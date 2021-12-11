@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+<body style="overflow:hidden; height:3000px;
+             background-image:url(repeatable-diagonal-gradient.png), url(repeatable-diagonal-gradient.png);
+             background-repeat:no-repeat;
+             background-position:0 300px, 0 0;">
+  <!-- Test that scrolling content above background-attachment:fixed content but not
+       intersecting it doesn't get moved down to a layer below the
+       background-attachment:fixed content -->
+  <div style="position:absolute; background:black; left:0; top:300px; width:500px; height:200px;"></div>
+</body>
+</html>

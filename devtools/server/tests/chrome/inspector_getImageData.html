@@ -1,0 +1,23 @@
+<html>
+<head>
+<body>
+  <img class="custom">
+  <img class="big-horizontal" src="large-image.jpg" style="width:500px;">
+  <canvas class="big-vertical" style="width:500px;"></canvas>
+  <img class="small" src="small-image.gif">
+  <img class="data" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=">
+  <script>
+    "use strict";
+
+    window.onload = () => {
+      const canvas = document.querySelector("canvas"), ctx = canvas.getContext("2d");
+      canvas.width = 1000;
+      canvas.height = 2000;
+      ctx.fillStyle = "red";
+      ctx.fillRect(0, 0, 1000, 2000);
+
+      window.opener.postMessage("ready", "*");
+    };
+  </script>
+</body>
+</html>

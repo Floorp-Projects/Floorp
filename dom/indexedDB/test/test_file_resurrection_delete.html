@@ -1,0 +1,126 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+  function* testSteps()
+  {
+    const READ_WRITE = "readwrite";
+
+    const name = window.location.pathname;
+
+    const objectStoreName = "Blobs";
+
+    const fileData = { key: 1, file: getRandomFile("random.bin", 100000) };
+
+    {
+      let request = indexedDB.open(name, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      is(event.type, "upgradeneeded", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      let objectStore = db.createObjectStore(objectStoreName, { });
+
+      objectStore.add(fileData.file, fileData.key);
+
+      event = yield undefined;
+
+      is(event.type, "success", "Got correct event type");
+
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      objectStore = trans.objectStore(objectStoreName);
+
+      objectStore.delete(fileData.key);
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(getFileDBRefCount(name, 1), 0, "Correct db ref count");
+
+      trans = db.transaction([objectStoreName], READ_WRITE);
+      objectStore = trans.objectStore(objectStoreName);
+
+      request = objectStore.add(fileData.file, fileData.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(getFileDBRefCount(name, 1), 1, "Correct db ref count");
+
+      fileData.file = null;
+    }
+
+    yield* assertEventuallyFileRefCount(name, 1, 0);
+
+    {
+      let request = indexedDB.open(name, 1);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      is(event.type, "success", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      let objectStore = trans.objectStore(objectStoreName);
+
+      request = objectStore.get(fileData.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      let result = event.target.result;
+      ok(result, "Got result");
+
+      objectStore.delete(fileData.key);
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(getFileDBRefCount(name, 1), 0, "Correct db ref count");
+
+      trans = db.transaction([objectStoreName], READ_WRITE);
+      objectStore = trans.objectStore(objectStoreName);
+
+      request = objectStore.add(result, fileData.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(getFileDBRefCount(name, 1), 1, "Correct db ref count");
+
+      event = null;
+      result = null;
+    }
+
+    yield* assertEventuallyFileRefCount(name, 1, 0);
+
+    finishTest();
+  }
+  </script>
+  <script type="text/javascript" src="file.js"></script>
+  <script type="text/javascript" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

@@ -1,0 +1,19 @@
+#filter substitution
+
+import os
+import sys
+
+sys.path.append(os.path.join('@topsrcdir@', 'js', 'src', 'gdb'))
+sys.path.append(os.path.join('@topsrcdir@', 'python', 'gdbpp'))
+
+# JS prettyprinters
+
+import mozilla.autoload
+mozilla.autoload.register(gdb.current_objfile())
+
+import mozilla.asmjs
+mozilla.asmjs.install()
+
+# Gecko prettyprinters
+
+import gdbpp

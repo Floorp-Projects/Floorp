@@ -1,0 +1,34 @@
+# Many things aren't appropriate for a frontend-only build.
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_PACKAGE=0
+MOZ_AUTOMATION_UPLOAD=0
+MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0
+
+NO_CACHE=1
+NO_NDK=1
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+. "$topsrcdir/build/mozconfig.no-compile"
+
+ac_add_options --disable-tests
+
+# From here on, like ../android-arm/nightly.
+
+# Android
+ac_add_options --target=arm-linux-androideabi
+
+ac_add_options --with-branding=mobile/android/branding/nightly
+
+export MOZILLA_OFFICIAL=1
+
+# mozconfigs/common.override would be here, but it needs to be last in the file.
+# End ../android-arm/nightly.
+
+# Disable Keyfile Loading (and checks) since.
+# This overrides the settings in the common android mozconfig
+ac_add_options --without-mozilla-api-keyfile
+ac_add_options --without-google-location-service-api-keyfile
+ac_add_options --without-google-safebrowsing-api-keyfile
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

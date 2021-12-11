@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+
+interface nsIContentSignatureReceiverCallback;
+
+/**
+ * An interface for verifying content-signatures, inspired by
+ * https://tools.ietf.org/html/draft-thomson-http-content-signature-00
+ * described here https://github.com/franziskuskiefer/content-signature/tree/pki
+ */
+[scriptable, uuid(45a5fe2f-c350-4b86-962d-02d5aaaa955a)]
+interface nsIContentSignatureVerifier : nsISupports
+{
+
+  /**
+   * Verifies that the data matches the data that was used to generate the
+   * signature.
+   *
+   * @param aData                   The data to be tested.
+   * @param aContentSignatureHeader The content-signature header,
+   *                                url-safe base64 encoded.
+   * @param aCertificateChain       The certificate chain to use for verification.
+   *                                PEM encoded string.
+   * @param aHostname               The hostname for which the end entity must
+                                    be valid.
+   * @returns Promise that resolves with the value true if the signature
+   *          matches the data and aCertificateChain is valid within aContext,
+   *          and false if not. Rejects if another error occurred.
+   */
+  [implicit_jscontext, must_use]
+  Promise asyncVerifyContentSignature(in ACString aData,
+                                      in ACString aContentSignatureHeader,
+                                      in ACString aCertificateChain,
+                                      in ACString aHostname);
+};

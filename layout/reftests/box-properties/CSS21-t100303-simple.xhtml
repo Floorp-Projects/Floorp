@@ -1,0 +1,202 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>CSS 2.1 Test Suite: Block-level, non-replaced elements in normal flow</title>
+		<!--
+
+		    THIS IS NOT THE FULL TEST.  IT HAS BEEN MODIFIED TO WORK
+		    AROUND THE FOLLOWING BUG:
+		    https://bugzilla.mozilla.org/show_bug.cgi?id=423306
+		    BY MAKING THE INTERMEDIATE ELEMENT NOT HAVE CHANGING 'direction'
+
+		  -->
+		<link rel="author" title="L. David Baron" href="https://dbaron.org/" />
+		<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+		<link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#blockwidth" />
+		<meta name="flags" content="" />
+		<style type="text/css"><![CDATA[
+
+		body { direction: ltr; }
+		div { height: 1px; }
+
+		/* containing block */
+		body > div {
+			margin: 0 17px 0 3px;
+			border: medium solid transparent;
+			border-width: 0 154px 0 157px;
+			padding: 0 6px 0 2px;
+			width: 350px;
+		}
+		/* parent that is not containing block */
+		/* COMMENTED OUT PER WORKAROUND DESCRIBED AT TOP */
+		/* body > div > div { display: inline; } */
+		/* test element */
+		body > div > div > div {
+			margin: 0 10px 0 6px;
+			border: medium solid transparent;
+			border-width: 0 12px 0 5px;
+			padding: 0 17px 0 9px;
+		}
+
+		/* COMMENTED OUT PER WORKAROUND DESCRIBED AT TOP */
+		body > div, /* body > div > div, */ body > div > div > div { direction: ltr; }
+		body > div.trtl > div > div { direction: rtl; }
+		/* COMMENTED OUT PER WORKAROUND DESCRIBED AT TOP */
+		/* body > div.prtl > div { direction: rtl; } */
+		body > div.cbrtl { direction: rtl; }
+		body > div.mlauto > div > div { margin-left: auto; }
+		body > div.mrauto > div > div { margin-right: auto; }
+
+		body > div.wauto > div > div { width: auto; }
+		body > div.wnarrow > div > div { width: 127px; }
+		body > div.wwide > div > div { width: 415px; }
+
+		/*
+		 * make a background on the containing block that is red
+		 * everywhere except where the test should draw its background
+		 */
+		body > div.wnarrow { background-image: url(CSS21-t100303-green-outside-170px.png); }
+		body > div.wwide { background-image: url(CSS21-t100303-green-outside-458px.png); }
+		body > div.wauto { background-image: url(CSS21-t100303-green-outside-334px.png); }
+		body > div.wauto.mlauto { background-image: url(CSS21-t100303-green-outside-340px.png); }
+		body > div.wauto.mrauto { background-image: url(CSS21-t100303-green-outside-344px.png); }
+		body > div.wauto.mlauto.mrauto { background-image: url(CSS21-t100303-green-outside-350px.png); }
+
+		/*
+		 * The only results in the markup rather than using selectors
+		 * are whether the div ends up aligned to the left edge (atl),
+		 * the right edge (atr), or centered (atc).  Things with auto
+		 * widths always count as atl, to make the style rules simpler
+		 * (though they abut both edges).
+		 */
+		body > div.atl { background-position: 8px 0; }
+		body > div.atl.mlauto { background-position: 2px 0; }
+
+		body > div.atr.wnarrow { background-position: 172px 0; }
+		body > div.atr.wnarrow.mrauto { background-position: 182px 0; }
+		body > div.atr.wwide { background-position: -116px 0; }
+		body > div.atr.wwide.mrauto { background-position: -106px 0; }
+
+		/* Can only be atc when mlauto and mrauto and wnarrow. */
+		body > div.atc.wnarrow { background-position: 92px 0; }
+
+		/*
+		 * make a background on the test div that is green only within
+		 * its desired width and red elsewhere
+		 */
+		body > div.wnarrow > div > div { background-image: url(CSS21-t100303-green-in-170px.png); }
+		body > div.wwide > div > div { background-image: url(CSS21-t100303-green-in-458px.png); }
+		body > div.wauto > div > div { background-image: url(CSS21-t100303-green-in-334px.png); }
+		body > div.wauto.mlauto > div > div { background-image: url(CSS21-t100303-green-in-340px.png); }
+		body > div.wauto.mrauto > div > div { background-image: url(CSS21-t100303-green-in-344px.png); }
+		body > div.wauto.mlauto.mrauto > div > div { background-image: url(CSS21-t100303-green-in-350px.png); }
+		/* move position to border-edge */
+		body > div > div > div { background-position: -5px 0; }
+
+		/* for debugging */
+		/* body > div { background: transparent ! important; } */
+		/* body > div > div > div { background: orange ! important; } */
+
+		]]></style>
+	</head>
+	<body>
+
+		<div class="atl wauto"><div><div></div></div></div>
+		<div class="atl wauto trtl"><div><div></div></div></div>
+		<div class="atl wauto prtl"><div><div></div></div></div>
+		<div class="atl wauto prtl trtl"><div><div></div></div></div>
+		<div class="atl wauto cbrtl"><div><div></div></div></div>
+		<div class="atl wauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atl wauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atl wauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mlauto"><div><div></div></div></div>
+		<div class="atl wauto mlauto trtl"><div><div></div></div></div>
+		<div class="atl wauto mlauto prtl"><div><div></div></div></div>
+		<div class="atl wauto mlauto prtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mlauto cbrtl"><div><div></div></div></div>
+		<div class="atl wauto mlauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mlauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atl wauto mlauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto"><div><div></div></div></div>
+		<div class="atl wauto mrauto trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto prtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto prtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto cbrtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto prtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto prtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto cbrtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atl wauto mrauto mlauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wnarrow"><div><div></div></div></div>
+		<div class="atl wnarrow trtl"><div><div></div></div></div>
+		<div class="atl wnarrow prtl"><div><div></div></div></div>
+		<div class="atl wnarrow prtl trtl"><div><div></div></div></div>
+		<div class="atr wnarrow cbrtl"><div><div></div></div></div>
+		<div class="atr wnarrow cbrtl trtl"><div><div></div></div></div>
+		<div class="atr wnarrow cbrtl prtl"><div><div></div></div></div>
+		<div class="atr wnarrow cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto trtl"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto prtl"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto prtl trtl"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto cbrtl"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atr wnarrow mlauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto trtl"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto prtl"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto prtl trtl"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto cbrtl"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atl wnarrow mrauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto trtl"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto prtl"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto prtl trtl"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto cbrtl"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atc wnarrow mrauto mlauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wwide"><div><div></div></div></div>
+		<div class="atl wwide trtl"><div><div></div></div></div>
+		<div class="atl wwide prtl"><div><div></div></div></div>
+		<div class="atl wwide prtl trtl"><div><div></div></div></div>
+		<div class="atr wwide cbrtl"><div><div></div></div></div>
+		<div class="atr wwide cbrtl trtl"><div><div></div></div></div>
+		<div class="atr wwide cbrtl prtl"><div><div></div></div></div>
+		<div class="atr wwide cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wwide mlauto"><div><div></div></div></div>
+		<div class="atl wwide mlauto trtl"><div><div></div></div></div>
+		<div class="atl wwide mlauto prtl"><div><div></div></div></div>
+		<div class="atl wwide mlauto prtl trtl"><div><div></div></div></div>
+		<div class="atr wwide mlauto cbrtl"><div><div></div></div></div>
+		<div class="atr wwide mlauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atr wwide mlauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atr wwide mlauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wwide mrauto"><div><div></div></div></div>
+		<div class="atl wwide mrauto trtl"><div><div></div></div></div>
+		<div class="atl wwide mrauto prtl"><div><div></div></div></div>
+		<div class="atl wwide mrauto prtl trtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto cbrtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto cbrtl prtl trtl"><div><div></div></div></div>
+		<div class="atl wwide mrauto mlauto"><div><div></div></div></div>
+		<div class="atl wwide mrauto mlauto trtl"><div><div></div></div></div>
+		<div class="atl wwide mrauto mlauto prtl"><div><div></div></div></div>
+		<div class="atl wwide mrauto mlauto prtl trtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto mlauto cbrtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto mlauto cbrtl trtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto mlauto cbrtl prtl"><div><div></div></div></div>
+		<div class="atr wwide mrauto mlauto cbrtl prtl trtl"><div><div></div></div></div>
+
+	</body>
+</html>

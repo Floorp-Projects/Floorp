@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Autoplay policy frame</title>
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <style>
+      video {
+        width: 50%;
+        height: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      window.addEventListener("message",
+        (event) => {
+          if (event.data == "click") {
+            SpecialPowers.wrap(document).notifyUserGestureActivation();
+            event.source.postMessage("activated", "*");
+          } else if (event.data == "play-audible") {
+            playAndPostResult(false, event.source);
+          } else if (event.data == "play-muted") {
+            playAndPostResult(true, event.source);
+          }
+        });
+      let w = window.opener || window.parent;
+      w.postMessage("ready", "*");
+    </script>
+  </body>
+</html>

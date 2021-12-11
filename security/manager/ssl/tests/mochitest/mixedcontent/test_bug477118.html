@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 477118</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  async function runTest()
+  {
+    await isSecurityState("secure", "data <img> doesn't break security");
+    finish();
+  }
+
+  async function afterNavigationTest()
+  {
+    await isSecurityState("secure", "still secure after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAN1wAADdcBQiibeAAAAAd0SU1FB9kBDxIAOdxBIbcAAAI+SURBVDjLxZO7TxRhFMV/M/PN7EPYhS02yytggo+ERAgxERsNhYnGzsQojaHT3r9F0cTaUjs6NUQLBRKDi4I8FEwkLMgO+5rdeX3XAoVYiZWnP797cu69Bv8gqZ+0QTqIdRpl1VHGvnV884CJwQgwicVtoB/ku/H4ycOnURgP/Q1g21Fw4+r0RjbbNmaq4ayO35UkXp9S2UzHxK2bE4QNl82FVwD0D49jn+hERBCRgwTiIX7pvGUGYF/BlO327d3ENfV7wuL0AyjPICIsfPvAmev3qdVqlMtlCoUCGxurDPT1kEnPomQKkRTFpXOjh4DN4kvGLuSJ/JC38y/ouXyXYrGIiBDHMVtbu1SrvXTlbfp6HcQcoVwp5hRAaWedPXFYfL+E1lAKswSRy+joKEEQICLkcjm01hiGgRcksW0b4SMKYHb+OSt6ma+VffxWRF3S5OeeMX7pHkqpwy5EBK31H90ogFODF1lbm8OtlEhloDORpbdnhDAMaTabhwbbtkkkEkRRhGVZR4BCfojJO4+o1VwQAItEIolpmliWRVtbG7s/dlDKotGo47U8CvkuAEwA3/eJoxhE0WyGuO4+nucRBAHVahXDMKg3agRhQBAGVKsVtNZHCRzHwTAMcrnc0eX9it3e3g7A6cGzhx0AKHWwQOV5jdXXb2ZOaa3BOP5ffF5ZptVqflG+3xpbWv5kh2FolEo7dnmv7Lium6zXG0nf95MiguM4QTqd9jPZTCvX2eF393QHqVRKZ7KZkP+unzPGLX8Jr7F8AAAAAElFTkSuQmCC" />
+</body>
+</html>

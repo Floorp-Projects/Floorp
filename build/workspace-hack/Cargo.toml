@@ -1,0 +1,117 @@
+[package]
+name = "mozilla-central-workspace-hack"
+version = "0.1.0"
+
+# This is a hack to help rust code in the tree that are built by different
+# invocations of cargo share dependencies rather than rebuilding them. This is
+# based on the "rustc-workspace-hack" used by the rustc build system to achieve
+# the same. From the description of the issue given there:
+#
+#  "Each time Cargo runs a build it will re-resolve the dependency graph, "
+#  "notably selecting different features sometimes for each build."
+#
+# We work around this by specifying the union of the set of features selected
+# by dependencies in each cargo invocation for each instance they would differ.
+
+[build-dependencies]
+void = { features = ["std", "default"], version = "1.0.2" }
+syn = { features = [
+    "clone-impls",
+    "default",
+    "derive",
+    "extra-traits",
+    "fold",
+    "full",
+    "parsing",
+    "printing",
+    "proc-macro",
+    "quote",
+    "visit",
+], version = "1.0" }
+serde = { features = ["default", "derive", "rc", "serde_derive", "std"], version = "1.0.66" }
+serde_derive = { features = ["default", "deserialize_in_place"], version = "1.0.66" }
+quote = { features = ["default", "proc-macro"], version = "1.0" }
+libc = { features = ["default", "std", "use_std"], version = "0.2" }
+bindgen = { default-features = false, features = ["runtime"], version = "0.56" }
+
+[target."cfg(windows)".dependencies.winapi]
+version = "0.3.6"
+features = [
+    "avrt",
+    "basetsd",
+    "bits",
+    "bits2_5",
+    "bitsmsg",
+    "combaseapi",
+    "consoleapi",
+    "d3d11",
+    "d3d11_1",
+    "d3d11sdklayers",
+    "d3d12",
+    "d3d12sdklayers",
+    "d3d12shader",
+    "d3dcommon",
+    "d3dcompiler",
+    "dwrite",
+    "dwrite_1",
+    "dwrite_3",
+    "dxgi1_2",
+    "dxgi1_3",
+    "dxgi1_4",
+    "dxgi1_5",
+    "dxgi1_6",
+    "dxgidebug",
+    "dxgiformat",
+    "dxgitype",
+    "errhandlingapi",
+    "fileapi",
+    "guiddef",
+    "handleapi",
+    "hidclass",
+    "hidpi",
+    "hidusage",
+    "impl-default",
+    "ioapiset",
+    "libloaderapi",
+    "knownfolders",
+    "memoryapi",
+    "minwinbase",
+    "minwindef",
+    "namedpipeapi",
+    "ntdef",
+    "ntsecapi",
+    "ntstatus",
+    "oaidl",
+    "objbase",
+    "oleauto",
+    "processenv",
+    "processthreadsapi",
+    "profileapi",
+    "psapi",
+    "rpcndr",
+    "setupapi",
+    "shlobj",
+    "std",
+    "synchapi",
+    "sysinfoapi",
+    "taskschd",
+    "timeapi",
+    "timezoneapi",
+    "unknwnbase",
+    "winbase",
+    "wincon",
+    "wincrypt",
+    "windef",
+    "winerror",
+    "wininet",
+    "winnls",
+    "winnt",
+    "winreg",
+    "winsock2",
+    "winuser",
+    "ws2def",
+    "ws2ipdef",
+    "ws2tcpip",
+    "wtypes",
+    "wtypesbase",
+]

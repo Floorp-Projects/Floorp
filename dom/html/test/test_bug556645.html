@@ -1,0 +1,50 @@
+<html>
+<head>
+  <title>Test for Bug 556645</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+function runTest()
+{
+  var obj = document.getElementById("obj");
+  var childDoc = obj.contentDocument;
+  var body = childDoc.body;
+  is(document.activeElement, document.body, "focus in parent before");
+  is(childDoc.activeElement, body, "focus in child before");
+
+  var button = childDoc.getElementsByTagName("button")[0];
+  button.focus();
+  childDoc.defaultView.focus();
+  is(document.activeElement, obj, "focus in parent after focus()");
+  is(childDoc.activeElement, button, "focus in child after focus()");
+
+  button.blur();
+  var pbutton = document.getElementById("pbutton");
+  pbutton.focus();
+
+  synthesizeKey("KEY_Tab");
+  is(document.activeElement, obj, "focus in parent after tab");
+  is(childDoc.activeElement, childDoc.documentElement, "focus in child after tab");
+
+  synthesizeKey("KEY_Tab");
+  is(document.activeElement, obj, "focus in parent after tab 2");
+  is(childDoc.activeElement, button, "focus in child after tab 2");
+
+  SimpleTest.finish();
+}
+
+</script>
+
+<button id="pbutton">Parent</button>
+<object id="obj" type="text/html"
+        data="object_bug556645.html"
+        width="200" height="200"></object>
+
+</body>
+</html>

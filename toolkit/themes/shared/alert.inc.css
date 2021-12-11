@@ -1,0 +1,173 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/global.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#alertBox[animate] {
+  animation-timing-function: cubic-bezier(.12,1.23,.48,1.09);
+}
+
+#alertBox[animate][clicked] {
+  animation-duration: .6s;
+  animation-name: alert-clicked-animation;
+}
+
+/* This is used if the close button is clicked
+   before the animation has finished. */
+#alertBox[animate][closing] {
+  animation-duration: .6s;
+  animation-name: alert-closing-animation;
+}
+
+#alertBox[animate]:not([clicked], [closing]):hover {
+  /* !important is necessary because CSS animations have highest
+     importance in the cascade with exception to !important rules. */
+  opacity: 1 !important;
+}
+
+@keyframes alert-animation {
+  from {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes alert-clicked-animation {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes alert-closing-animation {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+#alertIcon {
+  margin-top: 6px;
+  margin-inline-start: 8px;
+  margin-inline-end: 0;
+  margin-bottom: 0;
+  width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+}
+
+@media (resolution: 2dppx) {
+  #alertIcon {
+    image-rendering: -moz-crisp-edges;
+  }
+}
+
+#alertImage {
+  width: 80px;
+  height: 80px;
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: scale-down;
+  margin: 0 7px 7px;
+}
+
+.alertTextBox {
+  padding-top: 4px;
+  /* The text box width is increased to make up for the lack of image when one
+     is not provided. 349px is the text box width when a picture is present,
+     255px, plus the width of the image, 80px, and the margins, 7px each. */
+  width: 349px;
+}
+
+#alertBox[hasImage] > box > #alertTextBox {
+  width: 255px;
+}
+
+#alertBox:not([hasImage]) > box > #alertTextBox {
+  padding-inline-start: 8px;
+}
+
+#alertTextLabel {
+  padding-inline-end: 8px;
+}
+
+.alertTitle {
+  -moz-box-flex: 1;
+  font-weight: bold;
+  padding: 6px 8px 0;
+  width: 255px;
+}
+
+#alertFooter {
+  -moz-box-align: start;
+}
+
+#alertBox:not([hasOrigin]) > box > #alertTextBox,
+#alertFooter {
+  padding-bottom: 5px;
+}
+
+#alertSourceLabel {
+  -moz-box-flex: 1;
+  font-size: 83.334%;
+  color: GrayText;
+}
+
+#alertSettings {
+  appearance: none;
+  background-color: transparent;
+  border-width: 0;
+  border-radius: 20px;
+  min-width: 0;
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-end: 4px;
+  margin-bottom: 0;
+}
+
+#alertSettings > .button-box {
+  padding: 0;
+}
+
+#alertSettings .button-icon {
+  margin: 0;
+}
+
+#alertSettings:hover,
+#alertSettings[open] {
+  fill: #ddd;
+}
+
+#alertSettings:hover {
+  background-color: rgb(128,128,128);
+}
+
+#alertSettings[open],
+#alertSettings:hover:active {
+  background-color: rgb(102,102,102);
+}
+
+#alertSettings[focusedViaMouse]:-moz-focusring {
+  outline: none;
+}
+
+#alertSettings > .button-box > .button-menu-dropmarker,
+#alertSettings > .button-box > .box-inherit > .button-text {
+  display: none;
+}

@@ -1,0 +1,126 @@
+body   {
+  margin: 0;
+  padding: 0;
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  background-color: #fff;
+}
+
+#xulharness {
+  position: fixed;
+  top: 30px;
+  bottom: 0;
+  right: 0px;
+  left: 0px;
+  overflow:auto;
+}
+
+th, td {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  padding-left: .2em;
+  padding-right: .2em;
+  text-align: left;
+  height: 15px;
+  margin: 0;
+}
+
+li, li.test, li.dir {
+  padding: 0;
+  line-height: 15px;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  margin-left: 1em;
+  padding: 0;
+  border: none;
+}
+
+ul.top {
+  padding: 0;
+  padding-left: 1em;
+}
+
+table#test-table {
+  background: #f6f6f6;
+  margin-left: 1em;
+  padding: 0;
+}
+
+div.container {
+  margin: 1em;
+}
+
+a#runtests, a {
+  color: #3333cc;
+}
+
+li.non-test a {
+  color: #999999;
+}
+
+small a {
+  color: #000;
+}
+
+.clear { clear: both;}
+.invisible { display: none;}
+
+div.status {
+  min-height: 170px;
+  width: 100%;
+  border: 1px solid #666;
+}
+div.frameholder {
+  min-height: 170px;
+  min-width: 500px;
+  background-color: #ffffff;
+}
+
+div#current-test {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+#indicator {
+  color: white;
+  background-color: green;
+  padding: .5em;
+  margin: 0;
+}
+
+#pass, #fail {
+  margin: 0;
+  padding: .5em;
+}
+
+#testframe {
+  width: 500px;
+  height: 300px;
+}
+
+
+body[singletest=true] table,
+body[singletest=true] h2,
+body[singletest=true] p,
+body[singletest=true] br,
+body[singletest=true] .clear,
+body[singletest=true] .toggle,
+body[singletest=true] #current-test,
+body[singletest=true] .status {
+  display: none;
+}
+
+
+body[singletest=true],
+body[singletest=true] .container,
+body[singletest=true] .frameholder,
+body[singletest=true] #testframe {
+  display: flex;
+  flex: 1 1 auto;
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}

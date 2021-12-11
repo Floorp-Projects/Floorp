@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for single selection tree
+  -->
+<window title="Single Selection Tree" width="500" height="600"
+        onload="setTimeout(testtag_tree, 0, 'tree-single', 'treechildren-single',
+                           'single', 'simple', 'single selection tree');"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+
+<script src="tree_shared.js"/>
+
+<tree id="tree-single" rows="4" seltype="single">
+  <treecols>
+    <treecol id="name" label="Name" sort="label" properties="one two" flex="1"/>
+    <treecol id="address" label="Address" flex="1"/>
+  </treecols>
+  <treechildren id="treechildren-single">
+    <treeitem>
+      <treerow properties="firstrow">
+        <treecell label="Mary" value="mary" properties="firstname"/>
+        <treecell label="206 Garden Avenue" value="206ga"/>
+      </treerow>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell/>
+        <treecell value="19ms"/>
+      </treerow>
+    </treeitem>
+    <treeitem container="true">
+      <treerow>
+        <treecell label="Sarah"/>
+        <treecell label="702 Fern Avenue" editable="false"/>
+      </treerow>
+      <treechildren>
+        <treeitem>
+          <treerow>
+            <treecell label="Mary"/>
+            <treecell label="206 Garden Avenue"/>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell label="Chris"/>
+            <treecell label="19 Marion Street"/>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell label="Sarah"/>
+            <treecell label="702 Fern Avenue" editable="false"/>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell label="John"/>
+            <treecell label="99 Westminster Avenue"/>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell label="John"/>
+        <treecell label="99 Westminster Avenue"/>
+      </treerow>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell label="Mary"/>
+        <treecell label="206 Garden Avenue" selectable="false"/>
+      </treerow>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell label="Chris"/>
+        <treecell label="19 Marion Street"/>
+      </treerow>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell label="Sarah"/>
+        <treecell label="702 Fern Avenue"/>
+      </treerow>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell label="John"/>
+        <treecell label="99 Westminster Avenue"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+</tree>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+</window>

@@ -1,0 +1,335 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIPrincipal.idl"
+interface nsIURI;
+interface nsIChannel;
+interface nsIClassInfo;
+interface nsIDocShell;
+interface nsIDomainPolicy;
+interface nsILoadContext;
+
+%{ C++
+#include "jspubtd.h"
+
+namespace mozilla {
+namespace dom {
+class DomainPolicyClone;
+}
+}
+%}
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+[ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
+
+[scriptable, builtinclass, uuid(51daad87-3a0c-44cc-b620-7356801c9022)]
+interface nsIScriptSecurityManager : nsISupports
+{
+    /**
+     * For each of these hooks returning NS_OK means 'let the action continue'.
+     * Returning an error code means 'veto the action'. XPConnect will return
+     * false to the js engine if the action is vetoed. The implementor of this
+     * interface is responsible for setting a JS exception into the JSContext
+     * if that is appropriate.
+     */
+    [noscript] void canCreateWrapper(in JSContextPtr aJSContext,
+                                     in nsIIDRef aIID,
+                                     in nsISupports aObj,
+                                     in nsIClassInfo aClassInfo);
+
+    [noscript] void canCreateInstance(in JSContextPtr aJSContext,
+                                      in nsCIDRef aCID);
+
+    [noscript] void canGetService(in JSContextPtr aJSContext,
+                                  in nsCIDRef aCID);
+
+    /**
+     * Check that the script currently running in context "cx" can load "uri".
+     *
+     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
+     * should be denied.
+     *
+     * @param cx the JSContext of the script causing the load
+     * @param uri the URI that is being loaded
+     */
+    [noscript] void checkLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
+
+    /**
+     * Default CheckLoadURI permissions
+     */
+    // Default permissions
+    const unsigned long STANDARD = 0;
+
+    // Indicate that the load is a load of a new document that is not
+    // user-triggered.  Here "user-triggered" could be broadly interpreted --
+    // for example, scripted sets of window.location.href might be treated as
+    // "user-triggered" in some circumstances.  A typical example of a load
+    // that is not user-triggered is a <meta> refresh load.  If this flag is
+    // set, the load will be denied if the originating principal's URI has the
+    // nsIProtocolHandler::URI_FORBIDS_AUTOMATIC_DOCUMENT_REPLACEMENT flag set.
+    const unsigned long LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT = 1 << 0;
+
+    // Allow the loading of chrome URLs by non-chrome URLs.  Use with great
+    // care!  This will actually allow the loading of any URI which has the
+    // nsIProtocolHandler::URI_IS_UI_RESOURCE protocol handler flag set.  Ths
+    // probably means at least chrome: and resource:.
+    const unsigned long ALLOW_CHROME = 1 << 1;
+
+    // Don't allow URLs which would inherit the caller's principal (such as
+    // javascript: or data:) to load.  See
+    // nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT.
+    const unsigned long DISALLOW_INHERIT_PRINCIPAL = 1 << 2;
+
+    // Alias for DISALLOW_INHERIT_PRINCIPAL for backwards compat with
+    // JS-implemented extensions.
+    const unsigned long DISALLOW_SCRIPT_OR_DATA = DISALLOW_INHERIT_PRINCIPAL;
+
+    // Don't allow javascript: URLs to load
+    //   WARNING: Support for this value was added in Mozilla 1.7.8 and
+    //   Firefox 1.0.4.  Use in prior versions WILL BE IGNORED.
+    // When using this, make sure that you actually want DISALLOW_SCRIPT, not
+    // DISALLOW_INHERIT_PRINCIPAL
+    const unsigned long DISALLOW_SCRIPT = 1 << 3;
+
+    // Do not report errors if we just want to check if a principal can load
+    // a URI to not unnecessarily spam the error console.
+    const unsigned long DONT_REPORT_ERRORS = 1 << 4;
+
+    /**
+     * Check that content with principal aPrincipal can load "uri".
+     *
+     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
+     * should be denied.
+     *
+     * @param aPrincipal the principal identifying the actor causing the load
+     * @param uri the URI that is being loaded
+     * @param flags the permission set, see above
+     * @param innerWindowID the window ID for error reporting.  If this is 0
+     *        (which happens automatically if it's not passed from JS), errors
+     *        will only appear in the browser console, not window-associated
+     *        consoles like the web console.
+     */
+    [binaryname(CheckLoadURIWithPrincipal)]
+    void checkLoadURIWithPrincipalXPCOM(in nsIPrincipal aPrincipal,
+                                        in nsIURI uri,
+                                        in unsigned long flags,
+                                        [optional] in unsigned long long innerWindowID);
+
+    /**
+     * Same as the above, but when called from JS, raises exceptions with more
+     * useful messages, including both the tested URI and the principal string.
+     */
+    [implicit_jscontext, binaryname(CheckLoadURIWithPrincipalFromJS)]
+    void checkLoadURIWithPrincipal(in nsIPrincipal aPrincipal,
+                                   in nsIURI uri,
+                                   [optional] in unsigned long flags,
+                                   [optional] in unsigned long long innerWindowID);
+
+    /**
+     * Similar to checkLoadURIWithPrincipal but there are two differences:
+     *
+     * 1) The URI is a string, not a URI object.
+     * 2) This function assumes that the URI may still be subject to fixup (and
+     * hence will check whether fixed-up versions of the URI are allowed to
+     * load as well); if any of the versions of this URI is not allowed, this
+     * function will return error code NS_ERROR_DOM_BAD_URI.
+     */
+    [binaryname(CheckLoadURIStrWithPrincipal)]
+    void checkLoadURIStrWithPrincipalXPCOM(in nsIPrincipal aPrincipal,
+                                           in AUTF8String uri,
+                                           in unsigned long flags);
+
+    /**
+     * Same as the above, but when called from JS, raises exceptions with more
+     * useful messages, including both the tested URI and the principal string.
+     */
+    [implicit_jscontext, binaryname(CheckLoadURIStrWithPrincipalFromJS)]
+    void checkLoadURIStrWithPrincipal(in nsIPrincipal aPrincipal,
+                                      in AUTF8String uri,
+                                      [optional] in unsigned long flags);
+
+    /**
+     * Returns true if the URI is from a domain that is allow-listed through
+     * prefs to be allowed to use file:// URIs.
+     * @param aUri the URI to be tested
+     */
+    bool inFileURIAllowlist(in nsIURI aUri);
+
+    ///////////////// Principals ///////////////////////
+
+    /**
+     * Return the all-powerful system principal.
+     */
+    nsIPrincipal getSystemPrincipal();
+
+    /**
+     * Returns a principal that has the OriginAttributes of the load context.
+     * @param loadContext to get the OriginAttributes from.
+     */
+    nsIPrincipal getLoadContextContentPrincipal(in nsIURI uri,
+                                                 in nsILoadContext loadContext);
+
+    /**
+     * Returns a principal that has the OriginAttributes of the docshell.
+     * @param docShell to get the OriginAttributes from.
+     */
+    nsIPrincipal getDocShellContentPrincipal(in nsIURI uri,
+                                              in nsIDocShell docShell);
+
+    /**
+     * If this is a content principal, return a copy with different
+     * origin attributes.
+     */
+    [implicit_jscontext]
+    nsIPrincipal principalWithOA(in nsIPrincipal principal,
+                                 in jsval originAttributes);
+
+    /**
+     * Returns a principal whose origin is composed of |uri| and |originAttributes|.
+     * See nsIPrincipal.idl for a description of origin attributes, and
+     * ChromeUtils.webidl for a list of origin attributes and their defaults.
+     */
+    [implicit_jscontext]
+    nsIPrincipal createContentPrincipal(in nsIURI uri, in jsval originAttributes);
+
+    /**
+     * Returns a principal whose origin is the one we pass in.
+     * See nsIPrincipal.idl for a description of origin attributes, and
+     * ChromeUtils.webidl for a list of origin attributes and their defaults.
+     */
+    nsIPrincipal createContentPrincipalFromOrigin(in ACString origin);
+
+    /**
+     * Takes a principal and returns a string representation of it or a nullptr if it can't be serialized.
+     * Example output: `{"1": {"0": "https://mozilla.com", "2": "^privateBrowsingId=1"}}`
+     */
+    ACString principalToJSON(in nsIPrincipal principal);
+
+    /**
+     * Takes a string of the following format:
+     * `{"1": {"0": "https://mozilla.com", "2": "^privateBrowsingId=1"}}`
+     * and turns it into a principal or a nullptr on error.
+     */
+    nsIPrincipal JSONToPrincipal(in ACString json);
+
+    /**
+     * Returns a unique nonce principal with |originAttributes|.
+     * See nsIPrincipal.idl for a description of origin attributes, and
+     * ChromeUtils.webidl for a list of origin attributes and their defaults.
+     */
+    [implicit_jscontext]
+    nsIPrincipal createNullPrincipal(in jsval originAttributes);
+
+    /**
+     * Returns OK if aSourceURI and target have the same "origin"
+     * (scheme, host, and port).
+     * ReportError flag suppresses error reports for functions that
+     * don't need reporting.
+     * FromPrivateWindow indicates whether the error occurs in a private
+     * window or not.
+     */
+    void checkSameOriginURI(in nsIURI aSourceURI,
+                            in nsIURI aTargetURI,
+                            in boolean reportError,
+                            in boolean fromPrivateWindow);
+
+    /**
+     * Get the principal for the given channel.  This will typically be the
+     * channel owner if there is one, and the content principal for the
+     * channel's URI otherwise.  aChannel must not be null.
+     */
+    nsIPrincipal getChannelResultPrincipal(in nsIChannel aChannel);
+
+    /**
+     * Get the storage principal for the given channel.  This is basically the
+     * same of getChannelResultPrincipal() execept for trackers, where we
+     * return a principal with a different OriginAttributes.
+     */
+    nsIPrincipal getChannelResultStoragePrincipal(in nsIChannel aChannel);
+
+    /**
+     * This method returns 2 principals from a nsIChannel:
+     * - aPrincipal is the regular principal.
+     * - aPartitionedPrincipal is aPrincipal plus an isolation key in its
+     *   originAttributes.
+     * See more in StoragePrincipalHelper.h
+     */
+    void getChannelResultPrincipals(in nsIChannel aChannel,
+                                    out nsIPrincipal aPrincipal,
+                                    out nsIPrincipal aPartitionedPrincipal);
+
+    /**
+     * Temporary API until bug 1220687 is fixed.
+     *
+     * Returns the same value as getChannelResultPrincipal, but ignoring
+     * sandboxing.  Specifically, if sandboxing would have prevented the
+     * channel's triggering principal from being returned by
+     * getChannelResultPrincipal, the triggering principal will be returned
+     * by this method.
+     *
+     * Note that this method only ignores sandboxing of the channel in
+     * question, it does not ignore sandboxing of any channels further up a
+     * document chain.  The triggering principal itself may still be the null
+     * principal due to sandboxing further up a document chain.  In that regard
+     * the ignoring of sandboxing is limited.
+     */
+    [noscript, nostdcall]
+    nsIPrincipal getChannelResultPrincipalIfNotSandboxed(in nsIChannel aChannel);
+
+    /**
+     * Get the content principal for the channel's URI.
+     * aChannel must not be null.
+     */
+    nsIPrincipal getChannelURIPrincipal(in nsIChannel aChannel);
+
+    const unsigned long DEFAULT_USER_CONTEXT_ID = 0;
+
+    const unsigned long DEFAULT_PRIVATE_BROWSING_ID = 0;
+
+    /**
+     * Per-domain controls to enable and disable script. This system is designed
+     * to be used by at most one consumer, and enforces this with its semantics.
+     *
+     * Initially, domainPolicyActive is false. When activateDomainPolicy() is
+     * invoked, domainPolicyActive becomes true, and subsequent calls to
+     * activateDomainPolicy() will fail until deactivate() is invoked on the
+     * nsIDomainPolicy returned from activateDomainPolicy(). At this point,
+     * domainPolicyActive becomes false again, and a new consumer may acquire
+     * control of the system by invoking activateDomainPolicy().
+     */
+    nsIDomainPolicy activateDomainPolicy();
+    readonly attribute boolean domainPolicyActive;
+
+    /**
+     * Only the parent process can directly access domain policies, child
+     * processes only have a read-only mirror to the one in the parent.
+     * For child processes the mirror is updated via messages
+     * and ContentChild will hold the DomainPolicy by calling
+     * ActivateDomainPolicyInternal directly. New consumer to this
+     * function should not be addded.
+     */
+    [noscript] nsIDomainPolicy activateDomainPolicyInternal();
+
+    /**
+     * This function is for internal use only. Every time a child process is spawned, we
+     * must clone any active domain policies in the parent to the new child.
+     */
+    [noscript, notxpcom] void cloneDomainPolicy(in DomainPolicyClonePtr aClone);
+
+    /**
+     * Query mechanism for the above policy.
+     *
+     * If domainPolicyEnabled is false, this simply returns the current value
+     * of javascript.enabled. Otherwise, it returns the same value, but taking
+     * the various blocklist/allowlist exceptions into account.
+     */
+    bool policyAllowsScript(in nsIURI aDomain);
+};
+
+%{C++
+#define NS_SCRIPTSECURITYMANAGER_CONTRACTID "@mozilla.org/scriptsecuritymanager;1"
+%}

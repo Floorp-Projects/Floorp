@@ -1,0 +1,107 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+
+%define item #downloadsRichListBox > richlistitem
+%define itemFocused @item@[selected]
+
+/*** View and outer controls ***/
+
+#downloadsRichListBox {
+  /** The default listbox appearance comes with an unwanted margin. **/
+  appearance: none;
+  margin: 0;
+}
+
+/*** List items ***/
+
+@item@ {
+  height: var(--downloads-item-height);
+}
+
+.downloadTypeIcon {
+  margin: 8px 13px;
+  width: 32px;
+  height: 32px;
+}
+
+.downloadTarget {
+  margin: 0;
+}
+
+.downloadDetails {
+  opacity: 0.7;
+  font-size: 95%;
+  /* Use calc() to keep the height consistent with .downloadTarget, so that the
+     progress bar can be vertically centered. */
+  margin: 4px 0 calc(1em / 0.95 - 1em);
+}
+
+.downloadDetailsHover,
+.downloadDetailsButtonHover {
+  display: none;
+}
+
+.downloadButton {
+  appearance: none;
+  -moz-box-align: center;
+  background: transparent;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: none;
+  color: inherit;
+  padding: 0 12px;
+}
+
+.downloadButton > .button-box {
+  appearance: none;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.downloadButton > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.downloadButton > .button-box > .button-text {
+  display: none;
+}
+
+.downloadButton:hover > .button-box {
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.downloadButton:hover:active > .button-box {
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+/*** Button icons ***/
+
+.downloadIconCancel > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+}
+
+.downloadIconShow > .button-box > .button-icon {
+%ifdef XP_MACOSX
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+%else
+  list-style-image: url("chrome://browser/skin/folder.png");
+%endif
+}
+
+.downloadIconRetry > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
+}
+
+/*** Progressmeter ***/
+%include progressmeter.inc.css
+
+/*** Blocked iconography ***/
+%include download-blockedStates.inc.css

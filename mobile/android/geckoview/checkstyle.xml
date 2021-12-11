@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE module PUBLIC
+    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <module name="SuppressionFilter">
+      <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
+      <property name="optional" value="false"/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="FinalParameters">
+          <property name="tokens" value="METHOD_DEF, CTOR_DEF, LITERAL_CATCH, FOR_EACH_CLAUSE"/>
+        </module>
+        <module name="FinalLocalVariableCheck">
+          <property name="tokens" value="VARIABLE_DEF, PARAMETER_DEF"/>
+          <property name="validateEnhancedForLoopVariable" value="true"/>
+        </module>
+        <module name="ParameterName"/>
+        <module name="StaticVariableName"/>
+        <module name="OneStatementPerLine"/>
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+        <module name="SuppressWarningsHolder"/>
+        <module name="JavadocMethod">
+          <property name="id" value="checkstyle:javadocmethod"/>
+          <property name="scope" value="public"/>
+        </module>
+
+        <module name="MemberName">
+            <!-- Private members must use mHungarianNotation -->
+            <property name="format" value="m[A-Z][A-Za-z]*$"/>
+            <property name="applyToPrivate" value="true" />
+            <property name="applyToPublic" value="false" />
+            <property name="applyToPackage" value="false" />
+            <property name="applyToProtected" value="false" />
+        </module>
+
+        <module name="ClassTypeParameterName">
+            <property name="format" value="^[A-Z][A-Za-z]*$"/>
+        </module>
+        <module name="InterfaceTypeParameterName">
+            <property name="format" value="^[A-Z][A-Za-z]*$"/>
+        </module>
+        <module name="LocalVariableName"/>
+
+        <module name="OuterTypeFilename"/>
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI"/>
+        </module>
+        <module name="OneTopLevelClass"/>
+    </module>
+
+    <module name="SuppressWarningsFilter"/>
+</module>

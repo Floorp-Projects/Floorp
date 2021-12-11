@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=618017
+
+Parsing XML must not override the version.
+-->
+<head>
+  <title>Test for Bug 618017</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type='application/javascript'>
+let x = 12;
+function doLetEval() {
+  ok(eval('let x = 13; x') === 13, 'let statement is valid syntax in version 1.7');
+}
+</script>
+
+<script type='application/javascript'>
+doLetEval(); // Call to a function with a different version.
+</script>
+
+</body>
+</html>
+

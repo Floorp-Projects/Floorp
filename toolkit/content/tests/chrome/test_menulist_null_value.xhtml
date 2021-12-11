@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist value property"
+  onload="setTimeout(runTests, 0);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<menulist id="list">
+  <menupopup>
+    <menuitem id="i0" label="Zero" value="0"/>
+    <menuitem id="i1" label="One" value="item1"/>
+    <menuitem id="i2" label="Two" value="item2"/>
+    <menuitem id="ifalse" label="False" value="false"/>
+    <menuitem id="iempty" label="Empty" value=""/>
+  </menupopup>
+</menulist>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  var list = document.getElementById("list");
+
+  list.value = "item2";
+  is(list.value, "item2", "Check list value after setting value");
+  is(list.getAttribute("label"), "Two", "Check list label after setting value");
+
+  list.selectedItem = null;
+  is(list.value, "", "Check list value after setting selectedItem to null");
+  is(list.getAttribute("label"), "", "Check list label after setting selectedItem to null");
+
+  // select something again to make sure the label is not already empty
+  list.selectedIndex = 1;
+  is(list.value, "item1", "Check list value after setting selectedIndex");
+  is(list.getAttribute("label"), "One", "Check list label after setting selectedIndex");
+
+  // check that an item can have the "false" value
+  list.value = false;
+  is(list.value, "false", "Check list value after setting it to false");
+  is(list.getAttribute("label"), "False", "Check list labem after setting value to false");
+
+  // check that an item can have the "0" value
+  list.value = 0;
+  is(list.value, "0", "Check list value after setting it to 0");
+  is(list.getAttribute("label"), "Zero", "Check list label after setting value to 0");
+
+  // check that an item can have the empty string value.
+  list.value = "";
+  is(list.value, "", "Check list value after setting it to an empty string");
+  is(list.getAttribute("label"), "Empty", "Check list label after setting value to an empty string");
+
+  // select something again to make sure the label is not already empty
+  list.selectedIndex = 1;
+  // set the value to null and test it (bug 408940)
+  list.value = null;
+  is(list.value, "", "Check list value after setting value to null");
+  is(list.getAttribute("label"), "", "Check list label after setting value to null");
+
+  // select something again to make sure the label is not already empty
+  list.selectedIndex = 1;
+  // set the value to undefined and test it (bug 408940)
+  list.value = undefined;
+  is(list.value, "", "Check list value after setting value to undefined");
+  is(list.getAttribute("label"), "", "Check list label after setting value to undefined");
+
+  // select something again to make sure the label is not already empty
+  list.selectedIndex = 1;
+  // set the value to something that does not exist in any menuitem of the list
+  // and make sure the previous label is removed
+  list.value = "this does not exist";
+  is(list.value, "this does not exist", "Check the list value after setting it to something not associated witn an existing menuitem");
+  is(list.getAttribute("label"), "", "Check that the list label is empty after selecting a nonexistent item");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

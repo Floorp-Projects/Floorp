@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>CSS3 Multi-column Layout Test Suite: Overflow Pagination (Interlaced [Simplified])</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    body, html {
+      margin: 0;
+      padding: 0;
+    }
+
+    .following {
+      margin: 0 0 .5in;
+      height: .5in;
+      background: white;
+
+      font-size: 10pt;
+      line-height: 10pt;
+      color: navy;
+    }
+    .fno1 {
+      position: absolute;
+      top: 1.5in; left: 0;
+      width: 100pt;
+      border-top: 4px solid blue;
+    }
+    .fno2 {
+      position: absolute;
+      top: .5in; left: 100pt;
+      width: 100pt;
+    }
+    .overflow {
+      height: 4in;
+      width: 200pt;
+      border-bottom: 4px solid blue;
+    }
+    body {
+      height: 2.5in;
+      width: 300pt;
+      column-width: 100pt;
+      column-gap: 0;
+      column-fill: auto;
+      border: solid gray;
+      position: relative;
+    }
+  </style>
+ </head>
+ <body>
+  <div class="overflow">
+  </div>
+  <div class="following fno1">
+    This paragraph must be in the first column.
+    There must be no red on any page.
+  </div>
+  <p class="following fno2">
+    This paragraph must be in the second column.
+    There must be an unbroken blue line across
+    all three columns.
+  </p>
+ </body>
+</html>

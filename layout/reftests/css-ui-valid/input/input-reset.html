@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if input is of reset type, it is barred from constraint validation
+             and should not be affected by :-moz-ui-valid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body>
+    <!-- Setting value to the empty string let us check against input-button-ref.html -->
+    <input class='notvalid' type='reset' value=''>
+  </body>
+</html>

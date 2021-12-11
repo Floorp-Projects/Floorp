@@ -1,0 +1,290 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+- License, v. 2.0. If a copy of the MPL was not distributed with this
+- file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that TreeView component has working keyboard interactions.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>TreeView component keyboard test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = function() {
+  try {
+    const { a, button, div } =
+      require("devtools/client/shared/vendor/react-dom-factories");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const {
+      Simulate,
+      findRenderedDOMComponentWithClass,
+      findRenderedDOMComponentWithTag,
+      scryRenderedDOMComponentsWithClass,
+    } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const TreeView =
+      browserRequire("devtools/client/shared/components/tree/TreeView");
+
+    const _props = {
+      ...TEST_TREE_VIEW_INTERFACE,
+      renderValue: props => {
+        return (props.value === "C" ?
+          div({},
+          props.value + " ",
+            a({ href: "#" }, "Focusable 1"),
+            button({ }, "Focusable 2")) :
+          props.value + ""
+        );
+      },
+    };
+    const treeView = React.createElement(TreeView, _props);
+    const tree = ReactDOM.render(treeView, document.body);
+    const treeViewEl = findRenderedDOMComponentWithClass(tree, "treeTable");
+    const rows = scryRenderedDOMComponentsWithClass(tree, "treeRow");
+    const defaultFocus = treeViewEl.ownerDocument.body;
+
+    function blurEl(el) {
+      // Simulate.blur does not seem to update the activeElement.
+      el.blur();
+    }
+
+    function focusEl(el) {
+      // Simulate.focus does not seem to update the activeElement.
+      el.focus();
+    }
+
+    const tests = [{
+      name: "Test default TreeView state. Keyboard focus is set to document " +
+            "body by default.",
+      state: { selected: null, active: null },
+      activeElement: defaultFocus,
+    }, {
+      name: "Selected row must be set to the first row on initial focus. " +
+            "Keyboard focus should be set on TreeView's conatiner.",
+      action: () => {
+        focusEl(treeViewEl);
+        Simulate.click(rows[0]);
+      },
+      activeElement: treeViewEl,
+      state: { selected: "/B" },
+    }, {
+      name: "Selected row should remain set even when the treeView is " +
+            "blured. Keyboard focus should be set back to document body.",
+      action: () => blurEl(treeViewEl),
+      state: { selected: "/B" },
+      activeElement: defaultFocus,
+    }, {
+      name: "Selected row must be re-set again to the first row on initial " +
+            "focus. Keyboard focus should be set on treeView's conatiner.",
+      action: () => focusEl(treeViewEl),
+      activeElement: treeViewEl,
+      state: { selected: "/B" },
+    }, {
+      name: "Selected row should be updated to next on ArrowDown.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowDown" }},
+      state: { selected: "/C" },
+    }, {
+      name: "Selected row should be updated to last on ArrowDown.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowDown" }},
+      state: { selected: "/D" },
+    }, {
+      name: "Selected row should remain on last on ArrowDown.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowDown" }},
+      state: { selected: "/D" },
+    }, {
+      name: "Selected row should be updated to previous on ArrowUp.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowUp" }},
+      state: { selected: "/C" },
+    }, {
+      name: "Selected row should be updated to first on ArrowUp.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowUp" }},
+      state: { selected: "/B" },
+    }, {
+      name: "Selected row should remain on first on ArrowUp.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowUp" }},
+      state: { selected: "/B" },
+    }, {
+      name: "Selected row should move to the next matching row with first letter navigation.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "C" }},
+      state: { selected: "/C" },
+    }, {
+      name: "Selected row should not change when there are no more visible nodes matching first letter navigation.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "C" }},
+      state: { selected: "/C" },
+    }, {
+      name: "Selected row should be updated to last on End.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "End" }},
+      state: { selected: "/D" },
+    }, {
+      name: "Selected row should be updated to first on Home.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "Home" }},
+      state: { selected: "/B" },
+    }, {
+      name: "Selected row should be set as active on Enter.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "Enter" }},
+      state: { selected: "/B", active: "/B" },
+      activeElement: treeViewEl,
+    }, {
+      name: "Active row should be unset on Escape.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "Escape" }},
+      state: { selected: "/B", active: null },
+    }, {
+      name: "Selected row should be set as active on Space.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: " " }},
+      state: { selected: "/B", active: "/B" },
+      activeElement: treeViewEl,
+    }, {
+      name: "Selected row should unset when focus leaves the treeView.",
+      action: () => blurEl(treeViewEl),
+      state: { selected: "/B", active: null },
+      activeElement: defaultFocus,
+    }, {
+      name: "Keyboard focus should be set on treeView's conatiner on focus.",
+      action: () => focusEl(treeViewEl),
+      activeElement: treeViewEl,
+    }, {
+      name: "Selected row should be updated to next on ArrowDown.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowDown" }},
+      state: { selected: "/C", active: null },
+    }, {
+      name: "Selected row should be set as active on Enter. Keyboard focus " +
+            "should be set on the first focusable element inside the row, if " +
+            "available.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "Enter" }},
+      state: { selected: "/C", active: "/C" },
+      get activeElement() {
+        // When row becomes active/inactive, it is replaced with a newly
+        // rendered one.
+        return findRenderedDOMComponentWithTag(tree, "a");
+      },
+    }, {
+      name: "Keyboard focus should be set to next tabbable element inside " +
+            "the active row on Tab.",
+      action() {
+        synthesizeKey("KEY_Tab");
+      },
+      state: { selected: "/C", active: "/C" },
+      get activeElement() {
+        // When row becomes active/inactive, it is replaced with a newly
+        // rendered one.
+        return findRenderedDOMComponentWithTag(tree, "button");
+      },
+    }, {
+      name: "Keyboard focus should wrap inside the row when focused on last " +
+            "tabbable element.",
+      action() {
+        synthesizeKey("KEY_Tab");
+      },
+      state: { selected: "/C", active: "/C" },
+      get activeElement() {
+        return findRenderedDOMComponentWithTag(tree, "a");
+      },
+    }, {
+      name: "Keyboard focus should wrap inside the row when focused on first " +
+            "tabbable element.",
+      action() {
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+      },
+      state: { selected: "/C", active: "/C" },
+      get activeElement() {
+        return findRenderedDOMComponentWithTag(tree, "button");
+      },
+    }, {
+      name: "Active row should be unset on Escape. Focus should move back to " +
+            "the treeView container.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "Escape" }},
+      state: { selected: "/C", active: null },
+      activeElement: treeViewEl,
+    }, {
+      name: "Selected row should be set as active on Space. Keyboard focus " +
+            "should be set on the first focusable element inside the row, if " +
+            "available.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: " " }},
+      state: { selected: "/C", active: "/C" },
+      get activeElement() {
+        // When row becomes active/inactive, it is replaced with a newly
+        // rendered one.
+        return findRenderedDOMComponentWithTag(tree, "a");
+      },
+    }, {
+      name: "Selected row should remain set even when the treeView is " +
+            "blured. Keyboard focus should be set back to document body.",
+      action: () => treeViewEl.ownerDocument.activeElement.blur(),
+      state: { selected: "/C", active: null },
+      activeElement: defaultFocus,
+    }, {
+      name: "Keyboard focus should be set on treeView's conatiner on focus.",
+      action: () => focusEl(treeViewEl),
+      state: { selected: "/C", active: null },
+      activeElement: treeViewEl,
+    }, {
+      name: "Selected row should be set as active on Space. Keyboard focus " +
+            "should be set on the first focusable element inside the row, if " +
+            "available.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: " " }},
+      state: { selected: "/C", active: "/C" },
+      get activeElement() {
+        // When row becomes active/inactive, it is replaced with a newly
+        // rendered one.
+        return findRenderedDOMComponentWithTag(tree, "a");
+      },
+    }, {
+      name: "Selected row should be updated to previous on ArrowUp.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowUp" }},
+      state: { selected: "/B", active: null },
+      activeElement: treeViewEl,
+    }, {
+      name: "Selected row should be set as active on Enter.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "Enter" }},
+      state: { selected: "/B", active: "/B" },
+      activeElement: treeViewEl,
+    }, {
+      name: "Keyboard focus should move to another focusable element outside " +
+            "of the treeView when there's nothing to focus on inside the row.",
+      action() {
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+      },
+      state: { selected: "/B", active: null },
+      activeElement: treeViewEl.ownerDocument.documentElement,
+    }];
+
+    for (const test of tests) {
+      const { action, event, state, name } = test;
+
+      info(name);
+      if (event) {
+        const { type, options, el } = event;
+        Simulate[type](el, options);
+      } else if (action) {
+        action();
+      }
+
+      if (test.activeElement) {
+        is(treeViewEl.ownerDocument.activeElement, test.activeElement,
+          "Focus is set correctly.");
+      }
+
+      for (const key in state) {
+        is(tree.state[key], state[key], `${key} state is correct.`);
+      }
+    }
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Testcase for border-image + box-decoration-break</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=988653">
+  <meta charset="utf-8">
+  <style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+}
+* { font-family: DejaVuSansMono; }
+
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; padding-left:10px; margin:0;
+}
+
+b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,.b.clone {
+  border: 5px solid red;
+  border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD%2FgAIDAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoUlEQVR42u3bwQ0AIAgEwcOmtXttgScmsxWQCTyp3EysJo61IliwYMGCBUuwYMGCBQuWYMGCBQsWLMGCBQsWLFiCBQsWLFiwBAsWLFiwYAkWLFiwYMESLFiwYMGCpXaVka%2BsO8dmOUNYggULFixYsAQLFixYsGAJFixYsGDBEixYsGDBgiVYsGDBggVLsGDBggULlmDBggULFizBggUL1t89N%2FYEtBGStpoAAAAASUVORK5CYII%3D) 10 10 repeat;
+  border-image-outset: 7px 3px 5px 9px;
+}
+.b {
+  border: 5px solid transparent;
+  background: pink;
+}
+.b.clone {
+  background: pink;
+  height:28px;
+}
+.col3 .b.clone {
+  height:32px;
+}
+
+.columns {
+  columns: 2;
+  width: 200px;
+  height: 50px;
+  background: grey;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  float:left;
+}
+.col3 {
+  columns: 3;
+}
+.unbalanced { column-fill:auto; }
+.vbreak { height:66px; width:41px; }
+.unbalanced .vbreak { height:40px; }
+.h { width:30px;height:30px; background:grey; }
+.m { margin-left:15px; }
+.col3 .vbreak { height:116px; }
+.unbalanced.col3 .vbreak { height:40px; }
+x { display:inline-block; width:31px; height:18px; line-height:1; }
+y { display:inline-block; width:47px; height:18px; line-height:1; }
+pos1 { position:absolute; top:50px; width:700px; }
+pos2 { position:absolute; top:150px; width:700px; }
+pos3 { position:absolute; top:380px; width:700px; }
+pos4 { position:absolute; top:510px; width:700px; }
+
+b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10 {position:absolute;}
+c1,c2,c3,c4,c5,c6,c7,c8,c9,c10 {position:absolute; overflow:hidden; z-index:1;}
+
+
+b1 { top:50px; left:20px; height:66px; width:41px; }
+c1 { top:0; left:0; height:88px; width:200px; }
+
+b2 { top:-38px; left:128px; height:66px; width:41px; }
+c2 { top:50px; left:0; height:61px; width:200px; }
+
+b3 { top:50px; left:240px; height:116px; width:41px; }
+c3 { top:0; left:0; height:92px; width:600px; }
+
+b4 { top:-42px; left:312px; height:116px; width:41px; }
+c4 { top:50px; left:0; height:42px; width:600px; }
+
+b5 { top:-84px; left:384px; height:116px; width:41px; }
+c5 { top:50px; left:0; height:100px; width:600px; }
+
+b6 { top:148px; left:20px; height:19px; z-index:1; }
+m6 { top:135px; left:56px; height:55px; width:100px; background:white; z-index:2; }
+
+b7 { top:30px; left:-36px; width:78px; height:19px; }
+c7 { top:170px; left:20px; height:300px; width:200px; }
+
+b8 { top:30px; left:67px; width:125px; height:19px; }
+m8 { top:15px; left:103px; width:125px; height:55px; background:white; }
+c8 { top:170px; left:20px; height:300px; width:600px; }
+
+b9 { top:30px; left:-36px; width:125px; height:19px; }
+c9 { top:222px; left:20px; height:300px; width:47px; }
+
+b10 { top:30px; left:-83px; width:125px; height:19px; }
+c10 { top:274px; left:20px; height:300px; width:156px; }
+
+  </style>
+</head>
+<body>
+<c1><b1></b1></c1>
+<c2><b2></b2></c2>
+<c3><b3></b3></c3>
+<c4><b4></b4></c4>
+<c5><b5></b5></c5>
+<b6><x></x><y></y><br></b6><m6></m6>
+<c7><b7><x></x><y></y></b7></c7>
+<c8><b8><x></x><y></y><y></y></b8><m8></m8></c8>
+<c9><b9><x></x><y></y><y></y></b9></c9>
+<c10><b10><x></x><y></y><y></y></b10></c10>
+<pre>box-decoration-break:slice</pre>
+
+<pos1>
+<div class="columns"><div class="b vbreak slice"></div></div>
+<div class="columns col3"><div class="b vbreak slice"></div></div>
+</pos1>
+
+<pos2>
+<span class="b slice"><x></x><div class="h"></div><y></y></span><span class="b slice m"><x></x><div class="h"></div><y></y><div class="h"></div><y></y></span>
+
+<pre>box-decoration-break:clone</pre>
+</pos2>
+
+<pos3>
+<div class="unbalanced columns"><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:26px"></div></div>
+<div class="unbalanced columns col3"><div class="b vbreak clone"></div><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:36px"></div></div>
+</pos3>
+
+<pos4>
+<span class="b clone"><x></x></span><div class="h"></div><span class="b clone"><y></y></span>
+<span class="b clone m"><x></x></span><div class="h"></div><span class="b clone m"><y></y></span><div class="h"></div><span class="b clone m"><y></y></span>
+</pos4>
+
+</body>
+</html>

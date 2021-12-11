@@ -1,0 +1,105 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRequest.idl"
+
+interface nsISimpleEnumerator;
+interface nsIRequestObserver;
+interface nsIInterfaceRequestor;
+interface nsIRequestContext;
+
+/**
+ * A load group maintains a collection of nsIRequest objects.
+ * This is used in lots of places where groups of requests need to be tracked.
+ * For example, Document::mDocumentLoadGroup is used to track all requests
+ * made for subdocuments in order to track page load progress and allow all
+ * requests made on behalf of the document to be stopped, etc.
+ */
+[builtinclass, scriptable, uuid(f0c87725-7a35-463c-9ceb-2c07f23406cc)]
+interface nsILoadGroup : nsIRequest
+{
+    /**
+     * The group observer is notified when requests are added to and removed
+     * from this load group.  The groupObserver is weak referenced.
+     */
+    attribute nsIRequestObserver groupObserver;
+
+    /**
+     * Accesses the default load request for the group.  Each time a number
+     * of requests are added to a group, the defaultLoadRequest may be set
+     * to indicate that all of the requests are related to a base request.
+     *
+     * The load group inherits its load flags from the default load request.
+     * If the default load request is NULL, then the group's load flags are
+     * not changed.
+     */
+    attribute nsIRequest defaultLoadRequest;
+
+    /**
+     * Adds a new request to the group.  This will cause the default load
+     * flags to be applied to the request.  If this is a foreground
+     * request then the groupObserver's onStartRequest will be called.
+     *
+     * If the request is the default load request or if the default load
+     * request is null, then the load group will inherit its load flags from
+     * the request.
+     */
+    void addRequest(in nsIRequest aRequest,
+                    in nsISupports aContext);
+
+    /**
+     * Removes a request from the group.  If this is a foreground request
+     * then the groupObserver's onStopRequest will be called.
+     *
+     * By the time this call ends, aRequest will have been removed from the
+     * loadgroup, even if this function throws an exception.
+     */
+    void removeRequest(in nsIRequest aRequest,
+                       in nsISupports aContext,
+                       in nsresult aStatus);
+
+    /**
+     * Returns the requests contained directly in this group.
+     * Enumerator element type: nsIRequest.
+     */
+    readonly attribute nsISimpleEnumerator requests;
+
+    /**
+     * Returns the count of "active" requests (ie. requests without the
+     * LOAD_BACKGROUND bit set).
+     */
+    readonly attribute unsigned long activeCount;
+
+    /**
+     * Notification callbacks for the load group.
+     */
+    attribute nsIInterfaceRequestor notificationCallbacks;
+
+    /**
+     * Context for managing things like js/css connection blocking,
+     * and per-tab connection grouping.
+     */
+    readonly attribute unsigned long long requestContextID;
+
+    /**
+     * The set of load flags that will be added to all new requests added to
+     * this group. Any existing requests in the load group are not modified,
+     * so it is expected these flags will be added before requests are added
+     * to the group - typically via nsIDocShell::defaultLoadFlags on a new
+     * docShell.
+     * Note that these flags are *not* added to the default request for the
+     * load group; it is expected the default request will already have these
+     * flags (again, courtesy of setting nsIDocShell::defaultLoadFlags before
+     * the docShell has created the default request.)
+     */
+    attribute nsLoadFlags defaultLoadFlags;
+
+    /**
+     * Returns true if the loadGroup belongs to a discarded context, such as, a
+     * terminated private browsing session.
+     */
+    [infallible]
+    readonly attribute boolean isBrowsingContextDiscarded;
+};

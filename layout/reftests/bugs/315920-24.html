@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      span {color: red}
+      input[type=text][disabled]:disabled + span {color: green}
+      input[type=submit]:disabled + span {color: red}
+      input { display: none }
+    </style>
+  </head>
+
+  <body onload='document.getElementById("one").setAttribute("disabled", "disabled");
+                document.getElementById("one").setAttribute("type", "text");'>
+    <input type="submit" id="one"/>
+    <span>Should be no red </span>
+  </body>
+</html>

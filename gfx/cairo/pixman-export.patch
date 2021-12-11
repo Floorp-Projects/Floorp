@@ -1,0 +1,37 @@
+diff --git a/gfx/cairo/libpixman/src/pixman-compiler.h b/gfx/cairo/libpixman/src/pixman-compiler.h
+--- a/gfx/cairo/libpixman/src/pixman-compiler.h
++++ b/gfx/cairo/libpixman/src/pixman-compiler.h
+@@ -59,26 +59,33 @@
+ #   ifndef force_inline
+ #      define force_inline inline
+ #   endif
+ #   ifndef noinline
+ #      define noinline
+ #   endif
+ #endif
+ 
++/* In libxul builds we don't ever want to export pixman symbols */
++#if 1
++#   define PIXMAN_EXPORT cairo_public
++#else
++
+ /* GCC visibility */
+ #if defined(__GNUC__) && __GNUC__ >= 4 && !defined(_WIN32)
+ #   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
+ /* Sun Studio 8 visibility */
+ #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+ #   define PIXMAN_EXPORT __global
+ #else
+ #   define PIXMAN_EXPORT
+ #endif
+ 
++#endif
++
+ /* TLS */
+ #if defined(PIXMAN_NO_TLS)
+ 
+ #   define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
+     static type name
+ #   define PIXMAN_GET_THREAD_LOCAL(name)				\
+     (&name)
+ 

@@ -1,0 +1,181 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIAutoCompleteController.idl"
+
+interface nsIAutoCompletePopup;
+
+webidl Event;
+webidl Element;
+
+[scriptable, uuid(B068E70F-F82C-4C12-AD87-82E271C5C180)]
+interface nsIAutoCompleteInput : nsISupports
+{
+  /*
+   * The result view that will be used to display results
+   */
+  readonly attribute Element popupElement;
+  readonly attribute nsIAutoCompletePopup popup;
+
+  /*
+   * The controller.
+   */
+  readonly attribute nsIAutoCompleteController controller;
+
+  /*
+   * Indicates if the popup is currently open
+   */
+  [can_run_script] attribute boolean popupOpen;
+
+  /*
+   * Option to disable autocomplete functionality
+   */
+  attribute boolean disableAutoComplete;
+
+  /*
+   * If a search result has its defaultIndex set, this will optionally
+   * try to complete the text in the textbox to the entire text of the
+   * result at the default index as the user types
+   */
+  attribute boolean completeDefaultIndex;
+
+  /*
+   * complete text in the textbox as the user selects from the dropdown
+   * options if set to true
+   */
+  attribute boolean completeSelectedIndex;
+
+  /*
+   * Option for completing to the default result whenever the user hits
+   * enter or the textbox loses focus
+   */
+  attribute boolean forceComplete;
+
+  /*
+   * Option to open the popup only after a certain number of results are available
+   */
+  attribute unsigned long minResultsForPopup;
+
+  /*
+   * The maximum number of rows to show in the autocomplete popup.
+   */
+  attribute unsigned long maxRows;
+
+  /*
+   * Number of milliseconds after a keystroke before a search begins
+   */
+  attribute unsigned long timeout;
+
+  /*
+   * An extra parameter to configure searches with.
+   */
+  attribute AString searchParam;
+
+  /*
+   * The number of autocomplete session to search
+   */
+  readonly attribute unsigned long searchCount;
+
+  /*
+   * Get the name of one of the autocomplete search session objects
+   */
+  ACString getSearchAt(in unsigned long index);
+
+  /*
+   * The value of text in the autocomplete textbox.
+   *
+   * @note when setting a new value, the controller always first tries to use
+   *       setTextboxValueWithReason, and only if that throws (unimplemented),
+   *       fallbacks to the textValue's setter.  If a reason is not provided,
+   *       the implementation should assume TEXTVALUE_REASON_UNKNOWN, but it
+   *       should only happen in testing code.
+   */
+  attribute AString textValue;
+
+  /*
+   * Set the value of text in the autocomplete textbox, providing a reason to
+   * the autocomplete view.
+   */
+  const unsigned short TEXTVALUE_REASON_UNKNOWN = 0;
+  const unsigned short TEXTVALUE_REASON_COMPLETEDEFAULT = 1;
+  const unsigned short TEXTVALUE_REASON_COMPLETESELECTED = 2;
+  const unsigned short TEXTVALUE_REASON_REVERT = 3;
+  const unsigned short TEXTVALUE_REASON_ENTERMATCH = 4;
+
+  void setTextValueWithReason(in AString aValue,
+                              in unsigned short aReason);
+
+  /*
+   * Report the starting index of the cursor in the textbox
+   */
+  readonly attribute long selectionStart;
+
+  /*
+   * Report the ending index of the cursor in the textbox
+   */
+  readonly attribute long selectionEnd;
+
+  /*
+   * Select a range of text in the autocomplete textbox
+   */
+  void selectTextRange(in long startIndex, in long endIndex);
+
+  /*
+   * Notification that the search has started
+   */
+  void onSearchBegin();
+
+  /*
+   * Notification that the search concluded successfully
+   */
+  void onSearchComplete();
+
+  /*
+   * Notification that the user selected and entered a result item
+   *
+   * @param aEvent
+   *        The event that triggered the enter.
+   * @param itemWasSelected
+   *        A boolean value that indicates whether
+   *        an item was selected from the autocomplete popup.
+   * @return True if the user wishes to prevent the enter
+   */
+  boolean onTextEntered([optional] in Event aEvent, [optional] in boolean itemWasSelected);
+
+  /*
+   * Notification that the user cancelled the autocomplete session
+   *
+   * @return True if the user wishes to prevent the revert
+   */
+  boolean onTextReverted();
+
+  /*
+   * This popup should consume or dispatch the rollup event.
+   * TRUE: should consume; FALSE: should dispatch.
+   */
+  readonly attribute boolean consumeRollupEvent;
+
+  /*
+   * Indicates whether this input is in a "private browsing" context.
+   * nsIAutoCompleteSearches for these inputs should not persist any data to disk
+   * (such as a history database).
+   */
+  readonly attribute boolean inPrivateContext;
+
+  /*
+   * Don't rollup the popup when the caret is moved.
+   */
+  readonly attribute boolean noRollupOnCaretMove;
+
+  /*
+   * Don't rollup the popup when the search string becomes "".
+   */
+  readonly attribute boolean noRollupOnEmptySearch;
+
+  /**
+   * The userContextId of the current browser.
+   */
+  readonly attribute unsigned long userContextId;
+};

@@ -1,0 +1,267 @@
+<html>
+
+<head>
+  <title>ARIA menu events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    const kViaDisplayStyle = 0;
+    const kViaVisibilityStyle = 1;
+
+    function focusMenu(aMenuBarID, aMenuID, aActiveMenuBarID) {
+      this.eventSeq = [];
+
+      if (aActiveMenuBarID) {
+        this.eventSeq.push(new invokerChecker(EVENT_MENU_END,
+                                              getNode(aActiveMenuBarID)));
+      }
+
+      this.eventSeq.push(new invokerChecker(EVENT_MENU_START, getNode(aMenuBarID)));
+      this.eventSeq.push(new invokerChecker(EVENT_FOCUS, getNode(aMenuID)));
+
+      this.invoke = function focusMenu_invoke() {
+        getNode(aMenuID).focus();
+      };
+
+      this.getID = function focusMenu_getID() {
+        return "focus menu '" + aMenuID + "'";
+      };
+    }
+
+    function showMenu(aMenuID, aParentMenuID, aHow) {
+      this.menuNode = getNode(aMenuID);
+
+      // Because of aria-owns processing we may have menupopup start fired before
+      // related show event.
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.menuNode),
+        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID)),
+        new invokerChecker(EVENT_MENUPOPUP_START, this.menuNode),
+      ];
+
+      this.invoke = function showMenu_invoke() {
+        if (aHow == kViaDisplayStyle)
+          this.menuNode.style.display = "block";
+        else
+          this.menuNode.style.visibility = "visible";
+      };
+
+      this.getID = function showMenu_getID() {
+        return "Show ARIA menu '" + aMenuID + "' by " +
+          (aHow == kViaDisplayStyle ? "display" : "visibility") +
+          " style tricks";
+      };
+    }
+
+    function closeMenu(aMenuID, aParentMenuID, aHow) {
+      this.menuNode = getNode(aMenuID);
+      this.menu = null;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getMenu, this),
+        new invokerChecker(EVENT_MENUPOPUP_END, getMenu, this),
+        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID)),
+      ];
+
+      this.invoke = function closeMenu_invoke() {
+        // Store menu accessible reference while menu is still open.
+        this.menu = getAccessible(this.menuNode);
+
+        // Hide menu.
+        if (aHow == kViaDisplayStyle)
+          this.menuNode.style.display = "none";
+        else
+          this.menuNode.style.visibility = "hidden";
+      };
+
+      this.getID = function closeMenu_getID() {
+        return "Close ARIA menu " + aMenuID + " by " +
+          (aHow == kViaDisplayStyle ? "display" : "visibility") +
+          " style tricks";
+      };
+
+      function getMenu(aThisObj) {
+        return aThisObj.menu;
+      }
+    }
+
+    function focusInsideMenu(aMenuID, aMenuBarID) {
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getNode(aMenuID)),
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID)),
+      ];
+
+      this.invoke = function focusInsideMenu_invoke() {
+        getNode(aMenuID).focus();
+      };
+
+      this.getID = function focusInsideMenu_getID() {
+        return "focus menu '" + aMenuID + "'";
+      };
+    }
+
+    function blurMenu(aMenuBarID) {
+      var eventSeq = [
+        new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID)),
+        new invokerChecker(EVENT_FOCUS, getNode("outsidemenu")),
+      ];
+
+      this.__proto__ = new synthClick("outsidemenu", eventSeq);
+
+      this.getID = function blurMenu_getID() {
+        return "blur menu";
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    // gA11yEventDumpToConsole = true; // debuging
+    // enableLogging("tree,events,verbose");
+
+    var gQueue = null;
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new focusMenu("menubar2", "menu-help"));
+      gQueue.push(new focusMenu("menubar", "menu-file", "menubar2"));
+      gQueue.push(new showMenu("menupopup-file", "menu-file", kViaDisplayStyle));
+      gQueue.push(new closeMenu("menupopup-file", "menu-file", kViaDisplayStyle));
+      gQueue.push(new showMenu("menupopup-edit", "menu-edit", kViaVisibilityStyle));
+      gQueue.push(new closeMenu("menupopup-edit", "menu-edit", kViaVisibilityStyle));
+      gQueue.push(new focusInsideMenu("menu-edit", "menubar"));
+      gQueue.push(new blurMenu("menubar"));
+
+      gQueue.push(new focusMenu("menubar3", "mb3-mi-outside"));
+      gQueue.push(new showMenu("mb4-menu", document, kViaDisplayStyle));
+      gQueue.push(new focusMenu("menubar4", "mb4-item1"));
+      gQueue.push(new focusMenu("menubar5", "mb5-mi"));
+
+      gQueue.push(new synthFocus("mi6"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606207"
+     title="Dojo dropdown buttons are broken">
+    Bug 606207
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=614829"
+     title="Menupopup end event isn't fired for ARIA menus">
+    Bug 614829
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=615189"
+     title="Clean up FireAccessibleFocusEvent">
+    Bug 615189
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+     title="Rework accessible focus handling">
+    Bug 673958
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=933322"
+     title="menustart/end events are missing when aria-owns makes a menu hierarchy">
+    Bug 933322
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=934460"
+     title="menustart/end events may be missed when top level menuitem is focused">
+    Bug 934460
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=970005"
+     title="infinite long loop in a11y:FocusManager::ProcessFocusEvent">
+    Bug 970005
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="menubar" role="menubar">
+    <div id="menu-file" role="menuitem" tabindex="0">
+      File
+      <div id="menupopup-file" role="menu" style="display: none;">
+        <div id="menuitem-newtab" role="menuitem" tabindex="0">New Tab</div>
+        <div id="menuitem-newwindow" role="menuitem" tabindex="0">New Window</div>
+      </div>
+    </div>
+    <div id="menu-edit" role="menuitem" tabindex="0">
+      Edit
+      <div id="menupopup-edit" role="menu" style="visibility: hidden;">
+        <div id="menuitem-undo" role="menuitem" tabindex="0">Undo</div>
+        <div id="menuitem-redo" role="menuitem" tabindex="0">Redo</div>
+      </div>
+    </div>
+  </div>
+  <div id="menubar2" role="menubar">
+    <div id="menu-help" role="menuitem" tabindex="0">
+      Help
+      <div id="menupopup-help" role="menu" style="display: none;">
+        <div id="menuitem-about" role="menuitem" tabindex="0">About</div>
+      </div>
+    </div>
+  </div>
+  <div tabindex="0" id="outsidemenu">outsidemenu</div>
+
+  <!-- aria-owns relations -->
+  <div id="menubar3" role="menubar" aria-owns="mb3-mi-outside"></div>
+  <div id="mb3-mi-outside" role="menuitem" tabindex="0">Outside</div>
+
+  <div id="menubar4" role="menubar">
+    <div id="mb4_topitem" role="menuitem" aria-haspopup="true"
+         aria-owns="mb4-menu">Item</div>
+  </div>
+  <div id="mb4-menu" role="menu" style="display:none;">
+    <div role="menuitem" id="mb4-item1" tabindex="0">Item 1.1</div>
+    <div role="menuitem" tabindex="0">Item 1.2</div>
+  </div>
+
+  <!-- focus top-level menu item having haspopup -->
+  <div id="menubar5" role="menubar">
+    <div role="menuitem" aria-haspopup="true" id="mb5-mi" tabindex="0">
+      Item
+      <div role="menu" style="display:none;">
+        <div role="menuitem" tabindex="0">Item 1.1</div>
+        <div role="menuitem" tabindex="0">Item 1.2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- other aria-owns relations -->
+  <div id="mi6" tabindex="0" role="menuitem">aria-owned item</div>
+  <div aria-owns="mi6">Obla</div>
+
+  <div id="eventdump"></div>
+
+</body>
+</html>

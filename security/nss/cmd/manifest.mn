@@ -1,0 +1,111 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH	= ..
+# MODULE	= seccmd
+
+SOFTOKEN_SRCDIRS=
+NSS_SRCDIRS=
+LIB_SRCDIRS=
+
+ifdef NSS_BUILD_UTIL_ONLY
+REQUIRES = nspr
+else
+REQUIRES = nss nspr libdbm
+LIB_SRCDIRS = \
+ lib \
+ $(NULL)
+endif
+
+ifndef NSS_BUILD_UTIL_ONLY
+SOFTOKEN_SRCDIRS = \
+ $(BLTEST_SRCDIR) \
+ $(ECPERF_SRCDIR) \
+ $(FREEBL_ECTEST_SRCDIR) \
+ $(FIPSTEST_SRCDIR)  \
+ $(LOWHASHTEST_SRCDIR)  \
+ $(SHLIBSIGN_SRCDIR) \
+ $(NULL)
+endif
+
+ifndef NSS_BUILD_SOFTOKEN_ONLY
+ifndef NSS_BUILD_UTIL_ONLY
+NSS_SRCDIRS = \
+ addbuiltin \
+ atob  \
+ btoa  \
+ certutil  \
+ chktest  \
+ crlutil  \
+ crmftest \
+ dbtest \
+ derdump  \
+ digest  \
+ httpserv  \
+ listsuites \
+ makepqg  \
+ multinit \
+ nss-policy-check \
+ ocspclnt  \
+ ocspresp \
+ oidcalc  \
+ p7content  \
+ p7env  \
+ p7sign  \
+ p7verify  \
+ pk12util \
+ pk11importtest \
+ pk11ectest \
+ pk11gcmtest \
+ pk11mode \
+ pk1sign  \
+ pp  \
+ pwdecrypt \
+ rsaperf \
+ rsapoptst \
+ sdbthreadtst \
+ sdrtest \
+ selfserv  \
+ signtool \
+ signver \
+ smimetools  \
+ ssltap  \
+ strsclnt \
+ symkeyutil \
+ tests \
+ tstclnt  \
+ vfychain \
+ vfyserv \
+ modutil \
+ $(NULL)
+
+ifndef NSS_DISABLE_LIBPKIX
+NSS_SRCDIRS += \
+ pkix-errcodes \
+ $(NULL)
+endif
+
+endif
+endif
+
+DIRS = \
+ $(LIB_SRCDIRS) \
+ $(SOFTOKEN_SRCDIRS) \
+ $(NSS_SRCDIRS)
+
+TEMPORARILY_DONT_BUILD = \
+ $(NULL)
+
+# rsaperf  \
+#
+#       needs to look at what needs to happen to make jar build in
+# the binary release environment.
+#
+# perror requires lib/strerror.c which requires the client code installed 
+# to build (requires allxpstr.h)
+#
+DONT_BULD = jar \
+ perror \
+$(NULL)

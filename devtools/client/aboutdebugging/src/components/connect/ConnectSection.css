@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.connect-section {
+  --icon-size: calc(var(--base-unit) * 9);
+  --header-col-gap: calc(var(--base-unit) * 2);
+  margin-block-end: calc(var(--base-unit) * 4);
+}
+
+/*
+ *  +--------+----------------+
+ *  | <icon> |  <heading> 1fr |
+ *  +--------+----------------+
+ */
+.connect-section__header {
+  display: grid;
+  grid-template-areas: "icon heading";
+  grid-template-columns: auto 1fr;
+  grid-template-rows: var(--icon-size);
+  grid-column-gap: var(--header-col-gap);
+  align-items: center;
+
+  padding-block-end: calc(var(--base-unit) * 4);
+  padding-inline: calc(var(--base-unit) * 5);
+}
+
+.connect-section__header__title {
+  grid-area: heading;
+}
+
+.connect-section__header__icon {
+  grid-area: icon;
+  width: var(--icon-size);
+  height: var(--icon-size);
+
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.connect-section__content {
+  line-height: 1.5;
+  padding-inline-start: calc(var(--base-unit) * 5
+    + var(--header-col-gap) + var(--icon-size));
+  padding-inline-end: calc(var(--base-unit) * 5);
+}
+
+.connect-section__extra {
+  border-block-start: 1px solid var(--card-separator-color);
+}

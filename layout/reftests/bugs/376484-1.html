@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css"
+      href="data:text/css, .g1 { color: green }">
+<link rel="stylesheet" type="text/css"
+      href="javascript:' .g2 { color: green }'">
+<style type="text/css">
+  @import url("data:text/css, .g3 { color: green }");
+  @import url("javascript:' .g4 { color: green }'");
+</style>
+</head>
+<body>
+<p class="g1">This is text</p>
+<p class="g2">This is more text</p>
+<p class="g3">This is yet more text</p>
+<p class="g4">This is even more text</p>
+</body>
+</html>

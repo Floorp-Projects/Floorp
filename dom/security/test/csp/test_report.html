@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=548193
+-->
+<head>
+  <title>Test for Bug 548193</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * We try to load an inline-src using a policy that constrains
+ * all scripts from running (default-src 'none'). We verify that
+ * the generated csp-report contains the expceted values. If any
+ * of the JSON is not formatted properly (e.g. not properly escaped)
+ * then JSON.parse will fail, which allows to pinpoint such errors
+ * in the catch block, and the test will fail. Since we use an
+ * observer, we can set the actual report-uri to a foo value.
+ */
+
+const testfile = "tests/dom/security/test/csp/file_report.html";
+const reportURI = "http://mochi.test:8888/foo.sjs";
+const policy = "default-src 'none' 'report-sample'; report-uri " + reportURI;
+const docUri = "http://mochi.test:8888/tests/dom/security/test/csp/file_testserver.sjs" +
+               "?file=tests/dom/security/test/csp/file_report.html" +
+               "&csp=default-src%20%27none%27%20%27report-sample%27%3B%20report-uri%20http%3A//mochi.test%3A8888/foo.sjs";
+
+window.checkResults = function(reportObj) {
+  var cspReport = reportObj["csp-report"];
+
+  // The following uris' fragments should be stripped before reporting:
+  //    * document-uri
+  //    * blocked-uri
+  //    * source-file
+  // see http://www.w3.org/TR/CSP11/#violation-reports
+  is(cspReport["document-uri"], docUri, "Incorrect document-uri");
+
+  // we can not test for the whole referrer since it includes platform specific information
+  ok(cspReport.referrer.startsWith("http://mochi.test:8888/tests/dom/security/test/csp/test_report.html"),
+     "Incorrect referrer");
+
+  is(cspReport["blocked-uri"], "inline", "Incorrect blocked-uri");
+
+  is(cspReport["violated-directive"], "default-src", "Incorrect violated-directive");
+
+  is(cspReport["original-policy"], "default-src 'none' 'report-sample'; report-uri http://mochi.test:8888/foo.sjs",
+     "Incorrect original-policy");
+
+  is(cspReport["source-file"], docUri, "Incorrect source-file");
+
+  is(cspReport["script-sample"], "\n    var foo = \"propEscFoo\";\n    var bar…",
+     "Incorrect script-sample");
+
+  is(cspReport["line-number"], 7, "Incorrect line-number");
+}
+
+var chromeScriptUrl = SimpleTest.getTestFileURL("file_report_chromescript.js");
+var script = SpecialPowers.loadChromeScript(chromeScriptUrl);
+
+script.addMessageListener('opening-request-completed', function ml(msg) {
+  if (msg.error) {
+    ok(false, "Could not query report (exception: " + msg.error + ")");
+  } else {
+    try {
+      var reportObj = JSON.parse(msg.report);
+    } catch (e) {
+      ok(false, "Could not parse JSON (exception: " + e + ")");
+    }
+    try {
+      // test for the proper values in the report object
+      window.checkResults(reportObj);
+    } catch (e) {
+      ok(false, "Could not query report (exception: " + e + ")");
+    }
+  }
+
+  script.removeMessageListener('opening-request-completed', ml);
+  script.sendAsyncMessage("finish");
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+
+// load the resource which will generate a CSP violation report
+// save this for last so that our listeners are registered.
+var src = "file_testserver.sjs";
+// append the file that should be served
+src += "?file=" + escape(testfile);
+// append the CSP that should be used to serve the file
+src += "&csp=" + escape(policy);
+// appending a fragment so we can test that it's correctly stripped
+// for document-uri and source-file.
+src += "#foo";
+document.getElementById("cspframe").src = src;
+
+</script>
+</pre>
+</body>
+</html>

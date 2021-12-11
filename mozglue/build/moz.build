@@ -1,0 +1,134 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Build mozglue as a shared lib on Windows, OSX and Android. But not for
+# embedders!
+# If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
+if CONFIG["JS_STANDALONE"] and not CONFIG["MOZ_MEMORY"]:
+    Library("mozglue")
+elif CONFIG["OS_TARGET"] in ("WINNT", "Darwin", "Android"):
+    SharedLibrary("mozglue")
+else:
+    Library("mozglue")
+
+if CONFIG["OS_TARGET"] == "Android":
+    LDFLAGS += ["-Wl,--version-script,%s/mozglue.ver" % SRCDIR]
+    SOURCES += [
+        "BionicGlue.cpp",
+    ]
+
+if CONFIG["MOZ_ASAN"]:
+    SOURCES += [
+        "AsanOptions.cpp",
+    ]
+
+if CONFIG["MOZ_UBSAN"]:
+    SOURCES += [
+        "UbsanOptions.cpp",
+    ]
+
+if CONFIG["MOZ_TSAN"]:
+    SOURCES += [
+        "TsanOptions.cpp",
+    ]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    if CONFIG["MOZ_MEMORY"]:
+        DEFFILE = "mozglue.def"
+    # We'll break the DLL blocklist if we immediately load user32.dll.
+    # For the same reason, we delayload these other DLLs to avoid eager
+    # dependencies on user32.dll.
+    DELAYLOAD_DLLS += [
+        "oleaut32.dll",
+        "ole32.dll",
+        "user32.dll",
+        "winmm.dll",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"]:
+
+    if CONFIG["MOZ_MEMORY"] and FORCE_SHARED_LIB:
+        pass
+        # TODO: SHARED_LIBRARY_LIBS go here
+    else:
+        # Temporary, until bug 662814 lands
+        NoVisibilityFlags()
+        SOURCES += [
+            "dummy.cpp",
+        ]
+
+    if CONFIG["OS_TARGET"] == "WINNT":
+        LOCAL_INCLUDES += [
+            "/memory/build",
+        ]
+
+    EXPORTS.mozilla += [
+        "arm.h",
+        "mips.h",
+        "ppc.h",
+        "SSE.h",
+    ]
+
+    if CONFIG["CPU_ARCH"].startswith("x86"):
+        SOURCES += [
+            "SSE.cpp",
+        ]
+
+    if CONFIG["CPU_ARCH"] == "arm":
+        SOURCES += [
+            "arm.cpp",
+        ]
+
+    if CONFIG["CPU_ARCH"].startswith("mips"):
+        SOURCES += [
+            "mips.cpp",
+        ]
+
+    if CONFIG["CPU_ARCH"].startswith("ppc"):
+        SOURCES += [
+            "ppc.cpp",
+        ]
+
+    if CONFIG["MOZ_LINKER"]:
+        USE_LIBS += [
+            "zlib",
+        ]
+
+USE_LIBS += [
+    "mfbt",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    RCINCLUDE = "/mozglue/mozglue.rc"
+
+    if not CONFIG["HAVE_64BIT_BUILD"]:
+        EXPORTS += [
+            "IAccessible32.manifest",
+        ]
+
+    EXPORTS += [
+        "IAccessible64.manifest",
+    ]
+
+LIBRARY_DEFINES["IMPL_MFBT"] = True
+LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True
+
+if CONFIG["OS_TARGET"] == "Darwin":
+    # On OSX 10.10.3, a dead lock happens in some cases involving dynamic
+    # symbol resolution for symbols that jemalloc itself uses. While it
+    # might be possible to find a way to avoid all such symbol resolutions,
+    # it's currently not possible because at the very least there's a call
+    # to pthread_self from tsd_init_check_recursion, which is necessary
+    # because somehow clang doesn't want to accept the __thread keyword
+    # for TLS.
+    LDFLAGS += ["-Wl,-bind_at_load"]
+
+if CONFIG["MOZ_LINKER"] and CONFIG["CPU_ARCH"] == "arm":
+    LDFLAGS += ["-Wl,-version-script,%s/arm-eabi-filter" % SRCDIR]
+
+DIST_INSTALL = True
+
+include("replace_malloc.mozbuild")

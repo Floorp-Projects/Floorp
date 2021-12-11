@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Bug 989994</title>
+    <style>
+div:first-letter { color: red; }
+#s { color: blue; }
+    </style>
+  </head>
+  <body onload="document.getElementById('s').style.height = '100px';">
+    <div style="white-space: pre-line;">A
+foo<span dir="rtl" id="s">Z
+    </div>
+  </body>
+</html>

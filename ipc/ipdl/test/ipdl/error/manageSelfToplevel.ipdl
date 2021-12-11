@@ -1,0 +1,10 @@
+//error: top-level protocol `manageSelfToplevel' cannot manage itself
+
+protocol manageSelfToplevel {
+    manager manageSelfToplevel;
+    manages manageSelfToplevel;
+
+child:
+    async manageSelfToplevel();
+    async __delete__();
+};

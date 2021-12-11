@@ -1,0 +1,11 @@
+//error: struct `X' is only partially defined
+//error: struct `Y' is only partially defined
+//error: struct `Z' is only partially defined
+
+struct X { Y y; };
+struct Y { Z z; };
+struct Z { X x; };
+
+protocol undefMutualRecStruct {
+child: async __delete__(X x);
+};

@@ -1,0 +1,22 @@
+fuzzy(0-52,0-1452) == outline-and-box-shadow.html outline-and-box-shadow-ref.html
+== outline-and-3d-transform-1a.html outline-and-3d-transform-1-ref.html
+== outline-and-3d-transform-1b.html outline-and-3d-transform-1-ref.html
+fuzzy-if(gtkWidget,0-136,0-120) fuzzy-if(Android,0-255,0-356) fuzzy-if(d2d,0-16,0-96) fuzzy-if(cocoaWidget,0-255,0-120) fuzzy-if(winWidget,0-255,0-216) == outline-and-3d-transform-2.html outline-and-3d-transform-2-ref.html
+== outline-dynamic-change-1a.html outline-dynamic-change-1-ref.html
+== outline-dynamic-change-1b.html outline-dynamic-change-1-ref.html
+== outline-overflow-block-abspos.html outline-overflow-block-ref.html
+== outline-overflow-block-float.html outline-overflow-block-ref.html
+== outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-ref.html
+== outline-overflow-inlineblock-float.html outline-overflow-inlineblock-ref.html
+pref(layout.css.outline-style-auto.enabled,true) skip-if(!gtkWidget&&!winWidget&&!cocoaWidget) == outline-auto-001.html outline-auto-001-ref.html # only works on platforms that supports StyleAppearance::FocusOutline
+skip-if(nativeThemePref) == outline-auto-002.html outline-auto-002-ref.html
+pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001-solid-ref.html
+skip-if(nativeThemePref) != outline-auto-follows-border-radius-non-native.html outline-auto-follows-border-radius-non-native-notref.html
+skip-if(nativeThemePref) == outline-auto-follows-border-radius-non-native-02.html outline-auto-follows-border-radius-non-native.html
+needs-focus skip-if(nativeThemePref) == outline-auto-suppressed-native-widget.html outline-auto-suppressed-native-widget-ref.html
+== outline-initial-1a.html outline-initial-1-ref.html
+== outline-initial-1b.html outline-initial-1-ref.html
+== outline-on-table.html outline-on-table-ref.html
+== outline-table-caption.html outline-table-caption-ref.html
+== outline-table-caption-invisible.html about:blank
+== outline-wrapped-span-1.html outline-wrapped-span-1-ref.html

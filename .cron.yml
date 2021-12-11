@@ -1,0 +1,337 @@
+# Definitions for jobs that run periodically.  For details on the format, see
+# `https://hg.mozilla.org/ci/ci-admin/file/default/build-decision/src/build_decision/cron/schema.yml`.
+# For documentation, see `taskcluster/docs/cron.rst`.
+---
+
+jobs:
+    - name: daily-releases
+      job:
+          type: decision-task
+          treeherder-symbol: RPd
+          target-tasks-method: daily_releases
+      run-on-projects:
+          - mozilla-beta
+      when:
+          by-project:
+              # No default
+              mozilla-beta:
+                  - {weekday: 'Sunday', hour: 21, minute: 0}
+                  - {weekday: 'Tuesday', hour: 21, minute: 0}
+                  - {weekday: 'Thursday', hour: 21, minute: 0}
+
+    - name: nightly-desktop
+      job:
+          type: decision-task
+          treeherder-symbol: Nd
+          target-tasks-method: nightly_desktop
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              # Please update the `searchfox-index` job `mozilla-central` `when`
+              # times as well if updating the times here.
+              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
+              # No default
+
+    - name: nightly-desktop-linux
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-Ln
+          target-tasks-method: nightly_linux
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when: []  # never (hook only)
+
+    - name: nightly-desktop-osx
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-OSX
+          target-tasks-method: nightly_macosx
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when: []  # never (hook only)
+
+    - name: nightly-desktop-win32
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-win32
+          target-tasks-method: nightly_win32
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when: []  # never (hook only)
+
+    - name: nightly-desktop-win64
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-win64
+          target-tasks-method: nightly_win64
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when: []  # never (hook only)
+
+    - name: nightly-desktop-win64-aarch64
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-win64-aarch64
+          target-tasks-method: nightly_win64_aarch64
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when: []  # never (hook only)
+
+    - name: ship-geckoview
+      job:
+          type: decision-task
+          treeherder-symbol: ship_geckoview
+          target-tasks-method: ship_geckoview
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 10, minute: 0}]
+
+    - name: general-perf-testing
+      job:
+          type: decision-task
+          treeherder-symbol: gpt
+          target-tasks-method: general_perf_testing
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {weekday: 'Monday', hour: 10, minute: 30}
+          - {weekday: 'Wednesday', hour: 10, minute: 30}
+          - {weekday: 'Friday', hour: 10, minute: 30}
+
+    # For more context on this job, see:
+    # https://github.com/mozsearch/mozsearch-mozilla#how-searchfoxorg-stays-up-to-date
+    - name: searchfox-index
+      job:
+          type: decision-task
+          treeherder-symbol: Searchfox
+          target-tasks-method: searchfox_index
+      run-on-projects:
+          - mozilla-central
+          - mozilla-beta
+          - mozilla-release
+          - mozilla-esr78
+          - mozilla-esr91
+          - elm
+      when:
+          by-project:
+              # We want to run at both of the times the nightly runs.
+              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
+              # For all other jobs we just run once daily matching the 10 UTC
+              # nightly which is designed to align with searchfox's AWS cron
+              # jobs (for legacy reasons) rather than trying to align with
+              # specific builds.  (Ex: mozilla-beta has a "daily-releases" job
+              # that currently runs 3 times a week.)
+              #
+              # Note that for branches that don't change a lot this will result
+              # in a redundant job being scheduled each day rather than reusing
+              # the previous day's job.  This is only beneficial in the sense
+              # that there's no risk of expiration for artifacts and is a
+              # trade-off to avoid stale indices.  Bug 1686981 tracks fixing
+              # this.
+              mozilla-beta: [{hour: 10, minute: 0}]
+              mozilla-release: [{hour: 10, minute: 0}]
+              mozilla-esr78: [{hour: 10, minute: 0}]
+              mozilla-esr91: [{hour: 10, minute: 0}]
+              elm: [{hour: 10, minute: 0}]
+
+    - name: linux64-clang-trunk-perf
+      job:
+          type: decision-task
+          treeherder-symbol: linux64-clang-trunk-perf
+          target-tasks-method: linux64_clang_trunk_perf
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 2, minute: 0}
+
+    - name: updatebot-cron-job
+      job:
+          type: decision-task
+          treeherder-symbol: updatebot
+          target-tasks-method: updatebot_cron
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 0, minute: 0}
+          - {hour: 6, minute: 0}
+          - {hour: 12, minute: 0}
+          - {hour: 18, minute: 0}
+
+    - name: customv8-update
+      job:
+          type: decision-task
+          treeherder-symbol: customv8
+          target-tasks-method: customv8_update
+          optimize-target-tasks: false
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 10, minute: 30}]
+
+    - name: chromium-update
+      job:
+          type: decision-task
+          treeherder-symbol: Chromium
+          target-tasks-method: chromium_update
+          optimize-target-tasks: false
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 10, minute: 30}]
+
+    - name: bouncer-check
+      job:
+          type: decision-task
+          treeherder-symbol: Rel
+          target-tasks-method: cron_bouncer_check
+      run-on-projects:
+          - mozilla-central
+          - mozilla-beta
+          - mozilla-release
+          - mozilla-esr78
+          - mozilla-esr91
+      when:
+          by-project:
+              # No default branch
+              mozilla-central:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-beta:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-release:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-esr78:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-esr91:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+
+    - name: periodic-update
+      job:
+          type: decision-task
+          treeherder-symbol: Nfile
+          target-tasks-method: file_update
+      run-on-projects:
+          - mozilla-central
+          - mozilla-beta
+          - mozilla-release
+          - mozilla-esr91
+      when:
+          - {weekday: 'Monday', hour: 8, minute: 0}
+          - {weekday: 'Thursday', hour: 8, minute: 0}
+
+    - name: raptor-tp6m
+      job:
+          type: decision-task
+          treeherder-symbol: tp6m
+          target-tasks-method: raptor_tp6m
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {weekday: 'Monday', hour: 3, minute: 0}
+          - {weekday: 'Tuesday', hour: 3, minute: 0}
+          - {weekday: 'Wednesday', hour: 3, minute: 0}
+          - {weekday: 'Thursday', hour: 3, minute: 0}
+          - {weekday: 'Friday', hour: 3, minute: 0}
+          - {weekday: 'Saturday', hour: 3, minute: 0}
+          - {weekday: 'Sunday', hour: 3, minute: 0}
+
+    - name: perftest-s7
+      job:
+          type: decision-task
+          treeherder-symbol: tp6m
+          target-tasks-method: perftest_s7
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {weekday: 'Saturday', hour: 3, minute: 0}
+
+    - name: condprof
+      job:
+          type: decision-task
+          treeherder-symbol: condprof
+          target-tasks-method: condprof
+          include-push-tasks: true
+          optimize-target-tasks: false
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 16, minute: 00}
+
+    - name: l10n-bumper
+      job:
+          type: decision-task
+          treeherder-symbol: l10n-bump
+          target-tasks-method: l10n_bump
+      run-on-projects:
+          - mozilla-central
+          - mozilla-beta
+      when:
+          - {hour: 18, minute: 45}
+
+    - name: system-symbols
+      job:
+          type: decision-task
+          treeherder-symbol: system-symbols
+          target-tasks-method: system_symbols
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 0, minute: 0}
+
+    - name: perftest
+      job:
+          type: decision-task
+          treeherder-symbol: perftest
+          target-tasks-method: perftest
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 4, minute: 00}
+
+    - name: perftest-on-autoland
+      job:
+          type: decision-task
+          treeherder-symbol: perftest-auto
+          target-tasks-method: perftest-on-autoland
+      run-on-projects:
+          - autoland
+      when:
+          - {hour: 4, minute: 00}
+
+    - name: scriptworker-canary
+      job:
+          type: trigger-action
+          action-name: scriptworker-canary
+          include-cron-input: true
+      when: []  # never (hook only)
+
+    - name: l10n-cross-channel
+      job:
+          type: decision-task
+          treeherder-symbol: l10n-cross-channel
+          target-tasks-method: l10n-cross-channel
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 11, minute: 0}, {hour: 23, minute: 0}]
+              default: []

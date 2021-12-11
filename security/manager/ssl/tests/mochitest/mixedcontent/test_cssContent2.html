@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>CSS conent styling 2</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  if (navigator.platform.startsWith("Mac")) {
+    SimpleTest.expectAssertions(0, 1);
+  }
+
+  async function runTest()
+  {
+    await isSecurityState("secure");
+    document.getElementById("para").style.content =
+      "url('http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg')";
+
+    waitForSecurityState("broken", async () =>
+    {
+      await isSecurityState("broken", "insecure content added by styling breaks security");
+      finish();
+    });
+  }
+
+  async function afterNavigationTest()
+  {
+    is(document.getElementById("para").style.content, "");
+    await isSecurityState("secure", "security full after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <p id="para"></p>
+</body>
+</html>

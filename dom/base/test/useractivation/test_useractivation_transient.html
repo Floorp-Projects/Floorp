@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>User activation test: transient flag</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe></iframe>
+<iframe></iframe>
+<script>
+
+SimpleTest.requestFlakyTimeout("Timeouts are needed to test transient user_activation");
+
+let timeout = SpecialPowers.getIntPref("dom.user_activation.transient.timeout") + 1000;
+let [iframe0, iframe1] = document.querySelectorAll("iframe");
+
+function waitForEvent(aTarget, aEvent, aCallback) {
+  return new Promise((aResolve) => {
+    aTarget.addEventListener(aEvent, function listener(event) {
+      aCallback(event);
+      aResolve();
+    }, { once: true });
+  });
+}
+
+add_task(async function checkInitialStatus() {
+  ok(!SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on top-level document");
+  ok(!SpecialPowers.wrap(frames[0].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on first iframe");
+  ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on second iframe");
+});
+
+add_task(async function triggerUserActivation() {
+  // Trigger user activation on the first iframe.
+  SpecialPowers.wrap(frames[0].document).notifyUserGestureActivation();
+
+  // We should also propagate to all the ancestors.
+  ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the top-level document");
+  ok(SpecialPowers.wrap(frames[0].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the first iframe");
+  ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the second iframe");
+});
+
+add_task(async function iframeNavigation() {
+  frames[0].frameElement.src = "file_empty.html";
+  await waitForEvent(frames[0].frameElement, "load", () => {});
+  // We should reset the flag on iframe that navigates away from current page,
+  // but the flag on its ancestor isn't changed.
+  ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the top-level document");
+  ok(!SpecialPowers.wrap(frames[0].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the first iframe");
+  ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the second iframe");
+});
+
+add_task(async function triggerUserActivationTimeout() {
+  // Trigger user activation on the first iframe.
+  SpecialPowers.wrap(frames[0].document).notifyUserGestureActivation();
+
+  // hasValidTransientUserGestureActivation should return false after timeout.
+  await new Promise((aResolve) => {
+    setTimeout(() => {
+      ok(!SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+         "check has-valid-transient-user-activation on the top-level document");
+      ok(!SpecialPowers.wrap(frames[0].document).hasValidTransientUserGestureActivation,
+         "check has-valid-transient-user-activation on the first iframe");
+      ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
+         "check has-valid-transient-user-activation on the second iframe");
+      aResolve();
+    }, timeout);
+  });
+
+  // Trigger user activation again.
+  SpecialPowers.wrap(frames[0].document).notifyUserGestureActivation();
+  ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the top-level document");
+  ok(SpecialPowers.wrap(frames[0].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the first iframe");
+  ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the second iframe");
+});
+
+add_task(async function triggerUserActivationOnCrossOriginFrame() {
+  // Reset the activation flag.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+
+  // load cross-origin test page on iframe.
+  frames[0].frameElement.src = "https://example.com/tests/dom/base/test/useractivation/file_iframe_user_activated.html";
+  await waitForEvent(window, "message", (event) => {
+    if (event.data === "done") {
+      ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+         "check has-valid-transient-user-activation on the top-level document");
+      ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
+         "check has-valid-transient-user-activation on the second iframe");
+    } else {
+      ok(false, "receive unexpected message: " + event.data);
+    }
+  });
+
+  // hasValidTransientUserGestureActivation should return false after timeout.
+  await new Promise((aResolve) => {
+    setTimeout(() => {
+      ok(!SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+         "check has-valid-transient-user-activation on the top-level document");
+      ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
+         "check has-valid-transient-user-activation on the second iframe");
+      aResolve();
+    }, timeout);
+  });
+});
+
+add_task(async function propagateToSameOriginConnectedSubframe() {
+  // Reset the activation flag.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+
+  // load cross-origin test page on iframe.
+  iframe0.src = "https://example.com/tests/dom/base/test/useractivation/file_iframe_check_user_activation.html";
+  await waitForEvent(window, "message", (event) => {
+    if (event.data !== "loaded") {
+      ok(false, "receive unexpected message: " + event.data);
+    }
+  });
+
+  // Trigger user activation on top-level document.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the top-level document");
+  ok(SpecialPowers.wrap(iframe1.contentDocument).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the second iframe");
+
+  iframe0.contentWindow.postMessage("get", "*");
+  await waitForEvent(window, "message", (event) => {
+    if (typeof event.data === "object") {
+      ok(!event.data.isActivated, "check has-valid-transient-user-activation on the first iframe");
+    } else {
+      ok(false, "receive unexpected message: " + event.data);
+    }
+  });
+});
+
+add_task(async function endTests() {
+  // Reset the activation flag in order not to interfere following test in the
+  // verify mode which would run the test using same document couple times.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+});
+
+</script>
+</body>

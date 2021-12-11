@@ -1,0 +1,195 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+    - fetch
+
+transforms:
+    - gecko_taskgraph.transforms.build:transforms
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_lints:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    index:
+        product: firefox
+    treeherder:
+        symbol: Searchfox(idx)
+        kind: build
+        tier: 2
+    run-on-projects: []
+    optimization: null
+
+jobs:
+    linux64-searchfox/debug:
+        description: "Linux64 Debug Searchfox"
+        index:
+            job-name: linux64-searchfox-debug
+        treeherder:
+            platform: linux64/debug
+        worker-type: b-linux
+        worker:
+            max-run-time: 36000
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                RUSTC_BOOTSTRAP: "1"
+                MOZSEARCH_PLATFORM: "linux"
+        run:
+            using: mozharness
+            actions: [build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_sub_linux_configs/64_searchfox_and_debug.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            tooltool-downloads: public
+            keep-artifacts: false
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-nasm
+                - linux64-node
+                - linux64-rust
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    macosx64-searchfox/debug:
+        description: "MacOS X x64 Debug Cross-compile Searchfox"
+        index:
+            job-name: macosx64-searchfox-debug
+        treeherder:
+            platform: osx-cross/debug
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: debian11-amd64-build}
+            max-run-time: 36000
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                RUSTC_BOOTSTRAP: "1"
+                MOZSEARCH_PLATFORM: "macosx"
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_mac_64_cross_builds.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            custom-build-variant-cfg: cross-debug-searchfox
+            secrets: true
+            keep-artifacts: false
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-cctools-port
+                - linux64-clang-macosx-cross
+                - linux64-hfsplus
+                - linux64-libdmg
+                - linux64-nasm
+                - linux64-node
+                - linux64-rust-macos
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - macosx64-sdk-10.12
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    win64-searchfox/debug:
+        description: "Win64 Searchfox Debug (clang-cl)"
+        index:
+            job-name: win64-searchfox-debug
+        treeherder:
+            platform: windows2012-64/debug
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: debian11-amd64-build}
+            max-run-time: 36000
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                RUSTC_BOOTSTRAP: "1"
+                MOZSEARCH_PLATFORM: "windows"
+        run:
+            using: mozharness
+            options: [append-env-variables-from-configs]
+            actions: [get-secrets, build]
+            script: mozharness/scripts/fx_desktop_build.py
+            secrets: true
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+                - builds/taskcluster_sub_win64/searchfox_debug.py
+            tooltool-downloads: internal
+            extra-config:
+                mozconfig_platform: win64
+                env:
+                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
+        use-sccache: true
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang-win-cross
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-sccache
+                - linux64-dump_syms
+                - linux64-wine
+                - linux64-liblowercase
+                - linux64-winchecksec
+                - nsis
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+            fetch:
+                - upx-3.95-win
+
+    android-armv7-searchfox/debug:
+        description: "Android ARMv7 Debug Searchfox"
+        index:
+            job-name: android-armv7-searchfox-debug
+        treeherder:
+            platform: android-4-1-armv7/debug
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: android-build}
+            max-run-time: 36000
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                RUSTC_BOOTSTRAP: "1"
+                MOZSEARCH_PLATFORM: "android-armv7"
+                GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_android_64_builds.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            custom-build-variant-cfg: arm-debug-searchfox
+            tooltool-downloads: internal
+        use-sccache: true
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang
+                - linux64-rust-android
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-sccache
+                - linux64-nasm
+                - linux64-node
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi

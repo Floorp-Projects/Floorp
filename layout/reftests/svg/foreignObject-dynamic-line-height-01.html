@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <svg>
+    <foreignObject width="100" height="100">
+      This is long text that wraps.
+    </foreignObject>
+  </svg>
+  <script>
+    onload = function() {
+      var obj = document.querySelector("foreignObject");
+      window.w = obj.getBoundingClientRect().width;
+      obj.style.lineHeight = 3;
+      document.documentElement.className = "";
+    }
+  </script>
+</htmml>

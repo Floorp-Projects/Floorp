@@ -1,0 +1,30 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* nsIVariant based Property Bag support. */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+interface nsISimpleEnumerator;
+
+[scriptable, uuid(bfcd37b0-a49f-11d5-910d-0010a4e73d9a)]
+interface nsIPropertyBag : nsISupports
+{
+    /**
+     * Get a nsISimpleEnumerator whose elements are nsIProperty objects.
+     */
+    readonly attribute nsISimpleEnumerator enumerator;
+
+    /**
+     * Get a property value for the given name.
+     * @throws NS_ERROR_FAILURE if a property with that name doesn't
+     * exist.
+     */
+    nsIVariant getProperty(in AString name);
+};
+
+

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-position: left 75% top 25%</title>
+  <style type="text/css">
+#outer
+{
+  border: 1px solid black;
+  width: 128px;
+  height: 128px;
+}
+#inner1
+{
+  width: 128px;
+  height: 128px;
+  background-position: left 75% top 25%;
+  background-image: url(aqua-32x32.png);
+  background-repeat: no-repeat;
+}
+#inner2
+{
+  width: 128px;
+  height: 128px;
+  background-position: top 25% left 75%;
+  background-image: url(aqua-32x32.png);
+  background-repeat: no-repeat;
+}
+#inner3
+{
+  width: 128px;
+  height: 128px;
+  background-position: left 72px top 24px;
+  background-image: url(aqua-32x32.png);
+  background-repeat: no-repeat;
+}
+#inner4
+{
+  width: 128px;
+  height: 128px;
+  background-position: top 24px left 72px;
+  background-image: url(aqua-32x32.png);
+  background-repeat: no-repeat;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner1"></div></div>
+<div id="outer"><div id="inner2"></div></div>
+<div id="outer"><div id="inner3"></div></div>
+<div id="outer"><div id="inner4"></div></div>
+</body>
+</html>

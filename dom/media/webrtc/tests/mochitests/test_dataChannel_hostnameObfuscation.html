@@ -1,0 +1,59 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1592620",
+    title: "Blocklist to disable hostname obfuscation"
+  });
+
+  async function testBlocklist(options, blocklistEntry, shouldBeObfuscated) {
+    let test = new PeerConnectionTest(options);
+    addInitialDataChannel(test.chain);
+
+    if (blocklistEntry !== null) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["media.peerconnection.ice.obfuscate_host_addresses.blocklist",
+           blocklistEntry]
+        ]
+      });
+    }
+
+    test.chain.insertAfter('PC_LOCAL_WAIT_FOR_ICE_CONNECTED', [
+      async function CHECK_LOCAL_CANDIDATES() {
+        const stats = await test.pcLocal.getStats();
+        stats.forEach(s => {
+          if (s.type === 'local-candidate') {
+            if (shouldBeObfuscated) {
+              ok(s.address.includes(".local"), "address should be obfuscated");
+            } else {
+              ok(!s.address.includes(".local"), "address should not be obfuscated");
+            }
+          }
+        });
+      }]);
+
+    await test.run();
+  }
+
+  runNetworkTest(async (options) => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["media.peerconnection.ice.obfuscate_host_addresses", true]]
+    });
+    await testBlocklist(options, null, true);
+    await testBlocklist(options, "", true);
+    await testBlocklist(options, "example.com", true);
+    await testBlocklist(options, "mochi.test", false);
+    await testBlocklist(options, "example.com,mochi.test", false);
+    await testBlocklist(options, "*.test", false);
+  });
+
+</script>
+</pre>
+</body>
+</html>

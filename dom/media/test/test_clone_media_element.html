@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test: cloned media element should continue to play to the end even after the source of the original element is cleared</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// tests must run in sequence otherwise concurrent running test will also
+// update media cache which will hide the fact media cache not updated
+// after changes in media cache streams.
+PARALLEL_TESTS = 1;
+
+function startTest(test, token) {
+  manager.started(token);
+  info("Trying to load " + token);
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  v.src = test.name;
+
+  v.onloadedmetadata = function(evt) {
+    info(evt.target.token + " metadata loaded.");
+    evt.target.onloadedmetadata = null;
+    var clone = evt.target.cloneNode(false);
+    clone.token = evt.target.token;
+    clone.play();
+
+    clone.onloadstart = function(event) {
+      info("cloned " + event.target.token + " start loading.");
+      event.target.onloadstart = null;
+      removeNodeAndSource(v);
+    }
+
+    clone.onended = function(event) {
+      ok(true, "cloned " + event.target.token + " ended.");
+      event.target.onended = null;
+      removeNodeAndSource(event.target);
+      manager.finished(event.target.token);
+    }
+  }
+}
+
+var manager = new MediaTestManager;
+manager.runTests(gSmallTests.concat(gPlayedTests), startTest);
+
+</script>
+</pre>
+</body>
+</html>

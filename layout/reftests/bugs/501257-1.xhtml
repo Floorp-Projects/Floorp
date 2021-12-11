@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style><![CDATA[
+      .green { color: green; }
+      .toremove { color: red !important; }
+    ]]></style>
+  </head>
+  <body>
+    <div class="foo toremove">
+      This should be green
+    </div>
+    <script>
+      var div = document.getElementsByTagName("div")[0];
+      div.classList.toggle("toremove");
+      div.classList.toggle("green");
+    </script>
+  </body>
+</html>

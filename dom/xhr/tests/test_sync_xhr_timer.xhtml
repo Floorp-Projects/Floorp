@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+var counter = 0;
+var xhr;
+
+function syncXHR() {
+  xhr = new XMLHttpRequest();
+  xhr.open("GET", window.location, false);
+  xhr.send(null);
+}
+
+function increaseCounter() {
+  ++counter;
+  ok(counter <= 2, "Too many increaseCounter() calls!");
+  if (counter == 2) {
+    ok(true, "increaseCounter() should be called twice!");
+    SimpleTest.finish();
+  }
+}
+
+function runTest() {
+  setTimeout(syncXHR, 0);
+  setTimeout(increaseCounter, 0);
+  setTimeout(increaseCounter, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

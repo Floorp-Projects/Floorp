@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Picture-in-Picture test - transparent overlays - 1</title>
+  <script type="text/javascript" src="click-event-helper.js"></script>
+</head>
+<style>
+  video {
+    display: block;
+  }
+
+  .container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    color: white;
+  }
+
+  .toggle-overlay {
+    position: absolute;
+    min-width: 50px;
+    right: 0px;
+    height: 100%;
+    top: calc(50% - 25px);
+  }
+
+  button {
+    height: 100px;
+  }
+
+  .transparent-background {
+    background-color: transparent;
+  }
+
+  .partial-opacity {
+    opacity: 0.5;
+  }
+
+  .full-opacity {
+    opacity: 1.0;
+    background-color: green;
+  }
+
+  .no-pointer-events {
+    pointer-events: none;
+  }
+
+  .pointer-events {
+    pointer-events: auto;
+  }
+</style>
+<body>
+  <div class="container">
+    <div class="overlay transparent-background no-pointer-events">
+      This is a fully transparent overlay using a transparent background.
+      <div class="toggle-overlay partial-opacity pointer-events">
+        <button>I'm a button overlapping the toggle</button>
+      </div>
+    </div>
+    <video id="video-partial-transparent-button" src="test-video.mp4" loop="true"></video>
+  </div>
+
+  <div class="container">
+    <div class="overlay transparent-background no-pointer-events">
+      This is a fully transparent overlay using a transparent background.
+      <div class="toggle-overlay full-opacity pointer-events">
+        <button>I'm a button overlapping the toggle</button>
+      </div>
+    </div>
+    <video id="video-opaque-button" src="test-video.mp4" loop="true"></video>
+  </div>
+</body>
+</html>

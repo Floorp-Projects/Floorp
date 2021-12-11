@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=773262
+-->
+<title>Test for Bug 773262</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=773262">Mozilla Bug 773262</a></p>
+<iframe></iframe>
+<script>
+function runTest(doc, desc) {
+  is(doc.queryCommandEnabled("undo"), false,
+     desc + ": Undo shouldn't be enabled yet");
+  is(doc.queryCommandEnabled("redo"), false,
+     desc + ": Redo shouldn't be enabled yet");
+  is(doc.body.innerHTML, "<p>Hello</p>", desc + ": Wrong initial innerHTML");
+
+  doc.getSelection().selectAllChildren(doc.body.firstChild);
+  doc.execCommand("bold");
+  is(doc.queryCommandEnabled("undo"), true,
+     desc + ": Undo should be enabled after bold");
+  is(doc.queryCommandEnabled("redo"), false,
+     desc + ": Redo still shouldn't be enabled");
+  is(doc.body.innerHTML, "<p><b>Hello</b></p>",
+     desc + ": Wrong innerHTML after bold");
+
+  doc.execCommand("undo");
+  is(doc.queryCommandEnabled("undo"), false,
+     desc + ": Undo should be disabled again");
+  is(doc.queryCommandEnabled("redo"), true,
+     desc + ": Redo should be enabled now");
+  is(doc.body.innerHTML, "<p>Hello</p>",
+     desc + ": Wrong innerHTML after undo");
+
+  doc.execCommand("redo");
+  is(doc.queryCommandEnabled("undo"), true,
+     desc + ": Undo should be enabled after redo");
+  is(doc.queryCommandEnabled("redo"), false,
+     desc + ": Redo should be disabled again");
+  is(doc.body.innerHTML, "<p><b>Hello</b></p>",
+     desc + ": Wrong innerHTML after redo");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var doc = document.querySelector("iframe").contentDocument;
+
+  // First turn on designMode and run the test like that, as a sanity check.
+  doc.body.innerHTML = "<p>Hello</p>";
+  doc.designMode = "on";
+  runTest(doc, "1");
+
+  // Now to test the actual bug: repeat all the above, but with designMode
+  // toggled.  This should clear the undo history, so everything should be
+  // exactly as before.
+  doc.designMode = "off";
+  doc.body.innerHTML = "<p>Hello</p>";
+  doc.designMode = "on";
+  runTest(doc, "2");
+
+  SimpleTest.finish();
+});
+</script>

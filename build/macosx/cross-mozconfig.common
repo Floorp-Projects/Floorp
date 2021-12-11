@@ -1,0 +1,36 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+. "$topsrcdir/build/mozconfig.common"
+
+# cctools for ld, ar, and other related tools ; dsymutil for rust.
+mk_add_options "export PATH=$MOZ_FETCHES_DIR/cctools/bin:$MOZ_FETCHES_DIR/binutils/bin:$MOZ_FETCHES_DIR/clang/bin:$PATH"
+
+# dsymutil needs a libstdc++ more recent than what's on the system.
+mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
+
+CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX10.12.sdk
+
+export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+export DSYMUTIL=$MOZ_FETCHES_DIR/clang/bin/dsymutil
+export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
+export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
+export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
+
+export HOST_CFLAGS="-g"
+export HOST_CXXFLAGS="-g"
+export HOST_LDFLAGS="-g"
+
+ac_add_options --target=x86_64-apple-darwin
+export MACOS_SDK_DIR=$CROSS_SYSROOT
+
+if [ "x$MOZ_PKG_SPECIAL" != "xasan" -a -z "$MOZ_AUTOMATION_ARTIFACT_BUILDS" ]; then
+  # Enable static analysis checks by default on OSX cross builds.
+  # Exception is ASan, where this breaks.
+  # The option is not valid on artifact builds, so don't add it there either.
+  ac_add_options --enable-clang-plugin
+fi
+
+unset MOZ_STDCXX_COMPAT

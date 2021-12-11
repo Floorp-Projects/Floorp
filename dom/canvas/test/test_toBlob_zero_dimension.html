@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<title>Canvas test: toBlob</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="0"></canvas>
+<script>
+
+function testblob(blob) {
+  is(blob, null, "Null blob expected");
+}
+
+function test1(canvas)
+{
+  canvas.toBlob(function(blob) {
+    testblob(blob);
+    test2(canvas);
+  }, "image/png");
+}
+
+function test2(canvas)
+{
+  canvas.width = 0;
+  canvas.height = 100;
+  canvas.toBlob(function(blob) {
+    testblob(blob);
+    SimpleTest.finish();
+  }, "image/png");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+test1(canvas);
+
+});
+</script>

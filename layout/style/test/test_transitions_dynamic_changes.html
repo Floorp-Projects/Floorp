@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=525530
+-->
+<head>
+  <title>Test for Bug 525530</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=525530">Mozilla Bug 525530</a>
+<p id="display" style="text-indent: 100px"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 525530 **/
+
+var p = document.getElementById("display");
+var cs = getComputedStyle(p, "");
+var utils = SpecialPowers.DOMWindowUtils;
+
+p.style.transitionProperty = "all";
+p.style.transitionDuration = "4s";
+p.style.transitionDelay = "-2s";
+p.style.transitionTimingFunction = "linear";
+
+is(cs.textIndent, "100px", "initial value");
+
+p.style.textIndent = "0";
+is(cs.textIndent, "50px", "transition is halfway");
+p.style.transitionDuration = "0s";
+is(cs.textIndent, "50px", "changing duration doesn't change transitioning");
+p.style.transitionDelay = "0s";
+is(cs.textIndent, "50px", "changing delay doesn't change transitioning");
+p.style.transitionProperty = "text-indent";
+is(cs.textIndent, "50px",
+   "irrelevant change to transition property doesn't change transitioning");
+p.style.transitionProperty = "letter-spacing";
+is(cs.textIndent, "0px",
+   "relevant change to transition property does change transitioning");
+
+/** Test for Bug 522643 */
+p.style.transitionDuration = "4s";
+p.style.transitionDelay = "-2s";
+p.style.transitionProperty = "text-indent";
+p.style.textIndent = "100px";
+is(cs.textIndent, "50px", "transition is halfway");
+p.style.transitionDuration = "0s";
+p.style.transitionDelay = "0s";
+is(cs.textIndent, "50px",
+   "changing duration and delay doesn't change transitioning");
+p.style.textIndent = "0px";
+is(cs.textIndent, "0px",
+   "changing property after changing duration and delay stops transition");
+
+/** Test for Bug 1133375 */
+p.style.transitionDuration = "1s";
+p.style.transitionDelay = "-1s";
+p.style.transitionProperty = "text-indent";
+var endCount = 0;
+function incrementEndCount(event) { ++endCount; }
+p.addEventListener("transitionend", incrementEndCount);
+utils.advanceTimeAndRefresh(0);
+p.style.textIndent = "100px";
+is(cs.textIndent, "100px", "value should now be 100px");
+utils.advanceTimeAndRefresh(10);
+is(endCount, 0, "should not have started transition when combined duration less than or equal to 0");
+p.style.transitionDelay = "-2s";
+p.style.textIndent = "0";
+is(cs.textIndent, "0px", "value should now be 0px");
+utils.advanceTimeAndRefresh(10);
+is(endCount, 0, "should not have started transition when combined duration less than or equal to 0");
+utils.restoreNormalRefresh();
+p.style.textIndent = "";
+
+/** Test for bug 1144410 */
+utils.advanceTimeAndRefresh(0);
+p.style.transition = "opacity 200ms linear";
+p.style.opacity = "1";
+is(cs.opacity, "1", "bug 1144410 test - initial opacity");
+p.style.opacity = "0";
+is(cs.opacity, "1", "bug 1144410 test - opacity after starting transition");
+utils.advanceTimeAndRefresh(100);
+is(cs.opacity, "0.5", "bug 1144410 test - opacity during transition");
+utils.advanceTimeAndRefresh(200);
+is(cs.opacity, "0", "bug 1144410 test - opacity after transition");
+document.body.style.display = "none";
+is(cs.opacity, "0", "bug 1144410 test - opacity after display:none");
+p.style.opacity = "1";
+document.body.style.display = "";
+is(cs.opacity, "1", "bug 1144410 test - second transition, initial opacity");
+p.style.opacity = "0";
+is(cs.opacity, "1", "bug 1144410 test - opacity after starting second transition");
+utils.advanceTimeAndRefresh(100);
+is(cs.opacity, "0.5", "bug 1144410 test - opacity during second transition");
+utils.advanceTimeAndRefresh(200);
+is(cs.opacity, "0", "bug 1144410 test - opacity after second transition");
+utils.restoreNormalRefresh();
+p.style.opacity = "";
+p.style.transition = "";
+
+</script>
+</pre>
+</body>
+</html>

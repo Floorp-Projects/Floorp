@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+  <textarea id="testBox" style="padding:2px;" readonly></textarea>
+  <script type="text/javascript">
+    //Adding focus to the textbox should trigger a spellcheck
+    var textbox = document.getElementById("testBox");
+    addEventListener("load", function() {
+      textbox.readOnly = false;
+      textbox.focus();
+      textbox.value = "blahblahblah";
+      textbox.selectionStart = textbox.selectionEnd = 0;
+      textbox.blur();
+    }, false);
+  </script>
+
+</body>
+</html>

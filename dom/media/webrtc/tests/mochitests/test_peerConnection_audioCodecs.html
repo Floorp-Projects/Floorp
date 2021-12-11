@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1395853",
+    title: "Verify audio content over WebRTC for every audio codec",
+  });
+
+  // We match the format member against the sdp to figure out the payload type,
+  // So all other present codecs can be removed.
+  const codecs = [ "opus", "G722", "PCMU", "PCMA" ];
+
+  async function testAudioCodec(options = {}, codec) {
+    // sdputils checks for opus as part of its sdp sanity test
+    options.opus = codec == "opus";
+
+    let test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}], []);
+
+    test.chain.insertBefore("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
+      function PC_LOCAL_FILTER_OUT_CODECS() {
+        let otherCodec = codecs.find(c => c != codec);
+        let otherId = sdputils.findCodecId(test.originalOffer.sdp, otherCodec);
+
+        let id = sdputils.findCodecId(test.originalOffer.sdp, codec);
+        test.originalOffer.sdp =
+          sdputils.removeAllButPayloadType(test.originalOffer.sdp, id);
+
+        ok(!test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${otherId}[^0-9]`, "gi")),
+          `Other codec ${otherId} should be removed after filtering`);
+        ok(test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${id}[^0-9]`, "gi")),
+          `Tested codec ${id} should remain after filtering`);
+
+        for (let c of codecs.filter(c => c != codec)) {
+          // Remove rtpmaps for the other codecs so sdp sanity tests pass.
+          let id = sdputils.findCodecId(test.originalOffer.sdp, c);
+          test.originalOffer.sdp =
+            sdputils.removeRtpMapForPayloadType(test.originalOffer.sdp, id);
+        }
+
+        ok(!test.originalOffer.sdp.match(new RegExp(`a=rtpmap:${otherId}.*\\r\\n`, "gi")),
+           `Rtpmap of other codec ${otherId} should be removed after filtering`);
+        ok(test.originalOffer.sdp.match(new RegExp(`a=rtpmap:${id}.*\\r\\n`, "gi")),
+           `Rtpmap of tested codec should remain after filtering`);
+      },
+    ]);
+
+    test.chain.append([
+      async function CHECK_AUDIO_FLOW() {
+        try {
+          await test.pcRemote.checkReceivingToneFrom(new AudioContext(), test.pcLocal);
+          ok(true, "input and output audio data matches");
+        } catch(e) {
+          ok(false, `No audio flow: ${e}`);
+        }
+      },
+    ]);
+
+    await test.run();
+  }
+
+  runNetworkTest(async (options) => {
+    for (let codec of codecs) {
+      info(`Testing audio for codec ${codec}`);
+      try {
+        await testAudioCodec(options, codec);
+      } catch(e) {
+        ok(false, `Error in test for codec ${codec}: ${e}\n${e.stack}`);
+      }
+      info(`Tested audio for codec ${codec}`);
+    }
+  });
+</script>
+</pre>
+</body>
+</html>

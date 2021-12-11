@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the relationship between annotation vs blocking - cryptomining</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="features.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script class="testbody" type="text/javascript">
+
+runTests(SpecialPowers.Ci.nsIClassifiedChannel.CLASSIFIED_CRYPTOMINING,
+         [
+           ["privacy.trackingprotection.enabled", false],
+           ["privacy.trackingprotection.annotate_channels", false],
+           ["urlclassifier.features.fingerprinting.annotate.blacklistHosts", ""],
+           ["urlclassifier.features.fingerprinting.annotate.blacklistTables", ""],
+           ["privacy.trackingprotection.fingerprinting.enabled", false],
+           ["privacy.trackingprotection.cryptomining.enabled", true],
+           ["urlclassifier.features.socialtracking.annotate.blacklistHosts", ""],
+           ["urlclassifier.features.socialtracking.annotate.blacklistTables", ""],
+           ["privacy.trackingprotection.socialtracking.enabled", false],
+         ],
+         false /* a tracking resource */);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

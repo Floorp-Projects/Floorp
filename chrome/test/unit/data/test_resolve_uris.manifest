@@ -1,0 +1,5 @@
+resource foo .
+content foo resource://foo/foo-content/
+locale foo foo resource://foo/foo-locale/
+skin foo foo resource://foo/foo-skin/
+override chrome://good-package/content/override-me.xul resource://foo/foo-override/override-me.xul

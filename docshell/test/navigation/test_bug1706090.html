@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1706090</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  var bc = new BroadcastChannel("bug1706090");
+  var pageshowCount = 0;
+  bc.onmessage = function(event) {
+    if (event.data.type == "pageshow") {
+      ++pageshowCount;
+      if (pageshowCount == 1) {
+        is(event.data.persisted, false, "Shouldn't have persisted the initial load.");
+        bc.postMessage("sameOrigin");
+      } else if (pageshowCount == 2) {
+        bc.postMessage("back");
+      } else if (pageshowCount == 3) {
+        is(event.data.persisted, false, "Shouldn't have persisted same origin load.");
+        bc.postMessage("crossOrigin");
+      } else if (pageshowCount == 4) {
+        is(event.data.persisted, true, "Should have persisted cross origin load.");
+        bc.postMessage("sameSite");
+      } else if (pageshowCount == 5) {
+        is(event.data.persisted, false, "Shouldn't have persisted same site load.");
+        bc.postMessage("close");
+      }
+    } else if (event.data == "closed") {
+      bc.close();
+      SimpleTest.finish();
+    }
+  };
+
+  function runTest() {
+    SpecialPowers.pushPrefEnv({set: [["docshell.shistory.bfcache.allow_unload_listeners", true]]}, () => {
+      window.open("file_bug1706090.html", "", "noopener");
+    });
+  }
+  </script>
+</head>
+<body onload="runTest()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

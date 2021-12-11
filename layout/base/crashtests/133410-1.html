@@ -1,0 +1,27 @@
+<html>
+ <head>
+  <title>Bug 133410</title>
+ </head>
+
+ <body>
+
+  <table>
+   <tr>
+    <td>
+     <form>
+      <input type="text">
+      <input type="submit" value="Search">
+     <!-- note missing form close tag -->
+    </td>
+   </tr>
+  </table>
+
+  <table>
+   <span>
+    <!-- simple animated gif -->
+    <img src="../../../testing/crashtest/images/animfish.gif">
+   </span>
+  </table>
+
+ </body>
+</html>

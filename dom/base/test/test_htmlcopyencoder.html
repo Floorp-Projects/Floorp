@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test on the html copy encoder</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=422403">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testHtmlCopyEncoder () {
+  const de = SpecialPowers.Ci.nsIDocumentEncoder;
+  var encoder = SpecialPowers.Cu.createHTMLCopyEncoder();
+  var out, expected;
+
+  var node = document.getElementById('draggable');
+
+
+  // in the following tests, we must use the OutputLFLineBreak flag, to avoid
+  // to have the default line break of the platform in the result, so the test
+  // can pass on all platform
+
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setContainerNode(node);
+  out = encoder.encodeToString();
+  expected = 'This is a <em>draggable</em> bit of text.';
+  is(out, expected, "test container node ");
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = "<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>";
+  is(out, expected, "test node");
+
+  var select = window.getSelection();
+  select.selectAllChildren(node);
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = "<div style=\"display: none\">\n\n<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>\n\n</div>";
+  is(out, expected, "test selection");
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks | de.OutputEncodeHTMLEntities | de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setSelection(select);
+  var outContext = {value:''}, outInfo = {value:''};
+  out = encoder.encodeToStringWithContext(outContext, outInfo);
+  expected = "<div style=\"display: none\">\n\n<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>\n\n</div>";
+  is(out, expected, "test encodeToStringWithContext with selection ");
+
+  node.nextSibling.data="\nfoo bar\n";
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = "<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>";
+  is(out, expected, "test selection with additional data");
+
+  node = document.getElementById('aList');
+
+  var select = window.getSelection();
+  select.selectAllChildren(node);
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection");
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setContainerNode(node);
+  out = encoder.encodeToString();
+  expected = '\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n';
+  is(out, expected, "test list container node");
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = "<ol id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>";
+  is(out, expected, "test list node");
+
+  var liList = node.getElementsByTagName("li");
+  var range = document.createRange();
+
+  // selection start at the first child of the ol, and end after the element ol
+  range.setStart(node, 1);
+  range.setEnd(node.parentNode, 2);
+  select.removeAllRanges();
+  select.addRange(range);
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol id="aList">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection with range: selection start at the first child of the ol, and end after the element ol");
+
+  // selection start at the third child of the ol, and end after the element ol
+  range.setStart(node, 3);
+  range.setEnd(node.parentNode, 2);
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol id="aList"><li value=\"2\">sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol");
+
+
+  // selection start at the third child of the ol, and end after the element ol + ol start at the value 5
+  range.setStart(node, 3);
+  range.setEnd(node.parentNode, 2);
+  node.setAttribute("start","5");
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol id=\"aList\" start=\"5\"><li value=\"6\">sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol + ol start at the value 5");
+
+  // selection contains only some child of the ol
+  node.removeAttribute("start");
+  range.setStart(node, 3);
+  range.setEnd(node, 5);
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<li>sit amet, <strong>consectetuer</strong> </li>\n  ';
+  is(out, expected, "test list selection with range: selection contains only some child of the ol");
+
+  // selection contains only some child of the ol  + ol start at the value 5
+  node.setAttribute("start","5");
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<li>sit amet, <strong>consectetuer</strong> </li>\n  ';
+  is(out, expected, "test list selection with range: selection contains only some child of the ol + ol start at the value 5");
+
+  // selection contains only some child of the ol  + a value is set on the first li
+  node.removeAttribute("start");
+  liList[0].setAttribute("value","8");
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<li>sit amet, <strong>consectetuer</strong> </li>\n  ';
+  is(out, expected, "test list selection with range: selection contains only some child of the ol + ol start at the value 5");
+
+  select.selectAllChildren(node);
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol id=\"aList\">\n   <li value=\"8\">Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection with a value on a LI");
+
+  //test Bug 436703
+  node = document.getElementById('aContentEditable');
+  select.selectAllChildren(node);
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<p>one</p><p>two</p>';
+  is(out, expected, "select all children in an contentEditable div should not select the div itself");
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testHtmlCopyEncoder);
+
+</script>
+</pre>
+<div style="display: none">
+
+<div id="draggable" ondragstart="doDragStartSelection(event)">This is a <em>draggable</em> bit of text.</div>
+
+</div>
+<div style="display: none">
+
+<ol id="aList">
+   <li>Lorem ipsum dolor</li>
+  <li>sit amet, <strong>consectetuer</strong> </li>
+  <li>adipiscing elit</li>
+  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>
+  <li>aptent taciti</li>
+</ol>
+foo bar
+</div>
+
+<div id="aContentEditable" contentEditable="true"><p>one</p><p>two</p></div>
+</body>
+</html>

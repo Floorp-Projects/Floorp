@@ -1,0 +1,228 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Grid container baselines, nested grids</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151204">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#grid-baselines">
+  <link rel="match" href="grid-container-baselines-003-ref.html">
+  <link rel="stylesheet" type="text/css" href="support/ahem.css">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font:16px/1 Ahem; padding:0; margin:0;
+}
+
+.igrid { display: inline-grid; }
+.grid { display: grid; }
+.grid, .igrid {
+  grid: 13px repeat(3,50px) / 60px 60px;
+  border: 1px solid;
+  margin: 1px;
+}
+.grid.sfb , .igrid.sfb {
+  grid: repeat(3,50px) 13px / 60px 60px;
+}
+
+/* don't clamp grid item automatic minimum size */
+.igrid *, .grid * {
+  min-width: 0;
+  min-height: 0;
+}
+
+.a {
+  border: 3px solid black;
+  background:lime;
+}
+
+span:nth-of-type(1) { font-size:32px; }
+span:nth-of-type(2) { font-size:36px; }
+span:nth-of-type(3) { font-size:48px; }
+span:nth-of-type(4) { font-size:24px; }
+span.i { font-size:12px; grid-column:2; }
+
+.sfb { align-self:baseline; }
+.slb { align-self:last baseline; align-content:self-end; }
+.jfb { justify-self:baseline; justify-content:self-end; }
+.jlb { justify-self:last baseline; justify-content:self-end; }
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; text-orientation: sideways; }
+.vr { writing-mode: vertical-rl; text-orientation: sideways; }
+.vlr { writing-mode: vertical-lr; direction:rtl; text-orientation: sideways; }
+.vrl { writing-mode: vertical-rl; direction:ltr; text-orientation: sideways; }
+
+</style>
+</head>
+<body>
+
+<!--  TODO: figure out a way to make a reference for these:
+
+A<div class="igrid">
+  <div class="igrid slb" style="grid: 7px 13px 100px / 36px; grid-row: span 4;">
+    <n></n>
+    <n></n>
+    <span class="slb a" style="grid-row:3; margin-bottom:7px; padding-bottom:5px;">A<br>B</span>
+  </div>
+  <n></n>
+  <span class="slb i a" style="grid-row:4">C<br>D</span>
+</div>
+
+<div class="igrid" style="grid-template-columns:60px 60px 60px">
+  <div class="igrid slb" style="grid: 7px 13px 100px / 36px; grid-row: span 4;">
+    <n></n>
+    <span class="slb a" style="grid-row:3; margin-bottom:7px; padding-bottom:5px;">A<br>B</span>
+  </div>
+  <n></n>
+  <span class="slb i a" style="grid-row:4">C<br>D</span>
+  <span class="slb a" style="grid-row:4; grid-column:3; padding-bottom:20px">E<br>F</span>
+</div>
+
+<div class="igrid" style="grid-template-columns:60px 60px 60px">
+  <div class="igrid slb" style="grid: 7px 13px 100px / 36px; grid-row: span 4;">
+    <n></n>
+    <n></n>
+    <span class="a" style="grid-row:3; margin-bottom:7px; padding-bottom:5px;">A<br>B</span>
+  </div>
+  <span class="slb i a" style="grid-row:4">C<br>D</span>
+  <span class="slb a " style="grid-row:4; grid-column:3; padding-bottom:20px">E<br>F</span>
+</div>
+
+<div class="igrid" style="grid-template-columns:80px 60px 60px">
+  <div class="igrid slb" style="grid: 7px 13px 100px / 36px 36px; grid-row: span 4;">
+    <span class="a" style="grid-row:3; margin-bottom:7px; padding-bottom:5px;">A<br>B</span>
+    <span class="a" style="grid-row:3; ">A<br>B</span>
+  </div>
+  <n></n>
+  <span class="slb i a" style="grid-row:4">C<br>D</span>
+  <span class="slb a " style="grid-row:4; grid-column:3; padding-bottom:20px">E<br>F</span>
+</div>
+
+<br>
+-->
+
+A<div class="igrid sfb">
+  <div class="igrid sfb" style="grid: 100px 7px 13px / 36px; grid-row: span 4;">
+    <span class="sfb a" style="margin-bottom:7px; padding-bottom:5px;">A<br>B</span>
+    <n></n>
+    <n></n>
+  </div>
+  <span class="sfb i a" style="grid-row:1">C<br>D</span>
+  <n></n>
+</div>
+
+<div class="igrid sfb" style="grid-template-columns:60px 60px 60px">
+  <div class="igrid sfb" style="grid: 100px 7px 13px / 36px; grid-row: span 4;">
+    <span class="sfb a" style="margin-top:7px; padding-top:5px;">A<br>B</span>
+    <n></n>
+  </div>
+  <span class="sfb i a" style="grid-row:1">C<br>D</span>
+  <span class="sfb a" style="grid-row:1; grid-column:3; padding-top:20px">E<br>F</span>
+  <n></n>
+</div>
+<div class="igrid sfb" style="grid-template-columns:60px 60px 60px">
+  <div class="igrid sfb" style="grid: 100px 7px 13px / 36px; grid-row: span 4;">
+    <span class="a" style="margin-top:7px; padding-top:5px;">A<br>B</span>
+    <n></n>
+    <n></n>
+  </div>
+  <span class="sfb i a" style="grid-row:1">C<br>D</span>
+  <span class="sfb a " style="grid-row:1; grid-column:3; padding-top:20px">E<br>F</span>
+</div>
+
+<div class="igrid sfb" style="grid-template-columns:80px 60px 60px">
+  <div class="igrid sfb" style="grid: 100px 7px 13px / 36px 36px; grid-row: span 4;">
+    <span class="a" style="margin-top:7px; padding-top:5px;">A<br>B</span>
+    <span class="a" style="">A<br>B</span>
+  </div>
+  <span class="sfb i a" style="grid-row:1">C<br>D</span>
+  <span class="sfb a " style="grid-row:1; grid-column:3; padding-top:20px">E<br>F</span>
+  <n></n>
+</div>
+
+<br>
+
+<!-- TODO: impossible to make a reference due to bug 1166120
+
+A<div class="igrid" style="grid: auto / 100px;">
+<span class="jfb a vlr" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid" style="grid: auto / 100px;">
+<span class="jlb a vlr" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid slb" style="grid: auto / 100px;">
+<span class="jlb a vlr" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid vl" style="grid: 100px / 50px;">
+<span class="jlb a" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid slb vl" style="grid: 100px / 50px;">
+<span class="jfb a" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid sfb vl" style="grid: 100px / 50px;">
+<span class="jfb a" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+
+-->
+
+<!--  TODO: figure out a way to make a reference for these:
+
+A<div class="igrid" style="grid-template-columns:200px">
+  <div class="igrid slb vl" style="grid: 1fr / 7px 13px 50px; grid-row: span 4;">
+    <n></n>
+    <n></n>
+    <span class="slb a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
+  </div>
+</div><div class="igrid" style="grid-template-columns:200px">
+  <div class="igrid slb vl" style="grid: 1fr / 7px 13px 50px; grid-row: span 4;">
+    <n></n>
+    <n></n>
+    <span class="a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
+  </div>
+</div><div class="igrid" style="grid-template-columns:200px">
+  <div class="igrid slb vl" style="grid: 1fr / 7px 13px 50px; grid-row: span 4;">
+    <n></n>
+    <n></n>
+    <span class="jlb a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
+  </div>
+</div>
+
+-->
+
+A<div class="igrid" style="grid-template-columns:200px">
+  <div class="igrid sfb vl" style="grid: 1fr / 7px 13px 50px; grid-row: span 4;">
+    <span class="sfb a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
+    <n></n>
+    <n></n>
+  </div>
+</div><div class="igrid" style="grid-template-columns:200px">
+  <div class="igrid sfb vl" style="grid: 1fr / 7px 13px 50px; grid-row: span 4;">
+    <span class="a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
+    <n></n>
+    <n></n>
+  </div>
+</div><div class="igrid" style="grid-template-columns:200px">
+  <div class="igrid sfb vl" style="grid: 1fr / 7px 13px 50px; grid-row: span 4;">
+    <span class="jfb a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
+    <n></n>
+    <n></n>
+  </div>
+</div>
+
+<br>
+
+A<div class="igrid slb">
+  <div class="igrid slb" style="grid: 7px 13px 100px / 36px 3px; grid-row: span 4;">
+    <n></n><n></n>
+    <n></n><n></n>
+    <span class="slb a" style="margin-bottom:7px; padding-bottom:5px;">A<br>B</span><n></n>
+  </div>
+  <span class="slb i a" style="grid-row:4">C<br>D</span>
+  <n></n>
+</div>
+
+</body>
+</html>

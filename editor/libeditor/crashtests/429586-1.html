@@ -1,0 +1,8 @@
+<html>
+<head>
+<title>Bug 429586 - Crash [@ nsEditor::EndUpdateViewBatch] with pasting and domattrmodified removing iframe</title>
+</head>
+<body>
+<iframe id="content" src="data:text/html;charset=utf-8,%3Chtml%3E%0A%3Chead%3E%0A%3C/head%3E%0A%3Cbody%20contenteditable%3D%22true%22%3E%0A%0A%3Cscript%3E%0Afunction%20dokey%28%29%7B%0Adocument.body.focus%28%29%3B%0Adocument.execCommand%28%27insertParagraph%27%2C%20false%2C%20%27%27%29%3B%0A%7D%0AsetTimeout%28dokey%2C200%29%3B%0A%0Adocument.addEventListener%28%27DOMAttrModified%27%2C%20function%28%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%7D%2C%20true%29%3B%0A%3C/script%3E%0A%3C/body%3E%0A%3C/html%3E"></iframe>
+</body>
+</html>

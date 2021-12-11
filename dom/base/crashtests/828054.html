@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var outer = document.createElement("div");
+  outer.setAttribute("dir", "auto");
+  var inner = document.createElement("div");
+  inner.appendChild(document.createTextNode("A"));
+  outer.appendChild(inner);
+  inner.setAttribute("dir", "auto");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

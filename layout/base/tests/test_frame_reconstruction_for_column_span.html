@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>
+    Test for Bug 1503420: Test we don't reframe multi-column containing block
+    when appending a block containing a spanner kid.
+  </title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+
+  function appendBlock() {
+    // Create a subtree like the following, and append it to columns.
+    // <div>
+    //   <h3>spanner</h3>
+    //   block2
+    // </div>
+    var spanner = document.createElement("h3");
+    var spannerText = document.createTextNode("spanner");
+    spanner.appendChild(spannerText);
+
+    var block2 = document.createElement("div");
+    var block2Text = document.createTextNode("block2");
+    block2.appendChild(spanner);
+    block2.appendChild(block2Text)
+
+    var column = document.getElementById("column");
+    column.appendChild(block2);
+  }
+
+  function runTest() {
+    document.documentElement.offsetTop;
+    // We expected to construct 6 more frames.
+    // 1) Block frame for <div>
+    // 2) Block frame for <h3>
+    // 3) Text frame for "spanner"
+    // 4) Text frame for "block2"
+    // 5) Column-span wrapper for <h3>, which is a sibling of <div>
+    // 6) Column-span wrapper for 5), which is a sibling of <article>
+    // Note: creating a continuation frame doesn't increase the count.
+    const expectedFrameConstructCount = utils.framesConstructed + 6;
+
+    appendBlock();
+    document.documentElement.offsetTop;
+
+    is(utils.framesConstructed, expectedFrameConstructCount,
+       "We shouldn't construct unexpected frames.");
+
+    SimpleTest.finish();
+  }
+  </script>
+
+  <style>
+  #column {
+    column-count: 3;
+    column-rule: 6px solid;
+    width: 400px;
+    outline: 1px solid black;
+  }
+  h3 {
+    column-span: all;
+    outline: 1px solid blue;
+  }
+  </style>
+
+  <body onload="runTest();">
+    <article id="column">
+      <div>block1</div>
+    </article>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+<video id="v" style="position:absolute; left:0; top:0"></video>
+<canvas id="canvas" style="position:absolute; left:0; top:0"></video>
+<script type="text/javascript">
+/**
+ * Do seek multiple times and check the video frame on 0.3s.
+ */
+async function testFrameOrderAfterSeeking() {
+  const video = document.getElementById("v");
+  video.src = "frame_order.mp4";
+  await new Promise(r => video.oncanplay = r);
+  // The issue won't happen on the first seek, because the decoder hasn't been
+  // created yet.
+  video.currentTime = 0.1;
+  await new Promise(r => video.onseeked = r);
+  video.currentTime = 0.3;
+  await new Promise(r => video.onseeked = r);
+  // Since our media pipeline sends the frame to imageBridge, then fires
+  // a seeked event, the target frame may not be shown on the screen.
+  // So using canvas to access the target frame in the imageContainer in
+  // videoElement.
+  const canvas = document.getElementById("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+  document.documentElement.removeAttribute('class');
+};
+
+window.addEventListener("MozReftestInvalidate", testFrameOrderAfterSeeking);
+</script>
+</body>
+</html>

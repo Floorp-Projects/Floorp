@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: append data and check that mediasource duration got updated</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
+
+  let durationChangeCount = 0;
+  v.addEventListener("durationchange", () => durationChangeCount++);
+
+  const arrayBuffer = await fetchWithXHR("seek.webm");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
+
+  // Adding the first init segment will fire a durationchange.
+  await Promise.all([once(sb, "updateend"), once(v, "loadedmetadata")]);
+  ok(true, "got loadedmetadata");
+  // Set mediasource duration to 0, so future appendBuffer
+  // will update the mediasource duration.
+  // Changing the duration will fire a durationchange.
+  ms.duration = 0;
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
+  // Adding more data will fire durationchange.
+  await once(sb, "updateend");
+  ok(true, "got updateend");
+  // this will not fire durationchange as new duration == old duration
+  ms.endOfStream();
+  await once(ms, "sourceended");
+  is(durationChangeCount, 3, "durationchange not fired as many times as expected");
+  // XXX: Duration should be exactly 4.0, see bug 1065207.
+  ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

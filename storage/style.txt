@@ -1,0 +1,141 @@
+Storage Module Style Guidelines
+
+These guidelines should be followed for all new code in this module.  Reviewers
+will be enforcing them, so please obey them!
+
+* All code should be contained within the namespace mozilla::storage at a
+  minimum.  The use of namespaces is strongly encouraged.
+
+* All functions being called in the global namespace should be prefixed with
+  "::" to indicate that they are in the global namespace.
+
+* The indentation level to use in source code is two spaces.  No tabs, please!
+
+* All files should have the following emacs and vim mode lines:
+  -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+  vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+
+* All functions that are not XPCOM should start with a lowercase letter.
+
+* Function arguments that are not out parameters should be prefixed with a (for
+  pArameter), and use CamelCase.
+
+* Function arguments that are out parameters should be prefixed with an
+  underscore and have a descriptive name.
+
+* Function declarations should include javadoc style comments.
+
+* Javadoc @param tags should have the parameter description start on a new line
+  aligned with the variable name.  See the example below.
+
+* Javadoc @return (note: non-plural) continuation lines should be lined up with
+  the initial comment.  See the example below.
+
+* Javadoc @throws, like @param, should have the exception type on the same line
+  as the @throws and the description on a new line indented to line up with
+  the type of the exception.
+
+* For function implementations, each argument should be on its own line.
+
+* All variables should use camelCase.
+
+* The use of bool is encouraged whenever the variable does not have the
+  potential to go through xpconnect.
+
+* For pointer variable types, include a space after the type before the asterisk
+  and no space between the asterisk and variable name.
+
+* If any part of an if-else block requires braces, all blocks need braces.
+
+* Every else should be on a newline after a brace.
+
+* Bracing should start on the line after a function and class definition.  This
+  goes for JavaScript code as well as C++ code.
+
+* If a return value is not going to be checked, the return value should be
+  explicitly casted to void (C style cast).
+
+
+BIG EXAMPLE:
+
+*** Header ***
+
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_storage_FILENAME_h_
+#define mozilla_storage_FILENAME_h_
+
+namespace mozilla {
+namespace storage {
+
+class Foo : public Bar
+          , public Baz
+{
+public:
+  /**
+   * Brief function summary.
+   *
+   * @param aArg1
+   *        Description description description description description etc etc
+   *        next line of description.
+   * @param aArg2
+   *        Description description description.
+   * @return Description description description description description etc etc
+   *         next line of description.
+   *
+   * @throws NS_ERROR_FAILURE
+   *         Okay, so this is for JavaScript code, but you probably get the
+   *         idea.
+   */
+  int chew(int aArg1, int aArg2);
+};
+
+} // storage
+} // mozilla
+
+#endif // mozilla_storage_FILENAME_h_
+
+
+*** Implementation ***
+
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+NS_IMPL_ISUPPORTS(
+  Foo
+, IBar
+, IBaz
+)
+
+Foo::Foo(
+  LongArgumentLineThatWouldOtherwiseOverflow *aArgument1
+)
+: mField1(0)
+, mField2(0)
+{
+  someMethodWithLotsOfParamsOrJustLongParameters(
+    mLongFieldNameThatIsJustified,
+    mMaybeThisOneIsLessJustifiedButBoyIsItLong,
+    15
+  );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// Separate sections of the file like this
+
+int
+Foo::chew(int aArg1, int aArg2)
+{
+  (void)functionReturningAnIgnoredValue();
+
+  ::functionFromGlobalNamespaceWithVoidReturnValue();
+
+  return 0;
+}

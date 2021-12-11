@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<html>
+<body style="filter:url(#thresholdAt128);">
+  <div style="width:80px; height:80px; border: 1px solid black;">
+    <div style="border:20px solid red; width:40px; height:40px;
+                background:yellow;"></div>
+  </div>
+  <svg>
+    <filter id="thresholdAt128" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix"
+           values="255 0 0 0 -128 
+                   0 255 0 0 -128 
+                   0 0 255 0 -128 
+                   0 0 0 255 -128"/>
+
+    </filter>
+  </svg>
+</body>
+</html>

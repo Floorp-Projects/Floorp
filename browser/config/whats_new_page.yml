@@ -1,0 +1,126 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+- type: product-details
+  # %LOCALE% is automatically replaced by Balrog.
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/releasenotes/"
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/{product}/{version}/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      blob-types: [wnp]
+      release-types: [release, release-rc]
+      products: [firefox]
+      update-channel: release
+      # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
+      # This is done by taskgraph.
+      versions: ["<{version.major_number}.0"]
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0beta/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      blob-types: [wnp]
+      release-types: [beta, release-rc]
+      products: [firefox]
+      update-channel: beta
+      # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
+      # This is done by taskgraph.
+      versions: ["<{version.major_number}.0"]
+      locales:
+          - be
+          - ca
+          - cak
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - en-CA
+          - en-GB
+          - en-US
+          - es-AR
+          - es-ES
+          - es-MX
+          - eu
+          - fa
+          - fr
+          - fy-NL
+          - gn
+          - hr
+          - hsb
+          - hu
+          - ia
+          - id
+          - it
+          - ka
+          - lt
+          - nb-NO
+          - nl
+          - nn-NO
+          - pl
+          - pt-BR
+          - ru
+          - sk
+          - sl
+          - sq
+          - sv-SE
+          - tr
+          - uk
+          - vi
+          - zh-CN
+          - zh-TW
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0a2/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      blob-types: [wnp]
+      release-types: [beta]
+      products: [firefox]
+      update-channel: aurora
+      # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
+      # This is done by taskgraph.
+      versions: ["<{version.major_number}.0"]
+      locales:
+          - be
+          - cak
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - en-CA
+          - en-GB
+          - en-US
+          - es-AR
+          - es-CL
+          - es-ES
+          - es-MX
+          - fr
+          - fy-NL
+          - gn
+          - hsb
+          - hu
+          - ia
+          - id
+          - it
+          - ka
+          - lij
+          - nl
+          - nn-NO
+          - pl
+          - pt-BR
+          - pt-PT
+          - rm
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sv-SE
+          - tr
+          - uk
+          - vi
+          - zh-CN
+          - zh-TW

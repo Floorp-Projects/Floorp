@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=676619
+-->
+  <head>
+    <title>Test for the download attribute</title>
+
+  </head>
+  <body>
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=676619">Bug 676619</a>
+    <br/>
+    <ul>
+        <li><a href="download_page_1.txt"
+                download="test.txt" id="link1">Download "test.txt"</a></li>
+        <li><a href="video.ogg"
+                download id="link2">Download "video.ogg"</a></li>
+        <li><a href="video.ogg"
+                download="just some video.ogg" id="link3">Download "just some video.ogg"</a></li>
+        <li><a href="download_page_2.txt"
+                download="with-target.txt" id="link4">Download "with-target.txt"</a></li>
+        <li><a href="javascript:(1+2)+''"
+            download="javascript.html" id="link5">Download "javascript.html"</a></li>
+        <li><a href="#" download="test.blob" id=link6>Download "test.blob"</a></li>
+        <li><a href="#" download="test.file" id=link7>Download "test.file"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?inline=download_page_3.txt"
+            download="not_used.txt" id="link8">Download "download_page_3.txt"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?attachment=download_page_3.txt"
+            download="not_used.txt" id="link9">Download "download_page_3.txt"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?inline=none"
+            download="download_page_4.txt" id="link10">Download "download_page_4.txt"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?attachment=none"
+            download="download_page_4.txt" id="link11">Download "download_page_4.txt"</a></li>
+        <li><a href="http://example.com/"
+            download="example.com" id="link12" target="_blank">Download "example.com"</a></li>
+        <li><a href="video.ogg"
+            download="no file extension" id="link13">Download "force extension"</a></li>
+        <li><a href="dummy.ics"
+            download="dummy.not-ics" id="link14">Download "dummy.not-ics"</a></li>
+        <li><a href="redirect_download.sjs?inline=download_page_3.txt"
+            download="not_used.txt" id="link15">Download "download_page_3.txt"</a></li>
+        <li><a href="redirect_download.sjs?attachment=download_page_3.txt"
+            download="not_used.txt" id="link16">Download "download_page_3.txt"</a></li>
+        <li><a href="redirect_download.sjs?inline=none"
+            download="download_page_4.txt" id="link17">Download "download_page_4.txt"</a></li>
+        <li><a href="redirect_download.sjs?attachment=none"
+            download="download_page_4.txt" id="link18">Download "download_page_4.txt"</a></li>
+    </ul>
+    <div id="unload-flag">Okay</div>
+
+    <script>
+        let blobURL = window.URL.createObjectURL(new Blob(["just text"], {type: "application/x-blob"}));
+        document.getElementById("link6").href = blobURL;
+
+        let fileURL = window.URL.createObjectURL(new File(["just text"],
+              "wrong-file-name", {type: "application/x-some-file"}));
+        document.getElementById("link7").href = fileURL;
+
+        window.addEventListener("beforeunload", function(evt) {
+            document.getElementById("unload-flag").textContent = "Fail";
+        });
+    </script>
+  </body>
+</html>

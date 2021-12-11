@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for MakeCredential for W3C Web Authentication</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Test Same Origin Policy for W3C Web Authentication</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    // Execute the full-scope test
+    SimpleTest.waitForExplicitFinish();
+
+    var gTrackedCredential = {};
+
+    function arrivingHereIsGood(aResult) {
+      ok(true, "Good result! Received a: " + aResult);
+    }
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectSecurityError(aResult) {
+      ok(aResult.toString().startsWith("SecurityError"), "Expecting a SecurityError");
+    }
+
+    function expectTypeError(aResult) {
+      ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
+    }
+
+    function keepThisPublicKeyCredential(aIdentifier) {
+      return function(aPublicKeyCredential) {
+        gTrackedCredential[aIdentifier] = {
+          type: "public-key",
+          id: new Uint8Array(aPublicKeyCredential.rawId),
+          transports: [ "usb" ],
+        }
+        return Promise.resolve(aPublicKeyCredential);
+      }
+    }
+
+    function runTests() {
+      is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
+      isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+      isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
+      isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoint must exist");
+
+      let credm = navigator.credentials;
+
+      let chall = new Uint8Array(16);
+      window.crypto.getRandomValues(chall);
+
+      let user = {id: new Uint8Array(16), name: "none", icon: "none", displayName: "none"};
+      let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
+
+      var testFuncs = [
+        function() {
+          // Test basic good call
+          let rp = {id: document.domain, name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(keepThisPublicKeyCredential("basic"))
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function() {
+          // Test rp.id being unset
+          let makeCredentialOptions = {
+            rp: {name: "none"}, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function() {
+          // Test rp.name being unset
+          let makeCredentialOptions = {
+            rp: {id: document.domain}, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectTypeError);
+        },
+        function() {
+          // Test this origin with optional fields
+          let rp = {id: "user:pass@" + document.domain + ":8888", name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function() {
+          // Test blank rp.id
+          let rp = {id: "", name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function() {
+          // Test subdomain of this origin
+          let rp = {id: "subdomain." + document.domain, name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function() {
+          // Test the same origin
+          let rp = {id: "example.com", name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function() {
+          // Test the eTLD
+          let rp = {id: "com", name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test a different domain within the same TLD
+          let rp = {id: "alt.test", name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test basic good call
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: document.domain,
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function () {
+          // Test rpId being unset
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function () {
+          // Test this origin with optional fields
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "user:pass@" + document.origin + ":8888",
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test blank rpId
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "",
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test subdomain of this origin
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "subdomain." + document.domain,
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test the same origin
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "example.com",
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function() {
+          // Test the eTLD
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "com",
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test a different domain within the same TLD
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "alt.test",
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test basic good Create call but using an origin (Bug 1380421)
+          let rp = {id: window.origin, name: "none"};
+          let makeCredentialOptions = {
+            rp, user, challenge: chall, pubKeyCredParams: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test basic good Get call but using an origin (Bug 1380421)
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: window.origin,
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
+        },
+        function () {
+          // Test with an rpId that is not a valid domain string
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: document.domain + ":somejunk",
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(arrivingHereIsGood);
+        },
+        function () {
+          // Test with another rpId that is not a valid domain string
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: document.domain + ":8888",
+            allowCredentials: [gTrackedCredential.basic]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(arrivingHereIsGood);
+        },
+      ];
+      var i = 0;
+      var runNextTest = () => {
+        if (i == testFuncs.length) {
+          SimpleTest.finish();
+          return;
+        }
+        console.log(i, testFuncs[i], testFuncs.length);
+        testFuncs[i]().then(() => { runNextTest(); });
+        i = i + 1;
+      };
+      runNextTest();
+    };
+    SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                       ["security.webauth.webauthn_enable_softtoken", true],
+                                       ["security.webauth.webauthn_enable_android_fido2", false],
+                                       ["security.webauth.webauthn_enable_usbtoken", false]]},
+                              runTests);
+
+  </script>
+
+</body>
+</html>

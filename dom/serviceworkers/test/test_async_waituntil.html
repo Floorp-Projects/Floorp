@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Test that:
+  1. waitUntil() waits for each individual promise separately, even if
+     one of them was rejected.
+  2. waitUntil() can be called asynchronously as long as there is still
+     a pending extension promise.
+  -->
+<head>
+  <title>Test for Bug 1263304</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1263304">Mozilla Bug 1263304</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script src="utils.js"></script>
+<script class="testbody" type="text/javascript">
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+});
+
+function wait_for_message(expected_message) {
+  return new Promise(function(resolve, reject) {
+    navigator.serviceWorker.onmessage = function(event) {
+      navigator.serviceWorker.onmessage = null;
+      ok(event.data === expected_message, "Received expected message event: " + event.data);
+      resolve();
+    }
+  });
+}
+
+add_task(async function async_wait_until() {
+  var worker;
+  let registration = await navigator.serviceWorker.register(
+    "async_waituntil_worker.js", { scope: "./"} )
+    .then(function(reg) {
+      worker = reg.installing;
+      return waitForState(worker, 'activated', reg);
+    });
+
+  // The service worker will claim us when it becomes active.
+  ok(navigator.serviceWorker.controller, "Controlled");
+
+  // This will make the service worker die immediately if there are no pending
+  // waitUntil promises to keep it alive.
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.idle_timeout", 0],
+    ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
+
+  // The service worker will wait on two promises, one of which
+  // will be rejected. We check whether the SW is killed using
+  // the value of a global variable.
+  let waitForStart = wait_for_message("Started");
+  worker.postMessage("Start");
+  await waitForStart;
+
+  await new Promise((res, rej) => {
+    setTimeout(res, 0);
+  });
+
+  let waitResult = wait_for_message("Success");
+  worker.postMessage("Result");
+  await waitResult;
+
+  // Test the behaviour of calling waitUntil asynchronously. The important
+  // part is that we receive the message event.
+  let waitForMessage = wait_for_message("Done");
+  await fetch("doesnt_exist.html").then(() => {
+    ok(true, "Fetch was successful.");
+  });
+  await waitForMessage;
+
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+  await registration.unregister();
+});
+</script>
+</body>
+</html>

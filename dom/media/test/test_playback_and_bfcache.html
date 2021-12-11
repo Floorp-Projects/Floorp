@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test media playback and bfcache</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.requestFlakyTimeout("Need some timer to wait for the audio to play");
+    SimpleTest.waitForExplicitFinish();
+    var duration = 0;
+
+    // The test opens a page and another page with a media element is loaded.
+    // The media element plays an audio file and starts again and sends
+    // statistics about it and then history.back() is called. The test waits
+    // for 1s + duration of the audio file and goes forward. The audio playback
+    // shouldn't have progressed while the page was in the bfcache.
+    function test() {
+      let bc1 = new BroadcastChannel("bc1");
+      let pageshow1Count = 0;
+      bc1.onmessage = function(e) {
+        if (e.data == "pageshow") {
+          ++pageshow1Count;
+          info("Page 1 pageshow " + pageshow1Count);
+          if (pageshow1Count == 1) {
+            bc1.postMessage("loadNext");
+          } else if (pageshow1Count == 2) {
+            setTimeout(function() {
+                bc1.postMessage("forward");
+                bc1.close();
+              }, (Math.round(duration) + 1) * 1000);
+          }
+        }
+      };
+
+      let bc2 = new BroadcastChannel("bc2");
+      let pageshow2Count = 0;
+      let statisticsCount = 0;
+      bc2.onmessage = function(e) {
+        if (e.data.event == "pageshow") {
+          ++pageshow2Count;
+          info("Page 2 pageshow " + pageshow2Count);
+          if (pageshow2Count == 2) {
+            ok(e.data.persisted, "Should have persisted the page.");
+            bc2.postMessage("statistics");
+          }
+        } else {
+          ++statisticsCount;
+          if (statisticsCount == 1) {
+            duration = e.data.duration;
+            bc2.postMessage("back");
+          } else {
+            is(statisticsCount, 2, "Should got two play events.");
+            ok(e.data.currentTime < e.data.duration,
+               "Should have stopped the playback while the page was in bfcache." +
+               "currentTime: " + e.data.currentTime + " duration: " + e.data.duration);
+            bc2.close();
+            SimpleTest.finish();
+          }
+        }
+      };
+
+      window.open("file_playback_and_bfcache.html", "", "noopener");
+    }
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

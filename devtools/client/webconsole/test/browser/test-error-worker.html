@@ -1,0 +1,7 @@
+<script>
+"use strict";
+var w = new Worker("test-error-worker.js");
+w.postMessage(1);
+w.postMessage(2);
+w.postMessage(3);
+</script>

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=519928
+-->
+<head>
+  <title>Test for Bug 519928</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=519928">Mozilla Bug 519928</a>
+<p id="display"></p>
+<div id="content">
+<iframe id="load-frame"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var iframe = document.getElementById("load-frame");
+
+function enableJS() { allowJS(true, iframe); }
+function disableJS() { allowJS(false, iframe); }
+function allowJS(allow, frame) {
+  SpecialPowers.wrap(frame.contentWindow).windowGlobalChild.windowContext.allowJavascript = allow;
+}
+
+function expectJSAllowed(allowed, testCondition, callback) {
+  window.ICanRunMyJS = false;
+  var self_ = window;
+  testCondition();
+
+  var doc = iframe.contentDocument;
+  doc.body.innerHTML = "<iframe></iframe>";
+  var innerFrame = doc.querySelector("iframe");
+  innerFrame.addEventListener("load", function() {
+    var msg = "The inner iframe should" + (allowed ? "" : " not") + " be able to run Javascript";
+    is(self_.ICanRunMyJS, allowed, msg);
+    callback();
+  }, {once: true});
+  // eslint-disable-next-line no-useless-concat
+  var iframeSrc = "<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
+  innerFrame.srcdoc = iframeSrc;
+}
+
+SimpleTest.waitForExplicitFinish();
+/* eslint-disable max-nested-callbacks */
+addLoadEvent(function() {
+  var enterDesignMode = function() { document.designMode = "on"; };
+  var leaveDesignMode = function() { document.designMode = "off"; };
+  expectJSAllowed(false, disableJS, function() {
+    expectJSAllowed(true, enableJS, function() {
+      expectJSAllowed(true, enterDesignMode, function() {
+        expectJSAllowed(true, leaveDesignMode, function() {
+          expectJSAllowed(false, disableJS, function() {
+            expectJSAllowed(false, enterDesignMode, function() {
+              expectJSAllowed(false, leaveDesignMode, function() {
+                expectJSAllowed(true, enableJS, function() {
+                  enterDesignMode = function() { iframe.contentDocument.designMode = "on"; };
+                  leaveDesignMode = function() { iframe.contentDocument.designMode = "off"; };
+                  expectJSAllowed(false, disableJS, function() {
+                    expectJSAllowed(true, enableJS, function() {
+                      expectJSAllowed(true, enterDesignMode, function() {
+                        expectJSAllowed(true, leaveDesignMode, function() {
+                          expectJSAllowed(false, disableJS, function() {
+                            expectJSAllowed(false, enterDesignMode, function() {
+                              expectJSAllowed(false, leaveDesignMode, function() {
+                                expectJSAllowed(true, enableJS, function() {
+                                  testDocumentDisabledJS();
+                                });
+                              });
+                            });
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+/* eslint-enable max-nested-callbacks */
+
+function testDocumentDisabledJS() {
+  window.ICanRunMyJS = false;
+  var self_ = window;
+  // Ensure design modes are disabled
+  document.designMode = "off";
+  iframe.contentDocument.designMode = "off";
+
+  // Javascript enabled on the main iframe
+  enableJS();
+
+  var doc = iframe.contentDocument;
+  doc.body.innerHTML = "<iframe></iframe>";
+  var innerFrame = doc.querySelector("iframe");
+
+  // Javascript disabled on the innerFrame.
+  allowJS(false, innerFrame);
+
+  innerFrame.addEventListener("load", function() {
+    var msg = "The inner iframe should not be able to run Javascript";
+    is(self_.ICanRunMyJS, false, msg);
+    SimpleTest.finish();
+  }, {once: true});
+  // eslint-disable-next-line no-useless-concat
+  var iframeSrc = "<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
+  innerFrame.srcdoc = iframeSrc;
+}
+
+</script>
+</pre>
+</body>
+</html>

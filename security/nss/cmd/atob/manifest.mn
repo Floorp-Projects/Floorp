@@ -1,0 +1,22 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH	= ../..
+
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = nss 
+
+# This next line is used by .mk files
+# and gets translated into $LINCS in manifest.mnw
+# The MODULE is always implicitly required.
+# Listing it here in REQUIRES makes it appear twice in the cc command line.
+REQUIRES = seccmd dbm 
+
+DEFINES = -DNSPR20
+
+CSRCS = atob.c
+
+PROGRAM	= atob
+

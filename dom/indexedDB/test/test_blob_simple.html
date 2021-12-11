@@ -1,0 +1,280 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+  function* testSteps()
+  {
+    info("Setting up test fixtures: create an IndexedDB database and object store.");
+
+    let request = indexedDB.open(window.location.pathname, 1);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = unexpectedSuccessHandler;
+    let event = yield undefined;
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    let objectStore = db.createObjectStore("foo", { autoIncrement: true });
+    let index = objectStore.createIndex("foo", "index");
+
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+
+    info("Let's create a blob and store it in IndexedDB twice.");
+
+    const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
+    const INDEX_KEY = 5;
+    let blob = new Blob(BLOB_DATA, { type: "text/plain" });
+    let data = { blob, index: INDEX_KEY };
+
+    objectStore = db.transaction("foo", "readwrite").objectStore("foo");
+    objectStore.add(data).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    info("Added blob to database once");
+
+    let key = event.target.result;
+
+    objectStore.add(data).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    info("Added blob to database twice");
+
+    info("Let's retrieve the blob again and verify the contents is the same.");
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.get(key).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    info("Got blob from database");
+
+    let fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(event.target.result.blob);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+
+    info("Let's retrieve it again, create an object URL for the blob, load" +
+         "it via an XMLHttpRequest, and verify the contents is the same.");
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.get(key).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    info("Got blob from database");
+
+    let blobURL = URL.createObjectURL(event.target.result.blob);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", blobURL);
+    xhr.onload = grabEventAndContinueHandler;
+    xhr.send();
+    yield undefined;
+
+    URL.revokeObjectURL(blobURL);
+
+    is(xhr.responseText, BLOB_DATA.join(""), "Correct responseText");
+
+
+    info("Retrieve both blob entries from the database and verify contents.");
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.mozGetAll().onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.target.result.length, 2, "Got right number of items");
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(event.target.result[0].blob);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+    let cursorResults = [];
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (cursor) {
+        info("Got item from cursor");
+        cursorResults.push(cursor.value);
+        cursor.continue();
+      }
+      else {
+        info("Finished cursor");
+        continueToNextStep();
+      }
+    };
+    yield undefined;
+
+    is(cursorResults.length, 2, "Got right number of items");
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(cursorResults[0].blob);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+
+    info("Retrieve blobs from database via index and verify contents.");
+
+    index = db.transaction("foo").objectStore("foo").index("foo");
+    index.get(INDEX_KEY).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    info("Got blob from database");
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(event.target.result.blob);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+    index = db.transaction("foo").objectStore("foo").index("foo");
+    index.mozGetAll().onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.target.result.length, 2, "Got right number of items");
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(event.target.result[0].blob);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+    cursorResults = [];
+
+    index = db.transaction("foo").objectStore("foo").index("foo");
+    index.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (cursor) {
+        info("Got item from cursor");
+        cursorResults.push(cursor.value);
+        cursor.continue();
+      }
+      else {
+        info("Finished cursor");
+        continueToNextStep();
+      }
+    };
+    yield undefined;
+
+    is(cursorResults.length, 2, "Got right number of items");
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(cursorResults[0].blob);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(cursorResults[1].blob);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+
+    info("Slice the the retrieved blob and verify its contents.");
+
+    let slice = cursorResults[1].blob.slice(0, BLOB_DATA[0].length);
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(slice);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA[0], "Correct text");
+
+
+    info("Send blob to a worker, read its contents there, and verify results.");
+
+    function workerScript() {
+      /* eslint-env worker */
+      onmessage = function(event) {
+        var reader = new FileReaderSync();
+        postMessage(reader.readAsText(event.data));
+
+        var slice = event.data.slice(1, 2);
+        postMessage(reader.readAsText(slice));
+      };
+    }
+
+    let url =
+      URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
+
+    let worker = new Worker(url);
+    worker.postMessage(slice);
+    worker.onmessage = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.data, BLOB_DATA[0], "Correct text");
+    event = yield undefined;
+
+    is(event.data, BLOB_DATA[0][1], "Correct text");
+
+
+    info("Store a blob back in the database, and keep holding on to the " +
+         "blob, verifying that it still can be read.");
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.get(key).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    let blobFromDB = event.target.result.blob;
+    info("Got blob from database");
+
+    let txn = db.transaction("foo", "readwrite");
+    txn.objectStore("foo").put(event.target.result, key);
+    txn.oncomplete = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    info("Stored blob back into database");
+
+    fileReader = new FileReader();
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.readAsText(blobFromDB);
+    event = yield undefined;
+
+    is(event.target.result, BLOB_DATA.join(""), "Correct text");
+
+    blobURL = URL.createObjectURL(blobFromDB);
+
+    xhr = new XMLHttpRequest();
+    xhr.open("GET", blobURL);
+    xhr.onload = grabEventAndContinueHandler;
+    xhr.send();
+    yield undefined;
+
+    URL.revokeObjectURL(blobURL);
+
+    is(xhr.responseText, BLOB_DATA.join(""), "Correct responseText");
+
+
+    finishTest();
+  }
+  </script>
+  <script type="text/javascript" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

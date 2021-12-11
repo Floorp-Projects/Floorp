@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Blob URI with fragments</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script>
+
+var  blob = new Blob(['hello world']);
+ok(blob, "We have a blob.");
+
+var tests = [
+  { part: "", revoke: false, ok: true },
+  { part: "", revoke: true, ok: false },
+  { part: "?aa", revoke: false, ok: false },
+  { part: "?cc#dd", revoke: false, ok: false },
+  // Stripping #fragment on fetch
+  { part: "#bb", revoke: false, ok: true },
+  { part: "#ee?ff", revoke: false, ok: true }
+];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var url = URL.createObjectURL(blob);
+  ok(url, "We have a URI");
+
+  var test = tests.shift();
+
+  if (test.revoke) {
+    URL.revokeObjectURL(url + test.part);
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url + test.part);
+
+  xhr.onload = function() {
+    ok(test.ok, `URL with "${test.part}" should send()`);
+    is(xhr.responseText, 'hello world', 'URL: ' + url + test.part);
+    runTest();
+  }
+
+  xhr.onerror = function() {
+    ok(!test.ok, `URL with "${test.part}" should fail on send()`);
+    runTest();
+  }
+
+  xhr.send();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//")
+cpp_quote("// ISimpleDOMNode")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// An interface that extends MSAA's IAccessible to provide readonly DOM node information via cross-process COM.")
+cpp_quote("//")
+cpp_quote("// get_nodeInfo(")
+cpp_quote("//  /* [out] */ BSTR  *nodeName,   // For elements, this is the tag name")
+cpp_quote("//  /* [out] */ short  *nameSpaceID,")
+cpp_quote("//  /* [out] */ BSTR  *nodeValue, ")
+cpp_quote("//  /* [out] */ unsigned int    *numChildren); ")
+cpp_quote("//  /* [out] */ unsigned int    *uniqueID;  // In Win32 accessible events we generate, the target's childID matches to this")
+cpp_quote("//  /* [out] */ unsigned short  *nodeType,")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Get the basic information about a node.")
+cpp_quote("// The namespace ID can be mapped to an URI using nsISimpleDOMDocument::get_nameSpaceURIForID()")
+cpp_quote("//")
+cpp_quote("// get_attributes(")
+cpp_quote("//  /* [in]  */ unsigned short maxAttribs,")
+cpp_quote("//  /* [out] */ unsigned short  *numAttribs,")
+cpp_quote("//  /* [out] */ BSTR  *attribNames,")
+cpp_quote("//  /* [out] */ short *nameSpaceID,")
+cpp_quote("//  /* [out] */ BSTR  *attribValues);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Returns 3 arrays - the attribute names and values, and a namespace ID for each")
+cpp_quote("// If the namespace ID is 0, it's the same namespace as the node's namespace")
+cpp_quote("//")
+cpp_quote("// get_attributesForNames(")
+cpp_quote("//  /* [in] */ unsigned short numAttribs,")
+cpp_quote("//  /* [in] */ BSTR   *attribNames,")
+cpp_quote("//  /* [in] */ short  *nameSpaceID,")
+cpp_quote("//  /* [out] */ BSTR  *attribValues);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Takes 2 arrays - the attribute names and namespace IDs, and returns an array of corresponding values")
+cpp_quote("// If the namespace ID is 0, it's the same namespace as the node's namespace")
+cpp_quote("//")
+cpp_quote("// computedStyle(  ")
+cpp_quote("//  /* [in]  */ unsigned short maxStyleProperties,")
+cpp_quote("//  /* [out] */ unsigned short *numStyleProperties, ")
+cpp_quote("//  /* [in]  */ boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes")
+cpp_quote("//  /* [out] */ BSTR *styleProperties, ")
+cpp_quote("//  /* [out] */ BSTR *styleValues);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Returns 2 arrays -- the style properties and their values")
+cpp_quote("//  useAlternateView=FALSE: gets properties for the default media type (usually screen)")
+cpp_quote("//  useAlternateView=TRUE: properties for media types set w/ nsIDOMSimpleDocument::set_alternateViewMediaTypes()")
+cpp_quote("//")
+cpp_quote("// computedStyleForProperties(  ")
+cpp_quote("//  /* [in] */  unsigned short numStyleProperties, ")
+cpp_quote("//  /* [in] */  boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes")
+cpp_quote("//  /* [in] */  BSTR *styleProperties, ")
+cpp_quote("//  /* [out] */ BSTR *styleValues);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Scroll the current view so that this dom node is visible.")
+cpp_quote("//  placeTopLeft=TRUE: scroll until the top left corner of the dom node is at the top left corner of the view.")
+cpp_quote("//  placeTopLeft=FALSE: scroll minimally to make the dom node visible. Don't scroll at all if already visible.")
+cpp_quote("//")
+cpp_quote("// scrollTo( ")
+cpp_quote("//  /* [in] */ boolean placeTopLeft); ")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Returns style property values for those properties in the styleProperties [in] array")
+cpp_quote("// Returns 2 arrays -- the style properties and their values")
+cpp_quote("//  useAlternateView=FALSE: gets properties for the default media type (usually screen)")
+cpp_quote("//  useAlternateView=TRUE: properties for media types set w/ nsIDOMSimpleDocument::set_alternateViewMediaTypes()")
+cpp_quote("//")
+cpp_quote("// get_parentNode     (/* [out] */ ISimpleDOMNode **newNodePtr);")
+cpp_quote("// get_firstChild     (/* [out] */ ISimpleDOMNode **newNodePtr);")
+cpp_quote("// get_lastChild      (/* [out] */ ISimpleDOMNode **newNodePtr);")
+cpp_quote("// get_previousSibling(/* [out] */ ISimpleDOMNode **newNodePtr);")
+cpp_quote("// get_nextSibling    (/* [out] */ ISimpleDOMNode **newNodePtr);")
+cpp_quote("// get_childAt        (/* [in] */ unsigned childIndex, /* [out] */ ISimpleDOMNode **newNodePtr);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// DOM navigation - get a different node.")
+cpp_quote("//")
+cpp_quote("// get_innerHTML(/* [out] */ BSTR *htmlText);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Returns HTML of this DOM node's subtree. Does not include the start and end tag for this node/element.")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("// get_localInterface(/* [out] */ void **localInterface);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Only available in Gecko's process")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("// get_language(/* [out] */ BSTR *htmlText);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Returns the computed language for this node, or empty string if unknown.")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
+cpp_quote("")
+cpp_quote("")
+
+import "objidl.idl";
+import "oaidl.idl";
+
+[object, uuid(1814ceeb-49e2-407f-af99-fa755a7d2607)]
+interface ISimpleDOMNode : IUnknown
+{
+  const unsigned short NODETYPE_ELEMENT = 1;
+  const unsigned short NODETYPE_ATTRIBUTE = 2;
+  const unsigned short NODETYPE_TEXT = 3;
+  const unsigned short NODETYPE_CDATA_SECTION = 4;
+  const unsigned short NODETYPE_ENTITY_REFERENCE = 5;
+  const unsigned short NODETYPE_ENTITY = 6;
+  const unsigned short NODETYPE_PROCESSING_INSTRUCTION = 7;
+  const unsigned short NODETYPE_COMMENT = 8;
+  const unsigned short NODETYPE_DOCUMENT = 9;
+  const unsigned short NODETYPE_DOCUMENT_TYPE = 10;
+  const unsigned short NODETYPE_DOCUMENT_FRAGMENT = 11;
+  const unsigned short NODETYPE_NOTATION = 12;
+
+  [propget] HRESULT nodeInfo(
+    [out] BSTR *nodeName,   // for performance returns NULL for text nodes (true nodeName would be "#text")
+    [out] short *nameSpaceID,
+    [out] BSTR *nodeValue,
+    [out] unsigned int *numChildren,
+    [out] unsigned int *uniqueID, // In Win32 accessible events we generate, the target's childID matches to this
+    [out, retval] unsigned short *nodeType
+  );
+
+  [propget] HRESULT attributes(
+    [in] unsigned short maxAttribs,
+    [out, size_is(maxAttribs), length_is(*numAttribs)] BSTR *attribNames,
+    [out, size_is(maxAttribs), length_is(*numAttribs)] short *nameSpaceID,
+    [out, size_is(maxAttribs), length_is(*numAttribs)] BSTR *attribValues,
+    [out, retval] unsigned short *numAttribs
+  );
+
+  [propget] HRESULT attributesForNames(
+    [in] unsigned short numAttribs,
+    [in, size_is(numAttribs), length_is(numAttribs)] BSTR *attribNames,
+    [in, size_is(numAttribs), length_is(numAttribs)] short *nameSpaceID,
+    [out, retval, size_is(numAttribs), length_is(numAttribs)] BSTR *attribValues
+  );
+
+  [propget] HRESULT computedStyle(
+    [in] unsigned short maxStyleProperties,
+    [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes
+    [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleProperties,
+    [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleValues,
+    [out, retval] unsigned short *numStyleProperties
+  );
+
+  [propget] HRESULT computedStyleForProperties(
+    [in] unsigned short numStyleProperties,
+    [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes
+    [in, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleProperties,
+    [out, retval, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleValues
+  );
+
+  HRESULT scrollTo([in] boolean placeTopLeft);
+
+  [propget] HRESULT parentNode([out, retval] ISimpleDOMNode **node);
+  [propget] HRESULT firstChild([out, retval] ISimpleDOMNode **node);
+  [propget] HRESULT lastChild([out, retval] ISimpleDOMNode **node);
+  [propget] HRESULT previousSibling([out, retval] ISimpleDOMNode **node);
+  [propget] HRESULT nextSibling([out, retval] ISimpleDOMNode **node);
+  [propget] HRESULT childAt([in] unsigned childIndex,
+                            [out, retval] ISimpleDOMNode **node);
+
+  [propget] HRESULT innerHTML([out, retval] BSTR *innerHTML);
+
+  [propget, local] HRESULT localInterface([out][retval] void **localInterface);
+
+  [propget, call_as(get_localInterface)]
+  HRESULT remoteLocalInterface([out][retval] IUnknown **localInterface);
+
+  [propget] HRESULT language([out, retval] BSTR *language);
+}
+

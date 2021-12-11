@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+<title>Canvas2D test: CaptureStream()</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="captureStream_common.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+var c;       // Canvas element captured by streams.
+var h;       // CaptureStreamTestHelper holding utility test functions.
+var vauto;   // Video element with captureStream stream in automatic mode.
+var vmanual; // Video element with captureStream stream in manual (fps 0) mode.
+var vrate;   // Video element with captureStream stream with fixed frame rate.
+
+function checkDrawColorInitialRed() {
+  info("Checking that all video elements become red when initiated just after the first drawColor(red).");
+
+  h.drawColor(c, h.red);
+
+  vauto.srcObject = c.captureStream();
+  vmanual.srcObject = c.captureStream(0);
+  vrate.srcObject = c.captureStream(10);
+
+  ok(h.isPixel(h.getPixel(vauto), h.blackTransparent, 0),
+     "vauto should not be drawn to before stable state");
+  ok(h.isPixel(h.getPixel(vrate), h.blackTransparent, 0),
+     "vrate should not be drawn to before stable state");
+  ok(h.isPixel(h.getPixel(vmanual), h.blackTransparent, 0),
+     "vmanual should not be drawn to before stable state");
+
+  return Promise.resolve()
+    .then(() => h.pixelMustBecome(vauto, h.red, {
+      infoString: "should become red automatically",
+    }))
+    .then(() => h.pixelMustBecome(vrate, h.red, {
+      infoString: "should become red automatically",
+    }))
+    .then(() => h.pixelMustBecome(vmanual, h.red, {
+      infoString: "should become red when we get to stable state (first frame)",
+    }));
+}
+
+function checkDrawColorGreen() {
+  info("Checking that drawing green propagates properly to video elements.");
+
+  var drawing = h.startDrawing(() => h.drawColor(c, h.green));
+
+  return Promise.resolve()
+    .then(() => h.pixelMustBecome(vauto, h.green, {
+      infoString: "should become green automatically",
+    }))
+    .then(() => h.pixelMustBecome(vrate, h.green, {
+      infoString: "should become green automatically",
+    }))
+    .then(() => h.pixelMustBecome(vmanual, h.red, {
+      infoString: "should still be red",
+    }))
+    .then(() => h.requestFrame(vmanual))
+    .then(() => h.pixelMustBecome(vmanual, h.green, {
+      infoString: "should become green after requstFrame()",
+    }))
+    .catch(err => ok(false, "checkDrawColorGreen failed: ", err))
+    .then(() => drawing.stop());
+}
+
+function checkRequestFrameOrderGuarantee() {
+  info("Checking that requestFrame() immediately after a drawColor() " +
+       "call results in the expected frame seen in the stream.");
+
+  return Promise.resolve()
+    .then(() => h.pixelMustBecome(vmanual, h.green, {
+      infoString: "should still be green",
+    }))
+    .then(() => h.drawColor(c, h.red))   // 1. Draw canvas red
+    .then(() => h.requestFrame(vmanual)) // 2. Immediately request a frame
+    .then(() => h.pixelMustBecome(vmanual, h.red, {
+      infoString: "should become red after call order test",
+    }));
+}
+
+function checkDrawImageNotCleanRed() {
+  info("Checking that drawImage with not origin-clean image renders streams useless.");
+  var ctx = c.getContext('2d');
+  var notCleanRed = new Image();
+  var drawing;
+
+  return new Promise((resolve, reject) => {
+    notCleanRed.onload = resolve;
+    notCleanRed.onerror = () => reject(new Error("Failed to load tainted image."));
+    notCleanRed.src = "http://example.com/tests/dom/canvas/test/image_red_crossorigin_credentials.png";
+    document.body.appendChild(notCleanRed);
+  })
+    .then(() => drawing = h.startDrawing(() => ctx.drawImage(notCleanRed, 0, 0, c.width, c.height)))
+    .then(() => h.testNotClean(c))
+    .then(() => h.pixelMustNotBecome(vauto, h.red, {
+      timeout: 1000,
+      infoString: "should not become red",
+    }))
+    .then(() => ok(h.isPixelNot(h.getPixel(vrate), h.red, 250),
+                   "should not have become red"))
+    .then(() => h.pixelMustBecome(vmanual, h.green, {
+      infoString: "should still be green",
+    }))
+    .then(() => h.requestFrame(vmanual))
+    .then(() => h.pixelMustNotBecome(vmanual, h.red, {
+      timeout: 1000,
+      infoString: "should not become red",
+    }))
+    .catch(err => ok(false, "checkDrawImageNotCleanRed failed: ", err))
+    .then(() => drawing.stop());
+}
+
+function checkEndedOnStop() {
+  let promises = [vauto, vmanual, vrate].map(elem => {
+    elem.srcObject.getTracks()[0].stop();
+    return new Promise(resolve =>
+      elem.addEventListener("ended", function endedListener(event) {
+        ok(true, "Element " + elem.id + " ended.");
+        resolve();
+        elem.removeEventListener("ended", endedListener);
+      }));
+  });
+  return Promise.all(promises);
+}
+
+function finish() {
+  ok(true, 'Test complete.');
+  SimpleTest.finish();
+}
+
+function beginTest() {
+  SimpleTest.requestFlakyTimeout("Ensuring nothing happens until timing out with good margin");
+  h = new CaptureStreamTestHelper2D();
+
+  c = h.createAndAppendElement('canvas', 'c');
+  vauto = h.createAndAppendElement('video', 'vauto');
+  vmanual = h.createAndAppendElement('video', 'vmanual');
+  vrate = h.createAndAppendElement('video', 'vrate');
+
+  Promise.resolve()
+    .then(checkDrawColorInitialRed)
+    .then(checkDrawColorGreen)
+    .then(checkRequestFrameOrderGuarantee)
+    .then(checkDrawColorGreen) // Restore video elements to green.
+    .then(checkDrawImageNotCleanRed)
+    .then(checkEndedOnStop)
+    .then(finish);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+beginTest();
+</script>
+

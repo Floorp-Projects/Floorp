@@ -1,0 +1,118 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=724993-->
+<head>
+  <title>Tests specific to SVGStringList</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=724993">Mozilla Bug 724993</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <g id="g" requiredExtensions="foo bar baz"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/*
+This file runs a series of SVGStringList specific tests. Generic SVGXxxList
+tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
+to other list types belongs there.
+*/
+
+function initializeThrowsFor(stringList, value) {
+  try {
+    stringList.initialize(value);
+  } catch (e) {
+    return true;
+  }
+  return false;
+}
+
+function insertItemBeforeThrowsFor(stringList, value) {
+  try {
+    stringList.insertItemBefore(value, 0);
+  } catch (e) {
+    return true;
+  }
+  return false;
+}
+
+function replaceItemThrowsFor(stringList, value) {
+  try {
+    stringList.replaceItem(value, 0);
+  } catch (e) {
+    return true;
+  }
+  return false;
+}
+
+function appendItemThrowsFor(stringList, value) {
+  try {
+    stringList.appendItem(value);
+  } catch (e) {
+    return true;
+  }
+  return false;
+}
+
+function run_tests() {
+  var g = document.getElementById("g");
+  var strings = g.requiredExtensions;
+
+  // sanity check:
+  is(strings.numberOfItems, 3, "numberOfItems should be 3");
+
+
+  ok(!initializeThrowsFor(strings, null),
+     "SVGStringList.initialize() should not throw when passed null");
+  ok(initializeThrowsFor(strings, ""),
+     "SVGStringList.initialize() should throw when passed the empty string");
+  is(strings.length, 0, "length should be 0");
+
+  ok(!insertItemBeforeThrowsFor(strings, null),
+     "SVGStringList.insertItemBefore() should not throw when passed null");
+  ok(insertItemBeforeThrowsFor(strings, ""),
+     "SVGStringList.insertItemBefore() should throw when passed the empty string");
+  is(strings.length, 1, "length should be 1");
+
+  ok(!replaceItemThrowsFor(strings, null),
+     "SVGStringList.replaceItem() should not throw when passed null");
+  ok(replaceItemThrowsFor(strings, ""),
+     "SVGStringList.replaceItem() should throw when passed the empty string");
+  is(strings.length, 1, "length should be 1");
+
+  ok(!appendItemThrowsFor(strings, null),
+     "SVGStringList.appendItem() should not throw when passed null");
+  ok(appendItemThrowsFor(strings, ""),
+     "SVGStringList.appendItem() should throw when passed the empty string");
+  is(strings.length, 2, "length should be 2");
+
+
+  // more sanity checks:
+  ok(!initializeThrowsFor(strings, "valid-string"),
+     "SVGStringList.initialize() should not throw when passed a valid string");
+  ok(!insertItemBeforeThrowsFor(strings, "valid-string"),
+     "SVGStringList.insertItemBefore() should not throw when passed a valid string");
+  ok(!replaceItemThrowsFor(strings, "valid-string"),
+     "SVGStringList.replaceItem() should not throw when passed a valid string");
+  ok(!appendItemThrowsFor(strings, "valid-string"),
+     "SVGStringList.appendItem() should not throw when passed a valid string");
+  is(strings.length, 3, "numberOfItems should be 3");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run_tests);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

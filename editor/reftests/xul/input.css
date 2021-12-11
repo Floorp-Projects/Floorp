@@ -1,0 +1,36 @@
+@namespace url('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul');
+@namespace html url('http://www.w3.org/1999/xhtml');
+
+:root > html|input {
+  margin: 2px 4px;
+  padding: 2px 2px 3px;
+  padding-inline-start: 5px;
+}
+
+#mac > html|input {
+  margin: 4px;
+  padding: 0 1px;
+}
+
+html|input {
+  font: inherit;
+}
+
+html|input.empty {
+  color: graytext;
+}
+
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
+  :root:not(.winxp) html|input.empty {
+    font-style: italic;
+  }
+}
+
+html|input.num {
+  text-align: end;
+}
+
+/* .textbox-input has 1px extra padding on Linux */
+#linux html|input.num {
+  padding-inline-end: 3px;
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that all window properties are accessible to nonprivileged code</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body id="body">
+
+<script type="application/javascript">
+var lastProp;
+try {
+  var propVals = [];
+  for (var prop in window) {
+    lastProp = prop;
+    propVals.push(window[prop]);
+  }
+  ok(true, "Read all " + propVals.length + " window properties");
+} catch (ex) {
+  ok(false, "Exception occurred reading window." + lastProp); 
+}
+</script>
+
+<p id="display"></p>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+<script>
+window.addEventListener("load", () => {
+  const c = document.createElement("canvas");
+  c.getContext("2d");
+  const stream = c.captureStream();
+  const [track] = stream.getTracks();
+  stream.removeTrack(track);
+  track.stop();
+  stream.addTrack(track);
+  stream.removeTrack(track);
+  stream.addTrack(track);
+});
+</script>

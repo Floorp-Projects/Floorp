@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Blob URLs fetched in workers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script>
+
+SimpleTest.waitForExplicitFinish();
+
+// Let's be positive.
+Promise.resolve()
+
+// Create a file.
+.then(_ => {
+  return new Promise(resolve => {
+    let openerURL = SimpleTest.getTestFileURL("fileapi_chromeScript.js");
+    let opener = SpecialPowers.loadChromeScript(openerURL);
+
+    opener.addMessageListener("files.opened", files => {
+      resolve(files[0]);
+    });
+
+    opener.sendAsyncMessage("files.open", [ "I am the blob content" ]);
+  })
+})
+
+// Just a couple of checks
+.then(file => {
+  ok(file instanceof File, "We want a file");
+  ok(file.size > 0, "We have content");
+  return file;
+})
+
+// Let's create a blobURL
+.then(file => URL.createObjectURL(file))
+
+// Let's send it to a worker.
+.then(url => {
+  return new Promise(resolve => {
+    let w = new Worker('worker_bug1507893.js');
+    w.onmessage = e => {
+     resolve(e.data);
+    };
+    w.postMessage(url);
+  });
+})
+
+// Let's check the worker's output
+.then(blob => {
+  ok(blob instanceof File, "The worker sends us a blob");
+  ok(blob.size > 0, "We have data");
+})
+
+// All done.
+.then(SimpleTest.finish);
+
+  </script>
+</body>
+</html>

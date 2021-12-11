@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <table style="table-layout: fixed; width: 130px">
+    <tr>
+      <td style="overflow: hidden; white-space: nowrap;">
+        Some long text that cannot possibly fit in 130 px, because it just can't.
+      </td>
+    </tr>
+  </table>
+  <script>
+    onload = function() {
+      var td = document.querySelector("td");
+      // Make sure layout has happened.
+      var width = td.offsetWidth;
+      td.style.textOverflow = "ellipsis";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=387615
+-->
+<head>
+  <title>Test for Bug 387615</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+  @namespace html url(http://www.w3.org/1999/xhtml);
+  a { color: red; }
+  a[rel="next"] { color: green; }
+  a[html|rel="next"] { color: green; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=387615">Mozilla Bug 387615</a>
+<p id="display"><a>link</a></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 387615 **/
+
+var htmlns = "http://www.w3.org/1999/xhtml";
+
+var a = document.getElementById("display").firstChild;
+
+function col(elt) { return getComputedStyle(elt, "").color; }
+
+var red_cs = col(a);
+a.setAttribute("rel", "next");
+var green_cs = col(a);
+isnot(green_cs, red_cs, "computed values for red and green are different");
+
+a.setAttribute("rel", "NEXT");
+is(col(a), green_cs, "rel attribute should match case insensitively");
+
+a.removeAttribute("rel");
+a.setAttributeNS(htmlns, "html:rel", "next");
+is(col(a), green_cs, "html:rel attribute should match case-sensitively");
+
+a.setAttributeNS(htmlns, "html:rel", "NEXT");
+is(col(a), red_cs, "html:rel attribute should not match case-insensitively");
+
+</script>
+</pre>
+</body>
+</html>
+

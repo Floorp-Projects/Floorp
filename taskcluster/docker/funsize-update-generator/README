@@ -1,0 +1,7 @@
+
+To run this locally for testing/development purposes:
+
+1. Find a funsize generating task ID
+2. docker run -t -e TASKCLUSTER_ROOT_URL="https://firefox-ci-tc.services.mozilla.com" -e SIGNING_CERT='nightly' -e MAR_CHANNEL_ID='firefox-mozilla-central' -e TASK_ID="${TASK_ID}" -e EXTRA_PARAMS="--arch=x86_64"  funsize-update-generator /runme.sh
+
+The TASK_ID should be a recent "partials" Task.

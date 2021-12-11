@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Persistence Tests"
+        onload="runTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    function runTest() {
+      window.openDialog("window_persistence.xhtml", "_blank", "chrome,noopener", true, window);
+    }
+
+    function windowOpened() {
+      window.openDialog("window_persistence.xhtml", "_blank", "chrome,noopener", false, window);
+    }
+
+    function testDone() {
+      SimpleTest.finish();
+    }
+  </script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"/>
+</body>
+
+</window>

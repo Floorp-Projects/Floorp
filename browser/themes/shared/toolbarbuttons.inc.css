@@ -1,0 +1,369 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --toolbar-start-end-padding: 8px;
+  --toolbarbutton-outer-padding: 2px;
+  --toolbarbutton-inner-padding: 8px;
+
+  --toolbarbutton-hover-background: var(--button-hover-bgcolor);
+  --toolbarbutton-active-background: var(--button-active-bgcolor);
+
+  --toolbarseparator-color: color-mix(in srgb, currentColor 20%, transparent);
+
+  --bookmark-block-padding: 4px;
+
+  /* This default value of --toolbarbutton-height is defined to prevent
+     CSS errors for an invalid variable. The value should not get used,
+     as a more specific value should be set when the value will be used. */
+  --toolbarbutton-height: 0;
+}
+
+:root {
+  --toolbarbutton-focus-outline: var(--focus-outline);
+}
+
+:root[uidensity=compact] {
+  --toolbarbutton-outer-padding: 3px;
+  --toolbarbutton-inner-padding: 6px;
+  --bookmark-block-padding: 1px;
+}
+
+:root[uidensity=touch] {
+  --toolbarbutton-inner-padding: 9px;
+  --bookmark-block-padding: 7px;
+}
+
+#TabsToolbar {
+  /* Override the inner padding to ensure the dimensions match the tabs, but also making sure
+     different types of buttons (combined-buttons-dropmarker or text) still look correct. */
+  --toolbarbutton-inner-padding: calc((var(--tab-min-height) - 16px) / 2);
+}
+
+/* ::::: primary toolbar buttons ::::: */
+
+#tabbrowser-arrowscrollbox[scrolledtostart=true]::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox[scrolledtoend=true]::part(scrollbutton-down),
+:root:not([customizing]) .toolbarbutton-1[disabled=true],
+/* specialcase the overflow and the hamburger button so they show up disabled in customize mode. */
+#nav-bar-overflow-button[disabled=true],
+#PanelUI-menu-button[disabled=true] {
+  opacity: 0.4;
+}
+
+.toolbarbutton-1 > .toolbarbutton-icon {
+  margin-inline-end: 0 !important;
+}
+
+.toolbarbutton-1 > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+  width: 16px;
+}
+
+.toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
+  width: 12px;
+}
+
+#navigator-toolbox:not(:hover) #tabbrowser-arrowscrollbox:not([highlight])::part(scrollbutton-down) {
+  transition: 1s background-color ease-out;
+}
+
+#tabbrowser-arrowscrollbox[highlight]::part(scrollbutton-down) {
+  background-color: SelectedItem;
+}
+
+toolbar .toolbarbutton-1 {
+  appearance: none;
+  margin: 0;
+  padding: 0 var(--toolbarbutton-outer-padding);
+  -moz-box-pack: center;
+}
+
+#TabsToolbar .toolbarbutton-1 {
+  margin: 0 0 var(--tabs-navbar-shadow-size) !important;
+}
+
+#tabbrowser-arrowscrollbox::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
+  appearance: none;
+  background-clip: padding-box;
+  border: 4px solid transparent;
+  border-radius: calc(var(--tab-border-radius) + 4px);
+  margin: 0;
+  padding: var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 6px);
+}
+
+/*** Adds padding to end of toolbar while making that space click the first button ***/
+#PanelUI-menu-button {
+  padding-inline-end: var(--toolbar-start-end-padding);
+}
+
+toolbar .toolbarbutton-1 > menupopup {
+  margin-top: -3px;
+}
+
+toolbar .toolbarbutton-1 > .toolbarbutton-icon,
+toolbar .toolbarbutton-1 > .toolbarbutton-text,
+toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+  padding: var(--toolbarbutton-inner-padding);
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-text,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+  border-radius: var(--tab-border-radius);
+}
+
+toolbar .toolbarbutton-1 > .toolbarbutton-icon {
+  /* horizontal padding + actual icon width */
+  width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+  height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+}
+
+toolbar .toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
+  /* same height as regular buttons, but narrower, and for a 12x12 image */
+  padding-inline: 2px;
+  padding-block: calc(var(--toolbarbutton-inner-padding) + (16px - 12px) / 2);
+  width: calc(2 * 2px + 12px);
+}
+
+toolbar .toolbarbutton-1 > .toolbarbutton-text {
+  padding-top: var(--toolbarbutton-vertical-text-padding);
+  padding-bottom: 0;
+  /* To make the hover feedback line up with sibling buttons, it needs the same
+   * height as the button icons and the same vertical padding, but as a minimum,
+   * because otherwise an increase in text sizes would break things.
+   */
+  min-height: calc(16px + 2 * var(--toolbarbutton-inner-padding));
+}
+
+toolbar .toolbaritem-combined-buttons {
+  margin-inline: 2px;
+}
+
+toolbar .toolbaritem-combined-buttons > .toolbarbutton-1 {
+  padding-inline: 0;
+}
+
+toolbar .toolbaritem-combined-buttons:not(:hover) > separator {
+  content: "";
+  display: -moz-box;
+  width: 1px;
+  height: 16px;
+  margin-inline-end: -1px;
+  background-image: linear-gradient(currentColor 0, currentColor 100%);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 1px 16px;
+  opacity: .2;
+}
+
+toolbar[brighttext] .toolbaritem-combined-buttons > separator {
+  opacity: .3;
+}
+
+#PersonalToolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover,
+#tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
+#tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
+toolbarbutton.bookmark-item:not(.subviewbutton, [disabled=true], [open]):hover,
+toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-text,
+toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-badge-stack {
+  background-color: var(--toolbarbutton-hover-background);
+  color: inherit;
+}
+
+#PersonalToolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active),
+#tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover:active,
+#tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover:active,
+toolbarbutton.bookmark-item:hover:active:not(.subviewbutton, [disabled="true"]),
+toolbarbutton.bookmark-item[open="true"],
+toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-text,
+toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
+  background-color: var(--toolbarbutton-active-background);
+  color: inherit;
+}
+
+/* Keyboard focus styling */
+#PersonalToolbar .toolbarbutton-1:-moz-focusring,
+findbar toolbarbutton.tabbable:-moz-focusring,
+toolbarbutton.bookmark-item:not(.subviewbutton):-moz-focusring,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-badge-stack {
+  color: inherit;
+  outline: var(--toolbarbutton-focus-outline);
+  outline-offset: calc(var(--focus-outline-width) * -1);
+}
+
+:root[uidensity=compact] findbar toolbarbutton.tabbable:-moz-focusring,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-badge-stack {
+  outline-offset: calc(var(--focus-outline-width) * -1 - 1px);
+}
+
+#PersonalToolbar .toolbarbutton-1:-moz-focusring,
+toolbarbutton.bookmark-item:not(.subviewbutton):-moz-focusring {
+  outline-offset: -2px;
+}
+
+toolbar .toolbarbutton-1:-moz-focusring {
+  outline: none;
+}
+
+/* bookmarks menu button */
+
+#BMB_bookmarksPopup[side="top"],
+#BMB_bookmarksPopup[side="bottom"] {
+  margin-inline: -20px;
+}
+
+#BMB_bookmarksPopup[side="left"],
+#BMB_bookmarksPopup[side="right"] {
+  margin-block: -20px;
+}
+
+/* ::::: bookmark buttons ::::: */
+
+#personal-toolbar-empty-description,
+#PersonalToolbar .toolbarbutton-1,
+toolbarbutton.bookmark-item:not(.subviewbutton) {
+  margin: 2px;
+  padding: var(--bookmark-block-padding) 4px;
+}
+
+#PersonalToolbar .toolbarbutton-1,
+toolbarbutton.bookmark-item:not(.subviewbutton) {
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+:root[uidensity=compact] #PersonalToolbar .toolbarbutton-1,
+:root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
+  margin-inline: 1px;
+}
+
+toolbarbutton.bookmark-item:not(.subviewbutton) {
+  max-width: 13em;
+  appearance: none;
+}
+
+/**
+ * Ensure that the description is always at least as big as a bookmarks item,
+ * where its icon is 16px (which may be more than inline text height);
+ */
+#personal-toolbar-empty-description {
+  min-height: calc(16px + 2 * var(--bookmark-block-padding));
+}
+
+#bookmarks-toolbar-placeholder {
+  max-width: unset;
+}
+
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-icon,
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack,
+.bookmark-item > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Force the display of the label for bookmarks and the import button */
+#PersonalToolbar #import-button > .toolbarbutton-text,
+.bookmark-item > .toolbarbutton-text {
+  display: -moz-box !important;
+}
+
+#PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon {
+  margin-inline-end: 0;
+}
+
+#managed-bookmarks > .toolbarbutton-icon,
+#bookmarks-toolbar-placeholder > .toolbarbutton-icon,
+#PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
+#OtherBookmarks.bookmark-item[container] > .toolbarbutton-icon {
+  margin-inline-end: 4px;
+}
+
+/* Import button styling in the bookmarks toolbar */
+
+#PersonalToolbar #import-button > .toolbarbutton-text {
+  min-height: unset; /* override the .toolbarbutton-1 .toolbarbutton-text rule */
+}
+
+#PersonalToolbar #import-button > .toolbarbutton-icon {
+  margin-inline-end: 4px !important; /* Overrides the styling for .toolbarbutton-1 */
+}
+
+/* Separators */
+
+/* Override the toolkit styles, and make sure separators are draggable by
+ * making them wider, and using a pseudo-element for the visual separator. */
+#PlacesToolbarItems > toolbarseparator {
+  margin: 0;
+  padding-inline: 4px;
+  appearance: none;
+}
+
+/* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
+#PlacesToolbarItems > toolbarseparator::before {
+  content: "";
+  display: block;
+  border-inline-start: 1px solid;
+  border-image-source: linear-gradient(
+    transparent 3.75px,
+    var(--toolbarseparator-color) 3.75px,
+    var(--toolbarseparator-color) calc(100% - 3.75px),
+    transparent calc(100% - 3.75px) );
+  border-image-slice: 1;
+}
+
+@media (min-resolution: 2dppx) {
+  #PlacesToolbarItems > toolbarseparator::before {
+    border-inline-start-width: 0.5px;
+  }
+}
+
+/* The bookmarks toolbar is smaller than the other toolbars, so we
+ * need to override the badge position to not be cut off. */
+#PersonalToolbar .toolbarbutton-badge {
+  margin-top: -1px !important;
+}
+
+:root[uidensity=touch] #PersonalToolbar .toolbarbutton-badge {
+  margin-top: -4px !important;
+}
+
+/* Remove a pixel of margin on the end so that the badge doesn't
+ * overflow the toolbar and push the button into the overflow menu. */
+:root[uidensity=compact] .toolbarbutton-badge {
+  margin-inline-end: -7px !important;
+}
+
+/* To allow toolbarbuttons in the bookmarks toolbar to grow in
+ * height with the toolbar (like bookmark items), we apply background
+ * and padding to the buttons, not the button contents. This rule
+ * overrides attributes that would otherwise be duplicated. */
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-icon,
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-text,
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+  padding: 0 !important;
+  background: none !important;
+  min-height: 16px;
+}
+
+/* Alternative style for .toolbarbutton-badge used by CFR notifications */
+.toolbarbutton-badge.feature-callout {
+  width: 14px;
+  height: 14px;
+  min-width: auto;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  display: block;
+  margin: -7px 0 0 !important;
+  margin-inline-end: -6px !important;
+  background: url(chrome://global/skin/icons/badge-blue.svg);
+}

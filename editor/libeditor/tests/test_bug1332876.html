@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1332876
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1332876</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1332876">Mozilla Bug 1332876</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe srcdoc="<html><body><span>Edit me!</span>"></iframe>
+
+<pre id="test">
+
+<script type="application/javascript">
+
+/** Test for Bug 1332876 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let iframe = document.querySelector("iframe");
+  iframe.contentDocument.designMode = "on";
+
+  iframe.contentWindow.addEventListener("keypress", function() {
+    info("Hiding the iframe...");
+    iframe.style.display = "none";
+    document.body.offsetHeight;
+    ok(true, "did not crash");
+    SimpleTest.finish();
+  }, {once: true});
+
+  iframe.contentWindow.addEventListener("click", function() {
+    info("Waiting keypress event...");
+    // Use another macro task for avoiding impossible event nesting.
+    SimpleTest.executeSoon(() => {
+      synthesizeKey("a", {}, iframe.contentWindow);
+    });
+  }, {once: true});
+
+  let span = iframe.contentDocument.querySelector("span");
+  ok(span != null, "The span element should've been loaded in the iframe");
+  info("Waiting click event to focus the iframe...");
+  synthesizeMouseAtCenter(span, {}, iframe.contentWindow);
+});
+
+</script>
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+
+<window id="331215test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="SimpleTest.executeSoon(startTest);"
+        title="331215 test">
+
+  <script type="application/javascript"><![CDATA[
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+    var gFindBar = null;
+    var gBrowser;
+
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var info = window.arguments[0].info;
+    var ok = window.arguments[0].ok;
+    SimpleTest.requestLongerTimeout(2);
+
+    function startTest() {
+      (async function() {
+        gFindBar = document.getElementById("FindToolbar");
+        for (let browserId of ["content", "content-remote"]) {
+          await startTestWithBrowser(browserId);
+        }
+      })().then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
+    }
+
+    async function startTestWithBrowser(browserId) {
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
+      BrowserTestUtils.loadURI(gBrowser, "data:text/plain,latest");
+      await promise;
+      await onDocumentLoaded();
+    }
+
+    async function onDocumentLoaded() {
+      document.getElementById("cmd_find").doCommand();
+      await promiseEnterStringIntoFindField("test");
+      document.commandDispatcher
+              .getControllerForCommand("cmd_moveTop")
+              .doCommand("cmd_moveTop");
+      await promiseEnterStringIntoFindField("l");
+      ok(gFindBar._findField.getAttribute("status") == "notfound",
+         "Findfield status attribute should have been 'notfound' after entering test");
+      await promiseEnterStringIntoFindField("a");
+      ok(gFindBar._findField.getAttribute("status") != "notfound",
+         "Findfield status attribute should not have been 'notfound' after entering latest");
+    }
+
+    function promiseEnterStringIntoFindField(aString) {
+      return new Promise(resolve => {
+        let listener = {
+          onFindResult(result) {
+            if (result.result == Ci.nsITypeAheadFind.FIND_FOUND && result.searchString != aString)
+              return;
+            gFindBar.browser.finder.removeResultListener(listener);
+            resolve();
+          }
+        };
+        gFindBar.browser.finder.addResultListener(listener);
+
+        for (let c of aString) {
+          let code = c.charCodeAt(0);
+          let ev = new KeyboardEvent("keypress", {
+            keyCode: code,
+            charCode: code,
+            bubbles: true
+          });
+          gFindBar._findField.dispatchEvent(ev);
+        }
+      });
+    }
+  ]]></script>
+
+  <commandset>
+    <command id="cmd_find" oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
+  </commandset>
+  <browser type="content" primary="true" flex="1" id="content" messagemanagergroup="test" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content-remote" remote="true" messagemanagergroup="test" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>

@@ -1,0 +1,26 @@
+{
+  "name": "Atlas",
+  "description": "Internetovy portal - Atlas.sk",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "atlas-sk@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Atlas",
+      "search_url": "https://www.atlas.sk/search.php",
+      "search_form": "https://www.atlas.sk/",
+      "search_url_get_params": "phrase={searchTerms}&sourceid=firefox"
+    }
+  }
+}

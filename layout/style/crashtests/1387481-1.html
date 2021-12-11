@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<iframe id="f" src="1387481-1-iframe.html" onload="step()"></iframe>
+<script>
+var reloads = 3;
+function step() {
+  if (--reloads) {
+    f.contentWindow.location.reload();
+  } else {
+    document.documentElement.className = "";
+  }
+}
+</script>

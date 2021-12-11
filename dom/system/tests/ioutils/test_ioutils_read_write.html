@@ -1,0 +1,550 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+
+    // This is presently only used to test compatability between OS.File and
+    // IOUtils when it comes to writing compressed files. The import and the
+    // test `test_lz4_osfile_compat` can be removed with OS.File is removed.
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+    add_task(async function test_read_failure() {
+      const tmpDir = await PathUtils.getTempDir();
+      const doesNotExist = PathUtils.join(tmpDir, "does_not_exist.tmp");
+      await Assert.rejects(
+        IOUtils.read(doesNotExist),
+        /Could not open the file at .*/,
+        "IOUtils::read rejects when file does not exist"
+      );
+    });
+
+    add_task(async function test_write_no_overwrite() {
+      const tmpDir = await PathUtils.getTempDir();
+
+      // Make a new file, and try to write to it with overwrites disabled.
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_overwrite.tmp");
+      const untouchableContents = new TextEncoder().encode("Can't touch this!\n");
+
+      let exists = await IOUtils.exists(tmpFileName);
+      ok(!exists, `File ${tmpFileName} should not exist before writing`);
+
+      await IOUtils.write(tmpFileName, untouchableContents);
+
+      exists = await IOUtils.exists(tmpFileName);
+      ok(exists, `File ${tmpFileName} should exist after writing`);
+
+      const newContents = new TextEncoder().encode("Nah nah nah!\n");
+      await Assert.rejects(
+        IOUtils.write(tmpFileName, newContents, {
+          mode: "create",
+        }),
+        /Refusing to overwrite the file at */,
+        "IOUtils::write rejects writing to existing file if overwrites are disabled"
+      );
+      ok(
+        await fileHasBinaryContents(tmpFileName, untouchableContents),
+        "IOUtils::write doesn't change target file when overwrite is refused"
+      );
+
+      const bytesWritten = await IOUtils.write(
+        tmpFileName,
+        newContents,
+        { mode: "overwrite" }
+      );
+      is(
+        bytesWritten,
+        newContents.length,
+        "IOUtils::write can overwrite files if specified"
+      );
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_write_with_backup() {
+      info("Test backup file option with non-existing file");
+
+      const tmpDir = await PathUtils.getTempDir();
+
+      let fileContents = new TextEncoder().encode("Original file contents");
+      let destFileName = PathUtils.join(tmpDir, "test_write_with_backup_option.tmp");
+      let backupFileName = destFileName + ".backup";
+      let bytesWritten =
+        await IOUtils.write(destFileName, fileContents, {
+          backupFile: backupFileName,
+        });
+      ok(
+        await fileHasTextContents(destFileName, "Original file contents"),
+        "IOUtils::write creates a new file with the correct contents"
+      );
+      ok(
+        !await fileExists(backupFileName),
+        "IOUtils::write does not create a backup if the target file does not exist"
+      );
+      is(
+        bytesWritten,
+        fileContents.length,
+        "IOUtils::write correctly writes to a new file without performing a backup"
+      );
+
+      info("Test backup file option with existing destination");
+      let newFileContents = new TextEncoder().encode("New file contents");
+      ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
+      bytesWritten =
+        await IOUtils.write(destFileName, newFileContents, {
+          backupFile: backupFileName,
+        });
+      ok(
+        await fileHasTextContents(backupFileName, "Original file contents"),
+        "IOUtils::write can backup an existing file before writing"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "New file contents"),
+        "IOUtils::write can create the target with the correct contents"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::write correctly writes to the target after taking a backup"
+      );
+
+      await cleanup(destFileName, backupFileName);
+    });
+
+    add_task(async function test_write_with_backup_and_tmp() {
+      info("Test backup with tmp and backup file options, non-existing destination");
+
+      const tmpDir = await PathUtils.getTempDir();
+
+      let fileContents = new TextEncoder().encode("Original file contents");
+      let destFileName = PathUtils.join(tmpDir, "test_write_with_backup_and_tmp_options.tmp");
+      let backupFileName = destFileName + ".backup";
+      let tmpFileName = PathUtils.join(tmpDir, "temp_file.tmp");
+      let bytesWritten =
+        await IOUtils.write(destFileName, fileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+      ok(!await fileExists(tmpFileName), "IOUtils::write cleans up the tmpFile");
+      ok(
+        !await fileExists(backupFileName),
+        "IOUtils::write does not create a backup if the target file does not exist"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "Original file contents"),
+        "IOUtils::write can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        fileContents.length,
+        "IOUtils::write can copy tmp file to destination without performing a backup"
+      );
+
+      info("Test backup with tmp and backup file options, existing destination");
+      let newFileContents = new TextEncoder().encode("New file contents");
+      ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
+      bytesWritten =
+        await IOUtils.write(destFileName, newFileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+
+      ok(!await fileExists(tmpFileName), "IOUtils::write cleans up the tmpFile");
+      ok(
+        await fileHasTextContents(backupFileName, "Original file contents"),
+        "IOUtils::write can create a backup if the target file exists"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "New file contents"),
+        "IOUtils::write can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::write IOUtils::write can move tmp file to destination after performing a backup"
+      );
+
+      info("Test backup with tmp and backup file options, existing destination and backup");
+      newFileContents = new TextEncoder().encode("Updated new file contents");
+      ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
+      ok(await fileExists(backupFileName), `Expected ${backupFileName} to exist`);
+      bytesWritten =
+        await IOUtils.write(destFileName, newFileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+
+      ok(!await fileExists(tmpFileName), "IOUtils::write cleans up the tmpFile");
+      ok(
+        await fileHasTextContents(backupFileName, "New file contents"),
+        "IOUtils::write can create a backup if the target file exists"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "Updated new file contents"),
+        "IOUtils::write can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::write IOUtils::write can move tmp file to destination after performing a backup"
+      );
+
+      await cleanup(destFileName, backupFileName);
+    });
+
+    add_task(async function test_partial_read() {
+      const tmpDir = await PathUtils.getTempDir();
+
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_partial_read.tmp");
+      const bytes = Uint8Array.of(...new Array(50).keys());
+      const bytesWritten = await IOUtils.write(tmpFileName, bytes);
+      is(
+        bytesWritten,
+        50,
+        "IOUtils::write can write entire byte array to file"
+      );
+
+      // Read just the first 10 bytes.
+      const first10 = bytes.slice(0, 10);
+      const bytes10 = await IOUtils.read(tmpFileName, { maxBytes: 10 });
+      ok(
+        ObjectUtils.deepEqual(bytes10, first10),
+        "IOUtils::read can read part of a file, up to specified max bytes"
+      );
+
+      // Trying to explicitly read nothing isn't useful, but it should still
+      // succeed.
+      const bytes0 = await IOUtils.read(tmpFileName, { maxBytes: 0 });
+      is(bytes0.length, 0, "IOUtils::read can read 0 bytes");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_empty_read_and_write() {
+      // Trying to write an empty file isn't very useful, but it should still
+      // succeed.
+
+      const tmpDir = await PathUtils.getTempDir();
+
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_empty.tmp");
+      const emptyByteArray = new Uint8Array(0);
+      const bytesWritten = await IOUtils.write(
+        tmpFileName,
+        emptyByteArray
+      );
+      is(bytesWritten, 0, "IOUtils::write can create an empty file");
+
+      // Trying to explicitly read nothing isn't useful, but it should still
+      // succeed.
+      const bytes0 = await IOUtils.read(tmpFileName, { maxBytes: 0 });
+      is(bytes0.length, 0, "IOUtils::read can read 0 bytes");
+
+      // Implicitly try to read nothing.
+      const nothing = await IOUtils.read(tmpFileName);
+      is(nothing.length, 0, "IOUtils:: read can read empty files");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_full_read_and_write() {
+      // Write a file.
+
+      const tmpDir = await PathUtils.getTempDir();
+
+      info("Test writing to a new binary file");
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_numbers.tmp");
+      const bytes = Uint8Array.of(...new Array(50).keys());
+      const bytesWritten = await IOUtils.write(tmpFileName, bytes);
+      is(
+        bytesWritten,
+        50,
+        "IOUtils::write can write entire byte array to file"
+      );
+
+      // Read it back.
+      info("Test reading a binary file");
+      let fileContents = await IOUtils.read(tmpFileName);
+      ok(
+        ObjectUtils.deepEqual(bytes, fileContents) &&
+        bytes.length == fileContents.length,
+        "IOUtils::read can read back entire file"
+      );
+
+      const tooManyBytes = bytes.length + 1;
+      fileContents = await IOUtils.read(tmpFileName, { maxBytes: tooManyBytes });
+      ok(
+        ObjectUtils.deepEqual(bytes, fileContents) &&
+        fileContents.length == bytes.length,
+        "IOUtils::read can read entire file when requested maxBytes is too large"
+      );
+
+      // Clean up.
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_write_relative_path() {
+      const tmpFileName = "test_ioutils_write_relative_path.tmp";
+      const bytes = Uint8Array.of(...new Array(50).keys());
+
+      info("Test writing a file at a relative destination");
+      await Assert.rejects(
+        IOUtils.write(tmpFileName, bytes),
+        /Could not parse path/,
+        "IOUtils::write only works with absolute paths"
+      );
+    });
+
+    add_task(async function test_read_relative_path() {
+      const tmpFileName = "test_ioutils_read_relative_path.tmp";
+
+      info("Test reading a file at a relative destination");
+      await Assert.rejects(
+        IOUtils.read(tmpFileName),
+        /Could not parse path/,
+        "IOUtils::write only works with absolute paths"
+      );
+    });
+
+    add_task(async function test_lz4() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_lz4.tmp");
+
+      info("Test writing lz4 encoded data");
+      const varyingBytes = Uint8Array.of(...new Array(50).keys());
+      let bytesWritten = await IOUtils.write(tmpFileName, varyingBytes, { compress: true });
+      is(bytesWritten, 64, "Expected to write 64 bytes");
+
+      info("Test reading lz4 encoded data");
+      let readData = await IOUtils.read(tmpFileName, { decompress: true });
+      ok(readData.equals(varyingBytes), "IOUtils can write and read back LZ4 encoded data");
+
+      info("Test writing lz4 compressed data");
+      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
+      bytesWritten = await IOUtils.write(tmpFileName, repeatedBytes, { compress: true });
+      is(bytesWritten, 23, "Expected 50 bytes to compress to 23 bytes");
+
+      info("Test reading lz4 encoded data");
+      readData = await IOUtils.read(tmpFileName, { decompress: true });
+      ok(readData.equals(repeatedBytes), "IOUtils can write and read back LZ4 compressed data");
+
+      info("Test writing empty lz4 compressed data")
+      const empty = new Uint8Array();
+      bytesWritten = await IOUtils.write(tmpFileName, empty, { compress: true });
+      is(bytesWritten, 12, "Expected to write just the LZ4 header, with a content length of 0");
+
+
+      info("Test reading empty lz4 compressed data")
+      const readEmpty = await IOUtils.read(tmpFileName, { decompress: true });
+      ok(readEmpty.equals(empty), "IOUtils can write and read back empty buffers with LZ4");
+      const readEmptyRaw = await IOUtils.read(tmpFileName, { decompress: false });
+      is(readEmptyRaw.length, 12, "Expected to read back just the LZ4 header");
+      const expectedHeader = Uint8Array.of(109, 111, 122, 76, 122, 52, 48, 0, 0, 0, 0, 0); // "mozLz40\0\0\0\0"
+      ok(readEmptyRaw.equals(expectedHeader), "Expected to read header with content length of 0");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_lz4_osfile_compat() {
+      const tmpDir = await PathUtils.getTempDir();
+      const osfileTmpFile = PathUtils.join(tmpDir, "test_ioutils_lz4_compat_osfile.tmp");
+      const ioutilsTmpFile = PathUtils.join(tmpDir, "test_ioutils_lz4_compat_ioutils.tmp");
+
+      info("Test OS.File and IOUtils write the same file with LZ4 compression enabled")
+      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
+      let expectedBytes = 23;
+      let ioutilsBytes = await IOUtils.write(ioutilsTmpFile, repeatedBytes, { compress: true });
+      let osfileBytes = await OS.File.writeAtomic(osfileTmpFile, repeatedBytes, { compression: "lz4" });
+      is(ioutilsBytes, expectedBytes, "IOUtils writes the expected number of bytes for compression");
+      is(osfileBytes, ioutilsBytes, "OS.File and IOUtils write the same number of bytes for LZ4 compression");
+
+      info("Test OS.File can read a file compressed by IOUtils");
+      const osfileReadBytes = await OS.File.read(ioutilsTmpFile, { compression: "lz4" });
+      ok(osfileReadBytes.every(byte => byte === 1), "OS.File can read a file compressed by IOUtils");
+      is(osfileReadBytes.length, 50, "OS.File reads the right number of bytes from a file compressed by IOUtils")
+
+      info("Test IOUtils can read a file compressed by OS.File");
+      const ioutilsReadBytes = await IOUtils.read(osfileTmpFile, { decompress: true });
+      ok(ioutilsReadBytes.every(byte => byte === 1), "IOUtils can read a file compressed by OS.File");
+      is(ioutilsReadBytes.length, 50, "IOUtils reads the right number of bytes from a file compressed by OS.File")
+
+      await cleanup(osfileTmpFile, ioutilsTmpFile);
+    });
+
+    add_task(async function test_lz4_bad_call() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_lz4_bad_call.tmp");
+
+      info("Test decompression with invalid options");
+      const varyingBytes = Uint8Array.of(...new Array(50).keys());
+      let bytesWritten = await IOUtils.write(tmpFileName, varyingBytes, { compress: true });
+      is(bytesWritten, 64, "Expected to write 64 bytes");
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { maxBytes: 4, decompress: true }),
+        /The `maxBytes` and `decompress` options are not compatible/,
+        "IOUtils::read rejects when maxBytes and decompress options are both used"
+      );
+
+      await cleanup(tmpFileName)
+    });
+
+    add_task(async function test_lz4_failure() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_lz4_fail.tmp");
+
+      info("Test decompression of non-lz4 data");
+      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
+      await IOUtils.write(tmpFileName, repeatedBytes, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { decompress: true }),
+        (actual) => {
+          is(actual.constructor, DOMException,
+             "rejection reason constructor for decompress with bad header");
+          is(actual.name, "NotReadableError",
+             "rejection error name for decompress with bad header");
+          ok(/Could not decompress file because it has an invalid LZ4 header \(wrong magic number: .*\)/
+             .test(actual.message),
+             "rejection error message for decompress with bad header. Got "
+             + actual.message);
+          return true;
+        },
+        "IOUtils::read fails to decompress LZ4 data with a bad header"
+      );
+
+      info("Test decompression of short byte buffer");
+      const elevenBytes = Uint8Array.of(...new Array(11).fill(1));
+      await IOUtils.write(tmpFileName, elevenBytes, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { decompress: true }),
+        /Could not decompress file because the buffer is too short/,
+        "IOUtils::read fails to decompress LZ4 data with missing header"
+      );
+
+      info("Test decompression of valid header, but corrupt contents");
+      const headerFor10bytes = [109, 111, 122, 76, 122, 52, 48, 0, 10, 0, 0, 0] // "mozlz40\0" + 4 byte length
+      const badContents = new Array(11).fill(255); // Bad leading byte, followed by uncompressed stream.
+      const goodHeaderBadContents = Uint8Array.of(...headerFor10bytes, ...badContents);
+      await IOUtils.write(tmpFileName, goodHeaderBadContents, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { decompress: true }),
+        /Could not decompress file contents, the file may be corrupt/,
+        "IOUtils::read fails to read corrupt LZ4 contents with a correct header"
+      );
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_write_directory() {
+      const tmpDir = await PathUtils.getTempDir();
+      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_directory.tmp");
+      const tmpPath = `${fileName}.tmp`;
+      const bytes = Uint8Array.of(1, 2, 3, 4);
+
+      await IOUtils.makeDirectory(fileName);
+      await Assert.rejects(
+        IOUtils.write(fileName, bytes),
+        /NotAllowedError: Could not open the file at .+ for writing/);
+
+      await Assert.rejects(
+        IOUtils.write(fileName, bytes, { tmpPath }),
+        /NotAllowedError: Could not open the file at .+ for writing/);
+
+      ok(!await IOUtils.exists(PathUtils.join(fileName, PathUtils.filename(tmpPath))));
+    });
+
+    add_task(async function test_read_offset() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_read_offset.tmp");
+
+      const bytes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+      const byteArray = Uint8Array.of(...bytes);
+
+      await IOUtils.write(tmpFileName, byteArray);
+
+      for (const offset of [0, 5]) {
+        info(`Reading bytes from offset ${offset}`);
+
+        const readBytes = await IOUtils.read(tmpFileName, { offset });
+        Assert.deepEqual(
+          Array.from(readBytes),
+          bytes.slice(offset),
+          `should have read bytes from offset ${offset}`
+        );
+      }
+
+      for (const offset of [0, 5]) {
+        info(`Reading up to 5 bytes from offset ${offset}`);
+
+        const readBytes = await IOUtils.read(tmpFileName, {offset, maxBytes: 5});
+        Assert.deepEqual(
+          Array.from(readBytes),
+          bytes.slice(offset, offset + 5),
+          `should have read 5 bytes from offset ${offset}`
+        );
+      }
+
+      {
+        info(`Reading bytes from offset 10`);
+        const readBytes = await IOUtils.read(tmpFileName, {offset: 10});
+        is(readBytes.length, 0, "should have read 0 bytes");
+      }
+
+      {
+        info(`Reading up to 10 bytes from offset 5`);
+        const readBytes = await IOUtils.read(tmpFileName, {offset: 5, maxBytes: 10});
+        is(readBytes.length, 5, "should have read 5 bytes");
+        Assert.deepEqual(
+          Array.from(readBytes),
+          bytes.slice(5, 10),
+          "should have read last 5 bytes"
+        );
+      }
+    });
+
+    add_task(async function test_write_append() {
+      const tmpDir = await PathUtils.getTempDir();
+      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_append.tmp");
+
+      await IOUtils.write(fileName, Uint8Array.of(0, 1, 2, 3, 4));
+
+      const beforeAppend = await IOUtils.read(fileName);
+      Assert.deepEqual(Array.from(beforeAppend), [0, 1, 2, 3, 4], "read bytes should be equal");
+
+      await IOUtils.write(fileName, Uint8Array.of(5, 6, 7, 8, 9), { mode: "append" });
+
+      const afterAppend = await IOUtils.read(fileName);
+      Assert.deepEqual(Array.from(afterAppend), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "read bytes should be equal after appending");
+    });
+
+    add_task(async function test_write_append_no_create() {
+      const tmpDir = await PathUtils.getTempDir();
+      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_append_create.tmp");
+
+      await Assert.rejects(
+        IOUtils.write(fileName, Uint8Array.of(5, 6, 7, 8, 9), { mode: "append" }),
+        /NotFoundError: Could not open the file at .*/
+      );
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

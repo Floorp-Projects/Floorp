@@ -1,0 +1,207 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  border-inline-end: 1px solid var(--in-content-border-color);
+  background-color: var(--in-content-box-background);
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--in-content-border-color);
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-deemphasized-text);
+  font-size: 0.8em;
+}
+
+.meta > label > span {
+  margin-inline-end: 2px;
+}
+
+#login-sort {
+  background-color: transparent;
+  margin: 0;
+  padding-inline: 0 16px;
+  min-height: initial;
+  font: inherit;
+  font-weight: 600;
+  color: var(--in-content-text-color) !important;
+}
+
+#login-sort:hover:not([disabled]) {
+  background-color: var(--in-content-button-background);
+}
+
+#login-sort > option {
+  font-weight: normal;
+}
+
+.count {
+  flex-grow: 1;
+  text-align: end;
+  margin-inline-start: 18px;
+}
+
+.container {
+  display: contents;
+}
+
+:host(.no-logins) .empty-search-message,
+:host(:not(.empty-search)) .empty-search-message,
+:host(.empty-search:not(.create-login-selected)) ol,
+:host(.no-logins:not(.create-login-selected)) ol,
+:host(:not(.no-logins)) .intro,
+:host(.create-login-selected) .intro,
+:host(.create-login-selected) .empty-search-message {
+  display: none;
+}
+
+:host(:not(.initialized)) .count,
+:host(:not(.initialized)) .empty-search-message {
+  visibility: hidden;
+}
+
+.empty-search-message,
+.intro {
+  text-align: center;
+  padding: 1em;
+  max-width: 50ch; /* This should be kept in sync with login-list-item username and title max-width */
+  flex-grow: 1;
+  border-bottom: 1px solid var(--in-content-border-color);
+}
+
+.empty-search-message span,
+.intro span {
+  font-size: 0.85em;
+}
+
+ol {
+  margin-block: 0;
+  padding-inline-start: 0;
+  overflow: hidden auto;
+  flex-grow: 1;
+  scroll-padding-top: 24px; /* there is the section header that is sticky to the top */
+}
+
+.create-login-button {
+  margin: 16px;
+}
+
+.create-login-button-container {
+  border-top: 1px solid var(--in-content-border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.login-list-item {
+  display: flex;
+  align-items: center;
+  padding-block: 10px;
+  padding-inline: 12px 18px;
+  border-inline-start: 4px solid transparent;
+  user-select: none;
+}
+
+.login-list-header {
+  display: block;
+  position: sticky;
+  top: 0;
+  font-size: .85em;
+  font-weight: 600;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--in-content-border-color);
+  background-color: var(--in-content-box-background);
+}
+
+:not([hidden]) + .login-list-section,
+.login-list-item + .login-list-item {
+  border-top: 1px solid var(--in-content-border-color);
+}
+
+@media (-moz-proton) {
+.login-list-item:not(.selected):hover {
+  background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
+}
+
+.login-list-item:not(.selected):hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+} /*** END proton ***/
+
+.login-list-item.keyboard-selected {
+  border-inline-start-color: var(--in-content-border-color);
+  background-color: var(--in-content-button-background-hover);
+}
+
+.login-list-item.selected {
+  border-inline-start-color: var(--in-content-accent-color);
+  background-color: var(--in-content-page-background);
+}
+
+.login-list-item.selected .title {
+  font-weight: 600;
+}
+
+.labels {
+  flex-grow: 1;
+  overflow: hidden;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title,
+.username {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.favicon-wrapper {
+  height: 16px;
+  width: 16px;
+  background-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  background-repeat: no-repeat;
+  margin-inline-end: 12px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+}
+
+.favicon-wrapper.hide-default-favicon {
+  background-image: none;
+}
+
+.favicon {
+  width: 16px;
+}
+
+.username {
+  font-size: 0.85em;
+  color: var(--in-content-deemphasized-text);
+}
+
+.alert-icon {
+  min-width: 16px;
+  width: 16px;
+  margin-inline-start: 12px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.75;
+}
+
+@media not (prefers-contrast) {
+  .breached > .alert-icon {
+    fill: var(--red-60);
+    fill-opacity: 1;
+  }
+}

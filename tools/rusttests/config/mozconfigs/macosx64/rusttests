@@ -1,0 +1,2 @@
+. "$topsrcdir/build/macosx/mozconfig.common"
+. "$topsrcdir/tools/rusttests/config/mozconfigs/common"

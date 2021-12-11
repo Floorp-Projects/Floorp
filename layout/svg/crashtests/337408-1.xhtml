@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=337408 -->
+<!-- Just checking for lack of crash, nothing more -->
+<window id="svg-in-xul-stack"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:svg="http://www.w3.org/2000/svg"
+        style="background-color:white;"
+        screenX="20" 
+        screenY="20"
+        width="600"
+        height="400">
+
+  <stack>
+    <box flex="1">
+      <label value="foo"/>
+    </box>
+    <svg:svg>
+      <svg:rect width="100%" height="100%" fill="red" fill-opacity="0.5"/>
+    </svg:svg>
+  </stack>
+</window>

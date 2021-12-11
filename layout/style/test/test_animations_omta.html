@@ -1,0 +1,2850 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=964646
+-->
+<!--
+
+ ========= PLEASE KEEP THIS IN SYNC WITH test_animations.html =========
+
+ This test mimicks the content of test_animations.html but performs tests
+ specific to animations that run on the compositor thread since they require
+ special (asynchronous) handling. Furthermore, these tests check that
+ animations that are expected to run on the compositor thread, are actually
+ doing so.
+
+ If you are making changes to this file or to test_animations.html, please
+ try to keep them consistent where appropriate.
+
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for css3-animations running on the compositor thread (Bug
+         964646)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    @keyframes transform-anim {
+      to {
+        transform: translate(100px);
+      }
+    }
+    @keyframes anim1 {
+       0% { transform: translate(0px) }
+       50% { transform: translate(80px) }
+       100% { transform: translate(100px) }
+    }
+    @keyframes anim2 {
+      from { opacity: 0 } to { opacity: 1 }
+    }
+    @keyframes anim3 {
+      from { opacity: 0 } to { opacity: 1 }
+    }
+    @keyframes anim4 {
+      from { transform: translate(0px, 0px) }
+      to { transform: translate(0px, 100px) }
+    }
+
+    @keyframes kf1 {
+      50% { transform: translate(50px) }
+      to { transform: translate(150px) }
+    }
+    @keyframes kf2 {
+      from { transform: translate(150px) }
+      50% { transform: translate(50px) }
+    }
+    @keyframes kf3 {
+      25% { transform: translate(100px) }
+    }
+    @keyframes kf4 {
+      to, from { display: none; transform: translate(37px) }
+    }
+    @keyframes kf_cascade1 {
+      from { transform: translate(50px) }
+      50%, from { transform: translate(30px) }      /* wins: 0% */
+      75%, 85%, 50% { transform: translate(20px) }  /* wins: 75%, 50% */
+      100%, 85% { transform: translate(70px) }      /* wins: 100% */
+      85.1% { transform: translate(60px) }          /* wins: 85.1% */
+      85% { transform: translate(30px) }            /* wins: 85% */
+    }
+    @keyframes kf_cascade2 { from, to { opacity: 0.3 } }
+    @keyframes kf_cascade2 { from, to { transform: translate(50px) } }
+    @keyframes kf_cascade2 { from, to { transform: translate(100px) } }
+    @keyframes kf_tf1 {
+      0%   { transform: translate(20px); animation-timing-function: ease }
+      25%  { transform: translate(60px); }
+      50%  { transform: translate(160px); animation-timing-function: steps(5) }
+      75%  { transform: translate(120px); animation-timing-function: linear }
+      100% { transform: translate(20px); animation-timing-function: ease-out }
+    }
+    @keyframes kf_scale {
+      to { scale: 2.25 2.25; }
+    }
+
+    @keyframes always_fifty {
+      from, to { transform: translate(50px) }
+    }
+
+    #withbefore::before, #withafter::after {
+      content: "test";
+      animation: anim4 1s linear alternate 3;
+      display:block;
+    }
+
+    @keyframes multiprop {
+      0% {
+        transform: translate(10px); opacity: 0.3;
+        animation-timing-function: ease;
+      }
+      25% {
+        opacity: 0.5;
+        animation-timing-function: ease-out;
+      }
+      50% {
+        transform: translate(40px);
+      }
+      75% {
+        transform: translate(80px); opacity: 0.6;
+        animation-timing-function: ease-in;
+      }
+    }
+
+    @keyframes cascade {
+      0%, 25%, 100% { transform: translate(0px) }
+      50%, 75% { transform: translate(100px) }
+      0%, 75%, 100% { opacity: 0 }
+      25%, 50% { opacity: 1 }
+    }
+    @keyframes cascade2 {
+      0% { transform: translate(0px) }
+      25% { transform: translate(30px);
+            animation-timing-function: ease-in } /* beaten by rule below */
+      50% { transform: translate(0px) }
+      25% { transform: translate(50px) }
+      100% { transform: translate(100px) }
+    }
+
+    @keyframes primitives1 {
+      from { transform: rotate(0deg) translateX(0px) scaleX(1)
+        translate(0px) scale3d(1, 1, 1); }
+      to { transform: rotate(270deg) translate3d(0px, 0px, 0px) scale(1)
+        translateY(0px) scaleY(1); }
+    }
+
+    @keyframes important1 {
+      from { opacity: 0.5; }
+      50%  { opacity: 1 !important; } /* ignored */
+      to   { opacity: 0.8; }
+    }
+    @keyframes important2 {
+      from { opacity: 0.5;
+             transform: translate(100px); }
+      to   { opacity: 0.2 !important; /* ignored */
+             transform: translate(50px); }
+    }
+
+    @keyframes empty { }
+    @keyframes nearlyempty {
+      to {
+        transform: translate(100px);
+      }
+    }
+
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+
+    .visitedLink:link { background-color: yellow }
+    .visitedLink:visited { background-color: blue }
+
+    @keyframes opacitymid {
+      0% { opacity: 0.2 }
+      100% { opacity: 0.8 }
+    }
+
+    @keyframes transformnone {
+      0%, 100% { transform: translateX(50px) }
+      25%, 75% { transform: none }
+    }
+  </style>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=964646">Mozilla Bug
+  964646</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+const { AppConstants } = SpecialPowers.Cu.import(
+  "resource://gre/modules/AppConstants.jsm",
+  {}
+);
+/** Test for css3-animations running on the compositor thread (Bug 964646) **/
+ 
+// Global state
+var gDisplay = document.getElementById("display")
+  , gDiv     = null;
+
+// Shortcut omta_is and friends by filling in the initial 'elem' argument
+// with gDiv.
+[ 'omta_is', 'omta_todo_is', 'omta_is_approx' ].forEach(function(fn) {
+  var origFn = window[fn];
+  window[fn] = function() {
+    var args = Array.from(arguments);
+    if (!(args[0] instanceof Element)) {
+      args.unshift(gDiv);
+    }
+    return origFn.apply(window, args);
+  };
+});
+
+// Shortcut new_div and done_div to update gDiv
+var originalNewDiv = window.new_div;
+window.new_div = function(style) {
+  [ gDiv ] = originalNewDiv(style);
+};
+var originalDoneDiv = window.done_div;
+window.done_div = function() {
+  originalDoneDiv();
+  gDiv = null;
+};
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+runOMTATest(function() {
+  var onAbort = function() {
+    if (gDiv) {
+      done_div();
+    }
+  };
+  runAllAsyncAnimTests(onAbort).then(function() {
+    SimpleTest.finish();
+  });
+}, SimpleTest.finish);
+
+//----------------------------------------------------------------------
+//
+// Test cases
+//
+//----------------------------------------------------------------------
+
+// This test is not in test_animations.html but is here to test that
+// transform animations are actually run on the compositor thread as expected.
+addAsyncAnimTest(async function() {
+  new_div("animation: transform-anim linear 300s");
+
+  await waitForPaintsFlushed();
+
+  advance_clock(200000);
+  omta_is("transform", { tx: 100 * 2 / 3 }, RunningOn.Compositor,
+          "OMTA animation is animating as expected");
+  done_div();
+});
+
+async function testFillMode(fillMode, fillsBackwards, fillsForwards)
+{
+  var style = "transform: translate(30px); animation: 10s 3s anim1 linear";
+  var desc;
+  if (fillMode.length > 0) {
+    style += " " + fillMode;
+    desc = "fill mode " + fillMode + ": ";
+  } else {
+    desc = "default fill mode: ";
+  }
+  new_div(style);
+  listen();
+
+  await waitForPaintsFlushed();
+
+  if (fillsBackwards)
+    omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+            desc + "does affect value during delay (0s)");
+  else
+    omta_is("transform", { tx: 30 }, RunningOn.MainThread,
+            desc + "doesn't affect value during delay (0s)");
+
+  advance_clock(2000);
+  if (fillsBackwards)
+    omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+            desc + "does affect value during delay (0s)");
+  else
+    omta_is("transform", { tx: 30 }, RunningOn.MainThread,
+            desc + "does affect value during delay (0s)");
+
+  check_events([], "before start in testFillMode");
+  advance_clock(1000);
+  check_events([{ type: "animationstart", target: gDiv,
+                  bubbles: true, cancelable: false,
+                  animationName: "anim1", elapsedTime: 0.0,
+                  pseudoElement: "" }],
+               "right after start in testFillMode");
+
+  // If we have a backwards fill then at the start of the animation we will end
+  // up applying the same value as the fill value. Various optimizations in
+  // RestyleManager may filter out this meaning that the animation doesn't get
+  // added to the compositor thread until the first time the value changes.
+  //
+  // As a result we look for this first sample on either the compositor or the
+  // computed style
+  await waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.Either,
+          desc + "affects value at start of animation");
+  advance_clock(125);
+  // We might not add the animation to compositor until the second sample (due
+  // to the optimizations mentioned above) so we should wait for paints before
+  // proceeding
+  await waitForPaints();
+  omta_is("transform", { tx: 2 }, RunningOn.Compositor,
+          desc + "affects value during animation");
+  advance_clock(2375);
+  omta_is("transform", { tx: 40 }, RunningOn.Compositor,
+          desc + "affects value during animation");
+  advance_clock(2500);
+  omta_is("transform", { tx: 80 }, RunningOn.Compositor,
+          desc + "affects value during animation");
+  advance_clock(2500);
+  omta_is("transform", { tx: 90 }, RunningOn.Compositor,
+          desc + "affects value during animation");
+  advance_clock(2375);
+  omta_is("transform", { tx: 99.5 }, RunningOn.Compositor,
+          desc + "affects value during animation");
+  check_events([], "before end in testFillMode");
+  advance_clock(125);
+  check_events([{ type: "animationend", target: gDiv,
+                  bubbles: true, cancelable: false,
+                  animationName: "anim1", elapsedTime: 10.0,
+                  pseudoElement: "" }],
+               "right after end in testFillMode");
+  
+  // Currently the compositor will apply a forwards fill until it gets told by
+  // the main thread to clear the animation. As a result we should wait for
+  // paints to be flushed before checking that the animated value does *not*
+  // appear on the compositor thread.
+  await waitForPaints();
+  if (fillsForwards)
+    omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+            desc + "affects value at end of animation");
+  advance_clock(10);
+  if (fillsForwards)
+    omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+            desc + "affects value after animation");
+  else
+    omta_is("transform", { tx: 30 }, RunningOn.MainThread,
+            desc + "does not affect value after animation");
+
+  done_div();
+}
+
+addAsyncAnimTest(function() { return testFillMode("", false, false); });
+addAsyncAnimTest(function() { return testFillMode("none", false, false); });
+addAsyncAnimTest(function() { return testFillMode("forwards", false, true); });
+addAsyncAnimTest(function() { return testFillMode("backwards", true, false); });
+addAsyncAnimTest(function() { return testFillMode("both", true, true); });
+
+// Test that animations continue running when the animation name
+// list is changed.
+//
+// test_animations.html combines all these tests into one block but this is
+// difficult for OMTA because currently there are only two properties to which
+// we apply OMTA. Instead we break the test down into a few independent pieces
+// in order to exercise the same functionality.
+
+// Append to list
+addAsyncAnimTest(async function() {
+  new_div("animation: anim1 linear 10s");
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 0 }, RunningOn.Either,
+            "just anim1, translate at start");
+  advance_clock(1000);
+    omta_is("transform", { tx: 16 }, RunningOn.Compositor,
+            "just anim1, translate at 1s");
+  // append anim2
+  gDiv.style.animation = "anim1 linear 10s, anim2 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 16 }, RunningOn.Compositor,
+            "anim1 + anim2, translate at 1s");
+    omta_is("opacity", 0, RunningOn.Compositor,
+            "anim1 + anim2, opacity at 1s");
+  advance_clock(1000);
+    omta_is("transform", { tx: 32 }, RunningOn.Compositor,
+            "anim1 + anim2, translate at 2s");
+    omta_is("opacity", 0.1, RunningOn.Compositor,
+            "anim1 + anim2, opacity at 2s");
+  done_div();
+});
+
+// Prepend to list; delete from list
+addAsyncAnimTest(async function() {
+  new_div("animation: anim1 linear 10s");
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 0 }, RunningOn.Either,
+            "just anim1, translate at start");
+  advance_clock(1000);
+    omta_is("transform", { tx: 16 }, RunningOn.Compositor,
+                     "just anim1, translate at 1s");
+  // prepend anim2
+  gDiv.style.animation = "anim2 linear 10s, anim1 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 16 }, RunningOn.Compositor,
+            "anim2 + anim1, translate at 1s");
+    omta_is("opacity", 0, RunningOn.Compositor,
+            "anim2 + anim1, opacity at 1s");
+  advance_clock(1000);
+    omta_is("transform", { tx: 32 }, RunningOn.Compositor,
+            "anim2 + anim1, translate at 2s");
+    omta_is("opacity", 0.1, RunningOn.Compositor,
+            "anim2 + anim1, opacity at 2s");
+  // remove anim2 from list
+  gDiv.style.animation = "anim1 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 32 }, RunningOn.Compositor,
+            "just anim1, translate at 2s");
+    omta_is("opacity", 1, RunningOn.MainThread, "just anim1, opacity at 2s");
+  advance_clock(1000);
+    omta_is("transform", { tx: 48 }, RunningOn.Compositor,
+            "just anim1, translate at 3s");
+    omta_is("opacity", 1, RunningOn.MainThread, "just anim1, opacity at 3s");
+  done_div();
+});
+
+// Swap elements
+addAsyncAnimTest(async function() {
+  new_div("animation: anim1 linear 10s, anim2 linear 10s");
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 0 }, RunningOn.Either,
+            "anim1 + anim2, translate at start");
+    omta_is("opacity", 0, RunningOn.Compositor,
+            "anim1 + anim2, opacity at start");
+  advance_clock(1000);
+    omta_is("transform", { tx: 16 }, RunningOn.Compositor,
+            "anim1 + anim2, translate at 1s");
+    omta_is("opacity", 0.1, RunningOn.Compositor,
+            "anim1 + anim2, opacity at 1s");
+  // swap anim1 and anim2, change duration of anim2
+  gDiv.style.animation = "anim2 linear 5s, anim1 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 16 }, RunningOn.Compositor,
+            "anim2 + anim1, translate at 1s");
+    omta_is("opacity", 0.2, RunningOn.Compositor,
+            "anim2 + anim1, opacity at 1s");
+  advance_clock(1000);
+    omta_is("transform", { tx: 32 }, RunningOn.Compositor,
+            "anim2 + anim1, translate at 2s");
+    omta_is("opacity", 0.4, RunningOn.Compositor,
+            "anim2 + anim1, opacity at 2s");
+  // list anim2 twice, last duration wins, original start time still applies
+  gDiv.style.animation = "anim2 linear 5s, anim1 linear 10s, anim2 linear 20s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 32 }, RunningOn.Compositor,
+            "anim2 + anim1 + anim2, translate at 2s");
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0.1",
+       "anim2 + anim1 + anim2, opacity at 2s");
+  // drop one of the anim2, and list anim3 as well, which animates
+  // the same property as anim2
+  gDiv.style.animation = "anim1 linear 10s, anim2 linear 20s, anim3 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 32 }, RunningOn.Compositor,
+            "anim1 + anim2 + anim3, translate at 2s");
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0",
+       "anim1 + anim2 + anim3, opacity at 2s");
+  advance_clock(1000);
+    omta_is("transform", { tx: 48 }, RunningOn.Compositor,
+            "anim1 + anim2 + anim3, translate at 3s");
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0.1",
+       "anim1 + anim2 + anim3, opacity at 3s");
+  // now swap the anim3 and anim2 order
+  gDiv.style.animation = "anim1 linear 10s, anim3 linear 10s, anim2 linear 20s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 48 }, RunningOn.Compositor,
+            "anim1 + anim3 + anim2, translate at 3s");
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0.15",
+       "anim1 + anim3 + anim2, opacity at 3s");
+  advance_clock(2000); // (unlike test_animations.html, we seek 2s forwards here
+                       // since at 4s anim2 and anim3 produce the same result so
+                       // we can't tell which won.)
+    omta_is("transform", { tx: 80 }, RunningOn.Compositor,
+            "anim1 + anim3 + anim2, translate at 5s");
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0.25",
+       "anim1 + anim3 + anim2, opacity at 5s");
+  // swap anim3 and anim2 back
+  gDiv.style.animation = "anim1 linear 10s, anim2 linear 20s, anim3 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 80 }, RunningOn.Compositor,
+            "anim1 + anim2 + anim3, translate at 5s");
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0.3",
+       "anim1 + anim2 + anim3, opacity at 5s");
+  // seek past end of anim1
+  advance_clock(5100);
+  await waitForPaints();
+    omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+            "anim1 + anim2 + anim3, translate at 10.1s");
+  // Change the animation fill mode on the completed animation.
+  gDiv.style.animation =
+    "anim1 linear 10s forwards, anim2 linear 20s, anim3 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+            "anim1 + anim2 + anim3, translate at 10.1s with fill mode");
+  advance_clock(900);
+    omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+            "anim1 + anim2 + anim3, translate at 11s with fill mode");
+  // Change the animation duration on the completed animation, so it is
+  // no longer completed.
+  // XXX Not sure about this---there seems to be a bug in test_animations.html
+  // in that it drops the fill mode but the test comment says it has a fill mode
+  gDiv.style.animation = "anim1 linear 20s, anim2 linear 20s, anim3 linear 10s";
+  await waitForPaintsFlushed();
+    omta_is("transform", { tx: 82 }, RunningOn.Compositor,
+            "anim1 + anim2 + anim3, translate at 11s with fill mode");
+    is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0.9",
+       "anim1 + anim2 + anim3, opacity at 11s");
+  done_div();
+});
+
+/*
+ * css3-animations:  3. Keyframes
+ * http://dev.w3.org/csswg/css3-animations/#keyframes
+ */
+
+// Test the rules on keyframes that lack a 0% or 100% rule:
+// (simultaneously, test that reverse animations have their keyframes
+// run backwards)
+
+addAsyncAnimTest(async function() {
+  // 100px at 0%, 50px at 50%, 150px at 100%
+  new_div("transform: translate(100px); " +
+          "animation: kf1 ease 1s alternate infinite");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor, "no-0% at 0.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 0.1s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.6) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 0.3s");
+  advance_clock(200);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor, "no-0% at 0.5s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.4) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 0.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.8) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 0.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor, "no-0% at 1.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.8) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 1.1s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 1.4s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.6) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 1.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-0% at 1.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor, "no-0% at 2.0s");
+  done_div();
+
+  // 150px at 0%, 50px at 50%, 100px at 100%
+  new_div("transform: translate(100px); " +
+          "animation: kf2 ease-in 1s alternate infinite");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor, "no-100% at 0.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 0.1s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.6) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 0.3s");
+  advance_clock(200);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor, "no-100% at 0.5s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.4) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 0.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.8) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 0.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor, "no-100% at 1.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.8) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 1.1s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 1.4s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.6) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 1.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-100% at 1.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor, "no-100% at 2.0s");
+  done_div();
+
+  // 50px at 0%, 100px at 25%, 50px at 100%
+  new_div("transform: translate(50px); " +
+          "animation: kf3 ease-out 1s alternate infinite");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "no-0%-no-100% at 0.0s");
+  advance_clock(50);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 0.05s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.6) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 0.15s");
+  advance_clock(100);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "no-0%-no-100% at 0.25s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.4) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 0.55s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.8) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 0.85s");
+  advance_clock(150);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "no-0%-no-100% at 1.0s");
+  advance_clock(150);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.8) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 1.15s");
+  advance_clock(450);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 1.6s");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.6) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 1.85s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.2) }, 0.01,
+                 RunningOn.Compositor, "no-0%-no-100% at 1.95s");
+  advance_clock(50);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "no-0%-no-100% at 2.0s");
+  done_div();
+
+  // Test that non-animatable properties are ignored.
+  // Simultaneously, test that the block is still honored, and that
+  // we still override the value when two consecutive keyframes have
+  // the same value.
+  new_div("animation: kf4 ease 10s");
+  await waitForPaintsFlushed();
+  var cs = window.getComputedStyle(gDiv);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (linear, 0s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (linear, 0s)");
+  advance_clock(1000);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (linear, 1s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (linear, 1s)");
+  done_div();
+  new_div("animation: kf4 step-start 10s");
+  await waitForPaintsFlushed();
+  cs = window.getComputedStyle(gDiv);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (step-start, 0s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (step-start, 0s)");
+  advance_clock(1000);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (step-start, 1s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (step-start, 1s)");
+  done_div();
+
+  // Test cascading of the keyframes within an @keyframes rule.
+  new_div("animation: kf_cascade1 linear 10s");
+  await waitForPaintsFlushed();
+  //    0%: 30px
+  //   50%: 20px
+  //   75%: 20px
+  //   85%: 30px
+  // 85.1%: 60px
+  //  100%: 70px
+  omta_is("transform", { tx: 30 }, RunningOn.Compositor, "kf_cascade1 at 0s");
+  advance_clock(2500);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "kf_cascade1 at 2.5s");
+  advance_clock(2500);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor, "kf_cascade1 at 5s");
+  advance_clock(2000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor, "kf_cascade1 at 7s");
+  advance_clock(500);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor, "kf_cascade1 at 7.5s");
+  advance_clock(500);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "kf_cascade1 at 8s");
+  advance_clock(500);
+  omta_is("transform", { tx: 30 }, RunningOn.Compositor, "kf_cascade1 at 8.5s");
+  advance_clock(10);
+  // For some reason we get an error of 0.0003 for this test only
+  omta_is_approx("transform", { tx: 60 }, 0.001, RunningOn.Compositor,
+                 "kf_cascade1 at 8.51s");
+  advance_clock(745);
+  omta_is("transform", { tx: 65 }, RunningOn.Compositor,
+          "kf_cascade1 at 9.2505s");
+  done_div();
+
+  // Test cascading of the @keyframes rules themselves.
+  new_div("animation: kf_cascade2 linear 10s");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "last @keyframes rule with transform should win");
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "last @keyframes rule with transform should win");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.1. Timing functions for keyframes
+ * http://dev.w3.org/csswg/css3-animations/#timing-functions-for-keyframes-
+ */
+
+addAsyncAnimTest(async function() {
+  new_div("animation: kf_tf1 ease-in 10s alternate infinite");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 0s (test needed for flush)");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.4) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 1s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.8) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 2s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.2) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 3s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.6) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 4s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 160 }, RunningOn.Compositor,
+          "keyframe timing functions test at 5s");
+  advance_clock(1010); // avoid floating-point error
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 6s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.8) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 7s");
+  advance_clock(990);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 8s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.6) }, 0.01,
+                 RunningOn.Compositor, "keyframe timing functions test at 9s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 10s");
+  advance_clock(20000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 30s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.6) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 31s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 32s");
+  advance_clock(990); // avoid floating-point error
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.8) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 33s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 34s");
+  advance_clock(1010);
+  omta_is("transform", { tx: 160 }, RunningOn.Compositor,
+          "keyframe timing functions test at 35s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.6) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 36s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.2) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 37s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.8) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 38s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.4) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 39s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 40s");
+  done_div();
+
+  // spot-check the same thing without alternate
+  new_div("animation: kf_tf1 ease-in 10s infinite");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 0s (test needed for flush)");
+  advance_clock(11000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.4) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 11s");
+  advance_clock(3000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.6) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 14s");
+  advance_clock(2010); // avoid floating-point error
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 16s");
+  advance_clock(1990);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) }, 0.01,
+                 RunningOn.Compositor,
+                 "keyframe timing functions test at 18s");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.2. The 'animation-name' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-name-property-
+ */
+
+// animation-name is reasonably well-tested up in the tests for Section
+// 2, particularly the tests that "Test that animations continue running
+// when the animation name list is changed."
+
+// Test that 'animation-name: none' stops the animation, and setting
+// it again starts a new one.
+
+addAsyncAnimTest(async function() {
+  new_div("animation: anim2 ease-in-out 10s");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "after setting animation-name to anim2");
+  advance_clock(1000);
+  omta_is_approx("opacity", gTF.ease_in_out(0.1), 0.01, RunningOn.Compositor,
+                 "before changing animation-name to none");
+  gDiv.style.animationName = "none";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none");
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none plus 1s");
+  gDiv.style.animationName = "anim2";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "after changing animation-name to anim2");
+  advance_clock(1000);
+  omta_is_approx("opacity", gTF.ease_in_out(0.1), 0.01, RunningOn.Compositor,
+                 "at 1s in animation when animation-name no longer none again");
+  gDiv.style.animationName = "none";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none");
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none plus 1s");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.3. The 'animation-duration' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-duration-property-
+ */
+
+// FIXME: test animation-duration of 0 (quite a bit, including interaction
+// with fill-mode, count, and reversing), once I know what the right
+// behavior is.
+
+/*
+ * css3-animations:  3.4. The 'animation-timing-function' Property
+ * http://dev.w3.org/csswg/css3-animations/#animation-timing-function_tag
+ */
+
+// tested in tests for section 3.1
+
+/*
+ * css3-animations:  3.5. The 'animation-iteration-count' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-iteration-count-property-
+ */
+addAsyncAnimTest(async function() {
+  new_div("animation: anim2 ease-in 10s 0.3 forwards");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-iteration-count test 1 at 0s");
+  advance_clock(2000);
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-iteration-count test 1 at 2s");
+  advance_clock(900);
+  omta_is_approx("opacity", gTF.ease_in(0.29), 0.01, RunningOn.Compositor,
+                 "animation-iteration-count test 1 at 2.9s");
+  advance_clock(100);
+  // Animation has reached the end so allow it to be cleared from the compositor
+  await waitForPaints();
+  // For transform animations we can tell whether a transform on the compositor
+  // thread was set by animation or not since there is a special flag for it.
+  //
+  // For opacity animations, however, there is no such flag so we'll get an
+  // "OMTA" opacity even when it wasn't set by animation. When we pause an
+  // opacity animation we don't worry about where it is reported to be running
+  // (main thread or compositor) so long as the result is correct, hence we
+  // check for "either" below.
+  omta_is_approx("opacity", gTF.ease_in(0.3), 0.01, RunningOn.Either,
+                 "animation-iteration-count test 1 at 3s");
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_in(0.3), 0.01, RunningOn.Either,
+                 "animation-iteration-count test 1 at 3.1s");
+  advance_clock(5000);
+  omta_is_approx("opacity", gTF.ease_in(0.3), 0.01, RunningOn.Either,
+                 "animation-iteration-count test 1 at 8.1s");
+  done_div();
+
+  // The corresponding test in test_animations.html runs three animations in
+  // parallel but since we only have two properties that are OMTA-enabled at
+  // this time and no additive animation we split this test into two parts.
+  new_div("animation: anim2 ease-in 10s 0.3, " +
+          "anim4 ease-out 20s 1.2 alternate forwards");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-iteration-count test 2 at 0s");
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "animation-iteration-count test 3 at 0s");
+  advance_clock(2000);
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-iteration-count test 2 at 2s");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.1) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 3 at 2s");
+  advance_clock(900);
+  omta_is_approx("opacity", gTF.ease_in(0.29), 0.01, RunningOn.Compositor,
+                 "animation-iteration-count test 2 at 2.9s");
+  advance_clock(200);
+  await waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-iteration-count test 2 at 3.1s");
+  advance_clock(2000);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-iteration-count test 2 at 5.1s");
+  advance_clock(14700);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.99) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 3 at 19.8s");
+  advance_clock(200);
+  omta_is("transform", { ty: 100 }, RunningOn.Compositor,
+          "animation-iteration-count test 3 at 20s");
+  advance_clock(200);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.99) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 3 at 20.2s");
+  advance_clock(3600);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.81) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 3 at 23.8s");
+  advance_clock(200);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.8) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 3 at 24s");
+  advance_clock(200);
+  await waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-iteration-count test 2 at 25s");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.8) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-iteration-count test 3 at 25s");
+  done_div();
+
+  new_div("animation: anim4 ease-in-out 5s 1.6 forwards");
+  await waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "animation-iteration-count test 4 at 0s");
+  advance_clock(2000);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.4) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 4 at 2s");
+  advance_clock(2900);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.98) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 4 at 4.9s");
+  advance_clock(200);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.02) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 4 at 5.1s");
+  advance_clock(2800);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.58) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 4 at 7.9s");
+  advance_clock(100);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.6) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-iteration-count test 4 at 8s");
+  advance_clock(100);
+  await waitForPaints();
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.6) }, 0.01,
+                 RunningOn.Either,
+                 "animation-iteration-count test 4 at 8.1s");
+  advance_clock(16100);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.6) }, 0.01,
+                 RunningOn.Either,
+                 "animation-iteration-count test 4 at 25s");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.6. The 'animation-direction' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-direction-property-
+ */
+
+// Tested in tests for sections 3.1 and 3.5.
+
+addAsyncAnimTest(async function() {
+  new_div("animation: anim2 ease-in 10s infinite");
+  gDiv.style.animationDirection = "normal";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-direction test 1 (normal) at 0s");
+  gDiv.style.animationDirection = "reverse";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "animation-direction test 1 (reverse) at 0s");
+  gDiv.style.animationDirection = "alternate";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-direction test 1 (alternate) at 0s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "animation-direction test 1 (alternate-reverse) at 0s");
+  advance_clock(2000);
+  gDiv.style.animationDirection = "normal";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (normal) at 2s");
+  gDiv.style.animationDirection = "reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (reverse) at 2s");
+  gDiv.style.animationDirection = "alternate";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate) at 2s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate-reverse) at 2s");
+  advance_clock(5000);
+  gDiv.style.animationDirection = "normal";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.7), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (normal) at 7s");
+  gDiv.style.animationDirection = "reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.3), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (reverse) at 7s");
+  gDiv.style.animationDirection = "alternate";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.7), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate) at 7s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.3), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate-reverse) at 7s");
+  advance_clock(5000);
+  gDiv.style.animationDirection = "normal";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (normal) at 12s");
+  gDiv.style.animationDirection = "reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (reverse) at 12s");
+  gDiv.style.animationDirection = "alternate";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate) at 12s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate-reverse) at 12s");
+  advance_clock(10000);
+  gDiv.style.animationDirection = "normal";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (normal) at 22s");
+  gDiv.style.animationDirection = "reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (reverse) at 22s");
+  gDiv.style.animationDirection = "alternate";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate) at 22s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate-reverse) at 22s");
+  advance_clock(30000);
+  gDiv.style.animationDirection = "normal";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (normal) at 52s");
+  gDiv.style.animationDirection = "reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (reverse) at 52s");
+  gDiv.style.animationDirection = "alternate";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate) at 52s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), 0.01, RunningOn.Compositor,
+                 "animation-direction test 1 (alternate-reverse) at 52s");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.7. The 'animation-play-state' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-play-state-property-
+ */
+
+addAsyncAnimTest(async function() {
+  // simple test with just one animation
+  new_div("");
+  gDiv.style.animationTimingFunction = "ease";
+  gDiv.style.animationName = "anim1";
+  gDiv.style.animationDuration = "1s";
+  gDiv.style.animationDirection = "alternate";
+  gDiv.style.animationIterationCount = "2";
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "animation-play-state test 1, at 0s");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 1 at 250ms");
+  gDiv.style.animationPlayState = "paused";
+  await waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 1 at 250ms");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 1 still at 500ms");
+  gDiv.style.animationPlayState = "running";
+  await waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 1 still at 500ms");
+  advance_clock(500);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 1 at 1000ms");
+  advance_clock(250);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "animation-play-state test 1 at 1250ms");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 1 at 1500ms");
+  gDiv.style.animationPlayState = "paused";
+  await waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 1 at 1500ms");
+  advance_clock(2000);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 1 at 3500ms");
+  advance_clock(500);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 1 at 4000ms");
+  gDiv.style.animationPlayState = "";
+  await waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 1 at 4000ms");
+  advance_clock(500);
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 1 at 4500ms");
+  advance_clock(250);
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "animation-play-state test 1, at 4750ms");
+  advance_clock(250);
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "animation-play-state test 1, at 5000ms");
+  done_div();
+
+  // The corresponding test in test_animations.html tests various cases of
+  // pausing individual animations in a list of three different animations 
+  // but since there are only two OMTA properties we can animate
+  // independently this test is substantially simpler.
+  new_div("");
+  gDiv.style.animationTimingFunction = "ease-out, ease-in";
+  gDiv.style.animationName = "anim2, anim4";
+  gDiv.style.animationDuration = "1s, 2s";
+  gDiv.style.animationDirection = "alternate, normal";
+  gDiv.style.animationIterationCount = "4, 2";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-play-state test 2, at 0s");
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "animation-play-state test 3, at 0s");
+  advance_clock(250);
+  gDiv.style.animationPlayState = "paused, running"; // pause 1
+  await waitForPaintsFlushed();
+  // As noted with the tests for animation-iteration-count, for opacity
+  // animations we don't strictly check the finished animation is being animated
+  // on the main thread, but simply that it is producing the correct result.
+  omta_is_approx("opacity", gTF.ease_out(0.25), 0.01, RunningOn.MainThread,
+                 "animation-play-state test 2 at 250ms"); // paused
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.125) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 3 at 250ms");
+  advance_clock(250);
+  omta_is_approx("opacity", gTF.ease_out(0.25), 0.01, RunningOn.MainThread,
+                 "animation-play-state test 2 at 500ms"); // paused
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.25) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 3 at 500ms");
+  advance_clock(250);
+  gDiv.style.animationPlayState = "running, paused"; // unpause 1, pause 2
+  await waitForPaintsFlushed();
+  advance_clock(250);
+  omta_is_approx("opacity", gTF.ease_out(0.5), 0.01, RunningOn.Compositor,
+                 "animation-play-state test 2 at 1000ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 3 at 1000ms"); // paused
+  gDiv.style.animationPlayState = "paused"; // pause all
+  await waitForPaintsFlushed();
+  advance_clock(3000);
+  omta_is_approx("opacity", gTF.ease_out(0.5), 0.01, RunningOn.MainThread,
+                 "animation-play-state test 2 at 4000ms"); // paused
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 3 at 4000ms"); // paused
+  gDiv.style.animationPlayState = "running, paused"; // pause 2
+  await waitForPaintsFlushed();
+  advance_clock(850);
+  omta_is_approx("opacity", gTF.ease_out(0.65), 0.01, RunningOn.Compositor,
+                 "animation-play-state test 2 at 4850ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 3 at 4850ms");
+  advance_clock(300);
+  omta_is_approx("opacity", gTF.ease_out(0.35), 0.01, RunningOn.Compositor,
+                 "animation-play-state test 2 at 5150ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 3 at 5150ms");
+  advance_clock(2300);
+  omta_is_approx("opacity", gTF.ease_out(0.05), 0.01, RunningOn.Compositor,
+                 "animation-play-state test 2 at 7450ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 3 at 7450ms");
+  advance_clock(100);
+  // test 2 has finished so wait for it to be removed from the
+  // compositor (otherwise it will fill forwards)
+  await waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 7550ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
+                 RunningOn.MainThread,
+                 "animation-play-state test 3 at 7550ms");
+  gDiv.style.animationPlayState = "running"; // unpause 2
+  await waitForPaintsFlushed();
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 7550ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.875) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 3 at 7550ms");
+  advance_clock(500);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 8050ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.125) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 3 at 8050ms");
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 9050ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.625) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 3 at 9050ms");
+  advance_clock(500);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 9550ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.875) }, 0.01,
+                 RunningOn.Compositor,
+                 "animation-play-state test 3 at 9550ms");
+  advance_clock(500);
+  await waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 10050ms");
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          "animation-play-state test 3 at 10050ms");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.8. The 'animation-delay' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-delay-property-
+ */
+
+addAsyncAnimTest(async function() {
+  // test positive delay
+  new_div("animation: anim2 1s 0.5s ease-out");
+  await waitForPaintsFlushed();
+  // NOTE: getOMTAStyle() can't detect the animation is running on the
+  // compositor or not during the delay phase, since no opacity style is
+  // applied during the delay phase.
+  omta_is("opacity", 1, RunningOn.Either, "positive delay test at 0ms");
+  advance_clock(400);
+  omta_is("opacity", 1, RunningOn.Either, "positive delay test at 400ms");
+  advance_clock(100);
+  await waitForPaints();
+  omta_is("opacity", 0, RunningOn.Compositor, "positive delay test at 500ms");
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_out(0.1), 0.01, RunningOn.Compositor,
+                 "positive delay test at 500ms");
+  done_div();
+
+  // test dynamic changes to delay (i.e., that we preserve the start time
+  // that's before the delay)
+  new_div("animation: anim2 1s 0.5s ease-out both");
+  await waitForPaintsFlushed();
+  // NOTE: As noted above, getOMTAStyle() can't detect the animation is running
+  // on the compositor during the delay phase.
+  omta_is("opacity", 0, RunningOn.Either, "dynamic delay delay test at 0ms");
+  advance_clock(400);
+  omta_is("opacity", 0, RunningOn.Either,
+          "dynamic delay delay test at 400ms (1)");
+  gDiv.style.animationDelay = "0.2s";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_out(0.2), 0.01, RunningOn.Compositor,
+                 "dynamic delay delay test at 400ms (2)");
+  gDiv.style.animationDelay = "0.6s";
+  await waitForPaintsFlushed();
+  advance_clock(200);
+  omta_is("opacity", 0, RunningOn.Either, "dynamic delay delay test at 600ms");
+  advance_clock(200);
+  await waitForPaints();
+  omta_is_approx("opacity", gTF.ease_out(0.2), 0.01, RunningOn.Compositor,
+                 "dynamic delay delay test at 800ms");
+  advance_clock(1000);
+  await waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "dynamic delay delay test at 1800ms (1)");
+  gDiv.style.animationDelay = "1.5s";
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_out(0.3), 0.01, RunningOn.Compositor,
+                 "dynamic delay delay test at 1800ms (2)");
+  gDiv.style.animationDelay = "2s";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Either,
+          "dynamic delay delay test at 1800ms (3)");
+  done_div();
+
+  // test delay and play-state interaction
+  new_div("animation: anim2 1s 0.5s ease-out");
+  await waitForPaintsFlushed();
+  // NOTE: As noted above, getOMTAStyle() can't detect the animation is running
+  // on the compositor during the delay phase.
+  omta_is("opacity", 1, RunningOn.Either,
+          "delay and play-state delay test at 0ms");
+  advance_clock(400);
+  omta_is("opacity", 1, RunningOn.Either,
+          "delay and play-state delay test at 400ms");
+  gDiv.style.animationPlayState = "paused";
+  await waitForPaintsFlushed();
+  advance_clock(100);
+  omta_is("opacity", 1, RunningOn.MainThread, // paused
+          "delay and play-state delay test at 500ms");
+  advance_clock(500);
+  omta_is("opacity", 1, RunningOn.MainThread, // paused
+          "delay and play-state delay test at 1000ms");
+  gDiv.style.animationPlayState = "running";
+  await waitForPaintsFlushed();
+  advance_clock(100);
+  await waitForPaints();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "delay and play-state delay test at 1100ms");
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_out(0.1), 0.01, RunningOn.Compositor,
+                 "delay and play-state delay test at 1200ms");
+  gDiv.style.animationPlayState = "paused";
+  await waitForPaintsFlushed();
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_out(0.1), 0.01, RunningOn.Either,
+                 "delay and play-state delay test at 1300ms");
+  done_div();
+
+  // test negative delay and implicit starting values
+  new_div("transform: translate(1000px)");
+  await waitForPaintsFlushed();
+  advance_clock(300);
+  gDiv.style.transform = "translate(100px)";
+  gDiv.style.animation = "kf1 1s -0.1s ease-in";
+  await waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_in(0.2) },
+                 0.01, RunningOn.Compositor,
+                 "delay and implicit starting values test");
+  done_div();
+
+  // test large negative delay that causes the animation to start
+  // in the fourth iteration
+  new_div("animation: anim2 1s -3.6s ease-in 5 alternate forwards");
+  listen();
+  await waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.4), 0.01, RunningOn.Compositor,
+                 "large negative delay test at 0ms");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 3.6,
+                  pseudoElement: "" }],
+               "right after start in large negative delay test");
+  advance_clock(380);
+  omta_is_approx("opacity", gTF.ease_in(0.02), 0.01, RunningOn.Compositor,
+                 "large negative delay test at 380ms");
+  check_events([]);
+  advance_clock(20);
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "large negative delay test at 400ms");
+  check_events([{ type: 'animationiteration', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 4.0,
+                  pseudoElement: "" }],
+               "right after start in large negative delay test");
+  advance_clock(800);
+  omta_is_approx("opacity", gTF.ease_in(0.8), 0.01, RunningOn.Compositor,
+                 "large negative delay test at 1200ms");
+  check_events([]);
+  advance_clock(200);
+  omta_is("opacity", 1, RunningOn.Either,
+          "large negative delay test at 1400ms");
+  check_events([{ type: 'animationend', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 5.0,
+                  pseudoElement: "" }],
+               "right after start in large negative delay test");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.9. The 'animation-fill-mode' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-fill-mode-property-
+ */
+
+// animation-fill-mode is tested in the tests for section (2).
+
+/*
+ * css3-animations:  3.10. The 'animation' Shorthand Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-shorthand-property-
+ */
+
+/**
+ * Basic tests of animations on pseudo-elements
+ */
+addAsyncAnimTest(async function() {
+  new_div("");
+  listen();
+  gDiv.id = "withbefore";
+  await waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":before test at 0ms", "::before");
+  advance_clock(400);
+  omta_is("transform", { ty: 40 }, RunningOn.Compositor,
+          ":before test at 400ms", "::before");
+  advance_clock(800);
+  omta_is("transform", { ty: 80 }, RunningOn.Compositor,
+          ":before test at 1200ms", "::before");
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          ":before animation should not affect element");
+  advance_clock(800);
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":before test at 2000ms", "::before");
+  advance_clock(300);
+  omta_is("transform", { ty: 30 }, RunningOn.Compositor,
+          ":before test at 2300ms", "::before");
+  advance_clock(700);
+  check_events([ { type: "animationstart", animationName: "anim4",
+                   elapsedTime: 0, pseudoElement: "::before" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 1, pseudoElement: "::before" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 2, pseudoElement: "::before" },
+                 { type: "animationend", animationName: "anim4",
+                   elapsedTime: 3, pseudoElement: "::before" }]);
+  done_div();
+
+  new_div("");
+  listen();
+  gDiv.id = "withafter";
+  await waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":after test at 0ms", "::after");
+  advance_clock(400);
+  omta_is("transform", { ty: 40 }, RunningOn.Compositor,
+          ":after test at 400ms", "::after");
+  advance_clock(800);
+  omta_is("transform", { ty: 80 }, RunningOn.Compositor,
+          ":after test at 1200ms", "::after");
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          ":before animation should not affect element");
+  advance_clock(800);
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":after test at 2000ms", "::after");
+  advance_clock(300);
+  omta_is("transform", { ty: 30 }, RunningOn.Compositor,
+          ":after test at 2300ms", "::after");
+  advance_clock(700);
+  check_events([ { type: "animationstart", animationName: "anim4",
+                   elapsedTime: 0, pseudoElement: "::after" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 1, pseudoElement: "::after" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 2, pseudoElement: "::after" },
+                 { type: "animationend", animationName: "anim4",
+                   elapsedTime: 3, pseudoElement: "::after" }]);
+  done_div();
+});
+
+/**
+ * Test handling of properties that are present in only some of the
+ * keyframes.
+ */
+addAsyncAnimTest(async function() {
+  new_div("animation: multiprop 1s ease-in-out alternate infinite");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 10 }, RunningOn.Compositor,
+          "multiprop transform at 0ms");
+  omta_is("opacity", 0.3, RunningOn.Compositor, "multiprop opacity at 0ms");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.2) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 100ms");
+  omta_is_approx("opacity", 0.3 + 0.2 * gTF.ease(0.4), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 100ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.6) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 300ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.1), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 300ms");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 40 + 40 * gTF.ease_in_out(0.4) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 600ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.7), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 600ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 80 - 80 * gTF.ease_in(0.2) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 800ms");
+  omta_is_approx("opacity", 0.6 + 0.4 * gTF.ease_in(0.2), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 800ms");
+  advance_clock(400);
+  omta_is_approx("transform", { tx: 80 - 80 * gTF.ease_in(0.2) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 1200ms");
+  omta_is_approx("opacity", 0.6 + 0.4 * gTF.ease_in(0.2), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 1200ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 40 + 40 * gTF.ease_in_out(0.4) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 1400ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.7), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 1400ms");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.6) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 1700ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.1), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 1700ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.2) }, 0.01,
+                 RunningOn.Compositor, "multiprop transform at 1900ms");
+  omta_is_approx("opacity", 0.3 + 0.2 * gTF.ease(0.4), 0.01,
+                 RunningOn.Compositor, "multiprop opacity at 1900ms");
+  done_div();
+});
+
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=651456 -- make
+// sure that refreshing of animations doesn't break when we get two
+// refreshes with the same timestamp.
+addAsyncAnimTest(async function() {
+  new_div("animation: anim2 1s linear");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor, "bug 651456 at 0ms");
+  advance_clock(100);
+  omta_is("opacity", 0.1, RunningOn.Compositor, "bug 651456 at 100ms (1)");
+  advance_clock(0); // still forces a refresh
+  omta_is("opacity", 0.1, RunningOn.Compositor, "bug 651456 at 100ms (2)");
+  advance_clock(100);
+  omta_is("opacity", 0.2, RunningOn.Compositor, "bug 651456 at 200ms");
+  done_div();
+});
+
+// test_animations.html includes a test that UA !important rules override
+// animations. Unfortunately, there do not appear to be any UA !important rules
+// for opacity or transform except for one targetting a pseudo-element and
+// pseudo elements are not animated on the compositor. As a result we cannot
+// currently test this behavior.
+
+// Test that author !important rules override animations, but
+// that animations override regular author rules.
+addAsyncAnimTest(async function() {
+  new_div("animation: always_fifty 1s linear infinite; " +
+          "transform: translate(200px)");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "animations override regular author rules");
+  done_div();
+  new_div("animation: always_fifty 1s linear infinite; " +
+          "transform: translate(200px) ! important;");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 200 }, RunningOn.MainThread,
+          "important author rules override animations");
+  done_div();
+});
+
+// Test interaction of animations and restyling (Bug 686656).
+// This test depends on kf3 getting its 0% and 100% values from the
+// rules below it in the cascade; we're checking that the animation
+// isn't rebuilt when the restyles happen.
+addAsyncAnimTest(async function() {
+  new_div("animation: kf3 1s linear forwards");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "bug 686656 test 1 at 0ms");
+  advance_clock(250);
+  gDisplay.style.color = "blue";
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "bug 686656 test 1 at 250ms");
+  advance_clock(375);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "bug 686656 test 1 at 625ms");
+  advance_clock(375);
+  await waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "bug 686656 test 1 at 1000ms");
+  done_div();
+  gDisplay.style.color = "";
+});
+
+// Test interaction of animations and restyling (Bug 686656),
+// with reframing.
+// This test depends on kf3 getting its 0% and 100% values from the
+// rules below it in the cascade; we're checking that the animation
+// isn't rebuilt when the restyles happen.
+addAsyncAnimTest(async function() {
+  new_div("animation: kf3 1s linear forwards");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "bug 686656 test 2 at 0ms");
+  advance_clock(250);
+  gDisplay.style.overflow = "scroll";
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "bug 686656 test 2 at 250ms");
+  advance_clock(375);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "bug 686656 test 2 at 625ms");
+  advance_clock(375);
+  await waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "bug 686656 test 2 at 1000ms");
+  done_div();
+  gDisplay.style.overflow = "";
+});
+
+// Test that cascading between keyframes rules is per-property rather
+// than per-rule (bug ), and that the timing function isn't taken from a
+// rule that's skipped.  (Bug 738003)
+addAsyncAnimTest(async function() {
+  new_div("animation: cascade 1s linear forwards; position: relative");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "cascade test (transform) at 0ms");
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "cascade test (opacity) at 0ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "cascade test (transform) at 125ms");
+  omta_is("opacity", 0.5, RunningOn.Compositor,
+          "cascade test (opacity) at 125ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "cascade test (transform) at 250ms");
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "cascade test (opacity) at 250ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "cascade test (transform) at 375ms");
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "cascade test (opacity) at 375ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "cascade test (transform) at 500ms");
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "cascade test (opacity) at 500ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "cascade test (transform) at 625ms");
+  omta_is("opacity", 0.5, RunningOn.Compositor,
+          "cascade test (opacity) at 625ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "cascade test (transform) at 750ms");
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "cascade test (opacity) at 750ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "cascade test (transform) at 875ms");
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "cascade test (opacity) at 875ms");
+  advance_clock(125);
+  await waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "cascade test (transform) at 1000ms");
+  omta_is("opacity", 0, RunningOn.Either,
+          "cascade test (opacity) at 1000ms");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  new_div("animation: cascade2 8s linear forwards");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor, "cascade2 test at 0s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "cascade2 test at 1s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor, "cascade2 test at 2s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "cascade2 test at 3s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor, "cascade2 test at 4s");
+  advance_clock(3000);
+  omta_is("transform", { tx: 75 }, RunningOn.Compositor, "cascade2 test at 7s");
+  advance_clock(1000);
+  await waitForPaints();
+  omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+          "cascade2 test at 8s");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  new_div("animation: primitives1 2s linear forwards");
+  await waitForPaintsFlushed();
+  omta_is("transform", { }, RunningOn.Compositor, "primitives1 at 0s");
+  advance_clock(1000);
+  omta_is("transform", [ -0.707107, 0.707107, -0.707107, -0.707107, 0, 0 ],
+          RunningOn.Compositor, "primitives1 at 1s");
+  advance_clock(1000);
+  await waitForPaints();
+  omta_is("transform", [ 0, -1, 1, 0, 0, 0 ], RunningOn.MainThread,
+          "primitives1 at 0s");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  new_div("animation: important1 1s linear forwards");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.5, RunningOn.Compositor, "important1 test at 0s");
+  advance_clock(500);
+  omta_is("opacity", 0.65, RunningOn.Compositor, "important1 test at 0.5s");
+  advance_clock(500);
+  await waitForPaints();
+  omta_is("opacity", 0.8, RunningOn.Either, "important1 test at 1s");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  new_div("animation: important2 1s linear forwards");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.5, RunningOn.Compositor,
+          "important2 (opacity) test at 0s");
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "important2 (transform) test at 0s");
+  advance_clock(1000);
+  await waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "important2 (opacity) test at 1s");
+  omta_is("transform", { tx: 50 }, RunningOn.MainThread,
+          "important2 (transform) test at 1s");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  // Test that it's the length of the 'animation-name' list that's used to
+  // start animations.
+  // note: anim2 animates opacity from 0 to 1
+  // note: anim4 animates transform's y translation component from 0 to 100px
+  new_div("animation-name: anim2, anim4; " +
+          "animation-duration: 1s; " +
+          "animation-timing-function: linear; " +
+          "animation-delay: -250ms, -250ms, -750ms, -500ms;");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.25, RunningOn.Compositor,
+          "animation-name list length is the length that matters");
+  omta_is("transform", { ty: 25 }, RunningOn.Compositor,
+          "animation-name list length is the length that matters");
+  done_div();
+  new_div("animation-name: anim2, anim4, anim2; " +
+          "animation-duration: 1s; " +
+          "animation-timing-function: linear; " +
+          "animation-delay: -250ms, -250ms, -750ms, -500ms;");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "animation-name list length is the length that matters, " +
+          "and the last occurrence of a name wins");
+  omta_is("transform", { ty: 25 }, RunningOn.Compositor,
+          "animation-name list length is the length that matters");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  var dyn_sheet_elt = document.createElement("style");
+  document.head.appendChild(dyn_sheet_elt);
+  var dyn_sheet = dyn_sheet_elt.sheet;
+  dyn_sheet.insertRule(
+    "@keyframes dyn1 { from { transform: translate(0px) } " +
+    "50% { transform: translate(50px) } " +
+    "to { transform: translate(100px) } }", 0);
+  dyn_sheet.insertRule(
+    "@keyframes dyn2 { from { transform: translate(100px) } " +
+    "to { transform: translate(200px) } }", 1);
+  var dyn1 = dyn_sheet.cssRules[0];
+  var dyn2 = dyn_sheet.cssRules[1];
+  new_div("animation: dyn1 1s linear");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "dynamic rule change test, initial state");
+  advance_clock(250);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor,
+          "dynamic rule change test, 250ms");
+  dyn2.name = "dyn1";
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 125 }, RunningOn.Compositor,
+          "dynamic rule change test, change in @keyframes name applies");
+  dyn2.appendRule("50% { transform: translate(0px) }");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "dynamic rule change test, @keyframes appendRule");
+  // currently 0% { transform: translate(100px) }
+  var dyn2_kf1 = dyn2.cssRules[0];
+  dyn2_kf1.style.transform = "translate(-100px)";
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: -50 }, RunningOn.Compositor,
+          "dynamic rule change test, keyframe style set");
+  dyn2.name = "dyn2";
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor,
+          "dynamic rule change test, " +
+          "change in @keyframes name applies (second time)");
+  // currently 50% { transform: translate(50px) }
+  var dyn1_kf2 = dyn1.cssRules[1];
+  dyn1_kf2.keyText = "25%";
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "dynamic rule change test, change in keyframe keyText");
+  dyn1.deleteRule("25%");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor,
+          "dynamic rule change test, @keyframes deleteRule");
+  done_div();
+  dyn_sheet_elt.remove();
+  dyn_sheet_elt = null;
+  dyn_sheet = null;
+});
+
+/*
+ * Bug 1004361 - CSS animations with short duration sometimes don't dispatch
+ * a start event
+ */
+addAsyncAnimTest(async function() {
+  new_div("animation: anim2 1s 0.1s");
+  listen();
+  await waitForPaintsFlushed();
+  advance_clock(1200); // Skip past end of animation's entire active duration
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 1,
+                  pseudoElement: "" }],
+               "events after skipping over animation interval");
+  done_div();
+});
+
+/*
+ * Bug 1007513 - AnimationEvent.elapsedTime should be animation time
+ *
+ * There is no OMTA-version of this test since it is specific to the
+ * contents of animation events which are dispatched on the main thread.
+ *
+ * We *do* provide an OMTA-version of some tests regarding the *dispatch* of
+ * events to catch possible regressions if in future event dispatch is tied
+ * to animation throttling.
+ */
+
+/*
+ * Bug 1004365 - zero-duration animations
+ */
+
+addAsyncAnimTest(async function() {
+  new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
+  listen();
+  await waitForPaintsFlushed();
+  advance_clock(0);
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform during backwards fill of zero-duration animation");
+  advance_clock(2000); // Skip over animation
+  await waitForPaints();
+  omta_is("transform", { ty: 100 }, RunningOn.MainThread,
+          "transform during backwards fill of zero-duration animation");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after skipping over zero-duration animation");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
+  listen();
+  await waitForPaintsFlushed();
+  advance_clock(0);
+  // Seek to exactly the point where the animation starts and stops
+  advance_clock(1000);
+  await waitForPaints();
+  omta_is("transform", { ty: 100 }, RunningOn.MainThread,
+          "transform during backwards fill of zero-duration animation");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after seeking to end of zero-duration animation");
+  // Check no further events are dispatched
+  advance_clock(0);
+  advance_clock(100);
+  check_events([]);
+  done_div();
+});
+
+// We don't need to include all the animation-direction related tests
+// found in test_animations.html. We have already asserted above that
+// these zero-length animations do in fact run on the main thread and
+// we have checked that they dispatch events correctly.
+// The actual calculation of values on the main thread is covered by
+// test_animations.html
+
+// We do however still want to test with an infinite repeat count and zero
+// duration to ensure this does not confuse the screening of OMTA animations.
+addAsyncAnimTest(async function() {
+  new_div("transform: translate(0, 200px); " +
+          "animation: anim4 0s 1s both infinite");
+  listen();
+  await waitForPaintsFlushed();
+  advance_clock(0);
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform during backwards fill of infinitely repeating " +
+          "zero-duration animation");
+  advance_clock(2000);
+  await waitForPaints();
+  omta_is("transform", { ty: 100 }, RunningOn.MainThread,
+          "transform during forwards fill of infinitely repeating " +
+          "zero-duration animation");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after seeking to end of infinitely repeating " +
+               "zero-duration animation");
+  done_div();
+});
+
+// Test with negative delay
+addAsyncAnimTest(async function() {
+  new_div("transform: translate(0, 200px); " +
+          "animation: anim4 0s -1s both reverse 12.7 linear");
+  listen();
+  await waitForPaintsFlushed();
+  advance_clock(0);
+  omta_is("transform", { ty: 30 }, RunningOn.MainThread,
+          "transform during forwards fill of reversed and repeated " +
+          "zero-duration animation with negative delay");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after skipping over zero-duration animation " +
+               "with negative delay");
+  done_div();
+});
+
+/*
+ * Bug 1004377 - Animations with empty keyframes rule
+ */
+
+addAsyncAnimTest(async function() {
+  new_div("margin-right: 200px; animation: empty 2s 1s both");
+  listen();
+  advance_clock(0);
+  await waitForPaintsFlushed();
+  check_events([], "events during delay");
+  advance_clock(2000); // Skip to middle of animation
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events during middle of animation with empty keyframes rule");
+  advance_clock(1000); // Skip to end of animation
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationend', target: gDiv,
+                  animationName: 'empty', elapsedTime: 2,
+                  pseudoElement: "" }],
+               "events at end of animation with empty keyframes rule");
+  done_div();
+});
+
+// Test with a zero-duration animation and empty @keyframes rule
+addAsyncAnimTest(async function() {
+  new_div("margin-right: 200px; animation: empty 0s 1s both");
+  listen();
+  await waitForPaintsFlushed();
+  advance_clock(1000);
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events at end of zero-duration animation with " +
+               "empty keyframes rule");
+  done_div();
+});
+
+// Test with a keyframes rule that becomes empty
+addAsyncAnimTest(async function() {
+  new_div("animation: nearlyempty 1s both linear");
+  await waitForPaintsFlushed();
+  advance_clock(500);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is animating on compositor");
+
+  // Update keyframes rule and check the result gets removed
+  listen();
+  findKeyframesRule("nearlyempty").deleteRule("to");
+  await waitForPaintsFlushed();
+  omta_is("transform", { }, RunningOn.MainThread,
+          "Animation with (now) empty keyframes rule is cleared " +
+          "from compositor");
+
+  // Check we still dispatch the end event however
+  advance_clock(500);
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationend', target: gDiv,
+                  animationName: 'nearlyempty', elapsedTime: 1,
+                  pseudoElement: "" }],
+               "events at end of animation with newly " +
+               "empty keyframes rule");
+
+  done_div();
+});
+
+// Test when we update to point to an empty animation
+addAsyncAnimTest(async function() {
+  new_div("animation: always_fifty 1s both linear");
+  await waitForPaintsFlushed();
+  advance_clock(500);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is animating on compositor");
+
+  // Update animation name
+  listen();
+  gDiv.style.animationName = "empty";
+  await waitForPaintsFlushed();
+  omta_is("transform", { }, RunningOn.MainThread,
+          "Animation updated to use empty keyframes rule is cleared " +
+          "from compositor");
+
+  // Check events
+  advance_clock(500);
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events at start of animation updated to use " +
+               "empty keyframes rule");
+
+  done_div();
+});
+
+// Bug 996796 patch 12 - test for correct visited styles during
+// animation-only style flush.
+addAsyncAnimTest(async function() {
+  if (AppConstants.platform === "android") {
+    todo(false, "no global history on GeckoView; can't run test");
+    return;
+  }
+
+  var div1 = document.createElement("div");
+  div1.classList.add("target");
+  div1.style.height = "10px";
+  div1.style.animation = "anim2 linear 1s";
+
+  const topLocation =
+    await SpecialPowers.spawnChrome([], () => browsingContext.top.currentURI.spec);
+
+  var visitedLink = document.createElement("a");
+  visitedLink.setAttribute("href", topLocation);
+  visitedLink.classList.add("visitedLink");
+  visitedLink.classList.add("target");
+  visitedLink.style.display = "block";
+  visitedLink.style.height = "10px";
+  visitedLink.style.animation = "anim2 linear 1s";
+
+  var refVisitedLink = document.createElement("a");
+  refVisitedLink.setAttribute("href", topLocation);
+  refVisitedLink.classList.add("visitedLink");
+
+  gDisplay.appendChild(div1);
+  gDisplay.appendChild(visitedLink);
+  gDisplay.appendChild(refVisitedLink);
+
+  // Wait for visited link coloring.
+  await waitForVisitedLinkColoring(refVisitedLink,
+                                   "background-color", "rgb(0, 0, 255)");
+
+  // Wait for animations to start.
+  await waitForPaintsFlushed();
+
+  var bgColor = SpecialPowers.DOMWindowUtils
+    .getVisitedDependentComputedStyle(visitedLink, "", "background-color");
+  is(bgColor, "rgb(0, 0, 255)", "initial visited link background color");
+
+  advance_clock(250);
+
+  // Trigger a style change on div1 that will force us to do a miniflush,
+  // but which will not trigger a style change on visitedLink.
+  div1.style.color = "blue";
+  advance_clock(250);
+
+  bgColor = SpecialPowers.DOMWindowUtils
+    .getVisitedDependentComputedStyle(visitedLink, "", "background-color");
+
+  is(bgColor, "rgb(0, 0, 255)",
+     "visited link background color after animation-only flush");
+
+  div1.remove();
+  visitedLink.remove();
+  refVisitedLink.remove();
+});
+
+/*
+ * Bug 962594 - Turn off CSS animations when the element is display:none, or
+ * is in a display:none subtree.
+ */
+
+// Check that it works if the animated element itself becomes display:none
+addAsyncAnimTest(async function() {
+  new_div("animation: anim4 linear 10s");
+  await waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation is running on compositor");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation is at 1s on compositor");
+  gDiv.style.display = "none";
+  await waitForPaintsFlushed();
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation stopped on compositor");
+  advance_clock(1000);
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation 1s after display:none");
+  gDiv.style.display = "";
+  await waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation after display:block");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation 1s after display:block");
+  done_div();
+});
+
+// Check that it works if an ancestor of the animated element becomes display:none
+addAsyncAnimTest(async function() {
+  new_div("animation: anim4 linear 10s");
+  var ancestor = document.createElement("div");
+  gDiv.parentNode.insertBefore(ancestor, gDiv);
+  ancestor.appendChild(gDiv);
+  await waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation is running on compositor");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation is at 1s on compositor");
+  gDiv.style.display = "none";
+  await waitForPaintsFlushed();
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation stopped on compositor");
+  advance_clock(1000);
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation 1s after display:none");
+  gDiv.style.display = "";
+  await waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation after display:block");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation 1s after display:block");
+  ancestor.parentNode.insertBefore(gDiv, ancestor);
+  ancestor.remove();
+  done_div();
+});
+
+// Bug 1125455 - Transitions should not run when animations are running.
+addAsyncAnimTest(async function() {
+  new_div("transition: opacity 2s linear; opacity: 0.8");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.8, RunningOn.MainThread,
+          "initial opacity");
+  gDiv.style.opacity = "0.2";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.8, RunningOn.Compositor,
+          "opacity transition at 0s");
+  advance_clock(500);
+  omta_is("opacity", 0.65, RunningOn.Compositor,
+          "opacity transition at 0.5s");
+  gDiv.style.animation = "opacitymid 2s linear";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.2, RunningOn.Compositor,
+          "opacity animation overriding transition at 0s");
+  advance_clock(500);
+  omta_is("opacity", 0.35, RunningOn.Compositor,
+          "opacity animation overriding transition at 0.5s");
+  done_div();
+});
+
+// Bug 1320474 - keyframes-name may be a string, allows names that would
+// otherwise be excluded.
+// These tests don't need to be duplicated here as they relate purely to
+// the animation setup which is common to both main-thread and compositor
+// animations.
+
+// Bug 847287 - Test that changes of when an animation is dynamically
+// overridden work correctly.
+addAsyncAnimTest(async function() {
+  // anim2 and anim3 are both animations from opacity 0 to 1
+
+  new_div("animation: anim2 1s linear forwards; opacity: 0.5 ! important");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.5, RunningOn.MainThread,
+          "opacity overriding animation at start (0s)");
+  advance_clock(750);
+  omta_is("opacity", 0.5, RunningOn.MainThread,
+          "opacity overriding animation while running (750ms)");
+  advance_clock(1000);
+  omta_is("opacity", 0.5, RunningOn.MainThread,
+          "opacity overriding animation while filling (1750ms)");
+  done_div();
+
+  new_div("animation: anim2 1s linear; opacity: 0.5 ! important");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0.5, RunningOn.MainThread,
+          "opacity overriding animation at start (0s)");
+  advance_clock(750);
+  omta_is("opacity", 0.5, RunningOn.MainThread,
+          "opacity overriding animation while running (750ms)");
+  advance_clock(1000);
+  omta_is("opacity", 0.5, RunningOn.MainThread,
+          "opacity overriding animation after complete (1750ms)");
+  done_div();
+
+  // One animation overriding another, and then not.
+  new_div("animation: anim2 1s linear, anim3 500ms linear reverse");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "anim3 overriding anim2 at start (0s)");
+  advance_clock(400);
+  omta_is("opacity", 0.2, RunningOn.Compositor,
+          "anim3 overriding anim2 at 400ms");
+  advance_clock(200);
+  // Wait for paints because we're resending animations to the
+  // compositor via an UpdateOpacityLayer hint, which does the resending
+  // via painting.
+  await waitForPaints();
+  omta_is("opacity", 0.6, RunningOn.Compositor,
+          "anim2 at 600ms");
+  done_div();
+
+  // One animation overriding another, and then not, but without a
+  // restyle when the overriding one ends.
+  new_div("animation: anim2 1s steps(8, end)");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "anim2 at start (0s)");
+  advance_clock(300);
+  omta_is("opacity", 0.25, RunningOn.Compositor,
+          "anim2 at 300ms");
+  gDiv.style.animation = "anim2 1s steps(8, end), anim3 500ms steps(4, end)";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "anim3 overriding anim2 at 300ms");
+  advance_clock(475);
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim3 the same as anim2 at 775ms");
+  advance_clock(50);
+  // Wait for paints because we're resending animations to the
+  // compositor via an UpdateOpacityLayer hint, which does the resending
+  // via painting.
+  await waitForPaints();
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim2 at 825ms");
+  advance_clock(75);
+  omta_is("opacity", 0.875, RunningOn.Compositor,
+          "anim2 at 900ms");
+  done_div();
+
+  // Exactly the same as the previous test, except with an extra
+  // waitForPaintsFlushed(), since that extra one exposes other bugs.
+  new_div("animation: anim2 1s steps(8, end)");
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "anim2 at start (0s)");
+  advance_clock(300);
+  omta_is("opacity", 0.25, RunningOn.Compositor,
+          "anim2 at 300ms");
+  gDiv.style.animation = "anim2 1s steps(8, end), anim3 500ms steps(4, end)";
+  await waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "anim3 overriding anim2 at 300ms");
+  advance_clock(475);
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim3 the same as anim2 at 775ms");
+  // Extra waitForPaintsFlushed to expose bugs.
+  await waitForPaintsFlushed();
+  advance_clock(50);
+  // Wait for paints because we're resending animations to the
+  // compositor via an UpdateOpacityLayer hint, which does the resending
+  // via painting.
+  await waitForPaints();
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim2 at 825ms");
+  advance_clock(75);
+  omta_is("opacity", 0.875, RunningOn.Compositor,
+          "anim2 at 900ms");
+  done_div();
+
+  // Test that an interpolation that produces transform: none doesn't
+  // crash.
+  new_div("animation: transformnone 1s linear");
+  await waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "transformnone animation at 0ms");
+  advance_clock(500);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "transformnone animation at 500ms, interpolating none values");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  new_div("transform: translate(100px); transition: transform 10s 5s linear");
+  await waitForPaintsFlushed();
+  gDiv.style.transform = "translate(200px)";
+  await waitForPaintsFlushed();
+  // NOTE: As noted above, getOMTAStyle() can't detect the animation is running
+  // on the compositor during the delay phase.
+  omta_is("transform", { tx: 100 }, RunningOn.Either,
+          "transition runs on compositor thread during delay");
+  // At the *very* start of the transition the start value of the transition
+  // will match the underlying transform value. Various optimizations in
+  // RestyleManager may recognize this a "no change" and filter out the
+  // transition meaning that the animation doesn't get added to the compositor
+  // thread until the first time the value changes. As a result, we fast-forward
+  // a little past the beginning and then wait for the animation to be sent
+  // to the compositor.
+  advance_clock(5100);
+  await waitForPaints();
+  omta_is("transform", { tx: 101 }, RunningOn.Compositor,
+          "transition runs on compositor at start of active interval");
+  advance_clock(4900);
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor,
+          "transition runs on compositor at during active interval");
+  advance_clock(5000);
+  // Currently the compositor will apply a forwards fill until it gets told by
+  // the main thread to clear the animation. As a result we should wait for
+  // paints before checking that the animated value does *not* appear on the
+  // compositor thread.
+  await waitForPaints();
+  omta_is("transform", { tx: 200 }, RunningOn.MainThread,
+          "transition runs on main thread at end of active interval");
+
+  done_div();
+});
+
+// Normal background-color animation.
+addAsyncAnimTest(async function() {
+  new_div("background-color: rgb(255, 0, 0); " +
+          "transition: background-color 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.backgroundColor = "rgb(0, 255, 0)";
+  await waitForPaintsFlushed();
+
+  omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+          "background-color transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+          "background-color on compositor at 5s");
+
+  done_div();
+});
+
+// background-color animation with currentColor.
+addAsyncAnimTest(async function() {
+  new_div("color: rgb(255, 0, 0); " +
+          "background-color: currentColor; " +
+          "transition: background-color 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.backgroundColor = "rgb(0, 255, 0)";
+  await waitForPaintsFlushed();
+
+  omta_todo_is("background-color", "rgb(255, 0, 0)", RunningOn.ToDoCompositor,
+          "background-color transition starting with current-color runs on " +
+          "compositor thread");
+
+  advance_clock(5000);
+  omta_todo_is("background-color", "rgb(128, 128, 0)", RunningOn.ToDoCompositor,
+          "background-color on compositor at 5s");
+
+  done_div();
+});
+
+// Tests that a background-color animation from inherited currentColor to
+// a normal color on the compositor is updated when the parent color is
+// changed.
+addAsyncAnimTest(async function() {
+  new_div("");
+  const parent = document.createElement("div");
+  gDiv.parentNode.insertBefore(parent, gDiv);
+  parent.style.color = "rgb(255, 0, 0)";
+  parent.appendChild(gDiv);
+
+  gDiv.animate({ backgroundColor: [ "currentColor", "rgb(0, 255, 0)" ] }, 1000);
+
+  await waitForPaintsFlushed();
+
+  omta_todo_is("background-color", "rgb(255, 0, 0)", RunningOn.ToDoCompositor,
+          "background-color animation starting with current-color runs on " +
+          "compositor thread");
+
+  advance_clock(500);
+
+  omta_todo_is("background-color", "rgb(128, 128, 0)", RunningOn.ToDoCompositor,
+          "background-color on compositor at 5s");
+
+  // Change the parent's color in the middle of the animation.
+  parent.style.color = "rgb(0, 0, 255)";
+  await waitForPaintsFlushed();
+
+  omta_todo_is("background-color", "rgb(0, 128, 128)", RunningOn.ToDoCompositor,
+          "background-color on compositor is reflected by the parent's " +
+          "color change");
+
+  done_div();
+  parent.remove();
+});
+
+// Tests that a background-color animation from currentColor to a normal color
+// on <a> element is updated when the link is visited.
+addAsyncAnimTest(async function() {
+  if (AppConstants.platform === "android") {
+    todo(false, "no global history on GeckoView; can't run test");
+    return;
+  }
+
+  [ gDiv ] = new_element("a", "display: block");
+  gDiv.setAttribute("href", "not-exist.html");
+  gDiv.classList.add("visited");
+
+  const extraStyle = document.createElement('style');
+  document.head.appendChild(extraStyle);
+  extraStyle.sheet.insertRule(".visited:visited { color: rgb(0, 0, 255); }", 0);
+  extraStyle.sheet.insertRule(".visited:link { color: rgb(255, 0, 0); }", 1);
+
+  gDiv.animate({ backgroundColor: [ "currentColor", "rgb(0, 255, 0)" ] }, 1000);
+  await waitForPaintsFlushed();
+
+  omta_todo_is("background-color", "rgb(255, 0, 0)", RunningOn.ToDoCompositor,
+          "background-color animation starting with current-color runs on " +
+          "compositor thread");
+
+  advance_clock(500);
+
+  omta_todo_is("background-color", "rgb(128, 128, 0)", RunningOn.ToDoCompositor,
+          "background-color on compositor at 5s");
+
+  const topLocation =
+    await SpecialPowers.spawnChrome([], () => browsingContext.top.currentURI.spec);
+  gDiv.setAttribute("href", topLocation);
+  await waitForVisitedLinkColoring(gDiv, "color", "rgb(0, 0, 255)");
+  await waitForPaintsFlushed();
+
+  // `omta_is` checks that the result on the compositor equals to the value by
+  // getComputedValue() but getComputedValue lies for visited link values so
+  // we use getOMTAStyle directly instead.
+  todo_is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "background-color"),
+     "rgb(0, 128, 128)",
+     "background-color on <a> element after the link is visited");
+
+  extraStyle.remove();
+  done_element();
+  gDiv = null;
+});
+
+// Normal translate animation.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "transition: translate 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.translate = "200px";
+  await waitForPaintsFlushed();
+
+  omta_is("translate", { compositorValue: { tx: 100 }, computed: "100px" },
+          RunningOn.Compositor,
+          "translate transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("translate", { compositorValue: { tx: 150 }, computed: "150px" },
+          RunningOn.Compositor, "translate on compositor at 5s");
+
+  done_div();
+});
+
+// Normal rotate animation.
+addAsyncAnimTest(async function() {
+  new_div("rotate: 0deg; " +
+          "transition: rotate 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.rotate = "90deg";
+  await waitForPaintsFlushed();
+
+  omta_is("rotate", { compositorValue: [ 1, 0, 0, 1, 0, 0 ], computed: "0deg"},
+          RunningOn.Compositor, "rotate transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("rotate",
+          { compositorValue: [ Math.cos(Math.PI / 4), Math.sin(Math.PI / 4),
+                              -Math.sin(Math.PI / 4), Math.cos(Math.PI / 4),
+                               0, 0 ],
+            computed: "45deg" }, RunningOn.Compositor,
+          "rotate on compositor at 5s");
+
+  done_div();
+});
+
+// Normal scale animation.
+addAsyncAnimTest(async function() {
+  new_div("scale: 1 1; " +
+          "transition: scale 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.scale = "2 2";
+  await waitForPaintsFlushed();
+
+  omta_is("scale", { compositorValue: [ 1, 0, 0, 1, 0, 0 ], computed: "1" },
+          RunningOn.Compositor, "scale transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("scale",
+          { compositorValue: [ 1.5, 0, 0, 1.5, 0, 0 ], computed: "1.5" },
+          RunningOn.Compositor, "scale on compositor at 5s");
+
+  done_div();
+});
+
+// Normal multiple transform-like properties animation.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "scale: 1 1; " +
+          "transform: translate(200px); " +
+          "transition: all 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.translate = "200px";
+  gDiv.style.scale = "2 2";
+  gDiv.style.transform = "translate(100px)";
+  await waitForPaintsFlushed();
+
+  omta_is("transform", { compositorValue: { tx: 300 },
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("transform",
+          // The order is: translate, scale, transform.
+          // So the translate() in transform should be multiplied by 1.5.
+          { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 150*1.5), 0 ],
+            usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 5s");
+
+  done_div();
+});
+
+// Multiple transform-like properties animation. The non-animating properties
+// shouldn't be overridden by animating ones.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "scale: 1 1; " +
+          "transform: translate(200px); " +
+          "transition: all 10s linear");
+  await waitForPaintsFlushed();
+
+  // No transition on transform property.
+  gDiv.style.translate = "200px";
+  gDiv.style.scale = "2 2";
+  await waitForPaintsFlushed();
+
+  omta_is("transform", { compositorValue: { tx: 300 },
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("transform",
+          // The order is: translate, scale, transform.
+          // So the translate() in transform should be multiplied by 1.5.
+          { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 200*1.5), 0 ],
+            usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 5s");
+
+  done_div();
+});
+
+// Multiple transform-like properties animation with delay. The delayed
+// animating properties shouldn't be overridden.
+//
+// Note:
+// In delay phase, the SampleResult should be None, even though there is
+// an non-animating property which is also sent to the compositor.
+// If the SampleResult is Sampled in this case, we may get an incorrect result
+// ("scale" would be "1" because the final matrix is calculated by a default
+// scale value which overrides the scale css style).
+// That's why we shouldn't take non-animating properties into account on
+// SampleResult.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "scale: 1.25 1.25; " +
+          "animation: kf_scale 10s 2.5s linear");
+  await waitForPaintsFlushed();
+
+  // All transform-like properties use DisplayItemType::TYPE_TRANSFORM,
+  // so using "transform" is enough.
+  var compositorStr =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform");
+  ok(compositorStr === "",
+     "transform-like properties should not run on the compositor at 0s " +
+     "(in delay phase)");
+  var computedStr = window.getComputedStyle(gDiv).translate;
+  ok(computedStr === "100px",
+     "The computed value of translate property should be equal to 100px " +
+     "in delay phase, got " + computedStr);
+  computedStr = window.getComputedStyle(gDiv).scale;
+  ok(computedStr === "1.25",
+     "The computed value of scale property should be equal to 1.25 " +
+     "in delay phase, got " + computedStr);
+
+  advance_clock(2500);
+
+  omta_is("transform", { compositorValue: [ 1.25, 0, 0, 1.25, 100, 0 ],
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 2.5s");
+
+  advance_clock(5000);
+
+  omta_is("transform",
+          { compositorValue: [ 1.75, 0, 0, 1.75, 100, 0 ],
+            usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 7.5s");
+
+  done_div();
+});
+
+// Normal offset-path animation with path().
+addAsyncAnimTest(async function() {
+  new_div("offset-path: path('M50 50L100 100'); " +
+          "offset-distance: 50%; " +
+          "offset-rotate: 0deg; " +
+          "transition: offset-path 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.offsetPath = "path('M50 50L200 200')";
+  await waitForPaintsFlushed();
+
+  omta_is("offset-path",
+          { compositorValue: { tx: 25, ty: 25 },
+            computed: 'path("M 50 50 L 100 100")' },
+          RunningOn.Compositor,
+          "offset-path transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("offset-path",
+          { compositorValue: { tx: 50, ty: 50 },
+            computed: 'path("M 50 50 L 150 150")' },
+          RunningOn.Compositor,
+          "offset-path on compositor at 5s");
+
+  done_div();
+});
+
+// FIXME: Add test for ray() after we fix Bug 1590542.
+
+// Normal offset-distance animation.
+addAsyncAnimTest(async function() {
+  new_div("offset-path: path('M50 50v100'); " +
+          "offset-distance: 0%; " +
+          "offset-rotate: 0deg; " +
+          "transition: offset-distance 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.offsetDistance = "100%";
+  await waitForPaintsFlushed();
+
+  omta_is("offset-distance",
+          { compositorValue: { ty: 0 }, computed: '0%' },
+          RunningOn.Compositor,
+          "offset-distance transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("offset-distance",
+          { compositorValue: { ty: 50 }, computed: '50%' },
+          RunningOn.Compositor,
+          "offset-distance on compositor at 5s");
+
+  done_div();
+});
+
+// Normal offset-rotate animation.
+addAsyncAnimTest(async function() {
+  new_div("offset-path: path('M50 50v100'); " +
+          "offset-rotate: auto; " +
+          "transition: offset-rotate 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.offsetRotate = "auto 90deg";
+  await waitForPaintsFlushed();
+
+  // The direction vector is 90deg (because the path go from top to bottom), and
+  // offset-rotate is auto 0deg, so the entire rotation is 90deg.
+  // The matrix is [cos(pi/2), sin(pi/2), -sin(pi/2), cos(pi/2), 0, 0].
+  omta_is("offset-rotate",
+          { compositorValue: [ 0, 1, -1, 0, 0, 0 ], computed: 'auto' },
+          RunningOn.Compositor,
+          "offset-rotate transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  // At 50%, offset-rotate is auto 45deg, so the entire rotation is 135deg
+  // (= 90deg + 45deg = pi * 3/4), so the matrix is
+  // [cos(pi * 3/4), sin(pi * 3/4), -sin(pi * 3/4), cos(pi * 3/4), 0, 0]
+  omta_is("offset-rotate",
+          {
+            compositorValue: [
+              Math.cos(Math.PI * 3/4), Math.sin(Math.PI * 3/4),
+             -Math.sin(Math.PI * 3/4), Math.cos(Math.PI * 3/4),
+              0, 0
+            ],
+            computed: 'auto 45deg',
+          },
+          RunningOn.Compositor,
+          "offset-rotate on compositor at 5s");
+
+  done_div();
+});
+
+// Normal offset-anchor animation.
+addAsyncAnimTest(async function() {
+  new_div("offset-path: path('M50 50v100'); " +
+          "offset-rotate: 0deg; " +
+          "offset-anchor: 0% 0%; " +
+          "transition: offset-anchor 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.offsetAnchor = "100% 100%";
+  await waitForPaintsFlushed();
+
+  omta_is("offset-anchor",
+          { compositorValue: { tx: 50, ty: 50 }, computed: '0% 0%' },
+          RunningOn.Compositor,
+          "offset-anchor transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("offset-anchor",
+          { compositorValue: { tx: 0, ty: 0 }, computed: '50% 50%' },
+          RunningOn.Compositor,
+          "offset-anchor on compositor at 5s");
+
+  done_div();
+});
+
+// Normal multiple transform-like properties animation (including motion-path).
+addAsyncAnimTest(async function() {
+  new_div("translate: 0px; " +
+          "offset-path: path('M50 50v100');" +
+          "offset-distance: 0%;" +
+          "transform: translateX(0px); " +
+          "transition: all 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.translate = "0px 100px";
+  gDiv.style.transform = "translateX(-100px)";
+  gDiv.style.offsetDistance = "100%";
+  await waitForPaintsFlushed();
+
+  omta_is("transform", { compositorValue: [ 0, 1, -1, 0, 0, 0 ],
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("transform", { compositorValue: [ 0, 1, -1, 0, 0, 50 ],
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties transition runs on compositor thread");
+
+  done_div();
+});
+
+</script>
+</html>

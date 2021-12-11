@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=960820
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 960820</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for exception stacks crossing **/
+
+  // Synchronous event dispatch creates a new script entry point. At the time
+  // of this writing, an event listener defined in a Sandbox will cause the
+  // SafeJSContext to be pushed to the cx stack, which differs from the JSContext
+  // associated with this DOM window. So we test both kinds of boundaries.
+  var sb = new SpecialPowers.Cu.Sandbox(SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal());
+  sb.win = window;
+  SpecialPowers.Cu.evalInSandbox("win.document.addEventListener('click', " +
+                                 "function clickHandler() { win.wrappedJSObject.clickCallback(); });", sb);
+  function clickCallback() {
+    var stack = (new Error()).stack;
+    ok(true, "Invoked clickCallback. Stack: " + stack);
+    ok(/clickCallback/.test(stack), "clickCallback should be in the stack");
+    ok(!/clickHandler/.test(stack), "clickHandler should not be in the stack");
+    ok(/dispatchClick/.test(stack), "dispatchClick should be in the stack");
+
+    // Check Components.stack, but first filter through the SpecialPowers junk.
+    var stack = SpecialPowers.wrap(SpecialPowers.Components).stack;
+    while (/specialpowers/.test(stack)) {
+      stack = stack.caller;
+    }
+    ok(/clickCallback/.test(stack), "clickCallback should be reachable via Components.stack");
+    ok(/clickHandler/.test(stack.caller), "clickHandler should be reachable via Components.stack");
+    ok(/dispatchClick/.test(stack.caller.caller), "dispatchClick hould be reachable via Components.stack");
+  }
+  function dispatchClick() {
+    document.dispatchEvent(new MouseEvent('click'));
+  }
+  dispatchClick();
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=960820">Mozilla Bug 960820</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

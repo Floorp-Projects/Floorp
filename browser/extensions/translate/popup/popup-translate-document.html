@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/w3css/4/w3.css">
+</head>
+<body style="max-width: 360px;">
+    <section id="sectionSelect">
+        <p class="w3-container w3-round w3-light-grey w3-padding" data-i18n="msgToTranslateThisDocument" data-i18n-ph-value="(.pdf)">To translate this document (.pdf) it is necessary to convert it to HTML</p>
+        <div class="w3-padding w3-center">
+            <span data-i18n="msgSelectServiceConversion">Select a service to do this conversion</span>
+            <ul class="w3-ul w3-margin-top" id="selectService">
+                <li class="w3-button w3-border w3-round" data-name="translatewebpages">translatewebpages.org</li>
+                <li class="w3-button w3-border w3-round" data-name="google" style="margin-top: 5px;">translate.googleusercontent.com</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="sectionDownload" style="display: none;">
+        <p class="w3-container w3-round w3-light-grey w3-padding" data-i18n="msgDownloadingDocument">Downloading the document...</p>
+        <div class="w3-padding w3-center">
+            <span id="progress">0%</span>
+            <br>
+            <span id="error" class="w3-red w3-round" style="display: none;"></span>
+            <br>
+            <div id="send" class="w3-button w3-round w3-border" style="display: none;" data-i18n="msgSendDocument">Send document</div>
+            <div id="tryAgain" class="w3-button w3-round w3-border" style="display: none;" data-i18n="btnTryAgain">Try again</div>
+        </div>
+    </section>
+
+    <form action="https://translatewebpages.org/pdftohtml" method="POST" target="_blank" enctype="multipart/form-data" id="form_translatewebpages" style="display: none;">
+        <input type="text" name="autotranslate" hidden>
+        <input type="file" name="file">
+        <input type="submit" value="Submit">
+    </form>
+
+    <form action="https://translate.googleusercontent.com/translate_f" method="POST" target="_blank" enctype="multipart/form-data" id="form_google" style="display: none;">
+        <input type="text" name="hl" value="pt-BR">
+        <input type="text" name="ie" value="UTF-8">
+        <input type="text" name="js" value="y">
+        <input type="text" name="prev" value="_t">
+        <input type="text" name="sl" value="auto">
+        <input type="text" name="tl" value="pt">
+        <input type="file" name="file">
+        <input type="submit" value="Submit">
+    </form>
+
+    <script src="/lib/languages.js"></script>
+    <script src="/lib/config.js"></script>
+    <script src="/lib/i18n.js"></script>
+    <script src="popup-translate-document.js"></script>
+</body>
+</html>

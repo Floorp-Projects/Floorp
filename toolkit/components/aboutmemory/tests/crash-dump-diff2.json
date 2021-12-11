@@ -1,0 +1,11 @@
+{
+  "foo": 3,
+  "blah": 4,
+  "memory_report": {
+    "version": 1,
+    "hasMozMallocUsableSize": true,
+    "reports": [
+      {"process": "Main Process (pid NNN)", "path": "heap-allocated", "kind": 2, "units": 0, "amount": 262144001, "description": "Heap allocated."}
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    if (isApzEnabled()) {
+      SimpleTest.waitForExplicitFinish();
+
+
+      var prefs = [
+        ["apz.test.logging_enabled", true],
+        ["apz.paint_skipping.enabled", true],
+        ["apz.displayport_expiry_ms", 0],
+        ["general.smoothScroll", false],
+        ["apz.minimap.enabled", true], // helps to debug these tests
+      ];
+
+      var px_ratio_1_prefs = [
+        ...prefs,
+        ["layout.css.devPixelsPerPx", 1.0],
+      ];
+
+      var zoom_and_pan_prefs = [
+        ...prefs,
+        ...getPrefs("TOUCH_EVENTS:PAN"),
+        ["apz.allow_zooming", true],
+      ];
+
+      var no_multiplier_prefs = [
+        ...zoom_and_pan_prefs,
+        ["layers.low-precision-buffer", false],
+        ["apz.x_skate_size_multiplier", "0.0"],
+        ["apz.y_skate_size_multiplier", "0.0"],
+        ["apz.x_stationary_size_multiplier", "0.0"],
+        ["apz.y_stationary_size_multiplier", "0.0"],
+      ];
+
+      var subtests = [
+        { file: "helper_checkerboard_apzforcedisabled.html", prefs },
+        { file: "helper_checkerboard_scrollinfo.html", prefs },
+        { file: "helper_horizontal_checkerboard.html", "prefs": px_ratio_1_prefs },
+        { file: "helper_checkerboard_no_multiplier.html", "prefs": no_multiplier_prefs },
+        { file: "helper_checkerboard_zoom_during_load.html", "prefs": no_multiplier_prefs },
+        { file: "helper_wide_crossorigin_iframe.html", prefs },
+      ];
+
+      let platform = getPlatform();
+      if (platform != "windows") {
+        subtests.push(
+          { file: "helper_checkerboard_zoomoverflowhidden.html", "prefs": zoom_and_pan_prefs }
+        );
+      }
+
+      var scrollbarbutton_prefs = [
+        ...prefs,
+        ["general.smoothScroll", true],
+        // bug 1682919 only affects the main thread scrollbar button repeat codepath
+        ["apz.scrollbarbuttonrepeat.enabled", false]
+      ];
+
+      // Only Windows has scrollbar buttons in automation.
+      if (platform == "windows") {
+        subtests.push(
+          { file: "helper_scrollbarbuttonclick_checkerboard.html", "prefs": scrollbarbutton_prefs},
+        );
+      }
+
+      // Run the actual test in its own window, because it requires that the
+      // root APZC be scrollable. Mochitest pages themselves often run
+      // inside an iframe which means we have no control over the root APZC.
+      window.onload = () => {
+        runSubtestsSeriallyInFreshWindows(subtests)
+        .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+      };
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+  <title>touchmove coalescing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  window.oncontextmenu = function(e) {
+    e.preventDefault();
+  }
+
+  window.addEventListener("touchstart", function(e) { e.preventDefault(); },
+                          { passive: false} );
+
+  var touchmoveEvents = [];
+  function touchmove(e) {
+    // Make touchmove handling slow
+    var start = performance.now();
+    while (performance.now() < (start + 5));
+    touchmoveEvents.push(e);
+  }
+
+  async function fireLotsOfSingleTouchMoves() {
+    var ret = new Promise(function(resolve) {
+      SpecialPowers.loadChromeScript(function() {
+        var element = this.actorParent.rootFrameLoader.ownerElement;
+        var rect = element.getBoundingClientRect();
+        var win = element.ownerDocument.defaultView;
+        var utils = win.windowUtils;
+        var x = rect.x + (rect.width / 2);
+        var y = Math.floor(rect.y + (rect.height / 4));
+        var endY = Math.floor(rect.y + ((rect.height / 4) * 2));
+        utils.sendTouchEvent("touchstart", [0], [x], [y], [1], [1], [0], [1],
+                             0, false);
+        while (y != endY) {
+          utils.sendTouchEvent("touchmove", [0], [x], [y], [1], [1], [0], [1],
+                               0, false);
+          ++y;
+        }
+        utils.sendTouchEvent("touchend", [0], [x], [y], [1], [1], [0], [1],
+                             0, false);
+
+      });
+
+      touchmoveEvents = [];
+      window.addEventListener("touchmove", touchmove, true);
+      window.addEventListener("touchend", function(e) {
+        window.removeEventListener("touchmove", touchmove, true);
+        resolve(touchmoveEvents);
+      }, {once: true});
+    });
+
+    return ret
+  }
+
+  async function fireTwoSingleTouches() {
+    var ret = new Promise(function(resolve) {
+      SpecialPowers.loadChromeScript(function() {
+        var element = this.actorParent.rootFrameLoader.ownerElement;
+        var rect = element.getBoundingClientRect();
+        var win = element.ownerDocument.defaultView;
+        var utils = win.windowUtils;
+        var x = rect.x + (rect.width / 2);
+        var startY = Math.floor(rect.y + (rect.height / 4));
+        var endY = Math.floor(rect.y + ((rect.height / 4) * 2));
+        utils.sendTouchEvent("touchstart", [0], [x], [startY], [1], [1], [0],
+                             [1], 0, false);
+        utils.sendTouchEvent("touchmove", [0], [x], [startY], [1], [1], [0],
+                             [1], 0, false);
+        utils.sendTouchEvent("touchmove", [0], [x], [startY + 1], [1], [1], [0],
+                             [1], 0, false);
+        utils.sendTouchEvent("touchend", [0], [x], [endY], [1], [1], [0],
+                             [1], 0, false);
+      });
+
+      touchmoveEvents = [];
+      window.addEventListener("touchmove", touchmove, true);
+      window.addEventListener("touchend", function(e) {
+        window.removeEventListener("touchmove", touchmove, true);
+        resolve(touchmoveEvents);
+      }, {once: true});
+    });
+
+    return ret
+  }
+
+  async function fireLotsOfMultiTouchMoves() {
+    var ret = new Promise(function(resolve) {
+      SpecialPowers.loadChromeScript(function() {
+        var element = this.actorParent.rootFrameLoader.ownerElement;
+        var rect = element.getBoundingClientRect();
+        var win = element.ownerDocument.defaultView;
+        var utils = win.windowUtils;
+        var x = rect.x + (rect.width / 2);
+        var startY = Math.floor(rect.y + (rect.height / 4));
+        var endY = Math.floor(rect.y + ((rect.height / 4) * 2));
+        utils.sendTouchEvent("touchstart", [0, 1], [x, x + 1],
+                             [startY, startY + 1], [1, 1], [1, 1], [0, 0],
+                             [1, 1], 0, false);
+        while (startY != endY) {
+          utils.sendTouchEvent("touchmove", [0, 1], [x, x + 1],
+                               [startY, startY + 1], [1, 1], [1, 1], [0, 0],
+                               [1, 1], 0, false);
+          ++startY;
+        }
+        utils.sendTouchEvent("touchend", [0, 1], [x, x + 1], [endY, endY + 1],
+                             [1, 1], [1, 1], [0, 0], [1, 1], 0, false);
+
+      });
+
+      touchmoveEvents = [];
+      window.addEventListener("touchmove", touchmove, true);
+      window.addEventListener("touchend", function(e) {
+        window.removeEventListener("touchmove", touchmove, true);
+        resolve(touchmoveEvents);
+      }, {once: true});
+    });
+
+    return ret
+  }
+
+  function disableCoalescing() {
+    return SpecialPowers.pushPrefEnv({"set": [["dom.events.compress.touchmove",
+                                               false],
+                                              ["dom.events.coalesce.touchmove",
+                                               false]]});
+  }
+
+  function enableCoalescing() {
+    return SpecialPowers.pushPrefEnv({"set": [["dom.events.compress.touchmove",
+                                               false],
+                                              ["dom.events.coalesce.touchmove",
+                                               true]]});
+  }
+
+  async function runTests() {
+    document.body.clientTop; // Flush layout
+
+    await disableCoalescing();
+    var touchMovesWithoutCoalescing = await fireLotsOfSingleTouchMoves();
+    await enableCoalescing();
+    var touchMovesWithCoalescing = await fireLotsOfSingleTouchMoves();
+    opener.ok(touchMovesWithoutCoalescing.length > touchMovesWithCoalescing.length,
+              "Coalescing should reduce the number of touchmove events");
+    opener.isDeeply(touchMovesWithoutCoalescing.shift().touches,
+                    touchMovesWithCoalescing.shift().touches,
+                    "Shouldn't have coalesced the initial touchmove");
+    opener.isDeeply(touchMovesWithoutCoalescing.pop().touches,
+                    touchMovesWithCoalescing.pop().touches,
+                    "The last touchmove event should be up-to-date");
+
+    await disableCoalescing();
+    var twoTouchMovesWithoutCoalescing = await fireTwoSingleTouches();
+    await enableCoalescing();
+    var twoTouchMovesWithCoalescing = await fireTwoSingleTouches();
+    opener.is(twoTouchMovesWithoutCoalescing.length, 2,
+              "Should have got two touchmoves");
+    opener.is(twoTouchMovesWithoutCoalescing.length,
+              twoTouchMovesWithCoalescing.length,
+              "Shouldn't have coalesced the touchmove.");
+
+    await disableCoalescing();
+    var multiTouchMovesWithoutCoalescing = await fireLotsOfMultiTouchMoves();
+    await enableCoalescing();
+    var multiTouchMovesWithCoalescing = await fireLotsOfMultiTouchMoves();
+    opener.ok(multiTouchMovesWithoutCoalescing.length > multiTouchMovesWithCoalescing.length,
+       "Coalescing should reduce the number of multitouch touchmove events");
+    opener.isDeeply(multiTouchMovesWithoutCoalescing.shift().touches,
+                    multiTouchMovesWithCoalescing.shift().touches,
+                    "Shouldn't have coalesced the initial multitouch touchmove event");
+    opener.isDeeply(multiTouchMovesWithoutCoalescing.pop().touches,
+                    multiTouchMovesWithCoalescing.pop().touches,
+                    "The last multitouch touchmove event should be up-to-date");
+
+    opener.finish();
+    window.close();
+  }
+
+  function init() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", true]]},
+                              runTests);
+  }
+  </script>
+</head>
+<body style="height: 100vh;" onload="SimpleTest.waitForFocus(init);">
+</body>
+</html>

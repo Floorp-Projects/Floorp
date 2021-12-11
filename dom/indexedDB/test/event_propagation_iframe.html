@@ -1,0 +1,134 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript">
+
+    let testGenerator = testSteps();
+
+    function ok(val, message) {
+      val = val ? "true" : "false";
+      window.parent.postMessage("SimpleTest.ok(" + val + ", '" + message +
+                                "');", "*");
+    }
+
+    function grabEventAndContinueHandler(event) {
+      testGenerator.next(event);
+    }
+
+    function errorHandler(event) {
+      ok(false, "indexedDB error, code " + event.target.error.name);
+      finishTest();
+    }
+
+    function finishTest() {
+      testGenerator.return();
+      window.parent.postMessage("SimpleTest.finish();", "*");
+    }
+
+    const eventChain = [
+      "IDBRequest",
+      "IDBTransaction",
+      "IDBDatabase",
+    ];
+
+    let captureCount = 0;
+    let bubbleCount = 0;
+    let atTargetCount = 0;
+
+    function errorEventCounter(event) {
+      ok(event.type == "error", "Got an error event");
+      ok(event.target instanceof window[eventChain[0]],
+         "Correct event.target");
+
+      let constructor;
+      if (event.eventPhase == event.AT_TARGET) {
+        atTargetCount++;
+        constructor = eventChain[0];
+      }
+      else if (event.eventPhase == event.CAPTURING_PHASE) {
+        constructor = eventChain[eventChain.length - 1 - captureCount++];
+      }
+      else if (event.eventPhase == event.BUBBLING_PHASE) {
+        constructor = eventChain[++bubbleCount];
+        if (bubbleCount == eventChain.length - 1) {
+          event.preventDefault();
+        }
+      }
+      ok(event.currentTarget instanceof window[constructor],
+         "Correct event.currentTarget");
+
+      if (bubbleCount == eventChain.length - 1) {
+        ok(bubbleCount == captureCount,
+           "Got same number of calls for both phases");
+        ok(atTargetCount == 1, "Got one atTarget event");
+
+        captureCount = bubbleCount = atTargetCount = 0;
+        finishTest();
+      }
+    }
+
+    function* testSteps() {
+      window.parent.SpecialPowers.addPermission("indexedDB", true, document);
+
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      let db = event.target.result;
+      db.onerror = errorEventCounter;
+      db.addEventListener("error", errorEventCounter, true);
+
+      event.target.onsuccess = grabEventAndContinueHandler;
+
+      db.createObjectStore("foo", { autoIncrement: true });
+      yield undefined;
+
+      let transaction = db.transaction("foo", "readwrite");
+      transaction.addEventListener("error", errorEventCounter);
+      transaction.addEventListener("error", errorEventCounter, true);
+
+      let objectStore = transaction.objectStore("foo");
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onerror = errorHandler;
+      event = yield undefined;
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = function(event) {
+        ok(false, "Did not expect second add to succeed.");
+      };
+      request.onerror = errorEventCounter;
+      yield undefined;
+
+      transaction = db.transaction("foo", "readwrite");
+      transaction.addEventListener("error", errorEventCounter);
+      transaction.addEventListener("error", errorEventCounter, true);
+
+      objectStore = transaction.objectStore("foo");
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onerror = errorHandler;
+      event = yield undefined;
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = function(event) {
+        ok(false, "Did not expect second add to succeed.");
+      };
+      request.onerror = errorEventCounter;
+      yield undefined;
+    }
+  </script>
+
+</head>
+
+<body onload="testGenerator.next();"></body>
+
+</html>

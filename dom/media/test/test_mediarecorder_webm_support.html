@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media Recording - test WebM MIME support</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ok(MediaRecorder.isTypeSupported('audio/webm'),
+   'Should support audio/webm');
+ok(MediaRecorder.isTypeSupported('AUDIO/WEBM'),
+   'Should support audio/webm, upper case');
+ok(MediaRecorder.isTypeSupported('AuDiO/wEbM'),
+   'Should support audio/webm, mixed case');
+
+ok(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'),
+   'Should support audio/webm;codecs=opus');
+ok(MediaRecorder.isTypeSupported('AUDIO/WEBM;CODECS=opus'),
+   'Should support audio/webm;codecs=opus, upper case');
+ok(MediaRecorder.isTypeSupported('AuDiO/wEbM;cOdEcS=opus'),
+   'Should support audio/webm;codecs=opus, mixed case');
+
+ok(MediaRecorder.isTypeSupported('video/webm'),
+   'Should support video/webm');
+ok(MediaRecorder.isTypeSupported('VIDEO/WEBM'),
+   'Should support video/webm, upper case');
+ok(MediaRecorder.isTypeSupported('vIdEo/WeBm'),
+   'Should support video/webm, mixed case');
+
+ok(MediaRecorder.isTypeSupported('video/webm; codecs="vp8"'),
+   'Should support video/webm; codecs="vp8"');
+ok(MediaRecorder.isTypeSupported('VIDEO/WEBM; CODECS="vp8"'),
+   'Should support video/webm; codecs="vp8", upper case');
+ok(MediaRecorder.isTypeSupported('vIdEo/WeBm; CoDeCs="vp8"'),
+   'Should support video/webm; codecs="vp8", mixed case');
+
+ok(MediaRecorder.isTypeSupported('video/webm; codecs="vp8.0"'),
+   'Should support video/webm; codecs="vp8.0"');
+ok(MediaRecorder.isTypeSupported('VIDEO/WEBM; CODECS="vp8.0"'),
+   'Should support video/webm; codecs="vp8.0", upper case');
+ok(MediaRecorder.isTypeSupported('vIdEo/WeBm; CoDeCs="vp8.0"'),
+   'Should support video/webm; codecs="vp8.0", mixed case');
+
+ok(!MediaRecorder.isTypeSupported('video/webm; codecs="vp8, vorbis"'),
+   'Should not support video/webm + vp8/vorbis');
+ok(!MediaRecorder.isTypeSupported('video/webm; codecs="vp9, vorbis"'),
+   'Should not support video/webm + vp9/vorbis');
+ok(MediaRecorder.isTypeSupported('video/webm; codecs="vp8, opus"'),
+   'Should support video/webm + vp8/opus');
+ok(!MediaRecorder.isTypeSupported('video/webm; codecs="vp9, opus"'),
+   'Should not support video/webm + vp9/opus');
+</script>
+</head>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PC construct with no global object (bug 1717318)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+"use strict";
+
+// nsIArray is not special here, it could be pretty much any interface.
+// We do this outside the try block just in case someday the interface is
+// removed.
+const dummyInterface = SpecialPowers.Components.interfaces.nsIArray;
+ok(dummyInterface, "nsIArray should exist");
+try {
+  // Just don't crash.
+  SpecialPowers.Components.classes["@mozilla.org/peerconnection;1"]
+      .createInstance(dummyInterface);
+} catch (e) {}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+diff --git a/gfx/skia/src/core/SkDraw.cpp b/gfx/skia/src/core/SkDraw.cpp
+--- a/gfx/skia/src/core/SkDraw.cpp
++++ b/gfx/skia/src/core/SkDraw.cpp
+@@ -2529,17 +2529,17 @@ static bool compute_bounds(const SkPath&
+ 
+     //  init our bounds from the path
+     {
+         SkRect pathBounds = devPath.getBounds();
+         pathBounds.inset(-SK_ScalarHalf, -SK_ScalarHalf);
+         pathBounds.roundOut(bounds);
+     }
+ 
+-    SkIPoint margin;
++    SkIPoint margin = SkIPoint::Make(0, 0);
+     if (filter) {
+         SkASSERT(filterMatrix);
+ 
+         SkMask srcM, dstM;
+ 
+         srcM.fBounds = *bounds;
+         srcM.fFormat = SkMask::kA8_Format;
+         srcM.fImage = NULL;

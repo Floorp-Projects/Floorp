@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+<script src="head.js"></script>
+<script>
+"use strict";
+
+async function background() {
+  const url = "http://ext-cookie-first-party.mochi.test/";
+  const firstPartyDomain = "ext-cookie-first-party.mochi.test";
+  // A first party domain with invalid characters for the file system, which just happens to be a IPv6 address.
+  const firstPartyDomainInvalidChars = "[2606:4700:4700::1111]";
+  const expectedError = "First-Party Isolation is enabled, but the required 'firstPartyDomain' attribute was not set.";
+
+  const assertExpectedCookies = (expected, cookies, message) => {
+    let matches = (cookie, expected) => {
+      if (!cookie || !expected) {
+        return cookie === expected; // true if both are null.
+      }
+      for (let key of Object.keys(expected)) {
+        if (cookie[key] !== expected[key]) {
+          return false;
+        }
+      }
+      return true;
+    };
+    browser.test.assertEq(expected.length, cookies.length, `Got expected number of cookies - ${message}`);
+    if (cookies.length !== expected.length) {
+      return;
+    }
+    for (let expect of expected) {
+      let foundCookies = cookies.filter(cookie => matches(cookie, expect));
+      browser.test.assertEq(1, foundCookies.length,
+                            `Expected cookie ${JSON.stringify(expect)} found - ${message}`);
+    }
+  };
+
+  // Test when FPI is disabled.
+  const test_fpi_disabled = async () => {
+    let cookie, cookies;
+
+    // set
+    cookie = await browser.cookies.set({url, name: "foo1", value: "bar1"});
+    assertExpectedCookies([
+      {name: "foo1", value: "bar1", firstPartyDomain: ""},
+    ], [cookie], "set: FPI off, w/ empty firstPartyDomain, non-FP cookie");
+    cookie = await browser.cookies.set({url, name: "foo2", value: "bar2", firstPartyDomain});
+    assertExpectedCookies([
+      {name: "foo2", value: "bar2", firstPartyDomain},
+    ], [cookie], "set: FPI off, w/ firstPartyDomain, FP cookie");
+
+    // get
+    // When FPI is disabled, missing key/null/undefined is equivalent to "".
+    cookie = await browser.cookies.get({url, name: "foo1"});
+    assertExpectedCookies([
+      {name: "foo1", value: "bar1", firstPartyDomain: ""},
+    ], [cookie], "get: FPI off, w/o firstPartyDomain, non-FP cookie");
+    cookie = await browser.cookies.get({url, name: "foo1", firstPartyDomain: ""});
+    assertExpectedCookies([
+      {name: "foo1", value: "bar1", firstPartyDomain: ""},
+    ], [cookie], "get: FPI off, w/ empty firstPartyDomain, non-FP cookie");
+    cookie = await browser.cookies.get({url, name: "foo1", firstPartyDomain: null});
+    assertExpectedCookies([
+      {name: "foo1", value: "bar1", firstPartyDomain: ""},
+    ], [cookie], "get: FPI off, w/ null firstPartyDomain, non-FP cookie");
+    cookie = await browser.cookies.get({url, name: "foo1", firstPartyDomain: undefined});
+    assertExpectedCookies([
+      {name: "foo1", value: "bar1", firstPartyDomain: ""},
+    ], [cookie], "get: FPI off, w/ undefined firstPartyDomain, non-FP cookie");
+
+    cookie = await browser.cookies.get({url, name: "foo2", firstPartyDomain});
+    assertExpectedCookies([
+      {name: "foo2", value: "bar2", firstPartyDomain},
+    ], [cookie], "get: FPI off, w/ firstPartyDomain, FP cookie");
+    // There is no match for non-FP cookies with name "foo2".
+    cookie = await browser.cookies.get({url, name: "foo2"});
+    assertExpectedCookies([null], [cookie], "get: FPI off, w/o firstPartyDomain, no cookie");
+    cookie = await browser.cookies.get({url, name: "foo2", firstPartyDomain: ""});
+    assertExpectedCookies([null], [cookie], "get: FPI off, w/ empty firstPartyDomain, no cookie");
+    cookie = await browser.cookies.get({url, name: "foo2", firstPartyDomain: null});
+    assertExpectedCookies([null], [cookie], "get: FPI off, w/ null firstPartyDomain, no cookie");
+    cookie = await browser.cookies.get({url, name: "foo2", firstPartyDomain: undefined});
+    assertExpectedCookies([null], [cookie], "get: FPI off, w/ undefined firstPartyDomain, no cookie");
+
+    // getAll
+    for (let extra of [{}, {url}, {domain: firstPartyDomain}]) {
+      const prefix = `getAll(${JSON.stringify(extra)})`;
+      cookies = await browser.cookies.getAll({...extra});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+      ], cookies, `${prefix}: FPI off, w/o firstPartyDomain, non-FP cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: ""});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+      ], cookies, `${prefix}: FPI off, w/ empty firstPartyDomain, non-FP cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: null});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+      ], cookies, `${prefix}: FPI off, w/ null firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: undefined});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+      ], cookies, `${prefix}: FPI off, w/ undefined firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain});
+      assertExpectedCookies([
+        {name: "foo2", value: "bar2", firstPartyDomain},
+      ], cookies, `${prefix}: FPI off, w/ firstPartyDomain, FP cookies`);
+    }
+
+    // remove
+    cookie = await browser.cookies.remove({url, name: "foo1"});
+    assertExpectedCookies([
+      {url, name: "foo1", firstPartyDomain: ""},
+    ], [cookie], "remove: FPI off, w/ empty firstPartyDomain, non-FP cookie");
+    cookie = await browser.cookies.remove({url, name: "foo2", firstPartyDomain});
+    assertExpectedCookies([
+      {url, name: "foo2", firstPartyDomain},
+    ], [cookie], "remove: FPI off, w/ firstPartyDomain, FP cookie");
+
+    // Test if FP cookies set when FPI off can be accessed when FPI on.
+    await browser.cookies.set({url, name: "foo1", value: "bar1"});
+    await browser.cookies.set({url, name: "foo2", value: "bar2", firstPartyDomain});
+
+    browser.test.sendMessage("test_fpi_disabled");
+  };
+
+  // Test when FPI is enabled.
+  const test_fpi_enabled = async () => {
+    let cookie, cookies;
+
+    // set
+    await browser.test.assertRejects(
+      browser.cookies.set({url, name: "foo3", value: "bar3"}),
+      expectedError,
+      "set: FPI on, w/o firstPartyDomain, rejection");
+    cookie = await browser.cookies.set({url, name: "foo4", value: "bar4", firstPartyDomain});
+    assertExpectedCookies([
+      {name: "foo4", value: "bar4", firstPartyDomain},
+    ], [cookie], "set: FPI on, w/ firstPartyDomain, FP cookie");
+
+    // get
+    await browser.test.assertRejects(
+      browser.cookies.get({url, name: "foo3"}),
+      expectedError,
+      "get: FPI on, w/o firstPartyDomain, rejection");
+    await browser.test.assertRejects(
+      browser.cookies.get({url, name: "foo3", firstPartyDomain: null}),
+      expectedError,
+      "get: FPI on, w/ null firstPartyDomain, rejection");
+    await browser.test.assertRejects(
+      browser.cookies.get({url, name: "foo3", firstPartyDomain: undefined}),
+      expectedError,
+      "get: FPI on, w/ undefined firstPartyDomain, rejection");
+    cookie = await browser.cookies.get({url, name: "foo1", firstPartyDomain: ""});
+    assertExpectedCookies([
+      {name: "foo1", value: "bar1", firstPartyDomain: ""},
+    ], [cookie], "get: FPI on, w/ empty firstPartyDomain, non-FP cookie");
+    cookie = await browser.cookies.get({url, name: "foo4", firstPartyDomain});
+    assertExpectedCookies([
+      {name: "foo4", value: "bar4", firstPartyDomain},
+    ], [cookie], "get: FPI on, w/ firstPartyDomain, FP cookie");
+    cookie = await browser.cookies.get({url, name: "foo2", firstPartyDomain});
+    assertExpectedCookies([
+      {name: "foo2", value: "bar2", firstPartyDomain},
+    ], [cookie], "get: FPI on, w/ firstPartyDomain, FP cookie (set when FPI off)");
+
+    // getAll
+    for (let extra of [{}, {url}, {domain: firstPartyDomain}]) {
+      const prefix = `getAll(${JSON.stringify(extra)})`;
+      await browser.test.assertRejects(
+        browser.cookies.getAll({...extra}),
+        expectedError,
+        `${prefix}: FPI on, w/o firstPartyDomain, rejection`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: ""});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+      ], cookies, `${prefix}: FPI on, w/ empty firstPartyDomain, non-FP cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: null});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+        {name: "foo4", value: "bar4", firstPartyDomain},
+      ], cookies, `${prefix}: FPI on, w/ null firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain: undefined});
+      assertExpectedCookies([
+        {name: "foo1", value: "bar1", firstPartyDomain: ""},
+        {name: "foo2", value: "bar2", firstPartyDomain},
+        {name: "foo4", value: "bar4", firstPartyDomain},
+      ], cookies, `${prefix}: FPI on, w/ undefined firstPartyDomain, all cookies`);
+      cookies = await browser.cookies.getAll({...extra, firstPartyDomain});
+      assertExpectedCookies([
+        {name: "foo2", value: "bar2", firstPartyDomain},
+        {name: "foo4", value: "bar4", firstPartyDomain},
+      ], cookies, `${prefix}: FPI on, w/ firstPartyDomain, FP cookies`);
+    }
+
+    // remove
+    await browser.test.assertRejects(
+      browser.cookies.remove({url, name: "foo3"}),
+      expectedError,
+      "remove: FPI on, w/o firstPartyDomain, rejection");
+    cookie = await browser.cookies.remove({url, name: "foo4", firstPartyDomain});
+    assertExpectedCookies([
+      {url, name: "foo4", firstPartyDomain},
+    ], [cookie], "remove: FPI on, w/ firstPartyDomain, FP cookie");
+    cookie = await browser.cookies.remove({url, name: "foo2", firstPartyDomain});
+    assertExpectedCookies([
+      {url, name: "foo2", firstPartyDomain},
+    ], [cookie], "remove: FPI on, w/ firstPartyDomain, FP cookie (set when FPI off)");
+
+    // Test if FP cookies set when FPI on can be accessed when FPI off.
+    await browser.cookies.set({url, name: "foo4", value: "bar4", firstPartyDomain});
+
+    browser.test.sendMessage("test_fpi_enabled");
+  };
+
+  // Test FPI with a first party domain with invalid characters for
+  // the file system.
+  const test_fpi_with_invalid_characters = async () => {
+    let cookie;
+
+    // Test setting a cookie with a first party domain with invalid characters
+    // for the file system.
+    cookie = await browser.cookies.set({url, name: "foo5", value: "bar5",
+                                        firstPartyDomain: firstPartyDomainInvalidChars});
+    assertExpectedCookies([
+      {name: "foo5", value: "bar5", firstPartyDomain: firstPartyDomainInvalidChars},
+    ], [cookie], "set: FPI on, w/ firstPartyDomain with invalid characters, FP cookie");
+
+    // Test getting a cookie with a first party domain with invalid characters
+    // for the file system.
+    cookie = await browser.cookies.get({url, name: "foo5",
+                                        firstPartyDomain: firstPartyDomainInvalidChars});
+    assertExpectedCookies([
+      {name: "foo5", value: "bar5", firstPartyDomain: firstPartyDomainInvalidChars},
+    ], [cookie], "get: FPI on, w/ firstPartyDomain with invalid characters, FP cookie");
+
+    // Test removing a cookie with a first party domain with invalid characters
+    // for the file system.
+    cookie = await browser.cookies.remove({url, name: "foo5",
+                                           firstPartyDomain: firstPartyDomainInvalidChars});
+    assertExpectedCookies([
+      {url, name: "foo5", firstPartyDomain: firstPartyDomainInvalidChars},
+    ], [cookie], "remove: FPI on, w/ firstPartyDomain with invalid characters, FP cookie");
+
+    browser.test.sendMessage("test_fpi_with_invalid_characters");
+  };
+
+  // Test when FPI is disabled again, accessing FP cookies set when FPI is enabled.
+  const test_fpd_cookies_on_fpi_disabled = async () => {
+    let cookie, cookies;
+    cookie = await browser.cookies.get({url, name: "foo4", firstPartyDomain});
+    assertExpectedCookies([
+      {name: "foo4", value: "bar4", firstPartyDomain},
+    ], [cookie], "get: FPI off, w/ firstPartyDomain, FP cookie (set when FPI on)");
+    cookie = await browser.cookies.remove({url, name: "foo4", firstPartyDomain});
+    assertExpectedCookies([
+      {url, name: "foo4", firstPartyDomain},
+    ], [cookie], "remove: FPI off, w/ firstPartyDomain, FP cookie (set when FPI on)");
+
+    // Clean up.
+    await browser.cookies.remove({url, name: "foo1"});
+
+    cookies = await browser.cookies.getAll({firstPartyDomain: null});
+    assertExpectedCookies([], cookies, "Test is finishing, all cookies removed");
+
+    browser.test.sendMessage("test_fpd_cookies_on_fpi_disabled");
+  };
+
+  browser.test.onMessage.addListener((message) => {
+    switch (message) {
+      case "test_fpi_disabled": return test_fpi_disabled();
+      case "test_fpi_enabled": return test_fpi_enabled();
+      case "test_fpi_with_invalid_characters": return test_fpi_with_invalid_characters();
+      case "test_fpd_cookies_on_fpi_disabled": return test_fpd_cookies_on_fpi_disabled();
+      default: return browser.test.notifyFail("unknown-message");
+    }
+  });
+}
+
+function enableFirstPartyIsolation() {
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.firstparty.isolate", true],
+    ],
+  });
+}
+
+function disableFirstPartyIsolation() {
+  return SpecialPowers.popPrefEnv();
+}
+
+add_task(async () => {
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["cookies", "*://ext-cookie-first-party.mochi.test/"],
+    },
+  });
+  await extension.startup();
+  extension.sendMessage("test_fpi_disabled");
+  await extension.awaitMessage("test_fpi_disabled");
+  await enableFirstPartyIsolation();
+  extension.sendMessage("test_fpi_enabled");
+  await extension.awaitMessage("test_fpi_enabled");
+  extension.sendMessage("test_fpi_with_invalid_characters");
+  await extension.awaitMessage("test_fpi_with_invalid_characters");
+  await disableFirstPartyIsolation();
+  extension.sendMessage("test_fpd_cookies_on_fpi_disabled");
+  await extension.awaitMessage("test_fpd_cookies_on_fpi_disabled");
+  await extension.unload();
+});
+</script>

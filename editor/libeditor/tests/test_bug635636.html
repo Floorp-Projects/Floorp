@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635636
+-->
+<head>
+  <title>Test for Bug 635636</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635636">Mozilla Bug 635636</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 635636 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(async function() {
+  function openNewWindow(aURL) {
+    return new Promise(resolve => {
+      let contentWindow = window.open(aURL);
+      contentWindow.addEventListener("load", () => {
+        ok(true, aURL + " is loaded");
+        resolve(contentWindow);
+      }, { once: true });
+    });
+  }
+
+  function unloadWindow(aWindow) {
+    return new Promise(resolve => {
+      aWindow.addEventListener("unload", () => {
+        ok(true, "The window has been unloaded");
+        SimpleTest.executeSoon(() => { resolve(0); });
+      }, { once: true });
+      aWindow.location = "file_bug635636_2.html";
+    });
+  }
+
+  let contentWindow = await openNewWindow("file_bug635636.xhtml");
+
+  contentWindow.addEventListener("load", () => { ok(true, "load"); });
+  contentWindow.addEventListener("pageshow", () => { ok(true, "pageshow"); });
+
+  let div = contentWindow.document.getElementsByTagName("div")[0];
+  contentWindow.document.designMode = "on";
+
+  await unloadWindow(contentWindow);
+
+  div.remove();
+  ok(true, "Should not crash");
+  // Not needed for the crash
+  contentWindow.close();
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

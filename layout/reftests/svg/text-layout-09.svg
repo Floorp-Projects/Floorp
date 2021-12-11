@@ -1,0 +1,49 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+
+  <foreignObject><canvas xmlns="http://www.w3.org/1999/xhtml" id="canvas"/></foreignObject>
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <g fill="red">
+    <text dominant-baseline="hanging" x="70" y="70">hanging</text>
+    <text dominant-baseline="mathematical" x="70" y="140">mathematical</text>
+  </g>
+
+  <g fill="lime">
+    <text id="hanging" x="70" y="70" dy="0">hanging</text>
+    <text id="mathematical" x="70" y="140" dy="0">mathematical</text>
+  </g>
+
+  <style><![CDATA[
+  text {
+    font: bold 30px Verdana, Helvetica, Arial, sans-serif;
+  }
+  ]]></style>
+  <script>
+  function cover(id, offset) {
+    let element = document.getElementById(id);
+    element.dy.baseVal[0].value = offset;
+    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    let bbox = element.getBBox();
+    rect.x.baseVal.value = bbox.x;
+    rect.y.baseVal.value = bbox.y;
+    rect.width.baseVal.value = bbox.width;
+    rect.height.baseVal.value = bbox.height;
+    element.parentElement.appendChild(rect);
+  }
+  onload = function() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.font = 'bold 30px Verdana, Helvetica, Arial, sans-serif';
+
+    let text = 'h';
+    let textMetrics = ctx.measureText(text);
+
+    cover("hanging", textMetrics.actualBoundingBoxAscent * 1.1);
+
+    cover("mathematical", textMetrics.actualBoundingBoxAscent / 2 * 1.4);
+
+    document.documentElement.removeAttribute('class');
+  }
+  </script>
+</svg>

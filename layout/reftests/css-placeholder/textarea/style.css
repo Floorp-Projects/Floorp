@@ -1,0 +1,6 @@
+textarea::-moz-placeholder,
+textarea::placeholder,
+textarea.ref {
+  color: green;
+  opacity: 1.0;
+}

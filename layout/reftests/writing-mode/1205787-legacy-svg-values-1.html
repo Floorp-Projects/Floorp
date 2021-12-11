@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+/* SVG1.1 writing-mode values that should compute to standard CSS values: */
+.tb { writing-mode: tb; inline-size: 10em; }
+.tbrl { writing-mode: tb-rl; }
+.lr { writing-mode: lr; }
+</style>
+<div class=tb>
+Hello
+<span class=lr>horizontal</span>
+world
+</div>
+
+<div>One <span class=tbrl>two</span> three</div>
+
+<!-- replace the <span> contents with their computed writing-mode -->
+<script>
+var s = document.querySelectorAll("span");
+for (i = 0; i < s.length; i++) {
+  s[i].textContent = window.getComputedStyle(s[i]).writingMode;
+}
+
+document.documentElement.removeAttribute("class");
+</script>

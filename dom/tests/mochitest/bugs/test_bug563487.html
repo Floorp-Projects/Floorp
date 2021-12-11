@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=563487
+-->
+<head>
+  <!-- Put this before the mochi* stuff, since that adds various listeners -->
+  <script>
+    var exception = null;
+    try {
+      window.removeEventListener("foo", function() {});
+    } catch (e) {
+      exception = e;
+    }
+  </script>
+  <title>Test for Bug 563487</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=563487">Mozilla Bug 563487</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 563487 **/
+is(exception, null, "removeEventListener threw");
+</script>
+</pre>
+</body>
+</html>

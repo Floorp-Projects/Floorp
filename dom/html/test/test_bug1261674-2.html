@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1261674
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1261674</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1261674">Mozilla Bug 1261674</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<input id="test_input" type="range" max=0 min=10>
+<script type="text/javascript">
+
+/** Test for Bug 1261674 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  let input = window.document.getElementById("test_input");
+
+  // deltaY: deltaY of WheelEvent
+  // deltaMode: deltaMode of WheelEvent
+  let params = [
+    {deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_LINE},
+    {deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_LINE},
+    {deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_PAGE},
+    {deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_PAGE},
+    {deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL},
+    {deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL},
+    {deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_LINE},
+    {deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_LINE}
+  ];
+
+  let testIdx = 0;
+  let result = parseInt(input.value);
+  let rangeChange = 0;
+
+  input.addEventListener("change", () => {
+    ++rangeChange;
+  });
+
+  function runNext() {
+    let p = params[testIdx];
+    (p.focus) ? input.focus() : input.blur();
+    sendWheelAndPaint(input, 1, 1, { deltaY: p.deltaY, deltaMode: p.deltaMode }, () => {
+      ok(input.value == result,
+         "Handle wheel in range input test-" + testIdx + " expect " + result + " get " + input.value);
+      ok(rangeChange == 0, "Wheel event should not trigger change event when max < min");
+      testIdx++;
+      (testIdx >= params.length) ? SimpleTest.finish() : runNext();
+    });
+  }
+
+  input.addEventListener("input", () => {
+    ok(false, "Wheel event should be no effect to range input element with max < min");
+  });
+
+  runNext();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,851 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta name=viewport content="width=900">
+<title>WebGL workload simulator</title>
+<!--
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
+-->
+<style>
+body {
+  margin: 0;
+  font-family: monospace;
+  user-select: none;
+  -moz-user-select: -moz-none;
+  -webkit-user-select: none;
+  font-size: 22px;
+  text-size-adjust: none;
+}
+pre { margin: 0; }
+.square img { position: relative; }
+.square {
+  overflow: hidden;
+  border-bottom: 20px solid black;
+  border-right: 20px solid black;
+  display: block;
+}
+
+#fpsSpan { font-size: 30px; }
+#fpsPanel {
+  position: fixed;
+  text-align: right;
+  left: 550px;
+  top: 0px;
+  width: 300px;
+  font-size: 12px;
+  margin: 10px;
+  pointer-events: none;
+}
+
+input, label { white-space: pre; pointer-events: auto; }
+input { margin: 15px 15px;  transform: scale(2); }
+input[type="number"] { width: 50px; }
+input[type="range"] {
+    width: 100px;
+    margin: 30px 200px;
+    padding: 0px;
+    transform: scale(4);
+}
+
+.rotate { animation: rotating 2s linear infinite; }
+@keyframes rotating {
+  from { transform: scale(2) rotate(0deg); }
+  to { transform: scale(2) rotate(360deg); }
+}
+
+.bad { color: red; }
+.light { color: #CCCCCC; }
+#warning {
+  color: #FF0000;
+}
+</style>
+
+<canvas id=webglCanvas class=square></canvas>
+<canvas id=canvas class=square style=display:none;></canvas>
+<div id=dom class=square style=display:none;background:white>
+  <img id=img style=width:256px;height:256px;background:black></img>
+</div>
+<div style=margin:2em;margin-top:0>
+<div id=warning></div>
+Drag the WebGL logo.<br>
+<label for=useGl>Renderer: <input type=radio name=renderer id=useGl checked>WebGL</label>
+<label for=use2D><input type=radio name=renderer id=use2D>Canvas 2D</label>
+<label for=useDom><input type=radio name=renderer id=useDom>DOM</label>
+<br>
+<label for=animate><input type=checkbox name=animate id=animate>Animate</label>
+<span id=continuousOptions>
+  <label for=useRaf><input type=radio name=loop id=useRaf checked>requestAnimationFrame</label>
+  <label for=usePostMessage><input type=radio name=loop id=usePostMessage>postMessage</label>
+  <label for=useSetTimeout><input type=radio name=loop id=useSetTimeout>setTimeout</label>
+  <label for=useSetInterval><input type=radio name=loop id=useSetInterval>setInterval</label>
+  <br>
+  <div id=fpsOptions>
+    <input id=fpsSlider type=range min=10 max=240 step=10 value=60>
+    Target FPS: <span id=fpsLabel>60</span>
+  </div>
+</span>
+<details id=canvasOptions>
+  <summary>Canvas options</summary>
+  <div id=canvas2DOptions>
+    Canvas size <input type=number id=canvasSize value=512 min=1> pixels<sup>2</sup>
+    <label for=onscreen><input type=radio name=offscreen id=onscreen checked>Regular canvas</label>
+    <label for=offscreen><input type=radio name=offscreen id=offscreen>OffscreenCanvas (on main thread)</label>
+    <!-- <label for=offscreenWorker><input type=radio name=offscreen id=offscreenWorker>OffscreenCanvas on worker</label> -->
+    <br>
+    <label for=transferControlToOffscreen><input type=checkbox id=transferControlToOffscreen checked>Use transferControlToOffscreen</label>
+  </div>
+</details>
+<div id=glOptions>
+  <details id=glWork>
+    <summary>WebGL rendering work</summary>
+    <div id=pixelsWrapper>
+      <input type=range id=pixels min=65536 max=65536000 value=65536 step=65536>
+      draw <span id=pixelsLabel>64K</span> pixels per view
+    </div>
+    <input type=range id=drawCalls min=0 max=10000 value=0 step=10>
+    using <span id=drawCallsLabel>1</span> draw call(s) per view
+    <br>
+    Multiply the above slider values by:
+    <label for=x1><input type=radio name=multiplier id=x1 checked>1 </label>
+    <label for=x10><input type=radio name=multiplier id=x10>10 </label>
+    <label for=x100><input type=radio name=multiplier id=x100>100 </label>
+    <br>
+    <input type=range id=uploads min=0 max=256 value=0 step=0.25>
+    <span id=uploadLabel>0.00</span> MB glBufferData
+    <br>
+    <label for=finish><input type=checkbox id=finish>glFinish</label>
+    <br>
+    <label for=readPixels><input type=checkbox id=readPixels>glReadPixels</label>
+  </details>
+  <details id=contextCreation>
+    <summary>WebGL context creation options</summary>
+    <label for=useWebGL2><input type=checkbox id=useWebGL2 checked>Use WebGL 2 if available</label>
+    <label for=antialias><input type=checkbox id=antialias checked>Antialias</label>
+    <label for=alpha><input type=checkbox id=alpha checked>Alpha</label>
+    <label for=depth><input type=checkbox id=depth checked>Depth</label>
+    <label for=stencil><input type=checkbox id=stencil>Stencil</label>
+    <label for=premultipliedAlpha><input type=checkbox id=premultipliedAlpha checked>Premultiplied Alpha</label>
+    <label for=preserveDrawingBuffer><input type=checkbox id=preserveDrawingBuffer>Preserve Drawing Buffer</label>
+    <label for=desynchronized><input type=checkbox id=desynchronized>Desynchronized</label>
+    <br>
+    Power preference
+    <label for=ppDefault><input type=radio name=pp id=ppDefault checked>default</label>
+    <label for=lowPower><input type=radio name=pp id=lowPower>low-power</label>
+    <label for=highPerformance><input type=radio name=pp id=highPerformance>high-performance</label>
+    <br>
+    <label for=separateHighPowerContext><input type=checkbox id=separateHighPowerContext>Activate high power GPU (by creating a separate high power context)</label>
+  </details>
+  <div id=multiviewOptions>
+    <input type=range id=views min=1 max=4 value=0 step=1>
+    Draw <span id=viewsLabel>1</span> views(s)
+    <br>
+    <label for=multiview><input type=checkbox id=multiview>Use OVR_multiview2</label>
+    <label for=multiviewCopy><input type=checkbox id=multiviewCopy checked>Copy multiview draw results to main canvas</label>
+  </div>
+  <pre id=contextVersion>
+  </pre>
+  <details id=contextAttributes>
+    <summary>Context attributes</summary>
+    <pre></pre>
+  </details>
+  <details id=supportedExtensions>
+    <summary>Supported Extensions</summary>
+  </details>
+</div>
+<br>
+<input type=range id=jsWork min=0 max=100 value=0>
+<span id=jsWorkLabel>0</span> ms extra Javascript work per frame
+<br>
+<label for=animation><input type=checkbox id=animation>CSS animation</label>
+
+<div id=fpsPanel>
+  <label for=showFps><input type=checkbox id=showFps checked>Show FPS</label>
+  <div id=fps>
+    <span id=fpsSpan></span>
+    <p>
+    <label for=showStats><input type=checkbox id=showStats>More info</label>
+    <div id=stats></div>
+  </div>
+</div>
+
+<iframe id=highPowerFrame style=display:none></iframe>
+
+<h2><center>WebGL workload simulator</center></h2>
+</div>
+
+<script>
+'use strict';
+// Add all elements with ids as global readonly variables.
+for (let element of document.documentElement.querySelectorAll('[id]'))
+  Object.defineProperty(this, element.id, {value: element, writeable: false});
+
+
+/************\
+* Options UI *
+\************/
+
+
+// Set all input elements with values from the query string.
+const controls = document.querySelectorAll('input, details');
+const defaultChecked = {};
+const defaultValues = {};
+const defaultMaxes = {};
+for (const control of controls) {
+  if (!control.id) continue;
+  defaultChecked[control.id] = control.checked;
+  defaultValues[control.id] = control.value;
+  defaultMaxes[control.id] = control.max;
+  const param = window.location.search.match(control.id + '(?:=([^&]*))?');
+  if (param) {
+    if (control.type == 'radio')
+      control.checked = true;
+    else if (control.type == 'checkbox')
+      control.checked = param[1] != 'false';
+    else if (control instanceof HTMLDetailsElement)
+      control.open = true;
+    else
+      control.value = param[1];
+  }
+  control.oninput = updateControls;
+  if (control instanceof HTMLDetailsElement)
+    control.onclick = ()=>setTimeout(updateControls, 0);
+}
+// Some controls require a page reload when changed.
+const reloadControls = ['useWebGL2', 'antialias', 'alpha', 'depth', 'stencil', 'premultipliedAlpha', 'preserveDrawingBuffer', 'desynchronized', 'ppDefault', 'lowPower', 'highPerformance', 'canvasSize', 'onscreen', 'offscreen', 'transferControlToOffscreen'].map(x=>window[x]);
+for (let control of reloadControls) {
+  control.onchange = ()=>{
+    updateControls();
+    callReplaceStateThrottled();
+    location.reload();
+  };
+}
+
+separateHighPowerContext.onchange = ()=>{
+  if (!separateHighPowerContext.checked)
+    highPowerFrame.contentDocument.location.reload();
+  else {
+    const doc = highPowerFrame.contentDocument;
+    const canvas = doc.createElement('canvas');
+    doc.body.appendChild(canvas);
+    canvas.getContext('webgl', {powerPreference: 'high-performance'});
+  }
+}
+separateHighPowerContext.onchange();
+
+let queryString = window.location.search;
+let previousQueryString = queryString;
+let replaceStateScheduled = false;
+function callReplaceStateThrottled() {
+  replaceStateScheduled = false;
+  if (queryString == previousQueryString)
+    return;
+  previousQueryString = queryString;
+  let path = window.location.pathname;
+  history.replaceState(null, null, queryString == '?' ? path : path + queryString);
+}
+const suffixes = ['', 'K', 'M', 'G', 'E']
+const divisors = [];
+for (let i = 0; i < suffixes.length; i++)
+  divisors[i] = Math.pow(10, i * 3);
+const formatSI = (x) => {
+  const order = Math.min(Math.log10(Math.abs(x)) / 3 | 0, suffixes.length);
+  return (x / divisors[order]).toFixed(1) + suffixes[order];
+}
+var multiplier;
+function updateControls() {
+  multiplier = x1.checked ? 1 : x10.checked ? 10 : 100;
+  webglCanvas.style.display = useGl.checked ? 'block' : 'none';
+  canvas.style.display = use2D.checked ? 'block' : 'none';
+  dom.style.display = useDom.checked ? 'block' : 'none';
+  animation.className = animation.checked ? 'rotate' : null;
+  canvasOptions.style.display = useDom.checked ? 'none' : '';
+  transferControlToOffscreen.parentElement.style.display = onscreen.checked ? 'none' : '';
+  continuousOptions.style.display = animate.checked ? '' : 'none';
+  glOptions.style.display = useGl.checked ? '' : 'none';
+  multiviewOptions.style.display = (useGl.checked && multiviewAvailable) ? '' : 'none';
+  fpsOptions.style.display =
+      animate.checked && (useSetTimeout.checked || useSetInterval.checked) ?
+      '' : 'none';
+  fps.style.visibility = showFps.checked ? 'visible' : 'hidden';
+  stats.style.visibility = showStats.checked ? 'visible' : 'hidden';
+  drawCallsLabel.textContent = Math.max(1, drawCalls.value * multiplier);
+  pixelsLabel.textContent = formatSI(pixels.value * multiplier);
+  jsWorkLabel.textContent = jsWork.value;
+  fpsLabel.textContent = fpsSlider.value;
+  uploadLabel.textContent =
+      parseFloat(uploads.value).toFixed(2);
+  viewsLabel.textContent = views.value;
+  // Multiview is currently incompatible with multisampling.
+  if ((views.value > 1 || multiview.checked) && antialias.checked)
+    antialias.click();
+
+  const queryParams = [];
+  for (const control of controls) {
+    if (control.type == 'radio') {
+      if (!defaultChecked[control.id] && control.checked)
+        queryParams.push(control.id);
+    } else if (control.type == 'checkbox') {
+      if (control.checked != defaultChecked[control.id])
+        queryParams.push(defaultChecked[control.id] ? control.id + '=' + control.checked : control.id);
+    } else if (control instanceof HTMLDetailsElement) {
+      if (control.open)
+        queryParams.push(control.id);
+    } else if (control.value != defaultValues[control.id]) {
+      queryParams.push(control.id + '=' + control.value);
+    }
+  }
+  queryString = '?' + queryParams.join('&');
+  if (!replaceStateScheduled) {
+    replaceStateScheduled = true;
+    setTimeout(callReplaceStateThrottled, 200);
+  }
+  render();
+};
+
+
+/**********************\
+* Input event handling *
+\**********************/
+
+
+const imgSize = 256;
+const size = parseInt(canvasSize.value);
+let multiviewAvailable = false;
+let webglVersion;
+
+let mouseDown = false;
+const lastPos = [0, 0];
+document.onmouseup = (e) => { mouseDown = false; }
+document.onmousedown = (e) => {
+  mouseDown = true;
+  lastPos[0] = e.pageX;
+  lastPos[1] = e.pageY;
+};
+document.ontouchstart = (e) => {
+  lastPos[0] = e.touches[0].pageX;
+  lastPos[1] = e.touches[0].pageY;
+}
+const position = [(size - imgSize) / 2, (size - imgSize) / 2];
+let continuousRunning = false;
+let mouseUpdatesThisFrame = 0;
+function mouseMove(e) {
+  mouseUpdatesThisFrame++;
+  countFps("mouse/touchmove event");
+  const xy = [0, 0];
+  if (e.touches) {
+    xy[0] = e.touches[0].pageX;
+    xy[1] = e.touches[0].pageY;
+  } else {
+    xy[0] = e.pageX;
+    xy[1] = e.pageY;
+  }
+  if (e.touches || mouseDown) {
+    for (let i = 0; i < 2; ++i) {
+      position[i] += xy[i] - lastPos[i];
+      position[i] = Math.max(0, Math.min(size - imgSize, position[i]));
+      lastPos[i] = xy[i];
+    }
+    if (!continuousRunning) {
+      render();
+    }
+  }
+}
+document.addEventListener("mousemove", mouseMove, true);
+document.body.addEventListener("touchmove", mouseMove, true);
+for (const element of [dom, canvas, webglCanvas, img])
+  element.onmousedown = element.ontouchstart = (e)=>e.preventDefault();
+
+
+
+/***********\
+* Rendering *
+\***********/
+
+
+webglCanvas.width = webglCanvas.height = canvas.width = canvas.height = size;
+dom.style.width = dom.style.height = size + 'px';
+
+window.onmessage = () => render(false, true);
+
+let ctx;
+let bitmapRenderer;
+let offscreenCanvas;
+let gl;
+let glBitmapRenderer;
+let glOffscreenCanvas;
+let program;
+let buffer;
+const borderSize = 10;
+const vertices = [0, 0, 1, 0, 0, 1, 1, 1];
+const readPixelsArray = new Uint8Array(4);
+let writeBufferArray = new Float32Array(0);
+let interval;
+let intervalFps;
+let timeout = null;
+let rafPending = 0;
+let postMessagePending = 0;
+
+let maxViewsMultiview = 2;
+let multiviewProgram = [];
+let multiviewExt = null;
+let multiviewTexture = null;
+let multiviewFramebuffer = null;
+let viewFramebuffer = [];
+let lastNumViews = 0;
+
+let displayedWarningText = '';
+let warningText = '';
+
+const animationDirection = [1, -1];
+function render(fromRaf, fromPostMessage) {
+  if (fromRaf) rafPending--;
+  if (fromPostMessage) postMessagePending--;
+  // Set up the appropriate render loop callback as specified by the UI, if
+  // continuous rendering is enabled.
+  continuousRunning = animate.checked;
+  if (continuousRunning) {
+    for (let i = 0; i < 2; ++i) {
+      position[i] += animationDirection[i] * 2;
+      if (position[i] > size - imgSize) {
+        position[i] = size - imgSize;
+        animationDirection[i] = -1;
+      }
+      if (position[i] < 0) {
+        position[i] = 0;
+        animationDirection[i] = 1;
+      }
+    }
+    if (useRaf.checked && rafPending == 0) {
+      (window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+          window.webkitRequestAnimationFrame)(function() { render(true); });
+      rafPending++;
+    }
+    if (useSetTimeout.checked) {
+      clearTimeout(timeout);
+      timeout = setTimeout(render, 1 / fpsSlider.value * 1000);
+    }
+    if (useSetInterval.checked) {
+      if (!interval || intervalFps != fpsSlider.value) {
+        clearInterval(interval);
+        intervalFps = fpsSlider.value;
+        interval = setInterval(render, 1 / fpsSlider.value * 1000);
+      }
+    } else {
+      clearInterval(interval);
+      interval = null;
+    }
+    if (usePostMessage.checked) {
+      if (postMessagePending == 0) {
+        ++postMessagePending;
+        window.postMessage('', '*');
+      }
+    }
+  } else {
+    clearInterval(interval);
+    interval = null;
+  }
+
+  countFps("render", mouseUpdatesThisFrame);
+  mouseUpdatesThisFrame = 0;
+
+  // Busy wait for a configurable amount of time.
+  const startMs = Date.now();
+  while (Date.now() - startMs < jsWork.value);
+
+  warningText = '';
+
+  // Initialize GL.
+  if (!gl) {
+    const options = {};
+    for (let option of ['antialias', 'alpha', 'depth', 'stencil', 'premultipliedAlpha', 'preserveDrawingBuffer', 'desynchronized'])
+      options[option] = window[option].checked;
+    options.powerPreference = ppDefault.checked ? 'default' : lowPower.checked ? 'low-power' : 'high-performance';
+    let renderCanvas = webglCanvas;
+    if (offscreen.checked) {
+      if (transferControlToOffscreen.checked) {
+        renderCanvas = webglCanvas.transferControlToOffscreen();
+      } else {
+        glBitmapRenderer = webglCanvas.getContext('bitmaprenderer')
+        renderCanvas = glOffscreenCanvas = new OffscreenCanvas(size, size);
+      }
+    }
+    renderCanvas.width = renderCanvas.height = size;
+    if (useWebGL2.checked)
+      gl = renderCanvas.getContext('webgl2', options);
+    if (gl) {
+      webglVersion = 2;
+    } else {
+      webglVersion = 1;
+      gl = renderCanvas.getContext('webgl', options);
+      const aia = gl.getExtension('ANGLE_instanced_arrays');
+      if (aia)
+        gl.drawArraysInstanced = (a, b, c, d)=>aia.drawArraysInstancedANGLE(a, b, c, d);
+      else {
+        pixels.value = pixels.min;
+        pixelsWrapper.style.display = 'none';
+        gl.drawArraysInstanced = (a, b, c, d)=>gl.drawArrays(a, b, c);
+      }
+    }
+    // Read context info like renderer string and extensions.
+    let renderer = gl.getParameter(gl.RENDERER);
+    let debugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugRendererInfo)
+      renderer = gl.getParameter(debugRendererInfo.UNMASKED_RENDERER_WEBGL);
+    contextVersion.textContent = `WebGL Version: ${gl.getParameter(gl.VERSION)}\nRenderer: `;
+    const a = document.createElement('a');
+    a.textContent = renderer;
+    a.href = `https://www.google.com/search?q=${encodeURIComponent(renderer)}`
+    contextVersion.appendChild(a);
+    contextAttributes.getElementsByTagName('pre')[0].textContent = JSON.stringify(gl.getContextAttributes(), 0, 2);
+    for (const e of gl.getSupportedExtensions()) {
+      const a = document.createElement('a');
+      a.textContent = e;
+      a.href = `https://www.khronos.org/registry/webgl/extensions/${e}/`;
+      supportedExtensions.appendChild(a);
+      supportedExtensions.appendChild(document.createElement('br'));
+    }
+
+    // Setup texture
+    const tex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+    img.onload = ()=>{
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      render();
+    };
+
+    function setupProgram(vsSource, fsSource, attribs, uniforms) {
+      let prog = gl.createProgram();
+      function compileShader(source, type) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+          console.log(gl.getShaderInfoLog(shader));
+        gl.attachShader(prog, shader);
+      }
+      compileShader(vsSource, gl.VERTEX_SHADER);
+      compileShader(fsSource, gl.FRAGMENT_SHADER);
+      for (let i = 0; i < attribs.length; ++i)
+        gl.bindAttribLocation(prog, i, attribs[i]);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+        console.log(gl.getProgramInfoLog(prog));
+      for (const attrib of attribs)
+        prog[attrib] = gl.getAttribLocation(prog, attrib);
+      for (const uniform of uniforms)
+        prog[uniform] = gl.getUniformLocation(prog, uniform);
+      return prog;
+    }
+
+    program = setupProgram(`
+      attribute vec2 position;
+      varying vec2 texCoord;
+      uniform vec2 offset;
+      uniform float size;
+      void main() {
+        gl_Position = vec4(position * size + offset + vec2(size - 1., 1. - size), 0, 1);
+        texCoord = vec2(position.x, 1. - position.y);
+      }`,`
+      precision mediump float;
+      varying vec2 texCoord;
+      uniform vec4 colorAddition;
+      uniform sampler2D tex;
+      void main() {
+        gl_FragColor = texture2D(tex, texCoord) + colorAddition * 0.5;
+      }`,
+      ['position', 'texCoordIn'], ['offset', 'tex', 'size', 'colorAddition']);
+    gl.useProgram(program);
+    gl.uniform1i(program.tex, 0);
+
+    if (webglVersion >= 2 && gl.getExtension('OVR_multiview2')) {
+      multiviewAvailable = true;
+      let ext = gl.getExtension('OVR_multiview2')
+      maxViewsMultiview = Math.min(gl.getParameter(ext.MAX_VIEWS_OVR), 16);
+      views.max = maxViewsMultiview;
+      for (let i = 0; i < maxViewsMultiview; ++i) {
+        multiviewProgram[i] = setupProgram(`#version 300 es
+          #extension GL_OVR_multiview2 : enable
+          layout(num_views=${i + 1}) in;
+          in vec2 position;
+          out vec2 texCoord;
+          uniform vec2 offset;
+          uniform float size;
+          void main() {
+            gl_Position = vec4(position * size + offset + vec2(size - 1., 1. - size), 0, 1);
+            texCoord = vec2(position.x, 1. - position.y);
+          }`, `#version 300 es
+          #extension GL_OVR_multiview2 : enable
+          precision mediump float;
+          in vec2 texCoord;
+          out vec4 my_FragColor;
+          uniform sampler2D tex;
+          void main() {
+            vec4 colorAddition = vec4(((gl_ViewID_OVR & 0x4u) != 0u) ? 1.0 : 0.0,
+                                      ((gl_ViewID_OVR & 0x2u) != 0u) ? 1.0 : 0.0,
+                                      ((gl_ViewID_OVR & 0x1u) != 0u) ? 1.0 : 0.0,
+                                      1.0);
+            my_FragColor = texture(tex, texCoord) + colorAddition * 0.5;
+          }`,
+          ['position', 'texCoordIn'], ['offset', 'tex', 'size']);
+        gl.useProgram(multiviewProgram[i]);
+        gl.uniform1i(multiviewProgram[i].tex, 0);
+      }
+    }
+
+    // Setup vertex buffer
+    buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STREAM_DRAW);
+    gl.enableVertexAttribArray(program.position);
+    gl.vertexAttribPointer(program.position, 2, gl.FLOAT, false, 0, 0);
+
+    // Setup drawing state
+    gl.viewport(0, 0, size, size);
+    gl.clearColor(1, 1, 1, 1);
+    gl.disable(gl.SCISSOR_TEST);
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.STENCIL_TEST);
+    gl.disable(gl.BLEND);
+    gl.disable(gl.CULL_FACE);
+
+    updateControls();
+  } // End GL init
+
+  if (useDom.checked) {
+    img.style.left = position[0] + 'px';
+    img.style.top = position[1] + 'px';
+    return;
+  }
+  if (use2D.checked) {
+    if (!ctx) {
+      if (offscreen.checked) {
+        if (transferControlToOffscreen.checked) {
+          offscreenCanvas = canvas.transferControlToOffscreen();
+        } else {
+          bitmapRenderer = canvas.getContext('bitmaprenderer');
+          offscreenCanvas = new OffscreenCanvas(size, size);
+        }
+        ctx = offscreenCanvas.getContext('2d');
+      } else {
+        ctx = canvas.getContext('2d');
+      }
+    }
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    try {
+      ctx.drawImage(img, position[0], position[1]);
+    } catch (e) {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(position[0], position[1], imgSize, imgSize);
+    }
+    if (offscreen.checked && !transferControlToOffscreen.checked && bitmapRenderer && offscreenCanvas) {
+      bitmapRenderer.transferFromImageBitmap(offscreenCanvas.transferToImageBitmap());
+    }
+    return;
+  }
+
+  // Upload some data to test the PCI bottleneck.
+  if (uploads.value > 0) {
+    if (writeBufferArray.length * 4 != uploads.value * 1024 * 1024) {
+      writeBufferArray = new Float32Array(uploads.value * 1024 * 1024 / 4);
+      // We want to actually use this data in rendering so the graphics driver
+      // can't optimize away the upload. Fill the first few bytes with our real
+      // vertex data.
+      writeBufferArray.set(vertices, 0);
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, writeBufferArray, gl.STREAM_DRAW);
+  }
+
+  // Actually draw the map.
+  const numDrawCalls = Math.max(1, drawCalls.value * multiplier);
+  const numViews = multiviewAvailable ? Math.min(views.value, maxViewsMultiview) : 1;
+  const instances = pixels.value / 64000 * multiplier;
+  const instancesPerCall = Math.max(1, instances / numDrawCalls | 0);
+  const instancesFirstCall = instancesPerCall + numDrawCalls % instancesPerCall;
+  // Set up to scissor out all but one pixel of the map.
+  gl.scissor(position[0], size - position[1] - 1, 1, 1);
+
+  if (multiviewAvailable && (multiview.checked || numViews > 1) && !multiviewFramebuffer) {
+    multiviewTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, multiviewTexture);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, size, size, maxViewsMultiview);
+    multiviewExt = gl.getExtension('OVR_multiview2');
+    multiviewFramebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, multiviewFramebuffer);
+    multiviewExt.framebufferTextureMultiviewOVR(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, multiviewTexture, 0, 0, numViews);
+    lastNumViews = numViews;
+    for (let i = 0; i < maxViewsMultiview; ++i) {
+      viewFramebuffer[i] = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, viewFramebuffer[i]);
+      gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, multiviewTexture, 0, i);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
+  }
+
+  let usedProgram = program;
+  if (multiviewAvailable && multiview.checked) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, multiviewFramebuffer);
+    if (numViews != lastNumViews) {
+      multiviewExt.framebufferTextureMultiviewOVR(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, multiviewTexture, 0, 0, numViews);
+      lastNumViews = numViews;
+    }
+    usedProgram = multiviewProgram[numViews - 1];
+  } else {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  gl.useProgram(usedProgram);
+  gl.uniform2f(usedProgram.offset,
+               (position[0] - imgSize) / size * 2,
+               -position[1] / size * 2);
+  gl.uniform1f(usedProgram.size, imgSize * 2 / size);
+
+  if (usedProgram == program) {
+    gl.uniform4f(program.colorAddition, 0.0, 0.0, 0.0, 1.0);
+  }
+
+  for (let viewIndex = 0; viewIndex < numViews; ++viewIndex) {
+    let scissorEnabled = false;
+    if (multiviewAvailable && !multiview.checked && numViews > 1) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, viewFramebuffer[viewIndex]);
+      gl.uniform4f(program.colorAddition, (viewIndex & 4) ? 1.0 : 0.0, (viewIndex & 2) ? 1.0 : 0.0, (viewIndex & 1) ? 1.0 : 0.0, 1.0);
+      gl.disable(gl.SCISSOR_TEST);
+    }
+    gl.clearColor(1, 1, 1, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, instancesFirstCall);
+    var instancesDrawn = instancesFirstCall;
+    for (let i = 1; i < numDrawCalls; i++) {
+      if (instancesDrawn > instances && !scissorEnabled) {
+        // If we've drawn all of the requested pixels already, enable the scissor
+        // test so we only draw one pixel per draw call for the rest of the calls.
+        scissorEnabled = true;
+        gl.enable(gl.SCISSOR_TEST);
+      }
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, instancesPerCall);
+      instancesDrawn += instancesPerCall;
+    }
+    if (multiviewAvailable && multiview.checked) {
+      break;
+    }
+  }
+  gl.disable(gl.SCISSOR_TEST);
+
+  if (multiviewAvailable && (multiview.checked || numViews > 1)) {
+    if (multiviewCopy.checked) {
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+      gl.clearColor(1, 1, 1, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      let gridCellsPerRow = Math.ceil(Math.sqrt(numViews));
+      for (let i = 0; i < numViews; ++i) {
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, viewFramebuffer[i]);
+        let x = i % gridCellsPerRow;
+        let y = Math.floor(i / gridCellsPerRow);
+        x *= size / gridCellsPerRow;
+        y *= size / gridCellsPerRow;
+        gl.blitFramebuffer(0, 0, size, size, x, y, x + size / gridCellsPerRow, y + size / gridCellsPerRow, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+      }
+    } else {
+      warningText = 'NOTE: Offscreen multiview rendering active - rendering not copied to canvas';
+    }
+  }
+
+  if (finish.checked) {
+    gl.finish();
+  }
+  if (readPixels.checked) {
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readPixelsArray);
+  }
+  if (offscreen.checked && !transferControlToOffscreen.checked && glOffscreenCanvas && glBitmapRenderer) {
+    glBitmapRenderer.transferFromImageBitmap(glOffscreenCanvas.transferToImageBitmap());
+  }
+}
+
+
+/**************\
+* FPS counters *
+\**************/
+
+
+const counters = {};
+function countFps(name, mouseEventsThisFrame) {
+  let counter = counters[name];
+  if (!counter) {
+    counter = { history: [Date.now() - 16], name: name, count: 0 };
+    counters[name] = counter;
+  }
+  const history = counter.history;
+  history.push(Date.now());
+  while (history.length > 2 &&
+      history[0] + 1000 < history[history.length - 1]) {
+    counter.history.shift();
+  }
+  let averageMs = 0;
+  let maxMs = .1;
+  let minMs = 99999999;
+  for (let i = 1; i < history.length; i++) {
+    let diff = history[i] - history[i - 1];
+    averageMs += diff;
+    maxMs = Math.max(maxMs, diff);
+    minMs = Math.min(minMs, diff);
+  }
+  averageMs /= history.length - 1;
+  counter.fps = 1000 / averageMs;
+  counter.minFps = 1000 / maxMs;
+  counter.maxFps = 1000 / minMs;
+  counter.count++;
+
+  if (mouseEventsThisFrame !== undefined) {
+    counter.mouseEvents = counter.mouseEvents || { multiple: 0, zero: 0 };
+    if (mouseEventsThisFrame > 1) {
+      counter.mouseEvents.multiple++;
+    } else if (mouseEventsThisFrame == 0) {
+      counter.mouseEvents.zero++;
+    }
+  }
+
+  if (showFps.checked) {
+    fpsSpan.innerText = counters['render'].fps.toFixed();
+    if (showStats.checked) {
+      let text = "";
+      for (let key in counters) {
+        counter = counters[key];
+        text += "<b>" + counter.name + "</b><br>";
+        text += counter.fps.toFixed() + " avg FPS<br>";
+        text += "<div class=" +
+                (counter.maxFps - counter.fps > 10 ? "bad" : "") + ">" +
+                counter.maxFps.toFixed() + " max FPS</div>";
+        text += "<div class=" +
+                (counter.fps - counter.minFps > 10 ? "bad" : "") + ">" +
+                counter.minFps.toFixed() + " min FPS</div>";
+        if (counter.mouseEvents) {
+          text += "<div>" + counter.mouseEvents.zero +
+                  " frame(s) with no mouse/touch events";
+          text += "<div>" + counter.mouseEvents.multiple +
+                  " frame(s) with multiple mouse/touch events";
+        }
+        text += "<div class=light>" + counter.count + " frames</div>";
+      }
+      stats.innerHTML = text;
+    }
+  }
+  if (warningText != displayedWarningText) {
+    warning.textContent = warningText;
+    displayedWarningText = warningText;
+  }
+}
+
+updateControls();
+
+img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAgMAAAAhHED1AAAADFBMVEUAAAA5AAByAACZAAADU26qAAAFIUlEQVR42u2ZPW7jRhTHOVQkFiwEFU4RFTwCj0Am8AG8wHIDrC8QZBH4BAGJNGkdIL7BLpCo8Q1CpkqrDRCkVWEvkKSIChVUQHLy3pshRZlDeUhVCeZf6GOt+XHmvf+8+VjLMjIyMjIyMjIyMjIyMjIyMjIyMjL6j2txEUWX45u/uueo6l04qvlUNCfE9yPaf8zbendme84fB7af8ad6O6g9SzsAfjsEcNNtz6sBuVhylR7OGsCgQXhHzf5crVaCuNftQHvgd2LkF28GdKHVgcdD4C7udbvQ6sCRg9mNZheW6vZEyHUAaW/agKDhBadurxjwNN3oh1BpvGWpb6K12uOJ7gh6Mjbb6I6gL2Ffaeag1zKzZ/Jgn4wA6uo0wJUpgI8fvaDCPrCq+wcPBegaxsthgFgANvSRAEXnNxcaE2lL4UwwJh37v+F7DOTl5SkX7AiQWdaEPgI5CltRwhFy5bxwDwBGqXCoM/gtaw0Sba4G1DbKCbBBwOYYMKuzrAaIGOYIsAngSkc0AK/uoRogfLhJCxw9/mz+FCAeUfYAZBLWcUnx3OEDs2OAHGMPQBo5FIA0R0ByBIBf7EMojoka4EgfBxWOPi7QmeERwMEA2viiBIgsFtAMR++XXYBL0ySF+CoBcxliD/7oVV6JEwJm1UsCsCtKQkEzZqsGeNLHCPBLDx4WV9YsheoCgBTt45MzPXhVAnzpkjkEKSjn8HQIp4++YvwXykpAxpr3AQICZDDSzIpzF36SFpTakPG/qUrE5Itp9FINEC5JINZrADiYrJwykzH5l7SZEycAIQHS3QTb7ea8gqAD4J8U/5UnpwCpBEwwTVubrwHg89sZ3wEgdGjkGgD025bhU9fwAV0Z51TawJqHZicBTD5+A11JIfY+hBLewJqif2i2kwCL72x06xaCgXmblwwLi18yXUAKwc8gjg5/j3lzK4ZvXjUIkJAVfsa8OZwA80p7CHGBLgoA8A3/LYquOU0msOYzgNoH0sc+vH4mSsSnCHA5pVEHIGYSvPKJADDMPwDQiSz6/DQgseRchtdqUvdAAMRcsPsAQV2zPaomUFOqJz2IaTZO+gB+vTDOqZ5BVSsn/P0CRADIQkALjdMHqAsKNMWKCnW1sMX0E1mo4BE5FbbidEmTNR1ec5sGHREA4jKnmuj3Adx61XCoH7i2kINcYSSIi0sxTvsAdVnHphtaBGACb7HvDL8HBf7hAddHBNxFEVQm5cIiKj8uVFucwzSL4A0mJlYmPD0UVrMKq5Y2ubZb2A+oywBh0C8bOyN3cQ1gGr0IO5Nhi4CMvq4hYHfXVJHgbd1sohrA7MPvWcdJtPYm5MxMZGZTF1URpipuAOzXv7LuBgOfHRIgES0SVm/+6EMetAA/Zd0tDhR1LjqU0O67hHb3MmL4jLXfAnzdBkzqLRKuz3JpXWLmGP9W7p8BWFmf/GCtSG+t76Kkm4bqKDVfiqO7fINl6er5jeatNVbeYZ84Ts7wg7Z6r7sZu92vg1COPXA0e9W+E8cXz42hPrJUYw9dzcH1QX0oDHUTybkqWkuNw7PdHH1Dxd3OWv/Uo7g6mqaVjhXcvssndq/n0NYVzOPx8znXM2jrEmh/iOSrbgnVugX6kU5bC3EzmGhOCPU91JA5qr6IGjBFZ2dehVnWtaL9flBZuDnrMk8m/YzrRAVh+LVs61J35LUue920/+NqXIVdvKZxrKJz7sYXC/MfBEZGRkZGRkZGRkZGRkZGRkZGRkb/N/0Lo92VZbHxh60AAAAASUVORK5CYII=';
+</script>

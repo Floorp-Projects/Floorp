@@ -1,0 +1,49 @@
+<!--
+
+  Tests various aspects of initial pause behaviour including getCurrentTime and
+  setCurrentTime. In particular, we test the behaviour described in
+
+http://www.w3.org/2003/01/REC-SVG11-20030114-errata#getCurrentTime_setCurrentTime_undefined_before_document_timeline_begin
+
+ -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="unpause()">
+  <script type="text/ecmascript"><![CDATA[
+    // If we try to update the DOM as we go we very occasionally run into timing
+    // issues that produce false positives for this test. So instead we just set
+    // this flag and update the DOM at the end of the test.
+    var ok = true;
+
+    function assert(condition) {
+      ok = ok & condition;
+    }
+
+    // === Test the state before the document starts ===
+    document.documentElement.setCurrentTime(2);
+    assert(document.documentElement.getCurrentTime() == 0);
+    assert(!document.documentElement.animationsPaused());
+    document.documentElement.pauseAnimations();
+
+    function unpause() {
+      // === Test the state after that the document has started === 
+      assert(document.documentElement.getCurrentTime() == 2);
+      assert(document.documentElement.animationsPaused());
+
+      if (!ok) {
+        document.getElementById('wrong').style.visibility = 'visible';
+      }
+
+      document.documentElement.removeAttribute("class");
+    }
+  ]]></script>
+  <circle cx="50" cy="50" r="30" fill="blue">
+    <animate attributeName="cx" attributeType="XML"
+      to="250" begin="1s" dur="2s" fill="freeze"/>
+  </circle>
+  <!-- Tick mark to show where the circle should be -->
+  <path d="M150 40v20" stroke="green"/>
+  <!-- Marker to show if something is wrong in the DOM -->
+  <text fill="red" stroke="none" font-size="60" x="125" y="70"
+    font-family="sans-serif" id="wrong" visibility="hidden">X</text>
+</svg>

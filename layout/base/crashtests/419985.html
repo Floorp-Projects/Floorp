@@ -1,0 +1,29 @@
+<html class="reftest-wait">
+<head>
+<title>Crash [@ nsView::~nsView()] with onload focusing and removing window</title>
+</head>
+<body>
+<iframe id="content" onload="doe()" src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3C/head%3E%0A%3Cbody%20onfocus%3D%22window.frameElement.parentNode.removeChild%28window.frameElement%29%22%3E%0A%3Ciframe%20src%3D%22data%3Atext/html%3Bcharset%3Dutf-8%2C%253Cbody%2520onload%253D%2522document.links%255B0%255D.focus%2528%2529%253B%2522%253E%253Ca%2520href%253D%2522javascript%253A%2522%253Em%253C/a%253E%22%3E%3C/iframe%3E%0A%3Cstyle%20id%3D%22e%22%3E%0A@import%20URL%28416107.xhtml%29%3B%0A%3C/style%3E%0A%3C/body%3E%0A%3C/html%3E"></iframe>
+
+<script>
+// Run the test for 2 seconds
+setTimeout(function() {
+    clearInterval(i);
+    document.documentElement.removeChild(document.body);
+    document.documentElement.className = "";
+  }, 2000);
+
+function doe2() {
+document.getElementById('content').src = document.getElementById('content').src;
+}
+var i = setInterval(doe2, 400);
+
+function doe(){
+document.getElementById('content').style.display = 'none';
+document.body.offsetHeight;
+document.getElementById('content').style.display = '';
+}
+</script>
+
+</body>
+</html>

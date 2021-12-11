@@ -1,0 +1,80 @@
+# 
+# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#ident	"$Id$"
+#
+
+MOD_DEPTH = ../..
+topsrcdir   = @top_srcdir@
+srcdir	    = @srcdir@
+VPATH	    = @srcdir@
+
+NAME        = sun-nspr
+ifndef RPM_RELEASE
+RPM_RELEASE = 1
+endif
+TOPDIR      = /usr/src/redhat
+VERSION     = `grep PR_VERSION $(dist_includedir)/prinit.h \
+                  | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
+
+SPECFILE    = $(NAME).spec
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+# Force i386 for non 64 bit build
+ifneq ($(USE_64),1)
+	RPMTARGET = "--target=i386"
+	RPMLIBDIR = lib
+else
+	RPMLIBDIR = lib64
+endif
+
+publish:
+	$(MAKE) clean
+	mkdir -p SOURCES SRPMS RPMS BUILD
+	(cd $(dist_libdir) && tar cphf - libnspr4.so libplds4.so libplc4.so) \
+	| (mkdir -p opt/sun/private/$(RPMLIBDIR) && cd opt/sun/private/$(RPMLIBDIR) && tar xvfBp -)
+	(cd $(dist_includedir) && tar cphf - .) \
+	| (mkdir -p opt/sun/private/include/nspr && cd opt/sun/private/include/nspr && tar xvfBp -)
+	(cd opt/sun/private/include/nspr && \
+		rm -rf md)
+	tar czvf SOURCES/$(NAME)-$(VERSION).tar.gz opt
+	echo "%define name $(NAME)" >$(SPECFILE)
+	echo "%define version $(VERSION)" >>$(SPECFILE)
+	echo "%define release $(RPM_RELEASE)" >>$(SPECFILE)
+	echo "%define buildroot `pwd`/$(NAME)-root" >>$(SPECFILE)
+	echo "%define _topdir `pwd`" >>$(SPECFILE)
+	echo "%define _unpackaged_files_terminate_build 0" >>$(SPECFILE)
+	cat $(srcdir)/$(NAME).spec >>$(SPECFILE)
+	echo "" >>$(SPECFILE)
+	echo "%files" >>$(SPECFILE)
+	echo "%defattr(-,root,root)" >>$(SPECFILE)
+	echo "%dir /opt" >>$(SPECFILE)
+	echo "%dir /opt/sun" >>$(SPECFILE)
+	echo "%dir /opt/sun/private" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/$(RPMLIBDIR)" >>$(SPECFILE)
+	find opt \( -name "*.so" \) | sed -e "s-^-/-" >>$(SPECFILE)
+	echo "" >>$(SPECFILE)
+	echo "%files devel" >>$(SPECFILE)
+	echo "%defattr(-,root,root)" >>$(SPECFILE)
+	echo "%dir /opt" >>$(SPECFILE)
+	echo "%dir /opt/sun" >>$(SPECFILE)
+	echo "%dir /opt/sun/private" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include/nspr" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include/nspr/obsolete" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include/nspr/private" >>$(SPECFILE)
+	find opt -type f \( -name "*.h" \) \
+		| sed -e "s-^-/-" >>$(SPECFILE)
+	rpmbuild $(RPMTARGET) -bb $(SPECFILE)
+
+clean:
+	rm -rf $(TOPDIR)/BUILD/$(NAME)
+	rm -rf SOURCES SRPMS RPMS BUILD
+	rm -rf RPMS SRPMS opt
+	rm -f $(NAME)-$(VERSION).tar.gz

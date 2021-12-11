@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestUrlItem renders the expected snapshot for a populated url 1`] = `
+<ManifestItem
+  label="foo"
+>
+  <div
+    className="manifest-item__url"
+  />
+</ManifestItem>
+`;
+
+exports[`ManifestUrlItem renders the expected snapshot for an empty url 1`] = `
+<ManifestItem
+  label="foo"
+>
+  <div
+    className="manifest-item__url"
+  />
+</ManifestItem>
+`;

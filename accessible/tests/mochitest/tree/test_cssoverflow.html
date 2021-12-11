@@ -1,0 +1,135 @@
+<html>
+
+<head>
+  <title>CSS overflow testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    a.link:focus {
+      overflow: scroll;
+    }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function focusAnchor(aID) {
+      this.linkNode = getNode(aID);
+      this.link = getAccessible(this.linkNode);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode),
+      ];
+
+      this.invoke = function focusAnchor_invoke() {
+        this.linkNode.focus();
+      };
+
+      this.check = function focusAnchor_check(aEvent) {
+        is(this.link, aEvent.accessible,
+                "Focus should be fired against new link accessible!");
+      };
+
+      this.getID = function focusAnchor_getID() {
+        return "focus a:focus{overflow:scroll} #1";
+      };
+    }
+
+    function tabAnchor(aID) {
+      this.linkNode = getNode(aID);
+      this.link = getAccessible(this.linkNode);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode),
+      ];
+
+      this.invoke = function tabAnchor_invoke() {
+        synthesizeKey("VK_TAB", { shiftKey: false });
+      };
+
+      this.check = function tabAnchor_check(aEvent) {
+        is(this.link, aEvent.accessible,
+                   "Focus should be fired against new link accessible!");
+      };
+
+      this.getID = function tabAnchor_getID() {
+        return "focus a:focus{overflow:scroll} #2";
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    function doTests() {
+      // Shift+Tab not working, and a test timeout, bug 746977
+      if (MAC) {
+        todo(false, "Shift+tab isn't working on OS X, needs to be disabled until bug 746977 is fixed!");
+        SimpleTest.finish();
+        return;
+      }
+
+      gQueue = new eventQueue();
+
+      // CSS 'overflow: scroll' property setting and unsetting causes accessible
+      // recreation (and fire show/hide events). For example, the focus and
+      // blur of HTML:a with ':focus {overflow: scroll; }' CSS style causes its
+      // accessible recreation. The focus event should be fired on new
+      // accessible.
+      gQueue.push(new focusAnchor("a"));
+      gQueue.push(new tabAnchor("a2"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=591163"
+     title="mochitest for bug 413777: focus the a:focus {overflow: scroll;} shouldn't recreate HTML a accessible">
+    Mozilla Bug 591163
+  </a><br>
+  <a target="_blank"
+     title="Rework accessible tree update code"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
+    Mozilla Bug 570275
+  </a><br>
+  <a target="_blank"
+     title="Text control frames should accept dynamic changes to the CSS overflow property"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=686247">
+    Mozilla Bug 686247
+  </a><br>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div>
+    <a id="a" class="link" href="www">link</a>
+  </div>
+  <div>
+    <a id="a2" class="link" href="www">link2</a>
+  </div>
+</body>
+</html>

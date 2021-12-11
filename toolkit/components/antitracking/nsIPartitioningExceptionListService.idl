@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Observer for exception list updates.
+ */
+[scriptable, function, uuid(d8db1086-7b59-44d3-9f88-f31a7e642637)]
+interface nsIPartitioningExceptionListObserver : nsISupports
+{
+  /**
+   * Called by nsIPartitioningExceptionListService when the exception list
+   * changes and when the observer is first registered.
+   *
+   * @param aList
+   *        A semicolon-separated list of comma-separated url pairs.
+   */
+  void onExceptionListUpdate(in ACString aList);
+};
+
+/**
+ * A service that monitors updates to the exception list of partitioning
+ * from sources such as a local pref and remote settings updates.
+ */
+[scriptable, uuid(cf83a9af-dd3f-43a2-88bb-489a22bca124)]
+interface nsIPartitioningExceptionListService : nsISupports
+{
+  /**
+   * Register a new observer to exception list updates. When the observer is
+   * registered it is called immediately once. Afterwards it will be called
+   * whenever the specified pref changes or when remote settings for
+   * partitioning updates.
+   *
+   * @param aObserver
+   *        An nsIPartitioningExceptionListObserver object or function that
+   *        will receive updates to the exception list as a comma-separated
+   *        string. Will be called immediately with the current exception
+   *        list value.
+   */
+  void registerAndRunExceptionListObserver(in nsIPartitioningExceptionListObserver aObserver);
+
+  /**
+   * Unregister an observer.
+   *
+   * @param aObserver
+   *        The nsIPartitioningExceptionListObserver object to unregister.
+   */
+  void unregisterExceptionListObserver(in nsIPartitioningExceptionListObserver aObserver);
+};

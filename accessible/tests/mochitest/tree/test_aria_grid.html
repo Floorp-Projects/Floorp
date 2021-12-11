@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML table tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // grid having rowgroups
+
+      var accTree =
+        { TABLE: [
+          { GROUPING: [
+            { ROW: [
+              { GRID_CELL: [
+                { TEXT_LEAF: [ ] },
+              ] },
+            ] },
+          ] },
+        ] };
+
+      testAccessibleTree("grid", accTree);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // strange grids (mix of ARIA and HTML tables)
+
+      accTree = {
+        role: ROLE_TABLE,
+        children: [
+          { // div@role="row"
+            role: ROLE_ROW,
+            tagName: "DIV",
+            children: [
+              { // caption text leaf
+                role: ROLE_TEXT_LEAF,
+                name: "caption",
+                children: [ ],
+              },
+              { // th generic accessible
+                role: ROLE_TEXT_CONTAINER,
+                children: [
+                  { // th text leaf
+                    role: ROLE_TEXT_LEAF,
+                    name: "header1",
+                    children: [ ],
+                  },
+                ],
+              },
+              { // td@role="columnheader"
+                role: ROLE_COLUMNHEADER,
+                name: "header2",
+                children: [ { TEXT_LEAF: [ ] } ],
+              },
+            ],
+          },
+        ],
+      };
+      testAccessibleTree("strange_grid1", accTree);
+
+      accTree = {
+        role: ROLE_TABLE,
+        children: [
+          { // tr@role="row"
+            role: ROLE_ROW,
+            tagName: "TR",
+            children: [
+              { // td implicit role="gridcell"
+                role: ROLE_GRID_CELL,
+                children: [
+                  { // td text leaf
+                    role: ROLE_TEXT_LEAF,
+                    name: "cell1",
+                    children: [ ],
+                  },
+                ],
+              },
+              { // td@role="gridcell"
+                role: ROLE_GRID_CELL,
+                name: "cell2",
+                children: [ { TEXT_LEAF: [ ] } ],
+              },
+            ],
+          },
+        ],
+      };
+      testAccessibleTree("strange_grid2", accTree);
+
+      accTree = {
+        role: ROLE_TABLE,
+        children: [
+          { // div@role="row"
+            role: ROLE_ROW,
+            children: [
+              { // div@role="gridcell"
+                role: ROLE_GRID_CELL,
+                children: [
+                  { // td generic accessible
+                    role: ROLE_TEXT_CONTAINER,
+                    children: [
+                      { // text leaf from presentational table
+                        role: ROLE_TEXT_LEAF,
+                        name: "cell3",
+                        children: [ ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      testAccessibleTree("strange_grid3", accTree);
+
+      accTree = {
+        role: ROLE_TABLE,
+        children: [
+          { // div@role="row"
+            role: ROLE_ROW,
+            children: [
+              { // div@role="gridcell"
+                role: ROLE_GRID_CELL,
+                children: [
+                  { // table
+                    role: ROLE_TABLE,
+                    children: [
+                      { // tr
+                        role: ROLE_ROW,
+                        children: [
+                          { // td
+                            role: ROLE_CELL,
+                            children: [
+                              { // caption text leaf of presentational table
+                                 role: ROLE_TEXT_LEAF,
+                                 name: "caption",
+                                 children: [ ],
+                              },
+                              { // td generic accessible
+                                role: ROLE_TEXT_CONTAINER,
+                                children: [
+                                  { // td text leaf of presentational table
+                                    role: ROLE_TEXT_LEAF,
+                                    name: "cell4",
+                                    children: [ ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      testAccessibleTree("strange_grid4", accTree);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // grids that could contain whitespace accessibles but shouldn't.
+
+      accTree =
+        { TREE_TABLE: [
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] };
+
+      testAccessibleTree("whitespaces-grid", accTree);
+
+      // grids that could contain text container accessibles but shouldn't.
+
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] };
+
+      testAccessibleTree("gridWithPresentationalBlockElement", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Support ARIA role rowgroup"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=525909">
+    Mozilla Bug 525909
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="grid" role="grid">
+    <div role="rowgroup">
+      <div role="row">
+        <div role="gridcell">cell</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="strange_grid1" role="grid">
+    <div role="row">
+      <table role="presentation">
+        <caption>caption</caption>
+        <tr>
+          <th>header1</th>
+          <td role="columnheader">header2</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div id="strange_grid2" role="grid">
+    <table role="presentation">
+      <tr role="row">
+        <td id="implicit_gridcell">cell1</td>
+        <td role="gridcell">cell2</td>
+      </tr>
+    </table>
+  </div>
+
+  <div id="strange_grid3" role="grid">
+    <div role="row">
+      <div role="gridcell">
+        <table role="presentation">
+          <tr>
+            <td>cell3</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="strange_grid4" role="grid">
+    <div role="row">
+      <div role="gridcell">
+        <table>
+          <tr>
+            <td>
+              <table role="presentation">
+                <caption>caption</caption>
+                <tr><td>cell4</td></tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div role="treegrid" id="whitespaces-grid">
+    <div role="row" aria-selected="false" tabindex="-1">
+      <span role="gridcell">03:30PM-04:30PM</span>
+      <span role="gridcell" style="font-weight:bold;">test</span>
+      <span role="gridcell">a user1</span>
+    </div>
+  </div>
+
+  <div id="gridWithPresentationalBlockElement" role="grid">
+    <span style="display: block;">
+      <div role="row">
+        <div role="gridcell">Cell 1</div>
+        <div role="gridcell">Cell 2</div>
+      </div>
+    </span>
+    <span style="display: block;">
+      <div role="row">
+        <span style="display: block;">
+          <div role="gridcell">Cell 3</div>
+          <div role="gridcell">Cell 4</div>
+        </span>
+      </div>
+    </span>
+  </div>
+</body>
+</html>

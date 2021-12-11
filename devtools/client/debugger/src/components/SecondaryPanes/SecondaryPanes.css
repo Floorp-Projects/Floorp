@@ -1,0 +1,86 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.secondary-panes {
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  white-space: nowrap;
+  background-color: var(--theme-sidebar-background);
+  --breakpoint-expression-right-clear-space: 36px;
+}
+
+.secondary-panes .controlled > div {
+  max-width: 100%;
+}
+
+/*
+  We apply overflow to the container with the commandbar.
+  This allows the commandbar to remain fixed when scrolling
+  until the content completely ends. Not just the height of
+  the wrapper.
+  Ref: https://github.com/firefox-devtools/debugger/issues/3426
+*/
+
+.secondary-panes-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.secondary-panes .accordion {
+  flex: 1 0 auto;
+  margin-bottom: 0;
+}
+
+.secondary-panes-wrapper .accordion li:last-child ._content {
+  border-bottom: 0;
+}
+
+.pane {
+  color: var(--theme-body-color);
+}
+
+.pane .pane-info {
+  font-style: italic;
+  text-align: center;
+  padding: 0.5em;
+  user-select: none;
+  cursor: default;
+}
+
+.secondary-panes .breakpoints-buttons {
+  display: flex;
+}
+
+.dropdown {
+  width: 20em;
+  overflow: auto;
+}
+
+.secondary-panes input[type="checkbox"] {
+  margin: 0;
+  margin-inline-end: 4px;
+  vertical-align: middle;
+}
+
+.secondary-panes-wrapper .command-bar.bottom {
+  background-color: var(--theme-body-background);
+}
+
+/**
+ * Skip Pausing style
+ * Add a gray background and lower content opacity
+ */
+.skip-pausing .xhr-breakpoints-pane ._content,
+.skip-pausing .breakpoints-pane ._content,
+.skip-pausing .event-listeners-pane ._content,
+.skip-pausing .dom-mutations-pane ._content {
+  background-color: var(--skip-pausing-background-color);
+  opacity: var(--skip-pausing-opacity);
+  color: var(--skip-pausing-color);
+}

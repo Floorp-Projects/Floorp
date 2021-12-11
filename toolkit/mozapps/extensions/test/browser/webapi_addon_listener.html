@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<p id="result"></p>
+<script type="text/javascript">
+let events = [];
+let resultEl = document.getElementById("result");
+[ "onEnabling",
+  "onEnabled",
+  "onDisabling",
+  "onDisabled",
+  "onInstalling",
+  "onInstalled",
+  "onUninstalling",
+  "onUninstalled",
+  "onOperationCancelled",
+].forEach(event => {
+  navigator.mozAddonManager.addEventListener(event, data => {
+    let obj = {event, id: data.id, needsRestart: data.needsRestart};
+    events.push(JSON.stringify(obj));
+    resultEl.textContent = events.join("\n");
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+diff:
+    description: Generates diffs of CI changes
+    platform: linux1804-64/opt
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+        # Uncomment to upload logs of the generations as artifacts.
+        # env:
+        #     XDG_CACHE_HOME: "/builds/worker/artifacts/cache"
+        artifacts:
+            - type: directory
+              name: public/taskgraph
+              path: /builds/worker/artifacts
+    attributes:
+        code-review: true
+    always-target: true
+    treeherder:
+        kind: test
+        platform: gecko-decision/opt
+        symbol: tgdiff
+        tier: 2
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >-
+            mkdir -p /builds/worker/artifacts/diffs &&
+            ./mach taskgraph target --fast -p "taskcluster/test/params" -o "/builds/worker/artifacts/diffs/diff.txt" --diff {base_rev}
+    when:
+        files-changed:
+            - 'taskcluster/ci/**'
+            - 'taskcluster/**/*.py'

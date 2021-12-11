@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<style>
+.test::after {
+    content:"::after content";
+}
+</style>
+
+<fieldset>
+  Fieldset contents
+</fieldset>
+<script>
+  var td = document.querySelector("fieldset");
+  td.offsetWidth;
+  td.className = "test";
+</script>

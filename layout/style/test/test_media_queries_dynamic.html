@@ -1,0 +1,207 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=473400
+-->
+<head>
+  <title>Test for Bug 473400</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=473400">Mozilla Bug 473400</a>
+<iframe id="subdoc" src="about:blank"></iframe>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 473400 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var subdoc = document.getElementById("subdoc").contentDocument;
+  var subwin = document.getElementById("subdoc").contentWindow;
+  var style = subdoc.createElement("style");
+  style.setAttribute("type", "text/css");
+  subdoc.getElementsByTagName("head")[0].appendChild(style);
+  var sheet = style.sheet;
+  var iframe_style = document.getElementById("subdoc").style;
+
+  // Create a style rule and an element now based on the given media
+  // query "q", and return the computed style that should be passed to
+  // query_applies to see if that query currently applies.
+  var n = 0;
+  function make_query(q) {
+    var i = ++n;
+    sheet.insertRule("@media " + q + " { #e" + i + " { text-decoration: underline; } }", sheet.cssRules.length);
+    var e = subdoc.createElement("div");
+    e.id = "e" + i;
+    subdoc.body.appendChild(e);
+    var cs = subdoc.defaultView.getComputedStyle(e);
+    cs._originalQueryText = q;
+    return cs;
+  }
+  function query_applies(cs) {
+    return cs.getPropertyValue("text-decoration-line") == "underline";
+  }
+
+  function should_apply(cs) {
+    ok(query_applies(cs), cs._originalQueryText + " should apply");
+  }
+
+  function should_not_apply(cs) {
+    ok(!query_applies(cs), cs._originalQueryText + " should not apply");
+  }
+
+  var content_div = document.getElementById("content");
+  content_div.style.font = "initial";
+  var em_size =
+    getComputedStyle(content_div, "").fontSize.match(/^(\d+)px$/)[1];
+
+  let width_val = 317; // pick two not-too-round numbers
+  let height_val = 228;
+  iframe_style.width = width_val + "px";
+  iframe_style.height = height_val + "px";
+  var wh_queries = [
+    make_query("all and (min-width: " +
+                     (Math.ceil(width_val/em_size) + 1) + "em)"),
+    make_query("all and (min-width: " +
+                 (Math.floor(width_val/em_size) - 1) + "em)"),
+    make_query("all and (max-width: " +
+                 (Math.ceil(width_val/em_size) + 1) + "em)"),
+    make_query("all and (max-width: " +
+                     (Math.floor(width_val/em_size) - 1) + "em)"),
+    make_query("all and (min-width: " +
+                     (Math.ceil(width_val/(em_size*2)) + 1) + "em)"),
+    make_query("all and (min-width: " +
+                 (Math.floor(width_val/(em_size*2)) - 1) + "em)"),
+    make_query("all and (max-width: " +
+                 (Math.ceil(width_val/(em_size*2)) + 1) + "em)"),
+    make_query("all and (max-width: " +
+                     (Math.floor(width_val/(em_size*2)) - 1) + "em)")
+  ];
+
+  is(wh_queries[0].fontSize, em_size + "px", "text zoom is 1.0");
+  should_not_apply(wh_queries[0]);
+  should_apply(wh_queries[1]);
+  should_apply(wh_queries[2]);
+  should_not_apply(wh_queries[3]);
+  SpecialPowers.setTextZoom(subwin, 2.0);
+  isnot(wh_queries[0].fontSize, em_size + "px", "text zoom is not 1.0");
+  should_not_apply(wh_queries[4]);
+  should_apply(wh_queries[5]);
+  should_apply(wh_queries[6]);
+  should_not_apply(wh_queries[7]);
+  SpecialPowers.setTextZoom(subwin, 1.0);
+  is(wh_queries[0].fontSize, em_size + "px", "text zoom is 1.0");
+  is(subwin.innerHeight, 228, "full zoom is 1.0");
+  should_not_apply(wh_queries[0]);
+  should_apply(wh_queries[1]);
+  should_apply(wh_queries[2]);
+  should_not_apply(wh_queries[3]);
+  SpecialPowers.setFullZoom(subwin, 2.0);
+  isnot(subwin.innerHeight, 228, "full zoom is not 1.0");
+  should_not_apply(wh_queries[4]);
+  should_apply(wh_queries[5]);
+  should_apply(wh_queries[6]);
+  should_not_apply(wh_queries[7]);
+  SpecialPowers.setFullZoom(subwin, 1.0);
+  is(subwin.innerHeight, 228, "full zoom is 1.0");
+
+
+  // Now test that certain things *don't* happen, i.e., that we're
+  // making the optimizations we expect.
+  subdoc.body.textContent = "";
+  subdoc.body.appendChild(subdoc.createElement("div"));
+  for (var ruleIdx = sheet.cssRules.length; ruleIdx-- != 0; ) {
+    sheet.deleteRule(ruleIdx);
+  }
+
+  var utils = SpecialPowers.getDOMWindowUtils(subwin);
+  var restyleGeneration, framesConstructed, framesReflowed;
+  function reset_change_counters()
+  {
+    restyleGeneration = utils.restyleGeneration;
+    framesConstructed = utils.framesConstructed;
+    framesReflowed = utils.framesReflowed;
+  }
+
+  function flush_and_assert_change_counters(desc, expected) {
+    subdoc.body.offsetHeight;
+
+    if (!("restyle" in expected) ||
+        !("construct" in expected) ||
+        !("reflow" in expected)) {
+      ok(false, "parameter missing expectation");
+      return;
+    }
+
+    var didRestyle = utils.restyleGeneration != restyleGeneration;
+    var constructs = utils.framesConstructed - framesConstructed;
+    var reflows = utils.framesReflowed - framesReflowed;
+
+    (expected.restyle ? isnot : is)(didRestyle, false, "restyle: " + desc);
+    (expected.construct ? isnot : is)(constructs, 0,
+                                      "frame construct count: " + desc);
+    (expected.reflow ? isnot : is)(reflows, 0, "reflow count: " + desc);
+
+    reset_change_counters();
+  }
+
+  subdoc.body.offsetHeight;
+  reset_change_counters();
+
+  iframe_style.width = "103px";
+  flush_and_assert_change_counters("change width with no media queries",
+    { restyle: false, construct: false, reflow: true });
+
+  flush_and_assert_change_counters("no change",
+    { restyle: false, construct: false, reflow: false });
+
+  iframe_style.height = "123px";
+  flush_and_assert_change_counters("change height with no media queries",
+    { restyle: false, construct: false, reflow: true });
+
+  sheet.insertRule("@media (min-width: 150px) { div { display:flex } }", 0);
+  flush_and_assert_change_counters("add non-matching media query",
+    { restyle: false, construct: false, reflow: false });
+
+  iframe_style.width = "177px";
+  flush_and_assert_change_counters("resize width across media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  iframe_style.width = "162px";
+  flush_and_assert_change_counters("resize width without crossing media query",
+    { restyle: false, construct: false, reflow: true });
+
+  sheet.deleteRule(0);
+  flush_and_assert_change_counters("remove matching media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  sheet.insertRule("@media (max-height: 150px) { div { display:flex } }", 0);
+  flush_and_assert_change_counters("add matching media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  iframe_style.height = "111px";
+  flush_and_assert_change_counters("resize height without crossing media query",
+    { restyle: false, construct: false, reflow: true });
+
+  iframe_style.height = "184px";
+  flush_and_assert_change_counters("resize height across media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  sheet.deleteRule(0);
+  flush_and_assert_change_counters("remove non-matching media query",
+    { restyle: false, construct: false, reflow: false });
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

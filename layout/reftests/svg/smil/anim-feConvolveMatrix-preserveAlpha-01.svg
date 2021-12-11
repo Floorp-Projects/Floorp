@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the "preserveAlpha" &lt;boolean&gt; attribute on the "feConvolveMatrix" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <filter id="convolve_1">
+    <feConvolveMatrix order="2 2" kernelMatrix="0 0 0 0" preserveAlpha="true">
+      <!-- turn the referencing element from transparent to red at 1.25s -->
+      <animate attributeName="preserveAlpha"
+               calcMode="discrete"
+               begin="0s" dur="2.5s"
+               from="false" to="true"
+               fill="freeze"/>
+    </feConvolveMatrix>
+    <feColorMatrix type="matrix"
+                   values="0 0 0 1 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
+  </filter>
+  <filter id="convolve_2">
+    <feConvolveMatrix order="2 2" kernelMatrix="0 0 0 0" preserveAlpha="true">
+      <!-- turn the referencing element from red to transparent at 1s -->
+      <animate attributeName="preserveAlpha"
+               calcMode="discrete"
+               begin="0s" dur="2s"
+               from="true" to="false"
+               fill="freeze"/>
+    </feConvolveMatrix>
+    <feColorMatrix type="matrix"
+                   values="0 0 0 1 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
+  </filter>
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- 40% through discrete animation simple duration -
+       tests that the animation doesn't affect the element too early -->
+  <rect        width="100" height="50" fill="red" filter="url(#convolve_1)"/>
+
+  <!-- 50% through discrete animation simple duration -
+       tests that the animation affects the element now -->
+  <rect y="50" width="100" height="50" fill="red" filter="url(#convolve_2)"/>
+
+</svg>

@@ -1,0 +1,20 @@
+<html>
+<head>
+    <script>
+      function start () {
+        const video = document.getElementById('id_0')
+        const stream_1 = new MediaStream()
+        const stream_2 = video.mozCaptureStreamUntilEnded()
+        const track = stream_2.getTracks()[0]
+
+        video.srcObject = stream_1
+        stream_1.addTrack(track)
+      }
+
+      window.addEventListener('load', start)
+    </script>
+</head>
+<body>
+<video id="id_0" src="data:audio/mpeg;base64,ZQr/+1DEAAAAAAAAAAAAAAAAAAAAAABJbmZvAAAADwAAAAsAAAnKABcXFxcXFxcXFy4uLi4uLi4uLkVFRUVFRUVFRV1dXV1dXV1dXXR0dHR0dHR0dIuLi4uLi4uLi6KioqKioqKiorq6urq6urq6utHR0dHR0dHR0ejo6Ojo6Ojo6P///////////wAAADlMQU1FMy45OHIBpQAAAAAuHQAAFEAkBElCAABAAAAJyuGI2MQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tQxAAABmQjXHSRAAH6IfB3OVIDAADLlmjIxWKxWTyIABgmGydGjRox4f8Tg+D4OAgc/BwEDn+UBD+qwH/+8Tny7///KO4IYDgcDgcDgcDgcCgQAAAKKBUFc/nnP30a5O0zyYzMNMkzKlPva2GXgMIBbwDQEAYDQNXGLT2EIgEhoFnQNDb4BAPD9wTFYGJBWJw/8AUWgMBQgIEg4KmAKGP/wRG0csCIWDaQxcFhYvv/8WYMUpEIkXhvnRef//kmsuLPH5OvSoAFKxrJIm26DP/7UsQ">
+</body>
+</html>

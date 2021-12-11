@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Test unicode-bidi in form controls</title>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+ </head>
+ <body>
+   <p dir="rtl">&#x202e;This paragraph should appear backwards&#x202c;</p>
+   <p>
+   <textarea rows="3" cols="80" dir="rtl" style="resize:none">&#x202e;This textarea should appear backwards&#x202c;</textarea><br>
+   <input type="text" size="80" dir="rtl" value="&#x202e;This input should appear backwards&#x202c;"><br>
+   <input type="button" dir="rtl" value="&#x202e;This button should appear backwards&#x202c;"><br>
+   <select dir="rtl" size="6">
+    <option selected>&#x202e;This&#x202c;</option>
+    <optgroup label="&#x202e;select&#x202c;">
+     <option>&#x202e;should&#x202c;</option>
+     <option>&#x202e;appear&#x202c;</option>
+    </optgroup>
+    <optgroup label="&#x202e;backwards&#x202c;">
+     <option>&#x202e;throughout&#x202c;</option>
+    </optgroup>
+   </select><br>
+ </body>
+</html>

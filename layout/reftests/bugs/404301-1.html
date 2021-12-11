@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table { background: white }
+col[span] { background: green }
+td { color: white }
+</style>
+</head>
+<body onload="runTest()">
+ <table>
+   <colgroup id="x">
+     <col span="2"></col>
+     <col id="y"></col>
+   </colgroup>
+   <tr>
+     <td>One</td>
+     <td>Two</td>
+     <td>Three</td>
+     <td>Four</td>
+   </tr>
+ </table>
+
+ <script>
+   function runTest() {
+     document.body.offsetWidth;
+     document.getElementById("x").insertBefore(document.createElement("col"),
+                                               document.getElementById("y"));
+   }
+ </script>
+</body>
+</html>

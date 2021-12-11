@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="ahem.css" />
+  <title>Reference: Text that overlaps a background image should be backplated.</title>
+  <style>
+    div {
+      font: 20px Ahem;
+      background-image: url("blue.png");
+    }
+    .fake-backplate {
+      background-color: white;
+      width: max-content;
+      white-space: pre;
+    }
+    /* We need to include the trailing space as part of the backgrounded
+     * area here to properly make a mockup for the testcase's expected
+     * rendering, so we use 'white-space: pre'. The testcase pulls its file's
+     * trailing newline into the body, treats it as a final space character,
+     * and draws a backplate behind it. (This is probably correct? see
+     * discussion on bug 1577028.) */
+    </style>
+</head>
+<div><span class="fake-backplate">ppppp ppppp </span></div>
+</html>

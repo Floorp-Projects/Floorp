@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    "cache-storage.js",
+    "cloned-content-process-messages.js",
+    "console-messages.js",
+    "cookie.js",
+    "css-changes.js",
+    "css-messages.js",
+    "error-messages.js",
+    "extension-storage.js",
+    "indexed-db.js",
+    "local-storage.js",
+    "network-event-stacktraces.js",
+    "network-events.js",
+    "platform-messages.js",
+    "reflow.js",
+    "root-node.js",
+    "server-sent-events.js",
+    "session-storage.js",
+    "source.js",
+    "storage-utils.js",
+    "stylesheet.js",
+    "thread-states.js",
+    "websocket.js",
+)

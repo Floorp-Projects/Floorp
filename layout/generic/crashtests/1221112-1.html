@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .flexContainer {
+      display: flex;
+
+      /* Just for easier visualization: */
+      width: 600px;
+      justify-content: space-around;
+      border: 1px solid black;
+    }
+
+    .flexContainer:before {
+      position:absolute;
+      content:'before';
+    }
+    .flexContainer:after {
+      position:absolute;
+      content:'after'
+    }
+
+    .ordered-item {
+      position:relative;
+      order:5;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="flexContainer">
+      <div class="ordered-item">ItemWithOrderSet
+        <!-- It's important that this remain unclosed, for some reason. -->

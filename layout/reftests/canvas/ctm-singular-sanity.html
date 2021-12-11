@@ -1,0 +1,53 @@
+<html>
+<head>
+  <script type="text/javascript">
+
+function assert(cond, msg) { if (!cond) { throw msg; } }
+
+function isSameTM(m1, m2) {
+    // XXX this is probably the ugliest possible way to write this function,
+    // but it's intended to be lowest-common-denominator
+    if (!(m1.length === 6 && m1.length === m2.length)) {
+        return false;
+    }
+    for (var i = 0; i < m1.length; ++i) {
+        if (m1[i] !== m2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+window.onload = function() {
+    var IM = [ 1, 0, 0, 1, 0, 0 ];
+
+    try {
+        var ctx = document.getElementById("c1").getContext("2d");
+
+        var singular = [ 0, 0, 0, 0, 0, 0 ];
+        ctx.mozCurrentTransform = singular;
+        assert(isSameTM(singular, ctx.mozCurrentTransform),
+               "Expected setting CTM to a singular matrix to work");
+        var inv = ctx.mozCurrentTransformInverse;
+        assert(!isSameTM(inv, inv),
+               "Expected to get back matrix of NaN's from currentTransformInverse");
+        ctx.mozCurrentTransform = IM;
+
+        var m = [ 1, 2, 3, 4, 5, 6 ];
+        ctx.mozCurrentTransform = m;
+        ctx.mozCurrentTransformInverse = singular;
+        assert(isSameTM(m, ctx.mozCurrentTransform),
+                        "Setting currentTransformInverse to a singular matrix is a no-op");
+        ctx.mozCurrentTransform = IM;
+    } catch (e) {
+        document.body.innerHTML = "FAIL: "+ e.toString();
+        return;
+    }
+    document.body.innerHTML = "Pass";
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

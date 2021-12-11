@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Accessible XUL access keys and shortcut keys tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function openMenu(aMenuID, aMenuitemID)
+    {
+      this.menuNode = getNode(aMenuID);
+      this.menuitemNode = getNode(aMenuitemID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.menuNode)
+      ];
+
+      this.invoke = function openMenu_invoke()
+      {
+        // Show menu.
+        this.menuNode.open = true;
+      }
+
+      this.finalCheck = function openMenu_finalCheck()
+      {
+        var menu = getAccessible(aMenuID);
+        is(menu.accessKey, (MAC ? "u" : "Alt+u"),
+           "Wrong accesskey on " + prettyName(this.menuitemNode));
+
+        var menuitem = getAccessible(aMenuitemID);
+        is(menuitem.accessKey, "p",
+           "Wrong accesskey on " + prettyName(this.menuitemNode));
+        is(menuitem.keyboardShortcut, (MAC ? "⌃l" : "Ctrl+l"),
+           "Wrong keyboard shortcut on " + prettyName(this.menuitemNode));
+      }
+
+      this.getID = function openMenu_getID()
+      {
+        return "menuitem accesskey and shortcut test " +
+          prettyName(this.menuItemNode);
+      }
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      // HTML element should get accessKey from associated XUL label.
+      let input = getAccessible("input");
+      is(input.accessKey, (MAC ? "⌃⌥i" : "Alt+Shift+i"),
+         "Wrong accessKey on input");
+
+      // Test accessKey on HTML element inside shadow DOM.
+      let shadowButton = getAccessible(
+        document.getElementById("buttonShadow").shadowRoot.firstElementChild);
+      is(shadowButton.accessKey, (MAC ? "⌃⌥t" : "Alt+Shift+t"),
+         "Wrong accessKey on shadow button");
+
+      gQueue = new eventQueue();
+      gQueue.push(new openMenu("menu", "menuitem"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank" rel="opener"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=672092"
+         title="Reorganize access key and keyboard shortcut handling code">
+        Mozilla Bug 672092
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <label control="input" accesskey="i">input</label>
+      <html:input id="input"/>
+
+      <html:div id="buttonShadow"/>
+      <script>
+      <![CDATA[
+        let host = document.getElementById("buttonShadow");
+        let shadow = host.attachShadow({mode: "open"});
+        let button = document.createElement("button");
+        button.setAttribute("accesskey", "t");
+        shadow.append(button);
+      ]]>
+      </script>
+
+      <keyset>
+        <key key="l" modifiers="control" id="key1"/>
+      </keyset>
+
+      <menubar>
+        <menu label="menu" id="menu" accesskey="u">
+          <menupopup>
+            <menuitem accesskey="p" key="key1" label="item1" id="menuitem"/>
+          </menupopup>
+        </menu>
+      </menubar>
+
+      <vbox id="debug"/>
+    </vbox>
+  </hbox>
+
+</window>
+

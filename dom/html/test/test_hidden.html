@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=567663
+-->
+<head>
+  <title>Test for Bug 567663</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=567663">Mozilla Bug 567663</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <p></p>
+  <p hidden></p>
+</div>
+<pre id="test">
+<script>
+/** Test for Bug 567663 **/
+var ps = document.getElementById("content").getElementsByTagName("p");
+is(ps[0].hidden, false, "First p's IDL attribute was wrong.");
+is(ps[0].hasAttribute("hidden"), false, "First p had a content attribute.");
+is(ps[1].hidden, true, "Second p's IDL attribute was wrong.");
+is(ps[1].hasAttribute("hidden"), true,
+   "Second p didn't have a content attribute.");
+is(ps[1].getAttribute("hidden"), "",
+   "Second p's content attribute was wrong.");
+
+ps[0].hidden = true;
+is(ps[0].getAttribute("hidden"), "",
+   "Content attribute was set to an incorrect value.");
+ps[1].hidden = false;
+is(ps[1].hasAttribute("hidden"), false,
+   "Second p still had a content attribute.");
+
+ps[0].setAttribute("hidden", "banana");
+is(ps[0].hidden, true, "p's IDL attribute was wrong after setting.");
+is(ps[0].getAttribute("hidden"), "banana", "Content attribute changed.");
+
+ps[0].setAttribute("hidden", "false");
+is(ps[0].hidden, true, "p's IDL attribute was wrong after setting.");
+is(ps[0].getAttribute("hidden"), "false", "Content attribute changed.");
+
+ps[0].removeAttribute("hidden");
+is(ps[0].hidden, false,
+   "p's IDL attribute was wrong after removing the content attribute.");
+is(ps[0].hasAttribute("hidden"), false);
+</script>
+</pre>
+</body>
+</html>

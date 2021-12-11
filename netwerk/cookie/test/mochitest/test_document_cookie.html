@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for document.cookie when the policy changes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="cookiesHelper.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+runTests(async (w, state) => {
+  is(w.document.cookie.length, 0, "No cookie to start!");
+  w.document.cookie = "name=value";
+  is(w.document.cookie.includes("name=value"), state == ALLOWED, "Some cookies for me");
+});
+
+</script>
+</body>
+</html>

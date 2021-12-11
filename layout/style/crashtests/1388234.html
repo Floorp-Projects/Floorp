@@ -1,0 +1,9 @@
+<style></style>
+<script>
+  try { o1 = document.createElement('th') } catch(e) { }
+  try { document.documentElement.appendChild(o1) } catch(e) { }
+  try { document.styleSheets[0].insertRule("* { }", 0); } catch(e) { }
+  try { document.documentElement.getBoundingClientRect() } catch(e) { }
+  try { document.styleSheets[0].insertRule("* { unicode-bidi: bidi-override}", 0); } catch(e) { }
+  try { o1.rowSpan = 32 } catch(e) { }
+</script>

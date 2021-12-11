@@ -1,0 +1,330 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+<head><title>The Jprof Profiler</title></head>
+
+<body bgcolor="#FFFFFF" text="#000000"
+      link="#0000EE" vlink="#551A8B" alink="#FF0000">
+<center>
+<h1>The Jprof Profiler</h1>
+<font size="-1">
+<a href="mailto:jim_nance%yahoo.com">jim_nance@yahoo.com</a><p>
+Recent (4/2011) updates Randell Jesup (see bugzilla for contact info)
+</font>
+<hr>
+
+<a href="#introduction">Introduction</a> | <a href="#operation">Operation</a> |
+<a href="#setup">Setup</a> | <a href="#usage">Usage</a> |
+<a href="#interpretation">Interpretation</a>
+
+</center>
+<hr>
+
+<h3><a name="introduction">Introduction</a></h3>
+
+Jprof is a profiling tool.  I am writing it because I need to find out
+where mozilla is spending its time, and there do not seem to be any
+profilers for Linux that can handle threads and/or shared libraries.
+This code is based heavily on Kipp Hickman's leaky.
+
+<h3><a name="operation">Operation</a></h3>
+
+Jprof operates by installing a timer which periodically interrupts mozilla.
+When this timer goes off, the jprof code inside mozilla walks the function call
+stack to determine which code was executing and saves the results into the
+<code>jprof-log</code> and <code>jprof-map</code> files.  By collecting a large
+number of these call stacks, it is possible to deduce where mozilla is spending
+its time.
+
+<h3><a name="setup">Setup</a></h3>
+
+<p>Configure your mozilla with jprof support by adding
+<code>--enable-jprof</code> to your configure options (eg adding
+<code>ac_add_options --enable-jprof</code> to your <code>.mozconfig</code>) and
+making sure that you do <strong>not</strong> have the
+<code>--enable-strip</code> configure option set -- jprof needs symbols to
+operate.  On many architectures with GCC, you'll need to add
+<code>--enable-optimize="-O3 -fno-omit-frame-pointer"</code> or the
+equivalent to ensure frame pointer generation in the compiler you're using.</p>
+
+<p>Finally, build mozilla with your new configuration.  Now you can run jprof.</p>
+
+<h3><a name="usage">Usage</a></h3>
+<pre> jprof [-v] [-t] [-e exclude] [-i include] [-s stackdepth] [--last] [--all] [--start n [--end m]] [--output-dir dir] prog log [log2 ...]</pre>
+Options:
+<ul>
+  <li><b>-s depth</b> : Limit depth looked at from captured stack
+      frames</li>
+  <li><b>-v</b> : Output some information about the symbols, memory map, etc.</li>
+  <li><b>-t or --threads</b> : Group output according to thread.  May require external
+      LD_PRELOAD library to help force sampling of spawned threads; jprof
+       may capture the main thread only.  See <a
+       href="http://sam.zoy.org/writings/programming/gprof.html">gprof-helper</a>;
+       it may need adaption for jprof.</li>
+  <li><b>--only-thread id</b> : Only output data for thread 'id'</li>
+  <li><b>-e exclusion</b> : Allows excluding specific stack frames</li>
+  <li><b>-i inclusion</b> : Allows including specific stack frames</li>
+  <li><b>--last</b> : Only process data from the last 'section' of sampling
+      (starting at the last PROF)</li>
+  <li><b>--start N</b> : Start processing data at 'section' N </li>
+  <li><b>--end N</b> : Stop processing data at 'section' N </li>
+  <li><b>--output-dir dir</b> : Store generated .html files in the given directory </li>
+</ul>
+The behavior of jprof is determined by the value of the JPROF_FLAGS environment
+variable.  This environment variable can be composed of several substrings
+which have the following meanings:
+<ul>
+    <li> <b>JP_START</b> : Install the signal handler, and start sending the
+    timer signals.
+    
+    <li> <b>JP_DEFER</b> : Install the signal handler, but don't start sending
+    the timer signals.  The user must start the signals by sending the first
+    one (with <code>kill -PROF</code>, or with <code>kill -ALRM</code> if
+    JP_REALTIME is used, or with <code>kill -POLL</code> (also known as <code>kill -IO</code>) if JP_RTC_HZ is used).
+
+    <li> <b>JP_FIRST=x</b> : Wait x seconds before starting the timer
+
+    <li> <b>JP_PERIOD=y</b> : Set timer to interrupt every y seconds.  Only
+    values of y greater than or equal to 0.001 are supported.  Default is
+    0.050 (50ms).
+    
+    <li> <b>JP_REALTIME</b> : Do the profiling in intervals of real time rather
+    than intervals of time used by the mozilla process (and the kernel
+    when doing work for mozilla).  This could probably lead to weird
+    results (you'll see whatever runs when mozilla is waiting for events),
+    but is needed to see time spent in the X server.
+
+    <li> <b>JP_RTC_HZ=freq</b> : This option, only available on Linux if the
+    kernel is built with RTC support, makes jprof use the RTC timer instead of
+    using its own timer.  This option, like JP_REALTIME, uses intervals of real
+    time.  This option overrides JP_PERIOD.  <code>freq</code> is the frequency
+    at which the timer should fire, measured in Hz. It must be a power of 2.
+    The maximal frequency allowed by the kernel can be changed by writing to
+    <code>/proc/sys/dev/rtc/max-user-freq</code>; the maximum value it can be
+    set to is 8192.  Note that <code>/dev/rtc</code> will need to be readable
+    by the Firefox process; making that file world-readable is a simple way to
+    accomplish that.
+
+    <li> <b>JP_CIRCULAR=size</b> : This tells jprof to store samples in a
+    circular buffer of the given size, which then will be saved (appended)
+    to disk when SIGUSR1 is received or JProfStopProfiling is done.  If the
+    buffer overflows, the oldest entries will be evicted until there's
+    space for the new entry.<p>
+	 
+    SIGUSR2 will cause the circular buffer to be cleared.
+
+    <li> <b>JP_FILENAME=basefilename</b> : This is the filename used for
+    saving the log files to; the default is "jprof-log".  If Electrolysis
+    is used, each process after the first will have the process ID
+    added ("jprof-log-3212");
+
+</ul>
+
+<h4>Starting and stopping jprof from JavaScript</h4>
+<p>
+A build with jprof enabled adds four functions to the Window object:<p>
+<code>JProfStartProfiling()</code> and <code>JProfStopProfiling()</code>:  When used with JP_DEFER, these
+allow one to start and stop the timer just around whatever critical section is
+being profiled.</p><p>
+<code>JProfClearCircular()</code> and <code>JProfSaveCircular()</code>:
+These clear the circular buffer and save the buffer (without stopping), respectively.</p>
+
+<h4>Examples of JPROF_FLAGS usage</h4>
+<ul>
+
+  <li>To make the timer start firing 3 seconds after the program is started and
+  fire every 25 milliseconds of program time use:
+    <pre>
+        setenv JPROF_FLAGS "JP_START JP_FIRST=3 JP_PERIOD=0.025" </pre>
+
+  <li>To make the timer start on your signal and fire every 1 millisecond of
+  program time use:  
+    <pre>
+        setenv JPROF_FLAGS "JP_DEFER JP_PERIOD=0.001" </pre>
+
+  <li>To make the timer start on your signal and fire every 10 milliseconds of
+  wall-clock time use:  
+    <pre>
+        setenv JPROF_FLAGS "JP_DEFER JP_PERIOD=0.010 JP_REALTIME" </pre>
+
+  <li>To make the timer start on your signal and fire at 8192 Hz in wall-clock
+  time use:
+    <pre>
+        setenv JPROF_FLAGS "JP_DEFER JP_RTC_HZ=8192" </pre>
+  
+  <li>To make the timer start on JProfStartProfiling() and run continously
+      with a 1ms sample rate until told to stop, then save the last 1MB of
+      data:
+    <pre>
+        setenv JPROF_FLAGS "JP_DEFER JP_CIRCULAR=1048576 JP_PERIOD=0.001" </pre>
+
+</ul>
+
+<h4>Pausing profiles</h4>
+
+<P>jprof can be paused at any time by sending a SIGUSR1 to mozilla (<code>kill
+-USR1</code>).  This will cause the timer signals to stop and jprof-map to be
+written, but it will not close jprof-log.  Combining SIGUSR1 with the JP_DEFER
+option allows profiling of one sequence of actions by starting the timer right
+before starting the actions and stopping the timer right afterward.
+
+<P>After a SIGUSR1, sending another timer signal (SIGPROF, SIGALRM, or SIGPOLL (aka SIGIO),
+depending on the mode) can be used to continue writing data to the same
+output.
+
+<P>SIGUSR2 will cause the circular buffer to be cleared, if it's in use.
+This is useful right before running a test when you're using a large,
+continuous circular buffer, or programmatically at the start of an action
+which might take too long (JProfClearCircular()).
+
+<h4>Looking at the results</h4>
+
+Now that we have <code>jprof-log</code> and <code>jprof-map</code> files, we
+can use the jprof executable is used to turn them into readable output.  To do
+this jprof needs the name of the mozilla binary and the log file.  It deduces
+the name of the map file:
+
+<pre>
+  ./jprof /home/user/mozilla/objdir/dist/bin/firefox ./jprof-log > tmp.html
+</pre>
+
+This will generate the file <code>tmp.html</code> which you should view in a
+web browser.
+
+<pre>
+  ./jprof --output-dir=/tmp /home/user/mozilla/objdir/dist/bin/firefox ./jprof-log*
+</pre>
+
+This will generate a set of files in /tmp for each process.
+
+
+<h3><a name="interpretation">Interpretation</a></h3>
+
+
+The Jprof output is split into a flat portion and a hierarchical portion.
+There are links to each section at the top of the page.  It is typically
+easier to analyze the profile by starting with the flat output and following
+the links contained in the flat output up to the hierarchical output.
+
+<h4><a name="flat">Flat output</a></h3>
+
+The flat portion of the profile indicates which functions were executing
+when the timer was going off.  It is displayed as a list of functions names
+on the right and the number of times that function was interrupted on the
+left.  The list is sorted by decreasing interrupt count.  For example:
+
+<blockquote> <pre>
+Total hit count: 151603
+Count %Total  Function Name
+
+<a href="#23081">8806   5.8     __libc_poll</a>
+<a href="#40008">2254   1.5     __i686.get_pc_thunk.bx</a>
+<a href="#21390">2053   1.4     _int_malloc</a>
+<a href="#49013">1777   1.2     ComputedStyle::GetStyleData(nsStyleStructID)</a>
+<a href="#21380">1600   1.1     __libc_malloc</a>
+<a href="#603">1552   1.0     nsCOMPtr_base::~nsCOMPtr_base()</a>
+</pre> </blockquote>
+
+This shows that of the 151603 times the timer fired, 1777 (1.2% of the total) were inside ComputedStyle::GetStyleData() and 1552 (1.0% of the total) were in the nsCOMPtr_base destructor.
+
+<p>
+In general, the functions with the highest count are the functions which
+are taking the most time.
+
+<P>
+The function names are linked to the entry for that function in the
+hierarchical profile, which is described in the next section.
+
+<h4><a name="hier">Hierarchical output</a></h4>
+
+The hierarchical output is divided up into sections, with each section
+corresponding to one function.  A typical section looks something like
+this:
+
+<blockquote><pre>
+ index  Count         Hits      Function Name
+                      <A href="#72871">     545 (46.4%) nsBlockFrame::ReflowInlineFrames(nsBlockReflowState&, nsLineList_iterator, int*)</A>
+                      <A href="#72873">     100 (8.5%)  nsBlockFrame::ReflowDirtyLines(nsBlockReflowState&)</A>
+ 72870      4 (0.3%)  <a name=72870>     645 (54.9%)</a> <b>nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState&, nsLineLayout&, nsLineList_iterator, nsFlowAreaRect&, int&, nsFloatManager::SavedState*, int*, LineReflowStatus*, int)</b>
+                      <A href="#72821">     545 (46.4%) nsBlockFrame::ReflowInlineFrame(nsBlockReflowState&, nsLineLayout&, nsLineList_iterator, nsIFrame*, LineReflowStatus*)</A>
+                      <A href="#72853">      83 (7.1%)  nsBlockFrame::PlaceLine(nsBlockReflowState&, nsLineLayout&, nsLineList_iterator, nsFloatManager::SavedState*, nsRect&, int&, int*)</A>
+                      <A href="#74150">       9 (0.8%)  nsLineLayout::BeginLineReflow(int, int, int, int, int, int)</A>
+                      <A href="#74897">       1 (0.1%)  nsTextFrame::GetType() const</A>
+                      <A href="#74131">       1 (0.1%)  nsLineLayout::RelativePositionFrames(nsOverflowAreas&)</A>
+                      <A href="#58320">       1 (0.1%)  __i686.get_pc_thunk.bx</A>
+                      <A href="#53077">       1 (0.1%)  PL_ArenaAllocate</A>
+</pre></blockquote>
+
+The information this block tells us is:
+
+<ul>
+<li>There were 4 profiler hits <em>in</em> <code>nsBlockFrame::DoReflowInlineFrames</code>
+<li>There were 645 profiler hits <em>in or under</em> <code>nsBlockFrame::DoReflowInlineFrames</code>.  Of these:
+<ul>
+  <li>545 were in or under <code>nsBlockFrame::ReflowInlineFrame</code>
+  <li>83 were in or under <code>nsBlockFrame::PlaceLine</code>
+  <li>9 were in or under <code>nsLineLayout::BeginLineReflow</code>
+  <li>1 was in or under <code>nsTextFrame::GetType</code>
+  <li>1 was in or under <code>nsLineLayout::RelativePositionFrames</code>
+  <li>1 was in or under <code>__i686.get_pc_thunk.bx</code>
+  <li>1 was in or under <code>PL_ArenaAllocate</code>
+</ul>
+<li>Of these 645 calls into <code>nsBlockFrame::DoReflowInlineFrames</code>:
+<ul>
+  <li>545 came from <code>nsBlockFrame::ReflowInlineFrames</code>
+  <li>100 came from <code>nsBlockFrame::ReflowDirtyLines</code>
+</ul>
+</ul>
+
+
+The rest of this section explains how to read this information off from the jprof output.
+
+<p>This block corresponds to the function <code>nsBlockFrame::DoReflowInlineFrames</code>, which is
+therefore bolded and not a link.  The name of this function is preceded by
+five numbers which have the following meaning.  The number on the left (72870)
+is the index number, and is not important.  The next number (4) and the
+percentage following (0.3%) are the number
+of times this function was interrupted by the timer and the percentage of
+the total hits that is.  The last number pair ("645 (54.9%)")
+are the number of times this function was in the call stack when the timer went
+off.  That is, the timer went off while we were in code that was ultimately
+called from <code>nsBlockFrame::DoReflowInlineFrames</code>.
+<p>For our example we can see that our function was in the call stack for
+645 interrupt ticks, but we were only the function that was running when
+the interrupt arrived 4 times.
+<P>
+The functions listed above the line for <code>nsBlockFrame::DoReflowInlineFrames</code> are its
+callers.  The numbers to the left of these function names are the numbers of
+times these functions were in the call stack as callers of
+<code>nsBlockFrame::DoReflowInlineFrames</code>.  In our example, we were called 545 times by
+<code>nsBlockFrame::ReflowInlineFrames</code> and 100 times by
+<code>nsBlockFrame::ReflowDirtyLines</code>.
+<P>
+The functions listed below the line for <code>nsBlockFrame::DoReflowInlineFrames</code> are its
+callees.  The numbers to the left of the function names are the numbers of
+times these functions were in the callstack as callees of
+<code>nsBlockFrame::DoReflowInlineFrames</code> and the corresponding percentages. In our example, of the 645 profiler hits under <code>nsBlockFrame::DoReflowInlineFrames</code> 545 were under <code>nsBlockFrame::ReflowInlineFrame</code>, 83 were under <code>nsBlockFrame::PlaceLine</code>, and so forth.<p>
+
+<b>NOTE:</b> If there are loops of execution or recursion, the numbers will
+not add up and percentages can exceed 100%.  If a function directly calls
+itself "(self)" will be appended to the line, but indirect recursion will
+not be marked.
+
+<h3>Bugs</h3>
+The current build of Jprof has only been tested under Ubuntu 8.04 LTS, but
+should work under any fairly modern linux distribution using GCC/GLIBC.
+Please update this document with any known compatibilities/incompatibilities.
+<p>
+If you get an error:<p><code>Inconsistency detected by ld.so: dl-open.c: 260: dl_open_worker: Assertion `_dl_debug_initialize (0, args->nsid)->r_state == RT_CONSISTENT' failed!
+</code><p>that means you've hit a timing hole in the version of glibc you're
+running.  See <a
+href="http://sources.redhat.com/bugzilla/show_bug.cgi?id=4578">Redhat bug 4578</a>.
+<!-- <h3>Update</h3>
+<ul>
+</ul>
+-->
+
+</body>
+</html>

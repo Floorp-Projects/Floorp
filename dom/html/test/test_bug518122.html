@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=518122
+-->
+<head>
+  <title>Test for Bug 518122</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=518122">Mozilla Bug 518122</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 518122 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+var simple_tests = [ ["foo", "foo"],
+                     ["", ""],
+                     [null, ""],
+                     [undefined , "undefined"],
+                     ["\n", "\n"],
+                     ["\r", "\n"],
+                     ["\rfoo", "\nfoo"],
+                     ["foo\r", "foo\n"],
+                     ["foo\rbar", "foo\nbar"],
+                     ["foo\rbar\r", "foo\nbar\n"],
+                     ["\r\n", "\n"],
+                     ["\r\nfoo", "\nfoo"],
+                     ["foo\r\n", "foo\n"],
+                     ["foo\r\nbar", "foo\nbar"],
+                     ["foo\r\nbar\r\n", "foo\nbar\n"] ];
+
+var value_append_tests = [ ["foo", "bar", "foobar"],
+                           ["foo", "foo", "foofoo"],
+                           ["foobar", "bar", "foobarbar"],
+                           ["foobar", "foo", "foobarfoo"],
+                           ["foo\n", "foo", "foo\nfoo"],
+                           ["foo\r", "foo", "foo\nfoo"],
+                           ["foo\r\n", "foo", "foo\nfoo"],
+                           ["\n", "\n", "\n\n"],
+                           ["\r", "\r", "\n\n"],
+                           ["\r\n", "\r\n", "\n\n"],
+                           ["\r", "\r\n", "\n\n"],
+                           ["\r\n", "\r", "\n\n"],
+                           [null, null, "null"],
+                           [null, undefined, "undefined"],
+                           ["", "", ""]
+                           ];
+
+
+var simple_tests_for_input = [ ["foo", "foo"],
+                               ["", ""],
+                               [null, ""],
+                               [undefined , "undefined"],
+                               ["\n", ""],
+                               ["\r", ""],
+                               ["\rfoo", "foo"],
+                               ["foo\r", "foo"],
+                               ["foo\rbar", "foobar"],
+                               ["foo\rbar\r", "foobar"],
+                               ["\r\n", ""],
+                               ["\r\nfoo", "foo"],
+                               ["foo\r\n", "foo"],
+                               ["foo\r\nbar", "foobar"],
+                               ["foo\r\nbar\r\n", "foobar"] ];
+
+var value_append_tests_for_input = [ ["foo", "bar", "foobar"],
+                                     ["foo", "foo", "foofoo"],
+                                     ["foobar", "bar", "foobarbar"],
+                                     ["foobar", "foo", "foobarfoo"],
+                                     ["foo\n", "foo", "foofoo"],
+                                     ["foo\r", "foo", "foofoo"],
+                                     ["foo\r\n", "foo", "foofoo"],
+                                     ["\n", "\n", ""],
+                                     ["\r", "\r", ""],
+                                     ["\r\n", "\r\n", ""],
+                                     ["\r", "\r\n", ""],
+                                     ["\r\n", "\r", ""],
+                                     [null, null, "null"],
+                                     [null, undefined, "undefined"],
+                                     ["", "", ""]
+                                     ];
+function runTestsFor(el, simpleTests, appendTests) {
+  for(var i = 0; i < simpleTests.length; ++i) {
+    el.value = simpleTests[i][0];
+    is(el.value, simpleTests[i][1], "Wrong value (wrap=" + el.getAttribute('wrap') + ", simple_test=" + i + ")");
+  }
+  for (var j = 0; j < appendTests.length; ++j) {
+    el.value = appendTests[j][0];
+    el.value += appendTests[j][1];
+    is(el.value, appendTests[j][2], "Wrong value (wrap=" + el.getAttribute('wrap') + ", value_append_test=" + j + ")");
+  }
+}
+
+function runTests() {
+  var textareas = document.getElementsByTagName("textarea");
+  for (var i = 0; i < textareas.length; ++i) {
+    runTestsFor(textareas[i], simple_tests, value_append_tests);
+  }
+  var input = document.getElementsByTagName("input")[0];
+  runTestsFor(input, simple_tests_for_input, value_append_tests_for_input);
+  // initialize the editor
+  input.focus();
+  input.blur();
+  runTestsFor(input, simple_tests_for_input, value_append_tests_for_input);
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+<textarea cols="30" rows="7" wrap="none"></textarea>
+<textarea cols="30" rows="7" wrap="off"></textarea><br>
+<textarea cols="30" rows="7" wrap="soft"></textarea>
+<textarea cols="30" rows="7" wrap="hard"></textarea>
+<input type="text">
+</body>
+</html>

@@ -1,0 +1,105 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+NoVisibilityFlags()
+
+EXPORTS += [
+    'sqlite3.h',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+if CONFIG['MOZ_FOLD_LIBS']:
+    # When folding libraries, sqlite is actually in the nss library.
+    FINAL_LIBRARY = 'nss'
+else:
+    # The final library is in config/external/sqlite
+    FINAL_LIBRARY = 'sqlite'
+
+SOURCES += [
+    'sqlite3.c',
+]
+
+# -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
+# don't have to vacuum to make sure the data is not visible in the file.
+# -DSQLITE_ENABLE_FTS3=1 enables the full-text index module.
+# -DSQLITE_CORE=1 statically links that module into the SQLite library.
+# -DSQLITE_DEFAULT_PAGE_SIZE=32768 and SQLITE_MAX_DEFAULT_PAGE_SIZE=32768
+# increases the page size from 1k, see bug 416330.  It must be kept in sync with
+# the value of PREF_TS_PAGESIZE_DEFAULT in mozStorageService.cpp.  The value can
+# be overridden on a per-platform basis through the use of the PREF_TS_PAGESIZE
+# hidden preference.  If that preference is missing or invalid then this value
+# will be used.
+# Note: Be sure to update the configure.in checks when these change!
+for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE', 'SQLITE_CORE',
+            'SQLITE_ENABLE_FTS3', 'SQLITE_ENABLE_UNLOCK_NOTIFY',
+            'SQLITE_ENABLE_DBSTAT_VTAB'):
+    DEFINES[var] = 1
+
+DEFINES['SQLITE_DEFAULT_PAGE_SIZE'] = 32768
+DEFINES['SQLITE_MAX_DEFAULT_PAGE_SIZE'] = 32768
+
+# -DSQLITE_WIN32_GETVERSIONEX=0 avoids using deprecated functions.
+# SQLite will just assume we are running on NT kinds of Windows. That's fine
+# because we don't support Win9x.
+# -DSQLITE_ALLOW_URI_AUTHORITY=1 enables uri authorities. See bug 879133.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['SQLITE_WIN32_GETVERSIONEX'] = 0
+    DEFINES['SQLITE_ALLOW_URI_AUTHORITY'] = 1
+
+# -DSQLITE_ENABLE_LOCKING_STYLE=1 to help with AFP folders
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    DEFINES['SQLITE_ENABLE_LOCKING_STYLE'] = 1
+
+# sqlite defaults this to on on __APPLE_ but it breaks on newer iOS SDKs
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+    DEFINES['SQLITE_ENABLE_LOCKING_STYLE'] = 0
+
+# Turn on SQLite's assertions in debug builds.
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['SQLITE_DEBUG'] = 1
+    DEFINES['SQLITE_ENABLE_API_ARMOR'] = True
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # default to user readable only to fit Android security model
+    DEFINES['SQLITE_DEFAULT_FILE_PERMISSIONS'] = '0600'
+
+# Force using _msize on mingw, as sqlite3 only enables it with MSVC.
+if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] != 'clang-cl':
+    DEFINES['SQLITE_USE_MALLOC_H'] = True
+    DEFINES['SQLITE_USE_MSIZE'] = True
+
+# Omit unused functions to save some library footprint.
+DEFINES['SQLITE_OMIT_DEPRECATED'] = True
+DEFINES['SQLITE_OMIT_BUILTIN_TEST'] = True
+
+# Try to use a MEMORY temp store when possible. That allows for better
+# performance and doesn't suffer from a full separate tmp partition.
+# Exclude 32bit platforms due to address space fragmentation issues.
+if CONFIG['OS_TARGET'] == 'Android':
+    # On Android there's no tmp partition, so always use a MEMORY temp store.
+    DEFINES['SQLITE_TEMP_STORE'] = 3
+elif CONFIG['HAVE_64BIT_BUILD']:
+    # On 64bit platforms default to a MEMORY temp store for performance.
+    DEFINES['SQLITE_TEMP_STORE'] = 2
+
+# Change the default temp files prefix, to easily distinguish files we created
+# vs files created by other Sqlite instances in the system.
+DEFINES['SQLITE_TEMP_FILE_PREFIX'] = '"mz_etilqs_"'
+
+# Enabling sqlite math functions
+DEFINES['SQLITE_ENABLE_MATH_FUNCTIONS'] = True
+if CONFIG["OS_TARGET"] == "Linux" or CONFIG["OS_TARGET"] == "Android":
+    OS_LIBS += [
+        "m"
+    ]
+
+# Suppress warnings in third-party code.
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-type-limits',
+    ]

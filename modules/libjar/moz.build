@@ -1,0 +1,49 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking: JAR")
+
+if CONFIG["MOZ_ZIPWRITER"]:
+    DIRS += ["zipwriter"]
+
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+
+XPIDL_SOURCES += [
+    "nsIJARChannel.idl",
+    "nsIJARURI.idl",
+    "nsIZipReader.idl",
+]
+
+XPIDL_MODULE = "jar"
+
+EXPORTS += [
+    "nsJARProtocolHandler.h",
+    "nsJARURI.h",
+    "nsZipArchive.h",
+    "zipstruct.h",
+]
+
+UNIFIED_SOURCES += [
+    "nsJAR.cpp",
+    "nsJARChannel.cpp",
+    "nsJARInputStream.cpp",
+    "nsJARProtocolHandler.cpp",
+    "nsJARURI.cpp",
+    "nsZipArchive.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+REQUIRES_UNIFIED_BUILD = True

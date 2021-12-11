@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define NS_NSSVERSION_CONTRACTID "@mozilla.org/security/nssversion;1"
+%}
+
+[scriptable, uuid(a8a53a2b-75cc-4c68-a9bb-9791dbddaa00)]
+interface nsINSSVersion : nsISupports {
+    /* Minimal required versions as used at build time */
+    [must_use]
+    readonly attribute AString NSPR_MinVersion;
+    [must_use]
+    readonly attribute AString NSS_MinVersion;
+    [must_use]
+    readonly attribute AString NSSUTIL_MinVersion;
+    [must_use]
+    readonly attribute AString NSSSSL_MinVersion;
+    [must_use]
+    readonly attribute AString NSSSMIME_MinVersion;
+
+    /* Versions of libraries currently in use */
+    [must_use]
+    readonly attribute AString NSPR_Version;
+    [must_use]
+    readonly attribute AString NSS_Version;
+    [must_use]
+    readonly attribute AString NSSUTIL_Version;
+    [must_use]
+    readonly attribute AString NSSSSL_Version;
+    [must_use]
+    readonly attribute AString NSSSMIME_Version;
+};

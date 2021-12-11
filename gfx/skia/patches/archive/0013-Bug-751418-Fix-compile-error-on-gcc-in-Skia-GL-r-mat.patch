@@ -1,0 +1,26 @@
+From 3d786b1f0c040205ad9ef6d4216ce06b41f7359f Mon Sep 17 00:00:00 2001
+From: George Wright <gw@gwright.org.uk>
+Date: Mon, 5 Nov 2012 15:49:42 +0000
+Subject: [PATCH 3/8] Bug 751418 - Fix compile error on gcc in Skia/GL
+ r=mattwoodrow
+
+---
+ gfx/skia/src/gpu/gl/GrGLProgram.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gfx/skia/src/gpu/gl/GrGLProgram.cpp b/gfx/skia/src/gpu/gl/GrGLProgram.cpp
+index 2703110..40cadc3 100644
+--- a/gfx/skia/src/gpu/gl/GrGLProgram.cpp
++++ b/gfx/skia/src/gpu/gl/GrGLProgram.cpp
+@@ -575,7 +575,7 @@ bool GrGLProgram::genProgram(const GrCustomStage** customStages) {
+                                      POS_ATTR_NAME);
+ 
+     builder.fVSCode.appendf("void main() {\n"
+-                              "\tvec3 pos3 = %s * vec3("POS_ATTR_NAME", 1);\n"
++                              "\tvec3 pos3 = %s * vec3(" POS_ATTR_NAME ", 1);\n"
+                               "\tgl_Position = vec4(pos3.xy, 0, pos3.z);\n",
+                             viewMName);
+ 
+-- 
+1.7.11.7
+

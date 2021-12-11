@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for recipes overriding login fields</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+gTestDependsOnDeprecatedLogin = true;
+var chromeScript = runChecksAfterCommonInit();
+
+let fillPromiseResolvers = [];
+
+function waitForFills(fillCount) {
+  let promises = [];
+  while (fillCount--) {
+    let promise = new Promise(resolve => fillPromiseResolvers.push(resolve));
+    promises.push(promise);
+  }
+
+  return Promise.all(promises);
+}
+
+add_task(async function setup() {
+  // This test should run without any existing loaded recipes interfering.
+  await resetRecipes();
+
+  if (document.readyState !== "complete") {
+    await new Promise((resolve) => {
+      document.onreadystatechange = () => {
+        if (document.readyState !== "complete") {
+          return;
+        }
+        document.onreadystatechange = null;
+        resolve();
+      };
+    });
+  }
+
+  document.getElementById("content")
+  .addEventListener("input", function handleInputEvent(evt) {
+    let resolve = fillPromiseResolvers.shift();
+    if (!resolve) {
+      ok(false, "Too many fills");
+      return;
+    }
+
+    resolve(evt.target);
+  });
+});
+
+add_task(async function loadUsernamePasswordSelectorRecipes() {
+  await loadRecipes({
+    siteRecipes: [{
+      hosts: ["mochi.test:8888"],
+      usernameSelector: "input[name='uname1']",
+      passwordSelector: "input[name='pword2']",
+    }],
+  });
+});
+
+add_task(async function testOverriddingFields() {
+  // Insert the form dynamically so autofill is triggered after setup above.
+  document.getElementById("content").innerHTML = `
+    <!-- form with recipe for the username and password -->
+      <form id="form1">
+        <input type="text"     name="uname1" data-expected="true">
+        <input type="text"     name="uname2" data-expected="false">
+        <input type="password" name="pword1" data-expected="false">
+        <input type="password" name="pword2" data-expected="true">
+      </form>`;
+
+  let elements = await waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(async function testDefaultHeuristics() {
+  // Insert the form dynamically so autofill is triggered after setup above.
+  document.getElementById("content").innerHTML = `
+    <!-- Fallback to the default heuristics since the selectors don't match -->
+    <form id="form2">
+      <input type="text"     name="uname3" data-expected="false">
+      <input type="text"     name="uname4" data-expected="true">
+      <input type="password" name="pword3" data-expected="true">
+      <input type="password" name="pword4" data-expected="false">
+    </form>`;
+
+  let elements = await waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(async function loadNotUsernameSelectorRecipes() {
+  await resetRecipes();
+  await loadRecipes({
+    siteRecipes: [{
+      hosts: ["mochi.test:8888"],
+      notUsernameSelector: "input[name='not_uname1']",
+    }],
+  });
+});
+
+add_task(async function testNotUsernameField() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notUsernameSelector should be skipped -->
+    <form id="form3">
+      <input type="text"     name="uname5" data-expected="true">
+      <input type="text"     name="not_uname1" data-expected="false">
+      <input type="password" name="pword5" data-expected="true">
+    </form>`;
+
+  let elements = await waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(async function testNotUsernameFieldNoUsername() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notUsernameSelector should be skipped.
+         No username field should be found and filled in this case -->
+    <form id="form4">
+      <input type="text"     name="not_uname1" data-expected="false">
+      <input type="password" name="pword6" data-expected="true">
+    </form>`;
+
+  let elements = await waitForFills(1);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(async function loadNotPasswordSelectorRecipes() {
+  await resetRecipes();
+  await loadRecipes({
+    siteRecipes: [{
+      hosts: ["mochi.test:8888"],
+      notPasswordSelector: "input[name='not_pword'], input[name='not_pword2']",
+    }],
+  });
+});
+
+add_task(async function testNotPasswordField() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notPasswordSelector should be skipped -->
+    <form id="form5">
+      <input type="text"     name="uname7" data-expected="true">
+      <input type="password" name="not_pword" data-expected="false">
+      <input type="password" name="pword7" data-expected="true">
+    </form>`;
+
+  let elements = await waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(async function testNotPasswordFieldNoPassword() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notPasswordSelector should be skipped.
+         No username or password field should be found and filled in this case.
+         A dummy form7 is added after so we know when the login manager is done
+         considering filling form6. -->
+    <form id="form6">
+      <input type="text"     name="uname8" data-expected="false">
+      <input type="password" name="not_pword" data-expected="false">
+    </form>
+    <form id="form7">
+      <input type="password" name="pword9" data-expected="true">
+    </form>`;
+
+  let elements = await waitForFills(1);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(async function testNotPasswordField_tooManyToOkay() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notPasswordSelector should be skipped so we won't
+         have too many pw fields to handle (3). -->
+    <form id="form8">
+      <input type="text"     name="uname9" data-expected="true">
+      <input type="password" name="not_pword2" data-expected="false">
+      <input type="password" name="not_pword" data-expected="false">
+      <input type="password" name="pword10" data-expected="true">
+      <input type="password" name="pword11" data-expected="false">
+      <input type="password" name="pword12" data-expected="false">
+    </form>`;
+
+  let elements = await waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+  // Forms are inserted dynamically
+</div>
+<pre id="test"></pre>
+</body>
+</html>

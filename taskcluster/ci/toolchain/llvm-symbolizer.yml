@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        script: repack-llvm-symbolizer.sh
+        toolchain-artifact: public/build/llvm-symbolizer.tar.zst
+
+linux64-llvm-symbolizer:
+    description: "llvm-symbolizer for Linux"
+    treeherder:
+        symbol: TL(llvm-symbolizer)
+    fetches:
+        toolchain:
+            - linux64-clang
+
+macosx64-llvm-symbolizer:
+    description: "llvm-symbolizer for Linux"
+    treeherder:
+        symbol: TM(llvm-symbolizer)
+    fetches:
+        toolchain:
+            - macosx64-clang
+
+win64-llvm-symbolizer:
+    description: "llvm-symbolizer for Linux"
+    treeherder:
+        symbol: TW64(llvm-symbolizer)
+    fetches:
+        toolchain:
+            - win64-clang

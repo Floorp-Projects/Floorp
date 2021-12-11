@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=546995
+-->
+<head>
+  <title>Test for Bug 546995</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=546995">Mozilla Bug 546995</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <select id='s'></select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 546995 **/
+
+/* This test in only testing IDL reflection, another one is testing the behavior */
+
+function checkAutofocusIDLAttribute(element)
+{
+  ok('autofocus' in element, "Element has the autofocus IDL attribute");
+  ok(!element.autofocus, "autofocus default value is false");
+  element.setAttribute('autofocus', 'autofocus');
+  ok(element.autofocus, "autofocus should be enabled");
+  element.removeAttribute('autofocus');
+  ok(!element.autofocus, "autofocus should be disabled");
+}
+
+// TODO: keygen should be added when correctly implemented, see bug 101019.
+checkAutofocusIDLAttribute(document.getElementById('s'));
+
+</script>
+</pre>
+</body>
+</html>

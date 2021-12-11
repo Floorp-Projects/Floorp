@@ -1,0 +1,15 @@
+include PTestDataStructuresCommon;
+include protocol PTestDataStructures;
+
+namespace mozilla {
+namespace _ipdltest {
+
+sync protocol PTestDataStructuresSub {
+    manager PTestDataStructures;
+
+parent:
+    sync __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

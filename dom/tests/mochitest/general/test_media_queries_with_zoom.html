@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media Queries with Zoom</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+
+<div>Testing media queries with different zoom levels</div>
+
+<script type="application/javascript">
+
+const originalDPR = window.devicePixelRatio;
+const originalZoom = SpecialPowers.getFullZoom(window);
+
+const zoomsToTest = [
+300,
+240,
+200,
+170,
+150,
+133,
+120,
+110,
+100,
+90,
+80,
+67,
+50,
+30,
+];
+
+for (let i = 0; i < zoomsToTest.length; ++i) {
+  let zoomPercent = zoomsToTest[i];
+
+  let relativeZoom = originalZoom * zoomPercent / 100;
+  SpecialPowers.setFullZoom(window, relativeZoom);
+  let actualZoom = SpecialPowers.getDeviceFullZoom(window);
+  let targetDPR = (originalDPR * actualZoom);
+  let actualDPR = window.devicePixelRatio;
+  let mql = window.matchMedia(`(resolution: ${targetDPR}dppx)`);
+  ok(mql.matches, `At ${zoomPercent}% zoom, target ${targetDPR}dppx matches ${actualDPR}dppx.`);
+}
+
+// Reset the zoom when the test is done.
+SpecialPowers.setFullZoom(window, originalZoom);
+</script>
+
+</body>
+</html>

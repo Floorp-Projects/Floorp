@@ -1,0 +1,39 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+PRIVATE_EXPORTS = \
+	baset.h		  \
+	base.h		  \
+	$(NULL)
+
+EXPORTS =	   \
+	nssbaset.h \
+	nssbase.h  \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS =		   \
+	arena.c	   \
+	error.c	   \
+	errorval.c \
+	hashops.c  \
+	libc.c	   \
+	tracker.c  \
+	item.c     \
+	utf8.c	   \
+	list.c     \
+	hash.c     \
+	$(NULL)
+
+REQUIRES = nspr
+
+LIBRARY_NAME = nssb
+SHARED_LIBRARY = $(NULL)
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

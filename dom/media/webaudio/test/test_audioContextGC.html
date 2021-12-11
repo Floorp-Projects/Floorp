@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test inactive AudioContext is garbage collected</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let ids;
+
+const observer = (subject, topic, data) => {
+  const id = parseInt(data);
+  if (ids) {
+    ok(ids.delete(id), "Collected AudioNode id " + id);
+  }
+}
+SpecialPowers.addObserver(observer, "webaudio-node-demise");
+
+SimpleTest.registerCleanupFunction(function() {
+  if (observer) {
+    SpecialPowers.removeObserver(observer, "webaudio-node-demise");
+  }
+});
+
+function id(node) {
+  return SpecialPowers.getPrivilegedProps(node, "id");
+}
+
+let tests = [{
+  name: "Bare running AudioContext", setup: () => {
+    const ac = new AudioContext();
+    ids.add(id(ac.destination));
+    // Await state change notification before collection.
+    return new Promise((resolve) => {
+      ac.onstatechange = () => {
+        is(ac.state, "running", "ac.state");
+        resolve();
+      };
+    });
+  }
+}, {
+  name: "Stopped source", setup: () => {
+    const ac = new AudioContext();
+    ids.add(id(ac.destination));
+    const source = new ConstantSourceNode(ac);
+    ids.add(id(source));
+    source.start();
+    source.stop();
+    // Await ended notification before collection.
+    return new Promise((resolve) => {
+      source.onended = () => {
+        is(ac.state, "running", "ac.state");
+        resolve();
+      };
+    });
+  }
+}, {
+  name: "OfflineAudioContext not started", setup: () => {
+    const ac = new OfflineAudioContext({
+      numberOfChannels: 1, length: 1, sampleRate: 48000
+    });
+    ids.add(id(ac.destination));
+    const source = new ConstantSourceNode(ac);
+    ids.add(id(source));
+    source.start();
+  }
+}, {
+  name: "Completed OfflineAudioContext", setup: async () => {
+    const ac = new OfflineAudioContext({
+      numberOfChannels: 1, length: 1, sampleRate: 48000
+    });
+    ids.add(id(ac.destination));
+    const sourceBeforeStart = new ConstantSourceNode(ac);
+    ids.add(id(sourceBeforeStart));
+    sourceBeforeStart.start();
+    ac.startRendering();
+    await new Promise((resolve) => {
+      ac.oncomplete = () => {
+        resolve();
+      };
+    });
+    const sourceAfterComplete = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterComplete));
+    sourceAfterComplete.start();
+  }
+}, {
+  name: "suspended AudioContext", setup: async () => {
+    const ac = new AudioContext();
+    ids.add(id(ac.destination));
+    const sourceBeforeSuspend = new ConstantSourceNode(ac);
+    ids.add(id(sourceBeforeSuspend));
+    sourceBeforeSuspend.start();
+    ac.suspend();
+    const sourceAfterSuspend = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterSuspend));
+    sourceAfterSuspend.start();
+    await new Promise((resolve) => {
+      ac.onstatechange = () => {
+        if (ac.state == "suspended") {
+          resolve();
+        }
+      };
+    });
+    const sourceAfterSuspended = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterSuspended));
+    sourceAfterSuspended.start();
+  }
+}, {
+  name: "closed AudioContext", setup: async () => {
+    const ac = new AudioContext();
+    ids.add(id(ac.destination));
+    const sourceBeforeClose = new ConstantSourceNode(ac);
+    ids.add(id(sourceBeforeClose));
+    sourceBeforeClose.start();
+    ac.close();
+    const sourceAfterClose = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterClose));
+    sourceAfterClose.start();
+    await new Promise((resolve) => {
+      ac.onstatechange = () => {
+        if (ac.state == "closed") {
+          resolve();
+        }
+      };
+    });
+    const sourceAfterClosed = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterClosed));
+    sourceAfterClosed.start();
+  }
+}];
+
+const start_next_test = async () => {
+  const test = tests.shift();
+  if (!test) {
+    SimpleTest.finish();
+    return;
+  }
+  // Collect all audio nodes from previous tests.
+  if (!ids) {
+    await new Promise(resolve => {
+      SpecialPowers.exactGC(resolve);
+    });
+  }
+  ids = new Set();
+  await test.setup();
+  SpecialPowers.exactGC(() => {
+    is(ids.size, 0,
+       `All expected nodes for "${test.name}" should be collected`);
+    start_next_test();
+  });
+}
+
+start_next_test();
+
+</script>
+</pre>
+</body>
+</html>

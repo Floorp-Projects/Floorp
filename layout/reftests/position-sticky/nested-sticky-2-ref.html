@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+html, body {
+    margin: 0;
+}
+thead tr {
+    position: relative;
+    top: 50px;
+}
+th {
+    background-color: green;
+    height: 20px;
+}
+th:first-child {
+    position: relative;
+    top: 10px;
+}
+td {
+    background-color: blue;
+}
+</style>
+<body>
+<table cellspacing=0>
+    <thead>
+        <tr><th></th><th></th></tr>
+    </thead>
+    <tbody>
+        <tr><td style="height: 2000px; vertical-align: top">table cell</td><td>sibling</td></tr>
+    </tbody>
+</table>
+<script>
+  addEventListener('load', function() {
+    document.scrollingElement.scrollTop = 50;
+    document.documentElement.classList.remove('reftest-wait');
+  }, false);
+</script>
+</html>

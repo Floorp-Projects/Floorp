@@ -1,0 +1,83 @@
+# Standard 'directives.txt' prologues for jit-tests
+harness_directive = "|jit-test| skip-if: true"
+directive = "|jit-test| test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemorySupported(); local-include:harness/harness.js"
+
+# Failing tests across all testsuites
+excluded_tests = [
+  # false-positive windows-specific failures
+  "align.wast",
+  # bulk-memory-operations/issues/133 (data.wast:161)
+  "data.wast",
+  # memory limits can be encoded with more bytes now
+  "binary.wast",
+  "binary-leb128.wast",
+  # testing that multiple tables fail (imports.wast:309)
+  "imports.wast",
+  # bulk-memory-operations/issues/133 (linking.wast:206)
+  "linking.wast",
+  # bulk-memory-operations/issues/133 (elem.wast:142)
+  "elem.wast",
+  # test harness doesn't acquire global values correctly
+  "exports.wast",
+  # false-positive windows-specific failure
+  "memory_trap.wast",
+  # false-positive error on duplicate export name (names.wast:19)
+  "names.wast",
+  # false-positive error on invalid UTF-8 custom section name (utf8-custom-section-id.wast:6)
+  "utf8-custom-section-id.wast",
+  # invalid table maximum length for web embeddings
+  "table.wast",
+  # fails after a bottom-type has been added to validation
+  "unreached-invalid.wast",
+]
+
+[[repos]]
+name = "spec"
+url = "https://github.com/WebAssembly/spec"
+excluded_tests = []
+
+[[repos]]
+name = "threads"
+url = "https://github.com/WebAssembly/threads"
+branch = "main"
+parent = "spec"
+excluded_tests = [
+  "atomic.wast",
+  # testing that multi-value isn't implemented (func.wast:492)
+  "func.wast",
+  # testing that multi-value isn't implemented (type.wast:52)
+  "type.wast"
+]
+# Skip in WPT where we can't guard on features being enabled
+skip_wpt = true
+# Skip in jit-test when it's not enabled
+directive = "; skip-if: !wasmThreadsEnabled()"
+
+[[repos]]
+name = "simd"
+url = "https://github.com/WebAssembly/simd"
+branch = "main"
+parent = "spec"
+# Skip in jit-test when it's not enabled
+directive = "; skip-if: !wasmSimdEnabled()"
+excluded_tests = []
+
+[[repos]]
+name = "exception-handling"
+url = "https://github.com/WebAssembly/exception-handling"
+branch = "main"
+parent = "spec"
+# Skip in jit-test when it's not enabled
+directive = "; --wasm-exceptions; skip-if: !wasmExceptionsEnabled()"
+excluded_tests = [
+  # This gets included due to divergence between the proposal repo and the
+  # upstream spec, it can be removed when the repo is rebased.
+  "global.wast"
+]
+
+[[repos]]
+name = "memory64"
+url = "https://github.com/mozilla-spidermonkey/memory64"
+branch = "test-cases"
+directive = "; --wasm-memory64; skip-if: !wasmMemory64Enabled()"
+excluded_tests = []

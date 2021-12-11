@@ -1,0 +1,199 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url('chrome://devtools/content/shared/components/reps/reps.css');
+
+/******************************************************************************/
+/* TreeView Colors */
+
+:root {
+  --tree-header-background: #C8D2DC;
+  --tree-header-sorted-background: #AAC3DC;
+}
+
+/******************************************************************************/
+/* TreeView Table*/
+
+.treeTable {
+  color: var(--theme-highlight-blue);
+}
+
+.treeTable .treeLabelCell,
+.treeTable .treeValueCell {
+  padding: 2px 0;
+  padding-inline-start: 4px;
+  line-height: 16px; /* make rows 20px tall */
+  vertical-align: top;
+  overflow: hidden;
+}
+
+.treeTable .treeLabelCell {
+  white-space: nowrap;
+  cursor: default;
+  padding-inline-start: var(--tree-label-cell-indent);
+}
+
+.treeTable .treeLabelCell::after {
+  content: ":";
+  color: var(--object-color);
+}
+
+.treeTable .treeValueCell.inputEnabled {
+  padding-block: 0;
+}
+
+.treeTable .treeValueCell.inputEnabled input {
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  margin-inline-start: -2px;
+  border: solid 1px transparent;
+  outline: none;
+  box-shadow: none;
+  padding: 0 1px;
+  color: var(--theme-text-color-strong);
+  background: var(--theme-sidebar-background);
+}
+
+.treeTable .treeValueCell.inputEnabled input:focus {
+  border-color: var(--theme-textbox-box-shadow);
+  transition: all 150ms ease-in-out;
+}
+
+.treeTable .treeValueCell > [aria-labelledby],
+.treeTable .treeLabelCell > .treeLabel {
+  unicode-bidi: plaintext;
+  text-align: match-parent;
+}
+
+/* No padding if there is actually no label */
+.treeTable .treeLabel:empty {
+  padding-inline-start: 0;
+}
+
+.treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* :not(.selected) is used because row selection styles should have
+   more precedence than row hovering. */
+.treeTable .treeRow:not(.selected):hover {
+  background-color: var(--theme-selection-background-hover) !important;
+}
+
+.treeTable .treeRow.selected {
+  background-color: var(--theme-selection-background);
+}
+
+.treeTable .treeRow.selected *,
+.treeTable .treeRow.selected .treeLabelCell::after {
+  color: var(--theme-selection-color);
+  fill: currentColor;
+}
+
+/* Invert text selection color in selected rows */
+.treeTable .treeRow.selected :not(input, textarea)::selection {
+  color: var(--theme-selection-background);
+  background-color: var(--theme-selection-color);
+}
+
+/* Filtering */
+.treeTable .treeRow.hidden {
+  display: none !important;
+}
+
+.treeTable .treeValueCellDivider {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* Learn More link */
+.treeTable .treeValueCell .learn-more-link {
+  user-select: none;
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.treeTable .treeValueCell .learn-more-link:hover {
+  text-decoration: underline;
+}
+
+/******************************************************************************/
+/* Toggle Icon */
+
+.treeTable .treeRow .treeIcon {
+  box-sizing: content-box;
+  height: 14px;
+  width: 14px;
+  padding: 1px;
+  /* Set the size of loading spinner (see .devtools-throbber) */
+  font-size: 10px;
+  line-height: 14px;
+  display: inline-block;
+  vertical-align: bottom;
+  /* Use a total width of 20px (margins + padding + width) */
+  margin-inline: 3px 1px;
+}
+
+/* All expanded/collapsed styles need to apply on immediate children
+   since there might be nested trees within a tree. */
+.treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
+  cursor: pointer;
+  background-repeat: no-repeat;
+}
+
+/******************************************************************************/
+/* Header */
+
+.treeTable .treeHeaderRow {
+  height: 18px;
+}
+
+.treeTable .treeHeaderCell {
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 0 !important;
+  background: linear-gradient(
+          rgba(255, 255, 255, 0.05),
+          rgba(0, 0, 0, 0.05)),
+      radial-gradient(1px 60% at right,
+          rgba(0, 0, 0, 0.8) 0%,
+          transparent 80%) repeat-x var(--tree-header-background);
+  color: var(--theme-body-color);
+  white-space: nowrap;
+}
+
+.treeTable .treeHeaderCellBox {
+  padding-block: 2px;
+  padding-inline: 10px 14px;
+}
+
+.treeTable .treeHeaderRow > .treeHeaderCell:first-child > .treeHeaderCellBox {
+  padding: 0;
+}
+
+.treeTable .treeHeaderSorted {
+  background-color: var(--tree-header-sorted-background);
+}
+
+.treeTable .treeHeaderSorted > .treeHeaderCellBox {
+  background: url(chrome://devtools/skin/images/sort-descending-arrow.svg) no-repeat calc(100% - 4px);
+}
+
+.treeTable .treeHeaderSorted.sortedAscending > .treeHeaderCellBox {
+  background-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
+}
+
+.treeTable .treeHeaderCell:hover:active {
+  background-image: linear-gradient(
+          rgba(0, 0, 0, 0.1),
+          transparent),
+      radial-gradient(1px 60% at right,
+          rgba(0, 0, 0, 0.8) 0%,
+          transparent 80%);
+}

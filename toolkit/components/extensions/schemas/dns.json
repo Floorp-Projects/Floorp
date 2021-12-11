@@ -1,0 +1,82 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "PermissionNoPrompt",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "dns"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "dns",
+    "description": "Asynchronous DNS API",
+    "permissions": ["dns"],
+    "types": [
+      {
+        "id": "DNSRecord",
+        "type": "object",
+        "description": "An object encapsulating a DNS Record.",
+        "properties": {
+          "canonicalName": {
+            "type": "string",
+            "optional": true,
+            "description": "The canonical hostname for this record.  this value is empty if the record was not fetched with the 'canonical_name' flag."
+          },
+          "isTRR": {
+            "type": "string",
+            "description": "Record retreived with TRR."
+          },
+          "addresses": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "ResolveFlags",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "allow_name_collisions",
+            "bypass_cache",
+            "canonical_name",
+            "disable_ipv4",
+            "disable_ipv6",
+            "disable_trr",
+            "offline",
+            "priority_low",
+            "priority_medium",
+            "speculate"
+          ]
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "resolve",
+        "type": "function",
+        "description": "Resolves a hostname to a DNS record.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "hostname",
+            "type": "string"
+          },
+          {
+            "name": "flags",
+            "optional": true,
+            "default": [],
+            "$ref": "ResolveFlags"
+          }
+        ]
+      }
+    ]
+  }
+]

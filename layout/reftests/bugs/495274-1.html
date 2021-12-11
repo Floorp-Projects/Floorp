@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>body { color: green; }</style>
+    <link rel="stylesheet" href='data:text/css,body > span { color: red }' type="text/css"/>
+    <link rel="stylesheet" href='data:text/css,body > span { color: red }' type="text/css"/>
+    <script>
+      // Force cloning of the second linked sheet
+      document.styleSheets[2].cssRules[0];
+    </script>
+  </head>
+  <body>
+    <div><span>This text should be green</span></div>
+  </body>
+</html>

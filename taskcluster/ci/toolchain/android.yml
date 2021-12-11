@@ -1,0 +1,169 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: android-build}
+        max-run-time: 1800
+
+# In automation, we generate the AVD using the linux64-android-avd jobs. On
+# developers' machines, bootstrap will download the artifact from the avd job
+# instead of generating it.
+#
+# The Android AVD needs the corresponding system image generated in the
+# linux64-android-system-image TL job. System images are not redistributable,
+# so locally bootstrap will use sdkmanager to download the corresponding system
+# images.
+linux64-android-avd-x86_64-repack:
+    attributes:
+        local-toolchain: true
+    description: "Android AVD (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(avd-x86_64-linux)
+    run-on-projects: [trunk]
+    run:
+        script: repack-android-avd-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/x86_64.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: public/build/android-avd-linux.tar.zst
+        toolchain-alias: android-avd-x86_64-linux
+
+linux64-android-avd-arm-repack:
+    attributes:
+        local-toolchain: true
+    description: "Android AVD (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(avd-arm-linux)
+    run-on-projects: [trunk]
+    run:
+        script: repack-android-avd-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/arm.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: public/build/android-avd-linux.tar.zst
+        toolchain-alias: android-avd-arm-linux
+
+linux64-android-system-image-x86_64-repack:
+    description: "Android System Images (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(x86_64-avd-img-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-system-images
+              path: /builds/worker/project/gecko/android-system-images/
+              type: directory
+    run:
+        script: repack-android-system-images-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/x86_64.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-system-images/android-system-images-linux.tar.zst
+        toolchain-alias: android-system-image-x86_64-linux
+
+linux64-android-sdk-linux-repack:
+    description: "Android SDK (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(android-sdk-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-sdk
+              path: /builds/worker/project/gecko/android-sdk/
+              type: directory
+    run:
+        script: repack-android-sdk-linux.sh
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.zst
+        toolchain-alias: android-sdk-linux
+
+linux64-android-emulator-linux-repack:
+    description: "Android Emulator (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(android-emulator-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-emulator
+              path: /builds/worker/project/gecko/android-emulator/
+              type: directory
+    run:
+        script: repack-android-emulator-linux.sh
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-emulator/android-emulator-linux.tar.zst
+        toolchain-alias: android-emulator-linux
+
+linux64-android-ndk-linux-repack:
+    description: "Android NDK (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(android-ndk-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-ndk
+              path: /builds/worker/project/gecko/android-ndk/
+              type: directory
+    run:
+        script: repack-android-ndk-linux.sh
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-ndk/android-ndk.tar.zst
+        toolchain-alias: android-ndk-linux
+
+linux64-android-gradle-dependencies:
+    description: "Android Gradle dependencies toolchain task"
+    treeherder:
+        symbol: TL(gradle-dependencies)
+    worker:
+        env:
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
+    run:
+        script: android-gradle-dependencies.sh
+        sparse-profile: null
+        resources:
+            - 'taskcluster/scripts/misc/android-gradle-dependencies/**'
+            - '*.gradle'
+            - 'mobile/android/**/*.gradle'
+            - 'mobile/android/config/mozconfigs/android-arm-gradle-dependencies/**'
+            - 'mobile/android/config/mozconfigs/common*'
+            - 'mobile/android/gradle.configure'
+        toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
+        toolchain-alias: android-gradle-dependencies
+    fetches:
+        fetch:
+            - sonatype-nexus
+        toolchain:
+            # Aliases aren't allowed for toolchains depending on toolchains.
+            - linux64-android-sdk-linux-repack
+            - linux64-node
+
+linux64-android-gradle-dependencies-lite:
+    description: "Android Lite Gradle dependencies toolchain task"
+    treeherder:
+        symbol: TL(gradle-dependencies-lite)
+    worker:
+        env:
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
+    run:
+        script: android-gradle-dependencies-lite.sh
+        sparse-profile: null
+        resources:
+            - 'taskcluster/scripts/misc/android-gradle-dependencies/**'
+            - '*.gradle'
+            - 'mobile/android/**/*.gradle'
+            - 'mobile/android/config/mozconfigs/android-arm-gradle-dependencies/**'
+            - 'mobile/android/config/mozconfigs/common*'
+            - 'mobile/android/gradle.configure'
+        toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
+        toolchain-alias: android-gradle-dependencies-lite
+    fetches:
+        fetch:
+            - sonatype-nexus
+        toolchain:
+            # Aliases aren't allowed for toolchains depending on toolchains.
+            - linux64-android-sdk-linux-repack
+            - linux64-node

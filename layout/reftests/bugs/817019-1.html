@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+  <script type="text/javascript">
+    function paintCanvas() {
+      var elem = document.getElementById("mycanv");
+      var ctx = elem.getContext('2d');
+
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, 200, 200);
+      ctx.beginPath();
+      ctx.arc(150, 150, 100, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.clip();
+
+      // create radial gradient
+      var grd = ctx.createRadialGradient(110, 110, 42, 110, 110, 121);
+      grd.addColorStop(0, '#FFFFFF');
+      grd.addColorStop(1, '#E5E5E5');
+
+      ctx.fillStyle = grd;
+      // This should be completely clipped out!
+      ctx.fillRect(0, 0, 1, 1);
+    }
+  </script>
+</head>
+<body onload="paintCanvas();">
+  <canvas width=200 height=200 moz-opaque="true" id="mycanv"></canvas>
+</body>
+</html>

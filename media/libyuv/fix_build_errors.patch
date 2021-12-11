@@ -1,0 +1,51 @@
+# HG changeset patch
+# User Randell Jesup <rjesup@jesup.org>
+# Parent  260ab5c93e30a3d90f10ac30a15edf36fb0f03e9
+
+diff --git a/media/libyuv/libyuv/include/libyuv/row.h b/media/libyuv/libyuv/include/libyuv/row.h
+--- a/media/libyuv/libyuv/include/libyuv/row.h
++++ b/media/libyuv/libyuv/include/libyuv/row.h
+@@ -154,18 +154,19 @@ extern "C" {
+ #define HAS_SOBELROW_SSE2
+ #define HAS_SOBELTOPLANEROW_SSE2
+ #define HAS_SOBELXROW_SSE2
+ #define HAS_SOBELXYROW_SSE2
+ #define HAS_SOBELYROW_SSE2
+ 
+ // The following functions fail on gcc/clang 32 bit with fpic and framepointer.
+ // caveat: clangcl uses row_win.cc which works.
+-#if defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
+-    defined(_MSC_VER)
++#if !defined(MOZ_PROFILING) && \
++  (defined(__x86_64__) || !defined(__pic__) || defined(__clang__) ||  \
++   defined(_MSC_VER))
+ // TODO(fbarchard): fix build error on android_full_debug=1
+ // https://code.google.com/p/libyuv/issues/detail?id=517
+ #define HAS_I422ALPHATOARGBROW_SSSE3
+ #endif
+ #endif
+ 
+ // The following are available on all x86 platforms, but
+ // require VS2012, clang 3.4 or gcc 4.7.
+@@ -215,18 +216,19 @@ extern "C" {
+ // Effects:
+ #define HAS_ARGBADDROW_AVX2
+ #define HAS_ARGBATTENUATEROW_AVX2
+ #define HAS_ARGBMULTIPLYROW_AVX2
+ #define HAS_ARGBSUBTRACTROW_AVX2
+ #define HAS_ARGBUNATTENUATEROW_AVX2
+ #define HAS_BLENDPLANEROW_AVX2
+ 
+-#if defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
+-    defined(_MSC_VER)
++#if !defined(MOZ_PROFILING) && \
++  (defined(__x86_64__) || !defined(__pic__) || defined(__clang__) ||  \
++   defined(_MSC_VER))
+ // TODO(fbarchard): fix build error on android_full_debug=1
+ // https://code.google.com/p/libyuv/issues/detail?id=517
+ #define HAS_I422ALPHATOARGBROW_AVX2
+ #endif
+ #endif
+ 
+ // The following are available for AVX2 Visual C and clangcl 32 bit:
+ // TODO(fbarchard): Port to gcc.

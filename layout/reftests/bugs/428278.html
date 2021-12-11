@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+
+</head><body onload="foo()">
+
+<iframe id="x" src="428278-iframe.html"></iframe>
+<script>
+var w = 400;
+function foo() {
+  var div = document.getElementById('x');
+  div.style.width=w+"px";
+  ++w;
+  var v = document.offsetHeight;
+}
+</script>
+</body></html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+/* global SimpleTest SpecialPowers */
+SimpleTest.waitForExplicitFinish();
+document.addEventListener("DOMContentLoaded", async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true]
+    ]
+  });
+
+  let canvas = document.body.appendChild(document.createElement("canvas"));
+  if (!canvas) {
+    SimpleTest.ok(false, "Cannot create canvas");
+    SimpleTest.finish();
+  }
+
+  let gl = canvas.getContext("webgl");
+  if (!gl) {
+    SimpleTest.ok(false, "Cannot get WebGL context");
+    SimpleTest.finish();
+  }
+
+  SimpleTest.is(gl.getParameter(gl.MAX_TEXTURE_SIZE), 2048, "MAX_TEXTURE_SIZE");
+  SimpleTest.is(gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE),  2048, "MAX_CUBE_MAP_TEXTURE_SIZE");
+  SimpleTest.is(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),  2048, "MAX_RENDERBUFFER_SIZE");
+  SimpleTest.is(gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),  8, "MAX_VERTEX_TEXTURE_IMAGE_UNITS");
+  SimpleTest.is(gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),  8, "MAX_TEXTURE_IMAGE_UNITS");
+  SimpleTest.is(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),  16, "MAX_COMBINED_TEXTURE_IMAGE_UNITS");
+  SimpleTest.is(gl.getParameter(gl.MAX_VERTEX_ATTRIBS),  16, "MAX_VERTEX_ATTRIBS");
+  SimpleTest.is(gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),  256, "MAX_VERTEX_UNIFORM_VECTORS");
+  SimpleTest.is(gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS),  224, "MAX_FRAGMENT_UNIFORM_VECTORS");
+  SimpleTest.is(gl.getParameter(gl.MAX_VARYING_VECTORS),  8, "MAX_VARYING_VECTORS");
+  let viewportDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+  SimpleTest.is(viewportDims[0],  4096, "MAX_VIEWPORT_DIMS[0]");
+  SimpleTest.is(viewportDims[1],  4096, "MAX_VIEWPORT_DIMS[1]");
+  let aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE);
+  SimpleTest.is(aliasedPointSizeRange[0],  1, "ALIASED_POINT_SIZE_RANGE[0]");
+  SimpleTest.is(aliasedPointSizeRange[1],  63, "ALIASED_POINT_SIZE_RANGE[1]");
+  let aliasedLineWIdthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
+  SimpleTest.is(aliasedLineWIdthRange[0],  1, "ALIASED_LINE_WIDTH_RANGE[0]");
+  SimpleTest.is(aliasedLineWIdthRange[1],  1, "ALIASED_LINE_WIDTH_RANGE[1]");
+  SimpleTest.finish();
+});
+</script>

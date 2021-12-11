@@ -1,0 +1,6 @@
+---
+BadIncludeLinter:
+    description: Has an invalid include directive.
+    include: should be a list
+    type: string
+    payload: foobar

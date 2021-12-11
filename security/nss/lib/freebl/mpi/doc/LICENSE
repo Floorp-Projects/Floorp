@@ -1,0 +1,11 @@
+Within this directory, each of the file listed below is licensed under 
+the terms given in the file LICENSE-MPL, also in this directory.
+
+basecvt.pod
+gcd.pod
+invmod.pod
+isprime.pod
+lap.pod
+mpi-test.pod
+prime.txt
+prng.pod

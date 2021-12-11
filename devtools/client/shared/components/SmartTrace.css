@@ -1,0 +1,168 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * SmartTrace Component
+ * Styles for React component at `devtools/client/shared/components/SmartTrace.js`
+ */
+
+
+.frames-group .frame{
+  display: block;
+  padding-inline-start: 16px;
+}
+
+.img.annotation-logo{
+  background-color: var(--theme-body-color);
+}
+
+
+.frames [role="list"]{
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  grid-column-gap: 8px;
+}
+
+.frames .frame {
+  display: contents;
+  cursor: pointer;
+  white-space: normal;
+}
+
+.frames .title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  grid-column: 1 / 2;
+  color: var(--console-output-color);
+}
+
+.frames .location {
+  color: var(--frame-link-source);
+  grid-column: -1 / -2;
+  /* Force the location to be on one line and crop at start */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: end;
+}
+
+.frames .location .line {
+  color: var(--frame-link-line-color);
+}
+
+.frames .frames-list .frame:hover .location {
+  text-decoration: underline;
+}
+
+.frames .location-async-cause {
+  grid-column: 1 / -1;
+  color: var(--theme-comment);
+}
+
+/******* Group styles *******/
+.frames-group {
+  grid-column:1 / -1;
+}
+
+.frames .frames-group .group {
+  display: flex;
+}
+
+.group-description {
+  display: flex;
+  align-items: center;
+  color: var(--console-output-color);
+}
+
+.frames .frames-group .frames-list {
+  grid-column: 1 / -1;
+  margin-block-start: 2px;
+  /*
+   * We want to display each frame name on its own row, without having new lines in the
+   * clipboard when copying it. This does the trick.
+   */
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.frames .frames-group .frames-list .frame {
+  padding-inline-start: 16px;
+  text-overflow: ellipsis;
+}
+
+.frames-group .frames-list .title {
+  grid-column: -1 / 1;
+  padding-inline-start: 16px;
+}
+
+.frames .frames-group .frames-list .frame:first-of-type {
+  border-top: 1px solid var(--theme-splitter-color);
+  padding-block-start: 4px;
+}
+
+.frames .frames-group .frames-list .frame:last-of-type {
+  margin-block-end: 4px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.badge {
+  background: var(--theme-toolbar-background-hover);
+  color: var(--theme-body-color);
+  border-radius: 8px;
+  padding: 1px 4px;
+  font-size: 0.9em;
+  display: inline-block;
+  text-align: center;
+  cursor: default;
+  margin-inline-start: 4px;
+}
+
+.frames .frames-group.expanded .group-description,
+.frames .frames-group.expanded .badge {
+  color: var(--theme-highlight-blue);
+}
+
+/** Images **/
+
+.frames .img.annotation-logo {
+  /* FIXME: In order to display the Framework icons, we need to find a way to share CSS
+   * from the debugger, where the background images are defined.
+   * See https://github.com/firefox-devtools/debugger.html/issues/7782.
+   */
+  display: none;
+  /*
+  background-color:var(--theme-body-color);
+  display: inline-block;
+  width: 12px;
+  height:12px;
+  vertical-align: middle;
+  margin-inline-end:4px;
+  */
+}
+
+.expanded .img.annotation-logo {
+  background-color: currentColor;
+}
+
+.group .img.arrow {
+    mask: url("chrome://devtools/content/debugger/images/arrow.svg");
+    mask-size: auto;
+    margin-inline-end: 4px;
+    background-color: var(--theme-icon-dimmed-color);
+    width: 10px;
+    height: 10px;
+    mask-size: 100%;
+    display: inline-block;
+    transform: rotate(-90deg);
+    transition: transform 0.18s ease;
+}
+
+.group .img.arrow.expanded {
+  transform: rotate(0);
+}
+
+/* Frameworks */
+:root.theme-dark .annotation-logo:not(.angular) {
+  background-color: var(--theme-highlight-blue);
+}

@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofilling with autocomplete types (username, off, cc-type, etc.)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Test autofilling with autocomplete types (username, off, cc-type, etc.)
+
+<script>
+let readyPromise = registerRunTests(9);
+
+addLoginsInParent(
+  [window.location.origin, "https://autocomplete", null,
+   "testuser@example.com", "testpass1", "", ""]);
+
+let DEFAULT_ORIGIN = window.location.origin;
+
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
+let loadPromise = loadFormIntoWindow(DEFAULT_ORIGIN, `
+  <form id="form0" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form1" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="username">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form2" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="off" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form3" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="on" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form4" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="nosuchtype" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form5" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="email" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form6" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="tel" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form7" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="tel-national" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- Begin forms where the first field is skipped for the username -->
+
+  <form id="form101" action="https://autocomplete">
+    <input  type="text" name="uname">
+    <input  type="text" autocomplete="cc-number" name="acfield">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>`, win);
+</script>
+
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/*
+  Test for Login Manager: Skip over inappropriate autcomplete types when finding username field
+ */
+
+add_task(async function setup() {
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
+});
+
+/* Tests for autofill of single-user forms with various autocomplete types */
+add_task(async function test_autofill_autocomplete_types() {
+  await loadPromise;
+  await checkLoginFormInFrameWithElementValues(win, 0, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 1, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 2, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 3, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 4, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 5, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 6, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 7, null, "testuser@example.com", "testpass1");
+  await checkLoginFormInFrameWithElementValues(win, 101, "testuser@example.com", null, "testpass1");
+});
+
+</script>
+</pre>
+</body>
+</html>

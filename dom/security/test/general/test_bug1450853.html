@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1450853
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Cross-origin resouce status leak via MediaError</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/ChromeTask.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+
+<audio autoplay id="audio"></audio>
+
+<script type="application/javascript">
+
+/** Test for Bug 1450853 **/
+var CONST_GENERIC_ERROR_MESSAGE = "Failed to open media";
+
+add_task(function() {
+  return new Promise((resolve) => {
+      let audioElement = document.getElementById("audio");
+
+      audioElement.onerror = function() {
+      let err = this.error;
+      let message = err.message;
+      info(`Got Audio Error -> ${message}`);
+      ok(message.includes("404"), "Same-Origin Error Message may contain status data");
+      resolve();
+    };
+  audioElement.src = "/media/test.mp3";
+  });
+});
+
+add_task(function() {
+  return new Promise((resolve) => {
+      let audioElement = document.getElementById("audio");
+
+      audioElement.onerror = function() {
+      let err = this.error;
+      let message = err.message;
+
+      info(`Got Audio Error -> ${message}`);
+      is(message,CONST_GENERIC_ERROR_MESSAGE, "Cross-Origin Error Message is only Generic");
+      resolve();
+    };
+  audioElement.src = "https://example.com/media/test.mp3";
+  });
+});
+
+</script>
+</head>
+
+<body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1450853">Mozilla Bug 1450853</a>
+    <iframe width="0" height="0"></iframe>
+  </body>
+</html>

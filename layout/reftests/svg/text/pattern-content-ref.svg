@@ -1,0 +1,16 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="p2" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect x="-1" y="-1" width="10" height="10" fill="yellow"/>
+      <rect width="4" height="4"/>
+      <rect x="4" y="4" width="4" height="4"/>
+    </pattern>
+  </defs>
+  <g transform="scale(2)translate(50,120)scale(4)">
+    <text style="font: bold 48px sans-serif; fill: url(#p2); stroke: black; stroke-width: 1px">a</text>
+  </g>
+</svg>

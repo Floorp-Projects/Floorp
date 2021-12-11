@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>
+    A test to make sure checkerboard severity isn't reported for non-scrollable
+    OOP iframe
+  </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+
+// The actual test
+
+let code_for_oopif_to_run = function() {
+  document.addEventListener("click", function(e) {
+    dump(`OOPIF got click at ${e.clientX},${e.clientY}\n`);
+    let result = { x: e.clientX, y: e.clientY };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:ClickData", result);
+  });
+  dump("OOPIF registered click listener\n");
+  return true;
+};
+
+async function getIframeDisplayport(iframe) {
+  let oopif_displayport = function() {
+    let result = getLastContentDisplayportFor("fission_empty_docelement", false);
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Displayport", result);
+    return true;
+  };
+
+  let iframePromise = promiseOneEvent(window, "OOPIF:Displayport", null);
+  ok(await FissionTestHelper.sendToOopif(iframe, `(${oopif_displayport})()`));
+  let iframeResponse = await iframePromise;
+  dump("OOPIF response for Displayport: " +
+       JSON.stringify(iframeResponse.data) + "\n");
+
+  return iframeResponse.data;
+}
+
+async function getIframeScrollMax(iframe) {
+  let oopif_scroll_max = function() {
+    let result = {
+      scrollMaxX: window.scrollMaxX,
+      scrollMaxY: window.scrollMaxY
+    };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:ScrollMax", result);
+    return true;
+  };
+
+  let iframePromise = promiseOneEvent(window, "OOPIF:ScrollMax", null);
+  ok(await FissionTestHelper.sendToOopif(iframe, `(${oopif_scroll_max})()`));
+  let iframeResponse = await iframePromise;
+  dump("OOPIF response for ScrollMax: " +
+       JSON.stringify(iframeResponse.data) + "\n");
+
+  return iframeResponse.data;
+}
+
+async function test() {
+  await SpecialPowers.spawnChrome([], () => {
+    Services.telemetry.getHistogramById("CHECKERBOARD_SEVERITY").clear();
+  });
+
+  const iframe = document.getElementById("testframe");
+
+  // Make sure the iframe content is not scrollable.
+  const { scrollMaxX, scrollMaxY } = await getIframeScrollMax(iframe);
+  is(scrollMaxX, 0, "The iframe content should not be scrollable");
+  is(scrollMaxY, 0, "The iframe content should not be scrollable");
+
+  // Since bug 1709460 any visible OOP iframe initially has set the displayport.
+  let displayport = await getIframeDisplayport(iframe);
+  is(displayport.w, 400);
+  is(displayport.h, 300);
+
+  let iframeResponse =
+    await FissionTestHelper.sendToOopif(iframe, `(${code_for_oopif_to_run})()`);
+  dump("OOPIF response: " + JSON.stringify(iframeResponse) + "\n");
+  ok(iframeResponse, "code_for_oopif_to_run successfully installed");
+
+  // Click on the iframe via APZ so that it triggers a RequestContentRepaint
+  // call then it sets zero display port margins for the iframe's root scroller,
+  // thus as a result it will report a checkerboard event if there had been
+  // checkerboarding.
+  iframePromise = promiseOneEvent(window, "OOPIF:ClickData", null);
+  synthesizeNativeMouseEventWithAPZ(
+    { type: "click", target: iframe, offsetX: 10, offsetY: 10 },
+    () => dump("Finished synthesizing click, waiting for OOPIF message...\n")
+  );
+  iframeResponse = await iframePromise;
+  dump("OOPIF response: " + JSON.stringify(iframeResponse.data) + "\n");
+
+  // Now the displayport size should have been set.
+  displayport = await getIframeDisplayport(iframe);
+  is(displayport.w, 400, "The displayport size should be same as the iframe size");
+  is(displayport.h, 300, "The displayport size should be same as the iframe size");
+
+  // Wait 100ms to give a chance to deliver the checkerboard event.
+  await new Promise(resolve => {
+    setTimeout(resolve, 100);
+  });
+
+  const hasCheckerboardSeverity = await SpecialPowers.spawnChrome([], () => {
+    const histograms = Services.telemetry.getSnapshotForHistograms(
+        "main",
+        true /* clear the histograms after taking this snapshot*/).parent;
+
+    return histograms.hasOwnProperty("CHECKERBOARD_SEVERITY");
+  });
+  ok(!hasCheckerboardSeverity, "there should be no checkerboard severity data");
+}
+  </script>
+  <style>
+    iframe {
+        width: 400px;
+        height: 300px;
+        border: none;
+    }
+  </style>
+</head>
+<body>
+<iframe id="testframe"></iframe>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug 1155730</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1155730">Mozilla Bug 1155730</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("untriaged");
+
+    function assertCheck(data) {
+      if (data.assertIs) {
+        for (const args of data.assertIs) {
+          is(args[0], args[1], args[2]);
+        }
+      }
+      if (data.assertOk) {
+        for (const args of data.assertOk) {
+          ok(args[0], args[1]);
+        }
+      }
+      if (data.assertIsNot) {
+        for (const args of data.assertIsNot) {
+          isnot(args[0], args[1], args[2]);
+        }
+      }
+    }
+
+    var bc1, currentCase = 0;
+    function test1() {
+      bc1 = new BroadcastChannel("bug1155730_part1");
+      bc1.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "pageshow") {
+          currentCase++;
+          var persisted = msg.persisted;
+          is(persisted, false, "Shouldn't have persisted session history entry.");
+          bc1.postMessage({command: "test", currentCase});
+        } else if (command == "asserts") {
+          is(msg.currentCase, currentCase, "correct case");
+          info(`Checking asserts for case ${msg.currentCase}`);
+          assertCheck(msg);
+          if (currentCase == 3) {
+            // move on to the next test
+            bc1.close();
+            test2();
+          }
+        }
+      }
+      window.open("file_scrollRestoration_part1_nobfcache.html", "", "width=360,height=480,noopener");
+    }
+
+    var bc2, bc2navigate;
+    function test2() {
+      currentCase = 0;
+      bc2 = new BroadcastChannel("bug1155730_part2");
+      bc2.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "pageshow") {
+          currentCase++;
+          var persisted = msg.persisted;
+          switch (currentCase) {
+            case 1:
+              is(persisted, false, "Shouldn't have persisted session history entry.");
+              break;
+            case 2:
+              is(persisted, true, "Should have persisted session history entry.");
+          }
+          bc2.postMessage({command: "test", currentCase});
+        } else if (command == "asserts") {
+          is(msg.currentCase, currentCase, "correct case");
+          info(`Checking asserts for case ${msg.currentCase}`);
+          assertCheck(msg);
+          if (currentCase == 3) {
+            // move on to the next test
+            bc2.close();
+            test3();
+          }
+        } else if (command == "nextCase") {
+          currentCase++;
+        }
+      }
+
+      bc2navigate = new BroadcastChannel("navigate");
+      bc2navigate.onmessage = (event) => {
+        if (event.data.command == "loaded") {
+          bc2navigate.postMessage({command: "back"})
+          bc2navigate.close();
+        }
+      }
+      window.open("file_scrollRestoration_part2_bfcache.html", "", "width=360,height=480,noopener");
+    }
+
+    var bc3, bc3navigate;
+    function test3() {
+      currentCase = 0;
+      bc3 = new BroadcastChannel("bug1155730_part3");
+      bc3.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "pageshow") {
+          currentCase++;
+          if (currentCase == 3) {
+            var persisted = msg.persisted;
+            is(persisted, false, "Shouldn't have persisted session history entry.");
+          }
+
+          bc3.postMessage({command: "test", currentCase});
+        } else if (command == "asserts") {
+          is(msg.currentCase, currentCase, "correct case");
+          info(`Checking asserts for case ${msg.currentCase}`);
+          assertCheck(msg);
+        } else if (command == "nextCase") {
+          currentCase++;
+        } else if (command == "finishing") {
+          bc3.close();
+          test4();
+        }
+      }
+
+      bc3navigate = new BroadcastChannel("navigate");
+      bc3navigate.onmessage = (event) => {
+        if (event.data.command == "loaded") {
+          is(event.data.scrollRestoration, 'auto', "correct scroll restoration");
+          bc3navigate.postMessage({command: "back"})
+          bc3navigate.close();
+        }
+      }
+      window.open("file_scrollRestoration_part3_nobfcache.html", "", "width=360,height=480,noopener");
+    }
+
+    // test4 opens a new page which can enter bfcache. That page then loads
+    // another page which can't enter bfcache. That second page then scrolls
+    // down. History API is then used to navigate back and forward. When the
+    // second page loads again, it should scroll down automatically.
+    var bc4a, bc4b;
+    var scrollYCounter = 0;
+    function test4() {
+      currentCase = 0;
+      bc4a = new BroadcastChannel("bfcached");
+      bc4a.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "pageshow") {
+          ++currentCase;
+          if (currentCase == 1) {
+            ok(!msg.persisted, "The first page should not be persisted initially.");
+            bc4a.postMessage("loadNext");
+          } else if (currentCase == 3) {
+            ok(msg.persisted, "The first page should be persisted.");
+            bc4a.postMessage("forward");
+            bc4a.close();
+          }
+        }
+      }
+
+      bc4b = new BroadcastChannel("notbfcached");
+      bc4b.onmessage = (event) => {
+        var msg = event.data;
+        var command = msg.command;
+        if (command == "pageshow") {
+          ++currentCase;
+          if (currentCase == 2) {
+            ok(!msg.persisted, "The second page should not be persisted.");
+            bc4b.postMessage("getScrollY");
+            bc4b.postMessage("scroll");
+            bc4b.postMessage("getScrollY");
+            bc4b.postMessage("back");
+          } else if (currentCase == 4) {
+            ok(!msg.persisted, "The second page should not be persisted.");
+            bc4b.postMessage("getScrollY");
+          }
+        } else if (msg == "closed") {
+          bc4b.close();
+          SimpleTest.finish();
+        } else if ("scrollY" in msg) {
+          ++scrollYCounter;
+          if (scrollYCounter == 1) {
+            is(msg.scrollY, 0, "The page should be initially scrolled to top.");
+          } else if (scrollYCounter == 2) {
+            isnot(msg.scrollY, 0, "The page should be then scrolled down.");
+          } else if (scrollYCounter == 3) {
+            isnot(msg.scrollY, 0, "The page should be scrolled down after being restored from the session history.");
+            bc4b.postMessage("close");
+          }
+        }
+      }
+      window.open("file_scrollRestoration_bfcache_and_nobfcache.html", "", "width=360,height=480,noopener");
+    }
+
+    function runTest() {
+      // If Fission is disabled, the pref is no-op.
+      SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+        test1();
+      });
+    }
+
+  </script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+
+    <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=342532 -->
+
+    <title>Test: percentage height on absolutely positioned SVG</title>
+
+    <!--
+    This testcase checks that percentage values for height on absolutely
+    positioned SVG will be computed relative to their containing block, and
+    not relative to the content area of the user agent.
+    -->
+
+    <style type="text/css">
+
+html, body {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  height: 100%;
+  background: lime;
+}
+
+    </style>
+  </head>
+  <body>
+
+    <!-- create containing block for absolutely positioned children -->
+    <div style="position:relative;">
+
+      <!-- div to expand parent div to a computed height of 20px -->
+      <div style="height:20px; background:red;"/>
+
+      <!-- absolutely positioned SVG - the explicit 100% percentage height
+           should compute as a percentage of the parent div's computed height,
+           not as a percentage of the body's height! I.e. no red should show.
+      -->
+      <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; top:0; width: 100%; height: 100%">
+        <rect width="100%" height="100%" fill="red"/>
+        <rect width="100%" height="20px" fill="lime"/>
+      </svg>
+
+    </div>
+
+  </body>
+</html>

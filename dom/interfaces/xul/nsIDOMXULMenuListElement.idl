@@ -1,0 +1,24 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMXULSelectCntrlEl.idl"
+
+webidl Element;
+
+[scriptable, uuid(36c16a17-c0e9-4b35-951b-81a147314ef1)]
+interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
+  attribute boolean editable;
+  attribute boolean open;
+
+  // label of selected option or value of textfield for editable menu lists
+  readonly attribute AString label;
+
+  attribute AString crop;
+  attribute AString image;
+
+  // For editable menu lists only.
+  readonly attribute Element inputField;
+};
+

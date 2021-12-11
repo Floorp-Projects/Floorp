@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test input value change right after onsubmit event</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: input value change right after onsubmit event
+
+<script>
+  let chromeScript = runChecksAfterCommonInit();
+
+  function getSubmitMessage() {
+    info("getSubmitMessage");
+    return new Promise((resolve, reject) => {
+      chromeScript.addMessageListener("formSubmissionProcessed", function processed(...args) {
+        info("got formSubmissionProcessed");
+        chromeScript.removeMessageListener("formSubmissionProcessed", processed);
+        resolve(args[0]);
+      });
+    });
+  }
+</script>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+  <form id="form1" action="formTest.js" onsubmit="return false;">
+    <input  type="text"     name="uname" id="ufield">
+    <input  type="password" name="pword" id="pfield">
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+<script>
+  /** Test for Login Manager: input value change right after onsubmit event **/
+  add_task(async function checkFormValues() {
+    SpecialPowers.wrap(document.getElementById("ufield")).setUserInput("testuser");
+    SpecialPowers.wrap(document.getElementById("pfield")).setUserInput("testpass");
+    is($_(1, "uname").value, "testuser", "Checking for filled username");
+    is($_(1, "pword").value, "testpass", "Checking for filled password");
+
+    document.getElementById("form1").addEventListener("submit", () => {
+      // deliberately assign to .value rather than setUserInput:
+      // the scenario under test here is that script is changing/populating
+      // fields after the user has clicked the submit button
+      document.getElementById("ufield").value = "newuser";
+      document.getElementById("pfield").value = "newpass";
+    }, true);
+
+    document.getElementById("form1").addEventListener("submit", (e) => e.preventDefault());
+
+    let processedPromise = getSubmitMessage();
+
+    let button = document.getElementById("submitBtn");
+    button.click();
+
+    let { data } = await processedPromise;
+    is(data.usernameField.value, "testuser", "Should have registered \"testuser\" for username");
+    is(data.newPasswordField.value, "testpass", "Should have registered \"testpass\" for username");
+  });
+</script>
+</body>
+</html>

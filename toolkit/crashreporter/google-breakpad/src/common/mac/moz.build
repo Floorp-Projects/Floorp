@@ -1,0 +1,27 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    'arch_utilities.cc',
+    'file_id.cc',
+    'macho_id.cc',
+    'macho_reader.cc',
+    'macho_utilities.cc',
+    'macho_walker.cc',
+]
+
+SOURCES += [
+    'bootstrap_compat.cc',
+    'HTTPMultipartUpload.m',
+    'MachIPC.mm',
+    'string_utilities.cc',
+]
+
+Library('breakpad_mac_common_s')
+
+CMFLAGS += ['-std=c99']
+
+include('/toolkit/crashreporter/crashreporter.mozbuild')

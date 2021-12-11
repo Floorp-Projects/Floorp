@@ -1,0 +1,322 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+*|* {
+  -moz-user-modify: read-write;
+}
+
+/* Styles to alter look of things in the Editor content window
+ *  that should NOT be removed when we display in completely WYSIWYG
+ *  "Browser Preview" mode.
+ *  Anything that should change, like appearance of table borders
+ *  and Named Anchors, should be placed in EditorContent.css instead of here.
+*/
+
+/* Primary cursor is text I-beam */
+
+::-moz-canvas, a:link {
+  cursor: text;
+}
+
+/* Use default arrow over objects with size that
+   are selected when clicked on.
+   Override the browser's pointer cursor over links
+*/
+
+img, img[usemap], area,
+object, object[usemap],
+applet, hr, button, input, textarea, select,
+a:link img, a:visited img, a:active img,
+a[name]:-moz-only-whitespace {
+  cursor: default;
+}
+
+a:visited, a:active {
+  cursor: text;
+}
+
+/* Prevent clicking on links from going to link */
+a:link img, a:visited img {
+  -moz-user-input: none;
+}
+
+/* We suppress user/author's prefs for link underline,
+   so we must set explicitly. This isn't good!
+*/
+a:link {
+  color: -moz-hyperlinktext;
+}
+
+/* Allow double-clicks on these widgets to open properties dialogs
+   XXX except when the widget has disabled attribute */
+input, button, textarea {
+  user-select: all !important;
+  -moz-user-input: auto !important;
+  -moz-user-focus: none !important;
+}
+
+/* XXX Still need a better way of blocking other events to these widgets */
+select, input[disabled], input[type="checkbox"], input[type="radio"], input[type="file"] {
+  user-select: all !important;
+  -moz-user-input: none !important;
+  -moz-user-focus: none !important;
+}
+
+input[type="hidden"] {
+  border: 1px solid black !important;
+  visibility: visible !important;
+}
+
+label {
+    user-select: all !important;
+}
+
+::-moz-display-comboboxcontrol-frame {
+  user-select: text !important;
+}
+
+option {
+  user-select: text !important;
+}
+
+#mozToc.readonly {
+  user-select: all !important;
+  -moz-user-input: none !important;
+}
+
+/* the following rules are for Image Resizing */
+
+span[\_moz_anonclass="mozResizer"] {
+  width: 5px;
+  height: 5px;
+  position: absolute;
+  border: 1px black solid;
+  background-color: white;
+  user-select: none;
+  z-index: 2147483646; /* max value -1 for this property */
+}
+
+/* we can't use :active below */
+span[\_moz_anonclass="mozResizer"][\_moz_activated],
+span[\_moz_anonclass="mozResizer"]:hover {
+  background-color: black;
+}
+
+span[\_moz_anonclass="mozResizer"].hidden,
+span[\_moz_anonclass="mozResizingShadow"].hidden,
+img[\_moz_anonclass="mozResizingShadow"].hidden,
+span[\_moz_anonclass="mozGrabber"].hidden,
+span[\_moz_anonclass="mozResizingInfo"].hidden,
+a[\_moz_anonclass="mozTableRemoveRow"].hidden,
+a[\_moz_anonclass="mozTableRemoveColumn"].hidden {
+  display: none !important;
+}
+
+span[\_moz_anonclass="mozResizer"][anonlocation="nw"] {
+  cursor: nw-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="n"] {
+  cursor: n-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="ne"] {
+  cursor: ne-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="w"] {
+  cursor: w-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="e"] {
+  cursor: e-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="sw"] {
+  cursor: sw-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="s"] {
+  cursor: s-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="se"] {
+  cursor: se-resize;
+}
+
+span[\_moz_anonclass="mozResizingShadow"],
+img[\_moz_anonclass="mozResizingShadow"] {
+  outline: thin dashed black;
+  user-select: none;
+  opacity: 0.5;
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+}
+
+span[\_moz_anonclass="mozResizingInfo"] {
+  font-family: sans-serif;
+  font-size: x-small;
+  color: black;
+  background-color: #d0d0d0;
+  border: ridge 2px #d0d0d0;
+  padding: 2px;
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+}
+
+img[\_moz_resizing] {
+  outline: thin solid black;
+}
+
+*[\_moz_abspos] {
+  outline: silver ridge 2px;
+  z-index: 2147483645 !important; /* max value -2 for this property */
+}
+*[\_moz_abspos="white"] {
+  background-color: white !important;
+}
+*[\_moz_abspos="black"] {
+  background-color: black !important;
+}
+
+span[\_moz_anonclass="mozGrabber"] {
+  outline: ridge 2px silver;
+  padding: 2px;
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-image: url("resource://gre/res/grabber.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  user-select: none;
+  cursor: move;
+  z-index: 2147483647; /* max value for this property */
+}
+
+/* INLINE TABLE EDITING */
+
+a[\_moz_anonclass="mozTableAddColumnBefore"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 4px;
+  height: 8px;
+  background-image: url("resource://gre/res/table-add-column-before.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddColumnBefore"]:hover {
+  background-image: url("resource://gre/res/table-add-column-before-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddColumnBefore"]:active {
+  background-image: url("resource://gre/res/table-add-column-before-active.gif");
+}
+
+a[\_moz_anonclass="mozTableAddColumnAfter"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 4px;
+  height: 8px;
+  background-image: url("resource://gre/res/table-add-column-after.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddColumnAfter"]:hover {
+  background-image: url("resource://gre/res/table-add-column-after-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddColumnAfter"]:active {
+  background-image: url("resource://gre/res/table-add-column-after-active.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveColumn"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 8px;
+  background-image: url("resource://gre/res/table-remove-column.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableRemoveColumn"]:hover {
+  background-image: url("resource://gre/res/table-remove-column-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveColumn"]:active {
+  background-image: url("resource://gre/res/table-remove-column-active.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowBefore"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 4px;
+  background-image: url("resource://gre/res/table-add-row-before.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddRowBefore"]:hover {
+  background-image: url("resource://gre/res/table-add-row-before-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowBefore"]:active {
+  background-image: url("resource://gre/res/table-add-row-before-active.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowAfter"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 4px;
+  background-image: url("resource://gre/res/table-add-row-after.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddRowAfter"]:hover {
+  background-image: url("resource://gre/res/table-add-row-after-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowAfter"]:active {
+  background-image: url("resource://gre/res/table-add-row-after-active.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveRow"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 8px;
+  background-image: url("resource://gre/res/table-remove-row.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableRemoveRow"]:hover {
+  background-image: url("resource://gre/res/table-remove-row-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveRow"]:active {
+  background-image: url("resource://gre/res/table-remove-row-active.gif");
+}

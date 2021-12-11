@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=659596
+-->
+<head>
+  <title>Test for Bug 659596</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=659596">Mozilla Bug 659596</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 659596 **/
+
+function checkReflection(option, attribute) {
+  /**
+   * Getting.
+   */
+
+  // When attribute isn't present.
+  var tests = [ "", "foo" ];
+  for (var test of tests) {
+    option.removeAttribute(attribute);
+    option.textContent = test;
+    is(option.getAttribute(attribute), null,
+       "option " + attribute + "'s value should be null");
+    is(option[attribute], option.textContent,
+       "option." + attribute + " should reflect the text content when the attribute isn't set");
+  }
+
+  // When attribute is present.
+  tests = [
+    [ "", "" ],
+    [ "", "foo" ],
+    [ "foo", "bar" ],
+    [ "foo", "" ],
+  ];
+  for (var test of tests) {
+    option.setAttribute(attribute, test[0]);
+    option.textContent = test[1];
+    is(option[attribute], option.getAttribute(attribute),
+       "option." + attribute + " should reflect the content attribute when it is set");
+  }
+
+  /**
+   * Setting.
+   */
+
+  // When attribute isn't present.
+  tests = [
+    [ "", "new" ],
+    [ "foo", "new" ],
+  ];
+  for (var test of tests) {
+    option.removeAttribute(attribute);
+    option.textContent = test[0];
+    option[attribute] = test[1]
+
+    is(option.getAttribute(attribute), test[1],
+       "when setting, the content attribute should change");
+    is(option.textContent, test[0],
+       "when setting, the text content should not change");
+  }
+
+  // When attribute is present.
+  tests = [
+    [ "", "", "new" ],
+    [ "", "foo", "new" ],
+    [ "foo", "bar", "new" ],
+    [ "foo", "", "new" ],
+  ];
+  for (var test of tests) {
+    option.setAttribute(attribute, test[0]);
+    option.textContent = test[1];
+    option[attribute] = test[2];
+
+    is(option.getAttribute(attribute), test[2],
+       "when setting, the content attribute should change");
+    is(option.textContent, test[1],
+       "when setting, the text content should not change");
+  }
+}
+
+var option = document.createElement("option");
+
+checkReflection(option, "value");
+checkReflection(option, "label");
+
+</script>
+</pre>
+</body>
+</html>

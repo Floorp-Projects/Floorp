@@ -1,0 +1,24 @@
+<html><body>
+  Popup 1
+  <script type="application/javascript">
+    var bc = new BroadcastChannel("bug646641_1");
+    window.onload = () => {
+      bc.postMessage({ message: "childLoad", num: 1 })
+    }
+
+    window.onpageshow = () => {
+      bc.postMessage({ message: "childPageshow", num: 1 })
+    }
+    bc.onmessage = (msgEvent) => {
+      var msg = msgEvent.data;
+      if (msg == "pushState") {
+        history.pushState("", "", "");
+        location = "file_bfcache_plus_hash_2.html";
+      } else if (msg == "close") {
+        bc.postMessage({ message: "closed" });
+        bc.close();
+        window.close();
+      }
+    }
+  </script>
+</body></html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <script>
+    var a = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    a.appendChild(document.createTextNode(""));
+    document.documentElement.appendChild(a);
+    a.getNumberOfChars();
+    document.documentElement.removeChild(a);
+  </script>
+</svg>

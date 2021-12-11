@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test for Bug 1408250</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+    <script type="text/javascript">
+    "use strict";
+    SimpleTest.waitForExplicitFinish();
+
+    function testInNone10s() {
+      return new Promise((resolve,reject) => {
+        const supportedInstruments = [{
+          supportedMethods: "basic-card",
+        }];
+        const details = {
+          id: "simple details",
+          total: {
+            label: "Donation",
+            amount: { currency: "USD", value: "55.00" }
+          },
+        };
+        try {
+          const payRequest = new PaymentRequest(supportedInstruments, details);
+          ok(false, "Unexpected, new PaymentRequest() can not be used in non-e10s.");
+        } catch (err) {
+          ok(err.name, "ReferenceError",
+             "Expected ReferenceError when calling new PaymentRequest()");
+        }
+        resolve();
+
+      });
+    }
+
+    function runTests() {
+      testInNone10s()
+      .then(SimpleTest.finish)
+      .catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        SimpleTest.finish();
+      });
+    }
+
+    window.addEventListener('load', function() {
+      SpecialPowers.pushPrefEnv({
+        'set': [
+          ['dom.payments.request.enabled', true],
+        ]
+      }, runTests);
+    });
+    </script>
+  </head>
+  <body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1408250">Mozilla Bug 1408250</a>
+  </body>
+</html>

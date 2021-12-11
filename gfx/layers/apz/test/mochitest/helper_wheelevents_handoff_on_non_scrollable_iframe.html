@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>scroll handoff on non scrollable iframe document with overscroll-behavior: none</title>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+</head>
+<style>
+iframe {
+    width: 500px;
+    height: 500px;
+}
+</style>
+<body>
+<iframe></iframe>
+<div style="height:1000vh"></div>
+<script>
+
+// This test runs twice, with a same origin iframe first then with a cross
+// origin iframe second.
+async function test(targetOrigin) {
+  const iframe = document.querySelector("iframe");
+  const targetURL =
+    SimpleTest.getTestFileURL("helper_empty.html")
+    .replace(window.location.origin, targetOrigin);
+  iframe.src = targetURL;
+
+  await new Promise(resolve => {
+    iframe.onload = resolve;
+  });
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    content.document.documentElement.style =
+        "overscroll-behavior-y: none; overflow-y: scroll;";
+
+    // Flush the style change.
+    content.document.documentElement.getBoundingClientRect();
+    // Make sure the style change reaches to APZ.
+    await content.window.wrappedJSObject.promiseApzFlushedRepaints();
+  });
+
+  let scrollEventPromise = new Promise(resolve => {
+    window.addEventListener("scroll", resolve, { once: true });
+  });
+
+  synthesizeNativeWheel(iframe, 100, 100, 0, -10);
+  await scrollEventPromise;
+  await waitToClearOutAnyPotentialScrolls(window);
+
+  ok(window.scrollY > 0,
+     "Mouse wheel scrolling on an OOP iframe where the iframe document is " +
+     "not scrollable but has overscroll-behavior: none property should be " +
+     "handed off to the parent");
+
+  // Make sure the wheel scrolling has finished.
+  await waitToClearOutAnyPotentialScrolls(window);
+
+  // Make the iframe document scrollable and try to scroll up on the iframe
+  // document.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    content.document.body.style = "height: 500vh;";
+
+    // Flush the style change.
+    content.document.documentElement.getBoundingClientRect();
+    // Make sure the style change reaches to APZ.
+    await content.window.wrappedJSObject.promiseApzFlushedRepaints();
+  });
+
+  const mousemoveEventPromise = SpecialPowers.spawn(iframe, [], async () => {
+    await new Promise(resolve => {
+      content.window.addEventListener("mousemove", resolve, { once: true });
+    });
+  });
+
+  // Make sure the above event listener is registered.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.window.wrappedJSObject.promiseApzFlushedRepaints();
+  });
+
+  const scrollPos = window.scrollY;
+
+  // Send a mousemove event on the iframe to finish the last wheel event block.
+  synthesizeNativeMouseEventWithAPZ({
+    type: "mousemove",
+    target: iframe,
+    offsetX: 100,
+    offsetY: 100 + scrollPos,
+  });
+  await mousemoveEventPromise;
+
+  // Try to scroll up by a new wheel event on the iframe.
+  synthesizeNativeWheel(iframe, 100, 100 + scrollPos, 0, 10);
+  await waitToClearOutAnyPotentialScrolls(window);
+
+  // The wheel event should not be handed off to the root scroller since the
+  // iframe document has `overscroll-behavior-y: none`.
+  is(window.scrollY, scrollPos,
+     "The root scroller's position should never be changed");
+
+  // Restore the root scroll position for the next test case.
+  window.scrollTo(0, 0);
+}
+
+waitUntilApzStable()
+.then(async () => test(window.location.origin))
+.then(async () => test("http://example.com/"))
+.then(subtestDone, subtestFailed);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.sidebar-item {
+  color: var(--sidebar-text-color);
+  border-radius: 2px;
+  padding-inline-end: var(--category-padding);
+  padding-inline-start: var(--category-padding);
+  transition: background-color var(--category-transition-duration);
+  user-select: none;
+}
+
+.sidebar-item--tall {
+  height: var(--category-height);
+}
+
+.sidebar-item--condensed {
+  height: calc(var(--base-unit) * 9);
+}
+
+.sidebar-item__link {
+  display: block;
+  height: 100%;
+}
+
+.sidebar-item__link,
+.sidebar-item__link:hover {
+  color: inherit; /* do not apply usual link colors, but grab this element parent's */
+}
+
+.sidebar-item:not(.sidebar-item--selectable) {
+  color: var(--secondary-text-color);
+}
+
+.sidebar-item--selectable:hover {
+  background-color: var(--sidebar-background-hover);
+}
+
+.sidebar-item--selected {
+  color: var(--sidebar-selected-color);
+}
+
+.sidebar-item--breathe {
+  margin-block-start: calc(6 * var(--base-unit));
+  margin-block-end: calc(2 * var(--base-unit));
+}

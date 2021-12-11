@@ -1,0 +1,57 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "morgue", "dir": true },
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          { "name": "ls-archive.sqlite", "dir": false }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]

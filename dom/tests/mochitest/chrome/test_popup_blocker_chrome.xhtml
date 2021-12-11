@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=662519
+-->
+<window title="Mozilla Bug 662519"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=662519"
+     target="_blank">Mozilla Bug 662519</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 662519 **/
+
+  let w = null;
+
+  let steps = [
+    function() {
+      w = window.open("file_popup_blocker_chrome.html", "", "width=200,height=200");
+      ok(w, "The window object shouldn't be null");    
+      // next() is called within file_popup_blocker_chrome.html
+    },
+    function() {
+      w.close();
+      ok(true, "The popup appeared");
+      next();
+    },
+    function() {
+      w = window.open("file_popup_blocker_chrome.html", "_blank", "width=200,height=200");
+      ok(w, "The window object shouldn't be null");
+      // next() is called within file_popup_blocker_chrome.html
+    },
+    function() {
+      w.close();
+      ok(true, "The popup appeared");
+      next();
+    },
+  ];
+
+  function next() {
+    if (!steps.length) {
+      SimpleTest.finish();
+      return;
+    }
+    let step = steps.shift();
+    step();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  // We have to enable dom.disable_open_during_load which is disabled
+  // by the test harness.
+  SpecialPowers.pushPrefEnv({'set': [["dom.disable_open_during_load", true]] }, function() {
+    next();
+  });
+  ]]>
+  </script>
+</window>

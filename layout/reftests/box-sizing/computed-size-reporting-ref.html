@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<meta charset=utf-8>
+<title>Bug 520992</title>
+
+<style>
+  #borderBox {
+    background:gold;
+    height:100px;
+    box-sizing:border-box;
+  }
+
+</style>
+
+<div id="borderBox"></div>
+<p id="heightWidth1"></p>
+
+<script>
+  var divs = document.getElementsByTagName("div");
+  var textEle1 = document.getElementById("heightWidth1");
+  textEle1.innerHTML += "height = " + getComputedStyle(divs[0]).height;
+  textEle1.innerHTML += ", width = " + getComputedStyle(divs[0]).width;
+</script>

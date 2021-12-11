@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1709069: Test that Data URI which makes a top-level request gets updated in https-first</title>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+  window.onload = (event) => {
+    let myLoc = window.location.href;
+    window.opener.parent.postMessage({location: myLoc}, "*");
+    window.close();
+};
+</script>
+</body>
+</html>

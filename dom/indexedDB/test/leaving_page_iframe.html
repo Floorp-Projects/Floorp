@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+var db;
+function startDBWork() {
+  indexedDB.open(parent.location, 1).onupgradeneeded = function(e) {
+    db = e.target.result;
+    if (db.objectStoreNames.contains("mystore")) {
+      db.deleteObjectStore("mystore");
+    }
+    var store = db.createObjectStore("mystore");
+    store.add({ hello: "world" }, 42);
+    e.target.onsuccess = madeMod;
+  };
+}
+
+function madeMod() {
+  var trans = db.transaction(["mystore"], "readwrite");
+  var store = trans.
+              objectStore("mystore");
+  trans.oncomplete = function() {
+    parent.postMessage("didcommit", "*");
+  };
+
+  store.put({ hello: "officer" }, 42).onsuccess = function(e) {
+    // Make this transaction run until the end of time or until the page is
+    // navigated away, whichever comes first.
+    function doGet() {
+      store.get(42).onsuccess = doGet;
+    }
+    doGet();
+    document.location = "about:blank";
+  };
+}
+  </script>
+</head>
+<body onload="startDBWork();">
+  This is page one.
+</body>
+</html>

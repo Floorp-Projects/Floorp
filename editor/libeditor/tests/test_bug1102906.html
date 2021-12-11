@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1102906
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1102906</title>
+
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+
+  <script>
+   "use strict";
+
+  /* Test for Bug 1102906 */
+  /* The caret should be movable by using keyboard after drag-and-drop. */
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus( () => {
+    let content = document.getElementById("content");
+    let drag = document.getElementById("drag");
+    let selection = window.getSelection();
+
+    /* Perform drag-and-drop for an arbitrary content. The caret should be at
+       the end of the contenteditable. */
+    selection.selectAllChildren(drag);
+    synthesizeDrop(drag, content, {}, "copy");
+
+    let textContentAfterDrop = content.textContent;
+
+    /* Move the caret to the front of the contenteditable by using keyboard. */
+    for (let i = 0; i < content.textContent.length; ++i) {
+      sendKey("LEFT");
+    }
+    sendChar("!");
+
+    is(content.textContent, "!" + textContentAfterDrop,
+       "The exclamation mark should be inserted at the front.");
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1102906">Mozilla Bug 1102906</a>
+<div id="content" contenteditable="true"><span id="drag">Drag</span></div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1674777
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1674777</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+/** Test for Bug 1674777 **/
+
+function go() {
+    SimpleTest.waitForExplicitFinish();
+
+    let win = document.getElementById('ifr').contentWindow;
+
+    const nbytes = 3 * 1024 * 1024 * 1024; // 3 GB.
+    let tarray = new win.Int8Array(nbytes);
+    ok(Cu.isXrayWrapper(tarray), "Should be Xray");
+    is(tarray.length, nbytes, "Length should match");
+    is(tarray.byteLength, nbytes, "byteLength should match");
+
+    // Expect OOM when getting all property names.
+    let ex;
+    try {
+        Object.getOwnPropertyNames(tarray);
+    } catch (e) {
+        ex = e;
+    }
+    is(ex, "out of memory", "Expected OOM");
+
+    SimpleTest.finish();
+}
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1674777">Mozilla Bug 1674777</a>
+
+<iframe id="ifr" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+
+</body>
+</html>

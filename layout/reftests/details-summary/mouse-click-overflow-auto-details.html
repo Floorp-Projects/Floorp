@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <style>
+  details {
+    background-color: orange;
+    overflow: auto;
+    width: 300px;
+    height: 200px;
+  }
+  summary {
+    /* Hide the triangle for comparing with div in reftest. */
+    list-style-type: none;
+  }
+  summary {
+    background-color: green;
+    overflow: auto;
+    width: 200px;
+    height: 100px;
+  }
+  div.tall {
+    background-color: blue;
+    border: 1px dotted purple;
+    height: 1000px;
+    width: 50px;
+  }
+  </style>
+  <script>
+  function runTest() {
+    var summary = document.getElementById("summary");
+    summary.dispatchEvent(new MouseEvent("click"));
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details>
+      <summary id="summary">
+        <div class="tall">
+        </div>
+      </summary>
+      <div class="tall">
+      </div>
+    </details>
+  </body>
+</html>

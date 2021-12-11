@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <style>
+  body {
+    display: grid;
+    grid-template-rows: auto;
+    grid-template-columns: repeat(3, 150px);
+  }
+  .details {
+    border: 1px solid lightblue;
+  }
+  </style>
+  <body>
+    <div class="details" style="writing-mode: horizontal-tb; direction: ltr;">
+      <summary>Summary</summary>
+      <p>This is the details.</p>
+    </div>
+    <div class="details" style="writing-mode: vertical-rl; direction: ltr;">
+      <summary>Summary</summary>
+      <p>This is the details.</p>
+    </div>
+    <div class="details" style="writing-mode: vertical-lr; direction: ltr;">
+      <summary>Summary</summary>
+      <p>This is the details.</p>
+    </div>
+    <div class="details" style="writing-mode: horizontal-tb; direction: rtl;">
+      <summary>Summary</summary>
+      <p>This is the details.</p>
+    </div>
+    <div class="details" style="writing-mode: vertical-rl; direction: rtl;">
+      <summary>Summary</summary>
+      <p>This is the details.</p>
+    </div>
+    <div class="details" style="writing-mode: vertical-lr; direction: rtl;">
+      <summary>Summary</summary>
+      <p>This is the details.</p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,86 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Authentication")
+
+IPDL_SOURCES += ["PWebAuthnTransaction.ipdl"]
+
+XPIDL_SOURCES += ["nsIU2FTokenManager.idl"]
+
+XPIDL_MODULE = "dom_webauthn"
+
+EXPORTS.mozilla.dom += [
+    "AuthenticatorAssertionResponse.h",
+    "AuthenticatorAttestationResponse.h",
+    "AuthenticatorResponse.h",
+    "PublicKeyCredential.h",
+    "U2FHIDTokenManager.h",
+    "U2FSoftTokenManager.h",
+    "U2FTokenManager.h",
+    "U2FTokenTransport.h",
+    "WebAuthnCBORUtil.h",
+    "WebAuthnManager.h",
+    "WebAuthnManagerBase.h",
+    "WebAuthnTransactionChild.h",
+    "WebAuthnTransactionParent.h",
+    "WebAuthnUtil.h",
+    "winwebauthn/webauthn.h",
+]
+
+UNIFIED_SOURCES += [
+    "AuthenticatorAssertionResponse.cpp",
+    "AuthenticatorAttestationResponse.cpp",
+    "AuthenticatorResponse.cpp",
+    "cbor-cpp/src/encoder.cpp",
+    "cbor-cpp/src/output_dynamic.cpp",
+    "PublicKeyCredential.cpp",
+    "U2FHIDTokenManager.cpp",
+    "U2FSoftTokenManager.cpp",
+    "U2FTokenManager.cpp",
+    "WebAuthnCBORUtil.cpp",
+    "WebAuthnManager.cpp",
+    "WebAuthnManagerBase.cpp",
+    "WebAuthnTransactionChild.cpp",
+    "WebAuthnTransactionParent.cpp",
+    "WebAuthnUtil.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/dom/crypto",
+    "/security/manager/ssl",
+    "/third_party/rust",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    EXPORTS.mozilla.dom += [
+        "AndroidWebAuthnTokenManager.h",
+    ]
+    UNIFIED_SOURCES += [
+        "AndroidWebAuthnTokenManager.cpp",
+    ]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += [
+        "hid",
+    ]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    REQUIRES_UNIFIED_BUILD = True
+    EXPORTS.mozilla.dom += [
+        "WinWebAuthnManager.h",
+    ]
+    UNIFIED_SOURCES += [
+        "WinWebAuthnManager.cpp",
+    ]
+
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]

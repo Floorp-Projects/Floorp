@@ -1,0 +1,72 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1100966
+-->
+<head>
+  <title>Test for Bug 1100966</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable>
+=====<br>
+correct<br>
+fivee sixx<br>
+====
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+let {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+/** Test for Bug 1100966 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var div = document.getElementById("content");
+  div.focus();
+  synthesizeMouseAtCenter(div, {});
+
+  getSpellChecker().UpdateCurrentDictionary(() => {
+    sendString(" ");
+    SimpleTest.executeSoon(function() {
+      sendString("a");
+      SimpleTest.executeSoon(function() {
+        synthesizeKey("KEY_Backspace");
+
+        onSpellCheck(div, function() {
+          var sel = getSpellCheckSelection();
+          is(sel.rangeCount, 2, "We should have two misspelled words");
+          is(String(sel.getRangeAt(0)), "fivee", "Correct misspelled word");
+          is(String(sel.getRangeAt(1)), "sixx", "Correct misspelled word");
+
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+});
+
+function getEditor() {
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window);
+}
+
+function getSpellChecker() {
+  return getEditor().getInlineSpellChecker(false).spellChecker;
+}
+
+function getSpellCheckSelection() {
+  var selcon = getEditor().selectionController;
+  return selcon.getSelection(selcon.SELECTION_SPELLCHECK);
+}
+
+</script>
+</body>
+
+</html>

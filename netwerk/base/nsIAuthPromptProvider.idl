@@ -1,0 +1,34 @@
+/* -*- Mode: idl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(bd9dc0fa-68ce-47d0-8859-6418c2ae8576)]
+interface nsIAuthPromptProvider : nsISupports
+{
+    /**
+     * Normal (non-proxy) prompt request.
+     */
+    const uint32_t PROMPT_NORMAL        = 0;
+
+    /**
+     * Proxy auth request.
+     */
+    const uint32_t PROMPT_PROXY         = 1;
+
+    /**
+     * Request a prompt interface for the given prompt reason;
+     * @throws NS_ERROR_NOT_AVAILABLE if no prompt is allowed or
+     * available for the given reason.
+     *
+     * @param aPromptReason   The reason for the auth prompt;
+     *                        one of #PROMPT_NORMAL or #PROMPT_PROXY
+     * @param iid             The desired interface, e.g.
+     *                        NS_GET_IID(nsIAuthPrompt2).
+     * @returns an nsIAuthPrompt2 interface, or throws NS_ERROR_NOT_AVAILABLE
+     */
+    void getAuthPrompt(in uint32_t aPromptReason, in nsIIDRef iid,
+                       [iid_is(iid),retval] out nsQIResult result);
+};

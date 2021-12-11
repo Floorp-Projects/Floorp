@@ -1,0 +1,175 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.expression-input-form {
+  width: 100%;
+}
+
+.input-expression {
+  width: 100%;
+  margin: 0;
+  font-size: inherit;
+  border: 1px;
+  background-color: var(--theme-sidebar-background);
+  height: 24px;
+  padding-inline-start: 19px;
+  padding-inline-end: 12px;
+  color: var(--theme-body-color);
+  outline: 0;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+.input-expression::placeholder {
+  color: var(--theme-text-color-alt);
+  opacity: 1;
+}
+
+.input-expression:focus {
+  cursor: text;
+}
+
+.expressions-list .expression-input-container {
+  height: var(--expression-item-height);
+}
+
+.expressions-list .input-expression {
+  /* Prevent vertical bounce when editing an existing Watch Expression */
+  height: 100%;
+}
+
+.expressions-list {
+  /* TODO: add normalize */
+  margin: 0;
+  padding: 4px 0px;
+  overflow-x: auto;
+}
+
+.expression-input-container {
+  display: flex;
+  border: 1px solid transparent;
+}
+
+.expression-input-container.focused {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+:root.theme-dark .expression-input-container.focused {
+  border: 1px solid var(--blue-50);
+}
+
+.expression-input-container.error {
+  border: 1px solid red;
+}
+
+.expression-container {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-inline-start: 20px;
+  padding-inline-end: 12px;
+  width: 100%;
+  color: var(--theme-body-color);
+  background-color: var(--theme-body-background);
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+.expression-container > .tree {
+  width: 100%;
+  overflow: hidden;
+}
+
+.expression-container .tree .tree-node[aria-level="1"] {
+  padding-top: 0px;
+  /* keep line-height at 14px to prevent row from shifting upon expansion */
+  line-height: 14px;
+}
+
+.expression-container .tree-node[aria-level="1"] .object-label {
+  font-family: var(--monospace-font-family);
+}
+
+:root.theme-light .expression-container:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+:root.theme-dark .expression-container:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.tree .tree-node:not(.focused):hover {
+  background-color: transparent;
+}
+
+.expression-container__close-btn {
+  position: absolute;
+  /* hiding button outside of row until hovered or focused */
+  top: -100px;
+}
+
+.expression-container:hover .expression-container__close-btn,
+.expression-container:focus-within .expression-container__close-btn,
+.expression-container__close-btn:focus-within {
+  top: 0;
+}
+
+.expression-content .object-node {
+  padding-inline-start: 0px;
+  cursor: default;
+}
+
+.expressions-list .tree.object-inspector .node.object-node {
+  max-width: calc(100% - 20px);
+  min-width: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.expression-container__close-btn {
+  max-height: 16px;
+  padding-inline-start: 4px;
+}
+
+[dir="ltr"] .expression-container__close-btn {
+  right: 0;
+}
+
+[dir="rtl"] .expression-container__close-btn {
+  left: 0;
+}
+
+.expression-content {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  position: relative;
+}
+
+.expression-content .tree {
+  overflow: hidden;
+  flex-grow: 1;
+  line-height: 15px;
+}
+
+.expression-content .tree-node[data-expandable="false"][aria-level="1"] {
+  padding-inline-start: 0px;
+}
+
+.input-expression:not(:placeholder-shown) {
+  font-family: var(--monospace-font-family);
+}

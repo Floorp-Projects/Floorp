@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the &lt;number-list&gt; attribute on the 'text' element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <linearGradient id="gradient">
+    <stop offset="0" stop-color="black" />
+    <stop offset="100%" stop-color="red" />
+  </linearGradient>
+
+  <!-- The difference between respective numbers in the effective 'from' and
+       'to' lists below is carefully designed to be a factor of 3. That way
+       our reference file (which checks against a one third complete animation)
+       can contain whole numbers, which is necessary to avoid failure due to
+       hard coded rounded numbers in the reference not matching platform
+       specific rounding behaviour.
+    -->
+
+
+  <!-- Test calcMode="linear". -->
+
+  <filter id="f_calcMode_linear_to" x="0%" y="0%" width="100%" height="100%">
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="-1 3 3 -1">
+
+        <!-- At 1s the animVal should be "0 2 2 0". -->
+        <animate attributeName="tableValues"
+                 calcMode="linear"
+                 begin="0s" dur="3s"
+                 to="2 0 0 2"
+                 fill="freeze"/>
+
+      </feFuncR>
+    </feComponentTransfer>
+  </filter>
+  <rect x="20" y="20" width="256" height="20" fill="url(#gradient)"
+        filter="url(#f_calcMode_linear_to)"/>
+
+
+  <!-- Test 'by' animation. -->
+
+  <filter id="f_calcMode_linear_by" x="0%" y="0%" width="100%" height="100%">
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="-1 3 3 -1">
+
+        <!-- At 1s the animVal should be "0 2 2 0". -->
+        <animate attributeName="tableValues"
+                 calcMode="linear"
+                 begin="0s" dur="3s"
+                 by="3 -3 -3 3"
+                 fill="freeze"/>
+
+      </feFuncR>
+    </feComponentTransfer>
+  </filter>
+  <rect x="20" y="60" width="256" height="20" fill="url(#gradient)"
+        filter="url(#f_calcMode_linear_by)"/>
+
+
+  <!-- Test calcMode="paced". -->
+
+  <filter id="f_calcMode_paced" x="0%" y="0%" width="100%" height="100%">
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="-1 3 3 -1">
+
+        <!-- At 1s the animVal should be "0 2 2 0". -->
+        <animate attributeName="tableValues"
+                 calcMode="paced"
+                 begin="0s" dur="3s"
+                 values="-1 3 3 -1; 1 1 1 1; 2 0 0 2"
+                 fill="freeze"/>
+
+      </feFuncR>
+    </feComponentTransfer>
+  </filter>
+  <rect x="20" y="100" width="256" height="20" fill="url(#gradient)"
+        filter="url(#f_calcMode_paced)"/>
+
+
+  <!-- Test calcMode="discrete". -->
+
+  <filter id="f_calcMode_discrete" x="0%" y="0%" width="100%" height="100%">
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="0 0 0 0">
+
+        <!-- The value should be "0 2 2 0" from 1s onwards. -->
+        <animate attributeName="tableValues"
+                 calcMode="discrete"
+                 begin="0s" dur="2s"
+                 to="0 2 2 0"
+                 fill="freeze"/>
+
+      </feFuncR>
+    </feComponentTransfer>
+  </filter>
+  <rect x="20" y="140" width="256" height="20" fill="url(#gradient)"
+        filter="url(#f_calcMode_discrete)"/>
+
+</svg>

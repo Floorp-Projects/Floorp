@@ -1,0 +1,51 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - fetch
+    - packages
+
+transforms:
+    - gecko_taskgraph.transforms.try_job:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.cached_tasks:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        tier: 1
+    run-on-projects: []
+    run:
+        using: toolchain-script
+
+jobs-from:
+    - android.yml
+    - cbindgen.yml
+    - cctools-port.yml
+    - clang-tidy.yml
+    - clang.yml
+    - compiler-rt.yml
+    - dump-syms.yml
+    - fix-stacks.yml
+    - gcc.yml
+    - geckodriver.yml
+    - gn.yml
+    - grcov.yml
+    - llvm-symbolizer.yml
+    - macos-sdk.yml
+    - mingw.yml
+    - minidump_stackwalk.yml
+    - misc.yml
+    - nasm.yml
+    - node.yml
+    - resourcemonitor.yml
+    - rust.yml
+    - rust-size.yml
+    - sccache.yml
+    - sysroot.yml
+    - dist-toolchains.yml

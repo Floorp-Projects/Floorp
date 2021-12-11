@@ -1,0 +1,53 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/strict.dtd">
+<html lang="en"><head>
+
+
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>Frame="border" and Rules="none"</title>
+	<link rel="stylesheet" type="text/css" href="bordercol.css" />
+        <script language=javascript>
+          function onReftestLoad() {
+            document.getElementById('topRightMask').style.left = (document.getElementById('tablehead').getBoundingClientRect().right + 2) + 'px';
+            document.getElementById('topRightMask').style.top = (document.getElementById('tablehead').getBoundingClientRect().top - 3) + 'px';
+            document.getElementById('bottomLeftMask').style.top = (document.getElementById('tablefooter').getBoundingClientRect().bottom + 2) + 'px';
+          }        
+        </script>
+</head>
+<body onload='onReftestLoad();'>
+<div class="maskPixel" id="bottomLeftMask"></div>
+<div class="maskPixel" id="topRightMask"></div>
+<table rules="none" frame="border" id="testtable">
+	<caption><a name="void-none">Frame="border" and Rules="none"</caption>
+	<thead id="tablehead">
+		<tr>
+			<td>Row 1, Cell 1</td>
+			<td>Row 1, Cell 2</td>
+			<td>Row 1, Cell 3</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td rowspan="2">Row 2, Cell 1</td>
+			<td colspan="2">Row 2, Cell 2</td>
+		</tr>
+		<tr>
+			<td>Row 3, Cell 2</td>
+			<td rowspan="2">Row 3, Cell 3</td>
+		</tr>
+		<tr>
+			<td colspan="2">Row 4, Cell 1</td>
+		</tr>
+	</tbody>
+	<tfoot id='tablefooter'>
+		<tr>
+			<td>Row 5, Cell 1</td>
+			<td>Row 5, Cell 2</td>
+			<td>Row 5, Cell 3</td>
+		</tr>
+	</tfoot>
+</table>
+
+
+</body>
+
+</html>

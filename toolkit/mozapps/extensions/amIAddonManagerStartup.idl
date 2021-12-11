@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIJSRAIIHelper;
+interface nsIURI;
+
+[scriptable, builtinclass, uuid(01dfa47b-87e4-4135-877b-586d033e1b5d)]
+interface amIAddonManagerStartup : nsISupports
+{
+  /**
+   * Reads and parses startup data from the addonState.json.lz4 file, checks
+   * for modifications, and returns the result.
+   *
+   * Returns null for an empty or nonexistent state file, but throws for an
+   * invalid one.
+   */
+  [implicit_jscontext]
+  jsval readStartupData();
+
+  /**
+   * Registers a set of dynamic chrome registry entries, and returns an object
+   * with a `destruct()` method which must be called in order to unregister
+   * the entries.
+   *
+   * @param manifestURI The base manifest URI for the entries. URL values are
+   *        resolved relative to this URI.
+   * @param entries An array of arrays, each containing a registry entry as it
+   *        would appar in a chrome.manifest file. Only the following entry
+   *        types are currently accepted:
+   *
+   *         - "locale" A locale package entry. Must be a 4-element array.
+   *         - "override" A URL override entry. Must be a 3-element array.
+   */
+  [implicit_jscontext]
+  nsIJSRAIIHelper registerChrome(in nsIURI manifestURI, in jsval entries);
+
+  [implicit_jscontext]
+  jsval encodeBlob(in jsval value);
+
+  [implicit_jscontext]
+  jsval decodeBlob(in jsval value);
+
+  /**
+   * Enumerates over all entries in the JAR file at the given URI, and returns
+   * an array of entry paths which match the given pattern. The URI may be
+   * either a file: URL pointing directly to a zip file, or a jar: URI
+   * pointing to a zip file nested within another zip file. Only one level of
+   * nesting is supported.
+   *
+   * This should be used in preference to manually opening or retrieving a
+   * ZipReader from the zip cache, since the former causes main thread IO and
+   * the latter can lead to file locking issues due to unpredictable GC behavior
+   * keeping the cached ZipReader alive after the cache is flushed.
+   *
+   * @param uri The URI of the zip file to enumerate.
+   * @param pattern The pattern to match, as passed to nsIZipReader.findEntries.
+   */
+  Array<AString> enumerateJAR(in nsIURI uri, in AUTF8String pattern);
+
+  /**
+   * Similar to |enumerateJAR| above, but accepts the URI of a directory
+   * within a JAR file, and returns a list of all entries below it.
+   *
+   * The given URI must be a jar: URI, and its JAR file must point either to a
+   * file: URI, or to a singly-nested JAR within another JAR file (i.e.,
+   * "jar:file:///thing.jar!/" or "jar:jar:file:///thing.jar!/stuff.jar!/").
+   * Multiple levels of nesting are not supported.
+   */
+  Array<AString> enumerateJARSubtree(in nsIURI uri);
+
+  /**
+   * Initializes the URL Preloader.
+   *
+   * NOT FOR USE OUTSIDE OF UNIT TESTS.
+   */
+  void initializeURLPreloader();
+
+};
+

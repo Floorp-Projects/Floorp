@@ -1,0 +1,130 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#mount {
+  height: 100%;
+}
+
+button {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button:hover,
+button:focus {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.theme-dark button:hover,
+.theme-dark button:focus {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.debugger {
+  display: flex;
+  flex: 1;
+  height: 100%;
+}
+
+.debugger .tree-indent {
+  width: 16px;
+  margin-inline-start: 0;
+  border-inline-start: 0;
+}
+
+.editor-pane {
+  display: flex;
+  position: relative;
+  flex: 1;
+  background-color: var(--theme-body-background);
+  height: 100%;
+  overflow: hidden;
+}
+
+.editor-container {
+  width: 100%;
+}
+
+/* Utils */
+.absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.rounded-circle {
+  border-radius: 50%;
+}
+
+.text-white {
+  color: white;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+
+/*
+  Prevents horizontal scrollbar from displaying when
+  right pane collapsed (#7505)
+*/
+.split-box > .splitter:last-child {
+  display: none;
+}
+
+/**
+ * In RTL layouts, the Debugger UI overlays the splitters. See Bug 1731233.
+ * Note: we need to the `.debugger` prefix here to beat the specificity of the
+ * general rule defined in SlitBox.css for `.split-box.vert > .splitter`.
+ */
+.debugger .split-box.vert > .splitter {
+  border-left-width: var(--devtools-splitter-inline-start-width);
+  border-right-width: var(--devtools-splitter-inline-end-width);
+
+  margin-left: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-right: calc(-1 * var(--devtools-splitter-inline-end-width));
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(113, 113, 113, 0.5);
+}

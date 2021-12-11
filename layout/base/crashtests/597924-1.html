@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("s").appendChild(document.createElement("div"));
+  var marq = document.getElementById("f").contentDocument.documentElement;
+  marq.behavior = "alternate";
+}
+
+</script>
+</head>
+<body onload="boom();"><span id="s"></span><iframe src="data:text/xml,%3Cmarquee%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3EX%3C%2Fmarquee%3E" id="f"></iframe></body>
+</html>

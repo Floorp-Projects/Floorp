@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    suite:
+        category: firefox-ui
+    max-run-time: 5400
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    mozharness:
+        script: firefox_ui_tests/functional.py
+        config:
+            by-test-platform:
+                windows.*:
+                    - firefox_ui_tests/taskcluster_windows.py
+                macosx.*:
+                    - firefox_ui_tests/taskcluster.py
+                    - firefox_ui_tests/taskcluster_mac.py
+                linux.*:
+                    - firefox_ui_tests/taskcluster.py
+                    - remove_executables.py
+    python-3: true
+
+firefox-ui-functional-local:
+    description: "Firefox-ui-tests functional run"
+    treeherder-symbol: Fxfn-l(en-US)
+    mozharness:
+        extra-options:
+            - "--tag"
+            - "local"
+
+firefox-ui-functional-remote:
+    description: "Firefox-ui-tests functional run"
+    treeherder-symbol: Fxfn-r(en-US)
+    mozharness:
+        extra-options:
+            - "--tag"
+            - "remote"
+    tier: 2

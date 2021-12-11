@@ -1,0 +1,76 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - release-beetmover-push-to-release
+
+transforms:
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.bouncer_check:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    name: release-bouncer-check
+    description: release bouncer check
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-phase: push
+    worker-type: b-linux
+    worker:
+        max-run-time: 1200
+        docker-image: {in-tree: "update-verify"}
+    run:
+        sparse-profile: mozharness
+        extra-config:
+            by-release-level:
+                production:
+                    bouncer_prefix: "https://download.mozilla.org/"
+                staging:
+                    # This is the list on-change locales, excluding ja/ja-JP-mac
+                    # which bouncer_check doesn't support.
+                    locales: ['en-US', 'en-CA', 'he', 'it']
+                    bouncer_prefix: "https://bouncer-bouncer-releng.stage.mozaws.net/"
+                    cdn_urls:
+                        - ftp.stage.mozaws.net
+
+    attributes:
+        build_platform: linux64
+        build_type: opt
+    treeherder:
+        symbol: Rel(BncChk)
+        kind: test
+        tier: 1
+
+jobs:
+    firefox:
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: firefox-release-bouncer-check
+        run:
+            config:
+                by-release-type:
+                    beta:
+                        - releases/bouncer_firefox_beta.py
+                    release:
+                        - releases/bouncer_firefox_release.py
+                    esr.*:
+                        - releases/bouncer_firefox_esr.py
+                    default:
+                        - releases/bouncer_firefox_beta.py
+        treeherder:
+            platform: firefox-release/opt
+
+    devedition:
+        shipping-product: devedition
+        index:
+            product: devedition
+            job-name: devedition-release-bouncer-check
+        run:
+            config:
+                - releases/bouncer_firefox_devedition.py
+        treeherder:
+            platform: devedition-release/opt

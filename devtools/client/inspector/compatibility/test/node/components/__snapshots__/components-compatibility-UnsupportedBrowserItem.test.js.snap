@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UnsupportedBrowserItem component renders the browser 1`] = `
+<li>
+  <BrowserIcon
+    id="firefox"
+    name="Firefox"
+    title="Firefox 1, 69(beta), 70(nightly)"
+  />
+</li>
+`;

@@ -1,0 +1,63 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+=head1 NAME
+
+ isprime - probabilistic primality testing
+
+=head1 SYNOPSIS
+
+ isprime <a>
+
+=head1 DESCRIPTION
+
+The B<isprime> program attempts to determine whether the arbitrary
+precision integer I<a> is prime.  It first tests I<a> for divisibility
+by the first 170 or so small primes, and assuming I<a> is not
+divisible by any of these, applies 15 iterations of the Rabin-Miller
+probabilistic primality test.
+
+If the program discovers that the number is composite, it will print:
+
+ Not prime (reason)
+
+Where I<reason> is either:
+
+	divisible by small prime x
+
+Or:
+
+	failed nth pseudoprime test
+
+In the first case, I<x> indicates the first small prime factor that
+was found.  In the second case, I<n> indicates which of the
+pseudoprime tests failed (numbered from 1)
+
+If this happens, the number is definitely not prime.  However, if the
+number succeeds, this message results:
+
+ Probably prime, 1 in 4^15 chance of false positive
+
+If this happens, the number is prime with very high probability, but
+its primality has not been absolutely proven, only demonstrated to a
+very convincing degree.
+
+The value I<a> can be input in standard decimal notation, or, if it is
+prefixed with I<Ox>, it will be read as hexadecimal.
+
+=head1 ENVIRONMENT
+
+You can control how many iterations of Rabin-Miller are performed on
+the candidate number by setting the I<RM_TESTS> environment variable
+to an integer value before starting up B<isprime>.  This will change
+the output slightly if the number passes all the tests.
+
+=head1 SEE ALSO
+
+gcd(1), invmod(1), lap(1)
+
+=head1 AUTHOR
+
+ Michael J. Fromberger <sting@linguist.dartmouth.edu>
+ Thayer School of Engineering, Hanover, New Hampshire, USA

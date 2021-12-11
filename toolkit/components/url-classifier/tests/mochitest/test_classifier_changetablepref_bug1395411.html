@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Bug 1395411 - Changing the urlclassifier.*Table prefs doesn't remove them from the update checker.</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+const testTableV2 = "mochi1-phish-simple";
+const testTableV4 = "mochi1-phish-proto";
+const UPDATE_URL_V2 = "http://mochi.test:8888/tests/toolkit/components/url-classifier/dummyV2";
+const UPDATE_URL_V4 = "http://mochi.test:8888/tests/toolkit/components/url-classifier/dummyV4";
+
+let listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
+                    getService(Ci.nsIUrlListManager);
+
+let pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+
+SpecialPowers.pushPrefEnv(
+  {"set": [["browser.safebrowsing.phishing.enabled", true],
+           ["browser.safebrowsing.provider.mozilla.lists", testTableV2],
+           ["browser.safebrowsing.provider.mozilla4.lists", testTableV4],
+           ["browser.safebrowsing.provider.mozilla4.updateURL", UPDATE_URL_V4],
+           ["browser.safebrowsing.provider.mozilla.updateURL", UPDATE_URL_V2]]},
+  runTest);
+
+function runTest() {
+  (async function() {
+    await classifierHelper.waitForInit();
+
+    await pushPrefs(["urlclassifier.phishTable", testTableV2 + "," + testTableV4]);
+    is(listmanager.getUpdateUrl(testTableV4), UPDATE_URL_V4, "Correct update url v4");
+    is(listmanager.getUpdateUrl(testTableV2), UPDATE_URL_V2, "Correct update url v2");
+
+    await pushPrefs(["urlclassifier.phishTable", testTableV2]);
+    is(listmanager.getUpdateUrl(testTableV4), "", "Correct empty update url v4");
+    is(listmanager.getUpdateUrl(testTableV2), UPDATE_URL_V2, "Correct update url v2");
+
+    await pushPrefs(["urlclassifier.phishTable", testTableV4]);
+    is(listmanager.getUpdateUrl(testTableV4), UPDATE_URL_V4, "Correct update url v4");
+    is(listmanager.getUpdateUrl(testTableV2), "", "Correct empty update url v2");
+
+    await pushPrefs(["urlclassifier.phishTable", ""]);
+    is(listmanager.getUpdateUrl(testTableV4), "", "Correct empty update url v4");
+    is(listmanager.getUpdateUrl(testTableV2), "", "Correct empty update url v2");
+
+    await classifierHelper._cleanup();
+
+    SimpleTest.finish();
+  })();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>a valid meta viewport tag and no content attribute viewport tag</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=400">
+  <meta name="viewport">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function multiple_viewport_tags() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      // The no content attribute meta tag should be ignored.
+      is(info.width, 400, "width should be 400");
+    });
+  </script>
+</body>
+</html>

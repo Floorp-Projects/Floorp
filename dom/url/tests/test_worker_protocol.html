@@ -1,0 +1,41 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for URL protocol setter in workers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  let worker = new Worker("protocol_worker.js");
+
+  worker.onmessage = function(event) {
+    is(event.target, worker, "Correct worker");
+
+    if (event.data.type == "finish") {
+      SimpleTest.finish();
+      return;
+    }
+
+    if (event.data.type == "status") {
+      ok(event.data.status, event.data.msg);
+      return;
+    }
+
+    ok(false, "Invalid message.");
+  };
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

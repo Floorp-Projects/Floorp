@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait" reftest-async-scroll>
+<meta charset="utf-8">
+<title>Bug 1164227 - Testcase for the invalid region simplification bug</title>
+
+<style>
+
+#scrollbox {
+  width: 400px;
+  height: 500px;
+  overflow: auto;
+  margin: 80px;
+  border: 1px solid black;
+}
+
+.contents {
+  height: 600px;
+  background: white;
+  padding: 20px;
+  position: relative;
+}
+
+.boxes > div {
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border: 1px solid black;
+  float: left;
+  margin-left: -2px;
+}
+
+.boxes > div:nth-child(odd) {
+  transform: translateY(500px);
+}
+
+.reftest-no-paint {
+  position: absolute;
+  top: 250px;
+  left: 30px;
+  width: 200px;
+  height: 50px;
+  border: 1px solid red;
+}
+</style>
+
+<div id="scrollbox"
+     reftest-displayport-x="0"
+     reftest-displayport-y="0"
+     reftest-displayport-w="400"
+     reftest-displayport-h="500">
+
+  <div class="contents">
+
+    <div class="boxes">
+      <div style="margin-top: 0px"></div>
+      <div style="margin-top: 1px"></div>
+      <div style="margin-top: 2px"></div>
+      <div style="margin-top: 3px"></div>
+      <div style="margin-top: 4px"></div>
+      <div style="margin-top: 5px"></div>
+      <div style="margin-top: 6px"></div>
+      <div style="margin-top: 7px"></div>
+      <div style="margin-top: 8px"></div>
+      <div style="margin-top: 9px"></div>
+      <div style="margin-top: 10px"></div>
+      <div style="margin-top: 11px"></div>
+      <div style="margin-top: 12px"></div>
+      <div style="margin-top: 13px"></div>
+      <div style="margin-top: 14px"></div>
+      <div style="margin-top: 15px"></div>
+      <div style="margin-top: 16px"></div>
+      <div style="margin-top: 17px"></div>
+      <div style="margin-top: 18px"></div>
+      <div style="margin-top: 19px"></div>
+      <div style="margin-top: 20px"></div>
+      <div style="margin-top: 21px"></div>
+      <div style="margin-top: 22px"></div>
+      <div style="margin-top: 23px"></div>
+      <div style="margin-top: 24px"></div>
+      <div style="margin-top: 25px"></div>
+      <div style="margin-top: 26px"></div>
+      <div style="margin-top: 27px"></div>
+      <div style="margin-top: 28px"></div>
+      <div style="margin-top: 29px"></div>
+      <div style="margin-top: 30px"></div>
+      <div style="margin-top: 31px"></div>
+      <div style="margin-top: 32px"></div>
+      <div style="margin-top: 33px"></div>
+      <div style="margin-top: 34px"></div>
+      <div style="margin-top: 35px"></div>
+      <div style="margin-top: 36px"></div>
+      <div style="margin-top: 37px"></div>
+      <div style="margin-top: 38px"></div>
+      <div style="margin-top: 39px"></div>
+    </div>
+
+    <div class="reftest-no-paint"></div>
+
+  </div>
+
+</div>
+
+<script>
+
+var scrollbox = document.querySelector("#scrollbox");
+scrollbox.scrollTop = 100;
+
+window.addEventListener("MozReftestInvalidate", function (e) {
+  scrollbox.scrollTop = 0;
+  document.documentElement.removeAttribute("class");
+});
+
+</script>

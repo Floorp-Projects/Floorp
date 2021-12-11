@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<script type="text/javascript">
+var testFont = '40px sans-serif';
+
+function test(x, y, text, style, rotation, baseline) {
+  var canvas = document.createElement("canvas");
+  canvas.width = 400;
+  canvas.height = 400;
+  canvas.style.cssText = 'position:absolute;' + style;
+  document.getElementsByTagName('body')[0].appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(x - 20, y); ctx.lineTo(x + 20, y);
+  ctx.moveTo(x, y - 20); ctx.lineTo(x, y + 20);
+  ctx.stroke();
+  ctx.globalAlpha = 1.0;
+  ctx.font = testFont;
+  if (rotation != 0) {
+    ctx.translate(x,y);
+    ctx.rotate(rotation);
+    ctx.translate(-x,-y);
+  }
+  if (baseline != '') {
+    ctx.textBaseline = baseline;
+  }
+  ctx.fillText(text, x, y);
+}
+
+// Testcase: vertical text with various textBaselines
+// test(100,  50, 'Top', 'writing-mode:vertical-lr', 0, 'top');
+// test(150,  50, 'Middle', 'writing-mode:vertical-lr', 0, 'middle');
+// test(200,  50, 'Alphabetic', 'writing-mode:vertical-lr', 0, 'alphabetic');
+// test(250,  50, 'Bottom', 'writing-mode:vertical-lr', 0, 'bottom');
+
+// Reference: horizontal text with 90° rotation and the same baselines
+test(100,  50, 'Top', 'writing-mode:horizontal-tb', Math.PI/2, 'top');
+test(150,  50, 'Middle', 'writing-mode:horizontal-tb', Math.PI/2, 'middle');
+test(200,  50, 'Alphabetic', 'writing-mode:horizontal-tb', Math.PI/2, 'alphabetic');
+test(250,  50, 'Bottom', 'writing-mode:horizontal-tb', Math.PI/2, 'bottom');
+
+</script>

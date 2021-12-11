@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+<title>testcase2 Bug 432114 � Crash [@ PL_DHashTableOperate] with DOMNodeInserted event listener removing window and frameset contenteditable</title>
+</head>
+<body>
+<script>
+  window.addEventListener("DOMNodeRemoved", function() {
+    setTimeout(function() {
+      document.documentElement.removeAttribute("class");
+    }, 0);
+  });
+  var iframe = document.getElementById("content");
+  iframe.onload=function() {
+    dump("iframe onload\n");
+    console.log("iframe onload");
+  };
+</script>
+<iframe id="content" src="file_432114-2.xhtml" style="width:1000px;height: 200px;"></iframe>
+
+</body>
+</html>

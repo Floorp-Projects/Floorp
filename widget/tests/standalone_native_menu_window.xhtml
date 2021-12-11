@@ -1,0 +1,374 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="StandaloneNativeMenuWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="300"
+        height="300"
+        onload="onLoad();"
+        title="nsIStandaloneNativeMenu Test">
+
+  <command id="cmd_FooItem0" oncommand="gExecutedCommandID = 'cmd_FooItem0';"/>
+  <command id="cmd_FooItem1" oncommand="gExecutedCommandID = 'cmd_FooItem1';"/>
+  <command id="cmd_BarItem0" oncommand="gExecutedCommandID = 'cmd_BarItem0';"/>
+  <command id="cmd_BarItem1" oncommand="gExecutedCommandID = 'cmd_BarItem1';"/>
+  <command id="cmd_NewItem0" oncommand="gExecutedCommandID = 'cmd_NewItem0';"/>
+  <command id="cmd_NewItem1" oncommand="gExecutedCommandID = 'cmd_NewItem1';"/>
+  <command id="cmd_NewItem2" oncommand="gExecutedCommandID = 'cmd_NewItem2';"/>
+  <command id="cmd_NewItem3" oncommand="gExecutedCommandID = 'cmd_NewItem3';"/>
+  <command id="cmd_NewItem4" oncommand="gExecutedCommandID = 'cmd_NewItem4';"/>
+  <command id="cmd_NewItem5" oncommand="gExecutedCommandID = 'cmd_NewItem5';"/>
+
+  <!-- We do not modify any menus or menu items defined here in testing. These
+       serve as a baseline structure for us to test after other modifications.
+       We add children to the menubar defined here and test by modifying those
+       children. -->
+  <popupset>
+    <menupopup id="standalonenativemenu">
+      <menu id="foo" label="Foo">
+        <menupopup>
+          <menuitem label="FooItem0" command="cmd_FooItem0"/>
+          <menuitem label="FooItem1" command="cmd_FooItem1"/>
+          <menuseparator/>
+          <menu label="Bar">
+            <menupopup>
+              <menuitem label="BarItem0" command="cmd_BarItem0"/>
+              <menuitem label="BarItem1" command="cmd_BarItem1"/>
+            </menupopup>
+          </menu>
+        </menupopup>
+      </menu>
+    </menupopup>
+  </popupset>
+
+  <script type="application/javascript"><![CDATA[
+
+    function ok(condition, message) {
+      window.arguments[0].SimpleTest.ok(condition, message);
+    }
+
+    function is(a, b, message) {
+      window.arguments[0].SimpleTest.is(a, b, message);
+    }
+
+    function isnot(a, b, message) {
+      window.arguments[0].SimpleTest.isnot(a, b, message);
+    }
+
+    function todo(condition, message) {
+      window.arguments[0].SimpleTest.todo(condition, message);
+    }
+
+    function todo_is(a, b, message) {
+      window.arguments[0].SimpleTest.todo_is(a, b, message);
+    }
+
+    function todo_isnot(a, b, message) {
+      window.arguments[0].SimpleTest.todo_isnot(a, b, message);
+    }
+
+    function onTestsFinished() {
+      window.close();
+      window.arguments[0].SimpleTest.finish();
+    }
+
+    var gExecutedCommandID;
+
+    // returns the executed command ID, or the empty string if nothing was executed
+    function activateItem(menu, location) {
+      try {
+        gExecutedCommandID = "";
+        menu.menuWillOpen();
+        menu.activateNativeMenuItemAt(location);
+        return gExecutedCommandID;
+      }
+      catch (e) {
+        // activateNativeMenuItemAt throws an exception if the item was not found
+        dump(e + "\n");
+        return "";
+      }
+    }
+
+    function testItem(menu, location, targetID) {
+      var activatedCommandID = activateItem(menu, location);
+      return activatedCommandID != "" && activatedCommandID == targetID;
+    }
+
+    var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+    function createXULMenuPopup() {
+      return document.createElementNS(XUL_NS, "menupopup");
+    }
+
+    function createXULMenu(aLabel) {
+      var item = document.createElementNS(XUL_NS, "menu");
+      item.setAttribute("label", aLabel);
+      return item;
+    }
+
+    function createXULMenuItem(aLabel, aCommandId) {
+      var item = document.createElementNS(XUL_NS, "menuitem");
+      item.setAttribute("label", aLabel);
+      item.setAttribute("command", aCommandId);
+      return item;
+    }
+
+    function runBaseMenuTests(menu) {
+      menu.forceUpdateNativeMenuAt("0|3");
+      return testItem(menu, "0|0", "cmd_FooItem0") &&
+             testItem(menu, "0|1", "cmd_FooItem1") &&
+             testItem(menu, "0|3|0", "cmd_BarItem0") &&
+             testItem(menu, "0|3|1", "cmd_BarItem1");
+    }
+
+    function createStandaloneNativeMenu(menuNode) {
+      try {
+        let menu = Cc["@mozilla.org/widget/standalonenativemenu;1"].createInstance(Ci.nsIStandaloneNativeMenu);
+        menu.init(menuNode);
+        return menu;
+      } catch (e) {
+        ok(false, "Failed creating nsIStandaloneNativeMenu instance");
+        throw e;
+      }
+    }
+
+    function runDetachedMenuTests(addMenupopupBeforeCreatingSNM) {
+      let menu = createXULMenu("Detached menu");
+      menu.setAttribute("image", 'data:image/svg+xml,<svg%20xmlns="http://www.w3.org/2000/svg"%20width="32"%20height="32"><circle%20cx="16"%20cy="16"%20r="16"/></svg>');
+      let menupopup = createXULMenuPopup();
+
+      let popupShowingFired = false;
+      let itemActivated = false;
+
+      menupopup.addEventListener("popupshowing", function (e) {
+        popupShowingFired = true;
+
+        let menuitem = document.createElementNS(XUL_NS, "menuitem");
+        menuitem.setAttribute("label", "detached menu item");
+        /* eslint-disable-next-line no-shadow */
+        menuitem.addEventListener("command", function (e) {
+          itemActivated = true;
+        })
+        menupopup.appendChild(menuitem);
+      })
+
+      // It shouldn't make a difference whether the menupopup is added to the
+      // menu element before or after we create the nsIStandaloneNativeMenu
+      // instance with it. We test both orders by calling this function twice
+      // with different values for addMenupopupBeforeCreatingSNM.
+
+      var menuSNM = null; // the nsIStandaloneNativeMenu object for "menu"
+      if (addMenupopupBeforeCreatingSNM) {
+        menu.appendChild(menupopup);
+        menuSNM = createStandaloneNativeMenu(menu);
+      } else {
+        menuSNM = createStandaloneNativeMenu(menu);
+        menu.appendChild(menupopup);
+      }
+
+      try {
+        ok(!popupShowingFired, "popupshowing shouldn't have fired before our call to menuWillOpen()");
+        menuSNM.menuWillOpen();
+        ok(popupShowingFired, "calling menuWillOpen() should have notified our popupshowing listener");
+
+        ok(!itemActivated, "our dynamically-added menuitem shouldn't have been activated yet");
+        menuSNM.activateNativeMenuItemAt("0");
+        ok(itemActivated, "the new menu item should have been activated now");
+      } catch (ex) {
+        ok(false, "dynamic menu test failed: " + ex);
+      }
+    }
+
+    function onLoad() {
+      var _delayedOnLoad = function() {
+        try {
+
+        var menuNode = document.getElementById("standalonenativemenu");
+        var menu = createStandaloneNativeMenu(menuNode);
+
+        // First let's run the base menu tests.
+        ok(runBaseMenuTests(menu), "base tests #1");
+
+        // Set up some nodes that we'll use.
+        var newMenu0 = createXULMenu("NewMenu0");
+        var newMenu1 = createXULMenu("NewMenu1");
+        var newMenuPopup0 = createXULMenuPopup();
+        var newMenuPopup1 = createXULMenuPopup();
+        var newMenuItem0 = createXULMenuItem("NewMenuItem0", "cmd_NewItem0");
+        var newMenuItem1 = createXULMenuItem("NewMenuItem1", "cmd_NewItem1");
+        var newMenuItem2 = createXULMenuItem("NewMenuItem2", "cmd_NewItem2");
+        var newMenuItem3 = createXULMenuItem("NewMenuItem3", "cmd_NewItem3");
+        var newMenuItem4 = createXULMenuItem("NewMenuItem4", "cmd_NewItem4");
+        var newMenuItem5 = createXULMenuItem("NewMenuItem5", "cmd_NewItem5");
+
+        // Create another submenu with hierarchy via DOM manipulation.
+        // ******************
+        // * Foo * NewMenu0 * <- Menu bar
+        // ******************
+        //       ****************
+        //       * NewMenuItem0 * <- NewMenu0 submenu
+        //       ****************
+        //       * NewMenuItem1 *
+        //       ****************
+        //       * NewMenuItem2 *
+        //       *******************************
+        //       * NewMenu1   > * NewMenuItem3 * <- NewMenu1 submenu
+        //       *******************************
+        //                      * NewMenuItem4 *
+        //                      ****************
+        //                      * NewMenuItem5 *
+        //                      ****************
+        newMenu0.appendChild(newMenuPopup0);
+        newMenuPopup0.appendChild(newMenuItem0);
+        newMenuPopup0.appendChild(newMenuItem1);
+        newMenuPopup0.appendChild(newMenuItem2);
+        newMenuPopup0.appendChild(newMenu1);
+        newMenu1.appendChild(newMenuPopup1);
+        newMenuPopup1.appendChild(newMenuItem3);
+        newMenuPopup1.appendChild(newMenuItem4);
+        newMenuPopup1.appendChild(newMenuItem5);
+        //XXX - we have to append the menu to the top-level of the menu bar
+        // only after constructing it. If we append before construction, it is
+        // invalid because it has no children and we don't validate it if we add
+        // children later.
+        menuNode.appendChild(newMenu0);
+        menu.forceUpdateNativeMenuAt("1|3");
+        // Run basic tests again.
+        ok(runBaseMenuTests(menu), "base tests #2");
+
+        // Error strings.
+        var sa = "Command handler(s) should have activated";
+        var sna = "Command handler(s) should not have activated";
+
+        // Test middle items.
+        is(activateItem(menu, "1|1"), "cmd_NewItem1", "#1:" + sa);
+        is(activateItem(menu, "1|3|1"), "cmd_NewItem4", "#2:" + sa);
+
+        // Hide newMenu0.
+        newMenu0.setAttribute("hidden", "true");
+        ok(runBaseMenuTests(menu), "base tests #3: " + sa); // the base menu should still be unhidden
+        is(activateItem(menu, "1|0"), "", "#3:" + sna);
+        is(activateItem(menu, "1|1"), "", "#4:" + sna);
+        is(activateItem(menu, "1|2"), "", "#5:" + sna);
+        is(activateItem(menu, "1|3|0"), "", "#6:" + sna);
+        is(activateItem(menu, "1|3|1"), "", "#7:" + sna);
+        is(activateItem(menu, "1|3|2"), "", "#8:" + sna);
+
+        // Show newMenu0.
+        newMenu0.setAttribute("hidden", "false");
+        menu.forceUpdateNativeMenuAt("1|3");
+        ok(runBaseMenuTests(menu), "base tests #4:" + sa);
+        is(activateItem(menu, "1|0"), "cmd_NewItem0", "#9:" + sa);
+        is(activateItem(menu, "1|1"), "cmd_NewItem1", "#10:" + sa);
+        is(activateItem(menu, "1|2"), "cmd_NewItem2", "#11:" + sa);
+        is(activateItem(menu, "1|3|0"), "cmd_NewItem3", "#12:" + sa);
+        is(activateItem(menu, "1|3|1"), "cmd_NewItem4", "#13:" + sa);
+        is(activateItem(menu, "1|3|2"), "cmd_NewItem5", "#14:" + sa);
+
+        // Hide items.
+        newMenuItem1.setAttribute("hidden", "true");
+        newMenuItem4.setAttribute("hidden", "true");
+        menu.forceUpdateNativeMenuAt("1|2");
+        ok(runBaseMenuTests(menu), "base tests #5:" + sa);
+        is(activateItem(menu, "1|0"), "cmd_NewItem0", "#15:" + sa);
+        is(activateItem(menu, "1|1"), "cmd_NewItem2", "#16:" + sa);
+        is(activateItem(menu, "1|2"), "", "#17:" + sna);
+        is(activateItem(menu, "1|2|0"), "cmd_NewItem3", "#18:" + sa);
+        is(activateItem(menu, "1|2|1"), "cmd_NewItem5", "#19:" + sa);
+        is(activateItem(menu, "1|2|2"), "", "#20:" + sna);
+
+        // Show items.
+        newMenuItem1.setAttribute("hidden", "false");
+        newMenuItem4.setAttribute("hidden", "false");
+        //forceUpdateNativeMenuAt("1|3");
+        ok(runBaseMenuTests(menu), "base tests #6:" + sa);
+        is(activateItem(menu, "1|0"), "cmd_NewItem0", "#21:" + sa);
+        is(activateItem(menu, "1|1"), "cmd_NewItem1", "#22:" + sa);
+        is(activateItem(menu, "1|2"), "cmd_NewItem2", "#23:" + sa);
+        is(activateItem(menu, "1|3|0"), "cmd_NewItem3", "#24:" + sa);
+        is(activateItem(menu, "1|3|1"), "cmd_NewItem4", "#25:" + sa);
+        is(activateItem(menu, "1|3|2"), "cmd_NewItem5", "#26:" + sa);
+
+        // At this point in the tests the state of the menus has been returned
+        // to the originally diagramed state.
+
+        // Remove menu.
+        menuNode.removeChild(newMenu0);
+        ok(runBaseMenuTests(menu), "base tests #7:" + sa);
+        is(activateItem(menu, "1|0"), "", "#27:" + sna);
+        is(activateItem(menu, "1|1"), "", "#28:" + sna);
+        is(activateItem(menu, "1|2"), "", "#29:" + sna);
+        is(activateItem(menu, "1|3|0"), "", "#30:" + sna);
+        is(activateItem(menu, "1|3|1"), "", "#31:" + sna);
+        is(activateItem(menu, "1|3|2"), "", "#32:" + sna);
+        // return state to original diagramed state
+        menuNode.appendChild(newMenu0);
+
+        // The following is based on a similar test bug 447042 from the native
+        // menu bar test: Make sure that adding a menu node with no children
+        // to the menu bar and then adding another menu node with children works.
+        // In the menubar, root menus with no children are skipped - they're not
+        // visible in the menubar.
+        // Regular menus currently treat submenus without children differently:
+        // submenus without children *are* visible.
+        // We may want to change this in the future.
+        // After the mutation below we have the following root menu content:
+        //  - [0] Foo (with submenu)
+        //  - [1] tmpMenu0 (with empty submenu)
+        //  - [2] NewMenu0 (with submenu)
+        // Since the empty tmpMenu0 item is not skipped, NewMenu0 has index 2,
+        // so we use "2|..." below, rather than the "1|..." that's used in the
+        // menubar test.
+        var tmpMenu0 = createXULMenu("tmpMenu0");
+        menuNode.removeChild(newMenu0);
+        menuNode.appendChild(tmpMenu0);
+        menuNode.appendChild(newMenu0);
+        menu.forceUpdateNativeMenuAt("2|3");
+        ok(runBaseMenuTests(menu), "base tests #8");
+        is(activateItem(menu, "2|0"), "cmd_NewItem0", "#33:" + sa);
+        is(activateItem(menu, "2|1"), "cmd_NewItem1", "#34:" + sa);
+        is(activateItem(menu, "2|2"), "cmd_NewItem2", "#35:" + sa);
+        is(activateItem(menu, "2|3|0"), "cmd_NewItem3", "#36:" + sa);
+        is(activateItem(menu, "2|3|1"), "cmd_NewItem4", "#37:" + sa);
+        is(activateItem(menu, "2|3|2"), "cmd_NewItem5", "#38:" + sa);
+        // return state to original diagramed state
+        menuNode.removeChild(tmpMenu0);
+
+        // This test is basically a crash test for bug 433858.
+        newMenuItem1.setAttribute("hidden", "true");
+        newMenuItem2.setAttribute("hidden", "true");
+        newMenu1.setAttribute("hidden", "true");
+        menu.forceUpdateNativeMenuAt("1");
+        newMenuItem1.setAttribute("hidden", "false");
+        newMenuItem2.setAttribute("hidden", "false");
+        newMenu1.setAttribute("hidden", "false");
+        menu.forceUpdateNativeMenuAt("1");
+
+        // Check that "path components" which are out-of-range are not ignored.
+        // There are only two menu items in the root menu (with index 0 and 1),
+        // so index 2 is out of range.
+        is(activateItem(menu, "2|1|0"), "", "#39:" + sna);
+
+        // Check that hiding and then un-hiding the root menu doesn't result in
+        // a cyclic native menu structure.
+        menuNode.setAttribute("collapsed", "true");
+        menuNode.removeAttribute("collapsed");
+        ok(runBaseMenuTests(menu), "base tests #9");
+
+        // Run tests where the menu nodes are not in the document's node tree.
+        runDetachedMenuTests(false);
+        runDetachedMenuTests(true);
+
+        } catch (e) {
+          ok(false, "Caught an exception: " + e);
+        } finally {
+          onTestsFinished();
+        }
+      }
+
+      setTimeout(_delayedOnLoad, 1000);
+    }
+
+  ]]></script>
+</window>

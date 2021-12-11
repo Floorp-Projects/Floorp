@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+h2 {
+  margin-top: 2em;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+  margin-bottom: 1em;
+  padding: 0.5em 0;
+  border-radius: 10px;
+}
+
+#disk,
+#memory,
+#offline {
+  background-color: rgba(0, 0, 0, .1);
+}
+
+th {
+  width: 14em;
+  white-space: nowrap;
+  text-align: end;
+}
+
+td {
+  font-family: -moz-fixed;
+  word-wrap: break-word;
+}
+
+#col-key {
+  width: 60%;
+}
+
+#col-dataSize,
+#col-fetchCount,
+#col-lastModified,
+#col-expires {
+  width: 13%;
+}
+
+#col-pinned {
+  width: 5em;
+}
+
+#entries > tbody > tr:nth-child(odd) {
+  background-color: rgba(0, 0, 0, .03);
+}
+
+#entries > tbody > tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, .06);
+}
+
+#entries > tbody > tr > td {
+  padding: .5em 0;
+  text-align: center;
+}
+
+#entries > thead > tr > th {
+  text-align: center;
+  white-space: normal;
+}
+
+#entries > thead > tr > th:first-child,
+#entries > tbody > tr > td:first-child {
+  text-align: start;
+}

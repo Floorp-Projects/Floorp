@@ -1,0 +1,146 @@
+/* vim:set ts=4 sw=4 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+[uuid(6e35dbc0-49ef-4e2c-b1ea-b72ec64450a2)]
+interface nsIAuthModule : nsISupports
+{
+    /**
+     * Default behavior.
+     */
+    const unsigned long REQ_DEFAULT = 0;
+
+    /**
+     * Client and server will be authenticated.
+     */
+    const unsigned long REQ_MUTUAL_AUTH = (1 << 0);
+
+    /**
+     * The server is allowed to impersonate the client.  The REQ_MUTUAL_AUTH
+     * flag may also need to be specified in order for this flag to take
+     * effect.
+     */
+    const unsigned long REQ_DELEGATE = (1 << 1);
+
+    /**
+     * The authentication is required for a proxy connection.
+     */
+    const unsigned long REQ_PROXY_AUTH = (1 << 2);
+
+    /**
+     * Flags used for telemetry.
+     */
+    const unsigned long NTLM_MODULE_SAMBA_AUTH_PROXY = 0;
+    const unsigned long NTLM_MODULE_SAMBA_AUTH_DIRECT = 1;
+    const unsigned long NTLM_MODULE_WIN_API_PROXY = 2;
+    const unsigned long NTLM_MODULE_WIN_API_DIRECT = 3;
+    const unsigned long NTLM_MODULE_GENERIC_PROXY = 4;
+    const unsigned long NTLM_MODULE_GENERIC_DIRECT = 5;
+    const unsigned long NTLM_MODULE_KERBEROS_PROXY = 6;
+    const unsigned long NTLM_MODULE_KERBEROS_DIRECT = 7;
+
+    /** Other flags may be defined in the future */
+
+    /**
+     * Called to initialize an auth module.  The other methods cannot be called
+     * unless this method succeeds.
+     *
+     * @param aServiceName
+     *        the service name, which may be null if not applicable (e.g., for
+     *        NTLM, this parameter should be null).
+     * @param aServiceFlags
+     *        a bitwise-or of the REQ_ flags defined above (pass REQ_DEFAULT
+     *        for default behavior).
+     * @param aDomain
+     *        the authentication domain, which may be null if not applicable.
+     * @param aUsername
+     *        the user's login name
+     * @param aPassword
+     *        the user's password
+     */
+    void init(in ACString        aServiceName,
+              in unsigned long aServiceFlags,
+              in AString       aDomain,
+              in AString       aUsername,
+              in AString       aPassword);
+
+    /**
+     * Called to get the next token in a sequence of authentication steps.
+     *
+     * @param aInToken
+     *        A buffer containing the input token (e.g., a challenge from a
+     *        server).  This may be null.
+     * @param aInTokenLength
+     *        The length of the input token.
+     * @param aOutToken
+     *        If getNextToken succeeds, then aOutToken will point to a buffer
+     *        to be sent in response to the server challenge.  The length of
+     *        this buffer is given by aOutTokenLength.  The buffer at aOutToken
+     *        must be recycled with a call to free.
+     * @param aOutTokenLength
+     *        If getNextToken succeeds, then aOutTokenLength contains the
+     *        length of the buffer (number of bytes) pointed to by aOutToken.
+     */
+    void getNextToken([const] in voidPtr  aInToken,
+                      in unsigned long    aInTokenLength,
+                      out voidPtr         aOutToken,
+                      out unsigned long   aOutTokenLength);
+    /**
+     * Once a security context has been established through calls to GetNextToken()
+     * it may be used to protect data exchanged between client and server. Calls
+     * to Wrap() are used to protect items of data to be sent to the server.
+     *
+     * @param aInToken
+     *        A buffer containing the data to be sent to the server
+     * @param aInTokenLength
+     *        The length of the input token
+     * @param confidential
+     *        If set to true, Wrap() will encrypt the data, otherwise data will
+     *        just be integrity protected (checksummed)
+     * @param aOutToken
+     *        A buffer containing the resulting data to be sent to the server
+     * @param aOutTokenLength
+     *        The length of the output token buffer
+     *
+     * Wrap() may return NS_ERROR_NOT_IMPLEMENTED, if the underlying authentication
+     * mechanism does not support security layers.
+     */
+    void wrap([const] in voidPtr aInToken,
+              in unsigned long   aInTokenLength,
+              in boolean         confidential,
+              out voidPtr        aOutToken,
+              out unsigned long  aOutTokenLength);
+
+    /**
+     * Unwrap() is used to unpack, decrypt, and verify the checksums on data
+     * returned by a server when security layers are in use.
+     *
+     * @param aInToken
+     *        A buffer containing the data received from the server
+     * @param aInTokenLength
+     *        The length of the input token
+     * @param aOutToken
+     *        A buffer containing the plaintext data from the server
+     * @param aOutTokenLength
+     *        The length of the output token buffer
+     *
+     * Unwrap() may return NS_ERROR_NOT_IMPLEMENTED, if the underlying
+     * authentication mechanism does not support security layers.
+     */
+    void unwrap([const] in voidPtr aInToken,
+                in unsigned long   aInTokenLength,
+                out voidPtr        aOutToken,
+                out unsigned long  aOutTokenLength);
+
+%{C++
+    /**
+     * Create a new instance of an auth module.
+     *
+     * @param aType
+     *        The type of the auth module to be constructed.
+     */
+    static already_AddRefed<nsIAuthModule> CreateInstance(const char* aType);
+%}
+};

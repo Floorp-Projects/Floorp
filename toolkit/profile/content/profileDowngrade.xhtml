@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/profileDowngrade.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="profiledowngrade-window"
+        data-l10n-attrs="title,style"
+        onload="init()">
+
+  <linkset>
+        <html:link rel="localization" href="branding/brand.ftl"/>
+        <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+        <html:link rel="localization" href="toolkit/global/profileDowngrade.ftl"/>
+  </linkset>
+
+<dialog buttons="accept,extra1" buttonpack="end"
+        buttonidextra1="profiledowngrade-window-create"
+        buttonidaccept="profiledowngrade-quit">
+
+  <script src="profileDowngrade.js"/>
+  <script src="chrome://global/content/customElements.js"/>
+
+  <hbox flex="1" align="start">
+    <image id="info" role="presentation"/>
+    <vbox flex="1">
+      <description data-l10n-id="profiledowngrade-nosync"></description>
+#ifdef MOZ_SERVICES_SYNC
+      <description data-l10n-id="profiledowngrade-sync"></description>
+#endif
+    </vbox>
+  </hbox>
+
+</dialog>
+</window>

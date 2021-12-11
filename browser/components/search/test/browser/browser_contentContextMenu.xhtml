@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <body>
+    <a href="http://mozilla.org" id="link">I'm a link!</a>
+    <br/>
+    <a href="http://mozilla.org" id="longLink">I'm a really long link and I should be truncated.</a>
+    <br/>
+    <span id="plainText">
+      Right clicking me when I'm selected should show the menu item.
+    </span>
+    <br/>
+    <span id="mixedContent">
+      I'm some text, and <a href="http://mozilla.org">I'm a link!</a>
+    </span>
+    <br/>
+    <a href="http://mozilla.org">A partial <span id="partialLink">link selection</span></a>
+    <br/>
+    <span id="surrogatePair">
+      This character🔥  shouldn't be truncated.
+    </span>
+  </body>
+</html>

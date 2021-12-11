@@ -1,0 +1,236 @@
+<html>
+<head>
+  <title>Bug 1251238 - track service worker install time</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<iframe id="iframe"></iframe>
+<body>
+
+<script type="text/javascript">
+
+const State = {
+  BYTECHECK: -1,
+  PARSED: Ci.nsIServiceWorkerInfo.STATE_PARSED,
+  INSTALLING: Ci.nsIServiceWorkerInfo.STATE_INSTALLING,
+  INSTALLED: Ci.nsIServiceWorkerInfo.STATE_INSTALLED,
+  ACTIVATING: Ci.nsIServiceWorkerInfo.STATE_ACTIVATING,
+  ACTIVATED: Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
+  REDUNDANT: Ci.nsIServiceWorkerInfo.STATE_REDUNDANT
+};
+let swm = Cc["@mozilla.org/serviceworkers/manager;1"].
+          getService(Ci.nsIServiceWorkerManager);
+
+let EXAMPLE_URL = "https://example.com/chrome/dom/serviceworkers/test/";
+
+let swrlistener = null;
+let registrationInfo = null;
+
+// Use it to keep the sw after unregistration.
+let astrayServiceWorkerInfo = null;
+
+let expectedResults = [
+  {
+    // Speacial state for verifying update since we will do the byte-check
+    // first.
+    state: State.BYTECHECK, installedTimeRecorded: false,
+    activatedTimeRecorded: false, redundantTimeRecorded: false
+  },
+  {
+    state: State.PARSED, installedTimeRecorded: false,
+    activatedTimeRecorded: false, redundantTimeRecorded: false
+  },
+  {
+    state: State.INSTALLING, installedTimeRecorded: false,
+    activatedTimeRecorded: false, redundantTimeRecorded: false
+  },
+  {
+    state: State.INSTALLED, installedTimeRecorded: true,
+    activatedTimeRecorded: false, redundantTimeRecorded: false
+  },
+  {
+    state: State.ACTIVATING, installedTimeRecorded: true,
+    activatedTimeRecorded: false, redundantTimeRecorded: false
+  },
+  {
+    state: State.ACTIVATED, installedTimeRecorded: true,
+    activatedTimeRecorded: true, redundantTimeRecorded: false
+  },
+
+  // When first being marked as unregistered (but the worker can remain
+  // actively controlling pages)
+  {
+    state: State.ACTIVATED, installedTimeRecorded: true,
+    activatedTimeRecorded: true, redundantTimeRecorded: false
+  },
+  // When cleared (when idle)
+  {
+    state: State.REDUNDANT, installedTimeRecorded: true,
+    activatedTimeRecorded: true, redundantTimeRecorded: true
+  },
+];
+
+function waitForRegister(aScope, aCallback) {
+  return new Promise(function (aResolve) {
+    let listener = {
+      onRegister (aRegistration) {
+        if (aRegistration.scope !== aScope) {
+          return;
+        }
+        swm.removeListener(listener);
+        registrationInfo = aRegistration;
+        aResolve();
+      }
+    };
+    swm.addListener(listener);
+  });
+}
+
+function waitForUnregister(aScope) {
+  return new Promise(function (aResolve) {
+    let listener = {
+      onUnregister (aRegistration) {
+        if (aRegistration.scope !== aScope) {
+          return;
+        }
+        swm.removeListener(listener);
+        aResolve();
+      }
+    };
+    swm.addListener(listener);
+  });
+}
+
+function register() {
+  info("Register a ServiceWorker in the iframe");
+
+  let iframe = document.querySelector("iframe");
+  iframe.src = EXAMPLE_URL + "serviceworkerinfo_iframe.html";
+
+  let promise = new Promise(function(aResolve) {
+    iframe.onload = aResolve;
+  });
+
+  return promise.then(function() {
+    iframe.contentWindow.postMessage("register", "*");
+    return waitForRegister(EXAMPLE_URL);
+  })
+}
+
+function verifyServiceWorkTime(aSWRInfo, resolve) {
+  let expectedResult = expectedResults.shift();
+  ok(!!expectedResult, "We should be able to get test from expectedResults");
+
+  info("Check the ServiceWorker time in its state is " + expectedResult.state);
+
+  // Get serviceWorkerInfo from swrInfo or get the astray one which we hold.
+  let swInfo = aSWRInfo.evaluatingWorker ||
+               aSWRInfo.installingWorker ||
+               aSWRInfo.waitingWorker ||
+               aSWRInfo.activeWorker ||
+               astrayServiceWorkerInfo;
+
+  ok(!!aSWRInfo.lastUpdateTime,
+     "We should do the byte-check and update the update timeStamp");
+
+  if (!swInfo) {
+    is(expectedResult.state, State.BYTECHECK,
+       "We shouldn't get sw when we are notified for first time updating");
+    return;
+  }
+
+  ok(!!swInfo);
+
+  is(expectedResult.state, swInfo.state,
+     "The service worker's state should be " + swInfo.state + ", but got " +
+     expectedResult.state);
+
+  is(expectedResult.installedTimeRecorded, !!swInfo.installedTime,
+     "InstalledTime should be recorded when their state is greater than " +
+     "INSTALLING");
+
+  is(expectedResult.activatedTimeRecorded, !!swInfo.activatedTime,
+     "ActivatedTime should be recorded when their state is greater than " +
+     "ACTIVATING");
+
+  is(expectedResult.redundantTimeRecorded, !!swInfo.redundantTime,
+     "RedundantTime should be recorded when their state is REDUNDANT");
+
+  // We need to hold sw to avoid losing it since we'll unregister the swr later.
+  if (expectedResult.state === State.ACTIVATED) {
+    astrayServiceWorkerInfo = aSWRInfo.activeWorker;
+
+    // Resolve the promise for testServiceWorkerInfo after sw is activated.
+    resolve();
+  }
+}
+
+function testServiceWorkerInfo() {
+  info("Listen onChange event and verify service worker's information");
+
+  let promise_resolve;
+  let promise = new Promise(aResolve => promise_resolve = aResolve);
+
+  swrlistener = {
+    onChange: () => {
+      verifyServiceWorkTime(registrationInfo, promise_resolve);
+    }
+  };
+
+  registrationInfo.addListener(swrlistener);
+
+  return promise;
+}
+
+async function testHttpCacheUpdateTime() {
+  let iframe = document.querySelector("iframe");
+  let reg = await iframe.contentWindow.navigator.serviceWorker.getRegistration();
+  let lastUpdateTime = registrationInfo.lastUpdateTime;
+  await reg.update();
+  is(lastUpdateTime, registrationInfo.lastUpdateTime,
+     "The update time should not change when SW script is read from http cache.");
+}
+
+function unregister() {
+  info("Unregister the ServiceWorker");
+
+  let iframe = document.querySelector("iframe");
+  iframe.contentWindow.postMessage("unregister", "*");
+  return waitForUnregister(EXAMPLE_URL);
+}
+
+function cleanAll() {
+  return new Promise((aResolve, aReject) => {
+    is(expectedResults.length, 0, "All the tests should be tested");
+
+    registrationInfo.removeListener(swrlistener);
+
+    swm = null;
+    swrlistener = null;
+    registrationInfo = null;
+    astrayServiceWorkerInfo = null;
+    aResolve();
+  })
+}
+
+function runTest() {
+  return Promise.resolve()
+    .then(register)
+    .then(testServiceWorkerInfo)
+    .then(testHttpCacheUpdateTime)
+    .then(unregister)
+    .catch(aError => ok(false, "Some test failed with error " + aError))
+    .then(cleanAll)
+    .then(SimpleTest.finish);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true]
+]}, runTest);
+
+</script>
+</body>
+</html>

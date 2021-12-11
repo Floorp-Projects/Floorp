@@ -1,0 +1,166 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include <stdio.h>
+
+class nsCycleCollectorLogger;
+%}
+
+[ptr] native FILE(FILE);
+[ptr] native nsCycleCollectorLoggerPtr(nsCycleCollectorLogger);
+interface nsIFile;
+
+/**
+ * A set of interfaces for recording the cycle collector's work. An instance
+ * of nsICycleCollectorListener can be configured to enable various
+ * options, then passed to the cycle collector when it runs.
+ * Note that additional logging options are available by setting environment
+ * variables, as described at the top of nsCycleCollector.cpp.
+ */
+
+/**
+ * nsICycleCollectorHandler is the interface JS code should implement to
+ * receive the results logged by an nsICycleCollectorListener
+ * instance. Pass an instance of this to the logger's 'processNext' method
+ * after the collection has run. This will describe the objects the cycle
+ * collector visited, the edges it found, and the conclusions it reached
+ * about the liveness of objects.
+ *
+ * In more detail:
+ * - For each node in the graph:
+ *   - a call is made to either |noteRefCountedObject| or |noteGCedObject|, to
+ *     describe the node itself; and
+ *   - for each edge starting at that node, a call is made to |noteEdge|.
+ *
+ * - Then, a series of calls are made to:
+ *   - |describeRoot|, for reference-counted nodes that the CC has identified as
+ *     being alive because there are unknown references to those nodes.
+ *   - |describeGarbage|, for nodes the cycle collector has identified as garbage.
+ *
+ *   Any node not mentioned in a call to |describeRoot| or |describeGarbage| is
+ *   neither a root nor garbage. The cycle collector was able to find all of the
+ *   edges implied by the node's reference count.
+ */
+[scriptable, uuid(7f093367-1492-4b89-87af-c01dbc831246)]
+interface nsICycleCollectorHandler : nsISupports
+{
+    void noteRefCountedObject(in ACString aAddress,
+                              in unsigned long aRefCount,
+                              in ACString aObjectDescription);
+    void noteGCedObject(in ACString aAddress,
+                        in boolean aMarked,
+                        in ACString aObjectDescription,
+                        in ACString aCompartmentAddress);
+    void noteEdge(in ACString aFromAddress,
+                  in ACString aToAddress,
+                  in ACString aEdgeName);
+    void describeRoot(in ACString aAddress,
+                      in unsigned long aKnownEdges);
+    void describeGarbage(in ACString aAddress);
+};
+
+
+/**
+ * This interface allows replacing the log-writing backend for an
+ * nsICycleCollectorListener.  As this interface is also called while
+ * the cycle collector is running, it cannot be implemented in JS.
+ */
+[scriptable, builtinclass, uuid(3ad9875f-d0e4-4ac2-87e3-f127f6c02ce1)]
+interface nsICycleCollectorLogSink : nsISupports
+{
+  [noscript] void open(out FILE aGCLog, out FILE aCCLog);
+  void closeGCLog();
+  void closeCCLog();
+
+  // This string will appear somewhere in the log's filename.
+  attribute AString filenameIdentifier;
+
+  // This is the process ID; it can be changed if logging is on behalf
+  // of another process.
+  attribute int32_t processIdentifier;
+
+  // The GC log file, if logging to files.
+  readonly attribute nsIFile gcLog;
+
+  // The CC log file, if logging to files.
+  readonly attribute nsIFile ccLog;
+};
+
+
+/**
+ * This interface is used to configure some reporting options for the cycle
+ * collector. This interface cannot be implemented by JavaScript code, as it
+ * is called while the cycle collector is running.
+ *
+ * To analyze cycle collection data in JS:
+ *
+ * - Create an instance of nsICycleCollectorListener, which implements this
+ *   interface. In C++, this can be done by calling
+ *   nsCycleCollector_createLogger(). In JS, this can be done by calling
+ *   Components.utils.createCCLogger().
+ *
+ * - Set its |disableLog| property to true. This prevents the logger from
+ *   printing messages about each method call to a temporary log file.
+ *
+ * - Set its |wantAfterProcessing| property to true. This tells the logger
+ *   to record calls to its methods in memory. The |processNext| method
+ *   returns events from this record.
+ *
+ * - Perform a collection using the logger. For example, call
+ *   |nsIDOMWindowUtils|'s |garbageCollect| method, passing the logger as
+ *   the |aListener| argument.
+ *
+ * - When the collection is complete, loop calling the logger's
+ *   |processNext| method, passing a JavaScript object that implements
+ *   nsICycleCollectorHandler. This JS code is free to allocate and operate
+ *   on objects however it pleases: the cycle collector has finished its
+ *   work, and the JS code is simply consuming recorded data.
+ */
+[scriptable, builtinclass, uuid(703b53b6-24f6-40c6-9ea9-aeb2dc53d170)]
+interface nsICycleCollectorListener : nsISupports
+{
+    // Return a listener that directs the cycle collector to traverse
+    // objects that it knows won't be collectable.
+    //
+    // Note that even this listener will not visit every node in the heap;
+    // the cycle collector can't see the entire heap. But while this
+    // listener is in use, the collector disables some optimizations it
+    // normally uses to avoid certain classes of objects that are certainly
+    // alive. So, if your purpose is to get a view of the portion of the
+    // heap that is of interest to the cycle collector, and not simply find
+    // garbage, then you should use the listener this returns.
+    //
+    // Note that this does not necessarily return a new listener; rather, it may
+    // simply set a flag on this listener (a side effect!) and return it.
+    nsICycleCollectorListener allTraces();
+
+    // True if this listener will behave like one returned by allTraces().
+    readonly attribute boolean wantAllTraces;
+
+    // If true, do not log each method call to a temporary file.
+    // Initially false.
+    attribute boolean disableLog;
+
+    // If |disableLog| is false, this object will be sent the log text.
+    attribute nsICycleCollectorLogSink logSink;
+
+    // If true, record all method calls in memory, to be retrieved later
+    // using |processNext|. Initially false.
+    attribute boolean wantAfterProcessing;
+
+    // Report the next recorded event to |aHandler|, and remove it from the
+    // record. Return false if there isn't anything more to process.
+    //
+    // Note that we only record events to report here if our
+    // |wantAfterProcessing| property is true.
+    boolean processNext(in nsICycleCollectorHandler aHandler);
+
+    // Return the current object as an nsCycleCollectorLogger*, which is the
+    // only class that should be implementing this interface. We need the
+    // concrete implementation type to help the GC rooting analysis.
+    [noscript] nsCycleCollectorLoggerPtr asLogger();
+};

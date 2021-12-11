@@ -1,0 +1,26 @@
+{
+    "emulator_package": "system-images;android-24;default;armeabi-v7a",
+    "emulator_avd_name": "mozemulator-armeabi-v7a",
+    "emulator_extra_args": [
+        "-skip-adb-auth",
+        "-verbose",
+        "-show-kernel",
+        "-ranchu",
+        "-selinux", "permissive",
+        "-memory", "3072",
+        "-cores", "4",
+        "-skin", "800x1280",
+        "-gpu", "on",
+        "-no-snapstorage",
+        "-no-snapshot",
+        "-no-window",
+        "-no-accel",
+        "-prop", "ro.test_harness=true"
+    ],
+    "emulator_extra_config": {
+        "hw.keyboard": "yes",
+        "hw.lcd.density": "320",
+        "disk.dataPartition.size": "4000MB",
+        "sdcard.size": "600M"
+    }
+}

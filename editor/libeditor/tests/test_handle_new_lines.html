@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for TextEditor::HandleNewLinesInStringForSingleLineEditor()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="container"></div>
+
+<textarea id="toCopyPlaintext" style="display: none;"></textarea>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+async function copyPlaintext(aText) {
+  return new Promise(resolve => {
+    SimpleTest.waitForClipboard(
+      aText.replace(/\r\n?/g, "\n"),
+      () => {
+        let element = document.getElementById("toCopyPlaintext");
+        element.style.display = "block";
+        element.focus();
+        element.value = aText;
+        synthesizeKey("a", {accelKey: true});
+        synthesizeKey("c", {accelKey: true});
+      },
+      () => {
+        ok(true, `Succeeded to copy "${aText.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/ /g, "\u00A0")}" to clipboard`);
+        let element = document.getElementById("toCopyPlaintext");
+        element.style.display = "none";
+        resolve();
+      },
+      () => {
+        SimpleTest.finish();
+      });
+  });
+}
+
+async function doTests() {
+  // nsIEditor::eNewlinesPasteIntact (0):
+  //   only remove the leading and trailing newlines.
+  // nsIEditor::eNewlinesPasteToFirst (1) or any other value:
+  //   remove the first newline and all characters following it.
+  // nsIEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
+  //   replace newlines with spaces.
+  // nsIEditor::eNewlinesStrip (3):
+  //   remove newlines from the string.
+  // nsIEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
+  //   replace newlines with commas.
+  // nsIEditor::eNewlinesStripSurroundingWhitespace (5):
+  //   collapse newlines and surrounding whitespace characters and
+  //   remove them from the string.
+
+  // value: setting or pasting text.
+  // expected: array of final values for each above pref value.
+  //   setValue: expected result when HTMLInputElement.value is set to the value.
+  //   pasteValue: expected result when pasting the value from clipboard.
+  //
+  // Note that HTMLInputElement strips both \r and \n.  Therefore, each expected
+  // result is different from pasting the value.
+  const kTests = [
+    { value: "\nabc\ndef\n",
+      expected: [{ setValue: "abcdef", pasteValue: "abc\ndef" },
+                 { setValue: "abcdef", pasteValue: "abc" },
+                 { setValue: "abcdef", pasteValue: " abc def" },
+                 { setValue: "abcdef", pasteValue: "abcdef" },
+                 { setValue: "abcdef", pasteValue: "abc,def" },
+                 { setValue: "abcdef", pasteValue: "abcdef" }],
+    },
+    { value: "\n   abc   \n   def   \n",
+      expected: [{ setValue: "   abc      def   ", pasteValue: "   abc   \n   def   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abc   " },
+                 { setValue: "   abc      def   ", pasteValue: "    abc       def   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abc      def   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abc   ,   def   " },
+                 { setValue: "   abc      def   ", pasteValue: "abcdef" }],
+    },
+    { value: "   abc   \n   def   ",
+      expected: [{ setValue: "   abc      def   ", pasteValue: "   abc   \n   def   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abc   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abc       def   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abc      def   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abc   ,   def   " },
+                 { setValue: "   abc      def   ", pasteValue: "   abcdef   " }],
+    },
+  ];
+
+  let container = document.getElementById("container");
+  for (let i = 0; i <= 5; i++) {
+    await SpecialPowers.pushPrefEnv({"set": [["editor.singleLine.pasteNewlines", i]]});
+    container.innerHTML = `<input id="input${i}" type="text">`;
+    let input = document.getElementById(`input${i}`);
+    input.focus();
+    let editor = SpecialPowers.wrap(input).editor;
+    for (const kLineBreaker of ["\n", "\r", "\r\n"]) {
+      for (let kTest of kTests) {
+        let value = kTest.value.replace(/\n/g, kLineBreaker);
+        input.value = value;
+        is(editor.rootElement.firstChild.wholeText, kTest.expected[i].setValue,
+           `Setting value to "${value.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/ /g, "\u00A0")}" when pref is ${i}`);
+        input.value = "";
+
+        await copyPlaintext(value);
+        input.focus();
+        synthesizeKey("v", {accelKey: true});
+        is(editor.rootElement.firstChild.wholeText, kTest.expected[i].pasteValue,
+           `Pasting "${value.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/ /g, "\u00A0")}" when pref is ${i}`);
+        input.value = "";
+      }
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(doTests);
+</script>
+</pre>
+</body>
+</html>

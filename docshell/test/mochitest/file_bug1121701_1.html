@@ -1,0 +1,29 @@
+<script>
+  var bc = new BroadcastChannel("file_bug1121701_1");
+  var pageHideAsserts = undefined;
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "setInnerHTML") {
+      document.body.innerHTML = "modified";
+      window.onpagehide = function(event) {
+        window.onpagehide = null;
+        pageHideAsserts = {};
+        pageHideAsserts.persisted = event.persisted;
+        // eslint-disable-next-line no-unsanitized/property
+        pageHideAsserts.innerHTML = window.document.body.innerHTML;
+      };
+      window.location.href = msg.testUrl2;
+    } else if (command == "close") {
+      bc.postMessage({command: "closed"});
+      bc.close();
+      window.close();
+    }
+  }
+  window.onpageshow = function(e) {
+    var msg = {command: "child1PageShow", persisted: e.persisted, pageHideAsserts};
+    // eslint-disable-next-line no-unsanitized/property
+    msg.innerHTML = window.document.body.innerHTML;
+    bc.postMessage(msg);
+  };
+</script>

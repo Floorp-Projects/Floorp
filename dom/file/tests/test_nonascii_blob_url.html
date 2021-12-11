@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test blob URL for non-ascii domain</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content"></div>
+<script class="testbody" type="text/javascript">
+
+var iframe = document.createElement('iframe');
+iframe.src = 'http://xn--exmple-cua.test/tests/dom/file/tests/file_nonascii_blob_url.html';
+iframe.onload = function() {
+  iframe.contentWindow.postMessage('hello world', '*');
+  onmessage = function(e) {
+    is(e.data, 'hello world', "Blob URL for non-ascii domain works");
+    SimpleTest.finish();
+  }
+}
+
+document.getElementById('content').appendChild(iframe);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

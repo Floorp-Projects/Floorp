@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript">
+      window.onload = function() {
+
+        // Get the frame
+        var frame = document.getElementById("testframe");
+
+        // Set margin* attributes
+        frame.marginWidth = "30px";
+        frame.marginHeight = "20px";
+
+        // Trigger the reftest snapshot
+        document.documentElement.className = '';
+      }
+    </script>
+  </head>
+  <body>
+    <iframe id="testframe" src="653930-1-iframe.html">
+  </body>
+</html>

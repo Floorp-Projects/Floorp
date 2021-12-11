@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+>
+  <style>
+    rect { fill: blue !important; }
+  </style>
+  <rect x="15" y="15" width="200" height="200">
+    <set attributeName="fill" attributeType="CSS"
+         to="red" begin="0s" fill="freeze"/>
+  </rect>
+</svg>

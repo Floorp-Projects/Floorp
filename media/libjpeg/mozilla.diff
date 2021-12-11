@@ -1,0 +1,59 @@
+diff --git jmorecfg.h jmorecfg.h
+--- jmorecfg.h
++++ jmorecfg.h
+@@ -13,8 +13,9 @@
+  * JPEG software for special applications or support machine-dependent
+  * optimizations.  Most users will not need to touch this file.
+  */
+ 
++#include <stdint.h>
+ 
+ /*
+  * Maximum number of components (color channels) allowed in JPEG image.
+  * To meet the letter of Rec. ITU-T T.81 | ISO/IEC 10918-1, set this to 255.
+@@ -95,23 +96,17 @@ typedef unsigned char JOCTET;
+  */
+ 
+ /* UINT8 must hold at least the values 0..255. */
+ 
+-typedef unsigned char UINT8;
++typedef uint8_t UINT8;
+ 
+ /* UINT16 must hold at least the values 0..65535. */
+ 
+-#ifdef HAVE_UNSIGNED_SHORT
+-typedef unsigned short UINT16;
+-#else /* not HAVE_UNSIGNED_SHORT */
+-typedef unsigned int UINT16;
+-#endif /* HAVE_UNSIGNED_SHORT */
++typedef uint16_t UINT16;
+ 
+ /* INT16 must hold at least the values -32768..32767. */
+ 
+-#ifndef XMD_H                   /* X11/xmd.h correctly defines INT16 */
+-typedef short INT16;
+-#endif
++typedef int16_t INT16;
+ 
+ /* INT32 must hold at least signed 32-bit values.
+  *
+  * NOTE: The INT32 typedef dates back to libjpeg v5 (1994.)  Integers were
+@@ -136,17 +131,9 @@ typedef short INT16;
+  * for internal use, which ensures that internal behavior will always be the
+  * same regardless of any external headers that may be included.
+  */
+ 
+-#ifndef XMD_H                   /* X11/xmd.h correctly defines INT32 */
+-#ifndef _BASETSD_H_             /* Microsoft defines it in basetsd.h */
+-#ifndef _BASETSD_H              /* MinGW is slightly different */
+-#ifndef QGLOBAL_H               /* Qt defines it in qglobal.h */
+-typedef long INT32;
+-#endif
+-#endif
+-#endif
+-#endif
++typedef int32_t INT32;
+ 
+ /* Datatype used for image dimensions.  The JPEG standard only supports
+  * images up to 64K*64K due to 16-bit fields in SOF markers.  Therefore
+  * "unsigned int" is sufficient on all machines.  However, if you need to

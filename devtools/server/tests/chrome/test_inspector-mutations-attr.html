@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+let gInspectee = null;
+let gWalker = null;
+let attrNode;
+let attrFront;
+
+addTest(async function setup() {
+  const url = document.getElementById("inspectorContent").href;
+  const { target, doc } = await attachURL(url);
+  const inspector = await target.getFront("inspector");
+  gInspectee = doc;
+  gWalker = inspector.walker;
+  runNextTest();
+});
+
+addTest(setupAttrTest);
+addTest(testAddAttribute);
+addTest(testChangeAttribute);
+addTest(testRemoveAttribute);
+addTest(testQueuedMutations);
+addTest(setupFrameAttrTest);
+addTest(testAddAttribute);
+addTest(testChangeAttribute);
+addTest(testRemoveAttribute);
+addTest(testQueuedMutations);
+
+function setupAttrTest() {
+  attrNode = gInspectee.querySelector("#a");
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(node => {
+    attrFront = node;
+  }).then(runNextTest));
+}
+
+function setupFrameAttrTest() {
+  const frame = gInspectee.querySelector("#childFrame");
+  attrNode = frame.contentDocument.querySelector("#a");
+
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#childFrame").then(childFrame => {
+    return gWalker.children(childFrame);
+  }).then(children => {
+    const nodes = children.nodes;
+    is(nodes.length, 1, "There should be only one child of the iframe");
+    is(nodes[0].nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
+    return gWalker.querySelector(nodes[0], "#a");
+  }).then(node => {
+    attrFront = node;
+  }).then(runNextTest));
+}
+
+function testAddAttribute() {
+  attrNode.setAttribute("data-newattr", "newvalue");
+  attrNode.setAttribute("data-newattr2", "newvalue");
+  gWalker.once("mutations", () => {
+    is(attrFront.attributes.length, 3, "Should have id and two new attributes.");
+    is(attrFront.getAttribute("data-newattr"), "newvalue",
+       "Node front should have the first new attribute");
+    is(attrFront.getAttribute("data-newattr2"), "newvalue",
+       "Node front should have the second new attribute.");
+    runNextTest();
+  });
+}
+
+function testChangeAttribute() {
+  attrNode.setAttribute("data-newattr", "changedvalue1");
+  attrNode.setAttribute("data-newattr", "changedvalue2");
+  attrNode.setAttribute("data-newattr", "changedvalue3");
+  gWalker.once("mutations", mutations => {
+    is(mutations.length, 1,
+       "Only one mutation is sent for multiple queued attribute changes");
+    is(attrFront.attributes.length, 3, "Should have id and two new attributes.");
+    is(attrFront.getAttribute("data-newattr"), "changedvalue3",
+       "Node front should have the changed first value");
+    is(attrFront.getAttribute("data-newattr2"), "newvalue",
+       "Second value should remain unchanged.");
+    runNextTest();
+  });
+}
+
+function testRemoveAttribute() {
+  attrNode.removeAttribute("data-newattr2");
+  gWalker.once("mutations", () => {
+    is(attrFront.attributes.length, 2, "Should have id and one remaining attribute.");
+    is(attrFront.getAttribute("data-newattr"), "changedvalue3",
+       "Node front should still have the first value");
+    ok(!attrFront.hasAttribute("data-newattr2"), "Second value should be removed.");
+    runNextTest();
+  });
+}
+
+function testQueuedMutations() {
+  // All modifications to each attribute should be queued in one mutation event.
+
+  attrNode.removeAttribute("data-newattr");
+  attrNode.setAttribute("data-newattr", "1");
+  attrNode.removeAttribute("data-newattr");
+  attrNode.setAttribute("data-newattr", "2");
+  attrNode.removeAttribute("data-newattr");
+
+  for (let i = 0; i <= 1000; i++) {
+    attrNode.setAttribute("data-newattr2", i);
+  }
+
+  attrNode.removeAttribute("data-newattr3");
+  attrNode.setAttribute("data-newattr3", "1");
+  attrNode.removeAttribute("data-newattr3");
+  attrNode.setAttribute("data-newattr3", "2");
+  attrNode.removeAttribute("data-newattr3");
+  attrNode.setAttribute("data-newattr3", "3");
+
+  // This shouldn't be added in the attribute set, since it's a new
+  // attribute that's been added and removed.
+  attrNode.setAttribute("data-newattr4", "4");
+  attrNode.removeAttribute("data-newattr4");
+
+  gWalker.once("mutations", mutations => {
+    is(mutations.length, 4,
+       "Only one mutation each is sent for multiple queued attribute changes");
+    is(attrFront.attributes.length, 3,
+       "Should have id, data-newattr2, and data-newattr3.");
+
+    is(attrFront.getAttribute("data-newattr2"), "1000",
+       "Node front should still have the correct value");
+    is(attrFront.getAttribute("data-newattr3"), "3",
+       "Node front should still have the correct value");
+    ok(!attrFront.hasAttribute("data-newattr"), "Attribute value should be removed.");
+    ok(!attrFront.hasAttribute("data-newattr4"), "Attribute value should be removed.");
+
+    runNextTest();
+  });
+}
+
+addTest(function cleanup() {
+  gInspectee = null;
+  gWalker = null;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

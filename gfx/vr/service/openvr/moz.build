@@ -1,0 +1,62 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+FINAL_LIBRARY = 'xul'
+
+DEFINES['VR_API_PUBLIC'] = True
+
+# Windows.h wrappers conflict with internal methods in openvr
+DEFINES['MOZ_DISABLE_WINDOWS_WRAPPER'] = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG['HAVE_64BIT_BUILD']:
+        DEFINES['WIN64'] = True
+    else:
+        DEFINES['WIN32'] = True
+
+if CONFIG['OS_ARCH'] == 'Darwin':
+    DEFINES['POSIX'] = True
+    DEFINES['OSX'] = True
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        CXXFLAGS += ['-xobjective-c++']
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    DEFINES['POSIX'] = True
+    DEFINES['LINUX'] = True
+    if CONFIG['HAVE_64BIT_BUILD']:
+        DEFINES['LINUX64'] = True
+    else:
+        DEFINES['LINUX32'] = True
+
+LOCAL_INCLUDES += [
+    '/toolkit/components/jsoncpp/include',
+]
+
+USE_LIBS += [
+    'jsoncpp',
+]
+
+EXPORTS += [
+    'headers/openvr.h',
+]
+
+SOURCES += [
+    'src/dirtools_public.cpp',
+    'src/envvartools_public.cpp',
+    'src/hmderrors_public.cpp',
+    'src/openvr_api_public.cpp',
+    'src/pathtools_public.cpp',
+    'src/sharedlibtools_public.cpp',
+    'src/strtools_public.cpp',
+    'src/vrpathregistry_public.cpp',
+]
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    # Harmless warnings in 3rd party code
+    CXXFLAGS += [
+        '-Wno-error=parentheses',
+        '-Wno-error=unused-variable',
+    ]

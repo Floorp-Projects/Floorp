@@ -1,0 +1,135 @@
+<resources>
+    <string name="app_name">GeckoView Example</string>
+    <string name="activity_label">GeckoView Example</string>
+    <string name="location_hint">Enter URL or search keywords...</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="clear_field">Clear</string>
+    <string name="request_storage">Allow access to device storage for "%1$s"?</string>
+    <string name="request_storage_access">Allow third parties to access first party storage for "%1$s"?</string>
+    <string name="request_geolocation">Share location with "%1$s"?</string>
+    <string name="request_notification">Allow notifications for "%1$s"?</string>
+    <string name="request_video">Share video with "%1$s"</string>
+    <string name="request_audio">Share audio with "%1$s"</string>
+    <string name="request_media">Share video and audio with "%1$s"</string>
+    <string name="request_xr">Share WebXR displays with "%1$s"?</string>
+    <string name="request_autoplay">Allow video to autoplay on "%1$s"?</string>
+    <string name="request_media_key_system_access">Allow system media key access for "%1$s"?</string>
+    <string name="media_back_camera">Back camera</string>
+    <string name="media_front_camera">Front camera</string>
+    <string name="media_microphone">Microphone</string>
+    <string name="media_other">Unknown source</string>
+
+    <string name="crash_native">Native</string>
+    <string name="crash_java">Java</string>
+    <string name="crash_content_native">Content (Native)</string>
+    <string name="tracking_protection">Tracking Protection</string>
+    <string name="tracking_protection_ex">TP exception</string>
+    <string name="private_browsing">Private Browsing</string>
+    <string name="remote_debugging">Remote Debugging</string>
+    <string name="forward">Forward</string>
+    <string name="reload">Reload</string>
+    <string name="settings">Settings...</string>
+    <string name="crashed_title">GeckoView Example Crashed</string>
+    <string name="crashed_text">Tap to report to Mozilla.</string>
+    <string name="crashed_ignore">Ignore</string>
+    <string name="device_sharing_microphone">Microphone is on</string>
+    <string name="device_sharing_camera">Camera is on</string>
+    <string name="device_sharing_camera_and_mic">Camera and microphone are on</string>
+    <string name="new_tab">New tab</string>
+    <string name="install_addon">Install Add-on...</string>
+    <string name="install_addon_hint">Add-on URL: https://addons.mozilla.org/...</string>
+    <string name="update_addon">Update Add-on</string>
+    <string name="close_tab">Close tab</string>
+    <string name="desktop_mode">Desktop site</string>
+    <string name="collapse">Collapse GV</string>
+    <string name="slow_script">A script on this page is causing your web browser to run slowly</string>
+    <string name="wait">Wait</string>
+    <string name="stop">Stop</string>
+    <string name="install">Install</string>
+    <string name="cancel">Cancel</string>
+    <string name="addon_uri">WebExtension xpi URL</string>
+
+    # Preferences
+    <string name="key_tracking_protection">tracking_protection</string>
+    <item type="bool" name="tracking_protection_default">true</item>
+
+    <string name="key_javascript_enabled">javascript_enabled</string>
+    <item type="bool" name="javascript_enabled_default">true</item>
+
+    <string name="key_remote_debugging">remote_debugging</string>
+    <item type="bool" name="remote_debugging_default">true</item>
+
+    <string name="key_dfpi">dfpi</string>
+    <item type="bool" name="dfpi_default">false</item>
+
+    <string name="key_autoplay">autoplay</string>
+    <item type="bool" name="autoplay_default">false</item>
+
+    <string name="key_allow_extensions_in_private_browsing">allow_extensions_in_private_browsing</string>
+    <item type="bool" name="allow_extensions_in_private_browsing_default">false</item>
+
+    <string name="key_user_agent_override">user_agent_override</string>
+    <string name="user_agent_override_default"></string>
+    <string-array name="user_agent_override_display_names">
+        <item>Default</item>
+        <item>Chrome 80 on Android</item>
+        <item>Safari 12 on iPhone</item>
+    </string-array>
+    <string-array name="user_agent_override_values">
+        <item></item>
+        <item>Mozilla/5.0 (Linux; Android 10; Z832 Build/MMB29M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36</item>
+        <item>Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15</item>
+    </string-array>
+
+    <string name="key_enhanced_tracking_protection">enhanced_tracking_protection</string>
+    <string name="enhanced_tracking_protection_default">standard</string>
+    <string-array name="enhanced_tracking_protection_display_names">
+        <item>Disabled</item>
+        <item>Enabled (standard)</item>
+        <item>Enabled (strict)</item>
+    </string-array>
+    <string-array name="enhanced_tracking_protection_values">
+        <item>disabled</item>
+        <item>standard</item>
+        <item>strict</item>
+    </string-array>
+
+    <string name="key_preferred_color_scheme">preferred_color_scheme</string>
+    <item type="integer" name="preferred_color_scheme_default">-1</item>
+    <string-array name="pref_preferred_color_scheme_display_names">
+        <item>Follow System Preference</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="pref_preferred_color_scheme_values">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+
+    <string name="key_display_mode">display_mode</string>
+    <item type="integer" name="display_mode_default">0</item>
+    <string-array name="pref_display_mode_names">
+        <item>Browser</item>
+        <item>MinimalUi</item>
+        <item>Standalone</item>
+        <item>Fullscreen</item>
+    </string-array>
+    <string-array name="pref_display_mode_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string name="before_unload_message">This page is asking you to confirm that you want to leave - data you have entered may not be saved</string>
+    <string name="before_unload_title">Are you sure?</string>
+    <string name="before_unload_leave_page">Leave Page</string>
+    <string name="before_unload_stay">Stay on Page</string>
+
+    <string name="repost_confirm_message">To display this page, GeckoViewExample must send information that will repeat any action (such as a search or order confirmation) that was performed earlier.</string>
+    <string name="repost_confirm_title">Are you sure?</string>
+    <string name="repost_confirm_resend">Resend</string>
+    <string name="repost_confirm_cancel">Cancel</string>
+</resources>

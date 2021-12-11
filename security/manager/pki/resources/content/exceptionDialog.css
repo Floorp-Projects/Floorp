@@ -1,0 +1,38 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  max-width: 40em;
+}
+
+#warningSupplemental {
+  font-weight: bold;
+}
+
+.description {
+  font-weight: bold;
+}
+
+.longDescription {
+  /* 40em is the max-width of the dialog defined above.
+     18px is the horizontal padding of the dialog. */
+  width: calc(40em - 18px);
+  padding-bottom: 1em;
+}
+
+#warningText,
+#warningSupplemental,
+#headerDescription,
+.longDescription {
+  white-space: pre-wrap;
+}
+
+.description:empty,
+.longDescription:empty {
+  display: none;
+}
+
+#locationTextBox {
+  -moz-box-flex: 1;
+}

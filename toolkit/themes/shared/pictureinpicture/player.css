@@ -1,0 +1,152 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --player-bg-color: #000;
+  --player-control-icon-fill: #fff;
+  --btn-bg-color: rgba(50,50,50,0.55);
+  --close-btn-bg-color: rgb(211,216,220);
+  --close-btn-fill-color: #000;
+  --resize-margin: 5px;
+}
+
+button::-moz-focus-inner {
+  border: 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--player-bg-color);
+}
+
+body:fullscreen {
+  -moz-window-dragging: no-drag;
+}
+
+.player-holder {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+browser {
+  flex: 1;
+}
+
+#controls {
+  height: calc(100% - 2 * var(--resize-margin));
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: calc(100% - 2 * var(--resize-margin));
+  margin: var(--resize-margin);
+  -moz-window-dragging: drag;
+}
+
+#controls button {
+  appearance: none;
+  border: 0;
+}
+
+#controls[keying] button:-moz-focusring {
+  outline: 2px solid #fff;
+  box-shadow: 1px 2px 5px #000;
+}
+
+#controls-bottom {
+  display: flex;
+  position: absolute;
+  bottom: 15px;
+  justify-content: center;
+  width: 100%;
+}
+
+.gap {
+  flex: 0.1;
+  max-width: 50px;
+}
+
+.control-item {
+  -moz-window-dragging: no-drag;
+  background-color: var(--btn-bg-color);
+  border-radius: 4px;
+  cursor: pointer;
+  /**
+   * Make the button dimensions a square proportional to one
+   * dimension of the window - in this case, the width dimension,
+   * since we suspect most videos are wider than they are tall.
+   */
+  height: 10vmax;
+  width: 10vmax;
+  max-height: 32px;
+  max-width: 32px;
+  min-height: 16px;
+  min-width: 16px;
+  transition: opacity 160ms linear;
+  opacity: 0;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--player-control-icon-fill);
+  background-position: center;
+  background-size: 60%;
+  background-repeat: no-repeat;
+}
+
+#controls[keying] .control-item:focus {
+  border-radius: 0px;
+}
+
+#controls:hover .control-item {
+  opacity: 0.8;
+}
+
+#controls[keying] .control-item,
+#controls[showing] .control-item,
+#controls:hover .control-item:hover {
+  opacity: 1;
+}
+
+#close {
+  background-color: var(--close-btn-bg-color);
+  background-image: url("chrome://global/skin/icons/close.svg");
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  fill: var(--close-btn-fill-color);
+}
+
+#close[mac="true"] {
+  right: auto;
+  left: 10px;
+}
+
+#playpause {
+  left: 55%;
+}
+
+#controls.playing #playpause {
+  background-image: url("chrome://global/skin/media/pause-fill.svg");
+}
+
+#controls:not(.playing) #playpause {
+  background-image: url("chrome://global/skin/media/play-fill.svg");
+}
+
+#controls.muted #audio {
+  background-image: url("chrome://global/skin/media/audio-muted.svg");
+}
+
+#controls:not(.muted) #audio {
+  background-image: url("chrome://global/skin/media/audio.svg");
+}
+
+#unpip {
+  background-image: url("chrome://global/skin/media/picture-in-picture-closed.svg");
+  left: 45%;
+}
+
+#unpip:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}

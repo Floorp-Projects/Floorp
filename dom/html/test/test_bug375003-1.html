@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html id="html">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375003
+-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Test 1 for bug 375003</title>
+
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+        .s { display:block; width:20px; height:20px; background-color:lime; }
+        table  { background:pink; }
+        #td5,#td6 { border:7px solid blue;}
+    </style>
+
+<script>
+var x = [ 'Left','Top','Width','Height' ];
+function test(id,s,expected) {
+  var el = document.getElementById(id);
+  for(var i = 0; i < x.length; ++i) {
+    var actual = eval('el.'+s+x[i]);
+    if (expected[i] != -1 && s+x[i]!='scrollHeight')
+      is(actual, expected[i], id+"."+s+x[i]);
+  }
+}
+function t3(id,c,o,s,pid) {
+  test(id,'client',c);
+  test(id,'offset',o);
+  test(id,'scroll',s);
+  var p = document.getElementById(id).offsetParent; 
+  is(p.id, pid, id+".offsetParent");
+}
+
+function run_test() {
+   t3('span1',[0,0,20,20],[12,12,20,20],[0,0,20,20],'td1');
+   t3('td1'  ,[1,1,69,44],[7,7,71,46],[0,0,69,46],'table1');
+   t3('tr1'  ,[0,0,71,46],[7,7,71,46],[0,0,71,44],'table1');
+   t3('span2',[10,0,20,20],[27,12,30,20],[0,0,20,20],'td2');
+   t3('table1',[0,0,103,131],[10,10,103,131],[0,0,103,131],'body');
+   t3('div1',[10,10,-1,131],[0,0,-1,151],[0,0,-1,85],'body');
+
+   t3('span2b',[10,0,20,20],[25,-1,30,20],[0,0,20,20],'body');
+   // XXX not sure how to make reliable cross-platform tests for replaced-inline, inline
+   // t3('span2c',[10,2,18,2],[25,-1,30,6],[0,0,30,20],'body');
+   // t3('span2d',[0,0,0,0],[25,-1,10,19],[0,0,10,20],'body');
+
+   t3('span3' ,[0,0,20,20],[15,0,20,20],[0,0,20,20],'td3');
+   t3('td3'   ,[0,0,35,20],[0,0,35,20],[0,0,35,20],'table3');
+   t3('tr3'  ,[0,0,35,20],[0,0,35,20],[0,0,35,22],'table3');
+   t3('span4' ,[0,0,20,20],[0,0,20,20],[0,0,20,20],'td4');
+   t3('table3',[0,0,35,40],[0,0,35,40],[0,0,35,40],'div3');
+   t3('div3',[10,10,-1,40],[0,151,-1,60],[0,0,-1,70],'body');
+
+   t3('span5' ,[0,0,20,20],[1,1,20,20],[0,0,20,20],'td5');
+   t3('td5'   ,[7,7,22,22],[2,2,36,36],[0,0,22,36],'table5');
+   t3('tr5'  ,[0,0,36,36],[2,2,36,36],[0,0,36,22],'table5');
+   t3('span6' ,[0,0,20,20],[20,58,20,20],[0,0,20,20],'div5');
+   t3('table5',[0,0,40,78],[0,0,40,78],[0,0,40,78],'div5');
+   t3('div5',[10,10,-1,78],[0,211,-1,98],[0,0,-1,70],'body');
+
+   t3('span7' ,[0,0,20,20],[1,1,20,20],[0,0,20,20],'td7');
+   t3('td7'   ,[1,1,37,22],[2,2,39,24],[0,0,37,22],'table7');
+   t3('tr7'  ,[0,0,39,24],[2,2,39,24],[0,0,39,22],'table7');
+   t3('span8' ,[0,0,20,20],[19,30,20,20],[0,0,20,20],'table7');
+   t3('table7',[0,0,57,68],[10,319,57,68],[0,0,57,68],'body');
+   t3('div7',[10,10,-1,68],[0,309,-1,88],[0,0,-1,70],'body');
+
+   t3('span9' ,[0,0,20,20],[1,1,20,20],[0,0,20,20],'td9');
+   t3('td9'   ,[1,1,22,22],[2,2,24,24],[0,0,22,24],'table9');
+   t3('tr9'  ,[0,0,24,24],[2,2,24,24],[0,0,24,22],'table9');
+   t3('span10' ,[0,0,20,20],[17,43,20,20],[0,0,20,20],'table9');
+   t3('table9',[0,0,54,60],[10,407,54,60],[0,0,54,60],'body');
+   t3('div9',[10,10,-1,0],[0,397,-1,20],[0,0,-1,70],'body');
+
+   t3('span11' ,[0,0,20,20],[1,1,20,20],[0,0,20,20],'td11');
+   t3('td11'   ,[0,0,22,22],[2,2,22,22],[0,0,22,22],'table11');
+   t3('tr11'  ,[0,0,22,22],[2,2,22,22],[0,0,22,22],'table11');
+   t3('span12' ,[0,0,20,20],[28,454,20,20],[0,0,20,20],'body');
+   t3('table11',[0,0,26,30],[10,427,26,30],[0,0,26,30],'body');
+   t3('div11',[10,10,-1,30],[0,417,-1,50],[0,0,-1,70],'body');
+}
+</script>
+</head>
+<body id="body">
+
+<div id="content">
+<div id="div1" style="border:10px solid black">
+<table id="table1" cellspacing="7" cellpadding="12" border="9">
+  <tbody id="tbody1"><tr id="tr1"><td id="td1"><div class="s" id="span1"></div></td></tr></tbody>
+  <tbody id="tbody2"><tr id="tr2"><td id="td2"><div class="s" id="span2" style="margin-left:15px; border-left:10px solid blue;"></div></td></tr></tbody>
+</table>
+</div>
+
+<div id="div3" style="border:10px solid black; position:relative">
+<table id="table3"  cellpadding="0" cellspacing="0" border="0">
+  <tbody id="tbody3"><tr id="tr3"><td id="td3"><div class="s" id="span3" style="margin-left:15px"></div></td></tr></tbody>
+  <tbody id="tbody4"><tr id="tr4"><td id="td4"><div class="s" id="span4"></div></td></tr></tbody>
+</table>
+</div>
+
+<div id="div5" style="border:10px solid black; position:relative">
+<table id="table5">
+  <tbody id="tbody5"><tr id="tr5"><td id="td5"><div class="s" id="span5"></div></td></tr></tbody>
+  <tbody id="tbody6"><tr id="tr6"><td id="td6"><div class="s" id="span6" style="left:10px; top:10px; position:relative"></div></td></tr></tbody>
+</table>
+</div>
+
+<div id="div7" style="border:10px solid black;">
+<table id="table7" style="position:relative" border=7>
+  <tbody id="tbody7"><tr id="tr7"><td id="td7"><div class="s" id="span7"></div></td></tr></tbody>
+  <tbody id="tbody8"><tr id="tr8"><td id="td8"><div class="s" id="span8" style="position:relative; margin-left:15px"></div></td></tr></tbody>
+</table>
+</div>
+
+<div id="div9" style="border:10px solid black;">
+<table id="table9" style="position:absolute" border="13">
+  <tbody id="tbody9"><tr id="tr9"><td id="td9"><div class="s" id="span9"></div></td></tr></tbody>
+  <tbody id="tbody10"><tr id="tr10"><td id="td10"><div class="s" id="span10" style="position:absolute"></div></td></tr></tbody>
+</table>
+</div>
+
+<div id="div11" style="border:10px solid black; ">
+<table id="table11">
+  <tbody id="tbody11"><tr id="tr11"><td id="td11"><div class="s" id="span11"></div></td></tr></tbody>
+  <tbody id="tbody12"><tr id="tr12"><td id="td12"><div class="s" id="span12" style="position:absolute;margin-left:15px"></div></td></tr></tbody>
+</table>
+</div>
+
+<div style="border:10px solid black">
+<div class="s" id="span2b" style="margin-left:15px; border-left:10px solid blue;"></div></div>
+
+<div style="border:10px solid black">
+<button id="span2c" style="margin-left:15px; border-left:10px solid blue;"></button></div>
+
+<div style="border:10px solid black">
+<span id="span2d" style="margin-left:15px; border-left:10px solid blue;"></span></div>
+</div>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375003">Mozilla Bug 375003</a>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+run_test();
+</script>
+</pre>
+
+</body>
+</html>

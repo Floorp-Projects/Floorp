@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WelomeBox renders with default values 1`] = `
+<div
+  className="welcomebox"
+>
+  <div
+    className="alignlabel"
+  >
+    <div
+      className="shortcutFunction"
+    >
+      <p
+        className="welcomebox__searchSources"
+        onClick={[Function]}
+        role="button"
+        tabIndex="0"
+      >
+        <span
+          className="shortcutKey"
+        >
+          Ctrl+P
+        </span>
+        <span
+          className="shortcutLabel"
+        >
+           Go to file
+        </span>
+      </p>
+      <p
+        className="welcomebox__searchProject"
+        onClick={[Function]}
+        role="button"
+        tabIndex="0"
+      >
+        <span
+          className="shortcutKey"
+        >
+          Ctrl+Shift+F
+        </span>
+        <span
+          className="shortcutLabel"
+        >
+           Find in files
+        </span>
+      </p>
+      <p
+        className="welcomebox__allShortcuts"
+        onClick={[Function]}
+        role="button"
+        tabIndex="0"
+      >
+        <span
+          className="shortcutKey"
+        >
+          Ctrl+/
+        </span>
+        <span
+          className="shortcutLabel"
+        >
+          Show all shortcuts
+        </span>
+      </p>
+    </div>
+  </div>
+</div>
+`;

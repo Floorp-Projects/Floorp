@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for button
+  -->
+<window title="Button Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<button id="one" label="One" />
+<button id="two" label="Two"/>
+<hbox>
+  <button id="three" label="Three" open="true"/>
+</hbox>
+<hbox>
+  <button id="four" type="menu" label="Four"/>
+  <button id="five" label="Five"/>
+</hbox>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function test_button()
+{
+  synthesizeMouseExpectEvent($("one"), 2, 2, {}, $("one"), "command", "button press");
+  $("one").focus();
+  synthesizeKeyExpectEvent("VK_SPACE", { }, $("one"), "command", "key press");
+  $("two").disabled = true;
+  synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "!command", "button press command when disabled");
+  synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "click", "button press click when disabled");
+
+  if (!navigator.platform.includes("Mac")) {
+    $("one").focus();
+    synthesizeKey("KEY_ArrowDown");
+    is(document.activeElement, $("three"), "key cursor down on button");
+
+    synthesizeKey("KEY_ArrowRight");
+    is(document.activeElement, $("four"), "key cursor right on button");
+    synthesizeKey("KEY_ArrowDown");
+    is(document.activeElement, $("four"), "key cursor down on menu button");
+
+    $("three").focus();
+    synthesizeKey("KEY_ArrowUp");
+    is(document.activeElement, $("one"), "key cursor up on button");
+  }
+
+  $("two").focus();
+  ok(document.activeElement != $("two"), "focus disabled button");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(test_button);
+
+]]>
+</script>
+
+</window>

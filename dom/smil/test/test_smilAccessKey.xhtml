@@ -1,0 +1,79 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL accessKey support</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=587910">Mozilla Bug
+  587910</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="20" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for lack of SMIL accessKey support **/
+
+const gSvgns = 'http://www.w3.org/2000/svg';
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  testBeginValueIsNotSupported('accessKey(a)');
+  testBeginValueIsNotSupported('accesskey(a)');
+
+  is(getStartTime('accesskey(a); 1s'), 1,
+     'Start time for accesskey(a) followed by a literal time');
+  is(getStartTime('3s; accessKey(a)'), 3,
+     'Start time for accesskey(a) preceded by a literal time');
+
+  SimpleTest.finish();
+}
+
+function createAnim(beginSpec) {
+  const anim = document.createElementNS(gSvgns, 'animate');
+  anim.setAttribute('attributeName', 'cx');
+  anim.setAttribute('values', '0; 100');
+  anim.setAttribute('dur', '10s');
+  anim.setAttribute('begin', beginSpec);
+  return document.getElementById('circle').appendChild(anim);
+}
+
+function testBeginValueIsNotSupported(beginSpec) {
+  const anim = createAnim(beginSpec);
+
+  try {
+    anim.getStartTime();
+    ok(false,
+       `Should have failed to get start time for begin value: ${beginSpec}`);
+  } catch(e) {
+    is(e.name, 'InvalidStateError', `Unexpected exception: ${e.name}`);
+    is(e.code, DOMException.INVALID_STATE_ERR,
+       `Unexpected exception code: ${e.code}`);
+  }
+
+  anim.remove();
+}
+
+function getStartTime(beginSpec) {
+  const anim = createAnim(beginSpec);
+  let startTime;
+  try {
+    startTime = anim.getStartTime();
+  } catch (e) { }
+  anim.remove();
+
+  return startTime;
+}
+
+window.addEventListener('load', main);
+]]>
+</script>
+</pre>
+</body>
+</html>

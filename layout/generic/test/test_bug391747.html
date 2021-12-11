@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=391747
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>Test for bug 391747</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=391747">Mozilla Bug 391747</a>
+<p id="display"></p>
+<div id="content" style="display: block">
+<iframe id="iframe_391747" srcdoc="<table><tr><td style='width:500px;height:500px;border:1px solid blue'>x</td>"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function ctrlclick_391747(doc,x,y){
+  var wu =  SpecialPowers.getDOMWindowUtils(doc.defaultView);
+  wu.sendMouseEvent('mousedown',  x, y, 0, 1, 2);
+  wu.sendMouseEvent('mouseup',  x, y, 0, 1, 2);
+}
+
+function select_391747(doc){
+  var range = doc.createRange();
+  range.setStart(doc, 0);
+  range.setEnd(doc, 0);
+  doc.defaultView.getSelection().addRange(range);
+}
+
+function boom_391747() {
+  var target = document.getElementById('iframe_391747')
+  select_391747(target.contentDocument)
+  ctrlclick_391747(target.contentDocument, 100, 100);
+  ok(true, "pass");
+  SimpleTest.finish();
+}
+
+addLoadEvent(boom_391747);
+SimpleTest.waitForExplicitFinish()
+
+</script>
+</pre>
+</body>
+</html>

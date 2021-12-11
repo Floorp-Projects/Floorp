@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>load CORS Text track correctly when its parent media element's preload is none</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video preload="none" crossorigin="anonymous">
+  <track src="http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/media/webvtt/test/mochitest/basic.vtt&type=text/vtt&cors=anonymous" kind="subtitles" id="default" default>
+</video>
+<script type="text/javascript">
+/**
+ * This test is used to test the text track element with CORS resource can starts
+ * loaded correctly when its parent media element's preload attribute is none.
+ */
+async function runTest() {
+  await waitUntiTrackLoaded();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+/**
+ * The following are test helper functions.
+ */
+async function waitUntiTrackLoaded() {
+  let trackElement = document.getElementById("default");
+  if (trackElement.readyState != 2) {
+    info(`wait until the track finishes loading`);
+    await once(trackElement, "load");
+  }
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  is(trackElement.track.cues.length, 6, "Cue list length should be 6.");
+}
+</script>
+</body>
+</html>

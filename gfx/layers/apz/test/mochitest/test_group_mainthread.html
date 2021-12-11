@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests that perform main-thread scrolling</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var subtests = [
+  {"file": "helper_scrollby_bug1531796.html"},
+  {"file": "helper_scroll_anchoring_smooth_scroll.html"},
+  {"file": "helper_visualscroll_clamp_restore.html", prefs: [
+    ["apz.test.logging_enabled", true],
+  ]},
+  {"file": "helper_smoothscroll_spam.html"},
+  {"file": "helper_smoothscroll_spam_interleaved.html"},
+  {"file": "helper_mainthread_scroll_bug1662379.html", prefs: [
+    ["apz.test.logging_enabled", true],
+  ]},
+];
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

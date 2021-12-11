@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test cloneElementVisually</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="https://example.com:443/tests/dom/media/test/cloneElementVisually_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="content">
+  <h1>Original</h1>
+  <video id="original"></video>
+  <h1>MediaStream</h1>
+  <video id="streamTarget"></video>
+  <h1>Clone</h1>
+</div>
+<div id="results">
+  <h1>Results</h1>
+  <canvas id="left"></canvas>
+  <canvas id="right"></canvas>
+</div>
+
+<script type="application/javascript">
+
+/* import-globals-from cloneElementVisually_helpers.js */
+
+/**
+ * Test that we can clone a video that is playing a MediaStream.
+ */
+add_task(async () => {
+  await setup();
+
+  let originalVideo = document.getElementById("original");
+  let stream = originalVideo.mozCaptureStream();
+  let streamTarget = document.getElementById("streamTarget");
+  originalVideo.setAttribute("loop", true);
+  let playingPromise = waitForEventOnce(originalVideo, "playing");
+  await originalVideo.play();
+  await playingPromise;
+
+  streamTarget.srcObject = stream;
+  playingPromise = waitForEventOnce(streamTarget, "playing");
+  await streamTarget.play();
+  await playingPromise
+
+  await withNewClone(originalVideo, async clone => {
+    await SpecialPowers.wrap(streamTarget).cloneElementVisually(clone);
+
+    originalVideo.loop = false;
+    originalVideo.currentTime = originalVideo.duration - 0.1;
+    await waitForEventOnce(streamTarget, "ended");
+
+    ok(await assertVideosMatch(originalVideo, streamTarget),
+       "Should match Original video");
+    ok(await assertVideosMatch(streamTarget, clone),
+       "Should match MediaStream");
+  });
+
+  // Capturing a stream from a video "taints" it which prevents testing
+  // shutdown decoder behaviour. To avoid interfering with future tests,
+  // we replace the video.
+  let newVideo = originalVideo.cloneNode();
+  originalVideo.parentNode.replaceChild(newVideo, originalVideo);
+});
+
+</script>
+
+</body>
+</html>

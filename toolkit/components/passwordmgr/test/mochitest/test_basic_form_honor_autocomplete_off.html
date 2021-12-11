@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test login autofill autocomplete when signon.autofillForms.autocompleteOff is false</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: autofilling when autocomplete=off
+
+<script>
+let readyPromise = registerRunTests(6);
+
+addLoginsInParent(
+  [window.location.origin, "https://autocomplete2", null, "singleuser", "singlepass", "uname", "pword"]);
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+  <!-- test single logins, with autocomplete=off set -->
+  <form id="form1" action="https://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form2" action="https://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form3" action="https://autocomplete2" onsubmit="return false;" autocomplete="off">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form4" action="https://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- control -->
+  <form id="form5" action="https://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- username-only form -->
+  <form id="form6" action="https://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off" id="username">
+    <button type="submit">Submit</button>
+  </form>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Login Manager: multiple login autocomplete. **/
+let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+
+// Set the pref before the document loads.
+SpecialPowers.setBoolPref("signon.autofillForms.autocompleteOff", false);
+
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref("signon.autofillForms.autocompleteOff");
+});
+
+// Check for expected username/password in form.
+function checkFormValues(form, expectedUsername, expectedPassword) {
+  let uname = form.querySelector("[name='uname']");
+  let pword = form.querySelector("[name='pword']");
+  is(uname.value, expectedUsername, `Checking ${form.id} username is: ${expectedUsername}`);
+  is(pword.value, expectedPassword, `Checking ${form.id} password is: ${expectedPassword}`);
+}
+
+async function autoCompleteFieldsFromFirstMatch(form) {
+  // trigger autocomplete from the username field
+  await SimpleTest.promiseFocus(form.ownerGlobal);
+  let uname = form.querySelector("[name='uname']");
+  let shownPromise = promiseACShown();
+  uname.focus();
+  await shownPromise;
+
+  let formFilled = promiseFormsProcessedInSameProcess();
+  await synthesizeKey("KEY_ArrowDown"); // open
+  await synthesizeKey("KEY_Enter");
+  await formFilled;
+  await Promise.resolve();
+}
+
+add_task(async function setup() {
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
+  listenForUnexpectedPopupShown();
+});
+
+/* Tests for autofill of single-user forms for when we honor autocomplete=off on password fields */
+add_task(async function test_form1_honor_password_autocomplete_off() {
+  await SimpleTest.promiseFocus(window);
+  // With the pref toggled off, and with autocomplete=off on the password field,
+  // we expect not to have autofilled this form
+  let form = document.getElementById("form1");
+  ok(form, "found form under test");
+  checkFormValues(form, "", "");
+
+  // ..but it should autocomplete just fine
+  await autoCompleteFieldsFromFirstMatch(form);
+  checkFormValues(form, "singleuser", "singlepass");
+});
+
+add_task(async function test_form2_honor_password_autocomplete_off() {
+  await SimpleTest.promiseFocus(window);
+  // With the pref toggled off, and with autocomplete=off on the username field,
+  // we expect to have autofilled this form
+  let form = document.getElementById("form2");
+  ok(form, "found form under test");
+  checkFormValues(form, "singleuser", "singlepass");
+});
+
+add_task(async function test_form3_honor_password_autocomplete_off() {
+  await SimpleTest.promiseFocus(window);
+  // With the pref toggled off, and with autocomplete=off on the form,
+  // we expect to have autofilled this form
+  let form = document.getElementById("form3");
+  ok(form, "found form under test");
+  checkFormValues(form, "singleuser", "singlepass");
+});
+
+add_task(async function test_form4_honor_password_autocomplete_off() {
+  await SimpleTest.promiseFocus(window);
+  // With the pref toggled off, and autocomplete=off on the username and password field,
+  // we expect not to have autofilled this form
+  let form = document.getElementById("form4");
+  ok(form, "found form under test");
+  checkFormValues(form, "", "");
+
+  // ..but it should autocomplete just fine
+  await autoCompleteFieldsFromFirstMatch(form);
+  checkFormValues(form, "singleuser", "singlepass");
+});
+
+add_task(async function test_form5() {
+  await SimpleTest.promiseFocus(window);
+  // (this is a control, w/o autocomplete=off, to ensure the login
+  // that was being suppressed would have been filled in otherwise)
+  let form = document.getElementById("form5");
+  ok(form, "found form under test");
+  checkFormValues(form, "singleuser", "singlepass");
+});
+
+add_task(async function test_form6_honor_password_autocomplete_off() {
+  await SimpleTest.promiseFocus(window);
+  // With the pref toggled off, and with autocomplete=off on the username field
+  // in a username-only form, we expect to have autofilled this form
+  let form = document.getElementById("form6");
+  ok(form, "found form under test");
+  let uname = form.querySelector("[name='uname']");
+  is(uname.value, "singleuser", `Checking form6 username is: singleuser`);
+});
+</script>
+</pre>
+</body>
+</html>

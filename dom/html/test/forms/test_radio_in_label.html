@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=229925
+-->
+<head>
+  <title>Test for Bug 229925</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=229925">Mozilla Bug 229925</a>
+<p id="display"></p>
+<form>
+  <label>
+    <span id="s1">LABEL</span>
+    <input type="radio" name="rdo" value="1" id="r1" onmousedown="document.body.appendChild(document.createTextNode('down'));">
+    <input type="radio" name="rdo" value="2" id="r2" checked="checked">
+  </label>
+</form>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 229925 **/
+SimpleTest.waitForExplicitFinish();
+var r1 = document.getElementById("r1");
+var r2 = document.getElementById("r2");
+var s1 = document.getElementById("s1");
+SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
+function startTest() {
+  r1.click();
+  ok(r1.checked,
+     "The first radio input element should be checked by clicking the element");
+  r2.click();
+  ok(r2.checked,
+     "The second radio input element should be checked by clicking the element");
+  s1.click();
+  ok(r1.checked,
+     "The first radio input element should be checked by clicking other element");
+
+  r1.focus();
+  synthesizeKey("KEY_ArrowLeft");
+  ok(r2.checked,
+     "The second radio input element should be checked by key");
+  synthesizeKey("KEY_ArrowLeft");
+  ok(r1.checked,
+     "The first radio input element should be checked by key");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

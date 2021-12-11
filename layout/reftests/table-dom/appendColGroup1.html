@@ -1,0 +1,33 @@
+<HEAD>
+<SCRIPT src=tableDom.js>
+</SCRIPT>
+<SCRIPT>
+
+function doIt() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var cg = document.createElement("COLGROUP", null);
+  cg.width=200
+  var col = document.createElement("COL", null);
+  cg.appendChild(col);
+  col = document.createElement("COL", null);
+  cg.appendChild(col);
+  table.appendChild(cg);
+}
+</SCRIPT>  
+</HEAD>
+<BODY onload="doIt()">
+<table bgcolor=orange border>
+ <colgroup>
+  <col width=100>
+ </colgroup>
+ <tr>
+  <td>col-100</td><td>cg-200</td><td>cg-200</td>
+ </tr>
+</table>
+</BODY></HTML>
+
+
+
+
+
+

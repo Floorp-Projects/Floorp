@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=475636
+Test that refresh to data: URIs don't inherit the principal
+-->
+<head>
+  <title>Test for Bug 475636</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="gen.next()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=475636">Mozilla Bug 475636</a>
+
+<div id="content" style="display: none">
+  
+</div>
+<iframe id=loader></iframe>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var gen = runTests();
+
+window.private = 42;
+
+window.addEventListener("message", function(e) {
+  gen.next(e.data);
+});
+
+var url = "file_bug475636.sjs?";
+
+function* runTests() {
+  var loader = document.getElementById("loader");
+  for (var testNum = 1; ; ++testNum) {
+    loader.src = url + testNum;
+    let res = (yield);
+    if (res == "done") {
+      SimpleTest.finish();
+      return;
+    }
+    is(res, "pass");
+  }
+}
+
+
+</script>
+</pre>
+</body>
+</html>

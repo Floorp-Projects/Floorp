@@ -1,0 +1,37 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("controlCenter/**"):
+    BUG_COMPONENT = ("Firefox", "Site Identity")
+
+with Files("devtools/**"):
+    BUG_COMPONENT = ("DevTools", "General")
+
+with Files("permissionPrompts/**"):
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
+
+with Files("preferences/**"):
+    BUG_COMPONENT = ("Firefox", "Preferences")
+
+BROWSER_CHROME_MANIFESTS += [
+    # Each test is in it's own directory so it gets run in a clean profile with
+    # run-by-dir.
+    "controlCenter/browser.ini",
+    "devtools/browser.ini",
+    "permissionPrompts/browser.ini",
+    "preferences/browser.ini",
+    "primaryUI/browser.ini",
+    "tests/browser/browser.ini",
+]
+
+TEST_DIRS += [
+    "mozscreenshots/extension",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]

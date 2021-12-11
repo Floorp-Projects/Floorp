@@ -1,0 +1,73 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Graphics: WebGPU")
+
+MOCHITEST_MANIFESTS += [
+    "mochitest/mochitest-no-pref.ini",
+    "mochitest/mochitest.ini",
+]
+
+DIRS += []
+
+h_and_cpp = [
+    "Adapter",
+    "AdapterFeatures",
+    "BindGroup",
+    "BindGroupLayout",
+    "Buffer",
+    "CanvasContext",
+    "CommandBuffer",
+    "CommandEncoder",
+    "CompilationInfo",
+    "CompilationMessage",
+    "ComputePassEncoder",
+    "ComputePipeline",
+    "Device",
+    "DeviceLostInfo",
+    "Instance",
+    "ObjectModel",
+    "OutOfMemoryError",
+    "PipelineLayout",
+    "QuerySet",
+    "Queue",
+    "RenderBundle",
+    "RenderBundleEncoder",
+    "RenderPassEncoder",
+    "RenderPipeline",
+    "Sampler",
+    "ShaderModule",
+    "SupportedLimits",
+    "Texture",
+    "TextureView",
+    "ValidationError",
+]
+EXPORTS.mozilla.webgpu += [x + ".h" for x in h_and_cpp]
+UNIFIED_SOURCES += [x + ".cpp" for x in h_and_cpp]
+
+IPDL_SOURCES += [
+    "ipc/PWebGPU.ipdl",
+]
+
+EXPORTS.mozilla.webgpu += [
+    "ipc/WebGPUChild.h",
+    "ipc/WebGPUParent.h",
+    "ipc/WebGPUSerialize.h",
+    "ipc/WebGPUTypes.h",
+]
+
+UNIFIED_SOURCES += [
+    "ipc/WebGPUChild.cpp",
+    "ipc/WebGPUParent.cpp",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
+    CXXFLAGS += ["-Werror=implicit-int-conversion"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"

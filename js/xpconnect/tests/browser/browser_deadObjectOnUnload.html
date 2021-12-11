@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test page for https://bugzilla.mozilla.org/show_bug.cgi?id=1242643
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test page for Bug 1242643</title>
+</head>
+<body onUnload="onUnload();">
+<p><span id="samplepage">sample page</span></p>
+<script type="application/javascript">
+  function onUnload() {
+    console.log('in unload');
+  }
+</script>
+</body>
+</html>

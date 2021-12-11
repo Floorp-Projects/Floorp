@@ -1,0 +1,11 @@
+. "$topsrcdir/browser/config/mozconfigs/win64/debug"
+
+# Disable telemetry. All network activity is undesirable in fuzzing.
+ac_add_options MOZ_TELEMETRY_REPORTING=
+
+ac_add_options --enable-fuzzing
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=fuzzing
+
+. "$topsrcdir/build/mozconfig.common.override"

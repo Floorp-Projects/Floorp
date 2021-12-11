@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage chrome tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/chrome-harness.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_chrome_helper.html"
+        name="contentDomain"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var finished = false;
+function finish()
+{
+  if (!finished)
+  {
+    finished = true;
+    SimpleTest.finish();
+  }
+}
+
+/** Receives MessageEvents to this window. */
+function messageReceiver(evt)
+{
+  ok(evt instanceof MessageEvent, "umm, how did we get this?");
+  is(evt.type, "message", "expected events of type 'message'");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+
+  switch (evt.data)
+  {
+    case "path-is-set":
+      chromePathIsSet(evt);
+      break;
+      
+    case "post-to-self":
+      checkSelf(evt);
+      break;
+      
+    case "post-to-content-response":
+      receiveContent(evt);
+      break;
+
+    default:
+      ok(false, "unexpected message: " + evt.data);
+      finish();
+      break;
+  }
+}
+
+
+/******************
+ * SELF-RESPONDER *
+ ******************/
+
+function checkSelf(evt)
+{
+  var prepath = getChromePrePath(window.location.href);
+
+  is(evt.isTrusted, true, "should have sent a trusted event");
+  is(evt.origin, prepath, "wrong origin for chrome: URL");
+  is(evt.source, null, "chrome posters get a null source, for security");
+
+  window.frames.contentDomain.postMessage(prepath, "*");
+}
+
+
+function chromePathIsSet(evt)
+{
+  window.frames.contentDomain.postMessage("post-to-content",
+                                          "http://example.org");
+}
+
+/*************
+ * RECEIVERS *
+ *************/
+
+function receiveContent(evt)
+{
+  is(evt.isTrusted, true, "should have sent a trusted event");
+  finish();
+}
+
+
+/**************
+ * TEST SETUP *
+ **************/
+
+function run()
+{
+  window.addEventListener("message", messageReceiver);
+  window.postMessage("post-to-self", "*");
+}
+
+window.addEventListener("load", run);
+</script>
+</pre>
+</body>
+</html>

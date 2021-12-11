@@ -1,0 +1,45 @@
+---
+file-perm:
+    description: File permission check
+    include:
+        - .
+    extensions:
+        - .c
+        - .cc
+        - .cpp
+        - .flac
+        - .h
+        - .html
+        - .jsm
+        - .jsx
+        - .m
+        - .m4s
+        - .mm
+        - .mp4
+        - .png
+        - .rs
+        - .svg
+        - .ttf
+        - .wasm
+        - .xhtml
+        - .xml
+        - .xul
+        - .yml
+    support-files:
+        - 'tools/lint/file-perm/**'
+    type: external
+    payload: file-perm:lint
+
+maybe-shebang-file-perm:
+    description: "File permission check for files that might have `#!` header."
+    include:
+        - .
+    allow-shebang: true
+    extensions:
+        - .js
+        - .py
+        - .sh
+    support-files:
+        - 'tools/lint/file-perm/**'
+    type: external
+    payload: file-perm:lint

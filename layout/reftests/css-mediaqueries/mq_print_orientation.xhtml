@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-paged">
+<head>
+  <title>Media Query - Print mode test - orientation</title>
+  <style type="text/css"><![CDATA[
+    p {height: 10px; width: 100px; color: yellow; }
+    @media print { .a { color: aqua; } }
+    @media screen { .b { color: aqua; } }
+
+    /* Print reftests are 5/3, which is landscape. */
+    @media (orientation: landscape) { .c { color: aqua; } }    /* y */
+    @media print and (orientation: landscape) { .d {color: aqua; } }  /* y */
+    @media all and (orientation: landscape) { .e { color: aqua; } } /* y */
+
+
+    /* negative cases */
+    @media all and (orientation: portrait) { .f { color: aqua; } } /* n */
+
+    @media (orientation: portrait) { .g { color: aqua; } } /* n */
+    @media print and (orientation: portrait) { .h { color: aqua; } }  /* n */
+
+    @media screen and (orientation: landscape) { .i {color: aqua; } }   /* n */
+    @media screen and (orientation: portrait) { .j {color: aqua; } } /* n */
+
+  ]]></style>
+</head>
+
+<body>
+  <p class="a">a</p>
+  <p class="b">b</p>
+  <p class="c">c</p>
+  <p class="d">d</p>
+  <p class="e">e</p>
+  <p class="f">f</p>
+  <p class="g">g</p>
+  <p class="h">h</p>
+  <p class="i">i</p>
+  <p class="j">j</p>
+</body>
+</html>

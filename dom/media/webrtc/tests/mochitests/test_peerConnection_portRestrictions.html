@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1677046",
+    title: "RTCPeerConnection check restricted ports"
+  });
+
+var makePC = (config, expected_error) => {
+  var exception;
+  try {
+    new RTCPeerConnection(config).close();
+  } catch (e) {
+    exception = e;
+  }
+  is((exception? exception.name : "success"), expected_error || "success",
+     "RTCPeerConnection(" + JSON.stringify(config) + ")");
+};
+
+// This is a test of the iceServers parsing code + readable errors
+runNetworkTest(() => {
+  var exception = null;
+
+  // check various ports on the blocklist
+  makePC({ iceServers: [
+    { urls:"turn:[::1]:6666", username:"p", credential:"p" }] }, "NS_ERROR_UNEXPECTED");
+  makePC({ iceServers: [
+    { urls:"turns:localhost:6667?transport=udp", username:"p", credential:"p" }] },
+    "NS_ERROR_UNEXPECTED");
+  makePC({ iceServers: [
+    { urls:"stun:localhost:21", foo:"" }] }, "NS_ERROR_UNEXPECTED");
+  makePC({ iceServers: [
+    { urls:"stun:[::1]:22", foo:"" }] }, "NS_ERROR_UNEXPECTED");
+  makePC({ iceServers: [
+    { urls:"turn:localhost:5060", username:"p", credential:"p" }] },
+    "NS_ERROR_UNEXPECTED");
+
+  // check various ports on the good list for webrtc (or default port)
+  makePC({ iceServers: [
+    { urls:"turn:[::1]:53", username:"p", credential:"p" },
+    { urls:"turn:[::1]:5349", username:"p", credential:"p" },
+    { urls:"turn:[::1]:3478", username:"p", credential:"p" },
+    { urls:"turn:[::1]", username:"p", credential:"p" },
+    { urls:"turn:localhost:53?transport=udp", username:"p", credential:"p" },
+    { urls:"turn:localhost:3478?transport=udp", username:"p", credential:"p" },
+    { urls:"turn:localhost:53?transport=tcp", username:"p", credential:"p" },
+    { urls:"turn:localhost:3478?transport=tcp", username:"p", credential:"p" },
+    { urls:"turns:localhost:3478?transport=udp", username:"p", credential:"p" },
+    { urls:"stun:localhost", foo:"" }
+  ]});
+
+  // not in the known good ports and not on the generic block list
+  makePC({ iceServers: [{ urls:"turn:localhost:6664", username:"p", credential:"p" }] });
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Test add_task.skip() function"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript">
+    <![CDATA[
+
+      // Check that we can skip arbitrary tasks by calling `skip()`.
+
+      add_task(async function skipMeNot1() {
+        ok(true, "Well well well.");
+      });
+
+      add_task(async function skipMe1() {
+        ok(false, "Not skipped after all.");
+      }).skip();
+
+      add_task(async function skipMeNot2() {
+        ok(true, "Well well well.");
+      });
+
+      add_task(async function skipMeNot3() {
+        ok(true, "Well well well.");
+      });
+
+      add_task(async function skipMe2() {
+        ok(false, "Not skipped after all.");
+      }).skip();
+
+    ]]>
+  </script>
+  <body xmlns="http://www.w3.org/1999/xhtml" >
+  </body>
+</window>

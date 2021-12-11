@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=482659
+-->
+<head>
+  <title>Test for Bug 482659</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=482659">Mozilla Bug 482659</a>
+<p id="display">
+  <iframe></iframe>
+  <iframe src="about:blank"></iframe>
+  <iframe></iframe>
+  <iframe src="about:blank"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 482659 **/
+SimpleTest.waitForExplicitFinish()
+
+function testFrame(num) {
+  is(window.frames[num].document.baseURI, document.baseURI,
+     "Unexpected base URI in frame " + num);
+  is(window.frames[num].document.documentURI, "about:blank",
+     "Unexpected document URI in frame " + num);
+}
+
+function appendScript(doc) {
+  var s = doc.createElement("script");
+  s.textContent = "document.write('executed'); document.close()";
+  doc.body.appendChild(s);
+}
+
+function verifyScriptRan(num) {
+  is(window.frames[num].document.documentElement.textContent, "executed",
+     "write didn't happen in frame " + num);
+}
+
+addLoadEvent(function() {
+/* document.write part of test disabled due to bug 483818
+  appendScript(window.frames[2].document);
+  appendScript(window.frames[3].document);
+
+  verifyScriptRan(2);
+  verifyScriptRan(3);
+*/
+  for (var i = 0; i < 4; ++i) {
+    testFrame(i);
+  }
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

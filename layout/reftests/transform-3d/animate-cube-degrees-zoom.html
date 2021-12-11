@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html reftest-zoom="1.5">
+<title>Reftest, bug 1156456</title>
+<style>
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: white;
+  perspective: 1000px;
+}
+
+div, div::before, div::after {
+  width: 200px; height: 200px;
+}
+
+@keyframes HoldTransform {
+  from, to {
+    transform: rotateY(-120deg) rotateX(60deg);
+  }
+}
+
+div {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  margin: auto;
+  transform-origin: 50% 50% 100px;
+  background: #006;
+  transform-style: preserve-3d;
+  animation: 10s HoldTransform infinite;
+}
+
+div::before, div::after {
+  position: absolute;
+  top: 0; left: 0;
+  content: "";
+}
+
+div::before {
+  background: #00f;
+  transform: translate3D(100px, 0, 100px) rotateY(90deg);
+}
+
+div::after {
+  background: #00c;
+  transform: translate3D(0, -100px, 100px) rotateX(90deg);
+}
+
+</style>
+<div></div>

@@ -1,0 +1,70 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+MODULE = nss
+ifndef NSS_DISABLE_DBM
+DIRS = legacydb
+endif
+
+LIBRARY_NAME = softokn
+LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" -DSOFTOKEN_LIB_NAME=\"$(notdir $(SHARED_LIBRARY))\" -DSHLIB_VERSION=\"$(LIBRARY_VERSION)\"
+
+ifdef SQLITE_INCLUDE_DIR
+INCLUDES += -I$(SQLITE_INCLUDE_DIR)
+endif
+
+EXPORTS = \
+	lowkeyi.h \
+	lowkeyti.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	pkcs11ni.h \
+	softoken.h \
+	softoknt.h \
+	softkver.h \
+	sdb.h \
+	sftkdbt.h \
+	$(NULL)
+
+CSRCS = \
+	fipsaudt.c \
+	fipstest.c \
+	fipstokn.c \
+	kbkdf.c    \
+	lowkey.c   \
+	lowpbe.c   \
+	padbuf.c   \
+	pkcs11.c   \
+	pkcs11c.c  \
+	pkcs11u.c  \
+	sdb.c  \
+	sftkdb.c  \
+	sftkdhverify.c  \
+	sftkhmac.c  \
+	sftkike.c  \
+	sftkmessage.c  \
+	sftkpars.c  \
+	sftkpwd.c  \
+	softkver.c  \
+	tlsprf.c   \
+	jpakesftk.c \
+	$(NULL)
+
+ifndef NSS_DISABLE_DBM
+PRIVATE_EXPORTS += lgglue.h
+CSRCS += lgglue.c
+endif
+
+ifdef SQLITE_UNSAFE_THREADS
+DEFINES += -DSQLITE_UNSAFE_THREADS
+endif
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

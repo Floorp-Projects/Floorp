@@ -1,0 +1,59 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=887836
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for URLSearchParams</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="urlSearchParams_commons.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887836">Mozilla Bug 887836</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="x" id="x"></iframe>
+  <iframe name="y" id="y"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+  /** Test for Bug 887836 **/
+  ok("URLSearchParams" in window, "window.URLSearchParams exists");
+
+  var tests = [
+    testSimpleURLSearchParams,
+    testCopyURLSearchParams,
+    testParserURLSearchParams,
+    testURL,
+    testEncoding,
+    testOrdering,
+    testDelete,
+    testGetNULL,
+    testSet,
+    testIterable,
+    testZeroHandling,
+    testCopyConstructor,
+    testCTORs,
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+
+</script>
+</body>
+</html>

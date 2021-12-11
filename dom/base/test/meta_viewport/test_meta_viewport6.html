@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>meta viewport test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=2000, minimum-scale=0.75">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>width=2000, minimum-scale=0.75</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      is(info.minZoom,     0.75,    "minumum scale is set explicitly");
+      is(info.defaultZoom, 0.75,    "initial scale is bounded by the minimum scale");
+      is(info.maxZoom,     10,      "maximum scale defaults to the absolute maximum");
+      is(info.width,       2000,    "width is set explicitly");
+      is(info.height,      1200,    "height is proportional to displayHeight");
+      is(info.autoSize,    false,   "autoSize is disabled by default");
+      is(info.allowZoom,   true,    "zooming is enabled by default");
+
+      info = getViewportInfo(2000, 1000);
+      is(info.minZoom,     0.75,    "minumum scale is still set explicitly");
+      is(info.defaultZoom, 1,       "initial scale fits the width");
+      is(info.width,       2000,    "width is set explicitly");
+      is(info.height,      1000,    "height is proportional to the new displayHeight");
+    });
+
+    add_task(async function test2() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.5));
+
+      let info = getViewportInfo(800, 480);
+      is(info.minZoom,     1.125,   "minumum scale is converted to device pixel scale");
+      is(info.defaultZoom, 1.125,   "initial scale is bounded by the minimum scale");
+      is(info.maxZoom,     15,      "maximum scale defaults to the absolute maximum");
+      is(info.width,       2000,    "width is still set explicitly");
+      is(info.height,      1200,    "height is still proportional to displayHeight");
+    });
+  </script>
+</body>
+</html>

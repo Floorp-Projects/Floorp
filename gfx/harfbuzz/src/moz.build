@@ -1,0 +1,128 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+FILES_PER_UNIFIED_FILE = 100
+
+EXPORTS.harfbuzz += [
+    'hb-aat-layout.h',
+    'hb-aat.h',
+    'hb-blob.h',
+    'hb-buffer.h',
+    'hb-common.h',
+    'hb-deprecated.h',
+    'hb-draw.h',
+    'hb-face.h',
+    'hb-font.h',
+    'hb-map.h',
+    'hb-ot-color.h',
+    'hb-ot-deprecated.h',
+    'hb-ot-font.h',
+    'hb-ot-layout.h',
+    'hb-ot-math.h',
+    'hb-ot-meta.h',
+    'hb-ot-metrics.h',
+    'hb-ot-name.h',
+    'hb-ot-shape.h',
+    'hb-ot-var.h',
+    'hb-ot.h',
+    'hb-set.h',
+    'hb-shape-plan.h',
+    'hb-shape.h',
+    'hb-style.h',
+    'hb-unicode.h',
+    'hb-version.h',
+    'hb.h',
+]
+
+UNIFIED_SOURCES += [
+    'hb-aat-layout.cc',
+    'hb-aat-map.cc',
+    'hb-blob.cc',
+    'hb-buffer.cc',
+    'hb-common.cc',
+    'hb-draw.cc',
+    'hb-face.cc',
+    'hb-font.cc',
+    'hb-ms-feature-ranges.cc',
+    'hb-number.cc',
+    'hb-ot-cff1-table.cc',
+    'hb-ot-cff2-table.cc',
+    'hb-ot-color.cc',
+    'hb-ot-face.cc',
+    'hb-ot-font.cc',
+    'hb-ot-layout.cc',
+    'hb-ot-map.cc',
+    'hb-ot-math.cc',
+    'hb-ot-meta.cc',
+    'hb-ot-metrics.cc',
+    'hb-ot-name.cc',
+    'hb-ot-shape-complex-arabic.cc',
+    'hb-ot-shape-complex-default.cc',
+    'hb-ot-shape-complex-hangul.cc',
+    'hb-ot-shape-complex-hebrew.cc',
+    'hb-ot-shape-complex-indic-table.cc',
+    'hb-ot-shape-complex-indic.cc',
+    'hb-ot-shape-complex-khmer.cc',
+    'hb-ot-shape-complex-myanmar.cc',
+    'hb-ot-shape-complex-syllabic.cc',
+    'hb-ot-shape-complex-thai.cc',
+    'hb-ot-shape-complex-use.cc',
+    'hb-ot-shape-complex-vowel-constraints.cc',
+    'hb-ot-shape-fallback.cc',
+    'hb-ot-shape-normalize.cc',
+    'hb-ot-shape.cc',
+    'hb-ot-tag.cc',
+    'hb-ot-var.cc',
+    'hb-set.cc',
+    'hb-shape-plan.cc',
+    'hb-shape.cc',
+    'hb-shaper.cc',
+    'hb-static.cc',
+    'hb-style.cc',
+    'hb-subset-cff-common.cc',
+    'hb-subset-cff1.cc',
+    'hb-subset-cff2.cc',
+    'hb-unicode.cc',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    EXPORTS.harfbuzz += [
+        'hb-glib.h',
+    ]
+    UNIFIED_SOURCES += [
+        'hb-glib.cc',
+    ]
+    CXXFLAGS += CONFIG['GLIB_CFLAGS']
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    CXXFLAGS += ['-Wno-unused-variable']
+
+FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['PACKAGE_VERSION'] = '"moz"'
+DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+DEFINES['HAVE_OT'] = 1
+DEFINES['HAVE_ROUND'] = 1
+DEFINES['HB_NO_FALLBACK_SHAPE'] = True
+DEFINES['HB_NO_MT'] = True
+DEFINES['HB_NO_UCD'] = True
+DEFINES['HB_NO_UNICODE_FUNCS'] = True
+# Cancel the effect of the -DDEBUG macro if present,
+# because harfbuzz uses that name for its own purposes
+DEFINES['DEBUG'] = False
+
+# On Android, we want to use harfbuzz's mmap support for file access,
+# so we need to set the appropriate configuration flags as we're not
+# running harfbuzz's own configure script.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DEFINES['HAVE_MMAP'] = 1
+    DEFINES['HAVE_SYS_MMAN_H'] = 1
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['UNICODE'] = True

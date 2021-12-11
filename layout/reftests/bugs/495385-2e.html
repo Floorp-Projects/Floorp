@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Test that reframing content stops suppression around it correctly
+     and that setting text content twice works. Setting text node contents
+     twice may fail if we create a frame, then reframe, and botch the second
+     reframe. -->
+<style>
+body > div { border:1px solid black; margin:1em;
+             font-family:sans-serif; letter-spacing:2px; }
+</style>
+<script>
+function loaded() {
+  document.body.offsetHeight;
+  document.getElementById("d1").style.display = 'inline';
+  document.getElementById("d2").style.display = 'inline';
+  document.getElementById("d3").firstChild.data = "H ";
+  document.getElementById("d3").firstChild.data = "Hello ";
+  document.getElementById("d4").lastChild.data = " K";
+  document.getElementById("d4").lastChild.data = " Kitty";
+}
+</script>
+</head>
+<body onload="loaded()">
+  <div><div id="d1">Hello</div> <span>Kitty</span></div>
+  <div><span>Hello</span> <div id="d2">Kitty</div></div>
+  <div id="d3"> <span>Kitty</span></div>
+  <div id="d4"><span>Hello</span> </div>
+</body>
+</html>

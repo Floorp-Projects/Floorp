@@ -1,0 +1,99 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+MOD_DEPTH	= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+CSRCS =          \
+	unix.c    \
+	unix_errors.c    \
+	uxproces.c \
+	uxrng.c \
+	uxshm.c \
+	uxwrap.c \
+	$(NULL)
+
+ifneq ($(USE_PTHREADS),1)
+CSRCS += uxpoll.c
+endif
+
+ifeq ($(PTHREADS_USER),1)
+CSRCS += pthreads_user.c
+endif
+
+CSRCS += $(PR_MD_CSRCS)
+ASFILES += $(PR_MD_ASFILES)
+
+TARGETS = $(OBJS)
+
+ifeq ($(OS_ARCH),SunOS)
+	ifeq ($(CPU_ARCH),sparc)
+		ifdef USE_64
+			ULTRASPARC_ASFILES = os_SunOS_sparcv9.s
+			ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
+		else
+			LIBRARY_NAME = $(ULTRASPARC_LIBRARY)
+			LIBRARY_VERSION = $(MOD_MAJOR_VERSION)
+			ULTRASPARC_ASFILES = os_SunOS_ultrasparc.s
+			ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
+			TARGETS		+= $(ULTRASPARC_ASOBJS) $(SHARED_LIBRARY)
+			RELEASE_LIBS = $(SHARED_LIBRARY)
+			RELEASE_LIBS_DEST = $(RELEASE_LIB_DIR)/cpu/sparcv8plus
+			lib_subdir = cpu/sparcv8plus
+		endif
+	endif
+endif
+
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+DEFINES	+= -D_NSPR_BUILD_
+
+include $(topsrcdir)/config/rules.mk
+
+export:: $(TARGETS)
+
+ifeq ($(OS_ARCH),SunOS)
+ifeq ($(CPU_ARCH),sparc)
+
+ifdef USE_64
+$(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
+	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v9 $<
+else
+$(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
+	$(LD) -G -z text -z endfiltee -o $@ $(ULTRASPARC_ASOBJS)
+	$(INSTALL) -m 444 $@ $(dist_libdir)/cpu/sparcv8plus
+	$(INSTALL) -m 444 $@ $(dist_bindir)/cpu/sparcv8plus
+#
+# The -f $(ORIGIN)/... linker flag uses the real file, after symbolic links
+# are resolved, as the origin.  If NSDISTMODE is not "copy", libnspr4.so
+# will be installed as a symbolic link in $(dist_libdir), pointing to the
+# real libnspr4.so file in pr/src.  Therefore we need to install an
+# additional copy of libnspr_flt4.so in pr/src/cpu/sparcv8plus.
+#
+ifneq ($(NSDISTMODE),copy)
+	$(INSTALL) -m 444 $@ ../../cpu/sparcv8plus
+endif
+
+ifneq ($(NSDISTMODE),copy)
+clobber realclean clobber_all distclean::
+	rm -rf ../../cpu
+endif
+
+$(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
+	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<
+
+clean::
+	rm -rf $(ULTRASPARC_ASOBJS)
+endif
+
+endif
+endif

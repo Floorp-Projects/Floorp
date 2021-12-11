@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<!-- NodeIterator mutation tests, 2.
+     Originally part of WebKit, Mochi-ified by Zack Weinberg.
+     This file based on node-iterator-00[...].html from
+       http://svn.webkit.org/repository/webkit/trunk/LayoutTests/traversal/
+  -->
+<head>
+ <title>DOM Traversal: NodeIterator: Mutations (2/x)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  function resetContent() {
+    var content = $('content');
+    content.innerHTML = ('<span id="A"><\/span><span id="B"><\/span>'
+			 + '<span id="C"><\/span><span id="D"><\/span>'
+			 + '<span id="E"><\/span><span id="F"><\/span>'
+			 + '<span id="G"><\/span><span id="H"><\/span>'
+			 + '<span id="I"><\/span>');
+    return content;
+  }
+
+  function makeSpan(id) {
+    var e = document.createElement('span');
+    e.id = id;
+    return e;
+  }
+
+  function testNodeFilter(n) {
+    if (n.tagName == 'SPAN')
+      return NodeFilter.FILTER_ACCEPT;
+    return NodeFilter.FILTER_SKIP;
+  }
+
+  function checkseq(it, root, expect) {
+    var checkIt = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
+					      testNodeFilter);
+    var printedPointer = (it.referenceNode == undefined);
+    var string = '';
+    var node;
+    while ((node = checkIt.nextNode()) != null) {
+      if (!printedPointer && it.referenceNode == node) {
+        printedPointer = true;
+	var s = '[' + node.id + '] ';
+          if (it.pointerBeforeReferenceNode)
+            string += "* " + s;
+          else
+            string += s + "* ";
+      } else {
+        string += node.id + " ";
+      }
+    }
+    is(string.slice(0, -1), expect, "sequence check");
+  }
+
+  // first a basic sanity check [node-iterator-001]
+  (function(){
+     var root = resetContent();
+     var it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
+					  testNodeFilter);
+
+     checkseq(it, root, 'A B C D E F G H I');
+     it.nextNode();
+     checkseq(it, root, '[A] * B C D E F G H I');
+     it.previousNode();
+     checkseq(it, root, '* [A] B C D E F G H I');
+     it.previousNode();
+     checkseq(it, root, '* [A] B C D E F G H I');
+  })();
+
+  // Mutations that should not move the iterator [node-iterator-002]
+  (function(){
+     var root = resetContent();
+     var it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
+					  testNodeFilter);
+
+     for (var i = 0; i < 4; i++)
+       it.nextNode();
+     checkseq(it, root, 'A B C [D] * E F G H I');
+
+     root.removeChild($('E'));
+     checkseq(it, root, 'A B C [D] * F G H I');
+
+     var X = makeSpan('X');
+     root.insertBefore(X, $('F'));
+     checkseq(it, root, 'A B C [D] * X F G H I');
+
+     var I = $('I');
+     root.removeChild(I);
+     root.insertBefore(I, X);
+     checkseq(it, root, 'A B C [D] * I X F G H');
+  })();
+
+  // 002 complete
+
+  /* Template
+  (function(){
+     var root = resetContent();
+     var it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
+					  testNodeFilter);
+
+  })();
+  */
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,408 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Async.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>    
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>    
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+</head>
+<body>
+
+<pre id="test">
+<script type="text/javascript">
+try {
+        
+    var increment = function (res) {
+        return res + 1;
+    }
+
+    var throwStuff = function (res) {
+        throw new GenericError(res);
+    }
+
+    var catchStuff = function (res) {
+        return res.message;
+    }
+
+    var returnError = function (res) {
+        return new GenericError(res);
+    }
+
+    var anythingOkCallback = function (msg) {
+        return function (res) {
+            ok(true, msg);
+            return res;
+        }
+    }
+    
+    var testEqCallback = function () {
+        /* 
+            sort of emulate how deferreds work in Twisted 
+            for "convenient" testing
+        */
+        var args = [];
+        for (var i = 0; i < arguments.length; i++) {
+            args.push(arguments[i]);
+        }
+        return function (res) {
+            var nargs = args.slice();
+            nargs.unshift(res);
+            is.apply(this, nargs);
+            return res;
+        }
+    }
+
+    var neverHappen = function (d) {
+        ok(false, "this should never happen");
+    }
+    
+    /*
+        Test normal Deferred operation
+    */
+    var d = new Deferred();
+    d.addCallback(testEqCallback(1, "pre-deferred callback"));
+    d.callback(1);
+    d.addCallback(increment);
+    d.addCallback(testEqCallback(2, "post-deferred callback"));
+    d.addCallback(throwStuff);
+    d.addCallback(neverHappen);
+    d.addErrback(catchStuff);
+    d.addCallback(testEqCallback(2, "throw -> err, catch -> success"));
+    d.addCallback(returnError);
+    d.addCallback(neverHappen);
+    d.addErrback(catchStuff);
+    d.addCallback(testEqCallback(2, "return -> err, catch -> succcess"));
+
+    /*
+        Test Deferred cancellation
+    */
+    var cancelled = function (d) {
+        ok(true, "canceller called!");
+    }
+
+    var cancelledError = function (res) {
+        ok(res instanceof CancelledError, "CancelledError here");
+    }
+
+    d = new Deferred(cancelled);
+    d.addCallback(neverHappen);
+    d.addErrback(cancelledError);
+    d.cancel();
+
+    /*
+        Test succeed / fail
+    */
+
+    d = succeed(1).addCallback(testEqCallback(1, "succeed"));
+
+    // default error
+    d = fail().addCallback(neverHappen);
+    d = d.addErrback(anythingOkCallback("default fail"));
+
+    // default wrapped error
+    d = fail("web taco").addCallback(neverHappen).addErrback(catchStuff);
+    d = d.addCallback(testEqCallback("web taco", "wrapped fail"));
+
+    // default unwrapped error
+    d = fail(new GenericError("ugh")).addCallback(neverHappen).addErrback(catchStuff);
+    d = d.addCallback(testEqCallback("ugh", "unwrapped fail"));
+
+    /*
+        Test deferred dependencies
+    */
+
+    var deferredIncrement = function (res) {
+        var rval = succeed(res);
+        rval.addCallback(increment);
+        return rval;
+    }
+
+    d = succeed(1).addCallback(deferredIncrement);
+    d = d.addCallback(testEqCallback(2, "dependent deferred succeed"));
+
+    var deferredFailure = function (res) {
+        return fail(res);
+    }
+
+    d = succeed("ugh").addCallback(deferredFailure).addErrback(catchStuff);
+    d = d.addCallback(testEqCallback("ugh", "dependent deferred fail"));
+
+    /*
+        Test double-calling, double-failing, etc.
+    */
+    try {
+        succeed(1).callback(2);
+        neverHappen();
+    } catch (e) {
+        ok(e instanceof AlreadyCalledError, "double-call");
+    }
+    try {
+        fail(1).errback(2);
+        neverHappen();
+    } catch (e) {
+        ok(e instanceof AlreadyCalledError, "double-fail");
+    }
+    try {
+        d = succeed(1);
+        d.cancel();
+        d = d.callback(2);
+        ok(true, "swallowed one callback, no canceller");
+        d.callback(3);
+        neverHappen();
+    } catch (e) {
+        ok(e instanceof AlreadyCalledError, "swallow cancel");
+    }
+    try {
+        d = new Deferred(cancelled);
+        d.cancel();
+        d = d.callback(1);
+        neverHappen();
+    } catch (e) {
+        ok(e instanceof AlreadyCalledError, "non-swallowed cancel");
+    }
+    
+    /* Test incorrect Deferred usage */
+
+    d = new Deferred();
+    try {
+        d.callback(new Deferred());
+        neverHappen();
+    } catch (e) {
+        ok (e instanceof Error, "deferred not allowed for callback");
+    }
+    d = new Deferred();
+    try {
+        d.errback(new Deferred());
+        neverHappen();
+    } catch (e) {
+        ok (e instanceof Error, "deferred not allowed for errback");
+    }
+
+    d = new Deferred();
+    (new Deferred()).addCallback(function () { return d; }).callback(1);
+    try {
+        d.addCallback(function () {});
+        neverHappen();
+    } catch (e) {
+        ok (e instanceof Error, "chained deferred not allowed to be re-used");
+    }
+ 
+    /*
+        evalJSONRequest test
+    */
+    var fakeReq = {"responseText":'[1,2,3,4,"asdf",{"a":["b", "c"]}]'};
+    var obj = [1,2,3,4,"asdf",{"a":["b", "c"]}];
+    isDeeply(obj, evalJSONRequest(fakeReq), "evalJSONRequest");
+
+    try {
+        MochiKit.Async.getXMLHttpRequest();
+        ok(true, "getXMLHttpRequest");
+    } catch (e) {
+        ok(false, "no love from getXMLHttpRequest");
+    }
+    
+    var lock = new DeferredLock();
+    var lst = [];
+    var pushNumber = function (x) {
+        return function (res) { lst.push(x); }
+    };
+    lock.acquire().addCallback(pushNumber(1));
+    is( compare(lst, [1]), 0, "lock acquired" );
+    lock.acquire().addCallback(pushNumber(2));
+    is( compare(lst, [1]), 0, "lock waiting for release" );
+    lock.acquire().addCallback(pushNumber(3));
+    is( compare(lst, [1]), 0, "lock waiting for release" );
+    lock.release();
+    is( compare(lst, [1, 2]), 0, "lock passed on" );
+    lock.release();
+    is( compare(lst, [1, 2, 3]), 0, "lock passed on" );
+    lock.release();
+    try {
+        lock.release();
+        ok( false, "over-release didn't raise" );
+    } catch (e) {
+        ok( true, "over-release raised" );
+    }
+    lock.acquire().addCallback(pushNumber(1));
+    is( compare(lst, [1, 2, 3, 1]), 0, "lock acquired" );
+    lock.release();
+    is( compare(lst, [1, 2, 3, 1]), 0, "lock released" );
+
+    var d = new Deferred();
+    lst = [];
+    d.addCallback(operator.add, 2);
+    d.addBoth(operator.add, 4);
+    d.addCallback(bind(lst.push, lst));
+    d.callback(1);
+    is( lst[0], 7, "auto-partial addCallback addBoth" );
+    d.addCallback(function () { throw new Error(); });
+    ebTest = function(a, b) {
+        map(bind(lst.push, lst), arguments);
+    };
+    d.addErrback(ebTest, "foo");
+    is( lst[1], "foo", "auto-partial errback" );
+    is( lst.length, 3, "auto-partial errback" );
+    
+    /* 
+        Test DeferredList 
+    */ 
+     
+    var callList = [new Deferred(), new Deferred(), new Deferred()];
+    callList[0].addCallback(increment); 
+    callList[1].addCallback(increment); 
+    callList[2].addCallback(increment); 
+    var defList = new DeferredList(callList); 
+    ok(defList instanceof Deferred, "DeferredList looks like a Deferred");
+    
+    callList[0].callback(3); 
+    callList[1].callback(5); 
+    callList[2].callback(4); 
+     
+    defList.addCallback(function (lst) { 
+        is( arrayEqual(lst, [[true, 4], [true, 6], [true, 5]]), 1, 
+           "deferredlist result ok" ); 
+    }); 
+    
+    /* 
+        Test fireOnOneCallback 
+    */ 
+    
+    var callList2 = [new Deferred(), new Deferred(), new Deferred()];
+    callList2[0].addCallback(increment); 
+    callList2[1].addCallback(increment); 
+    callList2[2].addCallback(increment); 
+    var defList2 = new DeferredList(callList2, true); 
+    callList2[1].callback(5); 
+    callList2[0].callback(3); 
+    callList2[2].callback(4); 
+     
+    defList2.addCallback(function (lst) { 
+        is( arrayEqual(lst, [1, 6]), 1, "deferredlist fireOnOneCallback ok" ); 
+    }); 
+   
+    /* 
+        Test fireOnOneErrback 
+    */ 
+  
+    var callList3 = [new Deferred(), new Deferred(), new Deferred()];
+    callList3[0].addCallback(increment); 
+    callList3[1].addCallback(throwStuff); 
+    callList3[2].addCallback(increment); 
+    var defList3 = new DeferredList(callList3, false, true); 
+    defList3.callback = neverHappen;
+    callList3[0].callback(3); 
+    callList3[1].callback("foo"); 
+    callList3[2].callback(4); 
+     
+    defList3.addErrback(function (err) { 
+        is( err.message, "foo", "deferredlist fireOnOneErrback ok" ); 
+    }); 
+ 
+    /* 
+        Test consumeErrors 
+    */ 
+ 
+    var callList4 = [new Deferred(), new Deferred(), new Deferred()];
+    callList4[0].addCallback(increment); 
+    callList4[1].addCallback(throwStuff); 
+    callList4[2].addCallback(increment); 
+    var defList4 = new DeferredList(callList4, false, false, true); 
+    defList4.addErrback(neverHappen); 
+    callList4[1].addCallback(function (arg) { 
+        is(arg, null, "deferredlist consumeErrors ok" ); 
+    }); 
+    callList4[0].callback(3); 
+    callList4[1].callback("foo"); 
+    callList4[2].callback(4);
+
+    /*
+        Test gatherResults
+    */
+
+    var callList5 = [new Deferred(), new Deferred(), new Deferred()];
+    callList5[0].addCallback(increment); 
+    callList5[1].addCallback(increment); 
+    callList5[2].addCallback(increment); 
+    var gatherRet = gatherResults(callList5); 
+    callList5[0].callback(3); 
+    callList5[1].callback(5); 
+    callList5[2].callback(4); 
+     
+    gatherRet.addCallback(function (lst) { 
+        is( arrayEqual(lst, [4, 6, 5]), 1, 
+           "gatherResults result ok" ); 
+    }); 
+    
+    /*
+        Test maybeDeferred
+    */
+
+    var maybeDef = maybeDeferred(increment, 4);
+    maybeDef.addCallback(testEqCallback(5, "maybeDeferred sync ok"));
+
+    var maybeDef2 = deferredIncrement(8);
+    maybeDef2.addCallback(testEqCallback(9, "maybeDeferred async ok"));
+
+    ok( true, "synchronous test suite finished!");
+
+    var t = (new Date().getTime());
+    SimpleTest.waitForExplicitFinish();
+    checkCallLater = function (originalTime) {
+        is(originalTime, t, "argument passed in OK");
+        is(arguments.length, 1, "argument count right");
+    };
+    var lock = new DeferredLock();
+    withLock = function (msg) {
+        var cb = partial.apply(null, extend(null, arguments, 1));
+        var d = lock.acquire().addCallback(cb);
+        d.addErrback(ok, false, msg);
+        d.addCallback(function () {
+            ok(true, msg);
+            lock.release();
+        });
+        return d;
+    }
+    withLock("callLater", function () {
+        return callLater(0.05, checkCallLater, t);
+    });
+    withLock("wait", function () {
+        return wait(0.05, t).addCallback(checkCallLater);
+    });
+    withLock("loadJSONDoc", function () {
+        var d = loadJSONDoc("test_MochiKit-Async.json");
+        d.addCallback(function (doc) {
+            is(doc.passed,  true, "loadJSONDoc passed");
+        });
+        d.addErrback(function (doc) {
+            ok(false, "loadJSONDoc failed");
+        });
+        return d;
+    });
+    lock.acquire().addCallback(function () {
+        ok(true, "async suite finished");
+        SimpleTest.finish();
+    });
+            
+    
+} catch (err) {
+    
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+    SimpleTest.finish();
+
+}
+</script>
+</pre>
+</body>
+</html>

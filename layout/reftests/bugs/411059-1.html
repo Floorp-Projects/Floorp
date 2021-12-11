@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+p { float:left; white-space:pre; border:1px solid black; clear:both; }
+.letterspace { letter-spacing:4px; }
+table { clear:both; }
+</style>
+</head>
+<body>
+
+<p>
+	a
+</p>
+
+<div style="width:0">
+  <p>
+	a
+  </p>
+</div>
+
+<!-- there should be no letter-spacing after the tab, because letter-spacing is
+     already incorporated into the calculation of the tab position, but there
+     will be 4px after the a -->
+<p class="letterspace">
+	a
+</p>
+
+<div style="width:0">
+  <p class="letterspace">
+	a
+  </p>
+</div>
+
+<table><tr>
+  <td style="background-color:#808080;"><pre>
+test
+abcdefg	hijklm	nopqr	stuv	wxy	z0	1	
+  </pre></td>
+  <td style="background-color:#c08080;">cell 2</td>
+</tr></table>
+
+</body>
+</html>

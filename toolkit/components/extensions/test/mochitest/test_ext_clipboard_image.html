@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Clipboard permissions tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+/**
+ * This cannot be a xpcshell test, because:
+ * - On Android, copyString of nsIClipboardHelper segfaults because
+ *   widget/android/nsClipboard.cpp calls java::Clipboard::SetText, which is
+ *   unavailable in xpcshell.
+ * - On Windows, the clipboard is unavailable to xpcshell.
+ */
+
+function resetClipboard() {
+  SpecialPowers.clipboardCopyString(
+    "This is the default value of the clipboard in the test.");
+}
+
+async function checkClipboardHasTestImage(imageType) {
+  async function backgroundScript(imageType) {
+    async function verifyImage(img) {
+      // Checks whether the image is a 1x1 red image.
+      browser.test.assertEq(1, img.naturalWidth, "image width should match");
+      browser.test.assertEq(1, img.naturalHeight, "image height should match");
+
+      let canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      let ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0); // Draw without scaling.
+      let [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+      let expectedColor;
+      if (imageType === "png") {
+        expectedColor = [255, 0, 0];
+      } else if (imageType === "jpeg") {
+        expectedColor = [254, 0, 0];
+      }
+      let {os} = await browser.runtime.getPlatformInfo();
+      if (os === "mac") {
+        // Due to https://bugzil.la/1396587, the pasted image differs from the
+        // original/expected image.
+        // Once that bug is fixed, this whole macOS-only branch can be removed.
+        if (imageType === "png") {
+          expectedColor = [255, 38, 0];
+        } else if (imageType === "jpeg") {
+          expectedColor = [255, 38, 0];
+        }
+      }
+      browser.test.assertEq(expectedColor[0], r, "pixel should be red");
+      browser.test.assertEq(expectedColor[1], g, "pixel should not contain green");
+      browser.test.assertEq(expectedColor[2], b, "pixel should not contain blue");
+      browser.test.assertEq(255, a, "pixel should be opaque");
+    }
+
+    let editable = document.body;
+    editable.contentEditable = true;
+    let file;
+    await new Promise(resolve => {
+      document.addEventListener("paste", function(event) {
+        browser.test.assertEq(1, event.clipboardData.types.length, "expected one type");
+        browser.test.assertEq("Files", event.clipboardData.types[0], "expected type");
+        browser.test.assertEq(1, event.clipboardData.files.length, "expected one file");
+
+        // After returning from the paste event, event.clipboardData is cleaned, so we
+        // have to store the file in a separate variable.
+        file = event.clipboardData.files[0];
+        resolve();
+      }, {once: true});
+
+      document.execCommand("paste"); // requires clipboardWrite permission.
+    });
+
+    // When image data is copied, its first frame is decoded and exported to the
+    // clipboard. The pasted result is always an unanimated PNG file, regardless
+    // of the input.
+    browser.test.assertEq("image/png", file.type, "expected file.type");
+
+    // event.files[0] should be an accurate representation of the input image.
+    {
+      let img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error(`Failed to load image ${img.src} of size ${file.size}`));
+        img.src = URL.createObjectURL(file);
+      });
+
+      await verifyImage(img);
+    }
+
+    // This confirms that an image was put on the clipboard.
+    // In contrast, when document.execCommand('copy') + clipboardData.setData
+    // is used, then the 'paste' event will also have the image data (as tested
+    // above), but the contentEditable area will be empty.
+    {
+      let imgs = editable.querySelectorAll("img");
+      browser.test.assertEq(1, imgs.length, "should have pasted one image");
+      await verifyImage(imgs[0]);
+    }
+    browser.test.sendMessage("tested image on clipboard");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})("${imageType}");`,
+    manifest: {
+      permissions: ["clipboardRead"],
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("tested image on clipboard");
+  await extension.unload();
+}
+
+add_task(async function test_without_clipboard_permission() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.assertEq(undefined, browser.clipboard,
+                            "clipboard API requires the clipboardWrite permission.");
+      browser.test.notifyPass();
+    },
+    manifest: {
+      permissions: ["clipboardRead"],
+    },
+  });
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
+});
+
+add_task(async function test_copy_png() {
+  if (AppConstants.platform === "android") {
+    return; // Android does not support images on the clipboard.
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      // A 1x1 red PNG image.
+      let b64data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEX/AAD///9BHTQRAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==";
+      let imageData = Uint8Array.from(atob(b64data), c => c.charCodeAt(0)).buffer;
+      await browser.clipboard.setImageData(imageData, "png");
+      browser.test.sendMessage("Called setImageData with PNG");
+    },
+    manifest: {
+      permissions: ["clipboardWrite"],
+    },
+  });
+
+  resetClipboard();
+
+  await extension.startup();
+  await extension.awaitMessage("Called setImageData with PNG");
+  await extension.unload();
+
+  await checkClipboardHasTestImage("png");
+});
+
+add_task(async function test_copy_jpeg() {
+  if (AppConstants.platform === "android") {
+    return; // Android does not support images on the clipboard.
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      // A 1x1 red JPEG image, created using: convert xc:red red.jpg.
+      // JPEG is lossy, and the red pixel value is actually #FE0000 instead of
+      // #FF0000 (also seen using: convert red.jpg text:-).
+      let b64data = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAABAAEDAREAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACP/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAVAQEBAAAAAAAAAAAAAAAAAAAHCf/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/ADoDFU3/2Q==";
+      let imageData = Uint8Array.from(atob(b64data), c => c.charCodeAt(0)).buffer;
+      await browser.clipboard.setImageData(imageData, "jpeg");
+      browser.test.sendMessage("Called setImageData with JPEG");
+    },
+    manifest: {
+      permissions: ["clipboardWrite"],
+    },
+  });
+
+  resetClipboard();
+
+  await extension.startup();
+  await extension.awaitMessage("Called setImageData with JPEG");
+  await extension.unload();
+
+  await checkClipboardHasTestImage("jpeg");
+});
+
+add_task(async function test_copy_invalid_image() {
+  if (AppConstants.platform === "android") {
+    // Android does not support images on the clipboard.
+    return;
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      // This is a PNG image.
+      let b64data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEX/AAD///9BHTQRAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==";
+      let pngImageData = Uint8Array.from(atob(b64data), c => c.charCodeAt(0)).buffer;
+      await browser.test.assertRejects(
+        browser.clipboard.setImageData(pngImageData, "jpeg"),
+        "Data is not a valid jpeg image",
+        "Image data that is not valid for the given type should be rejected.");
+      browser.test.sendMessage("finished invalid image");
+    },
+    manifest: {
+      permissions: ["clipboardWrite"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("finished invalid image");
+  await extension.unload();
+});
+
+add_task(async function test_copy_invalid_image_type() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      // setImageData expects "png" or "jpeg", but we pass "image/png" here.
+      browser.test.assertThrows(
+        () => { browser.clipboard.setImageData(new ArrayBuffer(0), "image/png"); },
+        "Type error for parameter imageType (Invalid enumeration value \"image/png\") for clipboard.setImageData.",
+        "An invalid type for setImageData should be rejected.");
+      browser.test.sendMessage("finished invalid type");
+    },
+    manifest: {
+      permissions: ["clipboardWrite"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("finished invalid type");
+  await extension.unload();
+});
+
+if (AppConstants.platform === "android") {
+  add_task(async function test_setImageData_unsupported_on_android() {
+    let extension = ExtensionTestUtils.loadExtension({
+      async background() {
+        // Android does not support images on the clipboard,
+        // so it should not try to decode an image but fail immediately.
+        await browser.test.assertRejects(
+          browser.clipboard.setImageData(new ArrayBuffer(0), "png"),
+          "Writing images to the clipboard is not supported on Android",
+          "Should get an error when setImageData is called on Android.");
+        browser.test.sendMessage("finished unsupported setImageData");
+      },
+      manifest: {
+        permissions: ["clipboardWrite"],
+      },
+    });
+
+    await extension.startup();
+    await extension.awaitMessage("finished unsupported setImageData");
+    await extension.unload();
+  });
+}
+
+</script>
+</body>
+</html>

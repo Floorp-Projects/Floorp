@@ -1,0 +1,61 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=299673
+-->
+<head>
+  <title>Test #1 for Bug 299673</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body id="Body">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=299673">Mozilla Bug 299673</a>
+<p id="display">
+
+		<SELECT id="Select1" onchange="log(event); OpenWindow()" onfocus="log(event); " onblur="log(event)">
+			<OPTION selected>option1</OPTION>
+			<OPTION>option2</OPTION>
+			<OPTION>option3</OPTION>
+		</SELECT>
+		 
+		<INPUT id="Text1" type="text" onfocus="log(event)" onblur="log(event)">
+		<INPUT id="Text2" type="text" onfocus="log(event)" onblur="log(event)">
+
+</p>
+<div id="content" style="display: none">
+  
+</div>
+
+<pre id="test">
+
+<script src="bug299673.js"></script>
+
+<script class="testbody" type="text/javascript">
+
+/** Test #1 for Bug 299673 **/
+function doTest(expectedEventLog) {
+  var eventLogForNewWindow = '\
+ :  Test with browser.link.open_newwindow = 2\n\
+: focus top-doc\n\
+SELECT(Select1): focus \n\
+SELECT(Select1): change \n\
+ :  >>> OpenWindow\n\
+: blur top-doc\n\
+: focus popup-doc\n\
+INPUT(popupText1): focus \n\
+ :  <<< OpenWindow\n\
+SELECT(Select1): blur \n\
+INPUT(popupText1): blur \n\
+: blur popup-doc\n\
+: focus top-doc\n\
+'
+
+  setPrefAndDoTest(eventLogForNewWindow,'Body',2);  // 2 = open new window as window
+}
+
+todo(false, "Please write a test for bug 299673 that actually works, see bug 553417");
+
+</script>
+</pre>
+</body>
+</html>

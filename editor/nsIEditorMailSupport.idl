@@ -1,0 +1,36 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+
+webidl Node;
+
+[scriptable, builtinclass, uuid(fdf23301-4a94-11d3-9ce4-9960496c41bc)]
+interface nsIEditorMailSupport : nsISupports
+{
+  /** Insert a string as quoted text
+    * (whose representation is dependant on the editor type),
+    * replacing the selected text (if any),
+    * including, if possible, a "cite" attribute.
+    * @param aQuotedText  The actual text to be quoted
+    * @param aCitation    The "mid" URL of the source message
+    * @param aInsertHTML  Insert as html?  (vs plaintext)
+    * @return             The node which was inserted
+    */
+  [can_run_script]
+  Node insertAsCitedQuotation(in AString aQuotedText,
+                              in AString aCitation,
+                              in boolean aInsertHTML);
+
+  /**
+   * Rewrap the selected part of the document, re-quoting if necessary.
+   * @param aRespectNewlines  Try to maintain newlines in the original?
+   */
+  [can_run_script]
+  void rewrap(in boolean aRespectNewlines);
+};
+

@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+  <title>Text baseline positioning test</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!--
+      The primary font MarkA has a small line height.  The fallback font
+      (used for the character '1') will probably have a maximum ascent
+      greater than the ascent plus half leading of MarkA, but this
+      should not adversly affect the positioning of characters from the
+      primary font.  Currently the maximum ascent of the fallback font
+      has no effect on the position, but if a future implementation
+      considers the fallback font in the position, this test may need to
+      be modified to accommodate.
+    -->
+  <style type="text/css">
+    @font-face {
+      font-family: "MarkA";
+      src: url(../fonts/markA.ttf);
+    }
+    input {
+      font-family: "MarkA", sans-serif;
+      font-size: 32px;
+    }
+  </style>
+</head>
+<body>
+  <input size="2" value="AAAAAAAA1">
+</body>
+</html>

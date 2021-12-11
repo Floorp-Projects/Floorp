@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+Reftest for Bug 1367860
+Case 3: No font-family
+  (fails before patch)
+-->
+
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+  <div lang="ja" style="font-family: InvalidFontName;">
+    These two lines should be exactly the same.
+  </div>
+  <div lang="ja">
+    These two lines should be exactly the same.
+  </div>
+</body>
+</html>

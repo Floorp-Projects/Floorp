@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=424212
+-->
+<head>
+  <title>Test for Bug 424212</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=424212">Mozilla Bug 424212</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 424212 **/
+var fired = false;
+var xhr = new XMLHttpRequest();
+xhr.open("GET", window.location.href + "?" + Math.random());
+xhr.send("");
+xhr.onreadystatechange = function () {
+  fired = true;
+  is(xhr.status, 0, "Unexpected status");
+} 
+xhr.abort();
+is(fired, true, "No onreadystatechange handling?");
+</script>
+</pre>
+</body>
+</html>
+

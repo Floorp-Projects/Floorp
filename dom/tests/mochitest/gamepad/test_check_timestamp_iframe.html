@@ -1,0 +1,71 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Gamepad.timestamp</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+
+let ok = window.parent.ok;
+let is = window.parent.is;
+let SimpleTest = window.parent.SimpleTest;
+let SpecialPowers = window.parent.SpecialPowers;
+
+window.addEventListener("gamepadbuttondown", buttonpresshandler);
+
+var index;
+var timea=0;
+var firstPress = true;
+var testOver = false;
+
+runGamepadTest(checkTimestamp);
+
+async function checkTimestamp(){
+  const index = await GamepadService.addGamepad("test gamepad 1",
+                            GamepadService.standardMapping,
+                            GamepadService.noHand,
+                            4,
+                            2,
+                            0,
+                            0,
+                            0);
+
+  // Press a button to make the gamepad visible
+  // to the page.
+  await GamepadService.newButtonEvent(index, 0, true, true);
+  await GamepadService.newButtonEvent(index, 0, true, true);
+  ok(true, "test");
+}
+
+function cleanup(){
+  SpecialPowers.executeSoon(async function() {
+    await GamepadService.removeGamepad(index);
+    SimpleTest.finish();
+  });
+}
+
+async function buttonpresshandler(e) {
+  if (testOver) {
+    return;
+  }
+  if (timea == 0){
+    timea = e.gamepad.timestamp;
+  } else {
+    ok(timea <= e.gamepad.timestamp, "Timestamp less than last timestamp");
+  }
+  await GamepadService.newButtonEvent(index, 0, false, false);
+  if (!firstPress) {
+    testOver = true;
+    SpecialPowers.executeSoon(cleanup);
+  } else {
+    firstPress = false;
+  }
+}
+
+</script>
+</body>
+</html>

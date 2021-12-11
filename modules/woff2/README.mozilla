@@ -1,0 +1,14 @@
+This is the woff2 library from
+https://github.com/google/woff2.
+
+Upstream code can be viewed at
+  https://github.com/google/woff2/tree/master
+
+and cloned by
+  git clone https://github.com/google/woff2
+
+The in-tree copy is updated by running
+  sh update.sh
+from within the modules/woff2 directory.
+
+Current version: [commit 1bccf208bca986e53a647dfe4811322adb06ecf8].

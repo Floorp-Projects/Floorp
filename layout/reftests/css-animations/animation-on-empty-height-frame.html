@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<style>
+@keyframes anim {
+  from { background-color: white; }
+  to { background-color: red; }
+}
+</style>
+<body>
+</body>
+<script>
+window.addEventListener('load', () => {
+  const body = document.querySelector('body');
+  body.style.animation = 'anim 100s step-end reverse';
+  body.addEventListener('animationstart', () => {
+    // This MozAfterPaint event corresponds to the white background paint.
+    // (The animation will initially paint the background red since it is playing
+    // a step-end animation in reverse.)
+    window.addEventListener('MozAfterPaint', () => {
+      // FIXME: Bug 1341294. We need to wait for one more frame in the case
+      // the MozAfterPaint we received is not the one what we were waiting for.
+      // Note that we can't just wait for one more MozAfterPaint since in the
+      // case where everything works correctly, we won't get another
+      // MozAfterPaint for a long time due to the step-end timing function
+      // applied to the animation.
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('reftest-wait');
+      });
+    }, {once: true});
+  });
+});
+</script>
+</html>

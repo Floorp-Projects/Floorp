@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>All secure anti-regression check</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <link rel="stylesheet" type="text/css"
+    href="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/somestyle.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  // Navigation test goes over an insecure page, test state leak
+  navigateToInsecure = true;
+
+  async function runTest()
+  {
+    await isSecurityState("secure", "insecure <img> load breaks security");
+    finish();
+  }
+
+  async function afterNavigationTest()
+  {
+    await isSecurityState("secure", "security still broken after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg" />
+  <img src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/imgsecredirect.sjs" />
+  <iframe src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/iframesecredirect.sjs" />
+</body>
+</html>

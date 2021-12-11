@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="nsIAccessible::getAccessibleRelated() tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../relations.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      // xul:label@control
+      testRelation("label1", RELATION_LABEL_FOR, "checkbox1");
+      testRelation("checkbox1", RELATION_LABELLED_BY, "label1");
+
+      // xul:label@control, multiple
+      testRelation("label1_1", RELATION_LABEL_FOR, "checkbox1_1");
+      testRelation("label1_2", RELATION_LABEL_FOR, "checkbox1_1");
+      testRelation("checkbox1_1", RELATION_LABELLED_BY,
+                   [ "label1_1", "label1_2" ]);
+
+      // aria-labelledby
+      testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
+      testRelation("checkbox2", RELATION_LABELLED_BY, "label2");
+
+      // aria-labelledby, multiple relations
+      testRelation("label3", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("label4", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("checkbox3", RELATION_LABELLED_BY, ["label3", "label4"]);
+
+      // xul:label@control referring to HTML element
+      testRelation("label_input", RELATION_LABEL_FOR, "input");
+      testRelation("input", RELATION_LABELLED_BY, "label_input");
+
+      // aria-describedby
+      testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox4");
+      testRelation("checkbox4", RELATION_DESCRIBED_BY, "descr1");
+
+      // aria-describedby, multiple relations
+      testRelation("descr2", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("descr3", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("checkbox5", RELATION_DESCRIBED_BY, ["descr2", "descr3"]);
+
+      // xul:description@control
+      testRelation("descr4", RELATION_DESCRIPTION_FOR, "checkbox6");
+      testRelation("checkbox6", RELATION_DESCRIBED_BY, "descr4");
+
+      // xul:description@control, multiple
+      testRelation("descr5", RELATION_DESCRIPTION_FOR, "checkbox7");
+      testRelation("descr6", RELATION_DESCRIPTION_FOR, "checkbox7");
+      testRelation("checkbox7", RELATION_DESCRIBED_BY,
+                   [ "descr5", "descr6" ]);
+
+      // aria_owns, multiple relations
+      testRelation("treeitem1", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
+
+      // 'node child of' relation for outlineitem role
+      testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
+
+      // no relation node_child_of for accessible contained in an unexpected
+      // parent
+      testRelation("treeitem6", RELATION_NODE_CHILD_OF, null);
+
+      // 'node child of' relation for the document having window, returns
+      // direct accessible parent (fixed in bug 419770).
+      var iframeElmObj = {};
+      var iframeAcc = getAccessible("iframe", null, iframeElmObj);
+      var iframeDoc = iframeElmObj.value.contentDocument;
+      var iframeDocAcc = getAccessible(iframeDoc);
+      testRelation(iframeDocAcc, RELATION_NODE_CHILD_OF, iframeAcc);
+
+      // aria-controls
+      getAccessible("tab");
+      todo(false,
+           "Getting an accessible tab, otherwise relations for tabpanel aren't cached. Bug 606924 will fix that.");
+      testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
+      testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
+
+      // aria-controls, multiple relations
+      testRelation("lr1", RELATION_CONTROLLED_BY, "button");
+      testRelation("lr2", RELATION_CONTROLLED_BY, "button");
+      testRelation("button", RELATION_CONTROLLER_FOR, ["lr1", "lr2"]);
+
+      // aria-flowto
+      testRelation("flowto", RELATION_FLOWS_TO, "flowfrom");
+      testRelation("flowfrom", RELATION_FLOWS_FROM, "flowto");
+
+      // aria-flowto, multiple relations
+      testRelation("flowto1", RELATION_FLOWS_TO, ["flowfrom1", "flowfrom2"]);
+      testRelation("flowfrom1", RELATION_FLOWS_FROM, "flowto1");
+      testRelation("flowfrom2", RELATION_FLOWS_FROM, "flowto1");
+
+      // 'labelled by'/'label for' relation for xul:groupbox and xul:label
+      var groupboxAcc = getAccessible("groupbox");
+      var labelAcc = groupboxAcc.firstChild;
+      testRelation(labelAcc, RELATION_LABEL_FOR, groupboxAcc);
+      testRelation(groupboxAcc, RELATION_LABELLED_BY, labelAcc);
+
+      // 'labelled by'/'label for' relations for xul:tab and xul:tabpanel
+      // (fixed in bug 366527)
+      testRelation("tabpanel1", RELATION_LABELLED_BY, "tab1");
+      testRelation("tab1", RELATION_LABEL_FOR, "tabpanel1");
+      testRelation("tabpanel2", RELATION_LABELLED_BY, "tab2");
+      testRelation("tab2", RELATION_LABEL_FOR, "tabpanel2");
+      testRelation("tabpanel3", RELATION_LABELLED_BY, "tab3");
+      testRelation("tab3", RELATION_LABEL_FOR, "tabpanel3");
+
+      // finish test
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <vbox style="overflow: auto;" flex="1">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=475298"
+         title="mochitests for accessible relations">
+        Mozilla Bug 475298
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=673389"
+         title="node_child_of on an item not in a proper container">
+        Mozilla Bug 67389
+      </a><br/>
+
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <label id="label1" control="checkbox1">label</label>
+    <checkbox id="checkbox1"/>
+
+    <label id="label1_1" control="checkbox1_1">label</label>
+    <label id="label1_2" control="checkbox1_1">label</label>
+    <checkbox id="checkbox1_1"/>
+
+    <description id="label2">label</description>
+    <description role="checkbox" id="checkbox2" aria-labelledby="label2"/>
+
+    <description id="label3">label</description>
+    <description id="label4">label</description>
+    <description role="checkbox" id="checkbox3"
+                 aria-labelledby="label3 label4"/>
+
+    <label id="label_input" control="input">label</label>
+    <html:input id="input"/>
+
+    <description id="descr1">description</description>
+    <description role="checkbox" id="checkbox4" aria-describedby="descr1"/>
+
+    <description id="descr2">label</description>
+    <description id="descr3">label</description>
+    <description role="checkbox" id="checkbox5"
+                 aria-describedby="descr2 descr3"/>
+
+    <description id="descr4" control="checkbox6">description</description>
+    <checkbox id="checkbox6"/>
+
+    <description id="descr5" control="checkbox7">description</description>
+    <description id="descr6" control="checkbox7">description</description>
+    <checkbox id="checkbox7"/>
+
+    <description role="treeitem" id="treeitem1">Yellow</description>
+    <description role="treeitem" id="treeitem2">Orange</description>
+    <vbox id="tree" role="tree" aria-owns="treeitem1 treeitem2">
+      <description role="treeitem" id="treeitem3">Blue</description>
+      <description role="treeitem" id="treeitem4" aria-level="1">Green</description>
+      <description role="treeitem" id="treeitem5" aria-level="2">Light green</description>
+    </vbox>
+
+    <description role="treeitem" id="treeitem6">Dark green</description>
+
+    <iframe id="iframe"/>
+
+    <hbox id="tablist" role="tablist">
+      <description id="tab" role="tab" aria-controls="tabpanel">tab</description>
+    </hbox>
+    <description id="tabpanel" role="tabpanel">tabpanel</description>
+
+    <description id="lr1" aria-live="assertive">1</description>
+    <description id="lr2" aria-live="assertive">a</description>
+    <button id="button" aria-controls="lr1 lr2" label="button"
+            oncommand="getNode('lr1').textContent += '1'; getNode('lr2').textContent += 'a';"/>
+
+    <description id="flowto1" aria-flowto="flowfrom1 flowfrom2">flow to</description>
+    <description id="flowfrom1">flow from</description>
+    <description id="flowfrom2">flow from</description>
+
+    <description id="flowto" aria-flowto="flowfrom">flow to</description>
+    <description id="flowfrom">flow from</description>
+
+    <groupbox id="groupbox">
+      <label value="caption"/>
+    </groupbox>
+
+    <tabbox>
+      <tabs>
+        <tab label="tab1" id="tab1"/>
+        <tab label="tab2" id="tab2" linkedpanel="tabpanel2"/>
+        <tab label="tab3" id="tab3" linkedpanel="tabpanel3"/>
+      </tabs>
+      <tabpanels>
+        <tabpanel id="tabpanel1">
+          <description>tabpanel1</description>
+        </tabpanel>
+        <tabpanel id="tabpanel3">
+          <description>tabpanel3</description>
+        </tabpanel>
+        <tabpanel id="tabpanel2">
+          <description>tabpanel2</description>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
+
+ </vbox>
+</window>

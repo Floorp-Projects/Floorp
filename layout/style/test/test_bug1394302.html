@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1394302
+-->
+<head>
+  <title>Test for Bug 1394302</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <style>
+    #inner {
+      animation: setFontSize 0s forwards;
+    }
+    @keyframes setFontSize {
+      to { font-size: calc(110% + 0.1em); }
+    }
+    </style>
+</head>
+<body>
+<div id=outer>
+  <div id=inner></div>
+</div>
+<script>
+var outer = document.getElementById("outer");
+outer.style.fontSize = '10px';
+is(getComputedStyle(inner).fontSize, "12px");
+
+outer.style.fontSize = '20px';
+is(getComputedStyle(inner).fontSize, "24px");
+</script>
+</body>
+</html>

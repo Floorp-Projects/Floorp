@@ -1,0 +1,150 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"] += [
+    "manifest.json",
+    "run.js",
+]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["about-compat"] += [
+    "about-compat/aboutCompat.css",
+    "about-compat/aboutCompat.html",
+    "about-compat/aboutCompat.js",
+    "about-compat/AboutCompat.jsm",
+    "about-compat/aboutPage.js",
+    "about-compat/aboutPage.json",
+    "about-compat/aboutPageProcessScript.js",
+]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["data"] += [
+    "data/injections.js",
+    "data/shims.js",
+    "data/ua_overrides.js",
+]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["experiment-apis"] += [
+    "experiment-apis/aboutConfigPrefs.js",
+    "experiment-apis/aboutConfigPrefs.json",
+    "experiment-apis/appConstants.js",
+    "experiment-apis/appConstants.json",
+    "experiment-apis/matchPatterns.js",
+    "experiment-apis/matchPatterns.json",
+    "experiment-apis/systemManufacturer.js",
+    "experiment-apis/systemManufacturer.json",
+    "experiment-apis/trackingProtection.js",
+    "experiment-apis/trackingProtection.json",
+]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
+    "injections/css/bug0000000-testbed-css-injection.css",
+    "injections/css/bug1561371-mail.google.com-allow-horizontal-scrolling.css",
+    "injections/css/bug1570119-teamcoco.com-scrollbar-width.css",
+    "injections/css/bug1570328-developer-apple.com-transform-scale.css",
+    "injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css",
+    "injections/css/bug1605611-maps.google.com-directions-time.css",
+    "injections/css/bug1610344-directv.com.co-hide-unsupported-message.css",
+    "injections/css/bug1644830-missingmail.usps.com-checkboxes-not-visible.css",
+    "injections/css/bug1651917-teletrader.com.body-transform-origin.css",
+    "injections/css/bug1653075-livescience.com-scrollbar-width.css",
+    "injections/css/bug1654877-preev.com-moz-appearance-fix.css",
+    "injections/css/bug1654907-reactine.ca-hide-unsupported.css",
+    "injections/css/bug1666771-zilow-map-overdraw.css",
+    "injections/css/bug1694470-myvidster.com-content-not-shown.css",
+    "injections/css/bug1704653-tsky.in-clear-float.css",
+    "injections/css/bug1707795-office365-sheets-overscroll-disable.css",
+    "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
+    "injections/css/bug1719870-lcbo.com-table-clearfix.css",
+    "injections/css/bug1727080-nexity.fr-svg-size-fix.css",
+    "injections/css/bug1728140-map-size-fix.css",
+    "injections/css/bug1738313-curriculum.gov.bc.ca-bootstrap-fix.css",
+    "injections/css/bug1738316-vuoriclothing.com-flexbox-fix.css",
+]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
+    "injections/js/bug0000000-testbed-js-injection.js",
+    "injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js",
+    "injections/js/bug1457335-histography.io-ua-change.js",
+    "injections/js/bug1472075-bankofamerica.com-ua-change.js",
+    "injections/js/bug1579159-m.tailieu.vn-pdfjs-worker-disable.js",
+    "injections/js/bug1605611-maps.google.com-directions-time.js",
+    "injections/js/bug1610358-pcloud.com-appVersion-change.js",
+    "injections/js/bug1631811-datastudio.google.com-indexedDB.js",
+    "injections/js/bug1711082-m.aliexpress.com-undisable-search.js",
+    "injections/js/bug1714612-www.rfi.it-outertext.js",
+    "injections/js/bug1722955-frontgate.com-ua-override.js",
+    "injections/js/bug1724764-amextravel.com-window-print.js",
+    "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
+    "injections/js/bug1727100-slack.com-ua-override.js",
+    "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
+]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
+    "shims/addthis-angular.js",
+    "shims/adform.js",
+    "shims/adnexus-prebid.js",
+    "shims/adsafeprotected-ima.js",
+    "shims/apstag.js",
+    "shims/bmauth.js",
+    "shims/chartbeat.js",
+    "shims/criteo.js",
+    "shims/cxense.js",
+    "shims/eluminate.js",
+    "shims/empty-script.js",
+    "shims/empty-shim.txt",
+    "shims/facebook-sdk.js",
+    "shims/facebook.svg",
+    "shims/google-ads.js",
+    "shims/google-analytics-and-tag-manager.js",
+    "shims/google-analytics-ecommerce-plugin.js",
+    "shims/google-analytics-legacy.js",
+    "shims/google-ima.js",
+    "shims/google-page-ad.js",
+    "shims/google-publisher-tags.js",
+    "shims/google-safeframe.html",
+    "shims/hamropatro.js",
+    "shims/iaspet.js",
+    "shims/kinja.js",
+    "shims/live-test-shim.js",
+    "shims/moat.js",
+    "shims/mochitest-shim-1.js",
+    "shims/mochitest-shim-2.js",
+    "shims/mochitest-shim-3.js",
+    "shims/optimizely.js",
+    "shims/play.svg",
+    "shims/rambler-authenticator.js",
+    "shims/rich-relevance.js",
+    "shims/stackblitz.js",
+    "shims/tracking-pixel.png",
+    "shims/vast2.xml",
+    "shims/vast3.xml",
+    "shims/vidible.js",
+    "shims/vmad.xml",
+]
+
+FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["lib"] += [
+    "lib/about_compat_broker.js",
+    "lib/custom_functions.js",
+    "lib/injections.js",
+    "lib/intervention_helpers.js",
+    "lib/messaging_helper.js",
+    "lib/module_shim.js",
+    "lib/shim_messaging_helper.js",
+    "lib/shims.js",
+    "lib/ua_helpers.js",
+    "lib/ua_overrides.js",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Web Compatibility", "Tooling & Investigations")

@@ -1,0 +1,21 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0">
+  <desc>
+    Filtering the patterned 'rect' should not cause the pattern (lime
+    'circle') to be clipped or misplaced due to bad interaction with
+    the transforms.
+  </desc>
+  <defs>
+    <pattern id="pattern" patternUnits="userSpaceOnUse"
+             x="0" y="0" width="200" height="200">
+      <circle fill="lime" r="100" cx="100" cy="100"/>
+    </pattern>
+    <filter id="filter"><feGaussianBlur stdDeviation="0.001"/></filter>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <circle fill="red" r="98" cx="200" cy="100"/>
+  <rect width="200" height="200" fill="url(#pattern)" filter="url(#filter)" transform="translate(100, 0)"/>
+</svg>

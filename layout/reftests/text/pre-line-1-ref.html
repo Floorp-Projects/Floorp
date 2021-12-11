@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+span { background:yellow; }
+.float { float:left; background:orange; }
+.outer { overflow:auto; margin:1em; }
+</style>
+</head>
+<body>
+
+<div class="outer">My name is<br><br>Fred.</div>
+<div class="outer"><span>My name is<br><br>Fred.</span></div>
+
+<div class="outer"><div class="float">My name is<br><br>Fred.</div></div>
+<div class="outer"><div class="float"><span class="preline">My name is<br><br>Fred.</span></div></div>
+
+<div class="outer"><div style="width:0;"><div class="float">My name is<br><br>Fred.</div></div></div>
+<div class="outer"><div style="width:0;"><div class="float"><span>My name is<br><br>Fred.</span></div></div></div>
+
+</body>
+</html>

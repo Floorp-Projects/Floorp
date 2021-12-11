@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body onload="loaded()">
+<script>
+  function loaded() {
+    var t = document.querySelector('textarea');
+    t.selectionStart = t.selectionEnd = t.value.length;
+    t.focus();
+  }
+</script>
+<textarea>foo</textarea>
+</body>
+</html>

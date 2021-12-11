@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="91332.xsl" ?>
+<root>
+  <category name="Rectangles">
+    <list item="square" />
+  </category>
+  <quad id="square">
+    <desc>A square is ...</desc>
+  </quad>
+</root>

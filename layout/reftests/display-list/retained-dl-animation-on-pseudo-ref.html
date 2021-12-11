@@ -1,0 +1,28 @@
+<html>
+<head>
+<style>
+body {
+  margin: 0px;
+}
+#child {
+  width:100px;
+  height:100px;
+  background-color: green;
+  display: inline-block;
+}
+
+#parent::before {
+  content: '';
+  width: 100px;
+  height: 100px;
+  display: inline-block;
+  background-color: blue;
+}
+</style>
+</head>
+<body>
+  <div id="parent">
+    <div id="child"></div>
+  </div>
+</body>
+</html>

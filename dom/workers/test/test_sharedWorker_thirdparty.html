@@ -1,0 +1,54 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SharedWorker in 3rd Party Iframes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"> </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+  <script class="testbody">
+
+  function testThirdPartyFrame(name) {
+    return new Promise(resolve => {
+      // Let's use a window, loading the same origin, in order to have the new
+      // cookie-policy applied.
+      let w = window.open("sharedWorker_thirdparty_window.html?name=" + name);
+      window.addEventListener('message', function messageListener(evt) {
+        if (evt.data.name !== name) {
+          return;
+        }
+        w.close();
+        window.removeEventListener('message', messageListener);
+        resolve(evt.data.result);
+      });
+    });
+  }
+
+  const COOKIE_BEHAVIOR_ACCEPT        = 0;
+  const COOKIE_BEHAVIOR_REJECTFOREIGN = 1;
+
+  add_task(async function allowed() {
+    await SpecialPowers.pushPrefEnv({ set: [
+      ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT]
+    ]});
+    let result = await testThirdPartyFrame('allowed');
+    ok(result === 'allowed',
+       'SharedWorker should be allowed when 3rd party iframes can access storage');
+  });
+
+  add_task(async function blocked() {
+    await SpecialPowers.pushPrefEnv({ set: [
+      ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECTFOREIGN]
+    ]});
+    let result = await testThirdPartyFrame('blocked');
+    ok(result === 'blocked',
+       'SharedWorker should not be allowed when 3rd party iframes are denied storage');
+  });
+
+  </script>
+</body>
+</html>

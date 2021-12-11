@@ -1,0 +1,23 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+audio, video {
+  width: 140px;
+  height: 100px;
+  background-color: black;
+}
+
+/**
+ * Create a mask for the video direction tests which covers up the throbber.
+ */
+#mask {
+  position: absolute;
+  z-index: 3;
+  width: 140px;
+  height: 72px;
+  background-color: green;
+  top: 0;
+  right: 0;
+}

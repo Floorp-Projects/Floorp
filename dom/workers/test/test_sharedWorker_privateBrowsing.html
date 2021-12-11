@@ -1,0 +1,90 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SharedWorker - Private Browsing</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+
+<script type="application/javascript">
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+var mainWindow;
+
+var contentPage = "http://mochi.test:8888/chrome/dom/workers/test/empty.html";
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  win.addEventListener("load", function() {
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      if (win.content.location.href != contentPage) {
+        BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+        return;
+      }
+
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }, true);
+  }, {capture: true, once: true});
+}
+
+function setupWindow() {
+  mainWindow = window.browsingContext.topChromeWindow;
+  runTest();
+}
+
+var wN;
+var wP;
+
+function doTests() {
+  testOnWindow(false, function(aWin) {
+    wN = aWin;
+
+    testOnWindow(true, function(win) {
+      wP = win;
+
+      var sharedWorker1 = new wP.content.SharedWorker('sharedWorker_privateBrowsing.js');
+      sharedWorker1.port.onmessage = function(event) {
+        is(event.data, 1, "Only 1 sharedworker expected in the private window");
+
+        var sharedWorker2 = new wN.content.SharedWorker('sharedWorker_privateBrowsing.js');
+        sharedWorker2.port.onmessage = function(event1) {
+          is(event1.data, 1, "Only 1 sharedworker expected in the normal window");
+
+          var sharedWorker3 = new wP.content.SharedWorker('sharedWorker_privateBrowsing.js');
+          sharedWorker3.port.onmessage = function(event2) {
+            is(event2.data, 2, "Only 2 sharedworker expected in the private window");
+            runTest();
+          }
+        }
+      }
+    });
+  });
+}
+
+var steps = [
+  setupWindow,
+  doTests
+];
+
+function runTest() {
+  if (!steps.length) {
+    wN.close();
+    wP.close();
+
+    SimpleTest.finish();
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["browser.startup.page", 0],
+  ["browser.startup.homepage_override.mstone", "ignore"],
+]}, runTest);
+
+</script>
+</body>
+</html>

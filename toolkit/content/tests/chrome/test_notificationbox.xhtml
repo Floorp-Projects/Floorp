@@ -1,0 +1,646 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for notificationbox
+  -->
+<window title="Notification Box" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+
+  <vbox id="nb"/>
+  <menupopup id="menupopup" onpopupshown="this.hidePopup()" onpopuphidden="checkPopupClosed()">
+    <menuitem label="One"/>
+  </menupopup>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const NOTIFICATION_LOCAL_NAME = "notification-message"
+SimpleTest.waitForExplicitFinish();
+
+var testtag_notificationbox_buttons = [
+  {
+    label: "Button 1",
+    accesskey: "u",
+    callback: testtag_notificationbox_buttonpressed,
+    popup: "menupopup"
+  }
+];
+
+var testtag_notificationbox_buttons_nopopup = [
+  {
+    label: "Button 1 No Popup",
+    accesskey: "u",
+    callback: testtag_notificationbox_button1pressed,
+  },
+  {
+    label: "Button 2 No Popup",
+    accesskey: "u",
+    callback: testtag_notificationbox_button2pressed,
+  }
+];
+
+var testtag_notificationbox_links = [
+  {
+    label: "Link 1",
+    callback: testtag_notificationbox_buttonpressed,
+    link: "about:mozilla"
+  },
+  {
+    label: "Button 2",
+    accesskey: "u",
+    callback: testtag_notificationbox_buttonpressed,
+  }
+];
+
+var testtag_notificationbox_supportpage = [
+  {
+    supportPage: "test1",
+  },
+  {
+    label: "This is an existing label",
+    supportPage: "test2",
+  }
+];
+
+function testtag_notificationbox_buttonpressed(notification, button)
+{
+  SimpleTest.is(button.localName, "button");
+  return false;
+}
+
+let buttonsPressedLog = "";
+function testtag_notificationbox_button1pressed(notification, button) { buttonsPressedLog += "button1"; return true; }
+function testtag_notificationbox_button2pressed(notification, button) { buttonsPressedLog += "button2"; return true; }
+
+function testtag_notificationbox(nb)
+{
+  testtag_notificationbox_State(nb, "initial", null, 0);
+
+  SimpleTest.is(nb.removeAllNotifications(false), undefined, "initial removeAllNotifications");
+  testtag_notificationbox_State(nb, "initial removeAllNotifications", null, 0);
+  SimpleTest.is(nb.removeAllNotifications(true), undefined, "initial removeAllNotifications immediate");
+  testtag_notificationbox_State(nb, "initial removeAllNotifications immediate", null, 0);
+
+  runTimedTests(tests, -1, nb, null);
+}
+
+var notification_last_events = [];
+function notification_eventCallback(event)
+{
+  notification_last_events.push({ actualEvent: event , item: this });
+}
+
+/**
+ * For any notifications that have the notification_eventCallback on
+ * them, we will have recorded instances of those callbacks firing
+ * and stored them. This checks to see that the expected event types
+ * are being fired in order, and targeting the right item.
+ *
+ * @param {Array<string>} expectedEvents
+ *        The list of event types, in order, that we expect to have been
+ *        fired on the item.
+ * @param {<xul:notification>} ntf
+ *        The notification we expect the callback to have been fired from.
+ * @param {string} testName
+ *        The name of the current test, for logging.
+ */
+function testtag_notification_eventCallback(expectedEvents, ntf, testName)
+{
+  for (let i = 0; i < expectedEvents; ++i) {
+    let expected = expectedEvents[i];
+    let { actualEvent, item } = notification_last_events[i];
+    SimpleTest.is(actualEvent, expected, testName + ": event name");
+    SimpleTest.is(item, ntf, testName + ": event item");
+  }
+  notification_last_events = [];
+}
+
+var tests =
+[
+  {
+    test(nb, ntf) {
+      // append a new notification
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+        }, testtag_notificationbox_buttons);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append", ntf, 1);
+      testtag_notification_State(nb, ntf, "append", "Notification", "note",
+                                 "happy.png", nb.PRIORITY_INFO_LOW);
+
+      // check the getNotificationWithValue method
+      var ntf_found = nb.getNotificationWithValue("note");
+      SimpleTest.is(ntf, ntf_found, "getNotificationWithValue note");
+
+      var none_found = nb.getNotificationWithValue("notenone");
+      SimpleTest.is(none_found, null, "getNotificationWithValue null");
+      return ntf;
+    }
+  },
+  {
+    test(nb, ntf) {
+      // check that notifications can be removed properly
+      nb.removeNotification(ntf);
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "removeNotification", null, 0);
+    }
+  },
+  {
+    test(nb, ntf) {
+      // append a new notification, but now with an event callback
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+          eventCallback: notification_eventCallback,
+        }, testtag_notificationbox_buttons);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification with callback");
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append with callback", ntf, 1);
+      return ntf;
+    }
+  },
+  {
+    test(nb, ntf) {
+      nb.removeNotification(ntf);
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "removeNotification with callback",
+                                    null, 0);
+
+      testtag_notification_eventCallback(["removed"], ntf, "removeNotification()");
+      return ntf;
+    }
+  },
+  {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_MEDIUM,
+          eventCallback: notification_eventCallback,
+        }, testtag_notificationbox_buttons);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification with object");
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append with callback", ntf, 1);
+      testtag_notificationbox_State(nb, "append using object", ntf, 1);
+      testtag_notification_State(nb, ntf, "append object", "Notification", "note",
+                                 "happy.png", nb.PRIORITY_INFO_MEDIUM);
+      return ntf;
+    }
+  },
+  {
+    test(rb, ntf) {
+      // Dismissing the notification instead of removing it should
+      // fire a dismissed "event" on the callback, followed by
+      // a removed "event".
+      ntf.dismiss();
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "called dismiss()", null, 0);
+      testtag_notification_eventCallback(["dismissed", "removed"], ntf,
+                                         "dismiss()");
+      return ntf;
+    }
+  },
+  {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_WARNING_LOW,
+          eventCallback: notification_eventCallback,
+        }, [{
+          label: "Button",
+        }]);
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append", ntf, 1);
+      testtag_notification_State(nb, ntf, "append", "Notification", "note",
+                                 "happy.png", nb.PRIORITY_WARNING_LOW);
+      nb.removeNotification(ntf);
+
+      return [1, null];
+    }
+  },
+  {
+    repeat: true,
+    test(nb, arr) {
+      var idx = arr[0];
+      var ntf = arr[1];
+      switch (idx) {
+        case 1:
+          // append a new notification
+          ntf = nb.appendNotification("note", {
+              label: "Notification",
+              image: "happy.png",
+              priority: nb.PRIORITY_INFO_LOW,
+            }, testtag_notificationbox_buttons);
+          SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
+
+          // Test persistence
+          ntf.persistence++;
+
+          return [idx, ntf];
+        case 2:
+        case 3:
+          nb.removeTransientNotifications();
+
+          return [idx, ntf];
+      }
+      return ntf;
+    },
+    result(nb, arr) {
+      var idx = arr[0];
+      var ntf = arr[1];
+      switch (idx) {
+        case 1:
+          testtag_notificationbox_State(nb, "notification added", ntf, 1);
+          testtag_notification_State(nb, ntf, "append", "Notification", "note",
+                                     "happy.png", nb.PRIORITY_INFO_LOW);
+          SimpleTest.is(ntf.persistence, 1, "persistence is 1");
+
+          return [++idx, ntf];
+        case 2:
+          testtag_notificationbox_State(nb, "first removeTransientNotifications", ntf, 1);
+          testtag_notification_State(nb, ntf, "append", "Notification", "note",
+                                     "happy.png", nb.PRIORITY_INFO_LOW);
+          SimpleTest.is(ntf.persistence, 0, "persistence is now 0");
+
+          return [++idx, ntf];
+        case 3:
+          testtag_notificationbox_State(nb, "second removeTransientNotifications", null, 0);
+          
+          this.repeat = false;
+      }
+      return ntf;
+    }
+  },
+  {
+    test(nb, ntf) {
+      // append another notification
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_MEDIUM,
+        }, testtag_notificationbox_buttons);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification again");
+      return ntf;
+    },
+    result(nb, ntf) {
+      // check that appending a second notification after removing the first one works
+      testtag_notificationbox_State(nb, "append again", ntf, 1);
+      testtag_notification_State(nb, ntf, "append again", "Notification", "note",
+                                 "happy.png", nb.PRIORITY_INFO_MEDIUM);
+      return ntf;
+    }
+  },
+  {
+    test(nb, ntf) {
+      // check the removeCurrentNotification method
+      nb.removeCurrentNotification();
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "removeCurrentNotification", null, 0);
+    }
+  },
+  {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_HIGH,
+        }, testtag_notificationbox_buttons);
+      return ntf;
+    },
+    result(nb, ntf) {
+      // test the removeAllNotifications method
+      testtag_notificationbox_State(nb, "append info_high", ntf, 1);
+      SimpleTest.is(ntf.priority, nb.PRIORITY_INFO_HIGH,
+                    "notification.priority " + nb.PRIORITY_INFO_HIGH);
+      SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
+    }
+  },
+  {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+          eventCallback: notification_eventCallback,
+        }, testtag_notificationbox_links);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append link notification with callback");
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
+
+      let buttonContainer = ntf.buttonContainer;
+      let button = buttonContainer.lastElementChild;
+      SimpleTest.is(button.localName, "button", "button is a button");
+      SimpleTest.ok(!button.href, "button href is not set");
+
+      let link = ntf.messageText.lastElementChild;
+      SimpleTest.is(link.localName, "label", "link is a label");
+      SimpleTest.is(link.href, "about:mozilla", "link href is correct");
+
+      SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
+    }
+  },
+  {
+    test(nb, ntf) {
+      // append a new notification
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+        }, testtag_notificationbox_buttons_nopopup);
+      return ntf;
+    },
+    result(nb, ntf) {
+      let buttons = nb.currentNotification.buttonContainer.querySelectorAll("* button");
+
+      buttons[0].focus();
+      synthesizeKey(" ", {});
+      SimpleTest.is(buttonsPressedLog, "button1", "button 1 with keyboard");
+      buttons[1].focus();
+      synthesizeKey(" ", {});
+      SimpleTest.is(buttonsPressedLog, "button1button2", "button 2 with keyboard");
+
+      synthesizeMouseAtCenter(buttons[0], {});
+      SimpleTest.is(buttonsPressedLog, "button1button2button1", "button 1 with mouse");
+      synthesizeMouseAtCenter(buttons[1], {});
+      SimpleTest.is(buttonsPressedLog, "button1button2button1button2", "button 2 with mouse");
+
+      nb.removeAllNotifications(true);
+    }
+  },
+  {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("note", {
+        label: "Notification",
+        image: "happy.png",
+        priority: nb.PRIORITY_INFO_LOW,
+        eventCallback: notification_eventCallback,
+      }, testtag_notificationbox_supportpage);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append support page notification");
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
+
+      let link = ntf.messageText.lastElementChild.previousSibling.previousSibling;
+      SimpleTest.is(link.localName, "label", "link 1 is a label");
+      SimpleTest.ok(link.value != "", "link 1 label is set");
+      SimpleTest.ok(link.href.endsWith("/test1"), "link 1 href is set");
+
+      link = ntf.messageText.lastElementChild;
+      SimpleTest.is(link.localName, "label", "link 2 is a label");
+      SimpleTest.is(link.value, "This is an existing label", "link 2 label is set");
+      SimpleTest.ok(link.href.endsWith("/test2"), "link 2 href is set");
+
+      SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
+    }
+  },
+  {
+    test(nb, unused) {
+      // add a number of notifications and check that they are added in order
+      nb.appendNotification("4", { label: "Four", priority: nb.PRIORITY_INFO_HIGH },
+                            testtag_notificationbox_buttons);
+      nb.appendNotification("7", { label: "Seven", priority: nb.PRIORITY_WARNING_HIGH },
+                            testtag_notificationbox_buttons);
+      nb.appendNotification("2", { label: "Two", priority: nb.PRIORITY_INFO_LOW });
+      nb.appendNotification("8", { label: "Eight", priority: nb.PRIORITY_CRITICAL_LOW });
+      nb.appendNotification("5", { label: "Five", priority: nb.PRIORITY_WARNING_LOW });
+      nb.appendNotification("6", { label: "Six", priority: nb.PRIORITY_WARNING_HIGH });
+      nb.appendNotification("1", { label: "One", priority: nb.PRIORITY_INFO_LOW });
+      nb.appendNotification("9", { label: "Nine", priority: nb.PRIORITY_CRITICAL_MEDIUM });
+      let ntf = nb.appendNotification("10", { label: "Ten", priority: nb.PRIORITY_CRITICAL_HIGH });
+      nb.appendNotification("3", { label: "Three", priority: nb.PRIORITY_INFO_MEDIUM });
+      return ntf;
+    },
+    result(nb, ntf) {
+      let expectedValue = "3";
+      ntf = nb.getNotificationWithValue(expectedValue);
+      is(nb.currentNotification, ntf, "appendNotification last notification");
+      is(nb.currentNotification.getAttribute("value"), expectedValue, "appendNotification order");
+      return 1;
+    }
+  },
+  {
+    // test closing notifications to make sure that the current notification is still set properly
+    repeat: true,
+    test(nb, testidx) {
+      this.repeat = false;
+      return undefined;
+    },
+    result(nb, arr) {
+        let notificationOrder = [4, 7, 2, 8, 5, 6, 1, 9, 10, 3];
+        let allNotificationValues = [...nb.stack.children].map(n => n.getAttribute("value"));
+        is(allNotificationValues.length, notificationOrder.length, "Expected number of notifications");
+        for (let i = 0; i < allNotificationValues.length; i++) {
+          is(
+            allNotificationValues[i],
+            notificationOrder[i].toString(),
+            `Notification ${i} matches`
+          );
+        }
+        return undefined;
+    }
+  },
+  {
+    test(nb, ntf) {
+      var exh = false;
+      try {
+        nb.appendNotification("no", { label: "no", priority: -1 });
+      } catch (ex) { exh = true; }
+      SimpleTest.is(exh, true, "appendNotification priority too low");
+
+      exh = false;
+      try {
+        nb.appendNotification("no", { label: "no", priority: 11 });
+      } catch (ex) { exh = true; }
+      SimpleTest.is(exh, true, "appendNotification priority too high");
+
+      // check that the other priority types work properly
+      runTimedTests(appendPriorityTests, -1, nb, nb.PRIORITY_WARNING_LOW);
+    }
+  }
+];
+
+var appendPriorityTests = [
+  {
+    test(nb, priority) {
+      let ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority,
+        }, testtag_notificationbox_buttons);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification " + priority);
+      return [ntf, priority];
+    },
+    result(nb, obj) {
+      SimpleTest.is(obj[0].priority, obj[1], "notification.priority " + obj[1]);
+      return obj[1];
+    }
+  },
+  {
+    test(nb, priority) {
+      nb.removeCurrentNotification();
+      return priority;
+    },
+    result(nb, priority) {
+      if (priority == nb.PRIORITY_CRITICAL_HIGH) {
+        let ntf = nb.appendNotification("note", {
+            label: "Notification", 
+            image: "happy.png",
+            priority: nb.PRIORITY_INFO_LOW,
+          }, testtag_notificationbox_buttons);
+        setTimeout(checkPopupTest, 50, nb, ntf);
+      }
+      else {
+        runTimedTests(appendPriorityTests, -1, nb, ++priority);
+      }
+    }
+  },
+];
+
+function testtag_notificationbox_State(nb, testid, expecteditem, expectedcount)
+{
+  SimpleTest.is(nb.currentNotification, expecteditem, testid + " currentNotification");
+  SimpleTest.is(nb.allNotifications ? nb.allNotifications.length : "no value",
+                expectedcount, testid + " allNotifications");
+}
+
+function testtag_notification_State(nb, ntf, testid, label, value, image, priority)
+{
+  is(ntf.messageText.textContent, label, testid + " notification label");
+  is(ntf.getAttribute("value"), value, testid + " notification value");
+  is(ntf.priority, priority, testid + " notification priority");
+
+  var type;
+  switch (priority) {
+    case nb.PRIORITY_INFO_LOW:
+    case nb.PRIORITY_INFO_MEDIUM:
+    case nb.PRIORITY_INFO_HIGH:
+      type = "info";
+      break;
+    case nb.PRIORITY_WARNING_LOW:
+    case nb.PRIORITY_WARNING_MEDIUM:
+    case nb.PRIORITY_WARNING_HIGH:
+      type = "warning";
+      break;
+    case nb.PRIORITY_CRITICAL_LOW:
+    case nb.PRIORITY_CRITICAL_MEDIUM:
+    case nb.PRIORITY_CRITICAL_HIGH:
+      type = "critical";
+      break;
+  }
+
+  is(ntf.getAttribute("type"), type, testid + " notification type");
+
+  let icons = {
+    info: "chrome://global/skin/icons/info-filled.svg",
+    warning: "chrome://global/skin/icons/warning.svg",
+    critical: "chrome://global/skin/icons/error.svg",
+  };
+  let icon = icons[type];
+  is(getComputedStyle(ntf.messageImage, "::after").content, `url("${icon}")`, "notification image is set");
+}
+
+function checkPopupTest(nb, ntf)
+{
+  if (nb._animating) {
+    setTimeout(checkPopupTest, 50, nb, ntf);
+  } else {
+    var evt = new Event("");
+    ntf.dispatchEvent(evt);
+    evt.target.buttonInfo = testtag_notificationbox_buttons[0];
+    ntf.handleEvent(evt);
+  }
+}
+
+function checkPopupClosed()
+{
+  SimpleTest.finish();
+}
+
+/**
+ * run one or more tests which perform a test operation, wait for a delay,
+ * then perform a result operation.
+ *
+ * tests - array of objects where each object is :
+ *           {
+ *             test: test function,
+ *             result: result function
+ *             repeat: true to repeat the test
+ *           }
+ * idx - starting index in tests
+ * element - element to run tests on
+ * arg - argument to pass between test functions
+ *
+ * If, after executing the result part, the repeat property of the test is
+ * true, then the test is repeated. If the repeat property is not true,
+ * continue on to the next test.
+ *
+ * The test and result functions take two arguments, the element and the arg.
+ * The test function may return a value which will passed to the result
+ * function as its arg. The result function may also return a value which
+ * will be passed to the next repetition or the next test in the array.
+ */
+function runTimedTests(tests, idx, element, arg)
+{
+  if (idx >= 0 && "result" in tests[idx])
+    arg = tests[idx].result(element, arg);
+
+  // if not repeating, move on to the next test
+  if (idx == -1 || !tests[idx].repeat)
+    idx++;
+
+  if (idx < tests.length) {
+    var result = tests[idx].test(element, arg);
+    setTimeout(runTimedTestsWait, 50, tests, idx, element, result);
+  }
+}
+
+function runTimedTestsWait(tests, idx, element, arg)
+{
+  // use this secret property to check if the animation is still running. If it
+  // is, then the notification hasn't fully opened or closed yet
+  if (element._animating)
+    setTimeout(runTimedTestsWait, 50, tests, idx, element, arg);
+  else
+    runTimedTests(tests, idx, element, arg);
+}
+
+setTimeout(() => {
+  testtag_notificationbox(new MozElements.NotificationBox(e => {
+    document.getElementById("nb").appendChild(e);
+  }));
+}, 0);
+]]>
+</script>
+
+</window>
+

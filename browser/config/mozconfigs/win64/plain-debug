@@ -1,0 +1,3 @@
+. $topsrcdir/browser/config/mozconfigs/win64/plain-opt
+
+ac_add_options --enable-debug

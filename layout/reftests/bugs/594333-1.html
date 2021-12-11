@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+div {
+  float: left;
+  width: 300px;
+  height: 200px;
+  background: url(repeatable-diagonal-gradient.png);
+}
+</style>
+<script type="text/javascript">
+var i = 32;
+function test() {
+  document.getElementById("a").style.width = (i*10)+'px';
+  document.getElementById("b").style.opacity = 0.999 - i/64.0;
+  i--;
+  if (i >= 0) {
+    setTimeout(test, 10);
+  } else {
+    document.documentElement.removeAttribute("class");
+  }
+}
+</script>
+</head>
+<body onload="test()">
+  <div id="a"></div>
+  <div id="b"></div>
+</body>
+</html>

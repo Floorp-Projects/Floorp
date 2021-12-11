@@ -1,0 +1,51 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library('speex')
+
+EXPORTS.speex += [
+    'speex_resampler.h',
+]
+
+SOURCES += [
+    'resample.c',
+    'simd_detect.cpp',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+
+# We don't compile the full speex codec, only the resampler.
+DEFINES['OUTSIDE_SPEEX'] = True
+
+DEFINES['EXPORT'] = ''
+
+if CONFIG['MOZ_SAMPLE_TYPE_S16']:
+    DEFINES['FIXED_POINT'] = True
+else:
+    DEFINES['FLOATING_POINT'] = True
+
+# Only use SSE code when using floating point samples, and on x86
+if CONFIG['INTEL_ARCHITECTURE'] and not CONFIG['MOZ_SAMPLE_TYPE_S16']:
+    DEFINES['_USE_SSE'] = True
+    DEFINES['_USE_SSE2'] = True
+    SOURCES += [
+        'resample_sse.c'
+    ]
+    SOURCES['resample_sse.c'].flags += CONFIG['SSE2_FLAGS']
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    DEFINES['_USE_NEON'] = True
+    SOURCES += [
+        'resample_neon.c'
+    ]
+    SOURCES['resample_neon.c'].flags += CONFIG['NEON_FLAGS']
+
+# Suppress warnings in third-party code.
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CFLAGS += ['-Wno-sign-compare']

@@ -1,0 +1,14 @@
+<script>
+function go() {
+  document.execCommand("justifyFull", false)
+  document.execCommand("selectAll", false)
+  window.top.addEventListener("DOMNodeRemoved", eh)
+  document.execCommand("heading", false, "H1")
+}
+function eh() {
+  document.execCommand("insertHTML", false, undefined)
+}
+</script>
+<body onload=go()>
+<dd contenteditable="true">A
+<!-- A -->

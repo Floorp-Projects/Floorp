@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Reference for SVG glyphs being used in HTML content</title>
+  <style>
+    @font-face {
+      font-family: "Liberation";
+      src: url(resources/svg.woff);
+    }
+    text { font: 200px Liberation; fill: fuchsia; stroke: black; }
+  </style>
+  <text x="0" y="200">b</text>
+</svg>

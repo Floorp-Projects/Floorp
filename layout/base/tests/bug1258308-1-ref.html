@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <meta charset="utf-8">
+    <title>Testcase #1 for bug 1258308</title>
+    <script>
+        function test1() {
+          synthesizeKey("KEY_ArrowDown");
+          synthesizeKey("KEY_ArrowDown");
+          // caret should now be at the start of the third line
+          document.body.offsetHeight;
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            document.documentElement.removeAttribute("class");
+          }));
+        }
+        function runTests() {
+          document.querySelector('textarea').focus();
+          document.body.offsetHeight;
+        }
+    </script>
+</head>
+<body>
+
+<textarea onfocus="test1()" spellcheck="false" style="-moz-appearance:none">abc
+def
+ghi</textarea>
+
+<script>
+SimpleTest.waitForFocus(runTests);
+</script>
+</body>
+</html>

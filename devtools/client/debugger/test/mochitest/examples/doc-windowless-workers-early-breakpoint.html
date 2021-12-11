@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+
+<script>
+startWorker();
+
+function startWorker() {
+  new Worker("simple-worker.js");
+}
+function startWorkerWithMessage() {
+  var w = new Worker("simple-worker.js");
+  w.postMessage({yo: 'yo'})
+}
+</script>
+
+<body>
+Hello World!
+</body>
+</html>

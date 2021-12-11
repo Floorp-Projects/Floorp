@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Test for checking that same console.trace() calls are duplicated</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<script type="application/javascript">
+/* eslint-disable */
+function foo1() {
+  foo2();
+}
+
+function foo2() {
+  foo3();
+}
+
+function foo3() {
+  console.trace();
+}
+for (let i = 0; i < 3; i++){
+  foo1();
+}
+</script>
+  </head>
+  <body>
+    <p>Test that same console.trace <b>are</b> repeated in the console</p>
+  </body>
+</html>

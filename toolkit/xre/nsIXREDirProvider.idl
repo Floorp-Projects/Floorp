@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+
+[scriptable, uuid(f6ee3c0a-5119-47fc-b1a7-ace9e1111fff)]
+interface nsIXREDirProvider : nsISupports
+{
+  /**
+   * Only intended to be used from xpcshell tests. Allows setting the local
+   * and normal profile data directories. Calling this after something using
+   * them has started up will cause problems.
+   */
+  void setUserDataDirectory(in nsIFile aFile, in boolean aLocal);
+
+  /**
+   * Gets the hash for the current installation directory.
+   */
+  AString getInstallHash();
+};

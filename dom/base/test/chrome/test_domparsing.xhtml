@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Test for the Mozilla extesion of the DOM Parsing and Serialization API"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=816410"
+     target="_blank">Mozilla Bug 816410</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+"use strict";
+/** Test for Bug 816410 **/
+
+function throws(fn, type, message) {
+  try {
+    fn();
+    ok(false, message);
+  } catch (e) {
+    if (type) {
+      is(e.name, type, message);
+    } else {
+      ok(true, message);
+    }
+  }
+}
+
+// DOMParser constructor should not throw for extra arguments
+new DOMParser(undefined);
+new DOMParser(null);
+new DOMParser(false);
+new DOMParser(0);
+new DOMParser("");
+new DOMParser({});
+
+// XMLSerializer constructor should not throw for extra arguments
+new XMLSerializer(undefined);
+new XMLSerializer(null);
+new XMLSerializer(false);
+new XMLSerializer(0);
+new XMLSerializer("");
+new XMLSerializer({});
+
+runTest(new DOMParser(), new XMLSerializer());
+
+function runTest(parser, serializer) {
+  is(typeof parser.parseFromString, "function", "parseFromString should exist");
+  is(typeof parser.parseFromBuffer, "function", "parseFromBuffer should exist");
+  is(typeof parser.parseFromStream, "function", "parseFromStream should exist");
+
+  is(typeof serializer.serializeToString, "function", "serializeToString should exist");
+  is(typeof serializer.serializeToStream, "function", "serializeToStream should exist");
+
+  let tests = [
+    {input: "<html></html>", type: "text/html",
+     expected: '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body></body></html>'},
+    {input: "<xml></xml>", type: "text/xml", expected: "<xml/>"},
+    {input: "<xml></xml>", type: "application/xml", expected: "<xml/>"},
+    {input: "<html></html>", type: "application/xhtml+xml", expected: "<html/>"},
+    {input: "<svg></svg>", type: "image/svg+xml", expected: "<svg/>"},
+  ];
+  for (let t of tests) {
+    is(serializer.serializeToString(parser.parseFromString(t.input, t.type)), t.expected,
+       "parseFromString test for " + t.type);
+
+    let ostream = {
+      write: function(buf, count) { this.data += buf; return count; }
+    };
+    for (let charset of [null, "UTF-8"]) {
+      ostream.data = "";
+      serializer.serializeToStream(parser.parseFromString(t.input, t.type), ostream, charset);
+      is(ostream.data, t.expected,
+         "serializeToStream test for " + t.type + ", charset=" + charset);
+    }
+
+    if (t.type === "text/html") {
+      // parseFromBuffer and parseFromStream don't support "text/html".
+      continue;
+    }
+
+    let array = Array.from(t.input, function(c) { return c.charCodeAt(c); });
+    let inputs = [
+      {array: array, name: "parseFromBuffer (array)"},
+      {array: new Uint8Array(array), name: "parseFromBuffer (Uint8Array)"},
+    ];
+    for (let input of inputs) {
+      let a = input.array;
+      is(serializer.serializeToString(parser.parseFromBuffer(a, t.type)), t.expected,
+         input.name + " test for " + t.type);
+    }
+
+    let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                  createInstance(Ci.nsIStringInputStream);
+    for (let charset of [null, "UTF-8"]) {
+      istream.setData(t.input, -1);
+      is(serializer.serializeToString(parser.parseFromStream(istream, charset, t.input.length, t.type)),
+         t.expected, "parseFromStream test for " + t.type + ", charset=" + charset);
+    }
+  }
+  throws(function() {
+    parser.parseFromString("<xml></xml>", "foo/bar");
+  }, "TypeError", "parseFromString should throw for the unknown type");
+}
+  ]]></script>
+</window>

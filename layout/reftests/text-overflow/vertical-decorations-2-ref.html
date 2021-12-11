@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+div {
+  font: 25px monospace;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid gray;
+  padding: 5px;
+  display: inline-block;
+  vertical-align: top;
+}
+span {
+  text-decoration: overline;
+}
+.vlr {
+  writing-mode: vertical-lr;
+  text-orientation: sideways-right;
+  height: 10ch;
+}
+</style>
+</head>
+
+<body>
+<div class="vlr"><span>abcdefghi</span>…</div>
+</body>
+</html>

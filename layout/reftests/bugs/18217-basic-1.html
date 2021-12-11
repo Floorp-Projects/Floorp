@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CSS 2.1 Test Suite: Test for inline-table</title>
+<link rel="author" title="L. David Baron" href="https://dbaron.org/" />
+<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+<link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#table-display" />
+<meta name="assert" content="it is a rectangular block that participates in an inline formatting context)." />
+<link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#leading" />
+<meta name="assert" content="The baseline of an 'inline-table' is the baseline of the first row of the table." />
+<meta name="flags" content="" />
+<style type="text/css">
+span { display: inline-table; }
+</style>
+</head>
+<body>
+<p>a<span>b</span>c</p>
+</body>
+</html>

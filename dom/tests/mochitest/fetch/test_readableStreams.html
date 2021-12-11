@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for ReadableStreams and Fetch</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_readableStreams.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+async function tests() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [["dom.caches.enabled", true],
+            ["dom.caches.testing.enabled", true],
+            ["dom.quotaManager.testing", true]]
+  });
+
+  await test_nativeStream(SAME_COMPARTMENT);
+  await test_nativeStream(IFRAME_COMPARTMENT);
+  await workify('test_nativeStream');
+
+  await test_timeout(SAME_COMPARTMENT);
+  await test_timeout(IFRAME_COMPARTMENT);
+  await workify('test_timeout');
+
+  await test_nonNativeStream(SAME_COMPARTMENT);
+  await test_nonNativeStream(IFRAME_COMPARTMENT);
+  await workify('test_nonNativeStream');
+
+  await test_pendingStream(SAME_COMPARTMENT);
+  await test_pendingStream(IFRAME_COMPARTMENT);
+  await workify('test_pendingStream');
+
+  await test_noUint8Array(SAME_COMPARTMENT);
+  await test_noUint8Array(IFRAME_COMPARTMENT);
+  await workify('test_noUint8Array');
+
+  await test_nativeStream_cache(SAME_COMPARTMENT);
+  await test_nativeStream_cache(IFRAME_COMPARTMENT);
+  await workify('test_nativeStream_cache');
+
+  await test_nonNativeStream_cache(SAME_COMPARTMENT);
+  await test_nonNativeStream_cache(IFRAME_COMPARTMENT);
+  await workify('test_nonNativeStream_cache');
+
+  await test_codeExecution(SAME_COMPARTMENT);
+  await test_codeExecution(IFRAME_COMPARTMENT);
+
+  await test_global(SAME_COMPARTMENT);
+  await test_global(IFRAME_COMPARTMENT);
+  await workify('test_global');
+}
+
+async function runTests() {
+  try {
+    await tests();
+  } catch (exc) {
+    ok(false, exc.toString());
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+// The iframe starts the tests by calling parent.next() when it loads.
+  </script>
+  <iframe src="iframe_readableStreams.html" id="iframe"></iframe>
+</body>
+</html>
+

@@ -1,0 +1,19 @@
+<html>
+<head>
+<!-- font Prototype.ttf (see bug 496573 comment #25 and bug 534352)
+     has a redundant [0xFFFF,0xFFFF] sentinel value in the cmap -->
+<style type="text/css">
+@font-face {
+  font-family: test;
+  src: url(../fonts/Prototype.ttf);
+}
+
+body {
+  font-family: test, serif;
+}
+</style>
+</head>
+<body>
+This should NOT be in the default serif font.
+</body>
+</html>

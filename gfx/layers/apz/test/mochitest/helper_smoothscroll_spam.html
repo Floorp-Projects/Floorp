@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for scenario in bug 1228407</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.advanceTimeAndRefresh(0);
+
+  // Part of the problem in bug 1228407 was that the main-thread scroll
+  // generation counter was continually increasing (due to scrollBy calls in
+  // quick succession), and so repaint requests from APZ would get ignored (due
+  // to stale scroll generation), and so the main thread scroll position would
+  // never actually get updated. This loop exercises that case. The expected
+  // behaviour (pre-APZ) was that the scrollBy call would actually start the
+  // scroll animation and advance the scroll position a little bit, so the next
+  // scrollBy call would move the animation destination a little bit, and so
+  // the loop would continue advancing the scroll position. The bug resulted
+  // in the scroll position not advancing at all.
+  for (let i = 0; i < 100; i++) {
+    document.scrollingElement.scrollBy({top:60, behavior: "smooth"});
+    await promiseOnlyApzControllerFlushed();
+    utils.advanceTimeAndRefresh(16);
+  }
+
+  utils.restoreNormalRefresh();
+  await promiseOnlyApzControllerFlushed();
+
+  let scrollPos = document.scrollingElement.scrollTop;
+  ok(scrollPos > 60, `Scrolled ${scrollPos}px, should be more than 60`);
+}
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    body {
+      height: 5000px;
+      background: linear-gradient(red, black);
+    }
+  </style>
+</head>
+<body>
+</body>
+</html>

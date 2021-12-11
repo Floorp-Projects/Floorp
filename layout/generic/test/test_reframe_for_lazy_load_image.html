@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<div id='log'></div>
+<script>
+'use strict';
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  // Open a new document with enabling lazy load since we need to create an
+  // image element with loading="lazy" and alt="something" in the first place.
+  // That's because if the element has `alt` but doesn't have `lazy` we will
+  // generate inline frames due to the `alt`.  Also if we do add the `lazy` and
+  // the `alt` dynamically, it ends up generating reconstruct change hint for
+  // the `alt` change.
+  {
+    set: [
+      ["dom.image-lazy-loading.enabled", true],
+      ["dom.image-lazy-loading.root-margin.top", 0],
+      ["dom.image-lazy-loading.root-margin.bottom", 0],
+      ["dom.image-lazy-loading.root-margin.left", 0],
+      ["dom.image-lazy-loading.root-margin.right", 0],
+    ]
+  },
+  () => { window.open('file_reframe_for_lazy_load_image.html'); }
+);
+</script>
+</html>

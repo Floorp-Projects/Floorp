@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension cookies test</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_cookies_expiry() {
+  function background() {
+    let expectedEvents = [];
+
+    browser.cookies.onChanged.addListener(event => {
+      expectedEvents.push(`${event.removed}:${event.cause}`);
+      if (expectedEvents.length === 1) {
+        browser.test.assertEq("true:expired", expectedEvents[0], "expired cookie removed");
+        browser.test.assertEq("first", event.cookie.name, "expired cookie has the expected name");
+        browser.test.assertEq("one", event.cookie.value, "expired cookie has the expected value");
+      } else {
+        browser.test.assertEq("false:explicit", expectedEvents[1], "new cookie added");
+        browser.test.assertEq("first", event.cookie.name, "new cookie has the expected name");
+        browser.test.assertEq("one-again", event.cookie.value, "new cookie has the expected value");
+        browser.test.notifyPass("cookie-expiry");
+      }
+    });
+
+    setTimeout(() => {
+      browser.test.sendMessage("change-cookies");
+    }, 1000);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["http://example.com/", "cookies"],
+    },
+    background,
+  });
+
+  let chromeScript = loadChromeScript(() => {
+    const {sendAsyncMessage} = this;
+    Services.cookies.add(".example.com", "/", "first", "one", false, false, false, Date.now() / 1000 + 1, {}, Ci.nsICookie.SAMESITE_NONE, Ci.nsICookie.SCHEME_HTTP);
+    sendAsyncMessage("done");
+  });
+  await chromeScript.promiseOneMessage("done");
+  chromeScript.destroy();
+
+  await extension.startup();
+  await extension.awaitMessage("change-cookies");
+
+  chromeScript = loadChromeScript(() => {
+    const {sendAsyncMessage} = this;
+    Services.cookies.add(".example.com", "/", "first", "one-again", false, false, false, Date.now() / 1000 + 10, {}, Ci.nsICookie.SAMESITE_NONE, Ci.nsICookie.SCHEME_HTTP);
+    sendAsyncMessage("done");
+  });
+  await chromeScript.promiseOneMessage("done");
+  chromeScript.destroy();
+
+  await extension.awaitFinish("cookie-expiry");
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

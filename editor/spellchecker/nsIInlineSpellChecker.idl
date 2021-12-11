@@ -1,0 +1,38 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+interface nsIEditor;
+interface nsIEditorSpellCheck;
+
+webidl Node;
+webidl Range;
+
+[scriptable, uuid(b7b7a77c-40c4-4196-b0b7-b0338243b3fe)]
+interface nsIInlineSpellChecker : nsISupports
+{
+  readonly attribute nsIEditorSpellCheck spellChecker;
+
+  void init(in nsIEditor aEditor);
+  void cleanup(in boolean aDestroyingFrames);
+
+  attribute boolean enableRealTimeSpell;
+
+  void spellCheckRange(in Range aSelection);
+
+  Range getMisspelledWord(in Node aNode, in long aOffset);
+  [can_run_script]
+  void replaceWord(in Node aNode, in long aOffset, in AString aNewword);
+  void addWordToDictionary(in AString aWord);
+  void removeWordFromDictionary(in AString aWord);
+
+  void ignoreWord(in AString aWord);
+  void ignoreWords(in Array<AString> aWordsToIgnore);
+  void updateCurrentDictionary();
+
+  readonly attribute boolean spellCheckPending;
+};

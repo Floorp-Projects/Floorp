@@ -1,0 +1,136 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for Notification Box. The test is checking:
+* Basic rendering
+* Appending correct classname on wrapping
+* Appending a notification
+* Notification priority
+* Closing notification
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Notification Box</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
+
+    const renderedBox = shallowRenderComponent(NotificationBox, {});
+    is(renderedBox.type, "div", "NotificationBox is rendered as <div>");
+
+    info("Test rendering NotificationBox with default props");
+    const boxElement = React.createElement(NotificationBox);
+    const notificationBox = TestUtils.renderIntoDocument(boxElement);
+    const notificationNode = ReactDOM.findDOMNode(notificationBox);
+
+    ok(notificationNode.classList.contains("notificationbox"),
+      "NotificationBox has expected class");
+    ok(notificationNode.classList.contains("border-bottom"),
+      "NotificationBox has expected class");
+    is(notificationNode.textContent, "",
+      "Empty NotificationBox has no text content");
+
+    checkNumberOfNotifications(notificationBox, 0);
+
+    // Append a notification
+    notificationBox.appendNotification(
+      "Info message",
+      "id1",
+      null,
+      PriorityLevels.PRIORITY_INFO_HIGH
+    );
+
+    is (notificationNode.textContent, "Info message",
+      "The box must display notification message");
+    checkNumberOfNotifications(notificationBox, 1);
+
+    // Append more important notification
+    notificationBox.appendNotification(
+      "Critical message",
+      "id2",
+      null,
+      PriorityLevels.PRIORITY_CRITICAL_BLOCK
+    );
+
+    checkNumberOfNotifications(notificationBox, 1);
+
+    is (notificationNode.textContent, "Critical message",
+      "The box must display more important notification message");
+
+    // Append less important notification
+    notificationBox.appendNotification(
+      "Warning message",
+      "id3",
+      null,
+      PriorityLevels.PRIORITY_WARNING_HIGH
+    );
+
+    checkNumberOfNotifications(notificationBox, 1);
+
+    is (notificationNode.textContent, "Critical message",
+      "The box must still display the more important notification");
+
+    ok(notificationBox.getCurrentNotification(),
+      "There must be current notification");
+
+    notificationBox.getNotificationWithValue("id1").close();
+    checkNumberOfNotifications(notificationBox, 1);
+
+    notificationBox.getNotificationWithValue("id2").close();
+    checkNumberOfNotifications(notificationBox, 1);
+
+    notificationBox.getNotificationWithValue("id3").close();
+    checkNumberOfNotifications(notificationBox, 0);
+
+    info(`Check "wrapping" prop works as expected`);
+    // Append wrapping classname to the dom element when passing wrapping prop
+    const boxElementWrapped = React.createElement(NotificationBox, {wrapping: true});
+    const notificationBoxWrapped = TestUtils.renderIntoDocument(boxElementWrapped);
+    const wrappedNotificationNode = ReactDOM.findDOMNode(notificationBoxWrapped);
+
+    ok(wrappedNotificationNode.classList.contains("wrapping"),
+      "Wrapped notificationBox has expected class");
+
+    info(`Check "displayBorderTop/displayBorderBottom" props work as expected`);
+    const element = React.createElement(NotificationBox, {
+      displayBorderTop: true,
+      displayBorderBottom: false,
+    });
+    const renderedElement = TestUtils.renderIntoDocument(element);
+    const elementNode = ReactDOM.findDOMNode(renderedElement);
+
+    ok(elementNode.classList.contains("border-top"),
+      "truthy displayBorderTop render a border-top className");
+    ok(!elementNode.classList.contains("border-bottom"),
+      "falsy displayBorderBottom does not render a border-bottom className");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+
+function checkNumberOfNotifications(notificationBox, expected) {
+  is(TestUtils.scryRenderedDOMComponentsWithClass(
+    notificationBox, "notification").length, expected,
+    "The notification box must have expected number of notifications");
+}
+</script>
+</pre>
+</body>
+</html>

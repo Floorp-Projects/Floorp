@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Blinking Context Menu Item Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+  <menulist id="menulist">
+    <menupopup id="menupopup">
+      <menuitem label="Menu Item" id="menuitem"/>
+    </menupopup>
+  </menulist>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(startTest);
+
+function startTest() {
+  if (!/Mac/.test(navigator.platform)) {
+    ok(true, "Nothing to test on non-Mac.");
+    SimpleTest.finish();
+    return;
+  }
+  // Destroy frame while removing the _moz-menuactive attribute.
+  test_crash("REMOVAL", test2);
+}
+
+function test2() {
+  // Destroy frame while adding the _moz-menuactive attribute.
+  test_crash("ADDITION", test3);
+}
+
+function test3() {
+  // Don't mess with the frame, just test whether we've blinked.
+  test_crash("", SimpleTest.finish);
+}
+
+function test_crash(when, andThen) {
+  var menupopup = document.getElementById("menupopup");
+  var menuitem = document.getElementById("menuitem");
+  var attrChanges = { "REMOVAL": 0, "ADDITION": 0 };
+  var storedEvent = null;
+  menupopup.addEventListener("popupshown", function () {
+    menuitem.addEventListener("mouseup", function (e) {
+      menuitem.addEventListener("DOMAttrModified", function onDOMAttrModified(e) {
+        if (e.target != e.currentTarget) {
+          return;
+        }
+        if (e.attrName == "_moz-menuactive") {
+          if (!attrChanges[e.attrChange])
+            attrChanges[e.attrChange] = 1;
+          else
+            attrChanges[e.attrChange]++;
+          storedEvent = e;
+          if (e.attrChange == e[when]) {
+            menuitem.hidden = true;
+            menuitem.getBoundingClientRect();
+            ok(true, "Didn't crash on _moz-menuactive " + when.toLowerCase() + " during blinking")
+            menuitem.hidden = false;
+            menuitem.removeEventListener("DOMAttrModified", onDOMAttrModified);
+            SimpleTest.executeSoon(function () {
+              menupopup.hidePopup();
+            });
+          }
+        }
+      });
+    }, {once: true});
+    menupopup.addEventListener("popuphidden", function() {
+      if (!when) {
+        // Test whether we've blinked at all.
+        var shouldBlink = navigator.platform.match(/Mac/);
+        var expectedNumRemoval = shouldBlink ? 2 : 1;
+        var expectedNumAddition = shouldBlink ? 1 : 0;
+        ok(storedEvent, "got DOMAttrModified events after clicking menuitem")
+        is(attrChanges[storedEvent.REMOVAL], expectedNumRemoval, "blinking unset attributes correctly");
+        is(attrChanges[storedEvent.ADDITION], expectedNumAddition, "blinking set attributes correctly");
+      }
+      SimpleTest.executeSoon(andThen);
+    }, {once: true});
+    synthesizeMouse(menuitem, 10, 5, { type : "mousemove" });
+    synthesizeMouse(menuitem, 10, 5, { type : "mousemove" });
+    synthesizeMouse(menuitem, 10, 5, { type : "mousedown" });
+    SimpleTest.executeSoon(function () {
+      synthesizeMouse(menuitem, 10, 5, { type : "mouseup" });
+    });
+  }, {once: true});
+  document.getElementById("menulist").open = true;
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

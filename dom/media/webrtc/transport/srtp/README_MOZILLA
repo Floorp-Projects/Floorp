@@ -1,0 +1,7 @@
+This directory contains build files for libsrtp. The actual library
+source is in $TOPSRCDIR/third_party/libsrtp/
+
+The upstream git repository is https://github.com/cisco/libsrtp
+
+TBD add code and instructions how to do a clean update import without manual
+intervention.

@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>Bug NNN</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<style type="text/css">
+  @font-face {
+    font-family: Ahem;
+    src: url("Ahem.ttf");
+  }
+
+  pre {
+    font: 14px/1 Ahem;
+    height: 50px;
+    overflow-y: scroll;
+  }
+</style>
+<pre id=target contenteditable>ABC
+
+
+
+
+
+<br></pre>
+<script>
+  getSelection().collapse(target.childNodes[0], 9);
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(() => {
+    const sel = SpecialPowers.wrap(getSelection());
+    sel.scrollIntoView(0, true, 100, 0);
+    is(target.scrollTop, target.scrollTopMax);
+
+    SimpleTest.finish();
+  });
+</script>

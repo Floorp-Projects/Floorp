@@ -1,0 +1,15 @@
+<html>
+<head>
+<script>
+function start()
+{
+  sessionStorage.setItem("foo-https", "secure");
+  parent.postMessage(sessionStorage.getItem("foo-https"),
+                     "http://mochi.test:8888");
+}
+</script>
+</head>
+<body onload="start();">
+secure
+</body>
+</html>

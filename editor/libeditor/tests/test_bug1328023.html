@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1328023
+-->
+<html>
+<head>
+  <title>Test for Bug 1328023</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1328023">Mozilla Bug 1328023</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<input type="text" id="input1"/>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let elm = document.getElementById("input1");
+
+  elm.focus();
+  sendString("AB");
+  is(elm.value, "AB", "AB is input.value now");
+
+  synthesizeKey("KEY_Backspace");
+  is(elm.value, "A", "A is input.value now");
+
+  synthesizeKey("Z", { accelKey: true });
+  is(elm.value, "AB", "AB is input.value now");
+
+  sendString("C");
+  is(elm.value, "ABC", "ABC is input.value now");
+
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Backspace");
+
+  sendString("ABC");
+  is(elm.value, "ABC", "ABC is input.value now");
+
+  synthesizeKey("Z", { accelKey: true });
+  is(elm.value, "", "'' is input.value now");
+
+  synthesizeKey("Z", { accelKey: true, shiftKey: true });
+  is(elm.value, "ABC", "ABC is input.value now");
+
+  sendString("D");
+  is(elm.value, "ABCD", "ABCD is input.value now");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

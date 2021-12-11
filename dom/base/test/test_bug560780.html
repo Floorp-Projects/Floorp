@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=560780
+-->
+<head>
+  <title>Test for Bug 560780</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script  type="text/javascript">
+function init() {
+  var elem = document.getElementById('body');
+  elem.addEventListener('mousedown', mousedown, true);
+}
+var seen_mousedown = 0;
+function mousedown(event) {
+  var doc = event.target.ownerDocument;
+  var win = doc.defaultView;
+  var elem = doc.getElementById('body');
+  var selection = win.getSelection();
+  if (selection.rangeCount>0) {
+    var ragne = selection.getRangeAt(0);
+    var rect = ragne.getBoundingClientRect();
+    var p = elem.parentNode.appendChild(doc.createElement('p'));
+    p.textContent = "width: " + (rect.right -rect.left);
+  }
+  ++seen_mousedown;
+}
+</script>
+
+</head>
+<body id="body">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=560780">Mozilla Bug 560780</a>
+<p id="display" style="margin:0;padding:0;border:0"><a id="testlink" href="#aaaaaaaaaaaaaaaaaaaaaa">abcdefghijklmnabcdefghijklmn</a></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+  1.Start Minefield with New Profile.
+  2.Select texts by alt + mouse dragging horizontaly from 'd' in the link above to far right of window.
+  3.Click on the selected text
+  4.Click empty area of page
+  5.Repeat STEP 2 to 4 till browser crashes. (at least 5 times)
+
+<script type="application/javascript">
+
+/** Test for Bug 560780 **/
+
+function selectByMouseThenClick(elm,startx,starty) {
+  // select some text
+  var ctrl = !!navigator.platform.indexOf("Linux");
+  var alt  = true;
+  var x = startx;
+  synthesizeMouse(elm, x,        starty, { type:"mousedown", ctrlKey:ctrl, altKey:alt }); 
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x += 100, starty, { type:"mousemove", ctrlKey:ctrl, altKey:alt });
+  synthesizeMouse(elm, x,        starty, { type:"mouseup",   ctrlKey:ctrl, altKey:alt });
+
+  // click on the selection
+  synthesizeMouse(elm, startx + 10, starty + 1, {}); 
+
+  // click empty area of the page
+  synthesizeMouse(document.getElementById('body'), 800, 800, {}); 
+}
+
+function runTest() {
+  var e = document.getElementById('testlink');
+  selectByMouseThenClick(e,110,5);
+  selectByMouseThenClick(e,90,5);
+  selectByMouseThenClick(e,70,5);
+  selectByMouseThenClick(e,50,5);
+  selectByMouseThenClick(e,30,5);
+  selectByMouseThenClick(e,10,5);
+  is(seen_mousedown, 12, "got the mousedown events");
+  SimpleTest.finish();
+}
+
+function doTest() {
+  init();
+  runTest();
+}
+
+SimpleTest.waitForFocus(doTest, window);
+SimpleTest.waitForExplicitFinish();
+
+
+
+</script>
+</pre>
+</body>
+</html>

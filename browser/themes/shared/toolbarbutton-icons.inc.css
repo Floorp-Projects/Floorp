@@ -1,0 +1,484 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --toolbarbutton-icon-fill-attention: -moz-accent-color;
+  --warning-icon-bgcolor: #FFA436;
+}
+
+:root:-moz-lwtheme {
+  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
+}
+
+:root[lwt-popup-brighttext] panel,
+toolbar[brighttext]:-moz-lwtheme {
+  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
+  --warning-icon-bgcolor: #FFBD4F;
+}
+
+:root,
+/* Pick up the panel- and toolbar-specific --toolbarbutton-icon-fill-attention
+   values from above. */
+panel,
+toolbar {
+  --toolbar-field-icon-fill-attention: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
+}
+
+.toolbarbutton-animatable-box,
+.toolbarbutton-1 {
+  color: inherit !important;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--toolbarbutton-icon-fill);
+}
+
+.toolbarbutton-animatable-box {
+  display: block;
+  position: absolute;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+  list-style-image: none;
+  /* Height must be equal to height of toolbarbutton padding-box. --toolbarbutton-height
+     is calculated and set during runtime by BrowserUIUtils.setToolbarButtonHeightProperty()
+     before the animation begins. */
+  height: var(--toolbarbutton-height);
+}
+
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
+#stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
+#nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
+#PlacesChevron:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#PanelUI-menu-button:-moz-locale-dir(rtl) > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+  scale: -1 1;
+}
+
+#back-button {
+  list-style-image: url("chrome://browser/skin/back.svg");
+}
+
+#forward-button {
+  list-style-image: url("chrome://browser/skin/forward.svg");
+}
+
+/* The animations for the reload-button and stop-button are disabled
+   outside of the nav-bar due to bug 1382894. */
+:is(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
+  display: none;
+}
+#nav-bar-customization-target > #stop-reload-button > :is(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
+  display: block;
+}
+
+#stop-reload-button[animate] > #reload-button > .toolbarbutton-icon,
+#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-icon {
+  fill: transparent;
+}
+
+@keyframes stop-to-reload {
+  /* pause on the first frame (step 0) for 6 frames of time */
+  from {
+    /* 0 */
+    transform: translateX(0);
+  }
+  /* resume at 7/35 and animate across the next 14 frames */
+  17.14% {
+    animation-timing-function: steps(14);
+    transform: translateX(calc(0  * -20px));
+  }
+  /* pause on the last frame for the remainder of the duration */
+  54.29% {
+    transform: translateX(calc(14 * -20px));
+  }
+  to {
+    /* end state for animation: */
+    transform: translateX(calc(var(--anim-frames) * -20px));
+  }
+}
+
+@keyframes reload-to-stop {
+  /* pause on the first frame (step 0) for 6 frames of time */
+  from {
+    /* 0 */
+    transform: translateX(0);
+    animation-timing-function: steps(12);
+  }
+  /* pause at 13/15 for 3 frames */
+  86.67% {
+    transform: translateX(calc(var(--anim-frames) * -20px));
+  }
+  to {
+    /* end state for animation: */
+    transform: translateX(calc(var(--anim-frames) * -20px));
+  }
+}
+
+#stop-reload-button[animate] > #reload-button,
+#stop-reload-button[animate] > #stop-button {
+  position: relative;
+}
+
+#nav-bar-customization-target :where(#reload-button, #stop-button) > .toolbarbutton-icon {
+  padding: calc(var(--toolbarbutton-inner-padding) + 1px) var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 1px ) !important; /* The animation is 18px but the other icons are 16px, lower it by 1px so it is vertically centered */
+}
+
+#reload-button > .toolbarbutton-animatable-box,
+#stop-button > .toolbarbutton-animatable-box {
+  top: calc(50% - 9px); /* Vertically center the 20px tall animatable image, which is 1px higher than other icons */
+  /* Since .toolbarbutton-icon uses a different width than the animatable-box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 20px) / 2);
+  width: 20px; /* Width of each frame within the SVG sprite */
+  height: 20px; /* Height of each frame within the SVG sprite */
+}
+
+#stop-reload-button[animate] > #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  background-image: url("chrome://browser/skin/stop-to-reload.svg");
+  /*
+    transition from stop icon to reload icon
+    pause at frame 0 for 6 ticks,
+    pause at frame 15 for 16 ticks
+    total 35 steps*/
+  --anim-frames: 14;
+  --anim-steps: calc(var(--anim-frames) + 21); /* Add steps for doing the pause at the start and end */
+  width: calc(20px * (var(--anim-frames) + 1));
+  height: 20px;
+
+  /* initial state for animation */
+  transform: translateX(0);
+}
+
+#stop-reload-button[animate] > #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: stop-to-reload;
+}
+
+#reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-duration: calc(var(--anim-steps) * 16.667ms);
+}
+
+#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  background-image: url("chrome://browser/skin/reload-to-stop.svg");
+  /*
+    transition from reload icon to stop icon
+    pause at end for 3 frames of time
+    pause at ...
+    total 15 steps*/
+  --anim-frames: 12;
+  --anim-steps: calc(var(--anim-frames) + 3); /* Add steps for doing the pause at the start and end */
+  width: calc(20px * (var(--anim-frames) + 1));
+  height: 20px;
+
+  /* initial state for animation */
+  transform: translateX(0);
+}
+
+#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: reload-to-stop;
+  animation-duration: calc(var(--anim-steps) * 16.667ms);
+}
+
+#reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-timing-function: steps(15);
+  animation-duration: 0.25s;
+}
+
+#reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  transform: translateX(-700px);
+}
+
+#reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  transform: translateX(-300px);
+}
+
+#reload-button {
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
+}
+
+#stop-button {
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+}
+
+#home-button {
+  list-style-image: url("chrome://browser/skin/home.svg");
+}
+
+#bookmarks-toolbar-button,
+#bookmarks-toolbar-placeholder {
+  list-style-image: url("chrome://browser/skin/bookmarks-toolbar.svg");
+}
+
+#bookmarks-menu-button {
+  list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+}
+
+#history-panelmenu {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+#downloads-button {
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+#add-ons-button {
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+}
+
+#open-file-button {
+  list-style-image: url("chrome://browser/skin/open.svg");
+}
+
+#screenshot-button {
+  list-style-image: url("chrome://browser/skin/screenshot.svg");
+}
+
+#save-page-button {
+  list-style-image: url("chrome://browser/skin/save.svg");
+}
+
+#sync-button {
+  list-style-image: url("chrome://browser/skin/tab.svg");
+}
+
+#characterencoding-button {
+  list-style-image: url("chrome://browser/skin/characterEncoding.svg");
+}
+
+#new-window-button {
+  list-style-image: url("chrome://browser/skin/window.svg");
+}
+
+#new-tab-button {
+  list-style-image: url("chrome://browser/skin/new-tab.svg");
+}
+
+#privatebrowsing-button {
+  list-style-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+
+#find-button {
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+#print-button {
+  list-style-image: url("chrome://global/skin/icons/print.svg");
+}
+
+%ifdef XP_MACOSX
+#restore-button,
+%endif
+#fullscreen-button {
+  list-style-image: url("chrome://browser/skin/fullscreen.svg");
+}
+
+#developer-button {
+  list-style-image: url("chrome://global/skin/icons/developer.svg");
+}
+
+#profiler-button-button > .toolbarbutton-icon {
+  list-style-image: url("chrome://devtools/skin/images/tool-profiler.svg");
+}
+
+#profiler-button-button:not(.profiler-active) > image {
+  transform: scaleX(-1);
+}
+
+#profiler-button-button.profiler-active > image {
+  fill: #0060df;
+  fill-opacity: 1;
+  background-color: #0060df33;
+}
+
+#profiler-button-button.profiler-active:hover > image {
+  background-color: #0060df22;
+}
+
+#profiler-button-button.profiler-paused > image {
+  opacity: 0.4;
+}
+
+#preferences-button {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+#PanelUI-menu-button {
+  list-style-image: url("chrome://browser/skin/menu.svg");
+}
+
+#PanelUI-menu-button[badge-status="update-available"],
+#PanelUI-menu-button[badge-status="update-downloading"],
+#PanelUI-menu-button[badge-status="update-manual"],
+#PanelUI-menu-button[badge-status="update-other-instance"],
+#PanelUI-menu-button[badge-status="update-restart"],
+#PanelUI-menu-button[badge-status="update-unsupported"],
+#PanelUI-menu-button[badge-status="addon-alert"],
+#PanelUI-menu-button[badge-status="fxa-needs-authentication"] {
+  list-style-image: url("chrome://browser/skin/menu-badged.svg");
+}
+
+#cut-button {
+  list-style-image: url("chrome://browser/skin/edit-cut.svg");
+}
+
+#copy-button {
+  list-style-image: url("chrome://global/skin/icons/edit-copy.svg");
+}
+
+#paste-button {
+  list-style-image: url("chrome://browser/skin/edit-paste.svg");
+}
+
+#zoom-out-button {
+  list-style-image: url("chrome://browser/skin/zoom-out.svg");
+}
+
+#zoom-in-button {
+  list-style-image: url("chrome://global/skin/icons/plus.svg");
+}
+
+#zoom-in-button > .toolbarbutton-icon {
+  /* This padding is used to center the icon */
+  padding-inline-start: 7px;
+}
+
+#PlacesChevron,
+#nav-bar-overflow-button {
+  list-style-image: url("chrome://global/skin/icons/chevron.svg");
+}
+
+#nav-bar-overflow-button[animate] > .toolbarbutton-icon {
+  fill: transparent;
+}
+
+@keyframes overflow-animation {
+  from {
+    transform: translateX(0);
+  }
+  from {
+    transform: translateX(-832px);
+  }
+}
+
+#nav-bar-overflow-button > .toolbarbutton-animatable-box {
+  visibility: hidden;
+  top: calc(50% - 8px); /* Vertically center the 16px tall animatable image */
+  /* Since .toolbarbutton-icon uses a different width than the animatable box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 16px) / 2);
+  width: 16px; /* Width of each frame within the SVG sprite */
+  height: 16px; /* Height of each frame within the SVG sprite */
+  -moz-context-properties: fill, stroke;
+  fill: var(--toolbarbutton-icon-fill);
+  stroke: var(--toolbarbutton-icon-fill-attention);
+}
+#nav-bar-overflow-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  background-image: url("chrome://browser/skin/chevron-animation.svg");
+  width: 848px;
+  height: 16px;
+  transform: translateX(0);
+}
+
+#nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box {
+  visibility: visible;
+}
+#nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: overflow-animation;
+  animation-timing-function: steps(52);
+  animation-duration: calc(52 * 16.667ms);
+}
+
+#email-link-button {
+  list-style-image: url("chrome://browser/skin/mail.svg");
+}
+
+#sidebar-button {
+  list-style-image: url("chrome://browser/skin/sidebars-right.svg");
+}
+
+#sidebar-button:-moz-locale-dir(ltr):not([positionend]),
+#sidebar-button:-moz-locale-dir(rtl)[positionend] {
+  list-style-image: url("chrome://browser/skin/sidebars.svg");
+}
+
+#panic-button {
+  list-style-image: url("chrome://browser/skin/forget.svg");
+}
+
+#panic-button[open] {
+  fill: rgb(213, 32, 20);
+}
+
+toolbar[brighttext] #panic-button[open] {
+  fill: #ff848b;
+}
+
+#library-button {
+  list-style-image: url("chrome://browser/skin/library.svg");
+}
+
+#save-to-pocket-button {
+  list-style-image: url("chrome://global/skin/icons/pocket-outline.svg");
+  fill: var(--toolbarbutton-icon-fill);
+}
+
+#save-to-pocket-button[open="true"],
+#save-to-pocket-button[pocketed="true"] {
+  list-style-image: url("chrome://global/skin/icons/pocket.svg");
+  fill: #ef4056;
+}
+
+/* ----- BOOKMARK BUTTONS ----- */
+
+.bookmark-item {
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+toolbarbutton.bookmark-item {
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--toolbarbutton-icon-fill);
+}
+
+.bookmark-item[container] {
+  list-style-image: url("chrome://browser/skin/folder.png");
+}
+
+.bookmark-item[container][query] {
+  list-style-image: url("chrome://browser/skin/places/folder-smart.svg");
+}
+
+.bookmark-item[query][tagContainer] {
+  list-style-image: url("chrome://browser/skin/places/tag.svg");
+  -moz-image-region: auto;
+}
+
+.bookmark-item[query][dayContainer] {
+  list-style-image: url("chrome://browser/skin/history.svg");
+  -moz-image-region: auto;
+}
+
+.bookmark-item[query][hostContainer] {
+  list-style-image: url("chrome://browser/skin/folder.png");
+}
+
+#whats-new-menu-button {
+  list-style-image: url("chrome://global/skin/icons/whatsnew.svg");
+}
+
+#ion-button {
+  list-style-image: url("chrome://browser/skin/ion.svg");
+}
+
+#import-button {
+  list-style-image: url("chrome://browser/skin/import.svg");
+}

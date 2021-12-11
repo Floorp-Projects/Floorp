@@ -1,0 +1,26 @@
+diff --git a/clang-tools-extra/clang-tidy/ClangTidy.cpp b/clang-tools-extra/clang-tidy/ClangTidy.cpp
+index 73d66b980a5e..3b18de2176ba 100644
+--- a/clang-tools-extra/clang-tidy/ClangTidy.cpp
++++ b/clang-tools-extra/clang-tidy/ClangTidy.cpp
+@@ -432,6 +432,7 @@ ClangTidyASTConsumerFactory::CreateASTConsumer(
+
+   for (auto &Check : Checks) {
+     Check->registerMatchers(&*Finder);
++    Check->registerPPCallbacks(Compiler);
+     Check->registerPPCallbacks(*SM, PP, ModuleExpanderPP);
+   }
+
+diff --git a/clang-tools-extra/clang-tidy/ClangTidyCheck.h b/clang-tools-extra/clang-tidy/ClangTidyCheck.h
+index 20e9b8e47e6f..aded1f2e196c 100644
+--- a/clang-tools-extra/clang-tidy/ClangTidyCheck.h
++++ b/clang-tools-extra/clang-tidy/ClangTidyCheck.h
+@@ -70,6 +70,9 @@ public:
+     return true;
+   }
+
++  /// This has been deprecated in clang 9 - needed by mozilla-must-override
++  virtual void registerPPCallbacks(CompilerInstance &Compiler) {}
++
+   /// Override this to register ``PPCallbacks`` in the preprocessor.
+   ///
+   /// This should be used for clang-tidy checks that analyze preprocessor-

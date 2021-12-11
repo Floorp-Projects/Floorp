@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for ElementTraversal via SVG</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="w3element_traversal.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var doc = $("svg").contentDocument;
+  
+  //et-namespace.svg
+  var parentEl = doc.getElementById("parentEl_namespace");
+  var nChild = parentEl.firstElementChild;
+  is(nChild && "dill", nChild.localName, "failed to get child with namespace")
+
+  //et-previousElementSibling.svg
+  var lec = doc.getElementById("last_element_child_pes");
+  var pes = lec.previousElementSibling;
+  isnot(pes, null, "previousElementSibling is null");
+  is(pes.nodeType, 1, "previousElementSibling returned the wrong node type");
+  is(pes.getAttribute("id"), "middle_element_child_pes", "previousElementSibling returned the wrong child");
+
+  //et-sibling_null.svg
+  var fec = doc.getElementById("first_element_child_sibnull");
+  var pes = fec.previousElementSibling;
+  var nes = fec.nextElementSibling;
+  is(pes, null, "previousElementSibling is not null");
+  is(nes, null, "nextElementSibling is not null");
+
+  //et-nextElementSibling.svg
+  fec = doc.getElementById("first_element_child_nes");
+  var nes = fec.nextElementSibling;
+  isnot(nes, null, "nextElementSibling returned NULL");
+  is(nes.nodeType, 1, "nextElementSibling returned wrong node type");
+  is(nes.getAttribute("id"), "last_element_child_nes", "nextElementSibling returned wrong node id");
+
+  //et-lastElementChild.svg
+  var parentEl = doc.getElementById("parentEl_lec");
+  var lec = parentEl.lastElementChild;
+  isnot(lec, null, "lastElementChild returned null");
+  is(lec.nodeType, 1, "lastElementChild returned wrong nodeType");
+  is(lec.getAttribute("id"), "last_element_child_lec", "lastElementChild returned wrong id");
+
+  //et-firstElementChild.svg
+  var parentEl = doc.getElementById("parentEl_fec");
+  var fec = parentEl.firstElementChild;
+  isnot(fec, null, "firstElementChild returned null");
+  is(fec.nodeType, 1, "firstElementChild returned wrong nodeType");
+  is(fec.getAttribute("id"), "first_element_child_fec", "firstElementChild returned wrong id");
+
+  //et-entity.svg
+  var parentEl = doc.getElementById("parentEl_entity");
+  var fec = parentEl.firstElementChild;
+  isnot(fec, null, "firstElementChild returned null");
+  is(fec.nodeType, 1, "firstElementChild returned wrong nodeType");
+  is(fec.getAttribute("id"), "first_element_child_entity", "firstElementChild returned wrong id");
+
+  //et-dynamic-remove.svg
+  var parentEl = doc.getElementById("parentEl_dynremove");
+  var lec = parentEl.lastElementChild;
+  parentEl.removeChild( lec );
+  is(parentEl.childElementCount && 1, parentEl.childElementCount, "failed to removeChild");
+
+  //et-dynamic-add.svg
+  var parentEl = doc.getElementById("parentEl_dynadd");
+  var newChild = doc.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  parentEl.appendChild( newChild );
+  is(parentEl.childElementCount && 2, parentEl.childElementCount, "failed to appendChild");
+
+  //et-childElement-null.svg
+  var parentEl = doc.getElementById("parentEl_null");
+  var fec = parentEl.firstElementChild;
+  var lec = parentEl.lastElementChild;
+  is(fec, null, "expected null from firstElementChild");
+  is(lec, null, "expected null from lastElementChild");
+
+
+  //et-childElementCount.svg
+  var parentEl = doc.getElementById("parentEl_count");
+  is(parentEl.childElementCount && 3, parentEl.childElementCount, "got wrong childElementCount");
+
+  //et-childElementCount-nochild.svg
+  var parentEl = doc.getElementById("parentEl_nochild");
+  is(0, parentEl.childElementCount, "got wrong childElementCount");
+  
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+</script>
+</pre>
+</body>
+</html>
+

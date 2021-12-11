@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+    <foreignObject requiredFeatures="foo" id="f">
+        <svg>
+            <text id="t"/>
+        </svg>
+    </foreignObject>
+
+    <script>
+        window.addEventListener("load", function() {
+            document.documentElement.appendChild(document.getElementById("f"))
+            document.getElementById("t").getNumberOfChars();
+        }, false);
+    </script>
+
+</svg>

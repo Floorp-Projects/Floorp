@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Large Menu Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    async function runTest() {
+      // This test exercises non-native menu code. So disable native context menus for this test.
+      // If we ever get to a point where we don't use any non-native menus on macOS any more, we can
+      // disable this test on macOS.
+      await SpecialPowers.pushPrefEnv({ set: [["widget.macos.native-context-menus", false]] });
+
+      window.openDialog("window_largemenu.xhtml", "_blank", "chrome,width=200,height=200,noopener", window);
+    }
+  </script>
+</head>
+<body onload="setTimeout(runTest, 0);">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<iframe id="f"></iframe>
+
+<script>
+var chromeScriptUrl = SimpleTest.getTestFileURL("file_report_chromescript.js");
+var script = SpecialPowers.loadChromeScript(chromeScriptUrl);
+
+var reportedFont1 = false;
+var reportedFont3 = false;
+
+function reportListener(msg) {
+  if (!msg.error) {
+    // Step 3: Check the specific blocked URLs from the CSP reports.
+    let blocked = JSON.parse(msg.report)["csp-report"]["blocked-uri"]
+                  .replace(/^.*\//, "");
+    switch (blocked) {
+      case "Ahem.ttf?report_font_cache-1":
+        ok(!reportedFont1, "should not have already reported Test Font 1");
+        ok(!reportedFont3, "should not have reported Test Font 3 before Test Font 1");
+        reportedFont1 = true;
+        break;
+      case "Ahem.ttf?report_font_cache-2":
+        ok(false, "should not have reported Test Font 2");
+        break;
+      case "Ahem.ttf?report_font_cache-3":
+        ok(!reportedFont3, "should not have already reported Test Font 3");
+        reportedFont3 = true;
+        break;
+    }
+    if (reportedFont1 && reportedFont3) {
+      script.removeMessageListener("opening-request-completed", reportListener);
+      script.sendAsyncMessage("finish");
+      SimpleTest.finish();
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+script.addMessageListener("opening-request-completed", reportListener);
+
+window.onmessage = function(message) {
+  // Step 2: Navigate to the second document, which will attempt to use the
+  // cached "Test Font 1" and then a new "Test Font 3", both of which will
+  // generate CSP reports.  The "Test Font 2" entry in the user font cache
+  // should not cause a CSP report from this document.
+  is(message.data, "first-doc-ready");
+  f.src = "file_report_font_cache-2.html";
+};
+
+// Step 1: Prime the user font cache with entries for "Test Font 1",
+// "Test Font 2" and "Test Font 3".
+f.src = "file_report_font_cache-1.html";
+</script>

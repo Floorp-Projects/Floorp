@@ -1,0 +1,39 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     The green square should always be rendered at 100px.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body > div {
+  width: 200px;
+  height: 200px;
+  float: left;
+  background-repeat: no-repeat;
+}
+
+div > div {
+  background: lime;
+}
+
+</style>
+</head>
+<body style="margin:0">
+<div style="background-image: -moz-element(#eInteger)"></div>
+<div style="background-image: -moz-element(#eRoundUp1)"></div>
+<div style="background-image: -moz-element(#eRoundUp2)"></div>
+<div style="background-image: -moz-element(#eRoundDown1)"></div>
+<div style="background-image: -moz-element(#eRoundDown2)"></div>
+
+<div style="overflow:hidden; height:0">
+  <div id="eInteger" style="margin: 0.3px; width: 100px; height: 100px;"></div>
+  <div id="eRoundUp1" style="margin: 0.3px; width: 99.6px; height: 99.6px;"></div>
+  <div id="eRoundUp2" style="margin: 0.6px; width: 99.6px; height: 99.6px;"></div>
+  <div id="eRoundDown1" style="margin: 0.3px; width: 100.3px; height: 100.3px;"></div>
+  <div id="eRoundDown2" style="margin: 0.6px; width: 100.3px; height: 100.3px;"></div>
+</div>
+</body>
+</html>

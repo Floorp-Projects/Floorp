@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test - big blob on content side</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_bigBlob");
+is(ws.readyState, 0, "Initial readyState is 0");
+ws.binaryType = "blob";
+
+ws.onopen = function() {
+  is(ws.readyState, 1, "Open readyState is 1");
+  ws.send(new Blob([new Array(1024*1024).join('123456789ABCDEF')]));
+}
+
+let receivedBlob;
+ws.onmessage = function(e) {
+  ok(e.data instanceof Blob, "We should be receiving a Blob");
+  receivedBlob = e.data;
+  ws.close();
+}
+
+ws.onclose = function(e) {
+  is(ws.readyState, 3, "Close readyState is 3");
+
+  // check blob contents
+  var reader = new FileReader();
+  reader.onload = function(event) {
+    is(reader.result, new Array(1024*1024).join('123456789ABCDEF'), "All data matches");
+  }
+
+  reader.onerror = function(event) {
+    ok(false, "Something bad happen.");
+  }
+
+  reader.onloadend = function(event) {
+    SimpleTest.finish();
+  }
+
+  reader.readAsBinaryString(receivedBlob);
+}
+
+SimpleTest.requestFlakyTimeout("The web socket tests are really fragile, but avoiding timeouts might be hard, since it's testing stuff on the network. " +
+                               "Expect all sorts of flakiness in this test...");
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

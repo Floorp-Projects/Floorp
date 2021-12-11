@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1112014</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="property_database.js"></script>
+  <script type="application/javascript">
+
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  SimpleTest.requestLongerTimeout(2);
+
+  // This holds a canonical test value for each TYPE_ constant.
+  let testValues = {
+    "color": "rgb(3,3,3)",
+    "gradient": "linear-gradient( 45deg, blue, red )",
+    "timing-function": "cubic-bezier(0.1, 0.7, 1.0, 0.1)",
+  };
+
+  // The canonical test values don't work for all properties, in
+  // particular some shorthand properties.  For these cases we have
+  // override values.
+  let overrideValues = {
+    "box-shadow": {
+      "color": testValues.color + " 2px 2px"
+    },
+    "-webkit-box-shadow": {
+      "color": testValues.color + " 2px 2px"
+    },
+    "scrollbar-color": {
+      "color": testValues.color + " " + testValues.color,
+    },
+    "text-shadow": {
+      "color": testValues.color + " 2px 2px"
+    },
+  };
+
+
+  // Ensure that all the TYPE_ constants have a representative
+  // test value, to try to ensure that this test is updated
+  // whenever a new type is added.
+  let reps = [];
+  for (let tc in InspectorUtils) {
+    if (/TYPE_/.test(tc)) {
+      if (!(tc in testValues)) {
+        reps.push(tc);
+      }
+    }
+  }
+  is(reps.join(","), "", "all types have representative test value");
+
+  for (let propertyName in gCSSProperties) {
+    let prop = gCSSProperties[propertyName];
+
+    for (let iter in testValues) {
+      let testValue = testValues[iter];
+      if (propertyName in overrideValues &&
+          iter in overrideValues[propertyName]) {
+        testValue = overrideValues[propertyName][iter];
+      }
+
+      let supported =
+        InspectorUtils.cssPropertySupportsType(propertyName, iter);
+      let parsed = CSS.supports(propertyName, testValue);
+      is(supported, parsed, propertyName + " supports " + iter);
+    }
+  }
+
+  // Regression test for an assertion failure in an earlier version of
+  // the code.  Note that cssPropertySupportsType returns false for
+  // all types for a variable.
+  ok(!InspectorUtils.cssPropertySupportsType("--variable", "color"),
+     "cssPropertySupportsType returns false for variable");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1112014">Mozilla Bug 1112014</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

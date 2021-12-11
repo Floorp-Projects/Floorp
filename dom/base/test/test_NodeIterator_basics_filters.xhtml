@@ -1,0 +1,178 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- NodeIterator basics and filters tests.
+     Originally written by Ian Hickson, Mochi-ified by Zack Weinberg.
+     This file based on 001.xml, 002.xml, and 010.xml from
+       http://hixie.ch/tests/adhoc/dom/traversal/node-iterator/
+     with some additional cases.
+  -->
+<head>
+  <title>DOM Traversal: NodeIterator: Basics and Filters</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<!-- comment -->
+<?body processing instruction?>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript"><![CDATA[
+  function compare_arrays(e, f, label) {
+    var length = (e.length > f.length) ? e.length : f.length;
+    for (var i = 0; i < length; i += 1) {
+      if (e[i] > 0)
+        is(f[i], e[i], label + " - index " + i + ": ");
+      else
+        todo_is(f[i], -e[i], label + " - index " + i + ": ");
+    }
+  }
+
+  /** DOM Traversal: NodeIterator: Basics **/
+  // NOTE: If you change the document structure, you have to make sure
+  // the magic numbers in this array (and 'expected_f', below) match.
+  var expected = new Array(9, // document
+                           1, // html
+                           3, 8, // leading comment
+                           3, 1, // head
+                           3, 1, 3, // title
+                           3, 1, // first script tag
+                           3, 1, // stylesheet tag
+                           3,    // close head
+                           3, 1, // body
+                           3, 1, // p#display
+                           3, 1, // div#content
+                           3, 8, // comment
+                           3, 7, // processing instruction
+                           3,    // close div
+                           3, 1, // pre#test
+                           3, 1, 4, // script and CDATA block
+                           -3, -3, -3); // close close close
+                                        // these aren't there
+                                        // not sure why
+  var found = new Array();
+
+  var iterator = document.createNodeIterator(document,
+                                             NodeFilter.SHOW_ALL,
+                                             null);
+  var node;
+
+  // forwards
+  while (node = iterator.nextNode())
+    found.push(node.nodeType);
+  compare_arrays(expected, found, 'basics forward');
+
+  // backwards
+  found.length = 0;
+  while (node = iterator.previousNode())
+    found.unshift(node.nodeType);
+  compare_arrays(expected, found, 'basics backward');
+
+  /** DOM Traversal: NodeIterator: Filters **/
+  function filter(n) {
+    if (n.nodeType == 3) {
+      return NodeFilter.FILTER_SKIP;
+    } else if (n.nodeName == 'body') {
+      return NodeFilter.FILTER_REJECT; // same as _SKIP
+    }
+    return 1; // FILTER_ACCEPT
+  }
+
+  // Same warning applies to this array as to 'expected'.
+  var expect_f = new Array(9, // document
+                           1, // html
+                           8, // leading comment
+                           1, // head
+                           1, // title
+                           1, // first script tag
+                           1, // stylesheet tag
+                           // body skipped
+                           1, // p#display
+                           1, // div#content
+                           8, // comment
+                           // processing instruction skipped
+                           1, // pre#test
+                           1, 4); // script and CDATA block
+
+  found.length = 0;
+  iterator = document.createNodeIterator(document, NodeFilter.SHOW_ALL,
+                                         filter);
+
+  // forwards
+  while (node = iterator.nextNode())
+    found.push(node.nodeType);
+  compare_arrays(expect_f, found, 'filtered forward');
+
+  // backwards
+  found.length = 0;
+  while (node = iterator.previousNode())
+    found.unshift(node.nodeType);
+  compare_arrays(expect_f, found, 'filtered backward');
+
+  function checkBadFilter(method, n) {
+    var iter =
+      document.createNodeIterator(document, NodeFilter.SHOW_ALL,
+                                  function() {
+                                    if (n < 0)
+                                      iter.detach();
+                                    return NodeFilter.FILTER_ACCEPT;
+                                  });
+    while (--n >= 0)
+      iter.nextNode();
+    try {
+      iter[method]();
+      ok(true, "Able to call " + method + " on a NodeIterator after calling no-op detach()");
+    } catch (x) { ok(false, x) }
+  }
+  checkBadFilter("nextNode", 2);
+  checkBadFilter("previousNode", 3);
+
+  (function() {
+    // Implementing the scenario outlined in
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=552110#c4
+
+    var iter = (function(filt) {
+      var grandparent = document.createElement("div"),
+          parent = document.createElement("span");
+
+      grandparent.appendChild(parent);
+      parent.appendChild(document.createElement("img"));
+      parent.appendChild(document.createElement("p"));
+
+      return document.createNodeIterator(grandparent,
+                                         NodeFilter.SHOW_ALL,
+                                         filt);
+    })(function(n) {
+      if (n.nodeName != "img")
+        return NodeFilter.FILTER_ACCEPT;
+
+      iter.detach();
+
+      n.parentNode.remove();
+      // Drop any node references passed into this function.
+      for (var i = 0; i < arguments.length; ++i)
+        arguments[i] = null;
+      ok(!n, "arguments[0] = null should have nulled out n");
+
+      // Try to trigger GC.
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", location.href, false);
+      xhr.send();
+
+      return NodeFilter.FILTER_SKIP;
+    });
+
+    is(iter.nextNode().nodeName, "div",
+       "iter.nextNode() returned the wrong node");
+    is(iter.nextNode().nodeName, "span",
+       "iter.nextNode() returned the wrong node");
+    try {
+      var p = iter.nextNode();
+      ok(false, "iter.nextNode() should have thrown, but instead it returned <" + p.nodeName + ">");
+    } catch (x) { ok(true, x) }
+  })();
+
+]]></script>
+</pre>
+</body>
+</html>

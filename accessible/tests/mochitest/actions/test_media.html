@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=483573
+-->
+<head>
+  <title>HTML5 audio/video tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../actions.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+
+    // gA11yEventDumpID = "eventDump";
+    // gA11yEventDumpToConsole = true; // debug stuff
+
+    function focusChecker(aAcc) {
+      this.type = EVENT_FOCUS;
+      this.target = aAcc;
+      this.getID = function focusChecker_getID() {
+        return "focus handling";
+      };
+      this.check = function focusChecker_check(aEvent) {
+        testStates(this.target, STATE_FOCUSED);
+      };
+    }
+
+    function nameChecker(aAcc, aName) {
+      this.type = EVENT_NAME_CHANGE;
+      this.target = aAcc;
+      this.getID = function nameChecker_getID() {
+        return "name change handling";
+      };
+      this.check = function nameChecker_check(aEvent) {
+        is(aEvent.accessible.name, aName,
+           "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
+      };
+    }
+
+    async function loadAudioSource() {
+      /**
+       * Setting the source dynamically and wait for it to load,
+       * so we can test the accessibility tree of the control in its ready and
+       * stable state.
+       *
+       * See bug 1484048 comment 25 for discussion on how it switches UI when
+       * loading a statically declared source.
+       */
+      await new Promise(resolve => {
+        let el = document.getElementById("audio");
+        el.addEventListener("canplaythrough", resolve, {once: true});
+        el.src = "../bug461281.ogg";
+      });
+
+      doTest();
+    }
+
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // test actions of audio controls
+
+      todo(false, "Focus test are disabled until bug 494175 is fixed.");
+
+      var audioElm = getAccessible("audio");
+      var playBtn = audioElm.firstChild;
+      // var scrubber = playBtn.nextSibling.nextSibling.nextSibling;
+      var muteBtn = audioElm.lastChild.previousSibling;
+
+      var actions = [
+        {
+          ID: muteBtn,
+          actionName: "press",
+          eventTarget: "element",
+          eventSeq: [
+     //       new focusChecker(muteBtn),
+            new nameChecker(muteBtn, "Unmute"),
+          ],
+        },
+     //   {
+     //     ID: scrubber,
+     //     actionName: "activate",
+     //     events: null,
+     //     eventSeq: [
+     //       new focusChecker(scrubber)
+     //     ]
+     //   },
+        {
+          ID: playBtn,
+          actionName: "press",
+          eventTarget: "element",
+          eventSeq: [
+     //       new focusChecker(playBtn),
+            new nameChecker(playBtn, "Pause"),
+          ],
+        },
+      ];
+
+      testActions(actions); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(loadAudioSource);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" rel="opener"
+     title="Expose HTML5 video and audio elements' embedded controls through accessibility APIs"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=483573">Mozilla Bug 483573</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <audio id="audio" controls="true"></audio>
+
+  <div id="eventDump"></div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  document.getElementById("i").src = "removing-editable-xslt-inner.xhtml";
+  setTimeout(function() { 
+    document.body.removeChild(document.getElementById("i"));
+    document.documentElement.removeAttribute("class");
+  }, 0);
+}
+</script>
+</head>
+<body onload="boom();">
+<iframe id="i"></iframe>
+</body>
+</html>

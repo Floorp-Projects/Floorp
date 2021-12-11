@@ -1,0 +1,124 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Service Workers")
+
+# Public stuff.
+EXPORTS.mozilla.dom += [
+    "FetchEventOpChild.h",
+    "FetchEventOpParent.h",
+    "FetchEventOpProxyChild.h",
+    "FetchEventOpProxyParent.h",
+    "NavigationPreloadManager.h",
+    "ServiceWorker.h",
+    "ServiceWorkerActors.h",
+    "ServiceWorkerChild.h",
+    "ServiceWorkerCloneData.h",
+    "ServiceWorkerContainer.h",
+    "ServiceWorkerContainerChild.h",
+    "ServiceWorkerContainerParent.h",
+    "ServiceWorkerDescriptor.h",
+    "ServiceWorkerEvents.h",
+    "ServiceWorkerInfo.h",
+    "ServiceWorkerInterceptController.h",
+    "ServiceWorkerIPCUtils.h",
+    "ServiceWorkerManager.h",
+    "ServiceWorkerManagerChild.h",
+    "ServiceWorkerManagerParent.h",
+    "ServiceWorkerOp.h",
+    "ServiceWorkerOpPromise.h",
+    "ServiceWorkerParent.h",
+    "ServiceWorkerRegistrar.h",
+    "ServiceWorkerRegistration.h",
+    "ServiceWorkerRegistrationChild.h",
+    "ServiceWorkerRegistrationDescriptor.h",
+    "ServiceWorkerRegistrationInfo.h",
+    "ServiceWorkerRegistrationParent.h",
+    "ServiceWorkerShutdownState.h",
+    "ServiceWorkerUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "FetchEventOpChild.cpp",
+    "FetchEventOpParent.cpp",
+    "FetchEventOpProxyChild.cpp",
+    "FetchEventOpProxyParent.cpp",
+    "NavigationPreloadManager.cpp",
+    "RemoteServiceWorkerContainerImpl.cpp",
+    "RemoteServiceWorkerImpl.cpp",
+    "RemoteServiceWorkerRegistrationImpl.cpp",
+    "ServiceWorker.cpp",
+    "ServiceWorkerActors.cpp",
+    "ServiceWorkerChild.cpp",
+    "ServiceWorkerCloneData.cpp",
+    "ServiceWorkerContainer.cpp",
+    "ServiceWorkerContainerChild.cpp",
+    "ServiceWorkerContainerParent.cpp",
+    "ServiceWorkerContainerProxy.cpp",
+    "ServiceWorkerDescriptor.cpp",
+    "ServiceWorkerEvents.cpp",
+    "ServiceWorkerInfo.cpp",
+    "ServiceWorkerInterceptController.cpp",
+    "ServiceWorkerJob.cpp",
+    "ServiceWorkerJobQueue.cpp",
+    "ServiceWorkerManager.cpp",
+    "ServiceWorkerManagerParent.cpp",
+    "ServiceWorkerOp.cpp",
+    "ServiceWorkerParent.cpp",
+    "ServiceWorkerPrivate.cpp",
+    "ServiceWorkerPrivateImpl.cpp",
+    "ServiceWorkerProxy.cpp",
+    "ServiceWorkerQuotaUtils.cpp",
+    "ServiceWorkerRegisterJob.cpp",
+    "ServiceWorkerRegistrar.cpp",
+    "ServiceWorkerRegistration.cpp",
+    "ServiceWorkerRegistrationChild.cpp",
+    "ServiceWorkerRegistrationDescriptor.cpp",
+    "ServiceWorkerRegistrationInfo.cpp",
+    "ServiceWorkerRegistrationParent.cpp",
+    "ServiceWorkerRegistrationProxy.cpp",
+    "ServiceWorkerScriptCache.cpp",
+    "ServiceWorkerShutdownBlocker.cpp",
+    "ServiceWorkerShutdownState.cpp",
+    "ServiceWorkerUnregisterCallback.cpp",
+    "ServiceWorkerUnregisterJob.cpp",
+    "ServiceWorkerUpdateJob.cpp",
+    "ServiceWorkerUtils.cpp",
+]
+
+IPDL_SOURCES += [
+    "IPCNavigationPreloadState.ipdlh",
+    "IPCServiceWorkerDescriptor.ipdlh",
+    "IPCServiceWorkerRegistrationDescriptor.ipdlh",
+    "PFetchEventOp.ipdl",
+    "PFetchEventOpProxy.ipdl",
+    "PServiceWorker.ipdl",
+    "PServiceWorkerContainer.ipdl",
+    "PServiceWorkerManager.ipdl",
+    "PServiceWorkerRegistration.ipdl",
+    "ServiceWorkerOpArgs.ipdlh",
+    "ServiceWorkerRegistrarTypes.ipdlh",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+MOCHITEST_MANIFESTS += [
+    "test/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "test/chrome.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser.ini",
+    "test/isolated/multi-e10s-update/browser.ini",
+]
+
+TEST_DIRS += ["test/gtest"]

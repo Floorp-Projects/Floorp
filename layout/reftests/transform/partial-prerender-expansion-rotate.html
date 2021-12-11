@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+<style>
+html {
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+@keyframes anim {
+  from { transform: translate(-50vw, -50vh) rotate(85deg); }
+  to { transform: translate(-50vw, -50vh) rotate(90deg); }
+}
+#target {
+  width: 200vw;
+  height: 200vh;
+  position: absolute;
+  transform-origin: 100vw 100vh;
+}
+</style>
+<div id="target">
+  <!--
+    Put an SVG element so that the transform display item has a blob on
+    Webrender which means this test properly fails without the proper fix.
+    -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+    <rect fill="green" width="16" height="16"></rect>
+  </svg>
+</div>
+<script>
+// Waiting MozReftestInvalidate event makes this test fail for some reasons.
+// so we use window.onload instead.
+window.onload = () => {
+  target.style.animation = "anim 100s step-end reverse";
+  target.addEventListener("animationstart", () => {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+};
+</script>
+</html>

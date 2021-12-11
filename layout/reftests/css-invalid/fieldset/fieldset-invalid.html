@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<!-- Invalid fieldset -->
+<style>
+  fieldset:invalid { display: none; }
+</style>
+<body onload="document.getElementById('input').setCustomValidity('foo'); document.documentElement.className='';">
+<fieldset>
+  <input id="input">
+</fieldset>
+</body>
+</html>

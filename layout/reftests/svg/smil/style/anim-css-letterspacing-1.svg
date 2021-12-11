@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait" onload="setTimeAndSnapshot(3.0, true)">
+  <script xlink:href="../smil-util.js"/>
+  <text x="50" y="50" font-size="20">abc
+    <animate attributeName="letter-spacing" fill="freeze" from="0" to="20" begin="0s" dur="4s"/>
+  </text>
+</svg>

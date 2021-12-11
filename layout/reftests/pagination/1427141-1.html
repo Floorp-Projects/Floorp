@@ -1,0 +1,39 @@
+<!doctype html>
+<html class="reftest-paged">
+  <head>
+    <title>bug 1427141</title>
+
+    <style>
+    @page { size:5in 3in; margin:0.5in; }
+    html,body {
+        color:black; background-color:white; font:16px/1 monospace; padding:0; margin:0;
+    }
+
+    report-page {
+      height: 100%;
+      display: block;
+      overflow: hidden;
+      page-break-before: always;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+    </style>
+  </head>
+  <body>
+    <report-page>
+      <div>
+        <table>
+          <tr>
+            <td>
+                PAGE 1 (above) is blank. The line below is visible:<br>
+                THIS IS PAGE 2
+            </td>
+          </tr>
+        </table>
+      </div>
+    </report-page>
+  </body>
+</html>

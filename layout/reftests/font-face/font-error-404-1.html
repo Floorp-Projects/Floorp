@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+/* When the font data is returned with a 404 (Not found) status, it should not be used */
+@font-face {
+  font-family: foo;
+  src: url(../fonts/Chunkfive.sjs?statusCode=404&statusReason=Not%20found);
+}
+body {
+  font-family: foo, monospace;
+  font-size: 36px;
+}
+</style>
+</head>
+<body>
+Hello world
+</body>
+</html>

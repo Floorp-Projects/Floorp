@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage structured clone page</title>
+  <script type="application/javascript"
+          src="postMessage_structured_clone_helper.js"></script>
+  <script type="application/javascript">
+    var generator = getTestContent()
+
+    function isClone(a, b) {
+        window.dump("Object a: " + a + "\n");
+        window.dump("Object b: " + b + "\n");
+        var stack = [[a, b]];
+        var memory = new WeakMap();
+        var rmemory = new WeakMap();
+
+        while (stack.length > 0) {
+            var pair = stack.pop();
+            var x = pair[0], y = pair[1];
+            if (typeof x !== "object" || x === null) {
+                // x is primitive.
+                if (x !== y) {
+                    window.dump("Primitives not equal!\n");
+                    return false;
+                }
+            } else if (x instanceof Date) {
+                if (x.getTime() == y.getTime())
+                    return true;
+                window.dump("Dates not equal!\n");
+                return false;
+            } else if (memory.has(x)) {
+                // x is an object we have seen before in a.
+                if (y !== memory.get(x)) {
+                    window.dump("Already seen!?\n");
+                    return false;
+                }
+                if (!(rmemory.get(y) == x)) {
+                    window.dump("Not equal??\n");
+                    return false;
+                }
+            } else {
+                // x is an object we have not seen before.
+                // Check that we have not seen y before either.
+                if (rmemory.has(y)) {
+                    // If we have seen y before, the only possible outcome
+                    // is that x and y are literally the same object.
+                    if (y == x)
+                        continue;
+                    window.dump("Already seen y!?\n");
+                    window.dump(y.toString() + "\n");
+                    return false;
+                }
+
+                // x and y must be of the same [[Class]].
+                var xcls = Object.prototype.toString.call(x);
+                var ycls = Object.prototype.toString.call(y);
+                if (xcls !== ycls) {
+                    window.dump("Failing on proto\n");
+                    return false;
+                }
+
+                // This function is only designed to check Objects and Arrays.
+                if (!(xcls === "[object Object]" || xcls === "[object Array]")) {
+                    window.dump("Not an object!\n");
+                    window.dump(xcls + "\n");
+                    return false;
+                }
+
+                // Compare objects.
+                var xk = Object.keys(x), yk = Object.keys(y);
+                if (xk.length !== yk.length) {
+                    window.dump("Length mismatch!\n");
+                    return false;
+                }
+                for (var i = 0; i < xk.length; i++) {
+                    // We must see the same property names in the same order.
+                    if (xk[i] !== yk[i]) {
+                        window.dump("wrong order\n");
+                        return false;
+                    }
+
+                    // Put the property values on the stack to compare later.
+                    stack.push([x[xk[i]], y[yk[i]]]);
+                }
+
+                // Record that we have seen this pair of objects.
+                memory.set(x, y);
+                rmemory.set(y, x);
+            }
+        }
+        return true;
+    }
+
+    function receiveMessage(evt)
+    {
+      if (isClone(evt.data, generator.next().value))
+        window.parent.postMessage("TEST-PASS", "*");
+      else
+        window.parent.postMessage("TEST-FAIL", "*");
+    }
+    window.addEventListener("message", receiveMessage);
+  </script>
+</head>
+<body>
+</body>
+</html>

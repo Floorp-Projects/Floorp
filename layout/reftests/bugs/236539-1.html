@@ -1,0 +1,130 @@
+<html>
+<head>
+<script type="text/javascript">
+var NumLine = 0
+
+function maj(IDLine)
+{
+
+var newtr = document.createElement("tr")
+newtr.setAttribute("id","tr"+IDLine)
+
+
+var newtdselect = document.createElement("td")
+var newselect = document.createElement("select")
+newselect.setAttribute("id","HypothRank_"+IDLine)
+newselect.setAttribute("name","HypothRank_"+IDLine)
+
+for (i=1;i<=IDLine;i++)
+ {
+
+ var newoption = document.createElement("option")
+ newoption.setAttribute("id",i)
+ newoption.setAttribute("class","classoption1")
+ if (i == IDLine)
+  {
+   newoption.setAttribute("selected","selected")
+  }
+ var newtxt = document.createTextNode(i)
+ newoption.appendChild(newtxt)
+
+ newselect.appendChild(newoption)
+ }
+
+if (i>2)
+ { 
+   for (j=1;j<=i-2;j++)
+    {
+     var newoption = document.createElement("option")
+     newoption.setAttribute("class","classoption1")
+     newoption.setAttribute("id",IDLine)
+     var newtxt = document.createTextNode(i-1)
+     newoption.appendChild(newtxt)
+     document.getElementById("HypothRank_"+j).appendChild(newoption)
+    }
+ }
+
+newtdselect.appendChild(newselect)
+newtr.appendChild(newtdselect)
+
+document.getElementById('letbody').appendChild(newtr)
+
+NumLine++
+}
+
+
+
+function DeleteLine(IDLine)
+{
+for (i=1;i<=NumLine;i++)
+
+ {
+  if (i != IDLine)
+    {
+     noeud = document.getElementById("HypothRank_"+i)[IDLine-1]
+     document.getElementById("HypothRank_"+i).removeChild(noeud)
+     for (j=0;j<=NumLine-2;j++)
+      {
+       noeud = document.getElementById("HypothRank_"+i)[j]
+
+       k=j+1
+       noeud.setAttribute("id",k)
+
+       if (k == NumLine)
+         {
+          noeud.setAttribute("selected","selected")
+         }
+       depart = 0
+       taille = noeud.firstChild.nodeValue.length
+       document.getElementById("HypothRank_"+i)[j].firstChild.replaceData(depart,taille,j+1)
+      }
+    }
+ }
+
+
+noeud = document.getElementById('tr'+IDLine)
+document.getElementById('letbody').removeChild(noeud)
+
+NumLine--
+
+for (i=IDLine;i<=NumLine;i++)
+ {
+ k=i+1
+ noeud = document.getElementById("tr"+k)
+ noeud.setAttribute("id","tr"+i)
+
+ noeud = document.getElementById("HypothRank_"+k)
+ noeud.setAttribute("id","HypothRank_"+i)
+ noeud.setAttribute("name","HypothRank_"+i) 
+
+ }
+
+
+}
+
+</script>
+</head>
+
+<body>
+<form>
+ <table border="1" id="latable">
+  <thead></thead>
+  <tfoot></tfoot>
+  <tbody id="letbody"></tbody>
+ </table>
+</form>
+
+<script>
+  document.body.offsetWidth;
+  maj(NumLine+1);
+  document.body.offsetWidth;
+  maj(NumLine+1);
+  document.body.offsetWidth;
+  maj(NumLine+1);
+  document.body.offsetWidth;
+  DeleteLine(2);
+  document.body.offsetWidth;
+</script>
+
+</body>
+</html>

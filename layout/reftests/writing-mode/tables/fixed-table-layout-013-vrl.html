@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Fixed table layout - specified column-group height</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="Specified column-group height is ignored in fixed table layout.">
+        <style type="text/css">
+            div.test
+            {
+                writing-mode: vertical-rl;
+            }
+            table
+            {
+                border-collapse: collapse;
+                table-layout: fixed;
+                height: 200px;
+            }
+            td { padding: 0px; }
+            #colgroup
+            {
+                height: 50px;
+            }
+            #cell
+            {
+                background: blue;
+            }
+            #div1
+            {
+                background: black;
+                height: 100px;
+            }
+            #div1, #cell
+            {
+                width: 24px;
+            }
+        </style>
+    </head>
+    <body>
+     <p>Test passes if the boxes below are the same height.</p>
+     <div class="test">
+        <table>
+            <colgroup id="colgroup">
+                <col>
+            </colgroup>
+            <colgroup>
+                <col>
+            </colgroup>
+            <tr>
+                <td id="cell"></td>
+                <td></td>
+           </tr>
+        </table>
+        <div id="div1"></div>
+      </div>
+    </body>
+</html>

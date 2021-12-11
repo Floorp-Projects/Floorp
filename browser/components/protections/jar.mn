@@ -1,0 +1,12 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+    content/browser/lockwise-card.js                      (content/lockwise-card.js)
+    content/browser/monitor-card.js                       (content/monitor-card.js)
+    content/browser/protections.css                       (content/protections.css)
+    content/browser/protections.html                      (content/protections.html)
+    content/browser/protections.js                        (content/protections.js)
+    content/browser/proxy-card.js                         (content/proxy-card.js)
+    content/browser/vpn-card.js                           (content/vpn-card.js)

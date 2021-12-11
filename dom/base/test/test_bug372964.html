@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=372964
+-->
+<head>
+  <title>Test for Bug 372964</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372964">Mozilla Bug 372964</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 372964 **/
+
+var expectedEventType = "";
+var shouldBeTrusted = false;
+var eventHandlerCallCount = 0;
+
+function eventHandler(evt) {
+  ++eventHandlerCallCount;
+  is(evt.type, expectedEventType, "Wrong event type");
+  is(evt.isTrusted, shouldBeTrusted, "Wrong .isTrusted");
+}
+
+function test(trusted, type, removeAddedListener, removeSetListener, allowUntrusted) {
+  if (trusted) {
+    var x1 = SpecialPowers.wrap(new XMLHttpRequest());
+  } else {
+    x1 = new XMLHttpRequest();
+  }
+
+  var handlerCount = 0;
+  if (trusted || allowUntrusted || allowUntrusted == undefined) {
+    ++handlerCount;
+  }
+
+  if (allowUntrusted == undefined) {
+    // Test .addEventListener with 3 parameters.
+    x1.addEventListener(type, eventHandler);
+  } else {
+    // Test .addEventListener with 4 parameters.
+    x1.addEventListener(type, eventHandler, false, allowUntrusted);
+  }
+
+  if (("on" + type) in x1) {
+    ++handlerCount;
+    x1["on" + type] = eventHandler;
+  }
+
+  if (removeAddedListener) {
+    x1.removeEventListener(type, eventHandler);
+    if (trusted || allowUntrusted || allowUntrusted == undefined) {
+      --handlerCount;
+    }
+  }
+
+  if (removeSetListener) {
+    if (("on" + type) in x1) {
+      --handlerCount;
+      x1["on" + type] = null;
+    }
+  }
+
+  var e1 = document.createEvent("Events");
+  e1.initEvent(type, true, true);
+  expectedEventType = type;
+  shouldBeTrusted = trusted;
+  var ecc = eventHandlerCallCount;
+  x1.dispatchEvent(e1);
+  is(eventHandlerCallCount, ecc + handlerCount,
+     "Wrong number event handler calls. (1)");
+
+  e1 = document.createEvent("Events");
+  e1.initEvent(type, true, true);
+  expectedEventType = type;
+  // Set trusted since open() may cause events to be sent.
+  shouldBeTrusted = true;
+  x1.open("GET", window.location);
+  x1.abort(); // This should not remove event listeners.
+  ecc = eventHandlerCallCount;
+  shouldBeTrusted = trusted;
+  x1.dispatchEvent(e1);
+  is(eventHandlerCallCount, ecc + handlerCount,
+     "Wrong number event handler calls. (2)");
+
+  e1 = document.createEvent("Events");
+  e1.initEvent(type, true, true);
+  expectedEventType = type;
+  // Set trusted since open()/send() may cause events to be sent.
+  shouldBeTrusted = true;
+  x1.open("GET", window.location);
+  x1.send("");
+  x1.abort(); // This should not remove event listeners!
+  ecc = eventHandlerCallCount;
+  shouldBeTrusted = trusted;
+  x1.dispatchEvent(e1);
+  is(eventHandlerCallCount, ecc + handlerCount,
+     "Wrong number event handler calls. (3)");
+}
+
+var events =
+  ["load", "error", "progress", "readystatechange", "foo"];
+
+do {
+  var e = events.shift();
+  test(false, e, false, false);
+  test(false, e, false, true);
+  test(false, e, true,  false);
+  test(false, e, true,  true);
+  test(true,  e, false, false);
+  test(true,  e, false, true);
+  test(true,  e, true,  false);
+  test(true,  e, true,  true);
+
+  test(false, e, false, false, false);
+  test(false, e, false, false, true);
+  test(false, e, false, true,  false);
+  test(false, e, false, true,  true);
+  test(false, e, true,  false, false);
+  test(false, e, true,  false, true);
+  test(false, e, true,  true,  false);
+  test(false, e, true,  true,  true);
+  test(true,  e, false, false, false);
+  test(true,  e, false, false, true);
+  test(true,  e, false, true,  false);
+  test(true,  e, false, true,  true);
+  test(true,  e, true,  false, false);
+  test(true,  e, true,  false, true);
+  test(true,  e, true,  true,  false);
+  test(true,  e, true,  true,  true);
+} while(events.length);
+
+</script>
+</pre>
+</body>
+</html>
+

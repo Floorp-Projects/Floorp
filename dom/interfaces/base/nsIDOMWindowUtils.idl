@@ -1,0 +1,2270 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+/**
+ * nsIDOMWindowUtils is intended for infrequently-used methods related
+ * to the current nsIDOMWindow.  Some of the methods may require
+ * elevated privileges; the method implementations should contain the
+ * necessary security checks.  Access this interface by calling
+ * getInterface on a DOMWindow.
+ *
+ * WARNING: Do not use 'out jsval' parameters in this file.
+ *          SpecialPowers, which is used to access nsIDOMWindowUtils
+ *          in plain mochitests, does not know how to handle them.
+ *          (Use 'jsval' return values instead.)
+ */
+
+%{C++
+#include "nsColor.h"
+class gfxContext;
+struct nsRect;
+%}
+
+[ref] native nsConstRect(const nsRect);
+native nscolor(nscolor);
+[ptr] native gfxContext(gfxContext);
+
+interface nsIArray;
+interface nsICycleCollectorListener;
+interface nsIPreloadedStyleSheet;
+interface nsITransferable;
+interface nsIQueryContentEventResult;
+interface nsIDOMWindow;
+interface nsIFile;
+interface nsIURI;
+interface nsIRunnable;
+interface nsITranslationNodeList;
+interface nsIJSRAIIHelper;
+interface nsIContentPermissionRequest;
+interface nsIObserver;
+
+webidl Animation;
+webidl DOMRect;
+webidl Element;
+webidl EventTarget;
+webidl Event;
+webidl Node;
+webidl NodeList;
+webidl Storage;
+
+[builtinclass, scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
+interface nsIDOMWindowUtils : nsISupports {
+
+  /**
+   * Image animation mode of the window. When this attribute's value
+   * is changed, the implementation should set all images in the window
+   * to the given value. That is, when set to kDontAnimMode, all images
+   * will stop animating. The attribute's value must be one of the
+   * animationMode values from imgIContainer.
+   * @note Images may individually override the window's setting after
+   *       the window's mode is set. Therefore images given different modes
+   *       since the last setting of the window's mode may behave
+   *       out of line with the window's overall mode.
+   * @note The attribute's value is the window's overall mode. It may
+   *       for example continue to report kDontAnimMode after all images
+   *       have subsequently been individually animated.
+   * @note Only images immediately in this window are affected;
+   *       this is not recursive to subwindows.
+   * @see imgIContainer
+   */
+  attribute unsigned short imageAnimationMode;
+
+  /**
+   * Whether the charset of the window's current document has been forced by
+   * the user.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   */
+  readonly attribute boolean docCharsetIsForced;
+
+  /**
+   * Return the conversion of a physical millimeter in CSS pixels.
+   */
+  readonly attribute float physicalMillimeterInCSSPixels;
+
+  /**
+   * Function to get metadata associated with the window's current document
+   * @param aName the name of the metadata.  This should be all lowercase.
+   * @return the value of the metadata, or the empty string if it's not set
+   *
+   * Will throw a DOM security error if called without chrome privileges.
+   */
+  AString getDocumentMetadata(in AString aName);
+
+  /**
+   * Force a synchronous layer transaction for this window if necessary.
+   */
+  [can_run_script]
+  void updateLayerTree();
+
+  /**
+   * Get the last used layer transaction id for this window's refresh driver.
+   */
+  readonly attribute unsigned long long lastTransactionId;
+
+  /**
+   * Information retrieved from the <meta name="viewport"> tag.
+   * See Document::GetViewportInfo for more information.
+   */
+  void getViewportInfo(in uint32_t aDisplayWidth, in uint32_t aDisplayHeight,
+                       out double aDefaultZoom, out boolean aAllowZoom,
+                       out double aMinZoom, out double aMaxZoom,
+                       out uint32_t aWidth, out uint32_t aHeight,
+                       out boolean aAutoSize);
+  /*
+   * Information retrieved from the viewport-fit value of <meta name="viewport">
+   * element.
+   */
+  AString getViewportFitInfo();
+
+  /**
+   * Information about the window size in device pixels.
+   */
+  void getContentViewerSize(out uint32_t aDisplayWidth, out uint32_t aDisplayHeight);
+
+  /**
+   * For any scrollable element, this allows you to override the
+   * visible region and draw more than what is visible, which is
+   * useful for asynchronous drawing. The "displayport" will be
+   * <xPx, yPx, widthPx, heightPx> in units of CSS pixels,
+   * regardless of the size of the enclosing container.  This
+   * will *not* trigger reflow.
+   *
+   * For the root scroll area, pass in the root document element.
+   * For scrollable elements, pass in the container element (for
+   * instance, the element with overflow: scroll).
+   *
+   * <x, y> is relative to the top-left of what would normally be
+   * the visible area of the element. This means that the pixels
+   * rendered to the displayport take scrolling into account,
+   * for example.
+   *
+   * It's legal to set a displayport that extends beyond the overflow
+   * area in any direction (left/right/top/bottom).
+   *
+   * It's also legal to set a displayport that extends beyond the
+   * area's bounds.  No pixels are rendered outside the area bounds.
+   *
+   * The caller of this method must have chrome privileges.
+   *
+   * Calling this will always force a recomposite, so it should be
+   * avoided if at all possible. Client code should do checks before
+   * calling this so that duplicate sets are not made with the same
+   * displayport.
+   *
+   * aPriority is recorded along with the displayport rectangle. If this
+   * method is called with a lower priority than the current priority, the
+   * call is ignored.
+   */
+  void setDisplayPortForElement(in float aXPx, in float aYPx,
+                                in float aWidthPx, in float aHeightPx,
+                                in Element aElement,
+                                in uint32_t aPriority);
+  /**
+   * An alternate way to represent a displayport rect as a set of margins and a
+   * base rect to apply those margins to. A consumer of pixels may ask for as
+   * many extra pixels as it would like in each direction. Layout then sets
+   * the base rect to the "visible rect" of the element, which is just the
+   * subrect of the element that is drawn (it does not take in account content
+   * covering the element).
+   *
+   * If both a displayport rect and displayport margins with corresponding base
+   * rect are set with the same priority then the margins will take precendence.
+   *
+   * Specifying an alignment value will ensure that after the base rect has
+   * been expanded by the displayport margins, it will be further expanded so
+   * that each edge is located at a multiple of the "alignment" value.
+   *
+   * Note that both the margin values and alignment are treated as values in
+   * ScreenPixels. Refer to layout/base/Units.h for a description of this unit.
+   * The base rect values are in app units.
+   */
+  void setDisplayPortMarginsForElement(in float aLeftMargin,
+                                       in float aTopMargin,
+                                       in float aRightMargin,
+                                       in float aBottomMargin,
+                                       in Element aElement,
+                                       in uint32_t aPriority);
+
+  void setDisplayPortBaseForElement(in int32_t aX,
+                                    in int32_t aY,
+                                    in int32_t aWidth,
+                                    in int32_t aHeight,
+                                    in Element aElement);
+
+  /**
+   * If |aElement| is a scroll container, returns the amount of layout
+   * space taken up by its scrollbars (that is, the width of the vertical
+   * scrollbar and the height of the horizontal scrollbar) in CSS pixels;
+   * otherwise returns zero.
+   *
+   * Note that on some platforms, scrollbars don't take up layout space
+   * ("overlay scrollbars"). On such platforms, the returned sizes are
+   * always zero.
+   *
+   * Layout scrollbars that normally take up space but were only shown to
+   * scroll the visual viewport inside the layout viewport (the layout viewport
+   * cannot be scrolled) do not take up space but they still return their size
+   * from this function.
+   */
+  void getScrollbarSizes(in Element aElement,
+                         out uint32_t aVerticalScrollbarWidth,
+                         out uint32_t aHorizontalScrollbarHeight);
+
+  /**
+   * Get/set the resolution at which rescalable web content is drawn for
+   * testing purposes.
+   *
+   * Setting a new resolution does *not* trigger reflow.  This API is
+   * entirely separate from textZoom and fullZoom; a resolution scale
+   * can be applied together with both textZoom and fullZoom.
+   *
+   * The effect of this API is for gfx code to allocate more or fewer
+   * pixels for rescalable content by a factor of |resolution| in
+   * both dimensions.
+   *
+   * In addition, the content is scaled by the amount of the resolution,
+   * so that it is displayed at a correspondingly larger or smaller size,
+   * without the need for the caller to set an additional transform.
+   *
+   * The purpose of this API is to allow tests to simulate many of the effects
+   * a non-reflowing scale-zoom, e.g. for pinch-zoom on mobile platforms, and
+   * should be only used for testing purposes.
+   *
+   * The caller of this method must have chrome privileges.
+   *
+   * This is intended to be used by test code only!
+   */
+  void setResolutionAndScaleTo(in float aResolution);
+
+  float getResolution();
+
+  /**
+   * Set a resolution on the presShell which is the "restored" from history.
+   * The display dimensions are compared to their current values and used
+   * to scale the resolution value if necessary, e.g. if the device was
+   * rotated between saving and restoring of the session data.
+   * This resolution should be used when painting for the first time. Calling
+   * this too late may have no effect.
+   */
+  void setRestoreResolution(in float aResolution,
+                            in uint32_t aDisplayWidth,
+                            in uint32_t aDisplayHeight);
+
+  /**
+   * Whether the next paint should be flagged as the first paint for a document.
+   * This gives a way to track the next paint that occurs after the flag is
+   * set. The flag gets cleared after the next paint.
+   *
+   * Can only be accessed with chrome privileges.
+   */
+  attribute boolean isFirstPaint;
+
+  uint32_t getPresShellId();
+
+  /**
+   * Returns whether a given header and value is a CORS-safelisted request
+   * header per https://fetch.spec.whatwg.org/#cors-safelisted-request-header
+   */
+  boolean isCORSSafelistedRequestHeader(in ACString name, in ACString value);
+
+  /**
+   * Following modifiers are for sent*Event() except sendNative*Event().
+   * NOTE: MODIFIER_ALT, MODIFIER_CONTROL, MODIFIER_SHIFT and MODIFIER_META
+   *       are must be same values as Event_Binding::*_MASK for backward
+   *       compatibility.
+   */
+  const long MODIFIER_ALT        = 0x0001;
+  const long MODIFIER_CONTROL    = 0x0002;
+  const long MODIFIER_SHIFT      = 0x0004;
+  const long MODIFIER_META       = 0x0008;
+  const long MODIFIER_ALTGRAPH   = 0x0010;
+  const long MODIFIER_CAPSLOCK   = 0x0020;
+  const long MODIFIER_FN         = 0x0040;
+  const long MODIFIER_FNLOCK     = 0x0080;
+  const long MODIFIER_NUMLOCK    = 0x0100;
+  const long MODIFIER_SCROLLLOCK = 0x0200;
+  const long MODIFIER_SYMBOL     = 0x0400;
+  const long MODIFIER_SYMBOLLOCK = 0x0800;
+  const long MODIFIER_OS         = 0x1000;
+
+  /** Synthesize a mouse event. The event types supported are:
+   *    mousedown, mouseup, mousemove, mouseover, mouseout, mousecancel,
+   *    contextmenu, MozMouseHittest
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Note that additional events may be fired as a result of this call. For
+   * instance, typically a click event will be fired as a result of a
+   * mousedown and mouseup in sequence.
+   *
+   * Normally at this level of events, the mouseover and mouseout events are
+   * only fired when the window is entered or exited. For inter-element
+   * mouseover and mouseout events, a movemove event fired on the new element
+   * should be sufficient to generate the correct over and out events as well.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * The event is dispatched via the toplevel window, so it could go to any
+   * window under the toplevel window, in some cases it could never reach this
+   * window at all.
+   *
+   * NOTE: mousecancel is used to represent the vanishing of an input device
+   * such as a pen leaving its digitizer by synthesizing a WidgetMouseEvent,
+   * whose mMessage is eMouseExitFromWidget and mExitFrom is
+   * WidgetMouseEvent::eTopLevel.
+   *
+   * @param aType event type
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
+   * @param aButton button to synthesize
+   * @param aClickCount number of clicks that have been performed
+   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
+   * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
+   *                           during dispatch
+   * @param aPressure touch input pressure: 0.0 -> 1.0
+   * @param aInputSourceArg input source, see MouseEvent for values,
+   *        defaults to mouse input.
+   * @param aIsDOMEventSynthesized controls Event.isSynthesized value
+   *                               that helps identifying test related events,
+   *                               defaults to true
+   * @param aIsWidgetEventSynthesized controls WidgetMouseEvent.mReason value
+   *                                  defaults to false (WidgetMouseEvent::eReal)
+   * @param aIdentifier A unique identifier for the pointer causing the event,
+   *                    defaulting to nsIDOMWindowUtils::DEFAULT_MOUSE_POINTER_ID.
+   *
+   * returns true if the page called prevent default on this event
+   */
+  [optional_argc, can_run_script]
+  boolean sendMouseEvent(in AString aType,
+                         in float aX,
+                         in float aY,
+                         in long aButton,
+                         in long aClickCount,
+                         in long aModifiers,
+                         [optional] in boolean aIgnoreRootScrollFrame,
+                         [optional] in float aPressure,
+                         [optional] in unsigned short aInputSourceArg,
+                         [optional] in boolean aIsDOMEventSynthesized,
+                         [optional] in boolean aIsWidgetEventSynthesized,
+                         [optional] in long aButtons,
+                         [optional] in unsigned long aIdentifier);
+
+  /** Synthesize a touch event. The event types supported are:
+   *    touchstart, touchend, touchmove, and touchcancel
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * The event is dispatched via the toplevel window, so it could go to any
+   * window under the toplevel window, in some cases it could never reach this
+   * window at all.
+   *
+   * @param aType event type
+   * @param xs array of offsets in CSS pixels for each touch to be sent
+   * @param ys array of offsets in CSS pixels for each touch to be sent
+   * @param rxs array of radii in CSS pixels for each touch to be sent
+   * @param rys array of radii in CSS pixels for each touch to be sent
+   * @param rotationAngles array of angles in degrees for each touch to be sent
+   * @param forces array of forces (floats from 0 to 1) for each touch to be sent
+   * @param count number of touches in this set
+   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
+   * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
+   *                           during dispatch
+   *
+   * returns true if the page called prevent default on this touch event
+   */
+  [can_run_script]
+  boolean sendTouchEvent(in AString aType,
+                         in Array<uint32_t> aIdentifiers,
+                         in Array<int32_t> aXs,
+                         in Array<int32_t> aYs,
+                         in Array<uint32_t> aRxs,
+                         in Array<uint32_t> aRys,
+                         in Array<float> aRotationAngles,
+                         in Array<float> aForces,
+                         in long aModifiers,
+                         [optional] in boolean aIgnoreRootScrollFrame);
+
+  /** The same as sendMouseEvent but ensures that the event is dispatched to
+   *  this DOM window or one of its children.
+   */
+  [optional_argc, can_run_script]
+  void sendMouseEventToWindow(in AString aType,
+                              in float aX,
+                              in float aY,
+                              in long aButton,
+                              in long aClickCount,
+                              in long aModifiers,
+                              [optional] in boolean aIgnoreRootScrollFrame,
+                              [optional] in float aPressure,
+                              [optional] in unsigned short aInputSourceArg,
+                              [optional] in boolean aIsDOMEventSynthesized,
+                              [optional] in boolean aIsWidgetEventSynthesized,
+                              [optional] in long aButtons,
+                              [optional] in unsigned long aIdentifier);
+
+  /** The same as sendTouchEvent but ensures that the event is dispatched to
+   *  this DOM window or one of its children.
+   */
+  [can_run_script]
+  boolean sendTouchEventToWindow(in AString aType,
+                                 in Array<uint32_t> aIdentifiers,
+                                 in Array<int32_t> aXs,
+                                 in Array<int32_t> aYs,
+                                 in Array<uint32_t> aRxs,
+                                 in Array<uint32_t> aRys,
+                                 in Array<float> aRotationAngles,
+                                 in Array<float> aForces,
+                                 in long aModifiers,
+                                 [optional] in boolean aIgnoreRootScrollFrame);
+
+  /** Synthesize a wheel event for a window. The event types supported is only
+   *  wheel.
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * @param aX                 x offset in CSS pixels
+   * @param aY                 y offset in CSS pixels
+   * @param aDeltaX            deltaX value.
+   * @param aDeltaY            deltaY value.
+   * @param aDeltaZ            deltaZ value.
+   * @param aDeltaMode         deltaMode value which must be one of the
+   *                           WheelEvent DOM_DELTA_* constants.
+   * @param aModifiers         modifiers pressed, using constants defined as
+   *                           MODIFIER_*
+   * @param aLineOrPageDeltaX  If you set this value non-zero for
+   *                           DOM_DELTA_PIXEL event, EventStateManager will
+   *                           dispatch NS_MOUSE_SCROLL event for horizontal
+   *                           scroll.
+   * @param aLineOrPageDeltaY  If you set this value non-zero for
+   *                           DOM_DELTA_PIXEL event, EventStateManager will
+   *                           dispatch NS_MOUSE_SCROLL event for vertical
+   *                           scroll.
+   * @param aOptions           Set following flags.
+   */
+  const unsigned long WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE = 0x0001;
+  const unsigned long WHEEL_EVENT_CAUSED_BY_MOMENTUM                     = 0x0002;
+  const unsigned long WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS               = 0x0004;
+  // If any of the following flags is specified this method will throw an
+  // exception in case the relevant overflowDelta has an unexpected value.
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_ZERO      = 0x0010;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_POSITIVE  = 0x0020;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_NEGATIVE  = 0x0040;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_ZERO      = 0x0100;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_POSITIVE  = 0x0200;
+  const unsigned long WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_NEGATIVE  = 0x0400;
+  void sendWheelEvent(in float aX,
+                      in float aY,
+                      in double aDeltaX,
+                      in double aDeltaY,
+                      in double aDeltaZ,
+                      in unsigned long aDeltaMode,
+                      in long aModifiers,
+                      in long aLineOrPageDeltaX,
+                      in long aLineOrPageDeltaY,
+                      in unsigned long aOptions);
+
+  /**
+   * Native modifiers for sendNativeKeyEvent and sendNativeMouseEvent.
+   * TODO: The other sendNative*Event should take these values instead.
+   */
+  const unsigned long NATIVE_MODIFIER_CAPS_LOCK       = 0x00000001;
+  const unsigned long NATIVE_MODIFIER_NUM_LOCK        = 0x00000002;
+  const unsigned long NATIVE_MODIFIER_SHIFT_LEFT      = 0x00000100;
+  const unsigned long NATIVE_MODIFIER_SHIFT_RIGHT     = 0x00000200;
+  const unsigned long NATIVE_MODIFIER_CONTROL_LEFT    = 0x00000400;
+  const unsigned long NATIVE_MODIFIER_CONTROL_RIGHT   = 0x00000800;
+  const unsigned long NATIVE_MODIFIER_ALT_LEFT        = 0x00001000;
+  const unsigned long NATIVE_MODIFIER_ALT_RIGHT       = 0x00002000;
+  const unsigned long NATIVE_MODIFIER_COMMAND_LEFT    = 0x00004000;
+  const unsigned long NATIVE_MODIFIER_COMMAND_RIGHT   = 0x00008000;
+  const unsigned long NATIVE_MODIFIER_HELP            = 0x00010000;
+  // On Windows, AltGraph key emulates the AltRight key on specific keyboard
+  // layouts.  Therefore, this shouldn't be used without `synthesizeNativeKey`.
+  const unsigned long NATIVE_MODIFIER_ALT_GRAPH       = 0x00020000;
+  // Available only on macOS.
+  const unsigned long NATIVE_MODIFIER_FUNCTION        = 0x00100000;
+  // Available only on macOS.  When pressing a key in numeric key pad, this
+  // must be included.
+  const unsigned long NATIVE_MODIFIER_NUMERIC_KEY_PAD = 0x01000000;
+
+  /**
+   * See nsIWidget::SynthesizeNativeKeyEvent
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * When you use this for tests, use the constants defined in NativeKeyCodes.js
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "keyevent"
+   * topic.
+   */
+  void sendNativeKeyEvent(in long aNativeKeyboardLayout,
+                          in long aNativeKeyCode,
+                          in unsigned long aModifierFlags,
+                          in AString aCharacters,
+                          in AString aUnmodifiedCharacters,
+                          [optional] in nsIObserver aObserver);
+
+  /**
+   * See nsIWidget::SynthesizeNativeMouseEvent
+   *
+   * Will be called on the widget that contains aElement.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * @param aScreenX    X offset in the screen in device pixels.
+   * @param aScreenY    Y offset in the screen in derive pixels.
+   * @param aNativeMessage      One of NATIVE_MOUSE_MESSAGE_*
+   * @param aButton     Same as `MouseEvent.button` value.
+   * @param aModifierFlags      See nsIWidget's native modifier flags.
+   * @param aElementOnWidget    An element which is on a widget.
+   * @param aObserver   The synthesized native event will be fired
+   *                    asynchronously, and upon completion the observer, if
+   *                    provided, will be notified with a "mouseevent" topic.
+   */
+  const unsigned long NATIVE_MOUSE_MESSAGE_BUTTON_DOWN  = 0x00000001;
+  const unsigned long NATIVE_MOUSE_MESSAGE_BUTTON_UP    = 0x00000002;
+  const unsigned long NATIVE_MOUSE_MESSAGE_MOVE         = 0x00000003;
+  const unsigned long NATIVE_MOUSE_MESSAGE_ENTER_WINDOW = 0x00000004;
+  const unsigned long NATIVE_MOUSE_MESSAGE_LEAVE_WINDOW = 0x00000005;
+  void sendNativeMouseEvent(in long aScreenX,
+                            in long aScreenY,
+                            in unsigned long aNativeMessage,
+                            in short aButton,
+                            in unsigned long aModifierFlags,
+                            in Element aElementOnWidget,
+                            [optional] in nsIObserver aObserver);
+
+  /**
+   * Suppress animations that are applied to a window by OS when
+   * resizing, moving, changing size mode, ...
+   */
+  void suppressAnimation(in boolean aSuppress);
+
+  /**
+   * The values for sendNativeMouseScrollEvent's aAdditionalFlags.
+   */
+
+  /**
+   * If MOUSESCROLL_PREFER_WIDGET_AT_POINT is set, widget will dispatch
+   * the event to a widget which is under the cursor.  Otherwise, dispatch to
+   * a default target on the platform.  E.g., on Windows, it's focused window.
+   */
+  const unsigned long MOUSESCROLL_PREFER_WIDGET_AT_POINT = 0x00000001;
+
+  /**
+   * Interpret the scroll delta values as lines rather than pixels.
+   */
+  const unsigned long MOUSESCROLL_SCROLL_LINES = 0x00000002;
+
+  /**
+   * The platform specific values of aAdditionalFlags.  Must be over 0x00010000.
+   */
+
+  /**
+   * If MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL is set and aNativeMessage is
+   * WM_VSCROLL or WM_HSCROLL, widget will set the window handle to the lParam
+   * instead of NULL.
+   */
+  const unsigned long MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL = 0x00010000;
+
+  /**
+   * See nsIWidget::SynthesizeNativeMouseScrollEvent
+   *
+   * Will be called on the widget that contains aElement.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a
+   * "mousescrollevent" topic.
+   *
+   * @param aNativeMessage
+   *   On Windows:  WM_MOUSEWHEEL (0x020A), WM_MOUSEHWHEEL(0x020E),
+   *                WM_VSCROLL (0x0115) or WM_HSCROLL (0x114).
+   */
+  void sendNativeMouseScrollEvent(in long aScreenX,
+                                  in long aScreenY,
+                                  in unsigned long aNativeMessage,
+                                  in double aDeltaX,
+                                  in double aDeltaY,
+                                  in double aDeltaZ,
+                                  in unsigned long aModifierFlags,
+                                  in unsigned long aAdditionalFlags,
+                                  in Element aElement,
+                                  [optional] in nsIObserver aObserver);
+
+  /**
+   * Touch states for sendNativeTouchPoint. These values match
+   * nsIWidget's TouchPointerState.
+   */
+
+  // The pointer is in a hover state above the digitizer
+  const long TOUCH_HOVER   = 0x01;
+  // The pointer is in contact with the digitizer
+  const long TOUCH_CONTACT = 0x02;
+  // The pointer has been removed from the digitizer detection area
+  const long TOUCH_REMOVE  = 0x04;
+  // The pointer has been canceled. Will cancel any pending os level
+  // gestures that would be triggered as a result of completion of the
+  // input sequence. This may not cancel moz platform related events
+  // that might get tirggered by input already delivered.
+  const long TOUCH_CANCEL  = 0x08;
+
+  /**
+   * Phase states for sendNativeTouchPadPinch.
+   */
+  const long PHASE_BEGIN = 0;
+  const long PHASE_UPDATE = 1;
+  const long PHASE_END  = 2;
+
+  /**
+   * Create a new or update an existing touch point on the digitizer.
+   * To trigger os level gestures, individual touch points should
+   * transition through a complete set of touch states which should be
+   * sent as individual calls. For example:
+   * tap - msg1:TOUCH_CONTACT, msg2:TOUCH_REMOVE
+   * drag - msg1-n:TOUCH_CONTACT (moving), msgn+1:TOUCH_REMOVE
+   * hover drag - msg1-n:TOUCH_HOVER (moving), msgn+1:TOUCH_REMOVE
+   *
+   * Widget support: Windows 8.0+, Winrt/Win32. Other widgets will throw.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "touchpoint"
+   * topic.
+   *
+   * @param aPointerId The touch point id to create or update.
+   * @param aTouchState one or more of the touch states listed above
+   * @param aScreenX, aScreenY screen coords of this event
+   * @param aPressure 0.0 -> 1.0 float val indicating pressure
+   * @param aOrientation 0 -> 359 degree value indicating the
+   * orientation of the pointer. Use 90 for normal taps.
+   */
+  void sendNativeTouchPoint(in unsigned long aPointerId,
+                            in unsigned long aTouchState,
+                            in long aScreenX,
+                            in long aScreenY,
+                            in double aPressure,
+                            in unsigned long aOrientation,
+                            [optional] in nsIObserver aObserver);
+  /**
+   * These values indicate touchpad pinch phase states :
+   * PHASE_BEGIN
+   * PHASE_UPDATE
+   * PHASE_END
+   * Widget support: Linux GTK 3.18+.
+   * @param aEventPhase The touchpad pinch phase using states listed above.
+   * @param aScale Events with PHASE_UPDATE will change the zoom level by
+   * the ratio between the scale of the current event and the scale of the last event.
+   * @param aScreenX, aScreenY screen coords of the focus point of this event.
+   * @param aModifierFlags is expected to contain native modifier values.
+   */
+  void sendNativeTouchpadPinch(in unsigned long aEventPhase,
+                               in float aScale,
+                               in long aScreenX,
+                               in long aScreenY,
+                               in long aModifierFlags);
+
+  /**
+   * Simulates native touch based taps on the input digitizer. Events
+   * triggered by this call are injected at the os level. Events do not
+   * bypass widget level input processing and as such can be used to
+   * test widget event logic and async pan-zoom controller functionality.
+   * Cannot be accessed from an unprivileged context.
+   *
+   * Long taps (based on the aLongTap parameter) will be completed
+   * asynchrnously after the call returns. Long tap delay is based on
+   * the ui.click_hold_context_menus.delay pref or 1500 msec if pref
+   * is not set.
+   *
+   * Widget support: Windows 8.0+, Winrt/Win32. Other widgets will
+   * throw.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified, with a "touchtap"
+   * topic.
+   *
+   * @param aScreenX, aScreenY screen coords of this event
+   * @param aLongTap true if the tap should be long, false for a short
+   * tap.
+   */
+  void sendNativeTouchTap(in long aScreenX,
+                          in long aScreenY,
+                          in boolean aLongTap,
+                          [optional] in nsIObserver aObserver);
+
+  /**
+   * Create a new or update an existing pen input on the digitizer.
+   *
+   * Widget support: Windows 10 1809+. Other widgets will throw.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "peninput"
+   * topic.
+   *
+   * @param aPointerId The touch point id to create or update.
+   * @param aPointerState one or more of the TOUCH_* listed above
+   * @param aScreenX x screen coord of this event
+   * @param aScreenY y screen coord of this event
+   * @param aPressure 0.0 -> 1.0 float val indicating pressure
+   * @param aRotation 0 -> 359 degree value indicating the rotation of the
+   * pointer. Use 0 for normal taps.
+   * @param aTiltX -90 -> 90 degree value indicating the tilt along the x-axis
+   * of the pointer. Use 0 for normal taps.
+   * @param aTiltY -90 -> 90 degree value indicating the tilt along the y-axis
+   * of the pointer. Use 0 for normal taps.
+   * @param aButton Same as MouseEvent::button.
+   */
+  void sendNativePenInput(in unsigned long aPointerId,
+                          in unsigned long aPointerState,
+                          in long aScreenX,
+                          in long aScreenY,
+                          in double aPressure,
+                          in unsigned long aRotation,
+                          in long aTiltX,
+                          in long aTiltY,
+                          in long aButton,
+                          [optional] in nsIObserver aObserver);
+
+  /**
+   * Cancel any existing touch points or long tap delays. Calling this is safe
+   * even if you're sure there aren't any pointers recorded. You should call
+   * this when tests shut down to reset the digitizer driver. Not doing so can
+   * leave the digitizer in an undetermined state which can screw up subsequent
+   * tests and native input.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "cleartouch"
+   * topic.
+   */
+  void clearNativeTouchSequence([optional] in nsIObserver aObserver);
+
+  /**
+   * Send a native event as if the user double tapped the touchpad with two
+   * fingers.
+   *
+   * Widget support: macOS.
+   * @param aScreenX, aScreenY screen coords of the focus point of this event.
+   * @param aModifierFlags is expected to contain native modifier values.
+   */
+  void sendNativeTouchpadDoubleTap(in long aScreenX,
+                                   in long aScreenY,
+                                   in long aModifierFlags);
+
+  /**
+   * Send a native event as if the user panned on the touchpad with two
+   * fingers.
+   *
+   * Widget support: Windows.
+   * @param aScreenX, aScreenY screen coords of the focus point of this event.
+   * @param aDeltaX, aDeltaY the amount of delta in the pan.
+   * @param aModifierFlags is expected to contain native modifier values.
+   */
+  void sendNativeTouchpadPan(in unsigned long aEventPhase,
+                             in long aScreenX,
+                             in long aScreenY,
+                             in double aDeltaX,
+                             in double aDeltaY,
+                             in long aModifierFlags);
+
+  /**
+   * Clears the SharedStyleSheetCache.
+   */
+  void clearSharedStyleSheetCache();
+
+  /**
+   * Returns the number of stylesheets that have been parsed on this document.
+   * Useful to test caching.
+   */
+  readonly attribute unsigned long parsedStyleSheets;
+
+  /**
+   * See nsIWidget::ActivateNativeMenuItemAt
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   */
+  void activateNativeMenuItemAt(in AString indexString);
+
+  /**
+   * See nsIWidget::ForceUpdateNativeMenuAt
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   */
+  void forceUpdateNativeMenuAt(in AString indexString);
+
+  /**
+   * Returns the current selection as plaintext. Note that the result may be
+   * different from the result of sendQueryContentEvent(QUERY_SELECTED_TEXT).
+   * This result is computed by native API with transferable data. In other
+   * words, when the OS treats the selection as plaintext, it treats current
+   * selection as this result.
+   */
+  AString GetSelectionAsPlaintext();
+
+  /**
+   * Force a garbage collection followed by a cycle collection.
+   *
+   * Will throw a DOM security error if called without chrome privileges in
+   * non-debug builds. Available to all callers in debug builds.
+   *
+   * @param aListener listener that receives information about the CC graph
+   */
+  void garbageCollect([optional] in nsICycleCollectorListener aListener);
+
+  /**
+   * Force a cycle collection without garbage collection.
+   *
+   * Will throw a DOM security error if called without chrome privileges in
+   * non-debug builds. Available to all callers in debug builds.
+   *
+   * @param aListener listener that receives information about the CC graph
+   */
+  void cycleCollect([optional] in nsICycleCollectorListener aListener);
+
+  /**
+   * Trigger whichever GC or CC timer is currently active and waiting to fire.
+   * Don't do this too much for initiating heavy actions, like the start of a IGC.
+   *
+   * @param aReason the reason for the GC, from js/public/GCAPI.h. Defaults to
+   * DOM_WINDOW_UTILS.
+   */
+  void runNextCollectorTimer([optional] in ACString aReason);
+
+  /**
+   * "Poke" the GC: set a timer to run a GC soon (usually 4 seconds), unless
+   * another GC timer has already been set. This is used for testing.
+   *
+   * @param aReason the reason for the GC, from js/public/GCAPI.h. Defaults to
+   * DOM_WINDOW_UTILS.
+   */
+  void pokeGC([optional] in ACString aReason);
+
+  /** Synthesize a simple gesture event for a window. The event types
+   *  supported are: MozSwipeGestureMayStart, MozSwipeGestureStart,
+   *  MozSwipeGestureUpdate, MozSwipeGestureEnd, MozSwipeGesture,
+   *  MozMagnifyGestureStart, MozMagnifyGestureUpdate, MozMagnifyGesture,
+   *  MozRotateGestureStart, MozRotateGestureUpdate, MozRotateGesture,
+   *  MozPressTapGesture, MozTapGesture, and MozEdgeUIGesture.
+   *
+   * Cannot be accessed from unprivileged context (not
+   * content-accessible) Will throw a DOM security error if called
+   * without chrome privileges.
+   *
+   * @param aType event type
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
+   * @param aDirection direction, using constants defined in SimpleGestureEvent.webidl
+   * @param aDelta  amount of magnification or rotation for magnify and rotation events
+   * @param aModifiers modifiers pressed, using constants defined in Event.webidl
+   * @param aClickCount For tap gestures, the number of taps.
+   */
+  void sendSimpleGestureEvent(in AString aType,
+                              in float aX,
+                              in float aY,
+                              in unsigned long aDirection,
+                              in double aDelta,
+                              in long aModifiers,
+                              [optional] in unsigned long aClickCount);
+
+  /**
+   * Retrieve the element at point aX, aY in the window's document.
+   *
+   * @param aIgnoreRootScrollFrame whether or not to ignore the root scroll
+   *        frame when retrieving the element. If false, this method returns
+   *        null for coordinates outside of the viewport.
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   */
+  Element elementFromPoint(in float aX,
+                           in float aY,
+                           in boolean aIgnoreRootScrollFrame,
+                           in boolean aFlushLayout);
+
+  /**
+   * Retrieve all nodes that intersect a rect in the window's document.
+   *
+   * @param aX x reference for the rectangle in CSS pixels
+   * @param aY y reference for the rectangle in CSS pixels
+   * @param aTopSize How much to expand up the rectangle
+   * @param aRightSize How much to expand right the rectangle
+   * @param aBottomSize How much to expand down the rectangle
+   * @param aLeftSize How much to expand left the rectangle
+   * @param aIgnoreRootScrollFrame whether or not to ignore the root scroll
+   *        frame when retrieving the element. If false, this method returns
+   *        null for coordinates outside of the viewport.
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @param aOnlyVisible Set to true if you only want nodes that pass a visibility
+   *        hit test.
+   * @param aTransparencyThreshold Only has an effect if aOnlyVisible is true.
+   *        Returns what amount of transparency is considered "opaque enough"
+   *        to consider elements "not visible". The default is effectively "1"
+   *        (so, only opaque elements will stop an element from being
+   *        "visible").
+   */
+  NodeList nodesFromRect(in float aX,
+                         in float aY,
+                         in float aTopSize,
+                         in float aRightSize,
+                         in float aBottomSize,
+                         in float aLeftSize,
+                         in boolean aIgnoreRootScrollFrame,
+                         in boolean aFlushLayout,
+                         in boolean aOnlyVisible,
+                         [optional] in float aTransparencyThreshold);
+
+
+  /**
+   * Get a list of nodes that have meaningful textual content to
+   * be translated. The implementation of this algorithm is in flux
+   * as we experiment and refine which approach works best.
+   *
+   * This method requires chrome privileges.
+   */
+  nsITranslationNodeList getTranslationNodes(in Node aRoot);
+
+  /**
+   * Compare the two canvases, returning the number of differing pixels and
+   * the maximum difference in a channel.  This will throw an error if
+   * the dimensions of the two canvases are different.
+   *
+   * This method requires chrome privileges.
+   */
+  uint32_t compareCanvases(in nsISupports aCanvas1,
+                           in nsISupports aCanvas2,
+                           out unsigned long aMaxDifference);
+
+  /**
+   * Returns true if a MozAfterPaint event has been queued but not yet
+   * fired.
+   */
+  readonly attribute boolean isMozAfterPaintPending;
+
+  /**
+   * Returns true if the InputTaskManager is suspended.
+   */
+  readonly attribute boolean isInputTaskManagerSuspended;
+
+  /**
+   * Suppresses/unsuppresses user initiated event handling in window's document
+   * and subdocuments.
+   *
+   * @throw NS_ERROR_DOM_SECURITY_ERR if called without chrome privileges and
+   *        NS_ERROR_FAILURE if window doesn't have a document.
+   */
+  void suppressEventHandling(in boolean aSuppress);
+
+  /**
+   * Disable or enable non synthetic test mouse events on *all* windows.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible).
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * @param aDisable  If true, disable all non synthetic test mouse events
+   *               on all windows.  Otherwise, enable them.
+   */
+  void disableNonTestMouseEvents(in boolean aDisable);
+
+  /**
+   * Returns the scroll position of the window's currently loaded document.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @see nsIDOMWindow::scrollX/Y
+   */
+  void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+
+  /**
+   * Returns the scroll position of the window's currently loaded document.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @see nsIDOMWindow::scrollX/Y
+   */
+  void getScrollXYFloat(in boolean aFlushLayout, out float aScrollX, out float aScrollY);
+
+  /**
+   * Returns the scrollbar width of the window's scroll frame.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   */
+  void getScrollbarSize(in boolean aFlushLayout, out long aWidth, out long aHeight);
+
+  /**
+   * Returns the given element's bounds without flushing pending layout changes.
+   */
+  DOMRect getBoundsWithoutFlushing(in Element aElement);
+
+  /**
+   * Scroll the visual viewport to the given coordinates, relative to the
+   * document origin.
+   * Only applicable to the window associated with the root content document.
+   * Note: this does not take effect right away. Rather, the visual scroll
+   *       request is sent to APZ with the next transaction, and will be
+   *       reflected in the main thread with the subsequent APZ repaint request.
+   * Please see the caveats mentioned at PresShell::ScrollToVisual(), and
+   * request APZ review if adding a new call to this.
+   */
+  const long UPDATE_TYPE_RESTORE = 0;
+  const long UPDATE_TYPE_MAIN_THREAD = 1;
+  const long SCROLL_MODE_INSTANT = 0;
+  const long SCROLL_MODE_SMOOTH = 1;
+  void scrollToVisual(in float aOffsetX, in float aOffsetY,
+                      in long aUpdateType, in long aScrollMode);
+
+  /**
+   * Returns the offset of the window's visual viewport relative to the
+   * layout viewport.
+   */
+  void getVisualViewportOffsetRelativeToLayoutViewport(out float aOffsetX,
+                                                       out float aOffsetY);
+
+  /**
+   * Returns the scroll position of the window's visual viewport.
+   */
+  void getVisualViewportOffset(out long aOffsetX, out long aOffsetY);
+
+  /**
+   * Transforms the passed in rect from layout relative coords (relative to
+   * this document) to be is visual coords.
+   */
+  DOMRect transformRectLayoutToVisual(in float aX, in float aY,
+                                      in float aWidth, in float aHeight);
+
+  /**
+   * Transform a rectangle given in coordinates relative to this document
+   * into CSS coordinates relative to the screen.
+   */
+  DOMRect toScreenRectInCSSUnits(in float aX, in float aY,
+                                 in float aWidth, in float aHeight);
+
+  /**
+   * Transform a rectangle given in coordinates relative to this document
+   * to the screen.
+   */
+  DOMRect toScreenRect(in float aX, in float aY,
+                       in float aWidth, in float aHeight);
+
+  /**
+   * Transform a rectangle given in coordinates relative to the top level
+   * parent process widget to the local widget. This window should be in a
+   * child process.
+   */
+  DOMRect convertFromParentProcessWidgetToLocal(in float aX,
+                                                in float aY,
+                                                in float aWidth,
+                                                in float aHeight);
+
+  /**
+   * Sets the maximum height of the dynamic toolbar in Screen pixel units.
+   */
+  [can_run_script]
+  void setDynamicToolbarMaxHeight(in uint32_t aHeightInScreen);
+
+  const long FLUSH_NONE = -1;
+  const long FLUSH_STYLE = 0;
+  const long FLUSH_LAYOUT = 1;
+  const long FLUSH_DISPLAY = 2;
+
+  /**
+   * Returns true if a flush of the given type is needed.
+   */
+  bool needsFlush(in long aFlushtype);
+
+  /**
+   * Flush pending layout-type notification without flushing throttled
+   * animations.
+   */
+  void flushLayoutWithoutThrottledAnimations();
+
+  /**
+   * Returns the bounds of the window's currently loaded document. This will
+   * generally be (0, 0, pageWidth, pageHeight) but in some cases (e.g. RTL
+   * documents) may have a negative left value.
+   */
+  DOMRect getRootBounds();
+
+  /**
+   * Get IME open state. TRUE means 'Open', otherwise, 'Close'.
+   * This property works only when IMEEnabled is IME_STATUS_ENABLED.
+   */
+  readonly attribute boolean IMEIsOpen;
+
+  /**
+   * WARNING: These values must be same as nsIWidget's values.
+   */
+
+  /**
+   * DISABLED means users cannot use IME completely.
+   * Note that this state is *not* same as |ime-mode: disabled;|.
+   */
+  const unsigned long IME_STATUS_DISABLED = 0;
+
+  /**
+   * ENABLED means users can use all functions of IME. This state is same as
+   * |ime-mode: normal;|.
+   */
+  const unsigned long IME_STATUS_ENABLED  = 1;
+
+  /**
+   * PASSWORD means users cannot use most functions of IME. But on GTK2,
+   * users can use "Simple IM" which only supports dead key inputting.
+   * The behavior is same as the behavior of the native password field.
+   * This state is same as |ime-mode: disabled;|.
+   */
+  const unsigned long IME_STATUS_PASSWORD = 2;
+
+  /**
+   * Get IME status, see above IME_STATUS_* definitions.
+   */
+  readonly attribute unsigned long IMEStatus;
+
+  /**
+   * Get whether current input context (including IME status) in the widget
+   * is set by content or not.
+   */
+  const unsigned long INPUT_CONTEXT_ORIGIN_MAIN = 0;
+  const unsigned long INPUT_CONTEXT_ORIGIN_CONTENT = 1;
+  readonly attribute unsigned long inputContextOrigin;
+
+  /**
+   * Get a root node which is observed by IMEContentObserver.
+   */
+  readonly attribute Node nodeObservedByIMEContentObserver;
+
+  /**
+   * Get the number of screen pixels per CSS pixel.
+   *
+   * This is the same as window.devicePixelRatio, except it bypasses
+   * the fingerprinting resistance efforts that window.devicePixelRatio
+   * does (which is fine as this is only exposed to browser internals).
+   */
+  readonly attribute float screenPixelsPerCSSPixel;
+
+  /**
+   * Get the number of screen pixels per CSS pixel,
+   * not taking into account any override of the device pixel scale
+   * that's imposed by Responsive Design Mode.
+   *
+   * This is needed to e.g. correctly translate "window.mozInnerScreenX/Y"
+   * into device pixels even when "window" is the window of a document
+   * inside an RDM pane.
+   */
+  readonly attribute float screenPixelsPerCSSPixelNoOverride;
+
+  /**
+   * Get the current zoom factor.
+   * This is _approximately_ the same as nsIContentViewer.fullZoom,
+   * but takes into account Gecko's quantization of the zoom factor, which is
+   * implemented by adjusting the (integer) number of appUnits per devPixel.
+   */
+  readonly attribute float fullZoom;
+
+  /**
+   * Dispatches aEvent as a synthesized trusted event for tests via the
+   * PresShell object of the window's document.
+   * The event is dispatched to aTarget, which should be an object
+   * which implements nsIContent interface (#element, #text, etc).
+   *
+   * Cannot be accessed from unprivileged context (not
+   * content-accessible) Will throw a DOM security error if called
+   * without chrome privileges.
+   *
+   * @note Event handlers won't get aEvent as parameter, but a similar event.
+   *       Also, aEvent should not be reused.
+   */
+  [can_run_script]
+  boolean dispatchDOMEventViaPresShellForTesting(in Node aTarget,
+                                                 in Event aEvent);
+
+  /**
+   * Sets WidgetEvent::mFlags::mOnlyChromeDispatch to true to ensure that
+   * the event is propagated only to chrome.
+   * Event's .target property will be aTarget.
+   * Returns the same value as what EventTarget.dispatchEvent does.
+   */
+  boolean dispatchEventToChromeOnly(in EventTarget aTarget,
+                                    in Event aEvent);
+
+  /**
+   * Returns the real classname (possibly of the mostly-transparent security
+   * wrapper) of aObj.
+   */
+  [implicit_jscontext] string getClassName(in jsval aObject);
+
+  /**
+   * Generate a content command event.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without chrome privileges.
+   *
+   * @param aType Type of command content event to send.  Can be one of "cut",
+   *        "copy", "paste", "delete", "undo", "redo", "insertText" or
+   *        "pasteTransferable".
+   * @param aTransferable an instance of nsITransferable when aType is
+   *        "pasteTransferable"
+   * @param aString The string to be inserted into focused editor when aType is
+   *        "insertText"
+   */
+  void sendContentCommandEvent(in AString aType,
+                               [optional] in nsITransferable aTransferable,
+                               [optional] in AString aString);
+
+  /**
+   * If sendQueryContentEvent()'s aAdditionalFlags argument is
+   * QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK, plain text generated from content
+   * is created with "\n".
+   * Otherwise, platform dependent.  E.g., on Windows, "\r\n" is used.
+   * aOffset and aLength are offset and length in/of the plain text content.
+   * This flag also affects the result values such as offset, length and string.
+   */
+  const unsigned long QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK = 0x0000;
+  const unsigned long QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK     = 0x0001;
+
+  /**
+   * sendQueryContentEvent()'s aAdditionalFlags may have one of following
+   * flags when aType is QUERY_SELECTED_TEXT.  If one of them is set,
+   * the result is the first range of the selection type.  See also
+   * nsISelectionController::SELECTION_*.
+   */
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_SPELLCHECK          = 0x0002;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT        = 0x0004;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT = 0x0008;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT   = 0x0010;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDCONVERTEDTEXT =
+                                                                         0x0020;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_ACCESSIBILITY       = 0x0040;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_FIND                = 0x0080;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_URLSECONDARY        = 0x0100;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT        = 0x0200;
+
+  /**
+   * One of sendQueryContentEvent()'s aAdditionalFlags.  If this is specified,
+   * aOffset is relative to start of selection or composition.
+   * Note that this is supported only when QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK
+   * is not specified for now.
+   */
+  const unsigned long QUERY_CONTENT_FLAG_OFFSET_RELATIVE_TO_INSERTION_POINT =
+                                                                         0x0400;
+
+  /**
+   * Synthesize a query content event. Note that the result value returned here
+   * is in LayoutDevice pixels rather than CSS pixels.
+   *
+   * @param aType  One of the following const values.  And see also each comment
+   *               for the other parameters and the result.
+   * @param aAdditionalFlags See the description of QUERY_CONTENT_FLAG_*.
+   */
+  nsIQueryContentEventResult sendQueryContentEvent(
+                               in unsigned long aType,
+                               in long long aOffset,
+                               in unsigned long aLength,
+                               in long aX,
+                               in long aY,
+                               [optional] in unsigned long aAdditionalFlags);
+
+  /**
+   * QUERY_SELECTED_TEXT queries the first selection range's information.
+   *
+   * @param aOffset   Not used.
+   * @param aLength   Not used.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return offset, reversed and text properties of the result are available.
+   */
+  const unsigned long QUERY_SELECTED_TEXT                       = 3200;
+
+  /**
+   * QUERY_TEXT_CONTENT queries the text at the specified range.
+   *
+   * @param aOffset   The first character's offset.  0 is the first character.
+   * @param aLength   The length of getting text.  If the aLength is too long,
+   *                  the result text is shorter than this value.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return text property of the result is available.
+   */
+  const unsigned long QUERY_TEXT_CONTENT                        = 3201;
+
+  /**
+   * QUERY_CARET_RECT queries the (collapsed) caret rect of the offset.
+   * If the actual caret is there at the specified offset, this returns the
+   * actual caret rect.  Otherwise, this guesses the caret rect from the
+   * metrics of the text.
+   *
+   * @param aOffset   The caret offset.  0 is the left side of the first
+   *                  caracter in LTR text.
+   * @param aLength   Not used.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return left, top, width and height properties of the result are available.
+   *         The left and the top properties are offset in the client area of
+   *         the DOM window.
+   */
+  const unsigned long QUERY_CARET_RECT                          = 3203;
+
+  /**
+   * QUERY_TEXT_RECT queries the specified text's rect.
+   *
+   * @param aOffset   The first character's offset.  0 is the first character.
+   * @param aLength   The length of getting text.  If the aLength is too long,
+   *                  the extra length is ignored.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return left, top, width and height properties of the result are available.
+   *         The left and the top properties are offset in the client area of
+   *         the DOM window.
+   */
+  const unsigned long QUERY_TEXT_RECT                           = 3204;
+
+  /**
+   * QUERY_TEXT_RECT queries the focused editor's rect.
+   *
+   * @param aOffset   Not used.
+   * @param aLength   Not used.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   *
+   * @return left, top, width and height properties of the result are available.
+   */
+  const unsigned long QUERY_EDITOR_RECT                         = 3205;
+
+  /**
+   * QUERY_CHARACTER_AT_POINT queries the character information at the
+   * specified point.  The point is offset in the window.
+   * NOTE: If there are some panels at the point, this method send the query
+   * event to the panel's widget automatically.
+   *
+   * @param aOffset   Not used.
+   * @param aLength   Not used.
+   * @param aX        X offset in the widget.
+   * @param aY        Y offset in the widget.
+   *
+   * @return offset, notFound, left, top, width and height properties of the
+   *         result are available.
+   */
+  const unsigned long QUERY_CHARACTER_AT_POINT                  = 3208;
+
+  /**
+   * QUERY_TEXT_RECT_ARRAY queries the rects per character
+   *
+   * @param aOffset   The first character's offset.  0 is the first character.
+   * @param aLength   The length of getting text.  If the aLength is too long,
+   *                  the extra length is ignored.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   */
+  const unsigned long QUERY_TEXT_RECT_ARRAY                     = 3209;
+
+  /**
+   * Called when the remote child frame has changed its fullscreen state,
+   * when entering fullscreen, and when the origin which is fullscreen changes.
+   * aFrameElement is the iframe element which contains the child-process
+   * fullscreen document.
+   */
+  void remoteFrameFullscreenChanged(in Element aFrameElement);
+
+  /**
+   * Called when the remote frame has popped all fullscreen elements off its
+   * stack, so that the operation can complete on the parent side.
+   */
+  void remoteFrameFullscreenReverted();
+
+  /**
+   * Calls the document to handle any pending fullscreen requests.
+   * It is called when the parent document has entered fullscreen, and
+   * we want to put the current document into fullscreen as well.
+   * The return value indicates whether there is any fullscreen request
+   * handled by this call.
+   */
+  boolean handleFullscreenRequests();
+
+  /**
+   * Called when the child frame has fully exit fullscreen, so that the parent
+   * process can also fully exit.
+   */
+  void exitFullscreen();
+
+  /**
+   * If sendQueryContentEvent()'s aAdditionalFlags argument is
+   * SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK, aOffset and aLength are offset
+   * and length in/of plain text generated from content is created with "\n".
+   * Otherwise, platform dependent.  E.g., on Windows, "\r\n" is used.
+   */
+  const unsigned long SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK = 0x0000;
+  const unsigned long SELECTION_SET_FLAG_USE_XP_LINE_BREAK     = 0x0001;
+
+  /**
+   * If SELECTION_SET_FLAG_REVERSE is set, the selection is set from
+   * |aOffset + aLength| to |aOffset|.  Otherwise, it's set from |aOffset| to
+   * |aOffset + aLength|.
+   */
+  const unsigned long SELECTION_SET_FLAG_REVERSE               = 0x0002;
+
+  /**
+   * Synthesize a selection set event to the window.
+   *
+   * This sets the selection as the specified information.
+   *
+   * @param aOffset  The caret offset of the selection start.
+   * @param aLength  The length of the selection.  If this is too long, the
+   *                 extra length is ignored.
+   * @param aAdditionalFlags See the description of SELECTION_SET_FLAG_*.
+   * @return True, if succeeded.  Otherwise, false.
+   */
+  boolean sendSelectionSetEvent(in unsigned long aOffset,
+                                in unsigned long aLength,
+                                [optional] in unsigned long aAdditionalFlags);
+
+  /* Selection behaviors - mirror nsIFrame's nsSelectionAmount constants */
+  const unsigned long SELECT_CHARACTER   = 0;
+  const unsigned long SELECT_CLUSTER     = 1;
+  const unsigned long SELECT_WORD        = 2;
+  const unsigned long SELECT_LINE        = 3;
+  const unsigned long SELECT_BEGINLINE   = 4;
+  const unsigned long SELECT_ENDLINE     = 5;
+  const unsigned long SELECT_PARAGRAPH   = 6;
+  const unsigned long SELECT_WORDNOSPACE = 7;
+
+  /**
+   * Select content at a client point based on a selection behavior if the
+   * underlying content is selectable. Selection will accumulate with any
+   * existing selection, callers should clear selection prior if needed.
+   * May fire selection changed events. Calls nsFrame's SelectByTypeAtPoint.
+   *
+   * @param aX, aY The selection point in client coordinates.
+   * @param aSelectType The selection behavior requested.
+   * @return True if a selection occured, false otherwise.
+   * @throw NS_ERROR_DOM_SECURITY_ERR, NS_ERROR_UNEXPECTED for utils
+   * issues, and NS_ERROR_INVALID_ARG for coordinates that are outside
+   * this window.
+   */
+  [can_run_script]
+  boolean selectAtPoint(in float aX,
+                        in float aY,
+                        in unsigned long aSelectBehavior);
+
+  /**
+   * Perform the equivalent of:
+   *   window.getComputedStyle(aElement, aPseudoElement).
+   *     getPropertyValue(aPropertyName)
+   * except that, when the link whose presence in history is allowed to
+   * influence aElement's style is visited, get the value the property
+   * would have if allowed all properties to change as a result of
+   * :visited selectors (except for cases where getComputedStyle uses
+   * data from the frame).
+   *
+   * This is easier to implement than adding our property restrictions
+   * to this API, and is sufficient for the present testing
+   * requirements (which are essentially testing 'color').
+   */
+  AString getVisitedDependentComputedStyle(in Element aElement,
+                                           in AString aPseudoElement,
+                                           in AString aPropertyName);
+
+  /**
+   * Put the window into a state where scripts are frozen and events
+   * suppressed, for use when the window has launched a modal prompt.
+   */
+  void enterModalState();
+
+  /**
+   * Resume normal window state, where scripts can run and events are
+   * delivered.
+   */
+  void leaveModalState();
+
+  /**
+   * Is the window is in a modal state? [See enterModalState()]
+   */
+  boolean isInModalState();
+
+  /**
+   * Internal desktopMode flag.
+   */
+  attribute boolean desktopModeViewport;
+
+  /**
+   * Suspend/resume timeouts on this window and its descendant windows.
+   */
+  void suspendTimeouts();
+  void resumeTimeouts();
+
+  /**
+   * What type of layer manager the widget associated with this window is
+   * using. "Basic" is unaccelerated; other types are accelerated. Throws an
+   * error if there is no widget associated with this window.
+   */
+  readonly attribute AString layerManagerType;
+
+  /**
+   * True if the layer manager for the widget associated with this window is
+   * forwarding layers to a remote compositor, false otherwise. Throws an
+   * error if there is no widget associated with this window.
+   */
+  readonly attribute boolean layerManagerRemote;
+
+  /**
+   * True if advanced layers is enabled on this window, false otherwise.
+   */
+  readonly attribute boolean usingAdvancedLayers;
+
+  /**
+   * True if webrender was requested by the user (via pref or env-var), false
+   * otherwise. Note that this doesn't represent whether or not webrender is
+   * *actually* enabled, just whether or not it was requested.
+   */
+  readonly attribute boolean isWebRenderRequested;
+
+  /**
+   * Returns the current audio backend as a free-form string.
+   */
+  readonly attribute AString currentAudioBackend;
+
+  /**
+   * Returns the max channel counts of the current audio device.
+   */
+  readonly attribute unsigned long currentMaxAudioChannels;
+
+  /**
+   * Returns the mean round trip latency in seconds for the default input and
+   * output device, and the stddev of this latency, as a two element array when
+   * the Promise succeeds.
+   */
+  Promise defaultDevicesRoundTripLatency();
+
+  /**
+   * Returns the preferred sample rate of the current audio device.
+   */
+  readonly attribute unsigned long currentPreferredSampleRate;
+
+  /**
+   * Returns all the audio input/output devices.
+   */
+  const unsigned short AUDIO_INPUT   = 0;
+  const unsigned short AUDIO_OUTPUT  = 1;
+  nsIArray audioDevices(in unsigned short aSide);
+
+  /**
+   * Record (and return) frame-intervals for frames which were presented
+   *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
+   *
+   * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is called too late
+   *     (elements were overwritten since Start), result is considered invalid and hence empty.
+   * - Buffer is capable of holding 10 seconds @ 60fps (or more if frames were less frequent).
+   *     Can be changed (up to 1 hour) via pref: toolkit.framesRecording.bufferSize.
+   * - Note: the first frame-interval may be longer than expected because last frame
+   *     might have been presented some time before calling StartFrameTimeRecording.
+   */
+
+  /**
+   * Returns a handle which represents current recording start position.
+   */
+  void startFrameTimeRecording([retval] out unsigned long startIndex);
+
+  /**
+   * Returns array of frame intervals since the time when the given startIndex
+   * was handed out from startFrameTimeRecording.
+   */
+  Array<float> stopFrameTimeRecording(in unsigned long startIndex);
+
+  /**
+   * The DPI of the display
+   */
+  readonly attribute float displayDPI;
+
+  /**
+   * advanceTimeAndRefresh allows the caller to take over the refresh
+   * driver timing for a window.  A call to advanceTimeAndRefresh does
+   * three things:
+   *  (1) It marks the refresh driver for this presentation so that it
+   *      no longer refreshes on its own, but is instead driven entirely
+   *      by the caller (except for the refresh that happens when a
+   *      document comes out of the bfcache).
+   *  (2) It advances the refresh driver's current refresh time by the
+   *      argument given.  Negative advances are permitted.
+   *  (3) It does a refresh (i.e., notifies refresh observers) at that
+   *      new time.
+   *
+   * Note that this affects other connected docshells of the same type
+   * in the same docshell tree, such as parent frames.
+   *
+   * When callers have completed their use of advanceTimeAndRefresh,
+   * they must call restoreNormalRefresh.
+   */
+  void advanceTimeAndRefresh(in long long aMilliseconds);
+
+  /**
+   * Undoes the effects of advanceTimeAndRefresh.
+   */
+  void restoreNormalRefresh();
+
+  /**
+   * Reports whether the current state is test-controlled refreshes
+   * (see advanceTimeAndRefresh and restoreNormalRefresh above).
+   */
+  readonly attribute bool isTestControllingRefreshes;
+
+  /**
+   * Reports whether APZ is enabled on the widget that this window is attached
+   * to. If there is no widget it will report the default platform value of
+   * whether or not APZ is enabled.
+   */
+  readonly attribute bool asyncPanZoomEnabled;
+
+  /**
+   * Set async scroll offset on an element. The next composite will render
+   * with that offset if async scrolling is enabled, and then the offset
+   * will be removed. Only call this while test-controlled refreshes is enabled.
+   */
+  void setAsyncScrollOffset(in Element aElement, in float aX, in float aY);
+
+  /**
+   * Set async zoom value. aRootElement should be the document element of our
+   * document. The next composite will render with that zoom added to any
+   * existing zoom if async scrolling is enabled, and then the zoom will be
+   * removed. Only call this while test-controlled refreshes is enabled.
+   */
+  void setAsyncZoom(in Element aRootElement, in float aValue);
+
+  /**
+   * Do a round-trip to the compositor to ensure any pending APZ repaint requests
+   * get flushed to the main thread. If the function returns true, the flush was
+   * triggered and an "apz-repaints-flushed" notification will be dispatched via
+   * the observer service once the flush is complete. If the function returns
+   * false, an error occurred or a flush is not needed, and the notification
+   * will not fire. This is intended to be used by test code only!
+   */
+  bool flushApzRepaints();
+
+  /**
+   * Sets a flag on the element to forcibly disable APZ on it. This affects
+   * the result of nsLayoutUtils::ShouldDisableApzForElement when called on
+   * this element. This function also schedules a repaint to ensure that the
+   * change takes effect. Note that this is not reversible; it is intended for
+   * use by test code only.
+   */
+  void disableApzForElement(in Element aElement);
+
+  /**
+   * Ask APZ to pan and zoom to the focused input element.
+   */
+  [can_run_script] void zoomToFocusedInput();
+
+  /**
+   * Method for testing StyleAnimationValue::ComputeDistance.
+   *
+   * Returns the distance between the two values as reported by
+   * StyleAnimationValue::ComputeDistance for the given element and
+   * property.
+   */
+  double computeAnimationDistance(in Element element,
+                                  in AString property,
+                                  in AString value1,
+                                  in AString value2);
+
+  /**
+   * Returns the computed style for the specified property of given pseudo type
+   * on the given element after removing styles from declarative animations.
+   * @param aElement - A target element
+   * @param aPseudoElement - A pseudo type (e.g. '::before' or null)
+   * @param aProperty - A longhand CSS property (e.g. 'background-color')
+   * @param aFlushType - FLUSH_NONE if any pending styles should not happen,
+   *                     FLUSH_STYLE to flush pending styles.
+   */
+  AString getUnanimatedComputedStyle(in Element aElement,
+                                     in AString aPseudoElement,
+                                     in AString aProperty,
+                                     in long aFlushType);
+
+  /**
+   * Get the type of the currently focused html input, if any.
+   */
+  readonly attribute AString focusedInputType;
+
+  /**
+   * Get the action hint of the currently focused html input, if any.
+   */
+  readonly attribute AString focusedActionHint;
+
+  /**
+   * Get the inputmode of the currently focused editing host, if any.
+   */
+  readonly attribute AString focusedInputMode;
+
+  /**
+   * Get the autocapitalize of the currently focused editing host, if any.
+   */
+  readonly attribute AString focusedAutocapitalize;
+
+  /**
+   * Find the view ID for a given element. This is the reverse of
+   * findElementWithViewId().
+   */
+  nsViewID getViewId(in Element aElement);
+
+  /**
+   * Check if any PaintedLayer painting has been done for this element,
+   * clears the painted flags if they have.
+   */
+  boolean checkAndClearPaintedState(in Element aElement);
+
+  /**
+   * Check if any display list building has been done for this element,
+   * clears the display list flags if they have.
+   */
+  boolean checkAndClearDisplayListState(in Element aElement);
+
+  /**
+   * Check whether all display items of the primary frame of aElement have been
+   * assigned to the same single PaintedLayer in the last paint. If that is the
+   * case, returns whether that PaintedLayer is opaque; if it's not the case, an
+   * exception is thrown.
+   */
+  boolean isPartOfOpaqueLayer(in Element aElement);
+
+  /**
+   * Count the number of different PaintedLayers that the supplied elements have
+   * been assigned to in the last paint. Throws an exception if any of the
+   * elements doesn't have a primary frame, or if that frame's display items are
+   * assigned to any other layers than just a single PaintedLayer per element.
+   */
+  unsigned long numberOfAssignedPaintedLayers(in Array<Element> aElements);
+
+  /**
+   * Get internal id of the stored blob, file or file handle.
+   */
+  [implicit_jscontext] long long getFileId(in jsval aFile);
+
+  /**
+   * Get internal file path of the stored file or file handle.
+   *
+   * TODO: File handle objects are actually not supported at the moment.
+   */
+  [implicit_jscontext] AString getFilePath(in jsval aFile);
+
+  /**
+   * Get file ref count info for given database and file id.
+   *
+   */
+  [implicit_jscontext]
+  boolean getFileReferences(in AString aDatabaseName, in long long aId,
+                            [optional] in jsval aOptions,
+                            [optional] out long aRefCnt,
+                            [optional] out long aDBRefCnt);
+
+  void flushPendingFileDeletions();
+
+  /**
+   * Begin opcode-level profiling of all JavaScript execution in the window's
+   * runtime.
+   */
+  [implicit_jscontext]
+  void startPCCountProfiling();
+
+  /**
+   * Stop opcode-level profiling of JavaScript execution in the runtime, and
+   * collect all counts for use by getPCCount methods.
+   */
+  [implicit_jscontext]
+  void stopPCCountProfiling();
+
+  /**
+   * Purge collected PC counters.
+   */
+  [implicit_jscontext]
+  void purgePCCounts();
+
+  /**
+   * Get the number of scripts with opcode-level profiling information.
+   */
+  [implicit_jscontext]
+  long getPCCountScriptCount();
+
+  /**
+   * Get a JSON string for a short summary of a script and the PC counts
+   * accumulated for it.
+   */
+  [implicit_jscontext]
+  AString getPCCountScriptSummary(in long script);
+
+  /**
+   * Get a JSON string with full information about a profiled script,
+   * including the decompilation of the script and placement of decompiled
+   * operations within it, and PC counts for each operation.
+   */
+  [implicit_jscontext]
+  AString getPCCountScriptContents(in long script);
+
+  /**
+   * Returns true if painting is suppressed for this window and false
+   * otherwise.
+   */
+  readonly attribute boolean paintingSuppressed;
+
+  /**
+   * Set the viewport size for the purposes of clamping scroll positions for
+   * the root scroll frame of this document to be (aWidth,aHeight) in CSS pixels.
+   *
+   * The caller of this method must have chrome privileges.
+   */
+  void setVisualViewportSize(in float aWidth, in float aHeight);
+
+  /**
+   * These are used to control whether dialogs (alert, prompt, confirm) are
+   * allowed, and to reset the inernal state that controls whether dialogs
+   * are currently blocked or not.
+   */
+  void disableDialogs();
+  void enableDialogs();
+  bool areDialogsEnabled();
+  void resetDialogAbuseState();
+
+  const unsigned long AGENT_SHEET = 0;
+  const unsigned long USER_SHEET = 1;
+  const unsigned long AUTHOR_SHEET = 2;
+  /**
+   * Synchronously loads a style sheet from |sheetURI| and adds it to the list
+   * of additional style sheets of the document.
+   *
+   * These additional style sheets are very much like user/agent sheets loaded
+   * with loadAndRegisterSheet. The only difference is that they are applied only
+   * on the document owned by this window.
+   *
+   * Sheets added via this API take effect immediately on the document.
+   */
+  void loadSheet(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Same as the above method but allows passing the URI as a string.
+   */
+  void loadSheetUsingURIString(in ACString sheetURI, in unsigned long type);
+
+  /**
+   * Adds a style sheet to the list of additional style sheets of the document.
+   *
+   * Style sheets can be preloaded with nsIStyleSheetService.preloadSheet.
+   *
+   * Sheets added via this API take effect immediately on the document.
+   */
+  void addSheet(in nsIPreloadedStyleSheet sheet, in unsigned long type);
+
+  /**
+   * Remove the document style sheet at |sheetURI| from the list of additional
+   * style sheets of the document.  The removal takes effect immediately.
+   */
+  void removeSheet(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Same as the above method but allows passing the URI as a string.
+   */
+  void removeSheetUsingURIString(in ACString sheetURI, in unsigned long type);
+
+  /**
+   * Returns true if a user input is being handled.
+   *
+   * This calls EventStateManager::IsHandlingUserInput().
+   */
+  readonly attribute boolean isHandlingUserInput;
+
+  /**
+   * Returns milliseconds elapsed since last user input was started.
+   * Returns -1 if there wasn't any previous user input.
+   *
+   * This relies on EventStateManager::LatestUserInputStart()
+   */
+  readonly attribute double millisSinceLastUserInput;
+
+  /**
+   * After calling the method, the window for which this DOMWindowUtils
+   * was created can be closed using scripts.
+   */
+  void allowScriptsToClose();
+
+  /**
+   * Is the parent window's main widget visible?  If it isn't, we probably
+   * don't want to display any dialogs etc it may request.  This corresponds
+   * to the visibility check in nsWindowWatcher::OpenWindowInternal().
+   *
+   * Will throw a DOM security error if called without chrome privileges or
+   * NS_ERROR_NOT_AVAILABLE in the unlikely event that the parent window's
+   * main widget can't be reached.
+   */
+  readonly attribute boolean isParentWindowMainWidgetVisible;
+
+  /**
+   * In certain cases the event handling of nodes, form controls in practice,
+   * may be disabled. Such cases are for example the existence of disabled
+   * attribute or -moz-user-input: none.
+   */
+  boolean isNodeDisabledForEvents(in Node aNode);
+
+  /**
+   * Setting paintFlashing to true will flash newly painted area.
+   */
+  attribute boolean paintFlashing;
+
+  /*
+   * Returns the value of a given property animated on the compositor thread.
+   * If the property is NOT currently being animated on the compositor thread,
+   * returns an empty string.
+   * NOTE: Do not use this function for elements that there was another
+   * animation running on the compositor before.
+   */
+  AString getOMTAStyle(in Element aElement, in AString aProperty,
+                       [optional] in AString aPseudoElement);
+
+  /*
+   * Returns true if the given animation is being tracked by the pending
+   * animation tracker for the current document.
+   */
+  bool isAnimationInPendingTracker(in Animation aAnimation);
+
+  /**
+   * If aHandlingInput is true, this informs the event state manager that
+   * we're handling user input. Otherwise, this is a no-op (as by default
+   * we're not handling user input).
+   * Remember to call destruct() on the return value!
+   * See also nsIDOMWindowUtils::isHandlingUserInput.
+   */
+  nsIJSRAIIHelper setHandlingUserInput(in boolean aHandlingInput);
+
+  /**
+   * Get the content- and compositor-side APZ test data instances.
+   * The return values are of type APZTestData (see APZTestData.webidl).
+   */
+  [implicit_jscontext] jsval getContentAPZTestData();
+  [implicit_jscontext] jsval getCompositorAPZTestData();
+
+  /**
+   * Posts an RestyleHint::RESTYLE_SELF restyle event for the given element.
+   */
+  void postRestyleSelfEvent(in Element aElement);
+
+  /**
+   * This method doesn't do anything useful.  It was solely added for the
+   * purpose of the test for bug 503926.
+   */
+  void xpconnectArgument(in nsISupports aObj);
+
+  /**
+   * Helper for JS components that need to send permission requests with
+   * e10s support properly.
+   */
+  void askPermission(in nsIContentPermissionRequest aRequest);
+
+  /**
+   * Restyle generation for the current document.
+   *
+   * May throw NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute unsigned long long restyleGeneration;
+
+  /**
+   * Number of frames constructed (excluding breaking) for the curent
+   * document.
+   *
+   * May throw NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute unsigned long long framesConstructed;
+
+  /**
+   * Number of frames reflowed for the curent document.
+   *
+   * May throw NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute unsigned long long framesReflowed;
+
+  /**
+   * Controls the amount of chrome that should be visible on each side of
+   * the window. Works like the chromemargin xul:window attribute.
+   * This should only be used with non-XUL windows.
+   */
+  void setChromeMargin(in int32_t aTop,
+                       in int32_t aRight,
+                       in int32_t aBottom,
+                       in int32_t aLeft);
+
+  /**
+   * Returns a JSObject which contains a list of frame uniformities
+   * when the pref gfx.vsync.collect-scroll-data is enabled.
+   * Every result contains a layer address and a frame uniformity for that layer.
+   * A negative frame uniformity value indicates an invalid frame uniformity and an error has occured.
+   */
+  [implicit_jscontext] jsval getFrameUniformityTestData();
+
+  /*
+   * Increase the chaos mode activation level. An equivalent number of
+   * calls to leaveChaosMode must be made in order to restore the original
+   * chaos mode state. If the activation level is nonzero all chaos mode
+   * features are activated.
+   */
+  void enterChaosMode();
+
+  /**
+   * Decrease the chaos mode activation level. See enterChaosMode().
+   */
+  void leaveChaosMode();
+
+  /**
+   * Alerts Gecko of a device reset
+   */
+  void triggerDeviceReset();
+
+  /**
+   * Returns whether the document's style set's rule processor for the
+   * specified level of the cascade is shared by multiple style sets.
+   * (Used by tests to ensure that certain optimizations do not regress.)
+   *
+   * @param aSheetType One of the nsIStyleSheetService.*_SHEET constants.
+   */
+  bool hasRuleProcessorUsedByMultipleStyleSets(in unsigned long aSheetType);
+
+  /**
+   * Enable or disable displayport suppression. This is intended to be used by
+   * testing code, to provide more deterministic behaviour over the displayport
+   * suppression during tests. Note that this updates a flag, so whatever value
+   * was last provided is what will be used.
+   */
+  void respectDisplayPortSuppression(in boolean aEnabled);
+
+  /**
+   * Set a flag that forces the next reflow interrupt check to return true. This
+   * can be used by tests to force execution of the interrupted reflow codepaths.
+   */
+  void forceReflowInterrupt();
+
+  /**
+   * Terminate the GPU process. Used for testing GPU process restarts.
+   */
+  void terminateGPUProcess();
+
+  /**
+    * Returns the GPU process pid, or -1 if there is no GPU process.
+    */
+  readonly attribute int32_t gpuProcessPid;
+
+  /**
+   * Adds an EventStates bit to the element.
+   *
+   * The state string must be one of the following:
+   *   * (none yet; but for example "higlighted" for NS_EVENT_STATE_HIGHLIGHTED)
+   *
+   * The supported state strings are defined in kManuallyManagedStates
+   * in nsDOMWindowUtils.cpp.
+   */
+  void addManuallyManagedState(in Element element,
+                               in AString state);
+
+  /**
+   * Removes the specified EventStates bits from the element.
+   *
+   * See above for the strings that can be passed for |state|.
+   */
+  void removeManuallyManagedState(in Element element,
+                                  in AString state);
+
+  /**
+   * Returns usage data for a given storage object.
+   *
+   * @param aStorage
+   *    The storage object to get usage data for.
+   */
+  int64_t getStorageUsage(in Storage aStorage);
+
+  /**
+   * Returns the directionality of a string using the first-strong character
+   * algorithm defined in http://unicode.org/reports/tr9/#P2.
+   *
+   * @param aString the string to retrieve the direction for.
+   * @return one of DIRECTION_LTR, DIRECTION_RTL or DIRECTION_NOT_SET depending
+   *         on the first-strong character found in the string.
+   */
+  long getDirectionFromText(in AString aString);
+
+  /**
+   * Calls FrameNeedsReflow on that root frame so that a layout flush
+   * will be necessary.
+   *
+   * This should only be used for testing.
+   */
+  void ensureDirtyRootFrame();
+
+  /**
+   * Capture the contents of the current WebRender frame and
+   * save them to a folder relative to the current working directory.
+   */
+  void wrCapture();
+
+  /**
+   * Flag bits for use in |wrStartCaptureSequence|'s |aFlags| argument.
+   */
+  const uint32_t WR_CAPTURE_SCENE = 0x1;
+  const uint32_t WR_CAPTURE_FRAME = 0x2;
+  const uint32_t WR_CAPTURE_TILE_CACHE = 0x4;
+  const uint32_t WR_CAPTURE_EXTERNAL_RESOURCES = 0x8;
+
+  /**
+   * Start capturing each WebRender frame to disk.
+   *
+   * |aPath| is the name of a new directory to be created to hold the captures.
+   * it is relative to:
+   * - the |PUBLIC_STORAGE| environment variable, if set, else
+   * - the |MOZ_UPLOAD_DIR| environment variable, if set, else
+   * - the user's home directory, if known, else
+   * the current directory.
+   *
+   * If there is already a directory with the given name, a numeric suffix is
+   * added to ensure a fresh directory is created. This means that you can't
+   * be sure your capture directory is actually named |aPath|.
+   *
+   * |aFlags| is a set of flags from |webrender::render_api::CaptureBits|.
+   *
+   * If there is already a sequence capture in progress, stop it and start a new
+   * one, with the new path and flags.
+   */
+  void wrStartCaptureSequence(in ACString aPath, in uint32_t aFlags);
+
+  /**
+   * Stop a capture begun with |wrStartCaptureSequence|.
+   */
+  void wrStopCaptureSequence();
+
+  /**
+   * Toggle recording of composition on and off.
+   *
+   * This is equivalent to calling |startCompositionRecorder()| or
+   * |stopCompositionRecorder(true)|.
+   */
+  Promise setCompositionRecording(in boolean aValue);
+
+  /**
+   * Start the composition recorder.
+   *
+   * @return A promise that is resolved to true if the composion recorder was
+   *         started successfully.
+   */
+  Promise startCompositionRecording();
+
+  /**
+   * Stop the composition recorder.
+   *
+   * @param aWriteToDisk Whether or not the frames should be written to disk.
+   *                     If false, they will be returned in the promise.
+   * @return A promise that resolves when the frames have been collected.
+   *         When |aWriteToDisk| is true, the promise will resolve to |undefined|.
+   *         Otherwise, the promise will resolve to a |DOMCollectedFrames| dictionary,
+   *         which contains the timestamps and contents of the captured frames.
+   */
+  Promise stopCompositionRecording(in boolean aWriteToDisk);
+
+  /**
+   * Returns whether the document we're associated to has recorded a given CSS
+   * property via the use counter mechanism.
+   *
+   * Throws if there's no document or the property is invalid.
+   */
+  bool isCssPropertyRecordedInUseCounter(in ACString aProperty);
+
+  /**
+   * Calls SetInitialViewport on the MobileViewportManager, which effectively
+   * causes it to refresh all of its internal state and update things that
+   * need updating.
+   */
+  void resetMobileViewportManager();
+
+  /**
+   * NOTE: Currently works only on GTK+.
+   */
+  attribute ACString systemFont;
+
+  /**
+   * Returns the number of times this document for this window has
+   * been painted to the screen.
+   *
+   * Use this instead of window.mozPaintCount
+   */
+  readonly attribute unsigned long long paintCount;
+
+  // These consts are only for testing purposes.
+  const long DEFAULT_MOUSE_POINTER_ID = 0;
+  const long DEFAULT_PEN_POINTER_ID   = 1;
+  const long DEFAULT_TOUCH_POINTER_ID = 2;
+
+  // Match mozilla::MouseButton.
+  const long MOUSE_BUTTON_LEFT_BUTTON   = 0;
+  const long MOUSE_BUTTON_MIDDLE_BUTTON = 1;
+  const long MOUSE_BUTTON_RIGHT_BUTTON  = 2;
+
+  // Match mozilla::MouseButtonsFlag.
+  const long MOUSE_BUTTONS_NO_BUTTON = 0x00;
+  const long MOUSE_BUTTONS_LEFT_BUTTON = 0x01;
+  const long MOUSE_BUTTONS_RIGHT_BUTTON = 0x02;
+  const long MOUSE_BUTTONS_MIDDLE_BUTTON = 0x04;
+  // Typically, "back" button being left side of 5-button
+  // mice, see "buttons" attribute document of DOM3 Events.
+  const long MOUSE_BUTTONS_4TH_BUTTON = 0x08;
+  // Typically, "forward" button being right side of 5-button
+  // mice, see "buttons" attribute document of DOM3 Events.
+  const long MOUSE_BUTTONS_5TH_BUTTON = 0x10;
+  // Buttons are not specified, will be calculated from |aButton|.
+  const long MOUSE_BUTTONS_NOT_SPECIFIED = -1;
+
+  // Return values for getDirectionFromText().
+  const long DIRECTION_LTR = 0;
+  const long DIRECTION_RTL = 1;
+  const long DIRECTION_NOT_SET = 2;
+
+  void syncFlushCompositor();
+
+  unsigned long long getLayersId();
+
+  // Returns true if we are effectively throttling frame requests.
+  readonly attribute bool effectivelyThrottlesFrameRequests;
+
+  // Returns the ID for the underlying window widget, which can
+  // be compared against the rawId from a nsIMediaDevice to determine
+  // if the window is being shared.
+  //
+  // Using this only makes sense in the parent process, and the function
+  // will intentionally crash any non-parent process that tries to access
+  // it.
+  readonly attribute AString webrtcRawDeviceId;
+
+  // Used for testing to check the suspend status.
+  readonly attribute bool suspendedByBrowsingContextGroup;
+};
+
+[scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
+interface nsITranslationNodeList : nsISupports {
+  readonly attribute unsigned long length;
+  Node item(in unsigned long index);
+
+  // A translation root is a block element, or an inline element
+  // which its parent is not a translation node.
+  boolean isTranslationRootAtIndex(in unsigned long index);
+};
+
+/**
+ * JS doesn't do RAII very well. We can use this interface to make remembering
+ * to destruct an object in a finally clause easier.
+ */
+[scriptable, uuid(52e5a996-d0a9-4efc-a6fa-24489c532b19)]
+interface nsIJSRAIIHelper : nsISupports {
+  void destruct();
+};

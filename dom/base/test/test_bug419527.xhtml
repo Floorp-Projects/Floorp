@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=419527
+-->
+<head>
+  <title>Test for Bug 419527</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<template id="template"><span>Foo</span></template>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=419527">Mozilla Bug 419527</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 419527 **/
+customElements.define("custom-element", class extends HTMLElement {
+  constructor() {
+    super();
+    const template = document.getElementById("template");
+    const shadowRoot = this.attachShadow({mode: "open"})
+      .appendChild(template.content.cloneNode(true));
+  }
+  connectedCallback() {
+    var win = window;
+    var span = this.shadowRoot.children[0];
+    win.ok(span.textContent == "Foo", "Right span.");
+    win.ok(span.localName == "span", "Wrong anon node!");
+    var range = document.createRange();
+    range.selectNode(span.firstChild);
+    win.ok(range.startContainer == span, "Wrong start container!");
+    win.ok(range.endContainer == span, "Wrong end container!");
+    var newSubTree = win.newSubTree;
+    newSubTree.appendChild(this);
+    range.setStart(newSubTree.firstChild, 0);
+    win.ok(range.startContainer == newSubTree.firstChild,
+           "Range should have been collapsed to newSubTree.firstChild!");
+    win.ok(range.endContainer == newSubTree.firstChild,
+           "Range should have been collapsed to newSubTree.firstChild!");
+    SimpleTest.finish();
+  }
+});
+
+var d;
+
+function runRangeTest() {
+  window.newSubTree = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  newSubTree.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "div"));
+
+  d = document.createElementNS("http://www.w3.org/1999/xhtml", "custom-element");
+  document.body.appendChild(d);
+}
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(runRangeTest, 0);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,114 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIX509Cert;
+
+%{ C++
+namespace IPC {
+  class Message;
+}
+class PickleIterator;
+%}
+
+[ptr] native IpcMessagePtr(IPC::Message);
+[ptr] native PickleIteratorPtr(PickleIterator);
+
+[builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
+interface nsITransportSecurityInfo : nsISupports {
+    readonly attribute unsigned long securityState;
+    readonly attribute long errorCode; // PRErrorCode
+    // errorCode as string (e.g. "SEC_ERROR_UNKNOWN_ISSUER")
+    readonly attribute AString errorCodeString;
+
+    /**
+     * The following parameters are only valid after the TLS handshake
+     * has completed.  Check securityState first.
+     */
+
+    /**
+     * If certificate verification failed, this will be the peer certificate
+     * chain provided in the handshake, so it can be used for error reporting.
+     * If verification succeeded, this will be empty.
+     */
+    readonly attribute Array<nsIX509Cert> failedCertChain;
+
+    readonly attribute nsIX509Cert serverCert;
+    readonly attribute Array<nsIX509Cert> succeededCertChain;
+
+    [must_use]
+    readonly attribute ACString cipherName;
+    [must_use]
+    readonly attribute unsigned long keyLength;
+    [must_use]
+    readonly attribute unsigned long secretKeyLength;
+    [must_use]
+    readonly attribute ACString keaGroupName;
+    [must_use]
+    readonly attribute ACString signatureSchemeName;
+
+    const short SSL_VERSION_3   = 0;
+    const short TLS_VERSION_1   = 1;
+    const short TLS_VERSION_1_1 = 2;
+    const short TLS_VERSION_1_2 = 3;
+    const short TLS_VERSION_1_3 = 4;
+    [must_use]
+    readonly attribute unsigned short protocolVersion;
+
+    const short CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE          = 0;
+    const short CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT        = 5;
+    const short CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS  = 6;
+    const short CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS = 7;
+    [must_use]
+    readonly attribute unsigned short certificateTransparencyStatus;
+
+    [must_use]
+    readonly attribute boolean isAcceptedEch;
+    [must_use]
+    readonly attribute boolean isDelegatedCredential;
+    [must_use]
+    readonly attribute boolean isDomainMismatch;
+    [must_use]
+    readonly attribute boolean isNotValidAtThisTime;
+
+    [must_use]
+    readonly attribute boolean isUntrusted;
+
+    /**
+     * True only if (and after) serverCert was successfully validated as
+     * Extended Validation (EV).
+     */
+    [must_use]
+    readonly attribute boolean isExtendedValidation;
+
+    [notxpcom, noscript]
+    void SerializeToIPC(in IpcMessagePtr aMsg);
+
+    [notxpcom, noscript]
+    bool DeserializeFromIPC([const] in IpcMessagePtr aMsg, in PickleIteratorPtr aIter);
+
+    /* negotiatedNPN is '' if no NPN list was provided by the client,
+     * or if the server did not select any protocol choice from that
+     * list. That also includes the case where the server does not
+     * implement NPN.
+     *
+     * If negotiatedNPN is read before NPN has progressed to the point
+     * where this information is available NS_ERROR_NOT_CONNECTED is
+     * raised.
+     */
+    readonly attribute ACString negotiatedNPN;
+
+    /**
+     * True iff the connection was resumed using the resumption token.
+     */
+    readonly attribute boolean resumed;
+
+    /**
+     * True iff the succeededCertChain is built in root.
+     */
+    attribute boolean isBuiltCertChainRootBuiltInRoot;
+};

@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<style>
+<![CDATA[
+#baz { -moz-binding: url(360078-1xbl.xml#foo); }
+]]>
+</style>
+
+<script>
+<![CDATA[
+
+function stuff()
+{
+  var baz = document.getElementById("baz");
+  var count = 0;
+  
+  setTimeout(step, 30);
+  
+  function step()
+  {
+    ++count;
+    if (count < 15) {
+      baz.cloneNode(true);
+      setTimeout(step, 30);
+    }
+    else {
+      document.documentElement.removeAttribute("class");
+    }
+  }
+  
+}
+
+]]>
+</script>
+</head>
+<body onload="stuff()">
+
+<hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="baz"></hbox>
+
+</body>
+</html>

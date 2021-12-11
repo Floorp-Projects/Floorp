@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Bug 413982</title>
+    <style type="text/css">
+        div.clearboth {
+            clear: both;
+        }
+        div.floatdiv {
+            float: left;
+        }
+        span.innerspan {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="floatdiv">
+        This is
+        <span class="innerspan"> the first line.
+        </span>
+    </div>
+    <div class="clearboth">This is the second line.</div>
+</body>
+</html>

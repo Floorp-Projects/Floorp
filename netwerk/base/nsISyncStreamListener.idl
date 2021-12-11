@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIStreamListener.idl"
+
+[scriptable, uuid(7e1aa658-6e3f-4521-9946-9685a169f764)]
+interface nsISyncStreamListener : nsIStreamListener
+{
+    /**
+     * Returns an input stream that when read will fetch data delivered to the
+     * sync stream listener.  The nsIInputStream implementation will wait for
+     * OnDataAvailable events before returning from Read.
+     *
+     * NOTE: Reading from the returned nsIInputStream may spin the current
+     * thread's event queue, which could result in any event being processed.
+     */
+    readonly attribute nsIInputStream inputStream;
+};

@@ -1,0 +1,224 @@
+0 - Thunderbird ( PID: 2035 ):
+	res_base      : 0x1600000
+	res_mask      : 0x1fffff
+	windows       : 69
+	GCs           : 35
+	fonts         : 1
+	pixmaps       : 175
+	pictures      : 272
+	glyphsets     : 73
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 9
+	unknowns      : 42
+	pixmap bytes  : 4715737
+	other bytes   : ~13024
+	total bytes   : ~4728761
+1 - 809276 – GetXRes should parse output of xrestop in process versus crazy shell commands - Nightly ( PID: 6076 ):
+	res_base      : 0x1400000
+	res_mask      : 0x1fffff
+	windows       : 24
+	GCs           : 36
+	fonts         : 1
+	pixmaps       : 122
+	pictures      : 172
+	glyphsets     : 49
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 6
+	unknowns      : 19
+	pixmap bytes  : 3535225
+	other bytes   : ~8368
+	total bytes   : ~3543593
+2 - Terminal ( PID: 1668 ):
+	res_base      : 0x800000
+	res_mask      : 0x1fffff
+	windows       : 27
+	GCs           : 3
+	fonts         : 1
+	pixmaps       : 32
+	pictures      : 50
+	glyphsets     : 4
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 5
+	unknowns      : 56
+	pixmap bytes  : 1943716
+	other bytes   : ~4504
+	total bytes   : ~1948220
+3 - Fluxbox ( PID:  ?   ):
+	res_base      : 0xa00000
+	res_mask      : 0x1fffff
+	windows       : 286
+	GCs           : 21
+	fonts         : 1
+	pixmaps       : 33
+	pictures      : 562
+	glyphsets     : 3
+	colormaps     : 1
+	passive grabs : 254
+	cursors       : 19
+	unknowns      : 27
+	pixmap bytes  : 684196
+	other bytes   : ~29176
+	total bytes   : ~713372
+4 - notify-osd ( PID: 1813 ):
+	res_base      : 0x1000000
+	res_mask      : 0x1fffff
+	windows       : 2
+	GCs           : 3
+	fonts         : 0
+	pixmaps       : 1
+	pictures      : 2
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 0
+	unknowns      : 10
+	pixmap bytes  : 74408
+	other bytes   : ~408
+	total bytes   : ~74816
+5 - <unknown> ( PID:  ?   ):
+	res_base      : 0x0
+	res_mask      : 0x1fffff
+	windows       : 1
+	GCs           : 0
+	fonts         : 2
+	pixmaps       : 0
+	pictures      : 0
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 1
+	unknowns      : 68
+	pixmap bytes  : 28940
+	other bytes   : ~3728
+	total bytes   : ~32668
+6 - <unknown> ( PID:  ?   ):
+	res_base      : 0xe00000
+	res_mask      : 0x1fffff
+	windows       : 0
+	GCs           : 0
+	fonts         : 0
+	pixmaps       : 1
+	pictures      : 0
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 0
+	unknowns      : 0
+	pixmap bytes  : 28940
+	other bytes   : ~0
+	total bytes   : ~28940
+7 - emacs@jhammel-ThinkPad-X230 ( PID: 4824 ):
+	res_base      : 0x1a00000
+	res_mask      : 0x1fffff
+	windows       : 5
+	GCs           : 45
+	fonts         : 1
+	pixmaps       : 8
+	pictures      : 18
+	glyphsets     : 3
+	colormaps     : 1
+	passive grabs : 0
+	cursors       : 9
+	unknowns      : 9
+	pixmap bytes  : 9239
+	other bytes   : ~3184
+	total bytes   : ~12423
+8 - NetworkManager Applet ( PID: 1798 ):
+	res_base      : 0xc00000
+	res_mask      : 0x1fffff
+	windows       : 4
+	GCs           : 3
+	fonts         : 1
+	pixmaps       : 17
+	pictures      : 33
+	glyphsets     : 2
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 1
+	unknowns      : 15
+	pixmap bytes  : 408
+	other bytes   : ~2416
+	total bytes   : ~2824
+9 - gnome-screensaver ( PID: 1817 ):
+	res_base      : 0x1200000
+	res_mask      : 0x1fffff
+	windows       : 3
+	GCs           : 1
+	fonts         : 0
+	pixmaps       : 0
+	pictures      : 0
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 0
+	unknowns      : 9
+	pixmap bytes  : 0
+	other bytes   : ~312
+	total bytes   : ~312
+10 - xrestop ( PID:  ?   ):
+	res_base      : 0x1800000
+	res_mask      : 0x1fffff
+	windows       : 1
+	GCs           : 1
+	fonts         : 0
+	pixmaps       : 0
+	pictures      : 0
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 0
+	unknowns      : 0
+	pixmap bytes  : 0
+	other bytes   : ~48
+	total bytes   : ~48
+11 - <unknown> ( PID:  ?   ):
+	res_base      : 0x400000
+	res_mask      : 0x1fffff
+	windows       : 1
+	GCs           : 1
+	fonts         : 0
+	pixmaps       : 0
+	pictures      : 0
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 0
+	unknowns      : 0
+	pixmap bytes  : 0
+	other bytes   : ~48
+	total bytes   : ~48
+12 - <unknown> ( PID:  ?   ):
+	res_base      : 0x600000
+	res_mask      : 0x1fffff
+	windows       : 0
+	GCs           : 1
+	fonts         : 0
+	pixmaps       : 0
+	pictures      : 0
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 0
+	unknowns      : 0
+	pixmap bytes  : 0
+	other bytes   : ~24
+	total bytes   : ~24
+13 - <unknown> ( PID:  ?   ):
+	res_base      : 0x200000
+	res_mask      : 0x1fffff
+	windows       : 0
+	GCs           : 0
+	fonts         : 0
+	pixmaps       : 0
+	pictures      : 0
+	glyphsets     : 0
+	colormaps     : 0
+	passive grabs : 0
+	cursors       : 0
+	unknowns      : 0
+	pixmap bytes  : 0
+	other bytes   : ~0
+	total bytes   : ~0

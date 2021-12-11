@@ -1,0 +1,284 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for closing PaymentRequest</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="DefaultData.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('ClosePaymentChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
+
+  async function requestChromeAction(action, params) {
+    gScript.sendAsyncMessage(action, params);
+    await new Promise(resolve => {
+      gScript.addMessageListener(`${action}-complete`, function completeListener() {
+        gScript.removeMessageListener(`${action}-complete`, completeListener);
+        resolve();
+      });
+    });
+  }
+
+  async function testCloseByReloading() {
+    const testName = "testCloseByReloading";
+    await requestChromeAction("test-setup", testName);
+    info(testName);
+    let nextStatus = ["creating", "reloading"];
+    let currStatus = nextStatus.shift();
+    let ifr = document.createElement('iframe');
+    await requestChromeAction("payment-num-set");
+
+    await new Promise((resolve) => {
+      let listener = function(event) {
+        is(event.data, "successful",
+           `${testName}: Expected 'successful' when ${currStatus}, but got '${event.data}'.`);
+        if (currStatus === "creating") {
+          ifr.contentWindow.location.reload();
+        } else if (currStatus === "reloading") {
+          window.removeEventListener("message", listener);
+          resolve();
+        }
+        currStatus = nextStatus.shift();
+      }
+      window.addEventListener("message", listener);
+      ifr.src = "simple_payment_request.html";
+      document.body.appendChild(ifr);
+    });
+
+    await requestChromeAction("payment-num-check", 1);
+    document.body.removeChild(ifr);
+
+  }
+
+  async function testCloseByRedirecting() {
+    const testName = "testCloseByRedirecting";
+    await requestChromeAction("test-setup", testName);
+    return new Promise((resolve) => {
+      let nextStatus = ["creating", "redirecting"];
+      let currStatus = nextStatus.shift();
+      let ifr = document.createElement('iframe');
+      let listener = async function(event) {
+        is(event.data, "successful",
+           `${testName}: Expected 'successful' when ${currStatus}, but got '${event.data}'.`);
+        if (currStatus === "creating") {
+          ifr.src = "blank_page.html";
+        } else if (currStatus === "redirecting"){
+          window.removeEventListener("message", listener);
+          await requestChromeAction("close-check");
+          document.body.removeChild(ifr);
+          resolve();
+        }
+        currStatus = nextStatus.shift();
+      };
+      window.addEventListener("message", listener);
+      ifr.src = "simple_payment_request.html";
+      document.body.appendChild(ifr);
+    });
+  }
+
+  async function testCloseByRedirectingAfterShow() {
+    const testName = "testCloseByRedirectingAfterShow";
+    await requestChromeAction("test-setup", testName);
+    return new Promise((resolve) => {
+      let nextStatus = ["creating", "showing", "redirecting"];
+      let currStatus = nextStatus.shift();
+      let ifr = document.createElement('iframe');
+      let handler = undefined;
+      let listener = async (event) => {
+        is(event.data, "successful",
+           `${testName}: Expected 'successful' when ${currStatus}, but got '${event.data}'.`);
+        if (currStatus === "creating") {
+          handler = SpecialPowers.getDOMWindowUtils(ifr.contentWindow).setHandlingUserInput(true);
+          ifr.contentWindow.postMessage("show PaymentRequest", "*");
+        } else if (currStatus === "showing") {
+          handler.destruct();
+          ifr.src = "blank_page.html";
+        } else if (currStatus === "redirecting") {
+          window.removeEventListener("message", listener);
+          await requestChromeAction("close-check");
+          await requestChromeAction("reject-payment", true);
+          document.body.removeChild(ifr);
+          resolve();
+        }
+        currStatus = nextStatus.shift();
+      }
+      window.addEventListener("message", listener);
+      ifr.src = "simple_payment_request.html";
+      document.body.appendChild(ifr);
+    });
+  }
+
+  async function testCloseByRemovingIframe() {
+    const testName = "testCloseByRemovingIframe";
+    await requestChromeAction("test-setup", testName);
+    return new Promise((resolve) => {
+      let nextStatus = ["creating"];
+      let currStatus = nextStatus.shift();
+      let ifr = document.createElement('iframe');
+      let listener = async function(event) {
+        is(event.data, "successful",
+           `${testName}: Expected 'successful' when ${currStatus}, but got '${event.data}'.`);
+        document.body.removeChild(ifr);
+        window.removeEventListener("message", listener);
+        await requestChromeAction("close-check");
+        resolve();
+      };
+      window.addEventListener("message", listener);
+      ifr.src = "simple_payment_request.html";
+      document.body.appendChild(ifr);
+    });
+  }
+
+  async function testUpdateWithRespondedPayment() {
+    const testName = "testUpdateWithRespondedPayment";
+    await requestChromeAction("test-setup", testName);
+    return new Promise(resolve => {
+      let nextStatus = ["creating", "showing", "closing", "updating", "finishing"];
+      let currStatus = nextStatus.shift();
+      let ifr = document.createElement('iframe');
+      let handler = undefined;
+      let listener = async function(event) {
+        is(event.data, "successful",
+           `${testName}: Expected 'successful' when ${currStatus}, but got '${event.data}'.`);
+        switch (currStatus) {
+          case "creating":
+            handler = SpecialPowers.getDOMWindowUtils(ifr.contentWindow).setHandlingUserInput(true);
+            ifr.contentWindow.postMessage("show PaymentRequest", "*");
+            break;
+          case "showing":
+            await requestChromeAction("update-payment");
+            break;
+          case "closing":
+            await requestChromeAction("reject-payment", false);
+            break;
+          case "updating":
+            await requestChromeAction("close-check");
+            ifr.contentWindow.postMessage("updateWith PaymentRequest", "*");
+            break;
+          case "finishing":
+            handler.destruct();
+            document.body.removeChild(ifr);
+            window.removeEventListener("message", listener);
+            resolve();
+            break;
+          default:
+            ok(false, testName + ": Unknown status()" + currStatus);
+            break;
+        }
+        currStatus = nextStatus.shift();
+      }
+      window.addEventListener("message", listener);
+      ifr.src = "simple_payment_request.html";
+      document.body.appendChild(ifr);
+    });
+  }
+
+  function getLoadedPaymentRequest(iframe, url) {
+    return new Promise(resolve => {
+      iframe.addEventListener(
+        "load",
+        () => {
+          const { PaymentRequest } = iframe.contentWindow;
+          const request = new PaymentRequest(defaultMethods, defaultDetails);
+          resolve(request);
+        },
+        { once: true }
+      );
+      iframe.src = url;
+    });
+  }
+
+  async function testNonfullyActivePayment() {
+    const testName = "testNonfullyActivePayment";
+    await requestChromeAction("test-setup", testName);
+
+    const outer = document.createElement("iframe");
+    outer.allow = "payment";
+    document.body.appendChild(outer);
+    await getLoadedPaymentRequest(outer,"blank_page.html");
+
+    const inner = outer.contentDocument.createElement("iframe");
+    inner.allow = "payment";
+    outer.contentDocument.body.appendChild(inner);
+
+    const request = await getLoadedPaymentRequest(inner,"blank_page.html");
+    ok(request, `${testName}: PaymentRequest in inner iframe should exist.`);
+
+    await new Promise(res => {
+      outer.addEventListener("load", res);
+      outer.src = "simple_payment_request.html";
+    });
+
+    let handler = SpecialPowers.getDOMWindowUtils(inner.contentWindow).setHandlingUserInput(true);
+    try {
+      const showPromise = await request.show();
+      ok(false, `${testName}: expected 'AbortError', but got resolved.`);
+    } catch (error) {
+      is(error.name, "AbortError",
+         `${testName}: expected 'AbortError'.`);
+    }
+    await handler.destruct();
+    inner.remove();
+    outer.remove();
+  }
+
+  async function teardown() {
+    return new Promise((resolve) => {
+      gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+        gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+        gScript.removeMessageListener("test-fail", testFailHandler);
+        gScript.removeMessageListener("test-pass", testPassHandler);
+        gScript.destroy();
+        SimpleTest.finish();
+        resolve();
+      });
+      gScript.sendAsyncMessage("teardown");
+    });
+  }
+
+  async function runTests() {
+    try {
+      await testCloseByReloading();
+      await testCloseByRedirecting();
+      await testCloseByRedirectingAfterShow();
+      await testCloseByRemovingIframe();
+      await testUpdateWithRespondedPayment();
+      await testNonfullyActivePayment();
+      await teardown();
+    } catch(e) {
+      ok(false, "test_closePayment.html: Unexpected error: " + e.name);
+      SimpleTest.finish();
+    }
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1408234">Mozilla Bug 1408234</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1483470">Mozilla Bug 1483470</a>
+</body>
+</html>

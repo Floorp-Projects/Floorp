@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+html,body {
+  font-size:12px;
+  font-family:monospace;
+}
+.grid {
+  display: grid;
+  border: 1px solid green;
+  grid-template-columns: 20px 20px 20px 20px;
+  grid-template-rows: 20px 20px 20px;
+  grid-auto-flow: row;
+  grid-auto-columns: 20px;
+  grid-auto-rows: 20px;
+}
+
+span {
+  background: lime;
+  border: 1px solid;
+}
+
+.test1 { grid-template-areas:'.. a a-start-.'; }
+.test1 span { grid-column: a-start- / 8; }
+
+.test2 {
+  grid-template-areas:
+    'a a a ... . .'
+    'a a a .   . ..'
+    '.-b b .   . ...'
+  ;
+}
+
+.test2 .a {
+  grid-area: a;
+}
+.test2 .b {
+  grid-column: 2 / span 3;
+  grid-row: b;
+}
+.test2 .c {
+  grid-column: auto / span 3;
+}
+
+.test3 {
+  grid-template-areas:'.a.';
+  grid-template-columns: [a-start] 20px 20px [a-start-start] 20px [a-start-end];
+}
+.test3 span { grid-column: a-start / 8; }
+
+.test4 {
+  grid-template-areas:'. .... .-a';
+  grid-template-columns: 20px [-a-start] 20px [-a-start] 20px [-a-end] 20px ;
+}
+.test4 span { grid-column: -a-start 2 / 8; }
+
+    </style>
+</head>
+<body>
+
+<div class="grid test1"><span>a</span></div>
+
+<div class="grid test2">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+</div>
+
+<div class="grid test3"><span>a</span></div>
+
+<div class="grid test4"><span>a</span></div>
+
+</body>
+</html>

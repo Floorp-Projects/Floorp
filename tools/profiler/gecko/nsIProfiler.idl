@@ -1,0 +1,181 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "mozilla/Maybe.h"
+#include "nsTArrayForwardDeclare.h"
+#include "nsStringFwd.h"
+%}
+
+[ref] native nsCString(const nsCString);
+[ref] native StringArrayRef(const nsTArray<nsCString>);
+
+/**
+ * Start-up parameters for subprocesses are passed through nsIObserverService,
+ * which, unfortunately, means we need to implement nsISupports in order to
+ * go through it.
+ */
+[scriptable, builtinclass, uuid(0a175ba7-8fcf-4ce9-9c4b-ccc6272f4425)]
+interface nsIProfilerStartParams : nsISupports
+{
+  readonly attribute uint32_t entries;
+  readonly attribute double duration;
+  readonly attribute double interval;
+  readonly attribute uint32_t features;
+  readonly attribute uint64_t activeTabID;
+
+  [noscript, notxpcom, nostdcall] StringArrayRef getFilters();
+};
+
+[scriptable, builtinclass, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
+interface nsIProfiler : nsISupports
+{
+  boolean CanProfile();
+  void StartProfiler(in uint32_t aEntries, in double aInterval,
+                     in Array<AUTF8String> aFeatures,
+                     [optional] in Array<AUTF8String> aFilters,
+                     [optional] in uint64_t aActiveTabID,
+                     [optional] in double aDuration);
+  void StopProfiler();
+  boolean IsPaused();
+  void Pause();
+  void Resume();
+  boolean IsSamplingPaused();
+  void PauseSampling();
+  void ResumeSampling();
+
+  /*
+   * Resolves the returned promise after at least one full periodic sampling.
+   * Rejects the promise if sampler is not running (yet, or anymore, or paused).
+   * This is mainly useful in tests, to wait just long enough to guarantee that
+   * one sample was taken in the main process.
+   */
+  [implicit_jscontext]
+  Promise waitOnePeriodicSampling();
+
+  /*
+   * Returns the JSON string of the profile. If aSinceTime is passed, only
+   * report samples taken at >= aSinceTime.
+   */
+  string GetProfile([optional] in double aSinceTime);
+
+  /*
+   * Returns a JS object of the profile. If aSinceTime is passed, only report
+   * samples taken at >= aSinceTime.
+   */
+  [implicit_jscontext]
+  jsval getProfileData([optional] in double aSinceTime);
+
+  [implicit_jscontext]
+  Promise getProfileDataAsync([optional] in double aSinceTime);
+
+  [implicit_jscontext]
+  Promise getProfileDataAsArrayBuffer([optional] in double aSinceTime);
+
+  [implicit_jscontext]
+  Promise getProfileDataAsGzippedArrayBuffer([optional] in double aSinceTime);
+
+  /**
+   * Returns a promise that resolves once the file has been written.
+   */
+  [implicit_jscontext]
+  Promise dumpProfileToFileAsync(in ACString aFilename,
+                                 [optional] in double aSinceTime);
+
+  boolean IsActive();
+
+  /**
+   * Clear all registered and unregistered page information in prifiler.
+   */
+  void ClearAllPages();
+
+  /**
+   * Returns an array of the features that are supported in this build.
+   * Features may vary depending on platform and build flags.
+   */
+  Array<AUTF8String> GetFeatures();
+
+  /**
+   * Returns a JavaScript object that contains a description of the currently configured
+   * state of the profiler when the profiler is active. This can be useful to assert
+   * the UI of the profiler's recording panel in tests. It returns null when the profiler
+   * is not active.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval activeConfiguration;
+
+  /**
+   * Returns an array of all features that are supported by the profiler.
+   * The array may contain features that are not supported in this build.
+   */
+  Array<AUTF8String> GetAllFeatures();
+
+  void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
+                     out uint32_t aGeneration);
+
+  /**
+   * Returns the elapsed time, in milliseconds, since the profiler's epoch.
+   * The epoch is guaranteed to be constant for the duration of the
+   * process, but is otherwise arbitrary.
+   */
+  double getElapsedTime();
+
+  /**
+   * Contains an array of shared library objects.
+   * Every object has the properties:
+   *  - start:      The start address of the memory region occupied by this library.
+   *  - end:        The end address of the memory region occupied by this library.
+   *  - offset:     Usually zero, except on Linux / Android if the first mapped
+   *                section of the library has been mapped to an address that's
+   *                different from the library's base address.
+   *                Then offset = start - baseAddress.
+   *  - name:       The name (file basename) of the binary.
+   *  - path:       The full absolute path to the binary.
+   *  - debugName:  On Windows, the name of the pdb file for the binary. On other
+   *                platforms, the same as |name|.
+   *  - debugPath:  On Windows, the full absolute path of the pdb file for the
+   *                binary. On other platforms, the same as |path|.
+   *  - arch:       On Mac, the name of the architecture that identifies the right
+   *                binary image of a fat binary. Example values are "i386", "x86_64",
+   *                and "x86_64h". (x86_64h is used for binaries that contain
+   *                instructions that are specific to the Intel Haswell microarchitecture.)
+   *                On non-Mac platforms, arch is "".
+   *  - breakpadId: A unique identifier string for this library, as used by breakpad.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval sharedLibraries;
+
+  /**
+   * Returns a promise that resolves to a SymbolTableAsTuple for the binary at
+   * the given path.
+   *
+   * SymbolTable as tuple: [addrs, index, buffer]
+   * Contains a symbol table, which can be used to map addresses to strings.
+   *
+   * The first element of this tuple, commonly named "addrs", is a sorted array of
+   * symbol addresses, as library-relative offsets in bytes, in ascending order.
+   * The third element of this tuple, commonly named "buffer", is a buffer of
+   * bytes that contains all strings from this symbol table, in the order of the
+   * addresses they correspond to, in utf-8 encoded form, all concatenated
+   * together.
+   * The second element of this tuple, commonly named "index", contains positions
+   * into "buffer". For every address, that position is where the string for that
+   * address starts in the buffer.
+   * index.length == addrs.length + 1.
+   * index[addrs.length] is the end position of the last string in the buffer.
+   *
+   * The string for the address addrs[i] is
+   * (new TextDecoder()).decode(buffer.subarray(index[i], index[i + 1]))
+   */
+  [implicit_jscontext]
+  Promise getSymbolTable(in ACString aDebugPath, in ACString aBreakpadID);
+
+  /**
+   * Dump the collected profile to a file.
+   */
+  void dumpProfileToFile(in string aFilename);
+};

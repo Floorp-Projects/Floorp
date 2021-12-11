@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=514156
+-->
+<head>
+  <title>Test for Bug 514156</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=514156">Mozilla Bug 514156</a>
+<p id="display"></p>
+<div id="content">
+<input type="text" id="input1">
+<input type="text" id="input2">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 514156 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  var input1 = $("input1");
+  input1.focus();
+  sendString("\u200e\u05d0\u05d1");
+  is(escape(input1.value), escape("\u200e\u05d0\u05d1"), "non-spacing character and direction change shouldn't change content");
+
+  var input2 = $("input2");
+  input2.focus();
+  sendString("\u05b6");
+  sendString("abc");
+  is(escape(input2.value), escape("\u05b6abc"), "non-spacing character and direction change shouldn't change content");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

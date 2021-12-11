@@ -1,0 +1,95 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bug 1699892 - SVG context properties for allowed domains</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+<script>
+  /**
+   * Returns a Promise that resolves when target fires a load event.
+   */
+  function waitForLoad(target) {
+    return new Promise(resolve => {
+      target.addEventListener("load", () => {
+        if (event.target == target) {
+          resolve();
+        }}, { once: true });
+    });
+  }
+
+  function makeContextFillFrame(source) {
+    return `
+      <style>
+        img {
+          -moz-context-properties: fill;
+          fill: green;
+        }
+      </style>
+      <img src="${source}" style="width: 100px; height: 100px;">
+    `;
+  }
+
+  /**
+   * Creates an iframe, loads src in it, and waits for the load event
+   * for the iframe to fire. Then it snapshots the iframe and returns
+   * the snapshot (and removes the iframe from the document, to clean up).
+   *
+   * src can be a URL starting with http, or is otherwise assumed to be
+   * a srcdoc string.
+   */
+  async function loadSrcImageAndSnapshot({ src, srcdoc }) {
+    let frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+
+    if (src) {
+      frame.src = src;
+    } else {
+      frame.srcdoc = srcdoc;
+    }
+
+    await waitForLoad(frame);
+
+    let snapshot = await snapshotWindow(frame, false);
+    document.body.removeChild(frame);
+    return snapshot;
+  }
+
+  add_task(async () => {
+    const ALLOWED_DOMAIN = "example.org";
+    const DISALLOWED_DOMAIN = "example.com";
+
+    await SpecialPowers.pushPrefEnv({
+      set: [["svg.context-properties.content.allowed-domains", ALLOWED_DOMAIN]]
+    });
+
+    // When the context properties are allowed, we expect a green
+    // square. When they are not allowed, we expected a red square.
+
+    let redReference = await loadSrcImageAndSnapshot({
+      srcdoc: `<div style="width: 100px; height: 100px; background: red"></div>`,
+    });
+
+    let greenReference = await loadSrcImageAndSnapshot({
+      srcdoc: `<div style="width: 100px; height: 100px; background: green"></div>`,
+    });
+
+    let allowedSnapshot = await loadSrcImageAndSnapshot({
+      src: `file_context_fill_fallback_red.html?${ALLOWED_DOMAIN}`
+    });
+
+    let disallowedSnapshot = await loadSrcImageAndSnapshot({
+      src: `file_context_fill_fallback_red.html?${DISALLOWED_DOMAIN}`
+    });
+
+    const kNoFuzz = null;
+    info("Reference snapshots should look different from each other");
+    assertSnapshots(redReference, greenReference, false, kNoFuzz, "red", "green");
+
+    info("Allowed domain should be green");
+    assertSnapshots(allowedSnapshot, greenReference, true, kNoFuzz, ALLOWED_DOMAIN, "green");
+
+    info("Disallowed domain should be red");
+    assertSnapshots(disallowedSnapshot, redReference, true, kNoFuzz, DISALLOWED_DOMAIN, "red");
+  });
+</script>
+<body>
+</body>

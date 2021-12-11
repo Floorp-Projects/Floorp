@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>RTL list displayed as inline broken</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <style type="text/css">
+ul {
+ padding: 3px 10px;
+ border-bottom: 3px solid #4949A9;
+ white-space: nowrap;
+ font-size: 13px;
+ direction: rtl;
+ text-align: left;
+}
+
+ul li {
+ display: inline;
+ margin: 0;
+ padding: 3px 10px;
+ border-top: 1px solid gray;
+ border-right: 1px solid gray;
+ border-left: 1px solid gray;
+ background-color: #f0f0f0;
+}
+  </style>
+ </head>
+ <body>
+  <h1>Broken RTL list when displayed as inline</h1>
+  <h2>One Item</h2>
+  <ul class="tabs">
+   <li>Tab</li>
+  </ul>
+  <h2>Two Items</h2>
+  <ul class="tabs">
+   <li>Tab</li>
+   <li>Tab</li>
+  </ul>
+  <h2>Many</h2>
+  <ul class="tabs">
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+   <li>Tab</li>
+  </ul>
+ </body>
+</html>

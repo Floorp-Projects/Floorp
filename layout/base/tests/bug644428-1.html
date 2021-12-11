@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="setupCaret()" spellcheck="false">
+    <div contenteditable>a<span>b</span>c </div>
+    <script>
+      function setupCaret() {
+        var div = document.querySelector("div");
+        div.focus();
+        var sel = window.getSelection();
+        sel.collapse(div, 3);
+        synthesizeKey("KEY_Backspace");
+        synthesizeKey("KEY_Backspace");
+      }
+    </script>
+  </body>
+</html>

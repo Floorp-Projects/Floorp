@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1284788</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #block1, #block2, #block3 {
+      background: blue;
+      width: 50px; height: 50px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="block1"></div>
+  <div id="block2"></div>
+  <div id="block3"></div>
+  <div id="test">
+    <script>
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.requestFlakyTimeout("For changing pointer lock element not in a valid user event handler");
+
+      var block1 = document.getElementById("block1");
+      var block2 = document.getElementById("block2");
+      var block3 = document.getElementById("block3");
+
+      class ClickTester {
+        constructor(target) {
+          this._target = target;
+          this._callback = null;
+          document.addEventListener("click", this);
+        }
+
+        synthesize(callback) {
+          ok(!this._callback, "No callback should have been hooked");
+          this._callback = callback;
+          synthesizeMouseAtCenter(this._target, {}, window);
+        }
+
+        handleEvent(e) {
+          ok(!!this._callback, "Should have hooked a callback");
+          var callback = this._callback;
+          this._callback = null;
+          callback(e);
+        }
+      };
+
+      var tester = new ClickTester(block3);
+      // It would be called in handler of load event in pointerlock_utils.js
+      function start() {
+        tester.synthesize(firstClick);
+      }
+
+      function firstClick(e) {
+        is(e.target, block3, "Click is triggered inside block3");
+        document.addEventListener("pointerlockchange", lockedPointerOnBlock1);
+        block1.requestPointerLock();
+      }
+
+      function lockedPointerOnBlock1() {
+        document.removeEventListener("pointerlockchange", lockedPointerOnBlock1);
+        is(document.pointerLockElement, block1, "Pointer should be locked on #block1");
+        SimpleTest.executeSoon(() => {
+          tester.synthesize(secondClick);
+        });
+      }
+
+      function secondClick(e) {
+        is(e.target, block1, "Event should be redirected to block1");
+        // Use 2s to ensure that we never consider this as an extension of user input.
+        setTimeout(() => {
+          document.addEventListener("pointerlockchange", lockedPointerOnBlock2);
+          block2.requestPointerLock();
+        }, 2000);
+      }
+
+      function lockedPointerOnBlock2() {
+        document.removeEventListener("pointerlockchange", lockedPointerOnBlock2);
+        is(document.pointerLockElement, block2, "Pointer should be locked on #block2");
+        SimpleTest.executeSoon(() => {
+          tester.synthesize(thirdClick);
+        });
+      }
+
+      function thirdClick(e) {
+        is(e.target, block2, "Event should be redirected to block2");
+        // Use 2s to ensure that we never consider this as an extension of user input.
+        setTimeout(() => {
+          document.addEventListener("pointerlockchange", lockedPointerOnBlock1Again);
+          block1.requestPointerLock();
+        }, 2000);
+      }
+
+      function lockedPointerOnBlock1Again() {
+        document.removeEventListener("pointerlockchange", lockedPointerOnBlock1Again);
+        is(document.pointerLockElement, block1, "Pointer should be locked on #block1 again");
+        SimpleTest.executeSoon(() => {
+          tester.synthesize(fourthClick);
+        });
+      }
+
+      function fourthClick(e) {
+        is(e.target, block1, "Event should be redirected to block1 again");
+        document.addEventListener("pointerlockchange", () => SimpleTest.finish());
+        document.exitPointerLock();
+      }
+
+    </script>
+  </div>
+</body>
+</html>

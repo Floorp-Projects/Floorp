@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Tests for mozInnerScreenX/Y properties
+  -->
+<window title="Test mozInnerScreenX/Y Properties"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"
+        style="height: 400px; position:relative; overflow: auto;">
+    <iframe id="f"
+            style="position:absolute; left:100px;
+                   top:200px; width:200px; height:200px; border:none;"></iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+function isRounded(a, b, msg) {
+  ok(Math.round(a) == Math.round(b),
+     msg + " (rounded), got " + a + ", expected " + b);
+}
+
+function doTests()
+{
+  var readable = false;
+  try
+  {
+    mozScreenPixelsPerCSSPixel;
+    readable = true;
+  }
+  catch(ex) { }
+  ok(!readable, "window pixels per css pixel shouldn't be readable to content");
+
+  var domWindowUtils = window.windowUtils;
+  var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
+
+  is(window.devicePixelRatio, devPxPerCSSPx, "window.devicePixelRatio");
+
+  var rootElement = document.documentElement;
+  isRounded(window.mozInnerScreenX*devPxPerCSSPx, rootElement.screenX,
+            "window screen X");
+  isRounded(window.mozInnerScreenY*devPxPerCSSPx, rootElement.screenY,
+            "window screen Y");
+
+  var f = document.getElementById("f");
+  var fBounds = f.getBoundingClientRect();
+
+  var fbc = f.contentWindow.docShell.browsingContext;
+
+  isRounded(f.contentWindow.mozInnerScreenX,
+            window.mozInnerScreenX + fBounds.left,
+            "frame screen X");
+  isRounded(f.contentWindow.mozInnerScreenY,
+            window.mozInnerScreenY + fBounds.top,
+            "frame screen Y");
+
+  fbc.fullZoom *= 2;
+  var frameDomWindowUtils = f.contentWindow.windowUtils;
+  is(frameDomWindowUtils.screenPixelsPerCSSPixel, 2*devPxPerCSSPx,
+     "frame screen pixels per CSS pixel");
+
+  is(f.contentWindow.devicePixelRatio, 2*devPxPerCSSPx, "frame devicePixelRatio");
+
+  isRounded(f.contentWindow.mozInnerScreenX*2,
+            window.mozInnerScreenX + fBounds.left,
+            "zoomed frame screen X");
+  isRounded(f.contentWindow.mozInnerScreenY*2,
+            window.mozInnerScreenY + fBounds.top,
+            "zoomed frame screen Y");
+  fbc.fullZoom = 1.0;
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(doTests);
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+</window>

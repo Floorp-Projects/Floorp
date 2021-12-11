@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTests()">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+  <iframe type="content" id="f" src="about:blank" style="border:1px solid black;"/>
+
+  <script>
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    var imports = [ "SimpleTest", "is", "isnot", "ok" ];
+    for (var name of imports) {
+      window[name] = window.arguments[0][name];
+    }
+
+    function snapshot(win) {
+      var el = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      el.width = win.innerWidth;
+      el.height = win.innerHeight;
+
+      var ctx = el.getContext("2d");
+      ctx.drawWindow(win, 0, 0,
+                     win.innerWidth, win.innerHeight,
+                     "rgba(0,0,0,0)", 0);
+      return el;
+    }
+
+    var color = '#2468AC';
+    var prefs = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefBranch);
+    var backgroundPref = matchMedia('(prefers-color-scheme:dark)').matches
+      ? 'browser.display.background_color.dark'
+      : 'browser.display.background_color';
+    prefs.setCharPref(backgroundPref, color);
+    // On Windows, this preference is true by default, we make it
+    // false to ensure we're using the color set above for our reference.
+    prefs.setBoolPref('browser.display.use_system_colors', false);
+
+    function runTests() {
+      var f = document.getElementById("f");
+
+      var testCanvas = snapshot(f.contentWindow);
+      prefs.clearUserPref(backgroundPref);
+      // Reset sys colors pref so we're using the system color for our test.
+      prefs.clearUserPref('browser.display.use_system_colors');
+
+      var refCanvas = snapshot(f.contentWindow);
+      var ctx = refCanvas.getContext('2d');
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, refCanvas.width, refCanvas.height);
+
+      var comparison = compareSnapshots(testCanvas, refCanvas, true);
+      ok(comparison[0], "Rendering OK, got " + comparison[1] + ", expected " + comparison[2]);
+
+
+      var tester = window.SimpleTest;
+      window.close();
+      tester.finish();
+    }
+  ]]>
+  </script>
+</window>

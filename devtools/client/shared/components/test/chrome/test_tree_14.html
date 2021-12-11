@@ -1,0 +1,245 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that Tree component has working keyboard interactions.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component keyboard test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const { a, button, div } =
+      require("devtools/client/shared/vendor/react-dom-factories");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const {
+      Simulate,
+      findRenderedDOMComponentWithClass,
+      findRenderedDOMComponentWithTag,
+    } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree = createFactory(
+      browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    let gTree, gFocused, gActive;
+    function renderTree(props = {}) {
+      let toggle = true;
+      const treeProps = {
+        ...TEST_TREE_INTERFACE,
+        onFocus: x => {
+          gFocused = x;
+          renderTree({ focused: gFocused, active: gActive });
+        },
+        onActivate: x => {
+          gActive = x;
+          renderTree({ focused: gFocused, active: gActive });
+        },
+        renderItem: (x, depth, focused) => {
+          toggle = !toggle;
+          return toggle ?
+            (div(
+              {},
+                `${"-".repeat(depth)}${x}:${focused}`,
+                a({ href: "#" }, "Focusable 1"),
+                button({ }, "Focusable 2"),
+                "\n",
+              )
+            ) : `${"-".repeat(depth)}${x}:${focused}`;
+        },
+        ...props
+      };
+
+      gTree = ReactDOM.render(Tree(treeProps), document.body);
+    }
+
+    renderTree();
+    const els = {
+      get tree() {
+        // React will replace the tree via renderTree.
+        return findRenderedDOMComponentWithClass(gTree, "tree");
+      },
+      get anchor() {
+        // When tree node becomes active/inactive, it is replaced with a newly rendered
+        // one.
+        return findRenderedDOMComponentWithTag(gTree, "a");
+      },
+      get button() {
+        // When tree node becomes active/inactive, it is replaced with a newly rendered
+        // one.
+        return findRenderedDOMComponentWithTag(gTree, "button");
+      },
+    };
+
+    const tests = [{
+      name: "Test default Tree props. Keyboard focus is set to document body by default.",
+      props: { focused: undefined, active: undefined },
+      activeElement: document.body,
+    }, {
+      name: "Focused props must be set to the first node on initial focus. " +
+            "Keyboard focus should be set on the tree.",
+      action: () => els.tree.focus(),
+      activeElement: "tree",
+      props: { focused: "A" },
+    }, {
+      name: "Focused node should remain set even when the tree is blured. " +
+            "Keyboard focus should be set back to document body.",
+      action: () => els.tree.blur(),
+      props: { focused: "A" },
+      activeElement: document.body,
+    }, {
+      name: "Unset tree's focused prop.",
+      action: () => renderTree({ focused: null }),
+      props: { focused: null },
+    }, {
+      name: "Focused node must be re-set again to the first tree node on initial " +
+            "focus. Keyboard focus should be set on tree's conatiner.",
+      action: () => els.tree.focus(),
+      activeElement: "tree",
+      props: { focused: "A" },
+    }, {
+      name: "Focused node should be set as active on Enter.",
+      event: { type: "keyDown", el: "tree", options: { key: "Enter" }},
+      props: { focused: "A", active: "A" },
+      activeElement: "tree",
+    }, {
+      name: "Active node should be unset on Escape.",
+      event: { type: "keyDown", el: "tree", options: { key: "Escape" }},
+      props: { focused: "A", active: null },
+    }, {
+      name: "Focused node should be set as active on Space.",
+      event: { type: "keyDown", el: "tree", options: { key: " " }},
+      props: { focused: "A", active: "A" },
+      activeElement: "tree",
+    }, {
+      name: "Active node should unset when focus leaves the tree.",
+      action: () => els.tree.blur(),
+      props: { focused: "A", active: null },
+      activeElement: document.body,
+    }, {
+      name: "Keyboard focus should be set on tree's conatiner on focus.",
+      action: () => els.tree.focus(),
+      activeElement: "tree",
+    }, {
+      name: "Focused node should be updated to next on ArrowDown.",
+      event: { type: "keyDown", el: "tree", options: { key: "ArrowDown" }},
+      props: { focused: "M", active: null },
+    }, {
+      name: "Focused item should be set as active on Enter. Keyboard focus should be " +
+            "set on the first focusable element inside the tree node, if available.",
+      event: { type: "keyDown", el: "tree", options: { key: "Enter" }},
+      props: { focused: "M", active: "M" },
+      activeElement: "anchor",
+    }, {
+      name: "Keyboard focus should be set to next tabbable element inside the active " +
+            "node on Tab.",
+      action() {
+        synthesizeKey("KEY_Tab");
+      },
+      props: { focused: "M", active: "M" },
+      activeElement: "button",
+    }, {
+      name: "Keyboard focus should wrap inside the tree node when focused on last " +
+            "tabbable element.",
+      action() {
+        synthesizeKey("KEY_Tab");
+      },
+      props: { focused: "M", active: "M" },
+      activeElement: "anchor",
+    }, {
+      name: "Keyboard focus should wrap inside the tree node when focused on first " +
+            "tabbable element.",
+      action() {
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+      },
+      props: { focused: "M", active: "M" },
+      activeElement: "button",
+    }, {
+      name: "Active tree node should be unset on Escape. Focus should move back to the " +
+            "tree container.",
+      event: { type: "keyDown", el: "tree", options: { key: "Escape" }},
+      props: { focused: "M", active: null },
+      activeElement: "tree",
+    }, {
+      name: "Focused node should be set as active on Space. Keyboard focus should be " +
+            "set on the first focusable element inside the tree node, if available.",
+      event: { type: "keyDown", el: "tree", options: { key: " " }},
+      props: { focused: "M", active: "M" },
+      activeElement: "anchor",
+    }, {
+      name: "Focused tree node should remain set even when the tree is blured. " +
+            "Keyboard focus should be set back to document body.",
+      action: () => document.activeElement.blur(),
+      props: { focused: "M", active: null, },
+      activeElement: document.body,
+    }, {
+      name: "Keyboard focus should be set on tree's conatiner on focus.",
+      action: () => els.tree.focus(),
+      props: { focused: "M", active: null },
+      activeElement: "tree",
+    }, {
+      name: "Focused tree node should be updated to previous on ArrowUp.",
+      event: { type: "keyDown", el: "tree", options: { key: "ArrowUp" }},
+      props: { focused: "A", active: null },
+    }, {
+      name: "Focused item should be set as active on Enter.",
+      event: { type: "keyDown", el: "tree", options: { key: "Enter" }},
+      props: { focused: "A", active: "A" },
+      activeElement: "tree",
+    }, {
+      name: "Keyboard focus should move to another focusable element outside of the " +
+            "tree when there's nothing to focus on inside the tree node.",
+      action() {
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+      },
+      props: { focused: "A", active: null },
+      activeElement: document.documentElement,
+    }];
+
+    for (const test of tests) {
+      const { action, event, props, name } = test;
+
+      info(name);
+      if (event) {
+        const { type, options, el } = event;
+        const target = typeof el === "string" ? els[el] : el;
+        Simulate[type](target, options);
+      } else if (action) {
+        action();
+      }
+
+      await forceRender(gTree);
+
+      if (test.activeElement) {
+        const expected = typeof test.activeElement === "string" ?
+          els[test.activeElement] : test.activeElement;
+        // eslint-disable-next-line no-debugger
+        if (document.activeElement!==expected) {debugger;}
+        is(document.activeElement, expected, "Focus is set correctly.");
+      }
+
+      for (const key in props) {
+        is(gTree.props[key], props[key], `${key} prop is correct.`);
+      }
+    }
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

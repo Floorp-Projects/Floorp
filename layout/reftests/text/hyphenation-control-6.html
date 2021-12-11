@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<style>
+.test { hyphens:auto; font:10px Ubuntu Mono, Courier New, Courier, monospace; border: 1px solid silver; }
+</style>
+<body>
+<p>All the columns should appear identical:</p>
+<div id="outer" style="columns:6">
+<script>
+let outer = document.getElementById("outer");
+for (i = 1; i <= 6; ++i) {
+  for (j = 0; j <= 18; j += 2) {
+    div = document.createElement("div");
+    div.className = "test";
+    div.style.width = j + "ch";
+    div.textContent = "the" + " ".repeat(i) + "flow-relative";
+    outer.appendChild(div);
+  }
+}
+</script>

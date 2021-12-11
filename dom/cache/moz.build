@@ -1,0 +1,102 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Storage: Cache API")
+
+EXPORTS.mozilla.dom.cache += [
+    "Action.h",
+    "ActorChild.h",
+    "ActorUtils.h",
+    "AutoUtils.h",
+    "Cache.h",
+    "CacheChild.h",
+    "CacheCommon.h",
+    "CacheOpChild.h",
+    "CacheOpParent.h",
+    "CacheParent.h",
+    "CacheStorage.h",
+    "CacheStorageChild.h",
+    "CacheStorageParent.h",
+    "CacheStreamControlChild.h",
+    "CacheStreamControlParent.h",
+    "CacheWorkerRef.h",
+    "Connection.h",
+    "Context.h",
+    "DBAction.h",
+    "DBSchema.h",
+    "FileUtils.h",
+    "IPCUtils.h",
+    "Manager.h",
+    "ManagerId.h",
+    "PrincipalVerifier.h",
+    "QuotaClient.h",
+    "ReadStream.h",
+    "SavedTypes.h",
+    "StreamControl.h",
+    "StreamList.h",
+    "Types.h",
+    "TypeUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "Action.cpp",
+    "ActorChild.cpp",
+    "AutoUtils.cpp",
+    "Cache.cpp",
+    "CacheChild.cpp",
+    "CacheCommon.cpp",
+    "CacheOpChild.cpp",
+    "CacheOpParent.cpp",
+    "CacheParent.cpp",
+    "CacheStorage.cpp",
+    "CacheStorageChild.cpp",
+    "CacheStorageParent.cpp",
+    "CacheStreamControlChild.cpp",
+    "CacheStreamControlParent.cpp",
+    "CacheWorkerRef.cpp",
+    "Connection.cpp",
+    "Context.cpp",
+    "DBAction.cpp",
+    "DBSchema.cpp",
+    "FileUtils.cpp",
+    "Manager.cpp",
+    "ManagerId.cpp",
+    "PrincipalVerifier.cpp",
+    "QuotaClient.cpp",
+    "ReadStream.cpp",
+    "StreamControl.cpp",
+    "StreamList.cpp",
+    "TypeUtils.cpp",
+]
+
+IPDL_SOURCES += [
+    "CacheTypes.ipdlh",
+    "PCache.ipdl",
+    "PCacheOp.ipdl",
+    "PCacheStorage.ipdl",
+    "PCacheStreamControl.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+MOCHITEST_MANIFESTS += [
+    "test/mochitest/mochitest.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "test/xpcshell/xpcshell.ini",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<body style="white-space:pre"> FG 
+ JK 
+<script>
+document.body.offsetTop;
+var t = document.body.firstChild;
+var sel = window.getSelection();
+sel.collapse(t, 1);
+sel.extend(t, 3);
+
+function doTest() {
+  t.insertData(0, ' BC \n');
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

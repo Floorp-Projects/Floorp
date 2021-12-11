@@ -1,0 +1,48 @@
+.ds-privacy-modal {
+  .modal-link {
+    display: flex;
+    align-items: center;
+    margin: 0 0 8px;
+    border: 0;
+    padding: 0;
+    color: var(--newtab-primary-action-background);
+    width: max-content;
+
+    &:hover {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    &::before {
+      -moz-context-properties: fill;
+      fill: var(--newtab-primary-action-background);
+      content: '';
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      margin-inline-end: 8px;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+    }
+
+    &.modal-link-privacy::before {
+      background-image: url('chrome://global/skin/icons/info.svg');
+    }
+
+    &.modal-link-manage::before {
+      background-image: url('chrome://global/skin/icons/settings.svg');
+    }
+  }
+
+  p {
+    line-height: 24px;
+  }
+
+  .privacy-notice {
+    max-width: 572px;
+    padding: 40px;
+    margin: auto;
+  }
+}

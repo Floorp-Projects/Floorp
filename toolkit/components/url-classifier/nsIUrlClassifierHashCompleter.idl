@@ -1,0 +1,103 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+
+/**
+ * This interface contains feilds in Matches object of FullHashResponse(V4).
+ * Reference from:
+ * https://developers.google.com/safe-browsing/v4/update-api#http-post-response_2
+ */
+[scriptable, uuid(aabeb50e-d9f7-418e-9469-2cd9608958c0)]
+interface nsIFullHashMatch : nsISupports
+{
+  readonly attribute ACString tableName;
+
+  readonly attribute ACString fullHash;
+
+  readonly attribute uint32_t cacheDuration;
+};
+
+/**
+ * This interface is implemented by nsIUrlClassifierHashCompleter clients.
+ */
+[scriptable, uuid(da16de40-df26-414d-bde7-c4faf4504868)]
+interface nsIUrlClassifierHashCompleterCallback : nsISupports
+{
+  /**
+   * A complete hash has been found that matches the partial hash.
+   * This method may be called 0-n times for a given
+   * nsIUrlClassifierCompleter::complete() call.
+   *
+   * @param hash
+   *        The 256-bit hash that was discovered.
+   * @param table
+   *        The name of the table that this hash belongs to.
+   * @param chunkId
+   *        The database chunk that this hash belongs to.
+   */
+  void completionV2(in ACString hash,
+                    in ACString table,
+                    in uint32_t chunkId);
+
+  /**
+   * This will be called when a fullhash response is received and parsed
+   * no matter if any full hash has been found.
+   *
+   * @param partialHash
+   *        The hash that was sent for completion.
+   * @param table
+   *        The name of the table that this hash belongs to.
+   * @param negativeCacheDuration
+   *        The negative cache duration in millisecond.
+   * @param fullHashes
+   *        Array of fullhashes that match the prefix.
+   */
+  void completionV4(in ACString partialHash,
+                    in ACString table,
+                    in uint32_t negativeCacheDuration,
+                    in nsIArray fullHashes);
+
+  /**
+   * The completion is complete.  This method is called once per
+   * nsIUrlClassifierCompleter::complete() call, after all completion()
+   * calls are finished.
+   *
+   * @param status
+   *        NS_OK if the request completed successfully, or an error code.
+   */
+  void completionFinished(in nsresult status);
+};
+
+/**
+ * Clients updating the url-classifier database have the option of sending
+ * partial (32-bit) hashes of URL fragments to be blocklisted.  If the
+ * url-classifier encounters one of these truncated hashes, it will ask an
+ * nsIUrlClassifierCompleter instance to asynchronously provide the complete
+ * hash, along with some associated metadata.
+ * This is only ever used for testing and should absolutely be deleted (I
+ * think).
+ */
+[scriptable, uuid(231fb2ad-ea8a-4e63-a331-eafc3b434811)]
+interface nsIUrlClassifierHashCompleter : nsISupports
+{
+  /**
+   * Request a completed hash from the given gethash url.
+   *
+   * @param partialHash
+   *        The 32-bit hash encountered by the url-classifier.
+   * @param gethashUrl
+   *        The gethash url to use.
+   * @param tableName
+   *        The table where we matched the partial hash.
+   * @param callback
+   *        An nsIUrlClassifierCompleterCallback instance.
+   */
+  void complete(in ACString partialHash,
+                in ACString gethashUrl,
+                in ACString tableName,
+                in nsIUrlClassifierHashCompleterCallback callback);
+};

@@ -1,0 +1,43 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Testcase for Filter Effects Module Level 1 feDropShadow</title>
+
+  <defs>
+    <!-- check default values -->
+    <filter id="dropShadow1">
+      <feDropShadow flood-color="green"/>
+    </filter>
+    <!-- check negative dx, dy -->
+    <filter id="dropShadow2">
+      <feDropShadow stdDeviation="5" dx="-2" dy="-5" flood-color="green"/>
+    </filter>
+    <!-- check flood-opacity and non-default values -->
+    <filter id="dropShadow3">
+      <feDropShadow stdDeviation="2 5" dx="5" dy="5" flood-color="green" flood-opacity="0.2"/>
+    </filter>
+    <!-- check sRGB -->
+    <filter id="dropShadow4" color-interpolation-filters="sRGB">
+      <feDropShadow stdDeviation="5" dx="5" dy="5" flood-color="green"/>
+    </filter>
+    <!-- check sourceAlpha input -->
+    <filter id="dropShadow5">
+      <feDropShadow in="SourceAlpha" flood-color="green"/>
+    </filter>
+    <!-- check negative stdDeviation (should not display anything) -->
+    <filter id="dropShadow6">
+      <feDropShadow stdDeviation="-2" flood-color="green"/>
+    </filter>
+  </defs>
+  <g fill="yellow" transform="translate(10,10)">
+    <circle cx="75" cy="75" r="70" filter="url(#dropShadow1)" />
+    <circle cx="250" cy="75" r="70" filter="url(#dropShadow2)" />
+    <circle cx="425" cy="75" r="70" filter="url(#dropShadow3)" />
+    <circle cx="600" cy="75" r="70" filter="url(#dropShadow4)" />
+    <circle cx="75" cy="250" r="70" filter="url(#dropShadow5)" />
+    <circle cx="250" cy="250" r="70" filter="url(#dropShadow6)" />
+  </g>
+</svg>

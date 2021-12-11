@@ -1,0 +1,9 @@
+<html>
+<head>
+  <title>This is really HTML, not text</title>
+</head>
+<body>
+<p>This file is really HTML; the test_ctype_override.txt^headers^ file sets a
+  new header that overwrites the default text/plain header.</p>
+</body>
+</html>

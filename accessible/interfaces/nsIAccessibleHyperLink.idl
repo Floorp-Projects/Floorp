@@ -1,0 +1,86 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIAccessible;
+
+/**
+ * A cross-platform interface that supports hyperlink-specific properties and
+ * methods.  Anchors, image maps, xul:labels with class="text-link" implement this interface.
+ */
+[scriptable, builtinclass, uuid(883643d4-93a5-4f32-922c-6f06e01363c1)]
+interface nsIAccessibleHyperLink : nsISupports
+{
+  /**
+   * Returns the offset of the link within the parent accessible.
+   */
+  readonly attribute long startIndex;
+
+  /**
+   * Returns the end index of the link within the parent accessible.
+   *
+   * @note  The link itself is represented by one embedded character within the
+   * parent text, so the endIndex should be startIndex + 1.
+   */
+  readonly attribute long endIndex;
+
+  /**
+   * Determines whether the link is valid (e. g. points to a valid URL).
+   *
+   * @note  XXX Currently only used with ARIA links, and the author has to
+   * specify that the link is invalid via the aria-invalid="true" attribute.
+   * In all other cases, TRUE is returned.
+   */
+  readonly attribute boolean valid;
+
+  /**
+   * The numbber of anchors within this Hyperlink. Is normally 1 for anchors.
+   * This anchor is, for example, the visible output of the html:a tag.
+   * With an Image Map, reflects the actual areas within the map.
+   */
+  readonly attribute long anchorCount;
+
+  /**
+   * Returns the URI at the given index.
+   *
+   * @note  ARIA hyperlinks do not have an URI to point to, since clicks are
+   * processed via JavaScript. Therefore this property does not work on ARIA
+   * links.
+   *
+   * @param index  The 0-based index of the URI to be returned.
+   *
+   * @return the nsIURI object containing the specifications for the URI.
+   */
+  nsIURI getURI (in long index);
+
+  /**
+   * Returns a reference to the object at the given index.
+   *
+   * @param index  The 0-based index whose object is to be returned.
+   *
+   * @return the nsIAccessible object at the desired index.
+   */
+  nsIAccessible getAnchor (in long index);
+};
+
+/*
+ Assumptions:
+
+ The object associated with object or anchor index
+ is an nsIAccessible.
+ A URI can be represented by the nsIURI interface
+ (or nsIURL interface).
+
+ Note that an object which supports nsIAccessibleHyperlink
+ does *not* generally implement nsIAccessible, unlike the
+    case of the other nsiAccessible* interfaces in this directory.
+
+    Aaron: would the nsISupports return from
+    getObject be queryable for nsIURI and nsIURL directly?
+
+*/

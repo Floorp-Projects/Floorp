@@ -1,0 +1,261 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The core XPConnect public interfaces. */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "jspubtd.h"
+#include "js/CompileOptions.h"
+#include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
+#include "xptinfo.h"
+#include "nsCOMPtr.h"
+
+class nsWrapperCache;
+%}
+
+/***************************************************************************/
+
+// NB: jsval and jsid are declared in nsrootidl.idl
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+[ptr] native nsWrapperCachePtr(nsWrapperCache);
+      native JSHandleId(JS::Handle<jsid>);
+[ref] native const_JSReadOnlyCompileOptionsRef(const JS::ReadOnlyCompileOptions);
+
+/***************************************************************************/
+
+// forward declarations...
+interface nsIPrincipal;
+interface nsIClassInfo;
+interface nsIVariant;
+interface nsIObjectInputStream;
+interface nsIObjectOutputStream;
+
+/***************************************************************************/
+[builtinclass, uuid(73e6ff4a-ab99-4d99-ac00-ba39ccb8e4d7)]
+interface nsIXPConnectJSObjectHolder : nsISupports
+{
+    [notxpcom, nostdcall] JSObjectPtr GetJSObject();
+};
+
+[builtinclass, uuid(e787be29-db5d-4a45-a3d6-1de1d6b85c30)]
+interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
+{
+    /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
+
+    void debugDump(in short depth);
+
+%{C++
+    /**
+     * Faster access to the native object from C++.  Will never return null.
+     */
+    nsISupports* Native() const { return mIdentity; }
+
+protected:
+    nsCOMPtr<nsISupports> mIdentity;
+public:
+%}
+};
+
+[builtinclass, uuid(3a01b0d6-074b-49ed-bac3-08c76366cae4)]
+interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
+{
+    /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
+    readonly attribute nsIIDPtr         InterfaceIID;
+
+    // Returns the global object for our JS object. If this object is a
+    // cross-compartment wrapper, returns the compartment's first global.
+    // The global we return is guaranteed to be same-compartment with the
+    // object.
+    // Note: this matches the GetJSObject() signature.
+    [notxpcom, nostdcall] JSObjectPtr GetJSObjectGlobal();
+
+    void debugDump(in short depth);
+
+    void aggregatedQueryInterface(in nsIIDRef uuid,
+                                  [iid_is(uuid),retval] out nsQIResult result);
+
+};
+
+// Special interface to unmark the internal JSObject.
+// QIing to nsIXPConnectWrappedJSUnmarkGray does *not* addref, it only unmarks,
+// and QIing to nsIXPConnectWrappedJSUnmarkGray is always supposed to fail.
+[builtinclass, uuid(c02a0ce6-275f-4ea1-9c23-08494898b070)]
+interface nsIXPConnectWrappedJSUnmarkGray : nsIXPConnectWrappedJS
+{
+};
+
+/***************************************************************************/
+
+
+[noscript, builtinclass, uuid(768507b5-b981-40c7-8276-f6a1da502a24)]
+interface nsIXPConnect : nsISupports
+{
+%{ C++
+    // This gets a non-addref'd pointer.
+    static nsIXPConnect* XPConnect();
+%}
+
+    /**
+    * wrapNative will create a new JSObject or return an existing one.
+    *
+    * This method now correctly deals with cases where the passed in xpcom
+    * object already has an associated JSObject for the cases:
+    *  1) The xpcom object has already been wrapped for use in the same scope
+    *     as an nsIXPConnectWrappedNative.
+    *  2) The xpcom object is in fact a nsIXPConnectWrappedJS and thus already
+    *     has an underlying JSObject.
+    *
+    * It *might* be possible to QueryInterface the nsIXPConnectJSObjectHolder
+    * returned by the method into a nsIXPConnectWrappedNative or a
+    * nsIXPConnectWrappedJS.
+    *
+    * This method will never wrap the JSObject involved in an
+    * XPCNativeWrapper before returning.
+    *
+    * Returns:
+    *    success:
+    *       NS_OK
+    *    failure:
+    *       NS_ERROR_XPC_BAD_CONVERT_NATIVE
+    *       NS_ERROR_FAILURE
+    */
+    JSObjectPtr
+    wrapNative(in JSContextPtr aJSContext,
+               in JSObjectPtr  aScope,
+               in nsISupports  aCOMObj,
+               in nsIIDRef     aIID);
+
+    /**
+     * Same as wrapNative, but it returns the JSObject in aVal. C++ callers
+     * must ensure that aVal is rooted.
+     * aIID may be null, it means the same as passing in
+     * &NS_GET_IID(nsISupports) but when passing in null certain shortcuts
+     * can be taken because we know without comparing IIDs that the caller is
+     * asking for an nsISupports wrapper.
+     * If aAllowWrapper, then the returned value will be wrapped in the proper
+     * type of security wrapper on top of the XPCWrappedNative (if needed).
+     * This method doesn't push aJSContext on the context stack, so the caller
+     * is required to push it if the top of the context stack is not equal to
+     * aJSContext.
+     */
+    void
+    wrapNativeToJSVal(in JSContextPtr aJSContext,
+                      in JSObjectPtr  aScope,
+                      in nsISupports  aCOMObj,
+                      in nsWrapperCachePtr aCache,
+                      in nsIIDPtr     aIID,
+                      in boolean      aAllowWrapper,
+                      out jsval       aVal);
+
+    /**
+    * wrapJS will yield a new or previously existing xpcom interface pointer
+    * to represent the JSObject passed in.
+    *
+    * This method now correctly deals with cases where the passed in JSObject
+    * already has an associated xpcom interface for the cases:
+    *  1) The JSObject has already been wrapped as a nsIXPConnectWrappedJS.
+    *  2) The JSObject is in fact a nsIXPConnectWrappedNative and thus already
+    *     has an underlying xpcom object.
+    *  3) The JSObject is of a jsclass which supports getting the nsISupports
+    *     from the JSObject directly. This is used for idlc style objects
+    *     (e.g. DOM objects).
+    *
+    * It *might* be possible to QueryInterface the resulting interface pointer
+    * to nsIXPConnectWrappedJS.
+    *
+    * Returns:
+    *   success:
+    *     NS_OK
+    *    failure:
+    *       NS_ERROR_XPC_BAD_CONVERT_JS
+    *       NS_ERROR_FAILURE
+    */
+    void
+    wrapJS(in JSContextPtr aJSContext,
+           in JSObjectPtr  aJSObj,
+           in nsIIDRef     aIID,
+           [iid_is(aIID),retval] out nsQIResult result);
+
+    /**
+     * Wraps the given jsval in a nsIVariant and returns the new variant.
+     */
+    nsIVariant
+    jSValToVariant(in JSContextPtr cx, in jsval aJSVal);
+
+    /**
+    * This only succeeds if the JSObject is a nsIXPConnectWrappedNative.
+    * A new wrapper is *never* constructed.
+    */
+    nsIXPConnectWrappedNative
+    getWrappedNativeOfJSObject(in JSContextPtr aJSContext,
+                               in JSObjectPtr  aJSObj);
+
+    void debugDump(in short depth);
+    void debugDumpObject(in nsISupports aCOMObj, in short depth);
+    void debugDumpJSStack(in boolean showArgs,
+                          in boolean showLocals,
+                          in boolean showThisProps);
+
+    /**
+    * wrapJSAggregatedToNative is just like wrapJS except it is used in cases
+    * where the JSObject is also aggregated to some native xpcom Object.
+    * At present XBL is the only system that might want to do this.
+    *
+    * XXX write more!
+    *
+    * Returns:
+    *   success:
+    *     NS_OK
+    *    failure:
+    *       NS_ERROR_XPC_BAD_CONVERT_JS
+    *       NS_ERROR_FAILURE
+    */
+    void
+    wrapJSAggregatedToNative(in nsISupports  aOuter,
+                             in JSContextPtr aJSContext,
+                             in JSObjectPtr  aJSObj,
+                             in nsIIDRef     aIID,
+                             [iid_is(aIID),retval] out nsQIResult result);
+
+    // Methods added since mozilla 0.6....
+
+    jsval variantToJS(in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value);
+    nsIVariant JSToVariant(in JSContextPtr ctx, in jsval value);
+
+    /**
+     * Create a sandbox for evaluating code in isolation using
+     * evalInSandboxObject().
+     *
+     * @param cx A context to use when creating the sandbox object.
+     * @param principal The principal (or NULL to use the null principal)
+     *                  to use when evaluating code in this sandbox.
+     */
+    [noscript] JSObjectPtr createSandbox(in JSContextPtr cx, in nsIPrincipal principal);
+
+    /**
+     * Evaluate script in a sandbox, completely isolated from all
+     * other running scripts.
+     *
+     * @param source The source of the script to evaluate.
+     * @param filename The filename of the script. May be null.
+     * @param cx The context to use when setting up the evaluation of
+     *           the script. The actual evaluation will happen on a new
+     *           temporary context.
+     * @param sandbox The sandbox object to evaluate the script in.
+     * @return The result of the evaluation as a jsval. If the caller
+     *         intends to use the return value from this call the caller
+     *         is responsible for rooting the jsval before making a call
+     *         to this method.
+     */
+    [noscript] jsval evalInSandboxObject(in AString source, in string filename,
+                                         in JSContextPtr cx,
+                                         in JSObjectPtr sandbox);
+};

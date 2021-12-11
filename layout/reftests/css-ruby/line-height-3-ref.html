@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1069519 - Ruby line height calculation</title>
+  <link rel="stylesheet" href="common.css">
+  <script type="text/javascript" src="utils.js"></script>
+</head>
+<body style="line-height: 1">
+  <div id="base">
+    <span id="inline">base</span>
+    <span id="text1" style="font-size: 80%; color: transparent">text</span>
+    <span id="text2" style="font-size: 50%; color: transparent">text</span>
+  </div>
+  next line
+  <script>
+    // Simulate the behavior of ruby layout.
+    var base = document.getElementById('base');
+    makeBSizeMatchInlineBox(base, document.getElementById('inline'));
+    base.style.paddingTop = getBSize(document.getElementById('text1'));
+    base.style.paddingBottom = getBSize(document.getElementById('text2'));
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 1299736</title>
+
+<div id="A" style="transform: translateX(50px)">
+  <div id="B">
+    <div id="C" style="position: fixed">
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("C").offsetLeft; // flush
+  document.getElementById("B").style.transform = "translateX(50px)";
+  document.getElementById("A").style.transform = "";
+</script>

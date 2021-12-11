@@ -1,0 +1,27 @@
+<html>
+<body>
+  The content of this <code>textarea</code> should not disappear on page reload:<br />
+  <textarea>This text should not disappear on page reload!</textarea>
+  <script>
+    var ta = document.getElementsByTagName("textarea").item(0);
+    if (!parent.reloaded) {
+      parent.reloaded = true;
+      ta.disabled = true;
+      location.reload();
+    } else {
+      // Primary regression test:
+      parent.isnot(ta.value, "",
+        "Content of dynamically disabled textarea disappeared on page reload.");
+      
+      // Bonus regression test: changing the textarea's defaultValue after
+      // reloading should also update the textarea's value.
+      var newDefaultValue = "new default value";
+      ta.defaultValue = newDefaultValue;
+      parent.is(ta.value, newDefaultValue,
+        "Changing the defaultValue attribute of a textarea fails to update its value attribute.");
+        
+      parent.SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>

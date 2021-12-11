@@ -1,0 +1,60 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Wheel-scrolling over position:fixed and position:sticky elements, in the top-level document as well as iframes</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var iframeWin = document.getElementById("iframe").contentWindow;
+
+  // scroll over the middle of the iframe's position:sticky element, check
+  // that it scrolls the iframe
+  var scrollPos = iframeWin.scrollY;
+  await promiseMoveMouseAndScrollWheelOver(iframeWin.document.body, 50, 150);
+  ok(iframeWin.scrollY > scrollPos, "iframe scrolled after wheeling over the position:sticky element");
+
+  // same, but using the iframe's position:fixed element
+  scrollPos = iframeWin.scrollY;
+  await promiseMoveMouseAndScrollWheelOver(iframeWin.document.body, 250, 150);
+  ok(iframeWin.scrollY > scrollPos, "iframe scrolled after wheeling over the position:fixed element");
+
+  // same, but scrolling the scrollable frame *inside* the position:fixed item
+  var fpos = document.getElementById("fpos_scrollable");
+  scrollPos = fpos.scrollTop;
+  await promiseMoveMouseAndScrollWheelOver(fpos, 50, 150);
+  ok(fpos.scrollTop > scrollPos, "scrollable item inside fixed-pos element scrolled");
+  // wait for it to layerize fully and then try again
+  await promiseAllPaintsDone();
+  await promiseOnlyApzControllerFlushed();
+  scrollPos = fpos.scrollTop;
+  await promiseMoveMouseAndScrollWheelOver(fpos, 50, 150);
+  ok(fpos.scrollTop > scrollPos, "scrollable item inside fixed-pos element scrolled after layerization");
+
+  // same, but using the top-level window's position:sticky element
+  scrollPos = window.scrollY;
+  await promiseMoveMouseAndScrollWheelOver(document.body, 50, 150);
+  ok(window.scrollY > scrollPos, "top-level document scrolled after wheeling over the position:sticky element");
+
+  // same, but using the top-level window's position:fixed element
+  scrollPos = window.scrollY;
+  await promiseMoveMouseAndScrollWheelOver(document.body, 250, 150);
+  ok(window.scrollY > scrollPos, "top-level document scrolled after wheeling over the position:fixed element");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body style="height:5000px; margin:0">
+  <div style="position:sticky; width: 100px; height: 300px; top: 0; background-color:red">sticky</div>
+  <div style="position:fixed; width: 100px; height: 300px; top: 0; left: 200px; background-color: green">fixed</div>
+  <iframe id='iframe' width="300" height="400" srcdoc="<body style='height:5000px; margin:0'><div style='position:sticky; width:100px; height:300px; top: 0; background-color:red'>sticky</div><div style='position:fixed; right:0; top: 0; width:100px; height:300px; background-color:green'>fixed</div>"></iframe>
+
+  <div id="fpos_scrollable" style="position:fixed; width: 100px; height: 300px; top: 0; left: 400px; background-color: red; overflow:scroll">
+   <div style="background-color: blue; height: 1000px; margin: 3px">scrollable content inside a fixed-pos item</div>
+  </div>
+</body>

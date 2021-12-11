@@ -1,0 +1,8 @@
+"""GDB Python customization auto-loader for jsapi-tests executable"""
+#filter substitution
+
+import os.path
+sys.path[0:0] = [os.path.join('@topsrcdir@', 'gdb')]
+
+import mozilla.autoload
+mozilla.autoload.register(gdb.current_objfile())

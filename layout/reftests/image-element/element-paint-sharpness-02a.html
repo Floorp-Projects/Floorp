@@ -1,0 +1,17 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test that background-size and zooming don't degrade rendering sharpness even when rendering to a surface.
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+<div style="width:400px; height:400px; background-image:-moz-element(#e); background-size: 200px;"></div>
+<div style="overflow:hidden; height:0">
+  <div id="e" style="width:100px; height:100px;">
+    <div style="width:100px; height:100px; border-radius:100%; background-color:lime;"></div>
+  </div>
+</div>
+</body>
+</html>

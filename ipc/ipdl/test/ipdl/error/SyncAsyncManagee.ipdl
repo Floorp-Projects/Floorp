@@ -1,0 +1,9 @@
+//error: protocol `SyncAsyncManagee' requires more powerful send semantics than its manager `SyncAsyncManager' provides
+
+include protocol SyncAsyncManager;
+
+sync protocol SyncAsyncManagee {
+    manager SyncAsyncManager;
+child:
+    async __delete__();
+};

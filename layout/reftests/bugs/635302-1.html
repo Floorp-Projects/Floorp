@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+#outer {
+    opacity: 0.8;
+    background-color:red;
+    width: 200px;
+}
+
+#inner {
+    opacity: 0.6;
+    background-color:black;
+    color:white;
+}
+
+</style>
+</head>
+<body>
+  <div id="outer">
+    <canvas width="200" height="200" style="display:block;" id="c1"></canvas>
+    <div id="inner">
+      <canvas width="200" height="400" style="display:block;" id="c2"></canvas>
+    </div>
+  </div>
+
+
+<script>
+var ctx = document.getElementById("c1").getContext("2d");
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, 200, 200);
+var ctx = document.getElementById("c2").getContext("2d");
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, 200, 200);
+ctx.fillStyle = "rgb(50,50,50)";
+ctx.fillRect(0, 200, 200, 200);
+</script>
+
+</body></html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage message receiver</title>
+  <script type="application/javascript">
+    function $(id) { return document.getElementById(id); }
+
+    function setup()
+    {
+      var target = $("domain");
+      target.textContent = location.hostname + ":" + (location.port || 80);
+    }
+
+    function receiveMessage(evt)
+    {
+      var response = evt.data + "-response";
+
+      if (evt.lastEventId !== "")
+        response += " wrong-lastEventId(" + evt.lastEventId + ")";
+
+      if (evt.source !== window.parent)
+      {
+        response += " unexpected-source(" + evt.source + ")";
+        response += " window-parent-is(" + window.parent + ")";
+        response += " location(" + window.location.href + ")";
+      }
+
+      if (evt.type != "message")
+        response += " wrong-type(" + evt.type + ")";
+
+      var data = evt.data;
+      if (data == "post-to-other-same-domain")
+      {
+        receiveSame(evt, response);
+      }
+      else if (data == "post-to-other-cross-domain")
+      {
+        receiveCross(evt, response);
+      }
+      else
+      {
+        response += " unexpected-message-to(" + window.location.href + ")";
+        window.parent.postMessage(response, "http://mochi.test:8888");
+        return;
+      }
+    }
+
+    function receiveSame(evt, response)
+    {
+      var source = evt.source;
+      try
+      {
+        if (evt.origin != "http://mochi.test:8888")
+          response += " unexpected-origin(" + evt.origin + ")";
+          
+        try
+        {
+          var threw = false;
+          var privateVariable = source.privateVariable;
+        }
+        catch (e)
+        {
+          threw = true;
+        }
+        if (threw || privateVariable !== window.parent.privateVariable)
+          response += " accessed-source!!!";
+  
+      }
+      finally
+      {
+        source.postMessage(response, evt.origin);
+      }
+    }
+
+    function receiveCross(evt, response)
+    {
+      var source = evt.source;
+      if (evt.origin != "http://mochi.test:8888")
+        response += " unexpected-origin(" + evt.origin + ")";
+        
+      try
+      {
+        var threw = false;
+        var privateVariable = source.privateVariable;
+      }
+      catch (e)
+      {
+        threw = true;
+      }
+      if (!threw || privateVariable !== undefined)
+        response += " accessed-source!!!";
+
+      source.postMessage(response, evt.origin);
+    }
+
+    window.addEventListener("load", setup);
+    window.addEventListener("message", receiveMessage);
+  </script>
+</head>
+<body>
+<h1 id="domain"></h1>
+</body>
+</html>

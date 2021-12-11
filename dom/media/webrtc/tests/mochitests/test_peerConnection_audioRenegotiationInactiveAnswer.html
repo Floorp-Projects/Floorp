@@ -1,0 +1,68 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="sdpUtils.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1213773",
+    title: "Renegotiation: answerer uses a=inactive for audio"
+  });
+
+  runNetworkTest(function (options) {
+    const helper = new AudioStreamHelper();
+
+    const test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}], []);
+    let haveFirstUnmuteEvent;
+
+    test.chain.insertBefore("PC_REMOTE_SET_LOCAL_DESCRIPTION", [
+      function PC_REMOTE_SETUP_ONUNMUTE_1() {
+        haveFirstUnmuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[0].track, "unmute");
+      }
+    ]);
+
+    test.chain.append([
+      function PC_REMOTE_CHECK_AUDIO_UNMUTED() {
+        return haveFirstUnmuteEvent;
+      },
+      function PC_REMOTE_CHECK_AUDIO_FLOWING() {
+        return helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[0]);
+      }
+    ]);
+
+    addRenegotiation(test.chain, []);
+
+    test.chain.insertAfter("PC_LOCAL_GET_ANSWER", [
+        function PC_LOCAL_REWRITE_REMOTE_SDP_INACTIVE(test) {
+          test._remote_answer.sdp =
+            sdputils.setAllMsectionsInactive(test._remote_answer.sdp);
+        }
+    ], false, 1);
+
+    test.chain.append([
+      function PC_REMOTE_CHECK_AUDIO_NOT_FLOWING() {
+        return helper.checkAudioNotFlowing(test.pcRemote._pc.getRemoteStreams()[0]);
+      }
+    ]);
+
+    test.chain.remove("PC_REMOTE_CHECK_STATS", 1);
+    test.chain.remove("PC_LOCAL_CHECK_STATS", 1);
+
+    addRenegotiation(test.chain, []);
+
+    test.chain.append([
+      function PC_REMOTE_CHECK_AUDIO_FLOWING_2() {
+        return helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[0]);
+      }
+    ]);
+
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

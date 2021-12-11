@@ -1,0 +1,115 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "GMPMessageUtils.h";
+
+using cdm::EncryptionScheme from "GMPSanitizedExports.h";
+using GMPBufferType from "gmp-video-codec.h";
+
+namespace mozilla {
+namespace gmp {
+
+// GMP processes are associated with a specific node ID, so all GMP requests
+// which have the same node ID will use the same GMP process. Depending on the
+// use case, the node ID may be represented by a string (such as when used for
+// WebRTC) or by this structure, which is populated according to the origin
+// initiating the request. This structure will eventually be converted to a
+// string representing a node ID.  For this structure, the process ensures the
+// strings are unique for the combination of origin, top level origin and GMP
+// name.
+struct NodeIdParts {
+  nsString mOrigin;
+  nsString mTopLevelOrigin;
+  nsString mGMPName;
+};
+
+// A NodeIdVariant should contain either
+// - A string representing an already computed node ID.
+// - A NodeIdParts representing a node ID that still needs to be computed by
+//   processing those parts.
+// This union is used to simplify passing of node ID information. Some
+// GMP use cases can hard code their node ID, while others need to compute
+// the node ID later. This lets us avoid having overloads to handle
+// the two different paths.
+union NodeIdVariant {
+  nsCString;
+  NodeIdParts;
+};
+
+struct GMPVideoEncodedFrameData {
+  uint32_t mEncodedWidth;
+  uint32_t mEncodedHeight;
+  uint64_t mTimestamp;  // microseconds
+  uint64_t mDuration;   // microseconds
+  uint32_t mFrameType;
+  uint32_t mSize;
+  GMPBufferType mBufferType;
+  Shmem mBuffer;
+  bool mCompleteFrame;
+};
+
+struct GMPPlaneData {
+  int32_t mSize;
+  int32_t mStride;
+  Shmem mBuffer;
+};
+
+struct GMPVideoi420FrameData {
+  GMPPlaneData mYPlane;
+  GMPPlaneData mUPlane;
+  GMPPlaneData mVPlane;
+  int32_t mWidth;
+  int32_t mHeight;
+  uint64_t mTimestamp;  // microseconds
+  uint64_t mDuration;   // microseconds
+};
+
+struct CDMInputBuffer {
+  Shmem mData;
+  uint8_t[] mKeyId;
+  uint8_t[] mIV;
+  int64_t mTimestamp;
+  int64_t mDuration;
+  uint32_t[] mClearBytes;
+  uint32_t[] mCipherBytes;
+  uint8_t mCryptByteBlock;
+  uint8_t mSkipByteBlock;
+  EncryptionScheme mEncryptionScheme;
+};
+
+struct CDMVideoDecoderConfig {
+  uint32_t mCodec;
+  uint32_t mProfile;
+  uint32_t mFormat;
+  int32_t mImageWidth;
+  int32_t mImageHeight;
+  uint8_t[] mExtraData;
+  EncryptionScheme mEncryptionScheme;
+};
+
+struct CDMKeyInformation {
+  uint8_t[] mKeyId;
+  uint32_t mStatus;
+  uint32_t mSystemCode;
+};
+
+struct CDMVideoPlane {
+  uint32_t mPlaneOffset;
+  uint32_t mStride;
+};
+
+struct CDMVideoFrame {
+  uint32_t mFormat;
+  int32_t mImageWidth;
+  int32_t mImageHeight;
+  CDMVideoPlane mYPlane;
+  CDMVideoPlane mUPlane;
+  CDMVideoPlane mVPlane;
+  int64_t mTimestamp;
+  int64_t mDuration;
+};
+
+}  // namespace gmp
+}  // namespace mozilla

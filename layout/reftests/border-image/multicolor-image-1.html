@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>test of border-image</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+  div {
+    border-width: 7px;
+    border-style: solid;
+    background: red; /* fail if this shows through */
+    background-image: url('3x3multicolor.png'); /* fail if this shows through */
+    border-image: url('3x3multicolor.png') 1 1 1 1 fill;
+    -khtml-border-image: url('3x3multicolor.png') 1 1 1 1 fill;
+    border-image: url('3x3multicolor.png') 1 1 1 1 fill;
+  }
+
+  </style>
+</head>
+<body>
+<div style="width: 100px; height: 5px"></div>
+</body>
+</html>

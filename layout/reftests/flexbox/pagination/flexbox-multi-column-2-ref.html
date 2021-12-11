@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <meta charset="utf-8">
+  <title>CSS Flexbox Test Reference: Fragmentation of multi-line column flex container</title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+
+  <style>
+  .multicol {
+    block-size: 50px;
+    inline-size: 190px;
+    column-width: 90px;
+    column-fill: auto;
+    column-gap: 10px;
+    border: 5px solid orange;
+    margin-block-end: 5px; /* Just to separate each sub-testcase visually. */
+  }
+  .flexContainer {
+    background: gray;
+    /* border-width is 0 by default; some sub-testcases will increase it. */
+    border: 0 solid lightgray;
+    block-size: 60px;
+    position: relative;
+  }
+  .border-padding {
+    border-block-width: 10px;
+    padding-block: 5px;
+  }
+
+  /* Note: flex items are in visual order as "CMYK": cyan, magenta, yellow, black. */
+  header, nav, article, footer {
+    inline-size: 20px;
+  }
+  header {
+    background: cyan;
+    block-size: 50px;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+  }
+  nav {
+    background: magenta;
+    block-size: 25px;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 30px;
+  }
+  article {
+    background: yellow;
+    block-size: 25px;
+    position: absolute;
+    inset-block-start: 25px;
+    inset-inline-start: 35px;
+  }
+  footer {
+    background: black;
+    block-size: 50px;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 70px;
+  }
+  .border-padding > header, .border-padding > nav, .border-padding > footer {
+    inset-block-start: 5px;
+  }
+  .border-padding > article {
+    inset-block-start: 30px;
+  }
+  </style>
+
+  <body>
+    <!-- Basic one without any margin/border/padding. -->
+    <div class="multicol">
+      <div class="flexContainer">
+        <header></header><nav></nav><article></article><footer></footer>
+      </div>
+    </div>
+
+    <!-- Test a container with margin-block-start. -->
+    <div class="multicol">
+      <div class="flexContainer" style="margin-block-start: 25px">
+        <header></header><nav></nav><article></article><footer></footer>
+      </div>
+    </div>
+
+    <!-- Test a container not at the top of the column/page. -->
+    <div class="multicol">
+      <div style="block-size: 25px"></div>
+      <div class="flexContainer">
+        <header></header><nav></nav><article></article><footer></footer>
+      </div>
+    </div>
+
+    <!-- Test a container with border and padding. -->
+    <div class="multicol">
+      <div class="flexContainer border-padding">
+        <header></header><nav></nav><article style="inset-block-start: 30px"></article><footer></footer>
+      </div>
+    </div>
+
+    <!-- Test a container with border, padding, and row-gap. -->
+    <div class="multicol">
+      <div class="flexContainer border-padding">
+        <header></header><nav></nav><article style="inset-block-start: 35px"></article><footer></footer>
+      </div>
+    </div>
+  </body>
+</html>

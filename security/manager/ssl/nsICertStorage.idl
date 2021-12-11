@@ -1,0 +1,272 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+%{C++
+#define NS_CERTSTORAGE_CONTRACTID "@mozilla.org/security/certstorage;1"
+%}
+
+/**
+ * Callback type used to notify callers that an operation performed by
+ * nsICertStorage has completed. Indicates the result of the requested
+ * operation, as well as any data returned by the operation.
+ */
+[scriptable, function, uuid(3f8fe26a-a436-4ad4-9c1c-a53c60973c31)]
+interface nsICertStorageCallback : nsISupports {
+  [must_use]
+  void done(in nsresult rv, in nsIVariant result);
+};
+
+/**
+ * A base interface for representing the revocation state of a certificate.
+ * Implementing this interface by itself is insufficient; your type must
+ * implement an inheriting interface that specifies the certificate by issuer
+ * and serial number or by subject and public key hash.
+ * Set state to nsICertStorage.STATE_UNSET to mark the certificate as not revoked.
+ * Set state to nsICertStorage.STATE_ENFORCE to mark the certificate as revoked.
+ */
+[scriptable, uuid(96db6fd7-6b64-4a5a-955d-310bd9ca4234)]
+interface nsIRevocationState : nsISupports {
+  readonly attribute short state;
+};
+
+/**
+ * An interface representing the revocation state of a certificate by issuer
+ * and serial number. Both issuer name and serial number are base64-encoded.
+ */
+[scriptable, uuid(23ce3546-f1b9-46f6-8de3-77704da5702f)]
+interface nsIIssuerAndSerialRevocationState : nsIRevocationState {
+    readonly attribute ACString issuer;
+    readonly attribute ACString serial;
+};
+
+/**
+ * An interface representing the revocation state of a certificate by subject
+ * and pub key hash (the hash algorithm should be SHA-256). Both subject name
+ * and public key hash are base64-encoded.
+ */
+[scriptable, uuid(e78b51b4-6fa4-41e2-92ce-e9404f541e96)]
+interface nsISubjectAndPubKeyRevocationState : nsIRevocationState {
+    readonly attribute ACString subject;
+    readonly attribute ACString pubKey;
+};
+
+/**
+ * An interface representing the CRLite enrollment state of a certificate
+ * identified by its subject and subject public key info hash.
+ * subject is a base 64-encoded DER subject distinguished name.
+ * spkiHash is a base 64-encoded SHA-256 hash of a DER subject public key info.
+ * state is nsICertStorage.STATE_ENFORCE or STATE_UNSET, meaning the certificate
+ * is or is not enrolled in CRLite, respectively.
+ */
+[scriptable, uuid(5d0d22be-185f-4cf0-b73b-c5a911273e77)]
+interface nsICRLiteState : nsISupports {
+    readonly attribute ACString subject;
+    readonly attribute ACString spkiHash;
+    readonly attribute short state;
+};
+
+/**
+ * An interface representing a certificate to add to storage. Consists of the
+ * base64-encoded DER bytes of the certificate (cert), the base64-encoded DER
+ * bytes of the subject distinguished name of the certificate (subject), and the
+ * trust of the certificate (one of the nsICertStorage.TRUST_* constants).
+ * (Note that this implementation does not validate that the given subject DN
+ * actually matches the subject DN of the certificate, nor that the given cert
+ * is a valid DER X.509 certificate.)
+ */
+[scriptable, uuid(27b66f5e-0faf-403b-95b4-bc11691ac50d)]
+interface nsICertInfo : nsISupports {
+  readonly attribute ACString cert;
+  readonly attribute ACString subject;
+  readonly attribute short trust;
+};
+
+[scriptable, uuid(327100a7-3401-45ef-b160-bf880f1016fd)]
+interface nsICertStorage : nsISupports {
+  const octet DATA_TYPE_REVOCATION = 1;
+  const octet DATA_TYPE_CERTIFICATE = 2;
+  const octet DATA_TYPE_CRLITE = 3;
+  const octet DATA_TYPE_CRLITE_FILTER_FULL = 4;
+  const octet DATA_TYPE_CRLITE_FILTER_INCREMENTAL = 5;
+
+  /**
+   * Asynchronously check if the backing storage has stored data of the given
+   * type in the past. This is useful if the backing storage may have had to
+   * have been deleted and recreated (as in bug 1546361 when we discovered that
+   * moving from a 32-bit binary to a 64-bit binary caused the DB to become
+   * unreadable, thus necessitating its deletion and recreation).
+   */
+  [must_use]
+  void hasPriorData(in octet type, in nsICertStorageCallback callback);
+
+  const short STATE_UNSET = 0;
+  const short STATE_ENFORCE = 1;
+  const short STATE_NOT_ENROLLED = 2;
+
+  /**
+   * Asynchronously set the revocation states of a set of certificates.
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  void setRevocations(in Array<nsIRevocationState> revocations,
+                      in nsICertStorageCallback callback);
+
+  /**
+   * Get the revocation state of a certificate. STATE_UNSET indicates the
+   * certificate is not revoked. STATE_ENFORCE indicates the certificate is
+   * revoked.
+   * issuer - issuer name, DER encoded
+   * serial - serial number, DER encoded
+   * subject - subject name, DER encoded
+   * pubkey - public key, DER encoded
+   * Must not be called from the main thread. See bug 1541212.
+   */
+  [must_use]
+  short getRevocationState(in Array<octet> issuer,
+                           in Array<octet> serial,
+                           in Array<octet> subject,
+                           in Array<octet> pubkey);
+
+   /**
+    * Check that the blocklist data is current. Specifically, that the current
+    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
+    * after the last blocklist update (as stored in the
+    * services.blocklist.onecrl.checked pref)
+    */
+  [must_use]
+  boolean isBlocklistFresh();
+
+  /**
+   * Asynchronously set a batch of CRLite enrollment state. See the
+   * documentation for nsICRLiteState.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  void setCRLiteState(in Array<nsICRLiteState> crliteState,
+                      in nsICertStorageCallback callback);
+
+  /**
+   * Get the CRLite enrollment state of a certificate identified by the given
+   * subject distinguished name and subject public key info (both as DER bytes).
+   * STATE_ENFORCE indicates the certificate is enrolled, whereas STATE_UNSET
+   * indicates it is not.
+   */
+  [must_use]
+  short getCRLiteState(in Array<octet> subject, in Array<octet> spki);
+
+  /**
+   * Given the contents of a CRLite filter and its creation date as seconds since the epoch,
+   * replaces any existing filter with the new one. Also clears any previously-set incremental
+   * revocation updates ("stashes").
+   */
+  [must_use]
+  void setFullCRLiteFilter(in Array<octet> filter, in uint64_t timestamp,
+                           in nsICertStorageCallback callback);
+
+  /**
+   * Given the DER-encoded issuer distinguished name, DER-encoded issuer subject public key info,
+   * and the bytes of the value of the serial number (so, not including the DER tag and length) of a
+   * certificate, returns the result of looking up the corresponding entry in the currently-saved
+   * CRLite filter (if any). Returns STATE_ENFORCE if the lookup indicates the corresponding
+   * certificate is revoked via CRLite. Returns STATE_UNSET if the lookup indicates the
+   * corresponding certificate is not revoked via CRLite. Returns STATE_NOT_ENROLLED if the issuer
+   * certificate is not enrolled in CRLite and thus no lookup was made. Also returns the timestamp
+   * before which lookups will be valid. That is, if a certificate has a notBefore value after the
+   * returned filter timestamp, the lookup is not trustworthy because the certificate may have been
+   * created after the filter, and thus it may cause a false negative or positive. If no filter is
+   * available (it may not have been downloaded yet), validBefore will be 0. The timestamp is
+   * represented as seconds since the epoch (i.e. it returns what was most recently set via
+   * setFullCRLiteFilter).
+   */
+  [must_use]
+  short getCRLiteRevocationState(in Array<octet> issuer,
+                                 in Array<octet> issuerSPKI,
+                                 in Array<octet> serialNumber,
+                                 out uint64_t validBefore);
+
+  /**
+   * Given the contents of a CRLite incremental revocation update ("stash"), adds the revocation
+   * information to the current set of stashed revocations. The basic unit of the stash file is an
+   * issuer subject public key info hash (sha-256) followed by a number of serial numbers
+   * corresponding to revoked certificates issued by that issuer. More specifically, each unit
+   * consists of:
+   *   4 bytes little-endian: the number of serial numbers following the issuer spki hash
+   *   1 byte: the length of the issuer spki hash
+   *   issuer spki hash length bytes: the issuer spki hash
+   *   as many times as the indicated serial numbers:
+   *     1 byte: the length of the serial number
+   *     serial number length bytes: the serial number
+   * The stash file consists of any number of these units concatenated together.
+   */
+  [must_use]
+  void addCRLiteStash(in Array<octet> stash, in nsICertStorageCallback callback);
+
+  /**
+   * Given a DER-encoded issuer subject public key info and the bytes of the value of the serial
+   * number (so, not including the DER tag and length), determines if the certificate identified by
+   * this issuer SPKI and serial number is revoked according to the current set of stashed CRLite
+   * revocation information.
+   */
+  [must_use]
+  bool isCertRevokedByStash(in Array<octet> issuerSPKI, in Array<octet> serialNumber);
+
+  /**
+   * Trust flags to use when adding a adding a certificate.
+   * TRUST_INHERIT indicates a certificate inherits trust from another
+   * certificate.
+   * TRUST_ANCHOR indicates the certificate is a root of trust.
+   */
+  const short TRUST_INHERIT = 0;
+  const short TRUST_ANCHOR = 1;
+
+  /**
+   * Asynchronously add a list of certificates to the backing storage.
+   * See the documentation for nsICertInfo.
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  void addCerts(in Array<nsICertInfo> certs, in nsICertStorageCallback callback);
+
+  /**
+   * Asynchronously remove the certificates with the given sha-256 hashes from
+   * the backing storage.
+   * hashes is an array of base64-encoded bytes of the sha-256 hashes of each
+   * certificate's bytes (DER-encoded).
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  void removeCertsByHashes(in Array<ACString> hashes,
+                           in nsICertStorageCallback callback);
+
+  /**
+   * Find all certificates in the backing storage with the given subject
+   * distinguished name.
+   * subject is the DER-encoded bytes of the subject distinguished name.
+   * Returns an array of arrays of bytes, where each inner array corresponds to
+   * the DER-encoded bytes of a certificate that has the given subject (although
+   * as these certificates were presumably added via addCertBySubject, this
+   * aspect is never actually valided by nsICertStorage).
+   * Must not be called from the main thread. See bug 1541212.
+   */
+  [must_use]
+  Array<Array<octet> > findCertsBySubject(in Array<octet> subject);
+
+  /**
+   * Get the count of remaining async operations. Called to ensure we don't skip
+   * or interrupt any operations during fast shutdown.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  int32_t GetRemainingOperationCount();
+};

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+  <!-- This Source Code Form is subject to the terms of the Mozilla Public
+  - License, v. 2.0. If a copy of the MPL was not distributed with this
+  - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+      <meta http-equiv="Content-Security-Policy" content="connect-src https:; default-src chrome:; object-src 'none'">
+      <meta name="referrer" content="no-referrer">
+      <meta charset="UTF-8">
+      <link rel="stylesheet" type="text/css" href="chrome://browser/skin/offlineSupportPages.css">
+      <link rel="icon" type="image/png" id="favicon" href="chrome://branding/content/icon32.png"/>
+      <title>Secure connection failed and Firefox did not connect</title>
+    </head>
+    <body>
+    <div id="offlineSupportContainer">
+      <h1>Secure connection failed and Firefox did not connect</h1>
+      <p>This article explains why you may see a <em>Secure Connection Failed</em> or a <em>Did Not Connect: Potential
+        Security Issue</em> error page and what you can do.
+      </p>
+      <div id="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+          <li class="toclevel-1"><a href="#w_secure-connection-cannot-be-established"><span class="tocnumber">1</span>
+            <span class="toctext">Secure connection cannot be established</span></a>
+            <ul>
+              <li class="toclevel-2"><a href="#w_secure-connection-failed"><span class="tocnumber">1.1</span>
+                <span class="toctext">Secure Connection Failed</span></a>
+              </li>
+              <li class="toclevel-2"><a href="#w_did-not-connect-potential-security-issue">
+                <span class="tocnumber">1.2</span>
+                <span class="toctext">Did Not Connect: Potential Security Issue</span></a>
+              </li>
+            </ul>
+          </li>
+          <li class="toclevel-1"><a href="#w_website-issues"><span class="tocnumber">2</span>
+            <span class="toctext">Website issues</span></a>
+            <ul>
+              <li class="toclevel-2"><a href="#w_tls-version-unsupported"><span class="tocnumber">2.1</span>
+                <span class="toctext">TLS version unsupported</span></a>
+              </li>
+              <li class="toclevel-2"><a href="#w_hsts-required"><span class="tocnumber">2.2</span>
+                <span class="toctext">HSTS required</span></a>
+              </li>
+            </ul>
+          </li>
+          <li class="toclevel-1"><a href="#w_security-software-conflict"><span class="tocnumber">3</span>
+            <span class="toctext">Security software conflict</span></a>
+          </li>
+          <li class="toclevel-1"><a href="#w_incorrect-system-clock"><span class="tocnumber">4</span>
+            <span class="toctext">Incorrect system clock</span></a>
+          </li>
+          <li class="toclevel-1"><a href="#w_other-secure-connection-issues"><span class="tocnumber">5</span>
+            <span class="toctext">Other secure connection issues</span></a>
+          </li>
+        </ul>
+      </div>
+      <h1 id="w_secure-connection-cannot-be-established">Secure connection cannot be established</h1>
+      <p>When a website that requires a secure (<strong>https</strong>)
+        connection tries to secure communication with your computer, Firefox cross-checks this attempt to make sure that
+        the website certificate and the connection method are actually
+        secure. If Firefox cannot establish a secure connection, it will display an error page.
+      </p>
+      <h2 id="w_secure-connection-failed">Secure Connection Failed</h2>
+      <p>A <em>Secure Connection Failed</em> error page will include a description of the error, an option to report the
+        error to Mozilla and a <span class="button">Try Again</span> button. There is no option to add a security exception to
+        bypass this type of error.
+      </p>
+      <p>
+      </p>
+      <p>The error page will also include the following information:</p>
+      <ul>
+        <li>
+          <em>The page you are trying to view cannot be shown because the authenticity of the received data could not
+            be verified.</em>
+        </li>
+        <li>
+          <em>Please contact the website owners to inform them of this problem.</em>
+        </li>
+      </ul>
+      <h2 id="w_did-not-connect-potential-security-issue">Did Not Connect: Potential Security Issue</h2>
+      <p>Certain secure connection failures will result in a <em>Did Not Connect: Potential Security Issue</em> error
+        page.
+      </p>
+      <p>
+      </p>
+      <p>The error page will include a description of the potential security threat, an option to report the error to
+        Mozilla and an <span class="button">Advanced…</span> button to view the error code and other technical details.
+        There is no option to add a security exception to visit the website.
+      </p>
+      <h1 id="w_website-issues">Website issues</h1>
+      <h2 id="w_tls-version-unsupported">TLS version unsupported</h2>
+      <p>Some websites try using outdated (no longer secure) Transport
+        Layer Security(<em>TLS</em>) mechanisms in an attempt to secure your connection. Firefox protects you by
+        preventing navigation to such sites if there is a problem in securely establishing a connection. Contact the
+        owners of the website and ask them to update their TLS version to a version that is still current and still secure.
+      </p>
+      <p>Starting in Firefox version 74, the minimum TLS version allowed by default is TLS 1.2. Websites that don't support
+        TLS version 1.2 or higher will display a <em>Secure
+        Connection Failed</em> error page with Error code: SSL_ERROR_UNSUPPORTED_VERSION and a message that <em>This website
+        might not support the TLS 1.2 protocol, which is the minimum version supported by Firefox.</em> The error page may
+        also include a button, <span class="button">Enable TLS 1.0 and 1.1</span> that will allow you to override the
+        minimum TLS requirement; however, Mozilla plans to remove this option and permanently disable TLS 1.0 and 1.1 in
+        a future version of Firefox.
+      </p>
+      <h2 id="w_hsts-required">HSTS required</h2>
+      <p>Other websites may require HTTP
+        Strict Transport Security (HSTS) and will not allow access with an insecure connection.
+      </p>
+      <h1 id="w_security-software-conflict">Security software conflict</h1>
+      <p>Many security products use a feature that intercepts secure connections by default. This can produce connection
+          errors or warnings on secure websites. If you see secure connection errors on multiple secure websites, updating
+          your security product or modifying its settings may resolve the issue.
+      </p>
+      <p>
+        <span class="for" data-for="win8,win10">
+          Alternatively, you can uninstall third-party security software and use Windows Defender,
+          the built-in antivirus on Windows 8 and Windows 10.
+        </span>
+      </p>
+      <p>
+      </p>
+      <h1 id="w_incorrect-system-clock">Incorrect system clock</h1>
+      <p>Firefox uses certificates on secure websites to ensure that your information is being sent to the intended
+        recipient and can't be read by eavesdroppers. An incorrect system date can cause Firefox to detect that the website's
+        security certificate is expired or invalid. Make sure your computer is set to the correct date, time and time zone.
+      </p>
+    </div>
+  </body>
+</html>

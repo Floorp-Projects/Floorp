@@ -1,0 +1,38 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRequestObserver.idl"
+
+interface nsIInputStream;
+
+/**
+ * nsIStreamListener
+ */
+[scriptable, uuid(3b4c8a77-76ba-4610-b316-678c73a3b88c)]
+interface nsIStreamListener : nsIRequestObserver
+{
+    /**
+     * Called when the next chunk of data (corresponding to the request) may
+     * be read without blocking the calling thread.  The onDataAvailable impl
+     * must read exactly |aCount| bytes of data before returning.
+     *
+     * @param aRequest request corresponding to the source of the data
+     * @param aInputStream input stream containing the data chunk
+     * @param aOffset
+     *        Number of bytes that were sent in previous onDataAvailable calls
+     *        for this request. In other words, the sum of all previous count
+     *        parameters.
+     * @param aCount number of bytes available in the stream
+     *
+     * NOTE: The aInputStream parameter must implement readSegments.
+     *
+     * An exception thrown from onDataAvailable has the side-effect of
+     * causing the request to be canceled.
+     */
+    void onDataAvailable(in nsIRequest aRequest,
+                         in nsIInputStream aInputStream,
+                         in unsigned long long aOffset,
+                         in unsigned long aCount);
+};

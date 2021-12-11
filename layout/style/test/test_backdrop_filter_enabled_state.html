@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<head>
+  <meta charset=utf-8>
+  <title>Test Backdrop-Filter Enabled State</title>
+  <link rel="author" title="Erik Nordin" href="mailto:nordzilla@mozilla.com">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+const webRenderEnabled = SpecialPowers.Cc["@mozilla.org/gfx/info;1"].getService(
+  SpecialPowers.Ci.nsIGfxInfo
+).WebRenderEnabled;
+
+(async function() {
+  for (let enabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({"set": [["layout.css.backdrop-filter.enabled", enabled]]});
+    is(webRenderEnabled && enabled, CSS.supports("backdrop-filter: initial"),
+      "backdrop-filter is available only if backdrop-filter pref is set and WebRender is enabled");
+  }
+  SimpleTest.finish();
+}());
+
+</script>
+

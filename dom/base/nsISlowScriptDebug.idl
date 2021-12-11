@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+
+webidl EventTarget;
+
+[scriptable, function, uuid(f7dbb80c-5d1e-4fd9-b55c-a9ffda4a75b1)]
+interface nsISlowScriptDebugCallback : nsISupports
+{
+  void handleSlowScriptDebug(in nsIDOMWindow aWindow);
+};
+
+[scriptable, function, uuid(b1c6ecd0-8fa4-11e4-b4a9-0800200c9a66)]
+interface nsISlowScriptDebuggerStartupCallback : nsISupports
+{
+  void finishDebuggerStartup();
+};
+
+[scriptable, function, uuid(dbee14b0-8fa0-11e4-b4a9-0800200c9a66)]
+interface nsISlowScriptDebugRemoteCallback : nsISupports
+{
+  void handleSlowScriptDebug(in EventTarget aBrowser,
+                             in nsISlowScriptDebuggerStartupCallback aCallback);
+};
+
+[scriptable, uuid(f75d4164-3aa7-4395-ba44-a5f95b2e8427)]
+interface nsISlowScriptDebug : nsISupports
+{
+  attribute nsISlowScriptDebugCallback activationHandler;
+  attribute nsISlowScriptDebugRemoteCallback remoteActivationHandler;
+};

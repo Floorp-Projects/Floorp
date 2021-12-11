@@ -1,0 +1,18 @@
+---
+yamllint:
+    description: YAML linter
+    include:
+        - .cron.yml
+        - .taskcluster.yml
+        - browser/config/
+        - python/mozlint/
+        - security/nss/.taskcluster.yml
+        - taskcluster
+        - testing/mozharness
+        - tools
+    extensions: ['yml', 'yaml']
+    support-files:
+        - '**/.yamllint'
+        - 'tools/lint/yamllint_/**'
+    type: external
+    payload: yamllint_:lint

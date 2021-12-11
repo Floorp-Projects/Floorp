@@ -1,0 +1,82 @@
+<html>
+
+<head>
+  <title>Accessible text selection change events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    var gQueue = null;
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    function getOnclickSeq(aID) {
+      return [
+        new caretMoveChecker(0, true, aID),
+        new unexpectedInvokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID),
+      ];
+    }
+
+    function doTests() {
+      // test caret move events and caret offsets
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthClick("c1_p1", getOnclickSeq("c1_p1")));
+      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 1, "c1_p1", 0, "c1_p2", 0), { shiftKey: true }));
+      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 2, "c1_p1", 0, "c1_p2", 9), { shiftKey: true }));
+
+      gQueue.push(new synthClick("ta1", getOnclickSeq("ta1")));
+      gQueue.push(new synthRightKey("ta1",
+                                    new textSelectionChecker("ta1", 0, 1, "ta1", 0, "ta1", 1),
+                                    { shiftKey: true }));
+      gQueue.push(new synthLeftKey("ta1",
+                                    [new textSelectionChecker("ta1", 0, 0, "ta1", 0, "ta1", 0),
+                                     new caretMoveChecker(0, true, "ta1")]));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=762934"
+     title="Text selection change event has a wrong target when selection is spanned through several objects">
+    Bug 762934
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=956032"
+     title="Text selection change event missed when selected text becomes unselected">
+    Bug 956032
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1" contentEditable="true">
+    <p id="c1_p1">paragraph</p>
+    <p id="c1_p2">paragraph</p>
+  </div>
+
+  <textarea id="ta1">Hello world</textarea>
+
+  <div id="eventdump"></div>
+</body>
+</html>

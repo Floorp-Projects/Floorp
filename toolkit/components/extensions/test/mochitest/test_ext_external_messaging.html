@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension external messaging</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function backgroundScript(id, otherId) {
+  browser.runtime.onMessage.addListener((msg, sender) => {
+    browser.test.fail(`Got unexpected message: ${uneval(msg)} ${uneval(sender)}`);
+  });
+
+  browser.runtime.onConnect.addListener(port => {
+    browser.test.fail(`Got unexpected connection: ${uneval(port.sender)}`);
+  });
+
+  browser.runtime.onMessageExternal.addListener((msg, sender) => {
+    browser.test.assertEq(otherId, sender.id, `${id}: Got expected external sender ID`);
+    browser.test.assertEq(`helo-${id}`, msg, "Got expected message");
+
+    browser.test.sendMessage("onMessage-done");
+
+    return Promise.resolve(`ehlo-${otherId}`);
+  });
+
+  browser.runtime.onConnectExternal.addListener(port => {
+    browser.test.assertEq(otherId, port.sender.id, `${id}: Got expected external connecter ID`);
+
+    port.onMessage.addListener(msg => {
+      browser.test.assertEq(`helo-${id}`, msg, "Got expected port message");
+
+      port.postMessage(`ehlo-${otherId}`);
+
+      browser.test.sendMessage("onConnect-done");
+    });
+  });
+
+  browser.test.onMessage.addListener(msg => {
+    if (msg === "go") {
+      browser.runtime.sendMessage(otherId, `helo-${otherId}`).then(result => {
+        browser.test.assertEq(`ehlo-${id}`, result, "Got expected reply");
+        browser.test.sendMessage("sendMessage-done");
+      });
+
+      let port = browser.runtime.connect(otherId);
+      port.postMessage(`helo-${otherId}`);
+
+      port.onMessage.addListener(msg => {
+        port.disconnect();
+
+        browser.test.assertEq(msg, `ehlo-${id}`, "Got expected port reply");
+        browser.test.sendMessage("connect-done");
+      });
+    }
+  });
+}
+
+function makeExtension(id, otherId) {
+  let args = `${JSON.stringify(id)}, ${JSON.stringify(otherId)}`;
+
+  let extensionData = {
+    background: `(${backgroundScript})(${args})`,
+    manifest: {
+      "applications": {"gecko": {id}},
+    },
+  };
+
+  return ExtensionTestUtils.loadExtension(extensionData);
+}
+
+add_task(async function test_contentscript() {
+  const ID1 = "foo-message@mochitest.mozilla.org";
+  const ID2 = "bar-message@mochitest.mozilla.org";
+
+  let extension1 = makeExtension(ID1, ID2);
+  let extension2 = makeExtension(ID2, ID1);
+
+  await Promise.all([extension1.startup(), extension2.startup()]);
+
+  extension1.sendMessage("go");
+  extension2.sendMessage("go");
+
+  await Promise.all([
+    extension1.awaitMessage("sendMessage-done"),
+    extension2.awaitMessage("sendMessage-done"),
+
+    extension1.awaitMessage("onMessage-done"),
+    extension2.awaitMessage("onMessage-done"),
+
+    extension1.awaitMessage("connect-done"),
+    extension2.awaitMessage("connect-done"),
+
+    extension1.awaitMessage("onConnect-done"),
+    extension2.awaitMessage("onConnect-done"),
+  ]);
+
+  await extension1.unload();
+  await extension2.unload();
+});
+</script>
+
+</body>
+</html>

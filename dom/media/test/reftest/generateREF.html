@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="application/javascript">
+</script>
+</head>
+<body>
+<p id="out"></p>
+<video id="v1" style="position:absolute; left:0; top:0"></video>
+<canvas id="canvas"></canvas>
+<script type="application/javascript">
+// READ ME FIRST.
+// The script is trying to make a reftest sample for reftest.
+
+// STEP1. Uncomment the method below that you want to use. If you want to dump
+// Nth frame, modify the parameter to the number of frame you want to dump.
+//window.onload = function() { setTimeout(dumpFirstFrame, 0); };
+//window.onload = function() { setTimeout(dumpLastFrame, 0); };
+window.onload = function() { setTimeout(function(){dumpNthFrame(15);}, 0); };
+
+// STEP2. Set the source of video that you want to capture
+const videoSrc = '';
+
+// STEP3. Ensure the pref `media.seekToNextFrame.enabled` is on
+// STEP4. Run this script on browser
+// STEP5. Copy the base64 image url to your xxx-ref.html
+
+function drawVideoToInnerHTML(v) {
+  // This allows to dump content via canvas when the source is cross-origin.
+  v.crossorigin = "anonymous";
+  var canvas = document.getElementById("canvas");
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(v, 0, 0, v.videoWidth, v.videoHeight);
+  var dataURL = canvas.toDataURL();
+  document.getElementById("out").innerHTML=dataURL;
+}
+
+function dumpFirstFrame() {
+  var video = document.getElementById("v1");
+  video.src = videoSrc;
+  video.preload = "metadata";
+
+  video.addEventListener("loadeddata", function() {
+    drawVideoToInnerHTML(video);
+  });
+}
+
+function dumpNthFrame(n) {
+  var video = document.getElementById("v1");
+  video.src = videoSrc;
+  video.preload = "metadata";
+  const totalFrames = n;
+
+  function checkNthFrame() {
+    console.log((totalFrames-n+1)+"th Frame time is " + video.currentTime);
+    n--;
+    if (n == 0) {
+      drawVideoToInnerHTML(video);
+    } else {
+      video.seekToNextFrame();
+    }
+  }
+  video.addEventListener("loadeddata", checkNthFrame);
+  video.addEventListener("seeked", checkNthFrame);
+}
+
+function dumpLastFrame() {
+  var video = document.getElementById("v1");
+  video.src = videoSrc;
+  video.preload = "metadata";
+  video.seenEnded = false;
+
+  // Seek to the end
+  video.addEventListener("loadeddata", function() {
+    video.currentTime = video.duration;
+    video.onseeked = () => {
+      video.onseeked = null;
+      callSeekToNextFrame();
+    };
+  });
+
+  function callSeekToNextFrame() {
+    video.seekToNextFrame().then(
+      () => {
+        if (!video.seenEnded)
+          callSeekToNextFrame();
+      },
+      () => {
+        // Reach the end, do nothing.
+      }
+    );
+  }
+
+  video.addEventListener("ended", function() {
+    video.seenEnded = true;
+    drawVideoToInnerHTML(video);
+  });
+}
+</script>
+</body>
+</html>

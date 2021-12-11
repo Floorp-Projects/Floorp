@@ -1,0 +1,134 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    "nsIDirectTaskDispatcher.idl",
+    "nsIEnvironment.idl",
+    "nsIEventTarget.idl",
+    "nsIIdlePeriod.idl",
+    "nsINamed.idl",
+    "nsIProcess.idl",
+    "nsIRunnable.idl",
+    "nsISerialEventTarget.idl",
+    "nsISupportsPriority.idl",
+    "nsIThread.idl",
+    "nsIThreadInternal.idl",
+    "nsIThreadManager.idl",
+    "nsIThreadPool.idl",
+    "nsITimer.idl",
+]
+
+XPIDL_MODULE = "xpcom_threads"
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+EXPORTS += [
+    "MainThreadUtils.h",
+    "nsICancelableRunnable.h",
+    "nsIDelayedRunnableObserver.h",
+    "nsIDiscardableRunnable.h",
+    "nsIIdleRunnable.h",
+    "nsMemoryPressure.h",
+    "nsProcess.h",
+    "nsProxyRelease.h",
+    "nsThread.h",
+    "nsThreadManager.h",
+    "nsThreadPool.h",
+    "nsThreadUtils.h",
+]
+
+EXPORTS.mozilla += [
+    "AbstractThread.h",
+    "BlockingResourceBase.h",
+    "CondVar.h",
+    "CPUUsageWatcher.h",
+    "DataMutex.h",
+    "DeadlockDetector.h",
+    "DelayedRunnable.h",
+    "EventQueue.h",
+    "IdlePeriodState.h",
+    "IdleTaskRunner.h",
+    "InputTaskManager.h",
+    "LazyIdleThread.h",
+    "MainThreadIdlePeriod.h",
+    "Monitor.h",
+    "MozPromise.h",
+    "MozPromiseInlines.h",
+    "Mutex.h",
+    "PerformanceCounter.h",
+    "Queue.h",
+    "RecursiveMutex.h",
+    "ReentrantMonitor.h",
+    "RWLock.h",
+    "SchedulerGroup.h",
+    "SharedThreadPool.h",
+    "SpinEventLoopUntil.h",
+    "StateMirroring.h",
+    "StateWatching.h",
+    "SynchronizedEventQueue.h",
+    "SyncRunnable.h",
+    "TaskCategory.h",
+    "TaskController.h",
+    "TaskDispatcher.h",
+    "TaskQueue.h",
+    "ThreadBound.h",
+    "ThreadEventQueue.h",
+    "ThrottledEventQueue.h",
+    "VsyncTaskManager.h",
+]
+
+SOURCES += [
+    "IdleTaskRunner.cpp",
+    "ThreadDelay.cpp",
+]
+
+UNIFIED_SOURCES += [
+    "AbstractThread.cpp",
+    "BlockingResourceBase.cpp",
+    "CPUUsageWatcher.cpp",
+    "DelayedRunnable.cpp",
+    "EventQueue.cpp",
+    "IdlePeriodState.cpp",
+    "InputEventStatistics.cpp",
+    "InputTaskManager.cpp",
+    "LazyIdleThread.cpp",
+    "MainThreadIdlePeriod.cpp",
+    "nsEnvironment.cpp",
+    "nsMemoryPressure.cpp",
+    "nsProcessCommon.cpp",
+    "nsProxyRelease.cpp",
+    "nsThread.cpp",
+    "nsThreadManager.cpp",
+    "nsThreadPool.cpp",
+    "nsThreadUtils.cpp",
+    "nsTimerImpl.cpp",
+    "PerformanceCounter.cpp",
+    "RecursiveMutex.cpp",
+    "RWLock.cpp",
+    "SchedulerGroup.cpp",
+    "SharedThreadPool.cpp",
+    "SynchronizedEventQueue.cpp",
+    "TaskController.cpp",
+    "TaskQueue.cpp",
+    "ThreadEventQueue.cpp",
+    "ThreadEventTarget.cpp",
+    "ThreadLocalVariables.cpp",
+    "ThrottledEventQueue.cpp",
+    "TimerThread.cpp",
+    "VsyncTaskManager.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "../build",
+    "/caps",
+    "/tools/profiler",
+]
+
+FINAL_LIBRARY = "xul"
+
+include("/ipc/chromium/chromium-config.mozbuild")

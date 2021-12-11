@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=601030
+-->
+<head>
+  <title>Test for Bug 601030</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=601030">Mozilla Bug 601030</a>
+<p id="display"></p>
+<div id="content">
+  <iframe src="data:text/html,<input autofocus>"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 601030 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var f = document.createElement("iframe");
+  var content = document.getElementById('content');
+
+  f.addEventListener("load", function() {
+    SimpleTest.executeSoon(function() {
+      isnot(document.activeElement, f,
+            "autofocus should not work when another frame is inserted in the document");
+
+      content.removeChild(f);
+      content.removeChild(document.getElementsByTagName('iframe')[0]);
+      f = document.createElement('iframe');
+      f.addEventListener("load", function() {
+        isnot(document.activeElement, f,
+              "autofocus should not work in a frame if the top document is already loaded");
+        SimpleTest.finish();
+      }, {once: true});
+      f.src = "data:text/html,<input autofocus>";
+      content.appendChild(f);
+    });
+  }, {once: true});
+
+  f.src = "data:text/html,<input autofocus>";
+  content.appendChild(f);
+});
+
+</script>
+</pre>
+</body>
+</html>

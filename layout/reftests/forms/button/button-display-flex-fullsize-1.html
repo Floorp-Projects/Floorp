@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0
+-->
+<html>
+<head>
+  <title>CSS Test: Testing for full height flex container in a button.</title>
+  <meta charset="utf-8">
+  <style>
+    button {
+      vertical-align: top;
+      padding: 0;
+      border: solid 1px black;
+      background: lightblue;
+      width: 200px;
+      height: 200px;
+    }
+
+    .flex {
+      display: inline-flex;
+      justify-content: space-between;
+      align-items: stretch;
+    }
+
+    .flex > * {
+      margin: 1px;
+      background: teal;
+      min-height: 10px;
+      min-width: 10px;
+    }
+
+    .vertical {
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <button class="flex">
+    <div></div>
+    <div></div>
+    <div></div>
+  </button>
+  <button class="flex vertical">
+    <div></div>
+    <div></div>
+    <div></div>
+  </button>
+</body>
+</html>
+

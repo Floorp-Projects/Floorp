@@ -1,0 +1,84 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that Color Contrast component renders correctly.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Color Contrast accessibility component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script src="chrome://mochitests/content/chrome/devtools/client/shared/components/test/chrome/head.js" type="application/javascript"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" type="application/javascript"></script>
+<script src="contrast.snapshots.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+/* global matchSnapshot */
+
+window.onload = async function() {
+  try {
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { ColorContrastCheck } = browserRequire(
+      "devtools/client/accessibility/components/ColorContrastAccessibility");
+
+    const {
+      accessibility: { SCORES },
+    } = browserRequire("devtools/shared/constants");
+
+    matchSnapshot("ColorContrastAccessibility error render.",
+      React.createElement(ColorContrastCheck, { error: true })
+    );
+
+    matchSnapshot("ColorContrastAccessibility basic render.",
+      React.createElement(ColorContrastCheck, {
+        "value": 4.00,
+        "color": [255, 0, 0, 1],
+        "backgroundColor": [255, 255, 255, 1],
+        "isLargeText": false,
+        "score": SCORES.FAIL,
+      })
+    );
+
+    matchSnapshot("ColorContrastAccessibility range render.",
+      React.createElement(ColorContrastCheck, {
+        "min": 1.19,
+        "max": 1.39,
+        "color": [128, 128, 128, 1],
+        "backgroundColorMin": [219, 106, 116, 1],
+        "backgroundColorMax": [156, 145, 211, 1],
+        "isLargeText": false,
+        "score": SCORES.FAIL,
+        "scoreMin": SCORES.FAIL,
+        "scoreMax": SCORES.FAIL,
+      })
+    );
+
+    matchSnapshot("ColorContrastAccessibility large text render.",
+      React.createElement(ColorContrastCheck, {
+        "value": 4.00,
+        "color": [255, 0, 0, 1],
+        "backgroundColor": [255, 255, 255, 1],
+        "isLargeText": true,
+        "score": SCORES.AA,
+      })
+    );
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,122 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Due to duplicate file names, we compile libavutil/x86 in its own
+# moz.build file.
+if CONFIG['FFVPX_ASFLAGS']:
+    if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
+        DIRS += ['x86']
+    elif CONFIG['CPU_ARCH'] == 'aarch64':
+        DIRS += ['aarch64']
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        DIRS += ['arm']
+
+SharedLibrary('mozavcodec')
+SOURCES += [
+    'allcodecs.c',
+    'avdct.c',
+    'avpacket.c',
+    'bitstream.c',
+    'bitstream_filters.c',
+    'bsf.c',
+    'codec_desc.c',
+    'dct.c',
+    'dct32_fixed.c',
+    'dct32_float.c',
+    'decode.c',
+    'faandct.c',
+    'faanidct.c',
+    'fdctdsp.c',
+    'fft_fixed.c',
+    'fft_fixed_32.c',
+    'fft_float.c',
+    'fft_init_table.c',
+    'flac.c',
+    'flacdata.c',
+    'flacdec.c',
+    'flacdsp.c',
+    'idctdsp.c',
+    'jfdctfst.c',
+    'jfdctint.c',
+    'jrevdct.c',
+    'log2_tab.c',
+    'mpegaudio.c',
+    'mpegaudiodata.c',
+    'mpegaudiodec_fixed.c',
+    'mpegaudiodecheader.c',
+    'mpegaudiodsp.c',
+    'mpegaudiodsp_data.c',
+    'mpegaudiodsp_fixed.c',
+    'mpegaudiodsp_float.c',
+    'null_bsf.c',
+    'options.c',
+    'parser.c',
+    'parsers.c',
+    'pthread.c',
+    'pthread_frame.c',
+    'pthread_slice.c',
+    'rdft.c',
+    'reverse.c',
+    'simple_idct.c',
+    'utils.c',
+    'vorbis_parser.c',
+    'xiph.c'
+]
+
+if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
+    SOURCES += [
+        'avpicture.c',
+        'bitstream_filter.c',
+        'golomb.c',
+        'h264pred.c',
+        'imgconvert.c',
+        'mathtables.c',
+        'profiles.c',
+        'qsv_api.c',
+        'raw.c',
+        'videodsp.c',
+        'vp56rac.c',
+        'vp8.c',
+        'vp8_parser.c',
+        'vp8dsp.c',
+        'vp9.c',
+        'vp9_parser.c',
+        'vp9_superframe_split_bsf.c',
+        'vp9block.c',
+        'vp9data.c',
+        'vp9dsp.c',
+        'vp9dsp_10bpp.c',
+        'vp9dsp_12bpp.c',
+        'vp9dsp_8bpp.c',
+        'vp9lpf.c',
+        'vp9mvs.c',
+        'vp9prob.c',
+        'vp9recon.c'
+    ]
+    if CONFIG['MOZ_WAYLAND']:
+        SOURCES += [
+            'vaapi_decode.c',
+            'vaapi_vp8.c',
+            'vaapi_vp9.c',
+        ]
+        USE_LIBS += ['mozva']
+
+if CONFIG['MOZ_LIBAV_FFT']:
+    SOURCES += [
+        'avfft.c',
+    ]
+
+SYMBOLS_FILE = 'avcodec.symbols'
+NoVisibilityFlags()
+
+USE_LIBS += [
+     'mozavutil'
+]
+
+if CONFIG['OS_TARGET'] != 'WINNT':
+    OS_LIBS += ['m']
+
+include("../ffvpxcommon.mozbuild")

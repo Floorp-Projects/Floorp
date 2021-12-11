@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the confirmation-dialog component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the confirmation-dialog component</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="chrome://browser/content/aboutlogins/components/confirmation-dialog.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="chrome://browser/content/aboutlogins/aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the confirmation-dialog component **/
+
+let options = {
+  title: "confirm-delete-dialog-title",
+  message: "confirm-delete-dialog-message",
+  confirmButtonLabel: "confirm-delete-dialog-confirm-button"
+};
+let cancelButton, confirmButton, gConfirmationDialog;
+add_task(async function setup() {
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  await importDependencies(templateFrame, displayEl);
+
+  gConfirmationDialog = document.createElement("confirmation-dialog");
+  displayEl.appendChild(gConfirmationDialog);
+  ok(gConfirmationDialog, "The dialog should exist");
+
+  cancelButton = gConfirmationDialog.shadowRoot.querySelector(".cancel-button");
+  confirmButton = gConfirmationDialog.shadowRoot.querySelector(".confirm-button");
+  ok(cancelButton, "The cancel button should exist");
+  ok(confirmButton, "The confirm button should exist");
+});
+
+add_task(async function test_escape_key_to_cancel() {
+  gConfirmationDialog.show(options);
+  ok(!gConfirmationDialog.hidden, "The dialog should be visible");
+  sendKey("ESCAPE");
+  ok(gConfirmationDialog.hidden, "The dialog should be hidden after hitting Escape");
+  gConfirmationDialog.hide();
+});
+
+add_task(async function test_initial_focus() {
+  gConfirmationDialog.show(options);
+  ok(!gConfirmationDialog.hidden, "The dialog should be visible");
+  is(gConfirmationDialog.shadowRoot.activeElement, confirmButton,
+     "After initially opening the dialog, the confirm button should be focused");
+  gConfirmationDialog.hide();
+});
+
+add_task(async function test_tab_focus() {
+  gConfirmationDialog.show(options);
+  ok(!gConfirmationDialog.hidden, "The dialog should be visible");
+  sendKey("TAB");
+  is(gConfirmationDialog.shadowRoot.activeElement, cancelButton,
+     "After opening the dialog and tabbing once, the cancel button should be focused");
+  gConfirmationDialog.hide();
+});
+
+add_task(async function test_enter_key_to_cancel() {
+  let showPromise = gConfirmationDialog.show(options);
+  ok(!gConfirmationDialog.hidden, "The dialog should be visible");
+  sendKey("RETURN");
+  try {
+    await showPromise;
+    ok(true, "The dialog Promise should resolve after hitting Return with the confirm button focused");
+  } catch (ex) {
+    ok(false, "The dialog Promise should not reject after hitting Return with the confirm button focused");
+  }
+});
+
+add_task(async function test_enter_key_to_confirm() {
+  let showPromise = gConfirmationDialog.show(options);
+  ok(!gConfirmationDialog.hidden, "The dialog should be visible");
+  sendKey("TAB");
+  sendKey("RETURN");
+  try {
+    await showPromise;
+    ok(false, "The dialog Promise should not resolve after hitting Return with the cancel button focused");
+  } catch (ex) {
+    ok(true, "The dialog Promise should reject after hitting Return with the cancel button focused");
+  }
+});
+
+add_task(async function test_dialog_focus_trap() {
+  let displayEl = document.getElementById("display");
+  let displayElChildSpan = document.createElement("span");
+  displayElChildSpan.tabIndex = 0;
+  displayElChildSpan.id = "display-child";
+  displayEl.appendChild(displayElChildSpan);
+
+  gConfirmationDialog.show(options);
+
+  ok(!gConfirmationDialog.hidden, "The dialog should be visible");
+  ok(displayElChildSpan.tabIndex === -1, "The tabIndex value for elements with a hardcoded tabIndex attribute should be reset to '-1'.")
+  ok(displayElChildSpan.dataset.oldTabIndex === "0", "Existing tabIndex values should be stored in `dataset.oldTabIndex`.")
+
+  const isActiveElemDialogOrHTMLorBODY = (elemTagName) => {
+    return (["HTML", "BODY", "CONFIRMATION-DIALOG"].includes(elemTagName));
+  }
+
+  let iterator = 0;
+  while(iterator < 20) {
+    sendKey("TAB");
+    isnot(document.activeElement.id, "display-child", "The display-child element should not gain focus when the dialog is showing");
+    ok(isActiveElemDialogOrHTMLorBODY(document.activeElement.tagName), "The confirmation-dialog should always have focus when the dialog is showing");
+    iterator++;
+  }
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+# sanity checks:
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
+
+# should look the same as type=text, except for the spin box
+== number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
+== number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl-ref.html
+== number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr-ref.html
+== number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
+
+# dynamic type changes:
+fuzzy(0-2,0-5) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
+fuzzy(0-2,0-5) == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
+
+# dynamic value changes:
+fuzzy(0-2,0-13) == show-value.html show-value-ref.html
+
+# disabled
+== number-disabled.html number-disabled-ref.html
+fails-if(Android&&nativeThemePref) != number-spinbox-disabled.html number-spinbox-disabled-notref.html
+
+# auto width:
+== number-auto-width-1.html number-auto-width-1-ref.html
+== flex.html flex-ref.html
+
+# min-height/max-height tests:
+skip-if(Android) == number-min-height-1.html number-min-height-1-ref.html
+skip-if(Android) == number-min-height-2.html number-min-height-2-ref.html
+skip-if(Android) == number-max-height-1.html number-max-height-1-ref.html
+skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
+
+# number of significant fractional digits:
+fuzzy-if(!nativeThemePref,0-1,0-1) == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
+
+# focus
+fuzzy(0-2,0-5) needs-focus == focus-handling.html focus-handling-ref.html # Win: Antialiasing underinvalidation, looks like.
+== spinner-overflow.html spinner-overflow-ref.html
+== spinner-overflow-vertical.html spinner-overflow-vertical-ref.html
+
+# select
+fuzzy(0-1,0-1) == number-selected.html number-selected-ref.html
+
+# pseudo-elements not usable from content:
+== number-pseudo-elements.html number-pseudo-elements-ref.html
+
+== number-placeholder.html number-placeholder-ref.html
+
+# check that if the anonymous text control is reframed, we reframe the whole
+# number control (the fuzzy is for the top-right and bottom-left of the border
+# bevel which gets slightly different antialiasing after invalidation):
+fuzzy(0-128,0-4) == number-reframe-anon-text-field.html number-reframe-anon-text-field-ref.html
+
+== pseudo-classes.html about:blank
+
+# Style inheritance:
+== number-style-inheritance.html number-style-inheritance-ref.html
+
+# l10n
+!= number-localized.html number-localized-notref.html
+
+== padding-001.html padding-001-ref.html
+!= padding-001.html padding-001-notref.html
+== padding-002.html padding-002-ref.html
+
+fuzzy-if(winWidget&&!nativeThemePref,0-35,0-17) fuzzy-if(!nativeThemePref,0-14,0-4) == clipped-text.html clipped-text-ref.html

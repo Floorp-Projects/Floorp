@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375314
+-->
+<head>
+  <title>Test for Bug 375314</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375314">Mozilla Bug 375314</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 375314 **/
+
+var lastContentType = -1;
+const testURL = window.location.href + "/this/is/the/test/url";
+
+function createChromeScript() {
+  var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(
+    Ci.nsICategoryManager
+  );
+
+  const POLICYNAME = "@mozilla.org/testpolicy;1";
+  const POLICYID = Components.ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
+
+  var policy = {
+    // nsISupports implementation
+    QueryInterface: ChromeUtils.generateQI([
+       "nsIFactory",
+       "nsIContentPolicy",
+    ]),
+
+    // nsIFactory implementation
+    createInstance(outer, iid) {
+      return this.QueryInterface(iid);
+    },
+
+    // nsIContentPolicy implementation
+    shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+      if (contentLocation.asciiSpec === "http://mochi.test:8888/tests/dom/base/test/test_bug375314-2.html/this/is/the/test/url") {
+        sendAsyncMessage("loadBlocked", { policyType: loadInfo.externalContentPolicyType});
+        return Ci.nsIContentPolicy.REJECT_REQUEST;
+      }
+      return Ci.nsIContentPolicy.ACCEPT;
+    },
+
+    shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+      return Ci.nsIContentPolicy.ACCEPT;
+    }
+  };
+
+  // Register content policy
+  var componentManager = Components.manager.QueryInterface(
+    Ci.nsIComponentRegistrar
+  );
+
+  componentManager.registerFactory(
+    POLICYID,
+    "Test content policy",
+    POLICYNAME,
+    policy
+  );
+  categoryManager.addCategoryEntry(
+    "content-policy",
+    POLICYNAME,
+    POLICYNAME,
+    false,
+    true
+  );
+
+  addMessageListener("shutdown", _ => {
+    categoryManager.deleteCategoryEntry(
+      "content-policy",
+      POLICYNAME,
+      false
+    );
+    componentManager.unregisterFactory(POLICYID, policy);
+  });
+
+  // Adding a new category dispatches an event to update
+  // caches, so we need to also dispatch an event to make
+  // sure we don't start the load until after that happens.
+  Services.tm.dispatchToMainThread(() => {
+    sendAsyncMessage("setupComplete");
+  });
+}
+
+// Request creating functions
+
+function requestDocument() {
+  // GeckoView shows an error page for CSP errors, which breaks this test, so just skip in that case.
+  try {
+    if (!SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(SpecialPowers.Ci.nsIAndroidBridge).isFennec) {
+      return false;
+    }
+  } catch (e){}
+
+  top.location.href = testURL;
+  return true;
+}
+
+function requestSubdocument() {
+  var content = $("content");
+
+  var frame = document.createElement("iframe");
+  frame.setAttribute("src", testURL);
+  content.appendChild(frame);
+}
+
+function requestObject() {
+  var content = $("content");
+
+  var object = document.createElement("embed");
+  object.setAttribute("src", testURL);
+  content.appendChild(object);
+}
+
+add_task(async function() {
+  let chromeScript = SpecialPowers.loadChromeScript(createChromeScript);
+  await chromeScript.promiseOneMessage("setupComplete");
+
+  if (requestDocument()) {
+    let result = await chromeScript.promiseOneMessage("loadBlocked");
+    is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_DOCUMENT, "Content policies triggered for TYPE_DOCUMENT");
+  }
+
+  requestSubdocument();
+  result = await chromeScript.promiseOneMessage("loadBlocked");
+  is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_SUBDOCUMENT, "Content policies triggered for TYPE_SUBDOCUMENT");
+
+  requestObject();
+  result = await chromeScript.promiseOneMessage("loadBlocked");
+  is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_OBJECT, "Content policies triggered for TYPE_OBJECT");
+
+  chromeScript.sendAsyncMessage("shutdown");
+  chromeScript.destroy();
+});
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,102 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIProtocolHandler.idl"
+
+interface nsIFile;
+interface nsIURIMutator;
+
+[scriptable, uuid(1fb25bd5-4354-4dcd-8d97-621b7b3ed2e4)]
+interface nsIFileProtocolHandler : nsIProtocolHandler
+{
+    /**
+     * This method constructs a new file URI
+     *
+     * @param aFile nsIFile
+     * @return reference to a new nsIURI object
+     */
+    nsIURI newFileURI(in nsIFile aFile);
+
+    /**
+     * This method constructs a new file URI, and returns a URI mutator
+     * that has not yet been finalized, allowing the URI to be changed without
+     * being cloned.
+     *
+     * @param aFile nsIFile
+     * @return reference to a new nsIURIMutator object
+     */
+    nsIURIMutator newFileURIMutator(in nsIFile file);
+
+    /**
+     * DEPRECATED, AVOID IF AT ALL POSSIBLE.
+     *
+     * Calling this will cause IO on the calling thread, to determine
+     * if the file is a directory or file, and based on that behaves as
+     * if you called getURLSpecFromDir or getURLSpecFromActualFile,
+     * respectively. This IO may take multiple seconds (e.g. for network
+     * paths, slow external drives that need to be woken up, etc.).
+     *
+     * Usually, the caller should *know* that the `file` argument is
+     * either a directory (in which case it should call getURLSpecFromDir)
+     * or a non-directory file (in which case it should call
+     * getURLSpecFromActualFile), and not need to call this method.
+     */
+    [noscript] AUTF8String getURLSpecFromFile(in nsIFile file);
+
+    /**
+     * Converts a non-directory nsIFile to the corresponding URL string.
+     * NOTE: under some platforms this is a lossy conversion (e.g., Mac
+     * Carbon build). If the nsIFile is a local file, then the result
+     * will be a file:// URL string.
+     *
+     * The resulting string may contain URL-escaped characters.
+     *
+     * Should only be called on files which are not directories. If
+     * called on directories, the resulting URL may lack a trailing slash
+     * and cause relative URLs in such a document to misbehave.
+     */
+    AUTF8String getURLSpecFromActualFile(in nsIFile file);
+
+    /**
+     * Converts a directory nsIFile to the corresponding URL string.
+     * NOTE: under some platforms this is a lossy conversion (e.g., Mac
+     * Carbon build). If the nsIFile is a local file, then the result
+     * will be a file:// URL string.
+     *
+     * The resulting string may contain URL-escaped characters.
+     *
+     * Should only be called on files which are directories (will enforce
+     * the URL ends with a slash).
+     */
+    AUTF8String getURLSpecFromDir(in nsIFile file);
+
+    /**
+     * Converts the URL string into the corresponding nsIFile if possible.
+     * A local file will be created if the URL string begins with file://.
+     */
+    nsIFile getFileFromURLSpec(in AUTF8String url);
+
+    /**
+     * Takes a local file and tries to interpret it as an internet shortcut
+     * (e.g. .url files on windows).
+     * @param file The local file to read
+     * @return The URI the file refers to
+     *
+     * @throw NS_ERROR_NOT_AVAILABLE if the OS does not support such files.
+     * @throw NS_ERROR_NOT_AVAILABLE if this file is not an internet shortcut.
+     */
+    nsIURI readURLFile(in nsIFile file);
+
+    /**
+     * Takes a local file and tries to interpret it as a shell link file
+     * (.lnk files on Windows)
+     * @param file The local file to read
+     * @return The URI the file refers to
+     *
+     * @throw NS_ERROR_NOT_AVAILABLE if the OS does not support such files.
+     * @throw NS_ERROR_NOT_AVAILABLE if this file is not a shell link.
+     */
+    nsIURI readShellLink(in nsIFile file);
+};

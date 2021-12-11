@@ -1,0 +1,104 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
+with Files("mozunit/**"):
+    BUG_COMPONENT = ("Testing", "Python Test")
+
+DIST_INSTALL = False
+# For sanity's sake, we compile nsinstall without the wrapped system
+# headers, so that we can use it to set up the wrapped system headers.
+NoVisibilityFlags()
+
+CONFIGURE_SUBST_FILES += [
+    "tests/src-simple/Makefile",
+]
+
+if CONFIG["HOST_OS_ARCH"] != "WINNT":
+    HOST_SOURCES += [
+        "nsinstall.c",
+        "pathsub.c",
+    ]
+    HostProgram("nsinstall_real")
+
+PYTHON_UNITTEST_MANIFESTS += [
+    "tests/python.ini",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc") and CONFIG["MOZ_OPTIMIZE"]:
+    CFLAGS += ["-O3"]
+
+HOST_DEFINES["UNICODE"] = True
+HOST_DEFINES["_UNICODE"] = True
+
+include("stl-headers.mozbuild")
+if CONFIG["WRAP_STL_INCLUDES"]:
+    stl_compiler = None
+    if CONFIG["OS_TARGET"] == "WINNT":
+        stl_compiler = "msvc"
+    else:
+        stl_compiler = "gcc"
+
+    if stl_compiler:
+        # Note that the 'stl_wrappers' folder is known to the build system as
+        # containing generated files; if this is changed here then the code in
+        # GeneratedFile.__init__ in python/mozbuild/mozbuild/frontend/data.py
+        # might need to be updated accordingly as well.
+        template_file = SRCDIR + "/%s-stl-wrapper.template.h" % stl_compiler
+        output_dir = "/dist/stl_wrappers"
+        # We have to use a sentinel file as the first file because the
+        # file_generate action will create it for us, but we want to create all
+        # the files in gen_wrappers()
+        outputs = tuple(
+            ["stl.sentinel"] + ["%s/%s" % (output_dir, h) for h in stl_headers]
+        )
+        GeneratedFile(
+            *outputs,
+            script="make-stl-wrappers.py",
+            entry_point="gen_wrappers",
+            flags=[TOPOBJDIR + output_dir, stl_compiler, template_file] + stl_headers
+        )
+
+    # Wrap <windows.h> to make it easier to use correctly
+    # NOTE: If we aren't wrapping STL includes, we're building part of the browser
+    # which won't need this wrapper, such as L10N. Just don't try to generate the
+    # wrapper in that case.
+    if CONFIG["OS_TARGET"] == "WINNT":
+        GeneratedFile(
+            "/dist/stl_wrappers/windows.h",
+            script="make-windows-h-wrapper.py",
+            entry_point="generate",
+            inputs=[
+                "windows-h-constant.decls.h",
+                "windows-h-unicode.decls.h",
+                "windows-h-wrapper.template.h",
+            ],
+            flags=[stl_compiler],
+        )
+
+if CONFIG["WRAP_SYSTEM_INCLUDES"]:
+    include("system-headers.mozbuild")
+    output_dir = "/dist/system_wrappers"
+    outputs = tuple(
+        ["system-header.sentinel"]
+        + ["%s/%s" % (output_dir, h) for h in stl_headers + system_headers]
+    )
+    GeneratedFile(
+        *outputs,
+        script="make-system-wrappers.py",
+        entry_point="gen_wrappers",
+        flags=[TOPOBJDIR + output_dir] + stl_headers + system_headers
+    )
+
+if CONFIG["COMPILE_ENVIRONMENT"] and CONFIG["CBINDGEN"]:
+    GeneratedFile(
+        "cbindgen-metadata.json",
+        script="/build/RunCbindgen.py",
+        entry_point="generate_metadata",
+        inputs=["!/.cargo/config"],
+    )

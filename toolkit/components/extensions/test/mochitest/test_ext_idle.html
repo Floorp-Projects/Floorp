@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function testWithRealIdleService() {
+  function background() {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      let detectionInterval = args[0];
+      if (msg == "addListener") {
+        let status = await browser.idle.queryState(detectionInterval);
+        browser.test.assertEq("active", status, "Idle status is active");
+        browser.idle.setDetectionInterval(detectionInterval);
+        browser.idle.onStateChanged.addListener(newState => {
+          browser.test.assertEq("idle", newState, "listener fired with the expected state");
+          browser.test.sendMessage("listenerFired");
+        });
+        browser.test.sendMessage("listenerAdded");
+      } else if (msg == "checkState") {
+        let status = await browser.idle.queryState(detectionInterval);
+        browser.test.assertEq("idle", status, "Idle status is idle");
+        browser.test.notifyPass("idle");
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["idle"],
+    },
+  });
+
+  await extension.startup();
+
+  let chromeScript = loadChromeScript(() => {
+    const {sendAsyncMessage} = this;
+    const idleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(Ci.nsIUserIdleService);
+    let idleTime = idleService.idleTime;
+    sendAsyncMessage("detectionInterval", Math.max(Math.ceil(idleTime / 1000) + 10, 15));
+  });
+  let detectionInterval = await chromeScript.promiseOneMessage("detectionInterval");
+  chromeScript.destroy();
+
+  info(`Setting interval to ${detectionInterval}`);
+  extension.sendMessage("addListener", detectionInterval);
+  await extension.awaitMessage("listenerAdded");
+  info("Listener added");
+  await extension.awaitMessage("listenerFired");
+  info("Listener fired");
+  extension.sendMessage("checkState", detectionInterval);
+  await extension.awaitFinish("idle");
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

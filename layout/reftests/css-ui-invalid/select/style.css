@@ -1,0 +1,18 @@
+/* Override default style */
+select:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+select.notinvalid {
+  background-color: green;
+}
+select.notinvalid:-moz-ui-invalid {
+  background-color: red;
+}
+
+select.invalid {
+  background-color: red;
+}
+select.invalid:-moz-ui-invalid {
+  background-color: green;
+}

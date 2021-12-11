@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+let gInspectee = null;
+let gWalker = null;
+
+addTest(async function setup() {
+  const url = document.getElementById("inspectorContent").href;
+  const { target, doc } = await attachURL(url);
+  gInspectee = doc;
+  const inspector = await target.getFront("inspector");
+  gWalker = inspector.walker;
+  runNextTest();
+});
+
+addTest(function testChangeValue() {
+  const contentNode = gInspectee.querySelector("#a").firstChild;
+  let nodeFront;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(front => {
+    // Get the text child
+    return gWalker.children(front, { maxNodes: 1 });
+  }).then(children => {
+    nodeFront = children.nodes[0];
+    is(nodeFront.nodeType, Node.TEXT_NODE);
+    return nodeFront.setNodeValue("newvalue");
+  }).then(() => {
+    // We're only going to test that the change hit the document.
+    // There are other tests that make sure changes are propagated
+    // to the client.
+    is(contentNode.nodeValue, "newvalue", "Node should have a new value.");
+  }).then(runNextTest));
+});
+
+addTest(function cleanup() {
+  gWalker = null;
+  gInspectee = null;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1307730
+-->
+<head>
+  <title>Test for Bug 1307730</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1307730">Mozilla Bug 1307730</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+const Cu = SpecialPowers.Cu;
+
+function runTest() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "https://example.com", false);
+  try {
+    xhr.send();
+  } catch (e) {
+    return e.name;
+  }
+  return 'XHR succeeded';
+}
+
+function evalInSandbox(sandbox, func) {
+  return SpecialPowers.unwrap(Cu.evalInSandbox(`(${func.toString()})()`, sandbox));
+}
+
+let sandbox = Cu.Sandbox([window, "https://example.org"],
+                         {wantGlobalProperties: ['XMLHttpRequest']});
+is(evalInSandbox(sandbox, runTest), 'NetworkError',
+   "Shouldn't be able to make a CORS request with an expanded principal");
+
+</script>
+</pre>
+</body>
+</html>

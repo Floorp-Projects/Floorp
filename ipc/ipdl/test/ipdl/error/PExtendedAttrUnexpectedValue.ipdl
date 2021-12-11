@@ -1,0 +1,6 @@
+//error: unexpected value for valueless attribute `RefCounted'
+
+[RefCounted=invalid] async protocol PExtendedAttrUnexpectedValue {
+parent:
+    async Msg();
+};

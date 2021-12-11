@@ -1,0 +1,154 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+%{C++
+#include "mozilla/DebugOnly.h"
+%}
+
+[ptr] native octetPtr(uint8_t);
+
+/**
+ * mozIStorageValueArray wraps an array of SQL values, such as a single database
+ * row.
+ */
+[scriptable, uuid(6e6306f4-ffa7-40f5-96ca-36159ce8f431)]
+interface mozIStorageValueArray : nsISupports {
+  /**
+   * These type values are returned by getTypeOfIndex
+   * to indicate what type of value is present at
+   * a given column.
+   */
+  const long VALUE_TYPE_NULL = 0;
+  const long VALUE_TYPE_INTEGER = 1;
+  const long VALUE_TYPE_FLOAT = 2;
+  const long VALUE_TYPE_TEXT = 3;
+  const long VALUE_TYPE_BLOB = 4;
+
+  /**
+   * numEntries
+   *
+   * number of entries in the array (each corresponding to a column
+   * in the database row)
+   */
+  readonly attribute unsigned long numEntries;
+
+  /**
+   * Returns the type of the value at the given column index;
+   * one of VALUE_TYPE_NULL, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT,
+   * VALUE_TYPE_TEXT, VALUE_TYPE_BLOB.
+   */
+  long getTypeOfIndex(in unsigned long aIndex);
+
+  /**
+   * Obtain a value for the given entry (column) index.
+   * Due to SQLite's type conversion rules, any of these are valid
+   * for any column regardless of the column's data type.  However,
+   * if the specific type matters, getTypeOfIndex should be used
+   * first to identify the column type, and then the appropriate
+   * get method should be called.
+   *
+   * If you ask for a string value for a NULL column, you will get an empty
+   * string with IsVoid set to distinguish it from an explicitly set empty
+   * string.
+   */
+  long getInt32(in unsigned long aIndex);
+  long long getInt64(in unsigned long aIndex);
+  double getDouble(in unsigned long aIndex);
+  AUTF8String getUTF8String(in unsigned long aIndex);
+  AString getString(in unsigned long aIndex);
+
+  // data will be NULL if dataSize = 0
+  void getBlob(in unsigned long aIndex, out unsigned long aDataSize, [array,size_is(aDataSize)] out octet aData);
+  AString getBlobAsString(in unsigned long aIndex);
+  AUTF8String getBlobAsUTF8String(in unsigned long aIndex);
+  boolean getIsNull(in unsigned long aIndex);
+
+  /**
+   * Returns a shared string pointer.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @param aByteLength
+   *        The number of bytes in the string or blob. This is the same as the
+   *        number of characters for UTF-8 strings, and twice the number of
+   *        characters for UTF-16 strings.
+   * @param aResult
+   *        A pointer to the string or blob.
+   */
+  [noscript] void getSharedUTF8String(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out string aResult);
+  [noscript] void getSharedString(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out wstring aResult);
+  [noscript] void getSharedBlob(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out octetPtr aResult);
+
+%{C++
+  /**
+   * Getters for native code that return their values as
+   * the return type, for convenience and sanity.
+   *
+   * Not virtual; no vtable bloat.
+   */
+
+  inline int32_t AsInt32(uint32_t idx) {
+    int32_t v = 0;
+    mozilla::DebugOnly<nsresult> rv = GetInt32(idx, &v);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return v;
+  }
+
+  inline int64_t AsInt64(uint32_t idx) {
+    int64_t v = 0;
+    mozilla::DebugOnly<nsresult> rv = GetInt64(idx, &v);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return v;
+  }
+
+  inline double AsDouble(uint32_t idx) {
+    double v = 0.0;
+    mozilla::DebugOnly<nsresult> rv = GetDouble(idx, &v);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return v;
+  }
+
+  inline const char* AsSharedUTF8String(uint32_t idx, uint32_t *len) {
+    const char *str = nullptr;
+    *len = 0;
+    mozilla::DebugOnly<nsresult> rv = GetSharedUTF8String(idx, len, &str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return str;
+  }
+
+  inline const char16_t* AsSharedWString(uint32_t idx, uint32_t *len) {
+    const char16_t *str = nullptr;
+    *len = 0;
+    mozilla::DebugOnly<nsresult> rv = GetSharedString(idx, len, &str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return str;
+  }
+
+  inline const uint8_t* AsSharedBlob(uint32_t idx, uint32_t *len) {
+    const uint8_t *blob = nullptr;
+    *len = 0;
+    mozilla::DebugOnly<nsresult> rv = GetSharedBlob(idx, len, &blob);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return blob;
+  }
+
+  inline bool IsNull(uint32_t idx) {
+    bool b = false;
+    mozilla::DebugOnly<nsresult> rv = GetIsNull(idx, &b);
+    MOZ_ASSERT(NS_SUCCEEDED(rv),
+               "Getting value failed, wrong column index?");
+    return b;
+  }
+
+%}
+
+};

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessible::childAtPoint() tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function doPreTest() {
+      waitForImageMap("imgmap", doTest);
+    }
+
+    function doTest() {
+      // Not specific case, child and deepchild testing.
+      var list = getAccessible("list");
+      var listitem = getAccessible("listitem");
+      var image = getAccessible("image");
+if (!MAC) {
+      testChildAtPoint(list, 1, 1, listitem, image.firstChild);
+} else {
+      todo(false, "Bug 746974 - children must match on all platforms, disable failing test on Mac");
+}
+
+      // ::MustPrune case (in this case childAtPoint doesn't look inside a
+      // textbox), point is inside of textbox.
+      var txt = getAccessible("txt");
+      testChildAtPoint(txt, 1, 1, txt, txt);
+
+      // ::MustPrune case, point is outside of textbox accessible but is in
+      // document.
+      testChildAtPoint(txt, -1, 1, null, null);
+
+      // ::MustPrune case, point is outside of root accessible.
+      testChildAtPoint(txt, -10000, 10000, null, null);
+
+      // Not specific case, point is inside of btn accessible.
+      var btn = getAccessible("btn");
+      testChildAtPoint(btn, 1, 1, btn, btn);
+
+      // Not specific case, point is outside of btn accessible.
+      testChildAtPoint(btn, -1, 1, null, null);
+
+      // Out of flow accessible testing, do not return out of flow accessible
+      // because it's not a child of the accessible even visually it is.
+      var rectArea = getNode("area").getBoundingClientRect();
+      var outOfFlow = getNode("outofflow");
+      outOfFlow.style.left = rectArea.left + "px";
+      outOfFlow.style.top = rectArea.top + "px";
+
+      testChildAtPoint("area", 1, 1, "area", "area");
+
+      // Test image maps. Their children are not in the layout tree.
+      var theLetterA = getAccessible("imgmap").firstChild;
+      hitTest("imgmap", theLetterA, theLetterA);
+      hitTest("container", "imgmap", theLetterA);
+
+      // hit testing for element contained by zero-width element
+      hitTest("container2", "container2_input", "container2_input");
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doPreTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=491657"
+     title="nsIAccessible::childAtPoint() tests">Mozilla Bug 491657</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="list" id="list">
+    <div role="listitem" id="listitem"><span role="image" id="image">img</span>item</div>
+  </div>
+
+  <span role="button">button1</span><span role="button" id="btn">button2</span>
+
+  <span role="textbox">textbox1</span><span role="textbox" id="txt">textbox2</span>
+
+  <div id="outofflow" style="width: 10px; height: 10px; position: absolute; left: 0px; top: 0px; background-color: yellow;">
+  </div>
+  <div id="area" style="width: 100px; height: 100px; background-color: blue;"></div>
+
+  <map name="atoz_map">
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+          coords="0,0,15,15" alt="thelettera" shape="rect"/>
+  </map>
+
+  <div id="container">
+    <img id="imgmap" width="447" height="15" usemap="#atoz_map" src="../letters.gif"/>
+  </div>
+
+  <div id="container2" style="width: 0px">
+    <input id="container2_input">
+  </div>
+</body>
+</html>

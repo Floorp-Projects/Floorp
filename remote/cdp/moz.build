@@ -1,0 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+JAR_MANIFESTS += ["jar.mn"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Remote Protocol", "CDP")
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+    "test/browser/component/browser.ini",
+    "test/browser/dom/browser.ini",
+    "test/browser/emulation/browser.ini",
+    "test/browser/fetch/browser.ini",
+    "test/browser/input/browser.ini",
+    "test/browser/io/browser.ini",
+    "test/browser/log/browser.ini",
+    "test/browser/network/browser.ini",
+    "test/browser/page/browser.ini",
+    "test/browser/runtime/browser.ini",
+    "test/browser/security/browser.ini",
+    "test/browser/target/browser.ini",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

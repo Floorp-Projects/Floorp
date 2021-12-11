@@ -1,0 +1,17 @@
+# Tests for seeking behaviour
+== anim-x-seek-1a.svg anim-standard-ref.svg
+== anim-x-seek-1b.svg anim-standard-ref.svg
+== anim-x-seek-1c.svg anim-standard-ref.svg
+== anim-x-seek-1d.svg anim-standard-ref.svg
+== anim-x-seek-1e.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1a.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1b.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1c.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1d.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1e.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1f.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1g.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1h.svg anim-standard-ref.svg
+== anim-x-seek-dynamic-1i.svg anim-standard-ref.svg
+== anim-x-seek-negative-1a.svg anim-standard-ref.svg
+== anim-x-seek-cross-container-1a.xhtml anim-standard-ref.xhtml

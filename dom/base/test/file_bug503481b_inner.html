@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Async script that isn't preloaded -->
+<script async src="file_bug503481.sjs?blockOn=R&body=runFirst();"></script>
+<script>
+firstRan = false;
+secondRan = false;
+thirdRan = false;
+forthRan = false;
+function runFirst() {
+  firstRan = true;
+}
+function runThird() {
+  parent.is(forthRan, false, "forth should still be blocked");
+  unblock("T");
+  thirdRan = true;
+}
+function runForth() {
+  forthRan = true;
+}
+
+function done() {
+  parent.is(firstRan, true, "first should have run by onload");
+  parent.is(secondRan, true, "second should have run by onload");
+  parent.is(thirdRan, true, "third should have run by onload");
+  parent.is(forthRan, true, "forth should have run by onload");
+  parent.SimpleTest.finish();
+}
+
+var reqs = [];
+function unblock(s) {
+  xhr = new XMLHttpRequest();
+  xhr.open("GET", "file_bug503481.sjs?unblock=" + s);
+  xhr.send();
+  reqs.push(xhr);
+}
+
+
+parent.is(firstRan, false, "First async script shouldn't have run");
+unblock("R");
+</script>
+
+<!-- test that inline async isn't actually async -->
+<script async>
+secondRan = true;
+</script>
+<script>
+parent.is(secondRan, true, "Second script shouldn't be async");
+</script>
+
+<!-- test that setting both defer and async treats the script as async -->
+<script defer async src="file_bug503481.sjs?blockOn=S&body=runThird();"></script>
+<script>
+parent.is(thirdRan, false, "third should not have run yet");
+unblock("S");
+</script>
+<script src="file_bug503481.sjs?blockOn=T&body=runForth();"></script>
+
+</head>
+
+<body onload="done()">

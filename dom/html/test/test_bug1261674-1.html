@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1261674
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1261674</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1261674">Mozilla Bug 1261674</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<input id="test_input" type="range" value=5 max=10 min=0>
+<script type="text/javascript">
+
+/** Test for Bug 1261674 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  let input = window.document.getElementById("test_input");
+
+  // focus: whether the target input element is focused
+  // deltaY: deltaY of WheelEvent
+  // deltaMode: deltaMode of WheelEvent
+  // valueChanged: expected value changes after input element handled the wheel event
+  let params = [
+    {focus: true, deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_LINE, valueChanged: -1},
+    {focus: true, deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_LINE, valueChanged: 1},
+    {focus: true, deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_PAGE, valueChanged: -1},
+    {focus: true, deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_PAGE, valueChanged: 1},
+    {focus: true, deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL, valueChanged: 0},
+    {focus: true, deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL, valueChanged: 0},
+    {focus: false, deltaY: 1.0, deltaMode: WheelEvent.DOM_DELTA_LINE, valueChanged: 0},
+    {focus: false, deltaY: -1.0, deltaMode: WheelEvent.DOM_DELTA_LINE, valueChanged: 0}
+  ];
+
+  let testIdx = 0;
+  let result = parseInt(input.value);
+  let rangeChange = 0;
+  let expectChange = 0;
+
+  input.addEventListener("change", () => {
+    ++rangeChange;
+  });
+
+  function runNext() {
+    let p = params[testIdx];
+    (p.focus) ? input.focus() : input.blur();
+    expectChange = p.valueChanged == 0 ? expectChange : expectChange + 1;
+    result += parseInt(p.valueChanged);
+    sendWheelAndPaint(input, 1, 1, { deltaY: p.deltaY, deltaMode: p.deltaMode }, () => {
+      ok(input.value == result,
+         "Handle wheel in range input test-" + testIdx + " expect " + result + " get " + input.value);
+      ok(rangeChange == expectChange,
+         "UA should fire change event when input's value changed, expect " + expectChange + " get " + rangeChange);
+      (++testIdx >= params.length) ? SimpleTest.finish() : runNext();
+    });
+  }
+
+  input.addEventListener("input", () => {
+    ok(input.value == result,
+       "Test-" + testIdx + " receive input event, expect " + result + " get " + input.value);
+  });
+
+  runNext();
+}
+
+</script>
+</body>
+</html>

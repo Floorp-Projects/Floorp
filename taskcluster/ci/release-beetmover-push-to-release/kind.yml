@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.beetmover_push_to_release:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-generate-checksums-beetmover
+    - post-update-verify-dummy
+
+job-defaults:
+    run-on-projects: []
+    shipping-phase: push
+
+jobs:
+    devedition-push-to-release:
+        name: devedition_push_to_release
+        product: devedition
+        shipping-product: devedition
+        treeherder-platform: devedition-release/opt
+
+    firefox-push-to-release:
+        name: firefox_push_to_release
+        product: firefox
+        shipping-product: firefox
+        treeherder-platform: firefox-release/opt

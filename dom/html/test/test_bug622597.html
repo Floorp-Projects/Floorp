@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=622597
+-->
+<head>
+  <title>Test for Bug 622597</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=622597">Mozilla Bug 622597</a>
+<p id="display"></p>
+<div id="content">
+  <form>
+    <input required>
+    <textarea required></textarea>
+    <select required><option value="">foo</option><option selected>bar</option></select>
+    <button>submit</button>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 622597 **/
+
+var form = document.forms[0];
+var input = form.elements[0];
+var textarea = form.elements[1];
+var select = form.elements[2];
+var button = form.elements[3];
+
+function checkPseudoClasses(aElement, aValid, aInvalid)
+{
+  is(aElement.matches(":-moz-ui-valid"), aValid,
+     aValid ? aElement + " should match :-moz-ui-valid"
+            : aElement + " should not match :-moz-ui-valid");
+  is(aElement.matches(":-moz-ui-invalid"), aInvalid,
+     aInvalid ? aElement + " should match :-moz-ui-invalid"
+              : aElement + " should not match :-moz-ui-invalid");
+  if (aValid && aInvalid) {
+    ok(false,
+       aElement +  " should not match :-moz-ui-valid AND :-moz-ui-invalid");
+  }
+}
+
+select.addEventListener("focus", function() {
+  SimpleTest.executeSoon(function() {
+    form.noValidate = false;
+    SimpleTest.executeSoon(function() {
+      checkPseudoClasses(select, false, true);
+      SimpleTest.finish();
+    });
+  });
+}, {once: true});
+
+textarea.addEventListener("focus", function() {
+  SimpleTest.executeSoon(function() {
+    form.noValidate = false;
+    SimpleTest.executeSoon(function() {
+      checkPseudoClasses(textarea, false, true);
+      form.noValidate = true;
+      select.selectedIndex = 0;
+      select.focus();
+    });
+  });
+}, {once: true});
+
+input.addEventListener("invalid", function() {
+  input.addEventListener("focus", function() {
+    SimpleTest.executeSoon(function() {
+      form.noValidate = false;
+      SimpleTest.executeSoon(function() {
+        checkPseudoClasses(input, false, true);
+        form.noValidate = true;
+        textarea.value = '';
+        textarea.focus();
+      });
+    });
+  }, {once: true});
+
+  SimpleTest.executeSoon(function() {
+    form.noValidate = true;
+    input.blur();
+    input.value = '';
+    input.focus();
+  });
+}, {once: true});
+
+button.addEventListener("focus", function() {
+  SimpleTest.executeSoon(function() {
+    synthesizeKey("KEY_Enter");
+  });
+}, {once: true});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  button.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    function check_styles() {
+      var redText = document.getElementById('red-text');
+      var blueText = document.getElementById('blue-text-element');
+      var blackText1 = document.getElementById('black-text');
+      var blackText2 = document.getElementById('black-text-2');
+      var redTextColor = window.getComputedStyle(redText).getPropertyValue('color');
+      var blueTextColor = window.getComputedStyle(blueText).getPropertyValue('color');
+      var blackTextColor1 = window.getComputedStyle(blackText1).getPropertyValue('color');
+      var blackTextColor2 = window.getComputedStyle(blackText2).getPropertyValue('color');
+      ok(redTextColor == 'rgb(255, 0, 0)', "The first part should be red.");
+      ok(blueTextColor == 'rgb(0, 0, 255)', "The second part should be blue.");
+      ok(blackTextColor1 == 'rgb(0, 0, 0)', "The second last part should still be black.");
+      ok(blackTextColor2 == 'rgb(0, 0, 0)', "The last part should still be black.");
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function() {
+      check_styles();
+      SimpleTest.finish();
+    }
+  </script>
+  <script>
+    function good_correctHashLoaded() {
+      ok(true, "A stylesheet was correctly loaded when integrity matched");
+    }
+    function bad_correctHashBlocked() {
+      ok(false, "We should load stylesheets with hashes that match!");
+    }
+
+    function good_emptyIntegrityLoaded() {
+      ok(true, "A stylesheet was correctly loaded when the integrity attribute was empty");
+    }
+    function bad_emptyIntegrityBlocked() {
+      ok(false, "We should load stylesheets with empty integrity attributes!");
+    }
+
+    function good_incorrectHashBlocked() {
+      ok(true, "A stylesheet was correctly blocked, because the hash digest was wrong");
+    }
+    function bad_incorrectHashLoaded() {
+      ok(false, "We should not load stylesheets with hashes that do not match the content!");
+    }
+
+    function good_validBlobLoaded() {
+      ok(true, "A stylesheet was loaded successfully from a blob: URL with the right hash.");
+    }
+    function bad_validBlobBlocked() {
+      ok(false, "We should load stylesheets using blob: URLs with the right hash!");
+    }
+    function good_invalidBlobBlocked() {
+      ok(true, "A stylesheet was blocked successfully from a blob: URL with an invalid hash.");
+    }
+    function bad_invalidBlobLoaded() {
+      ok(false, "We should not load stylesheets using blob: URLs when they have the wrong hash!");
+    }
+
+    function good_correctUTF8HashLoaded() {
+      ok(true, "A UTF8 stylesheet was correctly loaded when integrity matched");
+    }
+    function bad_correctUTF8HashBlocked() {
+      ok(false, "We should load UTF8 stylesheets with hashes that match!");
+    }
+    function good_correctUTF8BOMHashLoaded() {
+      ok(true, "A UTF8 stylesheet (with BOM) was correctly loaded when integrity matched");
+    }
+    function bad_correctUTF8BOMHashBlocked() {
+      ok(false, "We should load UTF8 (with BOM) stylesheets with hashes that match!");
+    }
+    function good_correctUTF8ishHashLoaded() {
+      ok(true, "A UTF8ish stylesheet was correctly loaded when integrity matched");
+    }
+    function bad_correctUTF8ishHashBlocked() {
+      ok(false, "We should load UTF8ish stylesheets with hashes that match!");
+    }
+  </script>
+
+  <!-- valid sha256 hash. should trigger onload -->
+  <link rel="stylesheet" href="style1.css"
+        integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
+        onerror="bad_correctHashBlocked()"
+        onload="good_correctHashLoaded()">
+
+  <!-- empty metadata. should trigger onload -->
+  <link rel="stylesheet" href="style2.css"
+        integrity=""
+        onerror="bad_emptyIntegrityBlocked()"
+        onload="good_emptyIntegrityLoaded()">
+
+  <!-- invalid sha256 hash. should trigger onerror -->
+  <link rel="stylesheet" href="style3.css"
+        integrity="sha256-bogus"
+        onerror="good_incorrectHashBlocked()"
+        onload="bad_incorrectHashLoaded()">
+
+  <!-- valid sha384 hash of a utf8 file. should trigger onload -->
+  <link rel="stylesheet" href="style4.css"
+        integrity="sha384-13rt+j7xMDLhohLukb7AZx8lDGS3hkahp0IoeuyvxSNVPyc1QQmTDcwXGhQZjoMH"
+        onerror="bad_correctUTF8HashBlocked()"
+        onload="good_correctUTF8HashLoaded()">
+
+  <!-- valid sha384 hash of a utf8 file with a BOM. should trigger onload -->
+  <link rel="stylesheet" href="style5.css"
+        integrity="sha384-udAqVKPIHf/OD1isAYKrgzsog/3Q6lSEL2nKhtLSTmHryiae0+y6x1akeTzEF446"
+        onerror="bad_correctUTF8BOMHashBlocked()"
+        onload="good_correctUTF8BOMHashLoaded()">
+
+  <!-- valid sha384 hash of a utf8 file with the wrong charset. should trigger onload -->
+  <link rel="stylesheet" href="style6.css"
+        integrity="sha384-Xli4ROFoVGCiRgXyl7y8jv5Vm2yuqj+8tkNL3cUI7AHaCocna75JLs5xID437W6C"
+        onerror="bad_correctUTF8ishHashBlocked()"
+        onload="good_correctUTF8ishHashLoaded()">
+</head>
+<body>
+
+<!-- valid sha256 for a blob: URL -->
+<script>
+   var blob = new Blob(['.blue-text{color:blue}'],
+                       {type: 'text/css'});
+   var link = document.createElement('link');
+   link.rel = 'stylesheet';
+   link.href = window.URL.createObjectURL(blob);
+   link.setAttribute('integrity', 'sha256-/F+EMVnTWYJOAzN5n7/21idiydu6nRi33LZOISZtwOM=');
+   link.onerror = bad_validBlobBlocked;
+   link.onload = good_validBlobLoaded;
+   document.body.appendChild(link);
+</script>
+
+<!-- invalid sha256 for a blob: URL -->
+<script>
+   var blob = new Blob(['.black-text{color:blue}'],
+                       {type: 'text/css'});
+   var link = document.createElement('link');
+   link.rel = 'stylesheet';
+   link.href = window.URL.createObjectURL(blob);
+   link.setAttribute('integrity', 'sha256-/F+EMVnTWYJOAzN5n7/21idiydu6nRi33LZOISZtwOM=');
+   link.onerror = good_invalidBlobBlocked;
+   link.onload = bad_invalidBlobLoaded;
+   document.body.appendChild(link);
+</script>
+
+<p><span id="red-text">This should be red </span>,
+  <span id="purple-text">this should be purple</span>,
+  <span id="brown-text">this should be brown</span>,
+  <span id="orange-text">this should be orange</span>, and
+  <span class="blue-text" id="blue-text-element">this should be blue.</span>
+  However, <span id="black-text">this should stay black</span> and
+  <span class="black-text" id="black-text-2">this should also stay black.</span>
+</p>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

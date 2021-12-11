@@ -1,0 +1,29 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the "xlink:href" &lt;string&gt; attribute on the "use" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <defs>
+    <symbol id="sym1">
+      <rect x="20" y="150" width="440" height="80" fill="red" />
+    </symbol>
+    <symbol id="sym2">
+      <rect x="20" y="150" width="440" height="80" fill="lime" />
+    </symbol>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <use xlink:href="#sym1">
+    <animate attributeName="xlink:href"
+     calcMode="discrete"
+     begin="0s" dur="0.5s"
+     from="#sym1" to="#sym2"
+     fill="freeze"/>
+  </use>
+
+</svg>

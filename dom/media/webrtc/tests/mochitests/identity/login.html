@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Identity Provider Login</title>
+  <script type="application/javascript">
+  window.onload = () => {
+    var xhr = new XMLHttpRequest();
+    xhr.open("PUT", "https://example.com/.well-known/idp-proxy/idp.sjs?" +
+             window.location.hash.replace('#', ''));
+    xhr.onload = () => {
+      var isFramed = (window !== window.top);
+      var parent = isFramed ? window.parent : window.opener;
+      // Using '*' is cheating, but that's OK.
+      parent.postMessage('LOGINDONE', '*');
+      var done = document.createElement('div');
+
+      done.textContent = 'Done';
+      document.body.appendChild(done);
+
+      if (!isFramed) {
+        window.close();
+      }
+    };
+    xhr.send();
+  };
+  </script>
+</head>
+<body>
+  <div>Logging in...</div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+namespace mozilla {
+namespace dom {
+class ContentParent;
+class JSActorManager;
+} // namespace dom
+} // namespace mozilla
+%}
+[ptr] native ContentParentPtr(mozilla::dom::ContentParent);
+[ptr] native JSActorManagerPtr(mozilla::dom::JSActorManager);
+
+webidl JSProcessActorParent;
+
+/**
+ * Parent actor interface for a process which can host DOM content.
+ *
+ * Implemented by either `InProcessParent` for the parent process, or
+ * `ContentParent` for a content process.
+ */
+[scriptable, builtinclass, uuid(81fc08b9-c901-471f-ab0d-876362eba770)]
+interface nsIDOMProcessParent: nsISupports {
+  /**
+   * Internal child process ID. `0` is reserved for the parent process.
+   */
+  [infallible] readonly attribute unsigned long long childID;
+
+  /**
+   * OS ID of the process.
+   */
+  [infallible] readonly attribute long osPid;
+
+  /**
+   * Lookup a JSProcessActorParent managed by this interface by name.
+   */
+  [implicit_jscontext] JSProcessActorParent getActor(in ACString name);
+  JSProcessActorParent getExistingActor(in ACString name);
+
+  /** Can the actor still send messages? */
+  [infallible] readonly attribute boolean canSend;
+
+  [notxpcom, nostdcall] ContentParentPtr AsContentParent();
+
+  /** Cast this nsIDOMProcessParent to a JSActorManager */
+  [notxpcom, nostdcall] JSActorManagerPtr AsJSActorManager();
+
+  /**
+   * Remote type of the process.
+   */
+  readonly attribute ACString remoteType;
+};

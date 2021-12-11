@@ -1,0 +1,1171 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tree Don't auto expand root with very large number of children 1`] = `
+Array [
+  "key-A",
+  "key-B",
+  "key-E",
+  "key-F",
+  "key-G",
+  "key-C",
+  "key-H",
+  "key-I",
+  "key-D",
+  "key-J",
+  "key-M",
+  "key-N",
+]
+`;
+
+exports[`Tree active item - focus is inside the tree node and then blur 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L anchor]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - focus is inside the tree node when possible 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L anchor]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - focus is inside the tree node when possible 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L anchor]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - navigate inside the tree node 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L anchor]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - navigate inside the tree node 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L anchor]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - navigate inside the tree node 3`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L anchor]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - renders as expected when clicking away 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    [G]
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - renders as expected when clicking away 2`] = `
+"
+▶︎ [A]
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - renders as expected when moving away with keyboard 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - renders as expected when tree blurs 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    [G]
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - renders as expected when tree blurs 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    [G]
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - renders as expected when using keyboard and Enter 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree active item - renders as expected when using keyboard and Space 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree calls shouldItemUpdate when provided 1`] = `
+"
+▶︎ A
+▶︎ M
+"
+`;
+
+exports[`Tree calls shouldItemUpdate when provided 2`] = `
+"
+▶︎ A
+▶︎ M
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 3`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 4`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 5`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 6`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 7`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 8`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 9`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 10`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 11`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 12`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 13`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 14`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 15`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 16`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree ignores key strokes when pressing modifiers 17`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders arrows as expected when nodes are collapsed 1`] = `
+"
+▶︎ A
+▶︎ M
+"
+`;
+
+exports[`Tree renders arrows as expected when nodes are expanded 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected navigating down with keyboard on last node 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    [O]
+"
+`;
+
+exports[`Tree renders as expected navigating down with keyboard on last node 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    [O]
+"
+`;
+
+exports[`Tree renders as expected navigating up with the keyboard on a root 1`] = `
+"
+▼ [A]
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected navigating up with the keyboard on a root 2`] = `
+"
+▼ [A]
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected navigating with arrows on unexpandable roots 1`] = `
+"
+  [A]
+  M
+"
+`;
+
+exports[`Tree renders as expected navigating with arrows on unexpandable roots 2`] = `
+"
+  A
+  [M]
+"
+`;
+
+exports[`Tree renders as expected navigating with arrows on unexpandable roots 3`] = `
+"
+  [A]
+  M
+"
+`;
+
+exports[`Tree renders as expected when given a focused item 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    [G]
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when given a focused item 2`] = `
+"
+▶︎ [A]
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when given a focused item 3`] = `
+"
+▼ [A]
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when given a focused item 4`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating down with the keyboard 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    [K]
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating down with the keyboard 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating down with the keyboard 3`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    L
+|  |    [F]
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating up with the keyboard 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating up with the keyboard 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    [K]
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating up with the keyboard 3`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ [E]
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 1`] = `
+"
+▶︎ A
+▶︎ [M]
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 2`] = `
+"
+▶︎ [A]
+▶︎ M
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 3`] = `
+"
+▶︎ [A]
+▶︎ M
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 4`] = `
+"
+▶︎ A
+▶︎ [M]
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 5`] = `
+"
+▶︎ A
+▶︎ [M]
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 6`] = `
+"
+▶︎ A
+▼ [M]
+|  ▶︎ N
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 7`] = `
+"
+▶︎ A
+▼ M
+|  ▶︎ [N]
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 8`] = `
+"
+▶︎ A
+▼ M
+|  ▶︎ [N]
+"
+`;
+
+exports[`Tree renders as expected when navigating with home/end 9`] = `
+"
+▶︎ [A]
+▼ M
+|  ▶︎ N
+"
+`;
+
+exports[`Tree renders as expected when navigating with left arrows on roots 1`] = `
+"
+▶︎ A
+▶︎ [M]
+"
+`;
+
+exports[`Tree renders as expected when navigating with left arrows on roots 2`] = `
+"
+▶︎ [A]
+▶︎ M
+"
+`;
+
+exports[`Tree renders as expected when navigating with left arrows on roots 3`] = `
+"
+▶︎ [A]
+▶︎ M
+"
+`;
+
+exports[`Tree renders as expected when navigating with right/left arrows 1`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    K
+|  |  |    [L]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating with right/left arrows 2`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ [E]
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating with right/left arrows 3`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▶︎ [E]
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating with right/left arrows 4`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ [E]
+|  |  |    K
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when navigating with right/left arrows 5`] = `
+"
+▼ A
+|  ▼ B
+|  |  ▼ E
+|  |  |    [K]
+|  |  |    L
+|  |    F
+|  |    G
+|  ▼ C
+|  |    H
+|  |    I
+|  ▼ D
+|  |    J
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree renders as expected when passed autoDepth:1 1`] = `
+"
+▼ A
+|  ▶︎ B
+|  ▶︎ C
+|  ▶︎ D
+▼ M
+|  ▶︎ N
+"
+`;
+
+exports[`Tree renders as expected with collapsed nodes 1`] = `
+"
+▶︎ A
+▼ M
+|  ▼ N
+|  |    O
+"
+`;
+
+exports[`Tree uses isExpandable prop if it exists to render tree nodes 1`] = `
+"
+▶︎ A
+  M
+"
+`;

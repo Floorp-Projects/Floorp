@@ -1,0 +1,213 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISerialEventTarget.idl"
+
+%{C++
+#include "mozilla/AlreadyAddRefed.h"
+namespace mozilla {
+class TimeStamp;
+class TimeDurationValueCalculator;
+template <typename T> class BaseTimeDuration;
+typedef BaseTimeDuration<TimeDurationValueCalculator> TimeDuration;
+enum class EventQueuePriority;
+}
+%}
+
+[ptr] native PRThread(PRThread);
+native EventQueuePriority(mozilla::EventQueuePriority);
+
+native nsIEventTargetPtr(nsIEventTarget*);
+native nsISerialEventTargetPtr(nsISerialEventTarget*);
+native TimeStamp(mozilla::TimeStamp);
+native TimeDuration(mozilla::TimeDuration);
+
+/**
+ * This interface provides a high-level abstraction for an operating system
+ * thread.
+ *
+ * Threads have a built-in event queue, and a thread is an event target that
+ * can receive nsIRunnable objects (events) to be processed on the thread.
+ *
+ * See nsIThreadManager for the API used to create and locate threads.
+ */
+[builtinclass, scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
+interface nsIThread : nsISerialEventTarget
+{
+  /**
+   * @returns
+   *   The NSPR thread object corresponding to this nsIThread.
+   */
+  [noscript] readonly attribute PRThread PRThread;
+
+  /**
+   * @returns
+   *  Whether or not this thread may call into JS. Used in the profiler
+   *  to avoid some unnecessary locking.
+   */
+  [noscript] attribute boolean CanInvokeJS;
+
+
+  /**
+   * Shutdown the thread.  This method prevents further dispatch of events to
+   * the thread, and it causes any pending events to run to completion before
+   * the thread joins (see PR_JoinThread) with the current thread.  During this
+   * method call, events for the current thread may be processed.
+   *
+   * This method MAY NOT be executed from the thread itself.  Instead, it is
+   * meant to be executed from another thread (usually the thread that created
+   * this thread or the main application thread).  When this function returns,
+   * the thread will be shutdown, and it will no longer be possible to dispatch
+   * events to the thread.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   the current thread, that this thread was not created with a call to
+   *   nsIThreadManager::NewThread, or if this method was called more than once
+   *   on the thread object.
+   */
+  void shutdown();
+
+  /**
+   * This method may be called to determine if there are any events ready to be
+   * processed.  It may only be called when this thread is the current thread.
+   *
+   * Because events may be added to this thread by another thread, a "false"
+   * result does not mean that this thread has no pending events.  It only
+   * means that there were no pending events when this method was called.
+   *
+   * @returns
+   *   A boolean value that if "true" indicates that this thread has one or
+   *   more pending events.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   not the current thread.
+   */
+  boolean hasPendingEvents();
+
+  /**
+   * Similar to above, but checks only possible high priority queue.
+   */
+  boolean hasPendingHighPriorityEvents();
+
+  /**
+   * Process the next event.  If there are no pending events, then this method
+   * may wait -- depending on the value of the mayWait parameter -- until an
+   * event is dispatched to this thread.  This method is re-entrant but may
+   * only be called if this thread is the current thread.
+   *
+   * @param mayWait
+   *   A boolean parameter that if "true" indicates that the method may block
+   *   the calling thread to wait for a pending event.
+   *
+   * @returns
+   *   A boolean value that if "true" indicates that an event was processed.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   not the current thread.
+   */
+  boolean processNextEvent(in boolean mayWait);
+
+  /**
+   * Shutdown the thread asynchronously.  This method immediately prevents
+   * further dispatch of events to the thread, and it causes any pending events
+   * to run to completion before this thread joins with the current thread.
+   *
+   * UNLIKE shutdown() this does not process events on the current thread.
+   * Instead it merely ensures that the current thread continues running until
+   * this thread has shut down.
+   *
+   * This method MAY NOT be executed from the thread itself.  Instead, it is
+   * meant to be executed from another thread (usually the thread that created
+   * this thread or the main application thread).  When this function returns,
+   * the thread will continue running until it exhausts its event queue.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   the current thread, that this thread was not created with a call to
+   *   nsIThreadManager::NewThread, or if this method was called more than once
+   *   on the thread object.
+   */
+  void asyncShutdown();
+
+  /**
+   * Dispatch an event to a specified queue for the thread.  This function
+   * may be called from any thread, and it may be called re-entrantly.
+   * Most users should use the NS_Dispatch*() functions in nsThreadUtils instead
+   * of calling this directly.
+   *
+   * @param event
+   *   The alreadyAddRefed<> event to dispatch.
+   *   NOTE that the event will be leaked if it fails to dispatch.
+   * @param queue
+   *   Which event priority queue this should be added to
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched.
+   */
+  [noscript] void dispatchToQueue(in alreadyAddRefed_nsIRunnable event,
+                                  in EventQueuePriority queue);
+
+  /**
+   * Use this attribute to dispatch runnables to the thread. Eventually, the
+   * eventTarget attribute will be the only way to dispatch events to a
+   * thread--nsIThread will no longer inherit from nsIEventTarget.
+   */
+  readonly attribute nsIEventTarget eventTarget;
+
+  /**
+   * A fast C++ getter for the eventTarget.
+   */
+  [noscript,notxpcom] nsIEventTargetPtr EventTarget();
+
+  /**
+   * A fast C++ getter for the eventTarget. It asserts that the thread's event
+   * target is an nsISerialEventTarget and then returns it.
+   */
+  [noscript,notxpcom] nsISerialEventTargetPtr SerialEventTarget();
+
+  /**
+   * This is set to the end of the last 50+ms event that was executed on
+   * this thread (for MainThread only).  Otherwise returns a null TimeStamp.
+   */
+  [noscript] readonly attribute TimeStamp lastLongTaskEnd;
+  [noscript] readonly attribute TimeStamp lastLongNonIdleTaskEnd;
+
+  /**
+   * Get information on the timing of the currently-running event.
+   *
+   * @param delay
+   *   The amount of time the current running event in the specified queue waited
+   *   to run. Will return TimeDuration() if the queue is empty or has not run any
+   *   new events since event delay monitoring started.  NOTE: delay will be
+   *   TimeDuration() if this thread uses a PrioritizedEventQueue (i.e. MainThread)
+   *   and the event priority is below Input.
+   * @param start
+   *   The time the currently running event began to run, or TimeStamp() if no
+   *   event is running.
+   */
+  [noscript] void getRunningEventDelay(out TimeDuration delay, out TimeStamp start);
+
+  /**
+   * Set information on the timing of the currently-running event.
+   * Overrides the values returned by getRunningEventDelay
+   *
+   * @param delay
+   *   Delay the running event spent in queues, or TimeDuration() if
+   *   there's no running event.
+   * @param start
+   *   The time the currently running event began to run, or TimeStamp() if no
+   *   event is running.
+   */
+  [noscript] void setRunningEventDelay(in TimeDuration delay, in TimeStamp start);
+
+  [noscript] void setNameForWakeupTelemetry(in ACString name);
+};

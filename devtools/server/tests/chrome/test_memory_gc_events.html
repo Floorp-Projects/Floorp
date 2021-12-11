@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1137527 - Test receiving GC events from the memory actor.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  const EventEmitter = require("devtools/shared/event-emitter");
+
+  (async function() {
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
+
+    const gotGcEvent = new Promise(resolve => {
+      EventEmitter.on(memory, "garbage-collection", gcData => {
+        ok(gcData, "Got GC data");
+        resolve();
+      });
+    });
+
+    memory.forceGarbageCollection();
+    await gotGcEvent;
+
+    await memory.detach();
+    destroyServerAndFinish(target);
+  })();
+};
+</script>
+</pre>
+</body>
+</html>

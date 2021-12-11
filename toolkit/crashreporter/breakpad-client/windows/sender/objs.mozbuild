@@ -1,0 +1,14 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+lobjs_sender = [
+    'crash_report_sender.cc',
+]
+
+subdir = 'toolkit/crashreporter/breakpad-client/windows/sender'
+objs_sender = [
+    '/%s/%s' % (subdir, s) for s in lobjs_sender
+]

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that FormLike.rootElement points to right element when the page has Shadow DOM</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe></iframe>
+
+<script type="application/javascript">
+const { LoginFormFactory } = SpecialPowers.Cu.import("resource://gre/modules/LoginFormFactory.jsm", {});
+
+add_task(async function setup() {
+  const readyPromise = registerRunTests();
+  info("Waiting for setup and page load");
+  await readyPromise;
+
+  // assert that there are no logins
+  const allLogins = await LoginManager.getAllLogins();
+  is(allLogins.length, 0, "There are no logins");
+});
+
+const IFRAME = document.querySelector("iframe");
+const TESTCASES = [
+  // Check that the Shadow DOM version of form_basic.html works
+  {
+    name: "test_form_each_field_in_its_own_shadow_root",
+    filename: "form_basic_shadow_DOM_each_field_in_its_own_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#wrapper-password", "form"]],
+  },
+  {
+    name: "test_form_both_fields_together_in_a_shadow_root",
+    filename: "form_basic_shadow_DOM_both_fields_together_in_a_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#wrapper-un-and-pw", "form"]],
+  },
+  {
+    name: "test_form_form_and_fields_together_in_a_shadow_root",
+    filename: "form_basic_shadow_DOM_form_and_fields_together_in_a_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#wrapper", "form"]],
+  },
+  // Check that the Shadow DOM version of formless_basic.html works
+  {
+    name: "test_formless_each_field_in_its_own_shadow_root",
+    filename: "formless_basic_shadow_DOM_each_field_in_its_own_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#wrapper-password", "html"]],
+  },
+  {
+    name: "test_formless_both_fields_together_in_a_shadow_root",
+    filename: "formless_basic_shadow_DOM_both_fields_together_in_a_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#wrapper-un-and-pw", "html"]],
+  },
+  {
+    name: "test_formless_form_and_fields_together_in_a_shadow_root.html",
+    filename: "formless_basic_shadow_DOM_form_and_fields_together_in_a_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#wrapper", "html"]],
+  },
+  // Check that the nested Shadow DOM version of form_basic.html works
+  {
+    name: "test_form_nested_each_field_in_its_own_shadow_root",
+    filename: "form_nested_shadow_DOM_each_field_in_its_own_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#wrapper-password", "form"]],
+    outerHostElementSelector: "span#outer-wrapper-password",
+  },
+  {
+    name: "test_form_nested_both_fields_together_in_a_shadow_root",
+    filename: "form_nested_shadow_DOM_both_fields_together_in_a_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#inner-wrapper", "form"]],
+    outerHostElementSelector: "span#outer-wrapper",
+  },
+  {
+    name: "test_form_nested_form_and_fields_together_in_a_shadow_root",
+    filename: "form_nested_shadow_DOM_form_and_fields_together_in_a_shadow_root.html",
+    hostAndRootElementSelectorTuples: [["span#inner-wrapper", "form"]],
+    outerHostElementSelector: "span#outer-wrapper",
+  },
+  {
+    name: "test_multiple_forms_shadow_DOM_all_known_variants",
+    filename: "multiple_forms_shadow_DOM_all_known_variants.html",
+    hostAndRootElementSelectorTuples: [
+      ["span#outer-wrapper", "html"],
+      ["span#wrapper-password-form-case-1", "form#form-case-1"],
+      ["span#wrapper-form-case-2", "form#form-case-2"],
+      ["span#wrapper-form-case-3", "form#form-case-3"],
+    ],
+    outerHostElementSelector: "span#outer-wrapper",
+  }
+];
+
+async function testForm(testcase) {
+  const iframeLoaded = new Promise(resolve => {
+    IFRAME.addEventListener(
+      "load",
+      function(e) {
+        resolve(true);
+      },
+      { once: true }
+    );
+  });
+
+  // This could complete before the page finishes loading.
+  const numForms = testcase.hostAndRootElementSelectorTuples.length;
+  const formsProcessed = promiseFormsProcessedInSameProcess(numForms);
+
+  IFRAME.src = testcase.filename;
+  info("Waiting for test page to load in the iframe");
+  await iframeLoaded;
+
+  info(`Wait for ${numForms} form(s) to be processed.`);
+  await formsProcessed;
+
+  const iframeDoc = SpecialPowers.wrap(IFRAME.contentWindow).document;
+  for (let [hostElementSelector, rootElementSelector] of testcase.hostAndRootElementSelectorTuples) {
+    info("Get the expected rootElement from the document");
+    let hostElement = iframeDoc.querySelector(hostElementSelector);
+    let outerShadowRoot = null;
+    if (!hostElement) {
+      // Nested Shadow DOM testcase
+      const outerHostElement = iframeDoc.querySelector(testcase.outerHostElementSelector);
+      outerShadowRoot = outerHostElement.openOrClosedShadowRoot;
+      hostElement = outerShadowRoot.querySelector(hostElementSelector);
+    }
+    const shadowRoot = hostElement.openOrClosedShadowRoot;
+    let expectedRootElement = iframeDoc.querySelector(rootElementSelector);
+    if (!expectedRootElement) {
+      // The form itself is inside a ShadowRoot and/or there is a ShadowRoot in between the field and form
+      expectedRootElement =
+        shadowRoot.querySelector(rootElementSelector) ||
+        outerShadowRoot.querySelector(rootElementSelector);
+    }
+    ok(LoginFormFactory.getRootElementsWeakSetForDocument(iframeDoc).has(expectedRootElement), "Ensure formLike.rootElement has the expected value");
+  }
+}
+
+for (let testcase of TESTCASES) {
+  const taskName = testcase.name;
+  const tmp = {
+    async [taskName]() {
+      await testForm(testcase);
+    }
+  }
+  add_task(tmp[taskName]);
+}
+</script>
+</body>
+</html>

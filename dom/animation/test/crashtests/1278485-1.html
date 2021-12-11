@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  document.body.animate([],
+                        { duration: 6,
+                          easing: "cubic-bezier(0, -1e+39, 0, 0)" });
+  document.body.animate([],
+                        { duration: 6,
+                          easing: "cubic-bezier(0, 1e+39, 0, 0)" });
+  document.body.animate([],
+                        { duration: 6,
+                          easing: "cubic-bezier(0, 0, 0, -1e+39)" });
+  document.body.animate([],
+                        { duration: 6,
+                          easing: "cubic-bezier(0, 0, 0, 1e+39)" });
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

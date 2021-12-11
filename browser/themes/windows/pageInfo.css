@@ -1,0 +1,178 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import "chrome://global/skin/global.css";
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+#topBar {
+  -moz-window-dragging: drag;
+  border-bottom: 1px solid ThreeDLightShadow;
+  padding-inline-start: 10px;
+  background-color: Field;
+  color: FieldText;
+}
+
+/* View buttons */
+#viewGroup {
+  padding-inline-start: 10px;
+}
+
+#viewGroup > radio {
+  list-style-image: url("chrome://browser/skin/pageInfo.png");
+  appearance: none;
+  min-width: 4.5em;
+  margin: 0;
+  padding: 3px;
+}
+
+#viewGroup > radio:hover {
+  background-color: #E0E8F6;
+  color: black;
+}
+
+#viewGroup > radio[selected="true"] {
+  background-color: #C1D2EE;
+  color: black;
+}
+
+#viewGroup > radio > .radio-label-box {
+  margin: 0;
+  padding: 0 6px;
+}
+
+#generalTab {
+  -moz-image-region: rect(0px, 32px, 32px, 0px)
+}
+
+#generalTab:hover,
+#generalTab[selected="true"] {
+  -moz-image-region: rect(32px, 32px, 64px, 0px)
+}
+
+#mediaTab {
+  -moz-image-region: rect(0px, 64px, 32px, 32px)
+}
+
+#mediaTab:hover,
+#mediaTab[selected="true"] {
+  -moz-image-region: rect(32px, 64px, 64px, 32px)
+}
+
+#permTab {
+  -moz-image-region: rect(0px, 128px, 32px, 96px)
+}
+
+#permTab:hover,
+#permTab[selected="true"] {
+  -moz-image-region: rect(32px, 128px, 64px, 96px)
+}
+
+#securityTab {
+  -moz-image-region: rect(0px, 160px, 32px, 128px)
+}
+
+#securityTab:hover,
+#securityTab[selected="true"] {
+  -moz-image-region: rect(32px, 160px, 64px, 128px)
+}
+
+#mainDeck {
+  padding: 10px;
+}
+
+/* Misc */
+tree {
+  margin: .5em;
+}
+
+html|input {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+html|input.header {
+  margin-inline-start: 0;
+}
+
+#imagecontainerbox {
+  margin: .5em;
+  background: white;
+  overflow: auto;
+  border: 1px solid ThreeDLightShadow;
+}
+
+html|input:disabled {
+  font-style: italic;
+}
+
+/* General Tab */
+
+#securityBox description {
+  margin-inline-start: 10px;
+}
+
+#general-security-identity {
+  white-space: pre-wrap;
+  line-height: 2em;
+}
+
+/* Media Tab */
+#imagetree {
+  min-height: 10em;
+  margin-bottom: 0;
+}
+
+#mediaSplitter {
+  border-style: none;
+  background: none;
+  height: .8em;
+}
+
+#mediaTable {
+  margin-bottom: 2em;
+}
+
+#mediaLabelColumn {
+  min-width: 10em;
+}
+
+#thepreviewimage {
+  margin: 1em;
+}
+
+treechildren::-moz-tree-cell-text(broken) {
+  font-style: italic;
+  color: graytext;
+}
+
+/* Permissions Tab */
+#permList {
+  margin: .5em;
+  overflow: auto;
+  appearance: auto;
+  -moz-default-appearance: listbox;
+  color: FieldText;
+}
+
+.permission {
+  padding: 6px 7px;
+  min-height: 25px;
+  border-bottom: 1px dotted ThreeDShadow;
+}
+
+.permissionLabel {
+  font-weight: bold;
+}
+
+.permission:hover {
+  background-color: -moz-dialog;
+  color: -moz-dialogText;
+}
+
+/* Security Tab */
+
+#securityPanel table {
+  margin-bottom: 1em;
+}

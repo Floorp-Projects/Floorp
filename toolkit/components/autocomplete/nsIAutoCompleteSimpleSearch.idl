@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAutoCompleteSearch.idl"
+
+/*
+ * Simple interface that allows the results of the next search to be overridden.
+ */
+[scriptable, uuid(dc185a77-ba88-4caa-8f16-465253f7599a)]
+interface nsIAutoCompleteSimpleSearch : nsIAutoCompleteSearch
+{
+  /**
+   * Sets the result that should be used next time `startSearch` is called.
+   */
+  void overrideNextResult(in nsIAutoCompleteResult values);
+};

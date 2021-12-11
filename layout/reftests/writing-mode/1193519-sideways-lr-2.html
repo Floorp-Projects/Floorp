@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+div { padding: 5px; display: inline-block; }
+.vlr { writing-mode: vertical-lr; text-orientation: sideways; }
+.vrl { writing-mode: vertical-rl; text-orientation: sideways; }
+.slr { writing-mode: sideways-lr; }
+.srl { writing-mode: sideways-rl; }
+span { display: inline-block; block-size: 2em; vertical-align: middle; }
+span:nth-child(1) { background: red;    inline-size: 1em; }
+span:nth-child(2) { background: orange; inline-size: 1.1em; }
+span:nth-child(3) { background: yellow; inline-size: 1.3em; }
+span:nth-child(4) { background: green;  inline-size: 1.5em; }
+span:nth-child(5) { background: blue;   inline-size: 1.7em; }
+span:nth-child(6) { background: indigo; inline-size: 1.9em; }
+span:nth-child(7) { background: violet; inline-size: 2em; }
+</style>
+</head>
+
+<body>
+
+<p>All four columns should look the same:
+<div dir=rtl class="vrl"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+<div dir=rtl class="vlr"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+<div dir=rtl class="srl"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+<div dir=ltr class="slr"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>

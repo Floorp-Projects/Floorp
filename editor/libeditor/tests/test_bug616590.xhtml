@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=616590
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 616590" onload="runTest();">
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=616590"
+     target="_blank">Mozilla Bug 616590</a>
+  <p/>
+  <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          id="editor"
+          type="content"
+          editortype="htmlmail"
+          style="width: 400px; height: 100px;"/>
+  <p/>
+  <pre id="test">
+  </pre>
+  </body>
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  function EditorContentListener(aEditor)
+  {
+    this.init(aEditor);
+  }
+
+  EditorContentListener.prototype = {
+    init(aEditor)
+    {
+      this.mEditor = aEditor;
+    },
+
+    QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                            "nsISupportsWeakReference"]),
+
+    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
+    {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
+      {
+        var editor = this.mEditor.getEditor(this.mEditor.contentWindow);
+        if (editor) {
+          editor.QueryInterface(Ci.nsIEditorMailSupport);
+          editor.insertAsCitedQuotation("<html><body><div contenteditable>foo</div></body></html>", "", true);
+          document.documentElement.clientWidth;
+          progress.removeProgressListener(this);
+          ok(true, "Test complete");
+          SimpleTest.finish();
+        }
+      }
+    },
+
+
+    onProgressChange(aWebProgress, aRequest,
+                                aCurSelfProgress, aMaxSelfProgress,
+                                aCurTotalProgress, aMaxTotalProgress)
+    {
+    },
+
+    onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
+    {
+    },
+
+    onStatusChange(aWebProgress, aRequest, aStatus, aMessage)
+    {
+    },
+
+    onSecurityChange(aWebProgress, aRequest, aState)
+    {
+    },
+
+    onContentBlockingEvent(aWebProgress, aRequest, aEvent)
+    {
+    },
+
+    mEditor: null
+  };
+
+  var progress, progressListener;
+
+  function runTest() {
+    var editorElement = document.getElementById("editor");
+    editorElement.makeEditable("htmlmail", true);
+    var docShell = editorElement.docShell;
+    progress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
+    progressListener = new EditorContentListener(editorElement);
+    progress.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);
+    editorElement.setAttribute("src", "data:text/html,");
+  }
+]]>
+</script>
+</window>

@@ -1,0 +1,24 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <title>Testcase: foreignObject should clip its content</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=378897 -->
+
+  <rect width="100%" height="100%" fill="red"/>
+
+  <!-- Create the "pass" rect using a foreignObject so the testcase doesn't
+       seem to pass if foreignObject is not supported -->
+  <foreignObject width="100%" height="100%">
+    <html:div style="display:block; height:100%; width:100%; background: lime;"/>
+  </foreignObject>
+
+  <!-- test 'overflow' -->
+  <foreignObject x="-10" y="-10" width="10" height="10">
+    <html:div style="display:block; height:10000px; width:10000px; background:red;"/>
+  </foreignObject>
+
+</svg>

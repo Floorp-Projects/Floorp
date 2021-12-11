@@ -1,0 +1,14 @@
+[package]
+name = "l10nregistry-ffi-gtest"
+version = "0.1.0"
+authors = ["nobody@mozilla.org"]
+license = "MPL-2.0"
+description = "Tests for rust bindings to l10nRegistry"
+edition = "2018"
+
+[dependencies]
+l10nregistry-ffi = { path = "../l10nregistry-ffi" }
+moz_task = { path = "../../../../xpcom/rust/moz_task" }
+
+[lib]
+path = "test.rs"

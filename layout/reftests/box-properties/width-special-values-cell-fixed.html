@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>max-content, min-content, -moz-fit-content, and -moz-available values of CSS width property, on table cells with table-layout: fixed</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+    body { font-size: 10px; line-height: 1; }
+
+    td table { table-layout: fixed; width: 200px; }
+    td td:first-child {
+      border-left: 1px solid;
+      padding-left: 2px;
+      padding-right: 4px;
+      border-right: 8px solid;
+
+      background: yellow;
+    }
+
+  </style>
+</head>
+<body>
+
+<table border><tr>
+<td>
+<!-- width -->
+<table border><tr><td style="width: max-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: min-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: -moz-fit-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: -moz-available">A B</td><td></td></tr></table>
+
+</td>
+<td>
+<!-- min-width -->
+
+<table border><tr><td style="min-width: max-content">A B</td><td></td></tr></table>
+<table border><tr><td style="min-width: min-content">A B</td><td></td></tr></table>
+<table border><tr><td style="min-width: -moz-fit-content">A B</td><td></td></tr></table>
+<table border><tr><td style="min-width: -moz-available">A B</td><td></td></tr></table>
+
+<table border><tr><td style="width: 1px; min-width: max-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: 1px; min-width: min-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: 1px; min-width: -moz-fit-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: 1px; min-width: -moz-available">A B</td><td></td></tr></table>
+
+</td>
+<td>
+<!-- max-width -->
+
+<table border><tr><td style="max-width: max-content">A B</td><td></td></tr></table>
+<table border><tr><td style="max-width: min-content">A B</td><td></td></tr></table>
+<table border><tr><td style="max-width: -moz-fit-content">A B</td><td></td></tr></table>
+<table border><tr><td style="max-width: -moz-available">A B</td><td></td></tr></table>
+
+<table border><tr><td style="width: 150px; max-width: max-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: 150px; max-width: min-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: 150px; max-width: -moz-fit-content">A B</td><td></td></tr></table>
+<table border><tr><td style="width: 150px; max-width: -moz-available">A B</td><td></td></tr></table>
+
+
+</td>
+</tr></table>
+
+
+</body>
+</html>

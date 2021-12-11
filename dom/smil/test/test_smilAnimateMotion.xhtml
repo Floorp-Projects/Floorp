@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=436418
+-->
+<head>
+  <title>Test for animateMotion behavior</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <script type="text/javascript" src="db_smilAnimateMotion.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=436418">Mozilla Bug 436418</a>
+<p id="display"></p>
+<div id="content" style="visibility: hidden">
+
+<!-- NOTE: Setting font-size so we can test 'em' units -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="200px" height="200px" style="font-size: 500px"
+     onload="this.pauseAnimations()">
+  <!-- XXXdholbert Right now, 'em' conversions are correct if we set font-size
+       on rect using the inline style attr. However, if we use 'font-size' attr,
+       then 'em' units end up using the inherited font-size instead. Bug? -->
+  <rect x="20" y="20" width="200" height="200" style="font-size: 10px"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  // Start out with document paused
+  var svg = SMILUtil.getSVGRoot();
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  var timingData = new SMILTimingData(1.0, 6.0);
+  testBundleList(gMotionBundles, timingData);
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

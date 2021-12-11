@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1637135
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=400px">
+  <title>Test for Bug 1637135</title>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <style>
+    #target {
+      margin-left: 450px;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div id="target">
+  <script type="application/javascript">
+
+async function test() {
+  // Tap the target element, which is located beyond x=400.
+  // The bug occurs when we cannot hit it because the viewport
+  // width of x=400 causes us to be unable to hit elements
+  // beyond that point.
+  let target = document.getElementById("target");
+  let mouseDownEvent = null;
+  let mouseDownPromise = new Promise(resolve => {
+    target.addEventListener("mousedown", function(e) {
+      mouseDownEvent = e;
+      resolve();
+    });
+  });
+
+  synthesizeNativeTap(target, 10, 10);
+  await mouseDownPromise;
+
+  is(mouseDownEvent.target, target, "mousedown event targeted the correct element");
+}
+
+if (getPlatform() == "android") {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+} else {
+  // The fix for bug 1637135 is limited to Android, because
+  // it breaks the ability to target scrollbars, so we can
+  // only run this test on Android.
+  ok(true, "This subtest is only run on Android");
+  subtestDone();
+}
+
+  </script>
+</body>
+</html>

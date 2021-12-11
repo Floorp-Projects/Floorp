@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test downloads.download() uniquify option</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+
+let directory;
+
+add_task(async function setup() {
+  directory = FileUtils.getDir("TmpD", ["downloads"]);
+  directory.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  info(`Using download directory ${directory.path}`);
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.download.folderList", 2],
+    ["browser.download.dir", directory.path],
+  ]});
+
+  SimpleTest.registerCleanupFunction(async () => {
+    await SpecialPowers.popPrefEnv();
+    directory.remove(true);
+  });
+});
+
+add_task(async function test_downloads_uniquify() {
+  const file = directory.clone();
+  file.append("file_download.txt");
+
+  const unique = directory.clone();
+  unique.append("file_download(1).txt");
+
+  const {MockFilePicker} = SpecialPowers;
+  MockFilePicker.init(window);
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+  MockFilePicker.showCallback = fp => {
+    let file = directory.clone();
+    file.append(fp.defaultString);
+    MockFilePicker.setFiles([file]);
+  };
+
+  function background() {
+    const url = URL.createObjectURL(new Blob(["file content"]));
+    browser.test.onMessage.addListener(async (filename, saveAs) => {
+      try {
+        let id = await browser.downloads.download({
+          url,
+          filename,
+          saveAs,
+          conflictAction: "uniquify",
+        });
+        browser.downloads.onChanged.addListener(delta => {
+          if (delta.id == id && delta.state.current === "complete") {
+            browser.test.sendMessage("done", {ok: true, id});
+          }
+        });
+      } catch ({message}) {
+        browser.test.sendMessage("done", {ok: false, message});
+      }
+    });
+    browser.test.sendMessage("ready");
+  }
+
+  const manifest = {background, manifest: {permissions: ["downloads"]}};
+  const extension = ExtensionTestUtils.loadExtension(manifest);
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  async function testUniquify(saveAs) {
+    info(`Testing conflictAction:"uniquify" with saveAs=${saveAs}`);
+
+    ok(!file.exists(), "downloaded file should have been cleaned up before test ran");
+    ok(!unique.exists(), "uniquified file should have been cleaned up before test ran");
+
+    // Test download without uniquify and create a conflicting file so we can
+    // test with uniquify.
+    extension.sendMessage("file_download.txt", saveAs);
+    let result = await extension.awaitMessage("done");
+    ok(result.ok, "downloads.download() works with saveAs");
+
+    ok(file.exists(), "the file exists.");
+    is(file.fileSize, 12, "downloaded file is the correct size");
+
+    // Now that a conflicting file exists, test the uniquify behavior
+    extension.sendMessage("file_download.txt", saveAs);
+    result = await extension.awaitMessage("done");
+    ok(result.ok, "downloads.download() works with saveAs and uniquify");
+
+    ok(unique.exists(), "the file exists.");
+    is(unique.fileSize, 12, "downloaded file is the correct size");
+
+    file.remove(false);
+    unique.remove(false);
+  }
+  await testUniquify(true);
+  await testUniquify(false);
+
+  await extension.unload();
+  MockFilePicker.cleanup();
+});
+
+</script>
+
+</body>
+</html>

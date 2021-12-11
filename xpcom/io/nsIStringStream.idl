@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIInputStream.idl"
+
+%{C++
+#include "mozilla/MemoryReporting.h"
+%}
+
+native MallocSizeOf(mozilla::MallocSizeOf);
+
+/**
+ * nsIStringInputStream
+ *
+ * Provides scriptable and specialized C++-only methods for initializing a
+ * nsIInputStream implementation with a simple character array.
+ */
+[scriptable, builtinclass, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
+interface nsIStringInputStream : nsIInputStream
+{
+    /**
+     * SetData - assign data to the input stream (copied on assignment).
+     *
+     * @param data    - stream data
+     * @param dataLen - stream data length (-1 if length should be computed)
+     *
+     * NOTE: C++ code should consider using AdoptData or ShareData to avoid
+     * making an extra copy of the stream data.
+     *
+     * NOTE: For JS callers, the given data must not contain null characters
+     * (other than a null terminator) because a null character in the middle of
+     * the data string will be seen as a terminator when the data is converted
+     * from a JS string to a C++ character array.
+     */
+    void setData(in string data, in long dataLen);
+
+    /**
+     * SetUTF8Data - encode input data to UTF-8 and assign it to the input
+     * stream.
+     *
+     * @param data    - stream data
+     *
+     * NOTE: This method is meant to be used by JS callers,
+     */
+    void setUTF8Data(in AUTF8String data);
+
+    /**
+     * NOTE: the following methods are designed to give C++ code added control
+     * over the ownership and lifetime of the stream data.  Use with care :-)
+     */
+
+    /**
+     * AdoptData - assign data to the input stream.  the input stream takes
+     * ownership of the given data buffer and will free it when
+     * the input stream is destroyed.
+     *
+     * @param data      - stream data
+     * @param dataLen   - stream data length (-1 if length should be computed)
+     */
+    [noscript] void adoptData(in charPtr data, in long dataLen);
+
+    /**
+     * ShareData - assign data to the input stream.  the input stream references
+     * the given data buffer until the input stream is destroyed.  the given
+     * data buffer must outlive the input stream.
+     *
+     * @param data      - stream data
+     * @param dataLen   - stream data length (-1 if length should be computed)
+     */
+    [noscript] void shareData(in string data, in long dataLen);
+
+    [noscript, notxpcom]
+    size_t SizeOfIncludingThisIfUnshared(in MallocSizeOf aMallocSizeOf);
+
+    [noscript, notxpcom]
+    size_t SizeOfIncludingThisEvenIfShared(in MallocSizeOf aMallocSizeOf);
+};

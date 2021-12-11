@@ -1,0 +1,21 @@
+VTune files imported from VTune Amplifier XE 2017 Rev 1.0.486011.
+
+To update these files, copy the following from a VTune install directory:
+    sdk/src/ittnotify/*
+
+    include/ittnotify.h
+    include/jitprofiling.h
+    include/legacy/ittnotify.h
+
+Additionally, the following changes should be propagated:
+
+    - Some static functions should be exported for use in VTuneWrapper.cpp.
+    - Per Bug 1339190, all instances of "__attribute__((weak))" must be removed,
+      or Ubuntu shell builds will randomly crash on startup.
+    - With weak attributes removed, DL_SYMBOLS and PTHREAD_SYMBOLS should
+      be defined as "(1)" to avoid -Waddress warnings.
+    - Per Bug 1377651, the __itt_null variable in ittnotify.h should be
+      made non-static, so it can be used in a non-static function.
+
+If the license has changed, update the "VTune License" section of
+    toolkit/content/license.html

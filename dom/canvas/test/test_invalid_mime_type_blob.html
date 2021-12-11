@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<title>createImageBitmap from Blob with invalid type</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+function syncBlob() {
+  info("Let's create a small memory blob...");
+
+  // A 1x1 PNG image.
+  // Source: https://commons.wikimedia.org/wiki/File:1x1.png (Public Domain)
+  const IMAGE = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
+                     "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
+
+  let bytes = new Array(IMAGE.length);
+  for (let i = 0; i < IMAGE.length; i++) {
+    bytes[i] = IMAGE.charCodeAt(i);
+  }
+
+  let blob = new Blob([new Uint8Array(bytes)], { type: "text/html"});
+  window.createImageBitmap(blob)
+  .then(imageBitmap => {
+    ok(true, "Image created!");
+    is(imageBitmap.width, 1, "Image is 1x1");
+    is(imageBitmap.height, 1, "Image is 1x1");
+  })
+  .then(next);
+}
+
+function asyncBlob() {
+  info("Let's create a big memory blob...");
+
+  // A 1x1 PNG image.
+  // Source: https://commons.wikimedia.org/wiki/File:1x1.png (Public Domain)
+  const IMAGE = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
+                     "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
+
+  let bytes = new Array(IMAGE.length);
+  for (let i = 0; i < IMAGE.length; i++) {
+    bytes[i] = IMAGE.charCodeAt(i);
+  }
+
+  let blob = new Blob([new Uint8Array(bytes)], { type: "text/html"});
+  while (blob.size <= 1024*1024) {
+    blob = new Blob([blob, blob], { type: "text/html"});
+  }
+
+  ok(blob.size > 1024 * 1024, "More than 1mb");
+
+  let bc = new BroadcastChannel('a');
+  bc.onmessage = e => {
+    window.createImageBitmap(e.data)
+    .then(imageBitmap => {
+      ok(true, "Image created!");
+      is(imageBitmap.width, 1, "Image is 1x1");
+      is(imageBitmap.height, 1, "Image is 1x1");
+    })
+    .then(next);
+  }
+
+  new BroadcastChannel('a').postMessage(blob);
+}
+
+let tests = [
+ syncBlob,
+ asyncBlob,
+];
+
+function next() {
+  if (tests.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let test = tests.shift();
+  test();
+}
+
+SimpleTest.requestLongerTimeout(3); // slow on Android
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>

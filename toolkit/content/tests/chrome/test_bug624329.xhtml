@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=624329
+-->
+<window title="Mozilla Bug 624329 context menu position"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"
+        onload="beginTest()">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=624329"
+     target="_blank">Mozilla Bug 624329</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 624329 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var win;
+var timeoutID;
+var menu;
+
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+function beginTest() {
+    if (AppConstants.platform == "macosx" && SpecialPowers.getBoolPref("widget.macos.native-context-menus", false)) {
+        // This test does not apply with native context menus.
+        ok(true, "macOS positions native menus, so we don't need to test this behaviour.");
+        SimpleTest.finish();
+        return;
+    }
+
+    openTestWindow();
+}
+
+function openTestWindow() {
+    win = window.browsingContext.topChromeWindow.openDialog("bug624329_window.xhtml", "_blank", "width=300,resizable=yes,chrome", window);
+    // Close our window if the test times out so that it doesn't interfere
+    // with later tests.
+    timeoutID = setTimeout(function () {
+        ok(false, "Test timed out.");
+        // Provide some time for a screenshot
+        setTimeout(finish, 1000);
+    }, 20000);
+}
+
+function listenOnce(event, callback) {
+    win.addEventListener(event, function listener() {
+        callback();
+    }, { once: true});
+}
+
+function childFocused() {
+    // maximizing the window is a simple way to ensure that the menu is near
+    // the right edge of the screen.
+
+    listenOnce("resize", childResized);
+    win.maximize();
+}
+
+function childResized() {
+    const isOSXMavericks = navigator.userAgent.includes("Mac OS X 10.9");
+    const isOSXYosemite = navigator.userAgent.includes("Mac OS X 10.10");
+    if (isOSXMavericks || isOSXYosemite) {
+        todo_is(win.windowState, win.STATE_MAXIMIZED,
+                "A resize before being maximized breaks this test on 10.9 and 10.10");
+        finish();
+        return;
+    }
+
+    is(win.windowState, win.STATE_MAXIMIZED,
+       "window should be maximized");
+
+    isnot(win.innerWidth, 300,
+         "window inner width should have changed");
+
+    openContextMenu();
+}
+
+function openContextMenu() {
+    var mouseX = win.innerWidth - 10;
+    var mouseY = 10;
+
+    menu = win.document.getElementById("menu");
+    var screenX = menu.screenX;
+    var screenY = menu.screenY;
+    var utils = win.windowUtils;
+
+    utils.sendMouseEvent("contextmenu", mouseX, mouseY, 2, 0, 0);
+
+    var interval = setInterval(checkMoved, 200);
+    function checkMoved() {
+        if (menu.screenX != screenX ||
+            menu.screenY != screenY) {
+            clearInterval(interval);
+            // Wait further to check that the window does not move again.
+            setTimeout(checkPosition, 1000);
+        }
+    }
+
+    function checkPosition() {
+        var rootElement = win.document.documentElement;
+        var platformIsMac = navigator.userAgent.indexOf("Mac") > -1;
+
+        var x = menu.screenX - rootElement.screenX;
+        var y = menu.screenY - rootElement.screenY;
+
+        if (platformIsMac)
+        {
+          // This check is alterered slightly for OSX which adds padding to the top
+          // and bottom of its context menus. The menu position calculation must
+          // be changed to allow for the pointer to be outside this padding
+          // when the menu opens.
+          // (Bug 1075089)
+          ok(y + 6 >= mouseY,
+             "menu top " + (y + 6) + " should be below click point " + mouseY);
+        }
+        else
+        {
+          ok(y >= mouseY,
+             "menu top " + y + " should be below click point " + mouseY);
+        }
+        
+        ok(y <= mouseY + 20,
+           "menu top " + y + " should not be too far below click point " + mouseY);
+
+        ok(x < mouseX,
+           "menu left " + x + " should be left of click point " + mouseX);
+        var right = x + menu.getBoundingClientRect().width;
+
+        if (platformIsMac) {
+          // Rather than be constrained by the right hand screen edge, OSX menus flip
+          // horizontally and appear to the left of the mouse pointer
+          ok(right < mouseX,
+             "menu right " + right + " should be left of click point " + mouseX);
+        }
+        else {
+          ok(right > mouseX,
+             "menu right " + right + " should be right of click point " + mouseX);
+        }
+
+        clearTimeout(timeoutID);
+        finish();
+    }
+
+}
+
+function finish() {
+    if (menu && navigator.platform.includes("Win")) {
+        todo(false, "Should not have to hide popup before closing its window");
+        // This avoids mochitest "Unable to restore focus" errors (bug 670053).
+        menu.hidePopup();
+    }
+    win.close();
+    SimpleTest.finish();
+}
+
+  ]]>
+  </script>
+</window>

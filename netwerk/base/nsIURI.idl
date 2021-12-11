@@ -1,0 +1,322 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * URIs are essentially structured names for things -- anything. This interface
+ * provides accessors to get the most basic components of an URI.
+ * If you need to change some parts of the URI use nsIURIMutator.
+ * Subclasses, including nsIURL, impose greater structure on the URI.
+ *
+ * This interface follows Tim Berners-Lee's URI spec (RFC3986) [1], where the
+ * basic URI components are defined as such:
+ * <pre>
+ *      ftp://username:password@hostname:portnumber/pathname?query#ref
+ *      \ /   \               / \      / \        /\       / \   / \ /
+ *       -     ---------------   ------   --------  -------   ---   -
+ *       |            |             |        |         |       |    |
+ *       |            |             |        |      FilePath Query Ref
+ *       |            |             |       Port       \            /
+ *       |            |            Host      /          ------------
+ *       |         UserPass                 /                |
+ *     Scheme                              /                Path
+ *       \                                /
+ *        --------------------------------
+ *                       |
+ *                    PrePath
+ * </pre>
+ * The definition of the URI components has been extended to allow for
+ * internationalized domain names [2] and the more generic IRI structure [3].
+ *
+ * [1] https://tools.ietf.org/html/rfc3986
+ * [2] https://tools.ietf.org/html/rfc5890
+ * [3] https://tools.ietf.org/html/rfc3987
+ */
+
+%{C++
+#include "nsString.h"
+
+#undef GetPort  // XXX Windows!
+#undef SetPort  // XXX Windows!
+
+namespace mozilla {
+class Encoding;
+namespace ipc {
+class URIParams;
+}  // namespace ipc
+}  // namespace mozilla
+%}
+
+[ptr] native Encoding(const mozilla::Encoding);
+[ref] native URIParams(mozilla::ipc::URIParams);
+interface nsIURIMutator;
+
+/**
+ * nsIURI - interface for an uniform resource identifier w/ i18n support.
+ *
+ * AUTF8String attributes may contain unescaped UTF-8 characters.
+ * Consumers should be careful to escape the UTF-8 strings as necessary, but
+ * should always try to "display" the UTF-8 version as provided by this
+ * interface.
+ *
+ * AUTF8String attributes may also contain escaped characters.
+ *
+ * Unescaping URI segments is unadvised unless there is intimate
+ * knowledge of the underlying charset or there is no plan to display (or
+ * otherwise enforce a charset on) the resulting URI substring.
+ *
+ * The correct way to create an nsIURI from a string is via
+ * nsIIOService.newURI.
+ *
+ * NOTE: nsBinaryInputStream::ReadObject contains a hackaround to intercept the
+ * old (pre-gecko6) nsIURI IID and swap in the current IID instead, in order
+ * for sessionstore to work after an upgrade.  If this IID is revved further,
+ * we will need to add additional checks there for all intermediate IIDs, until
+ * ContentPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
+ */
+[scriptable, builtinclass, uuid(92073a54-6d78-4f30-913a-b871813208c6)]
+interface nsIURI : nsISupports
+{
+    /************************************************************************
+     * The URI is broken down into the following principal components:
+     */
+
+    /**
+     * Returns a string representation of the URI.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String spec;
+
+%{ C++
+    // An infallible wrapper for GetSpec() that returns a failure indication
+    // string if GetSpec() fails. It is most useful for creating
+    // logging/warning/error messages produced for human consumption, and when
+    // matching a URI spec against a fixed spec such as about:blank.
+    nsCString GetSpecOrDefault()
+    {
+        nsCString spec;
+        nsresult rv = GetSpec(spec);
+        if (NS_FAILED(rv)) {
+            spec.AssignLiteral("[nsIURI::GetSpec failed]");
+        }
+        return spec;
+    }
+%}
+
+    /**
+     * The prePath (eg. scheme://user:password@host:port) returns the string
+     * before the path.  This is useful for authentication or managing sessions.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String prePath;
+
+    /**
+     * The Scheme is the protocol to which this URI refers.  The scheme is
+     * restricted to the US-ASCII charset per RFC3986.
+     */
+    readonly attribute ACString scheme;
+
+    /**
+     * The username:password (or username only if value doesn't contain a ':')
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String userPass;
+
+    /**
+     * The optional username and password, assuming the preHost consists of
+     * username:password.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String username;
+    readonly attribute AUTF8String password;
+
+    /**
+     * The host:port (or simply the host, if port == -1).
+     */
+    readonly attribute AUTF8String hostPort;
+
+    /**
+     * The host is the internet domain name to which this URI refers.  It could
+     * be an IPv4 (or IPv6) address literal. Otherwise it is an ASCII or punycode
+     * encoded string.
+     */
+    readonly attribute AUTF8String host;
+
+    /**
+     * A port value of -1 corresponds to the protocol's default port (eg. -1
+     * implies port 80 for http URIs).
+     */
+    readonly attribute long port;
+
+    /**
+     * The path, typically including at least a leading '/' (but may also be
+     * empty, depending on the protocol).
+     *
+     * Some characters may be escaped.
+     *
+     * This attribute contains query and ref parts for historical reasons.
+     * Use the 'filePath' attribute if you do not want those parts included.
+     */
+    readonly attribute AUTF8String pathQueryRef;
+
+
+    /************************************************************************
+     * An URI supports the following methods:
+     */
+
+    /**
+     * URI equivalence test (not a strict string comparison).
+     *
+     * eg. http://foo.com:80/ == http://foo.com/
+     */
+    boolean equals(in nsIURI other);
+
+    /**
+     * An optimization to do scheme checks without requiring the users of nsIURI
+     * to GetScheme, thereby saving extra allocating and freeing. Returns true if
+     * the schemes match (case ignored).
+     */
+    [infallible] boolean schemeIs(in string scheme);
+
+    /**
+     * This method resolves a relative string into an absolute URI string,
+     * using this URI as the base.
+     *
+     * NOTE: some implementations may have no concept of a relative URI.
+     */
+    AUTF8String resolve(in AUTF8String relativePath);
+
+
+    /************************************************************************
+     * Additional attributes:
+     */
+
+    /**
+     * The URI spec with an ASCII compatible encoding.  Host portion follows
+     * the IDNA draft spec.  Other parts are URL-escaped per the rules of
+     * RFC2396.  The result is strictly ASCII.
+     */
+    readonly attribute ACString asciiSpec;
+
+    /**
+     * The host:port (or simply the host, if port == -1), with an ASCII compatible
+     * encoding.  Host portion follows the IDNA draft spec.  The result is strictly
+     * ASCII.
+     */
+    readonly attribute ACString asciiHostPort;
+
+    /**
+     * The URI host with an ASCII compatible encoding.  Follows the IDNA
+     * draft spec for converting internationalized domain names (UTF-8) to
+     * ASCII for compatibility with existing internet infrasture.
+     */
+    readonly attribute ACString asciiHost;
+
+    /************************************************************************
+     * Additional attribute & methods added for .ref support:
+     */
+
+    /**
+     * Returns the reference portion (the part after the "#") of the URI.
+     * If there isn't one, an empty string is returned.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String ref;
+
+    /**
+     * URI equivalence test (not a strict string comparison), ignoring
+     * the value of the .ref member.
+     *
+     * eg. http://foo.com/# == http://foo.com/
+     *     http://foo.com/#aaa == http://foo.com/#bbb
+     */
+    boolean equalsExceptRef(in nsIURI other);
+
+    /**
+     * returns a string for the current URI with the ref element cleared.
+     */
+    readonly attribute AUTF8String specIgnoringRef;
+
+    /**
+     * Returns if there is a reference portion (the part after the "#") of the URI.
+     */
+    readonly attribute boolean hasRef;
+
+    /************************************************************************
+     * Additional attributes added for .query support:
+     */
+
+    /**
+     * Returns a path including the directory and file portions of a
+     * URL.  For example, the filePath of "http://host/foo/bar.html#baz"
+     * is "/foo/bar.html".
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String filePath;
+
+    /**
+     * Returns the query portion (the part after the "?") of the URL.
+     * If there isn't one, an empty string is returned.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String query;
+
+    /**
+     * If the URI has a punycode encoded hostname, this will hold the UTF8
+     * representation of that hostname (if that representation doesn't contain
+     * blacklisted characters, and the network.IDN_show_punycode pref is false)
+     * Otherwise, if the hostname is ASCII, it will return the same as .asciiHost
+     */
+    readonly attribute AUTF8String displayHost;
+
+    /**
+     * The displayHost:port (or simply the displayHost, if port == -1).
+     */
+    readonly attribute AUTF8String displayHostPort;
+
+    /**
+     * Returns the same as calling .spec, only with a UTF8 encoded hostname
+     * (if that hostname doesn't contain blacklisted characters, and
+     * the network.IDN_show_punycode pref is false)
+     */
+    readonly attribute AUTF8String displaySpec;
+
+    /**
+     * Returns the same as calling .prePath, only with a UTF8 encoded hostname
+     * (if that hostname doesn't contain blacklisted characters, and
+     * the network.IDN_show_punycode pref is false)
+     */
+    readonly attribute AUTF8String displayPrePath;
+
+    /**
+     * Returns an nsIURIMutator that can be used to make changes to the URI.
+     * After performing the setter operations on the mutator, one may call
+     * mutator.finalize() to get a new immutable URI with the desired
+     * properties.
+     */
+    nsIURIMutator mutate();
+
+    /**
+     * Serializes a URI object to a URIParams data structure in order for being
+     * passed over IPC.  For deserialization, see nsIURIMutator.
+     */
+    [noscript, notxpcom] void serialize(in URIParams aParams);
+
+    %{C++
+    // MOZ_DBG support
+    friend std::ostream& operator<<(std::ostream& aOut, const nsIURI& aURI) {
+      nsIURI* uri = const_cast<nsIURI*>(&aURI);
+      return aOut << "nsIURI { " << uri->GetSpecOrDefault() << " }";
+    }
+    %}
+};

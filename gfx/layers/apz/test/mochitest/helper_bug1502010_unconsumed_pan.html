@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test pointercancel doesn't get sent for horizontal panning on a pan-y element</title>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript">
+    var pointerMoveCount = 0;
+    var lastPointerCoord = -1;
+    var apzFlushed = false;
+    var endEventReceived = false;
+    var testEndResolveFunc = null;
+    var testEndPromise = new Promise(resolve => {
+      testEndResolveFunc = resolve;
+    });
+
+    function checkForTestEnd() {
+        if (apzFlushed && endEventReceived) {
+            var target = document.getElementById("carousel");
+            target.removeEventListener("pointermove", moveListener);
+
+            ok(pointerMoveCount > 0, "Got " + pointerMoveCount + " pointermove events");
+            is(document.scrollingElement.scrollTop, 0, "Document didn't y-scroll");
+            is(document.scrollingElement.scrollLeft, 0, "Document didn't x-scroll");
+
+            testEndResolveFunc();
+        }
+    }
+
+    function moveListener(event) {
+        ok(event.clientX >= lastPointerCoord, "Got nondecreasing pointermove to " + event.clientX + "," + event.clientY);
+        lastPointerCoord = event.clientX;
+        pointerMoveCount++;
+    }
+
+    async function test() {
+        var target = document.getElementById("carousel");
+        target.addEventListener("pointercancel", (event) => {
+            ok(false, "Received pointercancel, uh-oh!");
+            endEventReceived = true;
+            setTimeout(checkForTestEnd, 0);
+        }, {once: true});
+        target.addEventListener("pointerup", () => {
+            ok(true, "Received pointerup");
+            endEventReceived = true;
+            setTimeout(checkForTestEnd, 0);
+        }, {once: true});
+
+        target.addEventListener("pointermove", moveListener);
+
+        // Drag mostly horizontally but also slightly vertically. If the
+        // touch-action were not respected due to a bug this might result
+        // in vertical scrolling instead of pointermove events.
+        await new Promise(resolve => {
+            synthesizeNativeTouchDrag(target, 10, 10, 200, -10, resolve);
+        });
+        await promiseOnlyApzControllerFlushed();
+        apzFlushed = true;
+
+        setTimeout(checkForTestEnd, 0);
+
+        await testEndPromise;
+    }
+
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  <div id="carousel" style="height: 50px; touch-action: pan-y; background-color: blue"></div>
+  <div id="spacer" style="height: 2000px"></div>
+</body>
+</html>

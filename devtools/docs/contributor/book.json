@@ -1,0 +1,6 @@
+{
+  "plugins": ["hints"],
+  "structure": {
+    "summary": "index.md"
+  }
+}

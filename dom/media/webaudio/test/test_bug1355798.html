@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test PannerNode produces output even when the even when the distance is
+    from the listener is zero, and the cone gain is present, regression test for
+  bug 1355798.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+var off = new OfflineAudioContext(1, 128, 44100);
+var panner = off.createPanner();
+var osc = off.createOscillator();
+panner.setPosition(1, 1, 1);
+off.listener.setPosition(1, 1, 1);
+osc.connect(panner).connect(off.destination);
+panner.coneOuterAngle = 359;
+osc.start();
+off.startRendering().then(function(b) {
+    is(b.getChannelData(0).filter(x => isNaN(x)).length, 0);
+    SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage cookies settings test</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="interOriginTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+</head>
+<body>
+
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Set cookies behavior to "always reject".
+SpecialPowers.pushPrefEnv({"set": [
+  ["network.cookie.cookieBehavior", 2],
+]}, test1);
+
+function test1() {
+  let w = window.open("windowProxy.html");
+  w.onload = _ => {
+    try {
+      w.localStorage.setItem("contentkey", "test-value");
+      ok(false, "Setting localStorageItem should throw a security exception");
+    }
+    catch(ex) {
+      is(ex.name, "SecurityError", "Got security exception");
+    }
+
+    w.close();
+
+    // Set cookies behavior to "reject 3rd party"
+    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]],
+                               "clear": [["network.cookie.lifetimePolicy"]]},
+                              test2);
+  }
+}
+
+function test2() {
+  let w = window.open("windowProxy.html");
+  w.onload = _ => {
+    try {
+      w.localStorage.setItem("contentkey", "test-value");
+      ok(true, "Setting localStorageItem should not throw a security exception");
+    }
+    catch(ex) {
+      ok(false, "Setting localStorageItem should not throw a security exception");
+    }
+
+    var fileTest = (location.protocol + "//example.com" + location.pathname)
+                   .replace("test_l", "frameL");
+
+    var myframe = w.document.createElement("iframe");
+    w.document.body.appendChild(myframe);
+    myframe.src = fileTest;
+
+    w.onmessage = function(e) {
+      switch (e.data.type || "") {
+        case "ok":
+          ok(e.data.what, e.data.msg);
+          break;
+        case "finish":
+          w.close();
+          SimpleTest.finish();
+          break;
+        default:
+          ok(false, "Invalid type.");
+      }
+    };
+  }
+}
+
+</script>
+</body>
+</html>

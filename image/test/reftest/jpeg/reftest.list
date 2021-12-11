@@ -1,0 +1,68 @@
+# JPEG tests 
+
+# Images of various sizes.
+== jpg-size-1x1.jpg   jpg-size-1x1.png
+== jpg-size-2x2.jpg   jpg-size-2x2.png
+== jpg-size-3x3.jpg   jpg-size-3x3.png
+== jpg-size-4x4.jpg   jpg-size-4x4.png
+== jpg-size-5x5.jpg   jpg-size-5x5.png
+== jpg-size-6x6.jpg   jpg-size-6x6.png
+== jpg-size-7x7.jpg   jpg-size-7x7.png
+== jpg-size-8x8.jpg   jpg-size-8x8.png
+== jpg-size-9x9.jpg   jpg-size-9x9.png
+== jpg-size-15x15.jpg jpg-size-15x15.png
+== jpg-size-16x16.jpg jpg-size-16x16.png
+== jpg-size-17x17.jpg jpg-size-17x17.png
+== jpg-size-31x31.jpg jpg-size-31x31.png
+== jpg-size-32x32.jpg jpg-size-32x32.png
+== jpg-size-33x33.jpg jpg-size-33x33.png
+# Progressive encoding
+== jpg-progressive.jpg jpg-progressive.png
+# Grayscale colorspace
+== jpg-gray.jpg jpg-gray.png
+# CMYK colorspace
+== jpg-cmyk-1.jpg jpg-cmyk-1.png
+== jpg-cmyk-2.jpg jpg-cmyk-2.png
+# This intermittently fails on Android due to async image decoding (bug #685516)
+# Sometimes the image decodes in time and the test passes, other times the image
+# appears blank and the test fails. This only seems to be triggered since the
+# switch to 24-bit colour (bug #803299).
+random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.png
+
+# webcam-simulacrum.mjpg is a hand-edited file containing red.jpg and blue.jpg,
+# concatenated together with the relevant headers for
+# multipart/x-mixed-replace. Specifically, with the headers in
+# webcam-simulacrum.mjpg^headers^, the web browser will get the following:
+#
+# HTTP 200 OK
+# Content-Type: multipart/x-mixed-replace;boundary=BOUNDARYOMG
+# 
+# --BOUNDARYOMG\r\n
+# Content-Type: image/jpeg\r\n
+# \r\n
+# <contents of red.jpg> (no newline)
+# --BOUNDARYOMG\r\n
+# Content-Type: image/jpeg\r\n
+# \r\n
+# <contents of blue.jpg> (no newline)
+# --BOUNDARYOMG--\r\n
+# 
+# (The boundary is arbitrary, and just has to be defined as something that
+# won't be in the text of the contents themselves. --$(boundary)\r\n means
+# "Here is the beginning of a boundary," and --$(boundary)-- means "All done
+# sending you parts.")
+HTTP == webcam-simulacrum.mjpg blue.jpg
+# Same as the above but as img elements in html files to get better test
+# coverage of multipart images.
+# Images loaded at the top level are actually loaded into an ImageDocument
+# which is a slim html document wrapper around the image.
+# Multipart images send multiple OnStartRequest's, each OnStartRequest causes
+# us to create a new ImageDocument to show the next part.
+# This differs from displaying a multipart image in an img element in a regular
+# document where we use the same document and same elements and same layout
+# frames for each part. So we have this testcase to test those different
+# codepaths.
+HTTP == webcam-simulacrum.html blue.html
+
+== non-interleaved_progressive-1.jpg non-interleaved_progressive-1-halfred-ref.png
+== non-interleaved_progressive-2.jpg non-interleaved_progressive-2-white-ref.png

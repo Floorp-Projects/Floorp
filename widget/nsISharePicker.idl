@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+interface mozIDOMWindowProxy;
+
+[scriptable, uuid(1201d357-8417-4926-a694-e6408fbedcf8)]
+interface nsISharePicker : nsISupports
+{
+  /**
+   * Initialize the share picker widget.
+   * @param nsIDOMWindow openerWindow.
+   */
+  void init(in mozIDOMWindowProxy openerWindow);
+
+  /**
+   * Returns the parent window this was initialized with.
+   */
+  readonly attribute mozIDOMWindowProxy openerWindow;
+
+  /**
+   * XPCOM Analog of navigator.share() as per:
+   * https://w3c.github.io/web-share/#share-method
+   */
+  Promise share(in AUTF8String title, in AUTF8String text, in nsIURI url);
+};

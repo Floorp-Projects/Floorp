@@ -1,0 +1,26 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+intr protocol PTestLatency {
+
+child:
+    async __delete__();
+    async Ping();
+    async Ping5();
+    intr Rpc();
+    async Spam();
+    intr Synchro();
+    [Compress] async CompressedSpam(uint32_t seqno);
+    intr Synchro2() returns (uint32_t lastSeqno,
+                            uint32_t numMessagesDispatched);
+
+parent:
+    async Pong();
+    async Pong5();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

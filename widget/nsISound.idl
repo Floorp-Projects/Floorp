@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURL;
+
+[scriptable, uuid(C3C28D92-A17F-43DF-976D-4EEAE6F995FC)]
+interface nsISound : nsISupports
+{
+  void play(in nsIURL aURL);
+  void beep();
+
+  /**
+    * Not strictly necessary, but avoids delay before first sound.
+    * The various methods on nsISound call Init() if they need to.
+	*/
+  void init();
+
+  /**
+   * In some situations, playEventSound will be called.  Then, each
+   * implementations will play a system sound for the event if it's necessary.
+   *
+   * NOTE: Don't change these values because they are used in
+   * nsPIPromptService.idl. So, if they are changed, that makes big impact for
+   * the embedders.
+   */
+  const unsigned long EVENT_NEW_MAIL_RECEIVED           = 0;
+  const unsigned long EVENT_ALERT_DIALOG_OPEN           = 1;
+  const unsigned long EVENT_CONFIRM_DIALOG_OPEN         = 2;
+  const unsigned long EVENT_PROMPT_DIALOG_OPEN          = 3;
+  const unsigned long EVENT_SELECT_DIALOG_OPEN          = 4;
+  const unsigned long EVENT_MENU_EXECUTE                = 5;
+  const unsigned long EVENT_MENU_POPUP                  = 6;
+  const unsigned long EVENT_EDITOR_MAX_LEN              = 7;
+  void playEventSound(in unsigned long aEventId);
+};

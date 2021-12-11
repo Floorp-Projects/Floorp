@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1730117
+-->
+<head>
+  <title>Test event suppression on nested iframe</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1730117">Mozilla Bug 1730117</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+function waitForMessage(aMsg) {
+  return new Promise((aResolve) => {
+    window.addEventListener("message", function handler(e) {
+      info(`receive: ${e.data}`);
+      if (e.data != aMsg) {
+        return;
+      }
+
+      window.removeEventListener("message", handler);
+      aResolve();
+    });
+  });
+}
+
+/** Test for Bug 1730117 **/
+
+add_task(async function test_sync_xhr() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["test.events.async.enabled", true],
+    ["dom.events.coalesce.mousemove", false],
+  ]});
+
+  let w = window.open("file_suppressed_events_top_xhr.html");
+  await waitForMessage("done");
+  w.close();
+});
+
+add_task(async function test_modalstate() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["test.events.async.enabled", false],
+    ["dom.events.coalesce.mousemove", false],
+  ]});
+
+  let w = window.open("file_suppressed_events_top_modalstate.html");
+  await waitForMessage("done");
+  w.close();
+});
+
+add_task(async function test_suppress_event_handling() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["test.events.async.enabled", false],
+    ["dom.events.coalesce.mousemove", false],
+  ]});
+
+  let w = window.open("file_suppressed_events_top.html");
+  await waitForMessage("done");
+  w.close();
+});
+
+</script>
+</pre>
+</body>
+</html>

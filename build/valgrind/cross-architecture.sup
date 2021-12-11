@@ -1,0 +1,184 @@
+# Full list is tracked through meta bug 793882
+
+####################
+#  Intended leaks  #
+####################
+
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534.)
+   Memcheck:Leak
+   ...
+   fun:_ZN7mozilla9SaveToEnvEPKc
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534.)
+   Memcheck:Leak
+   ...
+   fun:SaveToEnv
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793549.)
+   Memcheck:Leak
+   ...
+   fun:_ZL13SaveWordToEnvPKcRK12nsTSubstringIcE
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793549.)
+   Memcheck:Leak
+   ...
+   fun:SaveWordToEnv
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 944133.)
+   Memcheck:Leak
+   ...
+   fun:_ZN13CrashReporter14SetRestartArgsEiPPc
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793548.)
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_Z12ToNewCStringRK10nsACString
+   fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK10nsACString
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 1345153.)
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_ZN13CrashReporterL27SetupCrashReporterDirectoryEP7nsIFilePKcS3_PS1_
+   ...
+}
+{
+   We purposely leak the StatisticsReporter object
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   fun:operator new
+   fun:_Z21XRE_CreateStatsObjectv
+   ...
+}
+
+####################################
+#  Leaks in third party libraries  #
+####################################
+
+{
+   See bug 793535
+   Memcheck:Leak
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlsym
+   ...
+}
+{
+   See bug 793611
+   Memcheck:Leak
+   fun:memalign
+   fun:tls_get_addr_tail
+   fun:__tls_get_addr
+   ...
+}
+{
+   See bug 793611
+   Memcheck:Leak
+   fun:memalign
+   fun:tls_get_addr_tail
+   fun:___tls_get_addr
+   ...
+}
+
+#################
+#  Other leaks  #
+#################
+
+{
+   Bug 794369
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   ...
+   fun:_ZN20mozJSComponentLoader10LoadModuleERN7mozilla12FileLocationE
+   ...
+}
+{
+   Bug 794370
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   ...
+   fun:_ZN22nsComponentManagerImpl15RegisterFactoryERK4nsIDPKcS4_P10nsIFactory
+   ...
+}
+{
+   Bug 794372
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   ...
+   fun:_ZN22nsComponentManagerImpl22RegisterCIDEntryLockedEPKN7mozilla6Module8CIDEntryEPNS_11KnownModuleE
+   ...
+}
+{
+   Bug 794374
+   Memcheck:Leak
+   fun:malloc
+   fun:moz_xmalloc
+   ...
+   fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
+   ...
+}
+{
+   Bug 1017112
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:PK11_InitPin
+   fun:_ZN11nsPK11Token12InitPasswordEPKDs
+   ...
+}
+{
+   We intentionally leak TLS data in the global servo thread-pool until we can free it consistently (https://github.com/rayon-rs/rayon/issues/688)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:_ZN3std6thread5local4fast12Key$LT$T$GT$14try_initialize*
+   fun:_ZN5style5bloom19StyleBloom$LT$E$GT$3new*
+   ...
+}
+{
+   We intentionally leak TLS data in the global servo thread-pool until we can free it consistently (https://github.com/rayon-rs/rayon/issues/688)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:_ZN3std6thread5local4fast12Key$LT$T$GT$14try_initialize*
+   ...
+   fun:_ZN5style7sharing26StyleSharingCache$LT$E$GT$3new*
+   ...
+}
+{
+   Leak in libfontconfig1 in Debian 8 and 9. See bug 1636003.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcGetPrgname
+   ...
+}
+
+#################
+#  Other leaks  #
+#################
+{
+   Following frame pointers can lead us to uninitialized stack space
+   Memcheck:Cond
+   fun:DoFramePointerStackWalk
+}

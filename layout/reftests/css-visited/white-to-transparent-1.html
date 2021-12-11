@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style type="text/css">
+
+body { background: white; color: black }
+
+a { text-decoration: none; color: black }
+:link { background: #ccc; }
+:visited { background: transparent }
+
+</style>
+<a href="unvisited-page.html">unvisited</a>
+<a href="visited-page.html">visited</a>

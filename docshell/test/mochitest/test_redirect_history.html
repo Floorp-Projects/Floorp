@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test for redirect from POST</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <script>
+      "use strict";
+
+      info("Starting tests");
+
+      let tests = new Map([
+        ["sameorigin", window.location.origin],
+        ["crossorigin", "http://test1.example.com"],
+      ]);
+      for (let [kind, origin] of tests) {
+        add_task(async function runTest() {
+          info(`Submitting to ${origin}`);
+
+          let win;
+          await new Promise(resolve => {
+            addEventListener("message", resolve, { once: true });
+            info("Loading file_redirect_history.html");
+            win = window.open("file_redirect_history.html");
+          });
+          info("Done loading file_redirect_history.html");
+
+          let length = win.history.length;
+          let loc = win.location.toString();
+
+          await new Promise(resolve => {
+            addEventListener("message", resolve, { once: true });
+            info("Posting");
+            win.postMessage(`${origin}/tests/docshell/test/mochitest/form_submit_redirect.sjs?redirectTo=${loc}`, "*")
+          });
+          info("Done posting\n");
+          is(win.history.length, length, `Test ${kind}: history length should not change.`);
+          info(`Length=${win.history.length}`);
+          is(win.location.toString(), loc, `Test ${kind}: location should not change.`);
+
+          await new Promise(resolve => {
+            addEventListener("message", resolve, { once: true });
+            info("Reloading");
+            win.location.reload();
+          });
+          info("Done reloading\n");
+          is(win.location.toString(), loc, `Test ${kind}: location should not change after reload.`);
+
+          win.close();
+        });
+      }
+    </script>
+  </body>
+</html>

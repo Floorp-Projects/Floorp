@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=497242
+-->
+<head>
+  <title>Test for Bug 497242</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=497242">Mozilla Bug 497242</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form name="foo"/>
+  <form name="foo"/>
+  <form name="bar"/>
+  <form name="bar" xmlns=""/>
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 497242 **/
+is(document.getElementsByName("foo").length, 2,
+   "Should find both forms with name 'foo'");
+is(document.getElementsByName("foo")[0],
+   document.getElementsByTagName("form")[0],
+   "Unexpected first foo");
+is(document.getElementsByName("foo")[1],
+   document.getElementsByTagName("form")[1],
+   "Unexpected second foo");
+is(document.getElementsByName("bar").length, 1,
+   "Should find only the HTML form with name 'bar'");
+is(document.getElementsByName("bar")[0],
+   document.getElementsByTagName("form")[2],
+   "Unexpected bar");
+]]>
+</script>
+</pre>
+</body>
+</html>

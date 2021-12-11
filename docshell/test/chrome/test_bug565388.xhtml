@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=565388
+-->
+<window title="Mozilla Bug 565388"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 565388 **/
+  SimpleTest.waitForExplicitFinish();
+
+function test() {
+  var progressListener = {
+    add(docShell, callback) {
+      this.callback = callback;
+      this.docShell = docShell;
+      docShell.
+            QueryInterface(Ci.nsIInterfaceRequestor).
+            getInterface(Ci.nsIWebProgress).
+            addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+    },
+
+    finish() {
+      this.docShell.
+            QueryInterface(Ci.nsIInterfaceRequestor).
+            getInterface(Ci.nsIWebProgress).
+            removeProgressListener(this);
+      this.callback();
+    },
+
+    onStateChange (webProgress, req, flags, status) {
+      if (req.name.startsWith("data:application/vnd.mozilla.xul")) {
+        if (flags & Ci.nsIWebProgressListener.STATE_STOP)
+          this.finish();
+      }
+    },
+
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]),
+  }
+
+  var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
+                          .getService(Ci.nsIPrincipal);
+  var webNav = SpecialPowers.Services.appShell.createWindowlessBrowser(true);
+  var docShell = webNav.docShell;
+  docShell.createAboutBlankContentViewer(systemPrincipal, systemPrincipal);
+  var win = docShell.contentViewer.DOMDocument.defaultView;
+
+  progressListener.add(docShell, function(){
+    is(win.document.documentURI, "data:application/xhtml+xml;charset=utf-8,<window/>");
+    webNav.close();
+    SimpleTest.finish();
+  });
+
+  win.location = "data:application/xhtml+xml;charset=utf-8,<window/>";
+}
+
+addLoadEvent(function onLoad() {
+  test();
+});
+
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=565388"
+     target="_blank">Mozilla Bug 565388</a>
+  </body>
+</window>

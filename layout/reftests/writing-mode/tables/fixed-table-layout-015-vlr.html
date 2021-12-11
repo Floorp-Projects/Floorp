@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Fixed table layout - specified cell height overrides specified column-group height</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="A column that has both a cell height and column-group height specified will use its cell specified height.">
+        <style type="text/css">
+            div.test
+            {
+                writing-mode: vertical-lr;
+            }
+            table
+            {
+                border-spacing: 0;
+                table-layout: fixed;
+                height: 200px;
+            }
+            td { padding: 0px; }
+            #colgroup
+            {
+                height: 75px;
+            }
+            #cell
+            {
+                background: black;
+                height: 100px;
+            }
+            #div1
+            {
+                background: blue;
+                height: 100px;
+            }
+            #div1, td
+            {
+                width: 24px;
+            }
+        </style>
+    </head>
+    <body>
+     <p>Test passes if the boxes below are the same height.</p>
+     <div class="test">
+        <table>
+            <colgroup id="colgroup">
+                <col>
+            </colgroup>
+            <colgroup>
+                <col>
+            </colgroup>
+            <tr>
+                <td id="cell"></td>
+                <td></td>
+            </tr>
+        </table>
+        <div id="div1"></div>
+      </div>
+    </body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests of nsIEditor#beginningOfDocument()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(() => {
+      const originalBody = document.body.innerHTML;
+
+      (function test_with_text_editor() {
+        for (const test of [
+            {
+              tag: "input",
+              innerHTML: "<input>",
+            },
+            {
+              tag: "textarea",
+              innerHTML: "<textarea></textarea>",
+            },
+          ]) {
+            document.body.innerHTML = test.innerHTML;
+            const textControl = document.body.querySelector(test.tag);
+            const editor = SpecialPowers.wrap(textControl).editor;
+            editor.beginningOfDocument();
+            is(textControl.selectionStart, 0,
+              `nsIEditor.beginningOfDocument() should set selectionStart of empty <${test.tag}> to 0`);
+            is(textControl.selectionEnd, 0,
+              `nsIEditor.beginningOfDocument() should set selectionEnd of empty <${test.tag}> to 0`);
+            textControl.value = "abc";
+            textControl.selectionStart = 2;
+            textControl.selectionEnd = 3;
+            editor.beginningOfDocument();
+            is(textControl.selectionStart, 0,
+              `nsIEditor.beginningOfDocument() should set selectionStart of non-empty <${test.tag}> to 0`);
+            is(textControl.selectionEnd, 0,
+              `nsIEditor.beginningOfDocument() should set selectionEnd of non-empty <${test.tag}> to 0`);
+          }
+      })();
+
+      function getHTMLEditor() {
+        const editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+        if (!editingSession) {
+          return null;
+        }
+        return editingSession.getEditorForWindow(window);
+      }
+
+      (function test_with_contenteditable() {
+        document.body.innerHTML = "<div contenteditable><p>abc</p></div>";
+        getSelection().removeAllRanges();
+        getHTMLEditor().beginningOfDocument();
+        is(getSelection().rangeCount, 0,
+          "selection shouldn't be changed when there is no selection");
+        getSelection().setBaseAndExtent(document.body.querySelector("p").firstChild, 1,
+                                        document.body.querySelector("p").firstChild, 3);
+        getHTMLEditor().beginningOfDocument();
+        is(getSelection().isCollapsed, true,
+          "selection should be collapsed after calling nsIEditor.beginningOfDocument() with contenteditable having one paragraph");
+        is(getSelection().rangeCount, 1,
+          "selection should has only one range after calling nsIEditor.beginningOfDocument() with contenteditable having one paragraph");
+        is(getSelection().focusNode, document.body.querySelector("p").firstChild,
+          "selection should be collapsed into the text node after calling nsIEditor.beggingOfDocument() with content editable having one paragraph");
+        is(getSelection().focusOffset, 0,
+          "selection should be collapsed to start of the text node after calling nsIEditor.beggingOfDocument() with content editable having one paragraph");
+
+        document.body.innerHTML = "<div contenteditable><p contenteditable=\"false\">abc</p><p>def</p></div>";
+        getSelection().setBaseAndExtent(document.body.querySelector("p + p").firstChild, 1,
+                                        document.body.querySelector("p + p").firstChild, 3);
+        getHTMLEditor().beginningOfDocument();
+        is(getSelection().isCollapsed, true,
+          "selection should be collapsed after calling nsIEditor.beginningOfDocument() with contenteditable having non-editable paragraph first");
+        is(getSelection().rangeCount, 1,
+          "selection should has only one range after calling nsIEditor.beginningOfDocument() with contenteditable having non-editable paragraph first");
+        is(getSelection().focusNode, document.body.querySelector("div[contenteditable]"),
+          "selection should be collapsed to start of the editing host after calling nsIEditor.beggingOfDocument() with content editable having non-editable paragraph first");
+        is(getSelection().focusOffset, 0,
+          "selection should be collapsed to start of the editing host after calling nsIEditor.beggingOfDocument() with content editable having non-editable paragraph first");
+
+        document.body.innerHTML = "<div contenteditable>\n<p contenteditable=\"false\">abc</p>\n<p>def</p>\n</div>";
+        getSelection().setBaseAndExtent(document.body.querySelector("p + p").firstChild, 1,
+                                        document.body.querySelector("p + p").firstChild, 3);
+        getHTMLEditor().beginningOfDocument();
+        is(getSelection().isCollapsed, true,
+          "selection should be collapsed after calling nsIEditor.beginningOfDocument() with contenteditable having non-editable paragraph first and some invisible line breaks");
+        is(getSelection().rangeCount, 1,
+          "selection should has only one range after calling nsIEditor.beginningOfDocument() with contenteditable having non-editable paragraph first and some invisible line breaks");
+        is(getSelection().focusNode, document.body.querySelector("div[contenteditable]"),
+          "selection should be collapsed to start of the editing host after calling nsIEditor.beggingOfDocument() with content editable having non-editable paragraph first and some invisible line breaks");
+        is(getSelection().focusOffset, 0,
+          "selection should be collapsed to start of the editing host after calling nsIEditor.beggingOfDocument() with content editable having non-editable paragraph first and some invisible line breaks");
+
+        document.body.innerHTML = "<div contenteditable><p>abc</p></div>def<div contenteditable><p>ghi</p></div>";
+        getSelection().setBaseAndExtent(document.body.querySelector("div + div > p").firstChild, 1,
+                                        document.body.querySelector("div + div > p").firstChild, 3);
+        getHTMLEditor().beginningOfDocument();
+        is(getSelection().isCollapsed, true,
+          "selection should be collapsed after calling nsIEditor.beginningOfDocument() with the 2nd contenteditable");
+        is(getSelection().rangeCount, 1,
+          "selection should has only one range after calling nsIEditor.beginningOfDocument() with the 2nd contenteditable");
+        is(getSelection().focusNode, document.body.querySelector("div + div > p").firstChild,
+          "selection should be collapsed to start of the first text node in the second editing host after calling nsIEditor.beggingOfDocument() with the 2nd contenteditable");
+        is(getSelection().focusOffset, 0,
+          "selection should be collapsed to start of the first text node in the second editing host after calling nsIEditor.beggingOfDocument() with the 2nd contenteditable");
+      })();
+
+      document.body.innerHTML = originalBody;
+      SimpleTest.finish();
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

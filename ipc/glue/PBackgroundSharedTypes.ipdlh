@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace ipc {
+
+[Comparable] struct ContentSecurityPolicy
+{
+  nsString policy;
+  bool reportOnlyFlag;
+  bool deliveredViaMetaTagFlag;
+};
+
+[Comparable] struct ContentPrincipalInfo
+{
+  OriginAttributes attrs;
+
+  // Origin is not simply a part of the spec. Based on the scheme of the URI
+  // spec, we generate different kind of origins: for instance any file: URL
+  // shares the same origin, about: URLs have the full spec as origin and so
+  // on.
+  // Another important reason why we have this attribute is that
+  // ContentPrincipalInfo is used out of the main-thread. Having this value
+  // here allows us to retrive the origin without creating a full nsIPrincipal.
+  nsCString originNoSuffix;
+
+  nsCString spec;
+
+  nsCString? domain;
+
+  // Like originNoSuffix, baseDomain is used out of the main-thread.
+  nsCString baseDomain;
+};
+
+[Comparable] struct SystemPrincipalInfo
+{ };
+
+[Comparable] struct NullPrincipalInfo
+{
+  OriginAttributes attrs;
+  nsCString spec;
+};
+
+[Comparable] struct ExpandedPrincipalInfo
+{
+  OriginAttributes attrs;
+  PrincipalInfo[] allowlist;
+};
+
+[Comparable] union PrincipalInfo
+{
+  ContentPrincipalInfo;
+  SystemPrincipalInfo;
+  NullPrincipalInfo;
+  ExpandedPrincipalInfo;
+};
+
+[Comparable] struct CSPInfo
+{
+  ContentSecurityPolicy[] policyInfos;
+  PrincipalInfo requestPrincipalInfo;
+  nsCString selfURISpec;
+  nsString referrer;
+  uint64_t innerWindowID;
+  bool skipAllowInlineStyleCheck;
+};
+
+} // namespace ipc
+} // namespace mozilla

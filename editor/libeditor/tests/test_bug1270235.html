@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1270235
+-->
+<head>
+  <title>Test for Bug 1270235</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1270235">Mozilla Bug 1270235</a>
+<p id="display"></p>
+<div id="content" style="display: none;"></div>
+
+<div id="edit1" contenteditable="true"><p>AB</p></div>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let element = document.getElementById("edit1");
+  element.focus();
+  let textNode = element.firstChild.firstChild;
+  let node = textNode.splitText(0);
+  node.remove();
+
+  ok(!node.parentNode, "parent must be null");
+
+  let newRange = document.createRange();
+  newRange.setStart(node, 0);
+  newRange.setEnd(node, 0);
+  let selection = document.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(newRange);
+
+  ok(selection.isCollapsed, "isCollapsed must be true");
+
+  // Don't crash by user input
+  sendString("X");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

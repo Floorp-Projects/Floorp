@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for property priority preservation</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test that priorities are preserved correctly when setProperty is
+ * called, and during declaration block expansion/compression when other
+ * properties are manipulated.
+ */
+
+var div = document.getElementById("content");
+var s = div.style;
+
+s.setProperty("text-decoration", "underline", "");
+is(s.getPropertyValue("text-decoration"), "underline",
+   "text-decoration stored");
+is(s.getPropertyPriority("text-decoration"), "",
+   "text-decoration priority stored");
+s.setProperty("z-index", "7", "important");
+is(s.getPropertyValue("z-index"), "7",
+   "z-index stored");
+is(s.getPropertyPriority("z-index"), "important",
+   "z-index priority stored");
+s.setProperty("z-index", "3", "");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index overridden by setting non-important");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority overridden by setting non-important");
+is(s.getPropertyValue("text-decoration"), "underline",
+   "text-decoration still stored");
+is(s.getPropertyPriority("text-decoration"), "",
+   "text-decoration priority still stored");
+s.setProperty("text-decoration", "overline", "");
+is(s.getPropertyValue("text-decoration"), "overline",
+   "text-decoration stored");
+is(s.getPropertyPriority("text-decoration"), "",
+   "text-decoration priority stored");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority still stored");
+s.setProperty("text-decoration", "line-through", "important");
+is(s.getPropertyValue("text-decoration"), "line-through",
+   "text-decoration stored at new priority");
+is(s.getPropertyPriority("text-decoration"), "important",
+   "text-decoration priority overridden");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority still stored");
+
+  // also test setting a shorthand
+s.setProperty("font", "italic bold 12px/30px serif", "important");
+is(s.getPropertyValue("font-style"), "italic", "font-style stored");
+is(s.getPropertyPriority("font-style"), "important",
+   "font-style priority stored");
+is(s.getPropertyValue("font-weight"), "bold", "font-weight stored");
+is(s.getPropertyPriority("font-weight"), "important",
+   "font-weight priority stored");
+is(s.getPropertyValue("font-size"), "12px", "font-size stored");
+is(s.getPropertyPriority("font-size"), "important",
+   "font-size priority stored");
+is(s.getPropertyValue("line-height"), "30px", "line-height stored");
+is(s.getPropertyPriority("line-height"), "important",
+   "line-height priority stored");
+is(s.getPropertyValue("font-family"), "serif", "font-family stored");
+is(s.getPropertyPriority("font-family"), "important",
+   "font-family priority stored");
+
+is(s.getPropertyValue("text-decoration"), "line-through",
+   "text-decoration still stored");
+is(s.getPropertyPriority("text-decoration"), "important",
+   "text-decoration priority still stored");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority still stored");
+
+  // and overriding one element of that shorthand with some longhand
+  // test omitting the third argument to setProperty too (bug 655478)
+s.setProperty("font-style", "normal");
+
+is(s.getPropertyValue("font-style"), "normal", "font-style overridden");
+is(s.getPropertyPriority("font-style"), "", "font-style priority overridden");
+
+is(s.getPropertyValue("font-weight"), "bold", "font-weight unchanged");
+is(s.getPropertyPriority("font-weight"), "important",
+   "font-weight priority unchanged");
+is(s.getPropertyValue("font-size"), "12px", "font-size unchanged");
+is(s.getPropertyPriority("font-size"), "important",
+   "font-size priority unchanged");
+is(s.getPropertyValue("line-height"), "30px", "line-height unchanged");
+is(s.getPropertyPriority("line-height"), "important",
+   "line-height priority unchanged");
+is(s.getPropertyValue("font-family"), "serif", "font-family unchanged");
+is(s.getPropertyPriority("font-family"), "important",
+   "font-family priority unchanged");
+
+is(s.getPropertyValue("text-decoration"), "line-through",
+   "text-decoration still stored");
+is(s.getPropertyPriority("text-decoration"), "important",
+   "text-decoration priority still stored");
+is(s.getPropertyValue("z-index"), "3",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "",
+   "z-index priority still stored");
+
+s.setProperty("border-radius", "2em", "");
+is(s.getPropertyValue("border-radius"), "2em",
+   "border-radius serialization 1")
+
+s.setProperty("border-top-left-radius", "3em 4em", "");
+is(s.getPropertyValue("border-radius"),
+   "3em 2em 2em / 4em 2em 2em",
+   "border-radius serialization 2");
+
+s.setProperty("border-radius", "2em / 3em", "");
+is(s.getPropertyValue("border-radius"),
+   "2em / 3em",
+   "border-radius serialization 3")
+
+s.setProperty("border-top-left-radius", "4em", "");
+is(s.getPropertyValue("border-radius"),
+   "4em 2em 2em / 4em 3em 3em",
+   "border-radius serialization 3");
+
+</script>
+</pre>
+</body>
+</html>

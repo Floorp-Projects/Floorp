@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'" />
+    <title data-l10n-id="restore-page-tab-title"></title>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
+    <link rel="icon" href="chrome://global/skin/icons/info.svg"/>
+    <link rel="localization" href="browser/aboutSessionRestore.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <script src="chrome://browser/content/aboutSessionRestore.js"/>
+  </head>
+
+  <body class="illustrated">
+
+    <div class="container restore-chosen">
+      <div class="description-wrapper">
+        <div class="title">
+          <h1 class="title-text" data-l10n-id="restore-page-error-title"></h1>
+        </div>
+        <div class="description">
+          <p data-l10n-id="restore-page-problem-desc"></p>
+
+          <div id="errorLongDesc">
+            <p data-l10n-id="restore-page-try-this"></p>
+          </div>
+        </div>
+        <button id="tabsToggle" class="show-tabs">
+          <span id="showTabs" data-l10n-id="restore-page-show-tabs"></span>
+          <span id="hideTabs" data-l10n-id="restore-page-hide-tabs"></span>
+        </button>
+      </div>
+      <div class="tree-container" available="true">
+        <xul:tree id="tabList" seltype="single" hidecolumnpicker="true">
+          <xul:treecols>
+            <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
+            <xul:splitter class="tree-splitter"/>
+            <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
+          </xul:treecols>
+          <xul:treechildren flex="1"/>
+        </xul:tree>
+      </div>
+      <div class="button-container">
+#ifdef XP_UNIX
+        <xul:button id="errorCancel"
+                data-l10n-id="restore-page-close-button"/>
+        <xul:button class="primary"
+                id="errorTryAgain"
+                data-l10n-id="restore-page-try-again-button"/>
+#else
+        <xul:button class="primary"
+                id="errorTryAgain"
+                data-l10n-id="restore-page-try-again-button"/>
+        <xul:button id="errorCancel"
+                data-l10n-id="restore-page-close-button"/>
+#endif
+      </div>
+      <!-- holds the session data for when the tab is closed -->
+      <input type="text" id="sessionData" hidden="true"/>
+    </div>
+
+  </body>
+</html>

@@ -1,0 +1,28 @@
+{
+    "page_size": 25,
+    "page_count": 1,
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "addon_guid": "addon9@tests.mozilla.org",
+            "name": "Test Addon 9",
+            "version_ranges": [
+                {
+                    "addon_min_version": "4",
+                    "addon_max_version": "4",
+                    "applications": [
+                        {
+                            "name": "XPCShell",
+                            "id": "XPCShell",
+                            "guid": "xpcshell@tests.mozilla.org",
+                            "min_version": "1",
+                            "max_version": "1"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,111 @@
+[package]
+name = "gkrust-shared"
+version = "0.1.0"
+authors = ["nobody@mozilla.org"]
+license = "MPL-2.0"
+description = "Shared Rust code for libxul"
+
+[dependencies]
+geckoservo = { path = "../../../../servo/ports/geckolib" }
+kvstore = { path = "../../../components/kvstore" }
+lmdb-rkv-sys = { version = "0.11", features = ["mdb_idl_logn_9"] }
+mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "72eb355ddeada541d7e57dbe5fb60eb5124dea0d", features = ["missing-pixi-permitted"] }
+nserror = { path = "../../../../xpcom/rust/nserror" }
+nsstring = { path = "../../../../xpcom/rust/nsstring" }
+netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
+xpcom = { path = "../../../../xpcom/rust/xpcom" }
+prefs_parser = { path = "../../../../modules/libpref/parser" }
+static_prefs = { path = "../../../../modules/libpref/init/static_prefs" }
+profiler_helper = { path = "../../../../tools/profiler/rust-helper", optional = true }
+mozurl = { path = "../../../../netwerk/base/mozurl" }
+webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
+cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "5ada876e8b73246b9bb0b5855f9143a0a9848467", optional = true }
+cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="9695281319fcb3e40db6a32cc0661548d6192f4d", optional = true, features=["pulse-dlopen"] }
+cubeb-sys = { version = "0.9", optional = true, features=["gecko-in-tree"] }
+encoding_glue = { path = "../../../../intl/encoding_glue" }
+audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "03868a0eaf1d46e895353fa6e1f5bcaf7e588e62", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "03868a0eaf1d46e895353fa6e1f5bcaf7e588e62", optional = true }
+authenticator = "0.3.1"
+gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
+gecko_logger = { path = "../../../../xpcom/rust/gecko_logger" }
+rsdparsa_capi = { path = "../../../../dom/media/webrtc/sdp/rsdparsa_capi" }
+xulstore = { path = "../../../components/xulstore", optional = true }
+# We have these to enforce common feature sets for said crates.
+log = {version = "0.4", features = ["release_max_level_info"]}
+cose-c = { version = "0.1.5" }
+jsrust_shared = { path = "../../../../js/src/rust/shared" }
+cascade_bloom_filter = { path = "../../../components/cascade_bloom_filter" }
+cert_storage = { path = "../../../../security/manager/ssl/cert_storage" }
+bitsdownload = { path = "../../../components/bitsdownload", optional = true }
+storage = { path = "../../../../storage/rust" }
+bookmark_sync = { path = "../../../components/places/bookmark_sync", optional = true }
+chardetng_c = "0.1.1"
+audio_thread_priority = "0.23.4"
+mdns_service = { path="../../../../dom/media/webrtc/transport/mdns_service", optional = true }
+neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
+wgpu_bindings = { path = "../../../../gfx/wgpu_bindings" }
+mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", rev = "746743227485a83123784df0c53227ab466612ed" }
+fog_control = { path = "../../../components/glean" }
+app_services_logger = { path = "../../../../services/common/app_services_logger" }
+http_sfv = { path = "../../../../netwerk/base/http-sfv" }
+unic-langid = { version = "0.9", features = ["likelysubtags"] }
+unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
+fluent-langneg = { version = "0.13", features = ["cldr"] }
+fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
+rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
+gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
+
+# Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
+# version less than or equal to what we link to. This isn't a problem because we
+# tend to keep this up to date, but it needs to be taken into consideration when
+# changing this version.
+rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
+
+fluent = { version = "0.16", features = ["fluent-pseudo"] }
+fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
+l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
+l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs", rev = "fd02134161505f978e132114cbabdac057ce3b71" }
+fluent-fallback = "0.5"
+localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
+
+processtools = { path = "../../../components/processtools" }
+qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"}
+webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
+
+[features]
+default = []
+cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server"]
+cubeb_coreaudio_rust = ["cubeb-sys", "cubeb-coreaudio"]
+cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
+gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
+gecko_refcount_logging = ["geckoservo/gecko_refcount_logging", "xpcom/gecko_refcount_logging"]
+simd-accel = ["encoding_glue/simd-accel", "jsrust_shared/simd-accel"]
+moz_places = ["bookmark_sync"]
+spidermonkey_rust = ["jsrust_shared/baldrdash"]
+cranelift_x86 = ["jsrust_shared/cranelift_x86"]
+cranelift_arm32 = ["jsrust_shared/cranelift_arm32"]
+cranelift_arm64 = ["jsrust_shared/cranelift_arm64"]
+cranelift_none = ["jsrust_shared/cranelift_none"]
+smoosh = ["jsrust_shared/smoosh"]
+gecko_profiler = ["gecko-profiler/enabled", "profiler_helper"]
+gecko_profiler_parse_elf = ["profiler_helper/parse_elf"]
+new_xulstore = ["xulstore"]
+libfuzzer = []
+webrtc = ["mdns_service"]
+glean_disable_upload = ["fog_control/disable_upload"]
+glean_with_gecko = ["fog_control/with_gecko"]
+oxidized_breakpad = ["rust_minidump_writer_linux"]
+with_dbus = ["audio_thread_priority/with_dbus"]
+thread_sanitizer = ["xpcom/thread_sanitizer"]
+
+[lib]
+path = "lib.rs"
+test = false
+doctest = false
+bench = false
+doc = false
+plugin = false
+harness = false

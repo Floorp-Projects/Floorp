@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=437844
+https://bugzilla.mozilla.org/show_bug.cgi?id=348233
+-->
+<window title="Mozilla Bug 437844 and Bug 348233"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript"
+          src="RegisterUnregisterChrome.js"></script>
+
+  <body  xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=437844">
+      Mozilla Bug 437844
+    </a>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=348233">
+      Mozilla Bug 348233
+    </a>
+
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <script class="testbody" type="application/javascript">
+    <![CDATA[
+
+      SimpleTest.expectAssertions(0, 58);
+
+      /** Test for Bug 437844 and Bug 348233 **/
+      SimpleTest.waitForExplicitFinish();
+
+      let prefs = SpecialPowers.Services.prefs.nsIPrefBranch;
+      prefs.setCharPref("intl.l10n.pseudo", "bidi");
+
+      let rootDir = getRootDirectory(window.location.href);
+      let manifest = rootDir + "rtlchrome/rtl.manifest";
+
+      //copy rtlchrome to profile/rtlchrome and generate .manifest
+      let filePath = chromeURIToFile(manifest);
+      let tempProfileDir = copyDirToTempProfile(filePath.path, 'rtlchrome');
+      if (tempProfileDir.path.lastIndexOf('\\') >= 0) {
+        manifest = "content rtlchrome /" + tempProfileDir.path.replace(/\\/g, '/') + "\n";
+      } else {
+        manifest = "content rtlchrome " + tempProfileDir.path + "\n";
+      }
+      manifest += "override chrome://global/locale/intl.css chrome://rtlchrome/content/rtlchrome/rtl.css\n";
+      manifest += "override chrome://global/locale/global.dtd chrome://rtlchrome/content/rtlchrome/rtl.dtd\n";
+
+      let cleanupFunc = createManifestTemporarily(tempProfileDir, manifest);
+
+      // Load about:plugins in an iframe
+      let frame = document.createXULElement("iframe");
+      frame.setAttribute("src", "about:plugins");
+      frame.addEventListener("load", function () {
+          is(frame.contentDocument.dir, "rtl", "about:plugins should be RTL in RTL locales");
+
+          // eslint-disable-next-line no-unused-vars
+          let tmpd = SpecialPowers.Services.dirsvc.get("ProfD", Ci.nsIFile);
+
+          frame = document.createXULElement("iframe");
+          frame.setAttribute("src", "file://" + tmpd.path); // a file:// URI, bug 348233
+          frame.addEventListener("load", function () {
+              is(frame.contentDocument.body.dir, "rtl", "file:// listings should be RTL in RTL locales");
+
+              cleanupFunc();
+              prefs.clearUserPref("intl.l10n.pseudo");
+              SimpleTest.finish();
+            });
+          document.documentElement.appendChild(frame);
+        }, { once: true });
+      document.documentElement.appendChild(frame);
+
+    ]]>
+  </script>
+
+</window>

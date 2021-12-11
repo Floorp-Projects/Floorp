@@ -1,0 +1,317 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=741267
+-->
+<window title="Mozilla Bug 741267"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+   <script type="application/javascript">
+
+   
+</script>
+  <iframe id="t"></iframe>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741267"
+     target="_blank">Mozilla Bug 741267</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 741267 **/
+    function isXrayWrapper(x) {
+      return Cu.isXrayWrapper(x);
+    }
+
+    function doTest() {
+      var win = $("t").contentWindow;
+      ok(isXrayWrapper(win),
+         "We want to be testing things with an Xray as sandboxPrototype here");
+
+      var sandbox = Cu.Sandbox(win, { sandboxPrototype: win });
+
+      is(sandbox._content, undefined, "_content does nothing over Xray");
+
+      try {
+        var css = Cu.evalInSandbox("CSSStyleDeclaration", sandbox);
+        is(String(css.prototype), "[object CSSStyleDeclaration]",
+           "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
+      } catch (e) {
+        ok(false, "'CSSStyleDeclaration' shouldn't throw in a sandbox");
+      }
+      try {
+        var et = Cu.evalInSandbox("EventTarget", sandbox);
+        ok(et, "'EventTarget' in a sandbox should return the EventTarget interface object");
+        ok(isXrayWrapper(et), "Getting an interface object on an Xray wrapper should return an Xray wrapper");
+      } catch (e) {
+        ok(false, "'EventTarget' shouldn't throw in a sandbox");
+      }
+      try {
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        ok(xhr, "'XMLHttpRequest.prototype' in a sandbox should return the XMLHttpRequest interface prototype object");
+        ok(isXrayWrapper(xhr), "Getting an interface prototype object on an Xray wrapper should return an Xray wrapper");
+        ok(isXrayWrapper(xhr.constructor), "Getting the constructor property on an Xray wrapper of an interface prototype object should return an Xray wrapper");
+        isnot(Object.getOwnPropertyDescriptor(xhr, "send"), undefined,
+              "We should claim to have a send() method");
+        isnot(Object.keys(xhr).indexOf("responseType"), -1,
+              "We should claim to have a responseType property");
+        isnot(Object.getOwnPropertyNames(xhr).indexOf("open"), -1,
+              "We should claim to have an open() method");
+        isnot(Object.getOwnPropertyDescriptor(xhr, "constructor"), undefined,
+              "We should claim to have a 'constructor' property");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest.prototype' shouldn't throw in a sandbox");
+      }
+      try {
+        var img = Cu.evalInSandbox("Image.prototype", sandbox);
+        ok(img, "'Image.prototype' in a sandbox should return the interface prototype object");
+        ok(isXrayWrapper(img), "Getting an interface prototype object on an Xray wrapper should return an Xray wrapper");
+      } catch (e) {
+        ok(false, "'Image.prototype' shouldn't throw in a sandbox");
+      }
+      try {
+        var xhr = Cu.evalInSandbox("XMLHttpRequest", sandbox);
+        xhr.prototype = "notok";
+      } finally {
+        isnot(xhr.prototype, "notok", "'XMLHttpRequest.prototype' should be readonly");
+      }
+      var constructorWritable = false;
+      try {
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        xhr.constructor = "ok";
+        is(xhr.constructor, "ok", "'XMLHttpRequest.prototype.constructor' should be writeable");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest.prototype.constructor' should be writeable");
+      }
+      try {
+        var xhr = Cu.evalInSandbox("XMLHttpRequest", sandbox);
+        is(String(xhr), String(XMLHttpRequest), "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
+        ok(isXrayWrapper(xhr.prototype), "Getting the prototype property on an Xray wrapper of an interface object should return an Xray wrapper");
+        isnot(Object.getOwnPropertyDescriptor(xhr, "UNSENT"), undefined,
+              "We should claim to have an UNSENT constant");
+        isnot(Object.keys(xhr).indexOf("OPENED"), -1,
+              "We should claim to have an OPENED constant");
+        isnot(Object.getOwnPropertyNames(xhr).indexOf("DONE"), -1,
+              "We should claim to have a DONE constant");
+        isnot(Object.getOwnPropertyDescriptor(xhr, "prototype"), undefined,
+              "We should claim to have 'prototype' property");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
+      }
+      try {
+        var xhr = Cu.evalInSandbox("new XMLHttpRequest()", sandbox);
+        is("" + xhr, new XMLHttpRequest() + "", "'new XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+      } catch (e) {
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (1)");
+      }
+      try {
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.toString = function () { return 'Failed'; }; XMLHttpRequest;", sandbox);
+        is(xhr.toString(), XMLHttpRequest + "", "XMLHttpRequest.toString in the sandbox should not override the native toString behaviour");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
+      }
+      try {
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; new XMLHttpRequest();", sandbox);
+        is(xhr.toString(), new XMLHttpRequest() + "", "XMLHttpRequest.prototype.toString in the sandbox should not override the native toString behaviour");
+      } catch (e) {
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (2)");
+      }
+
+      try {
+        // have to run this test before document.defaultView.XMLHttpRequest
+        // gets munged in the sandbox.
+        var proto = Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        props = [];
+        for (var i in proto) {
+          props.push(i);
+        }
+        isnot(props.indexOf("dispatchEvent"), -1,
+           "'dispatchEvent' property should be enumerable on XMLHttpRequest.prototype");
+        props = Object.getOwnPropertyNames(proto);
+        is(props.indexOf("dispatchEvent"), -1,
+           "'dispatchEvent' is not an own property on XMLHttpRequest.prototype; it's on EventTarget.prototype")
+      } catch (e) {
+        ok(false, "XMLHttpRequest.prototype manipulation via an Xray shouldn't throw" + e);
+      }
+      try {
+        Cu.evalInSandbox("XMLHttpRequest.prototype.a = 'expando a'", sandbox);
+        Cu.evalInSandbox("XMLHttpRequest.prototype.b = 'expando b'", sandbox);
+        Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox).b = 'xrayexpando';
+        var xhr = Cu.evalInSandbox("new XMLHttpRequest()", sandbox);
+        is(xhr.a, undefined, "'XMLHttpRequest()' in a sandbox should not have expandos from inside the sandbox");
+        is(xhr.b, "xrayexpando", "'new XMLHttpRequest()' in a sandbox should have Xray expandos");
+      } catch (e) {
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
+      }
+      try {
+        Cu.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
+        var win = Cu.evalInSandbox("document.defaultView", sandbox);
+        var xhr = new win.XMLHttpRequest();
+        is("" + xhr, new XMLHttpRequest() + "", "'new XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+      } catch (e) {
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
+      }
+      try {
+        var canvas = Cu.evalInSandbox("document.createElement('canvas').getContext('2d')", sandbox);
+        is(canvas.DRAWWINDOW_DRAW_CARET, CanvasRenderingContext2D.DRAWWINDOW_DRAW_CARET, "Constants should be defined on DOM objects in a sandbox");
+      } catch (e) {
+        ok(false, "'document.createElement('canvas').getContext('2D')' shouldn't throw in a sandbox");
+      }
+      try {
+        var classList = Cu.evalInSandbox("document.body.className = 'a b'; document.body.classList", sandbox);
+        is(classList.toString(), "a b", "Stringifier should be called");
+      } catch (e) {
+        ok(false, "Stringifying shouldn't throw in a sandbox");
+      }
+      try {
+        var ctx = Cu.evalInSandbox("var ctx = document.createElement('canvas').getContext('2d'); ctx.foopy = 5; ctx", sandbox);
+        ok(!("foopy" in ctx), "We should have an Xray here");
+        var data = ctx.createImageData(1, 1);
+        for (var i = 0; i < data.data.length; ++i) {
+          // Watch out for premultiplied bits... just set all the alphas to 255
+          if (i % 4 == 3) {
+            // Note - We need to waive Xrays here because indexed access on Typed
+            // Arrays is forbidden over Xrays for performance reasons.
+            Cu.waiveXrays(data.data)[i] = 255;
+          } else {
+            Cu.waiveXrays(data.data)[i] = i;
+          }
+        }
+        ctx.putImageData(data, 0, 0);
+        var data2 = ctx.getImageData(0, 0, 1, 1);
+        is(data2.data.length, data.data.length, "Lengths must match");
+        for (i = 0; i < data.data.length; ++i)
+          is(Cu.waiveXrays(data.data)[i], Cu.waiveXrays(data2.data)[i], "Data at " + i + " should match");
+      } catch (e) {
+        ok(false, "Imagedata manipulation via an Xray shouldn't throw " + e);
+      }
+
+      try {
+        var list = Cu.evalInSandbox("document.getElementsByTagName('*')", sandbox);
+        props = [];
+        for (var i in list) {
+          props.push(i);
+        }
+        is(props.indexOf("constructor"), -1,
+           "'constructor' property should not be enumerable on list object");
+        props = Object.getOwnPropertyNames(list);
+        is(props.indexOf("constructor"), -1,
+           "'constructor' property should not be an own property name on list object");
+      } catch (e) {
+        ok(false, "NodeList.prototype manipulation via an Xray shouldn't throw" + e);
+      }
+
+      try {
+        var proto = Cu.evalInSandbox("NodeList.prototype", sandbox);
+        props = [];
+        for (var i in proto) {
+          props.push(i);
+        }
+        is(props.indexOf("constructor"), -1,
+           "'constructor' property should not be enumerable on proto directly");
+        props = Object.getOwnPropertyNames(proto);
+        isnot(props.indexOf("constructor"), -1,
+              "'constructor' property should be an own property name on proto");
+      } catch (e) {
+        ok(false, "NodeList.prototype manipulation via an Xray shouldn't throw" + e);
+      }
+
+      try {
+        var url = Cu.evalInSandbox("URL", sandbox);
+        for (var i in url) {
+          url[i];
+        }
+        isnot(url.createObjectURL, undefined, "Should have a createObjectURL");
+        ok(true, "We didn't crash!");
+      } catch (e) {
+        ok(false, "URL interface object manipulation via an Xray shouldn't throw" + e);
+      }
+
+      try {
+        url.revokeObjectURL("");
+      } catch (e) {
+        // Just testing whether revokeObjectURL crashes us
+      }
+      ok(true, "We didn't crash!");
+
+      // And now tests that don't use a window-associated sandbox
+      sandbox = Cu.Sandbox(win.document.nodePrincipal,
+                           { sandboxPrototype: win });
+      try {
+        var ws = Cu.evalInSandbox('var ws = new WebSocket("ws://example.org"); ws', sandbox);
+        // Test that we actually got a WebSocket object, probably
+        ok("bufferedAmount" in ws, "What is this object?");
+      } catch (e) {
+        ok(false, "Should be able to create a WebSocket in a sandbox " + e);
+      }
+      try {
+        var es = Cu.evalInSandbox('var es = new EventSource("about:blank"); es', sandbox);
+        // Test that we actually got a EventSource object, probably
+        is(es.url, "about:blank", "What is this object?");
+      } catch (e) {
+        ok(false, "Should be able to create an EventSource in a sandbox " + e);
+      }
+
+      try {
+        var nodeFilterIface = Cu.evalInSandbox(
+          'NodeFilter.myExpando = "FAIL"; NodeFilter', sandbox);
+        is(nodeFilterIface.myExpando, undefined,
+           "Should have Xrays for callback interface objects");
+      } catch (e) {
+        ok(false, "Should be able to return NodeFilter from a sandbox " + e);
+      }
+
+      try {
+        var eventCtor = Cu.evalInSandbox("Event", sandbox);
+        var e = new eventCtor("test", { bubbles: true });
+        is(e.bubbles, true, "Dictionary argument should work");
+      } catch (e) {
+        ok(false, "Should be able to construct my event " + e);
+      }
+
+      try {
+        var elem = Cu.evalInSandbox('document.createElement("p")', sandbox);
+        elem.expando = 5;
+        elem.expando = 7;
+        is(elem.expando, 7, "Should be able to set expandos on Xrays for DOM bindings");
+        var doc = Cu.evalInSandbox('document', sandbox);
+        doc.expando = 5;
+        doc.expando = 7;
+        is(doc.expando, 7, "Should be able to set expandos on Xrays for DOM bindings with named properties");
+      } catch (e) {
+        ok(false, "Setting expandos on Xrays shouldn't throw " + e);
+      }
+
+      // Test that binding a bareword window method produces something
+      // which has a .call
+      try {
+        var binary = Cu.evalInSandbox(
+          'btoa.bind(window).call(null, "foo")', sandbox);
+        is(binary, "Zm9v", "Should get the right result from .call on bound btoa");
+      } catch (e) {
+        ok(false, ".call on bound btoa shouldn't throw " + e);
+      }
+
+      // Test that binding a bareword window method produces something
+      // which has a .apply
+      try {
+        var binary = Cu.evalInSandbox(
+          'btoa.bind(window).apply(null, ["foo"])', sandbox);
+        is(binary, "Zm9v", "Should get the right result from .apply on bound btoa");
+      } catch (e) {
+        ok(false, ".apply on bound btoa shouldn't throw " + e);
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+</window>

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462455
+-->
+<head>
+  <title>Test for Bug 462455</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462455">Mozilla Bug 462455</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<video id="v">
+<script>
+var loadStarted = false;
+document.write('Pause parsing!');
+var v = document.getElementById('v');
+
+var resource = getPlayableVideo(gSmallTests);
+if (resource != null) {
+  var s = document.createElement("source");
+  s.src = resource.name;
+  s.type = resource.type;
+  v.appendChild(s);
+}
+
+ok(v.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+   "We shouldn't start network load until the current task returns.");
+</script>
+</video>
+</body>
+</html>

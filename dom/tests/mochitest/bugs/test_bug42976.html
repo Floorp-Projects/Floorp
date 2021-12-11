@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=42976
+-->
+<head>
+  <title>Test for Bug 42976</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=42976">Mozilla Bug 42976</a>
+<p id="display"></p>
+<div id="content">
+    <iframe id=specialtest srcdoc="<meta http-equiv='Content-Language' content='ja-JP'><base href='http://www.mozilla.org'><p>asdf"></iframe>;
+    <iframe id=htmlquirks srcdoc="<html><meta charset=ISO-8859-2><body><div></div></body></html>"></iframe>
+    <iframe id=htmlstd srcdoc="<!DOCTYPE html><html><meta charset=ISO-8859-3><body><div></div></body></html>"></iframe>
+    <iframe id=textplain srcdoc="<meta charset=ISO-8859-4>asdf%0Azxcv%0A"></iframe>
+    <iframe id=xhtmlstd srcdoc="<!DOCTYPE html><html xmlns='http://www.w3.org/1999/xhtml'><meta charset=ISO-8859-5><body><div></div></body></html>"></iframe>
+    <iframe id=xmlstd srcdoc="<meta charset=ISO-8859-6><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width='300' height='300'><text x='60' y='150' fill='blue'>Hello, World!</text><text x='60' y='250' fill='blue'>Hello, World!</text></svg>"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+
+  var iframes = document.getElementsByTagName("iframe");
+  for (var i = 1; i < iframes.length; i++) {
+    var doc = iframes[i].contentDocument;
+    var clonefalse = doc.cloneNode(false);
+    // doc.compatMode
+    ok(doc.compatMode == clonefalse.compatMode, "compatMode not preserved correctly; " + iframes[i].id);
+  
+    // doc.contentType
+    ok(doc.contentType == clonefalse.contentType, "contentType not preserved correctly; " + iframes[i].id);
+  
+    // doc.characterSet
+    ok(doc.characterSet == clonefalse.characterSet, "charset not preserved correctly; " + iframes[i].id);
+  
+    // innerHTML+tag case test
+    var clonetrue = doc.cloneNode(true);
+    doc.documentElement.firstChild.innerHTML="<div><dD></dD></div>";
+    clonetrue.documentElement.firstChild.innerHTML="<div><dD></dD></div>";
+    ok(doc.documentElement.innerHTML == clonetrue.documentElement.innerHTML,
+       "innerHTML not preserved correctly; " + iframes[i].id);
+  
+  }
+  
+  // A couple of tests that don't quite fit in the framework.
+  var doc = iframes[0].contentDocument;
+
+  // Setting document.dir does nothing in a document without an <html> element
+  doc.dir="rtl";
+  var docclone = doc.cloneNode(false);
+  
+  // doc.dir
+  ok(docclone.dir == "", "dir set on doc without html element");
+  
+  // document.querySelectorAll(":lang(ja)")
+  docclone.appendChild(docclone.createElement("html"));
+  ok(docclone.querySelectorAll(":lang(ja)").length == 1, "lang not preserved correctly");
+  
+  docclone.documentElement.innerHTML="<body><p><a href='a.html' id=a>asf</a></body>";
+  ok(docclone.getElementById('a').href == "http://www.mozilla.org/a.html",
+     "base not preserved correctly");
+
+  // Now that we have an <html> element, deep cloning preserves document.dir
+  docclone.dir="rtl";
+  var cloneclone = docclone.cloneNode(true);
+
+  // doc.dir
+  ok(cloneclone.dir == "rtl", "dir not preserved correctly");
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

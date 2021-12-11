@@ -1,0 +1,18 @@
+<!DOCTYPE HTML><html><head>
+</head>
+<body>
+<span contenteditable="true" spellcheck="false">navigable__</span><span id="x" contenteditable="true" spellcheck="false">navigable|unnavigable</span><br />
+<script>
+  // Position the caret after "u"
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  var x = document.getElementById('x');
+  var t = x.firstChild;
+  range.setStart(t, 11);
+  range.setEnd(t, 11);
+  sel.addRange(range);
+  x.focus();
+</script>
+</body>
+</html>

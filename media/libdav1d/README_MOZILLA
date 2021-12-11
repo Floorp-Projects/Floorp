@@ -1,0 +1,55 @@
+This directory contains build files for dav1d. The actual library
+source is in $TOPSRCDIR/third_party/dav1d/
+
+Any patches or additional configuration to be applied to the
+upstream source should be kept here in the media/libdav1d
+directory.
+
+To update the library source and build config files, execute
+
+  ./mach vendor media/libdav1d/moz.yaml
+
+To update to a specific upstream git tag or commit, use
+
+  ./mach vendor media/libdav1d/moz.yaml -r <commit>
+
+The upstream git repository is https://code.videolan.org/videolan/dav1d
+
+To update to a fork, use
+
+  ./mach vendor media/libdav1d/moz.yaml --repo <repository url> [-r <commit>]
+
+
+The rough steps are:
+- Execute ./mach vendor media/libdav1d/moz.yaml -r {tag-name}  # ex: ./mach vendor media/libdav1d/moz.yaml -r 0.6.0
+- Update ./moz.build and ./asm/moz.build to add new files and remove deleted ones using
+  third_party/dav1d/src/meson.build as a guide (confirm with the diff) (note the
+  empty .asm file in x86_64)
+- Some assembly files (notably avx2-specific ones) will generate no code on win32 builds,
+  leading to a nasm failure like:
+  "panic: assertion cv8_state.source_files != NULL failed at output/codeview.c:517"
+  These files can be identified by the `%if ARCH_X86_64` conditional around the entire contents.
+  To work around this error, move the sources to the moz.build block with the
+  `if CONFIG['CPU_ARCH'] == 'x86_64'` conditional.
+  See https://bugzilla.mozilla.org/show_bug.cgi?id=1712832 and
+      https://bugzilla.nasm.us/show_bug.cgi?id=3392658
+- Some files will be automatically added to the various autovendored_sources.mozbuild files.
+  In the case of the asm dir, these may cause build failures on particular platforms which
+  can be resolved by moving those out of autovendored_sources.mozbuild and into the regular
+  moz.build which has a condition on CONFIG['CPU_ARCH'].
+- Files ending in _tmpl.c may be automatically added to SOURCES, resulting in build failures.
+  To fix this, the file must be moved to the appropriate bitdepth_basenames list where
+  generate_source.py will generate the templates into buildable source files.
+- Clone the tag from the dav1d repo and build a stand-alone libdav1d following the steps here:
+  https://code.videolan.org/videolan/dav1d#compile
+- Copy vcs_version.h from the local build/include/vcs_version.h
+  to media/libdav1d/vcs_version.h
+- Copy version.h from local build/include/dav1d/version.h to
+  media/libdav1d/version.h
+- Add new options, if any, in moz.build or config.h
+
+Tips:
+- If you see build failures in build-linux64-base-toolchains (or
+  similar jobs) dav1d may now require a higher minimum nasm version
+  than our base toolchains currently support.  A bug updating the
+  minimum nasm version will probably be necessary.

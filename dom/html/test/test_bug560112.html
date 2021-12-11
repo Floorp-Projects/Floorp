@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=560112
+-->
+<head>
+  <title>Test for Bug 560112</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=560112">Mozilla Bug 560112</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 560112 **/
+
+/**
+ * Sets dataset property. Checks data attribute "attr".
+ * Gets dataset property. Checks data attribute "attr".
+ * Overwrites dataset property Checks data attribute "attr".
+ * Deletes dataset property. Checks data attribute "attr".
+ */
+function SetGetOverwriteDel(attr, prop)
+{
+  var el = document.createElement('div');
+
+  // Set property.
+  is(prop in el.dataset, false, 'Property should not be in dataset before setting.');
+  el.dataset[prop] = "zzzzzz";
+  is(prop in el.dataset, true, 'Property should be in dataset after setting.');
+  ok(el.hasAttribute(attr), 'Element should have data attribute for dataset property "' + prop + '".');
+
+  // Get property.
+  is(el.dataset[prop], "zzzzzz", 'Dataset property "' + prop + '" should have value "zzzzzz".');
+  is(el.getAttribute(attr), "zzzzzz", 'Attribute "' + attr + '" should have value "zzzzzz".');
+
+  // Overwrite property.
+  el.dataset[prop] = "yyyyyy";
+  is(el.dataset[prop], "yyyyyy", 'Dataset property "' + prop + '" should have value "yyyyyy".');
+  is(el.getAttribute(attr), "yyyyyy", 'Attribute "' + attr + '" should have value "yyyyyy".');
+
+  // Delete property.
+  delete el.dataset[prop];
+  ok(!el.hasAttribute(attr), 'Element should not have data attribute for dataset property "' + prop + '".');
+  is(prop in el.dataset, false, 'Deleted property should not be in dataset.');
+}
+
+/**
+ * Sets dataset property and expects exception.
+ */
+function SetExpectException(prop)
+{
+  var el = document.createElement('div');
+
+  try {
+    el.dataset[prop] = "xxxxxx";
+    ok(false, 'Exception should have been thrown.');
+  } catch (ex) {
+    ok(true, 'Exception should have been thrown.');
+  }
+}
+
+/**
+ * Adds attributes in "attrList" to element.
+ * Deletes attributes in "delList" from element.
+ * Checks for "numProp" properties in dataset.
+ */
+function DelAttrEnumerate(attrList, delList, numProp)
+{
+  var el = document.createElement('div');
+  
+  // Adds attributes in "attrList".
+  for (var i = 0; i < attrList.length; ++i) {
+    el.setAttribute(attrList[i], "aaaaaa");
+  }
+
+  // Remove attributes in "delList".
+  for (var i = 0; i < delList.length; ++i) {
+    el.removeAttribute(delList[i]);
+  }
+
+  var numPropCounted = 0;
+
+  for (var prop in el.dataset) {
+    if (el.dataset[prop] == "aaaaaa") {
+      ++numPropCounted;
+    }
+  }
+
+  is(numPropCounted, numProp, 'Number of enumerable dataset properties is incorrent after attribute removal.');
+}
+
+/**
+ * Adds attributes in "attrList" to element.
+ * Checks for "numProp" properties in dataset.
+ */
+function Enumerate(attrList, numProp)
+{
+  var el = document.createElement('div');
+
+  // Adds attributes in "attrList" to element.
+  for (var i = 0; i < attrList.length; ++i) {
+    el.setAttribute(attrList[i], "aaaaaa");
+  }
+
+  var numPropCounted = 0;
+
+  for (var prop in el.dataset) {
+    if (el.dataset[prop] == "aaaaaa") {
+      ++numPropCounted;
+    }
+  }
+
+  is(numPropCounted, numProp, 'Number of enumerable dataset properties is incorrect.');
+}
+
+/**
+ * Adds dataset property then removes attribute from element and check for presence of
+ * properties using the "in" operator.
+ */
+function AddPropDelAttr(attr, prop)
+{
+  var el = document.createElement('div');
+
+  el.dataset[prop] = 'dddddd';
+  is(prop in el.dataset, true, 'Operator "in" should return true after setting property.');
+  el.removeAttribute(attr);
+  is(prop in el.dataset, false, 'Operator "in" should return false for removed attribute.');
+}
+
+/**
+ * Adds then removes attribute from element and check for presence of properties using the
+ * "in" operator.
+ */
+function AddDelAttr(attr, prop)
+{
+  var el = document.createElement('div');
+
+  el.setAttribute(attr, 'dddddd');
+  is(prop in el.dataset, true, 'Operator "in" should return true after setting attribute.');
+  el.removeAttribute(attr);
+  is(prop in el.dataset, false, 'Operator "in" should return false for removed attribute.');
+}
+
+// Typical use case.
+SetGetOverwriteDel('data-property', 'property');
+SetGetOverwriteDel('data-a-longer-property', 'aLongerProperty');
+
+AddDelAttr('data-property', 'property');
+AddDelAttr('data-a-longer-property', 'aLongerProperty');
+
+AddPropDelAttr('data-property', 'property');
+AddPropDelAttr('data-a-longer-property', 'aLongerProperty');
+
+// Empty property name.
+SetGetOverwriteDel('data-', '');
+
+// Leading dash characters.
+SetGetOverwriteDel('data--', '-');
+SetGetOverwriteDel('data--d', 'D');
+SetGetOverwriteDel('data---d', '-D');
+
+// Trailing dash characters.
+SetGetOverwriteDel('data-d-', 'd-');
+SetGetOverwriteDel('data-d--', 'd--');
+SetGetOverwriteDel('data-d-d-', 'dD-');
+
+// "data-" in attribute name.
+SetGetOverwriteDel('data-data-', 'data-');
+SetGetOverwriteDel('data-data-data-', 'dataData-');
+
+// Longer attribute.
+SetGetOverwriteDel('data-long-long-long-long-long-long-long-long-long-long-long-long-long', 'longLongLongLongLongLongLongLongLongLongLongLongLong');
+
+var longAttr = 'data-long';
+var longProp = 'long';
+for (var i = 0; i < 30000; ++i) {
+  // Create really long attribute and property names.
+  longAttr += '-long';
+  longProp += 'Long';
+}
+
+SetGetOverwriteDel(longAttr, longProp);
+
+// Syntax error in setting dataset property (dash followed by lower case).
+SetExpectException('-a');
+SetExpectException('a-a');
+SetExpectException('a-a-a');
+
+// Invalid character.
+SetExpectException('a a');
+
+// Enumeration over dataset properties.
+Enumerate(['data-a-big-fish'], 1);
+Enumerate(['dat-a-big-fish'], 0);
+Enumerate(['data-'], 1);
+Enumerate(['data-', 'data-more-data'], 2);
+Enumerate(['daaata-', 'data-more-data'], 1);
+
+// Delete data attributes and enumerate properties.
+DelAttrEnumerate(['data-one', 'data-two'], ['data-one'], 1);
+DelAttrEnumerate(['data-one', 'data-two'], ['data-three'], 2);
+DelAttrEnumerate(['data-one', 'data-two'], ['one'], 2);
+</script>
+</pre>
+</body>
+</html>

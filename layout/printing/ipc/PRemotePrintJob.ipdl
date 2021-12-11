@@ -1,0 +1,60 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PPrinting;
+
+namespace mozilla {
+namespace layout {
+
+[RefCounted] async protocol PRemotePrintJob
+{
+  manager PPrinting;
+
+both:
+  // Tell either side to abort printing and clean up.
+  async AbortPrint(nsresult aRv);
+
+parent:
+  // Initialize the real print device with the given information.
+  async InitializePrint(nsString aDocumentTitle, nsString aPrintToFile,
+                        int32_t aStartPage, int32_t aEndPage);
+
+  // Translate the page recording writen into |fd| and play back the events to
+  // the real print device.
+  async ProcessPage(uint64_t[] deps);
+
+  // This informs the real print device that we've finished, so it can trigger
+  // the actual print.
+  async FinalizePrint();
+
+  // Report a state change to listeners in the parent process.
+  async StateChange(long aStateFlags,
+                    nsresult aStatus);
+
+  // Report a progress change to listeners in the parent process.
+  async ProgressChange(long aCurSelfProgress,
+                       long aMaxSelfProgress,
+                       long aCurTotalProgress,
+                       long aMaxTotalProgress);
+
+  // Report a status change to listeners in the parent process.
+  async StatusChange(nsresult aStatus);
+
+child:
+  // Inform the child that the print has been initialized in the parent or has
+  // failed with result aRv. Includes a file descriptor which the first page
+  // can be written to.
+  async PrintInitializationResult(nsresult aRv, FileDescriptor aFd);
+
+  // Inform the child that the latest page has been processed remotely. Includes
+  // a file descriptor which the next page can be written to.
+  async PageProcessed(FileDescriptor aFd);
+
+  async __delete__();
+};
+
+} // namespace layout
+} // namespace mozilla

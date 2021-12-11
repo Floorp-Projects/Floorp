@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1426594
+-->
+<head>
+  <title>Test for Bug 1426594</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    function runTests() {
+      let textElement = document.getElementById("textId"),
+          tspanElement = document.getElementById("tspanId");
+
+      isfuzzy(textElement.getBoundingClientRect().width, tspanElement.getBoundingClientRect().width, 5);
+      isfuzzy(textElement.getBoundingClientRect().height, tspanElement.getBoundingClientRect().height, 5);
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="runTests()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=589640">Mozilla Bug 1426594</a>
+<svg height="1.5em" width="200px">
+<text id="textId" y="1em"><tspan id="tspanId">ABCDEF</tspan></text>
+</svg>
+<div style="pointer-events: none; border: 1px solid red; position: absolute;
+     z-index: 1"
+  id="highlight">
+</div>
+</body>
+</html>

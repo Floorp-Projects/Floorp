@@ -1,0 +1,191 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Expressions should always have unique keys 1`] = `
+<Fragment>
+  <ul
+    className="pane expressions-list"
+  >
+    <li
+      className="expression-container"
+      key="expression1"
+      title="expression1"
+    >
+      <div
+        className="expression-content"
+      >
+        <Component
+          autoExpandDepth={0}
+          disableWrap={true}
+          onDOMNodeClick={[Function]}
+          onDOMNodeMouseOut={[Function]}
+          onDOMNodeMouseOver={[Function]}
+          onDoubleClick={[Function]}
+          onInspectIconClick={[Function]}
+          roots={
+            Array [
+              Object {
+                "contents": Object {
+                  "front": null,
+                  "value": Object {
+                    "class": "",
+                    "value": undefined,
+                  },
+                },
+                "name": "expression1",
+                "path": "expression1",
+              },
+            ]
+          }
+          shouldRenderTooltip={true}
+        />
+        <div
+          className="expression-container__close-btn"
+        >
+          <CloseButton
+            handleClick={[Function]}
+            tooltip="Remove watch expression"
+          />
+        </div>
+      </div>
+    </li>
+    <li
+      className="expression-container"
+      key="expression2"
+      title="expression2"
+    >
+      <div
+        className="expression-content"
+      >
+        <Component
+          autoExpandDepth={0}
+          disableWrap={true}
+          onDOMNodeClick={[Function]}
+          onDOMNodeMouseOut={[Function]}
+          onDOMNodeMouseOver={[Function]}
+          onDoubleClick={[Function]}
+          onInspectIconClick={[Function]}
+          roots={
+            Array [
+              Object {
+                "contents": Object {
+                  "front": null,
+                  "value": Object {
+                    "class": "",
+                    "value": undefined,
+                  },
+                },
+                "name": "expression2",
+                "path": "expression2",
+              },
+            ]
+          }
+          shouldRenderTooltip={true}
+        />
+        <div
+          className="expression-container__close-btn"
+        >
+          <CloseButton
+            handleClick={[Function]}
+            tooltip="Remove watch expression"
+          />
+        </div>
+      </div>
+    </li>
+  </ul>
+</Fragment>
+`;
+
+exports[`Expressions should render 1`] = `
+<Fragment>
+  <ul
+    className="pane expressions-list"
+  >
+    <li
+      className="expression-container"
+      key="expression1"
+      title="expression1"
+    >
+      <div
+        className="expression-content"
+      >
+        <Component
+          autoExpandDepth={0}
+          disableWrap={true}
+          onDOMNodeClick={[Function]}
+          onDOMNodeMouseOut={[Function]}
+          onDOMNodeMouseOver={[Function]}
+          onDoubleClick={[Function]}
+          onInspectIconClick={[Function]}
+          roots={
+            Array [
+              Object {
+                "contents": Object {
+                  "front": null,
+                  "value": Object {
+                    "class": "",
+                    "value": "foo",
+                  },
+                },
+                "name": "expression1",
+                "path": "expression1",
+              },
+            ]
+          }
+          shouldRenderTooltip={true}
+        />
+        <div
+          className="expression-container__close-btn"
+        >
+          <CloseButton
+            handleClick={[Function]}
+            tooltip="Remove watch expression"
+          />
+        </div>
+      </div>
+    </li>
+    <li
+      className="expression-container"
+      key="expression2"
+      title="expression2"
+    >
+      <div
+        className="expression-content"
+      >
+        <Component
+          autoExpandDepth={0}
+          disableWrap={true}
+          onDOMNodeClick={[Function]}
+          onDOMNodeMouseOut={[Function]}
+          onDOMNodeMouseOver={[Function]}
+          onDoubleClick={[Function]}
+          onInspectIconClick={[Function]}
+          roots={
+            Array [
+              Object {
+                "contents": Object {
+                  "front": null,
+                  "value": Object {
+                    "class": "",
+                    "value": "bar",
+                  },
+                },
+                "name": "expression2",
+                "path": "expression2",
+              },
+            ]
+          }
+          shouldRenderTooltip={true}
+        />
+        <div
+          className="expression-container__close-btn"
+        >
+          <CloseButton
+            handleClick={[Function]}
+            tooltip="Remove watch expression"
+          />
+        </div>
+      </div>
+    </li>
+  </ul>
+</Fragment>
+`;

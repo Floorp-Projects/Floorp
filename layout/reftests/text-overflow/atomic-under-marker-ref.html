@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: text-overflow with overflow where introducing a marker would cause
+          the line to have no visible text or atomic inline-level content --
+          then we should either suppress or clip the marker
+-->
+<html><head>
+<title>text-overflow: suppress or clip the marker when it hides all content</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:hidden;
+  width:100px;
+  white-space:nowrap;
+  margin:0 100px;
+}
+span {
+ width:97px;
+ display:inline-block;
+}
+s {
+ width:3px;
+ height:10px;
+ margin-left:-2px;
+ display:inline-block;
+ background:blue;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction:rtl;
+}
+.lro {
+  unicode-bidi: bidi-override;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+
+.t1 { }
+.t2 { }
+.t3 { margin-left:98px; padding-left:3px; }
+
+i {
+  display:inline-block;
+  width:2px; 
+  height:10px;
+  background:blue;
+}
+
+</style>
+
+</head><body>
+
+<div style="float:left;">
+<div class="test t1"><span>!</span>&#x2026;</div> <!-- atomic under marker -->
+<div class="test t1"><span>!</span>&#x2026;</div> <!-- atomic in padding -->
+<div class="test t1"><span>!</span>&#x2026;</div> <!-- atomic under marker and in padding -->
+<div class="test t2"><span>!</span>&#x2026;</div> <!-- atomic under marker -->
+<div class="test t2"><span>!</span>&#x2026;</div> <!-- atomic in padding -->
+<div class="test t2"><span>!</span>&#x2026;</div> <!-- atomic under marker and in padding -->
+
+<div class="test rtl t1"><span>!</span>&#x2026;</div> <!-- atomic under marker -->
+<div class="test rtl t1"><span>!</span>&#x2026;</div> <!-- atomic in padding -->
+<div class="test rtl t1"><span>!</span>&#x2026;</div> <!-- atomic under marker and in padding -->
+<div class="test t2"><x style="margin-left:3px">.|</style></div> <!-- atomic under marker -->
+<div class="test t3">g<i></i></div> <!-- atomic in padding -->
+<div class="test t2"><s style="margin-left:1px;"></s><i style="width:17px"></i></div> <!-- atomic under marker and in padding -->
+
+</div>
+
+
+</body>
+</html>

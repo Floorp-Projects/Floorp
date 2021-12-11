@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=502673
+-->
+
+<head>
+  <title>Test for Bug 502673</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<body onload="doTest();">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=502673">Mozilla Bug 502673</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 502673 **/
+
+      SimpleTest.waitForExplicitFinish();
+
+      function listener() {
+      }
+
+      listener.prototype =
+      {
+        NotifyDocumentWillBeDestroyed() {
+          var editor = SpecialPowers.wrap(this.input).editor;
+          editor.removeDocumentStateListener(this);
+        },
+
+        NotifyDocumentStateChanged(aNowDirty) {
+          var editor = SpecialPowers.wrap(this.input).editor;
+          editor.removeDocumentStateListener(this);
+        },
+
+        QueryInterface: SpecialPowers.wrapCallback(function(iid) {
+          if (iid.equals(SpecialPowers.Ci.nsIDocumentStateListener) ||
+              iid.equals(SpecialPowers.Ci.nsISupports))
+            return this;
+          throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+        }),
+      };
+
+      function doTest() {
+        var input = document.getElementById("ip");
+
+        // Add multiple listeners to the same editor
+        var editor = SpecialPowers.wrap(input).editor;
+        var listener1 = new listener();
+        listener1.input = input;
+        var listener2 = new listener();
+        listener2.input = input;
+        var listener3 = new listener();
+        listener3.input = input;
+        editor.addDocumentStateListener(listener1);
+        editor.addDocumentStateListener(listener2);
+        editor.addDocumentStateListener(listener3);
+
+        // Test 1. Fire NotifyDocumentStateChanged notifications where the
+        // listeners remove themselves
+        input.value = "mozilla";
+        editor.undo(1);
+
+        // Report success if we get here - clearly we didn't crash
+        ok(true, "Multiple listeners removed themselves after " +
+                 "NotifyDocumentStateChanged notifications - didn't crash");
+
+        // Add the listeners again for the next test
+        editor.addDocumentStateListener(listener1);
+        editor.addDocumentStateListener(listener2);
+        editor.addDocumentStateListener(listener3);
+
+        // Test 2. Fire NotifyDocumentWillBeDestroyed notifications where the
+        // listeners remove themselves (though in the real world, listeners
+        // shouldn't do this as nsEditor::PreDestroy removes them as
+        // listeners anyway)
+        document.body.removeChild(input);
+        ok(true, "Multiple listeners removed themselves after " +
+                 "NotifyDocumentWillBeDestroyed notifications - didn't crash");
+
+       SimpleTest.finish();
+      }
+   </script>
+  </pre>
+
+  <input type="text" id="ip" />
+</body>
+</html>

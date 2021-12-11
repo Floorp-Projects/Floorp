@@ -1,0 +1,8 @@
+//error: protocol `undeclared', managed by `undeclProtocol', has not been declared
+
+protocol undeclProtocol {
+    manages undeclared;
+
+child:
+    async undeclared();
+};

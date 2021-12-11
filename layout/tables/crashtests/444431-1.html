@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var c = document.createElementNS("http://www.w3.org/1999/xhtml", "caption");
+  var m = document.getElementById("m");
+  
+  m.insertBefore(c, m.firstChild);
+  m.removeChild(c);
+  document.body.style.visibility = "collapse";
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 0);">
+  <img usemap="#m" src="data:image/gif,GIF87a%02%00%02%00%B3%00%00%00%00%00%FF%FF%FF%00%00%00%00%00%00%FF%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%2C%00%00%00%00%02%00%02%00%00%04%03%90H%12%00%3B">
+  <map name="m" id="m"><area></map>
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIProxyInfo;
+interface nsICancelable;
+
+/**
+ * This interface serves as a closure for nsIProtocolProxyService's
+ * asyncResolve method.
+ */
+[scriptable, uuid(fbb6eff6-0cc2-4d99-8d6f-0a12b462bdeb)]
+interface nsIProtocolProxyCallback : nsISupports
+{
+  /**
+   * This method is called when proxy info is available or when an error
+   * in the proxy resolution occurs.
+   *
+   * @param aRequest
+   *        The value returned from asyncResolve.
+   * @param aChannel
+   *        The channel passed to asyncResolve.
+   * @param aProxyInfo
+   *        The resulting proxy info or null if there is no associated proxy
+   *        info for aURI.  As with the result of nsIProtocolProxyService's
+   *        resolve method, a null result implies that a direct connection
+   *        should be used.
+   * @param aStatus
+   *        The status of the callback.  This is a failure code if the request
+   *        could not be satisfied, in which case the value of aStatus
+   *        indicates the reason for the failure and aProxyInfo will be null.
+   */
+  void onProxyAvailable(in nsICancelable aRequest,
+                        in nsIChannel aChannel,
+                        in nsIProxyInfo aProxyInfo,
+                        in nsresult aStatus);
+};

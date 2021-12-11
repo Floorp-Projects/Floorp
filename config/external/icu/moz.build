@@ -1,0 +1,22 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("icu")
+
+if CONFIG["MOZ_SYSTEM_ICU"]:
+    OS_LIBS += CONFIG["MOZ_ICU_LIBS"]
+else:
+    DIRS += [
+        "common",
+        "data",
+        "i18n",
+    ]
+    if CONFIG["TARGET_ENDIANNESS"] == "big":
+        DIRS += [
+            "toolutil",
+            "icupkg",
+        ]
+    USE_LIBS += ["icudata"]

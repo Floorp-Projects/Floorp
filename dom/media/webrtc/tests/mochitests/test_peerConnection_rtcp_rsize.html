@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="sdpUtils.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1279153",
+    title: "rtcp-rsize",
+    visible: true
+  });
+
+  // 0) Use webrtc-sdp
+  // 1) ADD RTCP-RISZE to all video m-sections
+  // 2) Check for RTCP-RSIZE in ANSWER
+  // 3) Wait for media to flow
+  // 4) Wait for RTCP stats
+
+  runNetworkTest(async function (options) {
+    const test = new PeerConnectionTest(options);
+
+    let mSectionsAltered = 0;
+
+    test.chain.insertAfter("PC_LOCAL_CREATE_OFFER", [
+      function PC_LOCAL_ADD_RTCP_RSIZE(test) {
+        const lines = test.originalOffer.sdp.split("\r\n");
+        info(`SDP before rtcp-rsize: ${lines.join('\n')}`);
+        // Insert an rtcp-rsize for each m section
+        const rsizeAdded = lines.flatMap(line => {
+          if (line.startsWith("m=video")) {
+            mSectionsAltered = mSectionsAltered + 1;
+            return [line, "a=rtcp-rsize"];
+          }
+          return [line];
+        });
+        test.originalOffer.sdp = rsizeAdded.join("\r\n");
+        info(`SDP with rtcp-rsize: ${rsizeAdded.join("\n")}`);
+        is(mSectionsAltered, 1, "We only altered 1 msection")
+    }]);
+
+    // Check that the rtcp-rsize makes into the answer
+    test.chain.insertAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION", [
+      function PC_LOCAL_CHECK_RTCP_RSIZE(test) {
+        const msections = sdputils.getMSections(test.pcLocal._pc.currentRemoteDescription.sdp);
+        var alteredMSectionsFound = 0;
+        for (msection of msections) {
+          if (msection.startsWith("m=video")) {
+            ok(msection.includes("\r\na=rtcp-rsize\r\n"), "video m-section includes RTCP-RSIZE");
+            alteredMSectionsFound = alteredMSectionsFound + 1;
+          } else {
+            ok(!msection.includes("\r\na=rtcp-rsize\r\n"), "audio m-section does not include RTCP-RSIZE");
+          }
+        }
+        is(alteredMSectionsFound, mSectionsAltered, "correct number of msections found");
+      }
+    ]);
+
+    // Make sure that we are still getting RTCP stats
+    test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+      async function PC_LOCAL_AND_REMOTE_CHECK_FOR_RTCP_STATS(test) {
+        await Promise.all([
+          test.pcLocal.waitForSyncedRtcp(),
+          test.pcRemote.waitForSyncedRtcp(),
+        ]);
+        // The work is done by waitForSyncedRtcp which will throw if
+        // RTCP stats are not received.
+        info("RTCP stats received!");
+      },
+    );
+    test.setMediaConstraints([{audio: true}, {video: true}], []);
+    await test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

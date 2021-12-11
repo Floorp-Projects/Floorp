@@ -1,0 +1,36 @@
+From dc1292fc8c2b9da900ebcac953120eaffd0d329e Mon Sep 17 00:00:00 2001
+From: George Wright <gwright@mozilla.com>
+Date: Wed, 23 May 2012 14:52:36 -0400
+Subject: [PATCH 10/10]     Bug 755869 - [13] Re-apply bug 750733 - Use
+ handles in API object hooks where possible
+ r=mattwoodrow
+
+---
+ gfx/skia/src/xml/SkJS.cpp |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gfx/skia/src/xml/SkJS.cpp b/gfx/skia/src/xml/SkJS.cpp
+index f2e7a83..b2717d7 100644
+--- a/gfx/skia/src/xml/SkJS.cpp
++++ b/gfx/skia/src/xml/SkJS.cpp
+@@ -74,7 +74,7 @@ extern "C" {
+ #endif
+ 
+ static bool
+-global_enumerate(JSContext *cx, JSObject *obj)
++global_enumerate(JSContext *cx, JSHandleObject *obj)
+ {
+ #ifdef LAZY_STANDARD_CLASSES
+     return JS_EnumerateStandardClasses(cx, obj);
+@@ -84,7 +84,7 @@ global_enumerate(JSContext *cx, JSObject *obj)
+ }
+ 
+ static bool
+-global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
++global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
+ {
+ #ifdef LAZY_STANDARD_CLASSES
+     if ((flags & JSRESOLVE_ASSIGNING) == 0) {
+-- 
+1.7.5.4
+

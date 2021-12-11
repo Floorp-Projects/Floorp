@@ -1,0 +1,27 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test painting patterns with scaling by background-size and
+     -moz-transform.
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0;">
+  <div style="background: white; overflow: hidden;">
+    <div style="margin:20px 0px 20px 40px; width:40px; height:20px;
+                background:-moz-element(#p);
+                -moz-transform:scale(3);"></div>
+    <div style="width:120px; height:60px;
+                background:-moz-element(#p);
+                background-size:300% 300%;"></div>
+  
+    <svg>
+      <pattern id="p" patternUnits="userSpaceOnUse"
+                   x="0" y="0" width="20" height="20">
+        <rect x="5" y="5" width="10" height="10" fill="black"></rect>
+      </pattern> 
+    </svg>
+  </div>
+</body>
+</html>

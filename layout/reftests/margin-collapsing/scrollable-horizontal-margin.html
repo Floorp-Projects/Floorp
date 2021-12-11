@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 724352</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+x1,x2,x3,x4,x5,x6 { display:block; }
+x2 { overflow:auto; width:100px; background:grey; }
+x4 { width: 70px; margin: 0 20px; }
+    </style>
+</head>
+<body>
+
+<x1><x2 style="height:50px;">
+  <x4 style="height:20px; background:lime; "></x4>
+</x2></x1>
+
+
+</body>
+</html>

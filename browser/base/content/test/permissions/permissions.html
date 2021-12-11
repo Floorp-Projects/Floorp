@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <meta charset="utf8">
+  </head>
+<script>
+var gKeyDowns = 0;
+var gKeyPresses = 0;
+
+navigator.serviceWorker.register("dummy.js");
+
+function requestPush() {
+  return navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
+    serviceWorkerRegistration.pushManager.subscribe();
+  });
+}
+
+function requestGeo() {
+  return navigator.geolocation.getCurrentPosition(() => {
+    parent.postMessage("allow", "*");
+  }, error => {
+    // PERMISSION_DENIED = 1
+    parent.postMessage(error.code == 1 ? "deny" : "allow", "*");
+  });
+}
+
+
+window.onmessage = function(event) {
+  switch (event.data) {
+  case "push":
+      requestPush();
+      break;
+  }
+};
+
+</script>
+  <body onkeydown="gKeyDowns++;" onkeypress="gKeyPresses++">
+	<!-- This page could eventually request permissions from content
+	     and make sure that chrome responds appropriately -->
+  <button id="geo" onclick="requestGeo()">Geolocation</button>
+  <button id="xr" onclick="navigator.getVRDisplays()">XR</button>
+  <button id="desktop-notification" onclick="Notification.requestPermission()">Notifications</button>
+  <button id="push" onclick="requestPush()">Push Notifications</button>
+  <button id="camera" onclick="navigator.mediaDevices.getUserMedia({video: true, fake: true})">Camera</button>
+  </body>
+</html>

@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Largeop stretching</title>
+    <meta charset="utf-8"/>
+    <script type="text/javascript">
+
+      function verifyGreaterThan(aElement, aReference) {
+        /* Verify that the height of the element is greater than that of the
+           reference, and otherwise paint the element in red. */
+        var element = document.getElementById(aElement);
+        var ref = document.getElementById(aReference);
+        if (element.getBoundingClientRect().height -
+            ref.getBoundingClientRect().height <= 1) {
+          element.setAttribute("mathcolor", "red");
+        }
+      }
+
+      function doTest() {
+        /* Ensure that the parentheses in the displaystyle case stretch more
+           than the alternative. */
+        verifyGreaterThan("mo0", "mo0a");
+        verifyGreaterThan("mo1", "mo1a");
+        verifyGreaterThan("mo2", "mo2a");
+        verifyGreaterThan("mo3", "mo3a");
+
+        document.documentElement.removeAttribute("class");
+
+      }
+    </script>
+  </head>
+  <body onload="doTest();">
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mo id="mo0">(</mo>
+          <mo>∫</mo>
+          <mo id="mo1">)</mo>
+        <mrow>
+      </math>
+    </p>
+    <p>
+      <math>
+        <mrow>
+          <mo id="mo0a">(</mo>
+          <mo>∫</mo>
+          <mo id="mo1a">)</mo>
+        <mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mo id="mo2">(</mo>
+          <mo>&Product;</mo>
+          <mo id="mo3">)</mo>
+        <mrow>
+      </math>
+    </p>
+    <p>
+      <math>
+        <mrow>
+          <mo id="mo2a">(</mo>
+          <mo>&Product;</mo>
+          <mo id="mo3a">)</mo>
+        <mrow>
+      </math>
+    </p>
+    <p>
+      <!-- &bigotimes; included in the test to check for an assertion involving
+           the direction of the largeop pre-stretch -->
+      <math displaystyle="true">
+        <mrow>
+          <mo id="mo4">(</mo>
+          <mo>&bigotimes;</mo>
+          <mo id="mo5">)</mo>
+        <mrow>
+      </math>
+    </p>
+  </body>
+</html>

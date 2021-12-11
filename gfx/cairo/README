@@ -1,0 +1,261 @@
+Snapshots of cairo and glitz for mozilla usage.
+
+We only include the relevant parts of each release (generally, src/*.[ch]),
+as we have Makefile.in's that integrate into the Mozilla build system.  For
+documentation and similar, please see the official tarballs at
+http://www.cairographics.org/.
+
+VERSIONS:
+
+  cairo (12d521df8acc483b2daa844d4f05dc2fe2765ba6)
+  pixman (0.24.2)
+
+==== Patches ====
+
+Some specific things:
+
+max-font-size.patch: Clamp freetype font size to 1000 to avoid overflow issues
+
+win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
+
+nonfatal-assertions.patch: Make assertions non-fatal
+
+buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug 413583.
+
+cairo-version-fixes.patch: fix up cairo-version.c/cairo-version.h for in-place builds
+
+win32-ddb-dib.patch: fix for bug 455513; not upstream yet pending feebdack
+
+win32-vertically-offset-glyph.patch: bug 454098; vertical positioning errors when drawing glyph runs including delta-y offsets on screen via GDI
+
+ignore-rank0.patch: bug 474886; Not redrawing the background when changing page on flickr
+
+win32-canvas-glyph-position.patch: bug 475092; horizontal positioning errors when drawing glyph runs with delta-y offsets to canvas through win32-font
+
+win32-cleartype-clipping.patch: bug 445087; some glyphs are clipped, mainly on right-hand edge, when ClearType is enabled and drawing to RGBA canvas
+
+on-edge.patch: reverts the in-fill semantic change.
+
+wrap-source_image.patch: make sure we don't free the source image until we're done with it.
+
+zero-sized.patch: deal with zero sized surface in ways less likely to crash.
+
+text-path-filling-threshold.patch: use path filling instead of platform glyph rasterization at a smaller size threshold of 256 device pixels, if the backend supports native filling (which we assume will be fast).
+
+zombie-face.patch: bug 486974; leak and possible crash with @font-face{src:url()}.  Upstream commit: 0238fe2cafea2e1ed19bb222117bd73ee6898d4d
+
+win32-raster.patch: bug 498689; use scanline rasterizer on win32
+
+quartz-falback.patch: try to fix Quartz fallback-to-pixman path; possiby incorrect and obsoleted by Andrea Canciani patch
+
+quartz-repeating-radial-gradients.patch: use Quartz to render repeating radial gradients instead of falling back
+
+quartz-const-globals.patch: make some Quartz color function data const globals instead of local variables
+
+quartz-minimze-gradient-repeat.patch: reduce the number of gradient stop repetitions we use, to improve quality of Quartz's gradient rendering
+
+quartz-first-stop.patch: return the first stop for negative positions on the gradient line of a nonrepeating linear gradient
+
+quartz-glyph-extents.patch: bug 534260; work around incorrect glyph extents returned by quartz for anomalous empty glyphs
+
+quartz-state.patch: bug 522859; refactor cairo-quartz-surface so that state local to a drawing operation is stored in a cairo_quartz_drawing_state_t instead of the surface
+
+quartz-cache-CGImageRef.patch: cache CGImageRef for a CGBitmapContext; when we reuse it, Quartz will cache stuff, improving performance
+
+quartz-remove-snapshot.patch: remove broken implementation of backend snapshot
+
+quartz-cglayers.patch: add support for cairo surfaces backed by CGLayers
+
+quartz-cglayers-fix-fallback.patch: Bug 572912; fix bug in fallback code in previous patch
+
+quartz-get-image.patch: Bug 575521; add a way to get the image surface associated with a surface
+
+quartz-create-for-data.patch: Bug 575521; add a way to create quartz surfaces backed with application-provided data
+
+premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
+
+xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
+
+remove-comma: remove a comma from enum
+
+d2d.patch: add d2d support
+
+fix-zero-len-graident.patch: fix zero length gradients
+
+fix-clip-copy.patch: fix clip copying
+
+fix-clip-region-simplification.patch: fixes a bug in clip region simplifications
+
+expand-in-stroke-limits.patch: expand the in-stroke limits to avoid a bug
+
+d2d-dwrite.patch: update the d2d/dwrite stuff
+
+add-a-stash-of-cairo_t-s.patch: use the stash to avoid malloc/freeing cairo_t's
+
+bgr.patch: fix image wrapping
+
+disable-server-graidents.patch: disable server-side gradients
+
+clip-invariant.patch: make rasterization closer to being clip invariant
+
+fix-unnecessary-fallback.patch: avoid unnecessary fallback
+
+handle-a1-upload.patch: handle a1 image uploads through converter
+
+surface-clipper.patch: remove an incorrect optimization
+
+fix-win32-show-glyphs-clipping.patch: fix a clipping bug
+
+native-clipping.patch: Add support for a native clipping api
+
+quartz-is-clear.patch: Propagate the quartz is_clear flag.
+
+cairo-qt-compile.patch: Fix compile error, return not reached, and clone_similar interface
+
+dwrite-glyph-extents.patch: Add padding to extents of antialiased glyphs, to avoid unwanted clipping. (bug 568191)
+
+fix-ps-output.patch: PS: Add missing 'q' when resetting clip path (42b5cac7668625c9761113ff72b47af5cfd10377)
+
+ensure-text-flushed.patch: PDF-operators: ensure text operations flushed before emitting clip (42b5cac7668625c9761113ff72b47af5cfd10377)
+
+fix-xcopyarea-with-clips.patch: 5d07307b691afccccbb15f773d5231669ba44f5a
+
+cairo-x-visual.patch: make valid visua for cairo_xlib_surface_create_with_xrender_format (55037bfb2454a671332d961e061c712ab5471580)
+
+win32-transparent-surface.patch: add API so we can create a win32 surface for an HDC and indicate the surface has an alpha channel
+
+cairo_qt_glyphs.patch: Drop X surface from Qt surface, add support for new qt glyphs api
+
+empty-clip-rectangles.patch: f2fa15680ec3ac95cb68d4957557f06561a7dc55
+
+empty-clip-extents.patch: b79ea8a6cab8bd28aebecf6e1e8229d5ac017264
+
+clip-rects-surface-extents.patch: 108b1c7825116ed3f93aa57384bbd3290cdc9181
+
+disable-previous-scaled-font-cache.patch: Disable the previous-scaled-font-cache until we figure out our ctm handling (#583035)
+ 
+copyarea-with-alpha.patch: support simple overlapping self copies in (some) color_alpha xlib surfaces. https://bugs.freedesktop.org/show_bug.cgi?id=29250
+
+fix-clip-test.patch: Use y 498c10032ea3f8631a928cd7df96766f2c8ddca4
+
+quartz-refactor-surface-setup.patch: Extract the surface-source setup chunk of _cairo_quartz_setup_state into its own function
+
+quartz-fix-PAD.patch: Treat PAD like NONE instead of REPEAT
+
+quartz-mask-non-OVER.patch: Don't use CGContextSetAlpha to optimize alpha masking for non-OVER operators
+
+quartz-layers-content.patch: Store cairo content type in CGLayer surfaces
+
+quartz-optimize-OVER.patch: Optimize OVER to SOURCE for opaque patterns
+
+quartz-check-imageSurfaceEquiv.patch: Drop cairo_quartz_surface_t's "imageSurfaceEquiv" member variable if we have problems creating it
+
+disable-subpixel-antialiasing.patch: Add API to disable subpixel antialiasing completely for a target surface
+
+tee-surfaces-pointwise.patch: Composite tee subsurfaces pointwise if possible
+
+pattern_get_surface-no-error.patch: Don't put a pattern into error if cairo_pattern_get_surface fails
+
+missing-cairo-clip-init.diff: Missing cairo_clip_init call in cairo_gstate_show_text_glyphs lead to crash
+
+fix-cairo-win32-print-gdi-error.diff: Don't use fwprintf with char* format.  Flush stderr so that all error messages appears before exit.
+
+pixman-image-transform.patch: Reset the transform on pixman images when using them as destinations.
+
+fix-cairo-surface-wrapper-flush-build-warning.patch: Ensures that _cairo_surface_wrapper_flush always returns a status, to silence the build warning
+
+fixup-unbounded.patch: Hack to work around bad assumption.
+
+quartz-get-image-performance: Make cairo_quartz_get_image faster in the failure case by not flushing unless we are going to succeed.
+
+lround-c99-only.patch: Only use lround in C99 programs.
+
+unicode-printing.patch: Print as unicode (bug 454532)
+
+quartz-mark-dirty.patch: Add a quartz implementation of mark_dirty_rectangle (bug 715704)
+
+expose-snapshot.patch: Make functions to add snapshots public, as well as allow creating null surfaces publically. (bug 715658)
+
+fix-build-with-Werror=return-type.patch: Fix builds with -Werror=return-type (bug 737909)
+
+avoid-extend-none.patch: Avoid incorrectly using EXTEND_NONE (bug 751668)
+
+win32-ExtCreatePen-zero-size.patch: Don't pass zero width or dash lengths to ExtCreatePen (bug 768348)
+
+d2d-repeating-gradients.patch: Minimize number of gradient stops added to handle repeating with path fills (bug 768775)
+
+xlib-glyph-clip-region.patch: bug 709477, addressed upstream by be1ff2f45fdbc69537e513834fcffa0435e63073
+
+gdi-RGB24-ARGB32.patch: bug 788794
+
+dwrite-font-printing.patch: bug 468568; don't substitute a GDI font for a DWrite font if the name tables aren't equal
+
+d2d-gradient-ensure-stops.patch: bug 792903, ensure we don't set num_stops to 0
+
+setlcdfilter_in_tree.patch: bug 790139; force cairo to use FT_Library_SetLcdFilter from our in tree library rather than picking it up from the system
+
+dwrite-font-match-robustness.patch: bug 717178, don't crash when _name_tables_match is passed a nil scaled-font
+
+handle-multi-path-clip.patch: bug 813124, handle multiple clip paths correctly
+
+win32-gdi-font-cache.patch: Bug 717178, cache GDI font faces to reduce usage of GDI resources
+
+win32-gdi-font-cache-no-HFONT.patch: Bug 717178, don't cache GDI font faces when an HFONT belonging to the caller is passed in
+
+fix-win32-font-assertion.patch: Bug 838617, fix assertion from bug 717178 that was in the wrong place
+
+xlib-flush-glyphs.patch: bug 839745, flush glyphs when necessary
+
+dasharray-zero-gap.patch: bug 885585, ensure strokes get painted when the gaps in a dash array are all zero length
+
+cairo-mask-extends-bug.patch: bug 918671, sometimes when building a mask we wouldn't clear it properly. This is fixed in cairo 1.12
+
+ft-no-subpixel-if-surface-disables.patch: bug 929451, don't use subpixel aa for ft fonts on surfaces that don't support it
+
+win32-printing-axis-swap.patch: bug 1205854, workaround for Windows printer drivers that can't handle swapped X and Y axes
+
+no-pixman-image-reuse-across-threads.patch: bug 1273701, picked from 71e8a4c23019b01aa43b334fcb2784c70daae9b5
+
+==== pixman patches ====
+
+pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
+
+pixman-rename-and-endian.patch: include cairo-platform.h for renaming of external symbols and endian macros
+
+NOTE: we previously supported ARM assembler on MSVC, this has been removed because of the maintenance burden
+
+pixman-export.patch: use cairo_public for PIXMAN_EXPORT to make sure pixman symbols are not exported in libxul
+
+pixman-limits.patch: include limits.h for SIZE_MAX
+
+pixman-lowres-interp.patch: Use lower quality interpolation for more speed.
+
+pixman-bilinear-fastpath.patch: Bilinear fast paths for non-neon
+
+pixman-16-bit-pipeline.patch: 16 bit pipeline for dithering
+
+pixman-dither.patch: Add dithering of 16 bit gradients
+
+quartz-support-color-emoji-font.patch: support Apple Color Emoji font in cairo-quartz backend
+
+use-show-text-glyphs-if-glyph-path-fails.patch: fall back to show_text_glyphs even at huge sizes if scaled_font_glyph_path didn't work
+
+pixman-enable-altivec-acceleration.patch: enable building the altivec acceleration
+
+win32-d3dsurface9.patch: Create a win32 d3d9 surface to support LockRect
+
+win32-avoid-extend-pad-fallback: Avoid falling back to pixman when using EXTEND_PAD
+
+support-new-style-atomic-primitives.patch: Support the __atomic_* primitives for atomic operations
+
+clang-cl-popcount.patch: Use __builtin_popcount for Clang (including clang-cl)
+
+==== disable printing patch ====
+
+disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
+
+==== cairo clamp bounday patch ====
+cairo-clamp-boundary.patch: don't call pixman_fill with negative starts or negative sizes
+
+==== cairo zero subpath bounds patch ====
+zero-subpath-bounds.patch: include zero length paths in bounds

@@ -1,0 +1,25 @@
+<body>
+<head>
+  <title>Test mixed case mimetype for plugins</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+  SimpleTest.expectAssertions(0, 1);
+
+  SimpleTest.waitForExplicitFinish();
+
+  function frameLoaded() {
+    var contentDocument = document.getElementById("testframe").contentDocument;
+    ok(contentDocument.body.innerHTML.length > 0, "Frame content shouldn't be empty.");
+    ok(contentDocument.images.length > 0, "Frame content should have an image.");
+    SimpleTest.finish();
+  }
+</script>
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe" onload="frameLoaded()" src="mixed_case_mime.sjs"></iframe>
+
+</body>
+</html>

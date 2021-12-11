@@ -1,0 +1,85 @@
+<html>
+
+<head>
+  <title>HTML link states testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // a@href and its text node
+      testStates("link_href", STATE_LINKED);
+      testStates(getAccessible("link_href").firstChild, STATE_LINKED);
+
+      // a@onclick
+      testStates("link_click", STATE_LINKED);
+
+      // a@onmousedown
+      testStates("link_mousedown", STATE_LINKED);
+
+      // a@onmouseup
+      testStates("link_mouseup", STATE_LINKED);
+
+      // a@role="link"
+      testStates("link_arialink", STATE_LINKED);
+
+      // a@role="button"
+      testStates("link_ariabutton", 0, 0, STATE_LINKED);
+
+      // a (no @href, no click event listener)
+      testStates("link_notlink", 0, 0, STATE_LINKED);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=423409"
+     title="Expose click action if mouseup and mousedown are registered">
+    Mozilla Bug 423409
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=754830"
+     title="Calculate link states separately">
+    Mozilla Bug 754830
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=757774"
+     title="Fire state change event when link is traversed">
+    Mozilla Bug 757774
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <a id="link_href" href="http://mozilla.org">link</a>
+  <a id="link_click" onclick="">link</a>
+  <a id="link_mousedown" onmousedown="">link</a>
+  <a id="link_mouseup" onmouseup="">link</a>
+  <a id="link_arialink" role="link">aria link</a>
+  <a id="link_ariabutton" role="button">aria button</a>
+  <a id="link_notlink">not link</a>
+
+</body>
+</html>

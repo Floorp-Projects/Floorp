@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+</head>
+<body style="direction: rtl;">
+m
+<span id="a" style="border: 1px solid black;"></span>
+<div><script>document.body.offsetHeight;</script></div>
+m
+
+<script>
+function doe() {
+var a=document.getElementById('a');
+a.style.outline = '1px solid transparent';
+document.body.offsetHeight;
+a.style.outline = '';
+document.documentElement.removeAttribute('class');
+}
+setTimeout(doe, 500);
+</script>
+</body>
+</html>

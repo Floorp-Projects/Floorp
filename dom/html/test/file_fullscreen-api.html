@@ -1,0 +1,340 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=545812
+
+Test DOM full-screen API.
+
+-->
+<head>
+  <title>Test for Bug 545812</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+  <style>
+  body {
+    background-color: black;
+  }
+  </style>
+</head>
+<body>
+<div id="fullscreen-element"></div>
+<script type="application/javascript">
+
+/** Test for Bug 545812 **/
+
+function ok(condition, msg) {
+  opener.ok(condition, "[fullscreen] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[fullscreen] " + msg);
+}
+
+/*
+<html>
+  <body onload='document.body.requestFullscreen();'>
+  <iframe id='inner-frame'></iframe>
+  </body>
+</html>
+*/
+var iframeContents = "<html><body onload='parent.SimpleTest.waitForFocus(function(){document.body.requestFullscreen();});'><iframe id='inner-frame'></iframe></body></html>";
+
+var iframe = null;
+var outOfDocElement = null;
+var inDocElement = null;
+var container = null;
+var button = null;
+
+
+function sendMouseClick(element) {
+  synthesizeMouseAtCenter(element, {});
+}
+
+function assertPromiseResolved(promise, msg) {
+  let { state, value } = SpecialPowers.PromiseDebugging.getState(promise);
+  is(state, "fulfilled", "Promise should have been resolved " + msg);
+  is(value, undefined, "Promise should be resolved with undefined " + msg);
+}
+
+function assertPromiseRejected(promise, msg) {
+  let { state, reason } = SpecialPowers.PromiseDebugging.getState(promise);
+  is(state, "rejected", "Promise should have been rejected " + msg);
+  // XXX Actually we should be testing "instanceof TypeError", but it
+  // doesn't work as expected currently. See bug 1412856.
+  is(reason.name, "TypeError",
+     "Promise should be rejected with TypeError " + msg);
+}
+
+const FULLSCREEN_ELEMENT = document.getElementById("fullscreen-element");
+let promise;
+
+function enter1(event) {
+  is(event.target, FULLSCREEN_ELEMENT,
+     "Event target should be the fullscreen element #1");
+  ok(document.fullscreen, "Document should be in fullscreen");
+  is(document.fullscreenElement, FULLSCREEN_ELEMENT,
+     "Full-screen element should be div element.");
+  ok(document.fullscreenElement.matches(":fullscreen"),
+     "FSE should match :fullscreen");
+  addFullscreenChangeContinuation("exit", exit1);
+  FULLSCREEN_ELEMENT.remove();
+  is(document.fullscreenElement, null,
+     "Full-screen element should be null after removing.");
+}
+
+function exit1(event) {
+  document.body.appendChild(FULLSCREEN_ELEMENT);
+  is(document.fullscreenElement, null,
+     "Full-screen element should still be null after re-adding former FSE.");
+  is(event.target, document, "Event target should be the document #2");
+  ok(!document.fullscreen, "Document should not be in fullscreen");
+  is(document.fullscreenElement, null, "Full-screen element should be null.");
+  iframe = document.createElement("iframe");
+  iframe.allowFullscreen = true;
+  addFullscreenChangeContinuation("enter", enter2);
+  document.body.appendChild(iframe);
+  iframe.srcdoc = iframeContents;
+}
+
+function enter2(event) {
+  is(event.target, iframe,
+     "Event target should be the fullscreen iframe #3");
+  is(document.fullscreenElement, iframe,
+     "Full-screen element should be iframe element.");
+  is(iframe.contentDocument.fullscreenElement, iframe.contentDocument.body,
+     "Full-screen element in subframe should be body");
+  
+  // The iframe's body is full-screen. Cancel full-screen in the subdocument to return
+  // the full-screen element to the previous full-screen element. This causes
+  // a fullscreenchange event.
+  addFullscreenChangeContinuation("exit", exit2);
+  promise = document.exitFullscreen();
+}
+
+function exit2(event) {
+  is(document.fullscreenElement, null,
+     "Full-screen element should have rolled back.");
+  is(iframe.contentDocument.fullscreenElement, null,
+     "Full-screen element in subframe should be null");
+  assertPromiseResolved(promise, "in exit2");
+  
+  addFullscreenChangeContinuation("enter", enter3);
+  promise = FULLSCREEN_ELEMENT.requestFullscreen();
+}
+
+function enter3(event) {
+  is(event.target, FULLSCREEN_ELEMENT,
+     "Event target should be the fullscreen element #3");
+  is(document.fullscreenElement, FULLSCREEN_ELEMENT,
+     "Full-screen element should be div.");
+  assertPromiseResolved(promise, "in enter3");
+  
+  // Transplant the FSE into subdoc. Should exit full-screen.
+  addFullscreenChangeContinuation("exit", exit3);
+  var _innerFrame = iframe.contentDocument.getElementById("inner-frame");
+  _innerFrame.contentDocument.body.appendChild(FULLSCREEN_ELEMENT);
+  is(document.fullscreenElement, null,
+     "Full-screen element transplanted, should be null.");
+  is(iframe.contentDocument.fullscreenElement, null,
+     "Full-screen element in outer frame should be null.");
+  is(_innerFrame.contentDocument.fullscreenElement, null,
+     "Full-screen element in inner frame should be null.");
+}
+
+function exit3(event) {
+  document.body.appendChild(FULLSCREEN_ELEMENT);
+  is(event.target, document, "Event target should be the document #3");
+  is(document.fullscreenElement, null, "Full-screen element should be null.");
+  document.body.removeChild(iframe);
+  iframe = null;
+
+  // Do a request out of document. It should be denied.
+  // Continue test in the following fullscreenerror handler.
+  outOfDocElement = document.createElement("div");
+  addFullscreenErrorContinuation(error1);    
+  promise = outOfDocElement.requestFullscreen();
+}
+
+function error1(event) {
+  ok(!document.fullscreenElement,
+     "Requests for full-screen from not-in-doc elements should fail.");
+  assertPromiseRejected(promise, "in error1");
+  container = document.createElement("div");
+  inDocElement = document.createElement("div");
+  container.appendChild(inDocElement);
+  FULLSCREEN_ELEMENT.appendChild(container);
+
+  addFullscreenChangeContinuation("enter", enter4);
+  inDocElement.requestFullscreen();
+}
+
+function enter4(event) {
+  is(event.target, inDocElement,
+     "Event target should be the fullscreen element #4");
+  is(document.fullscreenElement, inDocElement, "FSE should be inDocElement.");
+
+  // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
+  addFullscreenChangeContinuation("exit", exit_to_arg_test_1);
+  container.remove();
+  is(document.fullscreenElement, null,
+     "Should not have a full-screen element again.");
+}
+
+function exit_to_arg_test_1(event) {
+  ok(!document.fullscreenElement,
+     "Should have left full-screen mode (third time).");
+  addFullscreenChangeContinuation("enter", enter_from_arg_test_1);
+  var threw = false;
+  try {
+    FULLSCREEN_ELEMENT.requestFullscreen(123);
+  } catch (e) {
+    threw = true;
+    // trigger normal fullscreen so that we continue
+    FULLSCREEN_ELEMENT.requestFullscreen();
+  }
+  ok(!threw, "requestFullscreen with bogus arg (123) shouldn't throw exception");
+}
+
+function enter_from_arg_test_1(event) {
+  ok(document.fullscreenElement,
+     "Should have entered full-screen after calling with bogus (ignored) argument (fourth time)");
+  addFullscreenChangeContinuation("exit", exit_to_arg_test_2);
+  document.exitFullscreen();
+}
+
+function exit_to_arg_test_2(event) {
+  ok(!document.fullscreenElement,
+     "Should have left full-screen mode (fourth time).");
+  addFullscreenChangeContinuation("enter", enter_from_arg_test_2);
+  var threw = false;
+  try {
+    FULLSCREEN_ELEMENT.requestFullscreen({ vrDisplay: null });
+  } catch (e) {
+    threw = true;
+    // trigger normal fullscreen so that we continue
+    FULLSCREEN_ELEMENT.requestFullscreen();
+  }
+  ok(!threw, "requestFullscreen with { vrDisplay: null } shouldn't throw exception");
+}
+
+function enter_from_arg_test_2(event) {
+  ok(document.fullscreenElement,
+     "Should have entered full-screen after calling with vrDisplay null argument (fifth time)");
+  addFullscreenChangeContinuation("exit", exit4);
+  document.exitFullscreen();
+}
+
+function exit4(event) {
+  ok(!document.fullscreenElement,
+     "Should be back in non-full-screen mode (fifth time)");
+  SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", true]]}, function() {
+    addFullscreenErrorContinuation(error2);
+    FULLSCREEN_ELEMENT.requestFullscreen();
+  });
+}
+
+function error2(event) {
+  ok(!document.fullscreenElement,
+     "Should still be in normal mode, because calling context isn't trusted.");
+  button = document.createElement("button");
+  button.onclick = function() {
+    FULLSCREEN_ELEMENT.requestFullscreen();
+  };
+  FULLSCREEN_ELEMENT.appendChild(button);
+  addFullscreenChangeContinuation("enter", enter5);
+  sendMouseClick(button);
+}
+
+function enter5(event) {
+  ok(document.fullscreenElement, "Moved to full-screen after mouse click");
+  addFullscreenChangeContinuation("exit", exit5);
+  document.exitFullscreen();
+}
+
+function exit5(event) {
+  ok(!document.fullscreenElement,
+     "Should have left full-screen mode (last time).");
+  SpecialPowers.pushPrefEnv({
+    "set":[["full-screen-api.allow-trusted-requests-only", false],
+           ["full-screen-api.enabled", false]]}, function() {
+              is(document.fullscreenEnabled, false, "document.fullscreenEnabled should be false if full-screen-api.enabled is false");
+              addFullscreenErrorContinuation(error3);
+              FULLSCREEN_ELEMENT.requestFullscreen();
+  });
+}
+
+function error3(event) {
+  ok(!document.fullscreenElement,
+     "Should still be in normal mode, because pref is not enabled.");
+
+  SpecialPowers.pushPrefEnv({"set":[["full-screen-api.enabled", true]]}, function() {
+    is(document.fullscreenEnabled, true, "document.fullscreenEnabled should be true if full-screen-api.enabled is true");
+    opener.nextTest();
+  });
+}
+
+function begin() {
+  testNamespaces(() => {
+    addFullscreenChangeContinuation("enter", enter1);
+    FULLSCREEN_ELEMENT.requestFullscreen();
+  });
+}
+
+function testNamespaces(followupTestFn) {
+  let tests = [
+    {allowed: false, name: "element", ns: "http://www.w3.org/XML/1998/namespace"},
+    {allowed: false, name: "element", ns: "http://www.w3.org/1999/xlink"},
+    {allowed: false, name: "element", ns: "http://www.w3.org/2000/svg"},
+    {allowed: false, name: "element", ns: "http://www.w3.org/1998/Math/MathML"},
+    {allowed: false, name: "mathml",  ns: "unknown"},
+    {allowed: false, name: "svg",     ns: "unknown"},
+    {allowed: true,  name: "element", ns: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"},
+    {allowed: true,  name: "element", ns: "http://www.w3.org/1999/xhtml"},
+    {allowed: true,  name: "svg",     ns: "http://www.w3.org/1999/xhtml"},
+    {allowed: true,  name: "math",    ns: "http://www.w3.org/1999/xhtml"},
+    {allowed: true,  name: "svg",     ns: "http://www.w3.org/2000/svg"},
+    {allowed: true,  name: "math",    ns: "http://www.w3.org/1998/Math/MathML"},
+    {allowed: true,  name: "element"},
+  ];
+
+  function runNextNamespaceTest() {
+    let test = tests.shift();
+    if (!test) {
+      followupTestFn();
+      return;
+    }
+
+    let elem = test.ns ? document.createElementNS(test.ns, test.name) :
+                         document.createElement(test.name);
+    document.body.appendChild(elem);
+
+    if (test.allowed) {
+      addFullscreenChangeContinuation("enter", () => {
+        ok(document.fullscreen, "Document should be in fullscreen");
+        is(document.fullscreenElement, elem,
+           `Element named '${test.name}' in this namespace should be allowed: ${test.ns}`);
+        addFullscreenChangeContinuation("exit", () => {
+          document.body.removeChild(elem);
+          runNextNamespaceTest();
+        });
+        document.exitFullscreen();
+      });
+    } else {
+      addFullscreenErrorContinuation(() => {
+        ok(!document.fullscreenElement,
+           `Element named '${test.name}' in this namespace should not be allowed: ${test.ns}`);
+        document.body.removeChild(elem);
+        runNextNamespaceTest();
+      });
+    }
+
+    SimpleTest.waitForFocus(() => elem.requestFullscreen());
+  }
+
+  runNextNamespaceTest();
+}
+</script>
+</pre>
+</body>
+</html>

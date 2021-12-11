@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="background-color:lime" viewBox="-50 -50 100 100">
+ <defs>
+   <filter id="blur">
+     <feGaussianBlur stdDeviation="1"/>
+   </filter>
+ </defs>
+
+ <circle r="15" fill="red" filter="url(#blur)" transform="rotate(45)"/>
+ <circle r="15" fill="red" filter="url(#blur)" transform="rotate(90)"/>
+ <circle r="15" fill="red" filter="url(#blur)" transform="skewX(0) skewY(0)"/>
+ <circle cx="-10" cy="-10" r="15" fill="red" filter="url(#blur)" transform="translate(10, 10)"/>
+ <circle cx="-10000" cy="-10000" r="15" fill="red" filter="url(#blur)" transform="translate(10000, 10000)"/>
+ <circle r="10" fill="red" filter="url(#blur)" transform="scale(1.5, 1.5)"/>
+
+ <!-- The circles above should be completely covered by the next one. -->
+ <circle r="20" fill="lime"/>
+</svg>

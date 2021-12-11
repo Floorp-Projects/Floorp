@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=182279
+-->
+<head>
+  <title>Test for Bug 182279</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=182279">Moozilla Bug 182279</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 182279 **/
+var sel = document.createElement("select");
+var opt1 = new Option();
+var opt2 = new Option();
+var opt3 = new Option();
+opt1.value = 1;
+opt2.value = 2;
+opt3.value = 3;
+sel.add(opt1, null);
+sel.add(opt2, opt1);
+sel.add(opt3);
+is(sel[0], opt2, "1st item should be 2");
+is(sel[1], opt1, "2nd item should be 1");
+is(sel[2], opt3, "3rd item should be 3");
+</script>
+</pre>
+</body>
+</html>

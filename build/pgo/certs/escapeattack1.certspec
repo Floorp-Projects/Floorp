@@ -1,0 +1,3 @@
+subject:www.bank1.com\00www.bad-guy.com
+issuer:printableString/CN=Temporary Certificate Authority/O=Mozilla Testing/OU=Profile Guided Optimization
+extension:subjectAlternativeName:www.bank1.com\00www.bad-guy.com

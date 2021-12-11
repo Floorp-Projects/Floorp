@@ -1,0 +1,558 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- This file tests the saving and loading of memory reports to/from file in
+       about:memory. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  "use strict";
+
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  // Hide all the real reporters;  we'll restore them at the end.
+  mgr.blockRegistrationAndHideExistingReporters();
+
+  // Setup a minimal number of fake reporters.
+  const KB = 1024;
+  const MB = KB * KB;
+  const HEAP  = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER = Ci.nsIMemoryReporter.KIND_OTHER;
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+
+  let fakeReporters = [
+    { collectReports(aCbObj, aClosure, aAnonymize) {
+        function f(aP, aK, aA, aD) {
+          aCbObj.callback("", aP, aK, BYTES, aA, aD, aClosure);
+        }
+        f("heap-allocated",     OTHER,   250 * MB, "Heap allocated.");
+        f("explicit/a/b",       HEAP,     50 * MB, "A b.");
+        f("other/a",            OTHER,   0.2 * MB, "Other a.");
+        f("other/b",            OTHER,   0.1 * MB, "Other b.");
+      }
+    }
+  ];
+
+  for (let i = 0; i < fakeReporters.length; i++) {
+    mgr.registerStrongReporterEvenIfBlocked(fakeReporters[i]);
+  }
+
+  ]]>
+  </script>
+
+  <iframe id="amFrame"  height="400" src="about:memory"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  function finish()
+  {
+    mgr.unblockRegistrationAndRestoreOriginalReporters();
+    SimpleTest.finish();
+  }
+
+  // Load the given file into the frame, then copy+paste the entire frame and
+  // check that the cut text matches what we expect.
+  function test(aFilename, aFilename2, aExpected, aDumpFirst, aVerbose, aNext) {
+    let frame = document.getElementById("amFrame");
+    frame.focus();
+
+    let doc = frame.contentWindow.document;
+    let verbosity = doc.getElementById("verbose");
+    verbosity.checked = aVerbose;
+
+    function getFilePath(aFilename) {
+      let file = SpecialPowers.Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+      file.append("chrome");
+      file.append("toolkit");
+      file.append("components");
+      file.append("aboutmemory");
+      file.append("tests");
+      file.append(aFilename);
+      return file.path;
+    }
+
+    let filePath = getFilePath(aFilename);
+
+    let e = document.createEvent('Event');
+    e.initEvent('change', true, true);
+
+    function check() {
+      // Initialize the clipboard contents.
+      SpecialPowers.clipboardCopyString("initial clipboard value");
+
+      let numFailures = 0, maxFailures = 30;
+
+      // Because the file load is async, we don't know when it will finish and
+      // the output will show up.  So we poll.
+      function copyPasteAndCheck() {
+        // Copy and paste frame contents, and filter out non-deterministic
+        // differences.
+        synthesizeKey("A", {accelKey: true});
+        synthesizeKey("C", {accelKey: true});
+        let actual = SpecialPowers.getClipboardData("text/unicode");
+        actual = actual.replace(/\(pid \d+\)/g, "(pid NNN)");
+
+        if (actual.trim() === aExpected.trim()) {
+          SimpleTest.ok(true, "Clipboard has the expected contents");
+          aNext();
+        } else {
+          numFailures++;
+          if (numFailures === maxFailures) {
+            ok(false, "pasted text doesn't match");
+            dump("******EXPECTED******\n");
+            dump(aExpected);
+            dump("*******ACTUAL*******\n");
+            dump(actual);
+            dump("********************\n");
+            finish();
+          } else {
+            setTimeout(copyPasteAndCheck, 100);
+          }
+        }
+      }
+      copyPasteAndCheck();
+    }
+
+    if (!aFilename2) {
+      function loadAndCheck() {
+        let fileInput1 =
+          frame.contentWindow.document.getElementById("fileInput1");
+        fileInput1.value = filePath;    // this works because it's a chrome test
+
+        fileInput1.dispatchEvent(e);
+        check();
+      }
+
+      if (aDumpFirst) {
+        let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
+                        getService(Ci.nsIMemoryInfoDumper);
+        dumper.dumpMemoryReportsToNamedFile(filePath, loadAndCheck, null,
+                                            /* anonymize = */ false,
+                                            /* minimize memory usage = */ false);
+      } else {
+        loadAndCheck();
+      }
+
+    } else {
+      let fileInput2 =
+        frame.contentWindow.document.getElementById("fileInput2");
+      fileInput2.value = filePath;    // this works because it's a chrome test
+
+      // Hack alert:  fileInput2's onchange handler calls fileInput2.click().
+      // But we don't want that to happen, because we want to bypass the file
+      // picker for the test.  So we set |e.skipClick|, which causes
+      // fileInput2.click() to be skipped, and dispatch the second change event
+      // directly ourselves.
+
+      e.skipClick = true;
+      fileInput2.dispatchEvent(e);
+
+      let filePath2 = getFilePath(aFilename2);
+      fileInput2.value = filePath2;    // this works because it's a chrome test
+
+      let e2 = document.createEvent('Event');
+      e2.initEvent('change', true, true);
+      fileInput2.dispatchEvent(e);
+
+      check();
+    }
+  }
+
+  // Returns a function that chains together multiple test() calls.
+  function chain(aPieces) {
+    let x = aPieces.shift();
+    if (x) {
+      return function() { test(x.filename, x.filename2, x.expected, x.dumpFirst, x.verbose, chain(aPieces)); }
+    }
+    return function() { finish(); };
+  }
+
+  let expectedGood =
+"\
+Main Process (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+262,144,000 B (100.0%) -- explicit\n\
+├──209,715,200 B (80.00%) ── heap-unclassified\n\
+└───52,428,800 B (20.00%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+1,024 B (100.0%) -- compartments\n\
+└──1,024 B (100.0%) ── system/a\n\
+\n\
+1,024 B (100.0%) -- ghost-windows\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+314,572 B (100.0%) -- other\n\
+├──209,715 B (66.67%) ── a\n\
+└──104,857 B (33.33%) ── b\n\
+\n\
+1,024 B (100.0%) -- pss\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+1,024 B (100.0%) -- rss\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+1,024 B (100.0%) -- size\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+1,024 B (100.0%) -- swap\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+262,144,000 B ── heap-allocated\n\
+\n\
+End of Main Process (pid NNN)\n\
+Explicit-only process\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+100,000 B (100.0%) -- explicit\n\
+└──100,000 B (100.0%) ── a/b\n\
+\n\
+End of Explicit-only process\n\
+Heap-unclassified process\n\
+Explicit Allocations\n\
+\n\
+262,144,000 B (100.0%) -- explicit\n\
+├──209,715,200 B (80.00%) ── heap-unclassified\n\
+└───52,428,800 B (20.00%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+262,144,000 B ── heap-allocated\n\
+\n\
+End of Heap-unclassified process\n\
+Other-only process\n\
+Other Measurements\n\
+\n\
+200,000 B (100.0%) -- a\n\
+├──100,000 B (50.00%) ── b\n\
+└──100,000 B (50.00%) ── c\n\
+\n\
+500,000 B ── heap-allocated\n\
+\n\
+End of Other-only process\n\
+";
+
+  let expectedGood2 =
+"\
+Main Process (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+262,144,000 B (100.0%) -- explicit\n\
+├──209,715,200 B (80.00%) ── heap-unclassified\n\
+└───52,428,800 B (20.00%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+314,572 B (100.0%) -- other\n\
+├──209,715 B (66.67%) ── a\n\
+└──104,857 B (33.33%) ── b\n\
+\n\
+262,144,000 B ── heap-allocated\n\
+\n\
+End of Main Process (pid NNN)\n\
+";
+
+  // This is the output for a malformed data file.
+  let expectedBad =
+"\
+Error: Invalid memory report(s): missing 'hasMozMallocUsableSize' property\
+";
+
+  // This is the output for a non-verbose diff.
+  let expectedDiffNonVerbose =
+"\
+P\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+-0.01 MB (100.0%) -- explicit\n\
+├──-0.01 MB (99.95%) ── storage/prefixset/goog-phish-shavar\n\
+└──-0.00 MB (00.05%) ++ (2 tiny)\n\
+\n\
+Other Measurements\n\
+\n\
+0.96 MB (100.0%) -- a\n\
+├──0.95 MB (99.80%) ── b\n\
+├──0.00 MB (00.10%) -- c\n\
+│  ├──-0.95 MB (-99.70%) ── e\n\
+│  ├──0.95 MB (99.60%) ── d\n\
+│  └──0.00 MB (00.20%) ++ (2 tiny)\n\
+└──0.00 MB (00.10%) ── h\n\
+\n\
+ 0.00 MB ── canvas-2d-pixel-bytes [2] [+]\n\
+-0.00 MB ── foobar [-]\n\
+\n\
+End of P\n\
+P2 (pid NNN)\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+0.00 MB (100.0%) -- explicit\n\
+└──0.00 MB (100.0%) ── window-objects/top(bar.com, id=NNN)/...\n\
+\n\
+Other Measurements\n\
+\n\
+0.00 MB (100.0%) -- p3\n\
+└──0.00 MB (100.0%) ── zone(0xNNN)/p3\n\
+\n\
+0.00 MB (100.0%) -- p4\n\
+└──0.00 MB (100.0%) ── js-zone(0xNNN)/p4\n\
+\n\
+0.00 MB (100.0%) -- p5\n\
+└──0.00 MB (100.0%) ── worker(foo.com, 0xNNN)/p5\n\
+\n\
+0.00 MB (100.0%) -- p6\n\
+└──0.00 MB (100.0%) ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}/p6\n\
+\n\
+0.00 MB (100.0%) -- p7\n\
+└──0.00 MB (100.0%) ── js-main-runtime-compartments/system/jar:file:///.../omni.ja!/p7\n\
+\n\
+0.00 MB ── p1 (pid NNN)\n\
+0.00 MB ── p2 (blah, pid=NNN)\n\
+\n\
+End of P2 (pid NNN)\n\
+P3\n\
+Other Measurements\n\
+\n\
+-0.00 MB ── p3 [-]\n\
+\n\
+End of P3\n\
+P4\n\
+Other Measurements\n\
+\n\
+0.00 MB ── p4 [+]\n\
+\n\
+End of P4\n\
+P7\n\
+Other Measurements\n\
+\n\
+0.00 MB (100.0%) -- p7\n\
+├──0.00 MB (57.14%) ── c [+]\n\
+└──0.00 MB (42.86%) ── b [+]\n\
+\n\
+-0.00 MB ── p7 [-]\n\
+\n\
+End of P7\n\
+P8\n\
+Other Measurements\n\
+\n\
+-0.00 MB (100.0%) -- p8\n\
+└──-0.00 MB (100.0%) -- a\n\
+   ├──-0.00 MB (50.00%) -- b\n\
+   │  ├──-0.00 MB (31.82%) -- c\n\
+   │  │  ├──-0.00 MB (18.18%) ── e [-]\n\
+   │  │  └──-0.00 MB (13.64%) ── d [-]\n\
+   │  ├──-0.00 MB (22.73%) ── f [-]\n\
+   │  └───0.00 MB (-04.55%) ── (fake child) [!]\n\
+   └──-0.00 MB (50.00%) -- g\n\
+      ├──-0.00 MB (31.82%) ── i [-]\n\
+      ├──-0.00 MB (27.27%) ── h [-]\n\
+      └───0.00 MB (-09.09%) ── (fake child) [!]\n\
+\n\
+End of P8\n\
+P9\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+0.00 MB (100.0%) -- explicit\n\
+└──0.00 MB (100.0%) ── threads/stacks/DNS Resolver #N (tid=NNN) [3]\n\
+\n\
+End of P9\n\
+";
+
+  // This is the output for a verbose diff.
+  let expectedDiffVerbose =
+"\
+P\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+-10,005 B (100.0%) -- explicit\n\
+├──-10,000 B (99.95%) ── storage/prefixset/goog-phish-shavar\n\
+├───────-6 B (00.06%) ── spell-check [2]\n\
+└────────1 B (-00.01%) ── xpcom/category-manager\n\
+\n\
+Other Measurements\n\
+\n\
+1,002,000 B (100.0%) -- a\n\
+├──1,000,000 B (99.80%) ── b\n\
+├──────1,000 B (00.10%) -- c\n\
+│      ├──-999,000 B (-99.70%) ── e\n\
+│      ├──998,000 B (99.60%) ── d\n\
+│      ├──1,000 B (00.10%) ── f\n\
+│      └──1,000 B (00.10%) ── g\n\
+└──────1,000 B (00.10%) ── h\n\
+\n\
+3,000 B ── canvas-2d-pixel-bytes [2] [+]\n\
+ -100 B ── foobar [-]\n\
+\n\
+End of P\n\
+P2 (pid NNN)\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+11 B (100.0%) -- explicit\n\
+└──11 B (100.0%) ── window-objects/top(bar.com, id=NNN)/...\n\
+\n\
+Other Measurements\n\
+\n\
+11 B (100.0%) -- p3\n\
+└──11 B (100.0%) ── zone(0xNNN)/p3\n\
+\n\
+11 B (100.0%) -- p4\n\
+└──11 B (100.0%) ── js-zone(0xNNN)/p4\n\
+\n\
+11 B (100.0%) -- p5\n\
+└──11 B (100.0%) ── worker(foo.com, 0xNNN)/p5\n\
+\n\
+11 B (100.0%) -- p6\n\
+└──11 B (100.0%) ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}/p6\n\
+\n\
+11 B (100.0%) -- p7\n\
+└──11 B (100.0%) ── js-main-runtime-compartments/system/jar:file:///.../omni.ja!/p7\n\
+\n\
+11 B ── p1 (pid NNN)\n\
+11 B ── p2 (blah, pid=NNN)\n\
+\n\
+End of P2 (pid NNN)\n\
+P3\n\
+Other Measurements\n\
+\n\
+-55 B ── p3 [-]\n\
+\n\
+End of P3\n\
+P4\n\
+Other Measurements\n\
+\n\
+66 B ── p4 [+]\n\
+\n\
+End of P4\n\
+P7\n\
+Other Measurements\n\
+\n\
+7 B (100.0%) -- p7\n\
+├──4 B (57.14%) ── c [+]\n\
+└──3 B (42.86%) ── b [+]\n\
+\n\
+-5 B ── p7 [-]\n\
+\n\
+End of P7\n\
+P8\n\
+Other Measurements\n\
+\n\
+-22 B (100.0%) -- p8\n\
+└──-22 B (100.0%) -- a\n\
+   ├──-11 B (50.00%) -- b\n\
+   │  ├───-7 B (31.82%) -- c\n\
+   │  │   ├──-4 B (18.18%) ── e [-]\n\
+   │  │   └──-3 B (13.64%) ── d [-]\n\
+   │  ├───-5 B (22.73%) ── f [-]\n\
+   │  └────1 B (-04.55%) ── (fake child) [!]\n\
+   └──-11 B (50.00%) -- g\n\
+      ├───-7 B (31.82%) ── i [-]\n\
+      ├───-6 B (27.27%) ── h [-]\n\
+      └────2 B (-09.09%) ── (fake child) [!]\n\
+\n\
+End of P8\n\
+P9\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+5,000 B (100.0%) -- explicit\n\
+└──5,000 B (100.0%) ── threads/stacks/DNS Resolver #N (tid=NNN) [3]\n\
+\n\
+End of P9\n\
+";
+
+  // This is the output for the crash reports diff.
+  let expectedDiff2 =
+"\
+Main Process (pid NNN)\n\
+Other Measurements\n\
+\n\
+1 B ── heap-allocated\n\
+\n\
+End of Main Process (pid NNN)\n\
+";
+
+  let expectedDiffFiss =
+"\
+P (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+3,000,000 B (100.0%) -- explicit\n\
+├──2,999,700 B (99.99%) ── heap-unclassified\n\
+└────────300 B (00.01%) ── foobar\n\
+\n\
+Other Measurements\n\
+\n\
+3,000,000 B ── heap-allocated\n\
+\n\
+End of P (pid NNN)\n\
+web (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+2,000,000 B (100.0%) -- explicit\n\
+├──1,000,000 B (50.00%) ── a/c/d\n\
+└──1,000,000 B (50.00%) ── heap-unclassified\n\
+\n\
+Other Measurements\n\
+\n\
+2,000,000 B ── heap-allocated\n\
+\n\
+End of web (pid NNN)\n\
+";
+
+  let frames = [
+    // This loads a pre-existing memory reports file that is valid.
+    { filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false, verbose: true },
+
+    // This loads a pre-existing crash dump file that is valid.
+    { filename: "crash-dump-good.json", expected: expectedGood2, dumpFirst: false, verbose: true },
+
+    // This dumps to a file and then reads it back in. (The result is the same
+    // as the previous test.)
+    { filename: "memory-reports-dumped.json.gz", expected: expectedGood2, dumpFirst: true, verbose: true },
+
+    // This loads a pre-existing file that is invalid.
+    { filename: "memory-reports-bad.json",  expected: expectedBad, dumpFirst: false, verbose: true },
+
+    // This diffs two pre-existing memory reports files.
+    { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json", expected: expectedDiffNonVerbose, dumpFirst: false, verbose: false },
+
+    // Ditto.
+    { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json", expected: expectedDiffVerbose, dumpFirst: false, verbose: true },
+
+    // This diffs two pre-existing crash report files.
+    { filename: "crash-dump-diff1.json", filename2: "crash-dump-diff2.json", expected: expectedDiff2, dumpFirst: false, verbose: true },
+
+    // This diffs a non-Fission and a Fission memory report.
+    { filename: "fiss-diff1.json", filename2: "fiss-diff2.json", expected: expectedDiffFiss, dumpFirst: false, verbose: true }
+  ];
+
+  SimpleTest.waitForFocus(chain(frames));
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(115, true)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <!-- Test min behavior
+
+       Set up is as follows:
+       1. There is a rectangle with a lime fill.
+       2. A <set> animation (with default fill="none") sets the fill to
+          orange at t=100s.
+          It has a simple duration of 10s and a min duration of 20s.
+       3. A further <set> animation sets the fill to red when the first
+          animation finishes (using syncbase timing).
+
+       At time t=115s we should still be in the first animation's active
+       interval with its fill mode of 'none' applied which should mean the
+       original lime fill is used. -->
+  <rect width="100%" height="100%" fill="lime">
+    <set attributeName="fill" to="orange" dur="10s" min="20s" begin="100s"
+      id="a"/>
+    <set attributeName="fill" to="red" begin="a.end"/>
+  </rect>
+</svg>

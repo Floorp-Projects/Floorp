@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var ctx = document.getElementById("c").getContext('2d');
+  ctx.stroke();
+}
+
+</script>
+</head>
+<body onload="boom();">
+<canvas id="c" width="800" style="overflow: clip; transform: skewY(30rad);"></canvas>
+</body>
+</html>

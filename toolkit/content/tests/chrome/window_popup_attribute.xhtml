@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="data:text/css,menupopup{margin: 0}" type="text/css"?>
+
+<window title="Popup Attribute Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="popup_shared.js"></script>
+  <script src="popup_trigger.js"></script>
+
+<script>
+window.opener.SimpleTest.waitForFocus(runTests, window);
+</script>
+
+<hbox style="margin-left: 200px; margin-top: 340px;">
+  <label id="trigger" popup="thepopup" value="Popup" height="60"/>
+</hbox>
+
+<menupopup id="thepopup">
+  <menuitem id="item1" label="First"/>
+  <menuitem id="item2" label="Main Item"/>
+  <menuitem id="amenu" label="A Menu" accesskey="M"/>
+  <menuitem id="item3" label="Third"/>
+  <menuitem id="one" label="One"/>
+  <menuitem id="fancier" label="Fancier Menu"/>
+  <menu id="submenu" label="Only Menu">
+    <menupopup id="submenupopup">
+      <menuitem id="submenuitem" label="Test Submenu"/>
+    </menupopup>
+  </menu>
+  <menuitem id="other" disabled="true" label="Other Menu"/>
+  <menuitem id="secondlast" label="Second Last Menu" accesskey="T"/>
+  <menuitem id="last" label="One Other Menu"/>
+</menupopup>
+
+</window>

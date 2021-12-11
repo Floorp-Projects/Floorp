@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html reftest-zoom="2">
+<head>
+  <title>background-size + zoom</title>
+  <style type="text/css">
+html
+{
+  margin: 0;
+  padding: 5px;
+}
+body
+{
+  margin: 0;
+  padding: 0;
+}
+#outer
+{
+  border: 1px solid black;
+  width: 64px;
+  height: 128px;
+}
+#inner
+{
+  width: 64px;
+  height: 128px;
+  background-image: url(aqua-32x32.png);
+  background-repeat: no-repeat;
+  background-size: 25%;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"></div></div>
+</body>
+</html>

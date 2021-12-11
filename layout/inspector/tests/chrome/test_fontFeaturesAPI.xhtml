@@ -1,0 +1,238 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<?xml-stylesheet type="text/css" href="test_fontFeaturesAPI.css"?>
+<window title="Test for font variation axis API"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+// Expected result (sorted) from the DejaVu Sans font we're testing with:
+var dejaVuFeatures = [
+  ["aalt", "grek", "dflt"],
+  ["aalt", "hebr", "dflt"],
+  ["aalt", "latn", "ISM "],
+  ["aalt", "latn", "KSM "],
+  ["aalt", "latn", "LSM "],
+  ["aalt", "latn", "MOL "],
+  ["aalt", "latn", "NSM "],
+  ["aalt", "latn", "ROM "],
+  ["aalt", "latn", "SKS "],
+  ["aalt", "latn", "SSM "],
+  ["aalt", "latn", "dflt"],
+  ["ccmp", "DFLT", "dflt"],
+  ["ccmp", "arab", "KUR "],
+  ["ccmp", "arab", "SND "],
+  ["ccmp", "arab", "URD "],
+  ["ccmp", "arab", "dflt"],
+  ["ccmp", "armn", "dflt"],
+  ["ccmp", "brai", "dflt"],
+  ["ccmp", "cans", "dflt"],
+  ["ccmp", "cher", "dflt"],
+  ["ccmp", "cyrl", "MKD "],
+  ["ccmp", "cyrl", "SRB "],
+  ["ccmp", "cyrl", "dflt"],
+  ["ccmp", "geor", "dflt"],
+  ["ccmp", "grek", "dflt"],
+  ["ccmp", "hani", "dflt"],
+  ["ccmp", "hebr", "dflt"],
+  ["ccmp", "kana", "dflt"],
+  ["ccmp", "lao ", "dflt"],
+  ["ccmp", "latn", "ISM "],
+  ["ccmp", "latn", "KSM "],
+  ["ccmp", "latn", "LSM "],
+  ["ccmp", "latn", "MOL "],
+  ["ccmp", "latn", "NSM "],
+  ["ccmp", "latn", "ROM "],
+  ["ccmp", "latn", "SKS "],
+  ["ccmp", "latn", "SSM "],
+  ["ccmp", "latn", "dflt"],
+  ["ccmp", "math", "dflt"],
+  ["ccmp", "nko ", "dflt"],
+  ["ccmp", "ogam", "dflt"],
+  ["ccmp", "runr", "dflt"],
+  ["ccmp", "tfng", "dflt"],
+  ["ccmp", "thai", "dflt"],
+  ["dlig", "DFLT", "dflt"],
+  ["dlig", "armn", "dflt"],
+  ["dlig", "latn", "ISM "],
+  ["dlig", "latn", "KSM "],
+  ["dlig", "latn", "LSM "],
+  ["dlig", "latn", "MOL "],
+  ["dlig", "latn", "NSM "],
+  ["dlig", "latn", "ROM "],
+  ["dlig", "latn", "SKS "],
+  ["dlig", "latn", "SSM "],
+  ["dlig", "latn", "dflt"],
+  ["fina", "arab", "KUR "],
+  ["fina", "arab", "SND "],
+  ["fina", "arab", "URD "],
+  ["fina", "arab", "dflt"],
+  ["fina", "nko ", "dflt"],
+  ["hlig", "hebr", "dflt"],
+  ["hlig", "latn", "ISM "],
+  ["hlig", "latn", "KSM "],
+  ["hlig", "latn", "LSM "],
+  ["hlig", "latn", "MOL "],
+  ["hlig", "latn", "NSM "],
+  ["hlig", "latn", "ROM "],
+  ["hlig", "latn", "SKS "],
+  ["hlig", "latn", "SSM "],
+  ["hlig", "latn", "dflt"],
+  ["init", "arab", "KUR "],
+  ["init", "arab", "SND "],
+  ["init", "arab", "URD "],
+  ["init", "arab", "dflt"],
+  ["init", "nko ", "dflt"],
+  ["kern", "DFLT", "dflt"],
+  ["kern", "arab", "KUR "],
+  ["kern", "arab", "SND "],
+  ["kern", "arab", "URD "],
+  ["kern", "arab", "dflt"],
+  ["kern", "armn", "dflt"],
+  ["kern", "brai", "dflt"],
+  ["kern", "cans", "dflt"],
+  ["kern", "cher", "dflt"],
+  ["kern", "cyrl", "MKD "],
+  ["kern", "cyrl", "SRB "],
+  ["kern", "cyrl", "dflt"],
+  ["kern", "geor", "dflt"],
+  ["kern", "grek", "dflt"],
+  ["kern", "hani", "dflt"],
+  ["kern", "hebr", "dflt"],
+  ["kern", "kana", "dflt"],
+  ["kern", "lao ", "dflt"],
+  ["kern", "latn", "ISM "],
+  ["kern", "latn", "KSM "],
+  ["kern", "latn", "LSM "],
+  ["kern", "latn", "MOL "],
+  ["kern", "latn", "NSM "],
+  ["kern", "latn", "ROM "],
+  ["kern", "latn", "SKS "],
+  ["kern", "latn", "SSM "],
+  ["kern", "latn", "dflt"],
+  ["kern", "math", "dflt"],
+  ["kern", "nko ", "dflt"],
+  ["kern", "ogam", "dflt"],
+  ["kern", "runr", "dflt"],
+  ["kern", "tfng", "dflt"],
+  ["kern", "thai", "dflt"],
+  ["liga", "arab", "KUR "],
+  ["liga", "arab", "SND "],
+  ["liga", "arab", "URD "],
+  ["liga", "arab", "dflt"],
+  ["liga", "latn", "ISM "],
+  ["liga", "latn", "KSM "],
+  ["liga", "latn", "LSM "],
+  ["liga", "latn", "MOL "],
+  ["liga", "latn", "NSM "],
+  ["liga", "latn", "ROM "],
+  ["liga", "latn", "SKS "],
+  ["liga", "latn", "SSM "],
+  ["liga", "latn", "dflt"],
+  ["locl", "cyrl", "MKD "],
+  ["locl", "cyrl", "SRB "],
+  ["locl", "latn", "ISM "],
+  ["locl", "latn", "KSM "],
+  ["locl", "latn", "LSM "],
+  ["locl", "latn", "MOL "],
+  ["locl", "latn", "NSM "],
+  ["locl", "latn", "ROM "],
+  ["locl", "latn", "SKS "],
+  ["locl", "latn", "SSM "],
+  ["mark", "arab", "KUR "],
+  ["mark", "arab", "SND "],
+  ["mark", "arab", "URD "],
+  ["mark", "arab", "dflt"],
+  ["mark", "cyrl", "MKD "],
+  ["mark", "cyrl", "SRB "],
+  ["mark", "cyrl", "dflt"],
+  ["mark", "grek", "dflt"],
+  ["mark", "hebr", "dflt"],
+  ["mark", "lao ", "dflt"],
+  ["mark", "latn", "ISM "],
+  ["mark", "latn", "KSM "],
+  ["mark", "latn", "LSM "],
+  ["mark", "latn", "MOL "],
+  ["mark", "latn", "NSM "],
+  ["mark", "latn", "ROM "],
+  ["mark", "latn", "SKS "],
+  ["mark", "latn", "SSM "],
+  ["mark", "latn", "dflt"],
+  ["mark", "nko ", "dflt"],
+  ["mark", "tfng", "dflt"],
+  ["medi", "arab", "KUR "],
+  ["medi", "arab", "SND "],
+  ["medi", "arab", "URD "],
+  ["medi", "arab", "dflt"],
+  ["medi", "nko ", "dflt"],
+  ["mkmk", "arab", "KUR "],
+  ["mkmk", "arab", "SND "],
+  ["mkmk", "arab", "URD "],
+  ["mkmk", "arab", "dflt"],
+  ["mkmk", "cyrl", "MKD "],
+  ["mkmk", "cyrl", "SRB "],
+  ["mkmk", "cyrl", "dflt"],
+  ["mkmk", "grek", "dflt"],
+  ["mkmk", "lao ", "dflt"],
+  ["mkmk", "latn", "ISM "],
+  ["mkmk", "latn", "KSM "],
+  ["mkmk", "latn", "LSM "],
+  ["mkmk", "latn", "MOL "],
+  ["mkmk", "latn", "NSM "],
+  ["mkmk", "latn", "ROM "],
+  ["mkmk", "latn", "SKS "],
+  ["mkmk", "latn", "SSM "],
+  ["mkmk", "latn", "dflt"],
+  ["rlig", "arab", "KUR "],
+  ["rlig", "arab", "SND "],
+  ["rlig", "arab", "URD "],
+  ["rlig", "arab", "dflt"],
+  ["salt", "grek", "dflt"],
+  ["salt", "hebr", "dflt"],
+  ["salt", "latn", "ISM "],
+  ["salt", "latn", "KSM "],
+  ["salt", "latn", "LSM "],
+  ["salt", "latn", "MOL "],
+  ["salt", "latn", "NSM "],
+  ["salt", "latn", "ROM "],
+  ["salt", "latn", "SKS "],
+  ["salt", "latn", "SSM "],
+  ["salt", "latn", "dflt"],
+];
+
+function RunTest() {
+  var rng = document.createRange();
+  var elem = document.getElementById("test1");
+  rng.selectNode(elem);
+  var fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts");
+  var font = fonts[0];
+  is(font.CSSFamilyName, "dejavu", "using correct test font");
+  var fontFeatures = font.getFeatures();
+  is(fontFeatures.length, dejaVuFeatures.length, "number of features");
+  var featureList = [];
+  fontFeatures.forEach(function(f) {
+    featureList.push([f.tag, f.script, f.languageSystem]);
+  });
+  is(featureList.sort().join(";"), dejaVuFeatures.join(";"), "list of features");
+
+  SimpleTest.finish();
+}
+
+  ]]>
+  </script>
+
+  <!-- html:body contains elements the test will inspect -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1280162"
+     target="_blank">Mozilla Bug 1280162</a>
+  <div id="test1">Hello world</div>
+  </body>
+
+</window>

@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1419222 - iFrame CSP should not affect parent document CSP</title>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="connect-src *; style-src * 'unsafe-inline'; "/>
+</head>
+<body>
+  <script>
+    var getCspObj = function(doc) {
+      var contentDoc = SpecialPowers.wrap(doc);
+      var cspJSON = contentDoc.cspJSON;
+      var cspOBJ = JSON.parse(cspJSON);
+      return cspOBJ;
+    }
+
+    // Add an iFrame, add an additional CSP directive to that iFrame, and
+    // return the CSP object of that iFrame.
+    var addIFrame = function() {
+      var frame = document.createElement("iframe");
+      frame.id = "nestedframe";
+      document.body.appendChild(frame);
+      var metaTag = document.createElement("meta");
+      metaTag.setAttribute("http-equiv", "Content-Security-Policy");
+      metaTag.setAttribute("content", "img-src 'self' data:;");
+      frame.contentDocument.head.appendChild(metaTag);
+      return getCspObj(frame.contentDocument);
+    }
+
+    // Get the CSP objects of the parent document before and after adding the
+    // iFrame, as well as of the iFram itself.
+    var parentBeginCspObj = getCspObj(document);
+    var iFrameCspObj = addIFrame();
+    var parentEndCspObj = getCspObj(document);
+
+    // Post a message containing the three CSP objects to the test context.
+    window.parent.postMessage(
+      {result: [parentBeginCspObj, iFrameCspObj, parentEndCspObj]},
+      "*"
+    );
+  </script>
+</body>
+</html>

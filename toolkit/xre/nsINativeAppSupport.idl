@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/* nsINativeAppSupport
+ *
+ * This "pseudo" (in the XPCOM sense) interface provides for
+ * platform-specific general application support
+ *
+ * Due to the nature of the beast, this interface is not a full-blown
+ * XPCOM component.  The primary reason is that objects that implement
+ * this interface generally must be operational *before* XPCOM (or any
+ * of the rest of Mozilla) are initialized.  As a result, this
+ * interface is instantiated by somewhat unconventional means.
+ *
+ * To create the implementor of this interface, you call the function
+ * NS_CreateNativeAppSupport.  This is done in the startup code
+ * in nsAppRunner.cpp
+ *
+ * The interface provides these functions:
+ *  start - You call this to inform the native app support that the
+ *          application is starting.  In addition, it serves as a
+ *          query as to whether the application should continue to
+ *          run.
+ *
+ *          If the returned boolean result is PR_FALSE, then the
+ *          application should exit without further processing.  In
+ *          such cases, the returned nsresult indicates whether the
+ *          reason to exit is due to an error or not.
+ *
+ *          Win32 Note: In the case of starting a second instance
+ *                      of this executable, this function will return
+ *                      PR_FALSE and nsresult==NS_OK.  This means that
+ *                      the command line arguments have been
+ *                      successfully passed to the instance of the
+ *                      application acting as a remote server.
+ *  quit - Informs the native app support that the application is stopping. The
+ *         app support should disable any functionality enabled by start.
+ *
+ *  onLastWindowClosing -  Called when the last window is closed. Used as a
+ *                         "soft" shutdown, passwords are flushed.
+ */
+
+[scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
+interface nsINativeAppSupport : nsISupports {
+    // Startup/shutdown.
+    boolean start();
+    void    enable();
+
+    void onLastWindowClosing();
+    void ReOpen();
+};

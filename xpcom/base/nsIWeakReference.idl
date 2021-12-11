@@ -1,0 +1,113 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
+
+// For MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED.
+#include "nsDebug.h"
+
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+
+#define MOZ_WEAKREF_DECL_OWNINGTHREAD nsAutoOwningThread _mWeakRefOwningThread;
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD \
+  _mWeakRefOwningThread.AssertOwnership("nsWeakReference not thread-safe")
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(that) \
+  (that)->_mWeakRefOwningThread.AssertOwnership("nsWeakReference not thread-safe")
+
+#else
+
+#define MOZ_WEAKREF_DECL_OWNINGTHREAD
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD do { } while (false)
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(that) do { } while (false)
+
+#endif
+
+%}
+
+/**
+ * An instance of |nsIWeakReference| is a proxy object that cooperates with
+ * its referent to give clients a non-owning, non-dangling reference.  Clients
+ * own the proxy, and should generally manage it with an |nsCOMPtr| (see the
+ * type |nsWeakPtr| for a |typedef| name that stands out) as they would any
+ * other XPCOM object.  The |QueryReferent| member function provides a
+ * (hopefully short-lived) owning reference on demand, through which clients
+ * can get useful access to the referent, while it still exists.
+ *
+ * @version 1.0
+ * @see nsISupportsWeakReference
+ * @see nsWeakReference
+ * @see nsWeakPtr
+ */
+[scriptable, uuid(9188bc85-f92e-11d2-81ef-0060083a0bcf)]
+interface nsIWeakReference : nsISupports
+  {
+    /**
+     * |QueryReferent| queries the referent, if it exists, and like |QueryInterface|, produces
+     * an owning reference to the desired interface.  It is designed to look and act exactly
+     * like (a proxied) |QueryInterface|.  Don't hold on to the produced interface permanently;
+     * that would defeat the purpose of using a non-owning |nsIWeakReference| in the first place.
+     */
+    [binaryname(QueryReferentFromScript)]
+    void QueryReferent( in nsIIDRef uuid, [iid_is(uuid), retval] out nsQIResult result );
+
+%{C++
+  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+
+  /**
+   * Returns true if the referring object is alive.  Otherwise, false.
+   */
+  bool IsAlive() const
+  {
+    return !!mObject;
+  }
+
+  nsresult QueryReferent(const nsIID& aIID, void** aInstancePtr);
+
+protected:
+  friend class nsSupportsWeakReference;
+
+  nsIWeakReference(nsISupports* aObject)
+    : mObject(aObject)
+  {
+  }
+
+  nsIWeakReference() = delete;
+
+  MOZ_WEAKREF_DECL_OWNINGTHREAD
+
+  // The object we're holding a weak reference to.
+  nsISupports* MOZ_NON_OWNING_REF mObject;
+%}
+  };
+
+
+/**
+ * |nsISupportsWeakReference| is a factory interface which produces appropriate
+ * instances of |nsIWeakReference|.  Weak references in this scheme can only be
+ * produced for objects that implement this interface.
+ *
+ * @version 1.0
+ * @see nsIWeakReference
+ * @see nsSupportsWeakReference
+ */
+[scriptable, uuid(9188bc86-f92e-11d2-81ef-0060083a0bcf)]
+interface nsISupportsWeakReference : nsISupports
+  {
+    /**
+     * |GetWeakReference| produces an appropriate instance of |nsIWeakReference|.
+     * As with all good XPCOM `getters', you own the resulting interface and should
+     * manage it with an |nsCOMPtr|.
+     *
+     * @see nsIWeakReference
+     * @see nsWeakPtr
+     * @see nsCOMPtr
+     */
+    nsIWeakReference GetWeakReference();
+  };

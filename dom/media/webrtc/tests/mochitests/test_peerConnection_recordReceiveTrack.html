@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script>
+createHTML({
+  bug: "1212237",
+  title: "Recording a fresh receive track should not throw",
+  visible: true,
+});
+
+/**
+ * Called when a fresh track is available, and tests that the track can be
+ * recorded until it ends without any thrown errors or fired error events.
+ */
+let generation = 0;
+async function testTrackAccessible(track) {
+  const id = ++generation;
+  info(`Testing accessibility for ${track.kind} track ${id}`);
+  const recorder = new MediaRecorder(new MediaStream([track]));
+  recorder.start();
+  let haveError = new Promise((_, rej) => recorder.onerror = e => rej(e.error));
+  await Promise.race([
+    new Promise(r => recorder.onstart = r),
+    haveError,
+  ]);
+  info(`Recording of ${track.kind} track ${id} started`);
+
+  const {data} = await Promise.race([
+    new Promise(r => recorder.ondataavailable = r),
+    haveError,
+  ]);
+  info(`Recording of ${track.kind} track ${id} finished at size ${data.size}`);
+
+  await Promise.race([
+    new Promise(r => recorder.onstop = r),
+    haveError,
+  ]);
+  info(`Recording of ${track.kind} track ${id} stopped`);
+
+  const element = createMediaElement(track.kind, `recording_${track.id}`);
+  const url = URL.createObjectURL(data);
+  try {
+    element.src = url;
+    element.preload = "metadata";
+    haveError = new Promise(
+      (_, rej) => element.onerror = e => rej(element.error));
+    await Promise.race([
+      new Promise(r => element.onloadeddata = r),
+      haveError,
+    ]);
+    info(`Playback of recording of ${track.kind} track ${id} loaded data`);
+
+    element.play();
+    await Promise.race([
+      new Promise(r => element.onended = r),
+      haveError,
+    ]);
+    info(`Playback of recording of ${track.kind} track ${id} ended`);
+  } finally {
+    URL.revokeObjectURL(data);
+  }
+}
+
+runNetworkTest(async options => {
+  // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+  if (navigator.userAgent.includes("Android")) {
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                    ["media.webrtc.hw.h264.enabled", false]);
+  }
+  const test = new PeerConnectionTest(options);
+  test.setMediaConstraints([{video: true}], [{audio: true}]);
+  test.setOfferOptions({offerToReceiveAudio: true});
+  const freshVideoTrackIsAccessible = new Promise(
+      r => test.pcRemote._pc.addEventListener("track", r, {once: true})
+    ).then(({track}) => testTrackAccessible(track));
+  const freshAudioTrackIsAccessible = new Promise(
+      r => test.pcLocal._pc.addEventListener("track", r, {once: true})
+    ).then(({track}) => testTrackAccessible(track));
+  test.chain.append([
+    function PC_CLOSE_TO_END_TRACKS() {
+      return test.close();
+    },
+    async function FRESH_VIDEO_TRACK_IS_ACCESSIBLE() {
+      await freshVideoTrackIsAccessible;
+      ok(true, "A freshly received video track is accessible by MediaRecorder");
+    },
+    async function FRESH_AUDIO_TRACK_IS_ACCESSIBLE() {
+      await freshAudioTrackIsAccessible;
+      ok(true, "A freshly received audio track is accessible by MediaRecorder");
+    },
+  ]);
+  await test.run();
+});
+</script>
+</pre>
+</body>
+</html>

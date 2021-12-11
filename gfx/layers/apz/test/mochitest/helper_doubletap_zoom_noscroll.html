@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping something tall that we are already zoomed to doesn't scroll (it zooms out)</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+
+function within(a, b, tolerance) {
+  return (Math.abs(a-b) < tolerance);
+}
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let resolution = await getResolution();
+  let initial_resolution = resolution;
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  ok(window.scrollY == 0, "window not scrolled");
+  info("window.scrollY " + window.scrollY);
+
+  // Check that double-tapping once zooms in
+  await doubleTapOn(document.getElementById("target"), 10, 10, useTouchpad);
+  let prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+  ok(window.scrollY == 0, "window not scrolled");
+  info("window.scrollY " + window.scrollY);
+
+  let x = document.getElementById("target").getBoundingClientRect().width/2;
+  let y = window.visualViewport.height - 20;
+  // Check that near the bottom doesn't scroll but zooms out
+  await doubleTapOn(document.getElementById("target"), x, y, useTouchpad);
+  prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+  // slight float inaccuracy, not sure why
+  ok(within(resolution, initial_resolution, 0.0002), "The second double-tap has restored the resolution to " + resolution);
+  ok(window.scrollY == 0, "window not scrolled");
+  info("window.scrollY " + window.scrollY);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+
+<div id="target" style="background: grey; width: 50vw; height: 300vh;">
+
+</body>
+</html>

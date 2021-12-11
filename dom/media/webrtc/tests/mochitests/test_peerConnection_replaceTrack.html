@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1032839",
+    title: "Replace video and audio (with WebAudio) tracks",
+    visible: true
+  });
+
+  function allLocalStreamsHaveSender(pc) {
+    return pc.getLocalStreams()
+      .every(s => s.getTracks()        // Every local stream,
+        .some(t => pc.getSenders()     // should have some track,
+          .some(sn => sn.track == t))) // that's being sent over |pc|.
+  }
+
+  function allRemoteStreamsHaveReceiver(pc) {
+    return pc.getRemoteStreams()
+      .every(s => s.getTracks()        // Every remote stream,
+        .some(t => pc.getReceivers()   // should have some track,
+          .some(sn => sn.track == t))) // that's being received over |pc|.
+  }
+
+  function replacetest(wrapper) {
+    var pc = wrapper._pc;
+    var oldSenderCount = pc.getSenders().length;
+    var sender = pc.getSenders().find(sn => sn.track.kind == "video");
+    var oldTrack = sender.track;
+    ok(sender, "We have a sender for video");
+    ok(allLocalStreamsHaveSender(pc),
+       "Shouldn't have any local streams without a corresponding sender");
+    ok(allRemoteStreamsHaveReceiver(pc),
+       "Shouldn't have any remote streams without a corresponding receiver");
+
+    var newTrack;
+    var audiotrack;
+    return getUserMedia({video:true, audio:true})
+      .then(newStream => {
+        window.grip = newStream;
+        newTrack = newStream.getVideoTracks()[0];
+        audiotrack = newStream.getAudioTracks()[0];
+        isnot(newTrack, sender.track, "replacing with a different track");
+        ok(!pc.getLocalStreams().some(s => s == newStream),
+           "from a different stream");
+        // Use wrapper function, since it updates expected tracks
+        return wrapper.senderReplaceTrack(sender, newTrack, newStream);
+      })
+      .then(() => {
+        is(pc.getSenders().length, oldSenderCount, "same sender count");
+        is(sender.track, newTrack, "sender.track has been replaced");
+        ok(!pc.getSenders().map(sn => sn.track).some(t => t == oldTrack),
+           "old track not among senders");
+        // Spec does not say we add this new track to any stream
+        ok(!pc.getLocalStreams().some(s => s.getTracks()
+                                           .some(t => t == sender.track)),
+           "track does not exist among pc's local streams");
+        return sender.replaceTrack(audiotrack)
+          .then(() => ok(false, "replacing with different kind should fail"),
+                e => is(e.name, "TypeError",
+                        "replacing with different kind should fail"));
+      });
+  }
+
+  runNetworkTest(function () {
+    test = new PeerConnectionTest();
+    test.audioCtx = new AudioContext();
+    test.setMediaConstraints([{video: true, audio: true}], [{video: true}]);
+    test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
+
+    // Test replaceTrack on pcRemote separately since it's video only.
+    test.chain.append([
+      function PC_REMOTE_VIDEOONLY_REPLACE_VIDEOTRACK(test) {
+        return replacetest(test.pcRemote);
+      },
+      function PC_LOCAL_NEW_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW(test) {
+        return test.pcLocal.waitForMediaFlow();
+      }
+    ]);
+
+    // Replace video twice on pcLocal to make sure it still works
+    // (does audio twice too, but hey)
+    test.chain.append([
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_1(test) {
+        return replacetest(test.pcLocal);
+      },
+      function PC_REMOTE_NEW_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW_1(test) {
+        return test.pcRemote.waitForMediaFlow();
+      },
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_2(test) {
+        return replacetest(test.pcLocal);
+      },
+      function PC_REMOTE_NEW_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW_2(test) {
+        return test.pcRemote.waitForMediaFlow();
+      }
+    ]);
+
+    test.chain.append([
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_WITHSAME(test) {
+        var pc = test.pcLocal._pc;
+        var sender = pc.getSenders().find(sn => sn.track.kind == "video");
+        ok(sender, "should still have a sender of video");
+        return sender.replaceTrack(sender.track)
+          .then(() => ok(true, "replacing with itself should succeed"));
+      },
+      function PC_REMOTE_NEW_SAME_VIDEOTRACK_WAIT_FOR_MEDIA_FLOW(test) {
+        return test.pcRemote.waitForMediaFlow();
+      }
+    ]);
+
+    // Replace the gUM audio track on pcLocal with a WebAudio track.
+    test.chain.append([
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_AUDIOTRACK_WEBAUDIO(test) {
+        var pc = test.pcLocal._pc;
+        var sender = pc.getSenders().find(sn => sn.track.kind == "audio");
+        ok(sender, "track has a sender");
+        var oldSenderCount = pc.getSenders().length;
+        var oldTrack = sender.track;
+
+        var sourceNode = test.audioCtx.createOscillator();
+        sourceNode.type = 'sine';
+        // We need a frequency not too close to the fake audio track
+        // (440Hz for loopback devices, 1kHz for fake tracks).
+        sourceNode.frequency.value = 2000;
+        sourceNode.start();
+
+        var destNode = test.audioCtx.createMediaStreamDestination();
+        sourceNode.connect(destNode);
+        var newTrack = destNode.stream.getAudioTracks()[0];
+
+        return test.pcLocal.senderReplaceTrack(
+            sender, newTrack, destNode.stream)
+          .then(() => {
+            is(pc.getSenders().length, oldSenderCount, "same sender count");
+            ok(!pc.getSenders().some(sn => sn.track == oldTrack),
+               "Replaced track should be removed from senders");
+            // TODO: Should PC remove local streams when there are no senders
+            // associated with it? getLocalStreams() isn't in the spec anymore,
+            // so I guess it is pretty arbitrary?
+            is(sender.track, newTrack, "sender.track has been replaced");
+            // Spec does not say we add this new track to any stream
+            ok(!pc.getLocalStreams().some(s => s.getTracks()
+                                               .some(t => t == sender.track)),
+               "track exists among pc's local streams");
+          });
+      }
+    ]);
+    test.chain.append([
+      function PC_LOCAL_CHECK_WEBAUDIO_FLOW_PRESENT(test) {
+        return test.pcRemote.checkReceivingToneFrom(test.audioCtx, test.pcLocal);
+      }
+    ]);
+    test.chain.append([
+      function PC_LOCAL_INVALID_ADD_VIDEOTRACKS(test) {
+        let videoTransceivers = test.pcLocal._pc.getTransceivers()
+          .filter(transceiver => {
+            return !transceiver.stopped &&
+                   transceiver.receiver.track.kind == "video" &&
+                   transceiver.sender.track;
+          });
+
+        ok(videoTransceivers.length,
+           "There is at least one non-stopped video transceiver with a track.");
+
+        videoTransceivers.forEach(transceiver => {
+            var stream = test.pcLocal._pc.getLocalStreams()[0];;
+            var track = transceiver.sender.track;
+            try {
+              test.pcLocal._pc.addTrack(track, stream);
+              ok(false, "addTrack existing track should fail");
+            } catch (e) {
+              is(e.name, "InvalidAccessError",
+                 "addTrack existing track should fail");
+            }
+          });
+      }
+    ]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

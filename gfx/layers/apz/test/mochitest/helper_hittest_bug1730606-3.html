@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>A hit testing test involving a scenario with a scale transform</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #layer1 {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      width: 100px;
+      height: 100px;
+      background: red;
+      overflow: scroll;
+      transform: scale(2.0);
+      transform-origin: 0 0;
+    }
+  </style>
+</head>
+<body>
+ <!-- Neither the root nor layer1 actually have room to scroll -->
+ <div id="layer1"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Force an APZC for layer1 in spite of it having no scroll range.
+  utils.setDisplayPortForElement(0, 0, 100, 100, layer1, 1);
+  await promiseApzFlushedRepaints();
+
+  // Hit an area on layer1 that would be on the root if layer1 weren't transformed.
+  checkHitResult(hitTest({x: 150, y: 150}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(layer1),
+                 utils.getLayersId(),
+                 "layer1");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

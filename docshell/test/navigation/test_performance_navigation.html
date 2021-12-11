@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=145971
+-->
+<head>
+  <title>Test for Bug 145971</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=145971">Mozilla Bug 145971</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+var testWindow;
+var bc = new BroadcastChannel("bug145971");
+bc.onmessage = function(msgEvent) {
+  var result = msgEvent.data.result;
+  if (result == undefined) {
+    info("Got unexpected message from BroadcastChannel");
+    return;
+  }
+  ok(result, "Bug 145971: Navigation type does not equal 2 when restoring document from session history.");
+  SimpleTest.finish();
+};
+
+function runTest() {
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    window.open("test_bug145971.html", "", "width=360,height=480,noopener");
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>

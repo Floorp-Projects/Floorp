@@ -1,0 +1,89 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["MOZ_PLACES"]:
+    TEST_DIRS += ["tests"]
+
+XPIDL_SOURCES += [
+    "nsINavHistoryService.idl",
+]
+
+XPIDL_MODULE = "places"
+
+if CONFIG["MOZ_PLACES"]:
+    XPIDL_SOURCES += [
+        "mozIAsyncHistory.idl",
+        "mozIPlacesAutoComplete.idl",
+        "mozIPlacesPendingOperation.idl",
+        "mozISyncedBookmarksMirror.idl",
+        "nsIFaviconService.idl",
+        "nsINavBookmarksService.idl",
+        "nsITaggingService.idl",
+    ]
+
+    EXPORTS.mozilla.places = [
+        "Database.h",
+        "History.h",
+        "INativePlacesEventCallback.h",
+        "NotifyRankingChanged.h",
+        "PageIconProtocolHandler.h",
+        "Shutdown.h",
+        "SyncedBookmarksMirror.h",
+    ]
+
+    UNIFIED_SOURCES += [
+        "Database.cpp",
+        "FaviconHelpers.cpp",
+        "Helpers.cpp",
+        "History.cpp",
+        "nsAnnoProtocolHandler.cpp",
+        "nsFaviconService.cpp",
+        "nsNavBookmarks.cpp",
+        "nsNavHistory.cpp",
+        "nsNavHistoryQuery.cpp",
+        "nsNavHistoryResult.cpp",
+        "PageIconProtocolHandler.cpp",
+        "PlaceInfo.cpp",
+        "Shutdown.cpp",
+        "SQLFunctions.cpp",
+        "VisitInfo.cpp",
+    ]
+
+    LOCAL_INCLUDES += [
+        "../build",
+    ]
+
+    EXTRA_JS_MODULES += [
+        "BookmarkHTMLUtils.jsm",
+        "BookmarkJSONUtils.jsm",
+        "Bookmarks.jsm",
+        "ExtensionSearchHandler.jsm",
+        "History.jsm",
+        "PlacesBackups.jsm",
+        "PlacesDBUtils.jsm",
+        "PlacesExpiration.jsm",
+        "PlacesSyncUtils.jsm",
+        "PlacesTransactions.jsm",
+        "PlacesUtils.jsm",
+        "SyncedBookmarksMirror.jsm",
+        "TaggingService.jsm",
+    ]
+
+    XPCOM_MANIFESTS += [
+        "components.conf",
+    ]
+
+    FINAL_LIBRARY = "xul"
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Places")
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+REQUIRES_UNIFIED_BUILD = True

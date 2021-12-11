@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <title>Native Key Bindings for Cocoa Test</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
+  </head>
+  <body>
+    <div id="editable" contenteditable>
+      <p>Stretching attack nullam stuck in a tree zzz, suspendisse cras nec
+      suspendisse lick suscipit. Nunc egestas amet litter box, nullam climb the
+      curtains biting I don't like that food tristique biting sleep on your
+      keyboard non. Lay down in your way cras nec tempus chase the red dot cras
+      nec, pharetra pharetra eat the grass leap run orci turpis attack.
+      Consectetur sleep in the sink eat I don't like that food, knock over the
+      lamp catnip in viverra tail flick zzz meow etiam enim. Ac ac hiss shed
+      everywhere kittens rhoncus, attack your ankles zzz iaculis kittens. Nullam
+      pellentesque rip the couch iaculis rhoncus nibh, give me fish orci turpis
+      purr sleep on your face quis nunc bibendum.</p>
+
+      <p>Neque jump on the table bat iaculis, adipiscing sleep on your keyboard
+      jump vel justo shed everywhere suspendisse lick. Zzz enim faucibus
+      hairball faucibus, pharetra sunbathe biting bat leap rip the couch attack.
+      Tortor nibh in viverra quis hairball nam, vulputate adipiscing sleep on
+      your keyboard purr knock over the lamp orci turpis. Vestibulum I don't
+      like that food et chase the red dot, adipiscing neque bibendum rutrum
+      accumsan quis rhoncus claw. Leap accumsan vehicula enim biting sleep on
+      your face, pharetra nam accumsan egestas kittens sunbathe. Pharetra chase
+      the red dot sniff non eat the grass, vulputate fluffy fur aliquam puking
+      judging you.</p>
+
+      <p>Claw purr sollicitudin sollicitudin lay down in your way consectetur,
+      pellentesque vehicula zzz orci turpis consectetur. I don't like that food
+      rhoncus pellentesque sniff attack, rhoncus tortor attack your ankles
+      iaculis scratched hiss vel. Tortor zzz tortor nullam rip the couch rutrum,
+      bat enim ut leap hairball iaculis. Bibendum sunbathe elit suspendisse
+      nibh, puking adipiscing sleep on your face sleep on your face zzz catnip.
+      Judging you rutrum bat sunbathe sleep on your face, jump on the table leap
+      tincidunt a faucibus sleep in the sink. Stuck in a tree tristique zzz hiss
+      in viverra nullam, quis tortor pharetra attack.</p>
+    </div>
+
+    <textarea id="textarea" cols="80">
+      Stretching attack nullam stuck in a tree zzz, suspendisse cras nec
+      suspendisse lick suscipit. Nunc egestas amet litter box, nullam climb the
+      curtains biting I don't like that food tristique biting sleep on your
+      keyboard non. Lay down in your way cras nec tempus chase the red dot cras
+      nec, pharetra pharetra eat the grass leap run orci turpis attack.
+      Consectetur sleep in the sink eat I don't like that food, knock over the
+      lamp catnip in viverra tail flick zzz meow etiam enim. Ac ac hiss shed
+      everywhere kittens rhoncus, attack your ankles zzz iaculis kittens. Nullam
+      pellentesque rip the couch iaculis rhoncus nibh, give me fish orci turpis
+      purr sleep on your face quis nunc bibendum.
+
+      Neque jump on the table bat iaculis, adipiscing sleep on your keyboard
+      jump vel justo shed everywhere suspendisse lick. Zzz enim faucibus
+      hairball faucibus, pharetra sunbathe biting bat leap rip the couch attack.
+      Tortor nibh in viverra quis hairball nam, vulputate adipiscing sleep on
+      your keyboard purr knock over the lamp orci turpis. Vestibulum I don't
+      like that food et chase the red dot, adipiscing neque bibendum rutrum
+      accumsan quis rhoncus claw. Leap accumsan vehicula enim biting sleep on
+      your face, pharetra nam accumsan egestas kittens sunbathe. Pharetra chase
+      the red dot sniff non eat the grass, vulputate fluffy fur aliquam puking
+      judging you.
+
+      Claw purr sollicitudin sollicitudin lay down in your way consectetur,
+      pellentesque vehicula zzz orci turpis consectetur. I don't like that food
+      rhoncus pellentesque sniff attack, rhoncus tortor attack your ankles
+      iaculis scratched hiss vel. Tortor zzz tortor nullam rip the couch rutrum,
+      bat enim ut leap hairball iaculis. Bibendum sunbathe elit suspendisse
+      nibh, puking adipiscing sleep on your face sleep on your face zzz catnip.
+      Judging you rutrum bat sunbathe sleep on your face, jump on the table leap
+      tincidunt a faucibus sleep in the sink. Stuck in a tree tristique zzz hiss
+      in viverra nullam, quis tortor pharetra attack.
+    </textarea>
+
+    <input id="input" type="text"
+      value="Stretching attack nullam stuck in a tree zzz, suspendisse cras nec
+      suspendisse lick suscipit. Nunc egestas amet litter box, nullam climb the
+      curtains biting I don't like that food tristique biting sleep on your
+      keyboard non. Lay down in your way cras nec tempus chase the red dot cras
+      nec, pharetra pharetra eat the grass leap run orci turpis attack.
+      Consectetur sleep in the sink eat I don't like that food, knock over the
+      lamp catnip in viverra tail flick zzz meow etiam enim. Ac ac hiss shed
+      everywhere kittens rhoncus, attack your ankles zzz iaculis kittens.
+      Nullam pellentesque rip the couch iaculis rhoncus nibh, give me fish orci
+      turpis purr sleep on your face quis nunc bibendum.">
+
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      let synthesizedKeys = [];
+      let expectations = [];
+
+      // Move to beginning of line
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_LeftArrow,
+                            {ctrlKey: true}, "\uf702", "\uf702"]);
+      expectations.push({
+        editable: [0, 0],
+        textarea: [0, 0],
+        input:    [0, 0],
+      });
+
+      // Move to end of line
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_RightArrow,
+                            {ctrlKey: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [72, 72],
+        input:    [732, 732],
+      });
+
+      // Move down
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_N,
+                            {ctrlKey: true}, "\u000e", "n"]);
+      expectations.push({
+        editable: [140, 140],
+        textarea: [145, 145],
+        input:    [732, 732],
+      });
+
+      // Move to beginning of line
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_LeftArrow,
+                            {ctrlKey: true}, "\uf702", "\uf702"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [73, 73],
+        input:    [0, 0],
+      });
+
+      // Move word right and modify selection
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_RightArrow,
+                            {altKey: true, shiftKey: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [73, 84],
+        textarea: [73, 90],
+        input:    [0, 10],
+      });
+
+      // Move word right
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_RightArrow,
+                            {altKey: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [84, 84],
+        textarea: [90, 90],
+        input:    [10, 10],
+      });
+
+      // Move word right
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_RightArrow,
+                            {altKey: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [89, 89],
+        textarea: [95, 95],
+        input:    [17, 17],
+      });
+
+      // Move down and modify selection
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_DownArrow,
+                            {shiftKey: true}, "\uf701", "\uf701"]);
+      expectations.push({
+        editable: [89, 171],
+        textarea: [95, 175],
+        input:    [17, 732],
+      });
+
+      // Move backward and modify selection
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_B,
+                            {ctrlKey: true, shiftKey: true}, "\u0002", "B"]);
+      expectations.push({
+        editable: [89, 170],
+        textarea: [95, 174],
+        input:    [17, 731],
+      });
+
+      // Delete forward
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_D,
+                            {ctrlKey: true}, "\u0004", "d"]);
+      expectations.push({
+        editable: [89, 89],
+        textarea: [95, 95],
+        input:    [17, 17],
+      });
+
+      // Delete backward
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_H,
+                            {ctrlKey: true}, "\u0008", "h"]);
+      expectations.push({
+        editable: [88, 88],
+        textarea: [94, 94],
+        input:    [16, 16],
+      });
+
+      // Move backward
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_B,
+                            {ctrlKey: true}, "\u0002", "b"]);
+      expectations.push({
+        editable: [87, 87],
+        textarea: [93, 93],
+        input:    [15, 15],
+      });
+
+      // Move to beginning of paragraph (line for now)
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A,
+                            {ctrlKey: true}, "\u0001", "a"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [73, 73],
+        input:    [0, 0],
+      });
+
+      // Move forward
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_F,
+                            {ctrlKey: true}, "\u0006", "f"]);
+      expectations.push({
+        editable: [74, 74],
+        textarea: [74, 74],
+        input:    [1, 1],
+      });
+
+      // Move word right
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_RightArrow,
+                            {altKey: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [84, 84],
+        textarea: [90, 90],
+        input:    [10, 10],
+      });
+
+      // Move word right
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_RightArrow,
+                            {altKey: true}, "\uf703", "\uf703"]);
+      expectations.push({
+        editable: [88, 88],
+        textarea: [94, 94],
+        input:    [17, 17],
+      });
+
+      // Delete to end of paragraph (line for now)
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_K,
+                            {ctrlKey: true}, "\u000b", "k"]);
+      expectations.push({
+        editable: [88, 88],
+        textarea: [94, 94],
+        input:    [17, 17],
+      });
+
+      // Move backward and modify selection
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_B,
+                            {ctrlKey: true, shiftKey: true}, "\u0002", "B"]);
+      expectations.push({
+        editable: [88, 87],
+        textarea: [93, 94],
+        input:    [16, 17],
+      });
+
+      // Move to end of paragraph (line for now)
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_E,
+                            {ctrlKey: true}, "\u0005", "e"]);
+      expectations.push({
+        editable: [139, 139],
+        textarea: [94, 94],
+        input:    [17, 17],
+      });
+
+      // Move up
+      synthesizedKeys.push([KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_P,
+                            {ctrlKey: true}, "\u0010", "p"]);
+      expectations.push({
+        editable: [73, 73],
+        textarea: [21, 21],
+        input:    [0, 0],
+      });
+
+      function checkWindowSelection(aElement, aSelection) {
+        let selection = window.getSelection();
+
+        is(selection.anchorOffset, aSelection[aElement.id][0],
+           aElement.id + ": Incorrect anchor offset");
+        is(selection.focusOffset, aSelection[aElement.id][1],
+           aElement.id + ": Incorrect focus offset");
+      }
+
+      function checkElementSelection(aElement, aSelection) {
+        is(aElement.selectionStart, aSelection[aElement.id][0],
+           aElement.id + ": Incorrect selection start");
+        is(aElement.selectionEnd, aSelection[aElement.id][1],
+           aElement.id + ": Incorrect selection end");
+      }
+
+      function* testRun(aElement, aSelectionCheck, aCallback) {
+        if (document.activeElement) {
+          document.activeElement.blur();
+        }
+
+        aElement.focus();
+
+        for (let i = 0; i < synthesizedKeys.length; i++) {
+          synthesizedKeys[i].push(function() {
+            aSelectionCheck(aElement, expectations[i]);
+            continueTest();
+          });
+          var synthOk = synthesizeNativeKey.apply(null, synthesizedKeys[i]);
+          synthesizedKeys[i].pop();
+          yield synthOk;
+        }
+      }
+
+      function* doTest() {
+        yield* testRun(document.getElementById("editable"), checkWindowSelection);
+        yield* testRun(document.getElementById("textarea"), checkElementSelection);
+        yield* testRun(document.getElementById("input"), checkElementSelection);
+      }
+
+      let gTestContinuation = null;
+
+      function continueTest() {
+        if (!gTestContinuation) {
+          gTestContinuation = doTest();
+        }
+        var ret = gTestContinuation.next();
+        if (ret.done) {
+          SimpleTest.finish();
+        } else {
+          is(ret.value, true, "Successfully synthesized key");
+        }
+      }
+
+      SimpleTest.waitForFocus(continueTest);
+    </script>
+  </body>
+</html>

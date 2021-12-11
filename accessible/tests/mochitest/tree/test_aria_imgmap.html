@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test usemap elements and ARIA</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  // gA11yEventDumpToConsole = true;
+  function doPreTest() {
+    waitForImageMap("imagemap", doTest);
+  }
+
+  function doTest() {
+    var accTree = {
+      role: ROLE_IMAGE_MAP,
+      children: [
+        {
+          role: ROLE_ENTRY,
+          name: "first name",
+        },
+        {
+          role: ROLE_ENTRY,
+          name: "last name",
+        },
+        {
+          role: ROLE_RADIOBUTTON,
+          name: "male",
+        },
+        {
+          role: ROLE_RADIOBUTTON,
+          name: "female",
+        },
+        {
+          role: ROLE_CHECKBUTTON,
+          name: "have bike",
+        },
+        {
+          role: ROLE_EDITCOMBOBOX,
+          name: "bike model",
+        },
+        {
+          role: ROLE_CHECKBUTTON,
+          name: "have car",
+        },
+        {
+          role: ROLE_CHECKBUTTON,
+          name: "have airplane",
+        },
+        {
+          role: ROLE_PUSHBUTTON,
+          name: "submit",
+        },
+      ],
+    };
+
+    // Test image map tree structure, roles, and names.
+    testAccessibleTree("imagemap", accTree);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doPreTest);
+  </script>
+
+</head>
+<body>
+
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=548291"
+  title="Accessible tree of ARIA image maps">
+Mozilla Bug 548291
+</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+
+<img id="imagemap" src="../formimage.png" width="219" height="229" border="0" usemap="#ariaMap">
+<map id="ariaMap" name="ariaMap">
+  <area id="t1" role="textbox" shape="rect" tabindex="0" alt="" title="first name"  coords="4,20,108,48" href="#" />
+  <area id="t2" role="textbox" shape="rect" alt="" title="last name"  coords="111,21,215,50" href="#" />
+  <area id="rb1" role="radio" aria-checked="true" shape="circle" alt="" title="male"  coords="60,75,11" href="#" />
+  <area id="rb2" role="radio" shape="circle" alt="" title="female"  coords="73,94,11" href="#" />
+  <area id="cb1" role="checkbox" aria-checked="true" shape="rect" alt="" title="have bike"  coords="95,123,118,145" href="#" />
+  <area id="cbox" role="combobox" shape="rect" alt="" title="bike model"  coords="120,124,184,146" href="#" />
+  <area id="cb2" role="checkbox" shape="rect" alt="" title="have car"  coords="90,145,114,164" href="#" />
+  <area id="cb3" role="checkbox" shape="rect" alt="" title="have airplane"  coords="130,163,152,184" href="#" />
+  <area id="b1" role="button" shape="rect" alt="" title="submit"  coords="4,198,67,224" href="#" />
+</map>
+</body>
+</html>

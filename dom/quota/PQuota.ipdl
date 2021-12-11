@@ -1,0 +1,179 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PQuotaRequest;
+include protocol PQuotaUsageRequest;
+
+include PBackgroundSharedTypes;
+
+include "mozilla/dom/quota/SerializationHelpers.h";
+
+using mozilla::OriginAttributesPattern
+  from "mozilla/OriginAttributes.h";
+
+using mozilla::dom::quota::PersistenceType
+  from "mozilla/dom/quota/PersistenceType.h";
+
+using mozilla::dom::quota::Client::Type
+  from "mozilla/dom/quota/Client.h";
+
+using mozilla::dom::ContentParentId
+  from "mozilla/dom/ipc/IdType.h";
+
+namespace mozilla {
+namespace dom {
+namespace quota {
+
+struct StorageNameParams
+{
+};
+
+struct StorageInitializedParams
+{
+};
+
+struct TemporaryStorageInitializedParams
+{
+};
+
+struct InitParams
+{
+};
+
+struct InitTemporaryStorageParams
+{
+};
+
+struct InitializePersistentOriginParams
+{
+  PrincipalInfo principalInfo;
+};
+
+struct InitializeTemporaryOriginParams
+{
+  PersistenceType persistenceType;
+  PrincipalInfo principalInfo;
+};
+
+struct GetFullOriginMetadataParams
+{
+  PersistenceType persistenceType;
+  PrincipalInfo principalInfo;
+};
+
+struct AllUsageParams
+{
+  bool getAll;
+};
+
+struct OriginUsageParams
+{
+  PrincipalInfo principalInfo;
+  bool fromMemory;
+};
+
+union UsageRequestParams
+{
+  AllUsageParams;
+  OriginUsageParams;
+};
+
+struct ClearResetOriginParams
+{
+  PrincipalInfo principalInfo;
+  PersistenceType persistenceType;
+  bool persistenceTypeIsExplicit;
+  Type clientType;
+  bool clientTypeIsExplicit;
+};
+
+struct ClearOriginParams
+{
+  ClearResetOriginParams commonParams;
+  bool matchAll;
+};
+
+struct ResetOriginParams
+{
+  ClearResetOriginParams commonParams;
+};
+
+struct ClearDataParams
+{
+  OriginAttributesPattern pattern;
+};
+
+struct ClearAllParams
+{
+};
+
+struct ResetAllParams
+{
+};
+
+struct PersistedParams
+{
+  PrincipalInfo principalInfo;
+};
+
+struct PersistParams
+{
+  PrincipalInfo principalInfo;
+};
+
+struct EstimateParams
+{
+  PrincipalInfo principalInfo;
+};
+
+struct ListOriginsParams
+{
+};
+
+union RequestParams
+{
+  StorageNameParams;
+  StorageInitializedParams;
+  TemporaryStorageInitializedParams;
+  InitParams;
+  InitTemporaryStorageParams;
+  InitializePersistentOriginParams;
+  InitializeTemporaryOriginParams;
+  GetFullOriginMetadataParams;
+  ClearOriginParams;
+  ResetOriginParams;
+  ClearDataParams;
+  ClearAllParams;
+  ResetAllParams;
+  PersistedParams;
+  PersistParams;
+  EstimateParams;
+  ListOriginsParams;
+};
+
+protocol PQuota
+{
+  manager PBackground;
+
+  manages PQuotaRequest;
+  manages PQuotaUsageRequest;
+
+parent:
+  async __delete__();
+
+  async PQuotaUsageRequest(UsageRequestParams params);
+
+  async PQuotaRequest(RequestParams params);
+
+  async StartIdleMaintenance();
+
+  async StopIdleMaintenance();
+
+  async AbortOperationsForProcess(ContentParentId contentParentId);
+};
+
+} // namespace quota
+} // namespace dom
+} // namespace mozilla

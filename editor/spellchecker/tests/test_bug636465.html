@@ -1,0 +1,53 @@
+<!doctype html>
+<title>Mozilla bug 636465</title>
+<link rel=stylesheet href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=636465"
+   target="_blank">Mozilla Bug 636465</a>
+<input id="x" value="foobarbaz" spellcheck="true" style="background-color: transparent; border: transparent;">
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  const {onSpellCheck} = SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+  var x = document.getElementById("x");
+  x.focus();
+  onSpellCheck(x, function() {
+    x.blur();
+    var spellCheckTrue = snapshotWindow(window);
+    x.setAttribute("spellcheck", "false");
+    var spellCheckFalse = snapshotWindow(window);
+    x.setAttribute("spellcheck", "true");
+    x.focus();
+    onSpellCheck(x, function() {
+      x.blur();
+      var spellCheckTrueAgain = snapshotWindow(window);
+      x.removeAttribute("spellcheck");
+      var spellCheckNone = snapshotWindow(window);
+      var ret = compareSnapshots(spellCheckTrue, spellCheckFalse, false)[0];
+      ok(ret,
+         "Setting the spellcheck attribute to false should work");
+      if (!ret) {
+        ok(false, "\nspellCheckTrue: " + spellCheckTrue.toDataURL() + "\nspellCheckFalse: " + spellCheckFalse.toDataURL());
+      }
+      ret = compareSnapshots(spellCheckTrue, spellCheckTrueAgain, true)[0];
+      ok(ret,
+         "Setting the spellcheck attribute back to true should work");
+      if (!ret) {
+        ok(false, "\nspellCheckTrue: " + spellCheckTrue.toDataURL() + "\nspellCheckTrueAgain: " + spellCheckTrueAgain.toDataURL());
+      }
+      ret = compareSnapshots(spellCheckNone, spellCheckFalse, true)[0];
+      ok(ret,
+         "Unsetting the spellcheck attribute should work");
+      if (!ret) {
+        ok(false, "\spellCheckNone: " + spellCheckNone.toDataURL() + "\nspellCheckFalse: " + spellCheckFalse.toDataURL());
+      }
+      SimpleTest.finish();
+    });
+  });
+}
+addLoadEvent(runTest);
+</script>

@@ -1,0 +1,33 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <title>Test of box-decoration-break with filter</title>
+  <style>
+    .clone {
+      box-decoration-break: clone;
+    }
+    span {
+      font: 24px sans-serif;
+      line-height: 2;
+      color: lime;
+      background: lime;
+      filter: blur(0px);
+    }
+    br {
+      line-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Box-Decoration-Break: Clone</h2>
+  <span class="clone">The<br />quick<br />orange fox</span>
+
+  <h2>Box-Decoration-Break: Slice</h2>
+  <span>The<br />quick<br />orange fox</span>
+</body>
+</html>

@@ -1,0 +1,42 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface allows the proxy code to use platform-specific proxy
+ * settings when the proxy preference is set to "automatic discovery". This service
+ * acts like a PAC parser to netwerk, but it will actually read the system settings and
+ * either return the proper proxy data from the autoconfig URL specified in the system proxy,
+ * or generate proxy data based on the system's manual proxy settings.
+ */
+[scriptable, uuid(971591cd-277e-409a-bbf6-0a79879cd307)]
+interface nsISystemProxySettings : nsISupports
+{
+    /**
+     * Whether or not it is appropriate to execute getProxyForURI off the main thread.
+     * If that method can block (e.g. for WPAD as windows does) then it must be
+     * not mainThreadOnly to avoid creating main thread jank. The main thread only option is
+     * provided for implementations that do not block but use other main thread only
+     * functions such as dbus.
+     */
+    readonly attribute bool mainThreadOnly;
+
+    /**
+     * If non-empty, use this PAC file. If empty, call getProxyForURI instead.
+     */
+    readonly attribute AUTF8String PACURI;
+
+    /**
+     * See ProxyAutoConfig::getProxyForURI; this function behaves similarly except
+     * a more relaxed return string is allowed that includes full urls instead of just
+     * host:port syntax. e.g. "PROXY http://www.foo.com:8080" instead of
+     * "PROXY www.foo.com:8080"
+     */
+    AUTF8String getProxyForURI(in AUTF8String testSpec,
+                               in AUTF8String testScheme,
+                               in AUTF8String testHost,
+                               in int32_t     testPort);
+};

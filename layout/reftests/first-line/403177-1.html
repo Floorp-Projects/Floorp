@@ -1,0 +1,23 @@
+<html>
+<head>
+<style>
+
+.fl:first-line { color: #ff00ff; background: #ffccff; }
+
+.flWithContent:first-line { content: "generated"; }
+
+</style>
+</head>
+
+<body onload="document.getElementById('inner').removeAttribute('class');">
+
+<div id="outer" class="fl">
+  a
+  <div id="inner" style="float: left;" class="flWithContent">
+    b
+  </div>
+  c
+</div>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+
+FINAL_TARGET_FILES.features["floorpsync@mozilla.org"] += [
+    "app.html",
+    "background.html",
+    "manifest.json"
+]
+
+FINAL_TARGET_FILES.features["floorpsync@mozilla.org"]["_locales"]["ja"] += ["_locales/ja/messages.json"]
+
+FINAL_TARGET_FILES.features["floorpsync@mozilla.org"]["_metadata"] += ["_metadata/verified_contents.json"]
+
+FINAL_TARGET_FILES.features["floorpsync@mozilla.org"]["assets"] += [
+    "assets/07cd34cc1a6673383b27b27cc7ad8004.svg",
+    "assets/114cd18b478088cff3e422700eeea537.woff2",
+    "assets/53545bf0c95fb5bef17517d4ac17f983.woff2",
+    "assets/68c5af1f48e2bfca1e57ae1c556a5c72.woff2",
+    "assets/90c57a3f35f7e89ba0d57bb7d09fbf6f.svg",
+    "assets/a4bca9febc2433c2f5f7aef68bc4e78e.woff2",
+    "assets/ada6e6df937f7e5e8b790dfea07109b7.woff2",
+    "assets/app.css",
+    "assets/app.css.map",
+    "assets/app.js",
+    "assets/app.js.LICENSE.txt",
+    "assets/app.js.map",
+    "assets/b886e5e4d0fb2ec299038048cb3d9a25.woff2",
+    "assets/background.js",
+    "assets/background.js.LICENSE.txt",
+    "assets/background.js.map",
+    "assets/cc9f106945de5cf13dcb5e54b5d2cec2.svg",
+    "assets/downloading.png",
+    "assets/fd55075af28b340bce1ba9cf7f652bfd.woff2",
+    "assets/icon128.png",
+    "assets/icon48.png",
+    "assets/notification.svg",
+    "assets/notsynced.png",
+    "assets/synced.png",
+    "assets/uploading.png",
+    "assets/webpage-metadata-collecter.js",
+    "assets/webpage-metadata-collecter.js.map",
+    "assets/zxcvbn-language-common.js",
+    "assets/zxcvbn-language-common.js.map",
+    "assets/zxcvbn-language-de.js",
+    "assets/zxcvbn-language-de.js.map",
+    "assets/zxcvbn-language-en.js",
+    "assets/zxcvbn-language-en.js.map"
+]
+
+
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "floorpsync")

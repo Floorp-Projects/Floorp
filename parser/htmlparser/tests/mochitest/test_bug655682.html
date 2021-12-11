@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=655682
+-->
+<head>
+  <title>Test for Bug 655682</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=655682">Mozilla Bug 655682</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe src=file_bug655682.sjs></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 655682 **/
+
+var gotOnload = false;
+var finishedTesting = false;
+
+function tryFinishTest() {
+  if (gotOnload && finishedTesting) {
+    SimpleTest.finish();
+  }
+}
+
+addLoadEvent(function() {
+  // Hit the event loop again just to make sure that we're not ending the test
+  // before all activity we care about is done.
+  SimpleTest.executeSoon(function() {
+    gotOnload = true;
+    tryFinishTest();
+  });
+});
+
+var tdsSeen = 0;
+
+var triggeredSecondTd = false;
+
+var iframe = document.getElementsByTagName("iframe")[0];
+
+SimpleTest.waitForExplicitFinish();
+
+function probe() {
+  var tds = iframe.contentDocument.getElementsByTagName("td").length;
+  switch (tds) {
+    case 0:
+      setTimeout(probe, 0);
+      return;
+    case 1:
+      tdsSeen = tds;
+      if (!triggeredSecondTd) {
+        triggeredSecondTd = true;
+        var script = document.createElement("script");
+        script.src = "file_bug655682.sjs?trigger=1";
+        document.head.appendChild(script);
+      }
+      setTimeout(probe, 0);
+      return;
+    case 2:
+      is(tdsSeen, 1, "Should have seen one td before seeing two.");
+      finishedTesting = true;
+      tryFinishTest();
+      return;
+    default:
+      ok(false, "Wrong number of tds");
+      SimpleTest.finish();
+  }
+}
+
+setTimeout(probe, 0);
+
+</script>
+</pre>
+</body>
+</html>

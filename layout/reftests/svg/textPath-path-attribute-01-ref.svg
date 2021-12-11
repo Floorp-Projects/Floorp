@@ -1,0 +1,24 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Reference for path attribute on textPath</title>
+
+  <defs>
+    <path id="path" d="M 100 100 h 400"/>
+  </defs>
+
+  <text font-size="20">
+    <textPath href="#path">Text on path with path attribute</textPath>
+  </text>
+
+  <text transform="translate(0,50)" font-size="20">
+    <textPath href="#path">Animate the path attribute into place</textPath>
+  </text>
+
+  <text transform="translate(0,100)" font-size="20">
+    <textPath href="#path">Ensure path is preferred over href</textPath>
+  </text>
+
+</svg>

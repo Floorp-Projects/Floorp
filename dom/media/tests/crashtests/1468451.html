@@ -1,0 +1,10 @@
+<script>
+alice = new RTCPeerConnection({ iceServers: [{ 'url': 'stun:2' }], }, null)
+bob = new RTCPeerConnection({ }, null)
+alice.createOffer({ offerToReceiveAudio: true })
+track = alice.getReceivers()[0].track
+alice.createOffer({ }).then((offer) => {
+  bob.addEventListener('signalingstatechange', (x) => x.target.addTransceiver(track, {}), { })
+  bob.close()
+})
+</script>

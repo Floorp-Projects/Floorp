@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=651956
+-->
+<head>
+  <title>Test for Bug 651956</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=651956">Mozilla Bug 651956</a>
+<p id="display"></p>
+<div id="content">
+  <input>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 651956 **/
+
+var input = document.getElementsByTagName('input')[0];
+
+var gotInputEvent = false;
+
+input.addEventListener("input", function() {
+  gotInputEvent = true;
+}, {once: true});
+
+input.addEventListener("focus", function() {
+  synthesizeKey("KEY_Escape");
+
+  setTimeout(function() {
+    ok(!gotInputEvent, "No input event should have been sent.");
+    SimpleTest.finish();
+  });
+}, {once: true});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  input.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

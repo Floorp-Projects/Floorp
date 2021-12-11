@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<title>Reference: Backplates should not include margins, indentation, padding, border space, or text-alignment space.</title>
+<style>
+  .outer {
+    background: url("blue.png");
+  }
+  div {
+    margin-bottom: 30px;
+  }
+  .fake-backplate {
+    background-color: white;
+  }
+</style>
+<div class="outer">
+  <div><span class="fake-backplate">div</span></div>
+  <div style="margin-left: 30px"><span class="fake-backplate">div w/ margin-left</span></div>
+  <div><span style="margin-left: 100px" class="fake-backplate">span w/ margin-left</span></div>
+  <div><span><span style="margin: 0px 100px" class="fake-backplate">nested span w/ margin on inner</span></span></div>
+  <div><span style="padding: 0px 50px"><span class="fake-backplate">span w/ padding</span></span></div>
+  <div><span style="border: 10px dotted black"><span class="fake-backplate">span w/ thick dotted border</span></span></div>
+  <div style="text-align: center"><span class="fake-backplate">div w/ text-align:center</span></div>
+  <div style="text-align: right"><span class="fake-backplate">div w/ text-align:right</span></div>
+  <div style="direction: rtl; text-align: center"><span class="fake-backplate">div w/ RTL &amp; text-align:center</span></div>
+  <div style="text-indent: 200px"><span class="fake-backplate">div w/ text-indent</span></div>
+</div>

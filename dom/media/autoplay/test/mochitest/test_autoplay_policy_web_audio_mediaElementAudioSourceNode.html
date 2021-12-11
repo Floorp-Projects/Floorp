@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Autoplay policy test : use media element as source for web audio</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<script>
+/* import-globals-from ../../../test/manifest.js */
+/**
+ * This test is used to ensure blocked AudioContext would be resumed when the
+ * source media element of MediaElementAudioSouceNode which has been created and
+ * connected to destinationnode starts.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+(async function testResumeAudioContextWhenMediaElementSourceStarted() {
+  await setupTestPreferences();
+
+  info(`- create audio context -`);
+  createAudioContext();
+
+  info(`- AudioContext is not allowed to start in beginning -`);
+  await audioContextShouldBeBlocked();
+
+  info(`- create a source for web audio and start the source -`);
+  await useMediaElementAsSourceAndPlayMediaElement();
+
+  info(`- AudioContext should be allowed to start after MediaElementAudioSourceNode started -`);
+  await audioContextShouldBeAllowedToStart();
+
+  endTest();
+})();
+
+/**
+ * Test utility functions
+ */
+
+function setupTestPreferences() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+    ["media.autoplay.blocking_policy", 0],
+    ["media.autoplay.block-webaudio", true],
+    ["media.autoplay.block-event.enabled", true],
+  ]});
+}
+
+function createAudioContext() {
+  /* global ac */
+  window.ac = new AudioContext();
+
+  ac.allowedToStart = new Promise(resolve => {
+    ac.addEventListener("statechange", function() {
+      if (ac.state === "running") {
+        resolve();
+      }
+    }, {once: true});
+  });
+
+  ac.notAllowedToStart = new Promise(resolve => {
+    ac.addEventListener("blocked", async function() {
+      resolve();
+    }, {once: true});
+  });
+}
+
+async function audioContextShouldBeBlocked() {
+  await ac.notAllowedToStart;
+  is(ac.state, "suspended", `AudioContext is blocked.`);
+}
+
+async function useMediaElementAsSourceAndPlayMediaElement() {
+  let video = document.createElement('video');
+  video.src = "gizmo.mp4";
+
+  let source = ac.createMediaElementSource(video);
+  source.connect(ac.destination);
+  // simulate user gesture in order to start video.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  await playVideo(video);
+}
+
+async function playVideo(video) {
+  video.play();
+  await once(video, "play");
+  ok(true, `video started.`);
+  removeNodeAndSource(video);
+}
+
+async function audioContextShouldBeAllowedToStart() {
+  await ac.allowedToStart;
+  is(ac.state, "running", `AudioContext is allowed to start.`);
+}
+
+function endTest() {
+  // reset the activation flag in order not to interfere following test in the
+  // verify mode which would run the test using same document couple times.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+  SimpleTest.finish();
+}
+
+</script>

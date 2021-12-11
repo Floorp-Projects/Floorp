@@ -1,0 +1,31 @@
+{
+  "browserAction": {
+    "url": "chrome://geckoview/content/ext-browserAction.js",
+    "schema": "chrome://extensions/content/schemas/browser_action.json",
+    "scopes": ["addon_parent"],
+    "manifest": ["browser_action"],
+    "paths": [["browserAction"]]
+  },
+  "browsingData": {
+    "url": "chrome://extensions/content/parent/ext-browsingData.js",
+    "schema": "chrome://extensions/content/schemas/browsing_data.json",
+    "scopes": ["addon_parent"],
+    "paths": [["browsingData"]]
+  },
+  "pageAction": {
+    "url": "chrome://geckoview/content/ext-pageAction.js",
+    "schema": "chrome://extensions/content/schemas/page_action.json",
+    "scopes": ["addon_parent"],
+    "manifest": ["page_action"],
+    "paths": [["pageAction"]]
+  },
+  "tabs": {
+    "url": "chrome://geckoview/content/ext-tabs.js",
+    "schema": "chrome://geckoview/content/schemas/tabs.json",
+    "scopes": ["addon_parent"],
+    "paths": [["tabs"]]
+  },
+  "geckoViewAddons": {
+    "schema": "chrome://geckoview/content/schemas/gecko_view_addons.json"
+  }
+}

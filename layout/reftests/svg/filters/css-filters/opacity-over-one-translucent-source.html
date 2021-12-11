@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Apply Opacity to a Translucent HTML Element Using a Factor Over One</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-opacity">
+  <link rel="match" href="opacity-over-one-translucent-source-ref.html">
+  <meta name="assert"
+        content="Given a factor over one, the CSS opacity filter function should
+                 not change the translucency of an HTML element.">
+  <style type="text/css">
+    #target {
+      filter: opacity(1000);
+      background-color: rgba(0, 255, 0, 0.25);
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a faded green square.</p>
+  <div id="target"></div>
+</body>
+</html>

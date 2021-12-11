@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+function onload() {
+  window.focus();
+  var range = document.createRange();
+  range.selectNodeContents(document.getElementById("selectMe"));
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+</script>
+<style type="text/css">
+body {
+  background: lightGray;
+}
+div {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font: 36px monospace;
+  color: white;
+}
+</style>
+</head>
+<!-- NOTREF case has selected text but the shadow is missing -->
+<body onload="onload()">
+<div id="selectMe"><bdo dir="rtl">selected shadowed rtl text</bdo></div>
+</body>
+</html>

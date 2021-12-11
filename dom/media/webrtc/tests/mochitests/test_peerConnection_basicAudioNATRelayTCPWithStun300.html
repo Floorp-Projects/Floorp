@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="nonTrickleIce.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "857668",
+  title: "Basic audio-only peer connection with UDP-blocking NAT, for verifying TCP relay with STUN 300 responses"
+});
+
+// This test uses the NAT simulator, which doesn't work in https, so we turn
+// on getUserMedia in http, which requires a reload.
+if (!("mediaDevices" in navigator)) {
+  SpecialPowers.pushPrefEnv({set: [['media.devices.insecure.enabled', true]]},
+                            () => location.reload());
+} else {
+  runNetworkTest(async (options = {}) => {
+    await pushPrefs(
+        ['media.peerconnection.ice.obfuscate_host_addresses', false],
+        ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
+        ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT'],
+        ['media.peerconnection.nat_simulator.block_udp', true],
+        ['media.peerconnection.nat_simulator.block_tcp', false],
+        ['media.peerconnection.ice.loopback', true],
+        ['media.getusermedia.insecure.enabled', true]);
+    options.expectedLocalCandidateType = "relay-tcp";
+    options.expectedRemoteCandidateType = "relay-tcp";
+    const turnServer = iceServersArray.find(server => "username" in server);
+    const turnRedirectPort = turnServer.turn_redirect_port;
+    const turnHostname = getTurnHostname(turnServer.urls[0]);
+    turnServer.urls = [`turn:${turnHostname}:${turnRedirectPort}?transport=tcp`];
+    // Override turn servers so we can test simulated redirects
+    options.config_local = {iceServers: [turnServer]};
+    options.config_remote = {iceServers: [turnServer]};
+    const test = new PeerConnectionTest(options);
+    // Make sure we don't end up choosing the wrong thing due to delays in
+    // trickle. Once we are willing to accept trickle after ICE success, we
+    // can maybe wait a bit to allow things to stabilize.
+    // TODO(bug 1238249)
+    makeOffererNonTrickle(test.chain);
+    makeAnswererNonTrickle(test.chain);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    await test.run();
+    await SpecialPowers.popPrefEnv();
+  }, { useIceServer: true });
+}
+</script>
+</pre>
+</body>
+</html>

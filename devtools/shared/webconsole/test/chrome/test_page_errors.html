@@ -1,0 +1,224 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for page errors</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for page errors</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
+SimpleTest.waitForExplicitFinish();
+
+const previousEnabled = window.docShell.cssErrorReportingEnabled;
+window.docShell.cssErrorReportingEnabled = true;
+
+SimpleTest.registerCleanupFunction(() => {
+  window.docShell.cssErrorReportingEnabled = previousEnabled;
+});
+
+let expectedPageErrors = [];
+
+const NO_UNCAUGHT_EXCEPTION = Symbol();
+
+function doPageErrors() {
+  expectedPageErrors = {
+    "document.body.style.color = 'fooColor';": {
+      errorMessage: /fooColor/,
+      sourceName: /test_page_errors/,
+      category: MESSAGE_CATEGORY.CSS_PARSER,
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: true,
+    },
+   "document.doTheImpossible();": {
+      errorMessage: /doTheImpossible/,
+      errorMessageName: undefined,
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+    "(42).toString(0);": {
+      errorMessage: /radix/,
+      errorMessageName: "JSMSG_BAD_RADIX",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+     "'use strict'; (Object.freeze({name: 'Elsa', score: 157})).score = 0;": {
+      errorMessage: /read.only/,
+      errorMessageName: "JSMSG_READ_ONLY",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+     "([]).length = -1": {
+      errorMessage: /array length/,
+      errorMessageName: "JSMSG_BAD_ARRAY_LENGTH",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+     "'abc'.repeat(-1);": {
+      errorMessage: /repeat count.*non-negative/,
+      errorMessageName: "JSMSG_NEGATIVE_REPETITION_COUNT",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+    "'a'.repeat(2e28);": {
+      errorMessage: /repeat count.*less than infinity/,
+      errorMessageName: "JSMSG_RESULTING_STRING_TOO_LARGE",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+    "77.1234.toExponential(-1);": {
+      errorMessage: /out of range/,
+      errorMessageName: "JSMSG_PRECISION_RANGE",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+    "function a() { return; 1 + 1; }": {
+      errorMessage: /unreachable code/,
+      errorMessageName: "JSMSG_STMT_AFTER_RETURN",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: true,
+    },
+    "let a, a;": {
+      errorMessage: /redeclaration of/,
+      errorMessageName: "JSMSG_REDECLARED_VAR",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+      notes: [
+        {
+          messageBody: /Previously declared at line/,
+          frame: {
+            source: /test_page_errors/,
+          }
+        }
+      ]
+    },
+    [`let error = new TypeError("abc");
+      error.name = "MyError";
+      error.message = "here";
+      throw error`]: {
+      errorMessage: /MyError: here/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+    "DOMTokenList.prototype.contains.call([])": {
+      errorMessage: /does not implement interface/,
+      errorMessageName: "MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+    [`let error2 = new TypeError("abc");
+      error2.name = "MyPromiseError";
+      error2.message = "here2";
+      Promise.reject(error2)`]: {
+      errorMessage: /MyPromiseError: here2/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+      // Promise.reject doesn't produce an uncaught exception
+      // even though |exception: true|.
+      [NO_UNCAUGHT_EXCEPTION]: true
+    }
+  };
+
+  let container = document.createElement("script");
+  for (const stmt of Object.keys(expectedPageErrors)) {
+      if (expectedPageErrors[stmt].error &&
+          !expectedPageErrors[stmt][NO_UNCAUGHT_EXCEPTION]) {
+          SimpleTest.expectUncaughtException();
+      }
+      info("starting stmt: " + stmt);
+      container = document.createElement("script");
+      document.body.appendChild(container);
+      container.textContent = stmt;
+      document.body.removeChild(container);
+      info("ending stmt: " + stmt);
+  }
+}
+
+async function startTest() {
+  removeEventListener("load", startTest);
+
+  const {state} = await attachConsole(["PageError"]);
+  onAttach(state);
+}
+
+function onAttach(state) {
+  onPageError = onPageError.bind(null, state);
+  state.webConsoleFront.on("pageError", onPageError);
+  doPageErrors();
+}
+
+const pageErrors = [];
+
+function onPageError(state, packet) {
+  if (!packet.pageError.sourceName.includes("test_page_errors")) {
+    info("Ignoring error from unknown source: " + packet.pageError.sourceName);
+    return;
+  }
+
+  pageErrors.push(packet.pageError);
+  if (pageErrors.length != Object.keys(expectedPageErrors).length) {
+    return;
+  }
+
+  state.webConsoleFront.off("pageError", onPageError);
+
+  Object.values(expectedPageErrors).forEach(function(message, index) {
+    info("checking received page error #" + index);
+    checkObject(pageErrors[index], Object.values(expectedPageErrors)[index]);
+  });
+
+  closeDebugger(state, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

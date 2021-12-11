@@ -1,0 +1,26 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+profile_files = [
+    "base/*",
+    "common/*",
+    "geckoview-junit/*",
+    "mochitest/*",
+    "perf/*",
+    "profiles.json",
+    "profileserver/*",
+    "reftest/*",
+    "unittest-features/*",
+    "unittest-required/*",
+    "web-platform/*",
+]
+
+TEST_HARNESS_FILES.reftest.profile_data += profile_files
+TEST_HARNESS_FILES.testing.mochitest.profile_data += profile_files
+TEST_HARNESS_FILES["web-platform"].prefs += profile_files
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "General")

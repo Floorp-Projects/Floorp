@@ -1,0 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+geckoview.jar:
+    content/ext-android.js
+    content/ext-android.json
+    content/ext-browserAction.js
+    content/ext-c-android.js
+    content/ext-c-tabs.js
+    content/ext-pageAction.js
+    content/ext-tabs.js
+    content/ext-downloads.js
+% override chrome://extensions/content/parent/ext-downloads.js chrome://geckoview/content/ext-downloads.js

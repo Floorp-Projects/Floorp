@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1069762 - Check blocked-uri in csp-reports after redirect</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We try to load a script from:
+ *   http://example.com/tests/dom/security/test/csp/file_path_matching_redirect_server.sjs
+ * which gets redirected to:
+ *  http://test1.example.com/tests/dom/security//test/csp/file_path_matching.js
+ *
+ * The blocked-uri in the csp-report should be the original URI:
+ *   http://example.com/tests/dom/security/test/csp/file_path_matching_redirect_server.sjs
+ * instead of the redirected URI:
+ *  http://test1.example.com/tests/com/security/test/csp/file_path_matching.js
+ *
+ * see also: http://www.w3.org/TR/CSP/#violation-reports
+ *
+ * Note, that we reuse the test-setup from
+ * test_path_matching_redirect.html
+ */
+
+const reportURI = "http://mochi.test:8888/foo.sjs";
+const policy = "script-src http://example.com; report-uri " + reportURI;
+const testfile = "tests/dom/security/test/csp/file_path_matching_redirect.html";
+
+var chromeScriptUrl = SimpleTest.getTestFileURL("file_report_chromescript.js");
+var script = SpecialPowers.loadChromeScript(chromeScriptUrl);
+
+script.addMessageListener('opening-request-completed', function ml(msg) {
+  if (msg.error) {
+    ok(false, "Could not query report (exception: " + msg.error + ")");
+  } else {
+    try {
+      var reportObj = JSON.parse(msg.report);
+    } catch (e) {
+      ok(false, "Could not parse JSON (exception: " + e + ")");
+    }
+    try {
+      var cspReport = reportObj["csp-report"];
+      // blocked-uri should only be the asciiHost instead of:
+      // http://test1.example.com/tests/dom/security/test/csp/file_path_matching.js
+      is(cspReport["blocked-uri"], "http://example.com/tests/dom/security/test/csp/file_path_matching_redirect_server.sjs", "Incorrect blocked-uri");
+    } catch (e) {
+      ok(false, "Could not query report (exception: " + e + ")");
+    }
+  }
+
+  script.removeMessageListener('opening-request-completed', ml);
+  script.sendAsyncMessage("finish");
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var src = "file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape(testfile);
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(policy);
+
+  document.getElementById("cspframe").src = src;
+}
+
+runTest();
+
+</script>
+</body>
+</html>

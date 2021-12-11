@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+-->
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+
+div {
+  font-family: DejaVuSansMono;
+  padding-left: 1em;
+}
+
+/* We put the text and marker into separate spans, because
+   overflow markers (and their shadows) are drawn separately
+   from the text frame. */
+span {
+  text-shadow: -0.5em 3px 2px red;
+}
+</style>
+</head>
+<body>
+
+<div><span>Hello</span><span>...</span></div>
+
+</body>
+</html>

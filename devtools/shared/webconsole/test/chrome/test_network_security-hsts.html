@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the network actor (HSTS detection)</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the network actor (HSTS detection)</p>
+
+<iframe src="https://example.com/chrome/devtools/shared/webconsole/test/chrome/network_requests_iframe.html"></iframe>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const TEST_CASES = [
+  {
+    desc: "no HSTS",
+    url: "https://example.com",
+    usesHSTS: false,
+  },
+  {
+    desc: "HSTS from this response",
+    url: "https://example.com/"+
+         "browser/browser/base/content/test/general/browser_star_hsts.sjs",
+    usesHSTS: true,
+  },
+  {
+    desc: "stored HSTS from previous response",
+    url: "https://example.com/",
+    usesHSTS: true,
+  }
+];
+
+async function startTest()
+{
+  info("Test detection of HTTP Strict Transport Security.");
+  for (const testCase of TEST_CASES) {
+    await checkHSTS(testCase)
+  }
+
+  // Reset HSTS state.
+  const gSSService = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
+  const uri = Services.io.newURI(TEST_CASES[0].url);
+  gSSService.resetState(uri, 0);
+
+  SimpleTest.finish();
+}
+
+async function checkHSTS({desc, url, usesHSTS}) {
+  info("Testing HSTS for " + url);
+  const commands = await createCommandsForTab();
+  const target = commands.targetCommand.targetFront;
+  const resourceCommand = commands.resourceCommand;
+
+  const resource = await new Promise(resolve => {
+    resourceCommand
+      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
+        onAvailable: () => {},
+        onUpdated: resourceUpdate => {
+          resolve(resourceUpdate[0].resource);
+        },
+      })
+      .then(() => {
+        // Spawn the network requests after we started watching
+        const iframe = document.querySelector("iframe").contentWindow;
+        iframe.wrappedJSObject.makeXhrCallback("GET", url);
+      });
+  });
+
+  const webConsoleFront = await target.getFront("console");
+  const packet = await webConsoleFront.getSecurityInfo(resource.actor);
+  is(
+    packet.securityInfo.hsts,
+    usesHSTS,
+    "Strict Transport Security detected correctly for " + url
+  );
+  await commands.destroy();
+}
+
+addEventListener("load", startTest, { once: true });
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "sourcemapped-rollup",
+  "private": true,
+  "dependencies": {
+    "@babel/core": "^7.0.0-beta.54",
+    "@babel/preset-env": "^7.0.0-beta.54",
+    "@babel/preset-flow": "^7.0.0-beta.54",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.54",
+    "lodash": "^4.17.5",
+    "rollup": "^0.63.0",
+    "rollup-plugin-babel": "^4.0.0-beta.7"
+  }
+}

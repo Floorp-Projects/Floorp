@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+% content extensions %content/extensions/
+    content/extensions/schemas/activity_log.json
+    content/extensions/schemas/alarms.json
+    content/extensions/schemas/browser_action.json
+    content/extensions/schemas/browser_settings.json
+    content/extensions/schemas/browsing_data.json
+#ifndef ANDROID
+    content/extensions/schemas/captive_portal.json
+#endif
+    content/extensions/schemas/clipboard.json
+    content/extensions/schemas/content_scripts.json
+    content/extensions/schemas/contextual_identities.json
+    content/extensions/schemas/cookies.json
+    content/extensions/schemas/dns.json
+    content/extensions/schemas/downloads.json
+    content/extensions/schemas/events.json
+    content/extensions/schemas/experiments.json
+    content/extensions/schemas/extension.json
+    content/extensions/schemas/extension_types.json
+    content/extensions/schemas/extension_protocol_handlers.json
+#ifndef ANDROID
+    content/extensions/schemas/geckoProfiler.json
+#endif
+    content/extensions/schemas/i18n.json
+#ifndef ANDROID
+    content/extensions/schemas/identity.json
+#endif
+    content/extensions/schemas/idle.json
+    content/extensions/schemas/management.json
+    content/extensions/schemas/manifest.json
+    content/extensions/schemas/native_manifest.json
+    content/extensions/schemas/network_status.json
+    content/extensions/schemas/notifications.json
+    content/extensions/schemas/page_action.json
+    content/extensions/schemas/permissions.json
+    content/extensions/schemas/proxy.json
+    content/extensions/schemas/privacy.json
+    content/extensions/schemas/runtime.json
+    content/extensions/schemas/storage.json
+    content/extensions/schemas/telemetry.json
+    content/extensions/schemas/test.json
+    content/extensions/schemas/theme.json
+    content/extensions/schemas/types.json
+    content/extensions/schemas/user_scripts.json
+    content/extensions/schemas/user_scripts_content.json
+    content/extensions/schemas/web_navigation.json
+    content/extensions/schemas/web_request.json

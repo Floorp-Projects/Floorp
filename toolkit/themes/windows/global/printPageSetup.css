@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+fieldset {
+  border: 0.5px groove ThreeDLightShadow;
+  margin: 6px 3px;
+}
+
+.groupbox-body {
+  /* We cannot use padding on the groupbox due to its -moz-appearance. */
+  margin: 3px 3px 6px;
+}
+
+.portrait-page {
+  list-style-image: url("chrome://global/skin/icons/Portrait.png");
+}
+
+.landscape-page {
+  list-style-image: url("chrome://global/skin/icons/Landscape.png");
+}
+
+#header-footer-grid {
+  display: grid;
+  grid-template-columns: auto auto auto;
+}

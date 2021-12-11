@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+<title>WebGL test: CaptureStream()</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="captureStream_common.js">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<script id="vs" type="x-shader/x-vertex">
+
+attribute vec2 aVertCoord;
+
+void main(void) {
+  gl_Position = vec4(aVertCoord, 0.0, 1.0);
+}
+
+</script>
+<script id="fs" type="x-shader/x-fragment">
+
+precision mediump float;
+uniform vec4 uColor;
+
+void main(void) {
+  gl_FragColor = uColor;
+}
+
+</script>
+<body>
+<script>
+
+// Globals. Initialized during beginTest().
+var c;       // Canvas element captured by streams.
+var gl;      // WebGLContext of |c|.
+var h;       // CaptureStreamTestHelper holding utility test functions.
+var vauto;   // Video element with captureStream stream in automatic mode.
+var vmanual; // Video element with captureStream stream in manual (fps 0) mode.
+var vrate;   // Video element with captureStream stream with fixed frame rate.
+
+/* Fails the test if there was a GL error */
+function checkGLError(info) {
+  var error = gl.getError();
+  // Comparing strings for sake of log output in hex format.
+  is("0x" + error.toString(16), "0x0", "WebGL error [" + info + "]");
+}
+
+function checkClearColorInitialRed() {
+  info("Checking that clearing to red works for first frame.");
+
+  h.clearColor(c, h.red);
+
+  vauto.srcObject = c.captureStream();
+  vmanual.srcObject = c.captureStream(0);
+  vrate.srcObject = c.captureStream(10);
+
+  ok(h.isPixel(h.getPixel(vauto), h.blackTransparent),
+    "vauto should not be drawn to before stable state");
+  ok(h.isPixel(h.getPixel(vrate), h.blackTransparent),
+    "vrate should not be drawn to before stable state");
+  ok(h.isPixel(h.getPixel(vmanual), h.blackTransparent),
+    "vmanual should not be drawn to before stable state");
+
+  return Promise.resolve()
+    .then(() => h.pixelMustBecome(vauto, h.red, {
+      infoString: "should become red automatically",
+    }))
+    .then(() => h.pixelMustBecome(vrate, h.red, {
+      infoString: "should become red automatically",
+    }))
+    .then(() => h.pixelMustBecome(vmanual, h.red, {
+      infoString: "should become red when we get to stable "
+        + "state (first frame)",
+    }))
+}
+
+function checkDrawColorGreen() {
+  info("Checking that drawing green results in green video frames.");
+  var drawing = h.startDrawing(h.drawColor.bind(h, c, h.green));
+  checkGLError('after DrawColor');
+  return Promise.resolve()
+    .then(() => h.pixelMustBecome(vauto, h.green, {
+      infoString: "should become green automatically",
+    }))
+    .then(() => h.pixelMustBecome(vrate, h.green, {
+      infoString: "should become green automatically",
+    }))
+    .then(() => h.pixelMustBecome(vmanual, h.red, {
+      infoString: "should still be red",
+    }))
+    .then(() => h.requestFrame(vmanual))
+    .then(() => h.pixelMustBecome(vmanual, h.green, {
+      infoString: "should become green after requstFrame()",
+    }))
+    .then(() => drawing.stop());
+}
+
+function checkClearColorRed() {
+  info("Checking that clearing to red works.");
+  var drawing = h.startDrawing(h.clearColor.bind(h, c, h.red));
+  return Promise.resolve()
+    .then(() => h.pixelMustBecome(vauto, h.red, {
+      infoString: "should become red automatically",
+    }))
+    .then(() => h.pixelMustBecome(vrate, h.red, {
+      infoString: "should become red automatically",
+    }))
+    .then(() => h.pixelMustBecome(vmanual, h.green, {
+      infoString: "should still be green",
+    }))
+    .then(() => h.requestFrame(vmanual))
+    .then(() => h.pixelMustBecome(vmanual, h.red, {
+      infoString: "should become red after requestFrame()",
+    }))
+    .then(() => drawing.stop());
+}
+
+function checkRequestFrameOrderGuarantee() {
+  info("Checking that requestFrame() immediately after a draw " +
+       "call results in the expected frame seen in the stream.");
+  return Promise.resolve()
+    .then(() => h.pixelMustBecome(vmanual, h.red, 0, "should still be red"))
+    .then(() => h.drawColor(c, h.green)) // 1. Draw canvas green
+    .then(() => h.requestFrame(vmanual)) // 2. Immediately request a frame
+    .then(() => h.pixelMustBecome(vmanual, h.green, {
+      infoString: "should become green after call order test",
+    }))
+}
+
+function checkEndedOnStop() {
+  let promises = [vauto, vmanual, vrate].map(elem => {
+    elem.srcObject.getTracks()[0].stop();
+    return new Promise(resolve =>
+      elem.addEventListener("ended", function endedListener(event) {
+        ok(true, "Element " + elem.id + " ended.");
+        resolve();
+        elem.removeEventListener("ended", endedListener);
+      }));
+  });
+  return Promise.all(promises);
+}
+
+
+function finish() {
+  ok(true, 'Test complete.');
+  SimpleTest.finish();
+}
+
+function beginTest() {
+  h = new CaptureStreamTestHelperWebGL();
+
+  c = h.createAndAppendElement('canvas', 'c');
+  vauto = h.createAndAppendElement('video', 'vauto');
+  vmanual = h.createAndAppendElement('video', 'vmanual');
+  vrate = h.createAndAppendElement('video', 'vrate');
+
+  gl = c.getContext('webgl');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    finish();
+    return;
+  }
+
+  gl.disable(gl.DEPTH_TEST);
+
+  prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+  if (!prog) {
+    ok(false, 'Program linking should succeed.');
+    return;
+  }
+
+  // Setup vertex coordinates for drawing a rectangle across the whole canvas.
+
+  prog.aVertCoord = gl.getAttribLocation(prog, "aVertCoord");
+  ok(prog.aVertCoord >= 0, '`aVertCoord` should be valid.');
+
+  var vertCoordArr = new Float32Array([
+    -1, -1,
+     1, -1,
+    -1,  1,
+     1,  1,
+  ]);
+  var vertCoordBuff = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertCoordBuff);
+  gl.bufferData(gl.ARRAY_BUFFER, vertCoordArr, gl.STATIC_DRAW);
+
+  gl.useProgram(prog);
+  gl.enableVertexAttribArray(prog.aVertCoord);
+  gl.vertexAttribPointer(prog.aVertCoord, 2, gl.FLOAT, false, 0, 0);
+
+  // Setup the helper with a pointer to how to change fragment color.
+
+  var uColorLocation = gl.getUniformLocation(prog, "uColor");
+  h.setFragmentColorLocation(uColorLocation);
+
+  checkGLError('after setup');
+
+  // Run tests.
+
+  Promise.resolve()
+    .then(checkClearColorInitialRed)
+    .then(checkDrawColorGreen)
+    .then(checkClearColorRed)
+    .then(checkRequestFrameOrderGuarantee)
+    .then(checkEndedOnStop)
+    .then(finish);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+beginTest();
+</script>
+

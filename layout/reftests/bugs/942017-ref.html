@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+    <meta charset="utf-8">
+    <title>Bug 942017</title>
+
+    <style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+}
+
+  html,body {
+      color:black; background-color:white; font-size:24px; font-family:DejaVuSansMono; padding:20px; margin:0;
+  }
+
+  div {
+    float: left;
+    padding: 1em 2em;
+    outline: 2px solid black;
+    background: black;
+  }
+
+  div.a { line-height: 0.5em; }
+  div.b { line-height: 2em; }
+  div.i l { margin-left:2.84ch; }
+
+  l { display:block; outline:1px solid green; width:1ch; direction:rtl; white-space:nowrap; }
+  x { display:inline-block; width:2.84ch; height:1px; vertical-align:top; }
+    </style>
+</head>
+<body>
+        <div class="a">
+          <l>X<x></x></l>
+          <l>X<x></x></l>
+        </div>
+
+<br clear="all">
+
+        <div class="b">
+          <l>X<x></x></l>
+          <l>X<x></x></l>
+        </div>
+
+<br clear="all">
+
+        <div class="a i">
+          <l>X<x></x></l>
+          <l>X<x></x></l>
+        </div>
+
+<br clear="all">
+
+        <div class="b i">
+          <l>X<x></x></l>
+          <l>X<x></x></l>
+        </div>
+
+</body>
+</html>

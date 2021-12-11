@@ -1,0 +1,34 @@
+<html>
+<head>
+  <title>redirecting...</title>
+
+  <script type="text/javascript">
+    function redirect(aURL) {
+      // We create a listener for this event in browser-test.js which will
+      // get picked up when specifying --flavor=chrome or --flavor=a11y
+      var event = new CustomEvent("contentEvent", {
+        bubbles: true,
+        detail: {
+          "data": aURL + location.search,
+          "type": "loadURI",
+        },
+      });
+      document.dispatchEvent(event);
+    }
+
+    function redirectToHarness() {
+      redirect("chrome://mochikit/content/harness.xhtml");
+    }
+
+    function onLoad() {
+      setTimeout(redirectToHarness, 0);
+      // In case the listener is not ready, re-try periodically
+      setInterval(redirectToHarness, 5000);
+    }
+  </script>
+</head>
+
+<body onload="onLoad();">
+redirecting...
+</body>
+</html>

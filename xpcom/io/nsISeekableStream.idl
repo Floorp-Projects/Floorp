@@ -1,0 +1,65 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsITellableStream.idl"
+
+/*
+ * nsISeekableStream
+ *
+ * Note that a stream might not implement all methods (e.g., a readonly stream
+ * won't implement setEOF)
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(8429d350-1040-4661-8b71-f2a6ba455980)]
+interface nsISeekableStream : nsITellableStream
+{
+    /*
+     * Sets the stream pointer to the value of the 'offset' parameter
+     */
+    const int32_t NS_SEEK_SET = 0;
+
+    /*
+     * Sets the stream pointer to its current location plus the value
+     * of the offset parameter.
+     */
+    const int32_t NS_SEEK_CUR = 1;
+
+    /*
+     * Sets the stream pointer to the size of the stream plus the value
+     * of the offset parameter.
+     */
+    const int32_t NS_SEEK_END = 2;
+
+    /**
+     *  seek
+     *
+     *  This method moves the stream offset of the steam implementing this
+     *  interface.
+     *
+     *   @param whence specifies how to interpret the 'offset' parameter in
+     *                 setting the stream offset associated with the implementing
+     *                 stream.
+     *
+     *   @param offset specifies a value, in bytes, that is used in conjunction
+     *                 with the 'whence' parameter to set the stream offset of the
+     *                 implementing stream.  A negative value causes seeking in
+     *                 the reverse direction.
+     *
+     *   @throws NS_BASE_STREAM_CLOSED if called on a closed stream.
+     */
+    void seek(in long whence, in long long offset);
+
+    /**
+     *  setEOF
+     *
+     *  This method truncates the stream at the current offset.
+     *
+     *   @throws NS_BASE_STREAM_CLOSED if called on a closed stream.
+     */
+    void setEOF();
+};

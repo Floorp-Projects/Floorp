@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Inspector Tree Menu Test</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <div>
+      <div id="paste-area">
+        <h1>Inspector Tree Menu Test</h1>
+        <p class="inner">Unset</p>
+        <p class="adjacent">
+          <span class="ref">3</span>
+        </p>
+      </div>
+      <p data-id="copy">Paragraph for testing copy</p>
+      <p id="sensitivity">Paragraph for sensitivity</p>
+      <p class="duplicate">This will be duplicated</p>
+      <p id="delete">This has to be deleted</p>
+      <img id="copyimage" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQYV2P4DwABAQEAWk1v8QAAAABJRU5ErkJggg==" />
+      <div id="hiddenElement" style="display: none;">
+        <p id="nestedHiddenElement">Visible element nested inside a non-visible element</p>
+      </div>
+      <p id="console-var">Paragraph for testing console variables</p>
+      <p id="console-var-multi">Paragraph for testing multiple console variables</p>
+
+
+      <p id="attributes" data-copy="the" data-long-copy="#01234567890123456789012345678901234567890123456789123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" data-edit="original" data-remove="thing">Attributes are going to be changed here</p>
+
+      <div id="host"></div>
+      <script>
+        'use strict';
+        document.getElementById("host").attachShadow({ mode: "open" });
+			</script>
+			<iframe srcdoc="<p>Paragraph in iFrame</p>"></iframe>
+    </div>
+  </body>
+</html>

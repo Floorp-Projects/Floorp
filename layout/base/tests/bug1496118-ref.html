@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style>
+    input, input:active { border: none; }
+  </style>
+</head>
+<body>
+<input id="input1" value="aaaaaaaaaaaaaaaaaaaa">
+<div id=div1 style="height: 100px;">
+  <textarea id="textarea1" style="display: none;"></textarea>
+</div>
+<script>
+SimpleTest.waitForFocus(() => {
+  let input1 = document.getElementById('input1');
+  input1.focus();
+  input1.selectionStart = input1.selectionEnd = 0;
+  synthesizeKey("A");
+  document.documentElement.removeAttribute("class");
+});
+</script>
+</body>
+</html>

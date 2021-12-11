@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage equal origins</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="interOriginTest2.js"></script>
+
+<!--
+  This test loads two frames from equal
+  origins and checks that entries of localStorage
+  objects are kept up-to-date and synchronized
+  between both frames.
+
+  The subsystem is based on postMessage and addEventListener
+  to send messages among different origins. The subsystem waits
+  for both frames be loaded and then alternately calls each frames'
+  doStep() function that on each call proceeds with a single step
+  of the test on its side. This way the subsystem alternate between
+  both frames until both sequences completely finish.
+-->
+
+<script type="text/javascript">
+
+function startTest()
+{
+  masterFrameOrigin = "http://example.org:80";
+  slaveFrameOrigin = "http://example.org:80";
+
+  masterFrame.location = masterFrameOrigin + framePath + "frameMasterEqual.html";
+  slaveFrame.location = slaveFrameOrigin + framePath + "frameSlaveEqual.html";
+}
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" name="masterFrame"></iframe>
+  <iframe src="" name="slaveFrame"></iframe>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Bug 892929 test</title>
+  <link rel="author" title="John Daggett" href="mailto:jdaggett@mozilla.com">
+  <link rel="help" href="http://www.w3.org/TR/css-fonts-3/#om-fontfeaturevalues" />
+  <meta name="assert" content="window.CSSFontFeatureValuesRule should appear by default" />
+  <script type="text/javascript" src="/resources/testharness.js"></script>
+  <script type="text/javascript" src="/resources/testharnessreport.js"></script>
+  <style type="text/css">
+  </style>
+</head>
+<body>
+<div id="log"></div>
+<pre id="display"></pre>
+
+<script type="text/javascript">
+
+function testCSSFontFeatureValuesRuleOM() {
+  var s = document.documentElement.style;
+  var cs = window.getComputedStyle(document.documentElement);
+
+  var hasFFVRule = "CSSFontFeatureValuesRule" in window;
+  var hasStyleAlternates = "fontVariantAlternates" in s;
+  var hasCompStyleAlternates = "fontVariantAlternates" in cs;
+
+  test(function() {
+    assert_equals(hasFFVRule,
+                  hasStyleAlternates,
+                  "style.fontVariantAlternates " +
+                    (hasStyleAlternates ? "available" : "not available") +
+                    " but " +
+                    "window.CSSFontFeatureValuesRule " +
+                    (hasFFVRule ? "available" : "not available") +
+                    " - ");
+  }, "style.fontVariantAlternates availability matches window.CSSFontFeatureValuesRule availability");
+
+  test(function() {
+    assert_equals(hasFFVRule,
+                  hasCompStyleAlternates,
+                  "computedStyle.fontVariantAlternates " +
+                    (hasCompStyleAlternates ? "available" : "not available") +
+                    " but " +
+                    "window.CSSFontFeatureValuesRule " +
+                    (hasFFVRule ? "available" : "not available") +
+                    " - ");
+  }, "computedStyle.fontVariantAlternates availability matches window.CSSFontFeatureValuesRule availability");
+
+  // if window.CSSFontFeatureValuesRule isn't around, neither should any of the font feature props
+  fontFeatureProps = [ "fontKerning", "fontVariantAlternates", "fontVariantCaps", "fontVariantEastAsian",
+                       "fontVariantLigatures", "fontVariantNumeric", "fontVariantPosition", "fontSynthesis",
+                       "fontFeatureSettings", "fontLanguageOverride" ];
+
+  if (!hasFFVRule) {
+    var i;
+    for (i = 0; i < fontFeatureProps.length; i++) {
+      var prop = fontFeatureProps[i];
+      test(function() {
+             assert_true(!(prop in s), "window.CSSFontFeatureValuesRule not available but style." + prop + " is available - ");
+           }, "style." + prop + " availability");
+      test(function() {
+             assert_true(!(prop in cs), "window.CSSFontFeatureValuesRule not available but computedStyle." + prop + " is available - ");
+           }, "computedStyle." + prop + " availability");
+    }
+  }
+
+}
+
+testCSSFontFeatureValuesRuleOM();
+
+</script>
+</body>
+</html>

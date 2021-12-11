@@ -1,0 +1,29 @@
+<script>
+function go() {
+  let selection = window.getSelection();
+  selection.setPosition(htmlvar00007, 1);
+  selection.setBaseAndExtent(htmlvar00011, 0, htmlvar00043, 0);
+  svgvar00014.before(svgvar00008.previousElementSibling);
+
+  document.execCommand("removeFormat", false);
+  document.execCommand("hiliteColor", false, "-moz-buttondefault");
+  document.execCommand("insertText", false, "");
+}
+function eh1() {
+  svgvar00007.appendChild(htmlvar00011);
+  htmlvar00003.appendChild(htmlvar00035);
+}
+</script>
+<body onload=go()>
+<span id="htmlvar00003">
+<pre id="htmlvar00007" contenteditable="true">
+<fieldset id="htmlvar00011"></fieldset>
+<iframe srcdoc="H"></iframe>
+<a id="htmlvar00035" hidden="hidden" contenteditable="true">
+<svg>
+<set onbegin="eh1()"/>
+<use id="htmlvar00043">
+<desc id="svgvar00007"></desc>
+</use>
+<font-face-uri id="svgvar00008"/>
+<feComponentTransfer id="svgvar00014">

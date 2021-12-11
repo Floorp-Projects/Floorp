@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <defs>
+
+    <!-- so that other documents can svg:use this one and force it to
+         load before onload -->
+    <g id="empty" />
+
+    <!-- Keep all black pixels black, and change any others to white. -->
+    <!-- NOTE: alpha is preserved, so it will not adjust alpha edges -->
+    <filter id="NonBlackToWhite" x="0%" y="0%" width="100%" height="100%">
+      <feColorMatrix type="matrix" values="255 255 255 0 0
+                                           255 255 255 0 0
+                                           255 255 255 0 0
+                                           0 0 0 1 0" />
+    </filter>
+
+    <!-- Keep all white pixels white, and change any others to black. -->
+    <!-- NOTE: alpha is preserved, so it will not adjust alpha edges -->
+    <filter id="NonWhiteToBlack" x="0%" y="0%" width="100%" height="100%">
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="-1" intercept="1" />
+        <feFuncG type="linear" slope="-1" intercept="1" />
+        <feFuncB type="linear" slope="-1" intercept="1" />
+      </feComponentTransfer>
+      <feColorMatrix type="matrix" values="255 255 255 0 0
+                                           255 255 255 0 0
+                                           255 255 255 0 0
+                                           0 0 0 1 0" />
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="-1" intercept="1" />
+        <feFuncG type="linear" slope="-1" intercept="1" />
+        <feFuncB type="linear" slope="-1" intercept="1" />
+      </feComponentTransfer>
+    </filter>
+
+    <!-- Threshold colours into sixteen steps per channel. -->
+    <filter id="ThresholdRGB" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncR type="discrete" tableValues="0 .125 .25 .375 .5 .625 .75 .875 1" />
+        <feFuncG type="discrete" tableValues="0 .125 .25 .375 .5 .625 .75 .875 1" />
+        <feFuncB type="discrete" tableValues="0 .125 .25 .375 .5 .625 .75 .875 1" />
+      </feComponentTransfer>
+    </filter>
+
+  </defs>
+</svg>

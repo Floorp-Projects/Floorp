@@ -1,0 +1,193 @@
+---
+# Presets defined here will be available to all users. Run them with:
+#   $ mach try --preset <name>
+#
+# If editing this file, make sure to run:
+#   $ mach python-test tools/tryselect/test/test_presets.py
+#
+# Descriptions are required. Please keep this in alphabetical order.
+
+# yamllint disable rule:line-length
+
+builds:
+    selector: fuzzy
+    description: >-
+        Run builds without any of the extras.
+    query:
+        - "^build- !fuzzing !notarization !reproduced !rusttests !signing !upload-symbols"
+
+builds-debug:
+    selector: fuzzy
+    description: >-
+        Run the bare minimum of debug build jobs to ensure builds work on
+        all tier-1 platforms.
+    query:
+        - "^build- 'debug !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
+
+builds-debugopt:
+    selector: fuzzy
+    description: >-
+        Run the bare minimum of debug and opt build jobs to ensure builds work on
+        all tier-1 platforms.
+    query:
+        - "^build- !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
+
+devtools:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to the Firefox Devtools
+    query:
+        - "'node-debugger | 'node-devtools"
+        - "'mozlint-eslint"
+        # 'mochitest-devtools-chrome matches "-e10s" and "-fis-e10s"
+        # Windows: skip jobs on asan and 32 bits platforms
+        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'windows10 !asan !-32"
+        # macos: no extra platform to filter out
+        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'macosx"
+        # Linux is being named "linux1804" and may change over time, so use a more flexible search
+        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'linux '64-qr/ !swr"
+        - "'xpcshell-e10s 'linux '64-qr/"
+
+devtools-linux:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to the Firefox Devtools, on Linux only.
+    query:
+        - "'node-debugger | 'node-devtools"
+        - "'mozlint-eslint"
+        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'linux '64-qr/ !swr"
+        - "'xpcshell-e10s 'linux '64-qr/"
+
+fpush-linux-android:
+    selector: fuzzy
+    description: >-
+        Runs correctness test suites on Linux and Android emulator platforms, as
+        well as builds across main platforms. The resulting jobs on TreeHerder
+        used to end up looking like a "F" shape (not so much these days) and so
+        this is typically referred to as an F-push. This is useful to do as a
+        general sanity check on changes to cross-platform Gecko code where you
+        unsure of what tests might be affected. Linux and Android (emulator)
+        test coverage are relatively cheap to run and cover a lot of the
+        codebase, while the builds on other platforms catch compilation problems
+        that might result from only building locally on one platform.
+    query:
+        - "'test-linux1804 'debug- !-shippable !-asan"
+        - "'test-android-em 'debug"
+        - "^build !-shippable !-signing !-asan !-fuzzing !-rusttests !-base-toolchain !-aar-"
+
+geckodriver:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to geckodriver, which implements the WebDriver
+        specification. This preset can be filtered down further to limit it to
+        a specific platform or other tasks only. For example:
+        |mach try --preset geckodriver -xq "'linux"|
+    query:
+        - "'rusttests"
+        - "'platform 'wdspec 'debug !fis"
+        - "'browsertime 'amazon 'vismet 'shippable 'firefox !fis"
+
+perf:
+    selector: fuzzy
+    description: >-
+        Runs all performance (raptor and talos) tasks across all platforms.
+        This preset can be filtered down further (e.g to limit it to a specific
+        platform) via |mach try --preset perf -xq "'windows"|.
+
+        Android hardware platforms are excluded due to resource limitations.
+    query:
+        - "^test- !android-hw 'raptor | 'talos"
+    rebuild: 5
+
+perf-chrome:
+    description: >-
+        Runs the talos tests most likely to change when making a change to
+        the browser chrome. This skips a number of talos jobs that are unlikely
+        to be affected in order to conserve resources.
+    query:
+        - "opt-talos- 'chrome | 'svg | 'session | 'tabswitch | 'other | 'g5"
+    rebuild: 6
+    selector: fuzzy
+
+remote-protocol:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to the Remote protocol, which underpins
+        many test harnesses as well as our CDP and WebDriver implementations.
+        This preset can be filtered down further to limit it to a specific
+        platform or to opt/debug tasks only. For example:
+        |mach try --preset remote-protocol -xq "'linux 'opt"|
+    query:
+        - "'awsy-base"
+        - "'firefox-ui"
+        - "'marionette !swr | harness"
+        - "'mochitest-browser !spi !swr 'fis -1$"
+        - "'mochitest-remote !spi !swr"
+        - "'platform 'reftest !swr 'fis | 'android !-lite -1$"
+        - "'platform 'wdspec !swr"
+        - "'platform !reftest !wdspec !swr 'fis | 'android !-lite -1$"
+        - "'puppeteer"
+        - "'reftest !platform !gpu !swr !no-accel 'fis | 'android !-lite -1$"
+        - "'xpcshell !spi !tsan !-lite"
+
+sample-suites:
+    selector: fuzzy
+    description: >-
+        Runs one chunk of every test suite plus all suites that aren't chunked.
+        It is useful for testing infrastructure changes that can affect the
+        harnesses themselves but are unlikely to break specific tests.
+    query:
+        - ^test- -1$
+        # Only run a single talos + raptor suite per platform
+        - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$ !raptor !talos
+        - ^test- 'raptor-speedometer | 'talos-g1
+
+sm-shell-all:
+    selector: fuzzy
+    description: <-
+        Runs a set of tests aimed to give a reasonable level of confidence for
+        basic SpiderMonkey changes (shell only), all platforms
+    query:
+        - "'spidermonkey | 'shell-haz"
+        - "!shippable !android 'jittest"  # macosx64 jittests
+
+sm-shell:
+    selector: fuzzy
+    description: <-
+        Runs a set of tests aimed to give a reasonable level of confidence for
+        basic SpiderMonkey changes (shell only) (linux only)
+    query:
+        - "!win !osx 'spidermonkey | 'shell-haz"
+
+
+sm-all:
+    selector: fuzzy
+    description: <-
+        Runs a set of tests aimed to give a reasonable level of confidence for
+        basic SpiderMonkey changes, including those that would require a
+        browser build.
+    query:
+        - "'spidermonkey | 'hazard"
+        - "!android !asan !shippable 'xpcshell"
+        - "!android !asan !shippable 'jsreftest"
+        - "!shippable !android 'jittest"  # macosx64 jittests
+
+webrender:
+    selector: fuzzy
+    description: >-
+        Runs the conformance tests relevant to WebRender.
+    query:
+        - "!talos !raptor !shippable !asan '-qr"
+        - "^webrender-"
+
+webrender-perf:
+    selector: fuzzy
+    description: >-
+        Runs the performance tests relevant to WebRender.
+    query:
+        - "'-qr !fis-e10s 'svgr"
+        - "'-qr !fis-e10s 'g1"
+        - "'-qr !fis-e10s 'g4"
+        - "'-qr !fis-e10s 'tp5"
+        - "'-qr !fis-e10s 'talos-webgl"
+        - "'-qr !fis-e10s 'motionmark-animometer"

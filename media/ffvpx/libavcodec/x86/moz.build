@@ -1,0 +1,55 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'constants.c',
+    'dct32.asm',
+    'dct_init.c',
+    'fdct.c',
+    'fdctdsp_init.c',
+    'flacdsp.asm',
+    'flacdsp_init.c',
+    'h264_intrapred.asm',
+    'h264_intrapred_10bit.asm',
+    'h264_intrapred_init.c',
+    'idctdsp.asm',
+    'idctdsp_init.c',
+    'imdct36.asm',
+    'mpegaudiodsp.c',
+    'simple_idct.asm',
+    'videodsp.asm',
+    'videodsp_init.c',
+    'vp8dsp.asm',
+    'vp8dsp_init.c',
+    'vp8dsp_loopfilter.asm',
+    'vp9dsp_init.c',
+    'vp9dsp_init_10bpp.c',
+    'vp9dsp_init_12bpp.c',
+    'vp9dsp_init_16bpp.c',
+    'vp9intrapred.asm',
+    'vp9intrapred_16bpp.asm',
+    'vp9itxfm.asm',
+    'vp9itxfm_16bpp.asm',
+    'vp9lpf.asm',
+    'vp9lpf_16bpp.asm',
+    'vp9mc.asm',
+    'vp9mc_16bpp.asm',
+]
+
+if CONFIG['CPU_ARCH'] == "x86_64":
+    SOURCES += [
+        'simple_idct10.asm',
+    ]
+
+if CONFIG['MOZ_LIBAV_FFT']:
+    SOURCES += [
+        'fft.asm',
+        'fft_init.c',
+    ]
+
+FINAL_LIBRARY = 'mozavcodec'
+
+include('/media/ffvpx/ffvpxcommon.mozbuild')

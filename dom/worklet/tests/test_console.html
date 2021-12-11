@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Worklet - Console</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+const WORKLET_SCRIPT = "worklet_console.js";
+
+function configureTest() {
+  function consoleListener() {
+    SpecialPowers.addObserver(this, "console-api-log-event");
+  }
+
+  consoleListener.prototype  = {
+    observe(aSubject, aTopic, aData) {
+      if (aTopic == "console-api-log-event") {
+        var obj = aSubject.wrappedJSObject;
+        if (obj.arguments[0] == "Hello world from a worklet") {
+          ok(true, "Message received \\o/");
+          is(obj.filename,
+             new URL(WORKLET_SCRIPT, document.baseURI).toString());
+
+          SpecialPowers.removeObserver(this, "console-api-log-event");
+          SimpleTest.finish();
+          return;
+        }
+      }
+    }
+  }
+
+  var cl = new consoleListener();
+
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  var audioContext = new AudioContext();
+  audioContext.audioWorklet.addModule(WORKLET_SCRIPT);
+}
+
+</script>
+</body>
+</html>

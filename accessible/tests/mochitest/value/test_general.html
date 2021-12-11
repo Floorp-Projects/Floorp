@@ -1,0 +1,159 @@
+<html>
+
+<head>
+  <title>nsIAccessible value testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style type="text/css">
+    .offscreen {
+      position: absolute;
+      left: -5000px;
+      top: -5000px;
+      height: 100px;
+      width: 100px;
+    }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+
+  <script src="chrome://mochikit/content/chrome-harness.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      function testValue(aID, aValue) {
+        var acc = getAccessible(aID);
+        if (!acc)
+          return;
+        is(acc.value, aValue, "Wrong value for " + aID + "!");
+      }
+
+      var href = getRootDirectory(window.location.href) + "foo";
+
+      // roles that can't live as HTMLLinkAccessibles
+      testValue("aria_menuitem_link", "");
+      testValue("aria_button_link", "");
+      testValue("aria_checkbox_link", "");
+      testValue("aria_application_link", "");
+      testValue("aria_main_link", "");
+      testValue("aria_navigation_link", "");
+
+      // roles that can live as HTMLLinkAccessibles
+      testValue("aria_link_link", href);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA textboxes
+
+      testValue("aria_textbox1", "helo");
+      // Textbox containing list.
+      testValue("aria_textbox2", "1. test");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA comboboxes
+
+      // aria-activedescendant defines a current item the value is computed from
+      testValue("aria_combobox1", kDiscBulletText + "Zoom");
+
+      // aria-selected defines a selected item the value is computed from,
+      // list control is pointed by aria-owns relation.
+      testValue("aria_combobox2", kDiscBulletText + "Zoom");
+
+      // aria-selected defines a selected item the value is computed from,
+      // list control is a child of combobox.
+      testValue("aria_combobox3", kDiscBulletText + "2");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // HTML controls
+      testValue("combobox1", "item1");
+      testValue("combobox2", "item2");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=494807"
+     title="Do not expose a11y info specific to hyperlinks when role is overridden using ARIA">
+    Bug 494807
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=819273"
+     title="ARIA combobox should have accessible value">
+    Bug 819273
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=887250"
+     title="ARIA textbox role doesn't expose value">
+    Bug 887250
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
+
+  <a id="aria_menuitem_link" role="menuitem" href="foo">menuitem</a>
+  <a id="aria_button_link" role="button" href="foo">button</a>
+  <a id="aria_checkbox_link" role="checkbox" href="foo">checkbox</a>
+
+  <!-- landmark links -->
+  <a id="aria_application_link" role="application" href="foo">app</a>
+  <a id="aria_main_link" role="main" href="foo">main</a>
+  <a id="aria_navigation_link" role="navigation" href="foo">nav</a>
+
+  <!-- strange edge case: please don't do this in the wild -->
+  <a id="aria_link_link" role="link" href="foo">link</a>
+
+  <div id="aria_textbox1" role="textbox">helo</div>
+  <div id="aria_textbox2" contenteditable role="textbox">
+    <ol><li>test</li></ol>
+  </div>
+
+  <div id="aria_combobox1" role="combobox"
+       aria-owns="aria_combobox1_owned_listbox"
+       aria-activedescendant="aria_combobox1_selected_option">
+  </div>
+  <ul role="listbox" id="aria_combobox1_owned_listbox">
+    <li role="option">Zebra</li>
+    <li role="option" id="aria_combobox1_selected_option">Zoom</li>
+  </ul>
+
+  <div id="aria_combobox2" role="combobox"
+       aria-owns="aria_combobox2_owned_listbox">
+  </div>
+  <ul role="listbox" id="aria_combobox2_owned_listbox">
+    <li role="option">Zebra</li>
+    <li role="option" aria-selected="true">Zoom</li>
+  </ul>
+
+  <div id="aria_combobox3" role="combobox">
+    <div role="textbox"></div>
+    <ul role="listbox">
+      <li role="option">1</li>
+      <li role="option" aria-selected="true">2</li>
+      <li role="option">3</li>
+    </ul>
+  </div>
+
+  <select id="combobox1">
+    <option id="cb1_item1">item1</option>
+    <option id="cb1_item2">item2</option>
+  </select>
+  <select id="combobox2">
+    <option id="cb2_item1">item1</option>
+    <option id="cb2_item2" selected="true">item2</option>
+  </select>
+
+</body>
+</html>

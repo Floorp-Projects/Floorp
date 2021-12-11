@@ -1,0 +1,404 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/dom/CSPMessageUtils.h";
+include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/dom/PermissionMessageUtils.h";
+include "mozilla/dom/PropertyBagUtils.h";
+include "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/ipc/URIUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+
+include IPCBlob;
+include IPCStream;
+include protocol PRemoteLazyInputStream;
+include ProtocolTypes;
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+[MoveOnly] using struct mozilla::SerializedStructuredCloneBuffer
+  from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
+
+using class mozilla::dom::LoadingSessionHistoryInfo
+  from "mozilla/dom/SessionHistoryEntry.h";
+
+using LayoutDeviceIntRect from "Units.h";
+using DesktopIntRect from "Units.h";
+using DesktopToLayoutDeviceScale from "Units.h";
+using CSSToLayoutDeviceScale from "Units.h";
+using CSSRect from "Units.h";
+using CSSSize from "Units.h";
+using ScreenIntSize from "Units.h";
+using mozilla::LayoutDeviceIntPoint from "Units.h";
+using nsSizeMode from "nsIWidgetListener.h";
+using ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
+using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+[RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+[RefCounted] using class nsIURI from "nsIURI.h";
+[RefCounted] using class nsIContentSecurityPolicy from "nsIContentSecurityPolicy.h";
+[RefCounted] using class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
+[RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
+[RefCounted] using class nsIVariant from "nsIVariant.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+[RefCounted] using class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
+
+namespace mozilla {
+namespace dom {
+
+struct MessagePortIdentifier
+{
+  nsID uuid;
+  nsID destinationUuid;
+  uint32_t sequenceId;
+  bool neutered;
+};
+
+/**
+ * Cross-process representation for postMessage() style payloads where Blobs may
+ * be referenced/"cloned" and (optionally) messageports transferred.  Use
+ * StructuredCloneData in your code to convert between this wire representation
+ * and the StructuredCloneData StructuredCloneHolder-subclass.
+ */
+struct ClonedMessageData
+{
+  SerializedStructuredCloneBuffer data;
+  IPCBlob[] blobs;
+  IPCStream[] inputStreams;
+  MessagePortIdentifier[] identifiers;
+};
+
+struct ErrorMessageData {
+};
+
+union ClonedOrErrorMessageData {
+  ClonedMessageData;
+  ErrorMessageData;
+};
+
+struct RefMessageData {
+  nsID uuid;
+};
+
+union MessageDataType {
+  ClonedMessageData;
+  RefMessageData;
+};
+
+struct MessageData {
+  nsID? agentClusterId;
+  MessageDataType data;
+};
+
+union IPCDataTransferData
+{
+  nsString;  // text
+  Shmem;     // images using Shmem
+  IPCBlob;   // files
+};
+
+struct IPCDataTransferImage
+{
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+  SurfaceFormat format;
+};
+
+struct IPCDataTransferItem
+{
+  nsCString flavor;
+  // The image details are only used when transferring images.
+  IPCDataTransferImage imageDetails;
+  IPCDataTransferData data;
+};
+
+struct IPCDataTransfer
+{
+  IPCDataTransferItem[] items;
+};
+
+struct ScreenDetails {
+  LayoutDeviceIntRect rect;
+  DesktopIntRect rectDisplayPix;
+  LayoutDeviceIntRect availRect;
+  DesktopIntRect availRectDisplayPix;
+  int32_t pixelDepth;
+  int32_t colorDepth;
+  DesktopToLayoutDeviceScale contentsScaleFactor;
+  CSSToLayoutDeviceScale defaultCSSScaleFactor;
+  float dpi;
+};
+
+struct DimensionInfo
+{
+  CSSRect rect;
+  CSSSize size;
+  ScreenOrientation orientation;
+  LayoutDeviceIntPoint clientOffset;
+  LayoutDeviceIntPoint chromeOffset;
+};
+
+struct FrameScriptInfo
+{
+  nsString url;
+  bool runInGlobalScope;
+};
+
+struct FeaturePolicyInfo
+{
+  nsString[]   inheritedDeniedFeatureNames;
+  nsString[]   attributeEnabledFeatureNames;
+  nsString     declaredString;
+  nsIPrincipal defaultOrigin;
+  nsIPrincipal selfOrigin;
+  nsIPrincipal srcOrigin;
+};
+
+/**
+ * The information required to complete a window creation request.
+ */
+struct CreatedWindowInfo
+{
+  nsresult rv;
+  bool windowOpened;
+  FrameScriptInfo[] frameScripts;
+  uint32_t maxTouchPoints;
+  DimensionInfo dimensions;
+  bool hasSiblings;
+};
+
+
+/**
+ * PerformanceInfo is used to pass performance info stored
+ * in WorkerPrivate and DocGroup instances, as well as
+ * memory-related information.
+ *
+ * Each (host, pid, windowId) is unique to a given DocGroup or
+ * Worker, and we collect the number of dispatches per Dispatch
+ * category and total execution duration as well as the current
+ * Zone JS Heap usage.
+ *
+ * This IPDL struct reflects the data collected in Performance counters,
+ * in addition of some memory usage information.
+ *
+ * see xpcom/threads/PerformanceCounter.h
+ */
+
+struct MediaMemoryInfo {
+  uint64_t audioSize;
+  uint64_t videoSize;
+  uint64_t resourcesSize;
+};
+
+struct PerformanceMemoryInfo {
+  MediaMemoryInfo media;
+  uint64_t domDom;
+  uint64_t domStyle;
+  uint64_t domOther;
+  uint64_t GCHeapUsage;
+};
+
+struct CategoryDispatch
+{
+  // DispatchCategory value
+  uint16_t category;
+  // Number of dispatch
+  uint16_t count;
+};
+
+struct PerformanceInfo
+{
+  // Host of the document, if any
+  nsCString host;
+  // process id
+  uint32_t pid;
+  // window id
+  uint64_t windowId;
+  // Execution time in microseconds
+  uint64_t duration;
+  // Counter ID (unique across processes)
+  uint64_t counterId;
+  // True if the data is collected in a worker
+  bool isWorker;
+  // True if the document window is the top window
+  bool isTopLevel;
+  // Memory
+  PerformanceMemoryInfo memory;
+  // Counters per category. For workers, a single entry
+  CategoryDispatch[] items;
+};
+
+struct DocShellLoadStateInit
+{
+  nsIURI URI;
+  nsIURI OriginalURI;
+  nsIURI ResultPrincipalURI;
+  bool ResultPrincipalURIIsSome;
+  nsIPrincipal TriggeringPrincipal;
+  nsIReferrerInfo ReferrerInfo;
+  bool KeepResultPrincipalURIIfSet;
+  bool LoadReplace;
+  bool InheritPrincipal;
+  bool PrincipalIsExplicit;
+  nsIPrincipal PrincipalToInherit;
+  nsIPrincipal PartitionedPrincipalToInherit;
+  bool ForceAllowDataURI;
+  bool IsExemptFromHTTPSOnlyMode;
+  bool OriginalFrameSrc;
+  bool IsFormSubmission;
+  uint32_t LoadType;
+  nsString Target;
+  nsIURI BaseURI;
+  uint32_t LoadFlags;
+  uint32_t InternalLoadFlags;
+  bool FirstParty;
+  bool HasValidUserGestureActivation;
+  bool AllowFocusMove;
+  nsCString TypeHint;
+  nsString FileName;
+  bool IsFromProcessingFrameAttributes;
+  // The Content Security Policy of the load, that is, the CSP of the entity
+  // responsible for causing the load to occur. Most likely this is the CSP
+  // of the document that started the load. In case the entity starting the
+  // load did not use a CSP, then Csp can be null. Please note that this is
+  // also the CSP that will be applied to the load in case the load
+  // encounters a server side redirect.
+  nsIContentSecurityPolicy Csp;
+
+  MaybeDiscardedBrowsingContext SourceBrowsingContext;
+  MaybeDiscardedBrowsingContext TargetBrowsingContext;
+
+  // The TriggineringSandboxFlags are the SandboxFlags of the entity
+  // responsible for causing the load to occur.
+  uint32_t TriggeringSandboxFlags;
+
+  nsCString? OriginalURIString;
+  int32_t? CancelContentJSEpoch;
+
+  nsIInputStream PostDataStream;
+  nsIInputStream HeadersStream;
+
+  nsString SrcdocData; // useless without sourcedocshell
+
+  // Fields missing due to lack of need or serialization
+  // nsCOMPtr<nsIDocShell> mSourceDocShell;
+  // bool mIsSrcDocLoad; // useless without sourcedocshell
+  // nsIChannel pendingRedirectedChannel; // sent through other mechanism
+
+  uint64_t LoadIdentifier;
+
+  bool ChannelInitialized;
+
+  bool TryToReplaceWithSessionHistoryLoad;
+
+  LoadingSessionHistoryInfo? loadingSessionHistoryInfo;
+
+  bool IsMetaRefresh;
+
+  nsIURI UnstrippedURI;
+
+  nsCString? RemoteTypeOverride;
+};
+
+struct TimedChannelInfo
+{
+  bool timingEnabled;
+  int8_t redirectCount;
+  int8_t internalRedirectCount;
+  TimeStamp asyncOpen;
+  TimeStamp channelCreation;
+  TimeStamp redirectStart;
+  TimeStamp redirectEnd;
+  nsString initiatorType;
+  bool allRedirectsSameOrigin;
+  bool allRedirectsPassTimingAllowCheck;
+  bool? timingAllowCheckForPrincipal;
+  TimeStamp launchServiceWorkerStart;
+  TimeStamp launchServiceWorkerEnd;
+  TimeStamp dispatchFetchEventStart;
+  TimeStamp dispatchFetchEventEnd;
+  TimeStamp handleFetchEventStart;
+  TimeStamp handleFetchEventEnd;
+  TimeStamp responseStart;
+  TimeStamp responseEnd;
+};
+
+struct ReplacementChannelConfigInit
+{
+  uint32_t redirectFlags;
+  uint32_t classOfService;
+  bool? privateBrowsing;
+  nsCString? method;
+  nsIReferrerInfo referrerInfo;
+  TimedChannelInfo? timedChannelInfo;
+  nullable PRemoteLazyInputStream uploadStream;
+  bool uploadStreamHasHeaders;
+  nsCString? contentType;
+  nsCString? contentLength;
+};
+
+union IPDLVariantValue
+{
+  bool;
+  uint8_t;   // In practice, uint8_t and uint16_t are likely unneeded,
+  int16_t;   // as signed->unsigned->signed has universal behavior.
+  uint16_t;  // but those conversions are only guaranteed in C++20.
+  int32_t;
+  uint32_t;
+  float;
+  double;
+  nsID;
+  nsString;
+  nsCString;
+  nsIURI;
+  nsIPrincipal;
+};
+
+struct IDPLVariant
+{
+  uint32_t type;  // We explicitly store the original nsIVariant type so that
+                  // the conversion back into a nsVariant later is lossless.
+  IPDLVariantValue data;
+};
+
+struct IPDLProperty
+{
+  nsString name;
+  nsIVariant value;
+};
+
+// Struct with information to show a frame from the parent process.
+struct ParentShowInfo
+{
+  nsString name;
+  bool fakeShowInfo;
+  bool isTransparent;
+  float dpi;
+  int32_t widgetRounding;
+  double defaultScale;
+};
+
+// Struct with information to show an iframe from the process that owns the
+// frame.
+struct OwnerShowInfo {
+  // This can be an IntSize rather than a Rect because content processes always
+  // render to a virtual <0, 0> top-left point.
+  ScreenIntSize size;
+
+  // TODO(emilio): Margin preferences go here.
+  ScrollbarPreference scrollbarPreference;
+
+  // TODO(emilio): I think we should really be able to figure this out from the
+  // parent process too instead.
+  nsSizeMode sizeMode;
+};
+
+} // namespace dom
+} // namespace mozilla

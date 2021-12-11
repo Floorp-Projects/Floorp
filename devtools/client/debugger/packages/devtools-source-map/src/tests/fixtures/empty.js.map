@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": [
+    "heart.js"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AACA;;AAEA;AACA;;AAEA;AACA;AACA;;AAEA;AACA;AACA,uBAAe;AACf;AACA;AACA;;AAEA;AACA;;AAEA;AACA;;AAEA;AACA;AACA;;;AAGA;AACA;;AAEA;AACA;;AAEA;AACA;;AAEA;AACA;;;;;;;ACtCA;AACA,QAAO,SAAS;AAChB;;AAEA;AACA;;AAEA;AACA;AACA;;AAEA;AACA;AACA;AACA;AACA;;;;;;;ACfA;AACA;AACA;;;;;;;ACFA;AACA;AACA;;AAEA,mBAAkB;;;;;;;ACJlB;AACA;AACA",
+  "file": "empty.js",
+  "sourceRoot": ""
+}

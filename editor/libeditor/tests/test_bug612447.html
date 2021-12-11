@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=612447
+-->
+<head>
+  <title>Test for Bug 612447</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=612447">Mozilla Bug 612447</a>
+<p id="display"></p>
+<div id="content">
+<iframe></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 612447 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  function editorCommandsEnabled() {
+    var caught = false;
+    try {
+      doc.execCommand("justifyfull", false, null);
+    } catch (e) {
+      caught = true;
+    }
+    return !caught;
+  }
+
+  var i = document.querySelector("iframe");
+  var doc = i.contentDocument;
+  var win = i.contentWindow;
+  var b = doc.body;
+  doc.designMode = "on";
+  i.focus();
+  b.focus();
+  var beforeA = snapshotWindow(win, true);
+  sendString("X");
+  var beforeB = snapshotWindow(win, true);
+  is(b.textContent, "X", "Typing should work");
+  while (b.firstChild) {
+    b.firstChild.remove();
+  }
+  ok(editorCommandsEnabled(), "The editor commands should work");
+
+  i.style.display = "block";
+  document.clientWidth;
+
+  i.focus();
+  b.focus();
+  var afterA = snapshotWindow(win, true);
+  sendString("X");
+  var afterB = snapshotWindow(win, true);
+  is(b.textContent, "X", "Typing should work");
+  while (b.firstChild) {
+    b.firstChild.remove();
+  }
+  ok(editorCommandsEnabled(), "The editor commands should work");
+
+  ok(compareSnapshots(beforeA, afterA, true)[0], "The iframes should look the same before typing");
+  ok(compareSnapshots(beforeB, afterB, true)[0], "The iframes should look the same after typing");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

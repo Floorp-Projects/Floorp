@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345873
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1345873</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+    div.ref {
+      display: none;
+      height: 30px;
+    }
+
+    refA, refB, refC {
+      display: block;
+      float: left;
+    }
+
+    div#a, refA {
+      background: lightgreen;
+      width: 20px;
+      height: 30px;
+    }
+    div#b, refB {
+      background: orange;
+      width: 30px;
+      height: 30px;
+    }
+    div#c, refC {
+      background: blue;
+      width: 50px;
+      height: 30px;
+    }
+    div#flexContainer {
+      display: flex;
+      width: 100px;
+      height: 30px;
+    }
+    div#flexContainerParent {
+      display: none;
+    }
+    .abs {
+      position: absolute !important;
+      width: 15px  !important;
+      height: 15px !important;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345873">Mozilla Bug 1345873</a>
+<div id="display">
+
+  <!-- Reference cases (display:none; only shown during initRefSnapshots) -->
+  <div id="references">
+    <div class="ref" id="abc"><refA></refA><refB></refB><refC></refC></div>
+    <div class="ref" id="Abc">
+      <refA class="abs"></refA><refB></refB><refC></refC></div>
+    <div class="ref" id="Bac">
+      <refB class="abs"></refB><refA></refA><refC></refC></div>
+    <div class="ref" id="Bca">
+      <refB class="abs"></refB><refC></refC><refA></refA></div>
+    <div class="ref" id="Cab">
+      <refC class="abs"></refC><refA></refA><refB></refB></div>
+    <div class="ref" id="ABc">
+      <refA class="abs"></refA><refB class="abs"></refB><refC></refC></div>
+    <div class="ref" id="ACb">
+      <refA class="abs"></refA><refC class="abs"></refC><refB></refB></div>
+    <div class="ref" id="BCa">
+      <refB class="abs"></refB><refC class="abs"></refC><refA></refA></div>
+    <div class="ref" id="ABC">
+      <refA class="abs"></refA><refB class="abs"></refB><refC class="abs"></refC></div>
+  </div>
+
+  <div id="flexContainerParent">
+    <!-- The flex container that we'll be testing
+         (its parent is display:none initially) -->
+    <div id="flexContainer">
+      <div id="a"></div>
+      <div id="b"></div>
+      <div id="c"></div>
+    </div>
+  </div>
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 1345873 **/
+
+/* This testcase ensures that we honor the "order" property when ordering
+ * flex items within a flex container.
+ *
+ * Note: The items in this testcase don't overlap, so this testcase does _not_
+ * test paint ordering.  It only tests horizontal ordering in a flex container.
+ */
+
+// DATA
+// ----
+
+// This will store snapshots of our reference divs
+let gRefSnapshots = {};
+
+// These are the sets of 'order' values that we'll test.
+// * The first three values in each array are the 'order' values that we'll
+// assign to elements a, b, and c (respectively).
+// * The next value is a string containing the concatenated IDs of any
+// elements that should be absolutely positioned.
+// * The final value in each array is the ID of the expected reference
+// rendering. (By convention, in those IDs, capital = abspos)
+var gOrderTestcases = [
+  // Just one child is abspos:
+  [ 1, 2, 3, "a", "Abc"],
+  [ 1, 2, 3, "b", "Bac"],
+  [ 1, 2, 3, "c", "Cab"],
+  [ 2, 3, 1, "b", "Bca"],
+  [ 3, 1, 1, "b", "Bca"],
+
+  // Two children are abspos:
+  // (Note: "order" doesn't influence position or paint order for abspos
+  // children - only for (in-flow) flex items.)
+  [ 1, 2, 3, "ab", "ABc"],
+  [ 2, 1, 3, "ab", "ABc"],
+  [ 1, 2, 3, "ac", "ACb"],
+  [ 3, 2, 1, "ac", "ACb"],
+  [ 3, 2, 1, "bc", "BCa"],
+
+  // All three children are abspos:
+  // (Rendering always the same regardless of "order" values)
+  [ 1, 2, 3, "abc", "ABC"],
+  [ 3, 1, 2, "abc", "ABC"],
+  [ 3, 2, 1, "abc", "ABC"],
+];
+
+// FUNCTIONS
+// ---------
+
+function initRefSnapshots() {
+  let refIds = ["abc",
+                "Abc", "Bac", "Bca", "Cab",
+                "ABc", "ACb", "BCa",
+                "ABC"];
+  for (let id of refIds) {
+    let elem = document.getElementById(id);
+    elem.style.display = "block";
+    gRefSnapshots[id] = snapshotWindow(window, false);
+    elem.style.display = "";
+  }
+}
+
+function complainIfSnapshotsDiffer(aSnap1, aSnap2, aMsg) {
+  let compareResult = compareSnapshots(aSnap1, aSnap2, true);
+  ok(compareResult[0],
+     "flex container rendering should match expected (" + aMsg +")");
+  if (!compareResult[0]) {
+    todo(false, "TESTCASE: " + compareResult[1]);
+    todo(false, "REFERENCE: "+ compareResult[2]);
+  }
+}
+
+function runOrderTestcase(aOrderTestcase) {
+  // Sanity-check
+  ok(Array.isArray(aOrderTestcase), "expecting testcase to be an array");
+  is(aOrderTestcase.length, 5, "expecting testcase to have 5 elements");
+
+  document.getElementById("a").style.order = aOrderTestcase[0];
+  document.getElementById("b").style.order = aOrderTestcase[1];
+  document.getElementById("c").style.order = aOrderTestcase[2];
+
+  let idsToMakeAbspos = aOrderTestcase[3].split("");
+  for (let absPosId of idsToMakeAbspos) {
+    document.getElementById(absPosId).classList.add("abs");
+  }
+
+  let snapshot = snapshotWindow(window, false);
+  complainIfSnapshotsDiffer(snapshot, gRefSnapshots[aOrderTestcase[4]],
+                            aOrderTestcase);
+
+  // Clean up
+  for (let id of ["a", "b", "c"]) {
+    document.getElementById(id).style.order = "";
+    document.getElementById(id).classList.remove("abs");
+  }
+}
+
+// Main Function
+function main() {
+  initRefSnapshots();
+
+  // un-hide the flex container's parent
+  let flexContainerParent = document.getElementById("flexContainerParent");
+  flexContainerParent.style.display = "block";
+
+  // Initial sanity-check: should be in expected document order
+  let initialSnapshot = snapshotWindow(window, false);
+  complainIfSnapshotsDiffer(initialSnapshot, gRefSnapshots.abc,
+                            "initial flex container rendering, " +
+                            "no 'order' value yet");
+
+  // OK, now we run our tests
+  gOrderTestcases.forEach(runOrderTestcase);
+
+  // Re-hide the flex container at the end
+  flexContainerParent.style.display = "";
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>

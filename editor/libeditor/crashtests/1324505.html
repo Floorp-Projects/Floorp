@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<script>
+addEventListener("DOMContentLoaded", function(){
+  let root = document.documentElement;
+  while(root.firstChild) {
+    root.firstChild.remove();
+  }
+  let o_0 = document.createElement("body");
+  root.appendChild(o_0);
+  o_0.appendChild(document.createElement("table"));
+  o_0.appendChild(document.createElement("canvas"));
+  let o_1 = document.createElement("canvas");
+  o_0.appendChild(o_1);
+  o_1.setAttribute("contenteditable", "true");
+  setTimeout(function(){
+    document.execCommand("selectAll", false, "Marker felt");
+    document.designMode = 'on';
+    document.execCommand("insertorderedlist", false, null);
+    document.execCommand("insertorderedlist", false, null);
+  }, 0);
+});
+</script>
+</html>

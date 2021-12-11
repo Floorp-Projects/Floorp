@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=459424
+-->
+<head>
+  <title>Test for Bug 459424</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=459424">Mozilla Bug 459424</a>
+<p id="display" style="mask: url(no-such-document-I-tell-you#x)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 459424 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setFullZoom(window, 2);
+  is(true, true, "Gotta test something");
+  SpecialPowers.setFullZoom(window, 1);
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

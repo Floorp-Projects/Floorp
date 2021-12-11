@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1264479",
+    title: "PeerConnection verify current and pending descriptions"
+  });
+
+  const pc1 = new RTCPeerConnection();
+  const pc2 = new RTCPeerConnection();
+
+  var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+  pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
+  pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+
+
+  runNetworkTest(function() {
+    const v1 = createMediaElement('video', 'v1');
+    const v2 = createMediaElement('video', 'v2');
+
+    return navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(stream => (v1.srcObject = stream).getTracks().forEach(t => pc1.addTrack(t, stream)))
+    .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
+    .then(offer => pc1.setLocalDescription(offer))
+    .then(() => {
+      ok(!pc1.currentLocalDescription, "pc1 currentLocalDescription is empty");
+      ok(pc1.pendingLocalDescription, "pc1 pendingLocalDescription is set");
+      ok(pc1.localDescription, "pc1 localDescription is set");
+    })
+    .then(() => pc2.setRemoteDescription(pc1.localDescription))
+    .then(() => {
+      ok(!pc2.currentRemoteDescription, "pc2 currentRemoteDescription is empty");
+      ok(pc2.pendingRemoteDescription, "pc2 pendingRemoteDescription is set");
+      ok(pc2.remoteDescription, "pc2 remoteDescription is set");
+    })
+    .then(() => pc2.createAnswer({}))  // check that createAnswer accepts arg.
+    .then(answer => pc2.setLocalDescription(answer))
+    .then(() => {
+      ok(pc2.currentLocalDescription, "pc2 currentLocalDescription is set");
+      ok(!pc2.pendingLocalDescription, "pc2 pendingLocalDescription is empty");
+      ok(pc2.localDescription, "pc2 localDescription is set");
+    })
+    .then(() => pc1.setRemoteDescription(pc2.localDescription))
+    .then(() => {
+      ok(pc1.currentRemoteDescription, "pc1 currentRemoteDescription is set");
+      ok(!pc1.pendingRemoteDescription, "pc1 pendingRemoteDescription is empty");
+      ok(pc1.remoteDescription, "pc1 remoteDescription is set");
+    });
+  });
+</script>
+</pre>
+</body>
+</html>

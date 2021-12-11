@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: Selected text, background, decorations
+-->
+<html class="reftest-wait"><head>
+<title>text-overflow: Selected text, background, decorations</title>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+@font-face {
+  font-family: TestEllipsisFallback;
+  src: url(TestEllipsisFallback.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:auto;
+  text-overflow:ellipsis ellipsis;
+  white-space:nowrap;
+  width: 5em;
+  position:relative;
+  margin-top:1em;
+  padding-left: 0.9em;
+  padding-right: 1.3em;
+}
+
+.hidden {
+  overflow:hidden;
+  width: 4.4em;
+}
+
+.rlo {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+.rtl {
+  direction:rtl;
+}
+x {font-family:DejaVuSansMono;}
+</style>
+<script>
+function getTextNode(elm) {
+  if (elm.nodeType != 3)
+    return getTextNode(elm.firstChild);
+  return elm;
+}
+function addRange(elm) {
+try {
+  var sel = window.getSelection();
+  var range = document.createRange();
+  var startNode = elm.getAttribute('startNode');
+  if (startNode == null)
+    startNode = getTextNode(elm);
+  else
+    startNode = getTextNode(elm.childNodes[startNode])
+  var start = elm.getAttribute('start');
+  if (start == null) start = 2;
+  var endNode = elm.getAttribute('endNode');
+  if (endNode == null)
+    endNode = startNode;
+  else
+    endNode = getTextNode(elm.childNodes[endNode])
+  var end = elm.getAttribute('end');
+  if (end == null) end = endNode.textContent.length;
+  if (startNode==endNode && start > end) return;
+  if (startNode==null) return;
+  range.setStart(startNode, start);
+  range.setEnd(endNode, end);
+  sel.addRange(range);
+} catch (e) {
+alert(e+'\n'+elm.id+'\n'+t)
+}
+}
+function selectText() {
+ var divs = document.getElementsByTagName('div');
+  for (i = 0; i < divs.length; ++i) {
+    addRange(divs[i]);
+  }
+  document.body.offsetHeight;
+  setTimeout(function(){document.documentElement.removeAttribute('class')},2000);
+}
+</script>
+</head><body onload="selectText();">
+
+
+<!-- LTR overflow:hidden -->
+<div contenteditable="true" spellcheck="true" class="test ltr hidden">Mispe|led word</div>
+<span style="display:block;width:15em"><div contenteditable="true" spellcheck="true" class="test ltr hidden" style="width:auto; float:right; font-family:TestEllipsisFallback; text-indent:-1em; " start=0 end=9><x>M       ispeled word</x></div></span><br clear="all">
+<div contenteditable="true" spellcheck="true" class="test ltr hidden"><span class="rlo">Mispelled word</span></div>
+<div contenteditable="true" spellcheck="true" class="test ltr hidden"><span class="rlo">Mispelled</span><span class="rlo"> word</span></div>
+<div contenteditable="true" spellcheck="true" class="test ltr hidden"><span class="rlo">Mis</span><span class="rlo">pelled word</div>
+<div contenteditable="true" spellcheck="true" class="test ltr hidden" endNode="1" style="text-indent:-0.2em"><span>Mis</span><span>pe|led</span><span> word</span></div>
+
+<!-- RTL overflow:hidden -->
+<div contenteditable="true" spellcheck="true" class="test rtl hidden">Mispelled word</div>
+<div contenteditable="true" spellcheck="true" class="test rtl hidden" end="2"><span class="lro">Mispelled word</span></div>
+<div contenteditable="true" spellcheck="true" class="test rtl hidden"><span class="lro">Mispelled</span><span class="rlo"> word</span></div>
+<div contenteditable="true" spellcheck="true" class="test rtl hidden"><span class="rlo">Mis</span><span class="rlo">pelled word</div>
+<div contenteditable="true" spellcheck="true" class="test rtl hidden"><span class="rlo">Mis</span><span class="rlo">pelled          word</div>
+<div contenteditable="true" spellcheck="true" class="test rtl hidden"><span class="rlo" style="margin-right:-0.2em">Mis</span><span class="rlo">pelled</span><span class="rlo"> word</span></div>
+
+</body></html>

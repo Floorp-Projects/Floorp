@@ -1,0 +1,88 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    "nsICategoryManager.idl",
+    "nsIClassInfo.idl",
+    "nsIComponentManager.idl",
+    "nsIComponentRegistrar.idl",
+    "nsIFactory.idl",
+    "nsIModule.idl",
+    "nsIServiceManager.idl",
+]
+
+XPIDL_MODULE = "xpcom_components"
+
+EXPORTS += [
+    "nsCategoryCache.h",
+    "nsCategoryManagerUtils.h",
+    "nsComponentManagerUtils.h",
+    "nsServiceManagerUtils.h",
+]
+
+EXPORTS.mozilla += [
+    "GenericFactory.h",
+    "Module.h",
+    "ModuleUtils.h",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    EXPORTS.mozilla += [
+        "!Components.h",
+    ]
+
+    GeneratedFile(
+        "Components.h",
+        "StaticComponentData.h",
+        "StaticComponents.cpp",
+        "services.json",
+        script="gen_static_components.py",
+        inputs=["!manifest-lists.json", "StaticComponents.cpp.in"],
+    )
+
+UNIFIED_SOURCES += [
+    "GenericFactory.cpp",
+    "ManifestParser.cpp",
+    "nsCategoryCache.cpp",
+    "nsCategoryManager.cpp",
+    "nsComponentManager.cpp",
+    "nsComponentManagerUtils.cpp",
+]
+
+SOURCES += [
+    "!StaticComponents.cpp",
+]
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "!..",
+    "../base",
+    "../build",
+    "../ds",
+    "/chrome",
+    "/js/xpconnect/loader",
+    "/layout/build",
+    "/modules/libjar",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
+    if CONFIG["MOZ_ENABLE_DBUS"]:
+        CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+
+if CONFIG["MOZ_BACKGROUNDTASKS"]:
+    DEFINES["MOZ_BACKGROUNDTASKS"] = True
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+PYTHON_UNITTEST_MANIFESTS += [
+    "test/python.ini",
+]

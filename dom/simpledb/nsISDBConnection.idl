@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface nsISDBCloseCallback;
+interface nsISDBRequest;
+
+[scriptable, builtinclass, uuid(ea420fdd-548f-44f9-9286-59aad6a40f01)]
+interface nsISDBConnection : nsISupports
+{
+  [must_use] void
+  init(in nsIPrincipal aPrincipal, [optional] in ACString aPersistenceType);
+
+  [must_use] nsISDBRequest
+  open(in AString aName);
+
+  [must_use] nsISDBRequest
+  seek(in unsigned long long offset);
+
+  [must_use] nsISDBRequest
+  read(in unsigned long long size);
+
+  [must_use, implicit_jscontext] nsISDBRequest
+  write(in jsval value);
+
+  [must_use] nsISDBRequest
+  close();
+
+  attribute nsISDBCloseCallback closeCallback;
+};

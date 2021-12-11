@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function backgroundScript(token) {
+  browser.runtime.onMessage.addListener(msg => {
+    browser.test.assertEq(msg, "done");
+    browser.test.notifyPass("sendmessage_reply");
+  });
+
+  browser.runtime.onConnect.addListener(port => {
+    browser.test.assertTrue(port.sender.url.endsWith("file_sample.html"), "sender url correct");
+    browser.test.assertTrue(port.sender.tab.url.endsWith("file_sample.html"), "sender url correct");
+
+    let tabId = port.sender.tab.id;
+    browser.tabs.connect(tabId, {name: token});
+
+    browser.test.assertEq(port.name, token, "token matches");
+    port.postMessage(token + "-done");
+  });
+
+  browser.test.sendMessage("background-ready");
+}
+
+function contentScript(token) {
+  let gotTabMessage = false;
+  let badTabMessage = false;
+  browser.runtime.onConnect.addListener(port => {
+    if (port.name == token) {
+      gotTabMessage = true;
+    } else {
+      badTabMessage = true;
+    }
+    port.disconnect();
+  });
+
+  let port = browser.runtime.connect(null, {name: token});
+  port.onMessage.addListener(function(msg) {
+    if (msg != token + "-done" || !gotTabMessage || badTabMessage) {
+      return; // test failed
+    }
+
+    // FIXME: Removing this line causes the test to fail:
+    // resource://gre/modules/ExtensionUtils.jsm, line 651: NS_ERROR_NOT_INITIALIZED
+    port.disconnect();
+    browser.runtime.sendMessage("done");
+  });
+}
+
+function makeExtension() {
+  let token = Math.random();
+  let extensionData = {
+    background: `(${backgroundScript})("${token}")`,
+    manifest: {
+      "permissions": ["tabs"],
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "js": ["content_script.js"],
+        "run_at": "document_idle",
+      }],
+    },
+
+    files: {
+      "content_script.js": `(${contentScript})("${token}")`,
+    },
+  };
+  return extensionData;
+}
+
+add_task(async function test_contentscript() {
+  let extension1 = ExtensionTestUtils.loadExtension(makeExtension());
+  let extension2 = ExtensionTestUtils.loadExtension(makeExtension());
+  await Promise.all([extension1.startup(), extension2.startup()]);
+
+  await extension1.awaitMessage("background-ready");
+  await extension2.awaitMessage("background-ready");
+
+  let win = window.open("file_sample.html");
+
+  await Promise.all([waitForLoad(win),
+                     extension1.awaitFinish("sendmessage_reply"),
+                     extension2.awaitFinish("sendmessage_reply")]);
+
+  win.close();
+
+  await extension1.unload();
+  await extension2.unload();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>font-display test</title>
+<meta charset="utf-8">
+<style>
+body { margin: 20px }
+
+@font-face {
+  font-family: test1-ref;
+  src: url(../fonts/markA.woff);
+}
+
+div.test {
+  font-size: 600%;
+  line-height: 1.3em;
+  width: 500px;
+}
+
+div.test p {
+  display: inline-block;
+  width: 150px;
+  margin: 0;
+}
+
+.auto { font-family: test1-ref; }
+.block { font-family: test1-ref; }
+.swap { font-family: test1-ref; }
+.fallback { font-family: test1-ref; }
+.optional { font-family: font-that-does-not-exist; }
+
+</style>
+</head>
+
+<body>
+<div class="test">
+<p class="auto">A</p>
+<p class="block">A</p>
+</div>
+<div class="test">
+<p class="swap">A</p>
+<p class="fallback">A</p>
+<p class="optional">A</p>
+</div>
+</body>
+</html>

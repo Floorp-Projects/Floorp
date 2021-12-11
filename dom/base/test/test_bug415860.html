@@ -1,0 +1,240 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=415860
+-->
+<head>
+  <title>Test for Bug 415860</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=415860">Mozilla Bug 415860</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="testdata"> </div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 415860 **/
+
+function tests() {
+  // #text node
+  n = document.getElementById('testdata').firstChild;
+  s = getSelection();
+
+  // Initial text..
+  n.textContent = "Hello!";
+
+  // select the second last character
+  r = document.createRange();
+  r.setStart(n, 4);
+  r.setEnd(n, 5);
+  s.addRange(r);
+
+  ok(s == "o", "Should have selected 'o'");
+  ok(r.toString() == "o", "Range should be 'o'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+
+  // Update the text
+  n.textContent = "Hello!";
+
+  ok(s == "", "Should have selected ''");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+
+  // select the last character
+  r = document.createRange();
+  r.setStart(n, 5);
+  r.setEnd(n, 6);
+  s.addRange(r);
+
+  ok(s == "!", "Should have selected '!'");
+  ok(r.toString() == "!", "Range should be '!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+
+  // Update the text
+  n.textContent = "Hello!";
+  ok(s == "", "Should have selected ''");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+
+  r = document.createRange();
+  r.setStart(n, 5);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "!", "Range should be '!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  r.setStart(n, 0);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "Hello!", "Range should be 'Hello!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.deleteData(0, 1);
+  ok(n.nodeValue == "ello!", "Node value should be 'ello!'");
+  ok(r.toString() == "ello!", "Range should be 'ello!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.deleteData(0, 4);
+  ok(n.nodeValue == "!", "Node value should be '!'");
+  ok(r.toString() == "!", "Range should be '!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 0);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "Hello!", "Range should be 'Hello!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.replaceData(0, 6, "hELLO?");
+  ok(n.nodeValue == "hELLO?", "Node value should be 'hELLO?'");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 1);
+  r.setEnd(n, 3);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "el", "Range should be 'el'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.replaceData(2, 6, "END");
+  ok(n.nodeValue == "HeEND", "Node value should be 'HeEND!'");
+  ok(r.toString() == "e", "Range should be 'e'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 1);
+  r.setEnd(n, 5);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "ello", "Range should be 'ello'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.replaceData(2, 1, "MID");
+  ok(n.nodeValue == "HeMIDlo!", "Node value should be 'HeMIDlo!'");
+  ok(r.toString() == "eMIDlo", "Range should be 'eMIDlo'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 0);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "Hello!", "Range should be 'Hello!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "hELLO?...";
+  ok(n.nodeValue == "hELLO?...", "Node value should be 'hELLO?...'");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 1);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "ello!", "Range should be 'ello!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 0);
+  r.setEnd(n, 5);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "Hello", "Range should be 'Hello'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "hELLO?...";
+  ok(n.nodeValue == "hELLO?...", "Node value should be 'hELLO?...'");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 0);
+  r.setEnd(n, 5);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "Hello", "Range should be 'Hello'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "...";
+  ok(n.nodeValue == "...", "Node value should be '...'");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 1);
+  r.setEnd(n, 5);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "ello", "Range should be 'ello'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "...";
+  ok(n.nodeValue == "...", "Node value should be '...'");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+
+  n.textContent = "$";
+  r.setStart(n, 0);
+  r.setEnd(n, 1);
+  ok(n.nodeValue == "$", "Node value should be $'");
+  ok(r.toString() == "$", "Range should be '$'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "?";
+  ok(n.nodeValue == "?", "Node value should be '?'");
+  ok(r.toString() == "", "Range should be ''");
+  ok(r.collapsed == true, "Range should be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 3);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "lo!", "Range should be 'lo!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.replaceData(1, 4, "MID");
+  ok(n.nodeValue == "HMID!", "Node value should be 'HMID!'");
+  ok(r.toString() == "MID!", "Range should be 'MID!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "Hello!";
+  r.setStart(n, 3);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", "Node value should be 'Hello!'");
+  ok(r.toString() == "lo!", "Range should be 'lo!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.replaceData(1, 2, "MID");
+  ok(n.nodeValue == "HMIDlo!", "Node value should be 'HMIDlo!'");
+  ok(r.toString() == "MIDlo!", "Range should be 'MIDlo!'");
+  ok(r.collapsed == false, "Range shouldn't be collapsed");
+
+  n.textContent = "Hello!";
+  r = document.createRange();
+  r.setStart(n, 6);
+  r.setEnd(n, 6);
+  ok(n.nodeValue == "Hello!", " Node value should be 'Hello!'");
+  ok(r.toString() == "", " Range should be ''");
+  ok(r.startOffset == 6, "Start offset should be 6");
+  ok(r.endOffset == 6, "End offset should be 6");
+
+  n.textContent = "Hello!";
+  ok(n.nodeValue == "Hello!", " Node value should be 'Hello!'");
+  ok(r.toString() == "", " Range should be ''");
+  ok(r.startOffset == 0, "Start offset should be 0");
+  ok(r.endOffset == 0, "End offset should be 0");
+}
+
+tests();
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,661 @@
+diff --git a/src/google_breakpad/common/minidump_format.h b/src/google_breakpad/common/minidump_format.h
+--- a/src/google_breakpad/common/minidump_format.h
++++ b/src/google_breakpad/common/minidump_format.h
+@@ -227,17 +227,18 @@ typedef struct {
+ 
+ /*
+  * DbgHelp.h
+  */
+ 
+ 
+ /* An MDRVA is an offset into the minidump file.  The beginning of the
+  * MDRawHeader is at offset 0. */
+-typedef uint32_t MDRVA;  /* RVA */
++typedef uint32_t MDRVA;   /* RVA   */
++typedef uint64_t MDRVA64; /* RVA64 */
+ 
+ typedef struct {
+   uint32_t  data_size;
+   MDRVA     rva;
+ } MDLocationDescriptor;  /* MINIDUMP_LOCATION_DESCRIPTOR */
+ 
+ 
+ typedef struct {
+@@ -327,16 +328,18 @@ typedef enum {
+   MD_MISC_INFO_STREAM            = 15,  /* MDRawMiscInfo */
+   MD_MEMORY_INFO_LIST_STREAM     = 16,  /* MDRawMemoryInfoList */
+   MD_THREAD_INFO_LIST_STREAM     = 17,
+   MD_HANDLE_OPERATION_LIST_STREAM = 18,
+   MD_TOKEN_STREAM                = 19,
+   MD_JAVASCRIPT_DATA_STREAM      = 20,
+   MD_SYSTEM_MEMORY_INFO_STREAM   = 21,
+   MD_PROCESS_VM_COUNTERS_STREAM  = 22,
++  MD_IPT_TRACE_STREAM            = 23,
++  MD_THREAD_NAMES_STREAM         = 24,
+   MD_LAST_RESERVED_STREAM        = 0x0000ffff,
+ 
+   /* Breakpad extension types.  0x4767 = "Gg" */
+   MD_BREAKPAD_INFO_STREAM        = 0x47670001,  /* MDRawBreakpadInfo  */
+   MD_ASSERTION_INFO_STREAM       = 0x47670002,  /* MDRawAssertionInfo */
+   /* These are additional minidump stream values which are specific to
+    * the linux breakpad implementation. */
+   MD_LINUX_CPU_INFO              = 0x47670003,  /* /proc/cpuinfo      */
+@@ -1117,16 +1120,26 @@ typedef struct {
+    *   module_path;
+    *   message;
+    *   signature_string;
+    *   backtrace;
+    *   message2; */
+   uint8_t data[0];
+ } MDRawMacCrashInfoRecord;
+ 
++typedef struct __attribute__((packed,aligned(4))) {
++  uint32_t thread_id;
++  MDRVA64 rva_of_thread_name;
++} MDRawThreadName;
++
++typedef struct {
++  uint32_t number_of_thread_names;
++  MDRawThreadName thread_names[0];
++} MDRawThreadNamesList;
++
+ /* This is the maximum supported size for each string in
+  * (MDRawMacCrashInfoRecord).data. If we encounter a string in the
+  * __crash_info section which seems larger than this, that's a sign of data
+  * corruption. */
+ #define MACCRASHINFO_STRING_MAXSIZE 8192
+ 
+ /* In principle there should only be one or two non-empty __DATA,__crash_info
+  * sections per process. But the __crash_info section is almost entirely
+diff --git a/src/google_breakpad/processor/call_stack.h b/src/google_breakpad/processor/call_stack.h
+--- a/src/google_breakpad/processor/call_stack.h
++++ b/src/google_breakpad/processor/call_stack.h
+@@ -41,21 +41,23 @@
+ // beginning with the innermost callee frame.
+ //
+ // Author: Mark Mentovai
+ 
+ #ifndef GOOGLE_BREAKPAD_PROCESSOR_CALL_STACK_H__
+ #define GOOGLE_BREAKPAD_PROCESSOR_CALL_STACK_H__
+ 
+ #include <cstdint>
++#include <string>
+ #include <vector>
+ 
+ namespace google_breakpad {
+ 
+ using std::vector;
++using std::string;
+ 
+ struct StackFrame;
+ template<typename T> class linked_ptr;
+ 
+ class CallStack {
+  public:
+   CallStack() { Clear(); }
+   ~CallStack();
+@@ -63,29 +65,33 @@ class CallStack {
+   // Resets the CallStack to its initial empty state
+   void Clear();
+ 
+   const vector<StackFrame*>* frames() const { return &frames_; }
+ 
+   // Set the TID associated with this call stack.
+   void set_tid(uint32_t tid) { tid_ = tid; }
+   void set_last_error(uint32_t last_error) { last_error_ = last_error; }
++  void set_name(const string& name) { name_ = name; }
+ 
+   uint32_t tid() const { return tid_; }
+   uint32_t last_error() const { return last_error_; }
++  const string name() const { return name_; }
+ 
+  private:
+   // Stackwalker is responsible for building the frames_ vector.
+   friend class Stackwalker;
+ 
+   // Storage for pushed frames.
+   vector<StackFrame*> frames_;
+ 
+   // The TID associated with this call stack. Default to 0 if it's not
+   // available.
+   uint32_t tid_;
+   // The last error the OS set for this thread (win32's GetLastError())
+   uint32_t last_error_;
++  // The name of this thread, empty if it's not available
++  string name_;
+ };
+ 
+ }  // namespace google_breakpad
+ 
+ #endif  // GOOGLE_BREAKPAD_PROCSSOR_CALL_STACK_H__
+diff --git a/src/google_breakpad/processor/minidump.h b/src/google_breakpad/processor/minidump.h
+--- a/src/google_breakpad/processor/minidump.h
++++ b/src/google_breakpad/processor/minidump.h
+@@ -1197,16 +1197,96 @@ class MinidumpMacCrashInfo : public Mini
+   bool ReadCrashInfoRecord(MDLocationDescriptor location,
+                            uint32_t record_start_size);
+   bool Read(uint32_t expected_size);
+ 
+   string description_;
+   vector<crash_info_record_t> records_;
+ };
+ 
++// MinidumpThreadName wraps MDRawThreadName
++class MinidumpThreadName : public MinidumpObject {
++ public:
++  ~MinidumpThreadName() override;
++
++  const MDRawThreadName* thread_name() const {
++    if (valid_) {
++      return &thread_name_;
++    }
++
++    return NULL;
++  }
++
++  uint32_t thread_id() const {
++    if (valid_) {
++      return thread_name_.thread_id;
++    }
++
++    return 0;
++  }
++
++  string name() const;
++
++  // Print a human-readable representation of the object to stdout.
++  void Print();
++
++ protected:
++  explicit MinidumpThreadName(Minidump* minidump);
++
++ private:
++  // These objects are managed by MinidumpThreadNameList
++  friend class MinidumpThreadNamesList;
++
++  // This works like MinidumpStream::Read, but is driven by
++  // MinidumpThreadNameList.
++  bool Read(uint32_t expected_size);
++
++  // Reads the thread name. This is done separately from Read to
++  // allow contiguous reading of thread names by MinidumpThreadNameList.
++  bool ReadAuxiliaryData();
++
++  bool valid_;
++  MDRawThreadName thread_name_;
++  const string* name_;
++};
++
++
++// MinidumpThreadNamesList contains all the names for threads in a process
++// in the form of MinidumpThreadNames.
++class MinidumpThreadNamesList : public MinidumpStream {
++ public:
++  ~MinidumpThreadNamesList() override;
++
++  unsigned int name_count() const {
++    return valid_ ? name_count_ : 0;
++  }
++
++  const string GetNameForThreadId(uint32_t thread_id) const;
++
++  // Print a human-readable representation of the object to stdout.
++  void Print();
++
++ protected:
++  explicit MinidumpThreadNamesList(Minidump* minidump_);
++
++ private:
++  friend class Minidump;
++
++  typedef vector<MinidumpThreadName> MinidumpThreadNames;
++
++  static const uint32_t kStreamType = MD_THREAD_NAMES_STREAM;
++
++  bool Read(uint32_t expected_size_) override;
++
++  MinidumpThreadNames* thread_names_;
++  uint32_t name_count_;
++  bool valid_;
++
++  DISALLOW_COPY_AND_ASSIGN(MinidumpThreadNamesList);
++};
+ 
+ // Minidump is the user's interface to a minidump file.  It wraps MDRawHeader
+ // and provides access to the minidump's top-level stream directory.
+ class Minidump {
+  public:
+   // path is the pathname of a file containing the minidump.
+   explicit Minidump(const string& path,
+                     bool hexdump=false,
+@@ -1261,16 +1343,17 @@ class Minidump {
+   virtual MinidumpAssertion* GetAssertion();
+   virtual MinidumpSystemInfo* GetSystemInfo();
+   virtual MinidumpUnloadedModuleList* GetUnloadedModuleList();
+   virtual MinidumpMiscInfo* GetMiscInfo();
+   virtual MinidumpBreakpadInfo* GetBreakpadInfo();
+   virtual MinidumpMemoryInfoList* GetMemoryInfoList();
+   MinidumpCrashpadInfo* GetCrashpadInfo();
+   MinidumpMacCrashInfo* GetMacCrashInfo();
++  MinidumpThreadNamesList* GetThreadNamesList();
+ 
+   // The next method also calls GetStream, but is exclusive for Linux dumps.
+   virtual MinidumpLinuxMapsList *GetLinuxMapsList();
+ 
+   // The next set of methods are provided for users who wish to access
+   // data in minidump files directly, while leveraging the rest of
+   // this class and related classes to handle the basic minidump
+   // structure and known stream types.
+diff --git a/src/processor/call_stack.cc b/src/processor/call_stack.cc
+--- a/src/processor/call_stack.cc
++++ b/src/processor/call_stack.cc
+@@ -45,11 +45,12 @@ CallStack::~CallStack() {
+ void CallStack::Clear() {
+   for (vector<StackFrame *>::const_iterator iterator = frames_.begin();
+        iterator != frames_.end();
+        ++iterator) {
+     delete *iterator;
+   }
+   tid_ = 0;
+   last_error_ = 0;
++  name_ = "";
+ }
+ 
+ }  // namespace google_breakpad
+diff --git a/src/processor/minidump.cc b/src/processor/minidump.cc
+--- a/src/processor/minidump.cc
++++ b/src/processor/minidump.cc
+@@ -5724,16 +5724,226 @@ MinidumpCrashpadInfo* Minidump::GetCrash
+   return GetStream(&crashpad_info);
+ }
+ 
+ MinidumpMacCrashInfo* Minidump::GetMacCrashInfo() {
+   MinidumpMacCrashInfo* mac_crash_info;
+   return GetStream(&mac_crash_info);
+ }
+ 
++MinidumpThreadNamesList* Minidump::GetThreadNamesList() {
++  MinidumpThreadNamesList* thread_names_list;
++  return GetStream(&thread_names_list);
++}
++
++//
++// MinidumpThreadName
++//
++
++
++MinidumpThreadName::MinidumpThreadName(Minidump* minidump)
++    : MinidumpObject(minidump),
++      valid_(false),
++      thread_name_(),
++      name_(NULL) {
++
++}
++
++MinidumpThreadName::~MinidumpThreadName() {
++  ;
++}
++
++void MinidumpThreadName::Print() {
++  if (!valid_) {
++    BPLOG(ERROR) << "MinidumpThreadName cannot print invalid data";
++    return;
++  }
++
++  printf("MDRawThreadName\n");
++  printf("  thread_id          = 0x%x\n",
++         thread_name_.thread_id);
++  printf("  rva_of_thread_name = 0x%" PRIx64 "\n",
++         thread_name_.rva_of_thread_name);
++
++  printf("  (name)             = \"%s\"\n", name().c_str());
++  printf("\n");
++}
++
++string MinidumpThreadName::name() const {
++  if (!valid_) {
++    BPLOG(ERROR) << "Invalid MinidumpThreadName for name";
++    return "";
++  }
++
++  return *name_;
++}
++
++bool MinidumpThreadName::Read(uint32_t expected_size) {
++
++  delete name_;
++
++  if (expected_size < sizeof(thread_name_)) {
++    BPLOG(ERROR) << "MinidumpThreadName expected size is less than size "
++                 << "of struct " << expected_size << " < "
++                 << sizeof(thread_name_);
++    return false;
++  }
++
++  if (!minidump_->ReadBytes(&thread_name_, sizeof(thread_name_))) {
++    BPLOG(ERROR) << "MinidumpThreadName cannot read name";
++    return false;
++  }
++
++  if (expected_size > sizeof(thread_name_)) {
++    uint32_t thread_name_bytes_remaining = expected_size - sizeof(thread_name_);
++    off_t pos = minidump_->Tell();
++    if (!minidump_->SeekSet(pos + thread_name_bytes_remaining)) {
++      BPLOG(ERROR) << "MinidumpThreadName unable to seek to end of name";
++      return false;
++    }
++  }
++
++  if (minidump_->swap()) {
++    Swap(&thread_name_.thread_id);
++    uint64_t rva_of_thread_name;
++    memcpy(&rva_of_thread_name, &thread_name_.rva_of_thread_name, sizeof(uint64_t));
++    Swap(&rva_of_thread_name);
++    memcpy(&thread_name_.rva_of_thread_name, &rva_of_thread_name, sizeof(uint64_t));
++  }
++
++  return true;
++}
++
++bool MinidumpThreadName::ReadAuxiliaryData() {
++  // Each thread must have a name string.
++  name_ = minidump_->ReadString(thread_name_.rva_of_thread_name);
++  if (!name_) {
++    BPLOG(ERROR) << "MinidumpThreadName could not read name";
++    valid_ = false;
++    return false;
++  }
++
++  // At this point, we have enough info for the name to be valid.
++  valid_ = true;
++  return true;
++}
++
++//
++// MinidumpThreadNamesList
++//
++
++
++MinidumpThreadNamesList::MinidumpThreadNamesList(Minidump* minidump)
++  : MinidumpStream(minidump),
++    thread_names_(NULL),
++    name_count_(0),
++    valid_(false) {
++  ;
++}
++
++MinidumpThreadNamesList::~MinidumpThreadNamesList() {
++  delete thread_names_;
++}
++
++const string MinidumpThreadNamesList::GetNameForThreadId(uint32_t thread_id) const {
++  if (valid_) {
++    for (unsigned int name_index = 0;
++         name_index < name_count_;
++         ++name_index) {
++      const MinidumpThreadName& thread_name = (*thread_names_)[name_index];
++      if (thread_name.thread_id() == thread_id) {
++        return thread_name.name();
++      }
++    }
++  }
++
++  return "";
++}
++
++void MinidumpThreadNamesList::Print() {
++  if (!valid_) {
++    BPLOG(ERROR) << "MinidumpThreadNamesList cannot print invalid data";
++    return;
++  }
++
++  printf("MinidumpThreadNamesList\n");
++  printf("  name_count = %d\n", name_count_);
++  printf("\n");
++
++  for (unsigned int name_index = 0;
++       name_index < name_count_;
++       ++name_index) {
++    printf("thread_name[%d]\n", name_index);
++
++    (*thread_names_)[name_index].Print();
++  }
++}
++
++bool MinidumpThreadNamesList::Read(uint32_t expected_size) {
++  delete thread_names_;
++  thread_names_ = NULL;
++  name_count_ = 0;
++
++  valid_ = false;
++
++  uint32_t number_of_thread_names;
++  if (!minidump_->ReadBytes(&number_of_thread_names, sizeof(number_of_thread_names))) {
++    BPLOG(ERROR) << "MinidumpThreadNamesList could not read the number of thread names";
++    return false;
++  }
++
++  if (minidump_->swap()) {
++    Swap(&number_of_thread_names);
++  }
++
++  if (expected_size !=
++      sizeof(number_of_thread_names) + (sizeof(MDRawThreadName) * number_of_thread_names)) {
++    BPLOG(ERROR) << "MinidumpThreadNamesList expected_size mismatch " <<
++                 expected_size << " != " << sizeof(number_of_thread_names) << " + (" <<
++                 sizeof(MDRawThreadName) << " * " << number_of_thread_names << ")";
++    return false;
++  }
++
++  if (number_of_thread_names != 0) {
++    scoped_ptr<MinidumpThreadNames> thread_names(
++        new MinidumpThreadNames(number_of_thread_names,
++                                MinidumpThreadName(minidump_)));
++
++    for (unsigned int name_index = 0;
++         name_index < number_of_thread_names;
++         ++name_index) {
++      MinidumpThreadName* thread_name = &(*thread_names)[name_index];
++
++      if (!thread_name->Read(sizeof(MDRawThreadName))) {
++        BPLOG(ERROR) << "MinidumpThreadNamesList could not read name " <<
++                     name_index << "/" << number_of_thread_names;
++        return false;
++      }
++    }
++
++    for (unsigned int name_index = 0;
++         name_index < number_of_thread_names;
++         ++name_index) {
++      MinidumpThreadName* thread_name = &(*thread_names)[name_index];
++
++      if (!thread_name->ReadAuxiliaryData()) {
++        BPLOG(ERROR) << "MinidumpThreadNamesList could not read required "
++                     "auxiliary data for thread name " <<
++                     name_index << "/" << number_of_thread_names;
++        return false;
++      }
++    }
++    thread_names_ = thread_names.release();
++  }
++
++  name_count_ = number_of_thread_names;
++  valid_ = true;
++  return true;
++}
++
+ static const char* get_stream_name(uint32_t stream_type) {
+   switch (stream_type) {
+   case MD_UNUSED_STREAM:
+     return "MD_UNUSED_STREAM";
+   case MD_RESERVED_STREAM_0:
+     return "MD_RESERVED_STREAM_0";
+   case MD_RESERVED_STREAM_1:
+     return "MD_RESERVED_STREAM_1";
+@@ -5772,16 +5982,20 @@ static const char* get_stream_name(uint3
+   case MD_TOKEN_STREAM:
+     return "MD_TOKEN_STREAM";
+   case MD_JAVASCRIPT_DATA_STREAM:
+     return "MD_JAVASCRIPT_DATA_STREAM";
+   case MD_SYSTEM_MEMORY_INFO_STREAM:
+     return "MD_SYSTEM_MEMORY_INFO_STREAM";
+   case MD_PROCESS_VM_COUNTERS_STREAM:
+     return "MD_PROCESS_VM_COUNTERS_STREAM";
++  case MD_IPT_TRACE_STREAM:
++    return "MD_IPT_TRACE_STREAM";
++  case MD_THREAD_NAMES_STREAM:
++    return "MD_THREAD_NAMES_STREAM";
+   case MD_LAST_RESERVED_STREAM:
+     return "MD_LAST_RESERVED_STREAM";
+   case MD_BREAKPAD_INFO_STREAM:
+     return "MD_BREAKPAD_INFO_STREAM";
+   case MD_ASSERTION_INFO_STREAM:
+     return "MD_ASSERTION_INFO_STREAM";
+   case MD_LINUX_CPU_INFO:
+     return "MD_LINUX_CPU_INFO";
+diff --git a/src/processor/minidump_dump.cc b/src/processor/minidump_dump.cc
+--- a/src/processor/minidump_dump.cc
++++ b/src/processor/minidump_dump.cc
+@@ -49,16 +49,17 @@ using google_breakpad::MinidumpUnloadedM
+ using google_breakpad::MinidumpMemoryInfoList;
+ using google_breakpad::MinidumpMemoryList;
+ using google_breakpad::MinidumpException;
+ using google_breakpad::MinidumpAssertion;
+ using google_breakpad::MinidumpSystemInfo;
+ using google_breakpad::MinidumpMiscInfo;
+ using google_breakpad::MinidumpBreakpadInfo;
+ using google_breakpad::MinidumpCrashpadInfo;
++using google_breakpad::MinidumpThreadNamesList;
+ 
+ struct Options {
+   Options()
+       : minidumpPath(), hexdump(false), hexdump_width(16) {}
+ 
+   string minidumpPath;
+   bool hexdump;
+   unsigned int hexdump_width;
+@@ -197,16 +198,21 @@ static bool PrintMinidumpDump(const Opti
+   }
+ 
+   MinidumpCrashpadInfo *crashpad_info = minidump.GetCrashpadInfo();
+   if (crashpad_info) {
+     // Crashpad info is optional, so don't treat absence as an error.
+     crashpad_info->Print();
+   }
+ 
++  MinidumpThreadNamesList *thread_names_list = minidump.GetThreadNamesList();
++  if (thread_names_list) {
++    thread_names_list->Print();
++  }
++
+   DumpRawStream(&minidump,
+                 MD_LINUX_CMD_LINE,
+                 "MD_LINUX_CMD_LINE",
+                 &errors);
+   DumpRawStream(&minidump,
+                 MD_LINUX_ENVIRON,
+                 "MD_LINUX_ENVIRON",
+                 &errors);
+diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
+--- a/src/processor/minidump_processor.cc
++++ b/src/processor/minidump_processor.cc
+@@ -173,16 +173,22 @@ ProcessResult MinidumpProcessor::Process
+   }
+ 
+   MinidumpMemoryList *memory_list = dump->GetMemoryList();
+   if (memory_list) {
+     BPLOG(INFO) << "Found " << memory_list->region_count()
+                 << " memory regions.";
+   }
+ 
++  MinidumpThreadNamesList* thread_names_list = dump->GetThreadNamesList();
++  if (thread_names_list) {
++    BPLOG(INFO) << "Found " << thread_names_list->name_count()
++                << " thread names.";
++  }
++
+   MinidumpThreadList *threads = dump->GetThreadList();
+   if (!threads) {
+     BPLOG(ERROR) << "Minidump " << dump->path() << " has no thread list";
+     return PROCESS_ERROR_NO_THREAD_LIST;
+   }
+ 
+   BPLOG(INFO) << "Minidump " << dump->path() << " has " <<
+       (has_cpu_info            ? "" : "no ") << "CPU info, " <<
+@@ -308,16 +314,19 @@ ProcessResult MinidumpProcessor::Process
+     } else {
+       // Threads with missing CPU contexts will hit this, but
+       // don't abort processing the rest of the dump just for
+       // one bad thread.
+       BPLOG(ERROR) << "No stackwalker for " << thread_string;
+     }
+     stack->set_tid(thread_id);
+     stack->set_last_error(thread->GetLastError());
++    if (thread_names_list) {
++      stack->set_name(thread_names_list->GetNameForThreadId(thread_id));
++    }
+     process_state->threads_.push_back(stack.release());
+     process_state->thread_memory_regions_.push_back(thread_memory);
+   }
+ 
+   if (interrupted) {
+     BPLOG(INFO) << "Processing interrupted for " << dump->path();
+     return PROCESS_SYMBOL_SUPPLIER_INTERRUPTED;
+   }
+diff --git a/src/processor/stackwalk_common.cc b/src/processor/stackwalk_common.cc
+--- a/src/processor/stackwalk_common.cc
++++ b/src/processor/stackwalk_common.cc
+@@ -876,35 +876,45 @@ void PrintProcessState(const ProcessStat
+     printf("\n");
+     printf("Application-specific information:\n");
+     printf("%s", process_state.mac_crash_info().c_str());
+   }
+ 
+   // If the thread that requested the dump is known, print it first.
+   int requesting_thread = process_state.requesting_thread();
+   if (requesting_thread != -1) {
+-    printf("\n");
+-    printf("Thread %d (%s)\n",
+-          requesting_thread,
+-          process_state.crashed() ? "crashed" :
+-                                    "requested dump, did not crash");
+-    PrintStack(process_state.threads()->at(requesting_thread), cpu,
++    const CallStack* requesting_thread_callstack =
++      process_state.threads()->at(requesting_thread);
++    printf("\n"
++           "Thread %d (%s)",
++           requesting_thread,
++           process_state.crashed() ? "crashed" :
++                                     "requested dump, did not crash");
++    if (!requesting_thread_callstack->name().empty()) {
++      printf(" - %s", requesting_thread_callstack->name().c_str());
++    }
++    PrintStack(requesting_thread_callstack, cpu,
+                output_stack_contents,
+                process_state.thread_memory_regions()->at(requesting_thread),
+                process_state.modules(), resolver);
+   }
+ 
+   // Print all of the threads in the dump.
+   int thread_count = process_state.threads()->size();
+   for (int thread_index = 0; thread_index < thread_count; ++thread_index) {
+     if (thread_index != requesting_thread) {
+       // Don't print the crash thread again, it was already printed.
++      const CallStack* callstack = process_state.threads()->at(thread_index);
++      printf("\n"
++             "Thread %d", thread_index);
++      if (!callstack->name().empty()) {
++        printf(" - %s", callstack->name().c_str());
++      }
+       printf("\n");
+-      printf("Thread %d\n", thread_index);
+-      PrintStack(process_state.threads()->at(thread_index), cpu,
++      PrintStack(callstack, cpu,
+                  output_stack_contents,
+                  process_state.thread_memory_regions()->at(thread_index),
+                  process_state.modules(), resolver);
+     }
+   }
+ 
+   PrintModules(process_state.modules(),
+                process_state.modules_without_symbols(),

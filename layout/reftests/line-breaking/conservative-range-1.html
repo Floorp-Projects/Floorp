@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<title>Bug 809020</title>
+<style>
+p { 
+  font-family: monospace;
+  margin: .5em 0;
+  width:0;
+}
+.break {
+  color: green;
+}
+.nobreak {
+  color: red;
+}
+</style>
+</head>
+<body>
+The green examples should break at all their hyphens; the red ones should not.
+<p class="nobreak">
+T-shirt
+</p>
+<p class="nobreak">
+billy-o
+</p>
+<p class="break">
+tally-ho
+</p>
+<p class="break">
+co-author
+</p>
+<p class="break">
+hi-de-hi
+</p>
+<p class="break">
+far-sighted
+</p>
+<p class="break">
+hocus-pocus
+</p>
+<p class="break">
+Nanki-Poo
+</p>
+<p class="break">
+Miami-Dade
+</p>
+<p class="break">
+Wells-next-the-Sea
+</p>
+<p class="break">
+Lee-on-the-Solent
+</p>
+<p class="nobreak">
+\\/^-_-^\//
+</p>
+<p class="nobreak">
+(''')-.-(''')
+<p class="nobreak">
+:-"&gt;
+<p class="nobreak">
+&lt;{^-^}&gt;
+</p>
+<p class="nobreak">
+:-D
+</p>
+</body>
+</html>

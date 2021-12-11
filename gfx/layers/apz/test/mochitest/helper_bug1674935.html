@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests that keyboard arrow keys scroll a very specific page</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+function start() {
+    document.documentElement.addEventListener("keyup", function() { console.log("keyup"); });
+    document.documentElement.addEventListener("keydown", function() { console.log("keydown"); });
+    document.documentElement.addEventListener("keypress", function() { console.log("keypress"); });
+}
+  </script>
+  <style>
+     .z1asCe {
+      display: inline-block;
+      width: 24px
+     }
+     .kno-ecr-pt {
+      position: relative;
+     }
+     .rsir2d {
+      opacity: 0.54
+     }
+     .bErdLd {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      left: 0;
+     }
+  </style>
+</head>
+<body onload="start();">
+  <div style="height: 4000px;">
+     <div class="rsir2d">
+        <span class="  z1asCe ">
+           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"></path>
+           </svg>
+        </span>
+        <div class="bErdLd">
+        </div>
+     </div>
+    <h2 class="kno-ecr-pt"><span>Firefox</span></h2>
+  </div>
+
+  <script type="application/javascript">
+
+    function waitForScrollEvent(target) {
+      return new Promise(resolve => {
+        target.addEventListener("scroll", resolve, { once: true });
+      });
+    }
+
+    async function test() {
+      is(window.scrollX, 0, "shouldn't have scrolled (1)");
+      is(window.scrollY, 0, "shouldn't have scrolled (2)");
+
+      let waitForScroll = waitForScrollEvent(window);
+
+      window.synthesizeKey("KEY_ArrowDown");
+
+      await waitForScroll;
+
+      is(window.scrollX, 0, "shouldn't have scrolled (3)");
+      isnot(window.scrollY, 0, "should have scrolled (4)");
+    }
+
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

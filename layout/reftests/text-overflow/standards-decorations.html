@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: Standards mode text-decorations
+-->
+<html><head>
+<title>text-overflow: Standards mode text-decorations</title>
+<style type="text/css">
+@font-face {
+  font-family: Ahem;
+  src: url(../fonts/Ahem.ttf);
+}
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  float:left;
+  height:2em;
+  white-space:pre;
+  margin-left:1em;
+  margin-bottom:1em;
+  font-size:20px;
+  color:blue;
+}
+span {
+  text-decoration: line-through;
+  font-size:16px;
+  color:black;
+}
+.t1 span {
+}
+.rlo {
+  unicode-bidi: bidi-override; direction:rtl;
+}
+.lro {
+  unicode-bidi: bidi-override;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+.t1 { width:7.3em;}
+.t2 { width:20px;}
+.t3 { width:22px;}
+.t4 { width:1px; font-family:Ahem; }
+.t3 span {margin-left:14px; }
+
+m { font-size:20px; }
+
+</style>
+
+</head><body>
+
+<div class="test t1"><span>0123&nbsp;567890123456789</span></div>
+<div class="test rtl t1"><span>0321&nbsp;56789012345</span></div>
+<div class="test t2" style="color:black"><span>xxxx</span></div>
+<div class="test t3"><span>x</span></div>
+<div class="test t4"><span>x</span></div>
+
+
+</body>
+</html>

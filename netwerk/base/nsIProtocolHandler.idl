@@ -1,0 +1,318 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "nsCOMPtr.h"
+
+/**
+ * Protocol handlers are registered with XPCOM under the following CONTRACTID prefix:
+ */
+#define NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "@mozilla.org/network/protocol;1?name="
+/**
+ * For example, "@mozilla.org/network/protocol;1?name=http"
+ */
+
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+#define IS_ORIGIN_IS_FULL_SPEC_DEFINED 1
+#endif
+%}
+
+interface nsIURI;
+interface nsIChannel;
+interface nsILoadInfo;
+
+/**
+ * nsIProtocolHandlerWithDynamicFlags
+ *
+ * Protocols that wish to return different flags depending on the URI should
+ * implement this interface.
+ */
+[scriptable, builtinclass, uuid(65a8e823-0591-4fc0-a56a-03265e0a4ce8)]
+interface nsIProtocolHandlerWithDynamicFlags : nsISupports
+{
+    /*
+     * Returns protocol flags for the given URI, which may be different from the
+     * flags for another URI of the same scheme.
+     */
+    unsigned long getFlagsForURI(in nsIURI aURI);
+};
+
+/**
+ * nsIProtocolHandler
+ */
+[scriptable, uuid(a87210e6-7c8c-41f7-864d-df809015193e)]
+interface nsIProtocolHandler : nsISupports
+{
+    /**
+     * The scheme of this protocol (e.g., "file").
+     */
+    readonly attribute ACString scheme;
+
+    /**
+     * The default port is the port that this protocol normally uses.
+     * If a port does not make sense for the protocol (e.g., "about:")
+     * then -1 will be returned.
+     */
+    readonly attribute long defaultPort;
+
+    /**
+     * Returns the protocol specific flags (see flag definitions below).
+     */
+    readonly attribute unsigned long protocolFlags;
+
+%{C++
+  // Helper method to get the protocol flags in the right way.
+  nsresult DoGetProtocolFlags(nsIURI* aURI, uint32_t* aFlags)
+  {
+      nsCOMPtr<nsIProtocolHandlerWithDynamicFlags> dh = do_QueryInterface(this);
+      nsresult rv = dh ? dh->GetFlagsForURI(aURI, aFlags) : GetProtocolFlags(aFlags);
+      if (NS_SUCCEEDED(rv)) {
+#if !IS_ORIGIN_IS_FULL_SPEC_DEFINED
+        MOZ_RELEASE_ASSERT(!(*aFlags & nsIProtocolHandler::ORIGIN_IS_FULL_SPEC),
+                           "ORIGIN_IS_FULL_SPEC is unsupported but used");
+#endif
+      }
+      return rv;
+  }
+%}
+
+    /**
+     * Constructs a new channel from the given URI for this protocol handler and
+     * sets the loadInfo for the constructed channel.
+     */
+    nsIChannel newChannel(in nsIURI aURI, in nsILoadInfo aLoadinfo);
+
+    /**
+     * Allows a protocol to override blacklisted ports.
+     *
+     * This method will be called when there is an attempt to connect to a port
+     * that is blacklisted.  For example, for most protocols, port 25 (Simple Mail
+     * Transfer) is banned.  When a URI containing this "known-to-do-bad-things"
+     * port number is encountered, this function will be called to ask if the
+     * protocol handler wants to override the ban.
+     */
+    boolean allowPort(in long port, in string scheme);
+
+
+    /**************************************************************************
+     * Constants for the protocol flags (the first is the default mask, the
+     * others are deviations):
+     *
+     * NOTE: Implementation must ignore any flags they do not understand.
+     */
+
+    /**
+     * standard full URI with authority component and concept of relative
+     * URIs (http, ...)
+     */
+    const unsigned long URI_STD = 0;
+
+    /**
+     * no concept of relative URIs (about, javascript, finger, ...)
+     */
+    const unsigned long URI_NORELATIVE = (1<<0);
+
+    /**
+     * no authority component (file, ...)
+     */
+    const unsigned long URI_NOAUTH = (1<<1);
+
+    /**
+     * This protocol handler can be proxied via a proxy (socks or http)
+     * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
+     * proxying, the handler should implement nsIProxiedProtocolHandler.
+     *
+     * If it supports only HTTP proxying, then it need not support
+     * nsIProxiedProtocolHandler, but should instead set the ALLOWS_PROXY_HTTP
+     * flag (see below).
+     *
+     * @see nsIProxiedProtocolHandler
+     */
+    const unsigned long ALLOWS_PROXY = (1<<2);
+
+    /**
+     * This protocol handler can be proxied using a http proxy (e.g., http,
+     * etc.).  nsIIOService::newChannelFromURI will feed URIs from this
+     * protocol handler to the HTTP protocol handler instead.  This flag is
+     * ignored if ALLOWS_PROXY is not set.
+     */
+    const unsigned long ALLOWS_PROXY_HTTP = (1<<3);
+
+    /**
+     * The URIs for this protocol have no inherent security context, so
+     * documents loaded via this protocol should inherit the security context
+     * from the document that loads them.
+     */
+    const unsigned long URI_INHERITS_SECURITY_CONTEXT = (1<<4);
+
+    /**
+     * "Automatic" loads that would replace the document (e.g. <meta> refresh,
+     * certain types of XLinks, possibly other loads that the application
+     * decides are not user triggered) are not allowed if the originating (NOT
+     * the target) URI has this protocol flag.  Note that the decision as to
+     * what constitutes an "automatic" load is made externally, by the caller
+     * of nsIScriptSecurityManager::CheckLoadURI.  See documentation for that
+     * method for more information.
+     *
+     * A typical protocol that might want to set this flag is a protocol that
+     * shows highly untrusted content in a viewing area that the user expects
+     * to have a lot of control over, such as an e-mail reader.
+     */
+    const unsigned long URI_FORBIDS_AUTOMATIC_DOCUMENT_REPLACEMENT = (1<<5);
+
+    /**
+     * +-------------------------------------------------------------------+
+     * |                                                                   |
+     * |  ALL PROTOCOL HANDLERS MUST SET ONE OF THE FOLLOWING FIVE FLAGS.  |
+     * |                                                                   |
+     * +-------------------------------------------------------------------+
+     *
+     *    * URI_LOADABLE_BY_ANYONE
+     *    * URI_DANGEROUS_TO_LOAD
+     *    * URI_IS_UI_RESOURCE
+     *    * URI_IS_LOCAL_FILE
+     *    * URI_LOADABLE_BY_SUBSUMERS
+     *
+     * These flags are used to determine who is allowed to load URIs for this
+     * protocol.  Note that if a URI is nested, only the flags for the
+     * innermost URI matter.  See nsINestedURI.
+     *
+     * If none of these five flags are set, the ContentSecurityManager will
+     * deny the load.
+     */
+
+    /**
+     * The URIs for this protocol can be loaded by anyone.  For example, any
+     * website should be allowed to trigger a load of a URI for this protocol.
+     * Web-safe protocols like "http" should set this flag.
+     */
+    const unsigned long URI_LOADABLE_BY_ANYONE = (1<<6);
+
+    /**
+     * The URIs for this protocol are UNSAFE if loaded by untrusted (web)
+     * content and may only be loaded by privileged code (for example, code
+     * which has the system principal).  Various internal protocols should set
+     * this flag.
+     */
+    const unsigned long URI_DANGEROUS_TO_LOAD = (1<<7);
+
+    /**
+     * The URIs for this protocol point to resources that are part of the
+     * application's user interface.  There are cases when such resources may
+     * be made accessible to untrusted content such as web pages, so this is
+     * less restrictive than URI_DANGEROUS_TO_LOAD but more restrictive than
+     * URI_LOADABLE_BY_ANYONE.  See the documentation for
+     * nsIScriptSecurityManager::CheckLoadURI.
+     */
+    const unsigned long URI_IS_UI_RESOURCE = (1<<8);
+
+    /**
+     * Loading of URIs for this protocol from other origins should only be
+     * allowed if those origins should have access to the local filesystem.
+     * It's up to the application to decide what origins should have such
+     * access.  Protocols like "file" that point to local data should set this
+     * flag.
+     */
+    const unsigned long URI_IS_LOCAL_FILE = (1<<9);
+
+    /**
+     * The URIs for this protocol can be loaded only by callers with a
+     * principal that subsumes this uri. For example, privileged code and
+     * websites that are same origin as this uri.
+     */
+    const unsigned long URI_LOADABLE_BY_SUBSUMERS = (1<<10);
+
+    /**
+     * Channels using this protocol never call OnDataAvailable
+     * on the listener passed to AsyncOpen and they therefore
+     * do not return any data that we can use.
+     */
+    const unsigned long URI_DOES_NOT_RETURN_DATA = (1<<11);
+
+    /**
+     * URIs for this protocol are considered to be local resources.  This could
+     * be a local file (URI_IS_LOCAL_FILE), a UI resource (URI_IS_UI_RESOURCE),
+     * or something else that would not hit the network.
+     */
+    const unsigned long URI_IS_LOCAL_RESOURCE = (1<<12);
+
+    /**
+     * URIs for this protocol execute script when they are opened.
+     */
+    const unsigned long URI_OPENING_EXECUTES_SCRIPT = (1<<13);
+
+    /**
+     * Loading channels from this protocol has side-effects that make
+     * it unsuitable for saving to a local file.
+     */
+    const unsigned long URI_NON_PERSISTABLE = (1<<14);
+
+    /**
+     * URIs for this protocol require the webapps permission on the principal
+     * when opening URIs for a different domain. See bug#773886
+     */
+    const unsigned long URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM = (1<<15);
+
+    /**
+     * Channels for this protocol don't need to spin the event loop to handle
+     * Open() and reads on the resulting stream.
+     */
+    const unsigned long URI_SYNC_LOAD_IS_OK = (1<<16);
+
+    /**
+     * All the origins whose URI has this scheme are considered potentially
+     * trustworthy.
+     * Per the SecureContext spec, https: and wss: should be considered
+     * a priori secure, and implementations may consider other,
+     * implementation-specific URI schemes as secure.
+     */
+    const unsigned long URI_IS_POTENTIALLY_TRUSTWORTHY = (1<<17);
+
+    /**
+     * This URI may be fetched and the contents are visible to anyone. This is
+     * semantically equivalent to the resource being served with all-access CORS
+     * headers.
+     */
+    const unsigned long URI_FETCHABLE_BY_ANYONE = (1 << 18);
+
+    /**
+     * If this flag is set, then the origin for this protocol is the full URI
+     * spec, not just the scheme + host + port.
+     *
+     * Note: this is not supported in Firefox.  It is currently only available
+     * in Thunderbird and SeaMonkey.
+     */
+    const unsigned long ORIGIN_IS_FULL_SPEC = (1 << 19);
+
+    /**
+     * If this flag is set, the URI does not always allow content using the same
+     * protocol to link to it.
+     */
+    const unsigned long URI_SCHEME_NOT_SELF_LINKABLE = (1 << 20);
+
+    /**
+     * The URIs for this protocol can be loaded by extensions.
+     */
+    const unsigned long URI_LOADABLE_BY_EXTENSIONS = (1 << 21);
+
+    /**
+     * The URIs for this protocol can not be loaded into private contexts.
+     */
+    const unsigned long URI_DISALLOW_IN_PRIVATE_CONTEXT = (1 << 22);
+
+    /**
+     * This protocol handler forbids accessing cookies e.g. for mail related
+     * protocols. Only used in Mailnews (comm-central).
+     */
+    const unsigned long URI_FORBIDS_COOKIE_ACCESS = (1 << 23);
+
+    /**
+     * This is an extension web accessible uri that is loadable if checked
+     * against an allow whitelist.
+     */
+    const unsigned long WEBEXT_URI_WEB_ACCESSIBLE = (1 << 24);
+};

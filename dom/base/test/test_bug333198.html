@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=333198
+-->
+<head>
+  <title>Test for Bug 333198</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<!-- setTimeout so that the test starts after paint suppression ends -->
+<body onload="setTimeout(runTest,0);">
+<iframe id="ifr"></iframe><br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=333198">Mozilla Bug 333198</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 333198 **/
+
+var focusTester;
+var focusTester2;
+var focusCount = 0;
+var eventCount = 0;
+function clickHandler() {
+  ++eventCount;
+}
+
+function suppressEvents(suppress) {
+  SpecialPowers.DOMWindowUtils.suppressEventHandling(suppress);
+}
+
+function sendEvents() {
+  windowUtils = SpecialPowers.getDOMWindowUtils(window);
+  windowUtils.sendMouseEvent("mousedown", 1, 1, 0, 1, 0);
+  windowUtils.sendMouseEvent("mouseup", 1, 1, 0, 1, 0);
+
+  iframeUtils = SpecialPowers.getDOMWindowUtils(document.getElementById("ifr").contentWindow);
+  iframeUtils.sendMouseEvent("mousedown", 1, 1, 0, 1, 0);
+  iframeUtils.sendMouseEvent("mouseup", 1, 1, 0, 1, 0);
+}
+
+function runTest() {
+  window.focus();
+  focusTester = document.getElementsByTagName("input")[0];
+  focusTester.blur();
+  window.addEventListener("click", clickHandler, true);
+  var ifr = document.getElementById("ifr")
+  ifr.contentWindow.addEventListener("click", clickHandler, true);
+  sendEvents();
+  is(eventCount, 2, "Wrong event count(1)");
+  suppressEvents(true);
+  sendEvents();
+  is(eventCount, 2, "Wrong event count(2)");
+  suppressEvents(false);
+  sendEvents();
+  is(eventCount, 4, "Wrong event count(2)");
+
+  is(focusCount, 0, "Wrong focus count (1)");
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", window.location, false);
+  xhr.onload = function() {
+                 focusTester.focus();
+                 is(focusCount, 1, "Wrong focus count (2)");
+                 focusTester.blur();
+               }
+  xhr.send();
+
+  focusTester.focus();
+  is(focusCount, 2, "Wrong focus count (3)");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<input type="text" onfocus="++focusCount;">
+</body>
+</html>

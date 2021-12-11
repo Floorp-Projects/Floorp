@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait" onload="go()">
+<script>
+<![CDATA[
+function go() {
+  document.documentElement.setCurrentTime(100);
+}
+function boom()
+{
+  document.documentElement.removeChild(document.getElementById("a"));
+  document.documentElement.removeAttribute("class");
+}
+]]>
+</script>
+<animate id="a" begin="a.end; 99.9s" end="a.begin+0.2s" onend="boom()"/>
+<animate id="a" begin="a.end; 99.9s" end="a.begin+0.2s"/>
+</svg>

@@ -1,0 +1,33 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=389350
+-->
+<head>
+<title>Test for Bug 389350</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>        
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function runTest() {
+  var e = document.getElementById("edit");
+  e.contentDocument.designMode = "on";
+  e.style.display = "block";
+  e.focus();
+  sendString("abc");
+  var expected = "<head></head><body>abc</body>";
+  var result = e.contentDocument.documentElement.innerHTML;
+  is(result, expected, "iframe with designmode on had incorrect content");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>
+
+</head>
+<body id="body">
+<iframe id="edit" width="200" height="100" style="display: none;" src="">
+</body>
+</html>

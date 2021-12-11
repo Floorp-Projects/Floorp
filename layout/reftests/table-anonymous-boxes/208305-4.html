@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style id="s">
+      span { display: table-cell ! important }
+    </style>
+    <script>
+      function doTest() {
+        var s = document.getElementById("s");
+        s.disabled = true;
+        document.body.offsetWidth;
+        s.disabled = false;
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <span style="display: block">a b</span>
+    <span style="display: block">c d</span>
+  </body>
+</html>

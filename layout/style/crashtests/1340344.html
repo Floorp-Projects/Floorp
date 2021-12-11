@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+window.onload = function(){
+  var anim =
+    document.documentElement.animate([{ "color": "hsla(6e147grad,16%,183.379675555%,0.0210463770007)" }]);
+  anim.ready.then(() => {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+};
+</script>
+</head>
+</html>

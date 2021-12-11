@@ -1,0 +1,212 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIPrefBranch.idl"
+
+interface nsIFile;
+
+/**
+ * A helper function for reading access statistics for preferences.
+ * See nsIPrefService.readStats for more details.
+ */
+[function, scriptable, uuid(c3f0cedc-e244-4316-b33a-80306a1c35a1)]
+interface nsIPrefStatsCallback : nsISupports
+{
+  void visit(in ACString prefName, in unsigned long accessCount);
+};
+
+[scriptable, uuid(0a2dbc02-2218-4687-b151-33d890676e00)]
+interface nsIPrefObserver : nsISupports
+{
+  /**
+   * Invoked when a string preference is witnessed.  kind will be "Default" or "User".
+   */
+  void onStringPref(in string kind, in string name, in string value, in boolean isSticky, in boolean isLocked);
+
+  /**
+   * Invoked when a integer preference is witnessed.  kind will be "Default" or "User".
+   */
+  void onIntPref(in string kind, in string name, in long value, in boolean isSticky, in boolean isLocked);
+
+  /**
+   * Invoked when a boolean preference is witnessed.  kind will be "Default" or "User".
+   */
+  void onBoolPref(in string kind, in string name, in boolean value, in boolean isSticky, in boolean isLocked);
+
+  /**
+   * Invoked when the prefs parser encounters an error.
+   */
+  void onError(in string message);
+};
+
+/**
+ * The nsIPrefService interface is the main entry point into the back end
+ * preferences management library. The preference service is directly
+ * responsible for the management of the preferences files and also facilitates
+ * access to the preference branch object which allows the direct manipulation
+ * of the preferences themselves.
+ *
+ * @see nsIPrefBranch
+ */
+
+[scriptable, uuid(1f84fd56-3956-40df-b86a-1ea01402ee96)]
+interface nsIPrefService : nsISupports
+{
+  /**
+   * Called to completely flush and re-initialize the preferences system.
+   *
+   * @throws Error The preference service failed to restart correctly.
+   */
+  void resetPrefs();
+
+  /**
+   * Called to reset all preferences with user set values back to the
+   * application default values.
+   */
+  void resetUserPrefs();
+
+  /**
+   * Called to write current preferences state to a file.
+   *
+   * @param aFile The file to be written.
+   *
+   * @note
+   * If nullptr is passed in for the aFile parameter the preference data is
+   * written out to the current preferences file (usually prefs.js.)
+   *
+   * @throws Error File failed to write.
+   *
+   * @see readUserPrefsFromFile
+   * @see nsIFile
+   */
+  void savePrefFile(in nsIFile aFile);
+
+  /**
+   * Call to get a Preferences "Branch" which accesses user preference data.
+   * Using a Set method on this object will always create or set a user
+   * preference value. When using a Get method a user set value will be
+   * returned if one exists, otherwise a default value will be returned.
+   *
+   * @param aPrefRoot The preference "root" on which to base this "branch".
+   *                  For example, if the root "browser.startup." is used, the
+   *                  branch will be able to easily access the preferences
+   *                  "browser.startup.page", "browser.startup.homepage", or
+   *                  "browser.startup.homepage_override" by simply requesting
+   *                  "page", "homepage", or "homepage_override". nullptr or ""
+   *                  may be used to access to the entire preference "tree".
+   *
+   * @return nsIPrefBranch The object representing the requested branch.
+   *
+   * @see getDefaultBranch
+   */
+  nsIPrefBranch getBranch(in string aPrefRoot);
+
+  /**
+   * Call to get a Preferences "Branch" which accesses only the default
+   * preference data. Using a Set method on this object will always create or
+   * set a default preference value. When using a Get method a default value
+   * will always be returned.
+   *
+   * @param aPrefRoot The preference "root" on which to base this "branch".
+   *                  For example, if the root "browser.startup." is used, the
+   *                  branch will be able to easily access the preferences
+   *                  "browser.startup.page", "browser.startup.homepage", or
+   *                  "browser.startup.homepage_override" by simply requesting
+   *                  "page", "homepage", or "homepage_override". nullptr or ""
+   *                  may be used to access to the entire preference "tree".
+   *
+   * @note
+   * Few consumers will want to create default branch objects. Many of the
+   * branch methods do nothing on a default branch because the operations only
+   * make sense when applied to user set preferences.
+   *
+   * @return nsIPrefBranch The object representing the requested default branch.
+   *
+   * @see getBranch
+   */
+  nsIPrefBranch getDefaultBranch(in string aPrefRoot);
+
+  /**
+   * The preference service is 'dirty' if there are changes to user preferences
+   * that have not been written to disk
+   */
+  readonly attribute boolean dirty;
+
+  /**
+   * Read in the preferences specified in a default preference file. This
+   * method does not clear preferences that were already set, but it may
+   * overwrite existing preferences.
+   *
+   * @param aFile The file to be read.
+   *
+   * @throws Error File failed to read or contained invalid data.
+   * @note This method is intended for internal unit testing only!
+   */
+  void readDefaultPrefsFromFile(in nsIFile aFile);
+
+  /**
+   * Like readDefaultPrefsFromFile, but for a user prefs file.
+   */
+  void readUserPrefsFromFile(in nsIFile aFile);
+
+  /**
+   * Usage statistics for performance tests. This function takes a function
+   * that is passed (preferenceName, accessCount) as arguments for every
+   * recorded preference. You can use this function to build e.g. a JS object
+   * holding that data.
+   *
+   * This is not implemented in non-debug builds and will throw an error.
+   */
+  void readStats(in nsIPrefStatsCallback callback);
+
+  /**
+   * Reset usage statistics for performance tests.
+   *
+   * This is not implemented in non-debug builds and will throw an error.
+   */
+  void resetStats();
+
+  /**
+   * Parse the given bytes, invoking callbacks on the given observer.
+   *
+   * This method does not modify any preferences.
+   *
+   * @param bytes The data to parse.  This data may be UTF-8 encoded, but is not
+   *              required to be so: the prefs parser will determine the encoding
+   *              automatically.
+   * @param observer The observer to invoke callbacks on.  Parsing errors will
+   *                 be reported via the onError callback.
+   * @param pathLabel An optional string with which to label errors.
+   */
+  void parsePrefsFromBuffer(in Array<uint8_t> bytes,
+                            in nsIPrefObserver observer,
+                            [optional] in string pathLabel);
+};
+
+%{C++
+
+#define NS_PREFSERVICE_CID                             \
+  { /* {1cd91b88-1dd2-11b2-92e1-ed22ed298000} */       \
+    0x91ca2441,                                        \
+    0x050f,                                            \
+    0x4f7c,                                            \
+    { 0x9d, 0xf8, 0x75, 0xb4, 0x0e, 0xa4, 0x01, 0x56 } \
+  }
+
+#define NS_PREFSERVICE_CONTRACTID "@mozilla.org/preferences-service;1"
+
+/**
+ * Notification sent before reading the default user preferences files.
+ */
+#define NS_PREFSERVICE_READ_TOPIC_ID "prefservice:before-read-userprefs"
+
+/**
+ * Notification sent when after reading app-provided default
+ * preferences, but before user profile override defaults are loaded.
+ */
+#define NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID "prefservice:after-app-defaults"
+
+%}

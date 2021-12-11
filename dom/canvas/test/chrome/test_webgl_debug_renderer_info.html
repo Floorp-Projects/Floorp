@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666446
+-->
+<head>
+  <title>Test that WEBGL_debug_renderer_info works in chrome code</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script>
+
+const UNMASKED_VENDOR_WEBGL = 0x9245;
+const UNMASKED_RENDERER_WEBGL = 0x9246;
+
+function isNonEmptyString(s) {
+  return s && (typeof s) == "string";
+}
+
+var canvas = document.createElement("canvas");
+var gl = canvas.getContext("experimental-webgl");
+ok(!gl.getError(), "getError on newly created WebGL context should return NO_ERROR");
+
+ok(!gl.getParameter(UNMASKED_VENDOR_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+   "Should not be able to query UNMASKED_VENDOR_WEBGL without having enabled the WEBGL_debug_renderer_info extension");
+ok(!gl.getParameter(UNMASKED_RENDERER_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+   "Should not be able to query UNMASKED_RENDERER_WEBGL without having enabled the WEBGL_debug_renderer_info extension");
+
+var exts = gl.getSupportedExtensions();
+ok(exts.includes("WEBGL_debug_renderer_info"),
+   "WEBGL_debug_renderer_info should be listed by getSupportedExtensions in chrome contexts");
+var ext = gl.getExtension("WEBGL_debug_renderer_info");
+ok(ext,
+   "WEBGL_debug_renderer_info should be available through getExtension in chrome contexts");
+
+ok(ext.UNMASKED_VENDOR_WEBGL == UNMASKED_VENDOR_WEBGL,
+   "UNMASKED_VENDOR_WEBGL has the correct value");
+ok(ext.UNMASKED_RENDERER_WEBGL == UNMASKED_RENDERER_WEBGL,
+   "UNMASKED_RENDERER_WEBGL has the correct value");
+
+ok(isNonEmptyString(gl.getParameter(UNMASKED_VENDOR_WEBGL)) && gl.getError() == gl.NO_ERROR,
+   "Should be able to query UNMASKED_VENDOR_WEBGL in chrome context with WEBGL_debug_renderer_info enabled");
+ok(isNonEmptyString(gl.getParameter(UNMASKED_RENDERER_WEBGL)) && gl.getError() == gl.NO_ERROR,
+   "Should be able to query UNMASKED_RENDERER_WEBGL in chrome context with WEBGL_debug_renderer_info enabled");
+
+</script>
+</body>
+</html>

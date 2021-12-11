@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1448730
+-->
+<head>
+  <title>Mozilla Bug 1448730</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1448730">Mozilla Bug 1448730</a>
+<p id="display">
+  <div id="container" style="width: 600px; height: 500px;"></div>
+</p>
+<div id="content" style="display: none;"></div>
+<pre id="test">
+</pre>
+<script>
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [['layout.accessiblecaret.enabled', true]]}, () => {
+  let iframe = document.createElement("iframe");
+  iframe.src = "bug1448730.html";
+  iframe.style.width = "100%";
+  iframe.style.height = "100%";
+  document.getElementById('container').appendChild(iframe);
+});
+</script>
+</body>
+</html>

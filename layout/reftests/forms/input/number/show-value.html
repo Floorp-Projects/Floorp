@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <head>
+    <meta charset="utf-8">
+    <style>
+
+input {
+  -moz-appearance: none;
+}
+
+    </style>
+    <script>
+// Using "142" as the magic number as "1" in a monospace font should not have
+// stray leading or trailing antialised pixels that get clipped unexpectedly.
+
+function run() {
+  var numbers = document.getElementsByTagName('input');
+  numbers[2].style.display = 'inline-block'; // none -> inline-block
+  numbers[3].setAttribute('value', '142');
+  numbers[4].value = '142';
+  numbers[5].varue = '1337'; // deliberately misspelt - should not set value
+  document.forms[0].reset(); // numbers[5] value should be 42 again.
+  document.documentElement.className = '';
+}
+
+document.addEventListener("MozReftestInvalidate", run);
+
+    </script>
+  </head>
+  <body onload="run();">
+    <input type='number' value='142'><br>
+    <input value='142' type='number'><br>
+    <input type='number' value='142' style="display: none;"><br>
+    <input type='number' value='1337'><br>
+    <input type='number' value='1337'><br>
+    <form>
+      <input type='number' value='142'>
+    </form>
+    <!-- div to cover spin box area for type=number to type=text comparison -->
+    <div style="display:block; position:absolute; background-color:black; width:200px; height:400px; top:0px; left:100px;">
+  </body>
+</html>

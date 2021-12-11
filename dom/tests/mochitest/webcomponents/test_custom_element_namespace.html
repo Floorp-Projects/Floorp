@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Custom Elements in an HTML document</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    const HTML_NS = "http://www.w3.org/1999/xhtml";
+    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+    class TestXULCustomElement extends XULElement {
+      constructor() {
+        super();
+      }
+
+      get connected() {
+        return true;
+      }
+    }
+
+    customElements.define("test-xul-element", TestXULCustomElement);
+
+    class TestHTMLCustomElement extends HTMLElement {
+      constructor() {
+        super();
+      }
+
+      get connected() {
+        return true;
+      }
+    }
+
+    customElements.define("test-html-element", TestHTMLCustomElement);
+
+    function checkElement(element, ns, connected, type) {
+      is(element.namespaceURI, ns, `${type} should have the correct namespace`);
+      if (connected) {
+        ok(element.connected, `${type} should have applied the class`);
+      } else {
+        is(element.connected, undefined, `${type} should not have applied the class`);
+      }
+    }
+
+    function runTest() {
+      let element = new TestXULCustomElement();
+      checkElement(element, XUL_NS, true, "instantiated XUL");
+
+      element = document.getElementById("xul2");
+      checkElement(element, HTML_NS, false, "parsed XUL as HTML");
+
+      element = document.createElement("test-xul-element");
+      checkElement(element, HTML_NS, false, "document.createElement(XUL)");
+
+      element = document.createXULElement("test-xul-element");
+      checkElement(element, XUL_NS, true, "document.createXULElement(XUL)");
+
+      element = document.createElementNS(XUL_NS, "test-xul-element");
+      checkElement(element, XUL_NS, true, "document.createElementNS(XUL, XUL)");
+
+      element = document.createElementNS(HTML_NS, "test-xul-element");
+      checkElement(element, HTML_NS, false, "document.createElementNS(HTML, XUL)");
+
+      element = new TestHTMLCustomElement();
+      checkElement(element, HTML_NS, true, "instantiated HTML");
+
+      element = document.getElementById("html2");
+      checkElement(element, HTML_NS, true, "parsed HTML as HTML");
+
+      element = document.createElement("test-html-element");
+      checkElement(element, HTML_NS, true, "document.createElement(HTML)");
+
+      element = document.createXULElement("test-html-element");
+      checkElement(element, XUL_NS, false, "document.createXULElement(HTML)");
+
+      element = document.createElementNS(XUL_NS, "test-html-element");
+      checkElement(element, XUL_NS, false, "document.createElementNS(XUL, HTML)");
+
+      element = document.createElementNS(HTML_NS, "test-html-element");
+      checkElement(element, HTML_NS, true, "document.createElementNS(HTML, HTML)");
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="runTest();">
+  <p id="display"></p>
+  <div id="content">
+    <test-xul-element id="xul2"/>
+    <test-html-element id="html2"/>
+  </div>
+  <pre id="test"></pre>
+</body>
+</html>

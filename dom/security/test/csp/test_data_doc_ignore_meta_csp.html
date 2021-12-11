@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1382869: data document should ignore meta csp</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load an iframe creating a new data document which defines
+ * a meta csp. We make sure the meta CSP is ignored and does not
+ * apply to the actual iframe document.
+ */
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  window.removeEventListener("message", receiveMessage);
+  is(event.data.result, "dataDocCreated", "sanity: received msg from loaded frame");
+
+  var frame = document.getElementById("testframe");
+  var contentDoc = SpecialPowers.wrap(frame).contentDocument;
+  var cspOBJ = JSON.parse(contentDoc.cspJSON);
+  // make sure we got no policy attached
+  var policies = cspOBJ["csp-policies"];
+  is(policies.length, 0, "there should be no CSP attached to the iframe");
+  SimpleTest.finish();
+}
+
+document.getElementById("testframe").src = "file_data_doc_ignore_meta_csp.html";
+
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .test:before { content: "Before"; display: block }
+    .test:after { content: "After"; display: block }
+  </style>
+</head>
+<body>
+<table>
+  <caption class="test">
+    Caption
+  </caption>
+<tr>
+  <td class="test">
+    Text
+  </td>
+</tr>
+</table>
+<div>
+  Before inline-block
+  <div style="display: inline-block" class="test"> Text </div>
+  After inline-block
+</div>
+<div>
+  Before span
+  <span class="test"> Text </span>
+  After span
+</div>
+<div class="test"> Text </div>
+</body>
+</html>

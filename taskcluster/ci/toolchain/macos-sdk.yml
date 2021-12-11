@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    attributes:
+        artifact_prefix: project/gecko/mac-sdk
+    worker-type: b-osx-1015
+    worker:
+        max-run-time: 1800
+        env:
+            PATH: "/usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+    run:
+        script: pack.sh
+    # Expiry similar to that of fetches
+    expires-after: 1000 years
+
+macosx64-sdk-10.11:
+    description: "MacOSX10.11 SDK"
+    treeherder:
+        symbol: TM(sdk10.11)
+    run:
+        arguments:
+            - /Applications/Xcode-7.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX10.11.sdk.tar.zst
+
+macosx64-sdk-10.12:
+    description: "MacOSX10.12 SDK"
+    treeherder:
+        symbol: TM(sdk10.12)
+    run:
+        arguments:
+            - /Applications/Xcode-8.3.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX10.12.sdk.tar.zst
+
+macosx64-sdk-11.0:
+    description: "MacOSX11.0 SDK"
+    treeherder:
+        symbol: TM(sdk11)
+    run:
+        arguments:
+            - /Applications/Xcode-12.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX11.0.sdk.tar.zst

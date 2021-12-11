@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test context-fill when no context fill value is provided</title>
+    <style>
+
+img {
+  -moz-context-properties: fill;
+  width: 100px;
+  height: 100px;
+}
+
+    </style>
+  </head>
+  <body>
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='context-fill'/></svg>">
+    <!-- The initial value for 'fill' is black, so we expect that to be the
+         context-fill that the following rect uses (the fallback color should
+         not be used). -->
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='context-fill red'/></svg>">
+  </body>
+</html>

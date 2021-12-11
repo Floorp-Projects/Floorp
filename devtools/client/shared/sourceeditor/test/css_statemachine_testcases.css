@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.devtools-toolbar {
+  -moz-appearance: none;
+           padding:4px 3px;border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+#devtools-menu.devtools-menulist,
+.devtools-toolbarbutton#devtools-menu {
+  -moz-appearance: none;
+  -moz-box-align: center;
+  min-width: 78px;
+  min-height: 22px;
+  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  border: 1px solid hsla(210,8%,5%,.45);
+  border-radius: 3px;
+  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+  margin: 0 3px;
+  color: inherit;
+}
+
+.devtools-toolbarbutton > hbox.toolbarbutton-menubutton-button {
+  -moz-box-orient: horizontal;
+}
+
+.devtools-menulist:active,
+#devtools-toolbarbutton:focus {
+  outline: 1px dotted hsla(210,30%,85%,0.7);
+  outline-offset   :  -4px;
+}
+
+.devtools-toolbarbutton:not([label]) {
+  min-width: 32px;
+}
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-toolbarbutton:not([checked=true]):hover:active {
+  border-color: hsla(210,8%,5%,.6);
+}
+
+.devtools-menulist["open"    ="true"],
+.devtools-toolbarbutton["open"  =   true],
+.devtools-toolbarbutton[checked=   "true"] {
+  border-color: hsla(210,8%,5%,.6) !important;
+}
+
+.devtools-toolbarbutton["checked"="true"] {
+  color: hsl(208,100%,60%);
+}
+
+.devtools-toolbarbutton[checked=true]:hover {
+  background-color: transparent !important;
+}
+
+.devtools-toolbarbutton[checked=true]:hover:active {
+  background-color: hsla(210,8%,5%,.2) !important;
+}
+
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+}
+
+.devtools-sidebar-tabs > tabs > tab:first-of-type {
+  margin-inline-start: -3px;
+}
+
+.devtools-sidebar-tabs > tabs > tab:not(:last-of-type) {
+  background-size: calc(100% - 2px) 100%, 1px 100%;
+}
+
+.hidden-labels-box:not(.visible) > label,
+.hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
+  display: none;
+}
+
+/* Maximize the size of the viewport when the window is small */
+@media (max-width: 800px) {
+  .category-name {
+    display: none;
+  }
+}
+
+@media all and (min-width: 300px) {
+  #error-box {
+    max-width: 50%;
+    margin: 0 auto;
+    background-image: url('chrome://global/skin/icons/information-32.png');
+    min-height: 36px;
+    padding-inline-start: 38px;
+  }
+
+  button {
+    width: auto !important;
+    min-width: 150px;
+  }
+
+  @keyframes downloadsIndicatorNotificationFinish {
+    from { opacity: 0; transform: scale(1); }
+    20%  {
+      opacity: .65;
+      animation-timing-function: ease-in;
+    } to { opacity: 0;
+      transform: scale(8); }
+  }
+}
+
+@keyframes smooth {
+  from { opacity: 0; transform: scale(1); }
+  20%  { opacity: .65; animation-timing-function: ease-in; }
+  to   {
+    opacity  : 0;
+    transform: scale(8);
+  }
+}

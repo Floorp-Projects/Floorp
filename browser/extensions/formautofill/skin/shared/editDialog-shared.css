@@ -1,0 +1,110 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --in-field-label-size: .8em;
+  --grid-column-row-gap: 8px;
+  /* Use the animation-easing-function that is defined in xul.css. */
+  --animation-easing-function: cubic-bezier(.07,.95,0,1);
+}
+
+dialog[subdialog] form {
+  /* Add extra space to ensure invalid input box is displayed properly */
+  padding: 2px;
+}
+
+/* The overly specific input attributes are required to override
+   padding from common.css */
+form input[type="email"],
+form input[type="tel"],
+form input[type="text"],
+form textarea,
+form select {
+  flex-grow: 1;
+  padding-top: calc(var(--in-field-label-size) + .4em);
+}
+
+form input[type="tel"] {
+  text-align: match-parent;
+}
+
+select {
+  margin: 0;
+  padding-bottom: 5px;
+}
+
+form label[class="container"] select {
+  min-width: 0;
+}
+
+form label,
+form div {
+  /* Positioned so that the .label-text and .error-text children will be
+     positioned relative to this. */
+  position: relative;
+  display: block;
+  line-height: 1em;
+}
+
+/* Reset margins for inputs and textareas, overriding in-content styles */
+#form textarea,
+#form input {
+  margin: 0;
+}
+
+form :is(label, div) .label-text {
+  position: absolute;
+  opacity: .5;
+  pointer-events: none;
+  inset-inline-start: 10px;
+  top: .2em;
+  transition: top .2s var(--animation-easing-function),
+              font-size .2s var(--animation-easing-function);
+}
+
+form :is(label, div):focus-within .label-text,
+form :is(label, div) .label-text[field-populated] {
+  top: 0;
+  font-size: var(--in-field-label-size);
+}
+
+form :is(input, select, textarea):focus ~ .label-text {
+  color: var(--in-content-item-selected);
+  opacity: 1;
+}
+
+/* Focused error fields should get a darker text but not the blue one since it
+ * doesn't look good with the red error outline. */
+form :is(input, select, textarea):focus:-moz-ui-invalid ~ .label-text {
+  color: var(--in-content-text-color);
+}
+
+form div[required] > label .label-text::after,
+form :is(label, div)[required] .label-text::after {
+  content: attr(fieldRequiredSymbol);
+}
+
+.persist-checkbox label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-block: var(--grid-column-row-gap);
+}
+
+dialog[subdialog] form {
+  /* Match the margin-inline-start of the #controls-container buttons
+     and provide enough padding at the top of the form so button outlines
+     don't get clipped. */
+  padding: 4px 4px 0;
+}
+
+#controls-container {
+  display: flex;
+  justify-content: end;
+  margin: 1em 0 0;
+}
+
+#billingAddressGUID-container {
+  display: none;
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: Simple bidi cases
+-->
+<html><head>
+<title>text-overflow: simple mixed-bidi cases</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:auto;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  width: 4.4em;
+  position:relative;
+  margin-top:1em;
+}
+
+.hidden {
+  overflow:hidden;
+  width: 4.7em;
+}
+
+.rlo {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+.rtl {
+  direction:rtl;
+}
+
+</style>
+
+</head><body>
+
+<!-- LTR overflow:scroll -->
+
+<div class="test">AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test"><span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test"><span class="rlo">HelloWorld</span></div>
+
+<!-- LTR overflow:hidden -->
+<div class="test hidden">AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test hidden"><span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test hidden"><span class="rlo">HelloWorld</span></div>
+
+<!-- RTL overflow:scroll -->
+
+<div class="test rtl">AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test rtl"><span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test rtl"><span class="rlo">HelloWorld</span></div>
+
+
+<!-- RTL overflow:hidden -->
+<div class="test rtl hidden">AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test rtl hidden"><span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span>AxxxxB<span class="rlo">HelloWorld</span></div>
+
+<div class="test rtl hidden"><span class="rlo">HelloWorld</span></div>
+
+
+
+
+</body></html>

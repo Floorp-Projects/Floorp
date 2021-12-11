@@ -1,0 +1,25 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Testcase for animation of the "elevation" attribute of the "feDistantLight" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <defs>
+    <filter id="f" x="0" y="0" width="0.5" height="0.5">
+      <feDiffuseLighting kernelUnitLength="1" lighting-color="lime">
+        <feDistantLight elevation="0">
+          <animate attributeName="elevation"
+                   calcMode="linear"
+                   begin="0s" dur="2s"
+                   from="0" to="200"
+                   fill="freeze"/>
+        </feDistantLight>
+      </feDiffuseLighting>
+    </filter>
+  </defs>
+  <path d="M0,0 h100 v100 h-100 z" filter="url(#f)"/>
+</svg>

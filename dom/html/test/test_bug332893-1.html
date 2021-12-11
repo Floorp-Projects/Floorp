@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+
+<form id="form1">
+   <input id="F1I1" type="input" value="11"/>
+   <input id="F1I2" type="input" value="12"/>
+</form>
+<form id="form2">
+	<input id="F2I1" type="input" value="21"/>
+	<input id="F2I2" type="input" value="22"/>
+</form>
+<script>
+<!-- Create a new input, add it to the first form, move it to the 2nd form, then move it back to the first -->
+	var form1 = document.getElementById("form1");
+      var form2 = document.getElementById("form2");
+	var newInput = document.createElement("input");
+	newInput.value = "13";
+      form1.insertBefore(newInput, form1.firstChild);     
+	var F2I2 = document.getElementById("F2I2");
+     	form2.insertBefore(newInput, F2I2);
+	form1.insertBefore(newInput, form1.firstChild);
+
+	is(form1.elements.length, 3, "Form 1 has the correct length");
+	is(form1.elements[0].value, "13", "Form 1 element 1 is correct");
+	is(form1.elements[1].value, "11", "Form 1 element 2 is correct");
+	is(form1.elements[2].value, "12", "Form 1 element 3 is correct");
+
+	is(form2.elements.length, 2, "Form 2 has the correct length");
+	is(form2.elements[0].value, "21", "Form 2 element 1 is correct");
+	is(form2.elements[1].value, "22", "Form 2 element 2 is correct");
+</script>
+</body>
+</html>

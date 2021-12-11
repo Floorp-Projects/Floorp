@@ -1,0 +1,6 @@
+# Common options for artifact builds to set automation steps.
+# This gets included before mozconfig.automation.
+
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0
+MOZ_AUTOMATION_ARTIFACT_BUILDS=1

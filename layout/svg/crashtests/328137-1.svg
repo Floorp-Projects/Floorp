@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script>
+
+
+function init()
+{
+  x = document.getElementsByTagName("stop");
+  x[0].appendChild(x[1]);
+}
+
+
+window.addEventListener("load", init, false);
+
+</script>
+
+<radialGradient>
+  <stop/>
+  <stop/>
+</radialGradient>
+
+</svg>

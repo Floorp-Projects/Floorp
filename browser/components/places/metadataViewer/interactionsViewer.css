@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  padding: .5em 2em;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.hidden {
+  display: none;
+}
+
+.message-bar {
+  flex: 0 0 100%;
+}
+
+.message-bar-icon {
+  vertical-align: middle;
+  -moz-context-properties: fill;
+  fill: #FFBF00;
+}
+
+#categories {
+  padding-top: 0;
+  overflow-y: auto;
+  margin-bottom: 42px;
+  user-select: none;
+  /* Override common.css for widths, to give more room for tables. */
+  width: auto;
+}
+
+#categories > .category {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-height: 42px;
+  /* Override common.css for widths and margins, to give more room for tables. */
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.category-name {
+  margin: auto 0;
+  pointer-events: none;
+  /* Matches the button margins/padding/border defined in common.css. So that
+     the export history button text aligns nicely. */
+  padding-inline: 16px;
+  margin-inline: 4px;
+}
+
+.main-content {
+  flex: 1;
+}
+
+#metadataLimit {
+  padding-bottom: 1em;
+}
+
+#tableViewer > div {
+  padding: .3em 1em;
+  overflow-x: hidden;
+	text-overflow: ellipsis;
+  white-space: nowrap;
+}

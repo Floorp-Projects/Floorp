@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    This tests that paths are stored in device space. This means that changing
+    the transform does not move the points already drawn.
+  -->
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<p><canvas width="100" height="100" id="c"></canvas></p>
+<script type="text/javascript">
+var c = document.getElementById('c').getContext('2d');
+
+c.shadowColor = '#f00';
+c.shadowBlur = 4;
+c.lineWidth = 2;
+
+c.translate(50, 40);
+
+var d = 30;
+c.beginPath();
+c.moveTo(d, 0);
+for (var n = 0; n < 3; n++) {
+  c.rotate(3.14159 / 2);
+  c.lineTo(d, 0);
+}
+c.closePath();
+c.stroke();
+
+</script>
+</body>
+</html>

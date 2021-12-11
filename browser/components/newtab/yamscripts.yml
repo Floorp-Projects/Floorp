@@ -1,0 +1,57 @@
+# This file compiles to package.json scripts.
+# When you add or modify anything, you *MUST* run:
+#      npm run yamscripts
+# to compile your changes.
+
+scripts:
+  # bundle: Build all assets for activity stream
+  bundle:
+    webpack: webpack --config webpack.system-addon.config.js
+    css: sass content-src/styles:css --no-source-map
+    welcomeBundle: webpack --config webpack.aboutwelcome.config.js
+    welcomeCss: sass content-src/aboutwelcome:aboutwelcome/content --no-source-map
+    html: rimraf prerendered && node ./bin/render-activity-stream-html.js
+
+  # buildmc: Used to do stuff when this code was in GitHub, now just an
+  # alias in case it's baked into anyone's brain.
+  buildmc:
+    bundle: => bundle
+
+  # watchmc:  Automatically rebuild when files are changed. NOTE: Includes sourcemaps, do not use for profiling/perf testing.
+  watchmc:
+    _parallel: true
+    webpack: =>bundle:webpack -- --env development -w
+    css: =>bundle:css -- --source-map --embed-sources --embed-source-map --load-path=content-src -w
+    welcomeBundle: =>bundle:welcomeBundle -- --env development -w
+    welcomeCss: =>bundle:welcomeCss -- --source-map --embed-sources --embed-source-map -w
+
+  testmc:
+    lint: =>lint
+    build: =>bundle:webpack
+    unit: karma start karma.mc.config.js
+
+  tddmc: karma start karma.mc.config.js --tdd
+
+  debugcoverage: open logs/coverage/index.html
+
+  # lint: Run various linters with mach or local dev dependencies
+  lint:
+    codespell: (cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_newtab_path)
+    eslint: (cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_newtab_path)
+    l10n: (cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings browser/locales/en-US/browser/newtab)
+    license: (cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_newtab_path)
+    sasslint: sass-lint -v -q
+
+  # test: Run all tests once
+  test: =>testmc
+
+  # tdd: Run content tests continuously
+  tdd: =>tddmc
+
+  # Utility scripts for use when vendoring in Node packages
+  vendor: node ./bin/vendor.js
+
+  fix:
+    # Note that since we're currently running eslint-plugin-prettier,
+    # running fix:eslint will also reformat changed JS files using prettier.
+    eslint: =>lint:eslint -- --fix

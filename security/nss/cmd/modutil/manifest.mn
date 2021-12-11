@@ -1,0 +1,32 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+MODULE = sectools
+
+CSRCS = modutil.c		\
+		pk11.c			\
+		instsec.c		\
+		install.c		\
+		installparse.c		\
+		install-ds.c		\
+		lex.Pk11Install_yy.c	\
+		$(NULL)
+
+CPPSRCS = 
+
+PROGRAM =  modutil
+
+REQUIRES = seccmd nss dbm
+
+DEFINES = -DNSPR20 -DYY_NO_UNPUT -DYY_NO_INPUT
+
+# sigh
+#INCLUDES += -I$(CORE_DEPTH)/nss/lib/pk11wrap
+
+# USE_STATIC_LIBS = 1 
+
+EXTRA_LIBS = $(JAR_LIBS)

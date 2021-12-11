@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1396798: Do not block toplevel data: navigation to image (except svgs)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+SpecialPowers.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", true);
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
+});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("have to test that top level data:image loading is blocked/allowed");
+
+function test_toplevel_data_image() {
+  const DATA_PNG =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
+  let win1 = window.open(DATA_PNG);
+  let wrappedWin1 = SpecialPowers.wrap(win1);
+  setTimeout(function () {
+    let images = wrappedWin1.document.getElementsByTagName('img'); 
+    is(images.length, 1, "Loading data:image/png should be allowed");
+    is(images[0].src, DATA_PNG, "Sanity: img src matches");
+    wrappedWin1.close();
+    test_toplevel_data_image_svg();
+  }, 1000);
+}
+
+function test_toplevel_data_image_svg() {
+  const DATA_SVG =
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij4KICA8cGF0aCBkPSJNOCwxMkwzLDcsNCw2bDQsNCw0LTQsMSwxWiIgZmlsbD0iIzZBNkE2QSIgLz4KPC9zdmc+Cg==";
+  let win2 = window.open(DATA_SVG);
+  // Unfortunately we can't detect whether the window was closed using some event,
+  // hence we are constantly polling till we see that win == null.
+  // Test times out on failure.
+  var win2Closed = setInterval(function() {
+    if (win2 == null || win2.closed) {
+      clearInterval(win2Closed);
+      ok(true, "Loading data:image/svg+xml should be blocked");
+      SimpleTest.finish();
+    }
+  }, 200);
+}
+// fire up the tests
+test_toplevel_data_image();
+
+</script>
+</body>
+</html>

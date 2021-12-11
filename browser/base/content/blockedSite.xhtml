@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+    <link rel="stylesheet" href="chrome://browser/skin/blockedSite.css" type="text/css" media="all" />
+    <link rel="icon" id="favicon" href="chrome://global/skin/icons/blocked.svg"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/safebrowsing/blockedSite.ftl"/>
+  </head>
+  <body>
+    <div id="errorPageContainer" class="container">
+
+      <!-- Error Title -->
+      <div id="errorTitle" class="title">
+        <h1 class="title-text" id="errorTitleText"></h1>
+      </div>
+
+      <div id="errorLongContent">
+
+        <!-- Short Description -->
+        <div id="errorShortDesc">
+          <p id="errorShortDescText"></p>
+        </div>
+
+        <!-- Advisory -->
+        <div id="advisoryDesc">
+          <p id="advisoryDescText">
+            <a id="advisory_provider" data-l10n-name="advisory_provider"></a>
+          </p>
+        </div>
+
+        <!-- Action buttons -->
+        <div id="buttons" class="button-container">
+          <!-- Commands handled in browser.js -->
+          <button id="goBackButton" class="primary" data-l10n-id="safeb-palm-accept-label"></button>
+          <button id="seeDetailsButton" data-l10n-id="safeb-palm-see-details-label"></button>
+        </div>
+      </div>
+      <div id="errorDescriptionContainer" hidden="true">
+        <!-- Error Descriptions Handled in blockedSite.js -->
+        <div class="error-description" id="errorLongDesc">
+          <p id="errorInnerDescription">
+              <span id="error_desc_sitename" data-l10n-name="sitename"></span>
+              <a id="error_desc_link" data-l10n-name="error_desc_link"></a>
+              <a id="report_detection" data-l10n-name="report_detection"></a>
+              <a id="ignore_warning_link" data-l10n-name="ignore_warning_link"></a>
+          </p>
+          <p id="learn_more">
+              <a id="learn_more_link" data-l10n-name="learn_more_link"></a>
+              <a id="firefox_support" data-l10n-name="firefox_support"></a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="chrome://browser/content/blockedSite.js"/>
+</html>

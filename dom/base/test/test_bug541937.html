@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for XHTML serializer, bug 541937</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=541937">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe" src="file_bug541937.html">
+  </iframe>
+  <iframe id="testframe2" src="file_bug541937.xhtml">
+  </iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testSerializer () {
+  const de = SpecialPowers.Ci.nsIDocumentEncoder;
+  var encoder = SpecialPowers.Cu.createDocumentEncoder("text/html");
+
+  var parser = new DOMParser();
+  var serializer = new XMLSerializer();
+
+  // with content
+  var str = '<?xml version="1.0"?><doc>\n<link xmlns="http://www.w3.org/1999/xhtml"><!-- child nodes -->  \n<content xmlns=""/></link>\n</doc>';
+  var expected = '<?xml version="1.0" encoding="UTF-8"?>\n<doc>\n<link xmlns="http://www.w3.org/1999/xhtml"><!-- child nodes -->  \n<content xmlns=""/></link>\n</doc>';
+
+  var doc = parser.parseFromString(str,"application/xml");
+  var result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
+  is(result, expected, "serialization of a link element inside an xml document with children");
+
+  // with only whitespaces
+  str = '<?xml version="1.0"?><doc>\n<link xmlns="http://www.w3.org/1999/xhtml">       \n    </link>\n</doc>';
+  expected = '<?xml version="1.0" encoding="UTF-8"?>\n<doc>\n<link xmlns="http://www.w3.org/1999/xhtml">       \n    </link>\n</doc>';  
+
+  doc = parser.parseFromString(str,"application/xml");
+  result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
+  is(result, expected, "serialization of a link element with only whitespaces as content, inside an xml document");
+  
+  // with only one space as content
+  str = '<?xml version="1.0"?><doc>\n<link xmlns="http://www.w3.org/1999/xhtml"> </link>\n</doc>';
+  expected = '<?xml version="1.0" encoding="UTF-8"?>\n<doc>\n<link xmlns="http://www.w3.org/1999/xhtml"> </link>\n</doc>';  
+
+  doc = parser.parseFromString(str,"application/xml");
+  result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
+  is(result, expected, "serialization of a link element with only one space as content, inside an xml document");
+  
+  // let's remove the content
+  str = '<?xml version="1.0"?><doc>\n<link xmlns="http://www.w3.org/1999/xhtml"> <!-- child nodes -->  \ndeleted content<content xmlns=""/> </link>\n</doc>';
+  expected = '<?xml version="1.0" encoding="UTF-8"?>\n<doc>\n<link xmlns="http://www.w3.org/1999/xhtml" />\n</doc>';  
+
+  doc = parser.parseFromString(str,"application/xml");
+  doc.documentElement.firstElementChild.textContent = '';
+  result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
+  is(result, expected, "serialization of a link element on which we removed dynamically the content, inside an xml document");
+  
+  // with no content but an ended tag
+  str = '<?xml version="1.0"?><doc>\n<link xmlns="http://www.w3.org/1999/xhtml"></link>\n</doc>';
+  expected = '<?xml version="1.0" encoding="UTF-8"?>\n<doc>\n<link xmlns="http://www.w3.org/1999/xhtml" />\n</doc>';  
+
+  doc = parser.parseFromString(str,"application/xml");
+  result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
+  is(result, expected, "serialization of a link element with no content but with an ended tag, inside an xml document");
+  
+  // with no content
+  str = '<?xml version="1.0"?><doc>\n<link xmlns="http://www.w3.org/1999/xhtml"/>\n</doc>';
+  expected = '<?xml version="1.0" encoding="UTF-8"?>\n<doc>\n<link xmlns="http://www.w3.org/1999/xhtml" />\n</doc>';  
+
+  doc = parser.parseFromString(str,"application/xml");
+  result = serializer.serializeToString(doc);
+  result = result.replace(/\r\n/mg, "\n");
+  is(result, expected, "serialization of a link element with no content, inside an xml document");
+  
+  
+  doc = $("testframe").contentDocument;
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
+  encoder.setCharset("UTF-8");
+  result = encoder.encodeToString();
+  expected = '<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n  <title>Test</title>\n';
+  expected += '   <link rel=\"Top\" href=\"\"> ';
+  expected += ' </head><body>foo \n\n\n  <p>Hello world</p>\n</body></html>';
+  is(result, expected, "serialization of a link element with content, inside an html document");
+
+  doc = $("testframe2").contentDocument;
+  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak);
+  encoder.setCharset("UTF-8");
+  result = encoder.encodeToString();
+  expected = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n';
+  expected += '<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />\n  <title>Test</title>\n';
+  expected += '   <link rel="Top" href="">  foo </link>\n';
+  expected += '\n</head>\n<body>\n  <p>Hello world</p>\n</body>\n</html>';
+  is(result, expected, "serialization of a link element with content, inside an xhtml document");
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testSerializer);
+
+</script>
+</pre>
+</body>
+</html>
+
+

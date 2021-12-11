@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DisplayTabbingOrder component: default render 1`] = `"<label class=\\"accessibility-tabbing-order devtools-checkbox-label devtools-ellipsis-text\\" for=\\"devtools-display-tabbing-order-checkbox\\" title=\\"Show tabbing order of elements and their tabbing index.\\"><input id=\\"devtools-display-tabbing-order-checkbox\\" class=\\"devtools-checkbox\\" type=\\"checkbox\\">Show Tabbing Order</label>"`;
+
+exports[`DisplayTabbingOrder component: displaying tabbing order render/update 1`] = `"<label class=\\"accessibility-tabbing-order devtools-checkbox-label devtools-ellipsis-text\\" for=\\"devtools-display-tabbing-order-checkbox\\" title=\\"Show tabbing order of elements and their tabbing index.\\"><input id=\\"devtools-display-tabbing-order-checkbox\\" class=\\"devtools-checkbox\\" type=\\"checkbox\\">Show Tabbing Order</label>"`;
+
+exports[`DisplayTabbingOrder component: displaying tabbing order render/update 2`] = `"<label class=\\"accessibility-tabbing-order devtools-checkbox-label devtools-ellipsis-text\\" for=\\"devtools-display-tabbing-order-checkbox\\" title=\\"Show tabbing order of elements and their tabbing index.\\"><input id=\\"devtools-display-tabbing-order-checkbox\\" class=\\"devtools-checkbox\\" type=\\"checkbox\\">Show Tabbing Order</label>"`;
+
+exports[`DisplayTabbingOrder component: toggle tabbing order overlay 1`] = `"<label class=\\"accessibility-tabbing-order devtools-checkbox-label devtools-ellipsis-text\\" for=\\"devtools-display-tabbing-order-checkbox\\" title=\\"Show tabbing order of elements and their tabbing index.\\"><input id=\\"devtools-display-tabbing-order-checkbox\\" class=\\"devtools-checkbox\\" type=\\"checkbox\\">Show Tabbing Order</label>"`;

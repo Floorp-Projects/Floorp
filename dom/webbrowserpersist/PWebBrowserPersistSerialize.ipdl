@@ -1,0 +1,29 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PWebBrowserPersistDocument;
+
+namespace mozilla {
+
+// This actor represents both an nsIWebBrowserPersistWriteCompletion
+// and the nsIOutputStream passed with it to the writeContent method.
+protocol PWebBrowserPersistSerialize {
+  manager PWebBrowserPersistDocument;
+
+parent:
+  // This sends the data with no flow control, so the parent could
+  // wind up buffering an arbitrarily large amount of data...  but
+  // it's a serialized DOM that's already in memory as DOM nodes, so
+  // this is at worst just a constant-factor increase in memory usage.
+  // Also, Chromium does the same thing; see
+  // content::RenderViewImpl::didSerializeDataForFrame.
+  async WriteData(uint8_t[] aData);
+
+  // This is the onFinish method.
+  async __delete__(nsCString aContentType,
+                   nsresult aStatus);
+};
+
+} // namespace mozilla

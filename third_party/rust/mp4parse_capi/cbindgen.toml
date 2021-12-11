@@ -1,0 +1,42 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen. */
+#ifndef mp4parse_rust_mp4parse_h
+#error "Don't include this file directly, instead include mp4parse.h"
+#endif
+"""
+include_version = true
+braces = "SameLine"
+line_length = 100
+tab_width = 2
+language = "C"
+cpp_compat = true
+
+[enum]
+rename_variants = "QualifiedScreamingSnakeCase"
+
+[defines]
+"feature = 3gpp" = "MP4PARSE_FEATURE_3GPP"
+"feature = meta-xml" = "MP4PARSE_FEATURE_META_XML"
+"feature = unstable-api" = "MP4PARSE_UNSTABLE_API"
+
+[parse]
+parse_deps = true
+include = ["mp4parse"]
+
+[export]
+# `mp4parse::Status` was previously defined as `mp4parse_capi::Mp4parseStatus`,
+# but now is referenced from `mp4parse_capi` via `pub use mp4parse::Status as Mp4parseStatus`,
+# the name `Status` does not appear in the public C API, so we must force its inclusion
+include = ["Status"]
+
+[export.rename]
+# We need to declare these types in mp4parse, but we rename them in the generated
+# header to match mp4parse_capi naming conventions
+"Status" = "Mp4parseStatus"
+"ParseStrictness" = "Mp4parseStrictness"
+"ImageSpatialExtentsProperty" = "Mp4parseImageSpatialExtents"
+"ImageRotation" = "Mp4parseIrot"
+"ImageMirror" = "Mp4parseImir"
+"Indice" = "Mp4parseIndice"

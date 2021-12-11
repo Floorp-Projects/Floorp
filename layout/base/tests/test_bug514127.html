@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=514127
+-->
+<head>
+  <title>Test for Bug 514127</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest();">
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=514127">Mozilla Bug 514127</a></p>
+
+<!--
+iframe source is
+<html><body style='background: rgb(0,0,255); width: 100px; height: 50100px;'></body></html>
+-->
+<iframe id="source" width="50" height="50"
+       src="data:text/html,%3Chtml%3E%3Cbody%20style%3D%27background%3A%20rgb%280%2C0%2C255%29%3B%20width%3A%20100px%3B%20height%3A%2050100px%3B%27%3E%3C%2Fbody%3E%3C%2Fhtml%3E"></iframe>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 514127 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  
+  var source = document.getElementById('source').contentWindow;
+  var canvasWidth = 50;
+  var canvasHeight = 50;
+
+  rect = { left: 25, top: 50000,
+           width: canvasWidth, height: canvasHeight };
+  var canvas = SpecialPowers.snapshotRect(source, rect, "transparent");
+  var context = canvas.getContext("2d");
+  
+  var data = context.getImageData(0, 0, canvasWidth, canvasHeight).data;
+  var failed = false;
+  for (var i = 0; i < data.length; i+=4) {
+    if (data[i] != 0 || data[i+1] != 0 || data[i+2] != 255 || data[i+3] != 255) {
+      failed = true;
+      break;
+    }
+  }
+  ok(!failed, "all pixels blue");
+  
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -10 20 20" preserveAspectRatio="none"
+     font-family="sans-serif">
+  <rect y="-10" width="20" height="20" fill="lime"/>
+  <text dominant-baseline="middle" fill="red">x</text>
+  <text y="0.5ex" fill="lime" stroke-width="1" stroke="lime">x</text>
+</svg>

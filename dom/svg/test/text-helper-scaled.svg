@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3000" height="2000">
+  <g id="g" style="font: 400px monospace">
+    <text id="text1" x="10" y="400">abc</text>
+
+    <path id="MyPath" d="M 5 800 h 2000 v 60 h -2000 z" stroke="red" fill="none"/>
+    <text id="text2"><textPath xlink:href="#MyPath">abcdefghijklmnopqrstuvwxyz</textPath></text>
+  </g>
+</svg>

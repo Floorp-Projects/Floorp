@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>max-content, min-content, -moz-fit-content, and -moz-available values of CSS width property, on blocks</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+    body { font-size: 10px; line-height: 1; }
+
+    div {
+      margin-left: 1px;
+      border-left: 2px solid;
+      padding-left: 4px;
+      padding-right: 8px;
+      border-right: 16px solid;
+      margin-right: 32px;
+
+      background: yellow;
+      margin-bottom: 1px;
+      float: left;
+      clear: left;
+    }
+
+    div.fill { width: 37px; }
+
+  </style>
+</head>
+<body style="width: 100px">
+<div class="">A B</div>
+<div class="">A B</div>
+<div class="">A B</div>
+<div class="">A <br>B</div>
+<div class="">A <br>B</div>
+<div class="">A <br>B</div>
+<div class="">A B</div>
+<div class="">A B</div>
+<div class="">A B</div>
+<div class="fill">A B C D E F G H I J</div>
+<div class="fill">A B C D E F G H I J</div>
+<div class="fill">A B C D E F G H I J</div>
+<div class="">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA <br>B</div>
+<div class="">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA <br>B</div>
+<div class="">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA <br>B</div>
+<div class="fill">A B</div>
+<div class="fill">A B</div>
+<div class="fill">A B</div>
+</body>
+</html>

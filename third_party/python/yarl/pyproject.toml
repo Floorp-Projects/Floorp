@@ -1,0 +1,7 @@
+[tool.towncrier]
+package = "yarl"
+filename = "CHANGES.rst"
+directory = "CHANGES/"
+title_format = "{version} ({project_date})"
+template = "CHANGES/.TEMPLATE.rst"
+issue_format = "`#{issue} <https://github.com/aio-libs/yarl/issues/{issue}>`_"

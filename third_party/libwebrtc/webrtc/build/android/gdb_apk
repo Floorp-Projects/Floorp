@@ -1,0 +1,171 @@
+#!/bin/bash
+#
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+#
+# Attach gdb to a running android application.  Similar to ndk-gdb.
+# Run with --annotate=3 if running under emacs (M-x gdb).
+#
+# By default it is used to debug content shell, if it is used to
+# debug other piceces, '-p' and '-l' options are needed.
+# For *unittests_apk (like base_unittests_apk), run with:
+#  "gdb_apk -p org.chromium.native_test -l out/Release/lib.target -r"
+
+# Run a command through adb shell, strip the extra \r from the output
+# and return the correct status code to detect failures. This assumes
+# that the adb shell command prints a final \n to stdout.
+# args: command to run
+# Prints the command's stdout on stdout
+# Returns the command's status
+# Note: the command's stderr is lost
+adb_shell () {
+  local TMPOUT="$(mktemp)"
+  local LASTLINE RET
+  local ADB=${ADB:-adb}
+
+  # The weird sed rule is to strip the final \r on each output line
+  # Since 'adb shell' never returns the command's proper exit/status code,
+  # we force it to print it as '%%<status>' in the temporary output file,
+  # which we will later strip from it.
+  $ADB shell $@ ";" echo "%%\$?" 2>/dev/null | sed -e 's![[:cntrl:]]!!g' > $TMPOUT
+  # Get last line in log, which contains the exit code from the command
+  LASTLINE=$(sed -e '$!d' $TMPOUT)
+  # Extract the status code from the end of the line, which must be '%%<code>'
+  RET=$(echo "$LASTLINE" | awk '{ if (match($0, "%%[0-9]+$")) { print substr($0,RSTART+2); } }')
+  # Remove the status code from the last line. Note that this may result in an empty line
+  LASTLINE=$(echo "$LASTLINE" | awk '{ if (match($0, "%%[0-9]+$")) { print substr($0,1,RSTART-1); } }')
+  # The output itself: all lines except the status code
+  sed -e '$d' $TMPOUT && echo -n "$LASTLINE"
+  # Remove temp file
+  rm -f $TMPOUT
+  # Exit with the appropriate status
+  return $RET
+}
+
+adb=$(which adb)
+if [[ "$adb" = "" ]] ; then
+  echo "Need adb in your path"
+  exit 1
+fi
+
+usage() {
+  echo "usage: ${0##*/} [-p package_name] [-l shared_lib_dir] [-g gdb] [-r]"
+  echo "-p package_name     the android APK package to be debugged"
+  echo "-l shared_lib_dir   directory containes native shared library"
+  echo "-g gdb_args         agruments for gdb, eg: -g '-n -write'"
+  echo "-r                  the target device is rooted"
+}
+
+process_options() {
+  local OPTNAME OPTIND OPTERR OPTARG
+  while getopts ":p:l:g:r" OPTNAME; do
+    case "$OPTNAME" in
+      p)
+        package_name="$OPTARG"
+        ;;
+      l)
+        shared_lib_dir="$OPTARG"
+        ;;
+      g)
+        gdb_args="$OPTARG"
+		;;
+      r)
+        rooted_phone=1
+        ;;
+      \:)
+        echo "'-$OPTARG' needs an argument."
+        usage
+        exit 1
+        ;;
+      *)
+        echo "invalid command line option: $OPTARG"
+        usage
+        exit 1
+        ;;
+    esac
+  done
+
+  if [ $# -ge ${OPTIND} ]; then
+    eval echo "Unexpected command line argument: \${${OPTIND}}"
+    usage
+    exit 1
+  fi
+}
+
+rooted_phone=0
+
+root=$(dirname $0)/../..
+package_name=org.chromium.content_shell
+shared_lib_dir=$root/out/${BUILDTYPE:-Debug}/lib.target
+gdb_args=''
+
+#process options
+process_options "$@"
+echo "Debug package $package_name"
+echo "Assume native shared library is under $shared_lib_dir"
+
+data_dir=/data/data/$package_name
+gdb_server_on_device=$data_dir/lib/gdbserver
+
+# Kill any running gdbserver
+pid=$(adb shell ps | awk '/gdbserver/ {print $2}')
+if [[ "$pid" != "" ]] ; then
+  if [[ $rooted_phone -eq 1 ]] ; then
+    adb shell kill $pid
+  else
+    adb shell run-as $package_name kill $pid
+  fi
+fi
+
+pid=$(adb_shell ps | awk "/$package_name$/ {print \$2}")
+if [[ "$pid" = "" ]] ; then
+  echo "No $package_name running?"
+  echo "Try this: adb shell am start -a android.intent.action.VIEW " \
+    "-n $package_name/.SomethingActivity (Something might be ContentShell)"
+  exit 2
+fi
+
+no_gdb_server=$(adb shell ls $gdb_server_on_device | grep 'No such file')
+if [[ "$no_gdb_server" != "" ]] ; then
+  echo "No gdb server on device at $gdb_server_on_device"
+  echo "Please install a debug build."
+  exit 3
+fi
+
+if [[ $rooted_phone -eq 1 ]] ; then
+  adb shell $gdb_server_on_device :4321 --attach $pid &
+  adb forward tcp:4321 tcp:4321
+else
+  adb shell run-as $package_name lib/gdbserver +debug-socket --attach $pid &
+  adb forward tcp:4321 localfilesystem:$data_dir/debug-socket
+fi
+sleep 2
+
+# Pull app_process and C libraries from device if needed
+app_process=${shared_lib_dir}/app_process
+if [[ ! -f ${app_process} ]] ; then
+  adb pull /system/bin/app_process ${app_process}
+  adb pull /system/lib/libc.so ${shared_lib_dir}
+fi
+
+# gdb commands
+cmdfile=$(mktemp /tmp/gdb_android_XXXXXXXX)
+cat >$cmdfile<<EOF
+# set solib-absolute-prefix null
+set solib-search-path ${shared_lib_dir}
+file ${app_process}
+target remote :4321
+EOF
+
+gdb=$(echo $ANDROID_TOOLCHAIN/../../linux-x86/bin/*gdb)
+if [[ ! -f ${gdb} ]] ; then
+  echo "Wow no gdb in env var ANDROID_TOOLCHAIN which is $ANDROID_TOOLCHAIN"
+  exit 4
+else
+  echo Using $gdb
+fi
+
+# ${gdb} -x $cmdfile $* $app_process
+${gdb} -x $cmdfile $gdb_args
+rm $cmdfile

@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=782211
+-->
+<head>
+  <title>Bug 782211</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=782211">Bug 782211</a>
+<p id="display"></p>
+<iframe name="sameDomain"></iframe>
+<iframe name="anotherSameDomain"></iframe>
+<iframe name="crossDomain"></iframe>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<script type="text/javascript">
+  /* eslint-disable mozilla/use-chromeutils-generateqi */
+
+  // The mock is not a general purpose mock, but is specific for this test.
+  // It is always registered in the parent process using LoadChromeScript by
+  // the MockAlertsService below, to allow this to work regardless of whether
+  // the frames from different origins live in the same process or in different
+  // processes (with Fission), since the default content-process alerts service
+  // relays messages to the parent process.
+  function mockServicesChromeScript() {
+    const MOCK_CID = Components.ID("{dbe37e64-d9a3-402c-8d8a-0826c619f7ad}");
+    const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
+
+    var notificationsCreated = [];
+
+    const mockAlertsService = {
+      showAlert(alert, alertListener) {
+        notificationsCreated.push(alert.name);
+        if (notificationsCreated.length == 3) {
+          // notifications created by the test1 origin
+          var test1notifications = [];
+          // notifications created by the test2 origin
+          var test2notifications = [];
+          for (var i = 0; i < notificationsCreated.length; i++) {
+            var notificationName = notificationsCreated[i];
+            if (notificationName.includes("test1")) {
+              test1notifications.push(notificationsCreated[i]);
+            } else if (notificationName.includes("test2")) {
+              test2notifications.push(notificationsCreated[i]);
+            }
+          }
+
+          is(
+            test1notifications.length,
+            2,
+            "2 notifications should be created by test1.example.org:80 origin."
+          );
+          is(
+            test1notifications[0],
+            test1notifications[1],
+            "notification names should be identical."
+          );
+          is(
+            test2notifications.length,
+            1,
+            "1 notification should be created by test2.example.org:80 origin."
+          );
+
+          // Register original alerts service.
+          registrar.unregisterFactory(MOCK_CID, this);
+
+          sendAsyncMessage("mock-alert-service:unregistered");
+        }
+      },
+
+      showAlertNotification(
+        imageUrl,
+        title,
+        text,
+        textClickable,
+        cookie,
+        alertListener,
+        name,
+        dir,
+        lang,
+        data
+      ) {
+        this.showAlert({ name });
+      },
+
+      QueryInterface(aIID) {
+        if (aIID.equals(Ci.nsISupports) || aIID.equals(Ci.nsIAlertsService)) {
+          return this;
+        }
+        throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+      },
+
+      createInstance(aOuter, aIID) {
+        if (aOuter != null) {
+          throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+        }
+        return this.QueryInterface(aIID);
+      },
+    };
+
+    const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+    registrar.registerFactory(
+      MOCK_CID,
+      "alerts service",
+      ALERTS_SERVICE_CONTRACT_ID,
+      mockAlertsService
+    );
+
+    const { sendAsyncMessage } = this;
+
+    sendAsyncMessage("mock-alert-service:registered");
+  }
+
+  const MockAlertsService = {
+    async register() {
+      if (this._chromeScript) {
+        throw new Error("MockAlertsService already registered");
+      }
+      this._chromeScript = SpecialPowers.loadChromeScript(
+        mockServicesChromeScript
+      );
+      await this._chromeScript.promiseOneMessage("mock-alert-service:registered");
+    },
+    async unregistered() {
+      await this._chromeScript.promiseOneMessage(
+        "mock-alert-service:unregistered"
+      );
+    },
+  };
+
+  if (window.Notification) {
+    SimpleTest.waitForExplicitFinish();
+
+    async function showNotifications() {
+      await MockAlertsService.register();
+
+      // Load two frames with the same origin that create notification with the same tag.
+      // Both pages should generate notifications with the same name, and thus the second
+      // notification should replace the first.
+      frames.sameDomain.location.href =
+        "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames.anotherSameDomain.location.href =
+        "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      // Load a frame with a different origin that creates a notification with the same tag.
+      // The notification name should be different and thus no notifications should be replaced.
+      frames.crossDomain.location.href =
+        "http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+
+      await MockAlertsService.unregistered();
+
+      SimpleTest.finish();
+    }
+
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [
+          ["notification.prompt.testing", true],
+          ["notification.prompt.testing.allow", true],
+        ],
+      },
+      showNotifications
+    );
+  } else {
+    ok(true, "Notifications are not enabled on the platform.");
+  }
+</script>
+</body>
+</html>

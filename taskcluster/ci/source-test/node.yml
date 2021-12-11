@@ -1,0 +1,116 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+newtab-unit-tests:
+    description: newtab unit tests
+    platform: linux1804-64/opt
+    treeherder:
+        symbol: node(newtab)
+        kind: test
+        tier: 1
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "ubuntu1804-test"}
+        max-run-time: 1800
+    require-build:
+        by-project:
+            autoland:
+                linux1804-64/opt: build-linux64/opt
+            try:
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64/opt: build-linux64-shippable/opt
+    run:
+        using: run-task
+        cache-dotcache: true
+        cwd: '{checkout}'
+        command: >
+            cd /builds/worker/checkouts/gecko/browser/components/newtab &&
+            npm install &&
+            node bin/try-runner.js
+    when:
+        files-changed:
+            - "browser/components/newtab/**"
+
+debugger-tests:
+    description: devtools debugger unit tests and flow type checks
+    platform: linux1804-64/opt
+    attributes:
+        code-review: true
+    treeherder:
+        symbol: node(debugger)
+        kind: test
+        tier: 1
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: run-task
+        cache-dotcache: true
+        cwd: '{checkout}'
+        command: >
+            npm install &&
+            cd devtools/client/debugger/ &&
+            yarn &&
+            node bin/try-runner.js
+    when:
+        files-changed:
+            - 'devtools/client/debugger/**'
+
+devtools-tests:
+    description: devtools node-based tests (for instance jest)
+    platform: linux1804-64/opt
+    attributes:
+        code-review: true
+    treeherder:
+        symbol: node(devtools)
+        kind: test
+        tier: 1
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: run-task
+        cache-dotcache: true
+        cwd: '{checkout}'
+        command: >
+            npm install &&
+            cd devtools/client/bin/ &&
+            node devtools-node-test-runner.js --suite=aboutdebugging &&
+            node devtools-node-test-runner.js --suite=accessibility &&
+            node devtools-node-test-runner.js --suite=application &&
+            node devtools-node-test-runner.js --suite=compatibility &&
+            node devtools-node-test-runner.js --suite=framework &&
+            node devtools-node-test-runner.js --suite=netmonitor &&
+            node devtools-node-test-runner.js --suite=performance &&
+            node devtools-node-test-runner.js --suite=shared_components &&
+            node devtools-node-test-runner.js --suite=webconsole
+    when:
+        files-changed:
+            - 'devtools/client/**'
+            - 'devtools/shared/**'
+
+eslint-plugin-mozilla:
+    description: eslint-plugin-mozilla integration tests
+    platform: linux1804-64/opt
+    treeherder:
+        symbol: node(epm)
+        kind: test
+        tier: 1
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: run-task
+        cache-dotcache: true
+        cwd: '{checkout}/tools/lint/eslint/eslint-plugin-mozilla'
+        command: >
+            cp -r /build/node_modules_eslint-plugin-mozilla node_modules &&
+            npm run test
+    when:
+        files-changed:
+            - 'tools/lint/eslint/eslint-plugin-mozilla/**'

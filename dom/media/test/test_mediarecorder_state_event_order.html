@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder fires an event after changing state</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+/**
+ * The flow of test is start()=>pause()=>resume()=>stop(). In each steps,
+ * this test verifies whether each MediaRecorder methods properly change
+ * its state before firing an event. Checking the state is done in the
+ * corresponding event handlers.
+ */
+function startTest(test, token) {
+  var element = document.createElement('audio');
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStream();
+
+  var mediaRecorder = new MediaRecorder(element.stream);
+
+  mediaRecorder.onwarning = function() {
+    ok(false, 'onwarning unexpectedly fired');
+  };
+
+  mediaRecorder.onerror = function() {
+    ok(false, 'onerror unexpectedly fired');
+  };
+
+  mediaRecorder.onstart = function() {
+    info('onstart fired successfully');
+    is(mediaRecorder.state, 'recording',
+        'Media Recorder changes state to recording before firing a start event');
+    mediaRecorder.pause();
+  };
+
+  mediaRecorder.onpause = function() {
+    info('onpause fired successfully');
+    is(mediaRecorder.state, 'paused',
+        'Media Recorder changes state to paused before firing a pause event');
+    mediaRecorder.resume();
+  };
+
+  mediaRecorder.onresume = function() {
+    info('onresume fired successfully');
+    is(mediaRecorder.state, 'recording',
+        'Media Recorder changes state to recording before firing a resume event');
+    mediaRecorder.stop();
+  };
+
+  mediaRecorder.onstop = function() {
+    info('onstop fired successfully');
+    is(mediaRecorder.state, 'inactive',
+        'Media Recorder changes state to inactive before firing a stop event');
+    SimpleTest.finish();
+  };
+
+  // Call start() once metadata are parsed.
+  element.onloadedmetadata = function() {
+    element.play();
+    mediaRecorder.start();
+    is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+    is(mediaRecorder.stream, element.stream,
+       'Media recorder stream = element stream at the start of recording');
+  };
+}
+
+manager.runTests(gMediaRecorderTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

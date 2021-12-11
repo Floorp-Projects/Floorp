@@ -1,0 +1,112 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`initializing when pending breakpoints exist in prefs syncs pending breakpoints 1`] = `
+Object {
+  "http://localhost:8000/examples/bar.js:5:2": Object {
+    "astLocation": Object {
+      "index": 0,
+      "name": undefined,
+      "offset": Object {
+        "line": 5,
+      },
+    },
+    "disabled": false,
+    "generatedLocation": Object {
+      "column": 2,
+      "line": 5,
+      "sourceUrl": "http://localhost:8000/examples/bar.js",
+    },
+    "location": Object {
+      "column": 2,
+      "line": 5,
+      "sourceId": "",
+      "sourceUrl": "http://localhost:8000/examples/bar.js",
+    },
+    "options": Object {
+      "condition": null,
+      "hidden": false,
+    },
+  },
+}
+`;
+
+exports[`when adding breakpoints a corresponding pending breakpoint should be added 1`] = `
+Object {
+  "astLocation": Object {
+    "index": 0,
+    "name": undefined,
+    "offset": Object {
+      "column": 1,
+      "line": 5,
+      "sourceId": "foo.js",
+      "sourceUrl": "http://localhost:8000/examples/foo.js",
+    },
+  },
+  "disabled": false,
+  "generatedLocation": Object {
+    "column": 1,
+    "line": 5,
+    "sourceUrl": "http://localhost:8000/examples/foo.js",
+  },
+  "location": Object {
+    "column": 1,
+    "line": 5,
+    "sourceUrl": "http://localhost:8000/examples/foo.js",
+  },
+  "options": Object {},
+}
+`;
+
+exports[`when adding breakpoints adding and deleting breakpoints add a corresponding pendingBreakpoint for each addition 1`] = `
+Object {
+  "astLocation": Object {
+    "index": 0,
+    "name": undefined,
+    "offset": Object {
+      "column": 0,
+      "line": 5,
+      "sourceId": "foo",
+      "sourceUrl": "http://localhost:8000/examples/foo",
+    },
+  },
+  "disabled": false,
+  "generatedLocation": Object {
+    "column": 0,
+    "line": 5,
+    "sourceUrl": "http://localhost:8000/examples/foo",
+  },
+  "location": Object {
+    "column": 0,
+    "line": 5,
+    "sourceUrl": "http://localhost:8000/examples/foo",
+  },
+  "options": Object {},
+}
+`;
+
+exports[`when adding breakpoints adding and deleting breakpoints add a corresponding pendingBreakpoint for each addition 2`] = `
+Object {
+  "astLocation": Object {
+    "index": 0,
+    "name": undefined,
+    "offset": Object {
+      "column": 0,
+      "line": 5,
+      "sourceId": "foo2",
+      "sourceUrl": "http://localhost:8000/examples/foo2",
+    },
+  },
+  "disabled": false,
+  "generatedLocation": Object {
+    "column": 0,
+    "line": 5,
+    "sourceUrl": "http://localhost:8000/examples/foo2",
+  },
+  "location": Object {
+    "column": 0,
+    "line": 5,
+    "sourceUrl": "http://localhost:8000/examples/foo2",
+  },
+  "options": Object {},
+}
+`;

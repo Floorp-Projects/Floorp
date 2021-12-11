@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test doing lots of hit-testing on a rapidly changing page</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+</head>
+<style>
+#spamdiv {
+    overflow: scroll;
+    width: 400px;
+    height: 400px;
+}
+#spamdiv div {
+    width: 1000px;
+    height: 1000px;
+}
+</style>
+<body>
+<script type="application/javascript">
+
+var SPAM_LIMIT = 200; // bigger numbers make the test run longer
+
+// This function adds and removes a scrollable div very rapidly (via
+// setTimeout(0) self-scheduling). This causes very frequent layer
+// transactions with a new APZ hit-testing tree from the main thread to APZ.
+// The div is created afresh every time so that the scroll identifier in
+// Gecko is continually increasing, and hit results from a stale tree will
+// not be valid on the new tree.
+var spamCount = 0;
+var spamPoint = null;
+function divSpammer() {
+  spamCount++;
+  if (spamCount >= SPAM_LIMIT) {
+    return;
+  }
+  setTimeout(divSpammer, 0);
+
+  // Remove the div if it exists...
+  var spamdiv = document.getElementById('spamdiv');
+  if (spamdiv) {
+    spamdiv.remove();
+    return;
+  }
+  // ... and add it if it doesn't exist.
+  spamdiv = document.createElement('div');
+  spamdiv.id = 'spamdiv';
+  spamdiv.appendChild(document.createElement('div'));
+  document.body.appendChild(spamdiv);
+  if (spamPoint == null) {
+    spamPoint = centerOf(spamdiv);
+  }
+}
+
+// This function does continuous hit-testing by scheduling itself over and
+// over with setTimeout(0). It hit-tests the same spot and expects to hit
+// either the root scrollframe (if the spamdiv is not present in that
+// instant) or the spamdiv (if it is present). If the spamdiv is hit, it
+// expects the scrollid to be non-decreasing.
+var rootScrollId = null;
+var lastScrollId = -1;
+function hitTestSpammer() {
+  if (spamCount >= SPAM_LIMIT) {
+    subtestDone();
+    return;
+  }
+  setTimeout(hitTestSpammer, 0);
+
+  if (spamPoint == null) {
+    // The very first invocation of this function will have spamPoint as null,
+    // and we use that to pick up the rootScrollId.
+    ok(rootScrollId == null, "This codepath shouldn't get hit twice");
+    rootScrollId = hitTest(centerOf(document.body)).scrollId;
+    ok(true, "Root scroll id detected as " + rootScrollId);
+    return;
+  }
+
+  var scrollId = hitTest(spamPoint).scrollId;
+  if (scrollId == rootScrollId) {
+    ok(true, "Hit test hit the root scroller, spamdiv is not in compositor");
+  } else {
+    is(scrollId >= lastScrollId, true, "spamdiv's scroll id is now " + scrollId);
+    lastScrollId = scrollId;
+  }
+}
+
+function startTest() {
+  // Make sure to run hitTestSpammer first so the first iteration is while
+  // spamPoint is still null.
+  setTimeout(hitTestSpammer, 0);
+  setTimeout(divSpammer, 0);
+}
+
+waitUntilApzStable().then(startTest);
+
+</script>
+</body>
+</html>

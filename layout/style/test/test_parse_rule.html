@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang=en>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<body>
+<iframe></iframe>
+<!-- Note that the following style and div elements are duplicates
+     of the ones written into the iframe; they are here for convienience
+     in resolving the "standard" computed value for a given specification
+-->
+<style></style>
+<div id=a class='a b c' title='zxcv weeqweqeweasd&#13;&#10;a&#10;'></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+
+window.onload=function(){
+
+var base;
+
+// A short note about escaping: all of the strings in this test go through
+// Javascript unescaping before getting passed to CSS.  This means that
+// sequences like "\n" refer to a newline, a single backslash is written "\\",
+// a CSS escape sequence is something like "\\A", and some quotes must be
+// escaped.
+
+var testset = [
+
+// Color tests
+// Generic property for testing
+{ base : base = "div {color:green}",
+  tests : [
+// My misc tests
+"<!--#a {color:green}",
+base + "<!-#a {color:red}",
+base + "#a<!--{color:red}",
+"-->#a{color:green}",
+base + "--#a {color:red}",
+base + "--aasdf, #a {color:green}",
+base + "-0aasdf, #a {color:red}",
+"-asdf, #a {color:green}",
+base + "#a {color: rgb\n(255, 0, 0)}",
+"#a {font: \"Arial\n;color:green}",
+"#a {color: @charset{}\"\\\n'\"url(\na\na); color:green}",
+"#a\r{color:green}",
+"#a\n{color:green}",
+"#a\t{color:green}",
+"@threedee maroon url('asdf\n) ra('asdf\n); " + base,
+"@threedee {maroon url('asdf\n) ra('asdf\n);} " + base,
+"div[title='zxcv weeqweqeweasd\\D\\A a']{color:green}",
+"div[title~='weeqweqeweasd']{color:green}",
+base + "#a\\\n{color:red}",
+base + "#a\v{color:red}",
+
+// CSS1 section 7.1
+"#a {color: green; rotation: 70deg;}",
+"#a {color: green;} #a{color:invalidValue;}",
+base + "#a {color: \"red\"}",
+base + "@three-dee {\n @background-lighting {\n  azimuth: 30deg;\n  elevation: 190deg;\n  }\n #a { color: red }\n }",
+"#a {COLOR: GREEN}",
+base + "#a:wait {color: red}",
+"#a:lang(en) {color: green}",
+"#a:lang(\nen\r\t ) {color: green}",
+base + "div ! em, #a {color: red}",
+base + "//asdf.zxcv,\n#a {color: red}",
+"#a {rotation-code: \"}\"; color: green;}",
+"#a {rotation-code: \"\\\"}\\\"\"; color: green;}",
+"#a {rotation-code: '}'; color: green;}",
+"#a {rotation-code: '\\'}\\''; color: green;}",
+"#a {\n type-display: @threedee {rotation-code: '}';};\n color: green;\n }",
+base + "p {text-indent: 0.5in;} color: maroon #a {color: red;}",
+base + "p {text-indent: 0.5in;} color: maroon; #a {color: red;}",
+
+// string tokenization as error token, not EOF (bug 311566 comment 70)
+"#a { color: green; foo: { \"bar\n;color: red}",
+
+// CSS 2.1 section 4.1.3
+"@MediA All {#a {ColOR :RgB(\t0,\r128,\n0 ) } };",
+base + "\\#a{color:red;}",
+base + "#a\\{color:red;\\}",
+base + "#a{color\\:red;}",
+base + "#a{color:red\\;}",
+"#a {c\\o\\l\\o\\r:\\g\\ree\\n}",
+"#a{ co\\00006Cor: gr\\000065en; }",
+"#a{ co\\4C or: gr\\000045en; }",
+".IdE6n-3t0_6, #a { color: green }",
+"#IdE6n-3t0_6, #a { color: green }",
+"._ident, #a { color: green }",
+"#_ident, #a { color: green }",
+".-ident, .a { color: green; }", // Testsuite has incorrect version
+"#怀ident, .a { color: green }",
+"#iden怀t怀, .a { color: green }",
+"#\\6000ident, .a { color: green }",
+"#iden\\6000t\\6000, .a { color: green }",
+".怀ident, .a { color: green }",
+".iden怀t怀, .a { color: green }",
+".\\6000ident, .a { color: green }",
+".iden\\6000t\\6000, .a { color: green }",
+base + "#6ident, #a {color: red }",
+".id4ent6, .a { color: green }",
+"#\\ident, .a { color: green; }",
+"#ide\\n\\t, .a { color: green; }",
+".\\6ident, .a { color: green; }",
+".\\--ident, .a { color: green; }",
+
+// CSS2.1 section 4.1.5 and 4.2
+"@import 'data:text/css,%23a{color:green}';",
+"@import \"data:text/css,%23a{color:green}\";",
+"@import url(data:text/css,%23a{color:green});",
+"@import 'data:text/css,%23a{color:green}' screen;",
+base + "@import 'data:text/css,%23a{color:red}' blahblahblah;",
+"@import 'data:text/css,%23a{color:green}'",
+"@import 'data:text/css,%23a{color:green}",
+"@foo {}" + base,
+"@foo bar {}" + base,
+"@foo; " + base,
+"@foo bar baz; " + base,
+base + "@foo {}; #a {color: red}",
+
+// CSS2.1 section 4.1.9
+"/* This is a CSS comment. */" + base,
+base + "/* #a {color: red} */",
+"/*********** /*/" + base,
+
+// CSS2.1 section 4.3.6
+base + "#a {color: rgb(255, 0, 0%)}",
+base + "#a {color: rgb(100%, 0, 0)}",
+"#a {color: rgb(0, 128, 0)}",
+"#a {color: rgb(0%, 50%, 0%)}",
+"#a {color: rgb(0%, 49.999999999999%, 0%)}",
+
+// CSS-Color-4
+// https://drafts.csswg.org/css-color/#rgb-functions
+"#a {color: rgb(0, 128.0, 0)}",
+], prop: "color", pseudo: ""
+},
+
+// Border tests
+// For testing lengths
+{ base : base = "#a {border-style:solid}",
+  tests : [
+// CSS1 section 7.1
+base + "#a {border-width: funny}",
+base + "#a {border-width: 50zu}",
+base + "#a {border-width: px}",
+
+// Number/unit parsing
+base + "#a {border-width: 0.px}",
+base + "#a {border-width: ..0px}",
+base + "#a {border-width: 0..0px}",
+base + "#a {border-width: 0.}",
+base + "#a {border-width: ..0}",
+base + "#a {border-width: 0..0}",
+base + "#a {border-width: 0; border-width: .0px medium}",
+base + "#a {border-width: 0; border-width: .0 medium}",
+base + "#a {border-width: 0; border-width: 0.0px medium}",
+], prop: "borderRightWidth", pseudo: ""},
+
+// Content tests
+// Tests for strings and pseudos
+{base : base = ".a::before {content: 'This is \\a'}",
+ tests : [
+// CSS 2.1 section 4.1.3
+"#a::before {content: 'This is \\a '}",
+"#a::before {content: 'This is \\A '}",
+"#a::before {content: 'This is \\0000a '}",
+"#a::before {content: 'This is \\00000a '}",
+"#a::before {content: 'This is \\\n\\00000a '}",
+"#a::before {content: 'This is \\\015\012\\00000a '}",
+"#a::before {content: 'This is \\\015\\00000a '}",
+"#a::before {content: 'This is \\\f\\00000a '}",
+"#a::before {content: 'This is\\20\f\\a'}",
+"#a::before {content: 'This is\\20\r\\a'}",
+"#a::before {content: 'This is\\20\n\\a'}",
+"#a::before {content: 'This is\\20\r\n\\a'}",
+base + "#a::before {content: 'FAIL \f\\a'}",
+base + "#a::before {content: 'FAIL \\\n\r\\a'}",
+"#a:before {content: 'This is \\a'}",
+
+base + "#a:: before {content: 'FAIL'}",
+base + "#a ::before {content: 'FAIL'}",
+"#a::before {content: 'This is \\a",
+
+], prop: "content", pseudo: "::before"
+},
+
+// Background color tests
+// For basic URL parsing sanity checks
+{ base : base = "div {background: blue}",
+  tests : [
+"#a {background: url() blue}",
+"#a {background: url(怀) blue}",
+], prop: "backgroundColor", pseudo: ""
+},
+
+// A one-off test I couldn't come up with a better way to do
+{ base : base = "div {border-style: dotted}",
+  tests : [
+// Sanity-check to make sure this test will work
+// This test requires a color name that starts with a "-"
+base + "#a {border: dotted 0 -moz-menuhover}",
+// The actual test: check that 0-moz-menuhover get parsed as an unknown dimension
+// rather than a separate identifier
+base + "#a {border: solid 0-moz-menuhover}",
+], prop: "borderLeftStyle", pseudo: ""
+},
+
+];
+
+var curTest = -1;
+var curSubTest = 0;
+
+var styleElement = document.getElementsByTagName("style")[0];
+var divElement = document.getElementById("a");
+var frame = document.getElementsByTagName("iframe")[0];
+
+var canonical;
+
+var doTests = function() {
+  if (curTest >= 0) {
+    var curElement = frame.contentDocument.getElementsByTagName("div")[0];
+    var curStyle = frame.contentDocument.defaultView.getComputedStyle(curElement, testset[curTest].pseudo);
+    if (testset[curTest].todo && testset[curTest].todo[testset[curTest].tests[curSubTest]]) {
+      todo_is(curStyle[testset[curTest].prop], canonical, testset[curTest].tests[curSubTest]);
+    } else {
+      is(curStyle[testset[curTest].prop], canonical, testset[curTest].tests[curSubTest]);
+    }
+    curSubTest++;
+  }
+  if (curTest == -1 || curSubTest >= testset[curTest].tests.length) {
+    curTest++;
+    curSubTest = 0;
+  }
+  if (!(curTest < testset.length)) {
+    SimpleTest.finish();
+    return;
+  }
+  if (curSubTest == 0) {
+    styleElement.textContent = "";
+    let computedBase = document.defaultView.getComputedStyle(divElement, testset[curTest].pseudo)[testset[curTest].prop];
+    styleElement.textContent = testset[curTest].base;
+    canonical = document.defaultView.getComputedStyle(divElement, testset[curTest].pseudo)[testset[curTest].prop];
+    styleElement.textContent = "";
+    isnot(computedBase, canonical, "Sanity check for rule: " + testset[curTest].base);
+  }
+  frame.contentDocument.open();
+  frame.contentDocument.write("<html lang=en><style>" + testset[curTest].tests[curSubTest] + "</style><div id=a class='a b c' title='zxcv weeqweqeweasd&#13;&#10;a'></div>");
+  frame.contentWindow.onload = function(){setTimeout(doTests, 0);};
+  frame.contentDocument.close();
+};
+
+// Running a debug build on the Android emulator is slooow and collecting
+// all the session history this test amasses through repeated navigations
+// adds considerably to the running time. Therefore, we restrict the
+// amount of session history we keep around during this test.
+SpecialPowers.pushPrefEnv({"set": [['browser.sessionhistory.max_entries', 4]]}, doTests);
+
+};
+
+</script>

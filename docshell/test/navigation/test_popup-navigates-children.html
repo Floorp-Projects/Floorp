@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>
+    <style type="text/css">
+      iframe { width: 90%; height: 50px; }
+    </style>
+<script>
+
+let window0 = null;
+let window1 = null;
+let window2 = null;
+let window3 = null;
+
+function testChild0() {
+  if (!window.window0)
+    window0 = window.open("navigate.html#opener.frames[0],location", "window0", "width=10,height=10");
+}
+
+function testChild1() {
+  if (!window.window1)
+    window1 = window.open("navigate.html#child1,open", "window1", "width=10,height=10");
+}
+
+function testChild2() {
+  if (!window.window2)
+    window2 = window.open("navigate.html#child2,form", "window2", "width=10,height=10");
+}
+
+function testChild3() {
+  if (!window.window3)
+    window3 = window.open("navigate.html#child3,hyperlink", "window3", "width=10,height=10");
+}
+
+window.onload = async function() {
+  await waitForFinishedFrames(4);
+  await isNavigated(frames[0], "Should be able to navigate on-domain opener's children by setting location.");
+  await isNavigated(frames[1], "Should be able to navigate on-domain opener's children by calling window.open.");
+  await isNavigated(frames[2], "Should be able to navigate on-domain opener's children by submitting form.");
+  await isNavigated(frames[3], "Should be able to navigate on-domain opener's children by targeted hyperlink.");
+
+  window0.close();
+  window1.close();
+  window2.close();
+  window3.close();
+
+  await cleanupWindows();
+  SimpleTest.finish();
+};
+
+</script>
+</head>
+<body>
+<div id="frames">
+<iframe onload="testChild0()" name="child0" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe onload="testChild1()" name="child1" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe onload="testChild2()" name="child2" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe onload="testChild3()" name="child3" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+</div>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

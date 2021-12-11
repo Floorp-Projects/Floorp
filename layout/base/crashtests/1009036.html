@@ -1,0 +1,15 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom()
+{
+    var div = document.getElementsByTagName("div")[0];
+    div.childNodes[1].convertPointFromNode({x:0, y:0}, div.childNodes[0]);
+}
+</script>
+</head>
+<body onload="boom();">
+<div><span>&#x05D0;C</span> </div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    add_task(async function test_setPermissions() {
+      const tempDir = await PathUtils.getTempDir();
+      const tempFile = PathUtils.join(tempDir, "setPermissions.tmp");
+
+      await IOUtils.writeUTF8(tempFile, "");
+      await IOUtils.setPermissions(tempFile, 0o421);
+
+      let stat = await IOUtils.stat(tempFile);
+
+      if (Services.appinfo.OS === "WINNT") {
+        // setPermissions ignores the x bit on Windows.
+        is(stat.permissions, 0o666, "Permissions munged on Windows");
+      } else {
+        let umask = Services.sysinfo.getProperty("umask");
+        is(stat.permissions, 0o421 & ~umask, "Permissions match");
+      }
+
+      await IOUtils.setPermissions(tempFile, 0o400);
+      stat = await IOUtils.stat(tempFile);
+
+      if (Services.appinfo.OS === "WINNT") {
+        is(stat.permissions, 0o444, "Permissions munged on Windows");
+
+        // We need to make the file writable to delete it on Windows.
+        await IOUtils.setPermissions(tempFile, 0o600);
+      } else {
+        is(stat.permissions, 0o400, "Permissions match");
+      }
+
+      await cleanup(tempFile);
+    });
+
+    add_task(async function test_setPermissionsWithoutHonoringUmask() {
+      const tempDir = await PathUtils.getTempDir();
+      const tempFile = PathUtils.join(tempDir, "setPermissions.tmp");
+
+      await IOUtils.writeUTF8(tempFile, "");
+      await IOUtils.setPermissions(tempFile, 0o421, false);
+
+      let stat = await IOUtils.stat(tempFile);
+
+      if (Services.appinfo.OS === "WINNT") {
+        // setPermissions ignores the x bit on Windows.
+        is(stat.permissions, 0o666, "Permissions munged on Windows");
+      } else {
+        is(stat.permissions, 0o421, "Permissions match");
+      }
+
+      await IOUtils.setPermissions(tempFile, 0o400);
+      stat = await IOUtils.stat(tempFile);
+
+      if (Services.appinfo.OS === "WINNT") {
+        is(stat.permissions, 0o444, "Permissions munged on Windows");
+
+        // We need to make the file writable to delete it on Windows.
+        await IOUtils.setPermissions(tempFile, 0o600);
+      } else {
+        is(stat.permissions, 0o400, "Permissions match");
+      }
+
+      await cleanup(tempFile);
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PKIX_DEPTH = ../..
+PLAT_DEPTH = $(PKIX_DEPTH)/..
+CORE_DEPTH = $(PKIX_DEPTH)/../../..
+
+# MODULE public and private header directories are implicitly REQUIRED.
+MODULE = nss
+
+# test_rwlock.c is taken out, need to link to libpkix internals
+#
+# The test is using LIBPKIX PL call directly, which violates our
+# code convention.
+#
+CSRCS = test_bigint.c \
+	test_bytearray.c \
+	test_hashtable.c \
+	test_mem.c \
+	test_mutex.c \
+	test_mutex2.c \
+	test_mutex3.c \
+	test_monitorlock.c \
+	test_object.c \
+	test_oid.c \
+	stress_test.c \
+	test_string.c \
+	test_string2.c \
+	$(NULL)
+
+LIBRARY_NAME = pkixtoolsys
+SHARED_LIBRARY = $(NULL)
+
+SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
+ 
+NO_MD_RELEASE = 1

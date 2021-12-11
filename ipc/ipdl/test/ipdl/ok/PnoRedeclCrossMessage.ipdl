@@ -1,0 +1,9 @@
+protocol PnoRedeclCrossMessage {
+
+    // each message has its own scope for param/return names
+
+child:
+    async Msg1(int f);
+    async Msg2(int f);
+
+};

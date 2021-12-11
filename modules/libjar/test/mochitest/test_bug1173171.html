@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1173171
+-->
+<head>
+  <title>Test for Bug 1173171</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="testFrame"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 1173171 **/
+
+// __xhr(method, url, responseType__.
+// A simple async XMLHttpRequest call.
+// Returns a promise with the response.
+let xhr = function(method, url, responseType) {
+  return new Promise(function(resolve, reject) {
+    let xhrInstance = new XMLHttpRequest();
+    xhrInstance.open(method, url, true);
+    xhrInstance.onload = function() {
+      resolve(xhrInstance.response);
+    };
+    xhrInstance.onerror = function() {
+      resolve(null);
+    };
+    xhrInstance.responseType = responseType;
+    xhrInstance.send();
+  });
+};
+
+let jarURL = "jar:http://mochi.test:8888/tests/modules/libjar/test/mochitest/bug403331.zip!/test.html";
+
+// Test behavior when blocking is deactivated and activated.
+add_task(async function() {
+  let response = await xhr("GET", jarURL, "document");
+  is(response, null, "Remote jars should be blocked.");
+});
+
+</script>
+</pre>
+
+</body>
+</html>

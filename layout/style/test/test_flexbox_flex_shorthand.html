@@ -1,0 +1,280 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 696253</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
+<div id="display">
+  <div id="content">
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 696253 **/
+/* (Testing the 'flex' CSS shorthand property) */
+
+// The CSS property name for the shorthand we're testing:
+const gFlexPropName = "flex";
+
+// Info from property_database.js on this property:
+const gFlexPropInfo = gCSSProperties[gFlexPropName];
+
+// The name of the property in the DOM (i.e. in elem.style):
+// (NOTE: In this case it's actually the same as the CSS property name --
+// "flex" -- but that's not guaranteed in general.)
+const gFlexDOMName = gFlexPropInfo.domProp;
+
+// Default values for shorthand subproperties, when they're not specified
+// explicitly in a testcase.  This lets the testcases be more concise.
+//
+// The values here are from the flexbox spec on the 'flex' shorthand:
+//   "When omitted, [flex-grow and flex-shrink are] set to '1'."
+//   "When omitted [..., flex-basis's] specified value is '0%'."
+let gFlexShorthandDefaults = {
+    "flex-grow":   "1",
+    "flex-shrink": "1",
+    "flex-basis":  "0%"
+};
+
+let gFlexShorthandTestcases = [
+/*
+  {
+    "flex":        "SPECIFIED value for flex shorthand",
+
+    // Expected Computed Values of Subproperties
+    // Semi-optional -- if unspecified, the expected value is taken
+    // from gFlexShorthandDefaults.
+    "flex-grow":   "EXPECTED computed value for flex-grow property",
+    "flex-shrink": "EXPECTED computed value for flex-shrink property",
+    "flex-basis":  "EXPECTED computed value for flex-basis property",
+  },
+*/
+
+  // Initial values of subproperties:
+  // --------------------------------
+  // (checked by another test that uses property_database.js, too, but
+  // might as well check here, too, for thoroughness).
+  {
+    "flex":        "",
+    "flex-grow":   "0",
+    "flex-shrink": "1",
+    "flex-basis":  "auto",
+  },
+  {
+    "flex":        "initial",
+    "flex-grow":   "0",
+    "flex-shrink": "1",
+    "flex-basis":  "auto",
+  },
+
+  // Special keyword "none" --> "0 0 auto"
+  // -------------------------------------
+  {
+    "flex":        "none",
+    "flex-grow":   "0",
+    "flex-shrink": "0",
+    "flex-basis":  "auto",
+  },
+
+  // One Value (numeric) --> sets flex-grow
+  // --------------------------------------
+  {
+    "flex":        "0",
+    "flex-grow":   "0",
+  },
+  {
+    "flex":        "5",
+    "flex-grow":   "5",
+  },
+  {
+    "flex":        "1000",
+    "flex-grow":   "1000",
+  },
+  {
+    "flex":        "0.0000001",
+    "flex-grow":   "1e-7"
+  },
+  {
+    "flex":        "20000000",
+    "flex-grow":   "20000000",
+  },
+
+  // One Value (length or other nonnumeric) --> sets flex-basis
+  // ----------------------------------------------------------
+  {
+    "flex":        "0px",
+    "flex-basis":  "0px",
+  },
+  {
+    "flex":        "0%",
+    "flex-basis":  "0%",
+  },
+  {
+    "flex":        "25px",
+    "flex-basis":  "25px",
+  },
+  {
+    "flex":        "5%",
+    "flex-basis":  "5%",
+  },
+  {
+    "flex":        "auto",
+    "flex-basis":  "auto",
+  },
+  {
+    "flex":        "fit-content",
+    "flex-basis":  "fit-content",
+  },
+  {
+    "flex":        "calc(5px + 6px)",
+    "flex-basis":  "11px",
+  },
+  {
+    "flex":        "calc(15% + 30px)",
+    "flex-basis":  "calc(15% + 30px)",
+  },
+
+  // Two Values (numeric) --> sets flex-grow, flex-shrink
+  // ----------------------------------------------------
+  {
+    "flex":        "0 0",
+    "flex-grow":   "0",
+    "flex-shrink": "0",
+  },
+  {
+    "flex":        "0 2",
+    "flex-grow":   "0",
+    "flex-shrink": "2",
+  },
+  {
+    "flex":        "3 0",
+    "flex-grow":   "3",
+    "flex-shrink": "0",
+  },
+  {
+    "flex":        "0.5000 2.03",
+    "flex-grow":   "0.5",
+    "flex-shrink": "2.03",
+  },
+  {
+    "flex":        "300.0 500.0",
+    "flex-grow":   "300",
+    "flex-shrink": "500",
+  },
+
+  // Two Values (numeric & length-ish) --> sets flex-grow, flex-basis
+  // ----------------------------------------------------------------
+  {
+    "flex":        "0 0px",
+    "flex-grow":   "0",
+    "flex-basis":  "0px",
+  },
+  {
+    "flex":        "0 0%",
+    "flex-grow":   "0",
+    "flex-basis":  "0%",
+  },
+  {
+    "flex":        "10 30px",
+    "flex-grow":   "10",
+    "flex-basis":  "30px",
+  },
+  {
+    "flex":        "99px 2.3",
+    "flex-grow":   "2.3",
+    "flex-basis":  "99px",
+  },
+  {
+    "flex":        "99% 6",
+    "flex-grow":   "6",
+    "flex-basis":  "99%",
+  },
+  {
+    "flex":        "auto 5",
+    "flex-grow":   "5",
+    "flex-basis":  "auto",
+  },
+  {
+    "flex":        "5 fit-content",
+    "flex-grow":   "5",
+    "flex-basis":  "fit-content",
+  },
+  {
+    "flex":        "calc(5% + 10px) 3",
+    "flex-grow":   "3",
+    "flex-basis":  "calc(5% + 10px)",
+  },
+
+  // Three Values --> Sets all three subproperties
+  // ---------------------------------------------
+  {
+    "flex":        "0 0 0",
+    "flex-grow":   "0",
+    "flex-shrink": "0",
+    "flex-basis":  "0px",
+  },
+  {
+    "flex":        "0.0 0.00 0px",
+    "flex-grow":   "0",
+    "flex-shrink": "0",
+    "flex-basis":  "0px",
+  },
+  {
+    "flex":        "0% 0 0",
+    "flex-grow":   "0",
+    "flex-shrink": "0",
+    "flex-basis":  "0%",
+  },
+  {
+    "flex":        "10px 3 2",
+    "flex-grow":   "3",
+    "flex-shrink": "2",
+    "flex-basis":  "10px",
+  },
+];
+
+function runFlexShorthandTest(aFlexShorthandTestcase)
+{
+  let content = document.getElementById("content");
+
+  let elem = document.createElement("div");
+
+  elem.style[gFlexDOMName] = aFlexShorthandTestcase[gFlexPropName];
+  content.appendChild(elem);
+
+  gFlexPropInfo.subproperties.forEach(function(aSubPropName) {
+    var expectedVal = aSubPropName in aFlexShorthandTestcase ?
+     aFlexShorthandTestcase[aSubPropName] :
+     gFlexShorthandDefaults[aSubPropName];
+
+    // Compare computed value against expected computed value (from testcase)
+    is(window.getComputedStyle(elem).getPropertyValue(aSubPropName),
+       expectedVal,
+       "Computed value of subproperty \"" + aSubPropName + "\" when we set \"" +
+       gFlexPropName + ": " + aFlexShorthandTestcase[gFlexPropName] + "\"");
+  });
+
+  // Clean up
+  content.removeChild(elem);
+}
+
+function main() {
+  gFlexShorthandTestcases.forEach(runFlexShorthandTest);
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>

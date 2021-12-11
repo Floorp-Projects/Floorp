@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for Bug 1371453</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<link rel="stylesheet" href="data:text/css,{}">
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+const Cu = SpecialPowers.Components.utils;
+const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+document.styleSheetChangeEventsEnabled = true;
+
+onload = runTest;
+
+async function runTest() {
+  const sheet = document.getElementsByTagName("link")[1].sheet;
+  sheet.insertRule('@import url("blahblah")', 0);
+
+  const rule = sheet.cssRules[0];
+  is(rule.type, CSSRule.IMPORT_RULE, "Got expected import rule.");
+  isnot(rule.styleSheet, null, "Import rule contains a stylesheet.");
+  isnot(rule.media, null, "Import rule contains a media list.");
+  is(rule.href, "blahblah", "Import rule contains expected href.");
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

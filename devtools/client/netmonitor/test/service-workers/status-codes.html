@@ -1,0 +1,62 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Status codes test</p>
+
+    <script type="text/javascript">
+      /* exported registerServiceWorker, unregisterServiceWorker, performRequests */
+      "use strict";
+
+      let swRegistration;
+
+      function registerServiceWorker() {
+        const sw = navigator.serviceWorker;
+        return sw.register("status-codes-service-worker.js")
+          .then(registration => {
+            swRegistration = registration;
+            console.log("Registered, scope is:", registration.scope);
+            return sw.ready;
+          }).then(() => {
+            // wait until the page is controlled
+            return new Promise(resolve => {
+              if (sw.controller) {
+                resolve();
+              } else {
+                sw.addEventListener("controllerchange", function() {
+                  resolve();
+                }, {once: true});
+              }
+            });
+          }).catch(err => {
+            console.error("Registration failed");
+          });
+      }
+
+      function unregisterServiceWorker() {
+        return swRegistration.unregister();
+      }
+
+      function performRequests() {
+        return new Promise(function doXHR(done) {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "test/200", true);
+          xhr.onreadystatechange = done;
+          xhr.send(null);
+        });
+      }
+    </script>
+  </body>
+
+</html>

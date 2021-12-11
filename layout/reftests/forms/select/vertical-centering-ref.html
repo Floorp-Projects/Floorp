@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<style>
+  @font-face {
+    font-family: "Ahem";
+    src: url(../../fonts/Ahem.ttf);
+  }
+  select {
+    -moz-appearance: none;
+    border: none;
+    font: 20px/1 Ahem;
+    box-sizing: content-box;
+    /* The testcase has 20px-tall text, which should be centered in a 40px-tall
+     content-box (with 10px of extra space above and below).  We emulate that
+     by having explicit 10px of padding on top and bottom. */
+    padding: 10px 0 10px 0;
+  }
+</style>
+<select>
+  <option>X</option>
+</select>

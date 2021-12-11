@@ -1,0 +1,300 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=475006
+https://bugzilla.mozilla.org/show_bug.cgi?id=391829
+https://bugzilla.mozilla.org/show_bug.cgi?id=581952
+https://bugzilla.mozilla.org/show_bug.cgi?id=558036
+-->
+<head>
+  <title>Group attributes tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // aria
+      testAttrs("atomic", {"atomic": "true", "container-atomic": "true"}, true);
+      testAttrs(getNode("atomic").firstChild, {"container-atomic": "true"}, true);
+      testAbsentAttrs("atomic_false", {"atomic": "false", "container-atomic": "false"});
+      testAbsentAttrs(getNode("atomic_false").firstChild, {"container-atomic": "false"});
+
+      testAttrs("autocomplete", {"autocomplete": "true"}, true);
+      testAttrs("checkbox", {"checkable": "true"}, true);
+      testAttrs("checkedCheckbox", {"checkable": "true"}, true);
+      testAbsentAttrs("checkedMenuitem", {"checkable": "true"}, true);
+      testAttrs("checkedMenuitemCheckbox", {"checkable": "true"}, true);
+      testAttrs("checkedMenuitemRadio", {"checkable": "true"}, true);
+      testAttrs("checkedOption", {"checkable": "true"}, true);
+      testAttrs("checkedRadio", {"checkable": "true"}, true);
+      testAttrs("checkedTreeitem", {"checkable": "true"}, true);
+      testAttrs("dropeffect", {"dropeffect": "copy"}, true);
+      testAttrs("grabbed", {"grabbed": "true"}, true);
+      testAttrs("haspopupTrue", { "haspopup": "true" }, true);
+      testAbsentAttrs("haspopupFalse", { "haspopup": "false" });
+      testAbsentAttrs("haspopupEmpty", { "haspopup": "" });
+      testAttrs("haspopupDialog", { "haspopup": "dialog" }, true);
+      testAttrs("haspopupListbox", { "haspopup": "listbox" }, true);
+      testAttrs("haspopupMenu", { "haspopup": "menu" }, true);
+      testAttrs("haspopupTree", { "haspopup": "tree" }, true);
+      testAbsentAttrs("modal", {"modal": "true"});
+      testAttrs("sortAscending", {"sort": "ascending"}, true);
+      testAttrs("sortDescending", {"sort": "descending"}, true);
+      testAttrs("sortNone", {"sort": "none"}, true);
+      testAttrs("sortOther", {"sort": "other"}, true);
+      testAttrs("roledescr", {"roledescription": "spreadshit"}, true);
+      testAttrs("currentPage", {"current": "page"}, true);
+      testAttrs("currentStep", {"current": "step"}, true);
+      testAttrs("currentLocation", {"current": "location"}, true);
+      testAttrs("currentDate", {"current": "date"}, true);
+      testAttrs("currentTime", {"current": "time"}, true);
+      testAttrs("currentTrue", {"current": "true"}, true);
+      testAttrs("currentOther", {"current": "true"}, true);
+      testAbsentAttrs("currentFalse", {"current": "true"});
+      testAttrs("currentSpan", {"current": "page"}, true);
+
+      // inherited attributes by subdocuments
+      var subdoc = getAccessible("iframe").firstChild;
+      testAttrs(subdoc, {"busy": "true"}, true);
+
+      // live object attribute
+
+      // HTML
+      testAttrs("output", {"live": "polite"}, true);
+
+      // ARIA
+      testAttrs("live", {"live": "polite"}, true);
+      testAttrs("live2", {"live": "polite"}, true);
+      testAbsentAttrs("live3", {"live": ""});
+      if (MAC) {
+        testAttrs("alert", {"live": "assertive"}, true);
+      } else {
+        testAbsentAttrs("alert", {"live": "assertive"});
+      }
+      testAttrs("log", {"live": "polite"}, true);
+      testAttrs("logAssertive", {"live": "assertive"}, true);
+      testAttrs("marquee", {"live": "off"}, true);
+      testAttrs("status", {"live": "polite"}, true);
+      testAttrs("timer", {"live": "off"}, true);
+      testAbsentAttrs("tablist", {"live": "polite"});
+
+      // container-live object attribute
+      testAttrs("liveChild", {"container-live": "polite"}, true);
+      testAttrs("live2Child", {"container-live": "polite"}, true);
+      if (MAC) {
+        testAttrs("alertChild", {"container-live": "assertive"}, true);
+      } else {
+        testAbsentAttrs("alertChild", {"container-live": "assertive"});
+      }
+      testAttrs("logChild", {"container-live": "polite"}, true);
+      testAttrs("logAssertiveChild", {"container-live": "assertive"}, true);
+      testAttrs("marqueeChild", {"container-live": "off"}, true);
+      testAttrs("statusChild", {"container-live": "polite"}, true);
+      testAttrs("timerChild", {"container-live": "off"}, true);
+      testAbsentAttrs("tablistChild", {"container-live": "polite"});
+      testAttrs("containerLiveOutput", {"container-live": "polite"}, true);
+      testAttrs("containerLiveOutput1", {"container-live": "polite"}, true);
+      testAttrs("containerLiveOutput2", {"container-live": "polite"}, true);
+
+      // container-live-role object attribute
+      testAttrs("log", {"container-live-role": "log"}, true);
+      testAttrs("logAssertive", {"container-live-role": "log"}, true);
+      testAttrs("marquee", {"container-live-role": "marquee"}, true);
+      testAttrs("status", {"container-live-role": "status"}, true);
+      testAttrs("timer", {"container-live-role": "timer"}, true);
+      testAttrs("logChild", {"container-live-role": "log"}, true);
+      testAttrs("logAssertive", {"container-live-role": "log"}, true);
+      testAttrs("logAssertiveChild", {"container-live-role": "log"}, true);
+      testAttrs("marqueeChild", {"container-live-role": "marquee"}, true);
+      testAttrs("statusChild", {"container-live-role": "status"}, true);
+      testAttrs("timerChild", {"container-live-role": "timer"}, true);
+      testAbsentAttrs("tablistChild", {"container-live-role": "tablist"});
+
+      // absent aria-label and aria-labelledby object attribute
+      testAbsentAttrs("label", {"label": "foo"});
+      testAbsentAttrs("labelledby", {"labelledby": "label"});
+
+      // container that has no default live attribute
+      testAttrs("liveGroup", {"live": "polite"}, true);
+      testAttrs("liveGroupChild", {"container-live": "polite"}, true);
+      testAttrs("liveGroup", {"container-live-role": "group"}, true);
+      testAttrs("liveGroupChild", {"container-live-role": "group"}, true);
+
+      // text input type
+      testAbsentAttrs("button", { "text-input-type": "button"});
+      testAbsentAttrs("checkbox", { "text-input-type": "checkbox"});
+      testAbsentAttrs("radio", { "text-input-type": "radio"});
+      testAttrs("email", {"text-input-type": "email"}, true);
+      testAttrs("search", {"text-input-type": "search"}, true);
+      testAttrs("tel", {"text-input-type": "tel"}, true);
+      testAttrs("url", {"text-input-type": "url"}, true);
+      testAttrs("number", {"text-input-type": "number"}, true);
+
+      // ARIA
+      testAttrs("searchbox", {"text-input-type": "search"}, true);
+
+      // html
+      testAttrs("radio", {"checkable": "true"}, true);
+      testAttrs("checkbox", {"checkable": "true"}, true);
+      testAttrs("draggable", {"draggable": "true"}, true);
+      testAttrs("th1", { "abbr": "SS#" }, true);
+      testAttrs("th2", { "abbr": "SS#" }, true);
+      testAttrs("th2", { "axis": "social" }, true);
+
+      // don't barf on an empty abbr element.
+      testAbsentAttrs("th3", { "abbr": "" }, true);
+
+      // application accessible
+      if (WIN) {
+        var gfxInfo = Cc["@mozilla.org/gfx/info;1"].
+          getService(Ci.nsIGfxInfo);
+        var attrs = {
+          "D2D": (gfxInfo.D2DEnabled ? "true" : "false"),
+        };
+        testAttrs(getApplicationAccessible(), attrs, false);
+      }
+
+      // no object attributes
+      testAbsentAttrs(getAccessible("listitem").firstChild, { "tag": "" });
+
+      // experimental aria
+      testAttrs("experimental", {"blah": "true"}, true);
+
+      // HTML5 aside element xml-roles
+      testAttrs("aside0", {"xml-roles": "note"}, true);
+      testAttrs("aside1", {"xml-roles": "group"}, true);
+      testAttrs("aside2", {"xml-roles": "complementary"}, true);
+
+      // non-standard data-at-shortcutkeys attribute:
+      testAttrs("shortcuts", {'data-at-shortcutkeys': '{"n":"New message","r":"Reply to message"}'}, true);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- container live -->
+  <output id="containerLiveOutput"><div id="containerLiveOutput1"><div id="containerLiveOutput2">Test</div></div></output>
+
+  <!-- aria -->
+  <div id="atomic" aria-atomic="true">live region</div>
+  <div id="atomic_false" aria-atomic="false">live region</div>
+  <div id="autocomplete" role="textbox" aria-autocomplete="true"></div>
+  <div id="checkbox" role="checkbox"></div>
+  <div id="checkedCheckbox" role="checkbox" aria-checked="true"></div>
+  <div id="checkedMenuitem" role="menuitem" aria-checked="true"></div>
+  <div id="checkedMenuitemCheckbox" role="menuitemcheckbox" aria-checked="true"></div>
+  <div id="checkedMenuitemRadio" role="menuitemradio" aria-checked="true"></div>
+  <div id="checkedOption" role="option" aria-checked="true"></div>
+  <div id="checkedRadio" role="radio" aria-checked="true"></div>
+  <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
+  <div id="dropeffect" aria-dropeffect="copy"></div>
+  <div id="grabbed" aria-grabbed="true"></div>
+  <div id="haspopupTrue" aria-haspopup="true"></div>
+  <div id="haspopupFalse" aria-haspopup="false"></div>
+  <div id="haspopupEmpty" aria-haspopup=""></div>
+  <div id="haspopupDialog" aria-haspopup="dialog"></div>
+  <div id="haspopupListbox" aria-haspopup="listbox"></div>
+  <div id="haspopupMenu" aria-haspopup="menu"></div>
+  <div id="haspopupTree" aria-haspopup="tree"></div>
+  <div id="modal" aria-modal="true"></div>
+  <div id="sortAscending" role="columnheader" aria-sort="ascending"></div>
+  <div id="sortDescending" role="columnheader" aria-sort="descending"></div>
+  <div id="sortNone" role="columnheader" aria-sort="none"></div>
+  <div id="sortOther" role="columnheader" aria-sort="other"></div>
+  <div id="roledescr" aria-roledescription="spreadshit"></div>
+  <div id="currentPage" aria-current="page"></div>
+  <div id="currentStep" aria-current="step"></div>
+  <div id="currentLocation" aria-current="location"></div>
+  <div id="currentDate" aria-current="date"></div>
+  <div id="currentTime" aria-current="time"></div>
+  <div id="currentTrue" aria-current="true"></div>
+  <div id="currentOther" aria-current="other"></div>
+  <div id="currentFalse" aria-current="false"></div>
+
+  <!-- aria-current on a span which must create an accessible -->
+  <ol>
+    <li><a href="...">Page 1</a></li>
+    <li><a href="...">Page 2</a></li>
+    <li><span id="currentSpan" aria-current="page">This page</span></li>
+  </ol>
+
+  <!-- inherited from iframe -->
+  <iframe id="iframe" src="data:text/html,<html><body></body></html>"
+          aria-busy="true"></iframe>
+
+  <!-- html -->
+  <output id="output"></output>
+
+  <!-- back to aria -->
+  <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
+  <div id="live2" role="marquee" aria-live="polite">excuse <div id="live2Child">me</div></div>
+  <div id="live3" role="region">excuse</div>
+  <div id="alert" role="alert">excuse <div id="alertChild">me</div></div>
+  <div id="log" role="log">excuse <div id="logChild">me</div></div>
+  <div id="logAssertive" role="log" aria-live="assertive">excuse <div id="logAssertiveChild">me</div></div>
+  <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
+  <div id="status" role="status">excuse <div id="statusChild">me</div></div>
+  <div id="tablist" role="tablist">tablist <div id="tablistChild">tab</div></div>
+  <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
+
+  <!-- aria-label[ledby] should not be an object attribute -->
+  <div id="label" role="checkbox" aria-label="foo"></div>
+  <div id="labelledby" role="checkbox" aria-labelledby="label"></div>
+
+  <!-- unusual live case -->
+  <div id="liveGroup" role="group" aria-live="polite">
+    excuse <div id="liveGroupChild">me</div>
+  </div>
+
+  <!-- text input type -->
+  <input id="button" type="button"/>
+  <input id="email" type="email"/>
+  <input id="search" type="search"/>
+  <input id="tel" type="tel"/>
+  <input id="url" type="url"/>
+  <input id="number" type="number"/>
+  <div id="searchbox" role="searchbox"></div>
+
+  <!-- html -->
+  <input id="radio" type="radio"/>
+  <input id="checkbox" type="checkbox"/>
+  <div id="draggable" draggable="true">Draggable div</div>
+  <table>
+    <tr>
+      <th id="th1"><abbr title="Social Security Number">SS#</abbr></th>
+      <th id="th2" abbr="SS#" axis="social">Social Security Number</th>
+      <th id="th3"><abbr></abbr></th>
+    </tr>
+  </table>
+
+  <ul>
+    <li id="listitem">item
+  </ul>
+
+  <!-- experimental aria -->
+  <div id="experimental" aria-blah="true">Fake beer</div>
+
+  <!-- HTML5 aside elements -->
+  <aside id="aside0" role="note">aside 0</aside>
+  <aside id="aside1" role="group">aside 1</aside>
+  <aside id="aside2">aside 2</aside>
+
+  <!-- Shortcuts for web applications -->
+  <div id="shortcuts" data-at-shortcutkeys='{"n":"New message","r":"Reply to message"}'></div>
+</body>
+</html>

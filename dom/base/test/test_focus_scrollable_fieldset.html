@@ -1,0 +1,60 @@
+<!doctype html>
+<title>Test for bug 1351248</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  fieldset {
+    overflow: auto;
+    height: 1em;
+    width: 1em;
+  }
+</style>
+<input type="text" id="start">
+
+<fieldset>
+  <input type="text">
+  <input type="text">
+  <input type="text">
+  <input type="text">
+  <input type="text">
+  <input type="text">
+</fieldset>
+
+<input type="text" id="end">
+<script>
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(async function() {
+    // Enable Full Keyboard Access emulation on Mac.
+    if (navigator.platform.indexOf("Mac") === 0) {
+      await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+    }
+
+    const start = document.getElementById("start");
+
+    start.focus();
+
+    const end = document.getElementById("end");
+
+    is(document.activeElement, start, "Focus moved sanely");
+
+    let lastActiveElement = start;
+    let stack = [start];
+
+    do {
+      synthesizeKey("KEY_Tab");
+      isnot(document.activeElement, lastActiveElement, "Focus should've moved once per tab keypress");
+      lastActiveElement = document.activeElement;
+      stack.push(lastActiveElement);
+    } while (document.activeElement != end)
+
+    is(stack.length, document.querySelectorAll("input").length + 1, "Fieldset should be focusable");
+
+    do {
+      let previous = stack.pop();
+      is(document.activeElement, previous, "Focus should've moved backwards as expected");
+      synthesizeKey("KEY_Tab", {shiftKey: true});
+    } while (stack.length);
+
+    SimpleTest.finish();
+  });
+</script>

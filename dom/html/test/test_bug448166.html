@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448166
+-->
+<head>
+  <meta charset="utf-8" />
+  <title>Test for Bug 448166</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448166">Mozilla Bug 448166</a>
+<p id="display">
+  <a id="test" href="http://www.moz&#xdc00;illa.org">should not be Mozilla</a>
+  <a id="control" href="http://www.mozilla.org">should not be Mozilla</a>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 448166 **/
+isnot($("test").href, "http://www.mozilla.org/",
+      "Should notice unpaired surrogate");
+is($("test").href, "http://www.moz�illa.org",
+      "URL parser fails. Href returns original input string");
+
+SimpleTest.doesThrow(() => { new URL($("test").href);}, "URL parser rejects input");
+
+is($("control").href, "http://www.mozilla.org/",
+      "Just making sure .href works");
+
+</script>
+</pre>
+</body>
+</html>
+

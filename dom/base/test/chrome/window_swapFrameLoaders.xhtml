@@ -1,0 +1,223 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1242644
+Test swapFrameLoaders with different frame types and remoteness
+-->
+<window title="Mozilla Bug 1242644"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"><![CDATA[
+  ["SimpleTest", "SpecialPowers", "info", "is", "ok", "add_task"].forEach(key => {
+    window[key] = window.arguments[0][key];
+  })
+
+  const NS = {
+    xul: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    html: "http://www.w3.org/1999/xhtml",
+  }
+
+  const TAG = {
+    xul: "browser",
+    html: "iframe", // mozbrowser
+  }
+
+  const SCENARIOS = [
+    ["xul", "xul"],
+    ["xul", "html"],
+    ["html", "xul"],
+    ["html", "html"],
+    ["xul", "xul", { remote: true }],
+    ["xul", "html", { remote: true }],
+    ["html", "xul", { remote: true }],
+    ["html", "html", { remote: true }],
+    ["xul", "html", { userContextId: 2 }],
+    ["xul", "html", { userContextId: 2, remote: true }],
+  ];
+
+  const HEIGHTS = [
+    200,
+    400
+  ];
+
+  function frameScript() {
+    addEventListener("load", function onLoad() {
+      sendAsyncMessage("test:load");
+    }, true);
+  }
+
+  // Watch for loads in new frames
+  window.messageManager.loadFrameScript(`data:,(${frameScript})();`, true);
+
+  function once(target, eventName, useCapture = false) {
+    info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+    return new Promise(resolve => {
+      for (let [add, remove] of [
+        ["addEventListener", "removeEventListener"],
+        ["addMessageListener", "removeMessageListener"],
+      ]) {
+        if ((add in target) && (remove in target)) {
+          target[add](eventName, function onEvent(...aArgs) {
+            info("Got event: '" + eventName + "' on " + target + ".");
+            target[remove](eventName, onEvent, useCapture);
+            resolve(aArgs);
+          }, useCapture);
+          break;
+        }
+      }
+    });
+  }
+
+  async function addFrame(type, options, height) {
+    let remote = options && options.remote;
+    let userContextId = options && options.userContextId;
+    let frame = document.createElementNS(NS[type], TAG[type]);
+    frame.setAttribute("remote", remote);
+    if (remote && type == "xul") {
+      frame.setAttribute("style", "-moz-binding: none;");
+    }
+    if (userContextId) {
+      frame.setAttribute("usercontextid", userContextId);
+    }
+    if (type == "html") {
+      frame.setAttribute("mozbrowser", "true");
+      frame.setAttribute("noisolation", "true");
+      frame.setAttribute("allowfullscreen", "true");
+    } else if (type == "xul") {
+      frame.setAttribute("type", "content");
+    }
+    let src = `data:text/html,<!doctype html>` +
+              `<body style="height:${height}px"/>`;
+    frame.setAttribute("src", src);
+    document.documentElement.appendChild(frame);
+    let mm = frame.frameLoader.messageManager;
+    await once(mm, "test:load");
+    return frame;
+  }
+
+  add_task(async function() {
+    for (let scenario of SCENARIOS) {
+      let [ typeA, typeB, options ] = scenario;
+      let heightA = HEIGHTS[0];
+      info(`Adding frame A, type ${typeA}, options ${JSON.stringify(options)}, height ${heightA}`);
+      let frameA = await addFrame(typeA, options, heightA);
+
+      let heightB = HEIGHTS[1];
+      info(`Adding frame B, type ${typeB}, options ${JSON.stringify(options)}, height ${heightB}`);
+      let frameB = await addFrame(typeB, options, heightB);
+
+      let frameScriptFactory = function(name) {
+        return `function() {
+          addMessageListener("ping", function() {
+            sendAsyncMessage("pong", "${name}");
+          });
+          addMessageListener("check-browser-api", function() {
+            let exists = "api" in this;
+            sendAsyncMessage("check-browser-api", {
+              exists,
+              running: exists && !this.api._shuttingDown,
+            });
+          });
+          addEventListener("pagehide", function({ inFrameSwap }) {
+            sendAsyncMessage("pagehide", inFrameSwap);
+          }, {mozSystemGroup: true});
+        }`;
+      }
+
+      // Load frame script into each frame
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        mmA.loadFrameScript("data:,(" + frameScriptFactory("A") + ")()", false);
+        mmB.loadFrameScript("data:,(" + frameScriptFactory("B") + ")()", false);
+      }
+
+      // Ping before swap
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        let inflightA = once(mmA, "pong");
+        let inflightB = once(mmB, "pong");
+
+        info("Ping message manager for frame A");
+        mmA.sendAsyncMessage("ping");
+        let [ { data: pongA } ] = await inflightA;
+        is(pongA, "A", "Frame A message manager gets reply A before swap");
+
+        info("Ping message manager for frame B");
+        mmB.sendAsyncMessage("ping");
+        let [ { data: pongB } ] = await inflightB;
+        is(pongB, "B", "Frame B message manager gets reply B before swap");
+      }
+
+      // Ping after swap using message managers acquired before
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        let pagehideA = once(mmA, "pagehide");
+        let pagehideB = once(mmB, "pagehide");
+
+        info("swapFrameLoaders");
+        frameA.swapFrameLoaders(frameB);
+
+        let [ { data: inFrameSwapA } ] = await pagehideA;
+        ok(inFrameSwapA, "Frame A got pagehide with inFrameSwap: true");
+        let [ { data: inFrameSwapB } ] = await pagehideB;
+        ok(inFrameSwapB, "Frame B got pagehide with inFrameSwap: true");
+
+        let inflightA = once(mmA, "pong");
+        let inflightB = once(mmB, "pong");
+
+        info("Ping message manager for frame A");
+        mmA.sendAsyncMessage("ping");
+        let [ { data: pongA } ] = await inflightA;
+        is(pongA, "B", "Frame A message manager acquired before swap gets reply B after swap");
+
+        info("Ping message manager for frame B");
+        mmB.sendAsyncMessage("ping");
+        let [ { data: pongB } ] = await inflightB;
+        is(pongB, "A", "Frame B message manager acquired before swap gets reply A after swap");
+      }
+
+      // Check height after swap
+      {
+        if (frameA.getContentDimensions) {
+          let { height } = await frameA.getContentDimensions();
+          is(height, heightB, "Frame A's content height is 400px after swap");
+        }
+        if (frameB.getContentDimensions) {
+          let { height } = await frameB.getContentDimensions();
+          is(height, heightA, "Frame B's content height is 200px after swap");
+        }
+      }
+
+      // Ping after swap using message managers acquired after
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        let inflightA = once(mmA, "pong");
+        let inflightB = once(mmB, "pong");
+
+        info("Ping message manager for frame A");
+        mmA.sendAsyncMessage("ping");
+        let [ { data: pongA } ] = await inflightA;
+        is(pongA, "B", "Frame A message manager acquired after swap gets reply B after swap");
+
+        info("Ping message manager for frame B");
+        mmB.sendAsyncMessage("ping");
+        let [ { data: pongB } ] = await inflightB;
+        is(pongB, "A", "Frame B message manager acquired after swap gets reply A after swap");
+      }
+
+      frameA.remove();
+      frameB.remove();
+    }
+  });
+  ]]></script>
+</window>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Test that an indefinite to-animation that falls back to discrete calcMode
+       because the property is not interpolatable, applies the underlying value
+       for the whole time. -->
+  <rect x="15" y="15" width="200" height="200" fill="blue" visibility="visible">
+    <animate attributeName="visibility" to="hidden" dur="indefinite"/>
+  </rect>
+</svg>

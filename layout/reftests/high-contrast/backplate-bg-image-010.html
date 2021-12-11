@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<title>Only lines containing visible content (visibility: visible) should receive backplates.</title>
+<style>
+  .outer {
+    background-image: url("blue.png");
+  }
+  .hidden {
+    visibility: hidden;
+  }
+  .visible {
+    visibility: visible;
+  }
+</style>
+<div class="outer">
+  <div>
+    AAAA<!-- no whitespace between elements
+    --><div class="hidden">BBBB</div><!-- no whitespace between elements
+    -->CCCC<!-- no whitespace between elements
+    --><div class="hidden">
+      DDDD
+      <div class="visible">EEEE</div>
+      FFFF
+    </div>
+  </div>
+  GGGG
+  <br>
+  HHHH
+  <span class="hidden">IIII</span>
+  JJJJ
+  <span class="hidden">
+    KKKK
+    <span class="visible">LLLL</span>
+    MMMM
+  </span>
+  NNNN
+  <span class="hidden">
+    <span style="display:inline-block">
+      1
+      <span class="visible">2</span>
+    </span>
+    <span style="display:inline-block" class="visible">
+      3
+    </span>
+    4<!-- no whitespace between elements
+  --></span>
+</div>

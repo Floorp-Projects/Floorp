@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src:url(resources/svg.woff);
+      }
+      text
+      {
+        font-family: Liberation;
+        font-size: 100px;
+      }
+    ]]>
+  </style>
+  <!-- 
+      Test that transforms within SVG glyph documents are applied properly
+  -->
+  <text x="0" y="100">
+  g
+  </text>
+  <text x="0" y="200">
+  g
+  </text>
+  <text x="0" y="300">
+  g
+  </text>
+
+  <text x="100" y="100">
+  g
+  </text>
+  <text x="100" y="200">
+  g
+  </text>
+  <text x="100" y="300">
+  g
+  </text>
+
+  <text x="200" y="100">
+  g
+  </text>
+  <!-- note that the next two are different from the preceding glyphs! -->
+  <text x="200" y="200">
+  q
+  </text>
+  <text x="200" y="300">
+  q
+  </text>
+</svg>

@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<title>Test for clipping of border-radius</title>
+<style>
+div {
+  display: inline-block;
+  background: lime;
+  margin: 18px 19px 21px 25px;
+  /* border + padding: 1px 2px 4px 8px */
+  height: 100px;
+  width: 200px;
+
+  /* Horizontal: TL TR BR BL / Vertical: TL TR BR BL */
+  /* border-radius: 25px 17px 14px 18px / 12px 15px 18px 17px; */
+  border-radius: 17px 15px 12px 10px / 11px 14px 14px 13px;
+}
+</style>
+<div></div>

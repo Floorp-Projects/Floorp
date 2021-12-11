@@ -1,0 +1,19 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <body>
+    <table border="1">
+      <tr>
+        <th>Division</th><th>Revenue</th><th>Growth</th><th>Bonus</th>
+      </tr>
+      <tr>
+        <td><em>North</em></td><td>10</td><td>9</td><td>7</td>
+      </tr>
+      <tr>
+        <td><em>West</em></td><td>6</td><td>-1.5</td><td>2</td>
+      </tr>
+      <tr>
+        <td><em>South</em></td><td>4</td><td>3</td><td>4</td>
+      </tr>
+    </table>
+  </body>
+</html>
+

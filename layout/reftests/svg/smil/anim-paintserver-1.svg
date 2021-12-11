@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lime">
+      <stop offset="0.0" stop-color="lime"/>
+    </linearGradient>
+    <linearGradient id="red">
+      <stop offset="0.0" stop-color="red"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Set paint server -->
+  <rect x="0" y="0" width="100" height="100" fill="red">
+    <set attributeName="fill" to="url(#lime)"/>
+  </rect>
+  <!-- 2. Get paint server. We're looking for a code path that will fetch the
+       base value, fail to replace it, and end up setting the animation
+       value as the fetched base value.
+       To-animation requires fetching the base value so we use that, plus
+       invalid animation values so that we won't replace the base value. -->
+  <rect x="100" y="0" width="100" height="100" fill="url(#lime)">
+    <animate attributeName="fill" to="pikapikaglittergold"/>
+  </rect>
+  <!-- 3. "Interpolate" paint servers. We should fall back to discrete mode
+       which should mean that 150s into a 3-valued animation of 400s duration
+       we're in the middle value since each value will get about 133s each.
+  -->
+  <rect x="200" y="0" width="100" height="100" fill="red">
+    <animate attributeName="fill" values="orange; url(#lime); purple"
+      begin="-150s" dur="400s"/>
+  </rect>
+
+  <!-- By addition tests: In the following cases we'll go to calculate our
+       animation function values but since they're by-animation we'll try to do
+       some addition which should fail since addition with paint servers isn't
+       supported and hence the animation should not be applied. -->
+  <!-- 4. Check by-addition behaves (1): by: paint server -->
+  <rect x="0" y="100" width="100" height="100" fill="lime">
+    <animate attributeName="fill" from="#f00" by="url(#red)"/>
+  </rect>
+  <!-- 5. Check by-addition behaves (2): from: paint server -->
+  <rect x="100" y="100" width="100" height="100" fill="lime">
+    <animate attributeName="fill" from="url(#red)" by="#f00"/>
+  </rect>
+  <!-- 6. Check by-addition behaves (3): from-by paint server -->
+  <rect x="200" y="100" width="100" height="100" fill="#0f0">
+    <animate attributeName="fill" from="url(#red)" by="url(#red)"/>
+  </rect>
+
+  <!-- 7. Check that by-addition without a paint server is ok though.
+       (Since the animation has indefinite simple duration we'll never get past
+       the first value which is is lime green.) -->
+  <rect x="0" y="200" width="100" height="100" fill="red">
+    <animate attributeName="fill" from="#0f0" by="#00f" dur="indefinite"/>
+  </rect>
+  <!-- 8. Sandwich addition test. In the following cases we should be able to
+       calculate the animation function ok, but we'll fail to add it to the
+       underlying values (since paint servers can't be added) and just set the
+       value instead. (SMIL 3 12.6.3 says, "[The additive] attribute is
+       ignored if the target attribute does not support additive animation.")
+       -->
+  <rect x="100" y="200" width="100" height="100" fill="red">
+    <animate attributeName="fill" values="url(#lime)" additive="sum"/>
+  </rect>
+  <!-- 9. Check paced animation fails expectedly. The operation is as with case
+       3 and we should fall back to discrete mode -->
+  <rect x="200" y="200" width="100" height="100" fill="red">
+    <animate attributeName="fill" values="#0f1; url(#lime); #00f"
+      begin="-150s" dur="400s" calcMode="paced"/>
+  </rect>
+
+  <!-- 10. Fallback color - specified color -->
+  <rect x="0" y="300" width="100" height="100" fill="red">
+    <set attributeName="fill" to="url(#nonexistant) lime"/>
+  </rect>
+  <!-- 11. Fallback color - currentColor -->
+  <g color="lime">
+    <rect x="100" y="300" width="100" height="100" fill="red">
+      <set attributeName="fill" to="url(#nonexistant) currentColor"/>
+    </rect>
+  </g>
+  <!-- 12. Fallback color - none -->
+  <rect x="200" y="300" width="100" height="100" fill="lime"/>
+  <rect x="200" y="300" width="100" height="100" fill="red">
+    <set attributeName="fill" to="url(#nonexistant) none"/>
+  </rect>
+</svg>

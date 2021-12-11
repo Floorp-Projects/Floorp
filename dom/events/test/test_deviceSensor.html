@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=402089
+-->
+<head>
+  <title>Test for Bug 742376</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=742376">Mozilla Bug 742376</a>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 742376 **/
+let Cc = SpecialPowers.Cc;
+let Ci = SpecialPowers.Ci;
+let dss = Cc["@mozilla.org/devicesensors;1"].getService(Ci.nsIDeviceSensors);
+
+function hasLightListeners() {
+  return dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_LIGHT, window);
+}
+
+function hasOrientationListeners() {
+  return dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_ORIENTATION, window) ||
+         dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_ROTATION_VECTOR, window) ||
+         dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_GAME_ROTATION_VECTOR, window);
+}
+
+function hasProximityListeners() {
+  return dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_PROXIMITY, window);
+}
+
+function hasMotionListeners() {
+  return dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_ACCELERATION, window) ||
+         dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_LINEAR_ACCELERATION, window) ||
+         dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_GYROSCOPE, window);
+}
+
+async function test_event_presence(prefName, eventCheck, eventName) {
+  function dumbListener(event) {}
+  function dumbListener2(event) {}
+  function dumbListener3(event) {}
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    [prefName, true]
+  ]});
+
+  is(eventCheck(), false, "Must not have listeners before tests start");
+
+  window.addEventListener(eventName, dumbListener);
+  window.addEventListener("random_event_name", function() {});
+  window.addEventListener(eventName, dumbListener2);
+
+  is(eventCheck(), true, `Should have listeners when ${eventName} sensor is enabled`);
+
+  window.removeEventListener(eventName, dumbListener);
+  window.removeEventListener(eventName, dumbListener2);
+
+  is(eventCheck(), false, "Must not have listeners when removed");
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    [prefName, false]
+  ]});
+
+  window.addEventListener(eventName, dumbListener);
+  window.addEventListener("random_event_name", function() {});
+  window.addEventListener(eventName, dumbListener2);
+
+  is(eventCheck(), false, "Must not have listeners when sensor is disabled");
+}
+
+async function start() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["device.sensors.enabled", true],
+    ["device.sensors.orientation.enabled", true]
+  ]});
+
+  is(hasOrientationListeners(), false, "Must not have listeners before tests start");
+
+  function dumbListener(event) {}
+  function dumbListener2(event) {}
+  function dumbListener3(event) {}
+
+  window.addEventListener("deviceorientation", dumbListener);
+  window.addEventListener("random_event_name", function() {});
+  window.addEventListener("deviceorientation", dumbListener2);
+
+  is(hasOrientationListeners(), true, "Listeners should have been added");
+
+  await new Promise(resolve => {
+    window.setTimeout(function() {
+      window.removeEventListener("deviceorientation", dumbListener);
+      is(hasOrientationListeners(), true, "Only some listeners should have been removed");
+      window.setTimeout(function() {
+        window.removeEventListener("deviceorientation", dumbListener2);
+        window.setTimeout(function() {
+          is(hasOrientationListeners(), false, "Listeners should have been removed");
+          resolve();
+        }, 0);
+      }, 0);
+    }, 0);
+  });
+
+  await new Promise(resolve => {
+    window.ondeviceorientation = function() {}
+    window.setTimeout(function() {
+      is(hasOrientationListeners(), true, "Handler should have been added");
+      window.ondeviceorientation = null;
+      window.setTimeout(function() {
+        is(hasOrientationListeners(), false, "Handler should have been removed");
+        resolve();
+      }, 0);
+    }, 0);
+  });
+
+  await test_event_presence("device.sensors.ambientLight.enabled", hasLightListeners, "devicelight");
+  await test_event_presence("device.sensors.proximity.enabled", hasProximityListeners, "userproximity");
+  await test_event_presence("device.sensors.motion.enabled", hasMotionListeners, "devicemotion");
+  await test_event_presence("device.sensors.orientation.enabled", hasOrientationListeners, "deviceorientation");
+
+  SimpleTest.finish();
+
+}
+
+SimpleTest.waitForExplicitFinish();
+
+start();
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Accessible XUL menulist and textbox @autocomplete hierarchy tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // menulist
+
+      var selectedOptionChildren = [];
+      if (MAC) {
+        // checkmark is part of the Mac menu styling
+        selectedOptionChildren = [{
+          role: ROLE_STATICTEXT,
+          children: []
+        }];
+      }
+
+      var accTree = {
+        role: ROLE_COMBOBOX,
+        children: [
+          {
+            role: ROLE_COMBOBOX_LIST,
+            children: [
+              {
+                role: ROLE_COMBOBOX_OPTION,
+                children: selectedOptionChildren
+              },
+              {
+                role: ROLE_COMBOBOX_OPTION,
+                children: []
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("menulist", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // textbox@type=autocomplete #1 (history)
+
+      accTree = {
+        // html:input
+        role: ROLE_ENTRY,
+        children: [
+          {
+            // #text
+            role: ROLE_TEXT_LEAF,
+            name: "http://mochi.test:8888/redirect-a11y.html",
+            children: []
+          }
+        ],
+      };
+
+      testAccessibleTree("autocomplete", accTree);
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=249292"
+         title="Ensure accessible children for toolbarbutton types 'menu'">
+        Mozilla Bug 249292
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=626660"
+         title="Cache rendered text on a11y side">
+        Mozilla Bug 626660
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <menulist id="menulist">
+        <menupopup>
+          <menuitem label="item"/>
+          <menuitem label="item"/>
+        </menupopup>
+      </menulist>
+
+      <html:input is="autocomplete-input"
+                  id="autocomplete"
+                  value="http://mochi.test:8888/redirect-a11y.html"/>
+    </vbox>
+  </hbox>
+
+</window>

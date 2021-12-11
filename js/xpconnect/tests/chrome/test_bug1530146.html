@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1530146
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1530146</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1530146 **/
+  SimpleTest.waitForExplicitFinish();
+
+  addLoadEvent(setupTest);
+
+  var sb;
+
+  function setupTest() {
+    // Create a sandbox with an expanded principal for our iframe.
+    sb = new Cu.Sandbox([frames[0].document.nodePrincipal],
+                        {sandboxPrototype: frames[0]});
+    // Grab a waiver for the subframe in the sandbox to make sure the waiver
+    // stays alive.  It would be nice if we could just use waiveXray in the
+    // sandbox: https://bugzilla.mozilla.org/show_bug.cgi?id=1531614
+    Cu.evalInSandbox('this.waiver = document.querySelector("iframe").contentWindow.wrappedJSObject',
+                     sb);
+    var ifr = frames[0].document.querySelector("iframe");
+    ifr.onload = doTest;
+    ifr.src = "file_bug1530146_inner.html";
+  }
+
+function doTest() {
+    // Create a new sandbox for the iframe's subframe
+    var sb2 = new Cu.Sandbox([frames[0][0].document.nodePrincipal],
+                             {sandboxPrototype: frames[0][0]});
+    // Reget the waiver; this is where things can go awry.
+    Cu.evalInSandbox('this.waiver = window.wrappedJSObject', sb2);
+    is(Cu.evalInSandbox("this.waiver.obj.a", sb2), "hello",
+       "Should get the right value and not crash");
+    is(Cu.evalInSandbox("(new this.waiver.Image()).localName", sb2), "img",
+       "Should create an image and not crash");
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1530146">Mozilla Bug 1530146</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe src="http://mochi.test:8888/chrome/js/xpconnect/tests/chrome/file_bug1530146.html"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

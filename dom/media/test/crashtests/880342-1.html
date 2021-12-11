@@ -1,0 +1,208 @@
+<script>
+try { o1 = new window.AudioContext(2, 10, 1019159); } catch(e) { }
+try { o2 = o1.createBufferSource(); } catch(e) { }
+try { o3 = o1.createConvolver(); } catch(e) { }
+try { o4 = o1.createChannelMerger(2); } catch(e) { }
+try { o5 = o1.createAnalyser(); } catch(e) { }
+try { o6 = o1.createPanner(); } catch(e) { }
+try { o7 = o1.createDynamicsCompressor(); } catch(e) { }
+try { o8 = o1.createWaveShaper(); } catch(e) { }
+try { o9 = o1.createChannelSplitter(6); } catch(e) { }
+try { o10 = o1.createScriptProcessor(8192, 2, 3); } catch(e) { }
+try { o1.listener.setPosition(-144115188075855870, 0, -5e-324) } catch(e) { }
+try { o3.buffer = function(){var buffer = o1.createBuffer(2, 741, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<741; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}(); } catch(e) { }
+try { o10.onaudioprocess = function(e) { /* onEvent */ }; } catch(e) { }
+try { o3.connect(o5,0,0) } catch(e) { }
+try { o9.channelCountMode = 'max'; } catch(e) { }
+try { o10.onaudioprocess = function(e) { /* onEvent */ }; } catch(e) { }
+try { o7.channelInterpretation = 'speakers'; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(2, 1887, 63346);for(var c=0; c<2; c++) {for(var i=0; i<1887; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.playbackRate.exponentialRampToValueAtTime(3.819464020334534, 32) } catch(e) { }
+try { o5.connect(o9,2,0) } catch(e) { }
+try { o9.channelCountMode = 'explicit'; } catch(e) { }
+try { o1.listener.speedOfSound = 72057594037927940; } catch(e) { }
+try { o1.destination.channelCountMode = 'explicit'; } catch(e) { }
+try { o7.threshold.value = 0.0646435404346891590021684237399313133209944; } catch(e) { }
+try { o7.connect(o10,0,0) } catch(e) { }
+try { o1.destination.channelInterpretation = 'speakers'; } catch(e) { }
+try { o3.connect(o4,0,0) } catch(e) { }
+try { o7.release.value = 23.030355486273447; } catch(e) { }
+try { o9.connect(o9,4,0) } catch(e) { }
+try { o6.channelCountMode = 'max'; } catch(e) { }
+try { o7.threshold.value = 0.6395867363641939418172910336579661816358566284179687500; } catch(e) { }
+try { o2.connect(o9,3,0) } catch(e) { }
+try { o10.onaudioprocess = function(e) { /* onEvent */ }; } catch(e) { }
+try { o7.connect(o10,0,0) } catch(e) { }
+try { o5.connect(o5,0,0) } catch(e) { }
+try { o2.playbackRate.value = 5e-324; } catch(e) { }
+try { o4.channelInterpretation = 'discrete'; } catch(e) { }
+try { o2.playbackRate.value = 1.2211628339508704; } catch(e) { }
+try { o2.channelCountMode = 'clamped-max'; } catch(e) { }
+try { o1.listener.dopplerFactor = 32; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(22, 1811, 21177);for(var c=0; c<22; c++) {for(var i=0; i<1811; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o5.channelCountMode = 'max'; } catch(e) { }
+try { o1.listener.speedOfSound = 1024; } catch(e) { }
+try { o2.playbackRate.value = 9.999999999999998e-91; } catch(e) { }
+try { o1.listener.speedOfSound = 16; } catch(e) { }
+try { o8.curve = new Float32Array(256); } catch(e) { }
+try { o1.listener.setVelocity(0, 128, 4) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(23, 483, o1.sampleRate);for(var c=0; c<23; c++) {for(var i=0; i<483; i++) {buffer.getChannelData(c)[i] = 0.026;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 945, 43803);for(var c=0; c<3; c++) {for(var i=0; i<945; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(19, 997, 23781);for(var c=0; c<19; c++) {for(var i=0; i<997; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.listener.speedOfSound = -8; } catch(e) { }
+try { o3.channelCountMode = 'explicit'; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 1740, o1.sampleRate);for(var c=0; c<3; c++) {for(var i=0; i<1740; i++) {buffer.getChannelData(c)[i] = 8;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(1, 1057, 30602);for(var c=0; c<1; c++) {for(var i=0; i<1057; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 78, o1.sampleRate);for(var c=0; c<3; c++) {for(var i=0; i<78; i++) {buffer.getChannelData(c)[i] = 10;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.listener.setPosition(9.999999999999995e-275, 0.0001, 2) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(1, 863, o1.sampleRate);for(var c=0; c<1; c++) {for(var i=0; i<863; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o8.channelCount = 3; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(2, 1821, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<1821; i++) {buffer.getChannelData(c)[i] = 0.3655;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o6.connect(o6,0,0) } catch(e) { }
+try { o1.listener.setOrientation(128, -0.479527496, 128, 1, 1, -16) } catch(e) { }
+try { o4.connect(o8,0,0) } catch(e) { }
+try { o7.reduction.exponentialRampToValueAtTime(1.7976931348623157e+308, 2048) } catch(e) { }
+try { o1.listener.dopplerFactor = 0.5754; } catch(e) { }
+try { o7.release.value = 0; } catch(e) { }
+try { o5.getFloatFrequencyData(new Float32Array(2048)) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(2, 120, 42419);for(var c=0; c<2; c++) {for(var i=0; i<120; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o3.buffer = function(){var buffer = o1.createBuffer(1, 1620, o1.sampleRate);for(var c=0; c<1; c++) {for(var i=0; i<1620; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}(); } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(1, 823, 77239);for(var c=0; c<1; c++) {for(var i=0; i<823; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.destination.channelInterpretation = 'speakers'; } catch(e) { }
+try { o1.listener.setPosition(2048, 0.000522899209, -4503599627370495) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 84028, 75483);for(var c=0; c<3; c++) {for(var i=0; i<84028; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.playbackRate.setTargetAtTime(5e-324, 9.999999999999998e-104, 0) } catch(e) { }
+try { o7.attack.value = 9.999999999999994e-236; } catch(e) { }
+try { o1.listener.dopplerFactor = 1024; } catch(e) { }
+try { o3.connect(o7,0,0) } catch(e) { }
+try { o2.playbackRate.linearRampToValueAtTime(0, 0) } catch(e) { }
+try { o4.connect(o10,0,0) } catch(e) { }
+try { o1.listener.setVelocity(0.682, 32, 1e-76) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 201, o1.sampleRate);for(var c=0; c<3; c++) {for(var i=0; i<201; i++) {buffer.getChannelData(c)[i] = 4;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.connect(o6,0,0) } catch(e) { }
+try { o5.getByteFrequencyData(new Uint8Array(32)) } catch(e) { }
+try { o3.connect(o6,0,0) } catch(e) { }
+try { o7.channelCount = 1; } catch(e) { }
+try { o2.playbackRate.setValueCurveAtTime(new Float32Array(512), 8, 1) } catch(e) { }
+try { o3.connect(o4,0,1) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 1996, o1.sampleRate);for(var c=0; c<3; c++) {for(var i=0; i<1996; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.listener.dopplerFactor = 2; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(2, 983, 60517);for(var c=0; c<2; c++) {for(var i=0; i<983; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o6.coneInnerAngle = 360; } catch(e) { }
+try { o8.curve = new Float32Array(512); } catch(e) { }
+try { o1.listener.setPosition(32, 16, 9.999999999999995e-280) } catch(e) { }
+try { o6.connect(o6,0,0) } catch(e) { }
+try { o1.listener.setPosition(2097151, 512, 5e-324) } catch(e) { }
+try { o7.channelCountMode = 'clamped-max'; } catch(e) { }
+try { o1.destination.channelCountMode = 'max'; } catch(e) { }
+try { o1.listener.setPosition(0, 1000000, 64) } catch(e) { }
+try { o4.connect(o5,0,0) } catch(e) { }
+try { o9.connect(o4,0,1) } catch(e) { }
+try { o7.attack.setValueCurveAtTime(new Float32Array(8), 256, 2048) } catch(e) { }
+try { o9.channelCountMode = 'explicit'; } catch(e) { }
+try { o1.listener.dopplerFactor = 5e-324; } catch(e) { }
+try { o4.connect(o10,0,0) } catch(e) { }
+try { o7.ratio.cancelScheduledValues(1) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(1, 1590, 9733);for(var c=0; c<1; c++) {for(var i=0; i<1590; i++) {buffer.getChannelData(c)[i] = 2;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.destination.channelCount = 2; } catch(e) { }
+try { o1.destination.channelInterpretation = 'speakers'; } catch(e) { }
+try { o5.channelCountMode = 'max'; } catch(e) { }
+try { o9.channelCountMode = 'clamped-max'; } catch(e) { }
+try { o7.attack.setTargetAtTime(0.11499421161482907549622467513472656719386577606201171875000, 1, 1.7976931348623157e+308) } catch(e) { }
+try { o2.playbackRate.value = 1; } catch(e) { }
+try { o3.normalize = false; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(2, 1866, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<1866; i++) {buffer.getChannelData(c)[i] = 0.174908422905697580329587026426452212035655975341797;}}return buffer;}(); } catch(e) { }
+try { o2.playbackRate.value = 1.0; } catch(e) { }
+try { o7.threshold.value = 100; } catch(e) { }
+try { o1.listener.setVelocity(961.4441892370145, 9.999999999999999e-157, 1) } catch(e) { }
+try { o5.getByteFrequencyData(new Uint8Array(2)) } catch(e) { }
+try { o6.connect(o10,0,0) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 1176, o1.sampleRate);for(var c=0; c<3; c++) {for(var i=0; i<1176; i++) {buffer.getChannelData(c)[i] = 9.753993292300242;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.playbackRate.linearRampToValueAtTime(0.8687, 32) } catch(e) { }
+try { o5.channelCountMode = 'explicit'; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(13, 703, 12723);for(var c=0; c<13; c++) {for(var i=0; i<703; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.loopEnd = 1.7976931348623157e+308; } catch(e) { }
+try { o3.connect(o7,0,0) } catch(e) { }
+try { o1.destination.channelCountMode = 'clamped-max'; } catch(e) { }
+try { o1.destination.channelInterpretation = 'discrete'; } catch(e) { }
+try { o2.connect(o10,0,0) } catch(e) { }
+try { o3.normalize = false; } catch(e) { }
+try { /* switch-case did not return anything. */ } catch(e) { }
+try { o10.connect(o8,0,0) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 132, 88507);for(var c=0; c<3; c++) {for(var i=0; i<132; i++) {buffer.getChannelData(c)[i] = 1.7976931348623157e+308;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.loopStart = 1.7976931348623157e+308; } catch(e) { }
+try { o1.listener.dopplerFactor = 1024; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(1, 40, o1.sampleRate);for(var c=0; c<1; c++) {for(var i=0; i<40; i++) {buffer.getChannelData(c)[i] = 1.3785770335346594;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o4.connect(o9,5,0) } catch(e) { }
+try { o8.curve = new Float32Array(16); } catch(e) { }
+try { o10.onaudioprocess = function(e) { /* onEvent */ }; } catch(e) { }
+try { o6.channelCountMode = 'explicit'; } catch(e) { }
+try { o2.playbackRate.value = 0; } catch(e) { }
+try { o4.channelCount = 3; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 220, o1.sampleRate);for(var c=0; c<3; c++) {for(var i=0; i<220; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.destination.channelInterpretation = 'discrete'; } catch(e) { }
+try { o1.listener.setPosition(70368744177664, 2048, 1.7976931348623157e+308) } catch(e) { }
+try { o2.playbackRate.setValueCurveAtTime(new Float32Array(128), 1.7976931348623157e+308, 0.75) } catch(e) { }
+try { o5.fftSize = 118; } catch(e) { }
+try { o5.minDecibels = 1; } catch(e) { }
+try { o7.release.value = 5e-324; } catch(e) { }
+try { o2.channelCount = 3; } catch(e) { }
+try { o2.channelCountMode = 'clamped-max'; } catch(e) { }
+try { o3.normalize = false; } catch(e) { }
+try { o1.listener.speedOfSound = 2; } catch(e) { }
+try { o2.loopStart = 32; } catch(e) { }
+try { o3.channelCountMode = 'max'; } catch(e) { }
+try { o1.listener.setPosition(0.37976588317653304, -274877906943, 64) } catch(e) { }
+try { o8.curve = new Float32Array(4); } catch(e) { }
+try { o1.listener.setVelocity(16, -1024, 0) } catch(e) { }
+try { o5.minDecibels = 10000; } catch(e) { }
+try { o2.playbackRate.value = 5e-324; } catch(e) { }
+try { o3.connect(o9,1,0) } catch(e) { }
+try { o10.onaudioprocess = function(e) { /* onEvent */ }; } catch(e) { }
+try { o5.connect(o8,0,0) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(3, 554, o1.sampleRate);for(var c=0; c<3; c++) {for(var i=0; i<554; i++) {buffer.getChannelData(c)[i] = 0.000001;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o7.release.value = 0; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(1, 1289, 29583);for(var c=0; c<1; c++) {for(var i=0; i<1289; i++) {buffer.getChannelData(c)[i] = 5e-324;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.listener.setOrientation(1024, 64, 16, 1024, 1, 68719476735) } catch(e) { }
+try { o1.listener.setOrientation(512, 10000000, 274877906944, 9.999999999999998e-113, -8, 3.6191134923595274) } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(1, 1453, 15258);for(var c=0; c<1; c++) {for(var i=0; i<1453; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o8.channelInterpretation = 'discrete'; } catch(e) { }
+try { o5.channelInterpretation = 'discrete'; } catch(e) { }
+try { o7.connect(o9,4,0) } catch(e) { }
+try { o8.connect(o10,0,0) } catch(e) { }
+try { o1.listener.setPosition(18014398509481984, 16, 0.505129302503804056279079759406158700585365295410156250000) } catch(e) { }
+try { o10.connect(o9,5,0) } catch(e) { }
+try { o2.loop = false; } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(11, 1673, o1.sampleRate);for(var c=0; c<11; c++) {for(var i=0; i<1673; i++) {buffer.getChannelData(c)[i] = 0;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(2, 577, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<577; i++) {buffer.getChannelData(c)[i] = 0.5611;}}return buffer;}() } catch(e) { }
+try { o2.connect(o1.destination); } catch(e) { }
+try { o1.listener.setOrientation(64, 2049, 5e-324, 0.1777, 2, 7) } catch(e) { }
+try { o5.maxDecibels = 128; } catch(e) { }
+try { o2.start(0) } catch(e) { }
+</script>

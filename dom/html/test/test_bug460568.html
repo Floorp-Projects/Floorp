@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=460568
+-->
+<head>
+  <title>Test for Bug 460568</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/EventUtils.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=460568">Mozilla Bug 460568</a>
+<p id="display"><a href="" id="anchor">a[href]</a></p>
+<div id="editor">
+  <a href="" id="anchorInEditor">a[href] in editor</a>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 460568 **/
+
+function runTest()
+{
+  var editor = document.getElementById("editor");
+  var anchor = document.getElementById("anchor");
+  var anchorInEditor = document.getElementById("anchorInEditor");
+
+  var focused;
+  anchorInEditor.onfocus = function() { focused = true; };
+
+  function isReallyEditable()
+  {
+    editor.focus();
+    var range = document.createRange();
+    range.selectNodeContents(editor);
+    var prevStr = range.toString();
+
+    var docShell = SpecialPowers.wrap(window).docShell;
+    var controller =
+          docShell.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                  .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
+                  .QueryInterface(SpecialPowers.Ci.nsISelectionController);
+    var sel = controller.getSelection(controller.SELECTION_NORMAL);
+    sel.collapse(anchorInEditor, 0);
+    sendString("a");
+    range.selectNodeContents(editor);
+    return prevStr != range.toString();
+  }
+
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("contenteditable", "true");
+  anchorInEditor.focus();
+  is(focused, false, "focus moved to element in contenteditable=true");
+  is(isReallyEditable(), true, "cannot edit by a key event");
+
+  // for bug 502273
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("dummy", "dummy");
+  editor.removeAttribute("dummy");
+  anchorInEditor.focus();
+  is(focused, false, "focus moved to element in contenteditable=true (after dummy attribute was removed)");
+  is(isReallyEditable(), true, "cannot edit by a key event");
+
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("contenteditable", "false");
+  anchorInEditor.focus();
+  is(focused, true, "focus didn't move to element in contenteditable=false");
+  is(isReallyEditable(), false, "can edit by a key event");
+
+  // for bug 502273
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("dummy", "dummy");
+  editor.removeAttribute("dummy");
+  anchorInEditor.focus();
+  is(focused, true, "focus moved to element in contenteditable=true (after dummy attribute was removed)");
+  is(isReallyEditable(), false, "cannot edit by a key event");
+
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("contenteditable", "true");
+  anchorInEditor.focus();
+  is(focused, false, "focus moved to element in contenteditable=true");
+  is(isReallyEditable(), true, "cannot edit by a key event");
+
+  // for bug 502273
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("dummy", "dummy");
+  editor.removeAttribute("dummy");
+  anchorInEditor.focus();
+  is(focused, false, "focus moved to element in contenteditable=true (after dummy attribute was removed)");
+  is(isReallyEditable(), true, "cannot edit by a key event");
+
+  focused = false;
+  anchor.focus();
+  editor.removeAttribute("contenteditable");
+  anchorInEditor.focus();
+  is(focused, true, "focus didn't move to element in contenteditable removed element");
+  is(isReallyEditable(), false, "can edit by a key event");
+
+  focused = false;
+  anchor.focus();
+  editor.contentEditable = true;
+  anchorInEditor.focus();
+  is(focused, false, "focus moved to element in contenteditable=true by property");
+  is(isReallyEditable(), true, "cannot edit by a key event");
+
+  focused = false;
+  anchor.focus();
+  editor.contentEditable = false;
+  anchorInEditor.focus();
+  is(focused, true, "focus didn't move to element in contenteditable=false by property");
+  is(isReallyEditable(), false, "can edit by a key event");
+
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("contenteditable", "true");
+  anchorInEditor.focus();
+  is(focused, false, "focus moved to element in contenteditable=true");
+  is(isReallyEditable(), true, "cannot edit by a key event");
+
+  // for bug 502273
+  focused = false;
+  anchor.focus();
+  editor.setAttribute("dummy", "dummy");
+  editor.removeAttribute("dummy");
+  anchorInEditor.focus();
+  is(focused, false, "focus moved to element in contenteditable=true (after dummy attribute was removed)");
+  is(isReallyEditable(), true, "cannot edit by a key event");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html dir="">
+  <head>
+    <title>Toolbox option</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="chrome://devtools/content/framework/options-panel.css">
+    <script src="chrome://devtools/content/shared/theme-switching.js"></script>
+    <link rel="localization" href="devtools/client/toolbox-options.ftl"/>
+  </head>
+  <body role="application" class="theme-body">
+  <form id="options-panel">
+    <div id="tools-box" class="options-vertical-pane">
+      <fieldset id="default-tools-box" class="options-groupbox">
+        <legend data-l10n-id="options-select-default-tools-label"></legend>
+        <span id="tools-not-supported-label" class="options-citation-label theme-comment" data-l10n-id="options-tool-not-supported-label"></span>
+      </fieldset>
+
+      <fieldset id="additional-tools-box" class="options-groupbox">
+        <legend data-l10n-id="options-select-additional-tools-label"></legend>
+      </fieldset>
+
+      <fieldset id="enabled-toolbox-buttons-box" class="options-groupbox">
+        <legend data-l10n-id="options-select-enabled-toolbox-buttons-label"></legend>
+      </fieldset>
+    </div>
+
+    <div class="options-vertical-pane">
+      <fieldset id="devtools-theme-box"
+                class="options-groupbox
+                       horizontal-options-groupbox
+                       radiogroup"
+                data-pref="devtools.theme">
+        <legend data-l10n-id="options-select-dev-tools-theme-label"></legend>
+      </fieldset>
+
+      <fieldset id="inspector-options" class="options-groupbox">
+        <legend data-l10n-id="options-context-inspector"></legend>
+        <label data-l10n-id="options-show-user-agent-styles-tooltip">
+          <input type="checkbox"
+                 data-pref="devtools.inspector.showUserAgentStyles"/>
+          <span data-l10n-id="options-show-user-agent-styles-label"></span>
+        </label>
+        <label data-l10n-id="options-collapse-attrs-tooltip">
+          <input type="checkbox"
+                 data-pref="devtools.markup.collapseAttributes"/>
+          <span data-l10n-id="options-collapse-attrs-label"></span>
+        </label>
+        <label>
+          <span data-l10n-id="options-default-color-unit-label"></span>
+          <select id="defaultColorUnitMenuList"
+                  data-pref="devtools.defaultColorUnit">
+            <option value="authored" data-l10n-id="options-default-color-unit-authored"></option>
+            <option value="hex" data-l10n-id="options-default-color-unit-hex"></option>
+            <option value="hsl" data-l10n-id="options-default-color-unit-hsl"></option>
+            <option value="rgb" data-l10n-id="options-default-color-unit-rgb"></option>
+            <option value="name" data-l10n-id="options-default-color-unit-name"></option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset id="styleeditor-options" class="options-groupbox">
+        <legend data-l10n-id="options-styleeditor-label"></legend>
+        <label data-l10n-id="options-stylesheet-autocompletion-tooltip">
+          <input type="checkbox"
+                 data-pref="devtools.styleeditor.autocompletion-enabled"/>
+          <span data-l10n-id="options-stylesheet-autocompletion-label"></span>
+        </label>
+      </fieldset>
+
+      <fieldset id="screenshot-options" class="options-groupbox">
+        <legend data-l10n-id="options-screenshot-label"></legend>
+        <label data-l10n-id="options-screenshot-clipboard-tooltip2">
+          <input type="checkbox"
+                 id="devtools-screenshot-clipboard"
+                 data-pref="devtools.screenshot.clipboard.enabled"/>
+          <span data-l10n-id="options-screenshot-clipboard-only-label"></span>
+        </label>
+        <label data-l10n-id="options-screenshot-audio-tooltip">
+          <input type="checkbox"
+                 id="devtools-screenshot-audio"
+                 data-pref="devtools.screenshot.audio.enabled"/>
+          <span data-l10n-id="options-screenshot-audio-label"></span>
+        </label>
+      </fieldset>
+    </div>
+
+    <div class="options-vertical-pane">
+      <fieldset id="sourceeditor-options" class="options-groupbox">
+        <legend data-l10n-id="options-sourceeditor-label"></legend>
+        <label data-l10n-id="options-sourceeditor-detectindentation-tooltip">
+          <input type="checkbox"
+                 id="devtools-sourceeditor-detectindentation"
+                 data-pref="devtools.editor.detectindentation"/>
+          <span data-l10n-id="options-sourceeditor-detectindentation-label"></span>
+        </label>
+        <label data-l10n-id="options-sourceeditor-autoclosebrackets-tooltip">
+          <input type="checkbox"
+                 id="devtools-sourceeditor-autoclosebrackets"
+                 data-pref="devtools.editor.autoclosebrackets"/>
+          <span data-l10n-id="options-sourceeditor-autoclosebrackets-label"></span>
+        </label>
+        <label data-l10n-id="options-sourceeditor-expandtab-tooltip">
+          <input type="checkbox"
+                 id="devtools-sourceeditor-expandtab"
+                 data-pref="devtools.editor.expandtab"/>
+          <span data-l10n-id="options-sourceeditor-expandtab-label"></span>
+        </label>
+        <label>
+          <span data-l10n-id="options-sourceeditor-tabsize-label"></span>
+          <select id="devtools-sourceeditor-tabsize-select"
+                  data-pref="devtools.editor.tabsize">
+            <option label="2">2</option>
+            <option label="4">4</option>
+            <option label="8">8</option>
+          </select>
+        </label>
+        <label>
+          <span data-l10n-id="options-sourceeditor-keybinding-label"></span>
+          <select id="devtools-sourceeditor-keybinding-select"
+                  data-pref="devtools.editor.keymap">
+            <option value="default" data-l10n-id="options-sourceeditor-keybinding-default-label"></option>
+            <option value="vim">Vim</option>
+            <option value="emacs">Emacs</option>
+            <option value="sublime">Sublime Text</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset id="context-options" class="options-groupbox">
+        <legend data-l10n-id="options-context-advanced-settings"></legend>
+          <label data-l10n-id="options-source-maps-tooltip">
+            <input type="checkbox"
+                   data-pref="devtools.source-map.client-service.enabled"/>
+            <span data-l10n-id="options-source-maps-label"></span>
+          </label>
+         <label data-l10n-id="options-show-platform-data-tooltip">
+            <input type="checkbox"
+                   id="devtools-show-gecko-data"
+                   data-pref="devtools.performance.ui.show-platform-data"/>
+            <span data-l10n-id="options-show-platform-data-label"></span>
+          </label>
+          <label data-l10n-id="options-disable-http-cache-tooltip">
+            <input type="checkbox"
+                   id="devtools-disable-cache"
+                   data-pref="devtools.cache.disabled"/>
+            <span data-l10n-id="options-disable-http-cache-label"></span>
+          </label>
+          <label data-l10n-id="options-disable-javascript-tooltip">
+            <input type="checkbox"
+                   id="devtools-disable-javascript"/>
+            <span data-l10n-id="options-disable-javascript-label"></span>
+          </label>
+          <label data-l10n-id="options-enable-service-workers-http-tooltip">
+            <input type="checkbox"
+                   id="devtools-enable-serviceWorkersTesting"
+                   data-pref="devtools.serviceWorkers.testing.enabled"/>
+            <span data-l10n-id="options-enable-service-workers-http-label"></span>
+          </label>
+          <label data-l10n-id="options-enable-chrome-tooltip">
+            <input type="checkbox"
+                   data-pref="devtools.chrome.enabled"/>
+            <span data-l10n-id="options-enable-chrome-label"></span>
+          </label>
+          <label data-l10n-id="options-enable-remote-tooltip2">
+            <input type="checkbox"
+                   data-pref="devtools.debugger.remote-enabled"/>
+            <span data-l10n-id="options-enable-remote-label"></span>
+          </label>
+          <span class="options-citation-label theme-comment"
+                id="triggers-page-refresh-label" data-l10n-id="options-context-triggers-page-refresh"
+          ></span>
+      </fieldset>
+    </div>
+
+  </form>
+  </body>
+</html>

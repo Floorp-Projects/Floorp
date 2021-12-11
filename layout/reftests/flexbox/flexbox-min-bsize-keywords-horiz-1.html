@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Test: Testing a horizonal flex container with keywords on min-width</title>
+  <meta charset="utf-8">
+  <style>
+    .container {
+      display: flex;
+      flex-direction: row;
+    }
+    .container > * {
+      writing-mode: vertical-lr;
+      border: 1px solid black;
+      flex-basis: 0;
+    }
+    .itemA {
+      background: purple;
+      min-width: -moz-max-content;
+      min-width: max-content;
+    }
+    .itemB {
+      background: teal;
+      min-width: -moz-min-content;
+      min-width: min-content;
+    }
+    .itemC {
+      background: blue;
+      min-width: -moz-fit-content;
+      min-width: fit-content;
+    }
+    .itemD {
+      background: yellow;
+      min-width: -moz-available;
+      min-width: -webkit-fill-available;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="itemA">itemA</div>
+    <div class="itemB">itemB</div>
+    <div class="itemC">itemC</div>
+    <div class="itemD">itemD</div>
+  </div>
+</body>
+</html>

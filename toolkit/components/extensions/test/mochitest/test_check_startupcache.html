@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Check StartupCache</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function check_ExtensionParent_StartupCache_is_non_empty() {
+  // This test aims to verify that the StartupCache of extensions is populated.
+  // Ideally, we would load an extension, restart the browser and confirm the
+  // existence of the StartupCache. That is not possible in a mochitest.
+  // So we will just read the contents of the StartupCache and verify that it
+  // populated and assume that it carries over to the next startup.
+  // The latter is checked in test_startup_canary.html
+
+  const { WebExtensionPolicy } = SpecialPowers.Cu.getGlobalForObject(SpecialPowers.Services);
+  // The Mochikit extension is part of the mochitests framework, so the fact
+  // that this test runs implies that the extension should have been started.
+  ok(
+    WebExtensionPolicy.getByID("mochikit@mozilla.org"),
+    "This test expects the Mochikit extension to be running"
+  );
+
+  let chromeScript = loadChromeScript(() => {
+    const {
+      ExtensionParent,
+    } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+    const { StartupCache } = ExtensionParent;
+    this.sendAsyncMessage("StartupCache_data", StartupCache._data);
+  });
+
+  let map = await chromeScript.promiseOneMessage("StartupCache_data");
+  chromeScript.destroy();
+
+  // "manifests" is populated by Extension's parseManifest in Extension.jsm.
+  const keys = ["manifests", "mochikit@mozilla.org", "2.0", "en-US"];
+  for (let key of keys) {
+    map = map.get(key);
+    ok(map, `StartupCache data map contains ${key}`);
+  }
+
+  // At this point `map` is expected to be the return value of
+  // ExtensionData's parseManifest.
+
+  is(
+    map?.manifest?.applications?.gecko?.id,
+    "mochikit@mozilla.org",
+    "StartupCache.manifests contains a parsed manifest"
+  );
+});
+</script>
+
+</body>
+</html>

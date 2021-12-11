@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+WEBGL_TYPES = {};
+WEBGL_TYPES['experimental-webgl'] = true;
+WEBGL_TYPES.webgl = true;
+
+function AreBothIn(a, b, set) {
+    return (a in set) && (b in set);
+}
+
+function IsAlias(typeA, typeB) {
+    if (typeA == typeB)
+        return true;
+
+    if (AreBothIn(typeA, typeB, WEBGL_TYPES))
+        return true;
+
+    return false;
+}
+
+function TestContextRetrieval(creationType, requestType, functionalTypeSet) {
+    var canvas = document.createElement('canvas');
+    var createdGL = canvas.getContext(creationType);
+
+    var didCreationSucceed = (createdGL != null);
+    if (creationType in functionalTypeSet) {
+        ok(createdGL, 'Context creation should succeed for type \'' +
+                      creationType + '\'');
+    } else {
+        ok(!createdGL, 'Context creation should fail for type \'' +
+                       creationType + '\'');
+        return;
+    }
+
+    var requestedGL = canvas.getContext(requestType);
+
+    if (requestType in functionalTypeSet &&
+        IsAlias(creationType, requestType))
+    {
+        ok(requestedGL, 'Request for \'' + requestType + '\' from \'' +
+                        creationType + '\' should succeed.');
+        ok(requestedGL == createdGL, 'Request for \'' + requestType +
+                                     '\' from \'' + creationType +
+                                     '\' should match.');
+    } else {
+        ok(!requestedGL, 'Request for \'' + requestType + '\' from \'' +
+                         creationType + '\' should fail.');
+    }
+}
+
+function IsWebGLFunctional() {
+    var canvas = document.createElement('canvas');
+    return canvas.getContext('experimental-webgl') != null;
+}
+
+function IsWebGLConformant() {
+    var canvas = document.createElement('canvas');
+    return canvas.getContext('webgl') != null;
+}
+
+var typeList = ['2d', 'experimental-webgl', 'webgl'];
+var functionalTypeSet = {};
+functionalTypeSet['2d'] = true;
+
+if (IsWebGLFunctional())
+    functionalTypeSet['experimental-webgl'] = true;
+
+if (IsWebGLConformant())
+    functionalTypeSet.webgl = true;
+
+for (var i in typeList) {
+    var creationType = typeList[i];
+
+    for (var j in typeList) {
+        var requestType = typeList[j];
+
+        TestContextRetrieval(creationType, requestType, functionalTypeSet);
+    }
+}
+
+</script>
+</body>
+</html>

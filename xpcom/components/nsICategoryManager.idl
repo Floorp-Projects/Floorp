@@ -1,0 +1,137 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsISupportsPrimitives.idl"
+
+interface nsISimpleEnumerator;
+
+%{C++
+#include "nsString.h"
+%}
+
+/*
+ * nsICategoryManager
+ */
+
+[scriptable, builtinclass, uuid(de021d54-57a3-4025-ae63-4c8eedbe74c0)]
+interface nsICategoryEntry : nsISupportsCString
+{
+  readonly attribute ACString entry;
+
+  readonly attribute ACString value;
+};
+
+[builtinclass, scriptable, uuid(3275b2cd-af6d-429a-80d7-f0c5120342ac)]
+interface nsICategoryManager : nsISupports
+{
+    /**
+     * Get the value for the given category's entry.
+     * @param aCategory The name of the category ("protocol")
+     * @param aEntry The entry you're looking for ("http")
+     * @return The value.
+     */
+    ACString getCategoryEntry(in ACString aCategory, in ACString aEntry);
+
+    /**
+     * Add an entry to a category.
+     * @param aCategory The name of the category ("protocol")
+     * @param aEntry The entry to be added ("http")
+     * @param aValue The value for the entry ("moz.httprulez.1")
+     * @param aPersist Should this data persist between invocations?
+     * @param aReplace Should we replace an existing entry?
+     * @return Previous entry, if any
+     */
+    ACString addCategoryEntry(in ACString aCategory, in ACString aEntry,
+                              in ACString aValue, in boolean aPersist,
+                              in boolean aReplace);
+
+    /**
+     * Delete an entry from the category.
+     * @param aCategory The name of the category ("protocol")
+     * @param aEntry The entry to be added ("http")
+     * @param aPersist Delete persistent data from registry, if present?
+     */
+    void deleteCategoryEntry(in ACString aCategory, in ACString aEntry,
+                             in boolean aPersist);
+
+    /**
+     * Delete a category and all entries.
+     * @param aCategory The category to be deleted.
+     */
+    void deleteCategory(in ACString aCategory);
+
+    /**
+     * Enumerate the entries in a category.
+     * @param aCategory The category to be enumerated.
+     * @return a simple enumerator, each result QIs to
+     *         nsICategoryEntry.
+     */
+    nsISimpleEnumerator enumerateCategory(in ACString aCategory);
+
+
+    /**
+     * Enumerate all existing categories
+     * @param aCategory The category to be enumerated.
+     * @return a simple enumerator, each result QIs to
+     *         nsISupportsCString.
+     */
+    nsISimpleEnumerator enumerateCategories();
+
+    %{C++
+    template<size_t N>
+    nsresult
+    GetCategoryEntry(const char (&aCategory)[N], const nsACString& aEntry,
+                     nsACString& aResult)
+    {
+        return GetCategoryEntry(nsLiteralCString(aCategory),
+                                aEntry, aResult);
+    }
+
+    template<size_t N, size_t M>
+    nsresult
+    GetCategoryEntry(const char (&aCategory)[N], const char (&aEntry)[M],
+                     nsACString& aResult)
+    {
+        return GetCategoryEntry(nsLiteralCString(aCategory),
+                                nsLiteralCString(aEntry),
+                                aResult);
+    }
+
+    nsresult
+    AddCategoryEntry(const nsACString& aCategory, const nsACString& aEntry,
+                     const nsACString& aValue, bool aPersist, bool aReplace)
+    {
+        nsCString oldValue;
+        return AddCategoryEntry(aCategory, aEntry, aValue, aPersist, aReplace,
+                                oldValue);
+    }
+
+    template<size_t N>
+    nsresult
+    AddCategoryEntry(const char (&aCategory)[N], const nsACString& aEntry,
+                     const nsACString& aValue, bool aPersist, bool aReplace)
+    {
+        nsCString oldValue;
+        return AddCategoryEntry(nsLiteralCString(aCategory), aEntry, aValue,
+                                aPersist, aReplace, oldValue);
+    }
+
+    template<size_t N>
+    nsresult
+    DeleteCategoryEntry(const char (&aCategory)[N], const nsACString& aEntry, bool aPersist)
+    {
+        return DeleteCategoryEntry(nsLiteralCString(aCategory), aEntry, aPersist);
+    }
+
+
+    template<size_t N>
+    nsresult
+    EnumerateCategory(const char (&aCategory)[N], nsISimpleEnumerator** aResult)
+    {
+        return EnumerateCategory(nsLiteralCString(aCategory), aResult);
+    }
+    %}
+};

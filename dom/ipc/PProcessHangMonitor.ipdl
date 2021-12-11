@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// ParamTraits stuff for nsIRemoteTab::NavigationType
+include "mozilla/dom/TabMessageUtils.h";
+using nsIRemoteTab::NavigationType from "nsIRemoteTab.h";
+
+using base::ProcessId from "base/process.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
+
+namespace mozilla {
+
+struct SlowScriptData
+{
+  TabId tabId;
+  nsCString filename;
+  nsString addonId;
+  double duration;
+};
+
+protocol PProcessHangMonitor
+{
+parent:
+  async HangEvidence(SlowScriptData data);
+  async ClearHang();
+
+child:
+  async TerminateScript();
+
+  async BeginStartingDebugger();
+  async EndStartingDebugger();
+
+  async PaintWhileInterruptingJS(TabId tabId, LayersObserverEpoch aEpoch);
+
+  async CancelContentJSExecutionIfRunning(
+      TabId tabId, NavigationType aNavigationType,
+      int32_t aNavigationIndex, nsCString? aNavigationURI, int32_t aEpoch);
+};
+
+} // namespace mozilla

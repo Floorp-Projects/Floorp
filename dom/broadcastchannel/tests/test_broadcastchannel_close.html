@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script type="application/javascript">
+
+function runTest() {
+  var receiver = new BroadcastChannel("foo");
+  var sequence = [ "2", "done" ];
+  receiver.onmessage = function(e) {
+    if (!sequence.length) {
+      ok(false, "No more data is expected");
+      return;
+    }
+
+    var data = sequence.shift();
+    is(e.data, data);
+
+    if (!sequence.length) {
+      SimpleTest.executeSoon(function() {
+        SimpleTest.finish();
+      });
+    }
+  };
+
+  var x = new BroadcastChannel("foo");
+  x.close();
+  try {
+    x.postMessage("1");
+    ok(false, "PostMessage should throw if called after a close().");
+  } catch (e) {
+    ok(true, "PostMessage should throw if called after a close().");
+  }
+
+  var y = new BroadcastChannel("foo");
+  y.postMessage("2");
+  y.close();
+  try {
+    y.postMessage("3");
+    ok(false, "PostMessage should throw if called after a close().");
+  } catch (e) {
+    ok(true, "PostMessage should throw if called after a close().");
+  }
+
+  var z = new BroadcastChannel("foo");
+  z.postMessage("done");
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+</script>
+</body>
+</html>

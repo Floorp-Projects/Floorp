@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<video id="v" controls></video>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function createMediaKeysAndSet() {
+  return navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, gCencMediaKeySystemConfig)
+  .then(function (access) {
+    return access.createMediaKeys();
+  })
+  .then(function (mediaKeys) {
+    document.getElementById("v").setMediaKeys(mediaKeys);
+    return mediaKeys;
+  });
+}
+
+function test() {
+  createMediaKeysAndSet()
+    .then((m) => {
+      let video = document.getElementById("v");
+      is(video.mediaKeys, m, "Should have set MediaKeys on media element");
+      // getStatusForPolicy() is not suppored by ClearKey key system.
+      // The promise will always be rejected with NotSupportedError.
+      return video.mediaKeys.getStatusForPolicy({minHdcpVersion: "hdcp-2.0"});
+    })
+    .then((mediaKeyStatus) => {
+      ok(false, "Promise of getStatusForPolicy should not be resolved with clearkey key system");
+    })
+    // Promise rejected with NotSupportedError as expected.
+    .catch(reason => is("NotSupportedError", reason.name,
+                        "Promise should be rejected with NotSupportedError."))
+    .then(() => SimpleTest.finish());
+}
+
+SpecialPowers.pushPrefEnv({"set":
+    [
+      ["media.eme.hdcp-policy-check.enabled", true],
+    ]
+  }, test);
+
+</script>
+</pre>
+</body>
+</html>

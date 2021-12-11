@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+<!--
+  A test for a partial pre-rendered transform animation moves to a place where
+  the whole area of the transform animation is out of the viewport.
+  We consider it jank, thus we report it to the main-thread, then we clear out
+  the initial green rectangle, thus the result should be a blank page.
+  -->
+<style>
+html {
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+@keyframes anim {
+  /* translate to a position the element is completely outside of the */
+  /* viewport                                                         */
+  to { transform: translateX(-300vw); }
+}
+#target {
+  width: 200vw;
+  height: 200vh;
+  position: absolute;
+  /* Some part of this element needs to be visible initially so that  */
+  /* a display item for this element is generated, thus the transform */
+  /* animation runs on the compositor.                                */
+  transform: translateX(-110vw);
+}
+</style>
+<div id="target">
+  <!--
+    Put an SVG element so that the transform display item has a blob on
+    WebRender which means this test properly fails without the proper fix.
+    -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+    <rect fill="green" width="16" height="16"></rect>
+  </svg>
+</div>
+<script>
+document.addEventListener("MozReftestInvalidate", () => {
+  target.style.animation = "anim 100s 1s step-start";
+  target.addEventListener("animationstart", () => {
+    // Wait 100ms to make sure we can report the jank to the main-thread and
+    // in response to the report we can do a paint process on the main-thread.
+    setTimeout(() => {
+      document.documentElement.classList.remove("reftest-wait");
+    }, 100);
+  });
+}, { once: true });
+</script>
+</html>

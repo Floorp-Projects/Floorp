@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "784519",
+    title: "setRemoteDescription (offer) in 'have-local-offer'"
+  });
+
+runNetworkTest(function () {
+  const test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.removeAfter("PC_LOCAL_SET_LOCAL_DESCRIPTION");
+
+  test.chain.append([
+    async function PC_LOCAL_SET_REMOTE_OFFER(test) {
+      const p = test.pcLocal._pc.setRemoteDescription(test.pcLocal._latest_offer);
+      await new Promise(r => test.pcLocal.onsignalingstatechange = r);
+      is(test.pcLocal._pc.signalingState, 'stable', 'should fire stable');
+      await new Promise(r => test.pcLocal.onsignalingstatechange = r);
+      is(test.pcLocal._pc.signalingState, 'have-remote-offer',
+         'should fire have-remote-offer');
+      await p;
+      ok(true, 'setRemoteDescription should succeed');
+    }
+  ]);
+
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for jQuery</title>
+  <script src="/MochiKit/Base.js"></script>
+  <script src="/MochiKit/Async.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript">
+    // On Linux 64 Stylo Disabled, we observed a failure in the
+    // test 'stop() - several in queue' in fx.js with a low precision value.
+    // We specify a value that seems safe. The root cause of this issue is
+    // believed to be jQuery's use of new Date as a mechanism to advance animations.
+  	SpecialPowers.pushPrefEnv({set:
+      [["privacy.reduceTimerPrecision", true],
+       ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000]]});
+  </script>
+  <script type="text/javascript" src="../lib/AJAX_setup.js"></script>         
+  <link rel="stylesheet" type="text/css" href="../lib/test.css" />
+</head>
+<body>
+  <iframe width="100%" height="500" id="testframe" src=""></iframe>
+</body>
+</html>
+

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=812687
+-->
+<head>
+  <title>Test for Bug 812687: focus order of reordered flex items</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    .container { display: flex; }
+
+    #focus1 { background: yellow;    }
+    #focus2 { background: lightgray; }
+    #focus3 { background: orange;    }
+    #focus4 { background: lightblue; }
+    #focus5 { background: pink;      }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=812687">Mozilla Bug 812687</a>
+<p id="display">
+  <a href="#" id="beforeContainer">Link before container</a>
+  <!-- This flex container's children are reordered visually with the "order"
+       CSS property, but their focus order (when tabbing through them) should
+       match their DOM order. So, #focus1 should receive focus before the other
+       flex items, even though it isn't visually the first flex item.  And so
+       on, up to #focus5, which is visually first (due to its negative "order"
+       value) but should be focused last (due to being last in the DOM). -->
+  <div class="container">
+    <a href="#" id="focus1">1</a>
+    <div><a href="#" id="focus2">2</a></div>
+    <div style="order: 100"><a href="#" id="focus3">3</a></div>
+    <div><a href="#" id="focus4">4</a></div>
+    <a href="#" id="focus5" style="order: -1">5</a>
+  </div>
+</p>
+<div id="content" style="display: none"></div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 812687 **/
+
+const gExpectedFocusedIds = [
+  "focus1",
+  "focus2",
+  "focus3",
+  "focus4",
+  "focus5"
+];
+
+function doTest() {
+  // First, we focus something just before the flex container:
+  document.getElementById('beforeContainer').focus();
+  is(document.activeElement, document.getElementById('beforeContainer'),
+     "explicitly-focused link should gain focus");
+
+  // And then we advance focus across the focusable things in the flex container
+  // and check that we traverse them in the expected order:
+  for (let expectedId of gExpectedFocusedIds) {
+    synthesizeKey("KEY_Tab");
+    is(document.activeElement, document.getElementById(expectedId),
+       "expecting element '#" + expectedId + "' to be focused");
+  }
+
+  SimpleTest.finish();
+}
+
+// Before we start, we have to bump Mac to make its 'tab'-key focus behavior
+// predicatble:
+function begin() {
+  SpecialPowers.pushPrefEnv({ set: [[ "accessibility.tabfocus", 7 ]] }, doTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(begin);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,72 @@
+{
+  "guid": "root________",
+  "title": "",
+  "id": 1,
+  "dateAdded": 1361551978957783,
+  "lastModified": 1361551978957783,
+  "type": "text/x-moz-place-container",
+  "root": "placesRoot",
+  "children": [
+    {
+      "guid": "menu________",
+      "title": "Bookmarks Menu",
+      "id": 2,
+      "parent": 1,
+      "dateAdded": 1361551978957783,
+      "lastModified": 1361551979382837,
+      "type": "text/x-moz-place-container",
+      "root": "bookmarksMenuFolder",
+      "children": [
+        {
+          "guid": "OCyeUO5uu9FG",
+          "title": "Help and Tutorials",
+          "id": 7,
+          "dateAdded": 1361551979356436,
+          "lastModified": 1361551979362718,
+          "type": "x/invalid",
+          "uri": "http://en-us.www.mozilla.com/en-US/firefox/help/"
+        },
+        {
+          "guid": "OCyeUO5uu9FH",
+          "index": 1,
+          "title": "Customize Firefox",
+          "id": 8,
+          "dateAdded": 1361551979365662,
+          "lastModified": 1361551979368077,
+          "type": "text/x-moz-place",
+          "uri": "http://en-us.www.mozilla.com/en-US/firefox/customize/"
+        },
+        {
+          "guid": "OCyeUO5uu9FG",
+          "title": "Bad URL",
+          "id": 9,
+          "dateAdded": 1361551979356436,
+          "lastModified": 1361551979362718,
+          "type": "text/x-moz-place",
+          "uri": "http:///"
+        }
+      ]
+    },
+    {
+      "guid": "toolbar_____",
+      "title": "Bookmarks Toolbar",
+      "id": 2,
+      "parent": 1,
+      "dateAdded": 1361551978957783,
+      "lastModified": 1361551979382837,
+      "type": "text/x-moz-place-container",
+      "root": "toolbarFolder",
+      "children": [
+        {
+          "guid": "OCyeUO5uu9FG",
+          "title": "Bad URL",
+          "id": 9,
+          "dateAdded": 1361551979356436,
+          "lastModified": 1361551979362718,
+          "type": "text/x-moz-place",
+          "uri": "http:///"
+        }
+      ]
+    }
+  ]
+}

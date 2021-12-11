@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <script>
+    var b = new BroadcastChannel("windowclose");
+
+    function isInitialLoad() {
+      return location.search.substr(1) != "withhistory" || history.length == 1;
+    }
+
+    function run() {
+      if (location.search.substr(1) == "withhistory") {
+        // An entry for the initial load, pushState, iframe and the next page.
+        if (history.length == 4) {
+          // We're coming back from history.
+          function listener(m) {
+            if (m.message.includes("Scripts may not close windows that were not opened by script.")) {
+              SpecialPowers.postConsoleSentinel();
+              SpecialPowers.pushPrefEnv({ set: [["dom.allow_scripts_to_close_windows", true]]}).then(
+                function() {
+                  window.onunload = function() {
+                    b.postMessage('blocked');
+                    b.close();
+                  };
+                  window.close();
+                });
+            }
+          }
+          SpecialPowers.registerConsoleListener(listener);
+          window.onunload = function() {
+            SpecialPowers.postConsoleSentinel();
+            b.postMessage('closed');
+            b.close();
+          };
+          window.close();
+        } else {
+          // Load a page which will call history.back()
+          location.href = "file_window_close_2.html";
+        }
+      } else {
+        onunload = function() {
+          b.postMessage('closed');
+          b.close();
+        };
+        window.close();
+      }
+    }
+
+    function init() {
+      if (isInitialLoad()) {
+        // Add some data to the session history.
+        history.pushState("foo", "foo");
+        var ifr = document.getElementsByTagName("iframe")[0];
+        ifr.onload = run;
+        ifr.src = "data:text/html,random data";
+      } else {
+        run();
+      }
+    }
+    window.onpageshow = () => {
+      setTimeout(init);
+    }
+
+    </script>
+  </head>
+  <body>
+    <iframe></iframe>
+  </body>
+</html>

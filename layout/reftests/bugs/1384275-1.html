@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<style>
+p { color: red; }
+@import url(https://example.invalid/a.css);
+@supports (color: green) {
+  p { color: green; }
+}
+</style>
+<p>This text should be green.</p>

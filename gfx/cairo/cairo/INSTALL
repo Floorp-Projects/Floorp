@@ -1,0 +1,184 @@
+Quick-start build instructions
+------------------------------
+1) Configure the package:
+
+	./configure
+
+2) Compile it:
+
+	make
+
+3) Install it:
+
+	make install
+
+This final step may require temporary root access (eg. with sudo) if
+you don't have write permission to the directory in which cairo will
+be installed.
+
+NOTE: If you are working with source from git/cvs rather than from a tar
+file, then you should use ./autogen.sh in place of ./configure
+anywhere it is mentioned in these instructions.
+
+More detailed build instructions
+--------------------------------
+1) Configure the package
+
+   The first step in building cairo is to configure the package by
+   running the configure script. [Note: if you don't have a configure
+   script, skip down below to the Extremely detailed build
+   instructions.]
+
+   The configure script attempts to automatically detect as much as
+   possible about your system. So, you should primarily just accept
+   its defaults by running:
+
+	./configure
+
+   The configure script does accept a large number of options for
+   fine-tuning its behavior. See "./configure --help" for a complete
+   list. The most commonly used options are discussed here.
+
+   --prefix=PREFIX
+
+	This option specifies the directory under which the software
+	should be installed. By default configure will choose a
+	directory such as /usr/local. If you would like to install
+	cairo to some other location, pass the director to configure
+	with the --prefix option. For example:
+
+		./configure --prefix=/opt/cairo
+
+	would install cairo into the /opt/cairo directory. You could
+	also choose a prefix directory within your home directory if
+	you don't have write access to any system-wide directory.
+
+	After installing into a custom prefix, you will need to set
+	some environment variables to allow the software to be
+	found. Assuming the /opt/cairo prefix and assuming you are
+	using the bash shell, the following environment variables
+	should be set:
+
+		PKG_CONFIG_PATH=/opt/cairo/lib/pkgconfig
+		LD_LIBRARY_PATH=/opt/cairo/lib
+		export PKG_CONFIG_PATH LD_LIBRARY_PATH
+
+	(NOTE: On Mac OS X, at least, use DYLD_LIBRARY_PATH in place
+	       of LD_LIBRARY_PATH above.)
+
+    --enable-XYZ
+    --enable-XYZ=yes
+    --enable-XYZ=auto
+    --enable-XYZ=no
+    --disable-XYZ
+
+   Cairo's various font and surface backends and other features can be
+   enabled or disabled at configure time.  Features can be divided into
+   three categories based on their default state:
+
+     * default=yes: These are the recommended features like PNG functions
+       and PS/PDF/SVG backends.  It is highly recommended to not disable
+       these features but if that's really what one wants, they can be
+       disabled using --disable-XYZ.
+
+     * default=auto: These are the "native" features, that is, they are
+       platform specific, like the Xlib surface backend.  You probably
+       want one or two of these.  They will be automatically enabled if
+       all their required facilities are available.  Or you can use
+       --enable-XYZ or --disable-XYZ to make your desire clear, and then
+       cairo errs during configure if your intention cannot be followed.
+
+     * default=no: These are the "experimental" features, and hence by
+       default off.  Use --enable-XYZ to enable them.
+
+   The list of all features and their default state can be seen in the
+   output of ./configure --help.
+
+2) Compile the package:
+
+   This step is very simple. Just:
+
+	make
+
+   The Makefiles included with cairo are designed to work on as many
+   different systems as possible.
+
+   When cairo is compiled, you can also run some automated tests of
+   cairo with:
+
+	make check
+
+   NOTE: Some versions of X servers will cause the -xlib tests to
+   report failures in make check even when cairo is working just
+   fine. If you see failures in nothing but -xlib tests, please
+   examine the corresponding -xlib-out.png images and compare them to
+   the -ref.png reference images (the -xlib-diff.png images might also
+   be useful). If the results seem "close enough" please do not report
+   a bug against cairo as the "failures" you are seeing are just due
+   to subtle variations in X server implementations.
+
+3) Install the package:
+
+   The final step is to install the package with:
+
+	make install
+
+   If you are installing to a system-wide location you may need to
+   temporarily acquire root access in order to perform this
+   operation. A good way to do this is to use the sudo program:
+
+	sudo make install
+
+Extremely detailed build instructions
+-------------------------------------
+So you want to build cairo but it didn't come with a configure
+script. This is probably because you have checked out the latest
+in-development code via git. If you need to be on the bleeding edge,
+(for example, because you're wanting to develop some aspect of cairo
+itself), then you're in the right place and should read on.
+
+However, if you don't need such a bleeding-edge version of cairo, then
+you might prefer to start by building the latest stable cairo release:
+
+	https://cairographics.org/releases
+
+or perhaps the latest (unstable) development snapshot:
+
+	https://cairographics.org/snapshots
+
+There you'll find nicely packaged tar files that include a configure
+script so you can go back the the simpler instructions above.
+
+But you're still reading, so you're someone that loves to
+learn. Excellent! We hope you'll learn enough to make some excellent
+contributions to cairo. Since you're not using a packaged tar file,
+you're going to need some additional tools beyond just a C compiler in
+order to compile cairo. Specifically, you need the following utilities:
+
+	automake
+	autoconf
+	autoheader
+	aclocal
+	libtoolize
+	pkg-config [at least version 0.16]
+	gtk-doc (recommended)
+
+Hopefully your platform of choice has packages readily available so
+that you can easily install things with your system's package
+management tool, (such as "apt-get install automake" on Debian or "yum
+install automake" on Fedora, etc.). Note that Mac OS X ships with
+glibtoolize instead of libtoolize.
+
+Once you have all of those packages installed, the next step is to run
+the autogen.sh script. That can be as simple as:
+
+	./autogen.sh
+
+But before you run that command, note that the autogen.sh script
+accepts all the same arguments as the configure script, (and in fact,
+will generate the configure script and run it with the arguments you
+provide). So go back up to step (1) above and see what additional
+arguments you might want to pass, (such as prefix). Then continue with
+the instructions, simply using ./autogen.sh in place of ./configure.
+
+Happy hacking!

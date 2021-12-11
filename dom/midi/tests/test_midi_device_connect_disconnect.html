@@ -1,0 +1,54 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(true);
+       let output;
+
+       let midi_access;
+       try {
+         midi_access = await navigator.requestMIDIAccess({ "sysex": false });
+         ok(true, "MIDI Access Request successful");
+       } catch (e) {
+         ok(false, "MIDI Access Request failed!");
+         SimpleTest.finish();
+         return;
+       }
+       is(midi_access.sysexEnabled, false, "Sysex should be false");
+       output = midi_access.outputs.get(MIDITestUtils.outputInfo.id);
+       let statePromiseRes;
+       let statePromise = new Promise((res) => { statePromiseRes = res; });
+       await output.open();
+       let stateChangeHandler = (event) => {
+         if (event.port == output) {
+           return;
+         }
+         statePromiseRes(event.port);
+       };
+       midi_access.addEventListener("statechange", stateChangeHandler);
+       // Send command to connect new port.
+       output.send([0x90, 0x01, 0x00]);
+       let p = await statePromise;
+       is(p.state, "connected", "Device " + p.name + " connected");
+
+       // Rebuild our promise, we'll need to await another one.
+       statePromise = new Promise((res) => { statePromiseRes = res; });
+       output.send([0x90, 0x02, 0x00]);
+       p = await statePromise;
+       is(p.state, "disconnected", "Device " + p.name + " disconnected");
+       midi_access.removeEventListener("statechange", stateChangeHandler);
+       SimpleTest.finish();
+     }
+    </script>
+  </body>
+</html>

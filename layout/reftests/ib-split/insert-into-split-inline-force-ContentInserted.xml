@@ -1,0 +1,11 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="test">
+    <content>
+      <!-- Multiple insertion points to force appends to be handled via
+           ContentInserted -->
+      <children includes="foo"/>
+      <children includes="bar"/>
+      <children/>
+    </content>
+  </binding>
+</bindings>

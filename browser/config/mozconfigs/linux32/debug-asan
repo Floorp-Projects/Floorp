@@ -1,0 +1,18 @@
+# Use at least -O1 for optimization to avoid stack space
+# exhaustions caused by Clang function inlining.
+ac_add_options --enable-debug
+ac_add_options --enable-optimize="-O1"
+
+# ASan specific options on Linux
+ac_add_options --enable-valgrind
+
+. $topsrcdir/build/unix/mozconfig.asan
+ac_add_options --disable-elf-hack
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=asan
+
+. "$topsrcdir/build/mozconfig.common.override"

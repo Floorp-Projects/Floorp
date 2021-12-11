@@ -1,0 +1,15 @@
+treechildren::-moz-tree-checkbox(checked) {
+  list-style-image: url("chrome://global/skin/icons/check.svg");
+}
+
+treechildren::-moz-tree-image(cyclerState1) {
+  list-style-type: disc;
+}
+
+treechildren::-moz-tree-image(cyclerState2) {
+  list-style-type: circle;
+}
+
+treechildren::-moz-tree-image(cyclerState3) {
+  list-style-type: square;
+}

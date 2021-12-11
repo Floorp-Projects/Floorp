@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<script>
+  window.parent.postMessage({
+    source: "iframe",
+    status: "networkresponse"
+  }, "*");
+  var w = new Worker('worker.js');
+  w.onmessage = function(evt) {
+    window.parent.postMessage({
+      source: 'worker',
+      status: evt.data,
+    }, '*');
+  };
+</script>

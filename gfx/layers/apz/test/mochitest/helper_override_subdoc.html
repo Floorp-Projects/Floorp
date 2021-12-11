@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Wheel scroll cancellation inside iframe</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+    This just loads helper_override_root in an iframe, so that we test event
+    regions overriding on in-process subdocuments.
+    <iframe id="ifr" src="helper_override_root.html" onload="document.getElementById('ifr').focus()"></iframe>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaStreamAudioSourceNode doesn't get data from cross-origin media resources</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+// Turn off the authentication dialog blocking for this test.
+SpecialPowers.setIntPref("network.auth.subresource-http-auth-allow", 2)
+
+var tests = [
+  // Not the same origin no CORS asked for, should have silence
+  { url: "http://example.org:80/tests/dom/media/webaudio/test/small-shot.ogg",
+    cors: null,
+    expectSilence: true },
+  // Same origin, should have sound
+  { url: "small-shot.ogg",
+    cors: null,
+    expectSilence: false },
+  // Cross-origin but we asked for CORS and the server answered with the right
+  // header, should have
+  { url: "http://example.org:80/tests/dom/media/webaudio/test/corsServer.sjs",
+    cors: "anonymous",
+    expectSilence: false }
+];
+
+var testsRemaining = tests.length;
+
+tests.forEach(function(e) {
+  e.ac = new AudioContext();
+  var a = new Audio();
+  if (e.cors) {
+    a.crossOrigin = e.cors;
+  }
+  a.src = e.url;
+  document.body.appendChild(a);
+
+  a.onloadedmetadata = () => {
+    // Wait for "loadedmetadata" before capturing since tracks are then known
+    // directly. If we set up the capture before "loadedmetadata" we
+    // (internally) have to wait an extra async jump for tracks to become known
+    // to main thread, before setting up audio data forwarding to the node.
+    // As that happens, the audio resource may have already ended on slow test
+    // machines, causing failures.
+    a.onloadedmetadata = null;
+    var measn = e.ac.createMediaElementSource(a);
+    var sp = e.ac.createScriptProcessor(2048, 1);
+    sp.seenSound = false;
+    sp.onaudioprocess = checkBufferSilent;
+
+    measn.connect(sp);
+    a.play();
+  };
+
+  function checkFinished(sp) {
+    if (a.ended) {
+      sp.onaudioprocess = null;
+      var not = e.expectSilence ? "" : "not";
+      is(e.expectSilence, !sp.seenSound,
+         "Buffer is " + not + " silent as expected, for " +
+         e.url + " (cors: " + e.cors + ")");
+      if (--testsRemaining == 0) {
+        SimpleTest.finish();
+      }
+    }
+  }
+
+  function checkBufferSilent(e) {
+    var inputArrayBuffer = e.inputBuffer.getChannelData(0);
+    var silent = true;
+    for (var i = 0; i < inputArrayBuffer.length; i++) {
+      if (inputArrayBuffer[i] != 0.0) {
+        silent = false;
+        break;
+      }
+    }
+    // It is acceptable to find a full buffer of silence here, even if we expect
+    // sound, because Gecko's looping on media elements is not seamless and we
+    // can underrun. We are looking for at least one buffer of non-silent data.
+    e.target.seenSound = !silent || e.target.seenSound;
+    checkFinished(e.target);
+    return silent;
+  }
+});
+</script>
+</pre>
+</body>
+</html>

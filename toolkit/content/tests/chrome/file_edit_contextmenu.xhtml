@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+       xmlns:html="http://www.w3.org/1999/xhtml">
+<script>
+customElements.define("shadow-input", class extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.appendChild(document.createElement("input"));
+  }
+});
+</script>
+<script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+<!-- Copied from toolkit/content/editMenuCommands.inc.xul -->
+<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
+<commandset id="editMenuCommands">
+  <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select"
+              oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+  <commandset id="editMenuCommandSetUndo" commandupdater="true" events="undo"
+              oncommandupdate="goUpdateUndoEditMenuItems()"/>
+  <commandset id="editMenuCommandSetPaste" commandupdater="true" events="clipboard"
+              oncommandupdate="goUpdatePasteMenuItems()"/>
+  <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')"/>
+  <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')"/>
+  <command id="cmd_cut" oncommand="goDoCommand('cmd_cut')"/>
+  <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')"/>
+  <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')"/>
+  <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')"/>
+  <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+  <command id="cmd_switchTextDirection" oncommand="goDoCommand('cmd_switchTextDirection');"/>
+</commandset>
+
+<menupopup id="outer-context-menu">
+  <menuseparator id="customizeMailToolbarMenuSeparator"/>
+  <menuitem id="hello" label="Hello" accesskey="H"/>
+</menupopup>
+
+<hbox context="outer-context-menu">
+<html:textarea />
+<html:input />
+<search-textbox />
+<html:shadow-input />
+</hbox>
+
+</window>

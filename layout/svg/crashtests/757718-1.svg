@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var svgDoc = (new DOMParser).parseFromString("<svg xmlns='http://www.w3.org/2000/svg'></svg>", "image/svg+xml");
+  var svgRoot = svgDoc.documentElement;
+  var rf = svgRoot.requiredFeatures;
+  document.adoptNode(svgRoot);
+  Object.getOwnPropertyNames(rf);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

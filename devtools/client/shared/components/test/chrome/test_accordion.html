@@ -1,0 +1,141 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that Accordion renders correctly.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Accordion component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="resource://testing-common/sinon-7.2.7.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script src="accordion.snapshots.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+/* global sinon */
+
+window.onload = async function() {
+  try {
+    const { button, div } = require("devtools/client/shared/vendor/react-dom-factories");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const {
+      Simulate,
+      renderIntoDocument,
+      findAllInRenderedTree,
+    } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Accordion =
+      browserRequire("devtools/client/shared/components/Accordion");
+
+    const testItems = [
+      {
+        header: "Test Accordion Item 1",
+        id: "accordion-item-1",
+        component: div({}),
+        opened: false,
+        onToggle: sinon.spy(),
+      },
+      {
+        header: "Test Accordion Item 2",
+        id: "accordion-item-2",
+        component: div({}),
+        buttons: button({}),
+        opened: false,
+        onToggle: sinon.spy(),
+      },
+      {
+        header: "Test Accordion Item 3",
+        id: "accordion-item-3",
+        component: div({}),
+        opened: true,
+        onToggle: sinon.spy(),
+      },
+    ];
+
+    // Accordion basic render
+    const accordion = React.createElement(Accordion, { items: testItems });
+
+    matchSnapshot("Accordion basic render.", accordion);
+
+    const tree = renderIntoDocument(accordion);
+    const headers = findAllInRenderedTree(tree, c => c.className === "accordion-header");
+
+    Simulate.click(headers[0]);
+    ok(testItems[0].onToggle.calledWith(true), "Handle toggling with click.");
+    ok(testItems[1].onToggle.notCalled,
+       "onToggle wasn't called on element we didn't click on.");
+
+    isDeeply(
+      tree.state,
+      {
+        everOpened: {
+          "accordion-item-1": true,
+          "accordion-item-2": false,
+          "accordion-item-3": true,
+        },
+        opened: {
+          "accordion-item-1": true,
+          "accordion-item-2": false,
+          "accordion-item-3": true,
+        },
+      },
+      "State updated correctly"
+    );
+
+    Simulate.keyDown(headers[0], { key: "Enter" });
+    ok(testItems[0].onToggle.calledWith(false), "Handle toggling with Enter key.");
+    isDeeply(
+      tree.state,
+      {
+        everOpened: {
+          "accordion-item-1": true,
+          "accordion-item-2": false,
+          "accordion-item-3": true,
+        },
+        opened: {
+          "accordion-item-1": false,
+          "accordion-item-2": false,
+          "accordion-item-3": true,
+        },
+      },
+      "State updated correctly"
+    );
+
+    Simulate.keyDown(headers[1], { key: " " });
+    ok(testItems[1].onToggle.calledWith(true), "Handle toggling with Space key.");
+    isDeeply(
+      tree.state,
+      {
+        everOpened: {
+          "accordion-item-1": true,
+          "accordion-item-2": true,
+          "accordion-item-3": true,
+        },
+        opened: {
+          "accordion-item-1": false,
+          "accordion-item-2": true,
+          "accordion-item-3": true,
+        },
+      },
+      "State updated correctly"
+    );
+
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

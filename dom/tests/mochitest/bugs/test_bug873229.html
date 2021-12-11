@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=873229
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 873229</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 873229 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    // We're going to need to be tricky: we want to trigger onerror without
+    // getting an exception thrown in our face.  Use event dispatch!
+    var f = $("f").contentWindow;
+    is(typeof(bar), "function", "bar should be a function");
+    is(typeof(f.bar), "function", "bar should be a function in the subframe");
+    var string;
+    var url;
+    var line;
+
+    var oldOnerror = window.onerror;
+
+    // Now we have to be very careful to not trigger any errors we don't
+    // expect!
+    var errorCount = 0;
+
+    window.onerror = function(exceptionString, exceptionURL, exceptionLine) {
+      string = exceptionString;
+      url = exceptionURL;
+      line = exceptionLine;
+      ++errorCount;
+    }
+
+    document.documentElement.onclick = function() {
+      bar();
+    };
+    string = "FAIL";
+    url = "FAIL";
+    line = "FAIL";
+    document.documentElement.dispatchEvent(new Event("click"));
+    is(string, "Script error.", "Did not sanitize string");
+    is(url,
+      "http://example.com/tests/dom/tests/mochitest/bugs/file_bug873229.js",
+      "Should not sanitize URL");
+    is(line, 0, "Did not sanitize line");
+
+    document.documentElement.onclick = function() {
+      f.bar();
+    };
+    string = "FAIL";
+    url = "FAIL";
+    line = "FAIL";
+    document.documentElement.dispatchEvent(new Event("click"));
+    is(string, "Script error.", "Did not sanitize string in iframe");
+    is(url,
+      "http://example.com/tests/dom/tests/mochitest/bugs/file_bug873229.js",
+      "Should not sanitize URL in iframe");
+    is(line, 0, "Did not sanitize line in iframe");
+
+    document.documentElement.onclick = null;
+
+    is(errorCount, 2, "Should have had two exceptions");
+    window.onerror = oldOnerror;
+    SimpleTest.finish();
+  });
+
+  </script>
+  <script src="http://example.com/tests/dom/tests/mochitest/bugs/file_bug873229.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=873229">Mozilla Bug 873229</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="f" srcdoc="<script src='http://example.com/tests/dom/tests/mochitest/bugs/file_bug873229.js'></script>"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

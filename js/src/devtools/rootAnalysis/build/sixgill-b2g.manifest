@@ -1,0 +1,10 @@
+[
+{
+"hg_id" : "ec7b7d2442e8",
+"algorithm" : "sha512",
+"digest" : "49627d734df52cb9e7319733da5a6be1812b9373355dc300ee5600b431122570e00d380d50c7c5b5003c462c2c2cb022494b42c4ad00f8eba01c2259cbe6e502",
+"filename" : "sixgill.tar.xz",
+"size" : 2628868,
+"unpack" : true
+}
+]

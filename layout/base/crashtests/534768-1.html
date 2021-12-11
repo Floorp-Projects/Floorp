@@ -1,0 +1,23 @@
+<html style="direction: rtl;">
+<head>
+<style>
+
+body:after { content: '0'; }
+body:first-letter { float: right; }
+
+</style>
+<script>
+
+function boom()
+{
+  document.documentElement.style.direction = "";
+  document.documentElement.offsetHeight;  
+  document.documentElement.style.textIndent = "3px";
+}
+
+</script>
+</head>
+
+<body onload="boom();"> &#x202E;</body>
+
+</html>

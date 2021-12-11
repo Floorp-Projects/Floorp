@@ -1,0 +1,193 @@
+# This directory contains tests for vertical text and logical layout coordinates.
+
+== 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref.html
+== 1082844.html 1082844-ref.html
+== 1083748.html 1083748-ref.html
+== 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
+== 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
+fuzzy-if(gtkWidget,0-255,0-2) fuzzy-if(winWidget||Android,0-4,0-8704) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
+== 1083892-1.html 1083892-1-ref.html
+== 1086883-1a.html 1086883-1-ref.html
+== 1086883-1b.html 1086883-1-ref.html
+== 1088025-1.html 1088025-1-ref.html
+== 1089388-1.html 1089388-1-ref.html
+== 1089388-2.html 1089388-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1090159-1.html 1090159-1-ref.html # Bug 1392106
+== 1090168-1.html 1090168-1-ref.html
+!= 1090168-1.html 1090168-1-notref.html
+== 1090168-2.html 1090168-2-ref.html
+fuzzy-if(azureSkia,0-255,0-2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1091058-1.html 1091058-1-ref.html # Bug 1392106
+random-if(useDrawSnapshot) == 1094434-1.html 1094434-1-ref.html
+== 1094434-2.html 1094434-2-ref.html
+== 1094914-1a.html 1094914-1-ref.html
+== 1094914-1b.html 1094914-1-ref.html
+== 1096224-1a.html 1096224-1-ref.html
+== 1096224-1b.html 1096224-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1a.html 1102175-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1b.html 1102175-1-ref.html # Bug 1392106
+== 1103613-1.html 1103613-1-ref.html
+== 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html
+== 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html
+== 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
+== 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
+fuzzy-if(Android,0-128,0-94) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html # Bug 1392106
+fuzzy(0-116,0-94) fuzzy-if(winWidget,0-135,0-124) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
+== 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
+== 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
+== 1122366-1-margin-collapse.html 1122366-1-margin-collapse-ref.html
+== 1124636-1-fieldset-max-height.html 1124636-1-fieldset-max-height-ref.html
+== 1124636-2-fieldset-min-height.html 1124636-2-fieldset-min-height-ref.html
+
+== ua-style-sheet-margin-1.html ua-style-sheet-margin-1-ref.html
+== ua-style-sheet-margin-2.html ua-style-sheet-margin-2-ref.html
+== ua-style-sheet-margin-3.html ua-style-sheet-margin-3-ref.html
+== ua-style-sheet-margin-4.html ua-style-sheet-margin-4-ref.html
+== ua-style-sheet-margin-5.html ua-style-sheet-margin-5-ref.html
+== ua-style-sheet-margin-6.html ua-style-sheet-margin-6-ref.html
+== ua-style-sheet-margin-7.html ua-style-sheet-margin-7-ref.html
+== ua-style-sheet-margin-8.html ua-style-sheet-margin-8-ref.html
+== ua-style-sheet-margin-9.html ua-style-sheet-margin-9-ref.html
+== ua-style-sheet-margin-10.html ua-style-sheet-margin-10-ref.html
+== ua-style-sheet-margin-11.html ua-style-sheet-margin-11-ref.html
+== ua-style-sheet-margin-12.html ua-style-sheet-margin-12-ref.html
+== ua-style-sheet-margin-13.html ua-style-sheet-margin-13-ref.html
+== ua-style-sheet-margin-14.html ua-style-sheet-margin-14-ref.html
+== ua-style-sheet-border-1.html ua-style-sheet-border-1-ref.html
+== ua-style-sheet-border-2.html ua-style-sheet-border-2-ref.html
+== ua-style-sheet-border-3.html ua-style-sheet-border-3-ref.html
+== ua-style-sheet-border-4.html ua-style-sheet-border-4-ref.html
+== ua-style-sheet-border-5.html ua-style-sheet-border-5-ref.html
+== ua-style-sheet-size-1.html ua-style-sheet-size-1-ref.html
+== ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
+
+== ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1-ref.html
+
+# Android theme uses different padding in themed textareas by default.
+skip-if(Android) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
+skip-if(Android) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
+
+fuzzy-if(Android,0-1,0-18) == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
+# Android uses different margins for buttons compared to the ref.
+skip-if(Android) fuzzy-if(!Android,0-2,0-6) == ua-style-sheet-button-1.html chrome://reftest/content/writing-mode/ua-style-sheet-button-1a-ref.html
+
+# Android uses different margins for buttons compared to the ref.
+skip-if(Android) == ua-style-sheet-input-color-1.html chrome://reftest/content/writing-mode/ua-style-sheet-input-color-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
+
+== 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-end-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-left-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-right-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-default-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-start-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-end-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-left-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-right-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-default-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+== 1127488-align-start-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+== 1127488-align-end-vertical-rl-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-left-vertical-rl-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-right-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+== 1127488-align-default-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-start-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-end-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
+== 1127488-align-left-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-right-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
+== 1127488-align-default-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+== 1127488-align-start-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+== 1127488-align-end-vertical-lr-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-left-vertical-lr-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-right-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+== 1127488-align-default-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-start-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
+== 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1130907-intrinsic-sizing-1.html 1130907-intrinsic-sizing-1-ref.html # bug 1392106
+== 1130907-intrinsic-sizing-2.html 1130907-intrinsic-sizing-2-ref.html
+== 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html
+== 1133945-1-vertical-align.html 1133945-1-vertical-align-ref.html
+== 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html
+== 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
+fails-if(geckoview) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # Bug 1558513 for GV
+fuzzy(0-159,0-111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
+fuzzy(0-159,0-111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
+fuzzy-if(winWidget,0-255,0-236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html
+== 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
+!= 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html
+
+# Font inflation behaves wrong in vertical writing mode: bug 1138495
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1a.html font-inflation-1-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1b.html font-inflation-1-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != font-inflation-1c.html font-inflation-1-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != font-inflation-1d.html font-inflation-1-ref.html
+pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) != font-inflation-1c.html font-inflation-1d.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1c.html font-inflation-1c-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1d.html font-inflation-1d-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) test-pref(layout.accessiblecaret.enabled,true) == font-inflation-1e.html font-inflation-1-ref.html
+
+== 1144501-1a-block-end-margin-orthogonal-size.html 1144501-1-block-end-margin-orthogonal-size-ref.html
+== 1144501-1b-block-end-margin-orthogonal-size.html 1144501-1-block-end-margin-orthogonal-size-ref.html
+== 1147834-relative-overconstrained-horizontal-tb-ltr.html 1147834-bottom-right-ref.html
+== 1147834-relative-overconstrained-horizontal-tb-rtl.html 1147834-bottom-left-ref.html
+== 1147834-relative-overconstrained-vertical-lr-ltr.html 1147834-bottom-right-ref.html
+== 1147834-relative-overconstrained-vertical-lr-rtl.html 1147834-top-right-ref.html
+== 1147834-relative-overconstrained-vertical-rl-ltr.html 1147834-bottom-left-ref.html
+== 1147834-relative-overconstrained-vertical-rl-rtl.html 1147834-top-left-ref.html
+== 1151993-1-orthogonal-block-size.html 1151993-1-orthogonal-block-size-ref.html
+== 1152941-1-orthogonal-blocksize-overflow.html 1152941-1-orthogonal-blocksize-overflow-ref.html
+== 1156021-text-indent-percent.html 1156021-text-indent-percent-ref.html
+== 1157752-upright-bidi.html 1157752-upright-bidi-ref.html
+== 1157758-1-vertical-arabic.html 1157758-1-vertical-arabic-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html # Bug 1392106
+== 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
+== 1174450-intrinsic-sizing.html 1174450-intrinsic-sizing-ref.html
+skip-if(winWidget&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html # bug 1442637
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html # Bug 1392106
+
+# tests involving sideways-lr mode
+random-if(gtkWidget) == 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.html
+random-if(gtkWidget) == 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
+fuzzy-if(winWidget,0-3,0-84) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
+fuzzy-if(winWidget,0-3,0-112) fails-if(Android) random-if(gtkWidget) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html # see bug 1366692. Rounding error with WR enabled, and on Android.
+fuzzy-if(gtkWidget,0-255,0-12) fuzzy-if(cocoaWidget,0-65,0-69) fuzzy-if(geckoview,0-255,0-13) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
+
+== 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
+== 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
+
+== 1216747-1.html 1216747-1-ref.html
+!= 1216747-1.html 1216747-1-notref.html
+
+== 1243125-1-floats-overflowing.html 1243125-1-floats-overflowing-ref.html
+
+skip-if(Android) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun-ref.html # Android bug 1250229
+
+== 1302734-bidi-plaintext-1a.html 1302734-bidi-plaintext-1-ref.html
+== 1302734-bidi-plaintext-1b.html 1302734-bidi-plaintext-1-ref.html
+== 1302734-bidi-plaintext-2a.html 1302734-bidi-plaintext-2-ref.html
+== 1302734-bidi-plaintext-2b.html 1302734-bidi-plaintext-2-ref.html
+== 1302734-bidi-plaintext-2c.html 1302734-bidi-plaintext-2-ref.html
+== 1302734-bidi-plaintext-2d.html 1302734-bidi-plaintext-2-ref.html
+
+== 1302389-scrolled-rect-1a.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(Android,0-54,0-852) == 1302389-scrolled-rect-1b.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(Android,0-54,0-852) fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-1c.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-1d.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(Android,0-54,0-852) fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-2a.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-2b.html 1302389-scrolled-rect-2-ref.html
+== 1302389-scrolled-rect-2c.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(Android,0-54,0-852) == 1302389-scrolled-rect-2d.html 1302389-scrolled-rect-2-ref.html
+
+== 1361631-mongolian-upright-1.html 1361631-mongolian-upright-1-ref.html
+== 1395926-vertical-upright-gpos-1.html 1395926-vertical-upright-gpos-1-ref.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1673510-1.html 1673510-1-ref.html # test font doesn't load reliably on win7
+
+# Suite of tests from Gérard Talbot in bug 1079151
+# Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) include abspos/reftest.list
+
+# Tests for tables with vertical writing modes
+include tables/reftest.list

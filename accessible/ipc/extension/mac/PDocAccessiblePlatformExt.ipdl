@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PDocAccessible;
+
+include "mozilla/GfxMessageUtils.h";
+
+using mozilla::a11y::EWhichRange from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::EWhichPostFilter from "mozilla/a11y/IPCTypes.h";
+[RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
+using nsIntRect from "nsRect.h";
+
+namespace mozilla {
+namespace a11y {
+
+struct TextAttributesRun {
+  nsString Text;
+  uint64_t ContainerID;
+  AccAttributes TextAttributes;
+};
+
+
+[NestedUpTo=inside_sync] sync protocol PDocAccessiblePlatformExt {
+  manager PDocAccessible;
+
+child:
+  async __delete__();
+
+  [Nested=inside_sync] sync RangeAt(uint64_t aID, int32_t aOffset, EWhichRange aRangeType)
+      returns(uint64_t aStartContainer, int32_t aStartOffset,
+              uint64_t aEndContainer, int32_t aEndOffset);
+
+  [Nested=inside_sync] sync NextClusterAt(uint64_t aID, int32_t aOffset)
+      returns(uint64_t aNextContainer, int32_t aNextOffset);
+
+  [Nested=inside_sync] sync PreviousClusterAt(uint64_t aID, int32_t aOffset)
+      returns(uint64_t aNextContainer, int32_t aNextOffset);
+
+  [Nested=inside_sync] sync TextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(nsString aText);
+
+  [Nested=inside_sync] sync BoundsForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(nsIntRect aRetVal);
+
+  [Nested=inside_sync] sync LengthForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(int32_t aLength);
+
+  [Nested=inside_sync] sync OffsetAtIndex(uint64_t aID, int32_t aIndex)
+      returns(uint64_t aContainer, int32_t aOffset);
+
+  [Nested=inside_sync] sync RangeOfChild(uint64_t aID, uint64_t aChild)
+      returns(int32_t aStartOffset, int32_t aEndOffset);
+
+  [Nested=inside_sync] sync LeafAtOffset(uint64_t aID, int32_t aOffset)
+      returns(uint64_t aLeaf);
+
+  [Nested=inside_sync] sync AttributedTextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(TextAttributesRun[] aAttributedText);
+
+  async SelectRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset);
+
+  // A filter that can be applied to search predicate results.
+  [Nested=inside_sync] sync ApplyPostSearchFilter(uint64_t[] aAccessibles, int32_t aLimit,
+                                                  EWhichPostFilter aSearchKey, nsString aSearchText)
+      returns(uint64_t[] aMatches);
+
+};
+
+}  // namespace a11y
+}  // namespace mozilla

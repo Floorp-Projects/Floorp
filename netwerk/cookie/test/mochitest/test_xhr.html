@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for cookies + XHR when the policy changes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="cookiesHelper.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+runTests(async (w, state) => {
+  w.document.cookie = "name=value";
+  await new w.Promise(resolve => {
+    let xhr = new w.XMLHttpRequest();
+    xhr.open("GET", "cookie.sjs?xhr&" + Math.random());
+    xhr.send();
+    xhr.onload = resolve;
+  });
+  await checkLastRequest("xhr", state);
+});
+
+</script>
+</body>
+</html>

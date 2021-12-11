@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1434357: Allow Web Request API to redirect to data: URI</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/* Description of the test:
+ * We load a *.js file which gets redirected to a data: URI.
+ * Since there is no good way to communicate loaded data: URI scripts
+ * we use updating a divContainer as a detour to verify the data: URI
+ * script has loaded.
+ */
+
+const WIN_URL =
+  "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_redirect_data_uri.html";
+
+add_task(async function test_webRequest_redirect_data_uri() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "*://mochi.test/tests/*",
+      ],
+      content_scripts: [{
+        matches: ["*://mochi.test/tests/*/file_redirect_data_uri.html"],
+        run_at: "document_end",
+        js: ["content_script.js"],
+        "all_frames": true,
+      }],
+    },
+
+    background() {
+      browser.webRequest.onBeforeRequest.addListener((details) => {
+        if (details.url.includes("dummy_non_existend_file.js")) {
+          let redirectUrl =
+            "data:text/javascript,document.getElementById('testdiv').textContent='loaded'";
+          return {redirectUrl};
+        }
+      }, {urls: ["*://mochi.test/tests/*"]}, ["blocking"]);
+    },
+
+    files: {
+      "content_script.js": function() {
+        let scriptEl = document.createElement("script");
+        // please note that dummy_non_existend_file.js file does not really need
+        // to exist because we redirect the load within onBeforeRequest().
+        scriptEl.src = "dummy_non_existend_file.js";
+        document.body.appendChild(scriptEl);
+
+        scriptEl.onload = function() {
+          let divContent = document.getElementById("testdiv").textContent;
+          browser.test.assertEq(divContent, "loaded",
+                                "redirect to data: URI allowed");
+          browser.test.sendMessage("finished");
+        };
+        scriptEl.onerror = function() {
+          browser.test.fail("script load failure");
+          browser.test.sendMessage("finished");
+        };
+      },
+    },
+  });
+
+  await extension.startup();
+  let win = window.open(WIN_URL);
+  await extension.awaitMessage("finished");
+  win.close();
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

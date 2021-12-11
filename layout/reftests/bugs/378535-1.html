@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style type="text/css">
+      #div1:before { content: "PASS1"; }
+      #div2:before { content: "FAIL2"; content: "PASS2" }
+      #div3:before { content: "FAIL3"; content: normal; }
+      #div4:before { content: normal; content: "PASS4"; }
+      #div5:before { content: "FAIL5"; content: none; }
+      #div6:before { content: "PASS6"; content: none none; }
+      #div7:before { content: "PASS7"; content: normal none; }
+      #div8:before { content: "PASS8"; content: none normal; }
+      #div9:before { content: "PASS9"; content: "FAIL8" none; }
+      #div10:before { content: "PASS10"; content: no-open-quote none; }
+      #div11:before { content: "FAIL11"; content: no-open-quote no-close-quote; }
+      #div12:before { content: "PASS12"; content: none "FAIL12"; }
+      
+    </style>
+  </head>
+  <body>
+    <div id="div1"></div>
+    <div id="div2"></div>
+    <div id="div3"></div>
+    <div id="div4"></div>
+    <div id="div5"></div>
+    <div id="div6"></div>
+    <div id="div7"></div>
+    <div id="div8"></div>
+    <div id="div9"></div>
+    <div id="div10"></div>
+    <div id="div11"></div>
+    <div id="div12"></div>
+  </body>
+</html>

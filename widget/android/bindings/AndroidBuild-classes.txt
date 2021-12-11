@@ -1,0 +1,5 @@
+[android.os.Build]
+<field> = noLiteral:true
+
+[android.os.Build$VERSION]
+<field> = noLiteral:true

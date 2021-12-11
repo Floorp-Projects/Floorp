@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500937
+-->
+<head>
+  <title>Test for Bug 500937</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=500937">Mozilla Bug 500937</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id=iframe src="about:blank"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 500937 **/
+
+var d = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null);
+var h = d.documentElement;
+h.appendChild(d.createElementNS("http://www.w3.org/1999/xhtml", "head"));
+var b = d.createElementNS("http://www.w3.org/1999/xhtml", "body");
+h.appendChild(b);
+
+b.appendChild(d.createElementNS("http://www.w3.org/1999/xhtml", "div"));
+b.appendChild(d.createElementNS("http://www.w3.org/1999/xhtml", "script"));
+b.appendChild(d.createElementNS("http://www.w3.org/1999/xhtml", "br"));
+b.appendChild(d.createElementNS("http://www.w3.org/1999/xhtml", "source"));
+b.appendChild(d.createElementNS("http://www.w3.org/1999/xhtml", "param"));
+b.appendChild(d.createTextNode("\u00A0"));
+
+is(new XMLSerializer().serializeToString(d), 
+   '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body><div></div><script><\/script><br /><source /><param />\u00A0</body></html>', 
+   "XML DOM input to XMLSerializer");
+
+d = document.getElementById('iframe').contentWindow.document;
+
+while(d.documentElement.previousSibling) {
+  d.removeChild(d.documentElement.previousSibling);
+}
+
+d.replaceChild(h, d.documentElement);
+
+is(new XMLSerializer().serializeToString(d),  
+   '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body><div></div><script><\/script><br /><source /><param />\u00A0</body></html>', 
+   "HTML DOM input to XMLSerializer");
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLOLElement attributes reflection</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLOLElement attributes reflection **/
+
+// .reversed (boolean)
+reflectBoolean({
+  element: document.createElement("ol"),
+  attribute: "reversed",
+})
+
+// .start
+reflectInt({
+  element: document.createElement("ol"),
+  attribute: "start",
+  nonNegative: false,
+  defaultValue: 1,
+});
+
+// .type
+reflectString({
+  element: document.createElement("ol"),
+  attribute: "type"
+});
+
+// .compact
+reflectBoolean({
+  element: document.createElement("ol"),
+  attribute: "compact",
+})
+
+// Additional tests for ol.start behavior when li elements are added
+var ol = document.createElement("ol");
+var li = document.createElement("li");
+li.value = 42;
+ol.appendChild(li);
+is(ol.start, 1, "ol.start with one li child, li.value = 42:");
+li.value = -42;
+is(ol.start, 1, "ol.start with one li child, li.value = 42:");
+ol.removeAttribute("start");
+li.removeAttribute("value");
+ol.appendChild(document.createElement("li"));
+ol.reversed = true;
+todo_is(ol.start, 2, "ol.start with two li children, ol.reversed == true:");
+li.value = 42;
+todo_is(ol.start, 2, "ol.start with two li childern, ol.reversed == true:");
+ol.start = 42;
+is(ol.start, 42, "ol.start = 42:");
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg height="2in" viewBox="0 0 216 144" width="3in" xmlns="http://www.w3.org/2000/svg">
+  <radialGradient id="a" cx="224" cy="135.18" gradientUnits="userSpaceOnUse" r="102.61">
+    <stop offset=".26" stop-color="#cdcdd4" stop-opacity="0"/>
+    <stop offset=".4" stop-color="#cdcdd4" stop-opacity=".02"/>
+    <stop offset=".55" stop-color="#cdcdd4" stop-opacity=".08"/>
+    <stop offset=".69" stop-color="#cdcdd4" stop-opacity=".18"/>
+    <stop offset=".72" stop-color="#cdcdd4" stop-opacity=".2"/>
+  </radialGradient>
+  <radialGradient id="b" cx="-33.16" cy="130.43" gradientUnits="userSpaceOnUse" r="150.75">
+    <stop offset=".27" stop-color="#cdcdd4" stop-opacity="0"/>
+    <stop offset=".46" stop-color="#cdcdd4" stop-opacity=".02"/>
+    <stop offset=".66" stop-color="#cdcdd4" stop-opacity=".08"/>
+    <stop offset=".86" stop-color="#cdcdd4" stop-opacity=".18"/>
+    <stop offset=".9" stop-color="#cdcdd4" stop-opacity=".2"/>
+  </radialGradient>
+  <radialGradient id="c" cx="129.21" cy="117.26" gradientTransform="matrix(1 0 0 .7 0 35.37)" gradientUnits="userSpaceOnUse" r="112.67">
+    <stop offset=".4" stop-color="#cdcdd4" stop-opacity="0"/>
+    <stop offset=".58" stop-color="#cdcdd4" stop-opacity=".02"/>
+    <stop offset=".77" stop-color="#cdcdd4" stop-opacity=".08"/>
+    <stop offset=".96" stop-color="#cdcdd4" stop-opacity=".18"/>
+    <stop offset="1" stop-color="#cdcdd4" stop-opacity=".2"/>
+  </radialGradient>
+  <linearGradient id="d" gradientUnits="userSpaceOnUse" x1="67.44" x2="126.91" y1="85.38" y2="25.9">
+    <stop offset="0" stop-color="#c689ff"/>
+    <stop offset="1" stop-color="#d74cf0"/>
+  </linearGradient>
+  <linearGradient id="e" gradientUnits="userSpaceOnUse" x1="37.24" x2="138.18" y1="121.61" y2="20.67">
+    <stop offset=".22" stop-color="#b833e1"/>
+    <stop offset=".91" stop-color="#ff4f5e"/>
+  </linearGradient>
+  <linearGradient id="f" gradientUnits="userSpaceOnUse" x1="80.06" x2="199.29" y1="149.59" y2="30.36">
+    <stop offset=".28" stop-color="#7542e5"/>
+    <stop offset=".42" stop-color="#824deb"/>
+    <stop offset=".79" stop-color="#a067fa"/>
+    <stop offset="1" stop-color="#ab71ff"/>
+  </linearGradient>
+    <path d="m209.32 76.55a9.51 9.51 0 0 1 -9.47 9.51h-38.07a7.27 7.27 0 0 1 0-14.54 7.15 7.15 0 0 1 1.74.22 7.89 7.89 0 0 1 -.2-1.69 7.5 7.5 0 0 1 11.74-6.18 12.6 12.6 0 0 1 24.79 3.13 9.51 9.51 0 0 1 9.47 9.55z" fill="url(#a)"/>
+    <path d="m84.66 32.38a10.74 10.74 0 0 0 -2.66.32 11.09 11.09 0 0 0 .29-2.53 11.3 11.3 0 0 0 -17.69-9.31 19 19 0 0 0 -37.37 4.77 14.27 14.27 0 1 0 0 28.54h57.43a10.9 10.9 0 0 0 0-21.79z" fill="url(#b)"/>
+    <path d="m24.87 72.66a22.54 22.54 0 0 1 22.45-22.66l120.77-.48a22.53 22.53 0 1 1 .18 45.06l-120.77.53a22.54 22.54 0 0 1 -22.63-22.45z" fill="url(#c)"/>
+    <path d="m83.89 81.48h29.85v8.65h-29.85z" fill="#ff848b"/>
+    <path d="m61.36 31.98h71.63v47.31h-71.63z" fill="url(#d)"/>
+    <path d="m140.78 84.07h-1.95v-53.76a3.86 3.86 0 0 0 -3.83-3.86h-75.54a3.86 3.86 0 0 0 -3.86 3.87v53.75h-2a1.92 1.92 0 0 0 -1.88 1.93v3.9a1.92 1.92 0 0 0 1.93 1.93h87.13a1.93 1.93 0 0 0 1.93-1.93v-3.9a1.93 1.93 0 0 0 -1.93-1.93zm-35.78 3.87h-15.53v-3.87h15.53z" fill="url(#e)"/>
+    <rect fill="url(#f)" height="62.76" rx="5.4" width="41.61" x="122.66" y="54.8"/>
+    <path d="m139.53 107.32h7.75v3.87h-7.75z" fill="#ab71ff"/>
+    <g fill="#f9f9fa">
+      <path d="m107.19 47.81a6.25 6.25 0 0 0 -8.81 0l-.17.18-1.31 3.2 5.23.32a1 1 0 0 1 .63 1.62l-6.12 6.34a1 1 0 0 1 -.69.29.93.93 0 0 1 -.66-.27 1 1 0 0 1 0-1.36l4.68-4.83-4.52-.3a1 1 0 0 1 -.76-.45 1 1 0 0 1 -.07-.87l1.49-3.68-.24-.23a6.23 6.23 0 0 0 -8.8 0 6.22 6.22 0 0 0 0 8.8l9 9a1.5 1.5 0 0 0 1.07.44 1.54 1.54 0 0 0 1.07-.44l9-9a6.24 6.24 0 0 0 -.02-8.76z"/>
+      <path d="m153.39 74.11a6.24 6.24 0 0 0 -8.81 0l-.18.18-1.3 3.21 5.23.32a1 1 0 0 1 .63 1.62l-6.12 6.33a1 1 0 0 1 -1.35 0 1 1 0 0 1 0-1.35l4.68-4.83-4.49-.28a1 1 0 0 1 -.76-.44 1 1 0 0 1 -.07-.87l1.49-3.67-.24-.24a6.23 6.23 0 0 0 -8.8 8.81l9 9a1.51 1.51 0 0 0 2.15 0l9-9a6.25 6.25 0 0 0 -.06-8.79z"/>
+    </g>
+</svg>

@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=656379
+-->
+<head>
+  <title>Test for Bug 656379</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 656379 **/
+SimpleTest.waitForExplicitFinish();
+var subwindow = window.open("./bug656379-1.html", "bug656379", "width=800,height=1000");
+
+function finishTests() {
+  subwindow.close();
+  SimpleTest.finish();
+}
+</script>
+</pre>
+
+</body>
+</html>

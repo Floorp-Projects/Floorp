@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Grid container baselines, nested flex/grid/table</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1306906">
+  <style type="text/css">
+
+* {
+    color:black; background-color:white; font-size:16px; font-family:monospace; padding:0; margin:0;
+}
+
+grid, flex {
+  display: inline-flex;
+  border: 1px solid;
+  border-width: 10px 0 3px 0;
+  padding-top: 1px;
+}
+
+flex { display:inline-grid; }
+table { display:inline-table; }
+td { vertical-align: baseline; }
+
+    </style>
+</head>
+<body>
+
+A
+<flex>A<br>B</flex>
+<flex><span>A<br>B</span></flex>
+<grid>A<br>B</grid>
+<grid><span>A<br>B</span></grid>
+<table cellpadding="0" cellspacing="0"><td><flex>A<br>B</flex></td></table>
+<table cellpadding="0" cellspacing="0"><td><grid>A<br>B</grid></td></table>
+<flex><grid>A<br>B</grid></flex>
+<grid><flex>A<br>B</flex></grid>
+<flex><flex>A<br>B</flex></flex>
+<grid><grid>A<br>B</grid></grid>
+
+
+</body>
+</html>

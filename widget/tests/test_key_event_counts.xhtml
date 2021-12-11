@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<!-- We've had issues on Mac OS X where native key events either don't get processed
+     or they get processed twice. This test tests some of those scenarios. -->
+
+<window id="window1" title="Test Key Event Counts" onload="runTest()"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <script type="application/javascript"><![CDATA[
+    var gKeyPressEventCount = 0;
+    var gKeyDownEventCount = 0;
+
+    function onKeyDown(e)
+    {
+      gKeyDownEventCount++;
+    }
+
+    function onKeyPress(e)
+    {
+      gKeyPressEventCount++;
+      e.preventDefault();
+    }
+
+    function* testBody()
+    {
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("keypress", onKeyPress);
+
+      // Test ctrl-tab
+      gKeyDownEventCount = 0;
+      gKeyPressEventCount = 0;
+      yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_Tab, {ctrlKey:1}, "\t", "\t", continueTest);
+      is(gKeyDownEventCount, 1);
+      is(gKeyPressEventCount, 0, "ctrl-tab should be consumed by tabbox of tabbrowser at keydown");
+
+      // Test cmd+shift+a
+      gKeyDownEventCount = 0;
+      gKeyPressEventCount = 0;
+      yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {metaKey:1, shiftKey:1}, "a", "A", continueTest);
+      is(gKeyDownEventCount, 1);
+      is(gKeyPressEventCount, 1);
+
+      // Test cmd-;
+      gKeyDownEventCount = 0;
+      gKeyPressEventCount = 0;
+      yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Semicolon, {metaKey:1}, ";", ";", continueTest);
+      is(gKeyDownEventCount, 1);
+      is(gKeyPressEventCount, 1);
+
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keypress", onKeyPress);
+    }
+
+    var gTestContinuation = null;
+
+    function continueTest()
+    {
+      if (!gTestContinuation) {
+        gTestContinuation = testBody();
+      }
+      var ret = gTestContinuation.next();
+      if (ret.done) {
+        SimpleTest.finish();
+      } else {
+        is(ret.value, true, "Key synthesized successfully");
+      }
+    }
+
+    function runTest()
+    {
+      SimpleTest.waitForExplicitFinish();
+      continueTest();
+    }
+  ]]></script>
+
+</window>

@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "commands",
+]
+
+DevToolsModules(
+    "adb-addon.js",
+    "adb-binary.js",
+    "adb-client.js",
+    "adb-device.js",
+    "adb-process.js",
+    "adb-running-checker.js",
+    "adb-runtime.js",
+    "adb-socket.js",
+    "adb.js",
+)
+
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "about:debugging")
+
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]

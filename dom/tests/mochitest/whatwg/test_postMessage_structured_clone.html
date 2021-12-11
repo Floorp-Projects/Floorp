@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=553125
+-->
+<head>
+  <title>postMessage uses structured clone</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript"
+          src="postMessage_structured_clone_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=553125">Mozilla Bug 553125</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_structured_clone_helper.html"
+        name="sameDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_structured_clone_helper.html"
+        name="crossDomain"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 553125 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var lastMessage = null;
+var crossOrigin = false;
+var generator = getTestContent();
+
+function runNextSameOrigin() {
+  let {done, value} = generator.next();
+  if (done) {
+    generator = getTestContent();
+    crossOrigin = true;
+    runNextCrossOrigin();
+    return;
+  }
+  lastMessage = value;
+  window.frames.sameDomain.postMessage(lastMessage, "http://mochi.test:8888");
+}
+
+function runNextCrossOrigin() {
+  let {done, value} = generator.next();
+  if (done) {
+    SimpleTest.finish();
+    return;
+  }
+  lastMessage = value;
+  window.frames.crossDomain.postMessage(lastMessage, "http://example.org:8000");
+}
+
+function receiveMessage(evt) {
+  if (evt.data == "TEST-PASS")
+    SimpleTest.ok(true, "structured clone of | " + lastMessage + " | succeeded");
+  else
+    SimpleTest.ok(false, "structured clone of | " + lastMessage + " | failed");
+  setTimeout(crossOrigin ? runNextCrossOrigin : runNextSameOrigin, 0);
+}
+
+window.addEventListener("message", receiveMessage);
+window.addEventListener("load", runNextSameOrigin);
+
+</script>
+</pre>
+</body>
+</html>

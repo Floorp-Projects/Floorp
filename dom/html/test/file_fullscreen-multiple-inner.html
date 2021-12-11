@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 724554</title>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+
+/** Test for Bug 545812 **/
+function begin(id) {
+  addFullscreenErrorContinuation(function() {
+    opener.ok(false, "Fullscreen denied " + id);
+    });
+  addFullscreenChangeContinuation("enter",
+    function() {
+      opener.enteredFullscreen(id);
+    });
+  document.body.requestFullscreen();
+}
+
+
+</script>
+</pre>
+</body>
+</html>

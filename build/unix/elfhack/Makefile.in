@@ -1,0 +1,44 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/rules.mk
+
+test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX) elfhack
+	$(MKSHLIB) $(LDFLAGS) $< -nostartfiles
+	@echo ===
+	@echo === If you get failures below, please file a bug describing the error
+	@echo === and your environment \(compiler and linker versions\), and
+	@echo === provide the pre-elfhacked library as an attachment.
+	@echo === Use --disable-elf-hack until this is fixed.
+	@echo ===
+	# Fail if the library doesn't have $(DT_TYPE) .dynamic info
+	$(TOOLCHAIN_PREFIX)readelf -d $@ | grep '($(DT_TYPE))'
+	@rm -f $@.bak
+	$(CURDIR)/elfhack -b -f $@
+	# Fail if the backup file doesn't exist
+	[ -f '$@.bak' ]
+	# Fail if the new library doesn't contain less relocations
+	[ $$($(TOOLCHAIN_PREFIX)objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
+
+test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): DSO_SONAME=$@
+test-array$(DLL_SUFFIX): DT_TYPE=INIT_ARRAY
+test-ctors$(DLL_SUFFIX): DT_TYPE=INIT
+
+.PRECIOUS: test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX)
+
+ifndef CROSS_COMPILE
+ifdef COMPILE_ENVIRONMENT
+libs:: test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX)
+
+dummy: dummy.$(OBJ_SUFFIX)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+libs:: dummy
+	# Will either crash or return exit code 1 if elfhack is broken
+	LD_PRELOAD=$(CURDIR)/test-array$(DLL_SUFFIX) $(CURDIR)/dummy
+	LD_PRELOAD=$(CURDIR)/test-ctors$(DLL_SUFFIX) $(CURDIR)/dummy
+
+endif
+endif

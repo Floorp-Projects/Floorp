@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function background() {
+  browser.runtime.onConnect.addListener(port => {
+    browser.test.assertEq(port.name, "ernie", "port name correct");
+    browser.test.assertTrue(port.sender.url.endsWith("file_sample.html"), "URL correct");
+    browser.test.assertTrue(port.sender.tab.url.endsWith("file_sample.html"), "tab URL correct");
+
+    let expected = "message 1";
+    port.onMessage.addListener(msg => {
+      browser.test.assertEq(msg, expected, "message is expected");
+      if (expected == "message 1") {
+        port.postMessage("message 2");
+        expected = "message 3";
+      } else if (expected == "message 3") {
+        expected = "disconnect";
+        browser.test.notifyPass("runtime.connect");
+      }
+    });
+    port.onDisconnect.addListener(() => {
+      browser.test.assertEq(null, port.error, "No error because port is closed by disconnect() at other end");
+      browser.test.assertEq(expected, "disconnect", "got disconnection at right time");
+    });
+  });
+}
+
+function contentScript() {
+  let port = browser.runtime.connect({name: "ernie"});
+  port.postMessage("message 1");
+  port.onMessage.addListener(msg => {
+    if (msg == "message 2") {
+      port.postMessage("message 3");
+      port.disconnect();
+    }
+  });
+}
+
+let extensionData = {
+  background,
+  manifest: {
+    "permissions": ["tabs"],
+    "content_scripts": [{
+      "matches": ["http://mochi.test/*/file_sample.html"],
+      "js": ["content_script.js"],
+      "run_at": "document_start",
+    }],
+  },
+
+  files: {
+    "content_script.js": contentScript,
+  },
+};
+
+add_task(async function test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let win = window.open("file_sample.html");
+
+  await Promise.all([waitForLoad(win), extension.awaitFinish("runtime.connect")]);
+
+  win.close();
+
+  await extension.unload();
+  info("extension unloaded");
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+<html>
+<body>
+<script>
+
+var success = 0;
+
+try {
+  parent[name].success = 1;
+  parent.postMessage({
+    from: name,
+    result: success ? "success" : "failure"
+  }, "http://mochi.test:8888");
+} catch (e) {
+  parent.postMessage({
+    from: name,
+    result: e.toString()
+  }, "http://mochi.test:8888");
+}
+
+</script>
+<p>Move on, nothing to see here...</p>
+</body>
+</html>

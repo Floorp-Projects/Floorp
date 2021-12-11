@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+  <body style="height: 100%">
+    <!-- Button shouldn't get pointer events because it confuses tests if it
+         can be hovered -->
+    <button style="position: relative; display: table; width: 50%;
+                     height: 50%; top: 25%; left: 25%; pointer-events: none">
+      <div style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+                  background: green"></div>
+    </button>
+  </body>
+</html>

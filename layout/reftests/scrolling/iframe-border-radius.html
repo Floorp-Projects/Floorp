@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<iframe src="iframe-border-radius-frame.html" id="f" style="width:500px; height:500px; border-radius:100px; border:none;"></iframe>
+<script>
+var f = document.getElementById("f");
+var count = 0;
+function doTest() {
+  ++count;
+  f.contentWindow.scrollTo(0, count*20);
+  if (count == 4) {
+    document.documentElement.removeAttribute("class");
+  } else {
+    setTimeout(doTest, 20);
+  }
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+
+[scriptable, uuid(91917c98-a8f3-4c98-8f10-4afb872f54c7)]
+interface nsIHapticFeedback : nsISupports {
+
+    const long ShortPress = 0;
+    const long LongPress  = 1;
+
+  /**
+     * Perform haptic feedback
+     *
+     * @param isLongPress
+     *        indicate whether feedback is for a long press (vs. short press)
+     */
+    void performSimpleAction(in long isLongPress);
+};

@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test APZ hit-testing while overscrolled</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    .spacer {
+      height: 5000px;
+    }
+    #target {
+      margin-left: 100px;
+      margin-top: 2px;
+      height: 4px;
+      width: 4px;
+      background: red;
+    }
+  </style>
+</head>
+<body>
+ <div id="target"></div>
+ <div class="spacer"></div>
+</body>
+<script type="application/javascript">
+
+// Some helper functions for listening for contextmenu events in the browser chrome.
+
+// A handle used to interact with the chrome script used to implement
+// [start|stop]ListeningForContextmenuEventsInChrome().
+let chromeScriptHandle = null;
+
+function startListeningForContextmenuEventsInChrome() {
+  /* eslint-env mozilla/frame-script */
+  function chromeScript() {
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+    let topWin = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!topWin) {
+      topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
+    }
+    let chromeReceivedContextmenu = false;
+    function chromeListener(e) {
+      chromeReceivedContextmenu = true;
+    }
+    topWin.addEventListener("contextmenu", chromeListener);
+    function queryContextmenu() {
+      sendAsyncMessage("query-contextmenu-response", { chromeReceivedContextmenu });
+    }
+    function cleanup() {
+      topWin.removeEventListener("contextmenu", chromeListener);
+      removeMessageListener("query-contextmenu", queryContextmenu);
+      removeMessageListener("cleanup", cleanup);
+    }
+    addMessageListener("query-contextmenu", queryContextmenu);
+    addMessageListener("cleanup", cleanup);
+  }
+  chromeScriptHandle = SpecialPowers.loadChromeScript(chromeScript);
+}
+
+async function didChromeReceiveContextmenu() {
+  chromeScriptHandle.sendAsyncMessage("query-contextmenu", null);
+  let response = await chromeScriptHandle.promiseOneMessage("query-contextmenu-response");
+  ok(response && ("chromeReceivedContextmenu" in response),
+     "Received a well-formed response from chrome script");
+  return response.chromeReceivedContextmenu;
+}
+
+function stopListeningForContextmenuEventsInChrome() {
+  chromeScriptHandle.sendAsyncMessage("cleanup", null);
+  chromeScriptHandle.destroy();
+}
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  if (config.isWindows) {
+    todo(false, "This test does not yet work on Windows");
+    return;
+  }
+
+  // Overscroll the root scroll frame at the top, creating a gutter.
+  // Note that the size of the gutter will only be 8px, because
+  // setAsyncScrollOffset() applies the overscroll as a single delta,
+  // and current APZ logic that transforms a delta into an overscroll
+  // amount limits each delta to at most 8px.
+  utils.setAsyncScrollOffset(document.documentElement, 0, -200);
+
+  // Now, perform a right-click in the gutter and check that APZ prevents
+  // the contextevent from reaching Gecko.
+  // To be sure that no event was dispatched to Gecko, install listeners
+  // on both the browser chrome window and the content window.
+  // This makes sure we catch the case where the overscroll transform causes
+  // the event to incorrectly target the browser chrome.
+  let deviceScale = utils.screenPixelsPerCSSPixel;
+  let midGutter = 4 / deviceScale;  // gutter is 8 *screen* pixels
+  startListeningForContextmenuEventsInChrome();
+  let contentReceivedContextmenu = false;
+  let contentListener = function(e) {
+    contentReceivedContextmenu = true;
+  };
+  document.addEventListener("contextmenu", contentListener);
+  synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    button: 2,  // eSecondary (= "right mouse button")
+    target: window,
+    offsetX: 100,
+    offsetY: midGutter
+  });
+  // Wait 10 frames for the event to maybe arrive, and if it
+  // hasn't, assume it won't.
+  for (let i = 0; i < 10; i++) {
+    await promiseFrame();
+  }
+  info("Finished waiting around for contextmenu event");
+  let chromeReceivedContextmenu = await didChromeReceiveContextmenu();
+  ok(!chromeReceivedContextmenu,
+     "Gecko received contextmenu event in browser chrome when it shouldn't have");
+  ok(!contentReceivedContextmenu,
+     "Gecko received contextmenu event targeting web content when it shouldn't have");
+  stopListeningForContextmenuEventsInChrome();
+  document.removeEventListener("contextmenu", contentListener);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

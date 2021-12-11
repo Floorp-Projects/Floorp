@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=661980
+-->
+<head>
+  <title>Test for Bug 661980</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=661980">Mozilla Bug 661980</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 661980 **/
+
+// While not currently needed, make this as similar as possible to a real
+// EventTarget just to make sure that we're tripping on the wrapping and
+// nothing else.
+var fakeTarget = {
+  addEventListener: function() {},
+  removeEventListener: function() {},
+  dispatchEvent: function() {}
+}
+
+var mouseevent = document.createEvent("MouseEvent");
+var didThrow = false;
+dump("hello nurse\n");
+try {
+  mouseevent.initMouseEvent("mouseover",
+                            false, false,
+                            window,
+                            1, 2, 3, 4, 5,
+                            false, false, false, false,
+                            0,
+                            fakeTarget);
+}
+catch (ex) {
+  didThrow = true;
+}
+ok(didThrow, "should not be able to implement EventTarget using script");
+
+mouseevent.initMouseEvent("mouseout",
+                          false, false,
+                          window,
+                          1, 2, 3, 4, 5,
+                          false, false, false, false,
+                          0,
+                          document.body);
+is(mouseevent.type, "mouseout",
+   "should able to implement EventTarget using Element");
+
+</script>
+</pre>
+</body>
+</html>

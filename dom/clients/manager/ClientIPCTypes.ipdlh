@@ -1,0 +1,161 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PClientSource;
+include DOMTypes;
+include PBackgroundSharedTypes;
+include IPCServiceWorkerDescriptor;
+include ProtocolTypes;
+
+include "mozilla/dom/BindingIPCUtils.h";
+include "mozilla/dom/ClientIPCUtils.h";
+include "ipc/ErrorIPCUtils.h";
+
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using ClientType from "mozilla/dom/ClientsBinding.h";
+using FrameType from "mozilla/dom/ClientBinding.h";
+using mozilla::StorageAccess from "mozilla/StorageAccess.h";
+using VisibilityState from "mozilla/dom/DocumentBinding.h";
+using CallerType from "mozilla/dom/BindingDeclarations.h";
+using mozilla::CopyableErrorResult from "mozilla/ErrorResult.h";
+
+namespace mozilla {
+namespace dom {
+
+struct ClientSourceConstructorArgs
+{
+  nsID id;
+  ClientType type;
+  PrincipalInfo principalInfo;
+  TimeStamp creationTime;
+};
+
+[Comparable] struct IPCClientInfo
+{
+  nsID id;
+  nsID? agentClusterId;
+  ClientType type;
+  PrincipalInfo principalInfo;
+  TimeStamp creationTime;
+  nsCString url;
+  FrameType frameType;
+  CSPInfo? cspInfo;
+  CSPInfo? preloadCspInfo;
+};
+
+struct IPCClientWindowState
+{
+  VisibilityState visibilityState;
+  TimeStamp lastFocusTime;
+  StorageAccess storageAccess;
+  bool focused;
+};
+
+struct IPCClientWorkerState
+{
+  StorageAccess storageAccess;
+};
+
+union IPCClientState
+{
+  IPCClientWindowState;
+  IPCClientWorkerState;
+};
+
+struct ClientInfoAndState
+{
+  IPCClientInfo info;
+  IPCClientState state;
+};
+
+struct ClientSourceExecutionReadyArgs
+{
+  nsCString url;
+  FrameType frameType;
+};
+
+struct ClientControlledArgs
+{
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
+struct ClientFocusArgs
+{
+  CallerType callerType;
+};
+
+struct ClientNavigateArgs
+{
+  IPCClientInfo target;
+  nsCString url;
+  nsCString baseURL;
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
+struct ClientPostMessageArgs
+{
+  ClonedMessageData clonedData;
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
+struct ClientMatchAllArgs
+{
+  IPCServiceWorkerDescriptor serviceWorker;
+  ClientType type;
+  bool includeUncontrolled;
+};
+
+struct ClientClaimArgs
+{
+  IPCServiceWorkerDescriptor serviceWorker;
+};
+
+struct ClientGetInfoAndStateArgs
+{
+  nsID id;
+  PrincipalInfo principalInfo;
+};
+
+struct ClientOpenWindowArgs
+{
+  PrincipalInfo principalInfo;
+  CSPInfo? cspInfo;
+  nsCString url;
+  nsCString baseURL;
+};
+
+union ClientOpConstructorArgs
+{
+  ClientControlledArgs;
+  ClientFocusArgs;
+  ClientNavigateArgs;
+  ClientPostMessageArgs;
+  ClientMatchAllArgs;
+  ClientClaimArgs;
+  ClientGetInfoAndStateArgs;
+  ClientOpenWindowArgs;
+};
+
+struct ClientList
+{
+  ClientInfoAndState[] values;
+};
+
+struct ClientNavigateOpConstructorArgs
+{
+  PClientSource target;
+  nsCString url;
+  nsCString baseURL;
+};
+
+union ClientOpResult
+{
+  CopyableErrorResult;
+  IPCClientState;
+  ClientInfoAndState;
+  ClientList;
+};
+
+} // namespace dom
+} // namespace mozilla

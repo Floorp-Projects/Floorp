@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test GetDir() for elements</title>
+    <script type="text/javascript">
+function fill() {
+    for (var i = 0; ; ++i) {
+	div = document.getElementById("div" + i);
+	if (!div) break;
+	span = document.getElementById("span" + i);
+	span.innerHTML = div.dir;
+    }
+}
+    </script>
+  </head>
+  <body onLoad="fill()">
+    <div id="div0" dir="">dir="", getDir returns "<span id="span0"></span>"</div>
+    <div id="div1" dir="ltr">dir="ltr", getDir returns "<span id="span1"></span>"</div>
+    <div id="div2" dir="rtl">dir="rtl", getDir returns "<span id="span2"></span>"</div>
+    <div id="div3" dir="auto">dir="auto", getDir returns "<span id="span3"></span>"</div>
+    <div id="div4" dir="foopy">dir="foopy", getDir returns "<span id="span4"></span>"</div>
+    <div id="div5">no dir attribute, getDir returns "<span id="span5"></span>"</div>
+  </body>
+</html>

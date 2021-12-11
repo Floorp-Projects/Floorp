@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Storage Test</title>
+  <script>
+    "use strict";
+    /* exported setup */
+    function setup() {
+      createIndexedDB();
+      createCookies();
+      createLocalStorage();
+      createSessionStorage();
+    }
+
+    function createIndexedDB() {
+      const open = indexedDB.open("MyDatabase", 1);
+
+      open.onupgradeneeded = function () {
+        const db = open.result;
+        db.createObjectStore("MyObjectStore", {keyPath: "id"});
+      };
+
+      open.onsuccess = function () {
+        const db = open.result;
+        const tx = db.transaction("MyObjectStore", "readwrite");
+        const store = tx.objectStore("MyObjectStore");
+
+        store.put({id: 12345, name: {first: "John", last: "Doe"}, age: 42});
+        store.put({id: 54321, name: {first: "Ralph", last: "Wood"}, age: 38});
+        store.put({id: 67890, name: {first: "Bob", last: "Smith"}, age: 35});
+        store.put({id: 98765, name: {first: "Freddie", last: "Krueger"}, age: 40});
+
+        tx.oncomplete = function () {
+          db.close();
+        };
+      };
+    }
+
+    function createCookies() {
+      document.cookie = "test1=Jean Dupond";
+      document.cookie = "test2=dnopuD naeJ";
+    }
+
+    function createLocalStorage() {
+      localStorage.setItem("test3", "John Doe");
+      localStorage.setItem("test4", "eoD nhoJ");
+    }
+
+    function createSessionStorage() {
+      sessionStorage.setItem("test5", "John Smith");
+      sessionStorage.setItem("test6", "htimS nhoJ");
+    }
+  </script>
+</head>
+<body>
+  <h1>IndexedDB Test</h1>
+</body>
+</html>

@@ -1,0 +1,188 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html "http://www.w3.org/1999/xhtml";
+
+.notificationbox-stack {
+  /* Prevent the animation from overlapping the navigation toolbar */
+  overflow: clip;
+}
+
+.notificationbox-stack[notificationside="top"] {
+  /* Create a stacking context for the box-shadow */
+  position: relative;
+  z-index: 1;
+}
+
+notification {
+  min-height: 40px;
+  padding-inline-start: 16px;
+  background: var(--notification-background);
+  color: var(--notification-text);
+  border-color: var(--notification-border);
+  border-style: solid;
+  border-width: 1px 0;
+  text-shadow: none;
+  font-size: 1.15em;
+
+  --notification-background: Window;
+  --notification-text: WindowText;
+  --notification-border: rgba(12, 12, 13, 0.2);
+  --notification-button-background: rgba(12,12,13,.1);
+  --notification-button-background-hover: rgba(12,12,13,0.2);
+  --notification-button-background-active: rgba(12,12,13,0.3);
+  --notification-button-text: inherit;
+  --notification-primary-button-background: #0060df;
+  --notification-primary-button-background-hover: #003eaa;
+  --notification-primary-button-background-active: #002275;
+  --notification-primary-button-text: rgb(249, 249, 250);
+}
+
+notification[type="info"]:-moz-lwtheme-brighttext {
+  --notification-background: #38383d;
+  --notification-text: rgb(249, 249, 250);
+  --notification-button-background: rgba(249,249,250,.1);
+  --notification-button-background-hover: rgba(249,249,250,.2);
+  --notification-button-background-active: rgba(249,249,250,.3);
+}
+
+html|notification-message.animated,
+notification.animated {
+  transition: margin-top 300ms var(--animation-easing-function), opacity 300ms var(--animation-easing-function);
+}
+
+.notificationbox-stack[notificationside="top"] > notification {
+  border-top-style: none;
+}
+
+.notificationbox-stack[notificationside="bottom"] > notification {
+  border-bottom-style: none;
+}
+
+notification[type="warning"] {
+  --notification-background: #ffe900;
+  --notification-text: #0c0c0d;
+}
+
+notification[type="critical"] {
+  --notification-background: #d70022;
+  --notification-text: #fff;
+}
+
+notification[type="critical"] > .close-icon:hover {
+  background-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+notification[type="critical"] > .close-icon:hover:active {
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.messageText {
+  margin-inline-start: 12px !important;
+  margin-block: 0;
+}
+
+.messageText > .text-link {
+  text-decoration: underline;
+  margin-block: 0;
+}
+
+.messageText > .text-link:not(.notification-link) {
+  color: inherit !important;
+  margin-inline: 0;
+}
+
+.messageImage {
+  width: 24px;
+  height: 24px;
+  margin: 4px 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+notification[type="info"] > hbox > .messageImage {
+  list-style-image: url("chrome://global/skin/icons/help.svg");
+}
+
+notification[type="warning"] > hbox > .messageImage {
+  list-style-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+notification[type="critical"] > hbox > .messageImage {
+  list-style-image: url("chrome://global/skin/icons/error.svg");
+}
+
+.messageCloseButton {
+  margin: 0;
+  padding: 0;
+}
+
+.messageCloseButton > .toolbarbutton-icon {
+  padding: 6px;
+  /* Override width from close-icon.css */
+  width: 32px !important;
+  /* Close button needs to be clickable from the edge of the window */
+  margin-inline-end: 8px;
+}
+
+.messageCloseButton:-moz-focusring {
+  /* Override the dotted outline from button.css */
+  outline: none;
+}
+
+.messageCloseButton:-moz-focusring > .toolbarbutton-icon {
+  outline: var(--toolbarbutton-focus-outline, 2px solid currentColor);
+}
+
+.notification-button {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: var(--notification-button-background);
+  color: var(--notification-button-text);
+  padding: 0 6px;
+  margin: 4px 8px;
+  height: 24px;
+}
+
+.notification-button[disabled] {
+  opacity: 0.5;
+}
+
+.notification-button:not([disabled]):hover {
+  background-color: var(--notification-button-background-hover);
+}
+
+.notification-button:not([disabled]):hover:active {
+  background-color: var(--notification-button-background-active);
+}
+
+.notification-button:-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline, 2px solid currentColor);
+}
+
+.notification-button.primary {
+  background-color: var(--notification-primary-button-background);
+  /* Override button.css hover & active styles */
+  color: var(--notification-primary-button-text) !important;
+}
+
+.notification-button.primary:-moz-focusring {
+  outline: 4px solid rgba(0, 96, 223, 0.5);
+  outline-offset: -1px;
+}
+
+.notification-button.primary:not([disabled]):hover {
+  background-color: var(--notification-primary-button-background-hover);
+}
+
+.notification-button.primary:not([disabled]):hover:active {
+  background-color: var(--notification-primary-button-background-active);
+}
+
+.notificationbox-stack {
+  background-color: var(--toolbar-bgcolor);
+  width: 100%;
+}

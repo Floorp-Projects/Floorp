@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Native mouse event tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+var gLeftWindow, gRightWindow, gBrowserElement;
+
+function openWindows() {
+  gLeftWindow = window.browsingContext.topChromeWindow
+                      .open('empty_window.xhtml', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200');
+  SimpleTest.waitForFocus(function () {
+    gRightWindow = window.browsingContext.topChromeWindow
+                         .open('empty_window.xhtml', '', 'chrome,screenX=300,screenY=50,width=200,height=200');
+    SimpleTest.waitForFocus(attachBrowserToLeftWindow, gRightWindow);
+  }, gLeftWindow);
+}
+
+function attachBrowserToLeftWindow() {
+  gBrowserElement = gLeftWindow.document.createXULElement("browser");
+  gBrowserElement.setAttribute("type", "content");
+  gBrowserElement.setAttribute("src", "file_bug596600.html");
+  gBrowserElement.style.width = "100px";
+  gBrowserElement.style.height = "100px";
+  gBrowserElement.style.margin = "50px";
+  gLeftWindow.document.documentElement.appendChild(gBrowserElement);
+  gBrowserElement.addEventListener("load", async () => {
+    await test1();
+    await test2();
+    gRightWindow.close();
+    gLeftWindow.close();
+    SimpleTest.finish();
+  }, { capture: true, once: true });
+}
+
+async function test1() {
+  // gRightWindow is active, gLeftWindow is inactive.
+  info(`Synthesizing native "mousemove" event at top-left of the screen...`);
+  await promiseNativeMouseEvent({
+    type: "mousemove",
+    screenX: 0,
+    screenY: 0,
+    scale: "inScreenPixels",
+  });
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+
+  // Move into the left window
+  info(`Synthesizing native "mousemove" event in the left window (but outside the content)...`);
+  await promiseNativeMouseEventAndWaitForEvent({
+    type: "mousemove",
+    target: gBrowserElement,
+    offsetX: -20,
+    offsetY: -20,
+    win: gLeftWindow,
+    scale: "screenPixelsPerCSSPixelNoOverride",
+    eventTypeToWait: "mouseover",
+    eventTargetToListen: gLeftWindow,
+  });
+  ok(true, `"mouseover" event is fired on the left window when cursor is moved into it`);
+
+  // Move over the browser
+  info(`Synthesizing native "mousemove" event on the content in the left window...`);
+  await promiseNativeMouseEventAndWaitForEvent({
+    type: "mousemove",
+    target: gBrowserElement,
+    atCenter: true,
+    win: gLeftWindow,
+    scale: "screenPixelsPerCSSPixelNoOverride",
+    eventTypeToWait: "mouseout",
+    eventTargetToListen: gLeftWindow,
+  });
+  ok(true, `"mouseout" event is fired on the left window when cursor is moved into its child browser`);
+}
+
+async function test2() {
+  // Make the browser cover the whole window.
+  gBrowserElement.style.margin = "0";
+  gBrowserElement.style.width = gBrowserElement.style.height = "200px";
+
+  // Add a box to the browser at the left edge.
+  var doc = gBrowserElement.contentDocument;
+  var box = doc.createElement("div");
+  box.setAttribute("id", "box");
+  box.style.position = "absolute";
+  box.style.left = "0";
+  box.style.top = "50px";
+  box.style.width = "100px";
+  box.style.height = "100px";
+  box.style.backgroundColor = "green";
+  doc.body.appendChild(box);
+
+  ok(!box.matches(":hover"), "Box shouldn't be hovered (since the mouse isn't over it and since it's in a non-clickthrough browser in a background window)");
+
+  // A function to waitForFocus and then wait for synthetic mouse
+  // events to happen.  Note that those happen off the refresh driver,
+  // and happen after animation frame requests.
+  function changeFocusAndAwaitSyntheticMouse(winToFocus,
+                                             elementToWatchForMouseEventOn) {
+    return Promise.all([
+      new Promise(resolve => {
+        function mouseWatcher() {
+          elementToWatchForMouseEventOn.removeEventListener("mouseover",
+                                                            mouseWatcher);
+          elementToWatchForMouseEventOn.removeEventListener("mouseout",
+                                                            mouseWatcher);
+          SimpleTest.executeSoon(resolve);
+        }
+        elementToWatchForMouseEventOn.addEventListener("mouseover",
+                                                      mouseWatcher);
+        elementToWatchForMouseEventOn.addEventListener("mouseout",
+                                                      mouseWatcher);
+      }),
+      new Promise(resolve => SimpleTest.waitForFocus(resolve, winToFocus)),
+    ]);
+  }
+
+  // Move the mouse over the box.
+  info(`Synthesizing native "mousemove" event into the box...`);
+  await promiseNativeMouseEvent({
+    type: "mousemove",
+    target: box,
+    atCenter: true,
+    win: gLeftWindow,
+    scale: "screenPixelsPerCSSPixelNoOverride",
+  });
+  await new Promise(resolve =>
+    requestAnimationFrame(() => SimpleTest.executeSoon(resolve))
+  );
+  // XXX We cannot guarantee that the native mousemouse have already handled here.
+  ok(!box.matches(":hover"), "Box shouldn't be hovered (since it's in a non-clickthrough browser in a background window)");
+
+  // Activate the left window.
+  info("Waiting the left window activated...");
+  await changeFocusAndAwaitSyntheticMouse(gLeftWindow, box);
+  ok(gBrowserElement.matches(":hover"), "browser should be hovered");
+  ok(box.matches(":hover"), "Box should be hovered");
+
+  // De-activate the window (by activating the right window).
+  info("Waiting the right window activated...");
+  await changeFocusAndAwaitSyntheticMouse(gRightWindow, box);
+  ok(!gBrowserElement.matches(":hover"), "browser shouldn't be hovered");
+  ok(!box.matches(":hover"), "Box shouldn't be hovered");
+
+  // Re-activate it.
+  info("Waiting the left window activated again...");
+  await changeFocusAndAwaitSyntheticMouse(gLeftWindow, box);
+  ok(gBrowserElement.matches(":hover"), "browser should be hovered");
+  ok(box.matches(":hover"), "Box should be hovered");
+
+  // Unhover the box and the left window.
+  info(`Synthesizing native "mousemove" event outside the box and the left window...`);
+  await promiseNativeMouseEventAndWaitForEvent({
+    type: "mousemove",
+    screenX: 0,
+    screenY: 0,
+    scale: "inScreenPixels",
+    win: gLeftWindow,
+    eventTargetToListen: box,
+    eventTypeToWait: "mouseout",
+  });
+  await new Promise(resolve =>
+    requestAnimationFrame(() => SimpleTest.executeSoon(resolve))
+  );
+
+  ok(!gBrowserElement.matches(":hover"), "browser shouldn't be hovered");
+  ok(!box.matches(":hover"), "box shouldn't be hovered");
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(openWindows);
+
+]]>
+</script>
+
+</window>

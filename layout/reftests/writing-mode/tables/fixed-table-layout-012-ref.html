@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+ <head>
+  <title>CSS Reftest Reference</title>
+  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+  <style type="text/css">
+ .test { writing-mode: vertical-lr; }
+  div.stripe
+  {
+    width: 24px;
+    height: 50px;
+  }
+  div.blue {background-color: blue;}
+  div.black {background-color: black;}
+  </style>
+ </head>
+ <body>
+  <p>Test passes if the boxes below are the same height.</p>
+  <div class="test">
+    <div class="black stripe"></div>
+    <div class="blue stripe"></div>
+  </div>
+ </body>
+</html>

@@ -1,0 +1,73 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage key order test</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<!--
+  Check we preserve order of keys in localStorage when
+  keys are just modified. When a new key is added or
+  a key is removed order is again unspecified.
+-->
+
+<script type="text/javascript">
+
+function startTest()
+{
+  try
+  {
+    var keyNames = new Array;
+    localStorage.a = "1";
+    localStorage.b = "2";
+    localStorage.c = "3";
+    localStorage.d = "4";
+    localStorage.e = "5";
+
+    is(localStorage.a, "1", "a = 1");
+    is(localStorage.b, "2", "b = 2");
+    is(localStorage.c, "3", "c = 3");
+    is(localStorage.d, "4", "d = 4");
+    is(localStorage.e, "5", "e = 5");
+    is(localStorage.length, 5, "length = 5");
+
+    for (var i = 0; i < localStorage.length; ++i)
+      keyNames[i] = localStorage.key(i);
+
+    localStorage.a = "10";
+    localStorage.b = "20";
+    localStorage.c = "30";
+    localStorage.d = "40";
+    localStorage.e = "50";
+
+    is(localStorage.a, "10", "a = 10");
+    is(localStorage.b, "20", "b = 20");
+    is(localStorage.c, "30", "c = 30");
+    is(localStorage.d, "40", "d = 40");
+    is(localStorage.e, "50", "e = 50");
+    is(localStorage.length, 5, "length = 5");
+
+    for (var i = 0; i < localStorage.length; ++i)
+      is(keyNames[i], localStorage.key(i), "key "+keyNames[i]+" on same index");
+
+    keyNamesStringify = "[\"" + keyNames.join("\",\"") + "\"]";
+    frame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/localstorage/frameOrder.html?" +
+      keyNamesStringify;
+  }
+  catch (ex)
+  {
+    localStorage.clear();
+    throw ex;
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" name="frame"></frame>
+</body>
+</html>

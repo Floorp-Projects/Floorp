@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+/**
+ * Layout for the runtime info container is:
+ *
+ *      <- 68px --x--------- 1fr ----------><---- max ---->
+ *   ∧  +---------+------------------------+--------------+
+ *  1fr |         | Runtime Info           |   [Action]   |
+ *   |  |  Icon   | eg "Firefox (70.0a1)"  |              |
+ *   x  |         +------------------------+              |
+ *  max |         | Device Name (optional) |              |
+ *   ∨  +---------+------------------------+--------------+
+ */
+.runtime-info {
+  align-items: center;
+  display: grid;
+
+  grid-column-gap: var(--main-heading-icon-gap);
+  grid-template-areas:
+  "icon title    action"
+  "icon subtitle .";
+  grid-template-columns: var(--main-heading-icon-size) 1fr max-content;
+  grid-template-rows: 1fr max-content;
+
+  margin-block-end: calc(var(--base-unit) * 5);
+}
+
+.runtime-info__icon {
+  grid-area: icon;
+}
+.runtime-info__title {
+  grid-area: title;
+}
+.runtime-info__subtitle {
+  grid-area: subtitle;
+}
+.runtime-info__action {
+  grid-area: action;
+}

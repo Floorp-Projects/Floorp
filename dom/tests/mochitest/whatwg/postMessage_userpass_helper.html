@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Username/password page for postMessage tests</title>
+  <script type="application/javascript">
+
+function sendMessage(evt)
+{
+  var msg = "child-message";
+
+  if (evt.origin !== "http://mochi.test:8888")
+    msg += " wrong-origin(" + evt.origin + ")";
+  if (evt.data !== "parent-message")
+    msg += " wrong-data(" + evt.data + ")";
+  if (evt.lastEventId !== "")
+    msg += " wrong-lastEventId(" + evt.lastEventId + ")";
+  if (evt.source !== window.parent)
+    msg += " wrong-source";
+
+  // It would be good to guarantee that we've been opened with a userinfo of
+  // "bobhope:password", but Gecko elides that from the content-visible URL,
+  // and I can't find another way to actually detect this programmatically.
+
+  window.parent.postMessage(msg, "http://mochi.test:8888");
+}
+
+window.addEventListener("message", sendMessage);
+  </script>
+</head>
+<body>
+<p>Kid iframe</p>
+</body>
+</html>
+

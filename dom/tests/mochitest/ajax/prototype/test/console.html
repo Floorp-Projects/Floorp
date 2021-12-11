@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+        "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
+  <head>
+    <title>Prototype Console</title>
+    <script src="../dist/prototype.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Prototype.Console = Class.create();
+      Prototype.Console.prototype = {
+        initialize: function(element, form, input) {
+          this.element = $(element);
+          this.form    = $(form);
+          this.input   = $(input);
+          this.context = window.eval.bind(window);
+          this.registerCallbacks();
+          document.title = 'Prototype Console ' + Prototype.Version;
+          Field.activate(this.input);
+        },
+        
+        registerCallbacks: function() {
+          Event.observe(this.form, 'submit', function(event) {
+            this.eval($F(this.input));
+            this.input.value = '';
+            Field.activate(this.input);
+            Event.stop(event);
+          }.bind(this));
+        },
+        
+        log: function(type, message) {
+          new Insertion.Bottom(this.element, 
+            '<tr class="' + type + '"><td>' +
+            message.escapeHTML() + '</td></tr>');
+          Element.scrollTo(this.form);
+        },
+        
+        eval: function(expression) {
+          if (expression.match(/^\s*$/)) return;
+          try {
+            this.log('input', expression);
+            window.$_ = this.context.call(window, expression);
+            this.log('output', Object.inspect($_));
+          } catch (e) {
+            this.log('error', e.toString());
+          }
+        },
+        
+        clear: function() {
+          this.element.innerHTML = '';
+        }
+      }
+    </script>
+    <style type="text/css">
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .console {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 50px;
+      }
+    
+      .console td {
+        padding: 5px;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      
+      .console tr.input td {
+        background-color: #eee;
+        font-weight: bold;
+      }
+      
+      .console tr.error td,
+      .console tr.output td {
+        color: #333;
+        border-bottom: 1px solid #ccc;
+      }
+      
+      .console tr.error td {
+        color: #f00;
+      }
+      
+      #input-form {
+        width: 100%;
+        background-color: #f0f5b8;
+        border-top: 1px solid #333;
+        padding: 10px;
+        position: fixed;
+        height: 25px;
+        bottom: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <table class="console">
+      <tbody id="console">
+      </tbody>
+    </table>
+    <form id="input-form">
+      <input type="text" size="60" id="input" />
+      <input type="submit" value="Evaluate" />
+    </form>
+    <script type="text/javascript">
+      window.console = new Prototype.Console('console', 'input-form', 'input');
+    </script>
+  </body>
+</html>

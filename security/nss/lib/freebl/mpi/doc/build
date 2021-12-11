@@ -1,0 +1,30 @@
+#!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+VERS="1.7p6"
+SECT="1"
+NAME="MPI Tools"
+
+echo "Building manual pages ..."
+case $# in
+  0)
+    files=`ls *.pod`
+    ;;
+  *)
+    files=$*
+    ;;
+esac
+
+for name in $files
+do
+   echo -n "$name ... "
+#  sname=`noext $name`
+   sname=`basename $name .pod`
+   pod2man --section="$SECT" --center="$NAME" --release="$VERS" $name > $sname.$SECT
+   echo "(done)"
+done
+
+echo "Finished building."
+

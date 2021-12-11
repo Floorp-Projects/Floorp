@@ -1,0 +1,639 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * A minimal set of rules for the XUL elements that may be implicitly created
+ * as part of HTML/SVG documents (e.g. scrollbars) can be found over in
+ * minimal-xul.css.  Rules for everything else related to XUL can be found in
+ * this file.  Make sure you choose the correct style sheet when adding new
+ * rules.  (This split of the XUL rules is to minimize memory use and improve
+ * performance in HTML/SVG documents.)
+ *
+ * This file should also not contain any app specific styling.  Defaults for
+ * widgets of a particular application should be in that application's style
+ * sheet.  For example, style definitions for browser can be found in
+ * browser.css.
+ */
+
+@import url("chrome://global/skin/tooltip.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
+
+/* TODO: investigate unifying these two root selectors
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1592344
+ */
+*|*:root {
+  --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
+}
+
+:root {
+  text-rendering: optimizeLegibility;
+  -moz-control-character-visibility: visible;
+}
+
+:root:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
+/* XUL doesn't show outlines by default */
+:focus-visible {
+  outline: initial;
+}
+
+/*
+ * Native anonymous popups and tooltips in html are document-level, which means
+ * that they don't inherit from the root, so this is needed.
+ */
+popupgroup:-moz-native-anonymous:-moz-locale-dir(rtl),
+tooltip:-moz-native-anonymous:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
+/* ::::::::::
+   :: Rules for 'hiding' portions of the chrome for special
+   :: kinds of windows (not JUST browser windows) with toolbars
+   ::::: */
+
+*|*:root[chromehidden~="menubar"] .chromeclass-menubar,
+*|*:root[chromehidden~="directories"] .chromeclass-directories,
+*|*:root[chromehidden~="status"] .chromeclass-status,
+*|*:root[chromehidden~="extrachrome"] .chromeclass-extrachrome,
+*|*:root[chromehidden~="location"] .chromeclass-location,
+*|*:root[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar,
+*|*:root[chromehidden~="toolbar"] .chromeclass-toolbar-additional {
+  display: none;
+}
+
+/* ::::::::::
+   :: Rules for forcing direction for entry and display of URIs
+   :: or URI elements
+   ::::: */
+
+.uri-element {
+  direction: ltr !important;
+}
+
+/****** elements that have no visual representation ******/
+
+script, data, commandset, command,
+broadcasterset, broadcaster, observes,
+keyset, key, toolbarpalette, template,
+treeitem, treeseparator, treerow, treecell {
+  display: none;
+}
+
+/********** focus rules **********/
+
+button,
+checkbox,
+menulist,
+radiogroup,
+tree,
+browser,
+editor,
+iframe {
+  -moz-user-focus: normal;
+}
+
+/******** window & page ******/
+
+window {
+  overflow: clip;
+  -moz-box-orient: vertical;
+}
+
+/******** box *******/
+
+vbox {
+  -moz-box-orient: vertical;
+}
+
+/********** label **********/
+
+label {
+  display: inline-block;
+}
+
+description {
+  display: flow-root;
+}
+
+label.text-link, label[onclick] {
+  -moz-user-focus: normal;
+}
+
+label html|span.accesskey {
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+}
+
+/********** toolbarbutton **********/
+
+toolbar[mode="icons"] .toolbarbutton-text,
+toolbar[mode="text"] .toolbarbutton-icon,
+html|label.toolbarbutton-badge:empty {
+  display: none;
+}
+
+/********** button **********/
+
+button {
+  -moz-default-appearance: button;
+  appearance: auto;
+}
+
+/******** browser, editor, iframe ********/
+
+browser,
+editor,
+iframe {
+  display: inline;
+}
+
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  browser,
+  editor,
+  iframe {
+    display: block;
+  }
+}
+
+/* Allow the browser to shrink below its intrinsic size, to match legacy
+ * behavior */
+browser {
+  align-self: stretch;
+  justify-self: stretch;
+  min-height: 0;
+  min-width: 0;
+}
+
+/*********** popup notification ************/
+popupnotification {
+  -moz-box-orient: vertical;
+}
+
+.popup-notification-menubutton:not([label]) {
+  display: none;
+}
+
+/********** radio **********/
+
+radiogroup {
+  -moz-box-orient: vertical;
+}
+
+/******** groupbox *********/
+
+groupbox {
+  -moz-box-orient: vertical;
+}
+
+/******** draggable elements *********/
+
+%ifndef MOZ_WIDGET_GTK
+titlebar,
+toolbar:not([nowindowdrag="true"], [customizing="true"]) {
+  -moz-window-dragging: drag;
+}
+%endif
+
+/* The list below is non-comprehensive and will probably need some tweaking. */
+toolbaritem,
+toolbarbutton,
+toolbarseparator,
+button,
+search-textbox,
+html|input,
+tab,
+radio,
+splitter,
+menulist {
+  -moz-window-dragging: no-drag;
+}
+
+titlebar {
+  pointer-events: auto !important;
+}
+
+/******* toolbar *******/
+
+toolbox {
+  -moz-box-orient: vertical;
+}
+
+%ifdef XP_MACOSX
+toolbar[type="menubar"] {
+  min-height: 0 !important;
+  border: 0 !important;
+}
+%endif
+
+toolbarspring {
+  -moz-box-flex: 1000;
+}
+
+/********* menu ***********/
+
+menubar > menu:empty {
+  visibility: collapse;
+}
+
+.menu-text {
+  -moz-box-flex: 1;
+}
+
+/********* menupopup, panel, & tooltip ***********/
+
+menupopup,
+panel {
+  -moz-box-orient: vertical;
+}
+
+menupopup,
+panel,
+tooltip {
+  display: -moz-popup;
+  z-index: 2147483647;
+  text-shadow: none;
+}
+
+tooltip {
+  -moz-box-orient: vertical;
+  white-space: pre-wrap;
+}
+
+tooltip:not([position]) {
+  margin-top: 21px;
+}
+
+% excluding Android here to work around bug 1637975:
+%ifndef ANDROID
+@supports -moz-bool-pref("xul.panel-animations.enabled") {
+@media (prefers-reduced-motion: no-preference) {
+%ifdef MOZ_WIDGET_COCOA
+  /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
+     instead of "transform" and "opacity" for these animations.
+     The -moz-window* properties apply to the whole window including the window's
+     shadow, and they don't affect the window's "shape", so the system doesn't
+     have to recompute the shadow shape during the animation. This makes them a
+     lot faster. In fact, Gecko no longer triggers shadow shape recomputations
+     for repaints.
+     These properties are not implemented on other platforms. */
+  panel[type="arrow"]:not([animate="false"]) {
+    transition-property: -moz-window-transform, -moz-window-opacity;
+    transition-duration: 0.18s, 0.18s;
+    transition-timing-function:
+      var(--animation-easing-function), ease-out;
+  }
+
+  /* Only do the fade-in animation on pre-Big Sur to avoid missing shadows on
+   * Big Sur, see bug 1672091. */
+  @media (-moz-mac-big-sur-theme: 0) {
+    panel[type="arrow"]:not([animate="false"]) {
+      -moz-window-opacity: 0;
+      -moz-window-transform: translateY(-70px);
+    }
+
+    panel[type="arrow"][side="bottom"]:not([animate="false"]) {
+      -moz-window-transform: translateY(70px);
+    }
+  }
+
+  /* [animate] is here only so that this rule has greater specificity than the
+   * rule right above */
+  panel[type="arrow"][animate][animate="open"] {
+    -moz-window-opacity: 1.0;
+    transition-duration: 0.18s, 0.18s;
+    -moz-window-transform: none;
+    transition-timing-function:
+      var(--animation-easing-function), ease-in-out;
+  }
+
+  panel[type="arrow"][animate][animate="cancel"] {
+    -moz-window-opacity: 0;
+    -moz-window-transform: none;
+  }
+%else
+  panel[type="arrow"]:not([animate="false"]) {
+    opacity: 0;
+    transform: translateY(-70px);
+    transition-property: transform, opacity;
+    transition-duration: 0.18s, 0.18s;
+    transition-timing-function:
+      var(--animation-easing-function), ease-out;
+  }
+
+  panel[type="arrow"][side="bottom"]:not([animate="false"]) {
+    transform: translateY(70px);
+  }
+
+  /* [animate] is here only so that this rule has greater specificity than the
+   * rule right above */
+  panel[type="arrow"][animate][animate="open"] {
+    opacity: 1.0;
+    transition-duration: 0.18s, 0.18s;
+    transform: none;
+    transition-timing-function:
+      var(--animation-easing-function), ease-in-out;
+  }
+
+  panel[type="arrow"][animate][animate="cancel"] {
+    transform: none;
+  }
+%endif
+}
+}
+%endif
+
+panel[type="arrow"][animating] {
+  pointer-events: none;
+}
+
+/******** tree ******/
+
+treecolpicker {
+  -moz-box-ordinal-group: 2147483646;
+}
+
+treechildren {
+  display: -moz-box;
+  user-select: none;
+  -moz-box-flex: 1;
+}
+
+tree {
+  -moz-box-orient: vertical;
+  width: 10px;
+  height: 10px;
+}
+
+tree[hidecolumnpicker="true"] treecolpicker {
+  display: none;
+}
+
+treecol {
+  min-width: 16px;
+}
+
+treecol[hidden="true"] {
+  visibility: collapse;
+  display: -moz-box;
+}
+
+/* ::::: lines connecting cells ::::: */
+tree:not([treelines="true"]) treechildren::-moz-tree-line {
+  visibility: hidden;
+}
+
+treechildren::-moz-tree-cell(ltr) {
+  direction: ltr !important;
+}
+
+/********** deck & stack *********/
+
+deck {
+  display: -moz-deck;
+}
+
+stack {
+  display: grid;
+  position: relative;
+}
+
+/* We shouldn't style native anonymous children like scrollbars or what not */
+stack > *|*:not(:-moz-native-anonymous) {
+  grid-area: 1 / 1;
+  z-index: 0;
+
+  /*
+    The default `min-height: auto` value makes grid items refuse to be smaller
+    than their content. This doesn't match the traditional behavior of XUL stack,
+    which often shoehorns tall content into a smaller stack and allows the content
+    to decide how to handle overflow (e.g. by scaling down if it's an image, or
+    by adding scrollbars if it's scrollable).
+  */
+  min-height: 0;
+}
+
+/********** tabbox *********/
+
+tabbox {
+  -moz-box-orient: vertical;
+}
+
+tabs {
+  -moz-box-orient: horizontal;
+}
+
+tab {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+tab[selected="true"]:not([ignorefocus="true"]) {
+  -moz-user-focus: normal;
+}
+
+tabpanels {
+  display: -moz-deck;
+}
+
+/********** tooltip *********/
+
+tooltip[titletip="true"] {
+  /* The width of the tooltip isn't limited on cropped <tree> cells. */
+  max-width: none;
+}
+
+/********** basic rule for anonymous content that needs to pass box properties through
+ ********** to an insertion point parent that holds the real kids **************/
+
+.box-inherit {
+  -moz-box-orient: inherit;
+  -moz-box-pack: inherit;
+  -moz-box-align: inherit;
+  -moz-box-direction: inherit;
+}
+
+/********** textbox **********/
+
+search-textbox {
+  user-select: text;
+  text-shadow: none;
+}
+
+/* Prefix with (xul|*):root to workaround HTML tests loading xul.css */
+:root html|textarea:not([resizable="true"]) {
+  resize: none;
+}
+
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  html|*.textbox-input {
+    /* Be block-level, so that -moz-box-flex can take effect, when we are an item
+       in a -moz-box being emulated by modified modern flex. */
+    display: block;
+  }
+}
+
+/********** autocomplete textbox **********/
+
+/* SeaMonkey uses its own autocomplete and the toolkit's autocomplete widget */
+%ifndef MOZ_SUITE
+
+.autocomplete-richlistbox {
+  -moz-user-focus: ignore;
+  overflow-x: hidden !important;
+}
+
+.autocomplete-richlistitem {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  overflow: clip;
+}
+
+%endif
+
+/* The following rule is here to fix bug 96899 (and now 117952).
+   Somehow trees create a situation
+   in which a popupset flows itself as if its popup child is directly within it
+   instead of the placeholder child that should actually be inside the popupset.
+   This is a stopgap measure, and it does not address the real bug.  */
+.autocomplete-result-popupset {
+  max-width: 0px;
+  width: 0 !important;
+  min-width: 0%;
+  min-height: 0%;
+}
+
+/********** menulist **********/
+
+menulist[popuponly] {
+  appearance: none !important;
+  margin: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  border: 0 !important;
+}
+
+/********** splitter **********/
+
+.tree-splitter {
+  width: 0px;
+  max-width: 0px;
+  min-width: 0% ! important;
+  min-height: 0% ! important;
+  -moz-box-ordinal-group: 2147483646;
+}
+
+/******** scrollbar ********/
+
+slider {
+  /* This is a hint to layerization that the scrollbar thumb can never leave
+     the scrollbar track. */
+  overflow: hidden;
+}
+
+/******** scrollbox ********/
+
+scrollbox {
+  /* This makes it scrollable! */
+  overflow: hidden;
+}
+
+scrollbox[smoothscroll=true] {
+  scroll-behavior: smooth;
+}
+
+/********** stringbundle **********/
+
+stringbundle,
+stringbundleset {
+  display: none;
+}
+
+/********** dialog **********/
+
+dialog {
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+}
+
+/********** wizard **********/
+
+wizard {
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+  width: 40em;
+  height: 30em;
+}
+
+wizard > wizardpage {
+  grid-area: 1 / 1;
+  min-height: 0;
+}
+
+wizard > wizardpage:not(.selected) {
+  visibility: hidden;
+}
+
+wizardpage {
+  -moz-box-orient: vertical;
+  overflow: auto;
+}
+
+/********** Rich Listbox ********/
+
+richlistbox {
+  -moz-user-focus: normal;
+  -moz-box-orient: vertical;
+}
+
+/*********** findbar ************/
+findbar {
+  overflow-x: hidden;
+}
+
+/* Some elements that in HTML blocks should be inline-level by default */
+button, image {
+  display: -moz-inline-box;
+}
+
+.menu-iconic-highlightable-text:not([highlightable="true"]),
+.menu-iconic-text[highlightable="true"] {
+  display: none;
+}
+
+[orient="vertical"] { -moz-box-orient: vertical !important; }
+[orient="horizontal"] { -moz-box-orient: horizontal !important; }
+
+[align="start"] { -moz-box-align: start !important; }
+[align="center"] { -moz-box-align: center !important; }
+[align="end"] { -moz-box-align: end !important; }
+[align="baseline"] { -moz-box-align: baseline !important; }
+[align="stretch"] { -moz-box-align: stretch !important; }
+
+[pack="start"] { -moz-box-pack: start !important; }
+[pack="center"] { -moz-box-pack: center !important; }
+[pack="end"] { -moz-box-pack: end !important; }
+
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  /* This isn't a real solution for [flex] and [ordinal], but it covers enough
+     cases to render the browser chrome for us to test emulated flex mode without
+     mass-changing existing markup and CSS.
+     If we get attr() in Bug 435426 this could  work for all cases. */
+  [flex="1"] { -moz-box-flex: 1; }
+  [flex="2"] { -moz-box-flex: 2; }
+  [flex="3"] { -moz-box-flex: 3; }
+  [flex="4"] { -moz-box-flex: 4; }
+  [flex="5"] { -moz-box-flex: 5; }
+  [flex="6"] { -moz-box-flex: 6; }
+  [flex="7"] { -moz-box-flex: 7; }
+  [flex="8"] { -moz-box-flex: 8; }
+  [flex="9"] { -moz-box-flex: 9; }
+  [flex="100"] { -moz-box-flex: 100; }
+  [flex="400"] { -moz-box-flex: 400; }
+  [flex="1000"] { -moz-box-flex: 1000; }
+  [flex="10000"] { -moz-box-flex: 10000; }
+}

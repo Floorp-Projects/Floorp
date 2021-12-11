@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/MockDOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Logging.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+    <style type="text/css">
+        #hideTest {
+            display: none;
+        }
+    </style>
+</head>
+<body style="border: 0; margin: 0; padding: 0;">
+
+<div id="styleTest" style="position: absolute; left: 400px; top: 100px; width: 100px; height: 80px; padding: 10px 20px 30px 40px; border-width: 1px 2px 3px 4px; border-style: solid; border-color: blue; background: red; opacity: 0.5; filter: alpha(opacity=50); font-size: 10px; overflow-x: visible; overflow-y: hidden;"><div id="innerDiv"></div>TEST<span id="styleSubTest">SUB</span><div id="floatTest" style="float: left;">Float</div></div>
+
+<div id="hideTest" style="width: 100px; height: 100px;"><div id="innerHideTest" style="width: 10px; height: 10px;"></div></div>
+
+<table id="testTable" border="0" cellspacing="0" cellpadding="0"
+    style="position:absolute;left: 400px; top:300px;line-height:20px;"><tr align="center">
+<td id="testCell1" style="width: 80px; height: 30px; border:2px solid blue">1</td>
+<td id="testCell2" style="width: 80px; height: 30px; border:2px solid blue">2</td>
+<td id="testCell3" style="width: 80px; height: 30px; border:2px solid blue">3</td>
+</tr></table>
+
+<pre id="test">
+<script type="text/javascript">
+
+try {
+
+    // initial
+    var pos = getElementPosition('styleTest');
+    is(pos.x, 400, 'initial x position');
+    is(pos.y, 100, 'initial y position');
+
+    // Coordinates including border and padding
+    pos = getElementPosition('innerDiv');
+    is(pos.x, 444, 'x position with offsetParent border');
+    is(pos.y, 111, 'y position with offsetParent border');
+
+    // moved
+    var newPos = new MochiKit.Style.Coordinates(500, 200);
+    setElementPosition('styleTest', newPos);
+    pos = getElementPosition('styleTest');
+    is(pos.x, 500, 'updated x position');
+    is(pos.y, 200, 'updated y position');
+
+    // moved with relativeTo
+    anotherPos = new MochiKit.Style.Coordinates(100, 100);
+    pos = getElementPosition('styleTest', anotherPos);
+    is(pos.x, 400, 'updated x position (using relativeTo parameter)');
+    is(pos.y, 100, 'updated y position (using relativeTo parameter)');
+
+    // Coordinates object
+    pos = getElementPosition({x: 123, y: 321});
+    is(pos.x, 123, 'passthrough x position');
+    is(pos.y, 321, 'passthrough y position');
+
+    // Coordinates object with relativeTo
+    pos = getElementPosition({x: 123, y: 321}, {x: 100, y: 50});
+    is(pos.x, 23, 'passthrough x position (using relativeTo parameter)');
+    is(pos.y, 271, 'passthrough y position (using relativeTo parameter)');
+
+    pos = getElementPosition('garbage');
+    is(typeof(pos), 'undefined',
+        'invalid element should return an undefined position');
+
+    // Only set one coordinate
+    setElementPosition('styleTest', {'x': 300});
+    pos = getElementPosition('styleTest');
+    is(pos.x, 300, 'updated only x position');
+    is(pos.y, 200, 'not updated y position');
+
+    var mc = MochiKit.Color.Color;
+    var red = mc.fromString('rgb(255,0,0)');
+    var color = null;
+
+    color = mc.fromString(getStyle('styleTest', 'background-color'));
+    is(color.toHexString(), red.toHexString(),
+        'test getStyle selector case');
+
+    color = mc.fromString(getStyle('styleTest', 'backgroundColor'));
+    is(color.toHexString(), red.toHexString(),
+        'test getStyle camel case');
+
+    is(getStyle('styleSubTest', 'font-size'), '10px',
+        'test computed getStyle selector case');
+
+    is(getStyle('styleSubTest', 'fontSize'), '10px',
+        'test computed getStyle camel case');
+
+    is(eval(getStyle('styleTest', 'opacity')), 0.5,
+        'test getStyle opacity');
+
+    is(getStyle('styleTest', 'opacity'), 0.5, 'test getOpacity');
+
+    setStyle('styleTest', {'opacity': 0.2});
+    is(getStyle('styleTest', 'opacity'), 0.2, 'test setOpacity');
+
+    setStyle('styleTest', {'opacity': 0});
+    is(getStyle('styleTest', 'opacity'), 0, 'test setOpacity');
+
+    setStyle('styleTest', {'opacity': 1});
+    var t = getStyle('styleTest', 'opacity');
+    ok(t > 0.999 && t <= 1, 'test setOpacity');
+
+    is(getStyle('floatTest', 'float'), "left", 'getStyle of float');
+    is(getStyle('floatTest', 'cssFloat'), "left", 'getStyle of cssFloat');
+    is(getStyle('floatTest', 'styleFloat'), "left", 'getStyle of styleFloat');
+    is(getStyle('styleTest', 'float'), "none", 'getStyle of float when unset');
+
+    setStyle('floatTest', { "float": "right" });
+    is(getStyle('floatTest', 'float'), "right", 'setStyle of CSS float');
+    is(getStyle('floatTest', 'cssFloat'), "right", 'setStyle of CSS cssFloat');
+    is(getStyle('floatTest', 'styleFloat'), "right", 'setStyle of CSS styleFloat');
+
+    var dims = getElementDimensions('styleTest');
+    is(dims.w, 166, 'getElementDimensions w ok');
+    is(dims.h, 124, 'getElementDimensions h ok');
+
+    dims = getElementDimensions('styleTest', true);
+    is(dims.w, 100, 'getElementDimensions content w ok');
+    is(dims.h, 80, 'getElementDimensions content h ok');
+
+    setElementDimensions('styleTest', {'w': 200, 'h': 150});
+    dims = getElementDimensions('styleTest', true);
+    is(dims.w, 200, 'setElementDimensions w ok');
+    is(dims.h, 150, 'setElementDimensions h ok');
+
+    setElementDimensions('styleTest', {'w': 150});
+    dims = getElementDimensions('styleTest', true);
+    is(dims.w, 150, 'setElementDimensions only w ok');
+    is(dims.h, 150, 'setElementDimensions h not updated ok');
+
+    hideElement('styleTest');
+    dims = getElementDimensions('styleTest', true);
+    is(dims.w, 150, 'getElementDimensions w ok when display none');
+    is(dims.h, 150, 'getElementDimensions h ok when display none');
+
+    dims = getElementDimensions('hideTest', true);
+    is(dims.w, 100, 'getElementDimensions w ok when CSS display none');
+    is(dims.h, 100, 'getElementDimensions h ok when CSS display none');
+
+    /* TODO: can we create a work-around for this case?
+    dims = getElementDimensions('innerHideTest', true);
+    is(dims.w, 10, 'getElementDimensions w ok when parent CSS display none');
+    is(dims.h, 10, 'getElementDimensions h ok when parent CSS display none');
+    */
+
+    var elem = DIV();
+    appendChildNodes('styleTest', elem);
+    var before = elem.style.display;
+    getElementDimensions(elem);
+    var after = elem.style.display;
+    is(after, before, 'getElementDimensions modified element display');
+
+    dims = getViewportDimensions();
+    is(dims.w > 0, true, 'test getViewportDimensions w');
+    is(dims.h > 0, true, 'test getViewportDimensions h');
+
+    pos = getViewportPosition();
+    is(pos.x, 0, 'test getViewportPosition x');
+    is(pos.y, 0, 'test getViewportPosition y');
+
+    // The 3(+3) following |is(dims.w, 80, ...);| need a width of at least 652px to pass.
+    // Our SimpleTest/TestRunner.js runs tests inside an |iframe.width = "500";| only.
+    // Work around that.
+    // NB: This test already passes without this workaround when run alone.
+    setElementPosition('testTable', {'x': dims.w - (3 * (2 + 80 + 2))});
+    pos = getElementPosition('testTable');
+    is(dims.w - pos.x >= (3 * (2 + 80 + 2)), true, 'Is viewport width enough to display \'testTable\' at expected size?');
+
+    dims = getElementDimensions('testCell1', true);
+    is(dims.w, 80, 'default left table cell content w ok');
+    is(dims.h, 30, 'default left table cell content h ok');
+    dims = getElementDimensions('testCell2', true);
+    is(dims.w, 80, 'default middle table cell content w ok');
+    is(dims.h, 30, 'default middle table cell content h ok');
+    dims = getElementDimensions('testCell3', true);
+    is(dims.w, 80, 'default right table cell content w ok');
+    is(dims.h, 30, 'default right table cell content h ok');
+
+    setStyle('testTable', {'borderCollapse': 'collapse'});
+    dims = getElementDimensions('testCell1', true);
+    is(dims.w, 80, 'collapsed left table cell content w ok');
+    is(dims.h, 30, 'collapsed left table cell content h ok');
+    dims = getElementDimensions('testCell2', true);
+    is(dims.w, 80, 'collapsed middle table cell content w ok');
+    is(dims.h, 30, 'collapsed middle table cell content h ok');
+    dims = getElementDimensions('testCell3', true);
+    is(dims.w, 80, 'collapsed right table cell content w ok');
+    is(dims.h, 30, 'collapsed right table cell content h ok');
+
+    hideElement('testTable');
+
+    var overflow = makeClipping('styleTest');
+    is(getStyle('styleTest', 'overflow-x'), 'hidden', 'make clipping on overflow-x');
+    is(getStyle('styleTest', 'overflow-y'), 'hidden', 'make clipping on overflow-y');
+
+    undoClipping('styleTest', overflow);
+    is(getStyle('styleTest', 'overflow-x'), 'visible', 'undo clipping on overflow-x');
+    is(getStyle('styleTest', 'overflow-y'), 'hidden', 'undo clipping on overflow-y');
+
+    ok( true, "test suite finished!");
+
+
+} catch (err) {
+
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+
+}
+</script>
+</pre>
+</body>
+</html>

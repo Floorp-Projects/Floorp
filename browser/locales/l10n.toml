@@ -1,0 +1,182 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+basepath = "../.."
+
+locales = [
+    "ach",
+    "af",
+    "an",
+    "ar",
+    "ast",
+    "az",
+    "be",
+    "bg",
+    "bn",
+    "bo",
+    "br",
+    "brx",
+    "bs",
+    "ca",
+    "ca-valencia",
+    "cak",
+    "ckb",
+    "cs",
+    "cy",
+    "da",
+    "de",
+    "dsb",
+    "el",
+    "en-CA",
+    "en-GB",
+    "eo",
+    "es-AR",
+    "es-CL",
+    "es-ES",
+    "es-MX",
+    "et",
+    "eu",
+    "fa",
+    "ff",
+    "fi",
+    "fr",
+    "fy-NL",
+    "ga-IE",
+    "gd",
+    "gl",
+    "gn",
+    "gu-IN",
+    "he",
+    "hi-IN",
+    "hr",
+    "hsb",
+    "hu",
+    "hy-AM",
+    "hye",
+    "ia",
+    "id",
+    "is",
+    "it",
+    "ja",
+    "ja-JP-mac",
+    "ka",
+    "kab",
+    "kk",
+    "km",
+    "kn",
+    "ko",
+    "lij",
+    "lo",
+    "lt",
+    "ltg",
+    "lv",
+    "meh",
+    "mk",
+    "mr",
+    "ms",
+    "my",
+    "nb-NO",
+    "ne-NP",
+    "nl",
+    "nn-NO",
+    "oc",
+    "pa-IN",
+    "pl",
+    "pt-BR",
+    "pt-PT",
+    "rm",
+    "ro",
+    "ru",
+    "sat",
+    "scn",
+    "sco",
+    "si",
+    "sk",
+    "sl",
+    "son",
+    "sq",
+    "sr",
+    "sv-SE",
+    "szl",
+    "ta",
+    "te",
+    "tg",
+    "th",
+    "tl",
+    "tr",
+    "trs",
+    "uk",
+    "ur",
+    "uz",
+    "vi",
+    "wo",
+    "xh",
+    "zh-CN",
+    "zh-TW",
+    ]
+
+[env]
+    l = "{l10n_base}/{locale}/"
+
+
+[[paths]]
+    reference = "browser/locales/en-US/**"
+    l10n = "{l}browser/**"
+
+[[paths]]
+    reference = "browser/branding/official/locales/en-US/**"
+    l10n = "{l}browser/branding/official/**"
+
+[[paths]]
+    reference = "browser/extensions/formautofill/locales/en-US/**"
+    l10n = "{l}browser/extensions/formautofill/**"
+
+[[paths]]
+    reference = "browser/extensions/report-site-issue/locales/en-US/**"
+    l10n = "{l}browser/extensions/report-site-issue/**"
+
+[[paths]]
+    reference = "services/sync/locales/en-US/**"
+    l10n = "{l}services/sync/**"
+
+
+[[includes]]
+    path = "toolkit/locales/l10n.toml"
+
+[[includes]]
+    path = "devtools/client/locales/l10n.toml"
+
+[[paths]]
+    reference = "devtools/startup/locales/en-US/**"
+    l10n = "{l}devtools/startup/**"
+
+# Filters
+# The filters below are evaluated one after the other, in the given order.
+# Enter a combination of path as in the localization, key, and an action,
+# to change the default behavior of compare-locales and l10n merge.
+#
+# For browser/locales/en-US/chrome/browser/foo.properties,
+# path would be {l}browser/chrome/browser/foo.properties
+# key: the key/id of the entity
+# If key isn't specified, the complete file can be missing.
+[[filters]]
+    path = "{l}browser/defines.inc"
+    key = "MOZ_LANGPACK_CONTRIBUTORS"
+    action = "ignore"
+
+[[filters]]
+    path = [
+        "{l}browser/defines.inc",
+        "{l}browser/firefox-l10n.js",
+    ]
+    action = "ignore"
+
+[[filters]]
+    path = "{l}browser/chrome/browser-region/region.properties"
+    key = [
+        "re:^browser\\.contentHandlers\\.types\\.[0-5]\\..*$",
+        "re:^gecko\\.handlerService\\.schemes\\..*$",
+        "re:^gecko\\.handlerService\\.defaultHandlersVersion$"
+    ]
+    action = "ignore"

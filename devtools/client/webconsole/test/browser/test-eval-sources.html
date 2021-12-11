@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset=UTF-8>
+<script>
+/* eslint-disable */
+eval("window.foo = function() { console.log('FOO'); }");
+eval("window.bar = function() { throw new Error('BAR') };");
+eval(`window.baz = function() {
+        console.log('BAZ');
+        console.trace('TRACE');
+     }
+     //# sourceURL=my-foo.js`);
+
+foo();
+baz();
+bar();
+
+</script>

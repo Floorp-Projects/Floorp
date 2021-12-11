@@ -1,0 +1,64 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_lints:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        retrigger: true
+
+jobs:
+    linux64-valgrind-qr/opt-swr:
+        description: "Linux64 Valgrind Opt WebRender"
+        index:
+            product: firefox
+            job-name: linux64-valgrind-qr/opt-swr
+        treeherder:
+            platform: linux64-qr/opt
+            symbol: V-swr
+            kind: build
+            tier: 1
+        worker-type: b-linux-aws
+        worker:
+            docker-image: {in-tree: valgrind-build}
+            max-run-time: 72000
+            env:
+                PERFHERDER_EXTRA_OPTIONS: valgrind
+        run:
+            using: mozharness
+            actions: [get-secrets, build, valgrind-test]
+            custom-build-variant-cfg: valgrind
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+            extra-config:
+                extra_prefs: [gfx.webrender.software=true]
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            tooltool-downloads: public
+            need-xvfb: true
+        use-sccache: true
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-rust
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-sccache
+                - linux64-nasm
+                - linux64-node
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+        optimization:
+            skip-unless-expanded: null

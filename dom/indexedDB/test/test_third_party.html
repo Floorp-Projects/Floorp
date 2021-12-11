@@ -1,0 +1,119 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+    const BEHAVIOR_ACCEPT = 0;
+    const BEHAVIOR_REJECTFOREIGN = 1;
+    const BEHAVIOR_REJECT = 2;
+    const BEHAVIOR_LIMITFOREIGN = 3;
+
+    const testData = [
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_ACCEPT, expectedResultFrame1: true, expectedResultFrame2: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_ACCEPT, expectedResultFrame1: true, expectedResultFrame2: true },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_ACCEPT, expectedResultFrame1: true, expectedResultFrame2: true },
+
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_REJECT, expectedResultFrame1: false, expectedResultFrame2: false },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_REJECT, expectedResultFrame1: false, expectedResultFrame2: false },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_REJECT, expectedResultFrame1: false, expectedResultFrame2: false },
+
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: true, expectedResultFrame2: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
+
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: true, expectedResultFrame2: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
+    ];
+
+    const iframe1Path =
+      window.location.pathname.replace("test_third_party.html",
+                                       "third_party_iframe1.html");
+    const iframe2URL =
+      "http://" + window.location.host +
+      window.location.pathname.replace("test_third_party.html",
+                                       "third_party_iframe2.html");
+
+    let testIndex = 0;
+    let openedWindow;
+
+    // Cookie preference changes are only applied to top-level tabs/windows
+    // when they are loaded. We need a window-proxy to continue the test.
+    function openWindow() {
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["network.cookie.cookieBehavior", testData[testIndex].cookieBehavior],
+        ],
+      }, () => {
+        openedWindow = window.open("third_party_window.html");
+        openedWindow.onload = _ => {
+          openedWindow.postMessage({
+            source: "parent",
+            href: iframe2URL,
+            iframeUrl: testData[testIndex].host + iframe1Path,
+          }, "*");
+        };
+      });
+    }
+
+    let testFrames = ["iframe1", "iframe2"];
+    function messageListener(event) {
+      let message = JSON.parse(event.data);
+
+      // TODO: This is an ad-hoc solution to get a useful assertion message.
+      // It would be desirable that the test framework provides the ability
+      // to capture context information and provide it on assertion failures,
+      // automatically stringified.
+      let testContext = `testData[${testIndex}] == ${JSON.stringify(testData[testIndex])}`;
+
+      let idx = testFrames.indexOf(message.source);
+      if (idx != -1) {
+        testFrames.splice(idx, 1);
+        if (message.source == "iframe1") {
+          is(message.result, testData[testIndex].expectedResultFrame1, `Good result for ${testContext} iframe1`);
+        } else if (message.source == "iframe2") {
+          is(message.result, testData[testIndex].expectedResultFrame2, `Good result for ${testContext} iframe2`);
+        }
+      } else {
+        ok(false, 'Test has already received a message from ${message.source}');
+      }
+
+      if (testFrames.length > 0) {
+        return;
+      }
+
+      openedWindow.close();
+
+      if (testIndex < testData.length - 1) {
+        testFrames = ["iframe1", "iframe2"];
+        testIndex++;
+        openWindow();
+        return;
+      }
+
+      SimpleTest.finish();
+    }
+
+    function runTest() {
+      SimpleTest.waitForExplicitFinish();
+
+      SpecialPowers.addPermission("indexedDB", true, document);
+
+      window.addEventListener("message", messageListener);
+      openWindow();
+    }
+  </script>
+
+</head>
+
+<body onload="runTest();">
+</body>
+
+</html>

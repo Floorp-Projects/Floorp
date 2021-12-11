@@ -1,0 +1,118 @@
+#! gmake
+
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+MOD_DEPTH	= .
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+DIRS = config pr lib
+
+ifdef MOZILLA_CLIENT
+# Make nsinstall use absolute symlinks by default for Mozilla OSX builds
+# http://bugzilla.mozilla.org/show_bug.cgi?id=193164
+ifeq ($(OS_ARCH),Darwin)
+ifndef NSDISTMODE
+NSDISTMODE=absolute_symlink
+export NSDISTMODE
+endif
+endif
+endif
+
+DIST_GARBAGE = config.cache config.log config.status
+
+all:: config.status export
+
+include $(topsrcdir)/config/rules.mk
+
+config.status:: configure
+ifeq ($(OS_ARCH),WINNT)
+	sh $(srcdir)/configure --no-create --no-recursion
+else
+	./config.status --recheck && ./config.status
+endif
+
+#
+# The -ll option of zip converts CR LF to LF.
+#
+ifeq ($(OS_ARCH),WINNT)
+ZIP_ASCII_OPT = -ll
+endif
+
+# Delete config/autoconf.mk last because it is included by every makefile.
+distclean::
+	@echo "cd pr/tests; $(MAKE) $@"
+	@$(MAKE) -C pr/tests $@
+	rm -f config/autoconf.mk
+	rm -f `cat unallmakefiles` unallmakefiles
+
+release::
+	echo $(BUILD_NUMBER) > $(RELEASE_DIR)/$(BUILD_NUMBER)/version.df
+	@if test -f imports.df; then \
+	    echo "cp -f imports.df $(RELEASE_DIR)/$(BUILD_NUMBER)/imports.df"; \
+	    cp -f imports.df $(RELEASE_DIR)/$(BUILD_NUMBER)/imports.df; \
+	else \
+	    echo "echo > $(RELEASE_DIR)/$(BUILD_NUMBER)/imports.df"; \
+	    echo > $(RELEASE_DIR)/$(BUILD_NUMBER)/imports.df; \
+	fi
+	cd $(RELEASE_DIR)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
+	rm -rf META-INF; mkdir META-INF; cd META-INF; \
+	echo "Manifest-Version: 1.0" > MANIFEST.MF; \
+	echo "" >> MANIFEST.MF; \
+	cd ..; rm -f mdbinary.jar; zip -r mdbinary.jar META-INF bin lib; \
+	rm -rf META-INF; \
+	cd include; \
+	rm -rf META-INF; mkdir META-INF; cd META-INF; \
+	echo "Manifest-Version: 1.0" > MANIFEST.MF; \
+	echo "" >> MANIFEST.MF; \
+	cd ..; rm -f mdheader.jar; zip $(ZIP_ASCII_OPT) -r mdheader.jar *; \
+	rm -rf META-INF
+ifeq ($(OS_ARCH),WINNT)
+	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); then \
+		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)"; \
+		mkdir -p $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
+	fi
+	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); then \
+		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)"; \
+		mkdir -p $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+	fi
+else
+	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); then \
+		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)"; \
+		$(NSINSTALL) -D $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
+		chmod 775 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
+	fi
+	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); then \
+		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)"; \
+		$(NSINSTALL) -D $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+		chmod 775 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+	fi
+endif
+	cd $(RELEASE_DIR)/$(BUILD_NUMBER); \
+	cp -f version.df imports.df $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
+	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/version.df; \
+	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/imports.df; \
+	cd $(OBJDIR_NAME); \
+	cp -f mdbinary.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)/mdbinary.jar; \
+	cd include; \
+	cp -f mdheader.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)/mdheader.jar
+
+package:
+	@echo "cd pkg; $(MAKE) publish"
+	$(MAKE) -C pkg publish
+
+depend:
+	@echo "NSPR20 has no dependencies.  Skipped."

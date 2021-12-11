@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=507487
+-->
+<head>
+  <style>
+    #content > * {
+    display:block; width:100px; height:100px; background: purple;
+    }
+    #content > teST {
+    display:block; width:100px; height:100px; background: green;
+    }
+    
+    #content > test {
+    display:block; width:100px; height:100px; background: blue;
+    }
+  </style>
+  <script type="application/javascript">
+  <![CDATA[
+  function f() {
+    document.getElementById('content').appendChild(document.createElementNS("test", "test"));
+    document.getElementById('content').appendChild(document.createElementNS("test", "teST"));
+    document.getElementById('content').appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "test"));
+    document.getElementById('content').appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "teST"));
+  }
+  ]]>
+  </script>
+</head>
+<body onload="f();">
+<div id="content"></div>
+</body>
+</html>

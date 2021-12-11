@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebuggerManager"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebuggerManager_worker.js";
+    const CHILD_WORKER_URL = "WorkerDebuggerManager_childWorker.js";
+
+    function test() {
+      (async function() {
+        SimpleTest.waitForExplicitFinish();
+
+        info("Check that worker debuggers are not enumerated before they are " +
+             "registered.");
+        ok(!findDebugger(WORKER_URL),
+           "Worker debugger should not be enumerated before it is registered.");
+        ok(!findDebugger(CHILD_WORKER_URL),
+           "Child worker debugger should not be enumerated before it is " +
+           "registered.");
+
+        info("Create a worker that creates a child worker, and wait for " +
+             "their debuggers to be registered.");
+        let promise = waitForMultiple([
+          waitForRegister(WORKER_URL),
+          waitForRegister(CHILD_WORKER_URL)
+        ]);
+        let worker = new Worker(WORKER_URL);
+        let [dbg, childDbg] = await promise;
+
+        info("Check that worker debuggers are enumerated after they are " +
+             "registered.");
+        ok(findDebugger(WORKER_URL),
+           "Worker debugger should be enumerated after it is registered.");
+        ok(findDebugger(CHILD_WORKER_URL),
+           "Child worker debugger should be enumerated after it is " +
+           "registered.");
+
+        info("Check that worker debuggers are not closed before they are " +
+             "unregistered.");
+        is(dbg.isClosed, false,
+           "Worker debugger should not be closed before it is unregistered.");
+        is(childDbg.isClosed, false,
+           "Child worker debugger should not be closed before it is " +
+           "unregistered");
+
+        info("Terminate the worker and the child worker, and wait for their " +
+             "debuggers to be unregistered.");
+        promise = waitForMultiple([
+          waitForUnregister(CHILD_WORKER_URL),
+          waitForUnregister(WORKER_URL),
+        ]);
+        worker.terminate();
+        await promise;
+
+        info("Check that worker debuggers are not enumerated after they are " +
+             "unregistered.");
+        ok(!findDebugger(WORKER_URL),
+           "Worker debugger should not be enumerated after it is " +
+           "unregistered.");
+        ok(!findDebugger(CHILD_WORKER_URL),
+           "Child worker debugger should not be enumerated after it is " +
+           "unregistered.");
+
+        info("Check that worker debuggers are closed after they are " +
+             "unregistered.");
+        is(dbg.isClosed, true,
+           "Worker debugger should be closed after it is unregistered.");
+        is(childDbg.isClosed, true,
+           "Child worker debugger should be closed after it is unregistered.");
+
+        info("Check that property accesses on worker debuggers throws " +
+             "after they are closed.");
+        assertThrows(() => dbg.url,
+                     "Property accesses on worker debugger should throw " +
+                     "after it is closed.");
+        assertThrows(() => childDbg.url,
+                     "Property accesses on child worker debugger should " +
+                     "throw after it is closed.");
+
+        SimpleTest.finish();
+      })();
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

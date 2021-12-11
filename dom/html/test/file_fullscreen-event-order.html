@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="file_fullscreen-utils.js"></script>
+<iframe src="empty.html" allowfullscreen></iframe>
+<script>
+function ok(condition, msg) {
+  opener.ok(condition, "[event-order] " + msg);
+}
+function is(a, b, msg) {
+  opener.is(a, b, "[event-order] " + msg);
+}
+
+let fullscreenEvents = [];
+let iframe, iframeDoc;
+
+function begin() {
+  iframe = document.querySelector("iframe");
+  iframeDoc = iframe.contentDocument;
+  document.addEventListener("fullscreenchange", evt => {
+    fullscreenEvents.push(evt);
+  });
+  iframeDoc.addEventListener("fullscreenchange", evt => {
+    fullscreenEvents.push(evt);
+  });
+  addFullscreenChangeContinuation("enter", enterFullscreen);
+  iframeDoc.body.requestFullscreen();
+}
+
+function assertFullscreenEvents(action) {
+  is(fullscreenEvents.length, 2,
+    "Two documents should have event dispatched for " + action);
+  is(fullscreenEvents[0].target, iframe,
+     "Root document should have the event dispatched first after " + action);
+  is(fullscreenEvents[1].target, iframeDoc.body,
+     "Inner document should have the event dispatched second after " + action);
+}
+
+function enterFullscreen() {
+  assertFullscreenEvents("requestFullscreen");
+  fullscreenEvents = [];
+  addFullscreenChangeContinuation("exit", exitFullscreen);
+  document.exitFullscreen();
+}
+
+function exitFullscreen() {
+  assertFullscreenEvents("exitFullscreen");
+  opener.nextTest();
+}
+</script>

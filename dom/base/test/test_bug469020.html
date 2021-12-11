@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=469020
+-->
+<head>
+  <title>Test for Bug 469020</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469020">Mozilla Bug 469020</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 469020 **/
+
+  var range = null;
+  var anchor = null;
+
+  function doRangeAnchor(elem, start, end) {
+    range = document.createRange();
+    range.setStart(elem.firstChild, start);
+    end = end < elem.lastChild.length ? end : elem.lastChild.length
+    range.setEnd(elem.lastChild, end);
+    anchor = document.createElement('a');
+    anchor.href = "javascript: void(0);";
+    range.surroundContents(anchor);
+  }
+
+  function undoRangeAnchor() {
+    var pnode = anchor.parentNode;
+    var range2 = document.createRange();
+    range2.selectNodeContents(anchor);
+    var contents = range2.extractContents();
+    pnode.replaceChild(contents,anchor);
+  }
+
+function serializeNode(node) {
+  var s;
+  var isElem = false;
+  if (node.nodeName == "#text") {
+    if (node.nodeValue) {
+      s = node.nodeValue
+    } else {
+      s = "<#empty>"
+    }
+  } else {
+    isElem = true;
+    s = "<" + node.nodeName + ">";
+  }
+  for (var j = 0; j < node.childNodes.length; ++j) {
+    s += serializeNode(node.childNodes[j]);
+  }
+  if (isElem) {
+    s += "</" + node.nodeName + ">";
+  }
+  return s;
+}
+
+function runTest(elementID, start, end, expected1, expected2, expected3) {
+  var e = document.getElementById(elementID);
+  doRangeAnchor(e, start, end);
+  is(serializeNode(e), expected1, "Wrong range behavior!");
+  document.getElementById('log').textContent += serializeNode(e) + "\n";
+  undoRangeAnchor();
+  is(serializeNode(e), expected2, "Wrong range behavior!");
+  document.getElementById('log').textContent += serializeNode(e) + "\n";
+  doRangeAnchor(e, start, end);
+  is(serializeNode(e), expected3, "Wrong range behavior!");
+  document.getElementById('log').textContent += serializeNode(e) + "\n";
+}
+
+function runTests() {
+  runTest("test1", 0, 3,
+          "<P><#empty><A>http://www.<SPAN>mozilla.</SPAN>org</A><#empty></P>",
+          "<P><#empty>http://www.<SPAN>mozilla.</SPAN>org<#empty></P>",
+          "<P><#empty><A><#empty>http://www.<SPAN>mozilla.</SPAN>org<#empty></A><#empty></P>");
+
+  runTest("test2", 1, 3,
+          "<P>h<A>ttp://www.<SPAN>mozilla.</SPAN>org</A><#empty></P>",
+          "<P>http://www.<SPAN>mozilla.</SPAN>org<#empty></P>",
+          "<P>h<A><#empty>ttp://www.<SPAN>mozilla.</SPAN>org<#empty></A><#empty></P>");
+
+  runTest("test3", 0, 2,
+          "<P><#empty><A>http://www.<SPAN>mozilla.</SPAN>or</A>g</P>",
+          "<P><#empty>http://www.<SPAN>mozilla.</SPAN>org</P>",
+          "<P><#empty><A><#empty>http://www.<SPAN>mozilla.</SPAN>org</A><#empty></P>");
+
+  runTest("test4", 1, 2,
+          "<P>h<A>ttp://www.<SPAN>mozilla.</SPAN>or</A>g</P>",
+          "<P>http://www.<SPAN>mozilla.</SPAN>org</P>",
+          "<P>h<A><#empty>ttp://www.<SPAN>mozilla.</SPAN>org</A><#empty></P>");
+
+  runTest("test5", 11, 0,
+          "<P>http://www.<A><#empty><SPAN>mozilla.</SPAN><#empty></A>org</P>",
+          "<P>http://www.<#empty><SPAN>mozilla.</SPAN><#empty>org</P>",
+          "<P>http://www.<A><#empty><#empty><SPAN>mozilla.</SPAN><#empty><#empty></A>org</P>");
+
+  runTest("test6", 10, 1,
+          "<P>http://www<A>.<SPAN>mozilla.</SPAN>o</A>rg</P>",
+          "<P>http://www.<SPAN>mozilla.</SPAN>org</P>",
+          "<P>http://www<A><#empty>.<SPAN>mozilla.</SPAN>or</A>g</P>");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+
+
+</script>
+</pre>
+<p id="test1">http://www.<span>mozilla.</span>org</p>
+<p id="test2">http://www.<span>mozilla.</span>org</p>
+<p id="test3">http://www.<span>mozilla.</span>org</p>
+<p id="test4">http://www.<span>mozilla.</span>org</p>
+<p id="test5">http://www.<span>mozilla.</span>org</p>
+<p id="test6">http://www.<span>mozilla.</span>org</p>
+<pre id="log">
+</pre>
+</body>
+</html>

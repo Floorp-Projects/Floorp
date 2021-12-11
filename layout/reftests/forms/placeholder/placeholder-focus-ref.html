@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='placeholder-style.css'>
+  <script type="text/javascript">
+    function focusInput()
+    {
+      document.getElementById('t1').focus();
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload="focusInput();">
+    <input id='t1' type="text" class="placeholder" value="my placeholder" onfocus="disableReftestWait();">
+  </body>
+</html>

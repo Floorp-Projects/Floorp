@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include PBackgroundSharedTypes;
+include ServiceWorkerRegistrarTypes;
+
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+protocol PServiceWorkerManager
+{
+  manager PBackground;
+
+parent:
+  async Register(ServiceWorkerRegistrationData data);
+
+  async Unregister(PrincipalInfo principalInfo, nsString scope);
+
+  async PropagateUnregister(PrincipalInfo principalInfo, nsString scope);
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

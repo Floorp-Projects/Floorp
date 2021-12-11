@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that we show the "hey you're not recording allocation stacks" message at the appropriate times.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+    <pre id="test">
+        <script src="head.js" type="application/javascript"></script>
+        <script type="application/javascript">
+         "use strict";
+         window.onload = async function() {
+           try {
+             const container = document.getElementById("container");
+
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                 census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
+                   report: {
+                     bytes: 1,
+                     totalBytes: 1,
+                     count: 1,
+                     totalCount: 1,
+                     id: 1,
+                     parent: undefined,
+                     children: [
+                       {
+                         name: "noStack",
+                         bytes: 1,
+                         totalBytes: 1,
+                         count: 1,
+                         totalCount: 1,
+                         children: undefined,
+                         id: 3,
+                         parent: 1,
+                       },
+                     ],
+                   },
+                   display: censusDisplays.allocationStack,
+                 }),
+               }),
+             })), container);
+
+             ok(container.querySelector(".no-allocation-stacks"),
+                "When there are no allocation stacks, we should show the message");
+
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                 census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
+                   report: {
+                     bytes: 1,
+                     totalBytes: 1,
+                     count: 1,
+                     totalCount: 1,
+                     id: 1,
+                     parent: undefined,
+                     children: [
+                       {
+                         name: Cu.getJSTestingFunctions().saveStack(),
+                         bytes: 1,
+                         totalBytes: 1,
+                         count: 1,
+                         totalCount: 1,
+                         children: undefined,
+                         id: 2,
+                         parent: 1,
+                       },
+                       {
+                         name: "noStack",
+                         bytes: 1,
+                         totalBytes: 1,
+                         count: 1,
+                         totalCount: 1,
+                         children: undefined,
+                         id: 3,
+                         parent: 1,
+                       },
+                     ],
+                   },
+                   display: censusDisplays.allocationStack,
+                 }),
+               }),
+             })), container);
+
+             ok(!container.querySelector(".no-allocation-stacks"),
+                "When there are allocation stacks, we should not show the message");
+
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                 census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
+                   report: {
+                     bytes: 1,
+                     totalBytes: 1,
+                     count: 1,
+                     totalCount: 1,
+                     id: 1,
+                     parent: undefined,
+                     children: undefined,
+                   },
+                   display: censusDisplays.allocationStack,
+                 }),
+               }),
+             })), container);
+
+             ok(!container.querySelector(".no-allocation-stacks"),
+                "When there isn't census data, we should not show the message");
+           } catch (e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         };
+        </script>
+    </pre>
+</body>
+</html>

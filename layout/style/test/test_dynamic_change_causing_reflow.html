@@ -1,0 +1,434 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1131371</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1131371">Mozilla Bug 1131371</a>
+<div id="display">
+  <div id="content">
+  </div>
+  <div id="elemWithAbsPosChild"><div style="position:absolute"></div></div>
+  <div id="elemWithFixedPosChild"><div style="position:fixed"></div></div>
+  <div id="elemWithScrollbars" style="overflow: scroll"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 1131371 **/
+
+const elemWithAbsPosChild = document.getElementById("elemWithAbsPosChild");
+const elemWithFixedPosChild = document.getElementById("elemWithFixedPosChild");
+const elemWithScrollbars = document.getElementById("elemWithScrollbars");
+
+/**
+ * This test verifies that certain style changes do or don't cause reflow
+ * and/or frame construction. We do this by checking the framesReflowed &
+ * framesConstructed counts, before & after a style-change, and verifying
+ * that any change to these counts is in line with our expectations.
+ *
+ * Each entry in gTestcases contains these member-values:
+ *   - beforeStyle (optional): initial value to use for "style" attribute.
+ *   - afterStyle: value to change the "style" attribute to.
+ *
+ * Testcases may also include two optional member-values to express that reflow
+ * and/or frame construction *are* in fact expected:
+ *   - expectConstruction (optional): if set to something truthy, then we expect
+ *      frame construction to occur when afterStyle is set. Otherwise, we
+ *      expect that frame construction should *not* occur.
+ *   - expectReflow (optional): if set to something truthy, then we expect
+ *      reflow to occur when afterStyle is set. Otherwise, we expect that
+ *      reflow should *not* occur.
+ */
+const gTestcases = [
+  // Things that shouldn't cause reflow:
+  // -----------------------------------
+  // * Adding an outline (e.g. for focus ring).
+  {
+    afterStyle:  "outline: 1px dotted black",
+  },
+
+  // * Changing between completely different outlines.
+  {
+    beforeStyle: "outline: 2px solid black",
+    afterStyle:  "outline: 6px dashed yellow",
+  },
+
+  // * Adding a box-shadow.
+  {
+    afterStyle: "box-shadow: inset 3px 3px gray",
+  },
+  {
+    afterStyle: "box-shadow: 0px 0px 10px 30px blue"
+  },
+
+  // * Changing between completely different box-shadow values,
+  // e.g. from an upper-left shadow to a bottom-right shadow:
+  {
+    beforeStyle: "box-shadow: -15px -20px teal",
+    afterStyle:  "box-shadow:  30px  40px yellow",
+  },
+
+  // * Adding a text-shadow.
+  {
+    afterStyle: "text-shadow: 3px 3px gray",
+  },
+  {
+    afterStyle: "text-shadow: 0px 0px 10px blue"
+  },
+
+  // * Changing between completely different text-shadow values,
+  // e.g. from an upper-left shadow to a bottom-right shadow:
+  {
+    beforeStyle: "text-shadow: -15px -20px teal",
+    afterStyle:  "text-shadow:  30px  40px yellow",
+  },
+
+  // * switching overflow between things that shouldn't create scrollframes.
+  {
+    beforeStyle: "overflow: visible",
+    afterStyle: "overflow: clip",
+  },
+
+  // Things that *should* cause reflow:
+  // ----------------------------------
+  // (e.g. to make sure our counts are actually measuring something)
+
+  // * Changing 'height' should cause reflow, but not frame construction.
+  {
+    beforeStyle: "height: 10px",
+    afterStyle:  "height: 15px",
+    expectReflow: true,
+  },
+
+  // * Changing 'shape-outside' on a non-floating box should not cause anything to happen.
+  {
+    beforeStyle: "shape-outside: none",
+    afterStyle:  "shape-outside: circle()",
+  },
+
+  // * Changing 'shape-outside' should cause reflow, but not frame construction.
+  {
+    beforeStyle: "float: left; shape-outside: none",
+    afterStyle:  "float: left; shape-outside: circle()",
+    expectReflow: true,
+  },
+
+  // * Changing 'overflow' on <body> should cause reflow,
+  // but not frame reconstruction
+  {
+    elem: document.body,
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: scroll",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: scroll",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: visible",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "overflow: visible",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+
+  // * Changing 'overflow' on <html> should cause reflow,
+  // but not frame reconstruction
+  {
+    elem: document.documentElement,
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.documentElement,
+    beforeStyle: "overflow: visible",
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+
+  // * Setting 'overflow' on arbitrary node should cause reflow as well as
+  // frame reconstruction
+  {
+    /* beforeStyle: implicitly 'overflow:visible' */
+    afterStyle:  "overflow: auto",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: visible",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+
+  // * but only reflow if we don't need to construct / unconstruct a new frame.
+  {
+    beforeStyle: "overflow: scroll",
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: scroll",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+
+  {
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: auto",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: scroll",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: scroll",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: elemWithScrollbars,
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: scroll",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  // * Changing 'display' should cause frame construction and reflow.
+  {
+    beforeStyle: "display: inline",
+    afterStyle:  "display: table",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+
+
+  // * Position changes trigger a reframe, unless whether we're a containing
+  // block doesn't change, in which case we just need to reflow.
+  {
+    beforeStyle: "position: static",
+    afterStyle:  "position: absolute",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle:  "position: absolute",
+    afterStyle: "position: fixed",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle:  "position: relative",
+    afterStyle: "position: fixed",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+
+  // This doesn't change whether we're a containing block because there are no
+  // abspos descendants.
+  {
+    afterStyle: "position: static",
+    beforeStyle:  "position: relative",
+    expectReflow: true,
+  },
+
+  // This doesn't change whether we're a containing block, shouldn't reframe.
+  {
+    afterStyle: "position: sticky",
+    beforeStyle:  "position: relative",
+    expectReflow: true,
+  },
+
+  // These don't change whether we're a containing block for our
+  // absolutely-positioned child, so shouldn't reframe.
+  {
+    elem: elemWithAbsPosChild,
+    afterStyle: "position: sticky",
+    beforeStyle:  "position: relative",
+    expectReflow: true,
+  },
+  {
+    elem: elemWithFixedPosChild,
+    afterStyle: "position: sticky",
+    beforeStyle:  "position: relative",
+    expectReflow: true,
+  },
+  {
+    elem: elemWithFixedPosChild,
+    afterStyle: "position: static",
+    beforeStyle:  "position: relative",
+    expectReflow: true,
+  },
+  {
+    elem: elemWithFixedPosChild,
+    afterStyle: "position: static",
+    beforeStyle:  "position: sticky",
+    expectReflow: true,
+  },
+  {
+    // Even if we're a scroll frame.
+    elem: elemWithFixedPosChild,
+    afterStyle: "position: static; overflow: auto;",
+    beforeStyle:  "position: relative; overflow: auto;",
+    expectReflow: true,
+  },
+
+  // These ones do though.
+  {
+    elem: elemWithAbsPosChild,
+    afterStyle: "position: static",
+    beforeStyle:  "position: relative",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: elemWithAbsPosChild,
+    afterStyle: "position: static",
+    beforeStyle:  "position: sticky",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: elemWithAbsPosChild,
+    afterStyle: "position: static; overflow: auto;",
+    beforeStyle:  "position: relative; overflow: auto;",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+];
+
+// Helper function to let us call either "is" or "isnot" & assemble
+// the failure message, based on the provided parameters.
+function checkFinalCount(aFinalCount, aExpectedCount,
+                         aExpectChange, aMsgPrefix, aCountDescription)
+{
+  let compareFunc;
+  let msg = aMsgPrefix;
+  if (aExpectChange) {
+    compareFunc = isnot;
+    msg += "should cause " + aCountDescription;
+  } else {
+    compareFunc = is;
+    msg += "should not cause " + aCountDescription;
+  }
+
+  compareFunc(aFinalCount, aExpectedCount, msg);
+}
+
+// Vars used in runOneTest that we really only have to look up once:
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+const gElem = document.getElementById("content");
+
+function runOneTest(aTestcase)
+{
+  // sanity-check that we have the one main thing we need:
+  if (!aTestcase.afterStyle) {
+    ok(false, "testcase is missing an 'afterStyle' to change to");
+    return;
+  }
+
+  // Figure out which element we'll be tweaking (defaulting to gElem)
+  let elem = aTestcase.elem ? aTestcase.elem : gElem;
+
+  // Verify that 'style' attribute is unset (avoid causing ourselves trouble):
+  const oldStyle = elem.getAttribute("style");
+
+  // Set the "before" style, and compose the first part of the message
+  // to be used in our "is"/"isnot" invocations:
+  let msgPrefix = "Changing style ";
+  if (aTestcase.beforeStyle) {
+    elem.setAttribute("style", aTestcase.beforeStyle);
+    msgPrefix += "from '" + aTestcase.beforeStyle + "' ";
+  }
+  msgPrefix += "to '" + aTestcase.afterStyle + "' ";
+  msgPrefix += "on " + elem.nodeName + " ";
+
+  // Establish initial counts:
+  let unusedVal = elem.offsetHeight; // flush layout
+  let origFramesConstructed = gUtils.framesConstructed;
+  let origFramesReflowed = gUtils.framesReflowed;
+
+  // Make the change and flush:
+  elem.setAttribute("style", aTestcase.afterStyle);
+  unusedVal = elem.offsetHeight; // flush layout
+
+  // Make our is/isnot assertions about whether things should have changed:
+  checkFinalCount(gUtils.framesConstructed, origFramesConstructed,
+                  aTestcase.expectConstruction, msgPrefix,
+                  "frame construction");
+  checkFinalCount(gUtils.framesReflowed, origFramesReflowed,
+                  aTestcase.expectReflow, msgPrefix,
+                  "reflow");
+
+  // Clean up!
+  if (oldStyle) {
+    elem.setAttribute("style", oldStyle);
+  } else {
+    elem.removeAttribute("style");
+  }
+
+  unusedVal = elem.offsetHeight; // flush layout
+}
+
+gTestcases.forEach(runOneTest);
+
+</script>
+</pre>
+</body>
+</html>

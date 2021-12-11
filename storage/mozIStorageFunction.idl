@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+#include "mozIStorageValueArray.idl"
+
+interface mozIStorageConnection;
+interface nsIArray;
+interface nsIVariant;
+
+/**
+ * mozIStorageFunction is to be implemented by storage consumers that
+ * wish to receive callbacks during the request execution.
+ *
+ * SQL can apply functions to values from tables. Examples of
+ * such functions are MIN(a1,a2) or SQRT(num). Many functions are
+ * implemented in SQL engine.
+ *
+ * This interface allows consumers to implement their own,
+ * problem-specific functions.
+ * These functions can be called from triggers, too.
+ *
+ */
+[scriptable, function, uuid(9ff02465-21cb-49f3-b975-7d5b38ceec73)]
+interface mozIStorageFunction : nsISupports {
+  /**
+   * onFunctionCall is called when execution of a custom
+   * function should occur.
+   *
+   * @param aNumArguments         The number of arguments
+   * @param aFunctionArguments    The arguments passed in to the function
+   *
+   * @returns any value as Variant type.
+   */
+
+  nsIVariant onFunctionCall(in mozIStorageValueArray aFunctionArguments);
+};

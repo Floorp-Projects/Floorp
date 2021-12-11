@@ -1,0 +1,50 @@
+ <!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+    <title>Return Values</title>
+  </head>
+
+  <body>
+    <script>
+    function return_something(x) {
+      debugger;
+      return x;
+    }
+
+    function callee(x) {
+      throw x;
+    }
+
+    function throw_something(x) {
+      try {
+        callee(x);
+      } catch (e) {
+        // Ignore.
+      }
+    }
+    </script>
+
+    <h3>Returns</h3>
+    <button onclick="return_something(2)">return(2)</button>
+    <button onclick="return_something(new Error('blah'))">return(error)</button>
+    <button onclick="return_something(undefined)">return(undefined)</button>
+    <button onclick="return_something(false)">return(false)</button>
+    <button onclick="return_something(null)">return(null)</button>
+    <button onclick="return_something(0)">return(0)</button>
+    <button onclick="return_something('yay')">return('yay')</button>
+
+
+    <h3>Throws</h3>
+    <button onclick="throw_something(2)">throw(2)</button>
+    <button onclick="throw_something(new Error('blah'))">throw(error)</button>
+    <button onclick="throw_something(undefined)">throw(undefined)</button>
+    <button onclick="throw_something(false)">throw(false)</button>
+    <button onclick="throw_something(0)">throw(0)</button>
+    <button onclick="throw_something(null)">throw(null)</button>
+    <button onclick="throw_something('yay')">throw('yay')</button>
+
+  </body>
+
+</html>

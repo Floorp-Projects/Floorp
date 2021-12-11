@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        window.is = SimpleTest.is;
+        window.info = SimpleTest.info;
+
+        // Tests that videos can only play audibly in windows/frames
+        // which have been activated by same-origin user gesture.
+
+        gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+          ["media.autoplay.blocking_policy", 0]);
+
+        SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {
+          runTest();
+        });
+
+        let testCases = [
+          {
+            property: "muted",
+            inaudible: true,
+            audible: false,
+          },
+
+          {
+            property: "volume",
+            inaudible: 0.0,
+            audible: 1.0,
+          },
+        ];
+
+        let child_url = "file_autoplay_policy_unmute_pauses.html";
+
+        async function runTest() {
+          for (const testCase of testCases) {
+            // Run each test in a new window, to ensure its user gesture
+            // activation state isn't tainted by preceeding tests.
+            let child = window.open(child_url, "", "width=500,height=500");
+            await once(child, "load");
+            child.postMessage(testCase, window.origin);
+            await nextWindowMessage();
+            child.close();
+          }
+          SimpleTest.finish();
+        }
+
+        SimpleTest.waitForExplicitFinish();
+
+      </script>
+    </pre>
+</body>
+
+</html>

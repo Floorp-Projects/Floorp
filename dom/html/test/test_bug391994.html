@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=391994
+-->
+<head>
+  <title>Test for Bug 391994</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=391994">Mozilla Bug 391994</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 391994 **/
+var testNumber = 0;
+
+function assertSelected(aOption, aExpectDefaultSelected, aExpectSelected) {
+  ++testNumber;
+  is(aOption.defaultSelected, aExpectDefaultSelected,
+     "Asserting default-selected state for option " + testNumber);
+  is(aOption.selected, aExpectSelected,
+     "Asserting selected state for option " + testNumber);
+}
+
+function assertSame(aSel1, aSel2Str, aTestNumber) {
+  var div = document.createElement("div");
+  div.innerHTML = aSel2Str;
+  sel2 = div.firstChild;
+  is(aSel1.options.length, sel2.options.length,
+     "Length should be same in select test " + aTestNumber);
+  is(aSel1.selectedIndex, sel2.selectedIndex,
+     "Selected index should be same in select test " + aTestNumber);
+  for (var i = 0; i < aSel1.options.length; ++i) {
+    is(aSel1.options[i].selected, sel2.options[i].selected,
+       "Options[" + i + "].selected should be the same in select test " +
+       aTestNumber);
+    is(aSel1.options[i].defaultSelected, sel2.options[i].defaultSelected,
+       "Options[" + i +
+       "].defaultSelected should be the same in select test " +
+       aTestNumber);
+  }
+}
+
+// Creation methods
+var opt = document.createElement("option");
+assertSelected(opt, false, false);
+
+opt = new Option();
+assertSelected(opt, false, false);
+
+// Setting of defaultSelected
+opt = new Option();
+opt.setAttribute("selected", "selected");
+assertSelected(opt, true, true);
+
+opt = new Option();
+opt.defaultSelected = true;
+assertSelected(opt, true, true);
+is(opt.hasAttribute("selected"), true, "Attribute should be set");
+is(opt.getAttribute("selected"), "",
+   "Attribute should be set to empty string");
+
+// Setting of selected
+opt = new Option();
+opt.selected = false;
+assertSelected(opt, false, false);
+
+opt = new Option();
+opt.selected = true;
+assertSelected(opt, false, true);
+
+// Interaction of selected and defaultSelected
+opt = new Option();
+opt.selected;
+opt.setAttribute("selected", "selected");
+assertSelected(opt, true, true);
+
+opt = new Option();
+opt.selected = false;
+opt.setAttribute("selected", "selected");
+assertSelected(opt, true, false);
+
+opt = new Option();
+opt.setAttribute("selected", "selected");
+opt.selected = true;
+opt.removeAttribute("selected");
+assertSelected(opt, false, true);
+
+// First test of putting things in a <select>: Adding default-selected option
+// should select it.
+var sel = document.createElement("select");
+sel.appendChild(new Option());
+is(sel.selectedIndex, 0, "First option should be selected");
+assertSelected(sel.firstChild, false, true);
+
+sel.appendChild(new Option());
+is(sel.selectedIndex, 0, "First option should still be selected");
+assertSelected(sel.firstChild, false, true);
+assertSelected(sel.firstChild.nextSibling, false, false);
+
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+assertSelected(sel.firstChild, false, false);
+assertSelected(sel.firstChild.nextSibling, false, false);
+assertSelected(opt, true, true);
+is(opt, sel.firstChild.nextSibling.nextSibling, "What happened here?");
+is(sel.options[0], sel.firstChild, "Unexpected option 0");
+is(sel.options[1], sel.firstChild.nextSibling, "Unexpected option 1");
+is(sel.options[2], opt, "Unexpected option 2");
+is(sel.selectedIndex, 2, "Unexpected selectedIndex in select test 1");
+
+assertSame(sel, "<select><option><option><option selected></select>", 1);
+
+// Second test of putting things in a <select>: Adding two default-selected
+// options should select the second one.
+sel = document.createElement("select");
+sel.appendChild(new Option());
+sel.appendChild(new Option());
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+assertSelected(sel.options[0], false, false);
+assertSelected(sel.options[1], false, false);
+assertSelected(sel.options[2], true, false);
+assertSelected(sel.options[3], true, true);
+is(sel.selectedIndex, 3, "Unexpected selectedIndex in select test 2");
+
+assertSame(sel,
+  "<select><option><option><option selected><option selected></select>", 2);
+
+// Third test of putting things in a <select>: adding a selected option earlier
+// than another selected option should make the new option selected.
+sel = document.createElement("select");
+sel.appendChild(new Option());
+sel.appendChild(new Option());
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+opt = new Option();
+opt.defaultSelected = true;
+sel.options[0] = opt;
+assertSelected(sel.options[0], true, true);
+assertSelected(sel.options[1], false, false);
+assertSelected(sel.options[2], true, false);
+is(sel.selectedIndex, 0, "Unexpected selectedIndex in select test 3");
+
+// Fourth test of putting things in a <select>: Just like second test, but with
+// a <select multiple>
+sel = document.createElement("select");
+sel.multiple = true;
+sel.appendChild(new Option());
+sel.appendChild(new Option());
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+assertSelected(sel.options[0], false, false);
+assertSelected(sel.options[1], false, false);
+assertSelected(sel.options[2], true, true);
+assertSelected(sel.options[3], true, true);
+is(sel.selectedIndex, 2, "Unexpected selectedIndex in select test 4");
+
+assertSame(sel,
+           "<select multiple><option><option>" +
+            "<option selected><option selected></select>",
+           4);
+
+</script>
+</pre>
+</body>
+</html>
+

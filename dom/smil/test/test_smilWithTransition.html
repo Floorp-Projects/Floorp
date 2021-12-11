@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset=utf-8>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<pre id="test">
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  { "set": [["dom.animations-api.getAnimations.enabled", true]]},
+  function() {
+    window.open("file_smilWithTransition.html");
+  });
+</script>
+</html>

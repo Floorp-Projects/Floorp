@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=610687
+-->
+<head>
+  <title>Test for Bug 610687</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=610687">Mozilla Bug 610687</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form>
+    <input type='radio' name='a'>
+    <input type='radio' name='a'>
+    <input type='radio' name='b'>
+  </form>
+  <input type='radio' name='a'>
+  <input type='radio' name='a'>
+  <input type='radio' name='b'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 610687 **/
+
+function checkPseudoClasses(aElement, aValid, aValidUI, aInvalidUI)
+{
+  if (aValid) {
+    ok(aElement.matches(":valid"), ":valid should apply");
+  } else {
+    ok(aElement.matches(":invalid"), ":invalid should apply");
+  }
+
+  is(aElement.matches(":-moz-ui-valid"), aValidUI,
+     aValid ? ":-moz-ui-valid should apply" : ":-moz-ui-valid should not apply");
+
+  is(aElement.matches(":-moz-ui-invalid"), aInvalidUI,
+     aInvalidUI ? ":-moz-ui-invalid should apply" : ":-moz-ui-invalid should not apply");
+
+  if (aInvalidUI && (aValid || aValidUI)) {
+    ok(false, ":invalid can't apply with :valid or :-moz-valid-ui");
+  }
+}
+
+/**
+ * r1 and r2 should be in the same group.
+ * r3 should be in another group.
+ * form can be null.
+ */
+function checkRadios(r1, r2, r3, form)
+{
+  // Default state.
+  checkPseudoClasses(r1, true, false, false);
+  checkPseudoClasses(r2, true, false, false);
+  checkPseudoClasses(r3, true, false, false);
+
+  // Suffering from being missing (without ui-invalid).
+  r1.required = true;
+  checkPseudoClasses(r1, false, false, false);
+  checkPseudoClasses(r2, false, false, false);
+  checkPseudoClasses(r3, true, false, false);
+
+  // Suffering from being missing (with ui-invalid).
+  r1.checked = false;
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r3, true, false, false);
+
+  // Do not suffer from being missing (with ui-valid).
+  r1.checked = true;
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r3, true, false, false);
+
+  // Do not suffer from being missing (with ui-valid).
+  r1.checked = false;
+  r1.required = false;
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r3, true, false, false);
+
+  // Suffering from being missing (with ui-invalid) with required set on one radio
+  // and the checked state changed on another.
+  r1.required = true;
+  r2.checked = false;
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r3, true, false, false);
+
+  // Do not suffer from being missing (with ui-valid) by checking the radio which
+  // hasn't the required attribute.
+  r2.checked = true;
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r3, true, false, false);
+
+  // .setCustomValidity() should not affect the entire group.
+  r1.checked = r2.checked = r3.checked = false;
+  r1.required = false;
+  r1.setCustomValidity('foo');
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r3, true, true, false);
+
+  r1.setCustomValidity('');
+  r2.setCustomValidity('foo');
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+  checkPseudoClasses(r3, true, true, false);
+
+  r2.setCustomValidity('');
+  r3.setCustomValidity('foo');
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r3, false, false, true);
+
+  // Removing the radio with the required attribute should make the group valid.
+  r1.setCustomValidity('');
+  r2.setCustomValidity('');
+  r1.required = false;
+  r2.required = true;
+  r1.checked = r2.checked = false;
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  var p = r2.parentNode;
+  p.removeChild(r2);
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  p.appendChild(r2);
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  // Adding a radio element to an invalid group should make it invalid.
+  p.removeChild(r1);
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  p.appendChild(r1);
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  // Adding a checked radio element to an invalid group should make it valid.
+  p.removeChild(r1);
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r1.checked = true;
+  p.appendChild(r1);
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  r1.checked = false;
+
+  // Adding an invalid radio element by changing the name attribute.
+  r2.name = 'c';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r2.name = 'a';
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  // Adding an element to an invalid radio group by changing the name attribute.
+  r1.name = 'c';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r1.name = 'a';
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  // Adding a checked element to an invalid radio group with the name attribute.
+  r1.name = 'c';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r1.checked = true;
+  r1.name = 'a';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  r1.checked = false;
+}
+
+var r1 = document.getElementsByTagName('input')[0];
+var r2 = document.getElementsByTagName('input')[1];
+var r3 = document.getElementsByTagName('input')[2];
+checkRadios(r1, r2, r3);
+
+r1 = document.getElementsByTagName('input')[3];
+r2 = document.getElementsByTagName('input')[4];
+r3 = document.getElementsByTagName('input')[5];
+checkRadios(r1, r2, r3);
+
+</script>
+</pre>
+</body>
+</html>

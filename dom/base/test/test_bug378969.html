@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=378969
+-->
+<head>
+  <title>Test for Bug 378969</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=378969">Mozilla Bug 378969</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 378969 **/
+
+function do_test()
+{
+  var XHTMLDocString = '<html xmlns="http://www.w3.org/1999/xhtml">';
+  XHTMLDocString += '<body><input/>input</body></html>';
+
+  var doc = new DOMParser().parseFromString(XHTMLDocString, "application/xml");
+
+  var body = doc.getElementsByTagName("body")[0];
+  var filter = NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT;
+  var walker = doc.createTreeWalker(body, filter, null);
+  walker.currentNode = body.firstChild;
+  walker.nextNode();
+
+  ok("A" == "A", "A is A");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+
+</script>
+</pre>
+</body>
+</html>
+

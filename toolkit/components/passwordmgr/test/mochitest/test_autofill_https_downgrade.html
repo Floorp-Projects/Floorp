@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test we don't autofill on an HTTP page using HTTPS logins</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+const MISSING_ACTION_PATH = TESTS_DIR + "mochitest/form_basic.html";
+const SAME_ORIGIN_ACTION_PATH = TESTS_DIR + "mochitest/form_same_origin_action.html";
+
+const chromeScript = runChecksAfterCommonInit(false);
+
+let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                                                           SpecialPowers.Ci.nsILoginInfo,
+                                                                           "init");
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
+
+async function prepareAndProcessForm(url, login) {
+  let processedPromise = promiseFormsProcessed();
+  win.location = url;
+  info("prepareAndProcessForm, assigned window location: " + url);
+  await processedPromise;
+}
+
+async function checkFormsWithLogin(formUrls, login, expectedUsername, expectedPassword) {
+  await LoginManager.removeAllUserFacingLogins();
+  await LoginManager.addLogin(login);
+
+  for (let url of formUrls) {
+    info("start test_checkNoAutofillOnDowngrade w. url: " + url);
+
+    await prepareAndProcessForm(url);
+    info("form was processed");
+
+    await SpecialPowers.spawn(win, [url, expectedUsername, expectedPassword],
+                              function(urlContent, expectedUsernameContent, expectedPasswordContent) {
+      let doc = this.content.document;
+      let uname = doc.getElementById("form-basic-username");
+      let pword = doc.getElementById("form-basic-password");
+      Assert.equal(uname.value, expectedUsernameContent, `username ${expectedUsernameContent ? "filled" : "not filled"} on ${urlContent}`);
+      Assert.equal(pword.value, expectedPasswordContent, `password ${expectedPasswordContent ? "filled" : "not filled"} on ${urlContent}`);
+    });
+  }
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.schemeUpgrades", true],
+    ["dom.security.https_first", false],
+    ]});
+});
+
+add_task(async function test_sanityCheckHTTPS() {
+  let login = new nsLoginInfo("https://example.com", "https://example.com", null,
+                              "name1", "pass1", "uname", "pword");
+
+  await checkFormsWithLogin([
+    `https://example.com${MISSING_ACTION_PATH}`,
+    `https://example.com${SAME_ORIGIN_ACTION_PATH}`,
+  ], login, "name1", "pass1");
+});
+
+add_task(async function test_checkNoAutofillOnDowngrade() {
+  let login = new nsLoginInfo("https://example.com", "https://example.com", null,
+                              "name1", "pass1", "uname", "pword");
+  await checkFormsWithLogin([
+    `http://example.com${MISSING_ACTION_PATH}`,
+    `http://example.com${SAME_ORIGIN_ACTION_PATH}`,
+  ], login, "", "");
+});
+
+add_task(async function test_checkNoAutofillOnDowngradeSubdomain() {
+  let login = new nsLoginInfo("https://sub.example.com", "https://example.com", null,
+                              "name1", "pass1", "uname", "pword");
+  todo(false, "await promiseFormsProcessed timesout when test is run with scheme=https");
+  await checkFormsWithLogin([
+    `http://example.com${MISSING_ACTION_PATH}`,
+    `http://example.com${SAME_ORIGIN_ACTION_PATH}`,
+  ], login, "", "");
+});
+
+
+add_task(async function test_checkNoAutofillOnDowngradeDifferentPort() {
+  let login = new nsLoginInfo("https://example.com:8080", "https://example.com", null,
+                              "name1", "pass1", "uname", "pword");
+  await checkFormsWithLogin([
+    `http://example.com${MISSING_ACTION_PATH}`,
+    `http://example.com${SAME_ORIGIN_ACTION_PATH}`,
+  ], login, "", "");
+});
+
+add_task(async function test_checkNoAutofillOnDowngradeSubdomainDifferentPort() {
+  let login = new nsLoginInfo("https://sub.example.com:8080", "https://example.com", null,
+                              "name1", "pass1", "uname", "pword");
+  await checkFormsWithLogin([
+    `https://example.com${MISSING_ACTION_PATH}`,
+    `https://example.com${SAME_ORIGIN_ACTION_PATH}`,
+  ], login, "", "");
+});
+</script>
+</pre>
+</body>
+</html>

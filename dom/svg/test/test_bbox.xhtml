@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=449327
+-->
+<head>
+  <title>Test for getBBox</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="bbox-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">//<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var doc = $("svg").contentDocument;
+
+  function isFuzzy(a, b, error, name) {
+    ok(!(Math.abs(a - b) > error),
+      name + " - got " + a + ", expected " + b + " (within " + error + ")");
+  }
+
+  function getBBox(id) {
+    return doc.getElementById(id).getBBox();
+  }
+  function checkBBox(id, x, y, width, height, error) {
+    var bbox = getBBox(id);
+    isFuzzy(bbox.x, x, error, id + ".getBBox().x");
+    isFuzzy(bbox.y, y, error, id + ".getBBox().y");
+    isFuzzy(bbox.width, width, error, id + ".getBBox().width");
+    isFuzzy(bbox.height, height, error, id + ".getBBox().height");
+  }
+  function compareBBox(id1, id2) {
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    is(bbox1.x, bbox2.x, id1 + ".getBBox().x");
+    is(bbox1.y, bbox2.y, id1 + ".getBBox().y");
+    isFuzzy(bbox1.width, bbox2.width, 0.0002, id1 + ".getBBox().width");
+    is(bbox1.height, bbox2.height, id1 + ".getBBox().height");
+  }
+  function compareBBoxFuzzy(id1, id2, err) {
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    isfuzzy(bbox1.x, bbox2.x, err, id1 + ".getBBox().x");
+    isfuzzy(bbox1.y, bbox2.y, err, id1 + ".getBBox().y");
+    isfuzzy(bbox1.width, bbox2.width, err, id1 + ".getBBox().width");
+    isfuzzy(bbox1.height, bbox2.height, err, id1 + ".getBBox().height");
+  }
+  function compareBBoxHeight(id1, id2) {
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    is(bbox1.height, bbox2.height, id1 + ".getBBox().height");
+  }
+  function compareBBoxWidthWithScaleFuzzy(id1, id2, scaleOfId2, err) {
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    isfuzzy(bbox1.width, bbox2.width * scaleOfId2, err, id1 + ".getBBox().width");
+  }
+
+  checkBBox("fO", 10, 10, 100, 100, 0.0);
+  checkBBox("i", 10, 10, 100, 100, 0.0);
+  compareBBoxHeight("a", "b");
+  compareBBoxHeight("a", "y");
+  compareBBox("b", "tspantext1");
+  compareBBoxFuzzy("tspantext1", "tspan1", 5);
+  compareBBoxHeight("tspantext2", "tspan2");
+  compareBBoxWidthWithScaleFuzzy("tspantext2", "tspan2", 2, 5);
+  compareBBoxHeight("text", "lrmText");
+  checkBBox("v", 95, 45, 10, 155, 0.001);
+  checkBBox("h", 195, 45, 105, 55, 0.001);
+  checkBBox("e", 95, 95, 10, 10, 0.001);
+  checkBBox("use_v", 195, 145, 10, 155, 0.001);
+  checkBBox("use_h", 295, 145, 105, 55, 0.001);
+  checkBBox("use_e", 195, 195, 10, 10, 0.001);
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+
+//]]></script>
+</pre>
+</body>
+</html>

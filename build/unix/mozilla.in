@@ -1,0 +1,108 @@
+#!/bin/sh
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+## 
+## Usage:
+##
+## $ mozilla [args]
+##
+## This script is meant to run the application binary from mozilla/dist/bin.
+##
+## The script will setup all the environment voodoo needed to make
+## the application binary to work.
+##
+
+#uncomment for debugging
+#set -x
+
+moz_libdir=%MOZAPPDIR%
+
+# Use run-mozilla.sh in the current dir if it exists
+# If not, then start resolving symlinks until we find run-mozilla.sh
+found=0
+progname="$0"
+curdir=`dirname "$progname"`
+progbase=`basename "$progname"`
+run_moz="$curdir/run-mozilla.sh"
+if test -x "$run_moz"; then
+  dist_bin="$curdir"
+  found=1
+else
+  here=`/bin/pwd`
+  while [ -h "$progname" ]; do
+    bn=`basename "$progname"`
+    cd `dirname "$progname"`
+    # Resolve symlink of dirname
+    cd `/bin/pwd`
+    progname=`/bin/ls -l "$bn" | sed -e 's/^.* -> //' `
+    progbase=`basename "$progname"`
+    if [ ! -x "$progname" ]; then
+      break
+    fi
+    curdir=`dirname "$progname"`
+    run_moz="$curdir/run-mozilla.sh"
+    if [ -x "$run_moz" ]; then
+      cd "$curdir"
+      dist_bin=`/bin/pwd`
+      run_moz="$dist_bin/run-mozilla.sh"
+      found=1
+      break
+    fi
+  done
+  cd "$here"
+fi
+if [ $found = 0 ]; then
+  # Check default compile-time libdir
+  if [ -x "$moz_libdir/run-mozilla.sh" ]; then
+    dist_bin="$moz_libdir"
+    run_moz="$moz_libdir/run-mozilla.sh"
+  else
+    echo "Cannot find %MOZ_APP_DISPLAYNAME% runtime directory. Exiting."
+    exit 1
+  fi
+fi
+
+script_args=""
+debugging=0
+MOZILLA_BIN="${progbase}-bin"
+
+if [ "$OSTYPE" = "beos" ]; then
+  mimeset -F "$MOZILLA_BIN"
+fi
+
+pass_arg_count=0
+while [ $# -gt $pass_arg_count ]
+do
+  case "$1" in
+    -p | --pure | -pure)
+      MOZILLA_BIN="${MOZILLA_BIN}.pure"
+      shift
+      ;;
+    -g | --debug)
+      script_args="$script_args -g"
+      debugging=1
+      shift
+      ;;
+    -d | --debugger)
+      script_args="$script_args -d $2"
+      shift 2
+      ;;
+    *)
+      # Move the unrecognized argument to the end of the list.
+      arg="$1"
+      shift
+      set -- "$@" "$arg"
+      pass_arg_count=`expr $pass_arg_count + 1`
+      ;;
+  esac
+done
+
+if [ $debugging = 1 ]
+then
+  echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
+fi
+exec "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
+# EOF.

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Fractional scroll area position / size</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+#scrollbox {
+  width: 200px;
+  overflow: hidden;
+  background: red;
+}
+
+#scrolled-content {
+  background: lime;
+  box-sizing: border-box;
+  border: solid black;
+  border-width: 1px 0;
+}
+
+</style>
+
+<div id="scrollbox">
+  <div id="scrolled-content"></div>
+</div>
+
+<script>
+
+function getFloatQueryParams(defaultValues) {
+  let result = Object.assign({}, defaultValues);
+  for (let chunk of location.search.substr(1).split("&")) {
+    let parts = chunk.split("=");
+    result[parts[0]] = parseFloat(parts[1]);
+  }
+  return result;
+}
+
+let params = getFloatQueryParams({
+  top: 0,
+  outerBottom: 100,
+  innerBottom: 100,
+  borderTop: 0,
+  borderBottom: 0,
+  scrollBefore: 0,
+  scrollAfter: undefined,
+  offsetAfter: undefined,
+});
+
+let scrollArea = document.getElementById("scrollbox");
+let scrolledContent = document.getElementById("scrolled-content");
+
+scrollArea.style.marginTop = params.top + "px";
+scrollArea.style.height = (params.outerBottom - params.top) + "px";
+scrolledContent.style.height =  (params.innerBottom - params.top) + "px";
+
+scrollArea.scrollTop = 1;
+scrollArea.scrollTop = 2;
+scrollArea.scrollTop = params.scrollBefore;
+
+window.addEventListener("MozReftestInvalidate", function () {
+  if (params.scrollAfter !== undefined) {
+    scrollArea.scrollTop = params.scrollAfter;
+  }
+  if (params.offsetAfter !== undefined) {
+    document.body.style.marginTop = params.offsetAfter + "px";
+  }
+  document.documentElement.className = "";
+});
+
+</script>

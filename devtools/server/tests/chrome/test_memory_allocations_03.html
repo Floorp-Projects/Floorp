@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1067491 - Test that frames keep the same index while we are recording.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  (async function() {
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
+
+    await memory.startRecordingAllocations();
+
+    // Allocate twice with the exact same stack (hence setTimeout rather than
+    // allocating directly in the generator), but with getAllocations() calls in
+    // between.
+
+    const allocs = [];
+    function allocator() {
+      allocs.push({});
+    }
+
+    setTimeout(allocator, 1);
+    await waitForTime(2);
+    const first = await memory.getAllocations();
+
+    setTimeout(allocator, 1);
+    await waitForTime(2);
+    const second = await memory.getAllocations();
+
+    await memory.stopRecordingAllocations();
+
+    // Assert that each frame in the first response has the same index in the
+    // second response. This isn't commutative, so we don't check that all
+    // of the second response's frames are the same in the first response,
+    // because there might be new allocations that happen after the first query
+    // but before the second.
+
+    function assertSameFrame(a, b) {
+      info("  First frame = " + JSON.stringify(a, null, 4));
+      info("  Second frame = " + JSON.stringify(b, null, 4));
+
+      is(!!a, !!b);
+      if (!a || !b) {
+        return;
+      }
+
+      is(a.source, b.source);
+      is(a.line, b.line);
+      is(a.column, b.column);
+      is(a.functionDisplayName, b.functionDisplayName);
+      is(a.parent, b.parent);
+    }
+
+    for (let i = 0; i < first.frames.length; i++) {
+      info("Checking frames at index " + i + ":");
+      assertSameFrame(first.frames[i], second.frames[i]);
+    }
+
+    await memory.detach();
+    destroyServerAndFinish(target);
+  })();
+};
+</script>
+</pre>
+</body>
+</html>

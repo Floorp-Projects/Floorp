@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+      function stringify(a) {
+        if (a)
+          return a.toSource();
+        return ''+a;
+      }
+      var args = [undefined, null, [], {}, 0, "0"];
+      var stringArgs = args.map(stringify);
+
+      function test_method(context, method, arity) {
+        function testParams(existingParams, depth) {
+          for (var arg of stringArgs) {
+            var code = "context[method](" + existingParams + arg + ")";
+            try {
+              eval(code);
+            } catch (ex) {
+              // Exceptions are expected
+            }
+
+            if (depth < arity)
+              testParams(existingParams + arg + ",", depth + 1);
+          }
+        }
+        testParams("", 1);
+      }
+
+      function startTest() {
+        var canvas = document.getElementById("img");
+        var context = canvas.getContext('2d');;
+        test_method(context, "getImageData", 4);
+        test_method(context, "putImageData", 3);
+      }
+    </script>
+  </head>
+  <body onload="startTest()">
+    <canvas id="img">No canvas support.</canvas>
+  </body>
+</html>

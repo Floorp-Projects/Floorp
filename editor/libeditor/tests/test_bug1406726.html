@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1406726
+-->
+<head>
+  <title>Test for Bug 1406726</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1406726">Mozilla Bug 1406726</a>
+<p id="display"></p>
+<div id="editor" contenteditable></div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1406726 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let editor = document.getElementById("editor");
+  let selection = window.getSelection();
+
+  editor.focus();
+  for (let paragraphSeparator of ["div", "p"]) {
+    document.execCommand("defaultParagraphSeparator", false, paragraphSeparator);
+
+    // The result of editor.innerHTML may be wrong in this tests.
+    // Currently, editor wraps following elements of <br> element with default
+    // paragraph separator only when there is only non-editable elements.
+    // This behavior should be standardized by execCommand spec.
+
+    editor.innerHTML = "foo<br>bar<br><span contenteditable=\"false\">baz</span>";
+    selection.collapse(editor.childNodes.item(2), "bar".length);
+    document.execCommand("insertParagraph", false);
+    is(editor.innerHTML, "foo<br>" +
+                         "<" + paragraphSeparator + ">bar</" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + "><br></" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + "><span contenteditable=\"false\">baz</span></" + paragraphSeparator + ">",
+       "All inline nodes including non-editable <span> element should be wrapped with default paragraph separator, <" + paragraphSeparator + ">");
+    ok(selection.isCollapsed, "Selection should be collapsed");
+    is(selection.anchorNode, editor.childNodes.item(3),
+       "Caret should be in the third line");
+    is(selection.anchorOffset, 0,
+       "Caret should be at start of the third line");
+
+    editor.innerHTML = "foo<br>bar<br><span>baz</span>";
+    selection.collapse(editor.childNodes.item(2), "bar".length);
+    document.execCommand("insertParagraph", false);
+    is(editor.innerHTML, "foo<br>" +
+                         "<" + paragraphSeparator + ">bar</" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + "><br></" + paragraphSeparator + ">" +
+                         "<span>baz</span>",
+       "All inline nodes in the second line should be wrapped with default paragraph separator, <" + paragraphSeparator + ">");
+    ok(selection.isCollapsed, "Selection should be collapsed");
+    is(selection.anchorNode, editor.childNodes.item(3),
+       "Caret should be in the third line");
+    is(selection.anchorOffset, 0,
+       "Caret should be at start of the third line");
+
+    editor.innerHTML = "foo<br>bar<br><span contenteditable=\"false\">baz</span>qux";
+    selection.collapse(editor.childNodes.item(2), "bar".length);
+    document.execCommand("insertParagraph", false);
+    is(editor.innerHTML, "foo<br>" +
+                         "<" + paragraphSeparator + ">bar</" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + "><br></" + paragraphSeparator + ">" +
+                         "<span contenteditable=\"false\">baz</span>qux",
+       "All inline nodes in the second line should be wrapped with default paragraph separator, <" + paragraphSeparator + ">");
+    ok(selection.isCollapsed, "Selection should be collapsed");
+    is(selection.anchorNode, editor.childNodes.item(3),
+       "Caret should be in the third line");
+    is(selection.anchorOffset, 0,
+       "Caret should be at start of the third line");
+
+    editor.innerHTML = "foo<br>bar<br><span contenteditable=\"false\">baz</span>";
+    selection.collapse(editor.childNodes.item(2), "ba".length);
+    document.execCommand("insertParagraph", false);
+    is(editor.innerHTML, "foo<br>" +
+                         "<" + paragraphSeparator + ">ba</" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + ">r</" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + "><span contenteditable=\"false\">baz</span></" + paragraphSeparator + ">",
+       "All inline nodes including non-editable <span> element should be wrapped with default paragraph separator, <" + paragraphSeparator + ">");
+    ok(selection.isCollapsed, "Selection should be collapsed");
+    is(selection.anchorNode, editor.childNodes.item(3).firstChild,
+       "Caret should be in the text node in the third line");
+    is(selection.anchorOffset, 0,
+       "Caret should be at start of the text node in the third line");
+
+    editor.innerHTML = "foo<br>bar<br><span>baz</span>";
+    selection.collapse(editor.childNodes.item(2), "ba".length);
+    document.execCommand("insertParagraph", false);
+    is(editor.innerHTML, "foo<br>" +
+                         "<" + paragraphSeparator + ">ba</" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + ">r</" + paragraphSeparator + ">" +
+                         "<span>baz</span>",
+       "All inline nodes in the second line should be wrapped with default paragraph separator, <" + paragraphSeparator + ">");
+    ok(selection.isCollapsed, "Selection should be collapsed");
+    is(selection.anchorNode, editor.childNodes.item(3).firstChild,
+       "Caret should be in the text node in the third line");
+    is(selection.anchorOffset, 0,
+       "Caret should be at start of the text node in the third line");
+
+    editor.innerHTML = "foo<br>bar<br><span contenteditable=\"false\">baz</span>qux";
+    selection.collapse(editor.childNodes.item(2), "ba".length);
+    document.execCommand("insertParagraph", false);
+    is(editor.innerHTML, "foo<br>" +
+                         "<" + paragraphSeparator + ">ba</" + paragraphSeparator + ">" +
+                         "<" + paragraphSeparator + ">r</" + paragraphSeparator + ">" +
+                         "<span contenteditable=\"false\">baz</span>qux",
+       "All inline nodes in the second line should be wrapped with default paragraph separator, <" + paragraphSeparator + ">");
+    ok(selection.isCollapsed, "Selection should be collapsed");
+    is(selection.anchorNode, editor.childNodes.item(3).firstChild,
+       "Caret should be in the text node in the third line");
+    is(selection.anchorOffset, 0,
+       "Caret should be at start of the text node in the third line");
+  }
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

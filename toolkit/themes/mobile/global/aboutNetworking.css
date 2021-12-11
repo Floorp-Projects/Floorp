@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#sectionTitle {
+  float: inline-start;
+  display: none;
+}
+
+#refreshDiv {
+  justify-content: flex-end;
+  margin-bottom: 0.5em;
+}
+
+#refreshDiv > * {
+  font-size: 2em;
+  vertical-align: middle;
+}
+
+#refreshDiv > input {
+  height: 1em;
+  width: 1em;
+}
+
+#refreshButton {
+  margin-top: 0;
+}
+
+/** Categories **/
+
+#categories {
+  display: inline-flex;
+}
+
+.category {
+  font-size: 2em;
+  padding: 0.2em;
+  text-align: center;
+  cursor: pointer;
+  /* Center category names */
+  display: flex;
+  align-items: center;
+}
+
+.category .category-name {
+  pointer-events: none;
+}
+
+.category[selected] {
+  font-weight: bold;
+}
+
+/** Content area **/
+
+.main-content {
+  flex: 1;
+}
+
+.tab {
+  padding: 0.5em 0;
+  overflow-x: auto;
+}
+
+.tab table {
+  width: 100%;
+}
+
+th, td, table {
+  border-collapse: collapse;
+  border: none;
+  text-align: start;
+}
+
+th {
+  padding-bottom: 0.5em;
+  padding-inline: 1em;
+  font-size: larger;
+  white-space: nowrap;
+}
+
+td {
+  padding-bottom: 0.25em;
+}

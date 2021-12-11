@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<menupopup id="popup" onpopupshowing="if (isSecondTest) popupShowing(event)" onpopupshown="popupShown()"
+                      onpopuphidden="nextTest()">
+  <menuitem label="One"/>
+  <menuitem label="Two"/>
+</menupopup>
+
+<button id="button" label="OK" popup="popup"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var isSecondTest = false;
+
+function openPopup()
+{
+  document.getElementById("popup").openPopup(parent.document.getElementById("outerbutton"), "after_start", 3, 1);
+}
+
+function popupShowing(event)
+{
+  var buttonrect = document.getElementById("button").getBoundingClientRect();
+  parent.arguments[0].SimpleTest.is(event.clientX, buttonrect.left + 6, "popup clientX with mouse");
+  parent.arguments[0].SimpleTest.is(event.clientY, buttonrect.top + 6, "popup clientY with mouse");
+}
+
+function popupShown()
+{
+  var left, top;
+  var popup = document.getElementById("popup");
+  var popuprect = popup.getBoundingClientRect();
+  if (isSecondTest) {
+    let buttonrect = document.getElementById("button").getBoundingClientRect();
+    left = buttonrect.left + 6;
+    top = buttonrect.top + 6;
+  } else {
+    let iframerect = parent.document.getElementById("frame").getBoundingClientRect();
+    let buttonrect = parent.document.getElementById("outerbutton").getBoundingClientRect();
+
+    // The popup should appear anchored on the bottom left edge of the button, however
+    // the client rectangle is relative to the iframe's document. Thus the coordinates
+    // are:
+    //  left = iframe's left - anchor button's left - 3 pixel offset passed to openPopup +
+    //         iframe border (17px) + iframe padding (0)
+    //  top = iframe's top - anchor button's bottom - 1 pixel offset passed to openPopup +
+    //        iframe border (0) + iframe padding (3px);
+    left = -(Math.round(iframerect.left) - Math.round(buttonrect.left) + 14);
+    top = -(Math.round(iframerect.top) - Math.round(buttonrect.bottom) + 2);
+  }
+
+  left += parseFloat(getComputedStyle(popup).marginLeft);
+  top += parseFloat(getComputedStyle(popup).marginTop);
+
+  var testid = isSecondTest ? "with mouse" : "anchored to parent frame";
+  parent.arguments[0].SimpleTest.is(Math.round(popuprect.left), left, "popup left " + testid);
+  parent.arguments[0].SimpleTest.is(Math.round(popuprect.top), top, "popup top " + testid);
+
+  document.getElementById("popup").hidePopup();
+}
+
+function nextTest()
+{
+  if (isSecondTest) {
+    parent.arguments[0].SimpleTest.finish();
+    parent.close();
+  }
+  else {
+    // this second test ensures that the popupshowing coordinates when a popup in
+    // a frame is opened are correct 
+    isSecondTest = true;
+    synthesizeMouse(document.getElementById("button"), 6, 6, { });
+  }
+}
+
+]]>
+</script>
+
+</window>

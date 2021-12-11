@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bug 1481500: click / activation on text activates the slot it's assigned to</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script>
+function generateLotsOfText() {
+  let text = "Some text. ";
+  for (let i = 0; i < 10; ++i)
+    text += text;
+  return text;
+}
+
+function runTests() {
+  let iframe = document.createElement('iframe');
+  document.body.appendChild(iframe);
+  iframe.onload = () => frameLoaded(iframe);
+  iframe.width = "350"
+  iframe.height = "350"
+  iframe.srcdoc =
+    `<div id="host">${generateLotsOfText()}</div>`
+}
+
+function frameLoaded(iframe) {
+  let host = iframe.contentDocument.getElementById('host');
+
+  host.attachShadow({ mode: 'open' }).innerHTML = `
+    <style>
+      :host {
+        width: 300px;
+        height: 300px;
+        overflow: hidden;
+      }
+    </style>
+    <slot></slot>
+  `;
+
+  let slot = host.shadowRoot.querySelector('slot');
+  let mousedownFired = false;
+  let mouseupFired = false;
+  slot.addEventListener('mousedown', function() {
+    ok(true, "Mousedown should fire on the slot when clicking on text");
+    mousedownFired = true;
+  });
+
+  slot.addEventListener('click', function() {
+    ok(true, "Click should target the slot");
+    ok(mousedownFired, "mousedown should've fired");
+    ok(mouseupFired, "click should've fired");
+    SimpleTest.finish();
+  });
+
+  slot.addEventListener('mouseup', function() {
+    // FIXME: When we fix bug 1481517, this check should move to the mousedown listener.
+    ok(this.matches(":active"), "Slot should become active");
+    mouseupFired = true;
+  });
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      synthesizeMouseAtPoint(150, 150, { type: "mousedown" });
+      synthesizeMouseAtPoint(150, 150, { type: "mouseup" });
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+window.onload = () => {
+  SimpleTest.waitForFocus(runTests);
+};
+</script>

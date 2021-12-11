@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1524573 -->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Testcase #1 for bug 1330962</title>
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px/1 monospace; padding:0; margin:0;
+}
+
+grid {
+  display: grid;
+  grid: 40px / auto;
+  float: left;
+  place-items: center start;
+  border: 1px solid;
+}
+grid.c {
+  grid: auto / 40px;
+  place-items: start center;
+}
+
+.v { writing-mode: vertical-lr; }
+
+/* fixed cross-size for the INPUT */
+input {
+  height: 30px;
+}
+.c input {
+  height: auto;
+  width: 30px;
+}
+
+  </style>
+</head>
+<body>
+
+<grid class=c><input type=range class=v></grid>
+<grid class=c><input type=range class=v></grid>
+<grid class=c><input type=range class=v></grid>
+
+<grid class=c><input type=range orient=vertical></grid>
+<grid class=c><input type=range orient=vertical></grid>
+<grid class=c><input type=range orient=vertical></grid>
+
+<grid><input type=range></grid>
+<grid><input type=range></grid>
+<grid><input type=range></grid>
+
+<grid><input type=range orient=horizontal class=v></grid>
+<grid><input type=range orient=horizontal class=v></grid>
+<grid><input type=range orient=horizontal class=v></grid>
+
+</body>
+</html>

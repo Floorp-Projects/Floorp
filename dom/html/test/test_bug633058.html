@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633058
+-->
+<head>
+  <title>Test for Bug 633058</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633058">Mozilla Bug 633058</a>
+<p id="display"></p>
+<div id="content">
+  <input>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 633058 **/
+
+SimpleTest.waitForExplicitFinish();
+
+// Turn off Spatial Navigation so that the 'keypress' event fires in traditional behavior.
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[['snav.enabled', false]]}, startTest);
+});
+function startTest() {
+  var nbExpectedKeyDown = 8;
+  var nbExpectedKeyPress = 1;
+  var inputGotKeyPress = 0;
+  var inputGotKeyDown = 0;
+  var divGotKeyPress = 0;
+  var divGotKeyDown = 0;
+
+  var input = document.getElementsByTagName('input')[0];
+  var content = document.getElementById('content');
+
+  content.addEventListener("keydown", () => { divGotKeyDown++; });
+  content.addEventListener("keypress", () => { divGotKeyPress++; });
+  input.addEventListener("keydown", () => { inputGotKeyDown++; });
+  input.addEventListener("keypress", () => { inputGotKeyPress++; });
+
+  input.addEventListener('focus', function() {
+    SimpleTest.executeSoon(() => {
+      synthesizeKey('KEY_ArrowUp');
+      synthesizeKey('KEY_ArrowLeft');
+      synthesizeKey('KEY_ArrowRight');
+      synthesizeKey('KEY_ArrowDown');
+      synthesizeKey('KEY_Backspace');
+      synthesizeKey('KEY_Delete');
+      synthesizeKey('KEY_Escape');
+      synthesizeKey('KEY_Enter');  // Will dispatch keypress event even in strict behavior.
+
+      is(inputGotKeyDown, nbExpectedKeyDown, "input got all keydown events");
+      is(inputGotKeyPress, nbExpectedKeyPress, "input got all keypress events");
+      is(divGotKeyDown, nbExpectedKeyDown, "div got all keydown events");
+      is(divGotKeyPress, nbExpectedKeyPress, "div got all keypress events");
+      SimpleTest.finish();
+    });
+  }, {once: true});
+  input.focus();
+}
+</script>
+</pre>
+</body>
+</html>

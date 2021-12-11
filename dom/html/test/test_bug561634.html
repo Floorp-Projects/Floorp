@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=561634
+-->
+<head>
+  <title>Test for Bug 561634</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=561634">Mozilla Bug 561634</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+  <form>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 561634 **/
+
+function checkEmptyForm()
+{
+  ok(document.forms[0].checkValidity(), "An empty form is valid");
+}
+
+function checkBarredFromConstraintValidation()
+{
+  var f = document.forms[0];
+  var fs = document.createElement('fieldset');
+  var i = document.createElement('input');
+
+  f.appendChild(fs);
+  i.type = 'hidden';
+  f.appendChild(i);
+
+  fs.setCustomValidity("foo");
+  i.setCustomValidity("foo");
+
+  ok(f.checkValidity(),
+     "A form with invalid element barred from constraint validation should be valid");
+
+  f.removeChild(i);
+  f.removeChild(fs);
+}
+
+function checkValid()
+{
+  var f = document.forms[0];
+  var i = document.createElement('input');
+  f.appendChild(i);
+
+  ok(f.checkValidity(), "A form with valid elements is valid");
+
+  f.removeChild(i);
+}
+
+function checkInvalid()
+{
+  var f = document.forms[0];
+  var i = document.createElement('input');
+  f.appendChild(i);
+
+  i.setCustomValidity("foo");
+  ok(!f.checkValidity(), "A form with invalid elements is invalid");
+
+  var i2 = document.createElement('input');
+  f.appendChild(i2);
+  ok(!f.checkValidity(),
+     "A form with at least one invalid element is invalid");
+
+  f.removeChild(i2);
+  f.removeChild(i);
+}
+
+function checkInvalidEvent()
+{
+  var f = document.forms[0];
+  var i = document.createElement('input');
+  f.appendChild(i);
+  var i2 = document.createElement('input');
+  f.appendChild(i2);
+
+  i.setCustomValidity("foo");
+
+  var invalidEventForInvalidElement = false;
+  var invalidEventForValidElement = false;
+
+  i.addEventListener("invalid", function (e) {
+    invalidEventForInvalidElement = true;
+    ok(e.cancelable, "invalid event should be cancelable");
+    ok(!e.bubbles, "invalid event should not bubble");
+  });
+
+  i2.addEventListener("invalid", function (e) {
+    invalidEventForValidElement = true;
+  });
+
+  f.checkValidity();
+
+  setTimeout(function() {
+    ok(invalidEventForInvalidElement,
+       "invalid event should be fired on invalid elements");
+    ok(!invalidEventForValidElement,
+       "invalid event should not be fired on valid elements");
+
+    f.removeChild(i2);
+    f.removeChild(i);
+
+    SimpleTest.finish();
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+checkEmptyForm();
+checkBarredFromConstraintValidation();
+checkValid();
+checkInvalid();
+checkInvalidEvent(); // will call finish().
+
+</script>
+</pre>
+</body>
+</html>

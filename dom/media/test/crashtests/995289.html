@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<script>
+var r0=new AudioContext();
+var r5=r0.createOscillator();
+var r6=r0.createPeriodicWave(new Float32Array(1),new Float32Array(1));
+r5.frequency.value = 4294967295;
+r5.start(0);
+r5.setPeriodicWave(r6);
+</script>

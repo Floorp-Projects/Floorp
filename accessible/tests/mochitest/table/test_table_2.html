@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="text/javascript">
+
+function doTest() {
+  // Test table with role=alert.
+  var tableInterfaceExposed = true;
+  var accTable3 = getAccessible("table3", [nsIAccessibleTable], null, DONOTFAIL_IF_NO_INTERFACE);
+  if (!accTable3)
+    tableInterfaceExposed = false;
+  ok(tableInterfaceExposed, "table interface is not exposed");
+
+  if (tableInterfaceExposed) {
+    testRole(accTable3, ROLE_ALERT);
+
+    is(accTable3.getCellAt(0, 0).firstChild.name, "cell0", "wrong cell");
+    is(accTable3.getCellAt(0, 1).firstChild.name, "cell1", "wrong cell");
+  }
+
+  // Test table with role=log and aria property in tr. We create accessible for
+  // tr in this case.
+  tableInterfaceExposed = true;
+  var accTable4 = getAccessible("table4", [nsIAccessibleTable], null, DONOTFAIL_IF_NO_INTERFACE);
+  if (!accTable4)
+    tableInterfaceExposed = false;
+  ok(tableInterfaceExposed, "table interface is not exposed");
+
+  if (tableInterfaceExposed) {
+    let accNotCreated = (!isAccessible("tr"));
+    ok(!accNotCreated, "missed tr accessible");
+
+    testRole(accTable4, ROLE_TABLE);
+
+    is(accTable4.getCellAt(0, 0).firstChild.name, "cell0", "wrong cell");
+    is(accTable4.getCellAt(0, 1).firstChild.name, "cell1", "wrong cell");
+    is(accTable4.getCellAt(1, 0).firstChild.name, "cell2", "wrong cell");
+    is(accTable4.getCellAt(1, 1).firstChild.name, "cell3", "wrong cell");
+  }
+
+  SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+addA11yLoadEvent(doTest);
+  </script>
+ </head>
+
+ <body >
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=419811">Mozilla Bug 419811</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Test Table -->
+  <br><br><b> Testing Table:</b><br><br>
+  <center>
+   <table id="table3" border="1" role="alert">
+    <tr>
+     <td>cell0</td>
+     <td>cell1</td>
+    </tr>
+   </table>
+
+   <table id="table4" border="1" role="log">
+    <tr aria-live="polite" id="tr">
+     <td>cell0</td>
+     <td>cell1</td>
+    </tr>
+    <tr>
+     <td>cell2</td>
+     <td>cell3</td>
+    </tr>
+   </table>
+
+  </center>
+ </body>
+</html>

@@ -1,0 +1,80 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/mochitest/chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+
+# Hack to make this file available as a resource:// URI.
+TESTING_JS_MODULES += [
+    "tests/mochitest/resource_test_file.html",
+]
+
+XPIDL_SOURCES += [
+    "nsIAddonPolicyService.idl",
+    "nsIDomainPolicy.idl",
+    "nsIPrincipal.idl",
+    "nsIScriptSecurityManager.idl",
+]
+
+XPIDL_MODULE = "caps"
+
+EXPORTS += [
+    "nsJSPrincipals.h",
+    "nsScriptSecurityManager.h",
+]
+
+EXPORTS.mozilla = [
+    "BasePrincipal.h",
+    "ContentPrincipal.h",
+    "ContentPrincipalInfoHashKey.h",
+    "ExpandedPrincipal.h",
+    "NullPrincipal.h",
+    "OriginAttributes.h",
+    "PrincipalHashKey.h",
+    "SystemPrincipal.h",
+]
+
+SOURCES += [
+    # Compile this separately since nsExceptionHandler.h conflicts
+    # with something from NullPrincipal.cpp.
+    "BasePrincipal.cpp",
+]
+
+UNIFIED_SOURCES += [
+    "ContentPrincipal.cpp",
+    "DomainPolicy.cpp",
+    "ExpandedPrincipal.cpp",
+    "nsJSPrincipals.cpp",
+    "nsScriptSecurityManager.cpp",
+    "NullPrincipal.cpp",
+    "OriginAttributes.cpp",
+    "SystemPrincipal.cpp",
+]
+
+USE_LIBS += [
+    "jsoncpp",
+]
+
+LOCAL_INCLUDES += [
+    "/docshell/base",
+    "/dom/base",
+    "/js/xpconnect/src",
+    "/netwerk/base",
+    "/netwerk/cookie",
+    "/toolkit/components/jsoncpp/include",
+]
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Security: CAPS")

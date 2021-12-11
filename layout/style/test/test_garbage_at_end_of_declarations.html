@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test handling of garbage at the end of CSS declarations</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/* eslint-disable dot-notation */
+/** Test for correct ExpectEndProperty calls in CSS parser **/
+
+
+/*
+ * Inspired by review comments on bug 378217.
+ *
+ * The original idea was to test that ExpectEndProperty calls are made
+ * in the correct places in the CSS parser so that we don't accept
+ * garbage at the end of property values.
+ *
+ * However, there's actually other code (in ParseDeclaration) that
+ * ensures that we don't accept garbage.
+ *
+ * Despite that, I'm checking it in anyway, since it caught an infinite
+ * loop in the patch for bug 435441.
+ */
+
+var gElement = document.getElementById("testnode");
+var gDeclaration = gElement.style;
+
+/*
+ * This lists properties where garbage identifiers are allowed at the
+ * end, with values in property_database.js that are exceptions that
+ * should be tested anyway.  "inherit", "initial" and "unset" are always
+ * tested.
+ */
+var gAllowsExtra = {
+  "counter-increment": { "none": true },
+  "counter-reset": { "none": true },
+  "font-family": {},
+  "font": { "caption": true, "icon": true, "menu": true, "message-box": true,
+            "small-caption": true, "status-bar": true },
+  "voice-family": {},
+  "list-style": {
+    "inside none": true, "none inside": true, "none": true,
+    "none outside": true, "outside none": true,
+    'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")': true,
+    'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==") outside': true,
+    'outside url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")': true
+  },
+};
+
+/* These are the reverse of the above list; they're the unusual values
+   that do allow extra keywords afterwards */
+var gAllowsExtraUnusual = {
+  "transition": { "all": true, "0s": true, "0s 0s": true, "ease": true,
+                  "1s 2s linear": true, "1s linear 2s": true,
+                  "linear 1s 2s": true, "linear 1s": true,
+                  "1s linear": true, "1s 2s": true, "2s 1s": true,
+                  "linear": true, "1s": true, "2s": true,
+                  "ease-in-out": true, "2s ease-in": true,
+                  "ease-out 2s": true, "1s width, 2s": true },
+  "animation": { "none": true, "0s": true, "ease": true,
+                 "normal": true, "running": true, "1.0": true,
+                 "1s 2s linear": true, "1s linear 2s": true,
+                 "linear 1s 2s": true, "linear 1s": true,
+                 "1s linear": true, "1s 2s": true, "2s 1s": true,
+                 "linear": true, "1s": true, "2s": true,
+                 "ease-in-out": true, "2s ease-in": true,
+                 "ease-out 2s": true, "1s bounce, 2s": true,
+                 "1s bounce, 2s none": true },
+  "font-family": { "inherit": true, "initial": true, "unset": true }
+};
+
+gAllowsExtraUnusual["-moz-transition"] = gAllowsExtraUnusual["transition"];
+gAllowsExtraUnusual["-moz-animation"] = gAllowsExtraUnusual["animation"];
+
+function test_property(property)
+{
+  var info = gCSSProperties[property];
+
+  function test_value(value) {
+    if (property in gAllowsExtra &&
+        value != "inherit" && value != "initial" && value != "unset" &&
+        !(value in gAllowsExtra[property])) {
+      return;
+    }
+    if (property in gAllowsExtraUnusual &&
+        value in gAllowsExtraUnusual[property]) {
+      return;
+    }
+
+    // Include non-identifier characters in the garbage
+    // in case |value| would also be valid with a <custom-ident> added.
+    gElement.setAttribute("style", property + ": " + value + " +blah/");
+    if ("subproperties" in info) {
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
+        is(gDeclaration.getPropertyValue(subprop), "",
+           ["expected garbage ignored after '", property, ": ", value,
+            "' when looking at subproperty '", subprop, "'"].join(""));
+      }
+    } else {
+      is(gDeclaration.getPropertyValue(property), "",
+         ["expected garbage ignored after '", property, ": ", value,
+          "'"].join(""));
+    }
+  }
+
+  var idx;
+  test_value("inherit");
+  test_value("initial");
+  test_value("unset");
+  for (idx in info.initial_values)
+    test_value(info.initial_values[idx]);
+  for (idx in info.other_values)
+    test_value(info.other_values[idx]);
+}
+
+// To avoid triggering the slow script dialog, we have to test one
+// property at a time.
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+var props = [];
+for (var prop in gCSSProperties)
+  props.push(prop);
+props = props.reverse();
+function do_one() {
+  if (props.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+  test_property(props.pop());
+  SimpleTest.executeSoon(do_one);
+}
+SimpleTest.executeSoon(do_one);
+
+</script>
+</pre>
+</body>
+</html>

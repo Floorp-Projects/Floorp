@@ -1,0 +1,131 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+GeckoSharedLibrary("IA2Marshal", linkage=None)
+
+DEFINES["REGISTER_PROXY_DLL"] = True
+
+DEFFILE = "IA2Marshal.def"
+
+OS_LIBS += [
+    "uuid",
+    "kernel32",
+    "rpcrt4",
+    "ole32",
+    "oleaut32",
+]
+
+midl_enums = [
+    "AccessibleEventId",
+    "AccessibleRole",
+    "AccessibleStates",
+    "IA2CommonTypes",
+]
+
+midl_interfaces = [
+    "Accessible2",
+    "Accessible2_2",
+    "Accessible2_3",
+    "AccessibleAction",
+    "AccessibleApplication",
+    "AccessibleComponent",
+    "AccessibleDocument",
+    "AccessibleEditableText",
+    "AccessibleHyperlink",
+    "AccessibleHypertext",
+    "AccessibleHypertext2",
+    "AccessibleImage",
+    "AccessibleRelation",
+    "AccessibleTable",
+    "AccessibleTable2",
+    "AccessibleTableCell",
+    "AccessibleText",
+    "AccessibleText2",
+    "AccessibleValue",
+]
+
+for enum in midl_enums:
+    GeneratedFile(
+        enum + ".h",
+        inputs=["/other-licenses/ia2/" + enum + ".idl"],
+        script="/build/midl.py",
+        entry_point="midl",
+        flags=["-app_config", "-I", TOPSRCDIR + "/other-licenses/ia2"],
+    )
+
+    EXPORTS += ["!" + enum + ".h"]
+
+for iface in midl_interfaces:
+    GeneratedFile(
+        iface + ".h",
+        iface + "_p.c",
+        iface + "_i.c",
+        iface + "_dlldata.c",
+        inputs=["/other-licenses/ia2/" + iface + ".idl"],
+        script="/build/midl.py",
+        entry_point="midl",
+        flags=[
+            "-app_config",
+            "-I",
+            TOPSRCDIR + "/other-licenses/ia2",
+            "-dlldata",
+            OBJDIR + "/" + iface + "_dlldata.c",
+        ],
+    )
+
+    EXPORTS += ["!" + iface + ".h", "!" + iface + "_i.c"]
+
+    for p in [iface + "_p.c", iface + "_i.c"]:
+        SOURCES += ["!%s" % p]
+
+        # Give some symbols a unique name in each translation unit, to avoid
+        # collisions caused by https://llvm.org/pr41817.
+        if CONFIG["CC_TYPE"] == "clang-cl":
+            SOURCES["!%s" % p].flags += [
+                "-DObject_StubDesc=Object_StubDesc__%s" % p[:-2]
+            ]
+            SOURCES["!%s" % p].flags += [
+                "-DUserMarshalRoutines=UserMarshalRoutines__%s" % p[:-2]
+            ]
+
+# Warning: the build system doesn't know about the dependency of IA2Marshal.rc on
+# IA2Typelib.tlb. We rely on the IA2Typelib.h output forcing the command to run
+# during export, before rc files are treated during compile.
+GeneratedFile(
+    "IA2Typelib.h",
+    "IA2Typelib_i.c",
+    "IA2Typelib.tlb",
+    inputs=["IA2Typelib.idl"],
+    script="/build/midl.py",
+    entry_point="midl",
+    flags=[
+        "-app_config",
+        "-I",
+        TOPSRCDIR + "/other-licenses/ia2",
+        "-D",
+        "_MIDL_DECLARE_WIREM_HANDLE",
+    ],
+)
+
+GeneratedFile(
+    "dlldata.c",
+    inputs=["!" + iface + "_dlldata.c" for iface in midl_interfaces],
+    script="/build/midl.py",
+    entry_point="merge_dlldata",
+)
+
+SOURCES += ["!dlldata.c"]
+
+RCINCLUDE = "IA2Marshal.rc"
+
+# Suppress warnings from the MIDL generated code.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CFLAGS += [
+        "-Wno-extern-initializer",
+        "-Wno-incompatible-pointer-types",
+        "-Wno-missing-braces",
+        "-Wno-unused-const-variable",
+    ]

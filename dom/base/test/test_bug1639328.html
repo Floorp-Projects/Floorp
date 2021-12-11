@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>Test for bug 1639328</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  /* To ensure that they're all in the viewport when displayed */
+  iframe {
+    width: 10px;
+    height: 10px;
+  }
+</style>
+<iframe id="http" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
+<iframe id="https" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
+<iframe id="same-origin" src="file_bug1639328.html"></iframe>
+<iframe id="display-none-http" style="display: none" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
+<iframe id="display-none-https" style="display: none" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
+<iframe id="display-none-same-origin" style="display: none" src="file_bug1639328.html"></iframe>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function getOneMessage(frame) {
+  info(`querying ${frame.src} (${frame.id})`);
+  let resolve;
+  let promise = new Promise(r => { resolve = r; });
+  window.addEventListener("message", function(e) {
+    info("got " + JSON.stringify(e.data));
+    resolve(e.data);
+  }, { once: true });
+  frame.contentWindow.postMessage("ping", "*");
+  return promise;
+}
+
+async function ticks(n) {
+  for (let i = 0; i < n; ++i) {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+}
+
+async function checkFrame(frame, shouldThrottle) {
+  let message = null;
+  do {
+    if (message) {
+      await ticks(2);
+    }
+    message = await getOneMessage(frame);
+  } while (message.throttledFrameRequests != shouldThrottle);
+  is(message.throttledFrameRequests, shouldThrottle, frame.id);
+}
+
+onload = async function() {
+  await SimpleTest.promiseFocus(window);
+  await ticks(2);
+  is(SpecialPowers.DOMWindowUtils.effectivelyThrottlesFrameRequests, false, "Should not be throttling main page");
+  for (let frame of document.querySelectorAll("iframe")) {
+    let shouldThrottle = frame.style.display == "none";
+    await checkFrame(frame, shouldThrottle);
+    info("Switching display of " + frame.id);
+    frame.style.display = shouldThrottle ? "" : "none";
+    await checkFrame(frame, !shouldThrottle);
+    info("And switching display back for " + frame.id);
+    frame.style.display = shouldThrottle ? "none" : "";
+    await checkFrame(frame, shouldThrottle);
+  }
+
+  SimpleTest.finish();
+};
+</script>

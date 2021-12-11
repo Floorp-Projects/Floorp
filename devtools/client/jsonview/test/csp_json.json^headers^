@@ -1,0 +1,2 @@
+Content-Type: application/json
+Content-Security-Policy: default-src 'none'; base-uri 'none';

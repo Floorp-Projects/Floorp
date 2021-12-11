@@ -1,0 +1,24 @@
+{
+    "stages": "4",
+    "pgo" : true,
+    "build_libcxx": false,
+    "build_wasm": true,
+    "build_type": "Release",
+    "assertions": false,
+    "cc": "cl.exe",
+    "cxx": "cl.exe",
+    "ml": "ml64.exe",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
+    "patches": [
+      "unpoison-thread-stacks_clang_10.patch",
+      "downgrade-mangling-error_clang_12.patch",
+      "bug47258-extract-symbols-mbcs.patch",
+      "Remove-FlushViewOfFile-when-unmaping-gcda-files.patch",
+      "revert-llvmorg-13-init-7827-g2a078c307204.patch",
+      "revert-llvmorg-13-init-8182-gc2297544c047.patch",
+      "llvmorg-14-init-6706-g6404f4b5af39.patch",
+      "loosen-msvc-detection.patch",
+      "win64-no-symlink.patch",
+      "revert-ga478b0a199f4.patch"
+    ]
+}

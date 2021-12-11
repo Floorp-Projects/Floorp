@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for correct installation of default theme</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+add_task(async function() {
+  let addon = await AddonManager.getAddonByID("default-theme@mozilla.org");
+
+  // Dev edition uses a different default theme on desktop.
+  const expectActive = (!AppConstants.MOZ_DEV_EDITION ||
+                        AppConstants.MOZ_BUILD_APP !== "browser");
+
+  ok(addon != null, "Default theme exists");
+  is(addon.type, "theme", "Add-on type is correct");
+  is(addon.isActive, expectActive, "Add-on is active?");
+  is(addon.hidden, false, "Add-on is not hidden");
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<html class="reftest-wait">
+    <head>
+        <script type="text/javascript">
+            const workerURL = "1614339-worker.js";
+
+            const Cc = SpecialPowers.Cc;
+            const Ci = SpecialPowers.Ci;
+            const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"]
+                          .getService(Ci.nsIWorkerDebuggerManager);
+
+            function waitForUnregister() {
+              return new Promise(function(resolve) {
+                wdm.addListener({
+                  onUnregister(dbg) {
+                    if (dbg.url !== workerURL) {
+                      return;
+                    }
+                    wdm.removeListener(this);
+                     resolve();
+                  },
+                });
+              });
+            }
+
+            function boom() {
+              const worker = new Worker(workerURL);
+              waitForUnregister().then(function() {
+                document.documentElement.classList.remove("reftest-wait");
+              });
+              worker.postMessage("Start");
+            }
+         </script>
+     </head>
+     <body onload="boom();"></body>
+</html>
+

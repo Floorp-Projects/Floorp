@@ -1,0 +1,1 @@
+|jit-test| test-also=--no-asmjs; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemorySupported(); 

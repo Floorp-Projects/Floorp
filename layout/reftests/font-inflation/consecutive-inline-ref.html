@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<style>
+  div {
+    width: 450px;
+    font-size: 34px;
+  }
+
+  a {
+    font-weight: bold;
+    line-height: 1.1em;
+    color: blue;
+  }
+
+  a#first {
+    font-size: 34px;
+    font-style: italic;
+  }
+
+  a#second {
+    font-size: 40px;
+  }
+
+</style>
+<!--
+In a 450 px container, the minimum font size at 15em per line is 30px. This
+means we map 0px-45px into 30px-45px, so 12px gets mapped to 34px and 30px
+gets mapped to 40px.
+-->
+<div>
+  <a id="first" href="">Hello</a><a id="second" href="">Worldz</a>
+</div>

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Autoplay policy test : createMediaStreamSource with active stream</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<script>
+
+/**
+ * This test is used to ensure that we would try to start the blocked AudioContext
+ * which is blocked by autoplay policy, when it creates a MediaStreamAudioSourceNode
+ * which has a active input stream.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+(async function testStartAudioContextWhenCreatingMediaStreamAudioSourceWithActiveStream() {
+  await setupTestPreferences();
+
+  info(`- create 2 AudioContext, one is used to generate active stream, another one is used to test whether it would be resumed after starting MediaStreamAudioSource with active stream -`);
+  createAudioContexts();
+
+  info(`- both AudioContext are not allowed to start in beginning -`);
+  await audioContextsShouldBeBlocked();
+
+  info(`- using AudioContext2 to create a MediaStreamAudioSourceNode with active stream, which should resume AudioContext2 -`);
+  await createMediaStreamAudioSourceByAudioContext2();
+
+  endTest();
+})();
+
+/**
+ * Test utility functions
+ */
+
+function setupTestPreferences() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+    ["media.autoplay.blocking_policy", 0],
+    ["media.autoplay.block-webaudio", true],
+    ["media.autoplay.block-event.enabled", true],
+  ]});
+}
+
+function createAudioContexts() {
+  /* global ac1, ac2 */
+  window.ac1 = new AudioContext();
+  window.ac2 = new AudioContext();
+
+  ac1.allowedToStart = new Promise(resolve => {
+    ac1.addEventListener("statechange", function() {
+      if (ac1.state === "running") {
+        resolve();
+      }
+    }, {once: true});
+  });
+
+  ac1.notAllowedToStart = new Promise(resolve => {
+    ac1.addEventListener("blocked", async function() {
+      resolve();
+    }, {once: true});
+  });
+
+
+  ac2.allowedToStart = new Promise(resolve => {
+    ac2.addEventListener("statechange", function() {
+      if (ac2.state === "running") {
+        resolve();
+      }
+    }, {once: true});
+  });
+
+  ac2.notAllowedToStart = new Promise(resolve => {
+    ac2.addEventListener("blocked", async function() {
+      resolve();
+    }, {once: true});
+  });
+}
+
+async function audioContextsShouldBeBlocked() {
+  await ac1.notAllowedToStart;
+  await ac2.notAllowedToStart;
+  is(ac1.state, "suspended", `AudioContext1 is blocked.`);
+  is(ac2.state, "suspended", `AudioContext2 is blocked.`);
+}
+
+async function startAudioContext1() {
+  // simulate user gesture in order to start video.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  ok(await ac1.resume().then(() => true, () => false), `resumed AudioContext1.`);
+  await ac1.allowedToStart;
+  is(ac1.state, "running", `AudioContext1 is running.`);
+}
+
+async function getActiveStream() {
+  await startAudioContext1();
+  // As AudioContext1 has been resumed, we can use it to create active stream.
+  return ac1.createMediaStreamDestination().stream;
+}
+
+async function createMediaStreamAudioSourceByAudioContext2() {
+  is(ac2.state, "suspended", `AudioContext2 is suspended.`);
+  let source = ac2.createMediaStreamSource(await getActiveStream());
+  source.connect(ac2.destination);
+  await ac2.allowedToStart;
+  is(ac2.state, "running", `AudioContext2 is running.`);
+}
+
+function endTest() {
+  // reset the activation flag in order not to interfere following test in the
+  // verify mode which would run the test using same document couple times.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+  SimpleTest.finish();
+}
+
+</script>

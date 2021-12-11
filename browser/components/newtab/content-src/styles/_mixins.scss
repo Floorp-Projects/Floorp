@@ -1,0 +1,50 @@
+// Shared styling of article images shown as background
+@mixin image-as-background {
+  background-color: var(--newtab-element-secondary-color);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 4px;
+  box-shadow: $shadow-image-inset;
+}
+
+// Note: lineHeight and fontSize should be unitless but can be derived from pixel values
+// Bug 1550624 to clean up / remove this mixin to avoid duplicate styles
+@mixin limit-visible-lines($line-count, $line-height, $font-size) {
+  font-size: $font-size * 1px;
+  -webkit-line-clamp: $line-count;
+  line-height: $line-height * 1px;
+}
+
+@mixin dark-theme-only {
+  [lwt-newtab-brighttext] & {
+    @content;
+  }
+}
+
+@mixin ds-border-top {
+  @content;
+
+  @include dark-theme-only {
+    border-top: 1px solid $grey-60;
+  }
+
+  border-top: 1px solid $grey-30;
+}
+
+@mixin ds-border-bottom {
+  @content;
+
+  @include dark-theme-only {
+    border-bottom: 1px solid $grey-60;
+  }
+
+  border-bottom: 1px solid $grey-30;
+}
+
+@mixin ds-fade-in($halo-color: $blue-50-30) {
+  box-shadow: 0 0 0 5px $halo-color;
+  transition: box-shadow 150ms;
+  border-radius: 4px;
+  outline: none;
+}

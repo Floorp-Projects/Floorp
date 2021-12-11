@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+#outer {
+  margin: 0px;
+  background: #ddd;
+  font-size: 0;
+  width: 300px;
+}
+
+#test1 {
+  writing-mode: vertical-rl;
+
+  height: 50px;
+  width: 100px;
+
+  margin-top: 10px;
+  margin-bottom: 0px;
+  margin-left: 50px;
+  margin-right: 0px;
+
+  border-top: 10px solid blue;
+  border-left: 20px solid red;
+  border-right: 30px solid green;
+  border-bottom: 40px solid gray;
+
+  display: inline-block;
+  background: yellow;
+}
+</style>
+</head>
+
+<body>
+
+<div id="outer">
+  <div id="test1">
+  </div>
+</div>
+
+</body>
+</html>

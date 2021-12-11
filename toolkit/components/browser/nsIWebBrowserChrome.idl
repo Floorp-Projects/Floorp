@@ -1,0 +1,111 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIWebBrowser;
+interface nsIDocShellTreeItem;
+
+/**
+ * nsIWebBrowserChrome corresponds to the top-level, outermost window
+ * containing an embedded Gecko web browser.
+ */
+
+[scriptable, uuid(E8C414C4-DC38-4BA3-AB4E-EC4CBBE22907)]
+interface nsIWebBrowserChrome : nsISupports
+{
+    /**
+     * Called when the link hover status is being changed.
+     * @param status status string. empty string is an acceptable value
+     *               meaning no link is hovered.
+     */
+    void setLinkStatus(in AString status);
+
+    /**
+     * Definitions for the chrome flags
+     */
+    const unsigned long CHROME_DEFAULT                = 0x00000001;
+    const unsigned long CHROME_WINDOW_BORDERS         = 0x00000002;
+    const unsigned long CHROME_WINDOW_CLOSE           = 0x00000004;
+    const unsigned long CHROME_WINDOW_RESIZE          = 0x00000008;
+    const unsigned long CHROME_MENUBAR                = 0x00000010;
+    const unsigned long CHROME_TOOLBAR                = 0x00000020;
+    const unsigned long CHROME_LOCATIONBAR            = 0x00000040;
+    const unsigned long CHROME_STATUSBAR              = 0x00000080;
+    const unsigned long CHROME_PERSONAL_TOOLBAR       = 0x00000100;
+    const unsigned long CHROME_SCROLLBARS             = 0x00000200;
+    const unsigned long CHROME_TITLEBAR               = 0x00000400;
+    const unsigned long CHROME_EXTRA                  = 0x00000800;
+
+    // createBrowserWindow specific flags
+    const unsigned long CHROME_WITH_SIZE              = 0x00001000;
+    const unsigned long CHROME_WITH_POSITION          = 0x00002000;
+
+    // special cases
+    const unsigned long CHROME_WINDOW_MIN             = 0x00004000;
+    const unsigned long CHROME_WINDOW_POPUP           = 0x00008000;
+
+    // whether to open a new private window.  CHROME_NON_PRIVATE_WINDOW
+    // forces the opened window to be non-private, and overrides
+    // CHROME_PRIVATE_WINDOW if it's set.  CHROME_PRIVATE_WINDOW
+    // forces the opened window to be private.  If neither of these
+    // flags are specified, the opened window will inherit the privacy
+    // status of its opener.  If there is no opener window, the new
+    // window will be non-private.
+    //
+    // CHROME_PRIVATE_LIFETIME causes the docshell to affect private-browsing
+    // session lifetime.  This flag is currently respected only for remote
+    // docshells.
+    const unsigned long CHROME_PRIVATE_WINDOW         = 0x00010000;
+    const unsigned long CHROME_NON_PRIVATE_WINDOW     = 0x00020000;
+    const unsigned long CHROME_PRIVATE_LIFETIME       = 0x00040000;
+    const unsigned long CHROME_ALWAYS_ON_TOP          = 0x00080000;
+
+    // Whether this window should use remote (out-of-process) tabs.
+    const unsigned long CHROME_REMOTE_WINDOW          = 0x00100000;
+
+    // Whether this window should use out-of-process cross-origin subframes.
+    const unsigned long CHROME_FISSION_WINDOW         = 0x00200000;
+
+    // Prevents new window animations on MacOS and Windows. Currently
+    // ignored for Linux.
+    const unsigned long CHROME_SUPPRESS_ANIMATION     = 0x01000000;
+
+    const unsigned long CHROME_WINDOW_RAISED          = 0x02000000;
+    const unsigned long CHROME_WINDOW_LOWERED         = 0x04000000;
+    const unsigned long CHROME_CENTER_SCREEN          = 0x08000000;
+
+    // Make the new window dependent on the parent.  This flag is only
+    // meaningful if CHROME_OPENAS_CHROME is set; content windows should not be
+    // dependent.
+    const unsigned long CHROME_DEPENDENT              = 0x10000000;
+
+    // Note: The modal style bit just affects the way the window looks and does
+    //       mean it's actually modal.
+    const unsigned long CHROME_MODAL                  = 0x20000000;
+    const unsigned long CHROME_OPENAS_DIALOG          = 0x40000000;
+    const unsigned long CHROME_OPENAS_CHROME          = 0x80000000;
+
+    const unsigned long CHROME_ALL                    = 0x00000ffe;
+
+    /**
+     * The chrome flags for this browser chrome. The implementation should
+     * reflect the value of this attribute by hiding or showing its chrome
+     * appropriately.
+     */
+    attribute unsigned long chromeFlags;
+
+    /**
+     * Shows the window as a modal window.
+     */
+    void showAsModal();
+
+    /**
+     * Is the window modal (that is, currently executing a modal loop)?
+     * @return true if it's a modal window
+     */
+    boolean isWindowModal();
+};

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1150308
+-->
+<head>
+  <title>Test for Bug 1150308</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+
+/** Test for Bug 1150308 **/
+
+function runTests() {
+  var iframe = document.createElement('iframe');
+  document.body.appendChild(iframe);
+  iframe.contentDocument.body.innerHTML =
+    '<div id="host"><span id="distributeme">Foo</span></div>';
+
+  var host = iframe.contentDocument.getElementById("host");
+  var shadow = host.attachShadow({mode: 'open'});
+  shadow.innerHTML = '<style>.bar:active { color: rgb(0, 255, 0); }</style><div class="bar" id="inner"><slot></slot></div>';
+  var inner = shadow.getElementById("inner");
+  var distributed = iframe.contentDocument.getElementById("distributeme");
+  var iframeWin = iframe.contentWindow;
+
+  is(iframeWin.getComputedStyle(inner).color, "rgb(0, 0, 0)", "The div inside the shadow root should not be active.");
+
+  synthesizeMouseAtCenter(distributed, { type: "mousedown" }, iframeWin);
+
+  is(iframeWin.getComputedStyle(inner).color, "rgb(0, 255, 0)", "Div inside shadow root should be active.");
+
+  synthesizeMouseAtCenter(distributed, { type: "mouseup" }, iframeWin);
+
+  is(iframeWin.getComputedStyle(inner).color, "rgb(0, 0, 0)", "Div inside shadow root should no longer be active.");
+
+  SimpleTest.finish();
+};
+
+SimpleTest.waitForExplicitFinish();
+window.onload = () => {
+  SimpleTest.waitForFocus(runTests);
+};
+</script>
+</body>
+</html>

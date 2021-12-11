@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=668513
+-->
+<head>
+  <title>Test for Bug 668513</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=668513">Mozilla Bug 668513</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+if (navigator.platform.startsWith("Linux")) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
+SimpleTest.waitForExplicitFinish();
+window.open("file_bug668513.html");
+</script>
+</pre>
+</body>
+</html>

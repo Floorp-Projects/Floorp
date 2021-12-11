@@ -1,0 +1,367 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIRequest.idl"
+
+%{ C++
+#include "mozilla/BasePrincipal.h"
+%}
+
+interface nsICancelable;
+interface nsIEventTarget;
+interface nsIDNSRecord;
+interface nsIDNSListener;
+interface nsIDNSResolverInfo;
+
+%{C++
+#include "nsTArrayForwardDeclare.h"
+namespace mozilla { namespace net {
+    struct DNSCacheEntries;
+} }
+%}
+
+[ptr] native EntriesArray(nsTArray<mozilla::net::DNSCacheEntries>);
+[ref] native OriginAttributes(const mozilla::OriginAttributes);
+
+/**
+ * nsIDNSService
+ */
+[scriptable, builtinclass, uuid(de5642c6-61fc-4fcf-9a47-03226b0d4e21)]
+interface nsIDNSService : nsISupports
+{
+    /**
+     * These are the dns request types that are currently supported.
+     * RESOLVE_TYPE_DEFAULT is standard A/AAAA lookup
+     */
+    cenum ResolveType : 16 {
+        RESOLVE_TYPE_DEFAULT = 0,
+        RESOLVE_TYPE_TXT = 16,
+        RESOLVE_TYPE_HTTPSSVC = 65,
+    };
+
+    cenum ResolverMode : 32 { // 32 bits to allow this to be stored in an Atomic
+        MODE_NATIVEONLY = 0,  // TRR OFF (by default)
+        MODE_RESERVED1 = 1,   // Reserved value. Used to be parallel resolve.
+        MODE_TRRFIRST = 2,    // fallback to native on TRR failure
+        MODE_TRRONLY = 3,     // don't even fallback
+        MODE_RESERVED4 = 4,   // Reserved value. Used to be race TRR with native.
+        MODE_TRROFF = 5       // identical to MODE_NATIVEONLY but explicitly selected
+    };
+
+    /**
+     * kicks off an asynchronous host lookup.
+     *
+     * @param aHostName
+     *        the hostname or IP-address-literal to resolve.
+     * @param aType
+     *        one of RESOLVE_TYPE_*.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
+     * @param aResolver
+     *        a resolverInfo object that holds information about the resolver
+     *        to be used such as TRR URL. If null we use the default configuration.
+     * @param aListener
+     *        the listener to be notified when the result is available.
+     * @param aListenerTarget
+     *        optional parameter (may be null).  if non-null, this parameter
+     *        specifies the nsIEventTarget of the thread on which the
+     *        listener's onLookupComplete should be called.  however, if this
+     *        parameter is null, then onLookupComplete will be called on an
+     *        unspecified thread (possibly recursively).
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving, the DNS cache will be
+     *        separated according to this originAttributes. This attribute is
+     *        optional to avoid breaking add-ons.
+     *
+     * @return An object that can be used to cancel the host lookup.
+     */
+    [implicit_jscontext, optional_argc]
+    nsICancelable asyncResolve(in AUTF8String       aHostName,
+                               in nsIDNSService_ResolveType aType,
+                               in unsigned long     aFlags,
+                               in nsIDNSResolverInfo aResolver,
+                               in nsIDNSListener    aListener,
+                               in nsIEventTarget    aListenerTarget,
+                    [optional] in jsval aOriginAttributes);
+
+    [notxpcom]
+    nsresult asyncResolveNative(in AUTF8String       aHostName,
+                                in nsIDNSService_ResolveType aType,
+                                in unsigned long     aFlags,
+                                in nsIDNSResolverInfo aResolver,
+                                in nsIDNSListener    aListener,
+                                in nsIEventTarget    aListenerTarget,
+                                in OriginAttributes  aOriginAttributes,
+                                out nsICancelable    aResult);
+
+    /**
+     * Returns a new resolverInfo object containing the URL we pass to it.
+     */
+    nsIDNSResolverInfo newTRRResolverInfo(in AUTF8String aTrrURL);
+
+    /**
+     * Attempts to cancel a previously requested async DNS lookup
+     *
+     * @param aHostName
+     *        the hostname or IP-address-literal to resolve.
+     * @param aType
+     *        one of RESOLVE_TYPE_*.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
+     * @param aResolver
+     *        a resolverInfo object that holds information about the resolver
+     *        to be used such as TRR URL. If null we use the default configuration.
+     * @param aListener
+     *        the original listener which was to be notified about the host lookup
+     *        result - used to match request information to requestor.
+     * @param aReason
+     *        nsresult reason for the cancellation
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving. This attribute is optional
+     *        to avoid breaking add-ons.
+     */
+    [implicit_jscontext, optional_argc]
+    void cancelAsyncResolve(in AUTF8String       aHostName,
+                            in nsIDNSService_ResolveType aType,
+                            in unsigned long     aFlags,
+                            in nsIDNSResolverInfo aResolver,
+                            in nsIDNSListener    aListener,
+                            in nsresult          aReason,
+                 [optional] in jsval             aOriginAttributes);
+
+    [notxpcom]
+    nsresult cancelAsyncResolveNative(in AUTF8String       aHostName,
+                                      in nsIDNSService_ResolveType aType,
+                                      in unsigned long     aFlags,
+                                      in nsIDNSResolverInfo aResolver,
+                                      in nsIDNSListener    aListener,
+                                      in nsresult          aReason,
+                                      in OriginAttributes  aOriginAttributes);
+
+    /**
+     * called to synchronously resolve a hostname.
+     *
+     * Since this method may block the calling thread for a long period of
+     * time, it may not be accessed from the main thread.
+     *
+     * @param aHostName
+     *        the hostname or IP-address-literal to resolve.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving, the DNS cache will be
+     *        separated according to this originAttributes. This attribute is
+     *        optional to avoid breaking add-ons.
+     *
+     * @return DNS record corresponding to the given hostname.
+     * @throws NS_ERROR_UNKNOWN_HOST if host could not be resolved.
+     * @throws NS_ERROR_NOT_AVAILABLE if accessed from the main thread.
+     */
+    [implicit_jscontext, optional_argc]
+    nsIDNSRecord resolve(in AUTF8String   aHostName,
+                         in unsigned long aFlags,
+              [optional] in jsval         aOriginAttributes);
+
+    [notxpcom]
+    nsresult resolveNative(in AUTF8String       aHostName,
+                           in unsigned long     aFlags,
+                           in OriginAttributes  aOriginAttributes,
+                           out nsIDNSRecord     aResult);
+
+    /**
+     * The method takes a pointer to an nsTArray
+     * and fills it with cache entry data
+     * Called by the networking dashboard
+     */
+    [noscript] void getDNSCacheEntries(in EntriesArray args);
+
+
+    /**
+     * Clears the DNS cache.
+     * @param aTrrToo
+     *        If true we will clear TRR cached entries too. Since these
+     *        are resolved remotely it's not necessary to clear them when
+     *        the network status changes, but it's sometimes useful to do so
+     *        for tests or other situations.
+     */
+    void clearCache(in boolean aTrrToo);
+
+    /**
+     * The method is used only for test purpose. We use this to recheck if
+     * parental control is enabled or not.
+     */
+    void reloadParentalControlEnabled();
+
+    /**
+     * Notifies the TRR service of a TRR that was automatically detected based
+     * on network preferences.
+     */
+    void setDetectedTrrURI(in AUTF8String aURI);
+
+    /**
+     * Notifies the DNS service that we failed to connect to this alternative
+     * endpoint.
+     * @param aOwnerName
+     *        The owner name of this HTTPS RRs.
+     * @param aSVCDomainName
+     *        The domain name of this alternative endpoint.
+     */
+    [noscript] void ReportFailedSVCDomainName(in ACString aOwnerName,
+                                              in ACString aSVCDomainName);
+
+    /**
+     * Check if the given domain name was failed to connect to before.
+     * @param aOwnerName
+     *        The owner name of this HTTPS RRs.
+     * @param aSVCDomainName
+     *        The domain name of this alternative endpoint.
+     */
+    [noscript] boolean IsSVCDomainNameFailed(in ACString aOwnerName,
+                                             in ACString aSVCDomainName);
+
+    /**
+     * Reset the exclusion list.
+     * @param aOwnerName
+     *        The owner name of this HTTPS RRs.
+     */
+    [noscript] void ResetExcludedSVCDomainName(in ACString aOwnerName);
+
+    /**
+     * Returns a string containing the URI currently used by the TRR service.
+     */
+    readonly attribute AUTF8String currentTrrURI;
+
+    /**
+     * Returns the value of the TRR Service's current default mode.
+     */
+    readonly attribute nsIDNSService_ResolverMode currentTrrMode;
+
+    /**
+     * The TRRService's current confirmation state.
+     * This is mostly for testing purposes.
+     */
+    readonly attribute unsigned long currentTrrConfirmationState;
+
+    /**
+     * @return the hostname of the operating system.
+     */
+    readonly attribute AUTF8String myHostName;
+
+    /**
+     * Returns true when we have valid ODoHConfigs to encrypt/decrypt oblivious
+     * DNS packets.
+     */
+    readonly attribute boolean ODoHActivated;
+
+    /*************************************************************************
+     * Listed below are the various flags that may be OR'd together to form
+     * the aFlags parameter passed to asyncResolve() and resolve().
+     */
+
+    /**
+     * if set, this flag suppresses the internal DNS lookup cache.
+     */
+    const unsigned long RESOLVE_BYPASS_CACHE = (1 << 0);
+
+    /**
+     * if set, the canonical name of the specified host will be queried.
+     */
+    const unsigned long RESOLVE_CANONICAL_NAME = (1 << 1);
+
+    /**
+     * if set, the query is given lower priority. Medium takes precedence
+     * if both are used.
+     */
+    const unsigned long RESOLVE_PRIORITY_MEDIUM = (1 << 2);
+    const unsigned long RESOLVE_PRIORITY_LOW    = (1 << 3);
+
+    /**
+     * if set, indicates request is speculative. Speculative requests
+     * return errors if prefetching is disabled by configuration.
+     */
+    const unsigned long RESOLVE_SPECULATE = (1 << 4);
+
+    /**
+     * If set, only IPv4 addresses will be returned from resolve/asyncResolve.
+     */
+    const unsigned long RESOLVE_DISABLE_IPV6 = (1 << 5);
+
+    /**
+     * If set, only literals and cached entries will be returned from resolve/
+     * asyncResolve.
+     */
+    const unsigned long RESOLVE_OFFLINE = (1 << 6);
+
+    /**
+     * If set, only IPv6 addresses will be returned from resolve/asyncResolve.
+     */
+    const unsigned long RESOLVE_DISABLE_IPV4 = (1 << 7);
+
+    /**
+     * If set, allow name collision results (127.0.53.53) which are normally filtered.
+     */
+    const unsigned long RESOLVE_ALLOW_NAME_COLLISION = (1 << 8);
+
+    /**
+     * If set, do not use TRR for resolving the host name.
+     */
+    const unsigned long RESOLVE_DISABLE_TRR = (1 << 9);
+
+    /**
+     * if set (together with RESOLVE_BYPASS_CACHE), invalidate the DNS
+     * existing cache entry first (if existing) then make a new resolve.
+     */
+    const unsigned long RESOLVE_REFRESH_CACHE = (1 << 10);
+
+    /**
+     * These two bits encode the TRR mode of the request.
+     * Use the static helper methods convert between the TRR mode and flags.
+     */
+    const unsigned long RESOLVE_TRR_MODE_MASK = (1 << 11) | (1 << 12);
+    const unsigned long RESOLVE_TRR_DISABLED_MODE = (1 << 11);
+%{C++
+    static uint32_t GetFlagsFromTRRMode(nsIRequest::TRRMode aMode) {
+        return static_cast<uint32_t>(aMode) << 11;
+    }
+
+    static nsIRequest::TRRMode GetTRRModeFromFlags(uint32_t aFlags) {
+        return static_cast<nsIRequest::TRRMode>((aFlags & RESOLVE_TRR_MODE_MASK) >> 11);
+    }
+%}
+
+    /**
+     * Force resolution even when SOCKS proxy with DNS forwarding is configured.
+     * Only to be used for the proxy host resolution.
+     */
+    const unsigned long RESOLVE_IGNORE_SOCKS_DNS = 1 << 13;
+
+     /**
+     * If set, only cached IP hint addresses will be returned from
+     * resolve/asyncResolve.
+     */
+    const unsigned long RESOLVE_IP_HINT = 1 << 14;
+
+    /**
+     * If set, do not use ODoH for resolving the host name.
+     */
+    const unsigned long RESOLVE_DISABLE_ODOH = 1 << 15;
+};
+
+%{C++
+
+/**
+ * An observer notification for this topic is sent whenever the URI that the
+ * TRR service is using has changed.
+ */
+#define NS_NETWORK_TRR_URI_CHANGED_TOPIC "network:trr-uri-changed"
+
+/**
+ * An observer notification for this topic is sent whenever the mode that the
+ * TRR service is using has changed.
+ */
+#define NS_NETWORK_TRR_MODE_CHANGED_TOPIC "network:trr-mode-changed"
+
+%}
+

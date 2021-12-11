@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.arc(32, 2, 64, 512, 1024, false);
+    ctx.scale(256, 16);
+    ctx.transform(32, 64, 16, 256, 0.5000140400370615, -0.6268189185361422);
+    ctx.scale(2, 0.33614443599622335);
+    ctx.transform(16, -64, 512, 0.5546715728833042, 4, -0.09260164319830985);
+    ctx.isPointInStroke(1024, 2048);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

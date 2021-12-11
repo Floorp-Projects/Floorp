@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS 2.1 Test Suite: :first-letter</title>
+  <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+  <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+  <link rel="help" href="http://www.w3.org/TR/CSS21/selector.html#first-letter"/>
+  <meta name="flags" content="dom" />
+  <style>
+    div#x::first-letter { color: blue; float: left; }
+  </style>
+</head>
+<body>
+<div id="x">Need at least two letters here</div>
+<script>
+  document.body.offsetWidth;
+  var div = document.getElementById("x");
+  div.id = "y";
+  div.firstChild.data = "Text";
+</script>
+</body>
+</html>
+

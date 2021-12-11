@@ -1,0 +1,85 @@
+From: Robert O'Callahan <robert@ocallahan.org>
+Bug 768348. Avoid ExtCreatePen failures by avoiding rounding widths and dash lengths down to zero. r=jrmuizel
+
+diff --git a/gfx/cairo/cairo/src/cairo-win32-printing-surface.c b/gfx/cairo/cairo/src/cairo-win32-printing-surface.c
+--- a/gfx/cairo/cairo/src/cairo-win32-printing-surface.c
++++ b/gfx/cairo/cairo/src/cairo-win32-printing-surface.c
+@@ -1251,22 +1251,24 @@ static cairo_int_status_t
+ {
+     cairo_win32_surface_t *surface = abstract_surface;
+     cairo_int_status_t status;
+     HPEN pen;
+     LOGBRUSH brush;
+     COLORREF color;
+     XFORM xform;
+     DWORD pen_style;
++    DWORD pen_width;
+     DWORD *dash_array;
+     HGDIOBJ obj;
+     unsigned int i;
+     cairo_solid_pattern_t clear;
+     cairo_matrix_t mat;
+     double scale;
++    double scaled_width;
+ 
+     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+     if (status)
+ 	return status;
+ 
+     if (op == CAIRO_OPERATOR_CLEAR) {
+ 	_cairo_win32_printing_surface_init_clear_color (surface, &clear);
+ 	source = (cairo_pattern_t*) &clear;
+@@ -1288,17 +1290,21 @@ static cairo_int_status_t
+     _cairo_matrix_factor_out_scale (&mat, &scale);
+ 
+     pen_style = PS_GEOMETRIC;
+     dash_array = NULL;
+     if (style->num_dashes) {
+ 	pen_style |= PS_USERSTYLE;
+ 	dash_array = calloc (sizeof (DWORD), style->num_dashes);
+ 	for (i = 0; i < style->num_dashes; i++) {
+-	    dash_array[i] = (DWORD) (scale * style->dash[i]);
++	    DWORD dashes = (DWORD) (scale * style->dash[i]);
++	    /* zero dash-lengths cause ExtCreatePen to fail. Make the dashes
++	     * longer if necessary.
++	     */
++	    dash_array[i] = MAX(1, dashes);
+ 	}
+     } else {
+ 	pen_style |= PS_SOLID;
+     }
+ 
+     SetMiterLimit (surface->dc, (FLOAT) (style->miter_limit), NULL);
+     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
+ 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) source;
+@@ -1310,18 +1316,29 @@ static cairo_int_status_t
+ 	/* Color not used as the pen will only be used by WidenPath() */
+ 	color = RGB (0,0,0);
+     }
+     brush.lbStyle = BS_SOLID;
+     brush.lbColor = color;
+     brush.lbHatch = 0;
+     pen_style |= _cairo_win32_line_cap (style->line_cap);
+     pen_style |= _cairo_win32_line_join (style->line_join);
++    scaled_width = scale * style->line_width;
++    if (scaled_width == 0.0)
++        return status;
++    pen_width = (DWORD)scaled_width;
++    if (pen_width == 0) {
++        /* ExtCreatePen will fail if passed zero width. We have to choose
++         * between drawing something too wide, or drawing nothing at all.
++         * Let's draw something.
++         */
++        pen_width = 1;
++    }
+     pen = ExtCreatePen(pen_style,
+-		       scale * style->line_width,
++		       pen_width,
+ 		       &brush,
+ 		       style->num_dashes,
+ 		       dash_array);
+     if (pen == NULL)
+ 	return _cairo_win32_print_gdi_error ("_win32_surface_stroke:ExtCreatePen");
+     obj = SelectObject (surface->dc, pen);
+     if (obj == NULL)
+ 	return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SelectObject");

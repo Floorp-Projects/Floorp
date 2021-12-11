@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+<head>
+<script>
+function finish() {
+	document.documentElement.className = "";
+}
+      window.addEventListener('load', () => {
+        const video = document.createElementNS('http://www.w3.org/1999/xhtml', 'video')
+        document.documentElement.appendChild(video)
+        setTimeout(async  () => { video.poster = '1677518-1.jpg'; setTimeout(finish, 500); }, 165 )
+        video.setAttribute('poster', '1677518-1.svg')
+      })
+    </script>
+</head>
+</html>

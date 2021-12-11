@@ -1,0 +1,158 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+richlistbox {
+  margin: 2px 4px;
+  background-color: Field;
+  color: FieldText;
+  overflow: auto;
+}
+
+richlistbox[disabled="true"] {
+  color: GrayText;
+}
+
+richlistitem[selected="true"] {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
+}
+
+richlistbox:where(:focus) > richlistitem[selected="true"] {
+  background-color: SelectedItem;
+  color: SelectedItemText;
+}
+
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"] {
+  outline: 1px dotted SelectedItem;
+  outline-offset: -1px;
+}
+
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"][selected="true"] {
+  outline: 1px dotted #F3D982; /* TODO: find a suitable system color */
+}
+
+richlistbox.theme-listbox > richlistitem {
+  border: 1px solid transparent;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
+  outline: 1px dotted #F3D982;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[current="true"] {
+  outline: 1px dotted SelectedItem;
+  outline-offset: -1px;
+}
+
+richlistbox.theme-listbox > richlistitem[selected="true"] {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
+  background-color: SelectedItem;
+  color: SelectedItemText;
+}
+
+richlistbox.theme-listbox > richlistitem > label {
+  margin: 0;
+  padding-block: 0 1px;
+  padding-inline: 4px 0;
+  white-space: nowrap;
+}
+
+@media (-moz-windows-default-theme) {
+  richlistbox.theme-listbox > richlistitem {
+    --listitem-selectedTextColor: rgb(0,0,0);
+    --listitem-selectedColor: rgb(217,217,217);
+    --listitem-selectedBorder: var(--listitem-selectedColor);
+    --listitem-selectedBottomBorder: rgb(204,204,204);
+    --listitem-selectedBackground: var(--listitem-selectedColor);
+    --listitem-selectedImage: none;
+    --listitem-selectedCurrentBorder: rgb(123,195,255);
+    --listitem-selectedFocusColor: rgb(205,232,255);
+    --listitem-selectedFocusBorder: var(--listitem-selectedFocusColor);
+    --listitem-selectedFocusBottomBorder: rgb(165,214,255);
+    --listitem-selectedFocusBackground: var(--listitem-selectedFocusColor);
+    --listitem-selectedFocusImage: none;
+    --listitem-selectedFocusCurrentBorder: var(--listitem-selectedFocusColor);
+    --listitem-selectedFocusCurrentBottomBorder: var(--listitem-selectedFocusBottomBorder);
+    --listitem-selectedFocusCurrentBackground: var(--listitem-selectedFocusColor);
+
+    color: FieldText;
+    margin-inline: 1px;
+    padding-block: 1px;
+    border-width: 1px;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+  }
+
+  richlistbox.theme-listbox > richlistitem[selected="true"] {
+    border-top-color: var(--listitem-selectedBorder);
+    border-inline-color: var(--listitem-selectedBorder);
+    border-bottom-color: var(--listitem-selectedBottomBorder);
+    background-image: var(--listitem-selectedImage);
+    background-color: var(--listitem-selectedBackground);
+    color: var(--listitem-selectedTextColor);
+  }
+
+  richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
+    border-top-color: var(--listitem-selectedFocusBorder);
+    border-inline-color: var(--listitem-selectedFocusBorder);
+    border-bottom-color: var(--listitem-selectedFocusBottomBorder);
+    background-image: var(--listitem-selectedFocusImage);
+    background-color: var(--listitem-selectedFocusBackground);
+    color: var(--listitem-selectedTextColor);
+  }
+
+  richlistbox.theme-listbox:focus > richlistitem[current="true"] {
+    border-color: var(--listitem-selectedCurrentBorder);
+    outline: none;
+  }
+
+  richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
+    border-top-color: var(--listitem-selectedFocusCurrentBorder);
+    border-inline-color: var(--listitem-selectedFocusCurrentBorder);
+    border-bottom-color: var(--listitem-selectedFocusCurrentBottomBorder);
+    background-color: var(--listitem-selectedFocusCurrentBackground);
+    outline: none;
+  }
+
+  @media (-moz-os-version: windows-win7) {
+    richlistbox.theme-listbox > richlistitem {
+      --listitem-selectedBottomBorder: var(--listitem-selectedColor);
+      --listitem-selectedBackground: rgba(190,190,190,.15);
+      --listitem-selectedImage: linear-gradient(rgba(190,190,190,.1), rgba(190,190,190,.4));
+      --listitem-selectedCurrentBorder: rgb(125,162,206);
+      --listitem-selectedFocusColor: rgb(132,172,221);
+      --listitem-selectedFocusBottomBorder: var(--listitem-selectedFocusColor);
+      --listitem-selectedFocusBackground: rgba(131,183,249,.02);
+      --listitem-selectedFocusImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.375));
+      --listitem-selectedFocusCurrentBackground: rgba(131,183,249,.15);
+
+      border-radius: 3px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -1px 0 1px rgba(255,255,255,.2);
+    }
+  }
+
+  @media (-moz-os-version: windows-win8) {
+    richlistbox.theme-listbox > richlistitem {
+      --listitem-selectedBottomBorder: var(--listitem-selectedColor);
+      --listitem-selectedBackground: rgba(190,190,190,.15);
+      --listitem-selectedImage: linear-gradient(rgba(190,190,190,.4), rgba(190,190,190,.4));
+      --listitem-selectedCurrentBorder: rgb(125,162,206);
+      --listitem-selectedFocusColor: rgb(132,172,221);
+      --listitem-selectedFocusBottomBorder: var(--listitem-selectedFocusColor);
+      --listitem-selectedFocusBackground: rgba(131,183,249,.02);
+      --listitem-selectedFocusImage: linear-gradient(rgba(131,183,249,.375), rgba(131,183,249,.375));
+      --listitem-selectedFocusCurrentBackground: rgba(131,183,249,.15);
+    }
+  }
+}
+
+listheader {
+  color: -moz-DialogText;
+}

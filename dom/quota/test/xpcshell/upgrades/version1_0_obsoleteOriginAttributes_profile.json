@@ -1,0 +1,112 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          { "name": "ls-archive.sqlite", "dir": false }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]

@@ -1,0 +1,77 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Due to duplicate file names, we compile libavutil/x86 in its own
+# moz.build file.
+if CONFIG['FFVPX_ASFLAGS']:
+    if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
+        DIRS += ['x86']
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        DIRS += ['arm']
+    elif CONFIG['CPU_ARCH'] == 'aarch64':
+        DIRS += ['aarch64']
+
+SharedLibrary('mozavutil')
+SOURCES += [
+    'avstring.c',
+    'bprint.c',
+    'buffer.c',
+    'channel_layout.c',
+    'cpu.c',
+    'crc.c',
+    'dict.c',
+    'error.c',
+    'eval.c',
+    'fifo.c',
+    'fixed_dsp.c',
+    'float_dsp.c',
+    'frame.c',
+    'hwcontext.c',
+    'imgutils.c',
+    'log.c',
+    'log2_tab.c',
+    'mathematics.c',
+    'mem.c',
+    'opt.c',
+    'parseutils.c',
+    'pixdesc.c',
+    'rational.c',
+    'reverse.c',
+    'samplefmt.c',
+    'slicethread.c',
+    'time.c',
+    'utils.c'
+]
+if CONFIG['MOZ_WAYLAND']:
+    SOURCES += [
+        'hwcontext_vaapi.c',
+    ]
+    USE_LIBS += ['mozva']
+
+if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
+    SOURCES += [
+        'adler32.c',
+        'base64.c',
+        'color_utils.c',
+        'integer.c',
+        'intmath.c',
+        'lls.c',
+        'pixelutils.c',
+        'threadmessage.c',
+        'timecode.c'
+    ]
+
+SYMBOLS_FILE =  'avutil.symbols'
+NoVisibilityFlags()
+
+OS_LIBS += CONFIG['REALTIME_LIBS']
+if CONFIG['OS_TARGET'] != 'WINNT':
+    OS_LIBS += ['m']
+
+if CONFIG['MOZ_NEEDS_LIBATOMIC']:
+    OS_LIBS += ['atomic']
+
+include("../ffvpxcommon.mozbuild")

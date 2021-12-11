@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=46555
+-->
+
+<head>
+  <title>Test for Bug 46555</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=46555">Mozilla Bug 46555</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <input type="text" value="" id="t1" />
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 46555 **/
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(function() {
+        const kCmd = "cmd_selectAll";
+
+        var input = document.getElementById("t1");
+        input.focus();
+        var controller =
+          SpecialPowers.wrap(input).controllers.getControllerForCommand(kCmd);
+
+        // Test 1: Select All should be disabled if editor is empty
+        is(controller.isCommandEnabled(kCmd), false,
+           "Select All command disabled when editor is empty");
+
+        SimpleTest.finish();
+      });
+   </script>
+  </pre>
+
+</body>
+</html>

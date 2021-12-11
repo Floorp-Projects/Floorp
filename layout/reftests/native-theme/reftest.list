@@ -1,0 +1,82 @@
+!= button-html-not-blank.html about:blank
+!= button-not-blank.html about:blank
+!= checkbox-not-blank.html about:blank
+!= combobox-not-blank.html about:blank
+!= fieldset-not-blank.html about:blank
+!= file-not-blank.html about:blank
+!= listbox-not-blank.html about:blank
+!= radio-not-blank.html about:blank
+!= text-control-not-blank.html about:blank
+!= textarea-not-blank.html about:blank
+
+!= text-input-native.html text-input-nonnative.html
+fuzzy(0-2,0-88) == text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
+!= textarea-native.html textarea-nonnative.html
+fuzzy(0-2,0-53) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
+!= button-native.html button-nonnative.html
+== button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
+!= combobox-native.html combobox-nonnative.html
+== combobox-nonnative-when-styled.html combobox-nonnative-when-styled-ref.html
+needs-focus != listbox-native.html listbox-nonnative.html
+needs-focus == listbox-nonnative-when-styled.html listbox-nonnative-when-styled-ref.html
+!= radio-native.html radio-nonnative.html
+== radio-still-native-when-styled.html radio-still-native-when-styled-ref.html
+!= checkbox-native.html checkbox-nonnative.html
+== checkbox-still-native-when-styled.html checkbox-still-native-when-styled-ref.html
+== native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
+
+!= 427122-1.html 427122-1-ref.html
+
+== chrome://reftest/content/native-theme/470711-1.xhtml chrome://reftest/content/native-theme/470711-1-ref.xhtml
+
+== chrome://reftest/content/native-theme/482955-1.xhtml chrome://reftest/content/native-theme/482955-1-ref.xhtml
+
+== 492155-1.html about:blank
+== 492155-2.html about:blank
+== 492155-3.html about:blank
+fails-if(Android&&!asyncPan) != 492155-4.html about:blank
+
+!= box-shadow-input.html box-shadow-input-ref.html
+!= box-shadow-button.html box-shadow-button-ref.html
+!= box-shadow-listbox.html box-shadow-listbox-ref.html
+!= box-shadow-combobox.html box-shadow-combobox-ref.html
+
+# RTL mirroring tests
+== checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
+skip-if(!cocoaWidget||!nativeThemePref) == chrome://reftest/content/native-theme/menulist-mirrored-when-rtl.xhtml chrome://reftest/content/native-theme/menulist-mirrored-when-rtl-ref.xhtml
+skip-if(!cocoaWidget||!nativeThemePref||debug) == chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl.xhtml chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl-ref.xhtml
+skip-if(!cocoaWidget||!nativeThemePref) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
+
+!= chrome://reftest/content/native-theme/resizer-bottomend.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
+random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomend.xhtml chrome://reftest/content/native-theme/resizer-bottomright.xhtml # bug 581086
+!= chrome://reftest/content/native-theme/resizer-bottomend.xhtml chrome://reftest/content/native-theme/resizer-bottomend-rtl.xhtml
+# Disabled on Linux (bug 519152), random on Windows (bug 581086)
+skip-if(gtkWidget) != chrome://reftest/content/native-theme/resizer-bottomend-rtl.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
+skip-if(gtkWidget) random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomend-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomend-flipped.xhtml
+skip-if(gtkWidget) == chrome://reftest/content/native-theme/resizer-bottomleft-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomleft.xhtml
+skip-if(gtkWidget) == chrome://reftest/content/native-theme/resizer-bottomright-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomright.xhtml
+
+!= chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
+random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/resizer-bottomleft.xhtml
+random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/resizer-left.xhtml
+!= chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xhtml
+skip-if(gtkWidget) != chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
+skip-if(gtkWidget) random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomend.xhtml
+
+# Windows-only, depends on native scrollbar metrics
+skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
+# skip-if(!winWidget) == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme-ref.html # Bug 512206
+
+== border-radius.html border-radius-ref.html
+
+== checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
+
+# These tests have been written to test the overflow of the window widget
+# (bug 568825) but we can't test it on Windows and Cocoa because they have
+# animated progress bars.
+# Nothing shows up on Android, presumably because that appearance type is
+# not implemented.
+skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
+fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow-small.html progress-nobar.html
+
+== chrome://reftest/content/native-theme/676387-1.xhtml chrome://reftest/content/native-theme/676387-1-ref.xhtml

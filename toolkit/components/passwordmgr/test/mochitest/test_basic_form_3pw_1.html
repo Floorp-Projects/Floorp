@@ -1,0 +1,259 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill for forms with 3 password fields</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: forms with 3 password fields (form filling)
+<script>
+gTestDependsOnDeprecatedLogin = true;
+runChecksAfterCommonInit(() => startTest());
+
+let DEFAULT_ORIGIN = window.location.origin;
+</script>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: form fill, 3 password fields **/
+
+// Test to make sure 3-password forms are filled properly.
+
+async function startTest() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <p>The next three forms are <b>user/pass/passB/passC</b>, as all-empty, preuser(only), and preuser/pass</p>
+    <form id="form1" action="formtest.js">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="rword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <form id="form2" action="formtest.js">
+      <input  type="text"       name="uname"  value="testuser">
+      <input  type="password"   name="pword">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="rword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <form id="form3" action="formtest.js">
+      <input  type="text"       name="uname"  value="testuser">
+      <input  type="password"   name="pword"  value="testpass">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="rword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+
+    <p>The next three forms are <b>user/passB/pass/passC</b>, as all-empty, preuser(only), and preuser/pass</p>
+    <form id="form4" action="formtest.js">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="pword">
+      <input  type="password"   name="rword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <form id="form5" action="formtest.js">
+      <input  type="text"       name="uname"  value="testuser">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="pword">
+      <input  type="password"   name="rword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <form id="form6" action="formtest.js">
+      <input  type="text"       name="uname"  value="testuser">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="pword"  value="testpass">
+      <input  type="password"   name="rword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <p>The next three forms are <b>user/passB/passC/pass</b>, as all-empty, preuser(only), and preuser/pass</p>
+    <form id="form7" action="formtest.js">
+      <input  type="text"       name="uname">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="rword">
+      <input  type="password"   name="pword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <form id="form8" action="formtest.js">
+      <input  type="text"       name="uname"  value="testuser">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="rword">
+      <input  type="password"   name="pword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <form id="form9" action="formtest.js">
+      <input  type="text"       name="uname"  value="testuser">
+      <input  type="password"   name="qword">
+      <input  type="password"   name="rword">
+      <input  type="password"   name="pword"  value="testpass">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>`, win);
+
+  let TESTCASES = [
+    // Check form 1
+    {
+      formNum: 1,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 1"],
+        ["pword", "testpass", "Checking password 1"],
+        ["qword", "", "Checking password 1 (q)"],
+        ["rword", "", "Checking password 1 (r)"],
+      ],
+    },
+    // Check form 2
+    {
+      formNum: 2,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 2"],
+        ["pword", "testpass", "Checking password 2"],
+        ["qword", "", "Checking password 2 (q)"],
+        ["rword", "", "Checking password 2 (r)"],
+      ],
+    },
+    // Check form 3
+    {
+      formNum: 3,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 3"],
+        ["pword", "testpass", "Checking password 3"],
+        ["qword", "", "Checking password 3 (q)"],
+        ["rword", "", "Checking password 3 (r)"],
+      ],
+    },
+    // Check form 4
+    {
+      formNum: 4,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 4"],
+        ["rword", "", "Checking password 4 (r)"],
+      ],
+      todoIsAssertionTuples: [
+        ["qword", "", "Checking password 4 (q)"],
+        ["pword", "testpass", "Checking password 4"],
+      ],
+    },
+    // Check form 5
+    {
+      formNum: 5,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 5"],
+        ["rword", "", "Checking password 5 (r)"],
+      ],
+      todoIsAssertionTuples: [
+        ["qword", "", "Checking password 5 (q)"],
+        ["pword", "testpass", "Checking password 5"],
+      ],
+    },
+    // Check form 6
+    {
+      formNum: 6,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 6"],
+        ["pword", "testpass", "Checking password 6"],
+        ["rword", "", "Checking password 6 (r)"],
+      ],
+      todoIsAssertionTuples: [
+        ["qword", "", "Checking password 6 (q)"],
+      ],
+    },
+    // Check form 7
+    {
+      formNum: 7,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 7"],
+        ["rword", "", "Checking password 7 (r)"],
+      ],
+      todoIsAssertionTuples: [
+        ["qword", "", "Checking password 7 (q)"],
+        ["pword", "testpass", "Checking password 7"],
+      ],
+    },
+    // Check form 8
+    {
+      formNum: 8,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 8"],
+        ["rword", "", "Checking password 8 (r)"],
+      ],
+      todoIsAssertionTuples: [
+        ["qword", "", "Checking password 8 (q)"],
+        ["pword", "testpass", "Checking password 8"],
+      ],
+    },
+    // Check form 9
+    {
+      formNum: 9,
+      isAssertionTuples: [
+        ["uname", "testuser", "Checking username 9"],
+        ["rword", "", "Checking password 9 (r)"],
+        ["pword", "testpass", "Checking password 9"],
+      ],
+      todoIsAssertionTuples: [
+        ["qword", "", "Checking password 9 (q)"],
+      ],
+    },
+  ];
+
+  await SpecialPowers.spawn(win, [TESTCASES], (testcasesF) => {
+    let doc = this.content.document;
+    for (let testcase of testcasesF) {
+      let { formNum } = testcase;
+      for (let tuple of testcase.isAssertionTuples) {
+        let [name, value, message] = tuple;
+        is(doc.querySelector(`#form${formNum} input[name=${name}]`).value, value, message);
+      }
+      if (!testcase.todoIsAssertionTuples) {
+        continue;
+      }
+      // TODO: Bug 1669614
+      // for (let tuple of testcase.todoIsAssertionTuples) {
+      //   let [name, value, message] = tuple;
+      //   todo_is(doc.querySelector(`#form${formNum} input[name=${name}]`).value, value, message);
+      // }
+    }
+  });
+
+  // TODO: as with the 2-password cases, add tests to check for creating new
+  // logins and changing passwords.
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

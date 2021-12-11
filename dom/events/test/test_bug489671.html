@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=489671
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 489671</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=489671"
+   >Mozilla Bug 489671</a>
+<p id="display" onclick="queueNextTest(); throw 'Got click 1';"></p>
+<script>
+// override window.onerror so it won't see our exceptions
+window.onerror = function() {}
+
+var testNum = 0;
+function doTest() {
+  switch(testNum++) {
+    case 0:
+      var event = document.createEvent("MouseEvents");
+      event.initMouseEvent("click", true, true, document.defaultView,
+                           0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      $("display").dispatchEvent(event);
+      break;
+    case 1:
+      var script = document.createElement("script");
+      script.textContent = "queueNextTest(); throw 'Got click 2'";
+      document.body.appendChild(script);
+      break;
+    case 2:
+      window.setTimeout("queueNextTest(); throw 'Got click 3'", 0);
+      break;
+    case 3:
+      SimpleTest.endMonitorConsole();
+      return;
+  }
+}
+function queueNextTest() { SimpleTest.executeSoon(doTest); }
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.monitorConsole(SimpleTest.finish, [
+  { errorMessage: "uncaught exception: Got click 1" },
+  { errorMessage: "uncaught exception: Got click 2" },
+  { errorMessage: "uncaught exception: Got click 3" }
+]);
+
+doTest();
+</script>
+</body>
+</html>

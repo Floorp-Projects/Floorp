@@ -1,0 +1,18 @@
+include protocol PTestBadActorSub;
+
+namespace mozilla {
+namespace _ipdltest {
+
+// Test that a parent sending a reentrant __delete__ message
+// is not killed if a child's message races with the reply.
+
+intr protocol PTestBadActor {
+  manages PTestBadActorSub;
+
+child:
+  async PTestBadActorSub();
+  async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

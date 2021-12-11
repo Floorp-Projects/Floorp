@@ -1,0 +1,26 @@
+[
+  {
+    "version": "Visual Studio 2017 15.4.2 / SDK 10.0.15063.0",
+    "size": 303146863,
+    "digest": "18700889e6b5e81613b9cf57ce4e0d46a6ee45bb4c5c33bae2604a5275326128775b8a032a1eb178c5db973746d565340c4e36d98375789e1d5bd836ab16ba58",
+    "algorithm": "sha512",
+    "filename": "vs2017_15.4.2.zip",
+    "unpack": true
+  },
+  {
+    "version": "Ninja 1.7.1",
+    "size": 184821,
+    "digest": "e4f9a1ae624a2630e75264ba37d396d9c7407d6e6aea3763056210ba6e1387908bd31cf4037a6a3661a418e86c4d2761e0c333e6a3bd0d66549d2b0d72d3f43b",
+    "algorithm": "sha512",
+    "filename": "ninja171.zip",
+    "unpack": true
+  },
+  {
+    "size": 13063963,
+    "visibility": "public",
+    "digest": "47a19f8f863eab3414abab2b9e9bd901ab896c799b3d9254b456b2f59374b085b99de805e21069a0819f01eecb3f43f7e2395a8c644c04bcbfa5711261cca29d",
+    "algorithm": "sha512",
+    "filename": "gyp-2017-05-23.zip",
+    "unpack": true
+  }
+]

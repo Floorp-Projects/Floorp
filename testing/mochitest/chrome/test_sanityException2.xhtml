@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=670817
+-->
+<window title="Mozilla Bug 670817"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=670817">Mozilla Bug 670817</a>
+<script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+ok(true, "a call to ok");
+SimpleTest.executeSoon(function() {
+  SimpleTest.expectUncaughtException();
+  throw "this is a deliberately thrown exception";
+});
+SimpleTest.executeSoon(function() {
+  SimpleTest.finish();
+});
+
+]]></script>
+</body>
+
+</window>

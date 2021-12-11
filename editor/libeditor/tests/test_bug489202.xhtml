@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=489202
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 489202" onload="runTest();">
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=489202"
+     target="_blank">Mozilla Bug 489202</a>
+  <p/>
+  <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          id="i1"
+          type="content"
+          editortype="htmlmail"
+          style="width: 400px; height: 100px;"/>
+  <p/>
+  <pre id="test">
+  </pre>
+  </body>
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+
+function getLoadContext() {
+  return window.docShell.QueryInterface(Ci.nsILoadContext);
+}
+
+function runTest() {
+  var trans = Cc["@mozilla.org/widget/transferable;1"]
+      .createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
+  trans.addDataFlavor("text/html");
+  var test_data = '<meta/><a href="http://mozilla.org/">mozilla.org</a>';
+  var cstr = Cc["@mozilla.org/supports-string;1"]
+      .createInstance(Ci.nsISupportsString);
+  cstr.data = test_data;
+  trans.setTransferData("text/html", cstr);
+
+  window.docShell
+     .rootTreeItem
+     .QueryInterface(Ci.nsIDocShell)
+     .appType = Ci.nsIDocShell.APP_TYPE_EDITOR; 
+  var e = document.getElementById('i1');
+  var doc = e.contentDocument;
+  doc.designMode = "on";
+  doc.body.innerHTML = "";
+  doc.defaultView.focus();
+  var selection = doc.defaultView.getSelection();
+  selection.removeAllRanges();
+  selection.selectAllChildren(doc.body);
+  selection.collapseToEnd();
+
+  var point = doc.defaultView.getSelection().getRangeAt(0).startOffset;
+  ok(point==0, "Cursor should be at editor start before paste");
+
+  utils.sendContentCommandEvent("pasteTransferable", trans);
+
+  point = doc.defaultView.getSelection().getRangeAt(0).startOffset;
+  ok(point>0, "Cursor should not be at editor start after paste");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+]]>
+</script>
+</window>

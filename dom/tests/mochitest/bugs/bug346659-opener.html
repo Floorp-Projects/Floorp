@@ -1,0 +1,9 @@
+<body onload="postBack();">
+  <script>
+    function postBack() {
+      var s = decodeURIComponent(window.location.search.substring(1));
+      window.opener.postMessage(s, "http://mochi.test:8888");
+    }
+    var childWin = window.open();
+  </script>
+</body>

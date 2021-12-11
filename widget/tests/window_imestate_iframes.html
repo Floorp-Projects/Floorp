@@ -1,0 +1,360 @@
+<html>
+<head>
+  <title>Test for IME state controling and focus moving for iframes</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <style type="text/css">
+    iframe {
+      border: none;
+      height: 100px;
+    }
+  </style>
+</head>
+<body onunload="onUnload();">
+<p id="display">
+  <!-- Use input[readonly] because it isn't affected by the partial focus
+       movement on Mac -->
+  <input id="prev" readonly><br>
+  <iframe id="iframe_not_editable"
+          src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;input id='editor'&gt;&lt;/body&gt;&lt;/html&gt;"></iframe><br>
+
+  <!-- Testing IME state and focus movement, the anchor elements cannot get focus -->
+  <iframe id="iframe_html"
+          src="data:text/html,&lt;html id='editor' contenteditable='true'&gt;&lt;body&gt;&lt;a href='about:blank'&gt;about:blank;&lt;/a&gt;&lt;/body&gt;&lt;/html&gt;"></iframe><br>
+  <iframe id="iframe_designMode"
+          src="data:text/html,&lt;body id='editor' onload='document.designMode=&quot;on&quot;;'&gt;&lt;a href='about:blank'&gt;about:blank;&lt;/a&gt;&lt;/body&gt;"></iframe><br>
+  <iframe id="iframe_body"
+          src="data:text/html,&lt;body id='editor' contenteditable='true'&gt;&lt;a href='about:blank'&gt;about:blank;&lt;/a&gt;&lt;/body&gt;"></iframe><br>
+  <iframe id="iframe_p"
+          src="data:text/html,&lt;body&gt;&lt;p id='editor' contenteditable='true'&gt;&lt;a href='about:blank'&gt;about:blank;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;"></iframe><br>
+
+  <input id="next" readonly><br>
+</p>
+<script class="testbody" type="application/javascript">
+
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+window.opener.SimpleTest.waitForFocus(runTests, window);
+
+function ok(aCondition, aMessage) {
+  window.opener.SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage) {
+  window.opener.SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function onUnload() {
+  window.opener.onFinish();
+}
+
+var gFocusObservingElement = null;
+var gBlurObservingElement = null;
+
+function onFocus(aEvent) {
+  if (aEvent.target != gFocusObservingElement) {
+    return;
+  }
+  ok(gFocusObservingElement.willFocus,
+     "focus event is fired on unexpected element");
+  gFocusObservingElement.willFocus = false;
+}
+
+function onBlur(aEvent) {
+  if (aEvent.target != gBlurObservingElement) {
+    return;
+  }
+  ok(gBlurObservingElement.willBlur,
+     "blur event is fired on unexpected element");
+  gBlurObservingElement.willBlur = false;
+}
+
+function observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
+                          aNextBlurredNode, aWillFireBlurEvent) {
+  if (gFocusObservingElement) {
+    if (gFocusObservingElement.willFocus) {
+      ok(false, "focus event was never fired on " + gFocusObservingElement);
+    }
+    gFocusObservingElement.removeEventListener("focus", onFocus, true);
+    gFocusObservingElement.willFocus = NaN;
+    gFocusObservingElement = null;
+  }
+  if (gBlurObservingElement) {
+    if (gBlurObservingElement.willBlur) {
+      ok(false, "blur event was never fired on " + gBlurObservingElement);
+    }
+    gBlurObservingElement.removeEventListener("blur", onBlur, true);
+    gBlurObservingElement.willBlur = NaN;
+    gBlurObservingElement = null;
+  }
+  if (aNextFocusedNode) {
+    gFocusObservingElement = aNextFocusedNode;
+    gFocusObservingElement.willFocus = aWillFireFocusEvent;
+    gFocusObservingElement.addEventListener("focus", onFocus, true);
+  }
+  if (aNextBlurredNode) {
+    gBlurObservingElement = aNextBlurredNode;
+    gBlurObservingElement.willBlur = aWillFireBlurEvent;
+    gBlurObservingElement.addEventListener("blur", onBlur, true);
+  }
+}
+
+function runTests() {
+  var utils = window.windowUtils;
+  var fm = Services.focus;
+
+  var iframe, editor, root;
+  var prev = document.getElementById("prev");
+  var next = document.getElementById("next");
+  var html = document.documentElement;
+
+  function resetFocusToInput(aDescription) {
+    observeFocusBlur(null, false, null, false);
+    prev.focus();
+    is(fm.focusedElement, prev,
+       "input#prev[readonly] element didn't get focus: " + aDescription);
+    is(utils.IMEStatus, utils.IME_STATUS_DISABLED,
+       "IME enabled on input#prev[readonly]: " + aDescription);
+  }
+
+  function resetFocusToParentHTML(aDescription) {
+    observeFocusBlur(null, false, null, false);
+    html.focus();
+    is(fm.focusedElement, html,
+       "Parent html element didn't get focus: " + aDescription);
+    is(utils.IMEStatus, utils.IME_STATUS_DISABLED,
+       "IME enabled on parent html element: " + aDescription);
+  }
+
+  function testTabKey(aForward,
+                      aNextFocusedNode, aWillFireFocusEvent,
+                      aNextBlurredNode, aWillFireBlurEvent,
+                      aIMEShouldBeEnabled, aTestingCaseDescription) {
+    observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
+                     aNextBlurredNode, aWillFireBlurEvent);
+    synthesizeKey("VK_TAB", { shiftKey: !aForward });
+    var description = "Tab key test: ";
+    if (!aForward) {
+      description = "Shift-" + description;
+    }
+    description += aTestingCaseDescription + ": ";
+    is(fm.focusedElement, aNextFocusedNode,
+       description + "didn't move focus as expected");
+    is(utils.IMEStatus,
+       aIMEShouldBeEnabled ?
+         utils.IME_STATUS_ENABLED : utils.IME_STATUS_DISABLED,
+       description + "didn't set IME state as expected");
+  }
+
+  function testMouseClick(aNextFocusedNode, aWillFireFocusEvent,
+                          aWillAllNodeLostFocus,
+                          aNextBlurredNode, aWillFireBlurEvent,
+                          aIMEShouldBeEnabled, aTestingCaseDescription) {
+    observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
+                     aNextBlurredNode, aWillFireBlurEvent);
+    // We're relying on layout inside the iframe being up to date, so make it so
+    iframe.contentDocument.documentElement.getBoundingClientRect();
+    synthesizeMouse(iframe, 10, 80, { });
+    var description = "Click test: " + aTestingCaseDescription + ": ";
+    is(fm.focusedElement, !aWillAllNodeLostFocus ? aNextFocusedNode : null,
+       description + "didn't move focus as expected");
+    is(utils.IMEStatus,
+       aIMEShouldBeEnabled ?
+         utils.IME_STATUS_ENABLED : utils.IME_STATUS_DISABLED,
+       description + "didn't set IME state as expected");
+  }
+
+  function testOnEditorFlagChange(aDescription, aIsInDesignMode) {
+    const kReadonly = Ci.nsIEditor.eEditorReadonlyMask;
+    var description = "testOnEditorFlagChange: " + aDescription;
+    resetFocusToParentHTML(description);
+    var htmlEditor = iframe.contentWindow.docShell.editor;
+    var e = aIsInDesignMode ? root : editor;
+    e.focus();
+    is(fm.focusedElement, e,
+       description + ": focus() of editor didn't move focus as expected");
+    is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
+       description + ": IME isn't enabled when the editor gets focus");
+    var flags = htmlEditor.flags;
+    htmlEditor.flags |= kReadonly;
+    is(fm.focusedElement, e,
+       description + ": when editor becomes readonly, focus moved unexpectedly");
+    is(utils.IMEStatus, utils.IME_STATUS_DISABLED,
+       description + ": when editor becomes readonly, IME is still enabled");
+    htmlEditor.flags = flags;
+    is(fm.focusedElement, e,
+       description + ": when editor becomes read-write, focus moved unexpectedly");
+    is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
+       description + ": when editor becomes read-write, IME is still disabled");
+  }
+
+  // hide all iframes
+  document.getElementById("iframe_not_editable").style.display = "none";
+  document.getElementById("iframe_html").style.display = "none";
+  document.getElementById("iframe_designMode").style.display = "none";
+  document.getElementById("iframe_body").style.display = "none";
+  document.getElementById("iframe_p").style.display = "none";
+
+  // non editable HTML element and input element can get focus.
+  iframe = document.getElementById("iframe_not_editable");
+  iframe.style.display = "inline";
+  editor = iframe.contentDocument.getElementById("editor");
+  root = iframe.contentDocument.documentElement;
+  resetFocusToInput("initializing for iframe_not_editable");
+
+  testTabKey(true, root, false, prev, true,
+             false, "input#prev[readonly] -> html");
+  testTabKey(true, editor, true, root, false,
+             true, "html -> input in the subdoc");
+  testTabKey(true, next, true, editor, true,
+             false, "input in the subdoc -> input#next[readonly]");
+  testTabKey(false, editor, true, next, true,
+             true, "input#next[readonly] -> input in the subdoc");
+  testTabKey(false, root, false, editor, true,
+             false, "input in the subdoc -> html");
+  testTabKey(false, prev, true, root, false,
+             false, "html -> input#next[readonly]");
+
+  iframe.style.display = "none";
+
+  // HTML element (of course, it's root) must enables IME.
+  iframe = document.getElementById("iframe_html");
+  iframe.style.display = "inline";
+  editor = iframe.contentDocument.getElementById("editor");
+  root = iframe.contentDocument.documentElement;
+  resetFocusToInput("initializing for iframe_html");
+
+  testTabKey(true, editor, true, prev, true,
+             true, "input#prev[readonly] -> html[contentediable=true]");
+  testTabKey(true, next, true, editor, true,
+             false, "html[contentediable=true] -> input#next[readonly]");
+  testTabKey(false, editor, true, next, true,
+             true, "input#next[readonly] -> html[contentediable=true]");
+  testTabKey(false, prev, true, editor, true,
+             false, "html[contenteditable=true] -> input[readonly]");
+
+  prev.style.display = "none";
+  resetFocusToParentHTML("testing iframe_html");
+  testTabKey(true, editor, true, html, false,
+             true, "html of parent -> html[contentediable=true]");
+  testTabKey(false, html, false, editor, true,
+             false, "html[contenteditable=true] -> html of parent");
+  prev.style.display = "inline";
+  resetFocusToInput("after parent html <-> html[contenteditable=true]");
+
+  testMouseClick(editor, true, false, prev, true, true, "iframe_html");
+
+  testOnEditorFlagChange("html[contentediable=true]", false);
+
+  iframe.style.display = "none";
+
+  // designMode should behave like <html contenteditable="true"></html>
+  // but focus/blur events shouldn't be fired on its root element because
+  // any elements shouldn't be focused state in designMode.
+  iframe = document.getElementById("iframe_designMode");
+  iframe.style.display = "inline";
+  iframe.contentDocument.designMode = "on";
+  editor = iframe.contentDocument.getElementById("editor");
+  root = iframe.contentDocument.documentElement;
+  resetFocusToInput("initializing for iframe_designMode");
+
+  testTabKey(true, root, false, prev, true,
+             true, "input#prev[readonly] -> html in designMode");
+  testTabKey(true, next, true, root, false,
+             false, "html in designMode -> input#next[readonly]");
+  testTabKey(false, root, false, next, true,
+             true, "input#next[readonly] -> html in designMode");
+  testTabKey(false, prev, true, root, false,
+             false, "html in designMode -> input#prev[readonly]");
+
+  prev.style.display = "none";
+  resetFocusToParentHTML("testing iframe_designMode");
+  testTabKey(true, root, false, html, false,
+             true, "html of parent -> html in designMode");
+  testTabKey(false, html, false, root, false,
+             false, "html in designMode -> html of parent");
+  prev.style.display = "inline";
+  resetFocusToInput("after parent html <-> html in designMode");
+
+  testMouseClick(editor, false, true, prev, true, true, "iframe_designMode");
+
+  testOnEditorFlagChange("html in designMode", true);
+
+  iframe.style.display = "none";
+
+  // When there is no HTML element but the BODY element is editable,
+  // the body element should get focus and enables IME.
+  iframe = document.getElementById("iframe_body");
+  iframe.style.display = "inline";
+  editor = iframe.contentDocument.getElementById("editor");
+  root = iframe.contentDocument.documentElement;
+  resetFocusToInput("initializing for iframe_body");
+
+  testTabKey(true, editor, true, prev, true,
+             true, "input#prev[readonly] -> body[contentediable=true]");
+  testTabKey(true, next, true, editor, true,
+             false, "body[contentediable=true] -> input#next[readonly]");
+  testTabKey(false, editor, true, next, true,
+             true, "input#next[readonly] -> body[contentediable=true]");
+  testTabKey(false, prev, true, editor, true,
+             false, "body[contenteditable=true] -> input#prev[readonly]");
+
+  prev.style.display = "none";
+  resetFocusToParentHTML("testing iframe_body");
+  testTabKey(true, editor, true, html, false,
+             true, "html of parent -> body[contentediable=true]");
+  testTabKey(false, html, false, editor, true,
+             false, "body[contenteditable=true] -> html of parent");
+  prev.style.display = "inline";
+  resetFocusToInput("after parent html <-> body[contenteditable=true]");
+
+  testMouseClick(editor, true, false, prev, true, true, "iframe_body");
+
+  testOnEditorFlagChange("body[contentediable=true]", false);
+
+  iframe.style.display = "none";
+
+  // When HTML/BODY elements are not editable, focus shouldn't be moved to
+  // the editable content directly.
+  iframe = document.getElementById("iframe_p");
+  iframe.style.display = "inline";
+  editor = iframe.contentDocument.getElementById("editor");
+  root = iframe.contentDocument.documentElement;
+  resetFocusToInput("initializing for iframe_p");
+
+  testTabKey(true, root, false, prev, true,
+             false, "input#prev[readonly] -> html (has p[contenteditable=true])");
+  testTabKey(true, editor, true, root, false,
+             true, "html (has p[contenteditable=true]) -> p[contentediable=true]");
+  testTabKey(true, next, true, editor, true,
+             false, "p[contentediable=true] -> input#next[readonly]");
+  testTabKey(false, editor, true, next, true,
+             true, "input#next[readonly] -> p[contentediable=true]");
+  testTabKey(false, root, false, editor, true,
+             false, "p[contenteditable=true] -> html (has p[contenteditable=true])");
+  testTabKey(false, prev, true, root, false,
+             false, "html (has p[contenteditable=true]) -> input#prev[readonly]");
+  prev.style.display = "none";
+
+  resetFocusToParentHTML("testing iframe_p");
+  testTabKey(true, root, false, html, false,
+             false, "html of parent -> html (has p[contentediable=true])");
+  testTabKey(false, html, false, root, false,
+             false, "html (has p[contentediable=true]) -> html of parent");
+  prev.style.display = "inline";
+  resetFocusToInput("after parent html <-> html (has p[contentediable=true])");
+
+  testMouseClick(root, false, true, prev, true, false, "iframe_p");
+
+  testOnEditorFlagChange("p[contenteditable=true]", false);
+
+  iframe.style.display = "none";
+
+  window.close();
+}
+
+</script>
+</body>
+
+</html>

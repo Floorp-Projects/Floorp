@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=802982
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Excessive getUserMedia calls</title>
+  <script type="application/javascript">
+
+  function finish() {
+    document.documentElement.removeAttribute("class");
+  }
+
+  function boom()
+  {
+    for (var j = 0; j < 100; ++j) {
+      navigator.mozGetUserMedia({video:true}, function(){}, function(){});
+    }
+    finish(); // we're not waiting for success/error callbacks here
+  }
+
+  </script>
+</head>
+
+<body onload="setTimeout(boom, 100)">
+</html>

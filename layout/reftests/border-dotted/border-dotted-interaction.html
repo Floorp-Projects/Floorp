@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Corner interaction with dotted and other border</title>
+    <style>
+.box {
+  position: relative;
+  width: 420px;
+  height: 420px;
+}
+.mask {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 10px;
+  empty-cells: show;
+  margin: 0px;
+}
+td {
+  border-color: black;
+  border-width: 10px;
+  height: 60px;
+  width: 60px;
+  box-sizing: border-box;
+}
+
+table .a { border-top-style:    none;   border-right-style: none;   }
+table .A { border-bottom-style: none;   border-left-style:  none;   }
+table .b { border-top-style:    solid;  border-right-style: solid;  }
+table .B { border-bottom-style: solid;  border-left-style:  solid;  }
+table .c { border-top-style:    double; border-right-style: double; }
+table .C { border-bottom-style: double; border-left-style:  double; }
+table .d { border-top-style:    dashed; border-right-style: dashed; }
+table .D { border-bottom-style: dashed; border-left-style:  dashed; }
+table .e { border-top-style:    dotted; border-right-style: dotted; }
+table .E { border-bottom-style: dotted; border-left-style:  dotted; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <table>
+        <tr><td class="A a"></td><td class="A b"></td><td class="A c"></td><td class="A d"></td><td class="A e"></td></tr>
+        <tr><td class="B a"></td><td class="B b"></td><td class="B c"></td><td class="B d"></td><td class="B e"></td></tr>
+        <tr><td class="C a"></td><td class="C b"></td><td class="C c"></td><td class="C d"></td><td class="C e"></td></tr>
+        <tr><td class="D a"></td><td class="D b"></td><td class="D c"></td><td class="D d"></td><td class="D e"></td></tr>
+        <tr><td class="E a"></td><td class="E b"></td><td class="E c"></td><td class="E d"></td><td class="E e"></td></tr>
+      </table>
+      <img class="mask" src="border-dotted-interaction-filled-mask.png">
+    </div>
+    <div class="box">
+      <table>
+        <tr><td class="A a"></td><td class="A b"></td><td class="A c"></td><td class="A d"></td><td class="A e"></td></tr>
+        <tr><td class="B a"></td><td class="B b"></td><td class="B c"></td><td class="B d"></td><td class="B e"></td></tr>
+        <tr><td class="C a"></td><td class="C b"></td><td class="C c"></td><td class="C d"></td><td class="C e"></td></tr>
+        <tr><td class="D a"></td><td class="D b"></td><td class="D c"></td><td class="D d"></td><td class="D e"></td></tr>
+        <tr><td class="E a"></td><td class="E b"></td><td class="E c"></td><td class="E d"></td><td class="E e"></td></tr>
+      </table>
+      <img class="mask" src="border-dotted-interaction-unfilled-mask.png">
+    </div>
+  </body>
+</html>
+

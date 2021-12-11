@@ -1,0 +1,24 @@
+//error: struct `X' is only partially defined
+//error: struct `Y' is only partially defined
+//error: struct `Z' is only partially defined
+
+struct X {
+    int i;
+    Y[] y;
+};
+
+struct Y {
+    X x;
+    Z z;
+};
+
+struct Z {
+    double d;
+    X x;
+};
+
+protocol mutualRecStruct {
+child:
+    async Test(X x, Y y, Z z);
+    async __delete__();
+};

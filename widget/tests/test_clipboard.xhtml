@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=948065
+-->
+<window title="Mozilla Bug 948065"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="initAndRunTests()">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <!-- test code goes here -->
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 948065 **/
+
+  const kIsMac = navigator.platform.indexOf("Mac") == 0;
+
+  function getLoadContext() {
+    return window.docShell.QueryInterface(Ci.nsILoadContext);
+  }
+
+  // Get clipboard data to paste.
+  function paste(clipboard) {
+    let trans = Cc['@mozilla.org/widget/transferable;1']
+                .createInstance(Ci.nsITransferable);
+    trans.init(getLoadContext());
+    trans.addDataFlavor("text/unicode");
+    clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
+    let str = {};
+    try {
+      trans.getTransferData('text/unicode', str);
+    } catch (e) {
+      str = '';
+    }
+    if (str) {
+      str = str.value.QueryInterface(Ci.nsISupportsString);
+      if (str) {
+        str = str.data;
+      }
+    }
+    return str;
+  }
+
+  function initAndRunTests() {
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    // Test copy.
+    const data = "random number: " + Math.random();
+    let helper = Cc['@mozilla.org/widget/clipboardhelper;1']
+                 .getService(Ci.nsIClipboardHelper);
+    helper.copyString(data);
+    is(paste(Services.clipboard), data, 'Data was successfully copied.');
+
+    // Test emptyClipboard, disabled for OSX because bug 666254
+    if (!kIsMac) {
+      Services.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
+      is(paste(Services.clipboard), '', 'Data was successfully cleared.');
+    }
+  }
+
+  ]]>
+  </script>
+</window>

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: Bug 465498 - Seeking after playback ended</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=465498">Mozilla Bug 465498</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(e) {
+  var v = e.target;
+  info(v._name + " loadedmetadata");
+  e.target.play();
+}
+
+function playbackEnded(e) {
+  var v = e.target;
+  info(v._name + " ended");
+  if (v._finished)
+    return;
+  ok(v.currentTime >= v.duration - 0.1 && v.currentTime <= v.duration + 0.1,
+     "Checking currentTime at end: " + v.currentTime + " for " + v._name);
+  ok(v.ended, "Checking playback has ended for " + v._name);
+  v.pause();
+  v.currentTime = 0;
+  ok(!v.ended, "Checking ended is no longer true for " + v._name);
+  v._seeked = true;
+}
+
+function seekEnded(e) {
+  var v = e.target;
+  info(v._name + " seeked");
+  if (v._finished)
+    return;
+  ok(v.currentTime == 0, "Checking currentTime after seek: " +
+     v.currentTime  + " for " + v._name);
+  ok(!v.ended, "Checking ended is false for " + v._name);
+  v._finished = true;
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
+function seeking(e) {
+  var v = e.target;
+  info(v._name + " seeking");
+}
+
+function initTest(test, token) {
+  var type = getMajorMimeType(test.type);
+  var v = document.createElement(type);
+  if (!v.canPlayType(test.type))
+    return;
+  v.preload = "metadata";
+  v.token = token;
+  manager.started(token);
+  v._name = test.name;
+
+  var s = document.createElement("source");
+  s.type = test.type;
+  s.src = test.name;
+  v.appendChild(s);
+
+  v._seeked = false;
+  v._finished = false;
+  v.addEventListener("loadedmetadata", startTest);
+  v.addEventListener("ended", playbackEnded);
+  v.addEventListener("seeked", seekEnded);
+  v.addEventListener("seeking", seeking);
+  document.body.appendChild(v);
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>
+</pre>
+</body>
+</html>

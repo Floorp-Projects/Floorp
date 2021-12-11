@@ -1,0 +1,1210 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Error - Error with V8-like stack renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    BOOM
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      getAccount
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      http://moz.com/script.js:1:2
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Error with invalid stack renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    bad stack
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  />
+</span>
+`;
+
+exports[`Error - Error with stack having frames with multiple @ renders with expected text for Error object 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    bar
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      errorBar
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:814:31
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn1"
+    >
+      errorFoo
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location1"
+    >
+      https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:815:31
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn2"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location2"
+    >
+      https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:816:31
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Error with undefined-grip message renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-undefined"
+    title={null}
+  >
+    undefined
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:16:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Error with undefined-grip message renders with expected text 2`] = `
+<span
+  className="objectBox-stackTrace "
+  data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
+>
+  <span
+    className="objectTitle"
+    key="title"
+  >
+    Error
+  </span>
+</span>
+`;
+
+exports[`Error - Error with undefined-grip name renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    too much recursion
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:16:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Error with undefined-grip name renders with expected text 2`] = `
+<span
+  className="objectBox-stackTrace "
+  data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
+>
+  <span
+    className="objectTitle"
+    key="title"
+  >
+    Error
+  </span>
+</span>
+`;
+
+exports[`Error - Error with undefined-grip stack renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
+>
+  InternalError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    too much recursion
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  />
+</span>
+`;
+
+exports[`Error - Eval error renders with expected text for an EvalError 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1022"
+  title={null}
+>
+  EvalError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    EvalError message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:10:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Internal error renders with expected text for an InternalError 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1023"
+  title={null}
+>
+  InternalError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    InternalError message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:11:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Multi line stack error renders with expected text for Error object 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    bar
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      errorBar
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:6:15
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn1"
+    >
+      errorFoo
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location1"
+    >
+      debugger eval code:3:3
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn2"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location2"
+    >
+      debugger eval code:8:1
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Range error renders with expected text for RangeError 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1024"
+  title={null}
+>
+  RangeError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    RangeError message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:12:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Reference error renders with expected text for ReferenceError 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1025"
+  title={null}
+>
+  ReferenceError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    ReferenceError message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:13:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Simple error renders with error type and preview message when in short mode 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    bar
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      errorBar
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:6:15
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn1"
+    >
+      errorFoo
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location1"
+    >
+      debugger eval code:3:3
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn2"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location2"
+    >
+      debugger eval code:8:1
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Simple error renders with error type only when customFormat prop isn't set 1`] = `
+<span
+  className="objectBox-stackTrace "
+  data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
+>
+  <span
+    className="objectTitle"
+    key="title"
+  >
+    Error: 
+  </span>
+  <span
+    className="objectBox objectBox-string"
+  >
+    bar
+  </span>
+</span>
+`;
+
+exports[`Error - Simple error renders with error type only when depth is > 0 1`] = `
+<span
+  className="objectBox-stackTrace "
+  data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
+>
+  <span
+    className="objectTitle"
+    key="title"
+  >
+    Error: 
+  </span>
+  <span
+    className="objectBox objectBox-string"
+  >
+    bar
+  </span>
+</span>
+`;
+
+exports[`Error - Simple error renders with expected text for simple error 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1020"
+  title="Error: \\"Error message\\""
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+    title="Error message"
+  >
+    Error message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:1:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Syntax error renders with expected text for SyntaxError 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1026"
+  title={null}
+>
+  SyntaxError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    SyntaxError message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:14:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Type error renders with expected text for TypeError 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1027"
+  title={null}
+>
+  TypeError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    TypeError message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:15:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - URI error renders with expected text for URIError 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1028"
+  title={null}
+>
+  URIError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    URIError message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:16:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - base-loader.js renders as expected in tiny mode 1`] = `
+<span
+  className="objectBox-stackTrace "
+  data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
+>
+  <span
+    className="objectTitle"
+    key="title"
+  >
+    Error
+  </span>
+</span>
+`;
+
+exports[`Error - base-loader.js renders as expected without mode 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    Error message
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      onPacket
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      resource://devtools/client/debugger-client.js:856:9
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn1"
+    >
+      send
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location1"
+    >
+      resource://devtools/shared/transport/transport.js:569:13
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn2"
+    >
+      makeInfallible
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location2"
+    >
+      resource://devtools/shared/ThreadSafeDevToolsUtils.js:109:14
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn3"
+    >
+      makeInfallible
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location3"
+    >
+      resource://devtools/shared/ThreadSafeDevToolsUtils.js:109:14
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - longString stacktrace - cut-off location renders as expected 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj33"
+  title={null}
+>
+  InternalError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    too much recursion
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      doStuff
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:32:1
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn1"
+    >
+      doStuff
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location1"
+    >
+      https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn2"
+    >
+      doStuff
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location2"
+    >
+      https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn3"
+    >
+      doStuff
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location3"
+    >
+      https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn4"
+    >
+      doStuff
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location4"
+    >
+      https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn5"
+    >
+      doStuff
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location5"
+    >
+      https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn6"
+    >
+      doStuff
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location6"
+    >
+      https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - longString stacktrace renders as expected 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn2.child1/obj33"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  />
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      ngOnChanges
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      webpack-internal:///./node_modules/@angular/common/esm5/common.js:2656:27
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn1"
+    >
+      checkAndUpdateDirectiveInline
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location1"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:12581:9
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn2"
+    >
+      checkAndUpdateNodeInline
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location2"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14109:20
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn3"
+    >
+      checkAndUpdateNode
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location3"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14052:16
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn4"
+    >
+      debugCheckAndUpdateNode
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location4"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14945:55
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn5"
+    >
+      debugCheckDirectivesFn
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location5"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14886:13
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn6"
+    >
+      View_MetaTableComponent_6
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location6"
+    >
+      ng:///AppModule/MetaTableComponent.ngfactory.js:98:5
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn7"
+    >
+      debugUpdateDirectives
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location7"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14871:12
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn8"
+    >
+      checkAndUpdateView
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location8"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14018:5
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn9"
+    >
+      callViewAction
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location9"
+    >
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14369:21
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - renderStacktrace prop uses renderStacktrace prop when provided 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    bar
+  </span>
+  <li
+    className="frame"
+  >
+    Function errorBar called from debugger eval code:6:15
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function errorFoo called from debugger eval code:3:3
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function &lt;anonymous&gt; called from debugger eval code:8:1
+
+  </li>
+</span>
+`;
+
+exports[`Error - renderStacktrace prop uses renderStacktrace with longString errors too 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj33"
+  title={null}
+>
+  InternalError: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    too much recursion
+  </span>
+  <li
+    className="frame"
+  >
+    Function execute/AppComponent&lt;/AppComponent.prototype.doStuff called from https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:32:1
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function execute/AppComponent&lt;/AppComponent.prototype.doStuff called from https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function execute/AppComponent&lt;/AppComponent.prototype.doStuff called from https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function execute/AppComponent&lt;/AppComponent.prototype.doStuff called from https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function execute/AppComponent&lt;/AppComponent.prototype.doStuff called from https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function execute/AppComponent&lt;/AppComponent.prototype.doStuff called from https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+
+  </li>
+  <li
+    className="frame"
+  >
+    Function execute/AppComponent&lt;/AppComponent.prototype.doStuff called from https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21
+
+  </li>
+</span>
+`;

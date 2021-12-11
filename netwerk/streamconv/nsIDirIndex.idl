@@ -1,0 +1,72 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/** A class holding information about a directory index.
+ * These have no reference back to their original source -
+ * changing these attributes won't affect the directory
+ */
+[scriptable, uuid(23bbabd0-1dd2-11b2-86b7-aad68ae7d7e0)]
+interface nsIDirIndex : nsISupports
+{
+    /**
+     * Entry's type is unknown
+     */
+    const unsigned long TYPE_UNKNOWN = 0;
+
+    /**
+     * Entry is a directory
+     */
+    const unsigned long TYPE_DIRECTORY = 1;
+
+    /**
+     * Entry is a file
+     */
+    const unsigned long TYPE_FILE = 2;
+
+    /**
+     * Entry is a symlink
+     */
+    const unsigned long TYPE_SYMLINK = 3;
+
+    /**
+     * The type of the entry - one of the constants above
+     */
+    attribute unsigned long type;
+
+    /**
+     * The content type - may be null if it is unknown.
+     * Unspecified for directories
+     */
+    attribute ACString contentType;
+
+    /**
+     * The fully qualified filename, expressed as a uri
+     *
+     * This is encoded with the encoding specified in
+     * the nsIDirIndexParser, and is also escaped.
+     */
+    attribute ACString location;
+
+    /**
+     * A description for the filename, which should be
+     * displayed by a viewer
+     */
+    attribute AString description;
+
+    /**
+     * File size, with -1 meaning "unknown"
+     */
+    attribute long long size;
+
+    /**
+     * Last-modified time in seconds-since-epoch.
+     * -1 means unknown - this is valid, because there were no
+     * ftp servers in 1969
+     */
+    attribute PRTime lastModified;
+};
+

@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html><head>
+<style>
+p { width: 13em; border: 1px solid black; }
+p span { white-space: nowrap; }
+a { color:pink; }
+</style>
+</head>
+<body>
+<!-- We should be able to break even when the only break opportunity is within a span
+that overflows the line width (the break opportunity after the whitespace is treated
+as a break before the first character of the second span) -->
+<p><span>mmmmmmmmmm</span>
+<span>mmmmm<a>mmmmm</a></span></p>
+<!-- A span that overflows the line width should be allowed to fit, it might have a break
+opportunity inside it (the break opportunity after the whitespace is treated
+as a break before the first character of the second span) -->
+<p>m <span>mmmmmmmmmm</span>
+<span>m<a>mmmmmmmmm</a></span></p>
+</body>
+</html>

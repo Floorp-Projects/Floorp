@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for bidi splitting and :first-letter</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css">
+
+p { unicode-bidi: bidi-override; }
+p:first-letter { float:left; font-size: 2em; }
+body { font-size: 300%; }
+
+</style>
+</head>
+<body>
+
+<p>This has AB<span style="background:yellow">CD</span>תש<span style="background:yellow">בא</span></p>
+
+</body>
+</html>

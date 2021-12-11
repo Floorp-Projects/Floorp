@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1293174</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="mochitest_support_external.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+      function startTest() {
+        setImplicitPointerCapture(true, loadSubFrame);
+      }
+      function loadSubFrame() {
+        runTestInNewWindow("bug1293174_implicit_pointer_capture_for_touch_1.html");
+      }
+      function executeTest(int_win) {
+        sendTouchEvent(int_win, "target0", "touchstart");
+        sendTouchEvent(int_win, "target0", "touchmove");
+        sendTouchEvent(int_win, "target1", "touchmove");
+        sendTouchEvent(int_win, "target0", "touchmove");
+        sendTouchEvent(int_win, "target0", "touchend");
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
+

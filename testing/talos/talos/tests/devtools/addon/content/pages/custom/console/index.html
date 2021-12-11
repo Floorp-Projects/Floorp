@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>iframe wrapper for the console custom page</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+    iframe {
+      border-style: none;
+      height: 100%;
+      position: absolute;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<script>
+  // Test parameters are passed to this page via url parameters.
+  // Create the iframe URL from the current URL to preserve the parameters.
+  const searchParamsEncoded = document.location.search;
+  const searchParams = new URLSearchParams(searchParamsEncoded);
+  const domains = searchParams.get("domains");
+
+  // We append a number of iframes equal to the number of domains.
+  // The first iframe has a domain with the same site as the damp top frame (http://damp.top.com).
+  // Second and subsequent iframes switch to a different-site URL (eg http://damp.iframeN.com).
+  for (let d = 0; d < domains; d++) {
+    const domain = d ? `damp.iframe${d}.com` : `damp.top.com`;
+    const iframeSrc = `http://${domain}/tests/devtools/addon/content/pages/custom/console/iframe.html${searchParamsEncoded}`;
+
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("src", iframeSrc);
+    document.body.appendChild(iframe);
+  }
+</script>
+</body>
+</html>

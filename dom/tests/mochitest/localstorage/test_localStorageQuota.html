@@ -1,0 +1,136 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage and DOM quota test</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="interOriginTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+//Note: this test is currently giving failures when running standalone, see bug 914865
+
+var currentTest = 1;
+
+function doNextTest()
+{
+  slave = frame;
+
+  switch (currentTest)
+  {
+    case 1:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else {
+        slaveOrigin = "http://example.com";
+      }
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
+      break;
+
+    // Now set another key with length 500 bytes, i.e. allocate 501 bytes
+    case 2:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    // Try to set the same key value again to check we don't fail
+    // even 1002 bytes has already been exhausted from the quota
+    // We just change the value of an existing key.
+    case 3:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    // Try to set the same key to a larger value that would lead to
+    // quota reach and check that the value is still the old one
+    case 4:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add2&B&failure";
+      break;
+
+    // Try to set a new 500 bytes key and check we fail because we are over the
+    // quota.
+    case 5:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else if (SpecialPowers.Services.appinfo.fissionAutostart){
+        // Fission makes the "https://test2.example.com" run in the different
+        // process with the other two and Legacy LS has issues with usage
+        // synchronization within processes, see Bug 1683299 for more details.
+        slaveOrigin = "http://test2.example.com";
+      } else {
+        slaveOrigin = "https://test2.example.com";
+      }
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
+      break;
+
+    // Remove the second key, it must not fail. This should release the
+    // allocated space of the quota assigned to test1.example.com.
+    case 6:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?remove&B&success";
+      break;
+
+    // Now try again to set 500 bytes key, it must succeed.
+    case 7:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else if (SpecialPowers.Services.appinfo.fissionAutostart){
+        slaveOrigin = "http://test2.example.com";
+      } else {
+        slaveOrigin = "https://test2.example.com";
+      }
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
+      break;
+
+    case 8:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        SimpleTest.executeSoon(doNextTest);
+      } else {
+        // Do a clean up...
+        slaveOrigin = "http://example.com";
+        slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      }
+      break;
+
+    case 9:
+      // Do a clean up...
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      break;
+
+    case 10:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        SimpleTest.executeSoon(doNextTest);
+      } else {
+        // Do a clean up...
+        slaveOrigin = "https://test2.example.com";
+        slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      }
+      break;
+
+    default: // end
+      SimpleTest.finish();
+  }
+
+  ++currentTest;
+}
+
+function doStep()
+{
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function startTest() {
+  // Initialy setup the quota to testing value of 1024B and
+  // set a 500 bytes key with name length 1 (allocate 501 bytes)
+  SpecialPowers.pushPrefEnv({"set": [["dom.storage.default_quota", 1], ["dom.storage.default_site_quota", 1], ["security.mixed_content.block_display_content", false], ["security.mixed_content.block_active_content", false]]}, doNextTest);
+}
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" name="frame"></iframe>
+</body>
+</html>

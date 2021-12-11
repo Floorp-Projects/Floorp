@@ -1,0 +1,354 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1435161
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for retry PaymentRequest</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="DefaultData.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  const gUrl = SimpleTest.getTestFileURL('RetryPaymentChromeScript.js');
+  const gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
+
+  async function requestChromeAction(action, params) {
+    gScript.sendAsyncMessage(action, params);
+    await new Promise(resolve => {
+      gScript.addMessageListener(`${action}-complete`, function completeListener() {
+        gScript.removeMessageListener(`${action}-complete`, completeListener);
+        resolve();
+      });
+    });
+  }
+
+  const validationErrors = {
+    error: "error",
+    shippingAddress: {
+      addressLine: "addressLine error",
+      city: "city error",
+      country: "country error",
+      dependentLocality: "dependentLocality error",
+      organization: "organization error",
+      phone: "phone error",
+      postalCode: "postalCode error",
+      recipient: "recipient error",
+      region: "region error",
+      regionCode: "regionCode error",
+      sortingCode: "sortingCode error",
+    },
+    payer: {
+      name: "name error",
+      email: "email error",
+      phone: "phone error",
+    },
+    paymentMethod: {
+      account: "method account error",
+      password: "method password error",
+    },
+  };
+
+  const options = {
+    requestPayerName: true,
+    requestPayerEmail: true,
+    requestPayerPhone: true,
+    requestShipping: true,
+    shippingType: "shipping"
+  };
+
+  function checkShowResponse(testName, payResponse) {
+    const { payerName, payerEmail, payerPhone } = payResponse.toJSON();
+    is(
+      payerName,
+      "Bill A. Pacheco",
+      `${testName}: Expected 'Bill A. Pacheco' on payerName, but got '${payerName}' after show PaymentRequest`
+    );
+    is(
+      payerEmail,
+      "",
+      `${testName}: Expected '' on payerEmail, but got '${payerEmail}' after show PaymentRequest`
+    );
+    is(
+      payerPhone,
+      "",
+      `${testName}: Expected '' on payerPhone, but got '${payerPhone}' after show PaymentRequest`
+    );
+  }
+
+  function checkRetryResponse(testName, payResponse) {
+    const { payerName, payerEmail, payerPhone } = payResponse.toJSON();
+    is(
+      payerName,
+      "Bill A. Pacheco",
+      `${testName}: Expected 'Bill A. Pacheco' on payerName, but got '${payerName}' after retry PaymentRequest`
+    );
+    is(
+      payerEmail,
+      "bpacheco@test.org",
+      `${testName} : Expected 'bpacheco@test.org' on payerEmail, but got '${payerEmail}' after retry PaymentRequest`
+    );
+    is(
+      payerPhone,
+      "+123456789",
+      `${testName} : Expected '+123456789' on payerPhone, but got '${payerPhone}' after retry PaymentRequest`
+    );
+  }
+
+  function unexpectedErrMsg(testName, errName, timing) {
+    return `${testName}: Unexpected error(${errName}) when ${timing} the PaymentRequest.`;
+  }
+
+  function expectedErrMsg(testName, expectedErr, errName, timing) {
+    return `${testName}: Expected '${expectedErr}' when ${timing} PaymentResponse, but got '${errName}'.`;
+  }
+
+  async function testRetryAfterComplete() {
+    const testName = "testRetryAfterComplete";
+    await requestChromeAction("start-test", testName);
+    const payRequest = new PaymentRequest(defaultMethods, defaultDetails, options);
+    ok(payRequest, testName + ": failed to create PaymentRequest.");
+    if (!payRequest) {
+      await requestChromeAction("finish-test");
+      return;
+    }
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let payResponse;
+    try {
+      payResponse = await payRequest.show();
+      await checkShowResponse(testName, payResponse);
+      handler.destruct();
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.Name, "showing"));
+      await requestChromeAction("finish-test");
+      handler.destruct();
+      return;
+    }
+    try {
+      await payResponse.complete("success");
+    } catch(err) {
+      let errName = err.Name;
+      ok(false, unexpectedErrMsg(testName, err.Name, "completing"));
+      await requestChromeAction("finish-test");
+      return;
+    }
+    try {
+      await payResponse.retry(validationErrors);
+      ok(false, `${testName}: Unexpected success when retry the PaymentResponse.`);
+      return;
+    } catch(err) {
+      is(err.name,
+         "InvalidStateError",
+         expectedErrMsg(testName, "InvalidStateError", err.name, "retrying"));
+      await requestChromeAction("finish-test");
+      return;
+    }
+    await requestChromeAction("finish-test");
+  }
+
+  async function testRetryAfterRetry() {
+    const testName = "testRetryAfterRetry";
+    await requestChromeAction("start-test", testName);
+    const payRequest = new PaymentRequest(defaultMethods, defaultDetails, options);
+    ok(payRequest, testName + ": failed to create PaymentRequest.");
+    if (!payRequest) {
+      await requestChromeAction("finish-test");
+      return;
+    }
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let payResponse;
+    try {
+      payResponse = await payRequest.show();
+      await checkShowResponse(testName, payResponse);
+      handler.destruct();
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.name, "showing"));
+      await requestChromeAction("finish-test");
+      handler.destruct();
+      return;
+    }
+    let retryPromise;
+    try {
+      retryPromise = payResponse.retry(validationErrors);
+      await payResponse.retry(validationErrors);
+      ok(false, `${testName}: Unexpected success when retry the PaymentResponse.`);
+      await requestChromeAction("finish-test");
+      return;
+    } catch(err) {
+      is(err.name,
+         "InvalidStateError",
+         expectedErrMsg(testName, "InvalidStateError", err.name, "retrying"));
+    }
+    try {
+      await retryPromise;
+      await payResponse.complete("success");
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.name, "completing"));
+      await requestChromeAction("finish-test");
+      return;
+    }
+    await requestChromeAction("finish-test");
+  }
+
+  async function testRetryWithEmptyErrors() {
+    const testName = "testRetryWithEmptyErrors";
+    await requestChromeAction("start-test", testName);
+    const payRequest = new PaymentRequest(defaultMethods, defaultDetails, options);
+    ok(payRequest, testName + ": failed to create PaymentRequest.");
+    if (!payRequest) {
+      requestChromeAction("finish-test");
+      return;
+    }
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let payResponse;
+    try {
+      payResponse = await payRequest.show();
+      await checkShowResponse(testName, payResponse);
+      handler.destruct();
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.name, "showing"));
+      await requestChromeAction("finish-test");
+      handler.destruct();
+      return;
+    }
+    try {
+      await payResponse.retry();
+      ok(false, `${testName}: Unexpected success when retry the PaymentResponse.`);
+      await requestChromeAction("finish-test");
+      return;
+    } catch(err) {
+      is(err.name,
+         "AbortError",
+         expectedErrMsg(testName, "AbortError", err.name, "retrying"));
+    }
+    try {
+      await payResponse.complete("success");
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.name, "completing"));
+      await requestChromeAction("finish-test");
+      return;
+    }
+    await requestChromeAction("finish-test");
+  }
+
+  async function testRetry() {
+    const testName = "testRetry";
+    await requestChromeAction("start-test", testName);
+    const payRequest = new PaymentRequest(defaultMethods, defaultDetails, options);
+    ok(payRequest, testName + ": failed to create PaymentRequest.");
+    if (!payRequest) {
+      await requestChromeAction("finish-test");
+      return;
+    }
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let payResponse;
+    try {
+      payResponse = await payRequest.show();
+      await checkShowResponse(testName, payResponse);
+      handler.destruct();
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.name, "showing"));
+      await requestChromeAction("finish-test");
+      handler.destruct();
+      return;
+    }
+    try {
+      await payResponse.retry(validationErrors);
+      await checkRetryResponse(testName, payResponse);
+      await payResponse.complete("success");
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.name, "retrying"));
+      await requestChromeAction("finish-test");
+      return;
+    }
+    await requestChromeAction("finish-test");
+  }
+
+  async function testRetryAbortByUser() {
+    const testName = "testRetryAbortByUser";
+    await requestChromeAction("reject-retry");
+    const payRequest = new PaymentRequest(defaultMethods, defaultDetails, options);
+    ok(payRequest, testName + ": failed to create PaymentRequest.");
+    if (!payRequest) {
+      await requestChromeAction("finish-test");
+      return;
+    }
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let payResponse;
+    try {
+      payResponse = await payRequest.show();
+      await checkShowResponse(testName, payResponse);
+      handler.destruct();
+    } catch(err) {
+      ok(false, unexpectedErrMsg(testName, err.name, "showing"));
+      handler.destruct();
+      await requestChromeAction("finish-test");
+      return;
+    }
+    try {
+      await payResponse.retry(validationErrors);
+      ok(false, `${testName}: Unexpected success when retry the PaymentResponse.`);
+      await requestChromeAction("finish-test");
+      return;
+    } catch(err) {
+      is(err.name,
+         "AbortError",
+         expectedErrMsg(testName, "AbortError", err.name, "retrying"));
+    }
+    await requestChromeAction("finish-test");
+  }
+
+  function teardown() {
+    return new Promise((resolve, reject) => {
+      gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+        gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+        gScript.removeMessageListener("test-fail", testFailHandler);
+        gScript.removeMessageListener("test-pass", testPassHandler);
+        gScript.destroy();
+        SimpleTest.finish();
+        resolve();
+      });
+      gScript.sendAsyncMessage("teardown");
+    });
+  }
+
+  async function runTests() {
+    try {
+      await testRetryAfterComplete()
+      await testRetryAfterRetry()
+      await testRetryWithEmptyErrors()
+      await testRetry()
+      await testRetryAbortByUser()
+      await teardown()
+    } catch(e) {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    }
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1435161">Mozilla Bug 1435161</a>
+</body>
+</html>

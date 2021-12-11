@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    .container {
+      display: grid;
+      grid-gap: 5px;
+      grid-template: auto / 1fr 3fr 1fr;
+      background: lightyellow;
+    }
+
+    header, aside, section, footer {
+      background: lightblue;
+      font-family: sans-serif;
+      font-size: 3em;
+    }
+
+    header, footer {
+      grid-column: span 3;
+    }
+
+    main {
+      grid-column: span 3;
+      display: grid;
+      grid: subgrid / subgrid;
+    }
+
+    .aside1 {
+      grid-column: 1;
+    }
+
+    .aside2 {
+      grid-column: 3;
+    }
+
+    section {
+      grid-column: 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>Header</header>
+    <main>
+      <aside class="aside1">aside</aside>
+      <section>section</section>
+      <aside class="aside2">aside2</aside>
+    </main>
+    <footer>footer</footer>
+  </div>
+</body>
+</html>

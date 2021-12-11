@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+  <title>Tests that zooming out with an unchanging scroll pos still works properly</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <div style="height: 2000px; background-color: linear-gradient(green,blue)"></div>
+  <script type="application/javascript">
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+
+    async function test() {
+      // Initial state
+      is(await getResolution(), 1.0, "should not be zoomed");
+
+      // Zoom in
+      utils.setResolutionAndScaleTo(2.0);
+      await promiseApzFlushedRepaints();
+      // Check that we're still at 0,0 in both layout and visual viewport
+      is(await getResolution(), 2.0, "should be zoomed to 2.0");
+      is(window.scrollX, 0, "shouldn't have scrolled (1)");
+      is(window.scrollY, 0, "shouldn't have scrolled (2)");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled (3)");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled (4)");
+
+      // Freeze the main-thread refresh driver to stop it from processing
+      // paint requests
+      utils.advanceTimeAndRefresh(0);
+
+      // Zoom out. This will send a series of paint requests to the main
+      // thread with zooms that go down from 2.0 to 1.0.
+      // Use a similar touch sequence to what pinchZoomOutWithTouchAtCenter()
+      // does, except keep the first touch point anchored and only move the
+      // second touch point. In particular, we drag the second touch point
+      // from the top-left quadrant of the screen to the bottom-right, so that
+      // the scroll position never changes from 0,0. If we move either finger
+      // upwards at all, the synthesization can generate intermediate touch
+      // events with just that change which can cause the page to scroll down
+      // which we don't want here.
+      // The key here is that each of the repaint requests keeps the scroll
+      // position at 0,0, which in terms of the bug, means that only the first
+      // repaint request actually takes effect and the rest are discarded.
+      // The first repaint request has a zoom somewhere between 1.0 and 2.0,
+      // and therefore after the pinch is done, the zoom ends up stuck there
+      // instead of going all the way back to 1.0 like we would expect.
+      const deltaX = window.visualViewport.width / 16;
+      const deltaY = window.visualViewport.height / 16;
+      const centerX =
+        window.visualViewport.pageLeft + window.visualViewport.width / 2;
+      const centerY =
+        window.visualViewport.pageTop + window.visualViewport.height / 2;
+      const anchorFinger = { x: centerX + (deltaX * 6), y: centerY + (deltaY * 6) };
+      var zoom_out = [];
+      for (var i = -6; i < 6; i++) {
+        var movingFinger = { x: centerX + (deltaX * i), y: centerY + (deltaY * i) };
+        zoom_out.push([anchorFinger, movingFinger]);
+      }
+      var touchIds = [0, 1];
+      await synthesizeNativeTouchAndWaitForTransformEnd(zoom_out, touchIds);
+
+      // Release the refresh driver
+      utils.restoreNormalRefresh();
+
+      // Flush all the things, reach stable state
+      await promiseApzFlushedRepaints();
+
+      // Check that we're back at 1.0 resolution
+      is(await getResolution(), 1.0, "should be back at initial resolution");
+
+      // More sanity checks
+      is(window.scrollX, 0, "shouldn't have scrolled (5)");
+      is(window.scrollY, 0, "shouldn't have scrolled (6)");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled (7)");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled (8)");
+    }
+
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1381761 - Treating 'data:' documents as unique, opaque origins should still inherit the CSP</title>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content= "img-src 'none'"/>
+</head>
+<body>
+<iframe id="dataFrame" src="data:text/html,<body>should inherit csp</body>"></iframe>
+
+<script type="application/javascript">
+  // get the csp in JSON notation from the principal
+  var frame = document.getElementById("dataFrame");
+  frame.onload = function () {
+    var contentDoc = SpecialPowers.wrap(frame).contentDocument;
+    var cspOBJ = JSON.parse(contentDoc.cspJSON);
+    // make sure we got >>one<< policy
+    var policies = cspOBJ["csp-policies"];
+    window.parent.postMessage({result: policies.length}, "*");
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Note: The 'print' tests below that are annotated as 'fails' are really just
+# testing the integrity of the reftest harness. Their testcases & reference
+# case are known to differ, and we're testing that the harness correctly
+# detects them as differing & correctly handles the 'fails' annotation.
+# Some of these tests are used as their own reference to confirm basic
+# text and page number matching works as expected.
+print test-text.html test-text.html
+fails print test-text.html test-text-noref.html
+print test-number-of-pages.html test-number-of-pages.html
+fails print test-number-of-pages.html test-number-of-pages-noref.html
+print test-print-selection.html test-text-ref.html
+print test-print-selection-shadow-dom.html test-text-ref.html
+print test-print-selection-iframe.html test-text-ref.html
+print test-print-range.html test-print-range-ref.html
+print test-print-range-complex.html test-print-range-complex-ref.html
+fails print test-print-single-page.html test-print-single-page-noref.html
+print test-async-print.html test-text-ref.html
+fails print test-unexpected-text.html test-unexpected-text-noref.html
+fails print test-missing-text.html test-missing-text-noref.html
+test-pref(print.print_in_color,false) fails print test-color-text-01.html test-color-text-01.html
+print testcase-1696844.html testcase-1696844.html

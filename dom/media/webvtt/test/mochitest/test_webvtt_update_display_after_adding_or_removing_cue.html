@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebVTT : cue display should be updated immediately after adding or removing cue</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+/**
+ * This test is used to ensure that we will update cue display immediately after
+ * adding or removing cue after video starts, because `show-poster` flag would be
+ * reset after video starts, which allows us to process cues instead of showing
+ * a poster. In this test, we start with adding a cue [0:5] to video, which
+ * should be showed in the beginning, and then remove the cue later. The cue
+ * should be removed immediately, not show
+ */
+async function startTest() {
+  const video = await createVideo();
+  await startVideo(video);
+
+  info(`cue should be showed immediately after it was added.`);
+  const cue = createCueAndAddCueToVideo(video);
+  await waitUntilCueShows(cue);
+
+  info(`cue should be hid immediately after it was removed.`);
+  removeCueFromVideo(cue, video);
+  checkIfCueHides(cue, video);
+
+  endTestAndClearVideo(video);
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = startTest;
+
+/**
+ * The following are test helper functions.
+ */
+async function createVideo() {
+  let video = document.createElement("video");
+  video.src = "gizmo.mp4";
+  video.controls = true;
+  document.body.appendChild(video);
+  // wait until media has loaded any data, because we won't update cue if it has
+  // not got any data.
+  await once(video, "loadedmetadata");
+  return video;
+}
+
+async function startVideo(video) {
+  info(`start play video`);
+  const played = video && await video.play().then(() => true, () => false);
+  ok(played, "video has started playing");
+}
+
+function createCueAndAddCueToVideo(video) {
+  let track = video.addTextTrack("subtitles");
+  track.mode = "showing";
+  let cue = new VTTCue(0, 5, "Test");
+  track.addCue(cue);
+  return cue;
+}
+
+function removeCueFromVideo(cue, video) {
+  let track = video.textTracks[0];
+  track.removeCue(cue);
+}
+
+async function waitUntilCueShows(cue) {
+  info(`wait until cue shows`);
+  // cue has not been showed yet.
+  cue = SpecialPowers.wrap(cue);
+  if (!cue.getActive) {
+    await once(cue, "enter");
+  }
+  ok(cue.getActive, `cue has been showed,`);
+}
+
+function checkIfCueHides(cue, video) {
+  ok(!SpecialPowers.wrap(cue).getActive, `cue has been hidden.`);
+  ok(video.currentTime < cue.endTime,
+    `cue is removed at ${video.currentTime}s before reaching its endtime.`);
+}
+
+function endTestAndClearVideo(video) {
+  removeNodeAndSource(video);
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

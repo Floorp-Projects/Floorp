@@ -1,0 +1,1372 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CSS Selectors</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<p id="display"><iframe id="iframe" src="about:blank"></iframe><iframe id="cloneiframe" src="about:blank"></iframe></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+
+var cloneiframe;
+
+function run() {
+  SpecialPowers.pushPrefEnv({ set: [["layout.css.xul-tree-pseudos.content.enabled", true]] }, runTests);
+}
+function runTests() {
+    var iframe = document.getElementById("iframe");
+    var ifwin = iframe.contentWindow;
+    var ifdoc = iframe.contentDocument;
+
+    cloneiframe = document.getElementById("cloneiframe");
+
+    var style_elem = ifdoc.createElement("style");
+    style_elem.setAttribute("type", "text/css");
+    ifdoc.getElementsByTagName("head")[0].appendChild(style_elem);
+    var style_text = ifdoc.createTextNode("");
+    style_elem.appendChild(style_text);
+
+    var gCounter = 0;
+
+    /*
+     * selector: the selector to test
+     * body_contents: what to set the body's innerHTML to
+     * match_fn: a function that, given the document object into which
+     *   body_contents has been inserted, produces an array of nodes that
+     *   should match selector
+     * notmatch_fn: likewise, but for nodes that should not match
+     * namespaces (optional): @namespace rules to be included in the sheet
+     */
+    function test_selector_in_html(selector, body_contents, match_fn, notmatch_fn, namespaces)
+    {
+        var zi = ++gCounter;
+        if (typeof(body_contents) == "string") {
+            ifdoc.body.innerHTML = body_contents;
+        } else {
+            // It's a function.
+            ifdoc.body.innerHTML = "";
+            body_contents(ifdoc.body);
+        }
+        if (!namespaces) {
+            namespaces = "";
+        }
+        style_text.data = namespaces + selector + "{ z-index: " + zi + " }";
+
+        var idx = style_text.parentNode.sheet.cssRules.length - 1;
+        if (namespaces == "") {
+            is(idx, 0, "unexpected rule index for " + selector);
+        }
+        if (idx < 0 ||
+            style_text.parentNode.sheet.cssRules[idx].type !=
+                CSSRule.STYLE_RULE)
+        {
+            ok(false, "selector " + selector + " could not be parsed");
+            return;
+        }
+
+        var should_match = match_fn(ifdoc);
+        var should_not_match = notmatch_fn(ifdoc);
+        if (should_match.length + should_not_match.length == 0) {
+            ok(false, "nothing to check");
+        }
+
+        for (let i = 0; i < should_match.length; ++i) {
+            let e = should_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, String(zi),
+               "element in " + body_contents + " matched " + selector);
+        }
+        for (let i = 0; i < should_not_match.length; ++i) {
+            let e = should_not_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, "auto",
+               "element in " + body_contents + " did not match " + selector);
+        }
+
+        // Now, since we're here, may as well make sure serialization
+        // works correctly.  It need not produce the exact same text,
+        // but it should produce a selector that matches the same
+        // elements.
+        zi = ++gCounter;
+        var ser1 = style_text.parentNode.sheet.cssRules[idx].selectorText;
+        style_text.data = namespaces + ser1 + "{ z-index: " + zi + " }";
+        for (let i = 0; i < should_match.length; ++i) {
+            let e = should_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, String(zi),
+               "element in " + body_contents + " matched " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+        for (let i = 0; i < should_not_match.length; ++i) {
+            let e = should_not_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, "auto",
+               "element in " + body_contents + " did not match " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+
+        // But when we serialize the serialized result, we should get
+        // the same text.
+        isnot(style_text.parentNode.sheet.cssRules[idx], undefined,
+              "parse of selector \"" + ser1 + "\" failed");
+
+        if (style_text.parentNode.sheet.cssRules[idx] !== undefined) {
+            var ser2 = style_text.parentNode.sheet.cssRules[idx].selectorText;
+            is(ser2, ser1, "parse+serialize of selector \"" + selector +
+                           "\" is idempotent");
+        }
+
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+
+        // And now test that when we clone the style sheet, we end up
+        // with the same selector (serializes to same string, and
+        // matches the same things).
+        zi = ++gCounter;
+        var style_sheet = "data:text/css," +
+            escape(namespaces + selector + "{ z-index: " + zi + " }");
+        var style_sheet_link =
+            "<link rel='stylesheet' href='" + style_sheet + "'>";
+        var html_doc = "<!DOCTYPE HTML>" +
+                       style_sheet_link + style_sheet_link +
+                       "<body>";
+        if (typeof(body_contents) == "string") {
+            html_doc += body_contents;
+        }
+        var docurl = "data:text/html," + escape(html_doc);
+        defer_clonedoc_tests(docurl, function() {
+            var wrappedCloneFrame = SpecialPowers.wrap(cloneiframe);
+            var clonedoc = wrappedCloneFrame.contentDocument;
+            var clonewin = wrappedCloneFrame.contentWindow;
+
+            if (typeof(body_contents) != "string") {
+                body_contents(clonedoc.body);
+            }
+
+            var links = clonedoc.getElementsByTagName("link");
+            // cause a clone
+            links[1].sheet.insertRule("#nonexistent { color: purple}", idx + 1);
+            // remove the uncloned sheet
+            links[0].remove();
+
+            var should_match1 = match_fn(clonedoc);
+            var should_not_match1 = notmatch_fn(clonedoc);
+
+            if (should_match1.length + should_not_match1.length == 0) {
+                ok(false, "nothing to check");
+            }
+
+            for (let i = 0; i < should_match1.length; ++i) {
+                let e = should_match1[i];
+                is(clonewin.getComputedStyle(e).zIndex, String(zi),
+                   "element in " + body_contents + " matched clone of " +
+                   selector);
+            }
+            for (let i = 0; i < should_not_match1.length; ++i) {
+                let e = should_not_match1[i];
+                is(clonewin.getComputedStyle(e).zIndex, "auto",
+                   "element in " + body_contents + " did not match clone of " +
+                   selector);
+            }
+
+            var ser3 = links[0].sheet.cssRules[idx].selectorText;
+            is(ser3, ser1,
+               "selector " + selector + " serializes correctly after cloning");
+        });
+    }
+
+    function should_serialize_to(selector, serialization)
+    {
+        style_text.data = selector + "{ z-index: 0 }";
+        is(style_text.parentNode.sheet.cssRules[0].selectorText,
+           serialization,
+           "selector '" + selector + "' should serialize to '" +
+             serialization + "'.");
+    }
+
+    function test_parseable(selector)
+    {
+        ifdoc.body.innerHTML = "<p></p>";
+
+        var zi = ++gCounter;
+        style_text.data = "p, " + selector + "{ z-index: " + zi + " }";
+        var should_match = ifdoc.getElementsByTagName("p")[0];
+        var parsed = ifwin.getComputedStyle(should_match).zIndex == zi;
+        ok(parsed, "selector " + selector + " was parsed");
+        if (!parsed) {
+            return;
+        }
+
+        // Test that it serializes to something that is also parseable.
+        var ser1 = style_elem.sheet.cssRules[0].selectorText;
+        zi = ++gCounter;
+        style_text.data = ser1 + "{ z-index: " + zi + " }";
+        is(ifwin.getComputedStyle(should_match).zIndex, String(zi),
+           "serialization " + ser1 + " of selector p, " + selector +
+           " was parsed");
+        var ser2 = style_elem.sheet.cssRules[0].selectorText;
+        is(ser2, ser1,
+           "parse+serialize of selector " + selector + " is idempotent");
+
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+
+        // Test that it clones to the same thing it serializes to.
+        zi = ++gCounter;
+        var style_sheet = "data:text/css," +
+                          escape("p, " + selector + "{ z-index: " + zi + " }");
+        var style_sheet_link =
+            "<link rel='stylesheet' href='" + style_sheet + "'>";
+        var html_doc = "<!DOCTYPE HTML>" +
+                       style_sheet_link + style_sheet_link +
+                       "<p></p>";
+        var docurl = "data:text/html," + escape(html_doc);
+
+        defer_clonedoc_tests(docurl, function() {
+            var wrappedCloneFrame = SpecialPowers.wrap(cloneiframe);
+            var clonedoc = wrappedCloneFrame.contentDocument;
+            var clonewin = wrappedCloneFrame.contentWindow;
+            var links = clonedoc.getElementsByTagName("link");
+            // cause a clone
+            links[1].sheet.insertRule("#nonexistent { color: purple}", 0);
+            // remove the uncloned sheet
+            links[0].remove();
+
+            should_match = clonedoc.getElementsByTagName("p")[0];
+            is(clonewin.getComputedStyle(should_match).zIndex, String(zi),
+               "selector " + selector + " was cloned correctly");
+            var ser3 = links[0].sheet.cssRules[1].selectorText;
+            is(ser3, ser1,
+               "selector " + selector + " serializes correctly after cloning");
+        });
+    }
+
+    function test_unparseable_via_api(selector)
+    {
+        try {
+          // Test that it is also unparseable when followed by EOF.
+          ifdoc.body.matches(selector);
+          ok(false, "selector '" + selector + "' plus EOF is parse error");
+        } catch(ex) {
+          is(ex.name, "SyntaxError",
+             "selector '" + selector + "' plus EOF is parse error");
+          is(ex.code, DOMException.SYNTAX_ERR,
+             "selector '" + selector + "' plus EOF is parse error");
+        }
+    }
+
+    function test_parseable_via_api(selector)
+    {
+        var threw = false;
+        try {
+          // Test that a selector is parseable when followed by EOF.
+          ifdoc.body.matches(selector);
+        } catch(ex) {
+          threw = true;
+        }
+        ok(!threw, "selector '" + selector + "' was parsed");
+    }
+
+    function test_balanced_unparseable(selector)
+    {
+        var zi1 = ++gCounter;
+        var zi2 = ++gCounter;
+        ifdoc.body.innerHTML = "<p></p><div></div>";
+        style_text.data = "p, " + selector + "{ z-index: " + zi1 + " }" +
+                          "div { z-index: " + zi2 + " }";
+        var should_not_match = ifdoc.getElementsByTagName("p")[0];
+        var should_match = ifdoc.getElementsByTagName("div")[0];
+        is(ifwin.getComputedStyle(should_not_match).zIndex, "auto",
+           "selector " + selector + " was a parser error");
+        is(ifwin.getComputedStyle(should_match).zIndex, String(zi2),
+           "selector " + selector + " error was recovered from");
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+        test_unparseable_via_api(selector);
+    }
+
+    function test_unbalanced_unparseable(selector)
+    {
+        var zi1 = ++gCounter;
+        var zi2 = ++gCounter;
+        ifdoc.body.innerHTML = "<p></p>";
+        style_text.data = "p, " + selector + "{ z-index: " + zi1 + " }";
+        var should_not_match = ifdoc.getElementsByTagName("p")[0];
+        is(ifwin.getComputedStyle(should_not_match).zIndex, "auto",
+           "selector " + selector + " was a parser error");
+        is(style_text.parentNode.sheet.cssRules.length, 0,
+           "sheet should have no rules since " + selector + " is parse error");
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+        test_unparseable_via_api(selector);
+    }
+
+    // [attr] selector
+    test_parseable("[attr]")
+    test_parseable_via_api("[attr");
+    test_parseable("[ATTR]")
+    should_serialize_to("[attr]", "[attr]");
+    should_serialize_to("[ATTR]", "[ATTR]");
+
+    // Whether we should drop the bar is debatable. This matches Edge
+    // and Safari at the time of writing.
+    should_serialize_to("[|attr]", "[attr]");
+    should_serialize_to("[|ATTR]", "[ATTR]");
+
+    // [attr= ] selector
+    test_parseable("[attr=\"x\"]");
+    test_parseable("[attr='x']");
+    test_parseable("[attr=x]");
+    test_parseable("[attr=\"\"]");
+    test_parseable("[attr='']");
+    test_parseable("[attr=\"foo bar\"]");
+    test_parseable_via_api("[attr=x");
+
+    test_balanced_unparseable("[attr=]");
+    test_balanced_unparseable("[attr=foo bar]");
+
+    test_selector_in_html(
+        '[title=""]',
+        '<p title=""></p>'
+        + '<div lang=" "></div><div lang="\t"></div><div lang="\n"></div>',
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr~= ] selector
+    test_parseable("[attr~=\"x\"]");
+    test_parseable("[attr~='x']");
+    test_parseable("[attr~=x]");
+    test_parseable("[attr~=\"\"]");
+    test_parseable("[attr~='']");
+    test_parseable("[attr~=\"foo bar\"]");
+    test_parseable_via_api("[attr~=x");
+
+    test_balanced_unparseable("[attr~=]");
+    test_balanced_unparseable("[attr~=foo bar]");
+
+    test_selector_in_html(
+        '[class~="x x"]',
+        '<div class="x x"></div><div class="x"></div><div class="x\tx"></div>div class="x\nx"></div>',
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr|="x"]
+    test_parseable('[attr|="x"]');
+    test_parseable("[attr|='x']");
+    test_parseable('[attr|=x]');
+    test_parseable_via_api("[attr|=x");
+
+    test_parseable('[attr|=""]');
+    test_parseable("[attr|='']");
+    test_balanced_unparseable('[attr|=]');
+
+    test_selector_in_html(
+        '[lang|=""]',
+        '<p lang=""></p><p lang="-"></p><p lang="-GB"></p>'
+        + '<div lang="en-GB"></div><div lang="en-"></div>',
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr$= ] selector
+    test_parseable("[attr$=\"x\"]");
+    test_parseable("[attr$='x']");
+    test_parseable("[attr$=x]");
+    test_parseable("[attr$=\"\"]");
+    test_parseable("[attr$='']");
+    test_parseable("[attr$=\"foo bar\"]");
+    test_parseable_via_api("[attr$=x");
+
+    test_balanced_unparseable("[attr$=]");
+    test_balanced_unparseable("[attr$=foo bar]");
+
+    // [attr^= ] selector
+    test_parseable("[attr^=\"x\"]");
+    test_parseable("[attr^='x']");
+    test_parseable("[attr^=x]");
+    test_parseable("[attr^=\"\"]");
+    test_parseable("[attr^='']");
+    test_parseable("[attr^=\"foo bar\"]");
+    test_parseable_via_api("[attr^=x");
+
+    test_balanced_unparseable("[attr^=]");
+    test_balanced_unparseable("[attr^=foo bar]");
+
+    // attr[*= ] selector
+    test_parseable("[attr*=\"x\"]");
+    test_parseable("[attr*='x']");
+    test_parseable("[attr*=x]");
+    test_parseable("[attr*=\"\"]");
+    test_parseable("[attr*='']");
+    test_parseable("[attr*=\"foo bar\"]");
+    test_parseable_via_api("[attr^=x");
+
+    test_balanced_unparseable("[attr*=]");
+    test_balanced_unparseable("[attr*=foo bar]");
+
+    // And now tests for correctness of matching of attr selectors.
+    var attrTestBody =
+        // Paragraphs 1-5
+        "<p attr></p> <p attr=''></p> <p attr='foo'></p> <p att></p> <p></p>" +
+        // Paragraphs 6-8
+        "<p attr='foo bar'></p> <p attr='foo-bar'></p> <p attr='foobar'></p>" +
+        // Paragraphs 9-10
+        "<p attr='foo bar baz'></p> <p attr='foo-bar-baz'></p>" +
+        // Paragraphs 11-12
+        "<p attr='foo-bar baz'></p> <p attr='   foo-bar  '></p> " +
+        // Paragraph 13-15
+        "<p attr=' foo '></p> <p attr='fo'></p> <p attr='bar baz-foo'></p>";
+    test_selector_in_html(
+        "[attr]", attrTestBody,
+        pset([1,2,3,6,7,8,9,10,11,12,13,14,15]), pset([4,5]));
+    test_selector_in_html(
+        "[attr=foo]", attrTestBody,
+        pset([3]), pset([1,2,4,5,6,7,8,9,10,11,12,13,14,15]));
+    test_selector_in_html(
+        "[attr~=foo]", attrTestBody,
+        pset([3,6,9,13]), pset([1,2,4,5,7,8,10,11,12,14,15]));
+    test_selector_in_html(
+        "[attr~=bar]", attrTestBody,
+        pset([6,9,15]), pset([1,2,3,4,5,7,8,10,11,12,13,14]));
+    test_selector_in_html(
+        "[attr~=baz]", attrTestBody,
+        pset([9,11]), pset([1,2,3,4,5,6,7,8,10,12,13,14,15]));
+    test_selector_in_html(
+        "[attr|=foo]", attrTestBody,
+        pset([3,7,10,11]), pset([1,2,4,5,6,8,9,12,13,14,15]));
+    test_selector_in_html(
+        "[attr|='bar baz']", attrTestBody,
+        pset([15]), pset([1,2,3,4,5,6,7,8,9,10,11,12,13,14]));
+    test_selector_in_html(
+        "[attr$=foo]", attrTestBody,
+        pset([3,15]), pset([1,2,4,5,6,7,8,9,10,11,12,13,14]));
+    test_selector_in_html(
+        "[attr$=bar]", attrTestBody,
+        pset([6,7,8]), pset([1,2,3,4,5,9,10,11,12,13,14,15]));
+    test_selector_in_html(
+        "[attr^=foo]", attrTestBody,
+        pset([3,6,7,8,9,10,11]), pset([1,2,4,5,12,13,14,15]));
+    test_selector_in_html(
+        "[attr*=foo]", attrTestBody,
+        pset([3,6,7,8,9,10,11,12,13,15]), pset([1,2,4,5,14]));
+
+    // Bug 420814
+    test_selector_in_html(
+        "div ~ div p",
+        "<div></div><div><div><p>match</p></div></div>",
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return []; }
+    );
+
+    // Bug 420245
+    test_selector_in_html(
+        "p[attr$=\"\"]",
+        "<p attr=\"foo\">This should not match</p>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("p"); }
+    );
+    test_selector_in_html(
+        "div + p[attr~=\"\"]",
+        "<div>Dummy</div><p attr=\"foo\">This should not match</p>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("p"); }
+    );
+    test_selector_in_html(
+        "div[attr^=\"\"]",
+        "<div attr=\"dummy1\">Dummy</div><div attr=\"dummy2\">Dummy</div>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+    test_selector_in_html(
+        "div[attr*=\"\"]",
+        "<div attr=\"dummy1\">Dummy</div><div attr=\"dummy2\">Dummy</div>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // :nth-child(), etc.
+    // Follow the whitespace rules as proposed in
+    // http://lists.w3.org/Archives/Public/www-style/2008Mar/0121.html
+    test_balanced_unparseable(":nth-child()");
+    test_balanced_unparseable(":nth-of-type( )");
+    test_parseable(":nth-last-child( odd)");
+    test_parseable(":nth-last-of-type(even )");
+    test_parseable(":nth-child(n )");
+    test_parseable(":nth-of-type( 2n)");
+    test_parseable(":nth-last-child( -n)");
+    test_parseable(":nth-last-of-type(-2n )");
+    test_balanced_unparseable(":nth-child(- n)");
+    test_balanced_unparseable(":nth-of-type(-2 n)");
+    test_balanced_unparseable(":nth-last-of-type(2n1)");
+    test_balanced_unparseable(":nth-child(2n++1)");
+    test_balanced_unparseable(":nth-of-type(2n-+1)");
+    test_balanced_unparseable(":nth-last-child(2n+-1)");
+    test_balanced_unparseable(":nth-last-of-type(2n--1)");
+    test_parseable(":nth-child( 3n + 1 )");
+    test_parseable(":nth-child( +3n - 2 )");
+    test_parseable(":nth-child( -n+ 6)");
+    test_parseable(":nth-child( +6 )");
+    test_balanced_unparseable(":nth-child(3 n)");
+    test_balanced_unparseable(":nth-child(+ 2n)");
+    test_balanced_unparseable(":nth-child(+ 2)");
+    test_parseable(":nth-child(3)");
+    test_parseable(":nth-of-type(-3)");
+    test_parseable(":nth-last-child(+3)");
+    test_parseable(":nth-last-of-type(0)");
+    test_parseable(":nth-child(-0)");
+    test_parseable(":nth-of-type(3n)");
+    test_parseable(":nth-last-child(-3n)");
+    test_parseable(":nth-last-of-type(+3n)");
+    test_parseable(":nth-last-of-type(0n)");
+    test_parseable(":nth-child(-0n)");
+    test_parseable(":nth-of-type(n)");
+    test_parseable(":nth-last-child(-n)");
+    test_parseable(":nth-last-of-type(2n+1)");
+    test_parseable(":nth-child(2n-1)");
+    test_parseable(":nth-of-type(2n+0)");
+    test_parseable(":nth-last-child(2n-0)");
+    test_parseable(":nth-child(-0n+0)");
+    test_parseable(":nth-of-type(n+1)");
+    test_parseable(":nth-last-child(n-1)");
+    test_parseable(":nth-last-of-type(-n+1)");
+    test_parseable(":nth-child(-n-1)");
+    test_balanced_unparseable(":nth-child(2-n)");
+    test_balanced_unparseable(":nth-child(2-n-1)");
+    test_balanced_unparseable(":nth-child(n-2-1)");
+    // Bug 750388
+    test_parseable(":nth-child(+n)");
+    test_balanced_unparseable(":nth-child(+ n)");
+    test_parseable(":nth-child(+n+2)");
+    test_parseable(":nth-child(+n-2)");
+    test_parseable(":nth-child(+n + 2)");
+    test_parseable(":nth-child(+n - 2)");
+    test_balanced_unparseable(":nth-child(+ n+2)");
+    test_balanced_unparseable(":nth-child(+ n-2)");
+    test_balanced_unparseable(":nth-child(+ n + 2)");
+    test_balanced_unparseable(":nth-child(+ n - 2)");
+    test_parseable(":nth-child(+n-100)");
+    test_parseable(":nth-child(+n - 100)");
+    test_balanced_unparseable(":nth-child(+ n-100)");
+    test_balanced_unparseable(":nth-child(+-n+2)");
+    test_balanced_unparseable(":nth-child(+ -n+2)");
+    test_balanced_unparseable(":nth-child(+-n-100)");
+    test_balanced_unparseable(":nth-child(+ -n-100)");
+    test_balanced_unparseable(":nth-child(++n-100)");
+    test_balanced_unparseable(":nth-child(-+n-100)");
+    test_balanced_unparseable(":nth-child(++2n - 100)");
+    test_balanced_unparseable(":nth-child(+-2n - 100)");
+    test_balanced_unparseable(":nth-child(-+2n - 100)");
+    test_balanced_unparseable(":nth-child(--2n - 100)");
+    test_balanced_unparseable(":nth-child(+/**/+2n - 100)");
+    test_balanced_unparseable(":nth-child(+/**/-2n - 100)");
+    test_balanced_unparseable(":nth-child(-/**/+2n - 100)");
+    test_balanced_unparseable(":nth-child(-/**/-2n - 100)");
+    test_balanced_unparseable(":nth-child(+/**/+/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(+/**/-/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(-/**/+/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(-/**/-/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(++/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(+-/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(-+/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(--/**/2n - 100)");
+    test_balanced_unparseable(":nth-child(-even)");
+    test_balanced_unparseable(":nth-child(-odd)");
+    test_balanced_unparseable(":nth-child(+even)");
+    test_balanced_unparseable(":nth-child(+odd)");
+    test_balanced_unparseable(":nth-child(+ even)");
+    test_balanced_unparseable(":nth-child(+ odd)");
+    test_balanced_unparseable(":nth-child(+-n)");
+    test_balanced_unparseable(":nth-child(+-n-)");
+    test_balanced_unparseable(":nth-child(-+n)");
+    test_balanced_unparseable(":nth-child(+n--)");
+    test_parseable(":nth-child(n+2)");
+    test_parseable(":nth-child(n/**/+/**/2)");
+    test_parseable(":nth-child(n-2)");
+    test_parseable(":nth-child(n/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(n++2)");
+    test_balanced_unparseable(":nth-child(n+-2)");
+    test_balanced_unparseable(":nth-child(n-+2)");
+    test_balanced_unparseable(":nth-child(n--2)");
+    test_balanced_unparseable(":nth-child(n/**/++2)");
+    test_balanced_unparseable(":nth-child(n/**/+-2)");
+    test_balanced_unparseable(":nth-child(n/**/-+2)");
+    test_balanced_unparseable(":nth-child(n/**/--2)");
+    test_balanced_unparseable(":nth-child(n/**/+/**/+2)");
+    test_balanced_unparseable(":nth-child(n/**/+/**/-2)");
+    test_balanced_unparseable(":nth-child(n/**/-/**/+2)");
+    test_balanced_unparseable(":nth-child(n/**/-/**/-2)");
+    test_balanced_unparseable(":nth-child(n+/**/+2)");
+    test_balanced_unparseable(":nth-child(n+/**/-2)");
+    test_balanced_unparseable(":nth-child(n-/**/+2)");
+    test_balanced_unparseable(":nth-child(n-/**/-2)");
+    test_balanced_unparseable(":nth-child(n++/**/2)");
+    test_balanced_unparseable(":nth-child(n+-/**/2)");
+    test_balanced_unparseable(":nth-child(n-+/**/2)");
+    test_balanced_unparseable(":nth-child(n--/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/++/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/+-/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/-+/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/--/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/+/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/+/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/-/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(n/**/-/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(n+/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(n+/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(n-/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(n-/**/-/**/2)");
+    test_parseable(":nth-child(2n+2)");
+    test_parseable(":nth-child(2n/**/+/**/2)");
+    test_parseable(":nth-child(2n-2)");
+    test_parseable(":nth-child(2n/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(2n++2)");
+    test_balanced_unparseable(":nth-child(2n+-2)");
+    test_balanced_unparseable(":nth-child(2n-+2)");
+    test_balanced_unparseable(":nth-child(2n--2)");
+    test_balanced_unparseable(":nth-child(2n/**/++2)");
+    test_balanced_unparseable(":nth-child(2n/**/+-2)");
+    test_balanced_unparseable(":nth-child(2n/**/-+2)");
+    test_balanced_unparseable(":nth-child(2n/**/--2)");
+    test_balanced_unparseable(":nth-child(2n/**/+/**/+2)");
+    test_balanced_unparseable(":nth-child(2n/**/+/**/-2)");
+    test_balanced_unparseable(":nth-child(2n/**/-/**/+2)");
+    test_balanced_unparseable(":nth-child(2n/**/-/**/-2)");
+    test_balanced_unparseable(":nth-child(2n+/**/+2)");
+    test_balanced_unparseable(":nth-child(2n+/**/-2)");
+    test_balanced_unparseable(":nth-child(2n-/**/+2)");
+    test_balanced_unparseable(":nth-child(2n-/**/-2)");
+    test_balanced_unparseable(":nth-child(2n++/**/2)");
+    test_balanced_unparseable(":nth-child(2n+-/**/2)");
+    test_balanced_unparseable(":nth-child(2n-+/**/2)");
+    test_balanced_unparseable(":nth-child(2n--/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/++/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/+-/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/-+/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/--/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/+/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/+/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/-/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(2n/**/-/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(2n+/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(2n+/**/-/**/2)");
+    test_balanced_unparseable(":nth-child(2n-/**/+/**/2)");
+    test_balanced_unparseable(":nth-child(2n-/**/-/**/2)");
+    test_parseable(":nth-child(+/**/n+2)");
+    test_parseable(":nth-child(+n/**/+2)");
+    test_parseable(":nth-child(+n/**/+2)");
+    test_parseable(":nth-child(+n+/**/2)");
+    test_parseable(":nth-child(+n+2/**/)");
+    test_balanced_unparseable(":nth-child(+1/**/n+2)");
+    test_parseable(":nth-child(+1n/**/+2)");
+    test_parseable(":nth-child(+1n/**/+2)");
+    test_parseable(":nth-child(+1n+/**/2)");
+    test_parseable(":nth-child(+1n+2/**/)");
+    test_balanced_unparseable(":nth-child(-/**/n+2)");
+    test_parseable(":nth-child(-n/**/+2)");
+    test_parseable(":nth-child(-n/**/+2)");
+    test_parseable(":nth-child(-n+/**/2)");
+    test_parseable(":nth-child(-n+2/**/)");
+    test_balanced_unparseable(":nth-child(-1/**/n+2)");
+    test_parseable(":nth-child(-1n/**/+2)");
+    test_parseable(":nth-child(-1n/**/+2)");
+    test_parseable(":nth-child(-1n+/**/2)");
+    test_parseable(":nth-child(-1n+2/**/)");
+    test_balanced_unparseable(":nth-child(-/**/ n+2)");
+    test_balanced_unparseable(":nth-child(- /**/n+2)");
+    test_balanced_unparseable(":nth-child(+/**/ n+2)");
+    test_balanced_unparseable(":nth-child(+ /**/n+2)");
+    test_parseable(":nth-child(+/**/n-2)");
+    test_parseable(":nth-child(+n/**/-2)");
+    test_parseable(":nth-child(+n/**/-2)");
+    test_parseable(":nth-child(+n-/**/2)");
+    test_parseable(":nth-child(+n-2/**/)");
+    test_balanced_unparseable(":nth-child(+1/**/n-2)");
+    test_parseable(":nth-child(+1n/**/-2)");
+    test_parseable(":nth-child(+1n/**/-2)");
+    test_parseable(":nth-child(+1n-/**/2)");
+    test_parseable(":nth-child(+1n-2/**/)");
+    test_balanced_unparseable(":nth-child(-/**/n-2)");
+    test_parseable(":nth-child(-n/**/-2)");
+    test_parseable(":nth-child(-n/**/-2)");
+    test_parseable(":nth-child(-n-/**/2)");
+    test_parseable(":nth-child(-n-2/**/)");
+    test_balanced_unparseable(":nth-child(-1/**/n-2)");
+    test_parseable(":nth-child(-1n/**/-2)");
+    test_parseable(":nth-child(-1n/**/-2)");
+    test_parseable(":nth-child(-1n-/**/2)");
+    test_parseable(":nth-child(-1n-2/**/)");
+    test_balanced_unparseable(":nth-child(-/**/ n-2)");
+    test_balanced_unparseable(":nth-child(- /**/n-2)");
+    test_balanced_unparseable(":nth-child(+/**/ n-2)");
+    test_balanced_unparseable(":nth-child(+ /**/n-2)");
+    test_parseable(":nth-child(+/**/N-2)");
+    test_parseable(":nth-child(+N/**/-2)");
+    test_parseable(":nth-child(+N/**/-2)");
+    test_parseable(":nth-child(+N-/**/2)");
+    test_parseable(":nth-child(+N-2/**/)");
+    test_balanced_unparseable(":nth-child(+1/**/N-2)");
+    test_parseable(":nth-child(+1N/**/-2)");
+    test_parseable(":nth-child(+1N/**/-2)");
+    test_parseable(":nth-child(+1N-/**/2)");
+    test_parseable(":nth-child(+1N-2/**/)");
+    test_balanced_unparseable(":nth-child(-/**/N-2)");
+    test_parseable(":nth-child(-N/**/-2)");
+    test_parseable(":nth-child(-N/**/-2)");
+    test_parseable(":nth-child(-N-/**/2)");
+    test_parseable(":nth-child(-N-2/**/)");
+    test_balanced_unparseable(":nth-child(-1/**/N-2)");
+    test_parseable(":nth-child(-1N/**/-2)");
+    test_parseable(":nth-child(-1N/**/-2)");
+    test_parseable(":nth-child(-1N-/**/2)");
+    test_parseable(":nth-child(-1N-2/**/)");
+    test_balanced_unparseable(":nth-child(-/**/ N-2)");
+    test_balanced_unparseable(":nth-child(- /**/N-2)");
+    test_balanced_unparseable(":nth-child(+/**/ N-2)");
+    test_balanced_unparseable(":nth-child(+ /**/N-2)");
+    test_parseable(":nth-child( +n + 1 )");
+    test_parseable(":nth-child( +/**/n + 1 )");
+    test_balanced_unparseable(":nth-child( -/**/2/**/n/**/+/**/4 )");
+    test_parseable(":nth-child( -2n/**/ + /**/4 )");
+    test_parseable(":nth-child( -2n/**/+/**/4 )");
+    test_parseable(":nth-child( -2n  /**/+/**/4 )");
+    test_balanced_unparseable(":nth-child( -/**/n  /**/+ /**/ 4 )");
+    test_parseable(":nth-child( +/**/n  /**/+ /**/ 4 )");
+    test_balanced_unparseable(":nth-child(+1/**/n-1)");
+    test_balanced_unparseable(":nth-child(1/**/n-1)");
+    // bug 876570
+    test_balanced_unparseable(":nth-child(+2n-)");
+    test_balanced_unparseable(":nth-child(+n-)");
+    test_balanced_unparseable(":nth-child(-2n-)");
+    test_balanced_unparseable(":nth-child(-n-)");
+    test_balanced_unparseable(":nth-child(2n-)");
+    test_balanced_unparseable(":nth-child(n-)");
+    test_balanced_unparseable(":nth-child(+2n+)");
+    test_balanced_unparseable(":nth-child(+n+)");
+    test_balanced_unparseable(":nth-child(-2n+)");
+    test_balanced_unparseable(":nth-child(-n+)");
+    test_balanced_unparseable(":nth-child(2n+)");
+    test_balanced_unparseable(":nth-child(n+)");
+
+    // exercise the an+b matching logic particularly hard for
+    // :nth-child() (since we know we use the same code for all 4)
+    var seven_ps = "<p></p><p></p><p></p><p></p><p></p><p></p><p></p>";
+    function pset(indices) { // takes an array of 1-based indices
+        return function pset_filter(doc) {
+            var a = doc.getElementsByTagName("p");
+            var result = [];
+            for (var i in indices)
+                result.push(a[indices[i] - 1]);
+            return result;
+        }
+    }
+    test_selector_in_html(":nth-child(0)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-3)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(3)", seven_ps,
+                          pset([3]), pset([1, 2, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(0n+3)", seven_ps,
+                          pset([3]), pset([1, 2, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-0n+3)", seven_ps,
+                          pset([3]), pset([1, 2, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(8)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(odd)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(even)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(2n-1)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child( 2n - 1 )", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(2n+1)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child( 2n + 1 )", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(2n+0)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(2n-0)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(-n+3)", seven_ps,
+                          pset([1, 2, 3]), pset([4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-n-3)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(n)", seven_ps,
+                          pset([1, 2, 3, 4, 5, 6, 7]), pset([]));
+    test_selector_in_html(":nth-child(n-3)", seven_ps,
+                          pset([1, 2, 3, 4, 5, 6, 7]), pset([]));
+    test_selector_in_html(":nth-child(n+3)", seven_ps,
+                          pset([3, 4, 5, 6, 7]), pset([1, 2]));
+    test_selector_in_html(":nth-child(2n+3)", seven_ps,
+                          pset([3, 5, 7]), pset([1, 2, 4, 6]));
+    test_selector_in_html(":nth-child(2n)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(2n-3)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(-1n+3)", seven_ps,
+                          pset([1, 2, 3]), pset([4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-2n+3)", seven_ps,
+                          pset([1, 3]), pset([2, 4, 5, 6, 7]));
+    // And a few spot-checks for the other :nth-* selectors
+    test_selector_in_html(":nth-child(4n+1)", seven_ps,
+                          pset([1, 5]), pset([2, 3, 4, 6, 7]));
+    test_selector_in_html(":nth-last-child(4n+1)", seven_ps,
+                          pset([3, 7]), pset([1, 2, 4, 5, 6]));
+    test_selector_in_html(":nth-of-type(4n+1)", seven_ps,
+                          pset([1, 5]), pset([2, 3, 4, 6, 7]));
+    test_selector_in_html(":nth-last-of-type(4n+1)", seven_ps,
+                          pset([3, 7]), pset([1, 2, 4, 5, 6]));
+    test_selector_in_html(":nth-child(6)", seven_ps,
+                          pset([6]), pset([1, 2, 3, 4, 5, 7]));
+    test_selector_in_html(":nth-last-child(6)", seven_ps,
+                          pset([2]), pset([1, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-of-type(6)", seven_ps,
+                          pset([6]), pset([1, 2, 3, 4, 5, 7]));
+    test_selector_in_html(":nth-last-of-type(6)", seven_ps,
+                          pset([2]), pset([1, 3, 4, 5, 6, 7]));
+
+    // Test [first|last|only]-[child|node|of-type]
+    var interesting_doc = "<!----> <div id='p1'> <!---->x<p id='s1'></p> <!----><p id='s2'></p> <!----></div> <!----><p id='p2'> <!----><span id='s3'></span> <!----><span id='s4'></span> <!---->x</p> <!----><div id='p3'> <!----><p id='s5'></p> <!----></div> <!---->";
+    function idset(ids) { // takes an array of ids
+        return function idset_filter(doc) {
+            var result = [];
+            for (var id of ids)
+                result.push(doc.getElementById(id));
+            return result;
+        }
+    }
+    function classset(classes) { // takes an array of classes
+        return function classset_filter(doc) {
+            var i, j, els;
+            var result = [];
+            for (i = 0; i < classes.length; i++) {
+                els = doc.getElementsByClassName(classes[i]);
+                for (j = 0; j < els.length; j++) {
+                    result.push(els[j]);
+                }
+            }
+            return result;
+        }
+    }
+    function emptyset(doc) { return []; }
+    test_parseable(":first-child");
+    test_parseable(":last-child");
+    test_parseable(":only-child");
+    test_parseable(":-moz-first-node");
+    test_parseable(":-moz-last-node");
+    test_parseable(":first-of-type");
+    test_parseable(":last-of-type");
+    test_parseable(":only-of-type");
+    test_selector_in_html(":first-child", seven_ps,
+                          pset([1]), pset([2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":first-child", interesting_doc,
+                          idset(["p1", "s1", "s3", "s5"]),
+                          idset(["s2", "p2", "s4", "p3"]));
+    test_selector_in_html(":-moz-first-node", interesting_doc,
+                          idset(["p1", "s3", "s5"]),
+                          idset(["s1", "s2", "p2", "s4", "p3"]));
+    test_selector_in_html(":last-child", seven_ps,
+                          pset([7]), pset([1, 2, 3, 4, 5, 6]));
+    test_selector_in_html(":last-child", interesting_doc,
+                          idset(["s2", "s4", "p3", "s5"]),
+                          idset(["p1", "s1", "p2", "s3"]));
+    test_selector_in_html(":-moz-last-node", interesting_doc,
+                          idset(["s2", "p3", "s5"]),
+                          idset(["p1", "s1", "p2", "s3", "s4"]));
+    test_selector_in_html(":only-child", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":only-child", interesting_doc,
+                          idset(["s5"]),
+                          idset(["p1", "s1", "s2", "p2", "s3", "s4", "p3"]));
+    test_selector_in_html(":first-of-type", seven_ps,
+                          pset([1]), pset([2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":first-of-type", interesting_doc,
+                          idset(["p1", "s1", "p2", "s3", "s5"]),
+                          idset(["s2", "s4", "p3"]));
+    test_selector_in_html(":last-of-type", seven_ps,
+                          pset([7]), pset([1, 2, 3, 4, 5, 6]));
+    test_selector_in_html(":last-of-type", interesting_doc,
+                          idset(["s2", "p2", "s4", "p3", "s5"]),
+                          idset(["p1", "s1", "s3"]));
+    test_selector_in_html(":only-of-type", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":only-of-type", interesting_doc,
+                          idset(["p2", "s5"]),
+                          idset(["p1", "s1", "s2", "s3", "s4", "p3"]));
+
+    // And a bunch of tests for the of-type aspect of :nth-of-type() and
+    // :nth-last-of-type().  Note that the last div here contains two
+    // children.
+    var mixed_elements="<p></p><p></p><div></div><p></p><div><p></p><address></address></div><address></address>";
+    function pdaset(ps, divs, addresses) { // takes an array of 1-based indices
+        var l = { p: ps, div: divs, address: addresses };
+        return function pdaset_filter(doc) {
+            var result = [];
+            for (var tag in l) {
+                var a = doc.getElementsByTagName(tag);
+                var indices = l[tag];
+                for (var i in indices)
+                    result.push(a[indices[i] - 1]);
+            }
+            return result;
+        }
+    }
+    test_selector_in_html(":nth-of-type(odd)", mixed_elements,
+                          pdaset([1, 3, 4], [1], [1, 2]),
+                          pdaset([2], [2], []));
+    test_selector_in_html(":nth-of-type(2n-0)", mixed_elements,
+                          pdaset([2], [2], []),
+                          pdaset([1, 3, 4], [1], [1, 2]));
+    test_selector_in_html(":nth-last-of-type(even)", mixed_elements,
+                          pdaset([2], [1], []),
+                          pdaset([1, 3, 4], [2], [1, 2]));
+
+    // Test greediness of descendant combinators.
+    var four_children="<div id='a'><div id='b'><div id='c'><div id='d'><\/div><\/div><\/div><\/div>";
+    test_selector_in_html("#a > div div", four_children,
+                          idset(["c", "d"]), idset(["a", "b"]));
+    test_selector_in_html("#a > #b div", four_children,
+                          idset(["c", "d"]), idset(["a", "b"]));
+    test_selector_in_html("#a div > div", four_children,
+                          idset(["c", "d"]), idset(["a", "b"]));
+    test_selector_in_html("#a #b > div", four_children,
+                          idset(["c"]), idset(["a", "b", "d"]));
+    test_selector_in_html("#a > #b div", four_children,
+                          idset(["c", "d"]), idset(["a", "b"]));
+    test_selector_in_html("#a #c > div", four_children,
+                          idset(["d"]), idset(["a", "b", "c"]));
+    test_selector_in_html("#a > #c div", four_children,
+                          idset([]), idset(["a", "b", "c", "d"]));
+
+    // More descendant combinator greediness (bug 511147)
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"></div><div class="x"></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b", "x"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"><p>filler filler <i>filler</i> filler</p></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b", "x"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="x"><p>filler filler <i>filler</i> filler</p></div><div></div><div class="b"></div><div></div><div class="x"><p>filler filler <i>filler</i> filler</p></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b", "x"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"></div><div class="match"></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b"]));
+
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div><div class="b"></div><div class="nomatch"></div></div></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div><div class="b"></div><div class="nomatch"></div></div><div class="nomatch"></div></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div class="b"></div><div><div class="nomatch"></div></div><div></div></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div class="b"></div></div><div class="nomatch"></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
+
+    // Test serialization of pseudo-elements.
+    should_serialize_to("p::first-letter", "p::first-letter");
+    should_serialize_to("p:first-letter", "p::first-letter");
+    should_serialize_to("div>p:first-letter", "div > p::first-letter");
+    should_serialize_to("span +div:first-line", "span + div::first-line");
+    should_serialize_to("input::placeholder", "input::placeholder");
+    should_serialize_to("input:placeholder-shown", "input:placeholder-shown");
+
+    // Test serialization of ::-moz-placeholder.
+    should_serialize_to("input::-moz-placeholder", "input::placeholder");
+
+    should_serialize_to(':lang("foo\\"bar")', ':lang(foo\\"bar)');
+
+    // Test default namespaces, including inside :not().
+    var html_default_ns = "@namespace url(http://www.w3.org/1999/xhtml);";
+    var html_ns = "@namespace html url(http://www.w3.org/1999/xhtml);";
+    var xul_default_ns = "@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);";
+    var single_a = "<a id='a' href='data:text/plain,this_better_be_unvisited'></a>";
+    var set_single = idset(['a']);
+    var empty_set = idset([]);
+    test_selector_in_html("a", single_a, set_single, empty_set,
+                          html_default_ns);
+    test_selector_in_html("a", single_a, empty_set, set_single,
+                          xul_default_ns);
+    test_selector_in_html("*|a", single_a, set_single, empty_set,
+                          xul_default_ns);
+    test_selector_in_html("html|a", single_a, set_single, empty_set,
+                          xul_default_ns + html_ns);
+    // Type selectors inside :not() bring in default namespaces, but
+    // non-type selectors don't.
+    test_selector_in_html("*|a:not(*)", single_a, set_single, empty_set,
+                          xul_default_ns);
+    test_selector_in_html("*|a:not(a)", single_a, set_single, empty_set,
+                          xul_default_ns);
+    test_selector_in_html("*|a:not(*|*)", single_a, empty_set, set_single,
+                          xul_default_ns);
+    test_selector_in_html("*|a:not(*|a)", single_a, empty_set, set_single,
+                          xul_default_ns);
+    test_selector_in_html("*|a:not(:link)", single_a + "<a id='b'></a>",
+                          idset(["b"]), set_single,
+                          xul_default_ns);
+    test_selector_in_html("*|a:not(:visited)", single_a + "<a id='b'></a>",
+                          idset(["a", "b"]), empty_set,
+                          xul_default_ns);
+    test_selector_in_html("*|a:not(html|*)", single_a, empty_set, set_single,
+                          xul_default_ns + html_ns);
+    test_selector_in_html("*|a:not(html|a)", single_a, empty_set, set_single,
+                          xul_default_ns + html_ns);
+    test_selector_in_html("*|a:not(|*)", single_a, set_single, empty_set,
+                          xul_default_ns + html_ns);
+    test_selector_in_html("*|a:not(|a)", single_a, set_single, empty_set,
+                          xul_default_ns + html_ns);
+    test_selector_in_html("html|a:not(|*)", single_a, set_single, empty_set,
+                          xul_default_ns + html_ns);
+    test_selector_in_html("html|a:not(|a)", single_a, set_single, empty_set,
+                          xul_default_ns + html_ns);
+    test_selector_in_html("html|a:not(*|*)", single_a, empty_set, set_single,
+                          xul_default_ns + html_ns);
+    test_selector_in_html("html|a:not(*|a)", single_a, empty_set, set_single,
+                          xul_default_ns + html_ns);
+
+    // Test -moz-locale-dir
+    test_parseable(":-moz-locale-dir(ltr)");
+    test_parseable(":-moz-locale-dir(rtl)");
+    test_parseable(":-moz-locale-dir(rTl)");
+    test_parseable(":-moz-locale-dir(LTR)");
+    test_parseable(":-moz-locale-dir(other)");
+    if (document.body.matches(":-moz-locale-dir(ltr)")) {
+        test_selector_in_html("a:-moz-locale-dir(LTr)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:-moz-locale-dir(ltR)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:-moz-locale-dir(LTR)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:-moz-locale-dir(RTl)", single_a,
+                              empty_set, set_single);
+    } else {
+        test_selector_in_html("a:-moz-locale-dir(RTl)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:-moz-locale-dir(rtL)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:-moz-locale-dir(RTL)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:-moz-locale-dir(LTr)", single_a,
+                              empty_set, set_single);
+    }
+    test_selector_in_html("a:-moz-locale-dir(other)", single_a,
+                          empty_set, set_single);
+
+    test_balanced_unparseable(":-moz-locale-dir()");
+    test_balanced_unparseable(":-moz-locale-dir(())");
+    test_balanced_unparseable(":-moz-locale-dir(3())");
+    test_balanced_unparseable(":-moz-locale-dir(f{})");
+    test_balanced_unparseable(":-moz-locale-dir('ltr')");
+    test_balanced_unparseable(":-moz-locale-dir(ltr, other)");
+    test_balanced_unparseable(":-moz-locale-dir(ltr other)");
+    test_balanced_unparseable(":-moz-locale-dir");
+
+    // Test :dir()
+    test_parseable(":dir(ltr)");
+    test_parseable(":dir(rtl)");
+    test_parseable(":dir(rTl)");
+    test_parseable(":dir(LTR)");
+    test_parseable(":dir(other)");
+    if (document.body.matches(":dir(ltr)")) {
+        test_selector_in_html("a:dir(LTr)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:dir(ltR)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:dir(LTR)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:dir(RTl)", single_a,
+                              empty_set, set_single);
+    } else {
+        test_selector_in_html("a:dir(RTl)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:dir(rtL)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:dir(RTL)", single_a,
+                              set_single, empty_set);
+        test_selector_in_html("a:dir(LTr)", single_a,
+                              empty_set, set_single);
+    }
+    test_selector_in_html("a:dir(other)", single_a,
+                          empty_set, set_single);
+
+    test_balanced_unparseable(":dir()");
+    test_balanced_unparseable(":dir(())");
+    test_balanced_unparseable(":dir(3())");
+    test_balanced_unparseable(":dir(f{})");
+    test_balanced_unparseable(":dir('ltr')");
+    test_balanced_unparseable(":dir(ltr, other)");
+    test_balanced_unparseable(":dir(ltr other)");
+    test_balanced_unparseable(":dir");
+
+    // Test -moz-lwtheme and -moz-lwtheme-[darktext|brighttext]
+    test_parseable(":-moz-lwtheme");
+    test_parseable(":-moz-lwtheme-brighttext");
+    test_parseable(":-moz-lwtheme-darktext");
+
+    test_balanced_unparseable(":-moz-tree-row(selected)");
+    test_balanced_unparseable("::-moz-tree-row(selected)");
+    test_balanced_unparseable("::-MoZ-trEE-RoW(sElEcTeD)");
+    test_balanced_unparseable(":-moz-tree-row(selected focus)");
+    test_balanced_unparseable(":-moz-tree-row(selected , focus)");
+    test_balanced_unparseable("::-moz-tree-row(selected ,focus)");
+    test_balanced_unparseable(":-moz-tree-row(selected, focus)");
+    test_balanced_unparseable("::-moz-tree-row(selected,focus)");
+    test_balanced_unparseable(":-moz-tree-row(selected     focus)");
+    test_balanced_unparseable("::-moz-tree-row(selected    ,   focus)");
+    test_balanced_unparseable("::-moz-tree-twisty(  hover open  )");
+    test_balanced_unparseable("::-moz-tree-row(selected {[]} )");
+    test_balanced_unparseable(":-moz-tree-twisty(open())");
+    test_balanced_unparseable("::-moz-tree-twisty(hover ())");
+
+    test_parseable(":-moz-window-inactive");
+    test_parseable("div p:-moz-window-inactive:hover span");
+
+    // Chrome-only
+    test_unbalanced_unparseable(":-moz-browser-frame");
+
+    // Plugin pseudoclasses are chrome-only:
+    test_unbalanced_unparseable(":-moz-type-unsupported");
+    test_unbalanced_unparseable(":-moz-type-unsupported-platform");
+    test_unbalanced_unparseable(":-moz-handler-clicktoplay");
+    test_unbalanced_unparseable(":-moz-handler-vulnerable-updatable");
+    test_unbalanced_unparseable(":-moz-handler-vulnerable-no-update");
+    test_unbalanced_unparseable(":-moz-handler-disabled");
+    test_unbalanced_unparseable(":-moz-handler-blocked");
+    test_unbalanced_unparseable(":-moz-handler-crashed");
+
+    // We're not in a UA sheet, so this should be invalid.
+    test_balanced_unparseable(":-moz-inert");
+    test_balanced_unparseable(":-moz-native-anonymous");
+    test_balanced_unparseable(":-moz-table-border-nonzero");
+
+    // Case sensitivity of tag selectors
+    function setup_cased_spans(body) {
+      var data = [
+        { tag: "span" },
+        { tag: "sPaN" },
+        { tag: "Span" },
+        { tag: "SPAN" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "span" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "sPaN" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "Span" },
+        { ns: "http://www.w3.org/1999/xhtml", tag: "SPAN" },
+        { ns: "http://example.com/useless", tag: "span" },
+        { ns: "http://example.com/useless", tag: "sPaN" },
+        { ns: "http://example.com/useless", tag: "Span" },
+        { ns: "http://example.com/useless", tag: "SPAN" },
+      ]
+      for (var i in data) {
+        var ent = data[i];
+        var elem;
+        if ("ns" in ent) {
+          elem = body.ownerDocument.createElementNS(ent.ns, ent.tag);
+        } else {
+          elem = body.ownerDocument.createElement(ent.tag);
+        }
+        body.appendChild(elem);
+      }
+    }
+    function bodychildset(indices) {
+      return function bodychildset_filter(doc) {
+        var body = doc.body;
+        var result = [];
+        for (var i in indices) {
+          result.push(body.childNodes[indices[i]]);
+        }
+        return result;
+      }
+    }
+    test_selector_in_html("span", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 8]),
+                          bodychildset([5, 6, 7, 9, 10, 11]));
+    test_selector_in_html("sPaN", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 9]),
+                          bodychildset([5, 6, 7, 8, 10, 11]));
+    test_selector_in_html("Span", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 10]),
+                          bodychildset([5, 6, 7, 8, 9, 11]));
+    test_selector_in_html("SPAN", setup_cased_spans,
+                          bodychildset([0, 1, 2, 3, 4, 11]),
+                          bodychildset([5, 6, 7, 8, 9, 10]));
+
+    // bug 528096 (tree pseudos)
+    test_unbalanced_unparseable(":-moz-tree-column((){} a");
+    test_unbalanced_unparseable(":-moz-tree-column(x(){} a");
+    test_unbalanced_unparseable(":-moz-tree-column(a b (){} a");
+    test_unbalanced_unparseable(":-moz-tree-column(a, b (){} a");
+
+    // Bug 543428 (escaping)
+    test_selector_in_html("\\32|a", single_a, set_single, empty_set,
+                          "@namespace \\32  url(http://www.w3.org/1999/xhtml);");
+    test_selector_in_html("-\\32|a", single_a, set_single, empty_set,
+                          "@namespace -\\32  url(http://www.w3.org/1999/xhtml);");
+    test_selector_in_html("\\2|a", single_a, set_single, empty_set,
+                          "@namespace \\0002  url(http://www.w3.org/1999/xhtml);");
+    test_selector_in_html("-\\2|a", single_a, set_single, empty_set,
+                          "@namespace -\\000002  url(http://www.w3.org/1999/xhtml);");
+    var spans = "<span class='2'></span><span class='&#x2;'></span>" +
+                "<span id='2'></span><span id='&#x2;'></span>"
+    test_selector_in_html(".\\32", spans,
+                          bodychildset([0]), bodychildset([1, 2, 3]));
+    test_selector_in_html("[class=\\32]", spans,
+                          bodychildset([0]), bodychildset([1, 2, 3]));
+    test_selector_in_html(".\\2", spans,
+                          bodychildset([1]), bodychildset([0, 2, 3]));
+    test_selector_in_html("[class=\\2]", spans,
+                          bodychildset([1]), bodychildset([0, 2, 3]));
+    test_selector_in_html("#\\32", spans,
+                          bodychildset([2]), bodychildset([0, 1, 3]));
+    test_selector_in_html("[id=\\32]", spans,
+                          bodychildset([2]), bodychildset([0, 1, 3]));
+    test_selector_in_html("#\\2", spans,
+                          bodychildset([3]), bodychildset([0, 1, 2]));
+    test_selector_in_html("[id=\\2]", spans,
+                          bodychildset([3]), bodychildset([0, 1, 2]));
+    test_balanced_unparseable("#2");
+
+    // Bug 553805:  :not() containing nothing is forbidden
+    test_balanced_unparseable(":not()");
+    test_balanced_unparseable(":not( )");
+    test_balanced_unparseable(":not( \t\n )");
+    test_balanced_unparseable(":not(/*comment*/)");
+    test_balanced_unparseable(":not( /*comment*/  /* comment */  )");
+    test_balanced_unparseable("p :not()");
+    test_balanced_unparseable("p :not( )");
+    test_balanced_unparseable("p :not( \t\n )");
+    test_balanced_unparseable("p :not(/*comment*/)");
+    test_balanced_unparseable("p :not( /*comment*/  /* comment */  )");
+    test_balanced_unparseable("p:not()");
+    test_balanced_unparseable("p:not( )");
+    test_balanced_unparseable("p:not( \t\n )");
+    test_balanced_unparseable("p:not(/*comment*/)");
+    test_balanced_unparseable("p:not( /*comment*/  /* comment */  )");
+
+    test_balanced_unparseable(":not(:nth-child(2k))");
+    test_balanced_unparseable(":not(:nth-child(()))");
+
+    // Bug 1685621 - Serialization of :not()
+    should_serialize_to(":not([disabled][selected])", ":not([disabled][selected])");
+    should_serialize_to(":not([disabled],[selected])", ":not([disabled], [selected])");
+
+    // :-moz-any()
+    test_parseable(":-moz-any()");
+    test_parseable(":-moz-any('foo')");
+    test_parseable(":-moz-any(div p)");
+    test_parseable(":-moz-any(div ~ p)");
+    test_parseable(":-moz-any(div~p)");
+    test_parseable(":-moz-any(div + p)");
+    test_parseable(":-moz-any(div+p)");
+    test_parseable(":-moz-any(div > p)");
+    test_parseable(":-moz-any(div>p)");
+    test_parseable(":-moz-any(div, p)");
+    test_parseable(":-moz-any( div , p  )");
+    test_parseable(":-moz-any(div,p)");
+    test_parseable(":-moz-any(div)");
+    test_parseable(":-moz-any(div,p,:link,span:focus)");
+    test_parseable(":-moz-any(:active,:focus)");
+    test_parseable(":-moz-any(:active,:link:focus)");
+    test_parseable(":-moz-any(div,:nonexistentpseudo)");
+    var any_elts = "<input type='text'><a href='http://www.example.com/'></a><div></div><a name='foo'>";
+    test_selector_in_html(":-moz-any(a,input)", any_elts,
+                          bodychildset([0, 1, 3]), bodychildset([2]));
+    test_selector_in_html(":-moz-any(:link,:not(a))", any_elts,
+                          bodychildset([0, 1, 2]), bodychildset([3]));
+    test_selector_in_html(":-moz-any([href],input[type],input[name])", any_elts,
+                          bodychildset([0, 1]), bodychildset([2, 3]));
+    test_selector_in_html(":-moz-any(div,a):-moz-any([type],[href],[name])",
+                          any_elts,
+                          bodychildset([1, 3]), bodychildset([0, 2]));
+
+    // Test that we don't tokenize an empty HASH.
+    test_balanced_unparseable("#");
+    test_balanced_unparseable("# ");
+    test_balanced_unparseable("#, p");
+    test_balanced_unparseable("# , p");
+    test_balanced_unparseable("p #");
+    test_balanced_unparseable("p # ");
+    test_balanced_unparseable("p #, p");
+    test_balanced_unparseable("p # , p");
+
+    // Test that a backslash alone at EOF outside of a string is treated
+    // as U+FFFD.
+    test_parseable_via_api("#a\\");
+    test_parseable_via_api("#\\");
+    test_parseable_via_api("\\");
+
+    // Test that newline escapes are only supported in strings.
+    test_balanced_unparseable("di\\\nv");
+    test_balanced_unparseable("div \\\n p");
+    test_balanced_unparseable("div\\\n p");
+    test_balanced_unparseable("div \\\np");
+    test_balanced_unparseable("div\\\np");
+
+    // Test that :-moz-placeholder is parsable.
+    test_parseable(":-moz-placeholder");
+
+    // Test that things other than user-action pseudo-classes are
+    // rejected after pseudo-elements.  Some of these tests rely on
+    // using a pseudo-element that supports a user-action pseudo-class
+    // after it, so we need to use the prefixed ::-moz-color-swatch,
+    // which is one of the ones with
+    // CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE (none of which are
+    // unprefixed).
+    test_parseable("::-moz-color-swatch:hover");
+    test_parseable("::-moz-color-swatch:is(:hover)");
+    test_parseable("::-moz-color-swatch:not(:hover)");
+    test_parseable("::-moz-color-swatch:where(:hover)");
+    test_balanced_unparseable("::-moz-color-swatch:not(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:first-child");
+    test_balanced_unparseable("::-moz-color-swatch:host");
+    test_balanced_unparseable("::-moz-color-swatch:host(div)");
+    test_balanced_unparseable("::-moz-color-swatch:nth-child(1)");
+    test_balanced_unparseable("::-moz-color-swatch:hover#foo");
+    test_balanced_unparseable(".foo::after:not(.bar) ~ h3");
+
+    for (let [selector, expected_serialization_when_parseable] of [
+      ["::-moz-color-swatch:where(.foo)", "::-moz-color-swatch:where()"],
+      ["::-moz-color-swatch:is(.foo)", "::-moz-color-swatch:is()"],
+      ["::-moz-color-swatch:where(p, :hover)", "::-moz-color-swatch:where(:hover)"],
+      ["::-moz-color-swatch:is(p, :hover)", "::-moz-color-swatch:is(:hover)"],
+    ]) {
+      test_parseable(selector);
+      should_serialize_to(selector, expected_serialization_when_parseable);
+    }
+
+    test_parseable(":-moz-broken");
+    test_parseable(":-moz-loading");
+
+    run_deferred_tests();
+}
+
+var deferred_tests = [];
+
+function defer_clonedoc_tests(docurl, onloadfunc)
+{
+    deferred_tests.push( { docurl: docurl, onloadfunc: onloadfunc } );
+}
+
+function run_deferred_tests()
+{
+    if (deferred_tests.length == 0) {
+        SimpleTest.finish();
+        return;
+    }
+
+    cloneiframe.onload = deferred_tests_onload;
+    cloneiframe.src = deferred_tests[0].docurl;
+}
+
+function deferred_tests_onload(event)
+{
+    if (event.target != cloneiframe)
+        return;
+
+    deferred_tests[0].onloadfunc();
+    deferred_tests.shift();
+
+    run_deferred_tests();
+}
+
+</script>
+</pre>
+</body>
+</html>

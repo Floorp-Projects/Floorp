@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" class="willBeRemoved">
+<head>
+<link rel="stylesheet" type="text/css" href="frame_selection_underline.css"/>
+<script type="text/javascript">
+<![CDATA[
+
+function init(aTest)
+{
+  var target = document.getElementById("target");
+  var decoration = document.getElementById("decoration");
+  var leftSpacer = document.getElementById("leftspacer");
+  var rightSpacer = document.getElementById("rightspacer");
+
+  var docShell = window.docShell;
+  var controller =
+    docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsISelectionDisplay)
+            .QueryInterface(Ci.nsISelectionController);
+
+  const nsISelectionController = Ci.nsISelectionController;
+  if (aTest.selection.isIME) {
+    leftSpacer.style.display = rightSpacer.style.display = "inline-block";
+  } else {
+    leftSpacer.style.display = rightSpacer.style.display = "none";
+  }
+
+  target.style.fontFamily = aTest.font.family;
+  target.style.fontSize = aTest.font.defaultSize;
+
+  decoration.style.textDecorationStyle = aTest.decoration.styleName;
+  decoration.style.textDecorationColor = aTest.selection.decorationColor;
+
+  document.documentElement.removeAttribute("class");
+  setTimeout(function () {
+    document.documentElement.setAttribute("class", "willBeRemoved"); }, 0);
+}
+
+]]>
+</script>
+</head>
+<body class="reference">
+  <div id="target"><span id="decoration"><span id="leftspacer">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="rightspacer"></span>&nbsp;</span></div>
+</body>
+</html>

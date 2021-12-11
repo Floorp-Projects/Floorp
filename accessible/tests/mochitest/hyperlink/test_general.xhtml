@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="test for nsIAccessibleHyperLink interface on XUL:label elements">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript"
+          src="hyperlink.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function testThis(aID, aAcc, aRole, aAnchorCount, aAnchorName, aURI,
+                      aStartIndex, aEndIndex, aValid)
+    {
+      testRole(aID, aRole);
+      is(aAcc.anchorCount, aAnchorCount, "Wrong number of anchors for ID "
+         + aID + "!");
+      is(aAcc.getAnchor(0).name, aAnchorName, "Wrong name for ID " + aID + "!");
+      is(aAcc.getURI(0).spec, aURI, "URI wrong for ID " + aID + "!");
+      is(aAcc.startIndex, aStartIndex, "Wrong startIndex value for ID " + aID
+         + "!");
+      is(aAcc.endIndex, aEndIndex, "Wrong endIndex value for ID " + aID + "!");
+      is(aAcc.valid, aValid, "Wrong valid state for ID " + aID + "!");
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      var linkedLabelAcc = getAccessible("linkedLabel",
+                                         [nsIAccessibleHyperLink]);
+      testThis("linkedLabel", linkedLabelAcc, ROLE_LINK, 1,
+               "Mozilla Foundation home", "http://www.mozilla.org/", 1, 2,
+               true);
+      testStates(linkedLabelAcc, STATE_LINKED, 0);
+
+      var labelWithValueAcc = getAccessible("linkLabelWithValue",
+                                            [nsIAccessibleHyperLink]);
+      testThis("linkLabelWithValue", labelWithValueAcc, ROLE_LINK, 1,
+               "Mozilla Foundation", "http://www.mozilla.org/", 2, 3, true,
+               false, true);
+      testStates(labelWithValueAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
+
+      var normalLabelAcc = getAccessible("normalLabel");
+      testRole(normalLabelAcc, ROLE_LABEL);
+      is(normalLabelAcc.name, "This label should not be a link",
+         "Wrong name for normal label!");
+      testStates(normalLabelAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED));
+
+      //////////////////////////////////////////////////////////////////////////
+      // Test focus
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new focusLink("linkedLabel", true));
+      gQueue.push(new focusLink("linkLabelWithValue", true));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=421066"
+       title="Implement Mochitests for the nsIAccessibleHyperLink interface on XUL:label elements">
+      Mozilla Bug 421066
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <label id="linkedLabel" href="http://www.mozilla.org/" is="text-link">
+    Mozilla Foundation home</label>
+  <label id="linkLabelWithValue" value="Mozilla Foundation" is="text-link"
+   href="http://www.mozilla.org/" />
+  <label id="normalLabel" value="This label should not be a link" />
+</window>

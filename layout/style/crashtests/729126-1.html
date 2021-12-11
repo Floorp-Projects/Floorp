@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<body style="transition-duration: 1ms"></body>
+<script>
+var body = document.body;
+/* flush */ getComputedStyle(body, "").background;
+body.style.background = 'url(none.png), repeat';
+/* flush */ getComputedStyle(body, "").background;
+</script>
+</html>

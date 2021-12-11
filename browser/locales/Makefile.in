@@ -1,0 +1,113 @@
+# vim:set ts=8 sw=8 sts=8 noet:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/config.mk
+
+
+SUBMAKEFILES += \
+	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
+	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+	$(NULL)
+
+# This makefile uses variable overrides from the l10n-% target to
+# build non-default locales to non-default dist/ locations. Be aware!
+
+PWD := $(CURDIR)
+
+# These are defaulted to be compatible with the files the wget-en-US target
+# pulls. You may override them if you provide your own files.
+ZIP_IN ?= $(ABS_DIST)/$(PACKAGE)
+
+ifdef MOZ_DEV_EDITION
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@devedition.mozilla.org
+else
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
+endif
+# For Nightly, we know where to get the builds from to do local repacks
+ifdef NIGHTLY_BUILD
+export EN_US_BINARY_URL ?= https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central
+endif
+
+ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+MOZ_PKG_MAC_DSSTORE=$(ABS_DIST)/branding/dsstore
+MOZ_PKG_MAC_BACKGROUND=$(ABS_DIST)/branding/background.png
+MOZ_PKG_MAC_ICON=$(ABS_DIST)/branding/disk.icns
+MOZ_PKG_MAC_EXTRA=--symlink '/Applications:/ '
+endif
+
+ifeq ($(CPU_ARCH), aarch64)
+MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.ARM64.sfx
+else
+MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.Win32.sfx
+endif
+
+# Required for l10n.mk - defines a list of app sub dirs that should
+# be included in langpack xpis.
+DIST_SUBDIRS = $(DIST_SUBDIR)
+
+include $(topsrcdir)/config/rules.mk
+
+include $(topsrcdir)/toolkit/locales/l10n.mk
+
+l10n-%: AB_CD=$*
+l10n-%:
+	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
+	$(NSINSTALL) -D $(DIST)/install
+	@$(MAKE) -C ../../toolkit/locales l10n-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
+	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
+ifneq (,$(wildcard ../extensions/formautofill/locales))
+	@$(MAKE) -C ../extensions/formautofill/locales AB_CD=$* XPI_NAME=locale-$*
+endif
+	@$(MAKE) -C ../extensions/report-site-issue/locales AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
+	@$(MAKE) -C ../../devtools/startup/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
+	@$(MAKE) l10n AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
+	@$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
+
+chrome-%: AB_CD=$*
+chrome-%: IS_LANGUAGE_REPACK=1
+chrome-%:
+	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
+	@$(MAKE) -C ../../toolkit/locales chrome-$*
+	@$(MAKE) -C ../../services/sync/locales chrome AB_CD=$*
+	@$(MAKE) -C ../../extensions/spellcheck/locales chrome AB_CD=$*
+ifneq (,$(wildcard ../extensions/formautofill/locales))
+	@$(MAKE) -C ../extensions/formautofill/locales chrome AB_CD=$*
+endif
+	@$(MAKE) -C ../../devtools/client/locales chrome AB_CD=$*
+	@$(MAKE) -C ../../devtools/startup/locales chrome AB_CD=$*
+	@$(MAKE) chrome AB_CD=$*
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
+	@$(MAKE) -C ../extensions/report-site-issue/locales chrome AB_CD=$*
+
+package-win32-installer: $(SUBMAKEFILES)
+	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen ZIP_IN='$(ZIP_OUT)' installer
+
+langpack: langpack-$(AB_CD)
+
+# This is a generic target that will make a langpack, repack ZIP (+tarball)
+# builds, and repack an installer if applicable. It is called from the
+# tinderbox scripts. Alter it with caution.
+
+installers-%: IS_LANGUAGE_REPACK=1
+installers-%:
+	@$(MAKE) clobber-$*
+	@$(MAKE) l10n-$*
+	@$(MAKE) package-langpack-$*
+	@$(MAKE) repackage-zip-$*
+ifeq (WINNT,$(OS_ARCH))
+	@$(MAKE) package-win32-installer AB_CD=$*
+endif
+	@echo 'repackaging done'
+
+ident:
+	@printf 'fx_revision '
+	@$(PYTHON3) $(topsrcdir)/config/printconfigsetting.py \
+	    '$(STAGEDIST)'/application.ini App SourceStamp
+	@printf 'buildid '
+	@$(PYTHON3) $(topsrcdir)/config/printconfigsetting.py \
+	    '$(STAGEDIST)'/application.ini App BuildID

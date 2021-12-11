@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=199692
+-->
+<head>
+  <title>Scrolled page for bug 199692 tests</title>
+  <style type="text/css">
+/* Disable default margins/padding/borders so (0, 0) gets a div. */
+* { margin: 0; padding: 0; border: 0; }
+  </style>
+  <script type="application/javascript">
+function $(id) { return document.getElementById(id); }
+
+function runTests()
+{
+  var is = window.parent.is;
+
+  is(document.elementFromPoint(0, 0), $("down"),
+     "document.elementFromPoint not respecting scrolling?");
+  is(document.elementFromPoint(200, 200), null,
+     "should have returned null for a not-visible point");
+  is(document.elementFromPoint(3, -5), null,
+     "should have returned null for a not-visible point");
+}
+  </script>
+</head>
+<!-- This page is loaded in a 200px-square iframe scrolled to #down. -->
+<body>
+<div style="height: 150px; background: lightblue;">first</div>
+<div id="down" style="height: 250px; background: lightgreen;">second</div>
+</body>
+</html>
+

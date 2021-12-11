@@ -1,0 +1,23 @@
+namespace mozilla {
+namespace _ipdltest {
+
+sync protocol PTestPriority {
+parent:
+    [Priority=input] async PMsg1();
+    [Priority=input] sync PMsg2();
+    [Priority=vsync] async PMsg3();
+    [Priority=vsync] sync PMsg4();
+    [Priority=mediumhigh] async PMsg5();
+    [Priority=mediumhigh] sync PMsg6();
+    [Priority=control] async PMsg7();
+    [Priority=control] sync PMsg8();
+
+child:
+    [Priority=input] async CMsg1();
+    [Priority=vsync] async CMsg2();
+    [Priority=mediumhigh] async CMsg3();
+    [Priority=control] async CMsg4();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

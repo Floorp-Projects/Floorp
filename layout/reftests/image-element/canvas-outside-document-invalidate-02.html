@@ -1,0 +1,33 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test that a complete redraw of the context invalidates the rendering observer, too.
+     (mozDrawText calls nsCanvasRenderingContext2D::Redraw() without a dirty rect to invalidate everything.)
+-->
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<body style="background: -moz-element(#e) white">
+
+<script>
+
+var canvas = document.createElement("canvas");
+canvas.width = canvas.height = 1;
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 1, 1);
+window.addEventListener("MozReftestInvalidate", function () {
+  ctx.strokeStyle = "white";
+  ctx.font = "50px bold Arial";
+  ctx.translate(-8, 18);
+  ctx.lineWidth = 50;
+  ctx.strokeText("•", 0, 0);
+  document.documentElement.className = "";
+});
+
+document.mozSetImageElement("e", canvas);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PLockRequest;
+
+include "mozilla/dom/locks/IPCUtils.h";
+
+using mozilla::dom::LockMode from "mozilla/dom/LockManagerBinding.h";
+using mozilla::dom::LockManagerSnapshot from "mozilla/dom/LockManagerBinding.h";
+
+namespace mozilla {
+namespace dom {
+namespace locks {
+
+struct IPCLockRequest {
+  nsString name;
+  LockMode lockMode;
+  bool ifAvailable;
+  bool steal;
+};
+
+[RefCounted]
+protocol PLockManager {
+  manager PBackground;
+  manages PLockRequest;
+
+ parent:
+  async Query() returns (LockManagerSnapshot snapshot);
+
+  async PLockRequest(IPCLockRequest aRequest);
+
+  async __delete__();
+};
+
+} // namespace cache
+} // namespace dom
+} // namespace mozilla

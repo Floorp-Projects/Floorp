@@ -1,0 +1,106 @@
+<html>
+
+<head>
+  <title>Accessible drag and drop event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+
+  <script type="application/javascript">
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    // aria grabbed invoker
+    function changeGrabbed(aNodeOrID, aGrabValue) {
+      this.DOMNode = getNode(aNodeOrID);
+
+      this.invoke = function changeGrabbed_invoke() {
+        if (aGrabValue != undefined) {
+          this.DOMNode.setAttribute("aria-grabbed", aGrabValue);
+        }
+      };
+
+      this.check = function changeGrabbed_check() {
+        testAttrs(aNodeOrID, {"grabbed": aGrabValue}, true);
+      };
+
+      this.getID = function changeGrabbed_getID() {
+        return prettyName(aNodeOrID) + " aria-grabbed changed";
+      };
+    }
+
+    // aria dropeffect invoker
+    function changeDropeffect(aNodeOrID, aDropeffectValue) {
+      this.DOMNode = getNode(aNodeOrID);
+
+      this.invoke = function changeDropeffect_invoke() {
+        if (aDropeffectValue != undefined) {
+          this.DOMNode.setAttribute("aria-dropeffect", aDropeffectValue);
+        }
+      };
+
+      this.check = function changeDropeffect_check() {
+        testAttrs(aNodeOrID, {"dropeffect": aDropeffectValue}, true);
+      };
+
+      this.getID = function changeDropeffect_getID() {
+        return prettyName(aNodeOrID) + " aria-dropeffect changed";
+      };
+    }
+
+    function doTests() {
+      // Test aria attribute mutation events
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_OBJECT_ATTRIBUTE_CHANGED);
+
+      let id = "grabbable";
+      gQueue.push(new changeGrabbed(id, "true"));
+      gQueue.push(new changeGrabbed(id, "false"));
+      todo(false, "uncomment this test when 472142 is fixed.");
+      // gQueue.push(new changeGrabbed(id, "undefined"));
+
+      id = "dropregion";
+      gQueue.push(new changeDropeffect(id, "copy"));
+      gQueue.push(new changeDropeffect(id, "execute"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=510441"
+     title="Add support for nsIAccessibleEvent::OBJECT_ATTRIBUTE_CHANGED">
+    Mozilla Bug 510441
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <!-- ARIA grabbed -->
+  <div id="grabbable" role="button" aria-grabbed="foo">button</div>
+
+  <!-- ARIA dropeffect -->
+  <div id="dropregion" role="region" aria-dropeffect="none">button</div>
+</body>
+</html>

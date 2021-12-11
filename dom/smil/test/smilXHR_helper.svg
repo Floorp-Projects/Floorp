@@ -1,0 +1,8 @@
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle id="circ" cx="20" cy="20" r="15" fill="blue">
+    <animate id="animXML" attributeName="cx" attributeType="XML"
+             from="500" to="600" begin="0s" dur="4s"/>
+    <animate id="animCSS" attributeName="opacity" attributeType="CSS"
+             from="0.2" to="0.3" begin="0s" dur="4s"/>
+  </circle>
+</svg>

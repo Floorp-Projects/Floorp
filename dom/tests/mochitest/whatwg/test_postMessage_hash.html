@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage's interaction with hash URIs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <base href="http://example.com/" />
+</head>
+<body>
+<p>(no bug; this is a preemptive test)</p>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash"
+        name="kid"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.origin, "http://mochi.test:8888", "wrong origin");
+  ok(evt.source === window.frames.kid, "wrong source");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+
+  is(evt.data, "response-message", "wrong data");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage);
+
+function run()
+{
+  window.frames.kid.postMessage("from-parent", "http://mochi.test:8888");
+}
+
+window.addEventListener("load", run);
+</script>
+</pre>
+</body>
+</html>

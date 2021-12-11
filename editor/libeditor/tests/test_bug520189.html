@@ -1,0 +1,620 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=520182
+-->
+<head>
+  <title>Test for Bug 520182</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=520182">Mozilla Bug 520182</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="a" src="about:blank"></iframe>
+  <iframe id="b" src="about:blank"></iframe>
+  <iframe id="c" src="about:blank"></iframe>
+  <div id="d" contenteditable="true"></div>
+  <div id="e" contenteditable="true"></div>
+  <div id="f" contenteditable="true"></div>
+  <iframe id="g" src="about:blank"></iframe>
+  <iframe id="h" src="about:blank"></iframe>
+  <div id="i" contenteditable="true"></div>
+  <div id="j" contenteditable="true"></div>
+  <iframe id="k" src="about:blank"></iframe>
+  <div id="l" contenteditable="true"></div>
+  <iframe id="m" src="about:blank"></iframe>
+  <div id="n" contenteditable="true"></div>
+  <iframe id="o" src="about:blank"></iframe>
+  <div id="p" contenteditable="true"></div>
+  <iframe id="q" src="about:blank"></iframe>
+  <div id="r" contenteditable="true"></div>
+  <iframe id="s" src="about:blank"></iframe>
+  <div id="t" contenteditable="true"></div>
+  <iframe id="u" src="about:blank"></iframe>
+  <div id="v" contenteditable="true"></div>
+  <iframe id="w" src="about:blank"></iframe>
+  <div id="x" contenteditable="true"></div>
+  <iframe id="y" src="about:blank"></iframe>
+  <div id="z" contenteditable="true"></div>
+  <iframe id="aa" src="about:blank"></iframe>
+  <div id="bb" contenteditable="true"></div>
+  <iframe id="cc" src="about:blank"></iframe>
+  <div id="dd" contenteditable="true"></div>
+  <iframe id="ee" src="about:blank"></iframe>
+  <div id="ff" contenteditable="true"></div>
+  <iframe id="gg" src="about:blank"></iframe>
+  <div id="hh" contenteditable="true"></div>
+  <iframe id="ii" src="about:blank"></iframe>
+  <div id="jj" contenteditable="true"></div>
+  <iframe id="kk" src="about:blank"></iframe>
+  <div id="ll" contenteditable="true"></div>
+  <iframe id="mm" src="about:blank"></iframe>
+  <div id="nn" contenteditable="true"></div>
+  <iframe id="oo" src="about:blank"></iframe>
+  <div id="pp" contenteditable="true"></div>
+  <iframe id="qq" src="about:blank"></iframe>
+  <div id="rr" contenteditable="true"></div>
+  <iframe id="ss" src="about:blank"></iframe>
+  <div id="tt" contenteditable="true"></div>
+  <iframe id="uu" src="about:blank"></iframe>
+  <div id="vv" contenteditable="true"></div>
+  <div id="sss" contenteditable="true"></div>
+  <iframe id="ssss" src="about:blank"></iframe>
+  <div id="ttt" contenteditable="true"></div>
+  <iframe id="tttt" src="about:blank"></iframe>
+  <div id="uuu" contenteditable="true"></div>
+  <iframe id="uuuu" src="about:blank"></iframe>
+  <div id="vvv" contenteditable="true"></div>
+  <iframe id="vvvv" src="about:blank"></iframe>
+  <div id="www" contenteditable="true"></div>
+  <iframe id="wwww" src="about:blank"></iframe>
+  <div id="xxx" contenteditable="true"></div>
+  <iframe id="xxxx" src="about:blank"></iframe>
+  <div id="yyy" contenteditable="true"></div>
+  <iframe id="yyyy" src="about:blank"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/* eslint-disable no-useless-concat */
+
+/** Test for Bug 520182 **/
+
+const dataPayload = "foo<iframe src=\"data:text/html,bar\"></iframe>baz";
+const jsPayload = "foo<iframe src=\"javascript:void('bar');\"></iframe>baz";
+const httpPayload = "foo<iframe src=\"http://mochi.test:8888/\"></iframe>baz";
+const scriptPayload = "foo<script>document.write(\"<iframe></iframe>\");</sc" + "ript>baz";
+const scriptExternalPayload = "foo<script src=\"data:text/javascript,document.write('<iframe></iframe>');\"></sc" + "ript>baz";
+const validStyle1Payload = "foo<style>#bar{color:red;}</style>baz";
+const validStyle2Payload = "foo<span style=\"color:red\">bar</span>baz";
+const validStyle3Payload = "foo<style>@font-face{font-family:xxx;src:'xxx.ttf';}</style>baz";
+const validStyle4Payload = "foo<style>@namespace xxx url(http://example.com/);</style>baz";
+const invalidStyle1Payload = "foo<style>#bar{-moz-binding:url('data:text/xml,<?xml version=\"1.0\"><binding xmlns=\"http://www.mozilla.org/xbl\"/>');}</style>baz";
+const invalidStyle2Payload = "foo<span style=\"-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot;/>');\">bar</span>baz";
+const invalidStyle3Payload = "foo<style>@import 'xxx.css';</style>baz";
+const invalidStyle4Payload = "foo<span style=\"@import 'xxx.css';\">bar</span>baz";
+const invalidStyle5Payload = "foo<span style=\"@font-face{font-family:xxx;src:'xxx.ttf';}\">bar</span>baz";
+const invalidStyle6Payload = "foo<span style=\"@namespace xxx url(http://example.com/);\">bar</span>baz";
+const invalidStyle7Payload = "<html><head><title>xxx</title></head><body>foo</body></html>";
+const invalidStyle8Payload = "foo<style>@-moz-document url(http://example.com/) {};</style>baz";
+const invalidStyle9Payload = "foo<style>@-moz-keyframes bar {};</style>baz";
+const nestedStylePayload = "foo<style>#bar1{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-1&quot;/>');<style></style>#bar2{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-2&quot;/>');</style>baz";
+const validImgSrc1Payload = "foo<img src=\"data:image/png,bar\">baz";
+const validImgSrc2Payload = "foo<img src=\"javascript:void('bar');\">baz";
+const validImgSrc3Payload = "foo<img src=\"file:///bar.png\">baz";
+const validDataFooPayload = "foo<span data-bar=\"value\">baz</span>";
+const validDataFoo2Payload = "foo<span _bar=\"value\">baz</span>";
+const svgPayload = "foo<svg><title>svgtitle</title></svg>bar";
+const svg2Payload = "foo<svg><bogussvg/></svg>bar";
+const mathPayload = "foo<math><bogusmath/></math>bar";
+const math2Payload = "foo<math><style>@import \"yyy.css\";</style</math>bar";
+const math3Payload = "foo<math><mi></mi></math>bar";
+const videoPayload = "foo<video></video>bar";
+const microdataPayload = "<head><meta name=foo content=bar><link rel=stylesheet href=url></head><body><meta itemprop=foo content=bar><link itemprop=bar href=url></body>";
+
+var tests = [
+  {
+    id: "a",
+    isIFrame: true,
+    payload: dataPayload,
+    iframeCount: 0,
+    rootElement() { return document.getElementById("a").contentDocument.documentElement; },
+  },
+  {
+    id: "b",
+    isIFrame: true,
+    payload: jsPayload,
+    iframeCount: 0,
+    rootElement() { return document.getElementById("b").contentDocument.documentElement; },
+  },
+  {
+    id: "c",
+    isIFrame: true,
+    payload: httpPayload,
+    iframeCount: 0,
+    rootElement() { return document.getElementById("c").contentDocument.documentElement; },
+  },
+  {
+    id: "g",
+    isIFrame: true,
+    payload: scriptPayload,
+    rootElement() { return document.getElementById("g").contentDocument.documentElement; },
+    iframeCount: 0,
+  },
+  {
+    id: "h",
+    isIFrame: true,
+    payload: scriptExternalPayload,
+    rootElement() { return document.getElementById("h").contentDocument.documentElement; },
+    iframeCount: 0,
+  },
+  {
+    id: "d",
+    payload: dataPayload,
+    iframeCount: 0,
+    rootElement() { return document.getElementById("d"); },
+  },
+  {
+    id: "e",
+    payload: jsPayload,
+    iframeCount: 0,
+    rootElement() { return document.getElementById("e"); },
+  },
+  {
+    id: "f",
+    payload: httpPayload,
+    iframeCount: 0,
+    rootElement() { return document.getElementById("f"); },
+  },
+  {
+    id: "i",
+    payload: scriptPayload,
+    rootElement() { return document.getElementById("i"); },
+    iframeCount: 0,
+  },
+  {
+    id: "j",
+    payload: scriptExternalPayload,
+    rootElement() { return document.getElementById("j"); },
+    iframeCount: 0,
+  },
+  {
+    id: "k",
+    isIFrame: true,
+    payload: validStyle1Payload,
+    rootElement() { return document.getElementById("k").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
+  },
+  {
+    id: "l",
+    payload: validStyle1Payload,
+    rootElement() { return document.getElementById("l"); },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
+  },
+  {
+    id: "m",
+    isIFrame: true,
+    payload: validStyle2Payload,
+    rootElement() { return document.getElementById("m").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
+  },
+  {
+    id: "n",
+    payload: validStyle2Payload,
+    rootElement() { return document.getElementById("n"); },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
+  },
+  {
+    id: "s",
+    isIFrame: true,
+    payload: invalidStyle1Payload,
+    rootElement() { return document.getElementById("s").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
+  },
+  {
+    id: "t",
+    payload: invalidStyle1Payload,
+    rootElement() { return document.getElementById("t"); },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
+  },
+  {
+    id: "u",
+    isIFrame: true,
+    payload: invalidStyle2Payload,
+    rootElement() { return document.getElementById("u").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
+  },
+  {
+    id: "v",
+    payload: invalidStyle2Payload,
+    rootElement() { return document.getElementById("v"); },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
+  },
+  {
+    id: "w",
+    isIFrame: true,
+    payload: validStyle3Payload,
+    rootElement() { return document.getElementById("w").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style"); },
+  },
+  {
+    id: "x",
+    payload: validStyle3Payload,
+    rootElement() { return document.getElementById("x"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style"); },
+  },
+  {
+    id: "y",
+    isIFrame: true,
+    payload: invalidStyle5Payload,
+    rootElement() { return document.getElementById("y").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style"); },
+  },
+  {
+    id: "z",
+    payload: invalidStyle5Payload,
+    rootElement() { return document.getElementById("z"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style"); },
+  },
+  {
+    id: "cc",
+    isIFrame: true,
+    payload: validStyle4Payload,
+    rootElement() { return document.getElementById("cc").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style"); },
+  },
+  {
+    id: "dd",
+    payload: validStyle4Payload,
+    rootElement() { return document.getElementById("dd"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style"); },
+  },
+  {
+    id: "ee",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("ee").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style"); },
+  },
+  {
+    id: "ff",
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("ff"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style"); },
+  },
+  {
+    id: "gg",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("gg").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
+  },
+  {
+    id: "hh",
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("hh"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
+  },
+  {
+    id: "ii",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("ii").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
+  },
+  {
+    id: "jj",
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("jj"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
+  },
+  {
+    id: "kk",
+    isIFrame: true,
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("kk").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
+  },
+  {
+    id: "ll",
+    payload: invalidStyle6Payload,
+    rootElement() { return document.getElementById("ll"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
+  },
+  {
+    id: "mm",
+    isIFrame: true,
+    indirectPaste: true,
+    payload: invalidStyle7Payload,
+    rootElement() { return document.getElementById("mm").contentDocument.documentElement; },
+    checkResult(html) {
+      is(html.indexOf("xxx"), -1, "Should not have retained the title text");
+      isnot(html.indexOf("foo"), -1, "Should have retained the body text");
+    },
+  },
+  {
+    id: "nn",
+    indirectPaste: true,
+    payload: invalidStyle7Payload,
+    rootElement() { return document.getElementById("nn"); },
+    checkResult(html) {
+      is(html.indexOf("xxx"), -1, "Should not have retained the title text");
+      isnot(html.indexOf("foo"), -1, "Should have retained the body text");
+    },
+  },
+  {
+    id: "oo",
+    isIFrame: true,
+    payload: validDataFooPayload,
+    rootElement() { return document.getElementById("oo").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the data-bar attribute"); },
+  },
+  {
+    id: "pp",
+    payload: validDataFooPayload,
+    rootElement() { return document.getElementById("pp"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the data-bar attribute"); },
+  },
+  {
+    id: "qq",
+    isIFrame: true,
+    payload: validDataFoo2Payload,
+    rootElement() { return document.getElementById("qq").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the _bar attribute"); },
+  },
+  {
+    id: "rr",
+    payload: validDataFoo2Payload,
+    rootElement() { return document.getElementById("rr"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the _bar attribute"); },
+  },
+  {
+    id: "ss",
+    isIFrame: true,
+    payload: invalidStyle8Payload,
+    rootElement() { return document.getElementById("ss").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("@-moz-document"), -1, "Should not have retained the @-moz-document rule"); },
+  },
+  {
+    id: "tt",
+    payload: invalidStyle8Payload,
+    rootElement() { return document.getElementById("tt"); },
+    checkResult(html) { is(html.indexOf("@-moz-document"), -1, "Should not have retained the @-moz-document rule"); },
+  },
+  {
+    id: "uu",
+    isIFrame: true,
+    payload: invalidStyle9Payload,
+    rootElement() { return document.getElementById("uu").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("@-moz-keyframes"), -1, "Should not have retained the @-moz-keyframes rule"); },
+  },
+  {
+    id: "vv",
+    payload: invalidStyle9Payload,
+    rootElement() { return document.getElementById("vv"); },
+    checkResult(html) { is(html.indexOf("@-moz-keyframes"), -1, "Should not have retained the @-moz-keyframes rule"); },
+  },
+  {
+    id: "sss",
+    payload: svgPayload,
+    rootElement() { return document.getElementById("sss"); },
+    checkResult(html) { isnot(html.indexOf("svgtitle"), -1, "Should have retained SVG title"); },
+  },
+  {
+    id: "ssss",
+    isIFrame: true,
+    payload: svgPayload,
+    rootElement() { return document.getElementById("ssss").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("svgtitle"), -1, "Should have retained SVG title"); },
+  },
+  {
+    id: "ttt",
+    payload: svg2Payload,
+    rootElement() { return document.getElementById("ttt"); },
+    checkResult(html) { is(html.indexOf("bogussvg"), -1, "Should have dropped bogussvg element"); },
+  },
+  {
+    id: "tttt",
+    isIFrame: true,
+    payload: svg2Payload,
+    rootElement() { return document.getElementById("tttt").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("bogussvg"), -1, "Should have dropped bogussvg element"); },
+  },
+  {
+    id: "uuu",
+    payload: mathPayload,
+    rootElement() { return document.getElementById("uuu"); },
+    checkResult(html) { is(html.indexOf("bogusmath"), -1, "Should have dropped bogusmath element"); },
+  },
+  {
+    id: "uuuu",
+    isIFrame: true,
+    payload: mathPayload,
+    rootElement() { return document.getElementById("uuuu").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("bogusmath"), -1, "Should have dropped bogusmath element"); },
+  },
+  {
+    id: "vvv",
+    payload: math2Payload,
+    rootElement() { return document.getElementById("vvv"); },
+    checkResult(html) { is(html.indexOf("yyy.css"), -1, "Should have dropped MathML style element"); },
+  },
+  {
+    id: "vvvv",
+    isIFrame: true,
+    payload: math2Payload,
+    rootElement() { return document.getElementById("vvvv").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("yyy.css"), -1, "Should have dropped MathML style element"); },
+  },
+  {
+    id: "www",
+    payload: math3Payload,
+    rootElement() { return document.getElementById("www"); },
+    checkResult(html) { isnot(html.indexOf("<mi"), -1, "Should not have dropped MathML mi element"); },
+  },
+  {
+    id: "wwww",
+    isIFrame: true,
+    payload: math3Payload,
+    rootElement() { return document.getElementById("wwww").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("<mi"), -1, "Should not have dropped MathML mi element"); },
+  },
+  {
+    id: "xxx",
+    payload: videoPayload,
+    rootElement() { return document.getElementById("xxx"); },
+    checkResult(html) { isnot(html.indexOf("controls="), -1, "Should have added the controls attribute"); },
+  },
+  {
+    id: "xxxx",
+    isIFrame: true,
+    payload: videoPayload,
+    rootElement() { return document.getElementById("xxxx").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("controls="), -1, "Should have added the controls attribute"); },
+  },
+  {
+    id: "yyy",
+    payload: microdataPayload,
+    rootElement() { return document.getElementById("yyy"); },
+    checkResult(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); },
+  },
+  {
+    id: "yyyy",
+    isIFrame: true,
+    payload: microdataPayload,
+    rootElement() { return document.getElementById("yyyy").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); },
+  },
+];
+
+function doNextTest() {
+  /* global testCounter:true */
+  if (typeof testCounter == "undefined") {
+    testCounter = 0;
+  } else if (++testCounter == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  runTest(tests[testCounter]);
+
+  doNextTest();
+}
+
+function getLoadContext() {
+  const Ci = SpecialPowers.Ci;
+  return SpecialPowers.wrap(window).docShell.QueryInterface(Ci.nsILoadContext);
+}
+
+function runTest(test) {
+  var elem = document.getElementById(test.id);
+  if ("isIFrame" in test) {
+    elem.contentDocument.designMode = "on";
+    elem.contentWindow.focus();
+  } else {
+    elem.focus();
+  }
+
+  var trans = SpecialPowers.Cc["@mozilla.org/widget/transferable;1"]
+                           .createInstance(SpecialPowers.Ci.nsITransferable);
+  trans.init(getLoadContext());
+  var data = SpecialPowers.Cc["@mozilla.org/supports-string;1"]
+                          .createInstance(SpecialPowers.Ci.nsISupportsString);
+  data.data = test.payload;
+  trans.addDataFlavor("text/html");
+  trans.setTransferData("text/html", data);
+
+  if ("indirectPaste" in test) {
+    var editor, win;
+    if ("isIFrame" in test) {
+      win = elem.contentDocument.defaultView;
+    } else {
+      getSelection().collapse(elem, 0);
+      win = window;
+    }
+    editor = SpecialPowers.wrap(win).docShell.editor;
+    let beforeInputEvent = null;
+    let inputEvent = null;
+    let selectionRanges = [];
+    win.addEventListener("beforeinput", aEvent => {
+      beforeInputEvent = aEvent;
+      selectionRanges = [];
+      let selection = win.getSelection();
+      for (let i = 0; i < selection.rangeCount; i++) {
+        let range = selection.getRangeAt(i);
+        selectionRanges.push(
+          new win.StaticRange({startContainer: range.startContainer,
+                               startOffset: range.startOffset,
+                               endContainer: range.endContainer,
+                               endOffset: range.endOffset}));
+      }
+    }, {once: true});
+    win.addEventListener("input", aEvent => { inputEvent = aEvent; }, {once: true});
+    editor.pasteTransferable(trans);
+    isnot(beforeInputEvent, null, '"beforeinput" event should be fired');
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
+      is(beforeInputEvent.inputType, "insertFromPaste", `inputType of "beforeinput" event should be "insertFromPaste"`);
+      is(beforeInputEvent.data, null, 'data of "beforeinput" event should be null');
+      is(beforeInputEvent.dataTransfer.getData("text/html"), test.payload, 'dataTransfer of "beforeinput" event should have the HTML data');
+      is(beforeInputEvent.dataTransfer.getData("text/plain"), "", 'dataTransfer of "beforeinput" event should not have have plain text');
+      let targetRanges = beforeInputEvent.getTargetRanges();
+      is(targetRanges.length, selectionRanges.length, 'getTargetRanges() of "beforeinput" event should return selection ranges');
+      if (targetRanges.length === selectionRanges.length) {
+        for (let i = 0; i < selectionRanges.length; i++) {
+          is(targetRanges[i].startContainer, selectionRanges[i].startContainer,
+             `startContainer of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+          is(targetRanges[i].startOffset, selectionRanges[i].startOffset,
+             `startOffset of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+          is(targetRanges[i].endContainer, selectionRanges[i].endContainer,
+             `endContainer of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+          is(targetRanges[i].endOffset, selectionRanges[i].endOffset,
+             `endOffset of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+        }
+      }
+    }
+    is(inputEvent.type, "input", '"input" event should be fired');
+    is(inputEvent.inputType, "insertFromPaste", `inputType of "input" event should be "insertFromPaste"`);
+    is(inputEvent.data, null, 'data of "input" event should be null');
+    is(inputEvent.dataTransfer.getData("text/html"), test.payload, 'dataTransfer of "input" event should have the HTML data');
+    is(inputEvent.dataTransfer.getData("text/plain"), "", 'dataTransfer of "input" event should not have have plain text');
+    is(inputEvent.getTargetRanges().length, 0, 'getTargetRanges() of "input" event should return empty array');
+  } else {
+    var clipboard = SpecialPowers.Services.clipboard;
+
+    clipboard.setData(trans, null, SpecialPowers.Ci.nsIClipboard.kGlobalClipboard);
+
+    synthesizeKey("V", {accelKey: true});
+  }
+
+  if ("checkResult" in test) {
+    if ("isIFrame" in test) {
+      test.checkResult(elem.contentDocument.documentElement.innerHTML,
+        elem.contentDocument.documentElement.textContent);
+    } else {
+      test.checkResult(elem.innerHTML, elem.textContent);
+    }
+  } else {
+    var iframes = test.rootElement().querySelectorAll("iframe");
+    var expectedIFrameCount = ("iframeCount" in test) ? test.iframeCount : 1;
+    is(iframes.length, expectedIFrameCount, "Only " + expectedIFrameCount + " iframe should be pasted");
+    if (expectedIFrameCount > 0) {
+      ok(!iframes[0].hasAttribute("src"), "iframe should not have a src attrib");
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv(
+    { "set": [["layout.css.moz-document.content.enabled", true]]},
+    doNextTest);
+});
+</script>
+</pre>
+</body>
+</html>

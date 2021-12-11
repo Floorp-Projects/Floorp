@@ -1,0 +1,59 @@
+<!doctype html>
+
+<head>
+  <title>Table accessible style change event testing</title>
+
+  <link rel="stylesheet"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script src="../common.js"></script>
+  <script src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    async function testGotStyleChange(elem, name, value) {
+      let waitFor = waitForEvent(
+        EVENT_TABLE_STYLING_CHANGED, elem
+      );
+      if (value) {
+        document.getElementById(elem).style.setProperty(name, value);
+      } else {
+        document.getElementById(elem).style.removeProperty(name);
+      }
+      await waitFor;
+    }
+
+    async function doTests() {
+      info("Set new row background");
+      await testGotStyleChange("rowOne", "background-color", "green");
+
+      info("Remove row background");
+      await testGotStyleChange("rowOne", "background-color", null);
+
+      info("Change cell border");
+      await testGotStyleChange("cellOne", "border", "5px solid green");
+
+      info("Remove cell border");
+      await testGotStyleChange("cellOne", "border", null);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+<body>
+  <table>
+      <tr id="rowOne" style="background-color: red;">
+        <td id="cellOne">cell1</td>
+        <td>cell2</td>
+      </tr>
+      <tr>
+        <td>cell3</td>
+        <td>cell4</td>
+      </tr>
+    </table>
+</body>
+</html>

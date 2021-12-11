@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Sanity mouse-clicking test</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function clickButton() {
+  let clickPromise = new Promise(resolve => {
+    document.addEventListener("click", resolve);
+  });
+
+  if (getQueryArgs().dtc) {
+    // force a dispatch-to-content region on the document
+    document.addEventListener("wheel", function() { /* no-op */ }, { passive: false });
+    await promiseAllPaintsDone();
+    await promiseOnlyApzControllerFlushed();
+  }
+
+  synthesizeNativeMouseEventWithAPZ(
+    { type: "click", target: document.getElementById("b"), offsetX: 5, offsetY: 5 },
+    () => dump("Finished synthesizing click, waiting for button to be clicked...\n")
+  );
+
+  let e = await clickPromise;
+  is(e.target, document.getElementById("b"), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
+}
+
+waitUntilApzStable()
+.then(clickButton)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+ <button id="b" style="width: 10px; height: 10px"></button>
+</body>
+</html>

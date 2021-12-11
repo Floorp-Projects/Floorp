@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Noninteger coordinates test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="a" style="position: fixed; left: 5.5px; top: 5.5px; width: 100px; height: 100px; background: blue"></div>
+<p style="margin-top: 110px">
+<script>
+var a = document.getElementById("a");
+isnot(a, document.elementFromPoint(5, 5), "a shouldn't be found");
+isnot(a, document.elementFromPoint(5.25, 5.25), "a shouldn't be found");
+is(a, document.elementFromPoint(5.5, 5.5), "a should be found");
+is(a, document.elementFromPoint(5.75, 5.75), "a should be found");
+is(a, document.elementFromPoint(6, 6), "a should be found");
+is(a, document.elementFromPoint(105, 105), "a should be found");
+is(a, document.elementFromPoint(105.25, 105.25), "a should be found");
+isnot(a, document.elementFromPoint(105.5, 105.5), "a shouldn't be found");
+isnot(a, document.elementFromPoint(105.75, 105.75), "a shouldn't be found");
+isnot(a, document.elementFromPoint(106, 106), "a shouldn't be found");
+</script>
+</body>
+</html>

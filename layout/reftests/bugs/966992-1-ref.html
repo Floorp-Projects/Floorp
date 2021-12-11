@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcases for overflow-clip-box:content-box</title>
+    <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px monospace; padding:0; margin:7px;
+}
+
+input {
+  width: 100px; padding:50px; -moz-appearance:none; overflow-clip-box:padding-box;
+  border: 3px solid black;
+  background-color: white;
+  font-family: monospace;
+}
+
+p {
+ position:absolute;
+ margin:0;
+ width:70%;
+ height: 1px;
+ background:magenta;
+}
+.rel p { width:200%; }
+.block {
+  border:1px solid grey; height:50px; width:200px; padding:20px;
+  overflow:auto; overflow-clip-box:padding-box;
+}
+.rel { position:relative; }
+.mask1 { position:absolute; width:20px; background:white; top:0; bottom:0; right:0; }
+.mask2 { position:absolute; width:20px; background:white; top:0px; bottom:-15px; right:220px; z-index:99; }
+.mask3 { position:absolute; width:20px; background:white; top:0; bottom:0; left:200px; }
+.mask4 { position:absolute; height:40px; background:white; top:4px; left:3px; width:210px; z-index:99; }
+.mask5 { position:absolute; height:40px; background:white; top:3px; right:3px; width:50px; }
+.button { width:100px; padding:0 50px; overflow:hidden; }
+    </style>
+</head>
+<body>
+
+<div class="rel block">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX<p style="padding-right:20px"></p><div class=mask1></div></div>
+<div style="float:right">
+
+<div class="rel block" style="box-sizing:border-box;height:90px"><span style="padding-right:20px">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span><div class=mask1></div></div>
+
+</div>
+
+<div class="rel block"><span style="padding-right:20px">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span><p></p><div class=mask1></div></div>
+<div id="d1" class="rel block"><span style="padding-right:20px">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span><span style="position:relative;"><div class=mask2></div><div class=mask1></div></span><p></p></div>
+<script>
+document.getElementById("d1").scrollLeft = "100000";
+</script>
+<div class="block"><span style="padding-right:20px"><span style="position:relative;"><div class=mask3></div>XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span></span><p></p></div>
+
+<span style="position:relative"><input spellcheck=false type="text" placeholder="someveryveryveryveryverylongvalue"><div class=mask5></div></span>
+<span style="position:relative"><input spellcheck=false type="text" value="someveryveryveryveryverylongvalue"><div class=mask5></div></span><br>
+<span style="position:relative"><input spellcheck=false type="password" value="someveryveryveryveryverylongpassword"><div class=mask5></div></span>
+<span style="position:relative"><input spellcheck=false type="email" value="someveryveryveryveryverylongvalue"><div class=mask5></div></span>
+<span style="position:relative"><input spellcheck=false type="blah" value="someveryveryveryveryverylongvalue"><div class=mask5></div></span>
+<br>
+<input spellcheck=false type="button" value="button" class="button" style="overflow-clip-box:initial">
+<input spellcheck=false type="button" value="button" class="button">
+<input spellcheck=false type="reset" class="button">
+<input spellcheck=false type="submit" class="button"><br>
+<input spellcheck=false type="button" value="" class="button">
+<input spellcheck=false type="reset" value="" class="button">
+<input spellcheck=false type="submit" value="" class="button"><br>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+<html>
+<head>
+  <title>Test for Bug 625187 - the iframe</title>
+<!--
+   - Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/
+   -
+   - Contributor(s):
+   -   Mihai Sucan <mihai.sucan@gmail.com>
+   -->
+</head>
+<body>
+<p><button id="btn1" onclick="alert('hello world 2')">Button 2</button></p>
+<p><button id="btn2" onclick="window.parent.alert('hello world 3')">Button 3</button></p>
+</body>
+</html>

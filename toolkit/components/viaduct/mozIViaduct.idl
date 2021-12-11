@@ -1,0 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[uuid(f8f11a45-ff04-4d8b-80e0-9ce14824538e), scriptable, builtinclass]
+interface mozIViaduct: nsISupports
+{
+  void EnsureInitialized();
+};

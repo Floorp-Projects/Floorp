@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that reloading, pausing and seeking in a media element that's being captured behaves as expected</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script src="manifest.js"></script>
+</head>
+<body>
+<video id="v"></video>
+<video id="vout"></video>
+<video id="vout_untilended"></video>
+<pre id="test">
+<script>
+const v = document.getElementById('v');
+const vout = document.getElementById('vout');
+const vout_untilended = document.getElementById('vout_untilended');
+
+function dumpEvent(event) {
+  const video = event.target;
+  info(
+    `${video.name}:${video.id} GOT EVENT ${event.type} ` +
+    `currentTime=${video.currentTime} paused=${video.paused} ` +
+    `ended=${video.ended} readyState=${video.readyState}`
+  );
+}
+
+function unexpected(event) {
+  ok(false, `${event.type} event received on ${event.target.id} unexpectedly`);
+};
+
+const events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
+for (const e of events) {
+  v.addEventListener(e, dumpEvent);
+  vout.addEventListener(e, dumpEvent);
+  vout_untilended.addEventListener(e, dumpEvent);
+}
+
+function isWithinEps(a, b, msg) {
+  ok(Math.abs(a - b) < 0.01,
+     "Got " + a + ", expected " + b + "; " + msg);
+}
+
+function isGreaterThanOrEqualEps(a, b, msg) {
+  ok(a >= b - 0.01,
+     "Got " + a + ", expected at least " + b + "; " + msg);
+}
+
+async function startTest(test) {
+  const seekTime = test.duration/2;
+  const contentDuration = test.contentDuration ?? test.duration;
+
+  v.src = test.name;
+  v.name = test.name;
+  vout.name = test.name;
+  vout_untilended.name = test.name;
+  v.preload = "metadata";
+  await new Promise(r => v.onloadedmetadata = r);
+
+  vout.srcObject = v.mozCaptureStream();
+  vout.play();
+
+  vout_untilended.srcObject = v.mozCaptureStreamUntilEnded();
+  vout_untilended.play();
+
+  for (const track of [
+      ...vout.srcObject.getTracks(),
+      ...vout_untilended.srcObject.getTracks(),
+    ]) {
+    ok(track.muted, `${track.kind} track ${track.id} should be muted`);
+  }
+
+  v.play();
+
+  await Promise.all([
+    ...vout.srcObject.getTracks(),
+    ...vout_untilended.srcObject.getTracks()
+  ].map(t => new Promise(r => t.onunmute = r)));
+
+  await new Promise(r => v.onended = r);
+  isGreaterThanOrEqualEps(v.currentTime, test.duration,
+    "checking v.currentTime at first 'ended' event");
+
+  await Promise.all([
+    new Promise(r => vout.onended = r),
+    new Promise(r => vout_untilended.onended = r),
+  ]);
+
+  isGreaterThanOrEqualEps(vout.currentTime, contentDuration,
+    "checking vout.currentTime at first 'ended' event");
+  ok(vout.ended, "checking vout has actually ended");
+  ok(vout_untilended.ended, "checking vout_untilended has actually ended");
+
+  vout_untilended.srcObject.onaddtrack = unexpected;
+  vout_untilended.onplaying = unexpected;
+  vout_untilended.onended = unexpected;
+
+  const voutPreSeekCurrentTime = vout.currentTime;
+  v.currentTime = seekTime;
+  await new Promise(r => v.onseeked = r);
+
+  is(v.currentTime, seekTime, "Finished seeking");
+  is(vout.currentTime, voutPreSeekCurrentTime,
+    "checking vout.currentTime has not changed after seeking");
+
+  v.play();
+  vout.play();
+
+  await new Promise(r => v.onended = r);
+  isGreaterThanOrEqualEps(v.currentTime, test.duration,
+    "checking v.currentTime at second 'ended' event");
+
+  await new Promise(r => vout.onended = r);
+  isGreaterThanOrEqualEps(vout.currentTime,
+    (test.duration - seekTime) + contentDuration,
+    "checking vout.currentTime after seeking and playing through again");
+
+  v.src = test.name + "?1";
+  vout.play();
+  await v.play();
+
+  isnot(vout.srcObject.getTracks().length, 0, "There are some output tracks");
+
+  vout.onended = unexpected;
+  vout.srcObject.onremovetrack = unexpected;
+
+  v.pause();
+  await Promise.all(
+    vout.srcObject.getTracks().map(t => new Promise(r => t.onmute = r))
+  );
+
+  for (const track of vout.srcObject.getTracks()) {
+    track.onunmute = unexpected;
+  }
+
+  v.currentTime = 0;
+  await new Promise(r => v.onseeked = r);
+
+  v.play();
+  await Promise.all(
+    vout.srcObject.getTracks().map(t => new Promise(r => t.onunmute = r))
+  );
+
+  vout.srcObject.onremovetrack = null;
+
+  await new Promise(r => v.onended = r);
+  isGreaterThanOrEqualEps(v.currentTime, test.duration,
+    "checking v.currentTime at third 'ended' event");
+
+  await new Promise(r => vout.onended = r);
+  isGreaterThanOrEqualEps(vout.currentTime,
+    (test.duration - seekTime) + contentDuration*2,
+    "checking vout.currentTime after seeking, playing through and reloading");
+}
+
+(async () => {
+  SimpleTest.waitForExplicitFinish();
+  try {
+    const testVideo = getPlayableVideo(gSmallTests);
+    if (testVideo) {
+      await startTest(testVideo);
+    } else {
+      todo(false, "No playable video");
+    }
+  } catch(e) {
+    ok(false, `Error: ${e}`);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+</script>
+</pre>
+</body>
+</html>

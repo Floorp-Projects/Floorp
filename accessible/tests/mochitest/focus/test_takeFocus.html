@@ -1,0 +1,109 @@
+<html>
+
+<head>
+  <title>nsIAccessible::takeFocus testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function takeFocusInvoker(aID) {
+      this.accessible = getAccessible(aID);
+
+      this.eventSeq = [ new focusChecker(this.accessible) ];
+
+      this.invoke = function takeFocusInvoker_invoke() {
+        this.accessible.takeFocus();
+      };
+
+      this.getID = function takeFocusInvoker_getID() {
+        return "takeFocus for " + prettyName(aID);
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Test
+
+    // gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTest() {
+      disableLogging(); // from test_focusedChild
+      gQueue = new eventQueue();
+
+      gQueue.push(new takeFocusInvoker("aria-link"));
+      gQueue.push(new takeFocusInvoker("aria-link2"));
+      gQueue.push(new takeFocusInvoker("link"));
+      gQueue.push(new takeFocusInvoker("item2"));
+      gQueue.push(new takeFocusInvoker(document));
+      gQueue.push(new takeFocusInvoker("lb_item2"));
+      gQueue.push(new takeFocusInvoker(document));
+      gQueue.push(new takeFocusInvoker("lb_item3.2"));
+      gQueue.push(new takeFocusInvoker(document));
+      gQueue.push(new takeFocusInvoker("lb_item3.1"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429547"
+     title="Support aria-activedescendant usage in nsIAccesible::TakeFocus()">
+    Mozilla Bug 429547
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452710"
+     title="nsIAccessible::takeFocus testing">
+    Mozilla Bug 452710
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=706067"
+     title="Make takeFocus work on widget items">
+    Mozilla Bug 706067
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <span id="aria-link" role="link" tabindex="0">link</span>
+  <span id="aria-link2" role="link" tabindex="0">link</span>
+
+  <a id="link" href="">link</a>
+
+  <div role="listbox" aria-activedescendant="item1" id="container" tabindex="1">
+    <div role="option" id="item1">item1</div>
+    <div role="option" id="item2">item2</div>
+    <div role="option" id="item3">item3</div>
+  </div>
+
+  <select id="listbox" size="5">
+    <option id="lb_item1">item1</option>
+    <option id="lb_item2">item2</option>
+    <optgroup>
+      <option id="lb_item3.1">item 3.1</option>
+      <option id="lb_item3.2">item 3.2</option>
+    </optgroup>
+  </select>
+</body>
+</html>

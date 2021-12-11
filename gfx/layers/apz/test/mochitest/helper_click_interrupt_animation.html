@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Clicking on the content (not scrollbar) should interrupt animations</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript">
+
+async function test() {
+  var scroller = document.documentElement;
+  var verticalScrollbarWidth = window.innerWidth - scroller.clientWidth;
+
+  if (verticalScrollbarWidth == 0) {
+    ok(true, "Scrollbar width is zero on this platform, test is useless here");
+    return;
+  }
+
+  // The anchor is the fixed-pos div that we use to calculate coordinates to
+  // click on the scrollbar. That way we don't have to recompute coordinates
+  // as the page scrolls. The anchor is at the bottom-right corner of the
+  // content area.
+  var anchor = document.getElementById('anchor');
+
+  var xoffset = (verticalScrollbarWidth / 2);
+  // Get a y-coord near the bottom of the vertical scrollbar track. Assume the
+  // vertical thumb is near the top of the scrollback track (since scroll
+  // position starts off at zero) and won't get in the way. Also assume the
+  // down arrow button, if there is one, is square.
+  var yoffset = 0 - verticalScrollbarWidth - 5;
+
+  // Take control of the refresh driver
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.advanceTimeAndRefresh(0);
+
+  // Click at the bottom of the scrollbar track to trigger a page-down kind of
+  // scroll. This should use "desktop zooming" scrollbar code which should
+  // trigger an APZ scroll animation.
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: anchor,
+    offsetX: xoffset,
+    offsetY: yoffset,
+  });
+
+  // Run a few frames, that should be enough to let the scroll animation
+  // start. We check to make sure the scroll position has changed.
+  for (let i = 0; i < 5; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  await promiseOnlyApzControllerFlushed();
+
+  let curPos = scroller.scrollTop;
+  ok(curPos > 0,
+     `Scroll offset has moved down some, to ${curPos}`);
+
+  // Now we click on the content, which should cancel the animation. Run
+  // everything to reach a stable state.
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: anchor,
+    offsetX: -5,
+    offsetY: -5,
+  });
+  for (let i = 0; i < 1000; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  await promiseOnlyApzControllerFlushed();
+
+  // Ensure the scroll position hasn't changed since the last time we checked,
+  // which indicates the animation got interrupted.
+  is(scroller.scrollTop, curPos, `Scroll position hasn't changed again`);
+
+  utils.restoreNormalRefresh();
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+ <div style="position:fixed; bottom: 0; right: 0; width: 1px; height: 1px" id="anchor"></div>
+ <div style="height: 300vh; margin-bottom: 10000px; background-image: linear-gradient(red,blue)"></div>
+  The above div is sized to 3x screen height so the linear gradient is more steep in terms of
+  color/pixel. We only scroll a few pages worth so we don't need the gradient all the way down.
+  And then we use a bottom-margin to make the page really big so the scrollthumb is
+  relatively small, giving us lots of space to click on the scrolltrack.
+</body>
+</html>

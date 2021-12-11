@@ -1,0 +1,11 @@
+<form action="PASS.html" method="POST"><input name="foo"></form>
+<button>clicky</button>
+
+<script>
+document.querySelector("button")
+  .addEventListener("click", () => {
+    let f = document.querySelector("form");
+    f.dispatchEvent(new Event("submit"));
+    f.submit();
+  });
+</script>

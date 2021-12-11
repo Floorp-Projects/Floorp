@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function boom()
+{
+  var table = document.getElementById("table");
+
+  var newCaption = document.createElement('caption');
+  newCaption.appendChild(document.createTextNode("THIS SHOULD BE VISIBLE"));
+  table.appendChild(newCaption);
+  table.appendChild(document.createElement("tbody"));
+}
+</script>
+
+</head>
+<body onload="boom();">
+
+<table id="table"></table>
+</body>
+</html>

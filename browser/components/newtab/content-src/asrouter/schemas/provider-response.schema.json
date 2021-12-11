@@ -1,0 +1,67 @@
+{
+  "title": "ProviderResponse",
+  "description": "A response object for remote providers of AS Router",
+  "type": "object",
+  "version": "6.1.0",
+  "properties": {
+    "messages": {
+      "type": "array",
+      "description": "An array of router messages",
+      "items": {
+        "title": "RouterMessage",
+        "description": "A definition of an individual message",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for the message that should not conflict with any other previous message"
+          },
+          "template": {
+            "type": "string",
+            "description": "An id matching an existing Activity Stream Router template",
+            "enum": ["simple_snippet"]
+          },
+          "bundled": {
+            "type": "integer",
+            "description": "The number of messages of the same template this one should be shown with (optional)"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "If bundled with other messages of the same template, which order should this one be placed in? (optional - defaults to 0)"
+          },
+          "content": {
+            "type": "object",
+            "description": "An object containing all variables/props to be rendered in the template. See individual template schemas for details."
+          },
+          "targeting": {
+            "type": "string",
+            "description": "A JEXL expression representing targeting information"
+          },
+          "trigger": {
+            "type": "object",
+            "description": "An action to trigger potentially showing the message",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "A string identifying the trigger action",
+                "enum": ["firstRun", "openURL"]
+              },
+              "params": {
+                "type": "array",
+                "description": "An optional array of string parameters for the trigger action",
+                "items": {
+                  "type": "string",
+                  "description": "A parameter for the trigger action"
+                }
+              }
+            },
+            "required": ["id"]
+          }
+        },
+        "required": ["id", "template", "content"]
+      }
+    }
+  },
+  "required": ["messages"]
+}

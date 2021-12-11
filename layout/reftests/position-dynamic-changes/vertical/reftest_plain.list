@@ -1,0 +1,20 @@
+# Please see the comment at the beginning of reftest.list
+
+skip-if(ThreadSanitizer) fuzzy-if(geckoview,0-2,0-1382) == topN-heightA-bottomA.html topN-heightA-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == topN-heightA-bottomN.html topN-heightA-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == topA-heightN-bottomA.html topA-heightN-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == topN-heightN-bottomA.html topN-heightN-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == topA-heightN-bottomN.html topA-heightN-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == topA-heightA-bottomN.html topA-heightA-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topN-heightA-bottomA.html toauto-topN-heightA-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topN-heightA-bottomN.html toauto-topN-heightA-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topA-heightN-bottomA.html toauto-topA-heightN-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topN-heightN-bottomA.html toauto-topN-heightN-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topA-heightN-bottomN.html toauto-topA-heightN-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topA-heightA-bottomN.html toauto-topA-heightA-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topN-heightA-bottomA.html topN-heightA-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topN-heightA-bottomN.html topN-heightA-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topA-heightN-bottomA.html topA-heightN-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topN-heightN-bottomA.html topN-heightN-bottomA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topA-heightN-bottomN.html topA-heightN-bottomN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topA-heightA-bottomN.html topA-heightA-bottomN-ref.html

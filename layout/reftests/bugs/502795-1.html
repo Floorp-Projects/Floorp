@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>bug 502795 - letterspace with downloaded font</title>
+</head>
+<style type="text/css">
+@font-face {
+    font-family: test;
+    src: url(../fonts/MarkA.ttf);
+}
+p {
+    font-family: test;
+    font-size: 24pt;
+    letter-spacing: 10px;
+}
+</style>
+<!-- with letterspacing, the downloaded font will fail to render
+     via coretext due to bug 502795 -->
+<body>
+<p>A</p>
+</body>
+</html>

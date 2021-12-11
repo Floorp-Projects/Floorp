@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'/>
+  <title>
+    WebGL Conformance Test Suite Single Test Wrapper
+  </title>
+  <link rel='stylesheet' type='text/css' href='iframe-passthrough.css'/>
+</head>
+<body>
+<iframe id='test-frame'></iframe>
+<script>
+'use strict';
+
+var frameElem = document.getElementById('test-frame');
+
+////////////////////////////////////////////////////////////////////////
+
+window.webglTestHarness = {
+  reportResults(pathname, success, message) {
+    if (parent) {
+      parent.ok(success, message);
+    } else {
+      console.log('ok(' + success + ', \'' + message + '\')');
+    }
+  },
+
+  notifyFinished(testPath) {
+    console.error('webglTestHarness.notifyFinished');
+    if (parent) {
+      parent.SimpleTest.finish();
+    } else {
+      console.log('SimpleTest.finish()');
+    }
+  },
+};
+
+if (parent) {
+  parent.SimpleTest.waitForExplicitFinish();
+  parent.SimpleTest.requestFlakyTimeout('untriaged');
+
+  try {
+    let timeoutLengthMultiplier;
+    if (navigator.appVersion.includes('Android')) {
+      // From layout/tools/reftest/reftest.js:
+      var version = SpecialPowers.Services.sysinfo.getProperty('version');
+      var kAndroidVersion2_3 = 9;
+      if (version == kAndroidVersion2_3) {
+        timeoutLengthMultiplier = 2.0;
+      }
+    } else if (SpecialPowers.Services.sysinfo.getProperty('isMinGW')) {
+      timeoutLengthMultiplier = 2.0;
+    }
+    if (timeoutLengthMultiplier) {
+      parent.SimpleTest.requestLongerTimeout(timeoutLengthMultiplier);
+    }
+  } catch (e) {
+    console.error('Warning: No SpecialPowers.');
+  }
+};
+
+////////////////////////////////////////////////////////////////////////
+
+function runTest() {
+  var testPath = location.search.substr(1);
+  console.log('testPath: ' + testPath);
+  frameElem.src = testPath;
+}
+
+SpecialPowers.pushPrefEnv({"set": [
+  ['webgl.force-enabled', true],
+  ['webgl.enable-draft-extensions', true],
+]}, runTest);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
+-->
+<window title="Mozilla Bug 1224790"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 1224790 **/
+  /*
+   * 1. Opens modal dialog
+   * 2. Open non-modal window from modal dialog
+   * 3. Close non-modal window
+   * 4. Close modal dialog
+   * 5. Click button to ensure mouse event is working
+   */
+
+  function startTest() {
+    window.openDialog('file_bug1224790-1_modal.xhtml', '', 'modal,noopener', window);
+  }
+
+  function modalClosed() {
+    SimpleTest.waitForFocus(gotFocus);
+  }
+
+  var timer = null;
+  function gotFocus() {
+    var button = document.getElementById('button');
+    synthesizeMouseAtCenter(button, { type: 'mousemove' }, window);
+    function click() {
+      // The bug is not reproducible with synthesizeMouseAtCenter.
+      synthesizeNativeMouseEvent({ type: "click", target: button, atCenter: true });
+    }
+    click();
+    // On debug build, it's possible that the click event handler is not
+    // triggered by the first click in case the click is dispatched too early
+    // before Firefox gets ready for input.
+    // Click the button again after 1 sec when we don't get click event.
+    timer = setTimeout(click, 1000);
+  }
+
+  function onClick() {
+    if (timer) {
+      // Avoid clicking unrelated thing.
+      clearTimeout(timer);
+    }
+    ok(true, "Click event should be fired");
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(startTest);
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1224790"
+     target="_blank">Mozilla Bug 1224790</a>
+  </body>
+  <button id="button" label="button" oncommand="onClick()" />
+</window>

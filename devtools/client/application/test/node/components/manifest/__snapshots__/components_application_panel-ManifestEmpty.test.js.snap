@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestEmpty renders the expected snapshot 1`] = `
+<article
+  className="app-page__icon-container js-manifest-empty"
+>
+  <aside>
+    <Localized
+      attrs={
+        Object {
+          "alt": true,
+        }
+      }
+      id="sidebar-item-manifest"
+    >
+      <img
+        className="app-page__icon"
+        src="chrome://devtools/skin/images/application-manifest.svg"
+      />
+    </Localized>
+  </aside>
+  <div>
+    <Localized
+      id="manifest-empty-intro2"
+    >
+      <h1
+        className="app-page__title"
+      />
+    </Localized>
+    <p>
+      <Localized
+        id="manifest-empty-intro-link"
+      >
+        <a
+          onClick={[Function]}
+        />
+      </Localized>
+    </p>
+    <Localized
+      id="manifest-non-existing"
+    >
+      <p />
+    </Localized>
+  </div>
+</article>
+`;

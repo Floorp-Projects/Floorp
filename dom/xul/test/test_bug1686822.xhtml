@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <html:script><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+    let chromeWindow = browsingContext.topChromeWindow;
+
+    let resolve;
+    let i = 0;
+    chromeWindow.moduleScriptRan = function() {
+      ok(true, "Module script executed: " + ++i)
+      resolve();
+      resolve = null;
+    }
+
+    function testOnce() {
+      let currentWin;
+      return new Promise(r => {
+        currentWin = chromeWindow.open("window_bug1686822.xhtml", "", "chrome");
+        resolve = r;
+      }).then(function() {
+        currentWin.close();
+      });
+    }
+
+    (async function() {
+      // The first and second loads are different so make sure we test both code paths.
+      await testOnce();
+      await testOnce();
+      delete chromeWindow.moduleScriptRan;
+      SimpleTest.finish();
+    }());
+  ]]></html:script>
+</window>

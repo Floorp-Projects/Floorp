@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Test disableglobalhistory attribute on remote browsers"
+        onload="run_test()"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <browser id="inprocess_disabled" src="about:blank" type="content" disableglobalhistory="true" />
+  <browser id="inprocess_enabled" src="about:blank" type="content" />
+
+  <browser id="remote_disabled" src="about:blank" type="content" disableglobalhistory="true" />
+  <browser id="remote_enabled" src="about:blank" type="content" />
+
+  <script type="text/javascript">
+
+  const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+  ContentTask.setTestScope(window.arguments[0].wrappedJSObject);
+
+  function expectUseGlobalHistory(id, expected) {
+    let browser = document.getElementById(id);
+    /* eslint-disable-next-line no-shadow */
+    return ContentTask.spawn(browser, {id, expected}, function({id, expected}) {
+      Assert.equal(docShell.browsingContext.useGlobalHistory, expected,
+                   "Got the right useGlobalHistory state in the docShell of " + id);
+    });
+  }
+
+  async function run_test() {
+    await expectUseGlobalHistory("inprocess_disabled", false);
+    await expectUseGlobalHistory("inprocess_enabled", true);
+
+    await expectUseGlobalHistory("remote_disabled", false);
+    await expectUseGlobalHistory("remote_enabled", true);
+    window.arguments[0].done();
+    ok(true);
+  }
+
+  </script>
+</window>

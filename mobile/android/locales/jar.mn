@@ -1,0 +1,62 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Note: This file should only contain locale entries. All
+# override and resource entries should go to mobile/android/chrome/jar.mn to avoid
+# having to create the same entry for each locale.
+
+@AB_CD@.jar:
+% locale browser @AB_CD@ %locale/@AB_CD@/browser/
+  locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
+  locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
+  locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)
+  locale/@AB_CD@/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
+
+# overrides for toolkit l10n, also for en-US
+# keep this file list in sync with l10n.toml and filter.py
+relativesrcdir toolkit/locales:
+  locale/@AB_CD@/browser/overrides/aboutReader.properties          (%chrome/global/aboutReader.properties)
+  locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
+  locale/@AB_CD@/browser/overrides/intl.properties                 (%chrome/global/intl.properties)
+  locale/@AB_CD@/browser/overrides/intl.css                        (%chrome/global/intl.css)
+
+# overrides for dom l10n, also for en-US
+# keep this file list in sync with filter.py
+relativesrcdir dom/locales:
+  locale/@AB_CD@/browser/overrides/global.dtd                  (%chrome/global.dtd)
+  locale/@AB_CD@/browser/overrides/AccessFu.properties         (%chrome/accessibility/AccessFu.properties)
+  locale/@AB_CD@/browser/overrides/dom/dom.properties          (%chrome/dom/dom.properties)
+#about:plugins
+  locale/@AB_CD@/browser/overrides/plugins.properties          (%chrome/plugins.properties)
+
+# Fluent files
+# Note: All rules must be wildcards, as localized files are optional
+# Only run this if we're not en-US, as en-US is already built
+# by toolkit/locales/jar.mn.
+# If you're including files from a subdirectory, ensure that you're
+# putting them into the corresponding subdirectory in the target.
+# The wildcard ** does that for us in toolkit.
+
+#define EN_US en-US
+#if AB_CD != EN_US
+[localization] @AB_CD@.jar:
+relativesrcdir toolkit/locales:
+#about:crashes
+  crashreporter                                    (%crashreporter/**/*.ftl)
+#about:about
+  toolkit/about                                    (%toolkit/about/*About.ftl)
+#about:mozilla
+  toolkit/about                                    (%toolkit/about/*Mozilla.ftl)
+#about:support
+  toolkit/about                                    (%toolkit/about/*Support.ftl)
+#about:rights
+  toolkit/about                                    (%toolkit/about/*Rights.ftl)
+#about:compat
+  toolkit/about                                    (%toolkit/about/*Compat.ftl)
+#about:webrtc
+  toolkit/about                                    (%toolkit/about/*Webrtc.ftl)
+#endif
+# Do not add files below the endif. Reviewers, expand more context above
+# for comments.

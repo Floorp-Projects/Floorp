@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This is a spot check for whether the speculative parser reuses style, script or image loads after the referrer policy has changed.
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test preloads for Bug 704320</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="referrerHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * This is the main test routine -- serialized by use of a generator.
+ * It resets the counter, then performs two tests in sequence using
+ * the same iframe.
+ */
+var tests = (function*() {
+  var iframe = document.getElementById("testframe");
+
+  // reset the counter
+  yield resetCounter();
+
+  // load the second test frame
+  // it will call back into this function via postMessage when it finishes loading.
+  // and continue beyond the yield.
+  yield iframe.src = 'file_bug704320_preload_reuse.html';
+
+  // check the second test
+  yield checkResults(finalizePreloadReuse);
+
+  // reset the counter
+  yield resetCounter();
+
+  // load the third test frame
+  // it will call back into this function via postMessage when it finishes loading.
+  // and continue beyond the yield.
+  yield iframe.src = 'file_bug704320_preload_attr.html';
+
+  // check the third test
+  yield checkResults(finalizePreloadReferrerPolicyAttr);
+
+  // complete.
+  SimpleTest.finish();
+})();
+
+// Helper functions below.
+
+/**
+ * This checks the second test: a test where preloads SHOULD be reused.
+ * We expect one request for each image, script, js request since
+ * the referrer policy does not change after speculative loads.
+ */
+function finalizePreloadReuse(results) {
+  var expected = {'css': {'count': 1, 'referrers': ['origin']},
+                  'img': {'count': 1, 'referrers': ['origin']},
+                  'js':  {'count': 1, 'referrers': ['origin']}};
+
+  for (var x in expected) {
+    ok(x in results, "some " + x + " loads required in results object.");
+
+    is(results[x].count, expected[x].count,
+       "Expected " + expected[x].count + " loads for " + x + " requests.");
+
+    // 'origin' is required
+    ok(results[x].referrers.includes('origin'),
+       "One load for " + x + " should have had 'origin' referrer.");
+
+    // no other values should be in the referrers.
+    is(results[x].referrers.indexOf('none'), -1,
+       "No loads for " + x + " should have a missing referrer.");
+    is(results[x].referrers.indexOf('full'), -1,
+       "No loads for " + x + " should have an 'full' referrer.")
+  }
+
+  advance();
+}
+
+/**
+ * This checks the third test: a test where preload requests of image, style
+ * should use referrerpolicy attribute and we expect the preloads should not
+ * be reused
+ */
+function finalizePreloadReferrerPolicyAttr(results) {
+  var expected = {'css': {'count': 1, 'referrers': ['origin']},
+                  'img': {'count': 1, 'referrers': ['origin']},
+                  'js':  {'count': 1, 'referrers': ['origin']}};
+
+  for (var x in expected) {
+    ok(x in results, "some " + x + " loads required in results object.");
+
+    is(results[x].count, expected[x].count,
+       "Expected " + expected[x].count + " loads for " + x + " requests.");
+
+    // 'origin' is required
+    ok(results[x].referrers.includes('origin'),
+       "One load for " + x + " should have had 'origin' referrer.");
+
+    // no other values should be in the referrers.
+    is(results[x].referrers.indexOf('none'), -1,
+       "No loads for " + x + " should have a missing referrer.");
+    is(results[x].referrers.indexOf('full'), -1,
+       "No loads for " + x + " should have an 'full' referrer.")
+  }
+
+  advance();
+}
+
+/**
+ * Grabs the results via XHR and passes to checker.
+ */
+function checkResults(checker) {
+  doXHR('/tests/dom/base/test/bug704320_counter.sjs?results',
+        function(xhr) {
+          checker(JSON.parse(xhr.responseText));
+        },
+        function(xhr) {
+          ok(false, "Can't get results from the counter server.");
+        });
+}
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>

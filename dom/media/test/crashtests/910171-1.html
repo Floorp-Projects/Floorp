@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+var context = new window.OfflineAudioContext(1, 4096, 48000);
+context.oncomplete = function(e) {
+    document.documentElement.removeAttribute("class");
+};
+var delay = context.createDelay();
+delay.connect(context.destination);
+delay.delayTime.value = 1.0;
+var buffer = context.createBuffer(1, 2048, context.sampleRate);
+var source = context.createBufferSource();
+source.buffer = buffer;
+source.connect(delay);
+source.start();
+context.startRendering();
+</script>

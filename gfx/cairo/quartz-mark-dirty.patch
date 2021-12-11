@@ -1,0 +1,56 @@
+Date:   Thu Jan 5 18:40:01 2012 -0500
+
+Bug 715704. Add a quartz implementation of mark_dirty_rectangle. r=roc
+
+We need to drop our CGImage cache when the surface has been changed by outside users.
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -3116,16 +3116,27 @@ _cairo_quartz_surface_clipper_intersect_
+ 	    CGContextEOClip (surface->cgContext);
+     }
+ 
+     ND((stderr, "-- intersect_clip_path\n"));
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
++static cairo_status_t
++_cairo_quartz_surface_mark_dirty_rectangle (void *abstract_surface,
++					    int x, int y,
++					    int width, int height)
++{
++    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
++    _cairo_quartz_surface_will_change (surface);
++    return CAIRO_STATUS_SUCCESS;
++}
++
++
+ // XXXtodo implement show_page; need to figure out how to handle begin/end
+ 
+ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
+     CAIRO_SURFACE_TYPE_QUARTZ,
+     _cairo_quartz_surface_create_similar,
+     _cairo_quartz_surface_finish,
+     _cairo_quartz_surface_acquire_image,
+     _cairo_quartz_surface_release_source_image,
+@@ -3138,17 +3149,17 @@ static const struct _cairo_surface_backe
+     NULL, /* create_span_renderer */
+     NULL, /* check_span_renderer */
+     NULL, /* copy_page */
+     NULL, /* show_page */
+     _cairo_quartz_surface_get_extents,
+     NULL, /* old_show_glyphs */
+     NULL, /* get_font_options */
+     NULL, /* flush */
+-    NULL, /* mark_dirty_rectangle */
++    _cairo_quartz_surface_mark_dirty_rectangle,
+     NULL, /* scaled_font_fini */
+     NULL, /* scaled_glyph_fini */
+ 
+     _cairo_quartz_surface_paint,
+     _cairo_quartz_surface_mask,
+     _cairo_quartz_surface_stroke,
+     _cairo_quartz_surface_fill,
+     _cairo_quartz_surface_show_glyphs,

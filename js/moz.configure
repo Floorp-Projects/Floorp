@@ -1,0 +1,1150 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+@depends(build_project)
+def js_standalone(build_project):
+    if build_project == "js":
+        return True
+
+
+# Branding
+# ==============================================================
+option(
+    "--with-app-name",
+    env="MOZ_APP_NAME",
+    nargs=1,
+    help="Used for e.g. the binary program file name. If not set, "
+    "defaults to a lowercase form of MOZ_APP_BASENAME.",
+)
+
+
+@depends("--with-app-name", js_standalone, moz_app_basename)
+def moz_app_name(value, js_standalone, moz_app_basename):
+    if value:
+        return value[0]
+    if js_standalone:
+        return "js"
+    return moz_app_basename.lower()
+
+
+set_config("MOZ_APP_NAME", moz_app_name)
+
+# SmooshMonkey (new frontend)
+# ==================================================
+
+# Define here in order to use the option from bindgen.configure.
+option(
+    "--enable-smoosh",
+    default=False,
+    help="Enable SmooshMonkey (new JS engine frontend)",
+)
+
+
+@depends("--enable-smoosh")
+def enable_smoosh(value):
+    if value:
+        return True
+
+
+set_config("JS_ENABLE_SMOOSH", enable_smoosh)
+set_define("JS_ENABLE_SMOOSH", enable_smoosh)
+
+include("../build/moz.configure/nspr.configure", when="--enable-compile-environment")
+include("../build/moz.configure/rust.configure", when="--enable-compile-environment")
+include("../build/moz.configure/bindgen.configure", when="--enable-compile-environment")
+
+set_config("JS_STANDALONE", js_standalone)
+set_define("JS_STANDALONE", js_standalone)
+add_old_configure_assignment("JS_STANDALONE", js_standalone)
+option(
+    "--enable-js-shell", default=js_standalone, help="{Build|Do not build} the JS shell"
+)
+
+
+@depends("--enable-js-shell")
+def js_disable_shell(value):
+    if not value:
+        return True
+
+
+set_config("JS_DISABLE_SHELL", js_disable_shell)
+
+set_define("JS_64BIT", depends(target)(lambda t: t.bitness == 64 or None))
+
+set_define("JS_PUNBOX64", depends(target)(lambda t: t.bitness == 64 or None))
+set_define("JS_NUNBOX32", depends(target)(lambda t: t.bitness == 32 or None))
+
+
+# SpiderMonkey as a shared library, and how its symbols are exported
+# ==================================================================
+option(
+    "--disable-shared-js",
+    when=js_standalone,
+    help="{Create|Do not create} a shared library",
+)
+
+option(
+    "--disable-export-js",
+    when=js_standalone,
+    help="{Mark|Do not mark} JS symbols as DLL exported/visible",
+)
+
+
+@depends("--disable-shared-js", "--disable-export-js", when=js_standalone)
+def shared_js(shared_js, export_js):
+    if shared_js:
+        if not export_js:
+            die("Must export JS symbols when building a shared library.")
+        return True
+
+
+set_config("JS_SHARED_LIBRARY", shared_js)
+add_old_configure_assignment("JS_SHARED_LIBRARY", shared_js)
+
+
+@depends(shared_js, "--disable-export-js", when=js_standalone)
+def exportable_js_api(shared_js, export_js):
+    if not shared_js and export_js:
+        return True
+
+
+set_define("STATIC_EXPORTABLE_JS_API", exportable_js_api)
+
+
+@depends(shared_js, exportable_js_api)
+def static_js_api(shared_js, export_js):
+    if not shared_js and not export_js:
+        return True
+
+
+set_define("STATIC_JS_API", static_js_api)
+
+
+@depends(shared_js)
+def static_js(value):
+    if not value:
+        return True
+
+
+set_define("MOZ_STATIC_JS", static_js)
+
+
+# JIT support
+# =======================================================
+@depends(target)
+def jit_default(target):
+    if target.cpu in ("x86", "x86_64", "arm", "aarch64", "mips32", "mips64"):
+        return True
+    return False
+
+
+option("--enable-jit", default=jit_default, help="{Enable|Disable} use of the JITs")
+
+
+@deprecated_option("--enable-ion")
+def report_deprecated(value):
+    if value:
+        die("--enable-ion is deprecated, use --enable-jit instead")
+    else:
+        die("--disable-ion is deprecated, use --disable-jit instead")
+
+
+# JIT code simulator for cross compiles
+# =======================================================
+option(
+    "--enable-simulator",
+    choices=("arm", "arm64", "mips32", "mips64"),
+    nargs=1,
+    help="Enable a JIT code simulator for the specified architecture",
+)
+
+
+@depends("--enable-jit", "--enable-simulator", target)
+def simulator(jit_enabled, simulator_enabled, target):
+    if not jit_enabled or not simulator_enabled:
+        return
+
+    sim_cpu = simulator_enabled[0]
+
+    if sim_cpu in ("arm", "mips32"):
+        if target.cpu != "x86":
+            die("The %s simulator only works on x86." % sim_cpu)
+
+    if sim_cpu in ("arm64", "mips64"):
+        if target.cpu != "x86_64":
+            die("The %s simulator only works on x86-64." % sim_cpu)
+
+    return namespace(**{sim_cpu: True})
+
+
+set_config("JS_SIMULATOR", depends_if(simulator)(lambda x: True))
+set_config("JS_SIMULATOR_ARM", simulator.arm)
+set_config("JS_SIMULATOR_ARM64", simulator.arm64)
+set_config("JS_SIMULATOR_MIPS32", simulator.mips32)
+set_config("JS_SIMULATOR_MIPS64", simulator.mips64)
+set_define("JS_SIMULATOR", depends_if(simulator)(lambda x: True))
+set_define("JS_SIMULATOR_ARM", simulator.arm)
+set_define("JS_SIMULATOR_ARM64", simulator.arm64)
+set_define("JS_SIMULATOR_MIPS32", simulator.mips32)
+set_define("JS_SIMULATOR_MIPS64", simulator.mips64)
+
+
+@depends("--enable-jit", simulator, target)
+def jit_codegen(jit_enabled, simulator, target):
+    if not jit_enabled:
+        return namespace(none=True)
+
+    if simulator:
+        return simulator
+
+    if target.cpu == "aarch64":
+        return namespace(arm64=True)
+    elif target.cpu == "x86_64":
+        return namespace(x64=True)
+
+    return namespace(**{str(target.cpu): True})
+
+
+set_config("JS_CODEGEN_NONE", jit_codegen.none)
+set_config("JS_CODEGEN_ARM", jit_codegen.arm)
+set_config("JS_CODEGEN_ARM64", jit_codegen.arm64)
+set_config("JS_CODEGEN_MIPS32", jit_codegen.mips32)
+set_config("JS_CODEGEN_MIPS64", jit_codegen.mips64)
+set_config("JS_CODEGEN_X86", jit_codegen.x86)
+set_config("JS_CODEGEN_X64", jit_codegen.x64)
+set_define("JS_CODEGEN_NONE", jit_codegen.none)
+set_define("JS_CODEGEN_ARM", jit_codegen.arm)
+set_define("JS_CODEGEN_ARM64", jit_codegen.arm64)
+set_define("JS_CODEGEN_MIPS32", jit_codegen.mips32)
+set_define("JS_CODEGEN_MIPS64", jit_codegen.mips64)
+set_define("JS_CODEGEN_X86", jit_codegen.x86)
+set_define("JS_CODEGEN_X64", jit_codegen.x64)
+
+# Profiling
+# =======================================================
+option(
+    "--enable-instruments",
+    env="MOZ_INSTRUMENTS",
+    help="Enable instruments remote profiling",
+)
+
+
+@depends("--enable-instruments", target)
+def instruments(value, target):
+    if value and target.os != "OSX":
+        die("--enable-instruments cannot be used when targeting %s", target.os)
+    if value:
+        return True
+
+
+set_config("MOZ_INSTRUMENTS", instruments)
+set_define("MOZ_INSTRUMENTS", instruments)
+add_old_configure_assignment("MOZ_INSTRUMENTS", instruments)
+imply_option("--enable-profiling", instruments, reason="--enable-instruments")
+
+option("--enable-callgrind", env="MOZ_CALLGRIND", help="Enable callgrind profiling")
+
+
+@depends("--enable-callgrind")
+def callgrind(value):
+    if value:
+        return True
+
+
+set_define("MOZ_CALLGRIND", callgrind)
+imply_option("--enable-profiling", callgrind)
+
+
+@depends(milestone)
+def enable_profiling(milestone):
+    return milestone.is_nightly
+
+
+option(
+    "--enable-profiling",
+    env="MOZ_PROFILING",
+    default=enable_profiling,
+    help="{Set|Do not set} compile flags necessary for using sampling "
+    "profilers (e.g. shark, perf)",
+)
+
+
+@depends("--enable-profiling")
+def profiling(value):
+    if value:
+        return True
+
+
+add_old_configure_assignment("MOZ_PROFILING", profiling)
+
+with only_when("--enable-compile-environment"):
+    imply_option("--enable-frame-pointers", True, when=profiling)
+
+
+@depends(profiling, target)
+def imply_vtune(value, target):
+    ok_cpu = target.cpu in ["x86", "x86_64"]
+    ok_kernel = target.kernel == "WINNT" or (
+        target.kernel == "Linux" and target.os == "GNU"
+    )
+
+    if value and ok_cpu and ok_kernel:
+        return True
+
+
+set_config("MOZ_PROFILING", profiling)
+set_define("MOZ_PROFILING", profiling)
+imply_option("--enable-vtune", imply_vtune, reason="--enable-profiling")
+
+
+option("--enable-vtune", env="MOZ_VTUNE", help="Enable VTune profiling")
+
+
+@depends("--enable-vtune")
+def vtune(value):
+    if value:
+        return True
+
+
+set_config("MOZ_VTUNE", vtune)
+set_define("MOZ_VTUNE", vtune)
+
+
+option(
+    "--enable-gc-probes",
+    env="JS_GC_PROBES",
+    help="Turn on probes for allocation and finalization",
+)
+
+
+@depends("--enable-gc-probes")
+def gc_probes(value):
+    if value:
+        return True
+
+
+set_define("JS_GC_PROBES", gc_probes)
+
+
+option(
+    "--enable-gczeal",
+    default=depends(when=moz_debug)(lambda: True),
+    help="{Enable|Disable} zealous GCing",
+)
+
+set_define("JS_GC_ZEAL", depends_if("--enable-gczeal")(lambda _: True))
+
+
+# Use a smaller chunk size for GC chunks
+# ========================================================
+# Use large (1MB) chunks by default.  This option can be used to give
+# smaller (currently 256K) chunks.
+option(
+    "--enable-small-chunk-size",
+    help="Allocate memory for JS GC things in smaller chunks",
+)
+
+set_define(
+    "JS_GC_SMALL_CHUNK_SIZE", depends(when="--enable-small-chunk-size")(lambda: True)
+)
+
+
+# Trace logging.
+# =======================================================
+@depends(milestone)
+def default_trace_logging(milestone):
+    return milestone.is_nightly
+
+
+option(
+    "--enable-trace-logging",
+    default=default_trace_logging,
+    help="{Enable|Disable} trace logging",
+)
+
+set_config("ENABLE_TRACE_LOGGING", depends_if("--enable-trace-logging")(lambda x: True))
+set_define("JS_TRACE_LOGGING", depends_if("--enable-trace-logging")(lambda x: True))
+
+
+# Enable breakpoint for artificial OOMs
+# =======================================================
+option(
+    "--enable-oom-breakpoint", help="Enable a breakpoint function for artificial OOMs"
+)
+
+set_define("JS_OOM_BREAKPOINT", depends_if("--enable-oom-breakpoint")(lambda _: True))
+
+
+option("--enable-perf", env="JS_ION_PERF", help="Enable Linux perf integration")
+
+
+@depends("--enable-perf")
+def ion_perf(value):
+    if value:
+        return True
+
+
+set_define("JS_ION_PERF", ion_perf)
+
+
+option(
+    "--enable-jitspew",
+    default=depends(when=moz_debug)(lambda: True),
+    help="{Enable|Disable} the Jit spew and IONFLAGS environment " "variable",
+)
+
+set_define("JS_JITSPEW", depends_if("--enable-jitspew")(lambda _: True))
+set_config("JS_JITSPEW", depends_if("--enable-jitspew")(lambda _: True))
+
+# Also enable the structured spewer
+set_define("JS_STRUCTURED_SPEW", depends_if("--enable-jitspew")(lambda _: True))
+set_config("JS_STRUCTURED_SPEW", depends_if("--enable-jitspew")(lambda _: True))
+
+
+@depends("--enable-jit", "--enable-jitspew", simulator, target, moz_debug)
+def jit_disasm_arm(jit_enabled, spew, simulator, target, debug):
+    if not jit_enabled:
+        return
+
+    if simulator and (debug or spew):
+        if getattr(simulator, "arm", None):
+            return True
+
+    if target.cpu == "arm" and (debug or spew):
+        return True
+
+
+set_config("JS_DISASM_ARM", jit_disasm_arm)
+set_define("JS_DISASM_ARM", jit_disasm_arm)
+
+
+@depends("--enable-jit", "--enable-jitspew", simulator, target, moz_debug)
+def jit_disasm_arm64(jit_enabled, spew, simulator, target, debug):
+    if not jit_enabled:
+        return
+
+    if simulator and (debug or spew):
+        if getattr(simulator, "arm64", None):
+            return True
+
+    if target.cpu == "aarch64" and (debug or spew):
+        return True
+
+
+set_config("JS_DISASM_ARM64", jit_disasm_arm64)
+set_define("JS_DISASM_ARM64", jit_disasm_arm64)
+
+# When enabled, masm will generate assumeUnreachable calls that act as
+# assertions in the generated code. This option is worth disabling when you
+# have to track mutated values through the generated code, to avoid constantly
+# dumping registers on and off the stack.
+option(
+    "--enable-masm-verbose",
+    default=depends(when=moz_debug)(lambda: True),
+    help="{Enable|Disable} MacroAssembler verbosity of generated code.",
+)
+set_define("JS_MASM_VERBOSE", depends_if("--enable-masm-verbose")(lambda _: True))
+set_config("JS_MASM_VERBOSE", depends_if("--enable-masm-verbose")(lambda _: True))
+
+# Architecture feature flags
+# =======================================================
+
+# Apple silicon does not seem to have any way to query the OS for the JSCVT
+# flag stored in the ID_AA64ISAR1_EL1 system register. In the mean time, we
+# hard code the value of the JSCVT flag which guards the implementation of
+# FJCVTZS instruction as part of ARMv8.3-JSConv.
+@depends(target)
+def is_apple_silicon(target):
+    return target.os == "OSX" and target.kernel == "Darwin" and target.cpu == "aarch64"
+
+
+option(
+    "--enable-arm64-fjcvtzs",
+    default=is_apple_silicon,
+    help="{Enable|Disable} static use of FJCVTZS instruction on Aarch64 targets.",
+)
+
+# The "ARM Architecture Reference Manual" for ARMv8 defines the JSCVT flag as
+# being a 4 bit integer (D12.2.52) and it can be manipulated using >= operator
+# (D12.1.4).
+#
+# The FJCVTZS instruction is implemented if ID_AA64ISAR1_EL1.JSCVT >= 1.
+@depends("--enable-arm64-fjcvtzs", target, simulator)
+def aarch64_jscvt(fjcvtzs, target, simulator):
+    if target.cpu == "aarch64" and fjcvtzs:
+        return 1
+
+    if simulator and getattr(simulator, "arm64", False) and fjcvtzs:
+        return 1
+
+    return 0
+
+
+set_define("MOZ_AARCH64_JSCVT", aarch64_jscvt)
+
+# CTypes
+# =======================================================
+@depends(js_standalone)
+def ctypes_default(js_standalone):
+    return not js_standalone
+
+
+option("--enable-ctypes", default=ctypes_default, help="{Enable|Disable} js-ctypes")
+
+build_ctypes = depends_if("--enable-ctypes")(lambda _: True)
+
+set_config("BUILD_CTYPES", build_ctypes)
+set_define("BUILD_CTYPES", build_ctypes)
+
+set_config("JS_HAS_CTYPES", build_ctypes)
+set_define("JS_HAS_CTYPES", build_ctypes)
+
+
+@depends("--enable-ctypes", "--enable-compile-environment")
+def ctypes_and_compile_environment(ctypes, compile_environment):
+    return ctypes and compile_environment
+
+
+include("ffi.configure", when=ctypes_and_compile_environment)
+
+
+# Enable pipeline operator
+# ===================================================
+option("--enable-pipeline-operator", default=False, help="Enable pipeline operator")
+
+
+@depends("--enable-pipeline-operator")
+def enable_pipeline_operator(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_PIPELINE_OPERATOR", enable_pipeline_operator)
+set_define("ENABLE_PIPELINE_OPERATOR", enable_pipeline_operator)
+
+
+# SIMD acceleration for encoding_rs
+# ==============================================================
+
+option(
+    "--enable-rust-simd", env="MOZ_RUST_SIMD", help="Enable explicit SIMD in Rust code."
+)
+
+
+@depends("--enable-rust-simd", target)
+def rust_simd(value, target):
+    # As of 2019-09-17, the simd-accel feature of encoding_rs has not
+    # been properly set up outside aarch64, armv7, x86 and x86_64.
+    if target.cpu in ("aarch64", "arm", "x86", "x86_64") and value:
+        return True
+
+
+set_config("MOZ_RUST_SIMD", rust_simd)
+set_define("MOZ_RUST_SIMD", rust_simd)
+
+
+# Support for wasm code generation with Cranelift
+# ==============================================================
+
+option(
+    "--enable-cranelift",
+    default=False,
+    help="{Enable|Disable} Cranelift code generator for wasm",
+)
+
+
+@depends(
+    "--enable-cranelift",
+    "--enable-jit",
+    "--enable-simulator",
+    target,
+    target_is_windows,
+)
+def enable_cranelift(value, jit_enabled, simulator, target, is_windows):
+    if not value:
+        return
+
+    if not jit_enabled:
+        die("--enable-cranelift requires --enable-jit")
+
+    if not (
+        target.cpu == "aarch64"
+        or (target.cpu == "x86_64" and simulator and simulator[0] == "arm64")
+    ):
+        die("--enable-cranelift is only supported on arm64")
+
+    if is_windows:
+        die("--enable-cranelift is not supported on windows")
+
+    return True
+
+
+set_config("ENABLE_WASM_CRANELIFT", enable_cranelift)
+set_define("ENABLE_WASM_CRANELIFT", enable_cranelift)
+
+
+# Telemetry to measure compile time and generated-code runtime
+# ============================================================
+
+option(
+    "--enable-spidermonkey-telemetry",
+    default=milestone.is_nightly,
+    help="{Enable|Disable} performance telemetry for SpiderMonkey (e.g. compile and run times)",
+)
+
+set_define(
+    "ENABLE_SPIDERMONKEY_TELEMETRY",
+    depends_if("--enable-spidermonkey-telemetry")(lambda x: True),
+)
+
+# Support for debugging code generated by wasm backends
+# =====================================================
+
+option(
+    "--enable-wasm-codegen-debug",
+    default=depends(when=moz_debug)(lambda: True),
+    help="{Enable|Disable} debugging for wasm codegen",
+)
+
+set_config(
+    "WASM_CODEGEN_DEBUG", depends_if("--enable-wasm-codegen-debug")(lambda x: True)
+)
+set_define(
+    "WASM_CODEGEN_DEBUG", depends_if("--enable-wasm-codegen-debug")(lambda x: True)
+)
+
+# Support for WebAssembly function-references.
+# ===========================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_function_references(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-function-references",
+    default=default_wasm_function_references,
+    help="{Enable|Disable} WebAssembly function-references",
+)
+
+
+@depends("--enable-wasm-function-references")
+def wasm_function_references(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
+set_define("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
+
+# Support for WebAssembly GC.
+# ===========================
+
+
+@depends(milestone.is_nightly, "--enable-wasm-function-references")
+def default_wasm_gc(is_nightly, function_references):
+    if is_nightly and function_references:
+        return True
+
+
+option(
+    "--enable-wasm-gc", default=default_wasm_gc, help="{Enable|Disable} WebAssembly GC"
+)
+
+
+@depends("--enable-wasm-gc", "--enable-wasm-function-references")
+def wasm_gc(value, function_references):
+    if not value:
+        return
+
+    if function_references:
+        return True
+
+    die("--enable-wasm-gc only possible with --enable-wasm-function-references")
+
+
+set_config("ENABLE_WASM_GC", wasm_gc)
+set_define("ENABLE_WASM_GC", wasm_gc)
+
+
+# Support for WebAssembly private ref types.
+# Prevent (ref T) types from being exposed to JS content so that wasm need do
+# no typechecking at the JS/wasm boundary
+# ===========================================================================
+
+
+@depends(milestone.is_nightly, "--enable-wasm-gc")
+def default_wasm_private_reftypes(is_nightly, gc):
+    if gc and is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-private-reftypes",
+    default=default_wasm_private_reftypes,
+    help="{Enable|Disable} WebAssembly private reference types",
+)
+
+set_config(
+    "WASM_PRIVATE_REFTYPES",
+    depends_if("--enable-wasm-private-reftypes")(lambda x: True),
+)
+set_define(
+    "WASM_PRIVATE_REFTYPES",
+    depends_if("--enable-wasm-private-reftypes")(lambda x: True),
+)
+
+# Support for WebAssembly shared memory and atomics.
+#
+# This affects the JS shell only and here to allow the use of
+# Cranelift in the shell.  Once Cranelift supports shared memory
+# and atomics it can go away.
+# =====================================================
+
+option(
+    "--disable-shared-memory", help="Disable JS/WebAssembly shared memory and atomics"
+)
+
+
+@depends("--disable-shared-memory")
+def enable_shared_memory(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_SHARED_MEMORY", enable_shared_memory)
+set_define("ENABLE_SHARED_MEMORY", enable_shared_memory)
+
+# Support for WebAssembly extended constant expressions
+# =====================================================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_extended_const(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-extended-const",
+    default=default_wasm_extended_const,
+    help="{Enable|Disable} WebAssembly extended constant expressions",
+)
+
+
+@depends("--enable-wasm-extended-const")
+def wasm_extended_const(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_WASM_EXTENDED_CONST", wasm_extended_const)
+set_define("ENABLE_WASM_EXTENDED_CONST", wasm_extended_const)
+
+# Support for WebAssembly SIMD
+# =====================================================
+
+
+@depends("--enable-jit", "--enable-simulator", "--enable-cranelift", target)
+def default_wasm_simd(jit_enabled, simulator, cranelift_enabled, target):
+    if not jit_enabled:
+        return
+
+    if cranelift_enabled:
+        return
+
+    if simulator and (simulator[0] != "arm64"):
+        return
+
+    if target.cpu in ("x86_64", "x86", "aarch64"):
+        return True
+
+
+option(
+    "--enable-wasm-simd",
+    default=default_wasm_simd,
+    help="{Enable|Disable} WebAssembly SIMD",
+)
+
+
+@depends(
+    "--enable-wasm-simd",
+    "--enable-jit",
+    "--enable-simulator",
+    "--enable-cranelift",
+    target,
+)
+def wasm_simd(value, jit_enabled, simulator, cranelift_enabled, target):
+    if not value:
+        return
+
+    if not jit_enabled:
+        die("--enable-wasm-simd requires --enable-jit")
+
+    if cranelift_enabled:
+        die("--enable-wasm-simd is not supported for --enable-cranelift")
+
+    if simulator and (simulator[0] != "arm64"):
+        die("--enable-wasm-simd is not supported for simulators, except arm64")
+
+    if target.cpu in ("x86_64", "x86", "aarch64"):
+        return True
+
+    die("--enable-wasm-simd only possible when targeting the x86_64/x86/arm64 jits")
+
+
+set_config("ENABLE_WASM_SIMD", wasm_simd)
+set_define("ENABLE_WASM_SIMD", wasm_simd)
+
+# Wormhole opcodes are Intel-only.  They are private to Firefox, but we need them for some
+# experiments on release and so they ride the trains.
+
+
+@depends("--enable-simulator", "--enable-wasm-simd", target)
+def default_wasm_simd_wormhole(simulator, wasm_simd, target):
+    if wasm_simd and target.cpu in ("x86", "x86_64") and not simulator:
+        return True
+
+
+option(
+    "--enable-wasm-simd-wormhole",
+    default=default_wasm_simd_wormhole,
+    help="{Enable|Disable} WebAssembly SIMD wormhole opcodes",
+)
+
+
+@depends(
+    "--enable-wasm-simd-wormhole", "--enable-wasm-simd", "--enable-simulator", target
+)
+def wasm_simd_wormhole(value, wasm_simd, simulator, target):
+    if not value:
+        return
+
+    if wasm_simd and target.cpu in ("x86", "x86_64") and not simulator:
+        return True
+
+    die("SIMD wormhole currently supported on native x86/x64 only, with --wasm-simd")
+
+
+set_config("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
+set_define("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
+
+
+# Support for WebAssembly relaxed SIMD
+# =====================================================
+
+
+@depends(milestone.is_nightly, "--enable-wasm-simd")
+def default_wasm_relaxed_simd(is_nightly, wasm_simd):
+    if is_nightly and wasm_simd:
+        return True
+
+
+option(
+    "--enable-wasm-relaxed-simd",
+    default=default_wasm_relaxed_simd,
+    help="{Enable|Disable} WebAssembly relaxed SIMD",
+)
+
+
+@depends("--enable-wasm-relaxed-simd", "--enable-wasm-simd")
+def wasm_relaxed_simd(value, wasm_simd):
+    if not value:
+        return
+
+    if not wasm_simd:
+        die("relaxed SIMD requires SIMD")
+
+    return True
+
+
+set_config("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
+set_define("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
+
+# Support for WebAssembly intgemm private intrinsics
+# =====================================================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_moz_intgemm(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-moz-intgemm",
+    default=default_wasm_moz_intgemm,
+    help="{Enable|Disable} WebAssembly intgemm private intrinsics",
+)
+
+
+@depends("--enable-wasm-moz-intgemm")
+def wasm_moz_intgemm(value):
+    if not value:
+        return
+
+    return True
+
+
+set_config("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)
+set_define("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)
+
+# Support for WebAssembly Memory64.
+# ===========================
+
+
+@depends(milestone.is_nightly, "--enable-cranelift", "--enable-simulator", target)
+def default_wasm_memory64(is_nightly, cranelift, simulator, target):
+    if cranelift:
+        return
+
+    if target.cpu == "mips32" or target.cpu == "mips64":
+        return
+
+    if simulator and (simulator[0] == "mips32" or simulator[0] == "mips64"):
+        return
+
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-memory64",
+    default=default_wasm_memory64,
+    help="{Enable|Disable} WebAssembly Memory64",
+)
+
+
+@depends("--enable-wasm-memory64", "--enable-cranelift", "--enable-simulator", target)
+def wasm_memory64(value, cranelift, simulator, target):
+    if not value:
+        return
+
+    if cranelift:
+        die("Memory64 is incompatible with Cranelift")
+
+    if target.cpu == "mips32" or target.cpu == "mips64":
+        die("Memory64 is incompatible with MIPS target")
+
+    if simulator and (simulator[0] == "mips32" or simulator[0] == "mips64"):
+        die("Memory64 is incompatible with MIPS simulator")
+
+    return True
+
+
+set_config("ENABLE_WASM_MEMORY64", wasm_memory64)
+set_define("ENABLE_WASM_MEMORY64", wasm_memory64)
+
+# Options for generating the shell as a script
+# ============================================
+option("--with-qemu-exe", nargs=1, help="Use path as an arm emulator on host platforms")
+set_config("QEMU_EXE", depends_if("--with-qemu-exe")(lambda x: x))
+
+option(
+    "--with-cross-lib",
+    nargs=1,
+    default=depends(target.alias)(lambda x: "/usr/%s" % x),
+    help="Use dir as the location for arm libraries",
+)
+set_config("CROSS_LIB", depends_if("--with-cross-lib")(lambda x: x))
+
+# Enable static checking using sixgill
+# ====================================
+
+option("--with-sixgill", nargs=1, help="Enable static checking of code using sixgill")
+
+
+@depends_if("--with-sixgill")
+@imports("os")
+def sixgill(value):
+    for f in ("bin/xdbfind", "gcc/xgill.so", "scripts/wrap_gcc/g++"):
+        if not os.path.exists(os.path.join(value[0], f)):
+            die("The sixgill plugin and binaries are not at the specified path")
+    return value[0]
+
+
+set_config("SIXGILL_PATH", sixgill)
+
+
+# Support for readline
+# =====================================================
+
+
+@depends("--enable-js-shell", target_is_windows, compile_environment, target)
+def editline(js_shell, is_windows, compile_environment, target):
+    return js_shell and not is_windows and compile_environment and (target.os != "WASI")
+
+
+option(
+    "--enable-readline", help="Link js shell to system readline library", when=editline
+)
+
+has_readline = check_symbol(
+    "readline",
+    flags=["-lreadline"],
+    when="--enable-readline",
+    onerror=lambda: die("No system readline library found"),
+)
+
+set_config("EDITLINE_LIBS", ["-lreadline"], when=has_readline)
+
+
+@depends("--enable-readline", editline, when=editline)
+def bundled_editline(readline, editline):
+    return editline and not readline
+
+
+set_config("JS_BUNDLED_EDITLINE", bundled_editline)
+
+set_define("EDITLINE", True, when=editline)
+
+
+# JIT observers
+# =============
+
+option(
+    "--with-jitreport-granularity",
+    default="3",
+    choices=("0", "1", "2", "3"),
+    help="Default granularity at which to report JIT code to external tools "
+    "(0 - no info, 1 - code ranges for while functions only, "
+    "2 - per-line information, 3 - per-op information)",
+)
+
+set_define(
+    "JS_DEFAULT_JITREPORT_GRANULARITY",
+    depends_if("--with-jitreport-granularity")(lambda value: value[0]),
+)
+
+
+# ECMAScript Internationalization API Support (uses ICU)
+# ======================================================
+system_lib_option("--with-system-icu", help="Use system ICU")
+
+system_icu = pkg_check_modules("MOZ_ICU", "icu-i18n >= 69.1", when="--with-system-icu")
+
+set_config("MOZ_SYSTEM_ICU", True, when=system_icu)
+set_define("MOZ_SYSTEM_ICU", True, when=system_icu)
+
+option("--without-intl-api", help="Disable ECMAScript Internationalization API")
+
+
+@depends("--with-intl-api", js_standalone)
+def check_intl_api(enabled, js_standalone):
+    if not enabled and not js_standalone:
+        die("--without-intl-api is not supported")
+
+
+set_config("JS_HAS_INTL_API", True, when="--with-intl-api")
+set_define("JS_HAS_INTL_API", True, when="--with-intl-api")
+
+
+@depends(check_build_environment, when="--with-intl-api")
+@imports(_from="__builtin__", _import="open")
+@imports(_from="__builtin__", _import="ValueError")
+def icu_version(build_env):
+    path = os.path.join(
+        build_env.topsrcdir, "intl", "icu", "source", "common", "unicode", "uvernum.h"
+    )
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            if line.startswith("#define"):
+                define = line.split(None, 3)
+                if len(define) == 3 and define[1] == "U_ICU_VERSION_MAJOR_NUM":
+                    try:
+                        return str(int(define[2]))
+                    except ValueError:
+                        pass
+    die("Cannot determine ICU version number from uvernum.h header file")
+
+
+set_config("MOZ_ICU_VERSION", icu_version)
+
+# Source files that use ICU should have control over which parts of the ICU
+# namespace they want to use.
+set_define("U_USING_ICU_NAMESPACE", "0", when="--with-intl-api")
+
+# We build ICU as a static library.
+set_define("U_STATIC_IMPLEMENTATION", True, when=depends(system_icu)(lambda x: not x))
+
+
+# Initial support for WebAssembly JS-API Type Reflections
+# =======================================================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_type_reflections(is_nightly):
+    return is_nightly
+
+
+option(
+    "--enable-wasm-type-reflections",
+    default=default_wasm_type_reflections,
+    help="{Enable|Disable} type reflection in WASM JS-API",
+)
+
+set_config(
+    "ENABLE_WASM_TYPE_REFLECTIONS",
+    depends_if("--enable-wasm-type-reflections")(lambda x: True),
+)
+set_define(
+    "ENABLE_WASM_TYPE_REFLECTIONS",
+    depends_if("--enable-wasm-type-reflections")(lambda x: True),
+)
+
+# Support for WebAssembly exceptions
+# ==================================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_exceptions(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-exceptions",
+    default=default_wasm_exceptions,
+    help="{Enable|Disable} WebAssembly exceptions",
+)
+
+set_config(
+    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
+)
+set_define(
+    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
+)
+
+set_define(
+    "_WASI_EMULATED_PROCESS_CLOCKS",
+    True,
+    when=depends(target)(lambda t: t.os == "WASI"),
+)
+
+# Enable change-array-by-copy
+# ===================================================
+def use_change_array_by_copy():
+    return False
+
+
+option(
+    "--enable-change-array-by-copy",
+    default=use_change_array_by_copy(),
+    help="{Enable|Disable} change-array-by-copy method pref/command-line option (disabled by default)",
+)
+
+
+@depends("--enable-change-array-by-copy")
+def enable_change_array_by_copy(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)
+set_define("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)

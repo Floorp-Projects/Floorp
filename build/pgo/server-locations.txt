@@ -1,0 +1,368 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#
+# This file defines the locations at which this HTTP server may be accessed.
+# It is referred to by the following page, so if this file moves, that page must
+# be modified accordingly:
+#
+# https://developer.mozilla.org/en/docs/Mochitest#How_do_I_test_issues_which_only_show_up_when_tests_are_run_across_domains.3F
+#
+# Empty lines and lines which begin with "#" are ignored and may be used for
+# storing comments.  All other lines consist of an origin followed by whitespace
+# and a comma-separated list of options (if indeed any options are needed).
+#
+# The format of an origin is, referring to RFC 2396, a scheme (either "http" or
+# "https"), followed by "://", followed by a host, followed by ":", followed by
+# a port number.  The colon and port number must be present even if the port
+# number is the default for the protocol.
+#
+# Unrecognized options are ignored.  Recognized options are "primary" and
+# "privileged", "nocert", "cert=some_cert_nickname", "redir=hostname" and
+# "failHandshake".
+#
+# "primary" denotes a location which is the canonical location of
+# the server; this location is the one assumed for requests which don't
+# otherwise identify a particular origin (e.g. HTTP/1.0 requests).
+#
+# "privileged" denotes a location which should have the ability to request
+# elevated privileges; the default is no privileges.
+#
+# "nocert" makes sense only for https:// hosts and means there is not
+# any certificate automatically generated for this host.
+#
+# "failHandshake" causes the tls handshake to fail (by sending a client hello to
+# the client).
+#
+# "cert=nickname" tells the pgo server to use a particular certificate
+# for this host. The certificate is referenced by its nickname that must
+# not contain any spaces. The certificate  key files (PKCS12 modules)
+# for custom certification are loaded from build/pgo/certs
+# directory. When new certificate is added to this dir pgo/ssltunnel
+# must be built then. This is only necessary for cases where we really do
+# want specific certs.
+# You can find instructions on how to add or modify certificates at:
+# https://firefox-source-docs.mozilla.org/build/buildsystem/test_certificates.html
+#
+# "redir=hostname" tells the pgo server is only used for https://
+# hosts while processing the CONNECT tunnel request. It responds
+# to the CONNECT with a 302 and redirection to the hostname instead
+# of connecting to the real back end and replying with a 200. This
+# mode exists primarily to ensure we don't allow a proxy to do that.
+#
+
+#
+# This is the primary location from which tests run.
+#
+http://mochi.test:8888   primary,privileged
+
+#
+# These are a common set of prefixes scattered across one TLD with two ports and
+# another TLD on a single port.
+#
+http://127.0.0.1:80               privileged
+http://127.0.0.1:8888             privileged
+http://test:80                    privileged
+http://mochi.test:8888            privileged
+http://mochi.xorigin-test:8888    privileged
+http://test1.mochi.test:8888
+http://sub1.test1.mochi.test:8888
+http://sub2.xn--lt-uia.mochi.test:8888
+http://test2.mochi.test:8888
+http://example.org:80                privileged
+http://test1.example.org:80          privileged
+http://test2.example.org:80          privileged
+http://test3.example.org:80          privileged
+http://sub1.test1.example.org:80     privileged
+http://sub1.test2.example.org:80     privileged
+http://sub2.test1.example.org:80     privileged
+http://sub2.test2.example.org:80     privileged
+http://example.org:8000              privileged
+http://test1.example.org:8000        privileged
+http://test2.example.org:8000        privileged
+http://sub1.test1.example.org:8000   privileged
+http://sub1.test2.example.org:8000   privileged
+http://sub2.test1.example.org:8000   privileged
+http://sub2.test2.example.org:8000   privileged
+http://example.com:80                privileged
+http://www.example.com:80            privileged
+http://test1.example.com:80          privileged
+http://test2.example.com:80          privileged
+http://sub1.test1.example.com:80     privileged
+http://sub1.test2.example.com:80     privileged
+http://sub2.test1.example.com:80     privileged
+http://sub2.test2.example.com:80     privileged
+http://noxul.example.com:80          privileged,noxul
+http://example.net:80                privileged
+http://supports-insecure.expired.example.com:80 privileged
+# Used to test that clearing Service Workers for domain example.com, does not clear prefixexample.com
+http://prefixexample.com:80
+
+# The first HTTPS location is used to generate the Common Name (CN) value of the
+# certificate's Issued To field.
+https://example.com:443                privileged
+https://www.example.com:443            privileged
+https://test1.example.com:443          privileged
+https://test2.example.com:443          privileged
+https://example.org:443                privileged
+https://test1.example.org:443          privileged
+https://test2.example.org:443          privileged
+https://sub1.test1.example.org:443     privileged
+https://sub1.test2.example.org:443     privileged
+https://sub2.test1.example.org:443     privileged
+https://sub2.test2.example.org:443     privileged
+https://sub1.test1.example.com:443     privileged
+https://sub1.test2.example.com:443     privileged
+https://sub2.test1.example.com:443     privileged
+https://sub2.test2.example.com:443     privileged
+https://example.net:443                privileged
+https://nocert.example.com:443         privileged,nocert
+https://self-signed.example.com:443    privileged,cert=selfsigned
+https://untrusted.example.com:443      privileged,cert=untrusted
+https://expired.example.com:443        privileged,cert=expired
+https://requestclientcert.example.com:443         privileged,clientauth=request
+https://requireclientcert.example.com:443         privileged,clientauth=require
+https://requireclientcert-2.example.com:443         privileged,clientauth=require
+https://mismatch.expired.example.com:443	privileged,cert=expired
+https://mismatch.untrusted.example.com:443	privileged,cert=untrusted
+https://untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
+https://mismatch.untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
+https://supports-insecure.expired.example.com:443   privileged,cert=expired
+https://no-subject-alt-name.example.com:443   cert=noSubjectAltName
+
+# Used for secure contexts on ip addresses, see bug 1616675. Note that
+# 127.0.0.1 prompts ssltunnel.cpp to do special-cases, so we use .2
+https://127.0.0.2:443                  privileged,ipV4Address
+https://secureonly.example.com:443
+
+# Prevent safebrowsing tests from hitting the network for its-a-trap.html and
+# its-an-attack.html.
+http://www.itisatrap.org:80
+https://www.itisatrap.org:443
+
+#
+# These are subdomains of <ält.example.org>.
+#
+http://sub1.xn--lt-uia.example.org:8000   privileged
+http://sub2.xn--lt-uia.example.org:80     privileged
+http://xn--exmple-cua.test:80             privileged
+http://sub1.xn--exmple-cua.test:80        privileged
+http://xn--exaple-kqf.test:80             privileged
+http://sub1.xn--exaple-kqf.test:80        privileged
+
+https://xn--hxajbheg2az3al.xn--jxalpdlp:443        privileged
+https://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:443   privileged
+
+#
+# These are subdomains of <παράδειγμα.δοκιμή>, the Greek IDN for example.test.
+#
+http://xn--hxajbheg2az3al.xn--jxalpdlp:80        privileged
+http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80   privileged
+
+# Bug 413909 test host
+https://bug413909.xn--hxajbheg2az3al.xn--jxalpdlp:443   privileged,cert=bug413909cert
+
+#
+# These hosts are used in tests which exercise privilege-granting functionality;
+# we could reuse some of the names above, but specific names make it easier to
+# distinguish one from the other in tests (as well as what functionality is
+# being tested).
+#
+http://sectest1.example.org:80       privileged
+http://sub.sectest2.example.org:80   privileged
+http://sectest2.example.org:80
+http://sub.sectest1.example.org:80
+
+https://sectest1.example.org:443       privileged
+https://sub.sectest2.example.org:443   privileged
+https://sectest2.example.org:443
+https://sub.sectest1.example.org:443
+
+#
+# Used while testing the url-classifier
+#
+http://malware.example.com:80
+http://unwanted.example.com:80
+http://tracking.example.com:80
+http://cryptomining.example.com:80
+http://fingerprinting.example.com:80
+http://not-tracking.example.com:80
+http://tracking.example.org:80
+http://another-tracking.example.net:80
+http://social-tracking.example.org:80
+http://itisatracker.org:80
+https://itisatracker.org:443
+http://trackertest.org:80
+#
+# Used while testing TLS session ticket resumption for third-party trackers (bug 1500533)
+# (DO NOT USE THIS HOST IN OTHER TESTS!)
+#
+https://tlsresumptiontest.example.org:443
+
+https://malware.example.com:443
+https://unwanted.example.com:443
+https://tracking.example.com:443
+https://cryptomining.example.com:443
+https://fingerprinting.example.com:443
+https://not-tracking.example.com:443
+https://tracking.example.org:443
+https://another-tracking.example.net:443
+https://social-tracking.example.org:443
+
+#
+# Used while testing flash blocking (Bug 1307604)
+#
+http://flashallow.example.com:80
+http://exception.flashallow.example.com:80
+http://flashblock.example.com:80
+http://exception.flashblock.example.com:80
+http://subdocument.example.com:80
+https://subdocument.example.com:443
+http://exception.subdocument.example.com:80
+
+#
+# Used while testing tracking protection (Bug 1580416)
+# Not that apps.fbsbx.com is a public suffix
+#
+http://mochitest.apps.fbsbx.com:80
+
+#
+# Flash usage can fail unless this URL exists
+#
+http://fpdownload2.macromedia.com:80
+https://fpdownload2.macromedia.com:443
+
+# Bug 1281083
+http://bug1281083.example.com:80
+
+# Bug 483437, 484111
+https://www.bank1.com:443           privileged,cert=escapeattack1
+
+#
+# CONNECT for redirproxy results in a 302 redirect to
+# test1.example.com
+#
+https://redirproxy.example.com:443          privileged,redir=test1.example.com
+
+# Host used for IndexedDB Quota testing
+http://bug704464-1.example.com:80        privileged
+http://bug704464-2.example.com:80        privileged
+http://bug704464-3.example.com:80        privileged
+http://bug702292.example.com:80          privileged
+
+# W3C hosts.
+# See http://www.w3.org/wiki/Testing/Requirements#The_Web_test_server_must_be_available_through_different_domain_names
+http://w3c-test.org:80
+http://w3c-test.org:81
+http://w3c-test.org:82
+http://w3c-test.org:83
+http://www.w3c-test.org:80
+http://www.w3c-test.org:81
+http://www.w3c-test.org:82
+http://www.w3c-test.org:83
+http://www1.w3c-test.org:80
+http://www1.w3c-test.org:81
+http://www1.w3c-test.org:82
+http://www1.w3c-test.org:83
+http://www2.w3c-test.org:80
+http://www2.w3c-test.org:81
+http://www2.w3c-test.org:82
+http://www2.w3c-test.org:83
+# http://天気の良い日.w3c-test.org
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:80
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:81
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:82
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:83
+# http://élève.w3c-test.org
+http://xn--lve-6lad.w3c-test.org:80
+http://xn--lve-6lad.w3c-test.org:81
+http://xn--lve-6lad.w3c-test.org:82
+http://xn--lve-6lad.w3c-test.org:83
+# HTTPS versions of the above
+https://w3c-test.org:443
+https://www.w3c-test.org:443
+https://www1.w3c-test.org:443
+https://www2.w3c-test.org:443
+https://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:443
+https://xn--lve-6lad.w3c-test.org:443
+http://test.w3.org:80
+
+# Hosts for testing TLD-based fallback encoding
+http://example.tw:80                privileged
+http://example.cn:80                privileged
+http://example.co.jp:80             privileged
+http://example.fi:80                privileged
+http://example.in:80                privileged
+http://example.lk:80                privileged
+
+# Host for HPKP
+https://include-subdomains.pinning-dynamic.example.com:443        privileged,cert=dynamicPinningGood
+https://bad.include-subdomains.pinning-dynamic.example.com:443    privileged,cert=dynamicPinningBad
+
+# Host for static pin tests
+https://badchain.include-subdomains.pinning.example.com:443       privileged,cert=staticPinningBad
+https://fail-handshake.example.com:443                            privileged,failHandshake
+
+# Host for bad cert domain fixup test
+https://badcertdomain.example.com:443                             privileged,cert=badCertDomain
+https://www.badcertdomain.example.com:443                         privileged,cert=badCertDomain
+https://127.0.0.3:433                                             privileged,cert=badCertDomain
+https://badcertdomain.example.com:82                              privileged,cert=badCertDomain
+https://mismatch.badcertdomain.example.com:443                    privileged,cert=badCertDomain
+
+# Hosts for HTTPS-First upgrades/downgrades
+http://httpsfirst.com:80                                          privileged
+https://httpsfirst.com:443                                        privileged,nocert
+
+# Hosts for sha1 console warning tests
+https://sha1ee.example.com:443                                    privileged,cert=sha1_end_entity
+https://sha256ee.example.com:443                                  privileged,cert=sha256_end_entity
+
+# Hosts for imminent distrust warning tests
+https://imminently-distrusted.example.com:443                     privileged,cert=imminently_distrusted
+
+# Hosts for ssl3/3des/tls1 tests
+https://ssl3.example.com:443         privileged,ssl3
+https://3des.example.com:443         privileged,3des,tls1,tls1_2
+https://tls1.example.com:443         privileged,tls1
+https://tls11.example.com:443        privileged,tls1_1
+https://tls12.example.com:443        privileged,tls1_2
+https://tls13.example.com:443        privileged,tls1,tls1_3
+
+# Hosts for youtube rewrite tests
+https://mochitest.youtube.com:443
+
+# Host for U2F localhost tests
+https://localhost:443
+
+# Bug 1402530
+http://localhost:80                 privileged
+
+# Host for testing APIs whitelisted for mozilla.org
+https://www.mozilla.org:443
+
+# local-IP origins for password manager tests (Bug 1582499)
+http://10.0.0.0:80                 privileged
+http://192.168.0.0:80              privileged
+
+# testing HTTPS-Only Suggestions on the Error Page (Bug 1665057)
+https://www.suggestion-example.com:443      privileged,cert=bug1665057cert
+http://suggestion-example.com:80            privileged
+https://suggestion-example.com:443          privileged,cert=badCertDomain
+http://no-suggestion-example.com:80         privileged
+https://no-suggestion-example.com:443       privileged,cert=badCertDomain
+
+# testing HTTPS-First doesn't show warning page for bad cert
+http://nocert.example.com:80                    privileged
+http://self-signed.example.com:80               privileged
+http://untrusted.example.com:80                 privileged
+http://untrusted-expired.example.com:80         privileged
+http://no-subject-alt-name.example.com:80       privileged
+http://expired.example.com:80                   privileged
+
+# testing HTTPS-First behaviour for redirection (Bug 1706126)
+http://redirect-example.com:80              privileged
+https://redirect-example.com:443            privileged,cert=bug1706126cert
+https://www.redirect-example.com:443        privileged,cert=bug1706126cert

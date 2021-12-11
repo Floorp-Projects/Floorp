@@ -1,0 +1,27 @@
+<html class="reftest-wait">
+<head>
+<script>
+function doe2() {
+document.getElementById('b').style.position = 'static';
+document.getElementById('a').setAttribute('style', 'position: absolute; column-count: 2;');
+document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<style>body * {border: 1px solid black;}</style>
+<body onload="doe2();">
+<div style="width: 500px;border: 1px solid black;">
+<div style="display: inline-block; width: 100px; height: 100px;"></div>
+<span style="position: absolute;"></span>
+mmmmmmmmmmmmmmmmmmmmmmm
+
+<span id="a">mmmmmmmmmmmmmmmmmmmm
+
+<div id="b" style="display: inline-block; width: 240px; height: 100px; position: absolute;"></div>
+m mm mm mm mm mm mm mm mm m
+<span style="float: left;">m</span>
+</span>
+</div>
+</body>
+
+</html>

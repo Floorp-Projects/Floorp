@@ -1,0 +1,90 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run-on-projects: [trunk]
+    run:
+        toolchain-artifact: public/build/nasm.tar.zst
+
+win64-nasm:
+    description: "nasm win64 build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TW64(nasm)
+    run:
+        script: build-nasm.sh
+        arguments: ['win64']
+    fetches:
+        fetch:
+            - nasm-2.15.05
+        toolchain:
+            - linux64-clang-mingw-x64
+
+macosx64-nasm:
+    description: "nasm macosx64 build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TM(nasm)
+    run:
+        script: build-nasm.sh
+        arguments: ['macosx64']
+    fetches:
+        fetch:
+            - nasm-2.15.05
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13-macosx-cross
+            - macosx64-sdk-11.0
+
+macosx64-aarch64-nasm:
+    description: "nasm macosx64 build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TM(nasm-aarch64)
+    run:
+        script: build-nasm.sh
+        arguments: ['macosx64-aarch64']
+    fetches:
+        fetch:
+            - nasm-2.14.02
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13-macosx-cross
+            - macosx64-sdk-11.0
+
+linux64-nasm:
+    description: "nasm linux64 build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TL(nasm)
+    run:
+        script: build-nasm.sh
+        arguments: ['linux64']
+    fetches:
+        fetch:
+            - nasm-2.15.05
+        toolchain:
+            - linux64-clang-13
+            - sysroot-x86_64-linux-gnu
+
+linux64-nasm-2.14.02:
+    description: "nasm linux64 minimum supported version build"
+    treeherder:
+        symbol: TL(nasm-2.14.02)
+    run:
+        script: build-nasm.sh
+        arguments: ['linux64']
+    fetches:
+        fetch:
+            - nasm-2.14.02
+        toolchain:
+            - linux64-clang-13
+            - sysroot-x86_64-linux-gnu

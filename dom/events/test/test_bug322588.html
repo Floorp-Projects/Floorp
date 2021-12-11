@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=322588
+-->
+<head>
+  <title>Test for Bug 322588 - onBlur window close no longer works</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=322588">Mozilla Bug 322588 - onBlur window close no longer works</a>
+<p id="display">
+<a id="link" href="javascript:pop350d('bug322588-popup.html#target')">Openwindow</a><br>
+The opened window should not directly close when clicking on the Openwindow link
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 322588 **/
+
+var result = "";
+
+var w;
+function pop350d(url) {
+  w = window.open();
+  w.addEventListener("unload", function () { result += " unload";});
+  w.addEventListener("load", function () { result += " load"; setTimeout(done, 1000);});
+  w.addEventListener("blur", function () { result += " blur";});
+  w.location = url;
+}
+
+function doTest() {
+  try {
+    sendMouseEvent({type:'click'}, 'link');
+  } catch(e) {
+    if (w)
+      w.close();
+    throw e;
+  }
+}
+
+function done() {
+  is(result," unload load","unexpected events"); // The first unload is for about:blank
+  if (w)
+    w.close();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["browser.newtab.preload", false]
+  ]}, doTest);
+});
+
+
+</script>
+</pre>
+</body>
+</html>

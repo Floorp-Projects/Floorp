@@ -1,0 +1,55 @@
+<html>
+<head>
+</head>
+<body style="position: absolute;">
+<iframe id="a"></iframe>
+<iframe></iframe>
+<script>
+function tripleclick(){
+var wu =  SpecialPowers.getDOMWindowUtils(window);
+wu.sendMouseEvent('mousedown',  100, 100, 0, 1, 0);
+setTimeout(tripleclick,20);
+}
+setTimeout(tripleclick,200,0, 0);
+
+function doe2() {
+document.body.setAttribute('style', 'position: absolute;');
+document.body.offsetHeight;
+document.getElementById('a').setAttribute('style', 'position: absolute; direction: rtl; ');
+setTimeout(doe3,200);
+}
+
+function doe3() {
+document.getElementsByTagName('*')[2].setAttribute('style', 'unicode-bidi: inherit; ime-mode: disabled; font-family: Al Bayan; ');
+}
+setTimeout(doe2,500,0);
+
+setTimeout(function(){window.location.reload()}, 1000);
+
+
+function designmodes(i){
+if (i>=0)
+  {
+try {
+window.frames[i].document.designMode='on';
+window.frames[i].document.execCommand('inserthtml', false, 'tesxt ');
+window.frames[i].document.designMode='off';
+}
+catch(e) {}
+}
+else { 
+i = window.frames.length-1;
+ }
+  i--;
+setTimeout(designmodes,50,i);
+}
+setTimeout(designmodes,500,window.frames.length-1);
+
+function doe2(i) {
+document.body.style.position == 'absolute' ? document.body.style.position = '' : document.body.style.position = 'absolute';
+setTimeout(doe2,200,i);
+}
+setTimeout(doe2,500,0);
+</script>
+</body>
+</html>

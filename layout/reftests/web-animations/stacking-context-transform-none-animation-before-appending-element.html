@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<!--
+  reftest-no-flush above is necessary to make invalidation changes happen.
+  Without it, reftest harness takes the snapshot on the next frame after the
+  frame that a paint for appending the element happened.
+ -->
+<title>Transform animation whose target is not initially associated with any document creates a stacking context even if it has only 'transform:none' in its keyframe</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  position: fixed;
+  background: green;
+  top: 50px;
+}
+div {
+  width: 100px; height: 100px;
+  background: blue;
+}
+</style>
+<span></span>
+<script>
+  var div = document.createElement("div")
+  var anim = div.animate({ transform: ['none', 'none'] },
+                         { duration: 100000 });
+  anim.ready.then(() => {
+    document.body.appendChild(div);
+    document.documentElement.classList.remove("reftest-wait");
+  });
+</script>

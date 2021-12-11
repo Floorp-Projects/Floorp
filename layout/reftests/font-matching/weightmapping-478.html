@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Weight mapping tests</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+body {
+  margin: 50px;
+  font-family: Futura, Verdana, sans-serif;
+}
+
+h3, h4 { font-weight: normal; }
+
+/* make all the spans blocks to avoid influence of what's outside them
+   on line-height calculations */
+span { display: block; }
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-bold.ttf);
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-heavy.ttf);
+  font-weight: 800;
+}
+
+@font-face {
+  font-family: test400;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+}
+
+@font-face {
+  font-family: test700;
+  src: url(../fonts/mplus/mplus-1p-bold.ttf);
+}
+
+@font-face {
+  font-family: test800;
+  src: url(../fonts/mplus/mplus-1p-heavy.ttf);
+}
+
+table {
+  border-collapse: collapse;
+  font-family: test;
+  font-size: 20px;
+}
+
+td {
+  padding: 0; margin: 0;
+}
+
+th {
+  font-weight: inherit;
+}
+
+.red { color: red; }
+
+th.cnor { font-weight: inherit; }
+th.cbo { font-weight: bolder; }
+th.cbobo, th.cbobo span { font-weight: bolder; }
+th.cli { font-weight: lighter; }
+th.clili, th.clili span { font-weight: lighter; }
+
+td.cnor { font-weight: inherit; }
+td.cbo { font-weight: bolder; }
+td.cbobo, td.cbobo span { font-weight: bolder; }
+td.cli { font-weight: lighter; }
+td.clili, td.clili span { font-weight: lighter; }
+
+thead { font-weight: 400; font-size: 75%; }
+
+.w1 { font-weight: 100; }
+.w2 { font-weight: 200; }
+.w3 { font-weight: 300; }
+.w4 { font-weight: 400; }
+.w5 { font-weight: 500; }
+.w6 { font-weight: 600; }
+.w7 { font-weight: 700; }
+.w8 { font-weight: 800; }
+.w9 { font-weight: 900; }
+
+</style>
+</head>
+<body>
+
+<h3>Font family with 400, 700, 800 weights</h3>
+
+<table>
+<thead>
+<th></th>
+<th class="clili"><span>lighter lighter</span></th>
+<th class="cli"><span>lighter</span></th>
+<th class="cnor"><span>normal</span></th>
+<th class="cbo"><span>bolder</span></th>
+<th class="cbobo"><span>bolder bolder</span></th>
+</thead>
+<tr class="w1">
+<th>100</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w2">
+<th>200</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w3">
+<th>300</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w4">
+<th class="red">400</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w5">
+<th>500</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w6">
+<th>600</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w7">
+<th class="red">700</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w8">
+<th class="red">800</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w9">
+<th>900</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+</table>
+
+<p>tokyotokkyokyokakyoku</p>
+
+</body>
+</html>

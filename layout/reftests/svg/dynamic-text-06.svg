@@ -1,0 +1,29 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <script>
+    var curXScale = 3;
+    function sample() {
+      var g = document.getElementById("g");
+      g.setAttribute("transform", "scale(" + curXScale + " 1)");
+
+      if (curXScale > 1) {
+        curXScale -= 0.1;
+        setTimeout("sample()", 1);
+      } else {
+        document.documentElement.removeAttribute('class');
+      }
+    }
+    document.addEventListener("MozReftestInvalidate", sample, false);
+    setTimeout(sample, 4000); // fallback for running outside reftest
+  </script>
+
+  <rect width="100%" height="100%" fill="lime"/>
+  <g font-family="sans-serif" font-weight="bold" font-size="120px"  id="g">
+    <text y="100">A</text>
+    <text y="250">V</text>
+  </g>
+  <rect width="100" height="100%" fill="lime"/>
+</svg>

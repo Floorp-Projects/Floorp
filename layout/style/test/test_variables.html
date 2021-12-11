@@ -1,0 +1,129 @@
+<!DOCTYPE type>
+<title>Assorted CSS variable tests</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" type="text/css">
+
+<style id="test1">
+</style>
+
+<style id="test2">
+</style>
+
+<style id="test3">
+</style>
+
+<style id="test4">
+</style>
+
+<div id="t4"></div>
+
+<style id="test5">
+</style>
+
+<div id="t5"></div>
+
+<style id="test6">
+</style>
+
+<style id="test7">
+</style>
+
+<style id="test8">
+</style>
+
+<script>
+var tests = [
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=773296#c121
+    var test1 = document.getElementById("test1");
+    test1.textContent = "p { --a:123!important; }";
+    var declaration = test1.sheet.cssRules[0].style;
+    declaration.cssText;
+    declaration.setProperty("color", "black");
+    is(declaration.getPropertyValue("--a"), "123");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=773296#c121
+    var test2 = document.getElementById("test2");
+    test2.textContent = "p { --a: a !important; }";
+    var declaration = test2.sheet.cssRules[0].style;
+    is(declaration.getPropertyPriority("--a"), "important");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=955913
+    var test3 = document.getElementById("test3");
+    test3.textContent = "p { border-left-style: inset; padding: 1px; --decoration: line-through; }";
+    var declaration = test3.sheet.cssRules[0].style;
+    is(declaration[declaration.length - 1], "--decoration");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=959973
+    var test4 = document.getElementById("test4");
+    test4.textContent = "#t4 { background-image: var(--a); }";
+
+    var element = document.getElementById("t4");
+    var path = window.location.pathname;
+    var currentDir = path.substring(0, path.lastIndexOf('/'));
+    var imageURL = "http://mochi.test:8888" + currentDir + "/image.png";
+
+    is(window.getComputedStyle(element).getPropertyValue("background-image"), "url(\"" + imageURL +"\")");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1043713
+    var test5 = document.getElementById("test5");
+    test5.textContent = "#t5 { --SomeVariableName: a; }";
+
+    var declaration = test5.sheet.cssRules[0].style;
+    is(declaration.item(0), "--SomeVariableName", "custom property name returned by item() on style declaration");
+    is(declaration[0], "--SomeVariableName", "custom property name returned by indexed getter on style declaration");
+
+    var element = document.getElementById("t5");
+    var cs = window.getComputedStyle(element);
+
+    is(cs.item(cs.length - 1), "--SomeVariableName", "custom property name returned by item() on computed style");
+    is(cs[cs.length - 1], "--SomeVariableName", "custom property name returned by indexed getter on style declaration");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1154356
+    var test7 = document.getElementById("test7");
+    test7.textContent = "p { --weird\\;name: green; }";
+    is(test7.sheet.cssRules[0].style.cssText, "--weird\\;name: green;");
+    test7.textContent = "p { --0: green; }";
+    is(test7.sheet.cssRules[0].style.cssText, "--0: green;");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1330172
+    var test8 = document.getElementById("test8");
+    test8.textContent = "p { --a:inHerit; }";
+    is(test8.sheet.cssRules[0].style.cssText, "--a: inherit;");
+    test8.textContent = "p { --b: initial!important; }";
+    is(test8.sheet.cssRules[0].style.cssText, "--b: initial !important;");
+    test8.textContent = "p { --c:   UNSET  !important }";
+    is(test8.sheet.cssRules[0].style.cssText, "--c: unset !important;");
+  },
+];
+
+function prepareTest() {
+  // Load an external style sheet for test 4.
+  var e = document.createElement("link");
+  e.addEventListener("load", runTest);
+  e.setAttribute("rel", "stylesheet");
+  e.setAttribute("href", "support/external-variable-url.css");
+  document.head.appendChild(e);
+}
+
+function runTest() {
+  tests.forEach(function(fn) { fn(); });
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+prepareTest();
+</script>

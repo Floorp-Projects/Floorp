@@ -1,0 +1,30 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM Worker Threads XHR - double send</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("xhr_worker_doubleSend.js");
+
+  var gotUploadLoad = false, gotLoadend = false;
+
+  worker.onmessage = function(event) {
+    is(event.target, worker, "Target is the worker");
+    is(event.data, "OK", "All good!");
+    SimpleTest.finish();
+  };
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

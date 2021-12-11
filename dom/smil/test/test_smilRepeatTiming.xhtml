@@ -1,0 +1,96 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=485157
+-->
+<head>
+  <title>Test repeat timing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=485157">Mozilla Bug
+  485157</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100px" height="100px">
+  <rect width="100" height="100" fill="green">
+    <set attributeName="width" to="100" dur="20s" repeatCount="5" begin="0s"
+      id="a" onrepeat="startWaiting(evt)"/>
+    <set attributeName="fill" attributeType="CSS" to="green"
+      begin="a.repeat(1)" onbegin="expectedBegin()" dur="20s"/>
+    <set attributeName="x" to="100"
+      begin="a.repeat(2)" onbegin="unexpectedBegin(this)" dur="20s"/>
+    <set attributeName="y" to="100"
+      begin="a.repeat(0)" onbegin="unexpectedBegin(this)" dur="20s"/>
+    <set attributeName="width" to="100"
+      begin="a.repeat(-1)" onbegin="unexpectedBegin(this)" dur="20s"/>
+    <set attributeName="height" to="100"
+      begin="a.repeat(a)" onbegin="unexpectedBegin(this)" dur="20s"/>
+  </rect>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test SMIL repeat timing **/
+
+/* Global Variables */
+const gTimeoutDur = 5000; // Time until we give up waiting for events in ms
+var gSvg  = document.getElementById('svg');
+var gRect = document.getElementById('circle');
+var gTimeoutID;
+var gGotBegin = false;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+function testBegin()
+{
+  gSvg.setCurrentTime(19.999);
+}
+
+function startWaiting(evt)
+{
+  is(evt.detail, 1, "Unexpected repeat event received: test broken");
+  if (gGotBegin)
+    return;
+
+  gTimeoutID = setTimeout(timeoutFail, gTimeoutDur);
+}
+
+function timeoutFail()
+{
+  ok(false, "Timed out waiting for begin event");
+  finish();
+}
+
+function expectedBegin()
+{
+  is(gGotBegin, false,
+     "Got begin event more than once for non-repeating animation");
+  gGotBegin = true;
+  clearTimeout(gTimeoutID);
+  // Wait a moment before finishing in case there are erroneous events waiting
+  // to be processed.
+  setTimeout(finish, 10);
+}
+
+function unexpectedBegin(elem)
+{
+  ok(false, "Got unexpected begin from animation with spec: " +
+            elem.getAttribute('begin'));
+}
+
+function finish()
+{
+  gSvg.pauseAnimations();
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", testBegin);
+]]>
+</script>
+</pre>
+</body>
+</html>

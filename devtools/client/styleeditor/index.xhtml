@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+<!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+ %editMenuStrings;
+<!ENTITY % sourceEditorStrings SYSTEM "chrome://devtools/locale/sourceeditor.dtd">
+ %sourceEditorStrings;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/toolbarbutton.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/chart.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/styleeditor.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        id="style-editor-chrome-window">
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="devtools/client/styleeditor.ftl"/>
+  </linkset>
+
+  <script src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+  <script>
+    "use strict";
+    /* import-globals-from ../../../toolkit/content/globalOverlay.js */
+    /* import-globals-from ../../../toolkit/content/editMenuOverlay.js */
+    /* exported goUpdateSourceEditorMenuItems */
+    function goUpdateSourceEditorMenuItems() {
+      goUpdateGlobalEditMenuItems();
+
+      ['cmd_undo', 'cmd_redo', 'cmd_cut', 'cmd_paste',
+       'cmd_delete', 'cmd_find', 'cmd_findAgain'].forEach(goUpdateCommand);
+    }
+  </script>
+
+  <popupset id="style-editor-popups">
+    <menupopup id="sourceEditorContextMenu"
+               incontentshell="false"
+               onpopupshowing="goUpdateSourceEditorMenuItems()">
+      <menuitem id="cMenu_undo"
+                data-l10n-id="text-action-undo" command="cmd_undo"/>
+      <menuseparator/>
+      <menuitem id="cMenu_cut"
+                data-l10n-id="text-action-cut" command="cmd_cut"/>
+      <menuitem id="cMenu_copy"
+                data-l10n-id="text-action-copy" command="cmd_copy"/>
+      <menuitem id="cMenu_paste"
+                data-l10n-id="text-action-paste" command="cmd_paste"/>
+      <menuitem id="cMenu_delete"
+                data-l10n-id="text-action-delete" command="cmd_delete"/>
+      <menuseparator/>
+      <menuitem id="cMenu_selectAll"
+                data-l10n-id="text-action-select-all" command="cmd_selectAll"/>
+      <menuseparator/>
+      <menuitem id="se-menu-find"
+        label="&findCmd.label;" accesskey="&findCmd.accesskey;" command="cmd_find"/>
+      <menuitem id="cMenu_findAgain" label="&findAgainCmd.label;"
+                accesskey="&findAgainCmd.accesskey;" command="cmd_findAgain"/>
+      <menuseparator/>
+      <menuitem id="se-menu-gotoLine"
+          label="&gotoLineCmd.label;"
+          accesskey="&gotoLineCmd.accesskey;"
+          key="key_gotoLine"
+          command="cmd_gotoLine"/>
+    </menupopup>
+    <menupopup id="sidebar-context" incontentshell="false">
+      <menuitem id="context-openlinknewtab"
+        data-l10n-id="styleeditor-open-link-new-tab"/>
+      <menuitem id="context-copyurl"
+        data-l10n-id="styleeditor-copy-url"/>
+    </menupopup>
+  </popupset>
+
+  <commandset id="sourceEditorCommands">
+    <command id="cmd_gotoLine" oncommand="goDoCommand('cmd_gotoLine')"/>
+    <command id="cmd_find" oncommand="goDoCommand('cmd_find')"/>
+    <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')"/>
+  </commandset>
+
+  <keyset id="sourceEditorKeys"/>
+
+  <box id="style-editor-chrome" class="devtools-responsive-container loading theme-body" context="sidebar-context">
+    <box class="splitview-controller">
+      <box class="splitview-main">
+        <toolbar class="devtools-toolbar">
+          <hbox class="devtools-toolbarbutton-group">
+            <toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
+                        data-l10n-id="styleeditor-new-button"/>
+            <toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
+                        data-l10n-id="styleeditor-import-button"/>
+          </hbox>
+          <spacer/>
+          <toolbarbutton id="style-editor-options"
+                      class="devtools-toolbarbutton devtools-option-toolbarbutton"
+                      data-l10n-id="styleeditor-options-button"/>
+        </toolbar>
+      </box>
+      <box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
+              persist="height">
+        <html:ol class="splitview-nav" tabindex="0"></html:ol>
+        <html:div class="splitview-nav placeholder empty">
+          <html:p><html:strong
+            data-l10n-id="styleeditor-no-stylesheet"
+          ></html:strong></html:p>
+          <html:p
+            data-l10n-id="styleeditor-no-stylesheet-tip"><html:a class="style-editor-newButton"
+                                                                data-l10n-name="append-new-stylesheet" href="#"/></html:p>
+            </html:div>
+
+      </box> <!-- .splitview-nav-container -->
+    </box>   <!-- .splitview-controller -->
+    <splitter class="devtools-side-splitter devtools-invisible-splitter"/>
+    <box class="splitview-side-details devtools-main-content"/>
+
+    <html:div id="splitview-templates" hidden="">
+      <html:li id="splitview-tpl-summary-stylesheet" tabindex="0">
+        <label class="stylesheet-enabled" tabindex="0"
+          data-l10n-id="styleeditor-visibility-toggle"></label>
+        <html:hgroup class="stylesheet-info">
+          <html:h1><html:a class="stylesheet-name" tabindex="0"><label crop="center"/></html:a></html:h1>
+          <html:div class="stylesheet-more">
+            <html:h3 class="stylesheet-title"></html:h3>
+            <html:h3 class="stylesheet-linked-file"></html:h3>
+            <html:h3 class="stylesheet-rule-count"></html:h3>
+            <spacer/>
+            <html:h3><label class="stylesheet-saveButton"
+                  data-l10n-id="styleeditor-save-button"></label></html:h3>
+          </html:div>
+        </html:hgroup>
+      </html:li>
+
+      <box id="splitview-tpl-details-stylesheet" class="splitview-details">
+        <hbox class="stylesheet-details-container">
+          <box class="stylesheet-editor-input textbox"
+               data-l10n-id="styleeditor-editor-textbox"/>
+          <splitter class="devtools-side-splitter"/>
+          <vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
+            <toolbar class="devtools-toolbar"
+              data-l10n-id="styleeditor-media-rules">
+            </toolbar>
+            <vbox class="stylesheet-media-container" flex="1">
+              <html:div class="stylesheet-media-list" />
+            </vbox>
+          </vbox>
+        </hbox>
+      </box>
+    </html:div> <!-- #splitview-templates -->
+  </box>
+</window>

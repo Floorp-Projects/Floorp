@@ -1,0 +1,181 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "gfxipc/ShadowLayerUtils.h";
+
+using struct gfxPoint from "gfxPoint.h";
+using nsIntRegion from "nsRegion.h";
+using mozilla::StereoMode from "ImageTypes.h";
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
+using mozilla::gfx::YUVColorSpace from "mozilla/gfx/Types.h";
+using mozilla::gfx::ColorDepth from "mozilla/gfx/Types.h";
+using mozilla::gfx::ColorRange from "mozilla/gfx/Types.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+using gfxImageFormat from "gfxTypes.h";
+using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
+
+namespace mozilla {
+namespace layers {
+
+[Comparable] struct SurfaceDescriptorD3D10 {
+  WindowsHandle handle;
+  SurfaceFormat format;
+  IntSize size;
+  YUVColorSpace yUVColorSpace;
+  ColorRange colorRange;
+};
+
+[Comparable] struct SurfaceDescriptorDXGIYCbCr {
+  WindowsHandle handleY;
+  WindowsHandle handleCb;
+  WindowsHandle handleCr;
+  IntSize size;
+  IntSize sizeY;
+  IntSize sizeCbCr;
+  ColorDepth colorDepth;
+  YUVColorSpace yUVColorSpace;
+  ColorRange colorRange;
+};
+
+[Comparable] struct SurfaceDescriptorMacIOSurface {
+  uint32_t surfaceId;
+  bool isOpaque;
+  YUVColorSpace yUVColorSpace;
+};
+
+[Comparable] struct SurfaceDescriptorDMABuf {
+  uint32_t bufferType;
+  uint64_t modifier;
+  uint32_t flags;
+  FileDescriptor[] fds;
+  uint32_t[] width;
+  uint32_t[] height;
+  uint32_t[] format;
+  uint32_t[] strides;
+  uint32_t[] offsets;
+  YUVColorSpace yUVColorSpace;
+  FileDescriptor[] fence;
+  uint32_t uid;
+  FileDescriptor[] refCount;
+};
+
+[Comparable] struct SurfaceTextureDescriptor {
+  uint64_t handle;
+  IntSize size;
+  SurfaceFormat format;
+  bool continuous;
+  bool ignoreTransform;
+};
+
+[Comparable] struct SurfaceDescriptorAndroidHardwareBuffer {
+  FileDescriptor handle;
+  uint64_t bufferId;
+  IntSize size;
+  SurfaceFormat format;
+};
+
+[Comparable] struct EGLImageDescriptor {
+  uintptr_t image; // `EGLImage` is a `void*`.
+  uintptr_t fence;
+  IntSize size;
+  bool hasAlpha;
+};
+
+[Comparable] struct SurfaceDescriptorSharedGLTexture {
+  uint32_t texture;
+  uint32_t target;
+  uintptr_t fence;
+  IntSize size;
+  bool hasAlpha;
+};
+
+
+[Comparable] union RemoteDecoderVideoSubDescriptor {
+  SurfaceDescriptorD3D10;
+  SurfaceDescriptorDXGIYCbCr;
+  SurfaceDescriptorDMABuf;
+  SurfaceDescriptorMacIOSurface;
+  null_t;
+};
+
+[Comparable] struct SurfaceDescriptorRemoteDecoder {
+  uint64_t handle;
+  RemoteDecoderVideoSubDescriptor subdesc;
+  MaybeVideoBridgeSource source;
+};
+
+[Comparable] union SurfaceDescriptorGPUVideo {
+  SurfaceDescriptorRemoteDecoder;
+};
+
+[Comparable] struct RGBDescriptor {
+  IntSize size;
+  SurfaceFormat format;
+  bool hasIntermediateBuffer;
+};
+
+[Comparable] struct YCbCrDescriptor {
+  IntRect display;
+  IntSize ySize;
+  uint32_t yStride;
+  IntSize cbCrSize;
+  uint32_t cbCrStride;
+  uint32_t yOffset;
+  uint32_t cbOffset;
+  uint32_t crOffset;
+  StereoMode stereoMode;
+  ColorDepth colorDepth;
+  YUVColorSpace yUVColorSpace;
+  ColorRange colorRange;
+  bool hasIntermediateBuffer;
+};
+
+[Comparable] union BufferDescriptor {
+  RGBDescriptor;
+  YCbCrDescriptor;
+};
+
+[Comparable] union MemoryOrShmem {
+  uintptr_t;
+  Shmem;
+};
+
+[Comparable] struct SurfaceDescriptorBuffer {
+  BufferDescriptor desc;
+  MemoryOrShmem data;
+};
+
+[Comparable] struct SurfaceDescriptorShared
+{
+  IntSize size;
+  int32_t stride;
+  SurfaceFormat format;
+  Handle handle;
+};
+
+[Comparable] struct SurfaceDescriptorRecorded {
+  int64_t textureId;
+};
+
+[Comparable] union SurfaceDescriptor {
+  SurfaceDescriptorBuffer;
+  SurfaceDescriptorD3D10;
+  SurfaceDescriptorDXGIYCbCr;
+  SurfaceDescriptorDMABuf;
+  SurfaceTextureDescriptor;
+  SurfaceDescriptorAndroidHardwareBuffer;
+  EGLImageDescriptor;
+  SurfaceDescriptorMacIOSurface;
+  SurfaceDescriptorSharedGLTexture;
+  SurfaceDescriptorGPUVideo;
+  SurfaceDescriptorRecorded;
+  null_t;
+};
+
+} // namespace
+} // namespace

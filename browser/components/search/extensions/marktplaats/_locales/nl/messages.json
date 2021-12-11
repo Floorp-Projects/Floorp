@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Marktplaats.nl"
+  },
+  "extensionDescription": {
+    "message": "Zoeken in alle categorieën op Marktplaats.nl"
+  },
+  "searchUrl": {
+    "message": "https://www.marktplaats.nl/z.html"
+  },
+  "searchForm": {
+    "message": "https://www.marktplaats.nl"
+  },
+  "searchUrlGetParams": {
+    "message": "client=firefox-search&query={searchTerms}"
+  }
+}

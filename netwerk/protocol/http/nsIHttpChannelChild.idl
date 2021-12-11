@@ -1,0 +1,38 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+namespace mozilla {
+class OriginAttributes;
+} // mozilla namespace
+%}
+
+[ptr] native RequestHeaderTuples(mozilla::net::RequestHeaderTuples);
+[ref] native MaybeCorsPreflightArgsRef(mozilla::Maybe<mozilla::net::CorsPreflightArgs>);
+[ref] native const_OriginAttributes(const mozilla::OriginAttributes);
+
+interface nsIPrincipal;
+interface nsIURI;
+
+[builtinclass, uuid(d02b96ed-2789-4f42-a25c-7abe63de7c18)]
+interface nsIHttpChannelChild : nsISupports
+{
+  [must_use] void addCookiesToRequest();
+
+  // Headers that the channel client has set via SetRequestHeader.
+  [must_use] readonly attribute RequestHeaderTuples clientSetRequestHeaders;
+
+  // Headers that the channel client has set via SetRequestHeader.
+  [notxpcom, nostdcall]
+  void GetClientSetCorsPreflightParameters(in MaybeCorsPreflightArgsRef args);
+
+  // This method is called by nsCORSListenerProxy if we need to remove
+  // an entry from the CORS preflight cache in the parent process.
+  [must_use]
+  void removeCorsPreflightCacheEntry(in nsIURI aURI, in nsIPrincipal aRequestingPrincipal,
+                                     in const_OriginAttributes aOriginAttributes);
+};

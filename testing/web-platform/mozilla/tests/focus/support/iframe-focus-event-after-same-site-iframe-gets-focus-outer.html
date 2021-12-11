@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Iframe focus event after same site iframe gets focus outer</title>
+<iframe src="iframe-focus-event-after-iframe-gets-focus-inner.html"></iframe>
+<script>
+let outerlog = "outerlog:";
+
+let iframe = document.querySelector("iframe");
+window.onmessage = function(e) {
+  if (e.data == "iframefocus") {
+    iframe.focus();
+  } else if (e.data == "iframecontentWindowfocus") {
+    iframe.contentWindow.focus();
+  } else if (e.data == "windowfocus") {
+    iframe.contentWindow.postMessage("windowfocus", "*");
+  } else if (e.data == "getlog") {
+    iframe.contentWindow.postMessage("getlog", "*");
+  } else {
+    opener.postMessage(outerlog + e.data, "*");
+  }
+};
+
+window.onload = function() {
+  window.onfocus = function() {
+    outerlog += "windowfocus,";
+  };
+
+  window.onblur = function() {
+    outerlog += "windowblur,";
+  };
+
+  iframe.onfocus = function() {
+    outerlog += "iframefocus,";
+  };
+
+  iframe.onblur = function() {
+    outerlog += "iframeblur,";
+  };
+
+  opener.postMessage("ready", "*");
+};
+</script>

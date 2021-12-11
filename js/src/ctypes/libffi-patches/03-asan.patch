@@ -1,0 +1,92 @@
+diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
+index dec331c958c21..b7c7d5218eb14 100644
+--- a/js/src/ctypes/libffi/src/x86/ffi64.c
++++ b/js/src/ctypes/libffi/src/x86/ffi64.c
+@@ -549,16 +549,26 @@ ffi_prep_cif_machdep (ffi_cif *cif)
+     flags |= UNIX64_FLAG_XMM_ARGS;
+ 
+   cif->flags = flags;
+   cif->bytes = (unsigned) FFI_ALIGN (bytes, 8);
+ 
+   return FFI_OK;
+ }
+ 
++#ifndef __SANITIZE_ADDRESS__
++# ifdef __clang__
++#  if __has_feature(address_sanitizer)
++#   define __SANITIZE_ADDRESS__
++#  endif
++# endif
++#endif
++#ifdef __SANITIZE_ADDRESS__
++__attribute__((noinline,no_sanitize_address))
++#endif
+ static void
+ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
+ 	      void **avalue, void *closure)
+ {
+   enum x86_64_reg_class classes[MAX_CLASSES];
+   char *stack, *argp;
+   ffi_type **arg_types;
+   int gprcount, ssecount, ngpr, nsse, i, avn, flags;
+diff --git a/js/src/ctypes/libffi/src/x86/ffiw64.c b/js/src/ctypes/libffi/src/x86/ffiw64.c
+index b68f69ccf68a0..5250e3052df1f 100644
+--- a/js/src/ctypes/libffi/src/x86/ffiw64.c
++++ b/js/src/ctypes/libffi/src/x86/ffiw64.c
+@@ -102,16 +102,26 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
+   n += (flags == FFI_TYPE_STRUCT);
+   if (n < 4)
+     n = 4;
+   cif->bytes = n * 8;
+ 
+   return FFI_OK;
+ }
+ 
++#ifndef __SANITIZE_ADDRESS__
++# ifdef __clang__
++#  if __has_feature(address_sanitizer)
++#   define __SANITIZE_ADDRESS__
++#  endif
++# endif
++#endif
++#ifdef __SANITIZE_ADDRESS__
++__attribute__((noinline,no_sanitize_address))
++#endif
+ static void
+ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
+ 	      void **avalue, void *closure)
+ {
+   int i, j, n, flags;
+   UINT64 *stack;
+   size_t rsize;
+   struct win64_call_frame *frame;
+diff --git a/js/src/ctypes/libffi/src/x86/ffi.c b/js/src/ctypes/libffi/src/x86/ffi.c
+--- a/js/src/ctypes/libffi/src/x86/ffi.c
++++ b/js/src/ctypes/libffi/src/x86/ffi.c
+@@ -250,16 +250,26 @@ static const struct abi_params abi_param
+     #define FFI_DECLARE_FASTCALL __declspec(fastcall)
+   #endif
+ #else
+   #define FFI_DECLARE_FASTCALL
+ #endif
+ 
+ extern void FFI_DECLARE_FASTCALL ffi_call_i386(struct call_frame *, char *) FFI_HIDDEN;
+ 
++#ifndef __SANITIZE_ADDRESS__
++# ifdef __clang__
++#  if __has_feature(address_sanitizer)
++#   define __SANITIZE_ADDRESS__
++#  endif
++# endif
++#endif
++#ifdef __SANITIZE_ADDRESS__
++__attribute__((noinline,no_sanitize_address))
++#endif
+ static void
+ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
+ 	      void **avalue, void *closure)
+ {
+   size_t rsize, bytes;
+   struct call_frame *frame;
+   char *stack, *argp;
+   ffi_type **arg_types;

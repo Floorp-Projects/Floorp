@@ -1,0 +1,16 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>Bug 1239889</title>
+  </head>
+  <body>
+  </body>
+  <script>
+    var div = document.createElement('div');
+    var effect = new KeyframeEffect(div, { opacity: [0, 1] });
+    requestAnimationFrame(() => {
+      document.body.appendChild(div);
+      document.documentElement.classList.remove("reftest-wait");
+    });
+  </script>
+</html>

@@ -1,0 +1,65 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <iframe id="workerFrame" src="errorPropagation_iframe.html"
+            onload="workerFrameLoaded();"></iframe>
+    <script type="text/javascript">
+      const workerCount = 3;
+
+      const errorMessage = "Error: expectedError";
+      const errorFilename = "http://mochi.test:8888/tests/dom/workers/test/" +
+                            "errorPropagation_worker.js";
+      const errorLineno = 48;
+
+      var workerFrame;
+
+      scopeErrorCount = 0;
+      workerErrorCount = 0;
+      windowErrorCount = 0;
+
+      function messageListener(event) {
+        if (event.type == "scope") {
+          scopeErrorCount++;
+        }
+        else if (event.type == "worker") {
+          workerErrorCount++;
+        }
+        else if (event.type == "window") {
+          windowErrorCount++;
+        }
+        else {
+          ok(false, "Bad event type: " + event.type);
+        }
+
+        is(event.data.message, errorMessage, "Correct message event.message");
+        is(event.data.filename, errorFilename,
+           "Correct message event.filename");
+        is(event.data.lineno, errorLineno, "Correct message event.lineno");
+
+        if (windowErrorCount == 1) {
+          is(scopeErrorCount, workerCount, "Good number of scope errors");
+          is(workerErrorCount, workerCount, "Good number of worker errors");
+          workerFrame.stop();
+          SimpleTest.finish();
+        }
+      }
+
+      function workerFrameLoaded() {
+        workerFrame = document.getElementById("workerFrame").contentWindow;
+        workerFrame.start(workerCount, messageListener);
+      }
+
+      SimpleTest.waitForExplicitFinish();
+    </script>
+  </body>
+</html>

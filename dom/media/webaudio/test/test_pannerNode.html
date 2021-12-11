@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test PannerNode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function near(a, b, msg) {
+  ok(Math.abs(a - b) < 1e-4, msg);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var context = new AudioContext();
+  var buffer = context.createBuffer(1, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+  }
+
+  var destination = context.destination;
+
+  var source = context.createBufferSource();
+
+  var panner = new PannerNode(context);
+
+  source.buffer = buffer;
+
+  source.connect(panner);
+  panner.connect(destination);
+
+  // Verify default values
+  is(panner.panningModel, "equalpower", "Correct default value for panning model");
+  is(panner.distanceModel, "inverse", "Correct default value for distance model");
+  near(panner.refDistance, 1, "Correct default value for ref distance");
+  near(panner.maxDistance, 10000, "Correct default value for max distance");
+  near(panner.rolloffFactor, 1, "Correct default value for rolloff factor");
+  near(panner.coneInnerAngle, 360, "Correct default value for cone inner angle");
+  near(panner.coneOuterAngle, 360, "Correct default value for cone outer angle");
+  near(panner.coneOuterGain, 0, "Correct default value for cone outer gain");
+  is(panner.channelCount, 2, "panner node has 2 input channels by default");
+  is(panner.channelCountMode, "clamped-max", "Correct channelCountMode for the panner node");
+  is(panner.channelInterpretation, "speakers", "Correct channelCountInterpretation for the panner node");
+
+  panner.setPosition(1, 1, 1);
+  near(panner.positionX.value, 1, "setPosition sets AudioParam properly");
+  near(panner.positionY.value, 1, "setPosition sets AudioParam properly");
+  near(panner.positionZ.value, 1, "setPosition sets AudioParam properly");
+
+  panner.setOrientation(0, 1, 0);
+  near(panner.orientationX.value, 0, "setOrientation sets AudioParam properly");
+  near(panner.orientationY.value, 1, "setOrientation sets AudioParam properly");
+  near(panner.orientationZ.value, 0, "setOrientation sets AudioParam properly");
+
+  source.start(0);
+  SimpleTest.executeSoon(function() {
+    source.stop(0);
+    source.disconnect();
+    panner.disconnect();
+
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

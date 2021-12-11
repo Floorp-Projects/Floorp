@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+/* load 9 faces of DejaVu Sans in the "dvs" family, with appropriate style descriptors */
+@font-face {
+  font-family: dvs;
+  src: url(../fonts/dejavu-sans/DejaVuSans.ttf);
+}
+@font-face {
+  font-family: dvs;
+  font-weight: bold;
+  src: url(../fonts/dejavu-sans/DejaVuSans-Bold.ttf);
+}
+@font-face {
+  font-family: dvs;
+  font-style: italic;
+  src: url(../fonts/dejavu-sans/DejaVuSans-Oblique.ttf);
+}
+@font-face {
+  font-family: dvs;
+  font-style: italic;
+  font-weight: bold;
+  src: url(../fonts/dejavu-sans/DejaVuSans-BoldOblique.ttf);
+}
+@font-face { /* note that there is no ExtraLight Condensed or Oblique */
+  font-family: dvs;
+  font-weight: 200;
+  src: url(../fonts/dejavu-sans/DejaVuSans-ExtraLight.ttf);
+}
+@font-face {
+  font-family: dvs;
+  font-stretch: condensed;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed.ttf);
+}
+@font-face {
+  font-family: dvs;
+  font-weight: bold;
+  font-stretch: condensed;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed-Bold.ttf);
+}
+@font-face {
+  font-family: dvs;
+  font-style: italic;
+  font-stretch: condensed;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed-Oblique.ttf);
+}
+@font-face {
+  font-family: dvs;
+  font-style: italic;
+  font-weight: bold;
+  font-stretch: condensed;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed-BoldOblique.ttf);
+}
+
+body {
+  font-family: dvs, serif;
+  font-size: 24px;
+}
+.l {
+  font-weight: 200;
+}
+</style>
+</head>
+<body>
+<!-- all 4 levels of "condensed" come out the same; "condensed" takes priority over "light" -->
+<div style="font-stretch: ultra-condensed">ultra-condensed <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<div style="font-stretch: extra-condensed">extra-condensed <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<div style="font-stretch: condensed">condensed <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<div style="font-stretch: semi-condensed">semi-condensed <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<!-- "normal" and all 4 levels of "expanded" come out the same; "light" is available, but only in upright, not italic -->
+<div style="font-stretch: normal">normal <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<div style="font-stretch: semi-expanded">semi-expanded <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<div style="font-stretch: expanded">expanded <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<div style="font-stretch: extra-expanded">extra-expanded <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+<div style="font-stretch: ultra-expanded">ultra-expanded <i>italic</i> <b>bold <i>italic</i></b> <span class="l">light <i>italic</i></span></div>
+</body>
+</html>
+

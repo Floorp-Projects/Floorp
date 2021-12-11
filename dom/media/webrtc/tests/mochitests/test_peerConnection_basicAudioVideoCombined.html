@@ -1,0 +1,24 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "796890",
+    title: "Basic audio/video (combined) peer connection"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true, video: true}],
+                             [{audio: true, video: true}]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

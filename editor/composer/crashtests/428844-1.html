@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+<head>
+<script>
+function boom() {
+  var iframe = document.getElementById('inner');
+  iframe.addEventListener("load", function() {
+    document.documentElement.removeAttribute("class");
+  });
+  iframe.src = "data:text/html,";
+  dump("Outer onload\n");
+}
+</script>
+</head>
+<body onload="boom()">
+<iframe src="428844-1-inner.xhtml" id="inner"></iframe>
+</body>
+</html>

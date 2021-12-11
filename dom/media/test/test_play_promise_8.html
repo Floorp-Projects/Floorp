@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: playAndPauseWhenCanplay
+// Case: invlke play() and then pause() on an element that already has enough data to play
+// Expected result: resolve the promise
+// Note: the pause() doesn't cancel the play() because it was alredy been queued to be resolved.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.preload = "auto";
+  element.src = test.name;
+  once(element, "canplay").then(() => {
+    element.play().then(
+      (result) => {
+        if (result == undefined) {
+          ok(true, `${token} is resolved with ${result}.`);
+        } else {
+          ok(false, `${token} is resolved with ${result}.`);
+        }
+      },
+      (error) => {
+        ok(false, `${token} is rejected with ${error.name}.`);
+      }
+    ).then( () => { manager.finished(token); } );
+    ok(!element.paused, `playAndPauseWhenCanplay(${token}) element should not be paused.`);
+    element.pause();
+    ok(element.paused, `playAndPauseWhenCanplay(${token}) element should be paused.`);
+  });
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>

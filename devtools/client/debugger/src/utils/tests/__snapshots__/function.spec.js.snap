@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`function findFunctionText finds class function 1`] = `
+"bar() {
+ 2 + 2;
+}"
+`;
+
+exports[`function findFunctionText finds function 1`] = `
+"async function exSlowFoo() {
+ return \\"yay in a bit\\";
+}"
+`;
+
+exports[`function findFunctionText finds function signature 1`] = `
+"async function exSlowFoo() {
+ return \\"yay in a bit\\";
+}"
+`;
+
+exports[`function findFunctionText finds property function 1`] = `
+"function name() {
+ 2 + 2;
+}"
+`;

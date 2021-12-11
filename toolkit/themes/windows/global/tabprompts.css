@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Tab Modal Prompt boxes */
+.tabModalBackground,
+tabmodalprompt {
+  background-color: hsla(0,0%,10%,.5);
+}
+
+tabmodalprompt {
+  font-family: sans-serif; /* use content font not system UI font */
+}
+
+.paymentDialogContainerFrame,
+.tabmodalprompt-mainContainer {
+  color: FieldText;
+  background-color: Field;
+  border-radius: 2px;
+  border: 1px solid threeDDarkShadow;
+}
+
+.tabmodalprompt-buttonContainer {
+  background-color: hsla(0,0%,0%,.05);
+  border-top: 1px solid hsla(0,0%,0%,.05);
+}

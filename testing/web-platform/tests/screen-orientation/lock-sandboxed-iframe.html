@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<iframe id="allowedIframe" sandbox="allow-scripts allow-same-origin allow-orientation-lock" style="display:none">
+</iframe>
+
+<iframe id="disallowedIframe" sandbox="allow-scripts allow-same-origin" style="display:none">
+</iframe>
+<script>
+promise_test(async t => {
+  const messageWatcher = new EventWatcher(t, window, "message");
+  const disallowedIframe = document.getElementById("disallowedIframe");
+  disallowedIframe.src = "resources/sandboxed-iframe-locking.html";
+
+  const message = await messageWatcher.wait_for("message");
+  assert_equals(message.data, "SecurityError", "screen.lockOrientation() throws a SecurityError");
+}, "Test without 'allow-orientation-lock' sandboxing directive");
+
+promise_test(async t => {
+  const messageWatcher = new EventWatcher(t, window, "message");
+  const disallowedIframe = document.getElementById("allowedIframe");
+  disallowedIframe.src = "resources/sandboxed-iframe-locking.html";
+
+  const message = await messageWatcher.wait_for("message");
+  assert_equals(message.data, "portrait-primary", "screen.orientation lock to portrait-primary");
+}, "Test with 'allow-orientation-lock' sandboxing directive");
+</script>

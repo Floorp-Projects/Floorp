@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing definite placement of grid items with 'order'</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107786">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#auto-placement-algo">
+  <link rel="help" href="http://dev.w3.org/csswg/css-flexbox-1/#order-property">
+  <link rel="match" href="grid-order-placement-definite-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ position: relative;
+ grid-template-columns: 20px 20px 20px 20px;
+ grid-template-rows: 20px;
+ padding: 17px 7px 11px 13px;
+ width: 100px;
+ height: 25px;
+}
+
+.a { order:4; grid-column-start:4; grid-row-start:1; width: 40px; background:lime; }
+.b { order:3; grid-column-start:3; grid-row-start:1; width: 60px; background:pink; }
+.c { order:2; grid-column-start:2; grid-row-start:1; width: 80px; background:yellow; }
+.d { order:1; grid-column-start:1; grid-row-start:1; width: 100px; background:silver; }
+.e { order:1; grid-column-start:1; grid-row-start:1; width: 100px; background:red; }
+
+span {
+  border: 1px solid;
+}
+
+.f2 { background:white; }
+.f2 span { opacity: 0.5; }
+.f2 span.e { display:none; }
+  </style>
+</head>
+<body>
+
+<f>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="e"></span>
+<span class="d">d</span>
+</div>
+
+<div class="grid">
+<span class="e"></span>
+<span class="d">d</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="a">a</span>
+</div>
+
+</f>
+
+<script>
+  var f = document.querySelector('f');
+  var f2 = f.cloneNode(true);
+  f2.className = 'f2';
+  document.body.appendChild(f2);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createEditor Adds codeFolding 1`] = `
+Object {
+  "cursorBlinkRate": 530,
+  "enableCodeFolding": true,
+  "extraKeys": Object {
+    "Cmd-F": false,
+    "Cmd-G": false,
+    "Ctrl-F": false,
+    "Ctrl-G": false,
+    "Esc": false,
+  },
+  "foldGutter": true,
+  "gutters": Array [
+    "breakpoints",
+    "hit-markers",
+    "CodeMirror-linenumbers",
+    "CodeMirror-foldgutter",
+  ],
+  "lineNumbers": true,
+  "lineWrapping": false,
+  "matchBrackets": true,
+  "mode": "javascript",
+  "readOnly": true,
+  "showAnnotationRuler": true,
+  "styleActiveLine": false,
+  "theme": "mozilla",
+  "value": " ",
+}
+`;
+
+exports[`createEditor Returns a SourceEditor 1`] = `
+Object {
+  "cursorBlinkRate": 530,
+  "enableCodeFolding": false,
+  "extraKeys": Object {
+    "Cmd-F": false,
+    "Cmd-G": false,
+    "Ctrl-F": false,
+    "Ctrl-G": false,
+    "Esc": false,
+  },
+  "foldGutter": false,
+  "gutters": Array [
+    "breakpoints",
+    "hit-markers",
+    "CodeMirror-linenumbers",
+  ],
+  "lineNumbers": true,
+  "lineWrapping": false,
+  "matchBrackets": true,
+  "mode": "javascript",
+  "readOnly": true,
+  "showAnnotationRuler": true,
+  "styleActiveLine": false,
+  "theme": "mozilla",
+  "value": " ",
+}
+`;

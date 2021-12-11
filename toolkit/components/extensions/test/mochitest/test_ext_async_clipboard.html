@@ -1,0 +1,403 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Async Clipboard permissions tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+// Bug 1479956 - On android-debug verify this test times out
+SimpleTest.requestLongerTimeout(2);
+
+/* globals ClipboardItem, clipboardWriteText, clipboardWrite, clipboardReadText, clipboardRead */
+function shared() {
+  this.clipboardWriteText = function(txt) {
+    return navigator.clipboard.writeText(txt);
+  };
+
+  this.clipboardWrite = function(items) {
+    return navigator.clipboard.write(items);
+  };
+
+  this.clipboardReadText = function() {
+    return navigator.clipboard.readText();
+  };
+
+  this.clipboardRead = function() {
+    return navigator.clipboard.read();
+  };
+}
+
+/**
+ * Clear the clipboard.
+ *
+ * This is needed because Services.clipboard.emptyClipboard() does not clear the actual system clipboard.
+ */
+function clearClipboard() {
+  if (AppConstants.platform == "android") {
+    // On android, this clears the actual system clipboard
+    SpecialPowers.Services.clipboard.emptyClipboard(SpecialPowers.Services.clipboard.kGlobalClipboard);
+    return;
+  }
+  // Need to do this hack on other platforms to clear the actual system clipboard
+  let transf = SpecialPowers.Cc["@mozilla.org/widget/transferable;1"]
+    .createInstance(SpecialPowers.Ci.nsITransferable);
+  transf.init(null);
+  // Empty transferables may cause crashes, so just add an unknown type.
+  const TYPE = "text/x-moz-place-empty";
+  transf.addDataFlavor(TYPE);
+  transf.setTransferData(TYPE, {});
+  SpecialPowers.Services.clipboard.setData(transf, null, SpecialPowers.Services.clipboard.kGlobalClipboard);
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.events.asyncClipboard", true],
+    ["dom.events.asyncClipboard.clipboardItem", true],
+    ["dom.events.asyncClipboard.read", true],
+  ]});
+});
+
+// Test that without enough permissions, we are NOT allowed to use writeText, write, read or readText in background script
+add_task(async function test_background_async_clipboard_no_permissions() {
+  function backgroundScript() {
+    const item = new ClipboardItem({
+      "text/plain": new Blob(["HI"], {type: "text/plain"})
+    });
+    browser.test.assertRejects(
+      clipboardRead(),
+      (err) => err === undefined,
+      "Read should be denied without permission"
+    );
+    browser.test.assertRejects(
+      clipboardWrite([item]),
+      "Clipboard write was blocked due to lack of user activation.",
+      "Write should be denied without permission"
+    );
+    browser.test.assertRejects(
+      clipboardWriteText("blabla"),
+      "Clipboard write was blocked due to lack of user activation.",
+      "WriteText should be denied without permission"
+    );
+    browser.test.assertRejects(
+      clipboardReadText(),
+      (err) => err === undefined,
+      "ReadText should be denied without permission"
+    );
+    browser.test.sendMessage("ready");
+  }
+  let extensionData = {
+    background: [shared, backgroundScript],
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  await extension.unload();
+});
+
+// Test that without enough permissions, we are NOT allowed to use writeText, write, read or readText in content script
+add_task(async function test_contentscript_async_clipboard_no_permission() {
+  function contentScript() {
+    const item = new ClipboardItem({
+      "text/plain": new Blob(["HI"], {type: "text/plain"})
+    });
+    browser.test.assertRejects(
+      clipboardRead(),
+      (err) => err === undefined,
+      "Read should be denied without permission"
+    );
+    browser.test.assertRejects(
+      clipboardWrite([item]),
+      "Clipboard write was blocked due to lack of user activation.",
+      "Write should be denied without permission"
+    );
+    browser.test.assertRejects(
+      clipboardWriteText("blabla"),
+      "Clipboard write was blocked due to lack of user activation.",
+      "WriteText should be denied without permission"
+    );
+    browser.test.assertRejects(
+      clipboardReadText(),
+      (err) => err === undefined,
+      "ReadText should be denied without permission"
+    );
+    browser.test.sendMessage("ready");
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["https://example.com/*/file_sample.html"],
+      }],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+  await extension.awaitMessage("ready");
+  win.close();
+  await extension.unload();
+});
+
+// Test that with enough permissions, we are allowed to use writeText  in content script
+add_task(async function test_contentscript_clipboard_permission_writetext() {
+  function contentScript() {
+    let str = "HI";
+    clipboardWriteText(str).then(function() {
+      // nothing here
+      browser.test.sendMessage("ready");
+    }, function(err) {
+      browser.test.fail("WriteText promise rejected");
+      browser.test.sendMessage("ready");
+    }); // clipboardWriteText
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["https://example.com/*/file_sample.html"],
+      }],
+      permissions: [
+        "clipboardWrite",
+        "clipboardRead",
+      ],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+  await extension.awaitMessage("ready");
+  const actual = SpecialPowers.getClipboardData("text/unicode");
+  is(actual, "HI", "right string copied by write");
+  win.close();
+  await extension.unload();
+});
+
+// Test that with enough permissions, we are allowed to use readText in content script
+add_task(async function test_contentscript_clipboard_permission_readtext() {
+  function contentScript() {
+    let str = "HI";
+    clipboardReadText().then(function(strData) {
+      if (strData == str) {
+        browser.test.succeed("Successfully read from clipboard");
+      } else {
+        browser.test.fail("ReadText read the wrong thing from clipboard:" + strData);
+      }
+      browser.test.sendMessage("ready");
+    }, function(err) {
+      browser.test.fail("ReadText promise rejected");
+      browser.test.sendMessage("ready");
+    }); // clipboardReadText
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["https://example.com/*/file_sample.html"],
+      }],
+      permissions: [
+        "clipboardWrite",
+        "clipboardRead",
+      ],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+  await SimpleTest.promiseClipboardChange("HI", () => {
+    SpecialPowers.clipboardCopyString("HI");
+  }, "text/unicode");
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+  await extension.awaitMessage("ready");
+  win.close();
+  await extension.unload();
+});
+
+// Test that with enough permissions, we are allowed to use write in content script
+add_task(async function test_contentscript_clipboard_permission_write() {
+  function contentScript() {
+    const item = new ClipboardItem({
+      "text/plain": new Blob(["HI"], {type: "text/plain"})
+    });
+    clipboardWrite([item]).then(function() {
+      // nothing here
+      browser.test.sendMessage("ready");
+    }, function(err) { // clipboardWrite promise error function
+      browser.test.fail("Write promise rejected");
+      browser.test.sendMessage("ready");
+    }); // clipboard write
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["https://example.com/*/file_sample.html"],
+      }],
+      permissions: [
+        "clipboardWrite",
+        "clipboardRead",
+      ],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+  await extension.awaitMessage("ready");
+  const actual = SpecialPowers.getClipboardData("text/unicode");
+  is(actual, "HI", "right string copied by write");
+  win.close();
+  await extension.unload();
+});
+
+// Test that with enough permissions, we are allowed to use read in content script
+add_task(async function test_contentscript_clipboard_permission_read() {
+  function contentScript() {
+    clipboardRead().then(async function(items) {
+      let blob = await items[0].getType("text/plain");
+      let s = await blob.text();
+      if (s == "HELLO") {
+        browser.test.succeed("Read promise successfully read the right thing");
+      } else {
+        browser.test.fail("Read read the wrong string from clipboard:" + s);
+      }
+      browser.test.sendMessage("ready");
+    }, function(err) { // clipboardRead promise error function
+      browser.test.fail("Read promise rejected");
+      browser.test.sendMessage("ready");
+    }); // clipboard read
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["https://example.com/*/file_sample.html"],
+      }],
+      permissions: [
+        "clipboardWrite",
+        "clipboardRead",
+      ],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+  await SimpleTest.promiseClipboardChange("HELLO", () => {
+    SpecialPowers.clipboardCopyString("HELLO");
+  }, "text/unicode");
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+  await extension.awaitMessage("ready");
+  win.close();
+  await extension.unload();
+});
+
+// Test that performing readText(...) when the clipboard is empty returns an empty string
+add_task(async function test_contentscript_clipboard_nocontents_readtext() {
+  function contentScript() {
+    clipboardReadText().then(function(strData) {
+      if (strData == "") {
+        browser.test.succeed("ReadText successfully read correct thing from an empty clipboard");
+      } else {
+        browser.test.fail("ReadText should have read an empty string, but read:" + strData);
+      }
+      browser.test.sendMessage("ready");
+    }, function(err) {
+      browser.test.fail("ReadText promise rejected: " + err);
+      browser.test.sendMessage("ready");
+    });
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["https://example.com/*/file_sample.html"],
+      }],
+      permissions: [
+        "clipboardRead",
+      ],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+
+  await SimpleTest.promiseClipboardChange("", () => {
+    clearClipboard();
+  }, "text/x-moz-place-empty");
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+  await extension.awaitMessage("ready");
+  win.close();
+  await extension.unload();
+});
+
+// Test that performing read(...) when the clipboard is empty returns an empty ClipboardItem
+add_task(async function test_contentscript_clipboard_nocontents_read() {
+  function contentScript() {
+    clipboardRead().then(function(items) {
+      if (items[0].types.length) {
+        browser.test.fail("Read read the wrong thing from clipboard, " +
+          "ClipboardItem has this many entries: " + items[0].types.length);
+      } else {
+        browser.test.succeed("Read promise successfully resolved");
+      }
+      browser.test.sendMessage("ready");
+    }, function(err) {
+      browser.test.fail("Read promise rejected: " + err);
+      browser.test.sendMessage("ready");
+    });
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["https://example.com/*/file_sample.html"],
+      }],
+      permissions: [
+        "clipboardRead",
+      ],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+
+  await SimpleTest.promiseClipboardChange("", () => {
+    clearClipboard();
+  }, "text/x-moz-place-empty");
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+  await extension.awaitMessage("ready");
+  win.close();
+  await extension.unload();
+});
+</script>
+</body>
+</html>

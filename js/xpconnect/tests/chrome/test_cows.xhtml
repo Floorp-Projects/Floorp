@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500931
+-->
+<window title="Mozilla Bug 522764"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=522764 "
+     target="_blank">Mozilla Bug 522764 </a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+add_task(async () => {
+var sandbox = new Cu.Sandbox("about:blank");
+
+var test_utils = window.windowUtils;
+
+await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                          true]]});
+
+function getCOW(x) {
+  if (typeof x != 'object' && typeof x != 'function')
+    return x;
+  x = Cu.waiveXrays(x);
+  var rval = {};
+  if (typeof x == "function")
+    rval = eval(`(${x.toString()})`);
+  for (var i in x) {
+    if (x.__lookupGetter__(i))
+      rval.__defineGetter__(i, eval(`(${x.__lookupGetter__(i).toString()})`))
+    else
+      rval[i] = getCOW(x[i]);
+  }
+  return rval;
+}
+
+// Give the sandbox a way to create ChromeObjectWrapped objects.
+sandbox.getCOW = getCOW;
+
+// Define test API functions in the sandbox.
+const TEST_API = ['is', 'isnot', 'ok', 'todo_is', 'todo_isnot', 'todo'];
+TEST_API.forEach(function(name) { sandbox[name] = window[name]; });
+
+sandbox.chromeGet = function (obj, prop) { return obj[prop]; };
+
+function COWTests() {
+    function getNames(cow) {
+        let names = [];
+        for (let name in cow) {
+            names.push(name);
+        }
+        return names;
+    }
+
+    // This function is actually stringified and run inside a
+    // sandbox with content privileges.
+
+    // TODO: This could use some refactoring; creating helper
+    // functions like assertIsWritable(myObj, 'someproperty') might
+    // be useful.
+
+    function isPropHidden(obj, propName, desc) {
+      try {
+          is(obj[propName], undefined,
+             "getting " + propName + " on " + desc + " should return undefined");
+          ok(!(propName in obj),
+             propName + " on " + desc + " should act as if it doesn't exist");
+          ok(!Object.hasOwnProperty.call(obj, propName),
+             propName + " on " + desc + " should act as if it doesn't exist");
+      } catch (e) {
+          ok(false, "getting " + propName + " on " + desc + " threw " + e);
+      }
+    }
+
+    const PROPS_TO_TEST = ['foo', 'bar', 'prototype'];
+
+    var empty = {};
+    var nonempty = {foo: 42, bar: 33};
+    is(getCOW(empty).foo, undefined,
+       "shouldn't throw when accessing exposed properties that don't exist");
+
+    PROPS_TO_TEST.forEach(function(name) {
+        isPropHidden(getCOW(nonempty), name, "object without exposedProps");
+    });
+
+    // Test function objects.
+    var func = function(x) { return 42; };
+    func.__exposedProps__ = { foo: "r" };
+    func.foo = "foo property";
+    var funcCOW = getCOW(func);
+    try {
+      funcCOW.foo;
+      ok(false, 'Functions are no longer COWable');
+    } catch (e) {
+      ok(/denied|insecure/.test(e), 'Functions are no longer COWable');
+    }
+    is(funcCOW(), 42, "Chrome functions should be callable");
+
+    // Test object with empty exposedProps
+    var strict = { __exposedProps__: {}, foo: "foo property" };
+    var strictCOW = getCOW(strict);
+    PROPS_TO_TEST.forEach(function(name) {
+        isPropHidden(strictCOW, name, "object with empty exposedProps");
+    });
+    is(getNames(strictCOW).length, 0,
+       "object with empty exposedProps shouldn't have any properties");
+
+    // Test object with one exposed property
+    var strict = { __exposedProps__: { foo: "r" }, foo: "foo property" };
+    var strictCOWr = getCOW(strict);
+    PROPS_TO_TEST.forEach(function(name) {
+        isPropHidden(strictCOW, name, "object with exposed 'foo'");
+    });
+    is(getNames(strictCOWr).length, 0,
+       "exposed props does not enumerate anything");
+    is(getNames(strictCOWr)[0], undefined,
+       "exposed props does not enumerate anything");
+
+    // Test writable property
+    var writable = getCOW({ __exposedProps__: {foo: 'w'}});
+    try {
+        ok(!("foo" in writable),
+           "non-existing write-only property shouldn't exist");
+        writable.foo = 5;
+        ok(false, "writing to a write-only exposed prop should throw");
+    } catch (e) {
+        ok(/Permission denied/.test(e),
+           "writing to a write-only exposed prop should throw the right error");
+    }
+    is(writable.foo, undefined,
+       "reading from a write-only exposed prop should return undefined");
+    try {
+        delete writable.foo;
+        ok(false, "deleting a write-only exposed prop should throw");
+    } catch (e) {
+        ok(true, "deleting a write-only exposed prop should throw " + e);
+    }
+
+    // Test readable property
+    var readable = { __exposedProps__: {foo: 'r'},
+                     foo: 5,
+                     bar: 6 };
+    try {
+        isPropHidden(getCOW(readable), "foo", undefined,
+                     "reading from a readable exposed prop shouldn't work");
+    } catch (e) {
+        ok(false, "reading from a readable exposed prop shouldn't throw " + e);
+    }
+    try {
+        getCOW(readable).foo = 1;
+        ok(false, "writing to a read-only exposed prop should fail");
+    } catch (e) {
+        ok(/Permission denied/.test(e),
+           "writing to a read-only exposed prop should fail");
+    }
+    try {
+        delete getCOW(readable).foo;
+        ok(false, "deleting a read-only exposed prop shouldn't work");
+    } catch (e) {
+        ok(/Permission denied/.test(e),
+           "deleting a read-only exposed prop should throw error");
+    }
+
+    try {
+        var props = getNames(getCOW(readable));
+        is(props.length, 0, "COW w/ one exposed prop should not enumerate");
+    } catch (e) {
+        ok(false, "COW w/ a readable prop should not raise exc " +
+                  "on enumeration: " + e);
+    }
+
+    // Test read/write property
+    var readwrite = getCOW({ __exposedProps__: {foo: 'rw'}});
+    try {
+        ok(!("foo" in readwrite),
+           "non-existing readwrite property shouldn't exist");
+        readwrite.foo = 5;
+        ok(false, "writing to a readwrite exposed prop should throw");
+    } catch (e) {
+        ok(/Permission denied/.test(e),
+           "writing to a readwrite exposed prop should throw the right error");
+    }
+    try {
+        delete readwrite.foo;
+        ok(false, "deleting a readwrite prop should throw");
+    } catch (e) {
+        ok(/Permission denied/.test(e),
+           "deleting a readwrite exposed prop should throw the right error");
+    }
+
+    // Readables and functions
+    try {
+        var COWFunc = getCOW((function() { return 5; }));
+        is(COWFunc(), 5, "COWed functions should be callable");
+    } catch (e) {
+        todo(false, "COWed functions should not raise " + e);
+    }
+}
+
+// Stringify the COW test suite and directly evaluate it in the sandbox.
+Cu.evalInSandbox('(' + COWTests.toString() + ')()', sandbox);
+
+// Test that COWed objects passing from content to chrome get unwrapped.
+function returnCOW() {
+    return getCOW({__exposedProps__: {},
+                  bar: 6});
+}
+
+var unwrapped = Cu.evalInSandbox(
+    '(' + returnCOW.toString() + ')()',
+    sandbox
+);
+
+try {
+    is(unwrapped.bar, 6,
+       "COWs should be unwrapped when entering chrome space");
+} catch (e) {
+    todo(false, "COWs should be unwrapped when entering chrome space, " +
+                "not raise " + e);
+}
+});
+  ]]></script>
+</window>

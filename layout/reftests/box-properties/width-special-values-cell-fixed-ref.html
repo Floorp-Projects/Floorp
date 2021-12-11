@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>max-content, min-content, -moz-fit-content, and -moz-available values of CSS width property, on table cells with table-layout: fixed</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+    body { font-size: 10px; line-height: 1; }
+
+    td table { width: 200px; }
+    td td:first-child {
+      border-left: 1px solid;
+      padding-left: 2px;
+      padding-right: 4px;
+      border-right: 8px solid;
+
+      background: yellow;
+    }
+
+  </style>
+</head>
+<body>
+
+<table border><tr>
+<td>
+<!-- width -->
+<table border><tr><td width="1">A&nbsp;B</td><td></td></tr></table>
+<table border><tr><td width="1">A B</td><td></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+
+</td>
+<td>
+<!-- min-width -->
+
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+
+<table border><tr><td width="1">A&nbsp;B</td><td></td></tr></table>
+<table border><tr><td width="1">A B</td><td></td></tr></table>
+<table border><tr><td width="1">A B</td><td></td></tr></table>
+<table border><tr><td width="1"><div style="width: 1px">A B</div></td><td></td></tr></table>
+
+</td>
+<td>
+<!-- max-width -->
+
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+<table border><tr><td width="50%">A B</td><td width="50%"></td></tr></table>
+
+<table border><tr><td width="1">A&nbsp;B</td><td></td></tr></table>
+<table border><tr><td width="1">A B</td><td></td></tr></table>
+<table border><tr><td width="1">A&nbsp;B</td><td></td></tr></table>
+<table border><tr><td width="150">A B</td><td></td></tr></table>
+
+</td>
+</tr></table>
+
+
+</body>
+</html>

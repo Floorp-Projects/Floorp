@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=480647
+-->
+<title>Test for Bug 480647</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=480647">Mozilla Bug 480647</a>
+<div contenteditable></div>
+<script>
+/** Test for Bug 480647 **/
+
+var div = document.querySelector("div");
+
+function parseFontSize(input, expected) {
+  parseFontSizeInner(input, expected, is);
+}
+
+function parseFontSizeTodo(input, expected) {
+  parseFontSizeInner(input, expected, todo_is);
+}
+
+function parseFontSizeInner(input, expected, fn) {
+  div.innerHTML = "foo";
+  getSelection().selectAllChildren(div);
+  document.execCommand("fontSize", false, input);
+  if (expected === null) {
+    fn(div.innerHTML, "foo",
+       'execCommand("fontSize", false, "' + input + '") should be no-op');
+  } else {
+    fn(div.innerHTML, '<font size="' + expected + '">foo</font>',
+       'execCommand("fontSize", false, "' + input + '") should parse to ' +
+       expected);
+  }
+}
+
+// Parse errors
+parseFontSize("", null);
+parseFontSize("abc", null);
+parseFontSize("larger", null);
+parseFontSize("smaller", null);
+parseFontSize("xx-small", null);
+parseFontSize("x-small", null);
+parseFontSize("small", null);
+parseFontSize("medium", null);
+parseFontSize("large", null);
+parseFontSize("x-large", null);
+parseFontSize("xx-large", null);
+parseFontSize("xxx-large", null);
+// Bug 747879
+parseFontSizeTodo("1.2em", null);
+parseFontSizeTodo("8px", null);
+parseFontSizeTodo("-1.2em", null);
+parseFontSizeTodo("-8px", null);
+parseFontSizeTodo("+1.2em", null);
+parseFontSizeTodo("+8px", null);
+
+// Numbers
+parseFontSize("0", 1);
+parseFontSize("1", 1);
+parseFontSize("2", 2);
+parseFontSize("3", 3);
+parseFontSize("4", 4);
+parseFontSize("5", 5);
+parseFontSize("6", 6);
+parseFontSize("7", 7);
+parseFontSize("8", 7);
+parseFontSize("9", 7);
+parseFontSize("10", 7);
+parseFontSize("1000000000000000000000", 7);
+parseFontSize("2.72", 2);
+parseFontSize("2.72e9", 2);
+
+// Minus sign
+parseFontSize("-0", 3);
+parseFontSize("-1", 2);
+parseFontSize("-2", 1);
+parseFontSize("-3", 1);
+parseFontSize("-4", 1);
+parseFontSize("-5", 1);
+parseFontSize("-6", 1);
+parseFontSize("-7", 1);
+parseFontSize("-8", 1);
+parseFontSize("-9", 1);
+parseFontSize("-10", 1);
+parseFontSize("-1000000000000000000000", 1);
+parseFontSize("-1.72", 2);
+parseFontSize("-1.72e9", 2);
+
+// Plus sign
+parseFontSize("+0", 3);
+parseFontSize("+1", 4);
+parseFontSize("+2", 5);
+parseFontSize("+3", 6);
+parseFontSize("+4", 7);
+parseFontSize("+5", 7);
+parseFontSize("+6", 7);
+parseFontSize("+7", 7);
+parseFontSize("+8", 7);
+parseFontSize("+9", 7);
+parseFontSize("+10", 7);
+parseFontSize("+1000000000000000000000", 7);
+parseFontSize("+1.72", 4);
+parseFontSize("+1.72e9", 4);
+
+// Whitespace
+parseFontSize(" \t\n\r\f5 \t\n\r\f", 5);
+parseFontSize("\u00a05", null);
+parseFontSize("\b5", null);
+</script>

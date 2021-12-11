@@ -1,0 +1,9 @@
+/**
+ * lcbo.com - Table with locations is not showing.
+ * Bug #1719870 - https://bugzilla.mozilla.org/show_bug.cgi?id=1719870
+ * WebCompat issue #75137 - https://webcompat.com/issues/75137
+ */
+
+.physicalStoreInventoryPage .scrollX {
+  clear: both;
+}

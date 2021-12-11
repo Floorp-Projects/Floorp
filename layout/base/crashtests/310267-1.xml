@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="white-space: pre;" class="reftest-wait"><script><![CDATA[
+
+function init() { 
+  var docElt = document.documentElement;
+  var firstText = docElt.childNodes[1];
+  var div = docElt.childNodes[2];
+  var bidiText = div.childNodes[0];
+
+  function first() 
+  {
+    docElt.insertBefore(div, firstText);
+    docElt.insertBefore(bidiText, div);
+  }
+  
+  function second()
+  {
+    docElt.insertBefore(div, firstText);
+    docElt.appendChild(bidiText);
+    document.documentElement.removeAttribute("class");
+  }
+  
+  first();
+  setTimeout(second, 100);
+
+}
+
+window.addEventListener("load", init, false);
+
+]]></script>
+
+A<div>׳
+Z</div></html>

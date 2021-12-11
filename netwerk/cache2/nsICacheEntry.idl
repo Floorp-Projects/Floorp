@@ -1,0 +1,370 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIAsyncOutputStream;
+interface nsICacheEntryDoomCallback;
+
+interface nsIFile;
+interface nsICacheEntryMetaDataVisitor;
+interface nsILoadContextInfo;
+
+[scriptable, uuid(607c2a2c-0a48-40b9-a956-8cf2bb9857cf)]
+interface nsICacheEntry : nsISupports
+{
+  const unsigned long CONTENT_TYPE_UNKNOWN = 0;
+  const unsigned long CONTENT_TYPE_OTHER = 1;
+  const unsigned long CONTENT_TYPE_JAVASCRIPT = 2;
+  const unsigned long CONTENT_TYPE_IMAGE = 3;
+  const unsigned long CONTENT_TYPE_MEDIA = 4;
+  const unsigned long CONTENT_TYPE_STYLESHEET = 5;
+  const unsigned long CONTENT_TYPE_WASM = 6;
+  /**
+   * Content type that is used internally to check whether the value parsed
+   * from disk is within allowed limits. Don't pass CONTENT_TYPE_LAST to
+   * setContentType method.
+   */
+  const unsigned long CONTENT_TYPE_LAST = 7;
+
+  /**
+   * Placeholder for the initial value of expiration time.
+   */
+  const unsigned long NO_EXPIRATION_TIME = 0xFFFFFFFF;
+
+  /**
+   * Get the key identifying the cache entry.
+   */
+  readonly attribute ACString key;
+
+  /**
+   * The unique ID for every nsICacheEntry instance, which can be used to check
+   * whether two pieces of information are from the same nsICacheEntry instance.
+   */
+  readonly attribute uint64_t cacheEntryId;
+
+  /**
+   * Whether the entry is memory/only or persisted to disk.
+   * Note: private browsing entries are reported as persistent for consistency
+   * while are not actually persisted to disk.
+   */
+  readonly attribute boolean persistent;
+
+  /**
+   * Get the number of times the cache entry has been opened.
+   */
+  readonly attribute long  fetchCount;
+
+  /**
+   * Get the last time the cache entry was opened (in seconds since the Epoch).
+   */
+  readonly attribute uint32_t  lastFetched;
+
+  /**
+   * Get the last time the cache entry was modified (in seconds since the Epoch).
+   */
+  readonly attribute uint32_t  lastModified;
+
+  /**
+   * Get the expiration time of the cache entry (in seconds since the Epoch).
+   */
+  readonly attribute uint32_t  expirationTime;
+
+  /**
+   * Set the time at which the cache entry should be considered invalid (in
+   * seconds since the Epoch).
+   */
+  void setExpirationTime(in uint32_t expirationTime);
+
+  /**
+   * Get the last network response times for onStartReqeust/onStopRequest (in ms).
+   * @throws
+   *    - NS_ERROR_NOT_AVAILABLE if onStartTime/onStopTime does not exist.
+   */
+  readonly attribute uint64_t  onStartTime;
+  readonly attribute uint64_t  onStopTime;
+
+  /**
+   * Set the network response times for onStartReqeust/onStopRequest (in ms).
+   */
+  void setNetworkTimes(in uint64_t onStartTime, in uint64_t onStopTime);
+
+  /**
+   * Set content type. Available types are defined at the begining of this file.
+   * The content type is used internally for cache partitioning and telemetry
+   * purposes so there is no getter.
+   */
+  void setContentType(in uint8_t contentType);
+
+  /**
+   * This method is intended to override the per-spec cache validation
+   * decisions for a duration specified in seconds. The current state can
+   * be examined with isForcedValid (see below). This value is not persisted,
+   * so it will not survive session restart. Cache entries that are forced valid
+   * will not be evicted from the cache for the duration of forced validity.
+   * This means that there is a potential problem if the number of forced valid
+   * entries grows to take up more space than the cache size allows.
+   *
+   * NOTE: entries that have been forced valid will STILL be ignored by HTTP
+   * channels if they have expired AND the resource in question requires
+   * validation after expiring. This is to avoid using known-stale content.
+   *
+   * @param aSecondsToTheFuture
+   *        the number of seconds the default cache validation behavior will be
+   *        overridden before it returns to normal
+   */
+  void forceValidFor(in unsigned long aSecondsToTheFuture);
+
+  /**
+   * The state variable for whether this entry is currently forced valid.
+   * Defaults to false for normal cache validation behavior, and will return
+   * true if the number of seconds set by forceValidFor() has yet to be reached.
+   */
+  readonly attribute boolean isForcedValid;
+
+  /**
+   * This method gets called to mark the actual use of the forced-valid entry.
+   * This is necessary for telemetry, so when the entry eventually gets
+   * evicted we can report whether it was ever used or not.
+   * If the entry was not forced-valid, then this operation has no effect.
+   */
+  void markForcedValidUse();
+
+  /**
+   * Open blocking input stream to cache data.  Use the stream transport
+   * service to asynchronously read this stream on a background thread.
+   * The returned stream MAY implement nsISeekableStream.
+   *
+   * @param offset
+   *        read starting from this offset into the cached data.  an offset
+   *        beyond the end of the stream has undefined consequences.
+   *
+   * @return non-blocking, buffered input stream.
+   */
+  nsIInputStream openInputStream(in long long offset);
+
+  /**
+   * Open non-blocking output stream to cache data.  The returned stream
+   * MAY implement nsISeekableStream.
+   *
+   * If opening an output stream to existing cached data, the data will be
+   * truncated to the specified offset.
+   *
+   * @param offset
+   *        write starting from this offset into the cached data.  an offset
+   *        beyond the end of the stream has undefined consequences.
+   * @param predictedSize
+   *        Predicted size of the data that will be written. It's used to decide
+   *        whether the resulting entry would exceed size limit, in which case
+   *        an error is thrown. If the size isn't known in advance, -1 should be
+   *        passed.
+   *
+   * @return blocking, buffered output stream.
+   */
+  nsIOutputStream openOutputStream(in long long offset, in long long predictedSize);
+
+  /**
+   * Get/set security info on the cache entry for this descriptor.
+   */
+  attribute nsISupports securityInfo;
+
+  /**
+   * Get the size of the cache entry data, as stored. This may differ
+   * from the entry's dataSize, if the entry is compressed.
+   */
+  readonly attribute unsigned long storageDataSize;
+
+  /**
+   * Asynchronously doom an entry. Listener will be notified about the status
+   * of the operation. Null may be passed if caller doesn't care about the
+   * result.
+   */
+  void asyncDoom(in nsICacheEntryDoomCallback listener);
+
+  /**
+   * Methods for accessing meta data.  Meta data is a table of key/value
+   * string pairs.  The strings do not have to conform to any particular
+   * charset, but they must be null terminated.
+   */
+  string getMetaDataElement(in string key);
+  void   setMetaDataElement(in string key, in string value);
+
+  /**
+   * Obtain the list of metadata keys this entry keeps.
+   *
+   * NOTE: The callback is invoked under the CacheFile's lock.  It means
+   * there should not be made any calls to the entry from the visitor and
+   * if the values need to be processed somehow, it's better to cache them
+   * and process outside the callback.
+   */
+  void visitMetaData(in nsICacheEntryMetaDataVisitor visitor);
+
+  /**
+   * Claims that all metadata on this entry are up-to-date and this entry
+   * now can be delivered to other waiting consumers.
+   *
+   * We need such method since metadata must be delivered synchronously.
+   */
+  void metaDataReady();
+
+  /**
+   * Called by consumer upon 304/206 response from the server.  This marks
+   * the entry content as positively revalidated.
+   * Consumer uses this method after the consumer has returned ENTRY_NEEDS_REVALIDATION
+   * result from onCacheEntryCheck and after successfull revalidation with the server.
+   */
+  void setValid();
+
+  /**
+   * Explicitly tell the cache backend this consumer is no longer going to modify
+   * this cache entry data or metadata.  In case the consumer was responsible to
+   * either of writing the cache entry or revalidating it, calling this method
+   * reverts the state to initial (as never written) or as not-validated and
+   * immediately notifies the next consumer in line waiting for this entry.
+   * This is the way to prevent deadlocks when someone else than the responsible
+   * channel references the cache entry being in a non-written or revalidating
+   * state.
+   */
+  void dismiss();
+
+  /**
+   * Returns the size in kilobytes used to store the cache entry on disk.
+   */
+  readonly attribute uint32_t diskStorageSizeInKB;
+
+  /**
+   * Doom this entry and open a new, empty, entry for write.  Consumer has
+   * to exchange the entry this method is called on for the newly created.
+   * Used on 200 responses to conditional requests.
+   *
+   * @param aMemoryOnly
+   *    - whether the entry is to be created as memory/only regardless how
+   *      the entry being recreated persistence is set
+   * @returns
+   *    - an entry that can be used to write to
+   * @throws
+   *    - NS_ERROR_NOT_AVAILABLE when the entry cannot be from some reason
+   *      recreated for write
+   */
+  nsICacheEntry recreate([optional] in boolean aMemoryOnly);
+
+  /**
+   * Returns the length of data this entry holds.
+   * @throws
+   *    NS_ERROR_IN_PROGRESS when the write is still in progress.
+   */
+  readonly attribute long long dataSize;
+
+  /**
+  * Returns the length of data this entry holds.
+  * @throws
+  *    - NS_ERROR_IN_PROGRESS when a write is still in progress (either real
+                              content or alt data).
+  *    - NS_ERROR_NOT_AVAILABLE if alt data does not exist.
+  */
+  readonly attribute long long altDataSize;
+
+  /**
+  * Returns the type of the saved alt data.
+  * @throws
+  *    - NS_ERROR_NOT_AVAILABLE if alt data does not exist.
+  */
+  readonly attribute ACString altDataType;
+
+  /**
+   * Opens and returns an output stream that a consumer may use to save an
+   * alternate representation of the data.
+   *
+   * @param type
+   *        type of the alternative data representation
+   * @param predictedSize
+   *        Predicted size of the data that will be written. It's used to decide
+   *        whether the resulting entry would exceed size limit, in which case
+   *        an error is thrown. If the size isn't known in advance, -1 should be
+   *        passed.
+   *
+   * @throws
+   *    - NS_ERROR_NOT_AVAILABLE if the real data hasn't been written.
+   *    - NS_ERROR_IN_PROGRESS when the writing regular content or alt-data to
+   *      the cache entry is still in progress.
+   *
+   * If there is alt-data already saved, it will be overwritten.
+   */
+  nsIAsyncOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
+
+  /**
+   * Opens and returns an input stream that can be used to read the alternative
+   * representation previously saved in the cache.
+   * If this call is made while writing alt-data is still in progress, it is
+   * still possible to read content from the input stream as it's being written.
+   * @throws
+   *    - NS_ERROR_NOT_AVAILABLE if the alt-data representation doesn't exist at
+   *      all or if alt-data of the given type doesn't exist.
+   */
+  nsIInputStream openAlternativeInputStream(in ACString type);
+
+  /**
+   * Get the nsILoadContextInfo of the cache entry
+   */
+  readonly attribute nsILoadContextInfo loadContextInfo;
+
+  /****************************************************************************
+   * The following methods might be added to some nsICacheEntryInternal
+   * interface since we want to remove them as soon as the old cache backend is
+   * completely removed.
+   */
+
+  /**
+   * @deprecated
+   * FOR BACKWARD COMPATIBILITY ONLY
+   * When the old cache backend is eventually removed, this method
+   * can be removed too.
+   *
+   * In the new backend: this method is no-op
+   * In the old backend: this method delegates to nsICacheEntryDescriptor.close()
+   */
+  void close();
+
+  /**
+   * @deprecated
+   * FOR BACKWARD COMPATIBILITY ONLY
+   * Marks the entry as valid so that others can use it and get only readonly
+   * access when the entry is held by the 1st writer.
+   */
+  void markValid();
+
+  /**
+   * @deprecated
+   * FOR BACKWARD COMPATIBILITY ONLY
+   * Marks the entry as valid when write access is acquired.
+   */
+  void maybeMarkValid();
+
+  /**
+   * @deprecated
+   * FOR BACKWARD COMPATIBILITY ONLY / KINDA HACK
+   * @param aWriteAllowed
+   *    Consumer indicates whether write to the entry is allowed for it.
+   *    Depends on implementation how the flag is handled.
+   * @returns
+   *    true when write access is acquired for this entry,
+   *    false otherwise
+   */
+  boolean hasWriteAccess(in boolean aWriteAllowed);
+};
+
+/**
+ * Argument for nsICacheEntry.visitMetaData, provides access to all metadata
+ * keys and values stored on the entry.
+ */
+[scriptable, uuid(fea3e276-6ba5-4ceb-a581-807d1f43f6d0)]
+interface nsICacheEntryMetaDataVisitor : nsISupports
+{
+  /**
+   * Called over each key / value pair.
+   */
+  void onMetaDataElement(in string key, in string value);
+};

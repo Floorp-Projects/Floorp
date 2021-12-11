@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=640387
+-->
+<head>
+  <title>Test for Bug 640387</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=640387">Mozilla Bug 640387</a>
+
+<!-- Test that, when going from
+
+  http://example.com/#foo
+
+to
+
+  http://example.com/
+
+via a non-history load, we do a true load, rather than a scroll. -->
+
+<script type='application/javascript'>
+SimpleTest.waitForExplicitFinish();
+
+var callbackOnLoad = false;
+function childLoad() {
+  if (callbackOnLoad) {
+    callbackOnLoad = false;
+    gGen.next();
+  }
+}
+
+var errorOnHashchange = false;
+var callbackOnHashchange = false;
+function childHashchange() {
+  if (errorOnHashchange) {
+    ok(false, "Got unexpected hashchange.");
+  }
+  if (callbackOnHashchange) {
+    callbackOnHashchange = false;
+    gGen.next();
+  }
+}
+
+function* run_test() {
+  var iframe = $("iframe").contentWindow;
+
+  ok(true, "Got first load");
+
+  // Spin the event loop so we exit the onload handler.
+  SimpleTest.executeSoon(function() { gGen.next(); });
+  yield undefined;
+
+  let origLocation = iframe.location + "";
+  callbackOnHashchange = true;
+  iframe.location.hash = "#1";
+  // Wait for a hashchange event.
+  yield undefined;
+
+  ok(true, "Got hashchange.");
+
+  iframe.location = origLocation;
+  // This should produce a load event and *not* a hashchange, because the
+  // result of the load is a different document than we had previously.
+  callbackOnLoad = true;
+  errorOnHashchange = true;
+  yield undefined;
+
+  ok(true, "Got final load.");
+
+  // Spin the event loop to give hashchange a chance to fire, if it's going to.
+  SimpleTest.executeSoon(function() { gGen.next(); });
+  yield undefined;
+
+  SimpleTest.finish();
+}
+
+callbackOnLoad = true;
+var gGen = run_test();
+
+</script>
+
+<iframe id='iframe' src='file_bug640387.html'></iframe>
+
+</body>
+</html>

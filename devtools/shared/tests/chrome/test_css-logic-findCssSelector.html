@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for CSS logic helper </title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+"use strict";
+
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { findCssSelector } = require("devtools/shared/inspector/css-logic");
+
+var _tests = [];
+function addTest(test) {
+  _tests.push(test);
+}
+
+function runNextTest() {
+  if (!_tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  _tests.shift()();
+}
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+addTest(function findAllCssSelectors() {
+  const nodes = document.querySelectorAll("*");
+  for (let i = 0; i < nodes.length; i++) {
+    const selector = findCssSelector(nodes[i]);
+    const matches = document.querySelectorAll(selector);
+
+    is(matches.length, 1, "There is a single match: " + selector);
+    is(matches[0], nodes[i], "The selector matches the correct node: " + selector);
+  }
+
+  runNextTest();
+});
+
+addTest(function findCssSelectorNotContainedInDocument() {
+  const unattached = document.createElement("div");
+  unattached.id = "unattached";
+  is(findCssSelector(unattached), "", "Unattached node returns empty string");
+
+  const unattachedChild = document.createElement("div");
+  unattached.appendChild(unattachedChild);
+  is(findCssSelector(unattachedChild), "", "Unattached child returns empty string");
+
+  const unattachedBody = document.createElement("body");
+  is(findCssSelector(unattachedBody), "", "Unattached body returns empty string");
+
+  runNextTest();
+});
+
+addTest(function findCssSelectorBasic() {
+  const data = [
+    "#one",
+    "#" + CSS.escape("2"),
+    ".three",
+    "." + CSS.escape("4"),
+    "#find-css-selector > div:nth-child(5)",
+    "#find-css-selector > p:nth-child(6)",
+    ".seven",
+    ".eight",
+    ".nine",
+    ".ten",
+    "div.sameclass:nth-child(11)",
+    "div.sameclass:nth-child(12)",
+    "div.sameclass:nth-child(13)",
+    "#" + CSS.escape("!, \", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \\, ], ^, `, {, |, }, ~"),
+  ];
+
+  const container = document.querySelector("#find-css-selector");
+  is(container.children.length, data.length, "Container has correct number of children.");
+
+  for (let i = 0; i < data.length; i++) {
+    const node = container.children[i];
+    is(findCssSelector(node), data[i], "matched id for index " + (i - 1));
+  }
+
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+  <div id="find-css-selector">
+    <div id="one"></div> <!-- Basic ID -->
+    <div id="2"></div> <!-- Escaped ID -->
+    <div class="three"></div> <!-- Basic Class -->
+    <div class="4"></div> <!-- Escaped Class -->
+    <div attr="5"></div>  <!-- Only an attribute -->
+    <p></p> <!-- Nothing unique -->
+    <div class="seven seven"></div> <!-- Two classes with same name -->
+    <div class="eight eight2"></div> <!-- Two classes with different names -->
+
+    <!-- Two elements with the same id - should not use ID -->
+    <div class="nine" id="nine-and-ten"></div>
+    <div class="ten" id="nine-and-ten"></div>
+
+    <!-- Three elements with the same id - should use class and nth-child instead -->
+    <div class="sameclass" id="11-12-13"></div>
+    <div class="sameclass" id="11-12-13"></div>
+    <div class="sameclass" id="11-12-13"></div>
+
+    <!-- Special characters -->
+    <div id="!, &quot;, #, $, %, &amp;, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, `, {, |, }, ~"></div>
+  </div>
+</body>
+</html>

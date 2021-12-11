@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<title>Test for bug 1539159</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<p></p>
+<script>
+function start() {
+  let rules = InspectorUtils.getCSSStyleRules(document.querySelector("p"));
+  ok(rules.length > 0, "Should have found some rules");
+  is(rules[0].type, CSSRule.STYLE_RULE, "Should have found a style rule");
+
+  let selector = rules[0].selectorText;
+  isnot(selector, ".xxxxx", "Rule selector should not be something strange");
+
+  try {
+    rules[0].selectorText = "img";
+  } catch (ex) {
+  }
+  is(rules[0].selectorText, selector, "Selector text should be unchanged");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+document.addEventListener('DOMContentLoaded', start)
+</script>

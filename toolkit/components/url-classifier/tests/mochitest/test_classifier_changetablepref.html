@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1281083 - Changing the urlclassifier.*Table prefs doesn't take effect before the next browser restart.</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script src="head.js"></script>
+<script class="testbody" type="text/javascript">
+
+var mainWindow = window.browsingContext.topChromeWindow;
+var contentPage = "http://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/bug_1281083.html";
+
+const testTable = "moz-track-digest256";
+const UPDATE_URL = "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/update.sjs";
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+var timer = Cc["@mozilla.org/timer;1"]
+            .createInstance(Ci.nsITimer);
+
+// If default preference contain the table we want to test,
+// We should change test table to a different one.
+var trackingTables = SpecialPowers.getCharPref("urlclassifier.trackingTable").split(",");
+ok(!trackingTables.includes(testTable), "test table should not be in the preference");
+
+var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
+                    getService(Ci.nsIUrlListManager);
+
+is(listmanager.getGethashUrl(testTable), "",
+   "gethash url for test table should be empty before setting to preference");
+
+function checkLoads(aWindow, aBlocked) {
+  var win = aWindow.content;
+  is(win.document.getElementById("badscript").dataset.touched, aBlocked ? "no" : "yes", "Should not load tracking javascript");
+}
+
+function testOnWindow() {
+  return new Promise((resolve, reject) => {
+    let win = mainWindow.OpenBrowserWindow();
+    win.addEventListener("load", function() {
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => {
+        win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+          if (win.content.location.href != contentPage) {
+            win.gBrowser.loadURI(contentPage, {
+              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+            });
+            return;
+          }
+          win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+
+          win.content.addEventListener("load", function innerLoad2(e) {
+            win.content.removeEventListener("load", innerLoad2);
+            SimpleTest.executeSoon(function() {
+              resolve(win);
+            });
+          }, false, true);
+        }, true);
+        SimpleTest.executeSoon(function() {
+          win.gBrowser.loadURI(contentPage, {
+            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          });
+        });
+      });
+    }, {capture: true, once: true});
+  });
+}
+
+function setup() {
+  return new Promise(function(resolve, reject) {
+    // gethash url of test table "moz-track-digest256" should be updated
+    // after setting preference.
+    var url = listmanager.getGethashUrl(testTable);
+    var expected = SpecialPowers.getCharPref("browser.safebrowsing.provider.mozilla.gethashURL");
+
+    is(url, expected, testTable + " matches its gethash url");
+
+    // Trigger update
+    listmanager.disableUpdate(testTable);
+    listmanager.enableUpdate(testTable);
+    listmanager.maybeToggleUpdateChecking();
+
+    // We wait until "nextupdattime" was set as a signal that update is complete.
+    waitForUpdateSuccess(function() {
+      resolve();
+    });
+  });
+}
+
+function waitForUpdateSuccess(callback) {
+  let nextupdatetime =
+    SpecialPowers.getCharPref("browser.safebrowsing.provider.mozilla.nextupdatetime");
+
+  if (nextupdatetime !== "1") {
+    callback();
+    return;
+  }
+
+  timer.initWithCallback(function() {
+    waitForUpdateSuccess(callback);
+  }, 10, Ci.nsITimer.TYPE_ONE_SHOT);
+}
+
+async function runTest() {
+  // To make sure url is not blocked by an already blocked url.
+  // Here we use non-tracking.example.com as a tracked url.
+  // Since this table is only used in this bug, so it won't affect other testcases.
+  await addCompletionToServer(testTable, "bug1281083.example.com/", UPDATE_URL);
+
+  /**
+   * In this test we try to modify only urlclassifier.*Table preference to see if
+   * url specified in the table will be blocked after update.
+   */
+  await SpecialPowers.pushPrefEnv(
+    {"set": [["urlclassifier.trackingTable", testTable]]});
+
+  await setup();
+
+  await testOnWindow().then(function(aWindow) {
+    checkLoads(aWindow, true);
+    aWindow.close();
+  });
+
+  SimpleTest.finish();
+}
+
+// Set nextupdatetime to 1 to trigger an update
+SpecialPowers.pushPrefEnv(
+  {"set": [["privacy.trackingprotection.enabled", true],
+           ["channelclassifier.allowlist_example", true],
+           ["browser.safebrowsing.provider.mozilla.nextupdatetime", "1"],
+           ["browser.safebrowsing.provider.mozilla.lists", testTable],
+           ["browser.safebrowsing.provider.mozilla.updateURL", UPDATE_URL]]},
+  runTest);
+
+// Expected finish() call is in "bug_1281083.html".
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>

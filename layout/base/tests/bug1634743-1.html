@@ -1,0 +1,29 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Caret is correctly position for block whose only child is a non-empty pseudo, if line-height is used</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div:focus {
+    outline: 2px solid blue;
+  }
+
+  div {
+    line-height: 5;
+    border: 1px solid gray;
+    padding: 8px;
+  }
+  div::before {
+    content: "abc";
+  }
+</style>
+<div contenteditable="true" spellcheck="false"></div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable="true"]').focus();
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      document.documentElement.removeAttribute("class");
+    });
+  });
+});
+</script>

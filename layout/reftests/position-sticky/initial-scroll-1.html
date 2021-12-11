@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - initial scroll position</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="initial-scroll-1-ref.html">
+    <meta name="assert" content="When the initial scroll position of the scroll container is not (0, 0), a sticky element inside it should be positioned correctly">
+    <style>
+      #scroll {
+        width: 100px;
+        height: 100px;
+        overflow: hidden;
+        direction: rtl;
+      }
+      #inner {
+        width: 200px;
+        height: 200px;
+        direction: ltr;
+      }
+      #sticky {
+        position: sticky;
+        left: 10px;
+        width: 10px;
+        height: 10px;
+        background-color: black;
+      }
+    </style>
+  <body>
+    <div id="scroll">
+      <div id="inner">
+        <div id="sticky">
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

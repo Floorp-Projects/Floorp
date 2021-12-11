@@ -1,0 +1,63 @@
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface imgIContainer;
+
+/**
+ * nsITaskbarPreviewButton
+ *
+ * Provides access to a window preview's toolbar button's properties.
+ */
+[scriptable, uuid(CED8842D-FE37-4767-9A8E-FDFA56510C75)]
+interface nsITaskbarPreviewButton : nsISupports
+{
+  /**
+   * The button's tooltip.
+   *
+   * Default: an empty string
+   */
+  attribute AString tooltip;
+
+  /**
+   * True if the array of previews should be dismissed when this button is clicked.
+   *
+   * Default: false
+   */
+  attribute boolean dismissOnClick;
+
+  /**
+   * True if the taskbar should draw a border around this button's image.
+   *
+   * Default: true
+   */
+  attribute boolean hasBorder;
+
+  /**
+   * True if the button is disabled. This is not the same as visible.
+   *
+   * Default: false
+   */
+  attribute boolean disabled;
+
+  /**
+   * The icon used for the button.
+   *
+   * Default: null
+   */
+  attribute imgIContainer image;
+
+  /**
+   * True if the button is shown. Buttons that are invisible do not
+   * participate in the layout of buttons underneath the preview.
+   *
+   * Default: false
+   */
+  attribute boolean visible;
+};
+

@@ -1,0 +1,149 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "nsISupports.idl"
+
+interface nsIContentSecurityPolicy;
+interface nsIPrincipal;
+interface nsITransportSecurityInfo;
+interface nsIURI;
+interface nsIWebProgress;
+interface nsIReferrerInfo;
+interface nsIOpenWindowInfo;
+
+[scriptable, uuid(14e5a0cb-e223-4202-95e8-fe53275193ea)]
+interface nsIBrowser : nsISupports
+{
+  /*
+   * Called by the child to inform the parent that links are dropped into
+   * content area.
+   *
+   * @param links a flat array of url, name, and type for each link
+   * @param triggeringPrincipal a principal that initiated loading
+   *                            of the dropped links
+   */
+  void dropLinks(in Array<AString> links,
+                 in nsIPrincipal triggeringPrincipal);
+
+  /**
+   * Swapping of frameloaders are usually initiated from a frameloader owner
+   * or other components operating on frameloader owners. This is done by calling
+   * swapFrameLoaders at MozFrameLoaderOwner webidl interface.
+   *
+   * This function aimed to provide the other way around -
+   * if the swapping is initiated from frameloader itself or other platform level
+   * components, it uses this interface to delegate the swapping request to
+   * frameloader owners and ask them to re-initiate frameloader swapping, so that
+   * frameloader owners such as <xul:browser> can setup their properties and /
+   * or listeners properly on swapping.
+   */
+  void swapBrowsers(in nsIBrowser aOtherBrowser);
+
+  /**
+   * Close the browser (usually means to remove a tab).
+   */
+  void closeBrowser();
+
+  /**
+   * A browser can change from remote to non-remote and vice versa.
+   * For example, when navigating from an in-process chrome page to
+   * a web page, this value would change from false to true.
+   */
+  readonly attribute boolean isRemoteBrowser;
+
+  /**
+   * The browser's permanent key. This was added temporarily for Session Store,
+   * and will be removed in bug 1716788.
+   */
+  readonly attribute jsval permanentKey;
+
+  readonly attribute nsIPrincipal contentPrincipal;
+  readonly attribute nsIPrincipal contentPartitionedPrincipal;
+  readonly attribute nsIContentSecurityPolicy csp;
+  readonly attribute nsIReferrerInfo referrerInfo;
+
+  /**
+   * Whether or not the browser is in the process of an nsIWebNavigation
+   * navigation method.
+   */
+  attribute boolean isNavigating;
+
+  /**
+   * Whether or not the character encoding menu may be enabled.
+   */
+  attribute boolean mayEnableCharacterEncodingMenu;
+
+  /**
+   * Called by Gecko to update the browser when its state changes.
+   *
+   * @param aCharset the new character set of the document
+   * @param aDocumentURI the URI of the current document
+   * @param aContentType the content type of the document
+   */
+  void updateForStateChange(in AString aCharset,
+                            in nsIURI aDocumentURI,
+                            in AString aContentType);
+
+  /**
+   * Called by Gecko to update the nsIWebNavigation when a location change occurs.
+   *
+   * @param aCanGoBack whether or not the nsIWebNavigation can go backwards in
+   *                   history
+   * @param aCanGoForward whether or not the nsIWebNavigation can go
+   *                      forward in history
+   */
+  void updateWebNavigationForLocationChange(in boolean aCanGoBack,
+                                            in boolean aCanGoForward);
+
+  /**
+   * Called by Gecko to update the browser when a location change occurs.
+   *
+   * @param aLocation the new location
+   * @param aCharset the character set of the document
+   * @param aMayEnableCharacterEncodingMenu whether or not the content encoding
+   *                                        menu may be enabled
+   * @param aDocumentURI the URI of the new document
+   * @param aTitle the title of the new doucment
+   * @param aContentPrincipal the security principal of the new document
+   * @param aContentPartitionedPrincipal the security principal for the new
+   *                                     document's storage
+   * @param aCSP the content security policy of the new document
+   * @param aReferrerInfo the referrer info of the new document
+   * @param aIsSynthetic whether or not the document is synthetic
+   * @param aHasRequestContextID whether or not the the request context has a
+   *                             value (true) or null should be used (false)
+   * @param aRequestContextID the request context ID
+   * @param aContentType the content type of the document
+   */
+  void updateForLocationChange(in nsIURI aLocation,
+                               in AString aCharset,
+                               in boolean aMayEnableCharacterEncodingMenu,
+                               in nsIURI aDocumentURI,
+                               in AString aTitle,
+                               in nsIPrincipal aContentPrincipal,
+                               in nsIPrincipal aContentPartitionedPrincipal,
+                               in nsIContentSecurityPolicy aCSP,
+                               in nsIReferrerInfo aReferrerInfo,
+                               in boolean aIsSynthetic,
+                               in boolean aHasRequestContextID,
+                               in uint64_t aRequestContextID,
+                               in AString aContentType);
+
+  /**
+   * Called to perform any async tasks which must be completed before changing
+   * remoteness. Gecko will wait for the returned promise to resolve before
+   * performing the process switch.
+   */
+  Promise prepareToChangeRemoteness();
+
+  /** Called immediately before changing remoteness */
+  void beforeChangeRemoteness();
+
+  /**
+   * Called immediately after changing remoteness.
+   *
+   * If this method returns `true`, Gecko will assume frontend handled resuming
+   * the load, and will not attempt to resume the load itself.
+   */
+  bool finishChangeRemoteness(in uint64_t aPendingSwitchId);
+};

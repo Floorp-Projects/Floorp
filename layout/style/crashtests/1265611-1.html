@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+  NOTE: The comment below is no longer quite true - in particular, we've
+  removed the 'layout.css.prefixes.webkit' pref entirely, so this test doesn't
+  exercise the same codepath that it did when the below comment was written. We
+  might as well keep this crashtest, though, even if it traverses a different
+  codepath now.
+-->
+<!--
+  This test relies on triggering a transition on the 'color' property which,
+  at least when this test was written, would trigger a transition on the
+  -webkit-text-fill-color property since its default value is 'currentcolor'.
+
+  However, in crashtests.list we turn off layout.css.prefixes.webkit so
+  we should not trigger a transition on -webkit-text-fill-color.
+  [Alert: This is no longer accurate, per NOTE above.]
+
+  This test exercises some code that, prior to this bug, would fail because we
+  would initially create the transition on -webkit-text-fill-color (because we
+  forgot to check if it was enabled or not) and then we would call other
+  methods that *do* check for the enabled-ness of the property leaving us
+  in an unexpected state.
+-->
+<body style="transition: all 4s" onload="document.body.style.color = 'green';"></body>

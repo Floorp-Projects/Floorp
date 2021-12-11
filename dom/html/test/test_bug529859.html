@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=529859
+-->
+<head>
+  <title>Test for Bug 529859</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529859">Mozilla Bug 529859</a>
+<div id="content">
+  <iframe name="target_iframe" id="target_iframe"></iframe>
+  <form action="form_submit_server.sjs" target="target_iframe" id="form"
+        method="POST" enctype="multipart/form-data">
+    <input id="emptyFileInput" name="emptyFileInput" type="file">
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 529859 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  $("target_iframe").onload = function() {
+    var response = JSON.parse(this.contentDocument.documentElement.textContent);
+    is(response.length, 1, "Unexpected number of inputs");
+    is(response[0].headers["Content-Disposition"],
+       "form-data; name=\"emptyFileInput\"; filename=\"\"",
+       "Incorrect content-disposition");
+    is(response[0].headers["Content-Type"], "application/octet-stream",
+       "Unexpected content-type");
+    SimpleTest.finish();
+  }
+  $("form").submit();
+});
+</script>
+</pre>
+</body>
+</html>

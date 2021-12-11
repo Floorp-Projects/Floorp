@@ -1,0 +1,38 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Example of 'column-rule-extent: segment' on a grid container with collapsed tracks</title>
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+.grid {
+  display: inline-grid;
+  grid: repeat(3, 30px) / repeat(auto-fit, minmax(0,1fr) 100px minmax(0,1fr));
+  width: 300px;
+  gap: 10px 16px;
+
+  column-rule: solid blue;
+  column-rule-extent: segment;
+  row-rule: solid purple;
+  row-rule-extent: segment;
+
+  border: 2px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+
+x {
+  grid-column: 1;
+  place-self: start;
+  background: grey;
+}
+x:nth-child(4) { grid-column: 3; }
+
+</style>
+
+<div class="grid"><x>row 1</x><x>row 2</x><x>row 3</x><x>column 3</x></div>

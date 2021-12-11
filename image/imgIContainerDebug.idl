@@ -1,0 +1,25 @@
+/** -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface is used in debug builds (and only there) in
+ * order to let automatic tests running JavaScript access
+ * internal state of imgContainers. This lets us test
+ * things like animation.
+ */
+[scriptable, builtinclass, uuid(52cbb839-6e63-4a70-b21a-1db4ca706c49)]
+interface imgIContainerDebug : nsISupports
+{
+  /**
+   * The # of frames this imgContainer has been notified about.
+   * That is equal to the # of times the animation timer has
+   * fired, and is usually equal to the # of frames actually
+   * drawn (but actual drawing might be disabled).
+   */
+  readonly attribute uint32_t framesNotified;
+};

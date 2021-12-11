@@ -1,0 +1,26 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 984048 - Test unregister</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  if (!parent) {
+    info("unregister/index.html should not to be launched directly!");
+  }
+
+  parent.postMessage({ controlled: !!navigator.serviceWorker.controller }, "*");
+</script>
+</pre>
+</body>
+</html>

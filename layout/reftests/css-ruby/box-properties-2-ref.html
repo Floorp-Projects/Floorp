@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1055667 - Box properties on ruby boxes</title>
+  <link rel="stylesheet" href="common.css">
+  <script type="text/javascript" src="utils.js"></script>
+</head>
+<body style="line-height: 10">
+  <ruby>
+    <rb>base1</rb>
+    <rb><div></div></rb>
+    <rb>base3</rb>
+    <rtc>
+      <rt></rt>
+      <rt style="margin: 22px 0;"><div id="rtblock" style="width: 256px; text-align:center; background: silver; padding: 2px; border: 4px solid gray; outline: 8px solid black; margin: 16px;"><span id="inline">text1</span></div></rt>
+      <!-- margin: 22px = margin: 16px + padding: 2px + border: 4px -->
+      <!-- width: 256px = 300px - 2 * (padding: 2px + border: 4px + margin: 16px) -->
+    </rtc>
+  </ruby>
+  <script type="text/javascript">
+    // normal height of an one-line inline-block is the line-height,
+    // we need to adjust it to the height of the inline box to simulate
+    // the ruby text box.
+    makeBSizeMatchInlineBox(document.getElementById('rtblock'),
+                            document.getElementById('inline'));
+  </script>
+</body>
+</html>

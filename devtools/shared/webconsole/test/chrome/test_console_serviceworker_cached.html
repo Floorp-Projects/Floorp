@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for getCachedMessages and Service Workers</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for getCachedMessages and Service Workers</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/chrome/";
+const SERVICE_WORKER_URL = BASE_URL + "helper_serviceworker.js";
+const FRAME_URL = BASE_URL + "sandboxed_iframe.html";
+
+const firstTabExpectedCalls = [
+  {
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['script evaluation'],
+    }
+  }, {
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['install event'],
+    }
+  }, {
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['activate event'],
+    }
+  },
+];
+
+const secondTabExpectedCalls = [
+  {
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['fetch event: ' + FRAME_URL],
+    }
+  }
+];
+
+const startTest = async function () {
+  removeEventListener("load", startTest);
+
+  await new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.enabled", true],
+      ["devtools.webconsole.filter.serviceworkers", true]
+    ]}, resolve);
+  });
+
+  info("Adding a tab and attaching a service worker");
+  const tab1 = await addTab(FRAME_URL);
+  const swr = await withActiveServiceWorker(tab1.linkedBrowser.contentWindow,
+                                SERVICE_WORKER_URL);
+
+  info("Attaching console to tab 1");
+  let {state} = await attachConsoleToTab(["ConsoleAPI"]);
+  let calls = await state.webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  checkConsoleAPICalls(calls.messages, firstTabExpectedCalls);
+  await closeDebugger(state);
+
+  // Because this tab is being added after the original messages happened,
+  // they shouldn't show up in a call to getCachedMessages.
+  // However, there is a fetch event which is logged due to loading the tab.
+  info("Adding a new tab at the same URL");
+
+  await addTab(FRAME_URL);
+  info("Attaching console to tab 2");
+  state = (await attachConsoleToTab(["ConsoleAPI"])).state;
+  calls = await state.webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  checkConsoleAPICalls(calls.messages, secondTabExpectedCalls);
+  await closeDebugger(state);
+
+  await swr.unregister();
+
+  SimpleTest.finish();
+};
+addEventListener("load", startTest);
+
+// This test needs to add tabs that are controlled by a service worker
+// so use some special powers to dig around and find gBrowser
+const {gBrowser} = SpecialPowers._getTopChromeWindow(SpecialPowers.window);
+
+SimpleTest.registerCleanupFunction(() => {
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
+});
+
+function addTab(url) {
+  info("Adding a new tab with URL: '" + url + "'");
+  return new Promise(resolve => {
+    const tab = gBrowser.selectedTab = gBrowser.addTab(url, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    gBrowser.selectedBrowser.addEventListener("load", function () {
+      info("URL '" + url + "' loading complete");
+      resolve(tab);
+    }, {capture: true, once: true});
+  });
+}
+
+</script>
+</body>
+</html>

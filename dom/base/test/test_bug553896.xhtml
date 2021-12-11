@@ -1,0 +1,69 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=553896
+-->
+<head>
+  <title>Test for Bug 553896</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=553896">Mozilla Bug 553896</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+/** Test for Bug 553896 **/
+try {
+  ok(!document.createElement("foo").isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.createAttribute("foo").isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.createTextNode("foo").isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.createCDATASection("foo").isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.createProcessingInstruction("foo", "bar").isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.createComment("foo").isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.implementation.createDocumentType("html", "", "").isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+try {
+  ok(!document.createDocumentFragment().isEqualNode(null), "Node is equal to null?");
+} catch (e) {
+  ok(false, "Exception was raised.");
+}
+]]>
+</script>
+</pre>
+</body>
+</html>

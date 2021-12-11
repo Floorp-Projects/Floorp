@@ -1,0 +1,175 @@
+<html>
+
+<head>
+  <title>Accessible name change event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function setAttr(aID, aAttr, aValue, aChecker) {
+      this.eventSeq = [ aChecker ];
+      this.invoke = function setAttr_invoke() {
+        getNode(aID).setAttribute(aAttr, aValue);
+      };
+
+      this.getID = function setAttr_getID() {
+        return "set attr '" + aAttr + "', value '" + aValue + "'";
+      };
+    }
+
+    /**
+     * No name change on an accessible, because the accessible is recreated.
+     */
+    function setAttr_recreate(aID, aAttr, aValue) {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getAccessible(aID)),
+        new invokerChecker(EVENT_SHOW, aID),
+      ];
+      this.invoke = function setAttr_recreate_invoke() {
+        todo(false, "No accessible recreation should happen, just name change event");
+        getNode(aID).setAttribute(aAttr, aValue);
+      };
+
+      this.getID = function setAttr_recreate_getID() {
+        return "set attr '" + aAttr + "', value '" + aValue + "'";
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    // gA11yEventDumpToConsole = true; // debuggin
+
+    var gQueue = null;
+    async function doTests() {
+      gQueue = new eventQueue();
+      // Later tests use await.
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
+
+      gQueue.push(new setAttr("tst1", "aria-label", "hi",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst1")));
+      gQueue.push(new setAttr("tst1", "alt", "alt",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst1")));
+      gQueue.push(new setAttr("tst1", "title", "title",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst1")));
+      gQueue.push(new setAttr("tst1", "aria-labelledby", "display",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst1")));
+
+      gQueue.push(new setAttr("tst2", "aria-labelledby", "display",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst2")));
+      gQueue.push(new setAttr("tst2", "alt", "alt",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
+      gQueue.push(new setAttr("tst2", "title", "title",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
+      gQueue.push(new setAttr("tst2", "aria-label", "hi",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
+
+      // When `alt` attribute is added or removed from a broken img,
+      // the accessible is recreated.
+      gQueue.push(new setAttr_recreate("tst3", "alt", "one"));
+      // When an `alt` attribute is changed, there is a name change event.
+      gQueue.push(new setAttr("tst3", "alt", "two",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst3")));
+      gQueue.push(new setAttr("tst3", "title", "title",
+                              new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst3")));
+
+      gQueue.push(new setAttr("tst4", "title", "title",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst4")));
+
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
+
+      const labelledBy = getNode("labelledBy");
+      const label = getNode("label");
+      let nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, labelledBy);
+      info("Changing text of aria-labelledby target");
+      label.textContent = "l2";
+      await nameChanged;
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, labelledBy);
+      info("Adding node to aria-labelledby target");
+      label.innerHTML = '<p id="labelChild">l3</p>';
+      await nameChanged;
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, labelledBy);
+      info("Changing text of aria-labelledby target's child");
+      getNode("labelChild").textContent = "l4";
+      await nameChanged;
+
+      const lateLabelledBy = getNode("lateLabelledBy");
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, lateLabelledBy);
+      info("Setting aria-labelledby");
+      lateLabelledBy.setAttribute("aria-labelledby", "lateLabel");
+      await nameChanged;
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, lateLabelledBy);
+      info("Changing text of late aria-labelledby target's child");
+      getNode("lateLabelChild").textContent = "l2";
+      await nameChanged;
+
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, "listitem");
+      info("Changing text of listitem child");
+      getNode("listitem").textContent = "world";
+      await nameChanged;
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=991969"
+     title="Event not fired when description changes">
+    Bug 991969
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <img id="tst1" alt="initial" src="../moz.png">
+  <img id="tst2" src="../moz.png">
+  <img id="tst3">
+  <img id="tst4" src="../moz.png">
+
+  <div id="labelledBy" aria-labelledby="label"></div>
+  <div id="label">l1</div>
+
+  <div id="lateLabelledBy"></div>
+  <div id="lateLabel"><p id="lateLabelChild">l1</p></div>
+
+  <ul><li id="listitem">hello</li></ul>
+
+  <div id="eventdump"></div>
+</body>
+</html>

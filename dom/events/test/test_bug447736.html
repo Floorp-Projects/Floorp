@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=447736
+-->
+<head>
+  <title>Test for Bug 447736</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=447736">Mozilla Bug 447736</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="secondTarget"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 447736 **/
+
+var loadEvent = null;
+window.addEventListener("load",
+  function (evt) {
+    is(evt.target, window.document, "Wrong target!");
+    is(evt.originalTarget, window.document, "Wrong originalTarget!");
+    ok(evt.isTrusted, "Event should be trusted!");
+    loadEvent = evt;
+    setTimeout("st.dispatchEvent(loadEvent)", 0);
+  }, true);
+
+var st = document.getElementById("secondTarget");
+st.addEventListener("load",
+  function (evt) {
+    is(evt.target, st, "Wrong target! (2)");
+    is(evt.originalTarget, st, "Wrong originalTarget! (2)");
+    ok(!evt.isTrusted, "Event shouldn't be trusted anymore!");
+    SimpleTest.finish();
+  }, true);
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

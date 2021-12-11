@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset=utf-8>
+<script>
+'use strict';
+window.onmessage = event => {
+  // This is a bi-directional message passthrough. We pass "callGetBoxQuads"
+  // messages down, and everything else back up.
+  const iframe = document.querySelector("iframe");
+  const goDown = !!event.data.callGetBoxQuads;
+  const targetWindow = (goDown ? iframe.contentWindow : window.parent);
+
+  targetWindow.postMessage(event.data, "*");
+};
+</script>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: lavender;
+  }
+  iframe {
+    width: 150px;
+    height: 150px;
+    margin: 50px;
+    border: 0;
+  }
+</style>
+<iframe src="https://test1.example.com/browser/devtools/client/shared/test/doc_layoutHelpers_getBoxQuads2-c-and-e.html">
+</iframe>

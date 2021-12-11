@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "First about:home paint performance test",
+  "description": "Add-on that quits the browser once the about:home paint measurement has been taken.",
+  "version": "0.1",
+
+  "applications": {
+    "gecko": {
+      "id": "startup_about_home_paint@mozilla.org"
+    }
+  },
+
+  "experiment_apis": {
+    "startup_about_home_paint": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

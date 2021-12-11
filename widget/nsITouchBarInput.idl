@@ -1,0 +1,78 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArray.idl"
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+[scriptable, function, uuid(001ab07c-1b3a-4dbf-a657-fada0065ff55)]
+interface nsITouchBarInputCallback : nsISupports
+{
+  void onCommand();
+};
+
+/**
+ * Implements an input to be registered on the Mac Touch Bar.
+ */
+
+[scriptable, uuid(77441d17-f29c-49d7-982f-f20a5ab5a900)]
+interface nsITouchBarInput : nsISupports
+{
+  readonly attribute AString key;
+
+  /**
+   * The lookup key for the button's localized text title.
+   */
+  attribute AString title;
+
+  /**
+   * The URI of an icon file.
+   */
+  attribute nsIURI image;
+
+  /**
+   * The type of the input.
+   * Takes one of:
+   *   `button`:
+   *     A standard button.
+   *     If an image is available, only the image is displayed.
+   *   `mainButton`:
+   *     An extra-wide button. Displays both the image and title.
+   *   `scrubber`:
+   *     A Scrubber element. Not yet implemented, except in the case of Apple's
+   *     pre-built Share scrubber.
+   *   `popover`:
+   *     An element that displays a new instance of nsTouchBar when tapped.
+   *     The elements in the new Touch Bar should be defined in the
+   *     input's `children` property.
+   *   `label`:
+   *     A text label.
+   *   `scrollView`:
+   *     Contains several buttons, defined in the input's `children` property.
+   *     The user can scroll through the buttons.
+   */
+  attribute AString type;
+
+  /**
+   * A callback function to be invoked when an element is touched.
+   */
+  attribute nsITouchBarInputCallback callback;
+
+  /**
+   * A hexadecimal uint32_t specifying the input's
+   * background color. If omitted, the default background color is used.
+   */
+  attribute uint32_t color;
+
+  /**
+   * If `true`, the Touch Bar input is greyed out and inoperable.
+   */
+  attribute boolean disabled;
+
+  /**
+   * An array containing an input's children.
+   * Available for  type = ("scrollView" || "popover").
+   */
+  attribute nsIArray children;
+};

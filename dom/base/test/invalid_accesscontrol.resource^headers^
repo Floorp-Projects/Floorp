@@ -1,0 +1,4 @@
+Access-Control-Allow-Origin: http://an.accesscrontrol.domain:80
+Content-Type: text/event-stream
+Cache-Control: no-cache, must-revalidate
+

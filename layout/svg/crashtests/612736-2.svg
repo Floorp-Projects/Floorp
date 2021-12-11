@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <path id="path" d="M0 100 h50" stroke="black"/>
+  <text>
+    <textPath xlink:href="#path">abc</textPath>
+    <textPath xlink:href="#path">def</textPath>
+  </text>
+</svg>

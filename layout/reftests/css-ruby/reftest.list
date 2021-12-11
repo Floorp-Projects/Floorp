@@ -1,0 +1,33 @@
+# Box properties support on ruby boxes are not specified.
+== box-properties-1.html box-properties-1-ref.html
+== box-properties-2.html box-properties-2-ref.html
+== box-properties-3.html box-properties-3-ref.html
+== box-properties-4.html box-properties-4-ref.html
+
+# These tests browser features.
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == inflated-ruby-1.html inflated-ruby-1-ref.html
+test-pref(font.minimum-size.ja,16) == min-font-size-1.html min-font-size-1-ref.html
+
+# These tests rely on height of inline elements which is unspecified.
+== line-height-1.html line-height-1-ref.html
+== line-height-2.html line-height-2-ref.html
+== line-height-3.html line-height-3-ref.html
+== line-height-4.html line-height-4-ref.html
+== relative-positioning-1.html relative-positioning-1-ref.html
+== relative-positioning-2.html relative-positioning-2-ref.html
+== ruby-position-horizontal.html ruby-position-horizontal-ref.html
+== ruby-position-vertical-lr.html ruby-position-vertical-lr-ref.html
+== ruby-position-vertical-rl.html ruby-position-vertical-rl-ref.html
+
+# Nested ruby should not crash.
+load nested-ruby-1.html
+
+# Inter-character ruby is not enabled, and its spec is not considered stable enough.
+pref(layout.css.ruby.intercharacter.enabled,true) fuzzy-if(Android,0-198,0-70) == ruby-intercharacter-1.htm ruby-intercharacter-1-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,false) != ruby-intercharacter-1.htm ruby-intercharacter-1-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,true) == ruby-intercharacter-2.htm ruby-intercharacter-2-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,false) != ruby-intercharacter-2.htm ruby-intercharacter-2-ref.htm
+
+# Testing a specific bug for RTL handling.
+== bug1181890.html bug1181890-ref.html
+!= bug1181890.html bug1181890-notref.html

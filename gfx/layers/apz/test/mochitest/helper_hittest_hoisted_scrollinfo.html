@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Hit-testing on a scrollframe forced to be inactive by being inside a filter</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+<style>
+    #withfilter {
+        filter: url(#menushadow);
+    }
+
+    #scroller {
+        width: 300px;
+        height: 500px;
+        overflow: scroll;
+    }
+
+    .spacer {
+        height: 1000px;
+        background-image: linear-gradient(red, blue);
+    }
+</style>
+</head>
+<body>
+ <div id="withfilter">
+  <div id="scroller">
+   <div class="spacer"></div>
+  </div>
+ </div>
+<!-- the SVG below copied directly from the Gecko Profiler code that
+     demonstrated the original bug. It basically generates a bit of a "drop
+     shadow" effect on the div it's applied to. Original SVG can be found at
+     https://github.com/firefox-devtools/profiler/blame/624f71bce5469cf4f8b2be720e929ba69fa6bfdc/res/img/svg/shadowfilter.svg -->
+ <svg xmlns="http://www.w3.org/2000/svg">
+   <defs>
+     <filter id="menushadow" color-interpolation-filters="sRGB" x="-10" y="-10" width="30" height="30">
+       <feComponentTransfer in="SourceAlpha">
+         <feFuncA type="linear" slope="0.3"/>
+       </feComponentTransfer>
+       <feGaussianBlur stdDeviation="5"/>
+       <feOffset dy="10" result="shadow"/>
+       <feComponentTransfer in="SourceAlpha">
+         <feFuncA type="linear" slope="0.1"/>
+       </feComponentTransfer>
+       <feMorphology operator="dilate" radius="0.5" result="rim"/>
+       <feMerge><feMergeNode in="shadow"/><feMergeNode in="rim"/></feMerge>
+       <feComposite operator="arithmetic" in2="SourceAlpha" k2="1" k3="-0.1"/>
+       <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+     </filter>
+   </defs>
+ </svg>
+</body>
+<script type="application/javascript">
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // layerize the scrollable frame. It's inside the filter so this
+  // shouldn't actually change the fact that it will still be main-thread
+  // scrolled.
+  var scroller = document.querySelector("#scroller");
+  utils.setDisplayPortForElement(0, 0, 300, 500, scroller, 1);
+  await promiseApzFlushedRepaints();
+
+  var expectedHitFlags =
+    APZHitResultFlags.VISIBLE | APZHitResultFlags.INACTIVE_SCROLLFRAME;
+  checkHitResult(hitTest(centerOf(scroller)),
+                 expectedHitFlags,
+                 utils.getViewId(scroller),
+                 utils.getLayersId(),
+                 "scrollable content inside a filter");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

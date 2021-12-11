@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing definite placement with non-existent line names</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1146051">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#grid-placement-slot">
+  <link rel="match" href="grid-placement-definite-implicit-002-ref.html">
+  <style type="text/css">
+html,body {
+  font-size: 16px;
+  font-family: monospace;
+  padding:0; margin:0;
+}
+
+span {
+  background: lime;
+  border: 1px solid;
+  grid-row: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: [A] 20px [A] 20px;
+  grid-template-rows: 20px 20px;
+  grid-auto-columns: 20px;
+}
+
+/* Legend:
+             X = line name with no match
+             x = ditto with span
+             A = existing line name
+             a = ditto with span
+             N = line number
+             n = ditto with span
+             e = on the end side
+             s = on the start side
+*/
+.XeN   { grid-column: X 3 / 2;            }
+.XsN   { grid-column: X -3 / 2;           }
+.NeX   { grid-column: 2 / X 3;            }
+.NsX   { grid-column: 2 / X -3;           }
+.XeA   { grid-column: X 3 / A;            }
+.XsA   { grid-column: X -3 / A;           }
+.XsA2  { grid-column: X -3 / A 2;         }
+.XsA3  { grid-column: X -3 / A 3;         }
+.AsX   { grid-column: A / X -3;           }
+.xsN   { grid-column: span X / 1;         }
+.x2sN  { grid-column: span X 2 / 1;       }
+.xsN2  { grid-column: span X / 2;         }
+.xXs   { grid-column: span X / X -2;      }
+.aXs   { grid-column: span A / X -2;      }
+.aXe   { grid-column: span A / X 2;       }
+.xXe   { grid-column: span X / X 2;       }
+
+.AXe   { grid-column: A / X 2;            }
+.A2Xe  { grid-column: A 2 / X 2;          }
+.XXe   { grid-column: X / X 2;            }
+.XX3e  { grid-column: X / X 3;            }
+.XbXe  { grid-column: X -2 / X;           }
+.XX0b  { grid-column: X -3 / X -3;        }
+.XX1b  { grid-column: X -3 / X -2;        }
+.XX2b  { grid-column: X -3 / X -1;        }
+.XbN1  { grid-column: X -3 / 1;           }
+.XbN2  { grid-column: X -3 / 2;           }
+.Xbb   { grid-column: X -3 / X -4;        }
+.Xee   { grid-column: X 3 / X;            }
+.nX2s  { grid-column: span 2 / X -2;      }
+.nXs   { grid-column: span 2 / X -1;      }
+.nXe   { grid-column: span 2 / X;         }
+.nX2e  { grid-column: span 2 / X 2;       }
+
+.nX3e  { grid-column: span 2 / X 3;       }
+.n3Xe  { grid-column: span 3 / X;         }
+.n4Xe  { grid-column: span 4 / X;         }
+.Xen3  { grid-column: X / span 3;         }
+.Xea   { grid-column: X / span A;         }
+.Xea2  { grid-column: X / span A 2;       }
+.Xea3  { grid-column: X / span A 3;       }
+.Xsa   { grid-column: X -1 / span A;      }
+.Xsa2  { grid-column: X -1 / span A 2;    }
+.Xsa4  { grid-column: X -1 / span A 4;    }
+.Xs2a  { grid-column: X -2 / span A;      }
+.Xs2a2 { grid-column: X -2 / span A 2;    }
+.Xs2a4 { grid-column: X -2 / span A 4;    }
+.Xs3a  { grid-column: X -3 / span A;      }
+.Xs3a2 { grid-column: X -3 / span A 2;    }
+.Xs3a4 { grid-column: X -3 / span A 4;    }
+
+.nxe   { grid-column: 1 / span X;         }
+.nx3e  { grid-column: 1 / span X 3;       }
+.n2x3e { grid-column: 2 / span X 3;       }
+.Axe   { grid-column: A / span X;         }
+.A2xe  { grid-column: A 2 / span X;       }
+.Ax3e  { grid-column: A / span X 3;       }
+.A2x3e { grid-column: A 2 / span X 3;     }
+.Aa    { grid-column: A / span A;         }
+.A2a   { grid-column: A 2 / span A;       }
+.Aa3   { grid-column: A / span A 3;       }
+.AXs   { grid-column: A / X -2;           }
+.A2Xs  { grid-column: A 2 / X -2;         }
+._Xs   { grid-column: auto / X -2;        }
+._Xe   { grid-column: auto / X 2;         }
+._xe   { grid-column: auto / span X;      }
+._x3e  { grid-column: auto / span X 3;    }
+
+._xa   { grid-column: auto / span A;      }
+._xa3  { grid-column: auto / span A 3;    }
+._xn3  { grid-column: auto / span 3;      }
+._xn5  { grid-column: auto / span 5;      }
+.Xs_   { grid-column: X -1 / auto;        }
+.X2s_  { grid-column: X -2 / auto;        }
+.X2e_  { grid-column: X 2 / auto;         }
+.A_    { grid-column: A / auto;           }
+.A2_   { grid-column: A 2 / auto;         }
+.x3_   { grid-column: span X 3 / auto;    }
+.a2_   { grid-column: span A 2 / auto;    }
+.a-2_  { grid-column: span A -2 / auto;   } /*intentionally invalid span*/
+._n    { grid-column: auto / 1;           }
+._n2   { grid-column: auto / 2;           }
+.A3Xe  { grid-column: A 3 / X 2;          }
+.asA   { grid-column: span A / A;         }
+.asA2  { grid-column: span A / A 2;       }
+.a2sA2 { grid-column: span A 2 / A 2;     }
+.as1   { grid-column: span A / 1;         }
+.as2   { grid-column: span A / 2;         }
+.as3   { grid-column: span A / 3;         }
+
+.c1 { grid-column:1; grid-row:auto; background:grey; }
+
+  </style>
+</head>
+<body>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="XeN" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XsN" ></span><span class="c1"></span></div>
+<div class="grid"><span class="NeX" ></span><span class="c1"></span></div>
+<div class="grid"><span class="NsX" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XeA" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XsA" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XsA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="XsA3"></span><span class="c1"></span></div>
+<div class="grid"><span class="AsX" ></span><span class="c1"></span></div>
+<div class="grid"><span class="xsN" ></span><span class="c1"></span></div>
+<div class="grid"><span class="x2sN"></span><span class="c1"></span></div>
+<div class="grid"><span class="xsN2"></span><span class="c1"></span></div>
+<div class="grid"><span class="xXs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="aXs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="aXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="xXe" ></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="AXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2Xe"></span><span class="c1"></span></div>
+<div class="grid"><span class="XXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XX3e"></span><span class="c1"></span></div>
+<div class="grid"><span class="XbXe"></span><span class="c1"></span></div>
+<div class="grid"><span class="XX0b"></span><span class="c1"></span></div>
+<div class="grid"><span class="XX1b"></span><span class="c1"></span></div>
+<div class="grid"><span class="XX2b"></span><span class="c1"></span></div>
+<div class="grid"><span class="XbN1"></span><span class="c1"></span></div>
+<div class="grid"><span class="XbN2"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xbb" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xee" ></span><span class="c1"></span></div>
+<div class="grid"><span class="nX2s"></span><span class="c1"></span></div>
+<div class="grid"><span class="nXs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="nXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="nX2e"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="nX3e" ></span><span class="c1"></span></div>
+<div class="grid"><span class="n3Xe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="n4Xe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xen3" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xea"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xea2" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xea3" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xsa"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xsa2" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xsa4" ></span><span class="c1"></span></div>
+
+<div class="grid"><span class="Xs2a" ></span><span class="c1"></span></div>
+
+<div class="grid"><span class="Xs2a2"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs2a4"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs3a" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs3a2"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs3a4"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="nxe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="nx3e" ></span><span class="c1"></span></div>
+<div class="grid"><span class="n2x3e"></span><span class="c1"></span></div>
+<div class="grid"><span class="Axe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2xe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Ax3e" ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2x3e"></span><span class="c1"></span></div>
+<div class="grid"><span class="Aa"   ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2a"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="Aa3"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="AXs"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2Xs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="_Xs"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_Xe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_xe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_x3e" ></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="_xa" ></span><span class="c1"></span></div>
+<div class="grid"><span class="_xa3"></span><span class="c1"></span></div>
+<div class="grid"><span class="_xn3"></span><span class="c1"></span></div>
+<div class="grid"><span class="_xn5"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="X2s_"></span><span class="c1"></span></div>
+<div class="grid"><span class="X2e_"></span><span class="c1"></span></div>
+<div class="grid"><span class="A_"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="x3_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="a2_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="a-2_"></span><span class="c1"></span></div>
+<div class="grid"><span class="_n"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_n2" ></span><span class="c1"></span></div>
+<div class="grid"><span class="A3Xe"></span><span class="c1"></span></div>
+<div class="grid"><span class="asA"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px; clear:both">
+<div class="grid"><span class="asA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="a2sA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as1"></span><span class="c1"></span></div>
+<div class="grid"><span class="as2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as3"></span><span class="c1"></span></div>
+</div>
+
+</body>
+</html>

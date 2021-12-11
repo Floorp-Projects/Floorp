@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462789
+-->
+<head>
+  <title>Test for Bug 462789</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462789">Mozilla Bug 462789</a>
+<p id="display"><iframe id="bug462789_iframe" srcdoc="<html><head><style>*{color:black;}</style></head><body>xxx" style="display: none;"></iframe></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 462789 **/
+
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+function do_test() {
+  const DOCUMENT_NODE_TYPE = 9;
+
+  var iframe = document.getElementById("bug462789_iframe");
+  var docElement = iframe.contentDocument.documentElement;
+  var body = docElement.children[1];
+  var rule = iframe.contentDocument.styleSheets[0].cssRules[0];
+  var text = body.firstChild;
+
+  try {
+    var res = InspectorUtils.getCSSStyleRules(docElement);
+    is(res.length, 0, "getCSSStyleRules");
+    res = InspectorUtils.getCSSStyleRules(body);
+    is(res.length, 0, "getCSSStyleRules");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    var res = InspectorUtils.getRuleLine(rule);
+    is(res, 1, "getRuleLine");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    var res = InspectorUtils.isIgnorableWhitespace(text);
+    is(res, false, "isIgnorableWhitespace");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    var res = InspectorUtils.getParentForNode(docElement, true);
+    is(res.nodeType, DOCUMENT_NODE_TYPE, "getParentForNode(docElement, true)");
+    res = InspectorUtils.getParentForNode(text, true);
+    is(res.tagName, "BODY", "getParentForNode(text, true)");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    InspectorUtils.getContentState(docElement);
+    ok(true, "Should not throw"); 
+  }
+  catch(e) { ok(false, "Got an exception: " + e); }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+
+</script>
+</pre>
+</body>
+</html>

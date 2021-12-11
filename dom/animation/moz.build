@@ -1,0 +1,73 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Animation")
+
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+
+EXPORTS.mozilla.dom += [
+    "Animation.h",
+    "AnimationEffect.h",
+    "AnimationTimeline.h",
+    "CSSAnimation.h",
+    "CSSPseudoElement.h",
+    "CSSTransition.h",
+    "DocumentTimeline.h",
+    "KeyframeEffect.h",
+]
+
+EXPORTS.mozilla += [
+    "AnimationComparator.h",
+    "AnimationEventDispatcher.h",
+    "AnimationPerformanceWarning.h",
+    "AnimationPropertySegment.h",
+    "AnimationTarget.h",
+    "AnimationUtils.h",
+    "ComputedTiming.h",
+    "ComputedTimingFunction.h",
+    "EffectCompositor.h",
+    "EffectSet.h",
+    "Keyframe.h",
+    "KeyframeEffectParams.h",
+    "KeyframeUtils.h",
+    "PendingAnimationTracker.h",
+    "PostRestyleMode.h",
+    "PseudoElementHashEntry.h",
+    "TimingParams.h",
+]
+
+UNIFIED_SOURCES += [
+    "Animation.cpp",
+    "AnimationEffect.cpp",
+    "AnimationEventDispatcher.cpp",
+    "AnimationPerformanceWarning.cpp",
+    "AnimationTimeline.cpp",
+    "AnimationUtils.cpp",
+    "ComputedTimingFunction.cpp",
+    "CSSAnimation.cpp",
+    "CSSPseudoElement.cpp",
+    "CSSTransition.cpp",
+    "DocumentTimeline.cpp",
+    "EffectCompositor.cpp",
+    "EffectSet.cpp",
+    "KeyframeEffect.cpp",
+    "KeyframeUtils.cpp",
+    "PendingAnimationTracker.cpp",
+    "TimingParams.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/layout/base",
+    "/layout/painting",
+    "/layout/style",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"

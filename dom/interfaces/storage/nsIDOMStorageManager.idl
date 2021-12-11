@@ -1,0 +1,132 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface mozIDOMWindow;
+
+webidl Storage;
+
+%{C++
+namespace mozilla {
+namespace dom {
+class SessionStorageCache;
+}  // namespace dom
+}  // namespace mozilla
+%}
+
+native SessionStorageCacheAddRefed(RefPtr<mozilla::dom::SessionStorageCache>);
+
+/**
+ * General purpose interface that has two implementations, for localStorage
+ * with "@mozilla.org/dom/localStorage-manager;1".
+ */
+[scriptable, uuid(a20c742e-3ed1-44fb-b897-4080a75b1662)]
+interface nsIDOMStorageManager : nsISupports
+{
+  /**
+   * This starts async preloading of a storage cache for scope
+   * defined by the principal and storage principal.
+   *
+   * Because of how multi-e10s support was implemented in bug 1285898, the
+   * StorageCache instance can no longer use a timer to keep itself alive.  So a
+   * Storage instance is returned if precaching believes the storage principal may
+   * have localStorage data.  (Previously the StorageCache would be brought into
+   * existence and kept alive by the timer so that it could be returned if a
+   * call to createStorage was made due to a request by the page.)
+   */
+  Storage precacheStorage(in nsIPrincipal aPrincipal,
+                          in nsIPrincipal aStoragePrincipal);
+
+  /**
+   * Returns instance of DOM storage object for given principal.
+   * A new object is always returned and it is ensured there is
+   * a storage for the scope created.
+   *
+   * @param aWindow
+   *    The parent window.
+   * @param aPrincipal
+   *    Principal to bound storage to.
+   * @param aStoragePrincipal
+   *    StoragePrincipal to bound storage to.
+   * @param aDocumentURI
+   *    URL of the demanding document, used for DOM storage event only.
+   * @param aPrivate
+   *    Whether the demanding document is running in Private Browsing mode or not.
+   */
+  Storage createStorage(in mozIDOMWindow aWindow,
+                        in nsIPrincipal aPrincipal,
+                        in nsIPrincipal aStoragePrincipal,
+                        in AString aDocumentURI,
+                        [optional] in bool aPrivate);
+  /**
+   * DEPRECATED.  The only good reason to use this was if you were writing a
+   * test and wanted to hackily determine if a preload happened.  That's now
+   * covered by `nsILocalStorageManager.isPreloaded` and you should use that if
+   * that's what you want.  If LSNG is in use, this will throw.
+   *
+   * Returns instance of DOM storage object for given principal.
+   * If there is no storage managed for the scope, then null is returned and
+   * no object is created.  Otherwise, an object (new) for the existing storage
+   * scope is returned.
+   *
+   * @param aWindow
+   *    The parent window.
+   * @param aPrincipal
+   *    Principal to bound storage to.
+   * @param aStoragePrincipal
+   *    StoragePrincipal to bound storage to.
+   * @param aPrivate
+   *    Whether the demanding document is running in Private Browsing mode or not.
+   */
+  Storage getStorage(in mozIDOMWindow aWindow,
+                     in nsIPrincipal aPrincipal,
+                     in nsIPrincipal aStoragePrincipal,
+                     [optional] in bool aPrivate);
+
+  /**
+   * Clones given storage into this storage manager.
+   *
+   * @param aStorageToCloneFrom
+   *    The storage to copy all items from into this manager.  Manager will then
+   *    return a new and independent object that contains snapshot of data from
+   *    the moment this method was called.  Modification to this new object will
+   *    not affect the original storage content we cloned from and vice versa.
+   */
+  void cloneStorage(in Storage aStorageToCloneFrom);
+
+  /**
+   * Returns true if the storage belongs to the given principal and is managed
+   * (i.e. has been created and is cached) by this storage manager.
+   *
+   * @param aPrincipal
+   *    Principal to check the storage against.
+   * @param aStorage
+   *    The storage object to examine.
+   *
+   * @result
+   *    true when the storage object is bound with the principal and is managed
+   *         by this storage manager.
+   *    false otherwise
+   */
+  bool checkStorage(in nsIPrincipal aPrincipal,
+                    in Storage aStorage);
+};
+
+[uuid(b3bfbbd0-e738-4cbf-b0f0-b65f25265e82)]
+interface nsIDOMSessionStorageManager : nsIDOMStorageManager {
+  /**
+   * Returns a SessionStorageCache object for the principal scope.
+   *
+   * @param aPrincipal
+   *    Principal to bound storage to.
+   * @param aStoragePrincipal
+   *    StoragePrincipal to bound storage to.
+   */
+   [noscript]
+   SessionStorageCacheAddRefed getSessionStorageCache(in nsIPrincipal aPrincipal,
+                                                      in nsIPrincipal aStoragePrincipal);
+};

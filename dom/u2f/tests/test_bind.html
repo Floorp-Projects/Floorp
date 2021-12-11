@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that bind() can be called on u2f.register/sign</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({ "set": [["security.webauth.u2f", true]] },
+                              doTest);
+    function doTest() {
+        // For some reason, exceptions from inside here do not cause a test
+        // failure!  Run the actual code we want off something that will report
+        // errors properly.
+        SimpleTest.executeSoon(function() {
+            // Need a new global for the pref to really take effect.
+            var iframe = document.createElement("iframe");
+            document.documentElement.appendChild(iframe);
+            var win = iframe.contentWindow;
+            is(typeof(win.u2f.register.bind(win.u2f)), "function",
+               "Should be able to bind u2f.register");
+            is(typeof(win.u2f.sign.bind(win.u2f)), "function",
+               "Should be able to bind u2f.sign");
+            iframe.remove();
+            SimpleTest.finish();
+        });
+    }
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

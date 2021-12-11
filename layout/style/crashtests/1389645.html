@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<script>
+window.onload = () => {
+  a = document.createElement("x")
+  document.documentElement.appendChild(a)
+  b = document.createElement("span")
+  document.documentElement.appendChild(b)
+  document.documentElement.getBoundingClientRect()
+  a.appendChild(document.createElement('div'))
+  b.innerText = "\uFDDE\r\u0301\n"
+}
+</script>

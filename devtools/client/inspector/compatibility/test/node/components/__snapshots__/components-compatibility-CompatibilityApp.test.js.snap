@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CompatibilityApp component renders with settings 1`] = `
+<section
+  className="compatibility-app theme-sidebar inspector-tabpanel"
+>
+  <div
+    className="compatibility-app__container compatibility-app__container-hidden"
+  >
+    <Accordion
+      className="compatibility-app__main"
+      items={
+        Array [
+          Object {
+            "component": <IssuePane
+              issues={Array []}
+            />,
+            "header": "compatibility-selected-element-header",
+            "id": "compatibility-app--selected-element-pane",
+            "opened": true,
+          },
+          Object {
+            "component": Array [
+              <IssuePane
+                dispatch={[Function]}
+                issues={Array []}
+              />,
+              null,
+            ],
+            "header": "compatibility-all-elements-header",
+            "id": "compatibility-app--all-elements-pane",
+            "opened": true,
+          },
+        ]
+      }
+    />
+    <Connect(Footer)
+      className="compatibility-app__footer"
+    />
+  </div>
+  <Connect(Settings) />
+</section>
+`;
+
+exports[`CompatibilityApp component renders zero issues 1`] = `
+<section
+  className="compatibility-app theme-sidebar inspector-tabpanel"
+>
+  <div
+    className="compatibility-app__container"
+  >
+    <Accordion
+      className="compatibility-app__main"
+      items={
+        Array [
+          Object {
+            "component": <IssuePane
+              issues={Array []}
+            />,
+            "header": "compatibility-selected-element-header",
+            "id": "compatibility-app--selected-element-pane",
+            "opened": true,
+          },
+          Object {
+            "component": Array [
+              <IssuePane
+                dispatch={[Function]}
+                issues={Array []}
+              />,
+              null,
+            ],
+            "header": "compatibility-all-elements-header",
+            "id": "compatibility-app--all-elements-pane",
+            "opened": true,
+          },
+        ]
+      }
+    />
+    <Connect(Footer)
+      className="compatibility-app__footer"
+    />
+  </div>
+</section>
+`;

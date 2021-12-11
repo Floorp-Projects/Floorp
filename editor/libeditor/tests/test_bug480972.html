@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>Test for bug 480972</title>
+<style src="/tests/SimpleTest/test.css" type="text/css"></style>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script class="testbody" type="application/javascript">
+
+function runTest() {
+  function verifyContent(s) {
+    var e = document.getElementById("i1");
+    var doc = e.contentDocument;
+    is(doc.body.innerHTML, s, "");
+  }
+
+  function pasteInto(html, target_id) {
+    var e = document.getElementById("i1");
+    var doc = e.contentDocument;
+    doc.designMode = "on";
+    doc.body.innerHTML = html;
+    doc.defaultView.focus();
+    if (target_id)
+      e = doc.getElementById(target_id);
+    else
+      e = doc.body;
+    var selection = doc.defaultView.getSelection();
+    selection.removeAllRanges();
+    selection.selectAllChildren(e);
+    selection.collapseToEnd();
+    SpecialPowers.wrap(doc).execCommand("paste", false, null);
+   return e;
+  }
+
+  function copyToClipBoard(s, asHTML, target_id) {
+    var e = document.getElementById("i2");
+    var doc = e.contentDocument;
+    if (asHTML) {
+      doc.body.innerHTML = s;
+    } else {
+      var text = doc.createTextNode(s);
+      doc.body.appendChild(text);
+    }
+    doc.designMode = "on";
+    doc.defaultView.focus();
+    var selection = doc.defaultView.getSelection();
+    selection.removeAllRanges();
+    if (!target_id) {
+      selection.selectAllChildren(doc.body);
+    } else {
+      var range = document.createRange();
+      range.selectNode(doc.getElementById(target_id));
+      selection.addRange(range);
+    }
+    SpecialPowers.wrap(doc).execCommand("copy", false, null);
+    return e;
+  }
+
+  copyToClipBoard("<span>Hello</span><span>Kitty</span>", true);
+  pasteInto("");
+  verifyContent("<span>Hello</span><span>Kitty</span>");
+
+  copyToClipBoard("<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span>", true);
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
+  verifyContent('<ol><li id="paste_here">X<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span></li></ol>');
+
+// The following test doesn't do what I expected, because the special handling
+// of IsList nodes in nsHTMLEditor::InsertHTMLWithContext simply removes
+// non-list/item children.  See bug 481177.
+//  copyToClipBoard("<ol><li>Hello Kitty</li><span>Hello</span></ol>", true);
+//  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
+//  verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li><span>Hello</span></ol>');
+
+  copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
+  pasteInto('<pre id="paste_here">Hello </pre>', "paste_here");
+  verifyContent('<pre id="paste_here">Hello Kitty<span>Hello</span></pre>');
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=480972">Mozilla Bug 480972</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+
+
+<iframe id="i1" width="200" height="100" src="about:blank"></iframe><br>
+<iframe id="i2" width="200" height="100" src="about:blank"></iframe><br>
+
+</body>
+</html>

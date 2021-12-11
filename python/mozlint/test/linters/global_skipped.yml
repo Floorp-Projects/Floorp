@@ -1,0 +1,8 @@
+---
+GlobalSkippedLinter:
+    description: It's bad to run global linters when nothing matches.
+    include:
+        - files
+    type: global
+    extensions: ['.non.existent.extension']
+    payload: global_payload:global_skipped

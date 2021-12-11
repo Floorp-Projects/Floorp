@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "906986",
+    title: "Renegotiation: restart ice, local and remote rollback, without a subsequent ICE restart"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_SETUP_ICE_HANDLER(test) {
+          test.pcLocal.setupIceCandidateHandler(test);
+        },
+        function PC_REMOTE_SETUP_ICE_HANDLER(test) {
+          test.pcRemote.setupIceCandidateHandler(test);
+        },
+
+        // causes a full, normal ice restart
+        function PC_LOCAL_SET_OFFER_OPTION(test) {
+          test.setOfferOptions({ iceRestart: true });
+        }
+      ]
+    );
+
+    test.chain.replaceAfter('PC_REMOTE_CREATE_ANSWER',
+      [
+        function PC_REMOTE_ROLLBACK(test) {
+          return test.setRemoteDescription(test.pcRemote, { type: "rollback" },
+                                           STABLE);
+        },
+
+        async function PC_LOCAL_ROLLBACK(test) {
+          await test.pcLocal.endOfTrickleIce;
+          // We haven't negotiated the new stream yet.
+          test.pcLocal.expectNegotiationNeeded();
+          return test.setLocalDescription(
+              test.pcLocal,
+              new RTCSessionDescription({ type: "rollback", sdp: ""}),
+              STABLE);
+        },
+
+        // Rolling back should shut down gathering for the offerer,
+        // but because the answerer never set a local description, no ICE
+        // gathering has happened yet, so there's no changes to ICE gathering
+        // state
+        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcLocal.endOfTrickleIce;
+        },
+
+        function PC_LOCAL_SET_OFFER_OPTION(test) {
+          test.setOfferOptions({ iceRestart: false });
+        }
+      ],
+      1 // Replaces after second PC_REMOTE_CREATE_ANSWER
+    );
+    test.chain.append(commandsPeerConnectionOfferAnswer);
+
+    // for now, only use one stream, because rollback doesn't seem to
+    // like multiple streams.  See bug 1259465.
+    test.setMediaConstraints([{audio: true}],
+                             [{audio: true}]);
+    return test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

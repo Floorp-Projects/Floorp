@@ -1,0 +1,55 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
+ *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
+ */"""
+include_version = true
+braces = "SameLine"
+line_length = 100
+tab_width = 2
+language = "C++"
+namespaces = ["mozilla", "wr"]
+
+[export]
+item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions", "constants"]
+include = ["POLYGON_CLIP_VERTEX_MAX"]
+
+[parse]
+parse_deps = true
+extra_bindings = ["webrender_api"]
+include = ["log", "euclid", "webrender", "webrender_api"]
+
+[fn]
+args = "Vertical"
+rename_args = "GeckoCase"
+
+[struct]
+associated_constants_in_body = true
+derive_eq = true
+derive_ostream = true
+
+[enum]
+add_sentinel = true
+derive_helper_methods = true
+derive_ostream = true
+
+[macro_expansion]
+bitflags = true
+
+[defines]
+"target_os = windows" = "XP_WIN"
+"target_os = macos" = "XP_MACOSX"
+"target_os = android" = "ANDROID"
+
+[export.rename]
+"ThinVec" = "nsTArray"
+
+[export.body]
+"Box2D" = """
+  inline T width() const { return max.x - min.x; }
+  inline T height() const { return max.y - min.y; }
+"""

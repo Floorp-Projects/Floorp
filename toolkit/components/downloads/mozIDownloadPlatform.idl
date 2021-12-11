@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIFile;
+
+[scriptable, uuid(9f556e4a-d9b3-46c3-9f8f-d0db1ac6c8c1)]
+interface mozIDownloadPlatform : nsISupports
+{
+  /**
+   * Perform platform specific operations when a download is done.
+   *
+   *   Windows:
+   *     Add the download to the recent documents list
+   *     Set the file to be indexed for searching
+   *   Mac:
+   *     Bounce the downloads dock icon
+   *   GTK:
+   *     Add the download to the recent documents list
+   *     Save the source uri in the downloaded file's metadata
+   *   Android:
+   *     Scan media
+   *
+   * @param aSource
+   *        Source URI of the download
+   * @param aReferrer
+   *        Referrer URI of the download
+   * @param aTarget
+   *        Downloaded file
+   * @param aContentType
+   *        The source's content type
+   * @param aIsPrivate
+   *        True for private downloads
+   * @return Promise that resolves once operations have completed.
+   */
+  [implicit_jscontext]
+  Promise downloadDone(in nsIURI aSource, in nsIURI aReferrer, in nsIFile aTarget,
+                       in ACString aContentType, in boolean aIsPrivate);
+
+  /**
+   * Security Zone constants. Used by mapUrlToZone().
+   */
+  const unsigned long ZONE_MY_COMPUTER = 0;
+  const unsigned long ZONE_INTRANET = 1;
+  const unsigned long ZONE_TRUSTED = 2;
+  const unsigned long ZONE_INTERNET = 3;
+  const unsigned long ZONE_RESTRICTED = 4;
+
+  /**
+   * Proxy for IInternetSecurityManager::MapUrlToZone().
+   *
+   *   Windows only.
+   *
+   * @param aURL
+   *        URI of the download
+   * @return Security Zone corresponding to aURL.
+   */
+  unsigned long mapUrlToZone(in AString aURL);
+};

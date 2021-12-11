@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1038811: Push tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1038811</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1038811">Mozilla Bug 1038811</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+  function debug(str) {
+  //  console.log(str + "\n");
+  }
+
+  var registration;
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
+    await setPushPermission(false);
+
+    var url = "worker.js?" + Math.random();
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
+  });
+
+  add_task(async function denySubscribe() {
+    try {
+      await registration.pushManager.subscribe();
+      ok(false, "subscribe() should fail because no permission for push");
+    } catch (error) {
+      ok(error instanceof DOMException, "Wrong exception type");
+      is(error.name, "NotAllowedError", "Wrong exception name");
+    }
+  });
+
+  add_task(async function denySubscribeInWorker() {
+    // If permission is revoked, `getSubscription()` should return `null`, and
+    // `subscribe()` should reject immediately. Calling these from the worker
+    // should not deadlock the main thread (see bug 1228723).
+    var errorInfo = await sendRequestToWorker({
+      type: "denySubscribe",
+    });
+    ok(errorInfo.isDOMException, "Wrong exception type");
+    is(errorInfo.name, "NotAllowedError", "Wrong exception name");
+  });
+
+  add_task(async function getEndpoint() {
+    var pushSubscription = await registration.pushManager.getSubscription();
+    is(pushSubscription, null, "getSubscription() should return null because no permission for push");
+  });
+
+  add_task(async function checkPermissionState() {
+    var permissionManager = SpecialPowers.Ci.nsIPermissionManager;
+    var tests = [{
+      action: permissionManager.ALLOW_ACTION,
+      state: "granted",
+    }, {
+      action: permissionManager.DENY_ACTION,
+      state: "denied",
+    }, {
+      action: permissionManager.PROMPT_ACTION,
+      state: "prompt",
+    }, {
+      action: permissionManager.UNKNOWN_ACTION,
+      state: "prompt",
+    }];
+    for (var test of tests) {
+      await setPushPermission(test.action);
+      var state = await registration.pushManager.permissionState();
+      is(state, test.state, JSON.stringify(test));
+      try {
+        await SpecialPowers.pushPrefEnv({ set: [
+          ["dom.push.testing.ignorePermission", true]] });
+        state = await registration.pushManager.permissionState();
+        is(state, "granted", `Should ignore ${
+          test.action} if the override pref is set`);
+      } finally {
+        await SpecialPowers.flushPrefEnv();
+      }
+    }
+  });
+
+  add_task(async function unregister() {
+    var result = await registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
+
+</script>
+</body>
+</html>

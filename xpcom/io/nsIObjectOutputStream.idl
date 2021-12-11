@@ -1,0 +1,99 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIBinaryOutputStream.idl"
+
+/**
+ * @See nsIObjectInputStream
+ * @See nsIBinaryOutputStream
+ */
+
+[scriptable, builtinclass, uuid(92c898ac-5fde-4b99-87b3-5d486422094b)]
+interface nsIObjectOutputStream : nsIBinaryOutputStream
+{
+    /**
+     * Write the object whose "root" or XPCOM-identity nsISupports is aObject.
+     * The cause for writing this object is a strong or weak reference, so the
+     * aIsStrongRef argument must tell which kind of pointer is being followed
+     * here during serialization.
+     *
+     * If the object has only one strong reference in the serialization and no
+     * weak refs, use writeSingleRefObject.  This is a valuable optimization:
+     * it saves space in the stream, and cycles on both ends of the process.
+     *
+     * If the reference being serialized is a pointer to an interface not on
+     * the primary inheritance chain ending in the root nsISupports, you must
+     * call writeCompoundObject instead of this method.
+     */
+    void writeObject(in nsISupports aObject, in boolean aIsStrongRef);
+
+    /**
+     * Write an object referenced singly and strongly via its root nsISupports
+     * or a subclass of its root nsISupports.  There must not be other refs to
+     * aObject in memory, or in the serialization.
+     */
+    void writeSingleRefObject(in nsISupports aObject);
+
+    /**
+     * Write the object referenced by an interface pointer at aObject that
+     * inherits from a non-primary nsISupports, i.e., a reference to one of
+     * the multiply inherited interfaces derived from an nsISupports other
+     * than the root or XPCOM-identity nsISupports; or a reference to an
+     * inner object in the case of true XPCOM aggregation.  aIID identifies
+     * this interface.
+     */
+    void writeCompoundObject(in nsISupports aObject,
+                             in nsIIDRef aIID,
+                             in boolean aIsStrongRef);
+
+    void writeID(in nsIDRef aID);
+
+    /**
+     * Optimized serialization support -- see nsIStreamBufferAccess.idl.
+     */
+    [notxpcom] charPtr getBuffer(in uint32_t aLength, in uint32_t aAlignMask);
+    [notxpcom] void    putBuffer(in charPtr aBuffer, in uint32_t aLength);
+};
+
+%{C++
+already_AddRefed<nsIObjectOutputStream>
+NS_NewObjectOutputStream(nsIOutputStream* aOutputStream);
+
+inline nsresult
+NS_WriteOptionalObject(nsIObjectOutputStream* aStream, nsISupports* aObject,
+                       bool aIsStrongRef)
+{
+    bool nonnull = (aObject != nullptr);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteObject(aObject, aIsStrongRef);
+    return rv;
+}
+
+inline nsresult
+NS_WriteOptionalSingleRefObject(nsIObjectOutputStream* aStream,
+                                nsISupports* aObject)
+{
+    bool nonnull = (aObject != nullptr);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteSingleRefObject(aObject);
+    return rv;
+}
+
+inline nsresult
+NS_WriteOptionalCompoundObject(nsIObjectOutputStream* aStream,
+                               nsISupports* aObject,
+                               const nsIID& aIID,
+                               bool aIsStrongRef)
+{
+    bool nonnull = (aObject != nullptr);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteCompoundObject(aObject, aIID, aIsStrongRef);
+    return rv;
+}
+
+%}

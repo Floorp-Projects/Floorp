@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=548463
+-->
+<head>
+  <title>Test for Bug 548463</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=548463">Mozilla Bug 548463</a>
+<p id="display"></p>
+<iframe id="otherDoc"></iframe>
+<div id="content" style="display: none">
+  <p id="elem1"></p>
+  <p id="elem2"></p>
+</div>
+<div id="otherContent" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 548463 **/
+
+var otherDoc = document.getElementById("otherDoc").contentDocument;
+var content = document.getElementById("content");
+var elem1 = document.getElementById("elem1");
+var elem2 = document.getElementById("elem2");
+
+function testAdoptFromDOMNodeRemoved(nodeToAppend, nodeRemoved, nodeToAdopt)
+{
+  function reparent(event)
+  {
+    if (event.target == nodeRemoved) {
+      nodeRemoved.removeEventListener("DOMNodeRemoved", arguments.callee);
+      otherDoc.adoptNode(nodeToAdopt);
+    }
+  }
+  nodeRemoved.addEventListener("DOMNodeRemoved", reparent);
+
+  var thrown = false;
+  try {
+    document.getElementById("otherContent").appendChild(nodeToAppend);
+  }
+  catch (e) {
+    thrown = true;
+  }
+
+  ok(!thrown, "adoptNode while appending should not throw");
+}
+
+var frag = document.createDocumentFragment();
+frag.appendChild(elem1);
+frag.appendChild(elem2);
+testAdoptFromDOMNodeRemoved(frag, elem1, elem2);
+
+content.appendChild(elem1);
+testAdoptFromDOMNodeRemoved(elem1, elem1, content);
+
+content.appendChild(elem1);
+
+</script>
+</pre>
+</body>
+</html>

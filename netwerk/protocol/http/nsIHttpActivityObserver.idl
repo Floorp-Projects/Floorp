@@ -1,0 +1,162 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+namespace mozilla {
+namespace net {
+class HttpActivityArgs;
+} // namespace net
+} // namespace mozilla
+%}
+
+[ref] native HttpActivityArgs(const mozilla::net::HttpActivityArgs);
+
+/**
+ * nsIHttpActivityObserver
+ *
+ * This interface provides a way for http activities to be reported
+ * to observers.
+ */
+[scriptable, uuid(412880C8-6C36-48d8-BF8F-84F91F892503)]
+interface nsIHttpActivityObserver : nsISupports
+{
+    /**
+     * observe activity from the http transport
+     *
+     * @param aHttpChannel
+     *        nsISupports interface for the the http channel that
+     *        generated this activity
+     * @param aActivityType
+     *        The value of this aActivityType will be one of
+     *          ACTIVITY_TYPE_SOCKET_TRANSPORT or
+     *          ACTIVITY_TYPE_HTTP_TRANSACTION
+     * @param aActivitySubtype
+     *        The value of this aActivitySubtype, will be depend
+     *        on the value of aActivityType. When aActivityType
+     *        is ACTIVITY_TYPE_SOCKET_TRANSPORT
+     *          aActivitySubtype will be one of the
+     *          nsISocketTransport::STATUS_???? values defined in
+     *          nsISocketTransport.idl
+     *        OR when aActivityType
+     *        is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *          aActivitySubtype will be one of the
+     *          nsIHttpActivityObserver::ACTIVITY_SUBTYPE_???? values
+     *          defined below
+     * @param aTimestamp
+     *        microseconds past the epoch of Jan 1, 1970
+     * @param aExtraSizeData
+     *        Any extra size data optionally available with
+     *        this activity
+     * @param aExtraStringData
+     *        Any extra string data optionally available with
+     *        this activity
+     */
+    [must_use]
+    void observeActivity(in nsISupports  aHttpChannel,
+                         in uint32_t     aActivityType,
+                         in uint32_t     aActivitySubtype,
+                         in PRTime       aTimestamp,
+                         in uint64_t     aExtraSizeData,
+                         in ACString     aExtraStringData);
+
+    /**
+     * This attribute is true when this interface is active and should
+     * observe http activities. When false, observeActivity() should not
+     * be called. It is present for compatibility reasons and should be
+     * implemented only by nsHttpActivityDistributor.
+     */
+    [must_use] readonly attribute boolean isActive;
+
+    /**
+     * This function is for internal use only. Every time a http transaction
+     * is created in socket process, we use this function to set the value of
+     * |isActive|. We need this since the real value of |isActive| is
+     * only available in parent process.
+     */
+    [noscript] void setIsActive(in boolean aActived);
+
+    /**
+     * This function is used when the real http channel is not available.
+     * We use the information in |HttpActivityArgs| to get the http channel or
+     * create a |NullHttpChannel|.
+     *
+     * @param aArgs
+     *        See the definition of |HttpActivityArgs| in PSocketProcess.ipdl.
+     */
+    [noscript, must_use]
+    void observeActivityWithArgs(in HttpActivityArgs aArgs,
+                                 in uint32_t aActivityType,
+                                 in uint32_t aActivitySubtype,
+                                 in PRTime   aTimestamp,
+                                 in uint64_t aExtraSizeData,
+                                 in ACString aExtraStringData);
+
+    const unsigned long ACTIVITY_TYPE_SOCKET_TRANSPORT     = 0x0001;
+    const unsigned long ACTIVITY_TYPE_HTTP_TRANSACTION     = 0x0002;
+
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_HEADER    = 0x5001;
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_BODY_SENT = 0x5002;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_START    = 0x5003;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_HEADER   = 0x5004;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_COMPLETE = 0x5005;
+    const unsigned long ACTIVITY_SUBTYPE_TRANSACTION_CLOSE = 0x5006;
+
+    /**
+     *  When aActivityType is ACTIVITY_TYPE_SOCKET_TRANSPORT
+     *  and aActivitySubtype is STATUS_SENDING_TO
+     *  aExtraSizeData will contain the count of bytes sent
+     *  There may be more than one of these activities reported
+     *  for a single http transaction, each aExtraSizeData
+     *  represents only that portion of the total bytes sent
+     *
+     *  When aActivityType is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *  and aActivitySubtype is ACTIVITY_SUBTYPE_REQUEST_HEADER
+     *  aExtraStringData will contain the text of the header
+     *
+     *  When aActivityType is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *  and aActivitySubtype is ACTIVITY_SUBTYPE_RESPONSE_HEADER
+     *  aExtraStringData will contain the text of the header
+     *
+     *  When aActivityType is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *  and aActivitySubtype is ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+     *  aExtraSizeData will contain the count of total bytes received
+     */
+};
+
+%{C++
+
+#define NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT    \
+            nsIHttpActivityObserver::ACTIVITY_TYPE_SOCKET_TRANSPORT
+#define NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION    \
+            nsIHttpActivityObserver::ACTIVITY_TYPE_HTTP_TRANSACTION
+
+#define NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER    \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_REQUEST_HEADER
+#define NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_BODY_SENT \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_REQUEST_BODY_SENT
+#define NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_START    \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_RESPONSE_START
+#define NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER   \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_RESPONSE_HEADER
+#define NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+#define NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+
+%}
+
+/**
+ * nsIHttpActivityDistributor
+ *
+ * This interface provides a way to register and unregister observers to the
+ * http activities.
+ */
+[scriptable, builtinclass, uuid(7C512CB8-582A-4625-B5B6-8639755271B5)]
+interface nsIHttpActivityDistributor : nsIHttpActivityObserver
+{
+    void addObserver(in nsIHttpActivityObserver aObserver);
+    void removeObserver(in nsIHttpActivityObserver aObserver);
+};

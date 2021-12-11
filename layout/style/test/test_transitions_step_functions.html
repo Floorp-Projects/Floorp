@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435441
+-->
+<head>
+  <title>Test for Bug 435441</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  p.transition {
+    transition: margin-top 100s linear;
+  }
+
+  </style>
+</head>
+<body>
+<div id="display">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for transition step functions **/
+
+var display = document.getElementById("display");
+
+function run_test(tf, percent, value)
+{
+  var p = document.createElement("p");
+  p.className = "transition";
+  p.style.marginTop = "0px";
+  // be this percent of the way through a 100s transition
+  p.style.transitionDelay = (percent * -100) + "s";
+  p.style.transitionTimingFunction = tf;
+  display.appendChild(p);
+  var cs = getComputedStyle(p, "");
+  var flush1 = cs.marginTop;
+
+  p.style.marginTop = "1000px";
+  var result = px_to_num(cs.marginTop) / 1000
+
+  is(result, value, 100 * percent + "% of the way through " + tf);
+
+  display.removeChild(p);
+}
+
+run_test("step-start", 0, 1);
+run_test("step-start", 0.001, 1);
+run_test("step-start", 0.999, 1);
+run_test("step-start", 1, 1);
+run_test("step-end", 0, 0);
+run_test("step-end", 0.001, 0);
+run_test("step-end", 0.999, 0);
+run_test("step-end", 1, 1);
+
+run_test("steps(2)", 0.00, 0.0);
+run_test("steps(2)", 0.49, 0.0);
+run_test("steps(2)", 0.50, 0.5);
+run_test("steps(2)", 0.99, 0.5);
+run_test("steps(2)", 1.00, 1.0);
+
+run_test("steps(2, end)", 0.00, 0.0);
+run_test("steps(2, end)", 0.49, 0.0);
+run_test("steps(2, end)", 0.50, 0.5);
+run_test("steps(2, end)", 0.99, 0.5);
+run_test("steps(2, end)", 1.00, 1.0);
+
+run_test("steps(2, start)", 0.00, 0.5);
+run_test("steps(2, start)", 0.49, 0.5);
+run_test("steps(2, start)", 0.50, 1.0);
+run_test("steps(2, start)", 0.99, 1.0);
+run_test("steps(2, start)", 1.00, 1.0);
+
+run_test("steps(8,end)", 0.00, 0.0);
+run_test("steps(8,end)", 0.10, 0.0);
+run_test("steps(8,end)", 0.20, 0.125);
+run_test("steps(8,end)", 0.30, 0.25);
+run_test("steps(8,end)", 0.40, 0.375);
+run_test("steps(8,end)", 0.49, 0.375);
+run_test("steps(8,end)", 0.50, 0.5);
+run_test("steps(8,end)", 0.60, 0.5);
+run_test("steps(8,end)", 0.70, 0.625);
+run_test("steps(8,end)", 0.80, 0.75);
+run_test("steps(8,end)", 0.90, 0.875);
+run_test("steps(8,end)", 1.00, 1.0);
+
+// steps(_, jump-*)
+run_test("steps(2, jump-start)", 0.00, 0.5);
+run_test("steps(2, jump-start)", 0.49, 0.5);
+run_test("steps(2, jump-start)", 0.50, 1.0);
+run_test("steps(2, jump-start)", 0.99, 1.0);
+run_test("steps(2, jump-start)", 1.00, 1.0);
+
+run_test("steps(2, jump-end)", 0.00, 0.0);
+run_test("steps(2, jump-end)", 0.49, 0.0);
+run_test("steps(2, jump-end)", 0.50, 0.5);
+run_test("steps(2, jump-end)", 0.99, 0.5);
+run_test("steps(2, jump-end)", 1.00, 1.0);
+
+run_test("steps(1, jump-both)", 0.00, 0.5);
+run_test("steps(1, jump-both)", 0.10, 0.5);
+run_test("steps(1, jump-both)", 0.99, 0.5);
+run_test("steps(1, jump-both)", 1.00, 1.0);
+
+run_test("steps(3, jump-both)", 0.00, 0.25);
+run_test("steps(3, jump-both)", 0.33, 0.25);
+run_test("steps(3, jump-both)", 0.34, 0.5);
+run_test("steps(3, jump-both)", 0.66, 0.5);
+run_test("steps(3, jump-both)", 0.67, 0.75);
+run_test("steps(3, jump-both)", 0.99, 0.75);
+run_test("steps(3, jump-both)", 1.00, 1.0);
+
+run_test("steps(2, jump-none)", 0.00, 0.0);
+run_test("steps(2, jump-none)", 0.49, 0.0);
+run_test("steps(2, jump-none)", 0.50, 1.0);
+run_test("steps(2, jump-none)", 1.00, 1.0);
+
+run_test("steps(3, jump-none)", 0.00, 0.0);
+run_test("steps(3, jump-none)", 0.33, 0.0);
+run_test("steps(3, jump-none)", 0.34, 0.5);
+run_test("steps(3, jump-none)", 0.66, 0.5);
+run_test("steps(3, jump-none)", 0.67, 1.0);
+run_test("steps(3, jump-none)", 1.00, 1.0);
+
+</script>
+</pre>
+</body>
+</html>

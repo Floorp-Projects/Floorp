@@ -1,0 +1,43 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Core
+  component: "ImageLib"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: highway
+
+  description: Performance-portable, length-agnostic SIMD with runtime dispatch
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://github.com/google/highway
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: commit e2397743fe092df68b760d358253773699a16c93 (2021-06-09T08:56:32Z).
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: e2397743fe092df68b760d358253773699a16c93
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: Apache-2.0
+
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/google/highway.git
+  source-hosting: github
+  vendor-directory: third_party/highway
+
+  exclude:
+    - g3doc/

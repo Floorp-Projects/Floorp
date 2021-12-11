@@ -1,0 +1,7 @@
+.ds-hr {
+  @include ds-border-top {
+    border: 0;
+  };
+
+  height: 0;
+}

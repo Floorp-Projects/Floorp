@@ -1,0 +1,33 @@
+# PngSuite - Basic formats (non-interlaced)
+
+
+# basn0g01 - black & white
+== basn0g01.png basn0g01.html
+# basn0g02 - 2 bit (4 level) grayscale
+== basn0g02.png basn0g02.html
+# basn0g04 - 4 bit (16 level) grayscale
+== basn0g04.png basn0g04.html
+# basn0g08 - 8 bit (256 level) grayscale
+== basn0g08.png basn0g08.html
+# basn0g16 - 16 bit (64k level) grayscale
+== basn0g16.png basn0g16.html
+# basn2c08 - 3x8 bits rgb color
+== basn2c08.png basn2c08.html
+# basn2c16 - 3x16 bits rgb color
+== basn2c16.png basn2c16.html
+# basn3p01 - 1 bit (2 color) paletted
+== basn3p01.png basn3p01.html
+# basn3p02 - 2 bit (4 color) paletted
+== basn3p02.png basn3p02.html
+# basn3p04 - 4 bit (16 color) paletted
+== basn3p04.png basn3p04.html
+# basn3p08 - 8 bit (256 color) paletted
+== basn3p08.png basn3p08.html
+# basn4a08 - 8 bit grayscale + 8 bit alpha-channel
+#== basn4a08.png basn4a08.html
+# basn4a16 - 16 bit grayscale + 16 bit alpha-channel
+#== basn4a16.png basn4a16.html
+# basn6a08 - 3x8 bits rgb color + 8 bit alpha-channel
+#== basn6a08.png basn6a08.html
+# basn6a16 - 3x16 bits rgb color + 16 bit alpha-channel
+#== basn6a16.png basn6a16.html

@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=123456
+-->
+<window title="Mozilla Bug 123456"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=123456"
+     target="_blank">Mozilla Bug 123456</a>
+
+  <div id="content" style="display: none">
+    <input id="fileList" type="file"></input>
+  </div>
+
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 123456 **/
+
+  var fileNum = 0;
+
+  /**
+   * Create a file which contains the given data and optionally adds the specified file extension.
+   */
+  function createFileWithData(fileData, /** optional */ extension) {
+    var testFile = Cc["@mozilla.org/file/directory_service;1"]
+                       .getService(Ci.nsIProperties)
+                       .get("ProfD", Ci.nsIFile);
+    var fileExtension = (extension == undefined) ? "" : "." + extension;
+    testFile.append("workerFile" + fileNum++ + fileExtension);
+
+    var outStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                        .createInstance(Ci.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0o666, 0);
+    outStream.write(fileData, fileData.length);
+    outStream.close();
+
+    var fileList = document.getElementById('fileList');
+    fileList.value = testFile.path;
+
+    return fileList.files[0];
+  }
+
+  /**
+   * Create a worker to access file properties.
+   */
+  function accessFileProperties(file, expectedSize, expectedType) {
+    waitForWorkerFinish();
+
+    var worker = new Worker("file_worker.js");
+
+    worker.onerror = function(event) {
+      ok(false, "Worker had an error: " + event.message);
+      finish();
+    };
+
+    worker.onmessage = function(event) {
+      is(event.data.size, expectedSize, "size proproperty accessed from worker is not the same as on main thread.");
+      is(event.data.type, expectedType, "type proproperty accessed from worker is incorrect.");
+      is(event.data.name, file.name, "name proproperty accessed from worker is incorrect.");
+      is(event.data.lastModified, file.lastModified, "lastModified proproperty accessed from worker is incorrect.");
+      finish();
+    };
+
+    worker.postMessage(file);
+  }
+
+  // Empty file.
+  accessFileProperties(createFileWithData(""), 0, "");
+
+  // Typical use case.
+  accessFileProperties(createFileWithData("Hello"), 5, "");
+
+  // Longish file.
+  var text = "";
+  for (var i = 0; i < 10000; ++i) {
+    text += "long";
+  }
+  accessFileProperties(createFileWithData(text), 40000, "");
+
+  // Type detection based on extension.
+  accessFileProperties(createFileWithData("text", "txt"), 4, "text/plain");
+
+  ]]>
+  </script>
+</window>

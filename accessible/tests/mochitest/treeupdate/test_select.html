@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML select options test</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    function addOptions(aID) {
+      this.selectNode = getNode(aID);
+      this.select = getAccessible(this.selectNode);
+      this.selectList = this.select.firstChild;
+
+      this.invoke = function addOptions_invoke() {
+        for (let i = 0; i < 2; i++) {
+          var opt = document.createElement("option");
+          opt.value = i;
+          opt.text = "Option: Value " + i;
+
+          this.selectNode.add(opt, null);
+        }
+      };
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.selectList),
+      ];
+
+      this.finalCheck = function addOptions_finalCheck() {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { COMBOBOX_OPTION: [
+                { TEXT_LEAF: [] },
+              ] },
+              { COMBOBOX_OPTION: [
+                { TEXT_LEAF: [] },
+              ] },
+            ] },
+          ] };
+        testAccessibleTree(this.select, tree);
+      };
+
+      this.getID = function addOptions_getID() {
+        return "test elements insertion into a select";
+      };
+    }
+
+    function removeOptions(aID) {
+      this.selectNode = getNode(aID);
+      this.select = getAccessible(this.selectNode);
+      this.selectList = this.select.firstChild;
+
+      this.invoke = function removeOptions_invoke() {
+        while (this.selectNode.length)
+          this.selectNode.remove(0);
+      };
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.selectList),
+      ];
+
+      this.finalCheck = function removeOptions_finalCheck() {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [] },
+          ] };
+        testAccessibleTree(this.select, tree);
+      };
+
+      this.getID = function removeptions_getID() {
+        return "test elements removal from a select";
+      };
+    }
+
+    /**
+     * Setting role=option on option makes the accessible recreate.
+     */
+    function setRoleOnOption() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, "s2_o"),
+        new invokerChecker(EVENT_SHOW, "s2_o"),
+      ];
+
+      this.invoke = function setRoleOnOption_setRole() {
+        getNode("s2_o").setAttribute("role", "option");
+      };
+
+      this.finalCheck = function() {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { COMBOBOX_OPTION: [ ] },
+            ] },
+          ] };
+        testAccessibleTree("s2", tree);
+      };
+
+      this.getID = function removeptions_getID() {
+        return "setting role=option on select option";
+      };
+    }
+
+    /**
+     * Setting multiple on select makes the accessible recreate.
+     */
+     function setMultipleOnSelect() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, "s3"),
+        new invokerChecker(EVENT_SHOW, "s3"),
+      ];
+
+      this.invoke = function setRoleOnOption_setRole() {
+        getNode("s3").multiple = true;
+      };
+
+      this.finalCheck = function() {
+        var tree =
+          { LISTBOX: [
+            { OPTION: [ ] },
+          ] };
+        testAccessibleTree("s3", tree);
+      };
+
+      this.getID = function removeptions_getID() {
+        return "setting multiple on select element";
+      };
+    }
+
+
+    /**
+     * Removing size on select makes the accessible recreate.
+     */
+     function removeSizeFromSelect() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, "s4"),
+        new invokerChecker(EVENT_SHOW, "s4"),
+      ];
+
+      this.invoke = function setRoleOnOption_setRole() {
+        getNode("s4").removeAttribute("size");
+      };
+
+      this.finalCheck = function() {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { COMBOBOX_OPTION: [ ] },
+            ] },
+          ] };
+        testAccessibleTree("s4", tree);
+      };
+
+      this.getID = function removeptions_getID() {
+        return "removing size from select element";
+      };
+    }
+
+    function doTest() {
+      const gQueue = new eventQueue();
+
+      gQueue.push(new addOptions("select"));
+      gQueue.push(new removeOptions("select"));
+      gQueue.push(new setRoleOnOption());
+      gQueue.push(new setMultipleOnSelect());
+      gQueue.push(new removeSizeFromSelect());
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="select"></select>
+  <select id="s2"><option id="s2_o"></option></select>
+  <select id="s3"><option></option></select>
+  <select id="s4" size="3"><option></option></select>
+</body>
+</html>

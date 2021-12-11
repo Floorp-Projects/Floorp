@@ -1,0 +1,97 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIProtocolProxyService;
+interface nsIProxyInfo;
+interface nsIURI;
+
+/**
+ * Recipient of the result of implementers of nsIProtocolProxy(Channel)Filter
+ * allowing the proxyinfo be provided asynchronously.
+ */
+[scriptable, uuid(009E6C3F-FB64-40C5-8093-F1495C64773E)]
+interface nsIProxyProtocolFilterResult : nsISupports
+{
+  /**
+   * It's mandatory to call this method exactly once when the applyFilter()
+   * implementation doesn't throw and to not call it when applyFilter() does
+   * throw.
+   *
+   * It's mandatory to call this method on the same thread as the call to
+   * applyFilter() has been made on.
+   *
+   * Following the above conditions, can be called either from within
+   * applyFilter() or asynchronouly any time later.
+   */
+  void onProxyFilterResult(in nsIProxyInfo aProxy);
+};
+
+/**
+ * This interface is used to apply filters to the proxies selected for a given
+ * URI.  Use nsIProtocolProxyService::registerFilter to hook up instances of
+ * this interface. See also nsIProtocolProxyChannelFilter.
+ */
+[scriptable, uuid(f424abd3-32b4-456c-9f45-b7e3376cb0d1)]
+interface nsIProtocolProxyFilter : nsISupports
+{
+  /**
+   * This method is called to apply proxy filter rules for the given URI
+   * and proxy object (or list of proxy objects).
+   *
+   * @param aURI
+   *        The URI for which these proxy settings apply.
+   * @param aProxy
+   *        The proxy (or list of proxies) that would be used by default for
+   *        the given URI.  This may be null.
+   *
+   * @param aCallback
+   *        An object that the implementer is obligated to call on with
+   *        the result (from within applyFilter() or asynchronously) when
+   *        applyFilter didn't throw.  The argument passed to onProxyFilterResult
+   *        is the proxy (or list of proxies) that should be used in place of
+   *        aProxy.  This can be just be aProxy if the filter chooses not to
+   *        modify the proxy.  It can also be null to indicate that a direct
+   *        connection should be used.  Use nsIProtocolProxyService.newProxyInfo
+   *        to construct nsIProxyInfo objects.
+   */
+  void applyFilter(in nsIURI aURI, in nsIProxyInfo aProxy,
+                   in nsIProxyProtocolFilterResult aCallback);
+};
+
+/**
+ * This interface is used to apply filters to the proxies selected for a given
+ * channel.  Use nsIProtocolProxyService::registerChannelFilter to hook up instances of
+ * this interface. See also nsIProtocolProxyFilter.
+ */
+[scriptable, uuid(245b0880-82c5-4e6e-be6d-bc586aa55a90)]
+interface nsIProtocolProxyChannelFilter : nsISupports
+{
+  /**
+   * This method is called to apply proxy filter rules for the given channel
+   * and proxy object (or list of proxy objects).
+   *
+   * @param aChannel
+   *        The channel for which these proxy settings apply.
+   * @param aProxy
+   *        The proxy (or list of proxies) that would be used by default for
+   *        the given channel. This may be null.
+   *
+   * @param aCallback
+   *        An object that the implementer is obligated to call on with
+   *        the result (from within applyFilter() or asynchronously) when
+   *        applyFilter didn't throw.  The argument passed to onProxyFilterResult
+   *        is the proxy (or list of proxies) that should be used in place of
+   *        aProxy.  This can be just be aProxy if the filter chooses not to
+   *        modify the proxy.  It can also be null to indicate that a direct
+   *        connection should be used.  Use nsIProtocolProxyService.newProxyInfo
+   *        to construct nsIProxyInfo objects.
+   */
+  void applyFilter(in nsIChannel aChannel, in nsIProxyInfo aProxy,
+                   in nsIProxyProtocolFilterResult aCallback);
+};

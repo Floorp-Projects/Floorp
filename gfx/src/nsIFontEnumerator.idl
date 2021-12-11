@@ -1,0 +1,78 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(924d98d9-3518-4cb4-8708-c74fe8e3ec3c)]
+interface nsIFontEnumerator : nsISupports
+{
+  /**
+   * Return a sorted array of the names of all installed fonts.
+   *
+   * @return array of names
+   * @return void
+   */
+  Array<AString> EnumerateAllFonts();
+
+  /**
+   * Return a sorted array of names of fonts that support the given language
+   * group and are suitable for use as the given CSS generic font.
+   *
+   * @param  aLangGroup language group
+   * @param  aGeneric   CSS generic font
+   * @return            array of names
+   * @return void
+   */
+  Array<AString> EnumerateFonts(in string aLangGroup, in string aGeneric);
+
+  /**
+   * Return a promise that resolves to a sorted array of the names of all
+   * installed fonts.
+   *
+   * @return Promise that resolves to Array
+   */
+  [implicit_jscontext]
+  jsval EnumerateAllFontsAsync();
+
+  /**
+   * Return a promise that resolves to a sorted array of names of fonts
+   * that support the given language group and are suitable for use as the given
+   * CSS generic font.
+   *
+   * @param  aLangGroup language group
+   * @param  aGeneric   CSS generic font
+   * @return Promise that resolves to Array
+   */
+  [implicit_jscontext]
+  jsval EnumerateFontsAsync(in string aLangGroup, in string aGeneric);
+
+  /**
+    @param  aLangGroup language group
+    @return bool do we have a font for this language group
+   */
+  void HaveFontFor(in string aLangGroup, [retval] out boolean aResult);
+
+  /**
+   * @param  aLangGroup language group
+   * @param  aGeneric CSS generic font
+   * @return suggested default font for this language group and generic family
+   */
+  wstring getDefaultFont(in string aLangGroup, in string aGeneric);
+
+  /**
+   * update the global font list
+   * return true if font list is changed
+   */
+  boolean updateFontList();
+
+  /**
+   * get the standard family name on the system from given family
+   * @param  aName family name which may be alias
+   * @return the standard family name on the system, if given name does not
+   *         exist, returns empty string
+   */
+  wstring getStandardFamilyName(in wstring aName);
+};

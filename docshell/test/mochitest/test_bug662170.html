@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=662170
+-->
+<head>
+  <title>Test for Bug 662170</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=662170">Mozilla Bug 662170</a>
+
+<script type="application/javascript">
+
+/** Test for Bug 662170 **/
+SimpleTest.waitForExplicitFinish();
+
+function childLoad() {
+  // Spin the event loop so we leave the onload handler.
+  SimpleTest.executeSoon(childLoad2);
+}
+
+function childLoad2() {
+  let cw = $("iframe").contentWindow;
+
+  // When we initially load the page, we should be at the top.
+  is(cw.pageYOffset, 0, "Initial Y offset should be 0.");
+
+  // Scroll the iframe to the bottom.
+  cw.scrollTo(0, 300);
+
+  // Did we actually scroll somewhere?
+  isnot(Math.round(cw.pageYOffset), 0, "Y offset should be non-zero after scrolling.");
+
+  // Now load file_bug662170.html#, which should take us to the top of the
+  // page.
+  cw.location = cw.location + "#";
+
+  is(cw.pageYOffset, 0, "Correct Y offset after loading #.");
+  SimpleTest.finish();
+}
+
+</script>
+
+<!-- When the iframe loads, it calls childLoad(). -->
+<iframe height='100px' id='iframe' src='file_bug662170.html'></iframe>
+
+</body>
+</html>

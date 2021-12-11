@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBDatabase;
+include protocol PBackgroundMutableFile;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct CreateFileRequestResponse
+{
+  PBackgroundMutableFile mutableFile;
+};
+
+union DatabaseRequestResponse
+{
+  nsresult;
+  CreateFileRequestResponse;
+};
+
+protocol PBackgroundIDBDatabaseRequest
+{
+  manager PBackgroundIDBDatabase;
+
+child:
+  async __delete__(DatabaseRequestResponse response);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

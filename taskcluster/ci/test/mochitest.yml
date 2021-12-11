@@ -1,0 +1,1131 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    suite:
+        category: mochitest
+    target:
+        by-test-platform:
+            android-em-7.*: geckoview-androidTest.apk
+            android-hw.*: geckoview-androidTest.apk
+            default: null
+    tier:
+        by-variant:
+            fission(-xorigin)?:
+                by-test-platform:
+                    linux.*64.*-qr/debug: 1
+                    default: 2
+            default:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    default: default
+    mozharness:
+        script:
+            by-test-platform:
+                android-em.*: android_emulator_unittest.py
+                android-hw.*: android_hardware_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android-em-7.*:
+                    - android/android_common.py
+                    - android/android-x86_64.py
+                android-hw.*:
+                    - android/android_common.py
+                    - android/android_hw.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_unittest.py
+    python-3: true
+
+mochitest-plain:
+    description: "Mochitest plain run"
+    treeherder-symbol: M()
+    schedules-component: mochitest-plain
+    loopback-video: true
+    virtualization: virtual
+    variants:
+        - fission
+        - fission-xorigin
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)-qr/debug: ['autoland', 'mozilla-central']
+                    (linux.*64|macosx.*64|windows10-64-2004)-qr/opt: ['autoland']
+                    (linux.*64|macosx.*64|windows10-64-2004)-shippable-qr/opt: ['autoland', 'mozilla-central']
+                    linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
+                    linux.*64-ccov-qr/opt: ['mozilla-central']
+                    default: []
+            fission-xorigin:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['trunk']
+                    linux.*64-ccov-qr/opt: ['mozilla-central']
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux1804-64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux1804-64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux1804-64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    linux.*64-ccov-qr/opt: []
+                    default: built-projects
+    chunks:
+        by-test-platform:
+            android-em-7.*: 4
+            linux.*/debug: 16
+            linux.*64-asan/opt: 10
+            linux.*64-tsan-qr/opt: 20
+            linux.*64-.*cov/opt: 10
+            windows10-64-2004-ccov.*/.*: 10
+            macosx.*64-ccov.*/.*: 10
+            default: 5
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
+    e10s: true
+    max-run-time: 5400
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        extra-options:
+            by-test-platform:
+                android-em.*:
+                    - --test-suite=mochitest-plain
+                default: []
+        chunked:
+            by-test-platform:
+                android-em.*: false
+                default: true
+
+mochitest-a11y:
+    description: "Mochitest a11y run"
+    treeherder-symbol: M(a11y)
+    schedules-component: mochitest-a11y
+    test-manifest-loader: default  # ensure we don't run with manifest-scheduling
+    loopback-video: true
+    e10s: false
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    default: built-projects
+    mozharness:
+        mochitest-flavor: a11y
+
+mochitest-browser-chrome:
+    description: "Mochitest browser-chrome run"
+    suite:
+        name: mochitest-browser-chrome
+    treeherder-symbol: M(bc)
+    schedules-component: mochitest-browser-chrome
+    loopback-video: true
+    variants:
+        - fission
+        - webrender-sw
+        - webrender-sw-a11y-checks
+        - webrender-sw-fission
+        - webrender-sw-wayland
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    (windows10-64-2004|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64(-asan)?-qr/(opt|debug): ['all']
+                    linux.*64-tsan-qr/opt: ['trunk']
+                    linux.*64-shippable-qr/opt: ['release']
+                    linux.*64(-shippable)?-qr/opt: built-projects
+                    linux.*64-devedition-qr/opt: built-projects
+                    windows10-64-2004-qr/debug: built-projects
+                    default: []
+            webrender-sw-a11y-checks: []  # run-on-projects defined in variant config
+            webrender-sw-fission:
+                by-test-platform:
+                    linux.*64(-asan|-shippable)?-qr/(opt|debug): ['trunk']
+                    linux.*64-ccov-qr/opt: ['mozilla-central']
+                    default: []
+            webrender-sw-wayland: []
+            default:
+                by-test-platform:
+                    linux.*-qr/.*: []
+                    linux.*64-ccov-qr/opt: []
+                    default: built-projects
+    tier:
+        by-variant:
+            fission(-xorigin)?:
+                by-test-platform:
+                    linux.*64-qr/debug: 1
+                    default: 2
+            webrender-sw:
+                by-test-platform:
+                    linux.*64(-asan|-shippable)?-qr/(opt|debug): 1
+                    default: default
+            webrender-sw-fission:
+                by-test-platform:
+                    linux.*64-qr/debug: 1
+                    default: 2
+            default: default
+    chunks:
+        by-test-platform:
+            linux.*-qr/debug: 16
+            linux.*64-asan-qr/opt: 16
+            linux.*64-tsan-qr/opt: 32
+            macosx.*64/debug: 16
+            windows10-64-2004-ccov.*/.*: 14
+            windows10.*-asan-qr/opt: 9
+            windows10-32-qr/debug: 12
+            default: 7
+    max-run-time:
+        by-test-platform:
+            linux.*64-ccov.*/.*: 9000
+            windows10-64-2004-ccov.*/.*: 10800
+            macosx.*64-ccov.*/.*: 10800
+            linux.*64-tsan-qr/opt: 10800
+            linux.*-qr/opt: 5400
+            .*/debug: 5400
+            default: 3600
+    mozharness:
+        mochitest-flavor: browser
+        chunked: true
+    # Bug 1281241: migrating to m3.large instances
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
+    allow-software-gl-layers: false
+
+mochitest-browser-chrome-failures:
+    description: "Mochitest failures for browser chrome run"
+    treeherder-symbol: M-f(bc)
+    schedules-component: mochitest-browser-chrome
+    suite:
+        name: mochitest-browser-chrome
+    loopback-video: true
+    allow-software-gl-layers: false
+    tier: 3
+    chunks: 2
+    max-run-time: 2700
+    e10s: true
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default: ['mozilla-central']
+    mozharness:
+        mochitest-flavor: browser
+        chunked: true
+        extra-options:
+            by-test-platform:
+                macosx1100.*:
+                    - --run-failures=apple_silicon
+                    - --timeout-as-pass
+                    - --crash-as-pass
+                macosx1015.*:
+                    - --run-failures=apple_catalina
+                    - --timeout-as-pass
+                    - --crash-as-pass
+                windows10-64-2004-*.*:
+                    - --run-failures=win10_2004
+                    - --timeout-as-pass
+                    - --crash-as-pass
+
+browser-screenshots:
+    description: "Browser Screenshots"
+    suite:
+        name: mochitest-browser-chrome-screenshots
+    treeherder-symbol: M(ss)
+    loopback-video: true
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64/debug: ['mozilla-central']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64/debug: ['mozilla-central']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64/debug: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    windows7-32(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
+                    windows10-64(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
+                    (?:windows10-64|windows7-32|linux1804-64|macosx1014-64)(?:-qr)?/opt: ['autoland']
+                    linux1804-64-(?:shippable)(?:-qr)?/opt: ['mozilla-central']
+                    macosx.*64-shippable/opt: ['mozilla-central']
+                    default: []
+    max-run-time: 3600
+    mozharness:
+        mochitest-flavor: browser
+    allow-software-gl-layers: false
+
+mochitest-chrome:
+    description: "Mochitest chrome run"
+    treeherder-symbol: M(c)
+    schedules-component: mochitest-chrome
+    loopback-video: true
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    default: built-projects
+    chunks:
+        by-test-platform:
+            .*(-ccov|-qr).*/.*: 3
+            windows10-64-2004-ccov-qr/opt: 3
+            .*-asan(-qr)?/opt: 3
+            .*-tsan-qr/opt: 6
+            (linux.*64|windows.*|macosx1015-64)/debug: 3
+            default: 2
+    max-run-time: 3600
+    e10s: false
+    mozharness:
+        mochitest-flavor: chrome
+        chunked: true
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
+
+mochitest-devtools-chrome:
+    description: "Mochitest devtools-chrome run"
+    suite:
+        name: mochitest-devtools-chrome
+    schedules-component: mochitest-browser-chrome
+    treeherder-symbol: M(dt)
+    loopback-video: true
+    variants:
+        - a11y-checks
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            a11y-checks:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: built-projects
+                    default: []
+            fission:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/(opt|debug): ['trunk']
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): ['trunk']
+                    linux.*64-ccov-qr/opt: ["mozilla-central"]
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-ccov-qr/opt: []
+                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    linux.*64-ccov-qr/opt: []
+                    default: built-projects
+    tier:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/(opt|debug): 1
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): 1
+                    default: 2
+            default: default
+    max-run-time:
+        by-test-platform:
+            windows10-64-2004-ccov.*/.*: 10800
+            macosx.*64-ccov.*/.*: 9000
+            linux.*64-ccov.*/.*: 7200
+            linux.*64-tsan-qr/opt: 7200
+            default: 5400
+    chunks:
+        by-test-platform:
+            .*-ccov.*/.*: 12
+            linux.*64-qr/debug: 12
+            macosx.*64-qr/debug: 8
+            .*-asan(-qr)?/opt: 8
+            .*-tsan-qr/opt: 16
+            default: 5
+    mozharness:
+        mochitest-flavor: chrome
+        chunked: true
+    instance-size:
+        by-test-platform:
+            linux.*64-[at]san(-qr)?/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
+    # Bug 1296086: high number of intermittents observed with software GL and large instances
+    allow-software-gl-layers: false
+
+mochitest-plain-gpu:
+    description: "Mochitest plain GPU run"
+    suite:
+        name: mochitest-plain-gpu
+    treeherder-symbol: M(gpu)
+    schedules-component: mochitest-plain
+    loopback-video: true
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    default: built-projects
+    virtualization: virtual-with-gpu
+    e10s: true
+    tier:
+        by-variant:
+            fission: 2
+            default:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    default: default
+    mozharness:
+        mochitest-flavor: plain
+        extra-options:
+            by-test-platform:
+                android.*:
+                    # note that Android runs fewer suites than other platforms
+                    - --test-suite=mochitest-plain-gpu
+                default:
+                    - --mochitest-suite=mochitest-plain-gpu
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
+
+mochitest-chrome-gpu:
+    description: "Mochitest chrome GPU run"
+    suite:
+        name: mochitest-chrome-gpu
+    treeherder-symbol: M(gpu-c)
+    loopback-video: true
+    virtualization: virtual-with-gpu
+    e10s: true
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android.*/.*: []
+                    default: built-projects
+    tier:
+        by-variant:
+            fission: 2
+            default: default
+    mozharness:
+        mochitest-flavor: chrome
+        extra-options:
+            by-test-platform:
+                android.*:
+                    # note that Android runs fewer suites than other platforms
+                    - --test-suite=mochitest-chrome-gpu
+                default:
+                    - --mochitest-suite=mochitest-chrome-gpu
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
+
+mochitest-media:
+    description: "Mochitest media run"
+    treeherder-symbol: M(mda)
+    schedules-component: mochitest-plain
+    max-run-time:
+        by-test-platform:
+            windows10-64-2004-ccov.*/.*: 7200
+            macosx.*64-ccov.*/.*: 7200
+            linux.*64-tsan-qr/opt: 7200
+            default: 5400
+    variants:
+        - fission
+        - fission-webgl-ipc
+        - socketprocess
+        - wayland
+        - webgl-ipc
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    (linux.*64|windows10-64-2004)-qr/debug: ['autoland', 'mozilla-central']
+                    (linux.*64|windows10-64-2004)-qr/opt: ['autoland']
+                    (linux.*64|windows10-64-2004)-shippable-qr/opt: ['mozilla-central']
+                    linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
+                    default: []
+            fission-webgl-ipc:
+                by-test-platform:
+                    (linux.*64|windows10-64-2004)-qr/debug: ['autoland', 'mozilla-central']
+                    (linux.*64|windows10-64-2004)-qr/opt: ['autoland']
+                    (linux.*64|windows10-64-2004)-shippable-qr/opt: ['mozilla-central']
+                    linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
+                    (linux|windows10-64-2004|macos)(?!.*-qr).*: []
+                    default: []
+            socketprocess:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: ['autoland', 'mozilla-central']
+                    android-hw-.*-aarch64-qr/debug: built-projects
+                    linux.*64(-asan|-devedition|-shippable)?-qr/(opt|debug): built-projects
+                    linux.*64-tsan-qr/opt: ['autoland', 'mozilla-central']
+                    macosx.*-64(-devedition|-shippable)?-qr/(opt|debug): built-projects
+                    windows10-(32|64)-2004(-devedition|-shippable)?-qr/(opt|debug): built-projects
+                    windows10-64-2004-asan-qr/opt: ['autoland', 'mozilla-central']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: ['autoland', 'mozilla-central']
+                    default: []
+            webgl-ipc:
+                by-test-platform:
+                    linux.*64(-shippable|-asan|-tsan)?-qr/opt: ['autoland', 'mozilla-central']
+                    macosx.*64(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
+                    windows10-(32|64)-2004(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
+                    windows10-64-2004-asan-qr/opt: ['autoland', 'mozilla-central']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: ['autoland', 'mozilla-central']
+                    linux1804-64-qr/debug: ['autoland', 'mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    android-hw-.*/opt: []
+                    android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    .*-tsan-qr/opt: ['trunk']
+                    linux.*(asan|ccov)/opt: []
+                    .*(ccov/|asan/|-32).*: built-projects
+                    (android|linux|windows10-64-2004|macos)(?!.*-qr).*: []
+                    windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    default: built-projects
+    loopback-video: true
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
+            default: large
+    chunks:
+        by-test-platform:
+            android-em-7.*: 1
+            windows10-64-2004.*: 1
+            macosx.*64.*/.*: 2
+            windows10-aarch64-qr/.*: 1
+            windows.*32-shippable/.*: 2
+            linux1804-64(-shippable|-devedition|-.*qr)/opt: 2
+            linux.*64-tsan-qr/opt: 4
+            default: 3
+    mozharness:
+        mochitest-flavor: plain
+        chunked:
+            by-test-platform:
+                android.*: false
+                macosx.*64.*: false
+                windows10-64-2004.*: false
+                default: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
+    tier:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64.*-qr/debug: 1
+                    default: 2
+            fission-webgl-ipc: 2
+            default:
+                by-test-platform:
+                    android-em.*: 1
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    windows10-aarch64-qr.*: 2
+                    android-hw.*: 1
+                    default: default
+
+mochitest-media-failures:
+    description: "Mochitest failures for mochitest media run"
+    treeherder-symbol: M-f(mda)
+    schedules-component: mochitest-plain
+    suite:
+        name: mochitest-media
+    loopback-video: true
+    allow-software-gl-layers: false
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: ['mozilla-central']
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            default: ['mozilla-central']
+    tier: 3
+    chunks:
+        by-test-platform:
+            macosx1100.*: 2
+            macosx1015.*: 1
+    max-run-time: 2700
+    e10s: true
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+        extra-options:
+            by-test-platform:
+                macosx1100.*:
+                    - --setpref=webgl.out-of-process=false
+                    - --run-failures=apple_silicon
+                    - --timeout-as-pass
+                    - --crash-as-pass
+                macosx1015.*:
+                    - --setpref=webgl.out-of-process=false
+                    - --run-failures=apple_catalina
+                    - --timeout-as-pass
+                    - --crash-as-pass
+
+
+mochitest-plain-headless:
+    description: "Mochitest plain headless run"
+    suite:
+        name: mochitest-plain
+    treeherder-symbol: M(h)
+    loopback-video: true
+    chunks:
+        by-test-platform:
+            linux.*/debug: 16
+            default: 5
+    e10s: true
+    max-run-time: 5400
+    allow-software-gl-layers: false
+    tier: 2
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64-qr/debug: ['trunk']
+                    linux.*64-shippable-qr/opt: ['mozilla-central']
+                    linux.*64-shippable/.*: ['mozilla-central']
+                    linux.*64/debug: ['mozilla-central']
+                    windows10-64-shippable(-qr)?/opt: ['mozilla-central']
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: ['mozilla-central']
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            default: ['mozilla-central']
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+        extra-options:
+            - --headless
+
+mochitest-valgrind:
+    description: "Mochitest plain Valgrind run"
+    suite:
+        name: mochitest-valgrind-plain
+    treeherder-symbol: M-V()
+    run-on-projects: []
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    tier: 3
+    loopback-video: true
+    chunks: 40
+    max-run-time: 14400
+    # We could re-enable e10s later.
+    # There's no intrinsic reason not to use it.
+    e10s: false
+    variants: []
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+
+mochitest-webgl1-core:
+    description: "Mochitest webgl1-core run"
+    treeherder-symbol: M(gl1c)
+    schedules-component: mochitest-plain
+    virtualization: virtual-with-gpu
+    e10s: true
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    loopback-video: true
+    max-run-time:
+        by-test-platform:
+            macosx.*64-ccov.*/.*: 7200
+            default: 1800
+    variants:
+        - fission
+        - fission-webgl-ipc
+        - wayland
+        - webgl-ipc
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64-asan-qr/opt: built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(debug|opt): built-projects
+                    default: []
+            fission-webgl-ipc:
+                by-test-platform:
+                    linux.*64-asan-qr/opt: built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(debug|opt): built-projects
+                    default: []
+            webgl-ipc:
+                by-test-platform:
+                    .*-ccov.*: []
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
+                    default: built-projects
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        extra-options:
+            - --setpref=webgl.out-of-process=false
+
+mochitest-webgl1-ext:
+    description: "Mochitest webgl1-ext run"
+    treeherder-symbol: M(gl1e)
+    schedules-component: mochitest-plain
+    virtualization: virtual-with-gpu
+    chunks:
+        by-test-platform:
+            android.*: 2
+            default: 1
+    e10s: true
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    loopback-video: true
+    max-run-time: 2700
+    variants:
+        - fission
+        - fission-webgl-ipc
+        - wayland
+        - webgl-ipc
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            fission-webgl-ipc:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            webgl-ipc:
+                by-test-platform:
+                    .*-ccov.*: []
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    windows10-64-2004-qr/(opt|debug): []
+                    win.*: ["trunk"]
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
+                    default: built-projects
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
+
+mochitest-webgl2-core:
+    description: "Mochitest webgl2-core run"
+    treeherder-symbol: M(gl2c)
+    schedules-component: mochitest-plain
+    virtualization: virtual-with-gpu
+    chunks:
+        by-test-platform:
+            android.*: 2
+            default: 1
+    e10s: true
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    loopback-video: true
+    max-run-time: 1800
+    variants:
+        - fission
+        - fission-webgl-ipc
+        - wayland
+        - webgl-ipc
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-shippable|-asan)?-qr/(opt|debug): built-projects
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            fission-webgl-ipc:
+                by-test-platform:
+                    linux.*64(-shippable|-asan)?-qr/(opt|debug): built-projects
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64(-shippable|-asan)?-qr/(opt|debug): built-projects
+                    default: []
+            webgl-ipc:
+                by-test-platform:
+                    .*-ccov.*/.*: []
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
+                    default: built-projects
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+
+mochitest-webgl2-ext:
+    description: "Mochitest webgl2-ext run"
+    treeherder-symbol: M(gl2e)
+    schedules-component: mochitest-plain
+    virtualization: virtual-with-gpu
+    variants:
+        - fission
+        - fission-webgl-ipc
+        - webgl-ipc
+        - webrender-sw
+        - wayland
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            fission-webgl-ipc:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64(-shippable|-asan)?-qr/(opt|debug): built-projects
+                    default: []
+            webgl-ipc:
+                by-test-platform:
+                    .*ccov.*/.*: []
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default: built-projects
+    chunks: 4
+    e10s: true
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    loopback-video: true
+    max-run-time: 2700
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
+
+mochitest-webgl2-deqp:
+    description: "Mochitest webgl2-deqp run"
+    treeherder-symbol: M(gl2d)
+    schedules-component: mochitest-plain
+    virtualization: virtual-with-gpu
+    variants:
+        - wayland
+        - webgl-ipc
+        - webrender-sw
+    run-on-projects: []  # Don't run this for now.
+    chunks: 4
+    e10s: true
+    loopback-video: true
+    max-run-time: 1800
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
+
+mochitest-webgpu:
+    description: "Mochitest webgpu run"
+    treeherder-symbol: M(webgpu)
+    schedules-component: mochitest-plain
+    virtualization: virtual-with-gpu
+    e10s: true
+    loopback-video: true
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64-qr/debug: ['trunk']
+                    linux.*64-shippable-qr/opt: ['mozilla-central']
+                    windows10-64-2004-shippable-qr/opt: ['mozilla-central']
+                    default: []
+            socketprocess_networking: []
+            wayland: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: ["trunk"]
+                    default: []
+            default:
+                by-test-platform:
+                    .*mingw.*: ["release"]
+                    .*shippable.*: ["mozilla-central"]
+                    (!-shippable).*-qr.*: ["trunk"]
+                    default: []
+    max-run-time:
+        by-test-platform:
+            macosx.*64-ccov.*/.*: 7200
+            default: 1800
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+
+mochitest-remote:
+    description: "Mochitest for the remote agent (/remote folder)"
+    suite:
+        name: mochitest-remote
+    treeherder-symbol: M(remote)
+    loopback-video: true
+    variants:
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    (windows10-64|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64-qr/debug: ['all']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    default: built-projects
+    tier:
+        by-variant:
+            fission: 2
+            default: default
+    max-run-time: 5400
+    mozharness:
+        mochitest-flavor: browser
+        extra-options:
+            - --setpref=remote.log.level=Trace
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual

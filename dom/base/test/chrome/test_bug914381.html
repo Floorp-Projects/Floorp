@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650776
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 914381</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=914381">Mozilla Bug 914381</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+function createFileWithData(fileData) {
+  var testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  testFile.append("testBug914381");
+
+  var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+  outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                 0o666, 0);
+  outStream.write(fileData, fileData.length);
+  outStream.close();
+
+  return testFile;
+}
+
+/** Test for Bug 914381. File's created in JS using an nsIFile should allow mozGetFullPathInternal calls to succeed **/
+var file = createFileWithData("Test bug 914381");
+
+SpecialPowers.pushPrefEnv({ set: [["dom.file.createInChild", true]]})
+.then(() => {
+  return File.createFromNsIFile(file);
+})
+.then(f => {
+  is(f.mozFullPathInternal, undefined, "mozFullPathInternal is undefined from js");
+  is(f.mozFullPath, file.path, "mozFullPath returns path if created with nsIFile");
+})
+.then(() => {
+  return File.createFromFileName(file.path);
+})
+.then(f => {
+  is(f.mozFullPathInternal, undefined, "mozFullPathInternal is undefined from js");
+  is(f.mozFullPath, "", "mozFullPath returns blank if created with a string");
+})
+.then(() => {
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

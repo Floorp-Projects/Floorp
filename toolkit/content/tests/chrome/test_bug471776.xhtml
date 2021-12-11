@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Textbox with placeholder undo test" width="500" height="600"
+        onload="doTest();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <hbox>
+    <html:input id="t1" placeholder="empty"/>
+  </hbox>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;">
+    <p id="display">
+    </p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    function doTest() {
+      var t1 = $("t1");
+      t1.focus();
+      var t1Enabled = {};
+      var t1CanUndo = {};
+      t1.editor.canUndo(t1Enabled, t1CanUndo);
+      ok(!t1CanUndo.value, "undo correctly disabled when no user edits");
+      SimpleTest.finish();
+    }
+
+  ]]></script>
+
+</window>

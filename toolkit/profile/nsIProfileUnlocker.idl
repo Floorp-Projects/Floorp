@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(08923af1-e7a3-4fae-ba02-128502193994)]
+interface nsIProfileUnlocker : nsISupports
+{
+  const unsigned long ATTEMPT_QUIT = 0;
+  const unsigned long FORCE_QUIT   = 1;
+
+  /**
+   * Try to unlock the specified profile by attempting or forcing the
+   * process that currently holds the lock to quit.
+   *
+   * @param aSeverity either ATTEMPT_QUIT or FORCE_QUIT
+   * @throws NS_ERROR_FAILURE if unlocking failed.
+   */
+  void unlock(in unsigned long aSeverity);
+};

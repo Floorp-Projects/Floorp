@@ -1,0 +1,23 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+transforms:
+    - gecko_taskgraph.transforms.chunk_partners:transforms
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.repackage_signing_partner:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-partner-repack-chunking-dummy  # Linux
+    - release-partner-repack-repackage  # Windows, Mac
+
+only-for-build-platforms:
+    - linux-shippable/opt
+    - linux64-shippable/opt
+    - macosx64-shippable/opt
+    - win32-shippable/opt
+    - win64-shippable/opt
+    - win64-aarch64-shippable/opt

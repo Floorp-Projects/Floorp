@@ -1,0 +1,278 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface mozIDOMWindowProxy;
+
+webidl BrowsingContext;
+webidl Document;
+webidl Element;
+
+native CallerType(mozilla::dom::CallerType);
+
+/**
+ * The focus manager deals with all focus related behaviour. Only one element
+ * in the entire application may have the focus at a time; this element
+ * receives any keyboard events. While there is only one application-wide
+ * focused element, each nsIDOMWindow maintains a reference to the element
+ * that would be focused if the window was active.
+ *
+ * If the window's reference is to a frame element (iframe, browser,
+ * editor), then the child window contains the element that is currently
+ * focused. If the window's reference is to a root element, then the root is
+ * focused. If a window's reference is null, then no element is focused, yet
+ * the window is still focused.
+ *
+ * The blur event is fired on an element when it loses the application focus.
+ * After this blur event, if the focus is moving away from a document, two
+ * additional blur events are fired on the old document and window containing
+ * the focus respectively.
+ *
+ * When a new document is focused, two focus events are fired on the new
+ * document and window respectively. Then the focus event is fired on an
+ * element when it gains the application focus.
+ *
+ * A special case is that the root element may be focused, yet does not
+ * receive the element focus and blur events. Instead a focus outline may be
+ * drawn around the document.
+ *
+ * Blur and focus events do not bubble as per the W3C DOM Events spec.
+ */
+[scriptable, uuid(86e1f1e1-365d-493b-b52a-a649f3f311dc)]
+interface nsIFocusManager : nsISupports
+{
+  /**
+   * The most active (frontmost) window, or null if no window that is part of
+   * the application is active. Do not use outside the parent process.
+   */
+  readonly attribute mozIDOMWindowProxy activeWindow;
+
+  /**
+   * In the parent process: The BrowsingContext corresponding to activeWindow.
+   * In content processes: The top-level Web content browsing context that
+   * focus is in if the application is active and focus is in Web content.
+   */
+  readonly attribute BrowsingContext activeBrowsingContext;
+
+  /**
+   * The child window within the activeWindow that is focused. This will
+   * always be activeWindow, a child window of activeWindow or null if no
+   * child window is focused. Setting the focusedWindow changes the focused
+   * window and raises the toplevel window it is in. If the current focus
+   * within the new focusedWindow is a frame element, then the focusedWindow
+   * will actually be set to the child window and the current element within
+   * that set as the focused element. This process repeats downwards until a
+   * non-frame element is found.
+   * The setter for this attribute defaults to CallerType::System.
+   * If focus is in another process, this is null in content processes and
+   * the closest ancestor in the parent process.
+   */
+  attribute mozIDOMWindowProxy focusedWindow;
+
+  /**
+   * Parent-process only: The content BrowsingContext that currently has focus,
+   * if any. Note this can be different from activeBrowsingContext in the case
+   * of subframes.
+   */
+  readonly attribute BrowsingContext focusedContentBrowsingContext;
+
+  /**
+   * The element that is currently focused. This will always be an element
+   * within the document loaded in focusedWindow or null if no element in that
+   * document is focused.
+   */
+  readonly attribute Element focusedElement;
+
+  /**
+   * Returns the method that was used to focus the element in window. This
+   * will either be 0, FLAG_BYMOUSE or FLAG_BYKEY. If window is null, then
+   * the current focusedWindow will be used by default. This has the result
+   * of retrieving the method that was used to focus the currently focused
+   * element.
+   */
+  uint32_t getLastFocusMethod(in mozIDOMWindowProxy window);
+
+  /**
+   * Changes the focused element reference within the window containing
+   * aElement to aElement or potentially redirects it to an anonymous
+   * descendant of it (e.g., for `<input type="number">` the focus is redirected
+   * to its descendant `<input type="text">`).
+   */
+  [can_run_script]
+  void setFocus(in Element aElement, in unsigned long aFlags);
+
+  /**
+   * Move the focus to another element. If aStartElement is specified, then
+   * movement is done relative to aStartElement. If aStartElement is null,
+   * then movement is done relative to the currently focused element. If no
+   * element is focused, focus the first focusable element within the
+   * document (or the last focusable element if aType is MOVEFOCUS_END). This
+   * method is equivalent to setting the focusedElement to the new element.
+   *
+   * Specifying aStartElement and using MOVEFOCUS_LAST is not currently
+   * implemented.
+   *
+   * If no element is found, and aType is either MOVEFOCUS_ROOT or
+   * MOVEFOCUS_CARET, then the focus is cleared. If aType is any other value,
+   * the focus is not changed.
+   *
+   * Returns the element that was focused (see setFocus). The return value
+   * may be null if focus was moved into a child process.
+   */
+  Element moveFocus(in mozIDOMWindowProxy aWindow,
+                    in Element aStartElement,
+                    in unsigned long aType, in unsigned long aFlags);
+
+  /**
+   * Clears the focused element within aWindow. If the current focusedWindow
+   * is a descendant of aWindow, sets the current focusedWindow to aWindow.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aWindow is null
+   */
+  void clearFocus(in mozIDOMWindowProxy aWindow);
+
+  /**
+   * Returns the currently focused element within aWindow. If aWindow is equal
+   * to the current value of focusedWindow, then the returned element will be
+   * the application-wide focused element (the value of focusedElement). The
+   * return value will be null if no element is focused.
+   *
+   * If aDeep is true, then child frames are traversed and the return value
+   * may be the element within a child descendant window that is focused. If
+   * aDeep if false, then the return value will be the frame element if the
+   * focus is in a child frame.
+   *
+   * aFocusedWindow will be set to the currently focused descendant window of
+   * aWindow, or to aWindow if aDeep is false. This will be set even if no
+   * element is focused.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aWindow is null
+   */
+  Element getFocusedElementForWindow(in mozIDOMWindowProxy aWindow,
+                                     in boolean aDeep,
+                                     out mozIDOMWindowProxy aFocusedWindow);
+
+  /**
+   * Moves the selection caret within aWindow to the current focus.
+   */
+  void moveCaretToFocus(in mozIDOMWindowProxy aWindow);
+
+  /***
+   * Check if given element (or potentially a descendant, see setFocus) is
+   * focusable.
+   */
+  boolean elementIsFocusable(in Element aElement, in unsigned long aFlags);
+
+  /*
+   * Raise the window when switching focus
+   */
+  const unsigned long FLAG_RAISE = 1;
+
+  /**
+   * Do not scroll the element to focus into view.
+   */
+  const unsigned long FLAG_NOSCROLL = 2;
+
+  /**
+   * If attempting to change focus in a window that is not focused, do not
+   * switch focus to that window. Instead, just update the focus within that
+   * window and leave the application focus as is. This flag will have no
+   * effect if a child window is focused and an attempt is made to adjust the
+   * focus in an ancestor, as the frame must be switched in this case.
+   */
+  const unsigned long FLAG_NOSWITCHFRAME = 4;
+
+  /**
+   * This flag is only used when passed to moveFocus. If set, focus is never
+   * moved to the parent frame of the starting element's document, instead
+   * iterating around to the beginning of that document again. Child frames
+   * are navigated as normal.
+   */
+  const unsigned long FLAG_NOPARENTFRAME = 8;
+
+  /**
+   * This flag is used for window and element focus operations to signal
+   * wether the caller is system or non system.
+   */
+  const unsigned long FLAG_NONSYSTEMCALLER = 16;
+
+  /**
+   * Focus is changing due to a mouse operation, for instance the mouse was
+   * clicked on an element.
+   */
+  const unsigned long FLAG_BYMOUSE = 0x1000;
+
+  /**
+   * Focus is changing due to a key operation, for instance pressing the tab
+   * key. This flag would normally be passed when MOVEFOCUS_FORWARD or
+   * MOVEFOCUS_BACKWARD is used.
+   */
+  const unsigned long FLAG_BYKEY = 0x2000;
+
+  /**
+   * Focus is changing due to a call to MoveFocus. This flag will be implied
+   * when MoveFocus is called except when one of the other mechanisms (mouse
+   * or key) is specified, or when the type is MOVEFOCUS_ROOT or
+   * MOVEFOCUS_CARET.
+   */
+  const unsigned long FLAG_BYMOVEFOCUS = 0x4000;
+
+  /**
+   * Do not show a ring around the element to focus, if this is not a text
+   * control, regardless of other state.
+   */
+  const unsigned long FLAG_NOSHOWRING = 0x8000;
+
+  /**
+   * Always show the focus ring or other indicator of focus, regardless of
+   * other state. Overrides FLAG_NOSHOWRING.
+   */
+  const unsigned long FLAG_SHOWRING = 0x100000;
+
+  /**
+   * Focus is changing due to a touch operation that generated a mouse event.
+   * Normally used in conjunction with FLAG_BYMOUSE.
+   */
+  const unsigned long FLAG_BYTOUCH = 0x200000;
+
+  /** Focus is changing due to a JS focus() call or similar operation. */
+  const unsigned long FLAG_BYJS = 0x400000;
+
+  /** Focus is changing due to a long press operation by touch or mouse. */
+  const unsigned long FLAG_BYLONGPRESS = 0x800000;
+
+  /** Mask with all the focus methods. */
+  const unsigned long METHOD_MASK = FLAG_BYMOUSE | FLAG_BYKEY | FLAG_BYMOVEFOCUS | FLAG_BYTOUCH | FLAG_BYJS | FLAG_BYLONGPRESS;
+
+  /** Mask with all the focus methods, plus the SHOW / NOSHOWRING flags. */
+  const unsigned long METHODANDRING_MASK = METHOD_MASK | FLAG_SHOWRING | FLAG_NOSHOWRING;
+
+  // these constants are used with the aType argument to MoveFocus
+
+  /** move focus forward one element, used when pressing TAB */
+  const unsigned long MOVEFOCUS_FORWARD = 1;
+  /** move focus backward one element, used when pressing Shift+TAB */
+  const unsigned long MOVEFOCUS_BACKWARD = 2;
+  /** move focus forward to the next frame document, used when pressing F6 */
+  const unsigned long MOVEFOCUS_FORWARDDOC = 3;
+  /** move focus forward to the previous frame document, used when pressing Shift+F6 */
+  const unsigned long MOVEFOCUS_BACKWARDDOC = 4;
+  /** move focus to the first focusable element */
+  const unsigned long MOVEFOCUS_FIRST = 5;
+  /** move focus to the last focusable element */
+  const unsigned long MOVEFOCUS_LAST = 6;
+  /** move focus to the root element in the document */
+  const unsigned long MOVEFOCUS_ROOT = 7;
+  /** move focus to a link at the position of the caret. This is a special value used to
+   *  focus links as the caret moves over them in caret browsing mode.
+   */
+  const unsigned long MOVEFOCUS_CARET = 8;
+
+  /** move focus to the first focusable document */
+  const unsigned long MOVEFOCUS_FIRSTDOC = 9;
+  /** move focus to the last focusable document */
+  const unsigned long MOVEFOCUS_LASTDOC = 10;
+};

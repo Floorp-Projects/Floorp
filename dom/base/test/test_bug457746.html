@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=457746
+-->
+<head>
+  <title>Test for Bug 457746</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=457746">Mozilla Bug 457746</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 457746 **/
+SimpleTest.waitForExplicitFinish();
+
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "bug457746.sjs");
+xhr.send("");
+xhr.abort();
+xhr.open("GET", "bug457746.sjs");
+xhr.onreadystatechange = function() {
+  if (xhr.readyState == 4) {
+    is(xhr.responseText, "\u00c1", "Broken encoding conversion?");
+    SimpleTest.finish();
+  }
+}
+xhr.send("");
+</script>
+</pre>
+</body>
+</html>

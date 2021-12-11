@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Do not use this interface. Instead, write:
+ *     Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+ *     addDebuggerToGlobal(global);
+ */
+[scriptable, uuid(a36fa816-31da-4b23-bc97-6412771f0867)]
+interface IJSDebugger : nsISupports
+{
+  /**
+   * Define the global Debugger constructor on a given global.
+   */
+  [implicit_jscontext]
+  void addClass(in jsval global);
+};

@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=431833
+-->
+<head>
+  <title>Test for Bug 431833</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script>
+    var loadsComplete = [];
+    function test(e) {
+      loadsComplete[e.target.id] = true;
+    }
+    window.addEventListener('DOMFrameContentLoaded',test,true);
+  </script>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=431833">Mozilla Bug 431833</a>
+<p id="display">
+ <iframe id="f1" srcdoc="1"></iframe>
+ <iframe id="f2" srcdoc="2"></iframe>
+ <iframe id="f3" srcdoc="<iframe id='f4' src='data:text/html,3'></iframe>"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 431833 **/
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+    function check(id) {
+      ok(loadsComplete[id], "DOMFrameContentLoaded didn't fire for " + id);
+    }
+    check("f1");
+    check("f2");
+    check("f3");
+    check("f4");
+  });
+
+addLoadEvent(SimpleTest.finish);
+</script>
+</pre>
+</body>
+</html>
+

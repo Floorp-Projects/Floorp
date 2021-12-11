@@ -1,0 +1,22 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+  <title>Bug 97777-2</title>
+  <style type="text/css">
+    div.top {position: absolute; border: 0px; background: #CCCCCC}
+    div.sub {border: solid blue}
+    p {border: solid red}
+  </style>
+</head>
+<body>
+<div class="top" style="top: 16.5em" align="center">
+  <p style="float: left">Float</p>
+  <div class="sub" style="-moz-float-edge: margin-box">Should be shrink-wrapped [align="center", float-edge="margin-box"]</div>
+</div>
+<div class="top" style="top: 20.5em" align="center">
+  <p style="float: right">Float</p>
+  <div class="sub" style="-moz-float-edge: margin-box">Should be shrink-wrapped [align="center", float-edge="margin-box"]</div>
+</div>
+</body>
+</html>

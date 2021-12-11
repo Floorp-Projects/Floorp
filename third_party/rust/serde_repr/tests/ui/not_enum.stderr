@@ -1,0 +1,7 @@
+error: input must be an enum
+ --> $DIR/not_enum.rs:3:10
+  |
+3 | #[derive(Serialize_repr)]
+  |          ^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)

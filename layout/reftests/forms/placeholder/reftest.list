@@ -1,0 +1,36 @@
+# Tests using placeholder-focus-ref.html as a reference are disabled because
+# we can't change the caret colour nor disable it and we can't change the
+# text colour without changing the caret which means that the tested page has
+# a black caret with a grey text and the reference has a grey caret with grey
+# text. The only thing that is doable is to make the caret grey in the tested
+# page but that would make the test moot because a failure wouldn't be seen.
+# A real way to fix this would be to be able to style the caret or to implement
+# ::value (bug 648643), depending of the ::value behaviour (it could change the
+# caret colour and the text colour or just the text colour).
+
+== placeholder-1-text.html placeholder-visible-ref.html
+== placeholder-1-password.html placeholder-visible-ref.html
+== placeholder-1-textarea.html placeholder-visible-textarea-ref.html
+== placeholder-2.html placeholder-visible-ref.html
+== placeholder-2-textarea.html placeholder-visible-textarea-ref.html
+== placeholder-3.html placeholder-overridden-ref.html
+== placeholder-4.html placeholder-overridden-ref.html
+== placeholder-5.html placeholder-visible-ref.html
+
+# This tests assumes that the overflowing placeholder won't eat the padding, which is just not true in some platforms...
+fuzzy-if(winWidget,0-160,0-10) fuzzy-if(Android,0-160,0-41) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-146,0-317) fuzzy-if(OSX==1010&&browserIsRemote,0-1,0-8) == placeholder-6.html placeholder-overflow-ref.html
+
+skip-if(Android&&asyncPan) == placeholder-6-textarea.html placeholder-overflow-textarea-ref.html
+# needs-focus == placeholder-7.html placeholder-focus-ref.html
+# needs-focus == placeholder-8.html placeholder-focus-ref.html
+# needs-focus == placeholder-9.html placeholder-focus-ref.html
+needs-focus == placeholder-10.html placeholder-visible-ref.html
+== placeholder-11.html placeholder-visible-ref.html
+== placeholder-12.html placeholder-visible-ref.html
+== placeholder-13.html placeholder-visible-ref.html
+== placeholder-14.html placeholder-visible-ref.html
+== placeholder-18.html placeholder-overridden-ref.html
+# needs-focus == placeholder-20.html placeholder-focus-ref.html
+needs-focus == placeholder-21.html placeholder-blank-ref.html
+needs-focus == placeholder-22.html placeholder-blank-ref.html
+== placeholder-rtl.html placeholder-rtl-ref.html

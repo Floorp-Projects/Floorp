@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1022229
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1022229</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for postMessage between sandboxed iframe and non-sandboxed window.
+   **/
+  SimpleTest.waitForExplicitFinish();
+  function go() {
+    var ifr = document.createElement('iframe');
+
+    ifr.setAttribute('src', 'iframe_main_bug1022229.html');
+    document.body.appendChild(ifr);
+  }
+
+  </script>
+</head>
+<body onload="go()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1022229">Mozilla Bug 1022229</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

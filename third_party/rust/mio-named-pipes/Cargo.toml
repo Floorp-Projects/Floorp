@@ -1,0 +1,25 @@
+[package]
+name = "mio-named-pipes"
+version = "0.1.6"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/alexcrichton/mio-named-pipes"
+homepage = "https://github.com/alexcrichton/mio-named-pipes"
+documentation = "https://docs.rs/mio-named-pipes/0.1/x86_64-pc-windows-msvc/mio_named_pipes/"
+description = """
+Windows named pipe bindings for mio.
+"""
+
+[target.'cfg(windows)'.dependencies]
+log = "0.4"
+mio = "0.6.5"
+miow = "0.3"
+
+[target.'cfg(windows)'.dependencies.winapi]
+version = "0.3"
+features = ["winerror", "ioapiset", "minwinbase", "winbase"]
+
+[dev-dependencies]
+env_logger = { version = "0.4", default-features = false }
+rand = "0.4"

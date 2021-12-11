@@ -1,0 +1,132 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.search-outline {
+  border: 1px solid var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  transition: border-color 200ms ease-in-out;
+}
+
+.search-outline:focus-within {
+  border-color: var(--blue-50);
+}
+
+.search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 24px;
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
+}
+
+.search-field .img.search {
+  --icon-mask-size: 12px;
+  --icon-inset-inline-start: 6px;
+  position: absolute;
+  z-index: 1;
+  top: calc(50% - 8px);
+  mask-size: var(--icon-mask-size);
+  background-color: var(--theme-icon-dimmed-color);
+  pointer-events: none;
+}
+
+.search-field.big .img.search {
+  --icon-mask-size: 16px;
+  --icon-inset-inline-start: 12px;
+}
+
+[dir="ltr"] .search-field .img.search {
+  left: var(--icon-inset-inline-start);
+}
+
+[dir="rtl"] .search-field .img.search {
+  right: var(--icon-inset-inline-start);
+}
+
+.search-field .img.loader {
+  width: 24px;
+  height: 24px;
+  margin-inline-end: 4px;
+}
+
+.search-field input {
+  align-self: stretch;
+  flex-grow: 1;
+  height: 24px;
+  width: 40px;
+  border: none;
+  padding: 4px;
+  padding-inline-start: 28px;
+  line-height: 16px;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--theme-body-color);
+  background-color: transparent;
+}
+
+.search-field.big input {
+  height: 40px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-inline-start: 40px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.search-field input:focus {
+  outline: none;
+}
+
+.search-field input::placeholder {
+  color: var(--theme-text-color-alt);
+  opacity: 1;
+}
+
+.search-field-summary {
+  align-self: center;
+  padding: 2px 4px;
+  white-space: nowrap;
+  text-align: center;
+  user-select: none;
+  color: var(--theme-text-color-alt);
+  /* Avoid layout jumps when we increment the result count quickly. With tabular
+     numbers, layout will only jump between 9 and 10, 99 and 100, etc. */
+  font-variant-numeric: tabular-nums;
+}
+
+.search-field.big .search-field-summary {
+  margin-inline-end: 4px;
+}
+
+.search-field .search-nav-buttons {
+  display: flex;
+  user-select: none;
+}
+
+.search-field .search-nav-buttons .nav-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 4px;
+  background: transparent;
+}
+
+.search-field .search-nav-buttons .nav-btn:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.search-field .close-btn {
+  margin-inline-end: 4px;
+}
+
+.search-field.big .close-btn {
+  margin-inline-end: 8px;
+}
+
+.search-field .close-btn::-moz-focus-inner {
+  border: none;
+}

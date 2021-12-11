@@ -1,0 +1,178 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    'pixman-version.h',
+    'pixman.h',
+]
+
+# Apple's arm assembler doesn't support the same syntax as
+# the standard GNU assembler, so use the C fallback paths for now.
+# This may be fixable if clang's ARM/iOS assembler improves into a
+# viable solution in the future.
+if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    if CONFIG['HAVE_ARM_NEON']:
+        SOURCES += [
+            'pixman-arm-neon-asm-bilinear.S',
+            'pixman-arm-neon-asm.S',
+        ]
+    if CONFIG['HAVE_ARM_SIMD']:
+        SOURCES += [
+            'pixman-arm-simd-asm-scaled.S',
+            'pixman-arm-simd-asm.S',
+        ]
+    if CONFIG['CC_TYPE'] == 'clang':
+        ASFLAGS += [
+            '-no-integrated-as',
+        ]
+
+SOURCES += [
+    'pixman-access-accessors.c',
+    'pixman-access.c',
+    'pixman-arm.c',
+    'pixman-bits-image.c',
+    'pixman-combine-float.c',
+    'pixman-combine32.c',
+    'pixman-conical-gradient.c',
+    'pixman-edge-accessors.c',
+    'pixman-edge.c',
+    'pixman-fast-path.c',
+    'pixman-filter.c',
+    'pixman-general.c',
+    'pixman-glyph.c',
+    'pixman-gradient-walker.c',
+    'pixman-image.c',
+    'pixman-implementation.c',
+    'pixman-linear-gradient.c',
+    'pixman-matrix.c',
+    'pixman-mips.c',
+    'pixman-noop.c',
+    'pixman-ppc.c',
+    'pixman-radial-gradient.c',
+    'pixman-region16.c',
+    'pixman-region32.c',
+    'pixman-solid-fill.c',
+    'pixman-trap.c',
+    'pixman-utils.c',
+    'pixman-x86.c',
+    'pixman.c',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+LOCAL_INCLUDES += [
+    '../../cairo/src',
+]
+
+if CONFIG['ANDROID_NDK']:
+    # For cpu-features.h
+    LOCAL_INCLUDES += [
+        '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK']
+    ]
+
+if CONFIG['MOZ_USE_PTHREADS']:
+    DEFINES['HAVE_PTHREADS'] = True
+
+DEFINES['PACKAGE'] = 'mozpixman'
+
+DEFINES['_USE_MATH_DEFINES'] = True
+
+use_mmx = False
+use_sse2 = False
+use_vmx = False
+use_arm_simd_gcc = False
+use_arm_neon_gcc = False
+if CONFIG['INTEL_ARCHITECTURE']:
+    use_sse2 = True
+    if CONFIG['CPU_ARCH'] == 'x86':
+        if CONFIG['CC_TYPE'] == 'clang-cl':
+            use_mmx = True
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        use_mmx = True
+elif CONFIG['CPU_ARCH'] in ('ppc', 'ppc64'):
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        use_vmx = True
+# Apple's arm assembler doesn't support the same syntax as
+# the standard GNU assembler, so use the C fallback paths for now.
+# This may be fixable if clang's ARM/iOS assembler improves into a
+# viable solution in the future.
+elif CONFIG['CPU_ARCH'] == 'arm':
+    if CONFIG['OS_ARCH'] != 'Darwin':
+        if CONFIG['HAVE_ARM_SIMD']:
+            use_arm_simd_gcc = True
+        if CONFIG['HAVE_ARM_NEON']:
+            use_arm_neon_gcc = True
+
+if use_mmx:
+    DEFINES['USE_MMX'] = True
+    SOURCES += ['pixman-mmx.c']
+    SOURCES['pixman-mmx.c'].flags += CONFIG['MMX_FLAGS']
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        SOURCES['pixman-mmx.c'].flags += [
+            '-Winline',
+            '--param', 'inline-unit-growth=10000',
+            '--param', 'large-function-growth=10000',
+        ]
+
+if use_sse2:
+    DEFINES['USE_SSE'] = True
+    DEFINES['USE_SSE2'] = True
+    SOURCES += ['pixman-sse2.c']
+    SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        SOURCES['pixman-sse2.c'].flags += ['-Winline']
+
+if use_vmx:
+    DEFINES['USE_VMX'] = True
+    SOURCES += ['pixman-vmx.c']
+    SOURCES['pixman-vmx.c'].flags += ['-maltivec']
+
+if use_arm_simd_gcc:
+    DEFINES['USE_ARM_SIMD'] = True
+    SOURCES += ['pixman-arm-simd.c']
+
+if use_arm_neon_gcc:
+    DEFINES['USE_ARM_NEON'] = True
+    SOURCES += ['pixman-arm-neon.c']
+    SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
+
+if CONFIG['OS_TARGET'] == 'Android' and (use_arm_neon_gcc or use_arm_simd_gcc):
+    # The assembly files in this directory are built with gas (because of
+    # -no-integrated-as), and they contain `.object_arch armv4`, which
+    # makes gas emit ARM_V4BX relocations that lld doesn't support.
+    # The code being third party and this setup being actually desirable to
+    # keep, until lld supports those relocations[1], hack around it by using
+    # the preprocessor to change it to armv7a, which is the target we use
+    # on arm android (with -march).
+    # 1. https://bugs.llvm.org/show_bug.cgi?id=38303
+    ASFLAGS += [
+        '-Darmv4=armv7a'
+    ]
+
+# Suppress warnings in third-party code.
+CFLAGS += [
+    '-Wno-address',
+    '-Wno-missing-field-initializers',
+    '-Wno-sign-compare',
+    '-Wno-incompatible-pointer-types',
+    '-Wno-unused',                      # too many unused warnings; ignore
+]
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CFLAGS += [
+        '-Wno-incompatible-pointer-types',
+        '-Wno-tautological-compare',
+        '-Wno-tautological-constant-out-of-range-compare',
+    ]
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    CFLAGS += [
+        '-Wno-unused-variable',
+    ]
+
+# See bug 386897.
+if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
+    CFLAGS += ['-O2']

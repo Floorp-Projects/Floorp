@@ -1,0 +1,11 @@
+cbor2/__init__.py,sha256=Si4l50bD5McrzpgQ6bEmhla2w2U910scs0lCqHzwxOo,239
+cbor2/compat.py,sha256=aBzyMrGwl061zdmlFPQrk4U1rqZQcVNl5ojRsQdG5d0,1033
+cbor2/decoder.py,sha256=6bJMq6fC8RRe5uJFrvKy9T-J3VLYKIkSF9UUmmlYj2A,11936
+cbor2/encoder.py,sha256=OimwLht642jK61Vl2X5FeIv3rHL0hd5yjQ7ajoO2hko,11496
+cbor2/types.py,sha256=I2lpvqktj8Nm8MJtUwdhOYXAUJw-UctYTQlKg0qZ9pc,1302
+cbor2-4.0.1.dist-info/DESCRIPTION.rst,sha256=1Lg57ktrF2XHHyDuGfWtKY5VZd4ydp3-7Ptr27cbWrE,1091
+cbor2-4.0.1.dist-info/METADATA,sha256=h1mC4t8mFZcyJc3cHWJFUf5wUWYVPAqh4Q4DRe0ajQg,1981
+cbor2-4.0.1.dist-info/RECORD,,
+cbor2-4.0.1.dist-info/WHEEL,sha256=o2k-Qa-RMNIJmUdIc7KU6VWR_ErNRbWNlxDIpl7lm34,110
+cbor2-4.0.1.dist-info/metadata.json,sha256=lHkH6x7w_MNrQqe5ZNu9kihQi3Gg-XOQpYTTElRtKe8,1006
+cbor2-4.0.1.dist-info/top_level.txt,sha256=4Z7JYs5_QM6eqOa2Ew1n_2-uKm2SYl76j2NWTtfCChs,6

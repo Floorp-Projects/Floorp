@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=444722
+-->
+<head>
+  <title>Test for Bug 444722</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=444722">Mozilla Bug 444722</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 444722 **/
+var counter = 0;
+var testCount = 0;
+var xhrs = new Array();
+
+function loadHandler() {
+  ++counter;
+  ok(true, "load handler should have been called.");
+  if (counter == testCount) {
+    SimpleTest.finish();
+  }
+}
+
+function testXHR(method, hasData, data) {
+  ++testCount;
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, "file_XHR_pass1.xml");
+  xhr.onload = loadHandler;
+  try {
+    if (hasData) {
+      xhr.send(data);
+    } else {
+      xhr.send();
+    }
+  } catch(ex) {
+    --testCount;
+    ok(false, "Calling XMLHttpRequest.send failed: " + ex);
+  }
+  // Keep XHR alive.
+  xhrs.push(xhr);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+testXHR("GET", false, null);
+testXHR("GET", true, null);
+testXHR("GET", true, "some data");
+
+testXHR("POST", false, null);
+testXHR("POST", true, null);
+testXHR("POST", true, "some data");
+</script>
+</pre>
+</body>
+</html>
+

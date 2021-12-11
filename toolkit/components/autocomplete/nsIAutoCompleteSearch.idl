@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAutoCompleteResult;
+interface nsIAutoCompleteObserver;
+interface nsIPropertyBag2;
+
+[scriptable, uuid(DE8DB85F-C1DE-4d87-94BA-7844890F91FE)]
+interface nsIAutoCompleteSearch : nsISupports
+{
+  /*
+   * Search for a given string and notify a listener (either synchronously
+   * or asynchronously) of the result
+   *
+   * @param searchString - The string to search for
+   * @param searchParam - An extra parameter
+   * @param previousResult - A previous result to use for faster searching
+   * @param listener - A listener to notify when the search is complete
+   * @param options An optional set of additional search parameters that may be
+   *        passed to the underlying implementation.
+   */
+  void startSearch(in AString searchString,
+                   in AString searchParam,
+                   in nsIAutoCompleteResult previousResult,
+                   in nsIAutoCompleteObserver listener,
+                   [optional] in nsIPropertyBag2 options);
+
+  /*
+   * Stop all searches that are in progress
+   */
+  void stopSearch();
+};
+
+[scriptable, uuid(8bd1dbbc-dcce-4007-9afa-b551eb687b61)]
+interface nsIAutoCompleteObserver : nsISupports
+{
+  /*
+   * Called when a search is complete and the results are ready
+   *
+   * @param search - The search object that processed this search
+   * @param result - The search result object
+   */
+  [can_run_script] void onSearchResult(in nsIAutoCompleteSearch search,
+                                       in nsIAutoCompleteResult result);
+};
+
+[scriptable, uuid(4c3e7462-fbfb-4310-8f4b-239238392b75)]
+interface nsIAutoCompleteSearchDescriptor : nsISupports
+{
+  // The search is started after the timeout specified by the corresponding
+  // nsIAutoCompleteInput implementation.
+  const unsigned short SEARCH_TYPE_DELAYED = 0;
+  // The search is started synchronously, before any delayed searches.
+  const unsigned short SEARCH_TYPE_IMMEDIATE = 1;
+
+  /**
+   * Identifies the search behavior.
+   * Should be one of the SEARCH_TYPE_* constants above.
+   * Defaults to SEARCH_TYPE_DELAYED.
+   */
+  readonly attribute unsigned short searchType;
+
+  /*
+   * Whether a new search should be triggered when the user deletes the
+   * autofilled part.
+   */
+  readonly attribute boolean clearingAutoFillSearchesAgain;
+};

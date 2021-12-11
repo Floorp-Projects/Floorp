@@ -1,0 +1,58 @@
+<html>
+
+<head>
+  <title>Explicit content and shadow DOM content relations tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // explicit content
+      let label = document.getElementById("label");
+      let element = document.getElementById("element");
+      testRelation(label, RELATION_LABEL_FOR, element);
+      testRelation(element, RELATION_LABELLED_BY, label);
+
+      // shadow DOM content
+      let shadowRoot = document.getElementById("shadowcontainer").shadowRoot;
+      let shadowLabel = shadowRoot.getElementById("label");
+      let shadowElement = shadowRoot.getElementById("element");
+
+      testRelation(shadowLabel, RELATION_LABEL_FOR, shadowElement);
+      testRelation(shadowElement, RELATION_LABELLED_BY, shadowLabel);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    addA11yLoadEvent(doTest, window);
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content">
+    <div id="label"></div>
+    <div id="element" aria-labelledby="label"></div>
+    <div id="shadowcontainer"></div>
+    <script>
+      let shadowRoot = document.getElementById("shadowcontainer").
+        attachShadow({mode: "open"});
+      shadowRoot.innerHTML =
+        `<div id="label"></div><div id="element" aria-labelledby="label"></div>`;
+    </script>
+  </div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

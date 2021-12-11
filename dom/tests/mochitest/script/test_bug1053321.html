@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<!--
+This test confirms we don't block body referred sub-resources by head-referenced defer and async scripts.
+If this test times out, the two image requests, that unblock the two script requests, never happen, hence
+are unexpectedly blocked.
+-->
+
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script>
+    // The two scripts below are expected to load and call scriptLoaded().
+    SimpleTest.waitForExplicitFinish();
+
+    window.expected_scripts = {
+      "defer": true,
+      "async": true,
+    };
+
+    function scriptLoaded(script)
+    {
+      ok(true, 'Script ' + script + ' executed');
+      delete window.expected_scripts[script];
+
+      let expecting = Object.keys(window.expected_scripts).length;
+      info("Expecting " + expecting + " more script(s) to execute");
+
+      if (expecting == 0) {
+        SimpleTest.finish();
+      }
+    }
+  </script>
+
+  <!-- this script is not loaded until file_blocked_script.sjs?unblock&defer request is made,
+       when this script is executed, it calls SimpleTest.finish().
+   -->
+  <script defer src="file_blocked_script.sjs?blocked&defer"></script>
+
+  <!-- this script is not loaded until file_blocked_script.sjs?unblock&async request is made,
+       when this script is executed, it calls SimpleTest.finish().
+   -->
+  <script async src="file_blocked_script.sjs?blocked&async"></script>
+</head>
+
+<body>
+  <img src="file_blocked_script.sjs?unblock&defer"/>
+  <img src="file_blocked_script.sjs?unblock&async"/>
+</body>

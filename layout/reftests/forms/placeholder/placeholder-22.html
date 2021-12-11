@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when focused, clearing placeholder attribute should work. -->
+  <script type="text/javascript">
+    function focusPlaceholder()
+    {
+      document.getElementById('p1').focus();
+    }
+    function setPlaceholder()
+    {
+      document.getElementById('p1').placeholder = '';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="focusPlaceholder();">
+    <input type="text" id="p1" value="" placeholder="my placeholder" onfocus="setPlaceholder(); disableReftestWait();">
+  </body>
+</html>

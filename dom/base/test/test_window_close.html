@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>test window.close()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    var b = new BroadcastChannel("windowclose");
+
+    const link = "link";
+    const windowopen = "window.open()";
+    var tests = [
+        {
+        type: windowopen,
+        noopener: true,
+        shouldCloseWithoutHistory: true,
+        shouldCloseWithHistory: false
+      },
+      {
+        type: windowopen,
+        noopener: false,
+        shouldCloseWithoutHistory: true,
+        shouldCloseWithHistory: true
+      },
+      {
+        type: link,
+        noopener: true,
+        shouldCloseWithoutHistory: true,
+        shouldCloseWithHistory: false
+      },
+      {
+        type: link,
+        noopener: false,
+        shouldCloseWithoutHistory: true,
+        shouldCloseWithHistory: true
+      }
+    ];
+
+    var loadTypes = ["withouthistory", "withhistory"];
+
+    async function start() {
+      // If Fission is disabled, the pref is no-op.
+      await SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]});
+
+      for (let test of tests) {
+        await SpecialPowers.pushPrefEnv({ set: [["dom.allow_scripts_to_close_windows", false]]});
+        if (test.type == windowopen) {
+          for (let loadType of loadTypes) {
+            var features = test.noopener ? "noopener" : "";
+            window.open("file_window_close.html?" + loadType, "", features);
+            await new Promise(function(r) {
+              b.onmessage = function(e) {
+                var expectedClose = loadType == "withouthistory" ?
+                  test.shouldCloseWithoutHistory : test.shouldCloseWithHistory;
+                is(e.data, expectedClose ? "closed" : "blocked",
+                   "Expected close on " + loadType + ": " + expectedClose);
+                r();
+              }
+            });
+          }
+        } else if (test.type == link) {
+          var rel = test.noopener ? "rel='noopener'" : "";
+          for (let loadType of loadTypes) {
+            document.getElementById("content").innerHTML =
+              "<a href='file_window_close.html?" +  loadType + "'" +
+                " target='foo' " + rel + "'>link</a>";
+            var p = new Promise(function(r) {
+              b.onmessage = function(e) {
+                var expectedClose = loadType == "withouthistory" ?
+                  test.shouldCloseWithoutHistory : test.shouldCloseWithHistory;
+                is(e.data, expectedClose ? "closed" : "blocked",
+                   "Expected close on " + loadType + ": " + expectedClose);
+                r();
+              }
+            });
+            document.getElementById("content").firstChild.click();
+            await p;
+          }
+        }
+      }
+      SimpleTest.finish();
+    }
+
+  </script>
+</head>
+<body onload="setTimeout(start)">
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test"></pre>
+</body>
+</html>

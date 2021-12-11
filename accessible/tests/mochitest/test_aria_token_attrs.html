@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=452388
+-->
+<head>
+  <title>An NMTOKEN based ARIA property is undefined if the ARIA attribute is not present, or is set to "" or "undefined"</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="common.js"></script>
+  <script type="application/javascript"
+          src="role.js"></script>
+  <script type="application/javascript"
+      src="states.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // test aria-pressed state mapping to roles PUSHBUTTON vs TOGGLEBUTTON
+      testRole("button_pressed_true", ROLE_TOGGLE_BUTTON);
+      testRole("button_pressed_false", ROLE_TOGGLE_BUTTON);
+      testRole("button_pressed_empty", ROLE_PUSHBUTTON);
+      testRole("button_pressed_undefined", ROLE_PUSHBUTTON);
+      testRole("button_pressed_absent", ROLE_PUSHBUTTON);
+
+      // test button aria-pressed states
+      testStates("button_pressed_true", STATE_PRESSED, 0, STATE_CHECKABLE);
+      testStates("button_pressed_false", 0, 0, STATE_CHECKABLE | STATE_PRESSED);
+      testStates("button_pressed_empty", 0, 0, STATE_PRESSED | STATE_CHECKABLE);
+      testStates("button_pressed_undefined", 0, 0, STATE_PRESSED | STATE_CHECKABLE);
+      testStates("button_pressed_absent", 0, 0, STATE_PRESSED | STATE_CHECKABLE);
+
+      // test (checkbox) checkable and checked states
+      testStates("checkbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("checkbox_checked_mixed", (STATE_CHECKABLE | STATE_MIXED), 0, STATE_CHECKED);
+      testStates("checkbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("checkbox_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("checkbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("checkbox_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test native checkbox checked state and aria-checked state (if conflict, native wins)
+      testStates("native_checkbox_nativechecked_ariatrue", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariafalse", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariaempty", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariaundefined", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariaabsent", (STATE_CHECKABLE | STATE_CHECKED));
+
+      testStates("native_checkbox_nativeunchecked_ariatrue", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariafalse", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariaempty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariaundefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariaabsent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test (checkbox) readonly states
+      testStates("checkbox_readonly_true", STATE_READONLY);
+      testStates("checkbox_readonly_false", 0, 0, STATE_READONLY);
+      testStates("checkbox_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("checkbox_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("checkbox_readonly_absent", 0, 0, STATE_READONLY);
+
+      // test (checkbox) required states
+      testStates("checkbox_required_true", STATE_REQUIRED);
+      testStates("checkbox_required_false", 0, 0, STATE_REQUIRED);
+      testStates("checkbox_required_empty", 0, 0, STATE_REQUIRED);
+      testStates("checkbox_required_undefined", 0, 0, STATE_REQUIRED);
+      testStates("checkbox_required_absent", 0, 0, STATE_REQUIRED);
+
+      // test (checkbox) invalid states
+      testStates("checkbox_invalid_true", STATE_INVALID);
+      testStates("checkbox_invalid_false", 0, 0, STATE_INVALID);
+      testStates("checkbox_invalid_empty", 0, 0, STATE_INVALID);
+      testStates("checkbox_invalid_undefined", 0, 0, STATE_INVALID);
+      testStates("checkbox_invalid_absent", 0, 0, STATE_INVALID);
+
+      // test (checkbox) disabled states
+      testStates("checkbox_disabled_true", STATE_UNAVAILABLE);
+      testStates("checkbox_disabled_false", 0, 0, STATE_UNAVAILABLE);
+      testStates("checkbox_disabled_empty", 0, 0, STATE_UNAVAILABLE);
+      testStates("checkbox_disabled_undefined", 0, 0, STATE_UNAVAILABLE);
+      testStates("checkbox_disabled_absent", 0, 0, STATE_UNAVAILABLE);
+
+      // test (listbox) multiselectable states
+      testStates("listbox_multiselectable_true", STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+      testStates("listbox_multiselectable_false", 0, 0, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+      testStates("listbox_multiselectable_empty", 0, 0, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+      testStates("listbox_multiselectable_undefined", 0, 0, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+      testStates("listbox_multiselectable_absent", 0, 0, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+
+      // test (option) checkable and checked states
+      testStates("option_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("option_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("option_checked_empty", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
+      testStates("option_checked_undefined", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
+      testStates("option_checked_absent", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
+
+      // test (menuitem) checkable and checked states, which are unsupported on this role
+      testStates("menuitem_checked_true", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_mixed", 0, 0, (STATE_CHECKABLE | STATE_CHECKED | STATE_MIXED));
+      testStates("menuitem_checked_false", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_empty", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_undefined", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_absent", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+
+      // test (menuitemcheckbox) checkable and checked states
+      testStates("menuitemcheckbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitemcheckbox_checked_mixed", (STATE_CHECKABLE | STATE_MIXED), 0, STATE_CHECKED);
+      testStates("menuitemcheckbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemcheckbox_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemcheckbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemcheckbox_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test (menuitemcheckbox) readonly states
+      testStates("menuitemcheckbox_readonly_true", STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_false", 0, 0, STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("menuitemcheckbox_readonly_absent", 0, 0, STATE_READONLY);
+
+      // test (menuitemradio) checkable and checked states
+      testStates("menuitemradio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitemradio_checked_mixed", STATE_CHECKABLE, 0, (STATE_MIXED | STATE_CHECKED));
+      testStates("menuitemradio_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemradio_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemradio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitemradio_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test (menuitemradio) readonly states
+      testStates("menuitemradio_readonly_true", STATE_READONLY);
+      testStates("menuitemradio_readonly_false", 0, 0, STATE_READONLY);
+      testStates("menuitemradio_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("menuitemradio_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("menuitemradio_readonly_absent", 0, 0, STATE_READONLY);
+
+      // test (radio) checkable and checked states
+      testStates("radio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("radio_checked_mixed", STATE_CHECKABLE, 0, (STATE_MIXED | STATE_CHECKED));
+      testStates("radio_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("radio_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("radio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("radio_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test (radiogroup) readonly states
+      testStates("radiogroup_readonly_true", STATE_READONLY);
+      testStates("radiogroup_readonly_false", 0, 0, STATE_READONLY);
+      testStates("radiogroup_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("radiogroup_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("radiogroup_readonly_absent", 0, 0, STATE_READONLY);
+
+      // test (switch) readonly states
+      testStates("switch_readonly_true", STATE_READONLY);
+      testStates("switch_readonly_false", 0, 0, STATE_READONLY);
+      testStates("switch_readonly_empty", 0, 0, STATE_READONLY);
+      testStates("switch_readonly_undefined", 0, 0, STATE_READONLY);
+      testStates("switch_readonly_absent", 0, 0, STATE_READONLY);
+
+      // test (textbox) multiline states
+      testStates("textbox_multiline_true", 0, EXT_STATE_MULTI_LINE);
+      testStates("textbox_multiline_false", 0, EXT_STATE_SINGLE_LINE);
+      testStates("textbox_multiline_empty", 0, EXT_STATE_SINGLE_LINE);
+      testStates("textbox_multiline_undefined", 0, EXT_STATE_SINGLE_LINE);
+      testStates("textbox_multiline_absent", 0, EXT_STATE_SINGLE_LINE);
+
+      // test (textbox) readonly states
+      testStates("textbox_readonly_true", STATE_READONLY);
+      testStates("textbox_readonly_false", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("textbox_readonly_empty", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("textbox_readonly_undefined", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("textbox_readonly_absent", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+
+      // test native textbox readonly state and aria-readonly state (if conflict, native wins)
+      testStates("native_textbox_nativereadonly_ariatrue", STATE_READONLY);
+      testStates("native_textbox_nativereadonly_ariafalse", STATE_READONLY);
+      testStates("native_textbox_nativereadonly_ariaempty", STATE_READONLY);
+      testStates("native_textbox_nativereadonly_ariaundefined", STATE_READONLY);
+      testStates("native_textbox_nativereadonly_ariaabsent", STATE_READONLY);
+
+      testStates("native_textbox_nativeeditable_ariatrue", 0, 0, STATE_READONLY);
+      testStates("native_textbox_nativeeditable_ariafalse", 0, 0, STATE_READONLY);
+      testStates("native_textbox_nativeeditable_ariaempty", 0, 0, STATE_READONLY);
+      testStates("native_textbox_nativeeditable_ariaundefined", 0, 0, STATE_READONLY);
+      testStates("native_textbox_nativeeditable_ariaabsent", 0, 0, STATE_READONLY);
+
+      // test (treeitem) selectable and selected states
+      testStates("treeitem_selected_true", (STATE_SELECTABLE | STATE_SELECTED));
+      testStates("treeitem_selected_false", STATE_SELECTABLE, 0, STATE_SELECTED);
+      testStates("treeitem_selected_empty", STATE_SELECTABLE, 0, STATE_SELECTED);
+      testStates("treeitem_selected_undefined", STATE_SELECTABLE, 0, STATE_SELECTED);
+      testStates("treeitem_selected_absent", STATE_SELECTABLE, 0, STATE_SELECTED);
+
+      // test (treeitem) haspopup states
+      testStates("treeitem_haspopup_true", STATE_HASPOPUP);
+      testStates("treeitem_haspopup_false", 0, 0, STATE_HASPOPUP);
+      testStates("treeitem_haspopup_empty", 0, 0, STATE_HASPOPUP);
+      testStates("treeitem_haspopup_undefined", 0, 0, STATE_HASPOPUP);
+      testStates("treeitem_haspopup_absent", 0, 0, STATE_HASPOPUP);
+
+      // test (treeitem) expandable and expanded/collapsed states
+      testStates("treeitem_expanded_true", STATE_EXPANDED, EXT_STATE_EXPANDABLE);
+      testStates("treeitem_expanded_false", STATE_COLLAPSED, EXT_STATE_EXPANDABLE);
+      testStates("treeitem_expanded_empty", 0, 0, STATE_EXPANDED | STATE_COLLAPSED, EXT_STATE_EXPANDABLE);
+      testStates("treeitem_expanded_undefined", 0, 0, STATE_EXPANDED | STATE_COLLAPSED, EXT_STATE_EXPANDABLE);
+      testStates("treeitem_expanded_absent", 0, 0, STATE_EXPANDED | STATE_COLLAPSED, EXT_STATE_EXPANDABLE);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452388">
+    Mozilla Bug 452388
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=499653"
+     title="Unify ARIA state attributes mapping rules">
+    Mozilla Bug 499653
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=989958"
+     title="Pressed state is not exposed on a button element with aria-pressed attribute"
+    Mozilla Bug 989958
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="button_pressed_true" role="button" aria-pressed="true">This button has aria-pressed="true" and should get ROLE_TOGGLE_BUTTON. It should also get STATE_PRESSED.</div>
+  <div id="button_pressed_false" role="button" aria-pressed="false">This button has aria-pressed="false" and should get ROLE_TOGGLE_BUTTON.</div>
+  <div id="button_pressed_empty" role="button" aria-pressed="">This button has aria-pressed="" and should <emph>not</emph> get ROLE_BUTTON.</div>
+  <div id="button_pressed_undefined" role="button" aria-pressed="undefined">This button has aria-pressed="undefined" and should <emph>not</emph> get ROLE_TOGGLE_BUTTON.</div>
+  <div id="button_pressed_absent" role="button">This button has <emph>no</emph> aria-pressed attribute and should <emph>not</emph> get ROLE_TOGGLE_BUTTON.</div>
+
+  <div id="checkbox_checked_true" role="checkbox" aria-checked="true">This checkbox has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+  <div id="checkbox_checked_mixed" role="checkbox" aria-checked="mixed">This checkbox has aria-checked="mixed" and should get STATE_CHECKABLE. It should also get STATE_MIXED.</div>
+  <div id="checkbox_checked_false" role="checkbox" aria-checked="false">This checkbox has aria-checked="false" and should get STATE_CHECKABLE.</div>
+  <div id="checkbox_checked_empty" role="checkbox" aria-checked="">This checkbox has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="checkbox_checked_undefined" role="checkbox" aria-checked="undefined">This checkbox has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="checkbox_checked_absent" role="checkbox">This checkbox has <emph>no</emph> aria-checked attribute and should get STATE_CHECKABLE.</div>
+
+  <form action="">
+    <input id="native_checkbox_nativechecked_ariatrue" type="checkbox" checked="checked" aria-checked="true"/>
+    <input id="native_checkbox_nativechecked_ariafalse" type="checkbox" checked="checked" aria-checked="false"/>
+    <input id="native_checkbox_nativechecked_ariaempty" type="checkbox" checked="checked" aria-checked=""/>
+    <input id="native_checkbox_nativechecked_ariaundefined" type="checkbox" checked="checked" aria-checked="undefined"/>
+    <input id="native_checkbox_nativechecked_ariaabsent" type="checkbox" checked="checked"/>
+
+    <input id="native_checkbox_nativeunchecked_ariatrue" type="checkbox" aria-checked="true"/>
+    <input id="native_checkbox_nativeunchecked_ariafalse" type="checkbox" aria-checked="false"/>
+    <input id="native_checkbox_nativeunchecked_ariaempty" type="checkbox" aria-checked=""/>
+    <input id="native_checkbox_nativeunchecked_ariaundefined" type="checkbox" aria-checked="undefined"/>
+    <input id="native_checkbox_nativeunchecked_ariaabsent" type="checkbox"/>
+  </form>
+
+  <div id="checkbox_readonly_true" role="checkbox" aria-readonly="true">This checkbox has aria-readonly="true" and should get STATE_READONLY.</div>
+  <div id="checkbox_readonly_false" role="checkbox" aria-readonly="false">This checkbox has aria-readonly="false" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="checkbox_readonly_empty" role="checkbox" aria-readonly="">This checkbox has aria-readonly="" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="checkbox_readonly_undefined" role="checkbox" aria-readonly="undefined">This checkbox has aria-readonly="undefined" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="checkbox_readonly_absent" role="checkbox">This checkbox has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
+
+  <div id="checkbox_required_true" role="checkbox" aria-required="true">This checkbox has aria-required="true" and should get STATE_REQUIRED.</div>
+  <div id="checkbox_required_false" role="checkbox" aria-required="false">This checkbox has aria-required="false" and should <emph>not</emph> get STATE_REQUIRED.</div>
+  <div id="checkbox_required_empty" role="checkbox" aria-required="">This checkbox has aria-required="" and should <emph>not</emph> get STATE_REQUIRED.</div>
+  <div id="checkbox_required_undefined" role="checkbox" aria-required="undefined">This checkbox has aria-required="undefined" and should <emph>not</emph> get STATE_REQUIRED.</div>
+  <div id="checkbox_required_absent" role="checkbox">This checkbox has <emph>no</emph> aria-required attribute and should <emph>not</emph> get STATE_REQUIRED.</div>
+
+  <div id="checkbox_invalid_true" role="checkbox" aria-invalid="true">This checkbox has aria-invalid="true" and should get STATE_INVALID.</div>
+  <div id="checkbox_invalid_false" role="checkbox" aria-invalid="false">This checkbox has aria-invalid="false" and should <emph>not</emph> get STATE_INVALID.</div>
+  <div id="checkbox_invalid_empty" role="checkbox" aria-invalid="">This checkbox has aria-invalid="" and should <emph>not</emph> get STATE_INVALID.</div>
+  <div id="checkbox_invalid_undefined" role="checkbox" aria-invalid="undefined">This checkbox has aria-invalid="undefined" and should <emph>not</emph> get STATE_INVALID.</div>
+  <div id="checkbox_invalid_absent" role="checkbox">This checkbox has <emph>no</emph> aria-invalid attribute and should <emph>not</emph> get STATE_INVALID.</div>
+
+  <div id="checkbox_disabled_true" role="checkbox" aria-disabled="true" tabindex="0">This checkbox has aria-disabled="true" and should get STATE_DISABLED.</div>
+  <div id="checkbox_disabled_false" role="checkbox" aria-disabled="false">This checkbox has aria-disabled="false" and should <emph>not</emph> get STATE_DISABLED.</div>
+  <div id="checkbox_disabled_empty" role="checkbox" aria-disabled="">This checkbox has aria-disabled="" and should <emph>not</emph> get STATE_DISABLED.</div>
+  <div id="checkbox_disabled_undefined" role="checkbox" aria-disabled="undefined">This checkbox has aria-disabled="undefined" and should <emph>not</emph> get STATE_DISABLED.</div>
+  <div id="checkbox_disabled_absent" role="checkbox">This checkbox has <emph>no</emph> aria-disabled attribute and should <emph>not</emph> get STATE_DISABLED.</div>
+
+  <div id="listbox_multiselectable_true" role="listbox" aria-multiselectable="true">
+    <div id="option_checked_true" role="option" aria-checked="true">item</div>
+  </div>
+  <div id="listbox_multiselectable_false" role="listbox" aria-multiselectable="false">
+    <div id="option_checked_false" role="option" aria-checked="false">item</div>
+  </div>
+  <div id="listbox_multiselectable_empty" role="listbox" aria-multiselectable="">
+    <div id="option_checked_empty" role="option" aria-checked="">item</div>
+  </div>
+  <div id="listbox_multiselectable_undefined" role="listbox" aria-multiselectable="undefined">
+    <div id="option_checked_undefined" role="option" aria-checked="undefined">item</div>
+  </div>
+  <div id="listbox_multiselectable_absent" role="listbox">
+    <div id="option_checked_absent" role="option">item</div>
+  </div>
+
+  <div role="menu">
+    <div id="menuitem_checked_true" role="menuitem" aria-checked="true">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_mixed" role="menuitem" aria-checked="mixed">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_false" role="menuitem" aria-checked="false">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_empty" role="menuitem" aria-checked="">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_undefined" role="menuitem" aria-checked="undefined">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_absent" role="menuitem">Generic menuitems don't support aria-checked.</div>
+
+    <div id="menuitemcheckbox_checked_true" role="menuitemcheckbox" aria-checked="true">This menuitemcheckbox has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+    <div id="menuitemcheckbox_checked_mixed" role="menuitemcheckbox" aria-checked="mixed">This menuitemcheckbox has aria-checked="mixed" and should get STATE_CHECKABLE. It should also get STATE_MIXED.</div>
+    <div id="menuitemcheckbox_checked_false" role="menuitemcheckbox" aria-checked="false">This menuitemcheckbox has aria-checked="false" and should get STATE_CHECKABLE.</div>
+    <div id="menuitemcheckbox_checked_empty" role="menuitemcheckbox" aria-checked="">This menuitemcheckbox has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+    <div id="menuitemcheckbox_checked_undefined" role="menuitemcheckbox" aria-checked="undefined">This menuitemcheckbox has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+    <div id="menuitemcheckbox_checked_absent" role="menuitemcheckbox">This menuitemcheckbox has <emph>no</emph> aria-checked attribute and should <emph>not</emph> get STATE_CHECKABLE.</div>
+
+    <div id="menuitemcheckbox_readonly_true" role="menuitemcheckbox" aria-readonly="true">This menuitemcheckbox has aria-readonly="true" and should get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_false" role="menuitemcheckbox" aria-readonly="false">This menuitemcheckbox has aria-readonly="false" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_empty" role="menuitemcheckbox" aria-readonly="">This menuitemcheckbox has aria-readonly="" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_undefined" role="menuitemcheckbox" aria-readonly="undefined">This menuitemcheckbox has aria-readonly="undefined" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemcheckbox_readonly_absent" role="menuitemcheckbox">This menuitemcheckbox has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
+
+    <div id="menuitemradio_checked_true" role="menuitemradio" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+    <div id="menuitemradio_checked_mixed" role="menuitemradio" aria-checked="mixed">This menuitem has aria-checked="mixed" and should get STATE_CHECKABLE. It should not get STATE_MIXED.</div>
+    <div id="menuitemradio_checked_false" role="menuitemradio" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
+    <div id="menuitemradio_checked_empty" role="menuitemradio" aria-checked="">This menuitem has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+    <div id="menuitemradio_checked_undefined" role="menuitemradio" aria-checked="undefined">This menuitem has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+    <div id="menuitemradio_checked_absent" role="menuitemradio">This menuitem has <emph>no</emph> aria-checked attribute but should get STATE_CHECKABLE.</div>
+  </div>
+
+    <div id="menuitemradio_readonly_true" role="menuitemradio" aria-readonly="true">This menuitemradio has aria-readonly="true" and should get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_false" role="menuitemradio" aria-readonly="false">This menuitemradio has aria-readonly="false" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_empty" role="menuitemradio" aria-readonly="">This menuitemradio has aria-readonly="" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_undefined" role="menuitemradio" aria-readonly="undefined">This menuitemradio has aria-readonly="undefined" and should <emph>not</emph> get STATE_READONLY.</div>
+    <div id="menuitemradio_readonly_absent" role="menuitemradio">This menuitemradio has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
+
+  <div id="radio_checked_true" role="radio" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_CHECKED.</div>
+  <div id="radio_checked_mixed" role="radio" aria-checked="mixed">This radio button has aria-checked="mixed" and should get STATE_CHECKABLE. It should not get STATE_MIXED.</div>
+  <div id="radio_checked_false" role="radio" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
+  <div id="radio_checked_empty" role="radio" aria-checked="">This menuitem has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="radio_checked_undefined" role="radio" aria-checked="undefined">This menuitem has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="radio_checked_absent" role="radio">This menuitem has <emph>no</emph> aria-checked attribute but should get STATE_CHECKABLE.</div>
+
+  <div id="radiogroup_readonly_true" role="radiogroup" aria-readonly="true">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_false" role="radiogroup" aria-readonly="false">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_empty" role="radiogroup" aria-readonly="">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_undefined" role="radiogroup" aria-readonly="undefined">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+  <div id="radiogroup_readonly_absent" role="radiogroup">
+    <div role="radio">yes</div>
+    <div role="radio">no</div>
+  </div>
+
+  <div id="switch_readonly_true" role="switch" aria-readonly="true">This switch has aria-readonly="true" and should get STATE_READONLY.</div>
+  <div id="switch_readonly_false" role="switch" aria-readonly="false">This switch has aria-readonly="false" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="switch_readonly_empty" role="switch" aria-readonly="">This switch has aria-readonly="" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="switch_readonly_undefined" role="switch" aria-readonly="undefined">This switch has aria-readonly="undefined" and should <emph>not</emph> get STATE_READONLY.</div>
+  <div id="switch_readonly_absent" role="switch">This switch has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
+
+  <div id="textbox_readonly_true" role="textbox" aria-readonly="true"></div>
+  <div id="textbox_readonly_false" role="textbox" aria-readonly="false"></div>
+  <div id="textbox_readonly_empty" role="textbox" aria-readonly=""></div>
+  <div id="textbox_readonly_undefined" role="textbox" aria-readonly="undefined"></div>
+  <div id="textbox_readonly_absent" role="textbox"></div>
+
+  <div id="textbox_multiline_true" role="textbox" aria-multiline="true"></div>
+  <div id="textbox_multiline_false" role="textbox" aria-multiline="false"></div>
+  <div id="textbox_multiline_empty" role="textbox" aria-multiline=""></div>
+  <div id="textbox_multiline_undefined" role="textbox" aria-multiline="undefined"></div>
+  <div id="textbox_multiline_absent" role="textbox"></div>
+
+  <form action="">
+    <input id="native_textbox_nativereadonly_ariatrue" readonly="readonly" aria-readonly="true"/>
+    <input id="native_textbox_nativereadonly_ariafalse" readonly="readonly" aria-readonly="false"/>
+    <input id="native_textbox_nativereadonly_ariaempty" readonly="readonly" aria-readonly=""/>
+    <input id="native_textbox_nativereadonly_ariaundefined" readonly="readonly" aria-readonly="undefined"/>
+    <input id="native_textbox_nativereadonly_ariaabsent" readonly="readonly"/>
+
+    <input id="native_textbox_nativeeditable_ariatrue" aria-readonly="true"/>
+    <input id="native_textbox_nativeeditable_ariafalse" aria-readonly="false"/>
+    <input id="native_textbox_nativeeditable_ariaempty" aria-readonly=""/>
+    <input id="native_textbox_nativeeditable_ariaundefined" aria-readonly="undefined"/>
+    <input id="native_textbox_nativeeditable_ariaabsent"/>
+  </form>
+
+  <div role="tree">
+    <div id="treeitem_selected_true" role="treeitem" aria-selected="true">This treeitem has aria-selected="true" and should get STATE_SELECTABLE. It should also get STATE_SELECTED.</div>
+    <div id="treeitem_selected_false" role="treeitem" aria-selected="false">This treeitem has aria-selected="false" and should get STATE_SELECTABLE.</div>
+    <div id="treeitem_selected_empty" role="treeitem" aria-selected="">This treeitem has aria-selected="" and should <emph>not</emph> get STATE_SELECTABLE.</div>
+    <div id="treeitem_selected_undefined" role="treeitem" aria-selected="undefined">This treeitem has aria-selected="undefined" and should <emph>not</emph> get STATE_SELECTABLE.</div>
+    <div id="treeitem_selected_absent" role="treeitem">This treeitem has <emph>no</emph> aria-selected attribute and should <emph>not</emph> get STATE_SELECTABLE.</div>
+
+    <div id="treeitem_haspopup_true" role="treeitem" aria-haspopup="true">This treeitem has aria-haspopup="true" and should get STATE_HASPOPUP.</div>
+    <div id="treeitem_haspopup_false" role="treeitem" aria-haspopup="false">This treeitem has aria-haspopup="false" and should get STATE_HASPOPUP.</div>
+    <div id="treeitem_haspopup_empty" role="treeitem" aria-haspopup="">This treeitem has aria-haspopup="" and should <emph>not</emph> get STATE_HASPOPUP.</div>
+    <div id="treeitem_haspopup_undefined" role="treeitem" aria-haspopup="undefined">This treeitem has aria-haspopup="undefined" and should <emph>not</emph> get STATE_HASPOPUP.</div>
+    <div id="treeitem_haspopup_absent" role="treeitem">This treeitem has <emph>no</emph> aria-haspopup attribute and should <emph>not</emph> get STATE_HASPOPUP.</div>
+
+    <div id="treeitem_expanded_true" role="treeitem" aria-expanded="true">This treeitem has aria-expanded="true" and should get STATE_EXPANDABLE. It should also get STATE_EXPANDED.</div>
+    <div id="treeitem_expanded_false" role="treeitem" aria-expanded="false">This treeitem has aria-expanded="false" and should get STATE_EXPANDABLE. It should also get STATE_COLLAPSED.</div>
+    <div id="treeitem_expanded_empty" role="treeitem" aria-expanded="">This treeitem has aria-expanded="" and should <emph>not</emph> get STATE_EXPANDABLE.</div>
+    <div id="treeitem_expanded_undefined" role="treeitem" aria-expanded="undefined">This treeitem has aria-expanded="undefined" and should <emph>not</emph> get STATE_EXPANDABLE.</div>
+    <div id="treeitem_expanded_absent" role="treeitem">This treeitem has <emph>no</emph> aria-expanded attribute and should <emph>not</emph> get STATE_EXPANDABLE.</div>
+  </div>
+
+  </body>
+</html>

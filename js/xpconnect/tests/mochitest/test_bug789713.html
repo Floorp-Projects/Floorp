@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=789713
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 789713</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=789713">Mozilla Bug 789713</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="ifr"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 789713 **/
+
+// We can't set document.domain on mochi.test, because it's forbidden to set
+// document.domain to a TLD.
+var ifr = document.getElementById('ifr');
+
+SimpleTest.waitForExplicitFinish();
+ifr.src = window.location.toString().replace("mochi.test:8888", "test1.example.org")
+                                    .replace("test_bug789713", "file_bug789713")
+                                    .split('?')[0];
+window.onmessage = function(message) {
+  ok(message.data, "Test succeeded and didn't crash");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

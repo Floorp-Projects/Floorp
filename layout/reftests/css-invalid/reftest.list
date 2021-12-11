@@ -1,0 +1,14 @@
+# :invalid should not apply on fieldset (always barred from constraint validation)
+include fieldset/reftest.list
+
+# :invalid should apply on the following elements
+include button/reftest.list
+include input/reftest.list
+include select/reftest.list
+include textarea/reftest.list
+include output/reftest.list
+
+# default :invalid style
+include default-style/reftest.list
+
+include form/reftest.list

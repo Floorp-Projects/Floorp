@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll>
+<body>
+  <div style="width:400px; height:200px; overflow:scroll;
+              scrollbar-width: none;
+              border:2px solid black; background: red;
+              contain:paint;"
+       reftest-displayport-x="0" reftest-displayport-y="0"
+       reftest-displayport-w="800" reftest-displayport-h="2000"
+       reftest-async-scroll-x="0" reftest-async-scroll-y="100">
+    <!-- This element is what we're hoping will fill the scrollport
+         when the reftest snapshot is taken: -->
+    <div style="background: lime; margin-top: 100px; height: 600px"></div>
+
+    <!-- This element is just to be sure the scrollframe's "contain:paint"
+         styling is actually having an effect. "contain:paint" should make the
+         scrollframe become a containing block for this fixed-pos element, and
+         then this element will position itself off the bottom of the
+         scrollframe and will be entirely clipped. If we fail to honor
+         "contain:paint" for some reason, then this element will instead use
+         the *viewport* as its containing block, and it'll show up in the
+         reftest snapshot and cause the reftest to fail. -->
+    <div style="position: fixed; top: 320px; width: 50px; height: 50px;
+                background: purple;"></div>
+  </div>
+</body>
+</html>

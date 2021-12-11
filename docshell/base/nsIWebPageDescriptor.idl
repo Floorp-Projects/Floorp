@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "nsISupports.idl"
+interface nsIDocShell;
+
+/**
+ * The nsIWebPageDescriptor interface allows content being displayed in one
+ * window to be loaded into another window without refetching it from the
+ * network.
+ */
+
+[scriptable, uuid(6f30b676-3710-4c2c-80b1-0395fb26516e)]
+interface nsIWebPageDescriptor : nsISupports
+{
+ /**
+  * Tells the object to load the page that otherDocShell is currently loading,
+  * or has loaded already, as view source, with the url being `aURL`.
+  *
+  * @throws NS_ERROR_FAILURE - NS_ERROR_INVALID_POINTER
+  */
+  void loadPageAsViewSource(in nsIDocShell otherDocShell, in AString aURL);
+
+
+ /**
+  * Retrieves the page descriptor for the curent document.
+  * @note, currentDescriptor is currently always an nsISHEntry object or null.
+  */
+  readonly attribute nsISupports currentDescriptor;
+};

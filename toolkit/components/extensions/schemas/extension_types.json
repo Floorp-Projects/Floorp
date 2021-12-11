@@ -1,0 +1,149 @@
+// Copyright 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "extensionTypes",
+    "description": "The <code>browser.extensionTypes</code> API contains type declarations for WebExtensions.",
+    "types": [
+      {
+        "id": "ImageFormat",
+        "type": "string",
+        "enum": ["jpeg", "png"],
+        "description": "The format of an image."
+      },
+      {
+        "id": "ImageDetails",
+        "type": "object",
+        "description": "Details about the format, quality, area and scale of the capture.",
+        "properties": {
+          "format": {
+            "$ref": "ImageFormat",
+            "optional": true,
+            "description": "The format of the resulting image.  Default is <code>\"jpeg\"</code>."
+          },
+          "quality": {
+            "type": "integer",
+            "optional": true,
+            "minimum": 0,
+            "maximum": 100,
+            "description": "When format is <code>\"jpeg\"</code>, controls the quality of the resulting image.  This value is ignored for PNG images.  As quality is decreased, the resulting image will have more visual artifacts, and the number of bytes needed to store it will decrease."
+          },
+          "rect": {
+            "type": "object",
+            "optional": true,
+            "description": "The area of the document to capture, in CSS pixels, relative to the page.  If omitted, capture the visible viewport.",
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"},
+              "width": {"type": "number"},
+              "height": {"type": "number"}
+            }
+          },
+          "scale": {
+            "type": "number",
+            "optional": true,
+            "description": "The scale of the resulting image.  Defaults to <code>devicePixelRatio</code>."
+          },
+          "resetScrollPosition": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If true, temporarily resets the scroll position of the document to 0. Only takes effect if rect is also specified."
+          }
+        }
+      },
+      {
+        "id": "RunAt",
+        "type": "string",
+        "enum": ["document_start", "document_end", "document_idle"],
+        "description": "The soonest that the JavaScript or CSS will be injected into the tab."
+      },
+      {
+        "id": "CSSOrigin",
+        "type": "string",
+        "enum": ["user", "author"],
+        "description": "The origin of the CSS to inject, this affects the cascading order (priority) of the stylesheet."
+      },
+      {
+        "id": "InjectDetails",
+        "type": "object",
+        "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time.",
+        "properties": {
+          "code": {"type": "string", "optional": true, "description": "JavaScript or CSS code to inject.<br><br><b>Warning:</b><br>Be careful using the <code>code</code> parameter. Incorrect use of it may open your extension to <a href=\"https://en.wikipedia.org/wiki/Cross-site_scripting\">cross site scripting</a> attacks."},
+          "file": {"type": "string", "optional": true, "description": "JavaScript or CSS file to inject."},
+          "allFrames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},
+          "matchAboutBlank": {"type": "boolean", "optional": true, "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."},
+          "frameId": {
+            "type": "integer",
+            "minimum": 0,
+            "optional": true,
+            "description": "The ID of the frame to inject the script into. This may not be used in combination with <code>allFrames</code>."
+          },
+          "runAt": {
+            "$ref": "RunAt",
+            "optional": true,
+            "default": "document_idle",
+            "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
+          },
+          "cssOrigin": {
+            "$ref": "CSSOrigin",
+            "optional": true,
+            "description": "The css origin of the stylesheet to inject. Defaults to \"author\"."
+          }
+        }
+      },
+      {
+        "id": "Date",
+        "choices": [
+          {
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "object",
+            "isInstanceOf": "Date",
+            "additionalProperties": { "type": "any" }
+          }
+        ]
+      },
+      {
+        "id": "ExtensionFileOrCode",
+        "choices": [
+          {
+            "type": "object",
+            "properties": {
+              "file": {
+                "$ref": "manifest.ExtensionURL"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "PlainJSONValue",
+        "description": "A plain JSON value",
+        "choices": [
+          { "type": "null" },
+          { "type": "number" },
+          { "type": "string" },
+          { "type": "boolean" },
+          { "type": "array", "items": {"$ref": "PlainJSONValue"} },
+          { "type": "object", "additionalProperties": { "$ref": "PlainJSONValue" } }
+        ]
+      }
+    ]
+  }
+]

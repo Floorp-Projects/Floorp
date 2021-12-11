@@ -1,0 +1,31 @@
+[package]
+name = "geckoservo"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+
+[lib]
+name = "geckoservo"
+path = "lib.rs"
+
+[features]
+gecko_debug = ["style/gecko_debug", "nsstring/gecko_debug"]
+gecko_refcount_logging = ["style/gecko_refcount_logging", "servo_arc/gecko_refcount_logging"]
+
+[dependencies]
+atomic_refcell = "0.1"
+bincode = "1.0"
+cssparser = "0.29"
+cstr = "0.2"
+gecko-profiler = { path = "../../../tools/profiler/rust-api" }
+libc = "0.2"
+log = {version = "0.4", features = ["release_max_level_info"]}
+malloc_size_of = {path = "../../components/malloc_size_of"}
+nsstring = {path = "../../../xpcom/rust/nsstring/"}
+num-traits = "0.2"
+selectors = {path = "../../components/selectors"}
+servo_arc = {path = "../../components/servo_arc"}
+smallvec = "1.0"
+style = {path = "../../components/style", features = ["gecko"]}
+style_traits = {path = "../../components/style_traits"}
+to_shmem = {path = "../../components/to_shmem"}

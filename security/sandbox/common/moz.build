@@ -1,0 +1,54 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
+
+UNIFIED_SOURCES += [
+    "SandboxSettings.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+XPIDL_SOURCES += [
+    "mozISandboxSettings.idl",
+]
+
+XPIDL_MODULE = "sandbox"
+
+if CONFIG["MOZ_SANDBOX"] and CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
+    UNIFIED_SOURCES += [
+        "test/SandboxTest.cpp",
+        "test/SandboxTestingChild.cpp",
+        "test/SandboxTestingParent.cpp",
+    ]
+
+    EXPORTS.mozilla += [
+        "test/SandboxTestingChild.h",
+        "test/SandboxTestingParent.h",
+    ]
+
+    IPDL_SOURCES += [
+        "test/PSandboxTesting.ipdl",
+    ]
+
+    XPIDL_SOURCES += [
+        "test/mozISandboxTest.idl",
+    ]
+
+    LOCAL_INCLUDES += [
+        "/netwerk/base",
+    ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+EXPORTS.mozilla += [
+    "SandboxSettings.h",
+]

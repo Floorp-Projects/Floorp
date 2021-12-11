@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/storage.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/components/SidebarToggle.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % storageDTD SYSTEM "chrome://devtools/locale/storage.dtd">
+  %storageDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+
+  <html:link rel="localization" href="devtools/client/storage.ftl"/>
+
+  <popupset id="storagePopupSet">
+    <menupopup id="storage-tree-popup">
+      <menuitem id="storage-tree-popup-delete-all"
+                label="&storage.popupMenu.deleteAllLabel;"/>
+      <menuitem id="storage-tree-popup-delete-all-session-cookies"
+                label="&storage.popupMenu.deleteAllSessionCookiesLabel;"/>
+      <menuitem id="storage-tree-popup-delete"/>
+    </menupopup>
+    <menupopup id="variable-view-popup">
+      <menuitem id="variable-view-popup-copy"
+                label="&storage.popupMenu.copyLabel;"/>
+    </menupopup>
+    <menupopup id="storage-table-popup">
+      <menuitem id="storage-table-popup-add"/>
+      <menuitem id="storage-table-popup-delete"/>
+      <menuitem id="storage-table-popup-delete-all-from"/>
+      <menuitem id="storage-table-popup-delete-all"
+                label="&storage.popupMenu.deleteAllLabel;"/>
+      <menuitem id="storage-table-popup-delete-all-session-cookies"
+                label="&storage.popupMenu.deleteAllSessionCookiesLabel;"/>
+    </menupopup>
+  </popupset>
+
+  <box flex="1" class="devtools-responsive-container theme-body">
+    <vbox id="storage-tree"/>
+    <splitter class="devtools-side-splitter"/>
+    <vbox flex="1">
+      <hbox id="storage-toolbar" class="devtools-toolbar devtools-input-toolbar">
+        <html:input id="storage-searchbox"
+                    class="devtools-filterinput"
+                    placeholder="&searchBox.placeholder;"/>
+        <hbox class="devtools-separator"/>
+        <html:button id="add-button"
+                class="devtools-button add-button"></html:button>
+        <html:button id="refresh-button"
+                class="devtools-button refresh-button"></html:button>
+        <html:button class="devtools-button sidebar-toggle" hidden=""></html:button>
+      </hbox>
+      <vbox id="storage-table" class="theme-sidebar" flex="1"/>
+    </vbox>
+    <splitter class="devtools-side-splitter"/>
+    <vbox id="storage-sidebar" class="devtools-sidebar-tabs" hidden="true">
+      <vbox flex="1"/>
+    </vbox>
+  </box>
+
+</window>

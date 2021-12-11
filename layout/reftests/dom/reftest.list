@@ -1,0 +1,51 @@
+# various tests involving dynamic insertion using the DOM
+
+# append a single element
+== appendsingle.html appendsingle-ref.html
+
+# append several elements
+== appendmultiple.html appendmultiple-ref.html
+
+# insert a single element
+== insertsingle.html insertsingle-ref.html
+
+# insert several elements
+== insertmultiple.html insertmultiple-ref.html
+
+# insert multiple nodes to a parent and one of its children
+== inserttoparentandchild-1.html inserttoparentandchild-ref.html
+== inserttoparentandchild-2.html inserttoparentandchild-ref.html
+
+# insert a parent with child and then insert more children to the parent
+== insertparentandchild.html insertparentandchild-ref.html
+
+# insert nodes to two different parents
+== inserttwoparents.html inserttwoparents-ref.html
+
+# multiple content inserts and appends
+# multiple range inserts
+== insertmultiplemultiple-1.html insertmultiplemultiple-ref.html
+# a range insert and an append
+== insertmultiplemultiple-2.html insertmultiplemultiple-ref.html
+# multiple range inserts and an append
+== insertmultiplemultiple-2.html insertmultiplemultiple-ref.html
+
+# testing bindings that have multiple insertion points
+== multipleinsertionpoints-ref2-shadow.xhtml multipleinsertionpoints-ref.xhtml
+# append a single element
+== multipleinsertionpoints-appendsingle-1-shadow.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-appendsingle-2-shadow.xhtml multipleinsertionpoints-ref.xhtml
+# append several elements
+== multipleinsertionpoints-appendmultiple-shadow.xhtml multipleinsertionpoints-ref.xhtml
+# insert a single element
+== multipleinsertionpoints-insertsingle-1-shadow.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-insertsingle-2-shadow.xhtml multipleinsertionpoints-ref.xhtml
+# insert several elements
+== multipleinsertionpoints-insertmultiple-shadow.xhtml multipleinsertionpoints-ref.xhtml
+
+# test appending some nodes whose frame construction should be done lazily
+# followed by appending a node that might not be done lazily
+== multipleappendwithxul.xhtml multipleappendwithxul-ref.xhtml
+== multipleappendwithinput.xhtml multipleappendwithinput-ref.xhtml
+== multipleappendwitheditable.xhtml multipleappendwitheditable-ref.xhtml
+

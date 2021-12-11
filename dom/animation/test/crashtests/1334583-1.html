@@ -1,0 +1,9 @@
+<div style="width: 200px; height: 200px; background: purple" id=div>
+</div>
+<script>
+const animation = div.animate(
+  [ { transform: "scale(1)" },
+    { transform: "scale(2)" } ],
+    { iterations: Infinity, duration: 512 } );
+animation.currentTime = 2147483647;
+</script>

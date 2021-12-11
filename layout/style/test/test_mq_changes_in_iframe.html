@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Media feature value change propagation in an iframe</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<iframe id="iframe"></iframe>
+<pre id="test"></pre>
+<script>
+add_task(async () => {
+  const mqString = "(prefers-reduced-motion: reduce)";
+
+  await SpecialPowers.pushPrefEnv({ set: [['ui.prefersReducedMotion', 0]]});
+
+  iframe.src = SimpleTest.getTestFileURL("mq_changes_child.html")
+                         .replace("mochi.test:8888", "example.com");
+  await new Promise(resolve => window.addEventListener("message", event => {
+    if (event.data == "ready") {
+      resolve();
+    }
+  }, { once: true } ));
+
+  const mql = matchMedia(mqString);
+  ok(!mql.matches, `Doesn't matches ${mqString}`);
+
+  const changedInThisDocument = new Promise(resolve => {
+    mql.addEventListener("change", event => { resolve(event.matches); });
+  });
+  const changedInIFrame = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if ("matches" in event.data) {
+        resolve(event.data.matches);
+      }
+    }, { once: true });
+  });
+
+  await SpecialPowers.pushPrefEnv({ set: [['ui.prefersReducedMotion', 1]]});
+
+  const results =
+      await Promise.allSettled([ changedInThisDocument, changedInIFrame ]);
+
+  results.forEach(result => {
+    is(result.status, "fulfilled");
+    ok(result.value, `Matches ${mqString}`);
+  });
+});
+</script>
+</body>
+</html>

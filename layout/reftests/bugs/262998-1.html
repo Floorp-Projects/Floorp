@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body onload="setTimeout(doTest,0);">
+
+<iframe id="edit"  style="display:none;" src=""></iframe>
+
+<script>
+  var x=document.getElementById('edit');
+  function doTest(){
+    x.style.display='block';
+    x.contentDocument.body.innerHTML="This is a test";
+    x.contentDocument.designMode='on';
+    x.contentDocument.execCommand("selectAll", false, "");
+    x.contentDocument.execCommand("bold", false, "");
+    x.contentDocument.execCommand("justifyCenter", false, "");
+    x.contentWindow.getSelection().removeAllRanges();
+    document.documentElement.className = "";
+  }
+</script>
+</body>
+</html>

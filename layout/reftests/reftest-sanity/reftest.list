@@ -1,0 +1,219 @@
+== data:text/html,<body> about:blank
+== data:text/plain, about:blank
+!= data:text/plain,HELLO about:blank
+
+# these tests make sure async reftests work:
+== chrome://reftest/content/reftest-sanity/test-async.xhtml chrome://reftest/content/reftest-sanity/test-async-ref.xhtml
+== test-async.html test-async-ref.html
+
+# test that zoom works (and really zooms, not just scales)
+fails-if(useDrawSnapshot) == test-zoom.html test-zoom-ref.html
+
+== text-zoom.html text-zoom-ref.html
+!= text-zoom.html text-zoom-notref.html
+
+# make sure we don't fall over if the root is missing
+== no-root.html about:blank
+
+# Makes sure that the file: protocol handler and HTTP server both
+# choose HTML vs. XHTML processing based on the file extensions.
+!= html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml
+HTTP != html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml
+
+# make sure red and green colors are not the default and are different from
+# each other
+!= green.html default.html
+!= green.html red.html
+!= red.html default.html
+
+# Make sure about:blank works, even via HTTP.
+== blank.html about:blank
+== about:blank blank.html
+HTTP == blank.html about:blank
+HTTP == about:blank blank.html
+# same for data:
+== default.html data:text/html,<div>Text</div>
+== data:text/html,<div>Text</div> default.html
+HTTP == default.html data:text/html,<div>Text</div>
+HTTP == data:text/html,<div>Text</div> default.html
+!= blank.html default.html
+HTTP != blank.html default.html
+
+fails-if(geckoview&&device) == filter-1.xhtml filter-1-ref.xhtml
+fails-if(geckoview&&device) == filter-2.xhtml filter-2-ref.xhtml
+
+# test that the MozReftestInvalidate event fires
+== invalidation.html about:blank
+fails-if(useDrawSnapshot) == zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
+
+# test that xulRuntime.OS works
+fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
+fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
+fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
+
+# test parsing of asserts() expressions
+asserts(0) load about:blank
+asserts(0-5) load about:blank
+asserts-if(true,0) load about:blank
+asserts-if(false,7) load about:blank
+asserts-if(true,0-4) load about:blank
+asserts-if(false,6-8) load about:blank
+
+# test that <div> is display:block
+== div.html div-ref.html
+
+# test script keyword
+include scripttests.list
+
+# test url-prefix
+include urlprefixtests.list
+
+# test defaults
+include defaults-tests.list
+
+# test that all corners are visible
+!= corners-1.html corners-1-ref.html
+!= corners-2.html corners-2-ref.html
+!= corners-3.html corners-3-ref.html
+!= corners-4.html corners-4-ref.html
+
+# Test that the harness gives the correct page dimensions.
+!= page-width-3.9in.html page-width-4in.html
+== page-width-4.1in.html page-width-4in.html
+== page-width-auto.html page-width-4in.html
+!= page-height-2in.html page-height-2.1in.html
+== page-height-2in.html page-height-nobreak.html
+== page-height-2.1in.html page-height-forcebreak.html
+
+# Check that tests that need focus are skipped when it's not available
+needs-focus load needs-focus.html
+
+# Bug 632636
+fails == data:text/plain,HELLO about:blank
+needs-focus == data:text/plain, about:blank
+
+# Sanity check of viewport+displayport overrides
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) fails-if(useDrawSnapshot) != test-displayport-2.html test-displayport-ref.html # bug 593168
+skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,0-1,0-1390) random-if(Android) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html
+skip-if(!browserIsRemote) == 656041-1.html 656041-1-ref.html
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-ref.html # bug 694706
+
+# IPC Position-fixed frames/layers test
+# Fixed layers are temporarily disabled (bug 656167).
+#pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed.html test-pos-fixed-ref.html
+#pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-bg-attachment-fixed.html test-bg-attachment-fixed-ref.html
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed-transform.html test-pos-fixed-transform-ref.html
+
+# reftest syntax: require-or
+require-or(unrecognizedCondition,skip) script scripttest-fail.html
+require-or(true&&unrecognizedCondition,skip) script scripttest-fail.html
+require-or(unrecognizedCondition&&true,skip) script scripttest-fail.html
+require-or(unrecognizedCondition,fails) script scripttest-fail.html
+require-or(true,fails) script scripttest-pass.html
+require-or(true&&true,fails) script scripttest-pass.html
+
+# tests for pref(...) syntax in manifest, including "fails" examples with incorrect prefs
+# a boolean pref
+pref(gfx.downloadable_fonts.enabled,true) != font-download.html font-default.html
+pref(gfx.downloadable_fonts.enabled,false) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,0) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,"foo") == font-download.html font-default.html
+# a non-existent pref
+fails pref(not.a.real.pref.name,1) == font-download.html font-default.html
+# an integer pref
+pref(font.size.variable.x-western,16) == font-size-16.html font-default.html
+pref(font.size.variable.x-western,16) != font-size-24.html font-default.html
+pref(font.size.variable.x-western,24) == font-size-24.html font-default.html
+pref(font.size.variable.x-western,24) != font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,false) == font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,"foo") == font-size-16.html font-default.html
+# a string pref
+pref(font.default.x-western,"serif") == font-serif.html font-default.html
+pref(font.default.x-western,"serif") != font-sans-serif.html font-default.html
+pref(font.default.x-western,"sans-serif") == font-sans-serif.html font-default.html
+pref(font.default.x-western,"sans-serif") != font-serif.html font-default.html
+fails pref(font.default.x-western,true) == font-serif.html font-default.html
+fails pref(font.default.x-western,0) == font-serif.html font-default.html
+# tests for ref-pref, and test-pref
+ref-pref(font.size.variable.x-western,16) == font-size-16.html font-default.html
+ref-pref(font.size.variable.x-western,16) != font-size-24.html font-default.html
+ref-pref(font.size.variable.x-western,24) == font-size-24.html font-default.html
+ref-pref(font.size.variable.x-western,24) != font-size-16.html font-default.html
+fails ref-pref(font.size.variable.x-western,false) == font-size-16.html font-default.html
+fails ref-pref(font.size.variable.x-western,"foo") == font-size-16.html font-default.html
+test-pref(font.size.variable.x-western,16) == font-default.html font-size-16.html
+test-pref(font.size.variable.x-western,16) != font-default.html font-size-24.html
+test-pref(font.size.variable.x-western,24) == font-default.html font-size-24.html
+test-pref(font.size.variable.x-western,24) != font-default.html font-size-16.html
+fails test-pref(font.size.variable.x-western,false) == font-default.html font-size-16.html
+fails test-pref(font.size.variable.x-western,"foo") == font-default.html font-size-16.html
+ref-pref(font.size.variable.x-western,16) test-pref(font.size.variable.x-western,24) != font-default.html font-default.html
+ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,16) != font-default.html font-default.html
+ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,24) == font-default.html font-default.html
+
+# reftest syntax: fuzzy(0-maxPixelDifference,0-maxNumberDifferingPixels)
+noautofuzz fuzzy(0-1,0-250000) == fuzzy.html fuzzy-ref.html
+noautofuzz fuzzy(0-1,0-250000) != too-fuzzy.html fuzzy-ref.html
+noautofuzz fuzzy-if(true,0-1,0-250000) == fuzzy.html fuzzy-ref.html
+noautofuzz fuzzy-if(false,0-2,0-1) == fuzzy-ref.html fuzzy-ref.html
+# test some ranged fuzzes
+noautofuzz fuzzy(1-10,1-250000) fuzzy-if(false,5-10,0-250000) == fuzzy.html fuzzy-ref.html
+noautofuzz fuzzy(0-0,0-250000) != fuzzy.html fuzzy-ref.html
+noautofuzz fuzzy(0-1,0-2) != fuzzy.html fuzzy-ref.html
+# If enabled, the following two should result in UNEXPECTED-PASS because
+# they are both overfuzzed
+# noautofuzz fuzzy(3-4,0-250000) == fuzzy.html fuzzy-ref.html
+# noautofuzz fuzzy(0-1,250001-250002) == fuzzy.html fuzzy-ref.html
+#
+# When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
+noautofuzz fails fuzzy-if(false,0-2,0-1) == fuzzy.html fuzzy-ref.html
+
+# Test that reftest-no-paint fails correctly.
+fails-if(layerChecksEnabled) == reftest-no-paint.html reftest-no-paint-ref.html
+
+skip-if(!asyncPan||!browserIsRemote) == async-scroll-1a.html async-scroll-1-ref.html
+
+# Disable low-res painting for this test as it will cause more to
+# be drawn than we want.
+defaults pref(layers.low-precision-buffer,false)
+skip-if(!asyncPan||!browserIsRemote) != async-scroll-1b.html async-scroll-1-ref.html
+defaults
+
+skip-if(!asyncPan||!browserIsRemote) == async-scroll-1c.html async-scroll-1-ref.html
+
+skip-if(!Android) pref(apz.allow_zooming,true) != async-zoom-1.html async-zoom-1-ref.html
+fuzzy(0-112,0-800) skip-if(!Android) pref(apz.allow_zooming,true) == async-zoom-2.html async-zoom-2-ref.html
+
+# reftest-opaque-layer
+== reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
+!= reftest-opaque-layer-pass.html about:blank
+!= about:blank reftest-opaque-layer-pass.html
+fails-if(layerChecksEnabled) == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+
+# If reftest-opaque-layer fails (no matter whether it fails in the test or in the reference),
+# it shouldn't matter whether the test matches the reference.
+fails != reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
+fails == reftest-opaque-layer-fail.html about:blank
+fails == about:blank reftest-opaque-layer-fail.html
+fails-if(layerChecksEnabled) != reftest-opaque-layer-fail.html about:blank
+fails-if(layerChecksEnabled) != about:blank reftest-opaque-layer-fail.html
+
+# reftest-opaque-layer and reftest-wait
+== reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
+!= reftest-opaque-layer-wait-pass.html about:blank
+fails-if(layerChecksEnabled) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
+fails-if(layerChecksEnabled) != reftest-opaque-layer-wait-fail.html about:blank
+
+# reftest-assigned-layer
+!= reftest-assigned-layer-pass.html about:blank
+fails-if(layerChecksEnabled) != reftest-assigned-layer-fail-1.html about:blank
+fails-if(layerChecksEnabled) != reftest-assigned-layer-fail-2.html about:blank
+fails-if(layerChecksEnabled) != reftest-assigned-layer-fail-3.html about:blank
+fails-if(layerChecksEnabled) != reftest-assigned-layer-fail-4.html about:blank
+
+# reftest-resolution
+pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == reftest-resolution.html reftest-resolution-ref.html
+
+== reftest-no-flush.html reftest-no-flush-ref.html
+
+skip-if(Android) HTTP == exampleorg-1.html exampleorg-1-ref.html

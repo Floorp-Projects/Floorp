@@ -1,0 +1,8 @@
+This color conversion code is from the Chromium open source project available here:
+
+http://code.google.com/chromium/
+
+The code comes from svn revision 63840 on 2010-10-26.
+
+It has been superseded upstream by libyuv (which is spawned off it). Bug 791941 is about
+trying to replace this code with libyuv.

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if button has a disabled fieldset ancestor, it is barred from
+             constraint validation and should not be affected by :valid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body>
+    <fieldset disabled>
+      <fieldset>
+        <button class='notvalid'></button>
+      </fieldset>
+    </fieldset>
+  </body>
+</html>
+

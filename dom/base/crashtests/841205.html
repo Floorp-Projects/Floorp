@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var b = document.createElement('bdi');
+  var c = document.createElement('div');
+  var d = document.createElement('div');
+
+  b.appendChild(c);
+  c.appendChild(d);
+  b.removeChild(c);
+  d.appendChild(b);
+  document.createElement('div').appendChild(c);
+  b.appendChild(document.createElement('div'));
+
+  b.setAttribute('dir', "auto");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

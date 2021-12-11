@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi=id=1368544
+-->
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1368544">Mozilla Bug 1368544</a>
+<div id="display"></div>
+<textarea id=textarea></textarea>
+<pre id="test">
+</pre>
+
+<script class="testbody">
+function hasEmptyTextNode(div) {
+  return div.firstChild.nodeType === Node.TEXT_NODE && div.firstChild.length === 0;
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let textarea = document.getElementById("textarea");
+  let editor = SpecialPowers.wrap(textarea).editor;
+
+  let spellChecker = SpecialPowers.Cu.createSpellChecker();
+  spellChecker.InitSpellChecker(editor, false);
+
+  textarea.focus();
+
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(textarea, () => {
+    spellChecker.UpdateCurrentDictionary(() => {
+      textarea.value = "ABC";
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child nodes");
+      sendString("D");
+      is(textarea.value, "ABCD", "D is last character");
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child nodes");
+      textarea.value = "";
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child node even if value is empty");
+
+      sendString("AAA");
+      synthesizeKey("KEY_Backspace", {repeat: 3});
+      is(textarea.value, "", "value is empty");
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child node even if value is empty");
+
+      textarea.value = "ABC";
+      SpecialPowers.wrap(textarea).setUserInput("");
+      is(textarea.value, "",
+         "textarea should become empty when setUserInput() is called with empty string");
+      ok(hasEmptyTextNode(editor.rootElement),
+            "editor of textarea should only have an empty text node when user input emulation set the value to empty");
+      todo(editor.rootElement.childNodes.length === 1, "editor of textarea should only have a single child");
+      if (editor.rootElement.childNodes.length > 1) {
+        is(editor.rootElement.childNodes.length, 2, "There should be only one additional <br> node");
+        is(editor.rootElement.lastChild.tagName.toLowerCase(), "br", "The node should be a <br> element node");
+        ok(!SpecialPowers.wrap(editor.rootElement.lastChild).isPaddingForEmptyEditor,
+            "The <br> should not be a padding <br> element");
+      }
+      textarea.value = "ABC";
+      synthesizeKey("KEY_Enter", {repeat: 2});
+      textarea.value = "";
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child node even if value is empty");
+
+      sendString("AAA");
+      is(textarea.value, "AAA", "value is AAA");
+      textarea.addEventListener("keyup", (e) => {
+        if (e.key == "Enter") {
+          textarea.value = "";
+          ok(editor.rootElement.hasChildNodes(),
+             "editor of textarea has child node even if value is empty");
+          SimpleTest.finish();
+        }
+      });
+
+      synthesizeKey("KEY_Enter");
+    });
+ });
+});
+</script>
+</body>
+</html>

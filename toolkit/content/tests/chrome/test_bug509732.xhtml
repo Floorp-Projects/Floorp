@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for bug 509732
+  -->
+<window title="Bug 509732" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+
+  <vbox id="nb" hidden="true"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"
+        onload="test()"/>
+
+  <!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+var gNotificationBox;
+
+// Tests that a notification that is added in an hidden box didn't throw the animation
+function test() {
+  SimpleTest.waitForExplicitFinish();
+  gNotificationBox = new MozElements.NotificationBox(e => {
+    document.getElementById("nb").appendChild(e);
+  });
+
+  is(gNotificationBox.allNotifications.length, 0, "There should be no initial notifications");
+
+  gNotificationBox.appendNotification("notification1",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+
+  is(gNotificationBox.allNotifications.length, 1, "Notification exists");
+  is(gNotificationBox._animating, false, "Notification shouldn't be animating");
+
+  test1();
+}
+
+// Tests that a notification that is removed from an hidden box didn't throw the animation
+function test1() {
+  let notification = gNotificationBox.getNotificationWithValue("notification1");
+  gNotificationBox.removeNotification(notification);
+  ok(!gNotificationBox.currentNotification, "Test 1 should show no current animation");
+  is(gNotificationBox._animating, false, "Notification shouldn't be animating");
+  is(gNotificationBox.allNotifications.length, 0, "Test 1 should show no notifications present");
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+
+</window>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for bug 549797 - Removing href attribute doesn't remove link styling</title>
+  <style type="text/css">
+    :link, :visited {
+      color:blue;
+    }
+    link {
+      display:block;
+    }
+    #link2::before {
+      content:"Test link 1";
+    }
+    #link4::before {
+      content:"Test link 2";
+    }
+    #link6::before {
+      content:"Test link 3";
+    }
+  </style>
+</head>
+<body onload="run_test();">
+<script type="text/javascript">
+function run_test()
+{
+  // Remove the href attributes of the links so they should be restyled as
+  // non-links.
+  document.getElementById("link1").removeAttribute("href");
+  document.getElementById("link2").removeAttribute("href");
+
+  // Add the href attribute to the links so they should be restyled as links.
+  document.getElementById("link3").href = "http://example.com/1";
+  document.getElementById("link4").href = "http://example.com/1";
+  document.getElementById("link5").setAttribute("href", "");
+  document.getElementById("link6").setAttribute("href", "");
+}
+</script>
+<p>
+  <a id="link1" href="http://example.com/1">Test anchor 1</a>
+  <link id="link2" href="http://example.com/1"/>
+  <a id="link3">Test anchor 2</a>
+  <link id="link4"/>
+  <a id="link5">Test anchor 3</a>
+  <link id="link6"/>
+</p>
+</body>
+</html>

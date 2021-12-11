@@ -1,0 +1,21 @@
+<!-- Quirks mode on purpose -->
+<html>
+  <head>
+    <style>
+      body { overflow: scroll; border: 1px solid green; }
+    </style>
+    <script>
+      onload = function() {
+        var newBody = document.createElement("body");
+        newBody.textContent = "This element should not have scrollbars!";
+        document.documentElement.appendChild(newBody);
+        window.nooptimize = newBody.offsetWidth;
+        document.body.remove();
+        newBody.scrollHeight; // Asserts in a debug build
+      }
+    </script>
+  </head>
+  <body>
+    First body
+  </body>
+</html>

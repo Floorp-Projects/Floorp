@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+<![CDATA[
+
+function boom() {
+    var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("id", "g");
+    var iframe = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+    g.appendChild(iframe);
+    document.documentElement.appendChild(g);
+    var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#g");
+    document.documentElement.appendChild(use);
+    setTimeout(function() {
+        setTimeout(function() {
+            g.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "video"));
+        }, 3);
+    }, 3);
+}
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+</svg>

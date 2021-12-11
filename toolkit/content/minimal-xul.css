@@ -1,0 +1,233 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This file should only contain a minimal set of rules for the XUL elements
+ * that may be implicitly created as part of HTML/SVG documents (e.g.
+ * scrollbars).  Rules for everything else related to XUL can be found in
+ * xul.css.  (This split of the XUL rules is to minimize memory use and improve
+ * performance in HTML/SVG documents.)
+ *
+ * ANYTHING ADDED TO THIS FILE WILL APPLY TO ALL DOCUMENTS, INCLUDING WEB CONTENT.
+ * IF UA RULES ARE ONLY NEEDED IN CHROME, THEY SHOULD BE ADDED TO xul.css.
+ */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+
+* {
+  -moz-user-focus: ignore;
+  user-select: none;
+  display: -moz-box;
+  box-sizing: border-box;
+}
+
+/* hide the content and destroy the frame */
+[hidden="true"] {
+  display: none;
+}
+
+/* hide the content, but don't destroy the frames */
+[collapsed="true"] {
+  visibility: collapse;
+}
+
+/* Rules required for style caching of anonymous content scrollbar parts */
+@supports -moz-bool-pref("layout.css.cached-scrollbar-styles.enabled") {
+  :is(scrollcorner, resizer, scrollbar, scrollbarbutton, slider):where(:-moz-native-anonymous) {
+    /* All scrollbar parts must not inherit any properties from the scrollable
+     * element (except for visibility and pointer-events), for the anonymous
+     * content style caching system to work.
+     */
+    all: initial;
+    visibility: inherit;
+    pointer-events: inherit;
+
+    /* These properties are not included in 'all'. */
+    -moz-list-reversed: initial;
+    -moz-context-properties: initial;
+    -moz-control-character-visibility: initial;
+    -moz-font-smoothing-background-color: initial;
+    -moz-min-font-size-ratio: initial;
+    math-depth: initial;
+    /* As long as inert implies pointer-events: none as it does now, we're
+     * good. */
+    -moz-inert: initial;
+
+    /* Using initial is not sufficient for direction, since its initial value can
+     * depend on the document's language.
+     *
+     * LTR is what we want for all scrollbar parts anyway, so that e.g. we don't
+     * reverse the rendering of a horizontal scrollbar.
+     */
+    direction: ltr;
+
+    /* Similarly for font properties, whose initial values depend on the
+     * document's language.  Scrollbar parts don't have any text or rely on
+     * font metrics.
+     */
+    font: 16px sans-serif;
+
+    /* The initial value of justify-items is `legacy`, which makes it depend on
+     * the parent style.
+     *
+     * Reset it to something else.
+     */
+    justify-items: start;
+
+    /* Avoid `object > *` rule in html.css from setting a useless, non-initial
+     * value of vertical-align.
+     */
+    vertical-align: initial !important;
+
+    /* Duplicate the rules from the '*' rule above, which were clobbered by the
+     * 'all: initial' declaration.
+     *
+     * The other zero specificity rules above are on :root, and scrollbar parts
+     * cannot match :root, so no need to duplicate them.
+     */
+    -moz-user-focus: ignore;
+    user-select: none;
+    display: -moz-box;
+    box-sizing: border-box;
+  }
+
+  /* There are other rules that set direction and cursor on scrollbar,
+   * expecting them to inherit into its children.  Explicitly inherit those,
+   * overriding the 'all: initial; direction: ltr;' declarations above.
+   */
+  :is(scrollbarbutton, slider, thumb):where(:-moz-native-anonymous) {
+    direction: inherit;
+    cursor: inherit;
+  }
+}
+
+scrollbar[orient="vertical"],
+slider[orient="vertical"],
+thumb[orient="vertical"] {
+  -moz-box-orient: vertical;
+}
+
+thumb {
+  /* Prevent -moz-user-modify declaration from designmode.css having an
+   * effect. */
+  -moz-user-modify: initial;
+
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+/********** resizer **********/
+
+resizer {
+  position: relative;
+  z-index: 2147483647;
+  /* Widget gets decide on its own whether or not the native theme should apply,
+     based on the context/OS theme. If it does not, SVG background will kick in. */
+  appearance: auto;
+  -moz-default-appearance: resizer;
+
+  /* native resizer should never flip on its own;
+     we will flip it (or the SVG background) with CSS transform below. */
+  direction: ltr;
+  writing-mode: initial;
+
+  background: url("chrome://global/skin/icons/resizer.svg") no-repeat;
+  background-size: 100% 100%;
+  cursor: se-resize;
+  width: 15px;
+  height: 15px;
+}
+
+/* bottomstart/bottomend is supported in XUL window only */
+resizer[dir="bottom"][flip],
+resizer[dir="bottomleft"],
+resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
+resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+resizer[dir="bottomleft"],
+resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
+resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
+  cursor: sw-resize;
+}
+
+resizer[dir="top"],
+resizer[dir="bottom"] {
+  cursor: ns-resize;
+}
+
+resizer[dir="left"] {
+  transform: scaleX(-1);
+}
+
+resizer[dir="left"],
+resizer[dir="right"] {
+  cursor: ew-resize;
+}
+
+resizer[dir="topleft"] {
+  cursor: nw-resize;
+}
+
+resizer[dir="topright"] {
+  cursor: ne-resize;
+}
+
+/********** scrollbar **********/
+
+thumb {
+  display: -moz-box !important;
+}
+
+/* Don't collapse thumb when scrollbar is disabled. */
+thumb[collapsed="true"] {
+  visibility: hidden;
+}
+
+scrollbar, scrollbarbutton, scrollcorner, slider, thumb {
+  user-select: none;
+}
+
+scrollcorner {
+  display: -moz-box !important;
+}
+
+scrollcorner[hidden="true"] {
+  display: none !important;
+}
+
+scrollbar[value="hidden"] {
+  visibility: hidden;
+}
+
+@media (-moz-scrollbar-start-backward: 0) {
+  scrollbarbutton[sbattr="scrollbar-up-top"] {
+    display: none;
+  }
+}
+
+@media (-moz-scrollbar-start-forward: 0) {
+  scrollbarbutton[sbattr="scrollbar-down-top"] {
+    display: none;
+  }
+}
+
+@media (-moz-scrollbar-end-backward: 0) {
+  scrollbarbutton[sbattr="scrollbar-up-bottom"] {
+    display: none;
+  }
+}
+
+@media (-moz-scrollbar-end-forward: 0) {
+  scrollbarbutton[sbattr="scrollbar-down-bottom"] {
+    display: none;
+  }
+}
+
+@media (-moz-scrollbar-thumb-proportional) {
+  thumb {
+    -moz-box-flex: 1;
+  }
+}

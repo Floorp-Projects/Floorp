@@ -1,0 +1,281 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://browser/skin/error-pages.css");
+
+body {
+  --warning-color: #ffa436;
+}
+
+@media (prefers-color-scheme: dark)  {
+  body {
+    --warning-color: #ffbd4f;
+  }
+}
+
+@media (prefers-contrast) {
+  body {
+    --warning-color: var(--in-content-page-color);
+  }
+}
+
+body.certerror {
+  width: 100%;
+}
+
+body.captiveportal .title {
+  background-image: url("wifi.svg");
+}
+
+body.certerror .title {
+  background-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+body.certerror .title {
+  color: var(--warning-color);
+}
+
+body.blocked .title {
+  background-image: url("chrome://global/skin/icons/blocked.svg");
+}
+
+body.clockSkewError .title {
+  background-image: none;
+  background-repeat: no-repeat;
+}
+
+#errorContainer {
+  display: none;
+}
+
+/* Pressing the retry button will cause the cursor to flicker from a pointer to
+ * not-allowed. Override the disabled cursor behaviour since we will never show
+ * the button disabled as the initial state. */
+button:disabled {
+  cursor: pointer;
+}
+
+#errorWhatToDoTitle {
+  margin-top: 2em;
+}
+
+#enableTls10Container {
+  display: none;
+}
+
+#prefChangeContainer {
+  display: none;
+}
+
+#learnMoreContainer {
+  display: none;
+}
+
+#openInNewWindowContainer {
+  display: none;
+}
+
+#certErrorAndCaptivePortalButtonContainer {
+  display: none;
+}
+
+#advancedPanelButtonContainer {
+  background-color: rgba(128, 128, 147, 0.1);
+  display: flex;
+  justify-content: end;
+  padding: 5px;
+  margin-top: 2em;
+}
+
+body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
+  display: flex;
+}
+
+body:not(.neterror) #netErrorButtonContainer {
+  display: none;
+}
+
+#netErrorButtonContainer > .try-again {
+  margin-top: 1.2em;
+}
+
+#advancedButton {
+  display: none;
+}
+
+body.captiveportal #returnButton {
+  display: none;
+}
+
+body:not(.captiveportal) #openPortalLoginPageButton {
+  display: none;
+}
+
+body:not(.clockSkewError) #certErrorAndCaptivePortalButtonContainer > .try-again,
+body:not(.clockSkewError) #advancedPanelContainer .try-again {
+  display: none;
+}
+
+#openPortalLoginPageButton {
+  margin-inline-start: 0;
+}
+
+body:not(.neterror) #advancedButton {
+  display: block;
+}
+
+#blockingErrorReporting {
+  display: none;
+  padding-bottom: 10px;
+}
+
+#advancedPanelContainer {
+  width: 100%;
+  position: absolute;
+  left: 0;
+}
+
+.advanced-panel {
+  /* Hidden until the link is clicked */
+  display: none;
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
+  margin: 48px auto;
+  min-width: var(--in-content-container-min-width);
+  max-width: var(--in-content-container-max-width);
+}
+
+#overrideWeakCryptoPanel {
+  display: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-content: space-between;
+  align-items: flex-start;
+  margin-top: 1em;
+}
+
+.mitm-name,
+#hostname {
+  font-weight: bold;
+}
+
+#errorCode {
+  white-space: nowrap;
+}
+
+#viewCertificate {
+  margin: 0 3em;
+}
+
+#badCertTechnicalInfo {
+  margin: 3em 3em 1em;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+#certificateErrorDebugInformation {
+  background-color: var(--in-content-box-info-background) !important;
+  border-top: 1px solid var(--in-content-border-color);
+  width: 100%;
+  padding: 1em 17.5%;
+  box-sizing: border-box;
+}
+
+#certificateErrorText {
+  font-family: monospace;
+  white-space: pre-wrap;
+  padding: 1em 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#cert_domain_link:not([href]) {
+  color: var(--in-content-page-color);
+  text-decoration: none;
+}
+
+.exceptionDialogButtonContainer {
+  display: flex;
+  justify-content: end;
+}
+
+.exceptionDialogButtonContainer[hidden] {
+  display: none;
+}
+
+.clockSkewError #returnButton {
+  display: none;
+}
+
+.clockSkewError #advancedButton {
+  display: none;
+}
+
+.clockSkewError .try-again {
+  display: block;
+  margin-top: 0.3em;
+}
+
+.clockSkewError #exceptionDialogButton {
+  display: none;
+}
+
+.clockSkewError #advancedPanelReturnButton {
+  display: none;
+}
+
+.malformedURI .try-again {
+  display: none;
+}
+
+#wrongSystemTimeWithoutReferencePanel {
+  display: none;
+}
+
+@media only screen and (max-width: 959px) {
+  #certificateErrorText {
+    /* The encoded certificate chain looks better when we're not
+     * wrapping words on big screens, but at some point we need
+     * to wrap to avoid overflowing */
+    word-wrap: anywhere;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #badCertTechnicalInfo {
+    margin: 10px 10px 5px;
+  }
+
+  #viewCertificate {
+    margin: 0 10px;
+  }
+
+  #errorCode {
+    /* Break the error code to avoid long codes overflowing the screen */
+    white-space: normal;
+    word-wrap: anywhere;
+  }
+}
+
+@media (max-width: 970px) {
+  body.certerror .title {
+    /* !important is necessary here until Bug 1723718 is resolved */
+    background-image: url("chrome://global/skin/icons/warning.svg") !important;
+    background-position: top left;
+    padding-top: 60px;
+    margin-top: -60px;
+  }
+  /* Reduce the negative margin on small viewport sizes to avoid exceeding the
+   * 38px body vertical padding error-pages.css sets, leaving 8px space: */
+  @media (max-height: 480px) {
+    body.certerror .title {
+      margin-top: -30px;
+    }
+  }
+
+  body.certerror .title:dir(rtl) {
+    background-position-x: right;
+  }
+}

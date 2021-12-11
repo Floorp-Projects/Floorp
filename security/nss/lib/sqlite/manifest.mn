@@ -1,0 +1,30 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+MODULE = nss
+
+LIBRARY_NAME = sqlite
+LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+RES = $(NULL)
+
+DEFINES += -DSQLITE_THREADSAFE=1
+
+PRIVATE_EXPORTS = \
+	sqlite3.h \
+	$(NULL)
+
+CSRCS = \
+	sqlite3.c \
+	$(NULL)
+
+# only add module debugging in opt builds if DEBUG_PKCS11 is set
+ifdef DEBUG_PKCS11
+  DEFINES += -DDEBUG_MODULE
+endif
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

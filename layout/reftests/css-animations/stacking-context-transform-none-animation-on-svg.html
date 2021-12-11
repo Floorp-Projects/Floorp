@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<title>Transform animation creates a stacking context even though it has only
+'transform:none' keyframes on an svg element</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  position: fixed;
+  background: green;
+  top: 50px;
+}
+@keyframes TransformNone {
+  from, to { transform: none }
+}
+#test {
+  animation: TransformNone 100s infinite;
+}
+</style>
+<span></span>
+<svg id="test" width="100px" height="100px">
+  <rect x="0" y="0" width="100%" height="100%" fill="blue"/>
+</svg>

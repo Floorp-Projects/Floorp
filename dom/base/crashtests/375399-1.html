@@ -1,0 +1,11 @@
+<html class="reftest-wait">
+<head>
+<title>Testcase bug 375399 - Crash [@ nsElementSH::PostCreate] when removing window when accessing xul:tree in xul:tabs onselect in svg:foreignObject</title>
+<script>
+setTimeout('document.documentElement.className = ""', 500);
+</script>
+</head>
+<body>
+<iframe id="content" src="./375399-1-inner.xhtml"></iframe>
+</body>
+</html>

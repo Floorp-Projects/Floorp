@@ -1,0 +1,109 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This picks up *hapticfeedback* which is graveyard
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("*OSFile*"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("*ocationProvider*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("windows/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("mac/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("mac/*OSPermissionRequest*"):
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
+
+with Files("linux/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("android/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("tests/chrome.ini"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("tests/*constants*"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("tests/mochitest.ini"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/*1197901*"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
+
+if toolkit == "windows":
+    DIRS += ["windows"]
+elif toolkit == "cocoa":
+    DIRS += ["mac"]
+elif toolkit == "android":
+    DIRS += ["android"]
+elif toolkit == "gtk":
+    DIRS += ["linux"]
+
+if toolkit != "cocoa":
+    EXPORTS += [
+        "nsOSPermissionRequest.h",
+    ]
+
+XPIDL_SOURCES += [
+    "nsIOSFileConstantsService.idl",
+    "nsIOSPermissionRequest.idl",
+]
+
+XPIDL_MODULE = "dom_system"
+
+EXPORTS += [
+    "nsDeviceSensors.h",
+    "nsOSPermissionRequestBase.h",
+]
+
+EXPORTS.mozilla += [
+    "OSFileConstants.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "IOUtils.h",
+    "PathUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "IOUtils.cpp",
+    "nsDeviceSensors.cpp",
+    "nsOSPermissionRequestBase.cpp",
+    "OSFileConstants.cpp",
+    "PathUtils.cpp",
+]
+
+EXTRA_JS_MODULES += [
+    "NetworkGeolocationProvider.jsm",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+# We fire the nsDOMDeviceAcceleration
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/dom/bindings",
+    "/js/xpconnect/loader",
+    "/xpcom/base",
+]
+
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini", "tests/ioutils/chrome.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]

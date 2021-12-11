@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.aboutdebugging-plug {
+  padding-block: calc(var(--base-unit) * 3);
+  border-block-start: 1px solid var(--separator-color);
+
+  /* display flex to handle showing the icon with ::before */
+  display: flex;
+  flex-direction: row;
+  column-gap: calc(var(--base-unit) * 2);
+  align-items: baseline;
+  font-size: var(--body-10-font-size);
+  font-weight: var(--body-10-font-weight);
+}
+
+.aboutdebugging-plug::before {
+  flex: 0 0 auto;
+  width: calc(var(--base-unit) * 4);
+  height: calc(var(--base-unit) * 4);
+  content: "";
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-image: url(chrome://global/skin/icons/developer.svg);
+  /* the icon size is taller than the line-height of the text. Since the
+     text can occupy multiple lines, and we want to keep the icon aligned
+     with respect to the first line, instead of align-items: center in
+     .aboutdebugging-plug, we use baseline, and fine tune the position here. */
+  position: relative;
+  top: 3px;
+}
+
+.registrations-container {
+  flex-grow: 1;
+}
+
+.registrations-container__list {
+  padding-inline-start: 0;
+}
+
+.registrations-container__item {
+  list-style-type: none;
+  margin: 0;
+  padding: calc(var(--base-unit) * 5) 0;
+}
+
+.registrations-container__item:first-child {
+  padding-top: 0;
+}
+
+.registrations-container__item:not(:last-child) {
+  border-bottom: 1px solid var(--separator-color);
+}

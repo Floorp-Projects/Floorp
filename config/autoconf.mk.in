@@ -1,0 +1,6 @@
+ifndef INCLUDED_AUTOCONF_MK
+INCLUDED_AUTOCONF_MK = autoconf.mk
+include $(DEPTH)/config/emptyvars.mk
+@ALLSUBSTS@
+include $(topsrcdir)/config/baseconfig.mk
+endif

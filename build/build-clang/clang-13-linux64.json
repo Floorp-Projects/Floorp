@@ -1,0 +1,25 @@
+{
+    "stages": "4",
+    "pgo" : true,
+    "build_libcxx": true,
+    "build_wasm": true,
+    "build_type": "Release",
+    "assertions": false,
+    "cc": "/usr/bin/gcc",
+    "cxx": "/usr/bin/g++",
+    "as": "/usr/bin/gcc",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
+    "patches": [
+      "static-llvm-symbolizer_clang_12.patch",
+      "find_symbolizer_linux_clang_10.patch",
+      "android-mangling-error_clang_12.patch",
+      "unpoison-thread-stacks_clang_10.patch",
+      "downgrade-mangling-error_clang_12.patch",
+      "revert-llvmorg-13-init-7827-g2a078c307204.patch",
+      "revert-llvmorg-13-init-8182-gc2297544c047.patch",
+      "loosen-msvc-detection.patch",
+      "fuzzing_ccov_build_clang_12.patch",
+      "llvmorg-14-init-6706-g6404f4b5af39.patch",
+      "revert-ga478b0a199f4.patch"
+    ]
+}

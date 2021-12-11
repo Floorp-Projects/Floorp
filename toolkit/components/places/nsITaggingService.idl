@@ -1,0 +1,66 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIVariant;
+
+[scriptable, uuid(9759bd0e-78e2-4421-9ed1-c676e1af3513)]
+interface nsITaggingService : nsISupports
+{
+  /**
+   * Tags a URL with the given set of tags. Current tags set for the URL
+   * persist. Tags in aTags which are already set for the given URL are
+   * ignored.
+   *
+   * @param aURI
+   *        the URL to tag.
+   * @param aTags
+   *        Array of tags to set for the given URL.  Each element within the
+   *        array can be either a tag name (non-empty string) or a concrete
+   *        itemId of a tag container.
+   * @param [optional] aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*.
+   *        Defaults to SOURCE_DEFAULT if omitted.
+   */
+  void tagURI(in nsIURI aURI,
+              in nsIVariant aTags,
+              [optional] in unsigned short aSource);
+
+  /**
+   * Removes tags from a URL. Tags from aTags which are not set for the
+   * given URL are ignored.
+   *
+   * @param aURI
+   *        the URL to un-tag.
+   * @param aTags
+   *        Array of tags to unset.  Pass null to remove all tags from the given
+   *        url.  Each element within the array can be either a tag name
+   *        (non-empty string) or a concrete itemId of a tag container.
+   * @param [optional] aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*.
+   *        Defaults to SOURCE_DEFAULT if omitted.
+   */
+  void untagURI(in nsIURI aURI,
+                in nsIVariant aTags,
+                [optional] in unsigned short aSource);
+
+  /**
+   * Retrieves all tags set for the given URL.
+   *
+   * @param aURI
+   *        a URL.
+   * @returns array of tags (sorted by name).
+   */
+  Array<AString> getTagsForURI(in nsIURI aURI);
+
+};
+
+%{C++
+
+#define TAGGING_SERVICE_CID "@mozilla.org/browser/tagging-service;1"
+
+%}

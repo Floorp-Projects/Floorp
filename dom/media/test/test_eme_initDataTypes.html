@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var tests = [
+  {
+    name: "One keyId",
+    initDataType: 'keyids',
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "Two keyIds",
+    initDataType: 'keyids',
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "Two keyIds, temporary session",
+    initDataType: 'keyids',
+    initData: '{"type":"temporary", "kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "Two keyIds, persistent session, type before kids",
+    initDataType: 'keyids',
+    initData: '{"type":"persistent-license", "kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"persistent-license"}',
+    sessionType: 'persistent-license',
+    expectPass: false,
+  },
+  {
+    name: "Invalid keyId",
+    initDataType: 'keyids',
+    initData: '{"kids":["0"]}',
+    sessionType: 'temporary',
+    expectPass: false,
+  },
+  {
+    name: "Empty keyId",
+    initDataType: 'keyids',
+    initData: '{"kids":[""]}',
+    sessionType: 'temporary',
+    expectPass: false,
+  },
+  {
+    name: "Invalid initData",
+    initDataType: 'keyids',
+    initData: 'invalid initData',
+    sessionType: 'temporary',
+    expectPass: false,
+  },
+  {
+    name: "'webm' initDataType",
+    initDataType: 'webm',
+    initData: 'YAYeAX5Hfod+V9ANHtANHg==',
+    expectedRequest: '{"kids":["YAYeAX5Hfod-V9ANHtANHg"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "'webm' initDataType with non 16 byte keyid",
+    initDataType: 'webm',
+    initData: 'YAYeAX5Hfod',
+    expectedRequest: '{\"kids\":[\"YAYeAX5Hfoc\"],\"type\":\"temporary\"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+];
+
+function PrepareInitData(initDataType, initData)
+{
+  if (initDataType == "keyids") {
+    return new TextEncoder().encode(initData);
+  } else if (initDataType == "webm") {
+    return StringToArrayBuffer(atob(initData));
+  }
+}
+
+function Test(test) {
+  return new Promise(function(resolve, reject) {
+    var configs = [{
+      initDataTypes: [test.initDataType],
+      videoCapabilities: [{contentType: 'video/mp4' }],
+    }];
+    navigator.requestMediaKeySystemAccess('org.w3.clearkey', configs)
+      .then((access) => access.createMediaKeys())
+      .then((mediaKeys) => {
+          var session = mediaKeys.createSession(test.sessionType);
+          session.addEventListener("message", function(event) {
+            is(event.messageType, "license-request", "'" + test.name + "' MediaKeyMessage type should be license-request.");
+            var text = new TextDecoder().decode(event.message);
+            is(text, test.expectedRequest, "'" + test.name + "' got expected response.");
+            is(text == test.expectedRequest, test.expectPass,
+               "'" + test.name + "' expected to " + (test.expectPass ? "pass" : "fail"));
+            resolve();
+          });
+          var initData = PrepareInitData(test.initDataType, test.initData);
+          return session.generateRequest(test.initDataType, initData);
+        }
+      ).catch((x) => {
+        ok(!test.expectPass, "'" + test.name + "' expected to fail.");
+        resolve();
+      });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+Promise.all(tests.map(Test)).then(function() {
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,8 @@
+. "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
+
+# Add-on signing is not required for DevEdition
+MOZ_REQUIRE_SIGNING=
+
+ac_add_options --with-branding=browser/branding/aurora
+
+. "$topsrcdir/build/mozconfig.common.override"

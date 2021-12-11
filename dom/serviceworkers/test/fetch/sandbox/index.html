@@ -1,0 +1,5 @@
+<!DOCTYPE html>
+<script>
+  window.parent.postMessage({status: "ok", result: true, message: "The iframe is not being intercepted"}, "*");
+  window.parent.postMessage({status: "done"}, "*");
+</script>

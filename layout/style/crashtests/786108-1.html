@@ -1,0 +1,22 @@
+<html>
+  <head></head>
+  <body></body>
+  <script type="text/javascript">
+    // Detect severe performance and memory issues when large amounts of errors
+    // are reported from CSS embedded in a file with a long data URI. Addressed
+    // by 786108; should finish quickly with that patch and run for a very long
+    // time otherwise.
+
+    var img = new Array;
+    img.push('<img src="data:image/svg+xml,');
+    img.push(encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="300px" height="300px">'));
+
+    for (var i = 0 ; i < 10000 ; i++)
+      img.push(encodeURIComponent('<circle cx="0" cy="0" r="1" style="xxx-invalid-property: 0;"/>'));
+
+    img.push(encodeURIComponent('</svg>'));
+    img.push('">');
+
+    document.getElementsByTagName('body')[0].innerHTML = img.join('');
+  </script>
+</html>

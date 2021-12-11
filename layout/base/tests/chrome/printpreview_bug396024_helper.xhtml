@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=396024
+-->
+<window title="Mozilla Bug 396024" onload="run()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<iframe id="i" src="about:blank" type="content"></iframe>
+<iframe src="about:blank" type="content"></iframe>
+<script type="application/javascript">
+<![CDATA[
+// Note: We can't use window.frames directly here because the type="content"
+// attributes isolate the frames into their own BrowsingContext hierarchies.
+let frameElts = document.getElementsByTagName("iframe");
+
+var is = window.arguments[0].is;
+var ok = window.arguments[0].ok;
+var todo = window.arguments[0].todo;
+var SimpleTest = window.arguments[0].SimpleTest;
+var gWbp;
+function printpreview() {
+  gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
+  var listener = {
+    onLocationChange: function(webProgress, request, location, flags) { },
+    onProgressChange: function(webProgress, request, curSelfProgress, 
+                               maxSelfProgress, curTotalProgress,
+                               maxTotalProgress) { },
+    onSecurityChange: function(webProgress, request, state) { },
+    onStateChange: function(webProgress, request, stateFlags, status) { },
+    onStatusChange: function(webProgress, request, status, message) { },
+    onContentBlockingEvent: function(webProgress, request, event) { },
+    QueryInterface: function(iid) {
+      if (iid.equals(Ci.nsIWebProgressListener) ||
+          iid.equals(Ci.nsISupportsWeakReference))
+            return this;
+      throw Components.Exception("", Cr.NS_NOINTERFACE);
+    }
+  }
+  let settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                       .getService(Ci.nsIPrintSettingsService).newPrintSettings;
+  settings.showPrintProgress = false; 
+  gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
+}
+
+function exitprintpreview() {
+  frameElts[1].contentWindow.docShell.exitPrintPreview();
+}
+
+function finish() {
+  SimpleTest.finish();
+  window.close();
+}
+
+function run()
+{
+/** Test for Bug 396024 **/
+  var printService = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                       .getService(Ci.nsIPrintSettingsService);
+
+  if (printService.lastUsedPrinterName != '') {
+    printpreview();
+    ok(gWbp.doingPrintPreview, "Should be doing print preview");
+    exitprintpreview();
+    ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore1");
+    printpreview();
+    setTimeout(run2, 0)
+  } else {
+    todo(false, "No printer seems installed on this machine, that is necessary for this test");
+    finish();
+  }
+}
+
+function run2() {
+  var loadhandler = function() {
+    document.getElementById("i").removeEventListener("load", arguments.callee, true);
+    setTimeout(run3, 0);
+  };
+  document.getElementById("i").addEventListener("load", loadhandler, true);
+  frameElts[0].contentWindow.location.reload();
+}
+
+function run3() {
+  gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
+  ok(gWbp.doingPrintPreview, "Should be doing print preview");
+  exitprintpreview();
+  setTimeout(run4, 0);
+}
+
+function run4() {
+  var i = document.getElementById("i");
+  i.remove();
+  var loadhandler = function() {
+    document.getElementById("i").removeEventListener("load", loadhandler, true);
+    setTimeout(run5, 0);
+  };
+  i.addEventListener("load", loadhandler, true);
+  document.documentElement.getBoundingClientRect();
+  document.documentElement.prepend(i);
+}
+
+function run5() {
+  gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
+  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore2");
+
+  //XXX this shouldn't be necessary, see bug 405555
+  printpreview();
+  exitprintpreview();
+  finish(); //should not have crashed after all of this
+}
+]]></script>
+</window>

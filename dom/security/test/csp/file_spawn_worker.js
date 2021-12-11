@@ -1,0 +1,1 @@
+postMessage("worker is executing");

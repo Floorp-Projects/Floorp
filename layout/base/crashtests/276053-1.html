@@ -1,0 +1,21 @@
+<html><head><title>Testcase bug 276053 - Closeing a tab with http://linuxblog.sytes.net loaded in it causes Firefox to crash [@ nsView::GetDimensions]</title>
+<style>
+#serendipityRightSideBar {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+<table><tbody><tr>
+<td>
+You should be able to see a green block at the right of this text<br>
+Closing this page, should not cause a crash.<br>
+
+<script>var x=document.body.offsetHeight;</script>
+</td>
+<td id="serendipityRightSideBar">
+ <iframe src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3C/head%3E%3Cbody%20style%3D%22background-color%3Agreen%22%3EYou%20should%20be%20able%20to%20see%20this%20text%3C/body%3E%3C/html%3E"></iframe>           
+</td>
+</tr></tbody></table>
+</body></html>

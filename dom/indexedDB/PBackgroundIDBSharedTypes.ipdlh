@@ -1,0 +1,309 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBDatabaseFile;
+include protocol PBackgroundMutableFile;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
+include protocol PRemoteLazyInputStream; // FIXME: bug 792908
+
+include DOMTypes;
+include IPCBlob;
+include ProtocolTypes;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+include "mozilla/dom/quota/SerializationHelpers.h";
+
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+using mozilla::dom::IDBCursor::Direction
+  from "mozilla/dom/IDBCursor.h";
+
+using mozilla::dom::indexedDB::StructuredCloneFileBase::FileType
+  from "mozilla/dom/IndexedDatabase.h";
+
+using class mozilla::dom::indexedDB::Key
+  from "mozilla/dom/indexedDB/Key.h";
+
+using class mozilla::dom::indexedDB::KeyPath
+  from "mozilla/dom/indexedDB/KeyPath.h";
+
+using mozilla::dom::quota::PersistenceType
+  from "mozilla/dom/quota/PersistenceType.h";
+
+[MoveOnly] using mozilla::SerializedStructuredCloneBuffer
+  from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct SerializedKeyRange
+{
+  Key lower;
+  Key upper;
+  bool lowerOpen;
+  bool upperOpen;
+  bool isOnly;
+};
+
+union BlobOrMutableFile
+{
+  null_t;
+  IPCBlob;
+  PBackgroundMutableFile;
+};
+
+struct SerializedStructuredCloneFile
+{
+  BlobOrMutableFile file;
+  FileType type;
+};
+
+struct SerializedStructuredCloneReadInfo
+{
+  SerializedStructuredCloneBuffer data;
+  SerializedStructuredCloneFile[] files;
+  bool hasPreprocessInfo;
+};
+
+struct SerializedStructuredCloneWriteInfo
+{
+  SerializedStructuredCloneBuffer data;
+  uint64_t offsetToKeyProp;
+};
+
+struct IndexUpdateInfo
+{
+  int64_t indexId;
+  Key value;
+  Key localizedValue;
+};
+
+struct DatabaseMetadata
+{
+  nsString name;
+  uint64_t version;
+  PersistenceType persistenceType;
+};
+
+struct ObjectStoreMetadata
+{
+  int64_t id;
+  nsString name;
+  KeyPath keyPath;
+  bool autoIncrement;
+};
+
+struct IndexMetadata
+{
+  int64_t id;
+  nsString name;
+  KeyPath keyPath;
+  nsCString locale;
+  bool unique;
+  bool multiEntry;
+  bool autoLocale;
+};
+
+struct DatabaseSpec
+{
+  DatabaseMetadata metadata;
+  ObjectStoreSpec[] objectStores;
+};
+
+struct ObjectStoreSpec
+{
+  ObjectStoreMetadata metadata;
+  IndexMetadata[] indexes;
+};
+
+struct CommonOpenCursorParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange? optionalKeyRange;
+  Direction direction;
+};
+
+struct ObjectStoreOpenCursorParams
+{
+  CommonOpenCursorParams commonParams;
+};
+
+struct ObjectStoreOpenKeyCursorParams
+{
+  CommonOpenCursorParams commonParams;
+};
+
+struct CommonIndexOpenCursorParams
+{
+  CommonOpenCursorParams commonParams;
+  int64_t indexId;
+};
+
+struct IndexOpenCursorParams
+{
+  CommonIndexOpenCursorParams commonIndexParams;
+};
+
+struct IndexOpenKeyCursorParams
+{
+  CommonIndexOpenCursorParams commonIndexParams;
+};
+
+// TODO: Actually, using a union here is not very nice, unless IPDL supported
+// struct inheritance. Alternatively, if IPDL supported enums, we could merge
+// the subtypes into one. Using a plain integer for discriminating the
+// subtypes would be too error-prone.
+union OpenCursorParams
+{
+  ObjectStoreOpenCursorParams;
+  ObjectStoreOpenKeyCursorParams;
+  IndexOpenCursorParams;
+  IndexOpenKeyCursorParams;
+};
+
+union DatabaseOrMutableFile
+{
+  PBackgroundIDBDatabaseFile;
+  PBackgroundMutableFile;
+};
+
+struct FileAddInfo
+{
+  DatabaseOrMutableFile file;
+  FileType type;
+};
+
+struct ObjectStoreAddPutParams
+{
+  int64_t objectStoreId;
+  SerializedStructuredCloneWriteInfo cloneInfo;
+  Key key;
+  IndexUpdateInfo[] indexUpdateInfos;
+  FileAddInfo[] fileAddInfos;
+};
+
+struct ObjectStoreAddParams
+{
+  ObjectStoreAddPutParams commonParams;
+};
+
+struct ObjectStorePutParams
+{
+  ObjectStoreAddPutParams commonParams;
+};
+
+struct ObjectStoreGetParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange keyRange;
+};
+
+struct ObjectStoreGetKeyParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange keyRange;
+};
+
+struct ObjectStoreGetAllParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange? optionalKeyRange;
+  uint32_t limit;
+};
+
+struct ObjectStoreGetAllKeysParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange? optionalKeyRange;
+  uint32_t limit;
+};
+
+struct ObjectStoreDeleteParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange keyRange;
+};
+
+struct ObjectStoreClearParams
+{
+  int64_t objectStoreId;
+};
+
+struct ObjectStoreCountParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange? optionalKeyRange;
+};
+
+struct IndexGetParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  SerializedKeyRange keyRange;
+};
+
+struct IndexGetKeyParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  SerializedKeyRange keyRange;
+};
+
+struct IndexGetAllParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  SerializedKeyRange? optionalKeyRange;
+  uint32_t limit;
+};
+
+struct IndexGetAllKeysParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  SerializedKeyRange? optionalKeyRange;
+  uint32_t limit;
+};
+
+struct IndexCountParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  SerializedKeyRange? optionalKeyRange;
+};
+
+union RequestParams
+{
+  ObjectStoreAddParams;
+  ObjectStorePutParams;
+  ObjectStoreGetParams;
+  ObjectStoreGetKeyParams;
+  ObjectStoreGetAllParams;
+  ObjectStoreGetAllKeysParams;
+  ObjectStoreDeleteParams;
+  ObjectStoreClearParams;
+  ObjectStoreCountParams;
+  IndexGetParams;
+  IndexGetKeyParams;
+  IndexGetAllParams;
+  IndexGetAllKeysParams;
+  IndexCountParams;
+};
+
+struct LoggingInfo
+{
+  nsID backgroundChildLoggingId;
+  int64_t nextTransactionSerialNumber;
+  int64_t nextVersionChangeTransactionSerialNumber;
+  uint64_t nextRequestSerialNumber;
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

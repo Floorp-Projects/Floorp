@@ -1,0 +1,154 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla-config.h"
+#include "AccessibleHandler.h"
+#include "HandlerDataUUID.h"
+
+import "ocidl.idl";
+import "servprov.idl";
+
+import "Accessible2_3.idl";
+import "AccessibleHypertext2.idl";
+import "AccessibleHyperlink.idl";
+import "AccessibleTable.idl";
+import "AccessibleTable2.idl";
+import "AccessibleTableCell.idl";
+
+typedef struct _StaticIA2Data
+{
+  NEWEST_IA2_INTERFACE* mIA2;
+  IAccessibleHypertext2* mIAHypertext;
+  IAccessibleHyperlink* mIAHyperlink;
+  IAccessibleTable* mIATable;
+  IAccessibleTable2* mIATable2;
+  IAccessibleTableCell* mIATableCell;
+} StaticIA2Data;
+
+typedef struct _DynamicIA2Data
+{
+  // From IAccessible/IAccessible2
+  VARIANT           mRole;
+  long              mState;
+  long              mChildCount;
+  long              mIA2Role;
+  AccessibleStates  mIA2States;
+  long              mLeft;
+  long              mTop;
+  long              mWidth;
+  long              mHeight;
+  long              mHwnd;
+  BSTR              mKeyboardShortcut;
+  BSTR              mName;
+  BSTR              mDescription;
+  BSTR              mDefaultAction;
+  BSTR              mValue;
+  BSTR              mAttributes;
+  IA2Locale         mIA2Locale;
+  // From IAccessibleAction
+  long              mNActions;
+  // From IAccessibleTableCell
+  long              mRowIndex;
+  long              mColumnIndex;
+  long              mRowExtent;
+  long              mColumnExtent;
+  boolean           mCellIsSelected;
+  long mNRowHeaderCells;
+  [size_is(mNRowHeaderCells)] long* mRowHeaderCellIds;
+  long mNColumnHeaderCells;
+  [size_is(mNColumnHeaderCells)] long* mColumnHeaderCellIds;
+  // From IAccessible2
+  long              mUniqueId;
+} DynamicIA2Data;
+
+interface IGeckoBackChannel;
+
+[uuid(2b0e83b3-fd1a-443f-9ed6-c00d39055b58)]
+interface HandlerData
+{
+  typedef struct _IA2Payload
+  {
+    StaticIA2Data mStaticData;
+    DynamicIA2Data mDynamicData;
+    IGeckoBackChannel* mGeckoBackChannel;
+  } IA2Payload;
+}
+
+[object,
+ uuid(IHANDLERCONTROL_IID),
+ async_uuid(ASYNCIHANDLERCONTROL_IID),
+ pointer_default(unique)]
+interface IHandlerControl : IUnknown
+{
+  HRESULT Invalidate();
+  HRESULT OnTextChange([in] long aHwnd, [in] long aIA2UniqueId,
+                       [in] VARIANT_BOOL aIsInsert,
+                       [in] IA2TextSegment* aText);
+}
+
+typedef struct _IARelationData
+{
+  BSTR mType;
+  long mNTargets;
+} IARelationData;
+
+typedef struct _AccChildData
+{
+  NEWEST_IA2_INTERFACE* mAccessible;
+  BSTR mText;
+  long mTextRole;
+  long mTextId;
+  long mTextState;
+  long mTextLeft;
+  long mTextTop;
+  long mTextWidth;
+  long mTextHeight;
+} AccChildData;
+
+[object,
+ uuid(IGECKOBACKCHANNEL_IID),
+ pointer_default(unique)]
+interface IGeckoBackChannel : IUnknown
+{
+  [propput] HRESULT HandlerControl([in] long aPid, [in] IHandlerControl* aCtrl);
+  HRESULT Refresh([out] DynamicIA2Data* aOutData);
+  [propget] HRESULT AllTextInfo([out] BSTR* aText,
+    [out, size_is(,*aNHyperlinks)] IAccessibleHyperlink*** aHyperlinks,
+    [out] long* aNHyperlinks,
+    [out, size_is(,*aNAttribRuns)] IA2TextSegment** aAttribRuns,
+    [out] long* aNAttribRuns);
+  [propget] HRESULT RelationsInfo(
+    [out, size_is(,*aNRelations)] IARelationData** aRelations,
+    [out] long* aNRelations);
+  [propget] HRESULT AllChildren(
+    [out, size_is(,*aNChildren)] AccChildData** aChildren,
+    [out] ULONG* aNChildren);
+}
+
+[uuid(1e545f07-f108-4912-9471-546827a80983)]
+library AccessibleHandlerTypeLib
+{
+  importlib("stdole2.tlb");
+
+  /**
+   * This definition is required in order for the handler implementation to
+   * support IDispatch (aka Automation). This is used by interpreted language
+   * FFIs to discover which interfaces may be controlled via IDispatch.
+   * (In particular, the python FFI used by NVDA needs this).
+   *
+   * In reality, the only a11y interface that is Automation compliant is
+   * IAccessible; our remaining interfaces are not.
+   *
+   * Once the FFI knows that IAccessible is supported, the FFI queries for
+   * IAccessible and is then able to resolve non-automation interfaces from
+   * there.
+   */
+  [uuid(HANDLER_CLSID)]
+  coclass AccessibleHandler
+  {
+    [default] interface IAccessible;
+  };
+};

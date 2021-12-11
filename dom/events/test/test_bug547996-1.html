@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=547996
+-->
+<head>
+  <title>Test for Bug 547996</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=547996">Mozilla Bug 547996</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 547996 **/
+/* mouseEvent.mozInputSource attribute */
+
+function prepareListener(eventName, expectedValue) {
+  return function(event) {
+    is(event.mozInputSource, expectedValue, "Correct .mozInputSource value in " + eventName);
+  };
+}
+
+const INPUT_SOURCE_UNKNOWN = MouseEvent.MOZ_SOURCE_UNKNOWN;
+const INPUT_SOURCE_KEYBOARD = MouseEvent.MOZ_SOURCE_KEYBOARD;
+
+function doTest() {
+  var eventNames = [
+    "mousedown",
+    "mouseup",
+    "click",
+    "dblclick",
+    "contextmenu",
+    "DOMMouseScroll",
+    "dragdrop",
+    "dragstart",
+    "dragend",
+    "dragenter",
+    "dragleave",
+    "dragover"
+  ];
+
+   var target = document.getElementById("testTarget");
+
+  for (var i in eventNames) {
+    for(var value = INPUT_SOURCE_UNKNOWN; value <= INPUT_SOURCE_KEYBOARD; value++) {
+      var eventName = eventNames[i];
+      var listener = prepareListener(eventName, value);
+
+      target.addEventListener(eventName, listener);
+
+      var newEvent = document.createEvent("MouseEvent");
+      newEvent.initNSMouseEvent(eventName, true, true, window, 0, 0, 0, 0, 0,
+                                false, false, false, false, 0, null, 0, value);
+      target.dispatchEvent(newEvent);
+      target.removeEventListener(eventName, listener);
+    }
+
+    // Events created by script that do not initialize the mozInputSource
+    // value should have the value MOZ_SOURCE_UNKNOWN
+    var listener = prepareListener(eventName, INPUT_SOURCE_UNKNOWN);
+    target.addEventListener(eventName, listener);
+
+    var newEvent = document.createEvent("MouseEvent");
+    newEvent.initMouseEvent(eventName, true, true, window, 0, 0, 0, 0, 0,
+                              false, false, false, false, 0, null);
+    target.dispatchEvent(newEvent);
+    target.removeEventListener(eventName, listener);
+
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+</script>
+</pre>
+<span id="testTarget" style="border: 1px solid black;">testTarget</span>
+</body>
+</html>

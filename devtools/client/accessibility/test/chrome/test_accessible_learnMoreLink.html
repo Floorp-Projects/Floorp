@@ -1,0 +1,98 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that LearnMoreLink parses and renders correctly text with learn more links.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>LearnMoreLink component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const { gDevTools } = require("devtools/client/framework/devtools");
+    const Services = browserRequire("Services");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const LearnMoreLink = createFactory(
+      browserRequire("devtools/client/accessibility/components/LearnMoreLink"));
+
+    class MockL10N {
+      constructor(bundle) {
+        this.bundle = bundle;
+      }
+
+      getStr(name) {
+        return this.bundle[name];
+      }
+
+      getFormatStr(name, ...args) {
+        let index = 0;
+        return this.bundle[name].replace("%S", () => args[index++]);
+      }
+    }
+
+    function testLinkClicked(link, expectedUrl) {
+      const browserWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+      const defaultOpenWebLinkIn = browserWindow.openWebLinkIn;
+
+      const checker = Symbol();
+      let onClickUrl = checker;
+      browserWindow.openWebLinkIn = url => {
+        onClickUrl = url;
+      };
+
+      Simulate.click(link);
+
+      ok(onClickUrl !== checker, "Link was clicked");
+      is(onClickUrl, expectedUrl, "Correct URL is opened");
+
+      browserWindow.openWebLinkIn = defaultOpenWebLinkIn;
+    }
+
+    const href = "http://example.com/";
+    const className = "test-class";
+    const l10n = new MockL10N({
+      message: "This is a message that contains a link. %S",
+      link: "Learn more",
+    });
+    const learnMoreLink = LearnMoreLink(
+      { href, className, l10n, learnMoreStringKey: "link", messageStringKey: "message" });
+    ok(LearnMoreLink, "Should be able to create LearnMoreLink instances");
+
+    ReactDOM.render(learnMoreLink, document.body);
+    const p = document.querySelector("p");
+    is(p.textContent, "This is a message that contains a link. Learn more",
+      "Text content for the whole paragraph is correct");
+
+    is(p.className, className, "Class name is set correctly.");
+
+    const link = p.querySelector(".link");
+    ok(link, "Link was rendered");
+    is(link.textContent, "Learn more", "Text content for link is correct");
+
+    testLinkClicked(link, href);
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

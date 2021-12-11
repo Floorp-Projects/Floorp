@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VRDisplay GetFrameData</title>
+    <meta name="timeout" content="long"/>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+    <script src="VRSimulationDriver.js"></script>
+    <script src="WebVRHelpers.js"></script>
+    <script src="requestPresent.js"></script>
+    <script src="runVRTest.js"></script>
+</head>
+<body id="body">
+    <canvas id="webglCanvas"></canvas>
+    <script>
+        "use strict";
+        var vrDisplay;
+        var vrRAF;
+        var canvas = document.getElementById('webglCanvas');
+        function startTest() {
+          promise_test((test) => {
+            return attachVRDisplay(test).then(() => {
+              VRSimulationDriver.SetEyeResolution(1332, 1586);
+              VRSimulationDriver.SetEyeParameter("left", -0.029, 0, 0, 41.65, 35.57, 48.00, 43.97);
+              VRSimulationDriver.SetEyeParameter("right", 0.029, 0, 0, 41.65, 43.97, 48.00, 35.57);
+              var poseOrient = new Float32Array([-0.188, -0.007, 0.045, -0.980]);
+              var posePos = new Float32Array([-0.161, 0.076, -0.250]);
+              var poseAngVel = new Float32Array([0.008, -0.002, -0.006]);
+              var poseAngAcc = new Float32Array([3.404, -1.469, -5.901]);
+              var poseLinVel = new Float32Array([0.001, -0.003, -0.002]);
+              var poseLinAcc = new Float32Array([0.007, 0.068, -0.052]);
+              VRSimulationDriver.SetVRDisplayPose(posePos, poseLinVel, poseLinAcc,
+                                                  poseOrient, poseAngVel, poseAngAcc);
+              VRSimulationDriver.UpdateVRDisplay();
+            }).then(() => {
+              return promise_test((test) => {
+                return setupVRDisplay(test).then(() => {
+                  return WebVRHelpers.RequestPresentOnVRDisplay(vrDisplay,
+                                                                [{ source: canvas }]);
+                }).then(() => {
+                  assert_true(vrDisplay.isPresenting, "vrDisplay.isPresenting must be true if requestPresent is fulfilled.");
+                  assert_equals(vrDisplay.getLayers().length, 1, "vrDisplay.getLayers() should return one layer.");
+
+                  verifyFrameData();
+                })
+              }, "WebVR requestPresent fulfilled");
+            })
+          }, "Finish setting up VR test data.");
+
+          function verifyFrameData() {
+            async_test(function (test) {
+              navigator.getVRDisplays().then((displays) => {
+                assert_equals(displays.length, 1, "displays.length must be one after attach.");
+                vrDisplay = displays[0];
+                vrDisplay.requestAnimationFrame(callback);
+
+                function callback() {
+                  var frameData1 = new VRFrameData();
+                  vrDisplay.getFrameData(frameData1);
+
+                  // We insert a new frame to confirm we still can get
+                  // the same data as the last getter.
+                  insertNewFrameData();
+
+                  var frameData2 = new VRFrameData();
+                  vrDisplay.getFrameData(frameData2);
+
+                  assert_equals(frameData1.timestamp, frameData2.timestamp,
+                                "frameData.timestamp at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(frameData1.leftProjectionMatrix,
+                                                       frameData2.leftProjectionMatrix),
+                              "frameData.leftProjectionMatrix at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(frameData1.leftViewMatrix,
+                                                       frameData2.leftViewMatrix),
+                              "frameData.leftViewMatrix at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(frameData1.rightProjectionMatrix,
+                                                       frameData2.rightProjectionMatrix),
+                              "frameData.rightProjectionMatrix at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(frameData1.rightViewMatrix,
+                                                       frameData2.rightViewMatrix),
+                              "frameData.rightViewMatrix at a frame should be equal.");
+
+                  var pose1 = frameData1.pose;
+                  var pose2 = frameData2.pose;
+                  assert_true(checkValueInFloat32Array(pose1.position,
+                                                       pose2.position),
+                              "pose.position at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(pose1.linearVelocity,
+                                                       pose2.linearVelocity),
+                              "pose.linearVelocity at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(pose1.linearAcceleration,
+                                                       pose2.linearAcceleration),
+                              "pose.linearAcceleration at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(pose1.orientation,
+                                                       pose2.orientation),
+                              "pose.orientation at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(pose1.angularVelocity,
+                                                       pose2.angularVelocity),
+                              "pose.angularVelocity at a frame should be equal.");
+
+                  assert_true(checkValueInFloat32Array(pose1.angularAcceleration,
+                                                       pose2.angularAcceleration),
+                              "pose.angularAcceleration at a frame should be equal.");
+                  test.done();
+                }
+              });
+            }, "WebVR returns the same frameData within a frame fulfilled");
+          }
+
+          function insertNewFrameData() {
+            var poseOrient = new Float32Array([-0.208, -0.017, 0.055, -0.930]);
+            var posePos = new Float32Array([-0.261, 0.036, -0.150]);
+            var poseAngVel = new Float32Array([0.018, -0.001, -0.003]);
+            var poseAngAcc = new Float32Array([1.504, -1.339, -4.901]);
+            var poseLinVel = new Float32Array([0.002, -0.001, -0.003]);
+            var poseLinAcc = new Float32Array([0.017, 0.061, -0.022]);
+            VRSimulationDriver.SetVRDisplayPose(posePos, poseLinVel, poseLinAcc,
+                                                poseOrient, poseAngVel, poseAngAcc);
+            VRSimulationDriver.UpdateVRDisplay();
+          }
+
+          function checkValueInFloat32Array(array1, array2) {
+            if (array1.length != array2.length) {
+              return false;
+            }
+            var index = 0;
+            while (index < array2.length) {
+              if (array1[index] != array2[index]) {
+                return false;
+              }
+              ++index;
+            }
+            return true;
+          }
+        }
+
+        runVRTest(startTest);
+    </script>
+</body>
+</html>

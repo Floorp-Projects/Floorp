@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "hasMozMallocUsableSize": true,
+  "reports": [
+    {"process": "P", "path": "explicit/xpcom/category-manager", "kind": 1, "units": 0, "amount": 56849, "description": "Desc."},
+    {"process": "P", "path": "explicit/storage/prefixset/goog-phish-shavar", "kind": 1, "units": 0, "amount": 670000, "description": "Desc."},
+
+    {"process": "P", "path": "explicit/spell-check", "kind": 1, "units": 0, "amount": 3, "description": "Desc."},
+
+    {"process": "P", "path": "page-faults-soft", "kind": 2, "units": 2, "amount": 61013, "description": "Desc."},
+
+    {"process": "P", "path": "canvas-2d-pixel-bytes", "kind": 2, "units": 0, "amount": 1000, "description": "Desc."},
+    {"process": "P", "path": "canvas-2d-pixel-bytes", "kind": 2, "units": 0, "amount": 2000, "description": "Desc."},
+
+    {"process": "P", "path": "foobaz", "kind": 2, "units": 0, "amount": 0, "description": "Desc."},
+
+    {"process": "P", "path": "a/b", "kind": 2, "units": 0, "amount": 2000000, "description": "Desc."},
+    {"process": "P", "path": "a/c/d", "kind": 2, "units": 0, "amount": 2998000, "description": "Desc."},
+    {"process": "P", "path": "a/c/e", "kind": 2, "units": 0, "amount": 1001000, "description": "Desc."},
+    {"process": "P", "path": "a/c/f", "kind": 2, "units": 0, "amount": 3001000, "description": "Desc."},
+    {"process": "P", "path": "a/c/g", "kind": 2, "units": 0, "amount": 3001000, "description": "Desc."},
+    {"process": "P", "path": "a/h", "kind": 2, "units": 0, "amount": 2000, "description": "Desc."},
+
+    {"process": "P2 (pid 22)", "path": "p1 (pid 456)", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "p2 (blah, pid=456)", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "p3/zone(0x5678)/p3", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "p4/js-zone(0x5678)/p4", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "p5/worker(foo.com, 0x5678)/p5", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "explicit/window-objects/top(bar.com, id=456)/...", "kind": 0, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "p6/z-moz-nullprincipal:{161effaa-c1f7-4010-a08e-e7c9aea01aed}/p6", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "p7/js-main-runtime-compartments/system/jar:file:\\\\\\temp_abc\\firefox\\omni.ja!/p7", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "explicit/js-non-window/runtime/script-sources/source(scripts=1, <non-notable files>)/misc", "kind": 2, "units": 0, "amount": 33, "description": "Desc."},
+
+    {"process": "P4", "path": "p4", "kind": 2, "units": 0, "amount": 66, "description": "Desc."},
+
+    {"process": "P6", "path": "p6", "kind": 2, "units": 0, "amount": 0, "description": "Desc."},
+
+    {"process": "P7", "path": "p7/b", "kind": 2, "units": 0, "amount": 3, "description": "Desc."},
+    {"process": "P7", "path": "p7/c", "kind": 2, "units": 0, "amount": 4, "description": "Desc."},
+
+    {"process": "P8", "path": "p8/a/b", "kind": 2, "units": 0, "amount": 1, "description": "Desc."},
+    {"process": "P8", "path": "p8/a/g", "kind": 2, "units": 0, "amount": 2, "description": "Desc."},
+
+    {"process": "P9", "path": "explicit/threads/stacks/DNS Resolver #1 (tid=33)", "kind": 0, "units": 0, "amount": 2000, "description": "Desc."},
+    {"process": "P9", "path": "explicit/threads/stacks/DNS Resolver #2 (tid=44)", "kind": 0, "units": 0, "amount": 4000, "description": "Desc."},
+    {"process": "P9", "path": "explicit/threads/stacks/DNS Resolver #3 (tid=45)", "kind": 0, "units": 0, "amount": 5000, "description": "Desc."}
+  ]
+}
+

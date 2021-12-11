@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<head>
+    <style>
+    @page { size:5in 3in; margin:0.5in; }
+
+    html,
+    body {
+        padding: 0;
+        margin: 0;
+    }
+
+    .gradient {
+        display: block;
+        background: linear-gradient(white, green);
+        border: 1px solid;
+        width: 100px;
+        height: 1000px;
+    }
+    </style>
+</head>
+<body>
+    <div style="page-break-after: always;"></div>
+    <div class="gradient"></div>
+</body>
+</html>

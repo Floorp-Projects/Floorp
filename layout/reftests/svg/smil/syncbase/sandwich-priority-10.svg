@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+      document.documentElement.pauseAnimations();
+      document.documentElement.setCurrentTime(0);
+      document.getElementById('b').setAttribute('end', 'a.begin');
+      setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test of animation sandwich priority based on syncbase dependencies.
+
+    Tests a change to an interval end that leaves the time the same but changes
+    the dependency chain.
+
+    At first c is dependent on b only.
+    Then via script we make b dependent on a's begin time so that c's begin time
+    is indirectly dependent on a's begin time and so should have a higher
+    priority.
+   -->
+  <rect width="100" height="100" fill="orange">
+    <set attributeName="fill" to="green"  begin="b.end"       id="c"/>
+    <set attributeName="fill" to="orange" begin="0s" end="1s" id="b"/>
+    <set attributeName="fill" to="red"    begin="1s"          id="a"/>
+  </rect>
+</svg>

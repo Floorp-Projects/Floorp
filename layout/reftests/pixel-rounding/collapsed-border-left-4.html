@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Pixel rounding testcase</title>
+<style type="text/css">
+
+html, body { margin: 0; border: none; padding: 0; }
+div { display: table; position: absolute; }
+
+</style>
+</head>
+<body>
+
+<!-- one border -->
+<div style="top: 10px; left: 10.4px; width: 10px; border-top: 10px solid green"></div>
+<div style="top: 10px; left: 30.4px; height: 10px; border-right: 10px solid green"></div>
+<div style="top: 10px; left: 50.4px; width: 10px; border-bottom: 10px solid green"></div>
+<div style="top: 10px; left: 70.4px; height: 10px; border-left: 10px solid green"></div>
+
+<!-- two adjacent borders -->
+<div style="top: 10px; left: 90.4px; border-top: 10px solid green; border-right: 10px solid green"></div>
+<div style="top: 10px; left: 110.4px; border-bottom: 10px solid green; border-right: 10px solid green"></div>
+<div style="top: 10px; left: 130.4px; border-top: 10px solid green; border-left: 10px solid green"></div>
+<div style="top: 10px; left: 150.4px; border-bottom: 10px solid green; border-left: 10px solid green"></div>
+
+<!-- two opposite borders -->
+<div style="top: 10px; left: 170.4px; height: 10px; border-left: 5px solid green; border-right: 5px solid green;"></div>
+<div style="top: 10px; left: 190.4px; height: 10px; border-left: 5px solid green; border-right: 5px solid green;"></div>
+<div style="top: 10px; left: 210.4px; width: 10px; border-top: 5px solid green; border-bottom: 5px solid green"></div>
+
+<!-- three borders -->
+<div style="top: 10px; left: 230.4px; border-top: 5px solid green; border-right: 10px solid green; border-bottom: 5px solid green"></div>
+<div style="top: 10px; left: 250.4px; border-top: 5px solid green; border-left: 10px solid green; border-bottom: 5px solid green"></div>
+<div style="top: 10px; left: 270.4px; border-left: 5px solid green; border-right: 5px solid green; border-bottom: 10px solid green"></div>
+<div style="top: 10px; left: 290.4px; border-left: 5px solid green; border-right: 5px solid green; border-bottom: 10px solid green"></div>
+<div style="top: 10px; left: 310.4px; border-left: 5px solid green; border-right: 5px solid green; border-top: 10px solid green"></div>
+<div style="top: 10px; left: 330.4px; border-left: 5px solid green; border-right: 5px solid green; border-top: 10px solid green"></div>
+
+<!-- four borders -->
+<div style="top: 10px; left: 350.4px; border-top: 5px solid green; border-right: 5px solid green; border-bottom: 5px solid green; border-left: 5px solid green"></div>
+<div style="top: 10px; left: 370.4px; border-top: 5px solid green; border-right: 5px solid green; border-bottom: 5px solid green; border-left: 5px solid green"></div>
+
+<!-- border around space -->
+<div style="top: 30px; left: 10.4px; border: 10px solid green; height: 20px; width: 20px"></div>
+
+</body>
+</html>

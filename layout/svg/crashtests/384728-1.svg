@@ -1,0 +1,21 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" onload="boom();">
+
+<script>
+
+function boom()
+{
+  document.getElementById("thhh").setAttributeNS("http://www.w3.org/1999/xlink", 'href', '');
+}
+
+</script>
+
+	<defs>
+    <g id="ch" style="counter-reset: c;">
+      <rect x="75" y="0" width="75" height="75" fill="lightgreen" style="counter-increment: c;"/>
+    </g>
+    
+  </defs>
+
+  <use id="thhh" x="0" y="0"><use xlink:href="#ch" x="0" y="0"/></use>
+
+</svg>

@@ -1,0 +1,29 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../../..
+
+PRIVATE_EXPORTS = \
+	pkix.h \
+	pkix_crlsel.h \
+	pkix_errorstrings.h \
+	pkix_results.h \
+	pkixt.h \
+	pkix_certsel.h \
+	pkix_params.h \
+	pkix_revchecker.h \
+	pkix_certstore.h \
+	pkix_pl_pki.h \
+	pkix_sample_modules.h \
+	pkix_checker.h \
+	pkix_pl_system.h \
+	pkix_util.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	$(NULL)
+
+REQUIRES = dbm

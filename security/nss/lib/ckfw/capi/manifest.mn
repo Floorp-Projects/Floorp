@@ -1,0 +1,35 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../../../..
+
+MODULE = nss
+
+EXPORTS =		\
+	nsscapi.h	\
+	$(NULL)
+
+CSRCS =			\
+	anchor.c	\
+	constants.c	\
+	cfind.c		\
+	cinst.c 	\
+	cobject.c	\
+	crsa.c		\
+	csession.c	\
+	cslot.c		\
+	ctoken.c	\
+	ckcapiver.c	\
+	staticobj.c	\
+	$(NULL)
+
+REQUIRES = nspr
+
+LIBRARY_NAME = nsscapi
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+LIBRARY = $(NULL)
+IMPORT_LIBRARY = $(NULL)
+
+#EXTRA_SHARED_LIBS = -L$(DIST)/lib -lnssckfw -lnssb -lplc4 -lplds4

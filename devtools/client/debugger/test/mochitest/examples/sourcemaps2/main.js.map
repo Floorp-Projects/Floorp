@@ -1,0 +1,1 @@
+{"version":3,"sources":["main.js"],"names":["message","document","getElementById","logMessage","console","log","value","addEventListener","logMessageButton"],"mappings":"AAAA,GAAIA,SAAUC,SAASC,eAAe,UAEtC,SAASC,cACPC,QAAQC,IAAI,eAAiBL,QAAQM,OAGvCN,QAAQO,iBAAiB,QAAS,WAChCP,QAAQM,MAAQ,IACf,MAEH,IAAIE,kBAAmBP,SAASC,eAAe,cAE/CM,kBAAiBD,iBAAiB,QAAS,WACzCJ,cACC"}

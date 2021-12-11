@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+    <script src='ensure-ext.js'></script>
+  </head>
+  <body>
+    <script>
+
+'use strict';
+
+var ENSURE = 'ENSURE'; // Works on all test machines.
+var FORBID = 'FORBID'; // Should not work on any test machine.
+var MACHINE_SPECIFIC = 'MACHINE_SPECIFIC';
+
+var defaultExts = [
+    // Ratified
+    ['ANGLE_instanced_arrays'        , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_blend_minmax'              , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_frag_depth'                , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_shader_texture_lod'        , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_texture_filter_anisotropic', [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['OES_element_index_uint'        , [ENSURE          , FORBID          ]],
+    ['OES_fbo_render_mipmap'         , [MACHINE_SPECIFIC, FORBID          ]],
+    ['OES_standard_derivatives'      , [MACHINE_SPECIFIC, FORBID          ]],
+    ['OES_texture_float'             , [ENSURE          , FORBID          ]],
+    ['OES_texture_float_linear'      , [ENSURE          , ENSURE          ]],
+    ['OES_texture_half_float'        , [ENSURE          , FORBID          ]],
+    ['OES_texture_half_float_linear' , [ENSURE          , FORBID          ]],
+    ['OES_vertex_array_object'       , [ENSURE          , FORBID          ]],
+    ['WEBGL_compressed_texture_s3tc' , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_debug_renderer_info'     , [ENSURE          , ENSURE          ]],
+    ['WEBGL_debug_shaders'           , [ENSURE          , ENSURE          ]],
+    ['WEBGL_depth_texture'           , [MACHINE_SPECIFIC, FORBID          ]],
+    ['WEBGL_draw_buffers'            , [MACHINE_SPECIFIC, FORBID          ]],
+    ['WEBGL_lose_context'            , [ENSURE          , ENSURE          ]],
+
+    // Community Approved
+    ['EXT_color_buffer_float'            , [FORBID          , ENSURE          ]],
+    ['EXT_color_buffer_half_float'       , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_disjoint_timer_query'          , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['EXT_float_blend'                   , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['EXT_sRGB'                          , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_texture_compression_bptc'      , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['EXT_texture_compression_rgtc'      , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['OVR_multiview2'                    , [FORBID          , MACHINE_SPECIFIC]],
+    ['WEBGL_color_buffer_float'          , [MACHINE_SPECIFIC, FORBID          ]],
+    ['WEBGL_compressed_texture_astc'     , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_compressed_texture_atc'      , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_compressed_texture_etc'      , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_compressed_texture_etc1'     , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_compressed_texture_pvrtc'    , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_compressed_texture_s3tc_srgb', [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+];
+
+var draftExts = [
+    ['EXT_texture_norm16'      , [FORBID          , MACHINE_SPECIFIC]],
+    ['OES_draw_buffers_indexed', [FORBID          , MACHINE_SPECIFIC]],
+    ['WEBGL_explicit_present'  , [ENSURE          , ENSURE          ]],
+];
+
+////////////////////
+// Ensure that we never see any extensions that we haven't listed above!
+
+(function() {
+    const expectedExts = (defaultExts.concat(draftExts)).map(x => x[0]);
+
+    ['webgl', 'webgl2'].forEach( contextType => {
+        const c = document.createElement('canvas');
+        const gl = c.getContext(contextType);
+        if (!gl) return;
+
+        const actualExts = gl.getSupportedExtensions();
+        actualExts.forEach(actualExt => {
+            ok(expectedExts.includes(actualExt), 'Unexpected ext: ' + actualExt);
+        });
+    });
+})();
+
+////////////////////
+
+function TestExtFor(contextType, extName, status) {
+    switch (status) {
+    case ENSURE:
+        EnsureExtFor(contextType, extName);
+        break;
+
+    case FORBID:
+        EnsureExtFor(contextType, extName, false);
+        break;
+
+    case MACHINE_SPECIFIC:
+        break;
+    }
+}
+
+function TestExt(extName, statusArr) {
+    TestExtFor('webgl', extName, statusArr[0]);
+    TestExtFor('webgl2', extName, statusArr[1]);
+}
+
+////////////////////
+
+defaultExts.forEach(function(x) {
+    var extName = x[0];
+    var statusArr = x[1];
+    TestExt(extName, statusArr);
+});
+
+draftExts.forEach(function(x) {
+    var extName = x[0];
+    EnsureExt(extName, false);
+});
+
+Lastly_WithDraftExtsEnabled(function() {
+    draftExts.forEach(function(x) {
+        var extName = x[0];
+        var statusArr = x[1];
+        TestExt(extName, statusArr);
+    });
+});
+
+    </script>
+  </body>
+</html>

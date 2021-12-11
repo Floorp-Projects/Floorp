@@ -1,0 +1,368 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "OptionalPermission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "management"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace":"management",
+    "description": "The <code>browser.management</code> API provides ways to manage the list of extensions that are installed and running.",
+    "types": [
+      {
+        "id": "IconInfo",
+        "description": "Information about an icon belonging to an extension.",
+        "type": "object",
+        "properties": {
+          "size": {
+            "type": "integer",
+            "description": "A number representing the width and height of the icon. Likely values include (but are not limited to) 128, 48, 24, and 16."
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL for this icon image. To display a grayscale version of the icon (to indicate that an extension is disabled, for example), append <code>?grayscale=true</code> to the URL."
+          }
+        }
+      },
+      {
+        "id": "ExtensionDisabledReason",
+        "description": "A reason the item is disabled.",
+        "type": "string",
+        "enum": ["unknown", "permissions_increase"]
+      },
+      {
+        "id": "ExtensionType",
+        "description": "The type of this extension, 'extension' or 'theme'.",
+        "type": "string",
+        "enum": ["extension", "theme"]
+      },
+      {
+        "id": "ExtensionInstallType",
+        "description": "How the extension was installed. One of<br><var>development</var>: The extension was loaded unpacked in developer mode,<br><var>normal</var>: The extension was installed normally via an .xpi file,<br><var>sideload</var>: The extension was installed by other software on the machine,<br><var>other</var>: The extension was installed by other means.",
+        "type": "string",
+        "enum": ["development", "normal", "sideload", "other"]
+      },
+      {
+        "id": "ExtensionInfo",
+        "description": "Information about an installed extension.",
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The extension's unique identifier.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of this extension.",
+            "type": "string"
+          },
+          "shortName": {
+            "description": "A short version of the name of this extension.",
+            "type": "string",
+            "optional": true
+          },
+          "description": {
+            "description": "The description of this extension.",
+            "type": "string"
+          },
+          "version": {
+            "description": "The <a href='manifest/version'>version</a> of this extension.",
+            "type": "string"
+          },
+          "versionName": {
+            "description": "The <a href='manifest/version#version_name'>version name</a> of this extension if the manifest specified one.",
+            "type": "string",
+            "optional": true
+          },
+          "mayDisable": {
+            "description": "Whether this extension can be disabled or uninstalled by the user.",
+            "type": "boolean"
+          },
+          "enabled": {
+            "description": "Whether it is currently enabled or disabled.",
+            "type": "boolean"
+          },
+          "disabledReason": {
+            "description": "A reason the item is disabled.",
+            "$ref": "ExtensionDisabledReason",
+            "optional": true
+          },
+          "type": {
+            "description": "The type of this extension, 'extension' or 'theme'.",
+            "$ref": "ExtensionType"
+          },
+          "homepageUrl": {
+            "description": "The URL of the homepage of this extension.",
+            "type": "string",
+            "optional": true
+          },
+          "updateUrl": {
+            "description": "The update URL of this extension.",
+            "type": "string",
+            "optional": true
+          },
+          "optionsUrl": {
+            "description": "The url for the item's options page, if it has one.",
+            "type": "string"
+          },
+          "icons": {
+            "description": "A list of icon information. Note that this just reflects what was declared in the manifest, and the actual image at that url may be larger or smaller than what was declared, so you might consider using explicit width and height attributes on img tags referencing these images. See the <a href='manifest/icons'>manifest documentation on icons</a> for more details.",
+            "type": "array",
+            "optional": true,
+            "items": {
+              "$ref": "IconInfo"
+            }
+          },
+          "permissions": {
+            "description": "Returns a list of API based permissions.",
+            "type": "array",
+            "optional": true,
+            "items" : {
+              "type": "string"
+            }
+          },
+          "hostPermissions": {
+            "description": "Returns a list of host based permissions.",
+            "type": "array",
+            "optional": true,
+            "items" : {
+              "type": "string"
+            }
+          },
+          "installType": {
+            "description": "How the extension was installed.",
+            "$ref": "ExtensionInstallType"
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "getAll",
+        "type": "function",
+        "permissions": ["management"],
+        "description": "Returns a list of information about installed extensions.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": [
+              {
+                "type": "array",
+                "name": "result",
+                "items": {
+                  "$ref": "ExtensionInfo"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "get",
+        "type": "function",
+        "permissions": ["management"],
+        "description": "Returns information about the installed extension that has the given ID.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "id",
+            "$ref": "manifest.ExtensionID",
+            "description": "The ID from an item of $(ref:management.ExtensionInfo)."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": [
+              {
+                "name": "result",
+                "$ref": "ExtensionInfo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "install",
+        "type": "function",
+        "requireUserInput": true,
+        "permissions": ["management"],
+        "description": "Installs and enables a theme extension from the given url.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "object",
+            "properties": {
+              "url": {
+                "$ref": "manifest.HttpURL",
+                "description": "URL pointing to the XPI file on addons.mozilla.org or similar."
+              },
+              "hash": {
+                "type": "string",
+                "optional": true,
+                "pattern": "^(sha256|sha512):[0-9a-fA-F]{64,128}$",
+                "description": "A hash of the XPI file, using sha256 or stronger."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": [
+              {
+                "name": "result",
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "manifest.ExtensionID"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getSelf",
+        "type": "function",
+        "description": "Returns information about the calling extension. Note: This function can be used without requesting the 'management' permission in the manifest.",
+        "async": "callback",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [
+              {
+                "name": "result",
+                "$ref": "ExtensionInfo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "uninstallSelf",
+        "type": "function",
+        "description": "Uninstalls the calling extension. Note: This function can be used without requesting the 'management' permission in the manifest.",
+        "async": "callback",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "options",
+            "optional": true,
+            "properties": {
+              "showConfirmDialog": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether or not a confirm-uninstall dialog should prompt the user. Defaults to false."
+              },
+              "dialogMessage": {
+                "type": "string",
+                "optional": true,
+                "description": "The message to display to a user when being asked to confirm removal of the extension."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "setEnabled",
+        "type": "function",
+        "permissions": ["management"],
+        "description": "Enables or disables the given add-on.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "id",
+            "type": "string",
+            "description": "ID of the add-on to enable/disable."
+          },
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "description": "Whether to enable or disable the add-on."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": []
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onDisabled",
+        "type": "function",
+        "permissions": ["management"],
+        "description": "Fired when an addon has been disabled.",
+        "parameters": [
+          {
+            "name": "info",
+            "$ref": "ExtensionInfo"
+          }
+        ]
+      },
+      {
+        "name": "onEnabled",
+        "type": "function",
+        "permissions": ["management"],
+        "description": "Fired when an addon has been enabled.",
+        "parameters": [
+          {
+            "name": "info",
+            "$ref": "ExtensionInfo"
+          }
+        ]
+      },
+      {
+        "name": "onInstalled",
+        "type": "function",
+        "permissions": ["management"],
+        "description": "Fired when an addon has been installed.",
+        "parameters": [
+          {
+            "name": "info",
+            "$ref": "ExtensionInfo"
+          }
+        ]
+      },
+      {
+        "name": "onUninstalled",
+        "type": "function",
+        "permissions": ["management"],
+        "description": "Fired when an addon has been uninstalled.",
+        "parameters": [
+          {
+            "name": "info",
+            "$ref": "ExtensionInfo"
+          }
+        ]
+      }
+    ]
+  }
+]

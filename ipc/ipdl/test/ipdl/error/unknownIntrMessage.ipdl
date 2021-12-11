@@ -1,0 +1,6 @@
+//error: Unknown sync IPC message unknownIntrMessage::Msg
+
+intr protocol unknownIntrMessage {
+parent:
+    intr Msg();
+};

@@ -1,0 +1,39 @@
+<script>
+async function registerWorker() {
+  const sw = navigator.serviceWorker;
+  const swr = await sw.register("service-worker.sjs", { scope: "" });
+  dump(`Registered, scope is: ${swr.scope}\n`);
+
+  await new Promise(resolve => {
+    const worker = swr.installing || swr.waiting || swr.active;
+    if (worker.state === 'activated') {
+      return resolve();
+    }
+
+    worker.addEventListener('statechange', () => {
+      if (worker.state === 'activated') {
+        return resolve();
+      }
+    });
+  });
+}
+
+async function unregisterWorker() {
+  const sw = navigator.serviceWorker;
+  const swr = await sw.register("service-worker.sjs", { scope: "" });
+  return swr.unregister();
+}
+
+async function fetchFromWorker() {
+  const response = await fetch("whatever");
+  const text = await response.text();
+  console.log(`Response ${text}`);
+}
+
+async function registerAndFetchFromWorker() {
+  await registerWorker();
+  await fetchFromWorker();
+}
+
+fetchFromWorker();
+</script>

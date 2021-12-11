@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait"
+      reftest-displayport-x="0"
+      reftest-displayport-y="0"
+      reftest-displayport-w="800"
+      reftest-displayport-h="1000">
+<meta charset="utf-8">
+<body>
+    <div>
+        <h4 style="height: 600px">All the lines at the bottom should show up when this is scrolled down.</h4>
+        <div id="ember801" class="graph-data ember-view">
+            <div style="position: relative;">
+                <div style="position: relative; width: 920px; height: 500px;" dir="ltr">
+                    <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%;" aria-label="A chart.">
+                        <svg width="920" height="500" style="" aria-label="A chart.">
+                            <defs id="defs">
+                            <clipPath id="_ABSTRACT_RENDERER_ID_2">
+                                <rect x="85" y="50" width="708" height="400"></rect>
+                            </clipPath></defs>
+                            <rect x="0" y="0" width="920" height="500" stroke="none" stroke-width="0" fill="#ffffff"></rect>
+                            <g></g>
+                            <g>
+                                <rect x="85" y="50" width="708" height="400" stroke="none" stroke-width="0" fill-opacity="0" fill="#ffffff"></rect>
+                                <g clip-path="url(#_ABSTRACT_RENDERER_ID_2)">
+                                    <g>
+                                        <rect y="50" width="1" height="400" stroke="none" stroke-width="0" fill="#cccccc"></rect>
+                                        <rect x="399" y="50" width="1" height="400" stroke="none" stroke-width="0" fill="#cccccc"></rect>
+                                        <rect x="85" y="449" width="708" height="1" stroke="none" stroke-width="0" fill="#cccccc"></rect>
+                                        <rect x="85" y="349" width="708" height="1" stroke="none" stroke-width="0" fill="#cccccc"></rect>
+                                        <rect x="85" y="250" width="708" height="1" stroke="none" stroke-width="0" fill="#cccccc"></rect>
+                                        <rect x="85" y="150" width="708" height="1" stroke="none" stroke-width="0" fill="#cccccc"></rect>
+                                        <rect x="85" y="50" width="708" height="1" stroke="none" stroke-width="0" fill="#cccccc"></rect>
+                                    </g>
+                                </g>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <div aria-hidden="true" style="position: absolute; top: 510px; left: 930px; white-space: nowrap; font-family: Arial; font-size: 14px; display: none;">0.2.42</div>
+                <div></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+function doTest() {
+  document.documentElement.scrollTop = 200;
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", doTest);
+
+</script>
+
+  </body>
+  </html>

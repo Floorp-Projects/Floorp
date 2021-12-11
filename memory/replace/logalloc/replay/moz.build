@@ -1,0 +1,86 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Program("logalloc-replay")
+
+SOURCES += [
+    "/mfbt/Assertions.cpp",
+    "/mfbt/Poison.cpp",
+    "/mfbt/RandomNum.cpp",
+    "/mfbt/TaggedAnonymousMemory.cpp",
+    "/mfbt/Unused.cpp",
+    "/mozglue/misc/StackWalk.cpp",
+    "Replay.cpp",
+]
+
+if CONFIG["OS_TARGET"] == "Linux":
+    LDFLAGS += ["-static-libstdc++"]
+
+if CONFIG["OS_TARGET"] == "Darwin":
+    # Work around "warning: 'aligned_alloc' is only available on macOS 10.15 or newer"
+    # when building with MACOSX_DEPLOYMENT_TARGET < 10.15 with >= 10.15 SDK.
+    # We have our own definition of the function, so it doesn't matter what the SDK says.
+    SOURCES["Replay.cpp"].flags += ["-Wno-unguarded-availability-new"]
+
+if CONFIG["MOZ_REPLACE_MALLOC_STATIC"] and (CONFIG["MOZ_DMD"] or CONFIG["MOZ_PHC"]):
+    UNIFIED_SOURCES += [
+        "/mfbt/HashFunctions.cpp",
+        "/mfbt/JSONWriter.cpp",
+    ]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += [
+        "dbghelp",
+    ]
+
+if CONFIG["MOZ_LINKER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    LOCAL_INCLUDES += [
+        "/mozglue/linker",
+    ]
+    DEFINES["__wrap_dladdr"] = "dladdr"
+
+
+if CONFIG["MOZ_BUILD_APP"] == "memory":
+    EXPORTS.mozilla += [
+        "/mozglue/misc/StackWalk.h",
+    ]
+
+if CONFIG["MOZ_BUILD_APP"] == "memory" or CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
+    UNIFIED_SOURCES += [
+        "/mfbt/double-conversion/double-conversion/bignum-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/bignum.cc",
+        "/mfbt/double-conversion/double-conversion/cached-powers.cc",
+        "/mfbt/double-conversion/double-conversion/double-to-string.cc",
+        "/mfbt/double-conversion/double-conversion/fast-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/fixed-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/string-to-double.cc",
+        "/mfbt/double-conversion/double-conversion/strtod.cc",
+        "/mozglue/misc/Printf.cpp",
+    ]
+
+if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
+    SOURCES += [
+        "../FdPrintf.cpp",
+    ]
+
+LOCAL_INCLUDES += [
+    "..",
+]
+
+# Link replace-malloc and the default allocator.
+USE_LIBS += [
+    "memory",
+]
+
+# The memory library defines this, so it's needed here too.
+DEFINES["IMPL_MFBT"] = True
+
+if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
+    OS_LIBS += ["atomic"]
+
+DisableStlWrapping()
+
+include("/mozglue/build/replace_malloc.mozbuild")

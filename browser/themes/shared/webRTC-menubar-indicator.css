@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#webRTC-sharingCamera-menu,
+#webRTC-sharingMicrophone-menu,
+#webRTC-sharingScreen-menu {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#webRTC-sharingCamera-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/camera.svg");
+}
+
+#webRTC-sharingMicrophone-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
+}
+
+#webRTC-sharingScreen-menu {
+  list-style-image: url("chrome://browser/skin/notification-icons/screen.svg");
+}
+
+#webRTC-sharingCamera-menu > menupopup,
+#webRTC-sharingMicrophone-menu > menupopup,
+#webRTC-sharingScreen-menu > menupopup {
+  list-style-image: none; /* don't inherit into menu items */
+}

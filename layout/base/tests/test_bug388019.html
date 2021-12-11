@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=388019
+-->
+<head>
+  <title>Test for Bug 388019</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=388019">Mozilla Bug 388019</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 388019 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var oldY = window.scrollY;
+  window.location.hash="#abc";
+  var newY = window.scrollY;
+  isnot(oldY, newY, "we scroll at all");
+  ok(oldY + 4000 < newY, "we scroll at least 4000 pixels");
+  window.scrollTo(0, 0); // make the results visible
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+
+<div style="height:4000px"></div>
+<a name="abc"></a>You should see this text if you click on the link.
+<div style="height:4000px"></div>
+
+</body>
+</html>
+

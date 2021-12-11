@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+<script>
+<![CDATA[
+
+function boom()
+{
+  var anim = document.getElementById("a");
+  var newSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  var oldSvg = document.removeChild(document.documentElement);
+  document.appendChild(newSvg);
+  document.removeChild(document.documentElement);
+  newSvg.pauseAnimations();
+  document.appendChild(newSvg);
+  newSvg.appendChild(anim);
+
+  oldSvg.removeAttribute("class");
+}
+
+window.addEventListener("load", function() { setTimeout(boom, 200); }, false);
+
+]]>
+</script>
+<animate id="a"/>
+</svg>

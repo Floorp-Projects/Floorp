@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=423375
+-->
+<head>
+  <title>Test for Bug 423375</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=423375">Mozilla Bug 423375</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="load-frame"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ ** Test for Bug 423375
+ ** (content shouldn't be able to load chrome: or resource:)
+ **/
+function tryLoad(url) {
+    try {
+        window.frames[0].location = url;
+        return "loaded";
+    } catch (e) {
+        if (/Access.*denied/.test(String(e))) {
+          return "denied";
+        }
+        return "unexpected: " + e;
+    }
+}
+
+is(tryLoad("chrome://global/content/mozilla.html"), "denied",
+   "content should have been prevented from loading chrome: URL");
+is(tryLoad("resource://gre-resources/html.css"), "denied",
+   "content should have been prevented from loading resource: URL");
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,84 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIURI;
+interface mozIPersonalDictionary;
+
+/**
+ * This interface represents a SpellChecker.
+ */
+[scriptable, uuid(8ba643a4-7ddc-4662-b976-7ec123843f10)]
+interface mozISpellCheckingEngine : nsISupports {
+  /**
+   * The name of the current dictionary. Is either a value from
+   * getDictionaryList or the empty string if no dictionary is selected.
+   * Setting this attribute to a value not in getDictionaryList will throw
+   * NS_ERROR_FILE_NOT_FOUND.
+   *
+   * If the dictionary is changed to no dictionary (the empty string), an
+   * observer is allowed to set another dictionary before it returns.
+   */
+  attribute ACString dictionary;
+
+  /**
+   * the personal dictionary
+   */
+  attribute mozIPersonalDictionary personalDictionary;
+
+  /**
+   * Get the list of dictionaries
+   */
+  Array<ACString> getDictionaryList();
+
+  /**
+   * check a word
+   */
+  boolean check(in AString word);
+
+  /**
+   * get a list of suggestions for a misspelled word
+   */
+  Array<AString> suggest(in AString word);
+
+  /**
+   * Load dictionaries from the specified dir
+   */
+  void loadDictionariesFromDir(in nsIFile dir);
+
+  /**
+   * Add dictionaries from a directory to the spell checker
+   */
+  void addDirectory(in nsIFile dir);
+
+  /**
+   * Remove dictionaries from a directory from the spell checker
+   */
+  void removeDirectory(in nsIFile dir);
+
+  /**
+   * Add a dictionary with the given language code and source URI. The URI
+   * must point to an affix file, with the ".aff" extension. The word list
+   * file must be in the same directory, with the same base name, and the
+   * ".dic" extension.
+   */
+  void addDictionary(in AString lang, in nsIURI file);
+
+  /**
+   * Remove a dictionary with the given language code and path. If the path does
+   * not match that of the current entry with the given language code, it is not
+   * removed.
+   *
+   * @returns True if the dictionary was found and removed.
+   */
+  bool removeDictionary(in AString lang, in nsIURI file);
+};
+
+%{C++
+#define SPELLCHECK_DICTIONARY_REMOVE_NOTIFICATION \
+  "spellcheck-dictionary-remove"
+%}

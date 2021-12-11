@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<body>
+  <script>
+    var obs = new MutationObserver(function() {
+      // Just need something here to assert exception is not pending.  Any
+      // binding method will do.
+      console.log("hello");
+    });
+    obs.observe(document.body, { childList: true });
+  </script>
+  <script>
+    noSuchMethodYo();
+  </script>
+</body>

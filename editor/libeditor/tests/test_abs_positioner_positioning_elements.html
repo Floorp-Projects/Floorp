@@ -1,0 +1,196 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for positioners of absolute positioned elements</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #target {
+    background-color: green;
+  }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" contenteditable style="height: 200px; width: 200px;"></div>
+<div id="clickaway" style="position: absolute; top: 250px; width: 10px; height: 10px; z-index: 100;"></div>
+<img src="green.png"><!-- for ensuring to load the image at first test of <img> case -->
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  document.execCommand("enableAbsolutePositionEditing", false, true);
+  ok(document.queryCommandState("enableAbsolutePositionEditing"),
+     "Absolute positioned element editor should be enabled by the call of execCommand");
+
+  let outOfEditor = document.getElementById("clickaway");
+
+  function cancel(e) { e.stopPropagation(); }
+  let content = document.getElementById("content");
+  content.addEventListener("mousedown", cancel);
+  content.addEventListener("mousemove", cancel);
+  content.addEventListener("mouseup", cancel);
+
+  async function waitForSelectionChange() {
+    return new Promise(resolve => {
+      document.addEventListener("selectionchange", () => {
+        resolve();
+      }, {once: true});
+    });
+  }
+
+  async function doTest(aDescription, aInnerHTML) {
+    content.innerHTML = aInnerHTML;
+    let description = aDescription + ": ";
+    let target = document.getElementById("target");
+    target.style.position = "absolute";
+
+    async function testPositioner(aDeltaX, aDeltaY) {
+      ok(true, description + "testPositioner(" + [aDeltaX, aDeltaY].join(", ") + ")");
+
+      // Reset the position of the target.
+      target.style.top = "50px";
+      target.style.left = "50px";
+
+      // Click on the target to show the positioner.
+      let promiseSelectionChangeEvent = waitForSelectionChange();
+      synthesizeMouseAtCenter(target, {});
+      await promiseSelectionChangeEvent;
+
+      let rect = target.getBoundingClientRect();
+
+      ok(target.hasAttribute("_moz_abspos"),
+         description + "While enableAbsolutePositionEditing is enabled, the positioner should appear");
+
+      // left is abs positioned element's left + margin-left + border-left-width + 12.
+      // XXX Perhaps, we need to add border-left-width here if you add new test to have thick border.
+      const kPositionerX = 18;
+      // top is abs positioned element's top + margin-top + border-top-width - 14.
+      // XXX Perhaps, we need to add border-top-width here if you add new test to have thick border.
+      const kPositionerY = -7;
+
+      let beforeInputEventExpected = true;
+      let beforeInputFired = false;
+      let inputEventExpected = true;
+      let inputFired = false;
+      function onBeforeInput(aEvent) {
+        beforeInputFired = true;
+        aEvent.preventDefault();  // For making sure this preventDefault() call does not cancel the operation.
+        if (!beforeInputEventExpected) {
+          ok(false, '"beforeinput" event should not be fired after stopping resizing');
+          return;
+        }
+        ok(aEvent instanceof InputEvent,
+           '"beforeinput" event for position changing of absolute position should be dispatched with InputEvent interface');
+        is(aEvent.cancelable, false,
+           '"beforeinput" event for position changing of absolute position container should not be cancelable');
+        is(aEvent.bubbles, true,
+           '"beforeinput" event for position changing of absolute position should always bubble');
+        is(aEvent.inputType, "",
+           'inputType of "beforeinput" event for position changing of absolute position should be empty string');
+        is(aEvent.data, null,
+           'data of "beforeinput" event for position changing of absolute position should be null');
+        is(aEvent.dataTransfer, null,
+           'dataTransfer of "beforeinput" event for position changing of absolute position should be null');
+        let targetRanges = aEvent.getTargetRanges();
+        let selection = document.getSelection();
+        is(targetRanges.length, selection.rangeCount,
+           'getTargetRanges() of "beforeinput" event for position changing of absolute position should return selection ranges');
+        if (targetRanges.length === selection.rangeCount) {
+          for (let i = 0; i < selection.rangeCount; i++) {
+            let range = selection.getRangeAt(i);
+            is(targetRanges[i].startContainer, range.startContainer,
+               `startContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+            is(targetRanges[i].startOffset, range.startOffset,
+               `startOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+            is(targetRanges[i].endContainer, range.endContainer,
+               `endContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+            is(targetRanges[i].endOffset, range.endOffset,
+               `endOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+          }
+        }
+      }
+      function onInput(aEvent) {
+        inputFired = true;
+        if (!inputEventExpected) {
+          ok(false, '"input" event should not be fired after stopping resizing');
+          return;
+        }
+        ok(aEvent instanceof InputEvent,
+           '"input" event for position changing of absolute position container should be dispatched with InputEvent interface');
+        is(aEvent.cancelable, false,
+           '"input" event for position changing of absolute position container should be never cancelable');
+        is(aEvent.bubbles, true,
+           '"input" event for position changing of absolute position should always bubble');
+        is(aEvent.inputType, "",
+           'inputType of "input" event for position changing of absolute position should be empty string');
+        is(aEvent.data, null,
+           'data of "input" event for position changing of absolute position should be null');
+        is(aEvent.dataTransfer, null,
+           'dataTransfer of "input" event for position changing of absolute position should be null');
+        is(aEvent.getTargetRanges().length, 0,
+           'getTargetRanges() of "input" event for position changing of absolute position should return empty array');
+      }
+
+      content.addEventListener("beforeinput", onBeforeInput);
+      content.addEventListener("input", onInput);
+
+      // Click on the positioner.
+      synthesizeMouse(target, kPositionerX, kPositionerY, {type: "mousedown"});
+      // Drag it delta pixels.
+      synthesizeMouse(target, kPositionerX + aDeltaX, kPositionerY + aDeltaY, {type: "mousemove"});
+      // Release the mouse button
+      synthesizeMouse(target, kPositionerX + aDeltaX, kPositionerY + aDeltaY, {type: "mouseup"});
+
+      ok(beforeInputFired, `${description}"beforeinput" event should be fired by moving absolute position container`);
+      ok(inputFired, `${description}"input" event should be fired by moving absolute position container`);
+
+      beforeInputEventExpected = false;
+      inputEventExpected = false;
+
+      // Move the mouse delta more pixels to the same direction to make sure that the
+      // positioning operation has stopped.
+      synthesizeMouse(target, kPositionerX + aDeltaX * 2, kPositionerY + aDeltaY * 2, {type: "mousemove"});
+      // Click outside of the image to hide the positioner.
+      synthesizeMouseAtCenter(outOfEditor, {});
+
+      content.removeEventListener("beforeinput", onBeforeInput);
+      content.removeEventListener("input", onInput);
+
+      // Get the new dimensions for the absolute positioned element.
+      let newRect = target.getBoundingClientRect();
+      isfuzzy(newRect.x, rect.x + aDeltaX, 1, description + "The left should be increased by " + aDeltaX + " pixels");
+      isfuzzy(newRect.y, rect.y + aDeltaY, 1, description + "The top should be increased by " + aDeltaY + "pixels");
+    }
+
+    await testPositioner( 10, 10);
+    await testPositioner( 10, -10);
+    await testPositioner(-10, 10);
+    await testPositioner(-10, -10);
+  }
+
+  const kTests = [
+    { description: "Positioner for <img>",
+      innerHTML: "<img id=\"target\" src=\"green.png\">",
+    },
+    { description: "Positioner for <table>",
+      innerHTML: "<table id=\"target\" border><tr><td>cell</td><td>cell</td></tr></table>",
+    },
+    { description: "Positioner for <div>",
+      innerHTML: "<div id=\"target\">div element</div>",
+    },
+  ];
+
+  for (const kTest of kTests) {
+    await doTest(kTest.description, kTest.innerHTML);
+  }
+  content.innerHTML = "";
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

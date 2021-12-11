@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <script>
+      var winsToClose = []
+      onbeforeunload = function() {
+        for (let win of winsToClose) {
+          if (win) {
+            win.close();
+          }
+        }
+      };
+      for (let i = 0; i < 38; i++) {
+        customElements.define("custom-element_0", class extends HTMLElement {
+          constructor() {
+            try { o1 = document.createElement("custom-element_0") } catch (e) {}
+            try { winsToClose.push(window.open("javascript:'<html><body>dummy</body></html>';")); } catch (e) {}
+          }
+        })
+        try { o3 = document.createElement("custom-element_0") } catch (e) {}
+      }
+    </script>
+  </head>
+</html>

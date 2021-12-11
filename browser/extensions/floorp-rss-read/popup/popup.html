@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 6px 0;
+      --arrowpanel-dimmed: hsla(0,0%,80%,.3);
+      --arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
+    }
+
+    .feedList {
+      font: menu;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .feedList li {
+      padding: 0;
+      margin: 0;
+    }
+
+    .feedList li a {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      padding: 4px 16px;
+    }
+    .feedList li a:hover {
+      background-color: var(--arrowpanel-dimmed);
+    }
+    .feedList li a:hover:active {
+      background-color: var(--arrowpanel-dimmed-further);
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

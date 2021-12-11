@@ -1,0 +1,42 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../../../..
+
+PRIVATE_EXPORTS = \
+	pkix_basicconstraintschecker.h \
+	pkix_certchainchecker.h \
+	pkix_crlchecker.h \
+        pkix_ekuchecker.h \
+	pkix_expirationchecker.h \
+	pkix_namechainingchecker.h \
+	pkix_nameconstraintschecker.h \
+	pkix_ocspchecker.h \
+	pkix_policychecker.h \
+	pkix_revocationmethod.h \
+	pkix_revocationchecker.h \
+	pkix_signaturechecker.h \
+	pkix_targetcertchecker.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	pkix_basicconstraintschecker.c \
+	pkix_certchainchecker.c \
+	pkix_crlchecker.c \
+	pkix_ekuchecker.c \
+	pkix_expirationchecker.c \
+	pkix_namechainingchecker.c \
+	pkix_nameconstraintschecker.c \
+	pkix_ocspchecker.c \
+	pkix_revocationmethod.c \
+	pkix_revocationchecker.c \
+	pkix_policychecker.c \
+	pkix_signaturechecker.c \
+	pkix_targetcertchecker.c \
+	$(NULL)
+
+LIBRARY_NAME = pkixchecker
+SHARED_LIBRARY = $(NULL)

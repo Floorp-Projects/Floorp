@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug </title>
+<script>
+var tests_done = 0;
+var tests = [
+  'window.getSelection().getRangeAt(0).setEnd(document.getElementsByTagName("pre")[0].firstChild,9)',
+  'window.getSelection().getRangeAt(0).setEndAfter(document.getElementsByTagName("pre")[0].firstChild)',
+  'window.getSelection().getRangeAt(0).setEndBefore(document.getElementsByTagName("pre")[0].childNodes[1])',
+  'pre=document.getElementsByTagName("pre")[0]; r=window.getSelection().getRangeAt(0); r.setEnd(pre.childNodes[1],3); r.setStartAfter(pre.firstChild)',
+  'window.getSelection().getRangeAt(0).setStartBefore(document.getElementsByTagName("pre")[0].firstChild)',
+  'window.getSelection().getRangeAt(0).selectNode(document.getElementsByTagName("pre")[0].firstChild)',
+  'window.getSelection().getRangeAt(0).selectNodeContents(document.getElementsByTagName("pre")[0])',
+  'window.getSelection().getRangeAt(0).collapse(true)',
+  'window.getSelection().getRangeAt(0).surroundContents(document.createElement("span"))',
+  'window.getSelection().getRangeAt(0).setStart(document,0)',
+  'window.getSelection().getRangeAt(0).detach()',
+  'window.getSelection().getRangeAt(0).extractContents()',
+  'window.getSelection().getRangeAt(0).deleteContents()'
+];
+function init_iframe(d) {
+  var pre = d.createElement('pre');
+  pre.appendChild(d.createTextNode('first\nfirst\n'));
+  pre.appendChild(d.createTextNode('second'));
+  d.documentElement.appendChild(pre);
+  var text = pre.firstChild;
+  var sel = d.defaultView.getSelection();
+  var r = d.createRange();
+  r.setStart(text,0)
+  r.setEnd(text,3)
+  sel.addRange(r);
+  d.documentElement.offsetHeight;
+}
+function test_iframe(iframe, i) {
+  iframe.contentDocument.write(
+    '<'+'style>span { text-decoration:underline; } <'+'/style>' +
+    '<'+'script>' + 
+        'window.parent.init_iframe(document);' +
+        'setTimeout(function(){' + window.parent.tests[i] + '; ++window.parent.tests_done; },0)' +
+    '<'+'/script>'
+  );
+}
+function create_iframe(i) {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  div.innerHTML = "<iframe src='about:blank' style='height:6em; width:12em; float:left;' frameborder='0' onload='test_iframe(this,"+i+")'><iframe>"
+}
+
+var id;
+function check_if_done() {
+  if (tests_done == tests.length) {
+    clearInterval(id);
+    document.documentElement.className = "";
+  }
+}
+
+function test() {
+  for (i = 0; i < tests.length; ++i) {
+    create_iframe(i);
+  }
+  id = setInterval(check_if_done,500);
+}
+</script>
+
+</head>
+<body onload="test()"></body>
+</html>

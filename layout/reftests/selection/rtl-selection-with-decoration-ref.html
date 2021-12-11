@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>rtl-selection-with-decoration-ref</title>
+    <style>
+      p {
+        font-size: 2em;
+        text-decoration-color: rgba(0, 0, 0, 0.3);
+        text-decoration-skip-ink: none;
+      }
+      #text1 {
+        text-decoration-line: line-through underline;
+      }
+      #text2 {
+        text-decoration-line: line-through overline;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="text1" lang="he">זוהי עובדה הקורא שדעתו מבוססת של תהיה</p>
+    <p id="text2" lang="he" dir="rtl">זוהי עובדה הקורא שדעתו מבוססת של תהיה</p>
+  </body>
+</html>

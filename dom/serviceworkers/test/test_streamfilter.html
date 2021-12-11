@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>
+    Test StreamFilter-monitored responses for ServiceWorker-intercepted requests
+  </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+add_task(async function setup() {
+  SimpleTest.waitForExplicitFinish();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ],
+  });
+
+  const registration = await navigator.serviceWorker.register(
+    "streamfilter_worker.js"
+  );
+
+  SimpleTest.registerCleanupFunction(async function unregisterRegistration() {
+    await registration.unregister();
+  });
+
+  await new Promise(resolve => {
+    const serviceWorker = registration.installing;
+
+    serviceWorker.onstatechange = () => {
+      if (serviceWorker.state == "activated") {
+        resolve();
+      }
+    };
+  });
+
+  ok(navigator.serviceWorker.controller, "Page is controlled");
+});
+
+async function getExtension() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+
+    // This WebExtension only proxies a response's data through a StreamFilter;
+    // it doesn't modify the data itself in any way.
+    background() {
+      class FilterWrapper {
+        constructor(requestId) {
+          const filter = browser.webRequest.filterResponseData(requestId);
+          const arrayBuffers = [];
+
+          filter.onstart = () => {
+            browser.test.sendMessage("start");
+          };
+
+          filter.ondata = ({ data }) => {
+            arrayBuffers.push(data);
+          };
+
+          filter.onstop = () => {
+            browser.test.sendMessage("stop");
+            new Blob(arrayBuffers).arrayBuffer().then(buffer => {
+              filter.write(buffer);
+              filter.close();
+            });
+          };
+
+          filter.onerror = () => {
+            // We only ever expect a redirect error here.
+            browser.test.assertEq(filter.error, "Channel redirected");
+            browser.test.sendMessage("error");
+          };
+        }
+      }
+
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          new FilterWrapper(details.requestId);
+        },
+        {
+          urls: ["<all_urls>"],
+          types: ["xmlhttprequest"],
+        },
+        ["blocking"]
+      );
+    },
+  });
+
+  await extension.startup();
+  return extension;
+}
+
+const streamFilterServerUrl = `${location.origin}/tests/dom/serviceworkers/test/streamfilter_server.sjs`;
+
+const requestUrlForServerQueryString = "syntheticResponse=0";
+
+// streamfilter_server.sjs is expected to respond to a request to this URL.
+const requestUrlForServer = `${streamFilterServerUrl}?${requestUrlForServerQueryString}`;
+
+const requestUrlForServiceWorkerQueryString = "syntheticResponse=1";
+
+// streamfilter_worker.js is expected to respond to a request to this URL.
+const requestUrlForServiceWorker = `${streamFilterServerUrl}?${requestUrlForServiceWorkerQueryString}`;
+
+// startNetworkerRequestFn must be a function that, when called, starts a
+// network request and returns a promise that resolves after the request
+// completes (or fails). This function will return the value that that promise
+// resolves with (or throw if it rejects).
+async function observeFilteredNetworkRequest(startNetworkRequestFn, promises) {
+  const networkRequestPromise = startNetworkRequestFn();
+  await Promise.all(promises);
+  return networkRequestPromise;
+}
+
+// Returns a promise that resolves with the XHR's response text.
+function callXHR(requestUrl, promises) {
+  return observeFilteredNetworkRequest(() => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = () => {
+        resolve(xhr.responseText);
+      };
+      xhr.onerror = reject;
+      xhr.open("GET", requestUrl);
+      xhr.send();
+    });
+  }, promises);
+}
+
+// Returns a promise that resolves with the Fetch's response text.
+function callFetch(requestUrl, promises) {
+  return observeFilteredNetworkRequest(() => {
+    return fetch(requestUrl).then(response => response.text());
+  }, promises);
+}
+
+// The expected response text is always the query string (without the leading
+// "?") of the request URL.
+add_task(async function callXhrExpectServerResponse() {
+  info(`Performing XHR at ${requestUrlForServer}...`);
+  let extension = await getExtension();
+  is(
+    await callXHR(requestUrlForServer, [
+      extension.awaitMessage("start"),
+      extension.awaitMessage("error"),
+      extension.awaitMessage("stop"),
+    ]),
+    requestUrlForServerQueryString,
+    "Server-supplied response for XHR completed successfully"
+  );
+  await extension.unload();
+});
+
+add_task(async function callXhrExpectServiceWorkerResponse() {
+  info(`Performing XHR at ${requestUrlForServiceWorker}...`);
+  let extension = await getExtension();
+  is(
+    await callXHR(requestUrlForServiceWorker, [
+      extension.awaitMessage("start"),
+      extension.awaitMessage("stop"),
+    ]),
+    requestUrlForServiceWorkerQueryString,
+    "ServiceWorker-supplied response for XHR completed successfully"
+  );
+  await extension.unload();
+});
+
+add_task(async function callFetchExpectServerResponse() {
+  info(`Performing Fetch at ${requestUrlForServer}...`);
+  let extension = await getExtension();
+  is(
+    await callFetch(requestUrlForServer, [
+      extension.awaitMessage("start"),
+      extension.awaitMessage("error"),
+      extension.awaitMessage("stop"),
+    ]),
+    requestUrlForServerQueryString,
+    "Server-supplied response for Fetch completed successfully"
+  );
+  await extension.unload();
+});
+
+add_task(async function callFetchExpectServiceWorkerResponse() {
+  info(`Performing Fetch at ${requestUrlForServiceWorker}...`);
+  let extension = await getExtension();
+  is(
+    await callFetch(requestUrlForServiceWorker, [
+      extension.awaitMessage("start"),
+      extension.awaitMessage("stop"),
+    ]),
+    requestUrlForServiceWorkerQueryString,
+    "ServiceWorker-supplied response for Fetch completed successfully"
+  );
+  await extension.unload();
+});
+</script>
+</body>
+</html>

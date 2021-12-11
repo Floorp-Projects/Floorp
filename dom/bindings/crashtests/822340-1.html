@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+  var xhr = new XMLHttpRequest;
+  function f() {
+    var x = xhr.getResponseHeader;
+    x("abc");
+  }
+  for (var i = 0; i < 20000; ++i) {
+    try { f(); } catch (e) {}
+  }
+</script>

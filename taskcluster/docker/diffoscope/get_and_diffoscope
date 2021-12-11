@@ -1,0 +1,103 @@
+#!/bin/bash
+
+set -e
+set -x
+
+cd /builds/worker
+
+mkdir a b
+
+# /builds/worker/bin contains wrapper binaries to divert what diffoscope
+# needs to use, so it needs to appear first.
+export PATH=/builds/worker/bin:$PATH
+
+# Until https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=879010 is
+# implemented, it's better to first manually extract the data.
+# Plus dmg files are not supported yet.
+
+case "$ORIG_URL" in
+*.zip|*.apk)
+	curl -L "$ORIG_URL" > a.zip
+	curl -L "$NEW_URL" > b.zip
+	unzip -d a a.zip
+	unzip -d b b.zip
+	;;
+*.tar.bz2)
+	curl -L "$ORIG_URL" | tar -C a -jxf -
+	curl -L "$NEW_URL" | tar -C b -jxf -
+	;;
+*.tar.gz)
+	curl -L "$ORIG_URL" | tar -C a -zxf -
+	curl -L "$NEW_URL" | tar -C b -zxf -
+	;;
+*.dmg)
+	for tool in lipo otool; do
+		ln -s $MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin*-$tool bin/$tool
+	done
+	curl -L "$ORIG_URL" > a.dmg
+	curl -L "$NEW_URL" > b.dmg
+	for i in a b; do
+		$MOZ_FETCHES_DIR/dmg/dmg extract $i.dmg $i.hfs
+		$MOZ_FETCHES_DIR/dmg/hfsplus $i.hfs extractall / $i
+	done
+	;;
+*)
+	ARTIFACT=$(basename "${ORIG_URL}")
+	curl -L "$ORIG_URL" > "a/${ARTIFACT}"
+	curl -L "$NEW_URL" > "b/${ARTIFACT}"
+esac
+
+case "$ORIG_URL" in
+*/target.apk)
+	OMNIJAR=assets/omni.ja
+	;;
+*)
+	OMNIJAR=omni.ja
+	;;
+esac
+
+# Builds are 99% of the time differing in some small ways, so it's not
+# really useful to report a failure (at least not until we actually
+# care about the builds being 100% identical).
+POST=true
+
+fail() {
+	exit 1
+}
+
+for option; do
+	case "$option" in
+	--unpack)
+		CURDIR=$PWD
+		for dir in a b; do
+			# Need to run mach python from inside the gecko source.
+			# See bug #1533642.
+			(cd $GECKO_PATH && ./mach python --no-virtualenv toolkit/mozapps/installer/unpack.py --omnijar $OMNIJAR $CURDIR/$dir)
+		done
+		;;
+	--fail)
+		POST="fail"
+		;;
+	*)
+		echo "Unsupported option: $option" >&2
+		exit 1
+	esac
+done
+
+if [ -n "$PRE_DIFF" ]; then
+	eval $PRE_DIFF
+fi
+
+if diffoscope \
+	--html diff.html \
+	--text diff.txt \
+	--progress \
+	$DIFFOSCOPE_ARGS \
+	a b
+then
+	# Ok
+	:
+else
+	$(dirname $0)/report_error diff
+	$POST
+fi

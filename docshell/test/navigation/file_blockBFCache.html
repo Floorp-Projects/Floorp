@@ -1,0 +1,33 @@
+<script>
+let keepAlive;
+window.onpageshow = (pageShow) => {
+  let bc = new BroadcastChannel("bfcache_blocking");
+
+  bc.onmessage = async function(m) {
+    switch(m.data.message) {
+      case "load":
+        bc.close();
+        location.href = m.data.url;
+        break;
+      case "runScript":
+        let test = new Function(`return ${m.data.fun};`)();
+        keepAlive = await test.call(window);
+        bc.postMessage({ type: "runScriptDone" });
+        break;
+      case "back":
+        bc.close();
+        history.back();
+        break;
+      case "forward":
+        bc.close();
+        history.forward();
+        break;
+      case "close":
+        window.close();
+        break;
+    }
+  };
+
+  bc.postMessage({ type: pageShow.type, persisted: pageShow.persisted })
+};
+</script>

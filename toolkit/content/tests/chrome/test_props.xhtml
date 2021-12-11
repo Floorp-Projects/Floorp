@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for basic properties - this test checks that the basic
+  properties defined in general.js and inherited by a number of elements
+  work properly.
+  -->
+<window title="Basic Properties Test"
+        onload="setTimeout(test_props, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<command id="cmd_nothing"/>
+<command id="cmd_action"/>
+
+<button id="button" label="Button" accesskey="B"
+        crop="end" image="happy.png" command="cmd_nothing"/>
+<checkbox id="checkbox" label="Checkbox" accesskey="B"
+          crop="end" image="happy.png" command="cmd_nothing"/>
+<radiogroup>
+  <radio id="radio" label="Radio Button" value="rb1" accesskey="B"
+         crop="end" image="happy.png" command="cmd_nothing"/>
+</radiogroup>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function test_props()
+{
+  test_props_forelement($("button"), "Button", null);
+  test_props_forelement($("checkbox"), "Checkbox", null);
+  test_props_forelement($("radio"), "Radio Button", "rb1");
+
+  SimpleTest.finish();
+}
+
+function test_props_forelement(element, label, value)
+{
+  // check the initial values
+  is(element.label, label, "element label");
+  if (value)
+    is(element.value, value, "element value");
+  is(element.accessKey, "B", "element accessKey");
+  is(element.image, "happy.png", "element image");
+  is(element.command, "cmd_nothing", "element command");
+  ok(element.tabIndex === 0, "element tabIndex");
+
+  synthesizeMouseExpectEvent(element, 4, 4, { }, $("cmd_nothing"), "command", "element");
+
+  // make sure that setters return the value
+  is(element.label = "Label", "Label", "element label setter return");
+  if (value)
+    is(element.value = "lb", "lb", "element value setter return");
+  is(element.accessKey = "L", "L", "element accessKey setter return");
+  is(element.image = "sad.png", "sad.png", "element image setter return");
+  is(element.command = "cmd_action", "cmd_action", "element command setter return");
+
+  // check the value after it was changed
+  is(element.label, "Label", "element label after set");
+  if (value)
+    is(element.value, "lb", "element value after set");
+  is(element.accessKey, "L", "element accessKey after set");
+  is(element.image, "sad.png", "element image after set");
+  is(element.command, "cmd_action", "element command after set");
+
+  synthesizeMouseExpectEvent(element, 4, 4, { }, $("cmd_action"), "command", "element");
+
+  // check that clicks on disabled items don't fire a command event
+  ok((element.disabled = true) === true, "element disabled setter return");
+  ok(element.disabled === true, "element disabled after set");
+  synthesizeMouseExpectEvent(element, 4, 4, { }, $("cmd_action"), "!command", "element");
+
+  element.disabled = false;
+}
+
+]]>
+</script>
+
+</window>

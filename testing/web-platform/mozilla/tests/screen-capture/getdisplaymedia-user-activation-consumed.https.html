@@ -1,0 +1,30 @@
+<!doctype html>
+<head>
+<title>Test getDisplayMedia() after user activation is consumed</title>
+<link rel="help" href="https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia">
+</head>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script>
+'use strict';
+
+promise_test(async t => {
+  await test_driver.bless('transient activation');
+  // SpecialPowers is used to consume user activation because the only
+  // spec-compliant Gecko API that consumes user activation is
+  // navigator.share(), which is disabled on CI versions of WINNT.
+  // https://searchfox.org/mozilla-central/rev/66547980e8e8ca583473c74f207cae5bac1ed541/testing/web-platform/meta/web-share/share-consume-activation.https.html.ini#4
+  const had_transient_activation =
+        SpecialPowers.wrap(document).consumeTransientUserGestureActivation();
+  assert_true(had_transient_activation,
+              'should have had transient activation');
+  const p = navigator.mediaDevices.getDisplayMedia();
+  // Race a settled promise to check that the returned promise is already
+  // rejected.
+  await promise_rejects_dom(
+    t, 'InvalidStateError', Promise.race([p, Promise.resolve()]),
+    'getDisplayMedia should have returned an already-rejected promise.');
+});
+</script>

@@ -1,0 +1,9 @@
+<html><body></body><script>
+document.designMode = "on";
+var hrElem = document.createElement("HR");
+var select = window.getSelection();
+document.body.appendChild(hrElem);
+select.collapse(hrElem,0);
+document.execCommand("InsertHTML", false, "<div>foo</div><div>bar</div>");
+</script>
+</html>

@@ -1,0 +1,42 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html id="html">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Marionette tests for AccessibleCaret in selection mode</title>
+    <style>
+    .block {
+      width: 10em;
+      height: 4em;
+      word-wrap: break-word;
+      overflow: auto;
+    }
+    </style>
+  </head>
+  <body>
+    <div>
+      <input id="input" value="ABC DEF GHI">
+      <input id="input-padding" style="padding: 1em;" value="ABC DEF GHI">
+
+      <!-- To successfully select 'B's when 'A' is selected, use sufficient
+           spaces between 'A's and 'B's to avoid the second caret covers 'B's. -->
+      <input size="16" id="input-size" value="AAAAAAAA          BBBBBBBB">
+    </div>
+    <br>
+    <div>
+      <textarea id="textarea" rows="4" cols="8">ABC DEF GHI JKL MNO PQR</textarea>
+      <textarea id="textarea-one-line" rows="4" cols="12">ABC DEF GHI</textarea>
+    </div>
+    <br>
+    <div><textarea dir="rtl" id="textarea-rtl" rows="8" cols="8">موزيلا فيرفكس موزيلا فيرفكس</textarea></div>
+    <br>
+    <div class="block" contenteditable="true" id="contenteditable">ABC DEF GHI</div>
+    <br>
+    <div class="block" id="content">ABC DEF GHI</div>
+    <br>
+    <div style="user-select: none;" id="non-selectable">Non-selectable</div>
+  </body>
+</html>

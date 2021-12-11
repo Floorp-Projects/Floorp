@@ -1,0 +1,173 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  margin: 8px;
+}
+
+table {
+  font-family: monospace;
+  border: 1px solid var(--in-content-border-color);
+  border-spacing: 0;
+  margin-block: 1em;
+}
+
+.controls {
+  font-size: 1.1em;
+  display: inline-block;
+  margin: 0 0.5em;
+}
+
+.control {
+  margin: 0.5em 0;
+}
+
+.message > p {
+  margin: 4px;
+}
+
+.log p,
+.prefs p {
+  font-family: monospace;
+  padding-inline-start: 2em;
+  text-indent: -2em;
+  margin-block: 2px;
+}
+
+#content > div {
+  padding: 1em 2em;
+  margin: 1em 0;
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 10px;
+  background-color: var(--in-content-box-background);
+}
+
+.section-heading > * {
+  display: inline-block;
+}
+
+.section-heading > button {
+  margin-inline: 1em;
+}
+
+.peer-connection > h3 {
+  background-color: var(--in-content-box-info-background);
+  padding: 4px;
+}
+
+.peer-connection > button {
+  margin-inline-start: 0;
+}
+
+.peer-connection table {
+  width: 100%;
+  text-align: center;
+}
+
+.peer-connection table th {
+  font-weight: bold;
+}
+
+.peer-connection table th,
+.peer-connection table td {
+  padding: 0.4em;
+  border: 1px solid var(--in-content-border-color);
+}
+
+.peer-connection table tr:nth-child(odd) {
+  background-color: var(--in-content-box-background-odd);
+}
+
+.peer-connection table caption {
+  text-align: start;
+}
+
+.peer-connection table.raw-candidate {
+  text-align: match-parent;
+}
+
+.bottom-border td {
+  border-bottom: 2px solid currentColor;
+}
+
+.peer-connection-config div {
+  margin-inline: 1em;
+  padding: 4px;
+  border: 1px solid var(--in-content-border-color);
+}
+
+.peer-connection-config div:nth-child(odd) {
+  background-color: var(--in-content-box-background-odd);
+}
+
+/* The pale colour scheme is taken from:
+   https://personal.sron.nl/~pault/#sec:qualitative */
+.ice-trickled {
+  background-color: #cceeff; /* pale cyan */
+}
+.ice-succeeded {
+  background-color: #ccddaa; /* pale green */
+}
+.ice-failed {
+  background-color: #ffcccc; /* pale red */
+}
+.ice-cancelled {
+  background-color: #eeeebb; /* pale yellow */
+}
+.ice-trickled,
+.ice-succeeded,
+.ice-failed,
+.ice-cancelled {
+  color: black
+}
+
+.info-label {
+  font-weight: bold;
+}
+
+.info-body,
+.stat-label {
+  padding-inline-start: 0.5em;
+}
+
+.section-ctrl {
+  margin: 1em 1.5em;
+}
+
+div.fold-trigger {
+  color: var(--blue-60);
+  cursor: pointer;
+}
+
+@media screen {
+  .fold-closed {
+    display: none !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+.sdp-history {
+  display: flex;
+  height: 400px;
+}
+
+.sdp-history-link {
+  text-decoration: underline;
+}
+
+.sdp-history h5 {
+  background-color: var(--in-content-box-info-background);
+}
+
+.sdp-history div {
+  border: 1px solid var(--in-content-border-color);
+  padding: 1em;
+  width: 50%;
+  overflow: scroll;
+}

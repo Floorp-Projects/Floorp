@@ -1,0 +1,41 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Widget: Gtk")
+
+SOURCES += [
+    "gtk-primary-selection-protocol.c",
+    "idle-inhibit-unstable-v1-protocol.c",
+    "linux-dmabuf-unstable-v1-protocol.c",
+    "pointer-constraints-unstable-v1-protocol.c",
+    "primary-selection-unstable-v1-protocol.c",
+    "relative-pointer-unstable-v1-protocol.c",
+    "viewporter-protocol.c",
+    "xdg-output-unstable-v1-protocol.c",
+]
+
+EXPORTS.mozilla.widget += [
+    "gbm.h",
+    "gtk-primary-selection-client-protocol.h",
+    "idle-inhibit-unstable-v1-client-protocol.h",
+    "linux-dmabuf-unstable-v1-client-protocol.h",
+    "pointer-constraints-unstable-v1-client-protocol.h",
+    "primary-selection-unstable-v1-client-protocol.h",
+    "relative-pointer-unstable-v1-client-protocol.h",
+    "va_drmcommon.h",
+    "viewporter-client-protocol.h",
+    "xdg-output-unstable-v1-client-protocol.h",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+CFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+
+CXXFLAGS += ["-Wno-error=shadow"]

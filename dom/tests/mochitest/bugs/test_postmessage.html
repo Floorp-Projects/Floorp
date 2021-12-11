@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1574017</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ChromeTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  async function waitForErrorMessage(err) {
+    return ChromeTask.spawn(err, async err => {
+      await new Promise(resolve => {
+        let console = Services.console;
+        console.reset();
+        console.registerListener(function listener(aMessage) {
+          var sourceName = `http://mochi.test:8888/tests/dom/tests/mochitest/bugs/test_postmessage.html`;
+          if (
+            aMessage.message.includes(err) &&
+            aMessage instanceof Ci.nsIScriptError &&
+            aMessage.sourceName == sourceName
+          ) {
+            console.unregisterListener(listener);
+            resolve();
+          }
+        });
+      });
+    });
+  }
+  add_task(async function testNoCallerURI() {
+    var Cu = SpecialPowers.Cu;
+    var princ = SpecialPowers.wrap(window.document).nodePrincipal;
+    var sandbox = Cu.Sandbox(princ, { sameZoneAs: this });
+    SpecialPowers.unwrap(sandbox).win = window.frames.diffDomain;
+    var err = `Failed to execute ‘postMessage’ on ‘DOMWindow’: The target origin provided (‘https://example.com’) does not match the recipient window’s origin (‘https://example.org’).`;
+    let consolePromise = waitForErrorMessage(err);
+    Cu.evalInSandbox(
+      'win.postMessage("We should not be able to post this message", "https://example.com");',
+      sandbox
+    );
+    await consolePromise;
+    ok(true, "Error message was logged correctly to the console");
+    Cu.nukeSandbox(sandbox);
+  });
+  add_task(async function testWithWindowID() {
+    var err = `Failed to execute ‘postMessage’ on ‘DOMWindow’: The target origin provided (‘https://example.ru’) does not match the recipient window’s origin (‘https://example.org’).`;
+    let consolePromise = waitForErrorMessage(err);
+    window.frames.diffDomain.postMessage(
+      "The window should not receive this",
+      "https://example.ru"
+    );
+    await consolePromise;
+    ok(true, "Error message was logged correctly to the console");
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1574017">Mozilla Bug 1574017</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<iframe id="diffDomain" name="diffDomain" src="https://example.org/tests/dom/tests/mochitest/bugs/file_empty.html"></iframe>
+</body>
+</html>

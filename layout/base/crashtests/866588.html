@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+
+body { white-space: pre-wrap; width: 1ch; font-family: monospace }
+body:first-line { }
+
+</style>
+
+<script>
+
+function boom()
+{
+  document.body.textContent = "\n\u202AX ";
+  document.documentElement.offsetHeight;
+  document.body.appendChild(document.createTextNode("Y"));
+  document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

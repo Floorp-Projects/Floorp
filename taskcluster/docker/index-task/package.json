@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "taskcluster-client": "^12.2.0"
+  },
+  "engines": {
+    "node": "10"
+  }
+}

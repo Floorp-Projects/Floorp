@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="800" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="purple" offset="0%" />
+      <stop stop-color="lime" offset="100%" />
+    </linearGradient>
+    <radialGradient id="grad2" cx="250" cy="400" r="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="red" offset="0%" />
+      <stop stop-color="blue" offset="100%" />
+    </radialGradient>
+  </defs>
+
+  <rect x="20" y="20" width="160" height="160" stroke-width="10"
+        fill="url(#grad)" stroke="url(#grad2)"
+        fill-opacity="0.5" stroke-opacity="1.0" />
+    
+  <rect x="320" y="20" width="160" height="160" stroke-width="10"
+        fill="url(#grad)" stroke="url(#grad2)"
+        fill-opacity="1.0" stroke-opacity="0.5" />
+    
+  <rect x="20" y="320" width="160" height="160" stroke-width="10"
+        fill="url(#grad2)" stroke="url(#grad)"
+        fill-opacity="0.5" stroke-opacity="1.0" />
+    
+  <rect x="320" y="320" width="160" height="160" stroke-width="10"
+        fill="url(#grad2)" stroke="url(#grad)"
+        fill-opacity="1.0" stroke-opacity="0.5" />
+
+</svg>

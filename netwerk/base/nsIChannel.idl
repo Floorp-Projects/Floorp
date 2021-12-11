@@ -1,0 +1,401 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRequest.idl"
+#include "nsILoadInfo.idl"
+
+interface nsIURI;
+interface nsIInterfaceRequestor;
+interface nsIInputStream;
+interface nsIStreamListener;
+
+%{C++
+#include "nsCOMPtr.h"
+%}
+
+/**
+ * The nsIChannel interface allows clients to construct "GET" requests for
+ * specific protocols, and manage them in a uniform way.  Once a channel is
+ * created (via nsIIOService::newChannel), parameters for that request may
+ * be set by using the channel attributes, or by QI'ing to a subclass of
+ * nsIChannel for protocol-specific parameters.  Then, the URI can be fetched
+ * by calling nsIChannel::open or nsIChannel::asyncOpen.
+ *
+ * After a request has been completed, the channel is still valid for accessing
+ * protocol-specific results.  For example, QI'ing to nsIHttpChannel allows
+ * response headers to be retrieved for the corresponding http transaction.
+ *
+ * This interface must be used only from the XPCOM main thread.
+ */
+[scriptable, uuid(2c389865-23db-4aa7-9fe5-60cc7b00697e)]
+interface nsIChannel : nsIRequest
+{
+    /**
+     * The original URI used to construct the channel. This is used in
+     * the case of a redirect or URI "resolution" (e.g. resolving a
+     * resource: URI to a file: URI) so that the original pre-redirect
+     * URI can still be obtained.  This is never null.  Attempts to
+     * set it to null must throw.
+     *
+     * NOTE: this is distinctly different from the http Referer (referring URI),
+     * which is typically the page that contained the original URI (accessible
+     * from nsIHttpChannel).
+     *
+     * NOTE: originalURI isn't yet set on the new channel when
+     * asyncOnChannelRedirect is called.
+     */
+    attribute nsIURI originalURI;
+
+    /**
+     * The URI corresponding to the channel.  Its value is immutable.
+     */
+    readonly attribute nsIURI URI;
+
+    /**
+     * The owner, corresponding to the entity that is responsible for this
+     * channel.  Used by the security manager to grant or deny privileges to
+     * mobile code loaded from this channel.
+     *
+     * NOTE: this is a strong reference to the owner, so if the owner is also
+     * holding a strong reference to the channel, care must be taken to
+     * explicitly drop its reference to the channel.
+     */
+    attribute nsISupports owner;
+
+    /**
+     * The notification callbacks for the channel.  This is set by clients, who
+     * wish to provide a means to receive progress, status and protocol-specific
+     * notifications.  If this value is NULL, the channel implementation may use
+     * the notification callbacks from its load group.  The channel may also
+     * query the notification callbacks from its load group if its notification
+     * callbacks do not supply the requested interface.
+     *
+     * Interfaces commonly requested include: nsIProgressEventSink, nsIPrompt,
+     * and nsIAuthPrompt/nsIAuthPrompt2.
+     *
+     * When the channel is done, it must not continue holding references to
+     * this object.
+     *
+     * NOTE: A channel implementation should take care when "caching" an
+     * interface pointer queried from its notification callbacks.  If the
+     * notification callbacks are changed, then a cached interface pointer may
+     * become invalid and may therefore need to be re-queried.
+     */
+    attribute nsIInterfaceRequestor notificationCallbacks;
+
+    /**
+     * Transport-level security information (if any) corresponding to the
+     * channel.
+     *
+     * NOTE: In some circumstances TLS information is propagated onto
+     * non-nsIHttpChannel objects to indicate that their contents were likely
+     * delivered over TLS all the same.
+     *
+     * FIXME(bz, bug 1528449) is that still true now that
+     * document.open() doesn't do this?
+     */
+    readonly attribute nsISupports securityInfo;
+
+    /**
+     * The MIME type of the channel's content if available.
+     *
+     * NOTE: the content type can often be wrongly specified (e.g., wrong file
+     * extension, wrong MIME type, wrong document type stored on a server, etc.),
+     * and the caller most likely wants to verify with the actual data.
+     *
+     * Setting contentType before the channel has been opened provides a hint
+     * to the channel as to what the MIME type is.  The channel may ignore this
+     * hint in deciding on the actual MIME type that it will report.
+     *
+     * Setting contentType after onStartRequest has been fired or after open()
+     * is called will override the type determined by the channel.
+     *
+     * Setting contentType between the time that asyncOpen() is called and the
+     * time when onStartRequest is fired has undefined behavior at this time.
+     *
+     * The value of the contentType attribute is a lowercase string.  A value
+     * assigned to this attribute will be parsed and normalized as follows:
+     *  1- any parameters (delimited with a ';') will be stripped.
+     *  2- if a charset parameter is given, then its value will replace the
+     *     the contentCharset attribute of the channel.
+     *  3- the stripped contentType will be lowercased.
+     * Any implementation of nsIChannel must follow these rules.
+     */
+    attribute ACString contentType;
+
+    /**
+     * The character set of the channel's content if available and if applicable.
+     * This attribute only applies to textual data.
+     *
+     * The value of the contentCharset attribute is a mixedcase string.
+     */
+    attribute ACString contentCharset;
+
+    /**
+     * The length of the data associated with the channel if available.  A value
+     * of -1 indicates that the content length is unknown. Note that this is a
+     * 64-bit value and obsoletes the "content-length" property used on some
+     * channels.
+     */
+    attribute int64_t contentLength;
+
+    /**
+     * Synchronously open the channel.
+     *
+     * @return blocking input stream to the channel's data.
+     *
+     * NOTE: nsIChannel implementations are not required to implement this
+     * method.  Moreover, since this method may block the calling thread, it
+     * should not be called on a thread that processes UI events.  Like any
+     * other nsIChannel method it must not be called on any thread other
+     * than the XPCOM main thread.
+     *
+     * NOTE: Implementations should throw NS_ERROR_IN_PROGRESS if the channel
+     * is reopened.
+     */
+    nsIInputStream open();
+
+    /**
+     * Asynchronously open this channel.  Data is fed to the specified stream
+     * listener as it becomes available.  The stream listener's methods are
+     * called on the thread that calls asyncOpen and are not called until
+     * after asyncOpen returns.  If asyncOpen returns successfully, the
+     * channel promises to call at least onStartRequest and onStopRequest.
+     *
+     * If the nsIRequest object passed to the stream listener's methods is not
+     * this channel, an appropriate onChannelRedirect notification needs to be
+     * sent to the notification callbacks before onStartRequest is called.
+     * Once onStartRequest is called, all following method calls on aListener
+     * will get the request that was passed to onStartRequest.
+     *
+     * If the channel's and loadgroup's notification callbacks do not provide
+     * an nsIChannelEventSink when onChannelRedirect would be called, that's
+     * equivalent to having called onChannelRedirect.
+     *
+     * If asyncOpen returns successfully, the channel is responsible for
+     * keeping itself alive until it has called onStopRequest on aListener or
+     * called onChannelRedirect.
+     *
+     * Implementations are allowed to synchronously add themselves to the
+     * associated load group (if any).
+     *
+     * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
+     * channel is reopened.
+     * NOTE: Implementations should throw an error if the channel has been
+     * cancelled prior asyncOpen being called.
+     *
+     * @param aListener the nsIStreamListener implementation
+     * @see nsIChannelEventSink for onChannelRedirect
+     */
+    void asyncOpen(in nsIStreamListener aListener);
+
+    /**
+     * True if the channel has been canceled.
+     */
+    [must_use] readonly attribute boolean canceled;
+
+    /**************************************************************************
+     * Channel specific load flags:
+     *
+     * Bits 16-31 are reserved for future use by this interface or one of its
+     * derivatives (e.g., see nsICachingChannel).
+     */
+
+    /**
+     * Set (e.g., by the docshell) to indicate whether or not the channel
+     * corresponds to a document URI.
+     * While setting this flag is sufficient to mark a channel as a document
+     * load, _checking_ whether the channel is a document load requires the use
+     * of the new channel.isDocument
+     */
+    const unsigned long LOAD_DOCUMENT_URI = 1 << 16;
+
+    /**
+     * If the end consumer for this load has been retargeted after discovering
+     * its content, this flag will be set:
+     */
+    const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 17;
+
+    /**
+     * This flag is set to indicate that this channel is replacing another
+     * channel.  This means that:
+     *
+     * 1) the stream listener this channel will be notifying was initially
+     *    passed to the asyncOpen method of some other channel
+     *
+     *   and
+     *
+     * 2) this channel's URI is a better identifier of the resource being
+     *    accessed than this channel's originalURI.
+     *
+     * This flag can be set, for example, for redirects or for cases when a
+     * single channel has multiple parts to it (and thus can follow
+     * onStopRequest with another onStartRequest/onStopRequest pair, each pair
+     * for a different request).
+     */
+    const unsigned long LOAD_REPLACE = 1 << 18;
+
+    /**
+     * Set (e.g., by the docshell) to indicate whether or not the channel
+     * corresponds to an initial document URI load (e.g., link click).
+     */
+    const unsigned long LOAD_INITIAL_DOCUMENT_URI = 1 << 19;
+
+    /**
+     * Set (e.g., by the URILoader) to indicate whether or not the end consumer
+     * for this load has been determined.
+     */
+    const unsigned long LOAD_TARGETED = 1 << 20;
+
+    /**
+     * If this flag is set, the channel should call the content sniffers as
+     * described in nsNetCID.h about NS_CONTENT_SNIFFER_CATEGORY.
+     *
+     * Note: Channels may ignore this flag; however, new channel implementations
+     * should only do so with good reason.
+     */
+    const unsigned long LOAD_CALL_CONTENT_SNIFFERS = 1 << 21;
+
+    /**
+     * This flag tells the channel to bypass URL classifier service check
+     * when opening the channel.
+     */
+    const unsigned long LOAD_BYPASS_URL_CLASSIFIER = 1 << 22;
+
+    /**
+     * If this flag is set, the media-type content sniffer will be allowed
+     * to override any server-set content-type. Otherwise it will only
+     * be allowed to override "no content type" and application/octet-stream.
+     */
+    const unsigned long LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE = 1 << 23;
+
+    /**
+     * Set to let explicitely provided credentials be used over credentials
+     * we have cached previously. In some situations like form login using HTTP
+     * auth via XMLHttpRequest we need to let consumers override the cached
+     * credentials explicitely. For form login 403 response instead of 401 is
+     * usually used to prevent an auth dialog. But any code other then 401/7
+     * will leave original credentials in the cache and there is then no way
+     * to override them for the same user name.
+     */
+    const unsigned long LOAD_EXPLICIT_CREDENTIALS = 1 << 24;
+
+    /**
+     * Set to force bypass of any service worker interception of the channel.
+     */
+    const unsigned long LOAD_BYPASS_SERVICE_WORKER = 1 << 25;
+
+    // nsICachingChannel load flags begin at bit 26.
+
+    /**
+     * Access to the type implied or stated by the Content-Disposition header
+     * if available and if applicable. This allows determining inline versus
+     * attachment.
+     *
+     * Setting contentDisposition provides a hint to the channel about the
+     * disposition.  If the hint is DISPOSITION_ATTACHMENT and a normal
+     * Content-Disposition header is present, the hinted value will always be
+     * used.  The value from Content-Disposition header is only used when
+     * the hinted value is not DISPOSITION_ATTACHMENT.
+     * If the header is missing the hinted value will be used if set.
+     *
+     * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header either
+     * doesn't exist for this type of channel or is empty, and return
+     * DISPOSITION_ATTACHMENT if an invalid/noncompliant value is present.
+     */
+    attribute unsigned long contentDisposition;
+    const unsigned long DISPOSITION_INLINE = 0;
+    const unsigned long DISPOSITION_ATTACHMENT = 1;
+
+    /**
+     * Access to the filename portion of the Content-Disposition header if
+     * available and if applicable. This allows getting the preferred filename
+     * without having to parse it out yourself.
+     *
+     * Setting contentDispositionFilename provides a hint to the channel about
+     * the disposition.  If a normal Content-Disposition header is present its
+     * value will always be used.  If it is missing the hinted value will be
+     * used if set.
+     *
+     * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header doesn't
+     * exist for this type of channel, if the header is empty, if the header
+     * doesn't contain a filename portion, or the value of the filename
+     * attribute is empty/missing.
+     */
+    attribute AString contentDispositionFilename;
+
+    /**
+     * Access to the raw Content-Disposition header if available and applicable.
+     *
+     * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header either
+     * doesn't exist for this type of channel or is empty.
+     *
+     * @deprecated Use contentDisposition/contentDispositionFilename instead.
+     */
+    readonly attribute ACString contentDispositionHeader;
+
+    /**
+     * The LoadInfo object contains information about a network load, why it
+     * was started, and how we plan on using the resulting response.
+     * If a network request is redirected, the new channel will receive a new
+     * LoadInfo object. The new object will contain mostly the same
+     * information as the pre-redirect one, but updated as appropriate.
+     * For detailed information about what parts of LoadInfo are updated on
+     * redirect, see documentation on individual properties.
+     */
+    attribute nsILoadInfo loadInfo;
+
+    /**
+     * Returns true if the channel is used to create a document.
+     * It returns true if the loadFlags have LOAD_DOCUMENT_URI set, or if
+     * LOAD_HTML_OBJECT_DATA is set and the channel has the appropriate
+     * MIME type.
+     * Note: May have the wrong value if called before OnStartRequest as we
+     * don't know the MIME type yet.
+     */
+    readonly attribute bool isDocument;
+
+%{ C++
+  inline bool IsDocument()
+  {
+    bool isDocument = false;
+    if (NS_SUCCEEDED(GetIsDocument(&isDocument)) && isDocument) {
+      return true;
+    }
+    return false;
+  }
+
+  inline already_AddRefed<nsILoadInfo> LoadInfo()
+  {
+    nsCOMPtr<nsILoadInfo> result;
+    mozilla::DebugOnly<nsresult> rv = GetLoadInfo(getter_AddRefs(result));
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && result);
+    return result.forget();
+  }
+%}
+
+};
+
+[builtinclass, scriptable, uuid(1ebbff64-d742-4f4a-aad5-4df2d1eb937a)]
+interface nsIIdentChannel : nsIChannel
+{
+    /**
+     * Unique ID of the channel, shared between parent and child. Needed if
+     * the channel activity needs to be monitored across process boundaries,
+     * like in devtools net monitor. See bug 1274556.
+     */
+    [must_use] attribute uint64_t channelId;
+
+%{ C++
+  inline uint64_t ChannelId()
+  {
+    uint64_t value = 0;
+    if (NS_SUCCEEDED(GetChannelId(&value))) {
+      return value;
+    }
+    return 0;
+  }
+%}
+};

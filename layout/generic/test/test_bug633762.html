@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633762
+-->
+<head>
+  <title>Test for Bug 633762</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body>
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug?id=633762">Mozilla Bug 633762</a>
+
+<iframe id="i" src="bug633762_iframe.html#a"></iframe>
+
+<pre id="test">
+<script>
+
+var doc;
+
+async function runTests() {
+  var i = document.getElementById("i");
+  doc = i.contentDocument;
+  var win = i.contentWindow;
+  // set display none on b
+  doc.getElementById("b").style.display = "none";
+  // flush layout
+  doc.documentElement.offsetLeft;
+  // focus on the iframe
+  win.focus();
+
+  // clear out any potential scroll events so we can listen for the one we want without false positives
+  await waitToClearOutAnyPotentialScrolls(window);
+
+  step2();
+}
+
+function step2() {
+  var i = document.getElementById("i");
+  doc = i.contentDocument;
+  var win = i.contentWindow;
+  // record scrolltop
+  scrollTopBefore = doc.body.scrollTop;
+  // send up arrow key event
+  sendKey("UP");
+  
+  win.addEventListener("scroll", finish, {once: true, capture: true});
+}
+
+function finish() {
+  // assert that scroll top is now less than before
+  ok(scrollTopBefore > doc.body.scrollTop, "pressing up arrow should scroll up");
+  SimpleTest.finish();
+}
+
+var smoothScrollPref = "general.smoothScroll";
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTests);
+});
+</script>
+</pre>
+
+</body>
+</html>

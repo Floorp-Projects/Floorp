@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Content Appended in Pagination before ::after (alternate)</title>
+
+  <style type="text/css">
+    body {
+      font-size: 16px;
+    }
+
+    #colset {
+      height: 200px;
+      width: 450px;
+      column-width: 150px;
+      column-gap: 0;
+      column-fill: auto;
+      border: 3px solid silver;
+    }
+
+    #x {
+      height: 500px;
+    }
+
+    #x:after {
+      display: block;
+      height: 220px;
+      content: "";
+      border-top: 4px solid blue;
+    }
+
+    #shift {
+      height: 201px;
+      border-bottom: 4px solid blue;
+    }
+</style>
+</head>
+
+<body onload="document.getElementById('x').appendChild(document.createTextNode('This must be in the second column between two 4px blue lines.'))">
+
+<div id="colset">
+  <div id="x">
+    <div id="shift"></div>
+  </div>
+</div>
+
+</body>
+
+</html>

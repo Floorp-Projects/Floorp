@@ -1,0 +1,18 @@
+[package]
+name = "random-crate"
+version = "0.1.0"
+authors = [
+  "Nobody <nobody@mozilla.org>",
+]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+deep-crate = { version = "0.1.0", path = "the/depths" }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

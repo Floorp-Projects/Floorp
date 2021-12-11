@@ -1,0 +1,9 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "58186e45a1a43234e6b6e30cae230e98ba528cf63fba822e43306010832e57462aefc631a493e6e75f1011c41cc54c7ce9ebbeed0292a22f3e867292d044250a",
+    "filename": "mitm6-android-fenix-dailymail.zip",
+    "size": 8427999,
+    "visibility": "public"
+  }
+]

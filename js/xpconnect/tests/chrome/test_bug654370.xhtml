@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=654370
+-->
+<window title="Mozilla Bug 654370"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=654370"
+     target="_blank">Mozilla Bug 654370</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+var sandbox = new Cu.Sandbox(window);
+var script = "(function (obj, type) { return obj instanceof type; })";
+var instanceOf = Cu.evalInSandbox(script, sandbox, "1.8", "Test", 1);
+ok(!instanceOf({}, Window), "instanceOf from the sandbox gets the right result");
+
+  ]]></script>
+</window>

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=829872
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 829872</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 829872 and Bug 968003 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var gLoadCount = 0;
+  function loaded() {
+    if (++gLoadCount == 3)
+      go();
+  }
+
+  async function check(elem, desc) {
+    is(elem.contentDocument, null, "null cross-origin contentDocument for " + desc);
+    ok(await SpecialPowers.spawn(elem, [], () => this.content.eval('frameElement === null;')),
+       "null cross-origin frameElement for " + desc);
+    if (!(elem instanceof elem.ownerDocument.defaultView.HTMLFrameElement))
+      is(elem.getSVGDocument(), null, "null cross-origin getSVGDocument() for " + desc);
+  }
+
+  async function go() {
+    ok(true, "Starting test");
+    await check($('ifr'), "iframe element");
+    await check($('obj'), "object element");
+    await check($('framesetholder').contentDocument.getElementById('fr'), "frameset frame");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=829872">Mozilla Bug 829872</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe id="ifr" onload="loaded();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<object id="obj" onload="loaded();" data="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></object>
+<iframe id="framesetholder" srcdoc="<html><head></head><frameset cols='100%'><frame id='fr' onload='parent.loaded();' src='http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html' /></frameset></html>"></iframe>
+</body>
+</html>

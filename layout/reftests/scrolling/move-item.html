@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <meta charset="utf-8">
+    <style type="text/css">
+      #a_box {
+        overflow:auto;
+        width:100px;
+        height:100px;
+        border:1px solid black;
+      }
+      #item {
+        width:40px;
+        height:40px;
+        position:relative;
+        background-color:#666;
+      }
+    </style>
+</head>
+<body onload="runTest();">
+  <div id="a_box">
+    <div id="item"></div>
+  </div>
+<script>
+  function runTest() {
+    document.getElementById("item").style.transform = "translate(80px, 80px)";
+    document.documentElement.removeAttribute("class");
+  }
+</script>
+</body>
+</html>

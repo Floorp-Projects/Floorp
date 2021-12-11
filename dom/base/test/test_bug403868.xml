@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=403868
+-->
+<head>
+  <title>Test for Bug 403868</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=403868">Mozilla Bug 403868</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 403868 **/
+function createSpan(id, insertionPoint) {
+  var s = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  s.id = id;
+  $("content").insertBefore(s, insertionPoint);
+  return s;
+}
+
+var s1a = createSpan("test1", null);
+is(document.getElementById("test1"), s1a,
+   "Only one span with id=test1 in the tree; should work!");
+
+var s2a = createSpan("test1", null);
+is(document.getElementById("test1"), s1a,
+   "Appending span with id=test1 doesn't change which one comes first");
+
+var s3a = createSpan("test1", s2a);
+is(document.getElementById("test1"), s1a,
+   "Inserting span with id=test1 not at the beginning; doesn't matter");
+
+var s4a = createSpan("test1", s1a);
+is(document.getElementById("test1"), s4a,
+   "Inserting span with id=test1 at the beginning changes which one is first");
+
+s4a.parentNode.removeChild(s4a);
+is(document.getElementById("test1"), s1a,
+   "First-created span with id=test1 is first again");
+
+s1a.parentNode.removeChild(s1a);
+is(document.getElementById("test1"), s3a,
+   "Third-created span with id=test1 is first now");
+
+// Start the id hashtable
+for (var i = 0; i < 256; ++i) {
+  document.getElementById("no-such-id-in-the-document" + i);
+}
+
+var s1b = createSpan("test2", null);
+is(document.getElementById("test2"), s1b,
+   "Only one span with id=test2 in the tree; should work!");
+
+var s2b = createSpan("test2", null);
+is(document.getElementById("test2"), s1b,
+   "Appending span with id=test2 doesn't change which one comes first");
+
+var s3b = createSpan("test2", s2b);
+is(document.getElementById("test2"), s1b,
+   "Inserting span with id=test2 not at the beginning; doesn't matter");
+
+var s4b = createSpan("test2", s1b);
+is(document.getElementById("test2"), s4b,
+   "Inserting span with id=test2 at the beginning changes which one is first");
+
+s4b.parentNode.removeChild(s4b);
+is(document.getElementById("test2"), s1b,
+   "First-created span with id=test2 is first again");
+
+s1b.parentNode.removeChild(s1b);
+is(document.getElementById("test2"), s3b,
+   "Third-created span with id=test2 is first now");
+]]>
+</script>
+</pre>
+</body>
+</html>
+

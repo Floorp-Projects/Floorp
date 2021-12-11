@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>text-overflow: Test 12</title>
+<style type="text/css">
+
+.test { 
+  border: thin dashed black; 
+  overflow: hidden; 
+  white-space: nowrap;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  font: 1em bold monospace;
+  background:lime;
+  color: black;
+  margin-left:400px;
+  height: 12em;
+  text-shadow: #6374AB 5px -12px 2px;
+}
+
+body {
+  width:800px;
+}
+
+img { width: 50px; height: 50px;   outline:5px dotted yellow; }
+span {
+  font-size:16px;
+  background:pink; 
+  border: 5px dashed blue;
+  padding: 0 25px;
+  text-decoration: underline overline line-through;
+  color:brown;
+  text-shadow: none;
+}
+i {
+  display:inline-block;
+  height: 50px;
+  width: 5em;
+  background: blue;
+  outline:5px dotted yellow;
+  text-shadow: none;
+}
+u {
+ padding-left:140px;
+}
+v {
+ padding-right:140px;
+}
+.rtl {
+  direction:rtl;
+}
+.rlo span {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro span {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+.h {display:none}
+iframe {
+  width: 100px;
+  height: 50px;
+}
+</style>
+<script>
+var c = "data:text/html,<style>body {white-space: nowrap;overflow:hidden;-o-text-overflow: ellipsis;text-overflow: ellipsis;}</style><body bgcolor='magenta'>CSS is awesome"
+function initIFRAME() {
+  var f = document.getElementsByTagName('iframe');
+  for (i = 0; i < f.length; ++i) {
+    f[i].setAttribute('src', c);
+  }
+  setTimeout(function(){document.body.style.width='500px'},0);
+}
+function setTextOverflow(str,quoted) {
+  var x = document.styleSheets[0];
+  var q = quoted ? '"' : '';
+  x.insertRule('.test{text-overflow:' + q + str + q +'}', x.cssRules.length);
+}
+</script>
+</head><body onload="initIFRAME()">
+text-overflow:"<input placeholder="type text then <ENTER>" onchange='setTextOverflow(this.value,1)'>" | <button onclick="setTextOverflow('ellipsis')">ellipsis</button> | <button onclick="setTextOverflow('clip')">clip</button> (Try "." or "" for example) <br>
+
+LTR / LTR
+<div class="test">
+<span><iframe></iframe>CSS is awesome CSS<i>overflowing-inline-block</i><u> is awesome</u></span><br>
+<span>CSS is awe<iframe></iframe>some CSS is awesome <i></i></span><br>
+<span>C SS is awesome<button>BUTTON</button> CSS is <iframe></iframe>awesom e </span><br>
+<span>C&shy;SS is awesome CSS is awesom&shy;e <button>BUTTON</button></span><br>
+<br><br></div>
+
+RTL / LTR
+<div class="test rtl">
+<span><iframe></iframe><v>CSS is awesome CSS</v><i>overflowing-inline-block</i> is awesome </span><br>
+<span>CSS is awe<iframe></iframe>some CSS is awesome <i></i></span><br>
+<span>C SS is awesome<button>BUTTON</button> CSS is <iframe></iframe>awesom e </span><br>
+<span>C&shy;SS is awesome CSS is awesom&shy;e <button>BUTTON</button></span><br>
+<br><br></div>
+
+
+LTR / RTL
+<div class="test rlo">
+<span><iframe></iframe>CSS is awesome CSS<i>overflowing-inline-block</i> is awesome </span><br>
+<span>CSS is awe<iframe></iframe>some CSS is awesome <i></i></span><br>
+<span>C SS is awesome<button>BUTTON</button> CSS is <iframe></iframe>awesom e </span><br>
+<span><button>BUTTON</button>C&shy;SS is awesome CSS is awesom&shy;e </span><br>
+<br><br></div>
+
+RTL / RTL
+<div class="test rtl rlo">
+<span><iframe></iframe>CSS is awesome CSS<i>overflowing-inline-block</i> is awesome </span><br>
+<span>CSS is awe<iframe></iframe>some CSS is awesome <i></i></span><br>
+<span>C SS is awesome<button>BUTTON</button> CSS is <iframe></iframe>awesom e </span><br>
+<span><button>BUTTON</button>C&shy;SS is awesome CSS is awesom&shy;e </span><br>
+<br><br></div>
+
+</body></html>

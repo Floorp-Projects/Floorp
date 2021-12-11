@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=572406
+-->
+<head>
+  <title>Test for Bug 572406</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload='runTests();'>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=572406">Mozilla Bug 572406</a>
+<p id="display"></p>
+<div id='content'>
+  <textarea id='i'>foo</textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 572406 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  var textarea = document.getElementById('i');
+
+  textarea.firstChild.nodeValue = "bar";
+  is(textarea.value, textarea.firstChild.nodeValue,
+     "textarea value should be firstChild.nodeValue");
+  is(textarea.defaultValue, textarea.firstChild.nodeValue,
+     "textarea defaultValue should be firstChild.nodeValue");
+
+  textarea.style.display = 'none';
+  SimpleTest.executeSoon(function() {
+    textarea.firstChild.nodeValue = "tulip";
+    is(textarea.value, textarea.firstChild.nodeValue,
+       "textarea value should be firstChild.nodeValue");
+    is(textarea.defaultValue, textarea.firstChild.nodeValue,
+       "textarea defaultValue should be firstChild.nodeValue");
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>

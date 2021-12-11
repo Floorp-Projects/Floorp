@@ -1,0 +1,92 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* Ctrl-Tab */
+
+#ctrlTab-panel {
+  appearance: none;
+%ifdef XP_MACOSX
+  -moz-window-shadow: none;
+%endif
+  --panel-background: hsla(0,0%,40%,.85);
+  --panel-color: white;
+  --panel-border-color: transparent;
+  --panel-padding: 20px 10px 10px;
+%ifndef XP_MACOSX
+  font-weight: bold;
+%endif
+}
+
+.ctrlTab-preview,
+#ctrlTab-showAll {
+  appearance: none;
+  color: inherit;
+  /* remove the :-moz-focusring outline from button.css on Windows */
+  outline: none !important;
+  margin: 0;
+  text-shadow: 0 0 1px hsl(0,0%,12%), 0 0 2px hsl(0,0%,12%);
+}
+
+.ctrlTab-preview > .button-box {
+  display: none;
+}
+
+.ctrlTab-canvas > html|img,
+.ctrlTab-canvas > html|canvas {
+  min-width: inherit;
+  max-width: inherit;
+  min-height: inherit;
+  max-height: inherit;
+}
+
+.ctrlTab-favicon-container {
+  position: relative;
+  -moz-box-pack: end;
+}
+
+.ctrlTab-favicon[src] {
+  width: 42px;
+  height: 42px;
+  margin-top: -44px;
+  margin-bottom: 2px;
+  margin-inline-end: -6px;
+  padding: 5px;
+  background-color: #F9F9FA;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);
+}
+
+.ctrlTab-canvas {
+  box-shadow: 1px 1px 2px hsl(0,0%,12%);
+  margin-bottom: 8px;
+}
+
+.ctrlTab-preview-inner,
+#ctrlTab-showAll {
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: .5em;
+}
+
+.ctrlTab-preview-inner {
+  margin-top: -10px;
+}
+
+#ctrlTab-showAll {
+  background-color: rgba(255,255,255,.2);
+  margin-top: .5em;
+}
+
+.ctrlTab-preview:focus > .ctrlTab-preview-inner,
+#ctrlTab-showAll:focus {
+  background-color: rgba(0,0,0,.75);
+  text-shadow: none;
+  border-color: #45a1ff;
+}
+
+.ctrlTab-label {
+  text-align: center;
+}

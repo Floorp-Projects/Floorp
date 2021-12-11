@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+	xmlns="http://www.w3.org/2000/svg">
+	<g clip-path="url(#clip0)">
+		<path fill-rule="evenodd" clip-rule="evenodd" d="M8.41753 2.35H2.5C1.83696 2.35 1.20107 2.61339 0.732233 3.08223C0.263392 3.55107 0 4.18696 0 4.85V9.85C0 10.513 0.263392 11.1489 0.732233 11.6178C0.807612 11.6931 0.88731 11.7632 0.970743 11.8277L2.2054 10.2563C2.08021 10.1663 2 10.0191 2 9.85V4.85C2 4.71739 2.05268 4.59021 2.14645 4.49644C2.24021 4.40268 2.36739 4.35 2.5 4.35H6.8461L8.41753 2.35ZM7.21882 10.35H10.05L13.65 7.35L11.188 5.29832L12.4207 3.72947L15.74 6.68C15.9058 6.86375 15.9976 7.10248 15.9976 7.35C15.9976 7.59752 15.9058 7.83625 15.74 8.02L11.24 12.02C11.1465 12.1236 11.0324 12.2065 10.9049 12.2633C10.7775 12.3201 10.6395 12.3497 10.5 12.35H5.64739L7.21882 10.35Z" fill="black"/>
+		<line x1="2.0815" y1="13.5959" x2="11.8459" y2="1.1685" stroke="black" stroke-width="2" stroke-linecap="round"/>
+	</g>
+	<defs>
+		<clipPath id="clip0">
+			<rect width="16" height="16" fill="white"/>
+		</clipPath>
+	</defs>
+</svg>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-paged">
+<body>
+<canvas id="canvas" width="10" height="10"></canvas>
+<script>
+var canvas = document.getElementById('canvas');
+canvas.mozPrintCallback = function(obj) {
+  setTimeout(function() {
+    var ctx = obj.context;
+    ctx.fillStyle = 'rgb(255, 0, 0)';
+    ctx.fillRect(0, 0, 10, 10);
+    obj.done();
+    document.documentElement.classList.toggle("reftest-wait");
+  }, 0);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=669671
+-->
+<head>
+  <title>Test for Bug 669671</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=669671">Mozilla Bug 669671</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 669671.
+ *
+ * This is a bit complicated.  We have a script, file_bug669671.sjs, which counts
+ * how many times it's loaded and returns that count in the body of an HTML
+ * document.  For brevity, call this page X.
+ *
+ * X is sent with Cache-Control: max-age=0 and can't be bfcached (it has an
+ * onunload handler).  Our test does the following in a popup:
+ *
+ * 1) Load X?pushed, to prime the cache.
+ * 2) Navigate to X.
+ * 3) Call pushState and navigate from X to X?pushed.
+ * 4) Navigate to X?navigated.
+ * 5) Go back (to X?pushed).
+ *
+ * We do all this work so we can check that in step 5, we fetch X?pushed from
+ * the network -- we shouldn't use our cached copy, because of the
+ * cache-control header X sends.
+ *
+ * Then we go back and repeat the whole process but call history.replaceState
+ * instead of pushState.  And for good measure, we test once more, this time
+ * modifying only the hash of the URI using replaceState.  In this case, we
+ * *should* load from the cache.
+ *
+ **/
+SimpleTest.requestLongerTimeout(2);
+SimpleTest.waitForExplicitFinish();
+
+function onChildLoad() {
+  SimpleTest.executeSoon(function() { gGen.next(); });
+}
+
+var _loadCount = 0;
+function checkPopupLoadCount() {
+  is(popup.document.body.innerHTML, _loadCount + "", "Load count");
+
+  // We normally want to increment _loadCount here.  But if the test fails
+  // because we didn't do a load we should have, let's not cause a cascade of
+  // failures by incrementing _loadCount.
+  var origCount = _loadCount;
+  if (popup.document.body.innerHTML >= _loadCount + "")
+    _loadCount++;
+  return origCount;
+}
+
+function* test() {
+  // Step 0 - Make sure the count is reset to 0 in case of reload
+  popup.location = "file_bug669671.sjs?countreset";
+  yield;
+  is(popup.document.body.innerHTML, "0",
+     "Load count should be reset to 0");
+
+  // Step 1 - The popup's body counts how many times we've requested the
+  // resource.  This is the first time we've requested it, so it should be '0'.
+  checkPopupLoadCount();
+
+  // Step 2 - We'll get another onChildLoad when this finishes.
+  popup.location = "file_bug669671.sjs";
+  yield undefined;
+
+  // Step 3 - Call pushState and change the URI back to ?pushed.
+  checkPopupLoadCount();
+  popup.history.pushState("", "", "?pushed");
+
+  // Step 4 - Navigate away.  This should trigger another onChildLoad.
+  popup.location = "file_bug669671.sjs?navigated-1";
+  yield undefined;
+
+  // Step 5 - Go back.  This should result in another onload (because the file is
+  // not in bfcache) and should be the fourth time we've requested the sjs file.
+  checkPopupLoadCount();
+  popup.history.back();
+  yield undefined;
+
+  // This is the check which was failing before we fixed the bug.
+  checkPopupLoadCount();
+
+  popup.close();
+
+  // Do the whole thing again, but with replaceState.
+  popup = window.open("file_bug669671.sjs?replaced");
+  yield undefined;
+  checkPopupLoadCount();
+  popup.location = "file_bug669671.sjs";
+  yield undefined;
+  checkPopupLoadCount();
+  popup.history.replaceState("", "", "?replaced");
+  popup.location = "file_bug669671.sjs?navigated-2";
+  yield undefined;
+  checkPopupLoadCount();
+  popup.history.back();
+  yield undefined;
+  checkPopupLoadCount();
+  popup.close();
+
+  // Once more, with feeling.  Notice that we don't have to prime the cache
+  // with an extra load here, because X and X#hash share the same cache entry.
+  popup = window.open("file_bug669671.sjs?hash-test");
+  yield undefined;
+  var initialCount = checkPopupLoadCount();
+  popup.history.replaceState("", "", "#hash");
+  popup.location = "file_bug669671.sjs?navigated-3";
+  yield undefined;
+  checkPopupLoadCount();
+  popup.history.back();
+  yield undefined;
+  is(popup.document.body.innerHTML, initialCount + "",
+     "Load count (should be cached)");
+  popup.close();
+
+  SimpleTest.finish();
+}
+
+var gGen = test();
+var popup;
+
+// Disable RCWN to make cache behavior deterministic.
+SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]}, () => {
+  // This will call into onChildLoad once it loads.
+  popup = window.open("file_bug669671.sjs?pushed");
+});
+</script>
+</pre>
+</body>
+</html>

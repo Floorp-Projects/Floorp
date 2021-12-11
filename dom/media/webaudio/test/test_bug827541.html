@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tell the cycle collector about the audio contexts owned by nsGlobalWindow</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  var iframe = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  document.body.appendChild(iframe);
+  var frameWin = iframe.contentWindow;
+  new frameWin.AudioContext();
+  document.body.removeChild(iframe);
+  expectException(() => new frameWin.AudioContext(),
+                  DOMException.INVALID_STATE_ERR);
+
+  // This test should not leak.
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,103 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* This file is loaded by both browser.xhtml and toolbox.xhtml. Therefore, rules
+   defined here can not rely on toolbox.xhtml variables. */
+
+/* Splitters */
+
+:root {
+  /* Draggable splitter element size */
+  --devtools-splitter-element-size: 1px;
+  --devtools-emphasized-splitter-element-size: 2px;
+
+  /* Define the widths of the draggable areas on each side of a splitter. top
+     and bottom widths are used for horizontal splitters, inline-start and
+     inline-end for side splitters.*/
+
+  --devtools-splitter-top-width: 2px;
+  --devtools-splitter-bottom-width: 2px;
+  --devtools-horizontal-splitter-min-height: calc(var(--devtools-splitter-top-width) +
+                                                  var(--devtools-splitter-bottom-width) +
+                                                  var(--devtools-splitter-element-size));
+  --devtools-emphasized-horizontal-splitter-min-height: calc(var(--devtools-splitter-top-width) +
+                                                             var(--devtools-splitter-bottom-width) +
+                                                             var(--devtools-emphasized-splitter-element-size));
+
+  /* Small draggable area on inline-start to avoid overlaps on scrollbars.*/
+  --devtools-splitter-inline-start-width: 1px;
+  --devtools-splitter-inline-end-width: 4px;
+
+  --devtools-vertical-splitter-min-width: calc(var(--devtools-splitter-inline-start-width) +
+                                               var(--devtools-splitter-inline-end-width) +
+                                               var(--devtools-splitter-element-size));
+}
+
+#appcontent[devtoolstheme="light"] {
+  /* These variables are used in browser.xhtml but inside the toolbox they are overridden by --theme-splitter-color */
+  --devtools-splitter-color: #e0e0e2;
+}
+
+#appcontent[devtoolstheme="dark"] {
+  --devtools-splitter-color: #38383d;
+}
+
+splitter.devtools-horizontal-splitter,
+.devtools-side-splitter {
+  appearance: none;
+  background-image: none;
+  border: 0;
+  border-style: solid;
+  border-color: transparent;
+  background-color: var(--devtools-splitter-color);
+  background-clip: content-box;
+  position: relative;
+
+  box-sizing: border-box;
+
+  /* Positive z-index positions the splitter on top of its siblings and makes
+     it clickable on both sides. */
+  z-index: 1;
+}
+
+splitter.devtools-horizontal-splitter {
+  min-height: var(--devtools-horizontal-splitter-min-height);
+
+  border-top-width: var(--devtools-splitter-top-width);
+  border-bottom-width: var(--devtools-splitter-bottom-width);
+
+  margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+  margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
+
+  cursor: ns-resize;
+}
+
+#toolbox-deck ~ splitter.devtools-horizontal-splitter {
+  min-height: var(--devtools-emphasized-horizontal-splitter-min-height);
+}
+
+/**
+ * Emphasized splitter has the hover style.
+ * This emphasized splitter affect splitter console only.
+ */
+#toolbox-deck ~ splitter.devtools-horizontal-splitter:hover {
+  background-color: var(--theme-emphasized-splitter-color-hover);
+}
+
+.devtools-side-splitter {
+  min-width: var(--devtools-vertical-splitter-min-width);
+
+  border-inline-start-width: var(--devtools-splitter-inline-start-width);
+  border-inline-end-width: var(--devtools-splitter-inline-end-width);
+
+  margin-inline-start: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-inline-end: calc(-1 * var(--devtools-splitter-inline-end-width));
+
+  cursor: ew-resize;
+}
+
+.devtools-horizontal-splitter.disabled,
+.devtools-side-splitter.disabled {
+  pointer-events: none;
+}

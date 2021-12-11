@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<title>Test for bold when system fallback is used</title>
+</head>
+<body>
+<!--
+  -- Chess symbols will use Droid Sans Fallback on Android,
+  -- which only has a single weight.
+  --
+  -- On some platforms there may be "regular" glyphs in the Bold face
+  -- of the fallback font used (e.g. Menlo on OS X), so this will
+  -- not reliably pass there.
+  -->
+<p>&#x2654;&#x2655;&#x2656;&#x2657;&#x2658;&#x2659;</p>
+<p><b>&#x2654;&#x2655;&#x2656;&#x2657;&#x2658;&#x2659;</b></p>
+</body>
+</html>

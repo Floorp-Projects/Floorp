@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=384147
+-->
+<head>
+  <title>Test for Bug 384147</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=384147">Mozilla Bug 384147</a>
+<p id="display"></p>
+<div id="content" style="display: block">
+<div contentEditable id="editor"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 384147 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var editor = document.getElementById("editor");
+
+editor.innerHTML = "<ol><li>Item 1</li><li>Item 2</li><ol><li>Item 3</li></ol></ol><ul><li>Item 4</li><li>Item 5</li></ul>";
+editor.focus();
+
+// If executed directly, a race condition exists that will cause execCommand
+// to fail occasionally (but often).  Defer test execution to page load.
+addLoadEvent(function() {
+  var sel = window.getSelection();
+
+  // Test the effect that the tab key has on list items.  Each test is
+  // documented with the initial state of the list on the left, and the
+  // expected state of the list on the right.  {\t} indicates the list item
+  // that will be indented.  {\st} indicates that a shift-tab will be simulated
+  // on that list item, outdenting it.
+  //
+  // Note: any test failing will likely result in all following tests failing
+  // as well, since each test depends on the document being in a given state.
+  // Unfortunately, due to the problems getting document focus and key events
+  // to fire consistently, it's difficult to reset state between tests.
+  // If there are test failures here, only debug the first test failure.
+
+  // *** test 1 ***
+  //  1. Item 1                       1. Item 1
+  //  2. {\t}Item 2                     1. Item 2
+  //    1. Item 3                       2. Item 3
+  //  * Item 4                        * Item 4
+  //  * Item 5                        * Item 5
+  sel.removeAllRanges();
+  sel.selectAllChildren(editor.getElementsByTagName("li")[1]);
+  document.execCommand("indent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li></ol></ol><ul><li>Item 4</li><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 1");
+
+  //  *** test 2 ***
+  //  1. Item 1                     1. Item 1
+  //    1. Item 2                     1. Item 2
+  //    2. {\t}Item 3                   1. Item 3
+  //  * Item 4                        * Item 4
+  //  * Item 5                        * Item 5
+  sel.removeAllRanges();
+  sel.selectAllChildren(editor.getElementsByTagName("li")[2]);
+  document.execCommand("indent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><ol><li>Item 3</li></ol></ol></ol><ul><li>Item 4</li><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 2");
+
+  //  *** test 3 ***
+  //  1. Item 1                       1. Item 1
+  //    1. Item 2                       1. Item 2
+  //      1. {\st}Item 3                2. Item 3
+  //  * Item 4                        * Item 4
+  //  * Item 5                        * Item 5
+  document.execCommand("outdent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li></ol></ol><ul><li>Item 4</li><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 3");
+
+  //  *** test 4 ***
+  //  1. Item 1                       1. Item 1
+  //    1. Item 2                       1. Item 2
+  //    2. {\st}Item 3                2. Item 3
+  //  * Item 4                        * Item 4
+  //  * Item 5                        * Item 5
+  document.execCommand("outdent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li></ol><li>Item 3</li></ol><ul><li>Item 4</li><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 4");
+
+  //  *** test 5 ***
+  //  1. Item 1                       1. Item 1
+  //    1. {\st}Item 2                2. Item 2
+  //  2. Item 3                       3. Item 3
+  //  * Item 4                        * Item 4
+  //  * Item 5                        * Item 5
+  sel.removeAllRanges();
+  sel.selectAllChildren(editor.getElementsByTagName("li")[1]);
+  document.execCommand("outdent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><li>Item 2</li><li>Item 3</li></ol><ul><li>Item 4</li><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 5");
+
+  //  *** test 6 ***
+  //  1. Item 1                       1. Item 1
+  //  2. {\t}Item 2                     1. Item 2
+  //  3. Item 3                       2. Item 3
+  //  * Item 4                        * Item 4
+  //  * Item 5                        * Item 5
+  document.execCommand("indent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li></ol><li>Item 3</li></ol><ul><li>Item 4</li><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 6");
+
+  //  *** test 7 ***
+  //  1. Item 1                       1. Item 1
+  //    1. Item 2                       1. Item 2
+  //  2. {\t}Item 3                     2. Item 3
+  //  * Item 4                        * Item 4
+  //  * Item 5                        * Item 5
+  sel.removeAllRanges();
+  sel.selectAllChildren(editor.getElementsByTagName("li")[2]);
+  document.execCommand("indent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li></ol></ol><ul><li>Item 4</li><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 7");
+
+  // That covers the basics of merging lists on indent and outdent.
+  // We also want to check that ul / ol lists won't be merged together,
+  // since they're different types of lists.
+  //  *** test 8 ***
+  //  1. Item 1                       1. Item 1
+  //    1. Item 2                       1. Item 2
+  //    2. Item 3                       2. Item 3
+  //  * {\t}Item 4                      * Item 4
+  //  * Item 5                        * Item 5
+  sel.removeAllRanges();
+  sel.selectAllChildren(editor.getElementsByTagName("li")[3]);
+  document.execCommand("indent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li></ol></ol><ul><ul><li>Item 4</li></ul><li>Item 5</li></ul>",
+    "html output doesn't match expected value in test 8");
+
+  // Better test merging with <ul> rather than <ol> too.
+  //  *** test 9 ***
+  //  1. Item 1                       1. Item 1
+  //    1. Item 2                       1. Item 2
+  //    2. Item 3                       2. Item 3
+  //    * Item 4                        * Item 4
+  //  * {\t}Item 5                      * Item 5
+  sel.removeAllRanges();
+  sel.selectAllChildren(editor.getElementsByTagName("li")[4]);
+  document.execCommand("indent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li></ol></ol><ul><ul><li>Item 4</li><li>Item 5</li></ul></ul>",
+    "html output doesn't match expected value in test 9");
+
+  // Same test as test 8, but with outdent rather than indent.
+  //  *** test 10 ***
+  //  1. Item 1                       1. Item 1
+  //    1. Item 2                       1. Item 2
+  //    2. Item 3                       2. Item 3
+  //    * {\st}Item 4                 * Item 4
+  //    * Item 5                        * Item 5
+  sel.removeAllRanges();
+  sel.selectAllChildren(editor.getElementsByTagName("li")[3]);
+  document.execCommand("outdent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li></ol></ol><ul><li>Item 4</li><ul><li>Item 5</li></ul></ul>",
+    "html output doesn't match expected value in test 10");
+
+  // Test indenting multiple items at once.  Hold down "shift" and select
+  // upwards to get all the <ol> items and the first <ul> item.
+  //  *** test 11 ***
+  //  1. Item 1                       1. Item 1
+  //    1. {\t}Item 2                     1. Item 2
+  //    2. {\t}Item 3                     2. Item 3
+  //  * {\t}Item 4                      * Item 4
+  //    * Item 5                        * Item 5
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.setStart(editor.getElementsByTagName("li")[1], 0);
+  range.setEnd(editor.getElementsByTagName("li")[3], editor.getElementsByTagName("li")[3].childNodes.length);
+  sel.addRange(range);
+  document.execCommand("indent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><ol><li>Item 2</li><li>Item 3</li></ol></ol></ol><ul><ul><li>Item 4</li><li>Item 5</li></ul></ul>",
+    "html output doesn't match expected value in test 11");
+
+  // Test outdenting multiple items at once.  Selection is already ready...
+  //  *** test 12 ***
+  //  1. Item 1                       1. Item 1
+  //      1. {\st}Item 2                1. Item 2
+  //      2. {\st}Item 3                2. Item 3
+  //    * {\st}Item 4                 * Item 4
+  //    * Item 5                        * Item 5
+  document.execCommand("outdent", false, null);
+  ok(editor.innerHTML == "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li></ol></ol><ul><li>Item 4</li><ul><li>Item 5</li></ul></ul>",
+    "html output doesn't match expected value in test 12");
+
+  SimpleTest.finish();
+});
+
+
+
+</script>
+</pre>
+</body>
+</html>
+

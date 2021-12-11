@@ -1,0 +1,10 @@
+<html>
+<head>
+<script>
+function jsfuzzer() {
+  try { a.matches("1"); } catch(e) { }
+  try { document.createElement("p").closest("1"); } catch(e) { }
+}
+</script>
+<body onload=jsfuzzer()>
+<feBlend id="a" />

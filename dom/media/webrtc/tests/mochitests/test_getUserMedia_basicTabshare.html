@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getUserMedia Basic Tabshare Test",
+    bug: "1193075"
+  });
+  /**
+   * Run a test to verify that we can complete a start and stop media playback
+   * cycle for a tabshare MediaStream on a video HTMLMediaElement.
+   *
+   * Additionally, exercise applyConstraints code for tabshare viewport offset.
+   */
+  runTest(function () {
+    var testVideo = createMediaElement('video', 'testVideo');
+
+    return Promise.resolve()
+      .then(() => pushPrefs(["media.getusermedia.browser.enabled", true]))
+      .then(() => {
+        SpecialPowers.wrap(document).notifyUserGestureActivation();
+        return getUserMedia({
+          video: { mediaSource: "browser",
+                   scrollWithPage: true },
+          fake: false
+        });
+      })
+      .then(stream => {
+        var playback = new MediaStreamPlayback(testVideo, stream);
+        return playback.playMedia(false);
+      })
+      .then(() => getUserMedia({
+        video: {
+          mediaSource: "browser",
+          viewportOffsetX: 0,
+          viewportOffsetY: 0,
+          viewportWidth: 100,
+          viewportHeight: 100
+        },
+        fake: false
+      }))
+      .then(stream => {
+        var playback = new MediaStreamPlayback(testVideo, stream);
+        playback.startMedia(false);
+        return playback.verifyPlaying()
+          .then(() => Promise.all([
+            () => testVideo.srcObject.getVideoTracks()[0].applyConstraints({
+              mediaSource: "browser",
+              viewportOffsetX: 10,
+              viewportOffsetY: 50,
+              viewportWidth: 90,
+              viewportHeight: 50
+            }),
+            () => listenUntil(testVideo, "resize", () => true)
+          ]))
+          .then(() => playback.verifyPlaying()) // still playing
+          .then(() => playback.stopTracksForStreamInMediaPlayback())
+          .then(() => playback.detachFromMediaElement());
+      });
+  });
+
+</script>
+</pre>
+</body>
+</html>

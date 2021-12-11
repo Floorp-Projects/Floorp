@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for blobURL in location</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+var expectedData = null;
+onmessage = function(e) {
+  if (expectedData === null) {
+    expectedData = e.data;
+  } else {
+    is(e.data, expectedData, "Pathname should be not be changed");
+    SimpleTest.finish();
+  }
+};
+
+SpecialPowers.pushPrefEnv({
+  "set": [["privacy.partition.bloburl_per_agent_cluster", false]]
+}).then(() => {
+  var ifr = document.createElement("iframe");
+  document.body.appendChild(ifr);
+
+  ifr.src = "data:text/html,<script>location=URL.createObjectURL(new%20Blob(['<script>parent.postMessage(location.pathname,\"*\");location.pathname=\"foo\";parent.postMessage(location.pathname,\"*\");<\/s' +'cript>'], {type:\"text/html\"}));<\/script>";
+});
+
+SimpleTest.waitForExplicitFinish();
+
+  </script>
+</body>
+</html>

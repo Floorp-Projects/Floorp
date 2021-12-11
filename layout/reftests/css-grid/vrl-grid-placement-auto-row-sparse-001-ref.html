@@ -1,0 +1,222 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+html {
+  writing-mode: vertical-rl;
+  text-orientation: sideways-right;
+}
+
+.grid {
+  block-size: 60px;
+  border: 2px solid green;
+  position: relative;
+}
+
+span {
+  position: absolute;
+  background: lime;
+  border: 1px solid black;
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.test1 .a {
+  inset-block-start: 0;
+  inset-inline-start: 20px;
+  inline-size: 20px;
+  block-size: 20px;
+}
+.test1 .b {
+  inset-block-start: 20px;
+  inset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test1 .c {
+  inset-block-start: 0;
+  inset-inline-start: 80px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test1 .d {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+.test1 .e {
+  inset-block-start: 20px;
+  inset-inline-start: 0;
+}
+.test1 .d2 {
+  inset-block-start: 0;
+  inset-inline-start: 40px;
+}
+
+.test2 .a {
+  inset-block-start: 0;
+  inset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test2 .b {
+  inset-block-start: 20px;
+  inset-inline-start: 20px;
+  inline-size: 20px;
+  block-size: 20px;
+}
+.test2 .c {
+  inset-block-start: 0;
+  inset-inline-start: 80px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test2 .d {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+.test2 .e {
+  inset-block-start: 20px;
+  inset-inline-start: 0;
+}
+.test2 .d2 {
+  inset-block-start: 20px;
+  inset-inline-start: 40px;
+}
+
+.test3 .a {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test3 .b {
+  inset-block-start: 40px;
+  inset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test3 .c {
+  inset-block-start: 60px;
+  inset-inline-start: 0;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test3 .d { inset-block-start: 60px; inset-inline-start:60px; }
+.test3 .e {
+  inset-block-start: 20px;
+  inset-inline-start: 60px;
+}
+.test3 .d2 {
+  inset-block-start: 80px;
+  inset-inline-start: 60px;
+}
+
+.test4 .c {
+  inset-block-start: 0;
+  inset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test4 .d {
+  inset-block-start: 40px;
+  inset-inline-start: 0;
+}
+.test4 .e {
+  inset-block-start: 20px;
+  inset-inline-start: 0px;
+}
+.test4 .d2 {
+  inset-block-start: 40px;
+  inset-inline-start: 20px;
+}
+
+.test5 .c {
+  inset-block-start: 20px;
+  inset-inline-start: 0;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test5 .d {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+.test5 .e {
+  inset-block-start: 20px;
+  inset-inline-start: 60px;
+}
+.test5 .d2 {
+  inset-block-start: 0;
+  inset-inline-start: 20px;
+}
+
+.test6 {
+  inset-inline-start: 0;
+  inset-block-start: 20px;
+}
+.test6d2 {
+  inset-block-start: 20px;
+  inset-inline-start: 140px;
+}
+.test6e {
+  inset-block-start: 20px;
+  inset-inline-start: 160px;
+}
+    </style>
+</head>
+<body>
+
+<div class="grid test1">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test2">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test3" style="block-size:100px">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test4">
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test5">
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test1">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="test6">d</span>
+<span class="test6d2">D</span>
+<span class="test6e">e</span>
+</div>
+
+</body>
+</html>

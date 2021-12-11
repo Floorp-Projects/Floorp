@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=511487
+-->
+<head>
+  <title>Test for Bug 511487</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=511487">Mozilla Bug 511487</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 511487 **/
+
+  var didTransform = false;
+  var processor = new XSLTProcessor();
+  var style =
+    '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0" xmlns="http://www.w3.org/1999/xhtml">' +
+      '<xsl:output method="xml" version="1.0" encoding="UTF-8" doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" doctype-public="-//W3C//DTD XHTML 1.0 Transitional//EN" />' +
+      '<xsl:template match="wml">' +
+        '<html xmlns="http://www.w3.org/1999/xhtml">' +
+          '<head>' +
+              '<title>XSLT test</title>' +
+          '</head>' +
+          '<body onload="window.alert(this)">' +
+          '</body>' +
+        '</html>' +
+      '</xsl:template>' +
+    '</xsl:stylesheet>';
+  var styleDoc = new DOMParser().parseFromString (style, "text/xml");
+
+  var data =
+    '<?xml version="1.0"?>' + 
+    '<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">' + 
+    '<wml><card><p>paragraph</p></card></wml>';
+  var originalDoc = new DOMParser().parseFromString(data, "text/xml");
+
+  processor.importStylesheet(styleDoc);
+  try {
+    var transformedDocument = processor.transformToDocument(originalDoc);
+    didTransform = true;
+  } catch (e) {
+    ok(false, e);
+  }
+
+  ok(didTransform, "transformToDocument didn't succeed!");
+
+
+</script>
+</pre>
+</body>
+</html>

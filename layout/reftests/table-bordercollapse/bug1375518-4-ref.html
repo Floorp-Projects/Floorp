@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<title>border-radius and separated border model tables</title>
+<style>
+
+body { background: white; color: black }
+
+table { border-collapse: separate; margin: 1em 2px; }
+table, td { border: 1px solid black; }
+
+.radius { border: 3px solid teal; background: aqua; color: black; }
+
+</style>
+
+<h1>border-radius and separated border model tables</h1>
+
+<table>
+  <tbody>
+    <tr><td>xx</td><td>xx</td><td>xx
+  </td></tr></tbody>
+  <tbody class="radius">
+    <tr><td>xx</td><td>xx</td><td>xx
+    </td></tr><tr><td>xx</td><td>xx</td><td>xx
+  </td></tr></tbody>
+  <tbody>
+    <tr><td>xx</td><td>xx</td><td>xx
+  </td></tr></tbody>
+</table>
+
+<table>
+  <tbody><tr class="radius"><td>xx</td><td>xx</td><td>xx
+  </td></tr><tr><td>xx</td><td>xx</td><td>xx
+</td></tr></tbody></table>
+
+<table>
+  <colgroup class="radius"><col><col></colgroup><colgroup><col>
+  </colgroup><tbody><tr><td>xx</td><td>xx</td><td>xx
+  </td></tr><tr><td>xx</td><td>xx</td><td>xx
+</td></tr></tbody></table>
+
+<table>
+  <colgroup><col><col class="radius"><col>
+  </colgroup><tbody><tr><td>xx</td><td>xx</td><td>xx
+  </td></tr><tr><td>xx</td><td>xx</td><td>xx
+</td></tr></tbody></table>

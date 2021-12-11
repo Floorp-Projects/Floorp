@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage with a thrown exception</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_throw_helper.html"
+        name="sameDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_throw_helper.html"
+        name="crossDomain"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function atLoad()
+{
+  try
+  {
+    sameDomain.postMessage("foo", "http://mochi.test:8888");
+    ok(true, "should not have thrown for same-domain exception");
+  }
+  catch (e)
+  {
+    ok(false, "uh-oh, threw a same-domain exception: " + e);
+  }
+
+  setTimeout(next, 0);
+}
+
+function next()
+{
+  ok(true, "no pending-exception wackiness for same-domain");
+  setTimeout(next2, 0);
+}
+
+function next2()
+{
+  try
+  {
+    crossDomain.postMessage("foo", "http://example.org:8000");
+    ok(true, "should not have thrown for cross-domain exception");
+  }
+  catch (e)
+  {
+    ok(false, "uh-oh, threw a cross-domain exception: " + e);
+  }
+
+  setTimeout(next3, 0);
+}
+
+function next3()
+{
+  ok(true, "no pending-exception wackiness for cross-domain");
+  SimpleTest.finish();
+}
+
+addLoadEvent(atLoad);
+</script>
+</pre>
+</body>
+</html>

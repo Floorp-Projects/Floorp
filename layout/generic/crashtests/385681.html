@@ -1,0 +1,34 @@
+<html><head>
+<title></title>
+<style>
+a  {
+ font-variant: small-caps; 
+}
+a:hover { 
+  color: red;
+}
+</style>
+</head>
+<body>
+<a href="#">home</a><br>
+<a href="#">login</a><br>
+<a href="#">signup</a><br>
+
+<script>
+function doe(i) {
+if (!i) {
+  document.links[1].style.color='red';
+	document.links[0].offsetHeight;
+	document.links[0].style.color = 'red';
+	}
+else {
+  document.links[1].style.color='blue';
+	document.links[0].style.color = 'blue';
+	}
+setTimeout(doe, 100, !i);
+}
+setTimeout(doe, 500, true);
+</script>
+</body>
+
+</html>

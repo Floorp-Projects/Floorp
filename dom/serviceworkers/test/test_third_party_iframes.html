@@ -1,0 +1,288 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <title>Bug 1152899 - Disallow the interception of third-party iframes using service workers when the third-party cookie preference is set</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+var chromeScript;
+chromeScript = SpecialPowers.loadChromeScript(_ => {
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+
+  Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+
+let index = 0;
+function next() {
+  info("Step " + index);
+  if (index >= steps.length) {
+    SimpleTest.finish();
+    return;
+  }
+  try {
+    let i = index++;
+    steps[i]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+onload = next;
+
+let iframe;
+let proxyWindow;
+let basePath = "/tests/dom/serviceworkers/test/thirdparty/";
+let origin = window.location.protocol + "//" + window.location.host;
+let thirdPartyOrigin = "https://example.com";
+
+function loadIframe() {
+  let message = {
+    source: "parent",
+    href: origin + basePath + "iframe2.html"
+  };
+  iframe.contentWindow.postMessage(message, "*");
+}
+
+function loadThirdPartyIframe() {
+  let message = {
+    source: "parent",
+    href: thirdPartyOrigin + basePath + "iframe2.html"
+  }
+  iframe.contentWindow.postMessage(message, "*");
+}
+
+function runTest(aExpectedResponses) {
+  // Let's use a proxy window to have the new cookie policy applied.
+  proxyWindow = window.open("window_party_iframes.html");
+  proxyWindow.onload = _ => {
+    iframe = proxyWindow.document.querySelector("iframe");
+    iframe.src = thirdPartyOrigin + basePath + "register.html";
+    let responsesIndex = 0;
+    window.onmessage = function(e) {
+      let status = e.data.status;
+      let expected = aExpectedResponses[responsesIndex];
+      if (status == expected.status) {
+        ok(true, "Received expected " + expected.status);
+        if (expected.next) {
+          expected.next();
+        }
+      } else {
+        ok(false, "Expected " + expected.status + " got " + status);
+      }
+      responsesIndex++;
+    };
+  }
+}
+
+// Verify that we can register and intercept a 3rd party iframe with
+// the given cookie policy.
+function testShouldIntercept(behavior, lifetime, done) {
+  SpecialPowers.pushPrefEnv({"set": [
+      ["network.cookie.cookieBehavior", behavior],
+      ["network.cookie.lifetimePolicy", lifetime],
+  ]}, function() {
+    runTest([{
+      status: "ok"
+    }, {
+      status: "registrationdone",
+      next() {
+        iframe.src = origin + basePath + "iframe1.html";
+      }
+    }, {
+      status: "iframeloaded",
+      next: loadIframe
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: loadThirdPartyIframe
+    }, {
+      status: "swresponse",
+    }, {
+      status: "worker-swresponse",
+      next() {
+        iframe.src = thirdPartyOrigin + basePath + "unregister.html";
+      }
+    }, {
+      status: "controlled",
+    }, {
+      status: "unregistrationdone",
+      next() {
+        window.onmessage = null;
+        proxyWindow.close();
+        ok(true, "Test finished successfully");
+        done();
+      }
+    }]);
+  });
+}
+
+// Verify that we cannot register a service worker in a 3rd party
+// iframe with the given cookie policy.
+function testShouldNotRegister(behavior, lifetime, done) {
+  SpecialPowers.pushPrefEnv({"set": [
+      ["network.cookie.cookieBehavior", behavior],
+      ["network.cookie.lifetimePolicy", lifetime],
+  ]}, function() {
+    runTest([{
+      status: "registrationfailed",
+      next() {
+        iframe.src = origin + basePath + "iframe1.html";
+      }
+    }, {
+      status: "iframeloaded",
+      next: loadIframe
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: loadThirdPartyIframe
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next() {
+        window.onmessage = null;
+        proxyWindow.close();
+        ok(true, "Test finished successfully");
+        done();
+      }
+    }]);
+  });
+}
+
+// Verify that if a service worker is already registered a 3rd
+// party iframe will still not be intercepted with the given cookie
+// policy.
+function testShouldNotIntercept(behavior, lifetime, done) {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
+    ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
+  ]}, function() {
+    runTest([{
+      status: "ok"
+    }, {
+      status: "registrationdone",
+      next() {
+        SpecialPowers.pushPrefEnv({"set": [
+            ["network.cookie.cookieBehavior", behavior],
+            ["network.cookie.lifetimePolicy", lifetime],
+          ]}, function() {
+            proxyWindow.close();
+            proxyWindow = window.open("window_party_iframes.html");
+            proxyWindow.onload = _ => {
+              iframe = proxyWindow.document.querySelector("iframe");
+              iframe.src = origin + basePath + "iframe1.html";
+            }
+          });
+      }
+    }, {
+      status: "iframeloaded",
+      next: loadIframe
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: loadThirdPartyIframe
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next() {
+        iframe.src = thirdPartyOrigin + basePath + "unregister.html";
+      }
+    }, {
+      status: "uncontrolled",
+    }, {
+      status: "getregistrationfailed",
+      next() {
+        SpecialPowers.pushPrefEnv({"set": [
+            ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
+            ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
+          ]}, function() {
+            proxyWindow.close();
+            proxyWindow = window.open("window_party_iframes.html");
+            proxyWindow.onload = _ => {
+              iframe = proxyWindow.document.querySelector("iframe");
+              iframe.src = thirdPartyOrigin + basePath + "unregister.html";
+            }
+          });
+      }
+    }, {
+      status: "controlled",
+    }, {
+      status: "unregistrationdone",
+      next() {
+        window.onmessage = null;
+        proxyWindow.close();
+        ok(true, "Test finished successfully");
+        done();
+      }
+    }]);
+  });
+}
+
+const BEHAVIOR_ACCEPT        = 0;
+const BEHAVIOR_REJECTFOREIGN = 1;
+const BEHAVIOR_REJECT        = 2;
+const BEHAVIOR_LIMITFOREIGN  = 3;
+
+const LIFETIME_EXPIRE        = 0;
+const LIFETIME_SESSION       = 2;
+
+let steps = [() => {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["browser.dom.window.dump.enabled", true],
+    ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
+    ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
+  ]}, next);
+}, () => {
+  testShouldIntercept(BEHAVIOR_ACCEPT, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_REJECTFOREIGN, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_REJECTFOREIGN, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_REJECT, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_REJECT, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_LIMITFOREIGN, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_LIMITFOREIGN, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_ACCEPT, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_REJECTFOREIGN, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_REJECTFOREIGN, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_REJECT, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_REJECT, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_LIMITFOREIGN, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_LIMITFOREIGN, LIFETIME_SESSION, next);
+}];
+
+</script>
+</pre>
+</body>
+</html>

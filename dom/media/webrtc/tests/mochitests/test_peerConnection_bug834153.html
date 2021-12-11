@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "834153",
+    title: "Queue CreateAnswer in PeerConnection.js"
+  });
+
+  runNetworkTest(function () {
+    var pc1 = new RTCPeerConnection();
+    var pc2 = new RTCPeerConnection();
+
+    return pc1.createOffer({ offerToReceiveAudio: true }).then(offer => {
+      // The whole point of this test is not to wait for the
+      // setRemoteDescription call to succesfully complete, so we
+      // don't wait for it to succeed.
+      pc2.setRemoteDescription(offer);
+      return pc2.createAnswer();
+    })
+    .then(answer => is(answer.type, "answer", "CreateAnswer created an answer"))
+    .catch(reason => ok(false, reason.message))
+    .then(() => {
+      pc1.close();
+      pc2.close();
+    })
+    .catch(reason => ok(false, reason.message));
+  });
+</script>
+</pre>
+</body>
+</html>

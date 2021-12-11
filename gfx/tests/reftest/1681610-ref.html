@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {
+          margin-left: 100px;
+          font-size: 500%;
+          font-family: Nimbus Sans, sans-serif;
+      }
+      ul {
+          width: 1em; /* This must to be non-zero, for the percentages to work. */
+      }
+      li {
+          /* This clip path is chosen to mask off all the rounded edges of a
+             'disc' list item marker, to hide the anti-aliased pixels along the
+             round edges of the bullets from the reftest. This makes correctly
+             rendered 'disc' and 'square' list item markers appear identical,
+             while a bogus clear pixel in the middle of a 'disc' marker (the
+             present bug) still shows up.
+
+             The exact placement and rendering of the marker is up to the user
+             agent, so these values are specific to Firefox. The right and left
+             inset values fall outside the usual 0%-100% range because the
+             marker appears to the left of the <li>'s border box. */
+          clip-path: inset(44% 159% 44% -74%);
+          list-style-type: square;
+      }
+    </style>
+  </head>
+  <body>
+    <ul>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+    </ul>
+  </body>
+</html>

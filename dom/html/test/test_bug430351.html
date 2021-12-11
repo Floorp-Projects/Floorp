@@ -1,0 +1,523 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=430351
+-->
+<head>
+  <title>Test for Bug 430351</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=430351">Mozilla Bug 430351</a>
+<p id="display"></p>
+<div id="content">
+  <div id="parent"></div>
+  <div id="editableParent" contenteditable="true"></div>
+  <iframe id="frame"></iframe>
+  <map name="map"><area></map>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 430351 **/
+
+var focusableElements = [
+    "<a tabindex=\"-1\"></a>",
+    "<a tabindex=\"0\"></a>",
+    "<a tabindex=\"0\" disabled></a>",
+    "<a tabindex=\"1\"></a>",
+    "<a contenteditable=\"true\"></a>",
+
+    "<a href=\"#\"></a>",
+    "<a href=\"#\" tabindex=\"-1\"></a>",
+    "<a href=\"#\" tabindex=\"0\"></a>",
+    "<a href=\"#\" tabindex=\"0\" disabled></a>",
+    "<a href=\"#\" tabindex=\"1\"></a>",
+    "<a href=\"#\" contenteditable=\"true\"></a>",
+    "<a href=\"#\" disabled></a>",
+
+    "<button></button>",
+    "<button tabindex=\"-1\"></button>",
+    "<button tabindex=\"0\"></button>",
+    "<button tabindex=\"1\"></button>",
+    "<button contenteditable=\"true\"></button>",
+
+    "<button type=\"reset\"></button>",
+    "<button type=\"reset\" tabindex=\"-1\"></button>",
+    "<button type=\"reset\" tabindex=\"0\"></button>",
+    "<button type=\"reset\" tabindex=\"1\"></button>",
+    "<button type=\"reset\" contenteditable=\"true\"></button>",
+
+    "<button type=\"submit\"></button>",
+    "<button type=\"submit\" tabindex=\"-1\"></button>",
+    "<button type=\"submit\" tabindex=\"0\"></button>",
+    "<button type=\"submit\" tabindex=\"1\"></button>",
+    "<button type=\"submit\" contenteditable=\"true\"></button>",
+
+    "<div tabindex=\"-1\"></div>",
+    "<div tabindex=\"0\"></div>",
+    "<div tabindex=\"1\"></div>",
+    "<div contenteditable=\"true\"></div>",
+    "<div tabindex=\"0\" disabled></div>",
+
+    "<embed>",
+    "<embed tabindex=\"-1\">",
+    "<embed tabindex=\"0\">",
+    "<embed tabindex=\"0\" disabled>",
+    "<embed tabindex=\"1\">",
+    "<embed disabled>",
+    "<embed contenteditable=\"true\">",
+
+    "<iframe contenteditable=\"true\"></iframe>",
+
+    "<iframe src=\"about:blank\"></iframe>",
+    "<iframe src=\"about:blank\" disabled></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"-1\"></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"0\"></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"0\" disabled></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"1\"></iframe>",
+    "<iframe src=\"about:blank\" contenteditable=\"true\"></iframe>",
+
+    "<iframe></iframe>",
+    "<iframe tabindex=\"-1\"></iframe>",
+    "<iframe tabindex=\"0\"></iframe>",
+    "<iframe tabindex=\"0\" disabled></iframe>",
+    "<iframe tabindex=\"1\"></iframe>",
+    "<iframe disabled></iframe>",
+
+    "<img tabindex=\"-1\">",
+    "<img tabindex=\"0\">",
+    "<img tabindex=\"0\" disabled>",
+    "<img tabindex=\"1\">",
+
+    "<input>",
+    "<input tabindex=\"-1\">",
+    "<input tabindex=\"0\">",
+    "<input tabindex=\"1\">",
+    "<input contenteditable=\"true\">",
+
+    "<input type=\"button\">",
+    "<input type=\"button\" tabindex=\"-1\">",
+    "<input type=\"button\" tabindex=\"0\">",
+    "<input type=\"button\" tabindex=\"1\">",
+    "<input type=\"button\" contenteditable=\"true\">",
+
+    "<input type=\"checkbox\">",
+    "<input type=\"checkbox\" tabindex=\"-1\">",
+    "<input type=\"checkbox\" tabindex=\"0\">",
+    "<input type=\"checkbox\" tabindex=\"1\">",
+    "<input type=\"checkbox\" contenteditable=\"true\">",
+
+    "<input type=\"image\">",
+    "<input type=\"image\" tabindex=\"-1\">",
+    "<input type=\"image\" tabindex=\"0\">",
+    "<input type=\"image\" tabindex=\"1\">",
+    "<input type=\"image\" contenteditable=\"true\">",
+
+    "<input type=\"password\">",
+    "<input type=\"password\" tabindex=\"-1\">",
+    "<input type=\"password\" tabindex=\"0\">",
+    "<input type=\"password\" tabindex=\"1\">",
+    "<input type=\"password\" contenteditable=\"true\">",
+
+    "<input type=\"radio\">",
+    "<input type=\"radio\" tabindex=\"-1\">",
+    "<input type=\"radio\" tabindex=\"0\">",
+    "<input type=\"radio\" tabindex=\"1\">",
+    "<input type=\"radio\" contenteditable=\"true\">",
+    "<input type=\"radio\" checked>",
+    "<form><input type=\"radio\" name=\"foo\"></form>",
+
+    "<input type=\"reset\">",
+    "<input type=\"reset\" tabindex=\"-1\">",
+    "<input type=\"reset\" tabindex=\"0\">",
+    "<input type=\"reset\" tabindex=\"1\">",
+    "<input type=\"reset\" contenteditable=\"true\">",
+
+    "<input type=\"submit\">",
+    "<input type=\"submit\" tabindex=\"-1\">",
+    "<input type=\"submit\" tabindex=\"0\">",
+    "<input type=\"submit\" tabindex=\"1\">",
+    "<input type=\"submit\" contenteditable=\"true\">",
+
+    "<input type=\"text\">",
+    "<input type=\"text\" tabindex=\"-1\">",
+    "<input type=\"text\" tabindex=\"0\">",
+    "<input type=\"text\" tabindex=\"1\">",
+    "<input type=\"text\" contenteditable=\"true\">",
+
+    "<input type=\"number\">",
+    "<input type=\"number\" tabindex=\"-1\">",
+    "<input type=\"number\" tabindex=\"0\">",
+    "<input type=\"number\" tabindex=\"1\">",
+    "<input type=\"number\" contenteditable=\"true\">",
+
+    "<object tabindex=\"-1\"></object>",
+    "<object tabindex=\"0\"></object>",
+    "<object tabindex=\"1\"></object>",
+    "<object contenteditable=\"true\"></object>",
+
+    "<object classid=\"java:a\"></object>",
+    "<object classid=\"java:a\" tabindex=\"-1\"></object>",
+    "<object classid=\"java:a\" tabindex=\"0\"></object>",
+    "<object classid=\"java:a\" tabindex=\"0\" disabled></object>",
+    "<object classid=\"java:a\" tabindex=\"1\"></object>",
+    "<object classid=\"java:a\" disabled></object>",
+    "<object classid=\"java:a\" contenteditable=\"true\"></object>",
+
+    "<select></select>",
+    "<select tabindex=\"-1\"></select>",
+    "<select tabindex=\"0\"></select>",
+    "<select tabindex=\"1\"></select>",
+    "<select contenteditable=\"true\"></select>",
+
+    "<option tabindex='-1'></option>",
+    "<option tabindex='0'></option>",
+    "<option tabindex='1'></option>",
+    "<option contenteditable></option>",
+
+    "<optgroup tabindex='-1'></optgroup>",
+    "<optgroup tabindex='0'></optgroup>",
+    "<optgroup tabindex='1'></optgroup>",
+    "<optgroup contenteditable></optgroup>"
+];
+
+var nonFocusableElements = [
+    "<a></a>",
+    "<a disabled></a>",
+
+    "<button tabindex=\"0\" disabled></button>",
+    "<button disabled></button>",
+
+    "<button type=\"reset\" tabindex=\"0\" disabled></button>",
+    "<button type=\"reset\" disabled></button>",
+
+    "<button type=\"submit\" tabindex=\"0\" disabled></button>",
+    "<button type=\"submit\" disabled></button>",
+
+    "<div></div>",
+    "<div disabled></div>",
+
+    "<img>",
+    "<img disabled>",
+    "<img contenteditable=\"true\">",
+
+    "<img usemap=\"#map\">",
+    "<img usemap=\"#map\" tabindex=\"-1\">",
+    "<img usemap=\"#map\" tabindex=\"0\">",
+    "<img usemap=\"#map\" tabindex=\"0\" disabled>",
+    "<img usemap=\"#map\" tabindex=\"1\">",
+    "<img usemap=\"#map\" disabled>",
+    "<img usemap=\"#map\" contenteditable=\"true\">",
+
+    "<input tabindex=\"0\" disabled>",
+    "<input disabled>",
+
+    "<input type=\"button\" tabindex=\"0\" disabled>",
+    "<input type=\"button\" disabled>",
+
+    "<input type=\"checkbox\" tabindex=\"0\" disabled>",
+    "<input type=\"checkbox\" disabled>",
+
+    "<input type=\"file\" tabindex=\"0\" disabled>",
+    "<input type=\"file\" disabled>",
+
+    "<input type=\"hidden\">",
+    "<input type=\"hidden\" tabindex=\"-1\">",
+    "<input type=\"hidden\" tabindex=\"0\">",
+    "<input type=\"hidden\" tabindex=\"0\" disabled>",
+    "<input type=\"hidden\" tabindex=\"1\">",
+    "<input type=\"hidden\" disabled>",
+    "<input type=\"hidden\" contenteditable=\"true\">",
+
+    "<input type=\"image\" tabindex=\"0\" disabled>",
+    "<input type=\"image\" disabled>",
+
+    "<input type=\"password\" tabindex=\"0\" disabled>",
+    "<input type=\"password\" disabled>",
+
+    "<input type=\"radio\" tabindex=\"0\" disabled>",
+    "<input type=\"radio\" disabled>",
+
+    "<input type=\"reset\" tabindex=\"0\" disabled>",
+    "<input type=\"reset\" disabled>",
+
+    "<input type=\"submit\" tabindex=\"0\" disabled>",
+    "<input type=\"submit\" disabled>",
+
+    "<input type=\"text\" tabindex=\"0\" disabled>",
+    "<input type=\"text\" disabled>",
+
+    "<object></object>",
+
+    "<select tabindex=\"0\" disabled></select>",
+    "<select disabled></select>",
+
+    "<option></option>",
+    "<option tabindex='1' disabled></option>",
+
+    "<optgroup></optgroup>",
+    "<optgroup tabindex='1' disabled></optgroup>"
+];
+
+var focusableInContentEditable = [
+    "<button></button>",
+    "<button tabindex=\"-1\"></button>",
+    "<button tabindex=\"0\"></button>",
+    "<button tabindex=\"1\"></button>",
+    "<button contenteditable=\"true\"></button>",
+
+    "<button type=\"reset\"></button>",
+    "<button type=\"reset\" tabindex=\"-1\"></button>",
+    "<button type=\"reset\" tabindex=\"0\"></button>",
+    "<button type=\"reset\" tabindex=\"1\"></button>",
+    "<button type=\"reset\" contenteditable=\"true\"></button>",
+
+    "<button type=\"submit\"></button>",
+    "<button type=\"submit\" tabindex=\"-1\"></button>",
+    "<button type=\"submit\" tabindex=\"0\"></button>",
+    "<button type=\"submit\" tabindex=\"1\"></button>",
+    "<button type=\"submit\" contenteditable=\"true\"></button>",
+
+    "<div tabindex=\"-1\"></div>",
+    "<div tabindex=\"0\"></div>",
+    "<div tabindex=\"1\"></div>",
+    "<div tabindex=\"0\" disabled></div>",
+
+    "<embed>",
+    "<embed tabindex=\"-1\">",
+    "<embed tabindex=\"0\">",
+    "<embed tabindex=\"0\" disabled>",
+    "<embed tabindex=\"1\">",
+    "<embed disabled>",
+    "<embed contenteditable=\"true\">",
+
+    "<iframe src=\"about:blank\"></iframe>",
+    "<iframe></iframe>",
+    "<iframe src=\"about:blank\" disabled></iframe>",
+    "<iframe disabled></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"-1\"></iframe>",
+    "<iframe tabindex=\"-1\"></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"0\"></iframe>",
+    "<iframe tabindex=\"0\"></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"0\" disabled></iframe>",
+    "<iframe tabindex=\"0\" disabled></iframe>",
+    "<iframe src=\"about:blank\" tabindex=\"1\"></iframe>",
+    "<iframe tabindex=\"1\"></iframe>",
+    "<iframe src=\"about:blank\" contenteditable=\"true\"></iframe>",
+    "<iframe contenteditable=\"true\"></iframe>",
+
+    "<img tabindex=\"-1\">",
+    "<img tabindex=\"0\">",
+    "<img tabindex=\"0\" disabled>",
+    "<img tabindex=\"1\">",
+
+    "<input>",
+    "<input tabindex=\"-1\">",
+    "<input tabindex=\"0\">",
+    "<input tabindex=\"1\">",
+    "<input contenteditable=\"true\">",
+
+    "<input type=\"button\">",
+    "<input type=\"button\" tabindex=\"-1\">",
+    "<input type=\"button\" tabindex=\"0\">",
+    "<input type=\"button\" tabindex=\"1\">",
+    "<input type=\"button\" contenteditable=\"true\">",
+
+    "<input type=\"file\">",
+    "<input type=\"file\" tabindex=\"-1\">",
+    "<input type=\"file\" tabindex=\"0\">",
+    "<input type=\"file\" tabindex=\"1\">",
+    "<input type=\"file\" contenteditable=\"true\">",
+
+    "<input type=\"checkbox\">",
+    "<input type=\"checkbox\" tabindex=\"-1\">",
+    "<input type=\"checkbox\" tabindex=\"0\">",
+    "<input type=\"checkbox\" tabindex=\"1\">",
+    "<input type=\"checkbox\" contenteditable=\"true\">",
+
+    "<input type=\"image\">",
+    "<input type=\"image\" tabindex=\"-1\">",
+    "<input type=\"image\" tabindex=\"0\">",
+    "<input type=\"image\" tabindex=\"1\">",
+    "<input type=\"image\" contenteditable=\"true\">",
+
+    "<input type=\"password\">",
+    "<input type=\"password\" tabindex=\"-1\">",
+    "<input type=\"password\" tabindex=\"0\">",
+    "<input type=\"password\" tabindex=\"1\">",
+    "<input type=\"password\" contenteditable=\"true\">",
+
+    "<input type=\"radio\">",
+    "<input type=\"radio\" tabindex=\"-1\">",
+    "<input type=\"radio\" tabindex=\"0\">",
+    "<input type=\"radio\" tabindex=\"1\">",
+    "<input type=\"radio\" contenteditable=\"true\">",
+    "<input type=\"radio\" checked>",
+    "<form><input type=\"radio\" name=\"foo\"></form>",
+
+    "<input type=\"reset\">",
+    "<input type=\"reset\" tabindex=\"-1\">",
+    "<input type=\"reset\" tabindex=\"0\">",
+    "<input type=\"reset\" tabindex=\"1\">",
+    "<input type=\"reset\" contenteditable=\"true\">",
+
+    "<input type=\"submit\">",
+    "<input type=\"submit\" tabindex=\"-1\">",
+    "<input type=\"submit\" tabindex=\"0\">",
+    "<input type=\"submit\" tabindex=\"1\">",
+    "<input type=\"submit\" contenteditable=\"true\">",
+
+    "<input type=\"text\">",
+    "<input type=\"text\" tabindex=\"-1\">",
+    "<input type=\"text\" tabindex=\"0\">",
+    "<input type=\"text\" tabindex=\"1\">",
+    "<input type=\"text\" contenteditable=\"true\">",
+
+    "<input type=\"number\">",
+    "<input type=\"number\" tabindex=\"-1\">",
+    "<input type=\"number\" tabindex=\"0\">",
+    "<input type=\"number\" tabindex=\"1\">",
+    "<input type=\"number\" contenteditable=\"true\">",
+
+    "<object tabindex=\"-1\"></object>",
+    "<object tabindex=\"0\"></object>",
+    "<object tabindex=\"1\"></object>",
+
+    // Disabled doesn't work for <object>.
+    "<object tabindex=\"0\" disabled></object>",
+    "<object disabled></object>",
+
+    "<select></select>",
+    "<select tabindex=\"-1\"></select>",
+    "<select tabindex=\"0\"></select>",
+    "<select tabindex=\"1\"></select>",
+    "<select contenteditable=\"true\"></select>",
+
+    "<option tabindex='-1'></option>",
+    "<option tabindex='0'></option>",
+    "<option tabindex='1'></option>",
+
+    "<optgroup tabindex='-1'></optgroup>",
+    "<optgroup tabindex='0'></optgroup>",
+    "<optgroup tabindex='1'></optgroup>"
+];
+
+var focusableInDesignMode = [
+    "<embed>",
+    "<embed tabindex=\"-1\">",
+    "<embed tabindex=\"0\">",
+    "<embed tabindex=\"0\" disabled>",
+    "<embed tabindex=\"1\">",
+    "<embed disabled>",
+    "<embed contenteditable=\"true\">",
+
+    "<img tabindex=\"-1\">",
+    "<img tabindex=\"0\">",
+    "<img tabindex=\"0\" disabled>",
+    "<img tabindex=\"1\">",
+];
+
+// Can't currently test these, need a plugin.
+var focusableElementsTODO = [
+    "<object classid=\"java:a\"></object>",
+    "<object classid=\"java:a\" tabindex=\"-1\"></object>",
+    "<object classid=\"java:a\" tabindex=\"0\"></object>",
+    "<object classid=\"java:a\" tabindex=\"0\" disabled></object>",
+    "<object classid=\"java:a\" tabindex=\"1\"></object>",
+    "<object classid=\"java:a\" disabled></object>",
+    "<object classid=\"java:a\" contenteditable=\"true\"></object>",
+];
+
+var serializer = new XMLSerializer();
+
+function testElements(parent, tags, shouldBeFocusable)
+{
+    var focusable, errorSuffix = "";
+    if (parent.ownerDocument.designMode == "on") {
+        focusable = focusableInDesignMode;
+        errorSuffix = " in a document with designMode=on";
+    }
+    else if (parent.contentEditable == "true") {
+        focusable = focusableInContentEditable;
+    }
+
+    for (var tag of tags) {
+        parent.ownerDocument.body.focus();
+
+        if (focusableElementsTODO.indexOf(tag) > -1) {
+            todo_is(parent.ownerDocument.activeElement, parent.firstChild,
+                    tag + " should be focusable" + errorSuffix);
+            continue;
+        }
+
+        parent.innerHTML = tag;
+
+        // Focus the deepest descendant.
+        var descendant = parent;
+        while ((descendant = descendant.firstChild))
+            element = descendant;
+
+        if (element.nodeName == "IFRAME")
+            var foo = element.contentDocument;
+
+        element.focus();
+
+        var errorPrefix = serializer.serializeToString(element) + " in " +
+                          serializer.serializeToString(parent);
+
+        try {
+          // Make sure activeElement doesn't point to a
+          // native anonymous element.
+          parent.ownerDocument.activeElement.localName;
+        } catch (ex) {
+          ok(false, ex + errorPrefix + errorSuffix);
+        }
+        if (focusable ? focusable.indexOf(tag) > -1 : shouldBeFocusable) {
+            is(parent.ownerDocument.activeElement, element,
+               errorPrefix + " should be focusable" + errorSuffix);
+        }
+        else {
+            isnot(parent.ownerDocument.activeElement, element,
+                  errorPrefix + " should not be focusable" + errorSuffix);
+        }
+
+        parent.innerHTML = "";
+    }
+}
+
+function test()
+{
+    var parent = document.getElementById("parent");
+    var editableParent = document.getElementById("editableParent");
+
+    testElements(parent, focusableElements, true);
+    testElements(parent, nonFocusableElements, false);
+
+    testElements(editableParent, focusableElements, true);
+    testElements(editableParent, nonFocusableElements, false);
+
+    var frame = document.getElementById("frame");
+    frame.contentDocument.body.innerHTML = document.getElementById("content").innerHTML;
+    frame.contentDocument.designMode = "on";
+    parent = frame.contentDocument.getElementById("parent");
+    editableParent = frame.contentDocument.getElementById("editableParent");
+
+    testElements(parent, focusableElements, false);
+    testElements(parent, nonFocusableElements, false);
+
+    testElements(editableParent, focusableElements, false);
+    testElements(editableParent, nonFocusableElements, false);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>

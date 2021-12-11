@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Pixel rounding testcase</title>
+<style type="text/css">
+
+html, body { margin: 0; border: none; padding: 0; }
+div { position: absolute; background: blue; }
+
+div.i1  { left: 10px; }
+div.i3  { left: 40px; }
+div.i5  { left: 70px; }
+div.i25 { left: 100px; }
+
+div.s1  { top: 10px; height: 1px; width: 1px; }
+div.s3  { top: 30px; height: 3px; width: 3px; }
+div.s5  { top: 50px; height: 5px; width: 5px; }
+div.s25 { top: 70px; height: 25px; width: 25px; }
+
+</style>
+</head>
+<body>
+
+<div class="s1 i1"></div>
+<div class="s1 i3"></div>
+<div class="s1 i5"></div>
+<div class="s1 i25"></div>
+
+<div class="s3 i1"></div>
+<div class="s3 i3"></div>
+<div class="s3 i5"></div>
+<div class="s3 i25"></div>
+
+<div class="s5 i1"></div>
+<div class="s5 i3"></div>
+<div class="s5 i5"></div>
+<div class="s5 i25"></div>
+
+<div class="s25 i1"></div>
+<div class="s25 i3"></div>
+<div class="s25 i5"></div>
+<div class="s25 i25"></div>
+
+</body>
+</html>

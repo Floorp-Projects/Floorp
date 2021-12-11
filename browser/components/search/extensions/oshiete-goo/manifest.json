@@ -1,0 +1,25 @@
+{
+  "name": "教えて！goo",
+  "description": "教えて！goo",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "oshiete-goo@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "教えて！goo",
+      "search_url": "https://oshiete.goo.ne.jp/search_goo/result/",
+      "search_url_get_params": "MT={searchTerms}&from=Firefox30&PT=Firefox30"
+    }
+  }
+}

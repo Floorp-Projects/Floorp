@@ -1,0 +1,3 @@
+GERRIT_HOST: True
+CODE_REVIEW_SERVER: chromium-review.googlesource.com
+VIEW_VC: https://chromium.googlesource.com/breakpad/breakpad/+/

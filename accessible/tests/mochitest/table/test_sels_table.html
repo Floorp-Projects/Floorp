@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>nsIAccesible selection methods testing for HTML table</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="text/javascript">
+
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // table
+
+      var cellsArray =
+      [
+        [false, false,       false,       kColSpanned, false, false,       false, false],
+        [false, false,       false,       false,       false, false,       false, kRowSpanned],
+        [false, false,       kColSpanned, false,       false, false,       false, kRowSpanned],
+        [false, kRowSpanned, kSpanned,    false,       false, kRowSpanned, false, kRowSpanned],
+      ];
+
+      testTableSelection("table", cellsArray);
+
+      var rowCount = 4;
+      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++)
+        testSelectTableRow("table", rowIdx, cellsArray);
+
+      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+        testSelectTableRow("table", rowIdx, cellsArray);
+        testUnselectTableRow("table", rowIdx, cellsArray);
+      }
+
+      var columsCount = 8;
+      for (let colIdx = 0; colIdx < columsCount; colIdx++)
+        testSelectTableColumn("table", colIdx, cellsArray);
+
+      for (let colIdx = 0; colIdx < columsCount; colIdx++) {
+        testSelectTableColumn("table", colIdx, cellsArray);
+        testUnselectTableColumn("table", colIdx, cellsArray);
+      }
+
+      var accTable = getAccessible("table", [nsIAccessibleTable]);
+      ok(!accTable.isProbablyForLayout(), "table is not for layout");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // table instane
+
+      cellsArray =
+      [
+        [false,       false, false,       -1,          -1],
+        [false,       false, false,       -1,          -1],
+        [false,       false, kColSpanned, kColSpanned, -1],
+        [kRowSpanned, false, false,       -1,          -1],
+        [kRowSpanned, false, kRowSpanned, false,       false],
+      ];
+
+      testTableSelection("tableinsane", cellsArray);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+ </head>
+ <body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052"
+     title="Fix our nsHTMLAccessibleTable class so GetIndexAt and GetRowAtIndex and GetColumnAtIndex behave consistently">
+    Mozilla Bug 410052
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=501635"
+     title="nsHTMLTableAccessible::GetSelectedCells contains index duplicates for spanned rows or columns">
+    Mozilla Bug 501635
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=417929"
+     title="nsIAccessiblTable selectRows does not unselect previously selected rows">
+    Mozilla Bug 417929
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=501659"
+     title="HTML table's isRowSelected/isColumnSelected shouldn't fail if row or column has cell holes">
+    Mozilla Bug 501659
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Test Table -->
+  <br><br><b> Testing Table:</b><br><br>
+  <center>
+   <table cellpadding="2" cellspacing="2" border="1" width="50%" id="table">
+    <tbody>
+     <tr>
+      <td><br></td>
+      <td><br></td>
+      <td rowspan="1" colspan="2"><br></td>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+      <td rowspan="4" colspan="1"><br></td>
+     </tr>
+     <tr>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+     </tr>
+     <tr>
+      <td><br></td>
+      <td rowspan="2" colspan="2">c1</td>
+      <td><br></td>
+      <td><br></td>
+      <td rowspan="2" colspan="1"><br></td>
+      <td><br></td>
+     </tr>
+     <tr>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+      <td><br></td>
+     </tr>
+    </tbody>
+   </table>
+
+   <table border="1" id="tableinsane">
+    <thead>
+     <tr>
+      <th>col1</th>
+      <th>col2</th>
+      <th>col3</th>
+     </tr>
+    </thead>
+     <tbody>
+      <tr>
+       <td>1</td>
+       <td>2</td>
+       <td>3</td>
+      </tr>
+      <tr>
+       <td rowspan="3">4</td>
+       <td colspan="4">5</td>
+      </tr>
+      <tr>
+       <td>6</td>
+       <td rowspan="2">7</td>
+      </tr>
+      <tr>
+       <td>8</td>
+       <td>9</td>
+       <td>10</td>
+      </tr>
+     </tbody>
+    </table>
+
+  </center>
+ </body>
+</html>

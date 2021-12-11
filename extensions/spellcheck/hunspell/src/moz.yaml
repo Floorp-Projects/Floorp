@@ -1,0 +1,15 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  product: "Core"
+  component: "Spelling checker"
+
+origin:
+  name: "Hunspell"
+  description: "Spell Checker"
+
+  url: "http://hunspell.github.io/"
+  license: "MPL-1.1"
+
+  release: "1.7.0"

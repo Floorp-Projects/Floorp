@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase for table + caption vertical margins (bug 478614)</title>
+<style type="text/css">
+body {margin-top: 0} /* Don't let collapsing of the body's top margin interfere with positioning */
+caption {margin-bottom: 100px; caption-side:bottom;}
+table {margin-bottom: 100px; width:100px;}
+</style>
+</head>
+<body>
+<table><caption>caption</caption>
+<tr><td>td</td></tr>
+</table>
+</body>
+</html>

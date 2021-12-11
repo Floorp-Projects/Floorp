@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=634373
+-->
+<head>
+  <title>Test for Bug 634373</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=634373">Mozilla Bug 634373</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 634373 **/
+
+function make_rule_and_remove_sheet(text, getter) {
+  var style = document.createElement("style");
+  style.setAttribute("type", "text/css");
+  style.appendChild(document.createTextNode(text));
+  document.head.appendChild(style);
+  var result = style.sheet.cssRules[0];
+  if (getter) {
+    result = getter(result);
+  }
+  document.head.removeChild(style);
+  style = null;
+  SpecialPowers.DOMWindowUtils.garbageCollect();
+  return result;
+}
+
+var gDisplayCS = getComputedStyle(document.getElementById("display"), "");
+
+function keep_rule_alive_by_matching(rule) {
+  // It's the caller's job to guarantee that the rule matches a p.
+  // This just causes a style flush, which in turn keeps the rule alive
+  // until the next style flush.
+  var color = gDisplayCS.color;
+  return rule;
+}
+
+function get_rule_and_child(rule) {
+  return [rule, rule.cssRules[0]];
+}
+
+function get_only_child(rule) {
+  return rule.cssRules[0];
+}
+
+var rule;
+
+// In this case, the rule goes away immediately, so we're testing
+// the DOM wrapper's handling of a null rule, rather than the rule's
+// handling of a null sheet.
+rule = make_rule_and_remove_sheet("p { color: blue }");
+rule.style.color = "";
+try {
+  rule.style.color = "fuchsia";
+} catch(ex) {}
+
+rule = make_rule_and_remove_sheet("p { color: blue }",
+                                  keep_rule_alive_by_matching);
+try {
+  rule.style.color = "";
+} catch(ex) {}
+try {
+  rule.style.color = "fuchsia";
+} catch(ex) {}
+
+rule = make_rule_and_remove_sheet("@media screen { p { color: blue } }",
+                                   get_rule_and_child);
+rule[1].style.color = "";
+try {
+  rule[1].style.color = "fuchsia";
+} catch(ex) {}
+
+// In this case, the rule goes away immediately, so we're testing
+// the DOM wrapper's handling of a null rule, rather than the rule's
+// handling of a null sheet.
+rule = make_rule_and_remove_sheet("@media screen { p { color: blue } }",
+                                   get_only_child);
+rule.style.color = "";
+try {
+  rule.style.color = "fuchsia";
+} catch(ex) {}
+
+rule = make_rule_and_remove_sheet("@media screen { p { color: blue } }",
+                                  function(ruleInner) {
+                                    return keep_rule_alive_by_matching(
+                                             get_only_child(ruleInner));
+                                  });
+try {
+  rule.style.color = "";
+} catch(ex) {}
+try {
+  rule.style.color = "fuchsia";
+} catch(ex) {}
+
+rule = make_rule_and_remove_sheet("@keyframes a { from { color: blue } }");
+rule.appendRule("from { color: fuchsia}");
+rule.deleteRule("from");
+rule.name = "b";
+rule.cssRules[0].keyText = "50%";
+
+ok(true, "didn't crash");
+
+</script>
+</pre>
+</body>
+</html>

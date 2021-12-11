@@ -1,0 +1,40 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += ["GeckoViewExternalAppService.cpp", "GeckoViewStreamListener.cpp"]
+EXPORTS += ["GeckoViewExternalAppService.h", "GeckoViewStreamListener.h"]
+
+if CONFIG["MOZ_ANDROID_HISTORY"]:
+    EXPORTS += [
+        "GeckoViewHistory.h",
+    ]
+    SOURCES += [
+        "GeckoViewHistory.cpp",
+    ]
+    include("/ipc/chromium/chromium-config.mozbuild")
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+EXTRA_COMPONENTS += [
+    "GeckoView.manifest",
+]
+
+EXTRA_JS_MODULES += [
+    "ColorPickerDelegate.jsm",
+    "FilePickerDelegate.jsm",
+    "GeckoViewPermission.jsm",
+    "GeckoViewPrompt.jsm",
+    "GeckoViewPrompter.jsm",
+    "GeckoViewPush.jsm",
+    "GeckoViewStartup.jsm",
+    "LoginStorageDelegate.jsm",
+    "PromptCollection.jsm",
+    "ShareDelegate.jsm",
+]
+
+FINAL_LIBRARY = "xul"

@@ -1,0 +1,300 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDocShell;
+interface nsISHEntry;
+interface nsIPrintSettings;
+webidl Document;
+webidl Node;
+
+%{ C++
+#include "nsTArray.h"
+#include "nsRect.h"
+
+class nsIWidget;
+class nsPresContext;
+class nsView;
+class nsDOMNavigationTiming;
+namespace mozilla {
+class Encoding;
+class PresShell;
+namespace dom {
+class WindowGlobalChild;
+} // namespace dom
+} // namespace mozilla
+%}
+
+[ptr] native nsIWidgetPtr(nsIWidget);
+[ref] native nsIntRectRef(nsIntRect);
+[ptr] native nsPresContextPtr(nsPresContext);
+[ptr] native nsViewPtr(nsView);
+[ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
+[ptr] native Encoding(const mozilla::Encoding);
+[ptr] native PresShellPtr(mozilla::PresShell);
+[ptr] native WindowGlobalChildPtr(mozilla::dom::WindowGlobalChild);
+
+[scriptable, builtinclass, uuid(2da17016-7851-4a45-a7a8-00b360e01595)]
+interface nsIContentViewer : nsISupports
+{
+  [noscript] void init(in nsIWidgetPtr aParentWidget,
+                       [const] in nsIntRectRef aBounds,
+                       in WindowGlobalChildPtr aWindowActor);
+
+  attribute nsIDocShell container;
+
+  [noscript,notxpcom,nostdcall] void loadStart(in Document aDoc);
+  [can_run_script] void loadComplete(in nsresult aStatus);
+  [notxpcom,nostdcall] readonly attribute boolean loadCompleted;
+
+  [notxpcom,nostdcall] readonly attribute boolean isStopped;
+
+   /**
+   * aAction is passed to PermitUnload to indicate what action to take
+   * if a beforeunload handler wants to prompt the user.
+   *
+   * ePrompt: Prompt and return the user's choice (default).
+   * eDontPromptAndDontUnload: Don't prompt and return false (unload not permitted)
+   *                           if the document (or its children) asks us to prompt.
+   * eDontPromptAndUnload: Don't prompt and return true (unload permitted) no matter what.
+   *
+   * NOTE: Keep this in sync with PermitUnloadAction in WindowGlobalActors.webidl.
+   */
+  cenum PermitUnloadAction : 8 {
+    ePrompt = 0,
+    eDontPromptAndDontUnload = 1,
+    eDontPromptAndUnload = 2
+  };
+
+  /**
+   * The result of dispatching a "beforeunload" event. If `eAllowNavigation`,
+   * no "beforeunload" listener requested to prevent the navigation, or its
+   * request was ignored. If `eRequestBlockNavigation`, a listener did request
+   * to block the navigation, and the user should be prompted.
+   */
+  cenum PermitUnloadResult : 8 {
+    eAllowNavigation = 0,
+    eRequestBlockNavigation = 1,
+  };
+
+  /**
+   * Overload PermitUnload method for C++ consumers with no aPermitUnloadFlags
+   * argument.
+   */
+  %{C++
+    nsresult PermitUnload(bool* canUnload) {
+      return PermitUnload(ePrompt, canUnload);
+    }
+  %}
+
+  /**
+   * Checks if the document wants to prevent unloading by firing beforeunload on
+   * the document.
+   * The result is returned.
+   */
+  boolean permitUnload([optional] in nsIContentViewer_PermitUnloadAction aAction);
+
+  /**
+   * Exposes whether we're blocked in a call to permitUnload.
+   */
+  readonly attribute boolean inPermitUnload;
+
+  /**
+   * Dispatches the "beforeunload" event and returns the result, as documented
+   * in the `PermitUnloadResult` enum.
+   */
+  [noscript,nostdcall,notxpcom] nsIContentViewer_PermitUnloadResult dispatchBeforeUnload();
+
+  /**
+   * Exposes whether we're in the process of firing the beforeunload event.
+   * In this case, the corresponding docshell will not allow navigation.
+   */
+  readonly attribute boolean beforeUnloadFiring;
+
+  void pageHide(in boolean isUnload);
+
+  /**
+   * All users of a content viewer are responsible for calling both
+   * close() and destroy(), in that order.
+   *
+   * close() should be called when the load of a new page for the next
+   * content viewer begins, and destroy() should be called when the next
+   * content viewer replaces this one.
+   *
+   * |historyEntry| sets the session history entry for the content viewer.  If
+   * this is null, then Destroy() will be called on the document by close().
+   * If it is non-null, the document will not be destroyed, and the following
+   * actions will happen when destroy() is called (*):
+   *  - Sanitize() will be called on the viewer's document
+   *  - The content viewer will set the contentViewer property on the
+   *    history entry, and release its reference (ownership reversal).
+   *  - hide() will be called, and no further destruction will happen.
+   *
+   *  (*) unless the document is currently being printed, in which case
+   *      it will never be saved in session history.
+   *
+   */
+  void close(in nsISHEntry historyEntry);
+  void destroy();
+
+  void stop();
+
+  /**
+   * Returns the same thing as getDocument(), but for use from script
+   * only.  C++ consumers should use getDocument().
+   */
+  readonly attribute Document DOMDocument;
+
+  /**
+   * Returns DOMDocument without addrefing.
+   */
+  [noscript,notxpcom,nostdcall] Document getDocument();
+
+  /**
+   * Allows setting the document.
+   */
+  [noscript,nostdcall] void setDocument(in Document aDocument);
+
+  [noscript] void getBounds(in nsIntRectRef aBounds);
+  [noscript] void setBounds([const] in nsIntRectRef aBounds);
+  /**
+   * The 'aFlags' argument to setBoundsWithFlags is a set of these bits.
+   */
+  const unsigned long eDelayResize = 1;
+  [noscript] void setBoundsWithFlags([const] in nsIntRectRef aBounds,
+                                     in unsigned long aFlags);
+
+  /**
+   * The previous content viewer, which has been |close|d but not
+   * |destroy|ed.
+   */
+  [notxpcom,nostdcall] attribute nsIContentViewer previousViewer;
+
+  void move(in long aX, in long aY);
+
+  void show();
+  void hide();
+
+  attribute boolean sticky;
+
+  /**
+   * Attach the content viewer to its DOM window and docshell.
+   * @param aState A state object that might be useful in attaching the DOM
+   *               window.
+   * @param aSHEntry The history entry that the content viewer was stored in.
+   *                 The entry must have the docshells for all of the child
+   *                 documents stored in its child shell list.
+   */
+  void open(in nsISupports aState, in nsISHEntry aSHEntry);
+
+  /**
+   * Clears the current history entry.  This is used if we need to clear out
+   * the saved presentation state.
+   */
+  void clearHistoryEntry();
+
+  /**
+   * Change the layout to view the document with page layout (like print preview), but
+   * dynamic and editable (like Galley layout).
+   */
+  void setPageModeForTesting(in boolean aPageMode,
+                             in nsIPrintSettings aPrintSettings);
+
+  /**
+   * Sets the print settings for print / print-previewing a subdocument.
+   */
+  [can_run_script] void setPrintSettingsForSubdocument(in nsIPrintSettings aPrintSettings);
+
+  /**
+   * Get the history entry that this viewer will save itself into when
+   * destroyed.  Can return null
+   */
+  readonly attribute nsISHEntry historyEntry;
+
+  /**
+   * Indicates when we're in a state where content shouldn't be allowed to
+   * trigger a tab-modal prompt (as opposed to a window-modal prompt) because
+   * we're part way through some operation (eg beforeunload) that shouldn't be
+   * rentrant if the user closes the tab while the prompt is showing.
+   * See bug 613800.
+   */
+  readonly attribute boolean isTabModalPromptAllowed;
+
+  /**
+   * Returns whether this content viewer is in a hidden state.
+   *
+   * @note Only Gecko internal code should set the attribute!
+   */
+  attribute boolean isHidden;
+
+  // presShell can be null.
+  [notxpcom,nostdcall] readonly attribute PresShellPtr presShell;
+  // presContext can be null.
+  [notxpcom,nostdcall] readonly attribute nsPresContextPtr presContext;
+  // aDocument must not be null.
+  [noscript] void setDocumentInternal(in Document aDocument,
+                                      in boolean aForceReuseInnerWindow);
+  /**
+   * Find the view to use as the container view for MakeWindow. Returns
+   * null if this will be the root of a view manager hierarchy. In that
+   * case, if mParentWidget is null then this document should not even
+   * be displayed.
+   */
+  [noscript,notxpcom,nostdcall] nsViewPtr findContainerView();
+  /**
+   * Set collector for navigation timing data (load, unload events).
+   */
+  [noscript,notxpcom,nostdcall] void setNavigationTiming(in nsDOMNavigationTimingPtr aTiming);
+
+  /**
+   * The actual full zoom in effect, as modified by the device context.
+   * For a requested full zoom, the device context may choose a slightly
+   * different effectiveFullZoom to accomodate integer rounding of app units
+   * per dev pixel. This property returns the actual zoom amount in use,
+   * though it may not be good user experience to report that a requested zoom
+   * of 90% is actually 89.1%, for example. This value is provided primarily to
+   * support media queries of dppx values, because those queries are matched
+   * against the actual native device pixel ratio and the actual full zoom.
+   *
+   * You should only need this for testing.
+   */
+  readonly attribute float deviceFullZoomForTest;
+
+  /**
+   * Disable entire author style level (including HTML presentation hints),
+   * for this viewer but not any child viewers.
+   */
+  attribute boolean authorStyleDisabled;
+
+  /**
+   * Requests the size of the content to the container.
+   */
+  void getContentSize(out long width, out long height);
+
+  /**
+   * Returns the preferred width and height of the content, constrained to the
+   * given maximum values. If either maxWidth or maxHeight is less than zero,
+   * that dimension is not constrained.
+   *
+   * All input and output values are in device pixels, rather than CSS pixels.
+   */
+  void getContentSizeConstrained(in long maxWidth, in long maxHeight,
+                                 out long width, out long height);
+
+  [noscript, notxpcom] Encoding getReloadEncodingAndSource(out int32_t aSource);
+  [noscript, notxpcom] void setReloadEncodingAndSource(in Encoding aEncoding, in int32_t aSource);
+  [noscript, notxpcom] void forgetReloadEncoding();
+};
+
+%{C++
+namespace mozilla {
+namespace dom {
+
+using XPCOMPermitUnloadAction = nsIContentViewer::PermitUnloadAction;
+using PermitUnloadResult = nsIContentViewer::PermitUnloadResult;
+
+} // namespace dom
+} // namespace mozilla
+%}

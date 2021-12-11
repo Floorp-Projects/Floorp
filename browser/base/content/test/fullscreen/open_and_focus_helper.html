@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+</head>
+<body>
+  <input></input>
+  <script>
+    const MY_ORIGIN = window.location.origin;
+    const CROSS_ORIGIN = "https://example.org";
+
+    // Creates an iframe with message channel to trigger window open and focus
+    window.createIframe = function(id, crossOrigin = false) {
+      return new Promise(resolve => {
+        const origin = crossOrigin ? CROSS_ORIGIN : MY_ORIGIN;
+        let iframe = document.createElement("iframe");
+        iframe.id = id;
+        iframe.src = origin + window.location.pathname;
+        iframe.onload = () => resolve(iframe);
+        document.body.appendChild(iframe);
+      });
+    }
+
+    window.sendMessage = function(destWin, msg) {
+      return new Promise(resolve => {
+        let channel = new MessageChannel();
+        channel.port1.onmessage = resolve;
+        destWin.postMessage(msg, "*", [channel.port2]);
+      });
+    }
+
+    window.onMessage = function(event) {
+      let canReply = event.ports && !!event.ports.length;
+      if(event.data === "open") {
+        window.openedWindow = window.open('https://example.com' + window.location.pathname);
+        if (canReply) event.ports[0].postMessage('opened');
+      } else if(event.data === "openpopup") {
+        window.openedWindow = window.open('https://example.com' + window.location.pathname, '', 'top=0,height=1, width=300');
+        if (canReply) event.ports[0].postMessage('popupopened');
+      } else if(event.data === "focus") {
+        window.openedWindow.focus();
+        if (canReply) event.ports[0].postMessage('focused');
+      } else if(event.data === "elementfocus") {
+        document.querySelector("input").focus();
+        if (canReply) event.ports[0].postMessage('elementfocused');
+      }
+    }
+    window.addEventListener('message', window.onMessage);
+  </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+# This is a fork of libudev-sys that dynamically loads its symbols with
+# dlopen when they are first used. This continues a precedent established
+# by Firefox's gamepad APIs to minimize the footprint of features when they
+# aren't being used. Specifically, this avoids the cost of dynamically linking
+# in libudev at process startup.
+#
+# "-sys" crates are a convention in the rust ecosystem for "a simple header
+# for a C library that Rust code can use to build a richer and safer API on
+# top of". In this case, libudev-sys is used by the [libudev crate].
+#
+# As of this writing, this hack is being used by the [authenticator-rs] crate,
+# which uses the libudev crate.
+#
+# The libudev crate assumes libudev is being dynamically linked in, and
+# checks if its symbols are null before intializing anything else, so that
+# you can use it to detect if libudev is installed and gracefully
+# disable gamepads or whatever else if it's not.
+#
+# If we're missing any symbols the libudev crate needs, then rust will give
+# us a compilation error. It's not a problem if we export additional symbols.
+#
+# So while this is a bit of a weird hack, it works pretty robustly, and this
+# crate is basically just a header for libudev so it's not a particularly
+# significant maintenance burden.
+#
+# authenticator-rs: https://github.com/mozilla/authenticator-rs
+# libudev crate: https://crates.io/crates/libudev
+
+[package]
+name = "libudev-sys"
+version = "0.1.3"
+authors = ["Tim Taubert <ttaubert@mozilla.com>"]
+description = "FFI bindings to libudev"
+
+[dependencies]
+lazy_static = "1.0"
+libc = "0.2"

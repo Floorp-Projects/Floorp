@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the Toolbar component shows the view switcher only at the appropriate times.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+    <pre id="test">
+        <script src="head.js" type="application/javascript"></script>
+        <script type="application/javascript">
+         "use strict";
+         window.onload = async function() {
+           try {
+             const container = document.getElementById("container");
+
+             // Census and dominator tree views.
+
+             for (const view of [viewState.CENSUS, viewState.DOMINATOR_TREE]) {
+               await renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
+                 view: { state: view },
+               })), container);
+
+               ok(container.querySelector("#select-view"),
+                  `The view selector is shown in view = ${view}`);
+             }
+
+             await renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
+               view: { state: viewState.DIFFING },
+             })), container);
+
+             ok(!container.querySelector("#select-view"),
+                "The view selector is NOT shown in the DIFFING view");
+           } catch (e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         };
+        </script>
+    </pre>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <textarea spellcheck="true">blahblahblah</textarea>
+  <script type="text/javascript">
+    var box = document.getElementsByTagName("textarea")[0];
+    box.focus(); //Bring the textbox into focus, triggering a spellcheck
+    box.blur(); //Blur in order to make things similar to other tests otherwise
+  </script>
+</body>
+</html>

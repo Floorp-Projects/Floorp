@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIUTF8StringEnumerator;
+interface nsIFile;
+
+[scriptable, uuid(7eb955f6-3e78-4d39-b72f-c1bf12a94bce)]
+interface nsIINIParser : nsISupports
+{
+  /**
+   * Enumerates the [section]s available in the INI file.
+   */
+  nsIUTF8StringEnumerator getSections();
+
+  /**
+   * Enumerates the keys available within a section.
+   */
+  nsIUTF8StringEnumerator getKeys(in AUTF8String aSection);
+
+  /**
+   * Get the value of a string for a particular section and key.
+   */
+  AUTF8String getString(in AUTF8String aSection, in AUTF8String aKey);
+};
+
+[scriptable, uuid(b67bb24b-31a3-4a6a-a5d9-0485c9af5a04)]
+interface nsIINIParserWriter : nsISupports
+{
+  /**
+   * Set the value of a string for a particular section and key.
+   */
+  void setString(in AUTF8String aSection, in AUTF8String aKey, in AUTF8String aValue);
+
+  /**
+   * Write to the INI file.
+   */
+  void writeFile(in nsIFile aINIFile);
+};
+
+[scriptable, uuid(ccae7ea5-1218-4b51-aecb-c2d8ecd46af9)]
+interface nsIINIParserFactory : nsISupports
+{
+  /**
+   * Create an iniparser instance from a local file.
+   */
+  nsIINIParser createINIParser([optional] in nsIFile aINIFile);
+};

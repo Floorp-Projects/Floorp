@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<title>createHTMLDocument</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<link rel="help" href="http://www.whatwg.org/html5/#creating-documents">
+<link rel="help" href="http://www.whatwg.org/html5/#document.title">
+<link rel="help" href="http://www.whatwg.org/html5/#dom-document-readystate">
+<body>
+<script>
+function isElement(element, localName) {
+  is(element.localName, localName);
+  is(element.namespaceURI, "http://www.w3.org/1999/xhtml");
+  is(element.tagName, localName.toUpperCase());
+  is(element.nodeName, localName.toUpperCase());
+  is(element.prefix, null);
+}
+function checkDoc(title, expectedtitle, normalizedtitle) {
+  var doc = document.implementation.createHTMLDocument(title);
+  is(doc.readyState, "complete");
+  is(doc.compatMode, "CSS1Compat");
+  // Opera doesn't have a doctype: DSK-311092
+  ok(doc.doctype, "Need a doctype");
+  is(doc.doctype.name, "html");
+  is(doc.doctype.publicId, "");
+  is(doc.doctype.systemId, "");
+  isElement(doc.documentElement, "html");
+  isElement(doc.documentElement.firstChild, "head");
+  if (title !== undefined) {
+    is(doc.documentElement.firstChild.childNodes.length, 1);
+    isElement(doc.documentElement.firstChild.firstChild, "title");
+    // Doesn't always work out in WebKit.
+    ok(doc.documentElement.firstChild.firstChild.firstChild, "Need a text node.");
+    is(doc.documentElement.firstChild.firstChild.firstChild.data, expectedtitle);
+  } else {
+    is(doc.documentElement.firstChild.childNodes.length, 0);
+  }
+  isElement(doc.documentElement.lastChild, "body");
+  is(doc.documentElement.lastChild.childNodes.length, 0);
+  is(doc.title, normalizedtitle);
+  doc.body.innerHTML = "foo";
+  is(doc.body.innerHTML, "foo", "innerHTML should work in HTML data documents!");
+}
+checkDoc("", "", "");
+checkDoc(null, "null", "null");
+checkDoc(undefined, "", "");
+checkDoc("foo  bar baz", "foo  bar baz", "foo bar baz");
+checkDoc("foo\t\tbar baz", "foo\t\tbar baz", "foo bar baz");
+checkDoc("foo\n\nbar baz", "foo\n\nbar baz", "foo bar baz");
+checkDoc("foo\f\fbar baz", "foo\f\fbar baz", "foo bar baz");
+checkDoc("foo\r\rbar baz", "foo\r\rbar baz", "foo bar baz");
+</script>

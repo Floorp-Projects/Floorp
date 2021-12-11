@@ -1,0 +1,49 @@
+# -*- Makefile -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
+# a recursive rule for finding nsinstall and the Perl scripts.
+ifdef NSBUILDROOT
+override NSBUILDROOT :=
+endif
+
+include $(topsrcdir)/config/config.mk
+
+# L10n jobs are doing make -C config manually before anything else,
+# and need nsinstall to be built as a consequence.
+ifdef COMPILE_ENVIRONMENT
+export:: host
+
+ifneq (WINNT,$(HOST_OS_ARCH))
+# Ensure nsinstall is atomically created
+nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
+	cp $^ $@.tmp
+	mv $@.tmp $@
+
+NSINSTALL_EXECUTABLES := nsinstall$(HOST_BIN_SUFFIX)
+NSINSTALL_DEST := $(DIST)/bin
+NSINSTALL_TARGET := host
+INSTALL_TARGETS += NSINSTALL
+endif
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+FORCE:
+
+ifndef JS_STANDALONE
+check-preqs += check-jar-mn
+endif
+
+check:: $(check-preqs)
+
+check-jar-mn::
+	$(MAKE) -C tests/src-simple check-jar
+	$(MAKE) -C tests/src-simple check-flat
+	$(MAKE) -C tests/src-simple check-flat USE_EXTENSION_MANIFEST=1
+ifneq (,$(filter-out WINNT,$(OS_ARCH)))
+	$(MAKE) -C tests/src-simple check-symlink
+endif

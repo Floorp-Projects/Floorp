@@ -1,0 +1,910 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=523771
+-->
+<head>
+  <title>Test for Bug 523771</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+<body onload="bodyLoaded()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=523771">Mozilla Bug 523771</a>
+<p id="display"></p>
+<iframe name="target_iframe" id="target_iframe"></iframe>
+<form action="form_submit_server.sjs" target="target_iframe" id="form"
+      method="POST" enctype="multipart/form-data">
+  <table>
+    <tr>
+      <td>Control type</td>
+      <td>Name and value</td>
+      <td>Name, empty value</td>
+      <td>Name, no value</td>
+      <td>Empty name, with value</td>
+      <td>No name, with value</td>
+      <td>No name or value</td>
+      <td>Strange name/value</td>
+    </tr>
+    <tr>
+      <td>Default input</td>
+      <td><input name="n1_1" value="v1_1"></td>
+      <td><input name="n1_2" value=""></td>
+      <td><input name="n1_3"></td>
+      <td><input name="" value="v1_4"></td>
+      <td><input value="v1_5"></td>
+      <td><input></td>
+      <td><input name="n1_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v1_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Text input</td>
+      <td><input type=text name="n2_1" value="v2_1"></td>
+      <td><input type=text name="n2_2" value=""></td>
+      <td><input type=text name="n2_3"></td>
+      <td><input type=text name="" value="v2_4"></td>
+      <td><input type=text value="v2_5"></td>
+      <td><input type=text></td>
+      <td><input type=text name="n2_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v2_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Checkbox unchecked</td>
+      <td><input type=checkbox name="n3_1" value="v3_1"></td>
+      <td><input type=checkbox name="n3_2" value=""></td>
+      <td><input type=checkbox name="n3_3"></td>
+      <td><input type=checkbox name="" value="v3_4"></td>
+      <td><input type=checkbox value="v3_5"></td>
+      <td><input type=checkbox></td>
+      <td><input type=checkbox name="n3_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v3_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Checkbox checked</td>
+      <td><input checked type=checkbox name="n4_1" value="v4_1"></td>
+      <td><input checked type=checkbox name="n4_2" value=""></td>
+      <td><input checked type=checkbox name="n4_3"></td>
+      <td><input checked type=checkbox name="" value="v4_4"></td>
+      <td><input checked type=checkbox value="v4_5"></td>
+      <td><input checked type=checkbox></td>
+      <td><input checked type=checkbox
+                 name="n4_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v4_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Radio unchecked</td>
+      <td><input type=radio name="n5_1" value="v5_1"></td>
+      <td><input type=radio name="n5_2" value=""></td>
+      <td><input type=radio name="n5_3"></td>
+      <td><input type=radio name="" value="v5_4"></td>
+      <td><input type=radio value="v5_5"></td>
+      <td><input type=radio></td>
+      <td><input type=radio name="n5_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v5_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Radio checked</td>
+      <td><input checked type=radio name="n6_1" value="v6_1"></td>
+      <td><input checked type=radio name="n6_2" value=""></td>
+      <td><input checked type=radio name="n6_3"></td>
+      <td><input checked type=radio name="" value="v6_4"></td>
+      <td><input checked type=radio value="v6_5"></td>
+      <td><input checked type=radio></td>
+      <td><input checked type=radio
+                 name="n6_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v6_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Hidden input</td>
+      <td><input type=hidden name="n7_1" value="v7_1"></td>
+      <td><input type=hidden name="n7_2" value=""></td>
+      <td><input type=hidden name="n7_3"></td>
+      <td><input type=hidden nane="" value="v7_4"></td>
+      <td><input type=hidden value="v7_5"></td>
+      <td><input type=hidden></td>
+      <td><input type=hidden name="n7_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v7_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Password input</td>
+      <td><input type=password name="n8_1" value="v8_1"></td>
+      <td><input type=password name="n8_2" value=""></td>
+      <td><input type=password name="n8_3"></td>
+      <td><input type=password name="" value="v8_4"></td>
+      <td><input type=password value="v8_5"></td>
+      <td><input type=password></td>
+      <td><input type=password name="n8_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v8_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Submit input</td>
+      <td><input type=submit name="n9_1" value="v9_1"></td>
+      <td><input type=submit name="n9_2" value=""></td>
+      <td><input type=submit name="n9_3"></td>
+      <td><input type=submit name="" value="v9_4"></td>
+      <td><input type=submit value="v9_5"></td>
+      <td><input type=submit></td>
+      <td><input type=submit name="n9_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v9_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Button input</td>
+      <td><input type=button name="n10_1" value="v10_1"></td>
+      <td><input type=button name="n10_2" value=""></td>
+      <td><input type=button name="n10_3"></td>
+      <td><input type=button name="" value="v10_4"></td>
+      <td><input type=button value="v10_5"></td>
+      <td><input type=button></td>
+      <td><input type=button name="n10_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v10_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Image input</td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="n11_1" value="v11_1"></td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="n11_2" value=""></td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="n11_3"></td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="" value="v11_4"></td>
+      <td><input type=image src="file_formSubmission_img.jpg" value="v11_5"></td>
+      <td><input type=image src="file_formSubmission_img.jpg"></td>
+      <td><input type=image src="file_formSubmission_img.jpg"
+                 name="n11_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v11_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Reset input</td>
+      <td><input type=reset name="n12_1" value="v12_1"></td>
+      <td><input type=reset name="n12_2" value=""></td>
+      <td><input type=reset name="n12_3"></td>
+      <td><input type=reset name="" value="v12_4"></td>
+      <td><input type=reset value="v12_5"></td>
+      <td><input type=reset></td>
+      <td><input type=reset name="n12_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v12_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Unknown input</td>
+      <td><input type=foobar name="n13_1" value="v13_1"></td>
+      <td><input type=foobar name="n13_2" value=""></td>
+      <td><input type=foobar name="n13_3"></td>
+      <td><input type=foobar name="" value="v13_4"></td>
+      <td><input type=foobar value="v13_5"></td>
+      <td><input type=foobar></td>
+      <td><input type=foobar name="n13_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v13_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
+    </tr>
+    <tr>
+      <td>Default button</td>
+      <td><button name="n14_1" value="v14_1"></button></td>
+      <td><button name="n14_2" value=""></button></td>
+      <td><button name="n14_3"></button></td>
+      <td><button name="" value="v14_4"></button></td>
+      <td><button value="v14_5"></button></td>
+      <td><button></button></td>
+      <td><button name="n14_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v14_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
+    </tr>
+    <tr>
+      <td>Submit button</td>
+      <td><button type=submit name="n15_1" value="v15_1"></button></td>
+      <td><button type=submit name="n15_2" value=""></button></td>
+      <td><button type=submit name="n15_3"></button></td>
+      <td><button type=submit name="" value="v15_4"></button></td>
+      <td><button type=submit value="v15_5"></button></td>
+      <td><button type=submit></button></td>
+      <td><button type=submit name="n15_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v15_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
+    </tr>
+    <tr>
+      <td>Button button</td>
+      <td><button type=button name="n16_1" value="v16_1"></button></td>
+      <td><button type=button name="n16_2" value=""></button></td>
+      <td><button type=button name="n16_3"></button></td>
+      <td><button type=button name="" value="v16_4"></button></td>
+      <td><button type=button value="v16_5"></button></td>
+      <td><button type=button></button></td>
+      <td><button type=button name="n16_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v16_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
+    </tr>
+    <tr>
+      <td>Reset button</td>
+      <td><button type=reset name="n17_1" value="v17_1"></button></td>
+      <td><button type=reset name="n17_2" value=""></button></td>
+      <td><button type=reset name="n17_3"></button></td>
+      <td><button type=reset name="" value="v17_4"></button></td>
+      <td><button type=reset value="v17_5"></button></td>
+      <td><button type=reset></button></td>
+      <td><button type=reset name="n17_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v17_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
+    </tr>
+    <tr>
+      <td>Unknown button</td>
+      <td><button type=foobar name="n18_1" value="v18_1"></button></td>
+      <td><button type=foobar name="n18_2" value=""></button></td>
+      <td><button type=foobar name="n18_3"></button></td>
+      <td><button type=foobar name="" value="v18_4"></button></td>
+      <td><button type=foobar value="v18_5"></button></td>
+      <td><button type=foobar ></button></td>
+      <td><button type=foobar name="n18_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v18_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
+    </tr>
+    <tr>
+      <td>&lt;input type='url'&gt;</td>
+      <td><input type=url name="n19_1" value="http://v19_1.org"></td>
+      <td><input type=url name="n19_2" value=""></td>
+      <td><input type=url name="n19_3"></td>
+      <td><input type=url name="" value="http://v19_4.org"></td>
+      <td><input type=url value="http://v19_5.org"></td>
+      <td><input type=url ></td>
+      <td><input type=url name="n19_7_&#13;_&#10;_&#13;&#10;__&quot;"
+                 value="http://v19_7_&#13;_&#10;_&#13;&#10;__&quot;">
+          <!-- Put UTF-8 value in the "strange" column. -->
+          <input type=url name="n19_8" value="http://m&#xf3;zill&auml;.&#xf3;rg"></td>
+    </tr>
+    <tr>
+      <td>&lt;input type='email'&gt;</td>
+      <td><input type=email name="n20_1" value="v20_1@bar"></td>
+      <td><input type=email name="n20_2" value=""></td>
+      <td><input type=email name="n20_3"></td>
+      <td><input type=email name="" value="v20_4@bar"></td>
+      <td><input type=email value="v20_5@bar"></td>
+      <td><input type=email ></td>
+      <td><input type=email name="n20_7_&#13;_&#10;_&#13;&#10;__&quot;"
+                 value="v20_7_&#13;_&#10;_&#13;&#10;__&quot;@bar">
+          <!-- Put UTF-8 value is the "strange" column. -->
+          <input type=email name="n20_8" value="foo@mózillä.órg"></td>
+    </tr>
+  </table>
+
+  <p>
+    File input:
+    <input type=file name="file_1" class="setfile">
+    <input type=file name="file_2">
+    <input type=file name="" class="setfile">
+    <input type=file name="">
+    <input type=file class="setfile">
+    <input type=file>
+  </p>
+  <p>
+    Multifile input:
+    <input multiple type=file name="file_3" class="setfile">
+    <input multiple type=file name="file_4" class="setfile multi">
+    <input multiple type=file name="file_5">
+    <input multiple type=file name="" class="setfile">
+    <input multiple type=file name="" class="setfile multi">
+    <input multiple type=file name="">
+    <input multiple type=file class="setfile">
+    <input multiple type=file class="setfile multi">
+    <input multiple type=file>
+  </p>
+
+  <p>
+    Textarea:
+    <textarea name="t1">t_1_v</textarea>
+    <textarea name="t2"></textarea>
+    <textarea name="">t_3_v</textarea>
+    <textarea>t_4_v</textarea>
+    <textarea></textarea>
+    <textarea name="t6">
+t_6_v</textarea>
+    <textarea name="t7">t_7_v
+</textarea>
+    <textarea name="t8">
+
+ t_8_v&#0032;
+</textarea>
+    <textarea name="t9_&#13;_&#10;_&#13;&#10;_ _&quot;">t_9_&#13;_&#10;_&#13;&#10;_ _&quot;_v</textarea>
+    <textarea name="t10" value="t_10_bogus">t_10_v</textarea>
+  </p>
+
+  <p>
+    Select one:
+
+    <select name="sel_1"></select>
+    <select name="sel_1b"><option></option></select>
+    <select name="sel_1c"><option selected></option></select>
+
+    <select name="sel_2"><option value="sel_2_v"></option></select>
+    <select name="sel_3"><option selected value="sel_3_v"></option></select>
+
+    <select name="sel_4"><option value="sel_4_v1"></option><option value="sel_4_v2"></option></select>
+    <select name="sel_5"><option selected value="sel_5_v1"></option><option value="sel_5_v2"></option></select>
+    <select name="sel_6"><option value="sel_6_v1"></option><option selected value="sel_6_v2"></option></select>
+
+    <select name="sel_7"><option>sel_7_v1</option><option>sel_7_v2</option></select>
+    <select name="sel_8"><option selected>sel_8_v1</option><option>sel_8_v2</option></select>
+    <select name="sel_9"><option>sel_9_v1</option><option selected>sel_9_v2</option></select>
+
+    <select name="sel_10"><option value="sel_10_v1">sel_10_v1_text</option><option value="sel_10_v2">sel_10_v2_text</option></select>
+    <select name="sel_11"><option selected value="sel_11_v1">sel_11_v1_text</option><option value="sel_11_v2">sel_11_v2_text</option></select>
+    <select name="sel_12"><option value="sel_12_v1">sel_12_v1_text</option><option selected value="sel_12_v2">sel_12_v2_text</option></select>
+
+    <select name="sel_13"><option disabled>sel_13_v1</option><option>sel_13_v2</option></select>
+    <select name="sel_14"><option disabled selected>sel_14_v1</option><option>sel_14_v2</option></select>
+    <select name="sel_15"><option disabled>sel_15_v1</option><option selected>sel_15_v2</option></select>
+
+    <select name="sel_16"><option>sel_16_v1</option><option disabled>sel_16_v2</option></select>
+    <select name="sel_17"><option selected>sel_17_v1</option><option disabled>sel_17_v2</option></select>
+    <select name="sel_18"><option>sel_18_v1</option><option disabled selected>sel_18_v2</option></select>
+
+    <select name=""><option selected value="sel_13_v1"></option><option value="sel_13_v2"></option></select>
+    <select name=""><option value="sel_14_v1"></option><option selected value="sel_14_v2"></option></select>
+    <select name=""><option selected>sel_15_v1</option><option>sel_15_v2</option></select>
+    <select name=""><option>sel_16_v1</option><option selected>sel_16_v2</option></select>
+
+    <select><option selected value="sel_17_v1"></option><option value="sel_17_v2"></option></select>
+    <select><option value="sel_18_v1"></option><option selected value="sel_18_v2"></option></select>
+    <select><option selected>sel_19_v1</option><option>sel_19_v2</option></select>
+    <select><option>sel_20_v1</option><option selected>sel_20_v2</option></select>
+  </p>
+
+  <p>
+    Select multiple:
+
+    <select multiple name="msel_1"></select>
+    <select multiple name="msel_1b"><option></option></select>
+    <select multiple name="msel_1c"><option selected></option></select>
+
+    <select multiple name="msel_2"><option value="msel_2_v"></option></select>
+    <select multiple name="msel_3"><option selected value="msel_3_v"></option></select>
+
+    <select multiple name="msel_4"><option value="msel_4_v1"></option><option value="msel_4_v2"></option></select>
+    <select multiple name="msel_5"><option selected value="msel_5_v1"></option><option value="msel_5_v2"></option></select>
+    <select multiple name="msel_6"><option value="msel_6_v1"></option><option selected value="msel_6_v2"></option></select>
+    <select multiple name="msel_7"><option selected value="msel_7_v1"></option><option selected value="msel_7_v2"></option></select>
+
+    <select multiple name="msel_8"><option>msel_8_v1</option><option>msel_8_v2</option></select>
+    <select multiple name="msel_9"><option selected>msel_9_v1</option><option>msel_9_v2</option></select>
+    <select multiple name="msel_10"><option>msel_10_v1</option><option selected>msel_10_v2</option></select>
+    <select multiple name="msel_11"><option selected>msel_11_v1</option><option selected>msel_11_v2</option></select>
+
+    <select multiple name="msel_12"><option value="msel_12_v1">msel_12_v1_text</option><option value="msel_12_v2">msel_12_v2_text</option></select>
+    <select multiple name="msel_13"><option selected value="msel_13_v1">msel_13_v1_text</option><option value="msel_13_v2">msel_13_v2_text</option></select>
+    <select multiple name="msel_14"><option value="msel_14_v1">msel_14_v1_text</option><option selected value="msel_14_v2">msel_14_v2_text</option></select>
+    <select multiple name="msel_15"><option selected value="msel_15_v1">msel_15_v1_text</option><option selected value="msel_15_v2">msel_15_v2_text</option></select>
+
+    <select multiple name="msel_16"><option>msel_16_v1</option><option>msel_16_v2</option><option>msel_16_v3</option></select>
+    <select multiple name="msel_17"><option selected>msel_17_v1</option><option>msel_17_v2</option><option>msel_17_v3</option></select>
+    <select multiple name="msel_18"><option>msel_18_v1</option><option selected>msel_18_v2</option><option>msel_18_v3</option></select>
+    <select multiple name="msel_19"><option selected>msel_19_v1</option><option selected>msel_19_v2</option><option>msel_19_v3</option></select>
+    <select multiple name="msel_20"><option>msel_20_v1</option><option>msel_20_v2</option><option selected>msel_20_v3</option></select>
+    <select multiple name="msel_21"><option selected>msel_21_v1</option><option>msel_21_v2</option><option selected>msel_21_v3</option></select>
+    <select multiple name="msel_22"><option>msel_22_v1</option><option selected>msel_22_v2</option><option selected>msel_22_v3</option></select>
+    <select multiple name="msel_23"><option selected>msel_23_v1</option><option selected>msel_23_v2</option><option selected>msel_23_v3</option></select>
+
+    <select multiple name="msel_24"><option disabled>msel_24_v1</option><option>msel_24_v2</option></select>
+    <select multiple name="msel_25"><option disabled selected>msel_25_v1</option><option>msel_25_v2</option></select>
+    <select multiple name="msel_26"><option disabled>msel_26_v1</option><option selected>msel_26_v2</option></select>
+    <select multiple name="msel_27"><option disabled selected>msel_27_v1</option><option selected>msel_27_v2</option></select>
+
+    <select multiple name="msel_28"><option>msel_28_v1</option><option disabled>msel_28_v2</option></select>
+    <select multiple name="msel_29"><option selected>msel_29_v1</option><option disabled>msel_29_v2</option></select>
+    <select multiple name="msel_30"><option>msel_30_v1</option><option disabled selected>msel_30_v2</option></select>
+    <select multiple name="msel_31"><option selected>msel_31_v1</option><option disabled selected>msel_31_v2</option></select>
+
+    <select multiple name="msel_32"><option disabled selected>msel_32_v1</option><option disabled selected>msel_32_v2</option></select>
+
+    <select multiple name=""><option>msel_33_v1</option><option>msel_33_v2</option></select>
+    <select multiple name=""><option selected>msel_34_v1</option><option>msel_34_v2</option></select>
+    <select multiple name=""><option>msel_35_v1</option><option selected>msel_35_v2</option></select>
+    <select multiple name=""><option selected>msel_36_v1</option><option selected>msel_36_v2</option></select>
+
+    <select multiple><option>msel_37_v1</option><option>msel_37_v2</option></select>
+    <select multiple><option selected>msel_38_v1</option><option>msel_38_v2</option></select>
+    <select multiple><option>msel_39_v1</option><option selected>msel_39_v2</option></select>
+    <select multiple><option selected>msel_40_v1</option><option selected>msel_40_v2</option></select>
+  </p>
+</form>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const placeholder_myFile1 = {};
+const placeholder_myFile2 = {};
+const placeholder_emptyFile = {};
+
+var myFile1, myFile2, emptyFile;
+let openerURL, opener;
+var gen;
+
+function bodyLoaded() {
+  openerURL = SimpleTest.getTestFileURL("formSubmission_chrome.js");
+  opener = SpecialPowers.loadChromeScript(openerURL);
+
+  let xhr = new XMLHttpRequest;
+  xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
+  xhr.send();
+  let basePath = xhr.responseText;
+
+  opener.addMessageListener("files.opened", onFilesOpened);
+  opener.sendAsyncMessage("files.open", [
+    basePath + "file_formSubmission_text.txt",
+    basePath + "file_formSubmission_img.jpg",
+  ]);
+
+  /*
+  * The below test function uses callbacks that invoke gen.next() rather than
+  * creating and resolving Promises.  I'm trying to minimize churn since these
+  * changes want to be uplifted.  Some kind soul might want to clean this all up
+  * at some point.
+  */
+
+  $("target_iframe").onload = function() { gen.next(); };
+}
+
+
+function onFilesOpened(files) {
+  let [textFile, imageFile] = files;
+  opener.destroy();
+
+  let singleFile = textFile;
+  let multiFile = [textFile, imageFile];
+
+  var addList = document.getElementsByClassName("setfile");
+  let i = 0;
+  var input;
+  while (input = addList[i++]) {
+    if (input.classList.contains("multi")) {
+      SpecialPowers.wrap(input).mozSetFileArray(multiFile);
+    } else {
+      SpecialPowers.wrap(input).mozSetFileArray([singleFile]);
+    }
+  }
+
+  input = document.createElement("input");
+  input.type = "file";
+  input.multiple = true;
+  SpecialPowers.wrap(input).mozSetFileArray(multiFile);
+  myFile1 = input.files[0];
+  myFile2 = input.files[1];
+  is(myFile1.size, 20, "File1 size");
+  is(myFile2.size, 2711, "File2 size");
+  emptyFile = { name: "", type: "application/octet-stream" };
+
+  // Now, actually run the tests; see below.
+  runAllTestVariants();
+};
+
+var expectedSub = [
+  // Default input
+  { name: "n1_1", value: "v1_1" },
+  { name: "n1_2", value: "" },
+  { name: "n1_3", value: "" },
+  { name: "n1_7_\r\n_\r\n_\r\n_ _\"", value: "v1_7____ _\"" },
+  // Text input
+  { name: "n2_1", value: "v2_1" },
+  { name: "n2_2", value: "" },
+  { name: "n2_3", value: "" },
+  { name: "n2_7_\r\n_\r\n_\r\n_ _\"", value: "v2_7____ _\"" },
+  // Checkbox unchecked
+  // Checkbox checked
+  { name: "n4_1", value: "v4_1" },
+  { name: "n4_2", value: "" },
+  { name: "n4_3", value: "on" },
+  { name: "n4_7_\r\n_\r\n_\r\n_ _\"", value: "v4_7_\r\n_\r\n_\r\n_ _\"" },
+  // Radio unchecked
+  // Radio checked
+  { name: "n6_1", value: "v6_1" },
+  { name: "n6_2", value: "" },
+  { name: "n6_3", value: "on" },
+  { name: "n6_7_\r\n_\r\n_\r\n_ _\"", value: "v6_7_\r\n_\r\n_\r\n_ _\"" },
+  // Hidden input
+  { name: "n7_1", value: "v7_1" },
+  { name: "n7_2", value: "" },
+  { name: "n7_3", value: "" },
+  { name: "n7_7_\r\n_\r\n_\r\n_ _\"", value: "v7_7_\r\n_\r\n_\r\n_ _\"" },
+  // Password input
+  { name: "n8_1", value: "v8_1" },
+  { name: "n8_2", value: "" },
+  { name: "n8_3", value: "" },
+  { name: "n8_7_\r\n_\r\n_\r\n_ _\"", value: "v8_7____ _\"" },
+  // Submit input
+  // Button input
+  // Image input
+  // Reset input
+  // Unknown input
+  { name: "n13_1", value: "v13_1" },
+  { name: "n13_2", value: "" },
+  { name: "n13_3", value: "" },
+  { name: "n13_7_\r\n_\r\n_\r\n_ _\"", value: "v13_7____ _\"" },
+  // <input type='url'>
+  { name: "n19_1", value: "http://v19_1.org" },
+  { name: "n19_2", value: "" },
+  { name: "n19_3", value: "" },
+  { name: "n19_7_\r\n_\r\n_\r\n__\"", value: "http://v19_7_____\"" },
+  { name: "n19_8", value: "http://m\xf3zill\xe4.\xf3rg" },
+  // <input type='email'>
+  { name: "n20_1", value: "v20_1@bar" },
+  { name: "n20_2", value: "" },
+  { name: "n20_3", value: "" },
+  { name: "n20_7_\r\n_\r\n_\r\n__\"", value: "v20_7_____\"@bar" },
+  { name: "n20_8", value: "foo@mózillä.órg" },
+  // Default button
+  // Submit button
+  // Button button
+  // Reset button
+  // Unknown button
+  // File
+  { name: "file_1", value: placeholder_myFile1 },
+  { name: "file_2", value: placeholder_emptyFile },
+  // Multiple file
+  { name: "file_3", value: placeholder_myFile1 },
+  { name: "file_4", value: placeholder_myFile1 },
+  { name: "file_4", value: placeholder_myFile2 },
+  { name: "file_5", value: placeholder_emptyFile },
+  // Textarea
+  { name: "t1", value: "t_1_v" },
+  { name: "t2", value: "" },
+  { name: "t6", value: "t_6_v" },
+  { name: "t7", value: "t_7_v\r\n" },
+  { name: "t8", value: "\r\n t_8_v \r\n" },
+  { name: "t9_\r\n_\r\n_\r\n_ _\"", value: "t_9_\r\n_\r\n_\r\n_ _\"_v" },
+  { name: "t10", value: "t_10_v" },
+
+  // Select one
+  { name: "sel_1b", value: "" },
+  { name: "sel_1c", value: "" },
+  { name: "sel_2", value: "sel_2_v" },
+  { name: "sel_3", value: "sel_3_v" },
+  { name: "sel_4", value: "sel_4_v1" },
+  { name: "sel_5", value: "sel_5_v1" },
+  { name: "sel_6", value: "sel_6_v2" },
+  { name: "sel_7", value: "sel_7_v1" },
+  { name: "sel_8", value: "sel_8_v1" },
+  { name: "sel_9", value: "sel_9_v2" },
+  { name: "sel_10", value: "sel_10_v1" },
+  { name: "sel_11", value: "sel_11_v1" },
+  { name: "sel_12", value: "sel_12_v2" },
+  { name: "sel_13", value: "sel_13_v2" },
+  { name: "sel_15", value: "sel_15_v2" },
+  { name: "sel_16", value: "sel_16_v1" },
+  { name: "sel_17", value: "sel_17_v1" },
+  // Select three
+  { name: "msel_1c", value: "" },
+  { name: "msel_3", value: "msel_3_v" },
+  { name: "msel_5", value: "msel_5_v1" },
+  { name: "msel_6", value: "msel_6_v2" },
+  { name: "msel_7", value: "msel_7_v1" },
+  { name: "msel_7", value: "msel_7_v2" },
+  { name: "msel_9", value: "msel_9_v1" },
+  { name: "msel_10", value: "msel_10_v2" },
+  { name: "msel_11", value: "msel_11_v1" },
+  { name: "msel_11", value: "msel_11_v2" },
+  { name: "msel_13", value: "msel_13_v1" },
+  { name: "msel_14", value: "msel_14_v2" },
+  { name: "msel_15", value: "msel_15_v1" },
+  { name: "msel_15", value: "msel_15_v2" },
+  { name: "msel_17", value: "msel_17_v1" },
+  { name: "msel_18", value: "msel_18_v2" },
+  { name: "msel_19", value: "msel_19_v1" },
+  { name: "msel_19", value: "msel_19_v2" },
+  { name: "msel_20", value: "msel_20_v3" },
+  { name: "msel_21", value: "msel_21_v1" },
+  { name: "msel_21", value: "msel_21_v3" },
+  { name: "msel_22", value: "msel_22_v2" },
+  { name: "msel_22", value: "msel_22_v3" },
+  { name: "msel_23", value: "msel_23_v1" },
+  { name: "msel_23", value: "msel_23_v2" },
+  { name: "msel_23", value: "msel_23_v3" },
+  { name: "msel_26", value: "msel_26_v2" },
+  { name: "msel_27", value: "msel_27_v2" },
+  { name: "msel_29", value: "msel_29_v1" },
+  { name: "msel_31", value: "msel_31_v1" },
+];
+
+var expectedAugment = [
+  { name: "aName", value: "aValue" },
+  //{ name: "aNameBool", value: "false" },
+  { name: "aNameNum", value: "9.2" },
+  { name: "aNameFile1", value: placeholder_myFile1 },
+  { name: "aNameFile2", value: placeholder_myFile2 },
+  //{ name: "aNameObj", value: "[object XMLHttpRequest]" },
+  //{ name: "aNameNull", value: "null" },
+  //{ name: "aNameUndef", value: "undefined" },
+];
+
+function checkMPSubmission(sub, expected, test) {
+  function getPropCount(o) {
+    var x, l = 0;
+    for (x in o) ++l;
+    return l;
+  }
+  function mpquote_name(s) {
+    return s.replace(/\r?\n|\r/g, "%0D%0A")
+            .replace(/\"/g, "%22");
+  }
+  function mpquote_filename(s) {
+    return s.replace(/\r/g, "%0D")
+            .replace(/\n/g, "%0A")
+            .replace(/\"/g, "%22");
+  }
+
+  is(sub.length, expected.length,
+     "Correct number of multipart items in " + test);
+
+  if (sub.length != expected.length) {
+    alert(JSON.stringify(sub));
+  }
+
+  var i;
+  for (i = 0; i < expected.length; ++i) {
+    if (!("fileName" in expected[i])) {
+      is(sub[i].headers["Content-Disposition"],
+         "form-data; name=\"" + mpquote_name(expected[i].name) + "\"",
+         "Correct name in " + test);
+      is (getPropCount(sub[i].headers), 1,
+          "Wrong number of headers in " + test);
+      is(sub[i].body,
+         expected[i].value.replace(/\r\n|\r|\n/, "\r\n"),
+         "Correct value in " + test);
+    }
+    else {
+      is(sub[i].headers["Content-Disposition"],
+         "form-data; name=\"" + mpquote_name(expected[i].name) + "\"; filename=\"" +
+           mpquote_filename(expected[i].fileName) + "\"",
+         "Correct name in " + test);
+      is(sub[i].headers["Content-Type"],
+         expected[i].contentType,
+         "Correct content type in " + test);
+      is (getPropCount(sub[i].headers), 2,
+          "Wrong number of headers in " + test);
+      is(sub[i].body,
+         expected[i].value,
+         "Correct value in " + test);
+    }
+  }
+}
+
+function utf8encode(s) {
+  return unescape(encodeURIComponent(s));
+}
+
+function checkURLSubmission(sub, expected) {
+  function urlEscape(s) {
+    return escape(utf8encode(s)).replace(/%20/g, "+")
+                                .replace(/\//g, "%2F")
+                                .replace(/@/g, "%40");
+  }
+
+  subItems = sub.split("&");
+  is(subItems.length, expected.length,
+     "Correct number of url items");
+  var i;
+  for (i = 0; i < expected.length; ++i) {
+    let expect = urlEscape(expected[i].name) + "=" +
+        urlEscape(("fileName" in expected[i]) ? expected[i].fileName : expected[i].value);
+    is (subItems[i], expect, "expected URL part");
+  }
+}
+
+function checkPlainSubmission(sub, expected) {
+
+  is(sub,
+     expected.map(function(v) {
+       return v.name + "=" +
+              (("fileName" in v) ? v.fileName : v.value) +
+              "\r\n";
+     }).join(""),
+     "Correct submission");
+}
+
+function setDisabled(list, state) {
+  Array.prototype.forEach.call(list, function(e) {
+    e.disabled = state;
+  });
+}
+
+// Run the suite of tests for this variant, returning a Promise that will be
+// resolved when the batch completes.  Then and only then runTestVariant may
+// be invoked to run a different variation.
+function runTestVariant(variantLabel) {
+  info("starting test variant: " + variantLabel);
+  return new Promise((resolve) => {
+    // Instantiate the generator.
+    gen = runTestVariantUsingWeirdGenDriver(resolve);
+    // Run the generator to the first yield, at which point it is self-driving.
+    gen.next();
+  });
+}
+function* runTestVariantUsingWeirdGenDriver(finishedVariant) {
+  // Set up the expectedSub array
+  fileReader1 = new FileReader;
+  fileReader1.readAsBinaryString(myFile1);
+  fileReader2 = new FileReader;
+  fileReader2.readAsBinaryString(myFile2);
+  fileReader1.onload = fileReader2.onload = function() { gen.next(); };
+  yield undefined; // Wait for both FileReaders. We don't care which order they finish.
+  yield undefined;
+  function fileFixup(o) {
+    if (o.value === placeholder_myFile1) {
+      o.value = fileReader1.result;
+      o.fileName = myFile1.name;
+      o.contentType = myFile1.type;
+    }
+    else if (o.value === placeholder_myFile2) {
+      o.value = fileReader2.result;
+      o.fileName = myFile2.name;
+      o.contentType = myFile2.type;
+    }
+    else if (o.value === placeholder_emptyFile) {
+      o.value = "";
+      o.fileName = emptyFile.name;
+      o.contentType = emptyFile.type;
+    }
+  };
+  expectedSub.forEach(fileFixup);
+  expectedAugment.forEach(fileFixup);
+
+  var form = $("form");
+
+  // multipart/form-data
+  var iframe = $("target_iframe");
+
+  // Make normal submission
+  form.action = "form_submit_server.sjs";
+  form.method = "POST";
+  form.enctype = "multipart/form-data";
+  form.submit();
+  yield undefined; // Wait for iframe to load as a result of the submission
+  var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkMPSubmission(submission, expectedSub, "normal submission");
+
+  // Disabled controls
+  setDisabled(document.querySelectorAll("input, select, textarea"), true);
+  form.submit();
+  yield undefined;
+  submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkMPSubmission(submission, [], "disabled controls");
+
+  // Reenabled controls
+  setDisabled(document.querySelectorAll("input, select, textarea"), false);
+  form.submit();
+  yield undefined;
+  submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkMPSubmission(submission, expectedSub, "reenabled controls");
+
+  // text/plain
+  form.action = "form_submit_server.sjs?plain";
+  form.enctype = "text/plain";
+  form.submit();
+  yield undefined;
+  submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkPlainSubmission(submission, expectedSub);
+
+  // application/x-www-form-urlencoded
+  form.action = "form_submit_server.sjs?url";
+  form.enctype = "application/x-www-form-urlencoded";
+  form.submit();
+  yield undefined;
+  submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkURLSubmission(submission, expectedSub);
+
+  // application/x-www-form-urlencoded
+  form.action = "form_submit_server.sjs?xxyy";
+  form.method = "GET";
+  form.enctype = "";
+  form.submit();
+  yield undefined;
+  submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkURLSubmission(submission, expectedSub);
+
+  // application/x-www-form-urlencoded
+  form.action = "form_submit_server.sjs";
+  form.method = "";
+  form.enctype = "";
+  form.submit();
+  yield undefined;
+  submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkURLSubmission(submission, expectedSub);
+
+  // Send form using XHR and FormData
+  xhr = new XMLHttpRequest();
+  xhr.onload = function() { gen.next(); };
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(new FormData(form));
+  yield undefined; // Wait for XHR load
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedSub, "send form using XHR and FormData");
+
+  // Send disabled form using XHR and FormData
+  setDisabled(document.querySelectorAll("input, select, textarea"), true);
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(new FormData(form));
+  yield undefined;
+  checkMPSubmission(JSON.parse(xhr.responseText), [], "send disabled form using XHR and FormData");
+  setDisabled(document.querySelectorAll("input, select, textarea"), false);
+
+  // Send FormData
+  function addToFormData(fd) {
+    fd.append("aName", "aValue");
+    fd.append("aNameNum", 9.2);
+    fd.append("aNameFile1", myFile1);
+    fd.append("aNameFile2", myFile2);
+  }
+  var fd = new FormData();
+  addToFormData(fd);
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(fd);
+  yield undefined;
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedAugment, "send FormData");
+
+  // Augment <form> using FormData
+  fd = new FormData(form);
+  addToFormData(fd);
+  xhr.open("POST", "form_submit_server.sjs");
+  xhr.send(fd);
+  yield undefined;
+  checkMPSubmission(JSON.parse(xhr.responseText),
+                    expectedSub.concat(expectedAugment), "send augmented FormData");
+
+  finishedVariant();
+}
+
+/**
+ * Install our service-worker (parameterized by appending "?MODE"), which will
+ * invoke skipWaiting() and clients.claim() to begin controlling us ASAP.  We
+ * wait on the controllerchange event
+ */
+async function installAndBeControlledByServiceWorker(mode) {
+  const scriptURL = "sw_formSubmission.js?" + mode;
+  const controllerChanged = new Promise((resolve) => {
+    navigator.serviceWorker.addEventListener(
+      "controllerchange", () => { resolve(); }, { once: true });
+  });
+
+  info("installing ServiceWorker: " + scriptURL);
+  const swr = await navigator.serviceWorker.register(scriptURL,
+                                                     { scope: "./" });
+  await controllerChanged;
+  ok(navigator.serviceWorker.controller.scriptURL.endsWith(scriptURL),
+     "controlled by the SW we expected");
+  info("became controlled by ServiceWorker.");
+
+  return swr;
+}
+
+async function runAllTestVariants() {
+  // Run the test as it has historically been run, with no ServiceWorkers
+  // anywhere!
+  await runTestVariant("no ServiceWorker");
+
+  // Uncomment the below if something in the test seems broken and you're not
+  // sure whether it's a side-effect of the multiple passes or not.
+  //await runTestVariant("no ServiceWorker second paranoia time");
+
+  // Ensure ServiceWorkers are enabled and that testing mode (which disables
+  // security checks) is on too.
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]});
+
+  // Now run the test with a ServiceWorker that covers the scope but has no
+  // fetch handler, so the optimization case will not actually dispatch a
+  // "fetch" event, but some stuff will happen that can change things enough
+  // to break them like in https://bugzilla.mozilla.org/show_bug.cgi?id=1383518.
+  await installAndBeControlledByServiceWorker("no-fetch");
+  await runTestVariant("ServiceWorker that does not listen for fetch events");
+
+  // Now the ServiceWorker does have a "fetch" event listener, but it will reset
+  // interception every time.  This is similar to the prior case but different
+  // enough that it could break things in a different exciting way.
+  await installAndBeControlledByServiceWorker("reset-fetch");
+  await runTestVariant("ServiceWorker that resets all fetches");
+
+  // Now the ServiceWorker resolves the fetch event with `fetch(event.request)`
+  // which makes little sense but is a thing that can happen.
+  const swr = await installAndBeControlledByServiceWorker("proxy-fetch");
+  await runTestVariant("ServiceWorker that proxies all fetches");
+
+  // cleanup.
+  info("unregistering ServiceWorker");
+  await swr.unregister();
+  info("ServiceWorker uninstalled");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

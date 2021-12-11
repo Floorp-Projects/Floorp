@@ -1,0 +1,18 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0">
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=461863 -->
+  <desc>
+    This test checks that transforms and filtering a descendant of a
+    filtered element interact correctly.
+  </desc>
+  <filter id="a"><feGaussianBlur stdDeviation="0.001"/></filter>
+  <filter id="b"><feGaussianBlur stdDeviation="0.001"/></filter>
+  <rect width="100%" height="100%" fill="lime"/>
+  <circle fill="red" cx="200" cy="200" r="98"/>
+  <g id="g" filter="url(#a)" transform="translate(100, 0)">
+    <circle fill="lime" filter="url(#b)" cx="100" cy="200" r="100"/>
+  </g>
+</svg>

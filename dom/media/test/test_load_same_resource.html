@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test loading of the same resource in multiple elements</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.requestCompleteLog();
+var manager = new MediaTestManager;
+
+function checkDuration(actual, expected, name) {
+  ok(Math.abs(actual - expected) < 0.1,
+     `${name} duration: ${actual} expected: ${expected}`);
+}
+
+function cloneLoaded(event) {
+  var e = event.target;
+  ok(true, `${e.token} loaded OK`);
+  checkDuration(e.duration, e._expectedDuration, e.token);
+  removeNodeAndSource(e);
+  manager.finished(e.token);
+}
+
+function tryClone(e) {
+  var clone = e.cloneNode(false);
+  clone.token = `${e.token}(cloned)`;
+  manager.started(clone.token);
+  manager.finished(e.token);
+
+  // Log events for debugging.
+  var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause"];
+  function logEvent(evt) {
+    var event = evt.target;
+    info(`${event.token} got ${evt.type}`);
+  }
+  events.forEach(function(event) {
+    clone.addEventListener(event, logEvent);
+  });
+
+
+  checkDuration(e.duration, e._expectedDuration, e.token);
+  clone._expectedDuration = e._expectedDuration;
+
+  clone.addEventListener("loadeddata", cloneLoaded, {once: true});
+  clone.addEventListener("loadstart", function(evt) {
+    info(`${evt.target.token} starts loading.`);
+    // Since there is only one H264 decoder instance, we have to delete the
+    // decoder of the original element for the cloned element to load. However,
+    // we can't delete the decoder too early otherwise cloning decoder will
+    // fail to kick in. We wait for 'loadstart' event of the cloned element to
+    // know when the decoder is already cloned and we can delete the decoder of
+    // the original element.
+    removeNodeAndSource(e);
+  }, {once: true});
+}
+
+// This test checks that loading the same URI twice in different elements at the same time
+// uses the same resource without doing another network fetch. One of the gCloneTests
+// uses dynamic_resource.sjs to return one resource on the first fetch and a different resource
+// on the second fetch. These resources have different lengths, so if the cloned element
+// does a network fetch it will get a resource with the wrong length and we get a test
+// failure.
+
+async function initTest(test, token) {
+  var e = document.createElement("video");
+  e.preload = "auto";
+  e.src = test.name;
+  e._expectedDuration = test.duration;
+  ok(true, `Trying to load ${test.name}, duration=${test.duration}`);
+  e.token = token;
+  manager.started(token);
+
+  // Since 320x240.ogv is less than 32KB, we need to wait for the
+  // 'suspend' event to ensure the partial block is flushed to the cache
+  // otherwise the cloned resource will create a new channel when it
+  // has no data to read at position 0. The new channel will download
+  // a different file than the original resource and fail the duration
+  // test.
+  let p1 = once(e, "loadeddata");
+  let p2 = once(e, "suspend");
+  await p1;
+  await p2;
+  tryClone(e);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [
+    ["logging.MediaDecoder", "Debug"],
+    ["logging.nsMediaElement", "Debug"],
+    ["logging.MediaCache", "Debug"],
+  ]},
+  manager.runTests.bind(manager, gCloneTests, initTest));
+
+</script>
+</pre>
+</body>
+</html>

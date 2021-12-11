@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ensure a page which is otherwise bfcacheable doesn't crash on reload</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    let pageshowCount = 0;
+    let bc = new BroadcastChannel("test_reload");
+    bc.onmessage = function(event) {
+      info("MessageEvent: " + event.data);
+      if (event.data == "pageshow") {
+        ++pageshowCount;
+        info("pageshow: " + pageshowCount);
+        if (pageshowCount < 3) {
+          info("Sending reload");
+          bc.postMessage("reload");
+        } else {
+          info("Sending close");
+          bc.postMessage("close");
+        }
+      } else if (event.data == "closed") {
+        info("closed");
+        bc.close();
+        ok(true, "Passed");
+        SimpleTest.finish();
+      }
+    }
+
+    function test() {
+      window.open("file_reload.html", "", "noopener");
+    }
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

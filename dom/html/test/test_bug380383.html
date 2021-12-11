@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=380383
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>Test for Bug 380383</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=380383">Mozilla Bug 380383</a>
+<p id="display">
+  <iframe id="f1" name="f1"></iframe>
+  <iframe id="f2" name="f2"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  /** Test for Bug 380383 **/
+  is($("f1").contentDocument.characterSet, "UTF-8",
+     "Unexpected charset for f1");
+
+  function runTest() {
+    is($("f2").contentDocument.characterSet, "UTF-8",
+       "Unexpected charset for f2");
+  }
+     
+  addLoadEvent(runTest);
+  addLoadEvent(SimpleTest.finish);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

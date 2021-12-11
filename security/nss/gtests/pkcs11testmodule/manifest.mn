@@ -1,0 +1,23 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+CPPSRCS = \
+      pkcs11testmodule.cpp \
+      $(NULL)
+
+INCLUDES += -I$(CORE_DEPTH)/cpputil
+
+REQUIRES = cpputil
+
+LIBRARY_NAME = pkcs11testmodule
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+LIBRARY = $(NULL)
+IMPORT_LIBRARY = $(NULL)
+
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
+             $(NULL)

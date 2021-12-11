@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    document.getElementsByTagName("td")[0].style.position = "absolute";
+    document.body.getClientRects(); //flush
+    document.getElementsByTagName("tbody")[0].style.transformStyle = "preserve-3d";
+}
+
+</script>
+</head>
+<body onload="boom();">
+<table><tbody><tr><td></td></tr></tbody></table>
+</body>
+</html>

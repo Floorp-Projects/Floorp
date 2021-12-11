@@ -1,0 +1,30 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+<script>
+
+function boom()
+{
+  var table = document.getElementById('table'); 
+
+  var newTR = document.createElement('tr'); 
+  var newTD = document.createElement('td'); 
+  newTR.appendChild(newTD); 
+  table.appendChild(newTR); 
+
+  newTD.setAttribute('rowspan', 3); 
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+
+<body onload="setTimeout(boom, 30);">
+
+<table id="table"><tr><td></td><td></td></tr></table>
+
+</body>
+
+</html>

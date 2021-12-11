@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=678842
+-->
+<head>
+  <title>Test for Bug 678842</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678842">Mozilla Bug 678842</a>
+<p id="display"></p>
+<iframe id="content"></iframe>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 678842 **/
+SimpleTest.waitForExplicitFinish();
+var content = document.getElementById("content");
+// load a subframe containing an editor with a defined unknown lang. At first
+// load, it will set dictionary to en-US. At second load, it will return current
+// dictionary. So, we can check, dictionary is correctly remembered between
+// loads.
+
+var firstLoad = true;
+var script;
+
+var loadListener = async function(evt) {
+  if (firstLoad) {
+    /* eslint-env mozilla/frame-script */
+    script = SpecialPowers.loadChromeScript(function() {
+      // eslint-disable-next-line mozilla/use-services
+      var dir = Cc["@mozilla.org/file/directory_service;1"]
+                  .getService(Ci.nsIProperties)
+                  .get("CurWorkD", Ci.nsIFile);
+      dir.append("tests");
+      dir.append("editor");
+      dir.append("spellchecker");
+      dir.append("tests");
+
+      var hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
+                       .getService(Ci.mozISpellCheckingEngine);
+
+      // Install en-GB dictionary.
+      let en_GB = dir.clone();
+      en_GB.append("en-GB");
+      hunspell.addDirectory(en_GB);
+
+      addMessageListener("en_GB-exists", () => en_GB.exists());
+      addMessageListener("destroy", () => hunspell.removeDirectory(en_GB));
+    });
+    is(await script.sendQuery("en_GB-exists"), true,
+       "true expected (en-GB directory should exist)");
+  }
+
+  var doc = evt.target.contentDocument;
+  var elem = doc.getElementById("textarea");
+  var editor = SpecialPowers.wrap(elem).editor;
+  editor.setSpellcheckUserOverride(true);
+  var inlineSpellChecker = editor.getInlineSpellChecker(true);
+
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(elem, function() {
+    var spellchecker = inlineSpellChecker.spellChecker;
+    try {
+      var currentDictonary = spellchecker.GetCurrentDictionary();
+    } catch (e) {}
+
+    if (!currentDictonary) {
+      spellchecker.SetCurrentDictionary("en-US");
+    }
+
+    if (firstLoad) {
+      firstLoad = false;
+
+       // First time around, the dictionary defaults to the locale.
+      is(currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
+
+      // Select en-GB.
+      spellchecker.SetCurrentDictionary("en-GB");
+
+      content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug678842_subframe.html?firstload=false";
+    } else {
+      is(currentDictonary, "en-GB", "unexpected lang " + currentDictonary + " instead of en-GB");
+      content.removeEventListener("load", loadListener);
+
+      // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
+      script.sendAsyncMessage("destroy");
+
+      // This will clear the content preferences and reset "spellchecker.dictionary".
+      spellchecker.SetCurrentDictionary("");
+      SimpleTest.finish();
+    }
+  });
+};
+
+content.addEventListener("load", loadListener);
+
+content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug678842_subframe.html?firstload=true";
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<!doctype html>
+<div id="host"></div>
+<script>
+  host.attachShadow({ mode: "open" }).innerHTML = `<style></style>`;
+  host.shadowRoot.styleSheets[0].foobie = host.shadowRoot;
+</script>

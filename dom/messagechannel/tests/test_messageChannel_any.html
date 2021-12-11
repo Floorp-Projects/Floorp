@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>MessagePort/Channel any content</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+var tests = [
+ 'hello world',
+ 123,
+ null,
+ true,
+ new Date(),
+ [ 1, 'test', true, new Date() ],
+ { a: true, b:  null, c: new Date(), d: [ true, false, {} ] },
+ new Blob([123], { type: 'plain/text' })
+];
+
+var currentTest = null;
+
+function getType(a) {
+  if (a === null || a === undefined)
+    return 'null';
+
+  if (Array.isArray(a))
+    return 'array';
+
+  if (typeof a == 'object')
+    return 'object';
+
+  return 'primitive';
+}
+
+function compare(a, b) {
+  is (getType(a), getType(b), 'Type matches');
+
+  var type = getType(a);
+  if (type == 'array') {
+    is (a.length, b.length, 'Array.length matches');
+    for (var i = 0; i < a.length; ++i) {
+      compare(a[i], b[i]);
+    }
+
+    return;
+  }
+
+  if (type == 'object') {
+    ok (a !== b, 'They should not match');
+
+    var aProps = [];
+    for (var p in a) aProps.push(p);
+
+    var bProps = [];
+    for (var p in b) bProps.push(p);
+
+    is (aProps.length, bProps.length, 'Props match');
+    is (aProps.sort().toString(), bProps.sort().toString(), 'Prop names match');
+
+    for (var p in a) {
+      compare(a[p], b[p]);
+    }
+
+    return;
+  }
+
+  if (type != 'null') {
+    is (a, b, 'Same value');
+  }
+}
+
+function runTest() {
+  var mc = new MessageChannel('foobar');
+  ok(mc, "MessageChannel can be created");
+
+  mc.port1.onmessage = function(event) {
+    compare(event.data, currentTest);
+    next();
+  }
+
+  function next() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    currentTest = tests.shift();
+    mc.port1.postMessage(currentTest);
+  }
+
+  var worker = new Worker("worker_messageChannel_any.js");
+  worker.onmessage = function(event) {
+    if (event.data == "READY") {
+      next();
+    }
+  };
+
+  worker.postMessage(mc.port2, [mc.port2]);
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+  </script>
+</body>
+</html>

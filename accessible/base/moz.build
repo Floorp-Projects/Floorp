@@ -1,0 +1,120 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += ["AccEvent.h", "nsAccessibilityService.h"]
+
+EXPORTS.mozilla.a11y += [
+    "AccAttributes.h",
+    "AccTypes.h",
+    "CacheConstants.h",
+    "DocManager.h",
+    "FocusManager.h",
+    "IDSet.h",
+    "Platform.h",
+    "RelationType.h",
+    "Role.h",
+    "SelectionManager.h",
+    "States.h",
+]
+
+if CONFIG["MOZ_DEBUG"]:
+    EXPORTS.mozilla.a11y += [
+        "Logging.h",
+    ]
+
+UNIFIED_SOURCES += [
+    "AccAttributes.cpp",
+    "AccEvent.cpp",
+    "AccGroupInfo.cpp",
+    "AccIterator.cpp",
+    "ARIAMap.cpp",
+    "ARIAStateMap.cpp",
+    "Asserts.cpp",
+    "DocManager.cpp",
+    "EmbeddedObjCollector.cpp",
+    "EventQueue.cpp",
+    "EventTree.cpp",
+    "Filters.cpp",
+    "FocusManager.cpp",
+    "NotificationController.cpp",
+    "nsAccessibilityService.cpp",
+    "nsAccessiblePivot.cpp",
+    "nsAccUtils.cpp",
+    "nsCoreUtils.cpp",
+    "nsEventShell.cpp",
+    "nsTextEquivUtils.cpp",
+    "Pivot.cpp",
+    "SelectionManager.cpp",
+    "StyleInfo.cpp",
+    "TextAttrs.cpp",
+    "TextLeafRange.cpp",
+    "TextRange.cpp",
+    "TextUpdater.cpp",
+    "TreeWalker.cpp",
+]
+
+if CONFIG["A11Y_LOG"]:
+    UNIFIED_SOURCES += [
+        "Logging.cpp",
+    ]
+
+LOCAL_INCLUDES += [
+    "/accessible/generic",
+    "/accessible/html",
+    "/accessible/ipc",
+    "/dom/base",
+    "/dom/xul",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    LOCAL_INCLUDES += [
+        "/accessible/ipc/win",
+    ]
+else:
+    LOCAL_INCLUDES += [
+        "/accessible/ipc/other",
+    ]
+
+LOCAL_INCLUDES += [
+    "/accessible/xpcom",
+    "/accessible/xul",
+    "/dom/base",
+    "/ipc/chromium/src",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/xul",
+    "/layout/xul/tree/",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    LOCAL_INCLUDES += [
+        "/accessible/atk",
+        "/gfx/cairo/cairo/src",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    LOCAL_INCLUDES += [
+        "/accessible/windows/ia2",
+        "/accessible/windows/msaa",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    LOCAL_INCLUDES += [
+        "/accessible/mac",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    LOCAL_INCLUDES += [
+        "/accessible/android",
+    ]
+else:
+    LOCAL_INCLUDES += [
+        "/accessible/other",
+    ]
+
+FINAL_LIBRARY = "xul"
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

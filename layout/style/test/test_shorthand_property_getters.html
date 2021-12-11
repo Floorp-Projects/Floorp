@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=376075
+-->
+<head>
+  <title>Test for Bug 376075</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=376075">Mozilla Bug 376075</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 376075 **/
+
+var e = document.getElementById("display");
+
+var borderExtras = "; border-image: none";
+
+// Test that we only serialize the 'border' shorthand when appropriate.
+e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: blue medium solid" + borderExtras);
+isnot(e.style.border, "", "should be able to serialize border");
+e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: green medium solid" + borderExtras);
+is(e.style.border, "", "should not be able to serialize border");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: green" + borderExtras);
+isnot(e.style.border, "", "should be able to serialize border");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: green blue blue blue" + borderExtras);
+is(e.style.border, "", "should not be able to serialize border");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue green blue blue" + borderExtras);
+is(e.style.border, "", "should not be able to serialize border");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue blue green blue" + borderExtras);
+is(e.style.border, "", "should not be able to serialize border");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid; border-color: blue blue blue green" + borderExtras);
+is(e.style.border, "", "should not be able to serialize border");
+e.setAttribute("style", "border-width: 3px 2px 3px 3px; border-style: solid; border-color: green" + borderExtras);
+is(e.style.border, "", "should not be able to serialize border");
+e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid dashed; border-color: green" + borderExtras);
+is(e.style.border, "", "should not be able to serialize border");
+
+// Test suppression of currentcolor in border shorthands.
+e.setAttribute("style", "border: medium solid");
+ok(e.style.border == "medium solid" ||
+   e.style.border == "solid medium",
+   "implied default color omitted serializing border");
+ok(e.style.borderLeft == "medium solid" ||
+   e.style.borderLeft == "solid medium",
+   "implied default color omitted serializing border-left");
+ok(e.style.cssText == "border: medium solid;" ||
+   e.style.cssText == "border: solid medium;",
+   "implied default color omitted serializing declaration");
+e.setAttribute("style", "border-right: medium solid");
+ok(e.style.borderRight == "medium solid" ||
+   e.style.borderRight == "solid medium",
+   "implied default color omitted serializing border-right");
+ok(e.style.borderRight == "medium solid" ||
+   e.style.borderRight == "solid medium",
+   "implied default color omitted serializing border-right");
+ok(e.style.cssText == "border-right: medium solid;" ||
+   e.style.cssText == "border-right: solid medium;",
+   "implied default color omitted serializing declaration");
+
+// Test that we shorten box properties to the shortest possible.
+e.setAttribute("style", "margin: 7px");
+is(e.style.margin, "7px", "should condense to shortest possible");
+is(e.style.cssText, "margin: 7px;", "should condense to shortest possible");
+e.setAttribute("style", "padding: 7px 7px 7px");
+is(e.style.padding, "7px", "should condense to shortest possible");
+is(e.style.cssText, "padding: 7px;", "should condense to shortest possible");
+e.setAttribute("style", "border-width: 7px 7px 7px 7px");
+is(e.style.borderWidth, "7px", "should condense to shortest possible");
+is(e.style.cssText, "border-width: 7px;", "should condense to shortest possible");
+e.setAttribute("style", "margin: 7px 7px 7px 6px");
+is(e.style.margin, "7px 7px 7px 6px", "should not condense");
+is(e.style.cssText, "margin: 7px 7px 7px 6px;", "should not condense");
+e.setAttribute("style", "border-style: solid dotted none dotted");
+is(e.style.borderStyle, "solid dotted none", "should condense");
+is(e.style.cssText, "border-style: solid dotted none;", "should condense");
+e.setAttribute("style", "border-color: green blue");
+is(e.style.borderColor, "green blue", "should condense");
+is(e.style.cssText, "border-color: green blue;", "should condense");
+e.setAttribute("style", "border-color: green blue green");
+is(e.style.borderColor, "green blue", "should condense");
+is(e.style.cssText, "border-color: green blue;", "should condense");
+e.setAttribute("style", "border-color: green blue green blue");
+is(e.style.borderColor, "green blue", "should condense");
+is(e.style.cssText, "border-color: green blue;", "should condense");
+e.setAttribute("style", "border-color: currentColor currentColor currentcolor CURRENTcolor");
+is(e.style.borderColor, "currentcolor", "should condense to canonical case");
+is(e.style.cssText, "border-color: currentcolor;", "should condense to canonical case");
+e.setAttribute("style", "border-style: ridge none none none");
+is(e.style.borderStyle, "ridge none none", "should condense");
+is(e.style.cssText, "border-style: ridge none none;", "should condense");
+e.setAttribute("style", "border-radius: 1px 1px 1px 1px");
+is(e.style.borderRadius, "1px", "should condense to shortest possible");
+is(e.style.cssText, "border-radius: 1px;", "should condense to shortest possible");
+e.setAttribute("style", "border-radius: 1px 1px 1px 1px / 2px 2px 2px 2px");
+is(e.style.borderRadius, "1px / 2px", "should condense to shortest possible");
+is(e.style.cssText, "border-radius: 1px / 2px;", "should condense to shortest possible");
+e.setAttribute("style", "border-radius: 1px 2px 1px 2px / 1% 2% 3% 2%");
+is(e.style.borderRadius, "1px 2px / 1% 2% 3%", "should condense to shortest possible");
+is(e.style.cssText, "border-radius: 1px 2px / 1% 2% 3%;", "should condense to shortest possible");
+
+// Test that we refuse to serialize the 'background' and 'font'
+// shorthands when some subproperties that can't be expressed in the
+// shorthand syntax are present.
+e.setAttribute("style", "font: medium serif");
+isnot(e.style.font, "", "should have font shorthand");
+e.setAttribute("style", "font: medium serif; font-size-adjust: 0.45");
+is(e.style.font, "", "should not have font shorthand");
+e.setAttribute("style", "font: medium serif; font-feature-settings: 'liga' off");
+is(e.style.font, "", "should not have font shorthand");
+
+// Test that all combinations of background-clip and background-origin
+// can be expressed in the shorthand (which wasn't the case previously).
+e.setAttribute("style", "background: red");
+isnot(e.style.background, "", "should have background shorthand");
+e.setAttribute("style", "background: red; background-origin: border-box");
+isnot(e.style.background, "", "should have background shorthand (origin:border-box)");
+e.setAttribute("style", "background: red; background-clip: padding-box");
+isnot(e.style.background, "", "should have background shorthand (clip:padding-box)");
+e.setAttribute("style", "background: red; background-origin: content-box");
+isnot(e.style.background, "", "should have background shorthand (origin:content-box)");
+e.setAttribute("style", "background: red; background-clip: content-box");
+isnot(e.style.background, "", "should have background shorthand (clip:content-box)");
+e.setAttribute("style", "background: red; background-clip: content-box; background-origin: content-box;");
+isnot(e.style.background, "", "should have background shorthand (clip:content-box;origin:content-box)");
+
+// Test background-size in the background shorthand.
+e.setAttribute("style", "background: red; background-size: 100% 100%");
+isnot(e.style.background, "", "should have background shorthand (size:100% 100%)");
+e.setAttribute("style", "background: red; background-size: 100% auto");
+isnot(e.style.background, "", "should have background shorthand (size:100% auto)");
+e.setAttribute("style", "background: red; background-size: auto 100%");
+isnot(e.style.background, "", "should have background shorthand (size:auto 100%)");
+
+// Check that we only serialize background when the lists (of layers) for
+// the subproperties are the same length.
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+isnot(e.style.background, "", "should have background shorthand (all lists length 3)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-clip too long)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-origin too short)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png), none; background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-image too long)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-attachment too short)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px, bottom; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-position too long)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat");
+is(e.style.background, "", "should not have background shorthand (background-repeat too short)");
+e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-size too long)");
+
+// Check that we only serialize background-position when the lists (of layers) for
+// the -x/-y subproperties are the same length.
+e.setAttribute("style", "background-position-x: 10%, left 2em, right; background-position-y: top 2em, bottom, 10%");
+is(e.style.backgroundPosition, "left 10% top 2em, left 2em bottom, right 10%", "should have background-position shorthand (both lists length 3)");
+e.setAttribute("style", "background-position-x: 10%, left 2em; background-position-y: top 2em, bottom, 10%");
+is(e.style.backgroundPosition, "", "should not have background-position shorthand (background-position-x too short)");
+e.setAttribute("style", "background-position-x: 10%, left 2em, right; background-position-y: top 2em");
+is(e.style.backgroundPosition, "", "should not have background-position shorthand (background-position-y too short)");
+
+// Check that background-position serialization doesn't produce invalid values.
+e.setAttribute("style", "background-position: 0px");
+is(e.style.backgroundPosition, "0px center", "1-value form should be accepted, with implied center value for background-position-y");
+e.setAttribute("style", "background-position: 0px center");
+is(e.style.backgroundPosition, "0px center", "2-value form 'x-offset' 'y-edge' should be accepted, and serialize to 2-value form");
+e.setAttribute("style", "background-position: left 0px center");
+is(e.style.backgroundPosition, "left 0px center", "3-value form 'x-edge' 'x-offset' 'y-edge' should be accepted and serialize to 3-value form");
+e.setAttribute("style", "background-position: left top 0px");
+is(e.style.backgroundPosition, "left top 0px", "3-value form 'x-edge' 'y-edge' 'y-offset' should be accepted and serialize to 3-value form");
+e.setAttribute("style", "background-position: left 0px top 0px");
+is(e.style.backgroundPosition, "left 0px top 0px", "4-value form should be accepted and serialize to 4-value form");
+e.setAttribute("style", "background-position-x: 0px; background-position-y: center");
+is(e.style.backgroundPosition, "0px center", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: 0px; background-position-y: 0px");
+is(e.style.backgroundPosition, "0px 0px", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: center; background-position-y: 0px");
+is(e.style.backgroundPosition, "center 0px", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: left; background-position-y: top");
+is(e.style.backgroundPosition, "left top", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: left 0px; background-position-y: center");
+is(e.style.backgroundPosition, "left 0px center", "should always serialize to 3-value form if both -x and -y specified an edge");
+e.setAttribute("style", "background-position-x: right; background-position-y: top 0px");
+is(e.style.backgroundPosition, "right top 0px", "should always serialize to 3-value form if both -x and -y specified an edge");
+e.setAttribute("style", "background-position-x: left 0px; background-position-y: 0px");
+is(e.style.backgroundPosition, "left 0px top 0px", "should serialize to 4-value form if 3-value form would only have one edge");
+e.setAttribute("style", "background-position-x: 0px; background-position-y: top 0px");
+is(e.style.backgroundPosition, "left 0px top 0px", "should serialize to 4-value form if 3-value form would only have one edge");
+
+// Check that we only serialize transition when the lists are the same length.
+e.setAttribute("style", "transition-property: color, width; transition-duration: 1s, 200ms; transition-timing-function: ease-in, linear; transition-delay: 0s, 1s");
+isnot(e.style.transition, "", "should have transition shorthand (lists same length)");
+e.setAttribute("style", "transition-property: color, width, left; transition-duration: 1s, 200ms; transition-timing-function: ease-in, linear; transition-delay: 0s, 1s");
+is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
+e.setAttribute("style", "transition-property: all; transition-duration: 1s, 200ms; transition-timing-function: ease-in, linear; transition-delay: 0s, 1s");
+is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
+e.setAttribute("style", "transition-property: color, width; transition-duration: 1s, 200ms, 300ms; transition-timing-function: ease-in, linear; transition-delay: 0s, 1s");
+is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
+e.setAttribute("style", "transition-property: color, width; transition-duration: 1s, 200ms; transition-timing-function: ease-in, linear, ease-out; transition-delay: 0s, 1s");
+is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
+e.setAttribute("style", "transition-property: color, width; transition-duration: 1s, 200ms; transition-timing-function: ease-in, linear; transition-delay: 0s, 1s, 0s");
+is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
+e.setAttribute("style", "transition: color, width; transition-delay: 0s");
+is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
+
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+isnot(e.style.animation, "", "should have animation shorthand (lists same length)");
+e.setAttribute("style", "animation-name: bounce, roll, left; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms, 300ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear, ease-out; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s, 0s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards, both; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2, 1; animation-play-state: paused, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running, running;");
+is(e.style.animation, "", "should not have animation shorthand (lists different lengths)");
+
+// Check that the 'border' shorthand resets 'border-image' and
+// but that other 'border-*' shorthands don't
+// (bug 482692).
+e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green');
+is(e.style.cssText,
+   'border-image: url("foo.png") 5 / 5 / 5 repeat; border-left: medium solid green;',
+   "border-left does NOT reset border-image");
+e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5; border: medium solid green');
+is(e.style.cssText,
+   'border: medium solid green;',
+   "border DOES reset border-image");
+
+// Test that the color goes at the beginning of the last item of the
+// background shorthand.
+// FIXME: Really the "repeat scroll 0% 0%" shouldn't be there.
+e.setAttribute("style", "background: url(foo.png) blue");
+is(e.style.cssText,
+   "background: blue url(\"foo.png\") repeat scroll 0% 0%;",
+   "color should be at start of single-item background");
+e.setAttribute("style", "background: url(bar.png), url(foo.png) blue");
+is(e.style.cssText,
+   "background: url(\"bar.png\") repeat scroll 0% 0%, blue url(\"foo.png\") repeat scroll 0% 0%;",
+   "color should be at start of single-item background");
+
+</script>
+</pre>
+</body>
+</html>

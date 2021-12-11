@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var j = document.createTextNode("j");
+  var r = document.createRange();
+  r.setEnd(j, 1);
+  j.splitText(0);
+  r.setEnd(j, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+
+</html>

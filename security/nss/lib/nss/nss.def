@@ -1,0 +1,1240 @@
+;+#
+;+# This Source Code Form is subject to the terms of the Mozilla Public
+;+# License, v. 2.0. If a copy of the MPL was not distributed with this
+;+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+;+#
+;+# OK, this file is meant to support SUN, LINUX, AIX and WINDOWS
+;+#   1. For all unix platforms, the string ";-"  means "remove this line"
+;+#   2. For all unix platforms, the string " DATA " will be removed from any 
+;+#	line on which it occurs.
+;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
+;+#      On AIX, lines containing ";+" will be removed.  
+;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   5. For all unix platforms, after the above processing has taken place,
+;+#    all characters after the first ";" on the line will be removed.  
+;+#    And for AIX, the first ";" will also be removed.
+;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
+;+#   directives are hidden behind ";", ";+", and ";-"
+;+NSS_3.2 {       # NSS 3.2 release
+;+    global:
+LIBRARY nss3	;-
+EXPORTS		;-
+ATOB_AsciiToData;
+BTOA_ConvertItemToAscii;
+BTOA_DataToAscii;
+CERT_AsciiToName;
+CERT_CertTimesValid;
+CERT_CheckCertValidTimes;
+CERT_CreateCertificateRequest;
+CERT_ChangeCertTrust;
+CERT_DecodeDERCrl;
+CERT_DestroyCertificateRequest;
+CERT_DestroyCertList;
+CERT_DestroyName;
+CERT_EnableOCSPChecking;
+CERT_FormatName;
+CERT_DestroyCertificate;
+CERT_DupCertificate;
+CERT_FreeDistNames;
+CERT_FreeNicknames;
+CERT_GetAVATag;
+CERT_GetCertEmailAddress;
+CERT_GetCertIssuerAndSN;
+CERT_GetCertNicknames;
+CERT_GetCertTrust;
+CERT_GetCertUid;
+CERT_GetCommonName;
+CERT_GetCountryName;
+CERT_GetDBContentVersion;
+CERT_GetDefaultCertDB;
+CERT_GetDomainComponentName;
+CERT_GetLocalityName;
+CERT_GetOrgName;
+CERT_GetOrgUnitName;
+CERT_GetSSLCACerts;
+CERT_GetSlopTime;
+CERT_GetStateName;
+CERT_ImportCAChain;
+CERT_NameToAscii;
+CERT_RFC1485_EscapeAndQuote;
+CERT_SetSlopTime;
+CERT_VerifyCertName;
+CERT_VerifyCertNow;
+DER_UTCDayToAscii;
+DER_UTCTimeToAscii;
+DER_GeneralizedTimeToTime;
+NSS_Init;
+NSS_Initialize;
+NSS_InitReadWrite;
+NSS_NoDB_Init;
+NSS_Shutdown;
+NSS_VersionCheck;
+PK11_Authenticate;
+PK11_ChangePW;
+PK11_CheckUserPassword;
+PK11_CipherOp;
+PK11_CloneContext;
+PK11_ConfigurePKCS11;
+PK11_CreateContextBySymKey;
+PK11_CreateDigestContext;
+PK11_DestroyContext;
+PK11_DestroyTokenObject;
+PK11_DigestBegin;
+PK11_DigestOp;
+PK11_DigestFinal;
+PK11_DoesMechanism;
+PK11_FindCertFromNickname;
+PK11_FindCertFromDERCert;
+PK11_FindCertByIssuerAndSN;
+PK11_FindKeyByAnyCert;
+PK11_FindKeyByDERCert;
+PK11_FindSlotByName;
+PK11_Finalize;
+PK11_FortezzaHasKEA;
+PK11_FreeSlot;
+PK11_FreeSlotList;
+PK11_FreeSymKey;
+PK11_GenerateKeyPair;
+PK11_GenerateRandom;
+PK11_GenerateNewParam;
+PK11_GetAllTokens;
+PK11_GetBlockSize;
+PK11_GetFirstSafe;
+PK11_GetInternalKeySlot;
+PK11_GetInternalSlot;
+PK11_GetSlotName;
+PK11_GetTokenName;
+PK11_HashBuf;
+PK11_IsFIPS;
+PK11_IsFriendly;
+PK11_IsInternal;
+PK11_IsHW;
+PK11_IsPresent;
+PK11_IsReadOnly;
+PK11_KeyGen;
+PK11_ListCerts;
+PK11_NeedLogin;
+PK11_RandomUpdate;
+PK11_SetPasswordFunc;
+PK11_SetSlotPWValues;
+PORT_Alloc;
+PORT_Free;
+PORT_GetError;
+PORT_SetError;
+PORT_SetUCS4_UTF8ConversionFunction;
+PORT_SetUCS2_UTF8ConversionFunction;
+PORT_SetUCS2_ASCIIConversionFunction;
+SECITEM_CopyItem;
+SECITEM_DupItem;
+SECITEM_FreeItem;
+SECITEM_ZfreeItem;
+SECKEY_ConvertToPublicKey;
+SECKEY_CopyPrivateKey;
+SECKEY_CreateSubjectPublicKeyInfo;
+SECKEY_DestroyPrivateKey;
+SECKEY_DestroySubjectPublicKeyInfo;
+SECMOD_IsModulePresent;
+SECOID_FindOIDTagDescription;
+SECOID_GetAlgorithmTag;
+SEC_DeletePermCertificate;
+SEC_DeletePermCRL;
+SEC_DerSignData;
+SEC_DestroyCrl;
+SEC_FindCrlByDERCert;
+SEC_FindCrlByName;
+SEC_LookupCrls;
+SEC_NewCrl;
+;+#
+;+# The following symbols are exported only to make libssl3.so work. 
+;+# These are still private!!!
+;+#
+__CERT_NewTempCertificate;
+__PK11_CreateContextByRawKey;
+__PK11_GetKeyData;
+__nss_InitLock;
+CERT_CertChainFromCert;
+CERT_DestroyCertificateList;
+CERT_DupCertList;
+CERT_ExtractPublicKey;
+CERT_FindCertByName;
+DER_Lengths;
+DSAU_DecodeDerSig;
+DSAU_EncodeDerSig;
+HASH_GetHashObject;
+NSSRWLock_Destroy;
+NSSRWLock_HaveWriteLock;
+NSSRWLock_LockRead;
+NSSRWLock_LockWrite;
+NSSRWLock_New;
+NSSRWLock_UnlockRead;
+NSSRWLock_UnlockWrite;
+NSS_PutEnv;
+PK11_Derive;
+PK11_DeriveWithFlags;
+PK11_DigestKey;
+PK11_FindBestKEAMatch;
+PK11_FindFixedKey;
+PK11_GenerateFortezzaIV;
+PK11_GetBestKeyLength;
+PK11_GetBestSlot;
+PK11_GetBestSlotMultiple;
+PK11_GetBestWrapMechanism;
+PK11_GetCurrentWrapIndex;
+PK11_GetMechanism;
+PK11_GetModuleID;
+PK11_GetPrivateModulusLen;
+PK11_GetSlotFromKey;
+PK11_GetSlotFromPrivateKey;
+PK11_GetSlotID;
+PK11_GetSlotSeries;
+PK11_GetTokenInfo;
+PK11_GetWindow;
+PK11_GetWrapKey;
+PK11_IVFromParam;
+PK11_MakeKEAPubKey;
+PK11_ParamFromIV;
+PK11_PubDecryptRaw;
+PK11_PubDerive;
+PK11_PubEncryptRaw;
+PK11_PubUnwrapSymKey;
+PK11_PubWrapSymKey;
+PK11_ReferenceSymKey;
+PK11_RestoreContext;
+PK11_SaveContext;
+PK11_SetFortezzaHack;
+PK11_SetWrapKey;
+PK11_Sign;
+PK11_SignatureLen;
+PK11_SymKeyFromHandle;
+PK11_TokenExists;
+PK11_UnwrapSymKey;
+PK11_UnwrapSymKeyWithFlags;
+PK11_Verify;
+PK11_VerifyKeyOK;
+PK11_WrapSymKey;
+PORT_ArenaAlloc;
+PORT_ArenaZAlloc;
+PORT_FreeArena;
+PORT_NewArena;
+PORT_Realloc;
+PORT_ZAlloc;
+PORT_ZFree;
+RSA_FormatBlock;
+SECITEM_CompareItem;
+SECKEY_CreateRSAPrivateKey;
+SECKEY_DestroyPublicKey;
+SECKEY_PublicKeyStrength;
+SECKEY_UpdateCertPQG;
+SECMOD_LookupSlot;
+SGN_Begin;
+SGN_DestroyContext;
+SGN_End;
+SGN_NewContext;
+SGN_Update;
+VFY_Begin;
+VFY_CreateContext;
+VFY_DestroyContext;
+VFY_End;
+VFY_Update;
+;+#
+;+# The following symbols are exported only to make libsmime3.so work. 
+;+# These are still private!!!
+;+#
+__CERT_ClosePermCertDB;
+__CERT_DecodeDERCertificate;
+__CERT_TraversePermCertsForNickname;
+__CERT_TraversePermCertsForSubject;
+__PBE_CreateContext;
+__PBE_DestroyContext;
+__PBE_GenerateBits;
+ATOB_ConvertAsciiToItem;
+CERT_AddCertToListTail;
+CERT_CertListFromCert;
+CERT_DestroyCertArray;
+CERT_FindCertByDERCert;
+CERT_FindCertByIssuerAndSN;
+CERT_FindSMimeProfile;
+CERT_ImportCerts;
+CERT_NewCertList;
+CERT_OpenCertDBFilename;
+CERT_SaveSMimeProfile;
+CERT_VerifyCert;
+DER_GetInteger;
+DER_TimeToUTCTime;
+DER_UTCTimeToTime;
+PK11_AlgtagToMechanism;
+PK11_BlockData;
+PK11_CreatePBEAlgorithmID;
+PK11_DestroyObject;
+PK11_ExportEncryptedPrivateKeyInfo;
+PK11_ExportPrivateKeyInfo;
+PK11_FindCertAndKeyByRecipientList;
+PK11_FindCertAndKeyByRecipientListNew;
+PK11_FindCertInSlot;
+PK11_FindPrivateKeyFromCert;
+PK11_FortezzaMapSig;
+PK11_GetKeyLength;
+PK11_GetKeyStrength;
+PK11_ImportCertForKeyToSlot;
+PK11_ImportEncryptedPrivateKeyInfo;
+PK11_ImportPrivateKeyInfo;
+PK11_MapPBEMechanismToCryptoMechanism;
+PK11_PBEKeyGen;
+PK11_ParamFromAlgid;
+PK11_ParamToAlgid;
+PK11_TraverseCertsForNicknameInSlot;
+PK11_TraverseCertsForSubjectInSlot;
+PORT_ArenaGrow;
+PORT_ArenaMark;
+PORT_ArenaRelease;
+PORT_ArenaStrdup;
+PORT_ArenaUnmark;
+PORT_UCS2_ASCIIConversion;
+PORT_UCS2_UTF8Conversion;
+SECITEM_AllocItem;
+SECKEY_CopyEncryptedPrivateKeyInfo;
+SECKEY_CopyPrivateKeyInfo;
+SECKEY_DestroyEncryptedPrivateKeyInfo;
+SECKEY_DestroyPrivateKeyInfo;
+SECOID_CompareAlgorithmID;
+SECOID_CopyAlgorithmID;
+SECOID_DestroyAlgorithmID;
+SECOID_FindOID;
+SECOID_FindOIDByTag;
+SECOID_FindOIDTag;
+SECOID_SetAlgorithmID;
+SEC_ASN1DecodeInteger;
+SEC_ASN1DecodeItem;
+SEC_ASN1DecoderClearFilterProc;
+SEC_ASN1DecoderClearNotifyProc;
+SEC_ASN1DecoderFinish;
+SEC_ASN1DecoderSetFilterProc;
+SEC_ASN1DecoderSetNotifyProc;
+SEC_ASN1DecoderStart;
+SEC_ASN1DecoderUpdate;
+SEC_ASN1Encode;
+SEC_ASN1EncodeInteger;
+SEC_ASN1EncodeItem;
+SEC_ASN1EncoderClearNotifyProc;
+SEC_ASN1EncoderClearStreaming;
+SEC_ASN1EncoderClearTakeFromBuf;
+SEC_ASN1EncoderFinish;
+SEC_ASN1EncoderSetNotifyProc;
+SEC_ASN1EncoderSetStreaming;
+SEC_ASN1EncoderSetTakeFromBuf;
+SEC_ASN1EncoderStart;
+SEC_ASN1EncoderUpdate;
+SEC_ASN1LengthLength;
+SEC_PKCS5GetCryptoAlgorithm;
+SEC_PKCS5GetKeyLength;
+SEC_PKCS5GetPBEAlgorithm;
+SEC_PKCS5IsAlgorithmPBEAlg;
+SEC_SignData;
+SGN_CompareDigestInfo;
+SGN_CopyDigestInfo;
+SGN_CreateDigestInfo;
+SGN_DestroyDigestInfo;
+SGN_Digest;
+VFY_VerifyData;
+VFY_VerifyDigest;
+;+#
+;+# Data objects
+;+#
+;+# Don't export these DATA symbols on Windows because they don't work right.
+;+# Use the SEC_ASN1_GET / SEC_ASN1_SUB / SEC_ASN1_XTRN macros to access them.
+;;CERT_CrlTemplate DATA ;
+;;CERT_SignedDataTemplate DATA ;
+;;CERT_CertificateTemplate DATA ;
+;;CERT_CertificateRequestTemplate DATA ;
+;;CERT_IssuerAndSNTemplate DATA ;
+;;CERT_SetOfSignedCrlTemplate DATA ;
+;;SECKEY_DSAPublicKeyTemplate DATA ;
+;;SECKEY_EncryptedPrivateKeyInfoTemplate DATA ;
+;;SECKEY_PointerToEncryptedPrivateKeyInfoTemplate DATA ;
+;;SECKEY_PointerToPrivateKeyInfoTemplate DATA ;
+;;SECKEY_PrivateKeyInfoTemplate DATA ;
+;;SECKEY_RSAPublicKeyTemplate DATA ;
+;;SECOID_AlgorithmIDTemplate DATA ;
+;;SEC_AnyTemplate DATA ;
+;;SEC_BMPStringTemplate DATA ;
+;;SEC_BitStringTemplate DATA ;
+;;SEC_GeneralizedTimeTemplate DATA ;
+;;SEC_IA5StringTemplate DATA ;
+;;SEC_IntegerTemplate DATA ;
+;;SEC_ObjectIDTemplate DATA ;
+;;SEC_OctetStringTemplate DATA ;
+;;SEC_PointerToAnyTemplate DATA ;
+;;SEC_PointerToOctetStringTemplate DATA ;
+;;SEC_SetOfAnyTemplate DATA ;
+;;SEC_UTCTimeTemplate DATA ;
+;;sgn_DigestInfoTemplate DATA ;
+NSS_Get_CERT_CrlTemplate;
+NSS_Get_CERT_SignedDataTemplate;
+NSS_Get_CERT_CertificateTemplate;
+NSS_Get_CERT_CertificateRequestTemplate;
+NSS_Get_CERT_IssuerAndSNTemplate;
+NSS_Get_CERT_SetOfSignedCrlTemplate;
+NSS_Get_SECKEY_DSAPublicKeyTemplate;
+NSS_Get_SECKEY_EncryptedPrivateKeyInfoTemplate;
+NSS_Get_SECKEY_PointerToEncryptedPrivateKeyInfoTemplate;
+NSS_Get_SECKEY_PointerToPrivateKeyInfoTemplate;
+NSS_Get_SECKEY_PrivateKeyInfoTemplate;
+NSS_Get_SECKEY_RSAPublicKeyTemplate;
+NSS_Get_SECOID_AlgorithmIDTemplate;
+NSS_Get_SEC_AnyTemplate;
+NSS_Get_SEC_BMPStringTemplate;
+NSS_Get_SEC_BitStringTemplate;
+NSS_Get_SEC_GeneralizedTimeTemplate;
+NSS_Get_SEC_IA5StringTemplate;
+NSS_Get_SEC_IntegerTemplate;
+NSS_Get_SEC_ObjectIDTemplate;
+NSS_Get_SEC_OctetStringTemplate;
+NSS_Get_SEC_PointerToAnyTemplate;
+NSS_Get_SEC_PointerToOctetStringTemplate;
+NSS_Get_SEC_SetOfAnyTemplate;
+NSS_Get_SEC_UTCTimeTemplate;
+NSS_Get_sgn_DigestInfoTemplate;
+;+# commands
+CERT_DecodeBasicConstraintValue;
+CERT_DecodeOidSequence;
+CERT_DecodeUserNotice;
+CERT_DecodeCertificatePoliciesExtension;
+CERT_DestroyCertificatePoliciesExtension;
+CERT_FindCertByNicknameOrEmailAddr;
+CERT_FindCertByNickname;
+CERT_GenTime2FormattedAscii;
+CERT_Hexify;
+CERT_CompareName;
+PK11SDR_Encrypt;
+PK11SDR_Decrypt;
+NSSBase64Decoder_Create;
+NSSBase64Decoder_Destroy;
+NSSBase64Decoder_Update;
+NSSBase64Encoder_Create;
+NSSBase64Encoder_Destroy;
+NSSBase64Encoder_Update;
+;+#PK11_DoPassword;
+;+#PK11_FindKeyByKeyID;
+PK11_InitPin;
+PK11_NeedUserInit;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.2.1 {       # NSS 3.2.1 release
+;+    global:
+CERT_AddRDN;
+CERT_CreateRDN;
+CERT_CreateAVA;
+CERT_CreateName;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.3 { 	# NSS 3.3. release
+;+    global:
+CERT_CheckCertUsage;
+CERT_FindCertIssuer;
+PK11_GetModule;
+SECKEY_CreateDHPrivateKey;
+SECKEY_GetPublicKeyType;
+SECMOD_AddNewModule;
+;+#
+;+# The following symbols are exported only to make JSS work.
+;+# These are still private!!!
+;+#
+CERT_DisableOCSPChecking;
+CERT_DisableOCSPDefaultResponder;
+CERT_EnableOCSPDefaultResponder;
+CERT_GetCertTimes;
+CERT_ImportCAChainTrusted;
+CERT_ImportCRL;
+CERT_IsCACert;
+CERT_IsCADERCert;
+CERT_SetOCSPDefaultResponder;
+PBE_CreateContext;
+PBE_DestroyContext;
+PBE_GenerateBits;
+PK11_CheckSSOPassword;
+PK11_CopySymKeyForSigning;
+PK11_DeleteTokenCertAndKey;
+PK11_DEREncodePublicKey;
+PK11_ExtractKeyValue;
+PK11_FindCertsFromNickname;
+PK11_FindKeyByKeyID;
+PK11_GetIVLength;
+PK11_GetKeyData;
+PK11_GetKeyType;
+PK11_GetLowLevelKeyIDForCert;
+PK11_GetLowLevelKeyIDForPrivateKey;
+PK11_GetSlotPWValues;
+PK11_ImportCertForKey;
+PK11_ImportDERCertForKey;
+PK11_ImportDERPrivateKeyInfo;
+PK11_ImportSymKey;
+PK11_IsLoggedIn;
+PK11_KeyForDERCertExists;
+PK11_KeyForCertExists;
+PK11_ListPrivateKeysInSlot;
+PK11_ListCertsInSlot;
+PK11_Logout;
+PK11_NeedPWInit;
+PK11_MakeIDFromPubKey;
+PK11_PQG_DestroyParams;
+PK11_PQG_DestroyVerify;
+PK11_PQG_GetBaseFromParams;
+PK11_PQG_GetCounterFromVerify;
+PK11_PQG_GetHFromVerify;
+PK11_PQG_GetPrimeFromParams;
+PK11_PQG_GetSeedFromVerify;
+PK11_PQG_GetSubPrimeFromParams;
+PK11_PQG_NewParams;
+PK11_PQG_NewVerify;
+PK11_PQG_ParamGen;
+PK11_PQG_ParamGenSeedLen;
+PK11_PQG_VerifyParams;
+PK11_ReferenceSlot;
+PK11_SeedRandom;
+PK11_UnwrapPrivKey;
+PK11_VerifyRecover;
+PK11_WrapPrivKey;
+SEC_CertNicknameConflict;
+SEC_PKCS5GetIV;
+SECMOD_DeleteInternalModule;
+SECMOD_DestroyModule;
+SECMOD_GetDefaultModuleList;
+SECMOD_GetDefaultModuleListLock;
+SECMOD_GetInternalModule;
+SECMOD_GetReadLock;
+SECMOD_ReferenceModule;
+SECMOD_ReleaseReadLock;
+SECKEY_AddPrivateKeyToListTail;
+SECKEY_EncodeDERSubjectPublicKeyInfo;
+SECKEY_ExtractPublicKey;
+SECKEY_DestroyPrivateKeyList;
+SECKEY_GetPrivateKeyType;
+SECKEY_HashPassword;
+SECKEY_ImportDERPublicKey;
+SECKEY_NewPrivateKeyList;
+SECKEY_RemovePrivateKeyListNode;
+VFY_EndWithSignature;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.3.1 { 	# NSS 3.3.1 release
+;+    global:
+;+#
+;+# The following symbols are exported only to make libsmime3.so work.
+;+# These are still private!!!
+;+#
+PK11_CreatePBEParams;
+PK11_DestroyPBEParams;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.4 { 	# NSS 3.4 release
+;+    global:
+SECMOD_AddNewModuleEx;
+SECMOD_DeleteModule;
+SECMOD_FreeModuleSpecList;
+SECMOD_GetModuleSpecList;
+SECMOD_LoadModule;
+SECMOD_LoadUserModule;
+SECMOD_UnloadUserModule;
+SECMOD_UpdateModule;
+;+# for PKCS #12
+PK11_RawPBEKeyGen;
+;+# for PSM
+__CERT_AddTempCertToPerm;
+CERT_AddOKDomainName;
+CERT_CopyName;
+CERT_CreateSubjectCertList;
+CERT_DecodeAVAValue;
+;+#CERT_DecodeCertFromPackage;
+CERT_DecodeGeneralName;
+CERT_DecodeTrustString;
+CERT_DerNameToAscii;
+CERT_EncodeGeneralName;
+CERT_FilterCertListByCANames;
+CERT_FilterCertListByUsage;
+CERT_FindCertExtension;
+CERT_FindKeyUsageExtension;
+CERT_FindUserCertByUsage;
+CERT_FindUserCertsByUsage;
+CERT_GetCertChainFromCert;
+CERT_GetOCSPAuthorityInfoAccessLocation;
+CERT_KeyFromDERCrl;
+CERT_MakeCANickname;
+CERT_NicknameStringsFromCertList;
+CERT_VerifySignedData;
+DER_Encode;
+HASH_Begin;
+HASH_Create;
+HASH_Destroy;
+HASH_End;
+HASH_ResultLen;
+HASH_Update;
+NSSBase64_DecodeBuffer;   # from Stan
+NSSBase64_EncodeItem;   # from Stan
+PK11_GetKeyGen;
+PK11_GetMinimumPwdLength;
+PK11_GetNextSafe;
+PK11_GetPadMechanism;
+PK11_GetSlotInfo;
+PK11_HasRootCerts;
+PK11_IsDisabled;
+PK11_LoadPrivKey;
+PK11_LogoutAll;
+PK11_MechanismToAlgtag;
+PK11_ResetToken;
+PK11_TraverseSlotCerts;
+SEC_ASN1Decode;
+SECKEY_CopySubjectPublicKeyInfo;
+SECMOD_CreateModule;
+SECMOD_FindModule;
+SECMOD_FindSlot;
+SECMOD_PubCipherFlagstoInternal;
+SECMOD_PubMechFlagstoInternal;
+;;CERT_NameTemplate DATA ;
+;;CERT_SubjectPublicKeyInfoTemplate DATA ;
+;;SEC_BooleanTemplate DATA ;
+;;SEC_NullTemplate DATA ;
+;;SEC_SignedCertificateTemplate DATA ;
+;;SEC_UTF8StringTemplate DATA ;
+NSS_Get_CERT_NameTemplate;
+NSS_Get_CERT_SubjectPublicKeyInfoTemplate;
+NSS_Get_SEC_BooleanTemplate;
+NSS_Get_SEC_NullTemplate;
+NSS_Get_SEC_SignedCertificateTemplate;
+NSS_Get_SEC_UTF8StringTemplate;
+;+# for JSS
+PK11_DeleteTokenPrivateKey;
+PK11_DeleteTokenPublicKey;
+PK11_DeleteTokenSymKey;
+PK11_GetNextSymKey;
+PK11_GetPQGParamsFromPrivateKey;
+PK11_GetPrivateKeyNickname;
+PK11_GetPublicKeyNickname;
+PK11_GetSymKeyNickname;
+PK11_ImportDERPrivateKeyInfoAndReturnKey;
+PK11_ImportPrivateKeyInfoAndReturnKey;
+PK11_ImportPublicKey;
+PK11_ImportSymKeyWithFlags;
+PK11_ListFixedKeysInSlot;
+PK11_ListPrivKeysInSlot;
+PK11_ListPublicKeysInSlot;
+PK11_ProtectedAuthenticationPath;
+PK11_SetPrivateKeyNickname;
+PK11_SetPublicKeyNickname;
+PK11_SetSymKeyNickname;
+SECKEY_DecodeDERSubjectPublicKeyInfo;
+SECKEY_DestroyPublicKeyList;
+;+# for debugging
+nss_DumpCertificateCacheInfo;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.5 { 	# cert creation APIs used by certutil
+;+    global:
+CERT_AddExtension;
+CERT_CopyRDN;
+CERT_CreateCertificate;
+CERT_CreateValidity;
+CERT_DestroyValidity;
+CERT_EncodeAndAddBitStrExtension;
+CERT_EncodeAuthKeyID;
+CERT_EncodeBasicConstraintValue;
+CERT_EncodeCRLDistributionPoints;
+CERT_FinishExtensions;
+CERT_StartCertExtensions;
+DER_AsciiToTime;
+PK11_ImportCert;
+PORT_Strdup;
+SECMOD_CanDeleteInternalModule;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.6 { 	# NSS 3.6 release
+;+    global:
+CERT_AddOCSPAcceptableResponses;
+CERT_CompleteCRLDecodeEntries;
+CERT_CreateOCSPCertID;
+CERT_CreateOCSPRequest;
+CERT_DecodeDERCrlWithFlags;
+CERT_DecodeOCSPResponse;
+CERT_DestroyOCSPCertID;
+CERT_DestroyOCSPRequest;
+CERT_EncodeOCSPRequest;
+CERT_FilterCertListForUserCerts;
+CERT_GetOCSPResponseStatus;
+CERT_GetOCSPStatusForCertID;
+CERT_IsUserCert;
+CERT_RemoveCertListNode;
+CERT_VerifyCACertForUsage;
+CERT_VerifyCertificate;
+CERT_VerifyCertificateNow;
+CERT_VerifyOCSPResponseSignature;
+PK11_ConvertSessionPrivKeyToTokenPrivKey;
+PK11_ConvertSessionSymKeyToTokenSymKey;
+PK11_GetModInfo;
+PK11_GetPBEIV;
+PK11_ImportCRL;
+PK11_ImportDERCert;
+PK11_PubUnwrapSymKeyWithFlags;
+PK11_SaveContextAlloc;
+PK11_TokenKeyGen;
+SEC_QuickDERDecodeItem;
+SECKEY_CopyPublicKey;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.7 { 	# NSS 3.7 release
+;+    global:
+CERT_CRLCacheRefreshIssuer;
+CERT_DestroyOCSPResponse;
+CERT_EncodeAltNameExtension;
+CERT_FindCertBySubjectKeyID;
+CERT_FindSubjectKeyIDExtension;
+CERT_GetFirstEmailAddress;
+CERT_GetNextEmailAddress;
+CERT_VerifySignedDataWithPublicKey;
+CERT_VerifySignedDataWithPublicKeyInfo;
+PK11_WaitForTokenEvent;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.7.1 { 	# NSS 3.7.1 release
+;+    global:
+PK11_TokenRefresh;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.8 { 	# NSS 3.8 release
+;+    global:
+CERT_IsRootDERCert;
+HASH_GetHashObjectByOidTag;
+HASH_GetHashTypeByOidTag;
+PK11_GetDefaultArray;
+PK11_GetDefaultFlags;
+PK11_GetDisabledReason;
+PK11_UpdateSlotAttribute;
+PK11_UserEnableSlot;
+PK11_UserDisableSlot;
+SECITEM_ItemsAreEqual;
+SECKEY_CreateECPrivateKey;
+SECKEY_PublicKeyStrengthInBits;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.9 { 	# NSS 3.9 release
+;+    global:
+CERT_DestroyOidSequence;
+CERT_GetOidString;
+;;CERT_TimeChoiceTemplate DATA ;
+DER_DecodeTimeChoice;
+DER_EncodeTimeChoice;
+DSAU_DecodeDerSigToLen;
+DSAU_EncodeDerSigWithLen;
+NSS_Get_CERT_TimeChoiceTemplate;
+PK11_DeriveWithFlagsPerm;
+PK11_ExportEncryptedPrivKeyInfo;
+PK11_FindSlotsByNames;
+PK11_GetSymKeyType;
+PK11_MoveSymKey;
+PK11_PubDeriveWithKDF;
+PK11_PubUnwrapSymKeyWithFlagsPerm;
+PK11_UnwrapSymKeyWithFlagsPerm;
+SECITEM_ArenaDupItem;
+SECMOD_GetDBModuleList;
+SECMOD_GetDeadModuleList;
+SEC_ASN1DecoderAbort;
+SEC_ASN1EncoderAbort;
+SEC_DupCrl;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.9.2 { 	# NSS 3.9.2 release
+;+    global:
+NSS_IsInitialized;
+PK11_DestroyGenericObject;
+PK11_DestroyGenericObjects;
+PK11_FindGenericObjects;
+PK11_GetNextGenericObject;
+PK11_GetPrevGenericObject;
+PK11_LinkGenericObject;
+PK11_ReadRawAttribute;
+PK11_UnlinkGenericObject;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.9.3 { 	# NSS 3.9.3 release
+;+    global:
+PK11_GetCertFromPrivateKey;
+PK11_PrivDecryptPKCS1;
+PK11_PubEncryptPKCS1;
+SECMOD_CancelWait;
+SECMOD_HasRemovableSlots;
+SECMOD_UpdateSlotList;
+SECMOD_WaitForAnyTokenEvent;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.10 { 	# NSS 3.10 release
+;+    global:
+CERT_CacheCRL;
+CERT_DecodeAltNameExtension;
+CERT_DecodeAuthInfoAccessExtension;
+CERT_DecodeAuthKeyID;
+CERT_DecodeCRLDistributionPoints;
+CERT_DecodeNameConstraintsExtension;
+CERT_DecodePrivKeyUsagePeriodExtension;
+CERT_DestroyUserNotice;
+CERT_FinishCertificateRequestAttributes;
+CERT_GetCertificateNames;
+CERT_GetCertificateRequestExtensions;
+CERT_GetNextGeneralName;
+CERT_GetNextNameConstraint;
+CERT_GetPrevGeneralName;
+CERT_GetPrevNameConstraint;
+CERT_MergeExtensions;
+CERT_StartCertificateRequestAttributes;
+CERT_StartCRLEntryExtensions;
+CERT_StartCRLExtensions;
+CERT_UncacheCRL;
+HASH_Clone;
+HASH_HashBuf;
+HASH_ResultLenByOidTag;
+HASH_ResultLenContext;
+SEC_GetSignatureAlgorithmOidTag;
+SECKEY_CacheStaticFlags;
+SECOID_AddEntry;
+;+#
+;+# Data objects
+;+#
+;+# Don't export these DATA symbols on Windows because they don't work right.
+;+# Use the SEC_ASN1_GET / SEC_ASN1_SUB / SEC_ASN1_XTRN macros to access them.
+;;CERT_SequenceOfCertExtensionTemplate DATA ;
+;;CERT_SignedCrlTemplate DATA ;
+NSS_Get_CERT_SequenceOfCertExtensionTemplate;
+NSS_Get_CERT_SignedCrlTemplate;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.10.2 { 	# NSS 3.10.2 release
+;+    global:
+PK11_TokenKeyGenWithFlags;
+PK11_GenerateKeyPairWithFlags;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.11 { 	# NSS 3.11 release
+;+    global:
+CERT_CompareValidityTimes;
+PK11_CopyTokenPrivKeyToSessionPrivKey;
+PK11_FreeSlotListElement;
+PK11_GenerateRandomOnSlot;
+PK11_GetSymKeyUserData;
+PK11_MapSignKeyType;
+PK11_SetSymKeyUserData;
+SECMOD_CloseUserDB;
+SECMOD_HasRootCerts;
+SECMOD_OpenUserDB;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.11.1 {
+;+    global:
+NSS_RegisterShutdown;
+NSS_UnregisterShutdown;
+SEC_ASN1EncodeUnsignedInteger;
+SEC_RegisterDefaultHttpClient;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.11.2 {
+;+    global:
+SECKEY_SignatureLen;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.11.7 {
+;+    global:
+CERT_SetOCSPFailureMode;
+CERT_OCSPCacheSettings;
+CERT_ClearOCSPCache;
+DER_GeneralizedDayToAscii;
+DER_TimeChoiceDayToAscii;
+DER_TimeToGeneralizedTime;
+DER_TimeToGeneralizedTimeArena;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.11.9 {
+;+    global:
+PK11_UnconfigurePKCS11;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12 { 	# NSS 3.12 release
+;+    global:
+CERT_CheckNameSpace;
+CERT_EncodeCertPoliciesExtension;
+CERT_EncodeInfoAccessExtension;
+CERT_EncodeInhibitAnyExtension;
+CERT_EncodeNoticeReference;
+CERT_EncodePolicyConstraintsExtension;
+CERT_EncodePolicyMappingExtension;
+CERT_EncodeSubjectKeyID;
+CERT_EncodeUserNotice;
+CERT_FindCRLEntryReasonExten;
+CERT_FindCRLNumberExten;
+CERT_FindNameConstraintsExten;
+CERT_GetClassicOCSPDisabledPolicy;
+CERT_GetClassicOCSPEnabledHardFailurePolicy;
+CERT_GetClassicOCSPEnabledSoftFailurePolicy;
+CERT_GetPKIXVerifyNistRevocationPolicy;
+CERT_GetUsePKIXForValidation;
+CERT_GetValidDNSPatternsFromCert;
+CERT_NewTempCertificate;
+CERT_SetOCSPTimeout;
+CERT_SetUsePKIXForValidation;
+CERT_PKIXVerifyCert;
+HASH_GetType;
+NSS_InitWithMerge;
+PK11_CreateMergeLog;
+PK11_CreateGenericObject;
+PK11_CreatePBEV2AlgorithmID;
+PK11_DestroyMergeLog;
+PK11_GenerateKeyPairWithOpFlags;
+PK11_GetAllSlotsForCert;
+PK11_GetPBECryptoMechanism;
+PK11_IsRemovable;
+PK11_MergeTokens;
+PK11_WriteRawAttribute;
+SECKEY_ECParamsToBasePointOrderLen;
+SECKEY_ECParamsToKeySize;
+SECMOD_DeleteModuleEx;
+SEC_GetRegisteredHttpClient;
+SEC_PKCS5IsAlgorithmPBEAlgTag;
+VFY_CreateContextDirect;
+VFY_CreateContextWithAlgorithmID;
+VFY_VerifyDataDirect;
+VFY_VerifyDataWithAlgorithmID;
+VFY_VerifyDigestDirect;
+VFY_VerifyDigestWithAlgorithmID;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.1 { 	# NSS 3.12.1 release
+;+    global:
+CERT_NameToAsciiInvertible;
+PK11_FindCertFromDERCertItem;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.3 { 	# NSS 3.12.3 release
+;+    global:
+CERT_CompareCerts;
+CERT_RegisterAlternateOCSPAIAInfoCallBack;
+PK11_GetSymKeyHandle;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.4 { 	# NSS 3.12.4 release
+;+    global:
+PK11_IsInternalKeySlot;
+SECMOD_OpenNewSlot;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.5 { 	# NSS 3.12.5 release
+;+    global:
+CERT_AddCertToListSorted;
+NSS_InitContext;
+NSS_ShutdownContext;
+SECMOD_GetDefaultModDBFlag;
+SECMOD_GetSkipFirstFlag;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.6 { 	# NSS 3.12.6 release
+;+    global:
+CERT_CacheOCSPResponseFromSideChannel;
+CERT_DistNamesFromCertList;
+CERT_DupDistNames;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.7 { 	# NSS 3.12.7 release
+;+    global:
+CERT_GetConstrainedCertificateNames;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.9 {  # NSS 3.12.9 release
+;+    global:
+CERT_FindCertByNicknameOrEmailAddrForUsage;
+PK11_DeriveWithTemplate;
+PK11_FindCertsFromEmailAddress;
+PK11_KeyGenWithTemplate;
+SECMOD_RestartModules;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.10 {  # NSS 3.12.10 release
+;+    global:
+CERT_AllocCERTRevocationFlags;
+CERT_DestroyCERTRevocationFlags;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.13 { 	# NSS 3.13 release
+;+    global:
+;;SECKEY_RSAPSSParamsTemplate DATA ;
+NSS_Get_SECKEY_RSAPSSParamsTemplate;
+NSS_GetVersion;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.13.2 { 	# NSS 3.13.2 release
+;+    global:
+PK11_ImportEncryptedPrivateKeyInfoAndReturnKey;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.14 { 	# NSS 3.14 release
+;+    global:
+CERT_CheckOCSPStatus;
+CERT_DecodeOCSPRequest;
+CERT_GetEncodedOCSPResponse;
+PK11_GetBestSlotWithAttributes;
+PK11_GetBestSlotMultipleWithAttributes;
+PK11_PQG_ParamGenV2;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.14.1 {    # NSS 3.14.1 release
+;+    global:
+CERT_CreateEncodedOCSPErrorResponse;
+CERT_CreateEncodedOCSPSuccessResponse;
+CERT_CreateOCSPSingleResponseGood;
+CERT_CreateOCSPSingleResponseUnknown;
+CERT_CreateOCSPSingleResponseRevoked;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.14.3 { 	# NSS 3.14.3 release
+;+    global:
+PK11_SignWithSymKey;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.15 { 	# NSS 3.15 release
+;+    global:
+CERT_EncodeNameConstraintsExtension;
+PK11_Decrypt;
+PK11_Encrypt;
+CERT_PostOCSPRequest;
+CERT_AddCertToListHead;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.15.4 { 	# NSS 3.15.4 release
+;+    global:
+CERT_ForcePostMethodForOCSP;
+CERT_GetSubjectNameDigest;
+CERT_GetSubjectPublicKeyDigest;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.16.1 { 	# NSS 3.16.1 release
+;+    global:
+PK11_ExportDERPrivateKeyInfo;
+PK11_ExportPrivKeyInfo;
+SECMOD_InternaltoPubMechFlags;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.16.2 { 	# NSS 3.16.2 release
+;+    global:
+CERT_AddExtensionByOID;
+CERT_GetGeneralNameTypeFromString;
+PK11_PubEncrypt;
+PK11_PrivDecrypt;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.18 { 	# NSS 3.18 release
+;+    global:
+__PK11_SetCertificateNickname;
+SEC_CheckCrlTimes;
+SEC_GetCrlTimes;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.19 { 	# NSS 3.19 release
+;+    global:
+CERT_GetImposedNameConstraints;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.19.1 { 	# NSS 3.19.1 release
+;+    global:
+SECKEY_BigIntegerBitLength;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.21 { 	# NSS 3.21 release
+;+    global:
+NSS_OptionGet;
+NSS_OptionSet;
+SECMOD_CreateModuleEx;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.22 { 	# NSS 3.22 release
+;+    global:
+PK11_SignWithMechanism;
+PK11_VerifyWithMechanism;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.30 { 	# NSS 3.30 release
+;+    global:
+CERT_CompareAVA;
+PK11_HasAttributeSet;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.31 { 	# NSS 3.31 release
+;+    global:
+CERT_GetCertIsPerm;
+CERT_GetCertIsTemp;
+PK11_FindCertFromURI;
+PK11_FindCertsFromURI;
+PK11_GetModuleURI;
+PK11_GetTokenURI;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.33 { 	# NSS 3.33 release
+;+    global:
+CERT_FindCertByIssuerAndSNCX;
+CERT_FindCertByNicknameOrEmailAddrCX;
+CERT_FindCertByNicknameOrEmailAddrForUsageCX;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.34 { 	# NSS 3.34 release
+;+    global:
+PK11_CreateManagedGenericObject;
+SGN_NewContextWithAlgorithmID;
+SEC_SignDataWithAlgorithmID;
+SEC_DerSignDataWithAlgorithmID;
+SEC_CreateSignatureAlgorithmParameters;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.39 { 	# NSS 3.39 release
+;+    global:
+CERT_GetCertKeyType;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.43 { 	# NSS 3.43 release
+;+    global:
+HASH_GetHashOidTagByHashType;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.44 { 	# NSS 3.44 release
+;+    global:
+CERT_GetCertificateDer;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.45 { 	# NSS 3.45 release
+;+    global:
+PK11_FindRawCertsWithSubject;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.47 { 	# NSS 3.47 release
+;+    global:
+PK11_GetCertsMatchingPrivateKey;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.52 { 	# NSS 3.52 release
+;+    global:
+_PK11_ContextGetAEADSimulation;
+_PK11_ContextSetAEADSimulation;
+PK11_AEADOp;
+PK11_AEADRawOp;
+PK11_GetObjectHandle;
+PK11_ReadRawAttributes;
+PK11_SymKeysToSameSlot;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.53 { 	# NSS 3.53 release
+;+    global:
+SECMOD_GetSystemFIPSEnabled;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.55 { 	# NSS 3.55 release
+;+    global:
+PK11_FindEncodedCertInSlot;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.58 { 	# NSS 3.58 release
+;+    global:
+PK11_HPKE_DestroyContext;
+PK11_HPKE_Deserialize;
+PK11_HPKE_ExportSecret;
+PK11_HPKE_GetEncapPubKey;
+PK11_HPKE_NewContext;
+PK11_HPKE_Open;
+PK11_HPKE_Seal;
+PK11_HPKE_Serialize;
+PK11_HPKE_SetupS;
+PK11_HPKE_SetupR;
+PK11_HPKE_ValidateParameters;
+PK11_ImportDataKey;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.59 { 	# NSS 3.59 release
+;+    global:
+CERT_AddCertToListHeadWithData;
+CERT_AddCertToListTailWithData;
+PK11_PubWrapSymKeyWithMechanism;
+PK11_PubUnwrapSymKeyWithMechanism;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.62 { 	# NSS 3.62 release
+;+    global:
+PK11_HPKE_ExportContext;
+PK11_HPKE_ImportContext;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.65 { 	# NSS 3.65 release
+;+    global:
+HASH_GetHMACOidTagByHashOidTag;
+PK11_CreateContextByPubKey;
+PK11_CreateContextByPrivKey;
+PK11_ExportEncryptedPrivKeyInfoV2;
+PK11_ExportEncryptedPrivateKeyInfoV2;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.66 { 	# NSS 3.66 release
+;+    global:
+PK11_ContextGetFIPSStatus;
+PK11_ObjectGetFIPSStatus;
+PK11_SlotGetLastFIPSStatus;
+;+    local:
+;+       *;
+;+};

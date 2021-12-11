@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <title>Long load</title>
+  <link rel="stylesheet" charset="UTF-8" type="text/css" media="screen" href="simple.css"/>
+  <style type="text/css">
+  body {
+    background: white;
+  }
+
+  div {
+    font-size: 4em;
+  }
+
+  div > span {
+     text-decoration: underline;
+  }
+  </style>
+</head>
+<body>
+  Time passes:
+  <script type="application/javascript">
+    "use strict";
+    for (let i = 0; i < 5000; i++) {
+      document.write("<br>...");
+    }
+  </script>
+</body>
+</html>

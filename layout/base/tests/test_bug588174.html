@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=569520
+-->
+<head>
+  <title>Test for Bug 569520</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=569520">Mozilla Bug 569520</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 569520 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+var start = window.performance.now();
+var firstListenerArg;
+var secondListenerArg;
+var thirdListenerTime;
+
+// callback arg is in the same timeline as performance.now()
+function thirdListener(t) {
+  thirdListenerTime = t;
+
+  ok(secondListenerArg >= firstListenerArg, // callback args from consecutive requestAnimationFrame
+     "Second listener should fire after first listener");
+
+  ok(thirdListenerTime >= secondListenerArg,
+     "Third listener should fire after second listener");
+
+  ok(firstListenerArg >= start, "First listener should fire after start");
+
+  SimpleTest.finish();
+}
+
+// callback arg is from requestAnimationFrame and comparable to performance.now()
+function secondListener(t) {
+  secondListenerArg = t;
+  requestAnimationFrame(thirdListener);
+}
+
+function firstListener(t) {
+  firstListenerArg = t;
+  requestAnimationFrame(secondListener);
+}
+
+addLoadEvent(function() {
+    setTimeout(function() {
+      requestAnimationFrame(firstListener);
+    }, 100);
+  });
+
+
+
+
+</script>
+</pre>
+</body>
+</html>

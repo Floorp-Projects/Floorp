@@ -1,0 +1,46 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.release_version_bump:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: Release Promotion version tag for buildN
+    run-on-projects: []
+    shipping-phase: promote
+    worker-type: tree
+    worker:
+        implementation: treescript
+        tags: ['buildN']
+        bump: false
+        dontbuild: true
+        push:
+            by-project:
+                mozilla-(beta|release|esr.*): true
+                maple: true
+                default: false
+
+
+jobs:
+    firefox:
+        name: firefox-tag-buildN
+        shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(TagBuild)
+            tier: 1
+            kind: build
+
+    devedition:
+        name: devedition-tag-buildN
+        shipping-product: devedition
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(TagBuild)
+            tier: 1
+            kind: build

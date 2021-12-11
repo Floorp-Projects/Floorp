@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435293
+-->
+<head>
+  <title>Test for Bug 435293</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <style>
+    .test {
+      background: green;
+      height: 100px;
+      width: 100px;
+    }
+    #test1 {
+      -moz-transform: scalex(0.5);
+    }
+    #test2 {
+      -moz-transform: scaley(0.5);
+    }
+    #test3 {
+      -moz-transform: scale(0.5, 0.5);
+    }
+    #test4 {
+      -moz-transform: scale(0.5, 0.5, 0.5);
+    }
+    #test5 {
+      -moz-transform: scale(80%, none);
+    }
+    #test6 {
+      -moz-transform: scale(640000, 0.0000000000000000001);
+    }
+    #test7 {
+      -moz-transform: scale(2em, 4px);
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435293">Mozilla Bug 435293</a>
+<p id="display"></p>
+<div id="content">
+  <div id="test1" class="test">
+    test
+  </div>
+  <p id="test2" class="test">
+    test
+  </p>
+  <div id="test3" class="test">
+    test
+  </div>
+  <div id="test4" class="test">
+    test
+  </div>
+  <div id="test5" class="test">
+    test
+  </div>
+  <div id="test6" class="test">
+    test
+  </div>
+  <div id="test7" class="test">
+    test
+  </div>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+runtests();
+
+function runtests() {
+  var style = window.getComputedStyle(document.getElementById("test1"));
+  is(style.getPropertyValue("-moz-transform"), "matrix(0.5, 0, 0, 1, 0, 0)",
+     "Scalex proper matrix is applied");
+
+  style = window.getComputedStyle(document.getElementById("test2"));
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, 0, 0.5, 0, 0)",
+     "Scaley proper matrix is applied");
+
+  style = window.getComputedStyle(document.getElementById("test3"));
+  is(style.getPropertyValue("-moz-transform"), "matrix(0.5, 0, 0, 0.5, 0, 0)",
+     "Scale proper matrix is applied");
+
+  style = window.getComputedStyle(document.getElementById("test4"));
+  is(style.getPropertyValue("-moz-transform"), "none",
+     "Three dimensional scale should be ignored");
+
+  style = window.getComputedStyle(document.getElementById("test5"));
+  is(style.getPropertyValue("-moz-transform"), "none",
+     "Percent values in scale should be ignored");
+
+  style = window.getComputedStyle(document.getElementById("test6"));
+  is(style.getPropertyValue("-moz-transform"), "matrix(640000, 0, 0, 1e-19, 0, 0)",
+     "Ensure wacky values are accepted");
+
+  style = window.getComputedStyle(document.getElementById("test7"));
+  is(style.getPropertyValue("-moz-transform"), "none",
+     "No unit values allowed in scale");
+}
+</script>
+</pre>
+</body>
+</html>

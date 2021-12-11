@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=697636
+-->
+<head>
+  <title>Test for Bug 697636</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<iframe id="f" srcdoc="<body text=green>1" allowfullscreen></iframe>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=697636">Mozilla Bug 697636</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 697636 **/
+
+var frameWin;
+var e1;
+
+function begin()
+{
+  var f = document.getElementById("f");
+  frameWin = f.contentWindow;
+  e1 = frameWin.document.documentElement;
+  f.srcdoc = "<body text=blue onload='parent.b2()'>2";
+}
+
+function b2()
+{
+  try {
+    e1.requestFullscreen();
+  } catch(e) {
+    opener.ok(false, "[hidden] Should not enter full-screen");
+  }
+  setTimeout(done, 0);
+}
+
+function done() {
+  opener.ok(!document.fullscreenElement, "[hidden] Should not have entered full-screen mode in hidden document.");
+  opener.ok(!e1.ownerDocument.fullscreenElement, "[hidden] Requesting owner should not have entered full-screen mode.");
+  opener.nextTest();
+}
+
+</script>
+</pre>
+</body>
+
+</html>

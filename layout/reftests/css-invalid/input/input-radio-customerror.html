@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if one radio in a group is suffering from a custom error, the other
+             radio should not be invalid. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i1').setCustomValidity('foo');
+                document.documentElement.className='';">
+    <input class='invalid' id='i1' name='foo' type='radio'>
+    <input class='notinvalid' id='i2' name='foo' type='radio'>
+  </body>
+</html>

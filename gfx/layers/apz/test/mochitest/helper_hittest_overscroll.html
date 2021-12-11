@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test APZ hit-testing while overscrolled</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    .spacer {
+      height: 5000px;
+    }
+    #target {
+      margin-left: 100px;
+      margin-top: 2px;
+      height: 4px;
+      width: 4px;
+      background: red;
+    }
+  </style>
+</head>
+<body>
+ <div id="target"></div>
+ <div class="spacer"></div>
+</body>
+<script type="application/javascript">
+
+// Some helper functions for listening for click events in the browser chrome.
+
+// A handle used to interact with the chrome script used to implement
+// [start|stop]ListeningFOrClickEventsInChrome().
+let chromeScriptHandle = null;
+
+function startListeningForClickEventsInChrome() {
+  /* eslint-env mozilla/frame-script */
+  function chromeScript() {
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+    let topWin = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!topWin) {
+      topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
+    }
+    let chromeReceivedClick = false;
+    function chromeListener(e) {
+      chromeReceivedClick = true;
+    }
+    topWin.addEventListener("click", chromeListener);
+    function queryClicked() {
+      sendAsyncMessage("query-clicked-response", { chromeReceivedClick });
+    }
+    function cleanup() {
+      topWin.removeEventListener("click", chromeListener);
+      removeMessageListener("query-clicked", queryClicked);
+      removeMessageListener("cleanup", cleanup);
+    }
+    addMessageListener("query-clicked", queryClicked);
+    addMessageListener("cleanup", cleanup);
+  }
+  chromeScriptHandle = SpecialPowers.loadChromeScript(chromeScript);
+}
+
+async function didChromeReceiveClick() {
+  chromeScriptHandle.sendAsyncMessage("query-clicked", null);
+  let response = await chromeScriptHandle.promiseOneMessage("query-clicked-response");
+  ok(response && ("chromeReceivedClick" in response),
+     "Received a well-formed response from chrome script");
+  return response.chromeReceivedClick;
+}
+
+function stopListeningForClickEventsInChrome() {
+  chromeScriptHandle.sendAsyncMessage("cleanup", null);
+  chromeScriptHandle.destroy();
+}
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Overscroll the root scroll frame at the top, creating a gutter.
+  // Note that the size of the gutter will only be 8px, because
+  // setAsyncScrollOffset() applies the overscroll as a single delta,
+  // and current APZ logic that transforms a delta into an overscroll
+  // amount limits each delta to at most 8px.
+  utils.setAsyncScrollOffset(document.documentElement, 0, -200);
+
+  // Check that the event hits the root scroll frame in APZ.
+  // This is important because additional pan-gesture events in the gutter
+  // should continue to be handled and cause further overscroll (or
+  // relieving overscroll, depending on their direction).
+  let hitResult = hitTest({x: 100, y: 4});
+  let rootViewId = utils.getViewId(document.documentElement);
+  checkHitResult(hitResult,
+                 APZHitResultFlags.VISIBLE,
+                 rootViewId,
+                 utils.getLayersId(),
+                 "APZ hit-test in the root gutter");
+
+  // Now, perform a click in the gutter and check that APZ prevents
+  // the event from reaching Gecko.
+  // To be sure that no event was dispatched to Gecko, install listeners
+  // on both the browser chrome window and the content window.
+  // This makes sure we catch the case where the overscroll transform causes
+  // the event to incorrectly target the browser chrome.
+  startListeningForClickEventsInChrome();
+  let contentReceivedClick = false;
+  let contentListener = function(e) {
+    contentReceivedClick = true;
+  };
+  document.addEventListener("click", contentListener);
+  synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: window,
+    offsetX: 100,
+    offsetY: 4
+  });
+  // Wait 10 frames for the event to maybe arrive, and if it
+  // hasn't, assume it won't.
+  for (let i = 0; i < 10; i++) {
+    await promiseFrame();
+  }
+  info("Finished waiting around for click event");
+  let chromeReceivedClick = await didChromeReceiveClick();
+  ok(!chromeReceivedClick,
+     "Gecko received click event in browser chrome when it shouldn't have");
+  ok(!contentReceivedClick,
+     "Gecko received click event targeting web content when it shouldn't have");
+  stopListeningForClickEventsInChrome();
+  document.removeEventListener("click", contentListener);
+
+  // Finally, while still overscrolled, perform a click not in the gutter.
+  // This event should successfully go through to the web content, and
+  // be untransformed by the overscroll transform (such that it hits the
+  // content that is visually under the cursor).
+  let clickPromise = new Promise(resolve => {
+    document.addEventListener("click", function(e) {
+      info("event clientX = " + e.clientX);
+      info("event clientY = " + e.clientY);
+      is(e.target, target, "Click while overscrolled hit intended target");
+      resolve();
+    }, { once: true });
+  });
+  synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: window,
+    offsetX: 102,
+    offsetY: 12
+  });
+  await clickPromise;
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

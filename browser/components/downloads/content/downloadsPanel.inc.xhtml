@@ -1,0 +1,191 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<commandset>
+  <command id="downloadsCmd_doDefault"
+           oncommand="goDoCommand('downloadsCmd_doDefault')"/>
+  <command id="downloadsCmd_pauseResume"
+           oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
+  <command id="downloadsCmd_cancel"
+           oncommand="goDoCommand('downloadsCmd_cancel')"/>
+  <command id="downloadsCmd_unblock"
+           oncommand="goDoCommand('downloadsCmd_unblock')"/>
+  <command id="downloadsCmd_chooseUnblock"
+           oncommand="goDoCommand('downloadsCmd_chooseUnblock')"/>
+  <command id="downloadsCmd_unblockAndOpen"
+           oncommand="goDoCommand('downloadsCmd_unblockAndOpen')"/>
+  <command id="downloadsCmd_unblockAndSave"
+           oncommand="goDoCommand('downloadsCmd_unblockAndSave')"/>
+  <command id="downloadsCmd_confirmBlock"
+           oncommand="goDoCommand('downloadsCmd_confirmBlock')"/>
+  <command id="downloadsCmd_open"
+           oncommand="goDoCommand('downloadsCmd_open')"/>
+  <command id="downloadsCmd_open:current"
+           oncommand="goDoCommand('downloadsCmd_open:current')"/>
+  <command id="downloadsCmd_open:tab"
+           oncommand="goDoCommand('downloadsCmd_open:tab')"/>
+  <command id="downloadsCmd_open:tabshifted"
+           oncommand="goDoCommand('downloadsCmd_open:tabshifted')"/>
+  <command id="downloadsCmd_open:window"
+           oncommand="goDoCommand('downloadsCmd_open:window')"/>
+  <command id="downloadsCmd_show"
+           oncommand="goDoCommand('downloadsCmd_show')"/>
+  <command id="downloadsCmd_retry"
+           oncommand="goDoCommand('downloadsCmd_retry')"/>
+  <command id="downloadsCmd_openReferrer"
+           oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
+  <command id="downloadsCmd_copyLocation"
+           oncommand="goDoCommand('downloadsCmd_copyLocation')"/>
+  <command id="downloadsCmd_clearList"
+           oncommand="goDoCommand('downloadsCmd_clearList')"/>
+  <command id="downloadsCmd_openInSystemViewer"
+           oncommand="goDoCommand('downloadsCmd_openInSystemViewer')"/>
+  <command id="downloadsCmd_alwaysOpenInSystemViewer"
+           oncommand="goDoCommand('downloadsCmd_alwaysOpenInSystemViewer')"/>
+  <command id="downloadsCmd_alwaysOpenSimilarFiles"
+           oncommand="goDoCommand('downloadsCmd_alwaysOpenSimilarFiles')"/>
+</commandset>
+
+<!-- For accessibility to screen readers, we use a label on the panel instead
+  of the anchor because the panel can also be displayed without an anchor. -->
+<panel id="downloadsPanel"
+       data-l10n-id="downloads-panel"
+       class="panel-no-padding"
+       role="group"
+       type="arrow"
+       orient="vertical"
+       onpopupshown="DownloadsPanel.onPopupShown(event);"
+       onpopuphidden="DownloadsPanel.onPopupHidden(event);"
+       hidden="true">
+
+  <linkset>
+    <html:link rel="localization" href="browser/downloads.ftl" />
+  </linkset>
+
+  <!-- The following popup menu should be a child of the panel element,
+       otherwise flickering may occur when the cursor is moved over the area
+       of a disabled menu item that overlaps the panel.  See bug 492960. -->
+  <menupopup id="downloadsContextMenu"
+             class="download-state">
+    <menuitem command="downloadsCmd_pauseResume"
+              class="downloadPauseMenuItem"
+              data-l10n-id="downloads-cmd-pause"/>
+    <menuitem command="downloadsCmd_pauseResume"
+              class="downloadResumeMenuItem"
+              data-l10n-id="downloads-cmd-resume"/>
+    <menuitem command="downloadsCmd_unblock"
+              class="downloadUnblockMenuItem"
+              data-l10n-id="downloads-cmd-unblock"/>
+    <menuitem command="downloadsCmd_openInSystemViewer"
+              class="downloadUseSystemDefaultMenuItem"
+              data-l10n-id="downloads-cmd-use-system-default"/>
+    <menuitem command="downloadsCmd_alwaysOpenInSystemViewer"
+              type="checkbox"
+              class="downloadAlwaysUseSystemDefaultMenuItem"
+              data-l10n-id="downloads-cmd-always-use-system-default"/>
+    <menuitem command="downloadsCmd_alwaysOpenSimilarFiles"
+              type="checkbox"
+              class="downloadAlwaysOpenSimilarFilesMenuItem"
+              data-l10n-id="downloads-cmd-always-open-similar-files"/>
+    <menuitem command="downloadsCmd_show"
+              class="downloadShowMenuItem"
+              data-l10n-id="downloads-cmd-show-menuitem-2"/>
+
+    <menuseparator class="downloadCommandsSeparator"/>
+
+    <menuitem command="downloadsCmd_openReferrer"
+              data-l10n-id="downloads-cmd-go-to-download-page"/>
+    <menuitem command="downloadsCmd_copyLocation"
+              data-l10n-id="downloads-cmd-copy-download-link"/>
+
+    <menuseparator/>
+
+    <menuitem command="cmd_delete"
+              class="downloadRemoveFromHistoryMenuItem"
+              data-l10n-id="downloads-cmd-remove-from-history"/>
+    <menuitem command="downloadsCmd_clearList"
+              data-l10n-id="downloads-cmd-clear-list"/>
+    <menuitem command="downloadsCmd_clearDownloads"
+              hidden="true"
+              data-l10n-id="downloads-cmd-clear-downloads"/>
+  </menupopup>
+
+  <panelmultiview id="downloadsPanel-multiView"
+                  mainViewId="downloadsPanel-mainView">
+
+    <panelview id="downloadsPanel-mainView">
+      <vbox class="panel-view-body-unscrollable">
+        <richlistbox id="downloadsListBox"
+                     data-l10n-id="downloads-panel-items"
+                     data-l10n-attrs="style"
+                     context="downloadsContextMenu"
+                     onmouseover="DownloadsView.onDownloadMouseOver(event);"
+                     onmouseout="DownloadsView.onDownloadMouseOut(event);"
+                     oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
+                     ondragstart="DownloadsView.onDownloadDragStart(event);"/>
+        <description id="emptyDownloads"
+                     data-l10n-id="downloads-panel-empty"/>
+      </vbox>
+      <vbox id="downloadsFooter">
+        <stack>
+          <hbox id="downloadsSummary"
+                align="center"
+                orient="horizontal"
+                onkeydown="DownloadsSummary.onKeyDown(event);"
+                onclick="DownloadsSummary.onClick(event);">
+            <image class="downloadTypeIcon" />
+            <vbox pack="center"
+                  flex="1"
+                  class="downloadContainer">
+              <description id="downloadsSummaryDescription"/>
+              <html:progress id="downloadsSummaryProgress"
+                             class="downloadProgress"
+                             max="100"/>
+              <description id="downloadsSummaryDetails"
+                           crop="end"/>
+            </vbox>
+          </hbox>
+          <vbox id="downloadsFooterButtons">
+            <toolbarseparator />
+            <button id="downloadsHistory"
+                    data-l10n-id="downloads-history"
+                    class="downloadsPanelFooterButton subviewbutton panel-subview-footer-button toolbarbutton-1"
+                    flex="1"
+                    oncommand="DownloadsPanel.showDownloadsHistory();"
+                    pack="start"/>
+          </vbox>
+        </stack>
+      </vbox>
+    </panelview>
+
+    <panelview id="downloadsPanel-blockedSubview"
+               data-l10n-id="downloads-details"
+               descriptionheightworkaround="true"
+               class="PanelUI-subView">
+      <vbox class="panel-view-body-unscrollable">
+        <hbox class="downloadsPanel-blockedSubview-title-box">
+          <description id="downloadsPanel-blockedSubview-title"/>
+          <image class="downloadsPanel-blockedSubview-image"/>
+        </hbox>
+        <description id="downloadsPanel-blockedSubview-details1"/>
+        <description id="downloadsPanel-blockedSubview-details2"/>
+      </vbox>
+      <hbox id="downloadsPanel-blockedSubview-buttons"
+            class="panel-footer"
+            align="stretch">
+        <button id="downloadsPanel-blockedSubview-unblockButton"
+                class="downloadsPanelFooterButton"
+                command="downloadsCmd_unblockAndOpen"
+                flex="1"/>
+        <button id="downloadsPanel-blockedSubview-deleteButton"
+                class="downloadsPanelFooterButton"
+                oncommand="DownloadsBlockedSubview.confirmBlock();"
+                default="true"
+                flex="1"/>
+      </hbox>
+    </panelview>
+  </panelmultiview>
+
+</panel>

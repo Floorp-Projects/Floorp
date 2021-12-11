@@ -1,0 +1,460 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [{
+      "$extend": "WebExtensionManifest",
+      "properties": {
+        "telemetry": {
+          "type": "object",
+          "optional": true,
+          "additionalProperties": { "$ref": "UnrecognizedProperty" },
+          "properties": {
+            "ping_type": {
+              "type": "string"
+            },
+            "schemaNamespace": {
+              "type": "string"
+            },
+            "public_key": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "object",
+                  "properties": {
+                    "crv": {
+                      "type": "string",
+                      "optional": "false"
+                    },
+                    "kty": {
+                      "type": "string",
+                      "optional": "false"
+                    },
+                    "x": {
+                      "type": "string",
+                      "optional": "false"
+                    },
+                    "y": {
+                      "type": "string",
+                      "optional": "false"
+                    }
+                  }
+                }
+              }
+            },
+            "study_name": {
+              "type": "string",
+              "optional": true
+            },
+            "pioneer_id": {
+              "type": "boolean",
+              "optional": true,
+              "default": false
+            }
+          }
+        }
+      }
+    },{
+      "$extend": "PermissionNoPrompt",
+      "choices": [{
+        "type": "string",
+        "enum": [
+          "telemetry"
+        ]
+      }]
+    }]
+  },
+  {
+    "namespace": "telemetry",
+    "description": "Use the <code>browser.telemetry</code> API to send telemetry data to the Mozilla Telemetry service. Restricted to Mozilla privileged webextensions.",
+    "types": [{
+      "id": "ScalarType",
+      "type": "string",
+      "enum": ["count", "string", "boolean"],
+      "description": "Type of scalar: 'count' for numeric values, 'string' for string values, 'boolean' for boolean values. Maps to <code>nsITelemetry.SCALAR_TYPE_*</code>."
+    }, {
+      "id": "ScalarData",
+      "type": "object",
+      "description": "Represents registration data for a Telemetry scalar.",
+      "properties": {
+        "kind": {
+          "$ref": "ScalarType"
+        },
+        "keyed": {
+          "type": "boolean",
+          "optional": true,
+          "default": false,
+          "description": "True if this is a keyed scalar."
+        },
+        "record_on_release": {
+          "type": "boolean",
+          "optional": true,
+          "default": false,
+          "description": "True if this data should be recorded on release."
+        },
+        "expired": {
+          "type": "boolean",
+          "optional": true,
+          "default": false,
+          "description": "True if this scalar entry is expired. This allows recording it without error, but it will be discarded."
+        }
+      }
+    }, {
+      "id": "EventData",
+      "type": "object",
+      "description": "Represents registration data for a Telemetry event.",
+      "properties": {
+        "methods": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of methods for this event entry."
+        },
+        "objects": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of objects for this event entry."
+        },
+        "extra_keys": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of allowed extra keys for this event entry."
+        },
+        "record_on_release": {
+          "type": "boolean",
+          "optional": true,
+          "default": false,
+          "description": "True if this data should be recorded on release."
+        },
+        "expired": {
+          "type": "boolean",
+          "optional": true,
+          "default": false,
+          "description": "True if this event entry is expired. This allows recording it without error, but it will be discarded."
+        }
+      }
+    }],
+    "permissions": ["telemetry"],
+    "functions": [{
+      "name": "submitPing",
+      "type": "function",
+      "description": "Submits a custom ping to the Telemetry back-end. See <code>submitExternalPing</code> inside TelemetryController.jsm for more details.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]+[a-z0-9]$",
+          "description": "The type of the ping."
+        },
+        {
+          "name": "message",
+          "type": "object",
+          "additionalProperties": { "type": "any" },
+          "description": "The data payload for the ping."
+        },
+        {
+          "description": "Options object.",
+          "name": "options",
+          "type": "object",
+          "properties": {
+            "addClientId": {
+              "type": "boolean",
+              "optional": true,
+              "default": false,
+              "description": "True if the ping should contain the client id."
+            },
+            "addEnvironment": {
+              "type": "boolean",
+              "optional": true,
+              "default": false,
+              "description": "True if the ping should contain the environment data."
+            },
+            "overrideEnvironment": {
+              "type": "object",
+              "additionalProperties": { "type": "any" },
+              "optional": true,
+              "default": false,
+              "description": "Set to override the environment data."
+            },
+            "usePingSender": {
+              "type": "boolean",
+              "optional": true,
+              "default": false,
+              "description": "If true, send the ping using the PingSender."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "submitEncryptedPing",
+      "type": "function",
+      "description": "Submits a custom ping to the Telemetry back-end, with an encrypted payload. Requires a telemetry entry in the manifest to be used.",
+      "parameters": [
+        {
+          "name": "message",
+          "type": "object",
+          "additionalProperties": { "type": "any" },
+          "description": "The data payload for the ping, which will be encrypted."
+        },
+        {
+          "description": "Options object.",
+          "name": "options",
+          "type": "object",
+          "properties": {
+            "schemaName": {
+              "type": "string",
+              "optional": false,
+              "description": "Schema name used for payload."
+            },
+            "schemaVersion": {
+              "type": "integer",
+              "optional": false,
+              "description": "Schema version used for payload."
+            }
+          }
+        }
+      ],
+      "async": true
+    },
+    {
+      "name": "canUpload",
+      "type": "function",
+      "description": "Checks if Telemetry upload is enabled.",
+      "parameters": [],
+      "async": true
+    },
+    {
+      "name": "scalarAdd",
+      "type": "function",
+      "description": "Adds the value to the given scalar.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name."
+        },
+        {
+          "name": "value",
+          "type": "integer",
+          "minimum": 1,
+          "description": "The numeric value to add to the scalar. Only unsigned integers supported."
+        }
+      ]
+    },
+    {
+      "name": "scalarSet",
+      "type": "function",
+      "description": "Sets the named scalar to the given value. Throws if the value type doesn't match the scalar type.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name"
+        },
+        {
+          "name": "value",
+          "description": "The value to set the scalar to",
+          "choices": [
+            { "type": "string" },
+            { "type": "boolean" },
+            { "type": "integer" },
+            { "type": "object", "additionalProperties": { "type": "any" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "scalarSetMaximum",
+      "type": "function",
+      "description": "Sets the scalar to the maximum of the current and the passed value",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name."
+        },
+        {
+          "name": "value",
+          "type": "integer",
+          "minimum": 0,
+          "description": "The numeric value to set the scalar to. Only unsigned integers supported."
+        }
+      ]
+    },
+    {
+      "name": "keyedScalarAdd",
+      "type": "function",
+      "description": "Adds the value to the given keyed scalar.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key name"
+        },
+        {
+          "name": "value",
+          "type": "integer",
+          "minimum": 1,
+          "description": "The numeric value to add to the scalar. Only unsigned integers supported."
+        }
+      ]
+    },
+    {
+      "name": "keyedScalarSet",
+      "type": "function",
+      "description": "Sets the keyed scalar to the given value. Throws if the value type doesn't match the scalar type.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name."
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key name."
+        },
+        {
+          "name": "value",
+          "description": "The value to set the scalar to.",
+          "choices": [
+            { "type": "string" },
+            { "type": "boolean" },
+            { "type": "integer" },
+            { "type": "object", "additionalProperties": { "type": "any" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "keyedScalarSetMaximum",
+      "type": "function",
+      "description": "Sets the keyed scalar to the maximum of the current and the passed value",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name."
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key name."
+        },
+        {
+          "name": "value",
+          "type": "integer",
+          "minimum": 0,
+          "description": "The numeric value to set the scalar to. Only unsigned integers supported."
+        }
+      ]
+    },
+    {
+      "name": "recordEvent",
+      "type": "function",
+      "description": "Record an event in Telemetry. Throws when trying to record an unknown event.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "category",
+          "type": "string",
+          "description": "The category name."
+        },
+        {
+          "name": "method",
+          "type": "string",
+          "description": "The method name."
+        },
+        {
+          "name": "object",
+          "type": "string",
+          "description": "The object name."
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "optional": true,
+          "description": "An optional string value to record."
+        },
+        {
+          "name": "extra",
+          "type": "object",
+          "optional": true,
+          "description": "An optional object of the form (string -> string). It should only contain registered extra keys.",
+          "additionalProperties": { "type": "string" }
+        }
+      ]
+    },
+
+    {
+      "name": "registerScalars",
+      "type": "function",
+      "description": "Register new scalars to record them from addons. See nsITelemetry.idl for more details.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "category",
+          "type": "string",
+          "description": "The unique category the scalars are registered in."
+        },
+        {
+          "name": "data",
+          "type": "object",
+          "additionalProperties": { "$ref": "ScalarData" },
+          "description": "An object that contains registration data for multiple scalars. Each property name is the scalar name, and the corresponding property value is an object of ScalarData type."
+        }
+      ]
+    },
+    {
+      "name": "registerEvents",
+      "type": "function",
+      "description": "Register new events to record them from addons. See nsITelemetry.idl for more details.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "category",
+          "type": "string",
+          "description": "The unique category the events are registered in."
+        },
+        {
+          "name": "data",
+          "type": "object",
+          "additionalProperties": { "$ref": "EventData" },
+          "description": "An object that contains registration data for 1+ events. Each property name is the category name, and the corresponding property value is an object of EventData type."
+        }
+      ]
+    },
+    {
+      "name": "setEventRecordingEnabled",
+      "type": "function",
+      "description": "Enable recording of events in a category. Events default to recording disabled. This allows to toggle recording for all events in the specified category.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "category",
+          "type": "string",
+          "description": "The category name."
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "description": "Whether recording is enabled for events in that category."
+        }
+      ]
+    }]
+  }
+]

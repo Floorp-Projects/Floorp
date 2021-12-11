@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<!--
+bugzilla.mozilla.org/show_bug.cgi?id=1673434
+-->
+<head>
+<title>Test for bug 1673434</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1673434">Mozilla Bug 1673434</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<input type="checkbox">
+<input type="radio" name="group" value="foo">
+<input type="radio" name="group" value="bar" checked>
+<input type="text">
+<script>
+const utils = SpecialPowers.DOMWindowUtils;
+
+function test_events(element, resolve) {
+  element.addEventListener("input", () => {
+    is(utils.isHandlingUserInput, false,
+       "isHandlingUserInput is false on input event by element.click()");
+  }, { once: true });
+  element.addEventListener("change", () => {
+    is(utils.isHandlingUserInput, false,
+       "isHandlingUserInput is false on change event by element.click()");
+    resolve();
+  }, { once: true });
+
+  element.click();
+}
+
+add_task(function testCheckboxEvent() {
+  return new Promise(resolve => {
+    let element = document.querySelector("input[type=checkbox]");
+    test_events(element, resolve);
+  });
+});
+
+add_task(function testRadioEvent() {
+  return new Promise(resolve => {
+    let element = document.querySelector("input[type=radio]");
+    test_events(element, resolve);
+  });
+});
+
+add_task(function testUserInput() {
+  // setUserInput should be handled as user input.
+  //
+  // XXX <textarea> won't fire input event by setUserInput.
+  return new Promise(resolve => {
+    let element = document.querySelector("input[type=text]");
+    element.addEventListener("input", () => {
+      is(utils.isHandlingUserInput, true,
+         "isHandlingUserInput is true on input event by setUserInput");
+    }, { once: true });
+    element.addEventListener("change", () => {
+      is(utils.isHandlingUserInput, true,
+         "isHandlingUserInput is true on change event by setUserInput");
+      resolve();
+    }, { once: true });
+
+    SpecialPowers.wrap(element).setUserInput("a");
+  });
+});
+</script>
+</pre>
+</body>
+</html>

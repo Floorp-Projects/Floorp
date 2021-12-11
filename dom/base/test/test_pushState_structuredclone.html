@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>history.pushState with serializable objects in state</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<script>
+  add_task(async function test() {
+    let state = {
+      b: new Blob(['1234567890']),
+      // CryptoKey
+      k: await crypto.subtle.generateKey({ name: "HMAC", length: 256, hash: {name: "SHA-256"} }, true, ["sign", "verify"]),
+      mr: new DOMMatrixReadOnly([1, 2, 3, 4, 5, 6]),
+      m: new DOMMatrix([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+      pr: new DOMPointReadOnly(1, 2, 3, 4),
+      p: new DOMPoint(4, 3, 2, 1),
+      q: new DOMQuad(new DOMRectReadOnly(1, 2, 3, 4)),
+      rr: new DOMRectReadOnly(1, 2, 3, 4),
+      r: new DOMRect(1, 2, 3, 4),
+      f: new File(['9876543210'], ''),
+      i: new ImageData(4, 4),
+      // RTCCertificate
+      c: await RTCPeerConnection.generateCertificate({ name: 'ECDSA', namedCurve: 'P-256' }),
+    };
+
+    history.pushState(state, "", "?withState");
+    ok(history.state instanceof Object,
+       "pushState with an object should set history.state.");
+    SimpleTest.isDeeply(history.state, state,
+                        "Check that history.state retains all serializable fields.");
+
+    history.pushState(undefined, "", "?withoutState");
+    let promisePoppedState = new Promise(resolve => {
+      window.addEventListener('popstate', event => {
+        resolve(event.state);
+      }, { once: true });
+    });
+    history.back();
+    let poppedState = await promisePoppedState;
+    ok(poppedState instanceof Object,
+       "Going back from pushState with an object should return an object in the popstate event.");
+    SimpleTest.isDeeply(poppedState, state,
+                        "Check that going back from pushState retains all serializable fields.");
+  });
+</script>
+</body>
+</html>

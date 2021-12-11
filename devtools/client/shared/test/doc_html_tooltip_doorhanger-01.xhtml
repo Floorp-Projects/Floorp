@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/light-theme.css"?>
+<window class="theme-light"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Tooltip test">
+
+  <vbox flex="1" style="position: relative">
+    <!-- LTR on left edge -->
+    <html:div
+      id="anchor1"
+      class="anchor"
+      data-hang="right"
+      style="width:10px; height: 10px; position: absolute; background: red;
+            top: 0; left: 0;">
+    </html:div>
+
+    <!-- RTL but too close to the left edge for the doorhanger to hang left -->
+    <html:div
+      id="anchor2"
+      class="anchor"
+      data-hang="right"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      top: 0; left: 25px; direction: rtl">
+    </html:div>
+
+    <!-- RTL -->
+    <html:div
+      id="anchor3"
+      class="anchor"
+      data-hang="left"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      top: 0; left: 250px; direction: rtl">
+    </html:div>
+
+   <!-- LTR -->
+   <html:div
+      id="anchor4"
+      class="anchor"
+      data-hang="right"
+      style="width:80%; height: 10px; position: absolute; background: red;
+      top: 0; left: 50px;">
+    </html:div>
+
+    <!-- LTR on right edge -->
+    <html:div
+      id="anchor5"
+      class="anchor"
+      data-hang="left"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      bottom: 0; right: 0;">
+    </html:div>
+
+    <!-- RTL near right edge -->
+    <html:div
+      id="anchor6"
+      class="anchor"
+      data-hang="left"
+      style="width:10px; height: 10px; position: absolute; background: red;
+      bottom: 0; right: 25px; direction: rtl">
+    </html:div>
+
+    <!-- LTR near left edge due to wide anchor -->
+    <html:div
+      id="anchor7"
+      class="anchor"
+      data-hang="right"
+      style="width:80%; height: 10px; position: absolute; background: red;
+      bottom: 0; right: 50px;">
+    </html:div>
+  </vbox>
+</window>

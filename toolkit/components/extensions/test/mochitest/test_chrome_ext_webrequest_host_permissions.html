@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test webRequest checks host permissions</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_webRequest_host_permissions() {
+  function background() {
+    function png(details) {
+      browser.test.sendMessage("png", details.url);
+    }
+    browser.webRequest.onBeforeRequest.addListener(png, {urls: ["*://*/*.png"]});
+    browser.test.sendMessage("ready");
+  }
+
+  const all = ExtensionTestUtils.loadExtension({background, manifest: {permissions: ["webRequest", "<all_urls>"]}});
+  const example = ExtensionTestUtils.loadExtension({background, manifest: {permissions: ["webRequest", "https://example.com/"]}});
+  const mochi_test = ExtensionTestUtils.loadExtension({background, manifest: {permissions: ["webRequest", "http://mochi.test/"]}});
+
+  await all.startup();
+  await example.startup();
+  await mochi_test.startup();
+
+  await all.awaitMessage("ready");
+  await example.awaitMessage("ready");
+  await mochi_test.awaitMessage("ready");
+
+  const win1 = window.open("https://example.com/chrome/toolkit/components/extensions/test/mochitest/file_with_images.html");
+  let urls = [await all.awaitMessage("png"),
+              await all.awaitMessage("png")];
+  ok(urls.some(url => url.endsWith("good.png")), "<all_urls> permission gets to see good.png");
+  ok((await example.awaitMessage("png")).endsWith("good.png"), "example permission sees same-origin example.com image");
+  ok(urls.some(url => url.endsWith("great.png")), "<all_urls> permission also sees great.png");
+
+  // Clear the in-memory image cache, it can prevent listeners from receiving events.
+  const imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
+  imgTools.getImgCacheForDocument(win1.document).clearCache(false);
+  win1.close();
+
+  const win2 = window.open("http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest/file_with_images.html");
+  urls = [await all.awaitMessage("png"),
+          await all.awaitMessage("png")];
+  ok(urls.some(url => url.endsWith("good.png")), "<all_urls> permission gets to see good.png");
+  ok((await mochi_test.awaitMessage("png")).endsWith("great.png"), "mochi.test permission sees same-origin mochi.test image");
+  ok(urls.some(url => url.endsWith("great.png")), "<all_urls> permission also sees great.png");
+  win2.close();
+
+  await all.unload();
+  await example.unload();
+  await mochi_test.unload();
+});
+
+add_task(async function test_webRequest_filter_permissions_warning() {
+  const manifest = {
+    permissions: ["webRequest", "http://example.com/"],
+  };
+
+  async function background() {
+    await browser.webRequest.onBeforeRequest.addListener(() => {}, {urls: ["http://example.org/"]});
+    browser.test.notifyPass();
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+
+  const warning = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{message: /filter doesn't overlap with host permissions/}]);
+  });
+
+  await extension.startup();
+  await extension.awaitFinish();
+
+  SimpleTest.endMonitorConsole();
+  await warning;
+
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

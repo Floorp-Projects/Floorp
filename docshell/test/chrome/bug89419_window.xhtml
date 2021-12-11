@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="89419Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(runTests, 0);"
+        title="bug 89419 test">
+
+  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+  <script type="application/javascript"><![CDATA[
+    ////
+    // A visited link should have the :visited style applied
+    // to it when displayed on a page which was fetched from
+    // the bfcache.
+    //
+    async function runTests() {
+      // Disable rcwn to make cache behavior deterministic.
+      var {SpecialPowers} = window.arguments[0];
+      await SpecialPowers.pushPrefEnv({"set":[["network.http.rcwn.enabled", false]]});
+
+      // Load a test page containing an image referring to the sjs that returns
+      // a different redirect every time it's loaded.
+      await new Promise(resolve => {
+        doPageNavigation({
+          uri: getHttpUrl("89419.html"),
+          onNavComplete: resolve,
+          preventBFCache: true,
+        });
+      })
+
+      var first = await snapshotWindow(TestWindow.getWindow());
+
+      await new Promise(resolve => {
+        doPageNavigation({
+          uri: "about:blank",
+          onNavComplete: resolve,
+        });
+      });
+
+      var second = await snapshotWindow(TestWindow.getWindow());
+      function snapshotsEqual(snap1, snap2) {
+        return compareSnapshots(snap1, snap2, true)[0];
+      }
+      ok(!snapshotsEqual(first, second), "about:blank should not be the same as the image web page");
+
+      await new Promise(resolve => {
+        doPageNavigation({
+          back: true,
+          onNavComplete: resolve,
+        });
+      });
+
+      var third = await snapshotWindow(TestWindow.getWindow());
+      ok(!snapshotsEqual(third, second), "going back should not be the same as about:blank");
+      ok(snapshotsEqual(first, third), "going back should be the same as the initial load");
+
+      // Tell the framework the test is finished.
+      finish();
+    }
+
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+</window>

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<head>
+	<style>
+		.parent {
+		  width: 200px;
+		  height: 200px;
+		  overflow: hidden;
+			border-radius: 0px 0px 20px 0px;
+			position: absolute;
+			z-index: 0;
+			background-color: #00ff00;
+		}
+
+		.child {
+		  width: 300px;
+		  height: 300px;
+		  margin-left: 100px;
+		  background-color: #ff0000;
+		  mix-blend-mode: difference;
+		}
+
+		body {
+			margin: 0;
+		}
+
+	</style>
+	<!-- Rounded rect clipping seems to not yield the same results when clipping
+	the parent and child elements individually. The reference rendering will show
+	some of the parent green color around the child's clipped corner.
+	The reftests, on the other hand, shows some gray pixels around the same area. 
+	This may somehow be related to antialiasing. -->
+</head>
+<body>
+	<div class="parent">
+	    <div class="child"></div>
+	</div>
+</body>

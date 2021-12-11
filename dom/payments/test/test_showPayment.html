@@ -1,0 +1,504 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1345366</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('ShowPaymentChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
+
+  async function requestChromeAction(action, params) {
+    await new Promise(resolve => {
+      gScript.addMessageListener(`${action}-complete`, function completeListener() {
+        gScript.removeMessageListener(`${action}-complete`, completeListener);
+        resolve();
+      });
+      gScript.sendAsyncMessage(action, params);
+    });
+  }
+
+  // testing data declaration
+  // default parameters for PaymentRequest construction
+  const defaultMethods = [{
+    supportedMethods: "basic-card",
+    data: {
+      supportedNetworks: ['unionpay', 'visa', 'mastercard', 'amex', 'discover',
+                          'diners', 'jcb', 'mir',
+      ],
+    },
+  }, {
+    supportedMethods: "testing-payment-method",
+  }];
+
+  const defaultTotal = {
+    label: "Total",
+    amount: {
+      currency: "USD",
+      value: "1.00",
+    },
+  }
+
+  const defaultDetails = {
+    id: "test payment",
+    total: defaultTotal,
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: false,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: false,
+      },
+    ],
+  };
+
+  const defaultOptions = {
+    requestPayerName: true,
+    requestPayerEmail: false,
+    requestPayerPhone: false,
+    requestShipping: true,
+    shippingType: "shipping"
+  };
+
+  // testing data for PaymentRequestUpdateEvent.updateWith()
+  const updatedShippingOptionsDetails = {
+    total: defaultTotal,
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: false,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: true,
+      },
+    ],
+  };
+
+  const updatedErrorDetails = {
+    total: defaultTotal,
+    error: "Update with Error",
+  };
+
+  // Promise function for PaymentRequestUpdateEvent.updateWith()
+  function updateWithPromise(detailsUpdate) {
+    return new Promise((resolve, reject) => {
+      if (detailsUpdate) {
+        resolve(detailsUpdate);
+      } else {
+        reject();
+      }
+    });
+  }
+
+  // testing data for PaymentRequest.show() with Non-supported methods
+  const nonSupportedMethods = [{
+    supportedMethods: "nonsupported-method",
+  }];
+
+
+  // checking functions
+  function checkAddress(testName, address, fromEvent) {
+    is(address.country,
+       "USA",
+       `${testName}: address.country should be 'USA'.`);
+    is(address.region,
+       "CA",
+       `${testName}: address.region should be 'CA'.`);
+    is(address.city,
+       "San Bruno",
+       `${testName}: address.city should be 'San Bruno'.`);
+    is(address.dependentLocality,
+       "Test locality",
+       `${testName}: address.dependentLocality should be 'Test locality'.`);
+    is(address.postalCode,
+       "94066",
+       `${testName}: address.postalCode should be '94066'.`);
+    is(address.sortingCode,
+       "123456",
+       `${testName}: address.sortingCode should be '123456'.`);
+    if (fromEvent) {
+      is(address.addressLine.length,
+         0,
+         `${testName}: address.addressLine.length should be 0 from event.`);
+      is(address.organization,
+         "",
+         `${testName}: address.organization should be empty from event.`);
+      is(address.recipient,
+         "",
+         `${testName}: address.recipient should be empty from event.`);
+      is(address.phone,
+         "",
+         `${testName}: address.phone should be empty from event.`);
+    } else {
+      is(address.addressLine.length,
+         1,
+         `${testName}: address.addressLine.length should be 1 from promise.`);
+      is(address.addressLine[0],
+         "Easton Ave",
+         `${testName}: address.addressLine[0] should be 'Easton Ave' from promise.`);
+      is(address.organization,
+         "Testing Org",
+         `${testName}: address.organization should be 'Testing Org' from promise.`);
+      is(address.recipient,
+         "Bill A. Pacheco",
+         `${testName}: address.recipient should be 'Bill A. Pacheco' from promise.`);
+      is(address.phone,
+         "+1-434-441-3879",
+         `${testName}: address.phone should be '+1-434-441-3879' from promise.`);
+    }
+  }
+
+  function checkResponse(testName, response) {
+    is(response.requestId,
+       "test payment",
+       `${testName}: response.requestId should be 'test payment'.`);
+    is(response.methodName,
+       "testing-payment-method",
+       `${testName}: response.methodName should be 'testing-payment-method'.`);
+    is(response.details.paymentToken,
+       "6880281f-0df3-4b8e-916f-66575e2457c1",
+       `${testName}: response.details.paymentToken should be '6880281f-0df3-4b8e-916f-66575e2457c1'.`);
+    checkAddress(testName, response.shippingAddress, false/*fromEvent*/);
+    is(response.shippingOption,
+       "FastShipping",
+       `${testName}: response.shippingOption should be 'FastShipping'.`);
+    is(response.payerName,
+       "Bill A. Pacheco",
+       `${testName}: response.payerName should be 'Bill A. Pacheco'.`);
+    ok(!response.payerEmail,
+       `${testName}: response.payerEmail should be empty`);
+    ok(!response.payerPhone,
+       `${testName}: response.payerPhone should be empty`);
+  }
+
+  // testing functions
+  async function testShowNormalFlow() {
+    const testName = "testShowNormalFlow";
+    await requestChromeAction("set-normal-ui-service", testName);
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    request.addEventListener("shippingaddresschange", event => {
+      checkAddress(testName, request.shippingAddress, true/*fromEvent*/);
+      event.updateWith(updateWithPromise(defaultDetails));
+    });
+    request.addEventListener("shippingoptionchange", event => {
+      event.updateWith(updateWithPromise(updatedShippingOptionsDetails));
+    });
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      let response = await request.show();
+      checkResponse(testName, response, false);
+      await response.complete();
+    } catch (error) {
+      ok(false, `${testName} Unexpected error: ${e.name}`);
+    }
+    await handler.destruct();
+  }
+
+  // testing show with nonsupported methods
+  async function testCannotMakePaymentShow() {
+    const testName = "testCannotMakePaymentShow";
+    await requestChromeAction("set-simple-ui-service", testName);
+
+    const request = new PaymentRequest(nonSupportedMethods, defaultDetails);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let result = await request.canMakePayment();
+    ok(!result, `${testName}: canMakePayment() should return false.`);
+    try {
+      await request.show();
+      ok(false, `${testName}: should be rejected with 'NotSupportedError' but got resolved.`);
+    } catch (error) {
+      is(error.name, "NotSupportedError", `${testName}: should be rejected with 'NotSupportedError'.`);
+    }
+    await handler.destruct();
+  }
+
+  // testing show rejected by user
+  async function testRejectShow() {
+    const testName = "testRejectShow";
+    await requestChromeAction("set-reject-ui-service", testName);
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      await request.show();
+      ok(false, `${testName}: Should be rejected with 'AbortError' but got resolved.`);
+    } catch(error) {
+      is(error.name, "AbortError", `${testName}: Should be rejected with 'AbortError'.`);
+    }
+    await handler.destruct();
+  }
+
+  // testing PaymentResponse.complete() with specified result
+  async function testCompleteStatus(testName, result) {
+    await requestChromeAction("set-simple-ui-service", testName);
+    if (result) {
+      await requestChromeAction(`set-complete-status-${result}`);
+    } else {
+      await requestChromeAction(`set-complete-status-unknown`);
+    }
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      let response = await request.show();
+      await response.complete(result);
+    } catch (error) {
+      ok(false, `${testName}: Unexpected error ${error.name}.`);
+    }
+    await handler.destruct();
+  }
+
+  async function testCompleteFail() {
+    const testName = "testCompleteFail";
+    return testCompleteStatus(testName, "fail");
+  }
+
+  async function testCompleteSuccess() {
+    const testName = "testCompleteSuccess";
+    return testCompleteStatus(testName, "success");
+  }
+
+  async function testCompleteUnknown() {
+    const testName = "testCompleteUnknown"
+    return testCompleteStatus(testName, "unknown");
+  }
+
+  async function testCompleteEmpty() {
+    const testName = "testCompleteEmpty";
+    return testCompleteStatus(testName);
+  }
+
+  // testing PaymentRequestUpdateEvent.updateWith with specified details and error
+  async function testUpdateWith(testName, detailsUpdate, expectedError) {
+    if (expectedError) {
+      await requestChromeAction("set-update-with-error-ui-service", testName);
+    } else {
+      await requestChromeAction("set-update-with-ui-service", testName);
+    }
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    request.addEventListener("shippingaddresschange", event => {
+      event.updateWith(updateWithPromise(detailsUpdate));
+    });
+    request.addEventListener("shippingoptionchange", event => {
+      event.updateWith(updateWithPromise(detailsUpdate));
+    });
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      const response = await request.show();
+      if (expectedError) {
+        ok(false, `${testName}: Should be rejected with ${expectedError} but got resolved.`);
+      } else {
+        await response.complete("success");
+      }
+    } catch(error) {
+      if (expectedError) {
+        is(error.name, expectedError, `${testName}: Should be rejected with ${expectedError}.`);
+      } else {
+        ok(false, `${testName}: Unexpected error ${error.name}.`);
+      }
+    }
+    await handler.destruct();
+  }
+
+  async function testUpdateWithReject() {
+    const testName = "testUpdateWithReject";
+    return testUpdateWith(testName, null, "AbortError");
+  }
+
+  async function testUpdateWithValidDetails() {
+    const testName = "testUpdateWithValidDetails";
+    return testUpdateWith(testName, updatedShippingOptionsDetails, null);
+  }
+
+  async function testUpdateWithInvalidDetails() {
+    const testName = "testUpdateWithInvalidDetails";
+    return testUpdateWith(testName, {total: "invalid details"}, "TypeError");
+  }
+
+  async function testUpdateWithError() {
+    const testName = "testUpdateWithError";
+    return testUpdateWith(testName, updatedErrorDetails, "AbortError");
+  }
+
+  // testing show with detailsUpdate promise
+  async function testShowWithDetailsPromise(testName, detailsUpdate, expectedError) {
+    if (expectedError) {
+      await requestChromeAction("set-reject-ui-service", testName);
+    } else {
+      await requestChromeAction("set-simple-ui-service", testName);
+    }
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    ok(!request.shippingOption, `${testName}: request.shippingOption should be null.`);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    try {
+      let response = await request.show(updateWithPromise(detailsUpdate));
+      if (expectedError) {
+        ok(false, `${testName}: Should be rejected with ${expectedError} but got resolved.`);
+      } else {
+        ok(response.shippingOption,
+           `${testName}: response.shippingOption should not be null.`);
+      }
+      await response.complete();
+    } catch(error) {
+      if (expectedError) {
+        is(error.name, expectedError, `${testName}: Should be rejected with ${expectedError}.`);
+      } else {
+        ok(false, `${testName}: Unexpected error ${error.name}.`);
+      }
+    }
+    await handler.destruct();
+  }
+  async function testShowWithValidPromise() {
+    const testName = "testShowWithValidPromise";
+    return testShowWithDetailsPromise(testName, updatedShippingOptionsDetails, null);
+  }
+
+  async function testShowWithRejectedPromise() {
+    const testName = "testShowWithRejectedPromise";
+    return testShowWithDetailsPromise(testName, null, "AbortError");
+  }
+
+  async function testShowWithInvalidPromise() {
+    const testName = "testShowWithInvalidPromise";
+    return testShowWithDetailsPromise(testName, {total: "invalid details"}, "TypeError");
+  }
+
+  async function testShowWithErrorPromise() {
+    const testName = "testShowWithErrorPromise";
+    return testShowWithDetailsPromise(testName, updatedErrorDetails, "AbortError");
+  }
+
+  async function testShowWithPromiseResolvedByRejectedPromise() {
+    const testName = "testShowWithPromiseResolvedByRejectedPromise";
+    await requestChromeAction("set-reject-ui-service", testName);
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    let rejectPromise = Promise.reject(new TypeError());
+    let detailsUpdatePromise = Promise.resolve(rejectPromise);
+    try {
+      await request.show(detailsUpdatePromise);
+      ok(false, `${testName}: should be rejected with AbortError but got resolved.`);
+    } catch(error) {
+      is(error.name, "AbortError", `${testName}: should be rejected with AbortError.`);
+    }
+    await handler.destruct();
+  }
+
+  // testing show response initialization in chrome process
+  async function testShowResponseInit() {
+    const testName = "testShowResponseInit";
+    await requestChromeAction("test-show-response-init", testName);
+  }
+
+  // testing show that is not triggered by user.
+  async function testShowNotTriggeredByUser() {
+    const testName = "testShowNotTriggeredByUser";
+    await requestChromeAction("set-simple-ui-service", testName);
+
+    const request = new PaymentRequest(defaultMethods, defaultDetails);
+    try {
+      await request.show();
+      ok(false, `${testName}: should be rejected with SecurityError, but got resolved.`);
+    } catch (error) {
+      is(error.name, "SecurityError", `${testName}: should be rejected with SecurityError.`);
+    }
+  }
+
+  // teardown function
+  async function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.removeMessageListener("test-fail", testFailHandler);
+      gScript.removeMessageListener("test-pass", testPassHandler);
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  // test main body
+  async function runTests() {
+    try {
+      await testCannotMakePaymentShow();
+      await testRejectShow();
+      await testShowNormalFlow();
+      await testCompleteSuccess();
+      await testCompleteFail();
+      await testCompleteUnknown();
+      await testCompleteEmpty();
+      await testUpdateWithReject();
+      await testUpdateWithValidDetails();
+      await testUpdateWithInvalidDetails();
+      await testUpdateWithError();
+      await testShowWithValidPromise();
+      await testShowWithInvalidPromise();
+      await testShowWithRejectedPromise();
+      await testShowWithErrorPromise();
+      await testShowWithPromiseResolvedByRejectedPromise();
+      await testShowResponseInit();
+      await testShowNotTriggeredByUser();
+      await teardown();
+    } catch (error) {
+      ok(false, `test_showPayment: Unexpected error: ${error.name}`);
+      SimpleTest.finish();
+    }
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345366">Mozilla Bug 1345366</a>
+</body>
+</html>

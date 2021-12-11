@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML ul/li element tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function listItemTree(aBulletText, aName, aSubtree) {
+      var obj = {
+        role: ROLE_LISTITEM,
+        children: [
+          {
+            role: ROLE_LISTITEM_MARKER,
+            name: aBulletText,
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            name: aName,
+          },
+        ],
+      };
+
+      if (aSubtree)
+        obj.children.push(aSubtree);
+
+      return obj;
+    }
+
+    function doTest() {
+      // list1
+      var discAccTree = {
+        role: ROLE_LIST,
+        children: [
+          new listItemTree(kDiscBulletText, "Oranges"),
+          new listItemTree(kDiscBulletText, "Apples"),
+          new listItemTree(kDiscBulletText, "Bananas"),
+        ],
+      };
+
+      testAccessibleTree("list1", discAccTree);
+
+      // list2
+      var circleAccTree = {
+        role: ROLE_LIST,
+        children: [
+          new listItemTree(kCircleBulletText, "Oranges"),
+          new listItemTree(kCircleBulletText, "Apples"),
+          new listItemTree(kCircleBulletText, "Bananas"),
+        ],
+      };
+
+      testAccessibleTree("list2", circleAccTree);
+
+      // list3
+      var squareAccTree = {
+        role: ROLE_LIST,
+        children: [
+          new listItemTree(kSquareBulletText, "Oranges"),
+          new listItemTree(kSquareBulletText, "Apples"),
+          new listItemTree(kSquareBulletText, "Bananas"),
+        ],
+      };
+
+      testAccessibleTree("list3", squareAccTree);
+
+      // list4
+      var nestedAccTree = {
+        role: ROLE_LIST,
+        children: [
+          new listItemTree("1. ", "Oranges"),
+          new listItemTree("2. ", "Apples"),
+          new listItemTree("3. ", "Bananas", circleAccTree),
+        ],
+      };
+
+      testAccessibleTree("list4", nestedAccTree);
+
+      // dl list
+      var tree =
+        { DEFINITION_LIST: [ // dl
+          { TERM: [ // dt
+            { TEXT_LEAF: [] },
+          ] },
+          { DEFINITION: [ // dd
+            { TEXT_LEAF: [] },
+          ] },
+          { TERM: [ // dt
+            { TEXT_LEAF: [] },
+          ] },
+          { DEFINITION: [ // dd
+            { TEXT_LEAF: [] },
+          ] },
+        ] };
+
+      testAccessibleTree("list5", tree);
+
+      // dl list inside ordered list
+      tree =
+        { LIST: [ // ol
+          { LISTITEM: [ // li
+            { LISTITEM_MARKER: [ ] },
+            { DEFINITION_LIST: [ // dl
+              { TERM: [ // dt
+                { TEXT_LEAF: [] },
+              ] },
+              { DEFINITION: [ // dd
+                { TEXT_LEAF: [] },
+              ] },
+            ] },
+          ] },
+        ] };
+
+      testAccessibleTree("list6", tree);
+
+      // li having no display:list-item style
+      tree =
+        { LIST: [ // ul
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+          { TEXT_LEAF: [] },
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+        ] };
+      testAccessibleTree("list7", tree);
+
+      tree =
+        { LIST: [ // ul
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+        ] };
+      testAccessibleTree("list8", tree);
+
+      // span having display:list-item style
+      testAccessibleTree("list9", discAccTree);
+
+      // dl with div grouping dt/dd
+      tree =
+        { DEFINITION_LIST: [ // dl
+          { TERM: [ // dt
+            { TEXT_LEAF: [] },
+          ] },
+          { DEFINITION: [ // dd
+            { TEXT_LEAF: [] },
+          ] },
+          { TERM: [ // dt
+            { TEXT_LEAF: [] },
+          ] },
+          { DEFINITION: [ // dd
+            { TEXT_LEAF: [] },
+          ] },
+        ] };
+
+      testAccessibleTree("list10", tree);
+
+      // list-style-image
+      testAccessibleTree("list11", discAccTree);
+
+      // list-style: none
+      tree =
+        { LIST: [ // ul
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+        ] };
+      testAccessibleTree("list12", tree);
+
+      // ::marker with content
+      tree = { // ol
+        role: ROLE_LIST,
+        children: [
+          { // li
+            role: ROLE_LISTITEM,
+            children: [
+              { // ::marker content text and counter
+                role: ROLE_LISTITEM_MARKER,
+                name: "foo1",
+              },
+              {
+                role: ROLE_TEXT_LEAF,
+                name: "Oranges",
+              },
+            ],
+          },
+          { // li
+            role: ROLE_LISTITEM,
+            children: [
+              { // ::marker content text and counter
+                role: ROLE_LISTITEM_MARKER,
+                name: "foo2",
+              },
+              {
+                role: ROLE_TEXT_LEAF,
+                name: "Apples",
+              },
+            ],
+          },
+        ],
+      };
+      testAccessibleTree("list13", tree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Fix O(n^2) access to all the children of a container"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045">
+    Mozilla Bug 342045
+  </a>
+  <a target="_blank"
+     title="Wrong accessible is created for HTML:li having block display style"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=507555">
+    Mozilla Bug 507555
+  </a>
+  <a target="_blank"
+     title="Bullets of nested not ordered lists have one and the same character."
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=604587">
+    Mozilla Bug 604587
+  </a>
+  <a target="_blank"
+     title="Fix list bullets for DL list (crash [@ nsBulletFrame::GetListItemText])"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=629114">
+    Mozilla Bug 629114
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ul id="list1">
+    <li id="l1_li1">Oranges</li>
+    <li id="l1_li2">Apples</li>
+    <li id="l1_li3">Bananas</li>
+  </ul>
+
+  <ul id="list2" style="list-style-type: circle">
+    <li id="l2_li1">Oranges</li>
+    <li id="l2_li2">Apples</li>
+    <li id="l2_li3">Bananas</li>
+  </ul>
+
+  <ul id="list3" style="list-style-type: square">
+    <li id="l3_li1">Oranges</li>
+    <li id="l3_li2">Apples</li>
+    <li id="l3_li3">Bananas</li>
+  </ul>
+
+  <ol id="list4">
+    <li id="li4">Oranges</li>
+    <li id="li5">Apples</li>
+    <li id="li6">Bananas<ul>
+        <li id="n_li4">Oranges</li>
+        <li id="n_li5">Apples</li>
+        <li id="n_li6">Bananas</li>
+      </ul>
+    </li>
+  </ol>
+
+  <dl id="list5">
+    <dt>item1</dt><dd>description</dd>
+    <dt>item2</td><dd>description</dd>
+  </dl>
+
+  <ol id="list6">
+    <li>
+      <dl id="dl">
+        <dt>item1</dt><dd>description</dd>
+      </dl>
+    </li>
+  </ol>
+
+  <!-- display style different than list-item -->
+  <ul id="list7">
+    <li id="l7_li1" style="display:inline-block;">Oranges</li>
+    <li id="l7_li2" style="display:inline-block;">Apples</li>
+  </ul>
+
+  <ul id="list8">
+    <li id="l8_li1" style="display:inline; float:right;">Oranges</li>
+    <li id="l8_li2" style="display:inline; float:right;">Apples</li>
+  </ul>
+
+  <!-- list-item display style -->
+  <ul id="list9">
+    <span id="l9_li1" style="display:list-item">Oranges</span>
+    <span id="l9_li2" style="display:list-item">Apples</span>
+    <span id="l9_li3" style="display:list-item">Bananas</span>
+  </ul>
+
+  <!-- dl with div grouping dd/dt elements (bug 1476347) -->
+  <dl id="list10">
+    <div><dt>item1</dt><dd>description</dd></div>
+    <div><dt>item2</td><dd>description</dd></div>
+  </dl>
+
+  <!-- list-style-image -->
+  <ul id="list11"
+      style="list-style-type: none; list-style-image: url('../moz.png');">
+    <li>Oranges</li>
+    <li>Apples</li>
+    <li>Bananas</li>
+  </ul>
+
+  <!-- list-style: none -->
+  <ul id="list12" style="list-style: none;">
+    <li>Oranges</li>
+    <li>Apples</li>
+  </ul>
+
+  <!-- ::marker with content -->
+  <style>
+    #list13 li {
+      counter-increment: list13counter;
+    }
+    #list13 li::marker {
+      content: 'foo' counter(list13counter);
+    }
+  </style>
+  <ol id="list13">
+    <li>Oranges</li>
+    <li>Apples</li>
+  </ol>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE HTML><html><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<textarea maxlength="3" spellcheck="false" style="-moz-appearance: none"></textarea>
+<script>
+  var t = document.querySelector("textarea");
+  t.focus();
+
+  sendString("ab");
+  synthesizeKey("KEY_Enter");
+  sendString("c");
+</script>
+</body>
+</html>

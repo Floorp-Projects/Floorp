@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US">
+  <head>
+  <title>Test LEGEND placed into FIELDSET shadow DOM</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1140579">
+<style>
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+.inline { display:inline; }
+z,.b { color:blue; }
+</style>
+  </head>
+  <body>
+    <fieldset id="host1"><legend>1</legend>a c</fieldset>
+    <fieldset id="host2"><legend>2</legend>a c</fieldset>
+    <fieldset id="host3"><legend>3</legend>a c</fieldset>
+    <fieldset id="host4"><legend>4</legend>a c</fieldset>
+    <fieldset id="host5"><legend>5</legend>a c</fieldset>
+    <fieldset id="host6"><legend class="b">6</legend>a c</fieldset>
+    <fieldset id="host7"><legend>7</legend>a <legend class="inline">L</legend> B</fieldset>
+    <fieldset id="host8"><legend>a 8</legend>A <legend class="inline">L c</legend> B</fieldset>
+    <fieldset id="host9"><legend>a 9</legend>A <legend class="inline p0">a L2 c</legend><z>a<legend>L3</legend>c</z> B</fieldset>
+  </body>
+</html>

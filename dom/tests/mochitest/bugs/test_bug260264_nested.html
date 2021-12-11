@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=260264
+-->
+<head>
+  <title>Test for Bug 260264</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils_bug260264.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=260264">Mozilla Bug 260264</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 260264 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function makeIframe(aEvent) {
+  var tempURL = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')+1);
+  tempURL = 'http://example.com' + tempURL + "child_bug260264.html#" + aEvent;
+  $("display").appendChild(document.createElement("iframe")).src = tempURL;
+}
+
+function test_nested_frames() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.disable_open_during_load", true]]}, test_nested_frames2);
+}
+
+function test_nested_frames2() {
+  // Grandchild will use this name to refer to the current window:
+  window.name = "parent260264";
+
+  if (tests[0]) {
+    tests[0].setup(function() {makeIframe(tests[0].event);});
+  } else {
+    ok(false, "There should have run 8 tests here");
+    SimpleTest.finish();
+  }
+}
+
+function should_have_blocked(popup) {
+  ok(!popup, "popup should have been blocked");
+}
+
+function should_not_have_blocked(popup) {
+ ok(popup, "popup should not have been blocked");
+}
+
+function setupPP(aAllowedEvents, aPopup1, aPopup2, aNext) {
+  SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events", aAllowedEvents]]}, function() {
+  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': aPopup1, 'context': document},
+                                 {'type': 'popup', 'allow': aPopup2, 'context': 'http://example.com'}], aNext);
+  });
+}
+
+/**
+ * The example_priv (DENY_ACTION) parameter controls whether or not the child frame has
+ * popup clearance.  Neither the top window nor the grandchild frame have
+ * this clearance.  The point of these tests is to make sure the child's
+ * clearance (or lack thereof) is properly considered when opening a popup
+ * from the grandchild.
+*/
+
+var tests = [
+ { event: "mouseup",
+   setup(aNext) {
+     setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "mouseup",
+   setup(aNext) {
+     setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "mouseup",
+   setup(aNext) {
+     setupPP("click", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "mouseup",
+   setup(aNext) {
+     setupPP("click", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_have_blocked
+ },
+ { event: "mouseover",
+   setup(aNext) {
+     setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_have_blocked
+ },
+ { event: "mouseover",
+   setup(aNext) {
+     setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "click",
+   setup(aNext) {
+     setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "click",
+   setup(aNext) {
+     setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ }
+];
+
+// Visible to child windows:
+function report(popup) {
+  tests[0].report(popup);
+  tests.shift();
+
+  if (tests[0]) {
+    tests[0].setup(function() {makeIframe(tests[0].event);});
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+test_nested_frames();
+
+</script>
+</pre>
+</body>
+</html>

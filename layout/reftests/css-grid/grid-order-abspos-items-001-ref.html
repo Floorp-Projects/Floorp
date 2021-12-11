@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing layout and painting of abs.pos. grid items with 'order'</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107786">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+ /*display: grid;*/
+ position: relative;
+ grid-template-columns: 20px 20px 20px 20px;
+ grid-auto-flow: row;
+ grid-auto-columns: 23px;
+ grid-auto-rows: 17px;
+ padding: 17px 7px 11px 13px;
+ width: 100px;
+ height: 25px;
+}
+
+.a { z-index:1; left:74px; right:5px; background:lime; }
+.b { z-index:1; left:54px; right:5px; background:pink; }
+.c { z-index:1; left:34px; right:5px; background:yellow; }
+.d { z-index:1; left:14px; right:5px; background:silver; }
+.e { display:none; }
+
+.abs {
+  position: absolute;
+  top:3px; bottom:1px;
+}
+
+span {
+  background: lime;
+  border: 1px solid;
+}
+
+.z-1 { z-index:-1; }
+.z1 { z-index:11; }
+.z1.b { z-index:12; }
+.z2 { z-index:13; }
+.z3 { z-index:14; }
+.z4 { z-index:15; }
+x { background:black; order:99; float:right; }
+f { float:left; }
+.f2 { background:white; }
+.f2 span { opacity: 0.5; }
+.f2 span.e { z-index:-1; }
+  </style>
+</head>
+<body>
+
+<f>
+
+<div class="grid">
+<span class="abs a">a</span>
+<span class="abs b">b</span>
+<span class="abs c">c</span>
+<span class="abs e">FAIL<x>x</x></span>
+<span class="abs d">d<x>x</x></span>
+</div>
+
+<div class="grid">
+<div>
+  <span class="abs c">c</span>
+  <span class="abs e">FAIL<x>x</x></span>
+  <span class="abs d">d<x>x</x></span>
+</div>
+<div>
+  <span class="abs a">a</span>
+  <span class="abs b">b</span>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:grid; order:2">
+<div style="display:grid;">
+<div>
+  <span class="abs e">FAIL<x>x</x></span>
+  <span class="abs d">d<x>x</x></span>
+</div>
+<div>
+  <span class="abs b">b</span>
+</div>
+</div>
+<div>
+  <span class="abs c">c</span>
+</div>
+<div>
+  <span class="abs a">a</span>
+</div>
+</div>
+</div>
+
+<div class="grid">
+<span class="abs a">a</span>
+<span class="abs z1 b">b</span>
+<span class="abs z2 c">c</span>
+<span class="abs e">FAIL<x>x</x></span>
+<span class="abs d">d<x>x</x></span>
+</div>
+
+<div class="grid">
+<div>
+  <span class="abs z1 c">c</span>
+  <span class="abs e">FAIL<x>x</x></span>
+  <span class="abs d">d<x>x</x></span>
+</div>
+<div>
+  <span class="abs a">a</span>
+  <span class="abs z1 b">b</span>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:grid; order:2">
+<div style="order:2">
+  <span class="abs a">a</span>
+</div>
+<div style="order:1">
+  <span class="abs z2 c">c</span>
+</div>
+</div>
+<div style="display:grid; order:1">
+<div style="order:2">
+  <span class="abs z1 b">b</span>
+</div>
+<div style="order:1">
+  <span class="abs z-1 d">FAIL<x>x</x></span>
+  <span class="abs z1 d">d<x>x</x></span>
+</div>
+</div>
+</div>
+
+</f>
+
+<script>
+  var f = document.querySelector('f');
+  var f2 = f.cloneNode(true);
+  f2.className = 'f2';
+  document.body.appendChild(f2);
+</script>
+
+</body>
+</html>

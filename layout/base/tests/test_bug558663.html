@@ -1,0 +1,37 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bug 558663 test</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <style>
+      iframe {
+        width: 600px;
+        height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+  </body>
+  <script>
+  if (navigator.platform.startsWith("Linux")) {
+    // For e10s issue of bug 966157
+    SimpleTest.expectAssertions(0, 2);
+  }
+  SimpleTest.waitForExplicitFinish();
+  // AccessibleCaret's pref is checked only when PresShell is initialized. To turn
+  // off the pref, we test bug 558663 in an iframe.
+  SpecialPowers.pushPrefEnv({"set": [['layout.accessiblecaret.enabled_on_touch', false]]}, function() {
+    var iframe = document.createElement("iframe");
+    iframe.src = "bug558663.html";
+    document.getElementById('container').appendChild(iframe);
+  });
+  </script>
+</html>

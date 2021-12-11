@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that all VP9 frames are decoded (contains superframes)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  var video = document.createElement("video");
+  video.src = "vp9-superframes.webm";
+  video.play();
+  video.addEventListener("ended", function () {
+    let vpq = video.getVideoPlaybackQuality();
+    is(vpq.totalVideoFrames, 120, "totalVideoFrames must contains 120 frames");
+    SimpleTest.finish();
+  });
+}
+
+addLoadEvent(function() {
+  test();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file enables test coverage of the dsa performance tests
+#
+#
+# mode     keysize   bufsize   repetitions cxrepetitions
+  dsa        64         20         200         5
+  dsa        96         20         200         3
+  dsa       128         20         200         3
+  dsa       256         20         200         3
+  dsa       384         20         200         3

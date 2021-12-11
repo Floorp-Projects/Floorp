@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<span id=a />
+<script>
+addEventListener("DOMContentLoaded", function(){
+  a.animate([{"left": "38%"}], 100);
+  a.appendChild(document.createElement("div"));
+  document.documentElement.classList.remove("reftest-wait");
+});
+</script>
+</html>

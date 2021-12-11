@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- dbaron thinks the validity of this test is questionable, see
+     https://bugzilla.mozilla.org/show_bug.cgi?id=477462#c20 and #c21 -->
+<style type="text/css">
+#table {
+ display: table;
+ width: 100px;
+}
+#caption1 {
+ display: table-caption;
+ height: 20px;
+ background-color: red;
+ margin-bottom: 10px;
+}
+#caption2 {
+ display: table-caption;
+ height: 20px;
+ background-color: blue;
+ margin: 20px 0;
+}
+#caption3 {
+ display: table-caption;
+ height: 20px;
+ background-color: green;
+ margin-top: 10px;
+}
+</style>
+</head>
+<body>
+<div id="table">
+ <div id="caption1"></div>
+ <div id="caption2"></div>
+ <div id="caption3"></div>
+</div>
+</body>
+</html>

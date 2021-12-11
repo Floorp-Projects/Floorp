@@ -1,0 +1,119 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<box id="customization-content-container">
+<box flex="1" id="customization-palette-container">
+  <label id="customization-header" data-l10n-id="customize-mode-menu-and-toolbars-header"></label>
+  <vbox id="customization-palette" class="customization-palette" hidden="true"/>
+  <html:div id="customization-pong-arena" hidden="true"/>
+  <spacer id="customization-spacer"/>
+</box>
+<vbox id="customization-panel-container">
+  <vbox id="customization-panelWrapper">
+    <box class="panel-arrowbox">
+      <image class="panel-arrow" side="top"/>
+    </box>
+    <box class="panel-arrowcontent" side="top" flex="1">
+      <vbox id="customization-panelHolder">
+        <description id="customization-panelHeader" data-l10n-id="customize-mode-overflow-list-title"></description>
+        <description id="customization-panelDescription" data-l10n-id="customize-mode-overflow-list-description"></description>
+      </vbox>
+      <box class="panel-inner-arrowcontentfooter" hidden="true"/>
+    </box>
+  </vbox>
+</vbox>
+</box>
+<hbox id="customization-footer">
+<checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
+# NB: because oncommand fires after click, by the time we've fired, the checkbox binding
+#    will already have switched the button's state, so this is correct:
+          oncommand="gCustomizeMode.toggleTitlebar(this.checked)" data-l10n-id="customize-mode-titlebar"/>
+<button id="customization-toolbar-visibility-button" class="customizationmode-button" type="menu" data-l10n-id="customize-mode-toolbars">
+  <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
+</button>
+<button id="customization-uidensity-button"
+        data-l10n-id="customize-mode-uidensity"
+        class="customizationmode-button"
+        type="menu"
+        hidden="true">
+  <panel type="arrow" id="customization-uidensity-menu"
+         orient="vertical"
+         onpopupshowing="gCustomizeMode.onUIDensityMenuShowing();"
+         position="topleft bottomleft"
+         flip="none"
+         role="menu">
+    <menuitem id="customization-uidensity-menuitem-compact"
+              class="menuitem-iconic customization-uidensity-menuitem"
+              role="menuitemradio"
+              data-l10n-id="customize-mode-uidensity-menu-compact-unsupported"
+              tabindex="0"
+              onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+              onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+              onblur="gCustomizeMode.resetUIDensity();"
+              onmouseout="gCustomizeMode.resetUIDensity();"
+              oncommand="gCustomizeMode.setUIDensity(this.mode);"/>
+    <menuitem id="customization-uidensity-menuitem-normal"
+              class="menuitem-iconic customization-uidensity-menuitem"
+              role="menuitemradio"
+              data-l10n-id="customize-mode-uidensity-menu-normal"
+              tabindex="0"
+              onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+              onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+              onblur="gCustomizeMode.resetUIDensity();"
+              onmouseout="gCustomizeMode.resetUIDensity();"
+              oncommand="gCustomizeMode.setUIDensity(this.mode);"/>
+#ifndef XP_MACOSX
+    <menuitem id="customization-uidensity-menuitem-touch"
+              class="menuitem-iconic customization-uidensity-menuitem"
+              role="menuitemradio"
+              data-l10n-id="customize-mode-uidensity-menu-touch"
+              tabindex="0"
+              onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+              onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+              onblur="gCustomizeMode.resetUIDensity();"
+              onmouseout="gCustomizeMode.resetUIDensity();"
+              oncommand="gCustomizeMode.setUIDensity(this.mode);">
+    </menuitem>
+    <spacer hidden="true" id="customization-uidensity-touch-spacer"/>
+    <checkbox id="customization-uidensity-autotouchmode-checkbox"
+              hidden="true"
+              data-l10n-id="customize-mode-uidensity-auto-touch-mode-checkbox"
+              oncommand="gCustomizeMode.updateAutoTouchMode(this.checked)"/>
+#endif
+  </panel>
+</button>
+<label is="text-link"
+       id="customization-lwtheme-link"
+       data-l10n-id="customize-mode-lwthemes-link"
+       onclick="gCustomizeMode.openAddonsManagerThemes();" />
+
+<button id="whimsy-button"
+        type="checkbox"
+        class="customizationmode-button"
+        oncommand="gCustomizeMode.togglePong(this.checked);"
+        hidden="true"/>
+
+<spacer id="customization-footer-spacer"/>
+#ifdef XP_MACOSX
+    <button id="customization-touchbar-button"
+        class="customizationmode-button"
+        hidden="true"
+        oncommand="gCustomizeMode.customizeTouchBar();"
+        data-l10n-id="customize-mode-touchbar-cmd"/>
+    <spacer hidden="true" id="customization-touchbar-spacer"/>
+#endif
+<button id="customization-undo-reset-button"
+        class="customizationmode-button"
+        hidden="true"
+        oncommand="gCustomizeMode.undoReset();"
+        data-l10n-id="customize-mode-undo-cmd"/>
+<button id="customization-reset-button"
+        oncommand="gCustomizeMode.reset();"
+        data-l10n-id="customize-mode-restore-defaults"
+        class="customizationmode-button"/>
+<button id="customization-done-button"
+        oncommand="gCustomizeMode.exit();"
+        data-l10n-id="customize-mode-done"
+        class="customizationmode-button"/>
+</hbox>

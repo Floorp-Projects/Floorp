@@ -1,0 +1,22 @@
+<!-- In paced calcmode, this animation should jump to -990 really fast,
+     despite the many small-jump values before it, leaving the canvas blank. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+  <script>
+    function go() {
+      document.documentElement.removeAttribute("class");
+    }
+    function delay_go() {
+      setTimeout(go, 1000);
+    }
+    document.addEventListener("MozReftestInvalidate", delay_go, false);
+    setTimeout(delay_go, 4000); // fallback for running outside reftest
+  </script>
+  <rect height="90" width="90" fill="green"></rect>
+  <rect x="40" y="40" width="10" height="10" fill="red">
+    <animate attributeName="x" 
+             dur="5s" values="40; 41; 42; 43; 44; 45; 46; 47; 48; 49; 50; -950"
+             calcMode="paced" fill="freeze"/>
+  </rect>
+</svg>

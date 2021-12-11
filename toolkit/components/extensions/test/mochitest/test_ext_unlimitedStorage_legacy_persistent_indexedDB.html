@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_unlimitedStorage.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+add_task(async function test_legacy_indexedDB_storagePersistent_unlimitedStorage() {
+  const EXTENSION_ID = "test-idbStoragePersistent@mozilla";
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+
+    manifest: {
+      permissions: ["unlimitedStorage"],
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+    },
+
+    background: async function() {
+      const PROMISE_RACE_TIMEOUT = 8000;
+
+      browser.test.sendMessage("extension-uuid", window.location.host);
+
+      try {
+        await Promise.race([
+          new Promise((resolve, reject) => {
+            const dbReq = indexedDB.open("test-persistent-idb", {version: 1.0, storage: "persistent"});
+
+            dbReq.onerror = evt => {
+              reject(evt.target.error);
+            };
+
+            dbReq.onsuccess = () => {
+              resolve();
+            };
+          }),
+          new Promise((resolve, reject) => {
+            setTimeout(() => {
+              reject(new Error("Timeout opening persistent db from background page"));
+            }, PROMISE_RACE_TIMEOUT);
+          }),
+        ]);
+
+        browser.test.notifyPass("indexeddb-storagePersistent-unlimitedStorage-done");
+      } catch (error) {
+        const loggedError = error instanceof DOMException ? error.message : error;
+        browser.test.fail(`error while testing persistent IndexedDB storage: ${loggedError}`);
+        browser.test.notifyFail("indexeddb-storagePersistent-unlimitedStorage-done");
+      }
+    },
+  });
+
+  await extension.startup();
+
+  const uuid = await extension.awaitMessage("extension-uuid");
+
+  await extension.awaitFinish("indexeddb-storagePersistent-unlimitedStorage-done");
+
+  await extension.unload();
+
+  checkSitePermissions(uuid, Services.perms.UNKNOWN_ACTION, "has been cleared");
+});
+
+</script>
+
+</body>
+</html>

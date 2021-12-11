@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 895091 - Integrating vtt.js</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id="v" src="seek.webm" preload="metadata">
+  <track src="long.vtt" kind="subtitles" id="track1">
+  <track src="long.vtt" kind="subtitles" id="track2">
+</video>
+<script type="text/javascript">
+/**
+ * This test is used to ensure that we can load two track elements with large
+ * amount of cues at same time. In this test, both tracks are disable by default,
+ * we have to enable them in order to start loading.
+ */
+var trackElement = document.getElementById("track1");
+var trackElementTwo = document.getElementById("track2");
+
+async function runTest() {
+  enableBothTracks();
+  await waitUntilBothTracksLoaded();
+  checkTrackReadyStateShouldBeLoaded();
+  checkCuesAmount();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = runTest;
+
+/**
+ * The following are test helper functions.
+ */
+function enableBothTracks() {
+  // All tracks are `disable` on default. As we won't start loading for disabled
+  // tracks, we have to change their mode in order to start loading.
+  trackElement.track.mode = "hidden";
+  trackElementTwo.track.mode = "hidden";
+}
+
+async function waitUntilBothTracksLoaded() {
+  info(`wait until both tracks finish loading`);
+  await Promise.all([once(trackElement, "load"), once(trackElementTwo, "load")]);
+}
+
+function checkTrackReadyStateShouldBeLoaded() {
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  is(trackElementTwo.readyState, 2, "Track::ReadyState should be set to LOADED.");
+}
+
+function checkCuesAmount() {
+  is(trackElement.track.cues.length, 2000, "Cue list length should be 2000.");
+  is(trackElementTwo.track.cues.length, 2000, "Cue list length should be 2000.");
+}
+</script>
+</body>
+</html>

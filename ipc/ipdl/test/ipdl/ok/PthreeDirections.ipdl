@@ -1,0 +1,13 @@
+protocol PthreeDirections {
+
+    // sanity check that the three direction specifiers are being accepted
+child:
+    async ChildMsg();
+
+parent:
+    async ParentMsg();
+
+both:
+    async BothMsg();
+
+};

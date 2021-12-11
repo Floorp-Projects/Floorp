@@ -1,0 +1,145 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsICacheEntry;
+interface nsICacheEntryOpenCallback;
+interface nsICacheEntryDoomCallback;
+interface nsICacheStorageVisitor;
+
+/**
+ * Representation of a cache storage. There can be just-in-mem,
+ * in-mem+on-disk, in-mem+on-disk+app-cache or just a specific
+ * app-cache storage.
+ */
+[scriptable, uuid(35d104a6-d252-4fd4-8a56-3c14657cad3b)]
+interface nsICacheStorage : nsISupports
+{
+  /**
+   * Placeholder for specifying "no special flags" during open.
+   */
+  const uint32_t OPEN_NORMALLY = 0;
+
+  /**
+   * Rewrite any existing data when opening a URL.
+   */
+  const uint32_t OPEN_TRUNCATE = 1 << 0;
+
+  /**
+   * Only open an existing entry.  Don't create a new one.
+   */
+  const uint32_t OPEN_READONLY = 1 << 1;
+
+  /**
+   * Use for first-paint blocking loads.
+   */
+  const uint32_t OPEN_PRIORITY = 1 << 2;
+
+  /**
+   * Bypass the cache load when write is still in progress.
+   */
+  const uint32_t OPEN_BYPASS_IF_BUSY = 1 << 3;
+
+  /**
+   * Perform the cache entry check (onCacheEntryCheck invocation) on any thread
+   * for optimal perfomance optimization.  If this flag is not specified it is
+   * ensured that onCacheEntryCheck is called on the same thread as respective
+   * asyncOpen has been called.
+   */
+  const uint32_t CHECK_MULTITHREADED = 1 << 4;
+
+  /**
+   * Don't automatically update any 'last used' metadata of the entry.
+   */
+  const uint32_t OPEN_SECRETLY = 1 << 5;
+
+  /**
+   * Entry is being opened as part of a service worker interception.  Do not
+   * allow the cache to be disabled in this case.
+   */
+  const uint32_t OPEN_INTERCEPTED = 1 << 6;
+
+  /**
+   * Asynchronously opens a cache entry for the specified URI.
+   * Result is fetched asynchronously via the callback.
+   *
+   * @param aURI
+   *    The URI to search in cache or to open for writting.
+   * @param aIdExtension
+   *    Any string that will extend (distinguish) the entry.  Two entries
+   *    with the same aURI but different aIdExtension will be comletely
+   *    different entries.  If you don't know what aIdExtension should be
+   *    leave it empty.
+   * @param aFlags
+   *    OPEN_NORMALLY - open cache entry normally for read and write
+   *    OPEN_TRUNCATE - delete any existing entry before opening it
+   *    OPEN_READONLY - don't create an entry if there is none
+   *    OPEN_PRIORITY - give this request a priority over others
+   *    OPEN_BYPASS_IF_BUSY - backward compatibility only, LOAD_BYPASS_LOCAL_CACHE_IF_BUSY
+   *    CHECK_MULTITHREADED - onCacheEntryCheck may be called on any thread, consumer
+   *                          implementation is thread-safe
+   * @param aCallback
+   *    The consumer that receives the result.
+   *    IMPORTANT: The callback may be called sooner the method returns.
+   */
+  void asyncOpenURI(in nsIURI aURI, in ACString aIdExtension,
+                    in uint32_t aFlags,
+                    in nsICacheEntryOpenCallback aCallback);
+
+  /**
+   * Immediately opens a new and empty cache entry in the storage, any existing
+   * entries are immediately doomed.  This is similar to the recreate() method
+   * on nsICacheEntry.
+   *
+   * Storage may not implement this method and throw NS_ERROR_NOT_IMPLEMENTED.
+   * In that case consumer must use asyncOpen with OPEN_TRUNCATE flag and get
+   * the new entry via a callback.
+   *
+   * @param aURI @see asyncOpenURI
+   * @param aIdExtension @see asyncOpenURI
+   */
+  nsICacheEntry openTruncate(in nsIURI aURI,
+                             in ACString aIdExtension);
+
+  /**
+   * Synchronously check on existance of an entry.  In case of disk entries
+   * this uses information from the cache index.  When the index data are not
+   * up to date or index is still building, NS_ERROR_NOT_AVAILABLE is thrown.
+   * The same error may throw any storage implementation that cannot determine
+   * entry state without blocking the caller.
+   */
+  boolean exists(in nsIURI aURI, in ACString aIdExtension);
+
+  /**
+   * Synchronously check on existance of alternative data and size of the
+   * content. When the index data are not up to date or index is still building,
+   * NS_ERROR_NOT_AVAILABLE is thrown. The same error may throw any storage
+   * implementation that cannot determine entry state without blocking the caller.
+   */
+  void getCacheIndexEntryAttrs(in nsIURI aURI,
+                               in ACString aIdExtension,
+                               out bool aHasAltData,
+                               out uint32_t aSizeInKB);
+  /**
+   * Asynchronously removes an entry belonging to the URI from the cache.
+   */
+  void asyncDoomURI(in nsIURI aURI, in ACString aIdExtension,
+                    in nsICacheEntryDoomCallback aCallback);
+
+  /**
+   * Asynchronously removes all cached entries under this storage.
+   * NOTE: Disk storage also evicts memory storage.
+   */
+  void asyncEvictStorage(in nsICacheEntryDoomCallback aCallback);
+
+  /**
+   * Visits the storage and its entries.
+   * NOTE: Disk storage also visits memory storage.
+   */
+  void asyncVisitStorage(in nsICacheStorageVisitor aVisitor,
+                         in boolean aVisitEntries);
+
+};

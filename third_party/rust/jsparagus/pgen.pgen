@@ -1,0 +1,89 @@
+# Grammar for the pgen parser specification language
+#
+# This was used to bootstrap the parser for the emu-grammar parser
+# specification language, and it's not clear why we should have two things.
+# Ignore this for now.
+
+var token IDENT;
+var token STR;
+var token MATCH;
+var token COMMENT;
+token Eq = "=";
+token Arrow = "=>";
+token Semi = ";";
+token Token = "token";
+token Var = "var";
+token Nt = "nt";
+token Goal = "goal";
+token Some = "Some";
+token None = "None";
+token OpenBrace = "{";
+token CloseBrace = "}";
+token OpenParen = "(";
+token CloseParen = ")";
+token Comma = ",";
+token QuestionMark = "?";
+
+goal nt grammar {
+    token_defs? nt_defs => grammar($0, $1);
+}
+
+nt token_defs {
+    token_def => single($0);
+    token_defs token_def => append($0, $1);
+}
+
+nt token_def {
+    "token" IDENT "=" STR ";" => const_token($1, $3);
+    "var" "token" IDENT ";" => var_token($2);
+}
+
+nt nt_defs {
+    nt_def => nt_defs_single($0);
+    nt_defs nt_def => nt_defs_append($0, $1);
+}
+
+nt nt_def {
+    COMMENT? "goal"? "nt" IDENT "{" prods? "}" => nt_def($0, $1, $3, $5);
+}
+
+nt prods {
+    prod => single($0);
+    prods prod => append($0, $1);
+    COMMENT => empty($0);
+}
+
+nt prod {
+    terms reducer? ";" => prod($0, $1);
+}
+
+nt terms {
+    term => single($0);
+    terms term => append($0, $1);
+}
+
+nt term {
+    symbol;
+    symbol "?" => optional($0);
+}
+
+nt symbol {
+    IDENT => ident($0);
+    STR => str($0);
+}
+
+nt reducer {
+    "=>" expr => $1;
+}
+
+nt expr {
+    MATCH => expr_match($0);
+    IDENT "(" expr_args? ")" => expr_call($0, $2);
+    "Some" "(" expr ")" => expr_some($2);
+    "None" => expr_none();
+}
+
+nt expr_args {
+    expr => args_single($0);
+    expr_args "," expr => args_append($0, $2);
+}

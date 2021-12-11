@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback of media files that should play OK</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var video = document.createElement('video');
+  video.preload = "metadata";
+  video.token = token;
+  video.prevTime = 0;
+  video.seenEnded = false;
+  video.seenSuspend = false;
+
+  var handler = {
+    "ontimeout": function() {
+      Log(token, "timed out: ended=" + video.seenEnded + ", suspend=" + video.seenSuspend);
+    }
+  };
+  manager.started(token, handler);
+
+  video.src = test.name;
+  video.name = test.name;
+
+  var check = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #1");
+    checkMetadata(t.name, v, t);
+  }}(test, video);
+
+  var noLoad = function(t, v) { return function() {
+    ok(false, t.name + " should not fire 'load' event");
+  }}(test, video);
+
+  var noError = function(t, v) { return function() {
+    ok(false, t.name + " should not fire 'error' event " + v.error.message);
+  }}(test, video);
+
+  var finish = function() {
+    video.finished = true;
+    video.removeEventListener("timeupdate", timeUpdate);
+    removeNodeAndSource(video);
+    manager.finished(video.token);
+  }
+
+  // We should get "ended" and "suspend" events to finish the test.
+  var mayFinish = function() {
+    if (video.seenEnded && video.seenSuspend) {
+      finish();
+    }
+  }
+
+  var checkEnded = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #2");
+    checkMetadata(t.name, v, test);
+    is(v.readyState, v.HAVE_CURRENT_DATA, t.name + " checking readyState");
+    ok(v.ended, t.name + " checking playback has ended");
+    ok(!v.finished, t.name + " shouldn't be finished");
+    ok(!v.seenEnded, t.name + " shouldn't be ended");
+
+    v.seenEnded = true;
+    mayFinish();
+  }}(test, video);
+
+  var checkSuspended = function(t, v) { return function() {
+    if (v.seenSuspend) {
+      return;
+    }
+    is(t.name, v.name, t.name + ": Name should match #3");
+
+    v.seenSuspend = true;
+    mayFinish();
+  }}(test, video);
+
+  var timeUpdate = function(t, v) { return function() {
+    if (v.prevTime > v.currentTime) {
+      ok(false, t.name + " time should run forwards: p=" +
+                v.prevTime + " c=" + v.currentTime);
+    }
+    v.prevTime = v.currentTime;
+  }}(test, video);
+
+  video.addEventListener("load", noLoad);
+  video.addEventListener("error", noError);
+  video.addEventListener("loadedmetadata", check);
+  video.addEventListener("timeupdate", timeUpdate);
+
+  // We should get "ended" and "suspend" events for every resource
+  video.addEventListener("ended", checkEnded);
+  video.addEventListener("suspend", checkSuspended);
+
+  document.body.appendChild(video);
+  video.play();
+}
+
+manager.runTests(gPlayTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

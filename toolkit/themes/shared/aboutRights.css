@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Rights Illustration */
+
+.rights-header {
+  background-image: url("chrome://global/skin/illustrations/about-rights.svg");
+  background-repeat: no-repeat;
+  background-position: right center;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  padding-inline-end: 320px;
+}
+
+.rights-header:dir(rtl) {
+  background-position: left center;
+}

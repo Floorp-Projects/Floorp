@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+.outer {
+  writing-mode:vertical-rl;
+  -webkit-writing-mode:vertical-rl;
+  width:600px;
+  height:200px;
+  border:1px solid gray;
+  background:#eee;
+}
+.test1 {
+  border:10px solid green;
+  margin-top:50%; /* should be 50% of 200px, i.e. 100px */
+  width:80px;
+  height:30px;
+}
+.test2 {
+  border:10px solid blue;
+  margin-right:25%; /* should be 25% of 200px, i.e. 50px */
+  margin-left:10%; /* should be 10% of 200px, i.e. 20px */
+  width:80px;
+  height:30px;
+}
+.test3 {
+  border:10px solid yellow;
+  margin-top:10%; /* should be 10% of 200px, i.e. 20px */
+  width:80px;
+  height:30px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="outer">
+
+<div class="test1">
+</div>
+
+<div class="test2">
+</div>
+
+<div class="test3">
+</div>
+
+</div>
+
+</body>
+</html>

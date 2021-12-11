@@ -1,0 +1,655 @@
+<html>
+
+<head>
+  <title>ARIA based nsIAccessible states testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style type="text/css">
+    .offscreen {
+      position: absolute;
+      left: -5000px;
+      top: -5000px;
+      height: 100px;
+      width: 100px;
+    }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function testAriaDisabledTree(aAccOrElmOrID) {
+      // test accessible and its subtree for propagated state.
+      var acc = getAccessible(aAccOrElmOrID);
+      if (!acc)
+        return;
+
+      var [state /* extraState */] = getStates(aAccOrElmOrID);
+      if (state & STATE_UNAVAILABLE) {
+        var role = getRole(acc);
+        if (role != ROLE_GROUPING) {
+          testStates(acc, STATE_FOCUSABLE);
+        }
+      }
+
+      // Iterate over its children to see if the state got propagated.
+      var children = null;
+      try {
+        children = acc.children;
+      } catch (e) {}
+      ok(children, "Could not get children for " + aAccOrElmOrID + "!");
+
+      if (children) {
+        for (var i = 0; i < children.length; i++) {
+          var childAcc = children.queryElementAt(i, nsIAccessible);
+          testAriaDisabledTree(childAcc);
+        }
+      }
+    }
+
+    function doTest() {
+      // aria_autocomplete
+      testStates("textbox_autocomplete_inline", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("textbox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("textbox_autocomplete_both", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_inline", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_both", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
+      testStates("htmltext_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("htmltextarea_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
+      // aria-busy
+      testStates("textbox_busy_false", 0, 0, STATE_BUSY);
+      testStates("textbox_busy_true", STATE_BUSY);
+      testStates("textbox_busy_error", STATE_INVALID);
+
+      // aria-expanded
+      testStates("combobox", STATE_COLLAPSED);
+      testStates("combobox_expanded", STATE_EXPANDED);
+
+      // tri-state checkbox
+      var checkboxElem = getNode("check1");
+      if (checkboxElem) {
+        testStates(checkboxElem, STATE_CHECKED);
+        checkboxElem.checked = false;
+        testStates(checkboxElem, 0, 0, STATE_CHECKED);
+        checkboxElem.indeterminate = true;
+        testStates(checkboxElem, STATE_MIXED, 0);
+      }
+
+      // aria-checked
+      testStates("aria_checked_checkbox", STATE_CHECKED);
+      testStates("aria_mixed_checkbox", STATE_MIXED);
+      testStates("aria_checked_switch", STATE_CHECKED);
+      testStates("aria_mixed_switch", 0, 0, STATE_MIXED); // unsupported
+      testStates("aria_mixed_switch", 0, 0, STATE_CHECKED); // not checked due to being unsupported
+
+      // test disabled group and all its descendants to see if they are
+      // disabled, too. See bug 429285.
+      testAriaDisabledTree("group");
+
+      // aria-modal
+      testStates("aria_modal", 0, EXT_STATE_MODAL);
+      testStates("aria_modal_false", 0, 0, 0, EXT_STATE_MODAL);
+
+      // aria-multiline
+      testStates("aria_multiline_textbox", 0, EXT_STATE_MULTI_LINE);
+
+      // aria-multiselectable
+      testStates("aria_multiselectable_listbox",
+                 STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+      testStates("aria_multiselectable_tablist",
+                 STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+
+      // aria-pressed
+      testStates("aria_pressed_button", STATE_PRESSED, 0, STATE_CHECKABLE);
+      testStates("aria_pressed_native_button", STATE_PRESSED, 0, STATE_CHECKABLE);
+
+      // aria-readonly
+      testStates("aria_readonly_textbox", STATE_READONLY);
+
+      // readonly on grid and gridcell
+      testStates("aria_grid_default", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_default_colheader_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_grid_default_colheader_inherited", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_default_rowheader_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_grid_default_rowheader_inherited", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_default_cell_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_grid_default_cell_inherited", 0, 0,
+                 STATE_READONLY, 0);
+
+      testStates("aria_grid_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_grid_readonly_colheader_editable", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_readonly_colheader_inherited", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_grid_readonly_rowheader_editable", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_readonly_rowheader_inherited", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_grid_readonly_cell_editable", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_readonly_cell_inherited", STATE_READONLY, 0,
+                 0, 0);
+
+      // readonly on treegrid and gridcell
+      testStates("aria_treegrid_default", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_default_colheader_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_treegrid_default_colheader_inherited", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_default_rowheader_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_treegrid_default_rowheader_inherited", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_default_cell_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_treegrid_default_cell_inherited", 0, 0,
+                 STATE_READONLY, 0);
+
+      testStates("aria_treegrid_readonly", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_treegrid_readonly_colheader_editable", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_readonly_colheader_inherited", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_treegrid_readonly_rowheader_editable", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_readonly_rowheader_inherited", STATE_READONLY, 0,
+                 0, 0);
+      testStates("aria_treegrid_readonly_cell_editable", 0, 0,
+                 STATE_READONLY, 0);
+      testStates("aria_treegrid_readonly_cell_inherited", STATE_READONLY, 0,
+                 0, 0);
+
+      // aria-readonly on directory
+      testStates("aria_directory", STATE_READONLY);
+
+      // aria-selectable
+      testStates("aria_selectable_listitem", STATE_SELECTABLE | STATE_SELECTED);
+
+      // active state caused by aria-activedescendant
+      testStates("as_item1", 0, EXT_STATE_ACTIVE);
+      testStates("as_item2", 0, 0, 0, EXT_STATE_ACTIVE);
+
+      // universal ARIA properties inherited from file input control
+      var fileBrowseButton = getAccessible("fileinput").firstChild;
+      testStates(fileBrowseButton,
+                 STATE_BUSY | STATE_UNAVAILABLE | STATE_REQUIRED | STATE_HASPOPUP | STATE_INVALID);
+      // No states on the label.
+
+      // offscreen test
+      testStates("aria_offscreen_textbox", STATE_OFFSCREEN);
+
+      //
+      // This section tests aria roles on links/anchors for underlying
+      // HTMLLinkAccessible creation. (see closed bug 494807)
+      //
+
+      // strong roles
+      testStates("aria_menuitem_link", 0, 0, STATE_LINKED);
+      testStates("aria_button_link", 0, 0, STATE_LINKED);
+      testStates("aria_checkbox_link", 0, 0, STATE_LINKED);
+
+      // strong landmark
+      testStates("aria_application_link", 0, 0, STATE_LINKED);
+      testStates("aria_application_anchor", 0, 0, STATE_SELECTABLE);
+
+      // strange cases
+      testStates("aria_link_link", STATE_LINKED);
+      testStates("aria_link_anchor", STATE_SELECTABLE);
+
+      // some landmarks that break accessibility for these native elements
+      // Note that these are illegal uses by web authors as per WAI-ARIA in HTML
+      testStates("aria_main_link", 0, 0, STATE_LINKED);
+      testStates("aria_navigation_link", 0, 0, STATE_LINKED);
+      testStates("aria_main_anchor", 0, 0, STATE_SELECTABLE);
+      testStates("aria_navigation_anchor", 0, 0, STATE_SELECTABLE);
+
+      // aria-orientation
+      testStates("aria_combobox", 0, 0, 0, EXT_STATE_HORIZONTAL | EXT_STATE_VERTICAL);
+      testStates("aria_hcombobox", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vcombobox", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_listbox", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hlistbox", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vlistbox", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_menu", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hmenu", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vmenu", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_menubar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_hmenubar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vmenubar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_radiogroup", 0, 0, 0, EXT_STATE_HORIZONTAL | EXT_STATE_VERTICAL);
+      testStates("aria_hradiogroup", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vradiogroup", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_scrollbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hscrollbar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vscrollbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_separator", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_hseparator", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vseparator", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_slider", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_hslider", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vslider", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_tablist", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_htablist", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtablist", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_toolbar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_htoolbar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtoolbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_tree", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_htree", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtree", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_treegrid", 0, 0, 0, EXT_STATE_HORIZONTAL | EXT_STATE_VERTICAL);
+      testStates("aria_htreegrid", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtreegrid", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+
+      // indeterminate ARIA progressbars (no aria-valuenow or aria-valuetext attribute)
+      // should expose mixed state
+      testStates("aria_progressbar", STATE_MIXED);
+      testStates("aria_progressbar_valuenow", 0, 0, STATE_MIXED);
+      testStates("aria_progressbar_valuetext", 0, 0, STATE_MIXED);
+
+      // aria-current
+      testStates("current_page_1", 0, EXT_STATE_CURRENT);
+      testStates("page_2", 0, 0, EXT_STATE_CURRENT);
+      testStates("page_3", 0, 0, EXT_STATE_CURRENT);
+      testStates("page_4", 0, 0, EXT_STATE_CURRENT);
+      testStates("current_foo", 0, EXT_STATE_CURRENT);
+
+      testStates("aria_listbox", STATE_FOCUSABLE);
+      testStates("aria_grid", STATE_FOCUSABLE);
+      testStates("aria_tree", STATE_FOCUSABLE);
+      testStates("aria_treegrid", STATE_FOCUSABLE);
+      testStates("aria_listbox_disabled", 0, 0, STATE_FOCUSABLE);
+      testStates("aria_grid_disabled", 0, 0, STATE_FOCUSABLE);
+      testStates("aria_tree_disabled", 0, 0, STATE_FOCUSABLE);
+      testStates("aria_treegrid_disabled", 0, 0, STATE_FOCUSABLE);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=457219"
+     title="nsIAccessible states testing">
+    Mozilla Bug 457219
+  </a><br />
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429285"
+     title="Propagate aria-disabled to descendants">
+    Mozilla Bug 429285
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=457226"
+     title="Mochitests for ARIA states">
+    Mozilla Bug 457226
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=499653"
+     title="Unify ARIA state attributes mapping rules">
+    Mozilla Bug 499653
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=681674"
+     title="aria-autocomplete not supported on standard form text input controls">
+    Mozilla Bug 681674
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=681674"
+     title="aria-orientation should be applied to separator and slider roles">
+    Mozilla Bug 681674
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=689847"
+     title="Expose active state on current item of selectable widgets">
+    Mozilla Bug 689847
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Mozilla Bug 699017
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=690199"
+     title="ARIA select widget should expose focusable state regardless the way they manage its children">
+    Mozilla Bug 690199
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=740851"
+     title="ARIA undetermined progressmeters should expose mixed state">
+    Mozilla Bug 740851
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=762876"
+     title="fix default horizontal / vertical state of role=scrollbar and ensure only one of horizontal / vertical states is exposed">
+    Mozilla Bug 762876
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=892091"
+     title="ARIA treegrid should be editable by default">
+    Bug 892091
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=835121"
+     title="ARIA grid should be editable by default">
+    Mozilla Bug 835121
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=989958"
+     title="Pressed state is not exposed on a button element with aria-pressed attribute">
+    Mozilla Bug 989958
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1136563"
+     title="Support ARIA 1.1 switch role">
+    Mozilla Bug 1136563
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1355921"
+     title="Elements with a defined, non-false value for aria-current should expose ATK_STATE_ACTIVE">
+    Mozilla Bug 1355921
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="textbox_autocomplete_inline" role="textbox" aria-autocomplete="inline"></div>
+  <div id="textbox_autocomplete_list" role="textbox" aria-autocomplete="list"></div>
+  <div id="textbox_autocomplete_both" role="textbox" aria-autocomplete="both"></div>
+  <div id="combobox_autocomplete_inline" role="combobox" aria-autocomplete="inline"></div>
+  <div id="combobox_autocomplete_list" role="combobox" aria-autocomplete="list"></div>
+  <div id="combobox_autocomplete_both" role="combobox" aria-autocomplete="both"></div>
+
+  <input id="htmltext_autocomplete_list" type="text" aria-autocomplete="list" />
+  <textarea id="htmltextarea_autocomplete_list" aria-autocomplete="list"></textarea>
+
+  <div id="textbox_busy_false" role="textbox" aria-busy="false"></div>
+  <div id="textbox_busy_true" role="textbox" aria-busy="true"></div>
+  <div id="textbox_busy_error" role="textbox" aria-busy="error"></div>
+
+  <div id="combobox" role="combobox">combobox</div>
+  <div id="combobox_expanded" role="combobox"
+       aria-expanded="true">combobox</div>
+
+  <input type="checkbox" id="check1" value="I agree" checked="true"/>
+
+  <div id="aria_checked_checkbox" role="checkbox" aria-checked="true">
+    I agree
+  </div>
+
+  <div id="aria_mixed_checkbox" role="checkbox" aria-checked="mixed">
+    I might agree
+  </div>
+
+  <div id="aria_checked_switch" role="switch" aria-checked="true">
+    I am switched on
+  </div>
+
+  <div id="aria_mixed_switch" role="switch" aria-checked="mixed">
+    I am unsupported
+  </div>
+
+  <div id="aria_modal" aria-modal="true">modal stuff</div>
+  <div id="aria_modal_false" aria-modal="false">non modal stuff</div>div>
+  <div id="aria_multiline_textbox" role="textbox" aria-multiline="true"></div>
+  <div id="aria_multiselectable_listbox" role="listbox" aria-multiselectable="true"></div>
+  <div id="aria_multiselectable_tablist" role="tablist" aria-multiselectable="true"></div>
+  <div id="aria_pressed_button" role="button" aria-pressed="true">Button</div>
+  <button id="aria_pressed_native_button" aria-pressed="true">Button</button>
+
+  <div id="aria_readonly_textbox"
+       role="textbox" aria-readonly="true">This text should be readonly</div>
+
+  <div id="aria_grid_default" role="grid">
+    <div role="row">
+      <div id="aria_grid_default_colheader_readonly"
+           role="columnheader" aria-readonly="true">colheader1</div>
+      <div id="aria_grid_default_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_grid_default_rowheader_readonly"
+           role="rowheader" aria-readonly="true">rowheader1</div>
+      <div id="aria_grid_default_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_grid_default_cell_readonly"
+           role="gridcell" aria-readonly="true">gridcell1</div>
+      <div id="aria_grid_default_cell_inherited"
+           role="gridcell">gridcell2</div>
+    </div>
+  </div>
+
+  <div id="aria_grid_readonly" role="grid" aria-readonly="true">
+    <div role="row">
+      <div id="aria_grid_readonly_colheader_editable"
+           role="columnheader" aria-readonly="false">colheader1</div>
+      <div id="aria_grid_readonly_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_grid_readonly_rowheader_editable"
+           role="rowheader" aria-readonly="false">rowheader1</div>
+      <div id="aria_grid_readonly_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_grid_readonly_cell_editable"
+           role="gridcell" aria-readonly="false">gridcell1</div>
+      <div id="aria_grid_readonly_cell_inherited"
+           role="gridcell">gridcell2</div>
+    </div>
+  </div>
+
+  <div id="aria_treegrid_default" role="grid">
+    <div role="row">
+      <div id="aria_treegrid_default_colheader_readonly"
+           role="columnheader" aria-readonly="true">colheader1</div>
+      <div id="aria_treegrid_default_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_default_rowheader_readonly"
+           role="rowheader" aria-readonly="true">rowheader1</div>
+      <div id="aria_treegrid_default_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_default_cell_readonly"
+           role="gridcell" aria-readonly="true">gridcell1</div>
+      <div id="aria_treegrid_default_cell_inherited"
+           role="gridcell">gridcell2</div>
+    </div>
+  </div>
+
+  <div id="aria_treegrid_readonly" role="grid" aria-readonly="true">
+    <div role="row">
+      <div id="aria_treegrid_readonly_colheader_editable"
+           role="columnheader" aria-readonly="false">colheader1</div>
+      <div id="aria_treegrid_readonly_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_readonly_rowheader_editable"
+           role="rowheader" aria-readonly="false">rowheader1</div>
+      <div id="aria_treegrid_readonly_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_treegrid_readonly_cell_editable"
+           role="gridcell" aria-readonly="false">gridcell1</div>
+      <div id="aria_treegrid_readonly_cell_inherited"
+           role="gridcell">gridcell2</div>
+    </div>
+  </div>
+
+  <div role="listbox">
+    <div id="aria_selectable_listitem" role="option" aria-selected="true">Item1</div>
+  </div>
+
+  <!-- Test that aria-disabled state gets propagated to all descendants -->
+  <div id="group" role="group" aria-disabled="true">
+    <button>hi</button>
+    <div tabindex="0" role="listbox" aria-activedescendant="item1"
+         aria-owns="item5">
+      <div role="option" id="item1">Item 1</div>
+      <div role="option" id="item2">Item 2</div>
+      <div role="option" id="item3">Item 3</div>
+      <div role="option" id="item4">Item 4</div>
+    </div>
+    <div role="slider" tabindex="0">A slider</div>
+  </div>
+  <div role="option" id="item5">Item 5</div>
+
+  <!-- Test active state -->
+  <div id="as_listbox" tabindex="0" role="listbox"
+       aria-activedescendant="as_item1">
+    <div role="option" id="as_item1">Item 1</div>
+    <div role="option" id="as_item2">Item 2</div>
+  </div>
+
+  <!-- universal ARIA properties should be inherited by text field of file input -->
+  <input type="file" id="fileinput"
+         aria-busy="true"
+         aria-disabled="true"
+         aria-required="true"
+         aria-haspopup="true"
+         aria-invalid="true">
+
+  <div id="offscreen_log" role="log" class="offscreen">
+    <div id="aria_offscreen_textbox" role="textbox" aria-readonly="true">This text should be offscreen</div>
+  </div>
+
+  <a id="aria_menuitem_link" role="menuitem" href="foo">menuitem</a>
+  <a id="aria_button_link" role="button" href="foo">button</a>
+  <a id="aria_checkbox_link" role="checkbox" href="foo">checkbox</a>
+
+  <!-- strange edge case: please don't do this in the wild -->
+  <a id="aria_link_link" role="link" href="foo">link</a>
+  <a id="aria_link_anchor" role="link" name="link_anchor">link</a>
+
+  <!-- landmarks: links -->
+  <a id="aria_application_link" role="application" href="foo">app</a>
+  <a id="aria_main_link" role="main" href="foo">main</a>
+  <a id="aria_navigation_link" role="navigation" href="foo">nav</a>
+
+  <!-- landmarks: anchors -->
+  <a id="aria_application_anchor" role="application" name="app_anchor">app</a>
+  <a id="aria_main_anchor" role="main" name="main_anchor">main</a>
+  <a id="aria_navigation_anchor" role="navigation" name="nav_anchor">nav</a>
+
+  <!-- aria-orientation -->
+  <div id="aria_combobox" role="combobox">combobox</div>
+  <div id="aria_hcombobox" role="combobox" aria-orientation="horizontal">horizontal combobox</div>
+  <div id="aria_vcombobox" role="combobox" aria-orientation="vertical">vertical combobox</div>
+  <div id="aria_listbox" role="listbox">listbox</div>
+  <div id="aria_hlistbox" role="listbox" aria-orientation="horizontal">horizontal listbox</div>
+  <div id="aria_vlistbox" role="listbox" aria-orientation="vertical">vertical listbox</div>
+  <div id="aria_menu" role="menu">menu</div>
+  <div id="aria_hmenu" role="menu" aria-orientation="horizontal">horizontal menu</div>
+  <div id="aria_vmenu" role="menu" aria-orientation="vertical">vertical menu</div>
+  <div id="aria_menubar" role="menubar">menubar</div>
+  <div id="aria_hmenubar" role="menubar" aria-orientation="horizontal">horizontal menubar</div>
+  <div id="aria_vmenubar" role="menubar" aria-orientation="vertical">vertical menubar</div>
+  <div id="aria_radiogroup" role="radiogroup">radiogroup</div>
+  <div id="aria_hradiogroup" role="radiogroup" aria-orientation="horizontal">horizontal radiogroup</div>
+  <div id="aria_vradiogroup" role="radiogroup" aria-orientation="vertical">vertical radiogroup</div>
+  <div id="aria_scrollbar" role="scrollbar">scrollbar</div>
+  <div id="aria_hscrollbar" role="scrollbar" aria-orientation="horizontal">horizontal scrollbar</div>
+  <div id="aria_vscrollbar" role="scrollbar" aria-orientation="vertical">vertical scrollbar</div>
+  <div id="aria_separator" role="separator">separator</div>
+  <div id="aria_hseparator" role="separator" aria-orientation="horizontal">horizontal separator</div>
+  <div id="aria_vseparator" role="separator" aria-orientation="vertical">vertical separator</div>
+  <div id="aria_slider" role="slider">slider</div>
+  <div id="aria_hslider" role="slider" aria-orientation="horizontal">horizontal slider</div>
+  <div id="aria_vslider" role="slider" aria-orientation="vertical">vertical slider</div>
+
+  <div id="aria_tablist" role="tablist">tablist</div>
+  <div id="aria_htablist" role="tablist" aria-orientation="horizontal">horizontal tablist</div>
+  <div id="aria_vtablist" role="tablist" aria-orientation="vertical">vertical tablist</div>
+  <div id="aria_toolbar" role="toolbar">toolbar</div>
+  <div id="aria_htoolbar" role="toolbar" aria-orientation="horizontal">horizontal toolbar</div>
+  <div id="aria_vtoolbar" role="toolbar" aria-orientation="vertical">vertical toolbar</div>
+  <div id="aria_tree" role="tree">tree</div>
+  <div id="aria_htree" role="tree" aria-orientation="horizontal">horizontal tree</div>
+  <div id="aria_vtree" role="tree" aria-orientation="vertical">vertical tree</div>
+  <div id="aria_treegrid" role="treegrid">treegrid</div>
+  <div id="aria_htreegrid" role="treegrid" aria-orientation="horizontal">horizontal treegrid</div>
+  <div id="aria_vtreegrid" role="treegrid" aria-orientation="vertical">vertical treegrid</div>
+
+  <!-- indeterminate ARIA progressbars should expose mixed state -->
+  <div id="aria_progressbar" role="progressbar"></div>
+  <div id="aria_progressbar_valuenow" role="progressbar" aria-valuenow="1"></div>
+  <div id="aria_progressbar_valuetext" role="progressbar" aria-valuetext="value"></div>
+
+  <!-- ARIA select widget should expose focusable state regardless the way they manage its children -->
+  <div id="aria_listbox" role="listbox">
+    <div role="option" tabindex="0">A</div>
+    <div role="option" tabindex="0">a</div>
+  </div>
+  <div id="aria_grid" role="grid">
+    <div role="row"><div role="gridcell" tabindex="0">B</div></div></div>
+    <div role="row"><div role="gridcell" tabindex="0">b</div></div></div>
+  <div id="aria_tree" role="tree">
+    <div role="treeitem" tabindex="0">C</div>
+    <div role="treeitem" tabindex="0">c</div>
+  </div>
+  <div id="aria_treegrid" role="treegrid">
+    <div role="row"><div role="gridcell" tabindex="0">D</div></div>
+    <div role="row"><div role="gridcell" tabindex="0">d</div></div>
+  </div>
+  <div id="aria_listbox_disabled" role="listbox" aria-disabled="true">
+    <div role="option">E</div>
+    <div role="option">e</div>
+  </div>
+  <div id="aria_grid_disabled" role="grid" aria-disabled="true">
+    <div role="row"><div role="gridcell">F</div></div>
+    <div role="row"><div role="gridcell">f</div></div>
+  </div>
+  <div id="aria_tree_disabled" role="tree" aria-disabled="true">
+    <div role="treeitem">G</div>
+    <div role="treeitem">g</div>
+  </div>
+  <div id="aria_treegrid_disabled" role="treegrid" aria-disabled="true">
+    <div role="row"><div role="gridcell">H</div></div>
+    <div role="row"><div role="gridcell">h</div></div>
+  </div>
+
+  <!-- Test that directory is readonly -->
+  <div id="aria_directory" role="directory"></div>
+
+  <!-- aria-current -->
+  <div id="current_page_1" role="link" aria-current="page">1</div>
+  <div id="page_2" role="link" aria-current="false">2</div>
+  <div id="page_3" role="link">3</div>
+  <div id="page_4" role="link" aria-current="">4</div>
+  <div id="current_foo" aria-current="foo">foo</div>
+</body>
+</html>

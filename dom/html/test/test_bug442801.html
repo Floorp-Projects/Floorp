@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=442801
+-->
+<head>
+  <title>Test for Bug 442801</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=442801">Mozilla Bug 442801</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div contenteditable="true">
+<p id="ce_true" contenteditable="true">contenteditable true</p>
+</div>
+
+<div contenteditable="true">
+<p id="ce_false" contenteditable="false">contenteditable false</p>
+</div>
+
+<div contenteditable="true">
+<p id="ce_empty" contenteditable="">contenteditable empty</p>
+</div>
+
+<div contenteditable="true">
+<p id="ce_inherit" contenteditable="inherit">contenteditable inherit</p>
+</div>
+
+<div contenteditable="true">
+<p id="ce_none" >contenteditable none</p>
+</div>
+
+
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 442801 **/
+
+is(window.getComputedStyle($("ce_true")).getPropertyValue("-moz-user-modify"), 
+    "read-write", 
+    "parent contenteditable is true, contenteditable is true; user-modify should be read-write");
+is(window.getComputedStyle($("ce_false")).getPropertyValue("-moz-user-modify"), 
+    "read-only",
+    "parent contenteditable is true, contenteditable is false; user-modify should be read-only");
+is(window.getComputedStyle($("ce_empty")).getPropertyValue("-moz-user-modify"), 
+    "read-write",
+    "parent contenteditable is true, contenteditable is empty; user-modify should be read-write");
+is(window.getComputedStyle($("ce_inherit")).getPropertyValue("-moz-user-modify"), 
+    "read-write",
+    "parent contenteditable is true, contenteditable is inherit; user-modify should be read-write");
+is(window.getComputedStyle($("ce_none")).getPropertyValue("-moz-user-modify"), 
+    "read-write",
+    "parent contenteditable is true, contenteditable is none; user-modify should be read-write");
+
+</script>
+</pre>
+</body>
+</html>

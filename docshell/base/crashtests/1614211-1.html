@@ -1,0 +1,15 @@
+<script>
+window.onload = () => {
+  b.addEventListener('DOMSubtreeModified', () => {
+    var o = document.getElementById('a')
+    var a = o.attributes
+    for (let j = 0; j < a.length; j++) {
+      o.setAttribute(a[j].name, 'i')
+      o.parentNode.appendChild(o)
+    }
+  })
+  b.setAttribute('a', b)
+}
+</script>
+<iframe id='a' sandbox='' allowfullscreen=''></iframe>
+<dfn id='b'>

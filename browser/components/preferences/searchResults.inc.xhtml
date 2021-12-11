@@ -1,0 +1,25 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<hbox id="header-searchResults"
+      class="subcategory"
+      hidden="true"
+      data-hidden-from-search="true"
+      data-category="paneSearchResults">
+  <html:h1 data-l10n-id="search-results-header"/>
+</hbox>
+
+<groupbox id="no-results-message"
+          data-hidden-from-search="true"
+          data-category="paneSearchResults"
+          hidden="true">
+  <vbox class="no-results-container">
+    <label id="sorry-message" data-l10n-id="search-results-empty-message2">
+      <html:span data-l10n-name="query" id="sorry-message-query"/>
+    </label>
+    <label id="need-help" data-l10n-id="search-results-help-link">
+      <html:a class="text-link" data-l10n-name="url" target="_blank"></html:a>
+    </label>
+  </vbox>
+</groupbox>

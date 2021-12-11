@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+  <head>
+    <style type="text/css">
+      p:first-line   { font-family: monospace }
+      p:first-letter { font-family: sans-serif }
+    </style>
+    <script>
+      function tweak() {
+        document.body.style.background = 'lightblue';
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+  <body onload="tweak();">
+    <p style="width: 100px"><span>The first letter of this paragraph should be
+        in sans-serif while the first-line should be in monospace.</span></p>
+  </body>
+</html>

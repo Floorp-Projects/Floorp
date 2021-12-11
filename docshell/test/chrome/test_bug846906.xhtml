@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=846906
+-->
+<window title="Mozilla Bug 846906"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 846906 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var appShellService = SpecialPowers.Services.appShell;
+  ok(appShellService, "Should be able to get app shell service");
+
+  var windowlessBrowser = appShellService.createWindowlessBrowser();
+  ok(windowlessBrowser, "Should be able to create windowless browser");
+
+  ok(windowlessBrowser instanceof Ci.nsIWindowlessBrowser,
+     "Windowless browser should implement nsIWindowlessBrowser");
+
+  var webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
+  ok(webNavigation, "Windowless browser should implement nsIWebNavigation");
+
+  var interfaceRequestor = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor);
+  ok(interfaceRequestor, "Should be able to query interface requestor interface");
+
+  var docShell = windowlessBrowser.docShell;
+  ok(docShell, "Should be able to get doc shell interface");
+
+  var document = webNavigation.document;
+  ok(document, "Should be able to get document");
+
+  var iframe = document.createXULElement("iframe");
+  ok(iframe, "Should be able to create iframe");
+
+  iframe.onload = function () {
+    ok(true, "Should receive initial onload event");
+
+    iframe.onload = function () {
+        ok(true, "Should receive onload event");
+
+        var contentDocument = iframe.contentDocument;
+        ok(contentDocument, "Should be able to get content document");
+
+        var div = contentDocument.getElementById("div1");
+        ok(div, "Should be able to get element by id");
+
+        var rect = div.getBoundingClientRect();
+        ok(rect, "Should be able to get bounding client rect");
+
+        // xxx: can we do better than hardcoding these values here?
+        is(rect.width, 1024);
+        is(rect.height, 768);
+
+        windowlessBrowser.close();
+
+        // Once the browser is closed, nsIWebNavigation and
+        // nsIInterfaceRequestor methods should no longer be accessible.
+        try {
+          windowlessBrowser.getInterface(Ci.nsIDocShell);
+          ok(false);
+        } catch (e) {
+          is(e.result, Cr.NS_ERROR_NULL_POINTER);
+        }
+
+        try {
+          windowlessBrowser.document;
+          ok(false);
+        } catch (e) {
+          is(e.result, Cr.NS_ERROR_NULL_POINTER);
+        }
+
+        SimpleTest.finish();
+    };
+    iframe.setAttribute("src", "http://mochi.test:8888/chrome/docshell/test/chrome/bug846906.html");
+  };
+  document.documentElement.appendChild(iframe);
+
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=846906"
+     target="_blank">Mozilla Bug 846906</a>
+  </body>
+</window>

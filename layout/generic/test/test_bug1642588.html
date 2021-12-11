@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<title>Test for Bug 1642588</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  [contenteditable] {
+    padding: .5em 40%;
+  }
+</style>
+
+<div>
+  <p>
+    Intentionally not in WPT as triple click is not guaranteed to have same
+    behavior on every browser.
+  </p>
+  <span contenteditable></span><hr>
+  <div contenteditable style="display: inline;"></div><hr>
+  <div contenteditable style="display: inline-block;"></div><hr>
+  <!--
+    FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1654364
+    <table contenteditable style="display: inline-table;"><tr><td></table><hr>
+  -->
+  <div contenteditable style="display: inline-flex;"></div><hr>
+  <div contenteditable style="display: inline-grid;"></div>
+</div>
+
+<script>
+function selectHostByClicks(host, number) {
+  for (let i = 1; i <= number; i++) {
+    synthesizeMouseAtCenter(host, { clickCount: i });
+  }
+}
+
+function nonCollapsedDeletionTest(host, clickCount) {
+  host.textContent = "contenteditable";
+  selectHostByClicks(host, clickCount);
+  const selection = getSelection();
+
+  is(selection.isCollapsed, false, "Noncollapsed selection should occur");
+
+  synthesizeKey("KEY_Backspace");
+  is(host.textContent, "", "Backspace should delete the content of the editing host");
+}
+
+function collapsedSelectionTest(host, clickCount) {
+  host.textContent = "";
+  selectHostByClicks(host, clickCount);
+  const selection = getSelection();
+
+  is(selection.isCollapsed, true, "Collapsed selection should occur");
+  is(selection.anchorNode, host, "Caret should be in host");
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const hosts = document.querySelectorAll("[contenteditable]");
+  for (const host of hosts) {
+    nonCollapsedDeletionTest(host, 2);
+    nonCollapsedDeletionTest(host, 3);
+    collapsedSelectionTest(host, 3);
+  }
+  SimpleTest.finish();
+});
+</script>

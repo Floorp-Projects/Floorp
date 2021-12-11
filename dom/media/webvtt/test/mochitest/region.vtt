@@ -1,0 +1,6 @@
+WEBVTT
+REGION
+id:fred width:62% lines:5 regionanchor:4%,78% viewportanchor:10%,90% scroll:up
+
+00:01.000 --> 00:02.000 region:fred
+Test here.

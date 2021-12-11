@@ -1,0 +1,52 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1509027042 -3600
+#      Thu Oct 26 15:10:42 2017 +0100
+# Node ID 34b1e1189bcbb3b8ecbfc4c9decc1c6dfc46c1e6
+# Parent  c3dc5b64a97fe0526ab8826bdcb47740592472b7
+Don't compile base::Time::FromStringInternal. r=aklotz
+
+This has a dependency on nspr, which causes issues.
+
+Originally landed in changeset:
+https://hg.mozilla.org/mozilla-central/rev/477b991bf6fa7b4511768649c9bf37c7275d30d9
+
+diff --git a/security/sandbox/chromium/base/time/time.cc b/security/sandbox/chromium/base/time/time.cc
+--- a/security/sandbox/chromium/base/time/time.cc
++++ b/security/sandbox/chromium/base/time/time.cc
+@@ -281,16 +281,17 @@ Time Time::Midnight(bool is_local) const
+     if (FromExploded(is_local, exploded, &out_time))
+       return out_time;
+   }
+   // This function must not fail.
+   NOTREACHED();
+   return Time();
+ }
+ 
++#if !defined(MOZ_SANDBOX)
+ // static
+ bool Time::FromStringInternal(const char* time_string,
+                               bool is_local,
+                               Time* parsed_time) {
+   DCHECK((time_string != nullptr) && (parsed_time != nullptr));
+ 
+   if (time_string[0] == '\0')
+     return false;
+@@ -301,16 +302,17 @@ bool Time::FromStringInternal(const char
+                                        &result_time);
+   if (PR_SUCCESS != result)
+     return false;
+ 
+   result_time += kTimeTToMicrosecondsOffset;
+   *parsed_time = Time(result_time);
+   return true;
+ }
++#endif
+ 
+ // static
+ bool Time::ExplodedMostlyEquals(const Exploded& lhs, const Exploded& rhs) {
+   return lhs.year == rhs.year && lhs.month == rhs.month &&
+          lhs.day_of_month == rhs.day_of_month && lhs.hour == rhs.hour &&
+          lhs.minute == rhs.minute && lhs.second == rhs.second &&
+          lhs.millisecond == rhs.millisecond;
+ }

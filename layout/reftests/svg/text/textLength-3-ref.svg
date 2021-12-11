@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @font-face { font-family: Linux Libertine; src: url(../../fonts/LinLibertine_Re-4.7.5.woff); }
+    svg { font: 50px Linux Libertine; text-rendering: geometricPrecision; }
+  </style>
+  <linearGradient id="aqua">
+    <stop stop-color="aqua"/>
+  </linearGradient>
+  <!-- the unscaled width of the "123" is 66 -->
+  <g transform="translate(50,0)">
+    <g stroke="red">
+      <path id="p1" d="M 0,40 v 66" stroke="red"/>
+      <path id="p2" d="M 40,40 v 132" stroke="red"/>
+      <path id="p3" d="M 80,40 v 132" stroke="red"/>
+      <path id="p4" d="M 120,40 v 44" stroke="red"/>
+      <path id="p5" d="M 160,40 v 44" stroke="red"/>
+    </g>
+
+    <g fill="url(#aqua)">
+      <text transform="translate(40,40)rotate(90)" y="40">123</text>
+      <text transform="translate(80,40)rotate(90)" y="40">1</text>
+      <text transform="translate(80,40)rotate(90)" x="66" y="40" text-anchor="middle">2</text>
+      <text transform="translate(80,40)rotate(90)" x="132" y="40" text-anchor="end">3</text>
+      <text transform="translate(80,40)rotate(90)scale(2,1)">123</text>
+      <text transform="translate(120,40)rotate(90)">1</text>
+      <text transform="translate(120,40)rotate(90)" x="22" text-anchor="middle">2</text>
+      <text transform="translate(120,40)rotate(90)" x="44" text-anchor="end">3</text>
+      <text transform="translate(160,40)rotate(90)scale(0.66666666,1)">123</text>
+    </g>
+
+    <g fill="none" stroke="black" stroke-width="2px">
+      <text transform="translate(40,40)rotate(90)" y="40">123</text>
+      <text transform="translate(80,40)rotate(90)" y="40">1</text>
+      <text transform="translate(80,40)rotate(90)" x="66" y="40" text-anchor="middle">2</text>
+      <text transform="translate(80,40)rotate(90)" x="132" y="40" text-anchor="end">3</text>
+      <text transform="translate(80,40)rotate(90)scale(2,1)">123</text>
+      <text transform="translate(120,40)rotate(90)">1</text>
+      <text transform="translate(120,40)rotate(90)" x="22" text-anchor="middle">2</text>
+      <text transform="translate(120,40)rotate(90)" x="44" text-anchor="end">3</text>
+      <text transform="translate(160,40)rotate(90)scale(0.66666666,1)">123</text>
+    </g>
+  </g>
+</svg>

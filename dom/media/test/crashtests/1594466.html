@@ -1,0 +1,22 @@
+<html>
+<head>
+<script>
+function start() {
+  const ac = new AudioContext();
+  const {stream: audioStream} = ac.createMediaStreamDestination();
+  const [audioTrack] = audioStream.getTracks();
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const [videoTrack] = canvas.captureStream().getTracks();
+
+  const rec = new MediaRecorder(new MediaStream([audioTrack, videoTrack]), {
+    mimeType: 'video/webm; codecs="vp8, opus"'
+  });
+  rec.start();
+}
+
+document.addEventListener('DOMContentLoaded', start)
+</script>
+</head>
+</html>
+

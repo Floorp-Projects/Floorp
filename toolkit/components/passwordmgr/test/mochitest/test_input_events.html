@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for input events in Login Manager</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="onNewEvent(event)">
+Login Manager test: input events should fire.
+
+<script>
+gTestDependsOnDeprecatedLogin = true;
+runChecksAfterCommonInit();
+
+SimpleTest.requestFlakyTimeout("untriaged");
+
+/** Test for Login Manager: form fill, should get input events. **/
+
+var usernameInputFired = false;
+var passwordInputFired = false;
+var usernameChangeFired = false;
+var passwordChangeFired = false;
+var onloadFired = false;
+
+function onNewEvent(e) {
+  info("Got " + e.type + " event.");
+  if (e.type == "load") {
+    onloadFired = true;
+  } else if (e.type == "input") {
+    if (e.target.name == "uname") {
+      is(e.target.value, "testuser", "Should get 'testuser' as username");
+      ok(!usernameInputFired, "Should not have gotten an input event for the username field yet.");
+      usernameInputFired = true;
+    } else if (e.target.name == "pword") {
+      is(e.target.value, "testpass", "Should get 'testpass' as password");
+      ok(!passwordInputFired, "Should not have gotten an input event for the password field yet.");
+      passwordInputFired = true;
+    }
+  } else if (e.type == "change") {
+    if (e.target.name == "uname") {
+      is(e.target.value, "testuser", "Should get 'testuser' as username");
+      ok(usernameInputFired, "Should get input event before change event for username field.");
+      ok(!usernameChangeFired, "Should not have gotten a change event for the username field yet.");
+      usernameChangeFired = true;
+    } else if (e.target.name == "pword") {
+      is(e.target.value, "testpass", "Should get 'testpass' as password");
+      ok(passwordInputFired, "Should get input event before change event for password field.");
+      ok(!passwordChangeFired, "Should not have gotten a change event for the password field yet.");
+      passwordChangeFired = true;
+    }
+  }
+  if (onloadFired && usernameInputFired && passwordInputFired && usernameChangeFired && passwordChangeFired) {
+    ok(true, "All events fired as expected, we're done.");
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.registerCleanupFunction(function cleanup() {
+  clearTimeout(timeout);
+  $_(1, "uname").removeAttribute("oninput");
+  $_(1, "pword").removeAttribute("oninput");
+  $_(1, "uname").removeAttribute("onchange");
+  $_(1, "pword").removeAttribute("onchange");
+  document.body.removeAttribute("onload");
+});
+
+var timeout = setTimeout(function() {
+  ok(usernameInputFired, "Username input event should have fired by now.");
+  ok(passwordInputFired, "Password input event should have fired by now.");
+  ok(usernameChangeFired, "Username change event should have fired by now.");
+  ok(passwordChangeFired, "Password change event should have fired by now.");
+  ok(onloadFired, "Window load event should have fired by now.");
+  ok(false, "Not all events fired yet.");
+  SimpleTest.finish();
+}, 10000);
+
+</script>
+
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+  <form id="form1" action="formtest.js">
+    <p>This is form 1.</p>
+    <input  type="text"       name="uname" oninput="onNewEvent(event)" onchange="onNewEvent(event)">
+    <input  type="password"   name="pword" oninput="onNewEvent(event)" onchange="onNewEvent(event)">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+<pre id="test"></pre>
+</body>
+</html>

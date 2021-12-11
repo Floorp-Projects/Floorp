@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=654550
+-->
+
+<head>
+  <title>Test for Bug 654550</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=654550">Mozilla Bug 654550</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /* Test for Bug 654550 */
+
+  // Parallel test must be disabled for media.video_stats.enabled is a global setting
+  // to prevent the setting from changing unexpectedly in the middle of the test.
+  PARALLEL_TESTS = 1;
+  SimpleTest.waitForExplicitFinish();
+  var manager = new MediaTestManager;
+
+  function checkStats(v, aShouldBeEnabled) {
+    if (aShouldBeEnabled) {
+      ok(v.mozParsedFrames != 0,
+         "At least one value should be different from 0 if stats are enabled");
+    } else {
+      ok(!v.mozParsedFrames,
+        "mozParsedFrames should be 0 if stats are disabled");
+      ok(!v.mozDecodedFrames,
+        "mozDecodedFrames should be 0 if stats are disabled");
+      ok(!v.mozPresentedFrames,
+        "mozPresentedFrames should be 0 if stats are disabled");
+      ok(!v.mozPaintedFrames,
+        "mozPaintedFrames should be 0 if stats are disabled");
+    }
+
+  }
+
+  function ontimeupdate_statsEnabled(event) {
+    var v = event.target;
+    v.removeEventListener('timeupdate', ontimeupdate_statsEnabled);
+    checkStats(v, true);
+    SpecialPowers.popPrefEnv(
+      function() {
+        v.addEventListener("timeupdate", ontimeupdate_statsDisabled);
+    });
+  }
+
+  function ontimeupdate_statsDisabled(event) {
+    var v = event.target;
+    v.removeEventListener('timeupdate', ontimeupdate_statsDisabled);
+    checkStats(v, false);
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
+
+  function startTest(test, token) {
+    var v = document.createElement('video');
+    v.token = token;
+    v.src = test.name;
+    // playback may reach the end before pref is changed for the duration is short
+    // set 'loop' to true to keep playing so that we won't miss 'timeupdate' events
+    v.loop = true;
+    manager.started(token);
+    SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", true]]},
+      function() {
+        v.play();
+        v.addEventListener("timeupdate", ontimeupdate_statsEnabled);
+    });
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", false]]},
+    function() {
+      manager.runTests(gVideoTests, startTest);
+  });
+
+</script>
+</pre>
+</body>
+</html>

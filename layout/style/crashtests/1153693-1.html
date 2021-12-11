@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+
+.a { clip-path: url(z); }
+#x { clip-path: inherit; }
+
+</style>
+</head>
+
+<body>
+    <div class="a">
+        <div class="a" id="x"></div>
+    </div>
+    <script>
+        getComputedStyle(document.getElementById("x"), "").clipPath;
+    </script>
+</body>
+
+</html>

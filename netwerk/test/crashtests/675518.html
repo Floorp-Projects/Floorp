@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<script>
+function boom()
+{
+  var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  frame.src = "javascript:'<html><body>1</body></html>';";
+  document.body.appendChild(frame);
+  var frameWin = frame.contentWindow;
+
+  var resizeListener = function() {
+    frameWin.removeEventListener("resize", resizeListener, false);
+    frameWin.document.write("3...");
+  };
+  frameWin.addEventListener("resize", resizeListener, false);
+
+  frameWin.document.write("2...");
+}
+
+</script>
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,98 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the rendering of a stack trace with source maps
+-->
+<head>
+  <meta charset="utf-8">
+  <title>StackTrace component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script src="head.js"></script>
+<script>
+"use strict";
+
+window.onload = function () {
+  const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const StackTrace = React.createFactory(
+    browserRequire("devtools/client/shared/components/StackTrace")
+  );
+  ok(StackTrace, "Got the StackTrace factory");
+
+  add_task(async function () {
+    const stacktrace = [
+      {
+        filename: "https://bugzilla.mozilla.org/bundle.js",
+        lineNumber: 99,
+        columnNumber: 10
+      },
+      {
+        functionName: "loadFunc",
+        filename: "https://bugzilla.mozilla.org/bundle.js",
+        lineNumber: 108,
+      }
+    ];
+
+    const props = {
+      stacktrace,
+      onViewSourceInDebugger: () => {},
+      // A mock source map service.
+      sourceMapURLService: {
+        subscribeByLocation: function ({ line, column }, callback) {
+          const newLine = line === 99 ? 1 : 7;
+          // Resolve immediately.
+          callback({
+            url: "https://bugzilla.mozilla.org/original.js",
+            line: newLine,
+            column,
+          });
+
+          return () => {}
+        },
+      },
+    };
+
+    const trace = ReactDOM.render(StackTrace(props), window.document.body);
+    await forceRender(trace);
+
+    const traceEl = ReactDOM.findDOMNode(trace);
+    ok(traceEl, "Rendered StackTrace has an element");
+
+    // Get the child nodes and filter out the text-only whitespace ones
+    const frameEls = Array.from(traceEl.childNodes)
+      .filter(n => n.className && n.className.includes("frame"));
+    ok(frameEls, "Rendered StackTrace has frames");
+    is(frameEls.length, 2, "StackTrace has 2 frames");
+
+    checkFrameString({
+      el: frameEls[0],
+      functionName: "<anonymous>",
+      source: "https://bugzilla.mozilla.org/original.js",
+      file: "original.js",
+      line: 1,
+      column: 10,
+      shouldLink: true,
+      tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:1:10",
+    });
+
+    checkFrameString({
+      el: frameEls[1],
+      functionName: "loadFunc",
+      source: "https://bugzilla.mozilla.org/original.js",
+      file: "original.js",
+      line: 7,
+      column: null,
+      shouldLink: true,
+      tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:7",
+    });
+  });
+};
+</script>
+</body>
+</html>

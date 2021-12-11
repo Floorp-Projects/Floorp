@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This is intended as a base interface; implementations may want to
+ * provide an object that can be qi'ed to provide more specific
+ * message information.
+ */
+[scriptable, uuid(3aba9617-10e2-4839-83ae-2e6fc4df428b)]
+interface nsIConsoleMessage : nsISupports
+{
+    /** Log level constants. */
+    const uint32_t debug = 0;
+    const uint32_t info = 1;
+    const uint32_t warn = 2;
+    const uint32_t error = 3;
+
+    /**
+     * The log level of this message.
+     */
+    readonly attribute uint32_t logLevel;
+
+    /**
+     * The time (in milliseconds from the Epoch) that the message instance
+     * was initialised.
+     * The timestamp is initialized as JS_now/1000 so that it can be
+     * compared to Date.now in Javascript.
+     */
+    readonly attribute long long timeStamp;
+
+    [binaryname(MessageMoz)] readonly attribute AString message;
+
+    attribute boolean isForwardedFromContentProcess;
+
+    AUTF8String toString();
+};
+
+%{ C++
+#define NS_CONSOLEMESSAGE_CID \
+{ 0x024efc9e, 0x54dc, 0x4844, { 0x80, 0x4b, 0x41, 0xd3, 0xf3, 0x69, 0x90, 0x73 }}
+%}

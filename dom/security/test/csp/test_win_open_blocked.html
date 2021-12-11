@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- we have to allowlist the actual script that spawns the tests,
+       hence the nonce.-->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+                    script-src 'nonce-foo'; style-src 'nonce-foo'">
+  <script nonce="foo" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <link nonce="foo" rel="stylesheet" type="text/css"
+                    href="/tests/SimpleTest/test.css"/>
+  <!-- this script block with window.open and document.open will not
+       be executed, since default-src is none -->
+  <script>
+    let win = window.open('file_default_src_none_csp.html');
+    document.open();
+    document.write("<script type='application/javascript'>" +
+                   "  window.opener.postMessage('document-opened', '*');" +
+                   "<\/script>");
+    document.close();
+  </script>
+  <script nonce="foo">
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("have to test that opening a " +
+                                   "new window/document has not succeeded");
+    window.addEventListener("message", receiveMessage);
+    let checkWindowStatus = false;
+    let checkDocumentStatus = false;
+
+    function receiveMessage(event) {
+      window.removeEventListener("message", receiveMessage);
+        if (event.data == "window-opened") {
+          checkWindowStatus = true;
+          win.close();
+        }
+        if (event.data == "document-opened") {
+          checkDocumentStatus = true;
+          doc.close();
+        }
+    }
+    setTimeout(function () {
+        is(checkWindowStatus, false,
+          "window shouldn't be opened");
+        is(checkDocumentStatus, false,
+          "document shouldn't be opened");
+        SimpleTest.finish();
+    }, 1500);
+  </script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,296 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface nsIQuotaRequest;
+interface nsIQuotaCallback;
+interface nsIQuotaUsageCallback;
+interface nsIQuotaUsageRequest;
+
+[scriptable, builtinclass, uuid(1b3d0a38-8151-4cf9-89fa-4f92c2ef0e7e)]
+interface nsIQuotaManagerService : nsISupports
+{
+  /**
+   * Asynchronously retrieves storage name and returns it as a plain string.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  storageName();
+
+  /**
+   * Check if storage is initialized.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  storageInitialized();
+
+  /**
+   * Check if temporary storage is initialized.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  temporaryStorageInitialized();
+
+  /**
+   * Initializes storage directory. This can be used in tests to verify
+   * upgrade methods.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  init();
+
+  /**
+   * Initializes temporary storage. This can be used in tests to verify
+   * temporary storage initialization.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  initTemporaryStorage();
+
+  /**
+   * Initializes persistent origin directory for the given origin. This can be
+   * used in tests to verify origin initialization.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   *
+   * @param aPrincipal
+   *        A principal for the origin whose directory is to be initialized.
+   */
+  [must_use] nsIQuotaRequest
+  initializePersistentOrigin(in nsIPrincipal aPrincipal);
+
+  /**
+   * Initializes temporary origin directory for the given origin. This can be
+   * used in tests to verify origin initialization.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   *
+   * @param aPersistenceType
+   *        A string that tells what persistence type of origin will be
+   *        initialized (temporary or default).
+   *
+   * @param aPrincipal
+   *        A principal for the origin whose directory is to be initialized.
+   */
+  [must_use] nsIQuotaRequest
+  initializeTemporaryOrigin(in ACString aPersistenceType,
+                            in nsIPrincipal aPrincipal);
+
+  /**
+   * Gets full origin metadata cached in memory for the given persistence type
+   * and origin.
+   *
+   * NOTE: This operation may still be delayed by other operations on the QM
+   *       I/O thread that are peforming I/O.
+   *
+   * @param aPersistenceType
+   *        A string that tells what persistence type will be used for getting
+   *        the metadata (either "temporary" or "default").
+   * @param aPrincipal
+   *        A principal that tells which origin will be used for getting the
+   *        metadata.
+   */
+  [must_use] nsIQuotaRequest
+  getFullOriginMetadata(in ACString aPersistenceType,
+                        in nsIPrincipal aPrincipal);
+
+  /**
+   * Schedules an asynchronous callback that will inspect all origins and
+   * return the total amount of disk space being used by storages for each
+   * origin separately.
+   *
+   * @param aCallback
+   *        The callback that will be called when the usage is available.
+   * @param aGetAll
+   *        An optional boolean to indicate inspection of all origins,
+   *        including internal ones.
+   */
+  [must_use] nsIQuotaUsageRequest
+  getUsage(in nsIQuotaUsageCallback aCallback,
+           [optional] in boolean aGetAll);
+
+  /**
+   * Schedules an asynchronous callback that will return the total amount of
+   * disk space being used by storages for the given origin.
+   *
+   * @param aPrincipal
+   *        A principal for the origin whose usage is being queried.
+   * @param aCallback
+   *        The callback that will be called when the usage is available.
+   * @param aFromMemory
+   *        An optional flag to indicate whether the cached usage should be
+   *        obtained. The default value is false.  Note that this operation may
+   *        still be delayed by other operations on the QM I/O thread that are
+   *        peforming I/O.
+   * Note:  Origin usage here represents total usage of an origin. However,
+   *        cached usage here represents only non-persistent usage of an origin.
+   */
+  [must_use] nsIQuotaUsageRequest
+  getUsageForPrincipal(in nsIPrincipal aPrincipal,
+                       in nsIQuotaUsageCallback aCallback,
+                       [optional] in boolean aFromMemory);
+
+  /**
+   * Asynchronously lists all origins and returns them as plain strings.
+   */
+  [must_use] nsIQuotaRequest
+  listOrigins();
+
+  /**
+   * Removes all storages. The files may not be deleted immediately depending
+   * on prohibitive concurrent operations.
+   * Be careful, this removes *all* the data that has ever been stored!
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  clear();
+
+  /**
+   * Removes all storages stored for the given pattern. The files may not be
+   * deleted immediately depending on prohibitive concurrent operations.  In
+   * terms of locks, it will get an exclusive multi directory lock for given
+   * pattern.  For example, given pattern {"userContextId":1007} and set of 3
+   * origins ["http://www.mozilla.org^userContextId=1007",
+   * "http://www.example.org^userContextId=1007",
+   * "http://www.example.org^userContextId=1008"], the method will only lock 2
+   * origins ["http://www.mozilla.org^userContextId=1007",
+   * "http://www.example.org^userContextId=1007"].
+   *
+   * @param aPattern
+   *        A pattern for the origins whose storages are to be cleared.
+   *        Currently this is expected to be a JSON representation of the
+   *        OriginAttributesPatternDictionary defined in ChromeUtils.webidl.
+   */
+  [must_use] nsIQuotaRequest
+  clearStoragesForOriginAttributesPattern(in AString aPattern);
+
+  /**
+   * Removes all storages stored for the given principal. The files may not be
+   * deleted immediately depending on prohibitive concurrent operations.
+   *
+   * @param aPrincipal
+   *        A principal for the origin whose storages are to be cleared.
+   * @param aPersistenceType
+   *        An optional string that tells what persistence type of storages
+   *        will be cleared.  If omitted (or void), all persistence types will
+   *        be cleared for the principal.  If a single persistence type
+   *        ("persistent", "temporary", or "default") is provided, then only
+   *        that persistence directory will be considered.  Note that
+   *        "persistent" is different than being "persisted" via persist() and
+   *        is only for chrome principals.  See bug 1354500 for more info.
+   *        In general, null is the right thing to pass here.
+   * @param aClientType
+   *        An optional string that tells what client type of storages
+   *        will be cleared.  If omitted (or void), all client types will be
+   *        cleared for the principal.  If a single client type is provided
+   *        from Client.h, then only that client's storage will be cleared.
+   *        If you want to clear multiple client types (but not all), then you
+   *        must call this method multiple times.
+   * @param aClearAll
+   *        An optional boolean to indicate clearing all storages under the
+   *        given origin.
+   */
+  [must_use] nsIQuotaRequest
+  clearStoragesForPrincipal(in nsIPrincipal aPrincipal,
+                            [optional] in ACString aPersistenceType,
+                            [optional] in AString aClientType,
+                            [optional] in boolean aClearAll);
+
+  /**
+   * Resets quota and storage management. This can be used to force
+   * reinitialization of the temp storage, for example when the pref for
+   * overriding the temp storage limit has changed.
+   * Be carefull, this invalidates all live storages!
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  reset();
+
+  /**
+   * Resets all storages stored for the given principal.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   *
+   * @param aPrincipal
+   *        A principal for the origin whose storages are to be reset.
+   * @param aPersistenceType
+   *        An optional string that tells what persistence type of storages
+   *        will be reset.  If omitted (or void), all persistence types will
+   *        be cleared for the principal.  If a single persistence type
+   *        ("persistent", "temporary", or "default") is provided, then only
+   *        that persistence directory will be considered.  Note that
+   *        "persistent" is different than being "persisted" via persist() and
+   *        is only for chrome principals.  See bug 1354500 for more info.
+   *        In general, null is the right thing to pass here.
+   * @param aClientType
+   *        An optional string that tells what client type of storages
+   *        will be reset.  If omitted (or void), all client types will be
+   *        cleared for the principal.  If a single client type is provided
+   *        from Client.h, then only that client's storage will be cleared.
+   *        If you want to clear multiple client types (but not all), then you
+   *        must call this method multiple times.
+   */
+  [must_use] nsIQuotaRequest
+  resetStoragesForPrincipal(in nsIPrincipal aPrincipal,
+                            [optional] in ACString aPersistenceType,
+                            [optional] in AString aClientType);
+
+  /**
+   * Check if given origin is persisted.
+   *
+   * @param aPrincipal
+   *        A principal for the origin which we want to check.
+   */
+  [must_use] nsIQuotaRequest
+  persisted(in nsIPrincipal aPrincipal);
+
+  /**
+   * Persist given origin.
+   *
+   * @param aPrincipal
+   *        A principal for the origin which we want to persist.
+   */
+  [must_use] nsIQuotaRequest
+  persist(in nsIPrincipal aPrincipal);
+
+  /**
+   * Given an origin, asynchronously calculate its group quota usage and quota
+   * limit. An origin's group is the set of all origins that share the same
+   * eTLD+1. This method is intended to be used for our implementation of the
+   * StorageManager.estimate() method. When we fix bug 1305665 and stop tracking
+   * quota limits on a group basis, this method will switch to operating on
+   * origins. Callers should strongly consider whether they want to be using
+   * getUsageForPrincipal() instead.
+   *
+   * This mechanism uses cached quota values and does not perform any I/O on its
+   * own, but it may be delayed by QuotaManager operations that do need to
+   * perform I/O on the QuotaManager I/O thread.
+   *
+   * @param aPrincipal
+   *        A principal for the origin (group) which we want to estimate.
+   */
+  [must_use] nsIQuotaRequest
+  estimate(in nsIPrincipal aPrincipal);
+};

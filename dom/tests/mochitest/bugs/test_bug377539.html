@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=377539
+-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>Testcase for bug 377539</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=377539">Mozilla Bug 377539</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<script type="text/javascript">
+var sw;
+var child_sw = -1;
+
+function test(){
+        var t = '<div style="display: none;"><iframe onload="doChecks()" srcdoc="<body><scr'+'ipt>try {parent.child_sw=screen.width}catch(e){}</scr'+'ipt>"></iframe></div>';
+        var div = document.createElement('div');
+        div.innerHTML = t;
+        document.getElementsByTagName('body')[0].appendChild(div);
+}
+
+try {
+  sw = screen.width;
+} catch (e) {
+  sw = -1;
+}
+
+</script>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function doChecks() {
+  isnot(sw, -1, "screen.width threw an exception");
+  is(child_sw, sw, "iframe got wrong screen.width");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+test();
+
+</script>
+</pre>
+</body>
+</html>

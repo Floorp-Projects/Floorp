@@ -1,0 +1,78 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-8">
+      <div class="form-group form-inline">
+        <span class="col-form-label col-md-2 pt-1">Build Type</span>
+        <div class="form-check form-check-inline">
+          <input id="both" class="filter form-check-input" type="radio" name="buildtype" value='{}' onchange="apply();" checked>
+          <label for="both" class="form-check-label">both</label>
+        </div>
+        {% for type in ["opt", "debug"] %}
+        <div class="form-check form-check-inline">
+          <input id="{{ type }}" class="filter form-check-input" type="radio" name="buildtype" value='{"build_type": "{{ type }}"}' onchange="apply();">
+          <label for={{ type }} class="form-check-label">{{ type }}</label>
+        </div>
+        {% endfor %}
+      </div>
+      <ul class="nav nav-tabs" id="tabbar" role="tablist">
+        {% for section in sections %}
+        <li class="nav-item">
+          {% if loop.first %}
+          <a class="nav-link active" id="{{ section.name }}-tab" data-toggle="tab" href="#{{section.name }}" role="tab" aria-controls="{{ section.name }}" aria-selected="true">{{ section.title }}</a>
+          {% else %}
+          <a class="nav-link" id="{{ section.name }}-tab" data-toggle="tab" href="#{{section.name }}" role="tab" aria-controls="{{ section.name }}" aria-selected="false">{{ section.title }}</a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="tab-content">
+        <button type="button" class="btn btn-secondary" value="true" onclick="selectAll(this);">Select All</button>
+        <button type="button" class="btn btn-secondary" onclick="selectAll(this);">Deselect All</button>
+        {% for section in sections %}
+        {% if loop.first %}
+        <div class="tab-pane show active" id="{{ section.name }}" role="tabpanel" aria-labelledby="{{ section.name }}-tab">
+        {% else %}
+        <div class="tab-pane" id="{{ section.name }}" role="tabpanel" aria-labelledby="{{ section.name }}-tab">
+        {% endif %}
+          {% for label, meta in section.labels|dictsort %}
+          <label class="multiselect filter-label" for={{ label }}>
+            <span>
+              {{ label }}
+              <input class="filter" type="checkbox" id={{ label }} name="{{ section.kind }}" value='{{ meta.attrs|tojson|safe }}' onchange="console.log('checkbox onchange triggered');apply();">
+              {% if meta.max_chunk > 1 %}
+              <input class="filter" type="text" pattern="^[0-9][0-9,-]*$" placeholder="1-{{ meta.max_chunk }}" name='{{ meta.attrs|tojson|safe }}' oninput="applyChunks();">
+              {% endif %}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-4" id="preview">
+      <form id="submit-tasks" action="" method="POST">
+        <textarea id="selection" name="selected-tasks" wrap="off"></textarea>
+        <span id="selection-count">0 tasks selected</span><br>
+        <span id="buttons">
+          <input id="cancel" class="btn btn-default" type="submit" name="action" value="Cancel">
+          <input id="push" class="btn btn-default" type="submit" name="action" value="Push">
+        </span>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const tasks = {{ tasks|tojson|safe }};
+</script>
+<script src="{{ url_for('static', filename='filter.js') }}"></script>
+<script src="{{ url_for('static', filename='select.js') }}"></script>
+{% endblock %}

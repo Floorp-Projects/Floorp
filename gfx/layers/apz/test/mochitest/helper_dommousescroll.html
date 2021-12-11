@@ -1,0 +1,33 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test that Direct Manipulation generated pan gesture events generate DOMMouseScroll events with reasonable line scroll amounts</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <script type="application/javascript">
+async function test() {
+  let numLines = 0;
+  window.addEventListener("DOMMouseScroll", function (event) { numLines += event.detail; }, { passive: false });
+  let promise = new Promise(resolve => {
+    window.addEventListener("DOMMouseScroll", resolve, { passive: false });
+  });
+  await promiseApzFlushedRepaints();
+
+  synthesizeTouchpadPan(20, 100, [0,0,0], [10,100,0], {});
+
+  await waitToClearOutAnyPotentialScrolls(window);
+  await promise;
+
+  info(numLines + " numLines");
+  ok(numLines < 10, "not too many lines");
+  ok(numLines > 0, "some lines");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</body>

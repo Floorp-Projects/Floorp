@@ -1,0 +1,118 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Test pararameter passing and argument conversion.
+ *
+ * Each test method returns the value in 'b', and copies 'a' into 'b'. This lets
+ * us test return values, in params, and inout params (out params should be
+ * covered by the intersection of return values and inout).
+ */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIXPCTestInterfaceA;
+interface nsIXPCTestInterfaceB;
+
+[scriptable, uuid(812145c7-9fcc-425e-a878-36ad1b7730b7)]
+interface nsIXPCTestParams : nsISupports {
+
+  // These types correspond to the ones in typelib.py
+  boolean               testBoolean(in boolean a, inout boolean b);
+  octet                 testOctet(in octet a, inout octet b);
+  short                 testShort(in short a, inout short b);
+  long                  testLong(in long a, inout long b);
+  long long             testLongLong(in long long a, inout long long b);
+  unsigned short        testUnsignedShort(in unsigned short a, inout unsigned short b);
+  unsigned long         testUnsignedLong(in unsigned long a, inout unsigned long b);
+  unsigned long long    testUnsignedLongLong(in unsigned long long a, inout unsigned long long b);
+  float                 testFloat(in float a, inout float b);
+  double                testDouble(in double a, inout float b);
+  char                  testChar(in char a, inout char b);
+  string                testString(in string a, inout string b);
+  wchar                 testWchar(in wchar a, inout wchar b);
+  wstring               testWstring(in wstring a, inout wstring b);
+  AString               testAString(in AString a, inout AString b);
+  AUTF8String           testAUTF8String(in AUTF8String a, inout AUTF8String b);
+  ACString              testACString(in ACString a, inout ACString b);
+  jsval                 testJsval(in jsval a, inout jsval b);
+
+  // Test various forms of the Array<T> type.
+  Array<short>          testShortSequence(in Array<short> a, inout Array<short> b);
+  Array<double>         testDoubleSequence(in Array<double> a, inout Array<double> b);
+  Array<nsIXPCTestInterfaceA> testInterfaceSequence(in Array<nsIXPCTestInterfaceA> a, inout Array<nsIXPCTestInterfaceA> b);
+  Array<AString>        testAStringSequence(in Array<AString> a, inout Array<AString> b);
+  Array<ACString>       testACStringSequence(in Array<ACString> a, inout Array<ACString> b);
+  Array<jsval>          testJsvalSequence(in Array<jsval> a, inout Array<jsval> b);
+  Array<Array<short> >  testSequenceSequence(in Array<Array<short> > a, inout Array<Array<short> > b);
+
+  void                  testInterfaceIsSequence(in nsIIDPtr aIID, [iid_is(aIID)] in Array<nsQIResult> a,
+                                                inout nsIIDPtr bIID, [iid_is(bIID)] inout Array<nsQIResult> b,
+                                                out nsIIDPtr rvIID, [retval, iid_is(rvIID)] out Array<nsQIResult> rv);
+
+  // Returns whatever was passed in.
+  Array<uint8_t>        testOptionalSequence([optional] in Array<uint8_t> arr);
+
+  //
+  // Dependent parameters use the same types as above, but are handled much differently.
+  //
+
+  // Test arrays.
+  void                  testShortArray(in unsigned long aLength, [array, size_is(aLength)] in short a,
+                                       inout unsigned long bLength, [array, size_is(bLength)] inout short b,
+                                       out unsigned long rvLength, [retval, array, size_is(rvLength)] out short rv);
+  void                  testDoubleArray(in unsigned long aLength, [array, size_is(aLength)] in double a,
+                                        inout unsigned long bLength, [array, size_is(bLength)] inout double b,
+                                        out unsigned long rvLength, [retval, array, size_is(rvLength)] out double rv);
+  void                  testStringArray(in unsigned long aLength, [array, size_is(aLength)] in string a,
+                                        inout unsigned long bLength, [array, size_is(bLength)] inout string b,
+                                        out unsigned long rvLength, [retval, array, size_is(rvLength)] out string rv);
+  void                  testWstringArray(in unsigned long aLength, [array, size_is(aLength)] in wstring a,
+                                         inout unsigned long bLength, [array, size_is(bLength)] inout wstring b,
+                                         out unsigned long rvLength, [retval, array, size_is(rvLength)] out wstring rv);
+  void                  testInterfaceArray(in unsigned long aLength, [array, size_is(aLength)] in nsIXPCTestInterfaceA a,
+                                           inout unsigned long bLength, [array, size_is(bLength)] inout nsIXPCTestInterfaceA b,
+                                           out unsigned long rvLength, [retval, array, size_is(rvLength)] out nsIXPCTestInterfaceA rv);
+
+  // uint8 array with optional length. Returns array length.
+  unsigned long         testByteArrayOptionalLength([array, size_is(aLength)] in uint8_t a, [optional] in unsigned long aLength);
+
+  // Test sized strings.
+  void                  testSizedString(in unsigned long aLength, [size_is(aLength)] in string a,
+                                        inout unsigned long bLength, [size_is(bLength)] inout string b,
+                                        out unsigned long rvLength, [retval, size_is(rvLength)] out string rv);
+  void                  testSizedWstring(in unsigned long aLength, [size_is(aLength)] in wstring a,
+                                         inout unsigned long bLength, [size_is(bLength)] inout wstring b,
+                                         out unsigned long rvLength, [retval, size_is(rvLength)] out wstring rv);
+
+  // Test iid_is.
+  void                  testInterfaceIs(in nsIIDPtr aIID, [iid_is(aIID)] in nsQIResult a,
+                                        inout nsIIDPtr bIID, [iid_is(bIID)] inout nsQIResult b,
+                                        out nsIIDPtr rvIID, [retval, iid_is(rvIID)] out nsQIResult rv);
+
+  // Test arrays of iid_is. According to khuey we don't use it for anything
+  // in mozilla-central, but calendar stuff depends on it.
+  void                  testInterfaceIsArray(in unsigned long aLength, in nsIIDPtr aIID,
+                                             [array, size_is(aLength), iid_is(aIID)] in nsQIResult a,
+                                             inout unsigned long bLength, inout nsIIDPtr bIID,
+                                             [array, size_is(bLength), iid_is(bIID)] inout nsQIResult b,
+                                             out unsigned long rvLength, out nsIIDPtr rvIID,
+                                             [retval, array, size_is(rvLength), iid_is(rvIID)] out nsQIResult rv);
+
+  // Test arrays of jsvals
+  void                  testJsvalArray(in unsigned long aLength, [array, size_is(aLength)] in jsval a,
+                                       inout unsigned long bLength, [array, size_is(bLength)] inout jsval b,
+                                       out unsigned long rvLength, [retval, array, size_is(rvLength)] out jsval rv);
+
+
+  // Test for out dipper parameters
+  void                 testOutAString(out AString o);
+
+  // Test for optional array size_is.
+  ACString             testStringArrayOptionalSize([array, size_is(aLength)] in string a, [optional] in unsigned long aLength);
+
+  // Test for omitted optional out parameter.
+  void                 testOmittedOptionalOut([optional] out nsIURI aOut);
+};

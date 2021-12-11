@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Storage inspector sidebar parsetree test</title>
+    <script type="application/javascript">
+      "use strict";
+      /* exported setup */
+      function setup() {
+        // These values should not be parsed into a tree.
+        localStorage.setItem("base64", "aGVsbG93b3JsZA==");
+        localStorage.setItem("boolean", "true");
+        localStorage.setItem("color", "#ff0034");
+        localStorage.setItem("dataURI", "data:,Hello World!");
+        localStorage.setItem("date", "2009-05-19 14:39:22-01");
+        localStorage.setItem("email", "foo@bar.co.uk");
+        localStorage.setItem("FQDN", "xn--froschgrn-x9a.co.uk");
+        localStorage.setItem("IP", "192.168.1.1");
+        localStorage.setItem("MacAddress", "01:AB:03:04:05:06");
+        localStorage.setItem("maths", "9-1");
+        localStorage.setItem("numbers", "10,123,456");
+        localStorage.setItem("SemVer", "1.0.4");
+        localStorage.setItem("URL", "www.google.co.uk");
+        localStorage.setItem("URL2", "http://www.google.co.uk");
+
+        // These values should be parsed into a tree.
+        localStorage.setItem("ampersand", "a&b&c&d&e&f&g");
+        localStorage.setItem("asterisk", "a*b*c*d*e*f*g");
+        localStorage.setItem("colon", "a:b:c:d:e:f:g");
+        localStorage.setItem("comma", "a,b,c,d,e,f,g");
+        localStorage.setItem("equals", "a=b=c=d=e=f=g");
+        localStorage.setItem("hash", "a#b#c#d#e#f#g");
+        localStorage.setItem("period", "a.b.c.d.e.f.g");
+        localStorage.setItem("tilde", "a~b~c~d~e~f~g");
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=577974
+-->
+<head>
+  <title>Test for Bug 577974</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style">
+
+  @keyframes bounce {
+    from {
+      margin-left: 0
+    }
+
+    /*
+     * These rules should get dropped due to syntax errors.  The script
+     * below tests that the 25% rule following them is at cssRules[1].
+     */
+    from, { margin-left: 0 }
+    from , { margin-left: 0 }
+    , from { margin-left: 0 }
+    ,from { margin-left: 0 }
+    from from { margin-left: 0 }
+    from, 1 { margin-left: 0 }
+    1 { margin-left: 0 }
+    1, from { margin-left: 0 }
+    from, 1.0 { margin-left: 0 }
+    1.0 { margin-left: 0 }
+    1.0, from { margin-left: 0 }
+
+    25% {
+      margin-left: 25px;
+    }
+
+    75%, 85% {
+      margin-left: 90px;
+    }
+
+    100% {
+      margin-left: 100px;
+    }
+  }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=577974">Mozilla Bug 577974</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 577974 **/
+
+var sheet = document.getElementById("style").sheet;
+
+var bounce = sheet.cssRules[0];
+is(bounce.type, CSSRule.KEYFRAMES_RULE, "bounce.type");
+is(bounce.type, 7, "bounce.type");
+is(bounce.name, "bounce", "bounce.name");
+bounce.name = "bouncier";
+is(bounce.name, "bouncier", "setting bounce.name");
+
+is(bounce.cssRules[0].type, CSSRule.KEYFRAME_RULE, "keyframe rule type");
+is(bounce.cssRules[0].type, 8, "keyframe rule type");
+is(bounce.cssRules[0].keyText, "0%", "keyframe rule keyText");
+is(bounce.cssRules[1].keyText, "25%", "keyframe rule keyText");
+is(bounce.cssRules[2].keyText, "75%, 85%", "keyframe rule keyText");
+is(bounce.cssRules[3].keyText, "100%", "keyframe rule keyText");
+is(bounce.cssRules[0].style.marginLeft, "0px", "keyframe rule style");
+is(bounce.cssRules[1].style.marginLeft, "25px", "keyframe rule style");
+
+is(bounce.cssRules[0].cssText, "0% { margin-left: 0px; }");
+is(bounce.cssText, "@keyframes bouncier {\n" +
+                   "0% { margin-left: 0px; }\n" +
+                   "25% { margin-left: 25px; }\n" +
+                   "75%, 85% { margin-left: 90px; }\n" +
+                   "100% { margin-left: 100px; }\n" +
+                   "}");
+
+bounce.cssRules[1].keyText = "from, 1"; // syntax error
+bounce.cssRules[1].keyText = "from, x"; // syntax error
+bounce.cssRules[1].keyText = "from,"; // syntax error
+bounce.cssRules[1].keyText = "from x"; // syntax error
+bounce.cssRules[1].keyText = "x"; // syntax error
+is(bounce.cssRules[1].keyText, "25%", "keyframe rule keyText parsing");
+bounce.cssRules[1].keyText = "from, 10%";
+is(bounce.cssRules[1].keyText, "0%, 10%", "keyframe rule keyText parsing");
+bounce.cssRules[1].keyText = "from, 0%";
+is(bounce.cssRules[1].keyText, "0%, 0%", "keyframe rule keyText parsing");
+bounce.cssRules[1].keyText = "from, from, from";
+is(bounce.cssRules[1].keyText, "0%, 0%, 0%", "keyframe rule keyText parsing");
+
+is(bounce.findRule("75%"), null, "findRule should match all keys");
+is(bounce.findRule("85%, 75%"), null,
+   "findRule should match all keys in order");
+is(bounce.findRule("75%,85%"), bounce.cssRules[2],
+   "findRule should match all keys in order, parsed");
+is(bounce.findRule("to"), bounce.cssRules[3],
+   "findRule should match keys as parsed");
+is(bounce.findRule("100%"), bounce.cssRules[3],
+   "findRule should match keys as parsed");
+is(bounce.findRule("100%, 100%"), null,
+   "findRule should match key list");
+is(bounce.findRule("100%,"), null,
+   "findRule should fail when given bad selector");
+is(bounce.findRule(",100%"), null,
+   "findRule should fail when given bad selector");
+is(bounce.cssRules.length, 4, "length of css rules");
+bounce.deleteRule("85%");
+is(bounce.cssRules.length, 4, "deleteRule should match all keys");
+bounce.deleteRule("85%, 75%");
+is(bounce.cssRules.length, 4, "deleteRule should match key list");
+bounce.deleteRule("75%  ,85%");
+is(bounce.cssRules.length, 3, "deleteRule should match keys in order, parsed");
+bounce.deleteRule("0%");
+is(bounce.cssRules.length, 2, "deleteRule should match keys in order, parsed");
+bounce.appendRule("from { color: blue }");
+is(bounce.cssRules.length, 3, "appendRule should append");
+is(bounce.cssRules[2].keyText, "0%", "appendRule should append");
+bounce.appendRule("from { color: blue }");
+is(bounce.cssRules.length, 4, "appendRule should append");
+is(bounce.cssRules[3].keyText, "0%", "appendRule should append");
+bounce.appendRule("from { color: blue } to { color: green }");
+is(bounce.cssRules.length, 4, "appendRule should ignore garbage at end");
+
+</script>
+</pre>
+</body>
+</html>

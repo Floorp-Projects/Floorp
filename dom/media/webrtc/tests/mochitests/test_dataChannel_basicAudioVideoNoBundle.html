@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1016476",
+    title: "Basic data channel audio/video connection without bundle"
+  });
+
+var test;
+runNetworkTest(function (options) {
+  options = options || { };
+  options.bundle = false;
+  test = new PeerConnectionTest(options);
+  addInitialDataChannel(test.chain);
+  test.setMediaConstraints([{audio: true}, {video: true}],
+                           [{audio: true}, {video: true}]);
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

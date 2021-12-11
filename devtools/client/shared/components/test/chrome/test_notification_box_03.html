@@ -1,0 +1,87 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for Notification Box. The test is checking:
+* Using custom buttons in a notification
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Notification Box</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
+
+    // Test rendering
+    const boxElement = React.createElement(NotificationBox);
+    const notificationBox = TestUtils.renderIntoDocument(boxElement);
+    const notificationNode = ReactDOM.findDOMNode(notificationBox);
+
+    let buttonCallbackExecuted = false;
+    const buttons = [{
+      label: "Button1",
+      callback: () => {
+        buttonCallbackExecuted = true;
+
+        // Do not close the notification
+        return true;
+      },
+    }, {
+      label: "Button2",
+      callback: () => {
+        // Close the notification (return value undefined)
+      },
+    }];
+
+    // Append a notification with buttons.
+    notificationBox.appendNotification(
+      "Info message",
+      "id1",
+      null,
+      PriorityLevels.PRIORITY_INFO_LOW,
+      buttons
+    );
+
+    const buttonNodes = notificationNode.querySelectorAll(
+      ".notificationButton");
+
+    is(buttonNodes.length, 2, "There must be two buttons");
+
+    // Click the first button
+    TestUtils.Simulate.click(buttonNodes[0]);
+    ok(buttonCallbackExecuted, "Button callback must be executed.");
+
+    is(TestUtils.scryRenderedDOMComponentsWithClass(
+      notificationBox, "notification").length, 1,
+      "There must be one notification");
+
+    // Click the second button (closing the notification)
+    TestUtils.Simulate.click(buttonNodes[1]);
+
+    is(TestUtils.scryRenderedDOMComponentsWithClass(
+      notificationBox, "notification").length, 0,
+      "The notification box must be empty now");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

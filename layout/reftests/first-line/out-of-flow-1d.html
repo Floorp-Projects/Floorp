@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS 2.1 Test Suite: :first-line</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/selector.html#first-line"/>
+    <meta name="flags" content="dom" />
+    <style>
+      div { color: green }
+      div::first-line { color: red }
+    </style>
+    <script>
+      function runTest() {
+        var s = document.createElement("span");
+        s.setAttribute("style", "float: left");
+        s.appendChild(document.createTextNode("This should be green"));
+        var i = document.getElementById("i");
+        i.parentNode.insertBefore(s, i);
+      }
+    </script>
+  </head>
+  <body onload="runTest()">
+    <div><span id="i"></span></div>
+  </body>
+</html>
+

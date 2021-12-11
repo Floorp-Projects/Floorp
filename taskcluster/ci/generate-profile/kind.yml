@@ -1,0 +1,253 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+    - instrumented-build
+
+transforms:
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.run_pgo_profile:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+
+job-defaults:
+    treeherder:
+        symbol: Bpgo(run)
+        kind: build
+        tier: 1
+    run-on-projects: ['release']
+
+jobs:
+    linux-shippable/opt:
+        description: "Linux Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: linux-profile
+        treeherder:
+            platform: linux32-shippable/opt
+        worker-type: b-linux
+        worker:
+            chain-of-trust: true
+            env:
+                NEED_XVFB: "true"
+            max-run-time: 1200
+            docker-image: {in-tree: ubuntu1804-test}
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/
+        run:
+            using: run-task
+            cwd: '{checkout}'
+            command: >
+                ./taskcluster/scripts/misc/run-profileserver.sh
+        run-on-projects: ['release']
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-minidump-stackwalk
+
+    linux64-shippable/opt:
+        description: "Linux64 Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: linux64-profile
+        treeherder:
+            platform: linux64-shippable/opt
+        worker-type: b-linux
+        worker:
+            chain-of-trust: true
+            env:
+                NEED_XVFB: "true"
+            max-run-time: 1200
+            docker-image: {in-tree: ubuntu1804-test}
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/
+        run:
+            using: run-task
+            cwd: '{checkout}'
+            command: >
+                ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-minidump-stackwalk
+
+    android-x86-shippable/opt:
+        description: "Android 5.0 x86 Profile Generation"
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            product: mobile
+            job-name: android-x86-profile
+        treeherder:
+            platform: android-5-0-x86/pgo
+        worker-type: t-linux-xlarge-pgo
+        worker:
+            chain-of-trust: true
+            max-run-time: 2700
+            docker-image: {in-tree: ubuntu1804-test}
+            env:
+                WORKING_DIR: "/builds/worker"
+                MOZHARNESS_PATH: "/builds/worker/checkouts/gecko/testing/mozharness"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/
+        run:
+            using: mozharness
+            need-xvfb: true
+            job-script: taskcluster/scripts/tester/test-linux.sh
+            script: android_emulator_pgo.py
+            tooltool-downloads: internal
+            options: [installer-path=/builds/worker/fetches/geckoview-androidTest.apk]
+            config:
+                - android/android_common.py
+                - android/android-x86_64-profile-generation.py
+                - android/android_pgo.py
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-minidump-stackwalk
+                - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
+
+    android-x86_64-shippable/opt:
+        description: "Android 5.0 x86_64 Profile Generation"
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            product: mobile
+            job-name: android-x86_64-profile
+        treeherder:
+            platform: android-5-0-x86_64/pgo
+        worker-type: t-linux-xlarge-pgo
+        worker:
+            chain-of-trust: true
+            max-run-time: 2700
+            docker-image: {in-tree: ubuntu1804-test}
+            env:
+                WORKING_DIR: "/builds/worker"
+                MOZHARNESS_PATH: "/builds/worker/checkouts/gecko/testing/mozharness"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/
+        run:
+            using: mozharness
+            need-xvfb: true
+            job-script: taskcluster/scripts/tester/test-linux.sh
+            script: android_emulator_pgo.py
+            tooltool-downloads: internal
+            options: [installer-path=/builds/worker/fetches/geckoview-androidTest.apk]
+            config:
+                - android/android_common.py
+                - android/android-x86_64-profile-generation.py
+                - android/android_pgo.py
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-minidump-stackwalk
+                - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
+
+    win32-shippable/opt:
+        description: "Win32 Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: win32-profile
+        treeherder:
+            platform: windows2012-32-shippable/opt
+        worker-type: b-win2012
+        worker:
+            chain-of-trust: true
+            max-run-time: 1200
+            env:
+                UPLOAD_PATH: "artifacts"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: build/src/artifacts/
+        run:
+            using: run-task
+            sparse-profile: profile-generate
+            cwd: '{checkout}'
+            command: ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - win64-clang-2stage
+                - win32-minidump-stackwalk
+
+    win64-shippable/opt:
+        description: "Win64 Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: win64-profile
+        treeherder:
+            platform: windows2012-64-shippable/opt
+        worker-type: b-win2012
+        worker:
+            chain-of-trust: true
+            max-run-time: 1200
+            env:
+                UPLOAD_PATH: "artifacts"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: build/src/artifacts/
+        run:
+            using: run-task
+            sparse-profile: profile-generate
+            cwd: '{checkout}'
+            command: ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - win64-clang-2stage
+                - win32-minidump-stackwalk
+
+    macosx64-shippable/opt:
+        description: "macosx64 Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: macosx64-profile
+        treeherder:
+            platform: macosx1014-64-shippable/opt
+        worker-type: b-osx-1015
+        worker:
+            chain-of-trust: true
+            max-run-time: 7200
+            env:
+                SHELL: "/bin/bash"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: artifacts/
+        run:
+            using: run-task
+            sparse-profile: profile-generate
+            cwd: '{checkout}'
+            command: ./taskcluster/scripts/misc/run-profileserver-macos.sh
+        fetches:
+            toolchain:
+                - macosx64-clang
+                - macosx64-minidump-stackwalk

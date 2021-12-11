@@ -1,0 +1,18 @@
+<Html class="reftest-wait">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf8">
+</head>
+<body onload="boom()">
+<iframe src="#" id="data"></iframe>
+<script>
+function boom() {
+var d=document.getElementById('data').contentDocument;
+d.clear()
+var text='Тест';
+d.write(text);
+d.close();
+document.documentElement.removeAttribute("class");
+}
+</script>
+</body>
+</html>

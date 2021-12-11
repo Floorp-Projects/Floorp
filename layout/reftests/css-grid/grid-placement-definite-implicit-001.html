@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing placement of grid items outside the explicit grid</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1146051">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#auto-placement-algo">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#overlarge-grids">
+  <link rel="match" href="grid-placement-definite-implicit-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ grid-template-columns: 20px 20px 20px 20px;
+ grid-template-rows: 20px;
+ grid-auto-columns: 3px;
+ grid-auto-rows: 20px;
+ border: 1px solid blue;
+ justify-items: stretch;
+}
+
+.a { grid-area: 1 / 2; background:lime; }
+.b { grid-column: span 1 / 2; grid-row: 1; background:pink; }
+.c { grid-row: 2; background:yellow; }
+.d { grid-row: 2; grid-column: 1 / span 20000; background:cyan; }
+
+span {
+  border: 1px solid;
+  line-height: 18px;
+  min-width: 0;
+}
+
+  </style>
+</head>
+<body style="overflow:hidden">
+
+<div class="grid">
+<span class="a">a</span><span class="b">b</span><span class="c">c</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span><span class="b" span="2">b</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="3">b</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="4">b</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="100">b</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="9998">b</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="9999">b</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="10000">b</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="12345">b</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="10000">b</span><span class="d">d</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="2">b</span><span class="d">d</span>
+</div>
+<div class="grid">
+<span class="b" style="grid-column: 9997 / span 1000; margin-left:-30000px; ">b</span>
+</div>
+
+<div class="grid cols" style="margin-left:-30000px;">
+<span class="b" style="grid-column: span 1 / a;">b</span>
+<span class="c" style="grid-column: a;">c</span>
+</div>
+<div class="grid rows" style="grid-auto-rows:3px; grid-auto-cols:20px; margin-top:-30000px; border:none">
+<span class="b" style="grid-row: span 1 / a;"></span>
+</div>
+
+<script>
+var elms = document.querySelectorAll("[span]");
+for (i=0; i < elms.length; ++i) {
+  var e = elms[i];
+  e.style.gridColumnStart = "span " + e.getAttribute("span");
+}
+var cols = '"';
+for (j = 0; j < 10010; ++j) {
+  cols += "a "
+}
+cols += '"';
+var rows = '';
+for (j = 0; j < 10010; ++j) {
+  rows += '"a" '
+}
+
+var style = document.createElement('style');
+style.appendChild(document.createTextNode(
+  ".cols { grid-template-areas: " + cols + "; }" +
+  ".rows { grid-template-areas: " + rows + "; }"));
+var head = document.querySelector("head");
+head.appendChild(style)
+</script>
+
+</body>
+</html>

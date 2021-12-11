@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bug 1326251</title>
+    <script>
+    var bc = new BroadcastChannel("file_bug1326251");
+    bc.onmessage = function(event) {
+      if ("nextTest" in event.data) {
+        testSteps[event.data.nextTest]();
+      }
+    }
+
+    function is(val1, val2, msg) {
+      bc.postMessage({type: "is", value1: val1, value2: val2, message: msg});
+    }
+
+    function ok(val, msg) {
+      bc.postMessage({type: "ok", value: val, message: msg});
+    }
+
+    const BASE_URL = "http://mochi.test:8888/tests/docshell/test/navigation/";
+    let testSteps = [
+      async function() {
+        // Test 1: Create dynamic iframe with bfcache enabled.
+        // Navigate static / dynamic iframes, then navigate top level window
+        // and navigate back. Both iframes should still exist with history
+        // entries preserved.
+        window.onunload = null; // enable bfcache
+        await createDynamicFrame(document);
+        await loadUriInFrame(document.getElementById("staticFrame"), "frame1.html");
+        await loadUriInFrame(document.getElementById("dynamicFrame"), "frame1.html");
+        await loadUriInFrame(document.getElementById("staticFrame"), "frame2.html");
+        await loadUriInFrame(document.getElementById("dynamicFrame"), "frame2.html");
+        is(history.length, 5, "history.length");
+        window.location = "goback.html";
+      },
+      async function() {
+        let webNav = SpecialPowers.wrap(window)
+                       .docShell
+                       .QueryInterface(SpecialPowers.Ci.nsIWebNavigation);
+        let shistory = webNav.sessionHistory;
+        is(webNav.canGoForward, true, "canGoForward");
+        is(shistory.index, 4, "shistory.index");
+        is(history.length, 6, "history.length");
+        is(document.getElementById("staticFrame").contentWindow.location.href, BASE_URL + "frame2.html", "staticFrame location");
+        is(document.getElementById("dynamicFrame").contentWindow.location.href, BASE_URL + "frame2.html", "dynamicFrame location");
+
+        // Test 2: Load another page in dynamic iframe, canGoForward should be
+        // false.
+        await loadUriInFrame(document.getElementById("dynamicFrame"), "frame3.html");
+        is(webNav.canGoForward, false, "canGoForward");
+        is(shistory.index, 5, "shistory.index");
+        is(history.length, 6, "history.length");
+
+        // Test 3: Navigate to antoher page with bfcache disabled, all dynamic
+        // iframe entries should be removed.
+        window.onunload = function() {}; // disable bfcache
+        window.location = "goback.html";
+      },
+      async function() {
+        let windowWrap = SpecialPowers.wrap(window);
+        let docShell = windowWrap.docShell;
+        let shistory = docShell.QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
+                               .sessionHistory;
+        // Now staticFrame has frame0 -> frame1 -> frame2.
+        if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+          // *EntryIndex attributes aren't meaningful when the session history
+          // lives in the parent process.
+          is(docShell.previousEntryIndex, 3, "docShell.previousEntryIndex");
+          is(docShell.loadedEntryIndex, 2, "docShell.loadedEntryIndex");
+        }
+        is(shistory.index, 2, "shistory.index");
+        is(history.length, 4, "history.length");
+        is(document.getElementById("staticFrame").contentWindow.location.href, BASE_URL + "frame2.html", "staticFrame location");
+        ok(!document.getElementById("dynamicFrame"), "dynamicFrame should not exist");
+
+        // Test 4: Load a nested frame in the static frame, navigate the inner
+        // static frame, add a inner dynamic frame and navigate the dynamic
+        // frame. Then navigate the outer static frame and go back. The inner
+        // iframe should show the last entry of inner static frame.
+        let staticFrame = document.getElementById("staticFrame");
+        staticFrame.width = "320px";
+        staticFrame.height = "360px";
+        await loadUriInFrame(staticFrame, "iframe_static.html");
+        let innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        await loadUriInFrame(innerStaticFrame, "frame1.html");
+        let innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, "frame2.html");
+        await loadUriInFrame(innerDynamicFrame, "frame3.html");
+        // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
+        // innerStaticFrame:                                frame0        -> frame1
+        // innerDynamicFrame:                                                frame2 -> frame3
+        is(shistory.index, 5, "shistory.index");
+        is(history.length, 6, "history.length");
+
+        // Wait for 2 load events - navigation and goback.
+        let onloadPromise = awaitOnload(staticFrame, 2);
+        await loadUriInFrame(staticFrame, "goback.html");
+        await onloadPromise;
+        // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static           -> goback
+        // innerStaticFrame:                                frame0        -> frame1
+        is(shistory.index, 4, "shistory.index");
+        is(history.length, 6, "history.length");
+        innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        is(innerStaticFrame.contentDocument.location.href, BASE_URL + "frame1.html", "innerStaticFrame location");
+        ok(!staticFrame.contentDocument.getElementById("dynamicFrame"), "innerDynamicFrame should not exist");
+
+        // Test 5: Insert and navigate inner dynamic frame again with bfcache
+        // enabled, and navigate top level window to a special page which will
+        // evict bfcache then goback. Verify that dynamic entries are correctly
+        // removed in this case.
+        window.onunload = null; // enable bfcache
+        staticFrame.width = "320px";
+        staticFrame.height = "360px";
+        innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, "frame2.html");
+        await loadUriInFrame(innerDynamicFrame, "frame3.html");
+        // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
+        // innerStaticFrame:                                frame0        -> frame1
+        // innerDynamicFrame:                                                frame2 -> frame3
+        is(shistory.index, 5, "shistory.index");
+        is(history.length, 6, "history.length");
+        window.location = "file_bug1326251_evict_cache.html";
+      },
+      async function() {
+        let windowWrap = SpecialPowers.wrap(window);
+        let docShell = windowWrap.docShell;
+        let shistory = docShell.QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
+                               .sessionHistory;
+        // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
+        // innerStaticFrame:                                frame0        -> frame1
+        if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+          // *EntryIndex attributes aren't meaningful when the session history
+          // lives in the parent process.
+          is(docShell.previousEntryIndex, 5, "docShell.previousEntryIndex");
+          is(docShell.loadedEntryIndex, 4, "docShell.loadedEntryIndex");
+        }
+        is(shistory.index, 4, "shistory.index");
+        is(history.length, 6, "history.length");
+        let staticFrame = document.getElementById("staticFrame");
+        let innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        is(innerStaticFrame.contentDocument.location.href, BASE_URL + "frame1.html", "innerStaticFrame location");
+        ok(!staticFrame.contentDocument.getElementById("dynamicFrame"), "innerDynamicFrame should not exist");
+
+        // Test 6: Insert and navigate inner dynamic frame and then reload outer
+        // frame. Verify that inner dynamic frame entries are all removed.
+        staticFrame.width = "320px";
+        staticFrame.height = "360px";
+        let innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, "frame2.html");
+        await loadUriInFrame(innerDynamicFrame, "frame3.html");
+        // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
+        // innerStaticFrame:                                frame0        -> frame1
+        // innerDynamicFrame:                                                frame2 -> frame3
+        is(shistory.index, 5, "shistory.index");
+        is(history.length, 6, "history.length");
+        let staticFrameLoadPromise = new Promise(resolve => {
+          staticFrame.onload = resolve;
+        });
+        staticFrame.contentWindow.location.reload();
+        await staticFrameLoadPromise;
+        // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
+        // innerStaticFrame:                                frame0        -> frame1
+        is(shistory.index, 4, "shistory.index");
+        is(history.length, 5, "history.length");
+        innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        is(innerStaticFrame.contentDocument.location.href, BASE_URL + "frame1.html", "innerStaticFrame location");
+        ok(!staticFrame.contentDocument.getElementById("dynamicFrame"), "innerDynamicFrame should not exist");
+        bc.postMessage("finishTest");
+        bc.close();
+        window.close();
+      },
+    ];
+
+    function awaitOnload(frame, occurances = 1) {
+      return new Promise(function(resolve, reject) {
+        let count = 0;
+        frame.addEventListener("load", function listener(e) {
+          if (++count == occurances) {
+            frame.removeEventListener("load", listener);
+            setTimeout(resolve, 0);
+          }
+        });
+      });
+    }
+
+    async function createDynamicFrame(targetDocument, frameSrc = "frame0.html") {
+      let dynamicFrame = targetDocument.createElement("iframe");
+      let onloadPromise = awaitOnload(dynamicFrame);
+      dynamicFrame.id = "dynamicFrame";
+      dynamicFrame.src = frameSrc;
+      let container = targetDocument.getElementById("frameContainer");
+      container.appendChild(dynamicFrame);
+      await onloadPromise;
+      return dynamicFrame;
+    }
+
+    async function loadUriInFrame(frame, uri) {
+      let onloadPromise = awaitOnload(frame);
+      frame.src = uri;
+      return onloadPromise;
+    }
+
+    function test() {
+      bc.postMessage("requestNextTest");
+    }
+    </script>
+  </head>
+  <body onpageshow="test();">
+    <div id="frameContainer">
+      <iframe id="staticFrame" src="frame0.html"></iframe>
+    </div>
+  </body>
+</html>

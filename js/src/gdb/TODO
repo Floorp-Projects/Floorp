@@ -1,0 +1,22 @@
+* Ideas:
+- char16_t *
+- js::Shape, js::Baseshape
+- printers for structures with horrible unions (JSString, JSParseNode)
+- bring back parse_node.py
+- New 'js show' command for showing full trees, property lists, hash table
+  contents, and so on --- JSParseNode * should not show the whole tree.
+  Possibly clean up some "pointer-only" stuff in parse_node.py.
+  - 'js show <defn>' lists a JSDefinition's uses
+  - 'js show <parsenode>' shows entire tree
+  - 'js show <scope>' lists all properties (parents)
+  - 'js tree <scope>' shows property tree
+- avoid dead union branches in js::Shape; print attrs nicely
+- Print JSScope with identifier.
+- Print JSAtomSets, and thus PN_NAMESET.
+- JSParseNode PN_NAMESET
+- 'JSClass *' pretty-printer
+
+
+Local variables:
+mode: org
+End:

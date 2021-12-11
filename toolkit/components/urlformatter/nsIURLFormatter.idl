@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * nsIURLFormatter
+ *
+ * nsIURLFormatter exposes methods to substitute variables in URL formats.
+ * Variable names can contain 'A-Z' letters and '_' characters.
+ *
+ * Mozilla Applications linking to Mozilla websites are strongly encouraged to use
+ * URLs of the following format:
+ *
+ *   http[s]://%SERVICE%.mozilla.[com|org]/%LOCALE%/
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(4ab31d30-372d-11db-a98b-0800200c9a66)]
+interface nsIURLFormatter: nsISupports
+{
+  /**
+   * formatURL - Formats a string URL
+   *
+   * The set of known variables is predefined.
+   * If a variable is unknown, it is left unchanged and a non-fatal error is reported.
+   *
+   * @param aFormat string Unformatted URL.
+   *
+   * @return The formatted URL.
+   */
+  AString formatURL(in AString aFormat);
+
+  /**
+   * formatURLPref - Formats a string URL stored in a preference
+   *
+   * If the preference value cannot be retrieved, a fatal error is reported
+   * and the "about:blank" URL is returned.
+   *
+   * @param aPref string Preference name.
+   *
+   * @return The formatted URL returned by formatURL(), or "about:blank".
+   */
+  AString formatURLPref(in AString aPref);
+
+  /**
+   * Remove all of the sensitive query parameter strings from URLs in |aMsg|.
+   */
+  AString trimSensitiveURLs(in AString aMsg);
+};

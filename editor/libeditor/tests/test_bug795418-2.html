@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=795418
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test #2 for Bug 772796</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772796">Mozilla Bug 795418</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div id="copySource">Copy this</div>
+<!-- load content of type application/xhtml+xml using an *.sjs file -->
+<iframe src="./file_bug795418-2.sjs"></iframe>
+
+<pre id="test">
+
+<script type="application/javascript">
+
+/** Test for Bug 795418 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  const div = document.getElementById("copySource");
+  getSelection().setBaseAndExtent(div.firstChild, 0, div.firstChild, "Copy this".length);
+  info(`Selected test: "${getSelection().getRangeAt(0).toString()}"`);
+
+  function checkResult() {
+    var iframe = document.querySelector("iframe");
+    var theEdit = iframe.contentDocument.firstChild;
+    theEdit.offsetHeight;
+    is(theEdit.innerHTML,
+       "<blockquote xmlns=\"http://www.w3.org/1999/xhtml\" type=\"cite\">Copy this</blockquote><span xmlns=\"http://www.w3.org/1999/xhtml\">AB</span>",
+       "unexpected HTML for test");
+    SimpleTest.finish();
+  }
+
+  function pasteQuote() {
+    var iframe = document.querySelector("iframe");
+    var iframeWindow = iframe.contentWindow;
+    var theEdit = iframe.contentDocument.firstChild;
+    theEdit.offsetHeight;
+    iframeWindow.focus();
+    SimpleTest.waitForFocus(function() {
+      var iframeSel = iframeWindow.getSelection();
+      iframeSel.removeAllRanges();
+      let span = iframe.contentDocument.querySelector("span");
+      iframeSel.collapse(span, 1);
+
+      SpecialPowers.doCommand(iframeWindow, "cmd_pasteQuote");
+      setTimeout(checkResult, 0);
+    }, iframeWindow);
+  }
+
+  SimpleTest.waitForClipboard(
+    aData => {
+      if (aData.includes(`${getSelection().getRangeAt(0)?.toString()}`)) {
+        return true;
+      }
+      info(`Text in the clipboard: "${aData}"`);
+      return false;
+    },
+    function setup() {
+      synthesizeKey("c", {accelKey: true});
+    },
+    function onSuccess() {
+      SimpleTest.executeSoon(pasteQuote);
+    },
+    function onFailure() {
+      SimpleTest.finish();
+    },
+    // TODO: bug 1686012
+    SpecialPowers.isHeadless ? "text/unicode" : "text/html"
+  );
+});
+
+</script>
+
+</pre>
+</body>
+</html>

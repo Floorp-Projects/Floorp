@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<?xml-stylesheet type="text/css" href="test_bug467669.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=467669
+-->
+<window title="Mozilla Bug 467669"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 467669 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function RunTest() {
+  const kIsLinux = navigator.platform.indexOf("Linux") == 0;
+  const kIsMac = navigator.platform.indexOf("Mac") == 0;
+  const kIsWin = navigator.platform.indexOf("Win") == 0;
+
+  var rng = document.createRange();
+  var elem, fonts, f;
+
+  elem = document.getElementById("test1");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts for simple Latin text");
+  f = fonts[0];
+  is(f.rule, null, "rule");
+  is(f.srcIndex, -1, "srcIndex");
+  is(f.localName, "", "local name");
+  is(f.URI, "", "URI");
+  is(f.format, "", "format string");
+  is(f.metadata, "", "metadata");
+//  report(elem.id, fonts);
+
+  elem = document.getElementById("test2");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 3, "number of fonts for mixed serif, sans and monospaced text");
+//  report(elem.id, fonts);
+
+  elem = document.getElementById("test3");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 2, "number of fonts for mixed Latin & Chinese");
+//  report(elem.id, fonts);
+
+  // get properties of a @font-face font
+  elem = document.getElementById("test4");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts in @font-face test");
+  f = fonts[0];
+  isnot(f.rule, null, "missing rule");
+  is(f.srcIndex, 1, "srcIndex");
+  is(f.localName, "", "local name");
+  is(f.URI, "chrome://mochitests/content/chrome/layout/inspector/tests/chrome/GentiumPlus-R.woff", "bad URI");
+  is(f.format, "woff", "format");
+  is(/bukva:raz/.test(f.metadata), true, "metadata");
+//  report(elem.id, fonts);
+
+  elem = document.getElementById("test5").childNodes[0];
+  // check that string length is as expected, including soft hyphens
+  is(elem.length, 42, "string length with soft hyphens");
+
+  // initial latin substring...
+  rng.setStart(elem, 0);
+  rng.setEnd(elem, 20); // "supercalifragilistic"
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts (Latin-only)");
+  f = fonts[0];
+  is(f.name, "Gentium Plus", "font name");
+  is(f.CSSFamilyName, "font-face-test-family", "family name");
+  is(f.fromFontGroup, true, "font matched in font group");
+
+  // extend to include a chinese character
+  rng.setEnd(elem, 21);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 2, "number of fonts (incl Chinese)");
+  if (kIsMac || kIsWin) { // these are only implemented by the Mac & Win font backends
+    var i;
+    for (i = 0; i < fonts.length; ++i) {
+      f = fonts[i];
+      if (f.rule) {
+        is(f.fromFontGroup, true, "@font-face font matched in group");
+        is(f.fromLanguagePrefs, false, "not from language prefs");
+        is(f.fromSystemFallback, false, "not from system fallback");
+      } else {
+        is(f.fromFontGroup, false, "not matched in group");
+        is(f.fromLanguagePrefs, true, "from language prefs");
+        is(f.fromSystemFallback, false, "not from system fallback");
+      }
+    }
+  }
+
+  // second half of the string includes &shy; chars to check original/skipped mapping;
+  // select just the final character
+  rng.setStart(elem, elem.length - 1);
+  rng.setEnd(elem, elem.length);
+  is(rng.toString(), "!", "content of range");
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts for last char");
+  f = fonts[0];
+  is(f.name, "Gentium Plus", "font name");
+
+  // include the preceding character as well
+  rng.setStart(elem, elem.length - 2);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 2, "number of fonts for last two chars");
+
+  // then trim the final one
+  rng.setEnd(elem, elem.length - 1);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "number of fonts for Chinese char");
+  f = fonts[0];
+  isnot(f.name, "Gentium Plus", "font name for Chinese char");
+
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+//  report("test5", fonts);
+
+  elem = document.getElementById("test6");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 2, "number of font faces for regular & italic");
+  is(fonts[0].CSSFamilyName, fonts[1].CSSFamilyName, "same family for regular & italic");
+  isnot(fonts[0].name, fonts[1].name, "different faces for regular & italic");
+//  report(elem.id, fonts);
+
+  SimpleTest.finish();
+}
+
+// just for test-debugging purposes
+function report(e, f) {
+  var fontNames = "";
+  var i;
+  for (i = 0; i < f.length; ++i) {
+    if (i == 0) {
+      fontNames += e + " fonts: "
+    } else {
+      fontNames += ", ";
+    }
+    fontNames += f.item(i).name;
+  }
+  dump(fontNames + "\n");
+}
+
+  ]]>
+  </script>
+
+  <!-- html:body contains elements the test will inspect -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=467669"
+     target="_blank">Mozilla Bug 467669</a>
+  <div id="test1">Hello world</div>
+  <div id="test2" style="font-family:sans-serif"><span style="font-family:serif">Hello</span> <tt>cruel</tt> world</div>
+  <div id="test3">Hello, &#x4F60;&#x597D;</div>
+  <div id="test4" class="gentium">Hello Gentium Plus!</div>
+  <div id="test5" class="gentium">supercalifragilistic&#x4F60;ex&#xAD;pi&#xAD;a&#xAD;li&#xAD;do&#xAD;cious&#x597D;!</div>
+  <div id="test6" style="font-family:serif">regular and <em>italic</em> text</div>
+  </body>
+
+</window>

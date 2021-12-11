@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(true);
+       await SpecialPowers.pushPrefEnv({"set": [["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false]]});
+       var checkCount = 0;
+       var lastTime = 0;
+       var reopened = false;
+       var input;
+       var output;
+       function checkReturn(event) {
+         ok(event.timeStamp > lastTime, "Received timestamp " + event.timeStamp + " should be greater than " + lastTime);
+         lastTime = event.timeStamp;
+         checkCount++;
+
+         if (checkCount == 6) {
+           input.close();
+           output.close();
+           SimpleTest.finish();
+         }
+       }
+       ok("Testing MIDI packet reordering based on timestamps");
+       // Request access without sysex.
+       let access = await navigator.requestMIDIAccess({ "sysex": false });
+       ok(true, "MIDI Access Request successful");
+       is(access.sysexEnabled, false, "Sysex should be false");
+
+       input = access.inputs.get(MIDITestUtils.inputInfo.id);
+       output = access.outputs.get(MIDITestUtils.outputInfo.id);
+       input.onmidimessage = checkReturn;
+       // trigger the packet timing sorting tests
+       output.send([0x90, 0x03, 0x00], 0);
+       ok(true, "Waiting on packets");
+     }
+    </script>
+  </body>
+</html>

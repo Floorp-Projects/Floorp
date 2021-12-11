@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.close-btn {
+  width: 16px;
+  height: 16px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 1px;
+  color: var(--theme-icon-color);
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+.close-btn .img {
+  display: block;
+  width: 12px;
+  height: 12px;
+  /* inherit the button's text color for the icon's color */
+  background-color: currentColor;
+}
+
+.close-btn.big {
+  width: 20px;
+  height: 20px;
+}
+
+.close-btn.big .img {
+  width: 16px;
+  height: 16px;
+}

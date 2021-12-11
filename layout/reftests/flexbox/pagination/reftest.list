@@ -1,0 +1,214 @@
+# Tests with an empty flex container being fragmented:
+== flexbox-empty-1a.html flexbox-empty-1-ref.html
+== flexbox-empty-1b.html flexbox-empty-1-ref.html
+== flexbox-empty-1c.html flexbox-empty-1-ref.html
+== flexbox-empty-1d.html flexbox-empty-1-ref.html
+
+# Tests with an empty flex container that overflows a short fixed-height block
+# being fragmented:
+== flexbox-empty-1e.html flexbox-empty-1-ref.html
+== flexbox-empty-1f.html flexbox-empty-1-ref.html
+== flexbox-empty-1g.html flexbox-empty-1-ref.html
+== flexbox-empty-1h.html flexbox-empty-1-ref.html
+
+# Tests with an empty flex container being fragmented, with margin, border,
+# and/or padding being taller than the available height:
+fuzzy-if(Android,0-128,0-10) == flexbox-empty-2a.html flexbox-empty-2-ref.html
+fuzzy-if(Android,0-128,0-10) == flexbox-empty-2b.html flexbox-empty-2-ref.html
+fuzzy-if(Android,0-128,0-10) == flexbox-empty-2c.html flexbox-empty-2-ref.html
+fuzzy-if(Android,0-128,0-10) == flexbox-empty-2d.html flexbox-empty-2-ref.html
+
+# Tests for how we fragment a flex container with one unbreakable child
+== flexbox-unbreakable-child-1a.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1a-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1b.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1b-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1c.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1c-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1d.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1d-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-2.html       flexbox-unbreakable-child-2-ref.html
+
+# Tests for how we fragment a flex container with one unbreakable child and
+# "box-decoration-break: clone"
+== flexbox-unbreakable-child-3a.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3a-wrap.html flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3b.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3b-wrap.html flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3c.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3c-wrap.html flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3d.html      flexbox-unbreakable-child-3-ref.html
+== flexbox-unbreakable-child-3d-wrap.html flexbox-unbreakable-child-3-ref.html
+
+# Tests for how we fragment flex items in a single-line column flex container.
+== flexbox-single-column-1a.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1b.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1c.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1d.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1e.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1f.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1g.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1h.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1i.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1j.html flexbox-single-column-1-ref.html
+== flexbox-single-column-2.html flexbox-single-column-2-ref.html
+== flexbox-single-column-3a.html flexbox-single-column-3-ref.html
+== flexbox-single-column-3b.html flexbox-single-column-3-ref.html
+== flexbox-single-column-4.html flexbox-single-column-4-ref.html
+== flexbox-single-column-5.html flexbox-single-column-5-ref.html
+== flexbox-single-column-6.html flexbox-single-column-6-ref.html
+
+# Tests for how we fragment flex items in a single-line column flex container
+# under "writing-mode: vertical-lr".
+== flexbox-single-column-vertical-lr-1a.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1b.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1c.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1d.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1e.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1f.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1g.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1h.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1i.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-1j.html flexbox-single-column-vertical-lr-1-ref.html
+== flexbox-single-column-vertical-lr-2.html flexbox-single-column-vertical-lr-2-ref.html
+== flexbox-single-column-vertical-lr-3a.html flexbox-single-column-vertical-lr-3-ref.html
+== flexbox-single-column-vertical-lr-3b.html flexbox-single-column-vertical-lr-3-ref.html
+== flexbox-single-column-vertical-lr-4.html flexbox-single-column-vertical-lr-4-ref.html
+== flexbox-single-column-vertical-lr-5.html flexbox-single-column-vertical-lr-5-ref.html
+== flexbox-single-column-vertical-lr-6.html flexbox-single-column-vertical-lr-6-ref.html
+
+# Tests for how we fragment flex items in a single-line column flex container
+# under "writing-mode: vertical-rl".
+== flexbox-single-column-vertical-rl-1a.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1b.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1c.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1d.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1e.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1f.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1g.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1h.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1i.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-1j.html flexbox-single-column-vertical-rl-1-ref.html
+== flexbox-single-column-vertical-rl-2.html flexbox-single-column-vertical-rl-2-ref.html
+== flexbox-single-column-vertical-rl-3a.html flexbox-single-column-vertical-rl-3-ref.html
+== flexbox-single-column-vertical-rl-3b.html flexbox-single-column-vertical-rl-3-ref.html
+== flexbox-single-column-vertical-rl-4.html flexbox-single-column-vertical-rl-4-ref.html
+== flexbox-single-column-vertical-rl-5.html flexbox-single-column-vertical-rl-5-ref.html
+== flexbox-single-column-vertical-rl-6.html flexbox-single-column-vertical-rl-6-ref.html
+
+# Tests for how we fragment flex items in a multi-line column flex container.
+== flexbox-multi-column-1a.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1b.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1c.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1d.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1e.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1f.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1g.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1h.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1i.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-1j.html flexbox-multi-column-1-ref.html
+== flexbox-multi-column-2.html flexbox-multi-column-2-ref.html
+
+# Tests for how we fragment flex items in a multi-line column flex container
+# under "writing-mode: vertical-lr".
+== flexbox-multi-column-vertical-lr-1a.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1b.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1c.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1d.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1e.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1f.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1g.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1h.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1i.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-1j.html flexbox-multi-column-vertical-lr-1-ref.html
+== flexbox-multi-column-vertical-lr-2.html flexbox-multi-column-vertical-lr-2-ref.html
+
+# Tests for how we fragment flex items in a multi-line column flex container
+# under "writing-mode: vertical-rl".
+== flexbox-multi-column-vertical-rl-1a.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1b.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1c.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1d.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1e.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1f.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1g.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1h.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1i.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-1j.html flexbox-multi-column-vertical-rl-1-ref.html
+== flexbox-multi-column-vertical-rl-2.html flexbox-multi-column-vertical-rl-2-ref.html
+
+# Tests for how we fragment flex items in a single-line row flex container.
+== flexbox-single-row-1a.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1b.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1c.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1d.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1e.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1f.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1g.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1h.html flexbox-single-row-1-ref.html
+== flexbox-single-row-2.html flexbox-single-row-2-ref.html
+== flexbox-single-row-3a.html flexbox-single-row-3-ref.html
+== flexbox-single-row-3b.html flexbox-single-row-3-ref.html
+== flexbox-single-row-4.html flexbox-single-row-4-ref.html
+
+# Tests for how we fragment flex items in a single-line row flex container
+# under "writing-mode: vertical-lr".
+== flexbox-single-row-vertical-lr-1a.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-1b.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-1c.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-1d.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-1e.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-1f.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-1g.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-1h.html flexbox-single-row-vertical-lr-1-ref.html
+== flexbox-single-row-vertical-lr-2.html flexbox-single-row-vertical-lr-2-ref.html
+== flexbox-single-row-vertical-lr-3a.html flexbox-single-row-vertical-lr-3-ref.html
+== flexbox-single-row-vertical-lr-3b.html flexbox-single-row-vertical-lr-3-ref.html
+== flexbox-single-row-vertical-lr-4.html flexbox-single-row-vertical-lr-4-ref.html
+
+# Tests for how we fragment flex items in a single-line row flex container
+# under "writing-mode: vertical-rl".
+== flexbox-single-row-vertical-rl-1a.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-1b.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-1c.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-1d.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-1e.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-1f.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-1g.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-1h.html flexbox-single-row-vertical-rl-1-ref.html
+== flexbox-single-row-vertical-rl-2.html flexbox-single-row-vertical-rl-2-ref.html
+== flexbox-single-row-vertical-rl-3a.html flexbox-single-row-vertical-rl-3-ref.html
+== flexbox-single-row-vertical-rl-3b.html flexbox-single-row-vertical-rl-3-ref.html
+== flexbox-single-row-vertical-rl-4.html flexbox-single-row-vertical-rl-4-ref.html
+
+# Tests for how we fragment flex items in a multi-line row flex container.
+== flexbox-multi-row-1a.html flexbox-multi-row-1-ref.html
+== flexbox-multi-row-1b.html flexbox-multi-row-1-ref.html
+== flexbox-multi-row-1c.html flexbox-multi-row-1-ref.html
+== flexbox-multi-row-1d.html flexbox-multi-row-1-ref.html
+== flexbox-multi-row-1e.html flexbox-multi-row-1-ref.html
+== flexbox-multi-row-1f.html flexbox-multi-row-1-ref.html
+== flexbox-multi-row-2a.html flexbox-multi-row-2-ref.html
+== flexbox-multi-row-2b.html flexbox-multi-row-2-ref.html
+
+# Tests for how we fragment flex items in a multi-line row flex container.
+# under "writing-mode: vertical-lr".
+== flexbox-multi-row-vertical-lr-1a.html flexbox-multi-row-vertical-lr-1-ref.html
+== flexbox-multi-row-vertical-lr-1b.html flexbox-multi-row-vertical-lr-1-ref.html
+== flexbox-multi-row-vertical-lr-1c.html flexbox-multi-row-vertical-lr-1-ref.html
+== flexbox-multi-row-vertical-lr-1d.html flexbox-multi-row-vertical-lr-1-ref.html
+== flexbox-multi-row-vertical-lr-1e.html flexbox-multi-row-vertical-lr-1-ref.html
+== flexbox-multi-row-vertical-lr-1f.html flexbox-multi-row-vertical-lr-1-ref.html
+== flexbox-multi-row-vertical-lr-2a.html flexbox-multi-row-vertical-lr-2-ref.html
+== flexbox-multi-row-vertical-lr-2b.html flexbox-multi-row-vertical-lr-2-ref.html
+
+# Tests for how we fragment flex items in a multi-line row flex container.
+# under "writing-mode: vertical-rl".
+== flexbox-multi-row-vertical-rl-1a.html flexbox-multi-row-vertical-rl-1-ref.html
+== flexbox-multi-row-vertical-rl-1b.html flexbox-multi-row-vertical-rl-1-ref.html
+== flexbox-multi-row-vertical-rl-1c.html flexbox-multi-row-vertical-rl-1-ref.html
+== flexbox-multi-row-vertical-rl-1d.html flexbox-multi-row-vertical-rl-1-ref.html
+== flexbox-multi-row-vertical-rl-1e.html flexbox-multi-row-vertical-rl-1-ref.html
+== flexbox-multi-row-vertical-rl-1f.html flexbox-multi-row-vertical-rl-1-ref.html
+== flexbox-multi-row-vertical-rl-2a.html flexbox-multi-row-vertical-rl-2-ref.html
+== flexbox-multi-row-vertical-rl-2b.html flexbox-multi-row-vertical-rl-2-ref.html

@@ -1,0 +1,63 @@
+:root { color-scheme: light }
+
+vbox, hbox {
+  margin-top: 8px;
+  margin-left: 8px;
+  display: block;
+}
+
+.file {
+  /* Copy of input properties that apply of forms.css below this */
+  color: inherit;
+  font: -moz-field;
+  text-rendering: optimizeLegibility;
+  line-height: normal !important;
+  text-align: start;
+  text-transform: none;
+  word-spacing: normal;
+  letter-spacing: normal;
+  text-indent: 0;
+  user-select: text;
+  text-shadow: none;
+
+  /* Copy of the type=file part of forms.css below this */
+  display: inline; /* this one isn't really a copy... */
+  white-space: nowrap;
+  overflow:hidden;
+
+  -moz-appearance: none;
+  -moz-binding: none;
+  cursor: default;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+}
+
+.file > label {
+  display: inline-block;
+
+  /* Copy from forms.css below this */
+  min-width: 12em;
+  padding-inline-start: 5px;
+
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+
+  direction: ltr !important;
+}
+
+.file[dir='rtl'] > label {
+  /* Copy from forms.css below this */
+  padding-inline-start: 0px;
+  padding-right: 5px;
+  text-align: right;
+}
+
+.file > button {
+  /* Copy from forms.css below this */
+  height: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  cursor: inherit;
+}

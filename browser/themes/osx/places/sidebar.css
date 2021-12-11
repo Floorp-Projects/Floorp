@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Sidebars */
+
+%include ../../shared/places/sidebar.inc.css
+
+.sidebar-placesTree {
+  margin: 0;
+  /* Default font size is 11px on mac, so this is 12px */
+  font-size: 1.0909rem;
+}
+
+:root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+  min-height: 32px;
+}
+
+.sidebar-placesTreechildren::-moz-tree-separator {
+  border-top: 1px solid #505d6d;
+  margin: 0 10px;
+}
+
+.sidebar-panel:not([lwt-sidebar]) .sidebar-placesTreechildren::-moz-tree-row(selected,blur) {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-source-list-selection;
+  -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
+}
+
+.sidebar-panel:not([lwt-sidebar-highlight]) .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-active-source-list-selection;
+  -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
+}
+
+.sidebar-placesTreechildren::-moz-tree-cell-text {
+  margin-inline-end: 6px;
+}
+
+#sidebar-search-container {
+  /* Native searchbar styling already adds 4px margin on Mac, so
+   * adding 4px padding results in 8px of total whitespace. */
+  padding: 4px;
+}
+
+#viewButton {
+  margin: 4px 0;
+  margin-inline-end: 4px;
+  /* Default font size is 11px on mac, so this is 12px */
+  font-size: 1.0909rem;
+}
+
+#viewButton:focus {
+  box-shadow: var(--focus-ring-box-shadow);
+}

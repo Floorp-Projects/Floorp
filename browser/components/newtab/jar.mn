@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+% resource activity-stream %res/activity-stream/ contentaccessible=yes
+% content activity-stream %content/activity-stream/ contentaccessible=yes
+  res/activity-stream/lib/ (./lib/*)
+  res/activity-stream/common/ (./common/*)
+  content/activity-stream/aboutwelcome/aboutwelcome.css (./aboutwelcome/content/aboutwelcome.css)
+  res/activity-stream/aboutwelcome/aboutwelcome.bundle.js (./aboutwelcome/content/aboutwelcome.bundle.js)
+  res/activity-stream/aboutwelcome/aboutwelcome.html (./aboutwelcome/content/aboutwelcome.html)
+  res/activity-stream/aboutwelcome/lib/ (./aboutwelcome/lib/*)
+  res/activity-stream/vendor/Redux.jsm (./vendor/Redux.jsm)
+  res/activity-stream/vendor/react.js (./vendor/react.js)
+  res/activity-stream/vendor/react-dom.js (./vendor/react-dom.js)
+  res/activity-stream/vendor/react-dom-server.js (./vendor/react-dom-server.js)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/vendor/react-dev.js (./vendor/react-dev.js)
+  res/activity-stream/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
+#endif
+  res/activity-stream/vendor/prop-types.js (./vendor/prop-types.js)
+  res/activity-stream/vendor/react-transition-group.js (./vendor/react-transition-group.js)
+  res/activity-stream/vendor/redux.js (./vendor/redux.js)
+  res/activity-stream/vendor/react-redux.js (./vendor/react-redux.js)
+* res/activity-stream/data/content/abouthomecache/page.html.template (./data/content/abouthomecache/page.html.template)
+* res/activity-stream/data/content/abouthomecache/script.js.template (./data/content/abouthomecache/script.js.template)
+  content/activity-stream/data/content/assets/  (./data/content/assets/*)
+#ifdef XP_WIN
+  content/activity-stream/data/content/assets/remote  (./data/content/windows-assets/*)
+#endif
+  content/activity-stream/data/content/tippytop/ (./data/content/tippytop/*)
+  res/activity-stream/data/content/activity-stream.bundle.js (./data/content/activity-stream.bundle.js)
+  res/activity-stream/data/content/newtab-render.js (./data/content/newtab-render.js)
+  res/activity-stream/data/custom-elements/ (./components/CustomElements/*)
+#ifdef XP_MACOSX
+  content/activity-stream/css/activity-stream.css (./css/activity-stream-mac.css)
+#elifdef XP_WIN
+  content/activity-stream/css/activity-stream.css (./css/activity-stream-windows.css)
+#else
+  content/activity-stream/css/activity-stream.css (./css/activity-stream-linux.css)
+#endif
+  res/activity-stream/prerendered/activity-stream.html (./prerendered/activity-stream.html)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/prerendered/activity-stream-debug.html (./prerendered/activity-stream-debug.html)
+#endif
+  res/activity-stream/prerendered/activity-stream-noscripts.html (./prerendered/activity-stream-noscripts.html)

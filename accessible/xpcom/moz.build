@@ -1,0 +1,82 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    "nsAccessibleRelation.cpp",
+    "xpcAccessibilityService.cpp",
+    "xpcAccessible.cpp",
+    "xpcAccessibleApplication.cpp",
+    "xpcAccessibleDocument.cpp",
+    "xpcAccessibleGeneric.cpp",
+    "xpcAccessibleHyperLink.cpp",
+    "xpcAccessibleHyperText.cpp",
+    "xpcAccessibleImage.cpp",
+    "xpcAccessibleSelectable.cpp",
+    "xpcAccessibleTable.cpp",
+    "xpcAccessibleTableCell.cpp",
+    "xpcAccessibleTextRange.cpp",
+    "xpcAccessibleValue.cpp",
+]
+
+SOURCES += [
+    "!xpcAccEvents.cpp",
+]
+
+EXPORTS += [
+    "!xpcAccEvents.h",
+    "xpcAccessibilityService.h",
+]
+
+LOCAL_INCLUDES += [
+    "/accessible/base",
+    "/accessible/basetypes",
+    "/accessible/generic",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    LOCAL_INCLUDES += [
+        "/accessible/atk",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    LOCAL_INCLUDES += [
+        "/accessible/windows/msaa",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    LOCAL_INCLUDES += [
+        "/accessible/ipc",
+        "/accessible/ipc/other",
+        "/accessible/mac",
+    ]
+    UNIFIED_SOURCES += ["xpcAccessibleMacInterface.mm"]
+    EXPORTS += [
+        "xpcAccessibleMacInterface.h",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    LOCAL_INCLUDES += [
+        "/accessible/android",
+    ]
+else:
+    LOCAL_INCLUDES += [
+        "/accessible/other",
+    ]
+
+
+GeneratedFile(
+    "xpcAccEvents.h",
+    "xpcAccEvents.cpp",
+    script="AccEventGen.py",
+    entry_point="gen_files",
+    inputs=[
+        "AccEvents.conf",
+    ],
+)
+
+FINAL_LIBRARY = "xul"
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

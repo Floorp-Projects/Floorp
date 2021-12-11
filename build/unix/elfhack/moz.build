@@ -1,0 +1,32 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIST_INSTALL = False
+DIRS += ["inject"]
+
+if not CONFIG["CROSS_COMPILE"]:
+    SOURCES += [
+        "dummy.c",
+        "test-array.c",
+        "test-ctors.c",
+    ]
+
+    SOURCES["dummy.c"].flags += ["-fno-lto"]
+    SOURCES["test-array.c"].flags += ["-fno-lto"]
+    SOURCES["test-ctors.c"].flags += ["-fno-lto"]
+
+HOST_SOURCES += [
+    "elf.cpp",
+    "elfhack.cpp",
+]
+
+HostProgram("elfhack")
+
+NO_PGO = True
+
+COMPILE_FLAGS["OS_CXXFLAGS"] = [
+    f for f in COMPILE_FLAGS["OS_CXXFLAGS"] if f != "-fno-exceptions"
+] + ["-fexceptions"]

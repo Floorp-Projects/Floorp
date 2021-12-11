@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<body style="white-space:pre"
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+><img src="data:image/gif;base64,R0lGODlhEAAQAPAAALuWAAAAACH5BAUIAAEALAMAAwAKAAoAAAIMDI5nye0Po5xutVAAADs="
+>
+<script>
+document.body.offsetTop;
+var t = document.body;
+// Test anchor < newfocus = focus
+var sel = window.getSelection();
+function loaded() {
+  sel.collapse(t, 2); // anchor
+  sel.extend(t, 8);   // focus
+}
+function doTest() {
+  sel.extend(t, 8); // newfocus
+  document.documentElement.removeAttribute('class');
+}
+window.addEventListener("load", loaded);
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

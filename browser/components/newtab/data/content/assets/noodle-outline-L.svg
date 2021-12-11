@@ -1,0 +1,13 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="147" height="164" viewBox="0 0 147 164" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M26.0923 73.3091C13.8884 71.367 5.84156 60.0045 8.1684 47.9971C10.4712 36.1135 22.0746 28.0774 34.1527 29.9995L100.16 40.504C112.485 42.4654 120.545 54.0226 118.024 66.1182L104.519 130.898C102.048 142.752 90.3351 150.631 78.2883 148.543C66.1158 146.432 58.2353 134.956 60.7321 122.98L69.6422 80.2397L26.0923 73.3091Z" stroke="url(#paint0_linear)"/>
+<defs>
+<linearGradient id="paint0_linear" x1="52.2466" y1="163.233" x2="0.9998" y2="40.1293" gradientUnits="userSpaceOnUse">
+<stop stop-color="#9059FF"/>
+<stop offset="0.520833" stop-color="#FF4AA2"/>
+<stop offset="1" stop-color="#FFBD4F"/>
+</linearGradient>
+</defs>
+</svg>

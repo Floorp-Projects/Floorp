@@ -1,0 +1,12 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>
+    Testcase for bug 686013: &lt;use&gt; targeting a fragment in a data URI
+  </title>
+  <rect fill="red" height="100%" width="100%"/>
+  <use xlink:href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg'&gt;&lt;rect id='target' height='100%' width='100%' fill='lime'/&gt;&lt;rect height='100%' width='100%' fill='orange'/&gt;&lt;/svg&gt;#target"/>
+</svg>

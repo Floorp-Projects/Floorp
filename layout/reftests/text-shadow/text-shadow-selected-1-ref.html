@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+function onload() {
+  window.focus();
+  var range = document.createRange();
+  range.selectNodeContents(document.getElementById("selectMe"));
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+</script>
+<style type="text/css">
+body {
+  background: lightGray;
+}
+div {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font: 36px monospace;
+  color: white;
+}
+</style>
+</head>
+<!-- REF case renders the selection first, using &nbsp; to avoid any show-through of glyph edges,
+     then the shadowed text on top of that -->
+<body onload="onload()">
+<div id="selectMe">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+<div style="text-shadow:1px 1px 1px red;">selected shadowed text</div>
+</body>
+</html>

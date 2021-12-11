@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Apply Sepia to an HTML Element Using a Percentage</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-sepia">
+  <link rel="match" href="sepia-percent-ref.html">
+  <meta name="assert"
+        content="Given a percentage, the CSS sepia filter function should
+                 change the color of an HTML element to a more brownish hue.">
+  <style type="text/css">
+    #target {
+      filter: sepia(85%);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a brownish green square.</p>
+  <div id="target"></div>
+</body>
+</html>

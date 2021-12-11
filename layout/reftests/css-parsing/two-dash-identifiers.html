@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<style>
+  .ok { color: red; }
+  #-- { color: green; }
+  #-foo { color: green }
+  #--foo { color: green; }
+  .-- { color: green; }
+  .-foo { color: green; }
+  .--foo { color: green; }
+
+  .fail { color: green; }
+  #- { color: red; }
+  .- { color: red; }
+</style>
+<div class="ok" id="--">This should be green.</div>
+<div class="ok" id="-foo">This should be green.</div>
+<div class="ok" id="--foo">This should be green.</div>
+<div class="ok --">This should be green.</div>
+<div class="ok -foo">This should be green.</div>
+<div class="ok --foo">This should be green.</div>
+<div class="fail" id="-">This should be green.</div>
+<div class="fail -">This should be green.</div>

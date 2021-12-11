@@ -1,0 +1,370 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include protocol PCompositorBridge;
+include protocol PTexture;
+
+include "gfxipc/ShadowLayerUtils.h";
+include "mozilla/GfxMessageUtils.h";
+
+using mozilla::gfx::Glyph from "mozilla/gfx/2D.h";
+using mozilla::gfx::SamplingFilter from "mozilla/gfx/2D.h";
+using struct mozilla::gfx::DeviceColor from "mozilla/gfx/2D.h";
+using struct mozilla::gfx::Point from "mozilla/gfx/Point.h";
+using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
+using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
+using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
+using class mozilla::SideBits from "mozilla/gfx/Types.h";
+using nscolor from "nsColor.h";
+using nscoord from "nsCoord.h";
+using struct nsRect from "nsRect.h";
+using struct nsPoint from "nsPoint.h";
+using class mozilla::TimeDuration from "mozilla/TimeStamp.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::ScreenRotation from "mozilla/WidgetUtils.h";
+using nsCSSPropertyID from "nsCSSPropertyID.h";
+using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::CSSPoint from "Units.h";
+using mozilla::CSSRect from "Units.h";
+using mozilla::LayerMargin from "Units.h";
+using mozilla::LayerPoint from "Units.h";
+using mozilla::LayerCoord from "Units.h";
+using mozilla::LayerSize from "Units.h";
+using mozilla::LayerRect from "Units.h";
+using mozilla::LayerIntSize from "Units.h";
+using mozilla::LayerIntRect from "Units.h";
+using mozilla::LayerIntRegion from "Units.h";
+using mozilla::ParentLayerIntRect from "Units.h";
+using mozilla::ParentLayerRect from "Units.h";
+using mozilla::LayoutDeviceIntRect from "Units.h";
+using mozilla::LayoutDevicePoint from "Units.h";
+using mozilla::LayoutDeviceRect from "Units.h";
+using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
+using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
+using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
+using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
+using mozilla::StyleOffsetPath from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleOffsetRotate from "mozilla/ServoStyleConsts.h";
+using mozilla::StylePositionOrAuto from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleRotate from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleScale from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleTranslate from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleTransform from "mozilla/ServoStyleConsts.h";
+
+namespace mozilla {
+namespace layers {
+
+struct TargetConfig {
+  IntRect naturalBounds;
+  ScreenRotation rotation;
+  ScreenOrientation orientation;
+  nsIntRegion clearRegion;
+};
+
+// Create a shadow layer for |layer|
+struct OpCreatePaintedLayer    { LayerHandle layer; };
+struct OpCreateContainerLayer  { LayerHandle layer; };
+struct OpCreateRefLayer        { LayerHandle layer; };
+
+struct OpAttachCompositable {
+  LayerHandle layer;
+  CompositableHandle compositable;
+};
+
+struct OpAttachAsyncCompositable {
+  LayerHandle layer;
+  CompositableHandle compositable;
+};
+
+struct ThebesBufferData {
+  IntRect rect;
+  IntPoint rotation;
+};
+
+struct CubicBezierFunction {
+  float x1;
+  float y1;
+  float x2;
+  float y2;
+};
+
+struct StepFunction {
+  int steps;
+  uint8_t type; // Converted from StyleStepPosition.
+};
+
+union TimingFunction {
+  null_t;
+  CubicBezierFunction;
+  StepFunction;
+};
+
+struct LayerColor { DeviceColor value; };
+
+[Comparable] union Animatable {
+  null_t;
+  float;
+  nscolor;
+  StyleRotate;
+  StyleScale;
+  StyleTranslate;
+  StyleTransform;
+  StyleOffsetPath;
+  LengthPercentage;
+  StyleOffsetRotate;
+  StylePositionOrAuto;
+};
+
+struct AnimationSegment {
+  Animatable startState;
+  Animatable endState;
+  float startPortion;
+  float endPortion;
+  uint8_t startComposite;
+  uint8_t endComposite;
+  TimingFunction sampleFn;
+};
+
+[Comparable] struct MotionPathData {
+  // the transform-origin property for motion in css pixels
+  CSSPoint origin;
+  // the adjustment for the anchor point of motion path.
+  CSSPoint anchorAdjustment;
+  RayReferenceData rayReferenceData;
+};
+
+[Comparable] struct PartialPrerenderData {
+  LayoutDeviceRect rect;
+  SideBits overflowedSides;
+  // the scroll id of the nearest scrollable frame of this partial prerender
+  // data.
+  ViewID scrollId;
+  // The clip rectangle of the nearest scrollable frame.
+  // NOTE: This should be used only for fallback cases where APZ is not enabled.
+  ParentLayerRect clipRect;
+  // a transform from the coordinate space of the animated element to a
+  // coordinate space where the `clipRect` can be applied.
+  Matrix4x4 transformInClip; // Used only for WebRender.
+  // the position relative to the reference frame of the animated transform
+  // element in the element coordinate space.
+  LayoutDevicePoint position; // Used only for WebRender.
+};
+
+// Transforms need extra information to correctly convert the list of transform
+// functions to a Matrix4x4 that can be applied directly to the layer.
+[Comparable] struct TransformData {
+  // the origin of the frame being transformed in app units
+  nsPoint origin;
+  // the transform-origin property for the transform in device pixels
+  Point3D transformOrigin;
+  nsRect bounds;
+  int32_t appUnitsPerDevPixel;
+  MotionPathData? motionPathData;
+  PartialPrerenderData? partialPrerenderData;
+};
+
+struct Animation {
+  // The zero time of this Animation's timeline. May be null if isNotPlaying is
+  // true.
+  TimeStamp originTime;
+  // The start time is relative to the originTime. This allows us to represent
+  // start times in the distant past that cannot be expressed using a TimeStamp.
+  TimeDuration? startTime;
+  TimeDuration delay;
+  TimeDuration endDelay;
+  // The value of the animation's current time at the moment it was sent to the
+  // compositor.  This value will be used for below cases:
+  // 1) Animations that are play-pending. Initially these animations will have a
+  //    null |startTime|. Once the animation is ready to start (i.e. painting
+  //    has finished), we calculate an appropriate value of |startTime| such
+  //    that playback begins from |holdTime|.
+  // 2) Not playing animations (e.g. paused and finished animations). In this
+  //   case the |holdTime| represents the current time the animation will
+  //   maintain.
+  TimeDuration holdTime;
+  TimeDuration duration;
+  // For each frame, the interpolation point is computed based on the
+  // startTime, the direction, the duration, and the current time.
+  // The segments must uniquely cover the portion from 0.0 to 1.0
+  AnimationSegment[] segments;
+  // Number of times to repeat the animation, including positive infinity.
+  // Values <= 0 mean the animation will not play (although events are still
+  // dispatched on the main thread).
+  float iterations;
+  float iterationStart;
+  // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
+  uint8_t direction;
+  // This uses dom::FillMode.
+  uint8_t fillMode;
+  nsCSSPropertyID property;
+  float playbackRate;
+  // When performing an asynchronous update to the playbackRate, |playbackRate|
+  // above is the updated playbackRate while |previousPlaybackRate| is the
+  // existing playbackRate. This is used by AnimationInfo to update the
+  // startTime based on the 'readyTime' (timestamp at the end of painting)
+  // and is not used beyond that point.
+  //
+  // It is set to numeric_limits<float>::quiet_NaN() when no asynchronous update
+  // to the playbackRate is being performed.
+  float previousPlaybackRate;
+  // This is used in the transformed progress calculation.
+  TimingFunction easingFunction;
+  uint8_t iterationComposite;
+  // True if the animation has a fixed current time (e.g. paused and
+  // forward-filling animations).
+  bool isNotPlaying;
+  // True if this is not an animating property. For some transform-like
+  // properties, we just send their baseStyles for merging with other animating
+  // properties. In this case, we don't have animation information on this
+  // property, and so don't need to do interpolation.
+  bool isNotAnimating;
+  // The base style that animations should composite with. This is only set for
+  // animations with a composite mode of additive or accumulate, and only for
+  // the first animation in the set (i.e. the animation that is lowest in the
+  // stack). In all other cases the value is null_t.
+  Animatable baseStyle;
+  // An optional data specific for transform like properies.
+  TransformData? transformData;
+};
+
+struct CompositorAnimations {
+  Animation[] animations;
+  // This id is used to map the layer animations between content
+  // and compositor side
+  uint64_t id;
+};
+
+struct ShmemSection {
+  Shmem shmem;
+  uint32_t offset;
+  uint32_t size;
+};
+
+struct CrossProcessSemaphoreDescriptor {
+  CrossProcessSemaphoreHandle sem;
+};
+
+union ReadLockDescriptor {
+  ShmemSection;
+  CrossProcessSemaphoreDescriptor;
+  uintptr_t;
+  null_t;
+};
+
+/**
+ * Tells the CompositableHost to remove the corresponding TextureHost
+ */
+struct OpRemoveTexture {
+  PTexture texture;
+};
+
+struct TimedTexture {
+  PTexture texture;
+  TimeStamp timeStamp;
+  IntRect picture;
+  uint32_t frameID;
+  uint32_t producerID;
+  bool readLocked;
+};
+
+/**
+ * Tells the compositor-side which textures to use (for example, as front buffer
+ * if there are several textures for double buffering).
+ * This provides a list of textures with timestamps, ordered by timestamp.
+ * The newest texture whose timestamp is <= the current time is rendered
+ * (where null is considered less than every other timestamp). If there is no
+ * such texture, the first texture is rendered.
+ * The first timestamp value can be null, but the others must not be.
+ * The list must not be empty.
+ */
+struct OpUseTexture {
+  TimedTexture[] textures;
+};
+
+struct OpNotifyNotUsed {
+  uint64_t TextureId;
+  uint64_t fwdTransactionId;
+};
+
+struct OpDeliverAcquireFence {
+  PTexture texture;
+  FileDescriptor fenceFd;
+};
+
+struct OpDeliverReleaseFence {
+  FileDescriptor? fenceFd;
+  uint64_t bufferId;
+  uint64_t fwdTransactionId;
+  bool usesImageBridge;
+};
+
+union CompositableOperationDetail {
+  OpRemoveTexture;
+
+  OpUseTexture;
+
+  OpDeliverAcquireFence;
+};
+
+struct CompositableOperation {
+  CompositableHandle compositable;
+  CompositableOperationDetail detail;
+};
+
+// Operations related to destroying resources, always handled after the other
+// operations for safety.
+union OpDestroy {
+  PTexture;
+  CompositableHandle;
+};
+
+// Replies to operations
+
+struct OpContentBufferSwap {
+  CompositableHandle compositable;
+  nsIntRegion frontUpdatedRegion;
+};
+
+/**
+ * An ImageCompositeNotification is sent the first time a particular
+ * image is composited by an ImageHost.
+ */
+struct ImageCompositeNotification {
+  CompositableHandle compositable;
+  TimeStamp imageTimeStamp;
+  TimeStamp firstCompositeTimeStamp;
+  uint32_t frameID;
+  uint32_t producerID;
+};
+
+union AsyncParentMessageData {
+  OpNotifyNotUsed;
+  OpDeliverReleaseFence;
+};
+
+union OMTAValue {
+  null_t;
+  nscolor;
+  float;
+  Matrix4x4;
+};
+
+} // namespace
+} // namespace

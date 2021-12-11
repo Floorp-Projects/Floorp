@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<title>Test ImageBitmap on Worker</title>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script type="text/javascript">
+
+// The following tests is not enabled in Worker now:
+// create from a HTMLImageElement
+// create from a HTMLVideoElement
+// create from a HTMLCanvasElement
+// create from a CanvasRenderingContext2D
+// call CanvasRenderingContext2D.drawImage()
+// call CanvasRenderingContext2D.createPaattern()
+// test security error from an unclean HTHMLImageElemnt
+// test security error from an unclean HTHMLVideoElemnt
+// test security error from an tainted HTHMLCanvasElemnt
+// test security error from an tainted CanvasRenderingContext2D
+
+// Task constructor function
+function Task(aType, aWidth, aHeight, aMsg, aSource) {
+  this.type = aType;
+  this.width = aWidth;
+  this.height = aHeight;
+  this.msg = aMsg;
+  this.source = aSource;
+}
+
+function TaskWithCrop(aType, aWidth, aHeight, aMsg, aSource, aSx, aSy, aSw, aSh) {
+  Task.call(this, aType, aWidth, aHeight, aMsg, aSource);
+  this.sx = aSx;
+  this.sy = aSy;
+  this.sw = aSw;
+  this.sh = aSh;
+}
+TaskWithCrop.prototype = Object.create(Task.prototype);
+TaskWithCrop.prototype.constructor = TaskWithCrop;
+
+var WORKER_TASKS = {
+  tasks: [], // an arrayf of Task objects
+  dispatch() {
+    if (this.tasks.length) {
+      worker.postMessage(this.tasks.pop());
+    } else {
+      worker.terminate();
+      SimpleTest.finish();
+    }
+  },
+};
+
+var worker = new Worker("imagebitmap_on_worker.js");
+worker.onmessage = function(event) {
+  if (event.data.type == "status") {
+    ok(event.data.status, event.data.msg);
+  } else if (event.data.type == "doneTask") {
+    WORKER_TASKS.dispatch();
+  }
+}
+
+function runTests() {
+  ok(worker, "Worker created successfully.");
+
+  // prepare an ImageData object
+  var image = document.createElement('img');
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var imageData;
+  image.src = "image_rgrg-256x256.png";
+  image.onload = function() {
+    var width = image.naturalWidth;
+    var height = image.naturalHeight;
+
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    ctx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+
+    imageData = ctx.getImageData(0, 0, image.naturalWidth, image.naturalHeight);
+
+    // task: test soruce: an ImageData
+    WORKER_TASKS.tasks.push(new Task("testImageData", width, height, "", imageData));
+
+    // task: test soruce: an ImageBitmap
+    WORKER_TASKS.tasks.push(new Task("testImageBitmap", width, height, "", imageData));
+
+    // task: test soruce: a Blob
+    canvas.toBlob(function(aBlob) {
+    	WORKER_TASKS.tasks.push(new Task("testBlob", width, height, "", aBlob));
+    });
+  };
+
+  // task: throw exception: general: sw == 0 || sh == 0
+  WORKER_TASKS.tasks.push(new TaskWithCrop("testException", 0, 0, "createImageBitmap should throw with 0 width/height", imageData, 0, 0, 0, 0));
+
+  // task: throw exception: general: source is a null
+  WORKER_TASKS.tasks.push(new TaskWithCrop("testException", 0, 0, "createImageBitmap should throw with null source", null, 0, 0, 0, 0));
+
+  // task: throw exception: ImageData: an ImageData object whose data attribute is backed by a detached buffer
+  var neuturedImageData = function getNeuturedImageData(iData) {
+    worker.postMessage(iData.data.buffer, [iData.data.buffer]);
+    return iData;
+  }(ctx.getImageData(0, 0, 50, 50));
+  WORKER_TASKS.tasks.push(new TaskWithCrop("testException", neuturedImageData.width, neuturedImageData.height,
+                                           "createImageBitmap should throw with neutured ImageData",
+                                           neuturedImageData, 0, 0, neuturedImageData.width, neuturedImageData.height));
+
+  // task: throw exception: Blob: a corrupted blob
+  function getCorruptedBlob(fileName) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", fileName);
+    xhr.responseType = "blob";//force the HTTP response, response-type header to be blob
+    xhr.onload = function() {
+        WORKER_TASKS.tasks.push(new Task("testException", 0, 0, "createImageBitmap should reject promise with corrupted blob", xhr.response));
+    }
+    xhr.send();
+  }
+  getCorruptedBlob("image_error-early.png");
+
+  // task: throw exception: Blob: non-image file
+  function getNonImageFile(fileName) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", fileName);
+    xhr.responseType = "blob";//force the HTTP response, response-type header to be blob
+    xhr.onload = function() {
+      WORKER_TASKS.tasks.push(new Task("testException", 0, 0, "createImageBitmap should reject promise with non-image blob", xhr.response));
+
+      // start to dispatch tasks to worker
+      WORKER_TASKS.dispatch();
+    }
+    xhr.send();
+  }
+  getNonImageFile("imagebitmap_on_worker.js");
+
+  // task: test bug : bug 1239300
+  WORKER_TASKS.tasks.push(new Task("testBug1239300"));
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+</script>
+</body>

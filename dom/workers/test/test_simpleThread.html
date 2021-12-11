@@ -1,0 +1,74 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads (Bug 437152)
+-->
+<head>
+  <title>Test for DOM Worker Threads (Bug 437152)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437152">DOM Worker Threads Bug 437152</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("simpleThread_worker.js");
+
+  worker.addEventListener("message",function(event) {
+    is(event.target, worker);
+    switch (event.data) {
+      case "no-op":
+        break;
+      case "started":
+        is(gotErrors, true);
+        worker.postMessage("no-op");
+        worker.postMessage("stop");
+        break;
+      case "stopped":
+        worker.postMessage("no-op");
+        SimpleTest.finish();
+        break;
+      default:
+        ok(false, "Unexpected message:" + event.data);
+        SimpleTest.finish();
+    }
+  });
+
+  var gotErrors = false;
+  worker.onerror = function(event) {
+    event.preventDefault();
+    is(event.target, worker);
+    is(event.message, "uncaught exception: Bad message: asdf");
+
+    worker.onerror = function(otherEvent) {
+      otherEvent.preventDefault();
+      is(otherEvent.target, worker);
+      is(otherEvent.message, "ReferenceError: Components is not defined");
+      gotErrors = true;
+
+      worker.onerror = function(oneMoreEvent) {
+        ok(false, "Worker had an error:" + oneMoreEvent.message);
+        SimpleTest.finish();
+      };
+    };
+  };
+
+  worker.postMessage("asdf");
+  worker.postMessage("components");
+  worker.postMessage("start");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

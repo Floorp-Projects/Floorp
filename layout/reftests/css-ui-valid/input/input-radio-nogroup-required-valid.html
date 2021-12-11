@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i').checked = false;
+                if (document.getElementById('i').matches(':-moz-ui-valid')) {
+                  document.body.textContent='FAIL';
+                } else {
+                  document.body.textContent='SUCCESS';
+                }
+                document.documentElement.className='';">
+    <input id='i' type='radio' required>
+  </body>
+</html>

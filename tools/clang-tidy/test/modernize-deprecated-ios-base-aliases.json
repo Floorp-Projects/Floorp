@@ -1,0 +1,1 @@
+[["warning", "'std::ios_base::io_state' is deprecated; use 'std::ios_base::iostate' instead", "modernize-deprecated-ios-base-aliases"], {"reliability": "high"}]

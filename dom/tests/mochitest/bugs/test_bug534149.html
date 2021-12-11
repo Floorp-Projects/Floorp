@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=534149
+-->
+<head>
+  <title>Test for Bug 534149</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=534149">Mozilla Bug 534149</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 534149 **/
+function getIDs(iframe) {
+  var win = iframe.contentWindow;
+  // Force inner creation
+  win.document;
+
+  let wgc = SpecialPowers.wrap(win).windowGlobalChild;
+  return [wgc.outerWindowId, wgc.innerWindowId];
+}
+
+var i1 = document.createElement("iframe");
+var i2 = document.createElement("iframe");
+
+document.body.appendChild(i1);
+var [i1outer, i1inner] = getIDs(i1);
+
+document.body.appendChild(i2);
+var [i2outer, i2inner] = getIDs(i2);
+
+is(i1inner, i1outer + 1, "For frame 1, inner should come right after outer");
+is(i2inner, i2outer + 1, "For frame 2, inner should come right after outer");
+is(i2outer, i1inner + 1, "Frame 2 comes right after frame 1");
+
+var innerWindowDestroyID = null;
+var outerWindowDestroyID = null;
+
+var outerObserver = {
+  observe(id) {
+    outerWindowDestroyID =
+      SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+    SpecialPowers.removeObserver(outerObserver, "outer-window-destroyed");
+    maybeContinueTest();
+  }
+};
+var innerObserver = {
+  observe(id) {
+    innerWindowDestroyID =
+      SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+    SpecialPowers.removeObserver(innerObserver, "inner-window-destroyed");
+    maybeContinueTest();
+  }
+};
+
+function removeFrame(iframe) {
+  SpecialPowers.addObserver(outerObserver, "outer-window-destroyed");
+  SpecialPowers.addObserver(innerObserver, "inner-window-destroyed");
+
+  iframe.remove();
+}
+
+function maybeContinueTest() {
+  if (innerWindowDestroyID != null &&
+      outerWindowDestroyID != null) {
+    is(innerWindowDestroyID, i1inner, "inner window of frame 1 should be destroyed");
+    is(outerWindowDestroyID, i1outer, "outer window of frame 1 should be destroyed");
+    SimpleTest.finish();
+  }
+}
+
+removeFrame(i1);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

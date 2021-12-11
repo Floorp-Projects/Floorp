@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+name: mozperftest
+manifest: None
+static-only: False
+suites:
+    netwerk/test/perf:
+        description: "Performance tests from the 'network/test/perf' folder."
+        tests:
+            youtube-scroll: ""
+            facebook-scroll: ""
+            cloudflare: ""
+            controlled: ""
+            g-search: ""
+            g-image: ""
+            lq-fetch: ""
+            youtube-noscroll: ""
+    netwerk/test/unit:
+        description: "Performance tests from the 'netwerk/test/unit' folder."
+        tests:
+            http3 raw: ""
+    testing/performance:
+        description: "Performance tests from the 'testing/performance' folder."
+        tests:
+            Politico Link: ""
+            BBC Link: ""
+            JSConf (cold): ""
+            VIEW: ""
+            main: ""
+            Facebook: ""
+            YouTube Link: ""
+            pageload: ""
+            JSConf (warm): ""
+            perfstats: ""
+    browser/base/content/test:
+        description: "Performance tests from the 'browser/base/content/test' folder."
+        tests:
+            Dom-size: ""

@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 0 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIWebBrowserChromeFocus is implemented by the same object as the
+ * nsIEmbeddingSiteWindow. It represents the focus up-calls from mozilla
+ * to the embedding chrome. See mozilla bug #70224 for gratuitous info.
+ */
+
+[scriptable, uuid(947B2EE6-51ED-4C2B-9F45-426C27CA84C6)]
+interface nsIWebBrowserChromeFocus : nsISupports
+{
+    /**
+     * Set the focus at the next focusable element in the chrome. If
+     * aForDocumentNavigation is true, this was a document navigation, so
+     * focus the parent window.
+     */
+
+    void focusNextElement(in bool aForDocumentNavigation);
+
+    /**
+     * Set the focus at the previous focusable element in the chrome.
+     */
+
+    void focusPrevElement(in bool aForDocumentNavigation);
+
+};

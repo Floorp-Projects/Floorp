@@ -1,0 +1,55 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIWebNavigationInfo interface exposes a way to get information
+ * on the capabilities of Gecko webnavigation objects.
+ */
+[scriptable, uuid(62a93afb-93a1-465c-84c8-0432264229de)]
+interface nsIWebNavigationInfo : nsISupports
+{
+  /**
+   * Returned by isTypeSupported to indicate lack of support for a type.
+   * @note this is guaranteed not to change, so that boolean tests can be done
+   * on the return value if isTypeSupported to detect whether a type is
+   * supported at all.
+   */
+  const unsigned long UNSUPPORTED = 0;
+
+  /**
+   * Returned by isTypeSupported to indicate that a type is supported as an
+   * image.
+   */
+  const unsigned long IMAGE = 1;
+
+  /**
+   * Returned by isTypeSupported to indicate that a type is a special NPAPI
+   * plugin that render as a transparent region (we do not support NPAPI
+   * plugins).
+   */
+  const unsigned long FALLBACK = 2;
+
+  /**
+   * @note Other return types may be added here in the future as they become
+   * relevant.
+   */
+
+  /**
+   * Returned by isTypeSupported to indicate that a type is supported via some
+   * other means.
+   */
+  const unsigned long OTHER = 1 << 15;
+
+  /**
+   * Query whether aType is supported.
+   * @param aType the MIME type in question.
+   * @return an enum value indicating whether and how aType is supported.
+   * @note This method may rescan plugins to ensure that they're properly
+   *       registered for the types they support.
+   */
+  unsigned long isTypeSupported(in ACString aType);
+};

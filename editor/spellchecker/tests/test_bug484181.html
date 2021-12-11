@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=484181
+-->
+<head>
+  <title>Test for Bug 484181</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="spellcheck.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=484181">Mozilla Bug 484181</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 484181 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+var gMisspeltWords;
+
+function getEditor() {
+  var win = window;
+  var editingSession = SpecialPowers.wrap(win).docShell.editingSession;
+  return editingSession.getEditorForWindow(win);
+}
+
+function append(str) {
+  var edit = document.getElementById("edit");
+  var editor = getEditor();
+  var sel = editor.selection;
+  sel.selectAllChildren(edit);
+  sel.collapseToEnd();
+  sendString(str);
+}
+
+function runTest() {
+  gMisspeltWords = ["haz", "cheezburger"];
+  var edit = document.getElementById("edit");
+  edit.focus();
+
+  const {onSpellCheck} = SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null);
+  onSpellCheck(edit, function() {
+    ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+       "All misspellings before editing are accounted for.");
+
+    append(" becaz I'm a lulcat!");
+    onSpellCheck(edit, function() {
+      gMisspeltWords.push("becaz");
+      gMisspeltWords.push("lulcat");
+      ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+         "All misspellings after typing are accounted for.");
+
+      SimpleTest.finish();
+    });
+  });
+}
+</script>
+</pre>
+
+<div><div></div><div id="edit" contenteditable="true">I can haz cheezburger</div></div>
+
+</body>
+</html>

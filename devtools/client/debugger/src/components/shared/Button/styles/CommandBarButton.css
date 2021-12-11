@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.command-bar-button {
+  appearance: none;
+  background: transparent;
+  border: none;
+  display: inline-block;
+  text-align: center;
+  position: relative;
+  padding: 0px 5px;
+  fill: currentColor;
+  min-width: 30px;
+}
+
+.command-bar-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.command-bar-button:not(.disabled):hover,
+.devtools-button.debugger-settings-menu-button:empty:enabled:not([aria-expanded="true"]):hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+.theme-dark .command-bar-button:not(.disabled):hover,
+.devtools-button.debugger-settings-menu-button:empty:enabled:not([aria-expanded="true"]):hover {
+  background: var(--theme-toolbar-hover);
+}
+
+:root.theme-dark .command-bar-button {
+  color: var(--theme-body-color);
+}
+
+.command-bar-button > * {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/**
+ * Settings icon and menu
+ */
+.devtools-button.debugger-settings-menu-button {
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.devtools-button.debugger-settings-menu-button::before {
+  background-image: url("chrome://devtools/skin/images/settings.svg");
+}

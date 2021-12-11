@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="300" height="300" viewBox="0 0 300 300" >
+  <style>
+    line { stroke: black; stroke-width: 5px; }
+  </style>
+
+  <line x1="50px" y1="50px" x2="250px" y2="50px"
+        style="stroke-dasharray: 5px, 10px">
+  </line>
+
+  <line x1="50px" y1="100px" x2="250px" y2="100px"
+        style="stroke-dasharray: 5px, 10px; stroke-dashoffset: 5px;">
+  </line>
+  <line x1="50px" y1="150px" x2="250px" y2="150px"
+        style="stroke-dasharray: 5px; stroke-dashoffset: 5px;">
+  </line>
+
+</svg>

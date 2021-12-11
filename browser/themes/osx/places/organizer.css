@@ -1,0 +1,203 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Places Organizer Sidebars */
+
+#placesList {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-source-list;
+  width: 160px;
+}
+
+#placesList > treechildren::-moz-tree-cell-text {
+  margin-inline-end: 6px;
+}
+
+#placesList > treechildren::-moz-tree-row(selected) {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-source-list-selection;
+  -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
+}
+
+#placesList > treechildren::-moz-tree-row(selected,focus) {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-active-source-list-selection;
+  -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
+}
+
+#placesList > treechildren::-moz-tree-cell(separator) {
+  cursor: default;
+}
+
+#placesList > treechildren::-moz-tree-separator {
+  border-top: 1px solid color-mix(in srgb, FieldText 70%, transparent);
+  margin: 0 10px;
+}
+
+#placesToolbar {
+  padding: 0 4px 3px;
+}
+
+#placesView {
+  border-top: none !important;
+}
+
+#placesView > splitter {
+  border-inline-start: none !important;
+  border-inline-end: 1px solid color-mix(in srgb, FieldText 30%, transparent);
+  min-width: 1px;
+  width: 3px;
+  margin-inline-start: -3px;
+  position: relative;
+  background-image: none !important;
+}
+
+#placesToolbar > toolbarbutton {
+  margin: 4px 4px 5px;
+  padding: 0;
+  height: 22px;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton;
+}
+
+#placesToolbar > toolbarbutton > .toolbarbutton-icon {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  margin: 1px 4px;
+}
+
+#placesToolbar > toolbarbutton:not(#clearDownloadsButton) > .toolbarbutton-text {
+  display: none;
+}
+
+#placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
+  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  padding: 0;
+  margin-inline-end: 2px;
+}
+
+#placesToolbar > toolbarbutton[disabled] > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton[type="menu"][disabled] > .toolbarbutton-menu-dropmarker,
+#placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive[type="menu"] > .toolbarbutton-menu-dropmarker {
+  opacity: .5;
+}
+
+#placesToolbar > toolbarbutton:-moz-window-inactive[disabled] > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton:-moz-window-inactive[type="menu"][disabled] > .toolbarbutton-menu-dropmarker {
+  opacity: .25;
+}
+
+#placesToolbar > toolbarbutton > menupopup {
+  margin-top: 1px;
+}
+
+/* back and forward button */
+#back-button,
+#forward-button:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
+}
+
+#forward-button,
+#back-button:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
+}
+
+#back-button {
+  margin-inline-end: 0 !important; /* override margin from #placesToolbar > toolbarbutton */
+}
+
+#forward-button {
+  margin-inline-start: 0 !important; /* override margin from #placesToolbar > toolbarbutton */
+}
+
+#back-button > .toolbarbutton-icon {
+  margin-inline: 3px 2px !important;
+}
+
+#forward-button > .toolbarbutton-icon {
+  margin-inline: 2px 3px !important;
+}
+
+/* organize button */
+#organizeButton {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* view button */
+#viewMenu {
+  list-style-image: url("chrome://browser/skin/sort.svg");
+}
+
+/* maintenance button */
+#maintenanceButton {
+  list-style-image: url("chrome://browser/skin/import-export.svg");
+}
+
+/* Root View */
+#placesView {
+  border-top: 1px solid ThreeDDarkShadow;
+  -moz-user-focus: ignore;
+}
+
+/* Info box */
+#detailsPane {
+  border-top: 1px solid color-mix(in srgb, FieldText 50%, transparent);
+  padding: 10px;
+}
+
+#placeContent {
+  appearance: none;
+  border: none;
+}
+
+#placeContent > treechildren::-moz-tree-cell,
+#placeContent > treechildren::-moz-tree-column {
+  border-inline-end: 1px solid color-mix(in srgb, FieldText 30%, transparent);
+}
+
+#placeContent > treechildren::-moz-tree-cell(separator) {
+  border-color: transparent;
+}
+
+/**
+ * info pane
+ */
+
+#itemsCountText,
+#selectItemDescription {
+  color: GrayText;
+}
+
+/**
+ * Downloads pane
+ */
+
+#clearDownloadsButton {
+  list-style-image: none !important;
+}
+
+#clearDownloadsButton > .toolbarbutton-icon {
+  display: none;
+}
+
+/**** expanders ****/
+
+.expander-up,
+.expander-down {
+  margin-block: 0 1px;
+  margin-inline: 8px 4px;
+  padding: 0;
+}
+
+.expander-up {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-disclosure-button-open;
+}
+
+.expander-down {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-disclosure-button-closed;
+}

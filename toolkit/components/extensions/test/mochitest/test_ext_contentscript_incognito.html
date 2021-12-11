@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script private browsing ID</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ChromeTask.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+async function test_contentscript_incognito() {
+  let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script.js"],
+        },
+      ],
+    },
+
+    background() {
+      let windowId;
+
+      browser.test.onMessage.addListener(([msg, url]) => {
+        if (msg === "open-window") {
+          browser.windows.create({url, incognito: true}).then(window => {
+            windowId = window.id;
+          });
+        } else if (msg === "close-window") {
+          browser.windows.remove(windowId).then(() => {
+            browser.test.sendMessage("done");
+          });
+        }
+      });
+    },
+
+    files: {
+      "content_script.js": async () => {
+        const COOKIE = "foo=florgheralzps";
+        document.cookie = COOKIE;
+
+        let url = new URL("return_headers.sjs", location.href);
+
+        let responses = [
+          new Promise(resolve => {
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", url);
+            xhr.onload = () => resolve(JSON.parse(xhr.responseText));
+            xhr.send();
+          }),
+
+          fetch(url, {credentials: "include"}).then(body => body.json()),
+        ];
+
+        try {
+          for (let response of await Promise.all(responses)) {
+            browser.test.assertEq(COOKIE, response.cookie, "Got expected cookie header");
+          }
+          browser.test.notifyPass("cookies");
+        } catch (e) {
+          browser.test.fail(`Error: ${e}`);
+          browser.test.notifyFail("cookies");
+        }
+      },
+    },
+  });
+
+  await extension.startup();
+
+  extension.sendMessage(["open-window", SimpleTest.getTestFileURL("file_sample.html")]);
+
+  await extension.awaitFinish("cookies");
+
+  extension.sendMessage(["close-window"]);
+  await extension.awaitMessage("done");
+
+  await extension.unload();
+}
+
+add_task(async function() {
+  await test_contentscript_incognito();
+});
+
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["network.cookie.cookieBehavior", 3],
+  ]});
+  await test_contentscript_incognito();
+});
+
+</script>
+
+</body>
+</html>

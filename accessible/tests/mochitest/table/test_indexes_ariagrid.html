@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Table indexes for ARIA grid tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA grid
+      var idxes = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [9, 10, 11],
+      ];
+      testTableIndexes("grid", idxes);
+
+      idxes = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [9, 10, 11],
+      ];
+      testTableIndexes("grid-rowgroups", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // a bit strange ARIA grid
+      idxes = [
+        [0, 1],
+        [2, 3],
+      ];
+      testTableIndexes("grid2", idxes);
+
+      // an ARIA grid with div wrapping cell and div wrapping row
+      idxes = [
+        [0, 1],
+        [2, 3],
+        [4, 5],
+      ];
+      testTableIndexes("grid3", idxes);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=386813"
+     title="support nsIAccessibleTable on ARIA grid/treegrid">Mozilla Bug 386813</a>
+  <a target="_blank"
+     title="nsHTMLTableCellAccessible is used in dojo's ARIA grid"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
+  <a target="_blank"
+     title="ARIA grid with rowgroup breaks table row/col counting and indices"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=761853">Mozilla Bug 761853</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="grid" id="grid">
+    <div role="row">
+      <span role="columnheader">column1</span>
+      <span role="columnheader">column2</span>
+      <span role="columnheader">column3</span>
+    </div>
+    <div role="row">
+      <span role="rowheader">row1</span>
+      <span role="gridcell">cell1</span>
+      <span role="gridcell">cell2</span>
+    </div>
+    <div role="row">
+      <span role="rowheader">row2</span>
+      <span role="gridcell">cell3</span>
+      <span role="gridcell">cell4</span>
+    </div>
+    <div role="row">
+      <span role="rowheader">row3</span>
+      <span role="gridcell">cell5</span>
+      <span role="gridcell">cell6</span>
+    </div>
+  </div>
+
+  <div role="grid" id="grid-rowgroups">
+    <div role="row">
+      <span role="columnheader">grid-rowgroups-col1</span>
+      <span role="columnheader">grid-rowgroups-col2</span>
+      <span role="columnheader">grid-rowgroups-col3</span>
+    </div>
+    <div role="rowgroup">
+      <div role="row">
+        <span role="rowheader">grid-rowgroups-row1</span>
+        <span role="gridcell">grid-rowgroups-cell1</span>
+        <span role="gridcell">grid-rowgroups-cell2</span>
+      </div>
+      <div role="row">
+        <span role="rowheader">grid-rowgroups-row2</span>
+        <span role="gridcell">grid-rowgroups-cell3</span>
+        <span role="gridcell">grid-rowgroups-cell4</span>
+      </div>
+    </div>
+    <div role="row">
+      <span role="rowheader">grid-rowgroups-row3</span>
+      <span role="gridcell">grid-rowgroups-cell5</span>
+      <span role="gridcell">grid-rowgroups-cell6</span>
+    </div>
+  </div>
+
+  <div role="grid" id="grid2">
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="columnheader">header1</td>
+          <td role="columnheader">header2</td>
+        </tr>
+      </table>
+    </div>
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="gridcell">cell1</td>
+          <td role="gridcell" tabindex="-1">cell2</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div role="grid" id="grid3">
+    <div role="row">
+      <div role="gridcell">Normal cell</div>
+      <div role="gridcell">1</div>
+    </div>
+    <div role="row">
+      <div role="gridcell">Div</div>
+      <div><div role="gridcell">2</div></div>
+    </div>
+    <div tabindex="-1"><div role="row">
+      <div role="gridcell">Cell in row in div</div>
+      <div role="gridcell">3</div>
+    </div></div>
+  </div>
+</body>
+</html>

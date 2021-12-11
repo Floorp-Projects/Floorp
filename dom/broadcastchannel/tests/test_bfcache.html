@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for bfcache and BroadcastChannel</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+  /*
+   * The test opens a new window. Then a message 'load' is sent there to load
+   * another page. If expectedPersisted is false, a dummy message is sent
+   * through a BroadcastChannel which the first has registered to use.
+   * That should evict the page from bfcache.
+   * 'back' message is sent to call history.back().
+   * The page which is loaded from session history should be persisted if
+   * expectedPersisted is true.
+   */
+  var testUrl1 = "testUrl1_bfcache.html";
+  var bc1 = new BroadcastChannel("testUrl1_bfcache");
+  var bc2 = new BroadcastChannel("testUrl2_bfcache");
+  bc1.onmessage = function(event) {
+    if (event.data == "closed") {
+      info("Closed");
+      runTest();
+      return;
+    }
+    page1Shown(event.data);
+  };
+  bc2.onmessage = function(event) { page2Shown(event.data); };
+
+  var counter = 0;
+  var expectedPersisted = false;
+  var bc = new BroadcastChannel("a");
+
+  function page1Shown(e) {
+    if (counter == 0) {
+      ok(!e.persisted, "test page should have been persisted initially");
+      bc1.postMessage("load");
+    } else {
+      is(e.persisted, expectedPersisted, "test page should have been persisted in pageshow");
+      bc1.postMessage("close");
+    }
+
+    counter++;
+  }
+
+  function page2Shown(e) {
+    if (!expectedPersisted) {
+      SimpleTest.executeSoon(function() {
+        info("Posting a message.");
+        bc.postMessage(42);
+      });
+    }
+
+    SimpleTest.executeSoon(function() {
+      info("Going back");
+      bc2.postMessage("back");
+    });
+  }
+
+  var tests = [
+    { expectedPersisted: true },
+    { expectedPersisted: false },
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      bc.close();
+      bc1.close();
+      bc2.close();
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+
+    counter = 0;
+    expectedPersisted = test.expectedPersisted;
+    window.open(testUrl1, "", "noopener");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    runTest();
+  });
+
+  </script>
+</body>
+</html>

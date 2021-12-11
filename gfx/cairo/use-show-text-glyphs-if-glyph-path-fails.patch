@@ -1,0 +1,42 @@
+From: Jonathan Kew <jkew@mozilla.com>
+bug 715798 pt 2 - fall back to show_text_glyphs even at huge sizes if scaled_font_glyph_path didn't work. r=jrmuizel
+
+diff --git a/gfx/cairo/cairo/src/cairo-gstate.c b/gfx/cairo/cairo/src/cairo-gstate.c
+--- a/gfx/cairo/cairo/src/cairo-gstate.c
++++ b/gfx/cairo/cairo/src/cairo-gstate.c
+@@ -2002,23 +2002,34 @@ cairo_status_t
+ 	cairo_path_fixed_t path;
+ 
+ 	_cairo_path_fixed_init (&path);
+ 
+ 	status = _cairo_scaled_font_glyph_path (gstate->scaled_font,
+ 						transformed_glyphs, num_glyphs,
+ 						&path);
+ 
+-	if (status == CAIRO_STATUS_SUCCESS) {
++	if (status == CAIRO_STATUS_SUCCESS && !_cairo_path_fixed_fill_is_empty (&path)) {
+ 	    status = _cairo_surface_fill (gstate->target, op, pattern,
+ 					  &path,
+ 					  CAIRO_FILL_RULE_WINDING,
+ 					  gstate->tolerance,
+ 					  gstate->scaled_font->options.antialias,
+ 					  _gstate_get_clip (gstate, &clip));
++	} else {
++	    /* if _cairo_scaled_font_glyph_path() failed, maybe the font doesn't support
++	     * returning paths, so try the _cairo_surface_show_text_glyphs() option
++	     */
++	    status = _cairo_surface_show_text_glyphs (gstate->target, op, pattern,
++						      utf8, utf8_len,
++						      transformed_glyphs, num_glyphs,
++						      transformed_clusters, num_clusters,
++						      cluster_flags,
++						      gstate->scaled_font,
++						      _gstate_get_clip (gstate, &clip));
+ 	}
+ 
+ 	_cairo_path_fixed_fini (&path);
+     }
+ 
+     _cairo_clip_fini (&clip);
+ 
+ CLEANUP_GLYPHS:

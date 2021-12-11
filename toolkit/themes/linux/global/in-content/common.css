@@ -1,0 +1,49 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/in-content/common.inc.css
+
+@media (prefers-color-scheme: dark) {
+  /* Don't apply scrollbar-color since it removes the native scrollbar style on Linux */
+  :root {
+    scrollbar-color: initial;
+  }
+}
+
+xul|tab[visuallyselected] {
+  /* Override styles for tab[selected] from
+     toolkit/themes/linux/global/tabbox.css */
+  margin-bottom: 0;
+}
+
+/* Overriding appearance also avoids incorrect selection background color with
+   light text. */
+xul|button > xul|*.button-box,
+xul|menulist::part(label-box),
+xul|*.radio-label-box,
+xul|*.checkbox-label-box {
+  appearance: none;
+}
+
+xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
+  appearance: none !important;
+}
+
+xul|menulist {
+  font-size: inherit;
+}
+
+xul|menulist::part(dropmarker) {
+  display: -moz-box;
+  margin-block: 6px;
+}
+
+xul|menulist:-moz-focusring::part(label-box) {
+  outline: none;
+}
+
+html|button {
+  /* XUL button min-width */
+  min-width: 6.3em;
+}

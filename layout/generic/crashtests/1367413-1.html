@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<title>Test for dynamic re-pagination of absolutely positioned elements</title>
+<link rel="author" title="Mats Palmgren" href="mailto:mats@mozilla.com">
+<link rel="author" title="L. David Baron" href="https://dbaron.org/">
+<style>
+
+#multicol {
+  columns: 3;
+  column-fill: auto;
+  column-gap: 15px;
+  height: 500px;
+  width: 300px;
+  background: yellow;
+}
+
+#relpos {
+  position: relative;
+  background: aqua;
+  height: 250px;
+}
+
+#abspos {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  height: 80px;
+  width: 50px;
+  background: blue;
+  transform: scale(0.9);
+}
+
+#overflow {
+  height: 100px;
+  width: 30px;
+  background: grey;
+}
+</style>
+<body style="width: 700px">
+
+<div id="multicol">
+  <div id="relpos">
+    <div id="abspos"><div id="overflow"></div></div>
+  </div>
+</div>
+
+<script>
+
+var mc = document.getElementById("multicol");
+mc.offsetHeight; // flush layout
+mc.style.height = "140px";
+mc.offsetHeight; // flush layout
+mc.parentNode.style.width = "800px";
+
+</script>

@@ -1,0 +1,47 @@
+#!/bin/bash -e
+
+# An example hook script to verify what is about to be pushed.  Called by "git
+# push" after it has checked the remote status, but before anything has been
+# pushed.  If this script exits with a non-zero status nothing will be pushed.
+#
+# This hook is called with the following parameters:
+#
+# $1 -- Name of the remote to which the push is being done
+# $2 -- URL to which the push is being done
+#
+# If pushing without using a named remote those arguments will be equal.
+#
+# Information about the commits which are being pushed is supplied as lines to
+# the standard input in the form:
+#
+#   <local ref> <local sha1> <remote ref> <remote sha1>
+
+REMOTE="$1"
+URL="$2"
+
+PUSH_COMMAND=$(ps -ocommand= -p $PPID)
+
+IS_DESTRUCTIVE="\-\-delete|\-f"
+
+PROTECTED_BRANCH="trailblazer"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+WILL_DELETE_PROTECTED_BRANCH=":$PROTECTED_BRANCH"
+
+if [[ $PUSH_COMMAND =~ $IS_DESTRUCTIVE ]]; then
+    if [ $CURRENT_BRANCH = $PROTECTED_BRANCH ] || [[ $PUSH_COMMAND =~ $PROTECTED_BRANCH ]]; then
+        echo "'$PROTECTED_BRANCH' cannot be deleted!"
+        exit 1
+    fi
+    exit 0
+fi
+
+if [[ $PUSH_COMMAND =~ $WILL_DELETE_PROTECTED_BRANCH ]]; then
+    echo "'$PROTECTED_BRANCH' cannot be deleted!"
+    exit 1
+fi
+
+cargo fmt -- --check || (echo "Please run 'cargo fmt'"; false);
+
+cargo clippy -- -D warnings || (echo "Please run 'cargo clippy'"; false);
+

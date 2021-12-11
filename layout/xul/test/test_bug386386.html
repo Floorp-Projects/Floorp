@@ -1,0 +1,34 @@
+<html>
+<head><title>Testcase for bug 386386</title>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=386386
+-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+
+<iframe id="test386386" src="file_bug386386.sjs"></iframe>
+
+<script class="testbody" type="application/javascript">
+
+function boom()
+{
+  var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  var doc = document.getElementById("test386386").contentDocument;
+  var observes = doc.createElementNS(XUL_NS, 'observes');
+  doc.removeChild(doc.documentElement);
+  doc.appendChild(observes);
+  is(0, 0, "Test is successful if we get here without crashing");
+  SimpleTest.finish();
+}
+
+function do_test() {
+  setTimeout(boom, 200);
+}
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+addLoadEvent(do_test);
+</script>
+
+</body>
+</html>

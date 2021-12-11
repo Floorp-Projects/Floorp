@@ -1,0 +1,106 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface imgIRequest;
+interface nsIPrincipal;
+interface nsIProperties;
+interface nsIURI;
+
+webidl Document;
+
+%{ C++
+namespace mozilla {
+class OriginAttributes;
+} // mozilla namespace
+%}
+
+[ptr] native OriginAttributesPtr(mozilla::OriginAttributes);
+
+/**
+ * imgICache interface
+ *
+ * @author Stuart Parmenter <pavlov@netscape.com>
+ * @version 0.1
+ * @see imagelib2
+ */
+[scriptable, builtinclass, uuid(bfdf23ff-378e-402e-8a6c-840f0c82b6c3)]
+interface imgICache : nsISupports
+{
+  /**
+   * Evict images from the cache.
+   *
+   * @param chrome If TRUE,  evict only chrome images.
+   *               If FALSE, evict everything except chrome images.
+   */
+  void clearCache(in boolean chrome);
+
+  /**
+   * Evict images from the cache.
+   *
+   * @param uri The URI to remove.
+   * @param doc The document to remove the cache entry for.
+   * @throws NS_ERROR_NOT_AVAILABLE if \a uri was unable to be removed from
+   * the cache.
+   */
+  [noscript] void removeEntry(in nsIURI uri, [optional] in Document doc);
+
+  /**
+   * Evict images from the cache with the same origin and the same
+   * originAttributes of the passed principal, across all processes. May only be
+   * called from the parent process.
+   *
+   * @param aPrincipal The principal to clear cache entries for. The principals
+   * origin attributes are used to determine whether the private or normal
+   * browsing cache is cleared.
+   * @throws NS_ERROR_NOT_AVAILABLE if not called in the parent process.
+   */
+  void removeEntriesFromPrincipalInAllProcesses(in nsIPrincipal aPrincipal);
+
+  /**
+   * Evict images from the non-chrome cache which match the the given base
+   * domain. Matching cache entries will be cleared across all origin attributes
+   * and all processes.
+   *
+   * @param aBaseDomain base domain to delete cache entries for.
+   * @throws NS_ERROR_NOT_AVAILABLE if not called in the parent process.
+   */
+  void removeEntriesFromBaseDomainInAllProcesses(in ACString aBaseDomain);
+
+  /**
+   * Find Properties
+   * Used to get properties such as 'type' and 'content-disposition'
+   * 'type' is a nsISupportsCString containing the images' mime type such as
+   * 'image/png'
+   * 'content-disposition' will be a nsISupportsCString containing the header
+   * If you call this before any data has been loaded from a URI, it will
+   * succeed, but come back empty.
+   *
+   * Hopefully this will be removed with bug 805119
+   *
+   * @param uri The URI to look up.
+   * @param doc Optional pointer to the document that the cache entry belongs to.
+   * @returns NULL if the URL was not found in the cache
+   */
+  [must_use]
+  nsIProperties findEntryProperties(in nsIURI uri,
+                                    [optional] in Document doc);
+
+  /**
+   * Make this cache instance respect private browsing notifications. This
+   * entails clearing the chrome and content caches whenever the
+   * last-pb-context-exited notification is observed.
+   */
+  void respectPrivacyNotifications();
+
+  /**
+   * Clear the image cache for a document.  Controlled documents are responsible
+   * for doing this manually when they get destroyed.
+   */
+  [noscript, notxpcom]
+  void clearCacheForControlledDocument(in Document doc);
+};

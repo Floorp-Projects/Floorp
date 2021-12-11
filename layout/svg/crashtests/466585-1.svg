@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script type="text/javascript">
+
+window.addEventListener("load", boom, false);
+
+function boom()
+{
+  document.getElementById("rect").setAttribute("filter", "url(#filter)");
+  document.getElementById("defs").setAttribute("fill", "red");
+}
+
+</script>
+
+<defs id="defs"><filter id="filter"/><rect id="rect"/></defs>
+
+</svg>

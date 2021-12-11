@@ -1,0 +1,177 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Hit-testing a scrollframe covered by nonrectangular and pointer-events:none things</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<style>
+    .scroller {
+        overflow: scroll;
+        width: 100px;
+        height: 100px;
+    }
+
+    .scroller > div {
+        height: 200px;
+        background-image: linear-gradient(#fff,#000);
+    }
+</style>
+</head>
+<body>
+<div id="testcase1">
+  <div style="width: 100px;height: 50px;display: inline-block;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="overflow: visible;background-color: #aa6666;">
+      <circle cx="80" cy="50" r="50"></circle>
+    </svg>
+  </div>
+  <div class="scroller" style="display: inline-block;"><div></div></div>
+  <div style="width: 100px; height: 100px; display: inline-block; position:relative;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="overflow: visible;background-color: #aa6666;">
+      <circle cx="20" cy="50" r="50"></circle>
+    </svg>
+  </div>
+</div>
+
+<div id="testcase2" style="position:relative; height: 110px;">
+  <div style="width: 100px;height: 100px;position:absolute;pointer-events:none;left: 25px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="background-color: #aa6666;pointer-events: none;">
+      <circle cx="75" cy="50" r="50" style="pointer-events: auto;"></circle>
+    </svg>
+  </div>
+  <div class="scroller" style="position: absolute; left: 100px;"><div></div></div>
+  <div style="width: 100px;height: 100px; position:absolute;pointer-events:none;left: 175px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="background-color: #aa6666;pointer-events: none;">
+      <circle cx="45" cy="50" r="50" style="pointer-events: auto;"></circle>
+    </svg>
+  </div>
+</div>
+
+<div id="testcase3">
+  <div style="width: 100px;height: 50px;display: inline-block;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="overflow: visible;background-color: #aa6666;">
+      <rect x="25" y="25" width="100" height="50"></rect>
+    </svg>
+  </div>
+  <div class="scroller" style="display: inline-block;"><div></div></div>
+  <div style="width: 100px; height: 100px; display: inline-block; position:relative;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="overflow: visible;background-color: #aa6666;">
+      <rect x="-30" y="25" width="100" height="50"></rect>
+    </svg>
+  </div>
+</div>
+
+<div id="testcase4" style="position:relative; height: 110px;">
+  <div style="width: 100px;height: 100px;position:absolute;pointer-events:none;left: 25px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="background-color: #aa6666;pointer-events: none;">
+      <rect x="25" y="25" width="100" height="50" style="pointer-events: auto;"></rect>
+    </svg>
+  </div>
+  <div class="scroller" style="position: absolute; left: 100px;"><div></div></div>
+  <div style="width: 100px;height: 100px; position:absolute;pointer-events:none;left: 175px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="background-color: #aa6666;pointer-events: none;">
+      <rect x="-25" y="25" width="100" height="50" style="pointer-events: auto;"></rect>
+    </svg>
+  </div>
+</div>
+
+<div style="width: 40em;">
+  Each of the gradients should be scrollable, except where the black stuff on the right cover them.
+  The brown square should not prevent scrolling. Similarly, the content on the left (which goes
+  underneath the scroller) shouldn't matter.
+</div>
+<script>
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // layerize the scrollable frames
+  for (var scroller of document.querySelectorAll(".scroller")) {
+    utils.setDisplayPortForElement(0, 0, 100, 200, scroller, 1);
+  }
+  await promiseApzFlushedRepaints();
+
+  var rootViewId = utils.getViewId(document.scrollingElement);
+  for (var testId = 1; testId <= 4; testId++) {
+    var target = document.querySelector(`#testcase${testId} .scroller`);
+    var scrollerViewId = utils.getViewId(target);
+    checkHitResult(hitTest(centerOf(target)),
+                   APZHitResultFlags.VISIBLE,
+                   scrollerViewId,
+                   utils.getLayersId(),
+                   `center of scroller in testcase ${testId}`);
+
+    var bounds = target.getBoundingClientRect();
+    var verticalScrollbarWidth = bounds.width - target.clientWidth;
+    var horizontalScrollbarHeight = bounds.height - target.clientHeight;
+
+    // these points should all hit the target scroller
+    checkHitResult(hitTest({x: bounds.x + 1, y: bounds.y + 1}),
+                   APZHitResultFlags.VISIBLE,
+                   scrollerViewId,
+                   utils.getLayersId(),
+                   `top left of scroller in testcase ${testId}`);
+    checkHitResult(hitTest({x: bounds.x + 1, y: bounds.y + (bounds.height / 2)}),
+                   APZHitResultFlags.VISIBLE,
+                   scrollerViewId,
+                   utils.getLayersId(),
+                   `middle left of scroller in testcase ${testId}`);
+    checkHitResult(hitTest({x: bounds.x + 1, y: bounds.bottom - horizontalScrollbarHeight - 1}),
+                   APZHitResultFlags.VISIBLE,
+                   scrollerViewId,
+                   utils.getLayersId(),
+                   `bottom left (excluding scrollbar) of scroller in testcase ${testId}`);
+    if (horizontalScrollbarHeight > 0) {
+      checkHitResult(hitTest({x: bounds.x + 1, y: bounds.bottom - 1}),
+                     APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR,
+                     scrollerViewId,
+                     utils.getLayersId(),
+                     `bottom left of scroller in testcase ${testId}`);
+    }
+
+    // With the first two cases (circle masks) both WebRender and non-WebRender
+    // emit dispatch-to-content regions for the right side, so for now we just
+    // test for that. Eventually WebRender should be able to stop emitting DTC
+    // and we can update this test to be more precise in that case.
+    // For the two rectangular test cases we get precise results rather than
+    // dispatch-to-content.
+    if (testId == 1 || testId == 2) {
+      checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.y + 1}),
+                     APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+                     rootViewId,
+                     utils.getLayersId(),
+                     `top right of scroller in testcase ${testId}`);
+      checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.bottom - horizontalScrollbarHeight - 1}),
+                     APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+                     rootViewId,
+                     utils.getLayersId(),
+                     `bottom right of scroller in testcase ${testId}`);
+    } else {
+      checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.y + 1}),
+                     APZHitResultFlags.VISIBLE,
+                     scrollerViewId,
+                     utils.getLayersId(),
+                     `top right of scroller in testcase ${testId}`);
+      checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.bottom - horizontalScrollbarHeight - 1}),
+                     APZHitResultFlags.VISIBLE,
+                     scrollerViewId,
+                     utils.getLayersId(),
+                     `bottom right of scroller in testcase ${testId}`);
+    }
+
+    checkHitResult(hitTest({x: bounds.right - 1, y: bounds.y + (bounds.height / 2)}),
+                   APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+                   rootViewId,
+                   utils.getLayersId(),
+                   `middle right of scroller in testcase ${testId}`);
+  }
+}
+
+waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+</script>
+</body></html>

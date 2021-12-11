@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>DOM mutations test</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function runTest() {
+      let iframe = document.getElementById("iframe");
+
+      // children change will recreate the table
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, () => {
+          let doc = getNode("iframe").contentDocument;
+          return doc && doc.getElementById("c1");
+        }),
+      ];
+
+      this.invoke = function runTest_invoke() {
+        var tree = {
+          SECTION: [ // c1
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_CONTAINER: [
+              { TEXT_LEAF: [] }, // something with ..
+            ] },
+            { TEXT_LEAF: [] }, // More text
+          ],
+        };
+        testAccessibleTree(iframe.contentDocument.getElementById("c1"), tree);
+
+        iframe.contentDocument.getElementById("c1_t").querySelector("span").remove();
+      };
+
+      this.finalCheck = function runTest_finalCheck() {
+        var tree = {
+          SECTION: [ // c1
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_LEAF: [] }, // More text
+          ],
+        };
+        testAccessibleTree(iframe.contentDocument.getElementById("c1"), tree);
+      };
+
+      this.getID = function runTest_getID() {
+        return "child DOM node is removed before the layout notifies the a11y about parent removal/show";
+      };
+    }
+
+    function runShadowTest() {
+      // children change will recreate the table
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, () => {
+          let doc = getNode("iframe").contentDocument;
+          return doc && doc.getElementById("c2");
+        }),
+      ];
+
+      this.invoke = function runShadowTest_invoke() {
+        var tree = {
+          SECTION: [ // c2
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_CONTAINER: [
+              { TEXT_LEAF: [] }, // something with ..
+            ] },
+            { TEXT_LEAF: [] }, // More text
+          ],
+        };
+        const iframe = document.getElementById("iframe");
+        testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
+
+        var shadowRoot = iframe.contentDocument.getElementById("c2_c").shadowRoot;
+        shadowRoot.firstElementChild.querySelector("span").remove();
+        // bug 1487312
+        shadowRoot.firstElementChild.offsetTop;
+        shadowRoot.appendChild(document.createElement("button"));
+      };
+
+      this.finalCheck = function runShadowTest_finalCheck() {
+        var tree = {
+          SECTION: [ // c2
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_LEAF: [] }, // More text
+            { PUSHBUTTON: [] }, // The button we appended.
+          ],
+        };
+        const iframe = document.getElementById("iframe");
+        testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
+      };
+
+      this.getID = function runShadowTest_getID() {
+        return "child DOM node is removed before the layout notifies the a11y about parent removal/show in shadow DOM";
+      };
+    }
+
+    // enableLogging("tree");
+    // gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTest() {
+      gQueue = new eventQueue();
+      gQueue.push(new runTest());
+      gQueue.push(new runShadowTest());
+      gQueue.invoke(); // will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    window.onload = () => {
+      let iframe = document.createElement("iframe");
+      iframe.id = "iframe";
+      iframe.src = "test_bug1276857_subframe.html";
+      addA11yLoadEvent(doTest, iframe.contentWindow);
+      document.body.appendChild(iframe);
+    };
+  </script>
+
+</head>
+<body>
+</body>
+</html>

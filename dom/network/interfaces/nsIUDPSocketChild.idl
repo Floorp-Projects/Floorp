@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsINetAddr.idl"
+
+interface nsIUDPSocketInternal;
+interface nsIInputStream;
+interface nsIPrincipal;
+interface nsIEventTarget;
+
+/*
+ * Internal interface for callback from chrome process
+ */
+[scriptable, builtinclass, uuid(613dd3ad-598b-4da9-ad63-bbda50c20098)]
+interface nsIUDPSocketInternal : nsISupports
+{
+  // callback while socket is opened. localPort and localAddress is ready until this time.
+  void callListenerOpened();
+  // callback while socket is connected.
+  void callListenerConnected();
+  // callback while socket is closed.
+  void callListenerClosed();
+  // callback while incoming packet is received.
+  void callListenerReceivedData(in AUTF8String host, in unsigned short port,
+                                in Array<uint8_t> data);
+  // callback while any error happened.
+  void callListenerError(in AUTF8String message, in AUTF8String filename, in uint32_t lineNumber);
+};

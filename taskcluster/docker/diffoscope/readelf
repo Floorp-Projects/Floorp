@@ -1,0 +1,13 @@
+#!/bin/sh
+
+case "$1 $2" in
+"--wide --symbols")
+    # When called with --wide --symbols, we remove the first column (which
+    # is essentially a line number that is not very useful), and then sort,
+    # which will order symbols by address, making a diff more useful.
+    /usr/bin/readelf "$@" | awk -F: '{print $2}' | sort
+    ;;
+*)
+    exec /usr/bin/readelf "$@"
+    ;;
+esac

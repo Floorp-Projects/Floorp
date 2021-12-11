@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<title>Test that @font-face rules from different origins cascade correctly</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script>
+let io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+  .getService(SpecialPowers.Ci.nsIIOService);
+
+let utils = SpecialPowers.getDOMWindowUtils(window);
+
+function load_sheet(sheet_text, level) {
+  if (level != "AGENT_SHEET" && level != "USER_SHEET" && level != "AUTHOR_SHEET") {
+    throw "unknown level";
+  }
+
+  let uri = io.newURI("data:text/css," + encodeURI(sheet_text));
+  utils.loadSheet(uri, utils[level]);
+}
+
+load_sheet(
+  "@font-face { font-family: TestAgent; src: url(about:invalid); }",
+  "AGENT_SHEET");
+
+load_sheet(
+  "@font-face { font-family: TestAuthor; src: url(about:invalid); }",
+  "AUTHOR_SHEET");
+
+load_sheet(
+  "@font-face { font-family: TestUser; src: url(about:invalid); }",
+  "USER_SHEET");
+
+is([...document.fonts].map(f => f.family).join(" "),
+   'TestAuthor',
+   "document.fonts only contains author @font-face rules");
+</script>

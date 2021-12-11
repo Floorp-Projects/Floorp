@@ -1,0 +1,87 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(9203c031-c4e7-4537-a4ec-81443d623d5a)]
+interface nsIAutoCompleteResult : nsISupports
+{
+  /**
+   * Possible values for the searchResult attribute
+   */
+  const unsigned short RESULT_IGNORED = 1; /* indicates invalid searchString */
+  const unsigned short RESULT_FAILURE = 2; /* indicates failure */
+  const unsigned short RESULT_NOMATCH = 3; /* indicates success with no matches
+                                              and that the search is complete */
+  const unsigned short RESULT_SUCCESS = 4; /* indicates success with matches
+                                              and that the search is complete */
+  const unsigned short RESULT_NOMATCH_ONGOING = 5; /* indicates success
+                                                      with no matches
+                                                      and that the search
+                                                      is still ongoing */
+  const unsigned short RESULT_SUCCESS_ONGOING = 6; /* indicates success
+                                                      with matches
+                                                      and that the search
+                                                      is still ongoing */
+  /**
+   * The original search string
+   */
+  readonly attribute AString searchString;
+
+  /**
+   * The result of the search
+   */
+  readonly attribute unsigned short searchResult;
+
+  /**
+   * Index of the default item that should be entered if none is selected
+   */
+  readonly attribute long defaultIndex;
+
+  /**
+   * A string describing the cause of a search failure
+   */
+  readonly attribute AString errorDescription;
+
+  /**
+   * The number of matches
+   */
+  readonly attribute unsigned long matchCount;
+
+  /**
+   * Get the value of the result at the given index
+   */
+  AString getValueAt(in long index);
+
+  /**
+   * This returns the string that is displayed in the dropdown
+   */
+  AString getLabelAt(in long index);
+
+  /**
+   * Get the comment of the result at the given index
+   */
+  AString getCommentAt(in long index);
+
+  /**
+   * Get the style hint for the result at the given index
+   */
+  AString getStyleAt(in long index);
+
+  /**
+   * Get the image of the result at the given index
+   */
+  AString getImageAt(in long index);
+
+  /**
+   * Get the final value that should be completed when the user confirms
+   * the match at the given index.
+   */
+  AString getFinalCompleteValueAt(in long index);
+
+  /**
+   * Remove the value at the given index from the autocomplete results.
+   */
+  void removeValueAt(in long rowIndex);
+};

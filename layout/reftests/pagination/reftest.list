@@ -1,0 +1,209 @@
+# For more pagination tests, see layout/reftests/w3c-css/submitted/css21/pagination/
+#   and layout/reftests/w3c-css/submitted/multicol3/
+# Pagination tests
+# asserts(3) == abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml # bug 1067755, 1135556
+== abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml
+== abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml
+== abspos-breaking-003.html abspos-breaking-003-ref.html
+== abspos-breaking-004.html abspos-breaking-004-ref.html
+== abspos-breaking-005.html abspos-breaking-005-ref.html
+== abspos-breaking-006.html abspos-breaking-006-ref.html
+== abspos-breaking-007.html abspos-breaking-007-ref.html
+== abspos-breaking-008.html abspos-breaking-008-ref.html
+== abspos-breaking-009.html abspos-breaking-009-ref.html
+== abspos-breaking-010.html abspos-breaking-010-ref.html
+== abspos-breaking-011.html abspos-breaking-011-ref.html # Bug 1392106
+== abspos-breaking-dynamic-001.html abspos-breaking-dynamic-001-ref.html
+== abspos-breaking-dynamic-002.html abspos-breaking-dynamic-002-ref.html
+== abspos-breaking-dynamic-003.html abspos-breaking-dynamic-003-ref.html
+== abspos-breaking-dynamic-004.html abspos-breaking-dynamic-001-ref.html
+== abspos-breaking-dynamic-005.html abspos-breaking-dynamic-005-ref.html
+== abspos-overflow-01.xhtml abspos-overflow-01.ref.xhtml
+== abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.ref.xhtml
+== border-breaking-000-cols.xhtml border-breaking-000-cols.ref.xhtml
+== border-breaking-001-cols.xhtml border-breaking-001-cols.ref.xhtml
+== border-breaking-002-cols.xhtml border-breaking-002-cols.ref.xhtml
+== border-breaking-003-cols.xhtml border-breaking-003-cols.ref.xhtml
+fails == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
+== content-inserted-000.xhtml content-inserted-000.ref.xhtml
+== content-inserted-001.xhtml content-inserted-001.ref.xhtml
+== content-inserted-002.xhtml content-inserted-002.ref.xhtml
+== content-inserted-003.xhtml content-inserted-002.ref.xhtml
+== content-inserted-004.xhtml content-inserted-002.ref.xhtml
+== content-inserted-005.xhtml content-inserted-002.ref.xhtml
+== content-inserted-006.xhtml content-inserted-002.ref.xhtml
+== content-inserted-007.xhtml content-inserted-002.ref.xhtml
+== content-inserted-008.xhtml content-inserted-001.ref.xhtml
+== content-inserted-009.xhtml content-inserted-002.ref.xhtml
+== dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.ref.xhtml
+== float-clear-000-print.html float-clear-000-print.ref.html
+== float-clear-001-print.html float-clear-000-print.ref.html
+== float-clear-002-print.html float-clear-000-print.ref.html
+== float-clear-003-print.html float-clear-000-print.ref.html
+fails == float-continuations-000.html float-continuations-000.ref.html
+fuzzy(0-1,0-21) == resize-reflow-000.html resize-reflow-000.ref.html
+fuzzy(0-1,0-23) == resize-reflow-001.html resize-reflow-001.ref.html
+== table-page-break-before-auto-1.html table-page-break-before-auto-1-ref.html
+#== table-page-break-before-auto-2.html table-page-break-before-auto-2-ref.html bug 563280
+== table-page-break-before-always-1.html table-page-break-before-auto-2-ref.html
+== table-page-break-before-left-1.html table-page-break-before-auto-2-ref.html
+== table-page-break-before-right-1.html table-page-break-before-auto-2-ref.html
+== table-page-break-after-always-1.html table-page-break-before-auto-2-ref.html
+== table-page-break-after-left-1.html table-page-break-before-auto-2-ref.html
+== table-page-break-after-right-1.html table-page-break-before-auto-2-ref.html
+== rowgroup-page-break-after-always-1.html table-page-break-before-auto-2-ref.html
+== row-page-break-after-always-1.html table-page-break-before-auto-2-ref.html
+== row-page-break-after-always-2.html table-page-break-before-auto-2-ref.html
+== rowgroup-thead-page-break-after-always-1.html table-page-break-before-auto-3-ref.html
+== rowgroup-tfoot-page-break-after-always-1.html table-page-break-before-auto-3-ref.html
+== table-tfoot-thead-1.html table-tfoot-thead-1-ref.html
+== table-caption-splitrowgroup-1.html table-caption-splitrowgroup-1-ref.html
+== table-caption-splitaftercaption-1.html table-caption-splitaftercaption-1-ref.html
+== table-caption-splitaftercaption-2.html table-caption-splitaftercaption-2-ref.html
+== table-caption-splitaftercaption-3.html table-caption-splitaftercaption-3-ref.html
+== table-caption-splitaftercaption-4.html table-caption-splitaftercaption-4-ref.html
+== table-caption-splitaftercaption-5.html table-caption-splitaftercaption-5-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-6.html table-caption-splitaftercaption-6-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-7.html table-caption-splitaftercaption-7-ref.html
+# == table-caption-splitaftercaption-8.html blank.html # bug 672654
+# == table-caption-splitaftercaption-9.html blank.html # bug 672654
+# pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-10.html blank.html # bug 672654
+# pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-11.html blank.html # bug 672654
+== table-cell-breaking-1a.html table-cell-breaking-1-ref.html
+== table-cell-breaking-1b.html table-cell-breaking-1-ref.html
+== table-cell-breaking-2a.html table-cell-breaking-2-ref.html
+== table-cell-breaking-2b.html table-cell-breaking-2-ref.html
+pref(layout.display-list.improve-fragmentation,false) == table-cell-breaking-3a.html table-cell-breaking-3a-ref.html
+pref(layout.display-list.improve-fragmentation,true) == table-cell-breaking-3a.html table-cell-breaking-3-ref.html
+asserts(1-1) pref(layout.display-list.improve-fragmentation,false) == table-cell-breaking-3b.html table-cell-breaking-3-ref.html # bug 714667
+asserts(1-1) pref(layout.display-list.improve-fragmentation,true) fails == table-cell-breaking-3b.html table-cell-breaking-3-ref.html # assert is bug 714667, fails due to bug 1681063
+== column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
+fuzzy-if(Android,0-4,0-2) fuzzy-if(swgl,0-1,0-35) == combobox-page-break-inside.html combobox-page-break-inside-ref.html
+pref(layout.display-list.improve-fragmentation,false) fuzzy-if(OSX,23-23,1-1) == table-nested-1308876-1.xhtml table-nested-1308876-1-ref.html # bug 1681063
+== contain-size-break-001.html contain-size-break-001-ref.html
+== contain-size-break-002.html contain-size-break-002-ref.html
+== contain-size-break-003.html contain-size-break-003-ref.html
+
+# Bugs
+== 272830-1.html 272830-1-ref.html
+== 318022-1.html 318022-1-ref.html
+== 403669-1.html 403669-1-ref.html
+== 381497-n.html 381497-f.html
+== test-async-paged.html 272830-1-ref.html
+== 129941-1a.html 129941-1-ref.html
+== 129941-1b.html 129941-1-ref.html
+== 129941-1c.html 129941-1-ref.html
+== 129941-1d.html 129941-1-ref.html
+== 129941-1e.html 129941-1e-ref.html
+== 609227-1.html 609227-1-ref.html
+== 609227-2a.html 609227-2-ref.html
+== 609227-2b.html 609227-2-ref.html
+== 577450-1.html 577450-1-ref.html
+== 626395-1a.html 626395-1-ref.html
+== 626395-1b.html 626395-1-ref.html
+== 626395-2a.html 626395-2-ref.html
+== 626395-2b.html 626395-2-ref.html
+== 626395-2c.html 626395-2-ref.html
+== 626395-2d.html 626395-2-ref.html
+== 652178-1.html 652178-1-ref.html
+== 115199-1.html 115199-1-ref.html
+== 115199-2a.html 115199-2-ref.html
+== 115199-2b.html 115199-2-ref.html
+== 652178-1.html 652178-1-ref2.html
+fuzzy-if(cocoaWidget,0-1,0-5000) fuzzy-if(swgl,0-1,0-9) == 745025-1.html 745025-1-ref.html
+== 820496-1.html 820496-1-ref.html
+
+# NOTE: These tests don't yet rigorously test what they're
+# trying to test (shrink-to-fit behavior), due to bug 967311.
+== 960822.html 960822-ref.html
+== 966419-1.html 966419-1-ref.html
+== 966419-2.html 966419-2-ref.html
+
+# asserts(3) fails 1108104.html 1108104-ref.html # bug 1067755, 1135556
+== 1166147.html 1166147-ref.html
+== 1321803-1a.html 1321803-1-ref.html
+== 1404868-1.html 1404868-1-ref.html
+== 1406050-1.html 1406050-1-ref.html
+== 1406291-1.html 1406291-1-ref.html
+== 1409585-1.html 1409585-1-ref.html
+== 1411799-1.html 1411799-1-ref.html
+== 1420528-1.html 1420528-1-ref.html
+== 1427141-1.html 1427141-ref.html
+== 1427141-2.html 1427141-ref.html
+== 1468654-1.html 1468654-1-ref.html
+== 1596310.html 1596310-ref.html
+
+== content-url-element.html image.html
+fuzzy-if(cocoaWidget&&swgl,0-1,0-23) == content-url-pseudo.html content-url-pseudo-ref.html
+
+== quirks.html quirks-ref.html
+!= quirks.html quirks-notref.html
+
+== fieldset-001.html fieldset-001-ref.html
+== fieldset-001-grid.html fieldset-001-ref.html
+== fieldset-002.html fieldset-002-ref.html
+== fieldset-003.html fieldset-003-ref.html
+== fieldset-004.html fieldset-004-ref.html
+== fieldset-005.html fieldset-005-ref.html
+== fieldset-006.html fieldset-006-ref.html
+== fieldset-007.html fieldset-007-ref.html
+== fieldset-008.html fieldset-008-ref.html
+== fieldset-009.html fieldset-009-ref.html
+== fieldset-00A.html fieldset-00A-ref.html
+== fieldset-00B.html fieldset-00B-ref.html
+== fieldset-00C.html fieldset-00C-ref.html
+== fieldset-00D.html fieldset-00D-ref.html
+== fieldset-00E.html fieldset-00E-ref.html
+== fieldset-00F.html fieldset-00F-ref.html
+== fieldset-00G.html fieldset-00G-ref.html
+== fieldset-00H.html fieldset-00H-ref.html
+== fieldset-00H-grid.html fieldset-00H-ref.html
+== fieldset-00I.html fieldset-00I-ref.html
+== fieldset-00I-grid.html fieldset-00I-ref.html
+== fieldset-00J.html fieldset-00J-ref.html
+== fieldset-00J-grid.html fieldset-00J-ref.html
+== fieldset-00K.html fieldset-00K-ref.html
+== fieldset-00L.html fieldset-00L-ref.html
+== fieldset-00M.html fieldset-00M-ref.html
+
+== block-max-height-001.html block-max-height-001-ref.html
+== block-max-height-002.html block-max-height-001-ref.html
+== block-min-height-001.html block-min-height-001-ref.html
+== block-min-height-002.html block-min-height-001-ref.html
+
+== bfc-001.html bfc-001-ref.html
+== bfc-002.html bfc-001-ref.html
+== bfc-003.html bfc-001-ref.html
+fails == bfc-004.html bfc-004-ref.html # bug 1602484
+== bfc-005.html bfc-004-ref.html
+== bfc-006.html bfc-006-ref.html
+== bfc-007.html bfc-006-ref.html
+== bfc-008.html bfc-006-ref.html
+
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(swgl,0-1,0-200) == inline-block-frag-simple-1.html inline-block-frag-simple-1-ref.html
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(cocoaWidget&&swgl,0-1,0-21) == inline-block-frag-simple-2.html inline-block-frag-simple-2-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-1.html inline-block-frag-offset-1-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-2.html inline-block-frag-offset-2-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-text-1.html inline-block-frag-text-1-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-1.html inline-block-slice-1-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-1b.html inline-block-slice-1b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-1c.html inline-block-slice-1c-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-2.html inline-block-slice-2-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-2b.html inline-block-slice-2b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-2c.html inline-block-slice-2c-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-3.html inline-block-slice-3-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-3b.html inline-block-slice-3b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-3c.html inline-block-slice-3c-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4.html inline-block-slice-4-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4b.html inline-block-slice-4b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4c.html inline-block-slice-4c-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5.html inline-block-slice-5-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5b.html inline-block-slice-5b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5c.html inline-block-slice-5c-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6.html inline-block-slice-6-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6b.html inline-block-slice-6b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6c.html inline-block-slice-6c-ref.html
+pref(layout.display-list.improve-fragmentation,true) != inline-block-slice-7.html inline-block-slice-7-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8.html inline-block-slice-8-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8b.html inline-block-slice-8b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8c.html inline-block-slice-8c-ref.html

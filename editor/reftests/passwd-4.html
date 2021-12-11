@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+Make sure that focusing a password text element does not
+cause a non-breaking space character to show up.
+-->
+<html class="reftest-wait">
+<body onload="loaded()">
+    <input type="password">
+    <script>
+      function loaded() {
+        var i = document.getElementsByTagName("input")[0];
+        i.focus();
+        i.value += "abcdef";
+        i.blur();
+        document.documentElement.className = "";
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <title>Testing invalid values for |points| attribute</title>
+  <style>
+    polyline {
+      fill: red;
+      stroke: lime;
+      stroke-width: 4;
+   }
+  </style>
+  <rect fill="lime" height="100%" width="100%"/>
+
+  <!-- First row: Initial comma(s) -->
+  <g transform="translate(0, 0)">
+    <polyline points=",0,0 10,20 20,0"    />
+    <polyline points=",,0,0 10,20 20,0"   transform="translate( 40, 0)"/>
+    <polyline points=", ,0,0 10,20 20,0"  transform="translate( 80, 0)"/>
+    <polyline points=", 0,0 10,20 20,0"   transform="translate(120, 0)"/>
+    <polyline points=",,, 0,0 10,20 20,0" transform="translate(160, 0)"/>
+  </g>
+  <!-- Second row: Trailing comma(s) -->
+  <g transform="translate(0, 40)">
+    <polyline points="0,0 10,20 20,0" />
+    <polyline points="0,0 10,20 20,0,"                                 style="fill: lime;" />
+    <polyline points="0,0 10,20 20,0"     transform="translate( 40, 0)"/>
+    <polyline points="0,0 10,20 20,0 ,"   transform="translate( 40, 0)" style="fill: lime;" />
+    <polyline points="0,0 10,20 20,0"     transform="translate( 80, 0)"/>
+    <polyline points="0,0 10,20 20,0,,"   transform="translate( 80, 0)" style="fill: lime;" />
+    <polyline points="0,0 10,20 20,0"     transform="translate(120, 0)"/>
+    <polyline points="0,0 10,20 20,0, ,"  transform="translate(120, 0)" style="fill: lime;" />
+    <polyline points="0,0 10,20 20,0"     transform="translate(160, 0)"/>
+    <polyline points="0,0 10,20 20,0 ,,," transform="translate(160, 0)" style="fill: lime;" />
+  </g>
+  <!-- Third row: Repeated commas in the middle -->
+  <g transform="translate(0, 80)">
+    <polyline points="0,,0 10,20 20,0"    />
+    <polyline points="0,,,0,10,20 20,0"   transform="translate( 40, 0)"/>
+    <polyline points="0, ,0 10,20 20,0"   transform="translate( 80, 0)"/>
+    <polyline points="0 0,, 10,20 20,0"   transform="translate(120, 0)"/>
+    <polyline points="0,0,,10,20 20,0"    transform="translate(160, 0)"/>
+  </g>
+  <!-- Fourth row: wrong number of values (at least 3, to get anything drawn)  -->
+  <g transform="translate(0, 120)">
+    <polyline points=""                   />
+    <polyline points="0,0"                transform="translate( 40, 0)"/>
+    <polyline points="0,0 10"             transform="translate( 80, 0)"/>
+    <polyline points="0,0 10,20 20"       transform="translate(120, 0)"/>
+    <polyline points="0,0 10,20 20,0"     transform="translate(160, 0)"/>
+    <polyline points="0,0 10,20 20,0 0"   transform="translate(160, 0)" style="fill: lime;"/>
+  </g>
+</svg>

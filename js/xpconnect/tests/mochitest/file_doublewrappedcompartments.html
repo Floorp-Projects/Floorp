@@ -1,0 +1,10 @@
+<html>
+    <head>
+        <script>
+            // We want to put an expando on the object, but we want this object
+            // to be wrapped in other compartments. This means that the expando
+            // must implement precreate, which happens (in general) for nodes.
+            // So we just do a cyclic reference to the document body.
+            window.expando = document.documentElement;
+        </script>
+    </head>

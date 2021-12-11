@@ -1,0 +1,257 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsICookie.idl"
+
+%{ C++
+namespace mozilla {
+class OriginAttributes;
+} // mozilla namespace
+%}
+
+[ptr] native OriginAttributesPtr(mozilla::OriginAttributes);
+
+/**
+ * An optional interface for accessing or removing the cookies
+ * that are in the cookie list
+ */
+
+[scriptable, builtinclass, uuid(AAAB6710-0F2C-11d5-A53B-0010A401EB10)]
+interface nsICookieManager : nsISupports
+{
+
+  /**
+   * Called to remove all cookies from the cookie list
+   */
+  void removeAll();
+
+  /**
+   * Returns an array of cookies in the cookie list.
+   * The objects in the array are of type nsICookie
+   * This array only contains non-private browsing cookies.
+   * To retrieve an array of private browsing cookies, use
+   * getCookiesWithOriginAttributes.
+   */
+  readonly attribute Array<nsICookie> cookies;
+
+  /**
+   * Returns an array of session cookies in the cookie list.
+   * The objects in the array are of type nsICookie
+   * This array only contains non-private browsing cookies.
+   */
+  readonly attribute Array<nsICookie> sessionCookies;
+
+  /**
+   * Returns current effective value of the cookieBehavior. It will return the
+   * different pref according to the aIsPrivate. If aIsPrivate is true, it will
+   * return the pref "network.cookie.cookieBehavior". Otherwise, it will return
+   * the pref "network.cookie.cookieBehavior.pbmode"
+   */
+  uint32_t getCookieBehavior(in boolean aIsPrivate);
+  %{C++
+    static uint32_t GetCookieBehavior(bool aIsPrivate);
+  %}
+
+  /**
+   * Called to remove an individual cookie from the cookie list, specified
+   * by host, name, and path. If the cookie cannot be found, no exception
+   * is thrown. Typically, the arguments to this method will be obtained
+   * directly from the desired nsICookie object.
+   *
+   * @param aHost The host or domain for which the cookie was set. @see
+   *              nsICookieManager::add for a description of acceptable host
+   *              strings. If the target cookie is a domain cookie, a leading
+   *              dot must be present.
+   * @param aName The name specified in the cookie
+   * @param aPath The path for which the cookie was set
+   * @param aOriginAttributes The originAttributes of this cookie.
+   *
+   */
+  [implicit_jscontext]
+  void remove(in AUTF8String   aHost,
+              in ACString      aName,
+              in AUTF8String   aPath,
+              in jsval         aOriginAttributes);
+
+  [notxpcom]
+  nsresult removeNative(in AUTF8String   aHost,
+                        in ACString      aName,
+                        in AUTF8String   aPath,
+                        in OriginAttributesPtr aOriginAttributes);
+
+  /**
+   * Add a cookie. nsICookieService is the normal way to do this. This
+   * method is something of a backdoor.
+   *
+   * @param aHost
+   *        the host or domain for which the cookie is set. presence of a
+   *        leading dot indicates a domain cookie; otherwise, the cookie
+   *        is treated as a non-domain cookie (see RFC2109). The host string
+   *        will be normalized to ASCII or ACE; any trailing dot will be
+   *        stripped. To be a domain cookie, the host must have at least two
+   *        subdomain parts (e.g. '.foo.com', not '.com'), otherwise an
+   *        exception will be thrown. An empty string is acceptable
+   *        (e.g. file:// URI's).
+   * @param aPath
+   *        path within the domain for which the cookie is valid
+   * @param aName
+   *        cookie name
+   * @param aValue
+   *        cookie data
+   * @param aIsSecure
+   *        true if the cookie should only be sent over a secure connection.
+   * @param aIsHttpOnly
+   *        true if the cookie should only be sent to, and can only be
+   *        modified by, an http connection.
+   * @param aIsSession
+   *        true if the cookie should exist for the current session only.
+   *        see aExpiry.
+   * @param aExpiry
+   *        expiration date, in seconds since midnight (00:00:00), January 1,
+   *        1970 UTC. note that expiry time will also be honored for session cookies;
+   *        in this way, the more restrictive of the two will take effect.
+   * @param aOriginAttributes
+   *        the originAttributes of this cookie.
+   * @param aSameSite
+   *        the SameSite attribute.
+   */
+  [implicit_jscontext]
+  void add(in AUTF8String aHost,
+           in AUTF8String aPath,
+           in ACString    aName,
+           in AUTF8String aValue,
+           in boolean     aIsSecure,
+           in boolean     aIsHttpOnly,
+           in boolean     aIsSession,
+           in int64_t     aExpiry,
+           in jsval aOriginAttributes,
+           in int32_t aSameSite,
+           in nsICookie_schemeType aSchemeMap);
+
+  [notxpcom]
+  nsresult addNative(in AUTF8String aHost,
+                     in AUTF8String aPath,
+                     in ACString    aName,
+                     in AUTF8String aValue,
+                     in boolean     aIsSecure,
+                     in boolean     aIsHttpOnly,
+                     in boolean     aIsSession,
+                     in int64_t     aExpiry,
+                     in OriginAttributesPtr aOriginAttributes,
+                     in int32_t aSameSite,
+                     in nsICookie_schemeType aSchemeMap);
+
+  /**
+   * Find whether a given cookie already exists.
+   *
+   * @param aHost
+   *        the cookie's host to look for
+   * @param aPath
+   *        the cookie's path to look for
+   * @param aName
+   *        the cookie's name to look for
+   * @param aOriginAttributes
+   *        the cookie's originAttributes to look for
+   *
+   * @return true if a cookie was found which matches the host, path, name and
+   *         originAttributes fields of aCookie
+   */
+  [implicit_jscontext]
+  boolean cookieExists(in AUTF8String aHost,
+                       in AUTF8String aPath,
+                       in ACString    aName,
+                       in jsval aOriginAttributes);
+
+  [notxpcom]
+  nsresult cookieExistsNative(in AUTF8String aHost,
+                              in AUTF8String aPath,
+                              in ACString    aName,
+                              in OriginAttributesPtr aOriginAttributes,
+                              out boolean aExists);
+
+  /**
+   * Count how many cookies exist within the base domain of 'aHost'.
+   * Thus, for a host "weather.yahoo.com", the base domain would be "yahoo.com",
+   * and any host or domain cookies for "yahoo.com" and its subdomains would be
+   * counted.
+   *
+   * @param aHost
+   *        the host string to search for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI. see @add for a description of
+   *        acceptable host strings.
+   *
+   * @return the number of cookies found.
+   */
+  unsigned long countCookiesFromHost(in AUTF8String aHost);
+
+  /**
+   * Returns an array of cookies that exist within the base domain of
+   * 'aHost'. Thus, for a host "weather.yahoo.com", the base domain would be
+   * "yahoo.com", and any host or domain cookies for "yahoo.com" and its
+   * subdomains would be returned.
+   *
+   * @param aHost
+   *        the host string to search for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI. see @add for a description of
+   *        acceptable host strings.
+   * @param aOriginAttributes The originAttributes of cookies that would be
+   *                          retrived.
+   *
+   * @return an array of nsICookie objects.
+   *
+   * @see countCookiesFromHost
+   */
+  [implicit_jscontext]
+  Array<nsICookie> getCookiesFromHost(in AUTF8String aHost,
+                                      in jsval aOriginAttributes);
+
+  /**
+   * Returns an array of all cookies whose origin attributes matches aPattern
+   *
+   * @param aPattern origin attribute pattern in JSON format
+   *
+   * @param aHost
+   *        the host string to search for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI. see @add for a description of
+   *        acceptable host strings. This attribute is optional. It will search
+   *        all hosts if this attribute is not given.
+   */
+  Array<nsICookie> getCookiesWithOriginAttributes(in AString aPattern,
+                                                  [optional] in AUTF8String aHost);
+
+  /**
+   * Remove all the cookies whose origin attributes matches aPattern
+   *
+   * @param aPattern origin attribute pattern in JSON format
+   */
+  void removeCookiesWithOriginAttributes(in AString aPattern,
+                                         [optional] in AUTF8String aHost);
+
+  /**
+   * Remove all the cookies whose origin attributes matches aPattern and the
+   * host is exactly aHost (without subdomain matching).
+   *
+   * @param aHost the host to match
+   * @param aPattern origin attribute pattern in JSON format
+   */
+  void removeCookiesFromExactHost(in AUTF8String aHost, in AString aPattern);
+
+  /**
+   * Removes all cookies that were created on or after aSinceWhen, and returns
+   * a Promise which will be resolved when the last such cookie has been
+   * removed.
+   *
+   * @param aSinceWhen the starting point in time after which no cookies should
+   *        be created when the Promise returned from this method is resolved.
+   */
+  [implicit_jscontext]
+  Promise removeAllSince(in int64_t aSinceWhen);
+
+  /**
+   * Retrieves all the cookies that were created on or after aSinceWhen, order
+   * by creation time */
+  Array<nsICookie> getCookiesSince(in int64_t aSinceWhen);
+};

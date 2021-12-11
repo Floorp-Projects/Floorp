@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+ "http://www.w3.org/TR/REC-html401-19991224/strict.dtd">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=windows-1251">
+  <title>Shift_JIS in body and text area</title>
+ </head>
+ <body>
+  <h1>Incorrect meta charset</h1>
+  <h2>This page is encoded in Shift_JIS, but has an incorrect meta charset
+     claiming that it is windows-1251</h2>
+  <p id="testpar">ѓ†ѓjѓRЃ[ѓh‚НЃA‚·‚Ч‚Д‚М•¶Ћљ‚ЙЊЕ—L‚М”ФЌ†‚р•t—^‚µ‚Ь‚·</p>
+  <form>
+  <p>
+   <textarea id="testtextarea" rows=6 cols=60>ѓ†ѓjѓRЃ[ѓh‚НЃA‚·‚Ч‚Д‚М•¶Ћљ‚ЙЊЕ—L‚М”ФЌ†‚р•t—^‚µ‚Ь‚·</textarea>
+   <input id="testinput" type="text" size=60 value="ѓ†ѓjѓRЃ[ѓh‚НЃA‚·‚Ч‚Д‚М•¶Ћљ‚ЙЊЕ—L‚М”ФЌ†‚р•t—^‚µ‚Ь‚·">
+  </p>
+  </form>
+  <h2>Expected text on load:</h2>
+  <p>&#x453;&#x2020;&#x453;&#x6A;&#x453;&#x52;&#x403;&#x5B;&#x453;&#x68;&#x201A;&#x41D;&#x403;&#x41;&#x201A;&#xB7;&#x201A;&#x427;&#x201A;&#x414;&#x201A;&#x41C;&#x2022;&#xB6;&#x40B;&#x459;&#x201A;&#x419;&#x40A;&#x415;&#x2014;&#x4C;&#x201A;&#x41C;&#x201D;&#x424;&#x40C;&#x2020;&#x201A;&#x440;&#x2022;&#x74;&#x2014;&#x5E;&#x201A;&#xB5;&#x201A;&#x42C;&#x201A;&#xB7;</p>
+  <h2>Expected text on resetting the encoding to Shift_JIS:</h2>
+  <p>&#x30E6;&#x30CB;&#x30B3;&#x30FC;&#x30C9;&#x306F;&#x3001;&#x3059;&#x3079;&#x3066;&#x306E;&#x6587;&#x5B57;&#x306B;&#x56FA;&#x6709;&#x306E;&#x756A;&#x53F7;&#x3092;&#x4ED8;&#x4E0E;&#x3057;&#x307E;&#x3059;</p>
+ </body>
+</html>

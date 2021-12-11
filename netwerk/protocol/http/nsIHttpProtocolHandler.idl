@@ -1,0 +1,200 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIProxiedProtocolHandler.idl"
+
+%{C++
+namespace mozilla {
+namespace net {
+class HSTSDataCallbackWrapper;
+}
+}
+%}
+
+native HSTSDataCallbackWrapperAlreadyAddRefed(RefPtr<mozilla::net::HSTSDataCallbackWrapper>);
+
+[scriptable, builtinclass, uuid(c48126d9-2ddd-485b-a51a-378e917e75f8)]
+interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
+{
+    /**
+     * Get the HTTP advertised user agent string.
+     */
+    [must_use] readonly attribute ACString userAgent;
+
+    /**
+     * Get the application name.
+     *
+     * @return The name of this application (eg. "Mozilla").
+     */
+    [must_use] readonly attribute ACString appName;
+
+    /**
+     * Get the application version string.
+     *
+     * @return The complete version (major and minor) string. (eg. "5.0")
+     */
+    [must_use] readonly attribute ACString appVersion;
+
+    /**
+     * Get the current platform.
+     *
+     * @return The platform this application is running on
+     *         (eg. "Windows", "Macintosh", "X11")
+     */
+    [must_use] readonly attribute ACString platform;
+
+    /**
+     * Get the current oscpu.
+     *
+     * @return The oscpu this application is running on
+     */
+    [must_use] readonly attribute ACString oscpu;
+
+    /**
+     * Get the application comment misc portion.
+     */
+    [must_use] readonly attribute ACString misc;
+
+    /**
+     * Get the Alt-Svc cache keys (used for testing).
+     */
+    [must_use] readonly attribute Array<ACString> altSvcCacheKeys;
+
+    /**
+     * Get the auth cache keys (used for testing).
+     */
+    [must_use] readonly attribute Array<ACString> authCacheKeys;
+
+    /**
+     * This function is used to ensure HSTS data storage is ready to read after
+     * the returned promise is resolved.
+     * Note that this function should only used for testing.
+     * See bug 1521729 for more details.
+     */
+    [implicit_jscontext]
+    Promise EnsureHSTSDataReady();
+
+    /**
+     * A C++ friendly version of EnsureHSTSDataReady
+     */
+    [noscript]
+    void EnsureHSTSDataReadyNative(in HSTSDataCallbackWrapperAlreadyAddRefed aCallback);
+
+    /*
+     * Clears the CORS preflight cache.
+     */
+    void clearCORSPreflightCache();
+};
+
+%{C++
+// ----------- Categories -----------
+/**
+ * At initialization time, the HTTP handler will initialize each service
+ * registered under this category:
+ */
+#define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
+
+// ----------- Observer topics -----------
+/**
+ * nsIObserver notification corresponding to startup category.  Services
+ * registered under the startup category will receive this observer topic at
+ * startup if they implement nsIObserver.  The "subject" of the notification
+ * is the nsIHttpProtocolHandler instance.
+ */
+#define NS_HTTP_STARTUP_TOPIC "http-startup"
+
+/**
+ * Called when asyncOpen synchronously failes e.g. because of any synchronously
+ * performed security checks.  This only fires on the child process, but if
+ * needed can be implemented also on the parent process.
+ */
+#define NS_HTTP_ON_FAILED_OPENING_REQUEST_TOPIC "http-on-failed-opening-request"
+
+ /**
+ * This observer topic is notified when an HTTP channel is opened.
+ * It is similar to http-on-modify-request, except that
+ * 1) The notification is guaranteed to occur before on-modify-request, during
+ *    the AsyncOpen call itself.
+ * 2) It only occurs for the initial open of a channel, not for internal
+ *    asyncOpens that happen during redirects, etc.
+ * 3) Some information (most notably nsIProxiedChannel.proxyInfo) may not be set
+ *    on the channel object yet.
+ *
+ * The "subject" of the notification is the nsIHttpChannel instance.
+ *
+ * Generally the 'http-on-modify-request' notification is preferred unless the
+ * synchronous, during-asyncOpen behavior that this notification provides is
+ * required.
+ */
+#define NS_HTTP_ON_OPENING_REQUEST_TOPIC "http-on-opening-request"
+
+ /**
+ * This observer topic is notified when a document channel is opened.
+ * It is similar to http-on-opening-request.
+ */
+#define NS_DOCUMENT_ON_OPENING_REQUEST_TOPIC "document-on-opening-request"
+
+/**
+ * Before an HTTP request is sent to the server, this observer topic is
+ * notified.  The observer of this topic can then choose to set any additional
+ * headers for this request before the request is actually sent to the server.
+ * The "subject" of the notification is the nsIHttpChannel instance.
+ */
+#define NS_HTTP_ON_MODIFY_REQUEST_TOPIC "http-on-modify-request"
+
+/**
+  * Before an HTTP request is sent to the server via a document channel this
+  * observer topic is notified.
+  * It is similar to http-on-modify-request.
+*/
+#define NS_DOCUMENT_ON_MODIFY_REQUEST_TOPIC "document-on-modify-request"
+
+/**
+ * Before an HTTP connection to the server is created, this observer topic is
+ * notified.  This observer happens after HSTS upgrades, etc. are set, providing
+ * access to the full set of request headers. The observer of this topic can
+ * choose to set any additional headers for this request before the request is
+ * actually sent to the server. The "subject" of the notification is the
+ * nsIHttpChannel instance.
+ */
+#define NS_HTTP_ON_BEFORE_CONNECT_TOPIC "http-on-before-connect"
+
+/**
+ * After an HTTP server response is received, this observer topic is notified.
+ * The observer of this topic can interrogate the response.  The "subject" of
+ * the notification is the nsIHttpChannel instance.
+ */
+#define NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC "http-on-examine-response"
+
+/**
+ * The observer of this topic is notified after the received HTTP response
+ * is merged with data from the browser cache.  This means that, among other
+ * things, the Content-Type header will be set correctly.
+ */
+#define NS_HTTP_ON_EXAMINE_MERGED_RESPONSE_TOPIC "http-on-examine-merged-response"
+
+/**
+ * The observer of this topic is notified about a background revalidation that
+ * started by hitting a request that fell into stale-while-revalidate window.
+ * This notification points to the channel that performed the revalidation and
+ * after this notification the cache entry has been validated or updated.
+ */
+#define NS_HTTP_ON_BACKGROUND_REVALIDATION "http-on-background-revalidation"
+
+/**
+ * The observer of this topic is notified before data is read from the cache.
+ * The notification is sent if and only if there is no network communication
+ * at all.
+ */
+#define NS_HTTP_ON_EXAMINE_CACHED_RESPONSE_TOPIC "http-on-examine-cached-response"
+
+/**
+ * This topic is notified for every http channel right after it called
+ * OnStopRequest on its listener, regardless whether it was finished
+ * successfully, failed or has been canceled.
+ */
+#define NS_HTTP_ON_STOP_REQUEST_TOPIC "http-on-stop-request"
+
+%}

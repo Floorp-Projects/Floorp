@@ -1,0 +1,46 @@
+{
+  "addons": {
+    "addon2@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2",
+          "update_link": "http://example.com/broken.xpi"
+        }
+      ]
+    },
+    "addon3@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2",
+          "update_link": "http://example.com/broken.xpi"
+        }
+      ]
+    },
+    "addon1@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2",
+          "update_link": "http://example.com/broken.xpi"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <g id="smiley">
+      <circle fill="yellow" stroke="black" stroke-width="1" cx="0" cy="0"
+        r="20"/>
+      <circle fill="white" stroke="black" stroke-width="1" cx="-7" cy="-7"
+        r="7"/>
+      <circle fill="white" stroke="black" stroke-width="1" cx="7" cy="-7"
+        r="7"/>
+      <circle cx="-5" cy="-7" r="2"/>
+      <circle cx="5" cy="-7" r="2"/>
+      <path d="m-11 7a13,13 0 0,0 22,0" fill="none" stroke="black"/>
+    </g>
+  </defs>
+  <g transform="translate(50 50)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(150 50)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(250 50)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(50 150)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(150 150)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(250 150)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(50 250)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(150 250)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+  <g transform="translate(250 250)">
+    <use xlink:href="#smiley" transform="scale(2)"/>
+  </g>
+</svg>

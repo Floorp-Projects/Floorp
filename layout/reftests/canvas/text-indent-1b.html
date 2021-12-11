@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <iframe sandbox
+          style="width: 200px"
+          srcdoc="<canvas style='text-indent: 50vw; display: block'>Text</canvas>"></iframe>
+  <script>
+    onload = function() {
+      var i = document.querySelector("iframe");
+      window.w = i.offsetWidth;
+      i.style.width = "400px";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

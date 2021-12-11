@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIStreamListener.idl"
+
+interface nsIFile;
+interface nsIDownloadObserver;
+
+/**
+ * nsIDownloader
+ *
+ * A downloader is a special implementation of a nsIStreamListener that will
+ * make the contents of the stream available as a file.  This may utilize the
+ * disk cache as an optimization to avoid an extra copy of the data on disk.
+ * The resulting file is valid from the time the downloader completes until
+ * the last reference to the downloader is released.
+ */
+[scriptable, uuid(fafe41a9-a531-4d6d-89bc-588a6522fb4e)]
+interface nsIDownloader : nsIStreamListener
+{
+    /**
+     * Initialize this downloader
+     *
+     * @param observer
+     *        the observer to be notified when the download completes.
+     * @param downloadLocation
+     *        the location where the stream contents should be written.
+     *        if null, the downloader will select a location and the
+     *        resulting file will be deleted (or otherwise made invalid)
+     *        when the downloader object is destroyed.  if an explicit
+     *        download location is specified then the resulting file will
+     *        not be deleted, and it will be the callers responsibility
+     *        to keep track of the file, etc.
+     */
+    void init(in nsIDownloadObserver observer,
+              in nsIFile             downloadLocation);
+};
+
+[scriptable, uuid(44b3153e-a54e-4077-a527-b0325e40924e)]
+interface nsIDownloadObserver : nsISupports
+{
+    /**
+     * Called to signal a download that has completed.
+     */
+    void onDownloadComplete(in nsIDownloader downloader,
+                            in nsIRequest    request,
+                            in nsISupports   ctxt,
+                            in nsresult      status,
+                            in nsIFile       result);
+};

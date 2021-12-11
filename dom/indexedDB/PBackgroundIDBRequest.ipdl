@@ -1,0 +1,171 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBTransaction;
+include protocol PBackgroundIDBVersionChangeTransaction;
+include protocol PBackgroundMutableFile;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
+include protocol PRemoteLazyInputStream; // FIXME: bug 792908
+
+include PBackgroundIDBSharedTypes;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+using class mozilla::dom::indexedDB::Key
+  from "mozilla/dom/indexedDB/Key.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct ObjectStoreAddResponse
+{
+  Key key;
+};
+
+struct ObjectStorePutResponse
+{
+  Key key;
+};
+
+struct ObjectStoreGetResponse
+{
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct ObjectStoreGetKeyResponse
+{
+  Key key;
+};
+
+struct ObjectStoreGetAllResponse
+{
+  SerializedStructuredCloneReadInfo[] cloneInfos;
+};
+
+struct ObjectStoreGetAllKeysResponse
+{
+  Key[] keys;
+};
+
+struct ObjectStoreDeleteResponse
+{ };
+
+struct ObjectStoreClearResponse
+{ };
+
+struct ObjectStoreCountResponse
+{
+  uint64_t count;
+};
+
+struct IndexGetResponse
+{
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct IndexGetKeyResponse
+{
+  Key key;
+};
+
+struct IndexGetAllResponse
+{
+  SerializedStructuredCloneReadInfo[] cloneInfos;
+};
+
+struct IndexGetAllKeysResponse
+{
+  Key[] keys;
+};
+
+struct IndexCountResponse
+{
+  uint64_t count;
+};
+
+union RequestResponse
+{
+  nsresult;
+  ObjectStoreGetResponse;
+  ObjectStoreGetKeyResponse;
+  ObjectStoreAddResponse;
+  ObjectStorePutResponse;
+  ObjectStoreDeleteResponse;
+  ObjectStoreClearResponse;
+  ObjectStoreCountResponse;
+  ObjectStoreGetAllResponse;
+  ObjectStoreGetAllKeysResponse;
+  IndexGetResponse;
+  IndexGetKeyResponse;
+  IndexGetAllResponse;
+  IndexGetAllKeysResponse;
+  IndexCountResponse;
+};
+
+struct PreprocessInfo
+{
+  SerializedStructuredCloneFile[] files;
+};
+
+struct ObjectStoreGetPreprocessParams
+{
+  PreprocessInfo preprocessInfo;
+};
+
+struct ObjectStoreGetAllPreprocessParams
+{
+  PreprocessInfo[] preprocessInfos;
+};
+
+union PreprocessParams
+{
+  ObjectStoreGetPreprocessParams;
+  ObjectStoreGetAllPreprocessParams;
+};
+
+struct ObjectStoreGetPreprocessResponse
+{
+};
+
+struct ObjectStoreGetAllPreprocessResponse
+{
+};
+
+// The nsresult is used if an error occurs for any preprocess request type.
+// The specific response types are sent on success.
+union PreprocessResponse
+{
+  nsresult;
+  ObjectStoreGetPreprocessResponse;
+  ObjectStoreGetAllPreprocessResponse;
+};
+
+protocol PBackgroundIDBRequest
+{
+  manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
+
+parent:
+  async Continue(PreprocessResponse response);
+
+child:
+  async __delete__(RequestResponse response);
+
+  // Preprocess is used in cases where response processing needs to do something
+  // asynchronous off of the child actor's thread before returning the actual
+  // result to user code. This is necessary because RequestResponse processing
+  // occurs in __delete__ and the PBackgroundIDBRequest implementations'
+  // life-cycles are controlled by IPC and are not otherwise reference counted.
+  // By introducing the (optional) Preprocess/Continue steps reference counting
+  // or the introduction of additional runnables are avoided.
+  async Preprocess(PreprocessParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

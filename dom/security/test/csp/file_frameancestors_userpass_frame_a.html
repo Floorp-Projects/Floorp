@@ -1,0 +1,12 @@
+<html>
+<head>
+  <title>Nested frame</title>
+  <script>
+  parent.parent.postMessage({call: "frameLoaded", testname: "frame_a", uri: window.location.toString()}, "*");
+  </script>
+</head>
+<body>
+  <tt>IFRAME A</tt><br/>
+  <iframe src='http://sampleuser:samplepass@mochi.test:8888/tests/dom/security/test/csp/file_frameancestors_userpass_frame_c.html'></iframe><br/>
+</body>
+</html>

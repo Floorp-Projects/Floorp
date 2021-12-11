@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1716622
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for large ImageData</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1716622">Mozilla Bug 1716622</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+  <canvas id="canvas" width="800" height="800"></canvas>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    function go() {
+      var ctx = document.getElementById("canvas").getContext("2d");
+
+      var ex = null;
+      try {
+        ctx.createImageData(23175, 23175);
+      } catch (e) {
+        ex = e;
+      }
+      ok(ex.toString().includes("Invalid width or height"),
+         "Expected createImageData exception");
+
+      ex = null;
+      try {
+        ctx.createImageData(33000, 33000);
+      } catch (e) {
+        ex = e;
+      }
+      ok(ex.toString().includes("Invalid width or height"),
+         "Expected createImageData exception");
+
+      ex = null;
+      try {
+        ctx.getImageData(0, 0, 23175, 23175);
+      } catch (e) {
+        ex = e;
+      }
+      ok(ex.toString().includes("negative or greater than the allowed amount"),
+         "Expected getImageData exception");
+
+      SimpleTest.finish();
+    }
+    go();
+  </script>
+</body>
+</html>

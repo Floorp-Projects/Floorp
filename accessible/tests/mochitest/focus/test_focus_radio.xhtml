@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Tests for Accessible TakeFocus on Radio Elements">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../promisified-events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    async function doTests() {
+      let radio1 = getAccessible("radio1");
+      let focused = waitForEvent(EVENT_FOCUS, radio1);
+      radio1.takeFocus();
+      await focused;
+      // radio1 wasn't selected. Ensure that takeFocus didn't change that.
+      testStates(radio1, STATE_FOCUSED, 0, STATE_CHECKED);
+
+      // Test focusing another radio in the group while the group is still
+      // focused.
+      let radio2 = getAccessible("radio2");
+      focused = waitForEvent(EVENT_FOCUS, radio2);
+      radio2.takeFocus();
+      await focused;
+      testStates(radio2, STATE_FOCUSED | STATE_CHECKED);
+
+      let groupEl = document.getElementById("radiogroup");
+      // Selecting an item also focuses it.
+      focused = waitForEvent(EVENT_FOCUS, radio1);
+      groupEl.value = "1";
+      await focused;
+      testStates(radio1, STATE_FOCUSED | STATE_CHECKED);
+
+      // If an item is already selected but not focused, selecting it again
+      // focuses it.
+      focused = waitForEvent(EVENT_FOCUS, radio2);
+      radio2.takeFocus();
+      await focused;
+      testStates(radio2, STATE_FOCUSED, 0, STATE_CHECKED);
+      // radio1 is selected but not focused.
+      // Select radio1 again, which should focus it.
+      focused = waitForEvent(EVENT_FOCUS, radio1);
+      groupEl.value = "1";
+      await focused;
+      testStates(radio1, STATE_FOCUSED | STATE_CHECKED);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <radiogroup id="radiogroup" value="2">
+        <radio id="radio1" value="1"/>
+        <radio id="radio2" value="2"/>
+      </radiogroup>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>

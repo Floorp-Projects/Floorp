@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1041200</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+<iframe style="width:700px; height:500px; margin-top:200px;" id="ourFrame"></iframe>
+<script>
+var SpecialPowers = window.arguments[0].SpecialPowers;
+var SimpleTest = window.arguments[0].SimpleTest;
+var ok = window.arguments[0].ok;
+var info = window.arguments[0].info;
+
+var viewer = SpecialPowers.setFullZoom(window, 2);
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  window.waitForAllPaintsFlushed(function () {
+    // Supply random key to ensure load actually happens
+    ourFrame.src = "bug1041200_frame.html?" + Math.random();
+  }, document.getElementById("ourFrame").contentDocument);
+};
+
+window.childLoaded = function() {
+  setTimeout(function() {
+    window.waitForAllPaintsFlushed(function(x1, y1, x2, y2) {
+      // We set the full zoom of this window too, so we need to account for it here.
+      ok(x2 - x1 >= 700 / 2 && y2 - y1 >= 500 / 2,
+         "expected to see invalidate of entire frame, got " + [x1,y1,x2,y2].join(','));
+      SimpleTest.finish();
+      window.close();
+    });
+  }, 0);
+};
+</script>
+

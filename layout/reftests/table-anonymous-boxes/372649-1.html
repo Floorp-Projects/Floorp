@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+#it { display: inline-table; }
+</style>
+</head>
+<body>
+<p>a<span id="it">b</span>d</p>
+<script>
+document.body.offsetWidth;
+document.getElementById("it").appendChild(document.createTextNode("c"));
+</script>
+</body>
+</html>

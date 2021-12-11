@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <rect x="20px" y="20px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 10px">
+  </rect>
+  <rect x="70px" y="20px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 10px">
+  </rect>
+  <rect x="120px" y="20px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 13px">
+  </rect>
+  <rect x="20px" y="70px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 17.5px">
+  </rect>
+  <rect x="70px" y="70px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 19.9px">
+  </rect>
+  <rect x="120px" y="70px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 25px">
+  </rect>
+  <rect x="20px" y="120px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 26px">
+  </rect>
+  <rect x="70px" y="120px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 30px">
+  </rect>
+  <rect x="120px" y="120px" width="15px" height="15px" stroke="blue"
+        style="stroke-width: 30px">
+  </rect>
+</svg>

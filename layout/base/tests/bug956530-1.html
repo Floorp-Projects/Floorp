@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <style>
+  /* eliminate the blue glow when focusing the element. */
+  input {
+    background: none;
+    border: none;
+    outline: none;
+  }
+  </style>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script>
+    async function test() {
+      let input = document.querySelector("input");
+      input.setSelectionRange(input.value.length, input.value.length);
+      window.focus();
+      // Run input.onfocus
+      synthesizeMouseAtCenter(input, {});
+      // Blur
+      await new Promise(resolve => { SimpleTest.executeSoon(resolve); });
+      synthesizeMouseAtCenter(document.body, {});
+      // Run input.onfocus again
+      await new Promise(resolve => { SimpleTest.executeSoon(resolve); });
+      synthesizeMouseAtCenter(input, {});
+      // Check the result
+      await new Promise(resolve => { SimpleTest.executeSoon(resolve); });
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <body onload="SimpleTest.executeSoon(test);">
+    <input value="text text text text text"
+           onfocus="this.select();">
+  </body>
+</html>

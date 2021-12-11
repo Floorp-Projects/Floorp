@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<title>Don't pull background colors of container layers through DrawAboveRegions of ThebesLayers</title>
+<style>
+
+#outer {
+  transform: translateX(1px);
+}
+
+#above {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  width: 100px;
+  height: 100px;
+  border: 1px solid black;
+}
+
+</style>
+
+<div id="outer">
+  <div style="height: 100px; width: 200px; background-color: lime;"></div>
+  <div id="above"></div>
+</div>

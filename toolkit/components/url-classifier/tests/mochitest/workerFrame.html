@@ -1,0 +1,65 @@
+<html>
+<head>
+<title></title>
+
+<script type="text/javascript">
+
+function startCleanWorker() {
+  var worker = new Worker("cleanWorker.js");
+
+  worker.onmessage = function(event) {
+    if (event.data == "success") {
+      window.parent.postMessage("success:blocked importScripts('evilWorker.js')", "*");
+    } else {
+      window.parent.postMessage("failure:failed to block importScripts('evilWorker.js')", "*");
+    }
+    window.parent.postMessage("finish", "*");
+  };
+
+  worker.onerror = function(event) {
+    window.parent.postmessage("failure:failed to load cleanWorker.js", "*");
+    window.parent.postMessage("finish", "*");
+  };
+
+  worker.postMessage("");
+}
+
+function startEvilWorker() {
+  var worker = new Worker("evilWorker.js");
+
+  worker.onmessage = function(event) {
+    window.parent.postMessage("failure:failed to block evilWorker.js", "*");
+    startUnwantedWorker();
+  };
+
+  worker.onerror = function(event) {
+    window.parent.postMessage("success:blocked evilWorker.js", "*");
+    startUnwantedWorker();
+  };
+
+  worker.postMessage("");
+}
+
+function startUnwantedWorker() {
+  var worker = new Worker("unwantedWorker.js");
+
+  worker.onmessage = function(event) {
+    window.parent.postMessage("failure:failed to block unwantedWorker.js", "*");
+    startCleanWorker();
+  };
+
+  worker.onerror = function(event) {
+    window.parent.postMessage("success:blocked unwantedWorker.js", "*");
+    startCleanWorker();
+  };
+
+  worker.postMessage("");
+}
+
+</script>
+
+</head>
+
+<body onload="startEvilWorker()">
+</body>
+</html>

@@ -1,0 +1,30 @@
+<html>
+<head>
+	<script>
+
+	function go()
+	{
+		try { o114 = document.createElement('canvas'); } catch(e) {;}
+		try { o103 = (new DOMParser).parseFromString('/', 'text/html'); } catch(e) {;}
+		try { o217 = o103.all[1]; } catch(e) {;}
+		try { o253 = window.getSelection(); } catch(e) {;}
+
+		try { o270 = document.body.appendChild(document.createElement('a')); } catch(e) {;}
+
+		try { o301 = window.getSelection(); } catch(e) {;}
+		try { o314 = window.getSelection(); } catch(e) {;}
+		try { document.body.appendChild(o114); } catch(e) {;}
+		try { document.documentElement.appendChild(o217); } catch(e) {;}
+		try { document.body.appendChild(o270); } catch(e) {;}
+		try { o217.contentEditable = true } catch(e) {;}
+
+		try { o253.modify('move','forward','lineboundary'); } catch(e) {;}
+		try { o314.modify('extend','left','line'); } catch(e) {;}
+		try { o301.modify('extend','right','line'); } catch(e) {;}
+	}
+	</script>
+</head>
+<body onload="go();">
+	<plaintext></plaintext>
+</bdoy>
+</html>

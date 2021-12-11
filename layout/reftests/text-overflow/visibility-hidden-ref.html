@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+-->
+<html><head>
+<title>text-overflow: visibility:hidden</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test { 
+
+  overflow: hidden; 
+  white-space: nowrap;
+  background:lime;
+  color: black;
+  width: 50%;
+}
+
+.rtl {
+  direction:rtl;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+u {
+  visibility:hidden;
+  padding-left: 3em;
+  background: cyan;
+}
+.rtl u {padding-right: 3em; padding-left:0;}
+s {
+  visibility:visible;
+}
+
+.t1 {width:10em;}
+.t2 {width:14em;}
+.t3 {width:13.5em;}
+.t3 u { padding-right:1em; }
+.t3.rtl u {padding-left:1em; padding-right: 3em; }
+.t4 {width:12.5em;}
+</style>
+
+</head><body>
+
+<div class="test t2">
+CSS is awesome<u></u><br>
+CSS is awesome<u>&nbsp;<s>x</s>&nbsp;</u>
+</div>
+<div class="test t1">CSS is awesome<u></u><br></div>
+<div class="test t2">CSS is awesome<u>&nbsp;<s>x</s>&nbsp;</u></div>
+<div class="test t3">CSS is awesome<u>&nbsp;<s>x</s></u></div>
+<div class="test t4">CSS is awesome<m>&#x2026;</m><u>&nbsp;<s></s></u></div>
+
+<div class="rtl">
+<div class="test rtl rlo t2">
+CSS is awesome<u></u><br>
+CSS is awesome<u>&nbsp;<s>x</s></u>
+</div>
+<div class="test rtl rlo t1">CSS is awesome<u></u><br></div>
+<div class="test rtl rlo t2">CSS is awesome<u>&nbsp;<s>x</s>&nbsp;</u></div>
+<div class="test rtl rlo t3">CSS is awesome<u>&nbsp;<s>x</s></u></div>
+<div class="test rtl rlo t4">CSS is awesome<m>&#x2026;</m><u>&nbsp;<s></s></u></div>
+</div>
+
+</body></html>

@@ -1,0 +1,12 @@
+== button-valid.html button-ref.html
+fuzzy(0-1,0-3) == button-invalid.html button-ref.html
+fuzzy(0-2,0-5) == button-disabled.html button-disabled-ref.html
+fuzzy(0-2,0-5) == button-dyn-disabled.html button-disabled-ref.html
+fuzzy(0-1,0-3) == button-dyn-not-disabled.html button-ref.html
+fuzzy(0-1,0-3) == button-button.html button-ref.html
+fuzzy(0-1,0-3) == button-reset.html button-ref.html
+fuzzy(0-1,0-3) == button-type-invalid.html button-ref.html
+fuzzy(0-1,0-3) == button-type-barred.html button-ref.html
+fuzzy(0-1,0-3) == button-disabled-fieldset-1.html button-fieldset-ref.html
+fuzzy(0-1,0-3) == button-disabled-fieldset-2.html button-fieldset-ref.html
+fuzzy(0-1,0-4) == button-fieldset-legend.html button-fieldset-legend-ref.html

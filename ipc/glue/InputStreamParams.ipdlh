@@ -1,0 +1,125 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include ProtocolTypes;
+
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PRemoteLazyInputStream;
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace ipc {
+
+struct HeaderEntry
+{
+  nsCString name;
+  nsCString value;
+};
+
+struct StringInputStreamParams
+{
+  nsCString data;
+};
+
+struct FileInputStreamParams
+{
+  uint32_t fileDescriptorIndex;
+  int32_t behaviorFlags;
+  int32_t ioFlags;
+};
+
+struct MultiplexInputStreamParams
+{
+  InputStreamParams[] streams;
+  uint32_t currentStream;
+  nsresult status;
+  bool startedReadingCurrent;
+};
+
+struct SlicedInputStreamParams
+{
+  InputStreamParams stream;
+  uint64_t start;
+  uint64_t length;
+  uint64_t curPos;
+  bool closed;
+};
+
+struct RemoteLazyInputStreamRef
+{
+  nsID id;
+  uint64_t start;
+  uint64_t length;
+};
+
+union RemoteLazyInputStreamParams
+{
+  RemoteLazyInputStreamRef;
+  PRemoteLazyInputStream;
+};
+
+union IPCRemoteStreamType
+{
+  PChildToParentStream;
+  PParentToChildStream;
+};
+
+struct IPCRemoteStreamParams
+{
+  // If this is true, the stream will send data only when the first operation
+  // is done on the destination side. The benefit of this is that we do not
+  // send data if not needed. On the other hand, it could have a performance
+  // issue.
+  bool delayedStart;
+
+  IPCRemoteStreamType stream;
+
+  int64_t length;
+};
+
+union InputStreamParams
+{
+  StringInputStreamParams;
+  FileInputStreamParams;
+  BufferedInputStreamParams;
+  MIMEInputStreamParams;
+  MultiplexInputStreamParams;
+  SlicedInputStreamParams;
+  RemoteLazyInputStreamParams;
+  InputStreamLengthWrapperParams;
+  IPCRemoteStreamParams;
+  EncryptedFileInputStreamParams;
+};
+
+struct EncryptedFileInputStreamParams
+{
+  FileInputStreamParams fileInputStreamParams;
+  uint8_t[] key;
+  uint32_t blockSize;
+};
+
+struct BufferedInputStreamParams
+{
+  InputStreamParams? optionalStream;
+  uint32_t bufferSize;
+};
+
+struct MIMEInputStreamParams
+{
+  InputStreamParams? optionalStream;
+  HeaderEntry[] headers;
+  bool startedReading;
+};
+
+struct InputStreamLengthWrapperParams
+{
+  InputStreamParams stream;
+  int64_t length;
+  bool consumed;
+};
+
+} // namespace ipc
+} // namespace mozilla

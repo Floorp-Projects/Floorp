@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1060896
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1060896</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="application/javascript">
+
+  /**
+   * Test for Bug 1060896; tests that loading a video inside an audio element works.
+   **/
+
+  var manager = new MediaTestManager;
+
+  function error(event) {
+    var a = event.target;
+    ok(!a.mozHasAudio, "Media must've had no active tracks to play");
+    a.removeEventListener("error", error);
+    a.removeEventListener("ended", ended);
+    removeNodeAndSource(a);
+    manager.finished(a.token);
+  }
+
+  function ended(event) {
+    var a = event.target;
+    a.removeEventListener("error", error);
+    a.removeEventListener("ended", ended);
+    removeNodeAndSource(a);
+    manager.finished(a.token);
+  }
+
+  function initTest(test, token) {
+    var a = document.createElement('audio');
+    a.token = token;
+    manager.started(token);
+    a.autoplay = true;
+
+    a.addEventListener("error", error);
+    a.addEventListener("ended", ended);
+
+    a.src = test.name;
+  }
+
+  var videos = getPlayableVideos(gSmallTests);
+  // Bug 1216012, skip the test on emulator-kk.
+  if (getAndroidVersion() == 19) {
+    todo(false, "Test disabled on emulator-kk.");
+  } else {
+    manager.runTests(videos, initTest);
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1060896">Mozilla Bug 1060896</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for preference not to use document colors</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  #one, #three { background: blue; color: yellow; border: thin solid red; column-rule: 2px solid green; text-shadow: 2px 2px green; box-shadow: 3px 7px blue; }
+  #two { background: transparent; border: thin solid; }
+  #five, #six {border: thick solid red; border-inline-start-color:green; border-inline-end-color:blue}
+  #seven {
+    border: 3px solid;
+  }
+  #eight {
+    border: 10px solid transparent;
+    border-image: repeating-linear-gradient(45deg, blue, blue 1%, red 1%, red 8%) 10;
+  }
+  #nine {
+    border: 10px solid blue;
+    border-image: none;
+  }
+
+  /* XXX also test rgba() */
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=58048">Mozilla Bug 58048</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=255411">Mozilla Bug 255411</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1430969">Mozilla Bug 1430969</a>
+<div id="display">
+
+<div id="one">Hello</div>
+<div id="two">Hello</div>
+<input id="three" type="button" value="Hello">
+<input id="four" type="button" value="Hello">
+<div id="five" dir="ltr">Hello</div>
+<div id="six" dir="rtl">Hello</div>
+<div id="seven">Hello</div>
+<div id="eight">I have a border-image</div>
+<div id="nine">I do not have a border-image</div>
+
+<input id="ten" type="button" value="Hello"><!-- Nothing should match this -->
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout('nsPresContext internally delays applying prefs using an nsITimer');
+
+var cs1 = getComputedStyle(document.getElementById("one"), "");
+var cs2 = getComputedStyle(document.getElementById("two"), "");
+var cs3 = getComputedStyle(document.getElementById("three"), "");
+var cs4 = getComputedStyle(document.getElementById("four"), "");
+var cs5 = getComputedStyle(document.getElementById("five"), "");
+var cs6 = getComputedStyle(document.getElementById("six"), "");
+var cs7 = getComputedStyle(document.getElementById("seven"), "");
+var cs8 = getComputedStyle(document.getElementById("eight"), "");
+var cs9 = getComputedStyle(document.getElementById("nine"), "");
+var cs10 = getComputedStyle(document.getElementById("ten"), "");
+
+function pushPrefEnvAndWait(args, cb) {
+  SpecialPowers.pushPrefEnv(args).then(cb)
+}
+
+pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 1]]}, part1);
+
+var transparentBackgroundColor;
+
+function part1()
+{
+    isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color applies");
+    isnot(cs1.color, cs2.color, "color applies");
+    isnot(cs1.borderTopColor, cs2.borderTopColor, "border-top-color applies");
+    isnot(cs1.borderRightColor, cs2.borderRightColor,
+          "border-right-color applies");
+    isnot(cs1.borderLeftColor, cs2.borderLeftColor,
+          "border-left-color applies");
+    isnot(cs1.borderBottomColor, cs2.borderBottomColor,
+          "border-top-color applies");
+    isnot(cs1.columnRuleColor, cs2.columnRuleColor,
+          "column-rule-color applies");
+    isnot(cs1.textShadow, cs2.textShadow,
+          "text-shadow applies");
+    isnot(cs1.boxShadow, cs2.boxShadow,
+          "box-shadow applies");
+    is(cs1.borderTopColor, cs3.borderTopColor, "border-top-color applies");
+    is(cs1.borderRightColor, cs3.borderRightColor,
+       "border-right-color applies");
+    is(cs1.borderLeftColor, cs3.borderLeftColor,
+       "border-left-color applies");
+    is(cs1.borderBottomColor, cs3.borderBottomColor, 
+       "border-top-color applies");
+    is(cs1.columnRuleColor, cs3.columnRuleColor,
+       "column-rule-color applies");
+    is(cs1.textShadow, cs3.textShadow,
+       "text-shadow applies");
+    is(cs1.boxShadow, cs3.boxShadow,
+       "box-shadow applies");
+    isnot(cs5.borderRightColor, cs2.borderRightColor,
+          "border-inline-end-color applies");
+    isnot(cs5.borderLeftColor, cs2.borderLeftColor,
+          "border-inline-start-color applies");
+    isnot(cs6.borderRightColor, cs2.borderRightColor,
+          "border-inline-start-color applies");
+    isnot(cs6.borderLeftColor, cs2.borderLeftColor,
+          "border-inline-end-color applies");
+    is(cs1.color, cs3.color, "color applies");
+    is(cs1.backgroundColor, cs3.backgroundColor, "background-color applies");
+    isnot(cs3.backgroundColor, cs4.backgroundColor, "background-color applies");
+    isnot(cs3.color, cs4.color, "color applies");
+    isnot(cs3.borderTopColor, cs4.borderTopColor, "border-top-color applies");
+    isnot(cs3.borderRightColor, cs4.borderRightColor,
+          "border-right-color applies");
+    isnot(cs3.borderLeftColor, cs4.borderLeftColor,
+          "border-left-color applies");
+    isnot(cs3.borderBottomColor, cs4.borderBottomColor,
+          "border-bottom-color applies");
+    isnot(cs8.borderImageSource, cs9.borderImageSource, "border-image-source applies");
+    transparentBackgroundColor = cs2.backgroundColor;
+    pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 2]]}, part2);
+}
+
+function systemColor(c) {
+    let {r, g, b, a} = SpecialPowers.wrap(window).InspectorUtils.colorToRGBA(c, document);
+    if (a == 1)
+      return `rgb(${r}, ${g}, ${b})`;
+    // Match ColorComponentToFloat's max number of decimals (3), and remove trailing zeros.
+    let alphaString = a.toFixed(3);
+    if (alphaString.includes(".")) {
+      while (alphaString[alphaString.length - 1] == "0")
+        alphaString = alphaString.substring(0, alphaString.length - 1);
+    }
+    return `rgba(${r}, ${g}, ${b}, ${alphaString})`;
+}
+
+function part2()
+{
+    isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color transparency preserved (opaque)");
+    is(cs2.backgroundColor, transparentBackgroundColor, "background-color transparency is preserved (transparent)");
+    is(cs1.color, cs2.color, "color is blocked");
+    is(cs1.borderTopColor, cs2.borderTopColor, "border-top-color is blocked");
+    is(cs1.borderRightColor, cs2.borderRightColor,
+       "border-right-color is blocked");
+    is(cs1.borderLeftColor, cs2.borderLeftColor,
+       "border-left-color is blocked");
+    is(cs5.borderRightColor, cs2.borderRightColor,
+       "border-inline-end-color is blocked");
+    is(cs5.borderLeftColor, cs2.borderLeftColor,
+       "border-inline-start-color is blocked");
+    is(cs6.borderRightColor, cs2.borderRightColor,
+       "border-inline-start-color is blocked");
+    is(cs6.borderLeftColor, cs2.borderLeftColor,
+       "border-inline-end-color is blocked");
+    is(cs1.borderBottomColor, cs2.borderBottomColor,
+       "border-bottom-color is blocked");
+    is(cs1.columnRuleColor, cs2.columnRuleColor,
+       "column-rule-color is blocked");
+    is(cs1.textShadow, cs2.textShadow,
+       "text-shadow is blocked");
+    is(cs1.boxShadow, cs2.boxShadow,
+       "box-shadow is blocked");
+    is(cs3.backgroundColor, cs10.backgroundColor, "background-color transparency preserved (opaque)");
+    is(cs3.color, cs10.color, "color is blocked");
+    is(cs3.borderTopColor, cs4.borderTopColor, "border-top-color is blocked");
+    is(cs3.borderRightColor, cs4.borderRightColor,
+       "border-right-color is blocked");
+    is(cs3.borderLeftColor, cs4.borderLeftColor,
+       "border-left-color is blocked");
+    is(cs3.borderBottomColor, cs4.borderBottomColor,
+       "border-bottom-color is blocked");
+    is(cs4.backgroundColor, systemColor("ButtonFace"), "background-color not broken on inputs");
+    is(cs4.color, systemColor("ButtonText"), "color not broken on inputs");
+    is(cs4.borderTopColor, systemColor("ThreeDLightShadow"), "border-top-color not broken on inputs");
+    is(cs4.borderRightColor, systemColor("ThreeDLightShadow"),
+       "border-right-color not broken on inputs");
+    is(cs4.borderLeftColor, systemColor("ThreeDLightShadow"),
+       "border-left-color not broken on inputs");
+    is(cs4.borderBottomColor, systemColor("ThreeDLightShadow"),
+       "border-bottom-color not broken on inputs");
+    is(cs8.borderImageSource, cs9.borderImageSource, "border-image-source is blocked");
+
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

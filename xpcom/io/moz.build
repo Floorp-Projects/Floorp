@@ -1,0 +1,155 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    "nsIAsyncInputStream.idl",
+    "nsIAsyncOutputStream.idl",
+    "nsIBinaryInputStream.idl",
+    "nsIBinaryOutputStream.idl",
+    "nsICloneableInputStream.idl",
+    "nsIConverterInputStream.idl",
+    "nsIConverterOutputStream.idl",
+    "nsIDirectoryEnumerator.idl",
+    "nsIDirectoryService.idl",
+    "nsIFile.idl",
+    "nsIInputStream.idl",
+    "nsIInputStreamLength.idl",
+    "nsIInputStreamPriority.idl",
+    "nsIInputStreamTee.idl",
+    "nsIIOUtil.idl",
+    "nsILineInputStream.idl",
+    "nsILocalFileWin.idl",
+    "nsIMultiplexInputStream.idl",
+    "nsIObjectInputStream.idl",
+    "nsIObjectOutputStream.idl",
+    "nsIOutputStream.idl",
+    "nsIPipe.idl",
+    "nsISafeOutputStream.idl",
+    "nsIScriptableBase64Encoder.idl",
+    "nsIScriptableInputStream.idl",
+    "nsISeekableStream.idl",
+    "nsIStorageStream.idl",
+    "nsIStreamBufferAccess.idl",
+    "nsIStringStream.idl",
+    "nsITellableStream.idl",
+    "nsIUnicharInputStream.idl",
+    "nsIUnicharLineInputStream.idl",
+    "nsIUnicharOutputStream.idl",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    XPIDL_SOURCES += [
+        "nsILocalFileMac.idl",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    EXPORTS += ["nsLocalFileWin.h"]
+    EXPORTS.mozilla += [
+        "FileUtilsWin.h",
+    ]
+    SOURCES += [
+        "FileUtilsWin.cpp",
+        "nsLocalFileWin.cpp",
+    ]
+else:
+    EXPORTS += ["nsLocalFileUnix.h"]
+    SOURCES += [
+        "nsLocalFileUnix.cpp",
+    ]
+
+XPIDL_MODULE = "xpcom_io"
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+EXPORTS += [
+    "FileDescriptorFile.h",
+    "nsAnonymousTemporaryFile.h",
+    "nsAppDirectoryServiceDefs.h",
+    "nsDirectoryService.h",
+    "nsDirectoryServiceDefs.h",
+    "nsDirectoryServiceUtils.h",
+    "nsEscape.h",
+    "nsLinebreakConverter.h",
+    "nsLocalFile.h",
+    "nsLocalFileCommon.h",
+    "nsMultiplexInputStream.h",
+    "nsNativeCharsetUtils.h",
+    "nsScriptableInputStream.h",
+    "nsStorageStream.h",
+    "nsStreamUtils.h",
+    "nsStringStream.h",
+    "nsUnicharInputStream.h",
+    "nsWildCard.h",
+    "SpecialSystemDirectory.h",
+]
+
+EXPORTS.mozilla += [
+    "Base64.h",
+    "FilePreferences.h",
+    "InputStreamLengthHelper.h",
+    "InputStreamLengthWrapper.h",
+    "NonBlockingAsyncInputStream.h",
+    "SeekableStreamWrapper.h",
+    "SlicedInputStream.h",
+    "SnappyCompressOutputStream.h",
+    "SnappyFrameUtils.h",
+    "SnappyUncompressInputStream.h",
+]
+
+UNIFIED_SOURCES += [
+    "Base64.cpp",
+    "crc32c.c",
+    "FileDescriptorFile.cpp",
+    "FilePreferences.cpp",
+    "InputStreamLengthHelper.cpp",
+    "InputStreamLengthWrapper.cpp",
+    "NonBlockingAsyncInputStream.cpp",
+    "nsAnonymousTemporaryFile.cpp",
+    "nsAppFileLocationProvider.cpp",
+    "nsBinaryStream.cpp",
+    "nsDirectoryService.cpp",
+    "nsEscape.cpp",
+    "nsInputStreamTee.cpp",
+    "nsIOUtil.cpp",
+    "nsLinebreakConverter.cpp",
+    "nsLocalFileCommon.cpp",
+    "nsMultiplexInputStream.cpp",
+    "nsNativeCharsetUtils.cpp",
+    "nsPipe3.cpp",
+    "nsScriptableBase64Encoder.cpp",
+    "nsScriptableInputStream.cpp",
+    "nsSegmentedBuffer.cpp",
+    "nsStorageStream.cpp",
+    "nsStreamUtils.cpp",
+    "nsStringStream.cpp",
+    "nsUnicharInputStream.cpp",
+    "nsWildCard.cpp",
+    "SeekableStreamWrapper.cpp",
+    "SlicedInputStream.cpp",
+    "SnappyCompressOutputStream.cpp",
+    "SnappyFrameUtils.cpp",
+    "SnappyUncompressInputStream.cpp",
+    "SpecialSystemDirectory.cpp",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    SOURCES += [
+        "CocoaFileUtils.mm",
+    ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["OS_ARCH"] == "Linux" and "lib64" in CONFIG["libdir"]:
+    DEFINES["HAVE_USR_LIB64_DIR"] = True
+
+LOCAL_INCLUDES += [
+    "!..",
+    "../build",
+]

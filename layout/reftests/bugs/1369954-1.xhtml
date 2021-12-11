@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style>
+      div > span { color: green; }
+      p > span { color: red !important; }
+      p { color: purple }
+    </style>
+    <script>
+      customElements.define("custom-div", class extends HTMLDivElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+
+          let style = document.createElement("style");
+          style.textContent = "p > span { color: red; } p { color: purple }";
+          let span = document.createElement("span");
+          span.textContent = "This should not be green";
+          let p = document.createElement("p");
+          p.append(document.createElement("slot"));
+          this.shadowRoot.append(style, span, p);
+        }
+      }, {
+        extends: "div",
+      });
+    </script>
+  </head>
+  <body>
+    <div is="custom-div">
+      <span>This should be green</span><br/>
+      <b>This should be purple</b>
+    </div>
+  </body>
+</html>

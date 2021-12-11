@@ -1,0 +1,44 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * An optional interface for embedding clients wishing to receive
+ * notifications for when a tooltip should be displayed or removed.
+ * The embedder implements this interface on the web browser chrome
+ * object associated with the window that notifications are required
+ * for.
+ *
+ * @see nsITooltipTextProvider
+ */
+[scriptable, uuid(44b78386-1dd2-11b2-9ad2-e4eee2ca1916)]
+interface nsITooltipListener : nsISupports
+{
+    /**
+     * Called when a tooltip should be displayed.
+     *
+     * @param aXCoords The tooltip left edge X coordinate.
+     * @param aYCoords The tooltip top edge Y coordinate.
+     * @param aTipText The text to display in the tooltip, typically obtained
+     *        from the TITLE attribute of the node (or containing parent)
+     *        over which the pointer has been positioned.
+     * @param aTipDir  The direction (ltr or rtl) in which to display the text
+     *
+     * @note
+     * Coordinates are specified in pixels, relative to the top-left
+     * corner of the browser area.
+     *
+     * @return <code>NS_OK</code> if the tooltip was displayed.
+     */
+    void onShowTooltip(in long aXCoords, in long aYCoords, in AString aTipText,
+                       in AString aTipDir);
+
+    /**
+     * Called when the tooltip should be hidden, either because the pointer
+     * has moved or the tooltip has timed out.
+     */
+    void onHideTooltip();
+};

@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for pointer events with preserve-3d</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div>
+  <div>
+    <div style="perspective: 100px; transform-style:preserve-3d; transform: translateX(100px)">
+      <div style="display:inline">
+        <div id="color" style="transform-style:flat; transform: translateX(-100px); display: block; background-color: blue; width: 200px; height: 200px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script class="testbody" type="text/javascript">
+function runTest() {
+    var target = document.elementFromPoint(200, 200);
+    ok(target == document.getElementById("color"), "Find the right target.");
+    var target = document.elementFromPoint(16, 16);
+    ok(target == document.getElementById("color"), "Find the right target.");
+}
+
+runTest();
+</script>
+</body>
+</html>

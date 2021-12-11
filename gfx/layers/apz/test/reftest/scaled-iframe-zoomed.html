@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html reftest-resolution="1.5">
+<style>
+div {
+  margin-left: 100px;
+  margin-top: 100px;
+  width: 200px;
+  height: 200px;
+  border: 10px blue solid;
+  transform: scale(2);
+}
+iframe {
+  width: 150px;
+  height: 150px;
+  border: 10px black solid;
+}
+</style>
+<div>
+<!--
+  this data:text/html is generated from single-lined version of
+  iframe-zoomed-child.html by encodeURIComponent().
+  -->
+<iframe src="data:text/html,%3Cstyle%3Ediv%20%7Bposition%3A%20absolute%3Bbackground-color%3A%20green%3Bwidth%3A%2010px%3Bheight%3A%2010px%3B%7D%3C%2Fstyle%3E%3Cdiv%20style%3D%22top%3A%200%3B%20left%3A%200%3B%22%3E%3C%2Fdiv%3E%3Cdiv%20style%3D%22top%3A%200%3B%20right%3A%200%3B%22%3E%3C%2Fdiv%3E%3Cdiv%20style%3D%22bottom%3A%200%3B%20right%3A%200%3B%22%3E%3C%2Fdiv%3E%3Cdiv%20style%3D%22bottom%3A%200%3B%20left%3A%200%3B%22%3E%3C%2Fdiv%3E">
+</iframe>
+</div>
+</html>

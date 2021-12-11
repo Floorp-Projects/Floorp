@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<style>
+  .not-animated {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #eee;
+  }
+
+  .simple-animation {
+    display: inline-block;
+
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: red;
+
+    animation: move 200s infinite;
+  }
+
+  .multiple-animations {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #eee;
+
+    animation: move 200s infinite , glow 100s 5;
+    animation-timing-function: ease-out;
+    animation-direction: reverse;
+    animation-fill-mode: both;
+  }
+
+  .transition {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #f06;
+
+    transition: width 500s ease-out;
+  }
+  .transition.get-round {
+    width: 200px;
+  }
+
+  .long-animation {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: gold;
+
+    animation: move 100s;
+  }
+
+  .short-animation {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: purple;
+
+    animation: move 1s;
+  }
+
+  .delayed-animation {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rebeccapurple;
+
+    animation: move 200s 5s infinite;
+  }
+
+  .delayed-transition {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: black;
+
+    transition: width 500s 3s;
+  }
+  .delayed-transition.get-round {
+    width: 200px;
+  }
+
+  .delayed-multiple-animations {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: green;
+
+    animation: move .5s 1s 10, glow 1s .75s 30;
+  }
+
+  .multiple-animations-2 {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: blue;
+
+    animation: move .5s, glow 100s 2s infinite, grow 300s 1s 100;
+  }
+
+  .all-transitions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background: blue;
+    transition: all .2s;
+  }
+  .all-transitions.expand {
+    width: 200px;
+    height: 100px;
+  }
+
+  @keyframes move {
+    100% {
+      transform: translateY(100px);
+    }
+  }
+
+  @keyframes glow {
+    100% {
+      background: yellow;
+    }
+  }
+
+  @keyframes grow {
+    100% {
+      width: 100px;
+    }
+  }
+</style>
+<div class="not-animated"></div>
+<div class="simple-animation"></div>
+<div class="multiple-animations"></div>
+<div class="transition"></div>
+<div class="long-animation"></div>
+<div class="short-animation"></div>
+<div class="delayed-animation"></div>
+<div class="delayed-transition"></div>
+<div class="delayed-multiple-animations"></div>
+<div class="multiple-animations-2"></div>
+<div class="all-transitions"></div>
+<script type="text/javascript">
+  "use strict";
+  // Get the transitions started when the page loads
+  addEventListener("load", function() {
+    document.querySelector(".transition").classList.add("get-round");
+    document.querySelector(".delayed-transition").classList.add("get-round");
+  });
+</script>

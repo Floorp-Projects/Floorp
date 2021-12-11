@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>table-repaint-non-border-collapse</title>
+  <style>
+    table, td, th {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+<table>
+  <tr>
+    <td>xxx</td>
+    <td>yyy</td>
+    <td>zzz</td>
+  </tr>
+</table>
+<script>
+  function foo() {
+    let x=document.getElementsByTagName('td')[0];
+    x.style.border = "5px solid black";
+    let y=document.getElementsByTagName('td')[1];
+    y.innerHTML =  "YYY";
+    document.documentElement.removeAttribute("class");
+  }
+  document.addEventListener("MozReftestInvalidate", foo);
+</script>
+</body>
+</html>

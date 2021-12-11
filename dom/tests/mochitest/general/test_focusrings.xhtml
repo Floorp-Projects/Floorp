@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+<html:style xmlns:html="http://www.w3.org/1999/xhtml" type="text/css">
+* { outline: none; }
+#b3 { outline: auto }
+#l1:-moz-focusring, #l3:-moz-focusring, #b1:-moz-focusring { outline: 2px solid red; }
+#l2:focus, #b2:focus { outline: 2px solid red; }
+</html:style>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+const kIsMac = navigator.platform.includes("Mac");
+
+function snapShot(element) {
+  var rect = element.getBoundingClientRect();
+  adjustedRect = { left: rect.left - 6, top: rect.top - 6,
+                   width: rect.width + 12, height: rect.height + 12 }
+  return SpecialPowers.snapshotRect(window, adjustedRect, "transparent");
+}
+
+async function initTest() {
+  if (kIsMac) {
+    // FIXME: Historically this pref was only respected on mac,
+    // and the test uses that assumption.
+    //
+    // Ideally it should be refactored to test with the different
+    // values of the pref, independently of the platform.
+    await SpecialPowers.pushPrefEnv({
+      "set": [
+        ['accessibility.mouse_focuses_formcontrol', 0],
+      ]
+    });
+  }
+
+  runTest();
+}
+
+function runTest()
+{
+  var isWinOrLinux = navigator.platform.includes("Win") || navigator.platform.includes("Linux");
+
+  function checkFocus(element, visible, testid)
+  {
+    var outline = getComputedStyle(element, "").outlineWidth;
+    is(outline, visible ? "2px" : "0px", testid);
+  }
+
+  // make sure that a focus ring appears on the focused button
+  if (kIsMac) {
+    var focusedButton = $("b3");
+    ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), true)[0], "unfocused shows no ring");
+    focusedButton.focus();
+    ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), false)[0], "focus shows ring");
+  }
+
+  checkFocus($("l1"), false, "initial appearance");
+
+  // we can't really test the situation on Windows where a dialog doesn't show
+  // focus rings until a key is pressed, as the default state depends on what
+  // kind of real user input, mouse or key, was last entered. But we can handle
+  // the test regardless of which user input last occurred.
+  $("l1").focus();
+  var expectedVisible = (!isWinOrLinux || getComputedStyle($("l1"), "").outlineWidth == "2px");
+  testHTMLElements(htmlElements, isWinOrLinux && !expectedVisible);
+
+  $("l1").focus();
+  checkFocus($("l1"), expectedVisible, "appearance on list after focus() with :moz-focusring");
+  $("l2").focus();
+
+  checkFocus($("l2"), true, "appearance on list after focus() with :focus");
+
+  is(getComputedStyle($("l1"), "").outlineWidth, "0px", "appearance on previous list after focus() with :focus");
+
+  synthesizeMouse($("l1"), 4, 4, { });
+  checkFocus($("l1"), false, "appearance on list after mouse focus with :moz-focusring");
+  synthesizeMouse($("l2"), 4, 4, { });
+  checkFocus($("l2"), true, "appearance on list after mouse focus with :focus");
+
+  synthesizeMouse($("b1"), 4, 4, { });
+  checkFocus($("b1"), false, "appearance on button after mouse focus with :moz-focusring");
+
+  synthesizeMouse($("b2"), 4, 4, { });
+  checkFocus($("b2"), !kIsMac, "appearance on button after mouse focus with :focus");
+
+  // after a key is pressed, the focus ring will always be visible
+  $("l2").focus();
+  synthesizeKey("KEY_Tab");
+  checkFocus($("l3"), true, "appearance on list after tab focus");
+
+  if (kIsMac) {
+    SpecialPowers.pushPrefEnv({"set": [['accessibility.mouse_focuses_formcontrol', 1]]}, testMacFocusesFormControl);
+  }
+  else {
+    SimpleTest.finish();
+  }
+}
+
+function testMacFocusesFormControl()
+{
+  testHTMLElements(htmlElementsMacPrefSet, false);
+  SimpleTest.finish();
+}
+
+var htmlElements = [
+  "<button id='elem'>Button</button>",
+  "<input id='elem' type='button'>",
+  "<input id='elem' type='checkbox'>",
+  "<input id='elem' class='canfocus'>",
+  "<input id='elem' type='password' class='canfocus'>",
+  "<textarea id='elem' class='canfocus'></textarea>",
+  "<select id='elem' class='canfocus'><option>One</select>",
+  "<select id='elem' rows='5' class='canfocus'><option>One</select>",
+  "<div id='elem' tabindex='0' class='canfocus' style='width: 10px; height: 10px;'></div>",
+  "<a href='about:blank' class='canfocus' onclick='return false;'>about:blank</a>",
+];
+
+var htmlElementsMacPrefSet = [
+  "<button id='elem' class='canfocus'>Button</button>",
+  "<input id='elem' class='canfocus'>",
+  "<input id='elem' type='button' class='canfocus'>",
+  "<input id='elem' type='checkbox' class='canfocus'>",
+];
+
+function createElement(str) {
+  let doc = new DOMParser().parseFromSafeString(`<html><body>${str}</body></html>`, "text/html");
+  return doc.body.firstChild;
+}
+
+function testHTMLElements(list, expectedNoRingsOnWin) {
+  var childwin = frames[0];
+  var childdoc = childwin.document;
+  var container = childdoc.getElementById("container");
+  for (var e = 0; e < list.length; e++) {
+    // Using innerHTML would be sanitized, so use the DOM parser instead to
+    // create the elements.
+    var elem = childdoc.adoptNode(createElement(list[e]));
+    container.appendChild(elem);
+
+    var shouldFocus = !kIsMac || (elem.className == "canfocus");
+    var ringSize = (shouldFocus ? (expectedNoRingsOnWin ? 2 : 1) : 0) + "px";
+
+    var expectedMatchWithMouse = shouldFocus && !expectedNoRingsOnWin;
+    var mouseRingSize = ringSize;
+    if (shouldFocus) {
+      var textControl = (function() {
+        if (elem.localName == "textarea")
+          return true;
+        if (elem.localName == "input")
+          return elem.type == "text" || elem.type == "password";
+        return false;
+      }());
+      expectedMatchWithMouse = textControl;
+      mouseRingSize = textControl ? "1px" : "2px";
+    }
+
+    if (elem.localName == "a") {
+      mouseRingSize = ringSize = "0px";
+      expectedMatchWithMouse = expectedMatchWithMouse && !kIsMac;
+    }
+
+    synthesizeMouse(elem, 8, 8, { }, childwin);
+    is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + list[e]);
+    is(childwin.getComputedStyle(elem).outlineWidth, mouseRingSize, "mouse click on " + list[e] + " ring");
+    is(elem.matches(":-moz-focusring"), expectedMatchWithMouse, "mouse click on " + list[e] + " selector");
+
+    if (childdoc.activeElement)
+      childdoc.activeElement.blur();
+
+    ringSize = mouseRingSize;
+    if (kIsMac && !shouldFocus && elem.localName != "a") {
+      ringSize = "1px";
+    }
+
+    elem.focus();
+    is(childdoc.activeElement, elem, "focus() on " + list[e]);
+    is(childwin.getComputedStyle(elem).outlineWidth, ringSize,
+       "focus() on " + list[e] + " ring");
+
+    childdoc.activeElement.blur();
+
+    // Clear out the container for the next test.
+    while (container.firstChild) {
+      container.firstChild.remove();
+    }
+  }
+}
+
+SimpleTest.waitForFocus(initTest);
+
+]]>
+</script>
+
+<richlistbox id="l1" class="plain" height="20"/>
+<richlistbox id="l2" class="plain" height="20"/>
+<richlistbox id="l3" class="plain" height="20"/>
+<button id="b1" label="Button"/>
+<button id="b2" label="Button"/>
+<button id="b3" label="Button"/>
+
+<iframe id="child" src="file_focusrings.html"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+</window>

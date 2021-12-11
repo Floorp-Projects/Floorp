@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+-->
+<head>
+  <title>Test for XHTML serializer + innerHtml, bug 545644</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=545644">Mozilla Bug </a>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testInner () {
+  var div = document.getElementById("test_inner");
+
+    try {
+      div.innerHTML = "some \u00A0 &amp;nbsp; text";
+      ok(false, "innerHTML in xhtml test failed, no exception by the parser when giving an unexpected entity"+e);
+    } catch (e) {
+      ok (true, "innerHTML in xhtml test ok");
+    }
+
+    try {
+      div.innerHTML = "some \u00A0 text";
+      div.innerHTML += "!";
+      ok (true, "innerHTML in xhtml test ok");
+    } catch (e) {
+      ok(false, "innerHTML in xhtml test failed, unexpected exception "+e);
+    }
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testInner);
+
+</script>
+</pre>
+<div id="test_inner"></div>
+</body>
+</html>
+
+

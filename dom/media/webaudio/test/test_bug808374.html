@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bug 808374</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+try {
+  var ctx = new AudioContext();
+  ctx.createBuffer(0, 1, ctx.sampleRate);
+} catch (e) {
+  ok(true, "The test should not crash during CC");
+}
+
+</script>
+</pre>
+</body>
+</html>

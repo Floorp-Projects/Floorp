@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=763689
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test behavior of 'min-height:auto' and 'min-width:auto' (Bug 763689 and Bug 1304636)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=763689">Mozilla Bug 763689</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1304636">Mozilla Bug 1304636</a>
+<body>
+<div id="display">
+  <div id="block-item">abc</div>
+
+  <div style="display: flex">
+    <div id="horizontal-flex-item">abc</div>
+    <div id="horizontal-flex-item-OH" style="overflow: hidden">def</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column">
+    <div id="vertical-flex-item">abc</div>
+    <div id="vertical-flex-item-OH" style="overflow: hidden">def</div>
+  </div>
+
+  <div style="display: grid">
+    <div id="grid-item"></div>
+    <div id="grid-item-OH" style="overflow: hidden"></div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/**
+ * Test 'min-height:auto' and 'min-width:auto' (Bug 763689 and Bug 1304636)
+ * ========================================================
+ * This test checks the computed-style value of the "auto" keyword introduced
+ * for the "min-height" and "min-width" properties in CSS3 Flexbox Section 4.5
+ * and CSS3 Grid Section 6.2.
+ *   https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+ *   https://www.w3.org/TR/css-grid-1/#grid-item-sizing
+ *
+ * Quoting that chunk of spec:
+ *     # auto
+ *     #   On a flex item whose overflow is visible in the main axis,
+ *     #   when specified on the flex item’s main-axis min-size property,
+ *     #   specifies an automatic minimum size. It otherwise computes to 0
+ *     #   (unless otherwise defined by a future specification).
+ *
+ */
+
+// Given an element ID, this function sets the corresponding
+// element's inline-style min-width and min-height explicitly to "auto".
+function setElemMinSizesToAuto(aElemId) {
+  var elem = document.getElementById(aElemId);
+
+  is(elem.style.minWidth, "", "min-width should be initially unset");
+  elem.style.minWidth = "auto";
+  is(elem.style.minWidth, "auto", "min-width should accept 'auto' value");
+
+  is(elem.style.minHeight, "", "min-height should be initially unset");
+  elem.style.minHeight = "auto";
+  is(elem.style.minHeight, "auto", "min-height should accept 'auto' value");
+}
+
+// Given an element ID, this function compares the corresponding element's
+// computed min-width and min-height against expected values.
+function checkElemMinSizes(aElemId,
+                           aExpectedMinWidth,
+                           aExpectedMinHeight)
+{
+  var elem = document.getElementById(aElemId);
+  is(window.getComputedStyle(elem).minWidth,  aExpectedMinWidth,
+     "checking min-width of " + aElemId);
+
+  is(window.getComputedStyle(elem).minHeight, aExpectedMinHeight,
+     "checking min-height of " + aElemId);
+}
+
+// This function goes through all the elements we're interested in
+// and checks their computed min-sizes against expected values,
+// farming out each per-element job to checkElemMinSizes.
+function checkAllTheMinSizes() {
+  // This is the normal part -- generally, the default value of "min-width"
+  // and "min-height" (auto) computes to "0px".
+  checkElemMinSizes("block-item", "0px", "0px");
+
+  // ...but for a flex item or grid item, "min-width: auto" and
+  // "min-height: auto" both compute to "auto" (even in cases where
+  // we know it'll actually resolve to 0 in layout, like for example
+  // when the item has "overflow:hidden").
+  checkElemMinSizes("horizontal-flex-item",    "auto", "auto");
+  checkElemMinSizes("horizontal-flex-item-OH", "auto", "auto");
+  checkElemMinSizes("vertical-flex-item",      "auto", "auto");
+  checkElemMinSizes("vertical-flex-item-OH",   "auto", "auto");
+  checkElemMinSizes("grid-item",               "auto", "auto");
+  checkElemMinSizes("grid-item-OH",            "auto", "auto");
+}
+
+// Main test function
+function main() {
+  // First: check that min-sizes are what we expect, with min-size properties
+  // at their initial value.
+  checkAllTheMinSizes();
+
+  // Now, we *explicitly* set min-size properties to "auto"...
+  var elemIds = [ "block-item",
+                  "horizontal-flex-item",
+                  "horizontal-flex-item-OH",
+                  "vertical-flex-item",
+                  "vertical-flex-item-OH",
+                  "grid-item",
+                  "grid-item-OH"];
+  elemIds.forEach(setElemMinSizesToAuto);
+
+  // ...and try again (should have the same result):
+  checkAllTheMinSizes();
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>

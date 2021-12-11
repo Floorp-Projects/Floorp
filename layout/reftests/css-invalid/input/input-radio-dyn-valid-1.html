@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when there are no radio suffering from being missing in the radio
+             group, all radio should not suffer from being missing. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i1').checked = true;
+                document.documentElement.className='';">
+    <input class='notinvalid' id='i1' name='foo' type='radio' required>
+    <input class='notinvalid' id='i2' name='foo' type='radio'>
+  </body>
+</html>

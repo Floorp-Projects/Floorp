@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "messaging",
+  "version": "1.0",
+  "description": "Test messaging between app and web extension",
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+  "applications": {
+    "gecko": {
+      "id": "messaging@tests.mozilla.org"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging"
+  ]
+}

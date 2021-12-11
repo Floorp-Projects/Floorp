@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Eme createMediaKeys helper page</title>
+<script>
+// This script waits for a message then attempts to requestMediaKeySystemAccess
+// then createMediaKeys. On success posts 'successCreatingMediaKeys' to the
+// source of the message, on failure posts 'failureCreatingMediaKeys' and a
+// description of the failure to the source of the message.
+
+async function createMediaKeys() {
+  const clearKeyOptions = [
+    {
+      initDataTypes: ["webm"],
+      videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }],
+    },
+  ];
+
+  let access = await navigator.requestMediaKeySystemAccess(
+    "org.w3.clearkey",
+    clearKeyOptions
+  );
+
+  return access.createMediaKeys();
+}
+function setupMessageListener() {
+  window.onmessage = async event => {
+    // We don't bother checking the message data since it should always be
+    // telling us to create media keys.
+    try {
+      let keys = await createMediaKeys();
+      if (!keys) {
+        event.source.postMessage("failureCreatingMediaKeys no keys", "*");
+        return;
+      }
+      event.source.postMessage("successCreatingMediaKeys", "*");
+    } catch (e) {
+      event.source.postMessage(`failureCreatingMediaKeys ${e}`, "*");
+    }
+  };
+}
+window.onload = setupMessageListener;
+</script>
+</head>
+<body>
+</body>
+</html>

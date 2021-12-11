@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 5;
+
+function test_seek5(v, seekTime, is, ok, finish) {
+
+// Test for a seek, followed by a play before the seek completes, ensure we play at the end of the seek.
+var startPassed = false;
+var endPassed = false;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return;
+
+  v.currentTime=seekTime;
+}
+
+function seekStarted() {
+  if (completed)
+    return;
+  ok(v.currentTime >= seekTime - 0.1, "Video currentTime should be around " + seekTime + ": " + v.currentTime);
+  startPassed = true;
+  v.play();
+}
+
+function seekEnded() {
+  if (completed)
+    return;
+  endPassed = true;
+}
+
+function playbackEnded() {
+  if (completed)
+    return;
+  ok(startPassed, "Got seeking event");
+  ok(endPassed, "Got seeked event");
+  completed = true;
+  finish();
+}
+
+v.addEventListener("ended", playbackEnded);
+v.addEventListener("loadedmetadata", startTest);
+v.addEventListener("seeking", seekStarted);
+v.addEventListener("seeked", seekEnded);
+
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

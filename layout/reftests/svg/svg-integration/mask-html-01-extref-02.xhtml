@@ -1,0 +1,15 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:svg="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+<body style="margin:0">
+  <div style="mask: url(mask-html-01-resource.svg#m1); width:500px; height:500px; background:lime;"></div>
+  <svg:svg height="0">
+    <!-- use an empty g to force mask-html-01-resource.svg to load before onload -->
+    <svg:use xlink:href="mask-html-01-resource.svg#empty" />
+  </svg:svg>
+</body>
+</html>

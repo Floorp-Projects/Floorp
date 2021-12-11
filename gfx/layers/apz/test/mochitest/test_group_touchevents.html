@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various touch tests that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var basic_pan_prefs = getPrefs("TOUCH_EVENTS:PAN");
+
+var subtests = [
+  // Simple tests to exercise basic panning behaviour
+  {"file": "helper_basic_pan.html", "prefs": [
+    ["dom.visualviewport.enabled", true],
+    ...basic_pan_prefs
+  ]},
+  {"file": "helper_div_pan.html", "prefs": basic_pan_prefs},
+  {"file": "helper_iframe_pan.html", "prefs": basic_pan_prefs},
+
+  // Simple test to exercise touch-tapping behaviour
+  {"file": "helper_tap.html"},
+  // Tapping, but with a full-zoom applied
+  {"file": "helper_tap_fullzoom.html"},
+
+  // For the following two tests, disable displayport suppression to make sure it
+  // doesn't interfere with the test by scheduling paints non-deterministically.
+  {"file": "helper_scrollto_tap.html?true",
+   "prefs": [["apz.paint_skipping.enabled", true]],
+   "dp_suppression": false},
+  {"file": "helper_scrollto_tap.html?false",
+   "prefs": [["apz.paint_skipping.enabled", false]],
+   "dp_suppression": false},
+
+  // Add new subtests to test_group_touch_events-4.html, not this file.
+];
+
+if (isApzEnabled()) {
+  ok(window.TouchEvent, "Check if TouchEvent is supported (it should be, the test harness forces it on everywhere)");
+  if (getPlatform() == "android") {
+    // This has a lot of subtests, and Android emulators are slow.
+    SimpleTest.requestLongerTimeout(2);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

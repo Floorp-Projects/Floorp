@@ -1,0 +1,78 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/GamepadMessageUtils.h";
+
+using mozilla::dom::GamepadPoseState from "mozilla/dom/GamepadPoseState.h";
+using mozilla::dom::GamepadTouchState from "mozilla/dom/GamepadTouchState.h";
+using mozilla::dom::GamepadLightIndicatorType from "mozilla/dom/GamepadLightIndicatorBinding.h";
+using mozilla::dom::GamepadMappingType from "mozilla/dom/GamepadBinding.h";
+using mozilla::dom::GamepadHand from "mozilla/dom/GamepadBinding.h";
+using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
+
+namespace mozilla {
+namespace dom {
+
+struct GamepadAdded {
+  nsString id;
+  GamepadMappingType mapping;
+  GamepadHand hand;
+  uint32_t display_id;
+  uint32_t num_buttons;
+  uint32_t num_axes;
+  uint32_t num_haptics;
+  uint32_t num_lights;
+  uint32_t num_touches;
+};
+
+struct GamepadRemoved {};
+
+struct GamepadAxisInformation {
+  uint32_t axis;
+  double value;
+};
+
+struct GamepadButtonInformation {
+  uint32_t button;
+  double value;
+  bool pressed;
+  bool touched;
+};
+
+struct GamepadPoseInformation {
+  GamepadPoseState pose_state;
+};
+
+struct GamepadLightIndicatorTypeInformation {
+  uint32_t light;
+  GamepadLightIndicatorType type;
+};
+
+struct GamepadHandInformation {
+  GamepadHand hand;
+};
+
+struct GamepadTouchInformation {
+  uint32_t index;
+  GamepadTouchState touch_state;
+};
+
+union GamepadChangeEventBody {
+  GamepadAdded;
+  GamepadRemoved;
+  GamepadAxisInformation;
+  GamepadButtonInformation;
+  GamepadHandInformation;
+  GamepadLightIndicatorTypeInformation;
+  GamepadPoseInformation;
+  GamepadTouchInformation;
+};
+
+struct GamepadChangeEvent {
+  GamepadHandle handle;
+  GamepadChangeEventBody body;
+};
+
+} // namespace dom
+} // namespace mozilla

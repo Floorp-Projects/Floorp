@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+webidl CharacterData;
+webidl Node;
+webidl Range;
+
+/*
+Editor Action Listener interface to outside world
+*/
+
+
+/**
+ * A generic editor action listener interface.
+ * <P>
+ * nsIEditActionListener is the interface used by applications wishing to be notified
+ * when the editor modifies the DOM tree.
+ *
+ * Note:  this is the wrong class to implement if you are interested in generic
+ * change notifications.  For generic notifications, you should implement
+ * nsIDocumentObserver.
+ */
+[scriptable, uuid(b22907b1-ee93-11d2-8d50-000064657374)]
+interface nsIEditActionListener : nsISupports
+{
+  /**
+   * Called after the editor deletes a node.
+   * @param aChild    The node to delete
+   * @param aResult   The result of the delete node operation.
+   */
+  void DidDeleteNode(in Node aChild, in nsresult aResult);
+
+  /**
+   * Called after the editor joins 2 nodes.
+   * @param aLeftNode   This node will be merged into the right node
+   * @param aRightNode  The node that will be merged into.
+   *                    There is no requirement that the two nodes be of
+   *                    the same type.
+   * @param aParent     The parent of aRightNode
+   * @param aResult     The result of the join operation.
+   */
+  void DidJoinNodes(in Node aLeftNode,
+                    in Node aRightNode,
+                    in Node aParent,
+                    in nsresult aResult);
+
+  /**
+   * Called after the editor inserts text.
+   * @param aTextNode   This node getting inserted text.
+   * @param aOffset     The offset in aTextNode to insert at.
+   * @param aString     The string that gets inserted.
+   * @param aResult     The result of the insert text operation.
+   */
+  void DidInsertText(in CharacterData       aTextNode,
+                     in long                aOffset,
+                     in AString             aString,
+                     in nsresult            aResult);
+
+  /**
+   * Called before the editor deletes text.
+   * @param aTextNode   This node getting text deleted.
+   * @param aOffset     The offset in aTextNode to delete at.
+   * @param aLength     The amount of text to delete.
+   */
+  void WillDeleteText(in CharacterData       aTextNode,
+                      in long                aOffset,
+                      in long                aLength);
+
+  /**
+   * Called before the editor deletes the ranges.
+   * @param aRangesToDelete     The ranges to be deleted.
+   */
+  void WillDeleteRanges(in Array<Range> aRangesToDelete);
+};

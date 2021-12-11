@@ -1,0 +1,97 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "domstubs.idl"
+
+interface nsIPrincipal;
+webidl Element;
+webidl WindowGlobalParent;
+
+[builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
+interface nsIRemoteTab : nsISupports
+{
+  /**
+   * When set to true, this tells the child to paint and upload layers to
+   * the compositor. When set to false, previous layers are cleared from
+   * the compositor, but only if preserveLayers is also set to false.
+   */
+  attribute boolean renderLayers;
+
+  /**
+   * True if layers are being rendered and the compositor has reported
+   * receiving them.
+   */
+  readonly attribute boolean hasLayers;
+
+  /**
+   * Adjusts the tab's active state in the process priority manager,
+   * allowing its process to be given a lower priority.
+   */
+  void deprioritize();
+
+  /**
+   * As an optimisation, setting the docshell's active state to
+   * inactive also triggers a layer invalidation to free up some
+   * potentially unhelpful memory usage. Calling preserveLayers
+   * will cause the layers to be preserved even for inactive
+   * docshells.
+   */
+  void preserveLayers(in boolean aPreserveLayers);
+
+  readonly attribute uint64_t tabId;
+
+  readonly attribute uint64_t contentProcessId;
+
+  /**
+   * The OS level process Id of the related child process.
+   */
+  readonly attribute int32_t osPid;
+
+  /**
+   * True if we've previously received layers for this tab when switching to
+   * it.
+   */
+  readonly attribute boolean hasPresented;
+
+  /**
+   * Ensures that the content process which has this remote tab has all of the
+   * permissions required to load a document with the given principal.
+   */
+  void transmitPermissionsForPrincipal(in nsIPrincipal aPrincipal);
+
+  /**
+   * Similar to `nsIDocShell.createAboutBlankContentViewer` but on a remote
+   * frame.  The docShell must not yet have navigated away from the initial
+   * about:blank document when this method is called.
+   *
+   * @param aPrincipal the principal to use for the new document.
+   * @param aPartitionedPrincipal the partitioned principal to use for the new
+   *        document.
+   */
+  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
+                                     in nsIPrincipal aPartitionedPrincipal);
+
+  cenum NavigationType : 8 {
+    NAVIGATE_BACK = 0,
+    NAVIGATE_FORWARD = 1,
+    NAVIGATE_INDEX = 2,
+    NAVIGATE_URL = 3
+  };
+
+  /**
+   * Interrupt content scripts if possible/needed to allow chrome scripts in the
+   * content process to run (in particular, to allow navigating through browser
+   * history.
+   */
+  [implicit_jscontext, binaryname(MaybeCancelContentJSExecutionFromScript)]
+  void maybeCancelContentJSExecution(
+      in nsIRemoteTab_NavigationType aNavigationType,
+      [optional] in jsval aCancelContentJSOptions);
+
+  /**
+   * Notify the remote tab that the resolution has changed.
+   */
+  [noscript] void notifyResolutionChanged();
+};

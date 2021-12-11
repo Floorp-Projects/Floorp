@@ -1,0 +1,24 @@
+<html>
+<head>
+<style type="text/css">
+/* This test is really intended for Segoe UI on Windows7;
+   we provide a known fallback font for other platforms where
+   the default font might not handle the diacritic (WinXP) */
+@font-face {
+  font-family: fallback;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+p.test {
+  font-family: "Segoe UI", fallback, sans-serif;
+  font-size: 60px;
+}
+span.test {
+  background: black;
+}
+</style>
+</head>
+<body>
+<p>Diacritic should be hidden by the black background:</p>
+<p class="test">x<span class="test">x&#x302;</span>x</p>
+</body>
+</html>

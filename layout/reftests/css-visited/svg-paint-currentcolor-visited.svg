@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <metadata>
+    <link xmlns="http://www.w3.org/1999/xhtml" rel="author" title="Cameron McCormack" href="mailto:cam@mcc.id.au"/>
+    <link xmlns="http://www.w3.org/1999/xhtml" rel="help" href="https://www.w3.org/TR/SVG2/pservers.html"/>
+    <link xmlns="http://www.w3.org/1999/xhtml" rel="match" href="currentcolor-visited-ref.svg"/>
+    <meta xmlns="http://www.w3.org/1999/xhtml" name="assert" content="currentcolor should resolve against the visited-dependent value of the color property."/>
+  </metadata>
+
+  <style>
+    a:link { color: red; }
+    a:visited { color: green; }
+    rect { fill: currentcolor; stroke: currentcolor; stroke-width: 20px; }
+  </style>
+
+  <a href="visited-page.html"><rect x="10" y="10" width="80" height="80"/></a>
+</svg>

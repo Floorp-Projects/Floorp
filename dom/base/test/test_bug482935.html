@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 482935</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="	/tests/SimpleTest/test.css" />
+</head>
+<body onload="onWindowLoad()">
+<script class="testbody" type="text/javascript">
+
+var url = "bug482935.sjs";
+
+function clearCache() {
+    if (SpecialPowers.isMainProcess()) {
+      SpecialPowers.Cc["@mozilla.org/netwerk/cache-storage-service;1"].
+                    getService(SpecialPowers.Ci.nsICacheStorageService).
+                    clear();
+    }
+}
+
+// Tests that the response is cached if the request is cancelled
+// after it has reached state 4
+function testCancelInPhase4() {
+
+  clearCache();
+
+  // First request - should be loaded from server
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener("readystatechange", function() {
+    if (xhr.readyState < xhr.DONE) return;
+    is(xhr.readyState, xhr.DONE, "wrong readyState");
+    xhr.abort();
+    SimpleTest.executeSoon(function() {
+      // This request was cancelled, so the responseText should be empty string
+      is(xhr.responseText, "", "Expected empty response to cancelled request");
+
+      // Second request - should be found in cache
+      var xhr2 = new XMLHttpRequest();
+
+      xhr2.addEventListener("load", function() {
+        is(xhr2.responseText, "0", "Received fresh value for second request");
+        SimpleTest.finish();
+      });
+
+      xhr2.open("GET", url);
+      xhr2.setRequestHeader("X-Request", "1", false);
+
+      try { xhr2.send(); }
+      catch(e) {
+        is(xhr2.status, "200", "Exception!");
+      }
+    });
+  });
+
+  xhr.open("GET", url, true);
+  xhr.setRequestHeader("X-Request", "0", false);
+  try { xhr.send(); }
+  catch(e) {
+    is("Nothing", "Exception", "Boom: " + e);
+  }
+}
+
+function onWindowLoad() {
+  // Disable rcwn to make cache behavior deterministic.
+  SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]},
+                            testCancelInPhase4);
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

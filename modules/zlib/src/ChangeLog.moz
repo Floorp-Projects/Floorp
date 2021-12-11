@@ -1,0 +1,73 @@
+
+		Mozilla ChangeLog file for zlib
+
+Mozilla.org changes:
+- 17 June 2004
+  Sync'd with 1.2.1 release
+  see bug #226733
+
+- 17 June 2004
+  Add mozzconf.h
+
+- 17 June 2004
+  Turn off ZLIB_DLL to fix static build bustage
+
+- 24 June 2004
+  do not prototype strerror for VMS in zutil.h
+
+- 25 June 2004
+  define NO_vsnprintf for VMS in zutil.h
+
+- 21 September 2004
+  applied patch for DoS vulnerabililty in inflate.c
+  see bug #258009
+
+- 02 November 2004
+  Sync'ed with 1.2.2 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  Our patches of 24, 25 June and 21 Sept are now in the zlib
+  distribution.
+  See bug #248644
+
+- 24 July 2005
+  Sync'ed with 1.2.3 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bugs #299445 and #300349
+
+- 24 July 2005
+  Added treatment of HAVE_VISIBILITY_PRAGMA in mozzconf.h
+
+- 24 July 2005
+  Updated zlib.def with new symbols in zlib version 1.2.3
+
+- 13 September 2009
+  Don't enable zlib's debug output when the Mozilla build is in debug mode (bug 431950)
+
+- 18 September 2010
+  Sync'ed with 1.2.5 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #573137
+
+- 8 February 2012
+  Sync'ed with 1.2.6 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #722391
+  
+- 4 May 2012
+  Sync'ed with 1.2.7 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #751697
+
+- 9 May 2013
+  Sync'ed with 1.2.8 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #866964
+  
+- 16 January 2017
+  Sync'ed with 1.2.11 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #1328099
+
+- 28 May 2021
+  Add <unistd.h> because of the error: implicit declaration of function {lseek, read, write} is invalid in C99.
+  See bug #1701197

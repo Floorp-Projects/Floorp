@@ -1,0 +1,13 @@
+/**
+ * directv.com.co - Browser is not supported message
+ * Bug #1610344 - https://bugzilla.mozilla.org/show_bug.cgi?id=1610344
+ * WebCompat issue #41822 - https://webcompat.com/issues/41822
+ *
+ * directv.com.co is showing a "This browser is not supported" message in
+ * Firefox. Our tests indicated that everything is working just fine, and our
+ * previous contact attempts have not been successful. This intervention
+ * hides the large red unsupported banner.
+ */
+.browser-compatible.compatible.incompatible {
+  display: none;
+}

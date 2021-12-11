@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=420499
+-->
+<window title="Mozilla Bug 420499" onload="setTimeout(focusInput, 500);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  
+
+    <menu id="menu" label="Menu">
+      <menupopup id="file-popup">
+        <!-- <input xmlns="http://www.w3.org/1999/xhtml" id="some-text" maxlength="10" value="some text"/> -->
+        <menu label="submenu">
+          <menupopup id="file-popup-inner">
+
+            <menuitem label="Item1"/>
+            <menuitem label="Item2"/>
+            <input xmlns="http://www.w3.org/1999/xhtml" id="some-text" maxlength="10" value="some more text"/>
+          </menupopup>
+        </menu>
+        <menuitem label="Item3"/>
+        <menuitem label="Item4"/>
+      </menupopup>
+    </menu>
+
+    <popupset>
+      <menupopup id="contextmenu">
+        <menuitem label="Cut"/>
+        <menuitem label="Copy"/>
+        <menuitem label="Paste"/>
+      </menupopup>
+      <tooltip id="tooltip" orient="vertical">
+        <description value="This is a tooltip"/>
+      </tooltip>
+    </popupset>
+  
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" bgcolor="white">
+  
+  <p id="par1">Paragraph 1</p>
+  <p id="par2">Paragraph 2</p>
+  <p id="par3">Paragraph 3</p>
+  <p id="par4">Paragraph 4</p>
+  <p id="par5">Paragraph 5</p>
+
+  <input type="text" id="text-input" maxlength="10" value="some more text"/> <br />
+
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=420499"
+     target="_blank">Mozilla Bug 420499</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    
+    /** Test for Bug 420499 **/
+    SimpleTest.waitForExplicitFinish();
+
+    function getSelectionController() {
+      return window.docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsISelectionDisplay)
+        .QueryInterface(Ci.nsISelectionController);
+    }
+
+    function isCaretVisible() {
+      var docShell = window.docShell;
+      var selCon = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsISelectionDisplay)
+        .QueryInterface(Ci.nsISelectionController);
+      return selCon.caretVisible;
+    }
+    
+    function focusInput() {
+      ok(!isCaretVisible(), "Caret shouldn't be visible");
+      $("text-input").focus();
+      ok(isCaretVisible(), "Caret should be visible when input focused");
+      window.addEventListener("popupshown", popupMenuShownHandler);
+      $("menu").open = true;
+    }
+    
+    function popupMenuShownHandler() {
+      window.removeEventListener("popupshown", popupMenuShownHandler);
+      ok(!isCaretVisible(), "Caret shouldn't be visible when menu open");
+      window.addEventListener("popuphidden", ensureParagraphFocused);
+      $("menu").open = false;
+    }
+    
+    function ensureParagraphFocused() {
+      window.removeEventListener("popuphidden", ensureParagraphFocused);
+      ok(isCaretVisible(), "Caret should have returned to previous focus");
+      window.addEventListener("popupshown", popupMenuShownHandler2);
+      $("contextmenu").openPopup($('text-input'), "topleft" , -1 , -1 , true, true);
+    }
+
+    function popupMenuShownHandler2() {
+      window.removeEventListener("popupshown", popupMenuShownHandler2);
+      ok(isCaretVisible(), "Caret should be visible when context menu open");
+      window.addEventListener("popuphidden", ensureParagraphFocused2);
+      document.getElementById("contextmenu").hidePopup();
+    }
+
+    function ensureParagraphFocused2() {
+      window.removeEventListener("popuphidden", ensureParagraphFocused2);
+      ok(isCaretVisible(), "Caret should still be visible");
+      window.addEventListener("popupshown", tooltipShownHandler);
+      $("tooltip").openPopup($('text-input'), "topleft" , -1 , -1 , false, true);
+    }
+
+    function tooltipShownHandler() {
+      window.removeEventListener("popupshown", tooltipShownHandler);
+      ok(isCaretVisible(), "Caret should be visible when tooltip is visible");
+      window.addEventListener("popuphidden", ensureParagraphFocused3);
+      document.getElementById("tooltip").hidePopup();
+    }
+
+    function ensureParagraphFocused3() {
+      window.removeEventListener("popuphidden", ensureParagraphFocused2);
+      ok(isCaretVisible(), "Caret should still be visible");
+      SimpleTest.finish();
+    }
+  ]]></script>
+</window>

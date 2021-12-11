@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS Test: shape-outside with a CORS violation</title>
+<link rel="author" title="Brad Werth" href="mailto:bwerth@mozilla.com"/>
+<link rel="help" href="https://drafts.csswg.org/css-shapes/#shape-outside-property"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+
+<style>
+.container {
+  clear: both;
+  width: 500px;
+}
+.shaper {
+  width: 50px;
+  height: 50px;
+  float: left;
+  background-color: green;
+}
+.shapeAllow {
+  shape-outside: url("support/1x1-transparent.png");
+}
+.shapeRefuse {
+  shape-outside: url("http://example.com/layout/style/test/support/1x1-transparent.png");
+}
+.sibling {
+  display: inline-block;
+}
+</style>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  let divAllow = document.getElementById("allow");
+  let divAllowSib = divAllow.nextElementSibling;
+  ok(divAllowSib.getBoundingClientRect().left == divAllow.getBoundingClientRect().left,
+     "Test 1: Sibling should be at same left offset as div (shape-outside should be allowed), and onload should only fire after layout is complete.");
+
+  let divRefuse = document.getElementById("refuse");
+  let divRefuseSib = divRefuse.nextElementSibling;
+  ok(divRefuseSib.getBoundingClientRect().left != divRefuse.getBoundingClientRect().left,
+     "Test 2: Sibling should be at different left offset from div (shape-outside should be refused).");
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onload="runTests()">
+  <div class="container">
+    <div id="allow" class="shaper shapeAllow"></div><div class="sibling">allow (image is blank, so text is flush left)</div>
+  </div>
+  <div class="container">
+    <div id="refuse" class="shaper shapeRefuse"></div><div class="sibling">refuse (image unread, so text is moved to box edge)</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <script>
+      try { o1 = window.getSelection() } catch(e) { }
+      try { o2 = document.createElement('map') } catch(e) { };
+      try { o3 = document.createElement('select') } catch(e) { }
+      try { document.documentElement.appendChild(o2) } catch(e) { };
+      try { o2.contentEditable = 'true' } catch(e) { };
+      try { o2.offsetTop } catch(e) { };
+      try { document.replaceChild(document.implementation.createHTMLDocument().documentElement, document.documentElement); } catch(e) { }
+      try { document.documentElement.appendChild(o3) } catch(e) { }
+      try { o1.modify('extend', 'forward', 'word') } catch(e) { }
+    </script>
+  </head>
+</html>

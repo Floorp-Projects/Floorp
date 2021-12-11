@@ -1,0 +1,17 @@
+#  CAVS 17.8
+#  "KeyPair" information for "ppcle-nss-64"
+#  Mod sizes selected: L=2048, N=224:: L=2048, N=256 :: L=3072, N=256 
+#  Generated on Fri Jul 17 19:51:19 2015
+
+[mod = L=2048, N=224]
+
+N = 10
+
+[mod = L=2048, N=256]
+
+N = 10
+
+[mod = L=3072, N=256]
+
+N = 10
+

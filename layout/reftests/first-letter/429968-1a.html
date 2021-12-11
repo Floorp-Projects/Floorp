@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+body { white-space:pre; color:black; }
+/* FIXME (Bug 1058203): avoid line-height:normal since it seems to have
+   different meaning on ::first-letter or span */
+#inner::first-letter { color:red; text-decoration:underline;
+                       font-size:200%; line-height: 1.2; }
+</style>
+</head>
+<body><div id="inner"><span>
+</span>AB</div></body>
+</html>

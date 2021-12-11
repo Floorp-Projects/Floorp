@@ -1,0 +1,18 @@
+/* Override default style */
+select:invalid {
+  box-shadow: none;
+}
+
+select.notvalid {
+  background-color: green;
+}
+select.notvalid:valid {
+  background-color: red;
+}
+
+select.valid {
+  background-color: red;
+}
+select.valid:valid {
+  background-color: green;
+}

@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=548545
+-->
+<head>
+  <title>Test for Bug 548545</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+  #content { margin: 1em; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=548545">Mozilla Bug 548545</a>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for Bug 548545 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var content = document.getElementById("content");
+
+var CC = SpecialPowers.Cc;
+var CI = SpecialPowers.Ci;
+
+var fe =
+  CC["@mozilla.org/gfx/fontenumerator;1"].createInstance(CI.nsIFontEnumerator);
+var allFonts = fe.EnumerateFonts(null, null);
+
+var idx = 0;
+var list = "";
+for (idx in allFonts) {
+  list += allFonts[idx] + "<br/>";
+}
+content.innerHTML = list;
+
+ok(true,"Loaded the font list");
+SimpleTest.finish();
+
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<style>
+body {
+  font-family: courier new, courier, monospace;
+  line-height: 1;
+}
+div {
+  width: 120px;
+  float: left;
+}
+span {
+  display: inline-block;
+  height: 1em;
+}
+span.a {
+  background: red;
+}
+span.b {
+  position: relative;
+  top: -1em;
+  height: 1em;
+  background: lightgreen;
+}
+</style>
+<p>No red should appear at the tips of the rectangles:</p>
+<script>
+for (var i = 10; i <= 16; i++) {
+  var div = document.createElement("div");
+  div.style.fontSize = i + "px";
+  document.body.appendChild(div);
+  for (var j = 1; j <= 10; j++) {
+    // create a red span with width specified in 'ch' units
+    var a = document.createElement("span");
+    a.className = "a";
+    a.style.width = j + "ch";
+    a.textContent = "\xA0";
+    div.appendChild(a);
+    div.appendChild(document.createElement("br"));
+    // overlay it with a green span containing the equivalent number of chars
+    var b = document.createElement("span");
+    b.className = "b";
+    b.textContent = "\xA0".repeat(j);
+    div.appendChild(b);
+    div.appendChild(document.createElement("br"));
+  }
+  for (var j = 1; j <= 10; j++) {
+    // create a red span containing a specific number of chars
+    var a = document.createElement("span");
+    a.className = "a";
+    a.textContent = "\xA0".repeat(j);
+    div.appendChild(a);
+    div.appendChild(document.createElement("br"));
+    // overlay it with a green span with width specified in 'ch' units
+    var b = document.createElement("span");
+    b.className = "b";
+    b.style.width = j + "ch";
+    b.textContent = "\xA0";
+    div.appendChild(b);
+    div.appendChild(document.createElement("br"));
+  }
+}
+</script>

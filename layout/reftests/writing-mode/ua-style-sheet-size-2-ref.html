@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on marquee elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; padding: 16px; }
+marquee { background-color: yellow; color: transparent; }
+.ltr marquee { width: -moz-available; height: 200px; }
+.rtl marquee { width: -moz-available; height: 200px; }
+.v-rl marquee { width: 200px; height: -moz-available; }
+</style>
+<div class=ltr>
+  <marquee direction=down>A</marquee>
+</div>
+<div class=rtl dir=rtl>
+  <marquee direction=down>A</marquee>
+</div>
+<!-- disabled until bug 1132308
+<div class=v-rl>
+  <marquee direction=down>A</marquee>
+</div>
+-->

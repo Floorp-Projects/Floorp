@@ -1,0 +1,9 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+
+. $topsrcdir/build/macosx/mozconfig.common
+
+ac_add_options --enable-debug
+
+ac_add_options --enable-clang-plugin
+
+. "$topsrcdir/build/mozconfig.common.override"

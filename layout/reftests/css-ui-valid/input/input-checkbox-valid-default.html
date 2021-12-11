@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if input is valid and its checkedness hasn't changed,
+             it should not be affected by :-moz-ui-valid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="if (document.getElementById('i').matches(':-moz-ui-valid')) {
+                  document.body.textContent='FAIL';
+                } else {
+                  document.body.textContent='SUCCESS';
+                }
+                document.documentElement.className='';">
+    <input id='i' type='checkbox'>
+  </body>
+</html>

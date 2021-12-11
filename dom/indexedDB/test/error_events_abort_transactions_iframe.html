@@ -1,0 +1,239 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript">
+
+    let testGenerator = testSteps();
+
+    function ok(val, message) {
+      val = val ? "true" : "false";
+      window.parent.postMessage("SimpleTest.ok(" + val + ", '" + message +
+                                "');", "*");
+    }
+
+    function is(a, b, message) {
+      ok(a == b, message);
+    }
+
+    function grabEventAndContinueHandler(event) {
+      testGenerator.next(event);
+    }
+
+    function errorHandler(event) {
+      ok(false, "indexedDB error, code " + event.target.errorCcode);
+      finishTest();
+    }
+
+    function unexpectedSuccessHandler(event) {
+      ok(false, "got success when it was not expected!");
+      finishTest();
+    }
+
+    function finishTest() {
+      // Let window.onerror have a chance to fire
+      setTimeout(function() {
+        setTimeout(function() {
+          window.parent.postMessage("SimpleTest.finish();", "*");
+        }, 0);
+      }, 0);
+    }
+
+    window.onerror = function(message, filename, lineno) {
+      is(message, "ConstraintError", "Expect a constraint error");
+    };
+
+    function* testSteps() {
+      window.parent.SpecialPowers.addPermission("indexedDB", true, document);
+
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = grabEventAndContinueHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      let db = event.target.result;
+      db.onversionchange = function(event) {
+        event.target.close();
+      };
+
+      is(db.version, 1, "Correct version");
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+      let trans = event.target.transaction;
+
+      trans.oncomplete = unexpectedSuccessHandler;
+      trans.onabort = grabEventAndContinueHandler;
+
+      let objectStore = db.createObjectStore("foo");
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+
+      let originalRequest = request;
+      request = objectStore.add({}, 1);
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onerror = errorHandler;
+      event = yield undefined;
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = function(event) {
+        // Don't do anything! ConstraintError is expected in window.onerror.
+      };
+      event = yield undefined;
+
+      is(event.type, "abort", "Got a transaction abort event");
+      is(db.version, 0, "Correct version");
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+      is(trans.error.name, "ConstraintError", "Right error");
+      ok(trans.error === request.error, "Object identity holds");
+      is(originalRequest.transaction, trans, "request.transaction should still be set");
+
+      event = yield undefined;
+      is(event.type, "error", "Got request error event");
+      is(event.target, originalRequest, "error event has right target");
+      is(event.target.error.name, "AbortError", "Right error");
+      is(originalRequest.transaction, null, "request.transaction should now be null");
+      // Skip the verification of ConstraintError in window.onerror.
+      event.preventDefault();
+
+      request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      db = event.target.result;
+      db.onversionchange = function(event) {
+        event.target.close();
+      };
+
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;
+      event.target.transaction.onabort = unexpectedSuccessHandler;
+
+      is(db.version, "1", "Correct version");
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+      objectStore = db.createObjectStore("foo");
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+
+      objectStore.createIndex("baz", "key.path");
+      objectStore.createIndex("dontDeleteMe", "");
+
+      is(objectStore.indexNames.length, 2, "Correct indexNames length");
+      ok(objectStore.indexNames.contains("baz"), "Has correct index");
+      ok(objectStore.indexNames.contains("dontDeleteMe"), "Has correct index");
+
+      let objectStoreForDeletion = db.createObjectStore("bar");
+
+      is(db.objectStoreNames.length, 2, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("bar"), "Has correct objectStore");
+
+      objectStoreForDeletion.createIndex("foo", "key.path");
+
+      is(objectStoreForDeletion.indexNames.length, 1, "Correct indexNames length");
+      ok(objectStoreForDeletion.indexNames.contains("foo"), "Has correct index");
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onerror = errorHandler;
+      event = yield undefined;
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = function(event) {
+        // Expected, but prevent the abort.
+        event.preventDefault();
+      };
+      event = yield undefined;
+
+      is(event.type, "complete", "Got a transaction complete event");
+
+      is(db.version, "1", "Correct version");
+      is(db.objectStoreNames.length, 2, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+      ok(db.objectStoreNames.contains("bar"), "Has correct objectStore");
+
+      request = indexedDB.open(window.location.pathname, 2);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      db = event.target.result;
+      db.onversionchange = function(event) {
+        event.target.close();
+      };
+
+      trans = event.target.transaction;
+      trans.oncomplete = unexpectedSuccessHandler;
+
+      is(db.version, "2", "Correct version");
+      is(db.objectStoreNames.length, 2, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+      ok(db.objectStoreNames.contains("bar"), "Has correct objectStore");
+
+      let createdObjectStore = db.createObjectStore("newlyCreated");
+      objectStore = trans.objectStore("foo");
+      let deletedObjectStore = trans.objectStore("bar");
+      deletedObjectStore.deleteIndex("foo");
+      db.deleteObjectStore("bar");
+
+      createdObjectStore.createIndex("newIndex", "key.path");
+      objectStore.createIndex("newIndex", "key.path");
+      objectStore.deleteIndex("baz");
+
+      is(db.objectStoreNames.length, 2, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("newlyCreated"), "Has correct objectStore");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+
+      is(createdObjectStore.indexNames.length, 1, "Correct indexNames length");
+      ok(createdObjectStore.indexNames.contains("newIndex"), "Has correct index");
+
+      is(objectStore.indexNames.length, 2, "Correct indexNames length");
+      ok(objectStore.indexNames.contains("dontDeleteMe"), "Has correct index");
+      ok(objectStore.indexNames.contains("newIndex"), "Has correct index");
+
+      // ConstraintError is expected in window.onerror.
+      objectStore.add({}, 1);
+      trans.onabort = grabEventAndContinueHandler;
+
+      event = yield undefined;
+
+      // Test that the world has been restored.
+      is(db.version, "1", "Correct version");
+      is(db.objectStoreNames.length, 2, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+      ok(db.objectStoreNames.contains("bar"), "Has correct objectStore");
+
+      is(objectStore.indexNames.length, 2, "Correct indexNames length");
+      ok(objectStore.indexNames.contains("dontDeleteMe"), "Has correct index");
+      ok(objectStore.indexNames.contains("baz"), "Has correct index");
+
+      is(createdObjectStore.indexNames.length, 0, "Correct indexNames length");
+
+      is(deletedObjectStore.indexNames.length, 1, "Correct indexNames length");
+      ok(deletedObjectStore.indexNames.contains("foo"), "Has correct index");
+
+      request.onerror = grabEventAndContinueHandler;
+
+      event = yield undefined;
+      is(event.type, "error", "Got request error event");
+      is(event.target.error.name, "AbortError", "Right error");
+      // Skip the verification of ConstraintError in window.onerror.
+      event.preventDefault();
+
+      finishTest();
+    }
+  </script>
+
+</head>
+
+<body onload="testGenerator.next();"></body>
+
+</html>

@@ -1,0 +1,52 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test that wheel events on an unscrollable OOP iframe are handoff-ed</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  iframe {
+    height: 201px;
+    border: none;
+  }
+  </style>
+</head>
+<body>
+  <div id="iframe-container" style="overflow-y: scroll; height: 200px;">
+    <iframe src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_wheelevents_handoff_on_iframe_child.html"></iframe>
+  </div>
+  <div style="height: 200vh;"></div>
+  <script type="application/javascript">
+async function test() {
+  const scrollContainer = document.querySelector("#iframe-container");
+  let scrollEventPromise = waitForScrollEvent(scrollContainer);
+
+  // Send a wheel event on the iframe.
+  const iframe = document.querySelector("iframe");
+  synthesizeNativeWheel(iframe, 50, 50, 0, -50);
+  await scrollEventPromise;
+
+  // The wheel event should be handoff-ed to the parent scroll container.
+  is(scrollContainer.scrollTop, scrollContainer.scrollTopMax,
+     "The scroll position in the parent scroll container should be at the bottom");
+
+  // Make sure the wheel event wasn't handoff-ed to the root scroller.
+  is(window.scrollY, 0, "The root scroll position should be 0");
+
+  await promiseFrame();
+  scrollEventPromise = waitForScrollEvent(window);
+  // Send a wheel event on the iframe again.
+  synthesizeNativeWheel(iframe, 50, 50, 0, -50);
+  await scrollEventPromise;
+
+  // Now it should be handoff-ed to the root scroller.
+  ok(window.scrollY > 0,
+     "The wheel event should have been handoff-ed to the root scroller");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</body>

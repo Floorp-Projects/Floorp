@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=642338
+-->
+<head>
+  <title>Test for Bug 642338</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=642338">Mozilla Bug 642338</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/* Test that the following window properties work:
+
+     menubar
+     toolbar
+     locationbar
+     personalbar
+     statusbar
+     scrollbars
+
+*/
+
+// Popup is opened if one of the following condtitions is met:
+//   * both location and toolbar are false
+//   * menubar is false
+//   * resizable is false
+//   * scrollbars is false
+//   * status is false
+//   * width is specified
+var featuresList = [
+  {
+    type: 'non-popup',
+    target: 'all-bars-toolbar',
+    features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=yes',
+  },
+  {
+    type: 'non-popup',
+    target: 'all-bars-location',
+    features: 'location=yes,menubar=yes,status=yes,scrollbars=yes',
+  },
+  {
+    type: 'popup',
+    target: 'no-menubar',
+    features: 'toolbar=yes,menubar=no,status=yes,scrollbars=yes',
+  },
+  {
+    type: 'popup',
+    target: 'no-toolbar',
+    features: 'toolbar=no,menubar=yes,status=yes,scrollbars=yes',
+  },
+  {
+    type: 'popup',
+    target: 'no-status',
+    features: 'toolbar=yes,menubar=yes,status=no,scrollbars=yes',
+  },
+  {
+    type: 'popup',
+    target: 'no-scrollbars',
+    features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=no',
+  },
+  {
+    type: 'popup',
+    target: 'no-bars',
+    features: 'toolbar=no,menubar=no,status=no,scrollbars=no',
+  },
+  {
+    type: 'popup',
+    target: 'no-resizable',
+    features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=yes'
+      + ',resizable=no',
+  },
+  {
+    type: 'popup',
+    target: 'width-sized',
+    features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=yes'
+      + ',width=500',
+  },
+  {
+    type: 'non-popup',
+    target: 'height-sized',
+    features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=yes'
+      + ',height=500',
+  },
+  {
+    type: 'popup',
+    target: 'sized',
+    features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=yes'
+      + ',width=500,height=500',
+  },
+];
+
+var numWindows = 0;
+
+/* Called when our popup loads. */
+function testWindow(w)
+{
+  function checkFeature(feature) {
+    if (w.location.search.startsWith('?popup')) {
+      is(w[feature].visible, false, `${feature} should be hidden for popup (${w.name}).`);
+    } else {
+      is(w[feature].visible, true, `${feature} should be visible for non-popup (${w.name}).`);
+    }
+  }
+
+  // If popup is opened, the following properties become false:
+  //   * menubar.visible
+  //   * toolbar.visible
+  //   * personalbar.visible
+  //   * status.visible
+  checkFeature('menubar');
+  checkFeature('toolbar');
+  checkFeature('personalbar');
+
+  // The following aren't affected by feature.
+  is(w.scrollbars.visible, true, `scrollbars should always be visible (${w.name}).`);
+  is(w.statusbar.visible, true, `statusbar should always be visible (${w.name}).`);
+  is(w.locationbar.visible, true, `locationbar should always be visible (${w.name}).`);
+
+  w.close();
+
+  numWindows++;
+  if (numWindows == featuresList.length) {
+    // We're done!
+    SimpleTest.finish();
+  }
+
+}
+
+SimpleTest.waitForExplicitFinish();
+for (var item of featuresList) {
+  // This will call back into testWindow when they open.
+  window.open(`file_window_bar.html?${item.type}`, item.target, item.features);
+}
+
+</script>
+</pre>
+</body>
+</html>

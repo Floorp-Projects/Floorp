@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=517056
+-->
+<head>
+  <title>Test for Bug 517056</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=517056">Mozilla Bug 517056</a>
+<p id="display">
+  <canvas id="c" width="1" height="1"></canvas>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 517056 **/
+var ctx = $("c").getContext('2d');
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, 1, 1);
+var data = ctx.getImageData(0, 0, 1, 1).data;
+is(data[0], 0, "Red channel of black should be 0");
+is(data[1], 0, "Green channel of black should be 0");
+is(data[2], 0, "Blue channel of black should be 0")
+is(data[3], 255, "Alpha channel of black should be opaque");
+var img = new Image();
+// Force a new URI every time, so that we don't run into stupid caching issues.
+img.src = "image_green-1x1.png?" + (new Date + 0) + Math.random();
+// This shouldn't throw
+ctx.drawImage(img, 0, 0);
+var data = ctx.getImageData(0, 0, 1, 1).data;
+is(data[0], 0, "Red channel of black should be 0 and image should have been ignored");
+is(data[1], 0, "Green channel of black should be 0 and image should have been ignored");
+is(data[2], 0, "Blue channel of black should be 0 and image should have been ignored")
+is(data[3], 255, "Alpha channel of black should be opaque and image should have been ignored");
+
+SimpleTest.waitForExplicitFinish();
+img.onload = function() {
+  ctx.drawImage(img, 0, 0);
+  var loadData = ctx.getImageData(0, 0, 1, 1).data;
+  is(loadData[0], 0, "Red channel of green should be 0");
+  is(loadData[1], 255, "Green channel of green should be 255");
+  is(loadData[2], 0, "Blue channel of green should be 0")
+  is(loadData[3], 255, "Alpha channel of green should be opaque");
+
+  SimpleTest.finish();
+}
+
+
+
+</script>
+</pre>
+</body>
+</html>

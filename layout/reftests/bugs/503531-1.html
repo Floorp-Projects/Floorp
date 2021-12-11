@@ -1,0 +1,25 @@
+<html class="reftest-wait"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #1 for bug 503531</title>
+<script>
+function boom() {
+  var emptyText = document.createTextNode('x');
+  document.body.appendChild(emptyText);
+
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.selectNode(emptyText);
+  sel.addRange(range);
+  sel.collapseToStart();
+
+  emptyText.nodeValue='';
+  
+  setTimeout(function(){document.documentElement.className = '';}, 50)
+}
+</script>
+</head>
+<body contenteditable="true" onload="document.body.focus(); boom()">
+<div>BLOCK</div>
+</body>
+</html>

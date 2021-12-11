@@ -1,0 +1,6 @@
+<head><script>
+window.addEventListener("pageshow", function(event) {
+    parent.ok(!event.persisted, "Should not load from bfcache");
+});
+</script></head>
+<body>Redirect target content</body>

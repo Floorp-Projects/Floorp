@@ -1,0 +1,73 @@
+<!--
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+        <title data-l10n-id="about-policies-title"></title>
+        <link rel="stylesheet" href="chrome://browser/content/policies/aboutPolicies.css">
+        <link rel="localization" href="branding/brand.ftl">
+        <link rel="localization" href="browser/branding/sync-brand.ftl">
+        <link rel="localization" href="browser/aboutPolicies.ftl">
+        <link rel="localization" href="browser/policies/policies-descriptions.ftl">
+        <script src="chrome://browser/content/policies/aboutPolicies.js"></script>
+    </head>
+    <body id="body">
+        <div id="categories">
+            <div class="category" selected="true" id="category-active" tabindex="0">
+                <label class="category-name" data-l10n-id="active-policies-tab"></label>
+            </div>
+            <div class="category" id="category-documentation" tabindex="0">
+                <label class="category-name" data-l10n-id="documentation-tab"></label>
+            </div>
+            <div class="category" id="category-errors" tabindex="0">
+                <label class="category-name" data-l10n-id="errors-tab"></label>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <div id="sectionTitle" class="header-name" data-l10n-id="active-policies-tab"></div>
+            </div>
+
+            <div id="active" class="tab active">
+                <h3 class="inactive-service-message" data-l10n-id="inactive-message"></h3>
+                <h3 class="no-specified-policies-message" data-l10n-id="no-specified-policies-message"></h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-l10n-id="policy-name"></th>
+                            <th data-l10n-id="policy-value"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeContent"></tbody>
+                </table>
+            </div>
+
+            <div id="documentation" class="tab" hidden="true">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-l10n-id="policy-name"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentationContent"></tbody>
+                </table>
+            </div>
+
+             <div id="errors" class="tab" hidden="true">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-l10n-id="policy-errors"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="errorsContent"></tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Pixel rounding testcase</title>
+<style type="text/css">
+
+html, body { margin: 0; border: none; padding: 0; }
+img { position: absolute; }
+
+img[src="blue-1x1.png"]   { left: 10px; }
+img[src="blue-3x3.png"]   { left: 40px; }
+img[src="blue-5x5.png"]   { left: 70px; }
+img[src="blue-25x25.png"] { left: 100px; }
+
+img.s1  { top:  9.5px; height: 2.1px; width: 1px; }
+img.s3  { top: 29.5px; height: 4.1px; width: 3px; }
+img.s5  { top: 49.5px; height: 6.1px; width: 5px; }
+img.s25 { top: 69.5px; height: 26.1px; width: 25px; }
+
+</style>
+</head>
+<body>
+
+<img class="s1" src="blue-1x1.png">
+<img class="s1" src="blue-3x3.png">
+<img class="s1" src="blue-5x5.png">
+<img class="s1" src="blue-25x25.png">
+
+<img class="s3" src="blue-1x1.png">
+<img class="s3" src="blue-3x3.png">
+<img class="s3" src="blue-5x5.png">
+<img class="s3" src="blue-25x25.png">
+
+<img class="s5" src="blue-1x1.png">
+<img class="s5" src="blue-3x3.png">
+<img class="s5" src="blue-5x5.png">
+<img class="s5" src="blue-25x25.png">
+
+<img class="s25" src="blue-1x1.png">
+<img class="s25" src="blue-3x3.png">
+<img class="s25" src="blue-5x5.png">
+<img class="s25" src="blue-25x25.png">
+
+</body>
+</html>

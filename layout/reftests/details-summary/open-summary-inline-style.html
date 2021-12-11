@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <style>
+  summary {
+    display: inline;
+  }
+  </style>
+  <body>
+    <details open>
+      <p>This is the details.</p>
+      <!-- Make summary the second element child so that layout will try to
+           render it as the first child. -->
+      <summary>Summary
+        <!-- Need ib-split so that the summary has multiple frames. -->
+        <div>Block in summary</div>
+      </summary>
+    </details>
+  </body>
+</html>

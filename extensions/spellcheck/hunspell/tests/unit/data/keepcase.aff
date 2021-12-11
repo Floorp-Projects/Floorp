@@ -1,0 +1,3 @@
+# keep case in signed words
+KEEPCASE A
+WORDCHARS .

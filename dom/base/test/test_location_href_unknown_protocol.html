@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for window.location setter to an unknown protocol (bug 1528305).</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+SimpleTest.waitForExplicitFinish();
+let beforeunload = false;
+let unload = false;
+
+window.onChildBeforeUnload = function() {
+  beforeunload = true;
+};
+
+window.onChildUnload = function() {
+  unload = true;
+};
+
+let win;
+window.onChildLoadTimedOut = function() {
+  ok(!unload, "shouldn't have unloaded child window");
+  ok(beforeunload, "should've fired a beforeunload event");
+  win.close();
+  SimpleTest.finish();
+};
+
+win = window.open("file_location_href_unknown_protocol.html");
+</script>

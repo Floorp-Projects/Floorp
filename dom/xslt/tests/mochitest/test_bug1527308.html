@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for serialized state in XSLT result document</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+async_test(t => {
+  let iframe = document.createElement('iframe');
+  let src = `<?xml version="1.0"?>
+             <?xml-stylesheet type="text/xml" href="#stylesheet"?>
+             <doc>
+               <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0" id="stylesheet">
+                 <xsl:output method="html"/>
+                 <xsl:template match="/">
+                   <html>
+                     <xsl:element name="script">self.addEventListener("message", () => { history.go(0); });</xsl:element>
+                     <body onload="parent.postMessage(history.state, '*'); history.replaceState('data', 'title');"></body>
+                   </html>
+                 </xsl:template>
+               </xsl:stylesheet>
+             </doc>`;
+  iframe.src = "data:text/xml," + encodeURIComponent(src);
+  let reloaded = false;
+  self.addEventListener("message", t.step_func(({data: state}) => {
+    if (!reloaded) {
+      assert_equals(state, null, "At this point history.state should be set.");
+      iframe.contentWindow.postMessage("", "*");
+      reloaded = true;
+      return;
+    }
+
+    assert_equals(state, 'data', "Data set through history.replaceState in an XSLT result document should persist.");
+    t.done();
+  }));
+  document.body.appendChild(iframe);
+}, "Test for serialized state in XSLT result document");
+</script>

@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=449141
+-->
+<head>
+  <title>Test for Bug 449141</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=449141">Mozilla Bug 449141</a>
+<p id="display">
+
+</p>
+<pre id="results"></pre>
+<div id="content" style="display: none">
+    <iframe src="bug449141_page.html" id="source"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 449141 **/
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+function getTempDir() {
+  return SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
+}
+
+// STATE_STOP from nsIWebProgressListener.idl
+const STATE_STOP = 0x00000010;
+
+var progressListener = {
+  onProgressChange() {
+    /* Ignore progress callback */
+  },
+  onStateChange(aProgress, aRequest, aStateFlag, aStatus) {
+    if (aStateFlag & STATE_STOP) {
+      var dirExists = false;
+      var videoExists = false;
+
+      var videoFile = getTempDir();
+      videoFile.append(this.dirName);
+      dirExists = videoFile.exists();
+      videoFile.append("320x240.ogv");
+      videoExists = videoFile.exists();
+      this.folder.remove(true);
+      this.file.remove(false);
+      ok(dirExists, "Directory containing video file should be created");
+      ok(videoExists, "Video should be persisted with document");
+      SimpleTest.finish();
+    }
+  },
+};
+
+function persistDocument(aDoc) {
+    const nsIWBP = Ci.nsIWebBrowserPersist;
+    const persistFlags =
+                  nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES
+                | nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+    const encodingFlags =
+                  nsIWBP.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
+
+    var id = Math.round(Math.random() * 10000);
+    var dirName = "bug449141_serialized" + id;
+    progressListener.dirName = dirName;
+
+    var file = getTempDir();
+    file.append("bug449141-serialized" + id + ".html");
+
+    var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+                    .createInstance(Ci.nsIWebBrowserPersist);
+    persist.progressListener = progressListener;
+    persist.persistFlags = persistFlags;
+    const kWrapColumn = 80;
+    var folder = getTempDir();
+    folder.append(dirName);
+    progressListener.folder = folder;
+    progressListener.file = file;
+    persist.saveDocument(aDoc, SpecialPowers.Services.io.newFileURI(file),
+                         folder,
+                         aDoc.contentType,
+                         encodingFlags, kWrapColumn);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+    var srcDoc = document.getElementById("source").contentDocument;
+    persistDocument(srcDoc);
+});
+</script>
+</pre>
+</body>
+</html>

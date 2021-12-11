@@ -1,0 +1,95 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+treechildren::-moz-tree-image {
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0.7;
+}
+
+treechildren::-moz-tree-image(title) {
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  padding-inline-end: 2px;
+  margin: 0 2px;
+  width: 16px;
+  height: 16px;
+}
+
+treechildren::-moz-tree-image(title, container),
+treechildren::-moz-tree-image(title, open) {
+  list-style-image: url("chrome://browser/skin/folder.png");
+}
+
+treechildren::-moz-tree-image(title, separator) {
+  list-style-image: none;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0;
+}
+
+treechildren::-moz-tree-image(container, queryFolder_toolbar_____) {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
+}
+
+treechildren::-moz-tree-image(container, queryFolder_menu________) {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.svg");
+}
+
+/* query-nodes should be styled even if they're not expandable */
+treechildren::-moz-tree-image(query) {
+  list-style-image: url("chrome://browser/skin/places/folder-smart.svg");
+}
+
+treechildren::-moz-tree-image(query, OrganizerQuery_allbms_____v) {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+treechildren::-moz-tree-image(query, OrganizerQuery_downloads__v) {
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+treechildren::-moz-tree-image(title, query, tagContainer),
+treechildren::-moz-tree-image(query, OrganizerQuery_tags_______v) {
+  list-style-image: url("chrome://browser/skin/places/tag.svg");
+}
+
+/* calendar icon for folders grouping items by date */
+treechildren::-moz-tree-image(title, query, dayContainer) {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+treechildren::-moz-tree-image(title, query, hostContainer) {
+  list-style-image: url("chrome://browser/skin/folder.png");
+}
+
+treechildren::-moz-tree-image(query, OrganizerQuery_history____v) {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+/* We want some queries to look like ordinary folders. This must come
+   after the (title, query) selector, or it would get overridden. */
+treechildren::-moz-tree-image(title, query, folder) {
+  list-style-image: url("chrome://browser/skin/folder.png");
+}
+
+treechildren::-moz-tree-cell-text(title, separator) {
+  color: ThreeDShadow;
+  margin: 0 5px;
+}
+
+treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
+  color: SelectedItemText;
+}
+
+/* Remove tiny spacing in separators appearing after the twisty column */
+treechildren::-moz-tree-twisty(title, separator) {
+  padding: 0;
+}
+
+treechildren::-moz-tree-image(cutting) {
+  opacity: 0.5;
+}
+
+treechildren::-moz-tree-cell-text(cutting) {
+  opacity: 0.7;
+}

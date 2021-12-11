@@ -1,0 +1,94 @@
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:accessible/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:addon-sdk/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:browser/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:build/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:caps/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:chrome/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:config/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:db/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:devtools/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:docshell/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:dom/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:editor/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:embedding/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:extensions/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:gfx/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:gradle/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:hal/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:image/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:intl/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:ipc/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:js/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:layout/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:media/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:memory/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:mfbt/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:mobile/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:modules/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:mozglue/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:netwerk/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:nsprpub/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:other-licenses/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:parser/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:python/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:security/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:services/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:servo/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:startupcache/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:storage/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:taskcluster/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:testing/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:toolkit/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:tools/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:uriloader/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:view/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:widget/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:xpcom/**", "tool": "clang-format"}
+{"configpaths": [".clang-format", ".clang-format-ignore"], "pattern": "glob:xpfe/**", "tool": "clang-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:accessible/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:addon-sdk/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:browser/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:build/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:caps/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:chrome/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:config/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:db/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:devtools/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:docshell/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:dom/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:editor/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:embedding/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:extensions/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:gfx/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:gradle/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:hal/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:image/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:intl/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:ipc/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:js/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:layout/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:media/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:memory/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:mfbt/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:mobile/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:modules/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:mozglue/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:netwerk/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:nsprpub/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:other-licenses/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:parser/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:python/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:security/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:services/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:servo/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:startupcache/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:storage/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:taskcluster/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:testing/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:toolkit/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:tools/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:uriloader/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:view/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:widget/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:xpcom/**", "tool": "prettier-format"}
+{"configpaths": [".eslintrc.js", ".eslintignore", ".prettierrc", ".prettierignore"], "pattern": "glob:xpfe/**", "tool": "prettier-format"}

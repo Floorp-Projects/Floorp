@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIRequest;
+interface nsIInterfaceRequestor;
+
+[scriptable, uuid(49439df2-b3d2-441c-bf62-866bdaf56fd2)]
+interface nsIContentHandler : nsISupports
+{
+  /**
+   * Tells the content handler to take over handling the content. If this
+   * function succeeds, the URI Loader will leave this request alone, ignoring
+   * progress notifications. Failure of this method will cause the request to be
+   * cancelled, unless the error code is NS_ERROR_WONT_HANDLE_CONTENT (see
+   * below).
+   *
+   * @param aWindowContext
+   *        Window context, used to get things like the current nsIDOMWindow
+   *        for this request. May be null.
+   * @param aContentType
+   *        The content type of aRequest
+   * @param aRequest
+   *        A request whose content type is already known.
+   *
+   * @throw NS_ERROR_WONT_HANDLE_CONTENT Indicates that this handler does not
+   *        want to handle this content. A different way for handling this
+   *        content should be tried.
+   */
+  void handleContent(in string aContentType,
+                     in nsIInterfaceRequestor aWindowContext,
+                     in nsIRequest aRequest);
+};

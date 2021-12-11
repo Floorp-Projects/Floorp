@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1121701
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1121701</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1121701 **/
+
+  var testUrl1 = "file_bug1121701_1.html";
+  var testUrl2 = "file_bug1121701_2.html";
+
+  var bc = new BroadcastChannel("file_bug1121701_1");
+  var bc2 = new BroadcastChannel("file_bug1121701_2");
+  var page1LoadCount = 0;
+  let page1Done = {};
+  page1Done.promise = new Promise(resolve => {
+    page1Done.resolve = resolve;
+  });
+  let page2Done = {};
+  page2Done.promise = new Promise(resolve => {
+    page2Done.resolve = resolve;
+  });
+
+  async function scheduleFinish() {
+    await Promise.all([page1Done.promise, page2Done.promise]);
+    bc2.close();
+    bc.close();
+    SimpleTest.finish();
+  }
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "child1PageShow") {
+      ++page1LoadCount;
+      var persisted = msg.persisted;
+      var pageHideAsserts = msg.pageHideAsserts;
+      if (pageHideAsserts) {
+        ok(pageHideAsserts.persisted, "onpagehide: test page 1 should get persisted");
+        is(pageHideAsserts.innerHTML, "modified",  "onpagehide: innerHTML text is 'modified'");
+      }
+      if (page1LoadCount == 1) {
+        SimpleTest.executeSoon(function() {
+          is(persisted, false, "Initial page load shouldn't be persisted.");
+          bc.postMessage({command: "setInnerHTML", testUrl2});
+        });
+      } else if (page1LoadCount == 2) {
+        is(persisted, true, "Page load from bfcache should be persisted.");
+        is(msg.innerHTML, "modified", "innerHTML text is 'modified'");
+        bc.postMessage({command: "close"});
+      }
+    } else if (command == "closed") {
+      page1Done.resolve();
+    }
+  }
+  bc2.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "child2PageShow") {
+      bc2.postMessage({command: "setInnerHTML", location: location.href});
+    } else if (command == "onmessage") {
+      page2Done.resolve();
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(async function() {
+    scheduleFinish();
+    // If Fission is disabled, the pref is no-op.
+    SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+      window.open(testUrl1, "", "noopener");
+    });
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1121701">Mozilla Bug 1121701</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

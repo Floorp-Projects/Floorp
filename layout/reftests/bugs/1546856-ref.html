@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Reference for bug 1546856: When the first painted item in a layer is removed, invalidation takes the wrong last paint offset because it hasn't initialized the last paint offset for that layer yet for this paint</title>
+<style>
+body {
+  height: 4000px;
+  padding: 200px 0;
+}
+
+div {
+  width: 600px;
+  height: 200px;
+  box-sizing: border-box;
+  border: 1px solid black;
+}
+
+</style>
+
+<div></div>
+
+<script>
+document.scrollingElement.scrollTop = 200;
+</script>

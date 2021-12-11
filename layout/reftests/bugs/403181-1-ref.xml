@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<svg xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.w3.org/2000/svg">
+  <foreignObject transform="scale(2.5)" width="100%" height="100%">
+    <html:p style="width:36px; height:24px; background:white;">
+    </html:p>
+    <html:p style="width:12px; height:12px; background:black;">
+    </html:p>
+  </foreignObject>
+</svg>

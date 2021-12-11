@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when changing the 'max' IDL property, the thumb of the range
+             should be moved to the appropriate position. This test also
+             sets the max to less than the current value which checks that the
+             rendering code handles repositioning correctly in the case that
+             sanitization of the value is needed for a non-value change. -->
+  <script type="text/javascript">
+    function setValue()
+    {
+      document.getElementById('i').max = "10";
+      document.documentElement.className = '';
+    }
+    document.addEventListener("MozReftestInvalidate", setValue);
+    setTimeout(setValue, 2000); // useful when not running under reftest suite
+  </script>
+  <body>
+    <input type=range id='i' max=100>
+  </body>
+</html>

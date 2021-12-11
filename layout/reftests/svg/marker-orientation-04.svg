@@ -1,0 +1,39 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="redTriangle"
+      refX="0" refY="12" markerUnits="userSpaceOnUse"
+      markerWidth="24" markerHeight="24" orient="auto">
+      <path fill="red" d="M 0 0 L 24 12 L 0 24 z" />
+    </marker>
+    <marker id="limeTriangle"
+      refX="0" refY="12" markerUnits="userSpaceOnUse"
+      markerWidth="24" markerHeight="24" orient="auto" overflow="visible">
+      <path fill="lime" stroke-width="3" stroke="lime" d="M 0 0 L 24 12 L 0 24 z" />
+    </marker>
+    <marker id="reverseLimeTriangle"
+      refX="0" refY="12" markerUnits="userSpaceOnUse"
+      markerWidth="24" markerHeight="24" orient="auto" overflow="visible">
+      <path transform="rotate(180, 0, 12)" fill="lime" stroke-width="3" stroke="lime" d="M 0 0 L 24 12 L 0 24 z" />
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- Control point vectors are zero -->
+  <path d="M 50,125 C 50,125, 100,25, 100,25" stroke-width="10" stroke="red"
+    marker-end="url(#redTriangle)" />
+
+  <path d="M 150,125 C 200,25, 200,25, 200,25" stroke-width="10" stroke="red"
+    marker-end="url(#redTriangle)" />
+
+  <!-- Non-degenerate covering -->
+  <path d="M 50,125 L 100,25" stroke-width="13" stroke="lime"
+    marker-end="url(#limeTriangle)" marker-start="url(#reverseLimeTriangle)" />
+
+  <path d="M 150,125 L 200,25" stroke-width="13" stroke="lime"
+    marker-end="url(#limeTriangle)" marker-start="url(#reverseLimeTriangle)" />
+</svg>

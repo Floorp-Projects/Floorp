@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+XUL <resizer> tests
+-->
+<window title="XUL resizer tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.ignoreAllUncaughtExceptions();
+
+    function openPopup()
+    {
+      document.getElementById("panel").
+        openPopupAtScreen(Math.round(window.mozInnerScreenX) + window.innerWidth - 130,
+                          Math.round(window.mozInnerScreenY) + window.innerHeight - 130);
+    }
+
+    var step = 0;
+    function popupShown(event)
+    {
+      let panel = document.getElementById("panel");
+      if (step == 0) {
+        // check to make sure that the popup cannot be resized past the edges of
+        // the content area
+        var resizerrect = document.getElementById("resizer").getBoundingClientRect();
+        synthesizeMouse(document.documentElement, resizerrect.left + 5, resizerrect.top + 5, { type:"mousedown" });
+        synthesizeMouse(document.documentElement, resizerrect.left + 2000, resizerrect.top + 2000, { type:"mousemove" });
+
+        // allow a one pixel variance as rounding is always done to the inside
+        // of a rectangle.
+        var popuprect = panel.getBoundingClientRect();
+        ok(Math.round(popuprect.right) == window.innerWidth ||
+           Math.round(popuprect.right) == window.innerWidth - 1,
+           "resized to content edge width");
+        ok(Math.round(popuprect.bottom) == window.innerHeight ||
+           Math.round(popuprect.bottom) == window.innerHeight - 1,
+           "resized to content edge height");
+
+        resizerrect = document.getElementById("resizer").getBoundingClientRect();
+        synthesizeMouse(document.documentElement, resizerrect.left + 5, resizerrect.top + 5, { type:"mouseup" });
+      }
+      else {
+        // the popup is opened twice. Make sure that for the second time, the
+        // resized popup opens in the same direction as there should still be
+        // room for it
+        var popuprect = panel.getBoundingClientRect();
+        var marginLeft = parseFloat(getComputedStyle(panel).marginLeft);
+        var marginTop = parseFloat(getComputedStyle(panel).marginTop);
+        is(Math.round(popuprect.left - marginLeft), window.innerWidth - 130, "reopen popup left");
+        is(Math.round(popuprect.top - marginTop), window.innerHeight - 130, "reopen popup top");
+      }
+
+      event.target.hidePopup();
+    }
+
+    function doResizerWindowTests() {
+      step++;
+      if (step == 1) {
+        openPopup();
+        return;
+      }
+
+      if (/Mac/.test(navigator.platform)) {
+        window.openDialog("window_resizer.xhtml", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
+      }
+      else {
+        // Skip window_resizer.xhtml tests.
+        todo(false, "We can't test GTK and Windows native drag resizing implementations.");
+        // Run window_resizer_element.xhtml test only.
+        lastResizerTest();
+      }
+    }
+
+    function lastResizerTest()
+    {
+      window.openDialog("window_resizer_element.xhtml", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
+    }
+
+    SimpleTest.waitForFocus(openPopup);
+   ]]></script>
+
+<panel id="panel" onpopupshown="popupShown(event)" onpopuphidden="doResizerWindowTests()">
+  <resizer id="resizer" dir="bottomend" width="16" height="16"/>
+  <hbox width="50" height="50" flex="1"/>
+</panel>
+
+</window>

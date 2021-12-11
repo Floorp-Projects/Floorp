@@ -1,0 +1,24 @@
+#if 0
+; Specifies files that should be copied (preserving symlinks) from dist/bin
+; to the .app/Contents/MacOS directory.
+#endif
+#filter substitution
+/*.app/***
+/certutil
+/@MOZ_APP_NAME@-bin
+#if defined(MOZ_GECKODRIVER)
+/geckodriver
+#endif
+/gtest/***
+/http3server
+#if defined(MOZ_ASAN) || defined(MOZ_TSAN)
+/llvm-symbolizer
+#endif
+#if defined(MOZ_CRASHREPORTER)
+/minidump-analyzer
+#endif
+/pingsender
+/pk12util
+/ssltunnel
+/xpcshell
+/XUL

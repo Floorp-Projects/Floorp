@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Test that insertions work in the presence of display:none elements that
+      separate whitespace from block boundaries -->
+<style>
+body > div { border:1px solid black; margin:1em;
+             font-family:sans-serif; letter-spacing:2px; }
+em { display:none; }
+</style>
+<script>
+function makeSpan(text) {
+  var e = document.createElement("span");
+  e.textContent = text;
+  return e;
+}
+function loaded() {
+  document.body.offsetHeight;
+  var d1 = document.getElementById("d1");
+  d1.insertBefore(makeSpan("Hello"), d1.firstChild);
+  var d2 = document.getElementById("d2");
+  d2.appendChild(makeSpan("Kitty"));
+  var d3 = document.getElementById("d3");
+  d3.insertBefore(makeSpan("Hello"), d3.firstChild.nextSibling);
+  var d4 = document.getElementById("d4");
+  d4.insertBefore(makeSpan("Kitty"), d4.lastChild);
+}
+</script>
+</head>
+<body onload="loaded()">
+  <div id="d1"><em>X</em> <span>Kitty</span></div>
+  <div id="d2"><span>Hello</span> <em>X</em></div>
+  <div id="d3"><div></div><em>X</em> <span>Kitty</span></div>
+  <div id="d4"><span>Hello</span> <em>X</em><div></div></div>
+</body>
+</html>

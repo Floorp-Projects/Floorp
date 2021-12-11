@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface imgIRequest;
+
+%{C++
+#include "nsRect.h"
+%}
+
+[ptr] native nsIntRect(nsIntRect);
+
+[scriptable, builtinclass, uuid(03da5641-a333-454a-a859-036d0bb683b7)]
+interface imgINotificationObserver : nsISupports
+{
+  // GetWidth() and GetHeight() can now be used to retrieve the size of the
+  // image.
+  const long SIZE_AVAILABLE = 1;
+
+  // A region of the image (indicated by the |aRect| argument to |notify|) has
+  // changed, and needs to be redrawn. This is triggered both for incremental
+  // rendering as the image gets decoded and for changes due to animation.
+  const long FRAME_UPDATE = 2;
+
+  // The first frame of the image is now decoded and ready to draw.
+  const long FRAME_COMPLETE = 3;
+
+  // The entire image has been loaded. That doesn't mean that it has been
+  // decoded, but it does mean that imgIContainer::Draw is guaranteed to succeed
+  // (modulo decode errors, at least) if you specify FLAG_SYNC_DECODE.
+  const long LOAD_COMPLETE = 4;
+
+  // The entire image has been decoded.
+  const long DECODE_COMPLETE = 5;
+
+  // The decoded version of the image has been discarded. Content should never
+  // change as a result of this notification - discarding is an implementation
+  // detail. This notification should normally only be observed by tests.
+  const long DISCARD = 6;
+
+  // The image was drawn without being locked. This notification is part of the
+  // image locking mechanism that prevents visible images from being discarded;
+  // generally only image locking code needs to observe it.
+  const long UNLOCKED_DRAW = 7;
+
+  // The image is animated.
+  const long IS_ANIMATED = 8;
+
+  // The image is transparent.
+  const long HAS_TRANSPARENCY = 9;
+
+  [noscript, notxpcom, nostdcall]
+  void notify(in imgIRequest aProxy, in long aType,
+              [const] in nsIntRect aRect);
+};

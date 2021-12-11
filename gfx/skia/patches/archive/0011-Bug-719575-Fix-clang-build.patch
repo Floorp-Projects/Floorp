@@ -1,0 +1,28 @@
+From cf855f31194ff071f2c787a7413d70a43f15f204 Mon Sep 17 00:00:00 2001
+From: Ehsan Akhgari <ehsan@mozilla.com>
+Date: Tue, 29 May 2012 15:39:55 -0400
+Subject: [PATCH] Bug 755869 - Re-apply patch from bug 719575 to fix clang
+ builds for the new Skia r=gw280
+
+---
+ gfx/skia/src/ports/SkFontHost_mac_coretext.cpp |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gfx/skia/src/ports/SkFontHost_mac_coretext.cpp b/gfx/skia/src/ports/SkFontHost_mac_coretext.cpp
+index c43d1a6..ce5f409 100644
+--- a/gfx/skia/src/ports/SkFontHost_mac_coretext.cpp
++++ b/gfx/skia/src/ports/SkFontHost_mac_coretext.cpp
+@@ -807,8 +807,8 @@ CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph&
+ void SkScalerContext_Mac::getVerticalOffset(CGGlyph glyphID, SkIPoint* offset) const {
+     CGSize vertOffset;
+     CTFontGetVerticalTranslationsForGlyphs(fCTVerticalFont, &glyphID, &vertOffset, 1);
+-    const SkPoint trans = {SkFloatToScalar(vertOffset.width),
+-                           SkFloatToScalar(vertOffset.height)};
++    const SkPoint trans = {SkScalar(SkFloatToScalar(vertOffset.width)),
++                           SkScalar(SkFloatToScalar(vertOffset.height))};
+     SkPoint floatOffset;
+     fVerticalMatrix.mapPoints(&floatOffset, &trans, 1);
+     if (!isSnowLeopard()) {
+-- 
+1.7.5.4
+

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title data-localization="manageCreditCardsTitle"/>
+  <link rel="localization" href="toolkit/payments/payments.ftl"/>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+  <link rel="stylesheet" href="chrome://formautofill/content/manageDialog.css" />
+  <script src="chrome://formautofill/content/manageDialog.js"></script>
+</head>
+<body dir="&locale.dir;">
+  <fieldset>
+    <legend data-localization="creditCardsListHeader"/>
+    <select id="credit-cards" size="9" multiple="multiple"/>
+  </fieldset>
+  <div id="controls-container">
+    <button id="remove" disabled="disabled" data-localization="removeBtnLabel"/>
+    <!-- Wrapper is used to properly compute the search tooltip position -->
+    <div>
+      <button id="add" data-localization="addBtnLabel"/>
+    </div>
+    <button id="edit" disabled="disabled" data-localization="editBtnLabel"/>
+  </div>
+  <script>
+    "use strict";
+    /* global ManageCreditCards */
+    new ManageCreditCards({
+      records: document.getElementById("credit-cards"),
+      controlsContainer: document.getElementById("controls-container"),
+      remove: document.getElementById("remove"),
+      add: document.getElementById("add"),
+      edit: document.getElementById("edit"),
+    });
+  </script>
+</body>
+</html>

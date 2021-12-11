@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - left+right, overconstrained</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="overconstrained-2-ref.html">
+    <meta name="assert" content="Left+right-sticky with a wide element in an LTR container: should not act as right-sticky">
+    <style>
+      #scroll {
+        width: 100px;
+        height: 100px;
+        overflow: hidden;
+        border: 1px solid black;
+        white-space: nowrap;
+      }
+      #scroll div {
+        display: inline-block;
+      }
+      .fill {
+        width: 99px;
+        height: 1px;
+      }
+      #contain {
+        width: 200px;
+        height: 10px;
+        background-color: gray;
+      }
+      #sticky {
+        position: sticky;
+        left: 10px;
+        right: 10px;
+        width: 81px;
+        height: 10px;
+        background-color: black;
+      }
+    </style>
+  <body>
+    <div id="scroll">
+      <div class="fill"></div
+      ><div id="sticky"></div
+      ><div class="fill"></div>
+    </div>
+  </body>
+</html>

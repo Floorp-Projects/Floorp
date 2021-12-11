@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=527896
+-->
+<head>
+  <title>Test for Bug 527896</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload='done();'>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=527896">Mozilla Bug 527896</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 527896 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var docWrittenSrcExecuted = false;
+var scriptInsertedSrcExecuted = false;
+
+// the iframe test runs with the HTML5 parser
+
+var iframe = document.getElementsByTagName('iframe')[0];
+iframe.contentWindow.document.open();
+iframe.contentWindow.document.write("<!DOCTYPE html>");
+iframe.contentWindow.document.write("<body><script id =\"thescript\" src=\"data:text/javascript,parent.docWrittenSrcExecuted = true;\">");
+
+// now remove the src attribute before the end tag is parsed
+iframe.contentWindow.document.getElementById('thescript').removeAttribute('src');
+
+iframe.contentWindow.document.write("parent.ok(false, \"Content executed.\");");
+iframe.contentWindow.document.write("<\/script>");
+iframe.contentWindow.document.close();
+
+// the insertion test runs with the default HTML parser since it's in this document itself!
+
+var div = document.getElementById('content');
+var script = document.createElement('script');
+div.appendChild(script); // this shouldn't yet freeze the script node nor run it
+script.setAttribute("src", "data:text/javascript,scriptInsertedSrcExecuted = true;");
+
+todo(false, "Add SVG tests after bug 528442.");
+
+function done() {
+  ok(docWrittenSrcExecuted, "document.written src didn't execute");
+  ok(scriptInsertedSrcExecuted, "script-inserted src didn't execute");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

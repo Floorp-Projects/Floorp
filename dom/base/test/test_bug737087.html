@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=737087
+-->
+<title>Test for Bug 737087</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=737087">Mozilla Bug 737087</a>
+<script>
+
+/** Test for Bug 737087 **/
+SimpleTest.waitForExplicitFinish();
+
+var bubbled = false;
+var capturedEvent = null;
+var inlineFiredEvent = null;
+
+addEventListener("error", function() { bubbled = true });
+addEventListener("error", function(e) {
+  capturedEvent = e;
+  is(typeof e, "object", "Error event must be object");
+  is(Object.getPrototypeOf(e), Event.prototype, "Error event must be Event");
+  is(e.bubbles, false, "e.bubbles must be false");
+  is(e.cancelable, false, "e.cancelable must be false");
+}, true);
+
+addLoadEvent(function() {
+  is(bubbled, false, "Error event must not bubble");
+  isnot(capturedEvent, null, "Error event must be captured");
+  isnot(inlineFiredEvent, null, "Inline error handler must fire");
+  is(capturedEvent, inlineFiredEvent,
+     "Same event must be handled by both handlers");
+  SimpleTest.finish();
+});
+</script>
+<script src=nonexistent
+  onerror="inlineFiredEvent = event"></script>

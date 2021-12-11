@@ -1,0 +1,33 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <style>
+      #testidSimple {
+	--background-color: blue;
+      }
+      .testclassSimple {
+	--background-color: green;
+      }
+
+      .testclassImportant {
+	--background-color: green !important;
+      }
+      #testidImportant {
+	--background-color: blue;
+      }
+
+      #testidDisable {
+	--background-color: blue;
+      }
+      .testclassDisable {
+	--background-color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="testidSimple" class="testclassSimple">Styled Node</div>
+    <div id="testidImportant" class="testclassImportant">Styled Node</div>
+    <div id="testidDisable" class="testclassDisable">Styled Node</div>
+  </body>
+</html>

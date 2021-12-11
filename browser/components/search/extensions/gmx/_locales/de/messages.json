@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "GMX Suche"
+  },
+  "searchUrl": {
+    "message": "https://go.gmx.net/br/moz_search_web/"
+  },
+  "suggestUrl": {
+    "message": "https://suggestplugin.ui-portal.de/s"
+  },
+  "searchUrlGetParams": {
+    "message": "q={searchTerms}&enc=UTF-8"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&brand=gmx&origin=br_splugin_ff_sg"
+  }
+}

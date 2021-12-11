@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script>
+    var bc = new BroadcastChannel("form_basic_bfcache");
+    bc.onmessage = function(event) {
+      if (event.data == "nextpage") {
+        location.href = "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/file_history_back.html";
+      } else if (event.data == "close") {
+        bc.postMessage("closed");
+        bc.close();
+        window.close();
+        SimpleTest.finish();
+      }
+    }
+
+    function is(val1, val2, msg) {
+      bc.postMessage({type: "is", value1: val1, value2: val2, message: msg});
+    }
+
+    function ok(val, msg) {
+      bc.postMessage({type: "ok", value: val, message: msg});
+    }
+    </script>
+    <script type="text/javascript" src="pwmgr_common.js"></script>
+    <script>
+      // Need to use waitForExplicitFinish also in this support file to
+      // stop SimpleTest complaining about missing checks.
+      // pwmgr_common.js uses internally some helper methods from SimpleTest.
+      SimpleTest.waitForExplicitFinish();
+
+      runChecksAfterCommonInit();
+
+      onpageshow = async function(pageShow) {
+        if (!pageShow.persisted) {
+          // This is the initial page load.
+          let loginAddedPromise = promiseStorageChanged(["addLogin"]);
+          let origin = window.location.origin;
+          addLoginsInParent([origin, "", null, "autofilled", "pass1", "", ""]);
+          await loginAddedPromise;
+        } else {
+          await promiseFormsProcessedInSameProcess();
+          let uname = document.getElementById("form-basic-username");
+          let pword = document.getElementById("form-basic-password");
+          checkLoginForm(uname, "autofilled", pword, "pass1");
+        }
+
+        bc.postMessage({type: pageShow.type, persisted: pageShow.persisted});
+      }
+    </script>
+  </head>
+  <body>
+    <form id="form-basic">
+      <input id="form-basic-username" name="username">
+      <input id="form-basic-password" name="password" type="password">
+      <input id="form-basic-submit" type="submit">
+    </form>
+  </body>
+</html>

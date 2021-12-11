@@ -1,0 +1,182 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Autocomplete emphasis test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<html:input id="richautocomplete"
+            is="autocomplete-input"
+            autocompletesearch="simple"
+            autocompletepopup="richpopup"/>
+<panel is="autocomplete-richlistbox-popup"
+       id="richpopup"
+       type="autocomplete-richlistbox"
+       noautofocus="true"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const ACR = Ci.nsIAutoCompleteResult;
+
+// A global variable to hold the search result for the current search.
+var resultText = "";
+
+// This result can't be constructed in-line, because otherwise we leak memory.
+function nsAutoCompleteSimpleResult(aString)
+{
+  this.searchString = aString;
+  this.searchResult = ACR.RESULT_SUCCESS;
+  this.matchCount = 1;
+}
+
+nsAutoCompleteSimpleResult.prototype = {
+ searchString: null,
+ searchResult: ACR.RESULT_FAILURE,
+ defaultIndex: -1,
+ errorDescription: null,
+ matchCount: 0,
+ getValueAt() { return resultText; },
+ getCommentAt() { return this.getValueAt(); },
+ getStyleAt() { return null; },
+ getImageAt() { return null; },
+ getFinalCompleteValueAt() { return this.getValueAt(); },
+ getLabelAt() { return this.getValueAt(); },
+ removeValueAt() {}
+};
+
+// A basic autocomplete implementation that returns the string contained in 'resultText'.
+var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
+var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
+var autoCompleteSimple = {
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIAutoCompleteSearch"]),
+
+  createInstance(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  startSearch(aString, aParam, aResult, aListener) {
+    var result = new nsAutoCompleteSimpleResult(aString);
+    aListener.onSearchResult(this, result);
+  },
+
+  stopSearch() {}
+};
+
+var componentManager = Components.manager
+                                 .QueryInterface(Ci.nsIComponentRegistrar);
+componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
+                                 autoCompleteSimpleName, autoCompleteSimple);
+
+var element = document.getElementById("richautocomplete");
+
+// Create stub to intercept `onSearchComplete` event.
+element.onSearchComplete = function(original) {
+  return function() {
+    original.apply(this, arguments);
+    checkSearchCompleted();
+  };
+}(element.onSearchComplete);
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(nextTest, 0);
+
+/* Test cases have the following attributes:
+ * - search: A search string, to be emphasized in the result.
+ * - result: A fixed result string, so we can hardcode the expected emphasis.
+ * - emphasis: A list of chunks that should be emphasized or not, in strict alternation.
+ * - emphasizeFirst: Whether the first element of 'emphasis' should be emphasized;
+ *                   The emphasis of the other elements is defined by the strict alternation rule.
+ */
+let testcases = [
+    { search: "test",
+      result: "A test string",
+      emphasis: ["A ", "test", " string"],
+      emphasizeFirst: false
+    },
+    { search: "tea two",
+      result: "Tea for two, and two for tea...",
+      emphasis: ["Tea", " for ", "two", ", and ", "two", " for ", "tea", "..."],
+      emphasizeFirst: true
+    },
+    { search: "tat",
+      result: "tatatat",
+      emphasis: ["tatatat"],
+      emphasizeFirst: true
+    },
+    { search: "cheval valise",
+      result: "chevalise",
+      emphasis: ["chevalise"],
+      emphasizeFirst: true
+    }
+];
+let test = -1;
+let currentTest = null;
+
+function nextTest() {
+  test++;
+
+  if (test >= testcases.length) {
+    // Unregister the factory so that we don't get in the way of other tests
+    componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
+    SimpleTest.finish();
+    return;
+  }
+
+  // blur the field to ensure that the popup is closed and that the previous
+  // search has stopped, then start a new search.
+  let autocomplete = $("richautocomplete");
+  autocomplete.blur();
+  autocomplete.focus();
+
+  currentTest = testcases[test];
+  resultText = currentTest.result;
+  autocomplete.value = currentTest.search;
+  synthesizeKey("KEY_ArrowDown");
+}
+
+function checkSearchCompleted() {
+  let autocomplete = $("richautocomplete");
+  let result = autocomplete.popup.richlistbox.firstChild;
+
+  for (let attribute of [result._titleText, result._urlText]) {
+    is(attribute.childNodes.length, currentTest.emphasis.length,
+       "The element should have the expected number of children.");
+    for (let i = 0; i < currentTest.emphasis.length; i++) {
+      let node = attribute.childNodes[i];
+      // Emphasized parts strictly alternate.
+      if ((i % 2 == 0) == currentTest.emphasizeFirst) {
+        // Check that this part is correctly emphasized.
+        is(node.nodeName, "span", ". That child should be a span node");
+        ok(node.classList.contains("ac-emphasize-text"), ". That child should be emphasized");
+        is(node.textContent, currentTest.emphasis[i], ". That emphasis should be as expected.");
+      } else {
+        // Check that this part is _not_ emphasized.
+        is(node.nodeName, "#text", ". That child should be a text node");
+        is(node.textContent, currentTest.emphasis[i], ". That text should be as expected.");
+      }
+    }
+  }
+
+  setTimeout(nextTest, 0);
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

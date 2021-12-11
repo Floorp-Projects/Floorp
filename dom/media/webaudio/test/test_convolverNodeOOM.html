@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test ConvolverNode with very large buffer that triggers an OOM</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  skipOfflineContextTests: true,
+  createGraph(context) {
+    var source = context.createOscillator();
+    var convolver = context.createConvolver();
+    // Very big buffer that results in an OOM
+    try {
+      var buffer = context.createBuffer(2, 300000000, context.sampleRate)
+      var channel = buffer.getChannelData(0);
+    } catch(e) {
+      // OOM when attempting to create the buffer, this can happen on 32bits
+      // OSes. Simply return here.
+      return convolver;
+    }
+    source.connect(convolver);
+    try {
+      convolver.buffer = buffer;
+    } catch (e) {
+      // This can also OOM.
+      return convolver;
+    }
+    source.start();
+    return convolver;
+  }
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,219 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/**
+ * Our OS integration code toggles whether system colors should return light or
+ * dark values based on the luminosity of the toolbar background. Because themes
+ * can style panels to have a different background color than the toolbar, we
+ * need specific overrides for system colors used in light or dark themes.
+ */
+#editBookmarkPanel:-moz-lwtheme {
+  color-scheme: light;
+}
+
+:root[lwt-popup-brighttext] #editBookmarkPanel {
+  color-scheme: dark;
+}
+
+#editBookmarkPanel > .panel-subview-body {
+  padding-block: 0;
+}
+
+html|div#editBookmarkPanelFaviconContainer {
+  display: flex;
+}
+
+#editBookmarkPanelInfoArea {
+  overflow: hidden;
+  padding: 4px var(--arrowpanel-padding) 0;
+}
+
+html|img#editBookmarkPanelFavicon[src] {
+  box-sizing: content-box;
+  width: 32px;
+  height: 32px;
+  padding: 5px;
+  background-color: #F9F9FA;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);
+  border-radius: 6px;
+  margin-top: 10px;
+  margin-inline-start: 10px;
+  margin-bottom: -52px; /* margin-top + paddings + height */
+}
+
+#editBookmarkPanelImage {
+  border-radius: 4px;
+  height: 150px;
+  background-image: -moz-element(#editBookmarkPanelImageCanvas);
+  background-repeat: no-repeat;
+  background-size: cover;
+  margin: 0;
+}
+
+#editBookmarkPanelRows,
+#editBookmarkPanelBottomContent {
+  padding: var(--arrowpanel-padding);
+}
+
+#editBookmarkPanelRows {
+  padding-bottom: 0;
+}
+
+/* Implements editBookmarkPanel resizing on folderTree un-collapse. */
+#editBMPanel_folderTree {
+  min-width: 27em;
+}
+
+#editBMPanel_newFolderButton {
+  appearance: none;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--button-bgcolor);
+  color: var(--button-color, inherit);
+  font-weight: 600;
+  min-width: 0;
+  padding: 8px 16px;
+
+  /* This button is deeper in the visual hierarchy than others (notably the
+     buttons at the bottom of the panel), so it should be slightly smaller. */
+  font-size: 90%;
+
+  /* This button needs to align with the tree above it. */
+  margin-inline-start: 4px;
+}
+
+#editBMPanel_newFolderButton:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset, 2px);
+}
+
+#editBMPanel_newFolderButton:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+#editBMPanel_newFolderButton:hover:active {
+  background-color: var(--button-active-bgcolor);
+}
+
+#editBookmarkPanelBottomButtons {
+  display: flex;
+}
+
+#editBookmarkPanel > #editBookmarkHeaderSeparator,
+#editBookmarkPanel > .panel-subview-body > #editBookmarkSeparator {
+  margin-bottom: 0;
+  margin-inline: 16px;
+}
+
+#editBookmarkPanel {
+  font: caption;
+}
+
+#editBookmarkPanelRows > vbox:not(#editBMPanel_nameRow) {
+  padding-block: var(--arrowpanel-padding) 0;
+}
+
+#editBookmarkPanelContent label[control] {
+  margin-inline-start: 0;
+  margin-block: 0 4px;
+}
+
+#editBookmarkPanel .caption-label {
+  display: none;
+}
+
+#editBookmarkPanelRows {
+  padding: 0.8em var(--arrowpanel-padding) var(--arrowpanel-padding);
+}
+
+#editBMPanel_selectionCount {
+  padding-top: 0.8em;
+}
+
+#editBookmarkPanelBottomContent {
+  padding: 0 var(--arrowpanel-padding) calc(var(--arrowpanel-padding) / 2);
+}
+
+#editBookmarkPanelBottomContent > checkbox {
+  margin-inline-start: 0;
+}
+
+#editBookmarkPanel_showForNewBookmarks > .checkbox-label-box > .checkbox-label {
+  opacity: 0.7;
+}
+
+#editBookmarkPanelBottomButtons > button {
+  margin-block: 0;
+}
+
+#editBookmarkPanel .expander-up > .button-box > .button-text,
+#editBookmarkPanel .expander-down > .button-box > .button-text {
+  display: none;
+}
+
+#editBookmarkPanel .expander-up,
+#editBookmarkPanel .expander-down {
+  appearance: none; /* override button.css */
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin: 0;
+  margin-inline-start: 4px;
+  min-width: 32px;
+  min-height: 32px;
+  color: var(--button-color);
+  background-color: var(--button-bgcolor);
+}
+
+#editBookmarkPanel .expander-up:hover,
+#editBookmarkPanel .expander-down:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+#editBookmarkPanel .expander-up:hover:active,
+#editBookmarkPanel .expander-down:hover:active {
+  /**
+   * We override the colour here because on macOS, buttons default to
+   * having :hover:active buttons have color -moz-buttonactivetext
+   */
+  color: var(--button-color);
+  background-color: var(--button-active-bgcolor);
+}
+
+#editBookmarkPanel .expander-up:focus-visible,
+#editBookmarkPanel .expander-down:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+  outline-offset: 0;
+}
+
+#editBookmarkPanel .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+#editBookmarkPanel .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+#editBMPanel_folderMenuList {
+  margin: 0;
+}
+
+#editBookmarkPanelRows > vbox > html|input,
+#editBookmarkPanelRows > vbox > hbox > html|input {
+  appearance: none;
+  padding: 8px;
+  border-radius: 4px;
+  border: 0;
+  outline: 1px solid var(--input-border-color, ThreeDShadow);
+  outline-offset: -1px;
+  background-color: var(--input-bgcolor, Field);
+  color: var(--input-color, FieldText);
+  margin: 0;
+}
+
+#editBookmarkPanelRows > vbox > html|input:focus-visible,
+#editBookmarkPanelRows > vbox > hbox > html|input:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+}

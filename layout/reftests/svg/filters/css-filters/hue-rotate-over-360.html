@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Hue Rotate an HTML Element Using an Angle Over 360 Degrees</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-hue-rotate">
+  <link rel="match" href="hue-rotate-over-360-ref.html">
+  <meta name="assert"
+        content="Given an angle over 360 degress, the CSS hue-rotate filter
+                 function should change the color of an HTML element.">
+  <style type="text/css">
+    #target {
+      filter: hue-rotate(450deg); /* Equivalent to 90deg. */
+      background-color: #f00;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a green square.</p>
+  <div id="target"></div>
+</body>
+</html>

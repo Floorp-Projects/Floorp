@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage uri/domain values and IDN encoding</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://sub1.ält.example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_idn_helper.html"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var responseReceived = false;
+var idnWindow = null;
+
+function receiveMessage(evt)
+{
+  ok(evt instanceof MessageEvent, "umm, how did we get this?");
+  is(evt.type, "message", "expected events of type 'message'");
+  ok(evt.isTrusted === true, "should have been a trusted event");
+
+  is(evt.origin, "http://sub1.xn--lt-uia.example.org:8000",
+     "wrong origin -- IDN issue, perhaps?");
+
+  is(evt.data, "idn-response", "unexpected test result");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+  ok(evt.source === idnWindow, "wrong source");
+
+  SimpleTest.finish();
+}
+window.addEventListener("message", receiveMessage);
+
+var xhtmlns = "http://www.w3.org/1999/xhtml";
+
+function setup()
+{
+  var idnFrame = document.getElementsByTagNameNS(xhtmlns, "iframe")[0];
+  idnWindow = idnFrame.contentWindow;
+  try
+  {
+    idnWindow.postMessage("idn-message", "http://sub1.ält.example.org:8000");
+  }
+  catch (e)
+  {
+    ok(false, "failed to post message: " + e);
+    SimpleTest.finish();
+  }
+}
+
+addLoadEvent(setup);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "manifest_version": 2,
+  "name": "actions",
+  "version": "1.0",
+  "description": "Defines Page and Browser actions",
+  "applications": {
+    "gecko": {
+      "id": "actions@tests.mozilla.org"
+    }
+  },
+  "browser_action": {
+    "default_title": "Test action default",
+    "theme_icons": [{
+      "light": "button/beasts-32-light.png",
+      "dark": "button/beasts-32.png",
+      "size": 32
+    }]
+  },
+  "page_action": {
+    "default_title": "Test action default",
+    "default_icon": {
+      "19": "button/geo-19.png",
+      "38": "button/geo-38.png"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "geckoViewAddons",
+    "nativeMessaging",
+    "nativeMessagingFromContent"
+  ]
+}

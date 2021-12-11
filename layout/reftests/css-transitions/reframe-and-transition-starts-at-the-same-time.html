@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+#target::before {
+  transition: background-color 100s steps(1, end);
+  content: 'initial';
+  background-color: rgb(255, 255, 255);
+  height: 100px;
+  width: 100px;
+  position: absolute;
+}
+#target.hover::before{
+  background-color: rgb(0, 0, 0);
+  content: '';
+}
+</style>
+<div id="target"></div>
+<script>
+window.addEventListener("load", () => {
+  target.className = 'hover';
+  target.addEventListener('transitionstart', () => {
+    document.documentElement.classList.remove('reftest-wait');
+  });
+});
+</script>
+</html>

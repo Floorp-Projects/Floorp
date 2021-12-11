@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<script>
+  var bc = new BroadcastChannel("navigate");
+  window.onload = () => {
+    bc.onmessage = (event) => {
+      if (event.data.command == "navigate") {
+        window.location = event.data.location;
+        bc.close();
+      }
+      if (event.data.command == "back") {
+        history.back();
+        bc.close();
+      }
+    }
+    bc.postMessage({command: "loaded", scrollRestoration: history.scrollRestoration});
+  }
+</script>

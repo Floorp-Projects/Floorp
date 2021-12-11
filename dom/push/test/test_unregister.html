@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1170817: Push tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1170817</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1170817">Mozilla Bug 1170817</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+  function generateURL() {
+    return "worker.js?" + (Math.random());
+  }
+
+  var registration;
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
+    await setPushPermission(true);
+
+    registration = await navigator.serviceWorker.register(
+      generateURL(), {scope: "."});
+    await waitForActive(registration);
+  });
+
+  var pushSubscription;
+  add_task(async function setupPushNotification() {
+    pushSubscription = await registration.pushManager.subscribe();
+    ok(pushSubscription, "successful registered for push notification");
+  });
+
+  add_task(async function unregisterPushNotification() {
+    var result = await pushSubscription.unsubscribe();
+    ok(result, "unsubscribe() on existing subscription should return true.");
+  });
+
+  add_task(async function unregisterAgain() {
+    var result = await pushSubscription.unsubscribe();
+    ok(!result, "unsubscribe() on previously unsubscribed subscription should return false.");
+  });
+
+  add_task(async function subscribeAgain() {
+    pushSubscription = await registration.pushManager.subscribe();
+    ok(pushSubscription, "Should create a new push subscription");
+
+    var result = await registration.unregister();
+    ok(result, "Should unregister the service worker");
+
+    registration = await navigator.serviceWorker.register(
+      generateURL(), {scope: "."});
+    await waitForActive(registration);
+    pushSubscription = await registration.pushManager.getSubscription();
+    ok(!pushSubscription,
+      "Unregistering a service worker should drop its subscription");
+  });
+
+  add_task(async function unregister() {
+    var result = await registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
+
+</script>
+</body>
+</html>

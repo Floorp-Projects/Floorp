@@ -1,0 +1,25 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="200" viewBox="0 0 700 200" class="reftest-wait">
+  <g transform="translate(100,100)" style="font: 16px sans-serif; fill: red">
+    <text>hello</text>
+  </g>
+  <script>
+    function when(type, f) {
+      var g = function(evt) {
+        window.removeEventListener(type, g, false);
+        f(evt);
+      };
+      window.addEventListener(type, g, false);
+    }
+
+    when("MozReftestInvalidate", function() {
+      document.getElementsByTagName("g")[0].style.fill = "green";
+      when("MozAfterPaint", function() {
+        document.documentElement.removeAttribute("class");
+      });
+    });
+  </script>
+</svg>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for selection changes with middle mouse button</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    span, td {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<textarea id="textarea" cols="1" rows="1">copied to clipboard</textarea>
+
+<div id="container">
+<span id="span1">first span.</span>
+<span id="span2">second span.</span><br>
+<a id="link" href="#top">link.</a>
+<table>
+<tr><td id="td1">first td.</td></tr>
+<tr><td id="td2">second td.</td></tr>
+</table>
+</div>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+const kIsMac = navigator.platform.includes("Mac");
+const selection = getSelection();
+
+async function doTests(aEnableMiddlePaste, aEditable, aDescription) {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", aEnableMiddlePaste],
+    ["middlemouse.contentLoadURL", false],
+    ["general.autoScroll", false],
+    ["general.autoscroll.prevent_to_collapse_selection_by_middle_mouse_down", false],
+  ]});
+
+  if (aEditable) {
+    document.getElementById("container").setAttribute("contenteditable", "true");
+  } else {
+    document.getElementById("container").removeAttribute("contenteditable");
+  }
+
+  let pasteEvents = [];
+  function pasteEventHandler(event) {
+    pasteEvents.push(event);
+    event.preventDefault();
+  }
+  document.getElementById("container").addEventListener("paste", pasteEventHandler, true);
+
+  // We need to behave as same as Chromium as far as possible.
+  // - middle mouse button down should be collapse selection at the point.
+  // - middle mouse button down can expand only with mouse button down with Shift key.
+  // - middle mouse button shouldn't select table cells.
+
+  function doTest(aMouseDown, aMouseUp,
+                  aExpectedSelectionAnchor, aExpectedSelectionFocus, aExpectedPastEventTarget,
+                  aAdditionalDescription) {
+    pasteEvents = [];
+    synthesizeMouseAtCenter(aMouseDown.target,
+      {
+        button: 1,
+        type: "mousedown",
+        shiftKey: aMouseDown.shiftKey,
+        ctrlKey: aMouseDown.ctrlKey && !kIsMac,
+        metaKey: aMouseDown.ctrlKey && kIsMac,
+      });
+    if (aExpectedSelectionAnchor === aExpectedSelectionFocus) {
+      ok(selection.isCollapsed,
+         aDescription + aAdditionalDescription + "Selection should be collapsed at mousedown");
+      is(selection.focusNode, aExpectedSelectionFocus,
+         aDescription + aAdditionalDescription + "Selection should be collapsed in the node at mousedown");
+    } else {
+      is(selection.anchorNode, aExpectedSelectionAnchor,
+         aDescription + aAdditionalDescription + "Anchor node of Selection should be previous anchor node");
+      is(selection.focusNode, aExpectedSelectionFocus,
+         aDescription + aAdditionalDescription + "Focus node of Selection should be the node at mousedown");
+    }
+    is(pasteEvents.length, 0,
+       aDescription + aAdditionalDescription + "paste event shouldn't be fired when middle mouse button down");
+
+    if (aMouseDown.target != aMouseUp.target) {
+      synthesizeMouseAtCenter(aMouseUp.target, {type: "mousemove"});
+    }
+    synthesizeMouseAtCenter(aMouseUp.target,
+      {
+        button: 1,
+        type: "mouseup",
+        shiftKey: aMouseUp.shiftKey,
+        ctrlKey: aMouseUp.ctrlKey && !kIsMac,
+        metaKey: aMouseUp.ctrlKey && kIsMac,
+      });
+    is(selection.anchorNode, aExpectedSelectionAnchor,
+       aDescription + aAdditionalDescription + "Anchor node of Selection shouldn't be modified at mouseup");
+    is(selection.focusNode, aExpectedSelectionFocus,
+       aDescription + aAdditionalDescription + "Focus node of Selection shouldn't be modified at mouseup");
+    if (aEnableMiddlePaste) {
+      if (aExpectedPastEventTarget === null) {
+        is(pasteEvents.length, 0,
+           aDescription + aAdditionalDescription + "paste event shouldn't be fired even when middle mouse button up");
+      } else {
+        is(pasteEvents.length, 1,
+           aDescription + aAdditionalDescription + "paste event should be fired only once at mouse up");
+        is(pasteEvents[0]?.target, aExpectedPastEventTarget,
+           aDescription + aAdditionalDescription + "paste event should be fired on start of selection");
+      }
+    } else {
+      is(pasteEvents.length, 0,
+         aDescription + aAdditionalDescription + "paste event shouldn't be fired when middle mouse button up when middle mouse paste is disabled");
+    }
+  }
+
+  let span1 = document.getElementById("span1");
+  let span2 = document.getElementById("span2");
+  let link = document.getElementById("link");
+
+  selection.removeAllRanges();
+  doTest({target: span1}, {target: span1},
+         span1.firstChild, span1.firstChild, span1,
+         "Clicking span1 when there is no selection: ");
+  doTest({target: span2}, {target: span2},
+         span2.firstChild, span2.firstChild, span2,
+         "Clicking span2 when selection is collapsed in span1: ");
+  doTest({target: span1}, {target: span2},
+         span1.firstChild, span1.firstChild, span1,
+         "Dragging from span1 to span2: ");
+  doTest({target: span2}, {target: span1},
+         span2.firstChild, span2.firstChild, span2,
+         "Dragging from span2 to span1: ");
+  doTest({target: span1, shiftKey: true}, {target: span1, shiftKey: true},
+         span2.firstChild, span1.firstChild, span1,
+         "Expanding selection with Shift key from span2 to span1: ");
+  selection.collapse(span1.firstChild, 3);
+  if (aEditable) {
+    // Collapse link into editable link.
+    doTest({target: link, shiftKey: true}, {target: link, shiftKey: true},
+          link.firstChild, link.firstChild,
+          link /* TODO: Perhaps, the "paste" event target should be the link */,
+          "Clicking an editable link with middle-button with Shift key when selection is collapsed in span1: ");
+  } else {
+    // Don't extend selection into a link.
+    link.onauxclick = event => event.preventDefault();
+    doTest({target: link, shiftKey: true}, {target: link, shiftKey: true},
+          span1.firstChild, span1.firstChild,
+          null /* due to the call of preventDefault */,
+          "Clicking a link with middle-button with Shift key when selection is collapsed in span1: ");
+    link.onauxclick = null;
+  }
+  // "paste" event should be fired in the "start" of selection.
+  selection.collapse(span1.firstChild, 3);
+  doTest({target: span2, shiftKey: true}, {target: span2, shiftKey: true},
+         span1.firstChild, span2.firstChild, span1,
+         "Expanding selection with Shift key from span1 to span2: ");
+  // XXX This case is different from Chrome for Linux.
+  //     In this case, Chrome does not collapse Selection at mousedown,
+  //     but collapse at click.  So, if mouseup occurs different element,
+  //     Selection isn't modified.
+  selection.selectAllChildren(span1);
+  doTest({target: span1}, {target: span1},
+         span1.firstChild, span1.firstChild, span1,
+         "Clicking span1 when span1 is selected: ");
+
+  let td1 = document.getElementById("td1");
+  let td2 = document.getElementById("td2");
+
+  selection.removeAllRanges();
+  doTest({target: td1}, {target: td1},
+         td1.firstChild, td1.firstChild, td1,
+         "Clicking td1 when there is no selection: ");
+  if (aEditable) {
+    // XXX In this case, we don't allow to expand selection with Shift key
+    //     click across table cell boundary.
+    doTest({target: td2, shiftKey: true}, {target: td2, shiftKey: true},
+           td1.firstChild, td1.firstChild, td1,
+           "Expanding selection with Shift key from td1 to td2: ");
+  } else {
+    doTest({target: td2, shiftKey: true}, {target: td2, shiftKey: true},
+           td1.firstChild, td2.firstChild, td1,
+           "Expanding selection with Shift key from td1 to td2: ");
+  }
+  // Shouldn't select per table cell when the button is middle mouse button.
+  doTest({target: td1, ctrlKey: true}, {target: td1, ctrlKey: true},
+         td1.firstChild, td1.firstChild, td1,
+         "Click td1 with Control key: ");
+
+  document.getElementById("container").removeEventListener("paste", pasteEventHandler, true);
+}
+
+async function runTestPreventingToCollapseSelectionByPrefs() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.contentLoadURL", false],
+    ["general.autoscroll.prevent_to_collapse_selection_by_middle_mouse_down", true],
+  ]});
+
+  // If middle click paste is disabled and autoscroll is enabled, we should
+  // allow users to prevent to collapse selection by middle mouse down.
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", false],
+    ["general.autoScroll", true],
+  ]});
+
+  const container = document.getElementById("container");
+  container.removeAttribute("contenteditable");
+  container.getBoundingClientRect();
+
+  const span1 = container.querySelector("span#span1");
+  const span2 = container.querySelector("span#span2");
+  function checkSelectAllChildrenOfSpan2(description) {
+    is(
+      getSelection().focusNode,
+      span2,
+      `Selection shouldn't be collapsed by ${description} (focusNode)`
+    );
+    is(
+      getSelection().focusOffset,
+      span2.childNodes.length,
+      `Selection shouldn't be collapsed by ${description} (focusOffset)`
+    );
+    is(
+      getSelection().anchorNode,
+      span2,
+      `Selection shouldn't be collapsed by ${description} (anchorNode)`
+    );
+    is(
+      getSelection().anchorOffset,
+      0,
+      `Selection shouldn't be collapsed by ${description} (anchorOffset)`
+    );
+  }
+
+  function checkSelectionCollapsedInSpan1(description) {
+    ok(
+      getSelection().isCollapsed,
+      `Selection should be collapsed into the clicked text node ${description} (isCollapsed)`
+    );
+    is(
+      getSelection().focusNode,
+      span1.firstChild,
+      `Selection should be collapsed into the clicked text node ${description} (focusNode)`
+    );
+    is(
+      getSelection().anchorNode,
+      span1.firstChild,
+      `Selection should be collapsed into the clicked text node ${description} (anchorNode)`
+    );
+  }
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectAllChildrenOfSpan2("middle mousedown if the pref is enabled and middle click paste is disabled and autoscroll are enabled");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectAllChildrenOfSpan2("middle mouseup if the pref is enabled and middle click paste is disabled and autoscroll are enabled");
+
+  container.setAttribute("contenteditable", "true");
+  container.getBoundingClientRect();
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectionCollapsedInSpan1("by middle mousedown if it's editable content");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectionCollapsedInSpan1("after middle mouseup if it's editable content");
+
+  container.removeAttribute("contenteditable");
+  container.getBoundingClientRect();
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", false],
+    ["general.autoScroll", false],
+  ]});
+
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectionCollapsedInSpan1("by middle mousedown if the pref is enabled but autoscroll are disabled");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectionCollapsedInSpan1("after middle mousedown if the pref is enabled but autoscroll are disabled");
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", true],
+    ["general.autoScroll", true],
+  ]});
+
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectionCollapsedInSpan1("by middle mousedown if the pref is enabled but middle mouse paste is enabled");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectionCollapsedInSpan1("after middle mousedown if the pref is enabled but middle mouse paste is enabled");
+}
+
+async function runAllTests() {
+  let textarea = document.getElementById("textarea");
+  textarea.focus();
+  await new Promise((resolve, reject) => {
+    SimpleTest.waitForClipboard(textarea.value,
+      () => {
+        synthesizeKey("a", {accelKey: true});
+        synthesizeKey("c", {accelKey: true});
+      },
+      () => {
+        ok(true, `Succeeded to copy "${textarea.value}" to clipboard`);
+        textarea.style.display = "none";
+        resolve();
+      },
+      () => {
+        ok(false, `Failed to copy "${textarea.value}" to clipboard`);
+        reject();
+      });
+  });
+
+  await doTests(true, false, "Testing with the middle paste enabled: ");
+  await doTests(false, false, "Testing with the middle paste disabled: ");
+
+  await doTests(true, true, "Testing in editable content with the middle paste enabled: ");
+  await doTests(false, true, "Testing in editable content with the middle paste disabled: ");
+
+  await runTestPreventingToCollapseSelectionByPrefs();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runAllTests);
+</script>
+</pre>
+</body>
+</html>

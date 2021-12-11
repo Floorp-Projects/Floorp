@@ -1,0 +1,28 @@
+/* vim: set ft=cpp: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+include protocol PContent;
+
+namespace mozilla {
+namespace dom {
+
+[RefCounted] protocol PExternalHelperApp
+{
+  manager PContent;
+
+parent:
+  async OnStartRequest(nsCString entityID);
+  async OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
+  async OnStopRequest(nsresult code);
+
+child:
+  async Cancel(nsresult aStatus);
+  async __delete__();
+};
+
+
+} // namespace dom
+} // namespace mozilla

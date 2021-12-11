@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: progress events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function do_progress(e) {
+  var v = e.target;
+  ok(!v._finished, "Check no progress events after completed for " + v._name);
+}
+
+function do_ended(e) {
+  var v = e.target;
+  ok(!v._finished, "Only one ended event for " + v._name);
+  v._finished = true;
+  v.removeEventListener("ended", do_ended);
+  v.removeEventListener("progress", do_progress);
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
+function startTest(test, token) {
+  var type = /^video/.test(test.type) ? "video" : "audio";
+  var v = document.createElement(type);
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v.autoplay = true;
+  v._name = test.name;
+  v._finished = false;
+  v.addEventListener("ended", do_ended);
+  v.addEventListener("progress", do_progress);
+  document.body.appendChild(v);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
+function beginTest() {
+  manager.runTests(gProgressTests, startTest);
+}
+</script>
+</pre>
+</body>
+</html>

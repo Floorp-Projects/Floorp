@@ -1,0 +1,128 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* we eventually want to share this value with the bookmark panel, which is
+     currently using --arrowpanel-padding */
+  --editbookmarkdialog-padding: 1.25em;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows > vbox {
+  padding-block: var(--editbookmarkdialog-padding) 0;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent label[control] {
+  margin-inline-start: 0;
+  margin-block: 0 4px;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows {
+  padding: calc(var(--editbookmarkdialog-padding) / 2) var(--editbookmarkdialog-padding) var(--editbookmarkdialog-padding);
+}
+
+#bookmarkpropertiesdialog .expander-up,
+#bookmarkpropertiesdialog .expander-down {
+  appearance: none;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin: 0;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+}
+
+#bookmarkpropertiesdialog .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+#bookmarkpropertiesdialog .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows > vbox > input,
+#bookmarkpropertiesdialog #editBookmarkPanelRows > vbox > hbox > input,
+#bookmarkpropertiesdialog #editBMPanel_folderMenuList {
+  margin: 0;
+}
+
+/* dialog-specific #editBookmarkPanel styles */
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows {
+  padding-inline: 0;
+  margin-inline: 4px;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows,
+#bookmarkpropertiesdialog vbox#editBMPanel_nameRow {
+  padding-top: 0;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows #editBMPanel_tagsField,
+#bookmarkpropertiesdialog #editBookmarkPanelRows #editBMPanel_folderMenuList {
+  margin-inline-end: 16px;
+}
+
+#bookmarkpropertiesdialog .caption-label {
+  margin: 4px;
+  color: var(--in-content-deemphasized-text);
+}
+
+/* Tags table */
+
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector {
+  border-color: var(--in-content-border-color);
+  padding: 12px;
+}
+
+/* Reset default margins for tags so we can apply custom ones */
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image,
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > label {
+  margin: 0;
+}
+
+/* Set spacing between tags */
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image {
+  margin-inline-end: 8px;
+}
+
+tree[is="places-tree"] > treechildren::-moz-tree-cell {
+  /* ensure we use the direction of the website title / url instead of the
+   * browser locale */
+  unicode-bidi: plaintext;
+}
+
+.places-tooltip-title {
+  /* ensure we use the direction of the website title instead of the
+   * browser locale */
+  unicode-bidi: plaintext;
+}
+
+.toolbar-drop-indicator {
+  position: relative;
+  z-index: 1;
+}
+
+/* Apply crisp rendering for favicons at exactly 2dppx resolution */
+@media (resolution: 2dppx) {
+  #bookmarksChildren,
+  .sidebar-placesTreechildren,
+  .placesTree > treechildren {
+    image-rendering: -moz-crisp-edges;
+  }
+}
+
+#searchFilter {
+  max-width: 23em;
+}
+
+.caption-label {
+  font-size: 0.9em;
+  line-height: 12px;
+  margin: 2px 4px;
+  color: currentColor;
+}

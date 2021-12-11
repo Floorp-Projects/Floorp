@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=430392
+-->
+<head>
+  <title>Test for Bug 430392</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=430392">Mozilla Bug 430392</a>
+<p id="display"></p>
+<div id="content">
+  <div contenteditable="true" id="edit"> <span contenteditable="false">A</span> ; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span> </div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 430392 **/
+
+function test() {
+  var edit = document.getElementById("edit");
+  var html = edit.innerHTML;
+  var expectedText = edit.textContent;
+  document.getElementById("edit").focus();
+
+  // Each test is [desc, callback, inputType of `beforeinput`, inputType of `input`].
+  // callback() is called and we check that the textContent didn't change.
+  // For expected failures, the format is
+  // [desc, callback, undefined, inputType of `beforeinput`, inputType of `input`, expectedValue],
+  // and the test will be marked as an expected fail if the textContent changes
+  // to expectedValue, and an unexpected fail if it's neither the original value
+  // nor expectedValue.
+  let tests = [["adding returns", () => {
+    getSelection().collapse(edit.firstChild, 0);
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("KEY_Enter");
+    synthesizeKey("KEY_Enter");
+    synthesizeKey("KEY_Backspace");
+    synthesizeKey("KEY_Backspace");
+  }, [
+    "insertParagraph",
+    "insertParagraph",
+    "deleteContentBackward",
+    "deleteContentBackward",
+  ],
+  // Blink does nothing in this case, but WebKit does insert paragraph.
+  [/* no input events for NOOP */]],
+  ["adding shift-returns", () => {
+    getSelection().collapse(edit.firstChild, 0);
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("KEY_Enter", {shiftKey: true});
+    synthesizeKey("KEY_Enter", {shiftKey: true});
+    synthesizeKey("KEY_Backspace");
+    synthesizeKey("KEY_Backspace");
+  }, [
+    "insertLineBreak",
+    "insertLineBreak",
+    "deleteContentBackward",
+    "deleteContentBackward",
+  ],
+  // Blink does nothing in this case, but WebKit inserts `<br>` element.
+  [/* no input events for NOOP */]],
+  ];
+  [
+    ["insertorderedlist", "insertOrderedList"],
+    ["insertunorderedlist", "insertUnorderedList"],
+    ["formatblock", "", "p"],
+  ]
+  .forEach(item => {
+      let cmd = item[0];
+      let param = item[2];
+      let inputType = item[1];
+      tests.push([cmd, () => { document.execCommand(cmd, false, param); },
+                  [/* execCommand shouldn't cause beforeinput event */],
+                  [inputType]]);
+   });
+  // These are all TODO -- they don't move the non-editable elements
+  [
+    ["bold", "formatBold"],
+    ["italic", "formatItalic"],
+    ["underline", "formatUnderline"],
+    ["strikethrough", "formatStrikeThrough"],
+    ["subscript", "formatSubscript"],
+    ["superscript", "formatSuperscript"],
+    ["forecolor", "formatFontColor", "blue"],
+    ["backcolor", "formatBackColor", "blue"],
+    ["hilitecolor", "formatBackColor", "blue"],
+    ["fontname", "formatFontName", "monospace"],
+    ["fontsize", "", "1"],
+    ["justifyright", "formatJustifyRight"],
+    ["justifycenter", "formatJustifyCenter"],
+    ["justifyfull", "formatJustifyFull"],
+  ]
+  .forEach(item => {
+      let cmd = item[0];
+      let param = item[2];
+      let inputType = item[1];
+      tests.push([cmd, () => { document.execCommand(cmd, false, param); },
+                  [/* execCommand shouldn't cause beforeinput event */],
+                  [inputType],
+                  " A ;  ; BC "]);
+   });
+  tests.push(["indent", () => { document.execCommand("indent"); },
+              [/* execCommand shouldn't cause beforeinput event */],
+              ["formatIndent"],
+              "  ;  ;  ABC"]);
+
+  let beforeinputTypes = [];
+  let inputTypes = [];
+  edit.addEventListener("beforeinput", event => { beforeinputTypes.push(event.inputType); });
+  edit.addEventListener("input", event => { inputTypes.push(event.inputType); });
+  tests.forEach(arr => {
+    ["div", "br", "p"].forEach(sep => {
+      document.execCommand("defaultParagraphSeparator", false, sep);
+
+      let expectedFailText = typeof arr[4] == "function" ? arr[4]() : arr[4];
+
+      edit.innerHTML = html;
+      edit.focus();
+      getSelection().selectAllChildren(edit);
+      beforeinputTypes = [];
+      inputTypes = [];
+      arr[1]();
+      if (typeof expectedFailText != "undefined") {
+        todo_is(edit.textContent, expectedText,
+                arr[0] + " should not change text (" + sep + ")");
+        if (edit.textContent !== expectedText &&
+            edit.textContent !== expectedFailText) {
+          is(edit.textContent, expectedFailText,
+             arr[0] + " changed to different failure (" + sep + ")");
+        }
+      } else {
+        is(edit.textContent, expectedText,
+           arr[0] + " should not change text (" + sep + ")");
+      }
+      is(beforeinputTypes.length, arr[2].length, `${arr[0]}: number of beforeinput events should be ${arr[2].length} (${sep})`);
+      for (let i = 0; i < Math.max(beforeinputTypes.length, arr[2].length); i++) {
+        if (i < beforeinputTypes.length && i < arr[2].length) {
+          is(beforeinputTypes[i], arr[2][i], `${arr[0]}: ${i + 1}th inputType of beforeinput event should be "${arr[2][i]}" (${sep})`);
+        } else if (i < beforeinputTypes.length) {
+          ok(false, `${arr[0]}: Redundant beforeinput event shouldn't be fired, its inputType was "${beforeinputTypes[i]}" (${sep})`);
+        } else {
+          ok(false, `${arr[0]}: beforeinput event whose inputType is "${arr[2][i]}" should be fired, but not fired (${sep})`);
+        }
+      }
+      is(inputTypes.length, arr[3].length, `${arr[0]}: number of input events is unexpected (${sep})`);
+      for (let i = 0; i < Math.max(inputTypes.length, arr[3].length); i++) {
+        if (i < inputTypes.length && i < arr[3].length) {
+          is(inputTypes[i], arr[3][i], `${arr[0]}: ${i + 1}th inputType of input event should be "${arr[3][i]}" (${sep})`);
+        } else if (i < inputTypes.length) {
+          ok(false, `${arr[0]}: Redundant input event shouldn't be fired, its inputType was "${inputTypes[i]}" (${sep})`);
+        } else {
+          ok(false, `${arr[0]}: input event whose inputType is "${arr[3][i]}" should be fired, but not fired (${sep})`);
+        }
+      }
+    });
+  });
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(test);
+
+</script>
+</pre>
+</body>
+</html>

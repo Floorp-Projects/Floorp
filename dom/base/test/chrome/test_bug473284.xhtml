@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=473284
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+onload="
+var result = '';
+try {
+  document.commandDispatcher.advanceFocusIntoSubtree({});
+  result += '1';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+  result += '2';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.advanceFocusIntoSubtree(null);
+  result += '3';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.focusedElement = {};
+  result += '4';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.focusedElement = document.documentElement;
+  result += '5';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.focusedElement = null;
+  result += '6';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.focusedWindow = {};
+  result += 'a';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.focusedWindow = null;
+  result += 'b';
+} catch (ex) {
+  result += '.';
+}
+
+try {
+  document.commandDispatcher.focusedWindow = window;
+  result += 'c';
+} catch (ex) {
+  result += '.';
+}
+
+is(result, '.23.56.bc', 'The correct assignments throw.');
+">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=473284"
+     target="_blank">Mozilla Bug 473284</a>
+  </body>
+</window>

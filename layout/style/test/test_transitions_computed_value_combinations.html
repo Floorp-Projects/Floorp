@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435441
+-->
+<head>
+  <title>Test for Bug 435441</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435441">Mozilla Bug 435441</a>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 435441 **/
+
+
+/**
+ * I want to test a reasonable number of combinations rather than all of
+ * them, but I also want the test results to be reproducable.  So use a
+ * simple random number generator with my own seed.  See
+ * http://en.wikipedia.org/wiki/Linear_congruential_generator
+ * (Using the numbers from Numerical Recipes.)
+ */
+var rand_state = 1938266273; // a randomly (once) generated number in [0,2^32)
+var all_integers = true;
+function myrand()
+{
+  rand_state = ((rand_state * 1664525) + 1013904223) % 0x100000000;
+  all_integers = all_integers &&
+                 Math.ceil(rand_state) == Math.floor(rand_state);
+  return rand_state / 0x100000000; // return value in [0,1)
+}
+
+// We want to test a bunch of values for each property.
+// Each of these values will also have a "computed" property filled in
+// below, so that we ensure it always computes to the same value.
+var values = {
+  "transition-duration":
+    [
+      { lone: true,  specified: "initial" },
+      { lone: false, specified: "2s" },
+      { lone: false, specified: "0s" },
+      { lone: false, specified: "430ms" },
+      { lone: false, specified: "1s" },
+    ],
+  "transition-property":
+    [
+      { lone: true,  specified: "initial" },
+      { lone: true,  specified: "none" },
+      { lone: true,  specified: "all" },
+      { lone: false, specified: "color" },
+      { lone: false, specified: "border-spacing" },
+      // Make sure to test the "unknown property" case.
+      { lone: false, specified: "unsupported-property" },
+      { lone: false, specified: "-other-unsupported-property" },
+    ],
+  "transition-timing-function":
+    [
+      { lone: true,  specified: "initial" },
+      { lone: false, specified: "linear" },
+      { lone: false, specified: "ease" },
+      { lone: false, specified: "ease-in-out" },
+      { lone: false, specified: "cubic-bezier(0, 0, 0.63, 1.00)" },
+    ],
+  "transition-delay":
+    [
+      { lone: true,  specified: "initial" },
+      { lone: false, specified: "2s" },
+      { lone: false, specified: "0s" },
+      { lone: false, specified: "430ms" },
+      { lone: false, specified: "-1s" },
+    ],
+};
+
+var elt = document.getElementById("content");
+var cs = getComputedStyle(elt, "");
+
+// Add the "computed" property to all of the above values.
+for (var prop in values) {
+  var valueset = values[prop];
+  for (var index in valueset) {
+    var item = valueset[index];
+    elt.style.setProperty(prop, item.specified, "");
+    item.computed = cs.getPropertyValue(prop);
+    elt.style.removeProperty(prop);
+    isnot(item.computed, "", "computed value must not be empty");
+    if (index != 0) {
+      isnot(item.computed, valueset[index-1].computed,
+            "computed value must not be the same as the last one");
+    }
+  }
+}
+
+var child = document.createElement("div");
+elt.appendChild(child);
+var child_cs = getComputedStyle(child, "");
+
+// Now test a hundred random combinations of values on the parent and
+// child.
+for (var iteration = 0; iteration < 100; ++iteration) {
+  // Figure out values on the parent.
+  var parent_vals = {};
+  for (var prop in values) {
+    var valueset = values[prop];
+    var list_length = Math.ceil(Math.pow(myrand(), 2) * 6);
+      // 41% chance of length 1
+    var specified = [];
+    var computed = [];
+    for (var i = 0; i < list_length; ++i) {
+      var index;
+      do {
+        index = Math.floor(myrand() * valueset.length);
+      } while (list_length != 1 && valueset[index].lone);
+      specified.push(valueset[index].specified);
+      computed.push(valueset[index].computed);
+    }
+    parent_vals[prop] = { specified: specified.join(", "),
+                          computed:  computed.join(", ") };
+    elt.style.setProperty(prop, parent_vals[prop].specified, "");
+  }
+
+  // Figure out values on the child.
+  var child_vals = {};
+  for (var prop in values) {
+    var valueset = values[prop];
+    // Use 0 as a magic value for "inherit".
+    var list_length = Math.floor(Math.pow(myrand(), 1.5) * 7);
+      // 27% chance of inherit
+      // 16% chance of length 1
+    if (list_length == 0) {
+      child_vals[prop] = { specified: "inherit",
+                           computed: parent_vals[prop].computed };
+    } else {
+      var specified = [];
+      var computed = [];
+      for (var i = 0; i < list_length; ++i) {
+        var index;
+        do {
+          index = Math.floor(myrand() * valueset.length);
+        } while (list_length != 1 && valueset[index].lone);
+        specified.push(valueset[index].specified);
+        computed.push(valueset[index].computed);
+      }
+      child_vals[prop] = { specified: specified.join(", "),
+                           computed:  computed.join(", ") };
+    }
+    child.style.setProperty(prop, child_vals[prop].specified, "");
+  }
+
+  // Test computed values
+  for (var prop in values) {
+    is(cs.getPropertyValue(prop), parent_vals[prop].computed,
+       "computed value of " + prop + ": " + parent_vals[prop].specified +
+       " on parent.");
+    is(child_cs.getPropertyValue(prop), child_vals[prop].computed,
+       "computed value of " + prop + ": " + child_vals[prop].specified +
+       " on child.");
+  }
+}
+
+ok(all_integers, "pseudo-random number generator kept its numbers " +
+                 "as integers throughout run");
+
+</script>
+</pre>
+</body>
+</html>

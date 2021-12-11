@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>title not set</title>
+  <script>
+    // If the query string is given, we are expecting the window.opener can be accessed
+    // across different first party domains, so we will match the cookie value.
+    // Otherwise, the access of window.opener should be treated as cross-origin.
+    // Therefore, it should fail at this setting.
+    let openerRestriction = true;
+    let cookieValue;
+    if (window.location.search.length) {
+      cookieValue = window.location.search.substr(1);
+      openerRestriction = false;
+    }
+
+    try {
+      let openerFrame = window.opener.frames.child;
+      let result = openerFrame.document.cookie === cookieValue;
+      if (result && !openerRestriction) {
+        document.title = "pass";
+      }
+    } catch (e) {
+      if (openerRestriction) {
+        document.title = "pass";
+      }
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+EXPORTS = \
+	pkcs12t.h \
+	pkcs12.h \
+	p12plcy.h \
+	p12.h \
+	p12t.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	p12local.c \
+	p12creat.c \
+	p12dec.c \
+	p12plcy.c \
+	p12tmpl.c \
+	p12e.c \
+	p12d.c \
+	$(NULL)
+
+LIBRARY_NAME = pkcs12
+SHARED_LIBRARY = $(NULL)
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

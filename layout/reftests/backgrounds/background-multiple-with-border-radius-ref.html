@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Test multiple backgrounds with border-radius</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998792">
+  <meta charset="utf-8">
+<style>
+
+.b2 {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD%2FgAIDAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoUlEQVR42u3bwQ0AIAgEwcOmtXttgScmsxWQCTyp3EysJo61IliwYMGCBUuwYMGCBQuWYMGCBQsWLMGCBQsWLFiCBQsWLFiwBAsWLFiwYAkWLFiwYMESLFiwYMGCpXaVka%2BsO8dmOUNYggULFixYsAQLFixYsGAJFixYsGDBEixYsGDBgiVYsGDBggVLsGDBggULlmDBggULFizBggUL1t89N%2FYEtBGStpoAAAAASUVORK5CYII%3D);
+}
+
+.b {
+  background: yellow;
+}
+
+div.b {
+  width: 100px;
+  height: 100px;
+  padding: 30px;
+}
+
+div.border {
+  width: 160px;
+  height: 160px;
+  border: 10px dashed blue;
+  border-radius: 10px;
+}
+
+div.b2 {
+  width: 100px;
+  height: 100px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="border"><div class="b"><div class="b2"></div></div></div>
+
+</body>
+</html>

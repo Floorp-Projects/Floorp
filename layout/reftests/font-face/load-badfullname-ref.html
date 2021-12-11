@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test of fonts with funky fullnames</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/markA.ttf);
+}
+
+body {
+  margin: 50px;
+  font-size: 12pt;
+  font-family: Gill Sans, Futura, sans-serif;
+}
+
+p.test1 { font-size: 48pt; font-family: test, Futura, sans-serif; }
+p.test2 { font-size: 48pt; font-family: test, Futura, sans-serif; }
+
+</style>
+  
+</head>
+<body>
+
+<p>Letter A should <strong>not</strong> appear below:</p>
+
+<p class="test1">A</p>
+
+<p class="test2">A</p>
+
+</body>
+</html>

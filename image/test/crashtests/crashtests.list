@@ -1,0 +1,70 @@
+# Bug 668068 - Maximum (256) width and height icons that we currently interpret as 0-width and 0-height.
+load 256-height.ico
+load 256-width.ico
+
+load 83804-1.gif
+load 89341-1.gif
+load 463696.bmp
+load 570451.png
+# Bug 1390704 - Skip on debug because it triggers a quadratic behavior that makes it take
+# so much time that it can trip on the reftest timeout of 5 minutes.
+skip-if(Android||isDebugBuild||ThreadSanitizer) load 694165-1.xhtml
+pref(canvas.mozgetasfile.enabled,true) load 681190.html
+load 732319-1.html
+load 844403-1.html
+load 856616.gif
+skip-if(ThreadSanitizer) load 944353.jpg
+load 1205923-1.html
+# Ensure we handle detecting that an image is animated, then failing to decode
+# it. (See bug 1210745.)
+load 1210745-1.gif
+load 1212954-1.svg
+load 1235605.gif
+load 1241728-1.html
+load 1241729-1.html
+load 1242093-1.html
+skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) load 1242778-1.png
+load 1249576-1.png
+load 1253362-1.html
+skip-if(Android&&browserIsRemote) load 1355898-1.html # bug 1507207
+load 1375842-1.html
+load 1413762-1.gif
+pref(image.downscale-during-decode.enabled,true) load 1443232-1.html
+load colormap-range.gif
+HTTP load delayedframe.sjs # A 3-frame animated GIF with an inordinate delay between the second and third frame
+
+# Animated gifs with a very large canvas, but tiny actual content.
+load delaytest.html?523528-1.gif
+load delaytest.html?523528-2.gif
+
+load delaytest.html?1262549-1.gif
+load delaytest.html?1277397-1.jpg
+
+# Bug 1160801 - Ensure that we handle invalid disposal types.
+load invalid-disposal-method-1.gif
+load invalid-disposal-method-2.gif
+load invalid-disposal-method-3.gif
+
+load invalid-icc-profile.jpg # This would have exposed the leak discovered in bug 642902
+
+# Ensure we handle ICO directory entries which specify the wrong size for the contained resource.
+load invalid_ico_height.ico
+load invalid_ico_width.ico
+
+# Bug 525326 - Test image sizes of 65535x65535 which is larger than we allow)
+load invalid-size.gif
+load invalid-size-second-frame.gif
+
+load multiple-png-hassize.ico # Bug 863958 - This icon's size is such that it leads to multiple writes to the PNG decoder after we've gotten our size.
+skip-if(ThreadSanitizer) asserts(0-2) load ownerdiscard.html # Bug 1323672, bug 807211
+load truncated-second-frame.png # Bug 863975
+
+# Bug 1509998 - Ensure that we handle empty frame rects in animated images.
+load 1509998.gif
+
+load 1526717-1.html
+skip-if(ThreadSanitizer) load 1629490-1.html
+
+HTTP load 1634839-1.html
+HTTP load 1634839-2.html
+pref(image.animated.decode-on-demand.batch-size,1) pref(image.animated.decode-on-demand.threshold-kb,0) HTTP load 1676172-1.html

@@ -1,0 +1,359 @@
+changeset:   651272:ff2582aceafe
+parent:      651260:b740f950e497
+user:        Gabriele Svelto <gsvelto@mozilla.com>
+date:        Thu Apr 08 12:01:43 2021 +0200
+summary:     fastfail
+
+diff --git a/src/google_breakpad/common/minidump_exception_win32.h b/src/google_breakpad/common/minidump_exception_win32.h
+--- a/src/google_breakpad/common/minidump_exception_win32.h
++++ b/src/google_breakpad/common/minidump_exception_win32.h
+@@ -2261,9 +2261,84 @@ typedef enum {
+ // These constants are defined in the MSDN documentation of
+ // the EXCEPTION_RECORD structure.
+ typedef enum {
+   MD_IN_PAGE_ERROR_WIN_READ  = 0,
+   MD_IN_PAGE_ERROR_WIN_WRITE = 1,
+   MD_IN_PAGE_ERROR_WIN_EXEC  = 8
+ } MDInPageErrorTypeWin;
+ 
++/* For (MDException).exception_information[0], when (MDException).exception_code
++ * is MD_EXCEPTION_CODE_WIN_STACK_BUFFER_OVERRUN. This describes the underlying
++ * reason for the crash. These values come from winnt.h.
++ *
++ * The content of this enum was created from winnt.h in the 10 SDK
++ * (version 10.0.19041.0) with
++ *
++ * egrep '#define FAST_FAIL_[A-Z_0-9]+\s+[0-9]' winnt.h
++ * | tr -d '\r'
++ * | sed -r 's@#define FAST_FAIL_([A-Z_0-9]+)\s+([0-9]+).*@\2 \1@'
++ * | sed -r 's@([0-9]+) ([A-Z_0-9]+)@  MD_FAST_FAIL_WIN_\2 = \1,@' */
++typedef enum {
++  MD_FAST_FAIL_WIN_LEGACY_GS_VIOLATION = 0,
++  MD_FAST_FAIL_WIN_VTGUARD_CHECK_FAILURE = 1,
++  MD_FAST_FAIL_WIN_STACK_COOKIE_CHECK_FAILURE = 2,
++  MD_FAST_FAIL_WIN_CORRUPT_LIST_ENTRY = 3,
++  MD_FAST_FAIL_WIN_INCORRECT_STACK = 4,
++  MD_FAST_FAIL_WIN_INVALID_ARG = 5,
++  MD_FAST_FAIL_WIN_GS_COOKIE_INIT = 6,
++  MD_FAST_FAIL_WIN_FATAL_APP_EXIT = 7,
++  MD_FAST_FAIL_WIN_RANGE_CHECK_FAILURE = 8,
++  MD_FAST_FAIL_WIN_UNSAFE_REGISTRY_ACCESS = 9,
++  MD_FAST_FAIL_WIN_GUARD_ICALL_CHECK_FAILURE = 10,
++  MD_FAST_FAIL_WIN_GUARD_WRITE_CHECK_FAILURE = 11,
++  MD_FAST_FAIL_WIN_INVALID_FIBER_SWITCH = 12,
++  MD_FAST_FAIL_WIN_INVALID_SET_OF_CONTEXT = 13,
++  MD_FAST_FAIL_WIN_INVALID_REFERENCE_COUNT = 14,
++  MD_FAST_FAIL_WIN_INVALID_JUMP_BUFFER = 18,
++  MD_FAST_FAIL_WIN_MRDATA_MODIFIED = 19,
++  MD_FAST_FAIL_WIN_CERTIFICATION_FAILURE = 20,
++  MD_FAST_FAIL_WIN_INVALID_EXCEPTION_CHAIN = 21,
++  MD_FAST_FAIL_WIN_CRYPTO_LIBRARY = 22,
++  MD_FAST_FAIL_WIN_INVALID_CALL_IN_DLL_CALLOUT = 23,
++  MD_FAST_FAIL_WIN_INVALID_IMAGE_BASE = 24,
++  MD_FAST_FAIL_WIN_DLOAD_PROTECTION_FAILURE = 25,
++  MD_FAST_FAIL_WIN_UNSAFE_EXTENSION_CALL = 26,
++  MD_FAST_FAIL_WIN_DEPRECATED_SERVICE_INVOKED = 27,
++  MD_FAST_FAIL_WIN_INVALID_BUFFER_ACCESS = 28,
++  MD_FAST_FAIL_WIN_INVALID_BALANCED_TREE = 29,
++  MD_FAST_FAIL_WIN_INVALID_NEXT_THREAD = 30,
++  MD_FAST_FAIL_WIN_GUARD_ICALL_CHECK_SUPPRESSED = 31,
++  MD_FAST_FAIL_WIN_APCS_DISABLED = 32,
++  MD_FAST_FAIL_WIN_INVALID_IDLE_STATE = 33,
++  MD_FAST_FAIL_WIN_MRDATA_PROTECTION_FAILURE = 34,
++  MD_FAST_FAIL_WIN_UNEXPECTED_HEAP_EXCEPTION = 35,
++  MD_FAST_FAIL_WIN_INVALID_LOCK_STATE = 36,
++  MD_FAST_FAIL_WIN_GUARD_JUMPTABLE = 37,
++  MD_FAST_FAIL_WIN_INVALID_LONGJUMP_TARGET = 38,
++  MD_FAST_FAIL_WIN_INVALID_DISPATCH_CONTEXT = 39,
++  MD_FAST_FAIL_WIN_INVALID_THREAD = 40,
++  MD_FAST_FAIL_WIN_INVALID_SYSCALL_NUMBER = 41,
++  MD_FAST_FAIL_WIN_INVALID_FILE_OPERATION = 42,
++  MD_FAST_FAIL_WIN_LPAC_ACCESS_DENIED = 43,
++  MD_FAST_FAIL_WIN_GUARD_SS_FAILURE = 44,
++  MD_FAST_FAIL_WIN_LOADER_CONTINUITY_FAILURE = 45,
++  MD_FAST_FAIL_WIN_GUARD_EXPORT_SUPPRESSION_FAILURE = 46,
++  MD_FAST_FAIL_WIN_INVALID_CONTROL_STACK = 47,
++  MD_FAST_FAIL_WIN_SET_CONTEXT_DENIED = 48,
++  MD_FAST_FAIL_WIN_INVALID_IAT = 49,
++  MD_FAST_FAIL_WIN_HEAP_METADATA_CORRUPTION = 50,
++  MD_FAST_FAIL_WIN_PAYLOAD_RESTRICTION_VIOLATION = 51,
++  MD_FAST_FAIL_WIN_LOW_LABEL_ACCESS_DENIED = 52,
++  MD_FAST_FAIL_WIN_ENCLAVE_CALL_FAILURE = 53,
++  MD_FAST_FAIL_WIN_UNHANDLED_LSS_EXCEPTON = 54,
++  MD_FAST_FAIL_WIN_ADMINLESS_ACCESS_DENIED = 55,
++  MD_FAST_FAIL_WIN_UNEXPECTED_CALL = 56,
++  MD_FAST_FAIL_WIN_CONTROL_INVALID_RETURN_ADDRESS = 57,
++  MD_FAST_FAIL_WIN_UNEXPECTED_HOST_BEHAVIOR = 58,
++  MD_FAST_FAIL_WIN_FLAGS_CORRUPTION = 59,
++  MD_FAST_FAIL_WIN_VEH_CORRUPTION = 60,
++  MD_FAST_FAIL_WIN_ETW_CORRUPTION = 61,
++  MD_FAST_FAIL_WIN_RIO_ABORT = 62,
++  MD_FAST_FAIL_WIN_INVALID_PFN = 63,
++} MDFastFailWin;
++
+ #endif  /* GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_WIN32_H__ */
+diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
+--- a/src/processor/minidump_processor.cc
++++ b/src/processor/minidump_processor.cc
+@@ -1288,16 +1288,24 @@ string MinidumpProcessor::GetCrashReason
+         case MD_EXCEPTION_CODE_WIN_BAD_FUNCTION_TABLE:
+           reason = "EXCEPTION_BAD_FUNCTION_TABLE";
+           break;
+         case MD_EXCEPTION_CODE_WIN_POSSIBLE_DEADLOCK:
+           reason = "EXCEPTION_POSSIBLE_DEADLOCK";
+           break;
+         case MD_EXCEPTION_CODE_WIN_STACK_BUFFER_OVERRUN:
+           reason = "EXCEPTION_STACK_BUFFER_OVERRUN";
++            if (raw_exception->exception_record.number_parameters > 0) {
++            uint32_t fast_fail_code =
++                static_cast<uint32_t>
++                (raw_exception->exception_record.exception_information[0]);
++            reason.append(" / ");
++            reason.append(FastFailToString(fast_fail_code));
++          }
++
+           break;
+         case MD_EXCEPTION_CODE_WIN_HEAP_CORRUPTION:
+           reason = "EXCEPTION_HEAP_CORRUPTION";
+           break;
+         case MD_EXCEPTION_OUT_OF_MEMORY:
+           reason = "Out of Memory";
+           break;
+         case MD_EXCEPTION_CODE_WIN_UNHANDLED_CPP_EXCEPTION:
+diff --git a/src/processor/symbolic_constants_win.cc b/src/processor/symbolic_constants_win.cc
+--- a/src/processor/symbolic_constants_win.cc
++++ b/src/processor/symbolic_constants_win.cc
+@@ -6409,9 +6409,214 @@ string NTStatusToString(uint32_t ntstatu
+       snprintf(reason_string, sizeof(reason_string), "0x%08x", ntstatus);
+       reason = reason_string;
+       break;
+     }
+   }
+   return reason;
+ }
+ 
++string FastFailToString(uint32_t fast_fail_code) {
++  string code_string;
++  // The content of this switch was created from winnt.h in the 10 SDK
++  // (version 10.0.19041.0) with
++  //
++  // egrep '#define FAST_FAIL_[A-Z_0-9]+\s+[0-9]' winnt.h
++  // | tr -d '\r'
++  // | sed -r 's@#define FAST_FAIL_([A-Z_0-9]+)\s+([0-9]+).*@\2 \1@'
++  // | sed -r 's@([0-9]+) ([A-Z_0-9]+)@    case MD_FAST_FAIL_WIN_\2:\n      code_string = "FAST_FAIL_\2";\n      break;@'
++  //
++  // and then the default case added.
++  switch (fast_fail_code) {
++    case MD_FAST_FAIL_WIN_LEGACY_GS_VIOLATION:
++      code_string = "FAST_FAIL_LEGACY_GS_VIOLATION";
++      break;
++    case MD_FAST_FAIL_WIN_VTGUARD_CHECK_FAILURE:
++      code_string = "FAST_FAIL_VTGUARD_CHECK_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_STACK_COOKIE_CHECK_FAILURE:
++      code_string = "FAST_FAIL_STACK_COOKIE_CHECK_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_CORRUPT_LIST_ENTRY:
++      code_string = "FAST_FAIL_CORRUPT_LIST_ENTRY";
++      break;
++    case MD_FAST_FAIL_WIN_INCORRECT_STACK:
++      code_string = "FAST_FAIL_INCORRECT_STACK";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_ARG:
++      code_string = "FAST_FAIL_INVALID_ARG";
++      break;
++    case MD_FAST_FAIL_WIN_GS_COOKIE_INIT:
++      code_string = "FAST_FAIL_GS_COOKIE_INIT";
++      break;
++    case MD_FAST_FAIL_WIN_FATAL_APP_EXIT:
++      code_string = "FAST_FAIL_FATAL_APP_EXIT";
++      break;
++    case MD_FAST_FAIL_WIN_RANGE_CHECK_FAILURE:
++      code_string = "FAST_FAIL_RANGE_CHECK_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_UNSAFE_REGISTRY_ACCESS:
++      code_string = "FAST_FAIL_UNSAFE_REGISTRY_ACCESS";
++      break;
++    case MD_FAST_FAIL_WIN_GUARD_ICALL_CHECK_FAILURE:
++      code_string = "FAST_FAIL_GUARD_ICALL_CHECK_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_GUARD_WRITE_CHECK_FAILURE:
++      code_string = "FAST_FAIL_GUARD_WRITE_CHECK_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_FIBER_SWITCH:
++      code_string = "FAST_FAIL_INVALID_FIBER_SWITCH";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_SET_OF_CONTEXT:
++      code_string = "FAST_FAIL_INVALID_SET_OF_CONTEXT";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_REFERENCE_COUNT:
++      code_string = "FAST_FAIL_INVALID_REFERENCE_COUNT";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_JUMP_BUFFER:
++      code_string = "FAST_FAIL_INVALID_JUMP_BUFFER";
++      break;
++    case MD_FAST_FAIL_WIN_MRDATA_MODIFIED:
++      code_string = "FAST_FAIL_MRDATA_MODIFIED";
++      break;
++    case MD_FAST_FAIL_WIN_CERTIFICATION_FAILURE:
++      code_string = "FAST_FAIL_CERTIFICATION_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_EXCEPTION_CHAIN:
++      code_string = "FAST_FAIL_INVALID_EXCEPTION_CHAIN";
++      break;
++    case MD_FAST_FAIL_WIN_CRYPTO_LIBRARY:
++      code_string = "FAST_FAIL_CRYPTO_LIBRARY";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_CALL_IN_DLL_CALLOUT:
++      code_string = "FAST_FAIL_INVALID_CALL_IN_DLL_CALLOUT";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_IMAGE_BASE:
++      code_string = "FAST_FAIL_INVALID_IMAGE_BASE";
++      break;
++    case MD_FAST_FAIL_WIN_DLOAD_PROTECTION_FAILURE:
++      code_string = "FAST_FAIL_DLOAD_PROTECTION_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_UNSAFE_EXTENSION_CALL:
++      code_string = "FAST_FAIL_UNSAFE_EXTENSION_CALL";
++      break;
++    case MD_FAST_FAIL_WIN_DEPRECATED_SERVICE_INVOKED:
++      code_string = "FAST_FAIL_DEPRECATED_SERVICE_INVOKED";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_BUFFER_ACCESS:
++      code_string = "FAST_FAIL_INVALID_BUFFER_ACCESS";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_BALANCED_TREE:
++      code_string = "FAST_FAIL_INVALID_BALANCED_TREE";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_NEXT_THREAD:
++      code_string = "FAST_FAIL_INVALID_NEXT_THREAD";
++      break;
++    case MD_FAST_FAIL_WIN_GUARD_ICALL_CHECK_SUPPRESSED:
++      code_string = "FAST_FAIL_GUARD_ICALL_CHECK_SUPPRESSED";
++      break;
++    case MD_FAST_FAIL_WIN_APCS_DISABLED:
++      code_string = "FAST_FAIL_APCS_DISABLED";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_IDLE_STATE:
++      code_string = "FAST_FAIL_INVALID_IDLE_STATE";
++      break;
++    case MD_FAST_FAIL_WIN_MRDATA_PROTECTION_FAILURE:
++      code_string = "FAST_FAIL_MRDATA_PROTECTION_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_UNEXPECTED_HEAP_EXCEPTION:
++      code_string = "FAST_FAIL_UNEXPECTED_HEAP_EXCEPTION";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_LOCK_STATE:
++      code_string = "FAST_FAIL_INVALID_LOCK_STATE";
++      break;
++    case MD_FAST_FAIL_WIN_GUARD_JUMPTABLE:
++      code_string = "FAST_FAIL_GUARD_JUMPTABLE";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_LONGJUMP_TARGET:
++      code_string = "FAST_FAIL_INVALID_LONGJUMP_TARGET";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_DISPATCH_CONTEXT:
++      code_string = "FAST_FAIL_INVALID_DISPATCH_CONTEXT";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_THREAD:
++      code_string = "FAST_FAIL_INVALID_THREAD";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_SYSCALL_NUMBER:
++      code_string = "FAST_FAIL_INVALID_SYSCALL_NUMBER";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_FILE_OPERATION:
++      code_string = "FAST_FAIL_INVALID_FILE_OPERATION";
++      break;
++    case MD_FAST_FAIL_WIN_LPAC_ACCESS_DENIED:
++      code_string = "FAST_FAIL_LPAC_ACCESS_DENIED";
++      break;
++    case MD_FAST_FAIL_WIN_GUARD_SS_FAILURE:
++      code_string = "FAST_FAIL_GUARD_SS_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_LOADER_CONTINUITY_FAILURE:
++      code_string = "FAST_FAIL_LOADER_CONTINUITY_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_GUARD_EXPORT_SUPPRESSION_FAILURE:
++      code_string = "FAST_FAIL_GUARD_EXPORT_SUPPRESSION_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_CONTROL_STACK:
++      code_string = "FAST_FAIL_INVALID_CONTROL_STACK";
++      break;
++    case MD_FAST_FAIL_WIN_SET_CONTEXT_DENIED:
++      code_string = "FAST_FAIL_SET_CONTEXT_DENIED";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_IAT:
++      code_string = "FAST_FAIL_INVALID_IAT";
++      break;
++    case MD_FAST_FAIL_WIN_HEAP_METADATA_CORRUPTION:
++      code_string = "FAST_FAIL_HEAP_METADATA_CORRUPTION";
++      break;
++    case MD_FAST_FAIL_WIN_PAYLOAD_RESTRICTION_VIOLATION:
++      code_string = "FAST_FAIL_PAYLOAD_RESTRICTION_VIOLATION";
++      break;
++    case MD_FAST_FAIL_WIN_LOW_LABEL_ACCESS_DENIED:
++      code_string = "FAST_FAIL_LOW_LABEL_ACCESS_DENIED";
++      break;
++    case MD_FAST_FAIL_WIN_ENCLAVE_CALL_FAILURE:
++      code_string = "FAST_FAIL_ENCLAVE_CALL_FAILURE";
++      break;
++    case MD_FAST_FAIL_WIN_UNHANDLED_LSS_EXCEPTON:
++      code_string = "FAST_FAIL_UNHANDLED_LSS_EXCEPTON";
++      break;
++    case MD_FAST_FAIL_WIN_ADMINLESS_ACCESS_DENIED:
++      code_string = "FAST_FAIL_ADMINLESS_ACCESS_DENIED";
++      break;
++    case MD_FAST_FAIL_WIN_UNEXPECTED_CALL:
++      code_string = "FAST_FAIL_UNEXPECTED_CALL";
++      break;
++    case MD_FAST_FAIL_WIN_CONTROL_INVALID_RETURN_ADDRESS:
++      code_string = "FAST_FAIL_CONTROL_INVALID_RETURN_ADDRESS";
++      break;
++    case MD_FAST_FAIL_WIN_UNEXPECTED_HOST_BEHAVIOR:
++      code_string = "FAST_FAIL_UNEXPECTED_HOST_BEHAVIOR";
++      break;
++    case MD_FAST_FAIL_WIN_FLAGS_CORRUPTION:
++      code_string = "FAST_FAIL_FLAGS_CORRUPTION";
++      break;
++    case MD_FAST_FAIL_WIN_VEH_CORRUPTION:
++      code_string = "FAST_FAIL_VEH_CORRUPTION";
++      break;
++    case MD_FAST_FAIL_WIN_ETW_CORRUPTION:
++      code_string = "FAST_FAIL_ETW_CORRUPTION";
++      break;
++    case MD_FAST_FAIL_WIN_RIO_ABORT:
++      code_string = "FAST_FAIL_RIO_ABORT";
++      break;
++    case MD_FAST_FAIL_WIN_INVALID_PFN:
++      code_string = "FAST_FAIL_INVALID_PFN";
++      break;
++    default: {
++      char buffer[11];
++      snprintf(buffer, sizeof(buffer), "%u", fast_fail_code);
++      code_string = buffer;
++      break;
++    }
++  }
++  return code_string;
++}
++
+ }  // namespace google_breakpad
+diff --git a/src/processor/symbolic_constants_win.h b/src/processor/symbolic_constants_win.h
+--- a/src/processor/symbolic_constants_win.h
++++ b/src/processor/symbolic_constants_win.h
+@@ -41,11 +41,14 @@
+ #include "common/using_std_string.h"
+ #include "google_breakpad/common/breakpad_types.h"
+ 
+ namespace google_breakpad {
+ 
+ /* Converts a NTSTATUS code to a reason string. */
+ string NTStatusToString(uint32_t ntstatus);
+ 
++/* Converts a FAST_FAIL code to a reason string. */
++string FastFailToString(uint32_t fast_fail_code);
++
+ }  // namespace google_breakpad
+ 
+ #endif  // GOOGLE_BREAKPAD_PROCESSOR_SYMBOLIC_CONSTANTS_WIN_H_
+

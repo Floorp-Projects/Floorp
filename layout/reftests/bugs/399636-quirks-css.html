@@ -1,0 +1,23 @@
+<html lang="en-US">
+<head>
+	<title>Reftest, bug 399636 (quirks mode, family from CSS)</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+	body { text-rendering: optimizeLegibility; }
+
+	/* the first three fonts lack glyphs for P, A, and S */
+	span { font-family: Symbol, Webdings, Wingdings, serif; }
+
+	/* ensure consistent vertical positioning under variation in
+	   first-choice font */
+	p { line-height: 50px; font-size: 16px; }
+	span, font { line-height: 25px; }
+
+	</style>
+</head>
+<body>
+
+<p>&nbsp;<span>PASS</span></p>
+
+</body>
+</html>

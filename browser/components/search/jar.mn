@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+        content/browser/search/autocomplete-popup.js                (content/autocomplete-popup.js)
+        content/browser/search/searchbar.js                         (content/searchbar.js)
+        content/browser/contentSearchUI.js                          (content/contentSearchUI.js)
+        content/browser/contentSearchHandoffUI.js                   (content/contentSearchHandoffUI.js)
+        content/browser/contentSearchUI.css                         (content/contentSearchUI.css)
+        search-extensions/                                          (extensions/**)
+
+% resource search-extensions %search-extensions/ contentaccessible=yes

@@ -1,0 +1,170 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#! gmake
+
+MOD_DEPTH	= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+CSRCS = \
+	arena.c \
+	base64t.c \
+	getopt.c \
+	string.c
+
+ifeq (,$(filter-out WINCE WINNT OS2,$(OS_ARCH)))
+CSRCS += arena.c
+endif
+
+ifeq (,$(filter-out WINCE WINNT OS2,$(OS_ARCH)))
+PROG_SUFFIX = .exe
+else
+PROG_SUFFIX =
+endif
+
+PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
+
+TARGETS = $(PROGS) $(OBJS)
+
+INCLUDES = -I$(dist_includedir)
+
+# Setting the variables LDOPTS and LIBPR.  We first initialize
+# them to the default values, then adjust them for some platforms.
+LDOPTS = -L$(dist_libdir)
+LIBPR = -lnspr$(MOD_MAJOR_VERSION)
+LIBPLC = -lplc$(MOD_MAJOR_VERSION)
+LIBPLDS = -lplds$(MOD_MAJOR_VERSION)
+
+ifeq (,$(filter-out WINCE WINNT, $(OS_ARCH)))
+  LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
+  ifeq (,$(filter-out WIN95 WINCE WINMO, $(OS_TARGET)))
+  LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+  LIBPLC= $(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+  LIBPLDS= $(dist_libdir)/plds$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+  else
+  LIBPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+  LIBPLC= $(dist_libdir)/libplc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+  LIBPLDS= $(dist_libdir)/libplds$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+  endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+LDOPTS += -Zomf -Zlinker /PM:VIO
+endif
+
+ifneq ($(OS_ARCH), WINNT)
+PWD = $(shell pwd)
+endif
+
+ifeq ($(OS_ARCH), Linux)
+    ifeq ($(OS_RELEASE), 1.2)
+        EXTRA_LIBS = -ldl
+    else
+        LDOPTS += -Xlinker -rpath $(PWD)/$(dist_libdir)
+        ifeq ($(USE_PTHREADS),1)
+            EXTRA_LIBS = -lpthread
+        endif
+    endif
+endif
+
+ifeq (,$(filter-out OpenBSD,$(OS_ARCH)))
+    ifeq ($(USE_PTHREADS),1)
+        EXTRA_LIBS = -lpthread
+    endif
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+LDOPTS += -Wl,+s,+b,$(PWD)/$(dist_libdir)
+endif
+
+# AIX
+ifeq ($(OS_ARCH),AIX)
+LDOPTS += -blibpath:$(PWD)/$(dist_libdir):/usr/lib:/lib
+LIBPR = -lnspr$(MOD_MAJOR_VERSION)_shr
+LIBPLC = -lplc$(MOD_MAJOR_VERSION)_shr
+endif
+
+# Solaris
+ifeq ($(OS_ARCH), SunOS)
+ifdef NS_USE_GCC
+LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(dist_libdir)
+else
+LDOPTS += -R $(PWD)/$(dist_libdir)
+endif
+
+# SunOS 5.5 needs to link with -lpthread, even though we already
+# linked with this system library when we built libnspr.so.
+ifeq ($(OS_RELEASE), 5.5)
+ifdef USE_PTHREADS
+EXTRA_LIBS = -lpthread
+endif
+endif
+endif # SunOS
+
+#####################################################
+#
+# The rules
+#
+#####################################################
+
+include $(topsrcdir)/config/rules.mk
+
+AIX_PRE_4_2 = 0
+ifeq ($(OS_ARCH),AIX)
+ifneq ($(OS_RELEASE),4.2)
+ifneq ($(USE_PTHREADS), 1)
+#AIX_PRE_4_2 = 1
+endif
+endif
+endif
+
+ifeq ($(AIX_PRE_4_2),1)
+
+# AIX releases prior to 4.2 need a special two-step linking hack
+# in order to both override the system select() and be able to 
+# get at the original system select().
+#
+# We use a pattern rule in ns/nspr20/config/rules.mk to generate
+# the .$(OBJ_SUFFIX) file from the .c source file, then do the
+# two-step linking hack below.
+
+$(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+	rm -f $@ $(AIX_TMP)
+	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
+	$(CC) -o $@ $(AIX_TMP) $(AIX_WRAP)
+	rm -f $(AIX_TMP)
+
+else
+
+# All platforms that are not AIX pre-4.2.
+
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+
+ifeq ($(OS_ARCH), WINNT)
+	link $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) ws2_32.lib -out:$@
+else
+ifeq ($(OS_ARCH), WINCE)
+	$(LD) $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) ws2.lib -out:$@
+else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC)  $(LIBPLDS) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
+else
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPLDS) $(LIBPR) $(EXTRA_LIBS) -o $@
+endif
+endif
+endif
+endif
+
+export:: $(TARGETS)
+clean::
+	rm -f $(TARGETS)

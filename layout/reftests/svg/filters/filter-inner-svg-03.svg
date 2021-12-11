@@ -1,0 +1,19 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0">
+  <desc>
+    The 'transform' attribute on the 'g' parent of the inner 'svg' should
+    not cause the lime 'circle' inside the inner 'svg' to be clipped when
+    the inner 'svg' is filtered.
+  </desc>
+  <filter id="filter"><feGaussianBlur stdDeviation="0.001"/></filter>
+  <rect width="100%" height="100%" fill="lime"/>
+  <circle fill="red" r="98" cx="200" cy="100"/>
+  <g transform="translate(100, 0)">
+    <svg width="200" height="200" filter="url(#filter)">
+      <circle fill="lime" r="100" cx="100" cy="100"/>
+    </svg>
+  </g>
+</svg>

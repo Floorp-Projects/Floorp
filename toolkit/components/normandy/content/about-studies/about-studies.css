@@ -1,0 +1,177 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --icon-background-color-1: #0A84FF;
+  --icon-background-color-2: #008EA4;
+  --icon-background-color-3: #ED00B5;
+  --icon-background-color-4: #058B00;
+  --icon-background-color-5: #A47F00;
+  --icon-background-color-6: #FF0039;
+  --icon-background-disabled-color: #737373;
+  --body-text-disabled-color: #737373;
+  --study-status-active-color: #058B00;
+  --study-status-disabled-color: #737373;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  width: 100%;
+}
+
+button > .button-box {
+  padding-inline: 10px;
+}
+
+.about-studies-container {
+  font-size: 1.25rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.info-box {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.info-box-content {
+  align-items: center;
+  background: var(--in-content-box-info-background);
+  border: 1px solid var(--in-content-border-color);
+  display: inline-flex;
+  padding: 10px 15px;
+}
+
+.info-box-content > * {
+  margin-right: 10px;
+}
+
+.info-box-content > *:last-child {
+  margin-right: 0;
+}
+
+.study-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.study {
+  align-items: center;
+  border-bottom: 1px solid var(--in-content-border-color);
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+}
+
+.study.disabled {
+  color: var(--body-text-disabled-color);
+}
+
+.study .study-status {
+  color: var(--study-status-active-color);
+  font-weight: bold;
+}
+
+.study.disabled .study-status {
+  color: var(--study-status-disabled-color);
+}
+
+.study:last-child {
+  border-bottom: none;
+}
+
+.study > * {
+  margin-right: 15px;
+}
+
+.study > *:last-child {
+  margin-right: 0;
+}
+
+.study-icon {
+  color: #FFF;
+  flex: 0 0 40px;
+  font-size: 26px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.study:nth-child(6n+0) .study-icon {
+  background: var(--icon-background-color-1);
+}
+
+.study:nth-child(6n+1) .study-icon {
+  background: var(--icon-background-color-2);
+}
+
+.study:nth-child(6n+2) .study-icon {
+  background: var(--icon-background-color-3);
+}
+
+.study:nth-child(6n+3) .study-icon {
+  background: var(--icon-background-color-4);
+}
+
+.study:nth-child(6n+4) .study-icon {
+  background: var(--icon-background-color-5);
+}
+
+.study:nth-child(6n+5) .study-icon {
+  background: var(--icon-background-color-6);
+}
+
+.study.disabled .study-icon {
+  background: var(--icon-background-disabled-color);
+}
+
+.study-details {
+  flex: 1;
+  overflow: hidden;
+}
+
+.study-name {
+  font-weight: bold;
+}
+
+.study-header {
+  margin-bottom: .3em;
+}
+
+.study-header > * {
+  margin-right: 5px;
+}
+
+.study-header > *:last-child {
+  margin-right: 0;
+}
+
+.study-description code {
+  background-color: rgb(128, 128, 128, 0.1);
+  border-radius: 3px;
+  box-sizing: border-box;
+  color: var(--in-content-text-color);
+  font-size: 85%;
+  font-family: 'Fira Mono', 'mono', monospace;
+  padding: .05em .4em;
+}
+
+.study-actions {
+  flex: 0 0;
+}
+
+.opt-in-box {
+  border-radius: 3px;
+  padding: 10px;
+  color: var(--study-status-active-color);
+  border: 1px solid;
+}
+
+.opt-in-box.opt-in-error {
+  color: var(--in-content-error-text-color);
+}

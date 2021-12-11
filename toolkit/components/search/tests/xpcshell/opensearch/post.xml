@@ -1,0 +1,8 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>Post</ShortName>
+  <Url type="text/html" method="POST" template="https://example.com/post">
+    <Param name="searchterms" value="{searchTerms}"/>
+  </Url>
+  <Url type="text/html" method="POST" template="http://engine-rel-searchform-post.xml/POST" rel="searchform"/>
+  <SearchForm>http://engine-rel-searchform-post.xml/?search</SearchForm>
+</OpenSearchDescription>

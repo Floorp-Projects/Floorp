@@ -1,0 +1,30 @@
+Load aolkeypk11.dll
+C_Initialize NULL
+C_GetSlotList false NULL slotCount
+NewArray slotList CK_ULONG slotCount
+C_GetSlotList false slotList slotCount
+#change the following to the appropriate slot id
+set slotID 1
+#set slotID slotList[0]
+C_GetSlotInfo slotID slotInfo
+C_GetTokenInfo slotID tokenInfo
+C_OpenSession slotID CK_SESSION_SERIAL session
+#
+#uncomment the following line and include the correct password
+#C_Login session CKU_USER 0000 4 
+#
+# build the search template
+#
+NewTemplate search CKA_CLASS
+SetTemplate search 0 CKO_CERTIFICATE
+NewArray certID CK_ULONG 1
+C_FindObjectsInit session search 1
+C_FindObjects session certID 1 count
+C_FindObjectsFinal session
+#
+# now read the cert out
+#
+NewTemplate derCert CKA_VALUE
+C_GetAttributeValue session certID derCert 1
+BuildTemplate derCert
+C_GetAttributeValue session certID derCert 1

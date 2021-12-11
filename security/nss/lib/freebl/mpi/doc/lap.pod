@@ -1,0 +1,36 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+=head1 NAME
+
+ lap - compute least annihilating power of a number
+
+=head1 SYNOPSIS
+
+ lap <a> <m>
+
+=head1 DESCRIPTION
+
+The B<lap> program computes the order of I<a> modulo I<m>, for
+arbitrary precision integers I<a> and I<m>.  The B<order> of I<a>
+modulo I<m> is defined as the smallest positive value I<n> for which
+I<a> raised to the I<n>th power, modulo I<m>, is equal to 1.  The
+order may not exist, if I<m> is composite.
+
+=head1 RESTRICTIONS
+
+This program is very slow, especially for large moduli.  It is
+intended as a way to help find primitive elements in a modular field,
+but it does not do so in a particularly inefficient manner.  It was
+written simply to help verify that a particular candidate does not
+have an obviously short cycle mod I<m>.
+
+=head1 SEE ALSO
+
+gcd(1), invmod(1), isprime(1)
+
+=head1 AUTHOR
+
+ Michael J. Fromberger <sting@linguist.dartmouth.edu>
+ Thayer School of Engineering, Hanover, New Hampshire, USA

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+#test {
+  color: red;
+}
+/* Adding/removing the green-class on #test should refresh the rule-view when #test is
+   selected */
+#test.green-class {
+  color: green;
+}
+/* Adding/removing the purple-class on #parent should refresh the rule-view when #test is
+   selected */
+#parent.purple-class #test {
+  color: purple;
+}
+/* Adding/removing the blue-class on #sibling should refresh the rule-view when #test is
+   selected*/
+#sibling.blue-class + #test {
+  color: blue;
+}
+</style>
+<div id="parent">
+  <div>
+    <div id="sibling"></div>
+    <div id="test">test</div>
+  </div>
+</div>

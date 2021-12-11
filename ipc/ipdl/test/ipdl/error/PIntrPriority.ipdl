@@ -1,0 +1,6 @@
+//error: intr message `Msg' cannot specify [Priority]
+
+intr protocol PIntrPriority {
+child:
+  [Priority=vsync] intr Msg();
+};

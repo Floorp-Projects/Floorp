@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="svg-image-util.css" />
+  <script src="svg-image-util.js"></script>
+</head>
+<body style="width: 600px"><!-- width for pct vals to resolve against -->
+  <script>
+      var svgParams = {
+        viewBox:  null,   // This gets set on a case-by-case basis below.
+        width  :  "10%",
+        height :  "30px",
+        meetOrSlice: null // This means "use pAR=none"
+      };
+
+      // Descriptions below describe the behavior of the rows of <img> elements
+      // in the corresponding test cases, which we mimic with specially-crafted
+      // <embed> elements.
+
+      // * FIRST TWO ROWS: <img> has width=auto height=auto
+      //  - Each <img> renders w/ width = 300px (default)
+      //  - Synthesized viewBox has width = 10% * viewport_width = .1*300 = 30
+      //  - <img> & viewBox both get height=30px, from <svg> height attr
+      svgParams.viewBox = [0, 0, 30, 30],
+      appendSVGSubArrayWithParams(svgParams, "embed", "300px", "30px");
+
+      // * SECOND TWO ROWS: <img> has width=auto, height=20px
+      // Calculations are as above, except <img> now imposes height="20px".
+      appendSVGSubArrayWithParams(svgParams, "embed", "300px", "20px");
+
+      // * THIRD TWO ROWS: <img> has width=30px height=auto
+      //  - <img> now renders w/ width = 30px (imposed by <img> width attr)
+      //  - Synthesized viewBox has width = 10% * viewport_width = .1*30 = 3
+      //  - <img> & viewBox both get height=30px, from <svg> height attr
+      svgParams.viewBox =  [0, 0, 3, 30];
+      appendSVGSubArrayWithParams(svgParams, "embed", "30px", "30px");
+
+      // * FOURTH TWO ROWS: <img> has width=30px height=20px
+      // Calculations are as above, except <img> now imposes height="20px".
+      appendSVGSubArrayWithParams(svgParams, "embed", "30px", "20px");
+
+  </script>
+  <!-- Body gets populated by script -->
+</body>
+</html>

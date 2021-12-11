@@ -1,0 +1,7 @@
+# urls combined with the words list
+https://www.google.com/search?q={0}
+https://search.yahoo.com/yhs/search?p={0}
+https://www.bing.com/search?q=create+list+of+nouns{0}
+https://www.amazon.com/s/ref=nb_sb_noss_2?url=search-alias%3Daps&field-keywords={0}
+https://www.youtube.com/results?search_query={0}
+https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313.TR0.TRC0.H0.Xbottle.TRS0&_nkw={0}

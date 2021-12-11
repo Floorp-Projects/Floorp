@@ -1,0 +1,361 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+  <!--
+Test the formatting of the file name, line and columns are correct in frame components,
+with optional columns, unknown and non-URL sources.
+-->
+  <head>
+    <meta charset="utf-8" />
+    <title>Frame component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://mochikit/content/tests/SimpleTest/test.css"
+    />
+  </head>
+  <body>
+    <pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Frame = React.createFactory(browserRequire("devtools/client/shared/components/Frame"));
+    ok(Frame, "Should get Frame");
+
+    // Check when there's a column
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 10,
+      }
+    }, {
+      file: "mahscripts.js",
+      line: 55,
+      column: 10,
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55:10",
+    });
+
+    // Check when there's no column
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+      }
+    }, {
+      file: "mahscripts.js",
+      line: 55,
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55",
+    });
+
+    // Check when column === 0
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 0,
+      }
+    }, {
+      file: "mahscripts.js",
+      line: 55,
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55",
+    });
+
+    // Check when there's an error in CSS (View source in Style Editor)
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/cafebabe.css",
+        line: 13,
+      },
+      messageSource: "css",
+    }, {
+        file: "cafebabe.css",
+        line: 13,
+        shouldLink: true,
+        tooltip: "View source in Style Editor → http://myfile.com/cafebabe.css:13",
+    });
+
+
+    // Check when there's no parseable URL source;
+    // should not link but should render line/columns
+    await checkFrameComponent({
+      frame: {
+        source: "self-hosted",
+        line: 1,
+      }
+    }, {
+      file: "self-hosted",
+      line: "1",
+      shouldLink: false,
+      tooltip: "self-hosted:1",
+    });
+    await checkFrameComponent({
+      frame: {
+        source: "self-hosted",
+        line: 1,
+        column: 10,
+      }
+    }, {
+      file: "self-hosted",
+      line: "1",
+      column: "10",
+      shouldLink: false,
+      tooltip: "self-hosted:1:10",
+    });
+
+    // Check when there's no source;
+    // should not link but should render line/columns
+    await checkFrameComponent({
+      frame: {
+        line: 1,
+      }
+    }, {
+      file: "(unknown)",
+      line: "1",
+      shouldLink: false,
+      tooltip: "(unknown):1",
+    });
+    await checkFrameComponent({
+      frame: {
+        line: 1,
+        column: 10,
+      }
+    }, {
+      file: "(unknown)",
+      line: "1",
+      column: "10",
+      shouldLink: false,
+      tooltip: "(unknown):1:10",
+    });
+
+    // Check when there's a column, but no line;
+    // no line/column info should render
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        column: 55,
+      }
+    }, {
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check when line is 0; this should be an invalid
+    // line option, so don't render line/column
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+        column: 55,
+      }
+    }, {
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check that line and column can be strings
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: "10",
+        column: "55",
+      }
+    }, {
+      file: "mahscripts.js",
+      line: 10,
+      column: 55,
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:10:55",
+    });
+
+    // Check that line and column can be strings,
+    // and that the `0` rendering rules apply when they are strings as well
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: "0",
+        column: "55",
+      }
+    }, {
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check that the showFullSourceUrl option works correctly
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFullSourceUrl: true
+    }, {
+      file: "http://myfile.com/mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check that the showFunctionName option works correctly
+    await checkFrameComponent({
+      frame: {
+        functionDisplayName: "myfun",
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      }
+    }, {
+      functionName: null,
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    await checkFrameComponent({
+      frame: {
+        functionDisplayName: "myfun",
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFunctionName: true
+    }, {
+      functionName: "myfun",
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check that anonymous function name is not displayed unless explicitly enabled
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFunctionName: true
+    }, {
+      functionName: null,
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFunctionName: true,
+      showAnonymousFunctionName: true
+    }, {
+      functionName: "<anonymous>",
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check if file is rendered with "/" for root documents when showEmptyPathAsHost is false
+    await checkFrameComponent({
+      frame: {
+        source: "http://www.cnn.com/",
+        line: "1",
+      },
+      showEmptyPathAsHost: false,
+    }, {
+      file: "/",
+      line: "1",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://www.cnn.com/:1",
+    });
+
+    // Check if file is rendered with hostname for root documents when showEmptyPathAsHost is true
+    await checkFrameComponent({
+      frame: {
+        source: "http://www.cnn.com/",
+        line: "1",
+      },
+      showEmptyPathAsHost: true,
+    }, {
+      file: "www.cnn.com",
+      line: "1",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://www.cnn.com/:1",
+    });
+
+    const resolvedLocation = {
+      sourceId: "whatever",
+      line: 23,
+      sourceUrl: "https://bugzilla.mozilla.org/original.js",
+    };
+    const mockSourceMapService = {
+      subscribeByLocation: function (loc, callback) {
+        // Resolve immediately.
+        callback({
+          url: resolvedLocation.sourceUrl,
+          line: resolvedLocation.line,
+          column: undefined,
+        });
+        return () => {};
+      },
+    };
+    await checkFrameComponent({
+      frame: {
+        line: 97,
+        source: "https://bugzilla.mozilla.org/bundle.js",
+      },
+      sourceMapURLService: mockSourceMapService,
+    }, {
+      file: "original.js",
+      line: resolvedLocation.line,
+      shouldLink: true,
+      tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:23",
+      source: "https://bugzilla.mozilla.org/original.js",
+    });
+
+    // Check when a message comes from a logPoint,
+    // a prefix should render before source
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 10,
+        options: { logPoint: true },
+      }
+    }, {
+      file: "mahscripts.js",
+      line: 55,
+      column: 10,
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55:10",
+    });
+
+    function checkFrameComponent(input, expected) {
+      const props = Object.assign({ onClick: () => {} }, input);
+      const frame = ReactDOM.render(Frame(props), window.document.body);
+      const el = ReactDOM.findDOMNode(frame);
+      const { source } = input.frame;
+      checkFrameString(Object.assign({ el, source }, expected));
+      ReactDOM.unmountComponentAtNode(window.document.body);
+    }
+
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+  </body>
+</html>

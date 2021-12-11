@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<title>Test normalization of convolution buffers</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+// Constants from
+// https://www.w3.org/TR/2015/WD-webaudio-20151208/#widl-ConvolverNode-normalize
+const GainCalibration = 0.00125;
+const GainCalibrationSampleRate = 44100;
+
+const sampleRate = GainCalibrationSampleRate;
+const LENGTH = 12800;
+// tolerate 16-bit math.
+const EPSILON = 1.0 / Math.pow(2, 15);
+
+function test_normalization_via_response_concat(delayIndex)
+{
+  var context = new OfflineAudioContext(1, LENGTH, sampleRate);
+
+  var impulse = context.createBuffer(1, 1, sampleRate);
+  impulse.getChannelData(0)[0] = 1.0;
+  var source = context.createBufferSource();
+  source.buffer = impulse;
+  source.start(0);
+
+  // Construct a set of adjacent responses in such a way that, when each is
+  // convolved with the impulse, they can be merged to produce a constant.
+
+  // The 5/4 ratio provides a range of lengths with different offsets within
+  // blocks.
+  var i = 0;
+  for (var responseEnd = 1;
+       i < LENGTH;
+       responseEnd = Math.floor((5 * responseEnd) / 4) + 1) {
+    var responseBuffer = context.createBuffer(1, responseEnd, sampleRate);
+    var response = responseBuffer.getChannelData(0);
+    var responseStart = i;
+    // The values in the response should be normalized, and so the output
+    // should not be dependent on the value.  Pick a changing value to test
+    // this.
+    var value = responseStart + 1;
+    for (; i < responseEnd; ++i) {
+      response[i] = value;
+    }
+    var convolver = context.createConvolver();
+    convolver.normalize = true;
+    convolver.buffer = responseBuffer;
+    convolver.connect(context.destination);
+    // Undo the normalization calibration by scaling the impulse so as to
+    // expect unit pulse output from the convolver.
+    var gain = context.createGain();
+    gain.gain.value =
+      Math.sqrt((responseEnd - responseStart) / responseEnd) / GainCalibration;
+    gain.connect(convolver);
+    source.connect(gain);
+  }
+
+  return context.startRendering().
+    then((buffer) => {
+      var output = buffer.getChannelData(0);
+      var max = output[0];
+      var maxIndex = 0;
+      var min = max;
+      var minIndex = 0;
+      for (var i = 1; i < buffer.length; ++i) {
+        if (output[i] > max) {
+          max = output[i];
+          maxIndex = i;
+        } else if (output[i] < min) {
+          min = output[i];
+          minIndex = i;
+        }
+      }
+      assert_approx_equals(output[maxIndex], 1.0, EPSILON,
+                           "max output at " + maxIndex);
+      assert_approx_equals(output[minIndex], 1.0, EPSILON,
+                           "min output at " + minIndex);
+    });
+}
+
+promise_test(test_normalization_via_response_concat,
+             "via response concatenation");
+</script>

@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Drop Shadow Default Color</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    #target {
+      filter: url(#drop-shadow);
+      background-color: #00f;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blue square with a green drop shadow.</p>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="drop-shadow" x="-50" y="-50" width="200" height="200" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="10" dy="10" stdDeviation="3" flood-color="#0f0" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>

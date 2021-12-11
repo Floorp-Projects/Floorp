@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=431054
+-->
+<head>
+  <title>Test for Bug 431054</title>
+  <script type="text/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+          </script>
+  <script type="text/javascript" src="CharsetDetectionTests.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426271">Mozilla Bug 431054</a>
+<p id="display"></p>
+<div id="content" style="display: none">  
+</div>
+<iframe id="testframe"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 431054 **/
+CharsetDetectionTests("bug431054_text.html",
+		      "EUC-JP",
+		      new Array("ja_parallel_state_machine"));
+</script>
+</pre>
+</body>
+</html>

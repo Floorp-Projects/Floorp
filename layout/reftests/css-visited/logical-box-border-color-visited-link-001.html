@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Logical Properties: Flow-Relative Border Colors in Visited Links</title>
+<style>
+a {
+  display: inline-block;
+  vertical-align: top;
+  border: 25px solid red;
+}
+#link1, #link2:visited {
+  border-block-start-color: green;
+  border-block-end-color: green;
+  border-inline-start-color: green;
+  border-inline-end-color: green;
+}
+#link3 {
+  border-block-start: 25px solid green;
+  border-block-end: 25px solid green;
+  border-inline-start: 25px solid green;
+  border-inline-end: 25px solid green;
+}
+#link4:visited {
+  /* :visited should honor the border color but ignore other values in the shorthand */
+  border-block-start: 0 none green;
+  border-block-end: 0 none green;
+  border-inline-start: 0 none green;
+  border-inline-end: 0 none green;
+}
+</style>
+<p>Test passes if there is a filled green square and <strong>no red</strong>.</p>
+<a id="link1" href="visited-page.html"></a><a id="link2" href="visited-page.html"></a><br>
+<a id="link3" href="visited-page.html"></a><a id="link4" href="visited-page.html"></a>

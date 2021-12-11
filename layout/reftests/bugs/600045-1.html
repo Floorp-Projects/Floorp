@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<canvas width="100" height="100" id="c" style="background: #f00"></canvas>
+<script>
+  window.onload = function () {
+    var ctx = document.getElementById('c').getContext('2d');
+
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.scale(5, 5);
+    ctx.strokeStyle = '#0f0';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(5, 5, 10, 10);
+  }
+</script>

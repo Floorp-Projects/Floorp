@@ -1,0 +1,89 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Elevation Dialog */
+/* Specify the size for the UI so it has a fixed size. 3rd
+   party themes should typically specify the same values. */
+#elevationBox,
+.update-content {
+  height: 360px;
+  width: 700px;
+}
+
+/* Remove margin and padding so the inner UI will extend to the edge of the
+   window. 3rd party themes should typically specify the same values. */
+#updates {
+  margin: 0;
+  padding: 0;
+}
+
+.update-header {
+  border-bottom: 2px groove ThreeDFace;
+  background-color: Window;
+  color: WindowText;
+}
+
+.update-header-box-1 {
+  padding: 5px 0;
+}
+
+.update-content {
+  padding: 10px;
+}
+
+.update-header-label {
+  font-weight: bold;
+}
+
+#update-button-box {
+  margin: 0;
+  padding: 6px 10px 10px;
+}
+
+.update-buttons-separator {
+  margin-block: 0 !important;
+}
+
+#updateFinishedName {
+  font-weight: bold;
+  font-size: larger;
+}
+
+/* Update History Window */
+update {
+  border-bottom: 1px dotted #C0C0C0;
+}
+
+.update-name {
+  font-weight: bold;
+}
+
+.update-label-column {
+  -moz-box-align: end;
+}
+
+.update-type {
+  font-weight: bold;
+  color: #990000;
+}
+
+.update-status-value,
+.update-installedOn-value {
+  margin-inline-start: 1ch;
+}
+
+#historyItems {
+  height: 200px;
+  margin: 1px 5px 5px;
+}
+
+#historyItems .update {
+  padding: 5px;
+  display: -moz-box;
+  -moz-box-orient: vertical;
+}
+
+.update-name {
+  -moz-box-flex: 1;
+}

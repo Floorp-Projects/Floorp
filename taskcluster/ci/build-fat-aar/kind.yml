@@ -1,0 +1,148 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - build
+    - toolchain
+
+transforms:
+    - gecko_taskgraph.transforms.build:transforms
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_lints:transforms
+    - gecko_taskgraph.transforms.build_fat_aar:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
+    index:
+        product: mobile
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: android-build}
+        max-run-time: 7200
+        env:
+            # Online in order to download the per-architecture AARs.
+            GRADLE_USER_HOME: "/builds/worker/checkouts/build/gecko/mobile/android/gradle/dotgradle-online"
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            MOZ_ANDROID_FAT_AAR_ARCHITECTURES: "armeabi-v7a,arm64-v8a,x86,x86_64"
+        artifacts:
+            - name: public/build/maven
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/maven/
+              type: directory
+            - name: public/build
+              path: /builds/worker/artifacts/
+              type: directory
+            - name: public/build/geckoview-androidTest.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+              type: file
+            - name: public/build/geckoview_example.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+              type: file
+    run:
+        using: mozharness
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        mozconfig-variant: null
+        tooltool-downloads: internal
+        # Note: These settings are only honored by nightly (i.e. shipping) builds
+        update-channel:
+            by-release-type:
+                nightly: nightly
+                nightly-oak: nightly-oak
+                beta:
+                    by-shipping-product:
+                        devedition: aurora
+                        default: beta
+                release.*: release
+                esr.*: esr
+                default:
+                    by-project:
+                        try: nightly-try
+                        default: null
+    fetches:
+        toolchain:
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang
+            - linux64-rust-android
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-nasm
+            - linux64-node
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+
+jobs:
+    android-geckoview-fat-aar-shippable/opt:
+        description: "Android GeckoView multi-architecture fat AAR Shippable"
+        attributes:
+            shippable: true
+            enable-full-crashsymbols: true
+            disable-push-apk: true
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            job-name: android-geckoview-fat-aar-opt
+            type: shippable-with-multi-l10n
+        treeherder:
+            platform: android-5-0-geckoview-fat-aar-shippable/opt
+            symbol: Bgv
+        dependencies:
+            android-x86-shippable: build-android-x86-shippable/opt
+            android-x86_64-shippable: build-android-x86_64-shippable/opt
+            android-arm-shippable: build-android-arm-shippable/opt
+            android-aarch64-shippable: build-android-aarch64-shippable/opt
+        worker:
+            env:
+                PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-nightly
+        run:
+            actions: [get-secrets, build, multi-l10n]
+            config:
+                - builds/releng_base_android_64_builds.py
+                - taskcluster_nightly.py
+            custom-build-variant-cfg: arm
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+        optimization:
+            skip-unless-backstop: null
+
+    android-geckoview-fat-aar-shippable-lite/opt:
+        description: "Android GeckoView Lite multi-architecture fat AAR Shippable"
+        attributes:
+            shippable: true
+            enable-full-crashsymbols: true
+            disable-push-apk: true
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            job-name: android-geckoview-fat-aar-opt-lite
+            type: shippable-with-multi-l10n
+        treeherder:
+            platform: android-4-1-geckoview-fat-aar-shippable/opt
+            symbol: Bgvl
+        dependencies:
+            android-x86-shippable-lite: build-android-x86-shippable-lite/opt
+            android-x86_64-shippable-lite: build-android-x86_64-shippable-lite/opt
+            android-arm-shippable-lite: build-android-arm-shippable-lite/opt
+            android-aarch64-shippable-lite: build-android-aarch64-shippable-lite/opt
+        worker:
+            env:
+                PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-nightly-lite
+        run:
+            actions: [get-secrets, build, multi-l10n]
+            config:
+                - builds/releng_base_android_64_builds.py
+                - taskcluster_nightly.py
+            custom-build-variant-cfg: arm-lite
+        fetches:
+            toolchain:
+                - android-gradle-dependencies-lite
+        optimization:
+            skip-unless-backstop: null

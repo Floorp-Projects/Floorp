@@ -1,0 +1,231 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing definite placement with non-existent line names</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1146051">
+  <style type="text/css">
+html,body {
+  font-size: 16px;
+  font-family: monospace;
+  padding:0; margin:0;
+}
+
+.grid {
+  height: 40px;
+  position: relative;
+}
+
+span {
+  position: absolute;
+  top:0; left:0; width:20px; height:20px;
+  background: lime;
+  border: 1px solid black;
+  box-sizing: border-box;
+}
+
+.XeN   { left: 20px; width: 80px; }
+.XsN   { width: 80px; }              .XsN ~ span { top:20px; left:60px; }
+.NeX   { left: 20px; width: 80px; }
+.NsX   { width: 80px; }              .NsX  ~ span { left: 60px; top: 20px; }
+.XeA   { width: 100px; }             .XeA  ~ span { top: 20px; }
+.XsA   { width: 60px; }              .XsA  ~ span { left: 60px; }
+.XsA2  { width: 80px; }              .XsA2 ~ span { left: 60px; top: 20px; }
+.XsA3  { width: 120px; }             .XsA3 ~ span { left: 60px; top: 20px; }
+.AsX   { width: 60px;}               .AsX  ~ span { left: 60px; }
+.xsN   { }                           .xsN  ~ span { left: 20px; }
+.x2sN  { width: 40px; }              .x2sN ~ span { left: 40px; }
+.xsN2  { width: 40px; }              .xsN2 ~ span { left: 20px; top: 20px; }
+.xXs   { }                           .xXs  ~ span { left: 60px;}
+.aXs   { }                           .aXs  ~ span { left: 60px;}
+.aXe   { left: 20px; width: 60px; }
+.xXe   { width: 100px; }             .xXe  ~ span { left: 20px; top: 20px; }
+
+.AXe   { width: 80px; }              .AXe  ~ span { top: 20px; }
+.A2Xe  { left: 20px; width: 60px; }
+.XXe   { left: 60px; }
+.XX3e  { left: 60px; width: 40px; }
+.XbXe  { width: 100px; }             .XbXe ~ span  { top: 20px; left: 40px; }
+.XX0b  { }                           .XX0b ~ span  { left: 60px; }
+.XX1b  { }                           .XX1b ~ span  { left: 60px; }
+.XX2b  { width: 40px; }              .XX2b ~ span  { left: 60px; }
+.XbN1  { width: 60px; }              .XbN1 ~ span  { left: 60px; }
+.XbN2  { width: 80px; }              .XbN2 ~ span  { top: 20px; left: 60px; }
+.Xbb   { }                           .Xbb  ~ span  { left: 80px; }
+.Xee   { left: 60px; width:40px; }
+.nX2s  { width: 40px; }              .nX2s ~ span  { left: 80px; }
+.nXs   { width: 40px; }              .nXs  ~ span  { left: 60px; }
+.nXe   { left: 20px; width: 40px; }
+.nX2e  { left: 40px; width: 40px; }
+
+.nX3e  { left: 60px; width: 40px; }
+.n3Xe  { width: 60px; }              .n3Xe ~ span  { top: 20px; }
+.n4Xe  { width: 80px; }              .n4Xe ~ span  { top: 20px; left: 20px; }
+.Xen3  { left: 60px; width: 60px; }
+.Xea   { left: 60px;  }
+.Xea2  { left: 60px; width: 40px; }
+.Xea3  { left: 60px; width: 60px; }
+.Xsa   { }                           .Xsa   ~ span  { left: 20px; }
+.Xsa2  { width: 40px;   }            .Xsa2  ~ span  { left: 20px; top: 20px; }
+.Xsa4  { width: 100px;  }            .Xsa4  ~ span  { left: 20px; top: 20px; }
+.Xs2a  { width: 40px;   }            .Xs2a  ~ span  { left: 40px; }
+.Xs2a2 { width: 60px;   }            .Xs2a2 ~ span  { left: 40px; top: 20px; }
+.Xs2a4 { width: 120px;  }            .Xs2a4 ~ span  { left: 40px; top: 20px; }
+.Xs3a  { width: 60px;   }            .Xs3a  ~ span  { left: 60px; }
+.Xs3a2 { width: 80px;   }            .Xs3a2 ~ span  { left: 60px; top: 20px; }
+.Xs3a4 { width: 140px;  }            .Xs3a4 ~ span  { left: 60px; top: 20px; }
+
+.nxe   { width: 60px;   }            .nxe   ~ span  { top: 20px; }
+.nx3e  { width: 100px;  }            .nx3e  ~ span  { top: 20px; }
+.n2x3e { left: 20px; width: 80px; }
+.Axe   { width: 60px;   }            .Axe   ~ span  { top: 20px; }
+.A2xe  { left: 20px; width: 40px; }
+.Ax3e  { width: 100px;  }            .Ax3e  ~ span  { top: 20px; }
+.A2x3e { left: 20px; width: 80px; }
+.Aa    { }                           .Aa    ~ span  { top: 20px; }
+.A2a   { left: 20px; width: 40px; }
+.Aa3   { width: 80px;   }            .Aa3   ~ span  { top: 20px; }
+.AXs   { width: 40px; }              .AXs   ~ span  { left:40px; }
+.A2Xs  { width: 60px; }              .A2Xs  ~ span  { left: 40px; top:20px; }
+._Xs   { }                           ._Xs   ~ span  { left: 60px; }
+._Xe   { left: 60px; }
+._xe   { }                           ._xe   ~ span  { top: 20px; }
+._x3e  { }                           ._x3e  ~ span  { top: 20px; }
+
+._xa   { }                           ._xa   ~ span  { top: 20px; }
+._xa3  { }                           ._xa3  ~ span  { top: 20px; }
+._xn3  { width: 60px;   }            ._xn3  ~ span  { top: 20px; }
+._xn5  { width: 100px;  }            ._xn5  ~ span  { top: 20px; }
+.Xs_   { }                           .Xs_   ~ span  { left: 20px; }
+.X2s_  { }                           .X2s_  ~ span  { left: 40px; }
+.X2e_  { left: 80px; }
+.A_    { }                           .A_    ~ span  { top: 20px; }
+.A2_   { left: 20px; }
+.x3_   { }                           .x3_   ~ span  { top: 20px; }
+.a2_   { }                           .a2_   ~ span  { top: 20px; }
+.a-2_  { }                           .a-2_  ~ span  { top: 20px; }
+._n    { }                           ._n    ~ span  { left: 20px; }
+._n2   { }                           ._n2   ~ span  { top: 20px; }
+.A3Xe  { left: 60px; }
+.asA   { }                           .asA   ~ span  { left: 20px; }
+.asA2  { }                           .asA2  ~ span  { top: 20px; }
+.a2sA2 { width: 40px; }              .a2sA2 ~ span  { left: 20px; top: 20px; }
+.as1   { }                           .as1   ~ span  { left: 20px; }
+.as2   { }                           .as2   ~ span  { top: 20px; }
+.as3   { left: 20px; }
+
+.c1 { background:grey; }
+
+    </style>
+</head>
+<body>
+
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="XeN" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XsN" ></span><span class="c1"></span></div>
+<div class="grid"><span class="NeX" ></span><span class="c1"></span></div>
+<div class="grid"><span class="NsX" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XeA" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XsA" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XsA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="XsA3"></span><span class="c1"></span></div>
+<div class="grid"><span class="AsX" ></span><span class="c1"></span></div>
+<div class="grid"><span class="xsN" ></span><span class="c1"></span></div>
+<div class="grid"><span class="x2sN"></span><span class="c1"></span></div>
+<div class="grid"><span class="xsN2"></span><span class="c1"></span></div>
+<div class="grid"><span class="xXs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="aXs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="aXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="xXe" ></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="AXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2Xe"></span><span class="c1"></span></div>
+<div class="grid"><span class="XXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="XX3e"></span><span class="c1"></span></div>
+<div class="grid"><span class="XbXe"></span><span class="c1"></span></div>
+<div class="grid"><span class="XX0b"></span><span class="c1"></span></div>
+<div class="grid"><span class="XX1b"></span><span class="c1"></span></div>
+<div class="grid"><span class="XX2b"></span><span class="c1"></span></div>
+<div class="grid"><span class="XbN1"></span><span class="c1"></span></div>
+<div class="grid"><span class="XbN2"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xbb" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xee" ></span><span class="c1"></span></div>
+<div class="grid"><span class="nX2s"></span><span class="c1"></span></div>
+<div class="grid"><span class="nXs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="nXe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="nX2e"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="nX3e" ></span><span class="c1"></span></div>
+<div class="grid"><span class="n3Xe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="n4Xe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xen3" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xea"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xea2" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xea3" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xsa"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xsa2" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xsa4" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs2a" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs2a2"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs2a4"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs3a" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs3a2"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs3a4"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="nxe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="nx3e" ></span><span class="c1"></span></div>
+<div class="grid"><span class="n2x3e"></span><span class="c1"></span></div>
+<div class="grid"><span class="Axe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2xe" ></span><span class="c1"></span></div>
+<div class="grid"><span class="Ax3e" ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2x3e"></span><span class="c1"></span></div>
+<div class="grid"><span class="Aa"   ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2a"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="Aa3"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="AXs"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2Xs" ></span><span class="c1"></span></div>
+<div class="grid"><span class="_Xs"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_Xe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_xe"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_x3e" ></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px">
+<div class="grid"><span class="_xa" ></span><span class="c1"></span></div>
+<div class="grid"><span class="_xa3"></span><span class="c1"></span></div>
+<div class="grid"><span class="_xn3"></span><span class="c1"></span></div>
+<div class="grid"><span class="_xn5"></span><span class="c1"></span></div>
+<div class="grid"><span class="Xs_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="X2s_"></span><span class="c1"></span></div>
+<div class="grid"><span class="X2e_"></span><span class="c1"></span></div>
+<div class="grid"><span class="A_"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="A2_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="x3_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="a2_" ></span><span class="c1"></span></div>
+<div class="grid"><span class="a-2_"></span><span class="c1"></span></div>
+<div class="grid"><span class="_n"  ></span><span class="c1"></span></div>
+<div class="grid"><span class="_n2" ></span><span class="c1"></span></div>
+<div class="grid"><span class="A3Xe"></span><span class="c1"></span></div>
+<div class="grid"><span class="asA"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px; clear:both">
+<div class="grid"><span class="asA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="a2sA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as1"></span><span class="c1"></span></div>
+<div class="grid"><span class="as2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as3"></span><span class="c1"></span></div>
+</div>
+
+</body>
+</html>

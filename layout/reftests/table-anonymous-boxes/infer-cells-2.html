@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <title>CSS 2.1 Test Suite: anonymous table boxes</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#anonymous-boxes"/>
+    <meta name="flags" content="" />
+  <body style="font-family: monospace">
+    <span style="display: table-row"> 
+      <!-- Trailing spaces in the spans needed only if the first test in
+           infer-cells-1.html is valid -->
+      <span>Row 1, </span>
+      <span>Col 1</span>
+      <span style="display: table-cell">Row 1, Col 2</span>
+      <span>Row 1, Col 3</span>
+    </span>
+    <span style="display: table-row"> 
+      <span style="display: table-cell">Row 22, Col 1</span>
+      <span>Row </span>
+      <span>22, </span>
+      <span>Col </span>
+      <span>2</span>
+      <span style="display: table-cell">Row 22, Col 3</span>
+    </span>
+    <span style="display: table-row">
+      <span style="display: table-cell">Row 333, Col 1</span>
+      <span style="display: table-cell">Row 333, Col 2</span>
+      <span>Row </span>
+      <span>333, </span>
+      <span>Col </span>
+      <span>3</span>
+    </span>
+  </body>
+</html>

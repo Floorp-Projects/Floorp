@@ -1,0 +1,34 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+EXPORTS = \
+	secmime.h \
+	secpkcs7.h \
+	pkcs7t.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	p7local.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	certread.c \
+	p7common.c \
+	p7create.c \
+	p7decode.c \
+	p7encode.c \
+	p7local.c  \
+	secmime.c  \
+	$(NULL)
+
+LIBRARY_NAME = pkcs7
+SHARED_LIBRARY = $(NULL)
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

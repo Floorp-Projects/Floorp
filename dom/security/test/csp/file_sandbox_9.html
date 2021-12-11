@@ -1,0 +1,12 @@
+<html>
+<head> <meta charset="utf-8"> </head>
+  <body>
+    <!-- Content-Security-Policy: default-src 'none'; sandbox allow-same-origin -->
+
+    <!-- these should be stopped by CSP -->
+    <img src="http://example.org/tests/dom/security/test/csp/file_CSP.sjs?testid=img9_bad&type=img/png"> </img>
+    <img src="/tests/dom/security/test/csp/file_CSP.sjs?testid=img9a_bad&type=img/png" />
+
+    <script src='/tests/dom/security/test/csp/file_sandbox_fail.js'></script>
+  </body>
+</html>

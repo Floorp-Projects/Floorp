@@ -1,0 +1,27 @@
+<html>
+<head>
+<script>
+function crashme() {
+  var obj = document.getElementById('popupid');
+  obj.style.visibility='hidden';
+}
+</script>
+</head>
+<body onload="crashme();">
+<a href="http://www.mozilla.org/">http://www.mozilla.org/</a>
+
+<div id="popupid">
+<font>
+<script>
+  document.write('<form>');
+  document.write('<span>');
+  document.write('<input>');
+  document.write('</span>');
+  document.write('<br>');
+  document.write('</form>');
+</script>
+</font>
+</div>
+
+</body>
+</html>

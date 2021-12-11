@@ -1,0 +1,45 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "actions",
+    "components",
+    "enhancers",
+    "middleware",
+    "reducers",
+    "selectors",
+    "utils",
+]
+DevToolsModules(
+    "browser-console-manager.js",
+    "browser-console.js",
+    "constants.js",
+    "panel.js",
+    "service-container.js",
+    "store.js",
+    "types.js",
+    "utils.js",
+    "webconsole-connection-proxy.js",
+    "webconsole-ui.js",
+    "webconsole-wrapper.js",
+    "webconsole.js",
+)
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/_browser_console.ini",
+    "test/browser/_jsterm.ini",
+    "test/browser/_webconsole.ini",
+    "test/node/fixtures/stubs/stubs.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "test/chrome/chrome.ini",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Console")

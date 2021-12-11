@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Images outside of display port are not decoded</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="imgutils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<div id="scroller" style="height: 300px; overflow: scroll;">
+  <div style="width: 100%; height: 12000px;"></div>
+  <iframe id="iframe"></iframe>
+  <div style="width: 100%; height: 5000px;"></div>
+</div>
+<pre id="test"></pre>
+<script>
+  add_task(async () => {
+    window.addEventListener("message", event => {
+      isnot(event.data, "decodeComplete",
+            "decodeComplete should never be received");
+    });
+
+    await new Promise(resolve => {
+      window.addEventListener("message", event => {
+        if (event.data == "loadComplete") {
+          ok(true, "Got loadComplete");
+          resolve();
+        }
+      }, { once: true });
+
+      const iframe = document.getElementById("iframe");
+      iframe.src = "http://example.org/tests/image/test/mochitest/child.html";
+    });
+
+    const start = Date.now();
+
+    // Waits a second;
+    await SimpleTest.promiseWaitForCondition(() => {
+      return 1000 < (Date.now() - start);
+    });
+
+    ok(true, "decodeComplete didn't receive within a second");
+  });
+
+</script>
+</body>
+</html>

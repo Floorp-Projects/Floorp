@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+
+<marker id="marker"><path d="M100,0 l100,100 200,200" filter="url(#filter)"/></marker>
+
+<filter id="filter"/>
+
+<path d="M100,0 l100,100 200,200" marker-mid="url(#marker)"/>
+
+<script>
+window.addEventListener("load", function() {
+    setTimeout(function() {
+        document.getElementById("filter").style.fontWeight = "bold";
+        document.documentElement.removeAttribute("class");
+    }, 200);
+}, false);
+</script>
+
+</svg>

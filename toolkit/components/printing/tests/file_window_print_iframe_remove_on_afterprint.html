@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<script>
+function closePrint() {
+  document.documentElement.removeChild(this.__container__);
+}
+
+function setPrint() {
+  this.contentWindow.__container__ = this;
+  this.contentWindow.onbeforeunload = closePrint;
+  this.contentWindow.onafterprint = closePrint;
+  this.contentWindow.print();
+}
+
+function printPage(content) {
+  var frame = document.createElement("iframe");
+  frame.onload = setPrint;
+  frame.style.position = "fixed";
+  frame.style.right = "0";
+  frame.style.bottom = "0";
+  frame.style.width = "0";
+  frame.style.height = "0";
+  frame.style.border = "0";
+  frame.srcdoc = content;
+  document.documentElement.appendChild(frame);
+}
+
+onload = function() {
+  printPage("Something");
+}
+</script>

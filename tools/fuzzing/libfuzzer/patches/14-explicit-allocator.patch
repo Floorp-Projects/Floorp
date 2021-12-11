@@ -1,0 +1,30 @@
+# HG changeset patch
+# User Christian Holler <choller@mozilla.com>
+# Date 1596126981 -7200
+#      Thu Jul 30 18:36:21 2020 +0200
+# Node ID 069dfa3715b1d30905ff0ea1c0f66db88ce146f9
+# Parent  6c779ec81530b6784a714063af66085681ab7318
+[libFuzzer] Make fuzzer_allocator explicit
+
+diff --git a/tools/fuzzing/libfuzzer/FuzzerDefs.h b/tools/fuzzing/libfuzzer/FuzzerDefs.h
+--- a/tools/fuzzing/libfuzzer/FuzzerDefs.h
++++ b/tools/fuzzing/libfuzzer/FuzzerDefs.h
+@@ -41,17 +41,17 @@ extern ExternalFunctions *EF;
+ // We are using a custom allocator to give a different symbol name to STL
+ // containers in order to avoid ODR violations.
+ template<typename T>
+   class fuzzer_allocator: public std::allocator<T> {
+     public:
+       fuzzer_allocator() = default;
+ 
+       template<class U>
+-      fuzzer_allocator(const fuzzer_allocator<U>&) {}
++      explicit fuzzer_allocator(const fuzzer_allocator<U>&) {}
+ 
+       template<class Other>
+       struct rebind { typedef fuzzer_allocator<Other> other;  };
+   };
+ 
+ template<typename T>
+ using Vector = std::vector<T, fuzzer_allocator<T>>;
+ 

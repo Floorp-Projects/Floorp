@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Autoplay policy test : suspend/resume the AudioParam's stream</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<script>
+
+/**
+ * This test is used to ensure the AudioParam's stream can be suspended/resumed
+ * by AudioContext.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+(async function testSuspendAndResumeAudioParamStreams() {
+  await setupTestPreferences();
+
+  info(`- create the AudioContext -`);
+  createAudioContext();
+
+  info(`- the AudioContext is not allowed to start in beginning -`);
+  await audioContextShouldBeBlocked();
+
+  info(`- connect AudioScheduledSourceNode to the AudioParam and start AudioScheduledSourceNode, the AudioParam's stream should be suspended in the beginning -`)
+  let audioParamsArr = await connectAudioScheduledSourceNodeToAudioParams();
+
+  info(`- the AudioContext and the AudioParam's stream should be resumed -`);
+  await audioContextAndAudioParamStreamsShouldBeResumed(audioParamsArr);
+
+  info(`- suspend the AudioContext which should also suspend the AudioParam's stream -`);
+  await suspendAudioContextAndAudioParamStreams(audioParamsArr);
+
+  endTest();
+})();
+
+/**
+ * Test utility functions
+ */
+
+function setupTestPreferences() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+    ["media.autoplay.blocking_policy", 0],
+    ["media.autoplay.block-webaudio", true],
+    ["media.autoplay.block-event.enabled", true],
+  ]});
+}
+
+function createAudioContext() {
+  /* global ac */
+  window.ac = new AudioContext();
+
+  ac.allowedToStart = new Promise(resolve => {
+    ac.addEventListener("statechange", function() {
+      if (ac.state === "running") {
+        resolve();
+      }
+    }, {once: true});
+  });
+
+  ac.notAllowedToStart = new Promise(resolve => {
+    ac.addEventListener("blocked", async function() {
+      resolve();
+    }, {once: true});
+  });
+}
+
+async function audioContextShouldBeBlocked() {
+  await ac.notAllowedToStart;
+  is(ac.state, "suspended", `AudioContext is blocked.`);
+}
+
+function createAudioParams(nodeType) {
+  switch (nodeType) {
+    case "audioBufferSource":
+      let buffer = ac.createBufferSource();
+      return [buffer.playbackRate, buffer.detune];
+    case "biquadFilter":
+      let bf = ac.createBiquadFilter();
+      return [bf.frequency, bf.detune, bf.Q, bf.gain];
+    case "constantSource":
+      return [ac.createConstantSource().offset];
+    case "dynamicsCompressor":
+      let dc = ac.createDynamicsCompressor();
+      return [dc.threshold, dc.knee, dc.ratio, dc.attack, dc.release];
+    case "delay":
+      return [ac.createDelay(5.0).delayTime];
+    case "gain":
+      return [ac.createGain().gain];
+    case "oscillator":
+      let osc = ac.createOscillator();
+      return [osc.frequency, osc.detune];
+    case "panner":
+      let panner = ac.createPanner();
+      return [panner.positionX, panner.positionY, panner.positionZ,
+              panner.orientationX, panner.orientationY, panner.orientationZ];
+    case "stereoPanner":
+      return [ac.createStereoPanner().pan];
+    default:
+      ok(false, `non-defined node type ${nodeType}.`);
+      return [];
+  }
+}
+
+function createAudioParamArrWithName(nodeType) {
+  let audioParamsArr = createAudioParams(nodeType);
+  for (let audioParam of audioParamsArr) {
+    audioParam.name = nodeType;
+  }
+  return audioParamsArr;
+}
+
+function createAllAudioParamsFromDifferentAudioNode() {
+  const NodesWithAudioParam =
+    ["audioBufferSource", "biquadFilter", "constantSource", "delay",
+     "dynamicsCompressor", "gain", "oscillator", "panner", "stereoPanner"];
+  let audioParamsArr = [];
+  for (let nodeType of NodesWithAudioParam) {
+    audioParamsArr = audioParamsArr.concat(createAudioParamArrWithName(nodeType));
+  }
+  ok(audioParamsArr.length >= NodesWithAudioParam.length,
+     `Length of AudioParam array (${audioParamsArr.length}) is longer than the "
+     "length of node type array (${NodesWithAudioParam.length}).`);
+  return audioParamsArr;
+}
+
+function connectAudioScheduledSourceNodeToAudioParams() {
+  let osc = ac.createOscillator();
+  let audioParamsArr = createAllAudioParamsFromDifferentAudioNode();
+  for (let audioParam of audioParamsArr) {
+    osc.connect(audioParam);
+    ok(SpecialPowers.wrap(audioParam).isTrackSuspended,
+      `(${audioParam.name}) audioParam's stream has been suspended.`);
+  }
+
+  // simulate user gesture in order to start video.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  osc.start();
+  return audioParamsArr;
+}
+
+async function audioContextAndAudioParamStreamsShouldBeResumed(audioParamsArr) {
+  await ac.allowedToStart;
+  is(ac.state, "running", `AudioContext is allowed to start.`);
+  for (let audioParam of audioParamsArr) {
+    ok(!SpecialPowers.wrap(audioParam).isTrackSuspended,
+       `(${audioParam.name}) audioParam's stream has been resumed.`);;
+  }
+}
+
+async function suspendAudioContextAndAudioParamStreams(audioParamsArr) {
+  await ac.suspend();
+  is(ac.state, "suspended", `AudioContext is suspended.`);
+  for (let audioParam of audioParamsArr) {
+    ok(SpecialPowers.wrap(audioParam).isTrackSuspended,
+       `(${audioParam.name}) audioParam's stream has been suspended.`);;
+  }
+}
+
+function endTest() {
+  // reset the activation flag in order not to interfere following test in the
+  // verify mode which would run the test using same document couple times.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+  SimpleTest.finish();
+}
+
+</script>

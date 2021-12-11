@@ -1,0 +1,9 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+value = "xyz"
+DEFINES["FOO"] = True
+DEFINES["BAZ"] = '"ab\'cd"'
+DEFINES["QUX"] = False
+DEFINES["BAR"] = 7
+DEFINES["VALUE"] = value

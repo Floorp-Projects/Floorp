@@ -1,0 +1,4 @@
+[NestedUpTo=inside_sync,RefCounted] async protocol PExtendedAttrMultipleAttributes {
+parent:
+    async Msg();
+};

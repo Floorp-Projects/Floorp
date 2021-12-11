@@ -1,0 +1,41 @@
+# 'nightly' contains things that are in nightly mozconfigs and allowed to be missing from release builds.
+# Other keys in whitelist contain things are in that branches mozconfigs and allowed to be missing from nightly builds.
+whitelist = {
+    'release': {},
+    'nightly': {},
+    }
+
+all_platforms = ['win64', 'win64-aarch64', 'win32', 'linux32', 'linux64', 'macosx64']
+
+for platform in all_platforms:
+    whitelist['nightly'][platform] = [
+        'ac_add_options --with-branding=browser/branding/nightly',
+    ]
+
+whitelist['nightly']['macosx64'] += [
+    'ac_add_options --enable-instruments',
+    'ac_add_options --enable-dtrace',
+    'if test `uname -s` != Linux; then',
+    'fi',
+]
+
+whitelist['nightly']['win64'] += [
+    '. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"',
+]
+
+for platform in all_platforms:
+    whitelist['release'][platform] = [
+        'ac_add_options --enable-update-channel=release',
+        'ac_add_options --enable-official-branding',
+    ]
+
+whitelist['release']['linux32'] += [
+    'export MOZILLA_OFFICIAL=1',
+]
+whitelist['release']['linux64'] += [
+    'export MOZILLA_OFFICIAL=1',
+]
+
+if __name__ == '__main__':
+    import pprint
+    pprint.pprint(whitelist)

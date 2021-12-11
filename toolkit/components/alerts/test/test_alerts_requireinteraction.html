@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for alerts with requireInteraction</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* eslint-env mozilla/frame-script */
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+  addMessageListener("waitForXULAlert", function() {
+    var timer = setTimeout(function() {
+      Services.ww.unregisterNotification(windowObserver);
+      sendAsyncMessage("waitForXULAlert", false);
+    }, 2000);
+
+    var windowObserver = function(win, aTopic, aData) {
+      if (aTopic != "domwindowopened") {
+        return;
+      }
+
+      win.addEventListener("load", function() {
+        let windowType = win.document.documentElement.getAttribute("windowtype");
+        if (windowType == "alert:alert") {
+          clearTimeout(timer);
+          Services.ww.unregisterNotification(windowObserver);
+
+          sendAsyncMessage("waitForXULAlert", true);
+        }
+      }, {once: true});
+    };
+
+    Services.ww.registerNotification(windowObserver);
+  });
+});
+
+var cookie = 0;
+function promiseCreateXULAlert(alertService, listener, name) {
+  return new Promise(resolve => {
+    chromeScript.addMessageListener("waitForXULAlert", function waitedForAlert(result) {
+      chromeScript.removeMessageListener("waitForXULAlert", waitedForAlert);
+      resolve(result);
+    });
+
+    chromeScript.sendAsyncMessage("waitForXULAlert");
+    alertService.showAlertNotification(null, "title", "body",
+      true, cookie++, listener, name, null, null, null,
+      null, false, true);
+  });
+}
+
+add_task(async function test_require_interaction() {
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application.");
+    return;
+  }
+
+  ok(true, "Alerts service exists in this application.");
+
+  var alertService;
+  try {
+    alertService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    ok(true, "Alerts service is available.");
+  } catch (ex) {
+    todo(false, "Alerts service is not available.");
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({"set": [
+      [ "dom.webnotifications.requireinteraction.enabled", true ],
+      [ "dom.webnotifications.requireinteraction.count", 2 ],
+  ]});
+
+  var expectedSequence = [
+    "first show",
+    "second show",
+    "second finished",
+    "second replacement show",
+    "third finished",
+    "first finished",
+    "third replacement show",
+    "second replacement finished",
+    "third replacement finished",
+  ];
+
+  var actualSequence = [];
+
+  function createAlertListener(name, showCallback, finishCallback) {
+    return (subject, topic, data) => {
+      if (topic == "alertshow") {
+        actualSequence.push(name + " show");
+        if (showCallback) {
+          showCallback();
+        }
+      } else if (topic == "alertfinished") {
+        actualSequence.push(name + " finished");
+        if (finishCallback) {
+          finishCallback();
+        }
+      }
+    };
+  }
+
+  var xulAlertCreated = await promiseCreateXULAlert(alertService,
+    createAlertListener("first"), "first");
+  if (!xulAlertCreated) {
+    ok(true, "Platform does not use XUL alerts.");
+    alertService.closeAlert("first");
+    return;
+  }
+
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
+    createAlertListener("second"), "second");
+  ok(xulAlertCreated, "Create XUL alert");
+
+  // Replace second alert
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
+    createAlertListener("second replacement"), "second");
+  ok(xulAlertCreated, "Create XUL alert");
+
+  var testFinishResolve;
+  var testFinishPromise = new Promise((resolve) => { testFinishResolve = resolve; });
+
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
+    createAlertListener("third"), "third");
+  ok(!xulAlertCreated, "XUL alert should not be visible");
+
+  // Replace the not-yet-visible third alert.
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
+    createAlertListener("third replacement",
+    function showCallback() {
+      alertService.closeAlert("second");
+      alertService.closeAlert("third");
+    },
+    function finishCallback() {
+      // Check actual sequence of alert events compared to expected sequence.
+      for (var i = 0; i < actualSequence.length; i++) {
+        is(actualSequence[i], expectedSequence[i],
+          "Alert callback at index " + i + " should be in expected order.");
+      }
+
+      testFinishResolve();
+    }), "third");
+
+  ok(!xulAlertCreated, "XUL alert should not be visible");
+
+  alertService.closeAlert("first");
+
+  await testFinishPromise;
+});
+
+</script>
+</pre>
+</body>
+</html>

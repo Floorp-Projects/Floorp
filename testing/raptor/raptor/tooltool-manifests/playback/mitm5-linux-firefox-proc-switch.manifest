@@ -1,0 +1,16 @@
+[
+  {
+    "filename": "mitm5-linux-firefox-pettay.zip",
+    "size": 162774,
+    "algorithm": "sha512",
+    "digest": "3b4bf399eca881bd586e1d8ce49758f1b8033d0fdbcb360663c0855ed9b2926020cecb9cb53ad2f141022dbbd73be4a229e2a3048461aefaca9d9be117b1705a",
+    "visibility": "public"
+  },
+  {
+    "filename": "mitm5-linux-firefox-seanfeng.zip",
+    "size": 191769,
+    "algorithm": "sha512",
+    "digest": "05cfb31ecbc4d911b367fef1e1112cb2dbdcca827876a2e82a00b9dd723ec205631e81b2db8aa0c827888d484f9d576baec7c18a14483fe188566a7febeadebd",
+    "visibility": "public"
+  }
+]

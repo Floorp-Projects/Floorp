@@ -1,0 +1,348 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PFileDescriptorSet;
+include protocol PBrowser;
+include protocol PDocAccessiblePlatformExt;
+
+include DocAccessibleTypes;
+
+include "mozilla/GfxMessageUtils.h";
+
+using nsIntRect from "nsRect.h";
+using mozilla::a11y::role from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";
+[RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::CacheUpdateType from "mozilla/a11y/IPCTypes.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
+
+namespace mozilla {
+namespace a11y {
+
+struct AccessibleData
+{
+  uint64_t ID;
+  role Role;
+  uint32_t ChildrenCount;
+  AccType Type;
+  AccGenericType GenericTypes;
+  uint8_t RoleMapEntryIndex;
+};
+
+union OriginDocument
+{
+  PDocAccessible;
+};
+
+struct BatchData
+{
+  OriginDocument Document;
+  uint64_t ID;
+  uint64_t State;
+  nsIntRect Bounds;
+  uint8_t ActionCount;
+  nsString Name;
+  nsString TextValue;
+  nsString DOMNodeID;
+  nsString Description;
+  double CurValue;
+  double MinValue;
+  double MaxValue;
+  double Step;
+  AccAttributes Attributes;
+};
+
+struct ShowEventData
+{
+  uint64_t ID;
+  uint32_t Idx;
+  AccessibleData[] NewTree;
+  bool EventSuppressed;
+};
+
+struct RelationTargets
+{
+  uint32_t Type;
+  uint64_t[] Targets;
+};
+
+struct TextRangeData
+{
+  uint64_t StartID;
+  uint64_t EndID;
+  int32_t StartOffset;
+  int32_t EndOffset;
+};
+
+[NestedUpTo=inside_sync] sync protocol PDocAccessible
+{
+  manager PBrowser;
+  manages PDocAccessiblePlatformExt;
+
+parent:
+  async PDocAccessiblePlatformExt();
+  async Shutdown();
+
+  /*
+   * Notify the parent process the document in the child process is firing an
+   * event.
+   */
+  async Event(uint64_t aID, uint32_t type);
+  async ShowEvent(ShowEventData data, bool aFromuser);
+  async HideEvent(uint64_t aRootID, bool aFromUser);
+  async StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
+  async CaretMoveEvent(uint64_t aID, int32_t aOffset, bool aIsSelectionCollapsed);
+  async TextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart, uint32_t aLen,
+                        bool aIsInsert, bool aFromUser);
+  async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
+  async RoleChangedEvent(role aRole);
+  async VirtualCursorChangeEvent(uint64_t aID,
+                                 uint64_t aOldPosition,
+                                 int32_t aOldStartOffset, int32_t aOldEndOffset,
+                                 uint64_t aPosition,
+                                 int32_t aStartOffset, int32_t aEndOffset,
+                                 int16_t aReason, int16_t aBoundaryType,
+                                 bool aFromUservcEvent);
+  async ScrollingEvent(uint64_t aID, uint64_t aType,
+                       uint32_t aScrollX, uint32_t aScrollY,
+                       uint32_t aMaxScrollX, uint32_t aMaxScrollY);
+  async AnnouncementEvent(uint64_t aID,
+                          nsString aAnnouncement,
+                          uint16_t aPriority);
+  async TextSelectionChangeEvent(uint64_t aID, TextRangeData[] aSelection);
+
+  /*
+   * Tell the parent document to bind the existing document as a new child
+   * document.
+   */
+  async BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
+
+  // Android
+  async Batch(uint64_t aBatchType, BatchData[] aData);
+
+  /*
+   * Cache The World
+   * aFinal is false when paginating cache into several pushes,
+   * and then true on the final push.
+   */
+  async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aFinal);
+
+child:
+  /*
+   * Notify the content process that the PDocAccessible has finished being
+   * constructed in the parent process.
+   */
+  async ConstructedInParentProcess();
+
+  async __delete__();
+
+  /*
+   * Called as a result of focus shifting from chrome to content
+   * elements through keyboard navigation.
+   */
+  async RestoreFocus();
+
+  // LocalAccessible
+  [Nested=inside_sync] sync State(uint64_t aID) returns(uint64_t states);
+  [Nested=inside_sync] sync NativeState(uint64_t aID) returns(uint64_t states);
+  [Nested=inside_sync] sync Name(uint64_t aID) returns(nsString name, uint32_t flag);
+  [Nested=inside_sync] sync Value(uint64_t aID) returns(nsString value);
+  [Nested=inside_sync] sync Help(uint64_t aID) returns(nsString help);
+  [Nested=inside_sync] sync Description(uint64_t aID) returns(nsString desc);
+  [Nested=inside_sync] sync Attributes(uint64_t aID) returns(AccAttributes attributes);
+  [Nested=inside_sync] sync RelationByType(uint64_t aID, uint32_t aRelationType)
+    returns(uint64_t[] targets);
+  [Nested=inside_sync] sync Relations(uint64_t aID) returns(RelationTargets[] relations);
+  [Nested=inside_sync] sync IsSearchbox(uint64_t aID) returns(bool retval);
+  [Nested=inside_sync] sync LandmarkRole(uint64_t aID) returns(nsString landmark);
+  [Nested=inside_sync] sync ARIARoleAtom(uint64_t aID) returns(nsString ariaRole);
+  [Nested=inside_sync] sync GroupPosition(uint64_t aID)
+    returns(int32_t groupLevel, int32_t similarItemsInGroup, int32_t positionInGroup);
+  async ScrollTo(uint64_t aID, uint32_t aScrollType);
+  async ScrollToPoint(uint64_t aID, uint32_t aScrollType, int32_t aX,
+                      int32_t aY);
+  async Announce(uint64_t aID, nsString aAnnouncement, uint16_t aPriority);
+
+  // AccessibleText
+
+  // TextSubstring is getText in IDL.
+  [Nested=inside_sync] sync CaretLineNumber(uint64_t aID) returns(int32_t aLineNumber);
+  [Nested=inside_sync] sync CaretOffset(uint64_t aID) returns(int32_t aOffset);
+   async SetCaretOffset(uint64_t aID, int32_t aOffset);
+  [Nested=inside_sync] sync CharacterCount(uint64_t aID) returns(int32_t aCount);
+  [Nested=inside_sync] sync SelectionCount(uint64_t aID) returns(int32_t aCount);
+  [Nested=inside_sync] sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
+                                         aEndOffset) returns(nsString aText, bool aValid);
+  [Nested=inside_sync] sync GetTextAfterOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
+    returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+  [Nested=inside_sync] sync GetTextAtOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
+    returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+
+  [Nested=inside_sync] sync GetTextBeforeOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
+    returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+  [Nested=inside_sync] sync CharAt(uint64_t aID, int32_t aOffset) returns(uint16_t aChar);
+
+  [Nested=inside_sync] sync TextAttributes(uint64_t aID, bool aIncludeDefAttrs, int32_t aOffset)
+    returns(AccAttributes aAttributes, int32_t aStartOffset, int32_t aEndOffset);
+  [Nested=inside_sync] sync DefaultTextAttributes(uint64_t aID) returns(AccAttributes aAttributes);
+
+  [Nested=inside_sync] sync TextBounds(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
+                             uint32_t aCoordType)
+    returns(nsIntRect aRetVal);
+  [Nested=inside_sync] sync CharBounds(uint64_t aID, int32_t aOffset, uint32_t aCoordType)
+    returns(nsIntRect aRetVal);
+
+  [Nested=inside_sync] sync OffsetAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aCoordType)
+    returns(int32_t aRetVal);
+
+  [Nested=inside_sync] sync SelectionBoundsAt(uint64_t aID, int32_t aSelectionNum)
+    returns(bool aSucceeded, nsString aData, int32_t aStartOffset, int32_t aEndOffset);
+  [Nested=inside_sync] sync SetSelectionBoundsAt(uint64_t aID, int32_t aSelectionNum,
+                                       int32_t aStartOffset, int32_t aEndOffset)
+    returns(bool aSucceeded);
+  [Nested=inside_sync] sync AddToSelection(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset)
+    returns(bool aSucceeded);
+  [Nested=inside_sync] sync RemoveFromSelection(uint64_t aID, int32_t aSelectionNum)
+    returns(bool aSucceeded);
+
+  async ScrollSubstringTo(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
+                          uint32_t aScrollType);
+  async ScrollSubstringToPoint(uint64_t aID,
+                               int32_t aStartOffset,
+                               int32_t aEndOffset,
+                               uint32_t aCoordinateType,
+                               int32_t aX, int32_t aY);
+
+  [Nested=inside_sync] sync Text(uint64_t aID) returns(nsString aText);
+  [Nested=inside_sync] sync ReplaceText(uint64_t aID, nsString aText);
+  [Nested=inside_sync] sync InsertText(uint64_t aID, nsString aText, int32_t aPosition)
+    returns(bool aValid);
+  [Nested=inside_sync] sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+    returns(bool aValid);
+  [Nested=inside_sync] sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+    returns(bool aValid);
+  [Nested=inside_sync] sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+    returns(bool aValid);
+  [Nested=inside_sync] sync PasteText(uint64_t aID, int32_t aPosition)
+    returns(bool aValid);
+
+  [Nested=inside_sync] sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(IntPoint aRetVal);
+  [Nested=inside_sync] sync ImageSize(uint64_t aID) returns(IntSize aRetVal);
+
+  [Nested=inside_sync] sync StartOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  [Nested=inside_sync] sync EndOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  [Nested=inside_sync] sync IsLinkValid(uint64_t aID) returns(bool aRetVal);
+  [Nested=inside_sync] sync AnchorCount(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  [Nested=inside_sync] sync AnchorURIAt(uint64_t aID, uint32_t aIndex) returns(nsCString aURI, bool aOk);
+  [Nested=inside_sync] sync AnchorAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfAnchor, bool aOk);
+
+  [Nested=inside_sync] sync LinkCount(uint64_t aID) returns(uint32_t aCount);
+  [Nested=inside_sync] sync LinkAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfLink, bool aOk);
+  [Nested=inside_sync] sync LinkIndexOf(uint64_t aID, uint64_t aLinkID) returns(int32_t aIndex);
+  [Nested=inside_sync] sync LinkIndexAtOffset(uint64_t aID, uint32_t aOffset) returns(int32_t aIndex);
+
+  [Nested=inside_sync] sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);
+  [Nested=inside_sync] sync ColIdx(uint64_t aID) returns(uint32_t aIndex);
+  [Nested=inside_sync] sync RowIdx(uint64_t aID) returns(uint32_t aIndex);
+  [Nested=inside_sync] sync GetPosition(uint64_t aID) returns(uint32_t aRow, uint32_t aCol);
+  [Nested=inside_sync] sync ColExtent(uint64_t aID) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync RowExtent(uint64_t aID) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync GetColRowExtents(uint64_t aID)
+    returns(uint32_t aCol, uint32_t aRow, uint32_t aColExtent, uint32_t aRowExtent);
+  [Nested=inside_sync] sync ColHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  [Nested=inside_sync] sync RowHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  [Nested=inside_sync] sync IsCellSelected(uint64_t aID) returns(bool aSelected);
+
+  [Nested=inside_sync] sync TableCaption(uint64_t aID) returns(uint64_t aCaptionID, bool aOk);
+  [Nested=inside_sync] sync TableSummary(uint64_t aID) returns(nsString aSummary);
+  [Nested=inside_sync] sync TableColumnCount(uint64_t aID) returns(uint32_t aColCount);
+  [Nested=inside_sync] sync TableRowCount(uint64_t aID) returns(uint32_t aRowCount);
+  [Nested=inside_sync] sync TableCellAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint64_t aCellID, bool aOk);
+  [Nested=inside_sync] sync TableCellIndexAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(int32_t aIndex);
+  [Nested=inside_sync] sync TableColumnIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aCol);
+  [Nested=inside_sync] sync TableRowIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow);
+  [Nested=inside_sync] sync TableRowAndColumnIndicesAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow, int32_t aCol);
+  [Nested=inside_sync] sync TableColumnExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync TableRowExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync TableColumnDescription(uint64_t aID, uint32_t aCol) returns(nsString aDescription);
+  [Nested=inside_sync] sync TableRowDescription(uint64_t aID, uint32_t aRow) returns(nsString aDescription);
+  [Nested=inside_sync] sync TableColumnSelected(uint64_t aID, uint32_t aCol) returns(bool aSelected);
+  [Nested=inside_sync] sync TableRowSelected(uint64_t aID, uint32_t aRow) returns(bool aSelected);
+  [Nested=inside_sync] sync TableCellSelected(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(bool aSelected);
+  [Nested=inside_sync] sync TableSelectedCellCount(uint64_t aID) returns(uint32_t aSelectedCells);
+  [Nested=inside_sync] sync TableSelectedColumnCount(uint64_t aID) returns(uint32_t aSelectedColumns);
+  [Nested=inside_sync] sync TableSelectedRowCount(uint64_t aID) returns(uint32_t aSelectedRows);
+  [Nested=inside_sync] sync TableSelectedCells(uint64_t aID) returns(uint64_t[] aCellIDs);
+  [Nested=inside_sync] sync TableSelectedCellIndices(uint64_t aID) returns(uint32_t[] aCellIndeces);
+  [Nested=inside_sync] sync TableSelectedColumnIndices(uint64_t aID) returns(uint32_t[] aColumnIndeces);
+  [Nested=inside_sync] sync TableSelectedRowIndices(uint64_t aID) returns(uint32_t[] aRowIndeces);
+  [Nested=inside_sync] sync TableSelectColumn(uint64_t aID, uint32_t aCol);
+  [Nested=inside_sync] sync TableSelectRow(uint64_t aID, uint32_t aRow);
+  [Nested=inside_sync] sync TableUnselectColumn(uint64_t aID, uint32_t aCol);
+  [Nested=inside_sync] sync TableUnselectRow(uint64_t aID, uint32_t aRow);
+  [Nested=inside_sync] sync TableIsProbablyForLayout(uint64_t aID) returns(bool aForLayout);
+  [Nested=inside_sync] sync AtkTableColumnHeader(uint64_t aID, int32_t aCol)
+    returns(uint64_t aHeaderID, bool aOk);
+  [Nested=inside_sync] sync AtkTableRowHeader(uint64_t aID, int32_t aRow)
+    returns(uint64_t aHeaderID, bool aOk);
+
+  [Nested=inside_sync] sync SelectedItems(uint64_t aID) returns(uint64_t[] aSelectedItemIDs);
+  [Nested=inside_sync] sync SelectedItemCount(uint64_t aID) returns(uint32_t aCount);
+  [Nested=inside_sync] sync GetSelectedItem(uint64_t aID, uint32_t aIndex) returns(uint64_t aSelected, bool aOk);
+  [Nested=inside_sync] sync IsItemSelected(uint64_t aID, uint32_t aIndex) returns(bool aSelected);
+  [Nested=inside_sync] sync AddItemToSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
+  [Nested=inside_sync] sync RemoveItemFromSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
+  [Nested=inside_sync] sync SelectAll(uint64_t aID) returns(bool aSuccess);
+  [Nested=inside_sync] sync UnselectAll(uint64_t aID) returns(bool aSuccess);
+
+  async TakeSelection(uint64_t aID);
+  async SetSelected(uint64_t aID, bool aSelected);
+
+  [Nested=inside_sync] sync DoAction(uint64_t aID, uint8_t aIndex) returns(bool aSuccess);
+  [Nested=inside_sync] sync ActionCount(uint64_t aID) returns(uint8_t aCount);
+  [Nested=inside_sync] sync ActionDescriptionAt(uint64_t aID, uint8_t aIndex) returns(nsString aDescription);
+  [Nested=inside_sync] sync ActionNameAt(uint64_t aID, uint8_t aIndex) returns(nsString aName);
+  [Nested=inside_sync] sync AccessKey(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
+  [Nested=inside_sync] sync KeyboardShortcut(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
+  [Nested=inside_sync] sync AtkKeyBinding(uint64_t aID) returns(nsString aResult);
+
+  [Nested=inside_sync] sync CurValue(uint64_t aID) returns(double aValue);
+  [Nested=inside_sync] sync SetCurValue(uint64_t aID, double aValue) returns(bool aRetVal);
+  [Nested=inside_sync] sync MinValue(uint64_t aID) returns(double aValue);
+  [Nested=inside_sync] sync MaxValue(uint64_t aID) returns(double aValue);
+  [Nested=inside_sync] sync Step(uint64_t aID) returns(double aStep);
+
+  async TakeFocus(uint64_t aID);
+  [Nested=inside_sync] sync FocusedChild(uint64_t aID)
+    returns(nullable PDocAccessible aResultDoc, uint64_t aResultID);
+
+  [Nested=inside_sync] sync Language(uint64_t aID) returns(nsString aLocale);
+  [Nested=inside_sync] sync DocType(uint64_t aID) returns(nsString aType);
+  [Nested=inside_sync] sync Title(uint64_t aID) returns(nsString aTitle);
+  [Nested=inside_sync] sync URL(uint64_t aID) returns(nsString aURL);
+  [Nested=inside_sync] sync MimeType(uint64_t aID) returns(nsString aMime);
+  [Nested=inside_sync] sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);
+
+  [Nested=inside_sync] sync ChildAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aWhich)
+    returns(nullable PDocAccessible aResultDoc, uint64_t aResultID);
+
+  [Nested=inside_sync] sync Extents(uint64_t aID, bool aNeedsScreenCoords)
+    returns(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
+  [Nested=inside_sync] sync ExtentsInCSSPixels(uint64_t aID)
+    returns(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
+  [Nested=inside_sync] sync DOMNodeID(uint64_t aID) returns(nsString aDOMNodeID);
+
+  /*
+   * Verify the cache. Used for testing purposes.
+   */
+  async VerifyCache(uint64_t aID, uint64_t aCacheDomain, AccAttributes aFields);
+
+};
+
+}
+}

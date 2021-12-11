@@ -1,0 +1,30 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+USE_LIBS += ["osclientcerts-static"]
+
+UNIFIED_SOURCES += [
+    "stub.cpp",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += [
+        "crypt32",
+        "kernel32",
+        "ncrypt",
+        "userenv",
+        "ws2_32",
+    ]
+
+if CONFIG["OS_ARCH"] == "Darwin":
+    OS_LIBS += [
+        "-framework Security",
+    ]
+
+SharedLibrary("osclientcerts")
+
+NoVisibilityFlags()
+SYMBOLS_FILE = "osclientcerts.symbols"

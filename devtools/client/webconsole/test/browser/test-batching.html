@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Webconsole batch console calls test page</title>
+  </head>
+  <body>
+    <p>batch console calls test page</p>
+    <script>
+    /* exported batchLog, batchLogAndClear */
+    "use strict";
+
+    function batchLog(numMessages = 0) {
+      for (let i = 0; i < numMessages; i++) {
+        console.log(i);
+      }
+    }
+
+    function batchLogAndClear(numMessages = 0) {
+      for (let i = 0; i < numMessages; i++) {
+        console.log(i);
+        if (i === numMessages - 1) {
+          console.clear();
+        }
+      }
+    }
+    </script>
+  </body>
+</html>

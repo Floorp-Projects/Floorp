@@ -1,0 +1,53 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+include protocol PChildToParentStream;
+include protocol PFileDescriptorSet;
+include protocol PParentToChildStream;
+include protocol PRemoteLazyInputStream;
+
+include IPCBlob;
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace dom {
+
+struct InputBlobs
+{
+  IPCBlob[] blobs;
+};
+
+struct InputDirectory
+{
+  nsString directoryPath;
+};
+
+union MaybeInputData
+{
+  InputBlobs;
+  InputDirectory;
+  void_t;
+};
+
+protocol PFilePicker
+{
+  manager PBrowser;
+
+parent:
+    async Open(int16_t selectedType, bool addToRecentDocs, nsString defaultFile,
+               nsString defaultExtension, nsString[] filters, nsString[] filterNames,
+               nsString[] rawFilters, nsString displayDirectory,
+               nsString displaySpecialDirectory, nsString okButtonLabel,
+               int16_t capture);
+
+child:
+    async __delete__(MaybeInputData data, int16_t result);
+};
+
+} // namespace dom
+} // namespace mozilla

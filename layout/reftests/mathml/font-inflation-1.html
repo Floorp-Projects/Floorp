@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Font Inflation</title>
+    <meta charset="utf-8"/>
+    <style>
+      @font-face {
+        font-family: "dtls-1";
+        src: url(../fonts/math/dtls-1.otf);
+      }
+      p, math {
+        font-family: serif;
+      }
+    </style>
+    <script type="text/javascript">
+      function almostEqual(aX, aY) {
+        var epsilon = 2.6;
+        return Math.abs(aX - aY) < epsilon;
+      }
+
+      function verifySize(aElement, aReference) {
+        /* Verify if the size of the element matches the reference, and
+           otherwise paint the element in red. */
+        if (!almostEqual(aElement.getBoundingClientRect().height,
+                         aReference.getBoundingClientRect().height) ||
+            !almostEqual(aElement.getBoundingClientRect().width,
+                         aReference.getBoundingClientRect().width)) {
+          aElement.setAttribute("mathcolor", "red");
+        }
+      }
+
+      function verifySizes() {
+        /* Compare the size of the elements in the inline and display equations
+           against the reference mtext elements. */
+        var ref = document.getElementById("ref");
+        var inline = document.getElementById("inline");
+        var cell = document.getElementById("cell");
+        for (var i = 0; i < ref.children.length; i++) {
+          verifySize(inline.children[i], ref.children[i]);
+          verifySize(cell.children[i], ref.children[i]);
+        }
+
+        document.documentElement.removeAttribute("class");
+      }
+
+      window.addEventListener("MozReftestInvalidate", verifySizes);
+    </script>
+  </head>
+  <body>
+
+<p>The text
+'<math>
+    <mrow id="ref">
+      <mtext style="font-family: dtls-1">&#x1D51E;</mtext>
+      <mtext>+</mtext>
+  </mrow>
+  </math>'
+should have the same size as inline math
+'<math>
+    <mrow id="inline">
+      <mtext style="font-family: dtls-1" mathvariant="fraktur">a</mtext>
+      <mo>+</mo>
+    </mrow>
+  </math>'
+or math in a table: '<math><mtable><mtr>
+    <mtd>
+      <mrow id="cell">
+        <mtext style="font-family: dtls-1" mathvariant="fraktur">a</mtext>
+        <mo>+</mo>
+      </mrow>
+    </mtd>
+  </mtr></mtable></math>'
+(but not necessarily the same size as block-level math
+<math display="block">
+    <mrow id="display">
+      <mtext style="font-family: dtls-1" mathvariant="fraktur">a</mtext>
+      <mo>+</mo>
+    </mrow>
+  </math>
+because it forms a BFC and hence is its own inflation container.)
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem
+ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt
+in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor
+sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut
+labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
+aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit
+amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore
+et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
+in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+officia deserunt mollit anim id est laborum.</p>
+
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=817420
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 817420</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=817420">Mozilla Bug 817420</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 817420 **/
+is(Object.getPrototypeOf(HTMLElement.prototype), Element.prototype,
+   "Must have correct proto chain for HTMLElement.prototype");
+is(Object.getPrototypeOf(document.createElementNS(null, "x")),
+   Element.prototype,
+   "Must have correct proto chain for random element");
+is(Object.getPrototypeOf(document.createElement("noSuchElementName")),
+   HTMLUnknownElement.prototype,
+   "Must have correct proto chain for random HTML element");
+
+// And check that it's really working as it should
+function checkPropPresent(propName, objList, expected)
+{
+  for (obj of objList) {
+    is(propName in obj,
+       expected,
+       obj + " should " + (expected ? "" : "not ") + "have the property");
+  }
+}
+var objList = [ Element.prototype,
+                HTMLElement.prototype,
+                document.createElementNS(null, "x"),
+                document.createElement("noSuchElementName"),
+                document.body ]
+checkPropPresent("somePropertyThatBetterNeverExist", objList, false);
+Element.prototype.somePropertyThatBetterNeverExist = 1;
+checkPropPresent("somePropertyThatBetterNeverExist", objList, true);
+
+objList = [ HTMLElement.prototype,
+            document.createElement("noSuchElementName"),
+            document.body ]
+checkPropPresent("someOtherPropertyThatBetterNeverExist", objList, false);
+HTMLElement.prototype.someOtherPropertyThatBetterNeverExist = 1;
+checkPropPresent("someOtherPropertyThatBetterNeverExist", objList, true);
+
+</script>
+</pre>
+</body>
+</html>

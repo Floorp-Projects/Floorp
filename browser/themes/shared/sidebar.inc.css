@@ -1,0 +1,128 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+#sidebar-box {
+  --sidebar-background-color: Field;
+  --sidebar-text-color: FieldText;
+  background-color: var(--sidebar-background-color);
+  color: var(--sidebar-text-color);
+  text-shadow: none;
+  min-width: 34px !important;
+}
+
+#sidebar-header {
+  font-size: 1.333em;
+  padding: 8px;
+  border-bottom: 1px solid var(--sidebar-border-color);
+}
+
+%ifndef MOZ_WIDGET_GTK
+% We don't let the splitter overlap the sidebar on Linux since the sidebar's
+% scrollbar is too narrow on Linux.
+.sidebar-splitter {
+  appearance: none;
+  border: 0 solid;
+  border-inline-end-width: 1px;
+  border-color: var(--sidebar-border-color);
+  min-width: 1px;
+  width: 4px;
+  background-image: none !important;
+  background-color: transparent;
+  margin-inline-start: -4px;
+  position: relative;
+}
+
+#sidebar-box[positionend] + .sidebar-splitter {
+  border-inline-width: 1px 0;
+  margin-inline: 0 -4px;
+}
+%endif
+
+#sidebar-throbber[loading="true"] {
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 2dppx) {
+  #sidebar-throbber[loading="true"] {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+    width: 16px;
+  }
+}
+
+#sidebar-title {
+  margin: 0;
+  padding: 0;
+  padding-inline: 8px 4px;
+}
+
+#sidebar-switcher-arrow {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
+}
+
+#sidebar-switcher-arrow {
+  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  width: 12px;
+  height: 12px;
+}
+
+#sidebar-switcher-target {
+  appearance: none;
+  color: inherit;
+  margin-inline-end: 4px;
+  border-radius: var(--toolbarbutton-border-radius);
+  border: 1px solid transparent;
+  padding: 2px 4px;
+}
+
+#sidebar-switcher-target:-moz-focusring:not(:hover, [open]),
+#sidebar-close:-moz-focusring:not(:hover, [open]) {
+  outline: 1px dotted;
+}
+
+#sidebar-switcher-target:hover:active,
+#sidebar-switcher-target.active {
+  background: var(--toolbarbutton-active-background);
+}
+
+/* Ensure we do not lose contrast between lightweight and OS theme colours */
+#sidebar-switcher-target:hover:-moz-lwtheme {
+  background: hsla(240, 5%, 5%, 0.1);
+}
+#sidebar-switcher-target:hover:active:-moz-lwtheme,
+#sidebar-switcher-target.active:-moz-lwtheme {
+  background: hsla(240, 5%, 5%, 0.15);
+}
+
+#sidebarMenu-popup .subviewbutton {
+  min-width: 190px;
+}
+
+toolbarseparator + #sidebar-extensions-separator {
+  display: none;
+}
+
+#sidebar-box[sidebarcommand="viewBookmarksSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
+  list-style-image: url(chrome://browser/skin/bookmark.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
+}
+
+#sidebar-box[sidebarcommand="viewHistorySidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
+  list-style-image: url(chrome://browser/skin/history.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
+}
+
+#sidebar-box[sidebarcommand="viewTabsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
+  list-style-image: url(chrome://browser/skin/tab.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
+}

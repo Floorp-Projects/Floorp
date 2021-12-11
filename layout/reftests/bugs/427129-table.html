@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Reftest, bug 427129</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	html, body { margin: 0; }
+
+	.contain {
+		background: aqua; color: black;
+		height: 10px; margin: 2px 50px;
+		padding-top: 0.1px; /* needed for some reason (XXX WHY?) */
+	}
+
+	.fl, .fr { height: 5px; }
+	.fl { float: left; width: 56px; }
+	.fr { float: right; width: 73px; }
+
+	/* tables default to border-box sizing */
+	.t { background: blue; height: 5px; width: 100px; border-spacing: 0;
+	     border-left: 1px solid blue; padding-left: 2px;
+	     padding-right: 4px; border-right: 8px solid blue; }
+	.t td { padding: 0; }
+
+	</style>
+</head>
+<body>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: 30px"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: 56px"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: 73px"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: 100px"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: auto"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: auto; margin-right: 30px"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: auto; margin-right: 56px"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: auto; margin-right: 73px"><tr><td></td></tr></table>
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<table class="t" style="margin-left: auto; margin-right: 100px"><tr><td></td></tr></table>
+</div>
+
+<!-- Remember that the extra end-edge margin gets ignored -->
+<div style="width: 300px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="width: 71px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px; width: 71px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="width: 72px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px; width: 72px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; width: 71px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; width: 71px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; width: 71px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; width: 71px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 0 0 15px; width: 71px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 0 0 15px; width: 72px"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="width: 35.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px; width: 35.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="width: 36.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px; width: 36.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; width: 35.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; width: 35.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; width: 35.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; width: 35.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 0 0 15px; width: 35.5%"><tr><td></td></tr></table>
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 0 0 15px; width: 36.5%"><tr><td></td></tr></table>
+	</div>
+</div>
+
+</body>
+</html>

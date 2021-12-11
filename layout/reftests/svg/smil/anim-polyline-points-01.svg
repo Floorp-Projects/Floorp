@@ -1,0 +1,73 @@
+<!--
+  From https://bugzilla.mozilla.org/show_bug.cgi?id=522308
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the 'points' attribute on the 'polyline' element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <style type="text/css">
+    polyline { fill: none; stroke: blue; stroke-width: 2px; }
+  </style>
+
+
+  <!-- The difference between respective numbers in the effective 'from' and
+       'to' lists below is carefully designed to be a factor of 3. That way
+       our reference file (which checks against a one third complete animation)
+       can contain whole numbers, which is necessary to avoid failure due to
+       hard coded rounded numbers in the reference not matching platform
+       specific rounding behaviour.
+    -->
+
+  <!-- Test 'to' animation. -->
+
+  <polyline points="10,10 70,70 110,10 160,10 210,10">
+    <animate attributeName="points"
+             calcMode="linear"
+             begin="0s" dur="3s"
+             to="10,10 70,10 110,10 160,70 210,10"
+             fill="freeze"/>
+  </polyline>
+
+
+  <!-- Test 'by' animation. -->
+
+  <polyline transform="translate(0, 70)"
+            points="10,10 70,70 110,10 160,10 210,10">
+    <animate attributeName="points"
+             calcMode="linear"
+             begin="0s" dur="3s"
+             by="0,0 0,-60 0,0 0,60 0,0"
+             fill="freeze"/>
+  </polyline>
+
+
+  <!-- Test calcMode="paced". We don't currently support paced animation, so
+       we're just testing that we don't do anything unexpected (that we behave
+       as if calcMode="discrete").
+  -->
+
+  <polyline transform="translate(0, 140)">
+    <animate attributeName="points"
+             calcMode="paced"
+             begin="0s" dur="3s"
+             values="10,10 70,70 110,10 160,10 210,10;
+                     10,10 70,30 110,10 160,50 210,10;
+                     10,10 70,10 110,10 160,70 210,10"
+             fill="freeze"/>
+  </polyline>
+
+
+  <!-- Test calcMode="discrete". -->
+
+  <polyline transform="translate(0, 210)"
+            points="10,10 70,70 110,10 160,10 210,10">
+    <animate attributeName="points"
+             calcMode="discrete"
+             begin="0s" dur="2s"
+             to="10,10 70,10 110,10 160,70 210,10"
+             fill="freeze"/>
+  </polyline>
+
+</svg>

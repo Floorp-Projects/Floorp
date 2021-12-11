@@ -1,0 +1,101 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This is the prompt interface which can be used without knowlege of a
+ * parent window. The parentage is hidden by the GetInterface though
+ * which it is gotten. This interface is identical to nsIPromptService
+ * but without the parent nsIDOMWindow parameter. See nsIPromptService
+ * for all documentation.
+ *
+ * Accesskeys can be attached to buttons and checkboxes by inserting
+ * an & before the accesskey character. For a real &, use && instead.
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(a63f70c0-148b-11d3-9333-00104ba0fd40)]
+interface nsIPrompt : nsISupports
+{
+    void alert(in wstring dialogTitle,
+               in wstring text);
+
+    void alertCheck(in wstring dialogTitle,
+                    in wstring text,
+                    in wstring checkMsg,
+                    inout boolean checkValue);
+
+    boolean confirm(in wstring dialogTitle,
+                    in wstring text);
+
+    boolean confirmCheck(in wstring dialogTitle,
+                         in wstring text,
+                         in wstring checkMsg,
+                         inout boolean checkValue);
+
+    const unsigned long BUTTON_POS_0              = 1;
+    const unsigned long BUTTON_POS_1              = 1 << 8;
+    const unsigned long BUTTON_POS_2              = 1 << 16;
+
+    const unsigned long BUTTON_TITLE_OK            = 1;
+    const unsigned long BUTTON_TITLE_CANCEL        = 2;
+    const unsigned long BUTTON_TITLE_YES           = 3;
+    const unsigned long BUTTON_TITLE_NO            = 4;
+    const unsigned long BUTTON_TITLE_SAVE          = 5;
+    const unsigned long BUTTON_TITLE_DONT_SAVE     = 6;
+    const unsigned long BUTTON_TITLE_REVERT        = 7;
+
+    const unsigned long BUTTON_TITLE_IS_STRING     = 127;
+
+    const unsigned long BUTTON_POS_0_DEFAULT       = 0 << 24;
+    const unsigned long BUTTON_POS_1_DEFAULT       = 1 << 24;
+    const unsigned long BUTTON_POS_2_DEFAULT       = 2 << 24;
+
+    /* used for security dialogs, buttons are initially disabled */
+    const unsigned long BUTTON_DELAY_ENABLE        = 1 << 26;
+
+    const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
+                                                    (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
+    const unsigned long STD_YES_NO_BUTTONS         = (BUTTON_TITLE_YES * BUTTON_POS_0) +
+                                                    (BUTTON_TITLE_NO * BUTTON_POS_1);
+
+
+    // Indicates whether a prompt should be shown in-content, on tab level or as a separate window
+    const unsigned long MODAL_TYPE_CONTENT = 1;
+    const unsigned long MODAL_TYPE_TAB = 2;
+    const unsigned long MODAL_TYPE_WINDOW = 3;
+    // Like MODAL_TYPE_WINDOW, but shown inside a parent window (with similar
+    // styles as _TAB and _CONTENT types) rather than as a new window:
+    const unsigned long MODAL_TYPE_INTERNAL_WINDOW = 4;
+
+    int32_t confirmEx(in wstring dialogTitle,
+                   in wstring text,
+                   in unsigned long buttonFlags,
+                   in wstring button0Title,
+                   in wstring button1Title,
+                   in wstring button2Title,
+                   in wstring checkMsg,
+                   inout boolean checkValue);
+
+     boolean prompt(in wstring dialogTitle,
+                    in wstring text,
+                    inout wstring value,
+                    in wstring checkMsg,
+                    inout boolean checkValue);
+
+     boolean promptPassword(in wstring dialogTitle,
+                            in wstring text,
+                            inout wstring password);
+
+     boolean promptUsernameAndPassword(in wstring dialogTitle,
+                                       in wstring text,
+                                       inout wstring username,
+                                       inout wstring password);
+
+    boolean select(in wstring dialogTitle,
+                   in wstring text,
+                   in Array<AString> selectList,
+                   out long outSelection);
+};

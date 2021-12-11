@@ -1,0 +1,397 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+
+    // This is presently only used to test compatability between OS.File and
+    // IOUtils when it comes to writing compressed files. The import and the
+    // test `test_lz4_osfile_compat` can be removed with OS.File is removed.
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+    // This is an impossible sequence of bytes in an UTF-8 encoded file.
+    // See section 3.5.3 of this text:
+    // https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt
+    const invalidUTF8 = Uint8Array.of(0xfe, 0xfe, 0xff, 0xff);
+
+    add_task(async function test_read_utf8_failure() {
+      info("Test attempt to read non-existent file (UTF8)");
+      const tmpDir = await PathUtils.getTempDir();
+      const doesNotExist = PathUtils.join(tmpDir, "does_not_exist.tmp");
+      await Assert.rejects(
+        IOUtils.readUTF8(doesNotExist),
+        /Could not open the file at .*/,
+        "IOUtils::readUTF8 rejects when file does not exist"
+      );
+
+      info("Test attempt to read invalid UTF-8");
+      const invalidUTF8File = PathUtils.join(tmpDir, "invalid_utf8.tmp");
+
+      // Deliberately write the invalid byte sequence to file.
+      await IOUtils.write(invalidUTF8File, invalidUTF8);
+
+      await Assert.rejects(
+        IOUtils.readUTF8(invalidUTF8File),
+        /Could not read file\(.*\) because it is not UTF-8 encoded/,
+        "IOUtils::readUTF8 will reject when reading a file that is not valid UTF-8"
+      );
+
+      await cleanup(invalidUTF8File);
+    });
+
+    add_task(async function test_write_utf8_no_overwrite() {
+      const tmpDir = await PathUtils.getTempDir();
+      // Make a new file, and try to write to it with overwrites disabled.
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_write_utf8_overwrite.tmp");
+      const untouchableContents = "Can't touch this!\n";
+      await IOUtils.writeUTF8(tmpFileName, untouchableContents);
+
+      const newContents = "Nah nah nah!\n";
+      await Assert.rejects(
+        IOUtils.writeUTF8(tmpFileName, newContents, {
+          mode: "create",
+        }),
+        /Refusing to overwrite the file at */,
+        "IOUtils::writeUTF8 rejects writing to existing file if overwrites are disabled"
+      );
+      ok(
+        await fileHasTextContents(tmpFileName, untouchableContents),
+        "IOUtils::writeUTF8 doesn't change target file when overwrite is refused"
+      );
+
+      const bytesWritten = await IOUtils.writeUTF8(
+        tmpFileName,
+        newContents,
+        { mode: "overwrite" }
+      );
+      is(
+        bytesWritten,
+        newContents.length,
+        "IOUtils::writeUTF8 can overwrite files if specified"
+      );
+      ok(
+        await fileHasTextContents(tmpFileName, newContents),
+        "IOUtils::writeUTF8 overwrites with the expected contents"
+      );
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_write_with_backup() {
+      info("Test backup file option with non-existing file");
+      const tmpDir = await PathUtils.getTempDir();
+      let fileContents = "Original file contents";
+      let destFileName = PathUtils.join(tmpDir, "test_write_utf8_with_backup_option.tmp");
+      let backupFileName = destFileName + ".backup";
+      let bytesWritten =
+        await IOUtils.writeUTF8(destFileName, fileContents, {
+          backupFile: backupFileName,
+        });
+      ok(
+        await fileHasTextContents(destFileName, "Original file contents"),
+        "IOUtils::writeUTF8 creates a new file with the correct contents"
+      );
+      ok(
+        !await fileExists(backupFileName),
+        "IOUtils::writeUTF8 does not create a backup if the target file does not exist"
+      );
+      is(
+        bytesWritten,
+        fileContents.length,
+        "IOUtils::write correctly writes to a new file without performing a backup"
+      );
+
+      info("Test backup file option with existing destination");
+      let newFileContents = "New file contents";
+      ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
+      bytesWritten =
+        await IOUtils.writeUTF8(destFileName, newFileContents, {
+          backupFile: backupFileName,
+        });
+      ok(
+        await fileHasTextContents(backupFileName, "Original file contents"),
+        "IOUtils::writeUTF8 can backup an existing file before writing"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "New file contents"),
+        "IOUtils::writeUTF8 can create the target with the correct contents"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::writeUTF8 correctly writes to the target after taking a backup"
+      );
+
+      await cleanup(destFileName, backupFileName);
+    });
+
+    add_task(async function test_write_with_backup_and_tmp() {
+      info("Test backup with tmp and backup file options, non-existing destination");
+      const tmpDir = await PathUtils.getTempDir();
+      let fileContents = "Original file contents";
+      let destFileName = PathUtils.join(tmpDir, "test_write_utf8_with_backup_and_tmp_options.tmp");
+      let backupFileName = destFileName + ".backup";
+      let tmpFileName = PathUtils.join(tmpDir, "temp_file.tmp");
+      let bytesWritten =
+        await IOUtils.writeUTF8(destFileName, fileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+      ok(!await fileExists(tmpFileName), "IOUtils::writeUTF8 cleans up the tmpFile");
+      ok(
+        !await fileExists(backupFileName),
+        "IOUtils::writeUTF8 does not create a backup if the target file does not exist"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "Original file contents"),
+        "IOUtils::writeUTF8 can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        fileContents.length,
+        "IOUtils::writeUTF8 can copy tmp file to destination without performing a backup"
+      );
+
+      info("Test backup with tmp and backup file options, existing destination");
+      let newFileContents = "New file contents";
+      bytesWritten =
+        await IOUtils.writeUTF8(destFileName, newFileContents, {
+          backupFile: backupFileName,
+          tmpPath: tmpFileName,
+        });
+
+      ok(!await fileExists(tmpFileName), "IOUtils::writeUTF8 cleans up the tmpFile");
+      ok(
+        await fileHasTextContents(backupFileName, "Original file contents"),
+        "IOUtils::writeUTF8 can create a backup if the target file exists"
+      );
+      ok(
+        await fileHasTextContents(destFileName, "New file contents"),
+        "IOUtils::writeUTF8 can write to the destination when a temporary file is used"
+      );
+      is(
+        bytesWritten,
+        newFileContents.length,
+        "IOUtils::writeUTF8 can move tmp file to destination after performing a backup"
+      );
+
+      await cleanup(destFileName, backupFileName);
+    });
+
+    add_task(async function test_empty_read_and_write_utf8() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_empty_utf8.tmp");
+      const emptyString = ""
+      const bytesWritten = await IOUtils.writeUTF8(
+        tmpFileName,
+        emptyString
+      );
+      is(bytesWritten, 0, "IOUtils::writeUTF8 can create an empty file");
+
+      const nothing = await IOUtils.readUTF8(tmpFileName);
+      is(nothing.length, 0, "IOUtils::readUTF8 can read empty files");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_full_read_and_write_utf8() {
+      // Write a file.
+      info("Test writing emoji file");
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_emoji.tmp");
+
+      // Make sure non-ASCII text is supported for writing and reading back.
+      // For fun, a sampling of space-separated emoji characters from different
+      // Unicode versions, including multi-byte glyphs that are rendered using
+      // ZWJ sequences.
+      const emoji = "☕️ ⚧️ 😀 🖖🏿 🤠 🏳️‍🌈 🥠 🏴‍☠️ 🪐";
+      const expectedBytes = 71;
+      const bytesWritten = await IOUtils.writeUTF8(tmpFileName, emoji);
+      is(
+        bytesWritten,
+        expectedBytes,
+        "IOUtils::writeUTF8 can write emoji to file"
+      );
+
+      // Read it back.
+      info("Test reading emoji from file");
+      let fileContents = await IOUtils.readUTF8(tmpFileName);
+      ok(
+        emoji == fileContents &&
+        emoji.length == fileContents.length,
+        "IOUtils::readUTF8 can read back entire file"
+      );
+
+      // Clean up.
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_write_utf8_relative_path() {
+      const tmpFileName = "test_ioutils_write_utf8_relative_path.tmp";
+
+      info("Test writing a file at a relative destination");
+      await Assert.rejects(
+        IOUtils.writeUTF8(tmpFileName, "foo"),
+        /Could not parse path/,
+        "IOUtils::writeUTF8 only works with absolute paths"
+      );
+    });
+
+    add_task(async function test_read_utf8_relative_path() {
+      const tmpFileName = "test_ioutils_read_utf8_relative_path.tmp";
+
+      info("Test reading a file at a relative destination");
+      await Assert.rejects(
+        IOUtils.readUTF8(tmpFileName),
+        /Could not parse path/,
+        "IOUtils::readUTF8 only works with absolute paths"
+      );
+    });
+
+
+    add_task(async function test_utf8_lz4() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4.tmp");
+
+      info("Test writing lz4 encoded UTF-8 string");
+      const emoji = "☕️ ⚧️ 😀 🖖🏿 🤠 🏳️‍🌈 🥠 🏴‍☠️ 🪐";
+      let bytesWritten = await IOUtils.writeUTF8(tmpFileName, emoji, { compress: true });
+      is(bytesWritten, 83, "Expected to write 64 bytes");
+
+      info("Test reading lz4 encoded UTF-8 string");
+      let readData = await IOUtils.readUTF8(tmpFileName, { decompress: true });
+      is(readData, emoji, "IOUtils can write and read back UTF-8 LZ4 encoded data");
+
+      info("Test writing lz4 compressed UTF-8 string");
+      const lotsOfCoffee = new Array(24).fill("☕️").join(""); // ☕️ is 3 bytes in UTF-8: \0xe2 \0x98 \0x95
+      bytesWritten = await IOUtils.writeUTF8(tmpFileName, lotsOfCoffee, { compress: true });
+      console.log(bytesWritten);
+      is(bytesWritten, 28, "Expected 72 bytes to compress to 28 bytes");
+
+      info("Test reading lz4 encoded UTF-8 string");
+      readData = await IOUtils.readUTF8(tmpFileName, { decompress: true });
+      is(readData, lotsOfCoffee, "IOUtils can write and read back UTF-8 LZ4 compressed data");
+
+      info("Test writing empty lz4 compressed UTF-8 string")
+      const empty = "";
+      bytesWritten = await IOUtils.writeUTF8(tmpFileName, empty, { compress: true });
+      is(bytesWritten, 12, "Expected to write just the LZ4 header");
+
+      info("Test reading empty lz4 compressed UTF-8 string")
+      const readEmpty = await IOUtils.readUTF8(tmpFileName, { decompress: true });
+      is(readEmpty, empty, "IOUtils can write and read back empty buffers with LZ4");
+      const readEmptyRaw = await IOUtils.readUTF8(tmpFileName, { decompress: false });
+      is(readEmptyRaw.length, 12, "Expected to read back just the LZ4 header");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_utf8_lz4_osfile_compat() {
+      const tmpDir = await PathUtils.getTempDir();
+      const osfileTmpFile = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_compat_osfile.tmp");
+      const ioutilsTmpFile = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_compat_ioutils.tmp");
+
+      info("Test OS.File and IOUtils write the same UTF-8 file with LZ4 compression enabled")
+      const emoji = "☕️ ⚧️ 😀 🖖🏿 🤠 🏳️‍🌈 🥠 🏴‍☠️ 🪐";
+      let expectedBytes = 83;
+      let ioutilsBytes = await IOUtils.writeUTF8(ioutilsTmpFile, emoji, { compress: true });
+      let osfileBytes = await OS.File.writeAtomic(osfileTmpFile, emoji, { compression: "lz4" });
+      is(ioutilsBytes, expectedBytes, "IOUtils writes the expected number of bytes for compression");
+      is(osfileBytes, ioutilsBytes, "OS.File and IOUtils write the same number of bytes for LZ4 compression");
+
+      info("Test OS.File can read an UTF-8 file compressed by IOUtils");
+      const osfileReadStr = await OS.File.read(ioutilsTmpFile, { compression: "lz4", encoding: "utf-8" });
+      is(osfileReadStr, emoji, "OS.File can read an UTF-8 file compressed by IOUtils")
+
+      info("Test IOUtils can read an UTF-8 file compressed by OS.File");
+      const ioutilsReadString = await IOUtils.readUTF8(ioutilsTmpFile, { decompress: true });
+      is(ioutilsReadString, emoji, "IOUtils can read an UTF-8 file compressed by OS.File");
+
+      await cleanup(osfileTmpFile, ioutilsTmpFile);
+    });
+
+    add_task(async function test_utf8_lz4_bad_call() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_bad_call.tmp");
+
+      info("readUTF8 ignores the maxBytes option if provided");
+      const emoji = "☕️ ⚧️ 😀 🖖🏿 🤠 🏳️‍🌈 🥠 🏴‍☠️ 🪐";
+      let bytesWritten = await IOUtils.writeUTF8(tmpFileName, emoji, { compress: true });
+      is(bytesWritten, 83, "Expected to write 83 bytes");
+
+      let readData = await IOUtils.readUTF8(tmpFileName, { maxBytes: 4, decompress: true });
+      is(readData, emoji, "IOUtils can write and read back UTF-8 LZ4 encoded data");
+
+      await cleanup(tmpFileName)
+    });
+
+    add_task(async function test_utf8_lz4_failure() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_fail.tmp");
+
+      info("Test decompression of non-lz4 UTF-8 string");
+      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
+      await IOUtils.write(tmpFileName, repeatedBytes, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.readUTF8(tmpFileName, { decompress: true }),
+        /Could not decompress file because it has an invalid LZ4 header \(wrong magic number: .*\)/,
+        "IOUtils::readUTF8 fails to decompress LZ4 data with a bad header"
+      );
+
+      info("Test UTF-8 decompression of short byte buffer");
+      const elevenBytes = Uint8Array.of(...new Array(11).fill(1));
+      await IOUtils.write(tmpFileName, elevenBytes, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.readUTF8(tmpFileName, { decompress: true }),
+        /Could not decompress file because the buffer is too short/,
+        "IOUtils::readUTF8 fails to decompress LZ4 data with missing header"
+      );
+
+      info("Test UTF-8 decompression of valid header, but corrupt contents");
+      const headerFor10bytes = [109, 111, 122, 76, 122, 52, 48, 0, 10, 0, 0, 0] // "mozlz40\0" + 4 byte length
+      const badContents = new Array(11).fill(255); // Bad leading byte, followed by uncompressed stream.
+      const goodHeaderBadContents = Uint8Array.of(...headerFor10bytes, ...badContents);
+      await IOUtils.write(tmpFileName, goodHeaderBadContents, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.readUTF8(tmpFileName, { decompress: true }),
+        /Could not decompress file contents, the file may be corrupt/,
+        "IOUtils::readUTF8 fails to read corrupt LZ4 contents with a correct header"
+      );
+
+      info("Testing decompression of an empty file (no header)");
+      {
+        const n = await IOUtils.writeUTF8(tmpFileName, "");
+        ok(n === 0, "Overwrote with empty file");
+      }
+      await Assert.rejects(
+        IOUtils.readUTF8(tmpFileName, { decompress: true }),
+        /Could not decompress file because the buffer is too short/,
+        "IOUtils::readUTF8 fails to decompress empty files"
+      );
+
+      await cleanup(tmpFileName);
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

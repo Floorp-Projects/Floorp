@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function doTest() {
+        document.getElementById("t").style.display = "table-row";
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <table style="border-collapse: collapse">
+      <tr style="display: block; border: 5px solid">
+        <td>LongLongLong</td>
+      </tr>
+      <tr style="display: none; border: 5px solid" id="t">
+        <td>Short</td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+function doStuff() {
+  window.parent.parent.ok_wrapper(true, "a subloaded document should inherit the flags of the document, not of the docshell/sandbox attribute");
+}
+</script>
+<body onload='doStuff()'>
+  I'm a subloaded document of file_iframe_sandbox_a_if8.html. I should be able to call a function in window.top
+  because I should be same-origin with it.
+</body>
+</html>
+

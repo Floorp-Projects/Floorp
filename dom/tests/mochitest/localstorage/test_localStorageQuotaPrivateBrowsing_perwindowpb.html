@@ -1,0 +1,191 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage and DOM quota test</title>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const CONTENT_PAGE = "http://mochi.test:8888/chrome/dom/tests/mochitest/localstorage/page_blank.html";
+const slavePath = "/chrome/dom/tests/mochitest/localstorage/";
+var currentTest = 1;
+var quota = Services.prefs.getIntPref("dom.storage.default_quota", 5 * 1024);
+var siteQuota = Services.prefs.getIntPref("dom.storage.default_site_quota", 25 * 1024);
+Services.prefs.setIntPref("browser.startup.page", 0);
+Services.prefs.setIntPref("dom.storage.default_quota", 1);
+Services.prefs.setIntPref("dom.storage.default_site_quota", 1);
+
+var slaveLoadsPending = 1;
+var slaveOrigin = "";
+var slave = null;
+var failureRegExp = new RegExp("^FAILURE");
+
+function startTest() {
+  testOnWindow(true, function(aWindow) {
+    info("Private window loaded");
+    var frame = aWindow.content.document.createElement("iframe");
+    aWindow.content.document.body.appendChild(frame);
+    aWindow.content.addEventListener("message", function(aEvent) {
+      onMessageReceived(aEvent, aWindow)
+    });
+    slave = aWindow.content.frames[0];
+
+    SimpleTest.waitForFocus(() => doNextTest(aWindow), aWindow);
+  });
+}
+
+function doNextTest(aWindow) {
+  info("Running test: " + currentTest);
+  switch (currentTest) {
+    // Initialy setup the quota to testing value of 1024B and
+    // set a 500 bytes key with name length 1 (allocate 501 bytes)
+    case 1:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else {
+        slaveOrigin = "http://example.com";
+      }
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
+      break;
+
+    // Now set another key with length 500 bytes, i.e. allocate 501 bytes
+    case 2:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    // Try to set the same key value again to check we don't fail
+    // even 1002 bytes has already been exhausted from the quota
+    // We just change the value of an existing key.
+    case 3:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    // Try to set the same key to a larger value that would lead to
+    // quota reach and check that the value is still the old one
+    case 4:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add2&B&failure";
+      break;
+
+    // Try to set a new 500 bytes key and check we fail because we are over the
+    // quota.
+    case 5:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else {
+        slaveOrigin = "https://test2.example.com";
+      }
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
+      break;
+
+    // Remove the second key, it must not fail. This should release the
+    // allocated space of the quota assigned to test1.example.com.
+    case 6:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?remove&B&success";
+      break;
+
+    // Now try again to set 500 bytes key, it must succeed.
+    case 7:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        slaveOrigin = "http://test1.example.com";
+      } else {
+        slaveOrigin = "https://test2.example.com";
+      }
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
+      break;
+
+    case 8:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        SimpleTest.executeSoon(() => doNextTest(aWindow));
+      } else {
+        // Do a clean up...
+        slaveOrigin = "http://example.com";
+        slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      }
+      break;
+
+    case 9:
+      // Do a clean up...
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      break;
+
+    case 10:
+      if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
+        SimpleTest.executeSoon(() => doNextTest(aWindow));
+      } else {
+        // Do a clean up...
+        slaveOrigin = "https://test2.example.com";
+        slave.location = slaveOrigin + slavePath + "frameQuota.html?clear";
+      }
+      break;
+
+    default:
+      Services.prefs.clearUserPref("browser.startup.page")
+      Services.prefs.setIntPref("dom.storage.default_quota", quota);
+      Services.prefs.setIntPref("dom.storage.default_site_quota", siteQuota);
+      aWindow.close();
+      SimpleTest.finish();
+  }
+
+  ++currentTest;
+}
+
+function onMessageReceived(event, aWindow) {
+  info("Message received: " + event.data);
+  switch (event.data) {
+    // Indication of the frame onload event
+    case "frame loaded":
+      if (--slaveLoadsPending)
+        break;
+    // Indication of successfully finished step of a test
+    // Just fall through...
+    case "perf":
+      // postMessage should send to the slaveOrigin. However with the addition of private
+      // browsing flags in origin attributes this will cause postMessage to fail. The origin of this
+      // window has false privatebrowsing, while the recipient is in a private window.
+      // To fix this issue and preserve the integrity of the test a * is passed to get around origin equality.
+      slave.postMessage("step", "*");
+      break;
+    // Indication of all test parts finish (from any of the frames)
+    case "done":
+      aWindow.content.localStorage.clear();
+      slaveLoadsPending = 1;
+      doNextTest(aWindow);
+      break;
+    // Any other message indicates error or succes message of a test
+    default:
+      SimpleTest.ok(!event.data.match(failureRegExp), event.data);
+      break;
+  }
+}
+
+function whenDelayedStartupFinished(aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    Services.obs.removeObserver(observer, aTopic);
+
+    aSubject.addEventListener("DOMContentLoaded", function() {
+      SimpleTest.executeSoon(function() { aCallback(aSubject); });
+    }, {capture: true, once: true});
+  }, "browser-delayed-startup-finished");
+}
+
+function testOnWindow(aIsPrivate, callback) {
+  var mainWindow = window.browsingContext.topChromeWindow;
+
+  mainWindow.openWebLinkIn(CONTENT_PAGE, "window", {
+                                  private: aIsPrivate });
+  whenDelayedStartupFinished(callback);
+};
+</script>
+</head>
+<body onload="startTest();">
+</body>
+</html>

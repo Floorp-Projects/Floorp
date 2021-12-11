@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Perspective in scrolled state</title>
+
+<style>
+
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  perspective: 1px;
+  overflow: auto;
+  margin: 0;
+}
+
+.transformed {
+  margin: 300px 100px 100px;
+  width: 200px;
+  height: 200px;
+  border: 10px solid black;
+}
+
+.spacer {
+  height: 4000px;
+}
+
+</style>
+
+<div class="transformed"></div>
+<div class="spacer"></div>
+
+<script>
+
+document.body.scrollTop = 200;
+
+</script>

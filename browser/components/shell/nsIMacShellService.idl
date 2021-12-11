@@ -1,0 +1,27 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIShellService.idl"
+
+[scriptable, uuid(387fdc80-0077-4b60-a0d9-d9e80a83ba64)]
+interface nsIMacShellService : nsIShellService
+{
+  /**
+   * Opens the desktop preferences, e.g. for after setting the background.
+   */
+  void showDesktopPreferences();
+
+  /**
+   * @param aPaneID used by macOS to identify the pane to open.
+   *                Example arguments:
+   *                  * "" - use the default Security and Privacy pane.
+   *                  * General
+   *                  * Privacy
+   *                  * Privacy_AllFiles
+   *                  * Privacy_Camera
+   *                  * Privacy_Microphone
+   */
+  void showSecurityPreferences(in ACString aPaneID);
+};

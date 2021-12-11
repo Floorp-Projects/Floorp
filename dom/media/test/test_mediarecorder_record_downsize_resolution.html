@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Recording canvas dynamically changes to greater resolution</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content">
+</div>
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  var canvas = document.createElement("canvas");
+  var canvas_size = 100;
+  var new_canvas_size = 50;
+  canvas.width = canvas.height = canvas_size;
+
+  var helper = new CaptureStreamTestHelper2D(canvas_size, canvas_size);
+  helper.drawColor(canvas, helper.red);
+
+  // The recorded stream coming from canvas.
+  var stream = canvas.captureStream();
+
+  // Check values for events
+  var numDataAvailabledRaised = 0;
+  var numResizeRaised = 0;
+  // Recorded data that will be playback.
+  var blob;
+
+  // Media recorder for VP8 and canvas stream.
+  var mediaRecorder = new MediaRecorder(stream);
+  is(mediaRecorder.stream, stream,
+     "Media recorder stream = canvas stream at the beginning of recording");
+
+  // Not expected events.
+  mediaRecorder.onwarning = () => ok(false, "MediaRecorder: onwarning unexpectedly fired");
+  mediaRecorder.onerror = err => {
+    ok(false, "MediaRecorder: onerror unexpectedly fired. Code " + err.name);
+    SimpleTest.finish();
+  }
+
+  // When recorder is stopped get recorded data.
+  mediaRecorder.ondataavailable = ev => {
+    info("Got 'dataavailable' event");
+    ++numDataAvailabledRaised;
+    is(blob, undefined, "On dataavailable event blob is undefined");
+    // Save recorded data for playback
+    blob = ev.data;
+  };
+
+  mediaRecorder.onstart = () => {
+    info('onstart fired successfully');
+  };
+
+  mediaRecorder.onstop = () => {
+    info("Got 'stop' event");
+    is(numDataAvailabledRaised, 1, "Expected 1 dataavailable event");
+
+    // Playback stream and verify resolution changes.
+    ok(blob, "Should have gotten a data blob");
+    var video = document.createElement("video");
+    video.id = "recorded-video";
+    video.src = URL.createObjectURL(blob);
+    video.onerror = err => {
+      ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
+      SimpleTest.finish();
+    };
+
+    // Check here that resize is correct in the playback stream.
+    video.onresize = function() {
+      ++numResizeRaised;
+      if (numResizeRaised == 1) {
+        is(this.videoWidth, canvas_size, "1st resize event original width");
+        is(this.videoHeight, canvas_size, "1st resize event original height ");
+      } else if (numResizeRaised == 2) {
+        is(this.videoWidth, new_canvas_size, "2nd resize event new width");
+        is(this.videoHeight, new_canvas_size, "2nd resize event new height");
+      } else {
+        ok(false, "Only 2 numResizeRaised events are expected");
+      }
+    };
+
+    video.onended = () => {
+      is(numResizeRaised, 2, "Expected 2 resize event");
+    };
+    document.getElementById("content").appendChild(video);
+    video.play();
+
+    // Check last color
+    helper.pixelMustBecome(video, helper.red, {
+      threshold: 128,
+      infoString: "Should become red",
+    }).then(() => {
+      video.onresize = {};
+      video.onended = {};
+      SimpleTest.finish();
+    });
+  };
+
+  // Start here by stream recorder.
+  mediaRecorder.start();
+  is(mediaRecorder.state, "recording", "Media recorder started");
+  requestAnimationFrame(draw);
+
+  // Change resolution every 100ms
+  var countFrames=0;
+  var previous_time = performance.now();
+  function draw(timestamp) {
+    if (timestamp - previous_time < 100) {
+      requestAnimationFrame(draw);
+      return;
+    }
+    previous_time = timestamp;
+
+    var size = 0;
+    var color = "";
+    if (countFrames < 1) {
+      // Initial size
+      size = canvas_size;
+      color = helper.blue;
+    } else if (countFrames < 2) {
+      // upsize
+      size = new_canvas_size;
+      color = helper.red;
+    } else {
+      // Stop recoredr on last frame
+      mediaRecorder.stop();
+      return;
+    }
+    // Resize and draw canvas
+    canvas.width = canvas.height = size;
+    helper.drawColor(canvas, color);
+    // Register next draw on every call
+    requestAnimationFrame(draw);
+    countFrames++;
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</pre>
+</body>
+</html>

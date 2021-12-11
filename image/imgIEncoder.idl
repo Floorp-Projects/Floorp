@@ -1,0 +1,135 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIAsyncInputStream.idl"
+#include "nsIEventTarget.idl"
+
+/**
+ * imgIEncoder interface
+ */
+[scriptable, uuid(4baa2d6e-fee7-42df-ae3f-5fbebc0c267c)]
+interface imgIEncoder : nsIAsyncInputStream
+{
+  // Possible values for outputOptions. Multiple values are semicolon-separated.
+  //
+  // PNG:
+  // ----
+  // transparency=[yes|no|none]  --  default: "yes"
+  //     Overrides default from input format. "no" and "none" are equivalent.
+  //
+  //
+  // APNG:
+  // -----
+  // The following options can be used with startImageEncode():
+  //
+  // transparency=[yes|no|none]  --  default: "yes"
+  //     Overrides default from input format. "no" and "none" are equivalent.
+  // skipfirstframe=[yes|no]  --  default: "no"
+  //     Controls display of the first frame in animations. PNG-only clients
+  //     always display the first frame (and only that frame).
+  // frames=#  --  default: "1"
+  //     Total number of frames in the image. The first frame, even if skipped,
+  //     is always included in the count.
+  // plays=#  --  default: "0"
+  //     Number of times to play the animation sequence. "0" will repeat
+  //     forever.
+  //
+  // The following options can be used for each frame, with addImageFrame():
+  //
+  // transparency=[yes|no|none]  --  default: "yes"
+  //     Overrides default from input format. "no" and "none" are equivalent.
+  // delay=#  --  default: "500"
+  //     Number of milliseconds to display the frame, before moving to the next
+  //     frame.
+  // dispose=[none|background|previous]  --  default: "none"
+  //     What to do with the image's canvas before rendering the next frame.
+  //     See APNG spec.
+  // blend=[source|over]  --  default: "source"
+  //     How to render the new frame on the canvas. See APNG spec.
+  // xoffset=#  --  default: "0"
+  // yoffset=#  --  default: "0"
+  //     Where to draw the frame, relative to the canvas.
+  //
+  //
+  // JPEG:
+  // -----
+  //
+  // quality=#  --  default: "92"
+  //    Quality of compression, 0-100 (worst-best).
+  //    Quality >= 90 prevents down-sampling of the color channels.
+
+
+  // Possible values for input format (note that not all image formats
+  // support saving alpha channels):
+
+    // Input is RGB each pixel is represented by three bytes:
+    // R, G, and B (in that order, regardless of host endianness)
+  const uint32_t INPUT_FORMAT_RGB = 0;
+
+    // Input is RGB each pixel is represented by four bytes:
+    // R, G, and B (in that order, regardless of host endianness).
+    // POST-MULTIPLIED alpha us used (50% transparent red is 0xff000080)
+  const uint32_t INPUT_FORMAT_RGBA = 1;
+
+    // Input is host-endian ARGB: On big-endian machines each pixel is therefore
+    // ARGB, and for little-endian machiens (Intel) each pixel is BGRA
+    // (This is used by canvas to match it's internal representation)
+    //
+    // PRE-MULTIPLIED alpha is used (That is, 50% transparent red is 0x80800000,
+    // not 0x80ff0000
+  const uint32_t INPUT_FORMAT_HOSTARGB = 2;
+
+  /* data - list of bytes in the format specified by inputFormat
+   * width  - width in pixels
+   * height - height in pixels
+   * stride - number of bytes per row in the image
+   *          Normally (width*3) or (width*4), depending on your input format,
+   *          but some data uses padding at the end of each row, which would
+   *          be extra.
+   * inputFormat - one of INPUT_FORMAT_* specifying the format of data
+   * outputOptions - semicolon-delimited list of name=value pairs that can
+   *                 give options to the output encoder. Options are encoder-
+   *                 specific. Just give empty string for default behavior.
+   */
+  void initFromData([array, size_is(length), const] in uint8_t data,
+                    in unsigned long length,
+                    in uint32_t width,
+                    in uint32_t height,
+                    in uint32_t stride,
+                    in uint32_t inputFormat,
+                    in AString outputOptions);
+
+  /*
+   * For encoding images which may contain multiple frames, the 1-shot
+   * initFromData() interface is too simplistic. The alternative is to
+   * use startImageEncode(), call addImageFrame() one or more times, and
+   * then finish initialization with endImageEncode().
+   *
+   * The arguments are basically the same as in initFromData().
+   */
+  void startImageEncode(in uint32_t width,
+                    in uint32_t height,
+                    in uint32_t inputFormat,
+                    in AString outputOptions);
+
+  void addImageFrame( [array, size_is(length), const] in uint8_t data,
+                    in unsigned long length,
+                    in uint32_t width,
+                    in uint32_t height,
+                    in uint32_t stride,
+                    in uint32_t frameFormat,
+                    in AString frameOptions);
+
+  void endImageEncode();
+
+  /*
+   * Sometimes an encoder can contain another encoder and direct access
+   * to its buffer is necessary.   It is only safe to assume that the buffer
+   * returned from getImageBuffer() is of size equal to getImageBufferUsed().
+   */
+  [noscript] unsigned long getImageBufferUsed();
+  [noscript] charPtr getImageBuffer();
+};

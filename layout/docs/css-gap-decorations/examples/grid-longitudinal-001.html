@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of rule longitudinal properties</title>
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 20px 30px 40px;
+  gap: 20px;
+
+  column-rule: 6px solid blue;
+
+  row-rule: 6px solid purple;
+  row-rule-extent: long;
+
+  border: 2px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+
+.test1 {
+  column-rule-longitudinal-inset: 4px;
+  row-rule-longitudinal-inset: 4px;
+  column-rule-longitudinal-edge-inset: 4px;
+  row-rule-longitudinal-edge-inset: 4px;
+}
+
+.test2 {
+  column-rule-length: 50%;
+  row-rule-length: 50%;
+  column-rule-longitudinal-inset: auto;
+  row-rule-longitudinal-inset: auto;
+  column-rule-longitudinal-edge-inset: auto;
+  row-rule-longitudinal-edge-inset: auto;
+}
+
+.test3 {
+  column-rule-width: 100%;
+  row-rule-width: 100%;
+}
+
+.test4 {
+  column-rule-width: 30%;
+  row-rule-width: 30%;
+  column-rule-lateral-inset-end: 0px;
+  row-rule-lateral-inset-end: 0px;
+}
+
+.test5 {
+  column-rule-width: 150%;
+  row-rule-width: 150%;
+  column-rule-lateral-inset-end: 0px;
+  row-rule-lateral-inset-end: 0px;
+}
+
+x {
+  block-size: 48px;
+  background: grey;
+  opacity: 0.5;
+}
+x:nth-child(2), x:nth-child(6) {
+  grid-column: span 2;
+}
+
+.grid::after {
+  position: absolute;
+  top: 120px;
+  width: 500px;
+  font-size: 10px;
+  vertical-align: top;
+  white-space: pre;
+}
+pre { font-size: 10px; }
+
+.test1::after { content: "*-rule-length: auto;\0Alongitudinal insets: 4px"; }
+.test2::after { content: "*-rule-length: 50%;\0Alongitudinal insets: auto"; }
+.test3::after { content: "*-rule-width: 100%"; }
+.test4::after { content: "*-rule-width: 30%;\0Alateral end insets: 0px"; }
+.test5::after { content: "*-rule-width: 150%;\0Alateral end insets: 0px"; }
+</style>
+<pre>Note that the grid items have 'opacity: 0.5' to show
+any rules underneath them.</pre>
+<div class="grid test1"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
+<div class="grid test2"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br>
+<div class="grid test3"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
+<div class="grid test4"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br>
+<div class="grid test5"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>

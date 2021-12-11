@@ -1,0 +1,61 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; img-src data: blob: https://firefoxusercontent.com;"/>
+    <title data-l10n-id="about-logins-import-report-page-title"></title>
+    <link rel="localization" href="branding/brand.ftl">
+    <link rel="localization" href="browser/branding/sync-brand.ftl">
+    <link rel="localization" href="browser/branding/brandings.ftl">
+    <link rel="localization" href="browser/aboutLogins.ftl">
+    <script type="module" src="chrome://browser/content/aboutlogins/aboutLoginsImportReport.js"></script>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLogins.css">
+    <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLoginsImportReport.css">
+    <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
+    <link rel="icon" href="chrome://browser/content/aboutlogins/icons/favicon.svg">
+  </head>
+  <body class="importreport">
+    <header>
+      <img id="branding-logo" src="chrome://branding/content/aboutlogins.svg" alt=""/>
+    </header>
+
+    <section id="report-body">
+      <div class="summary">
+        <h2 data-l10n-id="about-logins-import-report-title"></h2>
+        <div data-l10n-id="about-logins-import-report-description"></div>
+        <a href="https://support.mozilla.org/kb/import-login-data-file" class="about-logins-import-report-learn-more"
+          data-l10n-id="about-logins-import-dialog-error-learn-more" target="_blank" rel="noreferrer"></a>
+      </div>
+      <div class="new-logins" data-l10n-id="about-logins-import-report-added" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+      </div>
+      <div class="exiting-logins" data-l10n-id="about-logins-import-report-modified" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+      </div>
+      <div class="duplicate-logins" data-l10n-id="about-logins-import-report-no-change" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+        <div data-l10n-name="not-imported" class="count-details not-imported not-imported-hidden"></div>
+      </div>
+      <div class="errors-logins" data-l10n-id="about-logins-import-report-error" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+        <div data-l10n-name="not-imported" class="count-details not-imported error not-imported-hidden"></div>
+      </div>
+      <div class="logins-list"></div>
+    </section>
+
+    <template id="import-details-row-template">
+      <span class="row-count" data-l10n-id="about-logins-import-report-row-index" data-l10n-args='{"number": 0}'></span>
+      <span class="row-details"></span>
+    </template>
+
+  </body>
+</html>

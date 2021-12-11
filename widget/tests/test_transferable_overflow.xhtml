@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="nsTransferable with large string"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <title>nsTransferable with large string</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+  // This value is chosen such that the size of the memory for the string exceeds
+  // the kLargeDatasetSize threshold in nsTransferable.h (one million).
+  // Each character of a JS string is internally represented by two bytes,
+  // so the following string of length 500 001 uses 1 000 002 bytes.
+  const BIG_STRING = "x" + "BIGGY".repeat(100000);
+
+  // Some value with a length that is exactly kLargeDatasetSize (1 000 000).
+  const SMALL_STRING = "small".repeat(100000);
+
+  const nsTransferable = Components.Constructor("@mozilla.org/widget/transferable;1", "nsITransferable");
+  const nsSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString");
+
+  function assignTextToTransferable(transferable, string) {
+    var Suppstr = nsSupportsString();
+    Suppstr.data = string;
+    transferable.setTransferData("text/unicode", Suppstr);
+  }
+
+  function checkTransferableText(transferable, expectedString, description) {
+    var data = {};
+    transferable.getTransferData("text/unicode", data);
+    var actualValue = data.value.QueryInterface(Ci.nsISupportsString).data;
+    // Use ok + shortenString instead of is(...) to avoid dumping millions of characters in the output.
+    ok(actualValue === expectedString, description + ": text should match. " +
+       "Expected " + shortenString(expectedString)  + ", got " + shortenString(actualValue));
+
+    function shortenString(str) {
+      return str && str.length > 30 ? str.slice(0, 10) + "..." + str.slice(-10) : String(str);
+    }
+  }
+
+  function isFDCountingSupported() {
+    // On on-Windows we can count the number of file handles for the current process,
+    // while on Windows we need to count the number of files in ${TempD}\mozilla-temp-files\,
+    // which can be unreliable, especially because nsAnonymousTemporaryFile has documented
+    // that the deletion might not be immediate.
+    //
+    // To avoid intermittents, we only check the file descriptor counts on non-Windows.
+    // test_bug1123480.xhtml will do some basic testing for Windows.
+    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    return AppConstants.platform !== 'win';
+  }
+
+  function getClipboardCacheFDCount() {
+    var dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    dir.initWithPath("/dev/fd");
+    var count = 0;
+    for (var de = dir.directoryEntries; de.hasMoreElements(); ) {
+      var fdFile = de.nextFile;
+      var fileSize;
+      try {
+        fileSize = fdFile.fileSize;
+      } catch (e) {
+        // This can happen on macOS.
+        continue;
+      }
+      if (fileSize === BIG_STRING.length * 2 ||
+          // We are not expecting files of this small size,
+          // but include them in the count anyway
+          // in case the files are unexpectedly created.
+          fileSize === SMALL_STRING.length * 2) {
+        // Assume that the file was created by us if the size matches.
+        ++count;
+      }
+    }
+    return count;
+  }
+
+  function RunTest() {
+    const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    var win = window.browsingContext.topChromeWindow.open("about:blank", "_blank", "chrome, width=500, height=200");
+    ok(win, "should open window");
+    is(PrivateBrowsingUtils.isContentWindowPrivate(win), false, "used correct window context");
+
+    // ### Part 1 - Writing to the clipboard.
+
+    var Loadctx = PrivateBrowsingUtils.privacyContextFromWindow(win);
+    var Transfer = nsTransferable();
+    Transfer.init(Loadctx);
+    Transfer.addDataFlavor("text/unicode");
+    var initialFdCount = isFDCountingSupported() ? getClipboardCacheFDCount() : -1;
+
+    assignTextToTransferable(Transfer, BIG_STRING);
+    checkTransferableText(Transfer, BIG_STRING, "transferable after assigning BIG_STRING");
+    if (isFDCountingSupported()) {
+      is(getClipboardCacheFDCount(), initialFdCount + 1, "should use a file for BIG_STRING");
+    }
+
+    // Share the transferable with the system.
+    Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
+
+    // Sanity check: Copying to the clipboard should not have altered the transferable.
+    checkTransferableText(Transfer, BIG_STRING, "transferable after copying to clipboard");
+    if (isFDCountingSupported()) {
+      // We are only counting file descriptors for the current process,
+      // so even if the test were to be multi-process and the parent process creates another
+      // nsTransferable, then the count should still be the same.
+      is(getClipboardCacheFDCount(), initialFdCount + 1, "should still be using files for previously stored BIG_STRING");
+
+      // Re-establish baseline for the second part of the test below.
+      initialFdCount = getClipboardCacheFDCount();
+    }
+
+    // ### Part 2 - Reading from the clipboard.
+
+    var Transfer2 = nsTransferable();
+    Transfer2.init(Loadctx);
+    Transfer2.addDataFlavor("text/unicode");
+
+    // Iniitalize with a small string, so we can see that mData -> mCacheFD works.
+    assignTextToTransferable(Transfer2, SMALL_STRING);
+    checkTransferableText(Transfer2, SMALL_STRING, "transferable after assigning SMALL_STRING");
+    if (isFDCountingSupported()) {
+      is(getClipboardCacheFDCount(), initialFdCount, "should not use file to store SMALL_STRING.");
+    }
+
+    // Check whether the clipboard data can be read, and simulatenously trigger mData -> mCacheFD.
+    Services.clipboard.getData(Transfer2, Services.clipboard.kGlobalClipboard);
+    checkTransferableText(Transfer2, BIG_STRING, "transferable after retrieving from clipboard");
+    if (isFDCountingSupported()) {
+      is(getClipboardCacheFDCount(), initialFdCount + 1, "should use a file for BIG_STRING (read from clipboard).");
+    }
+
+    // Store a small string, to exercise the code path from mCacheFD -> mData.
+    assignTextToTransferable(Transfer2, SMALL_STRING);
+    checkTransferableText(Transfer2, SMALL_STRING, "transferable after assigning SMALL_STRING");
+    if (isFDCountingSupported()) {
+      is(getClipboardCacheFDCount(), initialFdCount, "should release the file after clearing the transferable.");
+    }
+  }
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    This test checks whether a big string can be copied to the clipboard, and then retrieved in the same form.
+    On non-Windows, the test also checks whether the data of the transferable is really stored in a file.
+  </body>
+</window>

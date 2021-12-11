@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+    .first {
+        transform: translateZ(10px);
+        background-color: blue;
+        top: 60px;
+    }
+    .second {
+        transform: translateZ(5px);
+        background-color: green;
+        top: 40px;
+    }
+    .third {
+        transform: translateZ(-5px);
+        background-color: yellow;
+        top: 20px;
+    }
+    .fourth {
+        transform: translateZ(-10px);
+        background-color: red;
+    }
+    .preserve {
+        transform-style: preserve-3d;
+    }
+    .leaf {
+        width: 100px;
+        height: 100px;
+        position:absolute;
+    }
+</style>
+</head><body>
+
+<div class="preserve">
+    <div class="leaf first"></div>
+    <div style="opacity:0.5">
+        <div class="leaf second"></div>
+        <div class="leaf fourth"></div>
+    </div>
+    <div class="leaf third"></div>
+</div>
+
+</body>
+</html>
+

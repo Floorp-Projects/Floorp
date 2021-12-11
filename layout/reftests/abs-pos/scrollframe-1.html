@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <body onload="loaded()">
+    <div style="position: relative; top: 100px; overflow: scroll; width: 100px; height: 100px;">
+      <div style="height: 200px">foo</div></div>
+    <script>
+      function loaded() {
+        var insPoint = document.querySelector("div");
+        insPoint.scrollTop = 50;
+        var div = document.createElement("div");
+        div.style.position = "absolute";
+        div.style.top = 0;
+        div.appendChild(document.createTextNode("abs"));
+        insPoint.insertBefore(div, insPoint.firstChild);
+      }
+    </script>
+  </body>
+</html>

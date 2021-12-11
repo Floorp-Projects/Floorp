@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+RUST_PROGRAMS += ["geckodriver"]
+# Some Rust build scripts compile C/C++ sources, don't error on warnings for them.
+AllowCompilerWarnings()
+
+RUST_TESTS = [
+    "geckodriver",
+    "webdriver",
+    "marionette",
+    # TODO: Move to mozbase/rust/moz.build once those crates can be
+    # tested separately.
+    "mozdevice",
+    "mozprofile",
+    "mozrunner",
+    "mozversion",
+]
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "geckodriver")
+
+SPHINX_TREES["/testing/geckodriver"] = "doc"
+
+with Files("doc/**"):
+    SCHEDULES.exclusive = ["docs"]

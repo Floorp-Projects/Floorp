@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<title>Testcase for checkerboarding after zooming during page load</title>
+<script type="application/javascript" src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<meta name="viewport" content="width=device-width"/>
+<style>
+body, html {
+    margin: 0;
+}
+</style>
+<body>
+ <div style="height: 5000px; background-color: green"></div>
+</body>
+<script type="application/javascript">
+
+// This function runs after page load, but simulates what might happen if
+// the user does a zoom during page load. It's hard to actually do this
+// during page load, because the specific behaviour depends on interleaving
+// between paints and the load event which is hard to control from a test.
+// So instead, we do the zoom after page load, and then trigger a MVM reset
+// which simulates what happens during the pageload process.
+async function test() {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+
+  // Make it so that the layout and visual viewports diverge. We do this by
+  // zooming and then moving the visual viewport.
+  utils.setResolutionAndScaleTo(2);
+  var x = window.innerWidth / 2;
+  var y = window.innerHeight / 2;
+  utils.scrollToVisual(x, y, utils.UPDATE_TYPE_MAIN_THREAD, utils.SCROLL_MODE_INSTANT);
+  dump("Done scrollToVisual\n");
+
+  // Next, kick off a paint transaction to APZ, so that it sets appropriate
+  // displayport margins with visual/layout adjustment factors.
+  await promiseApzFlushedRepaints();
+
+  // Once that's done, we want to trigger the MobileViewportManager to update
+  // the displayport margins.
+  dump("Resetting MVM...\n");
+  utils.resetMobileViewportManager();
+
+  // The bug is that at this point, paints end up checkerboarding because the
+  // MVM code to update the displayport margins doesn't preserve the layout
+  // adjustment factor needed.
+  utils.advanceTimeAndRefresh(0);
+  assertNotCheckerboarded(utils, utils.getViewId(document.scrollingElement), `Should not see checkerboarding`);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1006595</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1006595 **/
+
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  function arraysEqual(arr1, arr2, message) {
+    is(arr1.length, arr2.length, message + " length");
+    for (var i = 0; i < arr1.length; ++i) {
+      is(arr1[i], arr2[i], message + " element at index " + i);
+    }
+  }
+
+  var paddingSubProps = InspectorUtils.getSubpropertiesForCSSProperty("padding");
+  arraysEqual(paddingSubProps,
+              [ "padding-top",
+                "padding-right",
+                "padding-bottom",
+                "padding-left" ],
+              "'padding' subproperties");
+
+  var displaySubProps = InspectorUtils.getSubpropertiesForCSSProperty("color");
+  arraysEqual(displaySubProps, [ "color" ],
+              "'color' subproperties");
+
+  var varProps = InspectorUtils.getSubpropertiesForCSSProperty("--foo");
+  arraysEqual(varProps, ["--foo"], "'--foo' subproperties");
+
+  try {
+    InspectorUtils.cssPropertySupportsType("padding", 0);
+    ok(false, "Invalid types throw");
+  } catch (ex) {
+    ok(true, "Invalid types don't crash");
+  }
+
+  ok(InspectorUtils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
+  ok(!InspectorUtils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
+
+  ok(!InspectorUtils.cssPropertySupportsType("padding", "color"),
+     "'padding' can't be a color");
+
+  ok(InspectorUtils.cssPropertySupportsType("color", "color"),
+     "'color' can be a color");
+  ok(InspectorUtils.cssPropertySupportsType("background", "color"),
+     "'background' can be a color");
+  ok(!InspectorUtils.cssPropertySupportsType("background-image", "color"),
+     "'background-image' can't be a color");
+
+  ok(InspectorUtils.cssPropertySupportsType("background-image", "gradient"),
+     "'background-image' can be a gradient");
+  ok(InspectorUtils.cssPropertySupportsType("background", "gradient"),
+     "'background' can be a gradient");
+  ok(!InspectorUtils.cssPropertySupportsType("background-color", "gradient"),
+     "'background-color' can't be a gradient");
+
+  ok(InspectorUtils.cssPropertySupportsType("transition", "timing-function"),
+     "'transition' can be a timing function");
+  ok(InspectorUtils.cssPropertySupportsType("transition-timing-function", "timing-function"),
+     "'transition-duration' can be a timing function");
+  ok(!InspectorUtils.cssPropertySupportsType("background-color", "timing-function"),
+     "'background-color' can't be a timing function");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1006595">Mozilla Bug 1006595</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

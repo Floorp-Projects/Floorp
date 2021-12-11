@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<link rel="author" title="Xidorn Quan" href="https://www.upsuper.org">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<div id="display"></div>
+<script>
+// This cannot be a web-platform test because this doesn't match what
+// the spec says at the moment. Specifically, the spec wants to have
+// all font family serialized to string, while in practice, all browsers
+// serialize simple them to identifiers in some cases.
+// We want to check our current behavior. This can be changed once
+// browsers have an agreement on the exact behavior to spec.
+
+// format: [input, expected serialization]
+const tests = [
+  // Basic cases
+  ['simple', 'simple'],
+  ['    simple    ', 'simple'],
+  ['multi idents font', 'multi idents font'],
+  ['    multi   idents   font    ', 'multi idents font'],
+  ['"wrapped name"', '"wrapped name"'],
+  ['"   wrapped  name   "', '"   wrapped  name   "'],
+
+  // Special whitespaces
+  ['\\ leading ws', '" leading ws"'],
+  [' \\   leading ws', '"  leading ws"'],
+  ['\\ \\ leading ws', '"  leading ws"'],
+  [' \\ \\   leading ws', '"   leading ws"'],
+  ['\\ \\ \\ leading ws', '"   leading ws"'],
+  ['trailing ws\\ ', '"trailing ws "'],
+  ['trailing ws\\   ', '"trailing ws "'],
+  ['trailing ws   \\ ', '"trailing ws  "'],
+  ['trailing ws\\ \\ ', '"trailing ws  "'],
+  ['escaped\\ ws', '"escaped ws"'],
+  ['escaped\\    ws', '"escaped  ws"'],
+  ['escaped\\ \\ ws', '"escaped  ws"'],
+  ['escaped   \\ ws', '"escaped  ws"'],
+  ['escaped \\  ws', '"escaped   ws"'],
+  ['escaped number\\ 5', '"escaped number 5"'],
+];
+
+let el = document.getElementById("display");
+for (let [input, expected] of tests) {
+  test(function() {
+    el.style.fontFamily = input;
+    assert_equals(el.style.fontFamily, expected);
+  }, "Reserialization for " + JSON.stringify(input));
+}
+</script>

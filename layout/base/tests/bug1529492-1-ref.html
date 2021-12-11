@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+.parent {
+  font: 32px monospace;
+  width: 26ch;
+  transform: scaleX(0.5);
+  transform-origin: 0 0;
+}
+#child {
+  outline: none;
+}
+</style>
+<div class="parent"><div id="child">.BCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</div></div>
+<script>
+SimpleTest.waitForFocus(function() {
+  let r = document.createRange();
+  let t = child.firstChild;
+  r.setStart(t, 30);
+  r.setEnd(t, 30);
+
+  let sel = getSelection();
+  sel.empty();
+  sel.addRange(r);
+
+  document.documentElement.removeAttribute("class");
+});
+</script>

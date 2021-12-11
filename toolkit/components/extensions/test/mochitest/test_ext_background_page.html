@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>WebExtension test</title>
+    <meta charset="utf-8">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+    <script src="head.js" type="text/javascript"></script>
+    <link href="/tests/SimpleTest/test.css" rel="stylesheet"/>
+  </head>
+  <body>
+
+    <script type="text/javascript">
+      "use strict";
+
+      /* eslint-disable mozilla/balanced-listeners */
+
+      add_task(async function testAlertNotShownInBackgroundWindow() {
+        let extension = ExtensionTestUtils.loadExtension({
+          background: function () {
+            alert("I am an alert in the background.");
+
+            browser.test.notifyPass("alertCalled");
+          }
+        });
+
+        let consoleOpened = loadChromeScript(() => {
+          const {sendAsyncMessage, assert} = this;
+          assert.ok(!Services.wm.getEnumerator("alert:alert").hasMoreElements(), "Alerts should not be present at the start of the test.");
+
+          Services.obs.addObserver(function observer() {
+            sendAsyncMessage("web-console-created");
+            Services.obs.removeObserver(observer, "web-console-created");
+          }, "web-console-created");
+        });
+        let opened = consoleOpened.promiseOneMessage("web-console-created");
+
+        consoleMonitor.start([
+          {
+            message: /alert\(\) is not supported in background windows/
+          }, {
+            message: /I am an alert in the background/
+          }
+        ]);
+
+        await extension.startup();
+        await extension.awaitFinish("alertCalled");
+
+        let chromeScript = loadChromeScript(async () => {
+          const {assert} = this;
+          assert.ok(!Services.wm.getEnumerator("alert:alert").hasMoreElements(), "Alerts should not be present after calling alert().");
+        });
+        chromeScript.destroy();
+
+        await consoleMonitor.finished();
+
+        await opened;
+        consoleOpened.destroy();
+
+        chromeScript = loadChromeScript(async () => {
+          const {sendAsyncMessage} = this;
+          let {require} = ChromeUtils.import ("resource://devtools/shared/Loader.jsm");
+          require("devtools/client/framework/devtools-browser");
+          let {BrowserConsoleManager} = require("devtools/client/webconsole/browser-console-manager");
+
+          // And then double check that we have an actual browser console.
+          let haveConsole = !!BrowserConsoleManager.getBrowserConsole();
+
+          if (haveConsole) {
+            await BrowserConsoleManager.toggleBrowserConsole();
+          }
+          sendAsyncMessage("done", haveConsole);
+        });
+
+        let consoleShown = await chromeScript.promiseOneMessage("done");
+        ok(consoleShown, "console was shown");
+        chromeScript.destroy();
+
+        await extension.unload();
+      });
+    </script>
+
+  </body>
+</html>

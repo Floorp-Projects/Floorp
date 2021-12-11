@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<head>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+async function test() {
+  var subframe = document.getElementById("content-wrapper");
+
+  // scroll over the middle of the subframe, to make sure it scrolls,
+  // not the page
+  var scrollPos = subframe.scrollTop;
+  await promiseMoveMouseAndScrollWheelOver(subframe, 100, 100);
+  ok(subframe.scrollTop > scrollPos, "subframe scrolled after wheeling over it");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    html {
+      perspective:1000px;
+      overflow: hidden;
+    }
+    #fullscreen-wrapper {
+      display:table;
+      visibility:hidden;
+      width:100%;
+      height:100%;
+      position:fixed;
+      top:0;
+      left:0;
+      overflow:hidden;
+      z-index:9999;
+      perspective:1000px;
+    }
+    #content-wrapper {
+      overflow-y:auto;
+      height: 100vh;
+    }
+    #content-content {
+      min-height: 10000px;
+    }
+  </style>
+</head>
+<body>
+    <div id="fullscreen-wrapper">
+      <div></div>
+    </div>
+    <div id="content-wrapper">
+      <div id="content-content">
+        A<br>
+        B<br>
+        C<br>
+        D<br>
+        E<br>
+        f<br>
+        g<br>
+        h<br>
+        i<br>
+        j<br>
+      </div>
+    </div>
+</body>

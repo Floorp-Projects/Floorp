@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+
+/**
+ * nsIScriptableBase64Encoder efficiently encodes the contents
+ * of a nsIInputStream to a Base64 string.  This avoids the need
+ * to read the entire stream into a buffer, and only then do the
+ * Base64 encoding.
+ *
+ *  If you already have a buffer full of data, you should use
+ *  btoa instead!
+ */
+[scriptable, uuid(9479c864-d1f9-45ab-b7b9-28b907bd2ba9)]
+interface nsIScriptableBase64Encoder : nsISupports
+{
+  /**
+   *  These methods take an nsIInputStream and return a narrow or wide
+   *  string with the contents of the nsIInputStream base64 encoded.
+   *
+   *  The stream passed in must support ReadSegments and must not be
+   *  a non-blocking stream that will return NS_BASE_STREAM_WOULD_BLOCK.
+   *  If either of these restrictions are violated we will abort.
+   */
+  ACString encodeToCString(in nsIInputStream stream, in unsigned long length);
+  AString encodeToString(in nsIInputStream stream, in unsigned long length);
+};

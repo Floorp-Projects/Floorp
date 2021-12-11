@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for serialization and equivalence of time units</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for serialization and equivalence of time units **/
+
+/**
+ * We test that for each of the following:
+ *  + they reserialize to exactly what is given
+ *  + if a mapping is provided, they compute to the same result as the mapping
+ */
+var tests = {
+  "3s": "3000ms",
+  "500ms": "0.5s"
+};
+
+var p = document.getElementById("display");
+
+for (var test in tests) {
+  p.setAttribute("style", "transition-duration: " + test);
+  is(p.style.getPropertyValue("transition-duration"), test,
+     test + " serializes to exactly itself");
+  var equiv = tests[test];
+  if (equiv) {
+    var cm1 = getComputedStyle(p, "").transitionDuration;
+    p.style.transitionDuration = equiv;
+    var cm2 = getComputedStyle(p, "").transitionDuration;
+    is(cm1, cm2, test + " should compute to the same as " + equiv);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

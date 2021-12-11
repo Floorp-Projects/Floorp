@@ -1,0 +1,27 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1560260570 -3600
+#      Tue Jun 11 14:42:50 2019 +0100
+# Node ID 7baa38185938e45ab128ec3975ae139753c8ad67
+# Parent  cb568f9b29f8c2c84c72c49b7a565d8081929f04
+Bug 1552160: Fix missing atomic include in chromium platform_thread.cc. r=jld
+
+diff --git a/security/sandbox/chromium/base/threading/platform_thread.cc b/security/sandbox/chromium/base/threading/platform_thread.cc
+--- a/security/sandbox/chromium/base/threading/platform_thread.cc
++++ b/security/sandbox/chromium/base/threading/platform_thread.cc
+@@ -1,14 +1,15 @@
+ // Copyright 2018 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #include "base/threading/platform_thread.h"
+ 
++#include <atomic>
+ #include <memory>
+ 
+ #include "base/feature_list.h"
+ 
+ namespace base {
+ 
+ namespace {
+ 

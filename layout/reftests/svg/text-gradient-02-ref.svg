@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<title>Reference for gradient on text</title>
+
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=577850 -->
+
+  <defs>
+    <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0.0" stop-color="rgb(0, 0, 0)"/>
+      <stop offset="0.5" stop-color="rgb(255, 255, 255)"/>
+      <stop offset="1.0" stop-color="rgb(0, 0, 0)"/>
+    </linearGradient>
+  </defs>
+
+  <text x="0, 30, 60, 0, 40, 70" y="0, 0, 0, 1em, 1em, 1em" fill="url(#gradient)" font-size="60" transform="translate(50, 80)">
+    FooBar
+  </text>
+</svg>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { font-family: sans-serif; }
+  .f::first-letter { color: green }
+</style>
+<script>
+  window.onload = function() {
+    var lst = document.getElementsByClassName("d");
+    for (var i = 0; i < lst.length; ++i) {
+      lst[i].insertBefore(document.createTextNode("Text"),
+                          lst[i].firstChild);
+    }
+  }
+</script>
+</head>
+<body>
+<div class="f">Text</div>
+<div class="f" style="overflow: auto">Text</div>
+<fieldset class="f">Text</fieldset>
+<table><tr><td class="f">Text</td></tr></table>
+
+<div class="f d"></div>
+<div class="f d" style="overflow: auto"></div>
+<fieldset class="f d"></fieldset>
+<table><tr><td class="f d"></td></tr></table>
+
+<div class="f d">More Text</div>
+<div class="f d" style="overflow: auto">More Text</div>
+<fieldset class="f d">More Text</fieldset>
+<table><tr><td class="f d">More Text</td></tr></table>
+
+</body>
+</html>

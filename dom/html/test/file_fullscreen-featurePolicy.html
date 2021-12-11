@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for FeaturePolicy + fullscreen</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+  <style>
+  body {
+    background-color: black;
+  }
+  </style>
+</head>
+<body>
+
+<script type="application/javascript">
+function ok(condition, msg) {
+  opener.ok(condition, "[featurePolicy] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[featurePolicy] " + msg);
+}
+
+const INNER_FILE = "file_fullscreen-featurePolicy-inner.html";
+
+function begin() {
+  nextTest();
+}
+
+var tests = [
+  ["fullscreen 'none'", "fullscreenerror"],
+  ["fullscreen", "fullscreenchange"],
+  ["fullscreen 'src'", "fullscreenchange"],
+  ["fullscreen 'self'", "fullscreenchange"],
+  ["fullscreen *", "fullscreenchange"],
+  ["fullscreen http://random.net", "fullscreenerror"],
+  [null, "fullscreenchange"],
+];
+
+async function nextTest() {
+  if (tests.length == 0) {
+    opener.nextTest();
+    return;
+  }
+
+  let [value, expectedEvent] = tests.shift();
+
+  for (const isChrome of [false, true]) {
+    opener.info(`Running ${value} ${isChrome ? "w/" : "wo/"} chrome privileges`);
+
+    // Create an iframe with an allowfullscreen and with an allow attribute.
+    // The request should be denied or allowed, based on the current test.
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("allowfullscreen", "true");
+    if (value) {
+      iframe.setAttribute("allow", value);
+    }
+    iframe.src = INNER_FILE + (isChrome ? "?chrome" : "");
+
+    const setupForInnerTest = targetName => {
+      window.testTargetName = targetName;
+      return new Promise(resolve => {
+        window.continueTest = (event, enabled) => {
+          delete window.testTargetName;
+          delete window.continueTest;
+          resolve({ event, enabled });
+        };
+        document.body.appendChild(iframe);
+      });
+    };
+
+    const { event, enabled } = await setupForInnerTest(
+      `an iframe+allowfullscreen+allow:${value}+isChrome:${isChrome}`
+    );
+
+    if (isChrome) {
+      is(event, "fullscreenchange", "Expected a fullscreenchange event");
+      ok(enabled, "Should be enabled in chrome");
+    } else {
+      is(event, expectedEvent, "Expected a " + expectedEvent + " event");
+      is(enabled, expectedEvent == "fullscreenchange", "Should be appropriately enabled");
+    }
+    iframe.remove();
+  }
+  SimpleTest.executeSoon(nextTest);
+}
+</script>
+</body>
+</html>

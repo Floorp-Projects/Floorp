@@ -1,0 +1,62 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+    <title data-l10n-id="page-title"></title>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" media="all"/>
+    <link rel="icon" type="image/png" id="favicon" href="chrome://browser/content/robot.ico"/>
+    <link rel="stylesheet" href="chrome://browser/content/aboutRobots.css"/>
+    <linkset>
+      <link rel="localization" href="browser/aboutRobots.ftl"/>
+    </linkset>
+  </head>
+
+  <body>
+
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div class="container">
+
+      <!-- Error Title -->
+      <div class="title">
+        <h1 class="title-text" data-l10n-id="error-title-text"></h1>
+      </div>
+
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div class="description">
+
+        <!-- Short Description -->
+        <div>
+          <p id="errorShortDescText" data-l10n-id="error-short-desc-text"></p>
+        </div>
+
+        <!-- Long Description -->
+        <div>
+          <ul>
+            <li data-l10n-id="error-long-desc1"></li>
+            <li data-l10n-id="error-long-desc2"></li>
+            <li data-l10n-id="error-long-desc3"></li>
+            <li data-l10n-id="error-long-desc4"></li>
+          </ul>
+        </div>
+
+        <!-- Short Description -->
+        <div>
+          <small data-l10n-id="error-trailer-desc-text"></small>
+        </div>
+
+      </div>
+
+      <!-- Button -->
+      <div class="button-container">
+        <button id="errorTryAgain"
+                data-l10n-id="error-try-again"
+                data-l10n-attrs="label2"></button>
+      </div>
+    </div>
+  </body>
+  <script src="chrome://browser/content/aboutRobots.js"/>
+</html>

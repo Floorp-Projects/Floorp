@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a video element has set video dimensions on loadedmetadata</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+var startTest = function(test, token) {
+  manager.started(token);
+  var v1 = document.createElement('video');
+  var v2 = document.createElement('video');
+  var vout = document.createElement('video');
+
+  // Avoid a race for hardware resources between v1 and v2 on platforms with
+  // a hardware decoder, like B2G.
+  v1.preload = 'none';
+  v2.preload = 'none';
+
+  var numVideoElementsFinished = 0;
+
+  var ondurationchange = function(ev) {
+    var v = ev.target;
+    info(v.testName + " got durationchange");
+    v.durationchange = true;
+  };
+  var onresize = function(ev) {
+    var v = ev.target;
+    info(v.testName + " got resize");
+    ok(!v.resize, v.testName + " should only fire resize once for same size");
+    v.resize = true;
+    ok(v.durationchange, v.testName +
+       " durationchange event should have been emitted before resize");
+    is(v.videoWidth, test.width, v.testName + " width should be set on resize");
+    is(v.videoHeight, test.height, v.testName + " height should be set on resize");
+  };
+  var onloadedmetadata = function(ev) {
+    var v = ev.target;
+    info(v.testName + " got loadedmetadata");
+    ok(!v.loadedmetadata, v.testName + " should only fire loadedmetadata once");
+    v.loadedmetadata = true;
+    ok(v.resize, v.testName +
+       " resize event should have been emitted before loadedmetadata");
+
+    numVideoElementsFinished += 1;
+    if (v === v1) {
+      removeNodeAndSource(v1);
+      v2.load();
+    }
+
+    if (v === v2) {
+      vout.srcObject = v2.mozCaptureStreamUntilEnded();
+      v2.play();
+      vout.play();
+    }
+
+    if (numVideoElementsFinished === 3) {
+      removeNodeAndSource(v2);
+      removeNodeAndSource(vout);
+      manager.finished(token);
+    }
+  };
+  var setupElement = function(v, id) {
+    v.durationchange = false;
+    v.ondurationchange = ondurationchange;
+    v.resize = false;
+    v.onresize = onresize;
+    v.loadedmetadata = false;
+    v.onloadedmetadata = onloadedmetadata;
+    document.body.appendChild(v);
+  };
+
+  v1.testName = test.name;
+  v2.testName = test.name + " (Captured)";
+  vout.testName = test.name + " (Stream)";
+
+  v1.src = test.name;
+  v2.src = test.name;
+
+  setupElement(v1, "v1");
+  setupElement(v2, "v2");
+  setupElement(vout, "vout");
+
+  v1.play();
+};
+
+manager.runTests(getPlayableVideos(gSmallTests), startTest);
+</script>
+</pre>
+</body>
+</html>

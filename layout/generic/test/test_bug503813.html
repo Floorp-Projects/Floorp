@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=503813
+-->
+<head>
+  <title>Test for Bug 503813</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/EventUtils.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+   #a:after { content:"anonymous text"; display:block; height:10px; }
+   #a:hover:after { content:"hover content"; display:block; height:20px; }
+   #b:after { content:"anonymous text"; display:block; height:10px; }
+   #b:hover:after { content:url(file_Dolske.png); display:block; height:20px; }
+  </style>
+</head>
+<body>
+<div id="content" style="width:300px;">
+  <div id="a" style="margin:10px;"></div>
+  <div id="b" style="margin:10px;"></div>
+</div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=503813">Mozilla Bug 503813</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 503813 **/
+function test()
+{
+  synthesizeMouse(document.getElementById("a"), 5, 5, { type: "mousemove" });
+  is(document.getElementById("a").getBoundingClientRect().height, 20,
+     "Expected hover style");
+  synthesizeMouse(document.getElementById("b"), 5, 5, { type: "mousemove" });
+  is(document.getElementById("b").getBoundingClientRect().height, 20,
+     "Expected hover style");
+  SimpleTest.finish();
+}
+// Run 'test' when we've exited paint suppression and done layout
+window.onload = function() { setTimeout(test, 0); };
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,7 @@
+include input/reftest.list
+include textarea/reftest.list
+
+fuzzy(0-1,0-4) == css-restrictions.html css-restrictions-ref.html
+fuzzy-if(gtkWidget&&nativeThemePref,255-255,1376-1881) == css-simple-styling.html css-simple-styling-ref.html # gtkWidget, Bug 1600749
+!= css-background.html css-background-ref.html
+fuzzy(0-1,0-180) == ignore-pseudo-class.html ignore-pseudo-class-ref.html

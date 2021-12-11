@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="https://example.com:443/tests/dom/media/test/eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<video id="v" controls></video>
+<script class="testbody" type="text/javascript">
+/* import-globals-from eme.js */
+var manager = new MediaTestManager;
+
+var EMEmanifest = [
+  {
+    name:"bipbop 10s",
+    tracks: [
+      {
+          name:"video",
+          type:"video/mp4; codecs=\"avc1.4d4015\"",
+          fragments:[ "bipbop-cenc-video-10s.mp4",
+                    ]
+      }
+    ],
+    keys: {
+      "7e571d037e571d037e571d037e571d11" : "7e5733337e5733337e5733337e573311",
+    },
+    sessionType:"temporary",
+    sessionCount:1,
+    duration:10.01
+  },
+];
+
+function sleep(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+// To check if playback can be blocked and resumed correctly after
+// detaching original mediakeys and reattach it back.
+function startTest(test, token)
+{
+  manager.started(token);
+
+  var mk_ori;
+  let finish = new EMEPromise;
+
+  let v = document.getElementById("v");
+  let sessions = [];
+  function onSessionCreated(session) {
+    sessions.push(session);
+  }
+
+  function closeSessions() {
+    let p = new EMEPromise;
+    Promise.all(sessions.map(s => s.close()))
+    .then(p.resolve, p.reject);
+    return p.promise;
+  }
+
+  function setMediaKeysToElement(mk, solve, reject) {
+    v.setMediaKeys(mk).then(solve, reject);
+  }
+
+  function ReattachOriMediaKeys() {
+    function onOriMediaKeysSetOK() {
+      ok(true, TimeStamp(token) + " (ENCRYPTED) Set original MediaKeys back OK!");
+    }
+    function onOriMediaKeysSetFailed() {
+      ok(false, " Failed to set original mediakeys back.");
+    }
+
+    function onCanPlayAgain(ev) {
+      Promise.all([closeSessions()])
+      .then(() => {
+        ok(true, " (ENCRYPTED) Playback can be resumed.");
+        manager.finished(token);
+      }, () => {
+        ok(false, TimeStamp(token) + " Sessions are closed incorrectly.");
+        manager.finished(token);
+      });
+    }
+
+    once(v, "canplay", onCanPlayAgain);
+    setMediaKeysToElement(mk_ori, onOriMediaKeysSetOK, onOriMediaKeysSetFailed)
+  }
+
+  function triggerSeek() {
+    v.currentTime = v.duration / 2;
+  }
+
+  function onCanPlay(ev) {
+    function onSetMediaKeysToNullOK() {
+      ok(true, TimeStamp(token) + " Set MediaKeys to null. OK!");
+
+      triggerSeek();
+
+      SimpleTest.requestFlakyTimeout("To reattach mediakeys back again in 5s.");
+      sleep(5000).then(ReattachOriMediaKeys);
+    }
+    function onSetMediaKeysToNullFailed() {
+      ok(false, TimeStamp(token) + " Set MediaKeys to null. FAILED!");
+    }
+
+    SimpleTest.requestFlakyTimeout("To detach mediakeys after receiving 'canplay' event in 2s");
+    sleep(2000).then(() => {
+      setMediaKeysToElement(null, onSetMediaKeysToNullOK, onSetMediaKeysToNullFailed);
+    });
+  }
+
+  once(v, "canplay", onCanPlay);
+
+  var p1 = LoadInitData(v, test, token);
+  var p2 = CreateAndSetMediaKeys(v, test, token);
+  var p3 = LoadTest(test, v, token);
+  Promise.all([p1, p2, p3])
+  .then(values => {
+    let initData = values[0];
+    // stash the mediakeys
+    mk_ori = v.mediaKeys;
+    initData.map(ev => {
+      let session = v.mediaKeys.createSession();
+      onSessionCreated(session);
+      MakeRequest(test, token, ev, session);
+    });
+  })
+  .then(() => {
+    return finish.promise;
+  })
+  .catch(reason => ok(false, reason))
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(EMEmanifest, startTest);
+
+</script>
+</pre>
+</body>
+</html>

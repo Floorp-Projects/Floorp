@@ -1,0 +1,46 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+
+  <style type="text/css">
+    div.circle {
+      background: url(green-circle-alpha-32x32.png) center fixed;
+      width: 32px;
+      height: 32px;
+    }
+
+    div.redalpha {
+      background: url(red-128-alpha-32x32.png) center;
+      width: 32px;
+      height: 32px;
+    }
+
+    div.yellow {
+      background: url(yellow-32x32.png);
+      width: 32px;
+      height: 32px;
+    }
+
+    *#test1 {
+      width: 96px;
+      background-color: yellow;
+    }
+
+    *#test2 {
+      width: 96px;
+      background-color: red;
+    }
+
+    div.inline > div {
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="test1" class="inline"><div class="circle"><div class="redalpha"></div></div><div class="circle"><div class="redalpha"></div></div><div class="circle"><div class="redalpha"></div></div></div>
+  <div id="test2" class="inline"><div class="yellow"><div class="circle"><div class="redalpha"></div></div></div><div class="yellow"><div class="circle"><div class="redalpha"></div></div></div><div class="yellow"><div class="circle"><div class="redalpha"></div></div></div></div>
+  <div class="inline"><div class="yellow"><div class="circle"><div class="redalpha"></div></div></div><div class="yellow"><div class="circle"><div class="redalpha"></div></div></div><div class="yellow"><div class="circle"><div class="redalpha"></div></div></div></div>
+</body>
+
+</html>

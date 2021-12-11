@@ -1,0 +1,217 @@
+// -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+// The top-level element is a dictionary with two keys: "pinsets" maps details
+// of certificate pinning to a name and "entries" contains the HPKP details for
+// each host.
+//
+// "pinsets" is a list of objects. Each object has the following members:
+//   name: (string) the name of the pinset
+//   sha256_hashes: (list of strings) the set of allowed SPKIs hashes
+//
+// For a given pinset, a certificate is accepted if at least one of the
+// Subject Public Key Infos (SPKIs) is found in the chain.  SPKIs are specified
+// as names, which must match up with the name given in the Mozilla root store.
+//
+// "entries" is a list of objects. Each object has the following members:
+//   name: (string) the DNS name of the host in question
+//   include_subdomains: (optional bool) whether subdomains of |name| are also covered
+//   pins: (string) the |name| member of an object in |pinsets|
+//
+// "extra_certificates" is a list of base64-encoded certificates. These are used in
+// pinsets that reference certificates not in our root program (for example,
+// Facebook or intermediate CA certs).
+
+{
+  "chromium_data" : {
+    "cert_file_url": "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.pins?format=TEXT",
+    "json_file_url": "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT",
+    "substitute_pinsets": {
+      // Use the larger google_root_pems pinset instead of google
+      "google": "google_root_pems"
+    },
+    "production_pinsets": [
+      "google_root_pems",
+      "facebook",
+      "ncsccs"
+    ],
+    "production_domains": [
+      // Chrome's test domains.
+      "pinningtest.appspot.com",
+      "pinning-test.badssl.com",
+      // Dropbox
+      "dropbox.com",
+      "www.dropbox.com",
+      // Twitter
+      "api.twitter.com",
+      "business.twitter.com",
+      "dev.twitter.com",
+      "mobile.twitter.com",
+      "oauth.twitter.com",
+      "platform.twitter.com",
+      "twimg.com",
+      "www.twitter.com",
+      // Tor
+      "torproject.org",
+      "blog.torproject.org",
+      "check.torproject.org",
+      "dist.torproject.org",
+      "www.torproject.org",
+      // SpiderOak
+      "spideroak.com"
+    ],
+    "exclude_domains" : [
+      // Chrome's entry for twitter.com doesn't include subdomains, so replace
+      // it with our own entry below which also uses an expanded pinset.
+      "twitter.com"
+    ]
+   },
+  "pinsets": [
+    {
+      "name": "mozilla_services",
+      "sha256_hashes": [
+        "DigiCert Global Root CA",
+        "DigiCert High Assurance EV Root CA",
+        "ISRG Root X1"
+      ]
+    },
+    // For pinning tests on pinning.example.com, the certificate must be 'End
+    // Entity Test Cert'
+    {
+      "name": "mozilla_test",
+      "sha256_hashes": [
+        "End Entity Test Cert"
+      ]
+    },
+    // Google's root PEMs. Chrome pins only to their intermediate certs, but
+    // they'd like us to be more liberal. For the initial list, we are using
+    // the certs from https://pki.google.com/roots.pem.
+    // We have no built-in for commented out CAs.
+    // This list should be updated via the dumpGoogleRoots.js script.
+    {
+      "name": "google_root_pems",
+      "sha256_hashes": [
+        "AffirmTrust Commercial",
+        "AffirmTrust Networking",
+        "AffirmTrust Premium",
+        "AffirmTrust Premium ECC",
+        "Baltimore CyberTrust Root",
+        "Comodo AAA Services root",
+        "COMODO Certification Authority",
+        "COMODO ECC Certification Authority",
+        "COMODO RSA Certification Authority",
+        "Cybertrust Global Root",
+        "DigiCert Assured ID Root CA",
+        "DigiCert Assured ID Root G2",
+        "DigiCert Assured ID Root G3",
+        "DigiCert Global Root CA",
+        "DigiCert Global Root G2",
+        "DigiCert Global Root G3",
+        "DigiCert High Assurance EV Root CA",
+        "DigiCert Trusted Root G4",
+        "Entrust Root Certification Authority",
+        "Entrust Root Certification Authority - EC1",
+        "Entrust Root Certification Authority - G2",
+        "Entrust.net Premium 2048 Secure Server CA",
+        // "GeoTrust Global CA",
+        "GlobalSign ECC Root CA - R4",
+        "GlobalSign ECC Root CA - R5",
+        "GlobalSign Root CA",
+        "GlobalSign Root CA - R2",
+        "GlobalSign Root CA - R3",
+        "GlobalSign Root CA - R6",
+        "Go Daddy Class 2 CA",
+        "Go Daddy Root Certificate Authority - G2",
+        "GTS Root R1",
+        "GTS Root R2",
+        "GTS Root R3",
+        "GTS Root R4",
+        "Starfield Class 2 CA",
+        "Starfield Root Certificate Authority - G2",
+        "USERTrust ECC Certification Authority",
+        "USERTrust RSA Certification Authority"
+      ]
+    }
+    // The list above should be updated via the dumpGoogleRoots.js script.
+  ],
+
+  "entries": [
+    // Only domains that are operationally crucial to Firefox can have per-host
+    // telemetry reporting (the "id") field
+    { "name": "addons.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 1 },
+    { "name": "addons.mozilla.net", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 2 },
+    // AUS servers MUST remain in test mode
+    // see: https://bugzilla.mozilla.org/show_bug.cgi?id=1301956#c23
+    { "name": "aus4.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": true, "id": 3 },
+    { "name": "aus5.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": true, "id": 7 },
+    // Catchall for applications hosted under firefox.com
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1494431
+    { "name": "firefox.com", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": true, "id": 15 },
+    // Firefox Accounts & sync
+    // superseded by catchall for firefox.com, but leaving for tracking
+    { "name": "accounts.firefox.com", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 4 },
+    { "name": "api.accounts.firefox.com", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 5 },
+    { "name": "sync.services.mozilla.com", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 13 },
+    // Catch-all for all CDN resources, including product delivery
+    // Telemetry IDs added in bug 1521983.
+    { "name": "cdn.mozilla.net", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 16 },
+    { "name": "cdn.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 17 },
+    { "name": "download.mozilla.org", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 14 },
+    // Catch-all for everything hosted under services.mozilla.com
+    { "name": "services.mozilla.com", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 6 },
+    // Catch-all for everything hosted under telemetry.mozilla.org
+    // MUST remain in test mode in order to receive telemetry on broken pins
+    { "name": "telemetry.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": true, "id": 8 },
+    // Test Pilot
+    // superseded by catchall for firefox.com, but leaving for tracking
+    { "name": "testpilot.firefox.com", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 9 },
+    // Crash report sites
+    { "name": "crash-reports.mozilla.com", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 10 },
+    { "name": "crash-reports-xpsp2.mozilla.com", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 11 },
+    { "name": "crash-stats.mozilla.org", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 12 },
+    { "name": "include-subdomains.pinning.example.com",
+      "include_subdomains": true, "pins": "mozilla_test",
+      "test_mode": false },
+    // Example domain to collect per-host stats for telemetry tests.
+    { "name": "exclude-subdomains.pinning.example.com",
+      "include_subdomains": false, "pins": "mozilla_test",
+      "test_mode": false },
+    { "name": "test-mode.pinning.example.com", "include_subdomains": true,
+      "pins": "mozilla_test", "test_mode": true },
+    // Expand twitter's pinset to include all of *.twitter.com and use
+    // twitterCDN. More specific rules take precedence because we search for
+    // exact domain name first.
+    { "name": "twitter.com", "include_subdomains": true,
+      "pins": "twitterCDN", "test_mode": false }
+  ],
+  // When pinning to non-root certs, like intermediates,
+  // place the PEM of the pinned certificate in this array
+  // so Firefox can find the subject DN and public key
+  "extra_certificates": [
+    // Subject: C=US, O=Let's Encrypt, CN=Let's Encrypt Authority X3
+    // Issuer: C=US, O=Internet Security Research Group, CN=ISRG Root X1
+    "MIIFjTCCA3WgAwIBAgIRANOxciY0IzLc9AUoUSrsnGowDQYJKoZIhvcNAQELBQAwTzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2VhcmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTYxMDA2MTU0MzU1WhcNMjExMDA2MTU0MzU1WjBKMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNTGV0J3MgRW5jcnlwdDEjMCEGA1UEAxMaTGV0J3MgRW5jcnlwdCBBdXRob3JpdHkgWDMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCc0wzwWuUuR7dyXTeDs2hjMOrXNSYZJeG9vjXxcJIvt7hLQQWrqZ41CFjssSrEaIcLo+N15Obzp2JxunmBYB/XkZqf89B4Z3HIaQ6Vkc/+5pnpYDxIzH7KTXcSJJ1HG1rrueweNwAcnKx7pwXqzkrrvUHlNpi5y/1tPJZo3yMqQpAMhnRnyH+lmrhSYRQTP2XpgofL2/oOVvaGifOFP5eGr7DcGu9rDZUWfcQroGWymQQ2dYBrrErzG5BJeC+ilk8qICUpBMZ0wNAxzY8xOJUWuqgzuEPxsR/DMH+ieTETPS02+OP88jNquTkxxa/EjQ0dZBYzqvqEKbbUC8DYfcOTAgMBAAGjggFnMIIBYzAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBADBUBgNVHSAETTBLMAgGBmeBDAECATA/BgsrBgEEAYLfEwEBATAwMC4GCCsGAQUFBwIBFiJodHRwOi8vY3BzLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMB0GA1UdDgQWBBSoSmpjBH3duubRObemRWXv86jsoTAzBgNVHR8ELDAqMCigJqAkhiJodHRwOi8vY3JsLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMHIGCCsGAQUFBwEBBGYwZDAwBggrBgEFBQcwAYYkaHR0cDovL29jc3Aucm9vdC14MS5sZXRzZW5jcnlwdC5vcmcvMDAGCCsGAQUFBzAChiRodHRwOi8vY2VydC5yb290LXgxLmxldHNlbmNyeXB0Lm9yZy8wHwYDVR0jBBgwFoAUebRZ5nu25eQBc4AIiMgaWPbpm24wDQYJKoZIhvcNAQELBQADggIBABnPdSA0LTqmRf/Q1eaM2jLonG4bQdEnqOJQ8nCqxOeTRrToEKtwT++36gTSlBGxA/5dut82jJQ2jxN8RI8L9QFXrWi4xXnA2EqA10yjHiR6H9cj6MFiOnb5In1eWsRMUM2v3e9tNsCAgBukPHAg1lQh07rvFKm/Bz9BCjaxorALINUfZ9DD64j2igLIxle2DPxW8dI/F2loHMjXZjqG8RkqZUdoxtID5+90FgsGIfkMpqgRS05f4zPbCEHqCXl1eO5HyELTgcVlLXXQDgAWnRzut1hFJeczY1tjQQno6f6s+nMydLN26WuU4s3UYvOuOsUxRlJu7TSRHqDC3lSE5XggVkzdaPkuKGQbGpny+01/47hfXXNB7HntWNZ6N2Vwp7G6OfY+YQrZwIaQmhrIqJZuigsrbe3W+gdn5ykE9+Ky0VgVUsfxo52mwFYs1JKY2PGDuWx8M6DlS6qQkvHaRUo0FMd8TsSlbF0/v965qGFKhSDeQoMpYnwcmQilRh/0ayLThlHLN81gSkJjVrPI0Y8xCVPB4twb1PFUd2fPM3sA1tJ83sZ5v8vgFv2yofKRPB0t6JzUA81mSqM3kxl5e+IZwhYAyO0OTg3/fs8HqGTNKd9BqoUwSRBzp06JMg5brUCGwbCUDI0mxadJ3Bz4WxR6fyNpBK2yAinWEsikxqEt",
+    // Subject: C=US, O=Let's Encrypt, CN=Let's Encrypt Authority X4
+    // Issuer: C=US, O=Internet Security Research Group, CN=ISRG Root X1
+    "MIIFjTCCA3WgAwIBAgIRAJObmZ6kjhYNW0JZtD0gE9owDQYJKoZIhvcNAQELBQAwTzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2VhcmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTYxMDA2MTU0NDM0WhcNMjExMDA2MTU0NDM0WjBKMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNTGV0J3MgRW5jcnlwdDEjMCEGA1UEAxMaTGV0J3MgRW5jcnlwdCBBdXRob3JpdHkgWDQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDhJHRCe7eRMdlz/ziq2M5EXLc5CtxErg29RbmXN2evvVBPX9MQVGv3QdqOY+ZtW8DoQKmMQfzRA4n/YmEJYNYHBXiakL0aZD5P3M93L4lry2evQU3FjQDAa/6NhNy18pUxqOj2kKBDSpN0XLM+Q2lLiSJHdFE+mWTDzSQB+YQvKHcXIqfdw2wITGYvN3TFb5OOsEY3FmHRUJjIsA9PWFN8rPbaLZZhUK1D3AqmT561Urmcju9O30azMdwg/GnCoyB1Puw4GzZOZmbS3/VmpJMve6YOlD5gPUpLHG+6tE0cPJFYbi9NxNpw2+0BOXbASefpNbUUBpDB5ZLiEP1rubSFAgMBAAGjggFnMIIBYzAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBADBUBgNVHSAETTBLMAgGBmeBDAECATA/BgsrBgEEAYLfEwEBATAwMC4GCCsGAQUFBwIBFiJodHRwOi8vY3BzLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMB0GA1UdDgQWBBTFsatOTLHNZDCTfsGEmQWr5gPiJTAzBgNVHR8ELDAqMCigJqAkhiJodHRwOi8vY3JsLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMHIGCCsGAQUFBwEBBGYwZDAwBggrBgEFBQcwAYYkaHR0cDovL29jc3Aucm9vdC14MS5sZXRzZW5jcnlwdC5vcmcvMDAGCCsGAQUFBzAChiRodHRwOi8vY2VydC5yb290LXgxLmxldHNlbmNyeXB0Lm9yZy8wHwYDVR0jBBgwFoAUebRZ5nu25eQBc4AIiMgaWPbpm24wDQYJKoZIhvcNAQELBQADggIBAF4tI1yGjZgld9lP01+zftU3aSV0un0d2GKUMO7GxvwTLWAKQz/eT+u3J4+GvpD+BMfopIxkJcDCzMChjjZtZZwJpIY7BatVrO6OkEmaRNITtbZ/hCwNkUnbk3C7EG3OGJZlo9b2wzA8v9WBsPzHpTvLfOr+dS57LLPZBhp3ArHaLbdk33lIONRPt9sseDEkmdHnVmGmBRf4+J0Wy67mddOvz5rHH8uzY94raOayf20gzzcmqmot4hPXtDG4Y49MoFMMT2kcWck3EOTAH6QiGWkGJ7cxMfSL3S0niA6wgFJtfETETOZu8AVDgENgCJ3DS0bz/dhVKvs3WRkaKuuR/W0nnC2VDdaFj4+CRF8LGtn/8ERaH48TktH5BDyDVcF9zfJ75Scxcy23jAL2N6w3n/t3nnqoXt9Im4FprDr+mP1g2Z6Lf2YA0jE3kZalgZ6lNHu4CmvJYoOTSJw9X2qlGl1K+B4U327rG1tRxgjM76pN6lIS02PMECoyKJigpOSBu4V8+LVaUMezCJH9Qf4EKeZTHddQ1t96zvNd2s9ewSKx/DblXbKsBDzIdHJ+qi6+F9DIVM5/ICdtDdulOO+dr/BXB+pBZ3uVxjRANvJKKpdxkePyluITSNZHbanWRN07gMvwBWOL060i4VrL9er1sBQrRjU9iNpZQGTnLVAxQVFu"
+  ]
+}

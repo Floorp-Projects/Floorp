@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIProxyInfo;
+
+/**
+ * An interface for accessing the proxy info that a channel was
+ * constructed with.
+ *
+ * @see nsIProxiedProtocolHandler
+ */
+[scriptable, uuid(6238f134-8c3f-4354-958f-dfd9d54a4446)]
+interface nsIProxiedChannel : nsISupports
+{
+  /**
+   * Gets the proxy info the channel was constructed with. null or a
+   * proxyInfo with type "direct" mean no proxy.
+   *
+   * The returned proxy info must not be modified.
+   */
+  readonly attribute nsIProxyInfo proxyInfo;
+
+  /**
+   * The HTTP response code returned from the proxy to the CONNECT method.
+   * The response code is only available when we get the response from
+   * the proxy server, so this value is known in and after OnStartRequest.
+   *
+   * If CONNECT method is not used, httpProxyConnectResponseCode is always -1.
+   * After OnStartRequest, httpProxyConnectResponseCode is the real HTTP
+   * response code or 0 if we can't reach to the proxy.
+   */
+  readonly attribute int32_t httpProxyConnectResponseCode;
+};

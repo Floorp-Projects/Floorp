@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test inheritance through first-letter</title>
+    <style>
+      .f2 > * { color: blue }
+      .f2::first-letter { color: green }
+    </style>
+    <script>
+      function make(str) {
+        return document.createElement(str);
+      }
+      
+      window.onload = function() {
+        var x = document.getElementById("d1");
+        var y = make("span");
+        y.appendChild(document.createTextNode("ABC"));
+        x.appendChild(y);
+
+        x = document.getElementById("d2");
+        y = make("span");
+        x.appendChild(y);
+        y.appendChild(document.createTextNode("ABC"));
+      }
+    </script>
+  <body>
+    <div class="f2"><span>ABC</span></div>
+    <div class="f2" id="d1"></div>
+    <div class="f2" id="d2"></div>
+  </body>
+</html>

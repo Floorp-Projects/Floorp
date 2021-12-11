@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler()
+    {
+      var body = document.body;
+
+      var elements = ["input", "textarea", "select", "button"];
+      for (var e of elements) {
+        var el = document.createElement(e);
+        el.autofocus = true;
+        body.appendChild(el);
+      }
+
+      setTimeout(document.documentElement.removeAttribute('class'), 0);
+    }
+  </script>
+  <body onload="loadHandler();">
+  </body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+<title>Test MediaStreamTrackAudioSourceNode doesn't get data from cross-origin media resources</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+const CROSS_ORIGIN_URL = "http://example.org:80/tests/dom/media/webaudio/test/sine-440-10s.opus"
+let iterationCount = 0;
+let context = null;
+
+function processSamples(e) {
+  ++iterationCount;
+
+  let buf = e.inputBuffer.getChannelData(0);
+  let nonzeroSamplesThisBuffer = 0;
+  for (let i = 0; i < buf.length; ++i) {
+    if (buf[i] != 0) {
+      ++nonzeroSamplesThisBuffer;
+    }
+  }
+  is(nonzeroSamplesThisBuffer, 0,
+     "a source that is cross origin cannot be inspected by Web Audio");
+
+  if (iterationCount == 40) {
+    sp.onaudioprocess = null;
+    context.close();
+    SimpleTest.finish();
+  }
+}
+
+let audio = new Audio();
+audio.src = CROSS_ORIGIN_URL;
+audio.onloadedmetadata = function () {
+  context = new AudioContext();
+  let stream = audio.mozCaptureStream();
+  let track = stream.getAudioTracks()[0];
+  let node = context.createMediaStreamTrackSource(track);
+  node.connect(context.destination);
+  sp = context.createScriptProcessor(2048, 1);
+  sp.onaudioprocess = processSamples;
+  node.connect(sp);
+}
+
+</script>
+</pre>
+</body>

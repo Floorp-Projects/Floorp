@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  // Create a bunch of nested flex containers:
+  var parentNode = document.body;
+  var depth = 50;
+  for (var i = 0; i < depth; i++) {
+    var childNode = document.createElement("div");
+    childNode.style.display = "flex";
+    parentNode.appendChild(childNode);
+    parentNode = childNode;
+  }
+
+  // Add some text in the innermost child:
+  childNode.innerHTML = "Text";
+
+  // Force reflow:
+  var height = document.body.children[0].offsetHeight;
+</script>

@@ -1,0 +1,86 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for XHR Headers</title>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  </head>
+  <body>
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test">
+      <script class="testbody">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+var path =
+  location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+var filenamePrefix = "worker_xhr_headers_";
+var serverFilename = filenamePrefix + "server.sjs";
+var workerFilename = filenamePrefix + "worker.js";
+var otherHost = "example.com";
+
+info("Informing server about the current host");
+
+var xhr = new XMLHttpRequest();
+xhr.open("POST", path + serverFilename);
+xhr.setRequestHeader("options-host", otherHost);
+xhr.setRequestHeader("empty", "");
+xhr.onreadystatechange = function() {
+  if (xhr.readyState == 4) {
+    info("Launching worker");
+
+    var worker = new Worker(path + workerFilename);
+    worker.postMessage("http://" + otherHost + path + serverFilename);
+
+    worker.onmessage = function(event) {
+      ok(event.data.response === "", "Worker responded, saw no response");
+
+      var loopCount = 0;
+
+      function checkServer() {
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open("GET", path + serverFilename);
+        xhr2.onreadystatechange = function() {
+          if (xhr2.readyState == 4) {
+            if (xhr2.responseText) {
+              is(xhr2.responseText,
+                 "Success: expected OPTIONS request with '" +
+                 event.data.header + "' header",
+                 "Server saw expected requests");
+              SimpleTest.finish();
+            } else if (++loopCount < 30) {
+              setTimeout(checkServer, 1000);
+            } else {
+              ok(false, "Server never saw any requests");
+              SimpleTest.finish();
+            }
+          }
+        };
+
+        info("Checking server status (" + loopCount + ")");
+        xhr2.send();
+      }
+
+      checkServer();
+    };
+
+    worker.onerror = function(event) {
+      ok(false, "Worker had an error: '" + event.message + "'");
+      event.preventDefault();
+      SimpleTest.finish();
+    };
+  }
+};
+xhr.send();
+
+      </script>
+    </pre>
+  </body>
+</html>

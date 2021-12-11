@@ -1,0 +1,42 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <title>SW third party iframe test</title>
+
+  <script type="text/javascript">
+    function messageListener(event) {
+      let message = event.data;
+
+      dump("got message " + JSON.stringify(message) + "\n");
+      if (message.source == "parent") {
+        document.getElementById("iframe2").src = message.href;
+      }
+      else if (message.source == "iframe") {
+        parent.postMessage(event.data, "*");
+      } else if (message.source == "worker") {
+        parent.postMessage(event.data, "*");
+      }
+    }
+  </script>
+
+</head>
+
+<body>
+  <script>
+    onload = function() {
+      window.addEventListener('message', messageListener);
+      let message = {
+        source: "iframe",
+        status: "iframeloaded",
+      }
+      parent.postMessage(message, "*");
+    }
+  </script>
+  <iframe id="iframe2"></iframe>
+</body>
+
+</html>

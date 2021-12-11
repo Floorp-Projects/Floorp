@@ -1,0 +1,42 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+
+    <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=294086 -->
+
+    <title>Test: width:auto; height:auto; width="70px" height="0"</title>
+
+    <!--
+    This testcase checks that the <object> element uses the intrinsic width and
+    height of the embedded SVG. Since the intrinsic width is 70px and the
+    intrinsic height is zero, you should see a 1px blue border around a
+    rectangle 70px wide by 0px high when viewing this file. You should not see
+    any red.
+    -->
+
+    <style type="text/css">
+
+html, body {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+
+object {
+  padding: 0;
+  border: 1px solid blue;
+  margin: 50px;
+  background: red;
+}
+
+    </style>
+  </head>
+  <body>
+    <object data="object--auto-auto--px-0.svg" type="image/svg+xml">
+      FAIL
+    </object>
+  </body>
+</html>

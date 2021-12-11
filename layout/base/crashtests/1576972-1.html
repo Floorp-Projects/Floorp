@@ -1,0 +1,23 @@
+<html>
+<head>
+    <style>
+        * {
+            quotes: none !important;
+        }
+    </style>
+    <script>
+      function start () {
+        const o1 = document.getElementById('id_1')
+        const o2 = document.createElement('q')
+        const o3 = document.createElement('v')
+        document.documentElement.appendChild(o1)
+        o3.dir = 'rtl'
+        o2.appendChild(o3)
+        document.documentElement.appendChild(o2)
+      }
+
+      document.addEventListener('DOMContentLoaded', start)
+    </script>
+</head>
+<q id="id_1">
+</html>

@@ -1,0 +1,26 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "firefox",
+]
+
+DevToolsModules(
+    "context-menu-utils.js",
+    "filter-autocomplete-provider.js",
+    "filter-predicates.js",
+    "filter-text-utils.js",
+    "format-utils.js",
+    "headers-provider.js",
+    "l10n.js",
+    "mdn-utils.js",
+    "open-request-in-tab.js",
+    "prefs.js",
+    "request-blocking.js",
+    "request-utils.js",
+    "sort-predicates.js",
+    "sort-utils.js",
+    "tooltips.js",
+)

@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=221428
+-->
+<head>
+  <title>Test for Bug 221428</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" href="data:text/css,body { color: green; }">
+  <style>
+    @import url("data:text/css,body { border: 1px solid transparent; }");
+    body { color: black; }
+  </style>
+  <script>
+    var executed = false;
+  </script>
+  <link rel="stylesheet" href="javascript:executed = true;">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=221428">Mozilla Bug 221428</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 221428 **/
+
+var exceptionThrown = false;
+try {
+  is(document.styleSheets[1].cssRules[0].cssText, "body { color: green; }",
+     "Should get the color: green rule back");
+} catch (e) {
+  exceptionThrown = true;
+}
+
+ok(!exceptionThrown, "Should be able to access data: <link> stylesheet");
+
+exceptionThrown = false;
+try {
+  is(document.styleSheets[2].cssRules[1].cssText, "body { color: black; }",
+     "Should get the color: black rule back");
+} catch (e) {
+  exceptionThrown = true;
+}
+ok(!exceptionThrown, "Should be able to access <style> stylesheet");
+
+exceptionThrown = false;
+try {
+  is(document.styleSheets[2].cssRules[0].styleSheet.cssRules[0].cssText,
+     "body { border: 1px solid transparent; }",
+     "Should get the 'border: 1px solid transparent' rule back");
+} catch (e) {
+  exceptionThrown = true;
+}
+ok(!exceptionThrown, "Should be able to access data: @import stylesheet");
+
+ok(!executed,
+   "Shouldn't be executing stylesheet-link javascript: URIs against " +
+   "the page context");
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1.0">
+<title>Tests that pending visual scroll positions on RSFs of non-RCDs get cleared properly</title>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<body>
+<iframe style="width: 300px; height: 300px" id="scroller"></iframe>
+<script>
+function populateScroller() {
+  let text = '<div id="line0">line 0</div><br>';
+  for (let i = 1; i < 100; i++) {
+      text += 'line ' + i + '<br>';
+  }
+  /* eslint-disable no-unsanitized/property */
+  document.querySelector('#scroller').contentDocument.body.innerHTML = text;
+}
+
+function reconstructScroller() {
+  let scroller = document.querySelector('#scroller');
+  scroller.style.display = 'none';
+  /* eslint-disable no-unused-vars */
+  let dummyToForceFlush = scroller.scrollTop;
+  scroller.style.display = '';
+  dummyToForceFlush = scroller.scrollTop;
+}
+
+async function test() {
+  let scroller = document.querySelector('#scroller');
+  let subwin = scroller.contentWindow;
+
+  populateScroller();
+  subwin.scrollTo(0, 100);
+  is(subwin.scrollY, 100, 'Scroller scrolled down to y=100');
+
+  // let the visual scroll position round-trip through APZ
+  await promiseApzFlushedRepaints();
+
+  // frame reconstruction does a ScrollToVisual. The bug is that the pending
+  // visual scroll offset update never gets cleared even though the paint
+  // transaction should clear it.
+  reconstructScroller();
+  await promiseApzFlushedRepaints();
+
+  // Scroll back up to the top using APZ-side scrolling, and wait for the APZ
+  // wheel animation to complete and the final scroll position to get synced
+  // back to the main thread. The large -250 scroll delta required here is due
+  // to bug 1662487.
+  await promiseMoveMouseAndScrollWheelOver(subwin, 10, 10, true, -250);
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  for (let i = 0; i < 60; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  utils.restoreNormalRefresh();
+  await promiseApzFlushedRepaints();
+  is(subwin.scrollY, 0, 'Scroller scrolled up to y=0');
+
+  // Do a mouse-drag-selection. I couldn't find any simpler way to reproduce
+  // the problem.
+  const kMouseMovePixels = 10;
+  let promiseMouseMovesDone = new Promise((resolve) => {
+    let mouseDownX = 0;
+    subwin.document.documentElement.addEventListener('mousedown', (e) => {
+      dump(`Got mousedown at ${e.screenX}\n`);
+      mouseDownX = e.screenX;
+    });
+    subwin.document.documentElement.addEventListener('mousemove', (e) => {
+      // Mousemove events can get squashed together so we check the coord
+      // instead.
+      dump(`Got mousemove at ${e.screenX}\n`);
+      if (e.screenX - mouseDownX >= kMouseMovePixels) {
+        resolve();
+      }
+    });
+  });
+  let line0 = subwin.document.querySelector('#line0');
+  let dragFinisher = await promiseNativeMouseDrag(line0, 1, 5, kMouseMovePixels, 0, kMouseMovePixels);
+  await promiseMouseMovesDone;
+  await dragFinisher();
+
+  is(subwin.scrollY, 0, 'Scroller should remain at y=0');
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>

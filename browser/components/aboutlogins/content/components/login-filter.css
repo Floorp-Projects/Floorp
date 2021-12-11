@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.filter[type="text"] {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.4;
+  background-image: url("chrome://global/skin/icons/search-glass.svg");
+  background-position: 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  text-align: match-parent;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  padding-block: 6px;
+}
+
+:host(:dir(ltr)) .filter {
+  /* We use separate RTL rules over logical properties since we want the visual direction
+     to be independent from the user input direction */
+  padding-left: 32px;
+}
+
+:host(:dir(rtl)) .filter {
+  background-position-x: right 8px;
+  padding-right: 32px;
+}

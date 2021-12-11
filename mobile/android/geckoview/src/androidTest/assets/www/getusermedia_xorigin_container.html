@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>GetUserMedia from cross-origin iframe: the container document</title>
+  </head>
+  <body>
+    <iframe id="iframe_no_allow" src="http://127.0.0.1:4245/assets/www/getusermedia_xorigin_iframe.html"></iframe>
+    <iframe id="iframe" allow="camera;microphone" src="http://127.0.0.1:4245/assets/www/getusermedia_xorigin_iframe.html"></iframe>
+    <script>
+      "use strict";
+
+      let iframeWindow;
+      let generation = 1;
+
+      async function Send(obj) {
+        obj.gen = generation++;
+        iframeWindow.postMessage(obj, "http://127.0.0.1:4245");
+        while(true) {
+          const {data: {gen, result}} = await new Promise(r => window.onmessage = r);
+          if (gen == obj.gen) {
+            return result;
+          }
+        }
+      }
+
+      function Start(constraints) {
+        if (iframeWindow) {
+          return "iframe mode already decided";
+        }
+        iframeWindow = document.getElementById("iframe").contentWindow;
+        return Send({name: "start", constraints});
+      }
+
+      function StartNoAllow(constraints) {
+        if (iframeWindow) {
+          return "iframe mode already decided";
+        }
+        iframeWindow = document.getElementById("iframe_no_allow").contentWindow;
+        return Send({name: "start", constraints});
+      }
+
+      async function Stop() {
+        const result = await Send({name: "stop"});
+        iframeWindow = undefined;
+        return result;
+      }
+    </script>
+  </body>
+</html>

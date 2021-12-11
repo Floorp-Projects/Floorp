@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the pref media.cubeb.force_sample_rate</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+const WEIRD_SAMPLE_RATE = 44101;
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["media.cubeb.force_sample_rate", WEIRD_SAMPLE_RATE]
+]}).then(function() {
+  var ac = new AudioContext();
+  is(ac.sampleRate, WEIRD_SAMPLE_RATE, "Forced sample-rate set successfully.");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>

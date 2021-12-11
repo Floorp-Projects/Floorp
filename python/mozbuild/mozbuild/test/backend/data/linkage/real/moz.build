@@ -1,0 +1,14 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+DIRS += [
+    "foo",
+]
+
+NO_EXPAND_LIBS = True
+
+OS_LIBS += ["-lbaz"]
+
+USE_LIBS += ["static:baz"]
+
+Library("foo")

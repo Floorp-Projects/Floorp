@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various touch tests that spawn in new windows (5)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+
+var subtests = [
+  // tests that scrolling doesn't cause extra SchedulePaint calls
+  {"file": "helper_bug1669625.html", "dp_suppression": false},
+
+  // Add new subtests here. If this starts timing out because it's taking too
+  // long, create a test_group_touchevents-6.html file. Refer to 1423011#c57
+  // for more details.
+  // You can still add tests to test_group_touchevents-4.html, it hasn't gotten
+  // too long yet, but this file was created because adding a specific test to
+  // test_group_touchevents-5.html would timeout (without making any progress)
+  // with fission x-origin tests. So you can add tests here or in
+  // test_group_touchevents-4.html until they start timing out.
+];
+
+if (isApzEnabled()) {
+  ok(window.TouchEvent, "Check if TouchEvent is supported (it should be, the test harness forces it on everywhere)");
+  if (getPlatform() == "android") {
+    // This has a lot of subtests, and Android emulators are slow.
+    SimpleTest.requestLongerTimeout(2);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

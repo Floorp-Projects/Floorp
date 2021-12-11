@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Mozilla Bug 113934" onload="doTheTest()"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <hbox>
+    <vbox id="box1">
+    </vbox>
+    <vbox id="box2">
+    </vbox>
+    <spacer flex="1"/>
+  </hbox>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    /* globals SimpleTest, is, isnot, ok, snapshotWindow, compareSnapshots,
+               onerror */
+    var imports = [ "SimpleTest", "is", "isnot", "ok", "snapshotWindow",
+                    "compareSnapshots", "onerror" ];
+    for (var name of imports) {
+      window[name] = window.arguments[0][name];
+    }
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function addBrowser(parent, id, width, height) {
+      var b =
+        document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "browser");
+      var type = window.location.search.slice(1);
+      is(type == "chrome" || type == "content", true, "Unexpected type");
+      b.setAttribute("type", type);
+      b.setAttribute("id", id);
+      b.setAttribute("width", width);
+      b.setAttribute("height", height);
+      $(parent).appendChild(b);
+    }
+    addBrowser("box1", "f1", 300, 200);
+    addBrowser("box1", "f2", 300, 200);
+    addBrowser("box2", "f3", 30, 200);
+
+    /** Test for Bug 113934 **/
+    var doc1 =
+    "data:text/html,<html><body onbeforeunload='document.documentElement.textContent = \"\"' onunload='document.documentElement.textContent = \"\"' onpagehide='document.documentElement.textContent = \"\"'>This is a test</body></html>";
+    var doc2 = "data:text/html,<html><head></head><body>This is a second test</body></html>";
+
+
+    $("f1").setAttribute("src", doc1);
+    $("f2").setAttribute("src", doc2);
+    $("f3").setAttribute("src", doc2);
+
+    async function doTheTest() {
+      var s2 = await snapshotWindow($("f2").contentWindow);
+      // var s3 = await snapshotWindow($("f3").contentWindow);
+
+      // This test is broken - see bug 1090274
+      //ok(!compareSnapshots(s2, s3, true)[0],
+      //   "Should look different due to different sizing");
+
+      function getDOM(id) {
+        return $(id).contentDocument.documentElement.innerHTML;
+      }
+
+      var dom1 = getDOM("f1");
+
+      var dom2 = getDOM("f2");
+      $("f2").contentDocument.body.textContent = "Modified the text";
+      var dom2star = getDOM("f2");
+      isnot(dom2, dom2star, "We changed the DOM!");
+
+      $("f1").swapDocShells($("f2"));
+      // now we have doms 2*, 1, 2 in the frames
+
+      is(getDOM("f1"), dom2star, "Shouldn't have changed the DOM on swap");
+      is(getDOM("f2"), dom1, "Shouldn't have fired event handlers");
+
+      // Test for bug 480149
+      // The DOMLink* events are dispatched asynchronously, thus I cannot
+      // just include the <link> element in the initial DOM and swap the
+      // docshells. Instead, the link element is added now. Then, when the
+      // first DOMLinkAdded event (which is a result of the actual addition)
+      // is dispatched, the docshells are swapped and the pageshow and pagehide
+      // events are tested. Only then, we wait for the DOMLink* events,
+      // which are a result of swapping the docshells.
+      var DOMLinkListener = {
+        _afterFirst: false,
+        _removedDispatched: false,
+        _addedDispatched: false,
+        async handleEvent(aEvent) {
+          if (!this._afterFirst) {
+            is(aEvent.type, "DOMLinkAdded");
+
+            var strs = { "f1": "", "f3" : "" };
+            function attachListener(node, type) {
+              var listener = function(e) {
+                if (strs[node.id]) strs[node.id] += " ";
+                strs[node.id] += node.id + ".page" + type;
+              }
+              node.addEventListener("page" + type, listener);
+
+              listener.detach = function() {
+                node.removeEventListener("page" + type, listener);
+              }
+              return listener;
+            }
+
+            var l1 = attachListener($("f1"), "show");
+            var l2 = attachListener($("f1"), "hide");
+            var l3 = attachListener($("f3"), "show");
+            var l4 = attachListener($("f3"), "hide");
+
+            $("f1").swapDocShells($("f3"));
+            // now we have DOMs 2, 1, 2* in the frames
+
+            l1.detach();
+            l2.detach();
+            l3.detach();
+            l4.detach();
+
+            // swapDocShells reflows asynchronously, ensure layout is
+            // clean so that the viewport of f1 is the right size.
+            $("f1").getBoundingClientRect();
+            var s1_new = await snapshotWindow($("f1").contentWindow);
+            var [same, first, second] = compareSnapshots(s1_new, s2, true);
+            ok(same, "Should reflow on swap. Expected " + second + " but got " + first);
+
+            is(strs.f1, "f1.pagehide f1.pageshow");
+            is(strs.f3, "f3.pagehide f3.pageshow");
+            this._afterFirst = true;
+            return;
+          }
+          if (aEvent.type == "DOMLinkAdded") {
+            is(this._addedDispatched, false);
+            this._addedDispatched = true;
+          }
+          else {
+            is(this._removedDispatched, false);
+            this._removedDispatched = true;
+          }
+
+          if (this._addedDispatched && this._removedDispatched) {
+            $("f1").removeEventListener("DOMLinkAdded", this);
+            $("f1").removeEventListener("DOMLinkRemoved", this);
+            $("f3").removeEventListener("DOMLinkAdded", this);
+            $("f3").removeEventListener("DOMLinkRemoved", this);
+            window.close();
+            SimpleTest.finish();
+          }
+        }
+      };
+
+      $("f1").addEventListener("DOMLinkAdded", DOMLinkListener);
+      $("f1").addEventListener("DOMLinkRemoved", DOMLinkListener);
+      $("f3").addEventListener("DOMLinkAdded", DOMLinkListener);
+      $("f3").addEventListener("DOMLinkRemoved", DOMLinkListener);
+
+      var linkElement = $("f1").contentDocument.createElement("link");
+      linkElement.setAttribute("rel", "alternate");
+      linkElement.setAttribute("href", "about:blank");
+      $("f1").contentDocument.documentElement.firstChild.appendChild(linkElement);
+    }
+
+  ]]></script>
+</window>

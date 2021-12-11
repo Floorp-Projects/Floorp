@@ -1,0 +1,99 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1166832",
+    title: "Renegotiation: verify audio after renegotiation"
+  });
+
+  runNetworkTest(function (options) {
+    const test = new PeerConnectionTest(options);
+    const helper = new AudioStreamHelper();
+
+    test.chain.append([
+      function CHECK_ASSUMPTIONS() {
+        is(test.pcLocal.localMediaElements.length, 1,
+           "pcLocal should have one media element");
+        is(test.pcRemote.remoteMediaElements.length, 1,
+           "pcRemote should have one media element");
+        is(test.pcLocal._pc.getLocalStreams().length, 1,
+           "pcLocal should have one stream");
+        is(test.pcRemote._pc.getRemoteStreams().length, 1,
+           "pcRemote should have one stream");
+      },
+      function CHECK_AUDIO() {
+        return Promise.resolve()
+          .then(() => info("Checking local audio enabled"))
+          .then(() => helper.checkAudioFlowing(test.pcLocal._pc.getLocalStreams()[0]))
+          .then(() => info("Checking remote audio enabled"))
+          .then(() => helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
+
+          .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = false)
+
+          .then(() => info("Checking local audio disabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcLocal._pc.getLocalStreams()[0]))
+          .then(() => info("Checking remote audio disabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
+      }
+    ]);
+
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{audio: true}],
+                                   []);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
+        },
+      ]
+    );
+
+    test.chain.append([
+      function CHECK_ASSUMPTIONS2() {
+        is(test.pcLocal.localMediaElements.length, 2,
+           "pcLocal should have two media elements");
+        is(test.pcRemote.remoteMediaElements.length, 2,
+           "pcRemote should have two media elements");
+        is(test.pcLocal._pc.getLocalStreams().length, 2,
+           "pcLocal should have two streams");
+        is(test.pcRemote._pc.getRemoteStreams().length, 2,
+           "pcRemote should have two streams");
+      },
+      function RE_CHECK_AUDIO() {
+        return Promise.resolve()
+          .then(() => info("Checking local audio enabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcLocal._pc.getLocalStreams()[0]))
+          .then(() => info("Checking remote audio enabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
+
+          .then(() => info("Checking local2 audio enabled"))
+          .then(() => helper.checkAudioFlowing(test.pcLocal._pc.getLocalStreams()[1]))
+          .then(() => info("Checking remote2 audio enabled"))
+          .then(() => helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[1]))
+
+          .then(() => test.pcLocal._pc.getLocalStreams()[1].getAudioTracks()[0].enabled = false)
+          .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = true)
+
+          .then(() => info("Checking local2 audio disabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcLocal._pc.getLocalStreams()[1]))
+          .then(() => info("Checking remote2 audio disabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcRemote._pc.getRemoteStreams()[1]))
+
+          .then(() => info("Checking local audio enabled"))
+          .then(() => helper.checkAudioFlowing(test.pcLocal._pc.getLocalStreams()[0]))
+          .then(() => info("Checking remote audio enabled"))
+          .then(() => helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
+      }
+    ]);
+
+    test.setMediaConstraints([{audio: true}], []);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

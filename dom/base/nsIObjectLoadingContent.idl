@@ -1,0 +1,106 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIRequest;
+interface nsIFrame;
+interface nsIPluginTag;
+interface nsIURI;
+
+webidl BrowsingContext;
+
+/**
+ * This interface represents a content node that loads objects.
+ *
+ * Please make sure to update the MozObjectLoadingContent WebIDL
+ * mixin to mirror this interface when changing it.
+ */
+
+[scriptable, builtinclass, uuid(2eb3195e-3eea-4083-bb1d-d2d70fa35ccb)]
+interface nsIObjectLoadingContent : nsISupports
+{
+  /**
+   * See notes in nsObjectLoadingContent.h
+   */
+  const unsigned long TYPE_LOADING     = 0;
+  const unsigned long TYPE_IMAGE       = 1;
+  const unsigned long TYPE_FALLBACK    = 2;
+  const unsigned long TYPE_FAKE_PLUGIN = 3;
+  const unsigned long TYPE_DOCUMENT    = 4;
+  const unsigned long TYPE_NULL        = 5;
+
+  const unsigned long PLUGIN_ACTIVE               = 0xFF;
+
+  // Plugins-specific permission indicating that we want to prompt the user
+  // to decide whether they want to allow a plugin, but to do so in a less
+  // intrusive way than PROMPT_ACTION would entail. At the time of writing,
+  // this means hiding all in-content plugin overlays, but still showing the
+  // plugin badge in the URL bar.
+  const unsigned long PLUGIN_PERMISSION_PROMPT_ACTION_QUIET = 8;
+
+  /**
+   * The actual mime type (the one we got back from the network
+   * request) for the element.
+   */
+  readonly attribute ACString actualType;
+
+  /**
+   * Gets the type of the content that's currently loaded. See
+   * the constants above for the list of possible values.
+   */
+  readonly attribute unsigned long displayedType;
+
+  /**
+   * Gets the content type that corresponds to the give MIME type.  See the
+   * constants above for the list of possible values.  If nothing else fits,
+   * TYPE_FALLBACK will be returned.
+   */
+  unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
+
+  /**
+   * Forces a re-evaluation and reload of the tag, optionally invalidating its
+   * click-to-play state.  This can be used when the MIME type that provides a
+   * type has changed, for instance, to force the tag to re-evalulate the
+   * handler to use.
+   */
+  void reload(in boolean aClearActivation);
+
+  [noscript] void stopPluginInstance();
+
+  [noscript] void syncStartPluginInstance();
+  [noscript] void asyncStartPluginInstance();
+
+  /**
+   * Puts the tag in the "waiting on a channel" state and adopts this
+   * channel. This does not override the normal logic of examining attributes
+   * and the channel type, so the load may cancel this channel if it decides not
+   * to use one.
+   *
+   * This assumes:
+   *  - This tag has not begun loading yet
+   *  - This channel has not yet hit OnStartRequest
+   *  - The caller will continue to pass channel events to us as a listener
+   */
+  [noscript] void initializeFromChannel(in nsIRequest request);
+
+  /**
+   * The URL of the data/src loaded in the object. This may be null (i.e.
+   * an <embed> with no src).
+   */
+  readonly attribute nsIURI srcURI;
+
+  /**
+   * Disable the use of fake plugins and reload the tag if necessary.
+   */
+  void skipFakePlugins();
+
+  /**
+   * Switch the tag into the TYPE_DOCUMENT state, and returns the
+   * BrowsingContext which the load should complete in.
+   */
+  [noscript] BrowsingContext upgradeLoadToDocument(in nsIChannel channel);
+};

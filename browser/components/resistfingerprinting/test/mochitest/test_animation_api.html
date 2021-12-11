@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1382545
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1382545</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1382545 **/
+  SimpleTest.waitForExplicitFinish();
+
+  // Used by file_animation_api.html
+  var prefName = "";
+  var expectedPrecision = 0;
+  var resistFingerprinting = false;
+  var reduceTimerPrecision = false;
+
+  function runTest() {
+    // No matter what we set the precision to, if we're in ResistFingerprinting mode
+    // we use the larger of the precision pref and the constant 100ms
+    if (resistFingerprinting) {
+      expectedPrecision = expectedPrecision < 100000 ? 100000 : expectedPrecision;
+    }
+    window.open("file_animation_api.html");
+  }
+
+  function setupTest(rfp, rtp, ep) {
+    // Set globals
+    expectedPrecision = ep;
+    resistFingerprinting = rfp;
+    reduceTimerPrecision = rtp;
+    prefName = "";
+    prefName += resistFingerprinting ? "privacy.resistFingerprinting " : "";
+    prefName += reduceTimerPrecision ? "privacy.reduceTimerPrecision " : "";
+    SpecialPowers.pushPrefEnv({"set":
+      [
+        ["dom.animations-api.timelines.enabled", true],
+        ["privacy.resistFingerprinting", resistFingerprinting],
+        ["privacy.reduceTimerPrecision", reduceTimerPrecision],
+        ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision],
+      ],
+    }, runTest);
+  }
+
+  var testIndx = 0;
+  var testSequence = [
+    [true, false, 100000],
+    [false, true, 100000],
+    [true, false, 50000],
+    [false, true, 50000],
+    [true, false, 100],
+    [false, true, 100],
+    [true, true, 13],
+    [false, true, 13],
+  ];
+
+  window.onload = () => {
+    setupTest(testSequence[testIndx][0], testSequence[testIndx][1], testSequence[testIndx][2]);
+  };
+
+  function done() {
+    testIndx++;
+    if (testIndx == testSequence.length) {
+      SimpleTest.finish();
+    } else {
+      setupTest(testSequence[testIndx][0], testSequence[testIndx][1], testSequence[testIndx][2]);
+    }
+  }
+  </script>
+</head>
+<body>
+</body>
+</html>

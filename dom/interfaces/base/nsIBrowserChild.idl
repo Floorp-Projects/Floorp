@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "domstubs.idl"
+#include "nsIDroppedLinkHandler.idl"
+
+interface nsIWebBrowserChrome;
+
+webidl ContentFrameMessageManager;
+
+
+native CallerType(mozilla::dom::CallerType);
+native CommandsArray(nsTArray<nsCString>);
+[ref] native CommandsArrayRef(nsTArray<nsCString>);
+
+[scriptable, builtinclass, uuid(1fb79c27-e760-4088-b19c-1ce3673ec24e)]
+interface nsIBrowserChild : nsISupports
+{
+  readonly attribute ContentFrameMessageManager messageManager;
+
+  [notxpcom] void sendRequestFocus(in boolean canFocus, in CallerType aCallerType);
+
+  [noscript] void remoteSizeShellTo(in int32_t width, in int32_t height,
+                                    in int32_t shellItemWidth, in int32_t shellItemHeight);
+
+  void remoteDropLinks(in Array<nsIDroppedLinkItem> links);
+
+  readonly attribute uint64_t tabId;
+
+  /*
+   * Indicates whether or not there are other tabs in this tab's window.
+   */
+  attribute boolean hasSiblings;
+
+  /**
+   * Send a message from the BrowserChild to the BrowserParent that a
+   * nsIWebNavigation navigation finished in the child.
+   */
+  void notifyNavigationFinished();
+
+  /**
+   * Id of the chrome window the tab is within.
+   */
+  readonly attribute uint64_t chromeOuterWindowID;
+};

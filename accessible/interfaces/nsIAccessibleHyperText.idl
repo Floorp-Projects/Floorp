@@ -1,0 +1,54 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIAccessibleHyperLink.idl"
+
+/**
+ * A cross-platform interface that deals with text which contains hyperlinks.
+ * Each link is an embedded object representing exactly 1 character within
+ * the hypertext.
+ *
+ * Current implementation assumes every embedded object is a link.
+ */
+
+[scriptable, builtinclass, uuid(b33684e2-090c-4e1d-a3d9-f4b46f4237b9)]
+interface nsIAccessibleHyperText : nsISupports
+{
+  /**
+   * Return the number of links contained within this hypertext object.
+   */
+  readonly attribute long linkCount;
+
+  /**
+   * Return link accessible at the given index.
+   *
+   * @param index  [in] 0-based index of the link that is to be retrieved
+   *
+   * @return       link accessible or null if there is no link at that index
+   */
+  nsIAccessibleHyperLink getLinkAt(in long index);
+
+  /**
+   * Return index of the given link.
+   *
+   * @param link  [in] link accessible the index is requested for
+   *
+   * @return      index of the given link or null if there's no link within
+   *                hypertext accessible
+   */
+  long getLinkIndex(in nsIAccessibleHyperLink link);
+
+  /*
+   * Return link index at the given offset within hypertext accessible.
+   *
+   * @param offset  [in] the 0-based character index
+   *
+   * @return        0-based link's index or -1 if no link is present at that
+   *                  offset
+   */
+  long getLinkIndexAtOffset(in long offset);
+};

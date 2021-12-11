@@ -1,0 +1,1 @@
+assertEq(clearKeptObjects(), undefined);

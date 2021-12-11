@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
+-->
+<window title="Mozilla Bug 1123480"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <title>nsTransferable PBM Overflow Selection Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+  // Create over 1 MB of sample garbage text. JavaScript strings are represented by
+  // UTF16 strings, so the size is twice as much as the actual string length.
+  // This value is chosen such that the size of the memory for the string exceeds
+  // the kLargeDatasetSize threshold in nsTransferable.h.
+  // It is also not a round number to reduce the odds of having an accidental
+  // collisions with another file (since the test below looks at the file size
+  // to identify the file).
+  var Ipsum = "0123456789".repeat(1234321);
+  var IpsumByteLength = Ipsum.length * 2;
+  var SHORT_STRING_NO_CACHE = "short string that will never be cached to the disk";
+
+  function isWindows() {
+    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    return AppConstants.platform === 'win';
+  }
+
+  // Get a list of open file descriptors that refer to a file with the same size as
+  // the expected data (and assume that any mutations in file descriptor counts
+  // are caused by our test).
+  function getClipboardCacheFDCount() {
+    var dir;
+    if (isWindows()) {
+      // On Windows, nsAnonymousTemporaryFile does not immediately delete the file.
+      // Instead, the Windows-specific FILE_FLAG_DELETE_ON_CLOSE flag is used,
+      // which means that the file is deleted when the last handle is closed.
+      // Apparently, this flag is unreliable (e.g. when the application crashes),
+      // so nsAnonymousTemporaryFile stores the temporary files in a subdirectory,
+      // which is cleaned up some time after start-up.
+
+      // This is just a test, and during the test we deterministically close the
+      // handles, so if FILE_FLAG_DELETE_ON_CLOSE does the thing it promises, the
+      // file is actually removed when the handle is closed.
+
+      var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+      // Path from nsAnonymousTemporaryFile.cpp, GetTempDir.
+      dir = FileUtils.getFile("TmpD", ["mozilla-temp-files"]);
+    } else {
+      dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      dir.initWithPath("/dev/fd");
+    }
+    var count = 0;
+    for (var de = dir.directoryEntries; de.hasMoreElements(); ) {
+      var fdFile = de.nextFile;
+      var fileSize;
+      try {
+        fileSize = fdFile.fileSize;
+      } catch (e) {
+        // This can happen on macOS.
+        continue;
+      }
+      if (fileSize === IpsumByteLength) {
+        // Assume that the file was created by us if the size matches.
+        ++count;
+      }
+    }
+    return count;
+  }
+
+  function RunTest() {
+    const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    // Sanitize environment
+    gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);
+
+    var initialFdCount = getClipboardCacheFDCount();
+
+    // Overflow a nsTransferable region by using the clipboard helper
+    gClipboardHelper.copyString(Ipsum);
+
+    // gClipboardHelper.copyString also puts the data on the selection
+    // clipboard if the platform supports it.
+    var expectedFdDelta = Services.clipboard.supportsSelectionClipboard() ? 2 : 1;
+    // Undefined private browsing mode should cache to disk
+    is(getClipboardCacheFDCount(), initialFdCount + expectedFdDelta, "should cache to disk when PBM is undefined");
+
+    // Sanitize environment again.
+    gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);
+    is(getClipboardCacheFDCount(), initialFdCount, "should have cleared the clipboard data");
+
+    // Repeat procedure of plain text selection with private browsing
+    // disabled and enabled
+    const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+    for (let private of [false, true]) {
+      var win = window.browsingContext.topChromeWindow.open("about:blank", "_blank", "chrome, width=500, height=200" + (private ? ", private" : ""));
+      ok(win, private ? "should open private window" : "should open non-private window");
+      is(PrivateBrowsingUtils.isContentWindowPrivate(win), private, "used correct window context");
+
+      // Select plaintext in private/non-private channel
+      const nsTransferable = Components.Constructor("@mozilla.org/widget/transferable;1", "nsITransferable");
+      const nsSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString");
+      var Loadctx = PrivateBrowsingUtils.privacyContextFromWindow(win);
+      var Transfer = nsTransferable();
+      var Suppstr = nsSupportsString();
+      Suppstr.data = Ipsum;
+      Transfer.init(Loadctx);
+      Transfer.addDataFlavor("text/unicode");
+      Transfer.setTransferData("text/unicode", Suppstr);
+
+      // Enabled private browsing mode should not cache any selection to disk; disabled should
+      if (private) {
+        is(getClipboardCacheFDCount(), initialFdCount, "did not violate private browsing mode");
+      } else {
+        is(getClipboardCacheFDCount(), initialFdCount + 1, "should save memory by caching non-private clipboard data to disk");
+      }
+
+      // Share the transferable with the system.
+      Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
+      if (private) {
+        is(getClipboardCacheFDCount(), initialFdCount, "did not violate private browsing mode");
+      } else {
+        is(getClipboardCacheFDCount(), initialFdCount + 1, "should save memory by caching non-private clipboard data to disk");
+      }
+
+      // Sanitize the environment.
+      Suppstr = nsSupportsString();
+      Suppstr.data = SHORT_STRING_NO_CACHE;
+      Transfer.setTransferData("text/unicode", Suppstr);
+      is(getClipboardCacheFDCount(), initialFdCount, "should drop the cache file, if any.");
+
+      Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
+      is(getClipboardCacheFDCount(), initialFdCount, "should postsanitize the environment");
+    }
+  }
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1123480"
+     target="_blank">Mozilla Bug 1123480</a>
+  </body>
+</window>

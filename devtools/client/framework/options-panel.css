@@ -1,0 +1,183 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+:root{
+  user-select: none;
+}
+
+.theme-light {
+  --experimental-background: #E0EEFF;
+  --experimental-color: #436286;
+}
+
+.theme-dark {
+  --experimental-background: #436286;
+  --experimental-color: #E0EEFF;
+}
+
+#options-panel-container {
+  overflow: auto;
+}
+
+#options-panel {
+  display: block;
+}
+
+.options-vertical-pane {
+  display: inline;
+  float: inline-start;
+}
+
+.options-vertical-pane {
+  margin: 5px;
+  width: calc(100%/3 - 10px);
+  min-width: 320px;
+  padding-inline-start: 5px;
+  box-sizing: border-box;
+}
+
+/* Snap to 50% width once there is not room for 3 columns anymore.
+   This prevents having 2 columns showing in a row, but taking up
+   only ~66% of the available space. */
+@media (max-width: 1000px) {
+  .options-vertical-pane {
+    width: calc(100%/2 - 10px);
+  }
+}
+
+.options-vertical-pane fieldset {
+  border: none;
+  min-inline-size: auto;
+}
+
+.options-vertical-pane fieldset legend {
+  font-size: 1.4rem;
+  margin-inline-start: -15px;
+  margin-bottom: 3px;
+  cursor: default;
+}
+
+.options-vertical-pane fieldset + fieldset {
+  margin-top: 1rem;
+}
+
+.options-groupbox {
+  margin-inline-start: 15px;
+  padding: 2px;
+}
+
+.options-groupbox label {
+  display: flex;
+  padding: 4px 0;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+}
+
+/* Add padding for label of select inputs in order to
+   align it with surrounding checkboxes */
+.options-groupbox label span:first-child {
+  padding-inline-start: 5px;
+}
+
+.options-groupbox label span + select {
+  margin-inline-start: 4px;
+}
+
+.options-groupbox.horizontal-options-groupbox label {
+  display: inline-flex;
+  align-items: flex-end;
+}
+
+.options-groupbox.horizontal-options-groupbox label + label {
+  margin-inline-start: 4px;
+}
+
+.options-groupbox > * {
+  padding: 2px;
+}
+
+.options-citation-label {
+  display: inline-block;
+  font-size: 1rem;
+  font-style: italic;
+   /* To align it with the checkbox */
+  padding: 4px 0 0;
+  padding-inline-end: 4px;
+}
+
+#devtools-sourceeditor-keybinding-select {
+  min-width: 130px;
+}
+
+#devtools-sourceeditor-tabsize-select {
+  min-width: 80px;
+}
+
+#screenshot-options legend::after {
+  content: "";
+  display: inline-block;
+  background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
+  width: 16px;
+  height: 16px;
+  vertical-align: sub;
+  margin-inline-start: 5px;
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
+  opacity: 0.6;
+}
+
+.deprecation-notice::before {
+  background-image: url("chrome://devtools/skin/images/alert.svg");
+  content: '';
+  display: inline-block;
+  flex-shrink: 0;
+  height: 15px;
+  margin-inline-end: 5px;
+  width: 15px;
+}
+
+.deprecation-notice {
+  align-items: center;
+  background-color: var(--theme-warning-background);
+  color: var(--theme-warning-color);
+  display: flex;
+  margin-inline-start: 8px;
+  outline: var(--theme-warning-background) solid 4px;
+}
+
+.deprecation-notice a {
+  color: currentColor;
+}
+.deprecation-notice a:hover{
+  text-decoration: underline;
+}
+
+.experimental-notice::before {
+  mask-image: url("chrome://devtools/skin/images/filter-small.svg");
+  mask-size: 15px;
+  transform: scaleY(-1);
+  background-color: var(--experimental-color);
+  display: inline-block;
+  content: "";
+  flex-shrink: 0;
+  height: 15px;
+  margin-inline-end: 5px;
+  width: 15px;
+}
+
+.experimental-notice {
+  background-color: var(--experimental-background);
+  color: var(--experimental-color);
+  outline: var(--experimental-background) solid 4px;
+  align-items: center;
+  display: flex;
+  margin-inline-start: 8px;
+}
+
+.experimental-notice a {
+  color: currentColor;
+}
+.experimental-notice a:hover{
+  text-decoration: underline;
+}

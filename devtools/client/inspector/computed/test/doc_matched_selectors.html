@@ -1,0 +1,28 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <style>
+      .matched1, .matched2, .matched3, .matched4, .matched5 {
+        color: #000;
+      }
+
+      div {
+        position: absolute;
+        top: 40px;
+        left: 20px;
+        border: 1px solid #000;
+        color: #111;
+        width: 100px;
+        height: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    inspectstyle($("test"));
+    <div id="test" class="matched1 matched2 matched3 matched4 matched5">Test div</div>
+    <div id="dummy">
+      <div></div>
+    </div>
+  </body>
+</html>

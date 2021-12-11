@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * nsIWindowCreator is a callback interface used by Gecko to create
+ * new browser windows. The application, either Mozilla or an embedding app,
+ * must provide an implementation of the Window Watcher component and
+ * notify the WindowWatcher during application initialization.
+ *
+ * @see nsIWindowWatcher
+ */
+
+#include "nsISupports.idl"
+
+interface nsIOpenWindowInfo;
+interface nsIRemoteTab;
+interface nsIURI;
+interface nsIWebBrowserChrome;
+interface mozIDOMWindowProxy;
+
+[scriptable, uuid(30465632-A777-44cc-90F9-8145475EF999)]
+interface nsIWindowCreator : nsISupports {
+
+  /** Create a new window. Gecko will/may call this method, if made
+      available to it, to create new windows.
+      @param parent Parent window, if any. Null if not. The newly created
+                    window should be made a child/dependent window of
+                    the parent, if any (and if the concept applies
+                    to the underlying OS).
+      @param chromeFlags Chrome features from nsIWebBrowserChrome
+      @param aOpenWindowInfo Information used to open initial content in
+                             the new chrome window. Can be nullptr.
+      @param cancel Return |true| to reject window creation. If true the
+                    implementation has determined the window should not
+                    be created at all. The caller should not default
+                    to any possible backup scheme for creating the window.
+      @return the new window. Will be null if canceled or an error occurred.
+  */
+  nsIWebBrowserChrome createChromeWindow(in nsIWebBrowserChrome parent,
+                                         in uint32_t chromeFlags,
+                                         in nsIOpenWindowInfo aOpenWindowInfo,
+                                         out boolean cancel);
+};
+
+%{C++
+// {30465632-A777-44cc-90F9-8145475EF999}
+#define NS_WINDOWCREATOR_IID \
+ {0x30465632, 0xa777, 0x44cc, {0x90, 0xf9, 0x81, 0x45, 0x47, 0x5e, 0xf9, 0x99}}
+%}
+

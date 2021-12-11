@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<window title="DOM Worker Threads Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();"
+        onunload="onunload();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/chrome-harness.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+
+    const CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
+    const CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
+
+    /*
+     * input: string of the url where we are running from
+     * return: nsIFile
+     */
+    function getCurrentDir(path) {
+      var rootDir = getRootDirectory(window.location.href);
+      var jar = getJar(rootDir);
+
+      if (jar) {
+        return extractJarToTmp(jar);
+      }
+      return getLocalDir(path);
+    }
+
+    function getLocalDir(path) {
+      let dir = SpecialPowers.Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+      path = location.pathname;
+      path = path.slice("content/".length,
+                                         -1 * "/test_ctypes.xhtml".length);
+      let components = path.split("/");
+      for (let part in components) {
+        dir.append(components[part]);
+      }
+      return dir;
+    }
+
+    function setupLibs(path) {
+      let libFile = path.clone();
+      libFile.append(CTYPES_TEST_LIB);
+      ok(libFile.exists(), "ctypes test library doesn't exist!?");
+
+      libFile.copyTo(null, CTYPES_UNICODE_LIB);
+    }
+
+    function cleanupLibs(path) {
+      let unicodeFile = path.clone();
+      unicodeFile.append(CTYPES_UNICODE_LIB);
+      ok(unicodeFile.exists(), "ctypes unicode test library doesn't exist!?");
+
+      // Tolerate remove() failure because Firefox may have the DLL open
+      // for examination.
+      try {
+        unicodeFile.remove(false);
+      } catch (e) {}
+    }
+
+    function test()
+    {
+      SimpleTest.waitForExplicitFinish();
+
+      Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+      var dir = getCurrentDir(location.path);
+      ok(dir.exists() && dir.isDirectory(), "Chrome test dir doesn't exist?!");
+      setupLibs(dir);
+
+      var worker = new ChromeWorker("ctypes_worker.js");
+      worker.onmessage = function(event) {
+        is(event.data, "Done!", "Wrong message!");
+        cleanupLibs(dir);
+        SimpleTest.finish();
+      }
+      worker.onerror = function(event) {
+        if (event.message == "Error: 7.5 million years for that?" ||
+            event.message == "Error: Just following orders, sir!") {
+          // We throw those on purpose in the worker, so ignore them.
+          event.preventDefault();
+          return;
+        }
+        ok(false, "Worker had an error: " + event.message);
+        worker.terminate();
+        cleanupLibs(dir);
+        SimpleTest.finish();
+      }
+
+      worker.postMessage({dir: dir.path, os: Services.appinfo.OS});
+    }
+
+    function onunload()
+    {
+      Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

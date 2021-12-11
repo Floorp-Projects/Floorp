@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>sessionStorage basic test</title>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function startTest()
+{
+  // Check that we do not crash when we access the sessionStorage object from
+  // chrome and that we throw.  See bug 404453.
+  var exceptionCaught = false;
+  try {
+    sessionStorage;
+  }
+  catch (e) {
+    is(e.result, Components.results.NS_ERROR_NOT_AVAILABLE,
+       "Testing that we get the expected exception.");
+    exceptionCaught = true;
+  }
+  is(exceptionCaught, true, "Testing that an exception was thrown.");
+
+  SimpleTest.finish();
+}
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1665062 - HTTPS-Only: Do not cancel channel if auth is in progress</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * We send a top-level request which results in a '401 - Unauthorized' and ensure that the
+ * http background request does not accidentally treat that request as a potential timeout.
+ * We make sure that ther HTTPS-Only Mode Error Page does *NOT* show up.
+ */
+
+const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("When Auth is in progress, HTTPS-Only page should not show up");
+SimpleTest.requestLongerTimeout(10);
+
+const EXPECTED_KICK_OFF_REQUEST =
+  "http://test1.example.com/tests/dom/security/test/https-only/file_http_background_auth_request.sjs?foo";
+const EXPECTED_UPGRADE_REQUEST = EXPECTED_KICK_OFF_REQUEST.replace("http://", "https://");
+let EXPECTED_BG_REQUEST = "http://test1.example.com/";
+let requestCounter = 0;
+
+function examiner() {
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+}
+examiner.prototype  = {
+  observe(subject, topic, data) {
+    if (topic !== "specialpowers-http-notify-request") {
+      return;
+    }
+
+    // On Android we have other requests appear here as well. Let's make
+    // sure we only evaluate requests triggered by the test.
+    if (!data.startsWith("http://test1.example.com") &&
+        !data.startsWith("https://test1.example.com")) {
+      return;
+    }
+    ++requestCounter;
+    if (requestCounter == 1) {
+      is(data, EXPECTED_KICK_OFF_REQUEST, "kick off request needs to be http");
+      return;
+    }
+    if (requestCounter == 2) {
+      is(data, EXPECTED_UPGRADE_REQUEST, "upgraded request needs to be https");
+      return;
+    }
+    if (requestCounter == 3) {
+      is(data, EXPECTED_BG_REQUEST, "background request needs to be http and no sensitive info");
+      return;
+    }
+    ok(false, "we should never get here, but just in case");
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+window.AuthBackgroundRequestExaminer = new examiner();
+
+// https-only top-level background request occurs after 3 seconds, hence
+// we use 4 seconds to make sure the background request did not happen.
+function resolveAfter4Seconds() { 
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 4000);
+  });
+}
+
+async function runTests() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+    ["dom.security.https_only_mode_send_http_background_request", true],
+  ]});
+
+  let testWin = window.open(EXPECTED_KICK_OFF_REQUEST, "_blank");
+
+  // Give the Auth Process and background request some time before moving on.
+  await resolveAfter4Seconds();
+
+  if (AppConstants.platform !== "android") {
+    is(requestCounter, 3, "three requests total (kickoff, upgraded, background)");
+  } else {
+    // On Android, the auth request resolves and hence the background request
+    // is not even kicked off - nevertheless, the error page should not appear!
+    is(requestCounter, 2, "two requests total (kickoff, upgraded)");
+  }
+
+  await SpecialPowers.spawn(testWin, [], () => {
+    let innerHTML = content.document.body.innerHTML;
+    is(innerHTML, "", "expection page should not be displayed");
+  });
+
+  testWin.close();
+
+  window.AuthBackgroundRequestExaminer.remove();
+  SimpleTest.finish();
+}
+
+runTests();
+
+</script>
+</body>
+</html>

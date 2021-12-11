@@ -1,0 +1,116 @@
+<html>
+
+<head>
+  <title>Accessible name testing on focus</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Checker for invokers.
+     */
+    function actionChecker(aID, aDescription) {
+      this.__proto__ = new invokerChecker(EVENT_FOCUS, aID);
+
+      this.check = function actionChecker_check(aEvent) {
+        var target = aEvent.accessible;
+        is(target.description, aDescription,
+           "Wrong description for " + prettyName(target));
+      };
+    }
+
+    var gFocusHandler = {
+      handleEvent: function gFocusHandler_handleEvent(aEvent) {
+        var elm = aEvent.target;
+        if (elm.nodeType != Node.ELEMENT_NODE)
+          return;
+
+        gTooltipElm.style.display = "block";
+
+        elm.setAttribute("aria-describedby", "tooltip");
+      },
+    };
+
+    var gBlurHandler = {
+      handleEvent: function gBlurHandler_handleEvent(aEvent) {
+        gTooltipElm.style.display = "none";
+
+        var elm = aEvent.target;
+        if (elm.nodeType == Node.ELEMENT_NODE)
+          elm.removeAttribute("aria-describedby");
+      },
+    };
+
+    /**
+     * Do tests.
+     */
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    var gButtonElm = null;
+    var gTextboxElm = null;
+    var gTooltipElm = null;
+
+    function doTests() {
+      gButtonElm = getNode("button");
+      gTextboxElm = getNode("textbox");
+      gTooltipElm = getNode("tooltip");
+
+      gButtonElm.addEventListener("focus", gFocusHandler);
+      gButtonElm.addEventListener("blur", gBlurHandler);
+      gTextboxElm.addEventListener("focus", gFocusHandler);
+      gTextboxElm.addEventListener("blur", gBlurHandler);
+
+      // The aria-describedby is changed on DOM focus. Accessible description
+      // should be updated when a11y focus is fired.
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
+      gQueue.onFinish = function() {
+        gButtonElm.removeEventListener("focus", gFocusHandler);
+        gButtonElm.removeEventListener("blur", gBlurHandler);
+        gTextboxElm.removeEventListener("focus", gFocusHandler);
+        gTextboxElm.removeEventListener("blur", gBlurHandler);
+      };
+
+      var descr = "It's a tooltip";
+      gQueue.push(new synthFocus("button", new actionChecker("button", descr)));
+      gQueue.push(new synthTab("textbox", new actionChecker("textbox", descr)));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=520709"
+     title="mochitest to ensure name/description are updated on a11y focus if they were changed on DOM focus">
+    Mozilla Bug 520709
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="tooltip" style="display: none" aria-hidden="true">It's a tooltip</div>
+  <button id="button">button</button>
+  <input id="textbox">
+
+  <div id="eventdump"></div>
+</body>
+</html>

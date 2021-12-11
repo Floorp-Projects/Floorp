@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+      div {
+        min-height: 36px;
+      }
+    </style>
+    <script>
+      function test() {
+        var d = document.querySelector("div");
+        d.appendChild(document.createTextNode(""));
+        d.focus();
+      }
+      function focusTriggered() {
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </head>
+  <body onload="test()">
+    <div contenteditable onfocus="focusTriggered()"></div>
+  </body>
+</html>

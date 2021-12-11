@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>
+Child element in animating element that display property is changed from none
+</title>
+<style>
+#test {
+  display: none;
+  width: 100px;
+  height: 100px;
+}
+#child {
+  background-color: green;
+  width: 50px;
+  height: 50px;
+}
+</style>
+<div id="test">
+  <div id="child"></div>
+</div>
+<script>
+  var anim = test.animate({ backgroundColor: [ 'blue', 'blue' ] },
+                          { duration: 1000,
+                            iterations: Infinity });
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.styleSheets[0].cssRules[0].style.setProperty('display', 'block');
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  });
+</script>
+</html>

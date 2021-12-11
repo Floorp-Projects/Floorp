@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: loadAlgorithmResolveOrdering
+// Case: invoke load() on an element should resolve pending promises in order.
+// Expected result: the pending promises are resolved in order.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.preload = "auto";
+  element.src = test.name;
+  once(element, "canplay").then(() => {
+    let firstPromiseResolved = false;
+
+    // play
+    element.play().then(
+      () => { firstPromiseResolved = true; },
+      () => { ok(false,  `loadAlgorithmResolveOrdering(${token}) should not be rejected.`); }
+    );
+
+    // play again
+    element.play().then(
+      () => { ok(firstPromiseResolved, `loadAlgorithmResolveOrdering(${token}), the first play should already be resolved.`); },
+      () => { ok(false,  `loadAlgorithmResolveOrdering(${token}) should not be rejected.`); }
+    ).then( () => { manager.finished(token); } );
+
+    // triger load
+    element.src = test.name;
+  });
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>

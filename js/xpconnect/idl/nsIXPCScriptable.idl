@@ -1,0 +1,121 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIClassInfo.idl"
+
+%{C++
+#ifdef XP_WIN
+#undef GetClassName
+#endif
+
+#include "js/TypeDecls.h"
+
+namespace JS {
+class CallArgs;
+}
+
+%}
+
+interface nsIXPConnectWrappedNative;
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+[ptr] native JSValPtr(JS::Value);
+[ptr] native JSFreeOpPtr(JSFreeOp);
+[ref] native JSCallArgsRef(const JS::CallArgs);
+[ptr] native JSClassPtr(const JSClass);
+      native JSMutableHandleIdVector(JS::MutableHandleIdVector);
+
+%{ C++
+    // nsIXPCScriptable flags (only 32 bits available!). They are defined via
+    // #defines so they can be used in #ifndef guards in xpc_map_end.h.
+
+    #define XPC_SCRIPTABLE_WANT_PRECREATE                   (1 <<  0)
+    // (1 << 1) is unused
+    // (1 << 2) is unused
+    // (1 << 3) is unused
+    #define XPC_SCRIPTABLE_WANT_NEWENUMERATE                (1 <<  4)
+    #define XPC_SCRIPTABLE_WANT_RESOLVE                     (1 <<  5)
+    #define XPC_SCRIPTABLE_WANT_FINALIZE                    (1 <<  6)
+    #define XPC_SCRIPTABLE_WANT_CALL                        (1 <<  7)
+    #define XPC_SCRIPTABLE_WANT_CONSTRUCT                   (1 <<  8)
+    #define XPC_SCRIPTABLE_WANT_HASINSTANCE                 (1 <<  9)
+    #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY       (1 << 10)
+    #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY       (1 << 11)
+    // (1 << 12) is unused
+    #define XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE        (1 << 13)
+    // (1 << 14) is unused
+    // (1 << 15) is unused
+    #define XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE   (1 << 16)
+    // (1 << 17) is unused
+    #define XPC_SCRIPTABLE_IS_GLOBAL_OBJECT                 (1 << 18)
+    #define XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES     (1 << 19)
+%}
+
+/**
+ * Note: This is not really an XPCOM interface.  For example, callers must
+ * guarantee that they set the *_retval of the various methods that return a
+ * boolean to PR_TRUE before making the call.  Implementations may skip writing
+ * to *_retval unless they want to return PR_FALSE.
+ */
+[builtinclass, uuid(19b70b26-7c3f-437f-a04a-2a8f9e28b617)]
+interface nsIXPCScriptable : nsISupports
+{
+    readonly attribute AUTF8String className;
+    [notxpcom,nostdcall] uint32_t getScriptableFlags();
+    [notxpcom,nostdcall] JSClassPtr getJSClass();
+
+    void   preCreate(in nsISupports nativeObj, in JSContextPtr cx,
+                     in JSObjectPtr globalObj, out JSObjectPtr parentObj);
+
+    boolean newEnumerate(in nsIXPConnectWrappedNative wrapper,
+                        in JSContextPtr cx, in JSObjectPtr obj,
+                        in JSMutableHandleIdVector properties,
+                        in boolean enumerableOnly);
+
+    boolean resolve(in nsIXPConnectWrappedNative wrapper,
+                    in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
+                    out boolean resolvedp);
+
+    void   finalize(in nsIXPConnectWrappedNative wrapper,
+                    in JSFreeOpPtr fop, in JSObjectPtr obj);
+
+    boolean call(in nsIXPConnectWrappedNative wrapper,
+                in JSContextPtr cx, in JSObjectPtr obj,
+                in JSCallArgsRef args);
+
+    boolean construct(in nsIXPConnectWrappedNative wrapper,
+                     in JSContextPtr cx, in JSObjectPtr obj,
+                     in JSCallArgsRef args);
+
+    boolean hasInstance(in nsIXPConnectWrappedNative wrapper,
+                       in JSContextPtr cx, in JSObjectPtr obj,
+                       in jsval val, out boolean bp);
+
+%{ C++
+    #define GET_IT(f_, c_) \
+    bool f_() { \
+        return 0 != (GetScriptableFlags() & XPC_SCRIPTABLE_##c_); \
+    }
+
+    GET_IT(WantPreCreate,                WANT_PRECREATE)
+    GET_IT(WantNewEnumerate,             WANT_NEWENUMERATE)
+    GET_IT(WantResolve,                  WANT_RESOLVE)
+    GET_IT(WantFinalize,                 WANT_FINALIZE)
+    GET_IT(WantCall,                     WANT_CALL)
+    GET_IT(WantConstruct,                WANT_CONSTRUCT)
+    GET_IT(WantHasInstance,              WANT_HASINSTANCE)
+    GET_IT(UseJSStubForAddProperty,      USE_JSSTUB_FOR_ADDPROPERTY)
+    GET_IT(UseJSStubForDelProperty,      USE_JSSTUB_FOR_DELPROPERTY)
+    GET_IT(DontEnumQueryInterface,       DONT_ENUM_QUERY_INTERFACE)
+    GET_IT(AllowPropModsDuringResolve,   ALLOW_PROP_MODS_DURING_RESOLVE)
+    GET_IT(IsGlobalObject,               IS_GLOBAL_OBJECT)
+    GET_IT(DontReflectInterfaceNames,    DONT_REFLECT_INTERFACE_NAMES)
+
+    #undef GET_IT
+%}
+};

@@ -1,0 +1,38 @@
+# HG changeset patch
+# Parent d0b3d7af190b3c62397ece2bc33b429d903e455d
+
+diff -r d0b3d7af190b gfx/cairo/libpixman/src/Makefile.in
+--- a/gfx/cairo/libpixman/src/Makefile.in	Sat Nov 24 14:26:11 2012 +0100
++++ b/gfx/cairo/libpixman/src/Makefile.in	Thu Nov 29 22:20:59 2012 +0100
+@@ -42,6 +42,10 @@
+ endif
+ 
+ ifdef GNU_CC
++ifeq (ppc,$(findstring ppc,$(OS_TEST)))
++USE_VMX=1
++VMX_CFLAGS=-maltivec
++endif
+ ifeq (86,$(findstring 86,$(OS_TEST)))
+ USE_MMX=1
+ MMX_CFLAGS=-mmmx -Winline
+@@ -156,3 +160,6 @@
+ pixman-sse2.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(SSE2_CFLAGS)
+ 
+ pixman-arm-neon.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(ARM_NEON_CFLAGS)
++
++pixman-vmx.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(VMX_CFLAGS)
++
+diff -r d0b3d7af190b gfx/cairo/libpixman/src/pixman-vmx.c
+--- a/gfx/cairo/libpixman/src/pixman-vmx.c	Sat Nov 24 14:26:11 2012 +0100
++++ b/gfx/cairo/libpixman/src/pixman-vmx.c	Thu Nov 29 22:20:59 2012 +0100
+@@ -25,7 +25,10 @@
+  * Based on fbmmx.c by Owen Taylor, Søren Sandmann and Nicholas Miell
+  */
+ 
++#ifdef HAVE_CONFIG_H
+ #include <config.h>
++#endif
++
+ #include "pixman-private.h"
+ #include "pixman-combine32.h"
+ #include <altivec.h>

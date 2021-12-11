@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<head>
+<title>style matching - italic/oblique</title>
+<link rel="author" title="John Daggett" href="mailto:jdaggett@mozilla.com">
+<link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+<link rel="help" href="http://www.w3.org/TR/css3-fonts/#font-style-prop">
+<link rel="help" href="http://www.w3.org/TR/css3-fonts/#font-style-matching">
+<link rel="match" href="italic-oblique-ref.html">
+<meta name="flags" content="font matching must distinguish between italic and oblique">
+<style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/markA.woff);
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mark2B.woff);
+  font-style: oblique;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/markB.woff);
+  font-style: italic;
+}
+
+body { margin: 30px }
+p { margin: 0; font: italic 600% test, serif; }
+</style>
+</head>
+<body>
+<p>BBB</p>
+</body>
+</html>
+
+

@@ -1,0 +1,20 @@
+// Copyright 2009 the Sputnik authors.  All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+
+/*---
+info: |
+    The Date.parse property "length" has { ReadOnly, ! DontDelete, DontEnum }
+    attributes
+esid: sec-date.parse
+description: Checking DontDelete attribute
+---*/
+
+if (delete Date.parse.length !== true) {
+  throw new Test262Error('#1: The Date.parse.length property does not have the attributes DontDelete');
+}
+
+if (Date.parse.hasOwnProperty('length')) {
+  throw new Test262Error('#2: The Date.parse.length property does not have the attributes DontDelete');
+}
+
+reportCompare(0, 0);

@@ -1,0 +1,357 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISerializable.idl"
+#include "nsIContentPolicy.idl"
+
+interface nsIURI;
+interface nsIEventTarget;
+interface nsILoadInfo;
+interface nsIPrincipal;
+interface nsICSPEventListener;
+
+webidl Element;
+webidl Document;
+
+/**
+ * nsIContentSecurityPolicy
+ * Describes an XPCOM component used to model and enforce CSPs.  Instances of
+ * this class may have multiple policies within them, but there should only be
+ * one of these per document/principal.
+ */
+
+%{C++
+class nsCSPPolicy;
+%}
+
+[ptr] native CSPPolicyPtr(const nsCSPPolicy);
+
+[scriptable, builtinclass, uuid(1d632008-6c97-48ae-a51c-16e2daa0f4f6)]
+interface nsIContentSecurityPolicy : nsISerializable
+{
+  /**
+   * Directives supported by Content Security Policy.  These are enums for
+   * the CSPDirective type.
+   * The NO_DIRECTIVE entry is  used for checking default permissions and
+   * returning failure when asking CSP which directive to check.
+   *
+   * NOTE: When implementing a new directive, you will need to add it here but also
+   * add it to the CSPStrDirectives array in nsCSPUtils.h.
+   */
+  cenum CSPDirective : 8 {
+    NO_DIRECTIVE                   = 0,
+    DEFAULT_SRC_DIRECTIVE          = 1,
+    SCRIPT_SRC_DIRECTIVE           = 2,
+    OBJECT_SRC_DIRECTIVE           = 3,
+    STYLE_SRC_DIRECTIVE            = 4,
+    IMG_SRC_DIRECTIVE              = 5,
+    MEDIA_SRC_DIRECTIVE            = 6,
+    FRAME_SRC_DIRECTIVE            = 7,
+    FONT_SRC_DIRECTIVE             = 8,
+    CONNECT_SRC_DIRECTIVE          = 9,
+    REPORT_URI_DIRECTIVE           = 10,
+    FRAME_ANCESTORS_DIRECTIVE      = 11,
+    REFLECTED_XSS_DIRECTIVE        = 12,
+    BASE_URI_DIRECTIVE             = 13,
+    FORM_ACTION_DIRECTIVE          = 14,
+    WEB_MANIFEST_SRC_DIRECTIVE     = 15,
+    UPGRADE_IF_INSECURE_DIRECTIVE  = 16,
+    CHILD_SRC_DIRECTIVE            = 17,
+    BLOCK_ALL_MIXED_CONTENT        = 18,
+    SANDBOX_DIRECTIVE              = 19,
+    WORKER_SRC_DIRECTIVE           = 20,
+    NAVIGATE_TO_DIRECTIVE          = 21,
+  };
+
+  /**
+   * Accessor method for a read-only string version of the policy at a given
+   * index.
+   */
+  [binaryname(GetPolicyString)] AString getPolicy(in unsigned long index);
+
+  /**
+   * Accessor method for a read-only pointer the policy object at a given
+   * index. Returns a null pointer if the index is larger than the current
+   * policy count.
+   */
+  [noscript,notxpcom,nostdcall] CSPPolicyPtr GetPolicy(in unsigned long index);
+
+  /**
+   * Returns the number of policies attached to this CSP instance.  Useful with
+   * getPolicy().
+   */
+  readonly attribute unsigned long policyCount;
+
+  /**
+   * Returns whether this policy uses the directive upgrade-insecure-requests.
+   * Please note that upgrade-insecure-reqeusts also applies if the parent or
+   * including document (context) makes use of the directive.
+   */
+  readonly attribute bool upgradeInsecureRequests;
+
+  /**
+   * Returns whether this policy uses the directive block-all-mixed-content.
+   * Please note that block-all-mixed-content takes presedence in case the
+   * directive upgrade-insecure-requests is defined in the same policy and
+   * will therefore block all mixed content without even trying to perform
+   * an upgrade.
+   */
+  readonly attribute bool blockAllMixedContent;
+
+  /**
+   * Returns whether this policy enforces the frame-ancestors directive.
+   */
+  readonly attribute bool enforcesFrameAncestors;
+
+  /**
+   * Parse and install a CSP policy.
+   * @param aPolicy
+   *        String representation of the policy
+   *        (e.g., header value, meta content)
+   * @param reportOnly
+   *        Should this policy affect content, script and style processing or
+   *        just send reports if it is violated?
+   * @param deliveredViaMetaTag
+   *        Indicates whether the policy was delivered via the meta tag.
+   */
+  void appendPolicy(in AString policyString,
+                    in boolean reportOnly,
+                    in boolean deliveredViaMetaTag);
+
+  /*
+   * Whether this policy allows inline script or style.
+   * @param aContentPolicyType Either TYPE_SCRIPT or TYPE_STYLESHEET
+   * @param aNonce The nonce string to check against the policy
+   * @param aParserCreated If the script element was created by the HTML Parser
+   * @param aTriggeringElement The script element of the inline resource to
+   *        hash. It can be null.
+   * @param aContentOfPseudoScript The content of the psuedo-script to compare
+   *                               to hash (and compare to the hashes listed in
+   *                               the policy)
+   * @param aLineNumber The line number of the inline resource
+   *        (used for reporting)
+   * @param aColumnNumber The column number of the inline resource
+   *        (used for reporting)
+   * @return
+   *     Whether or not the effects of the inline style should be allowed
+   *     (block the rules if false).
+   */
+  boolean getAllowsInline(in nsIContentSecurityPolicy_CSPDirective aDirective,
+                          in AString aNonce,
+                          in boolean aParserCreated,
+                          in Element aTriggeringElement,
+                          in nsICSPEventListener aCSPEventListener,
+                          in AString aContentOfPseudoScript,
+                          in unsigned long aLineNumber,
+                          in unsigned long aColumnNumber);
+
+  /*
+   * Whether this policy allows a navigation subject to the navigate-to
+   * policy.
+   * @param aURI The target URI
+   * @param aIsFormSubmission True if the navigation was initiated by a form submission. This
+   *        is important since the form-action directive overrides navigate-to in that case.  
+   * @param aWasRedirect True if a redirect has happened. Important for path-sensitivity.
+   * @param aEnforceWhitelist True if the whitelist of allowed targets must be enforced. If 
+   *        this is true, the whitelist must be enforced even if 'unsafe-allow-redirects' is 
+   *        used. If 'unsafe-allow-redirects' is not used then the whitelist is always enforced
+   * @return
+   *     Whether or not the effects of the navigation is allowed
+   */
+  boolean getAllowsNavigateTo(in nsIURI aURI, 
+                              in boolean aIsFormSubmission,
+                              in boolean aWasRedirected,
+                              in boolean aEnforceWhitelist);
+
+  /**
+   * whether this policy allows eval and eval-like functions
+   * such as setTimeout("code string", time).
+   * @param shouldReportViolations
+   *     Whether or not the use of eval should be reported.
+   *     This function returns "true" when violating report-only policies, but
+   *     when any policy (report-only or otherwise) is violated,
+   *     shouldReportViolations is true as well.
+   * @return
+   *     Whether or not the effects of the eval call should be allowed
+   *     (block the call if false).
+   */
+  boolean getAllowsEval(out boolean shouldReportViolations);
+
+  /**
+   * Delegate method called by the service when the protected document is loaded.
+   * Returns the union of all the sandbox flags contained in CSP policies. This is the most
+   * restrictive interpretation of flags set in multiple policies.
+   * See nsSandboxFlags.h for the possible flags.
+   *
+   * @return
+   *    sandbox flags or SANDBOXED_NONE if no sandbox directive exists
+   */
+  uint32_t getCSPSandboxFlags();
+
+  /**
+   * For each violated policy (of type violationType), log policy violation on
+   * the Error Console and send a report to report-uris present in the violated
+   * policies.
+   *
+   * @param violationType
+   *     one of the VIOLATION_TYPE_* constants, e.g. inline-script or eval
+   * @param triggeringElement
+   *     the element that triggers this CSP violation. It can be null.
+   * @param sourceFile
+   *     name of the source file containing the violation (if available)
+   * @param contentSample
+   *     sample of the violating content (to aid debugging)
+   * @param lineNum
+   *     source line number of the violation (if available)
+   * @param columnNum
+   *     source column number of the violation (if available)
+   * @param aNonce
+   *     (optional) If this is a nonce violation, include the nonce so we can
+   *     recheck to determine which policies were violated and send the
+   *     appropriate reports.
+   * @param aContent
+   *     (optional) If this is a hash violation, include contents of the inline
+   *     resource in the question so we can recheck the hash in order to
+   *     determine which policies were violated and send the appropriate
+   *     reports.
+   */
+  void logViolationDetails(in unsigned short violationType,
+                           in Element triggeringElement,
+                           in nsICSPEventListener aCSPEventListener,
+                           in AString sourceFile,
+                           in AString scriptSample,
+                           in int32_t lineNum,
+                           in int32_t columnNum,
+                           [optional] in AString nonce,
+                           [optional] in AString content);
+
+  const unsigned short VIOLATION_TYPE_INLINE_SCRIPT          = 1;
+  const unsigned short VIOLATION_TYPE_EVAL                   = 2;
+  const unsigned short VIOLATION_TYPE_INLINE_STYLE           = 3;
+  const unsigned short VIOLATION_TYPE_NONCE_SCRIPT           = 4;
+  const unsigned short VIOLATION_TYPE_NONCE_STYLE            = 5;
+  const unsigned short VIOLATION_TYPE_HASH_SCRIPT            = 6;
+  const unsigned short VIOLATION_TYPE_HASH_STYLE             = 7;
+  const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE  = 8;
+  const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT = 9;
+
+  /**
+   * Called after the CSP object is created to fill in appropriate request
+   * context. Either use
+   *  * aDocument (preferred), or if no document is available, then provide
+   *  * aPrincipal, aSelfURI, aReferrer, aInnerWindowId explicitly.
+   */
+  [must_use] void setRequestContextWithDocument(in Document aDocument);
+  [must_use] void setRequestContextWithPrincipal(in nsIPrincipal aRequestPrincipal,
+                                                 in nsIURI aSelfURI,
+                                                 in AString aReferrer,
+                                                 in unsigned long long aInnerWindowId);
+
+  /**
+   * Get the various arguments needed to create a new request context for a CSP.
+   */
+  [noscript, notxpcom, nostdcall] readonly attribute nsIPrincipal requestPrincipal;
+  [noscript, notxpcom, nostdcall] readonly attribute nsIURI selfURI;
+  [noscript] readonly attribute AString referrer;
+  [noscript, notxpcom, nostdcall] readonly attribute unsigned long long innerWindowID;
+
+  /**
+   * Warning: Do not set that attribute unless you know exactly what you are doing!
+   *
+   * Primarily used to allow Devtools to edit inline styles!
+   */
+  [noscript, notxpcom, nostdcall] attribute boolean skipAllowInlineStyleCheck;
+
+  /**
+   *  Ensure we have a nsIEventTarget to use to label CSPReportSenderRunnable
+   */
+  [noscript] void ensureEventTarget(in nsIEventTarget aEventTarget);
+
+
+  /**
+   * Verifies ancestry as permitted by the policy.
+   *
+   * NOTE: Calls to this may trigger violation reports when queried, so this
+   * value should not be cached.
+   *
+   * @param aLoadInfo
+   *    The loadinfo of the channel containing the protected resource
+   * @return
+   *    true if the frame's ancestors are all allowed by policy (except for
+   *    report-only policies, which will send reports and then return true
+   *    here when violated).
+   */
+  boolean permitsAncestry(in nsILoadInfo aLoadInfo);
+
+
+  /**
+   * Checks if a specific directive permits loading of a URI.
+   *
+   * NOTE: Calls to this may trigger violation reports when queried, so the
+   * return value should not be cached.
+   *
+   * @param aTriggeringElement
+   *        The element that triggers this CSP check. It can be null.
+   * @param aURI
+   *    The URI about to be loaded or used.
+   * @param aDir
+   *    The CSPDirective to query (see above constants *_DIRECTIVE).
+   * @param aSpecific
+   *    If "true" and the directive is specified to fall back to "default-src"
+   *    when it's not explicitly provided, directivePermits will NOT try
+   *    default-src when the specific directive is not used.  Setting this to
+   *    "false" allows CSP to fall back to default-src.  This function
+   *    behaves the same for both values of canUseDefault when querying
+   *    directives that don't fall-back.
+   * @return
+   *    Whether or not the provided URI is allowed by CSP under the given
+   *    directive. (block the pending operation if false).
+   */
+  boolean permits(in Element aTriggeringElement,
+                  in nsICSPEventListener aCSPEventListener,
+                  in nsIURI aURI,
+                  in nsIContentSecurityPolicy_CSPDirective aDir,
+                  in boolean aSpecific);
+
+  /**
+   * Delegate method called by the service when sub-elements of the protected
+   * document are being loaded.  Given a bit of information about the request,
+   * decides whether or not the policy is satisfied.
+   *
+   * Calls to this may trigger violation reports when queried, so
+   * this value should not be cached.
+   *
+   * aOriginalURIIfRedirect must be passed only if this loading is the result
+   * of a redirect. In this case, aOriginalURIIfRedirect must be the original
+   * URL.
+   */
+  short shouldLoad(in nsContentPolicyType aContentType,
+                   in nsICSPEventListener aCSPEventListener,
+                   in nsIURI          aContentLocation,
+                   in nsIURI          aOriginalURIIfRedirect,
+                   in bool            aSendViolationReports,
+                   in AString         aNonce,
+                   in boolean         aParserCreated);
+
+%{ C++
+// nsIObserver topic to fire when the policy encounters a violation.
+#define CSP_VIOLATION_TOPIC "csp-on-violate-policy"
+%}
+
+  /**
+   * Returns the CSP in JSON notation.
+   */
+  AString toJSON();
+
+};
+
+typedef nsIContentSecurityPolicy_CSPDirective CSPDirective;
+
+/* Listener for security policy violation event */
+[function, scriptable, uuid(c3163b14-3a8f-46dd-a4af-bd04680364cd)]
+interface nsICSPEventListener : nsISupports
+{
+  // aJSON is the JSON format of SecurityPolicyViolationEventInit dictionary.
+  void onCSPViolationEvent(in AString aJSON);
+};

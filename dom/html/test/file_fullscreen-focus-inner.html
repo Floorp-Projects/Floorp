@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Focus test - child window</title>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function enterFullscreen() {
+  addFullscreenErrorContinuation(() => { opener.enteredFullscreen(false); });
+
+  addFullscreenChangeContinuation("enter", () => {
+    opener.enteredFullscreen(true);
+  });
+
+  document.body.requestFullscreen();
+}
+
+</script>
+</pre>
+</body>
+</html>

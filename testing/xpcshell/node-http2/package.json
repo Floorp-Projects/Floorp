@@ -1,0 +1,46 @@
+{
+  "name": "http2",
+  "version": "3.3.8",
+  "description": "An HTTP/2 client and server implementation",
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">=0.12.0 <9.0.0"
+  },
+  "devDependencies": {
+    "istanbul": "*",
+    "chai": "*",
+    "mocha": "*",
+    "docco": "*",
+    "bunyan": "*"
+  },
+  "scripts": {
+    "test": "istanbul test _mocha -- --reporter spec --slow 500 --timeout 15000",
+    "doc": "docco lib/* --output doc --layout parallel --template root.jst --css doc/docco.css && docco lib/protocol/* --output doc/protocol --layout parallel --template protocol.jst --css doc/docco.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/molnarg/node-http2.git"
+  },
+  "homepage": "https://github.com/molnarg/node-http2",
+  "bugs": {
+    "url": "https://github.com/molnarg/node-http2/issues"
+  },
+  "keywords": [
+    "http",
+    "http2",
+    "client",
+    "server"
+  ],
+  "author": "Gábor Molnár <gabor@molnar.es> (http://gabor.molnar.es)",
+  "contributors": [
+    "Nick Hurley",
+    "Mike Belshe",
+    "Yoshihiro Iwanaga",
+    "Igor Novikov",
+    "James Willcox",
+    "David Björklund",
+    "Patrick McManus"
+  ],
+  "license": "MIT",
+  "readmeFilename": "README.md"
+}

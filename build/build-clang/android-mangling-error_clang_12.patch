@@ -1,0 +1,24 @@
+Workaround segfault in clang's mangling code that is tickled when
+attempting to mangle the declaration:
+ std:__ndk1::__find_detail::__find_exactly_one_checked::__matches
+in the <tuple> header in the Android NDK.
+This codepath is exercised by MozsearchIndexer.cpp (the searchfox
+indexer) when indexing on Android. See also
+https://bugs.llvm.org/show_bug.cgi?id=40747
+
+diff --git a/clang/lib/AST/ItaniumMangle.cpp b/clang/lib/AST/ItaniumMangle.cpp
+index 4420f6a2c1c3..39792e6b7350 100644
+--- a/clang/lib/AST/ItaniumMangle.cpp
++++ b/clang/lib/AST/ItaniumMangle.cpp
+@@ -3954,6 +3954,11 @@ void CXXNameMangler::mangleExpression(const Expr *E, unsigned Arity,
+   // produces no output, where ImplicitlyConvertedToType and AsTemplateArg need
+   // to be preserved.
+ recurse:
++  if (!E) {
++    Out << "MOZ_WE_HACKED_AROUND_BUG_1500941";
++    return;
++  }
++
+   switch (E->getStmtClass()) {
+   case Expr::NoStmtClass:
+ #define ABSTRACT_STMT(Type)

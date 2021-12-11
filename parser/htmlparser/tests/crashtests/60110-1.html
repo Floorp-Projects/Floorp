@@ -1,0 +1,22 @@
+<HTML><HEAD>
+<TITLE>Edit parameters</TITLE>
+
+
+</HEAD>
+<BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
+LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000" >
+
+<p>
+Any item you check Reset on will get reset to its default value.
+<form method=post action=doeditparams.cgi><table>
+
+<tr><td valign=top><input type=checkbox name=reset-newchangedmail>Reset</td><td>
+<textarea wrap=hard name=newchangedmail rows=10 cols=80>From: bugzilla-daemon&#010;To: %to%&#013;&#010;Cc: %cc%&#013;&#010;Subject: [Bug %bugid%] %neworchanged% - %summary%&#013;&#010;&#013;&#010;%urlbase%show_bug.cgi?id=%bugid%&#013;&#010;&#013;&#010;%diffs%</textarea>
+</td></tr>
+<tr><td valign=top><input type=checkbox name=reset-whinemail>Reset</td><td>
+<textarea wrap=hard name=whinemail rows=10 cols=80>From: bugzilla-daemon&#010;To: %email%&#013;&#010;Subject: Your Bugzilla buglist needs attention.&#013;&#010;&#013;&#010;[This e-mail has been automatically generated.]&#013;&#010;&#013;&#010;You have one or more bugs assigned to you in the Bugzilla &#013;&#010;bugsystem (%urlbase%) that require&#013;&#010;attention.&#013;&#010;&#013;&#010;All of these bugs are in the NEW state, and have not been touched&#013;&#010;in %whinedays% days or more.  You need to take a look at them, and &#013;&#010;decide on an initial action.&#013;&#010;&#013;&#010;&#013;&#010;&#013;&#010;</textarea>
+</td></tr>
+<tr><td></td><td>2.11</td></tr></table>
+<input type=reset value="Reset form"><br>
+<input type=submit value="Submit changes">
+</form>

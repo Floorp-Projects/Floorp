@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage called through a different same-origin page</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://example.com/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
+        name="topDomainFrame"></iframe>
+<iframe src="http://test1.example.com/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
+        name="subDomainFrame"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+/** Receives MessageEvents to this window. */
+function messageReceiver(evt)
+{
+  ok(evt instanceof MessageEvent, "wrong event type");
+  is(evt.origin, "http://test1.example.com", "unexpected origin");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+  is(evt.data, "test-finished",
+     "unexpected data in message");
+
+  SimpleTest.finish();
+}
+
+function run()
+{
+  window.frames.subDomainFrame.postMessage("start-test",
+                                           "http://test1.example.com");
+}
+
+window.addEventListener("message", messageReceiver);
+window.addEventListener("load", run);
+</script>
+</pre>
+</body>
+</html>

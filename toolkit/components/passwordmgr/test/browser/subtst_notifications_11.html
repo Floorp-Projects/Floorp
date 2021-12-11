@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Subtest for Login Manager notifications - Popup Windows</title>
+</head>
+<body>
+<h2>Subtest 11 (popup windows)</h2>
+<script>
+
+// Ignore the '?' and split on |
+let [username, password, features, autoClose] = window.location.search.substring(1).split("|");
+
+var url = "subtst_notifications_11_popup.html?" + username + "|" + password;
+var popupWin = window.open(url, "subtst_11", features);
+
+// Popup window will call this function on form submission.
+function formSubmitted() {
+  if (autoClose) {
+    popupWin.close();
+  }
+}
+
+</script>
+</body>
+</html>

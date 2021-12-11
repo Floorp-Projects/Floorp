@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=885996
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1234567</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style> body { font-family: serif } </style>
+  <script type="application/javascript">
+
+  /** Test that update() modifies the element value such as done() when it is
+   * not called as a concellation.
+   */
+
+  SimpleTest.waitForExplicitFinish();
+
+  var MockColorPicker = SpecialPowers.MockColorPicker;
+
+  var test = runTest();
+
+  SimpleTest.waitForFocus(function() {
+    test.next();
+  });
+
+  function* runTest() {
+    MockColorPicker.init(window);
+    var element = null;
+
+    MockColorPicker.showCallback = function(picker, update) {
+      is(picker.initialColor, element.value);
+
+      if (element.dataset.type == 'update') {
+        update('#f00ba4');
+        is(element.value, '#f00ba4');
+
+        MockColorPicker.returnColor = '#f00ba7';
+        isnot(element.value, MockColorPicker.returnColor);
+      } else if (element.dataset.type == 'cancel') {
+        MockColorPicker.returnColor = '#bababa';
+        isnot(element.value, MockColorPicker.returnColor);
+      } else if (element.dataset.type == 'done') {
+        MockColorPicker.returnColor = '#098766';
+        isnot(element.value, MockColorPicker.returnColor);
+      }
+
+      SimpleTest.executeSoon(function() {
+        if (element.dataset.type == 'cancel') {
+          isnot(element.value, MockColorPicker.returnColor);
+        } else {
+          is(element.value, MockColorPicker.returnColor);
+        }
+
+        test.next();
+      });
+
+      return element.dataset.type == 'cancel' ? "" : MockColorPicker.returnColor;
+    };
+
+    for (var i = 0; i < document.getElementsByTagName('input').length; ++i) {
+      element = document.getElementsByTagName('input')[i];
+      synthesizeMouseAtCenter(element, {});
+      yield undefined;
+    };
+
+    MockColorPicker.cleanup();
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=885996">Mozilla Bug 885996</a>
+<p id="display"></p>
+<div id="content">
+  <input type='color' data-type='update'>
+  <input type='color' data-type='cancel'>
+  <input type='color' data-type='done'>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

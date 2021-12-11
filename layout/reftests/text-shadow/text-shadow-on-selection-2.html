@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+function onload() {
+  var range = document.createRange();
+  range.selectNodeContents(document.getElementById("selectMe"));
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  window.focus();
+}
+function disableReftestWait() {
+  document.documentElement.className = '';
+}
+</script>
+<style type="text/css">
+body {
+  background: white;
+  font-size: 24px;
+}
+div {
+  color: blue;
+  text-shadow: red 2px 2px 0px;
+}
+::-moz-selection {
+  background: yellow;
+  color: white;
+  text-shadow: none;
+}
+::selection {
+  background: yellow;
+  color: white;
+  text-shadow: none;
+}
+</style>
+</head>
+<body onload="onload()" onfocus="disableReftestWait()">
+<div>
+hello <span id="selectMe">selected</span> world
+</div>
+</body>
+</html>

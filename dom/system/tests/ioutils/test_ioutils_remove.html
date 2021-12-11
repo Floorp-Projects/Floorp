@@ -1,0 +1,93 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+
+    add_task(async function test_create_and_remove_file() {
+      info("Test creating and removing a single file");
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_create_and_remove.tmp");
+      await IOUtils.write(tmpFileName, new Uint8Array(0));
+      ok(await fileExists(tmpFileName), `Expected file ${tmpFileName} to exist`);
+
+      await IOUtils.remove(tmpFileName);
+      ok(!await fileExists(tmpFileName), "IOUtils::remove can remove files");
+
+      info("Test creating and removing an empty directory");
+      const tmpDirName = PathUtils.join(tmpDir, "test_ioutils_create_and_remove.tmp.d");
+      await IOUtils.makeDirectory(tmpDirName);
+      ok(await dirExists(tmpDirName), `Expected directory ${tmpDirName} to exist`);
+
+      await IOUtils.remove(tmpDirName);
+      ok(!await dirExists(tmpDirName), "IOUtils::remove can remove empty directories");
+    });
+
+    add_task(async function test_remove_non_existing() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutil_remove_non_existing.tmp");
+      ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
+
+      await IOUtils.remove(tmpFileName, { ignoreAbsent: true });
+      ok(!await fileExists(tmpFileName), "IOUtils::remove can ignore missing files without error");
+
+      await Assert.rejects(
+        IOUtils.remove(tmpFileName, { ignoreAbsent: false }),
+        /Could not remove the file at .* because it does not exist/,
+        "IOUtils::remove can throw an error when target file is missing"
+      );
+      ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
+    });
+
+    add_task(async function test_remove_recursive() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpParentDir = PathUtils.join(tmpDir, "test_ioutils_remove.tmp.d");
+      const tmpChildDir = PathUtils.join(tmpParentDir, "child.tmp.d");
+      const tmpTopLevelFileName = PathUtils.join(tmpParentDir, "top.tmp");
+      const tmpNestedFileName = PathUtils.join(tmpChildDir, "nested.tmp");
+      await createDir(tmpChildDir);
+      await createFile(tmpTopLevelFileName, "");
+      await createFile(tmpNestedFileName, "");
+
+      ok(
+        await fileExists(tmpTopLevelFileName),
+        `Expected file ${tmpTopLevelFileName} to exist`
+      );
+      ok(
+        await fileExists(tmpNestedFileName),
+        `Expected file  ${tmpNestedFileName} to exist`
+      );
+
+      await Assert.rejects(
+        IOUtils.remove(tmpParentDir, { recursive: false }),
+        /Could not remove the non-empty directory at .*/,
+        "IOUtils::remove fails if non-recursively removing directory with contents"
+      );
+
+      await IOUtils.remove(tmpParentDir, { recursive: true });
+      ok(
+        !await dirExists(tmpParentDir),
+        "IOUtils::remove can recursively remove a directory"
+      );
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

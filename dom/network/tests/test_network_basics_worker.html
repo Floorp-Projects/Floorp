@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Network in workers API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Network Information API **/
+function test() {
+  let w = new Worker('worker_network_basics.js');
+  w.onmessage = function(e) {
+    if (e.data.type == 'status') {
+      ok(e.data.status, e.data.msg);
+    } else if (e.data.type == 'finish') {
+      SimpleTest.finish();
+    } else {
+      ok(false, "Unknown message type");
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.netinfo.enabled", true]]}, test);
+
+</script>
+</pre>
+</body>
+</html>

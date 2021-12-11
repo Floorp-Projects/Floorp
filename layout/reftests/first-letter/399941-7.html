@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Test case for bug 399941.html</title>
+  <style type="text/css">
+   p:first-letter {
+     color: lime;
+     background-color: olive;
+   }
+  </style>
+ </head>
+ <body>
+ <!-- :first-letter originally didn't apply to symbols,
+       but this changed in bug 1686512 -->
+  <p>$64,000</p>
+ </body>
+</html>

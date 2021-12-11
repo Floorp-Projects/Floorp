@@ -1,0 +1,15 @@
+<script>
+window.onload = function() {
+  a.setAttribute("width", "0")
+  b.select()
+  document.documentElement.style.display="none"
+  document.documentElement.getBoundingClientRect()
+  document.documentElement.style.display=""
+
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  document.body.offsetTop;
+}
+</script>
+<input id="b" type="number">
+<iframe id="a" height="0">

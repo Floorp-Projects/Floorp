@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+richlistbox {
+  appearance: auto;
+  -moz-default-appearance: listbox;
+  margin: 2px 4px;
+  background-color: Field;
+  color: FieldText;
+  overflow: auto;
+}
+
+richlistbox[disabled="true"] {
+  color: GrayText;
+}
+
+richlistitem[selected="true"] {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+richlistbox:where(:focus) > richlistitem[selected="true"] {
+  background-color: SelectedItem;
+  color: SelectedItemText;
+}
+
+richlistbox.theme-listbox > richlistitem {
+  border: 1px solid transparent;
+}
+
+richlistbox.theme-listbox:not(:focus) > richlistitem[selected="true"] {
+  background-color: -moz-mac-secondaryhighlight;
+}
+
+richlistbox.theme-listbox > richlistitem > label {
+  margin: 0px;
+  padding-bottom: 1px;
+  padding-inline-start: 4px;
+  white-space: nowrap;
+}
+
+listheader {
+  color: -moz-DialogText;
+}

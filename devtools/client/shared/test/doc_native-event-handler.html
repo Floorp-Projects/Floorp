@@ -1,0 +1,25 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>A video element with native event handlers</title>
+    <script type="text/javascript">
+      "use strict";
+
+      /* exported initialSetup */
+      function initialSetup(event) {
+        // eslint-disable-next-line no-debugger
+        debugger;
+      }
+      window.addEventListener("load", function() {});
+    </script>
+  </head>
+  <body>
+    <button onclick="initialSetup()">Click me!</button>
+    <!-- the "controls" attribute ensures that there are extra event handlers in
+         the element. -->
+    <video controls></video>
+  </body>
+</html>

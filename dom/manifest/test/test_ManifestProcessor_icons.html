@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079453</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * Manifest icons member
+ * https://w3c.github.io/manifest/#icons-member
+ **/
+
+"use strict";
+
+typeTests.forEach((type) => {
+  var expected = `Expect non-array icons to be empty array: ${typeof type}.`;
+  data.jsonText = JSON.stringify({
+    icons: type,
+  });
+  var result = processor.process(data);
+  SpecialPowers.unwrap(result.icons);
+  is(result.icons.length, 0, expected);
+});
+  </script>
+</head>

@@ -1,0 +1,15 @@
+browsermob-proxy >= 0.8.0
+manifestparser >= 1.1
+marionette-driver >= 3.0.0
+mozcrash >= 2.0
+mozdevice >= 4.0.0,<5
+mozinfo >= 1.0.0
+mozlog >= 6.0
+moznetwork >= 0.27
+mozprocess >= 1.0.0
+mozprofile >= 2.2.0
+mozrunner >= 7.4.0
+moztest >= 0.8
+mozversion >= 2.1.0
+six
+wptserve >= 2.0.0

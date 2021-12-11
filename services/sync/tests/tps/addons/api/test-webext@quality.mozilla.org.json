@@ -1,0 +1,21 @@
+{
+  "next": null,
+  "results": [
+    {
+      "name": "Tet Webext XPI",
+      "type": "extension",
+      "guid": "test-webext@quality.mozilla.org",
+      "current_version": {
+        "version": "1.0",
+        "files": [
+          {
+            "platform": "all",
+            "size": 3412,
+            "url": "http://127.0.0.1:4567/addons/webextension.xpi"
+          }
+        ]
+      },
+      "last_updated": "2018-04-17T18:24:42Z"
+    }
+  ]
+}

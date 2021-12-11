@@ -1,0 +1,228 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ifeq (,$(MAKE_VERSION))
+$(error GNU Make is required)
+endif
+make_min_ver := 3.81
+ifneq ($(make_min_ver),$(firstword $(sort $(make_min_ver) $(MAKE_VERSION))))
+$(error GNU Make $(make_min_ver) or higher is required)
+endif
+
+export TOPLEVEL_BUILD := 1
+
+default::
+
+ifndef TEST_MOZBUILD
+ifdef MOZ_BUILD_APP
+include $(wildcard $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk)
+endif
+endif
+
+include $(topsrcdir)/config/config.mk
+
+ifneq (mobile/android,$(MOZ_BUILD_APP))
+$(MDDEPDIR)/buildid.h.stub $(MDDEPDIR)/source-repo.h.stub: FORCE
+endif
+source-repo.h: $(MDDEPDIR)/source-repo.h.stub
+buildid.h: $(MDDEPDIR)/buildid.h.stub
+
+BUILD_BACKEND_FILES := $(addprefix backend.,$(addsuffix Backend,$(BUILD_BACKENDS)))
+
+ifndef TEST_MOZBUILD
+# We need to explicitly put BUILD_BACKEND_FILES here otherwise the rule in
+# rules.mk doesn't run early enough.
+$(RUNNABLE_TIERS) binaries:: CLOBBER $(BUILD_BACKEND_FILES)
+endif
+
+ifdef JS_STANDALONE
+.PHONY: CLOBBER
+CLOBBER:
+else
+CLOBBER: $(topsrcdir)/CLOBBER
+	@echo 'STOP!  The CLOBBER file has changed.'
+	@echo 'Please run the build through "mach build".'
+	@exit 1
+endif
+
+install_manifests := \
+  $(addprefix dist/,branding include public private xpi-stage) \
+  _tests \
+  $(NULL)
+# Skip the dist/bin install manifest when using the hybrid
+# FasterMake/RecursiveMake backend. This is a hack until bug 1241744 moves
+# xpidl handling to FasterMake in that case, mechanically making the dist/bin
+# install manifest non-existent (non-existent manifests being skipped)
+ifeq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
+install_manifests += dist/bin
+endif
+install_manifest_depends = \
+  CLOBBER \
+  $(BUILD_BACKEND_FILES) \
+  $(NULL)
+
+.PHONY: install-manifests
+install-manifests: $(addprefix install-,$(install_manifests))
+
+# If we're using the hybrid FasterMake/RecursiveMake backend, we want
+# to recurse in the faster/ directory in parallel of install manifests.
+ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
+install-manifests: faster
+.PHONY: faster
+faster:
+	$(MAKE) -C faster FASTER_RECURSIVE_MAKE=1
+endif
+
+.PHONY: $(addprefix install-,$(install_manifests))
+$(addprefix install-,$(install_manifests)): install-%: $(install_manifest_depends)
+ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
+	@# If we're using the hybrid FasterMake/RecursiveMake backend, we want
+	@# to ensure the FasterMake end doesn't have install manifests for the
+	@# same directory, because that would blow up
+	$(if $(wildcard _build_manifests/install/$(subst /,_,$*)),$(if $(wildcard faster/install_$(subst /,_,$*)*),$(error FasterMake and RecursiveMake ends of the hybrid build system want to handle $*)))
+endif
+	$(addprefix $(call py_action,process_install_manifest,$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )--track install_$(subst /,_,$*).track $*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
+
+# Dummy wrapper rule to allow the faster backend to piggy back
+$(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
+
+.PHONY: install-tests
+install-tests: install-test-files
+
+.PHONY: install-test-files
+install-test-files:
+	$(call py_action,process_install_manifest,$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )--track install__test_files.track _tests _build_manifests/install/_test_files)
+
+include $(topsrcdir)/build/moz-automation.mk
+
+# Dummy rule for the cases below where we don't depend on dist/include
+recurse_pre-export::
+
+# For the binaries rule, not all the install manifests matter, so force only
+# the interesting ones to be done.
+recurse_pre-export:: install-manifests
+binaries::
+	@$(MAKE) install-manifests install_manifests=dist/include
+
+ifdef BUILD_VERBOSE_LOG
+verbose_flag = -v
+endif
+
+recurse_artifact:
+	$(PYTHON3) $(topsrcdir)/mach --log-no-times artifact install$(if $(MOZ_ARTIFACT_BUILD_SYMBOLS), --symbols$(addprefix =,$(filter full,$(MOZ_ARTIFACT_BUILD_SYMBOLS)))) $(verbose_flag)
+
+ifdef MOZ_EME_WIN32_ARTIFACT
+recurse_win32-artifact:
+	rm -rf $(DIST)/i686
+	$(PYTHON3) $(topsrcdir)/mach --log-no-times artifact install --job win32-opt --no-tests --distdir $(DIST)/i686 $(verbose_flag)
+	mv $(DIST)/i686/bin/* $(DIST)/i686
+endif
+
+ifdef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+recurse_android-fat-aar-artifact:
+	$(call py_action,fat_aar,\
+    $(addprefix --armeabi-v7a $(MOZ_FETCHES_DIR)/,$(MOZ_ANDROID_FAT_AAR_ARMEABI_V7A)) \
+    $(addprefix --arm64-v8a $(MOZ_FETCHES_DIR)/,$(MOZ_ANDROID_FAT_AAR_ARM64_V8A)) \
+    $(addprefix --x86 $(MOZ_FETCHES_DIR)/,$(MOZ_ANDROID_FAT_AAR_X86)) \
+    $(addprefix --x86-64 $(MOZ_FETCHES_DIR)/,$(MOZ_ANDROID_FAT_AAR_X86_64)) \
+    --distdir $(abspath $(DIST)/fat-aar))
+endif
+
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+
+recurse_android-stage-package: stage-package
+
+recurse_android-archive-geckoview:
+	GRADLE_INVOKED_WITHIN_MACH_BUILD=1 $(topsrcdir)/mach --log-no-times android archive-geckoview
+endif
+
+ifdef MOZ_WIDGET_TOOLKIT
+ifdef ENABLE_TESTS
+# Additional makefile targets to call automated test suites
+include $(topsrcdir)/testing/testsuite-targets.mk
+endif
+endif
+
+default all::
+	$(call BUILDSTATUS,TIERS $(TIERS) $(if $(MOZ_AUTOMATION),$(MOZ_AUTOMATION_TIERS)))
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef SCCACHE_VERBOSE_STATS
+default::
+	-$(CCACHE) --show-stats --stats-format=json > sccache-stats.json
+	@echo "===SCCACHE STATS==="
+	-$(CCACHE) --show-stats
+	@echo "==================="
+endif
+
+ifdef MOZ_CRASHREPORTER
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
+endif
+
+.PHONY: prepsymbolsarchive
+prepsymbolsarchive:
+	echo packing symbols
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+
+ifndef MOZ_AUTOMATION
+prepsymbolsarchive: recurse_syms
+endif
+
+.PHONY: symbolsfullarchive
+symbolsfullarchive: prepsymbolsarchive
+	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst'
+	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst' \
+                                     $(abspath $(DIST)/crashreporter-symbols) \
+                                     --full-archive)
+
+.PHONY: symbolsarchive
+symbolsarchive: prepsymbolsarchive
+	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip'
+	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' \
+                                     $(abspath $(DIST)/crashreporter-symbols))
+
+ifdef MOZ_CRASHREPORTER
+# Set MOZ_ENABLE_FULL_SYMBOLS to enable generation and upload of the full
+# crashreporter symbols archives
+ifdef MOZ_ENABLE_FULL_SYMBOLS
+buildsymbols: symbolsfullarchive symbolsarchive
+else
+buildsymbols: symbolsarchive
+endif # MOZ_ENABLE_FULL_SYMBOLS
+else
+buildsymbols:
+endif
+
+uploadsymbols:
+ifdef MOZ_CRASHREPORTER
+	$(PYTHON3) -u $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst'
+endif
+
+.PHONY: update-packaging
+update-packaging:
+	$(MAKE) -C tools/update-packaging
+
+.PHONY: package-generated-sources
+package-generated-sources:
+	$(call py_action,package_generated_sources,'$(DIST)/$(PKG_PATH)$(GENERATED_SOURCE_FILE_PACKAGE)')
+
+ifdef JS_STANDALONE
+# Delegate js-specific rules to js
+check-%:
+	$(MAKE) -C js/src $@
+
+source-package install:
+	$(MAKE) -C js/src $@
+
+# Every export rule depends on config/export, but the rule for config/export
+# doesn't exist when building js non-standalone.
+.PHONY: config/export
+config/export:
+
+endif
+
+# There used to be build interdependencies here. They are now in config/recurse.mk

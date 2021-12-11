@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>ArrayBuffer stream test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+function detachArrayBuffer(ab)
+{
+  var w = new Worker("data:application/javascript,");
+  w.postMessage(ab, [ab]);
+}
+
+function test()
+{
+  var ab = new ArrayBuffer(4000);
+  var ta = new Uint8Array(ab);
+  ta[0] = 'a'.charCodeAt(0);
+  ta[1] = 'b'.charCodeAt(0);
+
+  const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci;
+  var abis = Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
+               .createInstance(Ci.nsIArrayBufferInputStream);
+
+  var sis = Cc["@mozilla.org/scriptableinputstream;1"]
+              .createInstance(Ci.nsIScriptableInputStream);
+  sis.init(abis);
+
+  is(sis.read(1), "", "should read no data from an uninitialized ABIS");
+
+  abis.setData(ab, 0, 256 * 1024);
+
+  is(sis.read(1), "a", "should read 'a' after init");
+
+  detachArrayBuffer(ab);
+
+  SpecialPowers.forceGC();
+  SpecialPowers.forceGC();
+
+  try
+  {
+    is(sis.read(1), "b", "should read 'b' after detaching buffer");
+  }
+  catch (e)
+  {
+    ok(false, "reading from stream should have worked");
+  }
+
+  // A regression test for bug 1265076.  Previously, overflowing
+  // the internal buffer from readSegments would cause incorrect
+  // copying.  The constant mirrors the value in
+  // ArrayBufferInputStream::readSegments.
+  var size = 8192;
+  ab = new ArrayBuffer(2 * size);
+  ta = new Uint8Array(ab);
+
+  var i;
+  for (i = 0; i < size; ++i) {
+    ta[i] = 'x'.charCodeAt(0);
+  }
+  for (i = 0; i < size; ++i) {
+    ta[size + i] = 'y'.charCodeAt(0);
+  }
+
+  abis = Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
+           .createInstance(Ci.nsIArrayBufferInputStream);
+  abis.setData(ab, 0, 2 * size);
+
+  sis = Cc["@mozilla.org/scriptableinputstream;1"]
+          .createInstance(Ci.nsIScriptableInputStream);
+  sis.init(abis);
+
+  var result = sis.read(2 * size);
+  is(result, "x".repeat(size) + "y".repeat(size), "correctly read the data");
+}
+
+test();
+</script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Keep in sync with top-level .eslintignore
+
+src/workers/parser/tests/fixtures/functionNames.js
+src/workers/parser/tests/fixtures/scopes/*.js
+src/workers/parser/tests/fixtures/pause/*.js
+src/test/mochitest/examples/babel/polyfill-bundle.js
+src/test/mochitest/examples/babel/fixtures/*/input.js
+src/test/mochitest/examples/babel/fixtures/*/output.js
+src/test/mochitest/examples/babel/fixtures/*/output.js.map
+src/test/mochitest/examples/ember/quickstart

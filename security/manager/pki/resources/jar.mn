@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+pippki.jar:
+% content pippki %content/pippki/
+    content/pippki/certManager.js            (content/certManager.js)
+    content/pippki/certManager.xhtml           (content/certManager.xhtml)
+    content/pippki/changepassword.js         (content/changepassword.js)
+    content/pippki/changepassword.xhtml        (content/changepassword.xhtml)
+    content/pippki/clientauthask.js          (content/clientauthask.js)
+    content/pippki/clientauthask.xhtml         (content/clientauthask.xhtml)
+    content/pippki/deletecert.js             (content/deletecert.js)
+    content/pippki/deletecert.xhtml            (content/deletecert.xhtml)
+    content/pippki/device_manager.js         (content/device_manager.js)
+    content/pippki/device_manager.xhtml        (content/device_manager.xhtml)
+    content/pippki/downloadcert.js           (content/downloadcert.js)
+    content/pippki/downloadcert.xhtml          (content/downloadcert.xhtml)
+    content/pippki/editcacert.js             (content/editcacert.js)
+    content/pippki/editcacert.xhtml          (content/editcacert.xhtml)
+    content/pippki/exceptionDialog.css       (content/exceptionDialog.css)
+    content/pippki/exceptionDialog.js        (content/exceptionDialog.js)
+*   content/pippki/exceptionDialog.xhtml       (content/exceptionDialog.xhtml)
+    content/pippki/load_device.js            (content/load_device.js)
+    content/pippki/load_device.xhtml           (content/load_device.xhtml)
+    content/pippki/pippki.js                 (content/pippki.js)
+    content/pippki/protectedAuth.js          (content/protectedAuth.js)
+    content/pippki/protectedAuth.xhtml         (content/protectedAuth.xhtml)
+    content/pippki/resetpassword.js          (content/resetpassword.js)
+    content/pippki/resetpassword.xhtml         (content/resetpassword.xhtml)
+    content/pippki/setp12password.js         (content/setp12password.js)
+    content/pippki/setp12password.xhtml        (content/setp12password.xhtml)

@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.shortcuts-content {
+  padding: 15px;
+  column-width: 250px;
+  cursor: default;
+  user-select: none;
+}
+
+.shortcuts-content h2 {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  color: var(--theme-text-color-strong);
+}
+
+.shortcuts-section {
+  display: inline-block;
+  margin: 5px;
+  margin-bottom: 15px;
+  width: 250px;
+}
+
+.shortcuts-list {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+  overflow: auto;
+  width: calc(100% - 1px); /* 1px fixes the hidden right border */
+}
+
+.shortcuts-list li {
+  font-size: 12px;
+  color: var(--theme-body-color);
+  padding-top: 5px;
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid transparent;
+  white-space: pre;
+}
+
+@media (max-width: 640px) {
+  .shortcuts-section {
+    width: 100%;
+  }
+}

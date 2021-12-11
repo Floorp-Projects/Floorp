@@ -1,0 +1,27 @@
+== devanagari-1a.html devanagari-1-ref.html
+!= devanagari-1b.html devanagari-1-ref.html
+== devanagari-2.html devanagari-2-ref.html
+!= devanagari-3a.html devanagari-3-ref.html
+== devanagari-3b.html devanagari-3-ref.html
+!= devanagari-4.html devanagari-4-notref.html
+
+== gujarati-1a.html gujarati-1-ref.html
+!= gujarati-1b.html gujarati-1-ref.html
+== gujarati-2.html gujarati-2-ref.html
+!= gujarati-3a.html gujarati-3-ref.html
+fuzzy-if(gtkWidget,255-255,46-46) == gujarati-3b.html gujarati-3-ref.html # gtkWidget, Bug 1600777
+!= gujarati-4.html gujarati-4-notref.html
+
+== bengali-1a.html bengali-1-ref.html
+!= bengali-1b.html bengali-1-ref.html
+!= bengali-2a.html bengali-2-ref.html
+!= bengali-2b.html bengali-2-ref.html
+== bengali-3a.html bengali-3-ref.html
+!= bengali-3b.html bengali-3-ref.html
+!= bengali-3c.html bengali-3-ref.html
+!= bengali-3c.html bengali-3b.html
+
+!= 686225-1-bangla-aat.html 686225-1-bangla-aat-notref.html
+!= 686225-2-kannada-aat.html 686225-2-kannada-aat-notref.html
+
+== balinese-1.html balinese-1-ref.html

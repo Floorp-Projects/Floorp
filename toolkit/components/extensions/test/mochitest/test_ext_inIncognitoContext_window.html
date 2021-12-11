@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_in_incognito_context_true() {
+  function background() {
+    browser.runtime.onMessage.addListener(msg => {
+      browser.test.assertEq(true, msg, "inIncognitoContext is true");
+      browser.test.notifyPass("inIncognitoContext");
+    });
+
+    browser.windows.create({url: browser.runtime.getURL("/tab.html"), incognito: true});
+  }
+
+  function tabScript() {
+    browser.runtime.sendMessage(browser.extension.inIncognitoContext);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    files: {
+      "tab.js": tabScript,
+      "tab.html": `<!DOCTYPE html><html><head>
+        <meta charset="utf-8">
+        <script src="tab.js"><\/script>
+      </head></html>`,
+    },
+    incognitoOverride: "spanning",
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("inIncognitoContext");
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html>
+<script>
+try { o1 = document.createElement('canvas') } catch (e) {}
+try { o2 = o1.transferControlToOffscreen() } catch (e) {}
+try { o2.getContext("webgl", { }) } catch (e) {}
+</script>
+</html>

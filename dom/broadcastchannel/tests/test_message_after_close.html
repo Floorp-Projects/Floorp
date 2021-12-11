@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel - message after close</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+let a = new BroadcastChannel('a');
+let b = new BroadcastChannel('a');
+let count = 0;
+
+a.onmessage = function(e) {
+  ++count;
+  a.close();
+
+  setTimeout(() => {
+    is(count, 1, "Only 1 message received");
+    SimpleTest.finish();
+  }, 0);
+}
+
+for (let i = 0; i < 100; ++i) {
+  b.postMessage(42);
+}
+</script>
+</body>
+</html>

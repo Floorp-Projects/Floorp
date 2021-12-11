@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS 2.1 Test Suite: anonymous table boxes</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#anonymous-boxes"/>
+    <meta name="flags" content="dom" />
+    <style>
+      #t:before { content: "a" }
+    </style>
+  </head>  
+  <body>
+    <span id="t">
+      <span style="display: table-cell">b</span>
+      <script>document.body.offsetWidth</script>
+      <span style="display: table-cell">c</span>
+      d
+    </span>
+  </body>
+</html>

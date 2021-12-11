@@ -1,0 +1,16 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+BROWSER_CHROME_MANIFESTS += [
+    "browser_allocations_browser_console.ini",
+    "browser_allocations_reload_debugger.ini",
+    "browser_allocations_reload_inspector.ini",
+    "browser_allocations_reload_netmonitor.ini",
+    "browser_allocations_reload_no_devtools.ini",
+    "browser_allocations_reload_webconsole.ini",
+    "browser_allocations_target.ini",
+    "browser_allocations_toolbox.ini",
+]

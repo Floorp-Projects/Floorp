@@ -1,0 +1,112 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIObserver;
+
+[scriptable, uuid(609610de-9954-4a63-8a7c-346350a86403)]
+interface nsIProcess : nsISupports
+{
+  /**
+   * Initialises the process with an executable to be run. Call the run method
+   * to run the executable.
+   * @param executable The executable to run.
+   */
+  void init(in nsIFile executable);
+
+  /**
+   * Kills the running process. After exiting the process will either have
+   * been killed or a failure will have been returned.
+   */
+  void kill();
+
+  /**
+   * Executes the file this object was initialized with
+   * @param blocking   Whether to wait until the process terminates before
+                       returning or not.
+   * @param args       An array of arguments to pass to the process in the
+   *                   native character set.
+   * @param count      The length of the args array.
+   */
+  void run(in boolean blocking, [array, size_is(count)] in string args,
+           in unsigned long count);
+
+  /**
+   * Executes the file this object was initialized with optionally calling
+   * an observer after the process has finished running.
+   * @param args       An array of arguments to pass to the process in the
+   *                   native character set.
+   * @param count      The length of the args array.
+   * @param observer   An observer to notify when the process has completed. It
+   *                   will receive this process instance as the subject and
+   *                   "process-finished" or "process-failed" as the topic. The
+   *                   observer will be notified on the main thread.
+   * @param holdWeak   Whether to use a weak reference to hold the observer.
+   */
+  void runAsync([array, size_is(count)] in string args, in unsigned long count,
+                [optional] in nsIObserver observer, [optional] in boolean holdWeak);
+
+  /**
+   * Executes the file this object was initialized with
+   * @param blocking   Whether to wait until the process terminates before
+                       returning or not.
+   * @param args       An array of arguments to pass to the process in UTF-16
+   * @param count      The length of the args array.
+   */
+  void runw(in boolean blocking, [array, size_is(count)] in wstring args,
+	    in unsigned long count);
+
+  /**
+   * Executes the file this object was initialized with optionally calling
+   * an observer after the process has finished running.
+   * @param args       An array of arguments to pass to the process in UTF-16
+   * @param count      The length of the args array.
+   * @param observer   An observer to notify when the process has completed. It
+   *                   will receive this process instance as the subject and
+   *                   "process-finished" or "process-failed" as the topic. The
+   *                   observer will be notified on the main thread.
+   * @param holdWeak   Whether to use a weak reference to hold the observer.
+   */
+  void runwAsync([array, size_is(count)] in wstring args,
+		 in unsigned long count,
+		 [optional] in nsIObserver observer, [optional] in boolean holdWeak);
+
+  /**
+   * When set to true the process will not open a new window when started and
+   * will run hidden from the user. This currently affects only the Windows
+   * platform.
+   */
+  attribute boolean startHidden;
+
+  /**
+   * When set to true the process will be launched directly without using the
+   * shell. This currently affects only the Windows platform.
+   */
+  attribute boolean noShell;
+
+  /**
+   * The process identifier of the currently running process. This will only
+   * be available after the process has started and may not be available on
+   * some platforms.
+   */
+  readonly attribute unsigned long pid;
+
+  /**
+   * The exit value of the process. This is only valid after the process has
+   * exited.
+   */
+  readonly attribute long exitValue;
+
+  /**
+   * Returns whether the process is currently running or not.
+   */
+  readonly attribute boolean isRunning;
+};
+
+%{C++
+
+#define NS_PROCESS_CONTRACTID "@mozilla.org/process/util;1"
+%}

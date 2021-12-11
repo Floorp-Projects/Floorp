@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL ARIA state tests">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      // aria-pressed
+      testStates("pressed_button", STATE_PRESSED, 0, STATE_CHECKABLE);
+
+      testStates("tabs", STATE_MULTISELECTABLE);
+      // Make sure XUL selection works, since aria-selected defaults to false.
+      testStates("tab1", STATE_SELECTED);
+      // aria-selected="true".
+      testStates("tab2", STATE_SELECTED);
+      // Neither.
+      testStates("tab3", 0, 0, STATE_SELECTED);
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+     <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=1033283"
+         title="Expose pressed state on XUL menu toggle buttons">
+        Mozilla Bug 1033283
+     </a>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <button id="pressed_button" aria-pressed="true" label="I am pressed" />
+
+      <tabbox>
+        <tabs id="tabs" aria-multiselectable="true">
+          <tab id="tab1" label="tab1" selected="true"/>
+          <tab id="tab2" label="tab2" aria-selected="true"/>
+          <tab id="tab3" label="tab3"/>
+        </tabs>
+      </tabbox>
+    </vbox>
+  </hbox>
+
+</window>
+

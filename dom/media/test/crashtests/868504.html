@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    new AudioContext().createBufferSource().playbackRate.linearRampToValueAtTime(0, -1);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

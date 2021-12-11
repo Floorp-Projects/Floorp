@@ -1,0 +1,18 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<label style="display: block" contenteditable>
+  Foo
+</label>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let label = document.querySelector("label");
+  synthesizeMouseAtCenter(label, {});
+  is(document.activeElement, label, "Label should get focus");
+  synthesizeKey("x", {});
+  is(label.innerText.trim(), "Foox", "Should not select the whole label");
+  SimpleTest.finish();
+});
+</script>

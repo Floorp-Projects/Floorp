@@ -1,0 +1,71 @@
+<html>
+<head>
+  <title>3rd party content!</title>
+  <script type="text/javascript" src="https://example.com/browser/toolkit/components/antitracking/test/browser/storageAccessAPIHelpers.js"></script>
+</head>
+<body>
+<h1>Here the 3rd party content!</h1>
+<script>
+
+function info(msg) {
+  parent.postMessage({ type: "info", msg }, "*");
+}
+
+function ok(what, msg) {
+  parent.postMessage({ type: "ok", what: !!what, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+async function runTest() {
+  function workerCode() {
+    onmessage = e => {
+      try {
+        indexedDB.open("test", "1");
+        postMessage(true);
+      } catch (e) {
+        postMessage(false);
+      }
+    };
+  }
+
+  /* import-globals-from storageAccessAPIHelpers.js */
+  await noStorageAccessInitially();
+  info("Initialized");
+
+  let blob = new Blob([workerCode.toString() + "; workerCode();"]);
+  let blobURL = URL.createObjectURL(blob);
+  info("Blob created");
+
+  let w = new Worker(blobURL);
+  info("Worker created");
+
+  await new Promise(resolve => {
+    w.addEventListener("message", e => {
+      ok(!e.data, "IDB is disabled");
+      resolve();
+    }, { once: true });
+    w.postMessage("go");
+  });
+
+  /* import-globals-from storageAccessAPIHelpers.js */
+  await callRequestStorageAccess();
+
+  await new Promise(resolve => {
+    w.addEventListener("message", e => {
+      ok(e.data, "IDB is enabled");
+      resolve();
+    }, { once: true });
+    w.postMessage("go");
+  });
+
+  parent.postMessage({ type: "finish" }, "*");
+}
+
+runTest();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+[scriptable, uuid(249fb5ad-ae29-4e2c-a728-ba5cf464d188)]
+interface nsIChromeRegistry : nsISupports
+{
+  const int32_t NONE = 0;
+  const int32_t PARTIAL = 1;
+  const int32_t FULL = 2;
+
+  /**
+   * Resolve a chrome URL to an loadable URI using the information in the
+   * registry. Does not modify aChromeURL.
+   *
+   * Chrome URLs are allowed to be specified in "shorthand", leaving the
+   * "file" portion off. In that case, the URL is expanded to:
+   *
+   *   chrome://package/provider/package.ext
+   *
+   * where "ext" is:
+   *
+   *   "xul" for a "content" package,
+   *   "css" for a "skin" package, and
+   *   "dtd" for a "locale" package.
+   *
+   * @param aChromeURL the URL that is to be converted.
+   */
+  nsIURI convertChromeURL(in nsIURI aChromeURL);
+
+  /**
+   * refresh the chrome list at runtime, looking for new packages/etc
+   */
+  void checkForNewChrome();
+};
+
+[scriptable, uuid(93251ddf-5e85-4172-ac2a-31780562974f)]
+interface nsIXULChromeRegistry : nsIChromeRegistry
+{
+  // Get whether the default writing direction of the locale is RTL
+  boolean isLocaleRTL(in ACString package);
+
+  /**
+   * Installable skin XBL is not always granted the same privileges as other
+   * chrome. This asks the chrome registry whether scripts are allowed to be
+   * run for a particular chrome URI. Do not pass non-chrome URIs to this
+   * method.
+   */
+  boolean allowScriptsForPackage(in nsIURI url);
+
+  /**
+   * Content should only be allowed to load chrome JS from certain packages.
+   * This method reflects the contentaccessible flag on packages.
+   * Do not pass non-chrome URIs to this method.
+   */
+  boolean allowContentToAccess(in nsIURI url);
+
+  /**
+   * Returns true if the passed chrome URL is allowed to be loaded in a remote
+   * process. This reflects the remoteenabled flag on packages.
+   * Do not pass non-chrome URIs to this method.
+   */
+  boolean canLoadURLRemotely(in nsIURI url);
+
+  /**
+   * Returns true if the passed chrome URL must be loaded in a remote process.
+   * This reflects the remoterequired flag on packages.
+   * Do not pass non-chrome URIs to this method.
+   */
+  boolean mustLoadURLRemotely(in nsIURI url);
+};
+
+%{ C++
+
+#define NS_CHROMEREGISTRY_CONTRACTID \
+  "@mozilla.org/chrome/chrome-registry;1"
+
+/**
+ * Chrome registry will notify various caches that all chrome files need
+ * flushing.
+ */
+#define NS_CHROME_FLUSH_TOPIC \
+  "chrome-flush-caches"
+
+%}

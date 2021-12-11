@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Exercising the slider.snapMultiplier code</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <div id="scrollable" style="width: 300px; height: 300px; overflow: auto">
+    <div id="filler" style="height: 2000px; background-image: linear-gradient(red,blue)"></div>
+  </div>
+</body>
+<script type="text/javascript">
+async function test() {
+  // Note that this pref is a read-once-on-startup pref so we can't change it
+  // and have the change take effect. Instead we just use the value to determine
+  // what the expected behaviour is.
+  var snapMultiplier = SpecialPowers.getIntPref("slider.snapMultiplier");
+
+  // Much of the code below is "inlined" from promiseVerticalScrollbarDrag. Reusing
+  // that code was nontrivial given the modifications we needed to make, and
+  // would have increased the complexity of that helper function more than I'd
+  // like. However if any bugfixes are made to that function this code might
+  // need to be updated as well.
+
+  var scrollableDiv = document.getElementById("scrollable");
+  var boundingClientRect = scrollableDiv.getBoundingClientRect();
+  var verticalScrollbarWidth = boundingClientRect.width - scrollableDiv.clientWidth;
+  if (verticalScrollbarWidth == 0) {
+    ok(true, "No scrollbar, can't do this test");
+    return;
+  }
+
+  // register a scroll listener for the initial drag
+  let scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
+
+  var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
+  var mouseX = scrollableDiv.clientWidth + (verticalScrollbarWidth / 2);
+  var mouseY = upArrowHeight + 5; // start dragging somewhere in the thumb
+
+  dump("Starting drag at " + mouseX + ", " + mouseY + " from top-left of #" + scrollableDiv.id + "\n");
+
+  // Move the mouse to the scrollbar thumb and drag it down
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousedown",
+  });
+  // drag down by 100 pixels
+  mouseY += 100;
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
+
+  // wait here until the scroll event listener is triggered.
+  await scrollPromise;
+  var savedScrollPos = scrollableDiv.scrollTop;
+  ok(savedScrollPos > 0, "Scrolled to " + savedScrollPos);
+
+  // register a new scroll event listener. The next mousemove below will either
+  // trigger the snapback behaviour (if snapMultiplier > 0) or trigger a vertical
+  // scroll (if snapMultiplier == 0) because of the x- and y-coordinates we move
+  // the mouse to. This allows us to wait for a scroll event in either case.
+  // If we only triggered the snapback case then waiting for the scroll to
+  // "not happen" in the other case would be more error-prone.
+  scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
+  // Add 2 to snapMultipler just to make sure we get far enough away from the scrollbar
+  var snapBackDistance = (snapMultiplier + 2) * verticalScrollbarWidth;
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX + snapBackDistance,
+    offsetY: mouseY + 10,
+    type: "mousemove",
+  });
+
+  // wait here until the scroll happens
+  await scrollPromise;
+  if (snapMultiplier > 0) {
+    ok(scrollableDiv.scrollTop == 0, "Scroll position snapped back to " + scrollableDiv.scrollTop);
+  } else {
+    ok(scrollableDiv.scrollTop > savedScrollPos, "Scroll position increased to " + scrollableDiv.scrollTop);
+  }
+
+  // Now we move the mouse back to the old position to ensure the scroll position
+  // gets restored properly
+  scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
+
+  // wait here until the scroll happens
+  await scrollPromise;
+  ok(scrollableDiv.scrollTop == savedScrollPos, "Scroll position was restored to " + scrollableDiv.scrollTop);
+
+  // Release mouse and ensure the scroll position stuck
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mouseup",
+  });
+  // Flush everything just to be safe
+  await promiseOnlyApzControllerFlushed();
+
+  ok(scrollableDiv.scrollTop == savedScrollPos, "Final scroll position was " + scrollableDiv.scrollTop);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

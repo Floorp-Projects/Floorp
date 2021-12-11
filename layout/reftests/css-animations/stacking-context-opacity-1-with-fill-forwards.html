@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<title>
+Opacity animation does not destroy stacking context when the animation
+has finished but has fill:forwards
+</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  position: fixed;
+  background: green;
+  top: 50px;
+}
+@keyframes Opaque {
+  from, to { opacity: 1 }
+}
+#test {
+  width: 100px; height: 100px;
+  background: blue;
+  animation: Opaque 0s forwards;
+}
+</style>
+<span></span>
+<div id="test"></div>

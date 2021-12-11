@@ -1,0 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file enables test coverage of the rsa performance tests
+#
+#
+# mode     keysize   bufsize   exponent  repetitions cxrepetitions
+  rsa        32         32       17          1000        5 
+  rsa        64         64        3          500         3 
+  rsa       128        128      65537        200         3 

@@ -1,0 +1,91 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Message component renders the expected snapshot for ERROR level 1`] = `
+<aside
+  className="message message--level-error  qa-message some-classname-3"
+>
+  <img
+    className="message__icon"
+    src="chrome://devtools/skin/images/aboutdebugging-error.svg"
+  />
+  <div
+    className="message__body"
+  >
+    <div>
+      Message content
+    </div>
+  </div>
+</aside>
+`;
+
+exports[`Message component renders the expected snapshot for INFO level 1`] = `
+<aside
+  className="message message--level-info  qa-message some-classname-1"
+>
+  <img
+    className="message__icon"
+    src="chrome://devtools/skin/images/aboutdebugging-information.svg"
+  />
+  <div
+    className="message__body"
+  >
+    <div>
+      Message content
+    </div>
+  </div>
+</aside>
+`;
+
+exports[`Message component renders the expected snapshot for WARNING level 1`] = `
+<aside
+  className="message message--level-warning  qa-message some-classname-2"
+>
+  <img
+    className="message__icon"
+    src="chrome://devtools/skin/images/alert.svg"
+  />
+  <div
+    className="message__body"
+  >
+    <div>
+      Message content
+    </div>
+  </div>
+</aside>
+`;
+
+exports[`Message component renders with closing button renders the expected snapshot for Message with closing button 1`] = `
+<aside
+  className="message message--level-info  qa-message some-classname-1"
+>
+  <img
+    className="message__icon"
+    src="chrome://devtools/skin/images/aboutdebugging-information.svg"
+  />
+  <div
+    className="message__body"
+  >
+    <div>
+      Message content
+    </div>
+  </div>
+  <button
+    className="ghost-button message__button message__button--info qa-message-button-close-button"
+    onClick={[Function]}
+  >
+    <Localized
+      attrs={
+        Object {
+          "alt": true,
+        }
+      }
+      id="about-debugging-message-close-icon"
+    >
+      <img
+        className="qa-message-button-close-icon"
+        src="chrome://devtools/skin/images/close.svg"
+      />
+    </Localized>
+  </button>
+</aside>
+`;

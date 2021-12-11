@@ -1,0 +1,19 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include <windows.h>
+#include "nsNativeAppSupportWin.h"
+
+IDI_APPICON ICON FIREFOX_ICO
+IDI_DOCUMENT ICON DOCUMENT_ICO
+IDI_APPLICATION ICON FIREFOX_ICO
+IDI_NEWWINDOW ICON NEWWINDOW_ICO
+IDI_NEWTAB ICON NEWTAB_ICO
+IDI_PBMODE ICON PBMODE_ICO
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STARTMENU_APPNAME,              "@MOZ_APP_DISPLAYNAME@"
+END

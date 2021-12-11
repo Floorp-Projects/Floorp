@@ -1,0 +1,61 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/in-content/common.inc.css
+
+xul|tabs {
+  padding-inline: 0;
+  position: static;
+}
+
+xul|button[dlgtype="help"] {
+  appearance: none;
+  width: auto;
+}
+
+xul|menulist > xul|menupopup > xul|menuitem[checked="true"]::before,
+xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
+  display: none;
+}
+
+xul|menulist::part(dropmarker) {
+  display: -moz-box;
+  margin-block: 1px;
+}
+
+xul|menulist > xul|menupopup xul|menu,
+xul|menulist > xul|menupopup xul|menuitem {
+  padding-inline-end: 34px;
+}
+
+xul|*.checkbox-icon,
+xul|*.radio-icon {
+  margin-inline-end: 0;
+}
+
+xul|*.text-link:-moz-focusring {
+  box-shadow: none;
+}
+
+xul|search-textbox::part(search-sign) {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
+  margin-inline-end: 5px;
+}
+
+html|button {
+  /* XUL button min-width */
+  min-width: 79px;
+}
+
+html|input[type="email"],
+html|input[type="tel"],
+html|input[type="text"],
+html|input[type="password"],
+html|input[type="number"],
+html|textarea {
+  margin: 4px;
+}

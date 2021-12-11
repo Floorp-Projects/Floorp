@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  var ctx = canvas.getContext("2d");
+  document.implementation.createDocument("", "", null).adoptNode(canvas);
+
+  try { ctx.save(); } catch(e){}
+  try { ctx.restore(); } catch(e){}
+  try { ctx.scale(0,0); } catch(e){}
+  try { ctx.rotate(90); } catch(e){}
+  try { ctx.translate(1,1); } catch(e){}
+  try { ctx.transform(0,100,200,300,10,10); } catch(e){}
+  try { ctx.setTransform(0,100,200,300,10,10); } catch(e){}
+
+  try { x = ctx.globalAlpha; } catch(e){}
+  try { ctx.globalAlpha = 0.8; } catch(e){}
+  try { x = ctx.globalCompositeOperation; } catch(e){}
+  try { ctx.globalCompositeOperation = "copy"; } catch(e){}
+  try { x = ctx.strokeStyle; } catch(e){}
+  try { ctx.strokeStyle = "red"; } catch(e){}
+  try { x = ctx.fillStyle; } catch(e){}
+  try { ctx.fillStyle = "red"; } catch(e){}
+
+  try { ctx.createLinearGradient(0,100,100,100); } catch(e){}
+  try { ctx.createRadialGradient(0,100,100,100,10,10); } catch(e){}
+  try { ctx.createPattern(document.getElementsByTagName('img')[0], "repeat"); } catch(e){}
+
+  try { x = ctx.lineWidth; } catch(e){}
+  try { ctx.lineWidth = 2; } catch(e){}
+  try { x = ctx.lineCap; } catch(e){}
+  try { ctx.lineCap = "round"; } catch(e){}
+  try { x = ctx.lineJoin; } catch(e){}
+  try { ctx.lineJoin = "bevel"; } catch(e){}
+  try { x = ctx.miterLimit; } catch(e){}
+  try { ctx.miterLimit = 12; } catch(e){}
+
+  try { x = ctx.shadowOffsetX; } catch(e){}
+  try { ctx.shadowOffsetX = 1; } catch(e){}
+  try { x = ctx.shadowOffsetY; } catch(e){}
+  try { ctx.shadowOffsetY = 1; } catch(e){}
+  try { x = ctx.shadowBlur; } catch(e){}
+  try { ctx.shadowBlur = 1; } catch(e){}
+  try { x = ctx.shadowColor; } catch(e){}
+  try { ctx.shadowColor = "red"; } catch(e){}
+
+  try { ctx.clearRect(0,0,100,100); } catch(e){}
+  try { ctx.fillRect(0,0,100,100); } catch(e){}
+  try { ctx.strokeRect(0,0,100,100); } catch(e){}
+
+  try { ctx.beginPath(); } catch(e){}
+  try { ctx.moveTo(1,1); } catch(e){}
+  try { ctx.lineTo(10,10); } catch(e){}
+  try { ctx.quadraticCurveTo(1,2,3,4); } catch(e){}
+  try { ctx.bezierCurveTo(1,2,3,4,5,6); } catch(e){}
+  try { ctx.arcTo(1,2,3,4,5); } catch(e){}
+  try { ctx.arc(1,2,3,4,5); } catch(e){}
+  try { ctx.arc(1,2,3,4,5,true); } catch(e){}
+  try { ctx.rect(1,2,3,4); } catch(e){}
+  try { ctx.closePath(); } catch(e){}
+
+  try { ctx.fill(); } catch(e){}
+  try { ctx.stroke(); } catch(e){}
+  try { ctx.clip(); } catch(e){}
+
+  try { x = ctx.font; } catch(e){}
+  try { ctx.font = "14px sans-serif"; } catch(e){}
+  try { x = ctx.mozTextStyle; } catch(e){}
+  try { ctx.mozTextStyle = "14px sans-serif"; } catch(e){}
+  try { x = ctx.textAlign; } catch(e){}
+  try { ctx.textAlign = "right"; } catch(e){}
+  try { x = ctx.textBaseline; } catch(e){}
+  try { ctx.textBaseline = "top"; } catch(e){}
+
+  try { ctx.fillText("",0,0); } catch(e){}
+  try { ctx.strokeText("",0,0); } catch(e){}
+  try { ctx.measureText(""); } catch(e){}
+
+  try { ctx.mozDrawText(""); } catch(e){}
+  try { ctx.mozPathText(""); } catch(e){}
+  try { ctx.mozTextAlongPath("",true); } catch(e){}
+  try { ctx.mozTextAlongPath("",false); } catch(e){}
+
+  try { ctx.drawImage(document.getElementsByTagName('img')[0], 0, 0); } catch(e){}
+  try { ctx.isPointInPath(0, 0); } catch(e){}
+  try { ctx.createImageData(); } catch(e){}
+  try { ctx.getImageData(); } catch(e){}
+  try { ctx.putImageData(); } catch(e){}
+
+  try { x = ctx.imageSmoothingEnabled;  } catch(e){}
+  try { ctx.imageSmoothingEnabled = false;  } catch(e){}
+  try { ctx.imageSmoothingEnabled = true;  } catch(e){}
+
+  try { ctx.drawWindow(window, 0, 0, 0, 0, "red"); } catch(e){}
+}
+
+</script>
+</head>
+<body onload="boom();"><img width="100" height="100" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs="></body>
+</html>

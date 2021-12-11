@@ -1,0 +1,130 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Layout */
+
+.notificationbox .notificationInner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.notificationInner .messageText {
+  flex: 1;
+  width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notificationInner .messageImage,
+.notificationbox .notificationButton,
+.notificationbox .messageCloseButton {
+  flex: none;
+}
+
+.notificationbox .notificationInner:dir(rtl) {
+  flex-direction: row-reverse;
+}
+
+/* Style */
+
+.notificationbox .notification {
+  color: var(--theme-toolbar-color);
+  background-color: var(--theme-body-background);
+  text-shadow: none;
+  border-color: var(--theme-splitter-color);
+  border-style: solid;
+  border-width: 0;
+}
+
+.notificationbox.border-top .notification {
+  border-top-width: 1px;
+}
+
+.notificationbox.border-bottom .notification {
+  border-bottom-width: 1px;
+}
+
+.notificationbox .notification[data-type="info"] {
+  color: -moz-DialogText;
+  background-color: -moz-Dialog;
+}
+
+.notificationbox .notification[data-type="new"] {
+  color: var(--theme-contrast-color);
+  background-color: var(--theme-selection-background-hover);
+}
+
+/**
+ * Remove button borders for notifications highlighting New features.
+ */
+.notification[data-type="new"] .notificationButton {
+  border-radius: 2px;
+  border-width: 0;
+  padding: 4px;
+}
+
+.notificationbox .notification[data-type="critical"] {
+  color: white;
+  background-image: linear-gradient(rgb(212,0,0), rgb(152,0,0));
+}
+
+.notificationbox .messageImage {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin: 6px;
+}
+
+/* Default icons for notifications */
+
+.notificationbox .messageImage[data-type="info"] {
+  background-image: url("chrome://devtools/skin/images/info.svg");
+}
+
+.notificationbox .messageImage[data-type="new"] {
+  background-image: url("chrome://global/skin/icons/whatsnew.svg");
+  fill: var(--theme-highlight-blue);
+}
+
+.notificationbox .messageImage[data-type="warning"] {
+  background-image: url("chrome://devtools/skin/images/alert.svg");
+  /* Keep the icon colored to make it more eye-catching */
+  fill: #ffbf00;
+}
+
+.notificationbox .messageImage[data-type="critical"] {
+  background-image: url("chrome://devtools/skin/images/error.svg");
+}
+
+/* Close button */
+
+.notificationbox .messageCloseButton {
+  width: 24px;
+  height: 24px;
+  margin: 2px 4px;
+  background-image: url("chrome://devtools/skin/images/close.svg");
+  background-position: center;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  border-radius: 2px;
+  border-width: 0;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
+}
+
+.notificationbox .messageCloseButton:hover {
+  background-color: var(--theme-button-active-background);
+}
+
+.notificationbox .messageCloseButton:active {
+  background-color: rgba(170, 170, 170, .4); /* --toolbar-tab-hover-active */
+}
+
+.notificationbox.wrapping .notificationInner .messageText {
+  white-space: normal;
+}

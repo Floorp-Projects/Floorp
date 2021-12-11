@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: unknown/invalid formats raise decode error</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var ok = function (condition, name) {
+    SimpleTest.ok(condition, test.name + ": " + name);
+  }
+  var is = function (a, b, name) {
+    SimpleTest.is(a, b, test.name + ": " + name);
+  }
+
+  var v = document.createElement("video");
+  manager.started(token);
+  v.addEventListener("error", function (event) {
+    var el = event.currentTarget;
+    is(event.type, "error", "Expected event of type 'error'");
+    ok(el.error, "Element 'error' attr expected to have a value");
+    ok(el.error instanceof MediaError, "Element 'error' attr expected to be MediaError");
+    if (v.readyState == v.HAVE_NOTHING) {
+      is(el.error.code, MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, "Expected media not supported error");
+    } else {
+      is(el.error.code, MediaError.MEDIA_ERR_DECODE, "Expected a decode error");
+    }
+    ok(typeof el.error.message === 'string' || el.error.message instanceof String, "Element 'message' attr expected to be a string");
+    ok(el.error.message.length > 0, "Element 'message' attr has content");
+    el._sawError = true;
+    manager.finished(token);
+  });
+
+  v.addEventListener("loadeddata", function () {
+    ok(false, "Unexpected loadeddata event");
+    manager.finished(token);
+  });
+
+  v.autoplay = true;
+  v.addEventListener("ended", function () {
+    ok(false, "Unexpected ended event");
+    manager.finished(token);
+  });
+
+  v.src = test.name; // implicitly starts a load.
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [
+    ["media.cache_size", 40000],
+  ]
+}, beginTest);
+function beginTest() {
+  manager.runTests(gDecodeErrorTests, startTest);
+}
+</script>
+</pre>
+</body>
+</html>

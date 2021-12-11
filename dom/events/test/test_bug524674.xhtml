@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=524674
+-->
+<window title="Mozilla Bug 524674"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=524674"
+     target="_blank">Mozilla Bug 524674</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 524674 **/
+
+  var els = Cc["@mozilla.org/eventlistenerservice;1"]
+              .getService(Ci.nsIEventListenerService);
+
+  function dummyListener() {}
+
+  var runningTest = null;
+  var d = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  var xhr = new XMLHttpRequest();
+
+  // Test also double removals and such.
+  var tests = [
+    function() {
+      els.addListenerChangeListener(changeListener);
+      d.addEventListener("foo", dummyListener);
+      d.addEventListener("foo", dummyListener);
+      xhr.addEventListener("foo", dummyListener);
+      tests[0] = [{target: d, listeners: ["onfoo"]},
+                  {target: xhr, listeners: ["onfoo"]}];
+    },
+    function() {
+      d.addEventListener("bar", dummyListener);
+      d.addEventListener("baz", dummyListener);
+      xhr.addEventListener("bar", dummyListener);
+      xhr.addEventListener("baz", dummyListener);
+      tests[0] = [{target: d, listeners: ["onbaz", "onbar"]},
+                  {target: xhr, listeners: ["onbaz", "onbar"]}];
+    },
+    function() {
+      d.onclick = dummyListener;
+      d.onclick = dummyListener;
+      xhr.onload = dummyListener;
+      tests[0] = [{target: d, listeners: ["onclick"]},
+                  {target: xhr, listeners: ["onload"]}];
+    },
+    function() {
+      d.onclick = function() {};
+      tests[0] = [{target: d, listeners: ["onclick"]}];
+    },
+    function() {
+      d.removeEventListener("foo", dummyListener);
+      d.removeEventListener("foo", dummyListener);
+      xhr.removeEventListener("foo", dummyListener);
+      tests[0] = [{target: d, listeners: ["onfoo"]},
+                  {target: xhr, listeners: ["onfoo"]}];
+    },
+    function() {
+      d.removeEventListener("bar", dummyListener);
+      d.removeEventListener("baz", dummyListener);
+      xhr.removeEventListener("bar", dummyListener);
+      xhr.removeEventListener("baz", dummyListener);
+      tests[0] = [{target: d, listeners: ["onbar", "onbaz"]},
+                  {target: xhr, listeners: ["onbar", "onbaz"]}];
+    },
+    function() {
+      d.onclick = null;
+      d.onclick = null;
+      xhr.onload = null;
+      tests[0] = [{target: d, listeners: ["onclick"]},
+                  {target: xhr, listeners: ["onload"]}];
+    },
+    function() {
+      els.removeListenerChangeListener(changeListener);
+      // Check that once we've removed the change listener, it isn't called anymore.
+      d.addEventListener("foo", dummyListener);
+      xhr.addEventListener("foo", dummyListener);
+      SimpleTest.executeSoon(function() {
+        SimpleTest.finish();
+      });
+    }
+  ];
+
+  SimpleTest.executeSoon(tests[0]);
+
+  function changeListener(array) {
+    if (typeof tests[0] == "function") {
+      return;
+    }
+    var expectedEventChanges = tests[0];
+    var eventChanges = array.enumerate();
+    var i = 0;
+    while (eventChanges.hasMoreElements() && i < expectedEventChanges.length) {
+      var current;
+      try {
+        current = eventChanges.getNext().QueryInterface(Ci.nsIEventListenerChange);
+        var expected = expectedEventChanges[i];
+
+        if (current.target == expected.target) {
+          is(current.target, expected.target, current.target + " = " + expected.target);
+          ++i;
+        }
+      } catch(ex) {
+        continue;
+      }
+    }
+    if (expectedEventChanges.length != i) {
+      return;
+    }
+
+    is(expectedEventChanges.length, i, "Should have got notification for all the changes.");
+    tests.shift();
+
+    ok(tests.length);
+    SimpleTest.executeSoon(tests[0]);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

@@ -1,0 +1,4 @@
+SOURCES += [
+    "subdir/Test.cpp",
+    "Test.cpp",
+]

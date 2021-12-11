@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1012662
+https://bugzilla.mozilla.org/show_bug.cgi?id=1597857
+-->
+<head>
+  <title>Test for Clipboard</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1012662">Mozilla Bug 1012662</a><br>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1597857">Mozilla Bug 1597857</a>
+<p id="display"></p>
+
+<div id="content">
+  <span>span text</span>
+  <input type="text" value="text text">
+  <input type="password" value="password text">
+  <textarea>textarea text</textarea>
+  <div contentEditable="true">contenteditable text</div>
+</div>
+
+<pre id="test">
+<script type="application/javascript" src="file_clipboard_common.js"></script>
+</pre>
+</body>
+</html>

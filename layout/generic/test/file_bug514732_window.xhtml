@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="514732Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 514732 test">
+
+  <script type="application/javascript"><![CDATA[
+    window.opener = window.arguments[0];
+  ]]></script>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 514732.  The MozScrolledAreaChanged
+    // should be fired when a page is restored from the bfcache as though it had
+    // reloaded.
+    //
+    function* testIterator() {
+      // Make sure bfcache is on.
+      enableBFCache(true);
+
+        
+      // Load a wide and tall page, and then another.
+      for (var i = 0; i < 2; ++i) {
+        doPageNavigation( {
+          uri: "data:text/html,<!DOCTYPE html><html>" + 
+               "<head><title>bug 514732 bfcache test page " + i + "</title></head>" +
+               "<body>" + 
+               '<div style="position: absolute; left: 10000px; top: 10000px; width: 500px; height: 500px;">' +
+               "</body></html>",
+          eventsToListenFor: ["MozScrolledAreaChanged"],
+          expectedEvents: [ { type: "MozScrolledAreaChanged" } ],
+          onNavComplete: nextTest
+        } );
+        yield;
+      }
+
+      // Navigate back to the first page.  Don't test for width and height
+      // yet, just make sure we get an event.
+      doPageNavigation( {
+        back: true,
+        eventsToListenFor: ["MozScrolledAreaChanged"],
+        expectedEvents: [ { type: "MozScrolledAreaChanged" } ],
+        onNavComplete: nextTest
+      } );
+      yield;
+
+      // Navigate forth to our wide and tall page, this time testing for
+      // width and height on the event.
+      doPageNavigation( {
+        forward: true,
+        eventsToListenFor: ["MozScrolledAreaChanged"],
+        expectedEvents: [ { type: "MozScrolledAreaChanged" } ],
+        onNavComplete: nextTest
+      } );
+      yield;
+
+      finish();
+    }
+    
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+</window>

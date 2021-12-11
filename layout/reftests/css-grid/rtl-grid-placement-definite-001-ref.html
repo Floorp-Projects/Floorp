@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+
+.grid1, .grid2 {
+  block-size: 60px;
+  border: 2px solid green;
+  position: relative;
+}
+
+.grid2 {
+  border-width: 20px;
+}
+
+span {
+  position: absolute;
+  background: lime;
+  border: 1px solid black;
+  box-sizing: border-box;
+}
+
+.a {
+  inset-inline-start: 40px;
+  inset-block-start: 0px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.b {
+  inset-inline-start: 20px;
+  inset-block-start: 40px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.c {
+  inset-inline-start: 80px;
+  inset-block-start: 40px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.d {
+  inset-inline-start: 0px;
+  inset-block-start: 0px;
+  inline-size: 20px;
+  block-size: 60px;
+}
+    </style>
+</head>
+<body dir=rtl>
+
+<div class=grid1>
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+</div>
+
+<div class=grid2>
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+</div>
+
+</body>
+</html>

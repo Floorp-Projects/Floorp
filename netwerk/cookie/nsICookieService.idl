@@ -1,0 +1,168 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIChannel;
+webidl Document;
+
+/**
+ * @see nsICookieService::runInTransaction
+ */
+[scriptable, function, uuid(0fc41ffb-f1b7-42d9-9a42-8dc420c158c1)]
+interface nsICookieTransactionCallback : nsISupports
+{
+  void callback();
+};
+
+/**
+ * nsICookieService
+ *
+ * Provides methods for setting and getting cookies in the context of a
+ * page load.  See nsICookieManager for methods to manipulate the cookie
+ * database directly.  This separation of interface is mainly historical.
+ *
+ * This service broadcasts the notifications detailed below when the cookie
+ * list is changed, or a cookie is rejected.
+ *
+ * NOTE: observers of these notifications *must* not attempt to change profile
+ *       or switch into or out of private browsing mode from within the
+ *       observer. Doing so will cause undefined behavior. Mutating the cookie
+ *       list (e.g. by calling methods on nsICookieService and friends) is
+ *       allowed, but beware that there may be pending notifications you haven't
+ *       seen yet -- for instance, a "batch-deleted" notification will likely be
+ *       immediately followed by "added". You may check the state of the cookie
+ *       list to determine if this is the case.
+ *
+ * topic  : "cookie-changed"
+ *          broadcast whenever the cookie list changes in some way. see
+ *          explanation of data strings below.
+ * subject: see below.
+ * data   : "deleted"
+ *          a cookie was deleted. the subject is an nsICookie representing
+ *          the deleted cookie.
+ *          "added"
+ *          a cookie was added. the subject is an nsICookie representing
+ *          the added cookie.
+ *          "changed"
+ *          a cookie was changed. the subject is an nsICookie representing
+ *          the new cookie. (note that host, path, and name are invariant
+ *          for a given cookie; other parameters may change.)
+ *          "batch-deleted"
+ *          a set of cookies was purged (typically, because they have either
+ *          expired or because the cookie list has grown too large). The subject
+ *          is an nsIArray of nsICookie's representing the deleted cookies.
+ *          Note that the array could contain a single cookie.
+ *          "cleared"
+ *          the entire cookie list was cleared. the subject is null.
+ *
+ * topic  : "cookie-rejected"
+ *          broadcast whenever a cookie was rejected from being set as a
+ *          result of user prefs.
+ * subject: an nsIURI interface pointer representing the URI that attempted
+ *          to set the cookie.
+ * data   : none.
+ */
+[scriptable, uuid(1e94e283-2811-4f43-b947-d22b1549d824)]
+interface nsICookieService : nsISupports
+{
+  /*
+   * Possible values for the "network.cookie.cookieBehavior" preference.
+   */
+  const uint32_t BEHAVIOR_ACCEPT         = 0; // allow all cookies
+  const uint32_t BEHAVIOR_REJECT_FOREIGN = 1; // reject all third-party cookies
+  const uint32_t BEHAVIOR_REJECT         = 2; // reject all cookies
+  const uint32_t BEHAVIOR_LIMIT_FOREIGN  = 3; // reject third-party cookies unless the
+                                              // eTLD already has at least one cookie
+  const uint32_t BEHAVIOR_REJECT_TRACKER = 4; // reject trackers
+  const uint32_t BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN = 5; // reject trackers, partition third-party cookies
+  // When adding a new cookie behavior, please increase this value!
+  const uint32_t BEHAVIOR_LAST           = 5;
+
+  /*
+   * Possible values for the "network.cookie.lifetimePolicy" preference.
+   */
+  const uint32_t ACCEPT_NORMALLY   = 0; // accept normally
+  // Value = 1 is considered the same as 0 (See Bug 606655).
+  const uint32_t ACCEPT_SESSION    = 2; // downgrade to session
+  // Value = 3 is considered the same as 0
+
+  /*
+   * Get the complete cookie string associated with the document's principal.
+   * This method is meant to be used for `document.cookie` only. Any security
+   * check about storage-access permission and cookie behavior must be done by
+   * the caller.
+   *
+   * @param aDocument
+   *        The document.
+   *
+   * @return the resulting cookie string
+   */
+  ACString getCookieStringFromDocument(in Document aDocument);
+
+  /*
+   * Get the complete cookie string associated with the URI.
+   *
+   * This function is NOT redundant with getCookieString, as the result
+   * will be different based on httponly (see bug 178993)
+   *
+   * @param aURI
+   *        The URI of the document for which cookies are being queried.
+   *        file:// URIs (i.e. with an empty host) are allowed, but any other
+   *        scheme must have a non-empty host. A trailing dot in the host
+   *        is acceptable, and will be stripped. This argument must not be null.
+   * @param aChannel
+   *        the channel used to load the document.
+   *
+   * @return the resulting cookie string
+   */
+  ACString getCookieStringFromHttp(in nsIURI aURI, in nsIChannel aChannel);
+
+  /*
+   * Set the cookie string associated with a Document. This method is meant to
+   * be used for `document.cookie` only. Any security check about
+   * storage-access permission and cookie behavior must be done by the caller.
+   *
+   * @param aDocument
+   *        The document.
+   * @param aCookie
+   *        the cookie string to set.
+   */
+  void setCookieStringFromDocument(in Document aDocument, in ACString aCookie);
+
+  /*
+   * Set the cookie string and expires associated with the URI.
+   *
+   * This function is NOT redundant with setCookieString, as the result
+   * will be different based on httponly (see bug 178993)
+   *
+   * @param aURI
+   *        The URI of the document for which cookies are being queried.
+   *        file:// URIs (i.e. with an empty host) are allowed, but any other
+   *        scheme must have a non-empty host. A trailing dot in the host
+   *        is acceptable, and will be stripped. This argument must not be null.
+   * @param aCookie
+   *        the cookie string to set.
+   * @param aChannel
+   *        the channel used to load the document.
+   */
+  void setCookieStringFromHttp(in nsIURI aURI, in ACString aCookie,
+                               in nsIChannel aChannel);
+
+  /*
+   * Batch SQLite operations into one transaction. By default each call to
+   * CookieService that affects the underlying SQLite database (add, remove,
+   * setCookieString etc.) runs in a separate transaction.  If you do this many
+   * times in a row, it's faster and suggested to wrap them all in a single
+   * transaction by setting all the operations into the callback parameter.
+   * Example: test scripts that need to construct a large cookie database.
+   * @param aCallback
+   *        nsICookieTransactionCallback interface to call
+   * @throws NS_ERROR_FAILURE if aCallback() fails.
+   * @throws NS_ERROR_NOT_AVAILABLE if the connection is not established.
+   */
+   void runInTransaction(in nsICookieTransactionCallback aCallback);
+};

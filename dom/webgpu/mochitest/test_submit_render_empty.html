@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset='utf-8'>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+ok(SpecialPowers.getBoolPref('dom.webgpu.enabled'), 'Pref should be enabled.');
+
+const func = async function() {
+  const adapter = await navigator.gpu.requestAdapter();
+  const device = await adapter.requestDevice();
+
+  const bundleEncoder = device.createRenderBundleEncoder({
+    colorFormats: [swapChainFormat],
+  });
+  const bundle = bundleEncoder.finish({});
+
+  const texture = device.createTexture({
+    size: { width: 100, height: 100, depth: 1 },
+    format: "rgba8unorm",
+    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+  const view = texture.createView();
+
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [{
+      view,
+      loadValue: { r: 0, g: 0, b: 0, a: 0 },
+      storeOp: "store",
+    }],
+  });
+  pass.executeBundles([bundle]);
+  pass.endPass();
+  const command_buffer = encoder.finish();
+
+  device.queue.submit([command_buffer]);
+  ok(command_buffer !== undefined, 'command_buffer !== undefined');
+};
+
+SimpleTest.waitForExplicitFinish();
+func().finally(() => SimpleTest.finish());
+
+</script>
+</body>
+</html>

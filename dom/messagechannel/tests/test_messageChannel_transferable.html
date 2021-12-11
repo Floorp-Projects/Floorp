@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 677638 - port cloning</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  function basic_test() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    window.addEventListener('message', receiveMessage);
+    function receiveMessage(evt) {
+      if (evt.data.status == 'READY') {
+        a.port1.postMessage({ab, cb: ab}, [ab]);
+        ok(ab.byteLength == 0, "PostMessage - The size is: 0 == " + ab.byteLength)
+      } else {
+        ok(false, "Unknown message");
+      }
+    }
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded);
+    ifr.setAttribute('src', "iframe_messageChannel_post.html");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      ifr.contentWindow.postMessage({ port: a.port2 }, '*', [a.port2]);
+    }
+
+    a.port1.addEventListener('message', receivePortMessage);
+    function receivePortMessage(evt) {
+      is(evt.data.ab.byteLength, size, "The size is: " + size + " == " + ab.byteLength);
+      window.removeEventListener('message', receiveMessage);
+      runTests();
+    }
+
+    // Start() is not implicity invoked when addEventListener is used.
+    a.port1.start();
+
+    var size = 1024 * 1024 * 32;
+    var ab = new ArrayBuffer(size);
+    is(ab.byteLength, size, "The size is: " + size + " == " + ab.byteLength);
+  }
+
+  function port_test() {
+    window.addEventListener('message', receiveMessage);
+    function receiveMessage(evt) {
+      ok(evt.data.type == 'OK', evt.data.msg);
+    }
+
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded);
+    ifr.setAttribute('src', "iframe_messageChannel_transferable.html");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      ifr.contentWindow.postMessage('foobar!', '*', [a.port2]);
+    }
+
+    a.port1.onmessage = function(evt) {
+      ok(evt.ports.length == 1, "Iframe sent a new port!");
+      evt.ports[0].onmessage = function(event) {
+        is(event.data, "hello world!", "Message sent and received!");
+        runTests();
+      }
+
+      evt.ports[0].postMessage("hello world!");
+    }
+  }
+
+  var tests = [
+    basic_test,
+    port_test
+  ];
+
+  function runTests() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var t = tests.shift();
+    t();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTests();
+  </script>
+</body>
+</html>

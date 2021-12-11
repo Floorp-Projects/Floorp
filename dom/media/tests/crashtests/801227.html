@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=801227
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Abort due to page reload</title>
+  <script type="application/javascript">
+    var pc = new RTCPeerConnection();
+
+    var index = localStorage.index || 0;
+    if (index < 3) {
+      localStorage.index = index + 1;
+      window.location.reload();
+    }
+
+    function finish() {
+      delete localStorage["index"];
+
+      pc.close();
+      document.documentElement.removeAttribute("class");
+    }
+
+    navigator.mozGetUserMedia({ audio: true, fake: true }, function (aStream) {
+      pc.addStream(aStream);
+      finish();
+    }, finish);
+  </script>
+</head>
+
+<body>
+</body>
+</html>
+

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+  :-moz-broken {
+    border: 10px solid green;
+  }
+</style>
+<!--
+  We need to wait for an error event since we consider lazy load images are NOT
+  broken initially until loaded.
+-->
+<img loading="lazy" src="nosuch:url" onerror="document.documentElement.className=''">
+</html>

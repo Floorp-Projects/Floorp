@@ -1,0 +1,20 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsISocketProvider;
+
+/**
+ * nsISocketProviderService
+ *
+ * Provides a mapping between a socket type and its associated socket provider
+ * instance.  One could also use the service manager directly.
+ */
+[scriptable, uuid(8f8a23d0-5472-11d3-bbc8-0000861d1237)]
+interface nsISocketProviderService : nsISupports
+{
+    nsISocketProvider getSocketProvider(in string socketType);
+};

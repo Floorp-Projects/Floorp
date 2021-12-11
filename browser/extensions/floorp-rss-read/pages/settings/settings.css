@@ -1,0 +1,128 @@
+main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+main > * {
+  padding: 1rem;
+}
+
+.toolbar {
+  align-items: center;
+}
+
+.toolbar button {
+  margin-left: .5rem;
+}
+
+#feeds {
+  flex: 1;
+  overflow: auto;
+}
+
+.feed {
+  display: grid;
+  padding: 10px;
+  grid-template-columns: 1fr min-content;
+  grid-template-areas: "title   edit"
+                       "siteUrl edit";
+}
+
+.broken {
+  background-image: linear-gradient(
+    -45deg,
+    rgba(252, 166, 166, 0.4) 25%,
+    var(--card-background) 25%,
+    var(--card-background) 50%,
+    rgba(252, 166, 166, 0.4) 50%,
+    rgba(252, 166, 166, 0.4) 75%,
+    var(--card-background) 75%,
+    var(--card-background) 100%
+  );
+  background-size: 3em 3em;
+}
+
+.broken .feed-title {
+  font-weight: bold;
+}
+
+.feed-title {
+  grid-area: title;
+}
+
+.feed-url {
+  grid-area: siteUrl;
+  font-size: 0.8em;
+  color: var(--deemphasized-text-color);
+}
+
+.feed-title,
+.feed-url {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-edit {
+  grid-area: edit;
+}
+
+.form-row {
+  margin-bottom: 0.5em;
+}
+
+#edit-livemark-dialog .flex > *:last-child,
+#select-folder-dialog .flex > *:last-child {
+  margin-left: 0.5em;
+}
+
+#settings-dialog {
+  min-width: 300px;
+  width: -moz-max-content;
+  width: max-content;
+}
+
+#settings-dialog:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+}
+
+#settings-dialog .dialog-content {
+  overflow: auto;
+  flex-grow: 1;
+}
+
+#settings-dialog .dialog-content > div {
+  column-count: 2;
+  column-width: 50ch;
+}
+
+#settings-form {
+  display: contents;
+}
+
+.section {
+  break-inside: avoid;
+}
+
+.indent {
+  padding-inline-start: 1em;
+}
+
+#import-feeds {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+#darkIcon:checked,
+#lightIcon:checked,
+#orangeIcon:checked {
+  background-color: var(--blue-50-a30);
+  border-color: var(--blue-50);
+}

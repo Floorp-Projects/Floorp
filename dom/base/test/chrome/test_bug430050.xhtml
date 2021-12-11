@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=430050
+-->
+<window title="Mozilla Bug 430050"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430050"
+     target="_blank">Mozilla Bug 430050</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  /** Test for Bug 430050 **/
+
+  function endTest() {
+    ok(document.getElementById('b').contentDocument.documentElement.textContent ==
+       "succeeded", "Wrong URL loaded!");
+    SimpleTest.finish();
+  }
+
+  function startTest() {
+    document.documentElement.addEventListener('DOMAttrModified',
+      function(evt) {
+        if (evt.target == evt.currentTarget) {
+          document.getElementById('b').setAttribute("src",
+                                                    "data:text/plain,failed");
+          const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+          const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+          document.getElementById('b').loadURI('data:text/plain,succeeded', {
+            triggeringPrincipal: systemPrincipal
+          });
+          document.getElementById('b').addEventListener("load", endTest);
+        }
+      }, true);
+    document.documentElement.setAttribute("foo", "bar");
+  }
+  
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(startTest);
+
+  ]]></script>
+  <browser flex="1" id="b"/>
+</window>

@@ -1,0 +1,181 @@
+diff --git a/src/google_breakpad/processor/call_stack.h b/src/google_breakpad/processor/call_stack.h
+--- a/src/google_breakpad/processor/call_stack.h
++++ b/src/google_breakpad/processor/call_stack.h
+@@ -62,26 +62,30 @@ class CallStack {
+ 
+   // Resets the CallStack to its initial empty state
+   void Clear();
+ 
+   const vector<StackFrame*>* frames() const { return &frames_; }
+ 
+   // Set the TID associated with this call stack.
+   void set_tid(uint32_t tid) { tid_ = tid; }
++  void set_last_error(uint32_t last_error) { last_error_ = last_error; }
+ 
+   uint32_t tid() const { return tid_; }
++  uint32_t last_error() const { return last_error_; }
+ 
+  private:
+   // Stackwalker is responsible for building the frames_ vector.
+   friend class Stackwalker;
+ 
+   // Storage for pushed frames.
+   vector<StackFrame*> frames_;
+ 
+   // The TID associated with this call stack. Default to 0 if it's not
+   // available.
+   uint32_t tid_;
++  // The last error the OS set for this thread (win32's GetLastError())
++  uint32_t last_error_;
+ };
+ 
+ }  // namespace google_breakpad
+ 
+ #endif  // GOOGLE_BREAKPAD_PROCSSOR_CALL_STACK_H__
+diff --git a/src/google_breakpad/processor/minidump.h b/src/google_breakpad/processor/minidump.h
+--- a/src/google_breakpad/processor/minidump.h
++++ b/src/google_breakpad/processor/minidump.h
+@@ -279,16 +279,26 @@ class MinidumpMemoryRegion : public Mini
+ class MinidumpThread : public MinidumpObject {
+  public:
+   virtual ~MinidumpThread();
+ 
+   const MDRawThread* thread() const { return valid_ ? &thread_ : NULL; }
+   // GetMemory may return NULL even if the MinidumpThread is valid,
+   // if the thread memory cannot be read.
+   virtual MinidumpMemoryRegion* GetMemory();
++  // Corresponds to win32's GetLastError function, which records the last
++  // error value set by the OS for this thread. A more useful error message
++  // can be produced by passing this value to FormatMessage:
++  //
++  // https://docs.microsoft.com/windows/win32/debug/retrieving-the-last-error-code
++  //
++  // The value may also be looked up in Microsoft's System Error Codes listing:
++  //
++  // https://docs.microsoft.com/windows/win32/debug/system-error-codes
++  virtual uint32_t GetLastError();
+   // GetContext may return NULL even if the MinidumpThread is valid.
+   virtual MinidumpContext* GetContext();
+ 
+   // The thread ID is used to determine if a thread is the exception thread,
+   // so a special getter is provided to retrieve this data from the
+   // MDRawThread structure.  Returns false if the thread ID cannot be
+   // determined.
+   virtual bool GetThreadID(uint32_t *thread_id) const;
+diff --git a/src/processor/call_stack.cc b/src/processor/call_stack.cc
+--- a/src/processor/call_stack.cc
++++ b/src/processor/call_stack.cc
+@@ -44,11 +44,12 @@ CallStack::~CallStack() {
+ 
+ void CallStack::Clear() {
+   for (vector<StackFrame *>::const_iterator iterator = frames_.begin();
+        iterator != frames_.end();
+        ++iterator) {
+     delete *iterator;
+   }
+   tid_ = 0;
++  last_error_ = 0;
+ }
+ 
+ }  // namespace google_breakpad
+diff --git a/src/processor/minidump.cc b/src/processor/minidump.cc
+--- a/src/processor/minidump.cc
++++ b/src/processor/minidump.cc
+@@ -1567,16 +1567,76 @@ MinidumpMemoryRegion* MinidumpThread::Ge
+   if (!valid_) {
+     BPLOG(ERROR) << "Invalid MinidumpThread for GetMemory";
+     return NULL;
+   }
+ 
+   return memory_;
+ }
+ 
++uint32_t MinidumpThread::GetLastError() {
++  if (!valid_) {
++    BPLOG(ERROR) << "Cannot retrieve GetLastError() from an invalid thread";
++    return 0;
++  }
++
++  if (!thread_.teb) {
++    BPLOG(ERROR) << "Cannot retrieve GetLastError() without a valid TEB pointer";
++    return 0;
++  }
++
++  auto memory = minidump_->GetMemoryList();
++  if (!memory) {
++    BPLOG(ERROR) << "Cannot retrieve GetLastError() without a valid memory list";
++    return 0;
++  }
++
++  auto context = GetContext();
++  if (!context) {
++    BPLOG(ERROR) << "Cannot retrieve GetLastError()'s without a valid context";
++    return 0;
++  }
++
++  uint64_t pointer_width = 0;
++  switch (context_->GetContextCPU()) {
++    case MD_CONTEXT_X86:
++      pointer_width = 4;
++      break;
++    case MD_CONTEXT_AMD64:
++    case MD_CONTEXT_ARM64:
++      pointer_width = 8;
++      break;
++    default:
++      BPLOG(ERROR) << "GetLastError() isn't implemented for this CPU type yet";
++      return 0;
++  }
++
++  auto region = memory->GetMemoryRegionForAddress(thread_.teb);
++  if (!region) {
++    BPLOG(ERROR) << "GetLastError()'s memory isn't mapped in this minidump";
++    return 0;
++  }
++
++  // The TEB is opaque but we know the value we want lives at this offset
++  // from reverse engineering.
++  uint64_t offset = pointer_width * 13;
++  uint32_t error = 0;
++  if (!region->GetMemoryAtAddress(thread_.teb + offset, &error)) {
++    BPLOG(ERROR) << "GetLastError()'s memory isn't mapped in this minidump";
++    return 0;
++  }
++
++  if (minidump_->swap()) {
++    Swap(&error);
++  }
++
++  return error;
++}
++
++
+ 
+ MinidumpContext* MinidumpThread::GetContext() {
+   if (!valid_) {
+     BPLOG(ERROR) << "Invalid MinidumpThread for GetContext";
+     return NULL;
+   }
+ 
+   if (!context_) {
+diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
+--- a/src/processor/minidump_processor.cc
++++ b/src/processor/minidump_processor.cc
+@@ -301,16 +301,17 @@ ProcessResult MinidumpProcessor::Process
+       }
+     } else {
+       // Threads with missing CPU contexts will hit this, but
+       // don't abort processing the rest of the dump just for
+       // one bad thread.
+       BPLOG(ERROR) << "No stackwalker for " << thread_string;
+     }
+     stack->set_tid(thread_id);
++    stack->set_last_error(thread->GetLastError());
+     process_state->threads_.push_back(stack.release());
+     process_state->thread_memory_regions_.push_back(thread_memory);
+   }
+ 
+   if (interrupted) {
+     BPLOG(INFO) << "Processing interrupted for " << dump->path();
+     return PROCESS_SYMBOL_SUPPLIER_INTERRUPTED;
+   }

@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+include protocol PBackground;
+include "mozilla/dom/GamepadMessageUtils.h";
+include GamepadEventTypes;
+
+using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
+
+namespace mozilla {
+namespace dom {
+
+[RefCounted] protocol PGamepadTestChannel {
+  manager PBackground;
+  parent:
+    async GamepadTestEvent(uint32_t aID, GamepadChangeEvent aGamepadEvent);
+    async __delete__();
+  child:
+    async ReplyGamepadHandle(uint32_t aID, GamepadHandle aHandle);
+};
+
+}
+}

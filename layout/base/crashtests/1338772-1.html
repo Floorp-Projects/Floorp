@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function loadHandler() {
+  var outer = document.getElementById("outer");
+  var inner = document.createElement("iframe");
+  inner.height = "1px";
+  outer.contentDocument.body.appendChild(inner);
+
+  // Flush reflow inside our inner iframe. This ensures that our inner.height
+  // tweak further down will actually invoke the resize handler.
+  inner.contentWindow.offsetTop;
+
+  // Set up resize handler (which ends the test, one way or another)
+  inner.contentWindow.onresize = () => {
+    outer.remove();
+    document.documentElement.removeAttribute("class");
+  };
+
+  // Trigger the resize handler:
+  inner.height = "5px";
+  inner.offsetTop;
+}
+
+// This function is a hack to avoid sporadic test-failures with...
+//   "...timed out waiting for reftest-wait to be removed".
+// Occasionally, it seems this test loses a race condition of some sort, and
+// its resize handler isn't invoked. When that happens (and specifically, when
+// the test runs for longer than 500ms), we clear reftest-wait and call the
+// run a "pass" (which is kind of valid, because we didn't crash!) and move on.
+function setupFailsafe() {
+  setTimeout(() => {
+    document.documentElement.removeAttribute("class");
+  }, 500);
+}
+</script>
+<body onload="setupFailsafe()">
+  <iframe id="outer"
+          src="data:text/html,<html><body>"
+          onload="loadHandler()">
+  </iframe>
+</body>

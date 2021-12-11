@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1132764 - Test controlling the maximum allocations log length over the RDP.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  (async function() {
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
+
+    const allocs = [];
+    function allocator() {
+      allocs.push(new Object());
+    }
+
+    await memory.startRecordingAllocations({
+      maxLogLength: 1,
+    });
+
+    allocator();
+    allocator();
+    allocator();
+
+    const response = await memory.getAllocations();
+    await memory.stopRecordingAllocations();
+
+    is(response.allocations.length, 1,
+       "There should only be one entry in the allocations log.");
+
+    await memory.detach();
+    destroyServerAndFinish(target);
+  })();
+};
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,26 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o script-max-frames-1-actual.txt --max-frames=1 script-max-frames.json
+
+Invocation {
+  $DMD = '--mode=live --stacks=full'
+  Mode = 'live'
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  4 blocks in heap block record 1 of 1
+  4,416 bytes (4,404 requested / 12 slop)
+  Individual block sizes: 4,096; 128; 112; 80
+  100.00% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: E (E.cpp:99)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 4,416 bytes in 4 blocks
+}
+

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <script>
+      customElements.define("custom-element", class extends HTMLElement {
+        constructor() {
+          super();
+          const template = document.getElementById("template");
+          const shadowRoot = this.attachShadow({mode: "open"})
+            .appendChild(template.content.cloneNode(true));
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <template id="template">
+      <style>
+        .a + .b { color: green; }
+      </style>
+      <span class="a"></span>
+      <span class="b">This should be green</span>
+      <slot/>
+    </template>
+    <custom-element id="foo"></custom-element>
+  </body>
+</html>

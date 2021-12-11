@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=478398
+-->
+<head>
+  <title>Test for Bug 478398</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478398">Mozilla Bug 478398</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 399925. **/
+var oldTimeoutPref;
+var oldDiscardPref;
+SimpleTest.waitForExplicitFinish();
+window.onload = stage1;
+var imageFilename = "bug478398_ONLY.png";
+
+function stage1()
+{
+  // Get the current pref values
+  oldTimeoutPref = getImagePref(DISCARD_TIMEOUT_PREF);
+  oldDiscardPref = getImagePref(DISCARD_ENABLED_PREF);
+
+  // We're testing discarding here
+  setImagePref(DISCARD_ENABLED_PREF, true);
+
+  // Sets the discard timer to 500 ms (max timeout = 2*500ms = 1s)
+  setImagePref(DISCARD_TIMEOUT_PREF, 500);
+
+  // Create the image _after_ setting the discard timer pref
+  // This image was carefully constructed to make it a "big win" for discarding,
+  // so any reasonable heuristic should still discard it.
+  var image = new Image();
+  image.setAttribute("id", "testimage");
+  image.style.display = "none";
+  image.src = imageFilename;
+
+  // Put the image into the document
+  document.body.appendChild(image);
+
+  // Wait for load, then do stage2
+  image.onload = stage2;
+}
+
+function stage2()
+{
+  // Make sure we're loaded
+  ok(isImageLoaded("testimage"), "image should be loaded");
+
+  // We're loaded - force a synchronous decode
+  forceDecode("testimage");
+
+  // We should be decoded
+  ok(isFrameDecoded("testimage"), "image should be decoded");
+
+  // Wait 1.5 seconds, then finish the test
+  setTimeout(function() {
+    finishTest();;
+  }, 1500);
+
+}
+
+function finishTest()
+{
+  // The image should be discarded by now
+  ok(!isFrameDecoded("testimage"), "image should have been discarded!");
+
+  // Reset the prefs
+  setImagePref(DISCARD_TIMEOUT_PREF, oldTimeoutPref);
+  setImagePref(DISCARD_ENABLED_PREF, oldDiscardPref);
+
+  // Finish the test
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>
+

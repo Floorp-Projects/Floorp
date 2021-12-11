@@ -1,0 +1,316 @@
+<html>
+<head>
+  <title>Test for text input event handling on contenteditable editor</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <p id="static">static content<input id="inputInStatic"><textarea id="textareaInStatic"></textarea></p>
+  <p id="editor"contenteditable="true">content editable<input id="inputInEditor"><textarea id="textareaInEditor"></textarea></p>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
+
+function runTests() {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  var fm = Services.focus;
+
+  var listener = {
+    handleEvent: function _hv(aEvent) {
+      aEvent.preventDefault(); // prevent the browser default behavior
+    },
+  };
+  var els = Services.els;
+  els.addSystemEventListener(window, "keypress", listener, false);
+
+  var staticContent = document.getElementById("static");
+  staticContent._defaultValue = getTextValue(staticContent);
+  staticContent._isFocusable = false;
+  staticContent._isEditable = false;
+  staticContent._isContentEditable = false;
+  staticContent._description = "non-editable p element";
+  var inputInStatic = document.getElementById("inputInStatic");
+  inputInStatic._defaultValue = getTextValue(inputInStatic);
+  inputInStatic._isFocusable = true;
+  inputInStatic._isEditable = true;
+  inputInStatic._isContentEditable = false;
+  inputInStatic._description = "input element in static content";
+  var textareaInStatic = document.getElementById("textareaInStatic");
+  textareaInStatic._defaultValue = getTextValue(textareaInStatic);
+  textareaInStatic._isFocusable = true;
+  textareaInStatic._isEditable = true;
+  textareaInStatic._isContentEditable = false;
+  textareaInStatic._description = "textarea element in static content";
+  var editor = document.getElementById("editor");
+  editor._defaultValue = getTextValue(editor);
+  editor._isFocusable = true;
+  editor._isEditable = true;
+  editor._isContentEditable = true;
+  editor._description = "contenteditable editor";
+  var inputInEditor = document.getElementById("inputInEditor");
+  inputInEditor._defaultValue = getTextValue(inputInEditor);
+  inputInEditor._isFocusable = true;
+  inputInEditor._isEditable = true;
+  inputInEditor._isContentEditable = false;
+  inputInEditor._description = "input element in contenteditable editor";
+  var textareaInEditor = document.getElementById("textareaInEditor");
+  textareaInEditor._defaultValue = getTextValue(textareaInEditor);
+  textareaInEditor._isFocusable = true;
+  textareaInEditor._isEditable = true;
+  textareaInEditor._isContentEditable = false;
+  textareaInEditor._description = "textarea element in contenteditable editor";
+
+  function getTextValue(aElement) {
+    if (aElement == editor) {
+      var value = "";
+      for (var node = aElement.firstChild; node; node = node.nextSibling) {
+        if (node.nodeType == Node.TEXT_NODE) {
+          value += node.data;
+        } else if (node.nodeType == Node.ELEMENT_NODE) {
+          var tagName = node.tagName.toLowerCase();
+          switch (tagName) {
+            case "input":
+            case "textarea":
+              value += kLF;
+              break;
+            default:
+              ok(false, "Undefined tag is used in the editor: " + tagName);
+              break;
+          }
+        }
+      }
+      return value;
+    }
+    return aElement.value;
+  }
+
+  function testTextInput(aFocus) {
+    var when = " when " +
+      ((aFocus && aFocus._isFocusable) ? aFocus._description + " has focus" :
+                                         "nobody has focus");
+
+    function checkValue(aElement, aInsertedText) {
+      if (aElement == aFocus && aElement._isEditable) {
+        is(getTextValue(aElement), aInsertedText + aElement._defaultValue,
+           aElement._description +
+             " wasn't edited by synthesized key events" + when);
+        return;
+      }
+      is(getTextValue(aElement), aElement._defaultValue,
+         aElement._description +
+           " was edited by synthesized key events" + when);
+    }
+
+    if (aFocus && aFocus._isFocusable) {
+      aFocus.focus();
+      is(fm.focusedElement, aFocus,
+         aFocus._description + " didn't get focus at preparing tests" + when);
+    } else {
+      var focusedElement = fm.focusedElement;
+      if (focusedElement) {
+        focusedElement.blur();
+      }
+      ok(!fm.focusedElement,
+         "Failed to blur at preparing tests" + when);
+    }
+
+    if (aFocus && aFocus._isFocusable) {
+      sendString("ABC");
+      checkValue(staticContent, "ABC");
+      checkValue(inputInStatic, "ABC");
+      checkValue(textareaInStatic, "ABC");
+      checkValue(editor, "ABC");
+      checkValue(inputInEditor, "ABC");
+      checkValue(textareaInEditor, "ABC");
+
+      if (aFocus._isEditable) {
+        synthesizeKey("KEY_Backspace", {repeat: 3});
+        checkValue(staticContent, "");
+        checkValue(inputInStatic, "");
+        checkValue(textareaInStatic, "");
+        checkValue(editor, "");
+        checkValue(inputInEditor, "");
+        checkValue(textareaInEditor, "");
+      }
+    }
+
+    // When key events are fired on unfocused editor.
+    function testDispatchedKeyEvent(aTarget) {
+      var targetDescription = " (dispatched to " + aTarget._description + ")";
+      function dispatchKeyEvent(aKeyCode, aChar, aDispatchTarget) {
+        var keyEvent = new KeyboardEvent("keypress", {
+          bubbles: true,
+          cancelable: true,
+          view: null,
+          keyCode: aKeyCode,
+          charCode: aChar ? aChar.charCodeAt(0) : 0
+        });
+        aDispatchTarget.dispatchEvent(keyEvent);
+      }
+
+      function checkValueForDispatchedKeyEvent(aElement, aInsertedText) {
+        if (aElement == aTarget && aElement._isEditable &&
+            (!aElement._isContentEditable || aElement == aFocus)) {
+          is(getTextValue(aElement), aInsertedText + aElement._defaultValue,
+             aElement._description +
+               " wasn't edited by dispatched key events" +
+               when + targetDescription);
+          return;
+        }
+        if (aElement == aTarget) {
+          is(getTextValue(aElement), aElement._defaultValue,
+             aElement._description +
+               " was edited by dispatched key events" +
+               when + targetDescription);
+          return;
+        }
+        is(getTextValue(aElement), aElement._defaultValue,
+           aElement._description +
+             " was edited by key events unexpectedly" +
+             when + targetDescription);
+      }
+
+      dispatchKeyEvent(0, "A", aTarget);
+      dispatchKeyEvent(0, "B", aTarget);
+      dispatchKeyEvent(0, "C", aTarget);
+
+      checkValueForDispatchedKeyEvent(staticContent, "ABC");
+      checkValueForDispatchedKeyEvent(inputInStatic, "ABC");
+      checkValueForDispatchedKeyEvent(textareaInStatic, "ABC");
+      checkValueForDispatchedKeyEvent(editor, "ABC");
+      checkValueForDispatchedKeyEvent(inputInEditor, "ABC");
+      checkValueForDispatchedKeyEvent(textareaInEditor, "ABC");
+
+      dispatchKeyEvent(KeyboardEvent.DOM_VK_BACK_SPACE, 0, aTarget);
+      dispatchKeyEvent(KeyboardEvent.DOM_VK_BACK_SPACE, 0, aTarget);
+      dispatchKeyEvent(KeyboardEvent.DOM_VK_BACK_SPACE, 0, aTarget);
+
+      checkValueForDispatchedKeyEvent(staticContent, "");
+      checkValueForDispatchedKeyEvent(inputInStatic, "");
+      checkValueForDispatchedKeyEvent(textareaInStatic, "");
+      checkValueForDispatchedKeyEvent(editor, "");
+      checkValueForDispatchedKeyEvent(inputInEditor, "");
+      checkValueForDispatchedKeyEvent(textareaInEditor, "");
+    }
+
+    testDispatchedKeyEvent(staticContent);
+    testDispatchedKeyEvent(inputInStatic);
+    testDispatchedKeyEvent(textareaInStatic);
+    testDispatchedKeyEvent(editor);
+    testDispatchedKeyEvent(inputInEditor);
+    testDispatchedKeyEvent(textareaInEditor);
+
+    if (!aFocus._isEditable) {
+      return;
+    }
+
+    // IME
+    // input first character
+    synthesizeCompositionChange(
+      { "composition":
+        { "string": "\u3089",
+          "clauses":
+          [
+            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
+        },
+        "caret": { "start": 1, "length": 0 },
+      });
+    var queryText = synthesizeQueryTextContent(0, 100);
+    ok(queryText, "query text event result is null" + when);
+    if (!queryText) {
+      return;
+    }
+    ok(queryText.succeeded, "query text event failed" + when);
+    if (!queryText.succeeded) {
+      return;
+    }
+    is(queryText.text, "\u3089" + aFocus._defaultValue,
+       "composing text is incorrect" + when);
+    var querySelectedText = synthesizeQuerySelectedText();
+    ok(querySelectedText, "query selected text event result is null" + when);
+    if (!querySelectedText) {
+      return;
+    }
+    ok(querySelectedText.succeeded, "query selected text event failed" + when);
+    if (!querySelectedText.succeeded) {
+      return;
+    }
+    is(querySelectedText.offset, 1,
+       "query selected text event returns wrong offset" + when);
+    is(querySelectedText.text, "",
+       "query selected text event returns wrong selected text" + when);
+    // commit composition
+    synthesizeComposition({ type: "compositioncommitasis" });
+    queryText = synthesizeQueryTextContent(0, 100);
+    ok(queryText, "query text event result is null after commit" + when);
+    if (!queryText) {
+      return;
+    }
+    ok(queryText.succeeded, "query text event failed after commit" + when);
+    if (!queryText.succeeded) {
+      return;
+    }
+    is(queryText.text, "\u3089" + aFocus._defaultValue,
+       "composing text is incorrect after commit" + when);
+    querySelectedText = synthesizeQuerySelectedText();
+    ok(querySelectedText,
+       "query selected text event result is null after commit" + when);
+    if (!querySelectedText) {
+      return;
+    }
+    ok(querySelectedText.succeeded,
+       "query selected text event failed after commit" + when);
+    if (!querySelectedText.succeeded) {
+      return;
+    }
+    is(querySelectedText.offset, 1,
+       "query selected text event returns wrong offset after commit" + when);
+    is(querySelectedText.text, "",
+       "query selected text event returns wrong selected text after commit" +
+         when);
+
+    checkValue(staticContent, "\u3089");
+    checkValue(inputInStatic, "\u3089");
+    checkValue(textareaInStatic, "\u3089");
+    checkValue(editor, "\u3089");
+    checkValue(inputInEditor, "\u3089");
+    checkValue(textareaInEditor, "\u3089");
+
+    synthesizeKey("KEY_Backspace");
+    checkValue(staticContent, "");
+    checkValue(inputInStatic, "");
+    checkValue(textareaInStatic, "");
+    checkValue(editor, "");
+    checkValue(inputInEditor, "");
+    checkValue(textareaInEditor, "");
+  }
+
+  testTextInput(inputInStatic);
+  testTextInput(textareaInStatic);
+  testTextInput(editor);
+  testTextInput(inputInEditor);
+  testTextInput(textareaInEditor);
+
+  els.removeSystemEventListener(window, "keypress", listener, false);
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

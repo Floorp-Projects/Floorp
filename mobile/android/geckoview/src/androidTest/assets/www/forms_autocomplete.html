@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Forms</title>
+        <meta name="viewport" content="minimum-scale=1,width=device-width">
+    </head>
+    <body>
+        <form>
+            <input type="text" autocomplete="email" autofocus>
+            <input type="text" autocomplete="username">
+            <input type="password">
+            <input type="submit" value="submit">
+        </form>
+        <iframe id="iframe"></iframe>
+    <script>
+        addEventListener("load", function(e) {
+            if (window.parent === window) {
+                document.getElementById("iframe").contentWindow.location.href = window.location.href;
+            }
+        });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Deprecated reports</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="common_deprecated.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript">
+
+test_deprecatedInterface()
+.then(() => test_deprecatedMethod())
+.then(() => test_deprecatedAttribute())
+.then(() => test_takeRecords())
+.then(() => {
+  info("Workers!");
+
+  return new Promise(resolve => {
+    const w = new Worker("worker_deprecated.js");
+    w.onmessage = e => {
+      switch (e.data.type) {
+        case "info":
+          info(e.data.msg);
+          break;
+
+        case "check":
+          ok(e.data.check, e.data.msg);
+          break;
+
+        case "finish":
+          resolve();
+          break;
+
+        default:
+          ok(false, "Invalid message");
+          break;
+      }
+    }
+  });
+})
+
+.then(() => { SimpleTest.finish(); });
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

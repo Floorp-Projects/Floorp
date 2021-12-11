@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<div id="log"></div>
+<script>
+"use strict";
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    set: [
+      ["dom.meta-viewport.enabled", true],
+      ["apz.allow_zooming", true],
+    ],
+  },
+  function() {
+    // We need to open a new window because the API to set the dynamic toolbar
+    // max height works only in the top content document.
+    window.open("file_dynamic_toolbar_max_height.html");
+  }
+);
+</script>
+</html>

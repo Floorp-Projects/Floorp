@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test checking webRequest.onBeforeRequest details object</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+let expected = {
+  "file_contains_iframe.html": {
+    type: "main_frame",
+    frameAncestor_length: 0,
+  },
+  "file_contains_img.html": {
+    type: "sub_frame",
+    frameAncestor_length: 1,
+  },
+  "file_image_good.png": {
+    type: "image",
+    frameAncestor_length: 1,
+  }
+};
+
+function checkDetails(details) {
+  let url = new URL(details.url);
+  let filename = url.pathname.split("/").pop();
+  ok(expected.hasOwnProperty(filename), `Should be expecting a request for ${filename}`);
+  let expect = expected[filename];
+  is(expect.type, details.type, `${details.type} type matches`);
+  is(expect.frameAncestor_length, details.frameAncestors.length, "incorrect frameAncestors length");
+  if (filename == "file_contains_img.html") {
+    is(details.frameAncestors[0].frameId, details.parentFrameId,
+    "frameAncestors[0] should match parentFrameId");
+    expected["file_image_good.png"].frameId = details.frameId;
+  } else if (filename == "file_image_good.png") {
+    is(details.frameAncestors[0].frameId, details.parentFrameId,
+       "frameAncestors[0] should match parentFrameId");
+    is(details.frameId, expect.frameId,
+       "frameId for image and iframe should match");
+  }
+}
+
+add_task(async () => {
+  // Clear the image cache, since it gets in the way otherwise.
+  let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
+  let cache = imgTools.getImgCacheForDocument(document);
+  cache.clearCache(false);
+  await SpecialPowers.spawnChrome([], async () => {
+    Services.cache2.clear();
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "<all_urls>"],
+    },
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          browser.test.sendMessage("onBeforeRequest", details);
+        },
+        {
+          urls: [
+          "http://example.org/*/file_contains_img.html",
+          "http://mochi.test/*/file_contains_iframe.html",
+          "*://*/*.png",
+          ],
+        }
+      );
+    },
+  });
+
+  await extension.startup();
+  const FILE_URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html";
+  let win = window.open(FILE_URL);
+  await new Promise(resolve => win.addEventListener("load", () => resolve(), {once: true}));
+
+  for (let i = 0; i < Object.keys(expected).length; i++) {
+    checkDetails(await extension.awaitMessage("onBeforeRequest"));
+  }
+
+  win.close();
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

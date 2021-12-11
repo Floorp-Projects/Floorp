@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  </head>
+  <body onload="start()">
+    <input type="text" style="text-align:right; overflow:hidden; border-width:0;">
+    <script>
+      function start() {
+        var input = document.querySelector("input");
+        input.focus();
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

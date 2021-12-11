@@ -1,0 +1,30 @@
+[package]
+name = "style_tests"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+
+[lib]
+name = "style_tests"
+path = "lib.rs"
+doctest = false
+
+[dependencies]
+byteorder = "1.0"
+app_units = "0.7"
+cssparser = "0.29"
+euclid = "0.22"
+html5ever = "0.22"
+parking_lot = "0.10"
+rayon = "1"
+serde_json = "1.0"
+selectors = {path = "../../../components/selectors"}
+servo_arc = {path = "../../../components/servo_arc"}
+servo_atoms = {path = "../../../components/atoms"}
+servo_config = {path = "../../../components/config"}
+servo_url = {path = "../../../components/url"}
+size_of_test = {path = "../../../components/size_of_test"}
+style = {path = "../../../components/style"}
+style_traits = {path = "../../../components/style_traits"}
+std_test_override = { path = "../../../components/std_test_override" }
+to_shmem = { path = "../../../components/to_shmem" }

@@ -1,0 +1,103 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SPHINX_TREES["addon-manager"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+
+if CONFIG["MOZ_BUILD_APP"] == "mobile/android":
+    DEFINES["MOZ_FENNEC"] = True
+
+DIRS += [
+    "internal",
+]
+TEST_DIRS += ["test"]
+
+XPIDL_SOURCES += [
+    "amIAddonManagerStartup.idl",
+    "amIWebInstallPrompt.idl",
+]
+
+XPIDL_MODULE = "extensions"
+
+built_in_addons = "built_in_addons.json"
+GENERATED_FILES += [built_in_addons]
+manifest = GENERATED_FILES[built_in_addons]
+manifest.script = "gen_built_in_addons.py"
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    manifest.flags = ["--features=browser/features"]
+
+    FINAL_TARGET_FILES.browser.chrome.browser.content.browser += [
+        "!%s" % built_in_addons,
+    ]
+elif CONFIG["MOZ_BUILD_APP"] == "mobile/android":
+    manifest.flags = ["--features=features"]
+
+    FINAL_TARGET_FILES.chrome.chrome.content += [
+        "!%s" % built_in_addons,
+    ]
+elif CONFIG["MOZ_BUILD_APP"] == "comm/mail":
+    manifest.flags = ["--features=features"]
+
+    FINAL_TARGET_FILES.chrome.browser.content += [
+        "!%s" % built_in_addons,
+    ]
+
+EXTRA_PP_COMPONENTS += [
+    "extensions.manifest",
+]
+
+EXTRA_JS_MODULES += [
+    "AbuseReporter.jsm",
+    "addonManager.js",
+    "AddonManager.jsm",
+    "amContentHandler.jsm",
+    "amInstallTrigger.jsm",
+    "amWebAPI.jsm",
+    "Blocklist.jsm",
+    "LightweightThemeManager.jsm",
+]
+
+JAR_MANIFESTS += ["jar.mn"]
+
+EXPORTS.mozilla += [
+    "AddonContentPolicy.h",
+    "AddonManagerStartup.h",
+    "AddonManagerWebAPI.h",
+]
+
+UNIFIED_SOURCES += [
+    "AddonContentPolicy.cpp",
+    "AddonManagerStartup.cpp",
+    "AddonManagerWebAPI.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+LOCAL_INCLUDES += [
+    "/chrome",
+    "/dom/base",
+]
+
+FINAL_LIBRARY = "xul"
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
+
+with Files("Blocklist.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
+
+with Files("content/blocklist**"):
+    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
+
+REQUIRES_UNIFIED_BUILD = True

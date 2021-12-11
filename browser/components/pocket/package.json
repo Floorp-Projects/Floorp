@@ -1,0 +1,24 @@
+{
+  "name": "save-to-pocket-ff",
+  "version": "1.0.0",
+  "description": "Task running for Save to Pocket Extension",
+  "scripts": {
+    "start": "npm run build && npm run watch",
+    "build": "npx run-p build:*",
+    "build:handlebars": "node compile_handlebars.js",
+    "build:sass": "npx sass content/panels/css/main.scss content/panels/css/main.compiled.css --style=compressed",
+    "watch": "npx run-p watch:*",
+    "watch:handlebars": "npx chokidar \"content/panels/tmpl/**/*.handlebars\" -c \"npm run build:handlebars\"",
+    "watch:sass": "npx chokidar \"content/panels/css/**/*.scss\" -c \"npm run build:sass\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mozilla (https://mozilla.org/)",
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "chokidar-cli": "2.1.0",
+    "handlebars": "3.0.0",
+    "npm-run-all": "4.1.5",
+    "sass": "1.32.8"
+  },
+  "repository": "https://hg.mozilla.org/"
+}

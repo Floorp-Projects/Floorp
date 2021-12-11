@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1516237
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1516237</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+/** Test for Bug 1516237 **/
+ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+function go() {
+    SimpleTest.waitForExplicitFinish();
+
+    var frame = $('subframe');
+    frame.onload = null;
+
+    // Get a CCW wrapping an Xray waiver wrapping a WindowProxy.
+    var w = frame.contentWindow;
+    var ccwToWaiver = w.wrappedJSObject;
+    ccwToWaiver.testProp = 1;
+    is(ccwToWaiver.testProp, 1, "Can set properties on content window");
+
+    // Load a chrome page in the content frame. This might create a realm in
+    // the current chrome compartment - in that case we nuke the CCW to the
+    // waiver.
+    frame.onload = function() {
+        is(Cu.getClassName(w.Math, /* unwrap = */ false), "Math",
+           "Window must be in same system compartment");
+        ok(Cu.isDeadWrapper(ccwToWaiver),
+           "Nuked CCW to same-compartment window");
+        SimpleTest.finish();
+    };
+    frame.src = "file_empty.html";
+}
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1516237">Mozilla Bug 1516237</a>
+
+<iframe id="subframe" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" onload="go()"></iframe>
+
+</body>
+</html>

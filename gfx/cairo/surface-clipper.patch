@@ -1,0 +1,26 @@
+commit 061cc774a861f349334117203c301dee202f9f26
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Wed Apr 7 23:05:48 2010 -0400
+
+    Remove an incorrect optimization that was causing the clip
+    not to be set when it should've been.
+    
+    This happens when the path is equal but the parents aren't shared.
+
+diff --git a/src/cairo-surface-clipper.c b/src/cairo-surface-clipper.c
+index d536f0c..03610d1 100644
+--- a/src/cairo-surface-clipper.c
++++ b/src/cairo-surface-clipper.c
+@@ -78,12 +78,6 @@ _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
+     if (clip != NULL && clip->path == clipper->clip.path)
+ 	return CAIRO_STATUS_SUCCESS;
+ 
+-    if (clip != NULL && clipper->clip.path != NULL &&
+-	_cairo_path_fixed_equal (&clip->path->path, &clipper->clip.path->path))
+-    {
+-	return CAIRO_STATUS_SUCCESS;
+-    }
+-
+     /* all clipped out state should never propagate this far */
+     assert (clip == NULL || clip->path != NULL);
+ 

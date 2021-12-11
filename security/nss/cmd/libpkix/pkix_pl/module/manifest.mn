@@ -1,0 +1,25 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PKIX_DEPTH = ../..
+PLAT_DEPTH = $(PKIX_DEPTH)/..
+CORE_DEPTH = $(PKIX_DEPTH)/../../..
+
+# MODULE public and private header directories are implicitly REQUIRED.
+MODULE = nss
+
+CSRCS = test_colcertstore.c \
+	test_ekuchecker.c \
+	test_pk11certstore.c \
+	test_socket.c \
+	test_httpcertstore.c \
+	$(NULL)
+
+LIBRARY_NAME = pkixtoolmodule
+SHARED_LIBRARY = $(NULL)
+
+SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
+
+NO_MD_RELEASE = 1

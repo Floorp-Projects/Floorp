@@ -1,0 +1,202 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsITransportSecurityInfo;
+interface nsISimpleEnumerator;
+
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
+
+// [infallible] attributes are only allowed on [builtinclass]
+[scriptable, uuid(31313372-842c-4110-bdf1-6aea17c845ad), builtinclass]
+interface nsISiteSecurityState : nsISupports
+{
+  [must_use]
+  readonly attribute ACString hostname;
+  [infallible] readonly attribute long long expireTime;
+  [infallible] readonly attribute short securityPropertyState;
+  [infallible] readonly attribute boolean includeSubdomains;
+
+  [implicit_jscontext, must_use]
+  readonly attribute jsval originAttributes;
+
+  /*
+   * SECURITY_PROPERTY_SET and SECURITY_PROPERTY_UNSET correspond to indicating
+   * a site has or does not have the security property in question,
+   * respectively.
+   * SECURITY_PROPERTY_KNOCKOUT indicates a value on a preloaded
+   * list is being overridden, and the associated site does not have the
+   * security property in question.
+   */
+  const short SECURITY_PROPERTY_UNSET = 0;
+  const short SECURITY_PROPERTY_SET = 1;
+  const short SECURITY_PROPERTY_KNOCKOUT = 2;
+};
+
+// This has to be a builtinclass because it derives from a builtinclass.
+[scriptable, uuid(9ff16e40-1029-496c-95c2-bc819872b216), builtinclass]
+interface nsISiteHSTSState : nsISiteSecurityState
+{
+};
+
+[scriptable, uuid(275127f8-dbd7-4681-afbf-6df0c6587a01)]
+interface nsISiteSecurityService : nsISupports
+{
+    const uint32_t Success = 0;
+    const uint32_t ERROR_UNKNOWN = 1;
+    const uint32_t ERROR_UNTRUSTWORTHY_CONNECTION = 2;
+    const uint32_t ERROR_COULD_NOT_PARSE_HEADER = 3;
+    const uint32_t ERROR_NO_MAX_AGE = 4;
+    const uint32_t ERROR_MULTIPLE_MAX_AGES = 5;
+    const uint32_t ERROR_INVALID_MAX_AGE = 6;
+    const uint32_t ERROR_MULTIPLE_INCLUDE_SUBDOMAINS = 7;
+    const uint32_t ERROR_INVALID_INCLUDE_SUBDOMAINS = 8;
+    // The constants that were removed below were used in HPKP processing
+    // (which has been removed entirely).
+    // ERROR_INVALID_PIN was 9
+    // ERROR_MULTIPLE_REPORT_URIS was 10
+    // ERROR_PINSET_DOES_NOT_MATCH_CHAIN was 11
+    // ERROR_NO_BACKUP_PIN was 12
+    const uint32_t ERROR_COULD_NOT_SAVE_STATE = 13;
+    // ERROR_ROOT_NOT_BUILT_IN was 14
+
+    /**
+     * nsISiteSecurityService::IsSecureURI can optionally return a flag
+     * indicating the source of the HSTS cache entry, if it comes from the
+     * preload list, was seen naturally, or is a result of HSTS priming.
+     */
+    const uint32_t SOURCE_UNKNOWN         = 0;
+    const uint32_t SOURCE_PRELOAD_LIST    = 1;
+    const uint32_t SOURCE_ORGANIC_REQUEST = 2;
+
+    /**
+     * Parses a given HTTP header and records the results internally.
+     * Currently one header type is supported: HSTS (aka STS).
+     * The format of the HSTS header is defined by the HSTS specification:
+     * https://tools.ietf.org/html/rfc6797
+     * and allows a host to specify that future HTTP requests should be
+     * upgraded to HTTPS.
+     *
+     * @param aSourceURI the URI of the resource with the HTTP header.
+     * @param aHeader the HTTP response header specifying security data.
+     * @param aSecInfo the TransportSecurityInfo of the current channel.
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
+     * @param aSource the source of the header, whether it was from the preload
+     *                list, an organic header, or unknown.
+     * @param aMaxAge the parsed max-age directive of the header.
+     * @param aIncludeSubdomains the parsed includeSubdomains directive.
+     * @param aFailureResult a more specific failure result if NS_ERROR_FAILURE
+                             was returned.
+     * @return NS_OK            if it succeeds
+     *         NS_ERROR_FAILURE if it can't be parsed
+     *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
+     *                          if there are unrecognized tokens in the header.
+     */
+    [binaryname(ProcessHeader), noscript, must_use]
+    void processHeaderNative(in nsIURI aSourceURI,
+                             in ACString aHeader,
+                             in nsITransportSecurityInfo aSecInfo,
+                             in uint32_t aFlags,
+                             in uint32_t aSource,
+                             in const_OriginAttributesRef aOriginAttributes,
+                             [optional] out unsigned long long aMaxAge,
+                             [optional] out boolean aIncludeSubdomains,
+                             [optional] out uint32_t aFailureResult);
+
+    [binaryname(ProcessHeaderScriptable), implicit_jscontext, optional_argc,
+     must_use]
+    void processHeader(in nsIURI aSourceURI,
+                       in ACString aHeader,
+                       in nsITransportSecurityInfo aSecInfo,
+                       in uint32_t aFlags,
+                       in uint32_t aSource,
+                       [optional] in jsval aOriginAttributes,
+                       [optional] out unsigned long long aMaxAge,
+                       [optional] out boolean aIncludeSubdomains,
+                       [optional] out uint32_t aFailureResult);
+
+    /**
+     * Resets HSTS state a host, including the includeSubdomains state that
+     * would affect subdomains. This essentially removes the state for the
+     * domain tree rooted at this host. If any preloaded information is present
+     * for that host, that information will then be used instead of any other
+     * previously existing state.
+     *
+     * @param aURI    the URI of the target host
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
+     */
+    [implicit_jscontext, optional_argc, must_use]
+    void resetState(in nsIURI aURI,
+                    in uint32_t aFlags,
+                    [optional] in jsval aOriginAttributes);
+
+    /**
+     * Checks whether or not the URI's hostname has HSTS set.
+     * For example:
+     * The URI is an HSTS URI if either the host has the HSTS state set, or one
+     * of its super-domains has the HSTS "includeSubdomains" flag set.
+     * NOTE: this function makes decisions based only on the
+     * host contained in the URI, and disregards other portions of the URI
+     * such as path and port.
+     *
+     * @param aURI the URI to query for STS state.
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
+     * @param aCached true if we have cached information about this host, even
+     *                if the security state is false.
+     * @param aSource the source of the HSTS entry. One of SOURCE_PRELOAD_LIST,
+     *                SOURCE_ORGANIC_REQUEST, or SOURCE_UNKNOWN.
+     */
+    [binaryname(IsSecureURI), noscript, must_use]
+    boolean isSecureURINative(in nsIURI aURI, in uint32_t aFlags,
+                              in const_OriginAttributesRef aOriginAttributes,
+                              [optional] out boolean aCached,
+                              [optional] out uint32_t aSource);
+
+    [binaryname(IsSecureURIScriptable), implicit_jscontext, optional_argc,
+     must_use]
+    boolean isSecureURI(in nsIURI aURI, in uint32_t aFlags,
+                        [optional] in jsval aOriginAttributes,
+                        [optional] out boolean aCached,
+                        [optional] out uint32_t aSource);
+
+    /**
+     * Removes all non-preloaded HSTS state by resetting to factory-original
+     * settings.
+     */
+    [must_use]
+    void clearAll();
+
+    /**
+     * Returns an enumerator of the nsISiteSecurityService storage. Each item in
+     * the enumeration is a nsISiteSecurityState that can be QueryInterfaced to
+     * nsISiteHSTSState.
+     * Doesn't include hard-coded preloaded entries.
+     */
+    [must_use]
+    nsISimpleEnumerator enumerate();
+};
+
+%{C++
+#define NS_SSSERVICE_CONTRACTID "@mozilla.org/ssservice;1"
+%}

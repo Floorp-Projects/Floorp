@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079453</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * name and short_name members
+ * https://w3c.github.io/manifest/#name-member
+ * https://w3c.github.io/manifest/#short_name-member
+ **/
+
+"use strict";
+
+var trimNamesTests = [
+  `${seperators}pass${seperators}`,
+  `${lineTerminators}pass${lineTerminators}`,
+  `${whiteSpace}pass${whiteSpace}`,
+  // BOM
+  `\uFEFFpass\uFEFF`,
+];
+var props = ["name", "short_name"];
+
+props.forEach((prop) => {
+  trimNamesTests.forEach((trimmableString) => {
+    var assetion = `Expecting ${prop} to be trimmed.`;
+    var obj = {};
+    obj[prop] = trimmableString;
+    data.jsonText = JSON.stringify(obj);
+    var result = processor.process(data);
+    is(result[prop], "pass", assetion);
+  });
+});
+
+/*
+ * If the object is not a string, it becomes undefined
+ */
+props.forEach((prop) => {
+  typeTests.forEach((type) => {
+    var expected = `Expect non - string ${prop} to be undefined: ${typeof type}`;
+    var obj = {};
+    obj[prop] = type;
+    data.jsonText = JSON.stringify(obj);
+    var result = processor.process(data);
+    SimpleTest.ok(result[prop] === undefined, expected);
+  });
+});
+
+/**
+ * acceptable names - including long names
+ */
+var acceptableNames = [
+  "pass",
+  `pass pass pass pass pass pass pass pass pass pass pass pass pass pass
+   pass pass pass pass pass pass pass pass pass pass pass pass pass pass
+   pass pass pass pass pass pass pass pass pass pass pass pass pass pass
+   pass pass pass pass pass pass pass pass pass pass pass pass`,
+  "これは許容できる名前です",
+  "ນີ້ແມ່ນຊື່ທີ່ຍອມຮັບໄດ້",
+];
+
+props.forEach((prop) => {
+  acceptableNames.forEach((name) => {
+    var expected = `Expecting name to be acceptable : ${name}`;
+    var obj = {};
+    obj[prop] = name;
+    data.jsonText = JSON.stringify(obj);
+    var result = processor.process(data);
+    is(result[prop], name, expected);
+  });
+});
+  </script>
+</head>

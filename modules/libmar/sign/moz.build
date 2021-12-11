@@ -1,0 +1,32 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("signmar")
+
+UNIFIED_SOURCES += [
+    "mar_sign.c",
+    "nss_secutil.c",
+]
+
+FORCE_STATIC_LIB = True
+
+LOCAL_INCLUDES += [
+    "../src",
+    "../verify",
+]
+
+DEFINES["MAR_NSS"] = True
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    USE_STATIC_LIBS = True
+
+# C11 for static_assert
+c11_flags = ["-std=gnu11"]
+if CONFIG["CC_TYPE"] == "clang-cl":
+    c11_flags.insert(0, "-Xclang")
+CFLAGS += c11_flags
+
+REQUIRES_UNIFIED_BUILD = True

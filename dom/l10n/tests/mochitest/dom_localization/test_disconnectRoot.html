@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.disconnectRoot</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+key1 = Value for Key 1
+key2 = Value for Key 2
+` },
+  ];
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    const p1 = document.getElementById("p1");
+
+    const domLoc = new DOMLocalization(
+      ["/mock.ftl"],
+      false,
+      l10nReg,
+      ["en-US"],
+    );
+
+    await domLoc.translateRoots();
+    is(p1.textContent.length == 0, true);
+
+    const body = document.body;
+
+    domLoc.connectRoot(body);
+    await domLoc.translateRoots();
+    is(p1.textContent.includes("Key 1"), true);
+    is(p1.textContent.includes("Key 2"), false);
+
+    domLoc.disconnectRoot(body);
+    domLoc.setAttributes(p1, "key2");
+    await domLoc.translateRoots();
+    is(p1.textContent.includes("Key 1"), true);
+    is(p1.textContent.includes("Key 2"), false);
+
+    domLoc.connectRoot(body);
+    await domLoc.translateRoots();
+    is(p1.textContent.includes("Key 1"), false);
+    is(p1.textContent.includes("Key 2"), true);
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <p id="p1" data-l10n-id="key1"></p>
+</body>
+</html>

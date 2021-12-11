@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+  content/mozapps/profile/createProfileWizard.js  (content/createProfileWizard.js)
+  content/mozapps/profile/createProfileWizard.xhtml (content/createProfileWizard.xhtml)
+  content/mozapps/profile/profileSelection.js     (content/profileSelection.js)
+  content/mozapps/profile/profileSelection.xhtml  (content/profileSelection.xhtml)
+#ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
+  content/mozapps/profile/profileDowngrade.js     (content/profileDowngrade.js)
+* content/mozapps/profile/profileDowngrade.xhtml  (content/profileDowngrade.xhtml)
+#endif

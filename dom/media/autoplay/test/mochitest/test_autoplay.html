@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: autoplay attribute</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<video id='v1'"></video><audio id='a1'></audio>
+<video id='v2' autoplay></video><audio id='a2' autoplay></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* import-globals-from ../../../test/manifest.js */
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+var v2 = document.getElementById('v2');
+var a2 = document.getElementById('a2');
+ok(!v1.autoplay, "v1.autoplay should be false by default");
+ok(!a1.autoplay, "v1.autoplay should be false by default");
+ok(v2.autoplay, "v2.autoplay should be true");
+ok(a2.autoplay, "v2.autoplay should be true");
+
+v1.autoplay = true;
+a1.autoplay = true;
+ok(v1.autoplay, "video.autoplay not true");
+ok(a1.autoplay, "audio.autoplay not true");
+is(v1.getAttribute("autoplay"), "", "video autoplay attribute not set");
+is(a1.getAttribute("autoplay"), "", "video autoplay attribute not set");
+
+mediaTestCleanup();
+
+</script>
+</pre>
+</body>
+</html>

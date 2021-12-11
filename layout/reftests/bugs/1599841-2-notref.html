@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Arabic subtending mark, CSS counter, Noto Nastaliq Urdu</title>
+    <style>
+        @font-face {
+            font-family: "NotoNastaliqUrduWeb";
+            src: url("../fonts/NotoNastaliqUrdu-Regular.ttf") format("truetype");
+        }
+
+        p {
+            margin-right: 40px;
+            text-align: right;
+        }
+
+        ul {
+            font-family: "NotoNastaliqUrduWeb", sans-serif;
+            list-style: none;
+        }
+
+        ul.ref li::before {
+            content: "\0602";
+            background: blue;
+            color: white;
+        }
+
+        ul.ref.green li::before {
+            background: green;
+            color: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <p>The width of the green bar should <b>increase</b> half-way down:</p>
+
+    <ul class="ref" lang="ur" dir="rtl">
+        <li></li>
+    </ul>
+
+    <ul class="ref green" lang="ur" dir="rtl">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+</body>
+
+</html>

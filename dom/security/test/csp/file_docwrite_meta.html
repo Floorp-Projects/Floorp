@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 663570 - Test doc.write(meta csp)</title>
+  <meta charset="utf-8">
+
+  <!-- Use doc.write() to apply meta csp -->
+  <script type="application/javascript">
+    var metaCSP = "style-src 'none';  script-src 'none'; img-src 'none'";
+    document.write("<meta http-equiv=\"Content-Security-Policy\" content=\" " + metaCSP + "\">");
+  </script>
+
+  <!-- try to load a css which is forbidden by meta CSP -->
+  <link rel="stylesheet" type="text/css" href="file_docwrite_meta.css">
+
+  <!-- try to load a script which is forbidden by meta CSP -->
+  <script id="testscript" src="file_docwrite_meta.js"></script>
+
+</head>
+<body>
+
+  <!-- try to load an image which is forbidden by meta CSP -->
+  <img id="testimage" src="http://mochi.test:8888/tests/image/test/mochitest/blue.png"></img>
+
+</body>
+</html>

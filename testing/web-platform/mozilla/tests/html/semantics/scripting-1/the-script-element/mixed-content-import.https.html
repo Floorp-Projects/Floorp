@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Attempt to load a mixed content module graph</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+  setup({allow_uncaught_exception: true});
+  var test = async_test("Attempt to load a mixed content module graph")
+  window.addEventListener("error", testNoError);
+  function scriptError() {
+    // An error is expected
+    test.done();
+  }
+  function scriptLoaded() {
+    test.step(() => assert_unreached("Should not load"));
+    test.done();
+  }
+  function testNoError() {
+    test.step(() => assert_unreached("No event expected here"));
+    test.done();
+  }
+</script>
+<script type="module"
+        onerror="scriptError()"
+        onload="scriptLoaded()"
+        src="./support/mixed_import.js">
+</script>

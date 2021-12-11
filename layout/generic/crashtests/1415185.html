@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <style>
+      * { column-count: 17 }
+    </style>
+    <script>
+    try { o1 = document.createElement('p') } catch(e) { }
+    try { o2 = document.createElement('iframe') } catch(e) { }
+    try { o3 = document.createElement('details') } catch(e) { }
+    try { o4 = document.createElement('track') } catch(e) { }
+    try { document.documentElement.appendChild(o1) } catch(e) { }
+    try { document.documentElement.appendChild(o2) } catch(e) { }
+    try { o1.appendChild(o3) } catch(e) { }
+    try { o2.contentWindow.location.reload() } catch(e) { }
+    try { o3.appendChild(o4) } catch(e) { }
+    </script>
+  </head>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=593174
+-->
+<head>
+  <title>Test for Bug 593174</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=593174">Mozilla Bug 593174</a>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var loadCount = 0;
+var popup = null;
+
+const kOriginalLocation = location.href;
+
+function iframeLoaded(identifier) {
+  loadCount++;
+  dump("iframeLoaded. loadCount=" + loadCount +
+                    " identifier='" + identifier + "'\n");
+
+  var iframe = document.getElementById('iframe');
+  var iframeCw = iframe.contentWindow;
+
+  if (loadCount == 1) {
+    // Test 1: Navigate iframe1.  This page should be the referer.
+    // We'll get a callback from the inner page when its iframe finishes
+    // loading, so get rid of the onload listener on our iframe.
+
+    // Change this page's URI using replaceState; the referrer should be this
+    // new value, not our original location.
+    history.replaceState('', '', Math.random());
+
+    iframe.onload = null;
+    iframeCw.location = 'file_bug593174_2.html';
+  }
+  else if (loadCount == 2) {
+    // Test 1: Check that this page is the referer.
+    is(iframeCw.document.referrer, String(document.location), 'outer iframe referrer');
+
+    // Test 2: file_bug593174_2.html itself contains an iframe, whose src is a
+    // data: uri.  Call into that inner iframe and have it set its
+    // document.location.  The new document's referrer should be
+    // file_bug593174_2.html.
+
+    // We'll get a call to iframeLoaded when this finishes.
+    iframeCw.navigateInnerIframe();
+  }
+  else if (loadCount == 3) {
+    is(iframeCw.getInnerIframeReferrer(), String(iframeCw.location), 'inner iframe referrer');
+
+    // Now do the test again, this time with a popup.
+    popup = window.open('file_bug593174_1.html');
+    popup.onload = iframeLoaded('popup/outer');
+  }
+  else if (loadCount == 4) {
+    history.replaceState('', '', Math.random());
+
+    popup.onload = null;
+    popup.location = 'file_bug593174_2.html';
+  }
+  else if (loadCount == 5) {
+    is(popup.document.referrer, String(document.location), 'popup referrer after replaceState');
+    popup.navigateInnerIframe();
+  }
+  else if (loadCount == 6) {
+    is(popup.getInnerIframeReferrer(), String(popup.location), 'popup/inner iframe referrer');
+    popup.close();
+    history.replaceState('', '', kOriginalLocation);
+    SimpleTest.finish();
+  }
+}
+
+</script>
+
+<iframe onload='iframeLoaded("outer")' id='iframe' src='file_bug593174_1.html'></iframe>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>MessageEvent tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<button id="target">target</button>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var data = "foobar";
+var origin = "http://cool.example.com";
+var bubbles = true, cancelable = true;
+var lastEventId = "lastEventId";
+
+var target;
+
+var count = 0;
+
+function sendMsg()
+{
+  try
+  {
+    var evt = new MessageEvent('message', {
+      bubbles, cancelable, data,
+      origin, lastEventId, source: window});
+    ok(evt instanceof MessageEvent, "I ordered a MessageEvent!");
+  
+    is(evt.data, data, "unexpected data");
+    is(evt.origin, origin, "unexpected origin");
+    is(evt.lastEventId, lastEventId, "unexpected lastEventId");
+  
+    is(evt.cancelable, cancelable, "wrong cancelable property");
+    is(evt.bubbles, bubbles, "wrong bubbling property");
+    is(evt.source, window, "wrong source");
+  
+    return target.dispatchEvent(evt);
+  }
+  catch (e)
+  {
+    ok(false, "exception thrown: " + e);
+    return false;
+  }
+}
+
+function recvMsg(evt)
+{
+  is(evt.data, data, "unexpected data");
+  is(evt.origin, origin, "unexpected origin");
+  is(evt.lastEventId, lastEventId, "unexpected lastEventId");
+
+  is(evt.cancelable, cancelable, "wrong cancelable property");
+  is(evt.bubbles, bubbles, "wrong bubbling property");
+  is(evt.source, window, "wrong source");
+
+  is(evt.target, target, "wrong target");
+
+  if (target == evt.currentTarget)
+  {
+    is(Event.AT_TARGET, evt.eventPhase, "this listener was on the target");
+  }
+  else
+  {
+    is(evt.currentTarget, document, "should have gotten this at the window");
+    is(Event.BUBBLING_PHASE, evt.eventPhase, "wrong phase");
+  }
+
+  count++;
+}
+
+function setup()
+{
+  target = $("target");
+  target.addEventListener("message", recvMsg);
+  document.addEventListener("message", recvMsg);
+  var res = sendMsg();
+  ok(res === true, "nothing canceled this");
+  is(count, 2, "listener not called twice");
+  SimpleTest.finish();
+}
+
+addLoadEvent(setup);
+
+</script>
+</pre>
+</body>
+</html>

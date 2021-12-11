@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether we can create an AudioContext interface</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var context1 = new OfflineAudioContext(1, 128, 44100);
+  var context2 = new OfflineAudioContext(1, 128, 44100);
+
+  var destination1 = context1.destination;
+  var destination2 = context2.destination;
+  var gain1 = new GainNode(context2);
+
+  isnot(destination1, destination2, "Destination nodes should not be the same");
+  isnot(destination1.context, destination2.context, "Destination nodes should not have the same context");
+
+  var source1 = context1.createBufferSource();
+
+  expectException(function() {
+    source1.connect(destination1, 1);
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    source1.connect(destination1, 0, 1);
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    source1.connect(destination2);
+  }, DOMException.INVALID_ACCESS_ERR);
+  expectException(function() {
+    source1.connect(gain1.gain);
+  }, DOMException.INVALID_ACCESS_ERR);
+
+  source1.connect(destination1);
+
+  expectException(function() {
+    source1.disconnect(1);
+  }, DOMException.INDEX_SIZE_ERR);
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

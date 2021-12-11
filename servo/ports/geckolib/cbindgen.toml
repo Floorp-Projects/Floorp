@@ -1,0 +1,885 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+// See the comment in ServoBindings.h about the same.
+#pragma GCC diagnostic push
+#ifdef __clang__
+#  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
+// Work-around silly windows.h define.
+#pragma push_macro("STRICT")
+#undef STRICT
+"""
+trailer = """
+#pragma pop_macro("STRICT")
+#pragma GCC diagnostic pop
+#include "mozilla/ServoStyleConstsInlines.h"
+"""
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
+ *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate style -o layout/style/ServoStyleConsts.h`
+ */
+"""
+include_guard = "mozilla_ServoStyleConsts_h"
+include_version = true
+braces = "SameLine"
+line_length = 80
+tab_width = 2
+language = "C++"
+namespaces = ["mozilla"]
+includes = ["mozilla/ServoStyleConstsForwards.h", "mozilla/ServoStyleSet.h"]
+
+[parse]
+parse_deps = true
+extra_bindings = ["style"]
+include = ["style", "cssparser", "style_traits", "servo_arc"]
+
+[struct]
+associated_constants_in_body = true
+derive_eq = true
+derive_neq = true
+
+[defines]
+# These will actually never be defined, but is handy to avoid cbindgen
+# generating Servo-only types.
+"feature = servo" = "CBINDGEN_IS_SERVO"
+"feature = servo-layout-2013" = "CBINDGEN_IS_SERVO"
+"feature = servo-layout-2020" = "CBINDGEN_IS_SERVO"
+# These will always be defined.
+"feature = gecko" = "CBINDGEN_IS_GECKO"
+"feature = cbindgen" = "CBINDGEN_IS_GECKO"
+# These depend on the build.
+"target_pointer_width = 32" = "SERVO_32_BITS"
+"target_pointer_width = 64" = "HAVE_64BIT_BUILD"
+
+[macro_expansion]
+bitflags = true
+
+[enum]
+derive_helper_methods = true
+derive_const_casts = true
+derive_tagged_enum_destructor = true
+derive_tagged_enum_copy_constructor = true
+derive_tagged_enum_copy_assignment = true
+private_default_tagged_enum_constructor = true
+cast_assert_name = "MOZ_DIAGNOSTIC_ASSERT"
+
+[export]
+prefix = "Style"
+exclude = [
+  "NS_LogCtor",
+  "NS_LogDtor",
+]
+include = [
+  "AnimationTimeline",
+  "Appearance",
+  "BreakBetween",
+  "BreakWithin",
+  "BorderStyle",
+  "OutlineStyle",
+  "CaptionSide",
+  "FontSizeAdjust",
+  "ComputedFontStretchRange",
+  "ComputedFontStyleDescriptor",
+  "ComputedFontWeightRange",
+  "ComputedTimingFunction",
+  "ComputedValueFlags",
+  "CursorKind",
+  "DisplayOutside",
+  "DisplayInside",
+  "DisplayMode",
+  "PrefersColorScheme",
+  "PrefersContrast",
+  "FillRule",
+  "FontDisplay",
+  "FontFaceSourceListComponent",
+  "FontLanguageOverride",
+  "GenericFontFamily",
+  "FontFamily",
+  "FontFamilyNameSyntax",
+  "OverflowWrap",
+  "TimingFunction",
+  "OffsetPath",
+  "OffsetRotate",
+  "UnicodeRange",
+  "UserSelect",
+  "Float",
+  "OverscrollBehavior",
+  "ScrollSnapAlign",
+  "ScrollSnapAxis",
+  "ScrollSnapStrictness",
+  "ScrollSnapType",
+  "OverflowAnchor",
+  "OverflowClipBox",
+  "Resize",
+  "Overflow",
+  "LengthPercentage",
+  "LetterSpacing",
+  "NonNegativeLengthPercentage",
+  "LengthPercentageOrAuto",
+  "LineHeight",
+  "NonNegativeLengthPercentageOrAuto",
+  "NonNegativeLengthPercentageOrNormal",
+  "LengthOrAuto",
+  "NonNegativeLengthOrAuto",
+  "TextDecorationSkipInk",
+  "TextDecorationLength",
+  "Rect",
+  "IntersectionObserverRootMargin",
+  "Size",
+  "MaxSize",
+  "FlexBasis",
+  "Position",
+  "PositionOrAuto",
+  "BackgroundSize",
+  "BorderImageSlice",
+  "BorderSpacing",
+  "BorderRadius",
+  "ColorScheme",
+  "NonNegativeLengthOrNumberRect",
+  "Perspective",
+  "ZIndex",
+  "TransformOrigin",
+  "LineBreak",
+  "WordBreak",
+  "Contain",
+  "Origin",
+  "RestyleHint",
+  "TouchAction",
+  "WillChange",
+  "TextDecorationLine",
+  "TextUnderlinePosition",
+  "TextTransform",
+  "TextJustify",
+  "TextOverflow",
+  "MozControlCharacterVisibility",
+  "RubyPosition",
+  "MozListReversed",
+  "Owned",
+  "OwnedOrNull",
+  "Strong",
+  "ScrollbarColor",
+  "CaretColor",
+  "Color",
+  "ColorOrAuto",
+  "SystemColor",
+  "SystemColorScheme",
+  "SystemFont",
+  "GradientItem",
+  "VerticalAlign",
+  "BasicShape",
+  "ShapeRadius",
+  "ArcSlice",
+  "ForgottenArcSlicePtr",
+  "HeaderWithLength",
+  "MozContextProperties",
+  "Quotes",
+  "BoxShadow",
+  "SimpleShadow",
+  "Transform",
+  "Rotate",
+  "Scale",
+  "Translate",
+  "BorderImageWidth",
+  "ComputedUrl",
+  "ComputedImageUrl",
+  "UrlOrNone",
+  "Filter",
+  "Gradient",
+  "GridTemplateAreas",
+  "GridLine",
+  "TrackSize",
+  "TrackBreadth",
+  "ImplicitGridTracks",
+  "SVGPaint",
+  "SVGPaintKind",
+  "GridTemplateComponent",
+  "TextEmphasisStyle",
+  "VariantAlternatesList",
+  "PaintOrder",
+  "SVGPaintOrder",
+  "ClipRectOrAuto",
+  "CounterSetOrReset",
+  "CounterIncrement",
+  "WritingMode",
+  "Content",
+  "ContentItem",
+  "AlignSelf",
+  "JustifySelf",
+  "AlignItems",
+  "ComputedJustifyItems",
+  "AlignContent",
+  "JustifyContent",
+  "AlignTracks",
+  "JustifyTracks",
+  "TransformStyle",
+  "Image",
+  "ClipPath",
+  "ShapeOutside",
+  "GridAutoFlow",
+  "Cursor",
+  "SVGStrokeDashArray",
+  "SVGLength",
+  "SVGOpacity",
+  "SVGWidth",
+  "TextAlign",
+  "TextAlignLast",
+  "FontSizeKeyword",
+  "AspectRatio",
+  "DefaultFontSizes",
+  "RuleChangeKind",
+  "PageSize",
+  "DProperty",
+  "ImageRendering",
+]
+item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
+renaming_overrides_prefixing = true
+
+# Prevent some renaming for Gecko types that cbindgen doesn't otherwise understand.
+[export.rename]
+"nscolor" = "nscolor"
+"nsAtom" = "nsAtom"
+"nsIURI" = "nsIURI"
+"imgRequestProxy" = "imgRequestProxy"
+"nsCompatibility" = "nsCompatibility"
+"nsSimpleContentList" = "nsSimpleContentList"
+"nsACString" = "nsACString"
+"nsAString" = "nsAString"
+"nsString" = "nsString"
+"CopyableTArray" = "CopyableTArray"
+"nsTArray" = "nsTArray"
+"nsPresContext" = "nsPresContext"
+"ComputedTiming" = "ComputedTiming"
+"CountedUnknownProperty" = "CountedUnknownProperty"
+"RefPtr" = "RefPtr"
+"nsCSSPropertyID" = "nsCSSPropertyID"
+"nsCSSPropertyIDSet" = "nsCSSPropertyIDSet"
+"nsCSSValueSharedList" = "nsCSSValueSharedList"
+"AnimationPropertySegment" = "AnimationPropertySegment"
+"RawServoAnimationValueMap" = "RawServoAnimationValueMap"
+"RawServoAnimationValueTable" = "RawServoAnimationValueTable"
+"nsCSSUnit" = "nsCSSUnit"
+"ParsingMode" = "ParsingMode"
+"InheritTarget" = "InheritTarget"
+"PseudoStyleType" = "PseudoStyleType"
+"DeclarationBlockMutationClosure" = "DeclarationBlockMutationClosure"
+"AtomArray" = "AtomArray"
+"UpdateAnimationsTasks" = "UpdateAnimationsTasks"
+"StyleRuleInclusion" = "StyleRuleInclusion"
+"nsFontFaceRuleContainer" = "nsFontFaceRuleContainer"
+"MediumFeaturesChangedResult" = "MediumFeaturesChangedResult"
+"FontSizePrefs" = "FontSizePrefs"
+"nsCSSFontDesc" = "nsCSSFontDesc"
+"nsresult" = "nsresult"
+"gfxFontFeature" = "gfxFontFeature"
+"gfxFontFeatureValueSet" = "gfxFontFeatureValueSet"
+"SeenPtrs" = "SeenPtrs"
+"gfxFontVariation" = "gfxFontVariation"
+"URLExtraData" = "URLExtraData"
+"Keyframe" = "Keyframe"
+"nsChangeHint" = "nsChangeHint"
+"ServoElementSnapshotTable" = "ServoElementSnapshotTable"
+"nsTimingFunction" = "nsTimingFunction"
+"Keyframe" = "Keyframe"
+"ComputedKeyframeValues" = "ComputedKeyframeValues"
+"OriginFlags" = "OriginFlags"
+"ServoTraversalFlags" = "ServoTraversalFlags"
+"ServoStyleSetSizes" = "ServoStyleSetSizes"
+
+[export.body]
+"CSSPixelLength" = """
+  static StyleCSSPixelLength FromPixels(CSSCoord aCoord) { return {aCoord}; }
+  static StyleCSSPixelLength Zero() { return FromPixels(0.0f); }
+
+  inline nscoord ToAppUnits() const;
+  inline bool IsZero() const;
+  CSSCoord ToCSSPixels() const { return _0; }
+  inline void ScaleBy(float);
+  inline StyleCSSPixelLength ScaledBy(float) const;
+"""
+
+"GenericCalcNode" = """
+ private:
+
+  template <typename ResultT, typename PercentageConverter>
+  ResultT ResolveInternal(ResultT aPercentageBasis,
+                          PercentageConverter aPercentageConverter) const;
+
+ public:
+  CSSCoord ResolveToCSSPixels(CSSCoord aPercentageBasis) const;
+
+  using CoordPercentageRounder = nscoord(*)(float);
+  nscoord Resolve(nscoord aBasis, CoordPercentageRounder) const;
+
+  void ScaleLengthsBy(float);
+"""
+
+"LengthPercentageUnion" = """
+  using Self = StyleLengthPercentageUnion;
+
+  // TODO(emilio): cbindgen should be able to generate these in the body of the
+  // union, but it seems it's only implemented for structs, not unions.
+  static const uint8_t TAG_CALC = StyleLengthPercentageUnion_TAG_CALC;
+  static const uint8_t TAG_LENGTH = StyleLengthPercentageUnion_TAG_LENGTH;
+  static const uint8_t TAG_PERCENTAGE = StyleLengthPercentageUnion_TAG_PERCENTAGE;
+  static const uint8_t TAG_MASK = StyleLengthPercentageUnion_TAG_MASK;
+
+ private:
+  uint8_t Tag() const {
+    return tag.tag & TAG_MASK;
+  }
+
+ public:
+  // We need to do all this manually because cbingen can't reason about unions.
+  inline StyleLengthPercentageUnion();
+  inline StyleLengthPercentageUnion(const Self&);
+  inline ~StyleLengthPercentageUnion();
+  inline Self& operator=(const Self&);
+
+  inline bool operator==(const Self& aOther) const;
+  inline bool operator!=(const Self& aOther) const;
+
+  inline bool IsLength() const;
+  inline bool IsPercentage() const;
+  inline bool IsCalc() const;
+
+  inline const StyleLength& AsLength() const;
+  inline StyleLength& AsLength();
+
+  inline const StylePercentage& AsPercentage() const;
+  inline StylePercentage& AsPercentage();
+
+  inline const StyleCalcLengthPercentage& AsCalc() const;
+  inline StyleCalcLengthPercentage& AsCalc();
+
+  static inline Self Zero();
+  static inline Self FromAppUnits(nscoord);
+  static inline Self FromPixels(CSSCoord);
+  static inline Self FromPercentage(float);
+
+  inline void ScaleLengthsBy(float);
+  inline bool HasPercent() const;
+  inline bool ConvertsToLength() const;
+  inline nscoord ToLength() const;
+  inline CSSCoord ToLengthInCSSPixels() const;
+  inline bool ConvertsToPercentage() const;
+  inline bool HasLengthAndPercentage() const;
+  inline float ToPercentage() const;
+  inline bool IsDefinitelyZero() const;
+  inline CSSCoord ResolveToCSSPixels(CSSCoord aPercentageBasisInCSSPixels) const;
+  template<typename T> inline CSSCoord ResolveToCSSPixelsWith(T aPercentageGetter) const;
+  template<typename T, typename U>
+  inline nscoord Resolve(T aPercentageGetter, U aPercentRoundingFunction) const;
+  template<typename T>
+  inline nscoord Resolve(nscoord aPercentageBasis, T aPercentRoundingFunction) const;
+  template<typename T> inline nscoord Resolve(T aPercentageGetter) const;
+  inline nscoord Resolve(nscoord aPercentageBasis) const;
+"""
+
+"GenericLengthPercentageOrAuto" = """
+  inline bool ConvertsToLength() const;
+  inline nscoord ToLength() const;
+  inline bool ConvertsToPercentage() const;
+  inline float ToPercentage() const;
+  inline bool HasPercent() const;
+  inline bool HasLengthAndPercentage() const;
+
+  // Just some convenient aliases for LengthOrAuto, to avoid confusing naming.
+  inline bool IsLength() const;
+  inline const StyleLength& AsLength() const;
+"""
+
+"GenericSize" = """
+  inline bool ConvertsToLength() const;
+  inline nscoord ToLength() const;
+  inline bool ConvertsToPercentage() const;
+  inline float ToPercentage() const;
+  inline bool HasPercent() const;
+  inline bool HasLengthAndPercentage() const;
+  inline bool BehavesLikeInitialValueOnBlockAxis() const;
+"""
+
+"GenericFlexBasis" = """
+  inline bool IsAuto() const;
+"""
+
+"GenericMaxSize" = """
+  inline bool ConvertsToLength() const;
+  inline nscoord ToLength() const;
+  inline bool ConvertsToPercentage() const;
+  inline float ToPercentage() const;
+  inline bool HasPercent() const;
+  inline bool HasLengthAndPercentage() const;
+  inline bool BehavesLikeInitialValueOnBlockAxis() const;
+"""
+
+"GenericPosition" = """
+  inline bool HasPercent() const;
+  inline bool DependsOnPositioningAreaSize() const;
+  static inline StyleGenericPosition FromPercentage(float);
+"""
+
+"GenericBackgroundSize" = """
+  bool IsInitialValue() const;
+"""
+
+"Rect" = """
+  template<typename Predicate> inline bool All(Predicate) const;
+  template<typename Predicate> inline bool Any(Predicate) const;
+
+  // Defined in WritingModes.h
+  inline const T& Get(mozilla::Side) const;
+  inline const T& Get(WritingMode, LogicalSide) const;
+  inline const T& GetIStart(WritingMode) const;
+  inline const T& GetBStart(WritingMode) const;
+  inline const T& Start(LogicalAxis, WritingMode) const;
+  inline const T& GetIEnd(WritingMode) const;
+  inline const T& GetBEnd(WritingMode) const;
+  inline const T& End(LogicalAxis, WritingMode) const;
+
+  inline T& Get(mozilla::Side);
+  inline T& Get(WritingMode, LogicalSide);
+  inline T& GetIStart(WritingMode);
+  inline T& GetBStart(WritingMode);
+  inline T& GetIEnd(WritingMode);
+  inline T& GetBEnd(WritingMode);
+"""
+
+"GenericBorderRadius" = """
+  inline const StyleLengthPercentage& Get(HalfCorner) const;
+"""
+
+"RestyleHint" = """
+  static inline StyleRestyleHint RestyleSubtree();
+  static inline StyleRestyleHint RecascadeSubtree();
+  static inline StyleRestyleHint ForAnimations();
+  // Returns true if this change hint is guaranteed to at least recascade all
+  // elements in the subtree of the element it is applied to.
+  inline bool DefinitelyRecascadesAllSubtree() const;
+"""
+
+"TextTransform" = """
+  static inline StyleTextTransform None();
+  inline bool IsNone() const;
+"""
+
+"TextUnderlinePosition" = """
+  inline bool IsAuto() const;
+  inline bool IsFromFont() const;
+  inline bool IsUnder() const;
+  inline bool IsLeft() const;
+  inline bool IsRight() const;
+"""
+
+# TODO(emilio): Add hooks to cbindgen to be able to generate [[nodiscard]]
+# on the functions.
+"Owned" = """
+  UniquePtr<GeckoType> Consume() {
+    UniquePtr<GeckoType> ret(ptr);
+    ptr = nullptr;
+    return ret;
+  }
+"""
+
+"OwnedOrNull" = """
+  UniquePtr<GeckoType> Consume() {
+    UniquePtr<GeckoType> ret(ptr);
+    ptr = nullptr;
+    return ret;
+  }
+"""
+
+"Strong" = """
+  already_AddRefed<GeckoType> Consume() {
+    already_AddRefed<GeckoType> ret(const_cast<GeckoType*>(ptr));
+    ptr = nullptr;
+    return ret;
+  }
+"""
+
+"GenericColor" = """
+  static inline StyleGenericColor CurrentColor();
+  static inline StyleGenericColor FromColor(nscolor);
+  static inline StyleGenericColor Black();
+  static inline StyleGenericColor White();
+  static inline StyleGenericColor Transparent();
+  bool MaybeTransparent() const;
+  /**
+   * Compute the final color, taking into account the foreground color from the
+   * frame's ComputedStyle.
+   */
+  nscolor CalcColor(const nsIFrame*) const;
+  /**
+   * Compute the final color, taking into account the foreground color from the
+   * style.
+   */
+  nscolor CalcColor(const ComputedStyle&) const;
+  /**
+   * Compute the final color, making the argument the foreground color.
+   */
+  nscolor CalcColor(nscolor) const;
+  nscolor CalcColor(const StyleRGBA&) const;
+"""
+
+"RGBA" = """
+  static inline StyleRGBA Transparent();
+  static inline StyleRGBA FromColor(nscolor);
+
+  inline nscolor ToColor() const;
+"""
+
+"OwnedSlice" = """
+  constexpr StyleOwnedSlice() :
+    ptr((T*)alignof(T)),
+    len(0) {}
+
+  inline void Clear();
+  inline void CopyFrom(const StyleOwnedSlice&);
+  inline void SwapElements(StyleOwnedSlice&);
+
+  StyleOwnedSlice& operator=(const StyleOwnedSlice&);
+  StyleOwnedSlice& operator=(StyleOwnedSlice&&);
+
+  inline StyleOwnedSlice(const StyleOwnedSlice&);
+  inline StyleOwnedSlice(StyleOwnedSlice&&);
+  inline explicit StyleOwnedSlice(Vector<T>&&);
+
+  inline ~StyleOwnedSlice();
+
+  Span<const T> AsSpan() const {
+    return {ptr, len};
+  }
+
+  size_t Length() const {
+    return len;
+  }
+
+  bool IsEmpty() const { return Length() == 0; }
+
+  bool operator==(const StyleOwnedSlice& other) const {
+    return AsSpan() == other.AsSpan();
+  }
+
+  bool operator!=(const StyleOwnedSlice& other) const {
+    return !(*this == other);
+  }
+"""
+
+"ArcInner" = """
+  // Increase the reference count.
+  inline void IncrementRef();
+  // Release the reference count, and return whether the result must be freed or not.
+  [[nodiscard]] inline bool DecrementRef();
+"""
+
+"ArcSlice" = """
+  inline StyleArcSlice();
+  inline StyleArcSlice(const StyleArcSlice& aOther);
+
+  inline StyleArcSlice& operator=(const StyleArcSlice&);
+  inline StyleArcSlice& operator=(StyleArcSlice&&);
+
+  inline explicit StyleArcSlice(const StyleForgottenArcSlicePtr<T>& aPtr);
+ private:
+  inline void Release();
+ public:
+  inline ~StyleArcSlice();
+  inline Span<const T> AsSpan() const;
+  inline size_t Length() const;
+  inline bool IsEmpty() const;
+  inline bool operator==(const StyleArcSlice& other) const;
+  inline bool operator!=(const StyleArcSlice& other) const;
+"""
+
+"Arc" = """
+  StyleArc() = delete;
+  inline StyleArc(const StyleArc& Other);
+ private:
+  inline void Release();
+ public:
+  inline ~StyleArc();
+
+  inline StyleArc& operator=(const StyleArc&);
+  inline StyleArc& operator=(StyleArc&&);
+
+  const T* operator->() const {
+    MOZ_DIAGNOSTIC_ASSERT(p, "Arc shouldn't be null");
+    return &p->data;
+  }
+  const T& operator*() const {
+    MOZ_DIAGNOSTIC_ASSERT(p, "Arc shouldn't be null");
+    return p->data;
+  }
+  bool operator==(const StyleArc& other) const {
+    return p == other.p || *(*this) == *other;
+  }
+  bool operator!=(const StyleArc& other) const {
+    return !(*this == other);
+  }
+"""
+
+"CustomIdent" = """
+  inline nsAtom* AsAtom() const;
+"""
+
+"Atom" = """
+  StyleAtom(size_t) = delete;
+  StyleAtom() = delete;
+
+  inline bool IsStatic() const;
+  inline nsAtom* AsAtom() const;
+
+ private:
+  inline void AddRef();
+  inline void Release();
+
+ public:
+  inline explicit StyleAtom(already_AddRefed<nsAtom> aAtom);
+  inline StyleAtom(const StyleAtom& aOther);
+  inline StyleAtom& operator=(const StyleAtom&);
+  inline ~StyleAtom();
+"""
+
+"OwnedStr" = """
+  inline nsDependentCSubstring AsString() const;
+"""
+
+"GenericTransformOrigin" = """
+  inline bool HasPercent() const;
+"""
+
+"GenericTransform" = """
+  inline Span<const T> Operations() const;
+  inline bool IsNone() const;
+  bool HasPercent() const;
+"""
+
+"Angle" = """
+  inline static StyleAngle Zero();
+  inline float ToDegrees() const;
+  inline double ToRadians() const;
+  StyleAngle operator+(const StyleAngle& aAngle) const {
+    return StyleAngle{_0 + aAngle._0};
+  }
+  StyleAngle operator-(const StyleAngle& aAngle) const {
+    return StyleAngle{_0 - aAngle._0};
+  }
+"""
+
+"CoordPair" = """
+  explicit StyleCoordPair(const gfx::Point& aPoint): _0(aPoint.x), _1(aPoint.y) {}
+"""
+
+"TextOverflow" = """
+  StyleTextOverflow()
+    : first(StyleTextOverflowSide::Clip()),
+      second(StyleTextOverflowSide::Clip()),
+      sides_are_logical(true) {}
+"""
+
+"UrlExtraData" = """
+  StyleUrlExtraData() = delete;
+
+  // Could be implemented if wanted.
+  StyleUrlExtraData(const StyleUrlExtraData&) = delete;
+  StyleUrlExtraData& operator=(const StyleUrlExtraData&) = delete;
+
+  inline bool IsShared() const;
+
+  inline ~StyleUrlExtraData();
+  inline const URLExtraData& get() const;
+"""
+
+"CssUrlData" = """
+  // Implemented in nsStyleStruct.cpp
+  bool operator==(const StyleCssUrlData& other) const;
+  bool operator!=(const StyleCssUrlData& other) const {
+    return !(*this == other);
+  }
+"""
+
+"LoadData" = """
+  ~StyleLoadData();
+"""
+
+"CssUrl" = """
+  inline nsDependentCSubstring SpecifiedSerialization() const;
+  inline const URLExtraData& ExtraData() const;
+  inline StyleLoadData& LoadData() const;
+  inline nsIURI* GetURI() const;
+"""
+
+"ComputedUrl" = """
+  // Forwarded from CssUrl.
+  inline nsDependentCSubstring SpecifiedSerialization() const;
+  inline const URLExtraData& ExtraData() const;
+  inline nsIURI* GetURI() const;
+  inline StyleLoadData& LoadData() const;
+
+  inline bool IsLocalRef() const;
+  inline bool HasRef() const;
+  inline StyleCorsMode CorsMode() const;
+  already_AddRefed<nsIURI> ResolveLocalRef(nsIURI* aBase) const;
+  already_AddRefed<nsIURI> ResolveLocalRef(const nsIContent* aContent) const;
+
+  // Only relevant for images.
+  inline bool IsImageResolved() const;
+  inline imgRequestProxy* GetImage() const;
+  void ResolveImage(dom::Document&, const StyleComputedUrl* aOldImage);
+"""
+
+"GenericGradient" = """
+  inline bool Repeating() const;
+  bool IsOpaque() const;
+"""
+
+"GenericGridLine" = """
+  // Returns the `auto` value.
+  inline StyleGenericGridLine();
+  inline bool IsAuto() const;
+  // The line name, or nsGkAtoms::_empty if not present.
+  inline nsAtom* LineName() const;
+"""
+
+"GenericTrackBreadth" = """
+  inline bool HasPercent() const;
+"""
+
+"GenericTrackSize" = """
+  // Implemented in nsGridContainerFrame.cpp
+  inline const StyleGenericTrackBreadth<L>& GetMin() const;
+  inline const StyleGenericTrackBreadth<L>& GetMax() const;
+"""
+
+"GenericGridTemplateComponent" = """
+  inline Maybe<size_t> RepeatAutoIndex() const;
+  inline const StyleGenericTrackRepeat<L, I>* GetRepeatAutoValue() const;
+  inline bool HasRepeatAuto() const;
+  inline Span<const StyleOwnedSlice<StyleCustomIdent>> LineNameLists(bool aIsSubgrid) const;
+  inline Span<const StyleGenericTrackListValue<L, I>> TrackListValues() const;
+"""
+
+"GenericClipRect" = """
+  // Get the layout rect, replacing auto right / bottom values for aAutoSize.
+  inline nsRect ToLayoutRect(nscoord aAutoSize = NS_MAXSIZE) const;
+"""
+
+"GenericRotate" = """
+ public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericRotate(): tag(Tag::None) {}
+"""
+
+"GenericScale" = """
+ public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericScale(): tag(Tag::None) {}
+"""
+
+"GenericTranslate" = """
+ public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericTranslate(): tag(Tag::None) {}
+"""
+
+"GenericOffsetPath" = """
+ public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericOffsetPath(): tag(Tag::None) {}
+"""
+
+"GenericPositionOrAuto" = """
+ public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericPositionOrAuto(): tag(Tag::Auto) {}
+"""
+
+"GenericImage" = """
+ public:
+  // Returns the intrinsic resolution of the image.
+  //
+  // The resolution is in dppx, and should be used to impact the intrinsic
+  // size of the image.
+  ImageResolution GetResolution() const;
+
+  // Returns the intrinsic size of the image, if there's one, accounting for
+  // resolution as needed.
+  Maybe<CSSIntSize> GetIntrinsicSize() const;
+
+  // If this is an image-set(), the final image we've selected, otherwise it
+  // returns *this.
+  const StyleGenericImage& FinalImage() const;
+
+  // Whether this image may have an image request associated with it.
+  bool IsImageRequestType() const;
+
+  // Gets the image request URL.
+  const StyleComputedImageUrl* GetImageRequestURLValue() const;
+
+  // Gets the image data of this image if it has any image request.
+  imgRequestProxy* GetImageRequest() const;
+
+  // Returns true if this image is fully loaded, and its size is calculated.
+  // Always returns true if there's no image request involved and this image
+  // is not `none`.
+  bool IsComplete() const;
+
+  // Returns true if this image has an available size and hasn't errored.
+  // Always returns true if there's no image request involved and this image
+  // is not `none`.
+  bool IsSizeAvailable() const;
+
+  // Returns true if the item is definitely opaque --- i.e., paints every
+  // pixel within its bounds opaquely, and the bounds contains at least a pixel.
+  bool IsOpaque() const;
+
+  struct ActualCropRect {
+    nsIntRect mRect; // in image pixels
+    bool mIsEntireImage;
+  };
+
+  Maybe<ActualCropRect> ComputeActualCropRect() const;
+
+  // Resolves the underlying image request if any.
+  void ResolveImage(dom::Document&, const StyleGenericImage* aOld);
+
+  // Returns whether this image has been resolved.
+  bool IsResolved() const;
+"""
+
+"Ratio" = """
+  inline AspectRatio ToLayoutRatio(UseBoxSizing aUseBoxSizing) const;
+"""
+
+"GenericAspectRatio" = """
+  bool HasRatio() const { return ratio.IsRatio(); }
+  bool HasFiniteRatio() const { return static_cast<bool>(ToLayoutRatio()); }
+  bool BehavesAsAuto() const { return auto_ || !HasFiniteRatio(); }
+  inline AspectRatio ToLayoutRatio() const;
+
+  static StyleGenericAspectRatio Auto() {
+    return {true, StylePreferredRatio<N>::None()};
+  }
+"""
+
+"FontFamilyList" = """
+  // Whether the `fallback` generic is already on the family list.
+  inline bool ContainsFallback() const;
+  static StyleFontFamilyList WithOneUnquotedFamily(const nsACString&);
+  // Constructs a font family list with a list of names.
+  static StyleFontFamilyList WithNames(nsTArray<StyleSingleFontFamily>&&);
+"""
+
+"SingleFontFamily" = """
+  static StyleSingleFontFamily Parse(const nsACString& aName);
+  void AppendToString(nsACString& aFamily, bool aIncludeQuotes = true) const;
+  bool IsNamedFamily(const nsAString&) const;
+"""
+
+"AnimationTimeline" = """
+ public:
+  StyleAnimationTimeline(): tag(Tag::Auto) {}
+"""

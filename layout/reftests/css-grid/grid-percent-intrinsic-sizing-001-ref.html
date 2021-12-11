@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <style type="text/css">
+  <title>CSS Grid Test: Grid container intrinsic sizing involving percent track min sizing / grid-gap</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1302541">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font:16px/1 monospace; padding:0; margin:0;
+}
+
+div {
+  display: grid;
+  float: left;
+  border: 1px solid;
+  clear: left;
+  align-content: start;
+  justify-content: start;
+  margin: 3px;
+}
+
+span {
+  background: grey;
+}
+.c > span { width: 10px; }
+.r > span { height: 10px; }
+
+span:nth-child(2) { background:lime; }
+x { background: blue; }
+x:nth-child(2) { background:pink; }
+
+.c { grid-auto-rows: 5px; }
+.c.p1   { grid-template-columns: 1px; width: 10px; }
+.c.p1a  { grid-template-columns: minmax(10%,auto); }
+.c.p2   { grid-template-columns: 10% 10%; grid-gap: 20%; }
+.c.p2a  { grid-template-columns: repeat(2,minmax(10%,auto)); grid-gap: 20%; }
+.c.c0  { grid-template-columns: 0; }
+
+.r { grid-auto-columns: 5px; grid-auto-flow: column; }
+.r.p1   { grid-template-rows: 10%; }
+.r.p1a  { grid-template-rows: minmax(10%,auto); }
+.r.p2   { grid-template-rows: 10% 10%; grid-gap: 20%; }
+.r.p2a  { grid-template-rows: repeat(2,minmax(10%,auto)); grid-gap: 20%; }
+.r.r0   { grid-template-rows: 0; }
+
+  </style>
+</head>
+<body>
+
+<div class="c p1"><span></span><x></x></div>
+<div class="c c0"><x></x></div>
+<div class="c p1a"><span></span><x></x></div>
+<div class="c c0"><x></x></div>
+
+<div class="c p2"><span></span><span></span><x></x></div>
+<div class="c c0"><x></x></div>
+<div class="c p2a"><span></span><span></span><x></x></div>
+<div class="c c0"><x></x></div>
+
+<div class="r p1"><span></span><x></x></div>
+<div class="r r0"><x></x></div>
+<div class="r p1a"><span></span><x></x></div>
+<div class="r r0"><x></x></div>
+
+<div class="r p2"><span></span><span></span><x></x></div>
+<div class="r r0"><x></x></div>
+<div class="r p2a"><span></span><span></span><x></x></div>
+<div class="r r0"><x></x></div>
+
+</body>
+</html>

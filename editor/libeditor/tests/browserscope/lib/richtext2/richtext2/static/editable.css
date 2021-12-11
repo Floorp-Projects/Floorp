@@ -1,0 +1,66 @@
+.b, myb {
+  font-weight: bold;
+}
+
+.i, myi {
+  font-style: italic;
+}
+
+.s, mys {
+  text-decoration: line-through;
+}
+
+.u, myu {
+  text-decoration: underline;
+}
+
+.sub, mysub {
+  vertical-align: sub;
+}
+
+.sup, mysup {
+  vertical-align: super;
+}
+
+.jc, myjc {
+  text-align: center;
+}
+
+.jf, myjf {
+  text-align: justify;
+}
+
+.jl, myjl {
+  text-align: left;
+}
+
+.jr, myjr {
+  text-align: right;
+}
+
+.red, myred {
+  color: red;
+}
+
+.bcred, mybcred {
+  background-color: red;
+}
+
+.large, mylarge {
+  font-size: large;
+}
+
+.fs18px, myfs18px {
+  font-size: 18px;
+}
+
+.courier, mycourier {
+  font-family: courier;
+}
+
+gen::before {
+  content: "[BEFORE]";
+}
+gen::after {
+  content: "[AFTER]";
+}

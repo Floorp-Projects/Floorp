@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for delivering reports</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript">
+
+// Setting prefs.
+SpecialPowers.pushPrefEnv({ set: [
+  ["dom_reporting_delivering_timeout", 1],
+  ["dom_reporting_delivering_maxFailures", 2],
+  ["dom.reporting.delivering.maxReports", 3],
+]})
+
+// Tests run in iframes because the origin must be secure for report-to header.
+.then(_ => {
+  window.addEventListener("message", e => {
+    if (e.data.type == "finish") {
+      SimpleTest.finish();
+      return;
+    }
+
+    if (e.data.type == "test") {
+      ok(e.data.check, e.data.msg);
+      return;
+    }
+
+    ok(false, "Invalid message");
+  });
+
+  let ifr = document.createElement("iframe");
+  ifr.src = "https://example.org/tests/dom/reporting/tests/iframe_delivering.html";
+
+  document.body.appendChild(ifr);
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

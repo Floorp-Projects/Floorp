@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+  <!-- Test: input with maxlength is valid until the user edits it, even if it's too long -->
+  <head>
+    <style>
+      :valid { background-color:green; }
+      :invalid { background-color:red; }
+      * { background-color:white; }
+    </style>
+  </head>
+  <body onload="document.documentElement.className=''">
+    <input id="input" maxlength="2" value="foo">
+  </body>
+</html>
+

@@ -1,0 +1,105 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.getFirstRow()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+
+  try {
+    SpecialPowers.unwrap(getTableEditor().getFirstRow(undefined));
+    ok(false, "nsITableEditor.getFirstRow(undefined) should cause throwing an exception");
+  } catch (e) {
+    ok(true, "nsITableEditor.getFirstRow(undefined) should cause throwing an exception");
+  }
+
+  try {
+    SpecialPowers.unwrap(getTableEditor().getFirstRow(null));
+    ok(false, "nsITableEditor.getFirstRow(null) should cause throwing an exception");
+  } catch (e) {
+    ok(true, "nsITableEditor.getFirstRow(null) should cause throwing an exception");
+  }
+
+  try {
+    SpecialPowers.unwrap(getTableEditor().getFirstRow(editor));
+    ok(false, "nsITableEditor.getFirstRow() should cause throwing an exception if given node is not in <table>");
+  } catch (e) {
+    ok(true, "nsITableEditor.getFirstRow() should cause throwing an exception if given node is not in <table>");
+  }
+
+  // Set id to "test" for the argument for getFirstRow().
+  // Set id to "expected" for the expected <tr> element result (if there is).
+  // Set class of <table> to "hasAnonymousRow" if it does not has <tr> but will be anonymous <tr> element is created.
+  const kTests = [
+    '<table id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>',
+    '<table><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>',
+    '<table><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>',
+    '<table><tr id="expected"><td>cell1-1</td><td id="test">cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>',
+    '<table><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr id="test"><td>cell2-1</td><td>cell2-2</td></tr></table>',
+    '<table><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="test">cell2-1</td><td>cell2-2</td></tr></table>',
+    '<table><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td id="test">cell2-2</td></tr></table>',
+    '<table><tbody id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><tbody><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><thead id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></thead></table>',
+    '<table><thead><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></thead></table>',
+    '<table><tfoot id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></tfoot></table>',
+    '<table><tfoot><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></tfoot></table>',
+    '<table><thead id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr></thead><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><thead><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr></thead><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><thead><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr></thead><tbody><tr><td id="test">cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><tfoot id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr></tfoot><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><tfoot><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr></tfoot><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><tfoot><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr></tfoot><tbody><tr><td id="test">cell2-1</td><td>cell2-2</td></tr></tbody></table>',
+    '<table><tr><td><table id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table></td></tr></table>',
+    '<table><tr><td><table><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="test">cell2-1</td><td>cell2-2</td></tr></table></td></tr></table>',
+    '<table id="test"></table>',
+    '<table><caption id="test">table-caption</caption></table>',
+    '<table><caption>table-caption</caption><tr id="expected"><td id="test">cell</td></tr></table>',
+    '<table class="hasAnonymousRow"><td id="test">cell</td></table>',
+    '<table class="hasAnonymousRow"><td>cell-1</td><td id="test">cell-2</td></table>',
+    '<table><tr><td><table id="test"></table></td></tr></table>',
+    '<table><tr><td><table><caption id="test">table-caption</caption></table></td></tr></table>',
+    '<table><tr><td><table class="hasAnonymousRow"><td id="test">cell</td></table></td></tr></table>',
+    '<table><tr><td><table class="hasAnonymousRow"><td>cell-1</td><td id="test">cell-2</td></table></td></tr></table>',
+    '<table><tr id="expected"><td><p id="test">paragraph</p></td></tr></table>',
+  ];
+
+  for (const kTest of kTests) {
+    editor.innerHTML = kTest;
+    let firstRow = SpecialPowers.unwrap(getTableEditor().getFirstRow(document.getElementById("test")));
+    if (document.getElementById("expected")) {
+      is(firstRow.tagName, "TR", `Result should be a <tr>: ${kTest}`);
+      is(firstRow.getAttribute("id"), "expected", `Result should be the first <tr> element in the <table>: ${kTest}`);
+    } else if (document.querySelector(".hasAnonymousRow")) {
+      is(firstRow.tagName, "TR", `Result should be a <tr>: ${kTest}`);
+      is(firstRow, document.querySelector(".hasAnonymousRow tr"), `Result should be the anonymous <tr> element in the <table>: ${kTest}`);
+    } else {
+      is(firstRow, null, `Result should be null if there is no <tr> element in the <table>: ${kTest}`);
+    }
+  }
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>

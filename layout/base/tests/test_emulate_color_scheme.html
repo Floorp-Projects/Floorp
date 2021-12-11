@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Emulation of color-scheme (bug 1570721)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style>
+@media (prefers-color-scheme: light) {
+  #test { color: rgb(0, 1, 0); }
+}
+@media (prefers-color-scheme: dark) {
+  #test { color: rgb(0, 2, 0); }
+}
+</style>
+<div id="test"></div>
+<script>
+function colorId() {
+  // Gets the middle number of the rgb(0, x, 0) color.
+  let color = getComputedStyle(document.getElementById("test")).color;
+  let id = parseInt(color.split(",")[1], 10);
+  ok(id == 1 || id == 2 || id == 3, "Bogus color?");
+  return id;
+}
+
+{
+  let bc = SpecialPowers.wrap(window).browsingContext.top;
+  ok('prefersColorSchemeOverride' in bc, "API should exist");
+  is(bc.prefersColorSchemeOverride, "none", "Override shouldn't be active.");
+
+  let originalColor = colorId();
+
+  bc.prefersColorSchemeOverride = "light";
+  is(colorId(), 1, "Light emulation works");
+
+  bc.prefersColorSchemeOverride = "dark";
+  is(colorId(), 2, "Dark emulation works");
+
+  bc.prefersColorSchemeOverride = "none";
+  is(colorId(), originalColor, "Clearing the override works");
+}
+</script>

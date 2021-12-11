@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <title>CSS 2.1 Test Suite: generated content</title>
+    <link rel="author" title="Robert O'Callahan" href="mailto:robert@ocallahan.org" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#content"/>
+    <meta name="flags" content="dom" />
+<style>
+body::before {
+  content:"Before";
+  border:inherit;
+}
+.cl::after {
+  display:block;
+  content:"After";
+}
+</style>
+<script>
+function fixupDOM() {
+  document.body.setAttribute("style", "border:2px solid red;");
+  document.body.className = "cl";
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="fixupDOM()">
+</body>
+</html>

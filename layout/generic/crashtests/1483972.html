@@ -1,0 +1,10 @@
+<script>
+window.onload=function(){
+  window.frames[0].document.body.appendChild(a);
+  var o=window.frames[0].document.getElementById('a');
+  document.getElementById('b').appendChild(o.parentNode.removeChild(o));
+}
+</script>
+<audio id='a' controls autobuffer='true'></audio>
+<time id='b'>
+<iframe hidden>

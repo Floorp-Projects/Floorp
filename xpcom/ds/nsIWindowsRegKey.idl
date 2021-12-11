@@ -1,0 +1,336 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include <windows.h>
+%}
+
+native HKEY(HKEY);
+
+/**
+ * This interface is designed to provide scriptable access to the Windows
+ * registry system ("With Great Power Comes Great Responsibility").  The
+ * interface represents a single key in the registry.
+ *
+ * This interface is highly Win32 specific.
+ */
+[scriptable, uuid(2555b930-d64f-437e-9be7-0a2cb252c1f4)]
+interface nsIWindowsRegKey : nsISupports
+{
+  /**
+   * Root keys.  The values for these keys correspond to the values from
+   * WinReg.h in the MS Platform SDK.  The ROOT_KEY_ prefix corresponds to the
+   * HKEY_ prefix in the MS Platform SDK.
+   *
+   * This interface is not restricted to using only these root keys.
+   */
+  const unsigned long ROOT_KEY_CLASSES_ROOT     = 0x80000000;
+  const unsigned long ROOT_KEY_CURRENT_USER     = 0x80000001;
+  const unsigned long ROOT_KEY_LOCAL_MACHINE    = 0x80000002;
+
+  /**
+   * Values for the mode parameter passed to the open and create methods.
+   * The values defined here correspond to the REGSAM values defined in
+   * WinNT.h in the MS Platform SDK, where ACCESS_ is replaced with KEY_.
+   *
+   * This interface is not restricted to using only these access types.
+   */
+  const unsigned long ACCESS_BASIC              = 0x00020000;
+  const unsigned long ACCESS_QUERY_VALUE        = 0x00000001;
+  const unsigned long ACCESS_SET_VALUE          = 0x00000002;
+  const unsigned long ACCESS_CREATE_SUB_KEY     = 0x00000004;
+  const unsigned long ACCESS_ENUMERATE_SUB_KEYS = 0x00000008;
+  const unsigned long ACCESS_NOTIFY             = 0x00000010;
+  const unsigned long ACCESS_READ               = ACCESS_BASIC |
+                                                  ACCESS_QUERY_VALUE |
+                                                  ACCESS_ENUMERATE_SUB_KEYS |
+                                                  ACCESS_NOTIFY;
+  const unsigned long ACCESS_WRITE              = ACCESS_BASIC |
+                                                  ACCESS_SET_VALUE |
+                                                  ACCESS_CREATE_SUB_KEY;
+  const unsigned long ACCESS_ALL                = ACCESS_READ |
+                                                  ACCESS_WRITE;
+  const unsigned long WOW64_32                  = 0x00000200;
+  const unsigned long WOW64_64                  = 0x00000100;
+
+
+  /**
+   * Values for the type of a registry value.  The numeric values of these
+   * constants are taken directly from WinNT.h in the MS Platform SDK.
+   * The Microsoft documentation should be consulted for the exact meaning of
+   * these value types.
+   *
+   * This interface is somewhat restricted to using only these value types.
+   * There is no method that is directly equivalent to RegQueryValueEx or
+   * RegSetValueEx.  In particular, this interface does not support the
+   * REG_MULTI_SZ and REG_EXPAND_SZ value types.  It is still possible to
+   * enumerate values that have other types (i.e., getValueType may return a
+   * type not defined below).
+   */
+  const unsigned long TYPE_NONE   = 0;  // REG_NONE
+  const unsigned long TYPE_STRING = 1;  // REG_SZ
+  const unsigned long TYPE_BINARY = 3;  // REG_BINARY
+  const unsigned long TYPE_INT    = 4;  // REG_DWORD
+  const unsigned long TYPE_INT64  = 11; // REG_QWORD
+
+  /**
+   * This attribute exposes the native HKEY and is available to provide C++
+   * consumers with the flexibility of making other Windows registry API calls
+   * that are not exposed via this interface.
+   *
+   * It is possible to initialize this object by setting an HKEY on it.  In
+   * that case, it is the responsibility of the consumer setting the HKEY to
+   * ensure that it is a valid HKEY.
+   *
+   * WARNING: Setting the key does not close the old key.
+   */
+  [noscript] attribute HKEY key;
+
+  /**
+   * This method closes the key.  If the key is already closed, then this
+   * method does nothing.
+   */
+  void close();
+
+  /**
+   * This method opens an existing key.  This method fails if the key
+   * does not exist.
+   *
+   * NOTE: On 32-bit Windows, it is valid to pass any HKEY as the rootKey
+   * parameter of this function.  However, for compatibility with 64-bit
+   * Windows, that usage should probably be avoided in favor of openChild.
+   *
+   * @param rootKey
+   *        A root key defined above or any valid HKEY on 32-bit Windows.
+   * @param relPath
+   *        A relative path from the given root key.
+   * @param mode
+   *        Access mode, which is a bit-wise OR of the ACCESS_ values defined
+   *        above.
+   */
+  void open(in unsigned long rootKey, in AString relPath, in unsigned long mode);
+
+  /**
+   * This method opens an existing key or creates a new key.
+   *
+   * NOTE: On 32-bit Windows, it is valid to pass any HKEY as the rootKey
+   * parameter of this function.  However, for compatibility with 64-bit
+   * Windows, that usage should probably be avoided in favor of createChild.
+   *
+   * @param rootKey
+   *        A root key defined above or any valid HKEY on 32-bit Windows.
+   * @param relPath
+   *        A relative path from the given root key.
+   * @param mode
+   *        Access mode, which is a bit-wise OR of the ACCESS_ values defined
+   *        above.
+   */
+  void create(in unsigned long rootKey, in AString relPath, in unsigned long mode);
+
+  /**
+   * This method opens a subkey relative to this key.  This method fails if the
+   * key does not exist.
+   *
+   * @return nsIWindowsRegKey for the newly opened subkey.
+   */
+  nsIWindowsRegKey openChild(in AString relPath, in unsigned long mode);
+
+  /**
+   * This method opens or creates a subkey relative to this key.
+   *
+   * @return nsIWindowsRegKey for the newly opened or created subkey.
+   */
+  nsIWindowsRegKey createChild(in AString relPath, in unsigned long mode);
+
+  /**
+   * This attribute returns the number of child keys.
+   */
+  readonly attribute unsigned long childCount;
+
+  /**
+   * This method returns the name of the n'th child key.
+   *
+   * @param index
+   *        The index of the requested child key.
+   */
+  AString getChildName(in unsigned long index);
+
+  /**
+   * This method checks to see if the key has a child by the given name.
+   *
+   * @param name
+   *        The name of the requested child key.
+   */
+  boolean hasChild(in AString name);
+
+  /**
+   * This attribute returns the number of values under this key.
+   */
+  readonly attribute unsigned long valueCount;
+
+  /**
+   * This method returns the name of the n'th value under this key.
+   *
+   * @param index
+   *        The index of the requested value.
+   */
+  AString getValueName(in unsigned long index);
+
+  /**
+   * This method checks to see if the key has a value by the given name.
+   *
+   * @param name
+   *        The name of the requested value.
+   */
+  boolean hasValue(in AString name);
+
+  /**
+   * This method removes a child key and all of its values.  This method will
+   * fail if the key has any children of its own.
+   *
+   * @param relPath
+   *        The relative path from this key to the key to be removed.
+   */
+  void removeChild(in AString relPath);
+
+  /**
+   * This method removes the value with the given name.
+   *
+   * @param name
+   *        The name of the value to be removed.
+   */
+  void removeValue(in AString name);
+
+  /**
+   * This method returns the type of the value with the given name.  The return
+   * value is one of the "TYPE_" constants defined above.
+   *
+   * @param name
+   *        The name of the value to query.
+   */
+  unsigned long getValueType(in AString name);
+
+  /**
+   * This method reads the string contents of the named value as a Unicode
+   * string.
+   *
+   * @param name
+   *        The name of the value to query.  This parameter can be the empty
+   *        string to request the key's default value.
+   */
+  AString readStringValue(in AString name);
+
+  /**
+   * This method reads the integer contents of the named value.
+   *
+   * @param name
+   *        The name of the value to query.
+   */
+  unsigned long readIntValue(in AString name);
+
+  /**
+   * This method reads the 64-bit integer contents of the named value.
+   *
+   * @param name
+   *        The name of the value to query.
+   */
+  unsigned long long readInt64Value(in AString name);
+
+  /**
+   * This method reads the binary contents of the named value under this key.
+   *
+   * JavaScript callers should take care with the result of this method since
+   * it will be byte-expanded to form a JS string.  (The binary data will be
+   * treated as an ISO-Latin-1 character string, which it is not).
+   *
+   * @param name
+   *        The name of the value to query.
+   */
+  ACString readBinaryValue(in AString name);
+
+  /**
+   * This method writes the unicode string contents of the named value.  The
+   * value will be created if it does not already exist.
+   *
+   * @param name
+   *        The name of the value to modify.  This parameter can be the empty
+   *        string to modify the key's default value.
+   * @param data
+   *        The data for the value to modify.
+   */
+  void writeStringValue(in AString name, in AString data);
+
+  /**
+   * This method writes the integer contents of the named value.  The value
+   * will be created if it does not already exist.
+   *
+   * @param name
+   *        The name of the value to modify.
+   * @param data
+   *        The data for the value to modify.
+   */
+  void writeIntValue(in AString name, in unsigned long data);
+
+  /**
+   * This method writes the 64-bit integer contents of the named value.  The
+   * value will be created if it does not already exist.
+   *
+   * @param name
+   *        The name of the value to modify.
+   * @param data
+   *        The data for the value to modify.
+   */
+  void writeInt64Value(in AString name, in unsigned long long data);
+
+  /**
+   * This method writes the binary contents of the named value.  The value will
+   * be created if it does not already exist.
+   *
+   * JavaScript callers should take care with the value passed to this method
+   * since it will be truncated from a JS string (unicode) to a ISO-Latin-1
+   * string.  (The binary data will be treated as an ISO-Latin-1 character
+   * string, which it is not).  So, JavaScript callers should only pass
+   * character values in the range \u0000 to \u00FF, or else data loss will
+   * occur.
+   *
+   * @param name
+   *        The name of the value to modify.
+   * @param data
+   *        The data for the value to modify.
+   */
+  void writeBinaryValue(in AString name, in ACString data);
+
+  /**
+   * This method starts watching the key to see if any of its values have
+   * changed.  The key must have been opened with mode including ACCESS_NOTIFY.
+   * If recurse is true, then this key and any of its descendant keys are
+   * watched.  Otherwise, only this key is watched.
+   *
+   * @param recurse
+   *        Indicates whether or not to also watch child keys.
+   */
+  void startWatching(in boolean recurse);
+
+  /**
+   * This method stops any watching of the key initiated by a call to
+   * startWatching.  This method does nothing if the key is not being watched.
+   */
+  void stopWatching();
+
+  /**
+   * This method returns true if the key is being watched for changes (i.e.,
+   * if startWatching() was called).
+   */
+  boolean isWatching();
+
+  /**
+   * This method returns true if the key has changed and false otherwise.
+   * This method will always return false if startWatching was not called.
+   */
+  boolean hasChanged();
+};

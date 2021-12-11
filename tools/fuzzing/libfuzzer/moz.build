@@ -1,0 +1,55 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library('fuzzer')
+
+EXPORTS += [
+    'FuzzerDefs.h',
+    'FuzzerExtFunctions.def',
+    'FuzzerExtFunctions.h',
+]
+
+SOURCES += [
+    'FuzzerCrossOver.cpp',
+    'FuzzerDataFlowTrace.cpp',
+    'FuzzerDriver.cpp',
+    'FuzzerExtFunctionsDlsym.cpp',
+    'FuzzerExtFunctionsWeak.cpp',
+    'FuzzerExtFunctionsWindows.cpp',
+    'FuzzerExtraCounters.cpp',
+    'FuzzerFork.cpp',
+    'FuzzerIO.cpp',
+    'FuzzerIOPosix.cpp',
+    'FuzzerIOWindows.cpp',
+    'FuzzerLoop.cpp',
+    'FuzzerMerge.cpp',
+    'FuzzerMutate.cpp',
+    'FuzzerSHA1.cpp',
+    'FuzzerTracePC.cpp',
+    'FuzzerUtil.cpp',
+    'FuzzerUtilDarwin.cpp',
+    'FuzzerUtilFuchsia.cpp',
+    'FuzzerUtilLinux.cpp',
+    'FuzzerUtilPosix.cpp',
+    'FuzzerUtilWindows.cpp',
+]
+
+if CONFIG['CC_TYPE'] == 'clang':
+    CXXFLAGS += ['-Wno-unreachable-code-return']
+
+# According to the LLVM docs, LibFuzzer isn't supposed to be built with any
+# sanitizer flags and in fact, building it with ASan coverage currently causes
+# Clang 3.9+ to crash, so we filter out all sanitizer-related flags here.
+for flags_var in ('OS_CFLAGS', 'OS_CXXFLAGS'):
+    COMPILE_FLAGS[flags_var] = [
+        f for f in COMPILE_FLAGS.get(flags_var, [])
+        if not f.startswith('-fsanitize')
+    ]
+
+LINK_FLAGS['OS'] = [
+    f for f in LINK_FLAGS.get('OS', [])
+    if not f.startswith('-fsanitize')
+]

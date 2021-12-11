@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Testcase for filters on canvas</title>
+
+<style>
+
+#checkbox {
+  filter: url(#filter);
+}
+
+</style>
+
+<svg style="display: block; height: 0;">
+
+  <defs>
+    <filter id="filter" color-interpolation-filters="sRGB" x="-100%" y="-100%" width="300%" height="300%">
+      <feMorphology operator="dilate" radius="5" in="SourceAlpha" result="mask"/>
+      <feFlood flood-color="blue"/>
+      <feComposite operator="in" in2="mask"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+</svg>
+
+<input type="checkbox" id="checkbox">
+
+<script>
+
+document.getElementById("checkbox").focus();
+
+</script>

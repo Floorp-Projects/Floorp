@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1544209">Mozilla Bug 1544209</a>
+
+<svg height="800px" width="800px">
+    <text transform="scale(3,3)" id="a" x="20px" y="20px">ABC<tspan id="b">ABC</tspan></text>
+</svg>
+
+<script type="application/javascript">
+  let a = document.getElementById("a"),
+      b = document.getElementById("b");
+
+  let wtext = a.getBoundingClientRect().width,
+      wtspan = b.getBoundingClientRect().width;
+
+  ok(wtext >= wtspan, "<tspan> should not be wider than <text>");
+  isfuzzy((wtext - wtspan) / wtext, 0.5, 0.1, "<tspan> should be approximately half of the <text> width");
+</script>

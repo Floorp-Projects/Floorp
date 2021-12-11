@@ -1,0 +1,31 @@
+<html>
+<head>
+<title></title>
+
+<script type="text/javascript">
+
+function makeXHR(url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.onload = function() {
+    callback(xhr.response);
+  };
+  xhr.send();
+}
+
+function loaded(type) {
+  window.parent.postMessage("navigator.doNotTrack=" + navigator.doNotTrack, "*");
+
+  makeXHR("dnt.sjs", (res) => {
+    window.parent.postMessage("DNT=" + res, "*");
+    window.parent.postMessage("finish", "*");
+  });
+}
+
+</script>
+</head>
+
+<body onload="loaded('onload')">
+</body>
+
+</html>

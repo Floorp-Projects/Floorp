@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=466409
+-->
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=466409">Mozilla Bug 466409</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 466409 **/
+
+
+SimpleTest.waitForExplicitFinish();
+var testframe = document.getElementById('testframe');
+
+testframe.onload = function () {
+  ok(true, "page loaded successfully");
+  SimpleTest.finish();
+};
+testframe.src = "bug466409-page.html";
+
+</script>
+</pre>
+</body>
+</html>

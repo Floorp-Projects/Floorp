@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     onload="setTimeout(function() { document.getElementById('focc').style.overflow = 'scroll'; setTimeout(function() { location.reload(); }, 200); }, 200);">
+
+  <g id="focc">
+    <foreignObject width="500" height="500" id="fo" x="20" y="20">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <select><option>Reload to see some assertions</option></select>
+      </div>
+    </foreignObject>
+  </g>
+
+</svg>

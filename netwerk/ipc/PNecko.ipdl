@@ -1,0 +1,179 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PHttpChannel;
+include protocol PCookieService;
+include protocol PBrowser;
+#ifdef MOZ_WIDGET_GTK
+include protocol PGIOChannel;
+#endif
+include protocol PWebSocket;
+include protocol PWebSocketEventListener;
+include protocol PTCPSocket;
+include protocol PTCPServerSocket;
+include protocol PUDPSocket;
+include protocol PDNSRequest;
+include protocol PFileDescriptorSet;
+include protocol PDataChannel;
+include protocol PSimpleChannel;
+include protocol PTransportProvider;
+include protocol PChildToParentStream; //FIXME: bug #792908
+include protocol PParentToChildStream; //FIXME: bug #792908
+include protocol PStunAddrsRequest;
+include protocol PFileChannel;
+include protocol PClassifierDummyChannel;
+include protocol PWebrtcTCPSocket;
+include protocol PSocketProcessBridge;
+include protocol PDocumentChannel;
+
+include IPCStream;
+include NeckoChannelParams;
+include protocol PAltDataOutputStream;
+
+include "mozilla/dom/PermissionMessageUtils.h";
+
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+[RefCounted] using class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
+[RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
+[RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
+
+
+namespace mozilla {
+namespace net {
+
+//-------------------------------------------------------------------
+[NestedUpTo=inside_cpow] sync protocol PNecko
+{
+  manager PContent;
+  manages PHttpChannel;
+  manages PCookieService;
+  manages PWebSocket;
+  manages PWebSocketEventListener;
+  manages PTCPSocket;
+  manages PTCPServerSocket;
+  manages PUDPSocket;
+  manages PDNSRequest;
+  manages PDataChannel;
+#ifdef MOZ_WIDGET_GTK
+  manages PGIOChannel;
+#endif
+  manages PSimpleChannel;
+  manages PFileChannel;
+  manages PTransportProvider;
+  manages PAltDataOutputStream;
+  manages PStunAddrsRequest;
+  manages PClassifierDummyChannel;
+  manages PWebrtcTCPSocket;
+  manages PDocumentChannel;
+
+parent:
+  async __delete__();
+
+  [Nested=inside_cpow] async PCookieService();
+  async PHttpChannel(nullable PBrowser browser,
+                     SerializedLoadContext loadContext,
+                     HttpChannelCreationArgs args);
+
+  async PWebSocket(nullable PBrowser browser, SerializedLoadContext loadContext,
+                   uint32_t aSerialID);
+  async PTCPServerSocket(uint16_t localPort, uint16_t backlog, bool useArrayBuffers);
+  async PUDPSocket(nsIPrincipal principal, nsCString filter);
+
+  async PDNSRequest(nsCString hostName, nsCString trrServer, uint16_t type,
+                    OriginAttributes originAttributes, uint32_t flags);
+
+  async PDocumentChannel(MaybeDiscardedBrowsingContext browsingContext,
+                         DocumentChannelCreationArgs args);
+
+  async PWebSocketEventListener(uint64_t aInnerWindowID);
+
+  /* Predictor Methods */
+  async PredPredict(nsIURI targetURI, nsIURI sourceURI,
+                    uint32_t reason, OriginAttributes originAttributes,
+                    bool hasVerifier);
+  async PredLearn(nsIURI targetURI, nsIURI sourceURI,
+                  uint32_t reason, OriginAttributes originAttributes);
+  async PredReset();
+
+  async SpeculativeConnect(nsIURI uri, nsIPrincipal principal, bool anonymous);
+  async HTMLDNSPrefetch(nsString hostname, bool isHttps,
+                        OriginAttributes originAttributes, uint32_t flags);
+  async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,
+                              OriginAttributes originAttributes,
+                              uint32_t flags, nsresult reason);
+
+  /**
+   * channelId is used to establish a connection between redirect channels in
+   * the parent and the child when we're redirecting to a data: URI.
+   */
+  async PDataChannel(uint32_t channelId);
+#ifdef MOZ_WIDGET_GTK
+  async PGIOChannel(nullable PBrowser browser, SerializedLoadContext loadContext, GIOChannelCreationArgs args);
+#endif
+  async PSimpleChannel(uint32_t channelId);
+  async PFileChannel(uint32_t channelId);
+
+  async PClassifierDummyChannel(nsIURI uri, nsIURI aTopWindowURI,
+                                nsresult aTopWindowURIResult,
+                                LoadInfoArgs? loadInfo);
+
+  async RequestContextLoadBegin(uint64_t rcid);
+  async RequestContextAfterDOMContentLoaded(uint64_t rcid);
+  async RemoveRequestContext(uint64_t rcid);
+
+  async PAltDataOutputStream(nsCString type, int64_t predictedSize, PHttpChannel channel);
+
+  async PStunAddrsRequest();
+
+  /* tabId is only required for web-proxy support, which isn't always needed */
+  async PWebrtcTCPSocket(TabId? tabId);
+
+  /**
+   * WebExtension-specific remote resource loading
+   */
+  async GetExtensionStream(nsIURI uri) returns (nsIInputStream stream);
+  async GetExtensionFD(nsIURI uri) returns (FileDescriptor fd);
+
+  async InitSocketProcessBridge()
+    returns (Endpoint<PSocketProcessBridgeChild> endpoint);
+  async ResetSocketProcessBridge();
+
+  async EnsureHSTSData()
+    returns (bool result);
+
+  /**
+   * Page thumbnails remote resource loading
+   */
+  async GetPageThumbStream(nsIURI uri) returns (nsIInputStream stream);
+
+child:
+  /* Predictor Methods */
+  async PredOnPredictPrefetch(nsIURI uri, uint32_t httpStatus);
+  async PredOnPredictPreconnect(nsIURI uri);
+  async PredOnPredictDNS(nsIURI uri);
+
+  async SpeculativeConnectRequest();
+
+  // Using medium high priority to deliver this notification possibly sooner than we
+  // enter poll() on the child process with infinite timeout.
+  [Priority=mediumhigh] async NetworkChangeNotification(nsCString type);
+
+  async PTransportProvider();
+
+both:
+  // Actually we need PTCPSocket() for parent. But ipdl disallows us having different
+  // signatures on parent and child. So when constructing the parent side object, we just
+  // leave host/port unused.
+  async PTCPSocket(nsString host, uint16_t port);
+};
+
+
+} // namespace net
+} // namespace mozilla

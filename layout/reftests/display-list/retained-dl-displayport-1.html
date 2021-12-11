@@ -1,0 +1,21 @@
+<html class="reftest-wait reftest-async-scroll">
+<head>
+</head>
+<body>
+    <div id="container" style="width: 100px; height: 100px; overflow: auto;"
+         reftest-displayport-x="0" reftest-displayport-y="0"
+         reftest-displayport-width="100" reftest-displayport-height="100">
+    	<div id="first" style="background-color:blue; width: 10px; height: 10px;" class="reftest-no-display-list"></div>
+    	<div id="second" style="background-color:red; width: 10px; height: 10px;"></div>
+    	<div id="spacer" style="height: 200px;"></div>
+    </div>
+</body>
+<script>
+function doTest() {
+  document.getElementById("second").style.backgroundColor = "green";
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>

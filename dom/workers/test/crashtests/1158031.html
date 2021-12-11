@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+
+function boom()
+{
+    var w = new Worker("data:text/javascript;charset=UTF-8,");
+    w.postMessage(new Blob([], {}));
+}
+
+</script>
+<body onload="boom();"></body>

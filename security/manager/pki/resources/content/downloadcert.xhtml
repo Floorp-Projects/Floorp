@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<window data-l10n-id="download-cert-window"
+        data-l10n-attrs="title, style"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="onLoad();">
+<dialog id="download_cert"
+        buttons="accept,cancel">
+
+<linkset>
+  <html:link rel="localization" href="security/pippki/pippki.ftl"/>
+</linkset>
+
+<stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+
+<script src="chrome://pippki/content/pippki.js"/>
+<script src="chrome://pippki/content/downloadcert.js"/>
+
+  <!--  Let 'em know what they're doing -->
+  <vbox>
+    <description data-l10n-id="download-cert-message"></description>
+  </vbox>
+
+  <separator/>
+
+  <!--  checkboxes for trust bits
+     -  "do you want to?"
+     -  * trust for SSL
+     -  * trust for email
+    -->
+  <vbox>
+    <description id="trustHeader"/>
+    <checkbox data-l10n-id="download-cert-trust-ssl"
+              id="trustSSL"/>
+    <checkbox data-l10n-id="download-cert-trust-email"
+              id="trustEmail"/>
+  </vbox>
+
+  <separator/>
+
+  <vbox>
+    <description data-l10n-id="download-cert-message-desc"></description>
+    <separator/>
+    <hbox>
+      <button id="viewC-button"
+              data-l10n-id="download-cert-view-cert"
+              oncommand="viewCert();"/>
+      <description style="margin: 4px;" data-l10n-id="download-cert-view-text"></description>
+    </hbox>
+  </vbox>
+
+</dialog>
+</window>

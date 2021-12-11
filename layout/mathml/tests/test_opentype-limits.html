@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Open Type MATH - limits</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+      math {
+        font-size: 10px;
+      }
+      @font-face {
+        font-family: limits-5;
+        src: url(/tests/fonts/math/limits-5.otf);
+      }
+    </style>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      var epsilon = 5;
+      function almostEqual(x, y) { return Math.abs(x - y) < epsilon; }
+
+      function getBox(aId) {
+        return document.getElementById(aId).getBoundingClientRect();
+      }
+
+      function doTest() {
+        ok(almostEqual(getBox("base9").top - getBox("over9").bottom,
+                       (6 - 2) * 10) &&
+           almostEqual(getBox("base10").top - getBox("over10").bottom,
+                       (6 - 2) * 10),
+           "Bad AccentBaseHeight");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365">
+      Mozilla Bug 961365
+    </a>
+
+    <p id="display"></p>
+
+    <p>
+      <math style="font-family: limits-5;" displaystyle="true">
+        <mspace id="ref5" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math style="font-family: limits-5;" displaystyle="true">
+        <mover>
+          <mspace id="base9" height="2em" width="2em" mathbackground="blue"/>
+          <mo id="over9" stretchy="false">~</mo>
+        </mover>
+      </math>
+      <math style="font-family: limits-5;" displaystyle="true">
+        <munderover>
+          <mspace id="base10" height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="under10" height="1em" width="1em" mathbackground="red"/>
+          <mo id="over10" stretchy="false">~</mo>
+        </munderover>
+      </math>
+    </p>
+
+  </body>
+</html>

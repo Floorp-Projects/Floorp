@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+  <script type="application/javascript">
+
+  var port;
+
+  window.addEventListener('message', receiveMessage);
+  function receiveMessage(evt) {
+    port = evt.data.port;
+
+    port.addEventListener('message', receivePostMessage);
+    function receivePostMessage(event) {
+      port.postMessage(event.data);
+    }
+    port.start();
+
+    window.parent.postMessage({ status: "READY" }, '*');
+  }
+
+  </script>
+</body>
+</html>

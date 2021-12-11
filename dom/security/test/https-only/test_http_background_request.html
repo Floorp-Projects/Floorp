@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1663396: Test HTTPS-Only-Mode top-level background request not leaking sensitive info</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * Send a top-level request and make sure that the the top-level https-only background request
+ * (a) does only use pre-path information
+ * (b) does not happen if the pref is set to false
+ */
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("have to test that https-only mode background request does not happen");
+SimpleTest.requestLongerTimeout(8);
+
+const SJS_PATH = "tests/dom/security/test/https-only/file_http_background_request.sjs?sensitive";
+
+const EXPECTED_KICK_OFF_REQUEST = "http://example.com/" + SJS_PATH;
+const EXPECTED_KICK_OFF_REQUEST_LOCAL = "http://localhost:8/" + SJS_PATH;
+const EXPECTED_UPGRADE_REQUEST = EXPECTED_KICK_OFF_REQUEST.replace("http://", "https://");
+let expectedBackgroundRequest = "";
+let requestCounter = 0;
+
+function examiner() {
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+}
+examiner.prototype  = {
+  observe(subject, topic, data) {
+    if (topic !== "specialpowers-http-notify-request") {
+      return;
+    }
+    // On Android we have other requests appear here as well. Let's make
+    // sure we only evaluate requests triggered by the test.
+    if (!data.startsWith("http://example.com") &&
+        !data.startsWith("https://example.com") &&
+        !data.startsWith("http://localhost:8") &&
+        !data.startsWith("https://localhost:8")) {
+      return;
+    }
+    ++requestCounter;
+    if (requestCounter == 1) {
+      ok(
+        data === EXPECTED_KICK_OFF_REQUEST || data === EXPECTED_KICK_OFF_REQUEST_LOCAL,
+        "kick off request needs to be http"
+      );
+      return;
+    }
+    if (requestCounter == 2) {
+      is(data, EXPECTED_UPGRADE_REQUEST, "upgraded request needs to be https");
+      return;
+    }
+    if (requestCounter == 3) {
+      is(data, expectedBackgroundRequest, "background request needs to be http and no sensitive info like path");
+       return;
+    }
+    ok(false, "we should never get here, but just in case");
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+window.BackgroundRequestExaminer = new examiner();
+
+// https-only top-level background request occurs after 3 seconds, hence
+// we use 4 seconds to make sure the background request did not happen.
+function resolveAfter4Seconds() { 
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 4000);
+  });
+}
+
+async function runTests() {
+  // (a) Test http background request to only use prePath information
+  expectedBackgroundRequest = "http://example.com/";
+  requestCounter = 0;
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+    ["dom.security.https_only_mode_send_http_background_request", true],
+    ["dom.security.https_only_mode_error_page_user_suggestions", false],
+  ]});
+  let testWin = window.open(EXPECTED_KICK_OFF_REQUEST, "_blank");
+  await resolveAfter4Seconds();
+  is(requestCounter, 3, "three requests total (kickoff, upgraded, background)");
+  testWin.close();
+
+  // (x) Test no http background request happens when localhost
+  expectedBackgroundRequest = "";
+  requestCounter = 0;
+  testWin = window.open(EXPECTED_KICK_OFF_REQUEST_LOCAL, "_blank");
+  await resolveAfter4Seconds();
+  is(requestCounter, 1, "one requests total (kickoff, no upgraded, no background)");
+  testWin.close();
+
+  // (b) Test no http background request happens if pref is set to false
+  expectedBackgroundRequest = "";
+  requestCounter = 0;
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+    ["dom.security.https_only_mode_send_http_background_request", false],
+    ["dom.security.https_only_mode_error_page_user_suggestions", false],
+  ]});
+  testWin = window.open(EXPECTED_KICK_OFF_REQUEST, "_blank");
+  await resolveAfter4Seconds();
+  is(requestCounter, 2, "two requests total (kickoff, upgraded, no background)");
+  testWin.close();
+
+  // clean up and finish tests
+  window.BackgroundRequestExaminer.remove();
+  SimpleTest.finish();
+}
+
+runTests();
+
+</script>
+</body>
+</html>

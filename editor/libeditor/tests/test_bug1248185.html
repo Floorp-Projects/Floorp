@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248185
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1248185</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Avoid platform selection differences
+  SimpleTest.waitForFocus(function() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["layout.word_select.eat_space_to_next_word", true]],
+    }, runTests);
+  });
+
+  function runTests() {
+    var editor = document.querySelector("#test");
+    editor.focus();
+
+    var sel = window.getSelection();
+
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_selectRight2");
+    ok(sel.toString() == "three ", "expected 'three ' to be selected");
+
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    ok(sel.toString() == "", "expected empty selection");
+
+    SpecialPowers.doCommand(window, "cmd_selectLeft2");
+    ok(sel.toString() == "five", "expected 'five' to be selected");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1248185">Mozilla Bug 1248185</a>
+<body>
+<div style="font: 12px monospace; width: 45ch;">
+<span contenteditable="" id="test">blablablablablablablablablablablablablabla one two three four five</span>
+<div>
+<span>foo</span>
+</div>
+</div>
+</body>
+</html>

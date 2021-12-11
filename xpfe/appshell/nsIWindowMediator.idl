@@ -1,0 +1,193 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsISimpleEnumerator.idl"
+
+%{C++
+#define NS_WINDOWMEDIATOR_CID \
+{ 0x79a2b7cc, 0xf05b, 0x4605, \
+  { 0xbf, 0xa0, 0xfa, 0xc5, 0x4f, 0x27, 0xee, 0xc8 } }
+
+#define NS_WINDOWMEDIATOR_CONTRACTID \
+  "@mozilla.org/appshell/window-mediator;1"
+%}
+
+interface mozIDOMWindow;
+interface mozIDOMWindowProxy;
+interface nsIAppWindow;
+interface nsIWidget;
+interface nsIWindowMediatorListener;
+
+[scriptable, uuid(df0da056-357d-427f-bafd-e6cbf19c9381)]
+interface nsIWindowMediator: nsISupports
+{
+  /** Return an enumerator which iterates over all windows of type aWindowType
+    * from the oldest window to the youngest.
+    * @param  aWindowType the returned enumerator will enumerate only
+    *                     windows of this type. ("type" is the
+    *                     |windowtype| attribute of the XML <window> element.)
+    *                     If null, all windows will be enumerated.
+    * @return an enumerator of nsIDOMWindows.  Note that windows close
+    *         asynchronously in many cases, so windows returned from this
+    *         enumerator can have .closed set to true.  Caveat enumerator!
+    */
+  nsISimpleEnumerator getEnumerator(in wstring aWindowType);
+
+  /** Identical to getEnumerator except:
+    * @return an enumerator of nsIAppWindows
+  */
+  nsISimpleEnumerator getAppWindowEnumerator(in wstring aWindowType);
+
+  /** Return an enumerator which iterates over all windows of type aWindowType
+    * in their z (front-to-back) order. Note this interface makes
+    * no requirement that a window couldn't be revisited if windows
+    * are re-ordered while z-order enumerators are active.
+    * @param  aWindowType the returned enumerator will enumerate only
+    *                     windows of this type. ("type" is the
+    *                     |windowtype| attribute of the XML <window> element.)
+    *                     If null, all windows will be enumerated.
+    * @param  aFrontToBack if true, the enumerator enumerates windows in order
+    *                      from front to back. back to front if false.
+    * @return an enumerator of nsIAppWindows
+    */
+  nsISimpleEnumerator getZOrderAppWindowEnumerator(in wstring aWindowType,
+                        in boolean aFrontToBack);
+
+  /** This is a shortcut for simply fetching the first window in
+    * front to back order.
+    * @param  aWindowType return the topmost window of this type.
+    *                     ("type" is the |windowtype| attribute of
+    *                     the XML <window> element.)
+    *                     If null, return the topmost window of any type.
+    * @return the topmost window
+    */
+  mozIDOMWindowProxy getMostRecentWindow(in wstring aWindowType);
+
+  /** This is a shortcut for getMostRecentWindow('navigator:browser'), but
+    * if that fails it also tries 'navigator:geckoview' and 'mail:3pane'.
+    *
+    * @return the topmost browser window
+    */
+  mozIDOMWindowProxy getMostRecentBrowserWindow();
+
+  /**
+   * Same as getMostRecentWindow, but ignores private browsing
+   * windows.
+   */
+  mozIDOMWindowProxy getMostRecentNonPBWindow(in wstring aWindowType);
+
+  /**
+   * Return the outer window with the given ID, if any.  Can return null.
+   */
+  mozIDOMWindowProxy getOuterWindowWithId(in unsigned long long aOuterWindowID);
+
+  /**
+    * Return the inner window with the given current window ID, if any.
+    * Can return null if no inner window with the ID exists or if it's not
+    * a current inner anymore.
+    */
+  mozIDOMWindow getCurrentInnerWindowWithId(in unsigned long long aInnerWindowID);
+
+  /** Add the window to the list of known windows. Listeners (see
+    * addListener) will be notified through their onOpenWindow method.
+    * @param aWindow the window to add
+    */
+  [noscript] void registerWindow(in nsIAppWindow aWindow);
+
+  /** Remove the window from the list of known windows. Listeners (see
+    * addListener) will be be notified through their onCloseWindow method.
+    * @param aWindow the window to remove
+    */
+  [noscript] void unregisterWindow(in nsIAppWindow aWindow);
+
+  /** Call this method when a window gains focus. It's a primitive means of
+    * determining the most recent window. It's no longer necessary and it
+    * really should be removed.
+    * @param aWindow the window which has gained focus
+    */
+  [noscript] void updateWindowTimeStamp(in nsIAppWindow aWindow);
+
+  /* z-ordering: */
+
+  const unsigned long zLevelTop    = 1;
+  const unsigned long zLevelBottom = 2;
+  const unsigned long zLevelBelow  = 3; // below some window
+
+  /** A window wants to be moved in z-order. Calculate whether and how
+    * it should be constrained. Note this method is advisory only:
+    * it changes nothing either in WindowMediator's internal state
+    * or with the window.
+    * Note it compares the nsIAppWindow to nsIWidgets. A pure interface
+    * would use all nsIAppWindows. But we expect this to be called from
+    * callbacks originating in native window code. They are expected to
+    * hand us comparison values which are pulled from general storage
+    * in the native widget, and may not correspond to an nsIWidget at all.
+    * For that reason this interface requires only objects one step
+    * removed from the native window (nsIWidgets), and its implementation
+    * must be very understanding of what may be completely invalid
+    * pointers in those parameters.
+    *
+    * @param inWindow the window in question
+    * @param inPosition requested position
+    *                   values: zLevelTop: topmost window. zLevelBottom: bottom.
+    *                   zLevelBelow: below ioBelow. (the value of ioBelow will
+    *                   be ignored for zLevelTop and Bottom.)
+    * @param inBelow if inPosition==zLevelBelow, the window
+    *                 below which inWindow wants to be placed. Otherwise this
+    *                 variable is ignored.
+    * @param outPosition constrained position, values like inPosition.
+    * @param outBelow if outPosition==zLevelBelow, the window
+    *                 below which inWindow should be placed. Otherwise this
+    *                 this value will be null.
+    * @return PR_TRUE if the position returned is different from
+    *         the position given.
+    */
+
+  [noscript] boolean calculateZPosition(in nsIAppWindow   inWindow,
+                                        in unsigned long  inPosition,
+                                        in nsIWidget      inBelow,
+                                        out unsigned long outPosition,
+                                        out nsIWidget     outBelow);
+
+  /** A window has been positioned behind another. Inform WindowMediator
+    * @param inWindow the window in question
+    * @param inPosition new position. values:
+    *                   zLevelTop: topmost window.
+    *                   zLevelBottom: bottom.
+    *                   zLevelBelow: below inBelow. (inBelow is ignored
+    *                                for other values of inPosition.)
+    * @param inBelow the window inWindow is behind, if zLevelBelow
+    */
+  [noscript] void setZPosition(in nsIAppWindow inWindow,
+                               in unsigned long inPosition,
+                               in nsIAppWindow inBelow);
+
+  /** Return the window's Z level (as defined in nsIAppWindow).
+    * @param aWindow the window in question
+    * @return aWindow's z level
+    */
+  [noscript] uint32_t getZLevel(in nsIAppWindow aWindow);
+
+  /** Set the window's Z level (as defined in nsIAppWindow). The implementation
+    * will reposition the window as necessary to match its new Z level.
+    * The implementation will assume a window's Z level to be
+    * nsIAppWindow::normalZ until it has been informed of a different level.
+    * @param aWindow the window in question
+    * @param aZLevel the window's new Z level
+    */
+  [noscript] void setZLevel(in nsIAppWindow aWindow, in uint32_t aZLevel);
+
+  /** Register a listener for window status changes.
+    * keeps strong ref? (to be decided)
+    * @param aListener the listener to register
+    */
+  void addListener(in nsIWindowMediatorListener aListener);
+
+  /** Unregister a listener of window status changes.
+    * @param aListener the listener to unregister
+    */
+  void removeListener(in nsIWindowMediatorListener aListener);
+};

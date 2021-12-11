@@ -1,0 +1,59 @@
+From b79ea8a6cab8bd28aebecf6e1e8229d5ac017264 Mon Sep 17 00:00:00 2001
+From: Karl Tomlinson <karlt+@karlt.net>
+Date: Fri, 16 Jul 2010 23:46:25 +0000
+Subject: clip: consider all_clipped in _cairo_clip_get_extents
+
+If the gstate clip in _cairo_gstate_int_clip_extents() has all_clipped
+set (and path NULL), then it returns the gstate target extents instead of
+an empty rectangle.  If the target is infinite, then it says the clip is
+unbounded.
+
+Fixes https://bugs.freedesktop.org/show_bug.cgi?id=29124
+Tested-by test/get-clip
+
+Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk>
+---
+diff --git a/src/cairo-clip.c b/src/cairo-clip.c
+index f6173c6..77d8214 100644
+--- a/src/cairo-clip.c
++++ b/src/cairo-clip.c
+@@ -1264,9 +1264,14 @@ _cairo_clip_combine_with_surface (cairo_clip_t *clip,
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
++static const cairo_rectangle_int_t _cairo_empty_rectangle_int = { 0, 0, 0, 0 };
++
+ const cairo_rectangle_int_t *
+ _cairo_clip_get_extents (const cairo_clip_t *clip)
+ {
++    if (clip->all_clipped)
++	return &_cairo_empty_rectangle_int;
++
+     if (clip->path == NULL)
+ 	return NULL;
+ 
+diff --git a/test/get-clip.c b/test/get-clip.c
+index 9d6e796..f0477a1 100644
+--- a/test/get-clip.c
++++ b/test/get-clip.c
+@@ -83,6 +83,8 @@ check_clip_extents (const cairo_test_context_t *ctx,
+     cairo_clip_extents (cr, &ext_x1, &ext_y1, &ext_x2, &ext_y2);
+     if (ext_x1 == x && ext_y1 == y && ext_x2 == x + width && ext_y2 == y + height)
+         return 1;
++    if (width == 0.0 && height == 0.0 && ext_x1 == ext_x2 && ext_y1 == ext_y2)
++        return 1;
+     cairo_test_log (ctx, "Error: %s; clip extents %f,%f,%f,%f should be %f,%f,%f,%f\n",
+                     message, ext_x1, ext_y1, ext_x2 - ext_x1, ext_y2 - ext_y1,
+                     x, y, width, height);
+@@ -138,7 +140,8 @@ preamble (cairo_test_context_t *ctx)
+     cairo_save (cr);
+     cairo_clip (cr);
+     rectangle_list = cairo_copy_clip_rectangle_list (cr);
+-    if (! check_count (ctx, phase, rectangle_list, 0))
++    if (! check_count (ctx, phase, rectangle_list, 0) ||
++        ! check_clip_extents (ctx, phase, cr, 0, 0, 0, 0))
+     {
+ 	goto FAIL;
+     }
+--
+cgit v0.8.3-6-g21f6

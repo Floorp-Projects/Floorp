@@ -1,0 +1,287 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+# Generates a test program and attempts to compile it. In case of failure, the
+# resulting check will return None. If the test program succeeds, it will return
+# the output of the test program.
+# - `includes` are the includes (as file names) that will appear at the top of
+#   the generated test program.
+# - `body` is the code that will appear in the main function of the generated
+#   test program. `return 0;` is appended to the function body automatically.
+# - `language` is the language selection, so that the appropriate compiler is
+#   used.
+# - `flags` are the flags to be passed to the compiler, in addition to `-c`.
+# - `check_msg` is the message to be printed to accompany compiling the test
+#   program.
+@template
+def try_compile(
+    includes=None,
+    body="",
+    language="C++",
+    flags=None,
+    check_msg=None,
+    when=None,
+    onerror=lambda: None,
+):
+    compiler = {
+        "C": c_compiler,
+        "C++": cxx_compiler,
+    }[language]
+
+    return compiler.try_compile(
+        includes, body, flags, check_msg, when=when, onerror=onerror
+    )
+
+
+# Checks for the presence of the given header on the target system by compiling
+# a test program including that header. The return value of the template is a
+# check function returning True if the header is present, and None if it is not.
+# The value of this check function is also used to set a variable (with set_define)
+# corresponding to the checked header. For instance, HAVE_MALLOC_H will be set in
+# defines if check_header if called with 'malloc.h' as input and malloc.h is
+# present on the target.
+# - `header` is the header, as a file name, to check for.
+# - `language` is the language selection, so that the appropriate compiler is
+#   used.
+# - `flags` are the flags to be passed to the compiler, in addition to `-c`.
+# - `includes` are additional includes, as file names, to appear before the
+#   header checked for.
+# - `when` is a depends function that if present will make performing the check
+#   conditional on the value of that function.
+@template
+def check_header(
+    header, language="C++", flags=None, includes=None, when=None, onerror=lambda: None
+):
+    if when is None:
+        when = always
+
+    if includes:
+        includes = includes[:]
+    else:
+        includes = []
+    includes.append(header)
+
+    have_header = try_compile(
+        includes=includes,
+        language=language,
+        flags=flags,
+        check_msg="for %s" % header,
+        when=when,
+        onerror=onerror,
+    )
+    header_var = "HAVE_%s" % (
+        header.upper().replace("-", "_").replace("/", "_").replace(".", "_")
+    )
+    set_define(header_var, have_header)
+    return have_header
+
+
+# A convenience wrapper for check_header for checking multiple headers.
+# returns an array of the resulting checks in order corresponding to the
+# provided headers.
+# - `headers` are the headers to be checked.
+# - `kwargs` are keyword arguments passed verbatim to check_header.
+
+
+@template
+def check_headers(*headers, **kwargs):
+    checks = []
+    for header in headers:
+        checks.append(check_header(header, **kwargs))
+    return checks
+
+
+# Checks for the presence of the given symbol on the target system by compiling
+# a test program. The return value of the template is a check function
+# returning True if the symbol can be found, and None if it is not.
+@template
+def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: None):
+    if when is None:
+        when = always
+
+    compiler = {
+        "C": c_compiler,
+        "C++": cxx_compiler,
+    }[language]
+
+    # Stolen from autoconf 2.13 ; might be irrelevant now, but it doesn't hurt to
+    # keep using a char return type.
+    comment = [
+        "/* Override any gcc2 internal prototype to avoid an error.  */",
+        "/* We use char because int might match the return type of a gcc2",
+        "    builtin and then its argument prototype would still apply.  */",
+    ]
+
+    return compiler.try_run(
+        header=comment + ["char %s();" % symbol],
+        body="%s();" % symbol,
+        flags=flags,
+        check_msg="for %s" % symbol,
+        when=when,
+        onerror=onerror,
+    )
+
+
+# Determine whether to add a given flag to the given lists of flags for C or
+# C++ compilation.
+# - `flag` is the flag to test
+# - `flags_collection` is a @depends function for a namespace of lists of
+#    C/C++ compiler flags to add to.
+# - `test_flags` is a list of flags to pass to the compiler instead of merely
+#   passing `flag`. This is especially useful for checking warning flags. If
+#   this list is empty, `flag` will be passed on its own.
+# - `compiler` (optional) is the compiler to test against (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, both compilers
+#   are tested; the list of flags added to is dependent on the compiler tested.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+# - `check`, when not set, skips checking whether the flag is supported and
+#   adds it to the list of flags unconditionally.
+@template
+def check_and_add_flags(
+    flag, flags_collection, test_flags, compiler=None, when=None, check=True
+):
+    if compiler is not None:
+        compilers = (compiler,)
+    else:
+        compilers = (c_compiler, cxx_compiler)
+
+    if when is None:
+        when = always
+
+    results = []
+
+    if test_flags:
+        flags = test_flags
+    else:
+        flags = [flag]
+
+    for c in compilers:
+        assert c in {c_compiler, cxx_compiler, host_c_compiler, host_cxx_compiler}
+        lang, list_of_flags = {
+            c_compiler: ("C", flags_collection.cflags),
+            cxx_compiler: ("C++", flags_collection.cxxflags),
+            host_c_compiler: ("host C", flags_collection.host_cflags),
+            host_cxx_compiler: ("host C++", flags_collection.host_cxxflags),
+        }[c]
+
+        @depends(c, when)
+        def result(c, when):
+            if when and c.type in ("clang", "gcc"):
+                return True
+
+        if check:
+
+            @depends(c, dependable(flags))
+            def flags(c, flags):
+                # Don't error out just because clang complains about other things.
+                if c.type == "clang":
+                    flags += ["-Wno-error=unused-command-line-argument"]
+
+                return flags
+
+            result = c.try_compile(
+                flags=flags,
+                when=result,
+                check_msg="whether the %s compiler supports %s" % (lang, flag),
+            )
+
+        @depends(result, list_of_flags)
+        def maybe_add_flag(result, list_of_flags):
+            if result:
+                list_of_flags.append(flag)
+
+        results.append(result)
+
+    return tuple(results)
+
+
+@dependable
+def warnings_flags():
+    return namespace(cflags=[], cxxflags=[], host_cflags=[], host_cxxflags=[])
+
+
+# Tests whether GCC or clang support the given warning flag, and if it is,
+# add it to the list of warning flags for the build.
+# - `warning` is the warning flag (e.g. -Wfoo)
+# - `compiler` (optional) is the compiler to test against (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, both compilers
+#   are tested.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+# - `check`, when not set, skips checking whether the flag is supported and
+#   adds it to the list of warning flags unconditionally. This is only meant
+#   for add_gcc_warning().
+@template
+def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
+    # GCC and clang will fail if given an unknown warning option like
+    # -Wfoobar. But later versions won't fail if given an unknown negated
+    # warning option like -Wno-foobar. So when we are checking for support
+    # of a negated warning option, we actually test the positive form, but
+    # add the negated form to the flags variable.
+    if warning.startswith("-Wno-") and not warning.startswith("-Wno-error="):
+        flags = ["-Werror", "-W" + warning[5:]]
+    elif warning.startswith("-Werror="):
+        flags = [warning]
+    else:
+        flags = ["-Werror", warning]
+
+    return check_and_add_flags(
+        warning, warnings_flags, flags, compiler=compiler, when=when, check=check
+    )
+
+
+# Add the given warning to the list of warning flags for the build.
+# - `warning` is the warning flag (e.g. -Wfoo)
+# - `compiler` (optional) is the compiler to add the flag for (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, the warning flag
+#   is added for both compilers.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+
+
+@template
+def add_gcc_warning(warning, compiler=None, when=None):
+    check_and_add_gcc_warning(warning, compiler, when, check=False)
+
+
+# Like the warning checks above, but for general compilation flags.
+@dependable
+def compilation_flags():
+    return namespace(cflags=[], cxxflags=[], host_cflags=[], host_cxxflags=[])
+
+
+# Tests whether GCC or clang support the given compilation flag; if the flag
+# is supported, add it to the list of compilation flags for the build.
+# - `flag` is the flag to test
+# - `compiler` (optional) is the compiler to test against (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, both compilers
+#   are tested.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+# - `check`, when not set, skips checking whether the flag is supported and
+#   adds it to the list of flags unconditionally. This is only meant for
+#   add_gcc_flag().
+@template
+def check_and_add_gcc_flag(flag, compiler=None, when=None, check=True):
+    flags = ["-Werror", flag]
+
+    return check_and_add_flags(
+        flag, compilation_flags, flags, compiler=compiler, when=when, check=check
+    )
+
+
+# Add the given flag to the list of flags for the build.
+# - `flag` is the flag (e.g. -fno-sized-deallocation)
+# - `compiler` (optional) is the compiler to add the flag for (c_compiler or
+#   cxx_compiler, from toolchain.configure). When omitted, the flag is added
+#   for both compilers.
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the flag is wanted.
+@template
+def add_gcc_flag(warning, compiler=None, when=None):
+    check_and_add_gcc_flag(warning, compiler, when, check=False)

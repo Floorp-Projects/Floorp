@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<mask id="m"><text id="t">z</text></mask>
+
+<rect width="600" height="400" mask="url(#m)"/>
+
+<script>
+window.addEventListener("load", function() {
+  document.getElementById("t").firstChild.data = "ab";
+}, false);
+</script>
+
+</svg>

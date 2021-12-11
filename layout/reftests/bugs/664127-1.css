@@ -1,0 +1,11 @@
+/* This external stylesheet is needed to be able to use a cached image
+   (solidblue.png) through a relative path */
+tree {
+  height: 100px; -moz-appearance: none; border: none; background-color: transparent;
+}
+treecol, treecolpicker {
+  visibility: hidden;
+}
+treechildren::-moz-tree-image {
+  list-style-image: url('solidblue.png');
+}

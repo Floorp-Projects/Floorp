@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+kind-dependencies:
+    - build
+
+only-for-build-platforms:
+    - win64-shippable/opt
+
+transforms:
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.fxrecord:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-template:
+    description: "Desktop Startup Visual Metrics"
+    run-on-projects:
+        - mozilla-central
+    worker-type: performance-hardware/gecko-t-fxrecorder
+    worker:
+        implementation: generic-worker
+        max-run-time: 1800
+        os: windows
+        command: ["C:\\fxrecorder\\fxrecorder.exe --config C:\\fxrecorder\\fxrecord.toml record"]
+    treeherder:
+        symbol: fxrec(1st)
+        tier: 2
+        kind: other

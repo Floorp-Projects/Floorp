@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test for Bug 1590762</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <iframe name="targetFrame" id="targetFrame"></iframe>
+    <form id="form" action="double_submit.sjs?size=4096&fragments=10&delay=1000" method="POST" target="targetFrame">
+      <input id="input" type="text" name="text" value="value">
+      <input id="token" type="text" name="token" value="">
+      <input id="button" type="submit">
+    </form>
+    <script>
+      "use strict";
+
+      const CROSS_ORIGIN_URI = "http://test1.example.com/tests/docshell/test/mochitest/ping.html";
+
+      function generateBody(size) {
+        let data = new Uint8Array(size);
+        for (let i = 0; i < size; ++i) {
+          data[i] = 97 + Math.random() * (123 - 97);
+        }
+
+        return new TextDecoder().decode(data);
+      }
+
+      function asyncClick(counts) {
+        let frame = document.createElement('iframe');
+        frame.addEventListener(
+          'load', () => frame.contentWindow.postMessage({command: "start"}, "*"),
+          { once:true });
+        frame.src = "clicker.html";
+
+        addEventListener('message', ({source}) => {
+          if (source === frame.contentWindow) {
+            counts.click++;
+            synthesizeMouse(document.getElementById('button'), 5, 5, {});
+          }
+        }, { once: true });
+
+        document.body.appendChild(frame);
+        return stop;
+      }
+
+      function click(button) {
+        synthesizeMouse(button, 5, 5, {});
+      }
+
+      add_task(async function runTest() {
+        let frame = document.getElementById('targetFrame');
+        await new Promise(resolve => {
+          addEventListener('message', resolve, {once: true});
+          frame.src = CROSS_ORIGIN_URI;
+        });
+
+        let form = document.getElementById('form');
+        let button = document.getElementById('button');
+
+        document.getElementById('input').value = generateBody(1024*1024);
+        let token = document.getElementById('token');
+        token.value = "first";
+
+        await new Promise((resolve, reject) => {
+          let counts = { click: 0, submit: 0 };
+          form.addEventListener('submit', () => counts.submit++);
+          asyncClick(counts);
+          form.requestSubmit(button);
+          token.value = "bad";
+          let steps = {
+            good: {
+              entered: false,
+              next: () => { steps.good.entered = true; resolve(); },
+              assertion: () => {
+                ok(steps.first.entered && !steps.bad.entered, "good comes after first, but not bad")
+              }
+            },
+            first: {
+              entered: false,
+              next: () => { steps.first.entered = true; token.value = "good"; click(button); },
+              assertion: () => {
+                ok(!steps.good.entered && !steps.bad.entered, "first message is first")
+                is(counts.click, 1, "clicked");
+                is(counts.submit, 2, "did submit");
+              }
+            },
+            bad: {
+              entered: false,
+              next: () => { reject(); },
+              assertion: () => ok(false, "we got a bad message")
+            }
+          };
+          addEventListener('message', ({source, data}) => {
+            if (source !== frame.contentWindow) {
+              return;
+            }
+
+            let step = steps[data] || reject;
+            step.assertion();
+            step.next();
+          })
+        });
+      });
+    </script>
+  </body>
+</html>

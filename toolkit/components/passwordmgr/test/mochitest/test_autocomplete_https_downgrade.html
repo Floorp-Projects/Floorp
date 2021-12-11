@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autocomplete on an HTTPS page using upgraded HTTP logins</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+const chromeScript = runChecksAfterCommonInit(false);
+
+let origin = "http://" + window.location.host;
+let secureOrigin = "https://" + window.location.host;
+
+addLoginsInParent(
+  // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
+  [secureOrigin, secureOrigin, null, "name", "pass", "uname", "pword"],
+  [secureOrigin, secureOrigin, null, "name1", "pass1", "uname", "pword"],
+  // Same as above but HTTP instead of HTTPS (to test de-duping)
+  [origin, origin, null, "name1", "pass1", "uname", "pword"],
+  // Different HTTP login to upgrade with secure formActionOrigin
+  [origin, secureOrigin, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]);
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+  <iframe></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+let iframe = document.getElementsByTagName("iframe")[0];
+let iframeDoc, hostname;
+let uname;
+let pword;
+
+// Restore the form to the default state.
+function restoreForm() {
+  return SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-password").focus();
+    this.content.document.getElementById("form-basic-username").value = "";
+    this.content.document.getElementById("form-basic-password").value = "";
+    this.content.document.getElementById("form-basic-username").focus();
+  });
+}
+
+const HTTP_FORM_URL = origin + "/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
+
+async function setup(formUrl) {
+  await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
+
+  let processedPromise = promiseFormsProcessed();
+  iframe.src = formUrl;
+  await new Promise(resolve => {
+    iframe.addEventListener("load", function() {
+      resolve();
+    }, {once: true});
+  });
+
+  await processedPromise;
+
+  hostname = await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    return this.content.document.documentURIObject.host;
+  });
+}
+
+add_task(async function test_autocomplete_https_downgrade() {
+  info("test_autocomplete_http, setup with " + HTTP_FORM_URL);
+  await setup(HTTP_FORM_URL);
+
+  LoginManager.getAllLogins().then(logins => {
+    info("got logins: " + logins.map(l => l.origin));
+  });
+  // from a HTTP page, look for matching logins, we should never offer a login with an HTTPS scheme
+  // we're expecting just login2 as a match
+  let isCrossOrigin = false;
+  try {
+    // If this is a cross-origin test, the parent will be inaccessible. The fields
+    // should not be filled in.
+    window.parent.windowGlobalChild;
+  } catch(ex) {
+    isCrossOrigin = true;
+  }
+
+  await checkLoginFormInFrame(iframe, "form-basic-username", isCrossOrigin ? "" : "name1",
+                                      "form-basic-password", isCrossOrigin ? "" : "pass1");
+
+  // Trigger autocomplete popup
+  await restoreForm();
+  let popupState = await getPopupState();
+  is(popupState.open, false, "Check popup is initially closed");
+  let shownPromise = promiseACShown();
+  synthesizeKey("KEY_ArrowDown");
+  let results = await shownPromise;
+  info("got results: " + results.join(", "));
+  popupState = await getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected");
+  checkAutoCompleteResults(results, ["name1", "name2"], hostname, "initial");
+});
+</script>
+</pre>
+</body>
+</html>

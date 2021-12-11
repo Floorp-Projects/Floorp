@@ -1,0 +1,93 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=631437
+-->
+<head>
+  <title>Tests the array indexing and .length on SVGXXXList objects</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=631437">Mozilla Bug 631437</a>
+<svg xmlns="http://www.w3.org/2000/svg" id="svg">
+  <text id="text" x="10 20 30" rotate="40 50 60">abcde</text>
+  <path id="path" d="M0,0 L100,100"/>
+  <polygon id="poly" points="50,50 70,70 90,50"/>
+  <g id="g" transform="translate(20 30) rotate(50 60 70) scale(2)"
+     requiredExtensions="foo bar baz"/>
+</svg>
+<script type="text/javascript"><![CDATA[
+
+var text = document.getElementById("text"),
+    path = document.getElementById("path"),
+    poly = document.getElementById("poly"),
+    g    = document.getElementById("g");
+
+function CheckList(aListObject, aExpectedListLength, aListDescription) {
+  is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".numberOfItems");
+  is(aListObject.length, aExpectedListLength, aListDescription + ".length");
+  for (let i = 0; i < aListObject.length; i++) {
+    let item = aListObject.getItem(i);
+    ok(aListObject[i] === item, aListDescription + "[" + i + "]");
+  }
+  is(typeof(aListObject[aListObject.length]), "undefined", aListDescription + "[outOfBounds]");
+}
+
+var tests = [
+  { element: text,
+    attribute: "x",
+    listProperty: "x.baseVal",
+    type: "SVGLengthList",
+    subtests: [ { values: null, length: 3 },
+                { values: "40", length: 1 },
+                { values: "1em 2em 3em 4em 5em", length: 5 } ] },
+  { element: text,
+    attribute: "rotate",
+    listProperty: "rotate.baseVal",
+    type: "SVGNumberList",
+    subtests: [ { values: null, length: 3 },
+                { values: "10", length: 1 },
+                { values: "1 2 3 4 5", length: 5 } ] },
+  { element: poly,
+    attribute: "points",
+    listProperty: "animatedPoints",
+    type: "SVGPointList",
+    subtests: [ { values: null, length: 3 },
+                { values: "100,100", length: 1 },
+                { values: "0,0 10,10 20,0 30,10 40,0", length: 5 } ] },
+  { element: g,
+    attribute: "transform",
+    listProperty: "transform.baseVal",
+    type: "SVGTransformList",
+    subtests: [ { values: null, length: 3 },
+                { values: "skewX(45)", length: 1 },
+                { values: "translate(1 2) rotate(3) scale(4) skewY(5) skewX(6)",
+                  length: 5 } ] },
+  { element: g,
+    attribute: "requiredExtensions",
+    listProperty: "requiredExtensions",
+    type: "SVGStringList",
+    subtests: [ { values: null, length: 3 },
+                { values: "foo", length: 1 },
+                { values: "foo bar baz qux", length: 4 } ] },
+];
+
+for (let test of tests) {
+  let list = test.element;
+  for (let property of test.listProperty.split(".")) {
+    list = list[property];
+  }
+
+  for (let subtest of test.subtests) {
+    if (subtest.values) {
+      test.element.setAttribute(test.attribute, subtest.values);
+    }
+
+    CheckList(list, subtest.length,
+              test.type + ": " + test.element.localName + "." +
+                test.listProperty);
+  }
+}
+]]></script>
+</body>
+</html>

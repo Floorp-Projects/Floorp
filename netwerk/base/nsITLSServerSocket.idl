@@ -1,0 +1,183 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIServerSocket.idl"
+
+interface nsIX509Cert;
+interface nsITLSServerSecurityObserver;
+interface nsISocketTransport;
+
+[scriptable, uuid(cc2c30f9-cfaa-4b8a-bd44-c24881981b74)]
+interface nsITLSServerSocket : nsIServerSocket
+{
+  /**
+   * serverCert
+   *
+   * The server's certificate that is presented to the client during the TLS
+   * handshake.  This is required to be set before calling |asyncListen|.
+   */
+  attribute nsIX509Cert serverCert;
+
+  /**
+   * setSessionTickets
+   *
+   * Whether the server should support session tickets.  Defaults to true.  This
+   * should be set before calling |asyncListen| if you wish to change the
+   * default.
+   */
+  void setSessionTickets(in boolean aSessionTickets);
+
+  /**
+   * Values for setRequestClientCertificate
+   */
+  // Never request
+  const unsigned long REQUEST_NEVER           = 0;
+  // Request (but do not require) during the first handshake only
+  const unsigned long REQUEST_FIRST_HANDSHAKE = 1;
+  // Request (but do not require) during each handshake
+  const unsigned long REQUEST_ALWAYS          = 2;
+  // Require during the first handshake only
+  const unsigned long REQUIRE_FIRST_HANDSHAKE = 3;
+  // Require during each handshake
+  const unsigned long REQUIRE_ALWAYS          = 4;
+
+  /**
+   * setRequestClientCertificate
+   *
+   * Whether the server should request and/or require a client auth certificate
+   * from the client.  Defaults to REQUEST_NEVER.  See the possible options
+   * above.  This should be set before calling |asyncListen| if you wish to
+   * change the default.
+   */
+  void setRequestClientCertificate(in unsigned long aRequestClientCert);
+
+  /**
+   * setVersionRange
+   *
+   * The server's TLS versions that is used by the TLS handshake.
+   * This is required to be set before calling |asyncListen|.
+   *
+   * aMinVersion and aMaxVersion is a TLS version value from
+   * |nsITLSClientStatus| constants.
+   */
+  void setVersionRange(in unsigned short aMinVersion,
+                       in unsigned short aMaxVersion);
+};
+
+/**
+ * Security summary for a given TLS client connection being handled by a
+ * |nsITLSServerSocket| server.
+ *
+ * This is accessible through the security info object on the transport, which
+ * will be an instance of |nsITLSServerConnectionInfo| (see below).
+ *
+ * The values of these attributes are available once the |onHandshakeDone|
+ * method of the security observer has been called (see
+ * |nsITLSServerSecurityObserver| below).
+ */
+[scriptable, uuid(19668ea4-e5ad-4182-9698-7e890d48f327)]
+interface nsITLSClientStatus : nsISupports
+{
+  /**
+   * peerCert
+   *
+   * The client's certificate, if one was requested via |requestCertificate|
+   * above and supplied by the client.
+   */
+  readonly attribute nsIX509Cert peerCert;
+
+  /**
+   * Values for tlsVersionUsed, as defined by TLS
+   */
+  const short SSL_VERSION_3   = 0x0300;
+  const short TLS_VERSION_1   = 0x0301;
+  const short TLS_VERSION_1_1 = 0x0302;
+  const short TLS_VERSION_1_2 = 0x0303;
+  const short TLS_VERSION_1_3 = 0x0304;
+  const short TLS_VERSION_UNKNOWN = -1;
+
+  /**
+   * tlsVersionUsed
+   *
+   * The version of TLS used by the connection.  See values above.
+   */
+  readonly attribute short tlsVersionUsed;
+
+  /**
+   * cipherName
+   *
+   * Name of the cipher suite used, such as
+   * "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256".
+   * See security/nss/lib/ssl/sslinfo.c for the possible values.
+   */
+  readonly attribute ACString cipherName;
+
+  /**
+   * keyLength
+   *
+   * The "effective" key size of the symmetric key in bits.
+   */
+  readonly attribute unsigned long keyLength;
+
+  /**
+   * macLength
+   *
+   * The size of the MAC in bits.
+   */
+  readonly attribute unsigned long macLength;
+};
+
+/**
+ * Connection info for a given TLS client connection being handled by a
+ * |nsITLSServerSocket| server.  This object is thread-safe.
+ *
+ * This is exposed as the security info object on the transport, so it can be
+ * accessed via |transport.securityInfo|.
+ *
+ * This interface is available by the time the |onSocketAttached| is called,
+ * which is the first time the TLS server consumer is notified of a new client.
+ */
+[scriptable, uuid(8a93f5d5-eddd-4c62-a4bd-bfd297653184)]
+interface nsITLSServerConnectionInfo : nsISupports
+{
+  /**
+   * setSecurityObserver
+   *
+   * Set the security observer to be notified when the TLS handshake has
+   * completed.
+   */
+  void setSecurityObserver(in nsITLSServerSecurityObserver observer);
+
+  /**
+   * serverSocket
+   *
+   * The nsITLSServerSocket instance that accepted this client connection.
+   */
+  readonly attribute nsITLSServerSocket serverSocket;
+
+  /**
+   * status
+   *
+   * Security summary for this TLS client connection.  Note that the values of
+   * this interface are not available until the TLS handshake has completed.
+   * See |nsITLSClientStatus| above for more details.
+   */
+  readonly attribute nsITLSClientStatus status;
+};
+
+[scriptable, uuid(1f62e1ae-e546-4a38-8917-d428472ed736)]
+interface nsITLSServerSecurityObserver : nsISupports
+{
+  /**
+   * onHandsakeDone
+   *
+   * This method is called once the TLS handshake is completed.  This takes
+   * place after |onSocketAccepted| has been called, which typically opens the
+   * streams to keep things moving along. It's important to be aware that the
+   * handshake has not completed at the point that |onSocketAccepted| is called,
+   * so no security verification can be done until this method is called.
+   */
+  void onHandshakeDone(in nsITLSServerSocket aServer,
+                       in nsITLSClientStatus aStatus);
+};

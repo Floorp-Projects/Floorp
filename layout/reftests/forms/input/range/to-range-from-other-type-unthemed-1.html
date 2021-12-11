@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: input element changed to range state doesn't look like checkbox state -->
+  <script type="text/javascript">
+    function setToRange()
+    {
+      document.getElementById('i').type='range';
+      document.documentElement.className = '';
+    }
+    document.addEventListener("MozReftestInvalidate", setToRange);
+  </script>
+  <body>
+    <input type='checkbox' id='i' style="-moz-appearance:none;">
+  </body>
+</html>

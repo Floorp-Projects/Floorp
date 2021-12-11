@@ -1,0 +1,37 @@
+<html>
+<head>
+  <title>Accessible events testing for document</title>
+  <script>
+    const STATE_BUSY = Ci.nsIAccessibleStates.STATE_BUSY;
+
+    var gService = null;
+    function waitForDocLoad() {
+      if (!gService) {
+        gService = Cc["@mozilla.org/accessibilityService;1"].
+         getService(Ci.nsIAccessibilityService);
+      }
+
+      var accDoc = gService.getAccessibleFor(document);
+
+      var state = {};
+      accDoc.getState(state, {});
+      if (state.value & STATE_BUSY) {
+        window.setTimeout(waitForDocLoad, 0);
+        return;
+      }
+
+      hideIFrame();
+    }
+
+    function hideIFrame() {
+      var iframe = document.getElementById("iframe");
+      gService.getAccessibleFor(iframe.contentDocument);
+      iframe.style.display = "none";
+    }
+  </script>
+</head>
+
+<body onload="waitForDocLoad();">
+  <iframe id="iframe"></iframe>
+</body>
+</html>

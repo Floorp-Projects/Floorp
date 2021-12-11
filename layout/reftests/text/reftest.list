@@ -1,0 +1,378 @@
+# Font-dependent reftests may fail intermittently/transiently due to asynch fallback,
+# so we disable the async mechanism for this directory.
+defaults pref(gfx.font_rendering.fallback.async,false)
+
+fails-if(Android) == fallback-01.xhtml fallback-01-ref.xhtml
+== font-selection-by-lang-01.html font-selection-by-lang-01-ref.html
+== font-selection-fallback-1.html font-selection-fallback-1-ref.html
+== font-selection-generic-1.html font-selection-generic-1-ref.html
+!= font-size-adjust-01.html font-size-adjust-01-ref.html
+# The following test passes consistently only on Mac OS X;
+# both Windows and Linux give results that vary depending on the font size/zoom factor used,
+# because hinting affects the metrics used to compute the font size adjustment. See bug 429605.
+random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
+# This currently fails because line spacing does not respect font-size-adjust
+# in the "obvious" way, but it is unclear what the behavior should really be;
+# see bug #366138 for some (inconclusive) discussion
+# == font-size-adjust-03.html font-size-adjust-03-ref.html
+== justification-1.html justification-1-ref.html
+== justification-2a.html justification-2-ref.html
+== justification-2b.html justification-2-ref.html
+== justification-2c.html justification-2-ref.html
+!= justification-2d.html justification-2-ref.html
+== justification-cjk-extension.html justification-cjk-extension-ref.html
+== justification-space-diacritic.html justification-space-diacritic-ref.html
+load ligature-with-space-1.html
+== line-editing-1a.html line-editing-1-ref.html
+== line-editing-1b.html line-editing-1-ref.html
+== line-editing-1c.html line-editing-1-ref.html
+== line-editing-1d.html line-editing-1-ref.html
+== line-editing-1e.html line-editing-1-ref.html
+fails-if(cocoaWidget) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
+== lineheight-metrics-2a.html lineheight-metrics-2-ref.html
+== lineheight-metrics-2b.html lineheight-metrics-2-ref.html
+== lineheight-percentage-1.html lineheight-percentage-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == long-1.html long-ref.html # Bug 1392106
+fuzzy-if(Android,0-255,0-325) == pre-line-1.html pre-line-1-ref.html
+== pre-line-2.html pre-line-2-ref.html
+== pre-line-3.html pre-line-3-ref.html
+== pre-line-4.html pre-line-4-ref.html
+== pre-space-1.html pre-space-1-ref.html
+== pre-wrap-1.html pre-wrap-1-ref.html
+== soft-hyphens-1a.html soft-hyphens-1-ref.html
+== soft-hyphens-1b.html soft-hyphens-1-ref.html
+== soft-hyphens-1c.html soft-hyphens-1-ref.html
+== soft-hyphens-break-word-1a.html soft-hyphens-break-word-1-ref.html
+== soft-hyphens-break-word-1b.html soft-hyphens-break-word-1-ref.html
+== soft-hyphens-break-word-1c.html soft-hyphens-break-word-1-ref.html
+# Tests for soft hyphens in table cells, bug 418975
+!= soft-hyphen-in-table-1.html soft-hyphen-in-table-1-notref.html
+== soft-hyphen-in-table-1.html soft-hyphen-in-table-1-ref.html
+== soft-hyphen-in-table-2.html soft-hyphen-in-table-2-ref.html
+# Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually),
+# D2D, and Skia have subpixel positioning.  The tests for pixel-snapping assume that
+# 1 CSS pixel == 1 device pixel
+skip == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
+# Platforms with subpixel positioning already have inconsistent glyphs by
+# design, but that is considered more tolerable because they are subpixel
+# inconsistencies.  On those platforms we just test that glyph positions are
+# subpixel.
+# D2D/DirectWrite results depend on the rendering mode chosen, so considering this as random for now.
+skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
+== subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
+# No platforms do subpixel positioning vertically
+fuzzy-if(Android,0-19,0-2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
+fuzzy-if(Android,0-231,0-653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
+== swash-1.html swash-1-ref.html
+!= synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
+== synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
+== synthetic-bold-zero-width-01.html synthetic-bold-zero-width-01-ref.html
+# Tests for text-align-last
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-start.html text-align-last-start-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-end.html text-align-last-end-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-center.html text-align-last-center-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-justify.html text-align-last-justify-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-justify-rtl.html text-align-last-justify-rtl-ref.html # Bug 1392106
+#
+# Default values:
+# text-align defaults to start. text-align-last defaults to auto, which is
+# equivalent to the value of the ‘text-align’ property except when ‘text-align’
+# is set to ‘justify’, in which case it is currently equivalent to ‘start’
+# This will need to change when we implement text-justify
+== text-align-default-last-default.html text-align-start-last-start.html
+== text-align-start-last-default.html text-align-start-last-start.html
+== text-align-end-last-default.html text-align-end-last-end.html
+== text-align-center-last-default.html text-align-center-last-center.html
+== text-align-justify-last-default.html text-align-justify-last-start.html
+# All combinations of text-align and text-align-last should give different results
+# This only tests the combinations with the same value for text-align and
+# different values for text-align-last
+!= text-align-start-last-start.html text-align-start-last-end.html
+!= text-align-start-last-start.html text-align-start-last-center.html
+!= text-align-start-last-start.html text-align-start-last-justify.html
+!= text-align-start-last-end.html text-align-start-last-center.html
+!= text-align-start-last-end.html text-align-start-last-justify.html
+!= text-align-start-last-center.html text-align-start-last-justify.html
+!= text-align-end-last-start.html text-align-end-last-end.html
+!= text-align-end-last-start.html text-align-end-last-center.html
+!= text-align-end-last-start.html text-align-end-last-justify.html
+!= text-align-end-last-end.html text-align-end-last-center.html
+!= text-align-end-last-end.html text-align-end-last-justify.html
+!= text-align-end-last-center.html text-align-end-last-justify.html
+!= text-align-center-last-start.html text-align-center-last-end.html
+!= text-align-center-last-start.html text-align-center-last-center.html
+!= text-align-center-last-start.html text-align-center-last-justify.html
+!= text-align-center-last-end.html text-align-center-last-center.html
+!= text-align-center-last-end.html text-align-center-last-justify.html
+!= text-align-center-last-center.html text-align-center-last-justify.html
+!= text-align-justify-last-start.html text-align-justify-last-end.html
+!= text-align-justify-last-start.html text-align-justify-last-center.html
+!= text-align-justify-last-start.html text-align-justify-last-justify.html
+!= text-align-justify-last-end.html text-align-justify-last-center.html
+!= text-align-justify-last-end.html text-align-justify-last-justify.html
+!= text-align-justify-last-center.html text-align-justify-last-justify.html
+== text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
+== variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
+== white-space-1a.html white-space-1-ref.html
+== white-space-1b.html white-space-1-ref.html
+== white-space-2.html white-space-2-ref.html
+== white-space-3.html white-space-3-ref.html
+== wordbreak-1.html wordbreak-1-ref.html
+== wordbreak-3.html wordbreak-3-ref.html
+== wordbreak-4b.html wordbreak-4b-ref.html
+== wordbreak-5.html wordbreak-5-ref.html
+fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
+== wordbreak-7a.html wordbreak-7a-ref.html
+fails == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
+== wordbreak-8.html wordbreak-8-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == wordbreak-9.html wordbreak-9-ref.html
+== wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
+== wordwrap-01.html wordwrap-01-ref.html
+fuzzy-if(Android,0-1,0-1) == wordwrap-02.html wordwrap-02-ref.html # bug 1363940
+fuzzy(0-1,0-50) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
+== wordwrap-04.html wordwrap-04-ref.html
+== overflowwrap-04.html wordwrap-04-ref.html
+== wordwrap-05.html wordwrap-05-ref.html
+== overflowwrap-05.html wordwrap-05-ref.html
+== wordwrap-06.html wordwrap-06-ref.html
+== overflowwrap-06.html wordwrap-06-ref.html
+== wordwrap-07.html wordwrap-07-ref.html
+== overflowwrap-07.html wordwrap-07-ref.html
+!= wordwrap-08.html wordwrap-01-ref.html
+== wordwrap-08.html wordwrap-08-ref.html
+!= wordwrap-09.html wordwrap-01-ref.html
+!= overflowwrap-09.html wordwrap-01-ref.html
+== wordwrap-09.html wordwrap-09-ref.html
+== overflowwrap-09.html wordwrap-09-ref.html
+== wordwrap-10.html wordwrap-10-ref.html # bug 752459
+== overflowwrap-10.html wordwrap-10-ref.html
+== word-spacing-01.html word-spacing-01-ref.html
+# the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
+# an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
+random-if(cocoaWidget) random-if(gtkWidget) == zwnj-01.xhtml zwnj-01-ref.xhtml # gtkWidget:bug 1309113
+== zwnj-02.xhtml zwnj-02-ref.xhtml
+!= zwnj-01.html zwnj-01-notref.html
+== initial-zwj-1.html initial-zwj-1-ref.html
+== cgj-01.html cgj-01-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 444656.html 444656-ref.html # Bug 1392106
+fuzzy-if(geckoview,0-4,0-1) == 449555-1.html 449555-1-ref.html
+== 467722.html 467722-ref.html
+fuzzy(0-1,0-600) == 475092-sub.html 475092-ref.html
+fails-if(Android) fuzzy-if(!Android,0-90,0-3100) fuzzy-if(cocoaWidget,72-72,353-353) == 475092-pos.html 475092-sub.html # bug 482596
+== 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
+# Test for bug 484954
+== rgba-text.html rgba-text-ref.html
+# Test for bug 575695, 'kern' table support
+!= kerning-01.html kerning-01-notref.html
+# Test for bug 577380, support for AAT layout (on OS X only)
+random-if(!cocoaWidget) == 577380.html 577380-ref.html
+# Test for OpenType Arabic shaping support
+== arabic-shaping-1.html arabic-shaping-1-ref.html
+# check ligature in Arial Bold on Windows, for bug 644184; may fail on other platforms depending on fonts
+random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.html
+# Fallback (presentation-forms) shaping with a font that lacks GSUB/GPOS
+== arabic-fallback-1.html arabic-fallback-1-ref.html
+== arabic-fallback-2.html arabic-fallback-2-ref.html
+== arabic-fallback-3.html arabic-fallback-3-ref.html
+== arabic-fallback-4.html arabic-fallback-4-ref.html
+== arabic-marks-1.html arabic-marks-1-ref.html
+== arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
+# harfbuzz fallback mark stacking in the absence of GPOS:
+!= fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
+
+== 726392-1.html 726392-1-ref.html
+== 726392-2.html 726392-2-ref.html
+== 726392-3.html 726392-3-ref.html
+== 745555-1.html 745555-1-ref.html
+== 745555-2.html 745555-2-ref.html
+== 820255.html 820255-ref.html
+!= 1170688.html 1170688-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
+== 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
+skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
+fuzzy-if(Android,0-128,0-233) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html
+fails-if(Android) == 1463020-letter-spacing-text-transform-2.html 1463020-letter-spacing-text-transform-2-ref.html # missing font coverage on Android
+== 1507661-spurious-hyphenation-after-explicit.html 1507661-spurious-hyphenation-after-explicit-ref.html
+fuzzy-if(useDrawSnapshot,255-255,50-50) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
+!= 1637405-pua-shaping-1.html 1637405-pua-shaping-1-notref.html
+fuzzy-if(useDrawSnapshot,255-255,50-50) == 1655364-1.html 1655364-1-ref.html
+== 1670581-1.html 1670581-1-ref.html
+== 1673098-1.html 1673098-1-ref.html
+
+# ensure emoji chars don't render blank (bug 715798, bug 779042);
+# should at least render hexboxes if there's no font support
+random-if(geckoview) != emoji-01.html emoji-01-notref.html
+!= emoji-02.html emoji-02-notref.html
+
+# Bug 727276: tests with variation selectors 15 and 16 to control emoji rendering style
+== emoji-03.html emoji-03-ref.html
+# the next two will fail on OS X 10.6 because no color emoji font is present,
+# and also on Android platforms until we have color emoji fonts there.
+# Tests rely on bundled Twemoji Mozilla to pass on Windows <8.1 and Linux.
+!= emoji-03.html emoji-03-notref.html
+== emoji-04.html emoji-04-ref.html
+!= emoji-05.html emoji-05-notref.html
+
+# check that Graphite shaping (bug 631479) is working
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-01.html graphite-01-ref.html
+# Test 02 (using Pig Latin) is fuzzy on Win7 because glyph positioning is not guaranteed to match exactly
+# between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
+fuzzy-if(winWidget,0-49,0-220) pref(gfx.font_rendering.graphite.enabled,true) == graphite-02.html graphite-02-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-03a.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-03b.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,false) != graphite-01.html graphite-01-ref.html
+pref(gfx.font_rendering.graphite.enabled,false) != graphite-02.html graphite-02-ref.html
+# test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well
+pref(gfx.font_rendering.graphite.enabled,false) != graphite-03a.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,false) == graphite-03b.html graphite-03-notref.html
+
+# tests for graphite rendering with valid and invalid lang tags
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-04-fa.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-04-sd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-04-snd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-04-ur.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-04-urd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-04-sd.html graphite-04-ur.html
+
+# tests to compare graphite to opentype (will trivially pass when graphite not enabled)
+== graphite-05-ot-only.html graphite-05-ref.html
+!= graphite-05-ot-only.html graphite-05-fail.html
+== graphite-05-simple.html graphite-05-ref.html
+== graphite-05-multipass.html graphite-05-ref.html
+== graphite-05-lang.html graphite-05-ref.html
+== graphite-05-badlang.html graphite-05-ref.html
+== graphite-05-feat.html graphite-05-ref.html
+
+# comparing composed and decomposed characters that should render identically
+# under both OpenType and Graphite shaping
+pref(gfx.font_rendering.graphite.enabled,false) == glyph-decomposition-opentype.html glyph-decomposition-opentype-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.html glyph-decomposition-graphite-ref.html
+
+# test for bidi bug in graphite 1.3.2, fixed in 1.3.3 (bug 1207061)
+== graphite-bidi-1.html graphite-bidi-1-ref.html
+
+== graphite-surrogate-selection.html graphite-surrogate-selection-ref.html
+
+# Tests for hyphenation with hyphens property
+== auto-hyphenation-1.html auto-hyphenation-1-ref.html
+!= auto-hyphenation-1.html auto-hyphenation-1-notref.html
+== auto-hyphenation-1a.html auto-hyphenation-1-ref.html
+== auto-hyphenation-2.html auto-hyphenation-2-ref.html
+== auto-hyphenation-3.html auto-hyphenation-3-ref.html
+== auto-hyphenation-4.html auto-hyphenation-4-ref.html
+== auto-hyphenation-5.html auto-hyphenation-5-ref.html
+== auto-hyphenation-6.html auto-hyphenation-6-ref.html
+== auto-hyphenation-7.html auto-hyphenation-7-ref.html
+== auto-hyphenation-8.html auto-hyphenation-8-ref.html
+== auto-hyphenation-9.html auto-hyphenation-9-ref.html
+== auto-hyphenation-10.html auto-hyphenation-10-ref.html
+== auto-hyphenation-xmllang-1.xhtml auto-hyphenation-1-ref.html
+!= auto-hyphenation-xmllang-1.xhtml auto-hyphenation-1-notref.html
+== auto-hyphenation-xmllang-1a.xhtml auto-hyphenation-1-ref.html
+== auto-hyphenation-xmllang-2.xhtml auto-hyphenation-2-ref.html
+== auto-hyphenation-xmllang-3.xhtml auto-hyphenation-3-ref.html
+== auto-hyphenation-xmllang-4.xhtml auto-hyphenation-4-ref.html
+== auto-hyphenation-xmllang-5.xhtml auto-hyphenation-5-ref.html
+== auto-hyphenation-xmllang-6.xhtml auto-hyphenation-6-ref.html
+== auto-hyphenation-xmllang-7.xhtml auto-hyphenation-7-ref.html
+== auto-hyphenation-xmllang-8.xhtml auto-hyphenation-8-ref.html
+== auto-hyphenation-xmllang-9.xhtml auto-hyphenation-9-ref.html
+== auto-hyphenation-xmllang-10.xhtml auto-hyphenation-10-ref.html
+== auto-hyphenation-xmllang-11a.xhtml auto-hyphenation-1-ref.html
+== auto-hyphenation-xmllang-11b.xhtml auto-hyphenation-1-ref.html
+== auto-hyphenation-xmllang-12a.xhtml auto-hyphenation-4-ref.html
+== auto-hyphenation-xmllang-12b.xhtml auto-hyphenation-4-ref.html
+== auto-hyphenation-xmllang-13a.xhtml auto-hyphenation-1-ref.html
+== auto-hyphenation-xmllang-13b.xhtml auto-hyphenation-1-ref.html
+== auto-hyphenation-xmllang-14a.xhtml auto-hyphenation-4-ref.html
+== auto-hyphenation-xmllang-14b.xhtml auto-hyphenation-4-ref.html
+== auto-hyphenation-af-1.html auto-hyphenation-af-1-ref.html
+== auto-hyphenation-bg-1.html auto-hyphenation-bg-1-ref.html
+== auto-hyphenation-ca-1.html auto-hyphenation-ca-1-ref.html
+== auto-hyphenation-cy-1.html auto-hyphenation-cy-1-ref.html
+== auto-hyphenation-da-1.html auto-hyphenation-da-1-ref.html
+== auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1-ref.html
+== auto-hyphenation-de-1996-1.html auto-hyphenation-de-1996-1-ref.html
+!= auto-hyphenation-de-1901-1.html auto-hyphenation-de-1996-1.html
+== auto-hyphenation-de-ch-1.html auto-hyphenation-de-ch-1-ref.html
+== auto-hyphenation-eo-1.html auto-hyphenation-eo-1-ref.html
+== auto-hyphenation-es-1.html auto-hyphenation-es-1-ref.html
+== auto-hyphenation-et-1.html auto-hyphenation-et-1-ref.html
+== auto-hyphenation-fi-1.html auto-hyphenation-fi-1-ref.html
+== auto-hyphenation-fr-1.html auto-hyphenation-fr-1-ref.html
+== auto-hyphenation-gl-1.html auto-hyphenation-gl-1-ref.html
+== auto-hyphenation-hr-1.html auto-hyphenation-hr-1-ref.html
+== auto-hyphenation-hsb-1.html auto-hyphenation-hsb-1-ref.html
+== auto-hyphenation-hu-1.html auto-hyphenation-hu-1-ref.html
+== auto-hyphenation-ia-1.html auto-hyphenation-ia-1-ref.html
+== auto-hyphenation-is-1.html auto-hyphenation-is-1-ref.html
+== auto-hyphenation-it-1.html auto-hyphenation-it-1-ref.html
+== auto-hyphenation-kmr-1.html auto-hyphenation-kmr-1-ref.html
+== auto-hyphenation-la-1.html auto-hyphenation-la-1-ref.html
+== auto-hyphenation-lt-1.html auto-hyphenation-lt-1-ref.html
+== auto-hyphenation-mn-1.html auto-hyphenation-mn-1-ref.html
+== auto-hyphenation-nb-1.html auto-hyphenation-nb-1-ref.html
+== auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
+== auto-hyphenation-nn-1.html auto-hyphenation-nn-1-ref.html
+== auto-hyphenation-pl-1.html auto-hyphenation-pl-1-ref.html
+== auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
+== auto-hyphenation-ru-1.html auto-hyphenation-ru-1-ref.html
+== auto-hyphenation-sh-1.html auto-hyphenation-sh-1-ref.html
+== auto-hyphenation-sl-1.html auto-hyphenation-sl-1-ref.html
+== auto-hyphenation-sr-1.html auto-hyphenation-sr-1-ref.html
+== auto-hyphenation-sv-1.html auto-hyphenation-sv-1-ref.html # test swedish patterns
+!= auto-hyphenation-sv-1.html auto-hyphenation-sv-1-notref.html # verify swedish != english
+== auto-hyphenation-tr-1.html auto-hyphenation-tr-1-ref.html
+== auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
+
+== auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1-ref.html
+
+== hyphenation-caps-1.html hyphenation-caps-1-ref.html
+
+== hyphenation-control-1.html hyphenation-control-1-ref.html
+== hyphenation-control-2.html hyphenation-control-2-ref.html
+== hyphenation-control-3.html hyphenation-control-3-ref.html
+== hyphenation-control-4.html hyphenation-control-4-ref.html
+fuzzy-if(Android,0-64,0-18) fuzzy-if(winWidget,0-56,0-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == hyphenation-control-5.html hyphenation-control-5-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == hyphenation-control-6.html hyphenation-control-6-ref.html # Bug 1392106
+== hyphenation-control-7.html hyphenation-control-7-ref.html
+
+# osx-font-smoothing - with and without subpixel AA, only under OSX
+fails-if(!cocoaWidget) != osx-font-smoothing.html osx-font-smoothing-ref.html
+fails-if(!cocoaWidget) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
+== osx-font-smoothing-2.html osx-font-smoothing-2-ref.html
+
+# stray control chars should be visible by default, bug 1099557
+pref(layout.css.moz-control-character-visibility.enabled,true) != control-chars-01a.html control-chars-01-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) != control-chars-01b.html control-chars-01-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) != control-chars-01c.html control-chars-01-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) != control-chars-01d.html control-chars-01-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) != control-chars-02.html control-chars-02-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) == control-chars-03a.html control-chars-03-ref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) == control-chars-03b.html control-chars-03-ref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.control-characters.visible,true) != control-chars-04a.html control-chars-04-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.control-characters.visible,true) != control-chars-04b.html control-chars-04-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.control-characters.visible,true) != control-chars-04c.html control-chars-04-notref.html
+pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.control-characters.visible,true) != control-chars-04d.html control-chars-04-notref.html
+
+# font fallback for <space> when not supported in the primary font family - bug 970891
+== space-font-1.html space-font-1-ref.html
+
+# handling of highly negative letter-spacing and intrinsic width
+== negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == segment-break-transformation-1.html segment-break-transformation-1-ref.html # Bug 1392106
+
+# color glyphs, opacity, and RTL runs - bug 1318539
+== color-opacity-rtl-1.html color-opacity-rtl-1-ref.html
+== color-opacity-rtl-2.html color-opacity-rtl-2-ref.html
+
+== letter-spacing-nolig-1.html letter-spacing-nolig-1-ref.html
+== letter-spacing-nolig-2.html letter-spacing-nolig-2.html
+
+== ethiopic-wordspace.html ethiopic-wordspace-ref.html
+
+# sub and sup elements should be influenced by their container's line-height - bug 1524897
+== sub-sup-and-line-height.html sub-sup-and-line-height-ref.html
+
+# Reset default prefs.
+defaults

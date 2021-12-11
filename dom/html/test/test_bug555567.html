@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=555567
+-->
+<head>
+  <title>Test for Bug 555567</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=555567">Mozilla Bug 555567</a>
+<div id='content' style="display: none">
+  <form>
+    <fieldset>
+      <legend id="a"></legend>
+    </fieldset>
+    <legend id="b"></legend>
+  </form>
+  <legend id="c"></legend>
+</div>
+<pre id="test">
+<p id="display"></p>
+<script type="application/javascript">
+
+/** Test for Bug 555567 **/
+
+var a = document.getElementById('a');
+var b = document.getElementById('b');
+var c = document.getElementById('c');
+
+isnot(a.form, null,
+  "First legend element should have a not null form IDL attribute");
+is(b.form, null,
+  "Second legend element should have a null form IDL attribute");
+is(c.form, null,
+  "Third legend element should have a null form IDL attribute");
+
+</script>
+</pre>
+</body>
+</html>

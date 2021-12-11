@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=439808
+-->
+<head>
+  <title>Test for Bug 439808</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=439808">Mozilla Bug 439808</a>
+<p id="display"></p>
+<div id="content">
+<span><span contenteditable id="e">twest</span></span>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 439808 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var e = document.getElementById("e");
+  e.focus();
+  getSelection().collapse(e.firstChild, 1);
+  synthesizeKey("KEY_Delete");
+  is(e.textContent, "test", "Delete key worked");
+  synthesizeKey("KEY_Backspace");
+  is(e.textContent, "est", "Backspace key worked");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

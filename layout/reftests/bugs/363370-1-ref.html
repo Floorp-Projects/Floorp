@@ -1,0 +1,11 @@
+<html><head>
+<title>Testcase bug 363370 - [reflow branch] Crash [@ nsTArray_base::ShiftData] with testcase that appends table cells</title>
+</head>
+<body>
+
+<table border>
+<thead id="b"><tr><td rowspan="3">td</td></tr><tr><td>td</td></tr></thead>
+<tbody colspan="1" id="f"><tr></tr><tr><td>td</td></tr></tbody></table>
+
+</body>
+</html>

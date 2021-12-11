@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<!--
+From http://fantasai.inkedblade.net/style/specs/css2.1/tests/min-max-replaced
+with permission in
+https://bugzilla.mozilla.org/show_bug.cgi?id=413361#c11
+-->
+<html lang="en">
+ <head>
+  <title>CSS 2.1 Test Suite: Min/Max Height and Width Constraints on Replaced Elements</title>
+  <link rel="author" title="fantasai" href="http://fantasai.inkedblade.net/" />
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#min-max-widths" />
+  <meta name="assert" content="However, for replaced elements with an intrinsic ratio and both 'width' and 'height' specified as 'auto', the algorithm is as follows:" />
+  <style type="text/css">
+
+    /* Diagrams are scaled so that w and h line up.
+       Image is 75px x 75px; target dimensions will thus be 75px. */
+
+    /* h > max-height
+     * wmin/w < hmax/h
+     *
+     *            wmin           w
+     * |------------+------------+----------------> width 
+     *                  hmax     h
+     * |------------------+------+----------------> height
+     *
+     * target: [hmax * w/h, hmax]
+     */
+
+    #img6 {min-width:  60px; /* 40% */
+           max-height: 75px; /* 50% */}
+
+  </style>
+ </head>
+ <body>
+   <p><img src="234686-6.gif" alt="" id="img6"></p> <!-- w=150 h=150 -->
+
+ </body>
+</html>

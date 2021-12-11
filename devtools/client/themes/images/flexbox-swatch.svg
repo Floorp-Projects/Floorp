@@ -1,0 +1,8 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 13 11" fill="none" stroke="context-stroke" stroke-width="1" stroke-linejoin="round">
+  <rect x="0.5" y="0.5" width="12" height="10" stroke-dasharray="1 1" stroke-dashoffset="0.5"/>
+  <rect x="2.5" y="3.5" width="8" height="4"/>
+  <line x1="6.5" x2="6.5" y1="3" y2="8"/>
+</svg>

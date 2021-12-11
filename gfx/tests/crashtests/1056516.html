@@ -1,0 +1,15 @@
+<!-- crashtest for bug 1056516 -->
+<!-- This test is imported from the fuzzy-test in Bug 1346248-->
+<html>
+    <head>
+        <script>
+            o1 = document.createElement('acronym'); 
+            o2 = document.createElement('style');
+            o1.innerText = "æº¥¡à§ïµî¹ä¢¤ç²â¦¼ë¬ï¿áâ®ï¿½ë¨¸å¾°î¿ è«ã±¹î±â³ä³àµªê¥å¾ïç·®ï¿½ë            å¶¨ïºéµâï¢µâ¬¹"; {};
+            document.documentElement.appendChild(o1);
+            document.head.appendChild(o2);
+            document.styleSheets[0].insertRule("* { word-spacing: calc(1em); width: calc(1% + 100%); hyphens: auto; }", 0);
+        </script>
+    </head>
+    <body></body>
+</html>

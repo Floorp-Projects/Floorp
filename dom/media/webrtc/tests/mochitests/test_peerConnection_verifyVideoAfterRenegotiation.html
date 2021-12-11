@@ -1,0 +1,123 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1166832",
+    title: "Renegotiation: verify video after renegotiation"
+  });
+
+runNetworkTest(async () => {
+  // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+  if (navigator.userAgent.includes("Android")) {
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                    ["media.webrtc.hw.h264.enabled", false]);
+  }
+
+  const test = new PeerConnectionTest();
+
+  const h1 = new CaptureStreamTestHelper2D(50, 50);
+  const canvas1 = h1.createAndAppendElement('canvas', 'source_canvas1');
+  let stream1;
+  let vremote1;
+
+  const h2 = new CaptureStreamTestHelper2D(50, 50);
+  let canvas2;
+  let stream2;
+  let vremote2;
+
+  test.setMediaConstraints([{video: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function DRAW_INITIAL_LOCAL_GREEN(test) {
+      h1.drawColor(canvas1, h1.green);
+    },
+    function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+      stream1 = canvas1.captureStream(0);
+      test.pcLocal.attachLocalStream(stream1);
+      let i = 0;
+      return setInterval(function() {
+        try {
+          info("draw " + i ? "green" : "red");
+          h1.drawColor(canvas1, i ? h1.green : h1.red);
+          i = 1 - i;
+          stream1.requestFrame();
+          if (stream2 != null) {
+            h2.drawColor(canvas2, i ? h2.green : h2.blue);
+            stream2.requestFrame();
+          }
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
+    }
+  ]);
+
+  test.chain.append([
+    function FIND_REMOTE_VIDEO() {
+      vremote1 = test.pcRemote.remoteMediaElements[0];
+      ok(!!vremote1, "Should have remote video element for pcRemote");
+    },
+    function WAIT_FOR_REMOTE_GREEN() {
+      return h1.pixelMustBecome(vremote1, h1.green, {
+        threshold: 128,
+        infoString: "pcRemote's remote should become green",
+      });
+    },
+    function WAIT_FOR_REMOTE_RED() {
+      return h1.pixelMustBecome(vremote1, h1.red, {
+        threshold: 128,
+        infoString: "pcRemote's remote should become red",
+      });
+    }
+  ]);
+
+  addRenegotiation(test.chain,
+    [
+      function PC_LOCAL_ADD_SECOND_STREAM(test) {
+        canvas2 = h2.createAndAppendElement('canvas', 'source_canvas2');
+        h2.drawColor(canvas2, h2.blue);
+        stream2 = canvas2.captureStream(0);
+
+        // can't use test.pcLocal.getAllUserMediaAndAddStreams([{video: true}]);
+        // because it doesn't let us substitute the capture stream
+        test.pcLocal.attachLocalStream(stream2);
+      }
+    ]
+  );
+
+  test.chain.append([
+    function FIND_REMOTE2_VIDEO() {
+      vremote2 = test.pcRemote.remoteMediaElements[1];
+      ok(!!vremote2, "Should have remote2 video element for pcRemote");
+    },
+    function WAIT_FOR_REMOTE2_BLUE() {
+      return h2.pixelMustBecome(vremote2, h2.blue, {
+        threshold: 128,
+        infoString: "pcRemote's remote2 should become blue",
+      });
+    },
+    function DRAW_NEW_LOCAL_GREEN(test) {
+      stream1.requestFrame();
+      h1.drawColor(canvas1, h1.green);
+    },
+    function WAIT_FOR_REMOTE1_GREEN() {
+      return h1.pixelMustBecome(vremote1, h1.green, {
+        threshold: 128,
+        infoString: "pcRemote's remote1 should become green",
+      });
+    }
+  ]);
+
+  await test.run();
+});
+
+</script>
+</pre>
+</body>
+</html>

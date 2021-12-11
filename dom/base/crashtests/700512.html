@@ -1,0 +1,11 @@
+<html class="reftest-wait">
+  <script type="text/javascript">
+    var worker = new Worker("700512-worker.js");
+
+    worker.onmessage = function() {
+      document.documentElement.removeAttribute("class");
+    }
+
+    worker.postMessage(new Blob(["foo", "bar"]));
+  </script>
+</html>

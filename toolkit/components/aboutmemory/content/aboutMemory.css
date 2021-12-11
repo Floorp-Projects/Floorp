@@ -1,0 +1,189 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * The version used for mobile is located at
+ * toolkit/themes/mobile/global/aboutMemory.css.
+ * Desktop-specific stuff is at the bottom of this file.
+ */
+
+html {
+  background: -moz-Dialog;
+  color: -moz-DialogText;
+  font: message-box;
+}
+
+body {
+  padding: 0 2em;
+  margin: 0;
+  min-width: 45em;
+  margin: auto;
+}
+
+/* The comment at the top of aboutMemory.xhtml explains this font choice. */
+pre {
+  font-family: DejaVu Sans Mono, Liberation Mono, Fira Mono, monospace;
+}
+
+div.ancillary {
+  margin: 0.5em 0;
+  user-select: none;
+}
+
+div.section {
+  padding: 2em;
+  margin: 1em 0em;
+  border: 1px solid ThreeDShadow;
+  border-radius: 10px;
+  background: Field;
+  color: FieldText;
+}
+
+div.outputContainer {
+  display: flex;
+}
+
+div.sections {
+  flex: 1;
+  min-width: 0;
+}
+
+div.sidebar {
+  flex: 0 0 max-content;
+  margin-left: 1em;
+}
+
+div.sidebarContents {
+  position: sticky;
+  top: 0.5em;
+}
+
+div.sidebarItem {
+  padding: 0.5em;
+  margin: 1em 0em;
+  border: 1px solid ThreeDShadow;
+  border-radius: 10px;
+  background: Field;
+  color: FieldText;
+  user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+input.filterInput {
+  width: calc(100% - 1em);
+}
+
+ul.index {
+  list-style-position: inside;
+  margin: 0;
+  padding: 0;
+}
+
+ul.index > li {
+  padding-left: 0.5em;
+}
+
+div.opsRow {
+  padding: 0.5em;
+  margin-right: 0.5em;
+  margin-top: 0.5em;
+  border: 1px solid ThreeDShadow;
+  border-radius: 10px;
+  background: Field;
+  color: FieldText;
+  display: inline-block;
+}
+
+div.opsRowLabel, div.sidebarLabel {
+  display: block;
+  margin-bottom: 0.2em;
+  font-weight: bold;
+}
+
+.opsRowLabel label {
+  margin-left: 1em;
+  font-weight: normal;
+}
+
+div.non-verbose pre.entries {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+h1 {
+  padding: 0;
+  margin: 0;
+  background: inherit; /* When sticky give it the solid background of the parent */
+  display: inline;  /* allow subsequent text to the right of the heading */
+  position: sticky; /* Stay at the top of the page when scrolling */
+  top: 0;
+  z-index: 1; /* When sticky it should appear above the tree lines */
+}
+
+h2 {
+  padding-left: .1em;
+}
+
+h3 {
+  display: inline;  /* allow subsequent text to the right of the heading */
+}
+
+a.upDownArrow {
+  font-size: 130%;
+  text-decoration: none;
+  user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+.accuracyWarning, .badInputWarning, .invalid {
+  /*
+   * Technically this should be used with the default background colour,
+   * instead we're using the default field background colour,
+   * I hope this will be okay.
+   */
+  color: -moz-activehyperlinktext;
+}
+
+.treeline {
+  color: FieldText;
+  opacity: 0.5;
+}
+
+.mrValue {
+  font-weight: bold;
+}
+
+.hasKids {
+  cursor: pointer;
+}
+
+.hasKids:hover {
+  text-decoration: underline;
+}
+
+.noselect {
+  user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+.option {
+  font-size: 80%;
+  user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+.legend {
+  font-size: 80%;
+  user-select: none;  /* no need to include this when cutting+pasting */
+}
+
+.debug {
+  font-size: 80%;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Desktop-specific parts go here. */
+
+.hasKids:hover {
+  text-decoration: underline;
+}

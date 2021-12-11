@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<title>mask-size animation in delay phase</title>
+<style>
+@keyframes changeMaskSize {
+  from { mask-size: 50px 50px; }
+  to { mask-size: 50px 50px; }
+}
+
+#test {
+  height: 100px;
+  width: 100px;
+  mask-repeat: no-repeat;
+  mask-position: center center;
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"><rect x="0" y="0" width="25" height="25" fill="blue"/></svg>');
+  animation: changeMaskSize 100s 100s infinite;
+}
+
+#inner {
+  height: 100px;
+  width: 100px;
+  background-color: blue;
+  box-sizing: border-box;
+  /* Apply will-change property to force paint mask on mask layer */
+  border: 1px solid transparent;
+  will-change: transform;
+}
+
+</style>
+<div id="test"><div id="inner"></div></div>

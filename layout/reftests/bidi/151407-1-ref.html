@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test GetDir() for elements</title>
+  </head>
+  <body>
+    <div dir="">dir="", getDir returns ""</div>
+    <div dir="ltr">dir="ltr", getDir returns "ltr"</div>
+    <div dir="rtl">dir="rtl", getDir returns "rtl"</div>
+    <div dir="auto">dir="auto", getDir returns "auto"</div>
+    <div dir="foopy">dir="foopy", getDir returns ""</div>
+    <div>no dir attribute, getDir returns ""</div>
+  </body>
+</html>

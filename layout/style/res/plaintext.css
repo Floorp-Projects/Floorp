@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  -moz-control-character-visibility: visible;
+}
+
+.nowrap pre {
+  white-space: pre;
+}
+
+/* Make text go with the rules of dir=auto, but allow it to be overriden if 'Switch Text Direction' is triggered */
+html:not([dir]) pre { /* Not a UA sheet, so doesn't use :-moz-has-dir-attr */
+  unicode-bidi: plaintext;
+}
+
+@-moz-document unobservable-document() {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /**
+       * in-content-page-{color, background} for dark theme.
+       *
+       * TODO(emilio): Make this just `color-scheme: dark` once color-scheme ships,
+       * (or `color-scheme: light dark` outside the media query).
+       */
+      background: rgb(28,27,34);
+      color: rgb(251,251,254);
+    }
+  }
+}
+
+/* NOTE(emilio): For some reason some pages, mainly bing.com, load a bunch of
+ * scripts in zero-size <object> elements, see bug 1548449.
+ *
+ * Line-breaking such documents is useless and pretty expensive, so only render
+ * them if there's a viewport. Sigh.
+ */
+@media (width: 0) or (height: 0) {
+  :root {
+    display: none;
+  }
+}

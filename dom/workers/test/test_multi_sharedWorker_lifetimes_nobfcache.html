@@ -1,0 +1,100 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for SharedWorker</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+      <script class="testbody" type="text/javascript">
+        "use strict";
+
+        const windowRelativeURL = "multi_sharedWorker_frame_nobfcache.html";
+        const storedData = "0123456789abcdefghijklmnopqrstuvwxyz";
+        var bc, bc2;
+        bc = new BroadcastChannel("bugSharedWorkerLiftetime");
+        bc.onmessage = (event) => {
+          var msg = event.data;
+          var command = msg.command;
+          if (command == "finished") {
+            bc.close();
+            bc2.close();
+            SimpleTest.finish();
+          } else if (command == "debug") {
+            info(msg.message);
+          } else if (command == "fromWorker" || command == "loaded") {
+            sendToGenerator(msg.workerMessage);
+          }
+        }
+        bc2 = new BroadcastChannel("navigate");
+        bc2.onmessage = (event) => {
+          if (event.data.command == "loaded") {
+            sendToGenerator();
+          }
+        }
+
+        function postToWorker(workerMessage) {
+          bc.postMessage({command: "postToWorker", workerMessage});
+        }
+
+        let testGenerator = (function*() {
+          SimpleTest.waitForExplicitFinish();
+
+          // Open the window
+          window.open(windowRelativeURL, "testWin", "noopener");
+          yield undefined;
+
+          // Retrieve data from worker
+          postToWorker({ command: "retrieve" });
+
+          let msg = yield undefined;
+
+          // Verify there is no data stored
+          is(msg.type, "result", "Got a result message");
+          is(msg.data, undefined, "No data stored yet");
+
+          // Store data, and retrieve it
+          postToWorker({ command: "store", data: storedData });
+          postToWorker({ command: "retrieve" });
+
+          msg = yield undefined;
+          // Verify there is data stored
+          is(msg.type, "result", "Got a result message");
+          is(msg.data, storedData, "Got stored data");
+
+
+          info("Navigating to a different page");
+          // Current subpage should not go into bfcache because of the Cache-Control
+          // headers we have set.
+          bc.postMessage({command: "navigate", location: "navigate.html"});
+          yield undefined;
+
+          info("Navigating to " + windowRelativeURL);
+          bc2.postMessage({command: "navigate", location: windowRelativeURL });
+          yield undefined;
+
+          postToWorker({ command: "retrieve" });
+
+          msg = yield undefined;
+          is(msg.type, "result", "Got a result message");
+          is(msg.data, undefined, "No data stored");
+
+          postToWorker({ command: "store", data: storedData });
+          postToWorker({ command: "retrieve" });
+
+          msg = yield undefined;
+          is(msg.type, "result", "Got a result message");
+          is(msg.data, storedData, "Got stored data");
+
+          bc.postMessage({command: "finish"});
+        })();
+
+        let sendToGenerator = testGenerator.next.bind(testGenerator);
+
+      </script>
+  </head>
+  <body onload="testGenerator.next();">
+  </body>
+</html>

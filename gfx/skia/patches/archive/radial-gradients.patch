@@ -1,0 +1,25 @@
+diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/SkGradientShader.cpp
+--- a/gfx/skia/src/effects/SkGradientShader.cpp
++++ b/gfx/skia/src/effects/SkGradientShader.cpp
+@@ -1665,17 +1665,20 @@ public:
+         }
+         return kRadial2_GradientType;
+     }
+ 
+     virtual void shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int count) SK_OVERRIDE {
+         SkASSERT(count > 0);
+ 
+         // Zero difference between radii:  fill with transparent black.
+-        if (fDiffRadius == 0) {
++        // TODO: Is removing this actually correct? Two circles with the 
++        // same radius, but different centers doesn't sound like it
++        // should be cleared
++        if (fDiffRadius == 0 && fCenter1 == fCenter2) {
+           sk_bzero(dstC, count * sizeof(*dstC));
+           return;
+         }
+         SkMatrix::MapXYProc dstProc = fDstToIndexProc;
+         TileProc            proc = fTileProc;
+         const SkPMColor* SK_RESTRICT cache = this->getCache32();
+ 
+         SkScalar foura = fA * 4;

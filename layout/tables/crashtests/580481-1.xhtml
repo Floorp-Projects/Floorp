@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+function placeBefore(n, r) { r.parentNode.insertBefore(n, r); }
+
+function boom()
+{
+  placeBefore(document.createElementNS(HTML_NS, 'td'), document.getElementById("td1"));
+  placeBefore(document.createElementNS(HTML_NS, 'tr'), document.getElementById("tr1"));
+}
+
+]]>
+</script>
+</head>
+
+<body onload="boom();">
+<table rules="groups"><tbody><tbody><tr id="tr1" style="border-left: 6px inset green;"><td id="td1"></td></tr></tbody></tbody></table>
+</body>
+
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>nsIDOMWindowUtils::selectAtPoint test</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+<script type="application/javascript">
+  var SimpleTest = window.opener.SimpleTest;
+
+  function ok() { window.opener.ok.apply(window.opener, arguments); }
+  function done() { window.opener.done.apply(window.opener, arguments); }
+
+  function dumpLn() {
+    for (let idx = 0; idx < arguments.length; idx++)
+      dump(arguments[idx] + " ");
+    dump("\n");
+  }
+
+  function getCharacterDims() {
+    let span = document.getElementById("measure");
+    let rect = span.getBoundingClientRect();
+    // Subtract 2 from each dimension because of 1px border on all sides
+    // of the frame.
+    return { width: rect.width - 2, height: rect.height - 2 }; 
+  }
+
+  function setStart(aDWU, aX, aY, aSelectType)
+  {
+    // Clear any existing selection
+    let selection = document.getSelection();
+    selection.removeAllRanges();
+
+    // Select text
+    let result = aDWU.selectAtPoint(aX, aY, aSelectType);
+    ok(result == true, "selectAtPoint succeeded?");
+  }
+
+  function setEnd(aDWU, aX, aY, aSelectType)
+  {
+    // Select text
+    let result = aDWU.selectAtPoint(aX, aY, aSelectType);
+    ok(result == true, "selectAtPoint succeeded?");
+  }
+
+  function setSingle(aDWU, aX, aY, aSelectType, aSelectTypeStr, aExpectedSelectionText) {
+    // Clear any existing selection
+    let selection = document.getSelection();
+    selection.removeAllRanges();
+
+    // Select text
+    let result = aDWU.selectAtPoint(aX, aY, aSelectType);
+    ok(result == true, "selectAtPoint succeeded?");
+  }
+
+  function checkSelection(aDoc, aSelectTypeStr, aExpectedSelectionText) {
+    // Retrieve text selected
+    let selection = aDoc.getSelection();
+    let text = selection.toString();
+
+    // Test
+    let result = (text == aExpectedSelectionText);
+    ok(result, aSelectTypeStr + " selection text matches?");
+    if (!result) {
+      dumpLn(aSelectTypeStr + " selection text:", "[" + text + "] expected:[" + aExpectedSelectionText + "]" );
+    }
+  }
+
+  function doTest() {
+    let dwu = window.windowUtils;
+
+    let os = Cc["@mozilla.org/xre/app-info;1"]
+               .getService(Ci.nsIXULRuntime).OS;
+    let isLinux = (os == "Linux");
+    let isMac = (os == "Darwin");
+    let isWindows = (os == "WINNT");
+
+    if (!isLinux && !isMac && !isWindows) {
+      done();
+      return;
+    }
+
+    window.scrollTo(0, 0);
+
+    // Trick to get character spacing - get the bounds around a
+    // single character trapped in a div.
+    let charDims = getCharacterDims();
+    // dumpLn("character dims:", charDims.width, charDims.height);
+
+    //
+    // Root frame selection
+    //
+
+    // First div in the main page
+
+    let div = document.getElementById("div1");
+    let rect = div.getBoundingClientRect();
+    rect.x += 1; rect.y += 1; rect.width -= 2; rect.height -= 2;  // remove border
+
+    // Centered on the first character in the sentence div
+    let targetPoint = { xPos: rect.left + (charDims.width / 2),
+                        yPos: rect.top + (charDims.height / 2) };
+
+    setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE);
+    checkSelection(document, "SELECT_WORDNOSPACE", "ttestselection1");
+    setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORD);
+    if (isLinux || isMac) {
+      checkSelection(document, "SELECT_WORD", "ttestselection1");
+    } else if (isWindows) {
+      checkSelection(document, "SELECT_WORD", "ttestselection1 ");
+    }
+    setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
+    checkSelection(document, "SELECT_PARAGRAPH", "ttestselection1 Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut. Ne labore incorrupte vix. Cu copiosae postulant tincidunt ius, in illud appetere contentiones eos. Ei munere officiis assentior pro, nibh decore ius at.");
+
+    // Within the 10th character "c" in the sentence div
+    targetPoint = { xPos: rect.left + 9.6 * charDims.width,
+                    yPos: rect.top + (charDims.height / 2) };
+    // The expectations here are incorrect, because selectAtPoint selects two characters
+    // when it should only get one. https://bugzilla.mozilla.org/show_bug.cgi?id=1696176
+    setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
+    checkSelection(document, "SELECT_CHARACTER", "c");
+    setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CLUSTER);
+    checkSelection(document, "SELECT_CLUSTER", "c");
+
+    // Separate character blocks in a word 'ttestse(l)ection(1)'
+    targetPoint = { xPos: rect.left + 7.6 * charDims.width,
+                    yPos: rect.top + (charDims.height / 2) };
+    setStart(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
+    targetPoint = { xPos: rect.left + 14.6 * charDims.width,
+                    yPos: rect.top + (charDims.height / 2) };
+    setEnd(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
+    checkSelection(document, "split selection", "l1");
+
+    // Trying to select where there's no text, should fail but not throw
+    let result = dwu.selectAtPoint(rect.left - 20, rect.top - 20, Ci.nsIDOMWindowUtils.SELECT_CHARACTER, false);
+    ok(result == false, "couldn't select?");
+
+    // Second div in the main page
+
+    div = document.getElementById("div2");
+    rect = div.getBoundingClientRect();
+    rect.x += 1; rect.y += 1; rect.width -= 2; rect.height -= 2;  // remove border
+
+    // Centered on the first line, first character in the paragraph div
+    targetPoint = { xPos: rect.left + (charDims.width / 2),
+                    yPos: rect.top + (charDims.height / 2) };
+    setSingle(dwu, targetPoint.xPos + 50, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
+    checkSelection(document, "SELECT_PARAGRAPH", "Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut. Ne labore incorrupte vix. Cu copiosae postulant tincidunt ius, in illud appetere contentiones eos.");
+
+    //
+    // Inner IFRAME selection tests
+    //
+
+    let frame = document.getElementById("frame1");
+    let dwuFrame = frame.contentDocument
+                        .defaultView
+                        .windowUtils;
+
+    frame.contentWindow.scrollTo(0, 0);
+
+    rect = frame.getBoundingClientRect();
+    rect.x += 1; rect.y += 1; rect.width -= 2; rect.height -= 2;  // remove border
+
+    targetPoint = { xPos: charDims.width / 2,
+                    yPos: charDims.height / 2 };
+    setSingle(dwuFrame, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE);
+    checkSelection(frame.contentWindow.document, "SELECT_WORDNOSPACE", "ttestselection2");
+    setSingle(dwuFrame, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORD);
+    if (isLinux || isMac) {
+      checkSelection(frame.contentWindow.document, "SELECT_WORD", "ttestselection2");
+    } else if (isWindows) {
+      checkSelection(frame.contentWindow.document, "SELECT_WORD", "ttestselection2 ");
+    }
+    setSingle(dwuFrame, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
+    checkSelection(frame.contentWindow.document, "SELECT_PARAGRAPH", "ttestselection2 Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut.");
+
+    // Outside the frame should throw. This is a failure in coordinate setup of
+    // nsDOMWindowUtils::SelectAtPoint.
+    let thr = false;
+    try {
+      dwuFrame.selectAtPoint(rect.right + 50, rect.top, Ci.nsIDOMWindowUtils.SELECT_WORD, false);
+    } catch (ex)  { thr = true; }
+    ok(thr == true, "selectAtPoint expected throw?");
+    
+    done();
+  }
+
+  let frameLoad = false;
+  let pageLoad = false;
+  let painted = false;
+  function testReady() {
+    if (frameLoad && pageLoad && painted) 
+      doTest();
+  }
+
+  function onFrameLoad() {
+    // Exit the onload handler before trying the test, because we need
+    // to ensure that paint unsupression has happened.
+    setTimeout(function() {
+      frameLoad = true;
+      testReady();
+    }, 0);
+  }
+
+  function onPageLoad() {
+    // Exit the onload handler before trying the test, because we need
+    // to ensure that paint unsupression has happened
+    // XXXroc why do we need to separately test for the loading of the frame
+    // and a paint? That should not be necessary for this test.
+    setTimeout(function() {
+      pageLoad = true;
+      testReady();
+    }, 0);
+  }
+
+  function onPaint() {
+    window.removeEventListener("MozAfterPaint", onPaint);
+    painted = true;
+    testReady();
+  }
+
+  window.addEventListener("MozAfterPaint", onPaint);
+</script>
+
+<style type="text/css">
+
+body {
+  font-family: monospace;
+  margin-left: 40px;
+  margin-top: 40px;
+  padding: 0;
+}
+
+#div1 {
+  border: 1px solid red;
+  width: 400px;
+  height: 100px;
+}
+
+#frame1 {
+  display: block;
+  height: 100px;
+  width: 300px;
+  border: 1px solid blue;
+  padding: 0;
+  margin: 0;
+}
+
+#div2 {
+  border: 1px solid green;
+}
+
+#measure {
+  padding: 0px;
+  margin: 0px;
+  border: 1px solid red;
+}
+
+</style>
+</head>
+<body id="body" onload="onPageLoad();">
+
+<div id="div1">ttestselection1 Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut. Ne labore incorrupte vix. Cu copiosae postulant tincidunt ius, in illud appetere contentiones eos. Ei munere officiis assentior pro, nibh decore ius at.</div>
+
+<br />
+
+<iframe id="frame1" src="selectAtPoint-innerframe.html"></iframe>
+
+<br/>
+
+<div id="div2">Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut. Ne labore incorrupte vix. Cu copiosae postulant tincidunt ius, in illud appetere contentiones eos.</div>
+
+<br />
+
+<span id="measure">t</span>
+
+</body>
+</html>

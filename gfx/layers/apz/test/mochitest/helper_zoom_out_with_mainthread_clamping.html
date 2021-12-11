@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+  <title>Tests that zooming out in a way that triggers main-thread scroll re-clamping works properly</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <div style="width: 200vw; height: 2000px; background-color: linear-gradient(green,blue)"></div>
+  <script type="application/javascript">
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+
+    async function test() {
+      // Initial state
+      is(await getResolution(), 1.0, "should not be zoomed");
+
+      // Zoom in and go to the bottom-right corner. This ensures the layout
+      // and visual scroll offsets are nonzero, which increases the chances
+      // that the scroll position layer alignment code will mutate the scroll
+      // position (see comment below).
+      utils.setResolutionAndScaleTo(5.0);
+      await promiseApzFlushedRepaints();
+      utils.scrollToVisual(document.scrollingElement.clientWidth * 5,
+                           document.scrollingElement.clientHeight * 5,
+                           utils.UPDATE_TYPE_MAIN_THREAD,
+                           utils.SCROLL_MODE_INSTANT);
+      await promiseApzFlushedRepaints();
+
+      // Check that we're at the right place
+      is(await getResolution(), 5.0, "should be zoomed to 5.0");
+      is(window.scrollX, window.scrollMaxX, "layout x-coord should be maxed");
+      is(window.scrollY, window.scrollMaxY, "layout y-coord should be maxed");
+      ok(visualViewport.offsetLeft > 0, "visual x-coord should be even further");
+      ok(visualViewport.offsetTop > 0, "visual y-coord should be even further");
+
+      // Zoom out. This will trigger repaint requests to the main thread,
+      // at various intermediate resolutions. The repaint requests will
+      // trigger reflows, which will trigger the root scrollframe to re-clamp
+      // and layer-align the scroll position as part of the post-reflow action.
+      // The test is checking that these mutations don't end up sending a scroll
+      // position update to APZ that interrupts the zoom action (see bug 1671284
+      // comment 9 for the exact mechanism). In order to maximize the chances of
+      // catching the bug, we wait for the main thread repaint after each of the
+      // pinch inputs.
+
+      let zoom_out = pinchZoomOutTouchSequenceAtCenter();
+      // Do coordinate conversion up-front using the current resolution and
+      // visual viewport.
+      for (let entry of zoom_out) {
+        for (let i = 0; i < entry.length; i++) {
+          entry[i] = await coordinatesRelativeToScreen({
+            offsetX: entry[i].x,
+            offsetY: entry[i].y,
+            target: document.body,
+          });
+        }
+      }
+      // Dispatch the touch events, waiting for paints after each row in
+      // zoom_out.
+      let touchIds = [0, 1];
+      for (let i = 0; i < zoom_out.length; i++) {
+        let entry = zoom_out[i];
+        for (let j = 0; j < entry.length; j++) {
+          await new Promise(resolve => {
+            utils.sendNativeTouchPoint(
+              touchIds[j],
+              utils.TOUCH_CONTACT,
+              entry[j].x,
+              entry[j].y,
+              1,
+              90,
+              resolve
+            );
+          });
+        }
+        await promiseAllPaintsDone();
+
+        // On the last row also do the touch-up events
+        if (i == zoom_out.length - 1) {
+          for (let j = 0; j < entry.length; j++) {
+            await new Promise(resolve => {
+              utils.sendNativeTouchPoint(
+                touchIds[j],
+                utils.TOUCH_REMOVE,
+                entry[j].x,
+                entry[j].y,
+                1,
+                90,
+                resolve
+              );
+            });
+          }
+        }
+      }
+
+      // Wait for everything to stabilize
+      await promiseApzFlushedRepaints();
+
+      // Verify that the zoom completed and we're back at 1.0 resolution
+      isfuzzy(await getResolution(), 1.0, 0.0001, "should be back at initial resolution");
+    }
+
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

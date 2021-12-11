@@ -1,0 +1,22 @@
+[package]
+name = "mozrunner"
+version = "0.13.0"
+authors = ["Mozilla"]
+description = "Reliable Firefox process management."
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozrunner"
+license = "MPL-2.0"
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+mozprofile = { path = "../mozprofile", version = "0.7" }
+plist = "0.5"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winreg = "0.5"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+dirs = "2"
+
+[[bin]]
+name = "firefox-default-path"

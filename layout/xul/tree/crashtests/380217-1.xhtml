@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.documentElement.style.content = '\'a\'';">
+
+<html:style>
+* { position: fixed; }
+*:not(style) {
+  /* At the time this testcase was added, the above `float` styling would
+     have automatically forced "display:block" for these elements, so we
+     should preserve that styling to preserve the integrity of the crashtest
+     since blockification behavior for -moz-box is changing. */
+  display: block;
+}
+</html:style>
+
+<tree rows="6">
+  <treecols>
+      <treecol id="firstname" label="First Name" primary="true"/>
+  </treecols>
+  <treechildren>
+    <treeitem>
+      <treerow>
+        <treecell/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+</tree>
+
+</window>

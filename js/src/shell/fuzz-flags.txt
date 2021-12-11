@@ -1,0 +1,84 @@
+# This lists all the possible flags we'd like to see tested out in the shell by
+# fuzzers. A non-empty line not starting with # should be considered a valid
+# one. Note the following flag is recommended in ALL the cases: --fuzzing-safe
+
+# general jit flags
+--baseline-eager
+--blinterp
+--no-blinterp
+--blinterp-eager
+--cache-ir-stubs=off
+--cache-ir-stubs=on
+--ion-check-range-analysis
+--ion-eager
+--ion-edgecase-analysis=off
+--ion-edgecase-analysis=on
+--ion-extra-checks
+--ion-gvn=off
+--ion-gvn=on
+--ion-inlining=off
+--ion-inlining=on
+--ion-instruction-reordering=off
+--ion-instruction-reordering=on
+--ion-licm=off
+--ion-licm=on
+--ion-limit-script-size=off
+--ion-limit-script-size=on
+--ion-offthread-compile=off
+--ion-osr=off
+--ion-osr=on
+--ion-pruning=off
+--ion-pruning=on
+--ion-range-analysis=off
+--ion-range-analysis=on
+--ion-regalloc=testbed
+--ion-scalar-replacement=off
+--ion-scalar-replacement=on
+--ion-warmup-threshold=0
+--ion-warmup-threshold=10
+--ion-warmup-threshold=100
+--no-native-regexp
+--nursery-strings=off
+--nursery-strings=on
+--nursery-bigints=off
+--nursery-bigints=on
+--spectre-mitigations=off
+--spectre-mitigations=on
+--more-compartments
+--fast-warmup
+--warp-generator
+--warp-async
+--no-warp-generator
+--no-warp-async
+--large-arraybuffers
+
+# GC-related
+# These 2 flags can cause the shell to slow down
+# --gc-zeal=2
+# --gc-zeal=10
+--no-cgc
+--no-ggc
+--no-incremental-gc
+
+# wasm flags
+--wasm-gc
+--wasm-compiler=baseline
+--wasm-compiler=optimizing
+--wasm-compiler=baseline+optimizing
+--test-wasm-await-tier2
+--wasm-disable-huge-memory
+
+# CPU instruction set-related
+--no-sse3
+--no-ssse3
+--no-sse41
+--no-sse42
+
+# arm specific, no-ops on other platforms.
+--arm-sim-icache-checks
+--arm-asm-nop-fill=1
+--arm-hwcap=vfp
+
+# Profiling, code coverage, and debugging
+# --dump-bytecode option implies --code-coverage
+--dump-bytecode

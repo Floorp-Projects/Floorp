@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>
+<script>
+window.onload = async function() {
+  document.getElementById("link0").href = target_url;
+  document.getElementById("link1").href = target_url;
+
+  sendMouseEvent({type: "click"}, "link0");
+  sendMouseEvent({type: "click"}, "link1");
+
+  await waitForFinishedFrames(2);
+  await countAndClose("window0", 1);
+  await countAndClose("window1", 1);
+
+  await cleanupWindows();
+  SimpleTest.finish();
+};
+
+async function countAndClose(name, expected_count) {
+  var array_of_frames = await getFramesByName(name);
+  is(array_of_frames.length, expected_count,
+     "Should only open " + expected_count +
+     " window(s) with name " + name + " using a fancy hyperlink.");
+}
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=279495">Mozilla Bug 279495</a>
+<div id="links">
+<a id="link0" target="window0" onclick="window.open('blank.html', 'window0', 'width=10,height=10');">This is a fancy hyperlink</a>
+<a id="link1" target="window1" onclick="window.open('http://test1.example.org:80/tests/docshell/test/navigation/blank.html', 'window1', 'width=10,height=10');">This is a fancy hyperlink</a>
+</div>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

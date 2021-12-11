@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1082672
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1082672 part 2</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1082672">Mozilla Bug 1082672</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+if (typeof Symbol === "function") {
+  var sym = Symbol("ponies");
+  Object.defineProperty(window, sym, {configurable: true, value: 3});
+  is(window[sym], 3);
+} else {
+  ok(true, "no Symbols in this build");
+}
+</script>
+</pre>
+</body>
+</html>

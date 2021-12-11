@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    circle { fill: red }
+    @media (overflow-block: none) {
+      .a { fill: green }
+    }
+    @media (overflow-block: scroll) {
+      .b { fill: green }
+    }
+    @media (overflow-block: optional-paged) {
+      .c { fill: green }
+    }
+    @media (overflow-block: paged) {
+      .d { fill: green }
+    }
+    @media (overflow-block: something-new-and-unknown) {
+      .e { fill: green }
+    }
+    @media (overflow-block) {
+      .f { fill: green }
+    }
+  </style>
+  <circle cx="5" cy="10" r="5" class="a">A</circle>
+  <circle cx="15" cy="10" r="5" class="b">B</circle>
+  <circle cx="25" cy="10" r="5" class="c">C</circle>
+  <circle cx="35" cy="10" r="5" class="d">D</circle>
+  <circle cx="45" cy="10" r="5" class="e">E</circle>
+  <circle cx="55" cy="10" r="5" class="f">F</circle>
+</svg>

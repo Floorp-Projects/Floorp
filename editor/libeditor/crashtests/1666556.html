@@ -1,0 +1,19 @@
+<script>
+function func_a() {
+  a.appendChild(b)
+  document.execCommand("indent", false)
+}
+function func_b() {
+  document.execCommand("delete", false)
+  a.contentEditable = "true"
+  c.select()
+}
+</script>
+<video focus="false">
+<source onerror="func_a()">
+</video>
+<details id="a" open="tru">
+<p id="b">
+<input id="c" contenteditable="pla">
+<style onload="func_b()">
+<!-- x -->

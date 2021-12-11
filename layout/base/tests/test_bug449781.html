@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=449781
+-->
+<head>
+  <title>Test for Bug 449781</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=449781">Mozilla Bug 449781</a>
+<p id="display">Canary</p>
+<iframe src="about:blank" id="ourFrame" style="visibility: hidden">
+</iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var s1, s2, s3, s4;
+
+/** Test for Bug 449781 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  s1 = snapshotWindow(window);
+
+  $("ourFrame").style.display = "none";
+  is($("ourFrame").offsetWidth, 0, "Unexpected width after hiding");
+  $("ourFrame").style.display = "";
+  is($("ourFrame").clientWidth, 300, "Unexpected width after showing");
+
+  s2 = snapshotWindow(window);
+
+  var equal, str1, str2;
+  [equal, str1, str2] = compareSnapshots(s1, s2, true);
+  ok(equal, "Show/hide should have no effect - " +
+     "got " + str1 + " but expected " + str2);
+
+  SpecialPowers.setFullZoom($("ourFrame").contentWindow, 2);
+
+  s3 = snapshotWindow(window);
+
+  [equal, str1, str2] = compareSnapshots(s1, s3, true);
+  ok(equal, "Zoom should have no effect - " +
+     "got " + str1 + " but expected " + str2);
+
+  $("display").style.display = "none";
+
+  s4 = snapshotWindow(window);
+  [equal, str1, str2] = compareSnapshots(s3, s4, true);
+  ok(!equal, "Should be able to see the canary");
+
+  SimpleTest.finish();
+});
+
+
+
+</script>
+</pre>
+</body>
+</html>
+

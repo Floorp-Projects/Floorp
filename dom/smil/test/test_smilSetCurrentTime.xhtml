@@ -1,0 +1,76 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for setCurrentTime Behavior </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg"
+     onload="this.pauseAnimations()" />
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for basic setCurrentTime / getCurrentTime Behavior  **/
+
+/* Global Variables & Constants */
+const PRECISION_LEVEL = 0.0000001; // Allow small level of floating-point error
+const gTimes = [0, 1.5, 0.2, 0.99, -400.5, 10000000, -1];
+const gWaitTime = 20;
+var gSvg = document.getElementById("svg");
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+function main() {
+  ok(gSvg.animationsPaused(), "should be paused by <svg> load handler");
+  is(gSvg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  // Test that seeking takes effect immediately
+  for (var i = 0; i < gTimes.length; i++) {
+    gSvg.setCurrentTime(gTimes[i]);
+    // We adopt the SVGT1.2 behavior of clamping negative times to 0
+    assertFloatsEqual(gSvg.getCurrentTime(), Math.max(gTimes[i], 0.0));
+  }
+
+  // Test that seeking isn't messed up by timeouts
+  // (using tail recursion to set up the chain of timeout function calls)
+  var func = function() {
+    checkTimesAfterIndex(0);
+  }
+  setTimeout(func, gWaitTime);
+}
+
+/* This method seeks to the time at gTimes[index],
+ * and then sets up a timeout to...
+ *   - verify that the seek worked
+ *   - make a recursive call for the next index.
+ */
+function checkTimesAfterIndex(index) {
+  if (index == gTimes.length) {
+    // base case -- we're done!
+    SimpleTest.finish();
+    return;
+  }
+
+  gSvg.setCurrentTime(gTimes[index]);
+  var func = function() {
+    assertFloatsEqual(gSvg.getCurrentTime(), Math.max(gTimes[index], 0.0));
+    checkTimesAfterIndex(index + 1);
+  }
+  setTimeout(func, gWaitTime);
+}
+
+function assertFloatsEqual(aVal, aExpected) {
+  ok(Math.abs(aVal - aExpected) <= PRECISION_LEVEL,
+     "getCurrentTime returned " + aVal + " after seeking to " + aExpected)
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

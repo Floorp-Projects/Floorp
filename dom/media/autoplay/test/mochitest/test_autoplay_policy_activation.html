@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Autoplay policy test</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+  </head>
+  <body>
+    <pre id="test">
+      <script>
+
+        // Tests that videos can only play audibly in windows/frames
+        // which have been activated by same-origin user gesture.
+
+        gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+                        ["media.autoplay.blocking_policy", 0]);
+
+        SpecialPowers.pushPrefEnv({'set': gTestPrefs}, () => {
+          runTest();
+        });
+
+        let test_cases = [
+          {
+            name: "inaudible playback in unactivated same-origin iframe in activated parent -> allowed",
+            muted: true,
+            same_origin_child: true,
+            activated_from: "parent",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in unactivated same-origin iframe in unactivated parent -> allowed",
+            muted: true,
+            same_origin_child: true,
+            activated_from: "none",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated same-origin iframe in activated parent -> allowed",
+            muted: false,
+            same_origin_child: true,
+            activated_from: "parent",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated same-origin iframe in unactivated parent -> blocked",
+            muted: false,
+            same_origin_child: true,
+            activated_from: "none",
+            play_from: "child",
+            should_play: false,
+          },
+
+          {
+            name: "inaudible playback in unactivated cross-origin iframe in activated parent -> allowed",
+            muted: true,
+            same_origin_child: false,
+            activated_from: "parent",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in unactivated cross-origin iframe in unactivated parent -> allowed",
+            muted: true,
+            same_origin_child: false,
+            activated_from: "none",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated cross-origin iframe in activated parent -> allowed",
+            muted: false,
+            same_origin_child: false,
+            activated_from: "parent",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated cross-origin iframe in unactivated parent -> blocked",
+            muted: false,
+            same_origin_child: false,
+            activated_from: "none",
+            play_from: "child",
+            should_play: false,
+          },
+
+          {
+            name: "audible playback in activated cross-origin iframe -> allowed",
+            muted: false,
+            same_origin_child: false,
+            activated_from: "child",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in activated document -> allowed",
+            muted: false,
+            activated_from: "parent",
+            play_from: "parent",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated document -> blocked",
+            muted: false,
+            activated_from: "none",
+            play_from: "parent",
+            should_play: false,
+          },
+
+          {
+            name: "audible playback in activated document (via cross-origin child) -> allowed",
+            muted: false,
+            same_origin_child: false,
+            activated_from: "child",
+            play_from: "parent",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in activated document (via same-origin child) -> allowed",
+            muted: false,
+            same_origin_child: true,
+            activated_from: "child",
+            play_from: "parent",
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in activated document -> allowed",
+            muted: true,
+            activated_from: "parent",
+            play_from: "parent",
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in unactivated document -> allowed",
+            muted: true,
+            activated_from: "none",
+            play_from: "parent",
+            should_play: true,
+          },
+
+        ];
+
+        let child_url = "file_autoplay_policy_activation_window.html";
+
+        async function runTest() {
+          for (const test_case of test_cases) {
+            // Run each test in a new window, to ensure its user gesture
+            // activation state isn't tainted by preceeding tests.
+            let child = window.open(child_url, "", "width=500,height=500");
+            await once(child, "load");
+            child.postMessage(test_case, window.origin);
+            let result = await nextWindowMessage();
+            SimpleTest.is(result.data.allowedToPlay, test_case.should_play, "allowed - " + test_case.name);
+            SimpleTest.is(result.data.played, test_case.should_play, "played - " + test_case.name);
+            child.close();
+          }
+          SimpleTest.finish();
+        }
+
+        SimpleTest.waitForExplicitFinish();
+
+      </script>
+    </pre>
+  </body>
+</html>

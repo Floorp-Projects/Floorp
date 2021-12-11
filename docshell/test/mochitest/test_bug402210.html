@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+While working on bug 402210, it came up that the code was doing
+
+a.href = proto + host
+
+which technically produces "https:host" instead of "https://host" and
+that the code was relying on href's setting having fixup behaviour
+for this kind of thing.
+
+If we rely on it, we might as well test for it, even if it isn't the
+problem 402210 was meant to fix.
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=402210
+-->
+<head>
+  <title>Test for Bug 402210</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=402210">Mozilla Bug 402210</a>
+<p id="display">
+  <a id="testlink">Test Link</a>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  $("testlink").href = "https:example.com";
+  is($("testlink").href, "https://example.com/", "Setting href on an anchor tag should fixup missing slashes after https protocol");
+
+  $("testlink").href = "ftp:example.com";
+  is($("testlink").href, "ftp://example.com/", "Setting href on an anchor tag should fixup missing slashes after non-http protocol");
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(runTest);
+</script>
+</pre>
+</body>
+</html>
+

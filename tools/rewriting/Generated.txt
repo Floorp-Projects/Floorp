@@ -1,0 +1,11 @@
+browser/components/newtab/logs/
+browser/components/newtab/node_modules/
+devtools/client/aboutdebugging/test/jest/node_modules/
+devtools/client/application/test/components/node_modules/
+devtools/client/debugger/node_modules/
+dom/tests/ajax/jquery/
+dom/tests/ajax/mochikit/
+node_modules/
+intl/unicharutil/util/nsSpecialCasingData.cpp
+intl/unicharutil/util/nsUnicodePropertyData.cpp
+intl/unicharutil/util/nsUnicodeScriptCodes.h

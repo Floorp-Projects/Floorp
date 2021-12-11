@@ -1,0 +1,11 @@
+{
+    "manifest_version": 2,
+    "name": "normandy_fixture_b",
+    "version": "1.0",
+    "description": "Dummy test fixture that's a webextension, branch B",
+    "applications": {
+        "gecko": {
+            "id": "normandydriver-b@example.com"
+        }
+    }
+}

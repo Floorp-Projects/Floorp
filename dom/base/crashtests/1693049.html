@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+        * {
+            all: initial;
+            display: table-row-group !important
+        }
+    </style>
+    <script>
+      window.addEventListener('load', () => {
+        const mspace = document.getElementById('id_0')
+        const tfoot = document.createElement('tfoot')
+        const h5 = document.createElement('h5')
+        document.documentElement.appendChild(tfoot)
+        document.documentElement.appendChild(h5)
+        const range = new Range()
+        range.setStart(tfoot, NaN)
+        setTimeout(async () => selection.extend(h5, Nan), 107)
+        const selection = document.getSelection()
+        selection.addRange(range)
+        selection.modify('move', 'backward', 'character')
+        range.surroundContents(mspace)
+      })
+    </script>
+</head>
+<mspace id='id_0'></mspace>
+<input type='reset'>
+</html>

@@ -1,0 +1,184 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIRunnable.idl"
+%{C++
+#include "nsCOMPtr.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Atomics.h"
+%}
+
+native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
+
+[builtinclass, scriptable, uuid(a03b8b63-af8b-4164-b0e5-c41e8b2b7cfa)]
+interface nsIEventTarget : nsISupports
+{
+  /* until we can get rid of all uses, keep the non-alreadyAddRefed<> version */
+%{C++
+    nsresult Dispatch(nsIRunnable* aEvent, uint32_t aFlags) {
+      return Dispatch(nsCOMPtr<nsIRunnable>(aEvent).forget(), aFlags);
+    }
+%}
+
+  /**
+   * This flag specifies the default mode of event dispatch, whereby the event
+   * is simply queued for later processing.  When this flag is specified,
+   * dispatch returns immediately after the event is queued.
+   */
+  const unsigned long DISPATCH_NORMAL = 0;
+
+  /**
+   * This flag specifies the synchronous mode of event dispatch, in which the
+   * dispatch method does not return until the event has been processed.
+   *
+   * NOTE: passing this flag to dispatch may have the side-effect of causing
+   * other events on the current thread to be processed while waiting for the
+   * given event to be processed.
+   */
+  const unsigned long DISPATCH_SYNC = 1;
+
+  /**
+   * This flag specifies that the dispatch is occurring from a running event
+   * that was dispatched to the same event target, and that event is about to
+   * finish.
+   *
+   * A thread pool can use this as an optimization hint to not spin up
+   * another thread, since the current thread is about to become idle.
+   *
+   * These events are always async.
+   */
+  const unsigned long DISPATCH_AT_END = 2;
+
+  /**
+   * This flag specifies that the dispatched event may block the thread on
+   * which it executes, usually by doing some sort of I/O.  This information
+   * may be used by the event target to execute the job on a thread
+   * specifically dedicated to doing I/O, leaving other threads available for
+   * CPU-intensive work.
+   */
+  const unsigned long DISPATCH_EVENT_MAY_BLOCK = 4;
+
+  /**
+   * IsOnCurrentThread() should return true if events dispatched to this target
+   * can possibly run on the current thread, and false otherwise. In the case
+   * of an nsIEventTarget for a thread pool, it should return true on all
+   * threads in the pool. In the case of a non-thread nsIEventTarget such as
+   * ThrottledEventQueue, it should return true on the thread where events are
+   * expected to be processed, even if no events from the queue are actually
+   * being processed right now.
+   *
+   * When called on an nsISerialEventTarget, IsOnCurrentThread can be used to
+   * ensure that no other thread has "ownership" of the event target. As such,
+   * it's useful for asserting that an object is only used on a particular
+   * thread. IsOnCurrentThread can't guarantee that the current event has been
+   * dispatched through a particular event target.
+   *
+   * The infallible version of IsOnCurrentThread() is optimized to avoid a
+   * virtual call for non-thread event targets. Thread targets should set
+   * mThread to their virtual PRThread. Non-thread targets should leave
+   * mThread null and implement IsOnCurrentThreadInfallible() to
+   * return the correct answer.
+   *
+   * The fallible version of IsOnCurrentThread may return errors, such as during
+   * shutdown. If it does not return an error, it should return the same result
+   * as the infallible version. The infallible method should return the correct
+   * result regardless of whether the fallible method returns an error.
+   */
+  %{C++
+public:
+  // Infallible. Defined in nsThreadUtils.cpp. Delegates to
+  // IsOnCurrentThreadInfallible when mThread is null.
+  bool IsOnCurrentThread();
+
+protected:
+  mozilla::Atomic<PRThread*> mThread;
+
+  nsIEventTarget() : mThread(nullptr) {}
+  %}
+  // Note that this method is protected.  We define it through IDL, rather than
+  // in a %{C++ block, to ensure that the correct method indices are recorded
+  // for XPConnect purposes.
+  [noscript,notxpcom] boolean isOnCurrentThreadInfallible();
+  %{C++
+public:
+  %}
+
+  // Fallible version of IsOnCurrentThread.
+  boolean isOnCurrentThread();
+
+  /**
+   * Dispatch an event to this event target.  This function may be called from
+   * any thread, and it may be called re-entrantly.
+   *
+   * @param event
+   *   The alreadyAddRefed<> event to dispatch.
+   *   NOTE that the event will be leaked if it fails to dispatch.
+   * @param flags
+   *   The flags modifying event dispatch.  The flags are described in detail
+   *   below.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched.
+   */
+  [noscript, binaryname(Dispatch)] void dispatchFromC(in alreadyAddRefed_nsIRunnable event,
+                                                      [default(DISPATCH_NORMAL)] in unsigned long flags);
+  /**
+   * Version of Dispatch to expose to JS, which doesn't require an alreadyAddRefed<>
+   * (it will be converted to that internally)
+   *
+   * @param event
+   *   The (raw) event to dispatch.
+   * @param flags
+   *   The flags modifying event dispatch.  The flags are described in detail
+   *   below.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched.
+   */
+  [binaryname(DispatchFromScript)] void dispatch(in nsIRunnable event, in unsigned long flags);
+  /**
+   * Dispatch an event to this event target, but do not run it before delay
+   * milliseconds have passed.  This function may be called from any thread.
+   *
+   * @param event
+   *   The alreadyAddrefed<> event to dispatch.
+   * @param delay
+   *   The delay (in ms) before running the event.  If event does not rise to
+   *   the top of the event queue before the delay has passed, it will be set
+   *   aside to execute once the delay has passed.  Otherwise, it will be
+   *   executed immediately.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched, or
+   * that delay is zero.
+   */
+  [noscript] void delayedDispatch(in alreadyAddRefed_nsIRunnable event, in unsigned long delay);
+};
+
+%{C++
+// convenient aliases:
+#define NS_DISPATCH_NORMAL nsIEventTarget::DISPATCH_NORMAL
+#define NS_DISPATCH_SYNC   nsIEventTarget::DISPATCH_SYNC
+#define NS_DISPATCH_AT_END nsIEventTarget::DISPATCH_AT_END
+#define NS_DISPATCH_EVENT_MAY_BLOCK nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK
+
+// Convenient NS_DECL variant that includes some C++-only methods.
+#define NS_DECL_NSIEVENTTARGET_FULL                                   \
+    NS_DECL_NSIEVENTTARGET                                            \
+    /* Avoid hiding these methods */                                  \
+    using nsIEventTarget::Dispatch;                                   \
+    using nsIEventTarget::IsOnCurrentThread;
+%}

@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test content script access to canvas drawWindow()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+add_task(async function test_drawWindow() {
+  const permissions = [
+    "<all_urls>",
+  ];
+
+  const content_scripts = [{
+    matches: ["https://example.org/*"],
+    js: ["content_script.js"],
+  }];
+
+  const files = {
+    "content_script.js": () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      try {
+        ctx.drawWindow(window, 0, 0, 10, 10, "red");
+        const {data} = ctx.getImageData(0, 0, 10, 10);
+        browser.test.sendMessage("success", data.slice(0, 3).join());
+      } catch (e) {
+        browser.test.sendMessage("error", e.message);
+      }
+    },
+  };
+
+  const first = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions,
+      content_scripts
+    },
+    files
+  });
+  const second = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts
+    },
+    files
+  });
+
+  consoleMonitor.start([{ message: /Use of drawWindow [\w\s]+ is deprecated. Use tabs.captureTab/ }]);
+
+  await first.startup();
+  await second.startup();
+
+  const win = window.open("https://example.org/tests/toolkit/components/extensions/test/mochitest/file_to_drawWindow.html");
+
+  const colour = await first.awaitMessage("success");
+  is(colour, "255,255,153", "drawWindow() call was successful: #ff9 == rgb(255,255,153)");
+
+  const error = await second.awaitMessage("error");
+  is(error, "ctx.drawWindow is not a function", "drawWindow() method not awailable without permission");
+
+  win.close();
+  await first.unload();
+  await second.unload();
+  await consoleMonitor.finished();
+});
+
+add_task(async function test_tainted_canvas() {
+  const permissions = [
+    "<all_urls>",
+  ];
+
+  const content_scripts = [{
+    matches: ["https://example.org/*"],
+    js: ["content_script.js"],
+  }];
+
+  const files = {
+    "content_script.js": () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0);
+        try {
+          const png = canvas.toDataURL();
+          const {data} = ctx.getImageData(0, 0, 10, 10);
+          browser.test.sendMessage("success", {png, colour: data.slice(0, 4).join()});
+        } catch (e) {
+          browser.test.log(`Exception: ${e.message}`);
+          browser.test.sendMessage("error", e.message);
+        }
+      };
+
+      // Cross-origin image from example.com.
+      img.src = "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_image_good.png";
+    },
+  };
+
+  const first = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions,
+      content_scripts
+    },
+    files
+  });
+  const second = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts
+    },
+    files
+  });
+
+  await first.startup();
+  await second.startup();
+
+  const win = window.open("https://example.org/tests/toolkit/components/extensions/test/mochitest/file_to_drawWindow.html");
+
+  const {png, colour} = await first.awaitMessage("success");
+  ok(png.startsWith("data:image/png;base64,"), "toDataURL() call was successful.");
+  is(colour, "0,0,0,0", "getImageData() returned the correct colour (transparent).");
+
+  const error = await second.awaitMessage("error");
+  is(error, "The operation is insecure.", "toDataURL() throws without permission.");
+
+  win.close();
+  await first.unload();
+  await second.unload();
+});
+
+</script>

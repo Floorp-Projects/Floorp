@@ -1,0 +1,485 @@
+InputElementDiv ::
+  WhiteSpace
+  LineTerminator
+  Comment
+  CommonToken
+  DivPunctuator
+  RightBracePunctuator
+
+InputElementRegExp ::
+  WhiteSpace
+  LineTerminator
+  Comment
+  CommonToken
+  RightBracePunctuator
+  RegularExpressionLiteral
+
+InputElementRegExpOrTemplateTail ::
+  WhiteSpace
+  LineTerminator
+  Comment
+  CommonToken
+  RegularExpressionLiteral
+  TemplateSubstitutionTail
+
+InputElementTemplateTail ::
+  WhiteSpace
+  LineTerminator
+  Comment
+  CommonToken
+  DivPunctuator
+  TemplateSubstitutionTail
+
+
+WhiteSpace ::
+  <TAB>
+  <VT>
+  <FF>
+  <SP>
+  <NBSP>
+  <ZWNBSP>
+  <USP>
+
+
+LineTerminator ::
+  <LF>
+  <CR>
+  <LS>
+  <PS>
+
+LineTerminatorSequence ::
+  <LF>
+  <LS>
+  <PS>
+  <CR> <LF>
+
+
+MultiLineCommentChars ::
+  MultiLineCommentPiece
+  MultiLineCommentChars MultiLineCommentPiece
+
+MultiLineCommentPiece ::
+  MultiLineNotAsteriskChar
+  Stars MultiLineNotForwardSlashOrAsteriskChar
+
+MultiLineNotAsteriskChar ::
+  SourceCharacter but not `*`
+
+MultiLineNotForwardSlashOrAsteriskChar ::
+  SourceCharacter but not one of `/` or `*`
+
+SingleLineComment ::
+  `//` SingleLineCommentChars?
+
+SingleLineCommentChars ::
+  SingleLineCommentChar SingleLineCommentChars?
+
+SingleLineCommentChar ::
+  SourceCharacter but not LineTerminator
+
+
+CommonToken ::
+  IdentifierName
+  Punctuator
+  NumericLiteral
+  StringLiteral
+  Template
+
+
+Identifier ::
+  `TODO`
+
+IdentifierName ::
+  IdentifierStart
+  IdentifierName IdentifierPart
+
+IdentifierStart ::
+  UnicodeIDStart
+  `$`
+  `_`
+  `\` UnicodeEscapeSequence
+
+IdentifierPart ::
+  UnicodeIDContinue
+  `$`
+  `\` UnicodeEscapeSequence
+  <ZWNJ>
+  <ZWJ>
+
+UnicodeIDStart ::
+  `TODO`
+
+UnicodeIDContinue ::
+  `TODO`
+
+
+ReservedWord ::
+  Keyword
+  FutureReservedWord
+  NullLiteral
+  BooleanLiteral
+
+
+Keyword :: one of
+  `await`
+  `break`
+  `case` `catch` `class` `const` `continue`
+  `debugger` `default` `delete` `do`
+  `else` `export` `extends`
+  `finally` `for` `function`
+  `if` `import` `in` `instanceof`
+  `new`
+  `return`
+  `super` `switch`
+  `this` `throw` `try` `typeof`
+  `var` `void`
+  `while` `with`
+  `yield`
+
+
+FutureReservedWord ::
+  `enum`
+
+
+Punctuator :: one of
+  `{` `(` `)` `[` `]`
+  `.` `...` `;` `,`
+  `<` `>` `<=` `>=`
+  `==` `!=` `===` `!==`
+  `+` `-` `*` `%` `**`
+  `++` `--`
+  `<<` `>>` `>>>`
+  `&` `|` `^`
+  `!` `~`
+  `&&` `||`
+  `?` `:`
+  `=` `+=` `-=` `*=` `%=` `**=` `<<=` `>>=` `>>>=` `&=` `|=` `^=`
+  `=>`
+
+DivPunctuator ::
+  `/`
+  `/=`
+
+RightBracePunctuator ::
+  `}`
+
+
+NullLiteral ::
+  `null`
+
+
+BooleanLiteral ::
+  `true`
+  `false`
+
+
+DecimalLiteral ::
+  DecimalIntegerLiteral `.` DecimalDigits? ExponentPart?
+  `.` DecimalDigits ExponentPart?
+  DecimalIntegerLiteral ExponentPart?
+
+DecimalDigits ::
+  DecimalDigit
+  DecimalDigits DecimalDigit
+
+DecimalDigit :: one of
+  `0` `1` `2` `3` `4` `5` `6` `7` `8` `9`
+
+NonZeroDigit :: one of
+  `1` `2` `3` `4` `5` `6` `7` `8` `9`
+
+ExponentPart ::
+  ExponentIndicator SignedInteger
+
+ExponentIndicator :: one of
+  `e` `E`
+
+SignedInteger ::
+  DecimalDigits
+  `+` DecimalDigits
+  `-` DecimalDigits
+
+BinaryIntegerLiteral ::
+  `0b` BinaryDigits
+  `0B` BinaryDigits
+
+BinaryDigits ::
+  BinaryDigit
+  BinaryDigits BinaryDigit
+
+BinaryDigit :: one of
+  `0` `1`
+
+OctalIntegerLiteral ::
+  `0o` OctalDigits
+  `0O` OctalDigits
+
+OctalDigits ::
+  OctalDigit
+  OctalDigits OctalDigit
+
+OctalDigit :: one of
+  `0` `1` `2` `3` `4` `5` `6` `7`
+
+HexIntegerLiteral ::
+  `0x` HexDigits
+  `0X` HexDigits
+
+HexDigits ::
+  HexDigit
+  HexDigits HexDigit
+
+HexDigit :: one of
+  `0` `1` `2` `3` `4` `5` `6` `7` `8` `9` `a` `b` `c` `d` `e` `f` `A` `B` `C` `D` `E` `F`
+
+
+StringLiteral ::
+  `"` DoubleStringCharacters? `"`
+  `'` SingleStringCharacters? `'`
+
+DoubleStringCharacters ::
+  DoubleStringCharacter DoubleStringCharacters?
+
+SingleStringCharacters ::
+  SingleStringCharacter SingleStringCharacters?
+
+DoubleStringCharacter ::
+  SourceCharacter but not one of `"` or `\` or LineTerminator
+  <LS>
+  <PS>
+  `\` EscapeSequence
+  LineContinuation
+
+SingleStringCharacter ::
+  SourceCharacter but not one of `'` or `\` or LineTerminator
+  <LS>
+  <PS>
+  `\` EscapeSequence
+  LineContinuation
+
+LineContinuation ::
+  `\` LineTerminatorSequence
+
+
+CharacterEscapeSequence ::
+  SingleEscapeCharacter
+  NonEscapeCharacter
+
+SingleEscapeCharacter :: one of
+  `'` `"` `\` `b` `f` `n` `r` `t` `v`
+
+NonEscapeCharacter ::
+  SourceCharacter but not one of EscapeCharacter or LineTerminator
+
+EscapeCharacter ::
+  SingleEscapeCharacter
+  DecimalDigit
+  `x`
+  `u`
+
+HexEscapeSequence ::
+  `x` HexDigit HexDigit
+
+UnicodeEscapeSequence ::
+  `u` Hex4Digits
+  `u{` CodePoint `}`
+
+Hex4Digits ::
+  HexDigit HexDigit HexDigit HexDigit
+
+
+RegularExpressionLiteral ::
+  `/` RegularExpressionBody `/` RegularExpressionFlags
+
+RegularExpressionBody ::
+  RegularExpressionFirstChar RegularExpressionChars
+
+RegularExpressionChars ::
+  [empty]
+  RegularExpressionChars RegularExpressionChar
+
+RegularExpressionFirstChar ::
+  RegularExpressionNonTerminator but not one of `*` or `\` or `/` or `[`
+  RegularExpressionBackslashSequence
+  RegularExpressionClass
+
+RegularExpressionChar ::
+  RegularExpressionNonTerminator but not one of `\` or `/` or `[`
+  RegularExpressionBackslashSequence
+  RegularExpressionClass
+
+RegularExpressionBackslashSequence ::
+  `\` RegularExpressionNonTerminator
+
+RegularExpressionNonTerminator ::
+  SourceCharacter but not LineTerminator
+
+RegularExpressionClass ::
+  `[` RegularExpressionClassChars `]`
+
+RegularExpressionClassChars ::
+  [empty]
+  RegularExpressionClassChars RegularExpressionClassChar
+
+RegularExpressionClassChar ::
+  RegularExpressionNonTerminator but not one of `]` or `\`
+  RegularExpressionBackslashSequence
+
+RegularExpressionFlags ::
+  [empty]
+  RegularExpressionFlags IdentifierPart
+
+
+Template ::
+  NoSubstitutionTemplate
+  TemplateHead
+
+NoSubstitutionTemplate ::
+  ``` TemplateCharacters? ```
+
+TemplateHead ::
+  ``` TemplateCharacters? `${`
+
+TemplateSubstitutionTail ::
+  TemplateMiddle
+  TemplateTail
+
+TemplateMiddle ::
+  `}` TemplateCharacters? `${`
+
+TemplateTail ::
+  `}` TemplateCharacters? ```
+
+TemplateCharacters ::
+  TemplateCharacter TemplateCharacters?
+
+TemplateCharacter ::
+  `$` [lookahead != `{` ]
+  `\` EscapeSequence
+  `\` NotEscapeSequence
+  LineContinuation
+  LineTerminatorSequence
+  SourceCharacter but not one of ``` or `\` or `$` or LineTerminator
+
+NotEscapeSequence ::
+  `0` DecimalDigit
+  DecimalDigit but not `0`
+  `x` [lookahead <! HexDigit]
+  `x` HexDigit [lookahead <! HexDigit]
+  `u` [lookahead <! HexDigit] [lookahead != `{`]
+  `u` HexDigit [lookahead <! HexDigit]
+  `u` HexDigit HexDigit [lookahead <! HexDigit]
+  `u` HexDigit HexDigit HexDigit [lookahead <! HexDigit]
+  `u` `{` [lookahead <! HexDigit]
+  `u` `{` NotCodePoint [lookahead <! HexDigit]
+  `u` `{` CodePoint [lookahead <! HexDigit] [lookahead != `}`]
+
+NotCodePoint ::
+  HexDigits [> but only if MV of |HexDigits| > 0x10FFFF ]
+
+CodePoint ::
+  HexDigits [> but only if MV of |HexDigits| ≤ 0x10FFFF ]
+
+
+ControlLetter :: one of
+  `a` `b` `c` `d` `e` `f` `g` `h` `i` `j` `k` `l` `m` `n` `o` `p` `q` `r` `s` `t` `u` `v` `w` `x` `y` `z`
+  `A` `B` `C` `D` `E` `F` `G` `H` `I` `J` `K` `L` `M` `N` `O` `P` `Q` `R` `S` `T` `U` `V` `W` `X` `Y` `Z`
+
+
+NumericLiteral ::
+  DecimalLiteral
+  BinaryIntegerLiteral
+  OctalIntegerLiteral
+  HexIntegerLiteral
+  LegacyOctalIntegerLiteral
+
+LegacyOctalIntegerLiteral ::
+  `0` OctalDigit
+  LegacyOctalIntegerLiteral OctalDigit
+
+DecimalIntegerLiteral ::
+  `0`
+  NonZeroDigit DecimalDigits?
+  NonOctalDecimalIntegerLiteral
+
+NonOctalDecimalIntegerLiteral ::
+  `0` NonOctalDigit
+  LegacyOctalLikeDecimalIntegerLiteral NonOctalDigit
+  NonOctalDecimalIntegerLiteral DecimalDigit
+
+LegacyOctalLikeDecimalIntegerLiteral ::
+  `0` OctalDigit
+  LegacyOctalLikeDecimalIntegerLiteral OctalDigit
+
+NonOctalDigit :: one of
+  `8` `9`
+
+
+EscapeSequence ::
+  CharacterEscapeSequence
+  LegacyOctalEscapeSequence
+  HexEscapeSequence
+  UnicodeEscapeSequence
+
+LegacyOctalEscapeSequence ::
+  OctalDigit [lookahead <! OctalDigit]
+  ZeroToThree OctalDigit [lookahead <! OctalDigit]
+  FourToSeven OctalDigit
+  ZeroToThree OctalDigit OctalDigit
+
+ZeroToThree :: one of
+  `0` `1` `2` `3`
+
+FourToSeven :: one of
+  `4` `5` `6` `7`
+
+
+Comment ::
+  MultiLineComment
+  SingleLineComment
+  SingleLineHTMLOpenComment
+  SingleLineHTMLCloseComment
+  SingleLineDelimitedComment
+
+MultiLineComment ::
+  `/*` FirstCommentLine? LineTerminator MultiLineCommentChars? `*/` HTMLCloseComment?
+
+FirstCommentLine ::
+  SingleLineDelimitedCommentChars
+
+SingleLineHTMLOpenComment ::
+  `<!--` SingleLineCommentChars?
+
+SingleLineHTMLCloseComment ::
+  LineTerminatorSequence HTMLCloseComment
+
+SingleLineDelimitedComment ::
+  `/*` SingleLineDelimitedCommentChars? `*/`
+
+HTMLCloseComment ::
+  WhiteSpaceSequence? SingleLineDelimitedCommentSequence? `-->` SingleLineCommentChars?
+
+SingleLineDelimitedCommentChars ::
+  SingleLineDelimitedCommentPiece
+  SingleLineDelimitedCommentChars SingleLineDelimitedCommentPiece
+
+SingleLineDelimitedCommentPiece ::
+  SingleLineNotAsteriskChar
+  Stars SingleLineNotForwardSlashOrAsteriskChar
+
+Stars ::
+  `*`
+  Stars `*`
+
+SingleLineNotAsteriskChar ::
+  SourceCharacter but not one of `*` or LineTerminator
+
+SingleLineNotForwardSlashOrAsteriskChar ::
+  SourceCharacter but not one of `/` or `*` or LineTerminator
+
+WhiteSpaceSequence ::
+  WhiteSpace WhiteSpaceSequence?
+
+SingleLineDelimitedCommentSequence ::
+  SingleLineDelimitedComment WhiteSpaceSequence? SingleLineDelimitedCommentSequence?
+

@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  var select = document.getElementById("sss");
+  select.options.add.call(null, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<select id="sss"><option>foo</option></select>
+
+</body>
+</html>

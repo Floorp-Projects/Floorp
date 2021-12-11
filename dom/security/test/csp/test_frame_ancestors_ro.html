@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for frame-ancestors support in Content-Security-Policy-Report-Only</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width: 100%" id="cspframe"></iframe>
+<script type="text/javascript">
+const docUri = "http://mochi.test:8888/tests/dom/security/test/csp/file_frame_ancestors_ro.html";
+const frame = document.getElementById("cspframe");
+
+let testResults = {
+  reportFired: false,
+  frameLoaded: false
+};
+
+function checkResults(reportObj) {
+  let cspReport = reportObj["csp-report"];
+  is(cspReport["document-uri"], docUri, "Incorrect document-uri");
+
+  // we can not test for the whole referrer since it includes platform specific information
+  is(cspReport.referrer, document.location.toString(), "Incorrect referrer");
+  is(cspReport["blocked-uri"], document.location.toString(), "Incorrect blocked-uri");
+  is(cspReport["violated-directive"], "frame-ancestors", "Incorrect violated-directive");
+  is(cspReport["original-policy"], "frame-ancestors 'none'; report-uri http://mochi.test:8888/foo.sjs", "Incorrect original-policy");
+  testResults.reportFired = true;
+}
+
+let chromeScriptUrl = SimpleTest.getTestFileURL("file_report_chromescript.js");
+let script = SpecialPowers.loadChromeScript(chromeScriptUrl);
+
+script.addMessageListener('opening-request-completed', function ml(msg) {
+  if (msg.error) {
+    ok(false, "Could not query report (exception: " + msg.error + ")");
+  } else {
+    try {
+      let reportObj = JSON.parse(msg.report);
+      // test for the proper values in the report object
+      checkResults(reportObj);
+    } catch (e) {
+      ok(false, "Error verifying report object (exception: " + e + ")");
+    }
+  }
+
+  script.removeMessageListener('opening-request-completed', ml);
+  script.sendAsyncMessage("finish");
+  checkTestResults();
+});
+
+frame.addEventListener( 'load', () => {
+  // Make sure the frame is still loaded
+  testResults.frameLoaded = true;
+  checkTestResults()
+} );
+
+function checkTestResults() {
+  if( testResults.reportFired && testResults.frameLoaded ) {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+frame.src = docUri;
+
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=732665
+-->
+<window title="Mozilla Bug 732665"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=732665"
+     target="_blank">Mozilla Bug 732665</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                            true]]});
+  //
+  // Important! If this test starts failing after a tricky platform-y change,
+  // the stack quota numbers in XPCJSContext probably need twiddling. We want
+  // to maintain the invariants in this test (at least to some approximation)
+  // for security reasons.
+  //
+
+  // Executes f() d steps from the probed native stack limit, and returns
+  // the number of steps to the recursion limit from the caller.
+  function nearNativeStackLimit(d, f) {
+    f = f || function() {};
+    function inner() {
+      try {
+        with ({}) { // keep things predictable -- stay in the interpreter
+          var stepsFromLimit = eval("inner()"); // Use eval to force a number of native stackframes to be created.
+        }
+        if (stepsFromLimit == d) {
+          try { f(); } catch(e) { ok(false, 'nearNativeStackLimit callback threw: ' + e); }
+        }
+        return stepsFromLimit + 1;
+      } catch(e) {
+      // It would be nice to check here that the exception is actually an
+      // over-recursion here. But doing so would require toString()ing the
+      // exception, which we may not have the stack space to do.
+        return 0;
+      }
+    }
+    return inner();
+  }
+
+  var contentSb = new Cu.Sandbox('http://www.example.com');
+  var chromeSb = new Cu.Sandbox(window);
+  chromeSb.ok = contentSb.ok = ok;
+  Cu.evalInSandbox(nearNativeStackLimit.toSource(), chromeSb);
+  Cu.evalInSandbox(nearNativeStackLimit.toSource(), contentSb);
+  var chromeLimit = Cu.evalInSandbox("nearNativeStackLimit(0);", chromeSb);
+  var contentLimit = Cu.evalInSandbox("nearNativeStackLimit(0)", contentSb);
+  ok(chromeLimit >= contentLimit + 10,
+     "Chrome should be able to have at least 10 heavy frames more stack than content: " + chromeLimit + ", " + contentLimit);
+
+  // Exhaust the stack space in content, and then make sure we can still get 10
+  // heavy frames in chrome.
+  //
+  // Note that sometimes, if we pass |0| to nearNativeStackLimit, we can end up
+  // so close to the border in content that we can't even get ourselves together
+  // enough to make the cross-compartment call. So rather than exhausting the
+  // stack entirely and then checking for 10 chrome frames, we leave ourselves
+  // one frame's worth, and check for 11.
+  //
+  // If this assertion fails, the current work-around so far is to measure
+  // again the worst frame size, by using the JS Shell to run
+  // test_bug732665_meta.js . This script will output numbers to update
+  // XPCJSContext.cpp comment, as well as the kTrustedScriptBuffer constant.
+  contentSb.nnslChrome = chromeSb.nearNativeStackLimit;
+  var nestedLimit = Cu.evalInSandbox("nearNativeStackLimit(1, function() { nestedLimit = nnslChrome(0);}); nestedLimit;", contentSb);
+  ok(nestedLimit >= 11, "Chrome should be invokable from content script with an exhausted stack: " + nestedLimit);
+});
+  ]]>
+  </script>
+</window>

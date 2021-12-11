@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<script>
+/* global SimpleTest SpecialPowers */
+
+async function testEnumerateDevices(expectDevices) {
+  let devices = await navigator.mediaDevices.enumerateDevices();
+  if (!expectDevices) {
+    SimpleTest.is(devices.length, 0, "testEnumerateDevices: No devices");
+    return;
+  }
+  let cams = devices.filter((device) => device.kind == "videoinput");
+  let mics = devices.filter((device) => device.kind == "audioinput");
+  SimpleTest.ok((cams.length == 1) && (mics.length == 1),
+                "testEnumerateDevices: a microphone and a camera");
+}
+
+async function testGetUserMedia(expectDevices) {
+  const constraints = [
+    {audio: true},
+    {video: true},
+    {audio: true, video: true},
+    {video: {width: {min: 1e9}}}, // impossible
+    {audio: {channelCount: {exact: 1e3}}}, // impossible
+  ];
+  for (let constraint of constraints) {
+    let message = "getUserMedia(" + JSON.stringify(constraint) + ")";
+    try {
+      let stream = await navigator.mediaDevices.getUserMedia(constraint);
+      SimpleTest.ok(expectDevices, message + " resolved");
+      if (!expectDevices) {
+        continue;
+      }
+
+      // We only do testGetUserMedia(true) when privacy.resistFingerprinting
+      // is true, test if MediaStreamTrack.label is spoofed.
+      for (let track of stream.getTracks()) {
+        switch (track.kind) {
+          case "audio":
+            SimpleTest.is(track.label, "Internal Microphone", "AudioStreamTrack.label");
+            break;
+          case "video":
+            SimpleTest.is(track.label, "Internal Camera", "VideoStreamTrack.label");
+            break;
+          default:
+            SimpleTest.ok(false, "Unknown kind: " + track.kind);
+            break;
+        }
+        track.stop();
+      }
+    } catch (e) {
+      if (!expectDevices) {
+        SimpleTest.is(e.name, "NotAllowedError", message + " throws NotAllowedError");
+      } else {
+        SimpleTest.ok(false, message + " failed: " + e);
+      }
+    }
+  }
+}
+
+async function testDevices() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["media.navigator.streams.fake", true]
+    ]
+  });
+  await testEnumerateDevices(true); // should list a microphone and a camera
+  await testGetUserMedia(true); // should get audio and video streams
+}
+
+async function testNoDevices() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", false],
+      ["media.navigator.permission.device", false],
+      ["media.navigator.streams.fake", false],
+      ["media.audio_loopback_dev", "foo"],
+      ["media.video_loopback_dev", "bar"]
+    ]
+  });
+  await testEnumerateDevices(false); // should list nothing
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true]
+    ]
+  });
+  await testEnumerateDevices(true); // should list a microphone and a camera
+  await testGetUserMedia(false); // should reject with NotAllowedError
+}
+
+createHTML({
+  title: "Neutralize the threat of fingerprinting of media devices API when 'privacy.resistFingerprinting' is true",
+  bug: "1372073"
+});
+
+runTest(async () => {
+  // Make sure enumerateDevices and getUserMedia work when
+  // privacy.resistFingerprinting is true.
+  await testDevices();
+
+  // Test that absence of devices can't be detected.
+  await testNoDevices();
+});
+</script>
+</body>
+</html>

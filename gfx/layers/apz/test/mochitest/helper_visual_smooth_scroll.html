@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+  <title>Tests that the (internal) visual smooth scrolling API is not restricted to the layout scroll range</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    div {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 100%; height: 200%; background-color: green"></div>
+  <div style="width: 100%; height: 100%; background-color: blue"></div>
+  <script type="application/javascript">
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+
+    async function test() {
+      // Pick a destination to scroll to that's outside the layout scroll range
+      // but within the visual scroll range.
+      const destY = window.scrollMaxY + 100;
+
+      // Register a TransformEnd observer so we can tell when the smooth scroll
+      // animation stops.
+      let transformEndPromise = promiseTransformEnd();
+
+      // Use scrollToVisual() to smooth-scroll to the destination.
+      utils.scrollToVisual(0, destY, utils.UPDATE_TYPE_MAIN_THREAD,
+                           utils.SCROLL_MODE_SMOOTH);
+
+      // Wait for the TransformEnd.
+      await transformEndPromise;
+
+      // Give scroll offsets a chance to sync.
+      await promiseApzFlushedRepaints();
+
+      // Check that the visual viewport scrolled to the desired destination.
+      is(visualViewport.pageTop, destY,
+         "The visual viewport should have scrolled past the layout scroll range");
+    }
+
+    SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

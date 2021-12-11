@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=585978
+-->
+<head>
+  <title>Test for Bug 585978</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=585978">Mozilla Bug 585978</a>
+
+<script type="application/javascript">
+
+/* Test that if we have a unicode character in the middle of an ascii string,
+   the unicode character survives translation into and out of a text node. */
+
+for (let i = 0; i < 128; i++) {
+  let node = document.createTextNode('');
+  let str = '';
+  for (let j = 0; j < i; j++) {
+    str += 'a';
+  }
+  str += '\uA0A9'
+  node.data = str;
+
+  for (let j = 0; j < 32; j++) {
+    is(node.data, str);
+
+    str += 'b';
+    node.appendData('b');
+  }
+}
+
+</script>
+</body>
+</html>

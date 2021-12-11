@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test of legacy navigator interface for opening TCPSocket/TCPServerSocket.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 885982</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1084245">Mozilla Bug 1084245</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  function runTest() {
+    // See bug 903830; in e10s mode we never get to find out the localPort if we
+    // let it pick a free port by choosing 0.  This is the same port the xpcshell
+    // test was using.
+    var serverPort = 8085;
+
+    var listeningServer = navigator.mozTCPSocket.listen(serverPort,
+                                                        { binaryType: 'arraybuffer' },
+                                                        -1);
+    listeningServer.onconnect = function(ev) {
+      ok(true, "got server connect");
+      listeningServer.close();
+      listeningServer = null;
+      ev.socket.close()
+    }
+
+    var clientSocket = navigator.mozTCPSocket.open('127.0.0.1', serverPort,
+                                                   { binaryType: 'arraybuffer' });
+    clientSocket.onopen = function() { ok(true, "got client open"); }
+    clientSocket.onclose = function() {
+      ok(true, "got client close");
+      clientSocket.close();
+      clientSocket = null;
+      setTimeout(function() {
+        // This just helps the test harness clean up quickly
+        SpecialPowers.forceCC();
+        SpecialPowers.forceGC();
+        SimpleTest.finish();
+      }, 0);
+    }
+  }
+  runTest(); // we used to invoke this as part of a moot pref-setting callback
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=489415
+-->
+<head>
+  <title>Test for Bug 489415</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <style>
+    video {
+      width: 40%;
+      border: solid black 1px;
+    }
+  </style>
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=489415">Mozilla Bug 489415</a>
+  <p id="display"></p>
+  <pre id="test">
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({ set: p });
+    var count = 0;
+
+    function canReadBack(video) {
+      var c = document.createElement("canvas");
+      var ctx = c.getContext("2d");
+      ctx.drawImage(video, 0, 0);
+      try {
+        c.toDataURL();
+        return true;
+      } catch (ex) {
+        return false;
+      }
+    }
+
+    function runTest(origin, shouldReadBackOnLoad) {
+      return new Promise(function (resolve, reject) {
+        // Load will redirect mid-flight, which will be detected and should error,
+        // and we should no longer be able to readback.
+        var video = document.createElement("video");
+        video.preload = "metadata";
+        video.controls = true;
+        var url = "http://" + origin + "/tests/dom/media/test/midflight-redirect.sjs"
+                  + "?resource=pixel_aspect_ratio.mp4&type=video/mp4";
+        SimpleTest.info("Loading from " + url);
+        video.src = url;
+        document.body.appendChild(video);
+
+        once(video, "loadeddata", () => {
+          is(canReadBack(video), shouldReadBackOnLoad, "Should be able to readback");
+          video.play();
+        });
+
+        once(video, "error", () => {
+          is(canReadBack(video), false, "Should not be able to readback after error");
+          removeNodeAndSource(video);
+          resolve();
+        });
+
+        once(video, "ended", () => {
+          ok(false, "Should not be able to playback to end, we should have errored!");
+          removeNodeAndSource(video);
+          resolve();
+        });
+
+      });
+    }
+
+    Promise.all([
+      runTest("mochi.test:8888", true),
+      runTest("example.org", false),
+    ]).then(SimpleTest.finish);
+
+  </script>
+</pre>
+</body>
+</html>

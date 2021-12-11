@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1447784 - Implement CSP upgrade-insecure-requests directive</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We load a page that performs a CORS XHR to 127.0.0.1 which shouldn't be upgraded to https:
+ *
+ * Test 1:
+ *   Main page:   https://127.0.0.1:8080
+ *   XHR request: http://127.0.0.1:8080
+ *   No redirect to https://
+ *   Description: Upgrade insecure should *NOT* upgrade from http to https.
+ */
+
+const CSP_POLICY = "upgrade-insecure-requests; script-src 'unsafe-inline'";
+let testFiles = ["tests/dom/security/test/csp/file_upgrade_insecure_loopback.html",
+                 "tests/dom/security/test/csp/file_upgrade_insecure_loopback_form.html"];
+
+function examiner() {
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+}
+examiner.prototype = {
+  observe(subject, topic, data) {
+    if (topic === "specialpowers-http-notify-request") {
+      // we skip looking at other requests that might be observed accidentally
+      // e.g., we saw kinto requests when running this test locally
+      if (data.includes("bug-1661423-dont-upgrade-localhost")) {
+        let urlObj = new URL(data);
+        is(urlObj.protocol, "http:", "Didn't upgrade localhost URL");
+        loadTest();
+      }
+    }
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+};
+
+window.examiner = new examiner();
+
+
+function loadTest() {
+  if (testFiles.length == 0) {
+    removeAndFinish();
+    return;
+  }
+  var src = "https://example.com/tests/dom/security/test/csp/file_testserver.sjs?file=";
+  // append the file that should be served
+  src += escape(testFiles.shift())
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(CSP_POLICY);
+  document.getElementById("testframe").src = src;
+}
+
+function removeAndFinish() {
+  window.removeEventListener("message", receiveMessage);
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+// a postMessage handler that is used to bubble up results from
+// within the iframe.
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  if (event.data === "request-not-https") {
+    ok(true, "Didn't upgrade 127.0.0.1:8080 to https://");
+    loadTest();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// By default, proxies don't apply to 127.0.0.1.
+// We need them to for this test (at least on android), though:
+SpecialPowers.pushPrefEnv({set: [
+  ["network.proxy.allow_hijacking_localhost", true]
+]}).then(loadTest);
+
+</script>
+</body>
+</html>

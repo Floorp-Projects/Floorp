@@ -1,0 +1,351 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIX509Cert;
+interface nsIFile;
+interface nsIInterfaceRequestor;
+interface nsIZipReader;
+interface nsIInputStream;
+
+%{C++
+#define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
+%}
+
+typedef uint32_t AppTrustedRoot;
+
+[scriptable, function, uuid(fc2b60e5-9a07-47c2-a2cd-b83b68a660ac)]
+interface nsIOpenSignedAppFileCallback : nsISupports
+{
+  void openSignedAppFileFinished(in nsresult rv,
+                                 in nsIZipReader aZipReader,
+                                 in nsIX509Cert aSignerCert);
+};
+
+[scriptable, function, uuid(07c08655-8b11-4650-b6c4-0c145595ceb5)]
+interface nsIAsyncBoolCallback : nsISupports
+{
+    void onResult(in bool result);
+};
+
+/**
+ * Callback type for use with asyncVerifyCertAtTime.
+ * If aPRErrorCode is PRErrorCodeSuccess (i.e. 0), aVerifiedChain represents the
+ * verified certificate chain determined by asyncVerifyCertAtTime. aHasEVPolicy
+ * represents whether or not the end-entity certificate verified as EV.
+ * If aPRErrorCode is non-zero, it represents the error encountered during
+ * verification. aVerifiedChain is null in that case and aHasEVPolicy has no
+ * meaning.
+ */
+[scriptable, function, uuid(49e16fc8-efac-4f57-8361-956ef6b960a4)]
+interface nsICertVerificationCallback : nsISupports {
+  void verifyCertFinished(in int32_t aPRErrorCode,
+                          in Array<nsIX509Cert> aVerifiedChain,
+                          in bool aHasEVPolicy);
+};
+
+/**
+ * This represents a service to access and manipulate
+ * X.509 certificates stored in a database.
+ */
+[scriptable, uuid(5c16cd9b-5a73-47f1-ab0f-11ede7495cce)]
+interface nsIX509CertDB : nsISupports {
+
+  /**
+   *  Constants that define which usages a certificate
+   *  is trusted for.
+   */
+  const unsigned long UNTRUSTED       =      0;
+  const unsigned long TRUSTED_SSL     = 1 << 0;
+  const unsigned long TRUSTED_EMAIL   = 1 << 1;
+
+  /**
+   *  Will find a certificate based on its dbkey
+   *  retrieved by getting the dbKey attribute of
+   *  the certificate.
+   *
+   *  @param aDBkey Database internal key, as obtained using
+   *                attribute dbkey in nsIX509Cert.
+   */
+  [must_use]
+  nsIX509Cert findCertByDBKey(in ACString aDBkey);
+
+  /**
+   *  Use this to import a stream sent down as a mime type into
+   *  the certificate database on the default token.
+   *  The stream may consist of one or more certificates.
+   *
+   *  @param data The raw data to be imported
+   *  @param length The length of the data to be imported
+   *  @param type The type of the certificate, see constants in nsIX509Cert
+   *  @param ctx A UI context.
+   */
+  void importCertificates([array, size_is(length)] in octet data,
+                          in unsigned long length,
+                          in unsigned long type,
+                          in nsIInterfaceRequestor ctx);
+
+  /**
+   *  Import another person's email certificate into the database.
+   *
+   *  @param data The raw data to be imported
+   *  @param length The length of the data to be imported
+   *  @param ctx A UI context.
+   */
+  void importEmailCertificate([array, size_is(length)] in octet data,
+                              in unsigned long length,
+                              in nsIInterfaceRequestor ctx);
+
+  /**
+   *  Import a personal certificate into the database, assuming
+   *  the database already contains the private key for this certificate.
+   *
+   *  @param data The raw data to be imported
+   *  @param length The length of the data to be imported
+   *  @param ctx A UI context.
+   */
+  void importUserCertificate([array, size_is(length)] in octet data,
+                             in unsigned long length,
+                             in nsIInterfaceRequestor ctx);
+
+  /**
+   *  Delete a certificate stored in the database.
+   *
+   *  @param aCert Delete this certificate.
+   */
+  void deleteCertificate(in nsIX509Cert aCert);
+
+  /**
+   *  Modify the trust that is stored and associated to a certificate within
+   *  a database. Separate trust is stored for
+   *  One call manipulates the trust for one trust type only.
+   *  See the trust type constants defined within this interface.
+   *
+   *  @param cert Change the stored trust of this certificate.
+   *  @param type The type of the certificate. See nsIX509Cert.
+   *  @param trust A bitmask. The new trust for the possible usages.
+   *               See the trust constants defined within this interface.
+   */
+  [must_use]
+  void setCertTrust(in nsIX509Cert cert,
+                    in unsigned long type,
+                    in unsigned long trust);
+
+  /**
+   * @param cert        The certificate for which to modify trust.
+   * @param trustString decoded by CERT_DecodeTrustString. 3 comma separated
+   *                    characters, indicating SSL, Email, and Object signing
+   *                    trust. The object signing trust flags are effectively
+   *                    ignored by gecko, but they still must be specified (at
+   *                    least by a final trailing comma) because this argument
+   *                    is passed to CERT_DecodeTrustString.
+   */
+  [must_use]
+  void setCertTrustFromString(in nsIX509Cert cert, in ACString trustString);
+
+  /**
+   *  Query whether a certificate is trusted for a particular use.
+   *
+   *  @param cert Obtain the stored trust of this certificate.
+   *  @param certType The type of the certificate. See nsIX509Cert.
+   *  @param trustType A single bit from the usages constants defined
+   *                   within this interface.
+   *
+   *  @return Returns true if the certificate is trusted for the given use.
+   */
+  [must_use]
+  boolean isCertTrusted(in nsIX509Cert cert,
+                        in unsigned long certType,
+                        in unsigned long trustType);
+
+  /**
+   *  Import certificate(s) from file
+   *
+   *  @param aFile Identifies a file that contains the certificate
+   *               to be imported.
+   *  @param aType Describes the type of certificate that is going to
+   *               be imported. See type constants in nsIX509Cert.
+   */
+  [must_use]
+  void importCertsFromFile(in nsIFile aFile,
+                           in unsigned long aType);
+
+  const uint32_t Success = 0;
+  const uint32_t ERROR_UNKNOWN = 1;
+  const uint32_t ERROR_PKCS12_NOSMARTCARD_EXPORT = 2;
+  const uint32_t ERROR_PKCS12_RESTORE_FAILED = 3;
+  const uint32_t ERROR_PKCS12_BACKUP_FAILED = 4;
+  const uint32_t ERROR_PKCS12_CERT_COLLISION = 5;
+  const uint32_t ERROR_BAD_PASSWORD = 6;
+  const uint32_t ERROR_DECODE_ERROR = 7;
+  const uint32_t ERROR_PKCS12_DUPLICATE_DATA = 8;
+
+  /**
+   *  Import a PKCS#12 file containing cert(s) and key(s) into the database.
+   *
+   *  @param aFile Identifies a file that contains the data to be imported.
+   *  @param password The password used to protect the file.
+   *  @return Success or the specific error code on failure.  The return
+   *          values are defined in this file.
+   */
+  [must_use]
+  uint32_t importPKCS12File(in nsIFile aFile, in AString aPassword);
+
+  /**
+   *  Export a set of certs and keys from the database to a PKCS#12 file.
+   *
+   *  @param aFile Identifies a file that will be filled with the data to be
+   *               exported.
+   *  @param count The number of certificates to be exported.
+   *  @param aCerts The array of all certificates to be exported.
+   *  @param password The password used to protect the file.
+   *  @return Success or the specific error code on failure
+   */
+  [must_use]
+  uint32_t exportPKCS12File(in nsIFile aFile,
+                            in Array<nsIX509Cert> aCerts,
+                            in AString aPassword);
+
+  /*
+   *  Decode a raw data presentation and instantiate an object in memory.
+   *
+   *  @param base64 The raw representation of a certificate,
+   *                encoded as Base 64.
+   *  @return The new certificate object.
+   */
+  [must_use]
+  nsIX509Cert constructX509FromBase64(in ACString base64);
+
+  /*
+   *  Decode a raw data presentation and instantiate an object in memory.
+   *
+   *  @param certDER The raw representation of a certificate,
+   *                 encoded as raw DER.
+   *  @return The new certificate object.
+   */
+  [must_use]
+  nsIX509Cert constructX509(in Array<uint8_t> certDER);
+
+  /**
+   *  Verifies the signature on the given JAR file to verify that it has a
+   *  valid signature.  To be considered valid, there must be exactly one
+   *  signature on the JAR file and that signature must have signed every
+   *  entry. Further, the signature must come from a certificate that
+   *  is trusted for code signing.
+   *
+   *  On success, NS_OK, a nsIZipReader, and the trusted certificate that
+   *  signed the JAR are returned.
+   *
+   *  On failure, an error code is returned.
+   *
+   *  This method returns a nsIZipReader, instead of taking an nsIZipReader
+   *  as input, to encourage users of the API to verify the signature as the
+   *  first step in opening the JAR.
+   */
+  // 1 used to be AppMarketplaceProdPublicRoot.
+  // 2 used to be AppMarketplaceProdReviewersRoot.
+  // 3 used to be AppMarketplaceDevPublicRoot.
+  // 4 used to be AppMarketplaceDevReviewersRoot.
+  // 5 used to be AppMarketplaceStageRoot.
+  const AppTrustedRoot AppXPCShellRoot = 6;
+  const AppTrustedRoot AddonsPublicRoot = 7;
+  const AppTrustedRoot AddonsStageRoot = 8;
+  [must_use]
+  void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
+                              in nsIFile aJarFile,
+                              in nsIOpenSignedAppFileCallback callback);
+
+  /*
+   * Add a cert to a cert DB from a binary string.
+   *
+   * @param certDER The raw DER encoding of a certificate.
+   * @param trust String describing the trust settings to assign the
+   *              certificate. Decoded by CERT_DecodeTrustString. Consists of 3
+   *              comma separated sets of characters, indicating SSL, Email, and
+   *              Object signing trust. The object signing trust flags are
+   *              effectively ignored by gecko, but they still must be specified
+   *              (at least by a final trailing comma) because this argument is
+   *              passed to CERT_DecodeTrustString.
+   * @return nsIX509Cert the resulting certificate
+   */
+  [must_use]
+  nsIX509Cert addCert(in ACString certDER, in ACString trust);
+
+  // Flags for asyncVerifyCertAtTime (these must match the values in
+  // CertVerifier.cpp):
+  // Prevent network traffic.
+  const uint32_t FLAG_LOCAL_ONLY = 1 << 0;
+  // Do not fall back to DV verification after attempting EV validation.
+  const uint32_t FLAG_MUST_BE_EV = 1 << 1;
+
+  /*
+   * Asynchronously verify a certificate given a set of parameters. Calls the
+   * `verifyCertFinished` function on the provided `nsICertVerificationCallback`
+   * with the results of the verification operation.
+   * See the documentation for  nsICertVerificationCallback.
+   *
+   * @param aCert the certificate to verify
+   * @param aUsage an integer representing the usage to verify for (see
+   *               SECCertificateUsage in certt.h from NSS)
+   * @param aFlags flags as described above
+   * @param aHostname the (optional) hostname to verify for
+   * @param aTime the time at which to verify, in seconds since the epoch
+   * @param aCallback the nsICertVerificationCallback that will receive the
+                      results of this verification
+   * @return a succeeding nsresult if the job was dispatched successfully
+   */
+  [must_use]
+  void asyncVerifyCertAtTime(in nsIX509Cert aCert,
+                             in int64_t /*SECCertificateUsage*/ aUsage,
+                             in uint32_t aFlags,
+                             in ACString aHostname,
+                             in uint64_t aTime,
+                             in nsICertVerificationCallback aCallback);
+
+  // Clears the OCSP cache for the current certificate verification
+  // implementation.
+  [must_use]
+  void clearOCSPCache();
+
+  /*
+   * Add a cert to a cert DB from a base64 encoded string.
+   *
+   * @param base64 The raw representation of a certificate, encoded as Base 64.
+   * @param trust String describing the trust settings to assign the
+   *              certificate. Decoded by CERT_DecodeTrustString. Consists of 3
+   *              comma separated sets of characters, indicating SSL, Email, and
+   *              Object signing trust. The object signing trust flags are
+   *              effectively ignored by gecko, but they still must be specified
+   *              (at least by a final trailing comma) because this argument is
+   *              passed to CERT_DecodeTrustString.
+   * @return nsIX509Cert the resulting certificate
+   */
+  [must_use]
+  nsIX509Cert addCertFromBase64(in ACString base64, in ACString trust);
+
+  /*
+   * Get all the known certs in the database
+   */
+  [must_use]
+  Array<nsIX509Cert> getCerts();
+
+  /**
+   * Encode the list of certificates as a PKCS#7 SignedData structure. No data
+   * is actually signed - this is merely a way of exporting a collection of
+   * certificates.
+   */
+  [must_use]
+  ACString asPKCS7Blob(in Array<nsIX509Cert> certList);
+
+  /**
+   * Iterates through all the certs and returns false if any of the trusted
+   * CA certs are not built-in roots; and true otherwise.
+   */
+  [must_use]
+  void asyncHasThirdPartyRoots(in nsIAsyncBoolCallback callback);
+};

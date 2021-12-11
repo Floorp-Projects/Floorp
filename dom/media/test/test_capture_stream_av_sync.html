@@ -1,0 +1,276 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>A/V sync test for stream capturing</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<p>Following canvas will capture and show the video frame when the video becomes audible</p><br>
+<canvas id="canvas" width="640" height="480"></canvas>
+<script type="application/javascript">
+
+/**
+ * This test will capture stream before the video starts playing, and check if
+ * A/V sync will keep sync during playing.
+ */
+add_task(async function testAVSyncForStreamCapturing() {
+  createVideo();
+  captureStreamFromVideo();
+  await playMedia();
+  await testAVSync();
+  destroyVideo();
+});
+
+/**
+ * This test will check if A/V is still on sync after we switch the media sink
+ * from playback-based sink to mediatrack-based sink.
+ */
+add_task(async function testAVSyncWhenSwitchingMediaSink() {
+  createVideo();
+  await playMedia({resolveAfterReceivingTimeupdate : 5});
+  captureStreamFromVideo();
+  await testAVSync();
+  destroyVideo();
+});
+
+/**
+ * This test will check if A/V is still on sync after we change the playback
+ * rate on the captured stream.
+ */
+add_task(async function testAVSyncWhenChangingPlaybackRate() {
+  createVideo();
+  captureStreamFromVideo();
+  await playMedia();
+  const playbackRates = [0.25, 0.5, 1.0, 1.5, 2.0];
+  for (let rate of playbackRates) {
+    setPlaybackRate(rate);
+    // TODO : when playback rate set to 1.5+x, the A/V will become less stable
+    // in testing so we raise the fuzzy frames for that, but also increase the
+    // test times. As at that speed, precise A/V becomes trivial because we
+    // can't really tell the difference. But it would be good for us to
+    // investigate if we could make A/V sync work better at that extreme high
+    // rate.
+    if (rate >= 1.5) {
+      await testAVSync({ expectedAVSyncTestTimes : 4, fuzzyFrames : 10});
+    } else {
+      await testAVSync({ expectedAVSyncTestTimes : 2 });
+    }
+  }
+  destroyVideo();
+});
+
+/**
+ * Following are helper functions
+ */
+const DEBUG = false;
+function info_debug(msg) {
+  if (DEBUG) {
+    info(msg);
+  }
+}
+
+function createVideo() {
+  const video = document.createElement("video");
+  // This video is special for testing A/V sync, it only produce audible sound
+  // once per second, and when the sound comes out, you can check the position
+  // of the square to know if the A/V keeps sync.
+  video.src = "sync.webm";
+  video.loop = true;
+  video.controls = true;
+  video.width = 640;
+  video.height = 480;
+  video.id = "video";
+  document.body.appendChild(video);
+}
+
+function destroyVideo() {
+  const video = document.getElementById("video");
+  video.src = null;
+  video.remove();
+}
+
+async function playMedia({ resolveAfterReceivingTimeupdate } = {}) {
+  const video = document.getElementById("video");
+  ok(await video.play().then(_=>true,_=>false), "video started playing");
+  if (resolveAfterReceivingTimeupdate > 0) {
+    // Play it for a while to ensure the clock growing on the normal audio sink.
+    for (let idx = 0; idx < resolveAfterReceivingTimeupdate; idx++) {
+      await new Promise(r => video.ontimeupdate = r);
+    }
+  }
+}
+
+async function captureStreamFromVideo() {
+  const video = document.getElementById("video");
+  let ac = new AudioContext();
+  let analyser = ac.createAnalyser();
+  analyser.frequencyBuf = new Float32Array(analyser.frequencyBinCount);
+  analyser.smoothingTimeConstant = 0;
+  analyser.fftSize = 2048; // 1024 bins
+  let sourceNode = ac.createMediaElementSource(video);
+  sourceNode.connect(analyser);
+  analyser.connect(ac.destination);
+  video.analyser = analyser;
+}
+
+// This method will capture the stream from the video element, and check if A/V
+// keeps sync during capturing. `callback` parameter will be executed after
+// finishing capturing.
+// @param [optional] expectedAVSyncTestTimes
+//        The amount of times that A/V sync test performs.
+// @param [optional] fuzzyFrames
+//        This will fuzz the result from +0 (perfect sync) to -X to +X frames.
+async function testAVSync({ expectedAVSyncTestTimes = 5, fuzzyFrames = 5} = {}) {
+  return new Promise(r => {
+    const analyser = document.getElementById("video").analyser;
+    let testIdx = 0;
+    let hasDetectedAudibleFrame = false;
+    // As we only want to detect the audible frame at the first moment when
+    // sound becomes audible, so we always skip the first audible frame because
+    // it might not be the start, but the tail part (where audio is being
+    // decaying to silence) when we start detecting.
+    let hasSkippedFirstFrame = false;
+    analyser.notifyAnalysis = () => {
+      let {frequencyBuf} = analyser;
+      analyser.getFloatFrequencyData(frequencyBuf);
+      if (checkIfBufferIsSilent(frequencyBuf)) {
+        info_debug("no need to paint the silent frame");
+        hasDetectedAudibleFrame = false;
+        requestAnimationFrame(analyser.notifyAnalysis);
+        return;
+      }
+      if (hasDetectedAudibleFrame) {
+        info_debug("detected audible frame already");
+        requestAnimationFrame(analyser.notifyAnalysis);
+        return;
+      }
+      hasDetectedAudibleFrame = true;
+      if (!hasSkippedFirstFrame) {
+        info("skip the first audible frame");
+        hasSkippedFirstFrame = true;
+        requestAnimationFrame(analyser.notifyAnalysis);
+        return;
+      }
+      const video = document.getElementById("video");
+      info(`paint audible frame`);
+      const cvs = document.getElementById("canvas");
+      let context = cvs.getContext('2d');
+      context.drawImage(video, 0, 0, 640, 480);
+      if (checkIfAVIsOnSyncFuzzy(context, fuzzyFrames)) {
+        ok(true, `test ${testIdx++} times, a/v is in sync!`);
+      } else {
+        ok(false, `test ${testIdx++} times, a/v is out of sync!`);
+      }
+      if (testIdx == expectedAVSyncTestTimes) {
+        r();
+        return;
+      }
+      requestAnimationFrame(analyser.notifyAnalysis);
+    }
+    analyser.notifyAnalysis();
+  });
+}
+
+function checkIfBufferIsSilent(buffer) {
+  for (let data of buffer) {
+    // when sound is audible, its values are around -200 and the silence values
+    // are around -800.
+    if (data > -200) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// This function will check the pixel data from the `context` to see if the
+// square appears in the right place. As we can't control the exact timing
+// of rendering video frames in the compositor, so the result would be fuzzy.
+function checkIfAVIsOnSyncFuzzy(context, fuzzyFrames) {
+  const squareLength = 48;
+  // Canvas is 640*480, so perfect sync is the left-top corner when the square
+  // shows up in the middle.
+  const perfectSync =
+      { x: 320 - squareLength/2.0 ,
+        y: 240 - squareLength/2.0 };
+  let isAVSyncFuzzy = false;
+  // Get the whole partial section of image and detect where the square is.
+  let imageData = context.getImageData(0, perfectSync.y, 640, squareLength);
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    // If the pixel's color is red, then this position will be the left-top
+    // corner of the square.
+    if (isPixelColorRed(imageData.data[i], imageData.data[i+1],
+                        imageData.data[i+2])) {
+      const pos = ImageIdxToRelativeCoordinate(imageData, i);
+      let diff = calculateFrameDiffenceInXAxis(pos.x, perfectSync.x);
+      info(`find the square in diff=${diff}`);
+      // Maybe we check A/V sync too early or too late, try to adjust the diff
+      // to guess the previous correct position where the square should be.
+      if (diff > fuzzyFrames) {
+        diff = adjustFrameDiffBasedOnMediaTime(diff);
+        const video = document.getElementById("video");
+        info(`adjusted diff to ${diff} (time=${video.currentTime})`);
+      }
+      if (diff <= fuzzyFrames) {
+        isAVSyncFuzzy = true;
+      }
+      context.putImageData(imageData, 0, 0);
+      break;
+    }
+  }
+  if (!isAVSyncFuzzy) {
+    const ctx = document.getElementById('canvas');
+    info(ctx.toDataURL());
+  }
+  return isAVSyncFuzzy;
+}
+
+// Input an imageData and its idx, then return a relative coordinate on the
+// range of given imageData.
+function ImageIdxToRelativeCoordinate(imageData, idx) {
+  const offset = idx / 4; // RGBA
+  return { x: offset % imageData.width, y: offset / imageData.width };
+}
+
+function calculateFrameDiffenceInXAxis(squareX, targetX) {
+  const offsetX = Math.abs(targetX - squareX);
+  const xSpeedPerFrame = 640 / 60; // video is 60fps
+  return offsetX / xSpeedPerFrame;
+}
+
+function isPixelColorRed(r, g, b) {
+  // As the rendering color would vary in the screen on different platforms, so
+  // we won't strict the R should be 255, just check if it's larger than a
+  // certain threshold.
+  return r > 200 && g < 10 && b < 10;
+}
+
+function setPlaybackRate(rate) {
+  const video = document.getElementById("video");
+  info(`change playback rate from ${video.playbackRate} to ${rate}`);
+  document.getElementById("video").playbackRate = rate;
+}
+
+function adjustFrameDiffBasedOnMediaTime(currentDiff) {
+  // The audio wave can be simply regarded as being composed by "start", "peak"
+  // and "tail". The "start" part is the sound gradually becoming louder and the
+  // "tail" is gradually becoming silent. We want to check the "peak" part which
+  // should happn on evert second regularly (1s, 2s, 3s ...) However, this check
+  // is triggered by `requestAnimationFrame()` and we can't guarantee that
+  // we're checking the peak part while the function is being called. Therefore,
+  // we have to do an adjustment by the video time, to know if we're checking
+  // the audio wave too early or too late in order to get a consistent result.
+  const video = document.getElementById("video");
+  const videoCurrentTimeFloatPortion = video.currentTime % 1;
+  const timeOffset =
+      videoCurrentTimeFloatPortion > 0.5 ?
+          1 - videoCurrentTimeFloatPortion : // too early
+          videoCurrentTimeFloatPortion;      // too late
+  const frameOffset = timeOffset / 0.016; // 60fps, 1 frame=0.016s
+  info(`timeOffset=${timeOffset}, frameOffset=${frameOffset}`);
+  return Math.abs(currentDiff - frameOffset);
+}
+
+</script>
+</head>
+<body>
+</body>
+</html>

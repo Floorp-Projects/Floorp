@@ -1,0 +1,817 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsIDocShellTreeItem.idl"
+#include "nsIRequest.idl"
+
+%{ C++
+#include "js/TypeDecls.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/UniquePtr.h"
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
+class nsCommandManager;
+class nsPresContext;
+class nsDocShellLoadState;
+namespace mozilla {
+class Encoding;
+class HTMLEditor;
+class PresShell;
+namespace dom {
+class BrowsingContext;
+class ClientSource;
+} // namespace dom
+}
+%}
+
+/**
+ * The nsIDocShell interface.
+ */
+
+[ptr] native nsPresContext(nsPresContext);
+[ptr] native nsCommandManager(nsCommandManager);
+[ptr] native PresShell(mozilla::PresShell);
+[ref] native MaybeURI(mozilla::Maybe<nsCOMPtr<nsIURI>>);
+[ref] native Encoding(const mozilla::Encoding*);
+      native UniqueClientSource(mozilla::UniquePtr<mozilla::dom::ClientSource>);
+
+interface nsIURI;
+interface nsIChannel;
+interface nsIContentViewer;
+interface nsIContentSecurityPolicy;
+interface nsIEditor;
+interface nsIEditingSession;
+interface nsIInputStream;
+interface nsIRequest;
+interface nsISHEntry;
+interface nsILayoutHistoryState;
+interface nsISecureBrowserUI;
+interface nsIScriptGlobalObject;
+interface nsIStructuredCloneContainer;
+interface nsIDOMStorage;
+interface nsIPrincipal;
+interface nsIWebBrowserPrint;
+interface nsIPrivacyTransitionObserver;
+interface nsIReflowObserver;
+interface nsIScrollObserver;
+interface nsIRemoteTab;
+interface nsIBrowserChild;
+interface nsICommandParams;
+interface nsILoadURIDelegate;
+native BrowserChildRef(already_AddRefed<nsIBrowserChild>);
+native nsDocShellLoadStatePtr(nsDocShellLoadState*);
+
+webidl BrowsingContext;
+webidl ContentFrameMessageManager;
+webidl EventTarget;
+webidl Document;
+
+[scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
+interface nsIDocShell : nsIDocShellTreeItem
+{
+  void setCancelContentJSEpoch(in long aEpoch);
+
+  /**
+   * Loads a given URI.  This will give priority to loading the requested URI
+   * in the object implementing this interface.  If it can't be loaded here
+   * however, the URL dispatcher will go through its normal process of content
+   * loading.
+   *
+   * @param aLoadState This is the extended load info for this load.
+   * @param aSetNavigating If we should set isNavigating to true while initiating
+   *                       the load.
+   */
+  [noscript]void loadURI(in nsDocShellLoadStatePtr aLoadState, in boolean aSetNavigating);
+
+  /**
+   * Do either a history.pushState() or history.replaceState() operation,
+   * depending on the value of aReplace.
+   */
+  [implicit_jscontext]
+  void addState(in jsval aData, in AString aTitle,
+                in AString aURL, in boolean aReplace);
+
+  /**
+   * Reset state to a new content model within the current document and the document
+   * viewer.  Called by the document before initiating an out of band document.write().
+   */
+  void prepareForNewContentModel();
+
+  /**
+   * For editors and suchlike who wish to change the URI associated with the
+   * document. Note if you want to get the current URI, use the read-only
+   * property on nsIWebNavigation.
+   */
+  void setCurrentURI(in nsIURI aURI);
+
+  /**
+   * Notify the associated content viewer and all child docshells that they are
+   * about to be hidden.  If |isUnload| is true, then the document is being
+   * unloaded and all dynamic subframe history entries are removed as well.
+   *
+   * @param isUnload
+   *        True to fire the unload event in addition to the pagehide event,
+   *        and remove all dynamic subframe history entries.
+   */
+  [noscript] void firePageHideNotification(in boolean isUnload);
+
+  /**
+   * Presentation context for the currently loaded document.  This may be null.
+   */
+  [notxpcom,nostdcall] readonly attribute nsPresContext presContext;
+
+  /**
+   * Presentation shell for the currently loaded document.  This may be null.
+   */
+  [notxpcom,nostdcall] readonly attribute PresShell presShell;
+
+  /**
+   * Presentation shell for the oldest document, if this docshell is
+   * currently transitioning between documents.
+   */
+  [notxpcom,nostdcall] readonly attribute PresShell eldestPresShell;
+
+  /**
+   * Content Viewer that is currently loaded for this DocShell.  This may
+   * change as the underlying content changes.
+   */
+  [infallible] readonly attribute nsIContentViewer contentViewer;
+
+  /**
+   * Get the id of the outer window that is or will be in this docshell.
+   */
+  [infallible] readonly attribute unsigned long long outerWindowID;
+
+  /**
+   * This attribute allows chrome to tie in to handle DOM events that may
+   * be of interest to chrome.
+   */
+  attribute EventTarget chromeEventHandler;
+
+  /**
+   * This allows chrome to set a custom User agent on a specific docshell
+   */
+  attribute AString customUserAgent;
+
+  /**
+   * Whether CSS error reporting is enabled.
+   */
+  attribute boolean cssErrorReportingEnabled;
+
+  /**
+   * Whether to allow plugin execution
+   */
+  attribute boolean allowPlugins;
+
+  /**
+   * Attribute stating if refresh based redirects can be allowed
+   */
+  attribute boolean allowMetaRedirects;
+
+  /**
+   * Attribute stating if it should allow subframes (framesets/iframes) or not
+   */
+  attribute boolean allowSubframes;
+
+  /**
+   * Attribute stating whether or not images should be loaded.
+   */
+  attribute boolean allowImages;
+
+  /**
+   * Attribute stating whether or not media (audio/video) should be loaded.
+   */
+  [infallible] attribute boolean allowMedia;
+
+  /**
+   * Attribute that determines whether DNS prefetch is allowed for this subtree
+   * of the docshell tree.  Defaults to true.  Setting this will make it take
+   * effect starting with the next document loaded in the docshell.
+   */
+  attribute boolean allowDNSPrefetch;
+
+  /**
+   * Attribute that determines whether window control (move/resize) is allowed.
+   */
+  attribute boolean allowWindowControl;
+
+  /**
+   * True if the docshell allows its content to be handled by a content listener
+   * other than the docshell itself, including the external helper app service,
+   * and false otherwise.  Defaults to true.
+   */
+  [infallible] attribute boolean allowContentRetargeting;
+
+  /**
+   * True if new child docshells should allow content retargeting.
+   * Setting allowContentRetargeting also overwrites this value.
+   */
+  [infallible] attribute boolean allowContentRetargetingOnChildren;
+
+  /**
+   * Get an array of this docShell and its children.
+   *
+   * @param aItemType  - Only include docShells of this type, or if typeAll,
+   *                     include all child shells.
+   *                     Uses types from nsIDocShellTreeItem.
+   * @param aDirection - Whether to enumerate forwards or backwards.
+   */
+
+  cenum DocShellEnumeratorDirection : 8 {
+    ENUMERATE_FORWARDS  = 0,
+    ENUMERATE_BACKWARDS = 1
+  };
+
+  Array<nsIDocShell> getAllDocShellsInSubtree(in long aItemType,
+                                              in nsIDocShell_DocShellEnumeratorDirection aDirection);
+
+  /**
+   * The type of application that created this window.
+   *
+   * DO NOT DELETE, see bug 176166. For firefox, this value will always be
+   * UNKNOWN. However, it is used heavily in Thunderbird/comm-central and we
+   * don't really have a great replacement at the moment, so we'll just leave it
+   * here.
+   */
+  cenum AppType : 8 {
+    APP_TYPE_UNKNOWN = 0,
+    APP_TYPE_MAIL    = 1,
+    APP_TYPE_EDITOR  = 2
+  };
+
+  [infallible] attribute nsIDocShell_AppType appType;
+
+  /**
+   * certain docshells (like the message pane)
+   * should not throw up auth dialogs
+   * because it can act as a password trojan
+   */
+  attribute boolean allowAuth;
+
+  /**
+   * Set/Get the document scale factor.  When setting this attribute, a
+   * NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations
+   * not supporting zoom.  Implementations not supporting zoom should return
+   * 1.0 all the time for the Get operation.  1.0 by the way is the default
+   * of zoom.  This means 100% of normal scaling or in other words normal size
+   * no zoom.
+   */
+  attribute float zoom;
+
+  /*
+   * Tells the docshell to offer focus to its tree owner.
+   * This is currently only necessary for embedding chrome.
+   * If forDocumentNavigation is true, then document navigation should be
+   * performed, where only the root of documents are selected. Otherwise, the
+   * next element in the parent should be returned. Returns true if focus was
+   * successfully taken by the tree owner.
+   */
+  bool tabToTreeOwner(in boolean forward, in boolean forDocumentNavigation);
+
+  /**
+   * Current busy state for DocShell
+   */
+  cenum BusyFlags : 8 {
+    BUSY_FLAGS_NONE             = 0,
+    BUSY_FLAGS_BUSY             = 1,
+    BUSY_FLAGS_BEFORE_PAGE_LOAD = 2,
+    BUSY_FLAGS_PAGE_LOADING     = 4,
+  };
+
+  [infallible] readonly attribute nsIDocShell_BusyFlags busyFlags;
+
+  /**
+   * Load commands for the document
+   */
+  cenum LoadCommand : 8 {
+    LOAD_CMD_NORMAL  = 0x1,   // Normal load
+    LOAD_CMD_RELOAD  = 0x2,   // Reload
+    LOAD_CMD_HISTORY = 0x4,   // Load from history
+    LOAD_CMD_PUSHSTATE = 0x8, // History.pushState()
+  };
+
+  /*
+   * Attribute to access the loadtype for the document. LoadType Enum is
+   * defined in nsDocShellLoadTypes.h
+   */
+  [infallible] attribute unsigned long loadType;
+
+  /*
+   * Default load flags (as defined in nsIRequest) that will be set on all
+   * requests made by this docShell and propagated to all child docShells and
+   * to nsILoadGroup::defaultLoadFlags for the docShell's loadGroup.
+   * Default is no flags.  Once set, only future requests initiated by the
+   * docShell are affected, so in general, these flags should be set before
+   * the docShell loads any content.
+   */
+  attribute nsLoadFlags defaultLoadFlags;
+
+  /*
+   * returns true if the docshell is being destroyed, false otherwise
+   */
+  boolean isBeingDestroyed();
+
+  /*
+   * Returns true if the docshell is currently executing the onLoad Handler
+   */
+  readonly attribute boolean isExecutingOnLoadHandler;
+
+  attribute nsILayoutHistoryState layoutHistoryState;
+
+  /**
+   * Object used to delegate URI loading to an upper context.
+   * Currently only set for GeckoView to allow handling of load requests
+   * at the application level.
+   */
+  readonly attribute nsILoadURIDelegate loadURIDelegate;
+
+  /**
+   * Cancel the XPCOM timers for each meta-refresh URI in this docshell,
+   * and this docshell's children, recursively. The meta-refresh timers can be
+   * restarted using resumeRefreshURIs().  If the timers are already suspended,
+   * this has no effect.
+   */
+  void suspendRefreshURIs();
+
+  /**
+   * Restart the XPCOM timers for each meta-refresh URI in this docshell,
+   * and this docshell's children, recursively.  If the timers are already
+   * running, this has no effect.
+   */
+  void resumeRefreshURIs();
+
+  /**
+   * Begin firing WebProgressListener notifications for restoring a page
+   * presentation. |viewer| is the content viewer whose document we are
+   * starting to load.  If null, it defaults to the docshell's current content
+   * viewer, creating one if necessary.  |top| should be true for the toplevel
+   * docshell that is being restored; it will be set to false when this method
+   * is called for child docshells.  This method will post an event to
+   * complete the simulated load after returning to the event loop.
+   */
+  void beginRestore(in nsIContentViewer viewer, in boolean top);
+
+  /**
+   * Finish firing WebProgressListener notifications and DOM events for
+   * restoring a page presentation.  This should only be called via
+   * beginRestore().
+   */
+  void finishRestore();
+
+  void clearCachedUserAgent();
+
+  void clearCachedPlatform();
+
+  /* Track whether we're currently restoring a document presentation. */
+  readonly attribute boolean restoringDocument;
+
+  /* attribute to access whether error pages are enabled */
+  attribute boolean useErrorPages;
+
+  /**
+   * Display a load error in a frame while keeping that frame's currentURI
+   * pointing correctly to the page where the error ocurred, rather than to
+   * the error document page. You must provide either the aURI or aURL parameter.
+   *
+   * @param  aError         The error code to be displayed
+   * @param  aURI           nsIURI of the page where the error happened
+   * @param  aURL           wstring of the page where the error happened
+   * @param  aFailedChannel The channel related to this error
+   *
+   * Returns whether or not we displayed an error page (note: will always
+   * return false if in-content error pages are disabled!)
+   */
+  boolean displayLoadError(in nsresult aError,
+                           in nsIURI aURI,
+                           in wstring aURL,
+                           [optional] in nsIChannel aFailedChannel);
+
+  /**
+   * The channel that failed to load and resulted in an error page.
+   * May be null. Relevant only to error pages.
+   */
+  readonly attribute nsIChannel failedChannel;
+
+  /**
+   * Keeps track of the previous nsISHEntry index and the current
+   * nsISHEntry index at the time that the doc shell begins to load.
+   * Used for ContentViewer eviction.
+   */
+  readonly attribute long previousEntryIndex;
+  readonly attribute long loadedEntryIndex;
+
+  /**
+   * Notification that entries have been removed from the beginning of a
+   * nsSHistory which has this as its rootDocShell.
+   *
+   * @param numEntries - The number of entries removed
+   */
+  void historyPurged(in long numEntries);
+
+  /**
+   * Gets the channel for the currently loaded document, if any.
+   * For a new document load, this will be the channel of the previous document
+   * until after OnLocationChange fires.
+   */
+  readonly attribute nsIChannel currentDocumentChannel;
+
+  /**
+   * Find out whether the docshell is currently in the middle of a page
+   * transition. This is set just before the pagehide/unload events fire.
+   */
+  [infallible] readonly attribute boolean isInUnload;
+
+  /**
+   * Disconnects this docshell's editor from its window, and stores the
+   * editor data in the open document's session history entry.  This
+   * should be called only during page transitions.
+   */
+  [noscript, notxpcom] void DetachEditorFromWindow();
+
+  /**
+   * Propagated to the print preview document viewer.  Must only be called on
+   * a document viewer that has been initialized for print preview.
+   */
+  void exitPrintPreview();
+
+  /**
+   * The ID of the docshell in the session history.
+   */
+  readonly attribute nsIDRef historyID;
+
+  /**
+   * Helper method for accessing this value from C++
+   */
+  [noscript, notxpcom] nsIDRef HistoryID();
+
+  /**
+   * Sets whether a docshell is an app tab. An app tab docshell may behave
+   * differently than a non-app tab docshell in some cases, such as when
+   * handling link clicks. Docshells are not app tabs unless told otherwise.
+   */
+  attribute boolean isAppTab;
+
+  /**
+   * Create a new about:blank document and content viewer.
+   * @param aPrincipal the principal to use for the new document.
+   * @param aPartitionedPrincipal the partitioned principal to use for the new
+   *        document.
+   * @param aCsp the CSP to use for the new document.
+   */
+  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
+                                     in nsIPrincipal aPartitionedPrincipal,
+                                     [optional] in nsIContentSecurityPolicy aCSP);
+
+  /**
+   * Upon getting, returns the canonical encoding label of the document
+   * currently loaded into this docshell.
+   */
+  readonly attribute ACString charset;
+
+  void forceEncodingDetection();
+
+  /**
+   * In a child docshell, this is the charset of the parent docshell
+   */
+  [noscript, notxpcom, nostdcall] void setParentCharset(
+    in Encoding parentCharset,
+    in int32_t parentCharsetSource,
+    in nsIPrincipal parentCharsetPrincipal);
+  [noscript, notxpcom, nostdcall] void getParentCharset(
+    out Encoding parentCharset,
+    out int32_t parentCharsetSource,
+    out nsIPrincipal parentCharsetPrincipal);
+
+  /**
+   * Whether the docShell records profile timeline markers at the moment
+   */
+  [infallible] attribute boolean recordProfileTimelineMarkers;
+
+  /**
+   * Return a DOMHighResTimeStamp representing the number of
+   * milliseconds from an arbitrary point in time.  The reference
+   * point is shared by all DocShells and is also used by timestamps
+   * on markers.
+   */
+  DOMHighResTimeStamp now();
+
+  /**
+   * Returns and flushes the profile timeline markers gathered by the docShell
+   */
+  [implicit_jscontext]
+  jsval popProfileTimelineMarkers();
+
+  /**
+   * Add an observer to the list of parties to be notified when this docshell's
+   * private browsing status is changed. |obs| must support weak references.
+   */
+  void addWeakPrivacyTransitionObserver(in nsIPrivacyTransitionObserver obs);
+
+  /**
+   * Add an observer to the list of parties to be notified when reflows are
+   * occurring. |obs| must support weak references.
+   */
+  void addWeakReflowObserver(in nsIReflowObserver obs);
+
+  /**
+   * Remove an observer from the list of parties to be notified about reflows.
+   */
+  void removeWeakReflowObserver(in nsIReflowObserver obs);
+
+  /**
+   * Notify all attached observers that a reflow has just occurred.
+   *
+   * @param interruptible if true, the reflow was interruptible.
+   * @param start         timestamp when reflow started, in milliseconds since
+   *                      navigationStart (accurate to 1/1000 of a ms)
+   * @param end           timestamp when reflow ended, in milliseconds since
+   *                      navigationStart (accurate to 1/1000 of a ms)
+   */
+  [noscript] void notifyReflowObservers(in bool interruptible,
+                                        in DOMHighResTimeStamp start,
+                                        in DOMHighResTimeStamp end);
+
+  /**
+   * Add an observer to the list of parties to be notified when scroll position
+   * of some elements is changed.
+   */
+  [noscript] void addWeakScrollObserver(in nsIScrollObserver obs);
+
+  /**
+   * Add an observer to the list of parties to be notified when scroll position
+   * of some elements is changed.
+   */
+  [noscript] void removeWeakScrollObserver(in nsIScrollObserver obs);
+
+  /**
+   * Notify all attached observers that the scroll position of some element
+   * has changed.
+   */
+  [noscript] void notifyScrollObservers();
+
+  /**
+   * Returns true if this docshell is the top level content docshell.
+   */
+  [infallible] readonly attribute boolean isTopLevelContentDocShell;
+
+  /**
+   * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
+   * mozbrowser> boundaries. Which no longer exist.
+   *
+   * @deprecated: Use `BrowsingContext::GetParent()` in the future.
+   */
+  nsIDocShell getSameTypeInProcessParentIgnoreBrowserBoundaries();
+
+  /**
+   * True iff asynchronous panning and zooming is enabled for this
+   * docshell.
+   */
+  readonly attribute bool asyncPanZoomEnabled;
+
+  /**
+   * Are plugins allowed in the current document loaded in this docshell ?
+   * (if there is one). This depends on whether plugins are allowed by this
+   * docshell itself or if the document is sandboxed and hence plugins should
+   * not be allowed.
+   */
+  [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
+
+  /**
+   * Indicates whether the UI may enable the character encoding menu. The UI
+   * must disable the menu when this property is false.
+   */
+  [infallible] readonly attribute boolean mayEnableCharacterEncodingMenu;
+
+           attribute  nsIEditor editor;
+  readonly attribute  boolean   editable;             /* this docShell is editable */
+  readonly attribute  boolean   hasEditingSession;    /* this docShell has an editing session */
+
+  /**
+   * Make this docShell editable, setting a flag that causes
+   * an editor to get created, either immediately, or after
+   * a url has been loaded.
+   *      @param  inWaitForUriLoad    true to wait for a URI before
+   *                                  creating the editor.
+   */
+  void makeEditable(in boolean inWaitForUriLoad);
+
+  /**
+   * Returns false for mLSHE, true for mOSHE
+   */
+  boolean getCurrentSHEntry(out nsISHEntry aEntry);
+
+  /**
+    * Cherry picked parts of nsIController.
+    * They are here, because we want to call these functions
+    * from JS.
+    */
+  boolean isCommandEnabled(in string command);
+  [can_run_script]
+  void doCommand(in string command);
+  [can_run_script]
+  void doCommandWithParams(in string command, in nsICommandParams aParams);
+
+  /**
+   * Invisible DocShell are dummy construct to simulate DOM windows
+   * without any actual visual representation. They have to be marked
+   * at construction time, to avoid any painting activity.
+   */
+  [noscript, notxpcom] bool IsInvisible();
+  [noscript, notxpcom] void SetInvisible(in bool aIsInvisibleDocshell);
+
+/**
+ * Get the script global for the document in this docshell.
+*/
+  [noscript,notxpcom,nostdcall] nsIScriptGlobalObject GetScriptGlobalObject();
+
+  [noscript,notxpcom,nostdcall] Document getExtantDocument();
+
+  /**
+   * If deviceSizeIsPageSize is set to true, device-width/height media queries
+   * will be calculated from the page size, not the device size.
+   *
+   * Used by the Responsive Design Mode and B2G Simulator.
+   *
+   * Default is False.
+   * Default value can be overriden with
+   * docshell.device_size_is_page_size pref.
+   */
+  [infallible] attribute boolean deviceSizeIsPageSize;
+
+  /**
+   * Notify DocShell when the browser is about to start executing JS, and after
+   * that execution has stopped.  This only occurs when the Timeline devtool
+   * is collecting information.
+   */
+  [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStart(in string aReason,
+                                                                  in AString functionName,
+                                                                  in AString fileName,
+                                                                  in unsigned long lineNumber,
+                                                                  in jsval asyncStack,
+                                                                  in string asyncCause);
+  [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStop();
+
+  /**
+   * This attribute determines whether a document which is not about:blank has
+   * already be loaded by this docShell.
+   */
+  [infallible] readonly attribute boolean hasLoadedNonBlankURI;
+
+  /**
+   * Allow usage of -moz-window-dragging:drag for content docshells.
+   * True for top level chrome docshells. Throws if set to false with
+   * top level chrome docshell.
+   */
+  attribute boolean windowDraggingAllowed;
+
+  /**
+   * Sets/gets the current scroll restoration mode.
+   * @see https://html.spec.whatwg.org/#dom-history-scroll-restoration
+   */
+  attribute boolean currentScrollRestorationIsManual;
+
+  /**
+   * Setter and getter for the origin attributes living on this docshell.
+   */
+  [implicit_jscontext]
+  jsval getOriginAttributes();
+
+  [implicit_jscontext]
+  void setOriginAttributes(in jsval aAttrs);
+
+  /**
+   * The editing session for this docshell.
+   */
+  readonly attribute nsIEditingSession editingSession;
+
+  /**
+   * The browser child for this docshell.
+   */
+  [binaryname(ScriptableBrowserChild)] readonly attribute nsIBrowserChild browserChild;
+  [noscript,notxpcom,nostdcall] BrowserChildRef GetBrowserChild();
+
+  [noscript,nostdcall,notxpcom] nsCommandManager GetCommandManager();
+
+  cenum MetaViewportOverride: 8 {
+    /**
+     * Override platform/pref default behaviour and force-disable support for
+     * <meta name="viewport">.
+     */
+    META_VIEWPORT_OVERRIDE_DISABLED = 0,
+    /**
+     * Override platform/pref default behaviour and force-enable support for
+     * <meta name="viewport">.
+     */
+    META_VIEWPORT_OVERRIDE_ENABLED = 1,
+    /**
+     * Don't override the platform/pref default behaviour for support for
+     * <meta name="viewport">.
+     */
+    META_VIEWPORT_OVERRIDE_NONE = 2,
+  };
+
+  /**
+   * This allows chrome to override the default choice of whether the
+   * <meta name="viewport"> tag is respected in a specific docshell.
+   * Possible values are listed above.
+   */
+  [infallible] attribute nsIDocShell_MetaViewportOverride metaViewportOverride;
+
+  /**
+   * Attribute that determines whether tracking protection is enabled.
+   */
+  attribute boolean useTrackingProtection;
+
+ /**
+  * Fire a dummy location change event asynchronously.
+  */
+  [noscript] void dispatchLocationChangeEvent();
+
+
+  /**
+   * Start delayed autoplay media which are in the current document.
+   */
+  [noscript] void startDelayedAutoplayMediaComponents();
+
+  /**
+   * Take ownership of the ClientSource representing an initial about:blank
+   * document that was never needed.  As an optimization we avoid creating
+   * this document if no code calls GetDocument(), but we still need a
+   * ClientSource object to represent the about:blank window.  This may return
+   * nullptr; for example if the docshell has created a real window and document
+   * already.
+   */
+  [noscript, nostdcall, notxpcom]
+  UniqueClientSource TakeInitialClientSource();
+
+  void setColorMatrix(in Array<float> aMatrix);
+
+  /**
+   * Returns true if the current load is a forced reload,
+   * e.g. started by holding shift whilst triggering reload.
+   */
+  readonly attribute bool isForceReloading;
+
+  Array<float> getColorMatrix();
+
+%{C++
+  /**
+   * These methods call nsDocShell::GetHTMLEditorInternal() and
+   * nsDocShell::SetHTMLEditorInternal() with static_cast.
+   */
+  mozilla::HTMLEditor* GetHTMLEditor();
+  nsresult SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
+%}
+
+  /**
+   * The message manager for this docshell.  This does not throw, but
+   * can return null if the docshell has no message manager.
+   */
+  [infallible] readonly attribute ContentFrameMessageManager messageManager;
+
+   /**
+   * This returns a Promise which resolves to a boolean. True when the
+   * document has Tracking Content that has been blocked from loading, false
+   * otherwise.
+   */
+  Promise getHasTrackingContentBlocked();
+
+  /**
+   * Return whether this docshell is "attempting to navigate" in the
+   * sense that's relevant to document.open.
+   */
+  [notxpcom, nostdcall] readonly attribute boolean isAttemptingToNavigate;
+
+  /*
+   * Whether or not this docshell is executing a nsIWebNavigation navigation
+   * method.
+   *
+   * This will be true when the following methods are executing:
+   *   nsIWebNavigation.binaryLoadURI
+   *   nsIWebNavigation.goBack
+   *   nsIWebNavigation.goForward
+   *   nsIWebNavigation.gotoIndex
+   *   nsIWebNavigation.loadURI
+   */
+  [infallible] readonly attribute boolean isNavigating;
+
+  /**
+   * @see nsISHEntry synchronizeLayoutHistoryState().
+   */
+  void synchronizeLayoutHistoryState();
+
+  /**
+   * This attempts to save any applicable layout history state (like
+   * scroll position) in the nsISHEntry. This is normally done
+   * automatically when transitioning from page to page in the
+   * same process. We expose this function to support transitioning
+   * from page to page across processes as a workaround for bug 1630234
+   * until session history state is moved into the parent process.
+   */
+  void persistLayoutHistoryState();
+};

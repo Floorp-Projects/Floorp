@@ -1,0 +1,17 @@
+llvmorg-12-init-7827-g2a078c307204 leads to linker complaints in shippable
+builds. It may be related to LTO with IR from rustc. The patch author and I
+were unable to get to the bottom of it, and in the end they suggested that
+it's safe to undo the change locally.
+
+diff --git a/llvm/lib/IR/Attributes.cpp b/llvm/lib/IR/Attributes.cpp
+index b21d4527484..e9602f1aaf1 100644
+--- a/llvm/lib/IR/Attributes.cpp
++++ b/llvm/lib/IR/Attributes.cpp
+@@ -1848,7 +1848,6 @@ AttrBuilder AttributeFuncs::typeIncompatible(Type *Ty) {
+         .addAttribute(Attribute::NoAlias)
+         .addAttribute(Attribute::NoCapture)
+         .addAttribute(Attribute::NonNull)
+-        .addAlignmentAttr(1)             // the int here is ignored
+         .addDereferenceableAttr(1)       // the int here is ignored
+         .addDereferenceableOrNullAttr(1) // the int here is ignored
+         .addAttribute(Attribute::ReadNone)

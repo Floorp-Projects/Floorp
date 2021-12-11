@@ -1,0 +1,235 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SearchInput renders 1`] = `
+<div
+  className="search-outline"
+>
+  <div
+    aria-expanded={false}
+    aria-haspopup="listbox"
+    aria-owns="result-list"
+    className="search-field"
+    role="combobox"
+  >
+    <AccessibleImage
+      className="search"
+    />
+    <input
+      aria-activedescendant=""
+      aria-autocomplete="list"
+      aria-controls="result-list"
+      className=""
+      onBlur={[Function]}
+      onChange={[Function]}
+      onFocus={[Function]}
+      onKeyDown={[Function]}
+      placeholder="A placeholder"
+      spellCheck={false}
+      value=""
+    />
+    <div
+      className="search-field-summary"
+    >
+      So many results
+    </div>
+    <CloseButton
+      buttonClass=""
+    />
+  </div>
+</div>
+`;
+
+exports[`SearchInput shows nav buttons 1`] = `
+<div
+  className="search-outline"
+>
+  <div
+    aria-expanded={false}
+    aria-haspopup="listbox"
+    aria-owns="result-list"
+    className="search-field"
+    role="combobox"
+  >
+    <AccessibleImage
+      className="search"
+    />
+    <input
+      aria-activedescendant=""
+      aria-autocomplete="list"
+      aria-controls="result-list"
+      className=""
+      onBlur={[Function]}
+      onChange={[Function]}
+      onFocus={[Function]}
+      onKeyDown={[Function]}
+      placeholder="A placeholder"
+      spellCheck={false}
+      value=""
+    />
+    <div
+      className="search-field-summary"
+    >
+      So many results
+    </div>
+    <div
+      className="search-nav-buttons"
+    >
+      <button
+        className="nav-btn prev"
+        key="arrow-up"
+        onClick={[MockFunction]}
+        title="Previous result"
+        type="arrow-up"
+      >
+        <AccessibleImage
+          className="arrow-up"
+        />
+      </button>
+      <button
+        className="nav-btn next"
+        key="arrow-down"
+        onClick={[MockFunction]}
+        title="Next result"
+        type="arrow-down"
+      >
+        <AccessibleImage
+          className="arrow-down"
+        />
+      </button>
+    </div>
+    <CloseButton
+      buttonClass=""
+    />
+  </div>
+</div>
+`;
+
+exports[`SearchInput shows svg error emoji 1`] = `
+<div
+  className="search-outline"
+>
+  <div
+    aria-expanded={false}
+    aria-haspopup="listbox"
+    aria-owns="result-list"
+    className="search-field"
+    role="combobox"
+  >
+    <AccessibleImage
+      className="search"
+    />
+    <input
+      aria-activedescendant=""
+      aria-autocomplete="list"
+      aria-controls="result-list"
+      className="empty"
+      onBlur={[Function]}
+      onChange={[Function]}
+      onFocus={[Function]}
+      onKeyDown={[Function]}
+      placeholder="A placeholder"
+      spellCheck={false}
+      value=""
+    />
+    <div
+      className="search-field-summary"
+    >
+      So many results
+    </div>
+    <div
+      className="search-nav-buttons"
+    >
+      <button
+        className="nav-btn prev"
+        key="arrow-up"
+        onClick={[MockFunction]}
+        title="Previous result"
+        type="arrow-up"
+      >
+        <AccessibleImage
+          className="arrow-up"
+        />
+      </button>
+      <button
+        className="nav-btn next"
+        key="arrow-down"
+        onClick={[MockFunction]}
+        title="Next result"
+        type="arrow-down"
+      >
+        <AccessibleImage
+          className="arrow-down"
+        />
+      </button>
+    </div>
+    <CloseButton
+      buttonClass=""
+    />
+  </div>
+</div>
+`;
+
+exports[`SearchInput shows svg magnifying glass 1`] = `
+<div
+  className="search-outline"
+>
+  <div
+    aria-expanded={false}
+    aria-haspopup="listbox"
+    aria-owns="result-list"
+    className="search-field"
+    role="combobox"
+  >
+    <AccessibleImage
+      className="search"
+    />
+    <input
+      aria-activedescendant=""
+      aria-autocomplete="list"
+      aria-controls="result-list"
+      className=""
+      onBlur={[Function]}
+      onChange={[Function]}
+      onFocus={[Function]}
+      onKeyDown={[Function]}
+      placeholder="A placeholder"
+      spellCheck={false}
+      value=""
+    />
+    <div
+      className="search-field-summary"
+    >
+      So many results
+    </div>
+    <div
+      className="search-nav-buttons"
+    >
+      <button
+        className="nav-btn prev"
+        key="arrow-up"
+        onClick={[MockFunction]}
+        title="Previous result"
+        type="arrow-up"
+      >
+        <AccessibleImage
+          className="arrow-up"
+        />
+      </button>
+      <button
+        className="nav-btn next"
+        key="arrow-down"
+        onClick={[MockFunction]}
+        title="Next result"
+        type="arrow-down"
+      >
+        <AccessibleImage
+          className="arrow-down"
+        />
+      </button>
+    </div>
+    <CloseButton
+      buttonClass=""
+    />
+  </div>
+</div>
+`;

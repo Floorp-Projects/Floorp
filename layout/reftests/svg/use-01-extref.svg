@@ -1,0 +1,24 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testing that dynamic changes to the element for a given ID are reflected in 'use'</title>
+
+  <use x="10%" xlink:href="use-01-extref-resource.svg#r1"/>
+
+  <g id="g1">
+    <use x="20%" xlink:href="use-01-extref-resource.svg#g3"/>
+  </g>
+
+  <use x="30%" xlink:href="use-01-extref-resource.svg#g4"/>
+
+  <g id="g2">
+    <use x="70%" xlink:href="use-01-extref-resource.svg#g5"/>
+  </g>
+
+  <use x="80%" xlink:href="use-01-extref-resource.svg#g6"/>
+
+  <rect width="11%" height="100%" fill="lime" id="r2"/>
+</svg>

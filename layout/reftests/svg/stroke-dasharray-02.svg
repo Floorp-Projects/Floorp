@@ -1,0 +1,48 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Test the start point and direction of dashing on circle and ellipse</title>
+
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=944704 -->
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- Test circle element dashes cover two red circles -->
+  <circle cx="100" cy="62" r="8" fill="red"/>
+  <circle cx="66" cy="98" r="8" fill="red"/>
+  <circle cx="50" cy="50" r="50" fill="none" stroke="lime" stroke-width="30" stroke-dasharray="25 25 25 100000"/>
+
+  <!-- Sanity test to check that two circles cover circle element dashes (i.e. that the previous check didn't pass because the stroke was solid) -->
+  <circle cx="200" cy="50" r="50" fill="none" stroke="red" stroke-width="10" stroke-dasharray="10 40 10 100000"/>
+  <circle cx="250" cy="56" r="11" fill="lime"/>
+  <circle cx="223" cy="96" r="11" fill="lime"/>
+
+  <!-- Test ellipse element dashes cover two red circles -->
+  <circle cx="95" cy="211" r="8" fill="red"/>
+  <circle cx="47" cy="225" r="8" fill="red"/>
+  <ellipse cx="50" cy="200" rx="50" ry="25" fill="none" stroke="lime" stroke-width="25" stroke-dasharray="25 25 25 100000"/>
+
+  <!-- Sanity test to check that two circles cover ellipse element dashes (i.e. that the previous check didn't pass because the stroke was solid) -->
+  <ellipse cx="200" cy="200" rx="50" ry="25" fill="none" stroke="red" stroke-width="10" stroke-dasharray="10 40 10 100000"/>
+  <circle cx="250" cy="205" r="11" fill="lime"/>
+  <circle cx="206" cy="225" r="11" fill="lime"/>
+
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1131264 -->
+  <!-- small circles take a different code path -->
+
+  <!-- Test circle element dashes cover two red circles -->
+  <circle cx="125" cy="325" r="8" fill="red"/>
+  <circle cx="50" cy="380" r="8" fill="red"/>
+  <circle cx="0" cy="0" r=".0008" fill="none" stroke="lime" stroke-width=".0003" stroke-dasharray=".0005 .0005 .0005 100"
+          transform="translate(50, 300) scale(1e5, 1e5)"/>
+
+  <!-- Sanity test to check that two circles cover circle element dashes (i.e. that the previous check didn't pass because the stroke was solid) -->
+  <circle cx="0" cy="0" r=".0008" fill="none" stroke="red" stroke-width=".0001" stroke-dasharray=".0001 .0005 .0001 100"
+          transform="translate(180, 300) scale(1e5, 1e5)"/>
+  <circle cx="260" cy="305" r="14" fill="lime"/>
+  <circle cx="235" cy="358" r="14" fill="lime"/>
+
+</svg>

@@ -1,0 +1,349 @@
+<html>
+<head>
+  <title>Test for key event handler of text editor</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <input type="text" id="inputField">
+  <input type="password" id="passwordField">
+  <textarea id="textarea"></textarea>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+var inputField = document.getElementById("inputField");
+var passwordField = document.getElementById("passwordField");
+var textarea = document.getElementById("textarea");
+
+const kIsMac = navigator.platform.includes("Mac");
+const kIsWin = navigator.platform.includes("Win");
+const kIsLinux = navigator.platform.includes("Linux");
+
+function runTests() {
+  var fm = SpecialPowers.Services.focus;
+
+  var capturingPhase = { fired: false, prevented: false };
+  var bubblingPhase = { fired: false, prevented: false };
+
+  var listener = {
+    handleEvent: function _hv(aEvent) {
+      is(aEvent.type, "keypress", "unexpected event is handled");
+      switch (aEvent.eventPhase) {
+      case aEvent.CAPTURING_PHASE:
+        capturingPhase.fired = true;
+        capturingPhase.prevented = aEvent.defaultPrevented;
+        break;
+      case aEvent.BUBBLING_PHASE:
+        bubblingPhase.fired = true;
+        bubblingPhase.prevented = aEvent.defaultPrevented;
+        aEvent.preventDefault(); // prevent the browser default behavior
+        break;
+      default:
+        ok(false, "event is handled in unexpected phase");
+      }
+    },
+  };
+
+  function check(aDescription,
+                 aFiredOnCapture, aFiredOnBubbling, aPreventedOnBubbling) {
+    function getDesciption(aExpected) {
+      return aDescription + (aExpected ? " wasn't " : " was ");
+    }
+
+    is(capturingPhase.fired, aFiredOnCapture,
+       getDesciption(aFiredOnCapture) + "fired on capture phase");
+    is(bubblingPhase.fired, aFiredOnBubbling,
+       getDesciption(aFiredOnBubbling) + "fired on bubbling phase");
+
+    // If the event is fired on bubbling phase and it was already prevented
+    // on capture phase, it must be prevented on bubbling phase too.
+    if (capturingPhase.prevented) {
+      todo(false, aDescription +
+           " was consumed already, so, we cannot test the editor behavior actually");
+      aPreventedOnBubbling = true;
+    }
+
+    is(bubblingPhase.prevented, aPreventedOnBubbling,
+       getDesciption(aPreventedOnBubbling) + "prevented on bubbling phase");
+  }
+
+  var parentElement = document.getElementById("display");
+  SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
+                                       true);
+  SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
+                                       false);
+
+  function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly) {
+    function reset(aText) {
+      capturingPhase.fired = false;
+      capturingPhase.prevented = false;
+      bubblingPhase.fired = false;
+      bubblingPhase.prevented = false;
+      aElement.value = aText;
+    }
+
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+
+    aDescription += ": ";
+
+    aElement.focus();
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement, aDescription + "failed to move focus");
+
+    // Backspace key:
+    //   If native key bindings map the key combination to something, it's consumed.
+    //   If editor is readonly, it doesn't consume.
+    //   If editor is editable, it consumes backspace and shift+backspace.
+    //   Otherwise, editor doesn't consume the event but the native key
+    //   bindings on nsTextControlFrame may consume it.
+    reset("");
+    synthesizeKey("KEY_Backspace");
+    check(aDescription + "Backspace", true, true, true);
+
+    reset("");
+    synthesizeKey("KEY_Backspace", {shiftKey: true});
+    check(aDescription + "Shift+Backspace", true, true, true);
+
+    reset("");
+    synthesizeKey("KEY_Backspace", {ctrlKey: true});
+    // Win: cmd_deleteWordBackward
+    check(aDescription + "Ctrl+Backspace",
+          true, true, aIsReadonly || kIsWin);
+
+    reset("");
+    synthesizeKey("KEY_Backspace", {altKey: true});
+    // Win: cmd_undo
+    // Mac: cmd_deleteWordBackward
+    check(aDescription + "Alt+Backspace",
+          true, true, aIsReadonly || kIsWin || kIsMac);
+
+    reset("");
+    synthesizeKey("KEY_Backspace", {metaKey: true});
+    check(aDescription + "Meta+Backspace", true, true, aIsReadonly || kIsMac);
+
+    reset("");
+    synthesizeKey("KEY_Backspace", {osKey: true});
+    check(aDescription + "OS+Backspace", true, true, aIsReadonly || kIsMac);
+
+    // Delete key:
+    //   If native key bindings map the key combination to something, it's consumed.
+    //   If editor is readonly, it doesn't consume.
+    //   If editor is editable, delete is consumed.
+    //   Otherwise, editor doesn't consume the event but the native key
+    //   bindings on nsTextControlFrame may consume it.
+    reset("");
+    synthesizeKey("KEY_Delete");
+    // Linux: native handler
+    // Mac: cmd_deleteCharForward
+    check(aDescription + "Delete",
+          true, true, !aIsReadonly || kIsLinux || kIsMac);
+
+    reset("");
+    // Win: cmd_cutOrDelete
+    // Linux: cmd_cut
+    // Mac: cmd_deleteCharForward
+    synthesizeKey("KEY_Delete", {shiftKey: true});
+    check(aDescription + "Shift+Delete",
+          true, true, true);
+
+    reset("");
+    synthesizeKey("KEY_Delete", {ctrlKey: true});
+    // Win: cmd_deleteWordForward
+    // Linux: cmd_copy
+    check(aDescription + "Ctrl+Delete",
+          true, true, kIsWin || kIsLinux);
+
+    reset("");
+    synthesizeKey("KEY_Delete", {altKey: true});
+    // Mac: cmd_deleteWordForward
+    check(aDescription + "Alt+Delete",
+          true, true, kIsMac);
+
+    reset("");
+    synthesizeKey("KEY_Delete", {metaKey: true});
+    // Linux: native handler consumed.
+    check(aDescription + "Meta+Delete",
+          true, true, kIsLinux);
+
+    reset("");
+    synthesizeKey("KEY_Delete", {osKey: true});
+    check(aDescription + "OS+Delete",
+          true, true, kIsMac);
+
+    // XXX input.value returns "\n" when it's empty, so, we should use dummy
+    // value ("a") for the following tests.
+
+    // Return key:
+    //   If editor is readonly, it doesn't consume.
+    //   If editor is editable and not single line editor, it consumes Return
+    //   and Shift+Return.
+    //   Otherwise, editor doesn't consume the event.
+    reset("a");
+    synthesizeKey("KEY_Enter");
+    check(aDescription + "Return",
+          true, true, !aIsSingleLine && !aIsReadonly);
+    is(aElement.value, !aIsSingleLine && !aIsReadonly ? "a\n" : "a",
+       aDescription + "Return");
+
+    reset("a");
+    synthesizeKey("KEY_Enter", {shiftKey: true});
+    check(aDescription + "Shift+Return",
+          true, true, !aIsSingleLine && !aIsReadonly);
+    is(aElement.value, !aIsSingleLine && !aIsReadonly ? "a\n" : "a",
+       aDescription + "Shift+Return");
+
+    reset("a");
+    synthesizeKey("KEY_Enter", {ctrlKey: true});
+    check(aDescription + "Ctrl+Return", true, true, false);
+    is(aElement.value, "a", aDescription + "Ctrl+Return");
+
+    reset("a");
+    synthesizeKey("KEY_Enter", {altKey: true});
+    check(aDescription + "Alt+Return", true, true, false);
+    is(aElement.value, "a", aDescription + "Alt+Return");
+
+    reset("a");
+    synthesizeKey("KEY_Enter", {metaKey: true});
+    check(aDescription + "Meta+Return", true, true, false);
+    is(aElement.value, "a", aDescription + "Meta+Return");
+
+    reset("a");
+    synthesizeKey("KEY_Enter", {osKey: true});
+    check(aDescription + "OS+Return", true, true, false);
+    is(aElement.value, "a", aDescription + "OS+Return");
+
+    // Tab key:
+    //   Editor consumes tab key event unless any modifier keys are pressed.
+    reset("a");
+    synthesizeKey("KEY_Tab");
+    check(aDescription + "Tab", true, true, false);
+    is(aElement.value, "a", aDescription + "Tab");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
+       aDescription + "focus moved unexpectedly (Tab)");
+    aElement.focus();
+
+    reset("a");
+    synthesizeKey("KEY_Tab", {shiftKey: true});
+    check(aDescription + "Shift+Tab", true, true, false);
+    is(aElement.value, "a", aDescription + "Shift+Tab");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
+       aDescription + "focus moved unexpectedly (Shift+Tab)");
+
+    // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
+    // event should never be fired.
+    reset("a");
+    synthesizeKey("KEY_Tab", {ctrlKey: true});
+    check(aDescription + "Ctrl+Tab", false, false, false);
+    is(aElement.value, "a", aDescription + "Ctrl+Tab");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
+       aDescription + "focus moved unexpectedly (Ctrl+Tab)");
+
+    reset("a");
+    synthesizeKey("KEY_Tab", {altKey: true});
+    check(aDescription + "Alt+Tab", true, true, false);
+    is(aElement.value, "a", aDescription + "Alt+Tab");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
+       aDescription + "focus moved unexpectedly (Alt+Tab)");
+
+    reset("a");
+    synthesizeKey("KEY_Tab", {metaKey: true});
+    check(aDescription + "Meta+Tab", true, true, false);
+    is(aElement.value, "a", aDescription + "Meta+Tab");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
+       aDescription + "focus moved unexpectedly (Meta+Tab)");
+
+    reset("a");
+    synthesizeKey("KEY_Tab", {osKey: true});
+    check(aDescription + "OS+Tab", true, true, false);
+    is(aElement.value, "a", aDescription + "OS+Tab");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
+       aDescription + "focus moved unexpectedly (OS+Tab)");
+
+    // Esc key:
+    //   In all cases, esc key events are not consumed
+    reset("abc");
+    synthesizeKey("KEY_Escape");
+    check(aDescription + "Esc", true, true, false);
+
+    reset("abc");
+    synthesizeKey("KEY_Escape", {shiftKey: true});
+    check(aDescription + "Shift+Esc", true, true, false);
+
+    reset("abc");
+    synthesizeKey("KEY_Escape", {ctrlKey: true});
+    check(aDescription + "Ctrl+Esc", true, true, false);
+
+    reset("abc");
+    synthesizeKey("KEY_Escape", {altKey: true});
+    check(aDescription + "Alt+Esc", true, true, false);
+
+    reset("abc");
+    synthesizeKey("KEY_Escape", {metaKey: true});
+    check(aDescription + "Meta+Esc", true, true, false);
+
+    reset("abc");
+    synthesizeKey("KEY_Escape", {osKey: true});
+    check(aDescription + "OS+Esc", true, true, false);
+
+    // typical typing tests:
+    reset("");
+    sendString("M");
+    check(aDescription + "M", true, true, !aIsReadonly);
+    sendString("o");
+    check(aDescription + "o", true, true, !aIsReadonly);
+    sendString("z");
+    check(aDescription + "z", true, true, !aIsReadonly);
+    sendString("i");
+    check(aDescription + "i", true, true, !aIsReadonly);
+    sendString("l");
+    check(aDescription + "l", true, true, !aIsReadonly);
+    sendString("l");
+    check(aDescription + "l", true, true, !aIsReadonly);
+    sendString("a");
+    check(aDescription + "a", true, true, !aIsReadonly);
+    sendString(" ");
+    check(aDescription + "' '", true, true, !aIsReadonly);
+    is(aElement.value, !aIsReadonly ? "Mozilla " : "",
+       aDescription + "typed \"Mozilla \"");
+  }
+
+  doTest(inputField, "<input type=\"text\">", true, false);
+
+  inputField.setAttribute("readonly", "readonly");
+  doTest(inputField, "<input type=\"text\" readonly>", true, true);
+
+  doTest(passwordField, "<input type=\"password\">", true, false);
+
+  passwordField.setAttribute("readonly", "readonly");
+  doTest(passwordField, "<input type=\"password\" readonly>", true, true);
+
+  doTest(textarea, "<textarea>", false, false);
+
+  textarea.setAttribute("readonly", "readonly");
+  doTest(textarea, "<textarea readonly>", false, true);
+
+  SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
+                                          true);
+  SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
+                                          false);
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

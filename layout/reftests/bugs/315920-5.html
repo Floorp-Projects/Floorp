@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      option {color: green}
+      option[selected]:disabled ~ option:not([disabled]):not(:disabled) {color: red}
+    </style>
+  </head>
+  <body onload='var e1 = document.getElementById("one");
+                e1.parentNode.removeChild(e1);
+                document.getElementById("zero").setAttribute("selected", "true");'>
+    <select size="4" id="selection">
+      <option id="zero">Should be no red</option>
+      <option id="one" selected="true" disabled="disabled">Should be no red</option>
+      <option id="two">Should be no red</option>
+      <option id="three">Should be no red</option>
+    </select>
+  </body>
+</html>

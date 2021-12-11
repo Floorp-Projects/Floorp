@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1338293</title>
+  <style type="text/css">
+
+.none {
+     -moz-appearance: none;
+  -webkit-appearance: none;
+          appearance: none;
+  width:0; height:0; margin:0;
+}
+
+.b { border: 20px solid; }
+.o { outline: 20px solid; }
+
+  </style>
+</head>
+<body>
+
+<input class="none b" type="checkbox">
+<input class="none o" type="checkbox">
+
+<input class="none b" type="radio">
+<input class="none o" type="radio">
+
+<div style="color:green">
+<input class="none b" type="checkbox">
+<input class="none o" type="checkbox">
+
+<input class="none b" type="radio">
+<input class="none o" type="radio">
+</div>
+
+</body>
+</html>

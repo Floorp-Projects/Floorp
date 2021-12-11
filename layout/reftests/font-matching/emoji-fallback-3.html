@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<title>emoji fallback to color font</title>
+<style>
+div {
+  font-size: 48pt;
+}
+#test {
+  /* Because of the presence of the U+FE0F variation selectors, we should find
+     a color-emoji font even though the b/w symbol fonts are listed first. */
+  font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols',
+               'Segoe UI Emoji', 'Twemoji Mozilla', 'Apple Color Emoji', 'Noto Color Emoji';
+  font-size: 24pt;
+}
+</style>
+</head>
+<body>
+
+<div><span id=test>&#x1f170;&#xfe0f;&#x1f171;&#xfe0f;</div>
+
+</body>
+</html>

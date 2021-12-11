@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<style>
+body:first-letter { }
+body { display: inline; }
+</style>
+
+<script>
+function foo()
+{
+  document.getElementById("aa").style.display = "block";
+}
+</script>
+
+</head>
+
+<body onload="foo()">
+  <input type="text" style="display: block;" />
+  <span>Z</span>
+  <span id="aa">A</span>
+  <span style="display: block;">B</span>
+</body>
+
+</html>

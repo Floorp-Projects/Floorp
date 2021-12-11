@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US" class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Test: CSS display:contents; visibility:hidden</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+  <link rel="help" href="http://dev.w3.org/csswg/css-display">
+</head>
+<body>
+  <div id="x" style="display:contents; visibility: hidden">
+    Line 1
+  </div><script type="text/javascript">
+    document.body.offsetWidth;
+    document.getElementById("x").style.visibility = "visible";
+    document.body.style.color = "green";
+    document.body.offsetWidth;
+
+    document.documentElement.className = '';
+  </script>
+
+</body>
+</html>

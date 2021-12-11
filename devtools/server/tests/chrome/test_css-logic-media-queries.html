@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that css-logic handles media-queries correctly
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test css-logic media-queries</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <style>
+    div {
+      width: 1000px;
+      height: 100px;
+      background-color: #f00;
+    }
+
+    @media screen and (min-width: 1px) {
+      div {
+        width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div></div>
+  <script type="application/javascript">
+  "use strict";
+
+  window.onload = function() {
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+    const Services = require("Services");
+    const {CssLogic} = require("devtools/server/actors/inspector/css-logic");
+
+    SimpleTest.waitForExplicitFinish();
+
+    const div = document.querySelector("div");
+    const cssLogic = new CssLogic();
+    cssLogic.highlight(div);
+    cssLogic.processMatchedSelectors();
+
+    const _strings = Services.strings
+      .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
+
+    const inline = _strings.GetStringFromName("rule.sourceInline");
+
+    const source1 = inline + ":12";
+    const source2 = inline + ":19 @media screen and (min-width: 1px)";
+    is(cssLogic._matchedRules[0][0].source, source1,
+      "rule.source gives correct output for rule 1");
+    is(cssLogic._matchedRules[1][0].source, source2,
+      "rule.source gives correct output for rule 2");
+
+    SimpleTest.finish();
+  };
+  </script>
+</body>
+</html>

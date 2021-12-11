@@ -1,0 +1,70 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "idle",
+    "description": "Use the <code>browser.idle</code> API to detect when the machine's idle state changes.",
+    "permissions": ["idle"],
+    "types": [
+      {
+        "id": "IdleState",
+        "type": "string",
+        "enum": ["active", "idle"]
+      }
+    ],
+    "functions": [
+      {
+        "name": "queryState",
+        "type": "function",
+        "description": "Returns \"idle\" if the user has not generated any input for a specified number of seconds, or \"active\" otherwise.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "detectionIntervalInSeconds",
+            "type": "integer",
+            "minimum": 15,
+            "description": "The system is considered idle if detectionIntervalInSeconds seconds have elapsed since the last user input detected."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "newState",
+                "$ref": "IdleState"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "setDetectionInterval",
+        "type": "function",
+        "description": "Sets the interval, in seconds, used to determine when the system is in an idle state for onStateChanged events. The default interval is 60 seconds.",
+        "parameters": [
+          {
+            "name": "intervalInSeconds",
+            "type": "integer",
+            "minimum": 15,
+            "description": "Threshold, in seconds, used to determine when the system is in an idle state."
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onStateChanged",
+        "type": "function",
+        "description": "Fired when the system changes to an active or idle state. The event fires with \"idle\" if the the user has not generated any input for a specified number of seconds, and \"active\" when the user generates input on an idle system.",
+        "parameters": [
+          {
+            "name": "newState",
+            "$ref": "IdleState"
+          }
+        ]
+      }
+    ]
+  }
+]

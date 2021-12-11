@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <filter id="f"/>
+
+  <g filter="url(#f)">
+    <text>a&#x1e82f;</text>
+  </g>
+
+  <script>
+
+  window.addEventListener("load", function() {
+    var text = document.getElementsByTagName("text")[0];
+    text.firstChild.data = "d";
+    text.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "g"));
+  }, false);
+
+  </script>
+
+</svg>

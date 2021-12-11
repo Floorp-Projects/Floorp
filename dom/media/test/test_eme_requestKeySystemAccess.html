@@ -1,0 +1,477 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const SUPPORTED_LABEL = "pass label";
+
+function ValidateConfig(name, expected, observed) {
+  info("ValidateConfig " + name);
+  info("expected cfg=" + JSON.stringify(expected));
+  info("observed cfg=" + JSON.stringify(observed));
+
+  is(observed.label, expected.label, name + " label should match");
+  if (expected.initDataTypes) {
+    ok(expected.initDataTypes.every((element, index, array) => observed.initDataTypes.includes(element)), name + " initDataTypes should match.");
+  }
+
+  if (expected.audioCapabilities) {
+    ok(expected.audioCapabilities.length == 1, "Test function can only handle one capability.");
+    ok(observed.audioCapabilities.length == 1, "Test function can only handle one capability.");
+    is(observed.audioCapabilities[0].contentType, expected.audioCapabilities[0].contentType, name + " audioCapabilities should match.");
+  }
+  if (typeof expected.videoCapabilities !== 'undefined') {
+    info("expected.videoCapabilities=" + expected.videoCapabilities);
+    dump("expected.videoCapabilities=" + expected.videoCapabilities + "\n");
+    ok(expected.videoCapabilities.length == 1, "Test function can only handle one capability.");
+    ok(observed.videoCapabilities.length == 1, "Test function can only handle one capability.");
+    is(observed.videoCapabilities[0].contentType, expected.videoCapabilities[0].contentType, name + " videoCapabilities should match.");
+  }
+  if (expected.sessionTypes) {
+    is(expected.sessionTypes.length, observed.sessionTypes.length, "Should have expected number of sessionTypes");
+    for (var i = 0; i < expected.sessionTypes.length; i++) {
+      is(expected[i], observed[i], "Session type " + i + " should match");
+    }
+  }
+}
+
+function Test(test) {
+  var name = "'" + test.name + "'";
+  return new Promise(function(resolve, reject) {
+    var p;
+    if (test.options) {
+      var keySystem = (test.keySystem !== undefined) ? test.keySystem : CLEARKEY_KEYSYSTEM;
+      p = navigator.requestMediaKeySystemAccess(keySystem, test.options);
+    } else {
+      p = navigator.requestMediaKeySystemAccess(keySystem);
+    }
+    p.then(
+      function(keySystemAccess) {
+        ok(test.shouldPass, name + " passed and was expected to " + (test.shouldPass ? "pass" : "fail"));
+        is(keySystemAccess.keySystem, CLEARKEY_KEYSYSTEM, "CDM keySystem should be in MediaKeySystemAccess.keySystem");
+        ValidateConfig(name, test.expectedConfig, keySystemAccess.getConfiguration());
+        resolve();
+      },
+      function(ex) {
+        if (test.shouldPass) {
+          info(name + " failed: " + ex);
+        }
+        ok(!test.shouldPass, name + " failed and was expected to " + (test.shouldPass ? "pass" : "fail"));
+        resolve();
+      });
+  });
+}
+
+var tests = [
+  {
+    name: 'Empty keySystem string',
+    keySystem: '',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Empty options specified',
+    options: [ ],
+    shouldPass: false,
+  },
+  {
+    name: 'Undefined options',
+    shouldPass: false,
+  },
+  {
+    name: 'Basic MP4 cenc',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4'}],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      audioCapabilities: [{contentType: 'audio/mp4'}],
+      videoCapabilities: [{contentType: 'video/mp4'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Invalid keysystem failure',
+    keySystem: 'bogusKeySystem',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid initDataType',
+    options: [
+      {
+        initDataTypes: ['bogus'],
+        audioCapabilities: [{contentType: 'audio/mp4'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Valid initDataType after invalid',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['bogus', 'invalid', 'cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      audioCapabilities: [{contentType: 'audio/mp4'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Invalid videoType',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/bogus'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid distinctiveIdentifier fails',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        distinctiveIdentifier: 'bogus',
+        persistentState: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'distinctiveIdentifier is prohibited for ClearKey',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        distinctiveIdentifier: 'required',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid persistentState fails',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        persistentState: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid robustness unsupported',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4', robustness: 'very much so'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Unexpected config entry should be ignored',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        unexpectedEntry: 'this should be ignored',
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      videoCapabilities: [{contentType: 'video/mp4'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Invalid option followed by valid',
+    options: [
+      {
+        label: "this config should not be supported",
+        initDataTypes: ['bogus'],
+      },
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      videoCapabilities: [{contentType: 'video/mp4'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Persistent-license should not be supported by ClearKey',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        sessionTypes: ['persistent-license'],
+        persistentState: 'optional',
+      }
+    ],
+    shouldPass: false,
+  },  
+  {
+    name: 'Persistent-usage-record should not be supported by ClearKey',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4'}],
+        sessionTypes: ['persistent-usage-record'],
+        persistentState: 'optional',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 audio container',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      audioCapabilities: [{contentType: 'audio/mp4'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 audio container with AAC-LC',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4; codecs="mp4a.40.2"'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      audioCapabilities: [{contentType: 'audio/mp4; codecs="mp4a.40.2"'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 audio container with invalid codecs',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4; codecs="bogus"'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 audio container with mp3 is unsupported',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4; codecs="mp3"'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 video container type with an mp3 codec is unsupported',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4; codecs="mp3"'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 audio container type with a video codec is unsupported',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        audioCapabilities: [{contentType: 'audio/mp4; codecs="avc1.42E01E"'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 video container with constrained baseline h.264',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4; codecs="avc1.42E01E"'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      videoCapabilities: [{contentType: 'video/mp4; codecs="avc1.42E01E"'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 video container with invalid codecs',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4; codecs="bogus"'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 video container with both audio and video codec type in videoType',
+    options: [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4; codecs="avc1.42E01E,mp4a.40.2"'}],
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 audio and video type both specified',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['cenc'],
+        videoCapabilities: [{contentType: 'video/mp4; codecs="avc1.42E01E"'}],
+        audioCapabilities: [{contentType: 'audio/mp4; codecs="mp4a.40.2"'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['cenc'],
+      videoCapabilities: [{contentType: 'video/mp4; codecs="avc1.42E01E"'}],
+      audioCapabilities: [{contentType: 'audio/mp4; codecs="mp4a.40.2"'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Basic WebM video',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        videoCapabilities: [{contentType: 'video/webm'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      videoCapabilities: [{contentType: 'video/webm'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Basic WebM audio',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        audioCapabilities: [{contentType: 'audio/webm'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      audioCapabilities: [{contentType: 'audio/webm'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Webm with Vorbis audio and VP8 video.',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        videoCapabilities: [{contentType: 'video/webm;codecs="vp8"'}],
+        audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      videoCapabilities: [{contentType: 'video/webm;codecs="vp8"'}],
+      audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Webm with Vorbis audio and VP9 video.',
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        videoCapabilities: [{contentType: 'video/webm;codecs="vp9"'}],
+        audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      videoCapabilities: [{contentType: 'video/webm;codecs="vp9"'}],
+      audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Webm with bogus video.',
+    options: [
+      {
+        initDataTypes: ['webm'],
+        videoCapabilities: [{contentType: 'video/webm;codecs="bogus"'}],
+      }
+    ],
+    shouldPass: false,
+  },
+];
+
+SimpleTest.waitForExplicitFinish();
+Promise.all(tests.map(Test)).then(function() {
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

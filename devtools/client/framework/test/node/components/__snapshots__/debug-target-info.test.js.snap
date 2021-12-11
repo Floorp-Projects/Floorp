@@ -1,0 +1,526 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DebugTargetInfo component Connection info renders the expected snapshot for USB Release target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
+  <span
+    className="iconized-label qa-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label qa-runtime-info"
+  >
+    <img
+      className="channel-icon qa-runtime-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
+    />
+    <b
+      className="devtools-ellipsis-text qa-target-title"
+    >
+      Test Tab Name
+    </b>
+  </span>
+  <div
+    className="debug-target-navigation"
+  >
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://global/skin/icons/reload.svg"
+      />
+    </button>
+  </div>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
+    >
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/url"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for a process target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
+  <span
+    className="iconized-label qa-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label qa-runtime-info"
+  >
+    <img
+      className="channel-icon qa-runtime-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.process"
+      src="chrome://devtools/skin/images/settings.svg"
+    />
+    <b
+      className="devtools-ellipsis-text qa-target-title"
+    >
+      Test Tab Name
+    </b>
+  </span>
+  <span
+    className="debug-target-url"
+  >
+    <span
+      className="debug-target-url-readonly devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for a tab target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
+  <span
+    className="iconized-label qa-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label qa-runtime-info"
+  >
+    <img
+      className="channel-icon qa-runtime-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
+    />
+    <b
+      className="devtools-ellipsis-text qa-target-title"
+    >
+      Test Tab Name
+    </b>
+  </span>
+  <div
+    className="debug-target-navigation"
+  >
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://global/skin/icons/reload.svg"
+      />
+    </button>
+  </div>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
+    >
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/url"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for a worker target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
+  <span
+    className="iconized-label qa-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label qa-runtime-info"
+  >
+    <img
+      className="channel-icon qa-runtime-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.worker"
+      src="chrome://devtools/skin/images/debugging-workers.svg"
+    />
+    <b
+      className="devtools-ellipsis-text qa-target-title"
+    >
+      Test Tab Name
+    </b>
+  </span>
+  <span
+    className="debug-target-url"
+  >
+    <span
+      className="debug-target-url-readonly devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for an extension target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
+  <span
+    className="iconized-label qa-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label qa-runtime-info"
+  >
+    <img
+      className="channel-icon qa-runtime-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.extension"
+      src="chrome://devtools/skin/images/debugging-addons.svg"
+    />
+    <b
+      className="devtools-ellipsis-text qa-target-title"
+    >
+      Test Tab Name
+    </b>
+  </span>
+  <span
+    className="debug-target-url"
+  >
+    <span
+      className="debug-target-url-readonly devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target title renders the expected snapshot for This Firefox target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
+  <span
+    className="iconized-label qa-runtime-info"
+  >
+    <img
+      className="channel-icon qa-runtime-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel.thisRuntime-brandShorterName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    />
+  </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
+    />
+    <b
+      className="devtools-ellipsis-text qa-target-title"
+    >
+      Test Tab Name
+    </b>
+  </span>
+  <div
+    className="debug-target-navigation"
+  >
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://global/skin/icons/reload.svg"
+      />
+    </button>
+  </div>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
+    >
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/url"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target title renders the expected snapshot for a Toolbox with an unnamed target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
+  <span
+    className="iconized-label qa-runtime-info"
+  >
+    <img
+      className="channel-icon qa-runtime-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel.thisRuntime-brandShorterName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    />
+  </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
+    />
+  </span>
+  <div
+    className="debug-target-navigation"
+  >
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://global/skin/icons/reload.svg"
+      />
+    </button>
+  </div>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
+    >
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/without/a/name"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
+  </span>
+</header>
+`;

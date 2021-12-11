@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Test pref for overscroll-behavior property</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  </head>
+<script class="testbody" type="text/javascript">
+function runTest() {
+  let css = "div { overscroll-behavior: auto; }";
+  let style = document.createElement('style');
+  style.appendChild(document.createTextNode(css));
+  document.head.appendChild(style);
+
+  is(document.styleSheets[0].cssRules[0].style.length,
+     0,
+     "overscroll-behavior shouldn't be parsed if the pref is off");
+  SimpleTest.finish();
+}
+SpecialPowers.pushPrefEnv({ set: [["layout.css.overscroll-behavior.enabled", false]] },
+                          runTest);
+SimpleTest.waitForExplicitFinish();
+</script>
+</html>

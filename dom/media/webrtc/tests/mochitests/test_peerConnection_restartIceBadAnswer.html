@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1413709",
+    title: "Renegotiation: bad answer ICE credentials"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{audio: true}],
+                                   []);
+          return test.pcLocal.getAllUserMedia([{audio: true}]);
+        },
+      ]
+    );
+
+    // If the offerer hasn't indicated ICE restart, then an answer
+    // arriving during renegotiation that has modified ICE credentials
+    // should cause an error
+    test.chain.replaceAfter("PC_LOCAL_GET_ANSWER",
+      [
+        function PC_LOCAL_REWRITE_REMOTE_SDP_ICE_CREDS(test) {
+          test._remote_answer.sdp =
+            test._remote_answer.sdp.replace(/a=ice-pwd:.*\r\n/g,
+                                            "a=ice-pwd:bad-pwd\r\n")
+                                   .replace(/a=ice-ufrag:.*\r\n/g,
+                                            "a=ice-ufrag:bad-ufrag\r\n");
+        },
+
+        function PC_LOCAL_EXPECT_SET_REMOTE_DESCRIPTION_FAIL(test) {
+          return test.setRemoteDescription(test.pcLocal,
+                                           test._remote_answer,
+                                           STABLE)
+           .then(() => ok(false, "setRemoteDescription must fail"),
+                 e => is(e.name, "InvalidAccessError",
+                         "setRemoteDescription must fail and did"));
+         }
+      ], 1 // replace after the second PC_LOCAL_GET_ANSWER
+    );
+
+    test.setMediaConstraints([{audio: true}], []);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  </head>
+  <body onload="start()">
+    <iframe srcdoc="<body contenteditable spellcheck=false>foo bar"></iframe>
+    <script>
+      function start() {
+        var iframe = document.querySelector("iframe");
+        var win = iframe.contentWindow;
+        var doc = iframe.contentDocument;
+
+        setTimeout(function() {
+          doc.body.focus();
+
+          // Now try to set the caret without moving it
+          win.getSelection().collapse(doc.body.firstChild, 1);
+
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }
+    </script>
+  </body>
+</html>

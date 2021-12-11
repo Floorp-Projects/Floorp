@@ -1,0 +1,12 @@
+{
+  "description": "Extension to be installed in telemetry-tests-client tests.",
+  "manifest_version": 2,
+  "name": "helloworld",
+  "version": "1.0",
+  "homepage_url": "https://hg.mozilla.org/mozilla-central/",
+  "browser_action": {
+    "browser_style": true,
+    "default_title": "Hello World",
+    "default_popup": "helloworld.html"
+  }
+}

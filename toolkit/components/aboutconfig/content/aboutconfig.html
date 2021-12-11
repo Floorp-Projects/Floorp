@@ -1,0 +1,67 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+    <meta charset="utf-8">
+    <link rel="stylesheet" media="screen, projection" type="text/css"
+          href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" media="screen, projection" type="text/css"
+          href="chrome://global/skin/in-content/info-pages.css" title="infop">
+    <link rel="stylesheet" type="text/css"
+          href="chrome://global/content/aboutconfig/aboutconfig.css">
+    <link rel="localization" href="branding/brand.ftl">
+    <link rel="localization" href="toolkit/about/config.ftl">
+    <script src="chrome://global/content/aboutconfig/aboutconfig.js"></script>
+    <title data-l10n-id="about-config-page-title"></title>
+  </head>
+  <body>
+    <div class="container" role="alertdialog" aria-labelledby="warningTitle"
+         aria-describedby="warningDescription">
+
+      <div class="title">
+        <h1 id="warningTitle" class="title-text"
+            data-l10n-id="about-config-intro-warning-title"></h1>
+      </div>
+
+      <div class="description">
+        <p id="warningDescription" data-l10n-id="about-config-intro-warning-text"></p>
+      </div>
+
+      <div class="toggle-container-with-text">
+        <input type="checkbox" id="showWarningNextTime" checked>
+        <label for="showWarningNextTime"
+               data-l10n-id="about-config-intro-warning-checkbox"></label>
+      </div>
+
+      <div class="button-container">
+        <button id="warningButton" class="primary"
+                data-l10n-id="about-config-intro-warning-button"></button>
+      </div>
+    </div>
+
+    <template id="main">
+      <div id="toolbar">
+        <!-- Use a unique ID to prevent showing autocomplete results from other
+             browser pages with similarly named fields. -->
+        <input type="text" id="about-config-search"
+               data-l10n-id="about-config-search-input1">
+        <label class="checkbox-container">
+          <input type="checkbox" id="about-config-show-only-modified">
+          <span data-l10n-id="about-config-show-only-modified"></span>
+        </label>
+      </div>
+
+      <table id="prefs"></table>
+
+      <div class="config-background-wrapper">
+        <button id="show-all" class="ghost-button" data-l10n-id="about-config-show-all"></button>
+        <div class="config-background"></div>
+        <p class="config-help-text" data-l10n-id="about-config-caution-text"></p>
+      </div>
+    </template>
+  </body>
+</html>

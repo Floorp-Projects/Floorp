@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1713593: HTTPS-First: Add test for mixed content blocker.</title>
+</head>
+<body>
+  <!-- Test that image gets loaded (insecure) - the *.png does not actually exist because we only care for the console message to appear-->
+  <img type="image/png" id="testimage" src="http://example.com/browser/dom/security/test/https-first/auto_upgrading_identity.png" />
+  <!-- Test that the script gets blocked. The script does not actually exist because we only care for the console message to appear-->
+  <script type="text/javascript"  src="http://example.com/browser/dom/security/test/https-first/barfoo" >
+</script>
+</body>
+</html>

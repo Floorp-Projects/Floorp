@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- tests that words don't break in mid-cluster -->
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+@font-face { font-family: dvm; src: url(../fonts/DejaVuSansMono.woff); }
+textarea { font-family: dvm, monospace; font-size: 12px; overflow: scroll; }
+  </style>
+  <title>Test Wordwrap</title>
+ </head>
+ <body>
+  <textarea rows="10" cols="27">It's lipsmackinthirstquenchinace&#x300;tastinmotivatingoodbuzzinco&#x301;oltalkinhighwalkinfastlivin&#x303;evergivincoolfizzin Firefox!</textarea>
+ </body>
+</html>

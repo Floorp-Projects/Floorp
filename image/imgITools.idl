@@ -1,0 +1,207 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIEventTarget;
+interface nsIInputStream;
+interface nsIURI;
+interface imgIContainer;
+interface imgILoader;
+interface imgICache;
+interface imgIScriptedNotificationObserver;
+interface imgINotificationObserver;
+interface imgIContainerCallback;
+
+webidl Document;
+
+[scriptable, builtinclass, uuid(4c2383a4-931c-484d-8c4a-973590f66e3f)]
+interface imgITools : nsISupports
+{
+    /**
+     * decodeImageFromBuffer
+     * Caller provides an buffer, a buffer size and a mimetype. We read from
+     * the stream and decompress it (according to the specified mime type) and
+     * return the resulting imgIContainer.
+     *
+     * @param aBuffer
+     *        Data in memory.
+     * @param aSize
+     *        Buffer size.
+     * @param aMimeType
+     *        Type of image in the stream.
+     */
+    imgIContainer decodeImageFromBuffer(in string aBuffer,
+                                        in unsigned long aSize,
+                                        in ACString aMimeType);
+
+    /**
+     * decodeImageFromArrayBuffer
+     * Caller provides an ArrayBuffer and a mimetype. We read from
+     * the stream and decompress it (according to the specified mime type) and
+     * return the resulting imgIContainer.
+     *
+     * @param aArrayBuffer
+     *        An ArrayBuffer.
+     * @param aMimeType
+     *        Type of image in the stream.
+     */
+    [implicit_jscontext]
+    imgIContainer decodeImageFromArrayBuffer(in jsval aArrayBuffer,
+                                             in ACString aMimeType);
+
+    /**
+     * decodeImageFromChannelAsync
+     * See decodeImage. The main difference between this method and decodeImage
+     * is that here the operation is done async on a thread from the decode
+     * pool. When the operation is completed, the callback is executed with the
+     * result.
+     *
+     * @param aURI
+     *        The original URI of the image
+     * @param aChannel
+     *        Channel to the image to be decoded.
+     * @param aCallback
+     *        The callback is executed when the imgContainer is fully created.
+     * @param aObserver
+     *        Optional observer for the decoded image, the caller should make
+     *        sure the observer is kept alive as long as necessary, as ImageLib
+     *        does not keep a strong reference to the observer.
+     */
+    void decodeImageFromChannelAsync(in nsIURI aURI,
+                                     in nsIChannel aChannel,
+                                     in imgIContainerCallback aCallback,
+                                     in imgINotificationObserver aObserver);
+
+    /**
+     * decodeImageAsync
+     * See decodeImage. The main difference between this method and decodeImage
+     * is that here the operation is done async on a thread from the decode
+     * pool. When the operation is completed, the callback is executed with the
+     * result.
+     *
+     * @param aStream
+     *        An input stream for an encoded image file.
+     * @param aMimeType
+     *        Type of image in the stream.
+     * @param aCallback
+     *        The callback is executed when the imgContainer is fully created.
+     * @param aEventTarget
+     *        This eventTarget is used to execute aCallback
+     */
+    void decodeImageAsync(in nsIInputStream aStream,
+                          in ACString aMimeType,
+                          in imgIContainerCallback aCallback,
+                          in nsIEventTarget aEventTarget);
+
+    /**
+     * encodeImage
+     * Caller provides an image container, and the mime type it should be
+     * encoded to. We return an input stream for the encoded image data.
+     *
+     * @param aContainer
+     *        An image container.
+     * @param aMimeType
+     *        Type of encoded image desired (eg "image/png").
+     * @param outputOptions
+     *        Encoder-specific output options.
+     */
+    nsIInputStream encodeImage(in imgIContainer aContainer,
+                               in ACString aMimeType,
+                               [optional] in AString outputOptions);
+
+    /**
+     * encodeScaledImage
+     * Caller provides an image container, and the mime type it should be
+     * encoded to. We return an input stream for the encoded image data.
+     * The encoded image is scaled to the specified dimensions.
+     *
+     * @param aContainer
+     *        An image container.
+     * @param aMimeType
+     *        Type of encoded image desired (eg "image/png").
+     * @param aWidth, aHeight
+     *        The size (in pixels) desired for the resulting image. Specify 0 to
+     *        use the given image's width or height. Values must be >= 0.
+     * @param outputOptions
+     *        Encoder-specific output options.
+     */
+    nsIInputStream encodeScaledImage(in imgIContainer aContainer,
+                                     in ACString aMimeType,
+                                     in long aWidth,
+                                     in long aHeight,
+                                     [optional] in AString outputOptions);
+
+    /**
+     * getImgLoaderForDocument
+     * Retrieve an image loader that reflects the privacy status of the given
+     * document.
+     *
+     * @param doc
+     *        A document. Must not be null.
+     */
+    imgILoader getImgLoaderForDocument(in Document doc);
+
+    /**
+     * getImgLoaderForDocument
+     * Retrieve an image cache that reflects the privacy status of the given
+     * document.
+     *
+     * @param doc
+     *        A document. Null is allowed, but must _only_ be passed
+     *        when there is no way to obtain a relevant document for
+     *        the current context in which a cache is desired.
+     */
+    imgICache getImgCacheForDocument(in Document doc);
+
+    /**
+     * encodeCroppedImage
+     * Caller provides an image container, and the mime type it should be
+     * encoded to. We return an input stream for the encoded image data.
+     * The encoded image is cropped to the specified dimensions.
+     *
+     * The given offset and size must not exceed the image bounds.
+     *
+     * @param aContainer
+     *        An image container.
+     * @param aMimeType
+     *        Type of encoded image desired (eg "image/png").
+     * @param aOffsetX, aOffsetY
+     *        The crop offset (in pixels). Values must be >= 0.
+     * @param aWidth, aHeight
+     *        The size (in pixels) desired for the resulting image. Specify 0 to
+     *        use the given image's width or height. Values must be >= 0.
+     * @param outputOptions
+     *        Encoder-specific output options.
+     */
+    nsIInputStream encodeCroppedImage(in imgIContainer aContainer,
+                                      in ACString aMimeType,
+                                      in long aOffsetX,
+                                      in long aOffsetY,
+                                      in long aWidth,
+                                      in long aHeight,
+                                      [optional] in AString outputOptions);
+
+    /**
+     * Create a wrapper around a scripted notification observer (ordinarily
+     * imgINotificationObserver cannot be implemented from scripts).
+     *
+     * @param aObserver The scripted observer to wrap
+     */
+    imgINotificationObserver
+    createScriptedObserver(in imgIScriptedNotificationObserver aObserver);
+};
+
+/**
+ * This is a companion interface for nsIAsyncInputStream::asyncWait.
+ */
+[function, scriptable, uuid(f195772c-a4c0-47ae-80ca-211e001c67be)]
+interface imgIContainerCallback : nsISupports
+{
+    /* If the operation fails, aStatus will contain the error value */
+    void onImageReady(in imgIContainer aImage, in nsresult aStatus);
+};

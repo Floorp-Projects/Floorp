@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<video id="video" src="gizmo.mp4" loop></video>
+<script type="text/javascript">
+
+const video = document.getElementById("video");
+const w = window.opener || window.parent;
+
+window.onmessage = async event => {
+  if (event.data == "fullscreen") {
+    video.requestFullscreen();
+    video.onfullscreenchange = () => {
+      video.onfullscreenchange = null;
+      video.onfullscreenerror = null;
+      w.postMessage("entered-fullscreen", "*");
+    }
+    video.onfullscreenerror = () => {
+      // Retry until the element successfully enters fullscreen.
+      video.requestFullscreen();
+    }
+  } else if (event.data == "check-playing") {
+    if (!video.paused) {
+      w.postMessage("checked-playing", "*");
+    } else {
+      video.onplaying = () => {
+        video.onplaying = null;
+        w.postMessage("checked-playing", "*");
+      }
+    }
+  } else if (event.data == "check-pause") {
+    if (video.paused) {
+      w.postMessage("checked-pause", "*");
+    } else {
+      video.onpause = () => {
+        video.onpause = null;
+        w.postMessage("checked-pause", "*");
+      }
+    }
+  } else if (event.data == "play") {
+    await video.play();
+    w.postMessage("played", "*");
+  } else if (event.data == "pause") {
+    video.pause();
+    w.postMessage("paused", "*");
+  } else if (event.data == "setMetadata") {
+    const metadata = {
+      title: document.title,
+      artist: document.title,
+      album: document.title,
+      artwork: [{ src: document.title, sizes: "128x128", type: "image/jpeg" }],
+    };
+    navigator.mediaSession.metadata = new window.MediaMetadata(metadata);
+    w.postMessage(metadata, "*");
+  } else if (event.data == "setPositionState") {
+    navigator.mediaSession.setPositionState({
+      duration: 60, // The value doesn't matter
+    });
+  } else if (event.data.cmd == "setActionHandler") {
+    if (window.triggeredActionHandler === undefined) {
+      window.triggeredActionHandler = {};
+    }
+    const action = event.data.action;
+    window.triggeredActionHandler[action] = new Promise(r => {
+      navigator.mediaSession.setActionHandler(action, async () => {
+        if (action == "stop" || action == "pause") {
+          video.pause();
+        } else if (action == "play") {
+          await video.play();
+        }
+        r();
+      });
+    });
+    w.postMessage("setActionHandler-done", "*");
+  } else if (event.data.cmd == "checkActionHandler") {
+    const action = event.data.action;
+    if (!window.triggeredActionHandler[action]) {
+      w.postMessage("checkActionHandler-fail", "*");
+    } else {
+      await window.triggeredActionHandler[action];
+      w.postMessage("checkActionHandler-done", "*");
+    }
+  } else if (event.data == "create-media-session") {
+    // simply calling a media session would create an instance.
+    navigator.mediaSession;
+    w.postMessage("created-media-session", "*");
+  }
+}
+
+</script>
+</body>
+</html>

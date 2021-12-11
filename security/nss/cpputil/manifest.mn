@@ -1,0 +1,23 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ..
+DEPTH      = ..
+
+MODULE = nss
+
+LIBRARY_NAME = cpputil
+SHARED_LIBRARY = $(NULL)
+
+ifeq ($(NSS_BUILD_UTIL_ONLY),1)
+CPPSRCS = \
+      $(NULL)
+else
+CPPSRCS = \
+      databuffer.cc \
+      dummy_io.cc \
+      dummy_io_fwd.cc \
+      tls_parser.cc \
+      $(NULL)
+endif

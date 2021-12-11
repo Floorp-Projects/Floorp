@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Directory API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="filesystem_commons.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script type="application/javascript">
+
+var directory;
+var fileList;
+
+function create_fileList(aPath) {
+  fileList = document.createElement("input");
+  fileList.setAttribute("type", "file");
+  document.body.appendChild(fileList);
+
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+    fileList.setAttribute("data-name", message.name);
+
+    fileList.getFilesAndDirectories().then(function(array) {
+      is(array.length, 1, "We want just 1 directory.");
+      ok(array[0] instanceof Directory, "We want just 1 directory.");
+
+      directory = array[0];
+      script.destroy();
+      next();
+    });
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: aPath });
+}
+
+function test_simpleFilePicker(aPath) {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
+
+    is(fileList.files.length, 1, "we want 1 element");
+    ok(fileList.files[0] instanceof File, "we want 1 file");
+    ok("webkitRelativePath" in fileList.files[0], "we have webkitRelativePath attribute");
+    is(fileList.files[0].webkitRelativePath, "", "No webkit relative path for normal filePicker");
+
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("file.opened", onOpened);
+  script.sendAsyncMessage("file.open");
+}
+
+function test_duplicateGetFilesAndDirectories() {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+
+    var p1 = fileList.getFilesAndDirectories();
+    var p2 = fileList.getFilesAndDirectories();
+
+    isnot(p1, p2, "We create 2 different promises");
+
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: "test" });
+}
+
+function test_inputGetFiles() {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+    fileList.setAttribute("data-name", message.name);
+
+    fileList.getFilesAndDirectories()
+    .then(function(result) {
+       is(result.length, 1, "getFilesAndDirectories should return 1 element");
+       ok(result[0] instanceof Directory, "getFilesAndDirectories should return 1 directory");
+
+      return fileList.getFiles(false);
+    })
+    .then(function(result) {
+      is(result.length, 1, "getFiles should return 1 element");
+      ok(result[0] instanceof File, "getFile should return 1 file");
+      is(result[0].name, "foo.txt", "getFiles()[0].name should be 'foo.txt'");
+      is(result[0].webkitRelativePath, fileList.dataset.name + "/foo.txt", "getFiles()[0].webkitRelativePath should be '/foo.txt'");
+
+      return fileList.getFiles(true);
+    })
+    .then(function(result) {
+      is(result.length, 2, "getFiles should return 2 elements");
+
+      function checkFile(file) {
+        ok(file instanceof File, "getFile[x] should return a file");
+        if (file.name == "foo.txt") {
+          is(file.webkitRelativePath, fileList.dataset.name + "/foo.txt", "getFiles()[x].webkitRelativePath should be '/foo.txt'");
+        } else {
+          is(file.name, "bar.txt", "getFiles()[x].name should be 'bar.txt'");
+          is(file.webkitRelativePath, fileList.dataset.name + "/subdir/bar.txt", "getFiles()[x].webkitRelativePath should be '/subdir/bar.txt'");
+        }
+      }
+
+      checkFile(result[0]);
+      checkFile(result[1]);
+    })
+    .then(function() {
+      script.destroy();
+      next();
+    });
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: "test" });
+}
+
+var tests = [
+  function() { setup_tests(next); },
+
+  function() { create_fileList("tree"); },
+  function() { test_basic(directory, next); },
+  function() { test_getFilesAndDirectories(directory, true, next); },
+  function() { test_getFiles(directory, false, next); },
+  function() { test_getFiles(directory, true, next); },
+
+  function() { create_fileList("test"); },
+  function() { test_getFiles_recursiveComparison(directory, next); },
+
+  function() { create_fileList("root"); },
+  function() { test_basic(directory, next); },
+  function() { test_getFilesAndDirectories(directory, false, next); },
+  function() { test_getFiles(directory, false, next); },
+
+  test_duplicateGetFilesAndDirectories,
+  test_inputGetFiles,
+  test_simpleFilePicker,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>

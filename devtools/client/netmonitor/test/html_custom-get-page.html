@@ -1,0 +1,47 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Performing a custom number of GETs</p>
+
+    <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
+      function get(address, callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", address, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            callback();
+          }
+        };
+        xhr.send(null);
+      }
+
+      // Use a count parameter to defeat caching.
+      let count = 0;
+
+      function performRequests(total, url, timeout = 0) {
+        if (!total) {
+          return;
+        }
+        get(url || "request_" + (count++), function() {
+          setTimeout(performRequests.bind(this, --total, url, timeout), timeout);
+        });
+      }
+    </script>
+  </body>
+
+</html>

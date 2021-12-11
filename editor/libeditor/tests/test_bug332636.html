@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=332636
+-->
+<head>
+  <title>Test for Bug 332636</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=332636">Mozilla Bug 332636</a>
+<p id="display"></p>
+<div id="content">
+  <div id="edit0" contenteditable="true">axb</div><!-- reference: plane 0 base character -->
+  <div id="edit1" contenteditable="true">a&#x0308;b</div><!-- reference: plane 0 diacritic -->
+  <div id="edit2" contenteditable="true">a&#x10400;b</div><!-- plane 1 base character -->
+  <div id="edit3" contenteditable="true">a&#x10a0f;b</div><!-- plane 1 diacritic -->
+
+  <div id="edit0b" contenteditable="true">axb</div><!-- reference: plane 0 base character -->
+  <div id="edit1b" contenteditable="true">a&#x0308;b</div><!-- reference: plane 0 diacritic -->
+  <div id="edit2b" contenteditable="true">a&#x10400;b</div><!-- plane 1 base character -->
+  <div id="edit3b" contenteditable="true">a&#x10a0f;b</div><!-- plane 1 diacritic -->
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 332636 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+function test(edit) {
+  edit.focus();
+  var sel = window.getSelection();
+  sel.collapse(edit.childNodes[0], edit.textContent.length - 1);
+  synthesizeKey("KEY_Backspace");
+  is(edit.textContent, "ab", "The backspace key should delete the UTF-16 surrogate pair correctly");
+}
+
+function testWithMove(edit, offset) {
+  edit.focus();
+  var sel = window.getSelection();
+  sel.collapse(edit.childNodes[0], 0);
+  var i;
+  for (i = 0; i < offset; ++i) {
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("KEY_ArrowLeft");
+    synthesizeKey("KEY_ArrowRight");
+  }
+  synthesizeKey("KEY_Backspace");
+  is(edit.textContent, "ab", "The backspace key should delete the UTF-16 surrogate pair correctly");
+}
+
+function runTest() {
+  /* test backspace-deletion of the middle character */
+  test(document.getElementById("edit0"));
+  test(document.getElementById("edit1"));
+  test(document.getElementById("edit2"));
+  test(document.getElementById("edit3"));
+
+  /* extra tests with the use of RIGHT and LEFT to get to the right place */
+  testWithMove(document.getElementById("edit0b"), 2);
+  testWithMove(document.getElementById("edit1b"), 1);
+  testWithMove(document.getElementById("edit2b"), 2);
+  testWithMove(document.getElementById("edit3b"), 1);
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

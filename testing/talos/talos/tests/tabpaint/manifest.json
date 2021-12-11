@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "tabpaint test",
+  "version": "1.1",
+  "description": "Measures the performance of opening tabs",
+
+  "applications": {
+    "gecko": {
+      "id": "tabpaint-test@mozilla.org"
+    }
+  },
+
+  "experiment_apis": {
+    "tabpaint": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

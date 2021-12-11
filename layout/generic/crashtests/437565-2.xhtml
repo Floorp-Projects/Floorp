@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+ <style>
+   /* Note: The height here is almost nscoord_MAX in app-units */
+   /* Note: The width here needs to be wider than the viewport in order
+            to trigger a crash. */
+   div.tall {
+     height: 17895687px;
+     width: 3000px;
+     background: pink;
+   }
+   div.float  { float: left; }
+   div.clear  { clear: left; }
+   div.square { width: 10px; height: 10px; }
+   div.blue   { background: blue;   }
+   div.green  { background: green;  }
+   div.orange { background: orange; }
+ </style>
+</head>
+<!-- no body (adding a body prevents the crash, for some reason) -->
+  <div class="float"><div class="tall"/><div class="square blue"/></div>
+  <div class="float square green"/>
+  <div><div class="float square orange"/><div class="clear"/></div>
+</html>

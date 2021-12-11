@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<style>
+.wrapper {
+  width: 810vw;
+  transform: translateX(-50%);
+  height: 90vh;
+}
+.slides {
+  will-change: transform;
+}
+.button {
+  background-color: red;
+  position: absolute;
+  left: 50%;
+}
+</style>
+<div class="wrapper">
+  <div class="slides">
+    <span class="button">Add to cart</span>
+  </div>
+</div>
+<script>
+document.addEventListener("MozReftestInvalidate", () => {
+  document.querySelector(".button").style.backgroundColor = "green";
+  document.documentElement.classList.remove("reftest-wait");
+}, { once: true });
+</script>
+</html>

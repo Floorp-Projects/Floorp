@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<title>Testcase for checkerboarding during horizontal scrolling</title>
+<script type="application/javascript" src="apz_test_utils.js"></script>
+<script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+
+.scrollbox {
+  margin: 50px;
+  border: 2px solid black;
+  background: red;
+  width: 1120px;
+  height: 200px;
+  overflow: auto;
+}
+
+.scrolled {
+  width: 20000px;
+  height: 200px;
+  background: lime;
+}
+
+</style>
+
+</head><body>
+  <div class="scrollbox"><div class="scrolled"></div></div>
+</body>
+
+<script type="application/javascript">
+async function test() {
+  var scroller = document.querySelector(".scrollbox");
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var scrollerId = utils.getViewId(scroller);
+
+  // This test contains a wide horizontal scroll box and scrolls it horizontally
+  // from right to left. The size of the box is chosen so that the displayport
+  // snapping logic in nsLayoutUtils.cpp would tries an horizontal alignment larger
+  // than the margins. In such a situation we want to make sure the displayport
+  // alignment is adjusted so we don't snap too far which would cause content to
+  // be missed on the right side.
+
+  // The scroll values here just need to be "thorough" enough to exercise the
+  // code at different alignments, so using a non-power-of-two or prime number
+  // for the increment seems like a good idea. The smaller the increment, the
+  // longer the test takes to run (because more iterations) so we don't want it
+  // too small either.
+  // The scroll box is rather wide so we only scroll a portion of it so that the
+  // test doesn't run for too long.
+  var maxX = scroller.scrollLeftMax / 6;
+  for (var x = maxX; x > 0; x -= 71) {
+    dump(`Scrolling scroller to ${x}\n`);
+    scroller.scrollTo(x, 0);
+    await promiseApzFlushedRepaints();
+    assertNotCheckerboarded(utils, scrollerId, `At x=${x}`);
+  }
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

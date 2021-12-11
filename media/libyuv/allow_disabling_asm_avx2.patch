@@ -1,0 +1,96 @@
+# HG changeset patch
+# User Randell Jesup <rjesup@jesup.org>
+# Parent  f380aa97b5a46b07574edbef19f75fc9ff0388a5
+
+diff --git a/media/libyuv/libyuv/include/libyuv/row.h b/media/libyuv/libyuv/include/libyuv/row.h
+--- a/media/libyuv/libyuv/include/libyuv/row.h
++++ b/media/libyuv/libyuv/include/libyuv/row.h
+@@ -57,17 +57,17 @@ extern "C" {
+ 
+ // Visual C 2012 required for AVX2.
+ #if defined(_M_IX86) && !defined(__clang__) && defined(_MSC_VER) && \
+     _MSC_VER >= 1700
+ #define VISUALC_HAS_AVX2 1
+ #endif  // VisualStudio >= 2012
+ 
+ // The following are available on all x86 platforms:
+-#if !defined(LIBYUV_DISABLE_X86) && \
++#if !defined(LIBYUV_DISABLE_AVX2) && !defined(LIBYUV_DISABLE_X86) && \
+     (defined(_M_IX86) || defined(__x86_64__) || defined(__i386__))
+ // Conversions:
+ #define HAS_ABGRTOUVROW_SSSE3
+ #define HAS_ABGRTOYROW_SSSE3
+ #define HAS_ARGB1555TOARGBROW_SSE2
+ #define HAS_ARGB4444TOARGBROW_SSE2
+ #define HAS_ARGBEXTRACTALPHAROW_SSE2
+ #define HAS_ARGBSETROW_X86
+diff --git a/media/libyuv/libyuv/libyuv.gyp b/media/libyuv/libyuv/libyuv.gyp
+--- a/media/libyuv/libyuv/libyuv.gyp
++++ b/media/libyuv/libyuv/libyuv.gyp
+@@ -21,16 +21,18 @@
+     # Can be enabled if your jpeg has GYP support.
+     'libyuv_disable_jpeg%': 1,
+     # 'chromium_code' treats libyuv as internal and increases warning level.
+     'chromium_code': 1,
+     # clang compiler default variable usable by other apps that include libyuv.
+     'clang%': 0,
+     # Link-Time Optimizations.
+     'use_lto%': 0,
++    'yuv_disable_asm%': 0,
++    'yuv_disable_avx2%': 0,
+     'mips_msa%': 0,  # Default to msa off.
+     'build_neon': 0,
+     'build_msa': 0,
+     'conditions': [
+        ['(target_arch == "armv7" or target_arch == "armv7s" or \
+        (target_arch == "arm" and arm_version >= 7) or target_arch == "arm64")\
+        and (arm_neon == 1 or arm_neon_optional == 1)', {
+          'build_neon': 1,
+@@ -95,16 +97,29 @@
+             }],
+           ],
+         }],
+         ['build_msa != 0', {
+           'defines': [
+             'LIBYUV_MSA',
+           ],
+         }],
++        [ 'yuv_disable_asm != 0', {
++          'defines': [
++            # Enable the following 3 macros to turn off assembly for specified CPU.
++            'LIBYUV_DISABLE_X86',
++            'LIBYUV_DISABLE_NEON',
++            'LIBYUV_DISABLE_DSPR2',
++          ],
++        }],
++        [ 'yuv_disable_avx2 == 1', {
++          'defines': [
++            'LIBYUV_DISABLE_AVX2',
++          ]
++        }],
+         ['build_with_mozilla == 1', {
+           'defines': [
+             'HAVE_JPEG'
+           ],
+           'cflags_mozilla': [
+             '$(MOZ_JPEG_CFLAGS)',
+           ],
+         }],
+@@ -133,15 +148,17 @@
+           ],
+         }],
+       ], #conditions
+       'defines': [
+         # Enable the following 3 macros to turn off assembly for specified CPU.
+         # 'LIBYUV_DISABLE_X86',
+         # 'LIBYUV_DISABLE_NEON',
++        # This disables AVX2 (Haswell) support, overriding compiler checks
++        # 'LIBYUV_DISABLE_AVX2',
+         # Enable the following macro to build libyuv as a shared library (dll).
+         # 'LIBYUV_USING_SHARED_LIBRARY',
+         # TODO(fbarchard): Make these into gyp defines.
+       ],
+       'include_dirs': [
+         'include',
+         '.',
+       ],

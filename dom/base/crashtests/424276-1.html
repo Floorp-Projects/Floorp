@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  window.getSelection().selectAllChildren(document.createTextNode("\n\n"));
+  window.getSelection().addRange(document.createRange());
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+
+</html>

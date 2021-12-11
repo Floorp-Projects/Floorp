@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Check that dynamic times are reset during a forwards seek
+    var svg = document.documentElement;
+    var a = document.getElementById('a');
+    svg.pauseAnimations();
+    svg.setCurrentTime(1); // First interval 1s-2s
+    a.beginElement();
+    svg.setCurrentTime(2);
+    a.beginElementAt(1); // Add instance time t=3s
+    a.beginElementAt(3); // Add instance time t=5s -- should be cleared during
+                         // the seek when we process the restart at t=3s
+    svg.setCurrentTime(5); // Hence at t=5s we should be inactive
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="15" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="100" begin="indefinite" dur="1s" id="a"/>
+  </rect>
+</svg>

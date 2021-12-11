@@ -1,0 +1,249 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function() {
+      SimpleTest.finish();
+    }
+  </script>
+  <script>
+    function good_correctHashLoaded() {
+      ok(true, "A script was correctly loaded when integrity matched")
+    }
+    function bad_correctHashBlocked() {
+      ok(false, "We should load scripts with hashes that match!");
+    }
+
+    function good_correctHashArrayLoaded() {
+      ok(true, "A script was correctly loaded when one of the hashes in the integrity attribute matched")
+    }
+    function bad_correctHashArrayBlocked() {
+      ok(false, "We should load scripts with at least one hash that match!");
+    }
+
+    function good_emptyIntegrityLoaded() {
+      ok(true, "A script was correctly loaded when the integrity attribute was empty")
+    }
+    function bad_emptyIntegrityBlocked() {
+      ok(false, "We should load scripts with empty integrity attributes!");
+    }
+
+    function good_whitespaceIntegrityLoaded() {
+      ok(true, "A script was correctly loaded when the integrity attribute only contained whitespace")
+    }
+    function bad_whitespaceIntegrityBlocked() {
+      ok(false, "We should load scripts with integrity attributes containing only whitespace!");
+    }
+
+    function good_incorrectHashBlocked() {
+      ok(true, "A script was correctly blocked, because the hash digest was wrong");
+    }
+    function bad_incorrectHashLoaded() {
+      ok(false, "We should not load scripts with hashes that do not match the content!");
+    }
+
+    function good_incorrectHashArrayBlocked() {
+      ok(true, "A script was correctly blocked, because all the hashes were wrong");
+    }
+    function bad_incorrectHashArrayLoaded() {
+      ok(false, "We should not load scripts when none of the hashes match the content!");
+    }
+
+    function good_incorrectHashLengthBlocked() {
+      ok(true, "A script was correctly blocked, because the hash length was wrong");
+    }
+    function bad_incorrectHashLengthLoaded() {
+      ok(false, "We should not load scripts with hashes that don't have the right length!");
+    }
+
+    function bad_incorrectHashFunctionBlocked() {
+      ok(false, "We should load scripts with invalid/unsupported hash functions!");
+    }
+    function good_incorrectHashFunctionLoaded() {
+      ok(true, "A script was correctly loaded, despite the hash function being invalid/unsupported.");
+    }
+
+    function bad_missingHashFunctionBlocked() {
+      ok(false, "We should load scripts with missing hash functions!");
+    }
+    function good_missingHashFunctionLoaded() {
+      ok(true, "A script was correctly loaded, despite a missing hash function.");
+    }
+
+    function bad_missingHashValueBlocked() {
+      ok(false, "We should load scripts with missing hash digests!");
+    }
+    function good_missingHashValueLoaded() {
+      ok(true, "A script was correctly loaded, despite the missing hash digest.");
+    }
+
+    function good_401Blocked() {
+      ok(true, "A script was not loaded because of 401 response.");
+    }
+    function bad_401Loaded() {
+      ok(false, "We should nt load scripts with a 401 response!");
+    }
+
+    function good_valid302Loaded() {
+      ok(true, "A script was loaded successfully despite a 302 response.");
+    }
+    function bad_valid302Blocked() {
+      ok(false, "We should load scripts with a 302 response and the right hash!");
+    }
+
+    function good_invalid302Blocked() {
+      ok(true, "A script was blocked successfully after a 302 response.");
+    }
+    function bad_invalid302Loaded() {
+      ok(false, "We should not load scripts with a 302 response and the wrong hash!");
+    }
+
+    function good_validBlobLoaded() {
+      ok(true, "A script was loaded successfully from a blob: URL.");
+    }
+    function bad_validBlobBlocked() {
+      ok(false, "We should load scripts using blob: URLs with the right hash!");
+    }
+
+    function good_invalidBlobBlocked() {
+      ok(true, "A script was blocked successfully from a blob: URL.");
+    }
+    function bad_invalidBlobLoaded() {
+      ok(false, "We should not load scripts using blob: URLs with the wrong hash!");
+    }
+</script>
+</head>
+<body>
+  <!-- valid hash. should trigger onload -->
+  <!-- the hash value comes from running this command:
+       cat script.js | openssl dgst -sha256 -binary | openssl enc -base64 -A
+  -->
+  <script src="script.js"
+          integrity="sha256-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="bad_correctHashBlocked()"
+          onload="good_correctHashLoaded()"></script>
+
+  <!-- valid sha512 hash. should trigger onload -->
+  <script src="script.js"
+          integrity="sha512-mzSqH+vC6qrXX46JX2WEZ0FtY/lGj/5+5yYCBlk0jfYHLm0vP6XgsURbq83mwMApsnwbDLXdgjp5J8E93GT6Mw==?ignore=this"
+          onerror="bad_correctHashBlocked()"
+          onload="good_correctHashLoaded()"></script>
+
+  <!-- one valid sha256 hash. should trigger onload -->
+  <script src="script.js"
+          integrity="sha256-rkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA= sha256-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA= sha256-rkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="bad_correctHashArrayBlocked()"
+          onload="good_correctHashArrayLoaded()"></script>
+
+  <!-- empty integrity. should trigger onload -->
+  <script src="script.js"
+          integrity=""
+          onerror="bad_emptyIntegrityBlocked()"
+          onload="good_emptyIntegrityLoaded()"></script>
+
+  <!-- whitespace integrity. should trigger onload -->
+  <script src="script.js"
+          integrity="  
+	
+"
+          onerror="bad_whitespaceIntegrityBlocked()"
+          onload="good_whitespaceIntegrityLoaded()"></script>
+
+  <!-- invalid sha256 hash but valid sha384 hash. should trigger onload -->
+  <script src="script.js"
+          integrity="sha256-bogus sha384-zDCkvKOHXk8mM6Nk07oOGXGME17PA4+ydFw+hq0r9kgF6ZDYFWK3fLGPEy7FoOAo?"
+          onerror="bad_correctHashBlocked()"
+          onload="good_correctHashLoaded()"></script>
+
+  <!-- valid sha256 and invalid sha384. should trigger onerror -->
+  <script src="script.js"
+          integrity="sha256-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA= sha384-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="good_incorrectHashLengthBlocked()"
+          onload="bad_incorrectHashLengthLoaded()"></script>
+
+  <!-- invalid hash. should trigger onerror -->
+  <script src="script.js"
+          integrity="sha256-rkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="good_incorrectHashBlocked()"
+          onload="bad_incorrectHashLoaded()"></script>
+
+  <!-- invalid hashes. should trigger onerror -->
+  <script src="script.js"
+          integrity="sha256-rkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA= sha256-ZkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA= sha256-zkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="good_incorrectHashBlocked()"
+          onload="bad_incorrectHashLoaded()"></script>
+
+  <!-- invalid hash function. should trigger onload -->
+  <script src="script.js"
+          integrity="rot13-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="bad_incorrectHashFunctionBlocked()"
+          onload="good_incorrectHashFunctionLoaded()"></script>
+
+  <!-- missing hash function. should trigger onload -->
+  <script src="script.js"
+          integrity="RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="bad_missingHashFunctionBlocked()"
+          onload="good_missingHashFunctionLoaded()"></script>
+
+  <!-- missing hash value. should trigger onload -->
+  <script src="script.js"
+          integrity="sha512-"
+          onerror="bad_missingHashValueBlocked()"
+          onload="good_missingHashValueLoaded()"></script>
+
+  <!-- 401 response. should trigger onerror -->
+  <script src="script_401.js"
+          integrity="sha256-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="good_401Blocked()"
+          onload="bad_401Loaded()"></script>
+
+  <!-- valid sha256 after a redirection. should trigger onload -->
+  <script src="script_302.js"
+          integrity="sha256-RkrQYrxD/HCx+ImVLb51nvxJ6ZHfwuEm7bHppTun9oA="
+          onerror="bad_valid302Blocked()"
+          onload="good_valid302Loaded()"></script>
+
+  <!-- invalid sha256 after a redirection. should trigger onerror -->
+  <script src="script_302.js"
+          integrity="sha256-JSi74NSN8WQNr9syBGmNg2APJp9PnHUO5ioZo5hmIiQ="
+          onerror="good_invalid302Blocked()"
+          onload="bad_invalid302Loaded()"></script>
+
+  <!-- valid sha256 for a blob: URL -->
+  <script>
+   var blob = new Blob(["console.log('blob:valid');"],
+                       {type:"application/javascript"});
+   var script = document.createElement('script');
+   script.setAttribute('src', URL.createObjectURL(blob));
+   script.setAttribute('integrity', 'sha256-AwLdXiGfCqOxOXDPUim73G8NVEL34jT0IcQR/tqv/GQ=');
+   script.onerror = bad_validBlobBlocked;
+   script.onload = good_validBlobLoaded;
+   var head = document.getElementsByTagName('head').item(0);
+   head.appendChild(script);
+  </script>
+
+  <!-- invalid sha256 for a blob: URL -->
+  <script>
+   var blob = new Blob(["console.log('blob:invalid');"],
+                       {type:"application/javascript"});
+   var script = document.createElement('script');
+   script.setAttribute('src', URL.createObjectURL(blob));
+   script.setAttribute('integrity', 'sha256-AwLdXiGfCqOxOXDPUim73G8NVEL34jT0IcQR/tqv/GQ=');
+   script.onerror = good_invalidBlobBlocked;
+   script.onload = bad_invalidBlobLoaded;
+   var head = document.getElementsByTagName('head').item(0);
+   head.appendChild(script);
+  </script>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

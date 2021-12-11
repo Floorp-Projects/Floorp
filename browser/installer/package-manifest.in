@@ -1,0 +1,475 @@
+; This Source Code Form is subject to the terms of the Mozilla Public
+; License, v. 2.0. If a copy of the MPL was not distributed with this
+; file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+; Package file for the Firefox build.
+;
+; Packaging manifest is used to copy files from dist/bin
+; to the staging directory.
+; Some other files are built in the staging directory directly,
+; so they will be implicitly packaged too.
+;
+; File format:
+;
+; [] designates a toplevel component. Example: [xpcom]
+; - in front of a file specifies it to be removed from the destination
+; * wildcard support to recursively copy the entire directory
+; ; file comment
+;
+
+; Due to Apple Mac OS X packaging requirements, files that are in the same
+; directory on other platforms must be located in different directories on
+; Mac OS X. The following defines allow specifying the Mac OS X bundle
+; location which also work on other platforms.
+;
+; @BINPATH@
+; Equals Contents/MacOS/ on Mac OS X and is the path to the main binary on other
+; platforms.
+;
+; @RESPATH@
+; Equals Contents/Resources/ on Mac OS X and is equivalent to @BINPATH@ on other
+; platforms.
+
+#filter substitution
+
+#ifdef XP_MACOSX
+; Mac bundle stuff
+@APPNAME@/Contents/Info.plist
+#ifdef MOZ_UPDATER
+@APPNAME@/Contents/Library/LaunchServices
+#endif
+@APPNAME@/Contents/PkgInfo
+@RESPATH@/firefox.icns
+@RESPATH@/document.icns
+@RESPATH@/@LPROJ_ROOT@.lproj/*
+#endif
+
+[@AB_CD@]
+@RESPATH@/dictionaries/*
+@RESPATH@/browser/localization/*
+@RESPATH@/localization/*
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+@RESPATH@/fonts/*
+#endif
+@RESPATH@/hyphenation/*
+@RESPATH@/browser/@PREF_DIR@/firefox-l10n.js
+#ifdef HAVE_MAKENSISU
+@BINPATH@/uninstall/helper.exe
+#endif
+#ifdef MOZ_UPDATER
+@RESPATH@/update.locale
+@RESPATH@/updater.ini
+#endif
+#ifdef MOZ_DEFAULT_BROWSER_AGENT
+@RESPATH@/defaultagent.ini
+@RESPATH@/defaultagent_localized.ini
+#endif
+#if defined(MOZ_UPDATE_AGENT) || defined(MOZ_DEFAULT_BROWSER_AGENT)
+@RESPATH@/locale.ini
+#endif
+
+[xpcom]
+@RESPATH@/dependentlibs.list
+#ifdef MOZ_SHARED_MOZGLUE
+@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
+#endif
+#ifndef MOZ_STATIC_JS
+@BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
+#endif
+#ifndef MOZ_SYSTEM_NSPR
+#ifndef MOZ_FOLD_LIBS
+@BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
+#endif
+#endif
+#ifdef XP_MACOSX
+@BINPATH@/XUL
+#else
+@BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
+#endif
+#ifdef XP_MACOSX
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME@.app/
+#else
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME@
+#endif
+#ifdef XP_WIN
+#if MOZ_PACKAGE_MSVC_DLLS
+@BINPATH@/@MSVC_C_RUNTIME_DLL@
+@BINPATH@/@MSVC_CXX_RUNTIME_DLL@
+#endif
+#if MOZ_PACKAGE_WIN_UCRT_DLLS
+@BINPATH@/api-ms-win-*.dll
+@BINPATH@/ucrtbase.dll
+#endif
+#endif
+#ifdef MOZ_GTK
+@BINPATH@/@DLL_PREFIX@mozgtk@DLL_SUFFIX@
+#ifdef MOZ_WAYLAND
+@BINPATH@/@DLL_PREFIX@mozwayland@DLL_SUFFIX@
+#endif
+#endif
+
+; We don't have a complete view of which dlls to expect when doing an artifact
+; build because we haven't run the relevant parts of configure, so we guess
+; here and trust what came from our source build.
+#if defined(MOZ_ARTIFACT_BUILDS) && defined(XP_WIN)
+@BINPATH@/api-ms-win-*.dll
+@BINPATH@/ucrtbase.dll
+@BINPATH@/vcruntime*.dll
+@BINPATH@/msvcp*.dll
+@BINPATH@/libEGL.dll
+@BINPATH@/libGLESv2.dll
+@BINPATH@/d3dcompiler_47.dll
+#endif
+
+[browser]
+; [Base Browser Files]
+#ifndef XP_UNIX
+@BINPATH@/@MOZ_APP_NAME@.exe
+@BINPATH@/firefox.VisualElementsManifest.xml
+@BINPATH@/browser/VisualElements/VisualElements_150.png
+@BINPATH@/browser/VisualElements/VisualElements_70.png
+#else
+@BINPATH@/@MOZ_APP_NAME@-bin
+@BINPATH@/@MOZ_APP_NAME@
+#endif
+@RESPATH@/application.ini
+#ifdef MOZ_UPDATER
+@RESPATH@/update-settings.ini
+#endif
+@RESPATH@/platform.ini
+#ifndef MOZ_FOLD_LIBS
+@BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@lgpllibs@DLL_SUFFIX@
+#ifdef MOZ_FFVPX
+@BINPATH@/@DLL_PREFIX@mozavutil@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@mozavcodec@DLL_SUFFIX@
+#endif
+#ifdef XP_WIN
+#ifdef _AMD64_
+@BINPATH@/@DLL_PREFIX@qipcap64@DLL_SUFFIX@
+#else
+@BINPATH@/@DLL_PREFIX@qipcap@DLL_SUFFIX@
+#endif
+#endif
+
+; [Components]
+#ifdef ACCESSIBILITY
+#ifdef XP_WIN
+@BINPATH@/Accessible.tlb
+@BINPATH@/AccessibleHandler.dll
+@BINPATH@/AccessibleMarshal.dll
+@BINPATH@/IA2Marshal.dll
+#endif
+#endif
+
+; JavaScript components
+@RESPATH@/browser/components/BrowserComponents.manifest
+@RESPATH@/components/toolkitsearch.manifest
+@RESPATH@/components/extensions.manifest
+#ifdef MOZ_UPDATER
+@RESPATH@/components/nsUpdateService.manifest
+#endif
+@RESPATH@/components/ProcessSingleton.manifest
+@RESPATH@/components/HandlerService.manifest
+@RESPATH@/components/HandlerService.js
+#ifdef XP_MACOSX
+@RESPATH@/browser/components/MacTouchBar.manifest
+@RESPATH@/browser/components/MacTouchBar.js
+#endif
+@RESPATH@/components/SyncComponents.manifest
+@RESPATH@/components/servicesComponents.manifest
+@RESPATH@/components/servicesSettings.manifest
+@RESPATH@/components/cryptoComponents.manifest
+@RESPATH@/components/TelemetryStartup.manifest
+
+@RESPATH@/components/Push.manifest
+
+@RESPATH@/components/antitracking.manifest
+
+@RESPATH@/components/l10n-registry.manifest
+@RESPATH@/browser/components/l10n-registry.manifest
+
+; WebDriver (Marionette, Remote Agent) remote protocols
+#ifdef ENABLE_WEBDRIVER
+@RESPATH@/chrome/remote@JAREXT@
+@RESPATH@/chrome/remote.manifest
+#endif
+
+#if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
+@RESPATH@/components/TestInterfaceJS.js
+@RESPATH@/components/TestInterfaceJS.manifest
+#endif
+
+#if defined(MOZ_DEBUG) || defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
+@RESPATH@/browser/components/testComponents.manifest
+@RESPATH@/browser/components/startupRecorder.js
+#endif
+
+; [Extensions]
+@RESPATH@/components/extensions-toolkit.manifest
+@RESPATH@/browser/components/extensions-browser.manifest
+
+; Modules
+@RESPATH@/browser/modules/*
+@RESPATH@/modules/*
+@RESPATH@/browser/actors/*
+@RESPATH@/actors/*
+
+; ANGLE GLES-on-D3D rendering library
+#ifdef MOZ_ANGLE_RENDERER
+@BINPATH@/libEGL.dll
+@BINPATH@/libGLESv2.dll
+
+#ifdef MOZ_D3DCOMPILER_VISTA_DLL
+@BINPATH@/@MOZ_D3DCOMPILER_VISTA_DLL@
+#endif
+#endif # MOZ_ANGLE_RENDERER
+
+; [Browser Chrome Files]
+@RESPATH@/browser/chrome.manifest
+@RESPATH@/browser/chrome/browser@JAREXT@
+@RESPATH@/browser/chrome/browser.manifest
+@RESPATH@/chrome/pdfjs.manifest
+@RESPATH@/chrome/pdfjs/*
+@RESPATH@/chrome/toolkit@JAREXT@
+@RESPATH@/chrome/toolkit.manifest
+#ifdef MOZ_GTK
+@RESPATH@/browser/chrome/icons/default/default16.png
+@RESPATH@/browser/chrome/icons/default/default32.png
+@RESPATH@/browser/chrome/icons/default/default48.png
+@RESPATH@/browser/chrome/icons/default/default64.png
+@RESPATH@/browser/chrome/icons/default/default128.png
+#endif
+@RESPATH@/browser/features/*
+
+; [DevTools Startup Files]
+@RESPATH@/browser/chrome/devtools-startup@JAREXT@
+@RESPATH@/browser/chrome/devtools-startup.manifest
+
+; DevTools
+@RESPATH@/browser/chrome/devtools@JAREXT@
+@RESPATH@/browser/chrome/devtools.manifest
+@RESPATH@/browser/@PREF_DIR@/debugger.js
+
+; shell icons
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#ifdef MOZ_UPDATER
+; updater icon
+@RESPATH@/icons/updater.png
+#endif
+#endif
+#endif
+
+; [Default Preferences]
+; All the pref files must be part of base to prevent migration bugs
+@RESPATH@/browser/@PREF_DIR@/firefox.js
+@RESPATH@/browser/@PREF_DIR@/firefox-branding.js
+@RESPATH@/greprefs.js
+@RESPATH@/defaults/autoconfig/prefcalls.js
+@RESPATH@/browser/defaults/permissions
+; Remote Settings JSON dumps
+@RESPATH@/browser/defaults/settings/last_modified.json
+@RESPATH@/browser/defaults/settings/blocklists
+@RESPATH@/browser/defaults/settings/main
+@RESPATH@/browser/defaults/settings/security-state
+
+; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
+; Technically this is an app pref file, but we are keeping it in the original
+; gre location for now.
+@RESPATH@/defaults/pref/channel-prefs.js
+
+; Background tasks-specific preferences.  These are in the GRE
+; location since they apply to all tasks at this time.
+#ifdef MOZ_BACKGROUNDTASKS
+@RESPATH@/defaults/backgroundtasks/backgroundtasks.js
+#endif
+
+; [Layout Engine Resources]
+; Style Sheets, Graphics and other Resources used by the layout engine.
+@RESPATH@/res/EditorOverride.css
+@RESPATH@/res/contenteditable.css
+@RESPATH@/res/designmode.css
+@RESPATH@/res/table-add-column-after-active.gif
+@RESPATH@/res/table-add-column-after-hover.gif
+@RESPATH@/res/table-add-column-after.gif
+@RESPATH@/res/table-add-column-before-active.gif
+@RESPATH@/res/table-add-column-before-hover.gif
+@RESPATH@/res/table-add-column-before.gif
+@RESPATH@/res/table-add-row-after-active.gif
+@RESPATH@/res/table-add-row-after-hover.gif
+@RESPATH@/res/table-add-row-after.gif
+@RESPATH@/res/table-add-row-before-active.gif
+@RESPATH@/res/table-add-row-before-hover.gif
+@RESPATH@/res/table-add-row-before.gif
+@RESPATH@/res/table-remove-column-active.gif
+@RESPATH@/res/table-remove-column-hover.gif
+@RESPATH@/res/table-remove-column.gif
+@RESPATH@/res/table-remove-row-active.gif
+@RESPATH@/res/table-remove-row-hover.gif
+@RESPATH@/res/table-remove-row.gif
+@RESPATH@/res/grabber.gif
+#ifdef XP_MACOSX
+@RESPATH@/res/cursors/*
+#endif
+@RESPATH@/res/fonts/*
+@RESPATH@/res/dtd/*
+@RESPATH@/res/language.properties
+@RESPATH@/res/locale/layout/HtmlForm.properties
+@RESPATH@/res/locale/layout/MediaDocument.properties
+@RESPATH@/res/locale/layout/xmlparser.properties
+@RESPATH@/res/locale/dom/dom.properties
+#ifdef XP_MACOSX
+@RESPATH@/res/MainMenu.nib/
+#endif
+
+; Content-accessible resources.
+@RESPATH@/contentaccessible/*
+
+; svg
+@RESPATH@/res/svg.css
+
+; [Layout Debugger]
+#ifdef MOZ_LAYOUT_DEBUGGER
+@RESPATH@/chrome/layoutdebug@JAREXT@
+@RESPATH@/chrome/layoutdebug.manifest
+#endif
+
+; [Personal Security Manager]
+;
+; NSS libraries are signed in the staging directory,
+; meaning their .chk files are created there directly.
+;
+#ifndef MOZ_SYSTEM_NSS
+#if defined(XP_LINUX) && !defined(ANDROID)
+@BINPATH@/@DLL_PREFIX@freeblpriv3@DLL_SUFFIX@
+#elif defined(XP_SOLARIS) && defined(SPARC64)
+bin/libfreebl_64fpu_3.so
+bin/libfreebl_64int_3.so
+#else
+@BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
+#ifndef MOZ_FOLD_LIBS
+@BINPATH@/@DLL_PREFIX@nssutil3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@smime3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@ssl3@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@softokn3@DLL_SUFFIX@
+#endif
+@RESPATH@/chrome/pippki@JAREXT@
+@RESPATH@/chrome/pippki.manifest
+
+; preprocessor.py doesn't handle parentheses, so while the following could be
+; expressed in a single line, it's more clear to break them up.
+#if defined(XP_WIN) || defined(XP_MACOSX)
+#if !defined(_ARM64_)
+@BINPATH@/@DLL_PREFIX@osclientcerts@DLL_SUFFIX@
+#endif
+#endif
+
+; For process sandboxing
+#if defined(MOZ_SANDBOX)
+#if defined(XP_LINUX)
+@BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
+#endif
+#endif
+
+; [Updater]
+;
+#ifdef MOZ_UPDATER
+#ifdef XP_MACOSX
+@BINPATH@/updater.app/
+#else
+@BINPATH@/updater@BIN_SUFFIX@
+#endif
+#endif
+
+; [MaintenanceService]
+;
+#ifdef MOZ_MAINTENANCE_SERVICE
+@BINPATH@/maintenanceservice.exe
+@BINPATH@/maintenanceservice_installer.exe
+#endif
+
+; [Crash Reporter]
+;
+#ifdef MOZ_CRASHREPORTER
+#ifdef XP_MACOSX
+@BINPATH@/crashreporter.app/
+#else
+@BINPATH@/crashreporter@BIN_SUFFIX@
+@RESPATH@/crashreporter.ini
+#ifdef XP_UNIX
+@RESPATH@/Throbber-small.gif
+#elif defined(XP_WIN)
+@BINPATH@/@DLL_PREFIX@mozwer@DLL_SUFFIX@
+#endif
+#endif
+@RESPATH@/browser/crashreporter-override.ini
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+@BINPATH@/breakpadinjector.dll
+#endif
+#endif
+
+; [ minidump-analyzer ]
+;
+#ifdef MOZ_CRASHREPORTER
+@BINPATH@/minidump-analyzer@BIN_SUFFIX@
+#endif
+
+; [ Ping Sender ]
+;
+@BINPATH@/pingsender@BIN_SUFFIX@
+
+; Shutdown Terminator
+@RESPATH@/components/terminator.manifest
+
+#ifdef LLVM_SYMBOLIZER
+@BINPATH@/@LLVM_SYMBOLIZER@
+; On Windows, llvm-symbolizer depends on the MS DIA library.
+#ifdef WIN_DIA_SDK_BIN_DIR
+@BINPATH@/msdia140.dll
+#endif
+#endif
+
+#ifdef MOZ_CLANG_RT_ASAN_LIB
+@BINPATH@/@MOZ_CLANG_RT_ASAN_LIB@
+#endif
+
+; media
+@RESPATH@/gmp-clearkey/0.1/@DLL_PREFIX@clearkey@DLL_SUFFIX@
+@RESPATH@/gmp-clearkey/0.1/manifest.json
+
+#ifdef MOZ_DMD
+; DMD
+@RESPATH@/dmd.py
+@RESPATH@/fix_stacks.py
+#endif
+
+#ifdef PKG_LOCALE_MANIFEST
+#include @PKG_LOCALE_MANIFEST@
+#endif
+
+#if defined(XP_WIN) && defined(MOZ_DEFAULT_BROWSER_AGENT)
+@BINPATH@/default-browser-agent@BIN_SUFFIX@
+#endif
+
+#ifdef MOZ_EME_WIN32_ARTIFACT
+i686/plugin-container.exe
+i686/xul.dll
+i686/nss3.dll
+i686/mozglue.dll
+i686/lgpllibs.dll
+i686/msvcp140.dll
+i686/vcruntime140.dll
+i686/gmp-clearkey/0.1/clearkey.dll
+[eme destdir="i686"]
+; We assume the file we generate locally is the same as what was in the win32
+; build, which, practically speaking, is the case.
+@BINPATH@/gmp-clearkey/0.1/manifest.json
+#endif

@@ -1,0 +1,29 @@
+#pragma namespace("\\\\.\\root\\wmi")
+#pragma autorecover
+
+[dynamic: ToInstance, Description("Mozilla Generic Provider"),
+ Guid("{509962E0-406B-46F4-99BA-5A009F8D2225}")]
+class MozillaProvider : EventTrace
+{
+};
+
+[dynamic: ToInstance, Description("Mozilla Event: Places Init is complete."): Amended,
+ Guid("{A3DA04E0-57D7-482A-A1C1-61DA5F95BACB}"),
+ EventType(1)]
+class MozillaEventPlacesInit : MozillaProvider
+{
+};
+
+[dynamic: ToInstance, Description("Mozilla Event: Session Store Window Restored."): Amended,
+ Guid("{917B96B1-ECAD-4DAB-A760-8D49027748AE}"),
+ EventType(1)]
+class MozillaEventSessionStoreWindowRestored : MozillaProvider
+{
+};
+
+[dynamic: ToInstance, Description("Mozilla Event: XPCOM Shutdown."): Amended,
+ Guid("{26D1E091-0AE7-4F49-A554-4214445C505C}"),
+ EventType(1)]
+class MozillaEventXPCOMShutdown : MozillaProvider
+{
+};

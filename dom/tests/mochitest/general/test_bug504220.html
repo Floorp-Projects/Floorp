@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=504220
+-->
+<head>
+  <title>Test for Bug 504220</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run_test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=504220">Mozilla Bug 504220</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="frame" style="height:100px; width:100px; border:0"></iframe>
+  <div id="status" style="display: none"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 504220 **/
+
+function run_test() {
+  ok("onhashchange" in document.body,
+     "document.body should contain 'onhashchange'.");
+
+  ok("onhashchange" in window, "window should contain 'onhashchange'.");
+
+  // window.onhashchange should mirror document.body.onhashchange.
+  var func = function() { return 42; };
+  document.body.onhashchange = func;
+  is(window.onhashchange, func);
+
+  // Likewise, document.body.hashchange should mirror window.onhashchange
+  numEvents = 0;
+  var func2 = function() { numEvents++; gGen.next() };
+  window.onhashchange = func2;
+  is(document.body.onhashchange, func2);
+
+  SimpleTest.waitForExplicitFinish();
+
+  function* waitForHashchange() {
+    // Change the document's hash.  If we've been running this test manually,
+    // the hash might already be "#foo", so we need to check in order to be
+    // sure we trigger a hashchange.
+    if (location.hash != "#foo")
+      location.hash = "#foo";
+    else
+      location.hash = "#bar";
+
+    yield undefined;
+
+    is(numEvents, 1, "Exactly one hashchange should have been fired.");
+    SimpleTest.finish();
+  }
+
+  var gGen = waitForHashchange();
+  gGen.next();
+}
+
+</script>
+</pre>
+</body>
+</html>

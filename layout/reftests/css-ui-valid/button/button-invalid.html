@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: button element is never affected by :-moz-ui-valid. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('b').setCustomValidity('foo'); document.documentElement.className='';">
+    <button class='notvalid' id='b'></button>
+  </body>
+</html>

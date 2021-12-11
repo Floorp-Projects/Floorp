@@ -1,0 +1,37 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1558294860 -3600
+#      Sun May 19 20:41:00 2019 +0100
+# Node ID 331daa6926b2d495959a0aebbf034958a9bc1e2a
+# Parent  e71e4e7a914c2d2515bf84be6ad045febabb6dfc
+Bug 1552160: Add missing defines from concurrencysal.h and specstrings.h in windows_type.h on MinGW.
+
+diff --git a/security/sandbox/chromium/base/win/windows_types.h b/security/sandbox/chromium/base/win/windows_types.h
+--- a/security/sandbox/chromium/base/win/windows_types.h
++++ b/security/sandbox/chromium/base/win/windows_types.h
+@@ -4,17 +4,25 @@
+ 
+ // This file contains defines and typedefs that allow popular Windows types to
+ // be used without the overhead of including windows.h.
+ 
+ #ifndef BASE_WIN_WINDOWS_TYPES_H
+ #define BASE_WIN_WINDOWS_TYPES_H
+ 
+ // Needed for function prototypes.
++#if defined(__MINGW32__)
++// MinGW doesn't have this file yet, but we only need this define.
++// Bug 1552706 tracks removing this and the one below.
++#define _Releases_exclusive_lock_(lock)
++// MinGW doesn't appear to have this in specstrings.h either.
++#define _Post_equals_last_error_
++#else
+ #include <concurrencysal.h>
++#endif
+ #include <sal.h>
+ #include <specstrings.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+ // typedef and define the most commonly used Windows integer types.

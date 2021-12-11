@@ -1,0 +1,82 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.bouncer_check:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    name: bouncer-check
+    description: bouncer check
+    worker-type: b-linux
+    worker:
+        max-run-time: 1200
+        docker-image: {in-tree: "update-verify"}
+    run:
+        sparse-profile: mozharness
+        extra-config:
+            bouncer_prefix: "https://download.mozilla.org/"
+    attributes:
+        build_platform: linux64
+        build_type: opt
+        cron: true
+    treeherder:
+        symbol: Rel(ckbouncer)
+        kind: test
+        tier: 1
+
+jobs:
+    firefox:
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: firefox-bouncer-check
+        run:
+            config:
+                by-release-type:
+                    nightly:
+                        - releases/bouncer_firefox_nightly.py
+                    beta:
+                        - releases/bouncer_firefox_beta.py
+                    release:
+                        - releases/bouncer_firefox_release.py
+                    esr.*:
+                        - releases/bouncer_firefox_esr.py
+                    default:
+                        - releases/bouncer_firefox_beta.py
+            product-field:
+                by-project:
+                    mozilla-central: FIREFOX_NIGHTLY
+                    mozilla-beta: LATEST_FIREFOX_RELEASED_DEVEL_VERSION
+                    mozilla-release: LATEST_FIREFOX_VERSION
+                    mozilla-esr78: FIREFOX_ESR
+                    mozilla-esr91: FIREFOX_ESR_NEXT
+                    default: LATEST_FIREFOX_DEVEL_VERSION
+            products-url: https://product-details.mozilla.org/1.0/firefox_versions.json
+        treeherder:
+            platform: firefox-release/opt
+
+    devedition:
+        shipping-product: devedition
+        run-on-projects: [mozilla-beta]
+        index:
+            product: devedition
+            job-name: devedition-bouncer-check
+        run:
+            config:
+                by-project:
+                    mozilla-beta:
+                        - releases/bouncer_firefox_devedition.py
+                    default:
+                        - releases/dev_bouncer_firefox_devedition.py
+            product-field:
+                by-project:
+                    mozilla-beta: LATEST_FIREFOX_RELEASED_DEVEL_VERSION
+                    default: LATEST_FIREFOX_DEVEL_VERSION
+            products-url: https://product-details.mozilla.org/1.0/firefox_versions.json
+        treeherder:
+            platform: devedition-release/opt

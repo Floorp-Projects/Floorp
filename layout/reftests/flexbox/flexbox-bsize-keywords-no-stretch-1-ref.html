@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Reference Case</title>
+  <meta charset="utf-8">
+  <style>
+    .container {
+      display: flex;
+      height: 100px;
+      border: 1px solid black;
+    }
+    .min-content-height {
+      background: pink;
+      align-self: start;
+    }
+    .max-content-height {
+      background: lightblue;
+      align-self: start;
+    }
+    .auto-height {
+      background: orange;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="min-content-height">min</div>
+    <div class="max-content-height">max</div>
+    <div class="auto-height">auto</div>
+  </div>
+</body>
+</html>

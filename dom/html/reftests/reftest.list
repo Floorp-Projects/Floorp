@@ -1,0 +1,74 @@
+# autofocus attribute (we can't test with mochitests)
+include autofocus/reftest.list
+include toblob-todataurl/reftest.list
+
+== 41464-1a.html 41464-1-ref.html
+== 41464-1b.html 41464-1-ref.html
+== 52019-1.html 52019-1-ref.html
+== 82711-1.html 82711-1-ref.html
+== 82711-2.html 82711-2-ref.html
+!= 82711-1-ref.html 82711-2-ref.html
+!= 468263-1a.html about:blank
+!= 468263-1b.html about:blank
+!= 468263-1c.html about:blank
+!= 468263-1d.html about:blank
+== 468263-2.html 468263-2-ref.html
+== 468263-2.html 468263-2-alternate-ref.html
+== 484200-1.html 484200-1-ref.html
+== 485377.html 485377-ref.html
+== 557840.html 557840-ref.html
+== 560059-video-dimensions.html 560059-video-dimensions-ref.html
+== 573322-quirks.html 573322-quirks-ref.html
+== 573322-no-quirks.html 573322-no-quirks-ref.html
+== 596455-1a.html 596455-ref-1.html
+== 596455-1b.html 596455-ref-1.html
+== 596455-2a.html 596455-ref-2.html
+== 596455-2b.html 596455-ref-2.html
+== 610935.html 610935-ref.html
+== 649134-1.html 649134-ref.html
+skip-if(Android) == 649134-2.html 649134-2-ref.html
+== 741776-1.vtt 741776-1-ref.html
+
+== bug448564-1_malformed.html bug448564-1_well-formed.html
+== bug448564-1_malformed.html bug448564-1_ideal.html
+
+== bug448564-4a.html          bug448564-4b.html
+== bug502168-1_malformed.html bug502168-1_well-formed.html
+
+== responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit-ref.html
+== image-load-shortcircuit-1.html image-load-shortcircuit-ref.html
+== image-load-shortcircuit-2.html image-load-shortcircuit-ref.html
+
+# Test that image documents taken into account CSS properties like
+# image-orientation when determining the size of the image.
+# (Fuzzy necessary due to pixel-wise comparison of different JPEGs.
+# The vast majority of the fuzziness comes from Linux and WinXP.)
+skip-if(isCoverageBuild) fuzzy(0-2,0-830) random-if(useDrawSnapshot) == bug917595-iframe-1.html bug917595-1-ref.html
+fuzzy(0-3,0-7544) fuzzy-if(!geckoview,2-3,50-7544) == bug917595-exif-rotated.jpg bug917595-pixel-rotated.jpg # bug 1060869
+
+# Test support for SVG-as-image in <picture> elements.
+== bug1106522-1.html bug1106522-ref.html
+== bug1106522-2.html bug1106522-ref.html
+
+== href-attr-change-restyles.html href-attr-change-restyles-ref.html
+== figure.html figure-ref.html
+== pre-1.html pre-1-ref.html
+== table-border-1.html table-border-1-ref.html
+== table-border-2.html table-border-2-ref.html
+!= table-border-2.html table-border-2-notref.html
+
+# Test imageset is using permissions.default.image
+pref(permissions.default.image,1) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html
+pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html
+
+# Test video with rotation information can be rotated.
+skip-if(geckoview&&debug) == bug1228601-video-rotation-90.html bug1228601-video-rotated-ref.html # bug 1558285 for GV debug
+
+== bug1512297.html bug1512297-ref.html
+
+# Test that dynamically setting body margin attributes updates style appropriately
+== body-topmargin-dynamic.html body-topmargin-ref.html
+
+# Test that dynamically removing a nonmargin mapped attribute does not
+# destroy margins inherited from the frame.
+== body-frame-margin-remove-other-pres-hint.html body-frame-margin-remove-other-pres-hint-ref.html

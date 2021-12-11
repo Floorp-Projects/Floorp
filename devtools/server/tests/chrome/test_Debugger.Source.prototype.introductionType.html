@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=935203
+
+Debugger.Source.prototype.introductionType should return 'eventHandler' for
+JavaScrip appearing in an inline event handler attribute.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Debugger.Source.prototype.introductionType should identify event handlers</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+"use strict";
+
+const {addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+addSandboxedDebuggerToGlobal(this);
+
+let dbg;
+let iframeDO, doc;
+let Tootles, TootlesDO;
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+addTest(function setup() {
+  // Create an iframe to debug.
+  const iframe = document.createElement("iframe");
+  iframe.srcdoc = "<div id='Tootles' onclick='debugger;'>I'm a DIV!</div>" +
+                  "<script id='Auddie'>function auddie() { debugger; }<\/script>";
+  iframe.onload = onLoadHandler;
+  document.body.appendChild(iframe);
+
+  function onLoadHandler() {
+    // Now that the iframe's window has been created, we can add
+    // it as a debuggee.
+    dbg = new Debugger();
+    iframeDO = dbg.addDebuggee(iframe.contentWindow);
+    doc = iframe.contentWindow.document;
+    Tootles = doc.getElementById("Tootles");
+    TootlesDO = iframeDO.makeDebuggeeValue(Tootles);
+
+    runNextTest();
+  }
+});
+
+// Check the introduction type of in-markup event handler code.
+// Send a click event to Tootles, whose handler has a 'debugger' statement,
+// and check that script's introduction type.
+addTest(function ClickOnTootles() {
+  dbg.onDebuggerStatement = TootlesClickDebugger;
+  Tootles.dispatchEvent(new Event("click"));
+
+  function TootlesClickDebugger(frame) {
+    // some sanity checks
+    ok(frame.script.source.element === TootlesDO,
+       "top frame source belongs to element 'Tootles'");
+    is(frame.script.source.elementAttributeName, "onclick",
+       "top frame source belongs to 'onclick' attribute");
+
+    // And, the actual point of this test:
+    is(frame.script.source.introductionType, "eventHandler",
+       "top frame source's introductionType is 'eventHandler'");
+
+    runNextTest();
+  }
+});
+
+// Check the introduction type of dynamically added event handler code.
+// Add a drag event handler to Tootles as a string, and then send
+// Tootles a drag event.
+addTest(function DragTootles() {
+  dbg.onDebuggerStatement = TootlesDragDebugger;
+  Tootles.setAttribute("ondrag", "debugger;");
+  Tootles.dispatchEvent(new Event("drag"));
+
+  function TootlesDragDebugger(frame) {
+    // sanity checks
+    ok(frame.script.source.element === TootlesDO,
+       "top frame source belongs to element 'Tootles'");
+    is(frame.script.source.elementAttributeName, "ondrag",
+       "top frame source belongs to 'ondrag' attribute");
+
+    // And, the actual point of this test:
+    is(frame.script.source.introductionType, "eventHandler",
+       "top frame source's introductionType is 'eventHandler'");
+
+    runNextTest();
+  }
+});
+
+// Check the introduction type of an in-markup script element.
+addTest(function checkAuddie() {
+  const fnDO = iframeDO.getOwnPropertyDescriptor("auddie").value;
+  const AuddieDO = iframeDO.makeDebuggeeValue(doc.getElementById("Auddie"));
+
+  is(fnDO.class, "Function",
+     "Script element 'Auddie' defined function 'auddie'.");
+  ok(fnDO.script.source.element === AuddieDO,
+     "Function auddie's script belongs to script element 'Auddie'");
+  is(fnDO.script.source.elementAttributeName, undefined,
+     "Function auddie's script doesn't belong to any attribute of 'Auddie'");
+  is(fnDO.script.source.introductionType, "inlineScript",
+     "Function auddie's script's source was introduced by a script element");
+
+  runNextTest();
+});
+
+// Check the introduction type of a dynamically inserted script element.
+addTest(function InsertRover() {
+  dbg.onDebuggerStatement = RoverDebugger;
+  const rover = doc.createElement("script");
+  const roverDO = iframeDO.makeDebuggeeValue(rover);
+  rover.text = "debugger;";
+  doc.body.appendChild(rover);
+
+  function RoverDebugger(frame) {
+    // sanity checks
+    ok(frame.script.source.element === roverDO,
+       "Rover script belongs to Rover");
+    ok(frame.script.source.elementAttributeName === undefined,
+       "Rover script doesn't belong to an attribute of Rover");
+
+    // Check the introduction type.
+    ok(frame.script.source.introductionType === "injectedScript",
+       "Rover script's introduction type is 'injectedScript'");
+
+    runNextTest();
+  }
+});
+
+// Creates a chrome document with a XUL script element, and check its introduction type.
+addTest(function XULDocumentScript() {
+  const frame = document.createElement("iframe");
+  frame.src = "doc_Debugger.Source.prototype.introductionType.xhtml";
+  frame.onload = docLoaded;
+  info("Appending iframe containing a document with a XUL script tag");
+  document.body.appendChild(frame);
+
+  function docLoaded() {
+    info("Loaded chrome document");
+    const xulFrameDO = dbg.addDebuggee(frame.contentWindow);
+    const xulFnDO = xulFrameDO.getOwnPropertyDescriptor("xulScriptFunc").value;
+    is(typeof xulFnDO, "object", "XUL script element defined 'xulScriptFunc'");
+    is(xulFnDO.class, "Function",
+       "XUL global 'xulScriptFunc' is indeed a function");
+
+    // A XUL script elements' code gets shared amongst all
+    // instantiations of the document, so there's no specific DOM element
+    // we can attribute the code to.
+    is(xulFnDO.script.source.element, undefined,
+       "XUL script code should not be attributed to any individual element");
+
+    is(xulFnDO.script.source.introductionType, "inlineScript",
+       "xulScriptFunc's introduction type is 'inlineScript'");
+    runNextTest();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

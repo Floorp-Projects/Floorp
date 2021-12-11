@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  display: table;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+th {
+  width: 12em;
+  word-wrap: break-word;
+  vertical-align: top;
+  text-align: end;
+}
+
+td {
+  display: block;
+  font-family: -moz-fixed;
+  white-space: pre-wrap;
+}
+
+#td-key {
+  word-wrap: break-word;
+}

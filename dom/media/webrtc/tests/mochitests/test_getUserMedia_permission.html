@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({ title: "Test getUserMedia in iframes", bug: "1371741" });
+/**
+  Tests covering enumerateDevices API and deviceId constraint. Exercise code.
+*/
+
+// Call gUM in iframe.
+async function iframeGum(dict, iframe = document.createElement("iframe")) {
+  Object.assign(iframe, dict);
+  if (dict.src) {
+    info(`<iframe src="${dict.src}" sandbox="${dict.sandbox}">`);
+  } else {
+    info(`<iframe srcdoc sandbox="${dict.sandbox}">`);
+  }
+  document.documentElement.appendChild(iframe);
+
+  const once = (t, msg) => new Promise(r => t.addEventListener(msg, r, { once: true }));
+  const haveMessage = once(window, "message");
+  await new Promise(resolve => iframe.onload = resolve);
+  return (await haveMessage).data;
+};
+
+runTest(async () => {
+  const path = "/tests/dom/media/webrtc/tests/mochitests/test_getUserMedia_permission_iframe.html";
+
+  async function sourceFn() {
+    try {
+      const gUM = c => navigator.mediaDevices.getUserMedia(c);
+      let message;
+      let stream;
+      try {
+        stream = await gUM({ video: true });
+        message = 'success';
+      } catch(e) {
+        message = e.name;
+      }
+      parent.postMessage(message, 'https://example.com:443');
+
+      if (message == "success") {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    } catch (e) {
+      setTimeout(() => { throw e; });
+    }
+  }
+
+  const source = `<html\><script\>(${sourceFn.toString()})()</script\></html\>`;
+
+  // Test gUM in sandboxed vs. regular iframe.
+
+  for (const origin of [window.location.origin, "https://test1.example.com"]) {
+    const src = origin + path;
+    is(await iframeGum({ src, sandbox: "allow-scripts" }),
+       "NotAllowedError", "gUM fails in sandboxed iframe " + origin);
+  }
+  is(await iframeGum({
+       src: path,
+       sandbox: "allow-scripts allow-same-origin",
+     }),
+     "success", "gUM works in regular same-origin iframe");
+  is(await iframeGum({
+       src: `https://test1.example.com${path}`,
+       sandbox: "allow-scripts allow-same-origin",
+     }),
+     "NotAllowedError", "gUM fails in regular cross-origin iframe");
+
+  // Test gUM in sandboxed vs regular srcdoc iframe
+
+  const iframeSrcdoc = document.createElement("iframe");
+  iframeSrcdoc.srcdoc = source;
+  is(await iframeGum({ sandbox: "allow-scripts" }, iframeSrcdoc),
+     "NotAllowedError", "gUM fails in sandboxed srcdoc iframe");
+  is(await iframeGum({ sandbox: "allow-scripts allow-same-origin" }, iframeSrcdoc),
+     "success", "gUM works in regular srcdoc iframe");
+
+  // Test gUM in sandboxed vs regular blob iframe
+
+  const blob = new Blob([source], {type : "text/html"});
+	let src = URL.createObjectURL(blob);
+  is(await iframeGum({ src, sandbox: "allow-scripts" }),
+     "NotAllowedError", "gUM fails in sandboxed blob iframe");
+  is(await iframeGum({ src, sandbox: "allow-scripts allow-same-origin"}),
+     "success", "gUM works in regular blob iframe");
+  URL.revokeObjectURL(src);
+
+  // data iframes always have null-principals
+
+  src = `data:text/html;base64,${btoa(source)}`;
+  is(await iframeGum({ src, sandbox: "allow-scripts" }),
+     "NotAllowedError", "gUM fails in sandboxed data iframe");
+  is(await iframeGum({ src, sandbox: "allow-scripts allow-same-origin"}),
+     "NotAllowedError", "gUM fails in regular data iframe");
+});
+</script>
+</pre>
+</body>
+</html>

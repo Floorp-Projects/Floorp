@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+    content/browser/usercontext/usercontext.css (content/usercontext.css)
+
+% resource usercontext-content %content/ contentaccessible=yes
+    content/briefcase.svg     (content/briefcase.svg)
+    content/cart.svg          (content/cart.svg)
+    content/circle.svg        (content/circle.svg)
+    content/dollar.svg        (content/dollar.svg)
+    content/fence.svg         (content/fence.svg)
+    content/fingerprint.svg   (content/fingerprint.svg)
+    content/gift.svg          (content/gift.svg)
+    content/vacation.svg      (content/vacation.svg)
+    content/food.svg          (content/food.svg)
+    content/fruit.svg         (content/fruit.svg)
+    content/pet.svg           (content/pet.svg)
+    content/tree.svg          (content/tree.svg)
+    content/chill.svg         (content/chill.svg)

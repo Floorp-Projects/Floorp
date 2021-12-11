@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.popover {
+  position: fixed;
+  z-index: 100;
+  --gap-size: 10px;
+  --left-offset: -55px;
+}
+
+.popover.orientation-right {
+  display: flex;
+  flex-direction: row;
+}
+
+.popover.orientation-right .gap {
+  width: var(--gap-size);
+}
+
+.popover:not(.orientation-right) .gap {
+  height: var(--gap-size);
+  margin-left: var(--left-offset);
+}
+
+.popover:not(.orientation-right) .preview-popup {
+  margin-left: var(--left-offset);
+}
+
+.popover .add-to-expression-bar {
+  margin-left: var(--left-offset);
+}

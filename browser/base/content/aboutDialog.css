@@ -1,0 +1,137 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+@namespace html "http://www.w3.org/1999/xhtml";
+
+#aboutDialog {
+  width: 620px;
+  /* Set an explicit line-height to avoid discrepancies in 'auto' spacing
+     across screens with different device DPI, which may cause font metrics
+     to round differently. */
+  line-height: 1.5;
+}
+
+#rightBox {
+  background-image: url("chrome://branding/content/about-wordmark.svg");
+  background-repeat: no-repeat;
+  background-size: 288px auto;
+  /* padding-top creates room for the wordmark */
+  padding-top: 38px;
+  margin-top: 20px;
+}
+
+#rightBox:-moz-locale-dir(rtl) {
+  background-position: 100% 0;
+}
+
+#bottomBox {
+  padding: 15px 10px 0;
+}
+
+#release {
+  font-weight: bold;
+  font-size: 125%;
+  margin-top: 10px;
+  margin-inline-start: 0;
+}
+
+#version {
+  font-weight: bold;
+  margin-inline-start: 0;
+  user-select: text;
+  -moz-user-focus: normal;
+  cursor: text;
+}
+
+#version.update {
+  font-weight: normal;
+}
+
+#distribution,
+#distributionId {
+  display: none;
+  margin-block: 0;
+}
+
+.text-blurb {
+  margin-bottom: 10px;
+  margin-inline-start: 0;
+  padding-inline-start: 0;
+}
+
+#updateDeck > *:not(.selected) {
+  visibility: hidden;
+}
+
+#updateButton,
+#updateDeck > hbox > label {
+  margin-inline-start: 0;
+  padding-inline-start: 0;
+}
+
+.update-throbber {
+  width: 16px;
+  min-height: 16px;
+  margin-inline-end: 3px;
+}
+
+html|img.update-throbber {
+  vertical-align: middle;
+}
+
+image.update-throbber {
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .update-throbber {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
+}
+
+description > .text-link,
+description > .text-link:focus {
+  margin: 0;
+  padding: 0;
+}
+
+#submit-feedback {
+  padding-inline-start: 10px;
+}
+
+.bottom-link,
+.bottom-link:focus {
+  text-align: center;
+  margin: 0 40px;
+}
+
+#currentChannel {
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+}
+
+#updateBox {
+  line-height: normal;
+}
+
+#icons > .icon {
+  -moz-context-properties: fill;
+  margin: 5px;
+  width: 16px;
+  height: 16px;
+}
+
+#icons:not(.checkingForUpdates, .downloading, .applying, .restarting) > .update-throbber,
+#icons:not(.noUpdatesFound) > .noUpdatesFound,
+#icons:not(.apply) > .apply {
+  display: none;
+}
+
+#icons > .noUpdatesFound {
+  fill: #30e60b;
+}
+
+#icons > .apply {
+  fill: white;
+}

@@ -1,0 +1,36 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIWordBreaker;
+
+webidl Range;
+
+[scriptable, uuid(40aba110-2a56-4678-be90-e2c17a9ae7d7)]
+interface nsIFind : nsISupports
+{
+  attribute boolean findBackwards;
+  attribute boolean caseSensitive;
+  attribute boolean entireWord;
+  attribute boolean matchDiacritics;
+
+  /**
+   * Find some text in the current context. The implementation is
+   * responsible for performing the find and highlighting the text.
+   *
+   * @param aPatText     The text to search for.
+   * @param aSearchRange A Range specifying domain of search.
+   * @param aStartPoint  A Range specifying search start point.
+   *                     If not collapsed, we'll start from
+   *                     end (forward) or start (backward).
+   * @param aEndPoint    A Range specifying search end point.
+   *                     If not collapsed, we'll end at
+   *                     end (forward) or start (backward).
+   * @retval             A range spanning the match that was found (or null).
+   */
+  Range Find(in AString aPatText, in Range aSearchRange,
+             in Range aStartPoint, in Range aEndPoint);
+};

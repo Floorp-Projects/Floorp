@@ -1,0 +1,129 @@
+The follow may be trademarked by their respective organizations.
+
+3DES            Triple Data Encryption Standard
+AIX
+ANSI            American National Standards Institute
+ASCII           American Standard Code for Information Interchange
+ASN.1           Abstract Syntax Notation 1
+BATON
+BER             Basic Encoding Rules
+BMP             Basic Multilingual Plane
+British Telecom
+CAST
+CAST128
+CAST3
+CAST5
+CCITT           Comité Consultatif International Téléphonique et Télégraphique
+CDMF
+CER             Canonical Encoding Rules
+CRMF            Certificate Request Message Format
+ctags           ctags(1)
+Columbia University
+Cryptoki
+DER             Distinguished Encoding Rules
+DES             Data Encryption Standard
+DES2            Data Encryption Standard (2 key)
+DES3            Data Encryption Standard (3 key / triple)
+DH              Diffie-Hellman
+DICOM
+DLL             Dynamically Loadable Library
+DSA             Digital Signature Algorithm
+Department of Defense
+E.163-4
+ECDSA
+ECMA            European Computers Manufacturing Association
+EDI             Electronic Data Interchange
+emacs           emacs(1)
+EWOS            European Workshop on Open Systems
+Entrust
+Example.com
+FORTEZZA
+GIF             Graphical Interchange Format
+HP		Hewlett Packard
+HPUX
+HTML            Hypertext Markup Language
+IANA            Internet Assigned Numbers Authority
+IBM		International Business Machine
+IDEA
+IEEE
+IPSEC
+IRIX
+ISO             International Organization for Standardization
+ITU             International Telecommunication Union
+Java
+JPEG            Joint Photographic Experts Group
+JUNIPER
+KEA             Key Encryption Algorithm
+LDAP            Lightweight Directory Access Protocol
+LWER            Lightweight Encoding Rules
+Macintosh
+MD2
+MD5
+MIME            Multipurpose Internet Mail Extensions
+MISSI
+Microsoft
+NATO            North Atlantic Treaty Organization
+NSPR            Netscape Portable Runtime
+NSS             Network Security Services
+Netscape
+Netscape Certificate Server
+Netscape Directory
+Nordunet
+OAEP
+OCSP            Online Certificate Status Protocol
+OID             Object Identifier
+OSI             Open Systems Interconnection
+OSF		Open Software Foundation
+OSF1
+PERL            Practical Extraction and Report Language
+PGP             Pretty Good Privacy
+PHG
+PKCS            Public Key Cryptography Standards
+PKIX            Public Key Infrastructure (X.509)
+POSIX
+PTHREADS        Posix Threads
+PURIFY
+RC2
+RC4
+RC5
+RFC
+RSA
+RSA Data Security
+RSA Security
+SHA1            Secure Hashing Algorithm
+SITA            Societe Internationale de Telecommunications Aeronautiques
+SKIPJACK
+SMIME           Secure MIME
+SMPTE           Society of Motion Picture and Television Engineers
+SNMP            Simple Network Management Protocol
+SGI		Silicon Graphics Incorporated
+SSL             Secure Sockets Layer
+Sun
+SunOS
+Solaris
+TLS             Transport Layer Security
+Teletex
+Teletrust
+Telex
+Thawte
+UCS-4           Universal Coded Character Set
+UNIX
+URI             Uniform Resource Identifier
+URL             Uniform Resource Locator
+UTF-8           Unicode Transformation Format
+Unisys
+Verisign
+WIN32           Windows
+WINNT           Windows NT
+Windows
+WordPerfect
+X.121
+X.25
+X.400
+X.509
+X.520
+X9.42
+X9.57
+XAPIA
+Z39.50
+

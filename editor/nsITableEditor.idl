@@ -1,0 +1,454 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+
+webidl Element;
+webidl Node;
+webidl Range;
+
+[scriptable, builtinclass, uuid(4805e684-49b9-11d3-9ce4-ed60bd6cb5bc)]
+interface nsITableEditor : nsISupports
+{
+  const short eNoSearch = 0;
+  const short ePreviousColumn = 1;
+  const short ePreviousRow = 2;
+
+  /**
+   * insertTableCell() inserts <td> elements before or after a cell element
+   * containing first selection range.  I.e., if the cell spans columns and
+   * aInsertPosition is true, new columns will be inserted after the
+   * right-most column which contains the cell.  Note that this simply
+   * inserts <td> elements, i.e., colspan and rowspan around the cell
+   * containing selection are not modified.  So, for example, adding a cell
+   * to rectangular table changes non-rectangular table.  And if a cell
+   * containing selection is at left of row-spanning cell, it may be moved to
+   * right side of the row-spanning cell after inserting some cell elements
+   * before it.  Similarly, colspan won't be adjusted for keeping table
+   * rectangle.
+   * If first selection range is not in table cell element, this does nothing
+   * without exception.
+   *
+   * @param aNumberOfCellssToInsert     Number of cells to insert.
+   * @param aInsertAfterSelectedCell    true if new cells should be inserted
+   *                                    before current cell.  Otherwise, will
+   *                                    be inserted after the cell.
+   */
+  [can_run_script]
+  void insertTableCell(in long aNumberOfColumnsToInsert,
+                       in boolean aInsertAfterSelectedCell);
+
+  /**
+   * insertTableColumn() inserts columns before or after a cell element
+   * containing first selection range.  I.e., if the cell spans columns and
+   * aInsertAfterSelectedCell is tre, new columns will be inserted after the
+   * right-most column which contains the cell.  If first selection range is
+   * not in table cell element, this does nothing without exception.
+   *
+   * @param aNumberOfColumnsToInsert    Number of columns to insert.
+   * @param aInsertAfterSelectedCell    true if new columns will be inserted
+   *                                    before current cell.  Otherwise, will
+   *                                    be inserted after the cell.
+   */
+  [can_run_script]
+  void insertTableColumn(in long aNumberOfColumnsToInsert,
+                         in boolean aInsertAfterSelectedCell);
+
+  /*
+   * insertTableRow() inserts <tr> elements before or after a <td> element
+   * containing first selection range.  I.e., if the cell spans rows and
+   * aInsertAfterSelectedCell is true, new rows will be inserted after the
+   * bottom-most row which contains the cell.  If first selection range is
+   * not in table cell element, this does nothing without exception.
+   *
+   * @param aNumberOfRowsToInsert       Number of rows to insert.
+   * @param aInsertAfterSelectedCell    true if new rows will be inserted
+   *                                    before current cell.  Otherwise, will
+   *                                    be inserted after the cell.
+   */
+  [can_run_script]
+  void insertTableRow(in long aNumberOfRowsToInsert,
+                      in boolean aInsertAfterSelectedCell);
+
+  /** Delete table methods
+    * Delete starting at the selected cell or the
+    *  cell (or table) enclosing the selection anchor
+    * The selection is collapsed and is left in the
+    *  cell at the same row,col location as
+    *  the previous selection anchor, if possible,
+    *  else in the closest neighboring cell
+    *
+    * @param aNumber    Number of items to insert/delete
+    */
+  [can_run_script]
+  void deleteTable();
+
+  /**
+   * deleteTableCellContents() removes any contents in cell elements.  If two
+   * or more cell elements are selected, this removes all selected cells'
+   * contents.  Otherwise, this removes contents of a cell which contains
+   * first selection range.  This does nothing without exception if selection
+   * is not in cell element.
+   */
+  [can_run_script]
+  void deleteTableCellContents();
+
+  /**
+   * deleteTableCell() removes table cell elements.  If two or more cell
+   * elements are selected, this removes all selected cell elements.
+   * Otherwise, this removes some cell elements starting from selected cell
+   * element or a cell containing first selection range.  When this removes
+   * last cell element in <tr> or <table>, this removes the <tr> or the
+   * <table> too.  Note that when removing a cell causes number of its row
+   * becomes less than the others, this method does NOT fill the place with
+   * rowspan nor colspan.  This does nothing without exception if selection is
+   * not in cell element.
+   *
+   * @param aNumberOfCellsToDelete  Number of cells to remove.  This is ignored
+   *                                if 2 or more cells are selected.
+   */
+  [can_run_script]
+  void deleteTableCell(in long aNumberOfCellsToDelete);
+
+  /**
+   * deleteTableColumn() removes cell elements which belong to same columns
+   * of selected cell elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes cell elements which belong to same column.
+   * If 2 or more cell elements are selected, removes cell elements which
+   * belong to any of all selected columns.  In this case,
+   * aNumberOfColumnsToDelete is ignored.
+   * If there is no selection ranges, throws exception.
+   * If selection is not in a cell element, just does nothing without
+   * throwing exception.
+   * WARNING: This does not remove <col> nor <colgroup> elements.
+   *
+   * @param aNumberOfColumnsToDelete    Number of columns to remove.  This is
+   *                                    ignored if 2 ore more cells are
+   *                                    selected.
+   */
+  [can_run_script]
+  void deleteTableColumn(in long aNumberOfColumnsToDelete);
+
+  /**
+   * deleteTableRow() removes <tr> elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes <tr> elements starting from a <tr> element
+   * containing the selected cell or first selection range.
+   * If 2 or more cell elements are selected, all <tr> elements
+   * which contains selected cell(s).  In this case, aNumberOfRowsToDelete
+   * is ignored.
+   * If there is no selection ranges, throws exception.
+   * If selection is not in a cell element, just does nothing without
+   * throwing exception.
+   *
+   * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
+   *                                if 2 or more cells are selected.
+   */
+  [can_run_script]
+  void deleteTableRow(in long aNumberOfRowsToDelete);
+
+  /** Table Selection methods
+    * Selecting a row or column actually
+    * selects all cells (not TR in the case of rows)
+    */
+  [can_run_script]
+  void selectTableCell();
+
+  [can_run_script]
+  void selectTableRow();
+  [can_run_script]
+  void selectTableColumn();
+  [can_run_script]
+  void selectTable();
+  [can_run_script]
+  void selectAllTableCells();
+
+  /** Create a new TD or TH element, the opposite type of the supplied aSourceCell
+    *   1. Copy all attributes from aSourceCell to the new cell
+    *   2. Move all contents of aSourceCell to the new cell
+    *   3. Replace aSourceCell in the table with the new cell
+    *
+    *  @param aSourceCell   The cell to be replaced
+    *  @return              The new cell that replaces aSourceCell
+    */
+  [can_run_script]
+  Element switchTableCellHeaderType(in Element aSourceCell);
+
+  /** Merges contents of all selected cells
+    * for selected cells that are adjacent,
+    * this will result in a larger cell with appropriate
+    * rowspan and colspan, and original cells are deleted
+    * The resulting cell is in the location of the
+    *   cell at the upper-left corner of the adjacent
+    *   block of selected cells
+    *
+    * @param aMergeNonContiguousContents:
+    *       If true:
+    *         Non-contiguous cells are not deleted,
+    *         but their contents are still moved
+    *         to the upper-left cell
+    *       If false: contiguous cells are ignored
+    *
+    * If there are no selected cells,
+    *   and selection or caret is in a cell,
+    *   that cell and the one to the right
+    *   are merged
+    */
+  [can_run_script]
+  void joinTableCells(in boolean aMergeNonContiguousContents);
+
+  /** Split a cell that has rowspan and/or colspan > 0
+    *   into cells such that all new cells have
+    *   rowspan = 1 and colspan = 1
+    *  All of the contents are not touched --
+    *   they will appear to be in the upper-left cell
+    */
+  [can_run_script]
+  void splitTableCell();
+
+  /** Scan through all rows and add cells as needed so
+    *   all locations in the cellmap are occupied.
+    *   Used after inserting single cells or pasting
+    *   a collection of cells that extend past the
+    *   previous size of the table
+    * If aTable is null, it uses table enclosing the selection anchor
+    * This doesn't doesn't change the selection,
+    *   thus it can be used to fixup all tables
+    *   in a page independent of the selection
+    */
+  [can_run_script]
+  void normalizeTable(in Element aTable);
+
+  /**
+   * getCellIndexes() computes row index and column index of a table cell.
+   * Note that this depends on layout information.  Therefore, all pending
+   * layout should've been flushed before calling this.
+   *
+   * @param aCellElement        If not null, this computes indexes of the cell.
+   *                            If null, this computes indexes of a cell which
+   *                            contains anchor of Selection.
+   * @param aRowIndex           Must be an object, whose .value will be set
+   *                            to row index of the cell.  0 is the first row.
+   *                            If rowspan is set to 2 or more, the start
+   *                            row index is used.
+   * @param aColumnIndex        Must be an object, whose .value will be set
+   *                            to column index of the cell.  0 is the first
+   *                            column.  If colspan is set to 2 or more, the
+   *                            start column index is used.
+   */
+  [can_run_script]
+  void getCellIndexes(in Element aCellElement,
+                      out long aRowIndex, out long aColumnIndex);
+
+  /**
+   * getTableSize() computes number of rows and columns.
+   * Note that this depends on layout information.  Therefore, all pending
+   * layout should've been flushed before calling this.
+   *
+   * @param aTableOrElementInTable  If a <table> element, this computes number
+   *                                of rows and columns of it.
+   *                                If another element and in a <table>, this
+   *                                computes number of rows and columns of
+   *                                the nearest ancestor <table> element.
+   *                                If element is not in <table> element,
+   *                                throwing an exception.
+   *                                If null, this looks for nearest ancestor
+   *                                <table> element containing anchor of
+   *                                Selection.  If found, computes the number
+   *                                of rows and columns of the <table>.
+   *                                Otherwise, throwing an exception.
+   * @param aRowCount               Number of *actual* row count.
+   *                                I.e., rowspan does NOT increase this value.
+   * @param aColumnCount            Number of column count.
+   *                                I.e., if colspan is specified with bigger
+   *                                number than actual, the value is used
+   *                                as this.
+   */
+  void getTableSize(in Element aTableOrElementInTable,
+                    out long aRowCount, out long aColCount);
+
+  /**
+   * getCellAt() returns a <td> or <th> element in a <table> if there is a
+   * cell at the indexes.
+   *
+   * @param aTableElement       If not null, must be a <table> element.
+   *                            If null, looks for the nearest ancestor <table>
+   *                            to look for a cell.
+   * @param aRowIndex           Row index of the cell.
+   * @param aColumnIndex        Column index of the cell.
+   * @return                    Returns a <td> or <th> element if there is.
+   *                            Otherwise, returns null without throwing
+   *                            exception.
+   *                            If aTableElement is not null and not a <table>
+   *                            element, throwing an exception.
+   *                            If aTableElement is null and anchor of Selection
+   *                            is not in any <table> element, throwing an
+   *                            exception.
+   */
+  Element getCellAt(in Element aTableElement,
+                    in long aRowIndex, in long aColumnIndex);
+
+  /**
+   * Get cell element and its various information from <table> element and
+   * indexes in it.  If aTableElement is null, this looks for an ancestor
+   * <table> element of anchor of Selection.  If there is no <table> element
+   * at that point, this throws exception.  Note that this requires layout
+   * information.  So, you need to flush the layout after changing the DOM
+   * tree.
+   * If there is no cell element at the indexes, this throws exception.
+   * XXX Perhaps, this is wrong behavior, this should return null without
+   *     exception since the caller cannot distinguish whether the exception
+   *     is caused by "not found" or other unexpected situation.
+   *
+   * @param aTableElement       A <table> element.  If this is null, this
+   *                            uses ancestor of anchor of Selection.
+   * @param aRowIndex           Row index in aTableElement.  Starting from 0.
+   * @param aColumnIndex        Column index in aTableElement.  Starting from
+   *                            0.
+   * @param aCellElement        [OUT] The cell element at the indexes.
+   * @param aStartRowIndex      [OUT] First row index which contains
+   *                            aCellElement.  E.g., if the cell's rowspan is
+   *                            not 1, this returns its first row index.
+   *                            I.e., this can be smaller than aRowIndex.
+   * @param aStartColumnIndex   [OUT] First column index which contains the
+   *                            aCellElement.  E.g., if the cell's colspan is
+   *                            larger than 1, this returns its first column
+   *                            index.  I.e., this can be smaller than
+   *                            aColumIndex.
+   * @param aRowSpan            [OUT] rowspan attribute value in most cases.
+   *                            If the specified value is invalid, this
+   *                            returns 1.  Only when the document is written
+   *                            in HTML5 or later, this can be 0.
+   * @param aColSpan            [OUT] colspan attribute value in most cases.
+   *                            If the specified value is invalid, this
+   *                            returns 1.
+   * @param aEffectiveRowSpan   [OUT] Effective rowspan value at aRowIndex.
+   *                            This is same as:
+   *                              aRowSpan - (aRowIndex - aStartRowIndex)
+   * @param aEffectiveColSpan   [OUT] Effective colspan value at aColumnIndex.
+   *                            This is same as:
+   *                              aColSpan - (aColumnIndex - aStartColumnIndex)
+   * @param aIsSelected         [OUT] Returns true if aCellElement or its
+   *                            <tr> or <table> element is selected.
+   *                            Otherwise, e.g., aCellElement just contains
+   *                            selection range, returns false.
+   */
+  void getCellDataAt(in Element aTableElement,
+                     in long aRowIndex, in long aColumnIndex,
+                     out Element aCellElement,
+                     out long aStartRowIndex, out long aStartColumnIndex,
+                     out long aRowSpan, out long aColSpan,
+                     out long aEffectiveRowSpan, out long aEffectiveColSpan,
+                     out boolean aIsSelected);
+
+  /**
+   * getFirstRow() returns first <tr> element in a <table> element.
+   *
+   * @param aTableOrElementInTable  If a <table> element, returns its first
+   *                                <tr> element.
+   *                                If another element, looks for nearest
+   *                                ancestor <table> element first.  Then,
+   *                                return its first <tr> element.
+   * @return                        <tr> element in the <table> element.
+   *                                If <table> element is not found, this
+   *                                throws an exception.
+   *                                If there is a <table> element but it
+   *                                does not have <tr> elements, returns
+   *                                null without throwing exception.
+   *                                Note that this may return anonymous <tr>
+   *                                element if <table> has one or more cells
+   *                                but <tr> element is not in the source.
+   */
+  Element getFirstRow(in Element aTableElement);
+
+  /** Preferred direction to search for neighboring cell
+    * when trying to locate a cell to place caret in after
+    * a table editing action.
+    * Used for aDirection param in SetSelectionAfterTableEdit
+    */
+
+  /**
+   * getSelectedOrParentTableElement() returns a <td>, <th>, <tr> or <table>.
+   * If first selection range selects a <td> or <th>, returns it.  aTagName
+   * is set to "td" even if the result is a <th> and aCount is set to
+   * Selection.rangeCount.
+   * If first selection range does not select <td> nor <th>, but selection
+   * anchor refers <table>, returns it.  aTagName is set to "table" and
+   * aCount is set to 1.
+   * If first selection range does not select <td> nor <th>, but selection
+   * anchor refers <tr>, returns it.  aTagName is set to "tr" and aCount is
+   * set to 1.
+   * If first selection range does not select <td> nor <th>, but selection
+   * anchor refers <td> (not include <th>!), returns it.  aTagName is set to
+   * "td" and aCount is set to 0.
+   * Otherwise, if container of selection anchor is in a <td> or <th>,
+   * returns it.  aTagName is set to "td" but aCount is set to 0.
+   * Otherwise, returns null, aTagName is set to empty string and aCount is
+   * set to 0.  I.e., does not throw exception even if a cell is not found.
+   * NOTE: Calling this resets internal counter of getFirstSelectedCell()
+   *       and getNextSelectedCell().  I.e., getNextSelectedCell() will
+   *       return second selected cell element.
+   */
+  Element getSelectedOrParentTableElement(out AString aTagName,
+                                          out long aCount);
+
+  /** Generally used after GetSelectedOrParentTableElement
+    *   to test if selected cells are complete rows or columns
+    *
+    * @param aElement           Any table or cell element or any element
+    *                           inside a table
+    *                           Used to get enclosing table.
+    *                           If null, selection's anchorNode is used
+    *
+    * @return
+    *     0                        aCellElement was not a cell
+    *                              (returned result = NS_ERROR_FAILURE)
+    *     TableSelectionMode::Cell     There are 1 or more cells selected but
+    *                              complete rows or columns are not selected
+    *     TableSelectionMode::Row      All cells are in 1 or more rows
+    *                              and in each row, all cells selected
+    *                              Note: This is the value if all rows
+    *                              (thus all cells) are selected
+    *     TableSelectionMode::Column   All cells are in 1 or more columns
+    *                              and in each column, all cells are selected
+    */
+  [can_run_script]
+  uint32_t getSelectedCellsType(in Element aElement);
+
+  /**
+   * getFirstSelectedCellInTable() returns a cell element, its row index and
+   * its column index if first range of Selection selects a cell.  Note that
+   * that "selects a cell" means that the range container is a <tr> element
+   * and endOffset is startOffset + 1.  So, even if first range of Selection
+   * is in a cell element, this treats the range does not select a cell.
+   * NOTE: Calling this resets internal counter of getFirstSelectedCell()
+   *       and getNextSelectedCell().  I.e., getNextSelectedCell() will
+   *       return second selected cell element.
+   *
+   * @param aRowIndex    [OUT} Returns row index of the found cell.  If not
+   *                     found, returns 0.
+   * @param aColumnIndex [OUT] Returns column index of the found cell.  If
+   *                     not found, returns 0.
+   * @return             The cell element which is selected by the first
+   *                     range of Selection.  Even if this is not found,
+   *                     this returns null, not throwing exception.
+   */
+  [can_run_script]
+  Element getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
+
+  /**
+   * getSelectedCells() returns an array of `<td>` and `<th>` elements which
+   * are selected in **any** `<table>` elements (i.e., some cells may be
+   * in different `<table>` element).
+   * If first range does not select a table cell element, this returns empty
+   * array because editor considers that selection is not in table cell
+   * selection mode.
+   * If second or later ranges do not select only a table cell element, this
+   * ignores the ranges.
+   */
+  Array<Element> getSelectedCells();
+};

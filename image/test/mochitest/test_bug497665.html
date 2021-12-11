@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=497665
+-->
+<head>
+  <title>Test for Bug 497665</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=497665">Mozilla Bug 497665</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+var image1first, image2first, image1second, image2second, image1third, image2third;
+
+SimpleTest.waitForExplicitFinish();
+
+function checkFirst()
+{
+  var iframeelem = document.getElementById('test-iframe');
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+
+  var firstimg = iframeelem.contentDocument.getElementById('image1');
+  var secondimg = iframeelem.contentDocument.getElementById('image2');
+  ctx.drawImage(firstimg, 0, 0);
+  image1first = canvas.toDataURL();
+  ctx.drawImage(secondimg, 0, 0);
+  image2first = canvas.toDataURL();
+
+  ok(image1first == image2first, "We got different images, but shouldn't have.");
+
+  iframeelem.onload = checkForceReload;
+  iframeelem.contentWindow.location.reload(true);
+}
+
+function checkForceReload()
+{
+  var iframeelem = document.getElementById('test-iframe');
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+
+  var firstimg = iframeelem.contentDocument.getElementById('image1');
+  var secondimg = iframeelem.contentDocument.getElementById('image2');
+  ctx.drawImage(firstimg, 0, 0);
+  image1second = canvas.toDataURL();
+  ctx.drawImage(secondimg, 0, 0);
+  image2second = canvas.toDataURL();
+
+  ok(image1second == image2second, "We got different images after a force-reload, but shouldn't have.");
+
+  // Sanity check that we actually reloaded.
+  ok(image1first != image1second, "We got the same images after a force-reload.");
+
+  iframeelem.onload = checkReload;
+  iframeelem.contentWindow.location.reload(false);
+}
+
+function checkReload()
+{
+  var iframeelem = document.getElementById('test-iframe');
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+
+  var firstimg = iframeelem.contentDocument.getElementById('image1');
+  var secondimg = iframeelem.contentDocument.getElementById('image2');
+  ctx.drawImage(firstimg, 0, 0);
+  image1third = canvas.toDataURL();
+  ctx.drawImage(secondimg, 0, 0);
+  image2third = canvas.toDataURL();
+
+  ok(image1third == image2third, "We got different images after a reload, but shouldn't have.");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<div id="content"> <!-- style="display: none" -->
+<canvas id="canvas" width="100" height="100"> </canvas>
+<iframe id="test-iframe" src="bug497665-iframe.html" onload="checkFirst()"></iframe>
+</div>
+</body>
+</html>

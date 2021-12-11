@@ -1,0 +1,287 @@
+;+#
+;+# This Source Code Form is subject to the terms of the Mozilla Public
+;+# License, v. 2.0. If a copy of the MPL was not distributed with this
+;+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+;+#
+;+# OK, this file is meant to support SUN, LINUX, AIX and WINDOWS
+;+#   1. For all unix platforms, the string ";-"  means "remove this line"
+;+#   2. For all unix platforms, the string " DATA " will be removed from any 
+;+#	line on which it occurs.
+;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
+;+#      On AIX, lines containing ";+" will be removed.  
+;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   5. For all unix platforms, after the above processing has taken place,
+;+#    all characters after the first ";" on the line will be removed.  
+;+#    And for AIX, the first ";" will also be removed.
+;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
+;+#   directives are hidden behind ";", ";+", and ";-"
+;+
+;+NSS_3.2 {               # NSS 3.2 release
+;+    global:
+LIBRARY smime3 ;-
+EXPORTS	;-
+NSS_CMSContentInfo_GetBulkKey;
+NSS_CMSContentInfo_GetBulkKeySize;
+NSS_CMSContentInfo_GetContent;
+NSS_CMSContentInfo_GetContentEncAlgTag;
+NSS_CMSContentInfo_GetContentTypeTag;
+NSS_CMSContentInfo_SetBulkKey;
+NSS_CMSContentInfo_SetContent;
+NSS_CMSContentInfo_SetContentEncAlg;
+NSS_CMSContentInfo_SetContent_Data;
+NSS_CMSContentInfo_SetContent_DigestedData;
+NSS_CMSContentInfo_SetContent_EncryptedData;
+NSS_CMSContentInfo_SetContent_EnvelopedData;
+NSS_CMSContentInfo_SetContent_SignedData;
+NSS_CMSDEREncode;
+NSS_CMSDecoder_Cancel;
+NSS_CMSDecoder_Finish;
+NSS_CMSDecoder_Start;
+NSS_CMSDecoder_Update;
+NSS_CMSDigestContext_Cancel;
+NSS_CMSDigestContext_FinishMultiple;
+NSS_CMSDigestContext_FinishSingle;
+NSS_CMSDigestContext_StartMultiple;
+NSS_CMSDigestContext_StartSingle;
+NSS_CMSDigestContext_Update;
+NSS_CMSDigestedData_Create;
+NSS_CMSDigestedData_Destroy;
+NSS_CMSDigestedData_GetContentInfo;
+NSS_CMSEncoder_Cancel;
+NSS_CMSEncoder_Finish;
+NSS_CMSEncoder_Start;
+NSS_CMSEncoder_Update;
+NSS_CMSEncryptedData_Create;
+NSS_CMSEncryptedData_Destroy;
+NSS_CMSEncryptedData_GetContentInfo;
+NSS_CMSEnvelopedData_AddRecipient;
+NSS_CMSEnvelopedData_Create;
+NSS_CMSEnvelopedData_Destroy;
+NSS_CMSEnvelopedData_GetContentInfo;
+NSS_CMSMessage_ContentLevel;
+NSS_CMSMessage_ContentLevelCount;
+NSS_CMSMessage_Copy;
+NSS_CMSMessage_Create;
+NSS_CMSMessage_CreateFromDER;
+NSS_CMSMessage_Destroy;
+NSS_CMSMessage_GetContent;
+NSS_CMSMessage_GetContentInfo;
+NSS_CMSRecipientInfo_Create;
+NSS_CMSRecipientInfo_Destroy;
+NSS_CMSSignedData_AddCertChain;
+NSS_CMSSignedData_AddCertList;
+NSS_CMSSignedData_AddCertificate;
+NSS_CMSSignedData_AddDigest;
+NSS_CMSSignedData_AddSignerInfo;
+NSS_CMSSignedData_Create;
+NSS_CMSSignedData_CreateCertsOnly;
+NSS_CMSSignedData_Destroy;
+NSS_CMSSignedData_GetContentInfo;
+NSS_CMSSignedData_GetDigestAlgs;
+NSS_CMSSignedData_GetSignerInfo;
+NSS_CMSSignedData_HasDigests;
+NSS_CMSSignedData_ImportCerts;
+NSS_CMSSignedData_SetDigests;
+NSS_CMSSignedData_SignerInfoCount;
+NSS_CMSSignedData_VerifyCertsOnly;
+NSS_CMSSignedData_VerifySignerInfo;
+NSS_CMSSignerInfo_AddSMIMECaps;
+NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs;
+NSS_CMSSignerInfo_AddSigningTime;
+NSS_CMSSignerInfo_Create;
+NSS_CMSSignerInfo_Destroy;
+NSS_CMSSignerInfo_GetCertList;
+NSS_CMSSignerInfo_GetSignerCommonName;
+NSS_CMSSignerInfo_GetSignerEmailAddress;
+NSS_CMSSignerInfo_GetSigningCertificate;
+NSS_CMSSignerInfo_GetSigningTime;
+NSS_CMSSignerInfo_GetVerificationStatus;
+NSS_CMSSignerInfo_GetVersion;
+NSS_CMSSignerInfo_IncludeCerts;
+NSS_CMSUtil_VerificationStatusToString;
+NSS_SMIMEUtil_FindBulkAlgForRecipients;
+CERT_DecodeCertPackage;
+SEC_PKCS7AddRecipient;
+SEC_PKCS7AddSigningTime;
+SEC_PKCS7ContentType;
+SEC_PKCS7CreateData;
+SEC_PKCS7CreateEncryptedData;
+SEC_PKCS7CreateEnvelopedData;
+SEC_PKCS7CreateSignedData;
+SEC_PKCS7DecodeItem;
+SEC_PKCS7DecoderFinish;
+SEC_PKCS7DecoderStart;
+SEC_PKCS7DecoderUpdate;
+SEC_PKCS7DecryptContents;
+SEC_PKCS7DestroyContentInfo;
+SEC_PKCS7EncoderFinish;
+SEC_PKCS7EncoderStart;
+SEC_PKCS7EncoderUpdate;
+SEC_PKCS7GetCertificateList;
+SEC_PKCS7GetContent;
+SEC_PKCS7GetEncryptionAlgorithm;
+SEC_PKCS7IncludeCertChain;
+SEC_PKCS7IsContentEmpty;
+SEC_PKCS7VerifySignature;
+SEC_PKCS12AddCertAndKey;
+SEC_PKCS12AddPasswordIntegrity;
+SEC_PKCS12CreateExportContext;
+SEC_PKCS12CreatePasswordPrivSafe;
+SEC_PKCS12CreateUnencryptedSafe;
+SEC_PKCS12EnableCipher;
+SEC_PKCS12Encode;
+SEC_PKCS12DecoderImportBags;
+SEC_PKCS12DecoderFinish;
+SEC_PKCS12DecoderStart;
+SEC_PKCS12DecoderUpdate;
+SEC_PKCS12DecoderValidateBags;
+SEC_PKCS12DecoderVerify;
+SEC_PKCS12DestroyExportContext;
+SEC_PKCS12IsEncryptionAllowed;
+SEC_PKCS12SetPreferredCipher;
+;+    local:
+;+        *;
+;+};
+;+NSS_3.2.1 {               # NSS 3.2.1 release
+;+    global:
+NSSSMIME_VersionCheck;
+;+    local:
+;+        *;
+;+};
+;+NSS_3.3 {     # NSS 3.3 release
+;+    global:
+SEC_PKCS7AddCertificate;
+SEC_PKCS7CreateCertsOnly;
+SEC_PKCS7Encode;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.4 {     # NSS 3.4 release
+;+    global:
+CERT_DecodeCertFromPackage;
+NSS_CMSMessage_IsSigned;
+NSS_CMSSignedData_SetDigestValue;
+NSS_SMIMESignerInfo_SaveSMIMEProfile;
+SEC_PKCS12DecoderGetCerts;
+SEC_PKCS7ContainsCertsOrCrls;
+SEC_PKCS7ContentIsEncrypted;
+SEC_PKCS7ContentIsSigned;
+SEC_PKCS7CopyContentInfo;
+SEC_PKCS7GetSignerCommonName;
+SEC_PKCS7GetSignerEmailAddress;
+SEC_PKCS7GetSigningTime;
+SEC_PKCS7SetContent;
+SEC_PKCS7VerifyDetachedSignature;
+SECMIME_DecryptionAllowed;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.4.1 {     # NSS 3.4.1 release
+;+    global:
+NSS_CMSMessage_IsEncrypted;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.6 {     # NSS 3.6 release
+;+    global:
+NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs;
+NSS_CMSSignerInfo_CreateWithSubjKeyID;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.7 {     # NSS 3.7 release
+;+    global:
+NSS_CMSRecipientInfo_CreateWithSubjKeyID;
+NSS_CMSRecipientInfo_CreateWithSubjKeyIDFromCert;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.7.2 {   # NSS 3.7.2 release
+;+    global:
+NSS_CMSRecipientInfo_WrapBulkKey;
+NSS_CMSRecipientInfo_UnwrapBulkKey;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.8 {   # NSS 3.8 release
+;+    global:
+NSS_CMSRecipientInfo_CreateNew;
+NSS_CMSRecipientInfo_CreateFromDER;
+NSS_CMSRecipientInfo_Encode;
+NSS_CMSRecipientInfo_GetCertAndKey;
+SEC_PKCS12DecoderSetTargetTokenCAs;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.9 {   # NSS 3.9 release
+;+    global:
+SEC_PKCS7DecoderAbort;
+SEC_PKCS7EncoderAbort;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.9.3 {   # NSS 3.9.3 release
+;+    global:
+CERT_ConvertAndDecodeCertificate;
+SEC_PKCS7EncodeItem;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.10 {   # NSS 3.10 release
+;+    global:
+SEC_PKCS12DecoderIterateInit;
+SEC_PKCS12DecoderIterateNext;
+SEC_PKCS12DecryptionAllowed;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.2 {   # NSS 3.12.2 release
+;+    global:
+SEC_PKCS12AddCertOrChainAndKey;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.12.10 {   # NSS 3.12.10 release
+;+    global:
+NSS_CMSType_RegisterContentType;
+NSS_CMSContentInfo_SetDontStream;
+NSS_SMIMEUtil_CreateMSSMIMEEncKeyPrefs;
+;+#
+;+# Data objects
+;+#
+;+# Don't export these DATA symbols on Windows because they don't work right.
+;+# Use the SEC_ASN1_GET / SEC_ASN1_SUB / SEC_ASN1_XTRN macros to access them.
+;+#
+;+# See nssutil for other examples.
+;+#
+;;NSSCMSGenericWrapperDataTemplate DATA ;
+;;NSS_PointerToCMSGenericWrapperDataTemplate DATA ;
+NSS_Get_NSSCMSGenericWrapperDataTemplate;
+NSS_Get_NSS_PointerToCMSGenericWrapperDataTemplate;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.13 {    # NSS 3.13 release
+;+    global:
+NSSSMIME_GetVersion;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.15 {    # NSS 3.15 release
+;+    global:
+SEC_PKCS7VerifyDetachedSignatureAtTime;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.16 {    # NSS 3.16 release
+;+    global:
+NSS_CMSSignerInfo_Verify;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.18 {    # NSS 3.18 release
+;+    global:
+SEC_PKCS12DecoderRenameCertNicknames;
+;+    local:
+;+       *;
+;+};

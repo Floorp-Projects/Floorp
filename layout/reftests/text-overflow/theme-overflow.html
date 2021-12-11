@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Testcase for bug 669284</title>
+  
+  <style type="text/css">
+    p {
+      overflow: hidden;
+      text-overflow: ellipsis ellipsis;
+      width: 200px;
+    }
+    .r {
+      direction:rtl;
+    }
+
+.x0 { margin:0px;}
+.x1 { margin:1px;}
+.x2 { margin:2px;}
+.x3 { margin:3px;}
+.x4 { margin-left:-1px;}
+.r .x4 { margin-right:-1px;}
+
+f { float:left; width:1px; height:1px; margin-left:-100px; }
+.r f { float:right; width:1px; height:1px; margin-right:-100px; }
+  </style>
+</head>
+<body>
+<p>
+    <input type="checkbox" class="x0"> 0<f></f><br>
+    <input type="checkbox" class="x1"> 1<f></f><br>
+    <input type="checkbox" class="x2"> 2<f></f><br>
+    <input type="checkbox" class="x3"> 3<f></f><br>
+    <input type="checkbox" class="x4"><f></f><br>
+</p>
+
+<p>
+    <input type="radio" class="x0"> 0<f></f><br>
+    <input type="radio" class="x1"> 1<f></f><br>
+    <input type="radio" class="x2"> 2<f></f><br>
+    <input type="radio" class="x3"> 3<f></f><br>
+    <input type="radio" class="x4"><f></f><br>
+</p>
+
+<p class="r">
+    <input type="checkbox" class="x0"> 0<f></f><br>
+    <input type="checkbox" class="x1"> 1<f></f><br>
+    <input type="checkbox" class="x2"> 2<f></f><br>
+    <input type="checkbox" class="x3"> 3<f></f><br>
+    <input type="checkbox" class="x4"><f></f><br>
+</p>
+
+<p class="r">
+    <input type="radio" class="x0"> 0<f></f><br>
+    <input type="radio" class="x1"> 1<f></f><br>
+    <input type="radio" class="x2"> 2<f></f><br>
+    <input type="radio" class="x3"> 3<f></f><br>
+    <input type="radio" class="x4"><f></f><br>
+</p>
+
+</body>
+</html>

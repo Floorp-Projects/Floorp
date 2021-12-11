@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Panel Focus Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<checkbox id="b1" label="Item 1"/>
+
+<!-- Focus should be in this order: 2 6 3 8 1 4 5 7 9 -->
+<panel id="panel" norestorefocus="true" onpopupshown="panelShown()" onpopuphidden="panelHidden()">
+  <button id="t1" label="Button One"/>
+  <button id="t2" tabindex="1" label="Button Two" onblur="gButtonBlur++;"/>
+  <button id="t3" tabindex="2" label="Button Three"/>
+  <button id="t4" tabindex="0" label="Button Four"/>
+  <button id="t5" label="Button Five"/>
+  <button id="t6" tabindex="1" label="Button Six"/>
+  <button id="t7" label="Button Seven"/>
+  <button id="t8" tabindex="4" label="Button Eight"/>
+  <button id="t9" label="Button Nine"/>
+</panel>
+
+<panel id="noautofocusPanel" noautofocus="true"
+       onpopupshown="noautofocusPanelShown()" onpopuphidden="noautofocusPanelHidden()">
+  <html:input id="tb3"/>
+</panel>
+
+<checkbox id="b2" label="Item 2" popup="panel" onblur="gButtonBlur++;"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var gButtonBlur = 0;
+
+function showPanel()
+{
+  // click on the document so that the window has focus
+  synthesizeMouse(document.documentElement, 1, 1, { });
+
+  // focus the button
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("b1"), "focus", "button focus");
+  // tabbing again should skip the popup
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("b2"), "focus", "popup skipped in focus navigation");
+
+  $("panel").openPopup(null, "", 10, 10, false, false);
+}
+
+function panelShown()
+{
+  // the focus on the button should have been removed when the popup was opened
+  is(gButtonBlur, 1, "focus removed when popup opened");
+
+  // press tab numerous times to cycle through the buttons. The t2 button will
+  // be blurred twice, so gButtonBlur will be 3 afterwards.
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t2"), "focus", "tabindex 1");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t6"), "focus", "tabindex 2");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t3"), "focus", "tabindex 3");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t8"), "focus", "tabindex 4");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t1"), "focus", "tabindex 5");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t4"), "focus", "tabindex 6");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t5"), "focus", "tabindex 7");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t7"), "focus", "tabindex 8");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t9"), "focus", "tabindex 9");
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("t2"), "focus", "tabindex 10");
+
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t9"), "focus", "back tabindex 1");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t7"), "focus", "back tabindex 2");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t5"), "focus", "back tabindex 3");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t4"), "focus", "back tabindex 4");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t1"), "focus", "back tabindex 5");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t8"), "focus", "back tabindex 6");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t3"), "focus", "back tabindex 7");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t6"), "focus", "back tabindex 8");
+  synthesizeKeyExpectEvent("KEY_Tab", {shiftKey: true}, $("t2"), "focus", "back tabindex 9");
+
+  is(gButtonBlur, 3, "blur events fired within popup");
+
+  synthesizeKey("KEY_Escape");
+}
+
+function ok(condition, message) {
+  window.arguments[0].SimpleTest.ok(condition, message);
+}
+
+function is(left, right, message) {
+  window.arguments[0].SimpleTest.is(left, right, message);
+}
+
+function panelHidden()
+{
+  // closing the popup should have blurred the focused element
+  is(gButtonBlur, 4, "focus removed when popup closed");
+
+  // now that the panel is hidden, pressing tab should focus the elements in
+  // the main window again
+  synthesizeKeyExpectEvent("KEY_Tab", {}, $("b1"), "focus", "focus after popup closed");
+
+  $("noautofocusPanel").openPopup(null, "", 10, 10, false, false);
+}
+
+function noautofocusPanelShown()
+{
+  // with noautofocus="true", the focus should not be removed when the panel is
+  // opened, so key events should still be fired at the checkbox.
+  synthesizeKeyExpectEvent(" ", {}, $("b1"), "command", "noautofocus");
+  $("noautofocusPanel").hidePopup();
+}
+
+function noautofocusPanelHidden()
+{
+  window.close();
+  window.arguments[0].SimpleTest.finish();
+}
+
+window.arguments[0].SimpleTest.waitForFocus(showPanel, window);
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

@@ -1,0 +1,225 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test forms and logins without a username</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: forms and logins without a username.
+<script>
+gTestDependsOnDeprecatedLogin = true;
+runChecksAfterCommonInit(() => startTest());
+runInParent(() => {
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
+
+  // pwlogin1 uses a unique formActionOrigin, to check forms where no other logins
+  // will apply. pwlogin2 uses the normal formActionOrigin, so that we can test
+  // forms with a mix of username and non-username logins that might apply.
+  //
+  // Note: pwlogin2 is deleted at the end of the test.
+
+  let pwlogin1 = new nsLoginInfo();
+  let pwlogin2 = new nsLoginInfo();
+
+  pwlogin1.init("http://mochi.test:8888", "http://mochi.test:1111", null,
+                "", "1234");
+
+  pwlogin2.init("http://mochi.test:8888", "http://mochi.test:8888", null,
+                "", "1234");
+
+
+  Services.logins.addLogin(pwlogin1);
+  Services.logins.addLogin(pwlogin2);
+});
+
+let DEFAULT_ORIGIN = window.location.origin;
+</script>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: password-only logins **/
+async function startTest() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <!-- simple form: no username field, 1 password field -->
+    <form id='form1' action='http://mochi.test:1111/formtest.js'> 1
+        <input type='password' name='pname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- simple form: no username field, 2 password fields -->
+    <form id='form2' action='http://mochi.test:1111/formtest.js'> 2
+        <input type='password' name='pname1' value=''>
+        <input type='password' name='pname2' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- simple form: no username field, 3 password fields -->
+    <form id='form3' action='http://mochi.test:1111/formtest.js'> 3
+        <input type='password' name='pname1' value=''>
+        <input type='password' name='pname2' value=''>
+        <input type='password' name='pname3' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- simple form: no username field, 5 password fields -->
+    <form id='form4' action='http://mochi.test:1111/formtest.js'> 4
+        <input type='password' name='pname1' value=''>
+        <input type='password' name='pname2' value=''>
+        <input type='password' name='pname3' value=''>
+        <input type='password' name='pname4' value=''>
+        <input type='password' name='pname5' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- 6 password fields, should be ignored. -->
+    <form id='form5' action='http://mochi.test:1111/formtest.js'> 5
+        <input type='password' name='pname1' value=''>
+        <input type='password' name='pname2' value=''>
+        <input type='password' name='pname3' value=''>
+        <input type='password' name='pname4' value=''>
+        <input type='password' name='pname5' value=''>
+        <input type='password' name='pname6' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+
+
+    <!-- 1 username field -->
+    <form id='form6' action='http://mochi.test:1111/formtest.js'> 6
+        <input type='text'     name='uname' value=''>
+        <input type='password' name='pname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+
+    <!-- 1 username field, with a value set -->
+    <form id='form7' action='http://mochi.test:1111/formtest.js'> 7
+        <input type='text'     name='uname' value='someuser'>
+        <input type='password' name='pname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+
+
+    <!--
+    (The following forms have 2 potentially-matching logins, on is
+    password-only, the other is username+password)
+    -->
+
+
+
+    <!-- 1 username field, with value set. Fill in the matching U+P login -->
+    <form id='form8' action='formtest.js'> 8
+        <input type='text'     name='uname' value='testuser'>
+        <input type='password' name='pname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- 1 username field, with value set. Don't fill in U+P login-->
+    <form id='form9' action='formtest.js'> 9
+        <input type='text'     name='uname' value='someuser'>
+        <input type='password' name='pname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+
+
+    <!-- 1 username field, too small for U+P login -->
+    <form id='form10' action='formtest.js'> 10
+        <input type='text'     name='uname' value='' maxlength="4">
+        <input type='password' name='pname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- 1 username field, too small for U+P login -->
+    <form id='form11' action='formtest.js'> 11
+        <input type='text'     name='uname' value='' maxlength="0">
+        <input type='password' name='pname' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- 1 username field, too small for U+P login -->
+    <form id='form12' action='formtest.js'> 12
+        <input type='text'     name='uname' value=''>
+        <input type='password' name='pname' value='' maxlength="4">
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- 1 username field, too small for either login -->
+    <form id='form13' action='formtest.js'> 13
+        <input type='text'     name='uname' value=''>
+        <input type='password' name='pname' value='' maxlength="1">
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>
+
+    <!-- 1 username field, too small for either login -->
+    <form id='form14' action='formtest.js'> 14
+        <input type='text'     name='uname' value=''>
+        <input type='password' name='pname' value='' maxlength="0">
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
+    </form>`, win);
+
+  await checkLoginFormInFrameWithElementValues(win, 1, "1234");
+  await checkLoginFormInFrameWithElementValues(win, 2, "1234", "");
+  await checkLoginFormInFrameWithElementValues(win, 3, "1234", "", "");
+  await checkLoginFormInFrameWithElementValues(win, 4, "1234");
+  await checkUnmodifiedFormInFrame(win, 5);
+
+  await checkLoginFormInFrameWithElementValues(win, 6, "testuser", "testpass");
+  await checkLoginFormInFrameWithElementValues(win, 7, "someuser", "");
+
+  await checkLoginFormInFrameWithElementValues(win, 8, "testuser", "testpass");
+  await checkLoginFormInFrameWithElementValues(win, 9, "someuser", "");
+
+  await checkLoginFormInFrameWithElementValues(win, 10, "", "1234");
+  await checkLoginFormInFrameWithElementValues(win, 11, "", "1234");
+  await checkLoginFormInFrameWithElementValues(win, 12, "", "1234");
+
+  await checkUnmodifiedFormInFrame(win, 13);
+  await checkUnmodifiedFormInFrame(win, 14);
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1094549
+-->
+<head>
+  <title>Test for Bug 1094549</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1094549">Mozilla Bug 1094549</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+// Shorter timeout for this test should finish soon.
+SimpleTest.requestLongerTimeout(0.3);
+
+function finish(v) {
+  isnot(v.error, null, "should've got an error event");
+  SimpleTest.finish();
+}
+
+function onload() {
+  info("iframe loaded");
+  var v = SpecialPowers.wrap(document.body.getElementsByTagName("iframe")[0])
+                       .contentDocument.body.getElementsByTagName("video")[0];
+
+  // Got 'error' as expected, finish the test.
+  if (v.error) {
+    finish(v);
+    return;
+  }
+
+  // Otherwise, wait for it.
+  v.onerror = function() {
+    finish(v);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+var f = document.createElement("iframe");
+// Assign a resource file with zero length and expect the error event from
+// the video element since decoding metadata will fail.
+f.src = "data:video/webm,";
+f.addEventListener("load", onload);
+document.body.appendChild(f);
+
+</script>
+</pre>
+</body>
+</html>

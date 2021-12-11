@@ -1,0 +1,114 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Validate Interfaces Exposed to Service Workers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="../worker_driver.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+  function setupSW(registration) {
+    var iframe;
+    var worker = registration.installing ||
+                 registration.waiting ||
+                 registration.active;
+    window.onmessage = function(event) {
+      if (event.data.type == 'finish') {
+        iframe.remove();
+        registration.unregister().then(function(success) {
+          ok(success, "The service worker should be unregistered successfully");
+
+          SimpleTest.finish();
+        }, function(e) {
+          dump("Unregistering the SW failed with " + e + "\n");
+          SimpleTest.finish();
+        });
+      } else if (event.data.type == 'status') {
+        ok(event.data.status, event.data.msg);
+
+      } else if (event.data.type == 'getPrefs') {
+        let result = {};
+        event.data.prefs.forEach(function(pref) {
+          result[pref] = SpecialPowers.Services.prefs.getBoolPref(pref);
+        });
+        worker.postMessage({
+          type: 'returnPrefs',
+          prefs: event.data.prefs,
+          result
+        });
+
+      } else if (event.data.type == 'getHelperData') {
+        const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+        const isNightly = AppConstants.NIGHTLY_BUILD;
+        const isEarlyBetaOrEarlier = AppConstants.EARLY_BETA_OR_EARLIER;
+        const isRelease = AppConstants.RELEASE_OR_BETA;
+        const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+        const isMac = AppConstants.platform == "macosx";
+        const isWindows = AppConstants.platform == "win";
+        const isAndroid = AppConstants.platform == "android";
+        const isLinux = AppConstants.platform == "linux";
+        const isInsecureContext = !window.isSecureContext;
+        // Currently, MOZ_APP_NAME is always "fennec" for all mobile builds, so we can't use AppConstants for this
+        const isFennec = isAndroid && SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(SpecialPowers.Ci.nsIAndroidBridge).isFennec;
+
+        const result = {
+          isNightly, isEarlyBetaOrEarlier, isRelease, isDesktop, isMac,
+          isWindows, isAndroid, isLinux, isInsecureContext, isFennec
+        };
+
+        worker.postMessage({
+          type: 'returnHelperData', result
+        });
+      }
+    }
+
+    worker.onerror = function(event) {
+      ok(false, 'Worker had an error: ' + event.data);
+      SimpleTest.finish();
+    };
+
+    iframe = document.createElement("iframe");
+    iframe.src = "message_receiver.html";
+    iframe.onload = function() {
+      worker.postMessage({ script: "test_serviceworker_interfaces.js" });
+    };
+    document.body.appendChild(iframe);
+  }
+
+  function runTest() {
+    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."})
+      .then(setupSW);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    // The handling of "dom.caches.enabled" here is a bit complicated.  What we
+    // want to happen is that Cache is always enabled in service workers.  So
+    // if service workers are disabled by default we want to force on both
+    // service workers and "dom.caches.enabled".  But if service workers are
+    // enabled by default, we do not want to mess with the "dom.caches.enabled"
+    // value, since that would defeat the purpose of the test.  Use a subframe
+    // to decide whether service workers are enabled by default, so we don't
+    // force creation of our own Navigator object before our prefs are set.
+    var prefs = [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ];
+
+    var subframe = document.createElement("iframe");
+    document.body.appendChild(subframe);
+    if (!("serviceWorker" in subframe.contentWindow.navigator)) {
+	prefs.push(["dom.caches.enabled", true]);
+    }
+    subframe.remove();
+
+    SpecialPowers.pushPrefEnv({"set": prefs}, runTest);
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIRequest;
+
+/**
+ * nsIRequestObserver
+ */
+[scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
+interface nsIRequestObserver : nsISupports
+{
+    /**
+     * Called to signify the beginning of an asynchronous request.
+     *
+     * @param aRequest request being observed
+     *
+     * An exception thrown from onStartRequest has the side-effect of
+     * causing the request to be canceled.
+     */
+    void onStartRequest(in nsIRequest aRequest);
+
+    /**
+     * Called to signify the end of an asynchronous request.  This
+     * call is always preceded by a call to onStartRequest.
+     *
+     * @param aRequest request being observed
+     * @param aStatusCode reason for stopping (NS_OK if completed successfully)
+     *
+     * An exception thrown from onStopRequest is generally ignored.
+     */
+    void onStopRequest(in nsIRequest aRequest,
+                       in nsresult aStatusCode);
+};

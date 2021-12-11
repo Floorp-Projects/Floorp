@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.threads-list {
+  padding: 4px 0;
+}
+
+.threads-list * {
+  user-select: none;
+}
+
+.threads-list > .thread {
+  font-size: inherit;
+  color: var(--theme-text-color-strong);
+  padding: 2px 6px;
+  padding-inline-start: 20px;
+  line-height: 16px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.threads-list > .thread:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.threads-list > .thread.selected {
+  background-color: var(--tab-line-selected-color);
+}
+
+.threads-list .icon {
+  flex: none;
+  margin-inline-end: 4px;
+}
+
+.threads-list .img {
+  display: block;
+}
+
+.threads-list .label {
+  display: inline-block;
+  flex-grow: 1;
+  flex-shrink: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.threads-list .pause-badge {
+  flex: none;
+  margin-inline-start: 4px;
+}
+
+.threads-list > .thread.selected {
+  background: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.threads-list > .thread.selected .img {
+  background-color: currentColor;
+}

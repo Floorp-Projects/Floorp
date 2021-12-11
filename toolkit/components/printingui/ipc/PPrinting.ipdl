@@ -1,0 +1,46 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include PPrintingTypes;
+include protocol PContent;
+include protocol PBrowser;
+include protocol PPrintProgressDialog;
+include protocol PPrintSettingsDialog;
+include protocol PRemotePrintJob;
+
+namespace mozilla {
+namespace embedding {
+
+sync protocol PPrinting
+{
+  manager PContent;
+  manages PPrintProgressDialog;
+  manages PPrintSettingsDialog;
+  manages PRemotePrintJob;
+
+parent:
+  async ShowProgress(PBrowser browser,
+                     PPrintProgressDialog printProgressDialog,
+                     nullable PRemotePrintJob remotePrintJob,
+                     bool isForPrinting);
+
+  async ShowPrintDialog(PPrintSettingsDialog dialog,
+                        nullable PBrowser browser,
+                        PrintData settings);
+
+  async PPrintProgressDialog();
+  async PPrintSettingsDialog();
+
+  sync SavePrintSettings(PrintData settings, bool usePrinterNamePrefix,
+                         uint32_t flags)
+    returns(nsresult rv);
+
+child:
+  async PRemotePrintJob();
+  async __delete__();
+};
+
+} // namespace embedding
+} // namespace mozilla

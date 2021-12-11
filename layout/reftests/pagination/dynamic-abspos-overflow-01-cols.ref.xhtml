@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Multi-column Layout: AbsPos Pagination (Interlaced Dynamic Height)</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    html {
+      background: white;
+    }
+
+    #colset {
+      position: relative;
+      padding-top: 1px;
+      width: 300pt;
+      height: 2in;
+      border: silver 2pt;
+      border-style: none solid;
+    }
+
+    .centerline {
+      margin: 0 auto;
+      bottom: 0;
+      position: absolute;
+      width: 8px;
+      background: aqua;
+    }
+    #c1 {
+      height: 96pt;
+      right: 200pt;
+      left: 0;
+    }
+    #c2 {
+      height: 120pt;
+      right: 100pt;
+      left: 100pt;
+    }
+    #c3 {
+      height: 144pt;
+      right: 0;
+      left: 200pt;
+    }
+
+    #redline {
+      border-top: 8px solid lime;
+      margin-top: 1in;
+      position: relative;
+    }
+
+    #dynamo {
+      position: relative;
+      margin: -8px auto -8px;
+      width: 8px;
+      border-top: 8px solid orange;
+    }
+
+  </style>
+ </head>
+ <body>
+  <p>There must be a single green line with an orange square where
+    it intersects with the middle aqua line, and no red. The following
+    links must move the orange square to the intersection with the
+    indicated aqua line:</p>
+  <p>
+    <a href="asdljlwjerlk-unvisited">Left</a>
+    <a href="asdljlwjerlk-unvisited">Center</a>
+    <a href="asdljlwjerlk-unvisited">Right</a>
+  </p>
+  <div id="colset">
+    <div class="centerline" id="c1"></div>
+    <div class="centerline" id="c2"></div>
+    <div class="centerline" id="c3"></div>
+    <div id="redline"></div>
+    <div id="dynamo"></div>
+  </div>
+ </body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a MediaStream source triggers autoplay</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* import-globals-from ../../../test/manifest.js */
+SimpleTest.waitForExplicitFinish();
+
+var media = getPlayableVideo(gSmallTests);
+
+if (media == null) {
+  todo(false, "No media supported.");
+  SimpleTest.finish();
+} else {
+  function startTest() {
+    var v1 = document.createElement('video');
+    var v2 = document.createElement('video');
+    v1.preload = 'metadata';
+    v2.autoplay = true;
+    document.body.appendChild(v1);
+    document.body.appendChild(v2);
+
+    v1.src = media.name;
+    v1.onloadedmetadata = function() {
+      v2.srcObject = v1.mozCaptureStream();
+      v1.play();
+    };
+
+    v2.addEventListener('playing', function() {
+      ok(true, "playback started");
+      SimpleTest.finish();
+    }, {once: true});
+  }
+
+  startTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

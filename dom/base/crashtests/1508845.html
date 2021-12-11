@@ -1,0 +1,17 @@
+<script>
+window.onload=function(){
+  let bigShadowTree = `<div>`;
+  for (let i = 0; i < 10; ++i)
+    bigShadowTree = bigShadowTree + bigShadowTree;
+  b.attachShadow({ mode: 'open' }).innerHTML = bigShadowTree;
+  // Create wrappers for all those elements.
+  [...b.shadowRoot.querySelectorAll('*')].forEach(() => {});
+  document.documentElement.addEventListener('DOMNodeRemoved', function(){
+    window.frames[0].document.body.appendChild(b)
+  })
+  window.frames[0].document.body.appendChild(a)
+}
+</script>
+<mark id='a'>
+<iframe></iframe>
+<div id='b'>

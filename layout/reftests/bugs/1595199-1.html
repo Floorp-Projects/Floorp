@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<meta charset=UTF-8>
+<title>Testcase, bug 1595199</title>
+<style>
+  #outer {
+    background: red;
+    overflow: hidden;
+  }
+
+  #wrapper1 {
+    background: red;
+    height: 100%;
+  }
+
+  #wrapper2 {
+    background: fuchsia;
+    height: 100%;
+  }
+
+  #inner {
+    background: blue;
+    height: 100px;
+    width: 50%;
+  }
+</style>
+
+<div id="outer" style="height: 50px">
+  <div id="wrapper1">
+    <div id="wrapper2">
+      <div id="inner">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.addEventListener("load", function load_handler() {
+    document.getElementById("wrapper2").offsetHeight; // flush layout
+    document.getElementById("outer").style.height = "auto";
+  });
+</script>

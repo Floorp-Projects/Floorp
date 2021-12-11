@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<style>
+.test {
+  background-color: #fec;
+  display: inline-block;
+  width: 800px;
+  height: 800px;
+}
+
+.second {
+  box-shadow: inset 0 400px 1px 0px red;
+}
+
+.leftCut {
+  position: absolute;
+  margin-left: 0px;
+  margin-top: 0px;
+  width: 10px;
+  height: 800px;
+  background-color: black;
+}
+
+.rightCut {
+  position: absolute;
+  margin-left: 790px;
+  margin-top: 0px;
+  width: 10px;
+  height: 800px;
+  background-color: black;
+}
+
+.centerCut {
+  position: absolute;
+  margin-top: 395px;
+  width: 800px;
+  height: 20px;
+  background-color: black;
+}
+
+</style>
+
+<body>
+<div class="leftCut"></div>
+<div class="rightCut"></div>
+<div class="centerCut"></div>
+<div class="test second"></div>
+</body>
+</html>

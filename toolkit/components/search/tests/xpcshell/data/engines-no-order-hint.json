@@ -1,0 +1,70 @@
+{
+  "data": [
+    {
+      "webExtension": {
+        "id": "engine@search.mozilla.org"
+      },
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-rel-searchform-purpose@search.mozilla.org"
+      },
+      "orderHint": 1000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-chromeicon@search.mozilla.org"
+      },
+      "orderHint": 1000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
+      }, {
+        "included": { "regions": ["ru"] },
+        "default": "no"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-resourceicon@search.mozilla.org"
+      },
+      "appliesTo": [{
+        "included": { "locales": { "matches": ["en-US", "fr"] } },
+        "excluded": {
+          "regions": ["ru"]
+        },
+        "default": "no"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-reordered@search.mozilla.org"
+      },
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-pref@search.mozilla.org"
+      },
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de"] } },
+        "default": "no"
+      }]
+    }
+  ]
+}

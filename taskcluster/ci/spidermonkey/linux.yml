@@ -1,0 +1,483 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker:
+        max-run-time: 36000
+        docker-image: {in-tree: debian11-amd64-build}
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "0"
+    run:
+        tooltool-downloads: public
+
+sm-package-linux64/opt:
+    description: "Spidermonkey source package and test"
+    index:
+        job-name: sm-package-linux64-opt
+    treeherder:
+        symbol: SM(pkg)
+        platform: linux64/opt
+    run:
+        using: spidermonkey-package
+        spidermonkey-variant: plain
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - linux64-gcc
+            - sysroot-x86_64-linux-gnu
+
+sm-plain-linux64/debug:
+    description: "Spidermonkey Plain"
+    index:
+        job-name: sm-plain-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(p)
+    run:
+        spidermonkey-variant: plaindebug
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - sysroot-x86_64-linux-gnu
+
+sm-plain-linux64/opt:
+    description: "Spidermonkey Plain"
+    index:
+        job-name: sm-plain-linux64-opt
+    treeherder:
+        symbol: SM(p)
+        platform: linux64/opt
+    run:
+        spidermonkey-variant: plain
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - linux64-gcc
+            - sysroot-x86_64-linux-gnu
+
+sm-smoosh-linux64/debug:
+    description: "Spidermonkey SmooshMonkey"
+    index:
+        job-name: sm-smoosh-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(smoosh)
+        tier: 3
+    run:
+        spidermonkey-variant: smooshdebug
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+    when:
+        files-changed:
+            - 'third_party/rust/jsparagus/**'
+            - 'js/src/frontend/Frontend2.cpp'
+            - 'js/src/frontend/Frontend2.h'
+            - 'js/src/frontend/SourceNotes.h'
+            - 'js/src/frontend/smoosh/**'
+            - 'js/public/Symbol.h'
+            - 'js/src/vm/AsyncFunctionResolveKind.h'
+            - 'js/src/vm/BytecodeFormatFlags.h'
+            - 'js/src/vm/CheckIsObjectKind.h'
+            - 'js/src/vm/FunctionFlags.h'
+            - 'js/src/vm/FunctionPrefixKind.h'
+            - 'js/src/vm/GeneratorAndAsyncKind.h'
+            - 'js/src/vm/GeneratorResumeKind.h'
+            - 'js/src/vm/Opcodes.h'
+            - 'js/src/vm/ThrowMsgKind.h'
+            - 'js/src/vm/StencilEnums.h'
+
+sm-smoosh-linux64/opt:
+    description: "Spidermonkey SmooshMonkey"
+    index:
+        job-name: sm-smoosh-linux64-opt
+    treeherder:
+        symbol: SM(smoosh)
+        platform: linux64/opt
+        tier: 3
+    run:
+        spidermonkey-variant: smoosh
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+    when:
+        files-changed:
+            - 'third_party/rust/jsparagus/**'
+            - 'js/src/frontend/Frontend2.cpp'
+            - 'js/src/frontend/Frontend2.h'
+            - 'js/src/frontend/SourceNotes.h'
+            - 'js/src/frontend/smoosh/**'
+            - 'js/public/Symbol.h'
+            - 'js/src/vm/AsyncFunctionResolveKind.h'
+            - 'js/src/vm/BytecodeFormatFlags.h'
+            - 'js/src/vm/CheckIsObjectKind.h'
+            - 'js/src/vm/FunctionFlags.h'
+            - 'js/src/vm/FunctionPrefixKind.h'
+            - 'js/src/vm/GeneratorAndAsyncKind.h'
+            - 'js/src/vm/GeneratorResumeKind.h'
+            - 'js/src/vm/Opcodes.h'
+            - 'js/src/vm/ThrowMsgKind.h'
+            - 'js/src/vm/StencilEnums.h'
+
+sm-nojit-linux64/opt:
+    description: "Spidermonkey no JIT"
+    index:
+        job-name: sm-nojit-linux64-opt
+    treeherder:
+        symbol: SM(nojit)
+        platform: linux64/opt
+    run:
+        spidermonkey-variant: nojit
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-plain-linux32/debug:
+    description: "Spidermonkey Plain"
+    index:
+        job-name: sm-plain-linux32-debug
+    treeherder:
+        platform: linux32/debug
+        symbol: SM(p)
+    run:
+        spidermonkey-variant: plaindebug
+        spidermonkey-platform: linux
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
+
+sm-arm-sim-linux32/debug:
+    description: "Spidermonkey ARM sim"
+    index:
+        job-name: sm-arm-sim-linux32-debug
+    treeherder:
+        platform: linux32/debug
+        symbol: SM(arm)
+    run:
+        spidermonkey-variant: arm-sim
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
+
+sm-arm64-sim-linux64/debug:
+    description: "Spidermonkey ARM64 sim"
+    index:
+        job-name: sm-arm64-sim-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(arm64)
+    run:
+        spidermonkey-variant: arm64-sim
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-arm64-sim-cranelift-linux64/debug:
+    description: "Spidermonkey ARM64 sim with Cranelift Wasm backend"
+    index:
+        job-name: sm-arm64-sim-cranelift-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(arm64cl)
+        tier: 3
+    run:
+        spidermonkey-variant: arm64-cranelift-sim
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+    routes:
+        - "notify.email.jseward@mozilla.com.on-failed"
+
+sm-asan-linux64/opt:
+    description: "Spidermonkey Address Sanitizer"
+    index:
+        job-name: sm-linux64-asan-opt
+    treeherder:
+        symbol: SM(asan)
+        platform: linux64/opt
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
+    run:
+        spidermonkey-variant: asan
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-compacting-linux64/debug:
+    description: "Spidermonkey Compacting"
+    index:
+        job-name: sm-compacting-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(cgc)
+    run:
+        spidermonkey-variant: compacting
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-linux64-wasi/opt:
+    description: "Spidermonkey WASI opt build"
+    index:
+        job-name: sm-linux64-wasi-opt
+    treeherder:
+        platform: linux64/opt
+        symbol: SM(wasi)
+        tier: 2
+    run:
+        spidermonkey-variant: wasi
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+
+sm-msan-linux64/opt:
+    description: "Spidermonkey Memory Sanitizer"
+    index:
+        job-name: sm-linux64-msan-opt
+    treeherder:
+        symbol: SM(msan)
+        platform: linux64/opt
+        tier: 3
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
+    run:
+        spidermonkey-variant: msan
+    # Disable by default by allow try pushes to explicitly request.
+    run-on-projects: []
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-tsan-linux64/opt:
+    description: "Spidermonkey Thread Sanitizer"
+    index:
+        job-name: sm-linux64-tsan-opt
+    treeherder:
+        symbol: SM(tsan)
+        platform: linux64/opt
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
+    run:
+        spidermonkey-variant: tsan
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust-dev
+            - sysroot-x86_64-linux-gnu
+
+sm-rootanalysis-linux64/debug:
+    description: "Spidermonkey Root Analysis"
+    index:
+        job-name: sm-rootanalysis-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(r)
+    run:
+        spidermonkey-variant: rootanalysis
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-nonunified-linux64/debug:
+    description: "Spidermonkey Non-Unified Debug"
+    index:
+        job-name: sm-nonunified-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(nu)
+    run:
+        spidermonkey-variant: nonunified
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-fuzzing-linux64/opt:
+    description: "Spidermonkey Fuzzing"
+    index:
+        job-name: sm-linux64-fuzzing
+    treeherder:
+        platform: linux64/opt
+        symbol: SM(f)
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
+    run:
+        spidermonkey-variant: fuzzing
+    fetches:
+        toolchain:
+            - linux64-clang-13
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu
+
+sm-fuzzilli-linux64/debug:
+    description: "Spidermonkey Fuzzilli debug"
+    index:
+        job-name: sm-linux64-fuzzilli-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(fuzzilli)
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
+    run:
+        spidermonkey-variant: fuzzilli
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - sysroot-x86_64-linux-gnu
+
+sm-gdb-linux64/debug:
+    description: "Spidermonkey GDB Pretty-printers"
+    index:
+        job-name: sm-gdb-linux64
+    worker:
+        docker-image: {in-tree: gdb-test}
+    treeherder:
+        platform: linux64/debug
+        tier: 2
+        symbol: SM(gdb)
+    run:
+        spidermonkey-variant: gdb
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - sysroot-x86_64-linux-gnu

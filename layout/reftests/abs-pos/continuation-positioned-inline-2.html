@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <body onload="loaded()">
+    <span style="position: relative; top: 100px">foo<br>
+      <span id="ins-point">bar</span></span>
+    <script>
+      function loaded() {
+        var insPoint = document.getElementById("ins-point");
+        var span = document.createElement("span");
+        span.style.position = "absolute";
+        span.style.top = 0;
+        span.appendChild(document.createTextNode("abs"));
+        insPoint.insertBefore(span, insPoint.firstChild);
+      }
+    </script>
+  </body>
+</html>

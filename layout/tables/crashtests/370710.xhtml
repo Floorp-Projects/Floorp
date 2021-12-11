@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var tr2 = document.getElementById('tr2');
+  var newTD = document.createElement('td');
+  newTD.setAttribute('colspan', 2);
+  newTD.appendChild(document.createTextNode('x'));
+  tr2.insertBefore(newTD, document.getElementById('b'));
+  
+  document.getElementById('a').setAttribute('colspan', 1);
+  document.getElementById('b').setAttribute('colspan', 3);
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 250);">
+
+<table style="border-collapse: collapse;" border="1">
+  <tbody>
+    <tr>
+      <td id="a" colspan="3">A</td>
+    </tr>
+    <tr id="tr2">
+      <td id="b">B</td>
+    </tr>
+    <tr>
+      <td>C</td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: simple form fill
+
+<script>
+gTestDependsOnDeprecatedLogin = true;
+runChecksAfterCommonInit(startTest);
+
+let DEFAULT_ORIGIN = window.location.origin;
+
+/** Test for Login Manager: form fill, multiple forms. **/
+
+async function startTest() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <form id="form1" action="formtest.js">
+      <p>This is form 1.</p>
+      <input id="username-1" type="text"       name="uname">
+      <input id="password-1" type="password"   name="pword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>`, win);
+  await checkLoginFormInFrame(win, "username-1", "testuser", "password-1", "testpass");
+
+  SimpleTest.finish();
+}
+</script>
+
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

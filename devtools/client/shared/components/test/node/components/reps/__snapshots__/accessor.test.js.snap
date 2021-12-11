@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Accessor - Invoke getter does not render an icon when the object has an evaluation 1`] = `"\\"hello\\""`;

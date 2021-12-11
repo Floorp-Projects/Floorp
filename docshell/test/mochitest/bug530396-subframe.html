@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+  <body onload="window.parent.onloadCount++">
+    <a href="bug530396-noref.sjs" rel="noreferrer foo" id="target1">bug530396-noref.sjs</a>
+    <a href="bug530396-noref.sjs?newwindow" rel="nofollow noreferrer" id="target2" target="newwindow">bug530396-noref.sjs with new window</a>
+  </body>
+</html>

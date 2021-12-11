@@ -1,0 +1,74 @@
+<html>
+
+<head>
+  <title>Flush delayed events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    SimpleTest.expectAssertions(0, 1);
+
+    var gFocusHandler = {
+      handleEvent(aEvent) {
+        switch (this.count) {
+          case 0:
+            is(aEvent.DOMNode, getNode("input1"),
+               "Focus event for input1 was expected!");
+            getAccessible("input2").takeFocus();
+            break;
+
+          case 1:
+            is(aEvent.DOMNode, getNode("input2"),
+               "Focus event for input2 was expected!");
+
+            unregisterA11yEventListener(EVENT_FOCUS, gFocusHandler);
+            SimpleTest.finish();
+            break;
+
+          default:
+            ok(false, "Wrong focus event!");
+        }
+
+        this.count++;
+      },
+
+      count: 0,
+    };
+
+    function doTests() {
+      registerA11yEventListener(EVENT_FOCUS, gFocusHandler);
+
+      getAccessible("input1").takeFocus();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=477551"
+     title="DocAccessible::FlushPendingEvents isn't robust">
+    Mozilla Bug 477551
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input1">
+  <input id="input2">
+</body>
+</html>

@@ -1,0 +1,36 @@
+From: Daniel Holbert <dholbert@cs.stanford.edu>
+Bug 612662 patch 3: Drop cairo_quartz_surface_t's "imageSurfaceEquiv" member if we fail to create it. r=roc a=blocking-final+
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -3152,17 +3152,28 @@ cairo_quartz_surface_create (cairo_forma
+     if (surf->base.status) {
+ 	CGContextRelease (cgc);
+ 	free (imageData);
+ 	// create_internal will have set an error
+ 	return (cairo_surface_t*) surf;
+     }
+ 
+     surf->imageData = imageData;
+-    surf->imageSurfaceEquiv = cairo_image_surface_create_for_data (imageData, format, width, height, stride);
++
++    cairo_surface_t* tmpImageSurfaceEquiv =
++      cairo_image_surface_create_for_data (imageData, format,
++                                           width, height, stride);
++
++    if (cairo_surface_status (tmpImageSurfaceEquiv)) {
++        // Tried & failed to create an imageSurfaceEquiv!
++        cairo_surface_destroy (tmpImageSurfaceEquiv);
++        surf->imageSurfaceEquiv = NULL;
++    } else {
++        surf->imageSurfaceEquiv = tmpImageSurfaceEquiv;
++    }
+ 
+     return (cairo_surface_t *) surf;
+ }
+ 
+ /**
+  * cairo_quartz_surface_get_cg_context
+  * @surface: the Cairo Quartz surface
+  *

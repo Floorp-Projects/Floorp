@@ -1,0 +1,52 @@
+<html class="reftest-wait">
+<head>
+	<style>
+		*|HTML {
+			column-width: calc(15px)
+		}
+
+		*|HTML .class_1 {
+			border-style: dotted;
+			float: inline-end ! important
+		}
+
+		* {
+			block-size: calc(2px);
+		}
+	</style>
+	<script noFuzz>
+		function frameLoad() {
+			setInterval(function() {
+				document.documentElement.appendChild(o1)
+				document.documentElement.appendChild(o2)
+ 			}, 250)
+			try { document.documentElement.appendChild(o4) } catch (e) {}
+			try { xhr = new XMLHttpRequest() } catch (e) {}
+			try { xhr.open('GET', 'data:text/html,1', false) } catch (e) {}
+			try { xhr.send() } catch (e) {}
+			try { document.documentElement.appendChild(o3) } catch (e) {}
+			try { this.contentWindow.location.reload() } catch (e) {}
+		}
+
+		function start() {
+			o1 = document.createElement('del')
+			o2 = document.createElement('track')
+			o3 = document.createElement('video')
+			o4 = document.createElement('video')
+			o1.setAttribute('class', 'class_1')
+			o2.setAttribute('class', 'class_1')
+			o3.setAttribute('class', 'class_1')
+			frame = document.createElement('iframe')
+			frame.addEventListener('load', frameLoad)
+                        setTimeout(function(){
+                          document.documentElement.innerHTML="1";
+                          document.documentElement.removeAttribute("class");
+                        }, 1000);
+			document.firstElementChild.appendChild(frame)
+		}
+
+		document.addEventListener('DOMContentLoaded', start)
+	</script>
+	<body></body>
+</head>
+</html>

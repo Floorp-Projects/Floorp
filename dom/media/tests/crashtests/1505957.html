@@ -1,0 +1,23 @@
+<html id='a'>
+<script>
+window.onload=function() {
+    b.src=document.getElementById('c').innerHTML;
+    b.setAttribute('src', 'video-crash.webm');
+    document.documentElement.style.display='none';
+    window.top.open('');
+    var o = window.frames[0].document.body.childNodes[0];
+    document.getElementById('d').appendChild(o.parentNode.removeChild(o));
+    o = document.getElementById('a');
+    var p = o.parentNode;
+    o.setAttribute('id', 0)
+    p.removeChild(o);
+    p.appendChild(o);
+    o.setAttribute('style', 0)
+    p.removeChild(o);
+    p.appendChild(o);
+}
+</script>
+<iframe id='b'></iframe>
+<object id='c'>
+<ruby id='d'>
+</html>

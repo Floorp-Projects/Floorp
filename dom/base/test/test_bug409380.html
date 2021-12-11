@@ -1,0 +1,378 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=409380
+-->
+<head>
+  <title>Test for Bug 409380</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=409380">Mozilla Bug 409380</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 409380 **/
+
+// eslint-disable-next-line complexity
+function runRangeTest()
+{
+  // Bug 336381
+  // This is a case which can't be supported (at least not at the moment)
+  // because DOM Range requires that when the start boundary point is text node,
+  // it must be splitted. But in this case boundary point doesn't have parent,
+  // so splitting doesn't work.
+  var zz = document.getElementById("connectedDiv").firstChild;
+  zz.remove();
+  var range = document.createRange();
+  var hadException = false;
+  try {
+    range.setStart(zz, 0);
+    range.setEnd(zz, 0);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException ,
+     "It should be possible to select text node even if the node is not in DOM.");
+  hadException = false;
+  try {
+    range.insertNode(document.createTextNode('5'));
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException,
+     "It shouldn't be possible to insert text node to a detached range.");
+
+  // Bug 409380
+  var element = document.createElement('div');
+  var elementContent = "This is the element content";
+  element.innerHTML = elementContent;
+  range = element.ownerDocument.createRange();
+  hadException = false;
+  try {
+    range.selectNodeContents(element);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException,
+     "It should be possible to select node contents of a detached element.");
+  ok(range.toString() == elementContent, "Wrong range selection");
+
+  // range.selectNode can't succeed because selectNode sets boundary points
+  // to be parentNode, which in this testcase is null.
+  element = document.createElement('div');
+  range = element.ownerDocument.createRange();
+  hadException = false;
+  try {
+    range.selectNode(element);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "It shouldn't be possible to select a detached element.");
+
+  // Testing contextual fragment.
+  range = element.ownerDocument.createRange();
+  var cf = null;
+  var testContent = "<span>foo</span><span>bar</span>";
+  try {
+    range.selectNodeContents(element);
+    cf = range.createContextualFragment(testContent);
+    element.appendChild(cf);
+  } catch (ex) {
+  }
+  ok(cf, "Creating contextual fragment didn't succeed!");
+  ok(element.innerHTML == testContent, "Wrong innerHTML!");
+
+  element = document.createElement('div');
+  element.textContent = "foobar";
+  range = element.ownerDocument.createRange();
+  try {
+    range.selectNodeContents(element);
+    element.firstChild.insertData(3, " ");
+  } catch (ex) {
+  }
+  ok(range.toString() == "foo bar");
+
+  // Testing contextual fragment, but inserting element to document
+  // after creating range.
+  element = document.createElement('div');
+  range = element.ownerDocument.createRange();
+  document.body.appendChild(element);
+  cf = null;
+  testContent = "<span>foo</span><span>bar</span>";
+  try {
+    range.selectNodeContents(element);
+    cf = range.createContextualFragment(testContent);
+    element.appendChild(cf);
+  } catch (ex) {
+  }
+  ok(cf, "Creating contextual fragment didn't succeed!");
+  ok(element.innerHTML == testContent, "Wrong innerHTML!");
+
+  // Testing contextual fragment, but inserting element to document
+  // before creating range.
+  element = document.createElement('div');
+  document.body.appendChild(element);
+  range = element.ownerDocument.createRange();
+  cf = null;
+  testContent = "<span>foo</span><span>bar</span>";
+  try {
+    range.selectNodeContents(element);
+    cf = range.createContextualFragment(testContent);
+    element.appendChild(cf);
+  } catch (ex) {
+  }
+  ok(cf, "Creating contextual fragment didn't succeed!");
+  ok(element.innerHTML == testContent, "Wrong innerHTML!");
+
+  element = document.createElement('div');
+  var range2 = element.ownerDocument.createRange();
+  hadException = false;
+  try {
+    range2.selectNodeContents(element);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException,
+     "It should be possible to select node contents of a detached element.");
+
+  // Now the boundary points of range are in DOM, but boundary points of
+  // range2 aren't.
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.START_TO_START, range2);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.START_TO_END, range2);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.END_TO_START, range2);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.END_TO_END, range2);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.START_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.START_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.END_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.END_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  // range3 will be in document
+  element = document.createElement('div');
+  document.body.appendChild(element);
+  range3 = element.ownerDocument.createRange();
+  hadException = false;
+  try {
+    range3.selectNodeContents(element);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException,
+     "It should be possible to select node contents of a detached element.");
+
+  hadException = false;
+  try {
+    range3.compareBoundaryPoints(range.START_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range3.compareBoundaryPoints(range.START_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range3.compareBoundaryPoints(range.END_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range3.compareBoundaryPoints(range.END_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  // range4 won't be in document
+  element = document.createElement('div');
+  var range4 = element.ownerDocument.createRange();
+  hadException = false;
+  try {
+    range4.selectNodeContents(element);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException,
+     "It should be possible to select node contents of a detached element.");
+
+  hadException = false;
+  try {
+    range4.compareBoundaryPoints(range.START_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.START_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range4.compareBoundaryPoints(range.END_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  hadException = false;
+  try {
+    range4.compareBoundaryPoints(range.END_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(hadException, "Should have got an exception!");
+
+  // Compare range to itself.
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.START_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.START_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.END_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range.compareBoundaryPoints(range.END_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  // Attach startContainer of range2 to document.
+  ok(range2.startContainer == range2.endContainer, "Wrong container?");
+  document.body.appendChild(range2.startContainer);
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.START_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.START_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.END_TO_START, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  hadException = false;
+  try {
+    range2.compareBoundaryPoints(range.END_TO_END, range);
+  } catch (ex) {
+    hadException = true;
+  }
+  ok(!hadException, "Shouldn't have got an exception!");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runRangeTest);
+
+</script>
+</pre>
+<div id="connectedDiv">zz</div>
+</body>
+</html>

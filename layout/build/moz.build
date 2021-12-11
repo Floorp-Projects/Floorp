@@ -1,0 +1,79 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "nsContentDLF.h",
+    "nsLayoutCID.h",
+    "nsLayoutStatics.h",
+]
+
+UNIFIED_SOURCES += [
+    "nsContentDLF.cpp",
+    "nsLayoutModule.cpp",
+    "nsLayoutStatics.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+LOCAL_INCLUDES += [
+    "../base",
+    "../forms",
+    "../generic",
+    "../inspector",
+    "../mathml",
+    "../painting",
+    "../style",
+    "../tables",
+    "../xul",
+    "/caps",
+    "/docshell/base",
+    "/dom/audiochannel",
+    "/dom/base",
+    "/dom/bindings",
+    "/dom/canvas",
+    "/dom/filesystem",
+    "/dom/geolocation",
+    "/dom/html",
+    "/dom/jsurl",
+    "/dom/media",
+    "/dom/offline",
+    "/dom/storage",
+    "/dom/xslt/base",
+    "/dom/xslt/xml",
+    "/dom/xslt/xpath",
+    "/dom/xslt/xslt",
+    "/dom/xul",
+    "/editor/composer",
+    "/js/xpconnect/loader",
+    "/js/xpconnect/src",
+    "/netwerk/base",
+    "/netwerk/cookie",
+    "/toolkit/components/sessionstore",
+    "/view",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    LOCAL_INCLUDES += [
+        "/dom/system/windows",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    LOCAL_INCLUDES += [
+        "/dom/system/mac",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    LOCAL_INCLUDES += [
+        "/dom/system",
+        "/dom/system/android",
+    ]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

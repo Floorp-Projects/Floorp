@@ -1,0 +1,72 @@
+<script>
+Logger={}; Logger.JSError=function(e){};
+try { o0 = new Audio("media/audio/mono-uncompressed-8bit-44100hz.wav") } catch(e) { Logger.JSError(e); }
+try { o1 = o0.mozCaptureStreamUntilEnded() } catch(e) { Logger.JSError(e); }
+try { o2 = new window.AudioContext(); } catch(e) { Logger.JSError(e); }
+try { o3 = o2.createBufferSource(); } catch(e) { Logger.JSError(e); }
+try { o5 = o2.createChannelMerger(3); } catch(e) { Logger.JSError(e); }
+try { o3.start(0) } catch(e) { Logger.JSError(e); }
+try { o2.listener.setPosition(0.0417049336344248, 0.9932504594310304, 32) } catch(e) { Logger.JSError(e); }
+try { o5.disconnect(0) } catch(e) { Logger.JSError(e); }
+try { o0.mozGetMetadata() } catch(e) { Logger.JSError(e); }
+try { o3.channelCount = 1; } catch(e) { Logger.JSError(e); }
+try { o3.buffer = function anonymous() {
+var buffer = o2.createBuffer(1, 512, o2.sampleRate);for(var c=0;c<1;c++) {var data = buffer.getChannelData(c);for(var i=0;i<512;i++) {data[i] = i % 512}}return buffer;
+}(); } catch(e) { Logger.JSError(e); }
+try { o3.loop = false; } catch(e) { Logger.JSError(e); }
+try { o0.mozPreservesPitch = false; } catch(e) { Logger.JSError(e); }
+try { o2.destination.channelCount = 1; } catch(e) { Logger.JSError(e); }
+try { o3.loopStart = 8; } catch(e) { Logger.JSError(e); }
+try { o3.playbackRate.value = 0.46271130895770884; } catch(e) { Logger.JSError(e); }
+try { o2.listener.setVelocity(0.34781960219792546, 4, 2048) } catch(e) { Logger.JSError(e); }
+try { o5.connect(o5, 0, 0) } catch(e) { Logger.JSError(e); }
+try { o3.loopStart = -0.24696638021780326; } catch(e) { Logger.JSError(e); }
+try { o0.mozSetup(1, 44100) } catch(e) { Logger.JSError(e); }
+try { o3.buffer.copyToChannel(function anonymous() {
+var buffer=new Float32Array(256);for(var i=0;i<256;i++){buffer[i]=i / 256}return buffer;
+}(), 1, 2048, 64) } catch(e) { Logger.JSError(e); }
+try { o3.loop = false; } catch(e) { Logger.JSError(e); }
+try { setInterval(function anonymous() {
+try { o0.pause() } catch(e) { Logger.JSError(e); }
+}, 12.902067779658143) } catch(e) { Logger.JSError(e); }
+try { o2.listener.setPosition(256, 256, 16) } catch(e) { Logger.JSError(e); }
+try { o3.playbackRate.setValueCurveAtTime(function anonymous() {
+var buffer=new Float32Array(4);for(var i=0;i<4;i++){buffer[i]=i / 4}return buffer;
+}(), 2, 0.40792575814014437) } catch(e) { Logger.JSError(e); }
+try { o3.playbackRate.value = 0.4997270553139334; } catch(e) { Logger.JSError(e); }
+try { o0.loop = true; } catch(e) { Logger.JSError(e); }
+try { o3.loopStart = 4; } catch(e) { Logger.JSError(e); }
+try { setInterval(function anonymous() {
+try { o3.buffer = function anonymous() {
+var buffer = o2.createBuffer(1, 1, o2.sampleRate);for(var c=0;c<1;c++) {var data = buffer.getChannelData(c);for(var i=0;i<1;i++) {data[i] = Math.sin(Math.sin(i))}}return buffer;
+}() } catch(e) { Logger.JSError(e); }
+}, 54.32078602859342) } catch(e) { Logger.JSError(e); }
+try { o3.connect(o2.destination); } catch(e) { Logger.JSError(e); }
+try { o3.channelCountMode = 'max'; } catch(e) { Logger.JSError(e); }
+try { setInterval(function anonymous() {
+try { o3.channelCount = 1; } catch(e) { Logger.JSError(e); }
+}, 55.448587039802966) } catch(e) { Logger.JSError(e); }
+try { o3.playbackRate.cancelScheduledValues(0.7190983131805198) } catch(e) { Logger.JSError(e); }
+try { o3.playbackRate.cancelScheduledValues(16) } catch(e) { Logger.JSError(e); }
+try { o3.connect(o5, 0, 2) } catch(e) { Logger.JSError(e); }
+try { o3.loopEnd = 0.5864771678080962; } catch(e) { Logger.JSError(e); }
+try { o0.playbackRate = 0.2781783298771312; } catch(e) { Logger.JSError(e); }
+try { o0.loop = false; } catch(e) { Logger.JSError(e); }
+try { setInterval(function anonymous() {
+try { o5.disconnect(0) } catch(e) { Logger.JSError(e); }
+}, 29.75776777646425) } catch(e) { Logger.JSError(e); }
+try { o3.playbackRate.setValueCurveAtTime(function anonymous() {
+var buffer=new Float32Array(8);for(var i=0;i<8;i++){buffer[i]=8 % 8}return buffer;
+}(), 0.4972710112336257, 64) } catch(e) { Logger.JSError(e); }
+try { setInterval(function anonymous() {
+try { o0.controls = false; } catch(e) { Logger.JSError(e); }
+}, 22.550249570567694) } catch(e) { Logger.JSError(e); }
+try { o2.listener.setOrientation(0.6531494410366634, 64, 0.5120918081402992, -64, 0.32912433155093446, 256) } catch(e) { Logger.JSError(e); }
+try { o3.loop = true; } catch(e) { Logger.JSError(e); }
+try { o3.connect(o5, 0, 0) } catch(e) { Logger.JSError(e); }
+try { o3.buffer = function anonymous() {
+var buffer = o2.createBuffer(1, 2048, 48000);for(var c=0;c<1;c++) {var data = buffer.getChannelData(c);for(var i=0;i<2048;i++) {data[i] = Math.sin(Math.sin(2048 * 0.2519529190035427))}}return buffer;
+}(); } catch(e) { Logger.JSError(e); }
+try { o3.disconnect(0) } catch(e) { Logger.JSError(e); }
+</script>
+

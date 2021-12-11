@@ -1,0 +1,317 @@
+---
+target: obj-x86_64-pc-linux-gnu
+# It is used by 'mach static-analysis' and 'phabricator static-analysis bot'
+# in order to have consistency across the used checkers.
+# All the clang checks used by the static-analysis tools.
+#
+# To add a new checker:
+# 1. Add it in this file
+# 2. Create a C/C++ test case in tools/clang-tidy/test/ reproducing the
+#    warning/error that the checker will detect
+# 3. Run './mach static-analysis autotest -d' to create the reference
+# 4. Check the json file in tools/clang-tidy/test/
+# 5. Commit this file + the .cpp test case + the json result
+platforms:
+  - linux64
+  - macosx64
+  - win32
+  - win64
+# Minimum clang-tidy version that is required for all the following checkers
+# to work properly.
+# This is also used by 'mach clang-format'
+package_version: "13.0.0"
+clang_checkers:
+  - name: -*
+    publish: !!bool no
+  - name: bugprone-argument-comment
+    reliability: high
+  - name: bugprone-assert-side-effect
+    reliability: high
+  - name: bugprone-bool-pointer-implicit-conversion
+    reliability: low
+  - name: bugprone-forward-declaration-namespace
+    reliability: high
+  - name: bugprone-incorrect-roundings
+    reliability: high
+  - name: bugprone-integer-division
+    reliability: high
+  - name: bugprone-macro-parentheses
+    reliability: medium
+  - name: bugprone-macro-repeated-side-effects
+    reliability: high
+  - name: bugprone-misplaced-widening-cast
+    reliability: high
+  - name: bugprone-move-forwarding-reference
+    reliability: high
+  - name: bugprone-multiple-statement-macro
+    # Incompatible with our code base, see bug 1496379.
+    publish: !!bool no
+    reliability: high
+  - name: bugprone-sizeof-expression
+    reliability: high
+  - name: bugprone-string-constructor
+    reliability: high
+  - name: bugprone-string-integer-assignment
+    reliability: high
+  - name: bugprone-suspicious-memset-usage
+    reliability: high
+  - name: bugprone-suspicious-missing-comma
+    reliability: high
+  - name: bugprone-suspicious-semicolon
+    reliability: high
+  - name: bugprone-suspicious-string-compare
+    reliability: high
+  - name: bugprone-swapped-arguments
+    reliability: high
+  - name: bugprone-too-small-loop-variable
+    reliability: high
+  - name: bugprone-unused-raii
+    reliability: high
+  - name: bugprone-use-after-move
+    reliability: high
+  - name: clang-analyzer-core.CallAndMessage
+    reliability: medium
+  - name: clang-analyzer-core.DivideZero
+    reliability: high
+  - name: clang-analyzer-core.NonNullParamChecker
+    reliability: high
+  - name: clang-analyzer-core.NullDereference
+    reliability: medium
+  - name: clang-analyzer-core.UndefinedBinaryOperatorResult
+    reliability: medium
+  - name: clang-analyzer-core.uninitialized.Assign
+    reliability: medium
+  - name: clang-analyzer-core.uninitialized.Branch
+    reliability: medium
+  - name: clang-analyzer-cplusplus.Move
+    reliability: high
+  - name: clang-analyzer-cplusplus.NewDelete
+    reliability: medium
+  - name: clang-analyzer-cplusplus.NewDeleteLeaks
+    reliability: medium
+  - name: clang-analyzer-deadcode.DeadStores
+    reliability: high
+  - name: clang-analyzer-security.FloatLoopCounter
+    reliability: high
+  - name: clang-analyzer-security.insecureAPI.bcmp
+    reliability: high
+  - name: clang-analyzer-security.insecureAPI.bcopy
+    reliability: high
+  - name: clang-analyzer-security.insecureAPI.bzero
+    reliability: high
+  - name: clang-analyzer-security.insecureAPI.getpw
+    reliability: high
+  # We don't add clang-analyzer-security.insecureAPI.gets here; it's deprecated.
+  - name: clang-analyzer-security.insecureAPI.mkstemp
+    reliability: high
+  - name: clang-analyzer-security.insecureAPI.mktemp
+    reliability: high
+  - name: clang-analyzer-security.insecureAPI.rand
+    reliability: low
+    # C checker, that is outdated and doesn't check for the new std::rand calls.
+    publish: !!bool no
+  - name: clang-analyzer-security.insecureAPI.strcpy
+    reliability: low
+    # The functions that should be used differ on POSIX and Windows, and there
+    # isn't a consensus on how we should approach this.
+    publish: !!bool no
+  - name: clang-analyzer-security.insecureAPI.UncheckedReturn
+    reliability: low
+  - name: clang-analyzer-security.insecureAPI.vfork
+    reliability: medium
+  - name: clang-analyzer-unix.Malloc
+    reliability: high
+  - name: clang-analyzer-unix.cstring.BadSizeArg
+    reliability: high
+  - name: clang-analyzer-unix.cstring.NullArg
+    reliability: high
+  - name: cppcoreguidelines-narrowing-conversions
+    reliability: high
+  - name: cppcoreguidelines-pro-type-member-init
+    reliability: medium
+  - name: misc-non-copyable-objects
+    reliability: high
+  - name: misc-redundant-expression
+    reliability: medium
+  - name: misc-unused-alias-decls
+    reliability: high
+  - name: misc-unused-using-decls
+    reliability: high
+  - name: modernize-avoid-bind
+    restricted-platforms:
+      - win32
+      - win64
+    reliability: medium
+  - name: modernize-concat-nested-namespaces
+    reliability: high
+  - name: modernize-deprecated-ios-base-aliases
+    reliability: high
+  - name: modernize-loop-convert
+    reliability: high
+  - name: modernize-raw-string-literal
+    reliability: high
+  - name: modernize-redundant-void-arg
+    reliability: high
+    # We still have some old C code that is built with a C compiler, so this
+    # might break the build.
+    publish: !!bool no
+  - name: modernize-shrink-to-fit
+    reliability: high
+  - name: modernize-use-auto
+    reliability: high
+    # Controversial, see bug 1371052.
+    publish: !!bool no
+  - name: modernize-use-bool-literals
+    reliability: high
+  - name: modernize-use-equals-default
+    reliability: high
+  - name: modernize-use-equals-delete
+    reliability: high
+  - name: modernize-use-nullptr
+    reliability: high
+  - name: modernize-use-override
+    reliability: low
+    # Too noisy because of the way how we implement NS_IMETHOD. See Bug 1420366.
+    publish: !!bool no
+  - name: modernize-use-using
+    reliability: high
+  - name: mozilla-*
+    reliability: high
+  - name: performance-faster-string-find
+    reliability: high
+  - name: performance-for-range-copy
+    reliability: high
+  - name: performance-implicit-conversion-in-loop
+    reliability: high
+  - name: performance-inefficient-algorithm
+    restricted-platforms:
+      - linux64
+      - macosx64
+    reliability: high
+    # Disable as the test does not support C++17 yet
+    publish: !!bool no
+  - name: performance-inefficient-string-concatenation
+    reliability: high
+  - name: performance-inefficient-vector-operation
+    reliability: high
+  - name: performance-move-const-arg
+    reliability: high
+    config:
+      - key: CheckTriviallyCopyableMove
+        # As per Bug 1558359 - disable detection of trivially copyable types
+        # that do not have a move constructor.
+        value: 0
+  - name: performance-move-constructor-init
+    reliability: high
+  - name: performance-noexcept-move-constructor
+    reliability: high
+  - name: performance-type-promotion-in-math-fn
+    reliability: high
+  - name: performance-unnecessary-copy-initialization
+    reliability: high
+  - name: performance-unnecessary-value-param
+    reliability: high
+  - name: readability-braces-around-statements
+    reliability: high
+    config:
+      - key: ShortStatementLines
+        # Allow `if (foo) return;` without braces
+        # Still warns on `if (foo)\n return;`
+        value: 1
+  - name: readability-const-return-type
+    reliability: high
+  # Note: this can be loosened up by using the ShortStatementLines option
+  - name: readability-container-size-empty
+    reliability: high
+  - name: readability-delete-null-pointer
+    reliability: high
+  - name: readability-else-after-return
+    reliability: high
+    config:
+      - key: WarnOnConditionVariables
+        # Disable as we don't mind this kind of behavior
+        value: 0
+  - name: readability-implicit-bool-conversion
+    reliability: low
+    # On automation the config flags act strange. Please see Bug 1500241.
+    publish: !!bool no
+    config:
+      - key: AllowIntegerConditions
+        # The check will allow conditional integer conversions.
+        value: 1
+      - key: AllowPointerConditions
+        # The check will allow conditional pointer conversions.
+        value: 1
+  - name: readability-inconsistent-declaration-parameter-name
+    reliability: high
+  - name: readability-isolate-declaration
+    # As per bug 1558987 - we don't want to have this enabled
+    publish: !!bool no
+    reliability: high
+  - name: readability-magic-numbers
+    # Bug 1553495 - we must see first its impact on our code.
+    publish: !!bool no
+    reliability: high
+  - name: readability-misleading-indentation
+    reliability: high
+  - name: readability-non-const-parameter
+    reliability: high
+  - name: readability-qualified-auto
+    reliability: high
+  - name: readability-redundant-control-flow
+    reliability: high
+  - name: readability-redundant-preprocessor
+    reliability: high
+  - name: readability-redundant-smartptr-get
+    reliability: high
+  - name: readability-redundant-string-cstr
+    reliability: high
+  - name: readability-redundant-string-init
+    reliability: high
+  - name: readability-static-accessed-through-instance
+    reliability: high
+  - name: readability-simplify-boolean-expr
+    reliability: high
+  - name: readability-uniqueptr-delete-release
+    reliability: high
+  # We don't publish the google checkers since we are interested in only having
+  # a general idea how our code complies with the rules added by these checkers.
+  - name: google-build-explicit-make-pair
+    reliability: low
+    publish: !!bool no
+  - name: google-build-namespaces
+    reliability: low
+    publish: !!bool no
+  - name: google-build-using-namespace
+    reliability: low
+    publish: !!bool no
+  - name: google-default-arguments
+    reliability: low
+    publish: !!bool no
+  - name: google-explicit-constructor
+    reliability: low
+    publish: !!bool no
+  - name: google-global-names-in-headers
+    reliability: low
+    publish: !!bool no
+  - name: google-readability-casting
+    reliability: low
+    publish: !!bool no
+  - name: google-readability-function-size
+    reliability: low
+    publish: !!bool no
+  - name: google-readability-namespace-comments
+    reliability: low
+    publish: !!bool no
+  - name: google-readability-todo
+    reliability: low
+    publish: !!bool no
+  - name: google-runtime-int
+    reliability: low
+    publish: !!bool no
+  - name: google-runtime-operator
+    reliability: low
+    publish: !!bool no
+  - name: google-runtime-references
+    reliability: low
+    publish: !!bool no

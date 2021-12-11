@@ -1,0 +1,22 @@
+/* Override default style */
+output {
+  color: black;
+}
+
+output.notvalid {
+  color: green;
+}
+output.notvalid:valid {
+  color: red;
+}
+
+output.valid {
+  color: green;
+}
+output.valid:valid {
+  color: red;
+}
+
+output.ref {
+  color: green;
+}

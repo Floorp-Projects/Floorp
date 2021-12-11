@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+  <div id=tCF0>
+    <img id=victim src=ie.png>
+    <iframe src=discardframe.htm></iframe>
+  </div>
+  <script>
+    const Ci = SpecialPowers.Ci;
+    const Cc = SpecialPowers.Cc;
+
+    function ImageDecoderObserverStub()
+    {
+      this.sizeAvailable = function sizeAvailable(aRequest)   {}
+      this.frameComplete = function frameComplete(aRequest)   {}
+      this.decodeComplete = function decodeComplete(aRequest) {}
+      this.loadComplete = function loadComplete(aRequest)     {}
+      this.frameUpdate = function frameUpdate(aRequest)       {}
+      this.discard = function discard(aRequest)               {}
+      this.isAnimated = function isAnimated(aRequest)         {}
+    }
+    var img = document.getElementById('victim');
+    var observer = new ImageDecoderObserverStub();
+    observer.discard = function() {
+      cleanupAndFinish();
+    }
+    observer = SpecialPowers.wrapCallbackObject(observer);
+    var gObserver = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                    .createScriptedObserver(observer);
+    var imgLoadingContent = SpecialPowers.wrap(img);
+    imgLoadingContent.addObserver(gObserver);
+    function initCF() {
+      setTimeout(function() { document.adoptNode(tCF0); }, 0);
+    }
+    document.addEventListener("DOMContentLoaded", initCF);
+
+    function cleanupAndFinish() {
+      imgLoadingContent.removeObserver(gObserver);
+      setTimeout("document.documentElement.className = '';", 0);
+    }
+    function loadhandler() {
+      setTimeout("cleanupAndFinish();", 30000);
+    }
+    window.addEventListener("load", function() {
+      SpecialPowers.pushPrefEnv({"set":[["min_discard_timeout_ms", 1]]}, loadhandler)});
+  </script>
+</body>
+</html>

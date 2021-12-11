@@ -1,0 +1,21 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.net += [
+    "NeqoHttp3Conn.h",
+]
+
+LOCAL_INCLUDES += [
+    "/security/manager/ssl",
+    "/security/nss/lib/ssl",
+]
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    CbindgenHeader("neqo_glue_ffi_generated.h", inputs=["/netwerk/socket/neqo_glue"])
+
+    EXPORTS.mozilla.net += [
+        "!neqo_glue_ffi_generated.h",
+    ]

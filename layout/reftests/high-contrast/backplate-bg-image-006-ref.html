@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="ahem.css">
+<title>Reference: Text in a native button or input object that overlaps a background image should be backplated.</title>
+<style>
+body {
+  font: 20px Ahem;
+}
+.std {
+  background-image: url("blue.png");
+  height: 500px;
+}
+.fake-backplate {
+  background-color: white;
+  width: max-content;
+}
+button {
+  font: 20px Ahem;
+}
+</style>
+<div class="std">
+<button>ppppp</button><span class="fake-backplate">ppppp</span><br>
+<form>
+  <input>
+</form>
+<br>
+<span class="fake-backplate">ppppp<!-- no whitespace
+--><button>ppppp</button><!-- no whitespace
+-->ppppp</span>
+</div>

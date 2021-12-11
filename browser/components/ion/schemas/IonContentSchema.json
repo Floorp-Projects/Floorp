@@ -1,0 +1,39 @@
+{
+  "definitions": {},
+  "title": "Root",
+  "type": "object",
+  "required": [
+    "title",
+    "summary",
+    "details",
+    "joinIonConsent",
+    "leaveIonConsent"
+  ],
+  "properties": {
+    "title": {
+      "$id": "#root/title",
+      "title": "Title",
+      "type": "string"
+    },
+    "summary": {
+      "$id": "#root/summary",
+      "title": "Summary",
+      "type": "string"
+    },
+    "details": {
+      "$id": "#root/details",
+      "title": "Details",
+      "type": "string"
+    },
+    "joinIonConsent": {
+      "$id": "#root/joinIonConsent",
+      "title": "JoinIonconsent",
+      "type": "string"
+    },
+    "leaveIonConsent": {
+      "$id": "#root/leaveIonConsent",
+      "title": "LeaveIonconsent",
+      "type": "string"
+    }
+  }
+}

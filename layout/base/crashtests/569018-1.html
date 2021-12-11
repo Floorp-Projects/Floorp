@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("x").appendChild(document.getElementsByTagName("map")[0]);
+  document.getElementsByTagName("area")[0].appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", 'span'));
+  document.body.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", 'td'));
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);"><img src="data:image/gif,GIF87a%02%00%02%00%B3%00%00%00%00%00%FF%FF%FF%00%00%00%00%00%00%FF%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%2C%00%00%00%00%02%00%02%00%00%04%03%90H%12%00%3B" usemap="#Map"><map name="Map"><area></map><span id="x"></span></body>
+</html>

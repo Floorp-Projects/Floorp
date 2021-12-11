@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: stretching intrinsic ratio item with min/max-size:auto and automatic minimum size clamping</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218178">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: inline-grid;
+  border: 1px solid;
+  margin: 5px;
+  align-items: start;
+  justify-items: start;
+}
+img {
+  min-width: 0;
+  min-height: 0;
+}
+.vertical-tests div { vertical-align:bottom }
+  </style>
+</head>
+<body>
+
+<div class="grid" style="grid: 96px / 20px">
+<img src="support/lime-2x24.png" style="width:4px; height:96px">
+</div>
+<div class="grid" style="grid: 96px / 4px">
+<img src="support/lime-2x24.png" style="height:12px; width:4px">
+</div>
+
+<div class="grid" style="grid: 8px / 20px">
+<img src="support/lime-24x2.png" style="height:8px; width:12px">
+</div>
+<div class="grid" style="grid: 8px / 100px">
+<img src="support/lime-24x2.png" style="height:6px; width:100px">
+</div>
+
+<div class="grid" style="grid: 96px / 20px">
+<img src="support/lime-2x24.png" style="align-self:start; height:24px; width:20px">
+</div>
+<div class="grid" style="grid: 96px / 4px">
+<img src="support/lime-2x24.png" style="align-self:start; height:12px; width:4px">
+</div>
+
+<div class="grid" style="grid: 8px / 100px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
+</div>
+<div class="grid" style="grid: 8px / 10px; width:10px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
+</div>
+
+<br>
+
+<div class="grid" style="grid: 96px / 20px">
+<img src="support/lime-2x24.png" style="width:20px; height:96px">
+</div>
+<div class="grid" style="grid: 96px / 4px; width:6px">
+<img src="support/lime-2x24.png" style="width:6px; height:96px">
+</div>
+
+<div class="grid" style="grid: 8px / 20px; width:20px">
+<img src="support/lime-24x2.png" style="width:20px; height:8px">
+</div>
+<div class="grid" style="grid: 8px / 100px; width:100px; height:10px">
+<img src="support/lime-24x2.png" style="width:100px; height:10px">
+</div>
+
+<div class="grid" style="grid: 48px / 6px; width:6px; height:80px">
+<img src="support/lime-2x24.png" style="align-self:start; width:6px; height:80px">
+</div>
+<!--
+<div class="grid" style="grid: minmax(auto, 96px) / minmax(auto, 6px)">
+<img src="support/lime-2x24.png" style="align-self:start; width:4px; height:72px">
+</div>
+
+<div class="grid" style="grid: 4px / 100px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:72px; height:4px">
+</div>
+-->
+<div class="grid" style="grid: 4px / 10px; width:72px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:72px; height:4px">
+</div>
+
+<br>
+
+<div class="vertical-tests">
+
+<div class="grid" style="grid: 96px / 20px">
+<img src="support/lime-2x24.png" style="width:4px; height:96px">
+</div>
+<div class="grid" style="grid: 96px / 4px">
+<img src="support/lime-2x24.png" style="height:12px; width:4px">
+</div>
+
+<div class="grid" style="grid: 8px / 20px">
+<img src="support/lime-24x2.png" style="height:8px; width:12px">
+</div>
+<div class="grid" style="grid: 8px / 100px">
+<img src="support/lime-24x2.png" style="height:6px; width:100px">
+</div>
+
+<div class="grid" style="grid: 96px / 20px">
+<img src="support/lime-2x24.png" style="align-self:start; height:24px; width:20px">
+</div>
+<div class="grid" style="grid: 96px / 4px">
+<img src="support/lime-2x24.png" style="align-self:start; height:12px; width:4px">
+</div>
+
+<div class="grid" style="grid: 8px / 100px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
+</div>
+<div class="grid" style="grid: 8px / 10px; width:10px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
+</div>
+
+<br>
+
+<div class="grid" style="grid: 96px / 20px">
+<img src="support/lime-2x24.png" style="width:20px; height:96px">
+</div>
+<div class="grid" style="grid: 96px / 4px; width:6px">
+<img src="support/lime-2x24.png" style="width:6px; height:96px">
+</div>
+
+<div class="grid" style="grid: 8px / 20px; width:20px">
+<img src="support/lime-24x2.png" style="width:20px; height:8px">
+</div>
+<div class="grid" style="grid: 8px / 100px; width:100px; height:10px">
+<img src="support/lime-24x2.png" style="width:100px; height:10px">
+</div>
+
+<div class="grid" style="grid: 48px / 6px; width:6px; height:80px">
+<img src="support/lime-2x24.png" style="align-self:start; width:6px; height:80px">
+</div>
+<!--
+<div class="grid" style="grid: minmax(auto, 96px) / minmax(auto, 6px)">
+<img src="support/lime-2x24.png" style="align-self:start; width:4px; height:72px">
+</div>
+
+<div class="grid" style="grid: 4px / 100px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:72px; height:4px">
+</div>
+-->
+<div class="grid" style="grid: 4px / 10px; width:72px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:72px; height:4px">
+</div>
+
+</div>
+
+</body>
+</html>

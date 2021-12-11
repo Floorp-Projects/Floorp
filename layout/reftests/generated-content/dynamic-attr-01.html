@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <title>CSS 2.1 Test Suite: generated content</title>
+    <link rel="author" title="Robert O'Callahan" href="mailto:robert@ocallahan.org" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#content"/>
+    <meta name="flags" content="dom" />
+<style>
+body {
+  font-family:sans-serif;
+}
+body::before {
+  content:attr(my-attr);
+}
+body::after {
+  content:attr(my-attr-2);
+}
+</style>
+<script>
+function fixupDOM() {
+  document.body.setAttribute("my-attr", "before");
+  document.body.setAttribute("my-attr-2", "after!");
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body my-attr-2="xyz" onload="fixupDOM()">
+</body>
+</html>

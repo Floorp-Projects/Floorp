@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Global ARIA States and Accessible Creation</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      var globalIds = [
+        "atomic",
+        "busy",
+        "controls",
+        "describedby",
+        "description",
+        "disabled",
+        "dropeffect",
+        "flowto",
+        "grabbed",
+        "haspopup",
+        "invalid",
+        "label",
+        "labelledby",
+        "live",
+        "owns",
+        "relevant",
+      ];
+
+      // Elements having ARIA global state or properties or referred by another
+      // element must be accessible.
+      ok(isAccessible("pawn"),
+         "Must be accessible because referred by another element.");
+
+      for (let idx = 0; idx < globalIds.length; idx++) {
+        ok(isAccessible(globalIds[idx]),
+           "Must be accessible becuase of aria-" + globalIds[idx] +
+           " presence");
+      }
+
+      // Unfocusable elements, having ARIA global state or property with a valid
+      // IDREF value, and an inherited presentation role. A generic accessible
+      // is created (to prevent table cells text jamming).
+      ok(!isAccessible("td_nothing", nsIAccessibleTableCell),
+         "inherited presentation role takes a place");
+
+      for (let idx = 0; idx < globalIds.length; idx++) {
+        ok(isAccessible("td_" + globalIds[idx]),
+           "Inherited presentation role must be ignored becuase of " +
+           "aria-" + globalIds[idx] + " presence");
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Update universal ARIA attribute support to latest spec"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=551978">
+    Mozilla Bug 551978
+  </a>
+  <a target="_blank"
+     title="Presentational table related elements referred or having global ARIA attributes must be accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=809751">
+    Mozilla Bug 809751
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Test that global aria states and properties are enough to cause the
+  creation of accessible objects -->
+  <div id="global_aria_states_and_props" role="group">
+    <span id="pawn"></span>
+    <span id="atomic" aria-atomic="true"></span>
+    <span id="busy" aria-busy="false"></span>
+    <span id="controls" aria-controls="pawn"></span>
+    <span id="describedby" aria-describedby="pawn"></span>
+    <span id="description" aria-description="hi"></span>
+    <span id="disabled" aria-disabled="true"></span>
+    <span id="dropeffect" aria-dropeffect="move"></span>
+    <span id="flowto" aria-flowto="pawn"></span>
+    <span id="grabbed" aria-grabbed="false"></span>
+    <span id="haspopup" aria-haspopup="false"></span>
+    <span id="invalid" aria-invalid="false"></span>
+    <span id="label" aria-label="hi"></span>
+    <span id="labelledby" aria-labelledby="label"></span>
+    <span id="live" aria-live="polite"></span>
+    <span id="owns" aria-owns="pawn"></span>
+    <span id="relevant" aria-relevant="additions"></span>
+  </div>
+
+  <table role="presentation">
+    <tr>
+      <td id="td_nothing"></td>
+      <td id="td_atomic" aria-atomic="true"></td>
+      <td id="td_busy" aria-busy="false"></td>
+      <td id="td_controls" aria-controls="pawn"></td>
+      <td id="td_describedby" aria-describedby="pawn"></td>
+      <td id="td_description" aria-description="hi"></td>
+      <td id="td_disabled" aria-disabled="true"></td>
+      <td id="td_dropeffect" aria-dropeffect="move"></td>
+      <td id="td_flowto" aria-flowto="pawn"></td>
+      <td id="td_grabbed" aria-grabbed="false"></td>
+      <td id="td_haspopup" aria-haspopup="false"></td>
+      <td id="td_invalid" aria-invalid="false"></td>
+      <td id="td_label" aria-label="hi"></td>
+      <td id="td_labelledby" aria-labelledby="label"></td>
+      <td id="td_live" aria-live="polite"></td>
+      <td id="td_owns" aria-owns="pawn"></td>
+      <td id="td_relevant" aria-relevant="additions"></td>
+    </tr>
+  </table>
+</body>
+</html>

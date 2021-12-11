@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 919437</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=919437">Mozilla Bug 919437</a>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 919437 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var oldWidth = window.innerWidth;
+  var oldHeight = window.innerHeight;
+  var newWidth = oldWidth / 2;
+  var newHeight = oldHeight / 2;
+
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.setVisualViewportSize(newWidth, newHeight);
+  is(window.innerWidth, oldWidth, "innerWidth unaffected by changes to visual viewport size");
+  is(window.innerHeight, oldHeight, "innerHeight unaffected by changes to visual viewport size");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+
+</script>
+</pre>
+</body>
+</html>

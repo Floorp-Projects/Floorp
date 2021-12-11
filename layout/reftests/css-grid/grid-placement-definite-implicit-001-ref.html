@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing placement of grid items outside the explicit grid</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1146051">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+
+.grid {
+ border: 1px solid blue;
+}
+
+.a { background:lime; }
+.b { background:pink; }
+.c { width:1px; display: block; background:yellow; }
+.d { margin-left:3px; width:10000px; display: block; background:cyan; }
+
+span {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border: 1px solid;
+  vertical-align:top;
+}
+
+  </style>
+</head>
+<body style="overflow:hidden">
+
+<div class="grid">
+<span class="b">b</span><span class="a">a</span><span class="c" style="width:18px">c</span>
+</div>
+
+<div class="grid">
+<span class="b" span="2">b</span><span class="a">a</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="b" span="3">b</span><span class="a">a</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="b" span="4">b</span><span class="a">a</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="b" span="100">b</span><span class="a">a</span><span class="c">c</span>
+</div>
+<div class="grid">
+<span class="b" span="9998">b</span>
+</div>
+<div class="grid">
+<span class="b" span="9999">b</span>
+</div>
+<div class="grid">
+<span class="b" span="10000">b</span>
+</div>
+<div class="grid">
+<span class="b" span="12345">b</span>
+</div>
+<div class="grid" style="height:40px">
+<span class="b" span="10000">b</span>
+</div>
+<div class="grid">
+<span class="b" span="2">b</span><span class="a">a</span><span class="d">d</span>
+</div>
+<div class="grid">
+<span class="b" style="margin-left:56px; width:30000px; ">b</span>
+</div>
+
+<div class="grid cols" style="margin-left:-30000px;">
+<span class="b" style="width:1px; margin-left:30062px">b</span>
+<span class="c" style="margin-left:29000px; width:1063px;">c</span>
+</div>
+<div class="grid rows" style="border:none">
+<span class="b" style="margin-top:11px;height:1px;"></span>
+</div>
+
+
+<script>
+var elms = document.querySelectorAll("[span].b");
+for (i=0; i < elms.length; ++i) {
+  var e = elms[i];
+  var span = e.getAttribute("span");
+  var width = (15 + 3*parseInt((span>10000?10000:span)));
+  e.style.width = width + "px";
+}
+</script>
+
+</body>
+</html>

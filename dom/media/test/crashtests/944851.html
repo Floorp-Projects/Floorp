@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+var ac = new AudioContext(1, 1354, 44100);
+var shaper = ac.createWaveShaper();
+var biquad = ac.createBiquadFilter();
+shaper.connect(biquad.frequency);
+biquad.getFrequencyResponse(new Float32Array(55785),
+                            new Float32Array(62876),
+                            new Float32Array(45111));
+
+</script>
+</head>
+</html>

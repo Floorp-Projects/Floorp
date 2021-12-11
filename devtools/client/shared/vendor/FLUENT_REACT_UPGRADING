@@ -1,0 +1,33 @@
+[//]: # (
+  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+)
+
+# Upgrading @fluent/react
+
+## Getting the Source
+
+```bash
+git clone https://github.com/projectfluent/fluent.js
+cd fluent.js
+```
+
+Then checkout the version/tag you want, e.g. `@fluent/react@0.10.0`.
+
+## Building fluent-react
+
+```bash
+npm install
+cd fluent-gecko
+make fluent-react.js
+cp dist/fluent-react.js <gecko-dev>/devtools/client/shared/vendor/fluent-react.js
+```
+
+## Patching fluent-react
+
+- Open `fluent-react.js`
+- Replace `require('react')` with `require('devtools/client/shared/vendor/react')`
+- Replace `require('prop-types')` with `require('devtools/client/shared/vendor/react-prop-types')`
+
+## Update the version:
+
+The current version is 0.10.0. Update this version number everywhere in this file.

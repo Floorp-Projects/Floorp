@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Content Security Policy Frame Ancestors directive</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe style="width:100%;height:300px;" id='testframe'></iframe>
+
+<script class="testbody" type="text/javascript">
+
+var tests = [
+  {
+    /* test allowed */
+    csp: "default-src 'self'; script-src 'self' 'unsafe-inline'",
+    results: ["body-onload-fired", "text-node-fired",
+              "javascript-uri-fired", "javascript-uri-anchor-fired"],
+    desc: "allow inline scripts",
+    received: 0, // counter to make sure we received all 4 reports
+  },
+  {
+    /* test blocked */
+    csp: "default-src 'self'",
+    results: ["inline-script-blocked"],
+    desc: "block inline scripts",
+    received: 0, // counter to make sure we received all 4 reports
+  }
+];
+
+var counter = 0;
+var curTest;
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+}
+examiner.prototype  = {
+  observe(subject, topic, data) {
+    if (topic !== "csp-on-violate-policy") {
+      return;
+    }
+
+    var what = SpecialPowers.getPrivilegedProps(SpecialPowers.
+                             do_QueryInterface(subject, "nsISupportsCString"), "data");
+
+    if (!what.includes("Inline Script had invalid hash") &&
+        !what.includes("Inline Scripts will not execute")) {
+      return;
+    }
+    window.checkResults("inline-script-blocked");
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+function finishTest() {
+  window.examiner.remove();
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+// Check to see if all the tests have run
+var checkResults = function(result) {
+  var index = curTest.results.indexOf(result);
+  isnot(index, -1, "should find result (" + result +") within test: " + curTest.desc);
+  if (index > -1) {
+    curTest.received += 1;
+  }
+
+  // make sure we receive all the 4 reports for the 4 inline scripts
+  if (curTest.received < 4) {
+    return;
+  }
+
+  if (counter < tests.length) {
+    loadNextTest();
+    return;
+  }
+  finishTest();
+}
+
+// a postMessage handler that is used to bubble up results from the testframe
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  checkResults(event.data);
+}
+
+function clickit() {
+  document.getElementById("testframe").removeEventListener('load', clickit);
+  var testframe = document.getElementById('testframe');
+  var a = testframe.contentDocument.getElementById('anchortoclick');
+  sendMouseEvent({type:'click'}, a, testframe.contentWindow);
+}
+
+function loadNextTest() {
+  curTest = tests[counter++];
+  var src = "file_testserver.sjs?file=";
+  // append the file that should be served
+  src += escape("tests/dom/security/test/csp/file_inlinescript.html");
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(curTest.csp);
+
+  document.getElementById("testframe").src = src;
+  document.getElementById("testframe").addEventListener("load", clickit);
+}
+
+// set up the test and go
+window.examiner = new examiner();
+SimpleTest.waitForExplicitFinish();
+loadNextTest();
+
+</script>
+
+</body>
+</html>

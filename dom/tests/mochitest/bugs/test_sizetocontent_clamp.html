@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=764240
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 764240</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=764240">Mozilla Bug 764240</a>
+<p id="display"></p>
+<div id="content">
+  <button onclick="test();">run test</button>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 764240 **/
+
+SimpleTest.waitForExplicitFinish();
+
+// Error margin allowed for the window's size. Windows has varying minimum
+// sizes depending on the os due to outer window chrome. Unix is given 5
+// pixels to protect against minor variances.
+var epsilon =  !navigator.platform.includes("Win") ? 5 : 20;
+
+// Windows 8 has a minimum 122 pixel inner window width due to
+// outer window chrome.
+var isWin8 = (navigator.userAgent.includes("Windows NT 6.2"));
+
+var innerWidthMin = (isWin8 ? 120 : 100);
+var innerWidthMax = (isWin8 ? 125 : 100);
+
+var isExecuted = false;
+
+function test() {
+  var w = window.open('file_empty.html', null, 'width=300,height=300');
+
+  SimpleTest.waitForFocus(function() {
+    w.onresize = function() {
+      info(`got resize: ${w.innerWidth} ${w.innerHeight}`);
+
+      if (w.innerWidth > 300 - epsilon || isExecuted) {
+        return;
+      }
+
+      isExecuted = true;
+
+      ok(w.innerWidth + epsilon >= innerWidthMin && w.innerWidth - epsilon <= innerWidthMax,
+         "innerWidth should be between " + innerWidthMin + " and " + innerWidthMax + " but it was: " + w.innerWidth);
+      ok(w.innerHeight + epsilon >= 100 && w.innerHeight - epsilon <= 100,
+         "innerHeight should be around 100" + " but it was: " + w.innerHeight);
+
+      w.close();
+
+      SimpleTest.waitForFocus(function() {
+        SimpleTest.finish();
+      });
+    };
+    w.sizeToContent();
+  }, w);
+}
+
+SimpleTest.waitForFocus(function() {
+  synthesizeMouseAtCenter(document.getElementsByTagName('button')[0], {});
+});
+
+</script>
+</pre>
+</body>
+</html>

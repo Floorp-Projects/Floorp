@@ -1,0 +1,151 @@
+To upgrade to a new revision of libjpeg-turbo, do the following:
+
+* Check out libjpeg-turbo from git:
+
+    $ git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git
+
+* In a clean clone of mozilla-central, run the update script (tag defaults to HEAD):
+
+    $ ./media/update-libjpeg.sh /path/to/libjpeg-turbo [tag]
+
+  and fix up any rejects from applying the Mozilla specific patches at the end
+  of that script.
+
+* Since libjpeg-turbo normally creates jconfig.h and jconfigint.h at build time
+  and we use pre-generated versions, changes to jconfig.h.in and jconfigint.h.in
+  should be looked for and noted for later inclusion.
+
+* Now look through the new files and rm any which are npotb.  When I upgraded
+  to libjpeg-turbo 1.1.0, the only files I kept which didn't match
+
+    *.c  *.h *.asm *.inc
+
+  were README and README-turbo.
+
+  You can easily look for all non *.c, *.h, *.asm, and *.inc files by running
+
+    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\|md\|ijg\)$'
+
+  Once you're comfortable that you're only deleting files you want to delete
+  (and you've hg add'ed the files you want to keep), you can nuke the remaining
+  files with
+
+    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\|md\|ijg\)$' | xargs rm
+
+  A helpful command for finding the *.c files which aren't *currently* part of
+  the build is
+
+    diff <(ls *.c | sort) <(grep -o '\w*\.c' Makefile.in | sort)
+
+  Of course, libjpeg-turbo might have added some new source files, so you'll
+  have to look though and figure out which of these files to keep.
+
+* Update jconfig.h and jconfigint.h as noted previously.
+
+* Update moz.build to build any new files.
+
+* Finally, tell hg that we've added or removed some files:
+
+    $ hg addremove
+
+== September 9, 2021 (libjpeg-turbo v2.1.1 0a9b9721782d3a60a5c16c8c9a7abf3d4b1ecd42 2020-08-10) ==
+
+* Updated to v2.1.1 release.
+
+== November 19, 2020 (libjpeg-turbo v2.0.6 10ba6ed3365615ed5c2995fe2d240cb2d5000173 2020-11-16) ==
+
+* Updated to v2.0.6 release.
+
+== January 6, 2020 (libjpeg-turbo v2.0.4 166e34213e4f4e2363ce058a7bcc69fd03e38b76 2019-12-31) ==
+
+* Updated to v2.0.4 release.
+
+== September 5, 2019 (libjpeg-turbo v2.0.3 5db6a6819d0f904e0b58f34ae928fea234adb1a0 2019-09-04) ==
+
+* Updated to v2.0.3 release.
+
+== October 4, 2018 (libjpeg-turbo v2.0.0 574f3a772c96dc9db2c98ef24706feb3f6dbda9a 2018-06-27) ==
+
+* Updated to v2.0.0 release.
+
+== July 13, 2017 (libjpeg-turbo v1.5.2 e5c1613ccdfeffcd060fd94248b7c8ac7c0cfb0f 2017-08-09) ==
+
+* Updated to v1.5.2 release.
+
+== September 22, 2016 (libjpeg-turbo v1.5.1 cb88e5da8003afcdc443b787fdcb77285e5a8a02 2016-09-20) ==
+
+* Updated to v1.5.1 release.
+
+== June 23, 2016 (libjpeg-turbo v1.5.0 3ff13e651bbe6de9c6f15d05235d1d4f26f63ffc 2016-05-31) ==
+
+* Updated to v1.5.0 release.
+
+== October 5, 2015 (libjpeg-turbo v1.4.2 d8da49effe6460d55239c4c009c57f42d8e4a494 2015-09-21) ==
+
+* Updated to v1.4.2 release.
+
+== January 15, 2015 (libjpeg-turbo v1.4.0 r1481 2015-01-07) ==
+
+* Updated to v1.4.0 release.
+
+== March 24, 2014 (libjpeg-turbo v1.3.1 r1205 2014-03-22) ==
+
+* Updated to v1.3.1 release.
+
+== November 25, 2013 ==
+
+* Fix bug 891693.
+
+== June 4, 2013 (libjpeg-turbo v1.3.0 r988 2013-05-25) ==
+
+* Updated to v1.3.0 release.
+
+== December 12, 2012 ==
+
+* Replace the runtime computed jpeg_nbits_table with constants in
+  jpeg_nbits_table.h to make it shareable among processes. (bug 815473)
+
+== October 13, 2012 ==
+
+* Modified config.h to use MOZ_ALWAYS_INLINE (bug 800106).
+
+== July 4, 2012 (libjpeg-turbo v1.2.1 r853 2012-06-30) ==
+
+* Updated to v1.2.1 stable release.
+
+== June 5, 2012 (libjpeg-turbo v1.2.x branch, r831 2012-05-30) ==
+
+* Updated to latest version on v1.2.x branch (bug 759891).
+
+== February 10, 2012 (libjpeg-turbo v1.2.0 r807 2012-02-10) ==
+
+* Imported jchuff.c, jdhuff.c, jdhuff.h under new licensing.
+
+* Created mozilla.diff for the required jmorecfg.h changes and to allow for any
+  future changes made by Mozilla to upstream files.
+
+* Removed the following files which are unused by the Mozilla build:
+
+    cderror.h, cdjpeg.h, jconfig.h.in, transupp.h, simd/jsimdcfg.inc.h
+
+
+== March 28, 2011 (initial commit, libjpeg-turbo v1.1.0 r469 2011-02-27) ==
+
+* Modified jmorecfg.h to define UINT8, UINT16, INT16, and INT32 in terms of
+  prtypes to fix a build error on Windows.
+
+* Defined INLINE as NS_ALWAYS_INLINE in jconfig.h.
+
+* Removed the following files which are licensed under the wxWindows license:
+
+    bmp.c, bmp.h, jpegut.c, jpgtest.cxx, rrtimer.h, rrutil.h, turbojpeg.h,
+    turbojpegl.c
+
+* Reverted the following files to what was previously in Mozilla's tree
+  (nominally libjpeg 6.2):
+
+    jchuff.c, jdhuff.c, jdhuff.h
+
+  since the versions of these files in libjpeg-turbo are also under the
+  wxWindows license.  (It would have been nicer to revert them to the new
+  libjpeg-8b code, but that doesn't easily integrate with libjpeg-turbo.)

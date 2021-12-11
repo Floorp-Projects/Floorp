@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html dir='ltr'>
+<head>
+  <style id="cmBaseStyle">
+    html, body { height: 100%; }
+    body { margin: 0; overflow: hidden; }
+    .CodeMirror {
+      width: 100% !important;
+      /*
+        1.  Use fallback values for CSS variables, so that the text is sized
+            correctly while all the stylesheets load. Fallback values should
+            match the values in devtools/client/themes/variables.css
+        2.  Avoid !important for the font-size, to let CodeMirror set its own
+            font-size based on prefs.
+      */
+      font-size: var(--theme-code-font-size, 11px);
+      line-height: var(--theme-code-line-height, 1.3636) !important;
+    }
+  </style>
+  <link rel='stylesheet' href="chrome://devtools/content/shared/sourceeditor/codemirror/lib/codemirror.css">
+  <link rel='stylesheet' href="chrome://devtools/content/shared/sourceeditor/codemirror/addon/dialog/dialog.css">
+  <link rel='stylesheet' href="chrome://devtools/content/shared/sourceeditor/codemirror/mozilla.css">
+</head>
+<body class='theme-body devtools-monospace'></body>
+</html>

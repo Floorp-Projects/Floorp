@@ -1,0 +1,301 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+<!--
+Test the searchbox and autocomplete-popup components
+-->
+<head>
+  <meta charset="utf-8">
+  <title>SearchBox component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script src="head.js"></script>
+<script>
+"use strict";
+window.onload = async function () {
+  /**
+   * Takes a DOMNode with its children as list items,
+   * Typically UL > LI and each item's text value is
+   * compared with the reference item's value as a test
+   *
+   * @params {Node} - Node to be compared
+   * @reference {array} - Reference array for comparison. The selected index is
+   * highlighted as a single element array ie. ["[abc]", "ab", "abcPQR"],
+   * Here the element "abc" is highlighted
+   */
+  function compareAutocompleteList(list, reference) {
+    const delimiter = " - ";
+    const observedList = [...list.children].map(el => {
+      return el.classList.contains("autocomplete-selected")
+        ? `[${el.textContent}]`
+        : el.textContent
+    });
+    is(observedList.join(delimiter), reference.join(delimiter),
+      "Autocomplete items are rendered as expected");
+  }
+
+  function compareCursorPosition(initialElement) {
+    const initialPosition = initialElement.selectionStart;
+    return (element) => {
+      is(element.selectionStart, initialPosition, "Input cursor position is not changed");
+    }
+  }
+
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const SearchBox = React.createFactory(
+    browserRequire("devtools/client/shared/components/SearchBox")
+  );
+  const { component, $ } = await createComponentTest(SearchBox, {
+    type: "search",
+    autocompleteProvider: (filter) => {
+      const baseList = [
+        "foo",
+        "BAR",
+        "baZ",
+        "abc",
+        "pqr",
+        "xyz",
+        "ABC",
+        "a1",
+        "a2",
+        "a3",
+        "a4",
+        "a5",
+      ];
+      if (!filter) {
+        return [];
+      }
+
+      const tokens = filter.split(/\s+/g);
+      const lastToken = tokens[tokens.length - 1];
+      const previousTokens = tokens.slice(0, tokens.length - 1);
+
+      if (!lastToken) {
+        return [];
+      }
+
+      return baseList
+        .filter((item) => {
+          return item.toLowerCase().startsWith(lastToken.toLowerCase())
+            && item.toLowerCase() !== lastToken.toLowerCase();
+        })
+        .sort()
+        .map(item => ({
+          value: [...previousTokens, item].join(" "),
+          displayValue: item,
+        }));
+    },
+    onChange: () => null,
+  });
+
+  async function testSearchBoxWithAutocomplete() {
+    ok(!$(".devtools-autocomplete-popup"), "Autocomplete list not visible");
+
+    $(".devtools-searchinput").focus();
+    await forceRender(component); // Wait for state update
+    ok(!$(".devtools-autocomplete-popup"), "Autocomplete list not visible");
+
+    sendString("a");
+    await forceRender(component);
+
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "[ABC]",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "abc",
+    ]);
+
+    // Blur event
+    $(".devtools-searchinput").blur();
+    await forceRender(component);
+    ok(!component.state.focused, "focused state was properly set");
+    ok(!$(".devtools-autocomplete-popup"), "Autocomplete list removed from DOM");
+  }
+
+  async function testKeyEventsWithAutocomplete() {
+    // Clear the initial input
+    $(".devtools-searchinput").focus();
+    const cursorPositionIsNotChanged = compareCursorPosition($(".devtools-searchinput"));
+
+    // ArrowDown
+    synthesizeKey("KEY_ArrowDown");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "ABC",
+      "[a1]",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "abc",
+    ]);
+    ok($(".devtools-autocomplete-listbox .autocomplete-item:nth-child(2)")
+      .className.includes("autocomplete-selected"),
+      "Selection class applied");
+
+    // A double ArrowUp should roll back to the bottom of the list
+    synthesizeKey("KEY_ArrowUp");
+    synthesizeKey("KEY_ArrowUp");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "ABC",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "[abc]",
+    ]);
+    cursorPositionIsNotChanged($(".devtools-searchinput"));
+
+    // PageDown should take -5 places up
+    synthesizeKey("KEY_PageUp");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "ABC",
+      "[a1]",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "abc",
+    ]);
+    cursorPositionIsNotChanged($(".devtools-searchinput"));
+
+    // PageDown should take +5 places down
+    synthesizeKey("KEY_PageDown");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "ABC",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "[abc]",
+    ]);
+    cursorPositionIsNotChanged($(".devtools-searchinput"));
+
+    // Home should take to the top of the list
+    synthesizeKey("KEY_Home");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "[ABC]",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "abc",
+    ]);
+    cursorPositionIsNotChanged($(".devtools-searchinput"));
+
+    // End should take to the bottom of the list
+    synthesizeKey("KEY_End");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "ABC",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "[abc]",
+    ]);
+    cursorPositionIsNotChanged($(".devtools-searchinput"));
+
+    // Key down in existing state should rollover to the top
+    synthesizeKey("KEY_ArrowDown");
+    await forceRender(component);
+    // Tab should select the component and hide popup
+    synthesizeKey("KEY_Tab");
+    await forceRender(component);
+    is(component.state.value, "ABC", "Tab hit selects the item");
+    ok(!$(".devtools-autocomplete-popup"), "Tab hit hides the popup");
+
+    // Activate popup by removing a key
+    synthesizeKey("KEY_Backspace");
+    await forceRender(component);
+    ok($(".devtools-autocomplete-popup"), "Popup is up");
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "[ABC]",
+      "abc"
+    ]);
+
+    // Enter key selection
+    synthesizeKey("KEY_ArrowUp");
+    await forceRender(component);
+    synthesizeKey("KEY_Enter");
+    is(component.state.value, "abc", "Enter selection");
+    ok(!$(".devtools-autocomplete-popup"), "Enter/Return hides the popup");
+
+    // Escape should remove the autocomplete component
+    synthesizeKey("KEY_Backspace");
+    await forceRender(component);
+    synthesizeKey("KEY_Escape");
+    await forceRender(component);
+    ok(!$(".devtools-autocomplete-popup"),
+      "Autocomplete list removed from DOM on Escape");
+  }
+
+  async function testMouseEventsWithAutocomplete() {
+    $(".devtools-searchinput").focus();
+    await setState(component, {
+      value: "",
+      focused: true,
+    });
+    await forceRender(component);
+
+    // ArrowDown
+    synthesizeKey("KEY_ArrowDown");
+    await forceRender(component);
+    synthesizeMouseAtCenter($(".devtools-searchinput"), {}, window);
+    await forceRender(component);
+    is(component.state.focused, true, "Component should now be focused");
+
+    sendString("pq");
+    await forceRender(component);
+    synthesizeMouseAtCenter(
+      $(".devtools-autocomplete-listbox .autocomplete-item:nth-child(1)"),
+      {}, window
+    );
+    await forceRender(component);
+    is(component.state.value, "pqr", "Mouse click selects the item.");
+    ok(!$(".devtools-autocomplete-popup"), "Mouse click on item hides the popup");
+  }
+
+  async function testTokenizedAutocomplete() {
+    // Test for string "pqr ab" which should show list of ABC, abc
+    sendString(" ab");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), [
+      "[ABC]",
+      "abc"
+    ]);
+
+    // Select the first element, value now should be "pqr ABC"
+    synthesizeMouseAtCenter(
+      $(".devtools-autocomplete-listbox .autocomplete-item:nth-child(1)"),
+      {}, window
+    );
+    is(component.state.value, "pqr ABC", "Post Tokenization value selection");
+  }
+
+  add_task(async function () {
+    await testSearchBoxWithAutocomplete();
+    await testKeyEventsWithAutocomplete();
+    await testMouseEventsWithAutocomplete();
+    await testTokenizedAutocomplete();
+  });
+};
+</script>
+</body>
+</html>

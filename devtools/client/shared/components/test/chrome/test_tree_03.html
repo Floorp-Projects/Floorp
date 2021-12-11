@@ -1,0 +1,50 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Tree's autoExpandDepth.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
+      autoExpandDepth: 1
+    })), window.document.body);
+
+    isAccessibleTree(tree);
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "-C:false",
+      "-D:false",
+      "M:false",
+      "-N:false",
+    ], "Tree should be auto expanded one level");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

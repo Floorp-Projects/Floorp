@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=477531
+-->
+<head>
+  <title>Test for Bug 477531</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <style type="text/css">
+    #s {
+      margin-left: 10px;
+    }
+
+    #s:indeterminate {
+      margin-left: 30px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=477531">Mozilla Bug 477531</a>
+<p id="display"></p>
+<div id="content">
+
+<input type="checkbox" id="s" />
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 477531 **/
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
+   "10px",
+   "Non-indeterminate checkbox should have a margin of 10px");
+
+$("s").indeterminate = true;
+
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
+   "30px",
+   "Indeterminate checkbox should have a margin of 30px");
+
+$("s").setAttribute("type", "radio");
+
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
+   "30px",
+   "Setting an indeterminate element to type radio should give it indeterminate styles");
+
+$("s").setAttribute("type", "checkbox");
+
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
+   "30px",
+   "Setting an indeterminate element to type checkbox should give it indeterminate styles");
+
+$("s").indeterminate = false;
+
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
+   "10px",
+   "Newly non-indeterminate checkbox should have a margin of 10px");
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CommandBarButton renders 1`] = `
+<button
+  aria-pressed={false}
+  className="command-bar-button"
+/>
+`;
+
+exports[`debugBtn renders 1`] = `<debugBtn />`;

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> %htmlDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+    <title data-l10n-id="about-service-workers-title"></title>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" />
+    <link rel="stylesheet" href="chrome://mozapps/skin/aboutServiceWorkers.css" type="text/css" />
+    <link rel="localization" href="toolkit/about/aboutServiceWorkers.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <script src="chrome://global/content/aboutServiceWorkers.js" />
+  </head>
+  <body class="wide-container">
+    <div id="warning_not_enabled" class="warningBackground">
+      <div class="warningMessage" data-l10n-id="about-service-workers-warning-not-enabled"></div>
+    </div>
+    <div id="warning_no_serviceworkers" class="warningBackground">
+      <div class="warningMessage" data-l10n-id="about-service-workers-warning-no-service-workers"></div>
+    </div>
+    <div id="serviceworkers" class="tab active">
+      <h1 data-l10n-id="about-service-workers-main-title"></h1>
+    </div>
+  </body>
+</html>

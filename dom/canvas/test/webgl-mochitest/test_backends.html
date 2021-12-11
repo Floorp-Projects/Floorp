@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+</head>
+<body>
+<script>
+
+function RunWithPrefs(prefPairList, func) {
+  var prefEnv = {'set': prefPairList};
+  try {
+    SpecialPowers.pushPrefEnv(prefEnv, func);
+  } catch (e) {
+    console.log('Warning: Failed to set prefs: ' + JSON.stringify(prefPairList));
+    func();
+  }
+}
+
+////////////////////////////////////////
+
+var ANGLE_IS_SINGLETON = true;
+
+var expectD3DType;
+try {
+  // code borrowed from browser/modules/test/browser_taskbar_preview.js
+  var version = SpecialPowers.Services.sysinfo.getProperty('version');
+  version = parseFloat(version);
+
+  // Version 6.0 is Vista, 6.1 is 7.
+  if (version <= 6.0)
+    expectD3DType = 'd3d9';
+  else
+    expectD3DType = 'd3d11';
+} catch (e) {
+  expectD3DType = 'd3d11';
+}
+
+function GetRenderer() {
+  var c = document.createElement('canvas');
+  var gl = c.getContext('experimental-webgl');
+  if (!gl)
+    return undefined;
+
+  var ext = gl.getExtension('WEBGL_debug_renderer_info');
+  if (!ext)
+    throw new Error('Requires WEBGL_debug_renderer_info.');
+
+  var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+  return renderer;
+}
+
+function GetRendererType() {
+  var renderer = GetRenderer();
+  if (renderer === undefined)
+    return 'none';
+
+  if (renderer.includes('ANGLE')) {
+    if (renderer.includes('Microsoft Basic Render Driver')) // Also includes 'Direct3D11'.
+      return 'warp';
+    if (renderer.includes('Direct3D11'))
+      return 'd3d11';
+    if (renderer.includes('Direct3D9'))
+      return 'd3d9';
+
+  } else {
+    return 'gl';
+  }
+
+  throw new Error('Unrecognized renderer type for: ' + renderer);
+}
+
+function TestActualType(testName, expectedType) {
+  var actualType = GetRendererType();
+  ok(actualType == expectedType,
+     '[' + testName + '] Expected ' + expectedType + ', was ' + actualType);
+}
+
+////////////////////////////////////////
+
+function TestDefault() {
+  var expectedType = 'gl';
+  var isWindows = (navigator.platform.indexOf('Win') == 0);
+  if (isWindows) {
+    expectedType = expectD3DType;
+  }
+  TestActualType('TestDefault', expectedType);
+
+  if (isWindows && !ANGLE_IS_SINGLETON) {
+    var prefPairList = [
+      ['webgl.angle.force-warp', true],
+    ];
+    RunWithPrefs(prefPairList, TestWARP);
+    return;
+  }
+
+  var prefPairList = [
+    ['webgl.disabled', true],
+  ];
+  RunWithPrefs(prefPairList, TestDisabled);
+  return;
+}
+
+
+function TestWARP() {
+  var expectedType = (expectD3DType == 'd3d11') ? 'warp' : 'none';
+  TestActualType('TestWARP', expectedType);
+
+  var prefPairList = [
+    ['webgl.angle.force-warp', false],
+    ['webgl.angle.force-d3d11', true],
+  ];
+  RunWithPrefs(prefPairList, TestD3D11);
+}
+
+
+function TestD3D11() {
+  var expectedType = (expectD3DType == 'd3d11') ? 'd3d11' : 'none';
+  TestActualType('TestD3D11', expectedType);
+
+  var prefPairList = [
+    ['webgl.angle.force-d3d11', false],
+    ['webgl.angle.try-d3d11', false],
+  ];
+  RunWithPrefs(prefPairList, TestD3D9);
+}
+
+
+function TestD3D9() {
+  TestActualType('TestD3D9', 'd3d9');
+
+  var prefPairList = [
+    ['webgl.angle.try-d3d11', true],
+    ['webgl.disable-angle', true],
+  ];
+  RunWithPrefs(prefPairList, TestWinGL);
+}
+
+
+function TestWinGL() {
+  TestActualType('TestWinGL', 'gl');
+
+  var prefPairList = [
+    ['webgl.disabled', true],
+  ];
+  RunWithPrefs(prefPairList, TestDisabled);
+}
+
+
+function TestDisabled() {
+  TestActualType('TestDisabled', 'none');
+
+  SimpleTest.finish();
+}
+
+////////////////////////////////////////
+
+SimpleTest.waitForExplicitFinish();
+
+var prefPairList = [
+  ['webgl.force-enabled', true],
+  ['webgl.enable-debug-renderer-info', true],
+];
+RunWithPrefs(prefPairList, TestDefault);
+
+</script>
+</body>
+</html>

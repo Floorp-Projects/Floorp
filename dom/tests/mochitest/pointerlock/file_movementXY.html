@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+  <head>
+    <title>Bug 633602 - file_movementXY.html</title>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <div id="div"></div>
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 633602
+         * Checks if movementX and movementY are present
+         * in the mouse event object.
+         * It also checks the values for movementXY.
+         * They should be equal to the current screenXY minus
+         * the last screenXY
+         */
+
+        SimpleTest.waitForExplicitFinish();
+        SimpleTest.requestFlakyTimeout("We may need to wait for window's moving");
+
+        function MouseMovementStats() {
+          this.screenX = false;
+          this.screenY = false;
+          this.movementX = false;
+          this.movementY = false;
+        }
+
+        var div = document.getElementById("div")
+          , divCenterWidth = 0
+          , divCenterHeight = 0
+          , movementX = false
+          , movementY = false
+          , firstMove = new MouseMovementStats()
+          , secondMove = new MouseMovementStats();
+
+        function runTests () {
+          ok(movementX && movementY, "movementX and " +
+            "movementY should exist in mouse events objects.");
+          is(secondMove.movementX, secondMove.screenX - firstMove.screenX,
+           "movementX should be equal to eNow.screenX-ePrevious.screenX");
+          is(secondMove.movementY, secondMove.screenY - firstMove.screenY,
+           "movementY should be equal to eNow.screenY-ePrevious.screenY");
+        }
+
+        var moveMouse = function(e) {
+          info("Got mouse move");
+          movementX = ("movementX" in e);
+          movementY = ("movementY" in e);
+
+          div.removeEventListener("mousemove", moveMouse);
+          div.addEventListener("mousemove", moveMouseAgain);
+
+          firstMove.screenX = e.screenX;
+          firstMove.screenY = e.screenY;
+
+          divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
+          divCenterHeight = Math.round(div.getBoundingClientRect().height / 2);
+
+          synthesizeMouse(div, (divCenterWidth + 10), (divCenterHeight + 10), {
+            type: "mousemove"
+          }, window);
+        };
+
+        var moveMouseAgain = function(e) {
+          info("Got mouse move again");
+          secondMove.screenX = e.screenX;
+          secondMove.screenY = e.screenY;
+          secondMove.movementX = e.movementX;
+          secondMove.movementY = e.movementY;
+
+          div.removeEventListener("mousemove", moveMouseAgain);
+          addFullscreenChangeContinuation("exit", function() {
+            info("Got fullscreenchange for exiting");
+            runTests();
+            SimpleTest.finish();
+          });
+          document.exitFullscreen();
+        };
+
+        function start() {
+          info("Requesting fullscreen on parent");
+          addFullscreenChangeContinuation("enter", function() {
+            info("Got fullscreenchange for entering");
+            div.addEventListener("mousemove", moveMouse);
+            synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
+          });
+          div.requestFullscreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

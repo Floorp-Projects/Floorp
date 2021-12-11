@@ -1,0 +1,2 @@
+We no longer keep a local patch queue of patches against upstream. The protocol now
+is to upstream all patches before they are landed in mozilla-central.

@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL test: Check for privileged ext access.</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+
+function TestExt(gl, name) {
+  var ext = gl.getExtension(name);
+  ok(!ext, 'Should not have access to \'' + name + '\'.');
+}
+
+(function() {
+  var gl = c.getContext('webgl');
+  if (!gl) {
+    todo(gl, 'Get GL working here first.');
+    return;
+  }
+
+  // Privileged extensions:
+  TestExt(gl, 'MOZ_debug');
+})();
+
+</script>
+</body>
+</html>

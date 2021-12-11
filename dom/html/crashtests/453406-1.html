@@ -1,0 +1,34 @@
+<html>
+<head>
+<script type="text/javascript">
+function boom()
+{
+  var r = document.documentElement;
+  while (r.firstChild)
+    r.firstChild.remove();
+
+  var b    = document.createElement("BODY");
+  var s    = document.createElement("SCRIPT");
+  var f1   = document.createElement("FORM");
+  var i    = document.createElement("INPUT");
+  var br   = document.createElement("BR");
+  var f2   = document.createElement("FORM");
+  var span = document.createElement("SPAN");
+  f1.appendChild(i);
+  f1.appendChild(br);
+  s.appendChild(f1);
+  b.appendChild(s);
+  f2.appendChild(span);
+  b.appendChild(f2)
+  document.documentElement.appendChild(b);
+  b.contentEditable = "true";
+  document.execCommand("indent", false, null);
+  b.contentEditable = "false";
+  span.appendChild(i);
+  i.remove();
+}
+</script>
+</head>
+<body onload="boom();">
+</body>
+</html>

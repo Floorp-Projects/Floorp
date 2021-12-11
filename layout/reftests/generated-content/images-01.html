@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>CSS 2.1 Test Suite: generated content</title>
+    <link rel="author" title="Robert O'Callahan" href="mailto:robert@ocallahan.org" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#content"/>
+    <meta name="flags" content="" />
+<style>
+div::before {
+  content:url(missing-image.png);
+}
+div { border:1px solid green; margin:5px; }
+</style>
+</head>
+<div>Inner</div>
+</body>
+</html>

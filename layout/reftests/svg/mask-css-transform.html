@@ -1,0 +1,19 @@
+<style>
+  #square1 {
+    transform: translate(100px, 100px) scale(2,3);
+  }
+  #square2 {
+    transform: scale(2,3);
+  }
+</style>
+<svg style="width: 500px; height: 500px; border: 1px solid green;">
+  <defs>
+    <mask id="mask">
+      <rect id="square1" x="50px" y="50px" width="50px" height="50px" fill="#ffffff" />
+      <svg viewBox="0 0 100 100">
+        <rect id="square2" x="5" y="7" width="11" height="13" fill="blue" />
+      </svg>
+    </mask>
+  </defs>
+  <rect mask="url(#mask)" width="500px" height="500px" fill="red" />
+</svg>

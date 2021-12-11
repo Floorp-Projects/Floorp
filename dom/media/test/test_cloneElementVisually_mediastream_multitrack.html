@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test cloneElementVisually</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="https://example.com:443/tests/dom/media/test/cloneElementVisually_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="content">
+  <h1>Originals</h1>
+  <div id="originalContainer"></div>
+  <canvas id="canvas"></canvas>
+  <h1>MediaStream</h1>
+  <div id="streamTargetContainer"></div>
+  <h1>Clone</h1>
+</div>
+<div id="results">
+  <h1>Results</h1>
+  <canvas id="left"></canvas>
+  <canvas id="right"></canvas>
+</div>
+
+<script type="application/javascript">
+
+/* import-globals-from cloneElementVisually_helpers.js */
+
+/**
+ * Test that a clone of a video that is playing a MediaStream properly tracks
+ * the selected video track.
+ */
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.track.enabled", true],
+    ],
+  });
+
+  let originalVideo = document.createElement("video");
+  originalVideo.id = "original";
+  document.getElementById("originalContainer").appendChild(originalVideo);
+
+  let streamTarget = document.createElement("video");
+  document.getElementById("streamTargetContainer").appendChild(streamTarget);
+
+  await setup();
+
+  let [track1] = originalVideo.mozCaptureStream().getTracks();
+  let playingPromise = waitForEventOnce(originalVideo, "playing");
+  await originalVideo.play();
+  await playingPromise;
+
+  let canvas = document.getElementById("canvas");
+  canvas.width = originalVideo.videoWidth / 2;
+  canvas.height = originalVideo.videoHeight / 2;
+  let ctx = canvas.getContext("2d");
+  let [track2] = canvas.captureStream().getTracks();
+  ctx.fillStyle = "green";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  streamTarget.srcObject = new MediaStream([track1, track2]);
+  playingPromise = waitForEventOnce(streamTarget, "playing");
+  await streamTarget.play();
+  await playingPromise;
+
+  await withNewClone(originalVideo, async clone => {
+    SpecialPowers.wrap(streamTarget).cloneElementVisually(clone);
+
+    let selectedTrackIdx = streamTarget.videoTracks.selectedIndex;
+    streamTarget.videoTracks[++selectedTrackIdx % 2].selected = true;
+    await waitForEventOnce(streamTarget, "resize");
+
+    ok(await assertVideosMatch(streamTarget, clone),
+       "Should match MediaStream");
+  });
+
+  // Capturing a stream from a video "taints" it which prevents testing
+  // shutdown decoder behaviour. To avoid interfering with future tests,
+  // we replace the video.
+  let newVideo = originalVideo.cloneNode();
+  originalVideo.parentNode.replaceChild(newVideo, originalVideo);
+});
+
+</script>
+
+</body>
+</html>

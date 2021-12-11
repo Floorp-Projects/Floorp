@@ -1,0 +1,728 @@
+{
+  "Void": {
+    "_type": "enum"
+  },
+  "Argument": {
+    "_type": "enum",
+    "SpreadElement": "Box<Expression>",
+    "Expression": "Box<Expression>"
+  },
+  "Arguments": {
+    "_type": "struct",
+    "args": "Vec<Argument>"
+  },
+  "Identifier": {
+    "_type": "struct",
+    "value": "SourceAtomSetIndex"
+  },
+  "IdentifierName": {
+    "_type": "struct",
+    "value": "SourceAtomSetIndex"
+  },
+  "PrivateIdentifier": {
+    "_type": "struct",
+    "value": "SourceAtomSetIndex"
+  },
+  "Label": {
+    "_type": "struct",
+    "value": "SourceAtomSetIndex"
+  },
+  "VariableDeclarationKind": {
+    "_type": "enum",
+    "Var": null,
+    "Let": null,
+    "Const": null
+  },
+  "CompoundAssignmentOperator": {
+    "_type": "enum",
+    "LogicalOr": null,
+    "LogicalAnd": null,
+    "Coalesce": null,
+    "Add": null,
+    "Sub": null,
+    "Mul": null,
+    "Div": null,
+    "Mod": null,
+    "Pow": null,
+    "LeftShift": null,
+    "RightShift": null,
+    "RightShiftExt": null,
+    "Or": null,
+    "Xor": null,
+    "And": null
+  },
+  "BinaryOperator": {
+    "_type": "enum",
+    "Equals": null,
+    "NotEquals": null,
+    "StrictEquals": null,
+    "StrictNotEquals": null,
+    "LessThan": null,
+    "LessThanOrEqual": null,
+    "GreaterThan": null,
+    "GreaterThanOrEqual": null,
+    "In": null,
+    "Instanceof": null,
+    "LeftShift": null,
+    "RightShift": null,
+    "RightShiftExt": null,
+    "Add": null,
+    "Sub": null,
+    "Mul": null,
+    "Div": null,
+    "Mod": null,
+    "Pow": null,
+    "Comma": null,
+    "Coalesce": null,
+    "LogicalOr": null,
+    "LogicalAnd": null,
+    "BitwiseOr": null,
+    "BitwiseXor": null,
+    "BitwiseAnd": null
+  },
+  "UnaryOperator": {
+    "_type": "enum",
+    "Plus": null,
+    "Minus": null,
+    "LogicalNot": null,
+    "BitwiseNot": null,
+    "Typeof": null,
+    "Void": null,
+    "Delete": null
+  },
+  "UpdateOperator": {
+    "_type": "enum",
+    "Increment": null,
+    "Decrement": null
+  },
+  "Function": {
+    "_type": "struct",
+    "name": "Option<BindingIdentifier>",
+    "is_async": "bool",
+    "is_generator": "bool",
+    "params": "FormalParameters",
+    "body": "FunctionBody"
+  },
+  "Program": {
+    "_type": "enum",
+    "Module": "Module",
+    "Script": "Script"
+  },
+  "IfStatement": {
+    "_type": "struct",
+    "test": "Box<Expression>",
+    "consequent": "Box<Statement>",
+    "alternate": "Option<Box<Statement>>"
+  },
+  "Statement": {
+    "_type": "enum",
+    "BlockStatement": {
+      "block": "Block"
+    },
+    "BreakStatement": {
+      "label": "Option<Label>"
+    },
+    "ContinueStatement": {
+      "label": "Option<Label>"
+    },
+    "DebuggerStatement": null,
+    "DoWhileStatement": {
+      "block": "Box<Statement>",
+      "test": "Box<Expression>"
+    },
+    "EmptyStatement": null,
+    "ExpressionStatement": "Box<Expression>",
+    "ForInStatement": {
+      "left": "VariableDeclarationOrAssignmentTarget",
+      "right": "Box<Expression>",
+      "block": "Box<Statement>"
+    },
+    "ForOfStatement": {
+      "left": "VariableDeclarationOrAssignmentTarget",
+      "right": "Box<Expression>",
+      "block": "Box<Statement>"
+    },
+    "ForStatement": {
+      "init": "Option<VariableDeclarationOrExpression>",
+      "test": "Option<Box<Expression>>",
+      "update": "Option<Box<Expression>>",
+      "block": "Box<Statement>"
+    },
+    "IfStatement": "IfStatement",
+    "LabelledStatement": {
+      "label": "Label",
+      "body": "Box<Statement>"
+    },
+    "ReturnStatement": {
+      "expression": "Option<Box<Expression>>"
+    },
+    "SwitchStatement": {
+      "discriminant": "Box<Expression>",
+      "cases": "Vec<SwitchCase>"
+    },
+    "SwitchStatementWithDefault": {
+      "discriminant": "Box<Expression>",
+      "pre_default_cases": "Vec<SwitchCase>",
+      "default_case": "SwitchDefault",
+      "post_default_cases": "Vec<SwitchCase>"
+    },
+    "ThrowStatement": {
+      "expression": "Box<Expression>"
+    },
+    "TryCatchStatement": {
+      "body": "Block",
+      "catch_clause": "CatchClause"
+    },
+    "TryFinallyStatement": {
+      "body": "Block",
+      "catch_clause": "Option<CatchClause>",
+      "finalizer": "Block"
+    },
+    "WhileStatement": {
+      "test": "Box<Expression>",
+      "block": "Box<Statement>"
+    },
+    "WithStatement": {
+      "object": "Box<Expression>",
+      "body": "Box<Statement>"
+    },
+    "VariableDeclarationStatement": "VariableDeclaration",
+    "FunctionDeclaration": "Function",
+    "ClassDeclaration": "ClassDeclaration"
+  },
+  "Expression": {
+    "_type": "enum",
+    "MemberExpression": "MemberExpression",
+    "ClassExpression": "ClassExpression",
+    "LiteralBooleanExpression": {
+      "value": "bool"
+    },
+    "LiteralInfinityExpression": null,
+    "LiteralNullExpression": null,
+    "LiteralNumericExpression": "NumericLiteral",
+    "LiteralRegExpExpression": {
+      "pattern": "SourceSliceIndex",
+      "global": "bool",
+      "ignore_case": "bool",
+      "multi_line": "bool",
+      "dot_all": "bool",
+      "sticky": "bool",
+      "unicode": "bool"
+    },
+    "LiteralStringExpression": {
+      "value": "SourceAtomSetIndex"
+    },
+    "ArrayExpression": "ArrayExpression",
+    "ArrowExpression": {
+      "is_async": "bool",
+      "params": "FormalParameters",
+      "body": "ArrowExpressionBody"
+    },
+    "AssignmentExpression": {
+      "binding": "AssignmentTarget",
+      "expression": "Box<Expression>"
+    },
+    "BinaryExpression": {
+      "operator": "BinaryOperator",
+      "left": "Box<Expression>",
+      "right": "Box<Expression>"
+    },
+    "CallExpression": "CallExpression",
+    "CompoundAssignmentExpression": {
+      "operator": "CompoundAssignmentOperator",
+      "binding": "SimpleAssignmentTarget",
+      "expression": "Box<Expression>"
+    },
+    "ConditionalExpression": {
+      "test": "Box<Expression>",
+      "consequent": "Box<Expression>",
+      "alternate": "Box<Expression>"
+    },
+    "FunctionExpression": "Function",
+    "IdentifierExpression": "IdentifierExpression",
+    "NewExpression": {
+      "callee": "Box<Expression>",
+      "arguments": "Arguments"
+    },
+    "NewTargetExpression": null,
+    "ObjectExpression": "ObjectExpression",
+    "OptionalExpression": {
+      "object": "ExpressionOrSuper",
+      "tail": "Box<Expression>"
+    },
+    "OptionalChain": "OptionalChain",
+    "UnaryExpression": {
+      "operator": "UnaryOperator",
+      "operand": "Box<Expression>"
+    },
+    "TemplateExpression": "TemplateExpression",
+    "ThisExpression": null,
+    "UpdateExpression": {
+      "is_prefix": "bool",
+      "operator": "UpdateOperator",
+      "operand": "SimpleAssignmentTarget"
+    },
+    "YieldExpression": {
+      "expression": "Option<Box<Expression>>"
+    },
+    "YieldGeneratorExpression": {
+      "expression": "Box<Expression>"
+    },
+    "AwaitExpression": {
+      "expression": "Box<Expression>"
+    },
+    "ImportCallExpression": {
+      "argument": "Box<Expression>"
+    }
+  },
+  "MemberExpression": {
+    "_type": "enum",
+    "ComputedMemberExpression": "ComputedMemberExpression",
+    "StaticMemberExpression": "StaticMemberExpression",
+    "PrivateFieldExpression": "PrivateFieldExpression"
+  },
+  "OptionalChain": {
+    "_type": "enum",
+    "ComputedMemberExpressionTail": {
+      "expression": "Box<Expression>"
+    },
+    "StaticMemberExpressionTail": {
+      "property": "IdentifierName"
+    },
+    "PrivateFieldExpressionTail": {
+      "field": "PrivateIdentifier"
+    },
+    "CallExpressionTail": {
+      "arguments": "Arguments"
+    },
+    "ComputedMemberExpression": "ComputedMemberExpression",
+    "StaticMemberExpression": "StaticMemberExpression",
+    "PrivateFieldExpression": "PrivateFieldExpression",
+    "CallExpression": "CallExpression"
+  },
+  "PropertyName": {
+    "_type": "enum",
+    "ComputedPropertyName": "ComputedPropertyName",
+    "StaticPropertyName": "StaticPropertyName",
+    "StaticNumericPropertyName": "NumericLiteral"
+  },
+  "CallExpression": {
+    "_type": "struct",
+    "callee": "ExpressionOrSuper",
+    "arguments": "Arguments"
+  },
+  "ClassElementName": {
+    "_type": "enum",
+    "ComputedPropertyName": "ComputedPropertyName",
+    "StaticPropertyName": "StaticPropertyName",
+    "StaticNumericPropertyName": "NumericLiteral",
+    "PrivateFieldName": "PrivateIdentifier"
+  },
+  "ObjectProperty": {
+    "_type": "enum",
+    "NamedObjectProperty": "NamedObjectProperty",
+    "ShorthandProperty": "ShorthandProperty",
+    "SpreadProperty": "Box<Expression>"
+  },
+  "NamedObjectProperty": {
+    "_type": "enum",
+    "MethodDefinition": "MethodDefinition",
+    "DataProperty": "DataProperty"
+  },
+  "MethodDefinition": {
+    "_type": "enum",
+    "Method": "Method",
+    "Getter": "Getter",
+    "Setter": "Setter"
+  },
+  "ImportDeclaration": {
+    "_type": "enum",
+    "Import": "Import",
+    "ImportNamespace": "ImportNamespace"
+  },
+  "ExportDeclaration": {
+    "_type": "enum",
+    "ExportAllFrom": "ExportAllFrom",
+    "ExportFrom": "ExportFrom",
+    "ExportLocals": "ExportLocals",
+    "Export": "Export",
+    "ExportDefault": "ExportDefault"
+  },
+  "VariableReference": {
+    "_type": "enum",
+    "BindingIdentifier": "BindingIdentifier",
+    "AssignmentTargetIdentifier": "AssignmentTargetIdentifier"
+  },
+  "BindingPattern": {
+    "_type": "enum",
+    "ObjectBinding": "ObjectBinding",
+    "ArrayBinding": "ArrayBinding"
+  },
+  "Binding": {
+    "_type": "enum",
+    "BindingPattern": "BindingPattern",
+    "BindingIdentifier": "BindingIdentifier"
+  },
+  "SimpleAssignmentTarget": {
+    "_type": "enum",
+    "AssignmentTargetIdentifier": "AssignmentTargetIdentifier",
+    "MemberAssignmentTarget": "MemberAssignmentTarget"
+  },
+  "AssignmentTargetPattern": {
+    "_type": "enum",
+    "ArrayAssignmentTarget": "ArrayAssignmentTarget",
+    "ObjectAssignmentTarget": "ObjectAssignmentTarget"
+  },
+  "AssignmentTarget": {
+    "_type": "enum",
+    "AssignmentTargetPattern": "AssignmentTargetPattern",
+    "SimpleAssignmentTarget": "SimpleAssignmentTarget"
+  },
+  "Parameter": {
+    "_type": "enum",
+    "Binding": "Binding",
+    "BindingWithDefault": "BindingWithDefault"
+  },
+  "BindingWithDefault": {
+    "_type": "struct",
+    "binding": "Binding",
+    "init": "Box<Expression>"
+  },
+  "BindingIdentifier": {
+    "_type": "struct",
+    "name": "Identifier"
+  },
+  "AssignmentTargetIdentifier": {
+    "_type": "struct",
+    "name": "Identifier"
+  },
+  "ExpressionOrSuper": {
+    "_type": "enum",
+    "Expression": "Box<Expression>",
+    "Super": null
+  },
+  "MemberAssignmentTarget": {
+    "_type": "enum",
+    "ComputedMemberAssignmentTarget": "ComputedMemberAssignmentTarget",
+    "PrivateFieldAssignmentTarget": "PrivateFieldAssignmentTarget",
+    "StaticMemberAssignmentTarget": "StaticMemberAssignmentTarget"
+  },
+  "ComputedMemberAssignmentTarget": {
+    "_type": "struct",
+    "object": "ExpressionOrSuper",
+    "expression": "Box<Expression>"
+  },
+  "PrivateFieldAssignmentTarget": {
+    "_type": "struct",
+    "object": "ExpressionOrSuper",
+    "field": "PrivateIdentifier"
+  },
+  "StaticMemberAssignmentTarget": {
+    "_type": "struct",
+    "object": "ExpressionOrSuper",
+    "property": "IdentifierName"
+  },
+  "ArrayBinding": {
+    "_type": "struct",
+    "elements": "Vec<Option<Parameter>>",
+    "rest": "Option<Box<Binding>>"
+  },
+  "ObjectBinding": {
+    "_type": "struct",
+    "properties": "Vec<BindingProperty>",
+    "rest": "Option<Box<BindingIdentifier>>"
+  },
+  "BindingProperty": {
+    "_type": "enum",
+    "BindingPropertyIdentifier": "BindingPropertyIdentifier",
+    "BindingPropertyProperty": "BindingPropertyProperty"
+  },
+  "BindingPropertyIdentifier": {
+    "_type": "struct",
+    "binding": "BindingIdentifier",
+    "init": "Option<Box<Expression>>"
+  },
+  "BindingPropertyProperty": {
+    "_type": "struct",
+    "name": "PropertyName",
+    "binding": "Parameter"
+  },
+  "AssignmentTargetWithDefault": {
+    "_type": "struct",
+    "binding": "AssignmentTarget",
+    "init": "Box<Expression>"
+  },
+  "AssignmentTargetMaybeDefault": {
+    "_type": "enum",
+    "AssignmentTarget": "AssignmentTarget",
+    "AssignmentTargetWithDefault": "AssignmentTargetWithDefault"
+  },
+  "ArrayAssignmentTarget": {
+    "_type": "struct",
+    "elements": "Vec<Option<AssignmentTargetMaybeDefault>>",
+    "rest": "Option<Box<AssignmentTarget>>"
+  },
+  "ObjectAssignmentTarget": {
+    "_type": "struct",
+    "properties": "Vec<AssignmentTargetProperty>",
+    "rest": "Option<Box<AssignmentTarget>>"
+  },
+  "AssignmentTargetProperty": {
+    "_type": "enum",
+    "AssignmentTargetPropertyIdentifier": "AssignmentTargetPropertyIdentifier",
+    "AssignmentTargetPropertyProperty": "AssignmentTargetPropertyProperty"
+  },
+  "AssignmentTargetPropertyIdentifier": {
+    "_type": "struct",
+    "binding": "AssignmentTargetIdentifier",
+    "init": "Option<Box<Expression>>"
+  },
+  "AssignmentTargetPropertyProperty": {
+    "_type": "struct",
+    "name": "PropertyName",
+    "binding": "AssignmentTargetMaybeDefault"
+  },
+  "ClassExpression": {
+    "_type": "struct",
+    "name": "Option<BindingIdentifier>",
+    "super_": "Option<Box<Expression>>",
+    "elements": "Vec<Box<ClassElement>>"
+  },
+  "ClassDeclaration": {
+    "_type": "struct",
+    "name": "BindingIdentifier",
+    "super_": "Option<Box<Expression>>",
+    "elements": "Vec<Box<ClassElement>>"
+  },
+  "ClassElement": {
+    "_type": "enum",
+    "MethodDefinition": {
+      "is_static": "bool",
+      "method": "MethodDefinition"
+    },
+    "FieldDefinition": {
+      "name": "ClassElementName",
+      "init": "Option<Box<Expression>>"
+    }
+  },
+  "ModuleItems": {
+    "_type": "enum",
+    "ImportDeclaration": "ImportDeclaration",
+    "ExportDeclaration": "ExportDeclaration",
+    "Statement": "Box<Statement>"
+  },
+  "Module": {
+    "_type": "struct",
+    "directives": "Vec<Directive>",
+    "items": "Vec<ModuleItems>"
+  },
+  "Import": {
+    "_type": "struct",
+    "module_specifier": "SourceAtomSetIndex",
+    "default_binding": "Option<BindingIdentifier>",
+    "named_imports": "Vec<ImportSpecifier>"
+  },
+  "ImportNamespace": {
+    "_type": "struct",
+    "module_specifier": "SourceAtomSetIndex",
+    "default_binding": "Option<BindingIdentifier>",
+    "namespace_binding": "BindingIdentifier"
+  },
+  "ImportSpecifier": {
+    "_type": "struct",
+    "name": "Option<IdentifierName>",
+    "binding": "BindingIdentifier"
+  },
+  "ExportAllFrom": {
+    "_type": "struct",
+    "module_specifier": "SourceAtomSetIndex"
+  },
+  "ExportFrom": {
+    "_type": "struct",
+    "named_exports": "Vec<ExportFromSpecifier>",
+    "module_specifier": "SourceAtomSetIndex"
+  },
+  "ExportLocals": {
+    "_type": "struct",
+    "named_exports": "Vec<ExportLocalSpecifier>"
+  },
+  "Export": {
+    "_type": "enum",
+    "FunctionDeclaration": "Function",
+    "ClassDeclaration": "ClassDeclaration",
+    "VariableDeclaration": "VariableDeclaration"
+  },
+  "ExportDefault": {
+    "_type": "enum",
+    "FunctionDeclaration": "Function",
+    "ClassDeclaration": "ClassDeclaration",
+    "Expression": "Box<Expression>"
+  },
+  "ExportFromSpecifier": {
+    "_type": "struct",
+    "name": "IdentifierName",
+    "exported_name": "Option<IdentifierName>"
+  },
+  "ExportLocalSpecifier": {
+    "_type": "struct",
+    "name": "IdentifierExpression",
+    "exported_name": "Option<IdentifierName>"
+  },
+  "Method": {
+    "_type": "struct",
+    "name": "ClassElementName",
+    "is_async": "bool",
+    "is_generator": "bool",
+    "params": "FormalParameters",
+    "body": "FunctionBody"
+  },
+  "Getter": {
+    "_type": "struct",
+    "property_name": "ClassElementName",
+    "body": "FunctionBody"
+  },
+  "Setter": {
+    "_type": "struct",
+    "property_name": "ClassElementName",
+    "param": "Parameter",
+    "body": "FunctionBody"
+  },
+  "DataProperty": {
+    "_type": "struct",
+    "property_name": "PropertyName",
+    "expression": "Box<Expression>"
+  },
+  "ShorthandProperty": {
+    "_type": "struct",
+    "name": "IdentifierExpression"
+  },
+  "ComputedPropertyName": {
+    "_type": "struct",
+    "expression": "Box<Expression>"
+  },
+  "StaticPropertyName": {
+    "_type": "struct",
+    "value": "SourceAtomSetIndex"
+  },
+  "NumericLiteral": {
+    "_type": "struct",
+    "value": "f64"
+  },
+  "ArrayExpressionElement": {
+    "_type": "enum",
+    "SpreadElement": "Box<Expression>",
+    "Expression": "Box<Expression>",
+    "Elision": null
+  },
+  "ArrayExpression": {
+    "_type": "struct",
+    "elements": "Vec<ArrayExpressionElement>"
+  },
+  "ArrowExpressionBody": {
+    "_type": "enum",
+    "FunctionBody": "FunctionBody",
+    "Expression": "Box<Expression>"
+  },
+  "ComputedMemberExpression": {
+    "_type": "struct",
+    "object": "ExpressionOrSuper",
+    "expression": "Box<Expression>"
+  },
+  "IdentifierExpression": {
+    "_type": "struct",
+    "name": "Identifier"
+  },
+  "ObjectExpression": {
+    "_type": "struct",
+    "properties": "Vec<Box<ObjectProperty>>"
+  },
+  "StaticMemberExpression": {
+    "_type": "struct",
+    "object": "ExpressionOrSuper",
+    "property": "IdentifierName"
+  },
+  "PrivateFieldExpression": {
+    "_type": "struct",
+    "object": "ExpressionOrSuper",
+    "field": "PrivateIdentifier"
+  },
+  "TemplateExpressionElement": {
+    "_type": "enum",
+    "Expression": "Box<Expression>",
+    "TemplateElement": "TemplateElement"
+  },
+  "TemplateExpression": {
+    "_type": "struct",
+    "tag": "Option<Box<Expression>>",
+    "elements": "Vec<TemplateExpressionElement>"
+  },
+  "VariableDeclarationOrAssignmentTarget": {
+    "_type": "enum",
+    "VariableDeclaration": "VariableDeclaration",
+    "AssignmentTarget": "AssignmentTarget"
+  },
+  "VariableDeclarationOrExpression": {
+    "_type": "enum",
+    "VariableDeclaration": "VariableDeclaration",
+    "Expression": "Box<Expression>"
+  },
+  "Block": {
+    "_type": "struct",
+    "statements": "Vec<Statement>",
+    "declarations": "Option<Vec<SourceAtomSetIndex>>"
+  },
+  "CatchClause": {
+    "_type": "struct",
+    "binding": "Option<Box<Binding>>",
+    "body": "Block"
+  },
+  "Directive": {
+    "_type": "struct",
+    "raw_value": "SourceAtomSetIndex"
+  },
+  "FormalParameters": {
+    "_type": "struct",
+    "items": "Vec<Parameter>",
+    "rest": "Option<Binding>"
+  },
+  "FunctionBody": {
+    "_type": "struct",
+    "directives": "Vec<Directive>",
+    "statements": "Vec<Statement>"
+  },
+  "Script": {
+    "_type": "struct",
+    "directives": "Vec<Directive>",
+    "statements": "Vec<Statement>"
+  },
+  "SwitchCase": {
+    "_type": "struct",
+    "test": "Box<Expression>",
+    "consequent": "Vec<Statement>"
+  },
+  "SwitchDefault": {
+    "_type": "struct",
+    "consequent": "Vec<Statement>"
+  },
+  "TemplateElement": {
+    "_type": "struct",
+    "raw_value": "SourceAtomSetIndex"
+  },
+  "VariableDeclaration": {
+    "_type": "struct",
+    "kind": "VariableDeclarationKind",
+    "declarators": "Vec<VariableDeclarator>"
+  },
+  "VariableDeclarator": {
+    "_type": "struct",
+    "binding": "Binding",
+    "init": "Option<Box<Expression>>"
+  },
+  "CoverParenthesized": {
+    "_type": "enum",
+    "Expression": {
+      "expression": "Box<Expression>"
+    },
+    "Parameters": "Box<FormalParameters>"
+  }
+}

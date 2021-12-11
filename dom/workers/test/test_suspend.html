@@ -1,0 +1,162 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DOM Worker Threads</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  /**
+   * - main page tells subpage to call startWorker()
+   * - subpage starts worker
+   * - worker calls setInterval() and keeps calling postMessage()
+   * - onmessage(), as setup by the subpage, calls messageCallback
+   * - when messageCallback gets called more than 25 times
+   *    - subpage gets navigated to blank.html
+   * - blank page posts message to main page, and main page calls suspendCallback()
+   * - suspendCallback() schedules waitInterval() to be fired off every second
+   * - after 5 times, it clears the interval and navigates subpage back
+   * - suspend_window subpage starts receiving messages again and
+   *    does a final call to messageCallback()
+   * - finishTest() is called
+   */
+
+  var lastCount;
+
+  var suspended = false;
+  var resumed = false;
+  var finished = false;
+  var suspendBlankPageCurrentlyShowing = false;
+
+  var interval;
+  var oldMessageCount;
+  var waitCount = 0;
+
+  var bcSuspendWindow = new BroadcastChannel("suspendWindow");
+  bcSuspendWindow.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    var data = msg.data;
+    if (command == "loaded") {
+      if (finished) {
+        return;
+      }
+      bcSuspendWindow.postMessage({command: "startWorker"});
+    } else if (command == "messageCallback") {
+      messageCallback(data);
+    } else if (command == "errorCallback") {
+      errorCallback(data);
+    } else if (command == "finished") {
+      SimpleTest.finish();
+    }
+  }
+
+  var bcSuspendBlank = new BroadcastChannel("suspendBlank");
+  bcSuspendBlank.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "loaded") {
+      suspendBlankPageCurrentlyShowing = true;
+      if (suspended) {
+        badOnloadCallback();
+      } else {
+        suspendCallback();
+      }
+    } else if (command == "pagehide") {
+      suspendBlankPageCurrentlyShowing = false;
+    }
+  }
+
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    window.open("suspend_window.html", "testWin", "noopener");
+  });
+
+  function finishTest() {
+    if (finished) {
+      return;
+    }
+    finished = true;
+    bcSuspendWindow.postMessage({command: "finish"});
+  }
+
+  function waitInterval() {
+    if (finished) {
+      return;
+    }
+    ok(suspendBlankPageCurrentlyShowing, "correct page is showing");
+    is(suspended, true, "Not suspended?");
+    is(resumed, false, "Already resumed?!");
+    is(lastCount, oldMessageCount, "Received a message while suspended!");
+    if (++waitCount == 5) {
+      clearInterval(interval);
+      resumed = true;
+      bcSuspendBlank.postMessage({command: "navigateBack"});
+    }
+  }
+
+  function badOnloadCallback() {
+    if (finished) {
+      return;
+    }
+    ok(false, "We don't want suspend_window.html to fire a new load event, we want it to come out of the bfcache!");
+    finishTest();
+  }
+
+  function suspendCallback() {
+    if (finished) {
+      return;
+    }
+    ok(suspendBlankPageCurrentlyShowing, "correct page is showing");
+    is(suspended, false, "Already suspended?");
+    is(resumed, false, "Already resumed?");
+    suspended = true;
+    oldMessageCount = lastCount;
+    interval = setInterval(waitInterval, 1000);
+  }
+
+  function messageCallback(data) {
+    if (finished) {
+      return;
+    }
+
+    if (!suspended) {
+      ok(lastCount === undefined || lastCount == data - 1,
+         "Got good data, lastCount = " + lastCount + ", data = " + data);
+      lastCount = data;
+      if (lastCount == 25) {
+        bcSuspendWindow.postMessage({command: "navigate"});
+      }
+      return;
+    }
+
+    ok(!suspendBlankPageCurrentlyShowing, "correct page is showing");
+    is(resumed, true, "Got message before resumed!");
+    is(lastCount, data - 1, "Missed a message, suspend failed!");
+    finishTest();
+  }
+
+  function errorCallback(data) {
+    if (finished) {
+      return;
+    }
+    ok(false, "testWin had an error: '" + data + "'");
+    finishTest();
+  }
+
+</script>
+</pre>
+</body>
+</html>

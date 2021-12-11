@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=424698
+-->
+<head>
+  <title>Test for Bug 424698</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=424698">Mozilla Bug 424698</a>
+<p id="display">
+<input id="i1">
+<input id="target">
+<textarea id="i2"></textarea>
+<textarea id="target2"></textarea>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 424698 **/
+var i = $("i1");
+is(i.value, "", "Value should be empty string");
+i.defaultValue = "test";
+is(i.value, "test", "Setting defaultValue should work");
+i.defaultValue = "test2";
+is(i.value, "test2", "Setting defaultValue multiple times should work");
+
+// Now let's hide and reshow things
+i.style.display = "none";
+is(i.offsetWidth, 0, "Input didn't hide?");
+i.style.display = "";
+isnot(i.offsetWidth, 0, "Input didn't show?");
+is(i.value, "test2", "Hiding/showing should not affect value");
+i.defaultValue = "test3";
+is(i.value, "test3", "Setting defaultValue after hide/show should work");
+
+// Make sure typing works ok
+i = $("target");
+i.focus(); // Otherwise editor gets confused when we send the key events
+is(i.value, "", "Value should be empty string in second control");
+sendString("2test2");
+is(i.value, "2test2", 'We just typed the string "2test2"');
+i.defaultValue = "2test3";
+is(i.value, "2test2", "Setting defaultValue after typing should not work");
+i.style.display = "none";
+is(i.offsetWidth, 0, "Second input didn't hide?");
+i.style.display = "";
+isnot(i.offsetWidth, 0, "Second input didn't show?");
+is(i.value, "2test2", "Hiding/showing second input should not affect value");
+i.defaultValue = "2test4";
+is(i.value, "2test2", "Setting defaultValue after hide/show should not work if we typed");
+
+i = $("i2");
+is(i.value, "", "Textarea value should be empty string");
+i.defaultValue = "test";
+is(i.value, "test", "Setting textarea defaultValue should work");
+i.defaultValue = "test2";
+is(i.value, "test2", "Setting textarea defaultValue multiple times should work");
+
+// Now let's hide and reshow things
+i.style.display = "none";
+is(i.offsetWidth, 0, "Textarea didn't hide?");
+i.style.display = "";
+isnot(i.offsetWidth, 0, "Textarea didn't show?");
+is(i.value, "test2", "Hiding/showing textarea should not affect value");
+i.defaultValue = "test3";
+is(i.value, "test3", "Setting textarea defaultValue after hide/show should work");
+
+// Make sure typing works ok
+i = $("target2");
+i.focus(); // Otherwise editor gets confused when we send the key events
+is(i.value, "", "Textarea value should be empty string in second control");
+sendString("2test2");
+is(i.value, "2test2", 'We just typed the string "2test2"');
+i.defaultValue = "2test3";
+is(i.value, "2test2", "Setting textarea defaultValue after typing should not work");
+i.style.display = "none";
+is(i.offsetWidth, 0, "Second textarea didn't hide?");
+i.style.display = "";
+isnot(i.offsetWidth, 0, "Second textarea didn't show?");
+is(i.value, "2test2", "Hiding/showing second textarea should not affect value");
+i.defaultValue = "2test4";
+is(i.value, "2test2", "Setting textarea defaultValue after hide/show should not work if we typed");
+</script>
+</pre>
+</body>
+</html>
+

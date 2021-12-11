@@ -1,0 +1,111 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include ClientIPCTypes;
+include IPCServiceWorkerDescriptor;
+include IPCServiceWorkerRegistrationDescriptor;
+include PBackgroundSharedTypes;
+include URIParams;
+include DOMTypes;
+include NeckoChannelParams;
+include ProtocolTypes;
+
+include "mozilla/dom/ClientIPCUtils.h";
+include "mozilla/dom/ReferrerInfoUtils.h";
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+using mozilla::StorageAccess from "mozilla/StorageAccess.h";
+
+namespace mozilla {
+namespace dom {
+
+struct ServiceWorkerData {
+  IPCServiceWorkerDescriptor descriptor;
+  IPCServiceWorkerRegistrationDescriptor registrationDescriptor;
+  nsString cacheName;
+  uint32_t loadFlags;
+  nsString id;
+};
+
+union OptionalServiceWorkerData {
+  void_t;
+  ServiceWorkerData;
+};
+
+struct RemoteWorkerData
+{
+  // This should only be used for devtools.
+  nsString originalScriptURL;
+
+  // It is important to pass these as URIParams instead of strings for blob
+  // URLs: they carry an additional bit of state with them (mIsRevoked) that
+  // gives us a chance to use them, even after they've been revoked. Because
+  // we're asynchronously calling into the parent process before potentially
+  // loading the worker, it is important to keep this state. Note that this
+  // isn't a panacea: once the URL has been revoked, it'll give the worker 5
+  // seconds to actually load it; so it's possible to still fail to load the
+  // blob URL if it takes too long to do the round trip.
+  URIParams baseScriptURL;
+  URIParams resolvedScriptURL;
+
+  nsString name;
+
+  PrincipalInfo loadingPrincipalInfo;
+  PrincipalInfo principalInfo;
+  PrincipalInfo partitionedPrincipalInfo;
+
+  bool useRegularPrincipal;
+  bool hasStorageAccessPermissionGranted;
+
+  CookieJarSettingsArgs cookieJarSettings;
+
+  nsCString domain;
+
+  bool isSecureContext;
+
+  IPCClientInfo? clientInfo;
+
+  nsIReferrerInfo referrerInfo;
+
+  StorageAccess storageAccess;
+
+  OptionalServiceWorkerData serviceWorkerData;
+
+  nsID agentClusterId;
+
+  // Child process remote type where the worker should only run on.
+  nsCString remoteType;
+};
+
+// ErrorData/ErrorDataNote correspond to WorkerErrorReport/WorkerErrorNote
+// which in turn correspond to JSErrorReport/JSErrorNotes which allows JS to
+// report complicated errors such as redeclarations that involve multiple
+// distinct lines.  For more generic error-propagation IPC structures, see bug
+// 1357463 on making ErrorResult usable over IPC.
+
+struct ErrorDataNote {
+  uint32_t lineNumber;
+  uint32_t columnNumber;
+  nsString message;
+  nsString filename;
+};
+
+struct ErrorData {
+  bool isWarning;
+  uint32_t lineNumber;
+  uint32_t columnNumber;
+  nsString message;
+  nsString filename;
+  nsString line;
+  ErrorDataNote[] notes;
+};
+
+union ErrorValue {
+  nsresult;
+  ErrorData;
+  void_t;
+};
+
+} // namespace dom
+} // namespace mozilla

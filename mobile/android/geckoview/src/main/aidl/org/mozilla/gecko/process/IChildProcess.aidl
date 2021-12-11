@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko.process;
+
+import org.mozilla.gecko.process.IProcessManager;
+
+import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
+
+interface IChildProcess {
+    /** The process started correctly. */
+    const int STARTED_OK = 0;
+    /** An error occurred when trying to start this process. */
+    const int STARTED_FAIL = 1;
+    /** This process is being used elsewhere and cannot start. */
+    const int STARTED_BUSY = 2;
+
+    int getPid();
+    int start(in IProcessManager procMan,
+              in String mainProcessId,
+              in String[] args,
+              in Bundle extras,
+              int flags,
+              in String userSerialNumber,
+              in String crashHandlerService,
+              in ParcelFileDescriptor prefsPfd,
+              in ParcelFileDescriptor prefMapPfd,
+              in ParcelFileDescriptor ipcPfd,
+              in ParcelFileDescriptor crashReporterPfd,
+              in ParcelFileDescriptor crashAnnotationPfd);
+
+    void crash();
+}

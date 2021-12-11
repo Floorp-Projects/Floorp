@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for bug 1135361</title>
+    <style>
+    body {
+      font: 48px sans-serif;
+    }
+    div {
+      display: inline-block;
+      width: 3em;
+      border: 1px solid silver;
+      padding: .5em;
+    }
+    p {
+      writing-mode: vertical-rl;
+      -webkit-writing-mode: vertical-rl;
+      -ms-writing-mode: tb-rl; /* old syntax. IE */
+      text-orientation: upright;
+      -webkit-text-orientation: upright;
+      height: 4ch;
+      text-align: justify;
+      text-align-last: justify;
+    }
+    rt {
+      font-size: 20%; /* ensure ruby is small enough that it won't affect inline spacing */
+    }
+    .t {
+      color: transparent;
+    }
+    </style>
+  </head>
+  <body>
+   <div>
+    <p>
+      <ruby>東<rt>to</rt></ruby><ruby class="t">京<rt>kyo</rt></ruby>
+    </p>
+   </div>
+   <div>
+    <p>
+      <ruby class="t">東<rt>to</rt></ruby><ruby>京<rt>kyo</rt></ruby>
+    </p>
+   </div>
+  </body>
+</html>

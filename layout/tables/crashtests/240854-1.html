@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+ <head>
+    <title>Table dom Column Handling crash</title>
+
+<SCRIPT>
+function doIt() {
+  var t = document.getElementById('t1');
+  var c1 =document.getElementById('col2');
+  t.removeChild(c1);
+}
+</SCRIPT>  
+</HEAD>
+<BODY onload="doIt()">
+The 2 tables should look the same
+<table id="t1" bgcolor=orange border>
+ <col width=100>
+ <col width=200>
+ <col id="col2" width=300>
+ <tr>
+  <td>100</td><td>200</td><td>auto</td>
+ </tr>
+</table>
+<BR>
+<table bgcolor=orange border>
+ <col width=100>
+ <col width=200>
+ <tr>
+  <td>100</td><td>200</td><td>auto</td>
+ </tr>
+</table>
+
+ </BODY>
+</HTML>
+
+
+
+
+
+

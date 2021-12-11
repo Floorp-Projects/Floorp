@@ -1,0 +1,64 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=737565
+-->
+<title>Test for Bug 737565</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=737565">Mozilla Bug 737565</a>
+<script>
+
+/** Test for Bug 737565 **/
+var offsets = [-1, 0, 1, 2, 3, 65536, 1 << 31];
+// This is supposed to be an unsigned long, so adding or subtracting 1 << 32
+// should have no effect
+var offsetOffsets = [0, -Math.pow(2, 32), Math.pow(2, 32)];
+
+for (var i = 0; i < offsets.length; i++) {
+  for (var j = 0; j < offsetOffsets.length; j++) {
+    var offset = offsets[i] + offsetOffsets[j];
+
+    // Doctype always needs to throw
+    var threw = false;
+    try {
+      var range = document.createRange();
+      range.comparePoint(document.doctype, offset);
+    } catch(e) {
+      threw = true;
+      is(e.name, "InvalidNodeTypeError",
+         "comparePoint(document.doctype, " + offset
+         + ") must throw InvalidNodeTypeError");
+      is(Object.getPrototypeOf(e), DOMException.prototype,
+         "comparePoint(document.doctype, " + offset
+         + ") must throw DOMException");
+      is(e.code, DOMException.INVALID_NODE_TYPE_ERR,
+         "comparePoint(document.doctype, " + offset
+         + ") must throw INVALID_NODE_TYPE_ERR");
+    }
+    ok(threw, "comparePoint(document.doctype, " + offset + ") must throw");
+
+    threw = false;
+    // document.documentElement has two children, head and body
+    var expectedThrew = offsets[i] < 0 || offsets[i] > 2;
+    try {
+      var range = document.createRange();
+      range.comparePoint(document.documentElement, offset);
+    } catch(e) {
+      threw = true;
+      is(e.name, "IndexSizeError",
+         "comparePoint(document.documentElement, " + offset
+         + ") must throw IndexSizeError");
+      is(Object.getPrototypeOf(e), DOMException.prototype,
+         "comparePoint(document.documentElement, " + offset
+         + ") must throw DOMException");
+      is(e.code, DOMException.INDEX_SIZE_ERR,
+         "comparePoint(document.documentElement, " + offset
+         + ") must throw INDEX_SIZE_ERR");
+    }
+    is(threw, expectedThrew,
+       "comparePoint(document.documentElement, " + offset
+       + ") must " + (expectedThrew ? "" : "not ") + "throw");
+  }
+}
+
+</script>

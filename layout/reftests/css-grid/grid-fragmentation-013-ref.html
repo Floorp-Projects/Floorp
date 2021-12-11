@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US" class="reftest-paged"><head>
+  <meta charset="utf-8">
+  <title>Reference: Fragmentation in print context of height:auto grid, item break-inside:avoid</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <style type="text/css">
+@page { size:5in 3in; margin:0.5in; }
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  height: 1in;
+  border: 0.1in solid;
+}
+.col {
+  height: 0;
+  width: 0.6in;
+}
+.col > div {
+  height: 1in;
+  position: relative;
+  background: lime;
+  border: 0.05in solid black;
+}
+</style>
+</head>
+<body>
+
+<div style="padding-top:1in; background:grey">
+  <div class="grid">
+    <div class="col"><div></div></div>
+  </div>
+</div>
+
+<div style="padding-top:1in; background:grey;">
+  <div class="grid">
+    <div class="col"><div></div></div>
+  </div>
+</div>
+
+</body>
+</html>

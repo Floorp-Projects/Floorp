@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testing first-letter handling of font/text styles</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+html { overflow: hidden; }
+body {
+  margin: 1em;
+  font-size: 25px;
+  line-height: 1.2em;
+  font-family: serif;
+}
+
+div { width: 200px; }
+p { width: 0.5em; margin: 0; }
+span.bold { font-weight: bold; }
+span.bolditalic { font-weight: bold; font-style: italic; }
+span.floater { float: left; }
+span.sans { font-family: sans-serif; }
+</style>
+
+</head>
+<body>
+<div>
+<p><span class="bold">Y</span>ellow corndog</p>
+<p><span class="bolditalic">h</span>IPPIE BANANA</p>
+<p><span class="floater"><span class="sans">G</span>onzo macadamia</span></p>
+<p><span class="bolditalic">f</span>ELICITOUS <span class="bold">R</span>aspberry</p>
+</div>
+</body>
+</html>

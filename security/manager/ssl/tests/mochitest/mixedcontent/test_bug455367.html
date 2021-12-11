@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>No content image doesn't break security</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  async function runTest()
+  {
+    SpecialPowers.pushPrefEnv(
+      {"set": [["security.mixed_content.upgrade_display_content", false]]},
+      null);
+    await isSecurityState("broken", "broken");
+    finish();
+  }
+
+  async function afterNavigationTest()
+  {
+    await isSecurityState("broken", "broken after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/redirecttoemptyimage.sjs" />
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=66619
+-->
+<head>
+  <title>Test for Bug 66619</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=66619">Mozilla Bug 66619</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 66619 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  is(window.scrollY, 0, "window should initially be at top");
+
+  document.getElementById("first").focus();
+  var first = window.scrollY;
+  isnot(first, 0, "we scrolled to first anchor");
+  ok(first + window.innerHeight > 4000,
+     "we scrolled enough to show the anchor");
+
+  window.scrollTo(0, 0);
+  document.getElementById("second").focus();
+  var second = window.scrollY;
+
+  window.scrollTo(0, 0);
+  document.getElementById("third").focus();
+  var third = window.scrollY;
+
+  is(second, first, "we scrolled the second line of the anchor into view");
+  isnot(third, second, "we scrolled the second line of the anchor into view");
+  ok(third > second, "we scrolled the second line of the anchor into view");
+
+  window.scrollTo(0, 0); // make the results visible
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+
+<div style="height:4000px"></div>
+<a id="first"  href="http://www.mozilla.org/">first<br>link</a>
+<a id="second" href="http://www.mozilla.org/">second link</a>
+<a id="third"  href="http://www.mozilla.org/">third<br>link</a>
+<div style="height:4000px"></div>
+
+</body>
+</html>
+

@@ -1,0 +1,84 @@
+<html>
+
+<head>
+  <title>ARIA alert event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function showAlert(aID) {
+      this.DOMNode = document.createElement("div");
+
+      this.invoke = function showAlert_invoke() {
+        this.DOMNode.setAttribute("role", "alert");
+        this.DOMNode.setAttribute("id", aID);
+        var text = document.createTextNode("alert");
+        this.DOMNode.appendChild(text);
+        document.body.appendChild(this.DOMNode);
+      };
+
+      this.getID = function showAlert_getID() {
+        return "Show ARIA alert " + aID;
+      };
+    }
+
+    function changeAlert(aID) {
+      this.__defineGetter__("DOMNode", function() { return getNode(aID); });
+
+      this.invoke = function changeAlert_invoke() {
+        this.DOMNode.textContent = "new alert";
+      };
+
+      this.getID = function showAlert_getID() {
+        return "Change ARIA alert " + aID;
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    // gA11yEventDumpToConsole = true; // debuging
+    // enableLogging("tree,events,verbose");
+
+    var gQueue = null;
+    function doTests() {
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_ALERT);
+
+      gQueue.push(new showAlert("alert"));
+      gQueue.push(new changeAlert("alert"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=591199"
+     title="mochitest for bug 334386: fire alert event when ARIA alert is shown or new its children are inserted">
+    Mozilla Bug 591199
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+</body>
+</html>

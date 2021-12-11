@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<head>
+  <link rel="stylesheet" type="text/css" href="ahem.css" />
+  <title>Assigning a negative z-index to text which is backplated should change the z-index of the text only; the backplate should not be affected.</title>
+  <style>
+  body {
+    font: 20px Ahem;
+  }
+  .std {
+    background-image: url("blue.png");
+    padding: 15px;
+  }
+  .relpos {
+    position: relative;
+    left: 20px;
+  }
+  .negZ {
+    z-index: -1;
+  }
+  .ib {
+    display: inline-block;
+  }
+  </style>
+</head>
+<body>
+  <span class="std ib">
+    <span class="relpos negZ">ppppp ppppp</span>
+  </span>
+  <span>ppppp ppppp</span>
+</body>

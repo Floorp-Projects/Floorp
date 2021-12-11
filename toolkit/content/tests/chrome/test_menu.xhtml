@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menu Destruction Test"
+  onload="runTests();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <menubar>
+    <menu label="top" id="top">
+      <menupopup>
+        <menuitem label="top item"/>
+
+        <menu label="hello" id="nested">
+          <menupopup>
+            <menuitem label="item1"/>
+            <menuitem label="item2" id="item2"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+  </menubar>
+
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTests()
+  {
+    var menu = document.getElementById("nested");
+
+    // nsIDOMXULContainerElement::getIndexOfItem();
+    var item = document.getElementById("item2");
+    is(menu.getIndexOfItem(item), 1,
+       "nsIDOMXULContainerElement::getIndexOfItem() failed.");
+
+    // nsIDOMXULContainerElement::getItemAtIndex();
+    var itemAtIdx = menu.getItemAtIndex(1);
+    is(itemAtIdx, item,
+       "nsIDOMXULContainerElement::getItemAtIndex() failed.");
+
+    // nsIDOMXULContainerElement::itemCount
+    is(menu.itemCount, 2, "nsIDOMXULContainerElement::itemCount failed.");
+
+    // nsIDOMXULContainerElement::parentContainer
+    var topmenu = document.getElementById("top");
+    is(menu.parentContainer, topmenu,
+        "nsIDOMXULContainerElement::parentContainer failed.");
+
+    // nsIDOMXULContainerElement::appendItem();
+    item = menu.appendItem("item3");
+    is(menu.getIndexOfItem(item), 2,
+       "nsIDOMXULContainerElement::appendItem() failed.");
+
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display">
+    </p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+</window>
+

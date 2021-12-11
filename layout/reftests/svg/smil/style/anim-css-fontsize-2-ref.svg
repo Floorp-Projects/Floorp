@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <text x="20px" y="20px" style="font-size: 2px">abc
+  </text>
+  <text x="70px" y="20px" style="font-size: 30px">abc
+  </text>
+  <text x="120px" y="20px" style="font-size: 27px">abc
+  </text>
+  <text x="20px" y="70px" style="font-size: 22.5px">abc
+  </text>
+  <text x="70px" y="70px" style="font-size: 20.1px">abc
+  </text>
+  <text x="120px" y="70px" style="font-size: 15px">abc
+  </text>
+  <text x="20px" y="120px" style="font-size: 14px">abc
+  </text>
+  <text x="70px" y="120px" style="font-size: 10px">abc
+  </text>
+  <text x="120px" y="120px" style="font-size: 10px">abc
+  </text>
+</svg>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: Don't get stuck buffering for too long when we have frames to show</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  ms.addEventListener("sourceopen", () => ok(false, "No more sourceopen"));
+  const sb = ms.addSourceBuffer("video/mp4");
+  ok(sb, "Create a SourceBuffer");
+
+  sb.addEventListener("error", e => {
+    ok(false, "Got Error: " + e);
+    SimpleTest.finish();
+  });
+  await fetchAndLoad(sb, "bipbop/bipbop", ["init"], ".mp4");
+  await fetchAndLoad(sb, "bipbop/bipbop", ["1"], ".m4s");
+  await fetchAndLoad(sb, "bipbop/bipbop", ["2"], ".m4s");
+  /* Note - Missing |bipbop3| segment here corresponding to (1.62, 2.41] */
+  /* Note - Missing |bipbop4| segment here corresponding to (2.41, 3.20]  */
+  await fetchAndLoad(sb, "bipbop/bipbop", ["5"], ".m4s");
+  // last audio sample has a start time of 1.578956s
+  info("Playing video. It should play for a bit, then fire 'waiting'");
+  v.play();
+  await waitUntilTime(v, 1.57895);
+  const firstStop = Date.now();
+  await fetchAndLoad(sb, "bipbop/bipbop", ["3"], ".m4s");
+  // last audio sample has a start time of 2.368435
+  await waitUntilTime(v, 2.36843);
+  const waitDuration = (Date.now() - firstStop) / 1000;
+  ok(waitDuration < 15, `Should not spend inordinate amount of time buffering: ${waitDuration}`);
+  await fetchAndLoad(sb, "bipbop/bipbop", ["4"], ".m4s");
+  ms.endOfStream();
+  await once(v, "ended");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

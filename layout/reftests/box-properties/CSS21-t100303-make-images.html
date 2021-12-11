@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<script type="text/javascript">
+
+	var gWidth = 1024;
+	var gHeight = 1;
+	var gBarriers = [ 170, 334, 340, 344, 350, 458 ];
+
+	var gColors = [ "green", "red" ];
+
+	function append_url(filename, contents_url) {
+	    var p = document.createElement("p");
+	    var a = document.createElement("a");
+	    a.href = contents_url;
+	    var t = document.createTextNode("CSS21-t100303-" + filename);
+	    a.appendChild(t);
+	    p.appendChild(a);
+	    document.body.appendChild(p);
+	}
+
+	function run() {
+	    var canvas = document.getElementById("canvas");
+	    var cx = canvas.getContext("2d");
+	    for (var i in gBarriers) {
+	        var barrier = gBarriers[i];
+
+	        cx.fillStyle = gColors[1];
+	        cx.fillRect(0, 0, gWidth, gHeight);
+	        cx.fillStyle = gColors[0];
+	        cx.fillRect(0, 0, barrier, gHeight);
+	        append_url(gColors[0] + "-in-" + barrier + "px.png",
+	                   canvas.toDataURL("image/png"));
+
+	        cx.fillStyle = gColors[0];
+	        cx.fillRect(0, 0, gWidth, gHeight);
+	        cx.fillStyle = gColors[1];
+	        cx.fillRect(0, 0, barrier, gHeight);
+	        append_url(gColors[0] + "-outside-" + barrier + "px.png",
+	                   canvas.toDataURL("image/png"));
+	    }
+	}
+
+	</script>
+</head>
+<body onload="run()">
+
+<canvas width="1024" height="1" id="canvas"></canvas>
+
+</body>
+</html>

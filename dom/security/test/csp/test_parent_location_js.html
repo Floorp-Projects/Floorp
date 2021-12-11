@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1550414: Add CSP test for setting parent location to javascript:</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/**
+ * Description of the test:
+ * Load a document with a CSP of essentially script-src 'none' which includes a
+ * same origin iframe which tries to modify the parent.location using a javascript:
+ * URI -> make sure the javascript: URI is blocked correctly!
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(event) {
+  window.removeEventListener("message", receiveMessage);
+  is(event.data.blockedURI, "inline", "blockedURI");
+  is(event.data.violatedDirective, "script-src", "violatedDirective")
+  is(event.data.originalPolicy, "script-src 'nonce-bug1550414'", "originalPolicy");
+  SimpleTest.finish();
+}
+
+// using a postMessage handler to report the result back from
+// within the sandboxed iframe without 'allow-same-origin'.
+window.addEventListener("message", receiveMessage);
+
+document.getElementById("testframe").src = "file_parent_location_js.html";
+
+</script>
+</body>
+</html>

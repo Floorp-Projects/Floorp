@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Baseline Coverage Collection</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("Baseline coverage stabilization delay.");
+
+  async function delayBaseline() {
+    SimpleTest.ok(true, "Collecting  baseline coverage for HTML (.html) file types.");
+    await new Promise((c) => setTimeout(c, 30 * 1000));
+    SimpleTest.finish();
+  }
+
+  delayBaseline();
+</script>
+</body>
+</html>

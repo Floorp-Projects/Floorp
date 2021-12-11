@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <button>Some text</button>
+  <script>
+    onload = function() {
+      var obj = document.querySelector("button");
+      window.w = obj.getBoundingClientRect().width;
+      obj.style.textIndent = "50px";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

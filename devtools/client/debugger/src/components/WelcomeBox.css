@@ -1,0 +1,88 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.welcomebox {
+  position: absolute;
+  top: var(--editor-header-height);
+  left: 0;
+  bottom: var(--editor-footer-height);
+  width: calc(100% - 1px);
+  padding: 50px 0 0 0;
+  text-align: center;
+  background-color: var(--theme-toolbar-background);
+  overflow: hidden;
+  font-weight: 300;
+  z-index: 10;
+  user-select: none;
+}
+
+.theme-dark .welcomebox {
+  background-color: var(--theme-body-background);
+}
+
+.alignlabel {
+  display: flex;
+  white-space: nowrap;
+  font-size: 1.25em;
+}
+
+.shortcutKeys {
+  font-family: Courier;
+}
+
+.shortcutKey,
+.shortcutLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.welcomebox__searchSources:hover,
+.welcomebox__searchProject:hover,
+.welcomebox__allShortcuts:hover {
+  color: var(--theme-body-color);
+}
+
+.shortcutKey {
+  direction: ltr;
+  text-align: right;
+  padding-right: 10px;
+  font-family: var(--monospace-font-family);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--theme-body-color);
+}
+
+.shortcutKey:dir(rtl) {
+  text-align: left;
+}
+
+:root[platform="mac"] .welcomebox .shortcutKey {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+}
+
+.shortcutLabel {
+  text-align: start;
+  padding-left: 10px;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.shortcutFunction {
+  margin: 0 auto;
+  color: var(--theme-comment);
+  display: table;
+}
+
+.shortcutFunction p {
+  display: table-row;
+}
+
+.shortcutFunction .shortcutKey,
+.shortcutFunction .shortcutLabel {
+  padding: 10px 5px;
+  display: table-cell;
+}

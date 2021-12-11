@@ -1,0 +1,769 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500328
+-->
+<head>
+  <title>Test for Bug 500328</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=500328">Mozilla Bug 500328</a>
+<p id="display"></p>
+<div id="status"></div>
+<div id="content">
+  <iframe id="iframe"></iframe>
+  <iframe id="iframe2"></iframe>
+  <a id="link">link</a>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 500328 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var iframe = document.getElementById("iframe");
+var iframeCw = iframe.contentWindow;
+
+var iframe2 = document.getElementById("iframe2");
+var iframe2Cw = iframe2.contentWindow;
+
+const unvisitedColor = "rgb(0, 0, 238)";
+const visitedColor = "rgb(85, 26, 139)";
+
+var gCallbackOnIframeLoad = false;
+var gCallbackOnIframePageShow = false;
+var gCallbackOnPopState = false;
+var gNumPopStates = 0;
+var gLastPopStateEvent;
+var gLastScriptHistoryState;
+
+var gGen;
+
+function statusMsg(msg) {
+  var msgElem = document.createElement("p");
+  msgElem.appendChild(document.createTextNode(msg));
+
+  document.getElementById("status").appendChild(msgElem);
+}
+
+function longWait() {
+  function hitEventLoop(times, func) {
+    if (times > 0) {
+      setTimeout(hitEventLoop, 0, times - 1, func);
+    } else {
+      setTimeout(func, 0);
+    }
+  }
+  hitEventLoop(100, function() { gGen.next(); });
+}
+
+function shortWait() {
+  setTimeout(function() { gGen.next(); }, 0);
+}
+
+function onChildPopState(e) {
+  gNumPopStates++;
+  gLastPopStateEvent = e;
+  if (gCallbackOnPopState) {
+    statusMsg("Popstate(" + JSON.stringify(e.state) + ").  Calling gGen.next().");
+    gCallbackOnPopState = false;
+    gGen.next();
+  }
+  else {
+    statusMsg("Popstate(" + JSON.stringify(e.state) + ").  NOT calling gGen.next().");
+  }
+}
+
+function onChildScript(state) {
+  gLastScriptHistoryState = state;
+}
+
+function getURLFromEvent(e) {
+  try {
+    var target = e.target;
+    if ("contentWindow" in target) {
+      return target.contentWindow.location.toString();
+    }
+    if ("ownerDocument" in target && target.ownerDocument) {
+      return target.ownerDocument.location.toString();
+    }
+    if ("location" in target) {
+      return target.location.toString();
+    }
+    return target.toString();
+  }
+  catch(ex) {
+    return "<cross-site object>";
+  }
+}
+
+function onChildLoad(e) {
+  if(gCallbackOnIframeLoad) {
+    statusMsg("Got load for " + getURLFromEvent(e) + ".  About to call gGen.next().");
+    gCallbackOnIframeLoad = false;
+    gGen.next();
+  }
+  else {
+    statusMsg("Got load for " + getURLFromEvent(e) + ", but not calling gGen.next() because gCallbackOnIframeLoad was false.");
+  }
+}
+
+function onChildPageShow(e) {
+  if(gCallbackOnIframePageShow) {
+    statusMsg("Got pageshow for " + getURLFromEvent(e) + ".  About to call gGen.next().");
+    gCallbackOnIframePageShow = false;
+    SimpleTest.executeSoon(function() { gGen.next(); });
+  }
+  else {
+    statusMsg("Got pageshow for " + getURLFromEvent(e) + ", but not calling gGen.next() because gCallbackOnIframePageShow was false.");
+  }
+}
+
+function enableChildLoadCallback() {
+  gCallbackOnIframeLoad = true;
+}
+
+function enableChildPageShowCallback() {
+  gCallbackOnIframePageShow = true;
+}
+
+function enableChildPopStateCallback() {
+  gCallbackOnPopState = true;
+}
+
+function clearPopStateCounter() {
+  gNumPopStates = 0;
+}
+
+function noPopStateExpected(msg) {
+  is(gNumPopStates, 0, msg);
+
+  // Even if there's an error, set gNumPopStates to 0 so other tests don't
+  // fail.
+  gNumPopStates = 0;
+}
+
+function popstateExpected(msg) {
+  is(gNumPopStates, 1, msg);
+  gNumPopStates = 0;
+}
+
+function getColor(elem) {
+  var utils = SpecialPowers.getDOMWindowUtils(document.defaultView);
+  return utils.getVisitedDependentComputedStyle(elem, "", "color");
+}
+
+function getSHistory(theWindow)
+{
+  const Ci = SpecialPowers.Ci;
+  var sh = SpecialPowers.wrap(theWindow).docShell
+                        .QueryInterface(Ci.nsIWebNavigation)
+                        .sessionHistory;
+  if (!sh || sh == null)
+    throw("Couldn't get shistory for window!");
+
+  return sh;
+}
+
+function getSHTitle(sh, offset)
+{
+  if (!offset)
+    offset = 0;
+
+  // False instructs the SHistory not to modify its current index.
+  return sh.legacySHistory.getEntryAtIndex(sh.index + offset).title;
+}
+
+// Tests that win's location ends with str
+function locationEndsWith(win, str) {
+  var exp = new RegExp(str + "$");
+  ok(win.location.toString().match(exp),
+     "Wrong window location.  Expected it to end with " +
+     str + ", but actuall was " + win.location);
+}
+
+function expectException(func, msg) {
+  var failed = false;
+  try {
+    func();
+  } catch(ex) {
+    failed = true;
+  }
+
+  ok(failed, msg + " succeeded, but should have failed.");
+}
+
+function* runTest() {
+  // We can't enable universal XPConnect privleges in this function, because
+  // test 5 needs to be running at normal privleges in order to test the
+  // same-origin policy.
+
+  /**
+   * PRELIMINARY:
+   *  1. Clear the popstate counter
+   */
+
+  clearPopStateCounter();
+
+  // The URL of file_bug500328_1.html on http://localhost:8888
+  var innerLoc;
+
+  // Now we can start the tests
+
+  /**
+   * TEST 1 tests basic pushState functionality
+   */
+  enableChildLoadCallback();
+  iframeCw.location = "file_bug500328_1.html";
+  yield undefined;
+  innerLoc = iframeCw.location.toString();
+  // No popstate during initial load.
+  shortWait();
+  yield undefined;
+  noPopStateExpected("No initial popstate.");
+  is(JSON.stringify(gLastScriptHistoryState), "null", "null initial state.");
+  statusMsg("Awake after first load.");
+
+  // Make sure that the pushstate below doesn't trigger a hashchange.
+  iframeCw.onhashchange = function() {
+    ok(false, "Pushstate shouldn't trigger a hashchange.");
+  };
+
+  var testObj1 = 42;
+  var testObj2 = { x: 4.2 };
+  iframeCw.history.pushState(testObj1, "test 1");
+  is(JSON.stringify(iframeCw.history.state), JSON.stringify(testObj1),
+     "correct state after pushState");
+  is(iframeCw.location.search, "",
+     "First pushstate should leave us where we were.");
+
+  iframeCw.history.pushState(testObj2, "test 1#foo", "?test1#foo");
+  is(JSON.stringify(iframeCw.history.state), JSON.stringify(testObj2),
+     "correct state after pushState");
+  isnot(iframeCw.history.state, testObj2,
+     "correct state object identity after pushState");
+  is(iframeCw.location.search, "?test1",
+     "Second pushstate should push us to '?test1'.");
+  is(iframeCw.location.hash, "#foo",
+     "Second pushstate should push us to '#foo'");
+  shortWait();
+  yield undefined;
+
+  // Let the hashchange event fire, if it's going to.
+  longWait();
+  yield undefined;
+  iframeCw.onhashchange = null;
+
+  statusMsg("About to go back to page 1.");
+  // We don't have to yield here because this back() and the resulting popstate
+  // are completely synchronous.  In fact, if we did yield, JS would throw an
+  // error because we'd be calling gGen.next from within gGen.next.
+  iframeCw.history.back();
+
+  statusMsg("Awake after going back to page 1.");
+  popstateExpected("Going back to page 1 should trigger a popstate.");
+  is(gLastPopStateEvent.isTrusted, true, 'Popstate event should be trusted.');
+  is(JSON.stringify(gLastPopStateEvent.state), JSON.stringify(testObj1),
+     "Wrong state object popped after going back to page 1.");
+  ok(gLastPopStateEvent.state === iframeCw.history.state,
+     "Wrong state object in document after going back to page 1.");
+  ok(iframeCw.location.toString().match(/file_bug500328_1.html$/),
+      "Going back to page 1 hould take us to original page.");
+
+  iframeCw.history.back();
+  popstateExpected("Going back to page 0 should trigger a popstate.");
+  is(gLastPopStateEvent.state, null,
+     "Going back to page 0 should pop a null state.");
+  is(iframeCw.history.state, null,
+     "Going back to page 0 should pop a null state.");
+  is(iframeCw.location.search, "",
+     "Going back to page 0 should clear the querystring.");
+
+  iframeCw.history.forward();
+  popstateExpected("Going forward to page 1 should trigger a popstate.");
+  is(JSON.stringify(gLastPopStateEvent.state), JSON.stringify(testObj1),
+      "Wrong state object popped after going forward to page 1.");
+  is(gLastPopStateEvent.state, iframeCw.history.state,
+     "Wrong state object in document after going forward to page 1.");
+  ok(iframeCw.location.toString().match(/file_bug500328_1.html$/),
+      "Going forward to page 1 should leave us at original page.");
+
+  statusMsg("About to go forward to page 2.");
+  iframeCw.history.forward();
+  statusMsg("Awake after going forward to page 2.");
+  popstateExpected("Going forward to page 2 should trigger a popstate.");
+  is(JSON.stringify(gLastPopStateEvent.state), JSON.stringify(testObj2),
+     "Wrong state object popped after going forward to page 2.");
+  is(iframeCw.history.state, gLastPopStateEvent.state,
+     "Wrong state object in document after going forward to page 2.");
+  ok(iframeCw.location.toString().match(/file_bug500328_1.html\?test1#foo$/),
+     "Going forward to page 2 took us to " + iframeCw.location.toString());
+
+  statusMsg("About to reload page 2.");
+  iframeCw.location.reload();
+  enableChildLoadCallback();
+  yield undefined;
+  statusMsg("Awake after reloading page 2.");
+  noPopStateExpected("Reloading page 2 should not trigger popstate.");
+  is(JSON.stringify(iframeCw.history.state), JSON.stringify(testObj2),
+     "Wrong state object after reloading page 2.");
+  is(JSON.stringify(gLastScriptHistoryState), JSON.stringify(testObj2),
+     "Wrong state object while reloading page 2.");
+  ok(iframeCw.location.toString().match(/file_bug500328_1.html\?test1#foo$/),
+     "Reloading page 2 took us to " + iframeCw.location.toString());
+
+  // The iframe's current location is file_bug500328_1.html?test1#foo.
+  // Clicking link1 should take us to file_bug500328_1.html?test1#1.
+
+  enableChildPopStateCallback();
+  sendMouseEvent({type:'click'}, 'link-anchor1', iframeCw);
+  yield undefined;
+  popstateExpected("Clicking on link-anchor1 should trigger a popstate.");
+  is(iframeCw.location.search, "?test1",
+      "search should be ?test1 after clicking link.");
+  is(iframeCw.location.hash, "#1",
+      "hash should be #1 after clicking link.");
+  is(iframeCw.history.state, null,
+     "Wrong state object in document after clicking link to hash '#1'.");
+
+  /*
+   * Reload file_bug500328_1.html; we're now going to test that link hrefs
+   * and colors are updated correctly on push/popstates.
+   */
+
+  iframe.onload = onChildLoad;
+  enableChildLoadCallback();
+  iframeCw.location = "about:blank";
+  yield undefined;
+  enableChildLoadCallback();
+  iframeCw.location = "file_bug500328_1.html";
+  yield undefined;
+  noPopStateExpected("No popstate after re-loading file_bug500328_1.html");
+  statusMsg("Done loading file_bug500328_1.html for the second time.");
+
+  var ifLink = iframeCw.document.getElementById("link-anchor1");
+  var rand = Date.now() + "-" + Math.random();
+  ifLink.href = rand;
+
+  // Poll the document until the link has the correct color, or this test times
+  // out.  Unfortunately I can't come up with a more elegant way to do this.
+  // We could listen to MozAfterPaint, but that doesn't guarantee that we'll
+  // observe the new color.
+  while (getColor(ifLink) != unvisitedColor) {
+    // Dump so something shows up in the mochitest logs if we spin here.
+    dump("ifLink has wrong initial color.  Spinning...\n");
+    setTimeout(function() { gGen.next(); }, 0);
+    yield undefined;
+  }
+
+  // Navigate iframe2 to dir/${rand}
+  iframe2.onload = onChildLoad;
+  enableChildLoadCallback();
+  iframe2Cw.location = "mytestdir/" + rand;
+  yield undefined;
+
+  // PushState the iframe into the mytestdir directory.  This should cause
+  // ifLink to turn purple, since we just visited mytestdir/${rand} in iframe2.
+  iframeCw.history.pushState(null, "foo", "mytestdir/foo");
+
+  // Check that the link's color is now visitedColor
+  while (getColor(ifLink) != visitedColor) {
+    dump("ifLink has wrong color after pushstate.  Spinning...\n");
+    setTimeout(function() { gGen.next(); }, 0);
+    yield undefined;
+  }
+
+  ok(ifLink.href.match("mytestdir\\/" + rand + "$"),
+     "inner frame's link should end with 'mytestdir/${rand}'");
+
+  // Navigate out of the mytestdir directory.  This should cause ifLink to turn
+  // blue again.
+  iframeCw.history.pushState(null, "bar", "../file_bug500328_1.html");
+
+  // Check that the link's color is back to the unvisited color.
+  while (getColor(ifLink) != unvisitedColor) {
+    dump("ifLink has wrong color after pushstating out of dir.  Spinning...\n");
+    setTimeout(function() { gGen.next(); }, 0);
+    yield undefined;
+  }
+
+  ok(!ifLink.href.match("mytestdir"),
+     "inner frame's link shouldn't contain 'mytestdir'.");
+
+  /*
+   * TEST 2 tests that pushstate's same-origin checks are correct.
+   */
+  var filename = 'file_bug500328_2.html';
+  var dirname = document.location.pathname.replace(/[^\/]*$/, '');
+  statusMsg("Dirname is: " + dirname);
+  iframeCw.location = filename;
+  iframe.onload = onChildLoad;
+  enableChildLoadCallback();
+  yield undefined;
+
+  // This function tries to pushstate and replacestate to the given URL and
+  // fails the test if the calls succeed.
+  var tryBadPushAndReplaceState = function(url) {
+    // XXX ex should be a SECURITY_ERR, not a plain Error.
+
+    var hist = iframeCw.history;
+    var url2 = url + dirname + filename;
+
+    expectException(function() { hist.pushState({}, "foo", url); },
+                    'pushState to ' + url);
+
+    expectException(function() { hist.pushState({}, "foo", url2); },
+                    'pushState to ' + url2);
+
+    expectException(function() { hist.replaceState({}, "foo", url); },
+                    'replaceState to ' + url);
+
+    expectException(function() { hist.replaceState({}, "foo", url2); },
+                    'replaceState to ' + url2);
+  }
+
+  // We're currently at http://example.com/[dirname]/[filename]
+  tryBadPushAndReplaceState("https://mochi.test:8888");
+  tryBadPushAndReplaceState("http://foo.mochitest:8888");
+  tryBadPushAndReplaceState("http://mochi.test:1234");
+  tryBadPushAndReplaceState("http://mochi.test.a:8888");
+  tryBadPushAndReplaceState("http://mochi.tes:8888");
+  tryBadPushAndReplaceState("http://mmochi.test:8888");
+  tryBadPushAndReplaceState("http://me@mochi.test:8888");
+
+  /**
+   * TEST 3 tests that the session history entries' titles are properly sync'ed
+   * after push/pop states.
+   *
+   * We have to run this test in a popup rather than an iframe because only the
+   * root docshell has a session history object.
+   */
+  statusMsg("About to open popup.");
+  var popup = window.open("file_bug500328_1.html", "popup0",
+                          "height=200,width=200,location=yes," +
+                          "menubar=yes,status=yes,toolbar=yes,dependent=yes");
+
+  enableChildLoadCallback();
+  var shistory = getSHistory(popup);
+  yield undefined;
+  shortWait();
+  yield undefined;
+  noPopStateExpected("Shouldn't get popstate after opening window.");
+
+  popup.history.pushState(null, "title 0");
+  ok(SpecialPowers.isBackButtonEnabled(popup),
+     "Back button was not enabled after initial pushstate.");
+
+  popup.document.title = "title 1";
+
+  // Yield to the event loop so listeners will be notified of the title change
+  // and so that the hash change we trigger below generates a new session
+  // history entry.
+  shortWait();
+  yield undefined;
+
+  // Check that the current session history entry's title has been updated to
+  // reflect the new document title.
+  is(getSHTitle(shistory), "title 1", "SHEntry title test 1");
+
+  // Change the page's hash to #1, which will trigger a popstate event.
+  // We don't have to wait, because this happens synchronously.
+  popup.location.hash = "#1";
+  popstateExpected("Didn't get popstate after changing hash.");
+
+  popup.document.title = "title 2";
+
+  // Yield so listeners will be notified of the title change we just performed.
+  shortWait();
+  yield undefined;
+
+  is(getSHTitle(shistory), "title 2", "SHEntry title test 2");
+
+  // Go back.  Happens synchronously.  We should get a popstate.
+  statusMsg("About to go back.");
+  popup.history.go(-1);
+  popstateExpected("Didn't get a popstate after going back.");
+
+  // Even though we went back, we expect the SHEntry title to remain the same
+  // because the document didn't change.
+  is(getSHTitle(shistory), "title 2", "SHEntry title test 3");
+
+  popup.document.title = "Changed 1";
+  shortWait();
+  yield undefined;
+
+  // This check is really a test of bug 509055.
+  is(getSHTitle(shistory), "Changed 1", "SHEntry title test 4");
+
+  popup.close();
+
+  /**
+   * TEST 4 tests replaceState and that we don't get double popstates on
+   * window.open.  It also stress-tests the system and its interaction with
+   * bfcache by making many push/replace state calls.
+   */
+  popup = window.open("file_bug500328_1.html", "popup1",
+                      "height=200,width=200,location=yes," +
+                      "menubar=yes,status=yes,toolbar=yes,dependent=yes");
+
+  // The initial about:blank load into the new window shouldn't result in us
+  // seeing a popstate.  Once file_bug500328_1.html is loaded, it'll overwrite
+  // popup.onpopstate, and this assertion won't fire for that popstate and
+  // others after.
+  //
+  // If we fired the popstate event asynchronously, we'd expect this assert to
+  // fire.
+  popup.onpopstate = function() {
+    ok(false, "Initial load of popup shouldn't give us a popstate.");
+  };
+
+  shistory = getSHistory(popup);
+
+  enableChildLoadCallback();
+  yield undefined;
+  statusMsg("Awake after loading content into popup.");
+
+  popup.history.replaceState({n:1, ok:true}, "state 1", "good1.html");
+  locationEndsWith(popup, "good1.html");
+
+  // Even though we replaceState with title "state 1", the title should remain
+  // "test 1" because we ignore the title argument in push/replaceState.
+  // See bug 544535.
+  is(getSHTitle(shistory), "test 1", "SHEntry title 'state 1'");
+
+  // Flush the event loop so our next load creates a new session history entry.
+  shortWait();
+  yield undefined;
+
+  enableChildLoadCallback();
+  popup.location = "file_bug500328_1.html";
+  yield undefined;
+
+  // Flush the event loop so nsDocShell::OnNewURI runs and our load is recorded
+  // properly.
+  shortWait();
+  yield undefined;
+
+  // Now go back and make sure everything is as it should be.
+  enableChildPageShowCallback();
+  popup.history.back();
+  yield undefined;
+  // Flush the event loop so the document's location is updated and any
+  // popstates fire.
+  shortWait();
+  yield undefined;
+  noPopStateExpected("no popstate during initial load");
+
+  locationEndsWith(popup, "good1.html");
+  is(JSON.stringify(popup.history.state), '{"n":1,"ok":true}',
+     "Wrong state popped after going back to initial state.");
+
+  // We're back at state 0, which was replaceState-ed to state1.html.  Let's do
+  // some push/pop/replaces to make sure everything works OK when we involve
+  // large numbers of SHEntries.
+  for(var i = 2; i <= 30; i++) {
+    if (i % 3 == 0) {
+      popup.history.pushState({n:i, ok:true}, "state " + i, "good" + i + ".html");
+    }
+    else {
+      popup.history.pushState({n:i}, "state " + i, "state" + i + ".html");
+      for(var j = 0; j < i % 4; j++) {
+        popup.history.replaceState({n:i, nn:j}, "state " + i + ", " + j);
+      }
+      popup.history.replaceState({n:i, ok:true}, "state " + i, "good" + i + ".html");
+    }
+  }
+
+  for(var i = 29; i >= 1; i--) {
+    popup.history.back();
+    popstateExpected("Didn't get a popstate on iteration " + i);
+    locationEndsWith(popup, "good" + i + ".html");
+    is(gLastPopStateEvent.state.n, i, "Bad counter on last popstate event.");
+    ok(gLastPopStateEvent.state.ok,
+       "Last popstate event should have 'ok' set to true.");
+  }
+
+  popup.close();
+
+  /**
+   * TEST 5 tests misc security features and implementation details of
+   * Push/ReplaceState
+   */
+
+  /*
+   * Test that we can't push/replace an object with a large (over 640k
+   * characters) JSON representation.
+   */
+
+  // (In case you're curious, this loop generates an object which serializes to
+  // 694581 characters.)
+  var bigObject = new Object();
+  for(var i = 0; i < 51200; i++) {
+    bigObject[i] = i;
+  }
+  // statusMsg("Big object has size " + JSON.stringify(bigObject).length);
+
+  // We shouldn't be able to pushstate this large object, due to space
+  // constraints.
+  expectException(
+    function() { iframeCw.history.pushState(bigObject, "foo"); },
+    "pushState-ing large object");
+
+  expectException(
+    function() { iframeCw.history.replaceState(bigObject, "foo"); },
+    "replaceState-ing large object");
+
+  /*
+   * Make sure we can't push/replace state on an iframe of a different origin.
+   * This will work if this function has requested Universal XPConnect
+   * privileges, so any code which needs those privileges can't be in this
+   * function.
+   */
+  enableChildLoadCallback();
+  iframeCw.location = "http://example.com";
+  iframe.onload = onChildLoad;
+  yield undefined;
+  iframe.onload = null;
+
+  expectException(
+    function() { iframeCw.history.pushState({}, "foo"); },
+    "pushState-ing in a different origin");
+
+  expectException(
+    function() { iframeCw.history.replaceState({}, "foo"); },
+    "replaceState-ing in a different origin");
+
+  /*
+   * If we do the following:
+   *   * Start at page A.
+   *   * PushState to page B.
+   *   * Refresh.  The server responds with a 404
+   *   * Go back.
+   * Then at the end, page A should be displayed, not the 404 page.
+   */
+  enableChildLoadCallback();
+  iframe.onload = onChildLoad;
+  iframeCw.location = "about:blank";
+  yield undefined;
+  iframe.onload = null;
+
+  enableChildLoadCallback();
+  // navigate to http://mochi.test:8888/[...]/file_bug500328_1.html
+  iframeCw.location = innerLoc;
+  yield undefined;
+
+  // PushState to a URL which doesn't exist
+  iframeCw.history.pushState({}, "", rand);
+
+  // Refresh.  We'll end up a 404 page.
+  iframe.onload = onChildLoad;
+  enableChildLoadCallback();
+  iframeCw.location.reload(true);
+  yield undefined;
+  iframe.onload = null;
+
+  // Since the last page was a 404, going back should actually show the
+  // contents of the old page, instead of persisting the contents of the 404
+  // page.
+  enableChildPageShowCallback();
+  iframeCw.history.back();
+  yield undefined;
+
+  // Make sure that we're actually showing the contents of
+  // file_bug500328_1.html, as opposed to the 404 page.
+  var identifierElem = iframeCw.document.getElementById("link-anchor1");
+  ok(identifierElem != undefined && identifierElem != null,
+     "iframe didn't contain file_bug500328_1.html's contents.");
+
+  /**
+   * TEST 6 tests that the referrer is set properly after push/replace states.
+   */
+
+  /*
+   * First, a simple test:
+   *   * Load file_bug500328_1.html into iframe
+   *   * PushState to newpage1.html#foo
+   *   * Instruct the iframe to load file_bug500328_1.html into itself.
+   * The referer should be newpage1.html, without the hash.
+   *
+   * This also tests that we can call pushState from within the onload handler.
+   */
+  enableChildLoadCallback();
+  iframeCw.location = "file_bug500328_1.html";
+  yield undefined;
+
+  // Run within the onload handler.  This should work without issue.
+  iframeCw.history.pushState(null, "", "newpage1.html");
+
+  // iframeCw.navigateTo() causes the iframe to set its location on our
+  // behalf.  We can't just set its location ourselves, because then *we*
+  // become the referrer.
+  enableChildLoadCallback();
+  iframeCw.navigateTo("file_bug500328_1.html");
+  yield undefined;
+
+  ok(iframeCw.document.referrer.toString().match(/newpage1.html$/),
+     "Wrong referrer after pushState.  Expected newpage1.html, but was " +
+     iframeCw.document.referrer);
+
+  /*
+   * We're back at file_bug500328_1.html.  Now do the following:
+   *   * replaceState to newpage2.html#foo
+   *   * Click a link back to file_bug500328_1.html
+   * The referrer should be newpage2.html, without the hash.
+   */
+  iframeCw.history.replaceState(null, null, "newpage2.html#foo");
+  enableChildLoadCallback();
+  sendMouseEvent({type:'click'}, 'link-self', iframeCw);
+  yield undefined;
+
+  ok(iframeCw.document.referrer.toString().match(/newpage2.html$/),
+     "Wrong referrer after replaceState.  Expected newpage2.html, but was " +
+     iframeCw.document.referrer);
+
+  /*
+   * Set up a cycle with the popstate event to make sure it's properly
+   * collected.
+   */
+  var evt = document.createEvent("popstateevent");
+  evt.initEvent("foo", false, false, evt);
+
+  /* */
+  SimpleTest.finish();
+  statusMsg("********** Finished tests ***********");
+  while(true)
+  {
+    yield undefined;
+
+    // I don't think this will actually make the mochitest fail, but there's
+    // not much we can do about this.  Realistically, though, regressions are
+    // not likely to fire extra events -- this trap is here mostly to catch
+    // errors made while wriring tests.
+    ok(false, "Got extra event!");
+  }
+
+  /*
+  statusMsg("XXXXXXXXXXXXXX");
+  while(true) {
+    yield undefined;
+    statusMsg("Woken up.");
+  }
+  */
+}
+
+// Important: Wait to start the tests until the page has loaded.  Otherwise,
+// the test will occasionally fail when it begins running before the iframes
+// have finished their initial load of about:blank.
+window.addEventListener('load', function() {
+  gGen = runTest();
+  gGen.next();
+});
+
+</script>
+</pre>
+</body>
+</html>

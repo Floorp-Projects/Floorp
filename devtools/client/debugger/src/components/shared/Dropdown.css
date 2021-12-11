@@ -1,0 +1,96 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.dropdown {
+  background: var(--theme-body-background);
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
+  max-height: 300px;
+  position: absolute;
+  top: 24px;
+  width: 150px;
+  z-index: 1000;
+  overflow: auto;
+}
+
+[dir="ltr"] .dropdown {
+  right: 2px;
+}
+
+[dir="rtl"] .dropdown {
+  left: 2px;
+}
+
+.dropdown-block {
+  position: relative;
+  align-self: center;
+  height: 100%;
+}
+
+/* cover the reserved space at the end of .source-tabs */
+.source-tabs + .dropdown-block {
+  margin-inline-start: -28px;
+}
+
+.dropdown-button {
+  color: var(--theme-comment);
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-weight: 100;
+  font-size: 14px;
+  height: 100%;
+  width: 28px;
+}
+
+.dropdown-button .img {
+  display: block;
+}
+
+.dropdown ul {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.dropdown li {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: calc(16 / 12);
+  transition: all 0.25s ease;
+}
+
+.dropdown li:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.dropdown-icon {
+  margin-inline-end: 4px;
+  mask-size: 13px 13px;
+}
+
+.dropdown-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-icon.prettyPrint,
+.dropdown-icon.blackBox {
+  background-color: var(--theme-highlight-blue);
+}
+
+.dropdown-mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 999;
+  left: 0;
+  top: 0;
+}

@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset='utf-8'>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+var RGBA32F_EXT = 0x8814;
+var RGBA16F_EXT = 0x881A; // Yep, it's really 4 and A.
+var HALF_FLOAT_OES = 0x8D61;
+
+function IsFormatValidForRB(gl, format) {
+    ok(!gl.getError(), 'Should have no errors here.');
+
+    var rb = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+    gl.renderbufferStorage(gl.RENDERBUFFER, format, 4, 4);
+
+    var error = gl.getError();
+    if (error == gl.INVALID_ENUM)
+        return false;
+
+    ok(error == gl.NO_ERROR, 'Error should be INVALID_ENUM or NO_ERROR.');
+    return error == gl.NO_ERROR;
+}
+
+function IsFormatValidForTex(gl, format, type) {
+    ok(!gl.getError(), 'Should have no errors here.');
+
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, format, 4, 4, 0, format, type, null);
+
+    var error = gl.getError();
+    if (error == gl.INVALID_ENUM || error == gl.INVALID_OPERATION)
+        return false;
+
+    ok(error == gl.NO_ERROR, 'Error should be INVALID_{ENUM,OPERATION} or NO_ERROR.');
+    return error == gl.NO_ERROR;
+}
+
+function IsFormatValidForTexFB(gl, format, type) {
+    ok(!gl.getError(), 'Should have no errors here.');
+
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, format, 4, 4, 0, format, type, null);
+
+    var error = gl.getError();
+    if (error == gl.INVALID_ENUM || error == gl.INVALID_OPERATION)
+        return false;
+
+    ok(error == gl.NO_ERROR, 'Error should be INVALID_{ENUM,OPERATION} or NO_ERROR.');
+
+    var fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D,
+                            tex, 0);
+    error = gl.getError();
+    ok(error == gl.NO_ERROR, 'Error should be NO_ERROR.');
+
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    return status == gl.FRAMEBUFFER_COMPLETE;
+}
+
+function IsFormatValidForTexFBRead(gl, texFormat, texType, readType) {
+    ok(!gl.getError(), 'Should have no errors here.');
+
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, texFormat, 4, 4, 0, texFormat, texType,
+                  null);
+
+    var error = gl.getError();
+    if (error == gl.INVALID_ENUM || error == gl.INVALID_OPERATION)
+        return false;
+
+    ok(error == gl.NO_ERROR, 'Error should be INVALID_{ENUM,OPERATION} or NO_ERROR.');
+
+    var fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D,
+                            tex, 0);
+    error = gl.getError();
+    ok(error == gl.NO_ERROR, 'Error should be NO_ERROR.');
+
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status != gl.FRAMEBUFFER_COMPLETE)
+        return false;
+
+    var data;
+    switch (readType) {
+    case gl.UNSIGNED_BYTE:
+        data = new Uint8Array(4);
+        break;
+    case HALF_FLOAT_OES:
+        data = new Uint16Array(4);
+        break;
+    case gl.FLOAT:
+        data = new Float32Array(4);
+        break;
+    default:
+        throw 'Bad `readType`.';
+    }
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, readType, data);
+
+    error = gl.getError();
+    return error == gl.NO_ERROR;
+}
+
+function TestColorBufferExt(gl, rbFormat, texFormat, texType, readType)
+{
+    var isTexFBValid = IsFormatValidForTexFB(gl, texFormat, texType);
+    var isTexFBReadValid = IsFormatValidForTexFBRead(gl, texFormat, texType,
+                                                     readType);
+    var isRBValid = IsFormatValidForRB(gl, rbFormat);
+
+    var validSubsetCount = isTexFBValid + isTexFBReadValid + isRBValid;
+
+    if (validSubsetCount) {
+        ok(isTexFBValid, 'If active, texture-fbs should work.');
+        ok(isTexFBReadValid, 'If active, reading texture-fbs should work.');
+        ok(isRBValid, 'If active, renderbuffers should work.');
+    }
+
+    return validSubsetCount == 3;
+}
+
+function TestImpliedExtension(gl, baseExtName, impliedExtName, rbFormat,
+                              texFormat, texType, readType)
+{
+    ok(true, '========');
+    ok(true, 'Testing if ' + baseExtName + ' implies ' + impliedExtName + '.');
+    ok(true, '--------');
+
+    var baseExt = gl.getExtension(baseExtName);
+    if (!baseExt) {
+        ok(!baseExt, 'Ext \'' + baseExtName + '\' can be unsupported.');
+        return;
+    }
+
+    var isTexValid = IsFormatValidForTex(gl, texFormat, texType);
+    ok(isTexValid, baseExtName + ' should allow float textures.');
+    if (!isTexValid)
+        return;
+
+    var isImplicitlyActive = TestColorBufferExt(gl, rbFormat, texFormat,
+                                                texType, readType);
+
+    if (isImplicitlyActive) {
+        ok(true, 'Activating ' + baseExtName + ' has implicitly activated ' +
+           impliedExtName + '.');
+
+        var impliedExt = gl.getExtension(impliedExtName);
+        ok(impliedExt, 'If ' + impliedExtName + ' is supported implicitly, it' +
+           ' must be supported explicitly as well.');
+        return;
+    }
+
+    ok(true, 'Activating ' + baseExtName + ' has not implicitly activated ' +
+       impliedExtName + '.');
+    ok(true, '--------');
+
+    var impliedExt = gl.getExtension(impliedExtName);
+    if (!impliedExt) {
+        ok(true, impliedExtName + ' can be unsupported.');
+        return;
+    }
+    ok(true, 'Explicit activation of ' + impliedExtName + ' successful.');
+
+    var isFunctional = TestColorBufferExt(gl, rbFormat, texFormat, texType,
+                                          readType);
+    ok(isFunctional, impliedExtName + ' should be fully functional.');
+}
+
+(function() {
+    var canvas = document.createElement('canvas');
+    var gl = canvas.getContext('experimental-webgl');
+    if (!gl) {
+        ok(!gl, 'WebGL can be unsupported.');
+        return;
+    }
+
+    TestImpliedExtension(gl, 'OES_texture_float', 'WEBGL_color_buffer_float',
+                         RGBA32F_EXT, gl.RGBA, gl.FLOAT, gl.FLOAT);
+    TestImpliedExtension(gl, 'OES_texture_half_float',
+                         'EXT_color_buffer_half_float', RGBA16F_EXT, gl.RGBA,
+                         HALF_FLOAT_OES, gl.FLOAT);
+    ok(true, '========');
+    ok(true, 'TEST COMPLETE');
+})();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+. "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
+
+# We still need to build with debug symbols
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
+
+# ASan specific options on Linux
+ac_add_options --enable-valgrind
+
+. $topsrcdir/build/unix/mozconfig.asan
+ac_add_options --disable-elf-hack
+
+ac_add_options --enable-address-sanitizer-reporter
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=asan-reporter
+
+ac_add_options --with-branding=browser/branding/nightly
+
+. "$topsrcdir/build/mozconfig.common.override"

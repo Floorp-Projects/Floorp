@@ -1,0 +1,1000 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Group displays a group 1`] = `
+<div
+  className="frames-group"
+  onContextMenu={[Function]}
+>
+  <div
+    className="group"
+    key="frame"
+    onClick={[Function]}
+    role="listitem"
+    tabIndex={0}
+    title="Show Back frames"
+  >
+    <FrameIndent />
+    <FrameLocation
+      expanded={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "foo",
+          "generatedLocation": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "id": "frame",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "url",
+            "url": "url",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+    />
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      1
+    </Badge>
+    <br
+      className="clipboard-only"
+    />
+  </div>
+</div>
+`;
+
+exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
+<div
+  className="frames-group expanded"
+  onContextMenu={[Function]}
+>
+  <div
+    className="group"
+    key="1"
+    onClick={[Function]}
+    role="listitem"
+    tabIndex={0}
+    title="Collapse Back frames"
+  >
+    <FrameIndent />
+    <FrameLocation
+      expanded={true}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "renderFoo",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "1",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/mahscripts.js",
+            "url": "http://myfile.com/mahscripts.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+    />
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      3
+    </Badge>
+    <br
+      className="clipboard-only"
+    />
+  </div>
+  <div
+    className="frames-list"
+  >
+    <FrameIndent
+      key="frame-indent-0"
+    />
+    <Frame
+      copyStackTrace={[MockFunction]}
+      cx={
+        Object {
+          "isPaused": false,
+          "navigateCounter": 0,
+          "pauseCounter": 0,
+          "thread": "FakeThread",
+        }
+      }
+      disableContextMenu={false}
+      displayFullUrl={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "renderFoo",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "1",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/mahscripts.js",
+            "url": "http://myfile.com/mahscripts.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      frameworkGroupingOn={true}
+      getFrameTitle={[Function]}
+      hideLocation={true}
+      key="1"
+      panel="webconsole"
+      restart={[MockFunction]}
+      selectFrame={[MockFunction]}
+      selectLocation={[MockFunction]}
+      selectedFrame={
+        Object {
+          "asyncCause": null,
+          "displayName": "foo",
+          "generatedLocation": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "id": "frame",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "url",
+            "url": "url",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      shouldMapDisplayName={false}
+      toggleBlackBox={[MockFunction]}
+      toggleFrameworkGrouping={[MockFunction]}
+    />
+    <FrameIndent
+      key="frame-indent-1"
+    />
+    <Frame
+      copyStackTrace={[MockFunction]}
+      cx={
+        Object {
+          "isPaused": false,
+          "navigateCounter": 0,
+          "pauseCounter": 0,
+          "thread": "FakeThread",
+        }
+      }
+      disableContextMenu={false}
+      displayFullUrl={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "a",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "2",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/back.js",
+            "url": "http://myfile.com/back.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      frameworkGroupingOn={true}
+      getFrameTitle={[Function]}
+      hideLocation={true}
+      key="2"
+      panel="webconsole"
+      restart={[MockFunction]}
+      selectFrame={[MockFunction]}
+      selectLocation={[MockFunction]}
+      selectedFrame={
+        Object {
+          "asyncCause": null,
+          "displayName": "foo",
+          "generatedLocation": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "id": "frame",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "url",
+            "url": "url",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      shouldMapDisplayName={false}
+      toggleBlackBox={[MockFunction]}
+      toggleFrameworkGrouping={[MockFunction]}
+    />
+    <FrameIndent
+      key="frame-indent-2"
+    />
+    <Frame
+      copyStackTrace={[MockFunction]}
+      cx={
+        Object {
+          "isPaused": false,
+          "navigateCounter": 0,
+          "pauseCounter": 0,
+          "thread": "FakeThread",
+        }
+      }
+      disableContextMenu={false}
+      displayFullUrl={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "b",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "3",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/back.js",
+            "url": "http://myfile.com/back.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      frameworkGroupingOn={true}
+      getFrameTitle={[Function]}
+      hideLocation={true}
+      key="3"
+      panel="webconsole"
+      restart={[MockFunction]}
+      selectFrame={[MockFunction]}
+      selectLocation={[MockFunction]}
+      selectedFrame={
+        Object {
+          "asyncCause": null,
+          "displayName": "foo",
+          "generatedLocation": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "id": "frame",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "url",
+            "url": "url",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      shouldMapDisplayName={false}
+      toggleBlackBox={[MockFunction]}
+      toggleFrameworkGrouping={[MockFunction]}
+    />
+  </div>
+</div>
+`;
+
+exports[`Group renders group with anonymous functions 1`] = `
+<div
+  className="frames-group"
+  onContextMenu={[Function]}
+>
+  <div
+    className="group"
+    key="1"
+    onClick={[Function]}
+    role="listitem"
+    tabIndex={0}
+    title="Show Back frames"
+  >
+    <FrameIndent />
+    <FrameLocation
+      expanded={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "display-1",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "1",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/mahscripts.js",
+            "url": "http://myfile.com/mahscripts.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+    />
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      3
+    </Badge>
+    <br
+      className="clipboard-only"
+    />
+  </div>
+</div>
+`;
+
+exports[`Group renders group with anonymous functions 2`] = `
+<div
+  className="frames-group expanded"
+  onContextMenu={[Function]}
+>
+  <div
+    className="group"
+    key="1"
+    onClick={[Function]}
+    role="listitem"
+    tabIndex={0}
+    title="Collapse Back frames"
+  >
+    <FrameIndent />
+    <FrameLocation
+      expanded={true}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "display-1",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "1",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/mahscripts.js",
+            "url": "http://myfile.com/mahscripts.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+    />
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      3
+    </Badge>
+    <br
+      className="clipboard-only"
+    />
+  </div>
+  <div
+    className="frames-list"
+  >
+    <FrameIndent
+      key="frame-indent-0"
+    />
+    <Frame
+      copyStackTrace={[MockFunction]}
+      cx={
+        Object {
+          "isPaused": false,
+          "navigateCounter": 0,
+          "pauseCounter": 0,
+          "thread": "FakeThread",
+        }
+      }
+      disableContextMenu={false}
+      displayFullUrl={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "display-1",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "1",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/mahscripts.js",
+            "url": "http://myfile.com/mahscripts.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      frameworkGroupingOn={true}
+      hideLocation={true}
+      key="1"
+      panel="webconsole"
+      restart={[MockFunction]}
+      selectFrame={[MockFunction]}
+      selectLocation={[MockFunction]}
+      selectedFrame={
+        Object {
+          "asyncCause": null,
+          "displayName": "foo",
+          "generatedLocation": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "id": "frame",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "url",
+            "url": "url",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      shouldMapDisplayName={false}
+      toggleBlackBox={[MockFunction]}
+      toggleFrameworkGrouping={[MockFunction]}
+    />
+    <FrameIndent
+      key="frame-indent-1"
+    />
+    <Frame
+      copyStackTrace={[MockFunction]}
+      cx={
+        Object {
+          "isPaused": false,
+          "navigateCounter": 0,
+          "pauseCounter": 0,
+          "thread": "FakeThread",
+        }
+      }
+      disableContextMenu={false}
+      displayFullUrl={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "display-2",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "2",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/back.js",
+            "url": "http://myfile.com/back.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      frameworkGroupingOn={true}
+      hideLocation={true}
+      key="2"
+      panel="webconsole"
+      restart={[MockFunction]}
+      selectFrame={[MockFunction]}
+      selectLocation={[MockFunction]}
+      selectedFrame={
+        Object {
+          "asyncCause": null,
+          "displayName": "foo",
+          "generatedLocation": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "id": "frame",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "url",
+            "url": "url",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      shouldMapDisplayName={false}
+      toggleBlackBox={[MockFunction]}
+      toggleFrameworkGrouping={[MockFunction]}
+    />
+    <FrameIndent
+      key="frame-indent-2"
+    />
+    <Frame
+      copyStackTrace={[MockFunction]}
+      cx={
+        Object {
+          "isPaused": false,
+          "navigateCounter": 0,
+          "pauseCounter": 0,
+          "thread": "FakeThread",
+        }
+      }
+      disableContextMenu={false}
+      displayFullUrl={false}
+      frame={
+        Object {
+          "asyncCause": null,
+          "displayName": "display-3",
+          "generatedLocation": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "id": "3",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 55,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "http://myfile.com/back.js",
+            "url": "http://myfile.com/back.js",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      frameworkGroupingOn={true}
+      hideLocation={true}
+      key="3"
+      panel="webconsole"
+      restart={[MockFunction]}
+      selectFrame={[MockFunction]}
+      selectLocation={[MockFunction]}
+      selectedFrame={
+        Object {
+          "asyncCause": null,
+          "displayName": "foo",
+          "generatedLocation": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "id": "frame",
+          "index": 0,
+          "library": "Back",
+          "location": Object {
+            "line": 4,
+            "sourceId": "source",
+          },
+          "scope": Object {
+            "actor": "scope-actor",
+            "bindings": Object {
+              "arguments": Array [],
+              "variables": Object {},
+            },
+            "function": null,
+            "object": null,
+            "parent": null,
+            "scopeKind": "",
+            "type": "block",
+          },
+          "source": Object {
+            "extensionName": null,
+            "id": "source",
+            "isBlackBoxed": false,
+            "isExtension": false,
+            "isOriginal": false,
+            "isPrettyPrinted": false,
+            "isWasm": false,
+            "relativeUrl": "url",
+            "url": "url",
+          },
+          "state": "on-stack",
+          "this": Object {},
+          "thread": "FakeThread",
+          "type": "call",
+        }
+      }
+      shouldMapDisplayName={false}
+      toggleBlackBox={[MockFunction]}
+      toggleFrameworkGrouping={[MockFunction]}
+    />
+  </div>
+</div>
+`;

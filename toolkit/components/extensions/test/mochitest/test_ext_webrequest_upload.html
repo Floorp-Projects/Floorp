@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  enctype="multipart/form-data"
+  >
+<input type="text" name="&quot;special&quot; &#x0D;&#x0A; ch�rs" value="sp�cial">
+<input type="file" name="testFile">
+<input type="file" name="emptyFile">
+<input type="text" name="textInput1" value="value1">
+</form>
+
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  enctype="multipart/form-data"
+  >
+<input type="text" name="textInput2" value="value2">
+<input type="file" name="testFile">
+<input type="file" name="emptyFile">
+</form>
+
+</form>
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  >
+<input type="text" name="textInput" value="value1">
+<input type="text" name="textInput" value="value2">
+</form>
+<script>
+"use strict";
+
+let files, testFile, blob, file, uploads;
+add_task(async function test_setup() {
+  files = await new Promise(resolve => {
+    SpecialPowers.createFiles([{name: "testFile.pdf", data: "Not really a PDF file :)", "type": "application/x-pdf"}], (result) => {
+      resolve(result);
+    });
+  });
+  testFile = files[0];
+  blob = {
+    name: "blobAsFile",
+    content: new Blob(["A blob sent as a file"], {type: "text/csv"}),
+    fileName: "blobAsFile.csv",
+  };
+  file = {
+    name: "testFile",
+    fileName: testFile.name,
+  };
+  uploads = {
+    [blob.name]: blob,
+    [file.name]: file,
+    "emptyFile": {fileName: ""}
+  };
+});
+
+function background() {
+  const FILTERS = {urls: ["<all_urls>"]};
+
+  function onUpload(details) {
+    let url = new URL(details.url);
+    let upload = url.searchParams.get("upload");
+    if (!upload) {
+      return;
+    }
+
+    let requestBody = details.requestBody;
+    browser.test.log(`onBeforeRequest upload: ${details.url} ${JSON.stringify(details.requestBody)}`);
+    browser.test.assertTrue(!!requestBody, `Intercepted upload ${details.url} #${details.requestId} ${upload} have a requestBody`);
+    if (!requestBody) {
+      return;
+    }
+    let byteLength = parseInt(upload, 10);
+    if (byteLength) {
+      browser.test.assertTrue(!!requestBody.raw, `Binary upload ${details.url} #${details.requestId} ${upload} have a raw attribute`);
+      browser.test.assertEq(byteLength, requestBody.raw && requestBody.raw.map(r => r.bytes ? r.bytes.byteLength : 0).reduce((a, b) => a + b), `Binary upload size matches`);
+      return;
+    }
+    if ("raw" in requestBody) {
+      browser.test.assertEq(upload, JSON.stringify(requestBody.raw).replace(/(\bfile: ")[^"]+/, "$1<file>"), `Upload ${details.url} #${details.requestId} matches raw data`);
+    } else {
+      browser.test.assertEq(upload, JSON.stringify(requestBody.formData), `Upload ${details.url} #${details.requestId} matches form data.`);
+    }
+  }
+
+  browser.webRequest.onCompleted.addListener(
+    details => {
+      browser.test.log(`onCompleted ${details.requestId} ${details.url}`);
+      // See bug 1471387
+      if (details.url.endsWith("/favicon.ico") || details.originUrl == "about:newtab") {
+        return;
+      }
+
+      browser.test.sendMessage("done");
+    },
+    FILTERS);
+
+  let onBeforeRequest = details => {
+    browser.test.log(`${name} ${details.requestId} ${details.url}`);
+    // See bug 1471387
+    if (details.url.endsWith("/favicon.ico") || details.originUrl == "about:newtab") {
+      return;
+    }
+
+    onUpload(details);
+  };
+
+  browser.webRequest.onBeforeRequest.addListener(
+    onBeforeRequest, FILTERS, ["requestBody"]);
+
+  let tab;
+  browser.tabs.onCreated.addListener(newTab => {
+    tab = newTab;
+  });
+
+  browser.test.onMessage.addListener(msg => {
+    if (msg === "close-tab") {
+      browser.tabs.remove(tab.id);
+      browser.test.sendMessage("tab-closed");
+    }
+  });
+}
+
+add_task(async function test_xhr_forms() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "tabs",
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
+      ],
+    },
+    background,
+  });
+
+  await extension.startup();
+
+  async function doneAndTabClosed() {
+    await extension.awaitMessage("done");
+    let closed = extension.awaitMessage("tab-closed");
+    extension.sendMessage("close-tab");
+    await closed;
+  }
+
+  for (let form of document.forms) {
+    if (file.name in form.elements) {
+      SpecialPowers.wrap(form.elements[file.name]).mozSetFileArray(files);
+    }
+    let action = new URL(form.action);
+    let formData = new FormData(form);
+    let webRequestFD = {};
+
+    let updateActionURL = () => {
+      for (let name of formData.keys()) {
+        webRequestFD[name] = name in uploads ? [uploads[name].fileName] : formData.getAll(name);
+      }
+      action.searchParams.set("upload", JSON.stringify(webRequestFD));
+      action.searchParams.set("enctype", form.enctype);
+    };
+
+    updateActionURL();
+
+    form.action = action;
+    form.submit();
+    await doneAndTabClosed();
+
+    if (form.enctype !== "multipart/form-data") {
+      continue;
+    }
+
+    let post = (data) => {
+      let xhr = new XMLHttpRequest();
+      action.searchParams.set("xhr", "1");
+      xhr.open("POST", action.href);
+      xhr.send(data);
+      action.searchParams.delete("xhr");
+      return doneAndTabClosed();
+    };
+
+    formData.append(blob.name, blob.content, blob.fileName);
+    formData.append("formDataField", "some value");
+    updateActionURL();
+    await post(formData);
+
+    action.searchParams.set("upload", JSON.stringify([{file: "<file>"}]));
+    await post(testFile);
+
+    action.searchParams.set("upload", `${blob.content.size} bytes`);
+    await post(blob.content);
+
+    let byteLength = 16;
+    action.searchParams.set("upload", `${byteLength} bytes`);
+    await post(new ArrayBuffer(byteLength));
+  }
+
+  // Testing the decoding of percent escapes even in cases where the
+  // multipart/form-data serializer won't emit them.
+  {
+    let boundary = "-".repeat(27);
+    for (let i = 0; i < 3; i++) {
+      const randomNumber = Math.floor(Math.random() * (2 ** 32));
+      boundary += String(randomNumber);
+    }
+
+    const formPayload = [
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="percent escapes other than%20quotes and newlines"',
+      "",
+      "",
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="valid UTF-8: %F0%9F%92%A9"',
+      "",
+      "",
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="broken UTF-8: %F0%9F %92%A9"',
+      "",
+      "",
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="percent escapes aren\'t decoded in filenames"; filename="%0D%0A%22"',
+      "Content-Type: application/octet-stream",
+      "",
+      "",
+      `--${boundary}--`,
+      ""
+    ].join("\r\n");
+
+    const action = new URL("file_WebRequest_page3.html?trigger=form", document.location.href);
+    action.searchParams.set("xhr", "1");
+    action.searchParams.set("upload", JSON.stringify({
+      "percent escapes other than quotes and newlines": [""],
+      "valid UTF-8: 💩": [""],
+      "broken UTF-8: � ��": [""],
+      "percent escapes aren't decoded in filenames": ["%0D%0A%22"]
+    }));
+    action.searchParams.set("enctype", "multipart/form-data");
+
+    await fetch(
+      action.href,
+      {
+        method: "POST",
+        headers: {"Content-Type": `multipart/form-data; boundary=${boundary}`},
+        body: formPayload
+      },
+    );
+    await doneAndTabClosed();
+  }
+
+  await extension.unload();
+});
+</script>
+</body>
+</html>

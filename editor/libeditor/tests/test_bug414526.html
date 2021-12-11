@@ -1,0 +1,234 @@
+<html>
+<head>
+  <title>Test for backspace key and delete key shouldn't remove another editing host's text</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="display"></div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  var container = document.getElementById("display");
+
+  function reset() {
+    document.execCommand("Undo", false, null);
+  }
+
+  var selection = window.getSelection();
+  function moveCaretToStartOf(aEditor) {
+    selection.selectAllChildren(aEditor);
+    selection.collapseToStart();
+  }
+
+  function moveCaretToEndOf(aEditor) {
+    selection.selectAllChildren(aEditor);
+    selection.collapseToEnd();
+  }
+
+  /* TestCase #1
+   */
+  const kTestCase1 =
+    "<p id=\"editor1\" contenteditable=\"true\">editor1</p>" +
+    "<p id=\"editor2\" contenteditable=\"true\">editor2</p>" +
+    "<div id=\"editor3\" contenteditable=\"true\"><div>editor3</div></div>" +
+    "<p id=\"editor4\" contenteditable=\"true\">editor4</p>" +
+    "non-editable text" +
+    "<p id=\"editor5\" contenteditable=\"true\">editor5</p>";
+
+  const kTestCase1_editor3_deleteAtStart =
+    "<p id=\"editor1\" contenteditable=\"true\">editor1</p>" +
+    "<p id=\"editor2\" contenteditable=\"true\">editor2</p>" +
+    "<div id=\"editor3\" contenteditable=\"true\"><div>ditor3</div></div>" +
+    "<p id=\"editor4\" contenteditable=\"true\">editor4</p>" +
+    "non-editable text" +
+    "<p id=\"editor5\" contenteditable=\"true\">editor5</p>";
+
+  const kTestCase1_editor3_backspaceAtEnd =
+    "<p id=\"editor1\" contenteditable=\"true\">editor1</p>" +
+    "<p id=\"editor2\" contenteditable=\"true\">editor2</p>" +
+    "<div id=\"editor3\" contenteditable=\"true\"><div>editor</div></div>" +
+    "<p id=\"editor4\" contenteditable=\"true\">editor4</p>" +
+    "non-editable text" +
+    "<p id=\"editor5\" contenteditable=\"true\">editor5</p>";
+
+  container.innerHTML = kTestCase1;
+
+  var editor1 = document.getElementById("editor1");
+  var editor2 = document.getElementById("editor2");
+  var editor3 = document.getElementById("editor3");
+  var editor4 = document.getElementById("editor4");
+  var editor5 = document.getElementById("editor5");
+
+  /* TestCase #1:
+   * pressing backspace key at start should not change the content.
+   */
+  editor2.focus();
+  moveCaretToStartOf(editor2);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase1,
+     "Pressing backspace key at start of editor2 changes the content");
+  reset();
+
+  editor3.focus();
+  moveCaretToStartOf(editor3);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase1,
+     "Pressing backspace key at start of editor3 changes the content");
+  reset();
+
+  editor4.focus();
+  moveCaretToStartOf(editor4);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase1,
+     "Pressing backspace key at start of editor4 changes the content");
+  reset();
+
+  editor5.focus();
+  moveCaretToStartOf(editor5);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase1,
+     "Pressing backspace key at start of editor5 changes the content");
+  reset();
+
+  /* TestCase #1:
+   * pressing delete key at end should not change the content.
+   */
+  editor1.focus();
+  moveCaretToEndOf(editor1);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase1,
+     "Pressing delete key at end of editor1 changes the content");
+  reset();
+
+  editor2.focus();
+  moveCaretToEndOf(editor2);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase1,
+     "Pressing delete key at end of editor2 changes the content");
+  reset();
+
+  editor3.focus();
+  moveCaretToEndOf(editor3);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase1,
+          "Pressing delete key at end of editor3 changes the content");
+  reset();
+
+  editor4.focus();
+  moveCaretToEndOf(editor4);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase1,
+     "Pressing delete key at end of editor4 changes the content");
+  reset();
+
+  /* TestCase #1: cases when the caret is not on text node.
+   *   - pressing delete key at start should remove the first character
+   *   - pressing backspace key at end should remove the first character
+   * and the adjacent blocks should not be changed.
+   */
+  editor3.focus();
+  moveCaretToStartOf(editor3);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase1_editor3_deleteAtStart,
+     "Pressing delete key at start of editor3 changes adjacent elements"
+     + " and/or does not remove the first character.");
+  reset();
+
+  editor3.focus();
+  moveCaretToEndOf(editor3);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase1_editor3_backspaceAtEnd,
+     "Pressing backspace key at end of editor3 changes adjacent elements"
+     + " and/or does not remove the last character.");
+  reset();
+
+  /* TestCase #2:
+   * two adjacent editable <span> in a table cell.
+   */
+  const kTestCase2 = "<table><tbody><tr><td><span id=\"editor1\" contenteditable=\"true\">test</span>" +
+    "<span id=\"editor2\" contenteditable=\"true\">test</span></td></tr></tbody></table>";
+
+  container.innerHTML = kTestCase2;
+  editor1 = document.getElementById("editor1");
+  editor2 = document.getElementById("editor2");
+
+  editor2.focus();
+  moveCaretToStartOf(editor2);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase2,
+     "Pressing backspace key at the start of editor2 changes the content for kTestCase2");
+  reset();
+
+  editor1.focus();
+  moveCaretToEndOf(editor1);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase2,
+     "Pressing delete key at the end of editor1 changes the content for kTestCase2");
+  reset();
+
+  /* TestCase #3:
+   * editable <span> in two adjacent table cells.
+   */
+  const kTestCase3 = "<table><tbody><tr><td><span id=\"editor1\" contenteditable=\"true\">test</span></td>" +
+    "<td><span id=\"editor2\" contenteditable=\"true\">test</span></td></tr></tbody></table>";
+
+  container.innerHTML = kTestCase3;
+  editor1 = document.getElementById("editor1");
+  editor2 = document.getElementById("editor2");
+
+  editor2.focus();
+  moveCaretToStartOf(editor2);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase3,
+     "Pressing backspace key at the start of editor2 changes the content for kTestCase3");
+  reset();
+
+  editor1.focus();
+  moveCaretToEndOf(editor1);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase3,
+     "Pressing delete key at the end of editor1 changes the content for kTestCase3");
+  reset();
+
+  /* TestCase #4:
+   * editable <div> in two adjacent table cells.
+   */
+  const kTestCase4 = "<table><tbody><tr><td><div id=\"editor1\" contenteditable=\"true\">test</div></td>" +
+    "<td><div id=\"editor2\" contenteditable=\"true\">test</div></td></tr></tbody></table>";
+
+  container.innerHTML = kTestCase4;
+  editor1 = document.getElementById("editor1");
+  editor2 = document.getElementById("editor2");
+
+  editor2.focus();
+  moveCaretToStartOf(editor2);
+  synthesizeKey("KEY_Backspace");
+  is(container.innerHTML, kTestCase4,
+     "Pressing backspace key at the start of editor2 changes the content for kTestCase4");
+  reset();
+
+  editor1.focus();
+  moveCaretToEndOf(editor1);
+  synthesizeKey("KEY_Delete");
+  is(container.innerHTML, kTestCase4,
+     "Pressing delete key at the end of editor1 changes the content for kTestCase4");
+  reset();
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

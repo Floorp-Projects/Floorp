@@ -1,0 +1,9 @@
+<html class="reftest-wait"><head><script>
+function removestyles(i){
+document.getElementById('one').removeAttribute('style');
+document.body.offsetHeight;
+document.getElementById('two').removeAttribute('style');
+document.documentElement.removeAttribute("class");
+}
+
+</script></head><body onload="setTimeout(removestyles,0);"><table style="display: table-row-group;"><table><span id="one" style="display: table-caption;"><i style="position: fixed;"></i><div id="two" style="display: table-caption;"></div></span></body></html>

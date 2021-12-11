@@ -1,0 +1,15 @@
+/**
+ * preev.com - typed numbers are not fully visible
+ * Bug #1654877 - https://bugzilla.mozilla.org/show_bug.cgi?id=1654877
+ * WebCompat issue #55099 - https://webcompat.com/issues/55099
+ *
+ * It's hard to see the entered number because the spin button is
+ * taking too much space. While there is -moz-appearance: textfield,
+ * -webkit-appearance: none; underneath supersedes it,
+ * leaving the spin button visible. Adding -moz-appearance: textfield;
+ * as a separate rule fixes the issue
+ */
+input[type="number"],
+input[type="text"] {
+  -moz-appearance: textfield;
+}

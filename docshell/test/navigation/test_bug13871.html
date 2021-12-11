@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>
+    <style type="text/css">
+      iframe { width: 90%; height: 50px; }
+    </style>
+<script>
+async function runTest() {
+  navigateByLocation(window0.frames[0]);
+  navigateByOpen("window1_child0");
+  navigateByForm("window2_child0");
+  navigateByHyperlink("window3_child0");
+
+  await waitForFinishedFrames(4);
+
+  isInaccessible(window0.frames[0], "Should not be able to navigate off-domain frame by setting location.");
+  isInaccessible(window1.frames[0], "Should not be able to navigate off-domain frame by calling window.open.");
+  isInaccessible(window2.frames[0], "Should not be able to navigate off-domain frame by submitting form.");
+  isInaccessible(window3.frames[0], "Should not be able to navigate off-domain frame by targeted hyperlink.");
+
+  window0.close();
+  window1.close();
+  window2.close();
+  window3.close();
+
+  await cleanupWindows();
+  SimpleTest.finish();
+}
+
+// Because our open()'d windows are cross-origin, we can't wait for onload.
+// We instead wait for a postMessage from parent.html.
+var windows = new Map();
+addEventListener("message", function windowLoaded(evt) {
+  // Because window.open spins the event loop in order to open new windows,
+  // we might receive the "ready" message before we call waitForLoad.
+  // In that case, windows won't contain evt.source and we just note that the
+  // window is ready. Otherwise, windows contains the "resolve" function for
+  // that window's promise and we just have to call it.
+  if (windows.has(evt.source)) {
+    windows.get(evt.source)();
+  } else {
+    windows.set(evt.source, true);
+  }
+});
+
+var window0 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/parent.html", "window0", "width=10,height=10");
+var window1 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/parent.html", "window1", "width=10,height=10");
+var window2 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/parent.html", "window2", "width=10,height=10");
+var window3 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/parent.html", "window3", "width=10,height=10");
+
+function waitForLoad(w) {
+  return new Promise(function(resolve, reject) {
+    // If we already got the "ready" message, resolve immediately.
+    if (windows.has(w)) {
+      resolve();
+    } else {
+      windows.set(w, resolve);
+    }
+  });
+}
+
+Promise.all([ waitForLoad(window0),
+              waitForLoad(window1),
+              waitForLoad(window2),
+              waitForLoad(window3) ])
+       .then(runTest);
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=13871">Mozilla Bug 13871</a>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

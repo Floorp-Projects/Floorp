@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<body>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  document.body.appendChild(build_dom(10000, "div", { attributes: { "data-x": "https://example.com/b/abcdefghijklmnopqrstuvwxyz" } }));
+  flush_layout(document.body);
+  document.head.appendChild(build_rule("[data-x^='https://example.com/a']", 500, "{}"));
+  document.head.appendChild(build_rule("[data-x$='abcdefghijklmnopqrstuvwxy.']", 500, "{}"));
+  document.head.appendChild(build_rule("[data-x*='abcdefghijklmnopqrstuvwxy.']", 500, "{}"));
+  perf_start();
+  flush_style(document.body.lastChild);
+  perf_finish();
+};
+</script>

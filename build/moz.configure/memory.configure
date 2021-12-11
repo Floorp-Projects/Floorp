@@ -1,0 +1,99 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+@depends(target, js_package)
+def jemalloc_default(target, js_package):
+    if js_package:
+        return False
+    return target.kernel in ("Darwin", "Linux", "WINNT")
+
+
+option(
+    "--enable-jemalloc",
+    env="MOZ_MEMORY",
+    default=jemalloc_default,
+    help="{Replace|Do not replace} memory allocator with jemalloc",
+)
+
+
+set_config("MOZ_MEMORY", True, when="--enable-jemalloc")
+set_define("MOZ_MEMORY", True, when="--enable-jemalloc")
+add_old_configure_assignment("MOZ_MEMORY", True, when="--enable-jemalloc")
+
+
+@depends(milestone, build_project)
+def replace_malloc_default(milestone, build_project):
+    if build_project == "memory":
+        return True
+    if milestone.is_early_beta_or_earlier and build_project != "js":
+        return True
+
+
+option(
+    "--enable-replace-malloc",
+    default=replace_malloc_default,
+    when="--enable-jemalloc",
+    help="{Enable|Disable} ability to dynamically replace the malloc implementation",
+)
+
+
+set_config("MOZ_REPLACE_MALLOC", True, when="--enable-replace-malloc")
+set_define("MOZ_REPLACE_MALLOC", True, when="--enable-replace-malloc")
+
+
+@depends(build_project, when="--enable-replace-malloc")
+def replace_malloc_static(build_project):
+    # Default to statically linking replace-malloc libraries that can be
+    # statically linked, except when building with --enable-project=memory.
+    if build_project != "memory":
+        return True
+
+
+set_config("MOZ_REPLACE_MALLOC_STATIC", replace_malloc_static)
+
+# PHC (Probabilistic Heap Checker)
+# ==============================================================
+
+# In general, it only makes sense for PHC to run on the platforms that have a
+# crash reporter.
+@depends(
+    milestone,
+    target,
+    replace_malloc_default,
+    "--enable-replace-malloc",
+    when="--enable-jemalloc",
+)
+def phc_default(milestone, target, replace_malloc_default, replace_malloc):
+    if not replace_malloc_default or (
+        replace_malloc.origin != "default" and not replace_malloc
+    ):
+        return False
+    # Nightly or early beta only because PHC has a non-negligible performance cost.
+    if not milestone.is_early_beta_or_earlier:
+        return False
+    # Both Linux32 and Win32 have frequent crashes when stack tracing (for
+    # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
+    return (
+        (target.os == "GNU" and target.kernel == "Linux" and target.bitness == 64)
+        or (target.kernel == "WINNT" and target.bitness == 64)
+        or (target.os == "OSX")
+    )
+
+
+option(
+    "--enable-phc",
+    env="MOZ_PHC",
+    default=phc_default,
+    when="--enable-jemalloc",
+    help="{Enable|Disable} PHC (Probabilistic Memory Checker). "
+    "Also enables replace-malloc and frame pointers",
+)
+imply_option("--enable-replace-malloc", True, when="--enable-phc")
+imply_option("--enable-frame-pointers", True, when="--enable-phc")
+
+
+set_config("MOZ_PHC", True, when="--enable-phc")

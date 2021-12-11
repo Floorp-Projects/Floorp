@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1010538 - Anchor Link Scrolling</title>
+    <style type="text/css">
+
+        html,body {
+            color: black;
+            background-color: white;
+            font-size: 16px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .a_box {
+            position: relative;
+            left: 0px;
+            top: 0px;
+            width: 20px;
+            height: 20px;
+            background: blue;
+        }
+
+        .another_box {
+            position: relative;
+            left: 2000px;
+            top: 2000px;
+            width: 20px;
+            height: 20px;
+            background: green;
+            display: inline-block;
+        }
+
+        .scroll_box {
+            width: 50px;
+            height: 50px;
+            overflow: scroll;
+            will-change: scroll-position;
+        }
+
+        #scroll_1 {
+            scroll-behavior: auto;
+        }
+
+        #scroll_3 {
+            scroll-behavior: smooth;
+        }
+
+    </style>
+</head>
+<body>
+  <div id="scroll_1" class="scroll_box">
+    <div id="box1a" class="a_box"></div>
+    <a name="test_anchor_1" id="box1b" class="another_box"></a>
+  </div>
+  <div id="scroll_2" class="scroll_box">
+    <div id="box2a" class="a_box"></div>
+    <a name="test_anchor_2" id="box2b" class="another_box"></a>
+  </div>
+  <div id="scroll_3" class="scroll_box">
+    <div id="box3a" class="a_box"></div>
+    <a name="test_anchor_3" id="box3b" class="another_box"></a>
+  </div>
+<script>
+  function doTest() {
+    if (document.location.search != '?ref') {
+      // Scroll_1 to Scroll_2 are expected to scroll instantly
+      window.location.hash = "test_anchor_1";
+      window.location.hash = "test_anchor_2";
+
+      // Scroll_3 is expected to scroll smoothly
+      document.getElementById("box3b").scrollIntoView({block: "end", behavior: "smooth"});
+
+      // Interrupt any smooth scrolling
+      for (var i=1; i <= 3; i++) {
+        document.getElementById("scroll_" + i).scrollLeft
+          = document.getElementById("scroll_" + i).scrollLeft;
+        document.getElementById("scroll_" + i).scrollTop
+          = document.getElementById("scroll_" + i).scrollTop;
+      }
+    } else {
+      // Scroll all boxes except for Scroll_3
+      for (var i=1; i <= 2; i++) {
+        document.getElementById("box" + i + "b").scrollIntoView({block: "end", behavior: "instant"});
+      }
+    }
+    document.documentElement.removeAttribute("class");
+  }
+
+  for (var i=1; i <= 3; i++) {
+    document.getElementById("box" + i + "a")
+      .scrollIntoView({block: "start", behavior: "instant"});
+  }
+
+  window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

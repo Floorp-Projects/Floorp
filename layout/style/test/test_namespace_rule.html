@@ -1,0 +1,461 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CSS Namespace rules</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<p id="display"><iframe id="iframe" src="data:application/xhtml+xml,<html%20xmlns='http://www.w3.org/1999/xhtml'><head/><body/></html>"></iframe></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+
+function run() {
+    var wrappedFrame = SpecialPowers.wrap($("iframe"));
+    var ifwin = wrappedFrame.contentWindow;
+    var ifdoc = wrappedFrame.contentDocument;
+    var ifbody = ifdoc.getElementsByTagName("body")[0];
+
+    function setup_style_text() {
+        var style_elem = ifdoc.createElement("style");
+        style_elem.setAttribute("type", "text/css");
+        ifdoc.getElementsByTagName("head")[0].appendChild(style_elem);
+        let style_text = ifdoc.createCDATASection("");
+        style_elem.appendChild(style_text);
+        return style_text;
+    }
+
+    let style_text = setup_style_text();
+    var gCounter = 0;
+
+    /*
+     * namespaceRules: the @namespace rules to use
+     * selector: the selector to test
+     * body_contents: what to set the body's innerHTML to
+     * match_fn: a function that, given the document object into which
+     *   body_contents has been inserted, produces an array of nodes that
+     *   should match selector
+     * notmatch_fn: likewise, but for nodes that should not match
+     */
+    function test_selector_in_html(namespaceRules, selector, body_contents,
+                                   match_fn, notmatch_fn)
+    {
+        var zi = ++gCounter;
+        if (typeof(body_contents) == "string") {
+            ifbody.innerHTML = body_contents;
+        } else {
+            // It's a function.
+            ifbody.innerHTML = "";
+            body_contents(ifbody);
+        }
+        style_text.data =
+          namespaceRules + " " + selector + "{ z-index: " + zi + " }";
+        var should_match = match_fn(ifdoc);
+        var should_not_match = notmatch_fn(ifdoc);
+        if (should_match.length + should_not_match.length == 0) {
+            ok(false, "nothing to check");
+        }
+
+        for (var i = 0; i < should_match.length; ++i) {
+            var e = should_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, String(zi),
+               "element in " + body_contents + " matched " + selector);
+        }
+        for (var i = 0; i < should_not_match.length; ++i) {
+            var e = should_not_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, "auto",
+               "element in " + body_contents + " did not match " + selector);
+        }
+
+        // Now, since we're here, may as well make sure serialization
+        // works correctly.  It need not produce the exact same text,
+        // but it should produce a selector that matches the same
+        // elements.
+        zi = ++gCounter;
+        var ruleList = style_text.parentNode.sheet.cssRules;
+        var ser1 = ruleList[ruleList.length-1].selectorText;
+        style_text.data =
+          namespaceRules + " " + ser1 + "{ z-index: " + zi + " }";
+        for (var i = 0; i < should_match.length; ++i) {
+            var e = should_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, String(zi),
+               "element in " + body_contents + " matched " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+        for (var i = 0; i < should_not_match.length; ++i) {
+            var e = should_not_match[i];
+            is(ifwin.getComputedStyle(e).zIndex, "auto",
+               "element in " + body_contents + " did not match " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+
+        // But when we serialize the serialized result, we should get
+        // the same text.
+        var ser2 = ruleList[ruleList.length-1].selectorText;
+        is(ser2, ser1, "parse+serialize of selector \"" + selector +
+                       "\" is idempotent");
+
+        ifbody.innerHTML = "";
+        style_text.data = "";
+    }
+
+    // 2 tests from http://tc.labs.opera.com/css/namespaces/prefix-001.xml
+    test_selector_in_html(
+      '@namespace foo "x"; @namespace Foo "y";',
+      'Foo|test',
+      '<test xmlns="y"/>',
+      function (doc) { return doc.getElementsByTagName("test"); },
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace foo "x"; @namespace Foo "y";',
+      'foo|test',
+      '<test xmlns="y"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    // 2 tests from http://tc.labs.opera.com/css/namespaces/prefix-002.xml
+    test_selector_in_html(
+      '@namespace foo "";',
+      'test',
+      '<test xmlns=""/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace foo "";',
+      'foo|test',
+      '<test xmlns=""/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    // 2 tests from http://tc.labs.opera.com/css/namespaces/prefix-003.xml
+    test_selector_in_html(
+      '@namespace foo "";',
+      'test',
+      '<foo xmlns=""><test/></foo>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace foo "";',
+      'foo|test',
+      '<foo xmlns=""><test/></foo>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    // 4 tests from http://tc.labs.opera.com/css/namespaces/prefix-004.xml
+    test_selector_in_html(
+      '@namespace ""; @namespace x "test";',
+      'test[x]',
+      '<foo xmlns=""><test x=""/></foo>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace ""; @namespace x "test";',
+      '*|test',
+      '<foo xmlns=""><test x=""/></foo>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace ""; @namespace x "test";',
+      '*|test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace ""; @namespace x "test";',
+      'test',
+      '<test xmlns="test"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    // 2 tests from http://tc.labs.opera.com/css/namespaces/prefix-005.xml
+    test_selector_in_html(
+      '@namespace x "test";',
+      'test',
+      '<test/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace x "test";',
+      'test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    // Skipping the scope tests because they involve import, and we have no way
+    // to know when the import load completes.
+
+    // 1 test from http://tc.labs.opera.com/css/namespaces/syntax-001.xml
+    test_selector_in_html(
+      '@NAmespace x "http://www.w3.org/1999/xhtml";',
+      'x|test',
+      '<test/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    // 1 test from http://tc.labs.opera.com/css/namespaces/syntax-002.xml
+    test_selector_in_html(
+      '@NAmespac\\65  x "http://www.w3.org/1999/xhtml";',
+      'x|test',
+      '<test/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    // 3 tests from http://tc.labs.opera.com/css/namespaces/syntax-003.xml
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      'test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      'test',
+      '<test/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    // 3 tests from http://tc.labs.opera.com/css/namespaces/syntax-004.xml
+    test_selector_in_html(
+      '@namespace u\\00072l("test");',
+      '*|test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace u\\00072l("test");',
+      'test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace u\\00072l("test");',
+      'test',
+      '<test/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    // Skipping http://tc.labs.opera.com/css/namespaces/syntax-005.xml because it
+    // involves import, and we have no way // to know when the import load completes.
+
+    // Skipping http://tc.labs.opera.com/css/namespaces/syntax-006.xml because it
+    // involves import, and we have no way // to know when the import load completes.
+
+    // 2 tests from http://tc.labs.opera.com/css/namespaces/syntax-007.xml
+    test_selector_in_html(
+      '@charset "x"; @namespace url("test"); @namespace url("test2");',
+      '*|test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@charset "x"; @namespace url("test"); @namespace url("test2");',
+      'test',
+      '<test xmlns="test"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    // 2 tests from http://tc.labs.opera.com/css/namespaces/syntax-008.xml
+    test_selector_in_html(
+      '@namespace \\72x url("test");',
+      'rx|test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace \\72x url("test");',
+      'test',
+      '<test xmlns="test"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    // And now some :not() tests
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*:not(test)',
+      '<test xmlns="test"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*:not(test)',
+      '<test xmlns="testing"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace x url("test");',
+      '*|*:not(x|test)',
+      '<test xmlns="test"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace x url("test");',
+      '*|*:not(x|test)',
+      '<test xmlns="testing"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*:not(*)',
+      '<test xmlns="testing"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*:not(*)',
+      '<test xmlns="test"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace x url("test");',
+      '*|*:not(x|*)',
+      '<test xmlns="testing"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace x url("test");',
+      '*|*:not(x|*)',
+      '<test xmlns="test"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*:not([foo])',
+      '<test xmlns="testing" foo="bar"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*:not([foo])',
+      '<test xmlns="test" foo="bar"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[foo]',
+      '<test foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[|foo]',
+      '<test foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace test url("test");',
+      '*|*[test|foo]',
+      '<test foo="bar"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace test url("test");',
+      '*|*[test|foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return []; },
+      function (doc) { return doc.getElementsByTagName("test");}
+    );
+
+    test_selector_in_html(
+      '@namespace url("test");',
+      '*|*[*|foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    test_selector_in_html(
+      '',
+      '*|*[*|foo]',
+      '<test xmlns:t="test" t:foo="bar"/>',
+      function (doc) { return doc.getElementsByTagName("test");},
+      function (doc) { return []; }
+    );
+
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

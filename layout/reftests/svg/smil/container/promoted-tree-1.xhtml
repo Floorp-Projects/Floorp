@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Promoted subtree</title>
+    <!--
+    PURPOSE: As timing containers are defined according to the outermost SVG
+    document fragment, this case tests when a nested <svg> element is removed
+    and added as the outermost svg fragment, that is, promoted.
+
+    OPERATION: There is one animation containing two circles that move to the
+    right. The second circle is contained in a nested <svg> element. This nested
+    <svg> is removed from the outer <svg> element and then appended to
+    the parent <p> element.
+
+    EXPECTED RESULTS: After removing the inner <svg> and making it a child of
+    the <p> it becomes an outermost <svg> and therefore a new time container and
+    so the animation resets. This behaviour is the same in Opera and we believe
+    it to be correct.
+    -->
+    <script>
+        function moveAndSplit()
+        {
+          var svg = document.getElementById('outer');
+          svg.pauseAnimations();
+          svg.setCurrentTime(0.5);
+          split();
+          svg = document.getElementById('nested');
+          svg.pauseAnimations();
+          var svgs = document.getElementsByTagName('svg');
+          for (var i = 0; i &lt; svgs.length; i++) {
+            var svg = svgs[i];
+            svg.setCurrentTime(svg.getCurrentTime() + 0.5);
+          }
+          setTimeout('document.documentElement.removeAttribute("class")', 0);
+        }
+
+        function split()
+        {
+          var nested = document.getElementById('nested');
+          nested.parentNode.removeChild(nested);
+          var container = document.getElementById('container');
+          container.appendChild(nested);
+        }
+    </script>
+  </head>
+
+  <body onload="moveAndSplit()">
+    <p id="container">
+      <svg xmlns="http://www.w3.org/2000/svg" width="200px" height="200px"
+        id="outer">
+        <rect x="0" y="0" width="199" height="199"
+          style="fill: none; stroke: black"/>
+        <circle cx="0" cy="50" r="15" fill="skyblue" stroke="black"
+          stroke-width="1">
+          <animate attributeName="cx" from="0" to="200" begin="0s" dur="2s"
+            fill="freeze"/>
+        </circle>
+        <!-- nested svg fragment -->
+        <svg width="200px" height="200px" id="nested">
+          <rect x="0" y="0" width="199" height="199"
+            style="fill: none; stroke: black"/>
+          <circle cx="0" cy="110" r="15" fill="greenyellow" stroke="black"
+            stroke-width="1">
+            <animate attributeName="cx" from="0" to="200" begin="0s" dur="2s"
+              fill="freeze"/>
+          </circle>
+        </svg>
+      </svg>
+    </p>
+  </body>
+</html>

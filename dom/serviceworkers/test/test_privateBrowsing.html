@@ -1,0 +1,103 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for ServiceWorker - Private Browsing</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+
+<script type="application/javascript">
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+var mainWindow;
+
+var contentPage = "http://mochi.test:8888/chrome/dom/workers/test/empty.html";
+var workerScope = "http://mochi.test:8888/chrome/dom/serviceworkers/test/";
+var workerURL = workerScope + "worker.js";
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  win.addEventListener("load", function() {
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      if (win.content.location.href != contentPage) {
+        BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+        return;
+      }
+
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }, true);
+  }, {capture: true, once: true});
+}
+
+function setupWindow() {
+  mainWindow = window.browsingContext.topChromeWindow;
+  runTest();
+}
+
+var wN;
+var registration;
+var wP;
+
+function testPrivateWindow() {
+  testOnWindow(true, function(aWin) {
+    wP = aWin;
+    ok(!wP.content.eval('"serviceWorker" in navigator'), "ServiceWorkers are not available for private windows");
+    runTest();
+  });
+}
+
+function doTests() {
+  testOnWindow(false, function(aWin) {
+    wN = aWin;
+    ok("serviceWorker" in wN.content.navigator, "ServiceWorkers are available for normal windows");
+
+    wN.content.navigator.serviceWorker.register(workerURL,
+                                                { scope: workerScope })
+      .then(function(aRegistration) {
+        registration = aRegistration;
+        ok(registration, "Registering a service worker in a normal window should succeed");
+
+        // Bug 1255621: We should be able to load a controlled document in a private window.
+        testPrivateWindow();
+      }, function(aError) {
+        ok(false, "Error registering worker in normal window: " + aError);
+        testPrivateWindow();
+      });
+  });
+}
+
+var steps = [
+  setupWindow,
+  doTests
+];
+
+function cleanup() {
+  wN.close();
+  wP.close();
+
+  SimpleTest.finish();
+}
+
+function runTest() {
+  if (!steps.length) {
+    registration.unregister().then(cleanup, cleanup);
+
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
+  ["browser.startup.page", 0],
+  ["browser.startup.homepage_override.mstone", "ignore"],
+]}, runTest);
+
+</script>
+</body>
+</html>

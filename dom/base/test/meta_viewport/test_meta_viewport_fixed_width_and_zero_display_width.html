@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Fixed meta viewport width, zero display width</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=100">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>Fixed meta viewport width, zero display width</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function valid_width() {
+      // We choose a 2.5 scaleRatio here to make clear that the later check
+      // of the viewport height is getting a scaled value.
+      await SpecialPowers.pushPrefEnv(scaleRatio(2.5));
+
+      // We request a zero-width viewport because that triggers a special
+      // codepath that sets the viewport height to the scaled display height.
+      let info = getViewportInfo(0, 500);
+      is(info.width, 100, "width should be 100");
+      is(info.height, 200, "height should be 200, since 500 / 2.5 = 200");
+    });
+  </script>
+</body>
+</html>

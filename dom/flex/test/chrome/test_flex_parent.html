@@ -1,0 +1,133 @@
+<!doctype html>
+<html id="nonitem0">
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+  .container {
+    display: flex;
+    background-color: grey;
+    font: 14px sans-serif;
+    height: 20px;
+  }
+
+  .lime        { background: lime;   }
+  .yellow      { background: yellow; }
+  .orange      { background: orange; }
+</style>
+
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function testFlexParentExpectedValues(values) {
+  let expectedParent;
+  if (values.parent) {
+    expectedParent = document.getElementById(values.parent);
+  }
+
+  let item, itemLabel;
+
+  if (values.id) {
+    item = document.getElementById(values.id);
+    itemLabel = values.id;
+  } else {
+    item = expectedParent.firstChild;
+    itemLabel = "[text node]";
+  }
+
+  const actualParent = item.parentFlexElement;
+
+  if (values.parent) {
+    is(actualParent, expectedParent, "Item " + itemLabel + " should have a parent with id " + values.parent + ".");
+  } else {
+    is(actualParent, null, "Non-item " + itemLabel + " should not have a parent.");
+  }
+}
+
+function testFlexParents() {
+  let expectedValues = [
+    // These items expect to have a flex parent.
+    { id: "item0", parent: "container0" },
+    { id: "item1", parent: "container1" },
+    { id: "item2", parent: "container2" },
+    { id: "item3", parent: "container3" },
+    { id: "item4", parent: "container4" },
+    { id: null /* choose the first child of the expected parent */, parent: "container5" },
+
+
+    // These elements do NOT expect to have a flex parent.
+    { id: "nonitem0" },
+    { id: "nonitem1" },
+    { id: "nonitem2" },
+    { id: "nonitem3" },
+  ];
+
+  for (let i = 0; i < expectedValues.length; ++i) {
+    testFlexParentExpectedValues(expectedValues[i]);
+  }
+}
+
+function runTests() {
+  testFlexParents();
+  SimpleTest.finish();
+}
+</script>
+</head>
+
+<body onLoad="runTests();">
+  <!-- These items expect to have a flex parent. -->
+  <div id="container0" class="container">
+    <div id="item0" class="lime">first item</div>
+  </div>
+
+  <div id="container1" class="container">
+    <div class="orange">first item</div>
+    <div id="item1" class="lime">second item</div>
+  </div>
+
+  <div id="container2" class="container">
+    <div style="display:contents">
+      <div id="item2" class="lime">display-contents-child item</div>
+    </div>
+  </div>
+
+  <div id="container3" class="container">
+    A <span id="item3" class="lime">middle item</span> surrounded by anonymous text items</div>
+  </div>
+
+  <div id="container4" class="container">
+    <div id="item4" style="display: table-cell">display: table-cell item</div>
+  </div>
+
+  <div id="container5" class="container">
+    Text that gets wrapped in anonymous flex item
+  </div>
+
+  <!-- These elements do NOT expect to have a flex parent. -->
+
+  <!-- nonitem0 is the root html element -->
+
+  <div class="container">
+    <div>
+      <div id="nonitem1" class="yellow">child element of an item</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div>
+      <div id="nonitem2" style="position: absolute" class="yellow">position: absolute element</div>
+    </div>
+  </div>
+
+  <div class="container" style="position:relative">
+    <div>
+      <div id="nonitem3" style="position: absolute" class="yellow">
+        position: absolute element, with flex as containing block
+      </div>
+    </div>
+  </div>
+</body>
+</html>

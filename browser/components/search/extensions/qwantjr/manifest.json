@@ -1,0 +1,27 @@
+{
+  "name": "Qwant Junior",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "qwantjr@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Qwant Junior",
+      "search_url": "https://www.qwantjunior.com/",
+      "search_url_get_params": "q={searchTerms}&client=firefoxqwant",
+      "suggest_url": "https://api.qwant.com/egp/suggest/",
+      "suggest_url_get_params": "q={searchTerms}&client=opensearch",
+      "search_form": "https://www.qwantjunior.com/"
+    }
+  }
+}

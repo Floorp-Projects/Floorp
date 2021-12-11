@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=412567
+-->
+<head>
+  <title>Test for Bug 412567</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testRedispatching(event);">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=412567">Mozilla Bug 412567</a>
+<p id="display"></p>
+<div id="content" style="display: none" onload="redispatchinHandler(event)">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 412567 **/
+
+var loadEvent = null;
+
+function redispatchinHandler(evt) {
+  is(evt.type, "load", "Wrong event type!");
+  ok(!evt.isTrusted, "Event should not be trusted!");
+  SimpleTest.finish();
+}
+
+function redispatch() {
+  ok(loadEvent.isTrusted, "Event should be trusted before redispatching!");
+  document.getElementById('content').dispatchEvent(loadEvent);
+}
+
+function testRedispatching(evt) {
+  is(evt.type, "load", "Wrong event type!");
+  ok(evt.isTrusted, "Event should be trusted!");
+  loadEvent = evt;
+  setTimeout(redispatch, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

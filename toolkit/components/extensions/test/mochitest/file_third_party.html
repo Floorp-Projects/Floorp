@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+
+<script>
+
+"use strict"
+
+let url = new URL(location);
+let img = new Image();
+img.src = `http://${url.searchParams.get("domain")}/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png`;
+document.body.appendChild(img);
+
+</script>
+
+</body>
+</html>

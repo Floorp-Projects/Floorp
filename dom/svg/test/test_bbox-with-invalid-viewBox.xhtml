@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=433063
+-->
+<head>
+  <title>Test for getBBox when the viewBox is invalid</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<svg id="svg" xmlns="http://www.w3.org/2000/svg"
+     style="width:200px; height:200px;" viewBox="0 0 200 0">
+  <rect width="120" height="120"/>
+</svg>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var bbox = $("svg").getBBox();
+  is(bbox.x, 0, "Check bbox.x");
+  is(bbox.y, 0, "Check bbox.y");
+  is(bbox.width, 120, "Check bbox.width");
+  is(bbox.height, 120, "Check bbox.height");
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  document.getElementById("c").setAttribute('span', 2);
+  document.getElementById("cg").setAttribute('span', 2);
+}
+</script>
+</head>
+<body onload="boom();">
+<table><colgroup id="cg"><col span="3" id="c" /></colgroup></table>
+</body>
+</html>

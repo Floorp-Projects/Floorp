@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=116083
+-->
+<head>
+  <title>Test for Bug 116083</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=116083">Mozilla Bug 116083</a>
+<div id="content">
+<div style="white-space: pre">foo  bar</div>
+<div style="white-space: pre-wrap">foo  bar</div>
+<div style="white-space: pre-line">foo  bar</div>
+<div style="white-space: -moz-pre-space">foo  bar</div>
+<div style="white-space: pre" data-collapse-selection-to-child-and-extend>foo  bar</div>
+<div style="white-space: pre-wrap" data-collapse-selection-to-child-and-extend>foo  bar</div>
+<div style="white-space: pre-line" data-collapse-selection-to-child-and-extend>foo  bar</div>
+<div style="white-space: -moz-pre-space" data-collapse-selection-to-child-and-extend>foo  bar</div>
+<div data-result="bar  baz"><span style="white-space: pre">bar  </span>baz</div>
+<div data-result="bar  baz"><span style="white-space: pre-wrap">bar  </span>baz</div>
+<div data-result="bar  baz"><span style="white-space: pre-line">bar  </span>baz</div>
+<div data-result="bar  baz"><span style="white-space: -moz-pre-space">bar  </span>baz</div>
+<div data-result="foo  &#10;  bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: pre"><div>foo  </div><div>  bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo &#10; bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: pre" contenteditable><div>foo </div><div> bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo  &#10;  bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: pre-wrap"><div>foo  </div><div>  bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo &#10; bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: pre-wrap" contenteditable><div>foo </div><div> bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo  &#10;  bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: pre-line"><div>foo  </div><div>  bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo &#10; bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: pre-line" contenteditable><div>foo </div><div> bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo  &#10;  bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: -moz-pre-space"><div>foo  </div><div>  bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo &#10; bar&#10;&#10;!&#10;&#10;&#10;baz" style="white-space: -moz-pre-space" contenteditable><div>foo </div><div> bar</div><div><br></div><div>!</div><div><br><br></div><div>baz</div></div>
+<div data-result="foo&#10;bar&#10;baz&#10;qux"><div>foo<br></div><span>bar<br>baz<br>qux</span></div>
+<div data-result="foo&#10;bar&#10;baz&#10;qux" contenteditable><div>foo<br></div><span>bar<br>baz<br>qux</span></div>
+<div data-result="foo&#10;&#10;"><div>foo</div><span><br></span></div>
+<div data-result="foo&#10;&#10;" contenteditable><div>foo</div><span><br></span></div>
+<div data-result="foo&#10;&#10;bar"><div>foo</div><span><br></span><div>bar</div></div>
+<div data-result="foo&#10;&#10;bar" contenteditable><div>foo</div><span><br></span><div>bar</div></div>
+<div data-result="foo&#10;bar&#10;"><div>foo</div><span>bar<br></span></div>
+<div data-result="foo&#10;bar" contenteditable><div>foo</div><span>bar<br></span></div>
+<div data-result="foo&#10;bar&#10;baz"><div>foo</div><span>bar<br></span><div>baz</div></div>
+<div data-result="foo&#10;bar&#10;baz" contenteditable><div>foo</div><span>bar<br></span><div>baz</div></div>
+<div data-result="&#10;&#10;foo"><div><br><br><div>foo</div></div></div>
+<div data-result="&#10;&#10;foo" contenteditable><div><br><br><div>foo</div></div></div>
+<div data-result="foo&#10;bar"><div>foo<br>bar</div></div>
+<div data-result="foo&#10;bar" contenteditable><div>foo<br>bar</div></div>
+<div data-result="foo&#10;bar&#10;"><div>foo<br>bar<br></div></div>
+<div data-result="foo&#10;bar" contenteditable><div>foo<br>bar<br></div></div>
+<div data-result="&#10;foo bar&#10;">foo  bar</div>
+</div>
+<script type="application/javascript">
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+function hasExpectedFlavors() {
+  var cb = Cc["@mozilla.org/widget/clipboard;1"].
+           getService(Ci.nsIClipboard);
+
+  ok(cb.hasDataMatchingFlavors(["text/unicode"], cb.kGlobalClipboard),
+     "The clipboard has text/unicode");
+
+  ok(cb.hasDataMatchingFlavors(["text/html"], cb.kGlobalClipboard),
+     "The clipboard has text/html");
+
+  if (navigator.appVersion.includes("Win")) {
+    ok(cb.hasDataMatchingFlavors(["application/x-moz-nativehtml"], cb.kGlobalClipboard),
+       "The clipboard has application/x-moz-nativehtml");
+  }
+}
+
+function collapseSelectionToChildAndExtend(divElement) {
+  is(divElement.childNodes.length, 1, "Expected exactly one child node.");
+  var textChildNode = divElement.childNodes[0];
+  getSelection().collapse(textChildNode);
+  getSelection().extend(textChildNode, divElement.textContent.length);
+}
+
+function selectDependingOnAttributes(divElement) {
+  if (divElement.hasAttribute("data-collapse-selection-to-child-and-extend")) {
+    // Selecting text as follow comes closest to user behaviour.
+    collapseSelectionToChildAndExtend(divElement);
+  } else {
+    getSelection().selectAllChildren(divElement);
+  }
+}
+
+function nextTest() {
+  var div = document.querySelector("#content>div");
+  if (!div) {
+    SimpleTest.finish();
+    return;
+  }
+
+  selectDependingOnAttributes(div);
+
+  var expected = div.hasAttribute("data-result") ?
+                 div.getAttribute("data-result") :
+                 div.textContent;
+
+  SimpleTest.waitForClipboard(expected, function() {
+    synthesizeKey("C", {accelKey: true});
+  }, function() {
+    ok(true, div.getAttribute("style") + " passed");
+    hasExpectedFlavors();
+    div.remove();
+    nextTest();
+  }, function() {
+    ok(false, "failed to copy the expected content to the clipboard");
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set": [["clipboard.plainTextOnly", false]]}, nextTest);
+});
+
+</script>
+</body>
+</html>

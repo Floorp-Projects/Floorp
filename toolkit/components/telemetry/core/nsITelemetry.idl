@@ -1,0 +1,696 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIFile.idl"
+
+[scriptable,function, uuid(3d3b9075-5549-4244-9c08-b64fefa1dd60)]
+interface nsIFetchTelemetryDataCallback : nsISupports
+{
+  void complete();
+};
+
+[scriptable, uuid(273d2dd0-6c63-475a-b864-cb65160a1909)]
+interface nsITelemetry : nsISupports
+{
+  /**
+   * Histogram types:
+   * HISTOGRAM_EXPONENTIAL - buckets increase exponentially
+   * HISTOGRAM_LINEAR - buckets increase linearly
+   * HISTOGRAM_BOOLEAN - For storing 0/1 values
+   * HISTOGRAM_FLAG - For storing a single value; its count is always == 1.
+   * HISTOGRAM_COUNT - For storing counter values without bucketing.
+   * HISTOGRAM_CATEGORICAL - For storing enumerated values by label.
+   */
+  const unsigned long HISTOGRAM_EXPONENTIAL = 0;
+  const unsigned long HISTOGRAM_LINEAR = 1;
+  const unsigned long HISTOGRAM_BOOLEAN = 2;
+  const unsigned long HISTOGRAM_FLAG = 3;
+  const unsigned long HISTOGRAM_COUNT = 4;
+  const unsigned long HISTOGRAM_CATEGORICAL = 5;
+
+  /**
+   * Scalar types:
+   * SCALAR_TYPE_COUNT - for storing a numeric value
+   * SCALAR_TYPE_STRING - for storing a string value
+   * SCALAR_TYPE_BOOLEAN - for storing a boolean value
+   */
+  const unsigned long SCALAR_TYPE_COUNT = 0;
+  const unsigned long SCALAR_TYPE_STRING = 1;
+  const unsigned long SCALAR_TYPE_BOOLEAN = 2;
+
+  /**
+   * Dataset types:
+   * DATASET_ALL_CHANNELS - the basic dataset that is on-by-default on all channels
+   * DATASET_PRERELEASE_CHANNELS - the extended dataset that is opt-in on release,
+   *                                 opt-out on pre-release channels.
+   */
+  const unsigned long DATASET_ALL_CHANNELS = 0;
+  const unsigned long DATASET_PRERELEASE_CHANNELS = 1;
+
+  /**
+   * Serializes the histogram labels for categorical hitograms.
+   * The returned structure looks like:
+   *   { "histogram1": [ "histogram1_label1", "histogram1_label2", ...],
+   *     "histogram2": [ "histogram2_label1", "histogram2_label2", ...]
+   *     ...
+   *     }
+   *
+   * Note that this function should only be used in tests and about:telemetry.
+   */
+  [implicit_jscontext]
+  jsval getCategoricalLabels();
+
+  /**
+   * Serializes the histograms from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "name1": histogramData1, "name2": histogramData2 }, ... }
+   *
+   * Each histogram is represented in a packed format and has the following properties:
+   *   bucket_count - Number of buckets of this histogram
+   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN,
+   *                    HISTOGRAM_FLAG, HISTOGRAM_COUNT, or HISTOGRAM_CATEGORICAL
+   *   sum - sum of the bucket contents
+   *   range - A 2-item array of minimum and maximum bucket size
+   *   values - Map from bucket to the bucket's count
+   *
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on histograms.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/histograms.html#record-into-store
+   * @param aClearStore Whether to clear out the histograms in the named store after snapshotting.
+   *                    Defaults to false.
+   * @param aFilterTest If true, `TELEMETRY_TEST_` histograms will be filtered out.
+                        Filtered histograms are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForHistograms([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
+
+  /**
+   * Serializes the keyed histograms from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "name1": { "key_1": histogramData1, "key_2": histogramData2 }, ...}, ... }
+   *
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on histograms.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/histograms.html#record-into-store
+   * @param aClearStore Whether to clear out the keyed histograms in the named store after snapshotting.
+   *                    Defaults to false.
+   * @param aFilterTest If true, `TELEMETRY_TEST_` histograms will be filtered out.
+                        Filtered histograms are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForKeyedHistograms([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
+
+  /**
+   * Serializes the scalars from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "category1.probe": 1,"category1.other_probe": false, ... }, ... }.
+   *
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on scalars.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html#optional-fields
+   * @param aClearStore Whether to clear out the scalars in the named store after snapshotting.
+   *                    Defaults to false.
+   * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
+                        Filtered scalars are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForScalars([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
+
+  /**
+   * Serializes the keyed scalars from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
+   *
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on scalars.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html#optional-fields
+   * @param aClearStore Whether to clear out the keyed scalars in the named store after snapshotting.
+   *                    Defaults to false.
+   * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
+                        Filtered scalars are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForKeyedScalars([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
+
+  /**
+   * The amount of time, in milliseconds, that the last session took
+   * to shutdown.  Reads as 0 to indicate failure.
+   */
+  readonly attribute uint32_t lastShutdownDuration;
+
+  /**
+   * The number of failed profile lock attempts that have occurred prior to
+   * successfully locking the profile
+   */
+  readonly attribute uint32_t failedProfileLockCount;
+
+  /*
+   * An object containing information about slow SQL statements.
+   *
+   * {
+   *   mainThread: { "sqlString1": [<hit count>, <total time>], "sqlString2": [...], ... },
+   *   otherThreads: { "sqlString3": [<hit count>, <total time>], "sqlString4": [...], ... }
+   * }
+   *
+   * where:
+   *   mainThread: Slow statements that executed on the main thread
+   *   otherThreads: Slow statements that executed on a non-main thread
+   *   sqlString - String of the offending statement (see note)
+   *   hit count - The number of times this statement required longer than the threshold time to execute
+   *   total time - The sum of all execution times above the threshold time for this statement
+   *
+   * Note that dynamic SQL strings and SQL strings executed against addon DBs could contain private information.
+   * This property represents such SQL as aggregate database-level stats and the sqlString contains the database
+   * filename instead.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval slowSQL;
+
+  /*
+   * See slowSQL above.
+   *
+   * An object containing full strings of every slow SQL statement if toolkit.telemetry.debugSlowSql = true
+   * The returned SQL strings may contain private information and should not be reported to Telemetry.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval debugSlowSQL;
+
+  /**
+   * Flags for getUntrustedModuleLoadEvents.
+   */
+
+  /**
+   * This flag is set to retrieve all data including instances which have been
+   * retrieved before.  If not set, only new instances since the last call
+   * will be returned.
+   * If this flag is set, KEEP_LOADEVENTS_NEW must not be set unless
+   * EXCLUDE_STACKINFO_FROM_LOADEVENTS is set.
+   * (See also MultiGetUntrustedModulesData::Serialize.)
+   */
+  const unsigned long INCLUDE_OLD_LOADEVENTS = 1 << 0;
+
+  /**
+   * This flag is set to keep the returned instances as if they were not
+   * retrieved, meaning those instances will be returned by a next method
+   * call without INCLUDE_OLD_LOADEVENTS.  If not set, the returned instances
+   * can be re-retrieved only when INCLUDE_OLD_LOADEVENTS is specified.
+   * If this flag is set, INCLUDE_OLD_LOADEVENTS must not be set unless
+   * EXCLUDE_STACKINFO_FROM_LOADEVENTS is set.
+   * (See also MultiGetUntrustedModulesData::Serialize.)
+   */
+  const unsigned long KEEP_LOADEVENTS_NEW = 1 << 1;
+
+  /**
+   * This flag is set to include private fields.
+   * Do not specify this flag to retrieve data to be submitted.
+   */
+  const unsigned long INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS = 1 << 2;
+
+  /**
+   * This flag is set to exclude the "combinedStacks" field.
+   * Without this flag, the flags INCLUDE_OLD_LOADEVENTS and KEEP_LOADEVENTS_NEW
+   * cannot be set at the same time.
+   */
+  const unsigned long EXCLUDE_STACKINFO_FROM_LOADEVENTS = 1 << 3;
+
+  /*
+   * An array of untrusted module load events. Each element describes one or
+   * more modules that were loaded, contextual information at the time of the
+   * event (including stack trace), and flags describing the module's
+   * trustworthiness.
+   *
+   * @param aFlags   Combination (bitwise OR) of the flags specified above.
+   *                 Defaults to 0.
+   */
+  [implicit_jscontext]
+  Promise getUntrustedModuleLoadEvents([optional] in unsigned long aFlags);
+
+  /*
+   * Asynchronously get an array of the modules loaded in the process.
+   *
+   * The data has the following structure:
+   *
+   * [
+   *   {
+   *     "name": <string>, // Name of the module file (e.g. xul.dll)
+   *     "version": <string>, // Version of the module
+   *     "debugName": <string>, // ID of the debug information file
+   *     "debugID": <string>, // Name of the debug information file
+   *     "certSubject": <string>, // Name of the organization that signed the binary (Optional, only defined when present)
+   *   },
+   *   ...
+   * ]
+   *
+   * @return A promise that resolves to an array of modules or rejects with
+             NS_ERROR_FAILURE on failure.
+   * @throws NS_ERROR_NOT_IMPLEMENTED if the Gecko profiler is not enabled.
+   */
+  [implicit_jscontext]
+  Promise getLoadedModules();
+
+  /*
+   * An object with two fields: memoryMap and stacks.
+   * * memoryMap is a list of loaded libraries.
+   * * stacks is a list of stacks. Each stack is a list of pairs of the form
+   *   [moduleIndex, offset]. The moduleIndex is an index into the memoryMap and
+   *   offset is an offset in the library at memoryMap[moduleIndex].
+   * This format is used to make it easier to send the stacks to the
+   * symbolication server.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval lateWrites;
+
+  /**
+   * Create and return a histogram registered in TelemetryHistograms.h.
+   *
+   * @param id - unique identifier from TelemetryHistograms.h
+   * The returned object has the following functions:
+   *   add(value) - Adds a sample of `value` to the histogram.
+                    `value` may be a categorical histogram's label as a string,
+                    a boolean histogram's value as a boolean,
+                    or a number that fits inside a uint32_t.
+   *   snapshot([optional] {store}) - Returns a snapshot of the histogram with the same data fields
+                                      as in getSnapshotForHistograms().
+                                      Defaults to the "main" store.
+   *   clear([optional] {store}) - Zeros out the histogram's buckets and sum.
+                                   Defaults to the "main" store.
+                                   Note: This is intended to be only used in tests.
+   */
+  [implicit_jscontext]
+  jsval getHistogramById(in ACString id);
+
+  /**
+   * Create and return a histogram registered in TelemetryHistograms.h.
+   *
+   * @param id - unique identifier from TelemetryHistograms.h
+   * The returned object has the following functions:
+   *   add(string key, [optional] value) - Adds a sample of `value` to the histogram for that key.
+                                         If no histogram for that key exists yet, it is created.
+                                         `value` may be a categorical histogram's label as a string,
+                                         a boolean histogram's value as a boolean,
+                                         or a number that fits inside a uint32_t.
+   *   snapshot([optional] {store}) - Returns the snapshots of all the registered keys in the form
+                                      {key1: snapshot1, key2: snapshot2, ...} in the specified store.
+   *                                  Defaults to the "main" store.
+   *   keys([optional] {store}) - Returns an array with the string keys of the currently registered
+                                  histograms in the given store.
+                                  Defaults to "main".
+   *   clear([optional] {store}) - Clears the registered histograms from this.
+   *                               Defaults to the "main" store.
+   *                               Note: This is intended to be only used in tests.
+   */
+  [implicit_jscontext]
+  jsval getKeyedHistogramById(in ACString id);
+
+  /**
+   * A flag indicating if Telemetry can record base data (FHR data). This is true if the
+   * FHR data reporting service or self-support are enabled.
+   *
+   * In the unlikely event that adding a new base probe is needed, please check the data
+   * collection wiki at https://wiki.mozilla.org/Firefox/Data_Collection and talk to the
+   * Telemetry team.
+   */
+  attribute boolean canRecordBase;
+
+  /**
+   * A flag indicating if Telemetry is allowed to record extended data. Returns false if
+   * the user hasn't opted into "extended Telemetry" on the Release channel, when the
+   * user has explicitly opted out of Telemetry on Nightly/Aurora/Beta or if manually
+   * set to false during tests.
+   *
+   * Set this to false in tests to disable gathering of extended telemetry statistics.
+   */
+  attribute boolean canRecordExtended;
+
+  /**
+   * A flag indicating whether Telemetry is recording release data, which is a
+   * smallish subset of our usage data that we're prepared to handle from our
+   * largish release population.
+   *
+   * This is true most of the time.
+   *
+   * This does not indicate whether Telemetry will send any data. That is
+   * governed by user preference and other mechanisms.
+   *
+   * You may use this to determine if it's okay to record your data.
+   */
+  readonly attribute boolean canRecordReleaseData;
+
+  /**
+   * A flag indicating whether Telemetry is recording prerelease data, which is
+   * a largish amount of usage data that we're prepared to handle from our
+   * smallish pre-release population.
+   *
+   * This is true on pre-release branches of Firefox.
+   *
+   * This does not indicate whether Telemetry will send any data. That is
+   * governed by user preference and other mechanisms.
+   *
+   * You may use this to determine if it's okay to record your data.
+   */
+  readonly attribute boolean canRecordPrereleaseData;
+
+  /**
+   * A flag indicating whether Telemetry can submit official results (for base or extended
+   * data). This is true on official, non-debug builds with built in support for Mozilla
+   * Telemetry reporting.
+   */
+  readonly attribute boolean isOfficialTelemetry;
+
+  /**
+   * Enable/disable recording for this histogram at runtime.
+   * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
+   * Name must be a valid Histogram identifier, otherwise an assertion will be triggered.
+   *
+   * @param id - unique identifier from histograms.json
+   * @param enabled - whether or not to enable recording from now on.
+   */
+  void setHistogramRecordingEnabled(in ACString id, in boolean enabled);
+
+  /**
+   * Read data from the previous run. After the callback is called, the last
+   * shutdown time is available in lastShutdownDuration and any late
+   * writes in lateWrites.
+   */
+  void asyncFetchTelemetryData(in nsIFetchTelemetryDataCallback aCallback);
+
+  /**
+   * Get statistics of file IO reports, null, if not recorded.
+   *
+   * The statistics are returned as an object whose propoerties are the names
+   * of the files that have been accessed and whose corresponding values are
+   * arrays of size three, representing startup, normal, and shutdown stages.
+   * Each stage's entry is either null or an array with the layout
+   * [total_time, #creates, #reads, #writes, #fsyncs, #stats]
+   */
+  [implicit_jscontext]
+  readonly attribute jsval fileIOReports;
+
+  /**
+   * Return the number of milliseconds since process start using monotonic
+   * timestamps (unaffected by system clock changes). On Windows, this includes
+   * the period of time the device was suspended. On Linux and macOS, this does
+   * not include the period of time the device was suspneded.
+   */
+  double msSinceProcessStart();
+
+  /**
+   * Return the number of milliseconds since process start using monotonic
+   * timestamps (unaffected by system clock changes), including the periods of
+   * time the device was suspended.
+   * @throws NS_ERROR_NOT_AVAILABLE if unavailable.
+   */
+  double msSinceProcessStartIncludingSuspend();
+
+  /**
+   * Return the number of milliseconds since process start using monotonic
+   * timestamps (unaffected by system clock changes), excluding the periods of
+   * time the device was suspended.
+   * @throws NS_ERROR_NOT_AVAILABLE if unavailable.
+   */
+  double msSinceProcessStartExcludingSuspend();
+
+  /**
+   * Time since the system wide epoch. This is not a monotonic timer but
+   * can be used across process boundaries.
+   */
+  double msSystemNow();
+
+  /**
+   * Adds the value to the given scalar.
+   *
+   * @param aName The scalar name.
+   * @param aValue The numeric value to add to the scalar. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void scalarAdd(in ACString aName, in jsval aValue);
+
+  /**
+   * Sets the scalar to the given value.
+   *
+   * @param aName The scalar name.
+   * @param aValue The value to set the scalar to. If the type of aValue doesn't match the
+   *        type of the scalar, the function will fail. For scalar string types, the this
+   *        is truncated to 50 characters.
+   */
+  [implicit_jscontext]
+  void scalarSet(in ACString aName, in jsval aValue);
+
+  /**
+   * Sets the scalar to the maximum of the current and the passed value.
+   *
+   * @param aName The scalar name.
+   * @param aValue The numeric value to set the scalar to. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void scalarSetMaximum(in ACString aName, in jsval aValue);
+
+  /**
+   * Adds the value to the given keyed scalar.
+   *
+   * @param aName The scalar name.
+   * @param aKey The key name.
+   * @param aValue The numeric value to add to the scalar. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void keyedScalarAdd(in ACString aName, in AString aKey, in jsval aValue);
+
+  /**
+   * Sets the keyed scalar to the given value.
+   *
+   * @param aName The scalar name.
+   * @param aKey The key name.
+   * @param aValue The value to set the scalar to. If the type of aValue doesn't match the
+   *        type of the scalar, the function will fail.
+   */
+  [implicit_jscontext]
+  void keyedScalarSet(in ACString aName, in AString aKey, in jsval aValue);
+
+  /**
+   * Sets the keyed scalar to the maximum of the current and the passed value.
+   *
+   * @param aName The scalar name.
+   * @param aKey The key name.
+   * @param aValue The numeric value to set the scalar to. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void keyedScalarSetMaximum(in ACString aName, in AString aKey, in jsval aValue);
+
+  /**
+   * Resets all the stored scalars. This is intended to be only used in tests.
+   */
+  void clearScalars();
+
+  /**
+   * Immediately sends any Telemetry batched on this process to the parent
+   * process. This is intended only to be used on process shutdown.
+   */
+  void flushBatchedChildTelemetry();
+
+  /**
+   * Record an event in Telemetry.
+   *
+   * @param aCategory The category name.
+   * @param aMethod The method name.
+   * @param aObject The object name.
+   * @param aValue An optional string value to record.
+   * @param aExtra An optional object of the form (string -> string).
+   *               It should only contain registered extra keys.
+   *
+   * @throws NS_ERROR_INVALID_ARG When trying to record an unknown event.
+   */
+  [implicit_jscontext, optional_argc]
+  void recordEvent(in ACString aCategory, in ACString aMethod, in ACString aObject, [optional] in jsval aValue, [optional] in jsval extra);
+
+  /**
+   * Enable recording of events in a category.
+   * Events default to recording disabled. This allows to toggle recording for all events
+   * in the specified category.
+   *
+   * @param aCategory The category name.
+   * @param aEnabled Whether recording is enabled for events in that category.
+   */
+  void setEventRecordingEnabled(in ACString aCategory, in boolean aEnabled);
+
+  /**
+   * Serializes the recorded events to a JSON-appropriate array and optionally resets them.
+   * The returned structure looks like this:
+   *   [
+   *     // [timestamp, category, method, object, stringValue, extraValues]
+   *     [43245, "category1", "method1", "object1", "string value", null],
+   *     [43258, "category1", "method2", "object1", null, {"key1": "string value"}],
+   *     ...
+   *   ]
+   *
+   * @param aDataset DATASET_ALL_CHANNELS or DATASET_PRERELEASE_CHANNELS.
+   * @param [aClear=false] Whether to clear out the flushed events after snapshotting.
+   * @param aEventLimit How many events per process to limit the snapshot to contain, all if unspecified.
+   *                    Even if aClear, the leftover event records are not cleared.
+   */
+  [implicit_jscontext, optional_argc]
+  jsval snapshotEvents(in uint32_t aDataset, [optional] in boolean aClear, [optional] in uint32_t aEventLimit);
+
+  /**
+   * Register new events to record them from addons. This allows registering multiple
+   * events for a category. They will be valid only for the current Firefox session.
+   * Note that events shipping in Firefox should be registered in Events.yaml.
+   *
+   * @param aCategory The unique category the events are registered in.
+   * @param aEventData An object that contains registration data for 1-N events of the form:
+   *   {
+   *     "categoryName": {
+   *       "methods": ["test1"],
+   *       "objects": ["object1"],
+   *       "record_on_release": false,
+   *       "extra_keys": ["key1", "key2"], // optional
+   *       "expired": false // optional, defaults to false.
+   *     },
+   *     ...
+   *   }
+   * @param aEventData.<name>.methods List of methods for this event entry.
+   * @param aEventData.<name>.objects List of objects for this event entry.
+   * @param aEventData.<name>.extra_keys Optional, list of allowed extra keys for this event entry.
+   * @param aEventData.<name>.record_on_release Optional, whether to record this data on release.
+   *                                            Defaults to false.
+   * @param aEventData.<name>.expired Optional, whether this event entry is expired. This allows
+   *                                  recording it without error, but it will be discarded. Defaults to false.
+   */
+  [implicit_jscontext]
+  void registerEvents(in ACString aCategory, in jsval aEventData);
+
+  /**
+   * Parent process only. Register dynamic builtin events. The parameters
+   * have the same meaning as the usual |registerEvents| function.
+   *
+   * This function is only meant to be used to support the "artifact build"/
+   * "build faster" developers by allowing to add new events without rebuilding
+   * the C++ components including the headers files.
+  */
+  [implicit_jscontext]
+  void registerBuiltinEvents(in ACString aCategory, in jsval aEventData);
+
+  /**
+   * Parent process only. Register new scalars to record them from addons. This
+   * allows registering multiple scalars for a category. They will be valid only for
+   * the current Firefox session.
+   * Note that scalars shipping in Firefox should be registered in Scalars.yaml.
+   *
+   * @param aCategoryName The unique category the scalars are registered in.
+   * @param aScalarData An object that contains registration data for multiple scalars in the form:
+   *   {
+   *     "sample_scalar": {
+   *       "kind": Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+   *       "keyed": true, //optional, defaults to false
+   *       "record_on_release: true, // optional, defaults to false
+   *       "expired": false // optional, defaults to false.
+   *     },
+   *     ...
+   *   }
+   * @param aScalarData.<name>.kind One of the scalar types defined in this file (SCALAR_TYPE_*)
+   * @param aScalarData.<name>.keyed Optional, whether this is a keyed scalar or not. Defaults to false.
+   * @param aScalarData.<name>.record_on_release Optional, whether to record this data on release.
+   *                                             Defaults to false.
+   * @param aScalarData.<name>.expired Optional, whether this scalar entry is expired. This allows
+   *                                   recording it without error, but it will be discarded. Defaults to false.
+   */
+  [implicit_jscontext]
+  void registerScalars(in ACString aCategoryName, in jsval aScalarData);
+
+  /**
+   * Parent process only. Register dynamic builtin scalars. The parameters
+   * have the same meaning as the usual |registerScalars| function.
+   *
+   * This function is only meant to be used to support the "artifact build"/
+   * "build faster" developers by allowing to add new scalars without rebuilding
+   * the C++ components including the headers files.
+   */
+  [implicit_jscontext]
+  void registerBuiltinScalars(in ACString aCategoryName, in jsval aScalarData);
+
+  /**
+   * Resets all the stored events. This is intended to be only used in tests.
+   * Events recorded but not yet flushed to the parent process storage won't be cleared.
+   * Override the pref. `toolkit.telemetry.ipcBatchTimeout` to reduce the time to flush events.
+   */
+  void clearEvents();
+
+  /**
+   * Get a list of all registered stores.
+   *
+   * The list is deduplicated, but unordered.
+   */
+  [implicit_jscontext]
+  jsval getAllStores();
+
+  /**
+   * Does early, cheap initialization for native telemetry data providers.
+   * Currently, this includes only MemoryTelemetry.
+   */
+  void earlyInit();
+
+  /**
+   * Does late, expensive initialization for native telemetry data providers.
+   * Currently, this includes only MemoryTelemetry.
+   *
+   * This should only be called after startup has completed and the event loop
+   * is idle.
+   */
+  void delayedInit();
+
+  /**
+   * Shuts down native telemetry providers. Currently, this includes only
+   * MemoryTelemetry.
+   */
+  void shutdown();
+
+  /**
+   * Gathers telemetry data for memory usage and records it to the data store.
+   * Returns a promise which resolves when asynchronous data collection has
+   * completed and all data has been recorded.
+   */
+  [implicit_jscontext]
+  Promise gatherMemory();
+
+  /**
+   * Serializes the per-origin data in plain text, optionally clearing
+   * the storage. Only to be used by about:telemetry.
+   *
+   * The returned structure looks like:
+   *   { metric: {origin1: count1, origin2: count2, ...}, ...}
+   *
+   * @param aClear Whether to clear the storage. Default false.
+   * @return a snapshot of the per-origin data.
+   */
+  [implicit_jscontext]
+  jsval getOriginSnapshot([optional] in boolean aClear);
+
+  /**
+   * Encodes the per-origin information then serializes it.
+   * Returns a Promise.
+   *
+   * @param aClear Whether to clear the storage. Default false.
+   * @return Promise that resolves to the serialized encoded data.
+   */
+  [implicit_jscontext]
+  Promise getEncodedOriginSnapshot([optional] in boolean aClear);
+
+  /**
+   * Clears Firefox Origin Telemetry. Only to be used in tests.
+   */
+  void clearOrigins();
+};

@@ -1,0 +1,756 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>Table header information cells for HTML table</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // column header from thead and row header from @scope inside of tfoot
+
+      var headerInfoMap = [
+        {
+          cell: "table1_cell_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_weekday", "table1_date" ],
+        },
+        {
+          cell: "table1_cell_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_day", "table1_date" ],
+        },
+        {
+          cell: "table1_cell_3",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_qty" ],
+        },
+        {
+          cell: "table1_cell_4",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_weekday", "table1_date" ],
+        },
+        {
+          cell: "table1_cell_5",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_day", "table1_date" ],
+        },
+        {
+          cell: "table1_cell_6",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table1_qty" ],
+        },
+        {
+          cell: "table1_cell_7",
+          rowHeaderCells: [ "table1_total" ],
+          columnHeaderCells: [ "table1_qty" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // column and row headers from thead and @scope
+
+      headerInfoMap = [
+        {
+          cell: "table2_cell_2",
+          rowHeaderCells: [ "table2_rh_1" ],
+          columnHeaderCells: [ "table2_ch_2" ],
+        },
+        {
+          cell: "table2_cell_3",
+          rowHeaderCells: [ "table2_rh_1" ],
+          columnHeaderCells: [ "table2_ch_3" ],
+        },
+        {
+          cell: "table2_cell_5",
+          rowHeaderCells: [ "table2_rh_2" ],
+          columnHeaderCells: [ "table2_ch_2" ],
+        },
+        {
+          cell: "table2_cell_6",
+          rowHeaderCells: [ "table2_rh_2" ],
+          columnHeaderCells: [ "table2_ch_3" ],
+        },
+        {
+          cell: "table2_rh_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table2_ch_1" ],
+        },
+        {
+          cell: "table2_rh_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table2_ch_1" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // column headers from @headers
+
+      headerInfoMap = [
+        {
+          cell: "table3_cell_1",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table3_ch_1" ],
+        },
+        {
+          cell: "table3_cell_2",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table3_ch_2" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // table consisted of one column
+
+      headerInfoMap = [
+        {
+          cell: "table4_cell",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table4_ch" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // table consisted of one row
+
+      headerInfoMap = [
+        {
+          cell: "table5_cell",
+          rowHeaderCells: [ "table5_rh" ],
+          columnHeaderCells: [ ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // @headers points to table cells
+
+      headerInfoMap = [
+        {
+          cell: "table6_cell",
+          rowHeaderCells: [ "table6_rh" ],
+          columnHeaderCells: [ "table6_ch" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // @scope="rowgroup" and @scope="row"
+
+      headerInfoMap = [
+        {
+          cell: "t7_r1c1",
+          rowHeaderCells: [ "t7_Mary", "t7_Females" ],
+          columnHeaderCells: [ "t7_1km" ],
+        },
+        {
+          cell: "t7_r1c2",
+          rowHeaderCells: [ "t7_Mary", "t7_Females" ],
+          columnHeaderCells: [ "t7_5km" ],
+        },
+        {
+          cell: "t7_r1c3",
+          rowHeaderCells: [ "t7_Mary", "t7_Females" ],
+          columnHeaderCells: [ "t7_10km" ],
+        },
+        {
+          cell: "t7_r2c1",
+          rowHeaderCells: [ "t7_Betsy", "t7_Females" ],
+          columnHeaderCells: [ "t7_1km" ],
+        },
+        {
+          cell: "t7_r2c2",
+          rowHeaderCells: [ "t7_Betsy", "t7_Females" ],
+          columnHeaderCells: [ "t7_5km" ],
+        },
+        {
+          cell: "t7_r2c3",
+          rowHeaderCells: [ "t7_Betsy", "t7_Females" ],
+          columnHeaderCells: [ "t7_10km" ],
+        },
+        {
+          cell: "t7_r3c1",
+          rowHeaderCells: [ "t7_Matt", "t7_Males" ],
+          columnHeaderCells: [ "t7_1km" ],
+        },
+        {
+          cell: "t7_r3c2",
+          rowHeaderCells: [ "t7_Matt", "t7_Males" ],
+          columnHeaderCells: [ "t7_5km" ],
+        },
+        {
+          cell: "t7_r3c3",
+          rowHeaderCells: [ "t7_Matt", "t7_Males" ],
+          columnHeaderCells: [ "t7_10km" ],
+        },
+        {
+          cell: "t7_r4c1",
+          rowHeaderCells: [ "t7_Todd", "t7_Males" ],
+          columnHeaderCells: [ "t7_1km" ],
+        },
+        {
+          cell: "t7_r4c2",
+          rowHeaderCells: [ "t7_Todd", "t7_Males" ],
+          columnHeaderCells: [ "t7_5km" ],
+        },
+        {
+          cell: "t7_r4c3",
+          rowHeaderCells: [ "t7_Todd", "t7_Males" ],
+          columnHeaderCells: [ "t7_10km" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // @scope="colgroup" and @scope="col"
+
+      headerInfoMap = [
+        {
+          cell: "t8_r1c1",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t8_Mary", "t8_Females" ],
+        },
+        {
+          cell: "t8_r1c2",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t8_Betsy", "t8_Females" ],
+        },
+        {
+          cell: "t8_r1c3",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t8_Matt", "t8_Males" ],
+        },
+        {
+          cell: "t8_r1c4",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t8_Todd", "t8_Males" ],
+        },
+        {
+          cell: "t8_r2c1",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Mary", "t8_Females" ],
+        },
+        {
+          cell: "t8_r2c2",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Betsy", "t8_Females" ],
+        },
+        {
+          cell: "t8_r2c3",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Matt", "t8_Males" ],
+        },
+        {
+          cell: "t8_r2c4",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Todd", "t8_Males" ],
+        },
+        {
+          cell: "t8_r3c1",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Mary", "t8_Females" ],
+        },
+        {
+          cell: "t8_r3c2",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Betsy", "t8_Females" ],
+        },
+        {
+          cell: "t8_r3c3",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Matt", "t8_Males" ],
+        },
+        {
+          cell: "t8_r3c4",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Todd", "t8_Males" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // spanned table header cells (v1), @headers define header order
+
+      headerInfoMap = [
+        {
+          cell: "t9_r1c1",
+          rowHeaderCells: [ "t9_females", "t9_mary" ],
+          columnHeaderCells: [ "t9_1km" ],
+        },
+        {
+          cell: "t9_r1c2",
+          rowHeaderCells: [ "t9_females", "t9_mary" ],
+          columnHeaderCells: [ "t9_5km" ],
+        },
+        {
+          cell: "t9_r1c3",
+          rowHeaderCells: [ "t9_females", "t9_mary" ],
+          columnHeaderCells: [ "t9_10km" ],
+        },
+        {
+          cell: "t9_r2c1",
+          rowHeaderCells: [ "t9_females", "t9_betsy" ],
+          columnHeaderCells: [ "t9_1km" ],
+        },
+        {
+          cell: "t9_r2c2",
+          rowHeaderCells: [ "t9_females", "t9_betsy" ],
+          columnHeaderCells: [ "t9_5km" ],
+        },
+        {
+          cell: "t9_r2c3",
+          rowHeaderCells: [ "t9_females", "t9_betsy" ],
+          columnHeaderCells: [ "t9_10km" ],
+        },
+        {
+          cell: "t9_r3c1",
+          rowHeaderCells: [ "t9_males", "t9_matt" ],
+          columnHeaderCells: [ "t9_1km" ],
+        },
+        {
+          cell: "t9_r3c2",
+          rowHeaderCells: [ "t9_males", "t9_matt" ],
+          columnHeaderCells: [ "t9_5km" ],
+        },
+        {
+          cell: "t9_r3c3",
+          rowHeaderCells: [ "t9_males", "t9_matt" ],
+          columnHeaderCells: [ "t9_10km" ],
+        },
+        {
+          cell: "t9_r4c1",
+          rowHeaderCells: [ "t9_males", "t9_todd" ],
+          columnHeaderCells: [ "t9_1km" ],
+        },
+        {
+          cell: "t9_r4c2",
+          rowHeaderCells: [ "t9_males", "t9_todd" ],
+          columnHeaderCells: [ "t9_5km" ],
+        },
+        {
+          cell: "t9_r4c3",
+          rowHeaderCells: [ "t9_males", "t9_todd" ],
+          columnHeaderCells: [ "t9_10km" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // spanned table header cells (v2), @headers define header order
+
+      headerInfoMap = [
+        {
+          cell: "t10_r1c1",
+          rowHeaderCells: [ "t10_1km" ],
+          columnHeaderCells: [ "t10_females", "t10_mary" ],
+        },
+        {
+          cell: "t10_r1c2",
+          rowHeaderCells: [ "t10_1km" ],
+          columnHeaderCells: [ "t10_females", "t10_betsy" ],
+        },
+        {
+          cell: "t10_r1c3",
+          rowHeaderCells: [ "t10_1km" ],
+          columnHeaderCells: [ "t10_males", "t10_matt" ],
+        },
+        {
+          cell: "t10_r1c4",
+          rowHeaderCells: [ "t10_1km" ],
+          columnHeaderCells: [ "t10_males", "t10_todd" ],
+        },
+        {
+          cell: "t10_r2c1",
+          rowHeaderCells: [ "t10_5km" ],
+          columnHeaderCells: [ "t10_females", "t10_mary" ],
+        },
+        {
+          cell: "t10_r2c2",
+          rowHeaderCells: [ "t10_5km" ],
+          columnHeaderCells: [ "t10_females", "t10_betsy" ],
+        },
+        {
+          cell: "t10_r2c3",
+          rowHeaderCells: [ "t10_5km" ],
+          columnHeaderCells: [ "t10_males", "t10_matt" ],
+        },
+        {
+          cell: "t10_r2c4",
+          rowHeaderCells: [ "t10_5km" ],
+          columnHeaderCells: [ "t10_males", "t10_todd" ],
+        },
+        {
+          cell: "t10_r3c1",
+          rowHeaderCells: [ "t10_10km" ],
+          columnHeaderCells: [ "t10_females", "t10_mary" ],
+        },
+        {
+          cell: "t10_r3c2",
+          rowHeaderCells: [ "t10_10km" ],
+          columnHeaderCells: [ "t10_females", "t10_betsy" ],
+        },
+        {
+          cell: "t10_r3c3",
+          rowHeaderCells: [ "t10_10km" ],
+          columnHeaderCells: [ "t10_males", "t10_matt" ],
+        },
+        {
+          cell: "t10_r3c4",
+          rowHeaderCells: [ "t10_10km" ],
+          columnHeaderCells: [ "t10_males", "t10_todd" ],
+        },
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Ensure correct column headers after colspan in a previous row.
+      headerInfoMap = [
+        {
+          cell: "t11r1c1",
+          columnHeaderCells: [],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r1c2",
+          columnHeaderCells: [],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r2c1_2",
+          columnHeaderCells: ["t11r1c1"],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r3c1",
+          columnHeaderCells: ["t11r1c1"],
+          rowHeaderCells: [],
+        },
+        {
+          cell: "t11r3c2",
+          columnHeaderCells: ["t11r1c2"],
+          rowHeaderCells: [],
+        },
+      ];
+      testHeaderCells(headerInfoMap);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     title="implement IAccessibleTable2"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">
+    Bug 512424
+  </a>
+  <a target="_blank"
+     title="Table headers not associated when header is a td element with no scope"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=704465">
+    Bug 704465
+  </a>
+  <a target="_blank"
+     title="Support rowgroup and colgroup HTML scope"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1141978">
+    Bug 1141978
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table id="table1" border="1">
+    <thead>
+      <tr>
+        <th id="table1_date" colspan="2">Date</th>
+        <th id="table1_qty" rowspan="2">Qty</th>
+      </tr>
+      <tr>
+        <th id="table1_weekday">Weekday</th>
+        <th id="table1_day">Day</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="table1_cell_1">Mon</td>
+        <td id="table1_cell_2">1</td>
+        <td id="table1_cell_3">20</td>
+      </tr>
+      <tr>
+        <td id="table1_cell_4">Thu</td>
+        <td id="table1_cell_5">2</td>
+        <td id="table1_cell_6">15</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th id="table1_total" scope="row" colspan="2">Total</th>
+        <td id="table1_cell_7">35</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <table id="table2" border="1">
+    <thead>
+      <tr>
+        <th id="table2_ch_1">col1</th>
+        <th id="table2_ch_2">col2</th>
+        <td id="table2_ch_3" scope="col">col3</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="table2_rh_1">row1</th>
+        <td id="table2_cell_2">cell1</td>
+        <td id="table2_cell_3">cell2</td>
+      </tr>
+      <tr>
+        <td id="table2_rh_2" scope="row">row2</td>
+        <td id="table2_cell_5">cell3</td>
+        <td id="table2_cell_6">cell4</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table3" border="1">
+    <tr>
+      <td id="table3_cell_1" headers="table3_ch_1">cell1</td>
+      <td id="table3_cell_2" headers="table3_ch_2">cell2</td>
+    </tr>
+    <tr>
+      <td id="table3_ch_1" scope="col">col1</td>
+      <td id="table3_ch_2" scope="col">col2</td>
+    </tr>
+  </table>
+
+  <table id="table4">
+    <thead>
+      <tr>
+        <th id="table4_ch">colheader</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="table4_cell">bla</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table5">
+    <tr>
+      <th id="table5_rh">rowheader</th>
+      <td id="table5_cell">cell</td>
+    </tr>
+  </table>
+
+  <table id="table6">
+    <tr>
+      <td>empty cell</th>
+      <td id="table6_ch">colheader</td>
+    </tr>
+    <tr>
+      <td id="table6_rh">rowheader</th>
+      <td id="table6_cell" headers="table6_ch table6_rh">cell</td>
+    </tr>
+  </table>
+
+  <table id="table7" class="data complex" border="1">
+    <caption>Version 1 with rowgroup</caption>
+    <thead>
+    <tr>
+      <td colspan="2">&nbsp;</td>
+      <th id="t7_1km" scope="col">1 km</th>
+      <th id="t7_5km" scope="col">5 km</th>
+      <th id="t7_10km" scope="col">10 km</th>
+    </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="t7_Females" rowspan="2" scope="rowgroup">Females</th>
+        <th id="t7_Mary" scope="row">Mary</th>
+        <td id="t7_r1c1">8:32</td>
+        <td id="t7_r1c2">28:04</td>
+        <td id="t7_r1c3">1:01:16</td>
+      </tr>
+      <tr>
+        <th id="t7_Betsy" scope="row">Betsy</th>
+        <td id="t7_r2c1">7:43</td>
+        <td id="t7_r2c2">26:47</td>
+        <td id="t7_r2c3">55:38</td>
+      </tr>
+      <tr>
+        <th id="t7_Males" rowspan="2" scope="rowgroup">Males</th>
+        <th id="t7_Matt" scope="row">Matt</th>
+        <td id="t7_r3c1">7:55</td>
+        <td id="t7_r3c2">27:29</td>
+        <td id="t7_r3c3">57:04</td>
+      </tr>
+      <tr>
+        <th id="t7_Todd" scope="row">Todd</th>
+        <td id="t7_r4c1">7:01</td>
+        <td id="t7_r4c2">24:21</td>
+        <td id="t7_r4c3">50:35</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table8" class="data complex" border="1">
+    <caption>Version 2 with colgroup</caption>
+    <thead>
+      <tr>
+        <td rowspan="2">&nbsp;</td>
+        <th id="t8_Females" colspan="2" scope="colgroup">Females</th>
+        <th id="t8_Males" colspan="2" scope="colgroup">Males</th>
+      </tr>
+      <tr>
+        <th id="t8_Mary" scope="col">Mary</th>
+        <th id="t8_Betsy" scope="col">Betsy</th>
+        <th id="t8_Matt" scope="col">Matt</th>
+        <th id="t8_Todd" scope="col">Todd</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="t8_1km" scope="row">1 km</th>
+        <td id="t8_r1c1">8:32</td>
+        <td id="t8_r1c2">7:43</td>
+        <td id="t8_r1c3">7:55</td>
+        <td id="t8_r1c4">7:01</td>
+      </tr>
+      <tr>
+        <th id="t8_5km" scope="row">5 km</th>
+        <td id="t8_r2c1">28:04</td>
+        <td id="t8_r2c2">26:47</td>
+        <td id="t8_r2c3">27:27</td>
+        <td id="t8_r2c4">24:21</td>
+      </tr>
+      <tr>
+        <th id="t8_10km" scope="row">10 km</th>
+        <td id="t8_r3c1">1:01:16</td>
+        <td id="t8_r3c2">55:38</td>
+        <td id="t8_r3c3">57:04</td>
+        <td id="t8_r3c4">50:35</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <table id="table9" border="1">
+    <caption>
+      Example 1 (row group headers):
+    </caption>
+    <tr>
+      <td colspan="2"><span class="offscreen">empty</span></td>
+      <th id="t9_1km" width="40">1 km</th>
+      <th id="t9_5km" width="35">5 km</th>
+      <th id="t9_10km" width="42">10 km</th>
+    </tr>
+    <tr>
+      <th id="t9_females" width="56" rowspan="2">Females</th>
+      <th id="t9_mary" width="39">Mary</th>
+      <td id="t9_r1c1" headers="t9_females t9_mary t9_1km">8:32</td>
+      <td id="t9_r1c2" headers="t9_females t9_mary t9_5km">28:04</td>
+      <td id="t9_r1c3" headers="t9_females t9_mary t9_10km">1:01:16</td>
+    </tr>
+    <tr>
+      <th id="t9_betsy">Betsy</th>
+      <td id="t9_r2c1" headers="t9_females t9_betsy t9_1km">7:43</td>
+      <td id="t9_r2c2" headers="t9_females t9_betsy t9_5km">26:47</td>
+      <td id="t9_r2c3" headers="t9_females t9_betsy t9_10km">55:38</td>
+    </tr>
+    <tr>
+      <th id="t9_males" rowspan="2">Males</th>
+      <th id="t9_matt">Matt</th>
+      <td id="t9_r3c1" headers="t9_males t9_matt t9_1km">7:55</td>
+      <td id="t9_r3c2" headers="t9_males t9_matt t9_5km">27:29</td>
+      <td id="t9_r3c3" headers="t9_males t9_matt t9_10km">57:04</td>
+    </tr>
+    <tr>
+      <th id="t9_todd">Todd</th>
+      <td id="t9_r4c1" headers="t9_males t9_todd t9_1km">7:01</td>
+      <td id="t9_r4c2" headers="t9_males t9_todd t9_5km">24:21</td>
+      <td id="t9_r4c3" headers="t9_males t9_todd t9_10km">50:35</td>
+    </tr>
+  </table>
+
+  <table id="table10" border="1">
+    <caption>
+      Example 2 (column group headers):
+    </caption>
+    <tr>
+      <td rowspan="2"><span class="offscreen">empty</span></td>
+      <th colspan="2" id="t10_females">Females</th>
+      <th colspan="2" id="t10_males">Males</th>
+    </tr>
+    <tr>
+      <th width="40" id="t10_mary">Mary</th>
+      <th width="35" id="t10_betsy">Betsy</th>
+      <th width="42" id="t10_matt">Matt</th>
+      <th width="42" id="t10_todd">Todd</th>
+    </tr>
+    <tr>
+      <th width="39" id="t10_1km">1 km</th>
+      <td headers="t10_females t10_mary t10_1km" id="t10_r1c1">8:32</td>
+      <td headers="t10_females t10_betsy t10_1km" id="t10_r1c2">7:43</td>
+      <td headers="t10_males t10_matt t10_1km" id="t10_r1c3">7:55</td>
+      <td headers="t10_males t10_todd t10_1km" id="t10_r1c4">7:01</td>
+    </tr>
+    <tr>
+      <th id="t10_5km">5 km</th>
+      <td headers="t10_females t10_mary t10_5km" id="t10_r2c1">28:04</td>
+      <td headers="t10_females t10_betsy t10_5km" id="t10_r2c2">26:47</td>
+      <td headers="t10_males t10_matt t10_5km" id="t10_r2c3">27:29</td>
+      <td headers="t10_males t10_todd t10_5km" id="t10_r2c4">24:21</td>
+    </tr>
+    <tr>
+      <th id="t10_10km">10 km</th>
+      <td headers="t10_females t10_mary t10_10km" id="t10_r3c1">1:01:16</td>
+      <td headers="t10_females t10_betsy t10_10km" id="t10_r3c2">55:38</td>
+      <td headers="t10_males t10_matt t10_10km" id="t10_r3c3">57:04</td>
+      <td headers="t10_males t10_todd t10_10km" id="t10_r3c4">50:35</td>
+    </tr>
+  </table>
+
+  <table id="table11">
+    <tr>
+      <th id="t11r1c1">a</th>
+      <th id="t11r1c2">b</th>
+    </tr>
+    <tr>
+      <td id="t11r2c1_2" colspan="2"></td>
+    </tr>
+    <tr>
+      <td id="t11r3c1">e</td>
+      <td id="t11r3c2">f</td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<body>
+<script type="application/javascript">
+  'use strict';
+  // -sp-context: content
+  (function () {
+    class UiComponentTest extends HTMLDivElement {
+      constructor() {
+        super();
+        this.template = `<style></style>`;
+      }
+
+      connectedCallback() {
+        let shadow = this.attachShadow({ mode: "open" });
+        if (this.template) {
+          let te = document.createElement('template');
+          te.innerHTML = this.template;
+          shadow.appendChild(document.importNode(te.content, true));
+        }
+      }
+    };
+
+    customElements.define('ui-component-test', UiComponentTest, { extend: 'div'} );
+
+    let uic = new UiComponentTest();
+    document.body.appendChild(uic);
+  })();
+</script>
+</body>

@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Scrolling a scrollinfo layer and making sure it doesn't checkerboard</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+<style>
+    #withfilter {
+        filter: url(#menushadow);
+    }
+
+    #scroller {
+        width: 300px;
+        height: 1038px;
+        overflow: scroll;
+    }
+
+    .spacer {
+        height: 1878px;
+        background-image: linear-gradient(red, blue);
+    }
+</style>
+</head>
+<body>
+ <div id="withfilter">
+  <div id="scroller">
+   <div class="spacer"></div>
+  </div>
+ </div>
+<!-- the SVG below copied directly from the Gecko Profiler code that
+     demonstrated the original bug. It basically generates a bit of a "drop
+     shadow" effect on the div it's applied to. Original SVG can be found at
+     https://github.com/firefox-devtools/profiler/blame/624f71bce5469cf4f8b2be720e929ba69fa6bfdc/res/img/svg/shadowfilter.svg -->
+ <svg xmlns="http://www.w3.org/2000/svg">
+   <defs>
+     <filter id="menushadow" color-interpolation-filters="sRGB" x="-10" y="-10" width="30" height="30">
+       <feComponentTransfer in="SourceAlpha">
+         <feFuncA type="linear" slope="0.3"/>
+       </feComponentTransfer>
+       <feGaussianBlur stdDeviation="5"/>
+       <feOffset dy="10" result="shadow"/>
+       <feComponentTransfer in="SourceAlpha">
+         <feFuncA type="linear" slope="0.1"/>
+       </feComponentTransfer>
+       <feMorphology operator="dilate" radius="0.5" result="rim"/>
+       <feMerge><feMergeNode in="shadow"/><feMergeNode in="rim"/></feMerge>
+       <feComposite operator="arithmetic" in2="SourceAlpha" k2="1" k3="-0.1"/>
+       <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+     </filter>
+   </defs>
+ </svg>
+</body>
+<script type="application/javascript">
+async function test() {
+  var scroller = document.querySelector("#scroller");
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var scrollerId = utils.getViewId(scroller);
+
+  // Scroll to the bottom of the page, so that the bottom of #scroller is
+  // visible; that's where the checkerboarding happens.
+  document.scrollingElement.scrollTop = document.scrollingElement.scrollTopMax;
+
+  // After the first call to promiseApzFlushedRepaints, the scroller will have
+  // zero displayport margins (because it's inside an SVG filter, and so takes
+  // the "scroll info layer" codepath in APZ's CalculatePendingDisplayPort
+  // function. The main-thread then computes a displayport using those zero
+  // margins and alignment heuristics. If those heuristics are buggy, then the
+  // scroller may end up checkerboarding. That's what we check for on each
+  // scroll increment.
+
+  // The scroll values here just need to be "thorough" enough to exercise the
+  // code at different alignments, so using a non-power-of-two or prime number
+  // for the increment seems like a good idea. The smaller the increment, the
+  // longer the test takes to run (because more iterations) so we don't want it
+  // too small either.
+  for (var y = 3; y <= scroller.scrollTopMax; y += 17) {
+    dump(`Scrolling scroller to ${y}\n`);
+    scroller.scrollTo(0, y);
+    await promiseApzFlushedRepaints();
+    assertNotCheckerboarded(utils, scrollerId, `At y=${y}`);
+  }
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

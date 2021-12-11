@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+<?xml-stylesheet href="classic.css" type="text/css"?>
+<?xml-stylesheet href="list.css" type="text/css"?>
+
+<!DOCTYPE SearchResult>
+
+<SearchResult xmlns:html="http://www.w3.org/1999/xhtml"
+              xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<Header>
+  <Toolbar>
+    <html:form>
+      <Label>Sort by:</Label>
+      <html:input type="button" id="Author" onclick="sort(books,this.id)" value="Author"/>
+      <html:input type="button" id="Title" onclick="sort(books,this.id)" value="Title"/>
+      <html:input type="button" id="ISBN" onclick="sort(books,this.id)" value="ISBN #"/>
+      <html:input type="button" id="toggle" value="Toggle Style" onclick="initiateToggle(); return false;"/>
+    </html:form>
+  </Toolbar>
+
+  <SearchTitle>Amazon.com Search Results for: the keywords include "Road"</SearchTitle>
+</Header>
+
+<BookSet>
+
+  <Book>
+    <BookCover><html:img src="kerouac.gif" width="100" height="140"/></BookCover>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140042598/002-5969498-2733628">On the Road</Title>
+    <Author>Kerouac, Jack</Author>
+    <ISBN>0140042598</ISBN>
+    <Synopsis>
+On The Road, the most famous of Jack Kerouac's works, is not only the soul of the Beat movement and literature, but one of the most important novels of the century. Like nearly all of Kerouac's writing, On The Road is thinly fictionalized autobiography, filled with a cast made of Kerouac's real life friends, lovers, and fellow travelers. Narrated by Sal Paradise, one of Kerouac's alter-egos, On the Road is a cross-country bohemian odyssey that not only influenced writing in the years since its 1957 publication but penetrated into the deepest levels of American thought and culture. 
+    </Synopsis>
+    <ListPrice>$12.95</ListPrice>
+    <Price>$10.36</Price>
+  </Book>
+
+  <Book>
+    <BookCover><html:img src="bill.gif" width="100" height="140" /></BookCover>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140260404/002-5969498-2733628">The Road Ahead</Title>
+    <Author>Gates, Bill</Author>
+    <ISBN>666666666</ISBN>
+    <Synopsis>
+In a study, the founder of Microsoft presents his vision for the future in which he sees the digital technologies of the coming years changing the way we buy, work, learn, and communicate. But he doesn't mention XML!
+    </Synopsis>
+    <ListPrice>$15.95</ListPrice>
+    <Price>$12.76</Price>
+  </Book>
+
+  <Book>
+    <BookCover><html:img src="welville.gif" width="100" height="140" /></BookCover>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140167188/002-5969498-2733628">The Road to Wellville</Title>
+    <Author>Boyle, T. Coraghessan</Author>
+    <ISBN>0140167188</ISBN>
+    <Synopsis>
+A snobbish wife and her henpecked husband travel to Dr. Kellogg's spa in turn-of-the-century Battle Creek, where the youth-crazed affluent succumb to quackery. By the author of East is East.
+    </Synopsis>
+    <ListPrice>$12.95</ListPrice>
+    <Price>$10.36</Price>
+  </Book>
+
+  <Book>
+    <BookCover><html:img src="road.gif" width="100" height="140" /></BookCover>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/1562512625/002-5969498-2733628">AAA Road Atlas 1999</Title>
+    <Author>A. A. A.</Author>
+    <ISBN>1562512625</ISBN>
+    <Synopsis>
+The definitive road atlas to the United States, Canada and Mexico.
+    </Synopsis>
+    <ListPrice>$9.95</ListPrice>
+    <Price>$9.95</Price>
+  </Book>
+
+  <Book>
+    <BookCover><html:img src="bethlehem.gif" width="100" height="140" /></BookCover>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0449219143/002-5969498-2733628">Bethlehem Road</Title>
+    <Author>Perry, Anne</Author>
+    <ISBN>0449219143</ISBN>
+    <Synopsis>
+He might be elegant, but there's no mistaking it--the gentleman tied to the lamppost on Westminster Bridge is definitely dead. Before Inspector Thomas Pitt can even speculate on why anyone should want to kill the eminent M.P., Sir Lockwood, a colleague of his, meets the same fate at the same spot. The public is outraged, and clever Charlotte Pitt, Thomas's well-born wife, helps her hard-pressed husband by scouting society's drawing rooms for clues to these appalling crimes. Meanwhile, another victim is being stalked....
+    </Synopsis>
+    <ListPrice>$6.99</ListPrice>
+    <Price>$5.59</Price>
+  </Book>
+
+  <Book>
+    <BookCover><html:img src="charing.gif" width="100" height="140" /></BookCover>
+    <Title xlink:type="simple" xlink:show="replace" xlink:href="http://www.amazon.com/exec/obidos/ASIN/0140143505/002-5969498-2733628">84 Charing Cross Road</Title>
+    <Author>Hanff, Helene</Author>
+    <ISBN>0140143505</ISBN>
+    <Synopsis>
+84, Charing Cross Road is a charming record of bibliophilia, cultural difference, and imaginative sympathy. For 20 years, an outspoken New York writer and a rather more restrained London bookseller carried on an increasingly touching correspondence... 
+    </Synopsis>
+    <ListPrice>$9.95</ListPrice>
+    <Price>$7.96</Price>
+  </Book>
+
+</BookSet>
+
+<html:script src="books.js" />
+
+</SearchResult>

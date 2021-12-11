@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Grid container baselines, nested flex/grid/table</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151204">
+  <link rel="stylesheet" type="text/css" href="support/ahem.css">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font:16px/1 Ahem; padding:0; margin:0;
+}
+
+.ib {
+  display: inline-table;
+  height: 163px;
+  width: 120px;
+  border: 1px solid;
+  margin: 1px;
+}
+.ib2 {
+  display: inline-flex;
+  border: 1px solid;
+  margin: 1px;
+}
+
+span { display: inline-table; }
+.a {
+  border: 3px solid black;
+  background:lime;
+}
+
+span:nth-of-type(1) { font-size:32px; }
+span:nth-of-type(2) { font-size:36px; }
+span:nth-of-type(3) { font-size:48px; }
+span:nth-of-type(4) { font-size:24px; }
+span.i { font-size:12px; grid-column:2; }
+.f { display:inline-flex; }
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; text-orientation: sideways; }
+.vr { writing-mode: vertical-rl; text-orientation: sideways; }
+.vlr { writing-mode: vertical-lr; direction:rtl; text-orientation: sideways; }
+.vrl { writing-mode: vertical-rl; direction:ltr; text-orientation: sideways; }
+
+.igrid {
+  display: inline-grid;
+  grid: 13px repeat(3,50px) / 60px 60px;
+  border: 1px solid;
+  margin: 1px;
+}
+/* don't clamp grid item automatic minimum size */
+* {
+  min-width: 0;
+  min-height: 0;
+}
+.slb { align-self:last baseline; align-content:self-end; }
+
+</style>
+</head>
+<body>
+
+A<div class="ib">
+  <div class="ib" style="height:120px; width:56px;"><span
+     class="a f" style="width:30px; padding-bottom:5px;">A<br>B</span>
+  </div><span class="i a f" style="width:54px">C<br>D</span>
+</div></div>
+
+<div class="ib" style="width:180px;">
+  <div class="ib" style="height:120px; width:56px;"><span
+     class="a f" style="width:30px; padding-top:5px; margin-top:7px">A<br>B</span>
+  </div><span class="i a f" style="width:54px">C<br>D</span><span
+     class="a f" style="width:54px; padding-top:20px">E<br>F</span>
+</div>
+
+<div class="ib" style="width:180px;">
+  <div class="ib" style="height:120px; width:56px;"><span
+     class="a f" style="width:30px; margin-top:7px; padding-top:5px; padding-bottom:18px;">A<br>B</span>
+  </div><span class="i a f" style="width:54px">C<br>D</span><span
+     class="a f" style="width:54px; padding-top:20px">E<br>F</span>
+</div>
+
+
+<div class="ib" style="width:200px;">
+  <div class="ib" style="height:120px; width:76px; white-space:nowrap"><span
+     class="a f" style="width:30px; margin-top:7px; padding-top:5px; padding-bottom:18px;">A<br>B</span><span
+     class="a f" style="float:right; width:30px; position:relative; left:-4px; padding-bottom:22px;">A<br>B</span>
+  </div><span class="i a f" style="width:54px">C<br>D</span><span
+     class="a f" style="width:54px; padding-top:20px;">E<br>F</span>
+</div>
+
+<br>
+
+<x style="position:relative; top:-64px">A</x><div class="ib" style="width:200px;margin-top:32px">
+  <div class="ib vl" style="height:70px; width:196px;">
+    <span class="a" style="display:block; padding-block-end:15px; height:1px">A<br>B</span>
+  </div>
+</div><div class="ib" style="width:200px">
+  <div class="ib vl" style="height:70px; width:196px;">
+    <span class="a" style="display:block; padding-block-end:15px; width:148px; height:1px">A<br>B</span>
+  </div>
+</div><div class="ib" style="width:200px;position:relative; top:-31px">
+  <div class="ib vl" style="height:70px; width:196px;">
+    <span class="a" style="display:block; height:min-content; padding-block-end:15px; width:148px; height:min-content">A<br>B</span>
+  </div>
+</div>
+
+<br>
+
+A<div class="igrid slb">
+  <div class="igrid slb" style="grid: 7px 13px 100px / 36px 3px; grid-row: span 4;">
+    <n></n>
+    <n style="grid-row:2"></n>
+    <span class="slb a" style="margin-bottom:7px; padding-bottom:5px; grid-row:3; display:inline-block">A<br>B</span>
+  </div>
+  <span class="slb i a" style="grid-row:4; display:inline-block">C<br>D</span>
+  <n></n>
+</div>
+
+</body>
+</html>

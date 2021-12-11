@@ -1,0 +1,20 @@
+<style>
+#x {
+  -webkit-user-select: none;
+  word-break: break-word;
+  width: 0vh;
+  -webkit-perspective: 89px;
+  display: flex;
+  height: 1ch;
+}
+</style>
+<script>
+window.onload = () => {
+  document.execCommand("selectAll", false)
+  document.execCommand("selectAll", false)
+  document.execCommand("backColor", false, "r")
+  document.execCommand("superscript", false)
+}
+</script>
+<dl style="columns:1px">
+<dt id="x" contenteditable>aaa</dt>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=862380
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 862380</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 862380 **/
+  SimpleTest.waitForExplicitFinish();
+  function go() {
+    checkNotEnumerable($('ifr').contentWindow, true);
+    checkNotEnumerable($('ifr').contentWindow.location, false);
+    SimpleTest.finish();
+  }
+
+function checkNotEnumerable(obj, isWindow) {
+    try {
+      const expectedWindow = ["0"];
+      const expectedLocation = [];
+      const expected = isWindow ? expectedWindow : expectedLocation;
+      is(Object.keys(obj).length, expected.length,
+         "Object.keys gives right array length");
+      var actual = [];
+      for (var i in obj)
+        actual.push(i);
+      is(actual.length, expected.length,
+         "Enumeration sees the right number of props");
+      actual.sort();
+      expected.sort();
+      for (var i = 0; i < actual.length; ++i)
+        is(actual[i], expected[i], "Arrays should be the same " + i);
+    } catch (e) {
+      ok(false, "threw: " + e);
+    }
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=862380">Mozilla Bug 862380</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<iframe id="ifr" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>

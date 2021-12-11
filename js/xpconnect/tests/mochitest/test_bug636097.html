@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=504877
+test by moz_bug_r_a4@yahoo.com
+-->
+<head>
+  <title>Test for Bug 504877</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=504877">Mozilla Bug 504877</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 504877 **/
+SimpleTest.waitForExplicitFinish();
+
+var targetUrl = "http://example.com/";
+var l;
+
+function a() {
+        var r = "FAIL", s;
+        try {
+                s = l.toString();
+        }
+        catch (e) {
+                if (/denied|insecure/.test(e))
+                        r = "PASS";
+                s = e;
+        }
+
+        is(r, "PASS", "should have thrown an exception");
+        SimpleTest.finish();
+}
+
+var p = 0;
+function b() {
+        switch (++p) {
+        case 1:
+                frames[0].location = "about:blank";
+                break;
+        case 2:
+                l = frames[0].location;
+                frames[0].location = targetUrl;
+                break;
+        case 3:
+                a();
+                break;
+        }
+}
+</script>
+
+</pre>
+<iframe onload="b()"></iframe>
+</body>
+</html>

@@ -1,0 +1,199 @@
+#!/usr/bin/python3 -u
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+"""
+Thunderbird build environment prep for run-task,
+for use with comm-central derived repositories.
+
+This script is meant to run prior to run-task on repositories like
+comm-central that need to check out a copy of a mozilla repository
+in order to build.
+See bug 1491371 for background on why this is necessary.
+
+A project will have a file named ".gecko_rev.yml" in it's root. See the
+constant "GECKO_REV_CONF" if you want to change that. To download it, the
+script uses the project repository URL and the revision number.
+Those are defined in the environment variables:
+COMM_HEAD_REPOSITORY
+COMM_HEAD_REV
+
+.gecko_rev.yml has a structure like (for comm-central):
+```
+GECKO_BASE_REPOSITORY: https://hg.mozilla.org/mozilla-unified
+GECKO_HEAD_REPOSITORY: https://hg.mozilla.org/mozilla-central
+GECKO_HEAD_REF: default
+```
+or for branches:
+```
+GECKO_BASE_REPOSITORY: https://hg.mozilla.org/mozilla-unified
+GECKO_HEAD_REPOSITORY: https://hg.mozilla.org/releases/mozilla-beta
+GECKO_HEAD_REF: THUNDERBIRD_60_VERBRANCH
+GECKO_HEAD_REV: 6a830d12f15493a70b1192022c9985eba2139910
+
+Note about GECKO_HEAD_REV and GECKO_HEAD_REF:
+GECKO_HEAD_REF is a branch name or "default".
+GECKO_HEAD_REV is a revision hash.
+```
+"""
+
+import sys
+
+import os
+import socket
+import time
+from datetime import datetime
+from pprint import pformat
+
+import urllib.error
+import urllib.request
+
+import yaml
+
+if sys.version_info[0:2] < (3, 5):
+    print('run-task-wrapper requires Python 3.5+')
+    sys.exit(1)
+
+GECKO_REV_CONF = ".gecko_rev.yml"
+DEBUG = bool(os.environ.get("RTW_DEBUG", False))
+
+
+def print_message(msg, prefix=__file__, level=""):
+    """
+    Print messages.
+    :param object msg: message to print, usually a string, but not always
+    :param str prefix: message prefix
+    :param str level: message level (DEBUG, ERROR, INFO)
+    """
+    if not isinstance(msg, str):
+        msg = pformat(msg)
+    now = datetime.utcnow().isoformat()
+    # slice microseconds to 3 decimals.
+    now = now[:-3] if now[-7:-6] == '.' else now
+    if level:
+        sys.stdout.write('[{prefix} {now}Z] {level}: {msg}\n'.format(
+            prefix=prefix, now=now, level=level, msg=msg))
+    else:
+        sys.stdout.write('[{prefix} {now}Z] {msg}\n'.format(
+            prefix=prefix, now=now, msg=msg))
+    sys.stdout.flush()
+
+
+def error_exit(msg):
+    """Print the error message and exit with error."""
+    print_message(msg, level="ERROR")
+    if DEBUG:
+        raise Exception(msg)
+
+    sys.exit(1)
+
+
+def print_debug(msg):
+    """Prints a message with DEBUG prefix if DEBUG is enabled
+    with the environment variable "RTW_DEBUG".
+    """
+    if DEBUG:
+        print_message(msg, level="DEBUG")
+
+
+def check_environ():
+    """Check that the necessary environment variables to find the
+    comm- repository are defined. (Set in .taskcluster.yml)
+    :return: tuple(str, str)
+    """
+    print_debug("Checking environment variables...")
+    project_head_repo = os.environ.get("COMM_HEAD_REPOSITORY", None)
+    project_head_rev = os.environ.get("COMM_HEAD_REV", None)
+
+    if project_head_repo is None or project_head_rev is None:
+        error_exit("Environment NOT Ok:\n\tHead: {}\n\tRev: {}\n").format(
+            project_head_repo, project_head_rev)
+
+    print_debug("Environment Ok:\n\tHead: {}\n\tRev: {}\n".format(
+        project_head_repo, project_head_rev))
+    return project_head_repo, project_head_rev
+
+
+def download_url(url, retry=1):
+    """Downloads the given URL. Naively retries (when asked) upon failure
+    :param url: str
+    :param retry: int
+    :return: str
+    """
+    # Use 1-based counting for display and calculation purposes.
+    for i in range(1, retry+1):
+        try:
+            print_message('Fetching {}. Attempt {} of {}.'.format(
+                url, i, retry))
+            with urllib.request.urlopen(url, timeout=10) as response:
+                data = response.read().decode("utf-8")
+            return data
+        except (urllib.error.URLError, socket.timeout) as exc:
+            print_message('Unable to retrieve {}'.format(url))
+            if isinstance(exc, urllib.error.URLError):
+                print_message(exc.reason)
+            else:  # socket.timeout
+                print_message('Connection timed out.')
+
+            if i < retry:  # No more retries
+                wait_time = i * 5  # fail #1: sleep 5s. #2, sleep 10s
+                print_message('Retrying in {} seconds.'.format(wait_time))
+                time.sleep(wait_time)
+
+    error_exit('No more retry attempts! Aborting.')
+
+
+def fetch_gecko_conf(project_head_repo, project_revision):
+    """Downloads .gecko_rev.yml from the project repository
+    :param project_head_repo: str
+    :param project_revision: str
+    :return: dict
+    """
+    gecko_conf_url = '/'.join(
+        [project_head_repo, 'raw-file', project_revision, GECKO_REV_CONF])
+
+    gecko_conf_yml = download_url(gecko_conf_url, retry=5)
+
+    try:
+        gecko_conf = yaml.safe_load(gecko_conf_yml)
+        return gecko_conf
+    except yaml.YAMLError as exc:
+        err_txt = ["Error processing Gecko YAML configuration."]
+        if hasattr(exc, "problem_mark"):
+            mark = exc.problem_mark  # pylint: disable=no-member
+            err_txt.append("Error position: line {}, column {}".format(
+                mark.line + 1, mark.column + 1))
+        error_exit('\n'.join(err_txt))
+
+
+def update_environment(gecko_conf):
+    """Adds the new variables defined in gecko_conf to the
+    running environment.
+    :param gecko_conf: dict
+    """
+    print_message("Updating environment with:")
+    print_message(gecko_conf)
+    os.environ.update(gecko_conf)
+
+    print_debug("New environment:")
+    print_debug(os.environ)
+
+
+def exec_run_task(args):
+    """Executes run-task with a modified environment."""
+    print_message("Executing: {}".format(pformat(args)))
+    os.execv(args[0], args[0:])
+
+
+def main():
+    """Main function."""
+    args = sys.argv[1:]  # Remaining args starting with run-task
+
+    project_head_repo, project_revision = check_environ()
+    gecko_conf = fetch_gecko_conf(project_head_repo, project_revision)
+    update_environment(gecko_conf)
+    exec_run_task(args)
+
+
+if __name__ == "__main__":
+    main()

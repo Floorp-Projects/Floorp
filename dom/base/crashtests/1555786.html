@@ -1,0 +1,23 @@
+<html>
+<head>
+  <script>
+    function start() {
+      const xhr = new XMLHttpRequest();
+      const observer = new ResizeObserver(entries => {
+        xhr.open('GET', '', false);
+        xhr.send();
+        typeof entries[0].borderBoxSize;
+        typeof entries[0].contentRect;
+        typeof entries[0].borderBoxSize;
+      })
+      observer.observe(document.getElementById('list'), {});
+      window.close();
+    }
+
+    document.addEventListener('DOMContentLoaded', start);
+  </script>
+</head>
+<body>
+  <li class="" id="list">
+</body>
+</html>

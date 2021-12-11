@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<style>
+  table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+  }
+</style>
+<table>
+  <tbody>
+    <tr>
+      <td colspan="4">Spanning.</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr id="target"></tr>
+  </tbody>
+</table>
+<script>
+  onload = function() {
+    document.body.offsetWidth;
+    var row = document.getElementById("target");
+    row.innerHTML = "<td>1</td><td>2</td><!--This comment is needed--><td>3</td><td>4</td>";
+  }
+</script>

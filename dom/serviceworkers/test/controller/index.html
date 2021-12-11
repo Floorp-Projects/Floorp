@@ -1,0 +1,72 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 94048 - test install event.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  // Make sure to use good, unique messages, since the actual expression will not show up in test results.
+  function my_ok(result, msg) {
+    parent.postMessage({status: "ok", result, message: msg}, "*");
+  }
+
+  function finish() {
+    parent.postMessage({status: "done"}, "*");
+  }
+
+  navigator.serviceWorker.ready.then(function(swr) {
+    my_ok(swr.scope.match(/serviceworkers\/test\/control$/),
+          "This page should be controlled by upper level registration");
+    my_ok(swr.installing == undefined,
+          "Upper level registration should not have a installing worker.");
+    if (navigator.serviceWorker.controller) {
+      // We are controlled.
+      // Register a new worker for this sub-scope. After that, controller should still be for upper level, but active should change to be this scope's.
+      navigator.serviceWorker.register("../worker2.js", { scope: "./" }).then(function(e) {
+        my_ok("installing" in e, "ServiceWorkerRegistration.installing exists.");
+        my_ok(e.installing instanceof ServiceWorker, "ServiceWorkerRegistration.installing is a ServiceWorker.");
+
+        my_ok("waiting" in e, "ServiceWorkerRegistration.waiting exists.");
+        my_ok("active" in e, "ServiceWorkerRegistration.active exists.");
+
+        my_ok(e.installing &&
+              e.installing.scriptURL.match(/worker2.js$/),
+              "Installing is serviceworker/controller");
+
+        my_ok("scope" in e, "ServiceWorkerRegistration.scope exists.");
+        my_ok(e.scope.match(/serviceworkers\/test\/controller\/$/), "Scope is serviceworker/test/controller " + e.scope);
+
+        my_ok("unregister" in e, "ServiceWorkerRegistration.unregister exists.");
+
+        my_ok(navigator.serviceWorker.controller.scriptURL.match(/worker\.js$/),
+              "Controller is still worker.js");
+
+        e.unregister().then(function(result) {
+          my_ok(result, "Unregistering the SW should succeed");
+          finish();
+        }, function(error) {
+          dump("Error unregistering the SW: " + error + "\n");
+        });
+      });
+    } else {
+      my_ok(false, "Should've been controlled!");
+      finish();
+    }
+  }).catch(function(e) {
+    my_ok(false, "Some test threw an error " + e);
+    finish();
+  });
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,19 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+intr protocol PTestHangs {
+both:
+    intr StackFrame();
+
+parent:
+    async Nonce();
+
+child:
+    async Start();
+    intr Hang();
+    async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

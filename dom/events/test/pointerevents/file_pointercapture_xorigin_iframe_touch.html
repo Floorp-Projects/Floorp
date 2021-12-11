@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--https://bugzilla.mozilla.org/show_bug.cgi?id=1662587-->
+<head>
+<title>Bug 1671849 - Touch</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="pointerevent_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+#target {
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+iframe {
+  width: 400px;
+  height: 300px;
+  border: 1px solid blue;
+}
+</style>
+</head>
+<body>
+<a target="_blank"href="https://bugzilla.mozilla.org/show_bug.cgi?id=1671849">Mozilla Bug 1671849</a>
+<div id="target"></div>
+<iframe src="https://example.com/tests/dom/events/test/pointerevents/iframe.html"></iframe>
+
+<pre id="test">
+<script type="text/javascript">
+/**
+ * Test for Bug 1671849
+ */
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.w3c_pointer_events.implicit_capture", true]],
+  });
+  await waitUntilApzStable();
+});
+
+add_task(async function test_pointer_capture_xorigin_iframe_touch() {
+  let iframe = document.querySelector("iframe");
+  await SpecialPowers.spawn(iframe.contentWindow, [], () => {
+    let unexpected = function(e) {
+      ok(false, `iframe shoule not get any ${e.type} event`);
+    };
+    content.document.body.addEventListener("pointermove", unexpected);
+    content.document.body.addEventListener("pointerup", unexpected);
+  });
+
+  let target = document.getElementById("target");
+  synthesizeTouch(target, 10, 10, { type: "touchstart" });
+  await waitForEvent(target, "touchstart", async function(e) {
+    e.preventDefault();
+  });
+
+  synthesizeTouch(iframe, 10, 10, { type: "touchmove" });
+  await Promise.all([waitForEvent(target, "gotpointercapture"),
+                     waitForEvent(target, "pointermove")]);
+
+  synthesizeTouch(iframe, 10, 10, { type: "touchend" });
+  await Promise.all([waitForEvent(target, "lostpointercapture"),
+                     waitForEvent(target, "pointerup")]);
+});
+</script>
+</pre>
+</body>
+</html>

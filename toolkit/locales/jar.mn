@@ -1,0 +1,84 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[localization] @AB_CD@.jar:
+  crashreporter                                    (%crashreporter/**/*.ftl)
+  toolkit                                          (%toolkit/**/*.ftl)
+
+@AB_CD@.jar:
+% locale global @AB_CD@ %locale/@AB_CD@/global/
+  locale/@AB_CD@/global/aboutReader.properties          (%chrome/global/aboutReader.properties)
+  locale/@AB_CD@/global/aboutStudies.properties         (%chrome/global/aboutStudies.properties)
+  locale/@AB_CD@/global/autocomplete.properties         (%chrome/global/autocomplete.properties)
+  locale/@AB_CD@/global/appPicker.dtd                   (%chrome/global/appPicker.dtd)
+  locale/@AB_CD@/global/browser.properties              (%chrome/global/browser.properties)
+  locale/@AB_CD@/global/commonDialog.dtd                (%chrome/global/commonDialog.dtd)
+  locale/@AB_CD@/global/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
+  locale/@AB_CD@/global/contentAreaCommands.properties  (%chrome/global/contentAreaCommands.properties)
+  locale/@AB_CD@/global/datetimebox.dtd                 (%chrome/global/datetimebox.dtd)
+  locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)
+#ifndef MOZ_FENNEC
+  locale/@AB_CD@/global/editMenuOverlay.dtd             (%chrome/global/editMenuOverlay.dtd)
+#endif
+  locale/@AB_CD@/global/extensions.properties           (%chrome/global/extensions.properties)
+  locale/@AB_CD@/global/fallbackMenubar.properties      (%chrome/global/fallbackMenubar.properties)
+  locale/@AB_CD@/global/filepicker.properties           (%chrome/global/filepicker.properties)
+#ifndef MOZ_FENNEC
+  locale/@AB_CD@/global/findbar.properties              (%chrome/global/findbar.properties)
+#endif
+  locale/@AB_CD@/global/globalKeys.dtd                  (%chrome/global/globalKeys.dtd)
+  locale/@AB_CD@/global/intl.css                        (%chrome/global/intl.css)
+  locale/@AB_CD@/global/intl.properties                 (%chrome/global/intl.properties)
+  locale/@AB_CD@/global/keys.properties                 (%chrome/global/keys.properties)
+#ifndef MOZ_FENNEC
+  locale/@AB_CD@/global/narrate.properties              (%chrome/global/narrate.properties)
+#endif
+  locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
+#if !defined(XP_WIN) && !defined(MOZ_FENNEC)
+  locale/@AB_CD@/global/printdialog.properties          (%chrome/global/printdialog.properties)
+#endif
+  locale/@AB_CD@/global/resetProfile.dtd                (%chrome/global/resetProfile.dtd)
+  locale/@AB_CD@/global/resetProfile.properties         (%chrome/global/resetProfile.properties)
+  locale/@AB_CD@/global/dialog.properties               (%chrome/global/dialog.properties)
+  locale/@AB_CD@/global/tree.dtd                        (%chrome/global/tree.dtd)
+  locale/@AB_CD@/global/videocontrols.dtd               (%chrome/global/videocontrols.dtd)
+  locale/@AB_CD@/global/viewSource.properties           (%chrome/global/viewSource.properties)
+  locale/@AB_CD@/global/wizard.properties               (%chrome/global/wizard.properties)
+% locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/unix/ os=LikeUnix os=Android
+% locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/mac/ os=Darwin
+% locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/win/ os=WINNT
+  locale/@AB_CD@/global-platform/mac/platformKeys.properties  (%chrome/global-platform/mac/platformKeys.properties)
+  locale/@AB_CD@/global-platform/unix/platformKeys.properties (%chrome/global-platform/unix/platformKeys.properties)
+  locale/@AB_CD@/global-platform/win/platformKeys.properties  (%chrome/global-platform/win/platformKeys.properties)
+  locale/@AB_CD@/global-platform/mac/intl.properties          (%chrome/global-platform/mac/intl.properties)
+  locale/@AB_CD@/global-platform/unix/intl.properties         (%chrome/global-platform/unix/intl.properties)
+  locale/@AB_CD@/global-platform/win/intl.properties          (%chrome/global-platform/win/intl.properties)
+% locale mozapps @AB_CD@ %locale/@AB_CD@/mozapps/
+  locale/@AB_CD@/mozapps/downloads/unknownContentType.properties  (%chrome/mozapps/downloads/unknownContentType.properties)
+  locale/@AB_CD@/mozapps/downloads/unknownContentType.dtd         (%chrome/mozapps/downloads/unknownContentType.dtd)
+  locale/@AB_CD@/mozapps/downloads/downloads.properties           (%chrome/mozapps/downloads/downloads.properties)
+#ifndef MOZ_FENNEC
+  locale/@AB_CD@/mozapps/extensions/extensions.properties         (%chrome/mozapps/extensions/extensions.properties)
+#endif
+  locale/@AB_CD@/mozapps/profile/profileSelection.properties      (%chrome/mozapps/profile/profileSelection.properties)
+#ifndef MOZ_FENNEC
+  locale/@AB_CD@/mozapps/update/updates.properties                (%chrome/mozapps/update/updates.properties)
+#endif
+% locale alerts @AB_CD@ %locale/@AB_CD@/alerts/
+  locale/@AB_CD@/alerts/alert.dtd                                (%chrome/alerts/alert.dtd)
+  locale/@AB_CD@/alerts/alert.properties                         (%chrome/alerts/alert.properties)
+% locale passwordmgr @AB_CD@ %locale/@AB_CD@/passwordmgr/
+  locale/@AB_CD@/passwordmgr/passwordmgr.properties (%chrome/passwordmgr/passwordmgr.properties)
+% locale autoconfig @AB_CD@ %locale/@AB_CD@/autoconfig/
+  locale/@AB_CD@/autoconfig/autoconfig.properties   (%chrome/autoconfig/autoconfig.properties)
+% locale places @AB_CD@ %locale/@AB_CD@/places/
+  locale/@AB_CD@/places/places.properties                 (%chrome/places/places.properties)
+
+# Pick up l10n files for pdfviewer from browser
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1618465
+relativesrcdir browser/locales:
+% locale pdf.js @AB_CD@ %locale/pdfviewer/
+    locale/pdfviewer/viewer.properties             (%pdfviewer/viewer.properties)
+    locale/pdfviewer/chrome.properties             (%pdfviewer/chrome.properties)

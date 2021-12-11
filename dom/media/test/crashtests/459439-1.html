@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+var i = 0;
+function boom()
+{
+  var div = document.getElementById("div");
+  var audio = document.getElementById("audio");
+
+  audio.onload = null;
+
+  div.textContent = "FAIL";
+  audio.src += "";
+  div.textContent = "PASS?";
+
+  ++i;
+
+  setTimeout(done, 1);
+}
+
+function done()
+{
+  // Note we reset 'src' to release decoder resources and cubeb streams to
+  // prevent OOM or OpenCubeb() failures.
+  var audio = document.getElementById("audio");
+  audio.src = "";
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body>
+<audio id="audio" autoplay src="sound.ogg" oncanplaythrough="setTimeout(boom, 1);"></audio>
+<div id="div"></div>
+</body>
+</html>

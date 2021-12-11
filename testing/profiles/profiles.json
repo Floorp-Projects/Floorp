@@ -1,0 +1,11 @@
+{
+    "geckoview-junit": ["base", "common", "unittest-required", "unittest-features", "geckoview-junit"],
+    "mochitest": ["base", "common", "unittest-required", "unittest-features", "mochitest"],
+    "profileserver": ["base", "common", "unittest-required", "unittest-features", "profileserver"],
+    "raptor": ["base", "common", "perf", "raptor"],
+    "reftest": ["base", "common", "reftest"],
+    "talos": ["base", "common", "perf"],
+    "valgrind": ["base", "common", "unittest-required", "unittest-features"],
+    "xpcshell": ["base", "xpcshell"],
+    "web-platform-tests": ["base", "common", "unittest-required", "unittest-features", "web-platform"]
+}

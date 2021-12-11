@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.outline-filter {
+  border: 1px solid var(--theme-splitter-color);
+  border-top: 0px;
+}
+
+.outline-filter-input {
+  height: 24px;
+  width: 100%;
+  background-color: var(--theme-sidebar-background);
+  color: var(--theme-body-color);
+  font-size: inherit;
+  user-select: text;
+}
+
+.outline-filter-input.focused {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+.outline-filter-input::placeholder {
+  color: var(--theme-text-color-alt);
+  opacity: 1;
+}
+
+.theme-dark .outline-filter-input.focused {
+  border: 1px solid var(--blue-50);
+}

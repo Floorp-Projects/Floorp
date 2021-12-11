@@ -1,0 +1,41 @@
+<!-- Quirks -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=587469
+-->
+<head>
+  <title>Test for Bug 587469</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=587469">Mozilla Bug 587469</a>
+<p id="display">
+<map name=a></map>
+<map name=a><area shape=rect coords=25,25,75,75 href=#fail></map>
+<img usemap=#a src=image.png>
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 587469 **/
+SimpleTest.waitForExplicitFinish();
+function finish() {
+  is(location.hash, "", "Should not have changed the hash.");
+  SimpleTest.finish();
+}
+SimpleTest.waitForFocus(function() {
+  synthesizeMouse(document.getElementsByTagName("img")[0], 50, 50, {});
+  // Hit the event loop twice before doing the test
+  setTimeout(function() {
+    setTimeout(finish, 0);
+  }, 0);
+});
+
+
+</script>
+</pre>
+</body>
+</html>

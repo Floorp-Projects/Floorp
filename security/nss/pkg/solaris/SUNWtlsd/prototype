@@ -1,0 +1,128 @@
+#
+# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This required package information file contains a list of package contents.
+# The 'pkgmk' command uses this file to identify the contents of a package
+# and their location on the development machine when building the package.
+# Can be created via a text editor or through use of the 'pkgproto' command.
+
+#!search <pathname pathname ...>	# where to find pkg objects
+#!include <filename>			# include another 'prototype' file
+#!default <mode> <owner> <group>	# default used if not specified on entry
+#!<param>=<value>			# puts parameter in pkg environment
+
+# packaging files
+i copyright
+i pkginfo
+i depend=pkgdepend
+#
+# source locations relative to the prototype file
+#
+# SUNWtlsd
+#
+d none usr 0755 root sys
+d none usr/include 0755 root bin
+d none usr/include/mps 0755 root bin
+f none usr/include/mps/base64.h 0644 root bin
+#f none usr/include/mps/blapi.h 0644 root bin
+f none usr/include/mps/blapit.h 0644 root bin
+f none usr/include/mps/cert.h 0644 root bin
+f none usr/include/mps/certdb.h 0644 root bin
+f none usr/include/mps/certt.h 0644 root bin
+f none usr/include/mps/ciferfam.h 0644 root bin
+f none usr/include/mps/cmmf.h 0644 root bin
+f none usr/include/mps/cmmft.h 0644 root bin
+f none usr/include/mps/cms.h 0644 root bin
+f none usr/include/mps/cmsreclist.h 0644 root bin
+f none usr/include/mps/cmst.h 0644 root bin
+f none usr/include/mps/crmf.h 0644 root bin
+f none usr/include/mps/crmft.h 0644 root bin
+f none usr/include/mps/cryptohi.h 0644 root bin
+f none usr/include/mps/cryptoht.h 0644 root bin
+f none usr/include/mps/ecl-exp.h 0644 root bin
+f none usr/include/mps/hasht.h 0644 root bin
+f none usr/include/mps/jar-ds.h 0644 root bin
+f none usr/include/mps/jar.h 0644 root bin
+f none usr/include/mps/jarfile.h 0644 root bin
+f none usr/include/mps/key.h 0644 root bin
+#f none usr/include/mps/keydbt.h 0644 root bin
+f none usr/include/mps/keyhi.h 0644 root bin
+#f none usr/include/mps/keylow.h 0644 root bin
+f none usr/include/mps/keyt.h 0644 root bin
+#f none usr/include/mps/keytboth.h 0644 root bin
+f none usr/include/mps/keythi.h 0644 root bin
+#f none usr/include/mps/keytlow.h 0644 root bin
+f none usr/include/mps/nss.h 0644 root bin
+f none usr/include/mps/nssb64.h 0644 root bin
+f none usr/include/mps/nssb64t.h 0644 root bin
+f none usr/include/mps/nssbase.h 0644 root bin
+f none usr/include/mps/nssbaset.h 0644 root bin
+f none usr/include/mps/nssckepv.h 0644 root bin
+f none usr/include/mps/nssckbi.h 0644 root bin
+f none usr/include/mps/nssckft.h 0644 root bin
+f none usr/include/mps/nssckfw.h 0644 root bin
+f none usr/include/mps/nssckfwc.h 0644 root bin
+f none usr/include/mps/nssckfwt.h 0644 root bin
+f none usr/include/mps/nssckg.h 0644 root bin
+f none usr/include/mps/nssckmdt.h 0644 root bin
+#f none usr/include/mps/nssckp.h 0644 root bin
+f none usr/include/mps/nssckt.h 0644 root bin
+#f none usr/include/mps/nsscku.h 0644 root bin
+f none usr/include/mps/nssilckt.h 0644 root bin
+f none usr/include/mps/nssilock.h 0644 root bin
+f none usr/include/mps/nsslocks.h 0644 root bin
+f none usr/include/mps/nssrwlk.h 0644 root bin
+f none usr/include/mps/nssrwlkt.h 0644 root bin
+f none usr/include/mps/ocsp.h 0644 root bin
+f none usr/include/mps/ocspt.h 0644 root bin
+f none usr/include/mps/p12.h 0644 root bin
+f none usr/include/mps/p12plcy.h 0644 root bin
+f none usr/include/mps/p12t.h 0644 root bin
+f none usr/include/mps/pk11func.h 0644 root bin
+f none usr/include/mps/pk11pqg.h 0644 root bin
+f none usr/include/mps/pk11sdr.h 0644 root bin
+f none usr/include/mps/pk11priv.h 0644 root bin
+f none usr/include/mps/pk11pub.h 0644 root bin
+f none usr/include/mps/pkcs11.h 0644 root bin
+f none usr/include/mps/pkcs11f.h 0644 root bin
+f none usr/include/mps/pkcs11p.h 0644 root bin
+f none usr/include/mps/pkcs11t.h 0644 root bin
+f none usr/include/mps/pkcs11u.h 0644 root bin
+f none usr/include/mps/pkcs11n.h 0644 root bin
+f none usr/include/mps/pkcs12.h 0644 root bin
+f none usr/include/mps/pkcs12t.h 0644 root bin
+f none usr/include/mps/pkcs7t.h 0644 root bin
+f none usr/include/mps/portreg.h 0644 root bin
+f none usr/include/mps/preenc.h 0644 root bin
+f none usr/include/mps/secasn1.h 0644 root bin
+f none usr/include/mps/secasn1t.h 0644 root bin
+f none usr/include/mps/seccomon.h 0644 root bin
+f none usr/include/mps/secder.h 0644 root bin
+f none usr/include/mps/secdert.h 0644 root bin
+f none usr/include/mps/secdig.h 0644 root bin
+f none usr/include/mps/secdigt.h 0644 root bin
+f none usr/include/mps/secerr.h 0644 root bin
+f none usr/include/mps/sechash.h 0644 root bin
+f none usr/include/mps/secitem.h 0644 root bin
+f none usr/include/mps/secmime.h 0644 root bin
+f none usr/include/mps/secmod.h 0644 root bin
+f none usr/include/mps/secmodt.h 0644 root bin
+f none usr/include/mps/secoid.h 0644 root bin
+f none usr/include/mps/secoidt.h 0644 root bin
+f none usr/include/mps/secpkcs5.h 0644 root bin
+f none usr/include/mps/secpkcs7.h 0644 root bin
+f none usr/include/mps/secport.h 0644 root bin
+#f none usr/include/mps/secrng.h 0644 root bin
+#f none usr/include/mps/secrngt.h 0644 root bin
+f none usr/include/mps/shsign.h 0644 root bin
+f none usr/include/mps/smime.h 0644 root bin
+f none usr/include/mps/ssl.h 0644 root bin
+f none usr/include/mps/sslerr.h 0644 root bin
+f none usr/include/mps/sslproto.h 0644 root bin
+f none usr/include/mps/sslt.h 0644 root bin
+f none usr/include/mps/utilrename.h 0644 root bin

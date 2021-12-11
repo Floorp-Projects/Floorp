@@ -1,0 +1,10 @@
+<!DOCTYPE HTML>
+<html>
+<body style="-moz-control-character-visibility:visible">
+<span id="s">foo&#x01;bar</span>
+<script>
+var x = s.getBoundingClientRect().width;
+document.body.setAttribute("style", "-moz-control-character-visibility:hidden");
+</script>
+</body>
+</html>

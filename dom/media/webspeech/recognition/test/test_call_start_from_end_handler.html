@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650295
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 650295 -- Restart recognition from end handler</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650295">Mozilla Bug 650295</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function createAudioStream() {
+    var audioTag = document.createElement("audio");
+    audioTag.src = DEFAULT_AUDIO_SAMPLE_FILE;
+
+    var stream = audioTag.mozCaptureStreamUntilEnded();
+    audioTag.play();
+
+    return stream;
+  }
+
+  var done = false;
+  function endHandler(evt, sr) {
+    if (done) {
+      SimpleTest.finish();
+      return;
+    }
+
+    try {
+      var stream = createAudioStream();
+      sr.start(stream); // shouldn't fail
+    } catch (err) {
+      ok(false, "Failed to start() from end() callback");
+    }
+
+    // calling start() may cause some callbacks to fire, but we're
+    // no longer interested in them, except for onend, which is where
+    // we'll conclude the test.
+    sr.onstart = null;
+    sr.onaudiostart = null;
+    sr.onspeechstart = null;
+    sr.onspeechend = null;
+    sr.onaudioend = null;
+    sr.onresult = null;
+
+    // FIXME(ggp) the state transition caused by start() is async,
+    // but abort() is sync (see bug 1055093). until we normalize
+    // state transitions, we need to setTimeout here to make sure
+    // abort() finds the speech recognition object in the correct
+    // state (namely, STATE_STARTING).
+    setTimeout(function() {
+      sr.abort();
+      done = true;
+    });
+
+    info("Successfully start() from end() callback");
+  }
+
+  function expectExceptionHandler(evt, sr) {
+    try {
+      sr.start(createAudioStream());
+    } catch (err) {
+      is(err.name, "InvalidStateError");
+      return;
+    }
+
+    ok(false, "Calling start() didn't raise InvalidStateError");
+  }
+
+  performTest({
+    eventsToRequest: [
+      'EVENT_RECOGNITIONSERVICE_FINAL_RESULT'
+    ],
+    expectedEvents: {
+      'start': expectExceptionHandler,
+      'audiostart': expectExceptionHandler,
+      'speechstart': expectExceptionHandler,
+      'speechend': expectExceptionHandler,
+      'audioend': expectExceptionHandler,
+      'result': buildResultCallback("Mock final result"),
+      'end': endHandler,
+    },
+    prefs: [["media.webspeech.test.fake_fsm_events", true],
+            ["media.webspeech.test.fake_recognition_service", true],
+            ["media.webspeech.recognition.timeout", 100000]]
+  });
+
+</script>
+</pre>
+</body>
+</html>

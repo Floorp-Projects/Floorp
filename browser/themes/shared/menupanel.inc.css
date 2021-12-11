@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Menu panel and palette styles */
+
+/**
+ * These are placeholder icons until we get the proper Proton
+ * assets for zoom/fullscreen/sync.
+ */
+#appMenu-zoomEnlarge-button2 {
+  list-style-image: url(chrome://browser/skin/add-circle-fill.svg);
+}
+
+#appMenu-zoomReduce-button2 {
+  list-style-image: url(chrome://browser/skin/subtract-circle-fill.svg);
+}
+
+#appMenu-fullscreen-button2 {
+  list-style-image: url(chrome://browser/skin/fullscreen.svg);
+}
+
+#appMenu-fullscreen-button2[checked] {
+  list-style-image: url(chrome://browser/skin/fullscreen-exit.svg);
+}

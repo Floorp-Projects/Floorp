@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+
+  "name": "Theme test",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "theme@tests.mozilla.org"
+    }
+  },
+
+  "theme": {
+    "images": {
+      "theme_frame": "testImage.png"
+    },
+    "colors": {
+      "frame": "#000000",
+      "tab_background_text": "#ffffff"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+<html class="reftest-wait"><head>
+<title>Testcase Bug 381746 - odd and changing border in frameset</title>
+<script>
+var frameOnloadCalled = false;
+function frameOnload() {
+  if (!frameOnloadCalled) {
+    frameOnloadCalled = true;
+    return;
+  }
+  document.documentElement.removeAttribute("class");
+}
+function doe() {
+document.getElementsByTagName('frame')[0].src = '381746-1-framea.html';
+document.getElementsByTagName('frame')[1].src = '381746-1-framea.html';
+}
+window.onload=doe;
+</script>
+</head>
+<frameset cols="48%,52%">
+  <frame src="">
+  <frame src="">
+</frameset>
+</html>

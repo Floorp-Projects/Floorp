@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=403852
+-->
+  <title>Test for Bug 403852</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=403852">Mozilla Bug 403852</a>
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var script = '';
+SpecialPowers.pushPrefEnv({ "set":
+      [["privacy.reduceTimerPrecision", false]]},
+  function() {
+    var url = SimpleTest.getTestFileURL("bug403852_fileOpener.js");
+    script = SpecialPowers.loadChromeScript(url);
+    script.addMessageListener("file.opened", onOpened);
+    script.sendAsyncMessage("file.open");
+});
+
+function onOpened(message) {
+  var fileList = document.getElementById('fileList');
+  SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
+
+  // Make sure the file is accessible with indexed notation
+  var domFile = fileList.files[0];
+
+  is(domFile.name, "prefs.js", "fileName should be prefs.js");
+
+  ok("lastModified" in domFile, "lastModified must be present");
+
+  var d = new Date(message.mtime);
+  is(d.getTime(), (new Date(domFile.lastModified)).getTime(), "lastModified should be the same");
+
+  var x = new Date();
+
+  // In our implementation of File object, lastModified is unknown only for new objects.
+  // Using canvas or input[type=file] elements, we 'often' have a valid lastModified values.
+  // For canvas we use memory files and the lastModified is now().
+  var f = new File([new Blob(['test'], {type: 'text/plain'})], "test-name");
+
+  var y = new Date(f.lastModified);
+  var z = new Date();
+
+  ok((x.getTime() <= y.getTime()) && (y.getTime() <= z.getTime()), "lastModified of file which does not have last modified date should be current time");
+
+  script.destroy();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body> </html>

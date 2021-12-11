@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-gradient(radial, ...) expressions which we don't render
+    quite correctly because they can't easily be represented with modern syntax.
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  50px;
+      height: 40px;
+      margin: 1px;
+      float: left;
+
+      /* We include a fallback background, to easily distinguish failures at
+       * parse time (which fall back to this value) vs. something later on. */
+      background: red;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- Inner circle has nonzero radius: -->
+  <div style="background: -webkit-gradient(radial,
+                                           left top, 10, left top, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           center center, 50, center center, 40,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <!-- Both circles have the same radius: -->
+  <div style="background: -webkit-gradient(radial,
+                                           center center, 40, center center, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           10 10, 10, 10 10, 10,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <!-- Inner circle has different center than outer circle: -->
+  <div style="background: -webkit-gradient(radial,
+                                           left bottom, 0, left top, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           10 20, 40, 30 10, 5,
+                                           from(blue), to(yellow))"></div>
+ <br>
+
+  <!-- Inner circle and outer circle do not even intersect: -->
+  <div style="background: -webkit-gradient(radial,
+                                           10 10, 5, 30 10, 10,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           -50 10, 5, 150 10, 30,
+                                           from(blue), to(yellow))"></div>
+
+</body>
+</html>

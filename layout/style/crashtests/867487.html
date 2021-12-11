@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="data:text/css,">
+<script>
+
+function boom()
+{
+    var s = document.styleSheets[0];
+    var n = s.ownerNode;
+    var p = n.parentNode;
+
+    s.insertRule("#a { }", 0);
+
+    for (var i = 0; i < 3; ++i) {
+        p.removeChild(n);
+        p.appendChild(n);
+    }
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

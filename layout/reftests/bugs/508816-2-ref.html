@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+    body { padding-right: 100px; }
+    div.x1 { border: 1px solid purple; overflow-x: scroll; overflow-y: hidden; width: 300px; margin: 0 50px 0 0; padding: 0; }
+    div.x2 { height: 50px; }
+    span { display: inline-block; height: 50px; margin: 0; }
+  </style>
+</head>
+<body dir="rtl">
+  <div class="x1">
+    <span style="background: green; width: 50px; position: fixed; margin-inline-start: -50px"></span>
+    <div class="x2">
+      <span style="background: yellow; width: 400px; overflow: hidden"></span>
+    </div>
+  </div>
+</body>
+</html>

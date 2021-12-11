@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="298622Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest, 0);"
+        title="bug 298622 test">
+
+  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src= "docshell_helpers.js" />
+  <script type="application/javascript"><![CDATA[
+    // Global variable that holds a reference to the find bar.
+    var gFindBar;
+
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 298622:
+    // Find should work correctly on a page loaded from the
+    // bfcache.
+    //
+    function* testIterator()
+    {
+      // Make sure bfcache is on.
+      enableBFCache(true);
+
+      // Load a test page which contains some text to be found.
+      doPageNavigation({
+        uri: "data:text/html,<html><head><title>test1</title></head>" +
+             "<body>find this!</body></html>",
+        onNavComplete: nextTest
+      });
+      yield undefined;
+
+      // Load a second, dummy page, verifying that the original
+      // page gets stored in the bfcache.
+      doPageNavigation({
+        uri: getHttpUrl("generic.html"),
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "test1",
+                            persisted: true },
+                          { type: "pageshow",
+                            title: "generic page" } ],
+        onNavComplete: nextTest
+      });
+      yield undefined;
+
+      // Make sure we unsuppress painting before continuing
+      SimpleTest.executeSoon(nextTest);
+      yield undefined;
+
+      // Search for some text that's on the second page (but not on
+      // the first page), and verify that it can be found.
+      gFindBar = document.getElementById("FindToolbar");
+      document.getElementById("cmd_find").doCommand();
+      ok(!gFindBar.hidden, "failed to open findbar");
+      gFindBar._findField.value = "A generic page";
+      gFindBar._find();
+      SimpleTest.executeSoon(nextTest);
+      yield undefined;
+
+      // Make sure Find bar's internal status is not 'notfound'
+      isnot(gFindBar._findField.getAttribute("status"), "notfound",
+         "Findfield status attribute should not have been 'notfound'" +
+         " after Find");
+
+      // Make sure the key events above have time to be processed
+      // before continuing
+      waitForTrue(function() {
+        return (
+          TestWindow.getWindow().getSelection().toString().toLowerCase() ==
+          "a generic page");
+      }, nextTest, 20);
+      yield undefined;
+
+      is(gFindBar._findField.value, "A generic page",
+        "expected text not present in find input field");
+      is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
+         "a generic page",
+         "find failed on second page loaded");
+
+      // Go back to the original page and verify it's loaded from the
+      // bfcache.
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: ["pageshow"],
+        expectedEvents: [ { type: "pageshow",
+                            title: "test1",
+                            persisted: true } ],
+        onNavComplete: nextTest
+      });
+      yield undefined;
+
+      // Search for some text that's on the original page (but not
+      // the dummy page loaded above), and verify that it can
+      // be found.
+      gFindBar = document.getElementById("FindToolbar");
+      document.getElementById("cmd_find").doCommand();
+      ok(!gFindBar.hidden, "failed to open findbar");
+      gFindBar._findField.value = "find this";
+      gFindBar._find();
+      SimpleTest.executeSoon(nextTest);
+      yield undefined;
+
+      // Make sure Find bar's internal status is not 'notfound'
+      isnot(gFindBar._findField.getAttribute("status"), "notfound",
+         "Findfield status attribute should not have been 'notfound'" +
+         " after Find");
+
+      // Make sure the key events above have time to be processed
+      // before continuing
+      waitForTrue(function() {
+        return (
+          TestWindow.getWindow().getSelection().toString().toLowerCase() ==
+          "find this");
+      }, nextTest, 20);
+      yield undefined;
+
+      is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
+         "find this",
+         "find failed on page loaded from bfcache");
+
+      // Tell the framework the test is finished.
+      finish();
+    }
+
+  ]]></script>
+
+  <commandset>
+    <command id="cmd_find"
+     oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
+  </commandset>
+  <browser type="content" primary="true" flex="1" id="content" messagemanagergroup="test" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>

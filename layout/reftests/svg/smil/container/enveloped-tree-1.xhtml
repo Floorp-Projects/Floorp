@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Enveloped tree</title>
+    <!-- 
+    PURPOSE: This test case is the reverse of the promoted tree case. As time
+    containers are defined relative to the outermost SVG document fragment this
+    case tests that when an outermost <svg> fragment is added as a child of
+    another svg document fragment, the animations behave correctly and the time
+    containers are resolved correctly.
+
+    OPERATION: There are two animations that are more-or-less identical except
+    for a few aesthetic features. Both contain a circle that moves to the right.
+    The second document fragment (on the right) is removed and added as a child
+    of the first document fragment.
+
+    EXPECTED RESULTS: After combining the two document fragments the circles
+    should have the same horizontal position as they are now controlled by the
+    same time container.
+    -->
+    <script>
+        function moveAndAdopt()
+        {
+          var svgs = document.getElementsByTagName('svg');
+          for (var i = 0; i &lt; svgs.length; i++) {
+            var svg = svgs[i];
+            svg.pauseAnimations();
+            svg.setCurrentTime(0.5);
+          }
+          adopt();
+          var svg = document.getElementById('adopter');
+          svg.setCurrentTime(1.5);
+          setTimeout('document.documentElement.removeAttribute("class")', 0);
+        }
+
+        function adopt()
+        {
+          var adoptee = document.getElementById('adoptee');
+          adoptee.parentNode.removeChild(adoptee);
+          var adopter = document.getElementById('adopter');
+          adopter.appendChild(adoptee);
+        }
+    </script>
+  </head>
+
+  <body onload="moveAndAdopt()">
+    <!-- First tree -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="200px" height="200px"
+      id="adopter">
+      <rect x="0" y="0" width="199" height="199"
+        style="fill: none; stroke: black"/>
+      <circle cx="0" cy="50" r="15" fill="skyblue" stroke="black"
+        stroke-width="1">
+        <animate attributeName="cx" from="0" to="200" begin="0s" dur="3s"
+          fill="freeze"/>
+      </circle>
+    </svg>
+    <!-- Second tree -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="200px" height="200px"
+      id="adoptee">
+      <rect x="0" y="0" width="199" height="199"
+        style="fill: none; stroke: black"/>
+      <circle cx="0" cy="110" r="15" fill="greenyellow" stroke="black"
+        stroke-width="1">
+        <animate attributeName="cx" from="0" to="200" begin="0s" dur="3s"
+          fill="freeze"/>
+      </circle>
+    </svg>
+  </body>
+</html>

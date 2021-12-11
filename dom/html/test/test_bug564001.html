@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=564001
+-->
+<head>
+  <title>Test for Bug 564001</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=564001">Mozilla Bug 564001</a>
+<p id="display"><img usemap=#map src=image.png></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script>
+/** Test for Bug 564001 **/
+SimpleTest.waitForExplicitFinish();
+
+var wrongArea = document.createElement("area");
+wrongArea.shape = "default";
+wrongArea.href = "#FAIL";
+var wrongMap = document.createElement("map");
+wrongMap.name = "map";
+wrongMap.appendChild(wrongArea);
+document.body.appendChild(wrongMap);
+
+var rightArea = document.createElement("area");
+rightArea.shape = "default";
+rightArea.href = "#PASS";
+var rightMap = document.createElement("map");
+rightMap.name = "map";
+rightMap.appendChild(rightArea);
+document.body.insertBefore(rightMap, wrongMap);
+
+var images = document.getElementsByTagName("img");
+onhashchange = function() {
+  is(location.hash, "#PASS", "Should get the first map in tree order.");
+  SimpleTest.finish();
+};
+SimpleTest.waitForFocus(() => synthesizeMouse(images[0], 50, 50, {}));
+</script>
+</pre>
+</body>
+</html>

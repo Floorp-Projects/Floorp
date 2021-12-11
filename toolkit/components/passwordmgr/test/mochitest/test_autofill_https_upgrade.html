@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill on an HTTPS page using upgraded HTTP logins</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+const MISSING_ACTION_PATH = TESTS_DIR + "mochitest/form_basic.html";
+const CROSS_ORIGIN_SECURE_PATH = TESTS_DIR + "mochitest/form_cross_origin_secure_action.html";
+
+const chromeScript = runChecksAfterCommonInit(false);
+
+let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                                                           SpecialPowers.Ci.nsILoginInfo,
+                                                                           "init");
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
+
+async function prepareLoginsAndProcessForm(url, logins = []) {
+  await LoginManager.removeAllUserFacingLogins();
+
+  let dates = Date.now();
+  for (let login of logins) {
+    SpecialPowers.do_QueryInterface(login, SpecialPowers.Ci.nsILoginMetaInfo);
+    // Force all dates to be the same so they don't affect things like deduping.
+    login.timeCreated = login.timePasswordChanged = login.timeLastUsed = dates;
+    await LoginManager.addLogin(login);
+  }
+
+  let processedPromise = promiseFormsProcessed();
+  win.location = url;
+  await processedPromise;
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.schemeUpgrades", true],
+    ["signon.includeOtherSubdomainsInLookup", true],
+  ]});
+});
+
+add_task(async function test_simpleNoDupesNoAction() {
+  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+    new nsLoginInfo("http://example.com", "http://example.com", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win,
+                                   "form-basic-username", "name2",
+                                   "form-basic-password", "pass2");
+});
+
+add_task(async function test_simpleNoDupesUpgradeOriginAndAction() {
+  await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+    new nsLoginInfo("http://example.com", "http://example.org", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "name2",
+                                           "form-basic-password", "pass2");
+});
+
+add_task(async function test_simpleNoDupesUpgradeOriginOnly() {
+  await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+    new nsLoginInfo("http://example.com", "https://example.org", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "name2",
+                                           "form-basic-password", "pass2");
+});
+
+add_task(async function test_simpleNoDupesUpgradeActionOnly() {
+  await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+    new nsLoginInfo("https://example.com", "http://example.org", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "name2",
+                                           "form-basic-password", "pass2");
+});
+
+add_task(async function test_dedupe() {
+  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+    new nsLoginInfo("https://example.com", "https://example.com", null,
+                    "name1", "passHTTPStoHTTPS", "uname", "pword"),
+    new nsLoginInfo("http://example.com", "http://example.com", null,
+                    "name1", "passHTTPtoHTTP", "uname", "pword"),
+    new nsLoginInfo("http://example.com", "https://example.com", null,
+                    "name1", "passHTTPtoHTTPS", "uname", "pword"),
+    new nsLoginInfo("https://example.com", "http://example.com", null,
+                    "name1", "passHTTPStoHTTP", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "name1",
+                                           "form-basic-password", "passHTTPStoHTTPS");
+});
+
+add_task(async function test_dedupe_subdomain() {
+  // subdomain match (should be autofilled)
+  let loginToFill = new nsLoginInfo("http://test1.example.com", "http://test1.example.com", null,
+                                    "name1", "pass1");
+  const loginToFillGUID = "subdomain-match"
+  // Assign a GUID to this login so we can ensure this is the login that gets
+  // filled later.
+  loginToFill.QueryInterface(SpecialPowers.Ci.nsILoginMetaInfo).guid = loginToFillGUID;
+
+  await prepareLoginsAndProcessForm("https://test1.example.com" + MISSING_ACTION_PATH, [
+    // All logins have the same username and password:
+    // https: (scheme match)
+    new nsLoginInfo("https://example.com", "https://example.com", null,
+                    "name1", "pass1"),
+    loginToFill,
+    // formActionOrigin match
+    new nsLoginInfo("http://example.com", "https://test1.example.com", null,
+                    "name1", "pass1"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "name1",
+                                   "form-basic-password", "pass1");
+
+  let filledGUID = await SpecialPowers.spawn(win, [], function getFilledGUID() {
+    let LMC = this.content.windowGlobalChild.getActor("LoginManager");
+    let doc = this.content.document;
+    let form = doc.getElementById("form-basic");
+    let { login: filledLogin } = LMC.stateForDocument(doc).fillsByRootElement.get(form);
+    return filledLogin && filledLogin.guid;
+  });
+  is(filledGUID, loginToFillGUID, "Check the correct login was filled");
+});
+</script>
+</pre>
+</body>
+</html>

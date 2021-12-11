@@ -1,0 +1,11 @@
+foo.jar:
+% content bar %child/
+% content foo %
+  foo.js
+* foo.css
+  bar.js          (subdir/bar.js)
+  qux.js          (subdir/bar.js)
+* child/hoge.js   (bar.js)
+* child/baz.jsm
+
+% override   chrome://foo/bar.svg#hello   chrome://bar/bar.svg#hello

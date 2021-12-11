@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for HTMLTextAreaElement.value not returning value including CR</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<textarea></textarea>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  /**
+   * This test should check only the cases with emulating complicated
+   * key events and using XPCOM methods.  If you need to add simple textcases,
+   * use testing/web-platform/tests/html/semantics/forms/the-textarea-element/value-defaultValue-textContent.html
+   * instead
+   */
+  let textarea = document.querySelector("textarea");
+  textarea.focus();
+  // This shouldn't occur because widget handles control characters if they
+  // receive native key event, but for backward compatibility as XUL platform,
+  // let's check this.
+  synthesizeKey("\r");
+  is(textarea.value, "\n", "Inputting \\r from keyboard event should be converted to \\n");
+
+  textarea.value = "";
+  await new Promise((resolve, reject) => {
+    SimpleTest.waitForClipboard(
+      "ab\ncd\nef",
+      () => { SpecialPowers.clipboardCopyString("ab\r\ncd\ref"); },
+      resolve,
+      () => {
+        ok(false, "Clipboard copy failed");
+        reject();
+      }
+    );
+  });
+  synthesizeKey("v", {accelKey: true});
+  is(textarea.value, "ab\ncd\nef", "Pasting \\r from clipboard should be converted to \\n");
+
+  textarea.value = "";
+  SpecialPowers.wrap(textarea).editor.insertText("ab\r\ncd\ref");
+  is(textarea.value, "ab\ncd\nef", "Inserting \\r with nsIEditor.insertText() should be converted to \\n");
+
+  textarea.value = "";
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "ab\r\ncd\ref",
+        "clauses":
+        [
+          { "length": 9, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 9, "length": 0 },
+    });
+  is(textarea.value, "ab\ncd\nef", "Inserting \\r with composition should be converted to \\n");
+
+  synthesizeComposition({type: "compositioncommitasis"});
+  is(textarea.value, "ab\ncd\nef", "Inserting \\r with committing composition should be converted to \\n");
+
+  // We don't need to test spellchecker features on Android because of unsupported.
+  if (!navigator.appVersion.includes("Android")) {
+    ok(true, "Waiting to run spellchecker...");
+    let inlineSpellchecker = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(true);
+    textarea.value = "abx ";
+    await new Promise(resolve => {
+      SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+        .onSpellCheck(textarea, () => {
+            SimpleTest.executeSoon(resolve);
+        });
+    });
+    let anonymousDivElement = SpecialPowers.wrap(textarea).editor.rootElement;
+    let misspelledWord = inlineSpellchecker.getMisspelledWord(anonymousDivElement.firstChild, 0);
+    is(misspelledWord.startOffset, 0, "Misspelled word start should be 0");
+    is(misspelledWord.endOffset, 3, "Misspelled word end should be 3");
+    inlineSpellchecker.replaceWord(anonymousDivElement.firstChild, 0, "ab\r\ncd\ref");
+    is(textarea.value, "ab\ncd\nef ", "Inserting \\r from spellchecker should be converted to \\n");
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

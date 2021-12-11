@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xml" href="#bug"?>
+<!DOCTYPE doc [
+<!ATTLIST xsl:transform
+  id	ID	#REQUIRED>
+]>
+<doc>
+<xsl:transform id="bug"
+                version="2.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:key name="k0" match="e1" use="key('k0', 'foobar')" /> 
+  <xsl:template id="t1" name="t1" match="key('k0', '1/2/2003')" />
+</xsl:transform>
+
+<e1 a1="foobar" a2="foobar"/>
+
+</doc>

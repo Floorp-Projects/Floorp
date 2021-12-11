@@ -1,0 +1,113 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * This interface provides some constants used by the Places AutoComplete
+ * search provider as well as methods to track opened pages for AutoComplete
+ * purposes.
+ */
+[scriptable, uuid(61b6348a-09e1-4810-8057-f8cb3cec6ef8)]
+interface mozIPlacesAutoComplete : nsISupports
+{
+  //////////////////////////////////////////////////////////////////////////////
+  //// Matching Constants
+
+  // A few of these are not used in Firefox, but are still referenced in
+  // comm-central.
+
+  /**
+   * Match anywhere in each searchable term.
+   */
+  const long MATCH_ANYWHERE = 0;
+
+  /**
+   * Match first on word boundaries, and if we do not get enough results, then
+   * match anywhere in each searchable term.
+   */
+  const long MATCH_BOUNDARY_ANYWHERE = 1;
+
+  /**
+   * Match on word boundaries in each searchable term.
+   */
+  const long MATCH_BOUNDARY = 2;
+
+  /**
+   * Match only the beginning of each search term.
+   */
+  const long MATCH_BEGINNING = 3;
+
+  /**
+   * Match anywhere in each searchable term without doing any transformation
+   * or stripping on the underlying data.
+   */
+  const long MATCH_ANYWHERE_UNMODIFIED = 4;
+
+  /**
+   * Match only the beginning of each search term using a case sensitive
+   * comparator.
+   */
+  const long MATCH_BEGINNING_CASE_SENSITIVE = 5;
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Search Behavior Constants
+
+  /**
+   * Search through history.
+   */
+  const long BEHAVIOR_HISTORY = 1 << 0;
+
+  /**
+   * Search though bookmarks.
+   */
+  const long BEHAVIOR_BOOKMARK = 1 << 1;
+
+  /**
+   * Search through tags.
+   */
+  const long BEHAVIOR_TAG = 1 << 2;
+
+  /**
+   * Search the title of pages.
+   */
+  const long BEHAVIOR_TITLE = 1 << 3;
+
+  /**
+   * Search the URL of pages.
+   */
+  const long BEHAVIOR_URL = 1 << 4;
+
+  /**
+   * Search for typed pages.
+   * No more supported by Firefox, it is still being used by comm-central clients.
+   */
+  const long BEHAVIOR_TYPED = 1 << 5;
+
+  /**
+   * Search javascript: URLs.
+   */
+  const long BEHAVIOR_JAVASCRIPT = 1 << 6;
+
+  /**
+   * Search for pages that have been marked as being opened, such as a tab
+   * in a tabbrowser.
+   */
+  const long BEHAVIOR_OPENPAGE = 1 << 7;
+
+  /**
+   * Use intersection between history, typed, bookmark, tag and openpage
+   * instead of union, when the restrict bit is set.
+   */
+  const long BEHAVIOR_RESTRICT = 1 << 8;
+
+  /**
+   * Include search suggestions from the currently selected search provider.
+   */
+  const long BEHAVIOR_SEARCH = 1 << 9;
+};

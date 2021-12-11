@@ -1,0 +1,99 @@
+<html>
+
+<head>
+  <title>Accessible events testing for document</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../../common.js"></script>
+  <script type="application/javascript"
+          src="../../role.js"></script>
+  <script type="application/javascript"
+          src="../../states.js"></script>
+  <script type="application/javascript"
+          src="../../events.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    const kHide = 1;
+    const kShow = 2;
+    const kRemove = 3;
+
+    function morphIFrame(aIdentifier, aAction) {
+      this.DOMNode = getNode(aIdentifier);
+      this.IFrameContainerDOMNode = this.DOMNode.parentNode;
+
+      this.eventSeq = [
+        new invokerChecker(aAction === kShow ? EVENT_SHOW : EVENT_HIDE, this.DOMNode),
+        new invokerChecker(EVENT_REORDER, this.IFrameContainerDOMNode),
+      ];
+
+      this.invoke = () => {
+        if (aAction === kRemove) {
+          this.IFrameContainerDOMNode.removeChild(this.DOMNode);
+        } else {
+          this.DOMNode.style.display = aAction === kHide ? "none" : "block";
+        }
+      };
+
+      this.finalCheck = () =>
+        testAccessibleTree(this.IFrameContainerDOMNode, {
+          role: ROLE_SECTION,
+          children: (aAction == kHide || aAction == kRemove) ? [ ] :
+            [
+              {
+                role: ROLE_INTERNAL_FRAME,
+                children: [
+                  { role: ROLE_DOCUMENT },
+                ],
+              },
+            ],
+        });
+
+      this.getID = () => {
+        if (aAction === kRemove) {
+          return "remove iframe";
+        }
+
+        return `change display style of iframe to ${aAction === kHide ? "none" : "block"}`;
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    function doTests() {
+      const gQueue = new eventQueue(EVENT_REORDER);
+      gQueue.push(new morphIFrame("iframe", kHide));
+      gQueue.push(new morphIFrame("iframe", kShow));
+      gQueue.push(new morphIFrame("iframe", kRemove));
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=566103"
+     title="Reorganize accessible document handling">
+    Mozilla Bug 566103
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="testContainer"><iframe id="iframe"></iframe></div>
+</body>
+</html>

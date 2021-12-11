@@ -1,0 +1,44 @@
+---
+app_version: 87.0a1
+backstop: false
+base_repository: https://hg.mozilla.org/mozilla-unified
+build_date: 1612296233
+build_number: 1
+do_not_optimize: []
+existing_tasks: {}
+filters:
+    - target_tasks_method
+head_ref: cee95ac4c0a6dfe53a4a85ecfd854e449561b4a9
+head_repository: https://hg.mozilla.org/integration/autoland
+head_rev: cee95ac4c0a6dfe53a4a85ecfd854e449561b4a9
+hg_branch: default
+level: "3"
+message: ""
+moz_build_date: "20210202200353"
+next_version: null
+optimize_strategies: gecko_taskgraph.optimize:project.autoland
+optimize_target_tasks: true
+owner: cbrindusan@mozilla.com
+phabricator_diff: null
+project: autoland
+pushdate: 1612296233
+pushlog_id: "135570"
+release_enable_emefree: false
+release_enable_partner_attribution: false
+release_enable_partner_repack: false
+release_eta: ""
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
+release_product: null
+release_type: ""
+required_signoffs: []
+signoff_urls: {}
+target_tasks_method: autoland_tasks
+tasks_for: hg-push
+test_manifest_loader: bugbug
+try_mode: null
+try_options: null
+try_task_config: {}
+version: 87.0a1

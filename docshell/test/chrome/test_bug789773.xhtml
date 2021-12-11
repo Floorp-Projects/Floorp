@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=789773
+-->
+<window title="Mozilla Bug 789773"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=789773"
+     target="_blank">Mozilla Bug 789773</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /* Test for Bug 789773.
+   *
+   * See comment 50 for the situation we're testing against here.
+   *
+   * Note that the failure mode of this test is to hang, and hang the browser on quit.
+   * This is an unfortunate occurance, but that's why we're testing it.
+   */
+  SimpleTest.waitForExplicitFinish();
+
+  const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+  var calledListenerForBrowserChromeURL = false;
+  var testProgressListener = {
+    START_DOC: Ci.nsIWebProgressListener.STATE_START | Ci.nsIWebProgressListener.STATE_IS_DOCUMENT,
+    onStateChange(wp, req, stateFlags, status) {
+      let browserChromeFileName = AppConstants.BROWSER_CHROME_URL.split("/").reverse()[0];
+      if (req.name.includes(browserChromeFileName)) {
+        wp.DOMWindow; // Force the lazy creation of a DOM window.
+        calledListenerForBrowserChromeURL = true;
+      }
+      if (req.name.includes("mozilla.html") && (stateFlags & Ci.nsIWebProgressListener.STATE_STOP))
+        finishTest();
+    },
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]),
+  }
+
+   // Add our progress listener
+   var webProgress = Cc['@mozilla.org/docloaderservice;1'].getService(Ci.nsIWebProgress);
+   webProgress.addProgressListener(testProgressListener, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
+
+   // Open the window.
+   var popup = window.open("about:mozilla", "_blank", "width=640,height=400");
+
+   // Wait for the window to load.
+   function finishTest() {
+     webProgress.removeProgressListener(testProgressListener);
+     ok(true, "Loaded the popup window without spinning forever in the event loop!");
+     ok(calledListenerForBrowserChromeURL, "Should have called the progress listener for browser.xhtml");
+     popup.close();
+     SimpleTest.finish();
+   }
+
+  ]]>
+  </script>
+</window>

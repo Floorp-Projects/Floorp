@@ -1,0 +1,70 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    '../third_party/libdisasm/ia32_invariant.c',
+    '../third_party/libdisasm/ia32_reg.c',
+    'disassembler_x86.cc',
+    'exploitability_win.cc',
+]
+
+if CONFIG["CC_TYPE"] == "gcc" and int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
+    SOURCES['../third_party/libdisasm/ia32_reg.c'].flags += ["-Wno-stringop-truncation"]
+
+UNIFIED_SOURCES += [
+    '../third_party/libdisasm/ia32_implicit.c',
+    '../third_party/libdisasm/ia32_insn.c',
+    '../third_party/libdisasm/ia32_modrm.c',
+    '../third_party/libdisasm/ia32_opcode_tables.c',
+    '../third_party/libdisasm/ia32_operand.c',
+    '../third_party/libdisasm/ia32_settings.c',
+    '../third_party/libdisasm/x86_disasm.c',
+    '../third_party/libdisasm/x86_imm.c',
+    '../third_party/libdisasm/x86_insn.c',
+    '../third_party/libdisasm/x86_misc.c',
+    '../third_party/libdisasm/x86_operand_list.c',
+    'basic_code_modules.cc',
+    'basic_source_line_resolver.cc',
+    'call_stack.cc',
+    'cfi_frame_info.cc',
+    'convert_old_arm64_context.cc',
+    'dump_context.cc',
+    'dump_object.cc',
+    'exploitability.cc',
+    'exploitability_linux.cc',
+    'logging.cc',
+    'minidump.cc',
+    'minidump_processor.cc',
+    'pathname_stripper.cc',
+    'proc_maps_linux.cc',
+    'process_state.cc',
+    'source_line_resolver_base.cc',
+    'stack_frame_symbolizer.cc',
+    'stackwalk_common.cc',
+    'stackwalker.cc',
+    'stackwalker_amd64.cc',
+    'stackwalker_arm.cc',
+    'stackwalker_arm64.cc',
+    'stackwalker_mips.cc',
+    'stackwalker_ppc.cc',
+    'stackwalker_ppc64.cc',
+    'stackwalker_sparc.cc',
+    'stackwalker_x86.cc',
+    'symbolic_constants_win.cc',
+    'tokenize.cc',
+]
+
+DEFINES['BPLOG_MINIMUM_SEVERITY'] = 'SEVERITY_CRITICAL'
+
+Library('breakpad_processor')
+
+# Don't use the STL wrappers in the crashreporter clients
+DisableStlWrapping()
+
+include('/toolkit/crashreporter/crashreporter.mozbuild')
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

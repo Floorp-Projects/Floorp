@@ -1,0 +1,76 @@
+diff --git a/src/google_breakpad/common/minidump_exception_linux.h b/src/google_breakpad/common/minidump_exception_linux.h
+--- a/src/google_breakpad/common/minidump_exception_linux.h
++++ b/src/google_breakpad/common/minidump_exception_linux.h
+@@ -83,16 +83,20 @@ typedef enum {
+   MD_EXCEPTION_CODE_LIN_DUMP_REQUESTED = 0xFFFFFFFF /* No exception,
+                                                        dump requested. */
+ } MDExceptionCodeLinux;
+ 
+ /* For (MDException).exception_flags.  These values come from
+  * asm-generic/siginfo.h.
+  */
+ typedef enum {
++  /* Generic */
++  MD_EXCEPTION_FLAG_LIN_SI_USER = 0,
++  MD_EXCEPTION_FLAG_LIN_SI_KERNEL = 0x80,
++
+   /* SIGILL */
+   MD_EXCEPTION_FLAG_LIN_ILL_ILLOPC = 1,
+   MD_EXCEPTION_FLAG_LIN_ILL_ILLOPN = 2,
+   MD_EXCEPTION_FLAG_LIN_ILL_ILLADR = 3,
+   MD_EXCEPTION_FLAG_LIN_ILL_ILLTRP = 4,
+   MD_EXCEPTION_FLAG_LIN_ILL_PRVOPC = 5,
+   MD_EXCEPTION_FLAG_LIN_ILL_PRVREG = 6,
+   MD_EXCEPTION_FLAG_LIN_ILL_COPROC = 7,
+diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
+--- a/src/processor/minidump_processor.cc
++++ b/src/processor/minidump_processor.cc
+@@ -1401,16 +1401,22 @@ string MinidumpProcessor::GetCrashReason
+           reason = "SIGTRAP";
+           break;
+         case MD_EXCEPTION_CODE_LIN_SIGABRT:
+           reason = "SIGABRT";
+           break;
+         case MD_EXCEPTION_CODE_LIN_SIGBUS:
+           reason = "SIGBUS / ";
+           switch (exception_flags) {
++            case MD_EXCEPTION_FLAG_LIN_SI_USER:
++              reason.append("SI_USER");
++              break;
++            case MD_EXCEPTION_FLAG_LIN_SI_KERNEL:
++              reason.append("SI_KERNEL");
++              break;
+             case MD_EXCEPTION_FLAG_LIN_BUS_ADRALN:
+               reason.append("BUS_ADRALN");
+               break;
+             case MD_EXCEPTION_FLAG_LIN_BUS_ADRERR:
+               reason.append("BUS_ADRERR");
+               break;
+             case MD_EXCEPTION_FLAG_LIN_BUS_OBJERR:
+               reason.append("BUS_OBJERR");
+@@ -1462,18 +1468,24 @@ string MinidumpProcessor::GetCrashReason
+           break;
+         case MD_EXCEPTION_CODE_LIN_SIGKILL:
+           reason = "SIGKILL";
+           break;
+         case MD_EXCEPTION_CODE_LIN_SIGUSR1:
+           reason = "SIGUSR1";
+           break;
+         case MD_EXCEPTION_CODE_LIN_SIGSEGV:
+-          reason = "SIGSEGV /";
++          reason = "SIGSEGV / ";
+           switch (exception_flags) {
++            case MD_EXCEPTION_FLAG_LIN_SI_USER:
++              reason.append("SI_USER");
++              break;
++            case MD_EXCEPTION_FLAG_LIN_SI_KERNEL:
++              reason.append("SI_KERNEL");
++              break;
+             case MD_EXCEPTION_FLAG_LIN_SEGV_MAPERR:
+               reason.append("SEGV_MAPERR");
+               break;
+             case MD_EXCEPTION_FLAG_LIN_SEGV_ACCERR:
+               reason.append("SEGV_ACCERR");
+               break;
+             case MD_EXCEPTION_FLAG_LIN_SEGV_BNDERR:
+               reason.append("SEGV_BNDERR");

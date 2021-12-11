@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var b = document.body;
+  b.contentEditable = "true";
+  document.execCommand("contentReadOnly", false, null);
+  b.focus();
+  b.contentEditable = "false";
+  document.documentElement.contentEditable = "true";
+  document.createDocumentFragment().appendChild(b);
+  document.documentElement.focus();
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

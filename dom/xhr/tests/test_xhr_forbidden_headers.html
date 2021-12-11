@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=308484
+-->
+<head>
+  <title>Test for Bug 308484</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=308484">Mozilla Bug 308484</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 308484 **/
+
+var headers = [
+  "aCCept-chaRset",
+  "acCePt-eNcoDing",
+  "aCcEsS-cOnTrOl-ReQuEsT-mEtHoD",
+  "aCcEsS-cOnTrOl-ReQuEsT-hEaDeRs",
+  "coNnEctIon",
+  "coNtEnt-LEngth",
+  "CoOKIe",
+  "cOOkiE2",
+  "DATE",
+  "dNT",
+  "exPeCt",
+  "hOSt",
+  "keep-alive",
+  "oRiGiN",
+  "reFERer",
+  "te",
+  "trAiLer",
+  "trANsfEr-eNcoDiNg",
+  "uPGraDe",
+  "viA",
+  "pRoxy-",
+  "sEc-",
+  "proxy-fOobar",
+  "sec-bAZbOx"
+];
+var i, request;
+
+function  startTest() {
+  // Try setting headers in unprivileged context
+  request = new XMLHttpRequest();
+  request.open("GET", window.location.href);
+  for (i = 0; i < headers.length; i++)
+    request.setRequestHeader(headers[i], "test" + i);
+  request.send(); // headers aren't set on the channel until send()
+
+  // Read out headers
+  channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
+  for (i = 0; i < headers.length; i++) {
+    // Retrieving Content-Length will throw an exception
+    value = null;
+    try {
+      value = channel.getRequestHeader(headers[i]);
+    }
+    catch(e) {}
+
+    isnot(value, "test" + i, "Setting " + headers[i] + " header in unprivileged context");
+  }
+
+  // Try setting headers in privileged context
+  request = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  request.open("GET", window.location.href);
+  for (i = 0; i < headers.length; i++)
+    request.setRequestHeader(headers[i], `http://test${i}/`);
+  request.send(); // headers aren't set on the channel until send()
+
+  // Read out headers
+  var channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
+  for (i = 0; i < headers.length; i++) {
+    var value = channel.getRequestHeader(headers[i]);
+    is(value, `http://test${i}/`, "Setting " + headers[i] + " header in privileged context");
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+   SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], startTest);
+});
+</script>
+</pre>
+</body>
+</html>

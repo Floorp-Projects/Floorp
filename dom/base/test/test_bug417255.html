@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=417255
+-->
+<head>
+  <title>Test for Bug 417255</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+  .spacer { display:inline-block; height:10px; }
+  </style>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417255">Mozilla Bug 417255</a>
+<div id="display" style="width:800px"></div>
+
+<div><span id="s1" style="border:2px dotted red;"><span class="spacer" style="width:100px"></span>
+<div style="width:500px; height:100px; background:yellow;"></div>
+<span class="spacer" style="width:200px"></span></span></div>
+
+<div><span id="s2" style="border:2px dotted red;"><span class="spacer" style="width:100px"></span>
+<div style="width:150px; height:100px; background:yellow;"></div>
+<span class="spacer" style="width:200px"></span></span></div>
+
+<!-- test nested spans around the IB split -->
+<div><span id="s3" style="border:2px dotted red;"><span><span class="spacer" style="width:100px"></span>
+<div style="width:500px; height:100px; background:yellow;"></div>
+<span class="spacer" style="width:200px"></span></span></span></div>
+
+<div id="content" style="display: none">
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function getWidth(box) {
+  return box.right - box.left;
+}
+
+function doTest(id, boundsWidth, w1, w2, w3) {
+  var s = document.getElementById(id);
+  is(s.offsetWidth, boundsWidth, "bad offsetWidth");
+  is(getWidth(s.getBoundingClientRect()), boundsWidth, "bad getBoundingClientRect width");
+  is(getWidth(s.getClientRects()[0]), w1, "bad getClientRects width"); 
+  is(getWidth(s.getClientRects()[1]), w2, "bad getClientRects width"); 
+  is(getWidth(s.getClientRects()[2]), w3, "bad getClientRects width"); 
+}
+
+doTest("s1", 500, 102, 500, 202);
+doTest("s2", 202, 102, 150, 202);
+doTest("s3", 500, 102, 500, 202);
+
+</script>
+</pre>
+</body>
+
+</html>

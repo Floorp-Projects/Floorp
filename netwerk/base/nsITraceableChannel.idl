@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIStreamListener;
+
+/**
+ * A channel implementing this interface allows one to intercept its data by
+ * inserting intermediate stream listeners.
+ */
+[scriptable, uuid(68167b0b-ef34-4d79-a09a-8045f7c5140e)]
+interface nsITraceableChannel : nsISupports
+{
+    /*
+     * Replace the channel's listener with a new one, and return the listener
+     * the channel used to have. The new listener intercepts OnStartRequest,
+     * OnDataAvailable and OnStopRequest calls and must pass them to
+     * the original listener after examination. If multiple callers replace
+     * the channel's listener, a chain of listeners is created.
+     * The caller of setNewListener has no way to control at which place
+     * in the chain its listener is placed.
+     *
+     * @param aMustApplyContentConversion Pass true if the new listener requires
+     * content conversion to already be applied by the channel.
+     *
+     * Note: The caller of setNewListener must not delay passing
+     * OnStartRequest to the original listener.
+     *
+     * Note2: A channel may restrict when the listener can be replaced.
+     * It is not recommended to allow listener replacement after OnStartRequest
+     * has been called.
+     */
+    nsIStreamListener setNewListener(in nsIStreamListener aListener, [optional] in boolean aMustApplyContentConversion);
+};

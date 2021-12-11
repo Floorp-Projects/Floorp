@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<title>Test for bug 641198</title>
+<link rel="stylesheet" href="ImageDocument.css">
+<style type="text/css" media=screen>
+   a.animated1 {
+      display: block;
+      width: 40px;
+      height: 40px;
+      background: url("animation1a.gif") no-repeat 0 0;
+   }
+
+   a.animated1 span {
+      position: absolute;
+      top: -999em;
+   }
+
+   a.animated2 {
+      display: block;
+      width: 40px;
+      height: 40px;
+      background: url("animation2a.gif") no-repeat 0 0;
+   }
+
+   a.animated2 span {
+      position: absolute;
+      top: -999em;
+   }
+</style>
+</head>
+<body onload="doTimeout()">
+
+<a id="animated" href="#" title="Animated"><span>Animated</span></a>
+
+<script>
+// We check whether changing the class will lead to the animation being
+// run from the beginning, even if the animation was already shown
+// before.
+var counter = 0;
+function doTimeout() {
+  if (counter == 4) {
+    document.documentElement.className = '';
+  } else {
+    document.getElementById("animated").setAttribute("class", "animated" + ((counter % 2)+1));
+    setTimeout(doTimeout, counter == 3 ? 500 : 250); // Wait a bit more for the last one, to prevent oranges
+  }
+  counter++;
+}
+</script>
+</body>
+</html>
+

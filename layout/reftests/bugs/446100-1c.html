@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html reftest-zoom="1.8">
+<head>
+<style>
+div { margin:1em; }
+/* A 7x7px image, black with a 5x5 transparent box centered in it */
+div.box { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAYAAADEUlfTAAAAFklEQVQImWNgYGD4jwdDCCxgQCWxYgBX8hfpeym4dwAAAABJRU5ErkJggg==); }
+/* A 7x5px image, black with a 5x5 transparent box centered in it */
+div.vstrip { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAYAAACJmvbYAAAAFElEQVQImWNgYGD4z4Ad/GcYAEkAw+kJ94z5rSYAAAAASUVORK5CYII=); }
+/* A 5x7px image, black with a 5x5 transparent box centered in it */
+div.hstrip { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAHCAYAAADAp4fuAAAAE0lEQVQImWNgYGD4jwXTD2DYDgDN4Qn3yMcPlwAAAABJRU5ErkJggg==); }
+</style>
+</head>
+<body>
+<div class="box" style="background-position:-1px -1px; width:5px; height:5px;"></div>
+<div class="vstrip" style="background-position:-1px 0px; width:5px; height:22px;"></div>
+<div class="hstrip" style="background-position:0px -1px; width:22px; height:5px;"></div>
+</body>
+</html>

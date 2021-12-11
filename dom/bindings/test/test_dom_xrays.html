@@ -1,0 +1,330 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=787070
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 787070</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=787070">Mozilla Bug 787070</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="t" src="http://example.org/tests/dom/bindings/test/file_dom_xrays.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1021066 **/
+
+// values should contain the values that the property should have on each of
+// the objects on the prototype chain of obj. A value of undefined signals
+// that the value should not be present on that prototype.
+function checkXrayProperty(obj, name, values) {
+  var instance = obj;
+  do {
+    var value = values.shift();
+    if (typeof value == "undefined") {
+      ok(!obj.hasOwnProperty(name), "hasOwnProperty shouldn't see \"" + String(name) + "\" through Xrays");
+      is(Object.getOwnPropertyDescriptor(obj, name), undefined, "getOwnPropertyDescriptor shouldn't see \"" + String(name) + "\" through Xrays");
+      ok(!Object.keys(obj).includes(name), "Enumerating the Xray should not return \"" + String(name) + "\"");
+      ok(!Object.getOwnPropertyNames(obj).includes(name),
+         `The Xray's property names should not include ${String(name)}`);
+      ok(!Object.getOwnPropertySymbols(obj).includes(name),
+         `The Xray's property symbols should not include ${String(name)}`);
+    } else {
+      ok(obj.hasOwnProperty(name), "hasOwnProperty should see \"" + String(name) + "\" through Xrays");
+      var pd = Object.getOwnPropertyDescriptor(obj, name);
+      ok(pd, "getOwnPropertyDescriptor should see \"" + String(name) + "\" through Xrays");
+      if (pd && pd.get) {
+        is(pd.get.call(instance), value, "Should get the right value for \"" + String(name) + "\" through Xrays");
+      } else {
+        is(obj[name], value, "Should get the right value for \"" + String(name) + "\" through Xrays");
+      }
+      if (pd) {
+        if (pd.enumerable) {
+          ok(Object.keys(obj).indexOf("" + name) > -1, "Enumerating the Xray should return \"" + String(name) + "\"");
+        }
+        if (typeof name == "symbol") {
+          ok(Object.getOwnPropertySymbols(obj).includes(name),
+             `The Xray's property symbols should include ${String(name)}`);
+        } else {
+          ok(Object.getOwnPropertyNames(obj).includes("" + name),
+             `The Xray's property names should include ${name}`);
+        }
+      }
+    }
+  } while ((obj = Object.getPrototypeOf(obj)));
+}
+
+function checkWindowXrayProperty(obj, name, windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue) {
+  checkXrayProperty(obj, name, [ windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue ]);
+}
+
+function test() {
+  // Window
+  var win = document.getElementById("t").contentWindow;
+  var doc = document.getElementById("t").contentDocument;
+
+  var winProto = Object.getPrototypeOf(win);
+  is(winProto, win.Window.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  var namedPropertiesObject = Object.getPrototypeOf(winProto);
+  is(Cu.getClassName(namedPropertiesObject, /* unwrap = */ true), "WindowProperties", "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  var eventTargetProto = Object.getPrototypeOf(namedPropertiesObject);
+  is(eventTargetProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  // Xrays need to filter expandos.
+  checkWindowXrayProperty(win, "expando", undefined);
+  ok(!("expando" in win), "Xrays should filter expandos");
+
+  checkWindowXrayProperty(win, "shadowedIframe", undefined);
+  ok(!("shadowedIframe" in win), "Named properties should not be exposed through Xrays");
+
+  // Named properties live on the named properties object for global objects,
+  // but are not exposed via Xrays.
+  checkWindowXrayProperty(win, "iframe", undefined, undefined, undefined, undefined);
+  ok(!("iframe" in win), "Named properties should not be exposed through Xrays");
+
+  // Window properties live on the instance, shadowing the properties of the named property object.
+  checkWindowXrayProperty(win, "document", doc, undefined, undefined, undefined);
+  ok("document" in win, "WebIDL properties should be exposed through Xrays");
+
+  // Unforgeable properties live on the instance, shadowing the properties of the named property object.
+  checkWindowXrayProperty(win, "self", win, undefined, undefined, undefined);
+  ok("self" in win, "WebIDL properties should be exposed through Xrays");
+
+  // Object.prototype is at the end of the prototype chain.
+  var obj = win;
+  var proto;
+  while ((proto = Object.getPrototypeOf(obj))) {
+    obj = proto;
+  }
+  is(obj, win.Object.prototype, "Object.prototype should be at the end of the prototype chain");
+
+  // Named properties shouldn't shadow WebIDL- or ECMAScript-defined properties.
+  checkWindowXrayProperty(win, "addEventListener", undefined, undefined, undefined, eventTargetProto.addEventListener);
+  is(win.addEventListener, eventTargetProto.addEventListener, "Named properties shouldn't shadow WebIDL-defined properties");
+
+  is(win.toString, win.Object.prototype.toString, "Named properties shouldn't shadow ECMAScript-defined properties");
+
+  // WebIDL interface names should be exposed.
+  var waivedWin = Cu.waiveXrays(win);
+  checkWindowXrayProperty(win, "Element", Cu.unwaiveXrays(waivedWin.Element));
+
+  // JS standard classes should be exposed.
+  checkWindowXrayProperty(win, "Array", Cu.unwaiveXrays(waivedWin.Array));
+
+  // HTMLDocument
+  // Unforgeable properties live on the instance.
+  checkXrayProperty(doc, "location", [ win.location ]);
+  is(String(win.location), document.getElementById("t").src,
+     "Should have the right stringification");
+
+  // HTMLHtmlElement
+  var elem = doc.documentElement;
+
+  var elemProto = Object.getPrototypeOf(elem);
+  is(elemProto, win.HTMLHtmlElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  is(elemProto, win.HTMLElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  is(elemProto, win.Element.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  is(elemProto, win.Node.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  is(elemProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  // Xrays need to filter expandos.
+  ok(!("expando" in elem), "Xrays should filter expandos");
+
+  // WebIDL-defined properties live on the prototype.
+  checkXrayProperty(elem, "version", [ undefined, "" ]);
+  is(elem.version, "", "WebIDL properties should be exposed through Xrays");
+
+  // HTMLCollection
+  var coll = doc.getElementsByTagName("iframe");
+
+  // Named properties live on the instance for non-global objects.
+  checkXrayProperty(coll, "iframe", [ doc.getElementById("iframe") ]);
+
+  // Indexed properties live on the instance.
+  checkXrayProperty(coll, 0, [ doc.getElementById("shadowedIframe") ]);
+
+  // WebIDL-defined properties live on the prototype, overriding any named properties.
+  checkXrayProperty(coll, "item", [ undefined, win.HTMLCollection.prototype.item ]);
+
+  // ECMAScript-defined properties live on the prototype, overriding any named properties.
+  checkXrayProperty(coll, "toString", [ undefined, undefined, win.Object.prototype.toString ]);
+
+  // Frozen arrays should come from our compartment, not the target one.
+  var languages1 = win.navigator.languages;
+  isnot(languages1, undefined, "Must have .languages");
+  ok(Array.isArray(languages1), ".languages should be an array");
+  ok(Object.isFrozen(languages1), ".languages should be a frozen array");
+  ok(!Cu.isXrayWrapper(languages1), "Should have our own version of array");
+  is(Cu.getGlobalForObject(languages1), window,
+     "languages1 should come from our window");
+  // We want to get .languages in the content compartment, but without waiving
+  // Xrays altogether.
+  var languages2 = win.eval("navigator.languages");
+  isnot(languages2, undefined, "Must still have .languages");
+  ok(Array.isArray(languages2), ".languages should still be an array");
+  ok(Cu.isXrayWrapper(languages2), "Should have xray for content version of array");
+  is(Cu.getGlobalForObject(languages2), win,
+     "languages2 come from the underlying window");
+  ok(Object.isFrozen(languages2.wrappedJSObject),
+     ".languages should still be a frozen array underneath");
+  isnot(languages1, languages2, "Must have distinct arrays");
+  isnot(languages1, languages2.wrappedJSObject,
+        "Must have distinct arrays no matter how we slice it");
+
+  // Check that DataTransfer's .types has the hack to alias contains()
+  // to includes().
+  var dataTransfer = new win.DataTransfer();
+  is(dataTransfer.types.contains, dataTransfer.types.includes,
+     "Should have contains() set up as an alias to includes()");
+  // Waive Xrays on the dataTransfer itself, since the .types we get is
+  // different over Xrays vs not.
+  is(dataTransfer.wrappedJSObject.types.contains, undefined,
+     "Underlying object should not have contains() set up as an alias to " +
+     "includes()");
+
+  // Check that deleters work correctly in the [OverrideBuiltins] case.
+  elem = win.document.documentElement;
+  var dataset = elem.dataset;
+  is(dataset.foo, undefined, "Should not have a 'foo' property");
+  ok(!("foo" in dataset), "Really should not have a 'foo' property");
+  is(elem.getAttribute("data-foo"), null,
+     "Should not have a 'data-foo' attribute");
+  ok(!elem.hasAttribute("data-foo"),
+     "Really should not have a 'data-foo' attribute");
+  dataset.foo = "bar";
+  is(dataset.foo, "bar", "Should now have a 'foo' property");
+  ok("foo" in dataset, "Really should have a 'foo' property");
+  is(elem.getAttribute("data-foo"), "bar",
+     "Should have a 'data-foo' attribute");
+  ok(elem.hasAttribute("data-foo"),
+     "Really should have a 'data-foo' attribute");
+  delete dataset.foo;
+  is(dataset.foo, undefined, "Should not have a 'foo' property again");
+  ok(!("foo" in dataset), "Really should not have a 'foo' property again");
+  is(elem.getAttribute("data-foo"), null,
+     "Should not have a 'data-foo' attribute again");
+  ok(!elem.hasAttribute("data-foo"),
+     "Really should not have a 'data-foo' attribute again");
+
+  // Check that deleters work correctly in the non-[OverrideBuiltins] case.
+  var storage = win.sessionStorage;
+  is(storage.foo, undefined, "Should not have a 'foo' property");
+  ok(!("foo" in storage), "Really should not have a 'foo' property");
+  is(storage.getItem("foo"), null, "Should not have an item named 'foo'");
+  storage.foo = "bar";
+  is(storage.foo, "bar", "Should have a 'foo' property");
+  ok("foo" in storage, "Really should have a 'foo' property");
+  is(storage.getItem("foo"), "bar", "Should have an item named 'foo'");
+  delete storage.foo;
+  is(storage.foo, undefined, "Should not have a 'foo' property again");
+  ok(!("foo" in storage), "Really should not have a 'foo' property again");
+  is(storage.getItem("foo"), null, "Should not have an item named 'foo' again");
+
+  // Non-static properties are not exposed on interface objects or instances.
+  is(win.HTMLInputElement.checkValidity, undefined,
+     "Shouldn't see non-static property on interface objects");
+  is(Object.getOwnPropertyDescriptor(win.HTMLInputElement, "checkValidity"), undefined,
+     "Shouldn't see non-static property on interface objects");
+  is(Object.getOwnPropertyNames(win.HTMLInputElement).indexOf("checkValidity"), -1,
+     "Shouldn't see non-static property on interface objects");
+  isnot(typeof doc.createElement("input").checkValidity, "undefined",
+        "Should see non-static property on prototype objects");
+  is(Object.getOwnPropertyDescriptor(doc.createElement("input"), "checkValidity"), undefined,
+     "Shouldn't see non-static property on instances");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "checkValidity"), "undefined",
+        "Should see non-static property on prototype objects");
+
+  // Static properties are not exposed on prototype objects or instances.
+  isnot(typeof win.URL.createObjectURL, "undefined",
+        "Should see static property on interface objects");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.URL, "createObjectURL"), "undefined",
+        "Should see static property on interface objects");
+  isnot(Object.getOwnPropertyNames(win.URL).indexOf("createObjectURL"), -1,
+        "Should see static property on interface objects");
+  is(new URL("http://example.org").createObjectURL, undefined,
+     "Shouldn't see static property on instances and prototype ojbects");
+  is(Object.getOwnPropertyDescriptor(new URL("http://example.org"), "createObjectURL"), undefined,
+     "Shouldn't see static property on instances");
+  is(Object.getOwnPropertyDescriptor(win.URL.prototype, "createObjectURL"), undefined,
+     "Shouldn't see static property on prototype objects");
+
+  // Unforgeable properties are not exposed on prototype objects or interface
+  // objects.
+  is(Window.document, undefined,
+     "Shouldn't see unforgeable property on interface objects");
+  is(Object.getOwnPropertyDescriptor(Window, "document"), undefined,
+     "Shouldn't see unforgeable property on interface objects");
+  is(Object.getOwnPropertyNames(Window).indexOf("document"), -1,
+     "Shouldn't see unforgeable property on interface objects");
+  isnot(typeof win.document, "undefined",
+        "Should see unforgeable property on instances");
+  isnot(typeof Object.getOwnPropertyDescriptor(win, "document"), "undefined",
+        "Should see unforgeable property on instances");
+  is(Object.getOwnPropertyDescriptor(Window.prototype, "document"), undefined,
+     "Shouldn't see unforgeable property on prototype objects");
+
+  // Constant properties are not exposted on instances.
+  isnot(typeof win.Node.ELEMENT_NODE, "undefined",
+        "Should see constant property on interface objects");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.Node, "ELEMENT_NODE"), "undefined",
+        "Should see constant property on interface objects");
+  isnot(Object.getOwnPropertyNames(win.Node).indexOf("ELEMENT_NODE"), -1,
+        "Should see constant property on interface objects");
+  isnot(typeof elem.ELEMENT_NODE, "undefined",
+        "Should see constant property on prototype objects");
+  is(Object.getOwnPropertyDescriptor(elem, "ELEMENT_NODE"), undefined,
+     "Shouldn't see constant property on instances");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.Node.prototype, "ELEMENT_NODE"), "undefined",
+        "Should see constant property on prototype objects");
+
+  // Adopting nodes should not lose expandos.
+  elem = document.createElement("span");
+  elem.expando = 5;
+  is(elem.expando, 5, "We just set this property");
+  document.adoptNode(elem);
+  is(elem.wrappedJSObject, undefined, "Shouldn't be an Xray anymore");
+  is(elem.expando, 5, "Expando should not get lost");
+
+  // Instanceof tests
+  var img = doc.createElement("img");
+  var img2 = document.createElement("img");
+  ok(img instanceof win.HTMLImageElement,
+     "Should be an instance of HTMLImageElement from its global");
+  ok(win.HTMLImageElement.isInstance(img), "isInstance should work");
+  ok(HTMLImageElement.isInstance(img), "isInstance should work cross-global");
+  ok(win.HTMLImageElement.isInstance(img2),
+     "isInstance should work cross-global in the other direction");
+  ok(img instanceof win.Image,
+     "Should be an instance of Image, because Image.prototype == HTMLImageElement.prototype");
+  ok(!win.Image.isInstance, "Shouldn't have an isInstance method here");
+  // Image does not have a Symbol.hasInstance, but its proto
+  // (Function.prototype) does.
+  checkXrayProperty(win.Image, Symbol.hasInstance,
+                    [undefined, win.Function.prototype[Symbol.hasInstance]]);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+
+</script>
+</pre>
+</body>
+</html>

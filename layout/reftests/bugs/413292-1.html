@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+
+<style>
+  body { font-family: sans-serif; }
+</style>
+
+<script type="text/javascript">
+var loopCount = 0;
+var pause = 10; // smaller values make the bug more likely to occur
+var src = "data:text/html,iframe 1 <iframe width='100' height='100' src='data:text/html,iframe 2'>";
+var start = new Date();
+
+function ap()
+{
+  document.getElementById("div").style.position = "absolute";
+  setTimeout(bp, pause);
+}
+
+function bp()
+{
+  document.getElementById("div").style.position = "";
+  setTimeout(cp, pause);
+}
+
+function cp()
+{
+  document.getElementById("iframe").setAttribute("src", src);
+  setTimeout(nextIteration, pause);
+}
+
+function nextIteration()
+{
+  var now = new Date();
+  loopCount++;
+  if (loopCount < 20 && now - start < 5000) {
+    ap();
+  } else {
+    document.body.textContent = "Done";
+    document.documentElement.className = '';
+  }
+}
+</script>
+
+</head>
+
+<body onload="ap();"><div id="div"><iframe id="iframe"></iframe></div></body>
+</html>

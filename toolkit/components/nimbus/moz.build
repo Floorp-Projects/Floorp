@@ -1,0 +1,43 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Nimbus Desktop Client")
+
+EXPORTS.mozilla.browser += [
+    "lib/NimbusFeatures.h",
+]
+
+UNIFIED_SOURCES += [
+    "lib/NimbusFeatures.cpp",
+]
+
+# We expose NimbusFeatures to Android to make it easier to
+# import everywhere but the tests will fail to run
+if CONFIG["OS_TARGET"] != "Android":
+    TEST_DIRS += [
+        "test/gtest",
+    ]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+
+SPHINX_TREES["docs"] = "docs"
+
+TESTING_JS_MODULES += [
+    "schemas/ExperimentFeatureManifest.schema.json",
+    "schemas/ExperimentFeatureRemote.schema.json",
+    "schemas/NimbusEnrollment.schema.json",
+    "schemas/NimbusExperiment.schema.json",
+    "test/NimbusTestUtils.jsm",
+]
+
+FINAL_LIBRARY = "xul"
+
+JAR_MANIFESTS += ["jar.mn"]

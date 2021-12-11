@@ -1,0 +1,59 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Make sure that scrolling #scrolledBox into view paints the scrolled strip even while #coveringFixedBar covers that strip</title>
+
+<style>
+
+html {
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  height: 2000px;
+}
+
+#coveringFixedBar {
+  position: fixed;
+  left: 10px;
+  top: 0;
+  width: 380px;
+  height: 20px;
+  background: blue;
+  z-index: 100;
+}
+
+#scrolledBox {
+  position: relative;
+  margin: 0 100px;
+  opacity: 0.9;
+  width: 200px;
+  height: 200px;
+  background: lime;
+  border: 1px solid black;
+}
+
+</style>
+
+<div id="coveringFixedBar"></div>
+
+<div id="scrolledBox"></div>
+
+<script>
+
+document.documentElement.scrollTop = 40;
+
+window.addEventListener("MozReftestInvalidate", function () {
+  document.documentElement.scrollTop = 20;
+  window.requestAnimationFrame(function () {
+    document.documentElement.scrollTop = 0;
+    document.documentElement.removeAttribute("class");
+  });
+});
+
+</script>

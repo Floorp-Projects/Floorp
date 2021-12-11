@@ -1,0 +1,1135 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --card-padding: 24px;
+  --exit-icon-size: 12px;
+  --exit-icon-position: calc((var(--card-padding) - var(--exit-icon-size)) / 2);
+  --social-color: #9059FF;
+  --cookie-color: #0090F4;
+  --tracker-color: #2AC3A2;
+  --fingerprinter-color: #FFA436;
+  --cryptominer-color: #ADADBC;
+
+  /* Highlight colors for trackers */
+  --social-highlight-color: #7B4CDB;
+  --cookie-highlight-color: #0081DB;
+  --tracker-highlight-color: #23A488;
+  --fingerprinter-highlight-color: #D37F17;
+  --cryptominer-highlight-color: #9292A0;
+
+  --tab-highlight: var(--social-color); /* start with social selected */
+  --column-width: 16px;
+  --graph-empty: #CECECF;
+  --graph-curve: cubic-bezier(.66,.75,.59,.91);
+
+  /* Colors for the loading indicator */
+  --protection-report-loader-color-stop: #AEAEAE3D;
+  --protection-report-loader-gradient-opacity: 0.95;
+
+  --grey-70: #38383D;
+  --grey-90-a60: rgba(12, 12, 13, 0.6);
+
+  --gear-icon-fill: var(--grey-90-a60);
+  --hover-grey-link: var(--grey-70);
+  --feature-banner-color: rgba(0, 0, 0, 0.05);
+}
+
+body {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+body[focuseddatatype=social] {
+  --tab-highlight: var(--social-color);
+}
+
+body[focuseddatatype=cookie] {
+  --tab-highlight: var(--cookie-color);
+}
+
+body[focuseddatatype=tracker] {
+  --tab-highlight: var(--tracker-color);
+}
+
+body[focuseddatatype=fingerprinter] {
+  --tab-highlight: var(--fingerprinter-color);
+}
+
+body[focuseddatatype=cryptominer] {
+  --tab-highlight: var(--cryptominer-color);
+}
+
+h2 {
+  font-weight: 700;
+}
+
+#report-title {
+  font-size: 20px;
+  font-weight: 300;
+  margin-block-end: 20px;
+}
+
+#report-summary {
+  color: var(--in-content-deemphasized-text);
+  line-height: 26px;
+  font-size: 16px;
+  margin: 0;
+  margin-bottom: 15px;
+}
+
+#report-content {
+  width: 763px;
+  margin: 0 auto;
+  margin-block: 40px 80px;
+}
+
+.card-header .wrapper,
+.new-banner .wrapper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: center;
+}
+
+#manage-protections,
+.card-header > button,
+#save-passwords-button,
+#get-proxy-extension-link,
+#get-vpn-link,
+#vpn-banner-link,
+#manage-passwords-button,
+#sign-up-for-monitor-link {
+  grid-area: 1 / 5 / 1 / -1;
+  margin: 0;
+  font-size: 0.95em;
+  cursor: pointer;
+  padding: 10px;
+  text-align: center;
+  line-height: initial;
+}
+
+#vpn-banner-link {
+  grid-area: 1 / 6 / 1 / -1;
+}
+
+.new-banner .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / 6;
+  padding-inline-end: 15px;
+}
+
+.lockwise-card.has-logins .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / 6;
+}
+
+.card:not(.has-logins) .wrapper div:nth-child(1),
+.etp-card.custom-not-blocking .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / 5;
+  padding-inline-end: 15px;
+}
+
+.etp-card:not(.custom-not-blocking) .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / 8;
+}
+
+.card.has-logins .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / -1;
+}
+
+.vpn-card.subscribed .wrapper div:nth-child(1) {
+  padding-inline-end: 29px;
+  grid-area: 1 / 1 / 1 / 7;
+}
+
+/* We want to hide certain components depending on its state. */
+.no-logins .monitor-scanned-wrapper,
+.etp-card.custom-not-blocking .card-body,
+.etp-card.custom-not-blocking #protection-settings,
+#manage-protections,
+.etp-card .icon.dark,
+.proxy-card .icon.dark,
+.vpn-card .icon.dark,
+.vpn-banner .icon.dark,
+a.hidden,
+.loading .card-body,
+.lockwise-card.hidden,
+#lockwise-body-content .has-logins.hidden,
+#lockwise-body-content .no-logins.hidden,
+.lockwise-card.no-logins #lockwise-how-it-works,
+.lockwise-card.no-logins .lockwise-scanned-wrapper,
+.lockwise-card.no-logins #manage-passwords-button,
+.lockwise-card.has-logins #save-passwords-button,
+.monitor-card.hidden,
+.monitor-card.no-logins .card-body,
+.monitor-card.no-logins #monitor-header-content a,
+.monitor-card.no-logins .monitor-scanned-text,
+.monitor-card.no-logins .icon-small,
+.monitor-card.no-logins .monitor-breaches-wrapper,
+.monitor-card.no-logins .monitor-partial-breaches-wrapper,
+.monitor-card .monitor-breaches-wrapper.hidden,
+.monitor-card .monitor-partial-breaches-wrapper.hidden,
+.monitor-card.has-logins #sign-up-for-monitor-link,
+.loading a,
+.loading button,
+.loading .wrapper,
+.proxy-card.hidden,
+.vpn-card.hidden,
+.card-body.hidden,
+.hidden {
+  display: none;
+}
+
+.icon {
+  width: 64px;
+  height: 64px;
+  grid-column: 1;
+  margin: 0 auto;
+  z-index: 1;
+}
+
+.vpn-card .icon {
+  width: 56px;
+  height: 56px;
+}
+
+.new-banner .icon {
+  width: 50px;
+  height: 50px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --social-highlight-color: #9661FF;
+    --cookie-highlight-color: #2BA8FF;
+    --tracker-highlight-color: #39E1BC;
+    --fingerprinter-highlight-color: #FFB65E;
+    --cryptominer-highlight-color: #BEBECA;
+
+    --gear-icon-fill: rgba(249, 249, 250, 0.60);
+    --hover-grey-link: var(--grey-30);
+    --feature-banner-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .etp-card .icon.dark,
+  .proxy-card .icon.dark,
+  .vpn-card .icon.dark,
+  .vpn-banner .icon.dark {
+    display: block;
+  }
+
+  .etp-card .icon.light,
+  .proxy-card .icon.light,
+  .vpn-card .icon.light,
+  .vpn-banner .icon.light {
+    display: none;
+  }
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-rows: 20% auto;
+  padding: 0;
+  margin-block-end: 25px;
+  line-height: 1.3em;
+}
+
+.card-header,
+.card-body {
+  display: grid;
+  grid-template-columns: 1fr 7fr;
+  padding: var(--card-padding);
+  grid-gap: var(--card-padding);
+}
+
+.card .card-title {
+  font-size: inherit;
+  line-height: 1.25;
+  margin: 0;
+  cursor: default;
+}
+
+.card .content {
+  margin-block: 5px 0;
+  font-size: .93em;
+  cursor: default;
+  color: var(--in-content-deemphasized-text);
+}
+
+.exit-icon {
+  position: absolute;
+  width: var(--exit-icon-size);
+  height: var(--exit-icon-size);
+  top: var(--exit-icon-position);
+  inset-inline-end: var(--exit-icon-position);
+  background-image: url(chrome://global/skin/icons/close.svg);
+  background-size: calc(var(--exit-icon-size) - 2px);
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--in-content-deemphasized-text);
+
+  /* Override margin, padding, min-height and min-width set in common.inc.css */
+  padding: 0;
+  margin: 0;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+.exit-icon:enabled:hover {
+  background-color: var(--in-content-button-background);
+}
+
+.exit-icon:enabled:hover:active {
+  background-color: var(--in-content-button-background-hover);
+}
+
+.custom-not-blocking .content {
+  margin-block-end: 5px;
+}
+
+.custom-not-blocking #manage-protections {
+  display: initial;
+}
+
+#protection-settings {
+  -moz-context-properties: fill;
+  fill: var(--gear-icon-fill);
+  background: url("chrome://global/skin/icons/settings.svg") no-repeat 0;
+  font-size: 0.75em;
+  cursor: pointer;
+  width: max-content;
+  color: var(--in-content-deemphasized-text);
+  margin-block: 6px 0;
+  font-size: 12px;
+  padding-block: 4px;
+  padding-inline: 24px 4px;
+}
+
+#protection-settings:dir(rtl) {
+  background-position-x: right;
+}
+
+#protection-settings:hover,
+#protection-settings:focus {
+  text-decoration: underline;
+  color: var(--hover-grey-link);
+  fill: var(--hover-grey-link);
+}
+
+#protection-settings:hover:active {
+  text-decoration: none;
+  color: var(--in-content-text-color);
+  fill: var(--in-content-text-color);
+}
+
+#protection-settings:-moz-focusring {
+  outline: none;
+}
+
+.card .card-body {
+  border-block-start: 1px solid var(--in-content-border-color);
+  grid-column: span 2;
+  grid-row: 2;
+  position: relative;
+}
+
+.body-wrapper {
+  grid-column: 2;
+}
+
+#graph-week-summary,
+#graph-total-summary {
+  font-size: 0.8em;
+}
+
+#graph-week-summary {
+  font-weight: bold;
+}
+
+#graph-wrapper {
+  width: 100%;
+  margin-block: 33px 25px;
+}
+
+#graph {
+  display: grid;
+  grid: repeat(10, 1fr) max-content / repeat(7, 1fr);
+  height: 130px;
+  margin-block-end: 10px;
+}
+
+#private-window-message {
+  border: 1px solid var(--in-content-border-color);
+  grid-area: 1 / 2 / 1 / 7;
+  background-color: var(--in-content-box-background-odd);
+  padding: 13px 45px;
+  font-size: 13px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+#graph:not(.private-window) #private-window-message {
+  display: none;
+}
+
+/* Graph Bars */
+.graph-bar {
+  grid-row: 2 / -2;
+  align-self: flex-end;
+  width: var(--column-width);
+  position: relative;
+  height: 0;
+  transition: height 500ms var(--graph-curve);
+}
+
+.graph-wrapper-bar {
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  overflow: hidden;
+  outline: 1px solid transparent;
+}
+
+.graph-bar:hover {
+  cursor: pointer;
+}
+
+.graph-bar.empty {
+  height: 0;
+  border: 1px var(--graph-empty) solid;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.social-bar {
+  background-color: var(--social-color);
+}
+
+.hover-social .social-bar {
+  background-color: var(--social-highlight-color);
+}
+
+.cookie-bar {
+  background-color: var(--cookie-color);
+}
+
+.hover-cookie .cookie-bar {
+  background-color: var(--cookie-highlight-color);
+}
+
+.tracker-bar {
+  background-color: var(--tracker-color);
+}
+
+.hover-tracker .tracker-bar {
+  background-color: var(--tracker-highlight-color);
+}
+
+.fingerprinter-bar {
+  background-color: var(--fingerprinter-color);
+}
+
+.hover-fingerprinter .fingerprinter-bar {
+  background-color: var(--fingerprinter-highlight-color);
+}
+
+.cryptominer-bar {
+  background-color: var(--cryptominer-color);
+}
+
+.hover-cryptominer .cryptominer-bar {
+  background-color: var(--cryptominer-highlight-color);
+}
+
+.column-label {
+  margin-block-start: 5px;
+  font-size: 0.9em;
+  width: var(--column-width);
+  grid-row: -1;
+}
+
+.bar-count {
+  position: absolute;
+  top: -21px;
+  font-size: 0.8em;
+  opacity: 0;
+  transition: opacity 700ms;
+  pointer-events: none;
+}
+
+.bar-count.animate {
+  opacity: 1;
+}
+
+/* Legend */
+#graphLegendDescription {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+
+input[type="radio"] {
+  position: absolute;
+  inset-inline-start: -100px;
+}
+
+#legend input:focus + label {
+  outline: solid 1px;
+  outline-offset: -1px;
+  outline-color: var(--tab-highlight);
+}
+
+#legend {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: auto auto;
+  grid-gap: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+#highlight {
+  background: var(--tab-highlight);
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  align-self: end;
+  grid-column: 1 / span 1;
+  grid-row: 1 / 1;
+}
+
+#highlight-hover {
+  position: absolute;
+  height: 4px;
+  width: 100%;
+  bottom: -1px;
+  align-self: end;
+}
+
+#legend label {
+  margin-block-end: -1px;
+  padding: 15px 0;
+  padding-inline-end: 5px;
+  border: 3px solid transparent;
+  -moz-context-properties: fill;
+  display: inline-block;
+}
+
+#legend label:-moz-focusring {
+  outline: none;
+}
+
+.icon-small {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-end: 2px;
+}
+
+label span {
+  margin-inline-start: 1px;
+  display: inline-block;
+}
+
+label[data-type="social"] .icon-small {
+  fill: var(--social-color);
+}
+
+label[data-type="cookie"] .icon-small {
+  fill: var(--cookie-color);
+}
+
+label[data-type="tracker"] .icon-small {
+  fill: var(--tracker-color);
+}
+
+label[data-type="fingerprinter"] .icon-small {
+  fill: var(--fingerprinter-color);
+}
+
+label[data-type="cryptominer"] .icon-small {
+  fill: var(--cryptominer-color);
+}
+
+.hover-social label[for="tab-social"],
+.hover-cookie label[for="tab-cookie"],
+.hover-tracker label[for="tab-tracker"],
+.hover-fingerprinter label[for="tab-fingerprinter"],
+.hover-cryptominer label[for="tab-cryptominer"],
+label:hover {
+  cursor: pointer;
+}
+
+.tab-content {
+  display: none;
+  padding: 22px 20px 20px;
+  border-block-start: 1px solid var(--tab-highlight);
+  background-color: var(--in-content-box-background-odd);
+  font-size: 0.8em;
+  line-height: 1.75;
+}
+
+.tab-content .content-title {
+  font-weight: bold;
+}
+
+.tab-content p {
+  margin: 0;
+}
+
+.tab-content p:nth-of-type(2) {
+  color: var(--in-content-deemphasized-text);
+}
+
+#tab-social:checked ~ #social,
+#tab-cookie:checked ~ #cookie,
+#tab-tracker:checked ~ #tracker,
+#tab-fingerprinter:checked ~ #fingerprinter,
+#tab-cryptominer:checked ~ #cryptominer {
+  display: block;
+  grid-column: 1/ -1;
+  grid-row: 2;
+}
+
+input[data-type="social"]:checked ~ #highlight,
+.hover-social label[for="tab-social"] ~ #highlight-hover,
+label[for="tab-social"]:hover ~ #highlight-hover {
+  background-color: var(--social-color);
+  grid-area: social;
+}
+
+input[data-type="cookie"]:checked  ~ #highlight,
+.hover-cookie label[for="tab-cookie"] ~ #highlight-hover,
+label[for="tab-cookie"]:hover ~ #highlight-hover {
+  background-color: var(--cookie-color);
+  grid-area: cookie;
+}
+
+input[data-type="tracker"]:checked  ~ #highlight,
+.hover-tracker label[for="tab-tracker"] ~ #highlight-hover,
+label[for="tab-tracker"]:hover ~ #highlight-hover {
+  background-color: var(--tracker-color);
+  grid-area: tracker;
+}
+
+input[data-type="fingerprinter"]:checked  ~ #highlight,
+.hover-fingerprinter label[for="tab-fingerprinter"] ~ #highlight-hover,
+label[for="tab-fingerprinter"]:hover ~ #highlight-hover {
+  background-color: var(--fingerprinter-color);
+  grid-area: fingerprinter;
+}
+
+input[data-type="cryptominer"]:checked ~ #highlight,
+.hover-cryptominer label[for="tab-cryptominer"] ~ #highlight-hover,
+label[for="tab-cryptominer"]:hover ~ #highlight-hover {
+  background-color: var(--cryptominer-color);
+  grid-area: cryptominer;
+}
+
+#mobile-hanger {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.etp-card {
+  margin-top: 31px;
+  grid-template-rows: 20% auto auto;
+}
+
+/* Lockwise Card */
+
+#lockwise-body-content > .no-logins,
+#lockwise-body-content > .has-logins,
+#etp-mobile-content {
+  display: grid;
+  font-size: 0.875em;
+  align-items: center;
+}
+
+#lockwise-body-content > .no-logins,
+#etp-mobile-content {
+  grid: 1fr / 1fr 6fr;
+}
+
+#lockwise-body-content > .has-logins {
+  grid: 1fr 1fr / minmax(70px, auto) 1fr;
+  grid-gap: 10px;
+}
+
+.mobile-app-icon {
+  height: 56px;
+  width: auto;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#lockwise-app-links,
+#mobile-app-links {
+  display: block;
+}
+
+.block {
+  background-color: var(--grey-60);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 1.125em;
+  font-weight: bold;
+  color: #fff;
+  padding: 7px;
+  line-height: 18px;
+}
+
+#lockwise-body-content .has-logins a {
+  margin-inline-start: 10px;
+}
+
+.lockwise-scanned-wrapper {
+  display: grid;
+  grid-template-columns: 24px auto;
+  margin-block-start: 24px;
+  grid-area: 2 / 1 / 2 / 5;
+  padding-bottom: 1.7em;
+}
+
+#lockwise-scanned-text {
+  margin-inline-end: 15px;
+}
+
+#lockwise-scanned-icon {
+  margin-top: 5px;
+}
+
+#manage-passwords-button {
+  grid-area: 2 / 5 / 2 / 7;
+  margin-inline-end: 15px;
+}
+
+.vpn-card.subscribed #get-vpn-link {
+  display: none;
+}
+
+.vpn-card:not(.subscribed) .content.subscribed {
+  display: none;
+}
+
+.vpn-card.subscribed .content:not(.subscribed) {
+  display: none;
+}
+
+/* Monitor card */
+.monitor-info-wrapper {
+  display: grid;
+  grid: 1fr / 1fr 1fr 1fr;
+  grid-column-start: 1;
+  grid-column-end: 7;
+}
+
+.monitor-scanned-wrapper {
+  margin-block-start: 24px;
+  font-size: 0.85em;
+  display: block;
+}
+
+.monitor-breaches-wrapper {
+  display: grid;
+  grid-area: 2 / 1 / 2 / 8;
+  grid: 1fr auto / repeat(7, 1fr);
+  margin-bottom: 24px;
+}
+
+.monitor-partial-breaches-wrapper {
+  display: grid;
+  grid-area: 2 / 1 / 2 / 8;
+  grid-template-columns: repeat(7, 1fr);
+  margin-block: 24px;
+}
+
+.monitor-partial-breaches-header {
+  grid-area: 1 / 1 / 1 / 7;
+  margin-inline-end: 15px;
+  margin-block: 6px;
+}
+
+#monitor-partial-breaches-percentage {
+  font-size: .93em;
+  cursor: default;
+  color: var(--in-content-deemphasized-text);
+  float: inline-end;
+}
+
+.progress-bar {
+  grid-area: 2 / 1 / 2 / 7;
+  margin-inline-start: 15px;
+  border-radius: 4px;
+  height: 25px;
+  box-shadow: 0 0 0 1px rgba(202, 201, 213, 0.5);
+  border: none;
+  background: linear-gradient(-45deg, #0250BB 0%, #9059FF 100%);
+  direction: rtl;
+}
+
+.progress-bar:dir(rtl) {
+  direction: ltr;
+  background: linear-gradient(-45deg, #0250BB 0%, #9059FF 100%);
+}
+
+.progress-bar::-moz-progress-bar {
+  background: #FFFFFF;
+  border-radius: 0 4px 4px 0;
+}
+
+.monitor-partial-breaches-motivation-text {
+  grid-template-columns: repeat(7, 1fr);
+  grid-area: 3 / 1 / 3 / 8;
+  margin-top: 25px;
+  display: grid;
+}
+
+.monitor-partial-breaches-motivation-wrapper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-area: 2 / 1 / 2 / 8;
+}
+
+#monitor-partial-breaches-motivation-title {
+  font-weight: 700;
+  grid-area: 1 / 1 / 1 / 7;
+  margin-inline-end: 15px;
+}
+
+#monitor-breaches-description,
+#monitor-partial-breaches-motivation-desc {
+  grid-area: 1 / 1 / 1 / 5;
+  margin-block: auto;
+  margin-inline-end: 15px;
+}
+
+.monitor-breaches-header {
+  margin-top: 30px;
+  grid-area: 1 / 1 / 1 / 8;
+}
+
+.monitor-breaches-description-wrapper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-area: 2 / 1 / 2 / 8;
+}
+
+#monitor-partial-breaches-icon,
+#monitor-breaches-icon {
+  vertical-align: middle;
+  margin-inline-end: 2px;
+}
+
+#monitor-partial-breaches-title {
+  font-size: 0.93em;
+}
+
+#monitor-breaches-title {
+  font-weight: 700;
+}
+
+#monitor-breaches-title,
+#monitor-partial-breaches-title,
+#monitor-partial-breaches-motivation-title {
+  cursor: default;
+}
+
+.monitor-partial-breaches-link-wrapper,
+.monitor-breaches-link-wrapper {
+  margin-block: auto;
+  grid-area: 1 / 5 / 1 / 7;
+  margin-inline: 0 15px;
+  font-size: 0.95em;
+  text-align: center;
+  display: flex;
+}
+
+#monitor-breaches-link,
+#monitor-partial-breaches-link {
+  color: inherit;
+  outline: none;
+  text-decoration: none;
+  width: 157.267px;
+  padding: 9px;
+}
+
+.lockwise-card #lockwise-header-content > a,
+.monitor-card #monitor-header-content > a {
+  display: block;
+  margin-block-start: 5px;
+  width: max-content;
+}
+
+.monitor-card.has-logins #monitor-body-content {
+  display: grid;
+  grid: 1fr auto / repeat(7, 1fr);
+  align-items: center;
+}
+
+.monitor-card .card-body {
+  padding-top: 0;
+  border-block-start: none;
+}
+
+.monitor-block {
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  text-align: center;
+  margin-inline-end: 15px;
+}
+
+.monitor-block a {
+  outline: none;
+  color: #FFFFFF;
+  padding: 19px 0;
+}
+
+.monitor-block a:hover {
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+.email {
+  background: linear-gradient(162.33deg, #AB71FF 0%, #9059FF 100%);
+  grid-column: 1;
+}
+
+.email:hover {
+  background: linear-gradient(162.33deg, #7D43D1 0%, #7740E6 100%);
+}
+
+.email:dir(rtl) {
+  background: linear-gradient(197.67deg, #AB71FF 0%, #9059FF 100%);
+}
+
+.email:dir(rtl):hover {
+  background: linear-gradient(197.67deg, #7D43D1 0%, #7740E6 100%);
+}
+
+.breaches {
+  background: linear-gradient(162.33deg, #9059FF 0%, #7542E5 100%);
+  grid-column: 2;
+}
+
+.breaches:hover {
+  background: linear-gradient(162.33deg, #7740E6 0%, #4714B7 100%);
+}
+
+.breaches:dir(rtl) {
+  background: linear-gradient(197.67deg, #9059FF 0%, #7542E5 100%)
+}
+
+.breaches:dir(rtl):hover {
+  background: linear-gradient(197.67deg, #7740E6 0%, #4714B7 100%)
+}
+
+.passwords {
+  background: linear-gradient(162.33deg, #7542E5 0%, #592ACB 100%);
+  grid-column: 3;
+}
+
+.passwords:hover {
+  background: linear-gradient(162.33deg, #4714B7 0%, #2B009D 100%);
+}
+
+.passwords:dir(rtl) {
+  background: linear-gradient(197.67deg, #7542E5 0%, #592ACB 100%)
+}
+
+.passwords:dir(rtl):hover {
+  background: linear-gradient(197.67deg, #4714B7 0%, #2B009D 100%)
+}
+
+.monitor-stat {
+  display: flex;
+  font-size: 1.75em;
+  font-weight: bold;
+  margin-block-end: 5px;
+  word-break: break-all;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.monitor-icon {
+  margin-inline-end: 3px;
+}
+
+.icon-med {
+  width: 24px;
+  height: 24px;
+  -moz-context-properties: fill,fill-opacity;
+  fill: white;
+  fill-opacity: 0.65;
+  padding: 5px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.info-text {
+  font-size: 0.75em;
+  line-height: 13px;
+  margin: 0 10px;
+  display: inline-block;
+}
+
+.number-of-breaches.block {
+  font-size: 1.45em;
+  background-color: var(--orange-50);
+  padding: 15px;
+  grid-column: 1 / 2;
+  width: 70px;
+  height: 48px;
+}
+
+#manage-protections,
+#sign-up-for-monitor-link,
+#get-proxy-extension-link,
+#get-vpn-link,
+#vpn-banner-link,
+.monitor-partial-breaches-link-wrapper,
+.monitor-breaches-link-wrapper {
+  background-color: var(--in-content-primary-button-background);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  text-decoration: none;
+  color: var(--in-content-primary-button-text-color);
+  font-weight: 600;
+}
+
+#manage-protections:active,
+#sign-up-for-monitor-link:active,
+#get-proxy-extension-link:active,
+#get-vpn-link:active,
+#vpn-banner-link:active,
+#monitor-partial-breaches-link:active,
+#monitor-breaches-link:active {
+  background-color: var(--in-content-primary-button-background-active);
+}
+
+#manage-protections:hover,
+#sign-up-for-monitor-link:hover,
+#get-proxy-extension-link:hover,
+#get-vpn-link:hover,
+#vpn-banner-link:hover,
+#monitor-partial-breaches-link:hover,
+#monitor-breaches-link:hover {
+  background-color: var(--in-content-primary-button-background-hover);
+  color: var(--in-content-primary-button-text-color-hover);
+}
+
+#manage-protections:focus,
+#sign-up-for-monitor-link:focus,
+#get-proxy-extension-link:focus,
+#get-vpn-link:focus,
+#vpn-banner-link:focus,
+#monitor-partial-breaches-link:focus,
+.monitor-block > a:focus,
+#monitor-breaches-link:focus {
+  outline: 2px solid var(--in-content-focus-outline-color);
+  outline-offset: 2px;
+}
+
+.monitor-card.loading::after,
+.lockwise-card.loading::after {
+  position: absolute;
+  height: 110px;
+  width: 765px;
+  content: "";
+  background-image: linear-gradient(to right, var(--in-content-box-background) 0%, var(--protection-report-loader-color-stop) 30%, var(--in-content-box-background) 40%, var(--in-content-box-background) 100%);
+  background-repeat: no-repeat;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-name: loading;
+  animation-timing-function: cubic-bezier(.07,.95,1,1);
+  background-size: 700px 100%;
+  opacity: var(--protection-report-loader-gradient-opacity);
+}
+
+.monitor-card.loading:dir(rtl)::after,
+.lockwise-card.loading:dir(rtl)::after {
+  background-image: linear-gradient(to left, var(--in-content-box-background) 0%, var(--protection-report-loader-color-stop) 30%, var(--in-content-box-background) 40%, var(--in-content-box-background) 100%);
+  animation-name: loading-rtl;
+}
+
+@keyframes loading {
+  0% {
+    background-position-x: -300px;
+  }
+
+  100% {
+    background-position-x: 700px;
+    opacity: 0.02;
+  }
+}
+
+@keyframes loading-rtl {
+  0% {
+    background-position-x: right -300px;
+  }
+
+  100% {
+    background-position-x: right 700px;
+    opacity: 0.02;
+  }
+}
+
+.new-banner {
+  width: 100%;
+  background: var(--feature-banner-color);
+}
+
+.banner-wrapper {
+  width: 763px;
+  display: grid;
+  grid-template-columns: 1fr 7fr;
+  grid-gap: var(--card-padding);
+  line-height: 1.3em;
+  margin: 0 auto;
+  padding: 12px var(--card-padding);
+}
+
+.new-banner .banner-title {
+  margin: 0;
+  line-height: 1.25;
+  cursor: default;
+  font-size: inherit;
+}
+
+.new-banner .content {
+  margin-block: 5px 0;
+  font-size: 0.88em;
+  cursor: default;
+  color: var(--in-content-deemphasized-text);
+}
+
+.new-banner .exit-icon {
+  top: auto;
+  inset-inline-end: 30px;
+}
+
+.vpn-card .title-wrapper {
+  display: grid;
+  grid-template-columns: 24px auto;
+}
+
+.vpn-card:not(.subscribed) .card-title {
+  grid-area: 1 / 1 / 1 / -1;
+}
+
+.vpn-card.subscribed .card-title {
+  margin-inline-start: 3px;
+}
+
+.vpn-card:not(.subscribed) #check-icon {
+  display: none;
+}

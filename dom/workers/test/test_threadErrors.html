@@ -1,0 +1,64 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads (Bug 437152)
+-->
+<head>
+  <title>Test for DOM Worker Threads (Bug 437152)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437152">DOM Worker Threads Bug 437152</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  const expectedErrorCount = 4;
+
+  function messageListener(event) {
+    ok(false, "Unexpected message: " + event.data);
+    SimpleTest.finish();
+  };
+
+  var actualErrorCount = 0;
+  var failedWorkers = [];
+
+  function errorListener(event) {
+    event.preventDefault();
+
+    if (failedWorkers.includes(event.target)) {
+      ok(false, "Seen an extra error from this worker");
+      SimpleTest.finish();
+      return;
+    }
+
+    failedWorkers.push(event.target);
+    actualErrorCount++;
+
+    if (actualErrorCount == expectedErrorCount) {
+      ok(true, "all errors correctly detected");
+      SimpleTest.finish();
+    }
+  };
+
+  for (var i = 1; i <= expectedErrorCount; i++) {
+    var worker = new Worker("threadErrors_worker" + i + ".js");
+    worker.onmessage = messageListener;
+    worker.onerror = errorListener;
+    worker.postMessage("Hi");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

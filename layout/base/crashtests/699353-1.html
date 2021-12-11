@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script>
+
+function boom()
+{
+  document.execCommand("inserthtml", false, "ABC ");
+  document.execCommand("delete", false, null);
+  document.execCommand("inserthtml", false, "<style>");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 0);" contenteditable="true"></body>
+</html>

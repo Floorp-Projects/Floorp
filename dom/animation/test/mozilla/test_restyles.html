@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<div id='log'></div>
+<script>
+'use strict';
+SimpleTest.waitForExplicitFinish();
+SimpleTest.expectAssertions(0, 1); // bug 1332970
+SpecialPowers.pushPrefEnv(
+  {
+    set: [
+      ['layout.reflow.synthMouseMove', false],
+      ['privacy.reduceTimerPrecision', false],
+    ],
+  },
+  function() {
+    window.open('file_restyles.html');
+  }
+);
+</script>
+</html>

@@ -1,0 +1,12 @@
+== at-rule-013.html at-rule-013-ref.html
+== invalid-url-handling.xhtml invalid-url-handling-ref.xhtml
+== pseudo-elements-1.html pseudo-elements-1-ref.html
+== invalid-attr-1.html invalid-attr-1-ref.html
+== at-rule-error-handling-import-1.html at-rule-error-handling-ref.html
+== at-rule-error-handling-media-1.html at-rule-error-handling-ref.html
+== invalid-font-face-descriptor-1.html invalid-font-face-descriptor-1-ref.html
+== two-dash-identifiers.html two-dash-identifiers-ref.html
+
+test-pref(testing.supports.moz-bool-pref,true) == supports-moz-bool-pref-1.html green-ref.html
+test-pref(testing.supports.moz-bool-pref,false) == supports-moz-bool-pref-2.html green-ref.html
+test-pref(testing.supports.moz-bool-pref,true) == supports-moz-bool-pref-3.html green-ref.html

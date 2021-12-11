@@ -1,0 +1,12 @@
+# Tests related to SVG Animation (using SMIL), focusing on animation-sorting
+# to see which animation takes precedence (out of multiple animations on the
+# same attribute)
+
+== sort-startAfter-1.svg sort-startAfter-1-ref.svg
+== sort-startAfter-2.svg sort-startAfter-2-ref.svg
+== sort-startAfter-3.svg sort-startAfter-3-ref.svg
+== sort-startSame-1a.svg sort-startSame-1-ref.svg
+== sort-startSame-1b.svg sort-startSame-1-ref.svg
+== sort-startSame-2a.svg sort-startSame-2-ref.svg
+== sort-startSame-2b.svg sort-startSame-2-ref.svg
+random == sort-additive-1.svg sort-additive-1-ref.svg # bug 547801

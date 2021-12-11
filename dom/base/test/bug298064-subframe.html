@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script>
+      function test_func() {
+        var bar = new Option();
+        parent.is(bar.ownerDocument, document,
+                  "Unexpected document for our new option");
+        bar = new Image();
+        parent.is(bar.ownerDocument, document,
+                  "Unexpected document for our new image");
+        bar = new parent.Option();
+        parent.is(bar.ownerDocument, parent.document,
+                  "Unexpected document for parent new option");
+        bar = new parent.Image();
+        parent.is(bar.ownerDocument, parent.document,
+                  "Unexpected document for parent new image");
+        parent.isnot(parent.document, document, "Documents should be different");
+      }
+    </script>
+  </head>
+<html>
+   
+  

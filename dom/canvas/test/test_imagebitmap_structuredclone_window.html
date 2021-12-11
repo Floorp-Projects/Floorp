@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<title>Test ImageBitmap : StructuredClone main window to main window</title>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script src="imagebitmap_structuredclone_utils.js"></script>
+<script type="text/javascript">
+
+window.onmessage = function(event) {
+  compareImageBitmapWithImageElement(event.data.bitmap1, gImage1);
+  compareImageBitmapWithImageElement(event.data.bitmap2, gImage2);
+  compareImageBitmapWithImageData(event.data.bitmap3, gImageData, "Check preserving alpha");
+  SimpleTest.finish();
+}
+
+function runTests() {
+  prepareImageBitmaps().then(function(){
+    window.postMessage({"bitmap1":gImageBitmap1, "bitmap2":gImageBitmap2, "bitmap3":gImageBitmap3}, "*");
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+</script>
+</body>

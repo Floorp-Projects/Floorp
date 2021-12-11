@@ -1,0 +1,123 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PFileDescriptorSet;
+include protocol PBrowser;
+
+include DocAccessibleTypes;
+
+include "mozilla/GfxMessageUtils.h";
+
+using mozilla::a11y::role from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::CacheUpdateType from "mozilla/a11y/IPCTypes.h";
+[RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
+using mozilla::LayoutDeviceIntRect from "Units.h";
+
+namespace mozilla {
+namespace a11y {
+
+struct AccessibleData
+{
+  uint64_t ID;
+  int32_t MsaaID;
+  role Role;
+  uint32_t ChildrenCount;
+  AccType Type;
+  AccGenericType GenericTypes;
+  uint8_t RoleMapEntryIndex;
+};
+
+struct ShowEventData
+{
+  uint64_t ID;
+  uint32_t Idx;
+  AccessibleData[] NewTree;
+  bool EventSuppressed;
+};
+
+sync protocol PDocAccessible
+{
+  manager PBrowser;
+
+parent:
+  async Shutdown();
+
+  /*
+   * Notify the parent process the document in the child process is firing an
+   * event.
+   */
+  async Event(uint64_t aID, uint32_t type);
+  async ShowEvent(ShowEventData data, bool aFromUser);
+  async HideEvent(uint64_t aRootID, bool aFromUser);
+  async StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
+  async CaretMoveEvent(uint64_t aID, LayoutDeviceIntRect aCaretRect,
+                       int32_t aOffset, bool aIsSelectionCollapsed);
+  async TextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart, uint32_t aLen,
+                        bool aIsInsert, bool aFromUser);
+  sync SyncTextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart,
+                           uint32_t aLen, bool aIsInsert, bool aFromUser);
+  async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
+  async RoleChangedEvent(role aRole);
+  async FocusEvent(uint64_t aID, LayoutDeviceIntRect aCaretRect);
+  async VirtualCursorChangeEvent(uint64_t aID,
+                                 uint64_t aOldPosition,
+                                 int32_t aOldStartOffset, int32_t aOldEndOffset,
+                                 uint64_t aPosition,
+                                 int32_t aStartOffset, int32_t aEndOffset,
+                                 int16_t aReason, int16_t aBoundaryType,
+                                 bool aFromUservcEvent);
+  async ScrollingEvent(uint64_t aID, uint64_t aType,
+                       uint32_t aScrollX, uint32_t aScrollY,
+                       uint32_t aMaxScrollX, uint32_t aMaxScrollY);
+
+  /*
+   * Tell the parent document to bind the existing document as a new child
+   * document.
+   */
+  async BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
+
+  /*
+   * Cache The World
+   * aFinal is false when paginating cache into several pushes,
+   * and then true on the final push.
+   */
+  async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aFinal);
+
+child:
+  /**
+   * We use IDispatchHolder instead of IAccessibleHolder for the following two
+   * methods because of sandboxing. IAccessible::get_accParent returns the parent
+   * as an IDispatch. COM is not smart enough to understand that IAccessible is
+   * derived from IDispatch, so during marshaling it attempts to QueryInterface
+   * on the parent's proxy for IDispatch. This will fail with E_ACCESSDENIED
+   * thanks to the sandbox. We can avoid this entirely by just giving content
+   * the correct interface to begin with: IDispatch.
+   */
+  async ParentCOMProxy(IDispatchHolder aParentCOMProxy);
+  async EmulatedWindow(WindowsHandle aEmulatedWindowHandle,
+                       IDispatchHolder aEmulatedWindowCOMProxy);
+  async TopLevelDocCOMProxy(IAccessibleHolder aCOMProxy);
+  /*
+   * Called as a result of focus shifting from chrome to content
+   * elements through keyboard navigation.
+   */
+  async RestoreFocus();
+
+  /*
+   * Verify the cache. Used for testing purposes.
+   */
+  async VerifyCache(uint64_t aID, uint64_t aCacheDomain, AccAttributes aFields);
+
+  async __delete__();
+};
+
+}
+}

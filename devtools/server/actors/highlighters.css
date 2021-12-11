@@ -1,0 +1,962 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+  The :-moz-native-anonymous selector prefix prevents the styles defined here
+  from impacting web content. Indeed, this pseudo-class is only available to chrome code.
+  This stylesheet is loaded as a ua stylesheet via the addon sdk, so having this
+  pseudo-class is important.
+
+  A specific selector should still be specified to avoid impacting non-devtools
+  chrome content.
+*/
+
+:-moz-native-anonymous .highlighter-container {
+  /*
+  Content CSS applying to the html element impact the highlighters.
+  To avoid that, possible cases have been set to initial.
+  */
+  text-transform: initial;
+  text-indent: initial;
+  letter-spacing: initial;
+  word-spacing: initial;
+  color: initial;
+  direction: initial;
+  writing-mode: initial;
+}
+
+:-moz-native-anonymous .highlighter-container {
+  --highlighter-guide-color: hsl(200, 100%, 40%);
+  --highlighter-content-color: hsl(197, 71%, 73%);
+  --highlighter-bubble-text-color: hsl(216, 33%, 97%);
+  --highlighter-bubble-background-color: hsl(214, 13%, 24%);
+  --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
+  --highlighter-bubble-arrow-size: 8px;
+  --highlighter-font-family: message-box;
+  --highlighter-font-size: 11px;
+  --highlighter-infobar-color: hsl(210, 30%, 85%);
+  --highlighter-marker-color: #000;
+
+  --grey-40: #b1b1b3;
+  --red-40: #ff3b6b;
+  --yellow-60: #d7b600;
+  --blue-60: #0060df;
+}
+
+/**
+ * Highlighters are asbolute positioned in the page by default.
+ * A single highlighter can have fixed position in its css class if needed (see below the
+ * eye dropper or rulers highlighter, for example); but if it has to handle the
+ * document's scrolling (as rulers does), it would lag a bit behind due the APZ (Async
+ * Pan/Zoom module), that performs asynchronously panning and zooming on the compositor
+ * thread rather than the main thread.
+ */
+:-moz-native-anonymous .highlighter-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  /* The container for all highlighters doesn't react to pointer-events by
+     default. This is because most highlighters cover the whole viewport but
+     don't contain UIs that need to be accessed.
+     If your highlighter has UI that needs to be interacted with, add
+     'pointer-events:auto;' on its container element. */
+  pointer-events: none;
+}
+
+:-moz-native-anonymous .highlighter-container.box-model {
+  /* Make the box-model container have a z-index other than auto so it always sits above
+     other highlighters. */
+  z-index: 1;
+}
+
+:-moz-native-anonymous .highlighter-container [hidden] {
+  display: none;
+}
+
+:-moz-native-anonymous .highlighter-container [dragging] {
+  cursor: grabbing;
+}
+
+/* Box Model Highlighter */
+
+:-moz-native-anonymous .box-model-regions {
+  opacity: 0.6;
+}
+
+/* Box model regions can be faded (see the onlyRegionArea option in
+   highlighters.js) in order to only display certain regions. */
+:-moz-native-anonymous .box-model-regions [faded] {
+  display: none;
+}
+
+:-moz-native-anonymous .box-model-content {
+  fill: var(--highlighter-content-color);
+}
+
+:-moz-native-anonymous .box-model-padding {
+  fill: #6a5acd;
+}
+
+:-moz-native-anonymous .box-model-border {
+  fill: #444444;
+}
+
+:-moz-native-anonymous .box-model-margin {
+  fill: #edff64;
+}
+
+:-moz-native-anonymous .box-model-content,
+:-moz-native-anonymous .box-model-padding,
+:-moz-native-anonymous .box-model-border,
+:-moz-native-anonymous .box-model-margin {
+  stroke: none;
+}
+
+:-moz-native-anonymous .box-model-guide-top,
+:-moz-native-anonymous .box-model-guide-right,
+:-moz-native-anonymous .box-model-guide-bottom,
+:-moz-native-anonymous .box-model-guide-left {
+  stroke: var(--highlighter-guide-color);
+  stroke-dasharray: 5 3;
+  shape-rendering: crispEdges;
+}
+
+/* Highlighter - Infobar */
+
+:-moz-native-anonymous [class$="infobar-container"] {
+  position: absolute;
+  max-width: 95%;
+
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
+}
+
+:-moz-native-anonymous [class$="infobar"] {
+  position: relative;
+
+  padding: 5px;
+  min-width: 75px;
+
+  border-radius: 3px;
+  background: var(--highlighter-bubble-background-color) no-repeat padding-box;
+
+  color: var(--highlighter-bubble-text-color);
+  text-shadow: none;
+
+  border: 1px solid var(--highlighter-bubble-border-color);
+}
+
+/* Arrows */
+
+:-moz-native-anonymous
+  [class$="infobar-container"]
+  > [class$="infobar"]:before {
+  left: calc(50% - var(--highlighter-bubble-arrow-size));
+  border: var(--highlighter-bubble-arrow-size) solid
+    var(--highlighter-bubble-border-color);
+}
+
+:-moz-native-anonymous [class$="infobar-container"] > [class$="infobar"]:after {
+  left: calc(50% - 7px);
+  border: 7px solid var(--highlighter-bubble-background-color);
+}
+
+:-moz-native-anonymous [class$="infobar-container"] > [class$="infobar"]:before,
+:-moz-native-anonymous [class$="infobar-container"] > [class$="infobar"]:after {
+  content: "";
+  display: none;
+  position: absolute;
+  height: 0;
+  width: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+:-moz-native-anonymous
+  [class$="infobar-container"][position="top"]:not([hide-arrow])
+  > [class$="infobar"]:before,
+:-moz-native-anonymous
+  [class$="infobar-container"][position="top"]:not([hide-arrow])
+  > [class$="infobar"]:after {
+  border-bottom: 0;
+  top: 100%;
+  display: block;
+}
+
+:-moz-native-anonymous
+  [class$="infobar-container"][position="bottom"]:not([hide-arrow])
+  > [class$="infobar"]:before,
+:-moz-native-anonymous
+  [class$="infobar-container"][position="bottom"]:not([hide-arrow])
+  > [class$="infobar"]:after {
+  border-top: 0;
+  bottom: 100%;
+  display: block;
+}
+
+/* Text Container */
+
+:-moz-native-anonymous [class$="infobar-text"] {
+  overflow: hidden;
+  white-space: nowrap;
+  direction: ltr;
+  padding-bottom: 1px;
+  display: flex;
+  justify-content: center;
+  max-width: 768px;
+}
+
+:-moz-native-anonymous .box-model-infobar-tagname {
+  color: hsl(285, 100%, 75%);
+}
+
+:-moz-native-anonymous .box-model-infobar-id {
+  color: hsl(103, 46%, 54%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:-moz-native-anonymous .box-model-infobar-classes,
+:-moz-native-anonymous .box-model-infobar-pseudo-classes {
+  color: hsl(200, 74%, 57%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:-moz-native-anonymous [class$="infobar-dimensions"],
+:-moz-native-anonymous [class$="infobar-grid-type"],
+:-moz-native-anonymous [class$="infobar-flex-type"] {
+  border-inline-start: 1px solid #5a6169;
+  margin-inline-start: 6px;
+  padding-inline-start: 6px;
+}
+
+:-moz-native-anonymous [class$="infobar-grid-type"]:empty,
+:-moz-native-anonymous [class$="infobar-flex-type"]:empty {
+  display: none;
+}
+
+:-moz-native-anonymous [class$="infobar-dimensions"] {
+  color: var(--highlighter-infobar-color);
+}
+
+:-moz-native-anonymous [class$="infobar-grid-type"],
+:-moz-native-anonymous [class$="infobar-flex-type"] {
+  color: var(--grey-40);
+}
+
+/* CSS Grid Highlighter */
+
+:-moz-native-anonymous .css-grid-canvas {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  image-rendering: -moz-crisp-edges;
+}
+
+:-moz-native-anonymous .css-grid-regions {
+  opacity: 0.6;
+}
+
+:-moz-native-anonymous .css-grid-areas,
+:-moz-native-anonymous .css-grid-cells {
+  opacity: 0.5;
+  stroke: none;
+}
+
+:-moz-native-anonymous .css-grid-area-infobar-name,
+:-moz-native-anonymous .css-grid-cell-infobar-position,
+:-moz-native-anonymous .css-grid-line-infobar-number {
+  color: hsl(285, 100%, 75%);
+}
+
+:-moz-native-anonymous .css-grid-line-infobar-names:not(:empty) {
+  color: var(--highlighter-infobar-color);
+  border-inline-start: 1px solid #5a6169;
+  margin-inline-start: 6px;
+  padding-inline-start: 6px;
+}
+
+/* CSS Transform Highlighter */
+
+:-moz-native-anonymous .css-transform-transformed {
+  fill: var(--highlighter-content-color);
+  opacity: 0.8;
+}
+
+:-moz-native-anonymous .css-transform-untransformed {
+  fill: #66cc52;
+  opacity: 0.8;
+}
+
+:-moz-native-anonymous .css-transform-transformed,
+:-moz-native-anonymous .css-transform-untransformed,
+:-moz-native-anonymous .css-transform-line {
+  stroke: var(--highlighter-guide-color);
+  stroke-dasharray: 5 3;
+  stroke-width: 2;
+}
+
+/* Element Geometry Highlighter */
+
+:-moz-native-anonymous .geometry-editor-root {
+  /* The geometry editor can be interacted with, so it needs to react to
+     pointer events */
+  pointer-events: auto;
+  user-select: none;
+}
+
+:-moz-native-anonymous .geometry-editor-offset-parent {
+  stroke: var(--highlighter-guide-color);
+  shape-rendering: crispEdges;
+  stroke-dasharray: 5 3;
+  fill: transparent;
+}
+
+:-moz-native-anonymous .geometry-editor-current-node {
+  stroke: var(--highlighter-guide-color);
+  fill: var(--highlighter-content-color);
+  shape-rendering: crispEdges;
+  opacity: 0.6;
+}
+
+:-moz-native-anonymous .geometry-editor-arrow {
+  stroke: var(--highlighter-guide-color);
+  shape-rendering: crispEdges;
+}
+
+:-moz-native-anonymous .geometry-editor-root circle {
+  stroke: var(--highlighter-guide-color);
+  fill: var(--highlighter-content-color);
+}
+
+:-moz-native-anonymous .geometry-editor-handler-top,
+:-moz-native-anonymous .geometry-editor-handler-bottom {
+  cursor: ns-resize;
+}
+
+:-moz-native-anonymous .geometry-editor-handler-right,
+:-moz-native-anonymous .geometry-editor-handler-left {
+  cursor: ew-resize;
+}
+
+:-moz-native-anonymous [dragging] .geometry-editor-handler-top,
+:-moz-native-anonymous [dragging] .geometry-editor-handler-right,
+:-moz-native-anonymous [dragging] .geometry-editor-handler-bottom,
+:-moz-native-anonymous [dragging] .geometry-editor-handler-left {
+  cursor: grabbing;
+}
+
+:-moz-native-anonymous .geometry-editor-handler-top.dragging,
+:-moz-native-anonymous .geometry-editor-handler-right.dragging,
+:-moz-native-anonymous .geometry-editor-handler-bottom.dragging,
+:-moz-native-anonymous .geometry-editor-handler-left.dragging {
+  fill: var(--highlighter-guide-color);
+}
+
+:-moz-native-anonymous .geometry-editor-label-bubble {
+  fill: var(--highlighter-bubble-background-color);
+  shape-rendering: crispEdges;
+}
+
+:-moz-native-anonymous .geometry-editor-label-text {
+  fill: var(--highlighter-bubble-text-color);
+  font: var(--highlighter-font-family);
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+/* Rulers Highlighter */
+
+:-moz-native-anonymous .rulers-highlighter-elements {
+  shape-rendering: crispEdges;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+:-moz-native-anonymous .rulers-highlighter-elements > g {
+  opacity: 0.8;
+}
+
+:-moz-native-anonymous .rulers-highlighter-elements > g > rect {
+  fill: #fff;
+}
+
+:-moz-native-anonymous .rulers-highlighter-ruler-graduations {
+  stroke: #bebebe;
+}
+
+:-moz-native-anonymous .rulers-highlighter-ruler-markers {
+  stroke: #202020;
+}
+
+:-moz-native-anonymous .rulers-highlighter-horizontal-labels > text,
+:-moz-native-anonymous .rulers-highlighter-vertical-labels > text {
+  stroke: none;
+  fill: #202020;
+  font: var(--highlighter-font-family);
+  font-size: 9px;
+  dominant-baseline: hanging;
+}
+
+:-moz-native-anonymous .rulers-highlighter-horizontal-labels > text {
+  text-anchor: start;
+}
+
+:-moz-native-anonymous .rulers-highlighter-vertical-labels > text {
+  transform: rotate(-90deg);
+  text-anchor: end;
+}
+
+:-moz-native-anonymous .rulers-highlighter-viewport-infobar-container {
+  shape-rendering: crispEdges;
+  background-color: rgba(255, 255, 255, 0.7);
+  font: var(--highlighter-font-family);
+  position: fixed;
+  top: 30px;
+  right: 0px;
+  font-size: 12px;
+  padding: 4px;
+}
+
+/* Measuring Tool Highlighter */
+
+:-moz-native-anonymous .measuring-tool-tool {
+  pointer-events: auto;
+}
+
+:-moz-native-anonymous .measuring-tool-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+:-moz-native-anonymous .measuring-tool-elements {
+  position: absolute;
+}
+
+:-moz-native-anonymous .measuring-tool-root path {
+  shape-rendering: geometricPrecision;
+  pointer-events: auto;
+}
+
+:-moz-native-anonymous .measuring-tool-root .measuring-tool-box-path,
+:-moz-native-anonymous .measuring-tool-root .measuring-tool-diagonal-path {
+  fill: rgba(135, 206, 235, 0.6);
+  stroke: var(--highlighter-guide-color);
+}
+
+:-moz-native-anonymous .measuring-tool-root circle {
+  stroke: var(--highlighter-guide-color);
+  stroke-width: 2px;
+  fill: #fff;
+  vector-effect: non-scaling-stroke;
+}
+
+:-moz-native-anonymous .measuring-tool-handler-top,
+:-moz-native-anonymous .measuring-tool-handler-bottom {
+  cursor: ns-resize;
+}
+
+:-moz-native-anonymous .measuring-tool-handler-right,
+:-moz-native-anonymous .measuring-tool-handler-left {
+  cursor: ew-resize;
+}
+
+:-moz-native-anonymous .measuring-tool-handler-topleft,
+:-moz-native-anonymous .measuring-tool-handler-bottomright {
+  cursor: nwse-resize;
+}
+
+:-moz-native-anonymous .measuring-tool-handler-topright,
+:-moz-native-anonymous .measuring-tool-handler-bottomleft {
+  cursor: nesw-resize;
+}
+
+:-moz-native-anonymous .mirrored .measuring-tool-handler-topleft,
+:-moz-native-anonymous .mirrored .measuring-tool-handler-bottomright {
+  cursor: nesw-resize;
+}
+
+:-moz-native-anonymous .mirrored .measuring-tool-handler-topright,
+:-moz-native-anonymous .mirrored .measuring-tool-handler-bottomleft {
+  cursor: nwse-resize;
+}
+
+:-moz-native-anonymous [class^=measuring-tool-handler].dragging {
+  fill: var(--highlighter-guide-color);
+}
+
+:-moz-native-anonymous .dragging .measuring-tool-box-path,
+:-moz-native-anonymous .dragging .measuring-tool-diagonal-path {
+  opacity: 0.45;
+}
+
+:-moz-native-anonymous .measuring-tool-label-size,
+:-moz-native-anonymous .measuring-tool-label-position {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  border-radius: 4px;
+  padding: 4px;
+  white-space: pre-line;
+  font: var(--highlighter-font-family);
+  font-size: 10px;
+  pointer-events: none;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+:-moz-native-anonymous .measuring-tool-label-position {
+  color: #fff;
+  background: hsla(214, 13%, 24%, 0.8);
+}
+
+:-moz-native-anonymous .measuring-tool-label-size {
+  color: var(--highlighter-bubble-text-color);
+  background: var(--highlighter-bubble-background-color);
+  border: 1px solid var(--highlighter-bubble-border-color);
+  line-height: 1.5em;
+}
+
+:-moz-native-anonymous [class^=measuring-tool-guide] {
+  stroke: var(--highlighter-guide-color);
+  stroke-dasharray: 5 3;
+  shape-rendering: crispEdges;
+}
+
+/* Eye Dropper */
+
+:-moz-native-anonymous .eye-dropper-root {
+  --magnifier-width: 96px;
+  --magnifier-height: 96px;
+  /* Width accounts for all color formats (hsl being the longest) */
+  --label-width: 160px;
+  --label-height: 23px;
+  --color: #e0e0e0;
+
+  position: fixed;
+  /* Tool start position. This should match the X/Y defines in JS */
+  top: 100px;
+  left: 100px;
+
+  /* Prevent interacting with the page when hovering and clicking */
+  pointer-events: auto;
+
+  /* Offset the UI so it is centered around the pointer */
+  transform: translate(
+    calc(var(--magnifier-width) / -2),
+    calc(var(--magnifier-height) / -2)
+  );
+
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.4));
+
+  /* We don't need the UI to be reversed in RTL locales, otherwise the # would appear
+     to the right of the hex code. Force LTR */
+  direction: ltr;
+}
+
+:-moz-native-anonymous .eye-dropper-canvas {
+  image-rendering: -moz-crisp-edges;
+  cursor: none;
+  width: var(--magnifier-width);
+  height: var(--magnifier-height);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--color);
+  display: block;
+}
+
+:-moz-native-anonymous .eye-dropper-color-container {
+  background-color: var(--color);
+  border-radius: 2px;
+  width: var(--label-width);
+  height: var(--label-height);
+  position: relative;
+
+  --label-horizontal-center: translateX(
+    calc((var(--magnifier-width) - var(--label-width)) / 2)
+  );
+  --label-horizontal-left: translateX(
+    calc((-1 * var(--label-width) + var(--magnifier-width) / 2))
+  );
+  --label-horizontal-right: translateX(calc(var(--magnifier-width) / 2));
+  --label-vertical-top: translateY(
+    calc((-1 * var(--magnifier-height)) - var(--label-height))
+  );
+
+  /* By default the color label container sits below the canvas.
+     Here we just center it horizontally */
+  transform: var(--label-horizontal-center);
+  transition: transform 0.1s ease-in-out;
+}
+
+/* If there isn't enough space below the canvas, we move the label container to the top */
+:-moz-native-anonymous .eye-dropper-root[top] .eye-dropper-color-container {
+  transform: var(--label-horizontal-center) var(--label-vertical-top);
+}
+
+/* If there isn't enough space right of the canvas to horizontally center the label
+   container, offset it to the left */
+:-moz-native-anonymous .eye-dropper-root[left] .eye-dropper-color-container {
+  transform: var(--label-horizontal-left);
+}
+:-moz-native-anonymous
+  .eye-dropper-root[left][top]
+  .eye-dropper-color-container {
+  transform: var(--label-horizontal-left) var(--label-vertical-top);
+}
+
+/* If there isn't enough space left of the canvas to horizontally center the label
+   container, offset it to the right */
+:-moz-native-anonymous .eye-dropper-root[right] .eye-dropper-color-container {
+  transform: var(--label-horizontal-right);
+}
+:-moz-native-anonymous
+  .eye-dropper-root[right][top]
+  .eye-dropper-color-container {
+  transform: var(--label-horizontal-right) var(--label-vertical-top);
+}
+
+:-moz-native-anonymous .eye-dropper-color-preview {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  inset-inline-start: 3px;
+  inset-block-start: 3px;
+  box-shadow: 0px 0px 0px black;
+  border: solid 1px #fff;
+}
+
+:-moz-native-anonymous .eye-dropper-color-value {
+  text-shadow: 1px 1px 1px #fff;
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
+  text-align: center;
+  padding: 4px 0;
+}
+
+/* Paused Debugger Overlay */
+
+:-moz-native-anonymous .paused-dbg-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  zoom: 1;
+  right: 0;
+  bottom: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  /* We don't have access to DevTools themes here, but some of these colors come from the
+     themes. Theme variable names are given in comments. */
+  --text-color: #585959; /* --theme-body-color-alt */
+  --toolbar-background: #fcfcfc; /* --theme-toolbar-background */
+  --toolbar-border: #dde1e4; /* --theme-splitter-color */
+  --toolbar-box-shadow: 0 2px 2px 0 rgba(155, 155, 155, 0.26); /* --rdm-box-shadow */
+  --overlay-background: #dde1e4a8;
+}
+
+:-moz-native-anonymous .paused-dbg-root[overlay] {
+  background-color: var(--overlay-background);
+  pointer-events: auto;
+}
+
+:-moz-native-anonymous .paused-dbg-toolbar {
+  margin-top: 15px;
+  display: inline-flex;
+  user-select: none;
+
+  color: var(--text-color);
+  border-radius: 2px;
+  box-shadow: var(--toolbar-box-shadow);
+  background-color: var(--toolbar-background);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 4px;
+
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
+}
+
+:-moz-native-anonymous .paused-dbg-toolbar button {
+  margin: 8px 4px 6px 6px;
+  width: 16px;
+  height: 16px;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 16px 16px;
+  background-color: var(--text-color);
+
+  border: 0px;
+  appearance: none;
+}
+
+:-moz-native-anonymous .paused-dbg-divider {
+  width: 1px;
+  height: 16px;
+  margin-top: 10px;
+  background-color: var(--toolbar-border);
+}
+
+:-moz-native-anonymous .paused-dbg-reason,
+:-moz-native-anonymous .paused-dbg-step-button-wrapper,
+:-moz-native-anonymous .paused-dbg-resume-button-wrapper {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+:-moz-native-anonymous .paused-dbg-step-button-wrapper,
+:-moz-native-anonymous .paused-dbg-resume-button-wrapper {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+:-moz-native-anonymous button.paused-dbg-step-button {
+  margin-left: 6px;
+  margin-right: 6px;
+  mask-image: url(chrome://devtools/content/debugger/images/stepOver.svg);
+  padding: 0;
+}
+
+:-moz-native-anonymous button.paused-dbg-resume-button {
+  margin-right: 6px;
+  margin-right: 6px;
+  mask-image: url(chrome://devtools/content/debugger/images/resume.svg);
+  padding: 0;
+}
+
+:-moz-native-anonymous .paused-dbg-step-button-wrapper.hover,
+:-moz-native-anonymous .paused-dbg-resume-button-wrapper.hover {
+  background-color: var(--toolbar-border);
+  border-radius: 2px;
+}
+
+:-moz-native-anonymous .paused-dbg-reason {
+  padding: 3px 16px;
+  margin: 8px 0px;
+  line-height: 20px;
+  font-size: 18px;
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
+}
+
+/* Shapes highlighter */
+
+:-moz-native-anonymous .shapes-root {
+  pointer-events: none;
+}
+
+:-moz-native-anonymous .shapes-shape-container {
+  position: absolute;
+  overflow: visible;
+}
+
+:-moz-native-anonymous .shapes-polygon,
+:-moz-native-anonymous .shapes-ellipse,
+:-moz-native-anonymous .shapes-rect,
+:-moz-native-anonymous .shapes-bounding-box,
+:-moz-native-anonymous .shapes-rotate-line,
+:-moz-native-anonymous .shapes-quad {
+  fill: transparent;
+  stroke: var(--highlighter-guide-color);
+  shape-rendering: geometricPrecision;
+  vector-effect: non-scaling-stroke;
+}
+
+:-moz-native-anonymous .shapes-markers {
+  fill: #fff;
+}
+
+:-moz-native-anonymous .shapes-markers-outline {
+  fill: var(--highlighter-guide-color);
+}
+
+:-moz-native-anonymous .shapes-marker-hover {
+  fill: var(--highlighter-guide-color);
+}
+
+/* Accessible highlighter */
+
+:-moz-native-anonymous .accessible-infobar {
+  min-width: unset;
+}
+
+:-moz-native-anonymous .accessible-infobar-text {
+  display: grid;
+  grid-template-areas:
+    "role name"
+    "audit audit";
+  grid-template-columns: min-content 1fr;
+}
+
+:-moz-native-anonymous .accessible-infobar-role {
+  grid-area: role;
+  color: #9cdcfe;
+}
+
+:-moz-native-anonymous .accessible-infobar-name {
+  grid-area: name;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit {
+  grid-area: audit;
+  padding-top: 5px;
+  padding-bottom: 2px;
+}
+
+:-moz-native-anonymous .accessible-bounds {
+  opacity: 0.6;
+  fill: #6a5acd;
+}
+
+:-moz-native-anonymous .accessible-infobar-name,
+:-moz-native-anonymous .accessible-infobar-audit {
+  color: var(--highlighter-infobar-color);
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:empty::before,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:empty::after,
+:-moz-native-anonymous .accessible-infobar-name:empty {
+  display: none;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio::before {
+  content: "";
+  height: 8px;
+  width: 8px;
+  display: inline-flex;
+  background-color: var(--accessibility-highlighter-contrast-ratio-color);
+  box-shadow: 0 0 0 1px var(--grey-40),
+    4px 3px var(--accessibility-highlighter-contrast-ratio-bg),
+    4px 3px 0 1px var(--grey-40);
+  margin-inline-start: 3px;
+  margin-inline-end: 9px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio::after {
+  margin-inline-start: 2px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AA::after,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AAA::after {
+  color: #90E274;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit::before,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.FAIL::after {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  content: "";
+  vertical-align: -2px;
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.FAIL:after {
+  color: #E57180;
+  margin-inline-start: 3px;
+  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  fill: var(--red-40);
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AA::after {
+  content: "AA\2713";
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AAA::after {
+  content: "AAA\2713";
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-label,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-separator::before {
+  margin-inline-end: 3px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-separator::before {
+  content: "-";
+  margin-inline-start: 3px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit {
+  display: block;
+  padding-block-end: 5px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit:last-child {
+  padding-block-end: 0;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit::before {
+  margin-inline-end: 4px;
+  background-image: none;
+  fill: currentColor;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit.FAIL::before {
+  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  fill: var(--red-40);
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit.WARNING::before {
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  fill: var(--yellow-60);
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit.BEST_PRACTICES::before {
+  background-image: url(chrome://devtools/skin/images/info-small.svg);
+}
+
+:-moz-native-anonymous .accessible-infobar-name {
+  border-inline-start: 1px solid #5a6169;
+  margin-inline-start: 6px;
+  padding-inline-start: 6px;
+}
+
+/* Tabbing-order highlighter */
+
+:-moz-native-anonymous .tabbing-order-infobar {
+  min-width: unset;
+}
+
+:-moz-native-anonymous .tabbing-order .tabbing-order-infobar-container {
+  font-size:calc(var(--highlighter-font-size) + 2px);
+}
+
+:-moz-native-anonymous .tabbing-order .tabbing-order-bounds {
+  position: absolute;
+  display: block;
+  outline: 2px solid #000;
+  outline-offset: -2px;
+}
+
+:-moz-native-anonymous .tabbing-order.focused .tabbing-order-bounds {
+  outline-color: var(--blue-60);
+}
+
+:-moz-native-anonymous .tabbing-order.focused .tabbing-order-infobar {
+  background-color: var(--blue-60);
+}
+
+:-moz-native-anonymous .tabbing-order.focused .tabbing-order-infobar-text {
+  text-decoration: underline;
+}
+
+:-moz-native-anonymous .tabbing-order.focused .tabbing-order-infobar:after {
+  border-top-color: var(--blue-60);
+  border-bottom-color: var(--blue-60);
+}

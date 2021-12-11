@@ -1,0 +1,82 @@
+﻿<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DOM Worker Threads Suspending</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="output"></div>
+<script class="testbody" type="text/javascript">
+
+  var worker;
+  var finish = false;
+  var bc = new BroadcastChannel("suspendWindow");
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "startWorker") {
+      startWorker();
+    } else if (command == "navigate") {
+      window.location = "suspend_blank.html";
+    } else if (command == "finish") {
+      finish = true;
+      terminateWorker();
+      bc.postMessage({command: "finished"});
+      bc.close();
+      window.close();
+    }
+  }
+
+  function messageCallback(data) {
+    if (finish) {
+      return;
+    }
+    bc.postMessage({command: "messageCallback", data});
+  }
+
+  function errorCallback(msg) {
+    if (finish) {
+      return;
+    }
+    bc.postMessage({command: "errorCallback", data: msg});
+  }
+
+  var output = document.getElementById("output");
+
+  function terminateWorker() {
+    if (worker) {
+      worker.postMessage("stop");
+      worker = null;
+    }
+  }
+
+  function startWorker() {
+    var lastData;
+    worker = new Worker("suspend_worker.js");
+
+    worker.onmessage = function(event) {
+      output.textContent = (lastData ? lastData + " -> " : "") + event.data;
+      lastData = event.data;
+      messageCallback(event.data);
+    };
+
+    worker.onerror = function(event) {
+      this.terminate();
+      errorCallback(event.message);
+    };
+  }
+
+  window.onload = () => {
+    bc.postMessage({command: "loaded"});
+  }
+
+</script>
+</pre>
+</body>
+</html>

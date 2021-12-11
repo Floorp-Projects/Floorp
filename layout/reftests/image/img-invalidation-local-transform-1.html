@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!-- test for bug 1469000 https://bugzilla.mozilla.org/show_bug.cgi?id=1469000 -->
+<!-- this based on image/*/delaytest.html tests -->
+<head>
+<style>
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
+</head>
+<body>
+<div style="width: 450px">
+<img id="image1" src="img-invalidation-local-transform-1.png" srcset="img-invalidation-local-transform-1.png 400w, img-invalidation-local-transform-1.png 217w, img-invalidation-local-transform-1.png 100w">
+</div>
+
+
+<script>
+window.addEventListener("load", forceDecode);
+window.addEventListener("MozReftestInvalidate", reftestInvalidateListener);
+
+let decodeComplete = false;
+let gotReftestInvalidate = false;
+
+function forceDecode() {
+  let img = document.getElementById("image1");
+  img.decode().then(function() {
+    decodeComplete = true;
+    maybeStartTimer();
+  });
+}
+
+function reftestInvalidateListener() {
+  gotReftestInvalidate = true;
+  maybeStartTimer();
+}
+
+function maybeStartTimer() {
+  if (decodeComplete && gotReftestInvalidate) {
+    startTimer();
+  }
+}
+
+function startTimer() {
+  const delay = 2000;
+  setTimeout("document.documentElement.className = '';", delay);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Auto dir and alignment</title>
+    <style type="text/css">
+      p.plaintext {
+        unicode-bidi: plaintext;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Auto dir and alignment</h1>
+    <p>Every line below should read "<span style="unicode-bidi: bidi-override"
+>!world םולש</span>" and should be aligned to the right</p>
+    <p class="plaintext">שלום world!</p>
+    <p class="plaintext"><b>שלום</b> world!</p>
+    <p dir="auto">שלום world!</p>
+    <p dir="auto"><b>שלום</b> world!</p>
+  </body>
+</html>

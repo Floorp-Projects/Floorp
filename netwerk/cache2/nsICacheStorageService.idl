@@ -1,0 +1,139 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsICacheStorage;
+interface nsILoadContextInfo;
+interface nsIApplicationCache;
+interface nsIEventTarget;
+interface nsICacheStorageConsumptionObserver;
+interface nsICacheStorageVisitor;
+interface nsIPrincipal;
+
+/**
+ * Provides access to particual cache storages of the network URI cache.
+ */
+[scriptable, uuid(ae29c44b-fbc3-4552-afaf-0a157ce771e7)]
+interface nsICacheStorageService : nsISupports
+{
+  /**
+   * Get storage where entries will only remain in memory, never written
+   * to the disk.
+   *
+   * NOTE: Any existing disk entry for [URL|id-extension] will be doomed
+   * prior opening an entry using this memory-only storage.  Result of
+   * AsyncOpenURI will be a new and empty memory-only entry.  Using
+   * OPEN_READONLY open flag has no effect on this behavior.
+   *
+   * @param aLoadContextInfo
+   *    Information about the loading context, this focuses the storage JAR and
+   *    respects separate storage for private browsing.
+   */
+  nsICacheStorage memoryCacheStorage(in nsILoadContextInfo aLoadContextInfo);
+
+  /**
+   * Get storage where entries will be written to disk when not forbidden by
+   * response headers.
+   */
+  nsICacheStorage diskCacheStorage(in nsILoadContextInfo aLoadContextInfo);
+
+  /**
+   * Get storage where entries will be written to disk and marked as pinned.
+   * These pinned entries are immune to over limit eviction and call of clear()
+   * on this service.
+   */
+  nsICacheStorage pinningCacheStorage(in nsILoadContextInfo aLoadContextInfo);
+
+  /**
+   * Evict any cache entry having the same origin of aPrincipal.
+   *
+   * @param aPrincipal
+   *   The principal to compare the entries with.
+   */
+  void clearOrigin(in nsIPrincipal aPrincipal);
+
+  /**
+   * Evict any cache entry which belongs to a base domain. This includes entries
+   * partitioned under aBaseDomain and entries which belong to aBaseDomain, but
+   * are partitioned under other top level sites.
+   * @param aBaseDomain
+   *   The base domain to clear cache for.
+   */
+  void clearBaseDomain(in AString aBaseDomain);
+
+  /**
+   * Evict any cache entry having the same originAttributes.
+   *
+   * @param aOriginAttributes
+   *   The origin attributes in string format to compare the entries with.
+   */
+  void clearOriginAttributes(in AString aOriginAttributes);
+
+  /**
+   * Evict the whole cache.
+   */
+  void clear();
+
+  /**
+   * Purge only data of disk backed entries.  Metadata are left for
+   * performance purposes.
+   */
+  const uint32_t PURGE_DISK_DATA_ONLY = 1;
+  /**
+   * Purge whole disk backed entries from memory.  Disk files will
+   * be left unattended.
+   */
+  const uint32_t PURGE_DISK_ALL = 2;
+  /**
+   * Purge all entries we keep in memory, including memory-storage
+   * entries.  This may be dangerous to use.
+   */
+  const uint32_t PURGE_EVERYTHING = 3;
+  /**
+   * Purges data we keep warmed in memory.  Use for tests and for
+   * saving memory.
+   */
+  void purgeFromMemory(in uint32_t aWhat);
+
+  /**
+   * I/O thread target to use for any operations on disk
+   */
+  readonly attribute nsIEventTarget ioTarget;
+
+  /**
+   * Asynchronously determine how many bytes of the disk space the cache takes.
+   * @see nsICacheStorageConsumptionObserver
+   * @param aObserver
+   *    A mandatory (weak referred) observer.  Documented at
+   *    nsICacheStorageConsumptionObserver.
+   *    NOTE: the observer MUST implement nsISupportsWeakReference.
+   */
+  void asyncGetDiskConsumption(in nsICacheStorageConsumptionObserver aObserver);
+
+  /**
+   * Asynchronously visits all storages of the disk cache and memory cache.
+   * @see nsICacheStorageVisitor
+   * @param aVisitor
+   *   A visitor callback.
+   * @param aVisitEntries
+   *   A boolean indicates whether visits entries.
+   */
+  void asyncVisitAllStorages(in nsICacheStorageVisitor aVisitor,
+                             in boolean aVisitEntries);
+};
+
+[scriptable, uuid(7728ab5b-4c01-4483-a606-32bf5b8136cb)]
+interface nsICacheStorageConsumptionObserver : nsISupports
+{
+  /**
+   * Callback invoked to answer asyncGetDiskConsumption call. Always triggered
+   * on the main thread.
+   * NOTE: implementers must also implement nsISupportsWeakReference.
+   *
+   * @param aDiskSize
+   *    The disk consumption in bytes.
+   */
+  void onNetworkCacheDiskConsumption(in int64_t aDiskSize);
+};

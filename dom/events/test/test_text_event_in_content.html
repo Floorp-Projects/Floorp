@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <title>Not dispatching DOM "text" event on web apps</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<input id="input">
+<textarea id="textarea"></textarea>
+<div contenteditable id="editor"><p><br></p></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function doTests() {
+  for (let editorId of ["input", "textarea", "editor"]) {
+    let editor = document.getElementById(editorId);
+    editor.focus();
+    let fired = false;
+    function onText() {
+      fired = true;
+    }
+    editor.addEventListener("text", onText);
+
+    fired = false;
+    synthesizeCompositionChange({
+      composition: {string: "abc",
+                    clauses: [{length: 3, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+      caret: {start: 3, length: 0},
+    });
+    ok(!fired, `Starting composition shouldn't fire DOM "text" event in ${editorId}`);
+    fired = false;
+    synthesizeComposition({type: "compositioncommitasis", key: {key: "KEY_Enter"}});
+    ok(!fired, `Committing composition with the latest string shouldn't fire DOM "text" event in ${editorId}`);
+
+    fired = false;
+    synthesizeCompositionChange({
+      composition: {string: "def",
+                    clauses: [{length: 3, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+      caret: {start: 3, length: 0},
+    });
+    ok(!fired, `Restarting composition shouldn't fire DOM "text" event in ${editorId}`);
+    fired = false;
+    synthesizeComposition({type: "compositioncommit", data: "", key: {key: "KEY_Escape"}});
+    ok(!fired, `Committing composition with empty string shouldn't fire DOM "text" event in ${editorId}`);
+
+    fired = false;
+    synthesizeCompositionChange({
+      composition: {string: "de",
+                    clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+      caret: {start: 2, length: 0},
+    });
+    ok(!fired, `Restarting composition shouldn't fire DOM "text" event in ${editorId}`);
+    fired = false;
+    synthesizeComposition({type: "compositioncommit", data: "def", key: {key: "KEY_Escape"}});
+    ok(!fired, `Committing composition with new string shouldn't fire DOM "text" event in ${editorId}`);
+
+    fired = false;
+    synthesizeComposition({type: "compositioncommit", data: "ghi"});
+    ok(!fired, `Inserting string shouldn't fire DOM "text" event in ${editorId}`);
+
+    editor.removeEventListener("text", onText);
+  }
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

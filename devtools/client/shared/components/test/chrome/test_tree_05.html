@@ -1,0 +1,195 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test focusing with the Tree component.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree =
+      createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        { onFocus: x => renderTree({ focused: x }) },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
+
+    const tree = renderTree();
+    const treeElem = document.querySelector(".tree");
+
+    isAccessibleTree(tree);
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+
+    renderTree({ focused: "G" });
+    isAccessibleTree(tree, { hasActiveDescendant: true });
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:true",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "G should be focused");
+
+    // When tree gets focus by means other than mouse, do not set first node as
+    // focused node when there is already a focused node.
+    Simulate.focus(treeElem);
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:true",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "G should remain focused");
+
+    // Click the first tree node
+    document.querySelector(".tree-node").click();
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "A should be focused");
+
+    // Mouse down and mouse up events set tree "mouseDown" state correctly.
+    ok(!tree.state.mouseDown, "Mouse down state is not set.");
+    Simulate.mouseDown(document.querySelector(".tree-node"));
+    ok(tree.state.mouseDown, "Mouse down state is set.");
+    Simulate.mouseUp(document.querySelector(".tree-node"));
+    ok(!tree.state.mouseDown, "Mouse down state is reset.");
+
+    // Unset focused tree state.
+    renderTree({ focused: null });
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "No node should be focused");
+
+    // When tree gets focus while mouse is down, do not set first node as
+    // focused node.
+    Simulate.mouseDown(document.querySelector(".tree-node"));
+    Simulate.focus(treeElem);
+    Simulate.mouseUp(document.querySelector(".tree-node"));
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "No node should have been focused");
+
+    // When tree gets focus by means other than mouse, set first node as focused
+    // node if no nodes are focused.
+    Simulate.focus(treeElem);
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "A should be focused");
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

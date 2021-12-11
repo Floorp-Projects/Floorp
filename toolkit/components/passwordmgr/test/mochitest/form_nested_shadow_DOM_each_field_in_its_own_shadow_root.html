@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<!-- Simple form with username and password fields each in their own nested shadow roots -->
+<!-- This form is based off of toolkit/components/passwordmgr/test/browser/form_basic.html -->
+<form id="each-field-its-own-shadow">
+  <span id="outer-wrapper-username">
+    <!-- username input generated programmatically below -->
+  </span>
+  <span id="outer-wrapper-password">
+    <!-- password input generated programmatically below -->
+  </span>
+  <input id="submit" type="submit">
+</form>
+
+<script>
+  const submitButton = document.getElementById("submit");
+  const fields = ["username", "password"];
+  for (let field of fields) {
+    const inputEle = document.createElement("input");
+    inputEle.id = field;
+    inputEle.name = field;
+    if (field === "password") {
+      inputEle.type = field;
+    }
+    const wrapper = document.createElement("span");
+    wrapper.id = `wrapper-${field}`;
+    const shadow = wrapper.attachShadow({mode: "closed"});
+    shadow.append(inputEle);
+
+    const outerWrapper = document.getElementById(`outer-wrapper-${field}`);
+    const outerShadow = outerWrapper.attachShadow({mode: "closed"});
+    outerShadow.append(wrapper);
+  }
+</script>
+
+</body></html>

@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for bug 383383</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script>
+    SimpleTest.waitForExplicitFinish()
+  </script>
+  <script for="window" event="bar">
+    // This script should not run, but should not cause a parse error either.
+    ok(false, "Script was unexpectedly run")
+  </script>
+  <script>
+    ok(true, "Script was run as it should")
+    SimpleTest.finish()
+  </script>
+</body>
+</html>

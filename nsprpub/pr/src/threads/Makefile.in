@@ -1,0 +1,62 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#! gmake
+
+MOD_DEPTH	= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+ifdef USE_PTHREADS
+    DIRS =
+else
+ifdef USE_BTHREADS
+    DIRS =
+else
+    DIRS = combined
+endif
+endif
+
+ifdef USE_PTHREADS
+CSRCS = \
+	prcmon.c \
+	prrwlock.c   \
+	prtpd.c \
+	$(NULL)
+else
+ifdef USE_BTHREADS
+CSRCS = \
+	prcmon.c \
+	prrwlock.c   \
+	prtpd.c \
+	$(NULL)
+else
+CSRCS =	\
+	prcmon.c  \
+	prdump.c  \
+	prmon.c   \
+	prsem.c   \
+	prrwlock.c   \
+	prcthr.c \
+	prtpd.c \
+	$(NULL)
+endif
+endif
+
+TARGETS	= $(OBJS)
+
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+DEFINES	+= -D_NSPR_BUILD_
+
+include $(topsrcdir)/config/rules.mk
+
+export:: $(TARGETS)
+

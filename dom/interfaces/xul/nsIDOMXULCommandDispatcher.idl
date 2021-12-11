@@ -1,0 +1,40 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIController;
+interface nsIControllers;
+interface mozIDOMWindowProxy;
+
+webidl Element;
+
+[scriptable, uuid(a9fa9fd3-8d62-4f94-9ed8-3ea9c3cf0773)]
+interface nsIDOMXULCommandDispatcher : nsISupports
+{
+  [setter_can_run_script]
+  attribute Element focusedElement;
+  [setter_can_run_script]
+  attribute mozIDOMWindowProxy focusedWindow;
+
+  void                      addCommandUpdater(in Element updater,
+                                              in AString events,
+                                              in AString targets);
+  void                      removeCommandUpdater(in Element updater);
+
+  void                      updateCommands(in AString eventName);
+
+  nsIController             getControllerForCommand(in string command);
+  nsIControllers            getControllers();
+
+  void advanceFocus();
+  void rewindFocus();
+  void advanceFocusIntoSubtree(in Element elt);
+
+  // When locked, command updating is batched until unlocked. Always ensure that
+  // lock and unlock is called in a pair.
+  void lock();
+  void unlock();
+};

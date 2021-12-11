@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=514856
+-->
+<head>
+  <title>Test for Bug 514856</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=514856">Mozilla Bug 514856</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="testFrame" src="bug514856_iframe.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 514856 **/
+
+function beginTest() {
+  var ifr = document.getElementById("testFrame");
+  var win = ifr.contentWindow;
+
+  // After the click, the load event should be fired.
+  ifr.addEventListener('load', function() {
+    testDone();
+  });
+
+  // synthesizeMouse adds getBoundingClientRect left and top to the offsets but
+  // in that particular case, we don't want that.
+  var rect = ifr.getBoundingClientRect();
+  var left = rect.left;
+  var top = rect.top;
+
+  synthesizeMouse(ifr, 10 - left, 10 - top, { type: "mousemove" }, win);
+  synthesizeMouse(ifr, 12 - left, 12 - top, { type: "mousemove" }, win);
+  synthesizeMouse(ifr, 14 - left, 14 - top, { type: "mousemove" }, win);
+  synthesizeMouse(ifr, 16 - left, 16 - top, { }, win);
+}
+
+function testDone() {
+  var ifr = document.getElementById("testFrame");
+  var url = new String(ifr.contentWindow.location);
+
+  is(url.indexOf("?10,10"), -1, "Shouldn't have ?10,10 in the URL!");
+  is(url.indexOf("?12,12"), -1, "Shouldn't have ?12,12 in the URL!");
+  is(url.indexOf("?14,14"), -1, "Shouldn't have ?14,14 in the URL!");
+  isnot(url.indexOf("?16,16"), -1, "Should have ?16,16 in the URL!");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(beginTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,318 @@
+% This Source Code Form is subject to the terms of the Mozilla Public
+% License, v. 2.0. If a copy of the MPL was not distributed with this
+% file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/* These styles are intended to mimic XUL trees and the XUL search box. */
+
+html {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  font: message-box;
+  background-color: Field;
+  color: FieldText;
+  user-select: none;
+}
+
+/* The content-container holds the non-scrollable header and the scrollable
+   content area.
+*/
+.content-container {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+/* The content header is not scrollable */
+.content-header {
+  flex: 0 1 auto;
+}
+
+/* The main content area is scrollable and fills the rest of the area */
+.content-scrollable {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.emptyListInfo {
+  cursor: default;
+  padding: 3em 1em;
+  text-align: center;
+}
+
+.list,
+.item-tabs-list {
+  display: flex;
+  flex-flow: column;
+  flex-grow: 1;
+}
+
+.item.client {
+  opacity: 1;
+  max-height: unset;
+  display: unset;
+}
+
+.item.client.closed .item-tabs-list {
+  display: none;
+}
+
+.item {
+  display: inline-block;
+  opacity: 1;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  outline: none;
+}
+
+.item.selected > .item-title-container {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
+}
+
+.item.selected:focus > .item-title-container {
+  background-color: SelectedItem;
+  color: SelectedItemText;
+}
+
+.item.client .item-twisty-container {
+  min-width: 12px;
+  height: 12px;
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 1;
+}
+
+.item.client.closed .item-twisty-container {
+  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
+}
+
+.item.client.closed .item-twisty-container:dir(rtl) {
+  background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
+}
+
+.client .item.tab > .item-title-container {
+  padding-inline-start: 35px;
+}
+
+.item.tab > .item-title-container {
+  padding-inline-start: 20px;
+}
+
+.item.client[clientType] > .item-title-container > .item-icon-container {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.item.client[clientType=phone] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-phone.svg");
+}
+
+.item.client[clientType=tablet] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-tablet.svg");
+}
+
+.item.client[clientType=desktop] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-desktop.svg");
+}
+
+.item.client[clientType=tv] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-tv.svg");
+}
+
+.item.client[clientType=vr] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-vr.svg");
+}
+
+.item.tab > .item-title-container > .item-icon-container {
+  background-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.item-icon-container {
+  min-width: 16px;
+  max-width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+  margin-inline: 5px;
+  background-size: 16px 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.item-title-container {
+  display: flex;
+  flex-flow: row;
+  overflow: hidden;
+  flex-grow: 1;
+  align-items: center;
+  padding: 4px;
+}
+
+.item-title {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  line-height: 1.3;
+  cursor: default;
+}
+
+.item[hidden] {
+  opacity: 0;
+  max-height: 0;
+  transition: opacity 150ms ease-in-out, max-height 150ms ease-in-out 150ms;
+}
+
+.item.empty .item-title-container {
+  color: #aeaeae;
+}
+
+.client .item.empty > .item-title-container {
+  padding-inline-start: 35px;
+}
+
+.sync-state > p {
+  padding-inline: 10px;
+}
+
+.text-link {
+  color: rgb(0, 149, 221);
+  cursor: pointer;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.text-link,
+.text-link:focus {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.deck .sync-state {
+  display: none;
+  opacity: 0;
+  transition: opacity 1.5s;
+  border-top: 1px solid #bdbdbd;
+}
+
+.deck .sync-state.tabs-container {
+  border-top: 0;
+}
+
+.deck .sync-state.selected {
+  display: unset;
+  opacity: 100;
+}
+
+.deck .syncIllustration,
+.deck .syncIllustrationIssue {
+  height: 174px;
+  margin: 38px 8px 15px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.deck .syncIllustration {
+  background-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
+}
+
+.deck .syncIllustrationIssue {
+  background-image: url(chrome://browser/skin/fxa/sync-illustration-issue.svg);
+}
+
+.deck .instructions {
+  text-align: center;
+  color: GrayText;
+  padding: 0 11px;
+  max-width: 15em;
+  margin: 0 auto;
+}
+
+body[lwt-sidebar] .deck .instructions {
+  color: inherit;
+  opacity: .6;
+}
+
+.deck .button {
+  display: block;
+  background-color: #0060df;
+  color: white;
+  border: 0;
+  border-radius: 2px;
+  margin: 15px auto;
+  padding: 8px;
+  text-shadow: none;
+  width: calc(100% - 22px);
+  max-width: 200px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.deck .button:hover {
+  background-color: #003eaa;
+}
+
+.deck .button:hover:active {
+  background-color: #002275;
+}
+
+.sidebar-search-container {
+  display: flex;
+  padding: 4px;
+}
+
+.sidebar-search-container:not(.selected) {
+  display: none;
+}
+
+.tabsFilter {
+  flex-grow: 1;
+}
+
+/* Themed sidebars */
+
+body[lwt-sidebar] {
+  background-color: var(--lwt-sidebar-background-color);
+  color: var(--lwt-sidebar-text-color);
+  scrollbar-color: rgba(204,204,204,.5) rgba(230,230,235,.5);
+}
+
+body[lwt-sidebar-brighttext] {
+  scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
+}
+
+body[lwt-sidebar] .item.selected > .item-title-container {
+  background-color: hsla(0,0%,80%,.3);
+  color: inherit;
+}
+
+body[lwt-sidebar-brighttext] .item.selected > .item-title-container {
+  background-color: rgba(249,249,250,.1);
+}
+
+body[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
+  background-color: var(--lwt-sidebar-highlight-background-color);
+  color: var(--lwt-sidebar-highlight-text-color);
+}
+
+/* Apply crisp rendering for favicons at exactly 2dppx resolution */
+@media (resolution: 2dppx) {
+  .tabs-container .item-tabs-list .item-icon-container {
+    image-rendering: -moz-crisp-edges;
+  }
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1359076
+-->
+<head>
+  <title>Test for Bug 675884</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1359076">Mozilla Bug 1359076</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["device.sensors.orientation.enabled", false],
+  ["device.sensors.motion.enabled", false],
+  ["device.sensors.proximity.enabled", false],
+  ["device.sensors.ambientLight.enabled", false]
+]}, () => {
+  is("UserProximityEvent" in window, false, "UserProximityEvent does not exist");
+  is("DeviceLightEvent" in window, false, "DeviceLightEvent does not exist");
+  is("DeviceOrientationEvent" in window, false, "DeviceOrientationEvent does not exist");
+  is("DeviceMotionEvent" in window, false, "DeviceMotionEvent does not exist");
+  is("onuserproximity" in window, false, "onuserproximity does not exist");
+  is("ondevicelight" in window, false, "ondevicelight does not exist");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

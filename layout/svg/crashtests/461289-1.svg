@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<script type="text/javascript">
+
+function boom()
+{
+  var f = document.getElementById("filter1");
+  f.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "feImage"));
+  f.appendChild(document.getElementById("rect"));
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+
+<filter id="filter1"/><rect id="rect" filter="url(#filter1)"/>
+
+</svg>

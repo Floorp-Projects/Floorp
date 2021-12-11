@@ -1,0 +1,98 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.svg-common {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 16px;
+}
+
+.svg-button {
+  height: 32px;
+  width: 32px;
+  min-width: 0;
+  padding: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.button-open-dir {
+  background-image: url(chrome://global/skin/icons/folder.svg);
+}
+
+.button-expand {
+  background-image: url(chrome://global/skin/icons/arrow-down.svg);
+}
+
+.button-collapse {
+  background-image: url(chrome://global/skin/icons/arrow-up.svg);
+}
+
+.card-head > img {
+  margin-inline-start: .5em;
+}
+
+.image-warning {
+  fill: #fcd100;
+}
+
+.card {
+  margin-bottom: 16px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+}
+
+.module-name {
+  margin: 0;
+}
+
+.module-tags {
+  margin-inline: .5em;
+}
+
+.module-tag {
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-color: var(--in-content-button-background);
+  padding: 0 2px;
+  margin-inline-end: 2px;
+}
+
+.module-details {
+  font-size: 14px;
+  margin-top: var(--card-padding);
+}
+
+.module-details > div {
+  display: flex;
+}
+
+.module-detail-label {
+  width: 12em;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+.event-table {
+  width: max-content;
+  margin-top: var(--card-padding);
+}
+
+.event-table > thead,
+.event-table > tbody > tr {
+  height: 28px;
+  vertical-align: middle;
+}
+
+.event-table > thead > tr > th,
+.event-table > tbody > tr > td {
+  padding-inline: 10px;
+}

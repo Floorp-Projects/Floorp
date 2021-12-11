@@ -1,0 +1,25 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=860143
+-->
+<head>
+  <meta charset="utf-8">
+  <title>bug 860143</title>
+  <script type="application/javascript">
+    function start() {
+      var o0 = new window.RTCPeerConnection({
+        iceServers: [
+          {
+            url: "turn:AAAAAAAAAAAAAAAAA        AAAAAAAAAAA  AAAAAAAAAAAAA AA AAAAA        AAAAAAAAAAA  AAAAAAAAAAAAAAAA AAAAA        AAAAAAAAAA, AAAAAAAAAAAAAAAA        AAA    AAAAAAAAAAAAAAA"
+          }
+        ]
+      });
+      o0.close();
+    }
+  </script>
+</head>
+
+<body onload="start()">
+</body>
+</html>

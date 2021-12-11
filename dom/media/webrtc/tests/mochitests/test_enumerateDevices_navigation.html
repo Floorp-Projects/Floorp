@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<iframe id="iframe" srcdoc="<script>
+  window.enumerateDevices = () =>
+    navigator.mediaDevices.enumerateDevices();
+  </script>"
+    width="100%" height="50%" frameborder="1">
+</iframe>
+<pre id="test">
+<script type="application/javascript">
+createHTML({ title: "Suspend enumerateDevices code ", bug: "1479840" });
+/**
+  This test covers the case that the enumerateDevices method is suspended by
+  navigating away the current window. In order to implement that the enumeration
+  is executed in an iframe which is cleared before the enumeration has been resolved
+*/
+
+runTest(async () => {
+  // Run enumerate devices and mesure the time it will take.
+  const start = new Date().getTime();
+  try {
+    await iframe.contentWindow.enumerateDevices();
+  } catch (e) {
+    info("Failed to enumerate devices, error: " + e);
+  }
+  const elapsed = new Date().getTime() - start;
+
+  // Run again and navigate away. Expected to remain pending.
+  let p = iframe.contentWindow.enumerateDevices()
+  p.then( devices => {
+    ok(false, "Enumerate devices promise resolved unexpectedly, found " + devices.length + " devices.");
+  })
+  .catch ( error => {
+    ok(false, "Enumerate devices promise rejected unexpectedly: " + error);
+  });
+  iframe.srcdoc = "";
+
+  // Wait enough time.
+  try {
+    await timeout(p, 5 * elapsed, "timeout");
+    ok(false, "Enumerate devices promise resolved unexpectedly");
+  } catch (e) {
+    is(e.message, "timeout", "We should time out without enumerateDevices rejecting");
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>

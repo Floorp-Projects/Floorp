@@ -1,0 +1,127 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIExtensionStorageCallback;
+interface nsIFile;
+interface nsIVariant;
+
+// Implements the operations needed to support the `StorageArea` WebExtension
+// API.
+[scriptable, uuid(d8eb3ff1-9b4b-435a-99ca-5b8cbaba2420)]
+interface mozIExtensionStorageArea : nsISupports {
+    // These constants are exposed by the rust crate, but it's not worth the
+    // effort of jumping through the hoops to get them exposed to the JS
+    // code in a sane way - so we just duplicate them here. We should consider a
+    // test that checks they match the rust code.
+    // This interface is agnostic WRT the area, so we prefix the constants with
+    // the area - it's the consumer of this interface which knows what to use.
+    const unsigned long SYNC_QUOTA_BYTES = 102400;
+    const unsigned long SYNC_QUOTA_BYTES_PER_ITEM = 8192;
+    const unsigned long SYNC_MAX_ITEMS = 512;
+
+    // Sets one or more key-value pairs specified in `json` for the
+    // `extensionId`. If the `callback` implements
+    // `mozIExtensionStorageListener`, its `onChange`
+    // method will be called with the new and old values.
+    void set(in AUTF8String extensionId,
+             in AUTF8String json,
+             in mozIExtensionStorageCallback callback);
+
+    // Returns the value for the `key` in the storage area for the
+    // `extensionId`. `key` must be a JSON string containing either `null`,
+    // an array of string key names, a single string key name, or an object
+    // where the properties are the key names, and the values are the defaults
+    // if the key name doesn't exist in the storage area.
+    //
+    // If `get()` fails due to the quota being exceeded, the exception will
+    // have a result code of NS_ERROR_DOM_QUOTA_EXCEEDED_ERR (==0x80530016)
+    void get(in AUTF8String extensionId,
+             in AUTF8String key,
+             in mozIExtensionStorageCallback callback);
+
+    // Removes the `key` from the storage area for the `extensionId`. If `key`
+    // exists and the `callback` implements `mozIExtensionStorageListener`, its
+    // `onChanged` method will be called with the removed key-value pair.
+    void remove(in AUTF8String extensionId,
+                in AUTF8String key,
+                in mozIExtensionStorageCallback callback);
+
+    // Removes all keys from the storage area for the `extensionId`. If
+    // `callback` implements `mozIExtensionStorageListener`, its `onChange`
+    // method will be called with all removed key-value pairs.
+    void clear(in AUTF8String extensionId,
+               in mozIExtensionStorageCallback callback);
+
+    // Gets the number of bytes in use for the specified keys.
+    void getBytesInUse(in AUTF8String extensionId,
+                       in AUTF8String keys,
+                       in mozIExtensionStorageCallback callback);
+
+    // Gets and clears the information about the migration from the kinto
+    // database into the rust one. As "and clears" indicates, this will
+    // only produce a non-empty the first time it's called after a
+    // migration (which, hopefully, should only happen once).
+    void takeMigrationInfo(in mozIExtensionStorageCallback callback);
+};
+
+// Implements additional methods for setting up and tearing down the underlying
+// database connection for a storage area. This is a separate interface because
+// these methods are not part of the `StorageArea` API, and have restrictions on
+// when they can be called.
+[scriptable, uuid(2b008295-1bcc-4610-84f1-ad4cab2fa9ee)]
+interface mozIConfigurableExtensionStorageArea : nsISupports {
+    // Sets up the storage area. An area can only be configured once; calling
+    // `configure` multiple times will throw. `configure` must also be called
+    // before any of the `mozIExtensionStorageArea` methods, or they'll fail
+    // with errors.
+    // The second param is the path to the kinto database file from which we
+    // should migrate. This should always be specified even when there's a
+    // chance the file doesn't exist.
+    void configure(in nsIFile databaseFile, in nsIFile kintoFile);
+
+    // Tears down the storage area, closing the backing database connection.
+    // This is called automatically when Firefox shuts down. Once a storage area
+    // has been shut down, all its methods will fail with errors. If `configure`
+    // hasn't been called for this area yet, `teardown` is a no-op.
+    void teardown(in mozIExtensionStorageCallback callback);
+};
+
+// Implements additional methods for syncing a storage area. This is a separate
+// interface because these methods are not part of the `StorageArea` API, and
+// have restrictions on when they can be called.
+[scriptable, uuid(6dac82c9-1d8a-4893-8c0f-6e626aef802c)]
+interface mozISyncedExtensionStorageArea : nsISupports {
+    // If a sync is in progress, this method fetches pending change
+    // notifications for all extensions whose storage areas were updated.
+    // `callback` should implement `mozIExtensionStorageListener` to forward
+    // the records to `storage.onChanged` listeners. This method should only
+    // be called by Sync, after `mozIBridgedSyncEngine.apply` and before
+    // `syncFinished`. It fetches nothing if called at any other time.
+    void fetchPendingSyncChanges(in mozIExtensionStorageCallback callback);
+};
+
+// A listener for storage area notifications.
+[scriptable, uuid(8cb3c7e4-d0ca-4353-bccd-2673b4e11510)]
+interface mozIExtensionStorageListener : nsISupports {
+    // Notifies that an operation has data to pass to `storage.onChanged`
+    // listeners for the given `extensionId`. `json` is a JSON array of listener
+    // infos. If an operation affects multiple extensions, this method will be
+    // called multiple times, once per extension.
+    void onChanged(in AUTF8String extensionId, in AUTF8String json);
+};
+
+// A generic callback for a storage operation. Either `handleSuccess` or
+// `handleError` is guaranteed to be called once.
+[scriptable, uuid(870dca40-6602-4748-8493-c4253eb7f322)]
+interface mozIExtensionStorageCallback : nsISupports {
+    // Called when the operation completes. Operations that return a result,
+    // like `get`, will pass a `UTF8String` variant. Those that don't return
+    // anything, like `set` or `remove`, will pass a `null` variant.
+    void handleSuccess(in nsIVariant result);
+
+    // Called when the operation fails.
+    void handleError(in nsresult code, in AUTF8String message);
+};

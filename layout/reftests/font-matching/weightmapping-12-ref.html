@@ -1,0 +1,222 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Weight mapping tests</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+body {
+  margin: 50px;
+  font-family: Futura, Verdana, sans-serif;
+}
+
+h3, h4 { font-weight: normal; }
+
+/* make all the spans blocks to avoid influence of what's outside them
+   on line-height calculations */
+span { display: block; }
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-thin.ttf);
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-light.ttf);
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: test100;
+  src: url(../fonts/mplus/mplus-1p-thin.ttf);
+}
+
+@font-face {
+  font-family: test200;
+  src: url(../fonts/mplus/mplus-1p-light.ttf);
+}
+
+table {
+  border-collapse: collapse;
+  font-family: test;
+  font-size: 20px;
+}
+
+td {
+  padding: 0; margin: 0;
+}
+
+th {
+  font-weight: inherit;
+}
+
+.red { color: red; }
+
+th.cnor { font-weight: inherit; }
+th.cbo { font-weight: bolder; }
+th.cbobo, th.cbobo span { font-weight: bolder; }
+th.cli { font-weight: lighter; }
+th.clili, th.clili span { font-weight: lighter; }
+
+thead { font-weight: 400; font-size: 75%; }
+
+.w1 .clili { font-family: test100; }
+.w1 .cli { font-family: test100; }
+.w1 .cnor { font-family: test100; }
+.w1 .cbo { font-family: test200; }
+.w1 .cbobo { font-family: test200; font-weight: bold; }
+
+.w2 .clili { font-family: test100; }
+.w2 .cli { font-family: test100; }
+.w2 .cnor { font-family: test200; }
+.w2 .cbo { font-family: test200; }
+.w2 .cbobo { font-family: test200; font-weight: bold; }
+
+.w3 .clili { font-family: test100; }
+.w3 .cli { font-family: test100; }
+.w3 .cnor { font-family: test200; }
+.w3 .cbo { font-family: test200; }
+.w3 .cbobo { font-family: test200; font-weight: bold; }
+
+.w4 .clili { font-family: test100; }
+.w4 .cli { font-family: test100; }
+.w4 .cnor { font-family: test200; }
+.w4 .cbo { font-family: test200; font-weight: bold; }
+.w4 .cbobo { font-family: test200; font-weight: bold; }
+
+.w5 .clili { font-family: test100; }
+.w5 .cli { font-family: test100; }
+.w5 .cnor { font-family: test200; }
+.w5 .cbo { font-family: test200; font-weight: bold; }
+.w5 .cbobo { font-family: test200; font-weight: bold; }
+
+.w6 .clili { font-family: test100; }
+.w6 .cli { font-family: test200; }
+.w6 .cnor { font-family: test200; font-weight: bold; }
+.w6 .cbo { font-family: test200; font-weight: bold; }
+.w6 .cbobo { font-family: test200; font-weight: bold; }
+
+.w7 .clili { font-family: test100; }
+.w7 .cli { font-family: test200; }
+.w7 .cnor { font-family: test200; font-weight: bold; }
+.w7 .cbo { font-family: test200; font-weight: bold; }
+.w7 .cbobo { font-family: test200; font-weight: bold; }
+
+.w8 .clili { font-family: test200; }
+.w8 .cli { font-family: test200; font-weight: bold; }
+.w8 .cnor { font-family: test200; font-weight: bold; }
+.w8 .cbo { font-family: test200; font-weight: bold; }
+.w8 .cbobo { font-family: test200; font-weight: bold; }
+
+.w9 .clili { font-family: test200; }
+.w9 .cli { font-family: test200; font-weight: bold; }
+.w9 .cnor { font-family: test200; font-weight: bold; }
+.w9 .cbo { font-family: test200; font-weight: bold; }
+.w9 .cbobo { font-family: test200; font-weight: bold; }
+
+.w1 th { font-weight: 100; }
+.w2 th { font-weight: 200; }
+.w3 th { font-weight: 300; }
+.w4 th { font-weight: 400; }
+.w5 th { font-weight: 500; }
+.w6 th { font-weight: 600; }
+.w7 th { font-weight: 700; }
+.w8 th { font-weight: 800; }
+.w9 th { font-weight: 900; }
+
+</style>
+</head>
+<body>
+
+<h3>Font family with 100, 200 weights</h3>
+
+<table>
+<thead>
+<th></th>
+<th class="clili"><span>lighter lighter</span></th>
+<th class="cli"><span>lighter</span></th>
+<th class="cnor"><span>normal</span></th>
+<th class="cbo"><span>bolder</span></th>
+<th class="cbobo"><span>bolder bolder</span></th>
+</thead>
+<tr class="w1">
+<th class="red">100</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w2">
+<th class="red">200</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w3">
+<th>300</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w4">
+<th>400</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w5">
+<th>500</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w6">
+<th>600</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w7">
+<th>700</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w8">
+<th>800</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+<tr class="w9">
+<th>900</th>
+<td class="clili"><span>東京特許許可局</span></td>
+<td class="cli"><span>東京特許許可局</span></td>
+<td class="cnor"><span>東京特許許可局</span></td>
+<td class="cbo"><span>東京特許許可局</span></td>
+<td class="cbobo"><span>東京特許許可局</span></td>
+</tr>
+</table>
+
+<p>tokyotokkyokyokakyoku</p>
+
+</body>
+</html>

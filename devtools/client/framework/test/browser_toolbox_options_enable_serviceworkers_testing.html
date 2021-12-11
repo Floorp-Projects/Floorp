@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>browser_toolbox_options_enable_serviceworkers_testing.html</title>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <h1>SW-test</h1>
+    <script>
+      function register() {
+        return Promise.resolve().then(function() {
+          // While ServiceWorkerContainer.register() returns a promise, it's
+          // still wrapped with a .then() because navigator.serviceWorker is not
+          // defined in insecure contexts unless service worker testing is
+          // enabled, so dereferencing it would throw a ReferenceError (which
+          // is then caught in the .catch() clause).
+          return window.navigator.serviceWorker.register("serviceworker.js");
+        }).then(registration => {
+          return {success: true};
+        }).catch(error => {
+          return {success: false};
+        });
+      }
+
+      function unregister() {
+        return Promise.resolve().then(function() {
+          return window.navigator.serviceWorker.getRegistration();
+        }).then(registration => {
+          return registration.unregister().then(result => {
+            return {success: !!result};
+          });
+        }).catch(_ => {
+          return {success: false};
+        });
+      }
+
+      function iframeRegisterAndUnregister() {
+        var frame = window.document.createElement("iframe");
+        var promise = new Promise(function(resolve, reject) {
+          frame.addEventListener("load", function() {
+            Promise.resolve().then(_ => {
+              return frame.contentWindow.navigator.serviceWorker.register("serviceworker.js");
+            }).then(swr => {
+              return swr.unregister();
+            }).then(_ => {
+              frame.remove();
+              resolve({success: true});
+            }).catch(error => {
+              resolve({success: false});
+            });
+          }, {once: true});
+        });
+        frame.src = "browser_toolbox_options_enabled_serviceworkers_testing.html";
+        window.document.body.appendChild(frame);
+        return promise;
+      }
+
+      window.addEventListener("message", function(event) {
+        var response;
+        switch (event.data) {
+          case "devtools:sw-test:register": {
+            response = register();
+            break;
+          }
+          case "devtools:sw-test:unregister": {
+            response = unregister();
+            break;
+          }
+          case "devtools:sw-test:iframe:register-and-unregister": {
+            response = iframeRegisterAndUnregister();
+            break;
+          }
+        }
+        response.then(data => {
+          event.ports[0].postMessage(data);
+          event.ports[0].close();
+        });
+      });
+    </script>
+  </body>
+</html>

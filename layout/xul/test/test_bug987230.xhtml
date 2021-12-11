@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=987230
+-->
+<window title="Mozilla Bug 987230"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="SimpleTest.waitForFocus(startTest, window)">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=987230"
+     target="_blank">Mozilla Bug 987230</a>
+  </body>
+
+  <vbox>
+    <toolbar>
+      <toolbarbutton id="toolbarbutton-anchor"
+                     label="Anchor"
+                     consumeanchor="toolbarbutton-anchor"
+                     onclick="onAnchorClick(event)"
+                     style="padding: 50px !important; list-style-image: url(chrome://branding/content/icon32.png)"/>
+    </toolbar>
+    <spacer flex="1"/>
+    <hbox id="hbox-anchor"
+          style="padding: 20px"
+          onclick="onAnchorClick(event)">
+      <hbox id="inner-anchor"
+        consumeanchor="hbox-anchor"
+        >
+        Another anchor
+      </hbox>
+    </hbox>
+    <spacer flex="1"/>
+  </vbox>
+
+  <panel id="mypopup"
+         type="arrow"
+         onpopupshown="onMyPopupShown(event)"
+         onpopuphidden="onMyPopupHidden(event)">This is a test popup</panel>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 987230 **/
+  SimpleTest.waitForExplicitFinish();
+
+  SimpleTest.requestCompleteLog();
+
+  function onMyPopupHidden(e) {
+    ok(true, "Popup hidden");
+    if (outerAnchor.id == "toolbarbutton-anchor") {
+      popupHasShown = false;
+      outerAnchor = document.getElementById("hbox-anchor");
+      anchor = document.getElementById("inner-anchor");
+      nextTest();
+    } else {
+      //XXXgijs set mouse position back outside the iframe:
+      let frameRect = window.frameElement.getBoundingClientRect();
+      let utils = window.windowUtils;
+      let scale = utils.screenPixelsPerCSSPixel;
+      let outsideOfFrameX = (window.mozInnerScreenX + frameRect.width + 100) * scale;
+      let outsideOfFrameY = Math.max(0, window.mozInnerScreenY - 100) * scale;
+
+      info("Mousemove: " + outsideOfFrameX + ", " + outsideOfFrameY +
+           " (from innerscreen " + window.mozInnerScreenX + ", " + window.mozInnerScreenY +
+           " and rect width " + frameRect.width + " and scale " + scale + ")");
+      synthesizeNativeMouseEvent({
+        type: "mousemove",
+        screenX: outsideOfFrameX,
+        screenY: outsideOfFrameY,
+        scale: "inScreenPixels",
+        elementOnWidget: null,
+      });
+      SimpleTest.finish();
+    }
+  }
+
+  let popupHasShown = false;
+  function onMyPopupShown(e) {
+    popupHasShown = true;
+    synthesizeNativeMouseEvent({ type: "click", target: outerAnchor, offsetX: 5, offsetY: 5 });
+  }
+
+  function onAnchorClick(e) {
+    info("click: " + e.target.id);
+    ok(!popupHasShown, "Popup should only be shown once");
+    popup.openPopup(anchor, "bottomcenter topright");
+  }
+
+  let popup, outerAnchor, anchor;
+
+  function startTest() {
+    popup = document.getElementById("mypopup");
+    outerAnchor = document.getElementById("toolbarbutton-anchor");
+    anchor = outerAnchor.icon;
+    nextTest();
+  }
+
+  function nextTest(e) {
+    synthesizeMouse(outerAnchor, 5, 5, {});
+  }
+
+  ]]>
+  </script>
+</window>

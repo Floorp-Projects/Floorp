@@ -1,0 +1,2 @@
+# Register resource aliases
+resource services-automation resource://gre/modules/services-automation/

@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=882703
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Media test: TextTrackList change event</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+let video = document.createElement("video");
+
+isnot(video.textTracks, null, "Video should have a list of TextTracks.");
+
+video.addTextTrack("subtitles", "", "");
+
+let track = video.textTracks[0];
+video.textTracks.addEventListener("change", changed);
+
+is(track.mode, "hidden", "New TextTrack's mode should be hidden.");
+track.mode = "showing";
+// Bug882674: change the mode again to see if we receive only one
+// change event.
+track.mode = "hidden";
+
+var eventCount = 0;
+function changed(event) {
+  eventCount++;
+  is(eventCount, 1, "change event dispatched multiple times.");
+  is(event.target, video.textTracks, "change event's target should be video.textTracks.");
+  ok(event instanceof window.Event, "change event should be a simple event.");
+  ok(!event.bubbles, "change event should not bubble.");
+  ok(event.isTrusted, "change event should be trusted.");
+  ok(!event.cancelable, "change event should not be cancelable.");
+
+  // Delay the finish function call for testing the change event count.
+  setTimeout(SimpleTest.finish, 0);
+}
+</script>
+</pre>
+</body>
+</html>

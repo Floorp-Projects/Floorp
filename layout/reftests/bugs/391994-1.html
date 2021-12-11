@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  var sel = document.createElement("select");
+  sel.appendChild(new Option(1));
+  var opt = new Option(2);
+  opt.setAttribute("selected", "selected");
+  sel.appendChild(opt);
+  document.body.appendChild(sel);
+</script>
+</body>
+</html>

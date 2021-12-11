@@ -1,0 +1,21 @@
+<html class="reftest-paged">
+<head><style>
+    td { vertical-align: top; }
+    .tall {
+      height: 2.1in; /* just longer than a reftest-paged page. */
+      width:  1in;
+      float:  left;
+      border: 0px;
+    }
+</style></head>
+<body>
+  <table cellspacing="0" cellpadding="0">
+    <tbody></tbody>
+    <tfoot>
+      <tr><td rowspan="2">line 1<br/>line 2<br/>line 3</td></tr>
+      <tr><td><iframe class="tall"></iframe></td></tr>
+    </tfoot>
+  </table>
+  <br>
+</body>
+</html>

@@ -1,0 +1,3292 @@
+<!DOCTYPE HTML>
+<html style="font-size: 32px;">
+<head>
+  <title>Test for D3E WheelEvent</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="bodyLoaded()">
+<p id="display"></p>
+<div id="scrollable" style="font-family:monospace; font-size: 18px; line-height: 1; overflow: auto; width: 200px; height: 200px;">
+  <div id="scrolled" style="font-size: 64px; width: 5000px; height: 5000px;">
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+  </div>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+var gScrollableElement;
+var gScrolledElement;
+
+SimpleTest.waitForExplicitFinish();
+function bodyLoaded() {
+  gScrollableElement = document.getElementById("scrollable");
+  gScrolledElement = document.getElementById("scrolled");
+  runTests();
+}
+
+var gLineHeight = 0;
+var gHorizontalLine = 0;
+var gPageHeight = 0;
+var gPageWidth  = 0;
+
+function sendWheelAndWait(aX, aY, aEvent)
+{
+  sendWheelAndPaint(gScrollableElement, aX, aY, aEvent, continueTest);
+}
+
+function* prepareScrollUnits()
+{
+  var result = -1;
+  function handler(aEvent)
+  {
+    result = aEvent.detail;
+    aEvent.preventDefault();
+  }
+  window.addEventListener("MozMousePixelScroll", handler, { capture: true, passive: false });
+
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gLineHeight = result;
+  ok(gLineHeight > 10 && gLineHeight < 25, "prepareScrollUnits: gLineHeight may be illegal value, got " + gLineHeight);
+
+  result = -1;
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gHorizontalLine = result;
+  ok(gHorizontalLine > 5 && gHorizontalLine < 16, "prepareScrollUnits: gHorizontalLine may be illegal value, got " + gHorizontalLine);
+
+  result = -1;
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gPageHeight = result;
+  // XXX Cannot we know the actual scroll port size?
+  ok(gPageHeight >= 150 && gPageHeight <= 200,
+     "prepareScrollUnits: gPageHeight is strange value, got " + gPageHeight);
+
+  result = -1;
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gPageWidth = result;
+  ok(gPageWidth >= 150 && gPageWidth <= 200,
+     "prepareScrollUnits: gPageWidth is strange value, got " + gPageWidth);
+
+  window.removeEventListener("MozMousePixelScroll", handler, true);
+}
+
+// Tests continuous trusted wheel events. Trusted wheel events should cause
+// legacy mouse scroll events when its lineOrPageDelta value is not zero or
+// accumulated delta values of pixel scroll events of pixel only device
+// become over the line height.
+function* testContinuousTrustedEvents()
+{
+  const kSynthesizedWheelEventTests = [
+    { description: "Simple horizontal wheel event by pixels (16.0 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 16 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Simple horizontal wheel event by pixels (16.0 - 1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 16 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Simple horizontal wheel event by pixels (16.0 - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 16 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Simple vertical wheel event by pixels (16.0 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: 16 } }
+    },
+    { description: "Simple vertical wheel event by pixels (16.0 - 1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: 16 } }
+    },
+    { description: "Simple vertical wheel event by pixels (16.0 - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: 16 } }
+    },
+
+    { description: "Simple z-direction wheel event by pixels (16.0 - 1)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 0.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 0.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: false,  preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: false,  preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Simple horizontal wheel event by pixels (-16.0 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -16 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Simple horizontal wheel event by pixels (-16.0 - -1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -16 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Simple horizontal wheel event by pixels (-16.0 - -1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -16 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Simple vertical wheel event by pixels (-16.0 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: -16 } }
+    },
+    { description: "Simple vertical wheel event by pixels (-16.0 - -1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: -16 } }
+    },
+    { description: "Simple vertical wheel event by pixels (-16.0 - -1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: -16 } }
+    },
+
+    { description: "Simple z-direction wheel event by pixels (-16.0 - -1)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 0.0, deltaZ: -16.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 0.0, deltaZ: -16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: false,  preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: false,  preventDefault: false, detail: 0 } }
+    },
+
+    // 3 scroll events per line, and legacy line scroll will be fired first.
+    { description: "Horizontal wheel event by pixels (5.3 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Horizontal wheel event by pixels (5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Vertical wheel event by pixels (5.3 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "Vertical wheel event by pixels (5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "Vertical wheel event by pixels (5.3 - 0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+
+    { description: "Horizontal wheel event by pixels (-5.3 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Horizontal wheel event by pixels (-5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Horizontal wheel event by pixels (-5.3 - 0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Vertical wheel event by pixels (-5.3 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "Vertical wheel event by pixels (-5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "Vertical wheel event by pixels (-5.3 - 0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+
+    // 3 scroll events per line, and legacy line scroll will be fired last.
+    { description: "Horizontal wheel event by pixels (5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Horizontal wheel event by pixels (5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Horizontal wheel event by pixels (5.3 - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Vertical wheel event by pixels (5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "Vertical wheel event by pixels (5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "Vertical wheel event by pixels (5.3 - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+
+    { description: "Horizontal wheel event by pixels (-5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Horizontal wheel event by pixels (-5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Horizontal wheel event by pixels (-5.3 - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Vertical wheel event by pixels (-5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "Vertical wheel event by pixels (-5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "Vertical wheel event by pixels (-5.3 - -1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+
+    // Oblique scroll.
+    { description: "To bottom-right wheel event by pixels (5.3/5.2 - 1/1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "To bottom-right wheel event by pixels (5.3/5.2 - 0/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "To bottom-right wheel event by pixels (5.3/5.2 - 0/0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+
+    { description: "To bottom-left wheel event by pixels (-5.3/5.3 - -1/1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: true,  preventDefault: false, detail:  1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail:  5 } }
+    },
+    { description: "To bottom-left wheel event by pixels (-5.3/5.3 - 0/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail:  5 } }
+    },
+    { description: "To bottom-left wheel event by pixels (-5.3/5.3 - 0/0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail:  5 } }
+    },
+
+    { description: "To top-left wheel event by pixels (-5.2/-5.3 - -1/-1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "To top-left wheel event by pixels (-5.2/-5.3 - 0/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "To top-left wheel event by pixels (-5.2/-5.3 - 0/0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+
+    { description: "To top-right wheel event by pixels (5.3/-5.3 - 1/-1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  1 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "To top-right wheel event by pixels (5.3/-5.3 - 0/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+
+    // Pixel scroll only device's test. the lineOrPageDelta values should be computed
+    // by ESM. When changing the direction for each delta value, it should be
+    // reset at that time.
+    { description: "Pixel only device's horizontal wheel event by pixels (5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Pixel only device's horizontal wheel event by pixels (5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Pixel only device's horizontal wheel event by pixels (5.3 - 0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #4",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 1.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 1) #5",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 5 } }
+    },
+
+    { description: "Pixel only device's horizontal wheel event by pixels (-5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Pixel only device's horizontal wheel event by pixels (-5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Pixel only device's horizontal wheel event by pixels (-5.3 - 0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #4",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -1.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } }
+    },
+    { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - -1) #5",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -5 } }
+    },
+
+    // ESM should reset an accumulated delta value only when the direction of it
+    // is changed but shouldn't reset the other delta.
+    { description: "Pixel only device's bottom-right wheel event by pixels (5.3/4.9 - 0/0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 4.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: true,  preventDefault: false, detail: 4 } }
+    },
+    { description: "Pixel only device's bottom-right wheel event by pixels (5.3/4.9 - 0/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 4.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: true,  preventDefault: false, detail: 4 } }
+    },
+    { description: "Pixel only device's bottom-left wheel event by pixels (-5.3/4.9 - 0/0) #4",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 4.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail: 4 } }
+    },
+    // the accumulated X should be 0 here, but Y shouldn't be reset.
+    { description: "Pixel only device's bottom-right wheel event by pixels (5.3/4.9 - 0/0) #5",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 5.3, deltaY: 1.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 5.3, deltaY: 1.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 5 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } }
+    },
+
+    { description: "Pixel only device's top-left wheel event by pixels (-5.3/-4.9 - 0/0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -4 } }
+    },
+    { description: "Pixel only device's top-left wheel event by pixels (-5.3/-4.9 - 0/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -4 } }
+    },
+    { description: "Pixel only device's bottom-left wheel event by pixels (-5.3/4.9 - 0/0) #4",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: 4.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail:  4 } }
+    },
+    // the accumulated Y should be 0 here, but X shouldn't be reset.
+    { description: "Pixel only device's top-left wheel event by pixels (-5.3/-4.9 - 0/0) #5",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -5 },
+        vertical:   { expected: true,  preventDefault: false, detail: -4 } }
+    },
+
+    // Simple line scroll tests.
+    { description: "Simple horizontal wheel event by lines (1.0 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gHorizontalLine },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Simple horizontal wheel event by lines (1.0 - 1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gHorizontalLine },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Simple horizontal wheel event by lines (-1.0 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -gHorizontalLine },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+    { description: "Simple horizontal wheel event by lines (-1.0 - -1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -gHorizontalLine },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+
+    { description: "Simple vertical wheel event by lines (-1.0 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -gLineHeight } }
+    },
+    { description: "Simple vertical wheel event by lines (-1.0 - -1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -gLineHeight } }
+    },
+
+    { description: "Simple vertical wheel event by lines (1.0 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: gLineHeight } }
+    },
+    { description: "Simple vertical wheel event by lines (1.0 - 1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: gLineHeight } }
+    },
+
+    // high resolution line scroll
+    { description: "High resolution horizontal wheel event by lines (0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine / 3) },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "High resolution horizontal wheel event by lines (0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine / 3) },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "High resolution horizontal wheel event by lines (0.333... - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine / 3) },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "High resolution horizontal wheel event by lines (-0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -Math.floor(gHorizontalLine / 3) },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+    { description: "High resolution horizontal wheel event by lines (-0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -Math.floor(gHorizontalLine / 3) },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+    { description: "High resolution horizontal wheel event by lines (-0.333... - -1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -Math.floor(gHorizontalLine / 3) },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+
+    { description: "High resolution vertical wheel event by lines (0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by lines (0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by lines (0.333... - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight / 3) } }
+    },
+
+    { description: "High resolution vertical wheel event by lines (-0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -Math.floor(gLineHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by lines (-0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -Math.floor(gLineHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by lines (-0.333... - -1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -Math.floor(gLineHeight / 3) } }
+    },
+
+    // Oblique line scroll
+    { description: "Oblique wheel event by lines (-1.0/2.0 - -1/2)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0, deltaY: 2.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 2, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0, deltaY: 2.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: true,  preventDefault: false, detail:  2 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: false, detail:  gLineHeight * 2 } }
+    },
+
+    { description: "Oblique wheel event by lines (1.0/-2.0 - 1/-2)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: -2.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: -2, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: -2.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  1 },
+        vertical:   { expected: true,  preventDefault: false, detail: -2 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: false, detail: -gLineHeight * 2 } }
+    },
+
+    { description: "High resolution oblique wheel event by lines (0.5/0.333.../-0.8 - 0/0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine / 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight / 3) } }
+    },
+    { description: "High resolution oblique wheel event by lines (0.5/0.333.../-0.8 - 1/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine / 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight / 3) } }
+    },
+    { description: "High resolution oblique wheel event by lines (0.5/0.333.../-0.8 - 0/1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine / 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight / 3) } }
+    },
+
+    // Simple page scroll tests.
+    { description: "Simple horizontal wheel event by pages (1.0 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gPageWidth },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "Simple horizontal wheel event by pages (1.0 - 1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gPageWidth },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "Simple horizontal wheel event by pages (-1.0 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -gPageWidth },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+    { description: "Simple horizontal wheel event by pages (-1.0 - -1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -gPageWidth },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+
+    { description: "Simple vertical wheel event by pages (-1.0 - -1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -gPageHeight } }
+    },
+    { description: "Simple vertical wheel event by pages (-1.0 - -1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -gPageHeight } }
+    },
+
+    { description: "Simple vertical wheel event by pages (1.0 - 1) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: gPageHeight } }
+    },
+    { description: "Simple vertical wheel event by pages (1.0 - 1) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: gPageHeight } }
+    },
+
+    // high resolution page scroll
+    { description: "High resolution horizontal wheel event by pages (0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth / 3) },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "High resolution horizontal wheel event by pages (0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth / 3) },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+    { description: "High resolution horizontal wheel event by pages (0.333... - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth / 3) },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } }
+    },
+
+    { description: "High resolution horizontal wheel event by pages (-0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -Math.floor(gPageWidth / 3) },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+    { description: "High resolution horizontal wheel event by pages (-0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -Math.floor(gPageWidth / 3) },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+    { description: "High resolution horizontal wheel event by pages (-0.333... - -1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -Math.floor(gPageWidth / 3) },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } }
+    },
+
+    { description: "High resolution vertical wheel event by pages (0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by pages (0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by pages (0.333... - 1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight / 3) } }
+    },
+
+    { description: "High resolution vertical wheel event by pages (-0.333... - 0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -Math.floor(gPageHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by pages (-0.333... - 0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: false, preventDefault: false, detail:  0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -Math.floor(gPageHeight / 3) } }
+    },
+    { description: "High resolution vertical wheel event by pages (-0.333... - -1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail:  0 },
+        vertical:   { expected: true,  preventDefault: false, detail: -Math.floor(gPageHeight / 3) } }
+    },
+
+    // Oblique page scroll
+    { description: "Oblique wheel event by pages (-1.0/2.0 - -1/2)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0, deltaY: 2.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 2, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -1.0, deltaY: 2.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP },
+        vertical:   { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -gPageWidth },
+        vertical:   { expected: true,  preventDefault: false, detail:  gPageHeight * 2 } }
+    },
+
+    { description: "Oblique wheel event by pages (1.0/-2.0 - 1/-2)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: -2.0, deltaZ: 0.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: -2, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: -2.0, deltaZ: 0.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail:  UIEvent.SCROLL_PAGE_UP } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail:  gPageWidth },
+        vertical:   { expected: true,  preventDefault: false, detail: -gPageHeight * 2 } }
+    },
+
+    { description: "High resolution oblique wheel event by pages (0.5/0.333.../-0.8 - 0/0) #1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth / 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight / 3) } }
+    },
+    { description: "High resolution oblique wheel event by pages (0.5/0.333.../-0.8 - 1/0) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth / 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight / 3) } }
+    },
+    { description: "High resolution oblique wheel event by pages (0.5/0.333.../-0.8 - 0/1) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth / 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight / 3) } }
+    },
+
+    // preventDefault() shouldn't prevent other legacy events.
+    { description: "preventDefault() shouldn't prevent other legacy events (pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: true, detail: 1 },
+        vertical:   { expected: true,  preventDefault: true, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true, detail: 16 },
+        vertical:   { expected: true,  preventDefault: true, detail: 16 } },
+    },
+    { description: "preventDefault() shouldn't prevent other legacy events (line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: true, detail: 1 },
+        vertical:   { expected: true,  preventDefault: true, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true, detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: true, detail: gLineHeight } },
+    },
+    { description: "preventDefault() shouldn't prevent other legacy events (page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: true, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: true, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true, detail: gPageWidth },
+        vertical:   { expected: true,  preventDefault: true, detail: gPageHeight } },
+    },
+
+    // If wheel event is consumed by preventDefault(), legacy events are not necessary.
+    { description: "If wheel event is consumed by preventDefault(), legacy events are not necessary (pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: true,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+    },
+    { description: "If wheel event is consumed by preventDefault(), legacy events are not necessary (line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: true,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+    },
+    { description: "If wheel event is consumed by preventDefault(), legacy events are not necessary (page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: true,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+    },
+
+    // modifier key state tests
+    { description: "modifier key tests (shift, pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: 16 },
+        vertical:   { expected: true,  preventDefault: true,  detail: 16 } },
+    },
+    { description: "modifier key tests (shift, line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: true,  detail: gLineHeight } },
+    },
+    { description: "modifier key tests (shift, page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gPageWidth },
+        vertical:   { expected: true,  preventDefault: true,  detail: gPageHeight } },
+    },
+
+    { description: "modifier key tests (ctrl, pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: true, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: 16 },
+        vertical:   { expected: true,  preventDefault: true,  detail: 16 } },
+    },
+    { description: "modifier key tests (ctrl, line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: true, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: true,  detail: gLineHeight } },
+    },
+    { description: "modifier key tests (ctrl, page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: true, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gPageWidth },
+        vertical:   { expected: true,  preventDefault: true,  detail: gPageHeight } },
+    },
+
+    { description: "modifier key tests (alt, pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: 16 },
+        vertical:   { expected: true,  preventDefault: true,  detail: 16 } },
+    },
+    { description: "modifier key tests (alt, line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: true,  detail: gLineHeight } },
+    },
+    { description: "modifier key tests without content checking mode (alt, line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        skipDeltaModeCheck: true,
+        deltaX: gHorizontalLine,
+        deltaY: gLineHeight,
+        deltaZ: Math.max(gHorizontalLine, gLineHeight),
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: true,  detail: gLineHeight } },
+    },
+    { description: "modifier key tests (alt, page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gPageWidth },
+        vertical:   { expected: true,  preventDefault: true,  detail: gPageHeight } },
+    },
+
+    { description: "modifier key tests (meta, pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: true },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: 16 },
+        vertical:   { expected: true,  preventDefault: true,  detail: 16 } },
+    },
+    { description: "modifier key tests (meta, line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: true },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: true,  detail: gLineHeight } },
+    },
+    { description: "modifier key tests (meta, page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: true,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gPageWidth },
+        vertical:   { expected: true,  preventDefault: true,  detail: gPageHeight } },
+    },
+
+    // Momentum scroll should cause legacy events.
+    { description: "Momentum scroll should cause legacy events (pixel, not momentum)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 16 },
+        vertical:   { expected: true,  preventDefault: false, detail: 16 } },
+    },
+    { description: "Momentum scroll should cause legacy events (pixel, momentum)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: true,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 16 },
+        vertical:   { expected: true,  preventDefault: false, detail: 16 } },
+    },
+    { description: "Momentum scroll should cause legacy events (line, not momentum)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: false, detail: gLineHeight } },
+    },
+    { description: "Momentum scroll should cause legacy events (line, momentum)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: true,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: false, detail: gLineHeight } },
+    },
+    { description: "Momentum scroll should cause legacy events (page, not momentum)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gPageWidth },
+        vertical:   { expected: true,  preventDefault: false, detail: gPageHeight } },
+    },
+    { description: "Momentum scroll should cause legacy events (page, momentum)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: true,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: gPageWidth },
+        vertical:   { expected: true,  preventDefault: false, detail: gPageHeight } },
+    },
+
+    // Tests for accumulation delta when delta_multiplier_is customized.
+    { description: "lineOrPageDelta should be recomputed by ESM (pixel) #1",
+      prepare () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
+                                           ["mousewheel.default.delta_multiplier_y", 300]]},
+                                  continueTest);
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: gHorizontalLine / 4, deltaY: gLineHeight / 8, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: gHorizontalLine / 4 * 2, deltaY: gLineHeight / 8 * 3, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine / 4 * 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight / 8 * 3) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (pixel) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: gHorizontalLine / 4 + 1, deltaY: gLineHeight / 8 + 1, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: (gHorizontalLine / 4 + 1) * 2, deltaY: (gLineHeight / 8 + 1) * 3, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,   preventDefault: false, detail: Math.floor((gHorizontalLine / 4 + 1) * 2) },
+        vertical:   { expected: true,   preventDefault: false, detail: Math.floor((gLineHeight / 8 + 1) * 3) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (pixel) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: gHorizontalLine / 4 + 1, deltaY: gLineHeight / 8 + 1, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: (gHorizontalLine / 4 + 1) * 2, deltaY: (gLineHeight / 8 + 1) * 3, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,   preventDefault: false, detail: Math.floor((gHorizontalLine / 4 + 1) * 2) },
+        vertical:   { expected: true,   preventDefault: false, detail: Math.floor((gLineHeight / 8 + 1) * 3) } },
+      finished () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
+      },
+    },
+
+    { description: "lineOrPageDelta should be recomputed by ESM (pixel, negative, shift) #1",
+      prepare () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_shift.delta_multiplier_x", 200],
+                                           ["mousewheel.with_shift.delta_multiplier_y", 300]]},
+                                  continueTest);
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -gHorizontalLine / 4, deltaY: -gLineHeight / 8, deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -gHorizontalLine / 4 * 2, deltaY: -gLineHeight / 8 * 3, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(-gHorizontalLine / 4 * 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.ceil(-gLineHeight / 8 * 3) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (pixel, negative, shift) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -(gHorizontalLine / 4 + 1), deltaY: -(gLineHeight / 8 + 1), deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -(gHorizontalLine / 4 + 1) * 2, deltaY: -(gLineHeight / 8 + 1) * 3, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(-(gHorizontalLine / 4 + 1) * 2) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.ceil(-(gLineHeight / 8 + 1) * 3) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (pixel, negative, shift) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -(gHorizontalLine / 4 + 1), deltaY: -(gLineHeight / 8 + 1), deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -(gHorizontalLine / 4 + 1) * 2, deltaY: -(gLineHeight / 8 + 1) * 3, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false,  preventDefault: false, detail: 0 },
+        vertical:   { expected: true,   preventDefault: false, detail: -1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,   preventDefault: false, detail: Math.ceil(-(gHorizontalLine / 4 + 1) * 2) },
+        vertical:   { expected: true,   preventDefault: false, detail: Math.ceil(-(gLineHeight / 8 + 1) * 3) } },
+      finished () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_shift.delta_multiplier_x", 100],
+                                           ["mousewheel.with_shift.delta_multiplier_y", 100]]},
+                                  continueTest);
+      },
+    },
+
+    { description: "lineOrPageDelta should be recomputed by ESM (line) #1",
+      prepare () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.6, deltaY: 0.4, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine * 0.6) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (line) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.6, deltaY: 0.4, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine * 0.6) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (line) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.6, deltaY: 0.4, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine * 0.6) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
+      finished () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
+      },
+    },
+
+    { description: "lineOrPageDelta should be recomputed by ESM (line, negative) #1",
+      prepare () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
+                                           ["mousewheel.default.delta_multiplier_y", -100]]},
+                                  continueTest);
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -0.6, deltaY: 0.4, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gHorizontalLine * -0.6) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (line, negative) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -0.6, deltaY: 0.4, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: -1 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gHorizontalLine * -0.6) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (line, negative) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -0.6, deltaY: 0.4, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gHorizontalLine * -0.6) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
+      finished () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
+      },
+    },
+
+    { description: "lineOrPageDelta should be recomputed by ESM (page) #1",
+      prepare () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 200]]},
+                                  continueTest);
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.3, deltaY: 0.8, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth * 0.3) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight * 0.8) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (page) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.3, deltaY: 0.8, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth * 0.3) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight * 0.8) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (page) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.4, deltaY: 0.4, deltaZ: 0,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: 0.4, deltaY: 0.8, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_DOWN } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth * 0.4) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight * 0.8) } },
+      finished () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
+      },
+    },
+
+    { description: "lineOrPageDelta should be recomputed by ESM (page, negative) #1",
+      prepare () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 200]]},
+                                  continueTest);
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -0.3, deltaY: -0.8, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: false, preventDefault: false, detail: 0 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gPageWidth * -0.3) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.ceil(gPageHeight * -0.8) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (page, negative) #2",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -0.3, deltaY: -0.8, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: false, preventDefault: false, detail: 0 },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_UP } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gPageWidth * -0.3) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.ceil(gPageHeight * -0.8) } },
+    },
+    { description: "lineOrPageDelta should be recomputed by ESM (page, negative) #3",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.4, deltaY: -0.4, deltaZ: 0,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        deltaX: -0.4, deltaY: -0.8, deltaZ: 0
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_UP },
+        vertical:   { expected: true,  preventDefault: false, detail: UIEvent.SCROLL_PAGE_UP } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gPageWidth * -0.4) },
+        vertical:   { expected: true,  preventDefault: false, detail: Math.ceil(gPageHeight * -0.8) } },
+      finished () {
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
+      },
+    },
+  ];
+
+  var currentWheelEventTest;
+  var calledHandlers = { wheel: false,
+                         DOMMouseScroll: { horizontal: false, vertical: false },
+                         MozMousePixelScroll: { horizontal: false, vertical: false } };
+
+  function wheelEventHandler(aEvent)
+  {
+    var description = "testContinuousTrustedEvents, ";
+    description += currentWheelEventTest.description + ": wheel event ";
+
+    ok(!calledHandlers.wheel,
+       description + "was fired twice or more");
+    calledHandlers.wheel = true;
+
+    is(aEvent.target, gScrolledElement,
+       description + "target was invalid");
+    if (!currentWheelEventTest.wheel.skipDeltaModeCheck) {
+      is(aEvent.deltaMode, currentWheelEventTest.event.deltaMode,
+         description + "deltaMode was invalid");
+    }
+    is(SpecialPowers.wrap(aEvent).deltaMode, currentWheelEventTest.event.deltaMode,
+       description + "deltaMode is raw value from privileged script");
+    for (let prop of ["deltaX", "deltaY", "deltaZ"]) {
+      is(aEvent[prop], currentWheelEventTest.wheel[prop],
+         description + prop + " was invalid");
+      if (currentWheelEventTest.wheel.skipDeltaModeCheck) {
+        is(aEvent.deltaMode, WheelEvent.DOM_DELTA_PIXEL,
+           description + "deltaMode should become pixels for line scrolling if unchecked by content")
+        if (aEvent[prop] != 0) {
+          isnot(aEvent[prop], SpecialPowers.wrap(aEvent)[prop],
+                description + "should keep returning raw value for privileged script");
+        }
+      }
+    }
+    is(aEvent.shiftKey, currentWheelEventTest.event.shiftKey,
+       description + "shiftKey was invalid");
+    is(aEvent.ctrlKey, currentWheelEventTest.event.ctrlKey,
+       description + "ctrlKey was invalid");
+    is(aEvent.altKey, currentWheelEventTest.event.altKey,
+       description + "shiftKey was invalid");
+    is(aEvent.metaKey, currentWheelEventTest.event.metaKey,
+       description + "metaKey was invalid");
+
+    ok(!aEvent.defaultPrevented,
+       description + "defaultPrevented should be false");
+    if (currentWheelEventTest.wheel.preventDefault) {
+      aEvent.preventDefault();
+      ok(aEvent.defaultPrevented,
+         description + "defaultPrevented should be true");
+    }
+  }
+
+  function legacyEventHandler(aEvent)
+  {
+    var description = "testContinuousTrustedEvents, ";
+    description += currentWheelEventTest.description + ": " + aEvent.type + " event ";
+
+    if (aEvent.axis != MouseScrollEvent.HORIZONTAL_AXIS &&
+        aEvent.axis != MouseScrollEvent.VERTICAL_AXIS) {
+      ok(false,
+         description + "had invalid axis (" + aEvent.axis + ")");
+      return;
+    }
+
+    var isHorizontal = (aEvent.axis == MouseScrollEvent.HORIZONTAL_AXIS);
+
+    description += isHorizontal ? "(horizontal) " : "(vertical) ";
+
+    var isScrollEvent = (aEvent.type == "DOMMouseScroll");
+    var expectedEvent =
+      isScrollEvent ? currentWheelEventTest.DOMMouseScroll :
+                      currentWheelEventTest.MozMousePixelScroll;
+    var expected =
+      isHorizontal ? expectedEvent.horizontal : expectedEvent.vertical;
+
+    if (aEvent.type == "DOMMouseScroll") {
+      if (isHorizontal) {
+        ok(!calledHandlers.DOMMouseScroll.horizontal,
+           description + "was fired twice or more");
+        calledHandlers.DOMMouseScroll.horizontal = true;
+      } else {
+        ok(!calledHandlers.DOMMouseScroll.vertical,
+           description + "was fired twice or more");
+        calledHandlers.DOMMouseScroll.vertical = true;
+      }
+    } else {
+      if (isHorizontal) {
+        ok(!calledHandlers.MozMousePixelScroll.horizontal,
+           description + "was fired twice or more");
+        calledHandlers.MozMousePixelScroll.horizontal = true;
+      } else {
+        ok(!calledHandlers.MozMousePixelScroll.vertical,
+           description + "was fired twice or more");
+        calledHandlers.MozMousePixelScroll.vertical = true;
+      }
+    }
+
+    is(aEvent.target, gScrolledElement,
+       description + "target was invalid");
+    is(aEvent.detail, expected.detail,
+       description + "detail was invalid");
+
+    is(aEvent.shiftKey, currentWheelEventTest.event.shiftKey,
+       description + "shiftKey was invalid");
+    is(aEvent.ctrlKey, currentWheelEventTest.event.ctrlKey,
+       description + "ctrlKey was invalid");
+    is(aEvent.altKey, currentWheelEventTest.event.altKey,
+       description + "shiftKey was invalid");
+    is(aEvent.metaKey, currentWheelEventTest.event.metaKey,
+       description + "metaKey was invalid");
+
+    var expectedDefaultPrevented =
+      isScrollEvent ? false :
+      isHorizontal ? currentWheelEventTest.DOMMouseScroll.horizontal.preventDefault :
+                     currentWheelEventTest.DOMMouseScroll.vertical.preventDefault;
+    is(aEvent.defaultPrevented, expectedDefaultPrevented,
+       description + "defaultPrevented should be " + expectedDefaultPrevented);
+
+    if (expected.preventDefault) {
+      aEvent.preventDefault();
+      ok(aEvent.defaultPrevented,
+         description + "defaultPrevented should be true");
+    }
+  }
+
+  window.addEventListener("wheel", wheelEventHandler, { capture: true, passive: false });
+  window.addEventListener("DOMMouseScroll", legacyEventHandler, { capture: true, passive: false });
+  window.addEventListener("MozMousePixelScroll", legacyEventHandler, { capture: true, passive: false });
+
+  for (var i = 0; i < kSynthesizedWheelEventTests.length; i++) {
+    gScrollableElement.scrollTop = gScrollableElement.scrollBottom = 1000;
+
+    currentWheelEventTest = kSynthesizedWheelEventTests[i];
+
+    if (currentWheelEventTest.prepare) {
+      yield currentWheelEventTest.prepare();
+    }
+
+    yield sendWheelAndWait(10, 10, currentWheelEventTest.event);
+
+    if (currentWheelEventTest.finished) {
+      yield currentWheelEventTest.finished();
+    }
+
+    var description = "testContinuousTrustedEvents, " +
+      currentWheelEventTest.description + ": ";
+    is(calledHandlers.wheel, currentWheelEventTest.wheel.expected,
+       description + "wheel event was fired or not fired");
+    is(calledHandlers.DOMMouseScroll.horizontal,
+       currentWheelEventTest.DOMMouseScroll.horizontal.expected,
+       description + "horizontal DOMMouseScroll event was fired or not fired");
+    is(calledHandlers.DOMMouseScroll.vertical,
+       currentWheelEventTest.DOMMouseScroll.vertical.expected,
+       description + "vertical DOMMouseScroll event was fired or not fired");
+    is(calledHandlers.MozMousePixelScroll.horizontal,
+       currentWheelEventTest.MozMousePixelScroll.horizontal.expected,
+       description + "horizontal MozMousePixelScroll event was fired or not fired");
+    is(calledHandlers.MozMousePixelScroll.vertical,
+       currentWheelEventTest.MozMousePixelScroll.vertical.expected,
+       description + "vertical MozMousePixelScroll event was fired or not fired");
+
+    calledHandlers = { wheel: false,
+                       DOMMouseScroll: { horizontal: false, vertical: false },
+                       MozMousePixelScroll: { horizontal: false, vertical: false } };
+  }
+
+  window.removeEventListener("wheel", wheelEventHandler, true);
+  window.removeEventListener("DOMMouseScroll", legacyEventHandler, true);
+  window.removeEventListener("MozMousePixelScroll", legacyEventHandler, true);
+}
+
+var gTestContinuation = null;
+
+function continueTest()
+{
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
+}
+
+function* testBody()
+{
+  yield* prepareScrollUnits();
+  yield* testContinuousTrustedEvents();
+}
+
+function runTests()
+{
+  SpecialPowers.pushPrefEnv({"set": [
+    // FIXME(emilio): This test is broken in HiDPI, unclear if
+    // MozMousePixelScroll is not properly converting to CSS pixels, or
+    // whether sendWheelAndWait expectes device rather than CSS pixels, or
+    // something else.
+    ["layout.css.devPixelsPerPx", 1.0],
+
+    ["dom.event.wheel-deltaMode-lines.disabled", true],
+
+    ["mousewheel.system_scroll_override.enabled", false],
+
+    ["mousewheel.transaction.timeout", 100000],
+    ["mousewheel.default.delta_multiplier_x", 100],
+    ["mousewheel.default.delta_multiplier_y", 100],
+    ["mousewheel.default.delta_multiplier_z", 100],
+    ["mousewheel.with_alt.delta_multiplier_x", 100],
+    ["mousewheel.with_alt.delta_multiplier_y", 100],
+    ["mousewheel.with_alt.delta_multiplier_z", 100],
+    ["mousewheel.with_control.delta_multiplier_x", 100],
+    ["mousewheel.with_control.delta_multiplier_y", 100],
+    ["mousewheel.with_control.delta_multiplier_z", 100],
+    ["mousewheel.with_meta.delta_multiplier_x", 100],
+    ["mousewheel.with_meta.delta_multiplier_y", 100],
+    ["mousewheel.with_meta.delta_multiplier_z", 100],
+    ["mousewheel.with_shift.delta_multiplier_x", 100],
+    ["mousewheel.with_shift.delta_multiplier_y", 100],
+    ["mousewheel.with_shift.delta_multiplier_z", 100],
+    ["mousewheel.with_win.delta_multiplier_x", 100],
+    ["mousewheel.with_win.delta_multiplier_y", 100],
+    ["mousewheel.with_win.delta_multiplier_z", 100]
+  ]}, continueTest);
+}
+</script>
+</pre>
+</body>
+</html>

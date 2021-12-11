@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Picture-in-Picture test - transparent overlays - 1</title>
+  <script type="text/javascript" src="click-event-helper.js"></script>
+</head>
+<style>
+  video {
+    display: block;
+  }
+
+  .container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    color: white;
+  }
+
+  .transparent-background {
+    background-color: transparent;
+  }
+
+  .alpha-background {
+    background-color: rgba(255, 0, 0, 0.5);
+  }
+</style>
+<body>
+  <div class="container">
+    <div class="overlay transparent-background">This is a fully transparent overlay</div>
+    <video id="video-transparent-background" src="test-video.mp4" loop="true"></video>
+  </div>
+
+  <div class="container">
+    <div class="overlay alpha-background">This is a partially transparent overlay using alpha</div>
+    <video id="video-alpha-background" src="test-video.mp4" loop="true"></video>
+  </div>
+</body>
+</html>

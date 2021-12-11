@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<style>
+  a {
+    display: block;
+    text-decoration: none;
+  }
+  :link {
+    color: blue;
+  }
+  :visited {
+    color: purple;
+  }
+  .outer::first-line {
+    color: green;
+  }
+</style>
+<a class="outer" href="visited-page.html">Visited</a>
+<a class="outer" href="visited-page.html"><span>Visited with span</span></a>
+<a class="outer" href="visited-page.html"><a href="unvisited-page.html">Visited with inner unvisited</a></a>
+<a class="outer" href="visited-page.html"><a href="visited-page.html">Visited with inner visited</a></a>

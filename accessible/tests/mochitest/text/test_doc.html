@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessibleText getText related function tests for document accessible</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript">
+    
+    function doTest() {
+      var iframeDoc = [ getNode("iframe").contentDocument ];
+      testCharacterCount(iframeDoc, 15);
+      testText(iframeDoc, 0, 15, "outbody inbody ");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Elements appended outside the body aren't accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=608887">Mozilla Bug 608887</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <iframe id="iframe" src="doc.html"></iframe>
+
+</body>
+</html>

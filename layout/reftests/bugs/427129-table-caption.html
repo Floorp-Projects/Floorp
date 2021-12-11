@@ -1,0 +1,1040 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Reftest, bug 427129</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	html, body { margin: 0; }
+
+	.rtl { direction: rtl; }
+
+	.contain {
+		background: aqua; color: black;
+		height: 4px; margin: 1px 50px;
+		padding-top: 0.1px; /* needed for some reason (XXX WHY?) */
+	}
+
+	.fl, .fr { height: 2px; }
+	.fl { float: left; width: 56px; }
+	.fr { float: right; width: 73px; }
+
+	.t { background: blue; height: 1px; width: 100px; border-spacing: 0; }
+	.t caption { background: purple; height: 1px; width: 100px; }
+	.t td { padding: 0; }
+
+	</style>
+</head>
+<body>
+
+<!--
+  
+  WARNING: Both this test and the reference are constructed to test
+  our current behavior, which is far from optimal in a number of cases.
+  Fixing the test to test better behavior is encouraged when such
+  behavior is implemented.  In particular:
+   * making the effect of the caption's side margin make sense for 'top'
+     and 'bottom' captions
+   * making 'left' and 'right' captions behave sensibly
+
+  To test the behavior under resizing, every test in this page is
+  repeated three times, once in a container one pixel above the
+  transition width, once at the transition width (just fitting), and
+  once in a container a pixel below the transition width.
+
+-->
+
+<div style="width: 405px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: bottom">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 404px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: bottom">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 403px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: bottom">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 405px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 404px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 403px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 406px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; caption-side: bottom">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 405px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; caption-side: bottom">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 404px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; caption-side: bottom">
+			<caption style="margin: 0 15px 0 60px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 401px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 400px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 399px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 401px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 400px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 399px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 400px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 399px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 398px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 400px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 399px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 398px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 55px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 402px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 401px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 400px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 57px; caption-side: bottom-outside">
+			<caption style="margin: 0 15px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 402px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 57px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 401px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 57px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 400px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 15px 0 56px; caption-side: top-outside">
+			<caption style="margin: 0 15px 0 57px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 656px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 655px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 654px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 55px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 657px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 656px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 655px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 56px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 658px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 57px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 657px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 57px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 656px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 100px 0 57px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 657px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 55px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 656px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 55px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 655px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 55px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 657px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 56px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 656px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 56px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 655px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 56px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 658px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 57px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 657px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 57px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 656px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 57px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 425px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: bottom">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 424px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: bottom">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 423px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: bottom">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 425px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 424px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 423px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 426px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; caption-side: bottom">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 425px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; caption-side: bottom">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 424px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; caption-side: bottom">
+			<caption style="margin: 0 80px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 418px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 417px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 416px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 418px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 417px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 416px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 417px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 72px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 416px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 72px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 415px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 72px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 417px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 72px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 416px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 72px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 415px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 72px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 419px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 418px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 417px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 15px; caption-side: bottom-outside">
+			<caption style="margin: 0 73px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 419px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 74px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 418px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 74px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 417px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 15px; caption-side: top-outside">
+			<caption style="margin: 0 74px 0 15px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 673px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 72px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 672px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 72px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 671px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 72px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 674px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 73px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 673px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 73px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 672px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 73px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 675px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 74px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 674px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 74px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 673px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 100px 0 100px; caption-side: left">
+			<caption style="margin: 0 74px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 674px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 673px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 672px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 72px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 674px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 673px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 672px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 73px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 675px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 674px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 673px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+</body>
+</html>

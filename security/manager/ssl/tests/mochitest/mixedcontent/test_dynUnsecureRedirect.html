@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>img.src changes to unsecure redirect test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  async function runTest()
+  {
+    await isSecurityState("secure");
+    document.getElementById("image1").src =
+      "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/imgunsecredirect.sjs";
+
+    window.setTimeout(async () => {
+      await isSecurityState("broken", "src='redirect to unsecure' changed to broken");
+      finish();
+    }, 500);
+  }
+
+  async function afterNavigationTest()
+  {
+    is(document.getElementById("image1").src,
+      "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg",
+      "img.src secure again");
+    await isSecurityState("secure", "security full after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img id="image1" src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg" />
+</body>
+</html>

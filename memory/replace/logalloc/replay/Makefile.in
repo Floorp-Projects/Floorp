@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ifdef MOZ_CODE_COVERAGE
+SKIP = 1
+endif
+
+ifdef CROSS_COMPILE
+SKIP = 1
+endif
+
+ifdef CODEQL_DIST
+SKIP = 1
+endif
+
+ifneq ($(SKIP),1)
+
+ifeq ($(OS_TARGET),WINNT)
+LOGALLOC_VAR = MOZ_REPLACE_MALLOC_LIB
+else
+ifeq ($(OS_TARGET),Darwin)
+LOGALLOC_VAR = DYLD_INSERT_LIBRARIES
+else
+LOGALLOC_VAR = LD_PRELOAD
+endif
+endif
+
+ifndef MOZ_REPLACE_MALLOC_STATIC
+LOGALLOC = $(LOGALLOC_VAR)=$(CURDIR)/../$(DLL_PREFIX)logalloc$(DLL_SUFFIX)
+endif
+
+expected_output.log: $(srcdir)/replay.log
+# The logalloc-replay program will only replay entries from the first pid,
+# so the expected output only contains entries beginning with "1 "
+	grep "^1 " $< > $@
+
+check:: $(srcdir)/replay.log expected_output.log $(srcdir)/expected_output_minimal.log
+# Test with MALLOC_LOG as a file descriptor number
+# We filter out anything happening before the first jemalloc_stats (first
+# command in replay.log) because starting with libstdc++ 5, a static
+# initializer in the STL allocates memory, which we obviously don't have
+# in expected_output.log.
+	MALLOC_LOG=1 $(LOGALLOC) ./$(PROGRAM) < $< | sed -n '/jemalloc_stats/,$$p' | $(PYTHON3) $(srcdir)/logalloc_munge.py | diff -w - expected_output.log
+# Test with MALLOC_LOG as a file name
+	$(RM) test_output.log
+	MALLOC_LOG=test_output.log $(LOGALLOC) ./$(PROGRAM) < $<
+	sed -n '/jemalloc_stats/,$$p' test_output.log | $(PYTHON3) $(srcdir)/logalloc_munge.py | diff -w - expected_output.log
+
+	MALLOC_LOG=1 MALLOC_LOG_MINIMAL=1 $(LOGALLOC) ./$(PROGRAM) < $< | sed -n '/jemalloc_stats/,$$p' | $(PYTHON3) $(srcdir)/logalloc_munge.py | diff -w - $(srcdir)/expected_output_minimal.log
+
+endif

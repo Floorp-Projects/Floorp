@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+    <script src='ensure-ext.js'></script>
+  </head>
+  <body>
+    <script id='g_vs' type='text/plain'>
+
+void main() {
+    gl_PointSize = 1.0;
+}
+
+    </script>
+    <script id='g_fs' type='text/plain'>
+
+void main() {
+    gl_FragColor = vec4(0);
+}
+
+    </script>
+    <script>
+
+'use strict';
+
+let gl = null;
+
+function CheckTexFloatRenderable(rgbaInternal, type) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, rgbaInternal, 1, 1, 0, gl.RGBA, type, null);
+
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    return gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE;
+}
+
+function CheckRbFloatRenderable(format) {
+    const rb = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+    gl.renderbufferStorage(gl.RENDERBUFFER, format, 1, 1);
+
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb);
+    return gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE;
+}
+
+function CheckBlending() {
+    function CompileShader(type, elem) {
+        const text = elem.innerHTML.trim();
+        const s = gl.createShader(type);
+        gl.shaderSource(s, text);
+        gl.compileShader(s);
+        return s;
+    }
+
+    const vs = CompileShader(gl.VERTEX_SHADER, g_vs);
+    const fs = CompileShader(gl.FRAGMENT_SHADER, g_fs);
+    const p = gl.createProgram();
+    gl.attachShader(p, vs);
+    gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    gl.useProgram(p);
+
+    gl.drawArrays(gl.POINTS, 0, 1);
+    if (gl.getError()) throw new Error('Unexpected GL error,');
+
+    gl.enable(gl.BLEND);
+    gl.drawArrays(gl.POINTS, 0, 1);
+    return gl.getError() == 0;
+}
+
+function ResetGl(type) {
+    if (gl) {
+        const ext = gl.getExtension('WEBGL_lose_context');
+        ext.loseContext();
+        gl = null;
+    }
+    const c = document.createElement('canvas');
+    gl = c.getContext(type);
+    return !!gl;
+}
+
+function HasExt(name) {
+    return gl.getSupportedExtensions().indexOf(name) != -1;
+}
+
+ResetGl('webgl');
+if (HasExt('EXT_color_buffer_half_float')) {
+    const ext = gl.getExtension('OES_texture_half_float');
+    const implicitEnabled = CheckTexFloatRenderable(gl.RGBA, ext.HALF_FLOAT_OES);
+    ok(implicitEnabled, 'OES_texture_half_float should implicitly enable EXT_color_buffer_half_float.');
+}
+
+ResetGl('webgl');
+if (HasExt('WEBGL_color_buffer_float')) {
+    const ext = gl.getExtension('OES_texture_float');
+    const implicitEnabled = CheckTexFloatRenderable(gl.RGBA, gl.FLOAT);
+    ok(implicitEnabled, 'OES_texture_float should implicitly enable WEBGL_color_buffer_float.');
+
+    if (HasExt('EXT_float_blend')) {
+        ok(CheckBlending(), 'OES_texture_float should implicitly enable EXT_float_blend.');
+    }
+}
+
+ResetGl('webgl');
+if (HasExt('EXT_float_blend')) {
+    const ext = gl.getExtension('WEBGL_color_buffer_float');
+    CheckRbFloatRenderable(ext.RGBA32F_EXT);
+    const implicitEnabled = CheckBlending();
+    ok(implicitEnabled, 'WEBGL_color_buffer_float should implicitly enable EXT_float_blend.');
+}
+
+if (ResetGl('webgl2')) {
+    if (HasExt('EXT_float_blend')) {
+        const ext = gl.getExtension('EXT_color_buffer_float');
+        CheckTexFloatRenderable(gl.RGBA32F, gl.FLOAT);
+        const implicitEnabled = CheckBlending();
+        ok(implicitEnabled, 'EXT_color_buffer_float should implicitly enable EXT_float_blend.');
+    }
+}
+
+    </script>
+  </body>
+</html>

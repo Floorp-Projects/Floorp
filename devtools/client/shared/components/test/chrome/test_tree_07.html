@@ -1,0 +1,69 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that arrows get the open attribute when their item's children are expanded.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const dom = require("devtools/client/shared/vendor/react-dom-factories");
+    const Tree =
+      React.createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    const treeProps = Object.assign({}, TEST_TREE_INTERFACE, {
+      renderItem: (item, depth, focused, arrow) => {
+        return dom.div(
+          {
+            id: item,
+            style: { marginLeft: depth * 16 + "px" }
+          },
+          arrow,
+          item
+        );
+      }
+    });
+    const tree = ReactDOM.render(Tree(treeProps), window.document.body);
+
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+    await forceRender(tree);
+
+    let arrows = document.querySelectorAll(".arrow");
+    for (const a of arrows) {
+      ok(a.classList.contains("open"), "Every arrow should be open.");
+    }
+
+    TEST_TREE.expanded = new Set();
+    await forceRender(tree);
+
+    arrows = document.querySelectorAll(".arrow");
+    for (const a of arrows) {
+      ok(!a.classList.contains("open"), "Every arrow should be closed.");
+    }
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

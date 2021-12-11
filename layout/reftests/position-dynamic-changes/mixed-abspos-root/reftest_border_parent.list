@@ -1,0 +1,4 @@
+# Please see the comment at the beginning of reftest.list
+
+fuzzy-if(geckoview,0-2,0-1382) == mixed-dimentionN.html?border_parent mixed-dimentionN-ref.html?border_parent
+fuzzy-if(geckoview,0-2,0-1382) == mixed-dimentionA.html?border_parent mixed-dimentionA-ref.html?border_parent

@@ -1,0 +1,8 @@
+<script>
+const mql = matchMedia("(prefers-reduced-motion: reduce)");
+mql.addEventListener("change", event => {
+  parent.postMessage({ "matches": event.matches }, "*");
+});
+
+window.onload = () => { parent.postMessage("ready", "*"); };
+</script>

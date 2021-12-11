@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        const canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas')
+        document.adoptNode(document.documentElement)
+        document.appendChild(canvas)
+        canvas.focus()
+        canvas.contentEditable = 'true'
+        canvas.focus()
+        setTimeout(() => {
+            let params = new URLSearchParams(location.search);
+            let q = parseInt(params.get("c") || 0) + 1;
+            if (q > 5) {
+                window.opener.finishTests();
+                window.close();
+                return;
+            }
+            location.href = location.pathname + "?c=" + q;
+        }, 0)
+      })
+    </script>
+</head>
+</html>

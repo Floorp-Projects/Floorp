@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+      body { font-family: sans-serif; }
+    </style>
+    <script>
+      function runTest() {
+        document.getElementById('r').appendChild(document.createTextNode('x'));
+        document.getElementById('r').appendChild(document.createTextNode('x'));
+        document.getElementById('r').appendChild(document.createTextNode('x'));
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+<body onload="runTest()">
+
+<table border=1 id="t"><tbody><tr id="r"><td id="c">TD</td></tr></tbody></table>
+
+</body>
+</html>

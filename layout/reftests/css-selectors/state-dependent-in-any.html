@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      span { color: red; }
+      :-moz-any(:valid) + span { color: green; }
+    </style>
+  </head>
+  <body>
+    <input required><span>This should be green</span>
+    <script>
+      document.body.offsetWidth;
+      document.getElementsByTagName("input")[0].value = "Test"
+    </script>
+  </body>
+</html>

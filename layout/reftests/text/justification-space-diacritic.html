@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<style>
+div {
+  font-family:monospace;
+  width:200px;
+  border:1px solid red;
+  text-align-last:justify;
+}
+span {
+  display:inline-block;
+}
+</style>
+<!-- The <space> or <nbsp> characters that carry combining marks
+     should NOT be stretched by justification. -->
+<div>
+<p>Hello &#x308; &#x308; &#x308; world
+<p>Hello&nbsp;&#x308;&nbsp;&#x308;&nbsp;&#x308; world
+<p>Hello&nbsp;&#x308; &nbsp;&#x301;&nbsp;&#x300;world
+<p>Hello&nbsp;&#x202d;&#x308;&#x202c;‬ &nbsp;&#x202d;&#x302;&#x202c;world

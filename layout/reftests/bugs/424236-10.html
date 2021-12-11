@@ -1,0 +1,20 @@
+<!DOCTYPE HTML> <!-- standards mode only! -->
+<html>
+<head>
+<title>Testcase, overflow on empty spans</title>
+<style type="text/css">
+
+html, body { margin: 0; padding: 0.25em; }
+div { background:aqua; }
+div > span { outline: 1px dotted black; }
+div > span > span { display:block; margin: 0 1em; }
+
+</style>
+</head>
+<body>
+  <div>
+    <span>
+      <span>text</span></span>
+  </div>
+</body>
+</html>

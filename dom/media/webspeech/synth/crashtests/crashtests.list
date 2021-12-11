@@ -1,0 +1,1 @@
+skip-if(!cocoaWidget) pref(media.webspeech.synth.enabled,true) load 1230428.html # bug 1230428

@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<meta charset="UTF-8">
+<title>Does 'perspective' create a stacking context?</title>
+<link rel="stylesheet" href="stacking-context-common.css">
+<style>
+.perspective {
+  -webkit-perspective: 200px;
+  perspective: 200px;
+}
+</style>
+<div class="contain">
+  <div class="maybesc perspective">
+    <div class="inner1"></div>
+    <div class="inner3"></div>
+  </div>
+  <div class="intruder"></div>
+</div>

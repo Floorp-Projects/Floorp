@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DelayNode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+var gTest = {
+  length: 4096,
+  numberOfChannels: 1,
+  createGraph(context) {
+    var delay = new DelayNode(context);
+    ok(delay.delayTime, "The audioparam member must exist");
+    is(delay.delayTime.value, 0, "Correct initial value");
+    is(delay.delayTime.defaultValue, 0, "Correct default value");
+    delay.delayTime.value = 0.5;
+    is(delay.delayTime.value, 0.5, "Correct initial value");
+    is(delay.delayTime.defaultValue, 0, "Correct default value");
+
+    delay = new DelayNode(context, { delayTime: 0.5 });
+    ok(delay.delayTime, "The audioparam member must exist");
+    is(delay.delayTime.value, 0.5, "Correct initial value");
+    is(delay.delayTime.defaultValue, 0, "Correct default value");
+
+    var buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    }
+
+    var source = context.createBufferSource();
+
+    delay = context.createDelay();
+
+    source.buffer = buffer;
+
+    source.connect(delay);
+
+    ok(delay.delayTime, "The audioparam member must exist");
+    is(delay.delayTime.value, 0, "Correct initial value");
+    is(delay.delayTime.defaultValue, 0, "Correct default value");
+    delay.delayTime.value = 0.5;
+    is(delay.delayTime.value, 0.5, "Correct initial value");
+    is(delay.delayTime.defaultValue, 0, "Correct default value");
+    is(delay.channelCount, 2, "delay node has 2 input channels by default");
+    is(delay.channelCountMode, "max", "Correct channelCountMode for the delay node");
+    is(delay.channelInterpretation, "speakers", "Correct channelCountInterpretation for the delay node");
+
+    expectException(function() {
+      context.createDelay(0);
+    }, DOMException.NOT_SUPPORTED_ERR);
+    expectException(function() {
+      context.createDelay(180);
+    }, DOMException.NOT_SUPPORTED_ERR);
+    expectTypeError(function() {
+      context.createDelay(NaN);
+    }, DOMException.NOT_SUPPORTED_ERR);
+    expectException(function() {
+      context.createDelay(-1);
+    }, DOMException.NOT_SUPPORTED_ERR);
+
+    expectException(function() {
+      new DelayNode(context, { maxDelayTime: 0 });
+    }, DOMException.NOT_SUPPORTED_ERR);
+    expectException(function() {
+      new DelayNode(context, { maxDelayTime: 180 });
+    }, DOMException.NOT_SUPPORTED_ERR);
+    expectTypeError(function() {
+      new DelayNode(context, { maxDelayTime: NaN });
+    }, DOMException.NOT_SUPPORTED_ERR);
+    expectException(function() {
+      new DelayNode(context, { maxDelayTime: -1 });
+    }, DOMException.NOT_SUPPORTED_ERR);
+
+    context.createDelay(1); // should not throw
+
+    // Delay the source stream by 2048 frames
+    delay.delayTime.value = 2048 / context.sampleRate;
+
+    source.start(0);
+    return delay;
+  },
+  createExpectedBuffers(context) {
+    var expectedBuffer = context.createBuffer(1, 2048 * 2, context.sampleRate);
+    for (var i = 2048; i < 2048 * 2; ++i) {
+      expectedBuffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * (i - 2048) / context.sampleRate);
+    }
+    return expectedBuffer;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<!--
+  Check that pausing the base time container makes dependent times unresolved.
+ -->
+<head>
+<script><!----><![CDATA[
+function snapshot() {
+  var a = document.getElementById("svg-a");
+  var b = document.getElementById("svg-b");
+  a.pauseAnimations();
+  b.pauseAnimations();
+  a.setCurrentTime(2); // Since b is paused, the start time of a is now
+                       // unresolved.
+  // Check DOM state as well
+  var wrong = document.getElementById("wrong");
+  try {
+    document.getElementById("a").getStartTime();
+  } catch (e) {
+    if (e.name == "InvalidStateError" &&
+        e.code == DOMException.INVALID_STATE_ERR) {
+      wrong.style.setProperty('visibility', 'hidden', '');
+    }
+  }
+  document.documentElement.removeAttribute("class");
+}
+//]]></script>
+</head>
+<body onload="snapshot()">
+<svg xmlns="http://www.w3.org/2000/svg" width="120px" height="120px" id="svg-a">
+  <rect width="100" height="100" fill="green">
+    <set attributeName="fill" to="red" begin="b.begin" id="a"/>
+  </rect>
+  <g id="wrong">
+    <line stroke="black" stroke-width="8" x1="0" y1="0" x2="100" y2="100"/>
+    <line stroke="black" stroke-width="8" x1="0" y1="100" x2="100" y2="0"/>
+  </g>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="120px" height="120px" id="svg-b">
+  <set attributeName="y" to="0" begin="1s" id="b"/>
+</svg>
+</body>
+</html>

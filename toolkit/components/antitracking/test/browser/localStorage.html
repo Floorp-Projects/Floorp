@@ -1,0 +1,68 @@
+<h1>Here a tracker!</h1>
+<script>
+
+if (window.opener) {
+  SpecialPowers.wrap(document).userInteractionForTesting();
+  localStorage.foo = "opener" + Math.random();
+  // Don't call window.close immediatelly. It can happen that adding the
+  // "storage" event listener below takes more time than usual (it may need to
+  // synchronously subscribe in the parent process to receive storage
+  // notifications). Spending more time in the initial script can prevent
+  // the "load" event from being fired for the window opened by "open and test".
+  setTimeout(() => {
+    window.close();
+  }, 0);
+}
+
+if (parent) {
+  window.onmessage = e => {
+    if (e.data == "test") {
+      let status;
+      try {
+        localStorage.foo = "value" + Math.random();
+        status = true;
+      } catch (e) {
+        status = false;
+      }
+
+      parent.postMessage({type: "test", status }, "*");
+      return;
+    }
+
+    if (e.data == "open") {
+      window.open("localStorage.html");
+      return;
+    }
+
+    if (e.data == "open and test") {
+      let w = window.open("localStorage.html");
+      w.addEventListener("load", _ => {
+        let status;
+        try {
+          localStorage.foo = "value" + Math.random();
+          status = true;
+        } catch (e) {
+          status = false;
+        }
+
+        parent.postMessage({type: "test", status }, "*");
+      }, {once: true});
+    }
+  };
+
+  window.addEventListener("storage", e => {
+    let fromOpener = localStorage.foo.startsWith("opener");
+
+    let status;
+    try {
+      localStorage.foo = "value" + Math.random();
+      status = true;
+    } catch (e) {
+      status = false;
+    }
+
+    parent.postMessage({type: "test", status: status && fromOpener }, "*");
+  });
+}
+
+</script>

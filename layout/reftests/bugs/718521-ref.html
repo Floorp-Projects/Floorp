@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Rounded rectangle clipping test</title>
+<style>
+.clipround {
+  left:100px;
+  top:100px;
+  position:absolute;
+  width:700px;
+  height:380px;
+  overflow:hidden;
+  border-radius:45px;
+}
+.greendiv {
+  width:300px;
+  height:230px;
+  background-color:#00ff00;
+  position:absolute;
+}
+#nrcDiv0 {
+  left:0px;
+  top:0px;
+}
+#nrcDiv1 {
+  left:320px;
+  top:0px;
+}
+#nrcDiv2 {
+  left:0px;
+  top:240px;
+}
+</style>
+</head>
+
+<body>
+<div class="clipround">
+<div id="nrcDiv0" class="greendiv"></div>
+</div>
+<div class="clipround">
+<div id="nrcDiv1" class="greendiv"></div>
+</div>
+<div class="clipround">
+<div id="nrcDiv2" class="greendiv"></div>
+</div>
+</body>
+</html>

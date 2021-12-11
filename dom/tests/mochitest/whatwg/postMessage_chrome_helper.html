@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage chrome message receiver</title>
+  <script type="application/javascript">
+    var gPrePath = "";
+
+    function receiveMessage(evt)
+    {
+      if (evt.data.substring(0,9) == "chrome://") {
+        gPrePath = evt.data;
+        respond("path-is-set");
+      } else {
+        // Content cannot post to chrome without privileges
+        try {
+          window.parent.postMessage("SHOULD NOT GET THIS!", "*");
+        }
+        catch (ex) {
+        }
+
+        var msg = "post-to-content-response";
+
+        if (evt.source !== null)
+          msg += " wrong-source(" + evt.source + ")";
+        if (!evt.isTrusted)
+          msg += " unexpected-untrusted-event";
+        if (evt.type !== "message")
+          msg += " wrong-type(" + evt.type + ")";
+        if (evt.origin !== gPrePath)
+          msg += " wrong-origin(" + evt.origin + ")";
+        if (evt.data !== "post-to-content")
+          msg += " wrong-message(" + evt.data + ")";
+
+        respond(msg);
+      }
+    }
+    
+    function respond(msg)
+    {
+      SpecialPowers.wrap(window).parent.postMessage(msg, "*");
+    }
+    
+    window.addEventListener("message", receiveMessage);
+  </script>
+</head>
+<body>
+<h1 id="domain">example.org</h1>
+</body>
+</html>

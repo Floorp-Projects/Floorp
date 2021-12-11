@@ -1,0 +1,7 @@
+//error: struct `X' is only partially defined
+
+struct X { X x; };
+
+protocol undefSelfRecStruct {
+child: async __delete__(X x);
+};

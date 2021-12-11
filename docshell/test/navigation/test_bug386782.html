@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=386782
+-->
+<head>
+  <title>Test for Bug 386782</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script>
+
+    // This tests if we can load a document whose root is in designMode,
+    // edit it, navigate to a new page, navigate back, still edit, and still
+    // undo/redo. Note that this is different from the case where the
+    // designMode document is in a frame inside the window, as this means
+    // the editable region is not in the root docshell (a less complicated case).
+
+    var gTests = [
+      {
+        // <html><body><p>designModeDocument</p></body></html>
+        url: "file_bug386782_designmode.html",
+        name: "designModeNavigate",
+        onload(doc) { doc.designMode = "on"; },
+        expectedBodyBeforeEdit: "<p>designModeDocument</p>",
+        expectedBodyAfterEdit:  "<p>EDITED designModeDocument</p>",
+        expectedBodyAfterSecondEdit: "<p>EDITED TWICE designModeDocument</p>",
+      },
+      {
+        // <html><body contentEditable="true"><p>contentEditable</p></body></html>
+        url: "file_bug386782_contenteditable.html",
+        name: "contentEditableNavigate",
+        expectedBodyBeforeEdit: "<p>contentEditable</p>",
+        expectedBodyAfterEdit:  "EDITED <br><p>contentEditable</p>",
+        expectedBodyAfterSecondEdit: "EDITED TWICE <br><p>contentEditable</p>",
+      },
+    ];
+
+    var gTestNum = -1;
+    var gTest = null;
+
+    window.onload = goNext;
+
+    function goNext() {
+      gTestNum++;
+      if (gTestNum >= gTests.length) {
+        SimpleTest.finish();
+        return;
+      }
+      gTest = gTests[gTestNum];
+      gTest.window = window.open(gTest.url, gTest.name, "width=500,height=500");
+      window.onmessage = function(e) {
+        is(e.data.persisted, false, "Initial load cannot be persisted");
+        window.onmessage = null;
+        if ("onload" in gTest) {
+          gTest.onload(gTest.window.document);
+        }
+        SimpleTest.waitForFocus(beginTest, gTest.window);
+      };
+    }
+
+    function beginTest() {
+      gTest.window.document.body.focus();
+
+      // WARNING: If the following test fails, give the setTimeout() in the onload()
+      // a bit longer; the doc hasn't had enough time to setup its editor.
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyBeforeEdit, "Is doc setup yet");
+      sendString("EDITED ", gTest.window);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
+
+      gTest.window.location = "about:blank";
+      let cond = () => gTest.window.location.href == "about:blank";
+      SimpleTest.waitForCondition(cond, () => {
+        SimpleTest.waitForFocus(goBack, gTest.window, true);
+      }, "about:blank never loaded");
+    }
+
+    function goBack() {
+      window.onmessage = function(e) {
+        window.onmessage = null;
+        // Skip the test if the page is not loaded from the bf-cache when going back.
+        if (e.data.persisted) {
+          checkStillEditable();
+        } else {
+          gTest.window.close();
+          goNext();
+        }
+      };
+      gTest.window.history.back();
+    }
+
+    function checkStillEditable() {
+      // Check that the contents are correct.
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Edited contents still correct?");
+
+      // Check that we can undo/redo and the contents are correct.
+      gTest.window.document.execCommand("undo", false, null);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyBeforeEdit, "Can we undo?");
+
+      gTest.window.document.execCommand("redo", false, null);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Can we redo?");
+
+      // Check that we can still edit the page.
+      gTest.window.document.body.focus();
+      sendString("TWICE ", gTest.window);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterSecondEdit, "Can we still edit?");
+
+      gTest.window.close();
+      goNext();
+    }
+
+  </script>
+
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=386782">Mozilla Bug 386782</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 386782 **/
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

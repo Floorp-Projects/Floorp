@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+
+<script>
+"use strict";
+
+/* globals privilegedFetch, privilegedXHR */
+/* eslint-disable mozilla/balanced-listeners */
+
+addEventListener("message", function rcv(event) {
+  removeEventListener("message", rcv, false);
+
+  function assertTrue(condition, description) {
+    postMessage({msg: "assertTrue", condition, description}, "*");
+  }
+
+  function assertThrows(func, expectedError, msg) {
+    try {
+      func();
+    } catch (e) {
+      assertTrue(expectedError.test(e), msg + ": threw " + e);
+      return;
+    }
+
+    assertTrue(false, "Function did not throw, " +
+                      "expected error should have matched " + expectedError);
+  }
+
+  function passListener() {
+    assertTrue(true, "Content XHR has no elevated privileges");
+    postMessage({"msg": "finish"}, "*");
+  }
+
+  function failListener() {
+    assertTrue(false, "Content XHR has no elevated privileges");
+    postMessage({"msg": "finish"}, "*");
+  }
+
+  assertThrows(function() { new privilegedXHR(); },
+               /Permission denied to access object/,
+               "Content should not be allowed to construct a privileged XHR constructor");
+
+  assertThrows(function() { new privilegedFetch(); },
+               / is not a constructor/,
+               "Content should not be allowed to construct a privileged fetch() constructor");
+
+  let req = new XMLHttpRequest();
+  req.addEventListener("load", failListener);
+  req.addEventListener("error", passListener);
+  req.open("GET", "http://example.org/example.txt");
+  req.send();
+}, false);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "title": "UpdateActionMessage",
+  "description": "A template for messages that execute predetermined actions.",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "URL data to be used as argument to the action"
+            },
+            "expireDelta": {
+              "type": "number",
+              "description": "Expiration timestamp to be used as argument to the action"
+            }
+          }
+        },
+        "description": "Additional data provided as argument when executing the action"
+      },
+      "additionalProperties": false,
+      "description": "Optional action to take in addition to showing the notification"
+    },
+    "additionalProperties": false,
+    "required": ["id", "action"]
+  },
+  "additionalProperties": false,
+  "required": ["action"]
+}

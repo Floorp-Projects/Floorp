@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test promptAuth proxy prompts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="../../../prompts/test/prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* eslint-disable mozilla/use-chromeutils-generateqi */
+
+const LEVEL = Ci.nsIAuthPrompt2.LEVEL_NONE;
+
+let proxyAuthinfo = {
+  username: "",
+  password: "",
+  domain: "",
+
+  flags: Ci.nsIAuthInformation.AUTH_PROXY,
+  authenticationScheme: "basic",
+  realm: "",
+};
+
+// Let prompt_common know what kind of modal type is enabled for auth prompts.
+modalType = authPromptModalType;
+
+let chromeScript = runInParent(() => {
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const promptFac = Cc[
+    "@mozilla.org/passwordmanager/authpromptfactory;1"
+  ].getService(Ci.nsIPromptFactory);
+
+  let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let prompter2 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt2);
+  prompter2.QueryInterface(Ci.nsILoginManagerAuthPrompter).browser =
+    chromeWin.gBrowser.selectedBrowser;
+
+  let mozproxyURL;
+  let proxyChannel;
+
+  addMessageListener("init", () => init());
+
+  addMessageListener("proxyPrompter", function onMessage(msg) {
+    let args = [...msg.args];
+
+    args[0] = proxyChannel;
+    let rv = prompter2[msg.methodName](...args);
+    return {
+      rv,
+      // Send the args back to content so out/inout args can be checked.
+      args: msg.args,
+    };
+  });
+
+  addMessageListener("getTimeLastUsed", () => {
+    let logins = Services.logins.findLogins(mozproxyURL, null, "Proxy Realm");
+    return logins[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  });
+
+  function init() {
+    // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
+    let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+
+    let channel = Services.io.newChannel(
+      "http://example.com",
+      null,
+      null,
+      null, // aLoadingNode
+      systemPrincipal,
+      null, // aTriggeringPrincipal
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      Ci.nsIContentPolicy.TYPE_OTHER
+    );
+    pps.asyncResolve(channel, 0, resolveCallback);
+  }
+
+  class ProxyChannelListener {
+    onStartRequest(request) {
+      sendAsyncMessage("initDone");
+    }
+    onStopRequest(request, status) {}
+  }
+
+  function initLogins(pi) {
+    mozproxyURL = `moz-proxy://${pi.host}:${pi.port}`;
+
+    let proxyLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+      Ci.nsILoginInfo
+    );
+
+    proxyLogin.init(
+      mozproxyURL,
+      null,
+      "Proxy Realm",
+      "proxuser",
+      "proxpass",
+      "",
+      ""
+    );
+
+    Services.logins.addLogin(proxyLogin);
+  }
+
+  let resolveCallback = {
+    QueryInterface(iid) {
+      const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
+
+      if (
+        !interfaces.some(function (v) {
+          return iid.equals(v);
+        })
+      ) {
+        throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+      }
+      return this;
+    },
+
+    onProxyAvailable(req, uri, pi, status) {
+      initLogins(pi);
+
+      // I'm cheating a bit here... We should probably do some magic foo to get
+      // something implementing nsIProxiedProtocolHandler and then call
+      // NewProxiedChannel(), so we have something that's definately a proxied
+      // channel. But Mochitests use a proxy for a number of hosts, so just
+      // requesting a normal channel will give us a channel that's proxied.
+      // The proxyChannel needs to move to at least on-modify-request to
+      // have valid ProxyInfo, but we use OnStartRequest during startup()
+      // for simplicity.
+      proxyChannel = Services.io.newChannel(
+        "http://mochi.test:8888",
+        null,
+        null,
+        null, // aLoadingNode
+        systemPrincipal,
+        null, // aTriggeringPrincipal
+        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+        Ci.nsIContentPolicy.TYPE_OTHER
+      );
+      proxyChannel.asyncOpen(new ProxyChannelListener());
+    },
+  };
+});
+
+let prompter2 = new PrompterProxy(chromeScript);
+
+add_task(async function setup() {
+  let initComplete = new Promise((resolve) =>
+    chromeScript.addMessageListener("initDone", resolve)
+  );
+  chromeScript.sendAsyncMessage("init");
+  info("Waiting for startup to complete...");
+  await initComplete;
+});
+
+add_task(async function test_noAutologin() {
+  // test proxy login (default = no autologin), make sure it prompts.
+  let state = {
+    msg:
+      "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
+    title: "Authentication Required",
+    textValue: "proxuser",
+    passValue: "proxpass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  let action = {
+    buttonClick: "ok",
+  };
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm = "Proxy Realm";
+  proxyAuthinfo.flags = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  let time1 = await chromeScript.sendQuery("getTimeLastUsed");
+  promptDone = handlePrompt(state, action);
+  let isOk = prompter2.promptAuth(null, LEVEL, proxyAuthinfo);
+  await promptDone;
+  let time2 = await chromeScript.sendQuery("getTimeLastUsed");
+
+  ok(isOk, "Checking dialog return value (accept)");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
+
+add_task(async function test_autologin() {
+  // test proxy login (with autologin)
+
+  // Enable the autologin pref.
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.autologin.proxy", true]],
+  });
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm = "Proxy Realm";
+  proxyAuthinfo.flags = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  let time1 = await chromeScript.sendQuery("getTimeLastUsed");
+  let isOk = prompter2.promptAuth(null, LEVEL, proxyAuthinfo);
+  let time2 = await chromeScript.sendQuery("getTimeLastUsed");
+
+  ok(isOk, "Checking dialog return value (accept)");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
+
+add_task(async function test_autologin_incorrect() {
+  // test proxy login (with autologin), ensure it prompts after a failed auth.
+  let state = {
+    msg:
+      "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
+    title: "Authentication Required",
+    textValue: "proxuser",
+    passValue: "proxpass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  let action = {
+    buttonClick: "ok",
+  };
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm = "Proxy Realm";
+  proxyAuthinfo.flags =
+    Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED;
+
+  let time1 = await chromeScript.sendQuery("getTimeLastUsed");
+  promptDone = handlePrompt(state, action);
+  let isOk = prompter2.promptAuth(null, LEVEL, proxyAuthinfo);
+  await promptDone;
+  let time2 = await chromeScript.sendQuery("getTimeLastUsed");
+
+  ok(isOk, "Checking dialog return value (accept)");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
+</script>
+</pre>
+</body>
+</html>

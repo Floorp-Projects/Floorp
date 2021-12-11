@@ -1,0 +1,14 @@
+<!DOCTYPE>
+<html class="reftest-wait">
+  <script>
+    function onfocusHandler()
+    {
+      i.disabled = true;
+      i.disabled = false;
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload="document.getElementById('i').focus();">
+    <input id='i' onfocus='setTimeout(onfocusHandler,0);'>
+  </body>
+</html>

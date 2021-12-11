@@ -1,0 +1,18 @@
+# CAVS 17.1
+# "FIPS186-4 - KeyGen - Random Probably Prime Test " information for "aesniavx+ssse3sha-64"
+
+# Mod(s):  (2048);(3072);
+# Calculating number of rounds of M-R using:  Table C.3 (using error probability of 2^-100), 
+# Public Keys selection:Random values supported; 
+# Generated on Mon Aug 18 08:08:27 2014
+
+[mod = 2048]
+[Table for M-R Test = C.3]
+
+N = 10
+
+[mod = 3072]
+[Table for M-R Test = C.3]
+
+N = 10
+

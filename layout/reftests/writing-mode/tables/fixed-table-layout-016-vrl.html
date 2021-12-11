@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Fixed table height is maximum between table and sum of column 'height' (sum of columns' heights wins)</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="A fixed layout table's height will be the sum of its columns' heights if that number is greater than the table's specified height.">
+        <style type="text/css">
+            div.test
+            {
+                writing-mode: vertical-rl;
+            }
+            table
+            {
+                border-spacing: 0;
+                table-layout: fixed;
+                height: 75px;
+            }
+            td
+            {
+                background: blue;
+                padding: 0;
+                height: 25px;
+            }
+            #div1
+            {
+                background: black;
+                height: 100px;
+            }
+            #div1, td
+            {
+                width: 24px;
+            }
+        </style>
+    </head>
+    <body>
+     <p>Test passes if the boxes below are the same height.</p>
+     <div class="test">
+        <table>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+        <div id="div1"></div>
+      </div>
+    </body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=460740
+-->
+<head>
+  <title>Test for Bug 460740</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=460740">Mozilla Bug 460740</a>
+<p id="display"></p>
+<div id="content">
+  <ul>
+    <li contenteditable>
+      Editable LI
+    </li>
+    <li>
+      <div contenteditable>
+        Editable DIV inside LI
+      </div>
+    </li>
+    <li>
+      <div>
+        <div contenteditable>
+          Editable DIV inside DIV inside LI
+        </div>
+      </div>
+    </li>
+    <li>
+      <h3>
+        <div contenteditable>
+          Editable DIV inside H3 inside LI
+        </div>
+      </h3>
+    </li>
+  </ul>
+  <div contenteditable>
+    Editable DIV
+  </div>
+  <h3 contenteditable>
+    Editable H3
+  </h3>
+  <p contenteditable>
+    Editable P
+  </p>
+  <div>
+    <p contenteditable>
+      Editable P in a DIV
+    </p>
+  </div>
+  <p><span contenteditable>Editable SPAN in a P</span></p>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 460740 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+const CARET_BEGIN  = 0;
+const CARET_MIDDLE = 1;
+const CARET_END    = 2;
+
+function split(element, caretPos) {
+  // compute the requested position
+  var len = element.textContent.length;
+  var pos = -1;
+  switch (caretPos) {
+    case CARET_BEGIN:
+      pos = 0;
+      break;
+    case CARET_MIDDLE:
+      pos = Math.floor(len / 2);
+      break;
+    case CARET_END:
+      pos = len;
+      break;
+  }
+
+  // put the caret on the requested position
+  var range = document.createRange();
+  var sel = window.getSelection();
+  range.setStart(element.firstChild, pos);
+  range.setEnd(element.firstChild, pos);
+  sel.addRange(range);
+
+  // simulates a [Return] keypress
+  synthesizeKey("VK_RETURN", {shiftKey: true});
+}
+
+// count the number of non-BR elements in #content
+function getBlockCount() {
+  return document.querySelectorAll("#content *:not(br)").length;
+}
+
+// count the number of BRs in element
+function checkBR(element) {
+  return element.querySelectorAll("br").length;
+}
+
+function runTests() {
+  var count = getBlockCount();
+  var nodes = document.querySelectorAll("#content [contenteditable]");
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+    node.focus();
+    is(checkBR(node), 0, node.textContent.trim() + ": This node should not have any <br> element yet.");
+    for (var j = 0; j < 3; j++) { // CARET_BEGIN|MIDDLE|END
+      split(node, j);
+      ok(checkBR(node) > 0, node.textContent.trim() + " " + j + ": Pressing [Return] should add (at least) one <br> element.");
+      is(getBlockCount(), count, node.textContent.trim() + " " + j + ": Pressing [Return] should not change the number of non-<br> elements.");
+      document.execCommand("Undo", false, null);
+    }
+  }
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

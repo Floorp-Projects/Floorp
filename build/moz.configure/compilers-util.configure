@@ -1,0 +1,135 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+@template
+@imports("textwrap")
+@imports(_from="mozbuild.configure", _import="SandboxDependsFunction")
+def compiler_class(compiler, host_or_target):
+    is_target = host_or_target is target
+
+    class Compiler(SandboxDependsFunction):
+        # Generates a test program and attempts to compile it. In case of
+        # failure, the resulting check will return None. If the test program
+        # succeeds, it will return the output of the test program.
+        # - `includes` are the includes (as file names) that will appear at the
+        #   top of the generated test program.
+        # - `body` is the code that will appear in the main function of the
+        #   generated test program. `return 0;` is appended to the function
+        #   body automatically.
+        # - `flags` are the flags to be passed to the compiler, in addition to
+        #   `-c`.
+        # - `check_msg` is the message to be printed to accompany compiling the
+        #   test program.
+        def try_compile(
+            self,
+            includes=None,
+            body="",
+            flags=None,
+            check_msg=None,
+            when=None,
+            onerror=lambda: None,
+        ):
+            @depends(dependable(flags))
+            def flags(flags):
+                flags = list(flags or [])
+                flags.append("-c")
+                return flags
+
+            @depends(dependable(includes))
+            def header(includes):
+                includes = includes or []
+                return ["#include <%s>" % f for f in includes]
+
+            return self.try_run(
+                header=header,
+                body=body,
+                flags=flags,
+                check_msg=check_msg,
+                when=when,
+                onerror=onerror,
+            )
+
+        # Generates a test program and run the compiler against it. In case of
+        # failure, the resulting check will return None.
+        # - `header` is code that will appear at the top of the generated test
+        #   program.
+        # - `body` is the code that will appear in the main function of the
+        #   generated test program. `return 0;` is appended to the function
+        #   body automatically.
+        # - `flags` are the flags to be passed to the compiler.
+        # - `check_msg` is the message to be printed to accompany compiling the
+        #   test program.
+        # - `onerror` is a function called when the check fails.
+        def try_run(
+            self,
+            header=None,
+            body="",
+            flags=None,
+            check_msg=None,
+            when=None,
+            onerror=lambda: None,
+        ):
+            source = textwrap.dedent(
+                """\
+                int
+                main(void)
+                {
+                %s
+                  ;
+                  return 0;
+                }
+            """
+                % body
+            )
+
+            if check_msg:
+
+                def checking_fn(fn):
+                    return checking(check_msg)(fn)
+
+            else:
+
+                def checking_fn(fn):
+                    return fn
+
+            @depends(
+                self,
+                dependable(flags),
+                extra_toolchain_flags,
+                stlport_cppflags,
+                dependable(header),
+                when=when,
+            )
+            @checking_fn
+            def func(compiler, flags, extra_flags, stlport_flags, header):
+                flags = list(flags or [])
+                if is_target:
+                    flags += extra_flags or []
+                if compiler.language == "C++":
+                    flags += stlport_flags or []
+                header = header or ""
+                if isinstance(header, (list, tuple)):
+                    header = "\n".join(header)
+                if header:
+                    header += "\n"
+
+                if (
+                    try_invoke_compiler(
+                        compiler.wrapper + [compiler.compiler] + compiler.flags,
+                        compiler.language,
+                        header + source,
+                        flags,
+                        onerror=onerror,
+                    )
+                    is not None
+                ):
+                    return True
+
+            return func
+
+    compiler.__class__ = Compiler
+    return compiler

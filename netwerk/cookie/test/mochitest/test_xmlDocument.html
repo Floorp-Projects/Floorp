@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Document constructor</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+
+let w;
+
+SpecialPowers.pushPrefEnv({set: [
+  ["dom.storage_access.enabled", true],
+  ["dom.storage_access.prompt.testing", true],
+  ["dom.storage_access.prompt.testing.allow", true],
+  ["dom.testing.sync-content-blocking-notifications", true],
+  ["network.cookie.cookieBehavior", 0],
+]}).then(_ => {
+  return new Promise(resolve => {
+    w = window.open("empty.html");
+    w.onload = resolve;
+  });
+}).then(_ => {
+  const doc = new w.Document();
+  return doc.requestStorageAccess().catch(__ => {});
+}).then(___ => {
+  w.close();
+  ok(true, "No crash!");
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

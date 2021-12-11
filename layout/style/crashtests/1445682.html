@@ -1,0 +1,16 @@
+<script>
+  function go() {
+    let host = document.createElement('div');
+    let style_1 = document.createElement('style');
+    let style_2 = document.createElement('style');
+    let otherElement = document.createElement('div');
+    let shadowRoot = host.attachShadow({mode: "open"});
+    style_1.title = 'x';
+    style_2.title = 'y';
+    document.head.appendChild(style_1);
+    shadowRoot.appendChild(style_2);
+    document.documentElement.appendChild(otherElement);
+    otherElement.before('', host, '');
+  }
+  window.addEventListener('load', go)
+</script>

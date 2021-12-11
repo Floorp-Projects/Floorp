@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSS 2.1 Test Suite: anonymous table boxes (Mozilla bug 398681)</title>
+    <link rel="author" title="Jesse Ruderman" href="mailto:jruderman@gmail.com" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#anonymous-boxes"/>
+    <meta name="flags" content="dom" />
+</head>
+<body onload="document.getElementById('n').style.position = 'absolute';">
+<table border=1>
+  <tbody id="n"><tr><td>1__</td></tr></tbody>
+  <tbody><tr><td>__2</td></tr></tbody>
+</table>
+</body>
+</html>

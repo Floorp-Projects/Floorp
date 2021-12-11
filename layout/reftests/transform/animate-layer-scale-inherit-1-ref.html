@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 1122526</title>
+<style>
+
+#outer, #inner {
+  display: inline-block;
+  background: white;
+  color: black;
+}
+
+#inner {
+  vertical-align: top;
+  height: 100px;
+  width: 100px;
+  background: repeating-linear-gradient(to top left, yellow, blue 10px);
+  will-change: transform;
+}
+
+</style>
+
+<div id="outer">
+  <div id="inner">
+  </div>
+</div>

@@ -1,0 +1,136 @@
+diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
+--- /src/cpu_detect_x86.cpp
++++ /src/cpu_detect_x86.cpp
+@@ -44,9 +44,8 @@
+ 
+ 
+ #if defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
+-
+-   #if defined(__GNUC__) && defined(__i386__)
+-       // gcc
++   #if defined(__GNUC__) && defined(HAVE_CPUID_H)
++       // gcc and clang
+        #include "cpuid.h"
+    #elif defined(_M_IX86)
+        // windows non-gcc
+@@ -97,18 +96,7 @@
+  
+     uint res = 0;
+  
+-#if defined(__GNUC__)
+-    // GCC version of cpuid. Requires GCC 4.3.0 or later for __cpuid intrinsic support.
+-    uint eax, ebx, ecx, edx;  // unsigned int is the standard type. uint is defined by the compiler and not guaranteed to be portable.
+-
+-    // Check if no cpuid support.
+-    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)) return 0; // always disable extensions.
+-
+-    if (edx & bit_MMX)  res = res | SUPPORT_MMX;
+-    if (edx & bit_SSE)  res = res | SUPPORT_SSE;
+-    if (edx & bit_SSE2) res = res | SUPPORT_SSE2;
+-
+-#else
++#if !defined(__GNUC__)
+     // Window / VS version of cpuid. Notice that Visual Studio 2005 or later required 
+     // for __cpuid intrinsic support.
+     int reg[4] = {-1};
+@@ -121,7 +109,19 @@
+     if ((unsigned int)reg[3] & bit_MMX)  res = res | SUPPORT_MMX;
+     if ((unsigned int)reg[3] & bit_SSE)  res = res | SUPPORT_SSE;
+     if ((unsigned int)reg[3] & bit_SSE2) res = res | SUPPORT_SSE2;
++#elif defined(HAVE_CPUID_H)
++    // GCC version of cpuid. Requires GCC 4.3.0 or later for __cpuid intrinsic support.
++    uint eax, ebx, ecx, edx;  // unsigned int is the standard type. uint is defined by the compiler and not guaranteed to be portable.
++
++    // Check if no cpuid support.
++    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)) return 0; // always disable extensions.
+ 
++    if (edx & bit_MMX)  res = res | SUPPORT_MMX;
++    if (edx & bit_SSE)  res = res | SUPPORT_SSE;
++    if (edx & bit_SSE2) res = res | SUPPORT_SSE2;
++#else
++    // Compatible with GCC but no cpuid.h.
++    return 0;
+ #endif
+ 
+     return res & ~_dwDisabledISA;
+diff -u /src/STTypes.h /src/STTypes.h
+--- /src/STTypes.h
++++ /src/STTypes.h
+@@ -54,12 +54,17 @@
+ #define SOUNDTOUCH_ALIGN_POINTER_16(x)      ( ( (ulongptr)(x) + 15 ) & ~(ulongptr)15 )
+ 
+ 
+-#if (defined(__GNUC__) && !defined(ANDROID))
+-    // In GCC, include soundtouch_config.h made by config scritps.
+-    // Skip this in Android compilation that uses GCC but without configure scripts.
+-    #include "soundtouch_config.h"
+-#endif
++#include "soundtouch_config.h"
+ 
++#if defined(WIN32)
++#if defined(BUILDING_SOUNDTOUCH)
++#define SOUNDTOUCH_API __declspec(dllexport)
++#else
++#define SOUNDTOUCH_API __declspec(dllimport)
++#endif
++#else
++#define SOUNDTOUCH_API
++#endif
+ 
+ namespace soundtouch
+ {
+diff -u /src/SoundTouch.h /src/SoundTouch.h
+--- /src/SoundTouch.h
++++ /src/SoundTouch.h
+@@ -141,7 +141,7 @@
+ ///   tempo/pitch/rate/samplerate settings.
+ #define SETTING_NOMINAL_OUTPUT_SEQUENCE		7
+ 
+-class SoundTouch : public FIFOProcessor
++class SOUNDTOUCH_API SoundTouch : public FIFOProcessor
+ {
+ private:
+     /// Rate transposer class instance
+diff -u /src/FIRFilter.cpp /src/FIRFilter.cpp
+--- /src/FIRFilter.cpp
++++ /src/FIRFilter.cpp
+@@ -291,9 +296,11 @@
+ 
+ FIRFilter * FIRFilter::newInstance()
+ {
++#if defined(SOUNDTOUCH_ALLOW_MMX) || defined(SOUNDTOUCH_ALLOW_SSE)
+     uint uExtensions;
+ 
+     uExtensions = detectCPUextensions();
++#endif
+ 
+     // Check if MMX/SSE instruction set extensions supported by CPU
+ 
+diff -u /src/TDStretch.cpp /src/TDStretch.cpp
+--- /src/TDStretch.cpp
++++ /src/TDStretch.cpp
+@@ -624,9 +624,11 @@
+ 
+ TDStretch * TDStretch::newInstance()
+ {
++#if defined(SOUNDTOUCH_ALLOW_MMX) || defined(SOUNDTOUCH_ALLOW_SSE)
+     uint uExtensions;
+ 
+     uExtensions = detectCPUextensions();
++#endif
+ 
+     // Check if MMX/SSE instruction set extensions supported by CPU
+
+diff -u /src/AAFilter.cpp /src/AAFilter.cpp
+--- /src/AAFilter.cpp
++++ /src/AAFilter.cpp
+@@ -42,7 +42,7 @@
+ 
+ using namespace soundtouch;
+ 
+-#define PI       3.14159265358979323846
++#define PI       M_PI
+ #define TWOPI    (2 * PI)
+ 
+ // define this to save AA filter coefficients to a file
+ 

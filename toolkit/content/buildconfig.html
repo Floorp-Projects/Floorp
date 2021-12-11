@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#filter substitution
+#include @TOPOBJDIR@/source-repo.h
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src chrome:; object-src 'none'" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width; user-scalable=false;">
+    <title>Build Configuration</title>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css">
+    <link rel="stylesheet" href="chrome://global/content/buildconfig.css" type="text/css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Build Configuration</h1>
+      <p>Please be aware that this page doesn't reflect all the options used to build Firefox.</p>
+      #ifdef MOZ_SOURCE_URL
+      <h2>Source</h2>
+      <p>Built from <a href="@MOZ_SOURCE_URL@">@MOZ_SOURCE_URL@</a></p>
+      #endif
+      <h2>Build platform</h2>
+      <table class="build-platform-table">
+        <tbody>
+          <tr>
+            <th>target</th>
+          </tr>
+          <tr>
+            <td>@target@</td>
+          </tr>
+        </tbody>
+      </table>
+      #if defined(CC) && defined(CXX) && defined(RUSTC)
+      <h2>Build tools</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Compiler</th>
+            <th>Version</th>
+            <th>Compiler flags</th>
+          </tr>
+          <tr>
+            <td>@CC@</td>
+            <td>@CC_VERSION@</td>
+            <td>@CFLAGS@</td>
+          </tr>
+          <tr>
+            <td>@CXX@</td>
+            <td>@CC_VERSION@</td>
+            <td>@CXXFLAGS@</td>
+          </tr>
+          <tr>
+            <td>@RUSTC@</td>
+            <td>@RUSTC_VERSION@</td>
+            <td>@RUSTFLAGS@</td>
+          </tr>
+        </tbody>
+      </table>
+      #endif
+      <h2>Configure options</h2>
+      <p>@MOZ_CONFIGURE_OPTIONS@</p>
+      #ifdef ANDROID
+      <h2>Package name</h2>
+      <p>@ANDROID_PACKAGE_NAME@</p>
+      #endif
+    </div>
+  </body>
+</html>

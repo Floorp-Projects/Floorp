@@ -1,0 +1,24 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../../../..
+
+PRIVATE_EXPORTS = \
+	pkix_buildresult.h \
+	pkix_policynode.h \
+	pkix_valresult.h \
+	pkix_verifynode.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	pkix_buildresult.c \
+	pkix_policynode.c \
+	pkix_valresult.c \
+	pkix_verifynode.c \
+	$(NULL)
+
+LIBRARY_NAME = pkixresults
+SHARED_LIBRARY = $(NULL)

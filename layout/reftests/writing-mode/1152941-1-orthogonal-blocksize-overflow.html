@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+html {
+  -webkit-writing-mode: vertical-rl;
+  writing-mode: vertical-rl;
+  font: 16px/24px monospace;
+  padding: 20px;
+}
+body {
+  width: 40em;
+  height: 25em;
+}
+blockquote {
+  -webkit-writing-mode: horizontal-tb;
+  writing-mode: horizontal-tb;
+  width: 20em;
+  color: transparent;
+}
+</style>
+</head>
+
+<body>
+  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac fringilla quam,
+  eu ultricies augue.</p>
+
+  <blockquote>
+    <!-- The (invisible) text in the orthogonal block should NOT make following
+         content vanish if it overflows the <body>'s height! -->
+    <p>Ut accumsan dui eu elit dapibus rutrum. Nunc tristique urna eget ex dictum
+    placerat. Nunc venenatis enim sed odio iaculis, consequat consectetur sem
+    elementum.</p>
+
+    <p>Fusce eros eros, eleifend eget eros at, convallis tempor tortor. Cras
+    at gravida leo. Proin ultricies ipsum vitae felis suscipit, a tincidunt orci
+    mattis. Cras in suscipit mauris.</p>
+
+    <p>Etiam eu pellentesque nisi. Quisque
+    ullamcorper dui odio, eu feugiat nunc interdum vitae. Morbi egestas dolor a
+    nulla pellentesque, faucibus tincidunt diam facilisis. Suspendisse at urna
+    varius, pellentesque nibh non, venenatis ante.</p>
+
+    <p>Nullam aliquet orci vel dui
+    dapibus, nec facilisis enim interdum. Morbi condimentum venenatis commodo. Sed
+    viverra diam nec lacinia congue. Etiam ultrices luctus volutpat.</p>
+  </blockquote>
+
+  <p>Maecenas nec ornare ligula. Phasellus eleifend
+  elit leo, nec vestibulum sapien consectetur quis.</p>
+</body>
+</html>

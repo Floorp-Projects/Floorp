@@ -1,0 +1,88 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * An interface for access to a buffering stream implementation's underlying
+ * memory buffer.
+ *
+ * Stream implementations that QueryInterface to nsIStreamBufferAccess must
+ * ensure that all buffers are aligned on the most restrictive type size for
+ * the current architecture (e.g., sizeof(double) for RISCy CPUs).  malloc(3)
+ * satisfies this requirement.
+ */
+[scriptable, builtinclass, uuid(ac923b72-ac87-4892-ac7a-ca385d429435)]
+interface nsIStreamBufferAccess : nsISupports
+{
+    /**
+     * Get access to a contiguous, aligned run of bytes in the stream's buffer.
+     * Exactly one successful getBuffer call must occur before a putBuffer call
+     * taking the non-null pointer returned by the successful getBuffer.
+     *
+     * The run of bytes are the next bytes (modulo alignment padding) to read
+     * for an input stream, and the next bytes (modulo alignment padding) to
+     * store before (eventually) writing buffered data to an output stream.
+     * There can be space beyond this run of bytes in the buffer for further
+     * accesses before the fill or flush point is reached.
+     *
+     * @param aLength
+     *    Count of contiguous bytes requested at the address A that satisfies
+     *    (A & aAlignMask) == 0 in the buffer, starting from the current stream
+     *    position, mapped to a buffer address B.  The stream implementation
+     *    must pad from B to A by skipping bytes (if input stream) or storing
+     *    zero bytes (if output stream).
+     *
+     * @param aAlignMask
+     *    Bit-mask computed by subtracting 1 from the power-of-two alignment
+     *    modulus (e.g., 3 or sizeof(uint32_t)-1 for uint32_t alignment).
+     *
+     * @return
+     *    The aligned pointer to aLength bytes in the buffer, or null if the
+     *    buffer has no room for aLength bytes starting at the next address A
+     *    after the current position that satisfies (A & aAlignMask) == 0.
+     */
+    [notxpcom,noscript] charPtr getBuffer(in uint32_t aLength, in uint32_t aAlignMask);
+
+    /**
+     * Relinquish access to the stream's buffer, filling if at end of an input
+     * buffer, flushing if completing an output buffer.  After a getBuffer call
+     * that returns non-null, putBuffer must be called.
+     *
+     * @param aBuffer
+     *    A non-null pointer returned by getBuffer on the same stream buffer
+     *    access object.
+     *
+     * @param aLength
+     *    The same count of contiguous bytes passed to the getBuffer call that
+     *    returned aBuffer.
+     */
+    [notxpcom,noscript] void putBuffer(in charPtr aBuffer, in uint32_t aLength);
+
+    /**
+     * Disable and enable buffering on the stream implementing this interface.
+     * DisableBuffering flushes an output stream's buffer, and invalidates an
+     * input stream's buffer.
+     */
+    void disableBuffering();
+    void enableBuffering();
+
+    /**
+     * The underlying, unbuffered input or output stream.
+     */
+    readonly attribute nsISupports unbufferedStream;
+};
+
+%{C++
+
+/**
+ * These macros get and put a buffer given either an sba parameter that may
+ * point to an object implementing nsIStreamBufferAccess, nsIObjectInputStream,
+ * or nsIObjectOutputStream.
+ */
+#define NS_GET_BUFFER(sba,n,a)  ((sba)->GetBuffer(n, a))
+#define NS_PUT_BUFFER(sba,p,n)  ((sba)->PutBuffer(p, n))
+
+%}

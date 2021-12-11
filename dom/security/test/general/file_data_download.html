@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test download attribute for data: URI</title>
+</head>
+<body>
+  <a href="data:text/html,<body>data download</body>" download="data-foo.html" id="testlink">download data</a>
+  <script>
+    // click the link to have the downoad panel appear
+    let testlink = document.getElementById("testlink");
+    testlink.click();
+  </script>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebVTT : cue should be displayed properly after seeking</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+/**
+ * This test is used to ensure that the cue should be showed or hid correctly
+ * after seeking. In this test, we have two cues which are not overlapped, so
+ * there should only have one cue showing at a time.
+ */
+var CUES_INFO = [
+  { id: 0, startTime: 1, endTime: 3, text: "This is cue 0."},
+  { id: 1, startTime: 4, endTime: 6, text: "This is cue 1."},
+];
+
+async function startTest() {
+  const video = createVideo();
+  const cues = createCues(video);
+  await startVideo(video);
+
+  await seekVideo(video, cues[0].startTime);
+  await waitUntilCueIsShowing(cues[0]);
+  checkActiveCueAndInactiveCue(cues[0], cues[1]);
+
+  await seekVideo(video, cues[1].startTime);
+  await waitUntilCueIsShowing(cues[1]);
+  checkActiveCueAndInactiveCue(cues[1], cues[0]);
+
+  // seek forward again
+  await seekVideo(video, cues[0].startTime);
+  await waitUntilCueIsShowing(cues[0]);
+  checkActiveCueAndInactiveCue(cues[0], cues[1]);
+
+  removeNodeAndSource(video);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = startTest;
+/**
+ * The following are test helper functions.
+ */
+function checkActiveCueAndInactiveCue(activeCue, inactiveCue) {
+  ok(activeCue.getActive,
+     `cue ${activeCue.id} [${activeCue.startTime}:${activeCue.endTime}] is active`);
+  ok(!inactiveCue.getActive,
+     `cue ${inactiveCue.id} [${inactiveCue.startTime}:${inactiveCue.endTime}] is inactive`);
+}
+
+function createVideo() {
+  let video = document.createElement("video");
+  video.src = "gizmo.mp4";
+  video.controls = true;
+  document.body.appendChild(video);
+  return video;
+}
+
+function createCues(video) {
+  let track = video.addTextTrack("subtitles");
+  track.mode = "showing";
+  let cue0 = new VTTCue(CUES_INFO[0].startTime, CUES_INFO[0].endTime,
+                        CUES_INFO[0].text);
+  cue0.id = CUES_INFO[0].id;
+  let cue1 = new VTTCue(CUES_INFO[1].startTime, CUES_INFO[1].endTime,
+                        CUES_INFO[1].text);
+  cue1.id = CUES_INFO[1].id;
+  track.addCue(cue0);
+  track.addCue(cue1);
+  // Convert them to chrome objects in order to use chrome privilege APIs.
+  cue0 = SpecialPowers.wrap(cue0);
+  cue1 = SpecialPowers.wrap(cue1);
+  return [cue0, cue1];
+}
+
+async function startVideo(video) {
+  info(`start play video`);
+  const played = video && await video.play().then(() => true, () => false);
+  ok(played, "video has started playing");
+}
+
+async function waitUntilCueIsShowing(cue) {
+  info(`wait until cue ${cue.id} shows`);
+  // cue has not been showing yet.
+  if (!cue.getActive) {
+    await once(cue, "enter");
+  }
+  info(`cue ${cue.id} is showing`);
+}
+
+async function seekVideo(video, time) {
+  ok(isInRange(time, CUES_INFO[0].startTime, CUES_INFO[0].endTime) ||
+     isInRange(time, CUES_INFO[1].startTime, CUES_INFO[1].endTime),
+     `seek target time ${time} is within the correct range`)
+  info(`seek video to ${time}`);
+  video.currentTime = time;
+  await once(video, "seeked");
+  info(`seek succeeded, current time=${video.currentTime}`);
+}
+
+function isInRange(value, lowerBound, higherBound) {
+  return lowerBound <= value && value <= higherBound;
+}
+</script>
+</body>
+</html>

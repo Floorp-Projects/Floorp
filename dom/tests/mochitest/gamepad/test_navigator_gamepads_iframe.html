@@ -1,0 +1,123 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test gamepad</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+let ok = window.parent.ok;
+let is = window.parent.is;
+let isnot = window.parent.isnot;
+let SimpleTest = window.parent.SimpleTest;
+let SpecialPowers = window.parent.SpecialPowers;
+
+var content_index1 = 0;
+var internal_index2;
+var content_index2 = 1;
+
+var testNum = 0;
+var tests = [
+  check_first_gamepad,
+  check_second_gamepad,
+  check_gamepad_hole,
+  check_no_gamepads,
+];
+
+function run_next_test(event) {
+  SpecialPowers.executeSoon(async function() {
+    await tests[testNum++](event);
+  });
+}
+
+function buttonhandler(e) {
+ run_next_test(e);
+}
+
+function disconnecthandler(e) {
+  run_next_test(e);
+}
+window.addEventListener("gamepadbuttondown", buttonhandler);
+window.addEventListener("gamepaddisconnected", disconnecthandler);
+
+runGamepadTest(startTest)
+
+async function startTest() {
+  // gamepads should be empty first
+  is(navigator.getGamepads().length, 0, "should be zero gamepads exposed");
+  // Add a gamepad
+  internal_index1 = await GamepadService.addGamepad("test gamepad 1", // id
+                     GamepadService.standardMapping,
+                     GamepadService.noHand,
+                     4, // buttons
+                     2,
+                     0,
+                     0,
+                     0);
+
+  // Press a button to make the gamepad visible to the page.
+  await GamepadService.newButtonEvent(internal_index1, 0, true, true);
+}
+
+async function check_first_gamepad(e) {
+  ok(true, "Checking first gamepad");
+  // First gamepad gets added.
+  is(e.gamepad.id, "test gamepad 1", "correct gamepad name");
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 1, "should have one gamepad exposed");
+  is(gamepads[e.gamepad.index], e.gamepad, "right gamepad exposed at index");
+  is(gamepads[content_index1], e.gamepad, "gamepad counter working correctly");
+  // Add a second gamepad, should automatically show up.
+  internal_index2 = await GamepadService.addGamepad("test gamepad 2", // id
+                     GamepadService.standardMapping,
+                     GamepadService.noHand,
+                     4, // buttons
+                     2,
+                     0,
+                     0,
+                     0);
+
+  await GamepadService.newButtonEvent(internal_index2, 0, true, true);
+
+  ok(true, "Done checking first gamepad");
+}
+
+async function check_second_gamepad(e) {
+  ok(true, "Checking second gamepad");
+  // Second gamepad gets added.
+  is(e.gamepad.index, 1, "gamepad index should be 1")
+  is(e.gamepad.id, "test gamepad 2", "correct gamepad name");
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 2, "should have two gamepads exposed");
+  is(gamepads[e.gamepad.index], e.gamepad, "right gamepad exposed at index");
+  is(gamepads[content_index2], e.gamepad, "gamepad counter working correctly");
+  // Now remove the first one.
+  await GamepadService.removeGamepad(internal_index1);
+  ok(true, "Done checking second gamepad");
+}
+
+async function check_gamepad_hole(e) {
+  ok(true, "Checking gamepad hole");
+  // First gamepad gets removed.
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 2, "gamepads should have two entries");
+  is(gamepads[content_index1], null, "should be a hole in the gamepad list");
+  isnot(gamepads[content_index2], null, "second gamepad should exist");
+  // Now remove the second one.
+  await GamepadService.removeGamepad(internal_index2);
+  ok(true, "Done checking gamepad hole");
+}
+
+function check_no_gamepads(e) {
+  ok(true, "Checking no gamepads");
+  // Second gamepad gets removed.
+  var gamepads = navigator.getGamepads();
+  is(gamepads.length, 0, "gamepads should be empty");
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>

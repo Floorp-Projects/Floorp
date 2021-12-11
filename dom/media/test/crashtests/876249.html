@@ -1,0 +1,27 @@
+<script>
+var Context0= new AudioContext()
+var BufferSource0=Context0.createBufferSource();
+var BiquadFilter0=Context0.createBiquadFilter();
+BufferSource0.start(0,0.6167310480959713,0.7142638498917222);
+BiquadFilter0.connect(Context0.destination);
+BufferSource0.buffer=function(){
+	var length=86333;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);
+	for (var i = 0; i < length; ++i) { bufferData[i] = Math.sin(i*(-1))};
+	return Buffer;
+}();
+
+BufferSource0.connect(BiquadFilter0);
+
+BufferSource0.buffer=function(){
+	var length=21989;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);
+	for (var i = 0; i < length; ++i) { bufferData[i] = Math.sin(i*(0))};
+	return Buffer;
+}();
+
+BufferSource0.stop(0.04184641852043569);
+
+</script>

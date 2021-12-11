@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundFileHandle;
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace dom {
+
+struct FileRequestMetadata
+{
+  uint64_t? size;
+  int64_t? lastModified;
+};
+
+struct FileRequestGetMetadataResponse
+{
+  FileRequestMetadata metadata;
+};
+
+struct FileRequestReadResponse
+{
+  nsCString data;
+};
+
+struct FileRequestWriteResponse
+{
+};
+
+struct FileRequestTruncateResponse
+{
+};
+
+struct FileRequestFlushResponse
+{
+};
+
+union FileRequestResponse
+{
+  nsresult;
+  FileRequestGetMetadataResponse;
+  FileRequestReadResponse;
+  FileRequestWriteResponse;
+  FileRequestTruncateResponse;
+  FileRequestFlushResponse;
+};
+
+protocol PBackgroundFileRequest
+{
+  manager PBackgroundFileHandle;
+
+child:
+  async __delete__(FileRequestResponse response);
+
+  async Progress(uint64_t progress,
+                 uint64_t progressMax);
+};
+
+} // namespace dom
+} // namespace mozilla

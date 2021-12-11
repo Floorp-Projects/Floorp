@@ -1,0 +1,796 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
+-->
+<head>
+  <meta charset="utf-8">
+  <title>
+    Test for Bug 1508420: Cases where a frame isn't allowed to be a dynamic
+    reflow root
+  </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="main()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1508420">Mozilla Bug 1508420</a>
+<p id="display">
+  <!-- Here's the iframe that we'll do all of our testing/snapshotting in: -->
+  <iframe srcdoc="<!DOCTYPE html><body></body>"></iframe>
+</p>
+<script type="application/javascript">
+  /** Test for Bug 1508420 **/
+  /**
+   * This test exercises various cases where we exclude a frame from being
+   * flagged as a dynamic reflow root. (We prevent this because we know that
+   * there are cases where we'd produce incorrect layout if we initiated reflow
+   * from the frame in question.)
+   *
+   * Roughly, the idea in each subtest here is to do the following:
+   *  1) Set up a scenario with some condition that we think should prevent a
+   *     particular frame from being flagged as a dynamic reflow root.
+   *  2) Make a dynamic tweak that we expect would result in broken layout, if
+   *     we had allowed the frame in question to be a dynamic reflow root.
+   *     Take a snapshot.
+   *  3) Force a full reconstruct + reflow of the document's frames (by
+   *     toggling "display:none" on the root element). Take another snapshot.
+   *  4) Assert that snapshots look the same -- i.e. that our incremental
+   *     reflow didn't produce the wrong layout.
+   *
+   * Ideally, every condition in ReflowInput::InitDynamicReflowRoot()
+   * should have a corresponding subtest here (and the subtest should fail if
+   * we remove the condition from InitDynamicReflowRoot).
+   */
+
+  // Styles that are sufficient to make a typical element into a reflow root.
+  // We apply these styles to "reflow root candidates" throughout this test
+  // (and then add other styles that should make the candidate ineligible,
+  // typically).
+  const gReflowRootCandidateStyles =
+    "display: flow-root; will-change: transform; width: 10px; height: 10px;";
+
+  // Some convenience globals for the document inside the iframe:
+  // (initialized in 'main' after the iframe gets a chance to load)
+  // --------------------------------------------------------------
+  let gFWindow;
+  let gFDoc;
+  let gFBody;
+
+  // Some utility functions used in each test function:
+  // --------------------------------------------------
+  function createStyledDiv(divStyleStr, divInnerText) {
+    let div = gFDoc.createElement("div");
+    div.style.cssText = divStyleStr;
+    if (typeof divInnerText !== "undefined") {
+      div.innerText = divInnerText;
+    }
+    return div;
+  }
+
+  // This function takes an initial snapshot, then a second snapshot after
+  // invoking the given tweakFunc, and finally a third after forcing the frame
+  // tree to be reconstructed from scratch. Then it compares the snapshots to
+  // validate that the tweak did produce a visible change, & that the
+  // after-tweak rendering looks the same in the last two snapshots.
+  function tweakAndCompareSnapshots(tweakFunc, descPrefix) {
+    let snapPreTweak = snapshotWindow(gFWindow, false);
+    let descPreTweak = descPrefix + "-initial-rendering";
+
+    // Now we invoke the tweak (changing the size of some content inside the
+    // reflow root candidate). If this influences the size of the candidate
+    // itself, and we fail to do any reflow outside of the candidate because
+    // we made it a reflow root, then we expect to end up with a broken layout
+    // due to a parent or sibling not having been resized/repositioned.
+    // We'll discover that when comparing snapIncReflow against snapFullReflow
+    // below.
+    tweakFunc();
+
+    let snapIncReflow = snapshotWindow(gFWindow, false);
+    let descIncReflow = descPrefix + "-after-tweak-inc-reflow";
+
+    // Now we trigger a "full" reflow (not incremental), by forcing
+    // frame reconstruction all the way from the body element. This should
+    // force us to reflow from the actual document root, even if we have
+    // promoted any frames to be dynamic reflow roots.
+    gFBody.style.display = "none";
+    gFBody.offsetTop; // flush layout
+    gFBody.style.display = "";
+    let snapFullReflow = snapshotWindow(gFWindow, false);
+    let descFullReflow = descPrefix + "-after-tweak-full-reflow";
+
+    assertSnapshots(snapIncReflow, snapPreTweak, false, null,
+                    descIncReflow, descPreTweak);
+    assertSnapshots(snapIncReflow, snapFullReflow, true, null,
+                    descIncReflow, descFullReflow);
+  }
+
+  // Test functions (called from "main"), with a subtest array in most cases:
+  // ------------------------------------------------------------------------
+
+  // Subtests for intrinsic size keywords (and equivalent, e.g. percentages) as
+  // values for width/height/{min,max}-{width,height} on reflow root candidates:
+  let intrinsicSizeSubtests = [
+    { desc: "width-auto",
+      candStyle: "width:auto",
+    },
+    { desc: "width-pct",
+      candStyle: "width:80%",
+    },
+    { desc: "width-calc-pct",
+      candStyle: "width:calc(10px + 80%)",
+    },
+    { desc: "width-min-content",
+      candStyle: "width:-moz-min-content; width:min-content;",
+    },
+    { desc: "width-max-content",
+      candStyle: "width:-moz-max-content; width:max-content;",
+    },
+    { desc: "min-width-min-content",
+      candStyle: "min-width:-moz-min-content; min-width:min-content;",
+    },
+    { desc: "min-width-max-content",
+      candStyle: "min-width:-moz-max-content; min-width:max-content;",
+    },
+    { desc: "max-width-min-content",
+      // Note: hardcoded 'width' here must be larger than what 'inner'
+      // gets resized to, so that max-width gets a chance to clamp.
+      candStyle: "width: 50px; \
+                  max-width:-moz-min-content; max-width:min-content;",
+    },
+    { desc: "max-width-max-content",
+      candStyle: "width: 50px; \
+                  max-width:-moz-max-content; max-width:max-content;",
+    },
+    { desc: "height-auto",
+      candStyle: "height:auto",
+    },
+    { desc: "height-pct",
+      candStyle: "height:80%",
+    },
+    { desc: "height-calc-pct",
+      candStyle: "height:calc(10px + 80%)",
+    },
+    { desc: "height-min-content",
+      candStyle: "height:-moz-min-content; height:min-content;",
+    },
+    { desc: "height-max-content",
+      candStyle: "height:-moz-max-content; height:max-content;",
+    },
+    { desc: "min-height-min-content",
+      candStyle: "min-height:-moz-min-content; min-height:min-content;",
+    },
+    { desc: "min-height-max-content",
+      candStyle: "min-height:-moz-max-content; min-height:max-content;",
+    },
+    { desc: "max-height-min-content",
+      // Note: hardcoded 'height' here must be larger than what 'inner'
+      // gets resized to, so that max-height gets a chance to clamp.
+      candStyle: "height: 50px; \
+                  max-height:-moz-min-content; max-height:min-content;",
+    },
+    { desc: "max-height-max-content",
+      candStyle: "height: 50px; \
+                  max-height:-moz-max-content; max-height:max-content;",
+    },
+  ];
+
+  // Intrinsic heights (e.g. 'height:auto') should prevent
+  // an element from being a reflow root.
+  function runIntrinsicSizeSubtest(subtest) {
+    // Run each testcase in horizontal & vertical writing mode:
+    for (let wmVal of ["horizontal-tb", "vertical-lr"]) {
+      gFBody.style.writingMode = wmVal;
+
+      // Short version of WM, for use in logging for snapshot comparison below:
+      let wmDesc = (wmVal == "horizontal-tb" ? "-horizWM" : "-vertWM");
+
+      // This outer div is intrinsically sized, and it needs to be reflowed
+      // when the size of its child (the reflow root candidate) changes.
+      let outer = createStyledDiv("border: 2px solid teal; \
+                                   inline-size: -moz-max-content; \
+                                   inline-size: max-content");
+      // The reflow root candidate:
+      let cand = createStyledDiv(gReflowRootCandidateStyles +
+                                 subtest.candStyle);
+
+      // Something whose size we can adjust, inside the reflow root candidate:
+      let inner = createStyledDiv("height:20px; width:20px; \
+                                   border: 1px solid purple");
+
+      cand.appendChild(inner);
+      outer.appendChild(cand);
+      gFBody.appendChild(outer);
+
+      let tweakFunc = function() {
+        inner.style.width = inner.style.height = "40px";
+      };
+
+      tweakAndCompareSnapshots(tweakFunc, subtest.desc + wmDesc);
+
+      // clean up
+      outer.remove();
+      gFBody.style.writingMode = "";
+    }
+  }
+
+  let flexItemSubtests = [
+    { desc: "flex-basis-content",
+      candStyle: "flex-basis:content;",
+    },
+    { desc: "flex-basis-min-content",
+      candStyle: "flex-basis:-moz-min-content;flex-basis:min-content;",
+    },
+    { desc: "flex-basis-auto-width-auto",
+      candStyle: "flex-basis:auto;width:auto;",
+    },
+    // For percent flex-basis, we're concerned with cases where the percent
+    // triggers content-based sizing during the flex container's intrinsic
+    // sizing step.  So we need to get the container to be intrinsically sized;
+    // hence the use of the (optional) "isContainerIntrinsicallySized" flag.
+// FIXME(bug 1548078): the following two tests fail to produce a rendering difference:
+//    { desc: "flex-basis-pct",
+//      candStyle: "flex-basis:80%;",
+//      isContainerIntrinsicallySized: true,
+//    },
+//    { desc: "flex-basis-calc-pct",
+//      candStyle: "flex-basis:calc(10px + 80%);",
+//      isContainerIntrinsicallySized: true,
+//    },
+    { desc: "flex-basis-from-pct-isize",
+      candStyle: "inline-size:80%",
+      isContainerIntrinsicallySized: true,
+    },
+    { desc: "flex-basis-from-calc-pct-isize",
+      candStyle: "inline-size:calc(10px + 80%);",
+      isContainerIntrinsicallySized: true,
+    },
+    // Testing the magic "min-main-size:auto" keyword
+    // and other intrinsic min/max sizes
+    { desc: "flex-min-inline-size-auto",
+      candStyle: "flex:0 5px; inline-size:auto; min-inline-size:auto",
+    },
+    { desc: "flex-min-inline-size-min-content",
+      candStyle: "flex:0 5px; inline-size:auto; min-inline-size:min-content",
+    },
+    { desc: "flex-min-block-size-auto",
+      candStyle: "flex:0 5px; block-size:auto; min-block-size:auto",
+      isContainerColumnOriented: true,
+    },
+    { desc: "flex-min-block-size-auto",
+      candStyle: "flex:0 5px; block-size:auto; min-block-size:min-content",
+      isContainerColumnOriented: true,
+    },
+  ];
+
+  // Content-dependent flex-basis values should prevent a flex item
+  // from being a reflow root.
+  function runFlexItemSubtest(subtest) {
+    // We create a flex container with two flex items:
+    //  - a simple flex item that just absorbs all extra space
+    //  - the reflow root candidate
+    let containerSizeVal = subtest.isContainerIntrinsicallySized ?
+      "max-content" : "100px";
+    let containerSizeDecl =
+      "inline-size: " + containerSizeVal + "; " +
+      "block-size: " + containerSizeVal + ";";
+    let containerFlexDirectionDecl = "flex-direction: " +
+      (subtest.isContainerColumnOriented ? "column" : "row") + ";"
+
+    let flexContainer = createStyledDiv("display: flex; \
+                                         border: 2px solid teal; " +
+                                         containerSizeDecl +
+                                         containerFlexDirectionDecl);
+
+    let simpleItem = createStyledDiv("border: 1px solid gray; \
+                                      background: yellow; \
+                                      min-inline-size: 10px; \
+                                      flex: 1");
+
+    // The reflow root candidate
+    // (Note that we use min-width:0/min-height:0 by default, but subtests
+    // might override that with other values in 'candStyle'.)
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               " min-width: 0; min-height: 0; " +
+                               subtest.candStyle);
+
+    // Something whose size we can adjust, inside the reflow root candidate:
+    let inner = createStyledDiv("height:20px; width:20px");
+
+    cand.appendChild(inner);
+    flexContainer.appendChild(simpleItem);
+    flexContainer.appendChild(cand);
+    gFBody.appendChild(flexContainer);
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    flexContainer.remove(); // clean up
+  }
+
+  let gridItemSubtests = [
+    { desc: "grid-pct-inline-isize",
+      candStyle: "inline-size:80%",
+      isContainerIntrinsicallySized: true,
+    },
+    { desc: "grid-calc-pct-inline-isize",
+      candStyle: "inline-size:calc(10px + 80%);",
+      isContainerIntrinsicallySized: true,
+    },
+    { desc: "grid-min-inline-size-min-content",
+      candStyle: "min-inline-size:min-content",
+    },
+  ];
+
+  // 'auto' and intrinsic size keywords on some properties should prevent
+  // a grid item from becoming a reflow root.
+  function runGridItemSubtest(subtest) {
+    // We create a 4x4 grid container with two grid items:
+    //  - a simple grid item that just absorbs all extra space
+    //  - the reflow root candidate
+    let containerSizeVal = subtest.isContainerIntrinsicallySized ?
+      "max-content" : "100px";
+    let containerSizeDecl =
+      "inline-size: " + containerSizeVal + "; " +
+      "block-size: " + containerSizeVal + ";";
+    let containerGridDirectionDecl = "grid-auto-flow: " +
+      (subtest.isContainerColumnOriented ? "column" : "row") + ";"
+    let gridContainer = createStyledDiv("display: grid; \
+                                         grid: 1fr auto / 1fr auto; \
+                                         border: 2px solid teal; " +
+                                         containerSizeDecl +
+                                         containerGridDirectionDecl);
+
+    let simpleItem = createStyledDiv("border: 1px solid gray; \
+                                      background: yellow;");
+
+    // The reflow root candidate
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "background: blue; " +
+                               "grid-area:2/2; " +
+                               "min-width: 10px; min-height: 10px; " +
+                               subtest.candStyle);
+    // Something whose size we can adjust, inside the reflow root candidate:
+    let inner = createStyledDiv("height:20px; width:20px;");
+
+    cand.appendChild(inner);
+    gridContainer.appendChild(simpleItem);
+    gridContainer.appendChild(cand);
+    gFBody.appendChild(gridContainer);
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    gridContainer.remove(); // clean up
+  }
+
+  let gridContainerSubtests = [
+    { desc: "grid-column-start",
+      candStyle: "grid-column-start:2",
+    },
+    { desc: "grid-column-end",
+      candStyle: "grid-column-end:3",
+    },
+    { desc: "grid-row-start",
+      candStyle: "grid-row-start:2",
+    },
+    { desc: "grid-row-end",
+      candStyle: "grid-row-end:3",
+    },
+  ];
+
+  // Test that changes to grid item properties that affect grid container
+  // layout causes a grid container reflow when the item is a reflow root.
+  function runGridContainerSubtest(subtest) {
+    // We create a 4x4 grid container with one grid item:
+    //  - a reflow root grid item that we'll tweak from
+    //    the list above. By default it's placed at 1,1
+    //    but after the tweak it should be placed elsewhere
+    let gridContainer = createStyledDiv("display: grid; \
+                                         width: 100px; \
+                                         height: 100px; \
+                                         grid: 1fr 10px / 1fr 10px; \
+                                         border: 2px solid teal");
+    // The reflow root candidate
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "background: blue; " +
+                               " min-width: 10px; min-height: 10px; ");
+
+    gridContainer.appendChild(cand);
+    gFBody.appendChild(gridContainer);
+
+    let tweakFunc = function() {
+      cand.style.cssText += "; " + subtest.candStyle;
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    gridContainer.remove(); // clean up
+  }
+
+  let gridSubgridSubtests = [
+    { desc: "subgrid",
+      candStyle: "grid: subgrid / subgrid",
+    },
+    { desc: "subgrid-rows",
+      candStyle: "grid: subgrid / 20px",
+    },
+    { desc: "subgrid-columns",
+      candStyle: "grid: 20px / subgrid",
+    },
+  ];
+
+  // Test that a subgrid is not a reflow root.
+  function runGridSubgridSubtest(subtest) {
+    // We create a 4x4 grid container a with one grid item:
+    //  - a reflow root display:grid that we'll style as a subgrid from
+    //    the list above. We place an item inside it that we'll tweak
+    //    the size of, which should affect the outer grid track sizes.
+    let gridContainer = createStyledDiv("display: grid; \
+                                         width: 100px; \
+                                         height: 100px; \
+                                         grid: 1fr auto / 1fr auto; \
+                                         border: 2px solid teal");
+    // The reflow root candidate
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "display: grid;" +
+                               "grid-area: 2/2;" +
+                               "background: blue;" +
+                               "min-width: 10px; min-height: 10px;" +
+                               subtest.candStyle);
+
+    // Something whose size we can adjust, inside the subgrid:
+    let inner = createStyledDiv("height:20px; width:20px;");
+
+    cand.appendChild(inner);
+    gridContainer.appendChild(cand);
+    gFBody.appendChild(gridContainer);
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    gridContainer.remove(); // clean up
+  }
+
+  let tableSubtests = [
+    { desc: "table",
+      /* Testing the default "display:table" styling that runTableTest uses: */
+      candStyle: "",
+    },
+    { desc: "inline-table",
+      candStyle: "display:inline-table;",
+    },
+    { desc: "table-caption",
+      candStyle: "display:table-caption;",
+    },
+    { desc: "table-cell",
+      candStyle: "display:table-cell;",
+    },
+    { desc: "table-column",
+      candStyle: "display:table-column;",
+      isColumn: true,
+    },
+    { desc: "table-column-group",
+      candStyle: "display:table-column-group;",
+      isColumn: true,
+    },
+    { desc: "table-row",
+      candStyle: "display:table-row;",
+    },
+    { desc: "table-row-group",
+      candStyle: "display:table-row-group;",
+    },
+  ];
+
+  function runTableSubtest(subtest) {
+    let outer = createStyledDiv("");
+    let shrinkWrapIB = createStyledDiv("display: inline-block; \
+                                        border: 2px solid teal");
+    let cand = createStyledDiv("display: table; \
+                                width: 1px; height: 1px; \
+                                will-change: transform; \
+                                border: 1px solid purple;" +
+                                subtest.candStyle);
+    let inner = createStyledDiv("display: block; \
+                                 width: 10px; height: 10px; \
+                                 background: pink;");
+    if (subtest.isColumn) {
+      // The candidate is a table-column / table-column-group, so
+      // the inner content that we tweak shouldn't be inside of it.
+      // Create an explicit table, separately, and put the candidate
+      // (the column/column-group) and the tweakable inner element
+      // both inside of that explicit table.
+      let table = createStyledDiv("display: table");
+      table.appendChild(inner);
+      table.appendChild(cand);
+      shrinkWrapIB.appendChild(table);
+    } else {
+      // The candidate is a table or some other table part
+      // that can hold content. Just put the tweakable inner
+      // element directly inside of it, and let anonymous table parts
+      // be generated as-needed.
+      cand.appendChild(inner);
+      shrinkWrapIB.appendChild(cand);
+    }
+
+    outer.appendChild(gFDoc.createTextNode("a"));
+    outer.appendChild(shrinkWrapIB);
+    gFBody.appendChild(outer);
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    outer.remove(); // clean up
+  }
+
+  let inlineSubtests = [
+    { desc: "inline",
+      candStyle: "display:inline",
+    },
+  ];
+  function runInlineSubtest(subtest) {
+    let outer = createStyledDiv("");
+    let shrinkWrapIB = createStyledDiv("display: inline-block; \
+                                        border: 2px solid teal");
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               subtest.candStyle);
+    let inner = createStyledDiv("display: inline-block; \
+                                 width: 20px; height: 20px; \
+                                 background: pink;");
+
+    cand.appendChild(inner);
+    shrinkWrapIB.appendChild(cand);
+    outer.appendChild(gFDoc.createTextNode("a"));
+    outer.appendChild(shrinkWrapIB);
+    gFBody.appendChild(outer);
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    outer.remove(); // clean up
+  }
+
+  let rubySubtests = [
+    { desc: "ruby",
+      candStyle: "display:ruby",
+    },
+    { desc: "ruby-base",
+      candStyle: "display:ruby-base",
+    },
+    { desc: "ruby-base-container",
+      candStyle: "display:ruby-base-container",
+    },
+    { desc: "ruby-text",
+      candStyle: "display:ruby-text",
+    },
+    { desc: "ruby-text-container",
+      candStyle: "display:ruby-text-container",
+    },
+  ];
+
+  function runRubySubtest(subtest) {
+    let outer = createStyledDiv("");
+    let shrinkWrapIB = createStyledDiv("display: inline-block; \
+                                        border: 2px solid teal");
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               subtest.candStyle);
+    let inner = createStyledDiv("display: inline-block; \
+                                 width: 20px; height: 20px; \
+                                 background: pink;");
+
+    cand.appendChild(inner);
+    shrinkWrapIB.appendChild(cand);
+    outer.appendChild(gFDoc.createTextNode("a"));
+    outer.appendChild(shrinkWrapIB);
+    gFBody.appendChild(outer);
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    outer.remove(); // clean up
+  }
+
+  function runMozBoxTest() {
+    // We create a -moz-box, with a child that looks like a good candidate
+    // for being a reflow root, except that really its size depends on its
+    // child's size (due to the min-sizing behavior of children of -moz-box).
+    // We exercise this size dependency (& reveal the issue, if the candidate is
+    // mistakenly flagged as a reflow root) by growing the size of the
+    // content and seeing how the rendering changes.
+    let mozBox = createStyledDiv("display: -moz-box; \
+                                  width: 10px; \
+                                  border: 2px solid teal");
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               " border: 2px solid black;");
+    let inner = createStyledDiv("height: 20px; width: 20px; \
+                                 background: pink;");
+
+    cand.appendChild(inner);
+    mozBox.appendChild(cand);
+    gFBody.appendChild(mozBox);
+
+    // Note: This "is()" check is just validating that we're testing what we
+    // intend to be testing. Eventually, we'll remove support for -moz-box
+    // (as part of XUL), at which point this "is" check will start failing
+    // and we'll probably want to remove this test function, along with the
+    // IsXULBoxFrame() check that this test function is targeting in
+    // ReflowInput::InitDynamicReflowRoot.
+    is(gFWindow.getComputedStyle(mozBox).display, "-moz-box",
+       "'display:-moz-box' should be honored and show up in computed style");
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, "child-of-moz-box");
+
+    mozBox.remove(); // clean up
+  }
+
+  function runFixedPosTest() {
+    // We reset the 'will-change' value on the candidate (overriding
+    // 'will-change:transform'), so that it won't be a fixed-pos CB. We also
+    // give the candidate some margins to shift it away from the origin, to
+    // make it visually clearer that its child's fixed-pos offsets are being
+    // resolved against the viewport rather than against the candidate div.
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "will-change: initial; \
+                                margin: 20px 0 0 30px; \
+                                border: 2px solid black;");
+
+    let inner = createStyledDiv("height: 20px; width: 20px; \
+                                 background: pink;");
+    let fixedPos = createStyledDiv("position: fixed; \
+                                    width: 10px; height: 10px; \
+                                    background: gray;");
+
+    cand.appendChild(inner);
+    cand.appendChild(fixedPos);
+    gFBody.appendChild(cand);
+
+    // For our tweak, we'll adjust the size of "inner". This change impacts
+    // the position of the "fixedPos" placeholder (specifically, its static
+    // position), so this will require an incremental reflow that is rooted at
+    // the viewport (the containing block of "fixedPos") in order to produce
+    // the correct final layout. This is why "cand" isn't allowed to be a
+    // reflow root.
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, "fixed-pos");
+
+    cand.remove(); // clean up
+  }
+
+  function runMarginCollapseTest() {
+    let outer = createStyledDiv("background: lime");
+
+    // We use 'display:block' on the candidate (overriding 'display:flow-root')
+    // so that it won't be a block formatting context. (See usage/definition of
+    // NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS in our c++ layout code.)
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "display: block; \
+                                background: purple;");
+    // We'll add border to this div in the "tweak" function, which will break
+    // the stack of margin collapsed divs.
+    let divWithEventualBorder = createStyledDiv("");
+    let divWithMargin = createStyledDiv("margin-top: 30px; \
+                                         width: 10px; height: 10px; \
+                                         background: pink;");
+
+    divWithEventualBorder.appendChild(divWithMargin);
+    cand.appendChild(divWithEventualBorder);
+    outer.appendChild(cand);
+    gFBody.appendChild(outer);
+
+    // For our tweak, we'll add a border around "divWithEventualBorder", which
+    // prevents the margin (on "divWithMargin") from collapsing all the way up
+    // to the outermost div wrapper (which it does, before the tweak).
+    // So: this tweak effectively moves the y-position towards 0, for all
+    // div wrappers outside the new border. This includes "outer", the parent
+    // of our reflow root candidate. So: if we mistakenly allow "cand" to be a
+    // reflow root, then we probably would neglect to adjust the position of
+    // "outer" when reacting to this tweak (and we'd catch that & report a
+    // test failure in our screenshot comparisons below).
+    let tweakFunc = function() {
+      divWithEventualBorder.style.border = "2px solid black";
+    };
+    tweakAndCompareSnapshots(tweakFunc, "margin-uncollapse");
+
+    outer.remove(); // clean up
+  }
+
+  function runFloatTest() {
+    let outer = createStyledDiv("");
+
+    // We use 'display:block' on the candidate (overriding 'display:flow-root')
+    // so that it won't be a block formatting context. (See usage/definition of
+    // NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS in our c++ layout code.)
+    // This allows floats inside the candidate to affect the position of
+    // inline-level content outside of it.
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "display: block; \
+                                border: 2px solid black;");
+    let floatChild = createStyledDiv("float: left; \
+                                     width: 60px; height: 60px; \
+                                     background: pink;");
+    let inlineBlock = createStyledDiv("display: inline-block; \
+                                       width: 80px; height: 80px; \
+                                       background: teal");
+    cand.appendChild(floatChild);
+    outer.appendChild(cand);
+    outer.appendChild(inlineBlock);
+    gFBody.appendChild(outer);
+
+    let tweakFunc = function() {
+      floatChild.style.width = floatChild.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, "float");
+
+    outer.remove(); // clean up
+  }
+
+  function main() {
+    SimpleTest.waitForExplicitFinish();
+
+    // Initialize our convenience aliases:
+    gFWindow = frames[0].window;
+    gFDoc = frames[0].document;
+    gFBody = frames[0].document.body;
+
+    for (let subtest of intrinsicSizeSubtests) {
+      runIntrinsicSizeSubtest(subtest);
+    }
+    for (let subtest of flexItemSubtests) {
+      runFlexItemSubtest(subtest);
+    }
+    for (let subtest of gridContainerSubtests) {
+      runGridContainerSubtest(subtest);
+    }
+    if (SpecialPowers.getBoolPref("layout.css.grid-template-subgrid-value.enabled")) {
+      for (let subtest of gridSubgridSubtests) {
+        runGridSubgridSubtest(subtest);
+      }
+    }
+    for (let subtest of gridItemSubtests) {
+      runGridItemSubtest(subtest);
+    }
+    for (let subtest of tableSubtests) {
+      runTableSubtest(subtest);
+    }
+    for (let subtest of inlineSubtests) {
+      runInlineSubtest(subtest);
+    }
+    for (let subtest of rubySubtests) {
+      runRubySubtest(subtest);
+    }
+    runFixedPosTest();
+    runMarginCollapseTest();
+    runFloatTest();
+
+    // Turn on 'display:-moz-box' support, so that we can validate that
+    // children of XUL boxes are excluded from being tagged as dynamic
+    // reflow roots. We run this test last (and then call finish), since
+    // pref-setting is async and this lets the rest of this mochitest
+    // (everything up to this point) be straightforward & synchronous.
+    SpecialPowers.pushPrefEnv(
+      { set: [["layout.css.xul-box-display-values.content.enabled", true]]},
+      function() {
+        runMozBoxTest();
+        SimpleTest.finish();
+      }
+    );
+  }
+</script>
+</body>
+</html>

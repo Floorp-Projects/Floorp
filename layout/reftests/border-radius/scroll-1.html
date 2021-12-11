@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+function scrollTo(v) {
+  var d = document.getElementById("d");
+  d.scrollTop = v;
+  if (v < 100) {
+    setTimeout(function() { scrollTo(v + 50); }, 400);
+  } else {
+    document.documentElement.removeAttribute("class");
+  }
+}
+</script>
+</head>
+<body onload="scrollTo(0)">
+<div style="border-radius:100px; width:300px; height:300px; overflow:hidden;" id="d">
+  <div style="height:1000px;">
+    <div style="margin-top:100px; height:20px; background:blue;"></div>
+  </div>
+</div>
+</body>
+</html>

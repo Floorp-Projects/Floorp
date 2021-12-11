@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=379741
+-->
+<head>
+  <title>Test for Bug 379741</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=379741">Mozilla Bug 379741</a>
+<div id="content" style="display: none">
+<div id="noframe"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 379741 **/
+
+var cs = getComputedStyle(document.getElementById("noframe"), "");
+ok(cs.marginTop == "0" || cs.marginTop == "0px",
+   "computed margin-top is not none");
+ok(cs.marginRight == "0" || cs.marginRight == "0px",
+   "computed margin-right is not none");
+ok(cs.marginBottom == "0" || cs.marginBottom == "0px",
+   "computed margin-bottom is not none");
+ok(cs.marginLeft == "0" || cs.marginLeft == "0px",
+   "computed margin-left is not none");
+ok(cs.paddingTop == "0" || cs.paddingTop == "0px",
+   "computed padding-top is not none");
+ok(cs.paddingRight == "0" || cs.paddingRight == "0px",
+   "computed padding-right is not none");
+ok(cs.paddingBottom == "0" || cs.paddingBottom == "0px",
+   "computed padding-bottom is not none");
+ok(cs.paddingLeft == "0" || cs.paddingLeft == "0px",
+   "computed padding-left is not none");
+
+</script>
+</pre>
+</body>
+</html>
+

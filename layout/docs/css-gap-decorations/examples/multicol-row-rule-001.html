@@ -1,0 +1,72 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of column and row rules in a multi-column container</title>
+<style>
+html,body {
+  color:black; background-color:white; font:10px/1 monospace;
+}
+
+.columns {
+  column-width: 6ch;
+  gap: 16px 10px;
+
+  column-rule: 4px solid blue;
+  row-rule: 4px solid purple;
+  row-rule-align: rule;
+
+  inline-size: 30ch;
+  background: lightgrey;
+}
+.test1 { row-rule-extent: short; }
+.test2 { row-rule-extent: long; }
+.test3 { row-rule-extent: start; }
+.test4 { row-rule-extent: end; }
+.test5 { row-rule-extent: all-short; }
+.test6 { row-rule-extent: all-start; }
+.test7 { row-rule-extent: all-end; }
+.test8 { block-size: calc(32px + 3em); row-rule-extent: all-long; }
+.test9 { block-size: calc(32px + 3em); row-rule-extent: long; }
+
+x,a {
+  display: block;
+  background: grey;
+}
+a { column-span: all; }
+
+wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 2.5em;
+}
+wrapper::after {
+  position: absolute;
+  bottom: -1.5em;
+  font-size: 10px;
+  vertical-align: top;
+  content: attr(test);
+  white-space: pre;
+}
+</style>
+<wrapper><div class="columns test1"><x>1</x><x>2</x><x>3</x><a>column-span: all</a><x>4</x><x>5</x></div></wrapper>
+<wrapper><div class="columns test2"><x>1</x><x>2</x><x>3</x><a>column-span: all</a><x>4</x><x>5</x></div></wrapper><br>
+<wrapper><div class="columns test3"><x>1</x><x>2</x><x>3</x><a>column-span: all</a><x>4</x><x>5</x></div></wrapper>
+<wrapper><div class="columns test4"><x>1</x><x>2</x><x>3</x><a>column-span: all</a><x>4</x><x>5</x></div></wrapper><br>
+<wrapper><div class="columns test5"><x>1</x><x>2</x><x>3</x><a>column-span: all</a><x>4</x><x>5</x></div></wrapper>
+<wrapper><div class="columns test6"><x>1</x><x>2</x><x>3</x><a>column-span: all</a><x>4</x><x>5</x></div></wrapper><br>
+<wrapper><div class="columns test7"><x>1</x><x>2</x><x>3</x><a>column-span: all</a><x>4</x><x>5</x></div></wrapper>
+<wrapper><div class="columns test8"><x>1</x><x>2</x><a>column-span: all</a><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div></wrapper><br>
+<wrapper><div class="columns test9"><x>1</x><x>2</x><a>column-span: all</a><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div></wrapper><br>
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('.columns')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    elm.parentNode.setAttribute("test", 
+      "row-rule-extent: " + cs.rowRuleExtent
+    );
+  });
+}
+</script>

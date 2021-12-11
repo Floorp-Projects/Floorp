@@ -1,0 +1,451 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video width="320" height="240" id="video" controls mozNoDynamicControls preload="auto"></video>
+</div>
+
+<div id="host"></div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/*
+ * Positions of the  UI elements, relative to the upper-left corner of the
+ * <video> box.
+ */
+const videoWidth = 320;
+const videoHeight = 240;
+const videoDuration = 3.8329999446868896;
+
+const controlBarMargin = 9;
+
+const playButtonWidth = 30;
+const playButtonHeight = 40;
+const muteButtonWidth = 30;
+const muteButtonHeight = 40;
+const positionAndDurationWidth = 75;
+const fullscreenButtonWidth = 30;
+const fullscreenButtonHeight = 40;
+const volumeSliderWidth = 48;
+const volumeSliderMarginStart = 4;
+const volumeSliderMarginEnd = 6;
+const scrubberMargin = 9;
+const scrubberWidth = videoWidth - controlBarMargin - playButtonWidth - scrubberMargin * 2 - positionAndDurationWidth - muteButtonWidth - volumeSliderMarginStart - volumeSliderWidth - volumeSliderMarginEnd - fullscreenButtonWidth - controlBarMargin;
+const scrubberHeight = 40;
+
+// Play button is on the bottom-left
+const playButtonCenterX = 0 + Math.round(playButtonWidth / 2);
+const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
+// Mute button is on the bottom-right before the full screen button and volume slider
+const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2) - volumeSliderWidth - fullscreenButtonWidth - controlBarMargin;
+const muteButtonCenterY = videoHeight - Math.round(muteButtonHeight / 2);
+// Fullscreen button is on the bottom-right at the far end
+const fullscreenButtonCenterX = videoWidth - Math.round(fullscreenButtonWidth / 2) - controlBarMargin;
+const fullscreenButtonCenterY = videoHeight - Math.round(fullscreenButtonHeight / 2);
+// Scrubber bar is between the play and mute buttons. We don't need it's
+// X center, just the offset of its box.
+const scrubberOffsetX = controlBarMargin + playButtonWidth + scrubberMargin;
+const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
+
+const video = document.getElementById("video");
+
+let expectingEvents;
+let expectingEventPromise;
+
+async function isMuteButtonMuted() {
+  const muteButton = getElementWithinVideo(video, "muteButton");
+  await new Promise(SimpleTest.executeSoon);
+  return muteButton.getAttribute("muted") === "true";
+}
+
+async function isVolumeSliderShowingCorrectVolume(expectedVolume) {
+  const volumeControl = getElementWithinVideo(video, "volumeControl");
+  await new Promise(SimpleTest.executeSoon);
+  is(+volumeControl.value, expectedVolume * 100, "volume slider should match expected volume");
+}
+
+function forceReframe() {
+  // Setting display then getting the bounding rect to force a frame
+  // reconstruction on the video element.
+  video.style.display = "block";
+  video.getBoundingClientRect();
+  video.style.display = "";
+  video.getBoundingClientRect();
+}
+
+function verifyExpectedEvent(event) {
+  const checkingEvent = expectingEvents.shift();
+
+  if (event.type == checkingEvent) {
+    ok(true, "checking event type: " + checkingEvent);
+  } else {
+    expectingEventPromise.reject(new Error(`Got event: ${event.type}, expected: ${checkingEvent}`));
+  }
+
+  if (!expectingEvents.length) {
+    SimpleTest.executeSoon(expectingEventPromise.resolve);
+  }
+}
+
+async function waitForEvent(...eventTypes) {
+  expectingEvents = eventTypes;
+
+  await new Promise((resolve, reject) => expectingEventPromise = {resolve, reject}).catch(e => {
+    // Throw error here to get the caller in error stack.
+    ok(false, e);
+  });
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+      "set": [
+        ["media.cache_size", 40000],
+        ["full-screen-api.enabled", true],
+        ["full-screen-api.allow-trusted-requests-only", false],
+        ["full-screen-api.transition-duration.enter", "0 0"],
+        ["full-screen-api.transition-duration.leave", "0 0"],
+      ]});
+  await new Promise(resolve => {
+    video.addEventListener("canplaythrough", resolve, {once: true});
+    video.src = "seek_with_sound.ogg";
+  });
+
+  video.addEventListener("play", verifyExpectedEvent);
+  video.addEventListener("pause", verifyExpectedEvent);
+  video.addEventListener("volumechange", verifyExpectedEvent);
+  video.addEventListener("seeking", verifyExpectedEvent);
+  video.addEventListener("seeked", verifyExpectedEvent);
+  document.addEventListener("mozfullscreenchange", verifyExpectedEvent);
+
+  ["mousedown", "mouseup", "dblclick", "click"]
+    .forEach((eventType) => {
+      window.addEventListener(eventType, (evt) => {
+        // Prevent default action of leaked events and make the tests fail.
+        evt.preventDefault();
+        ok(false, "Event " + eventType + " in videocontrol should not leak to content;" +
+          "the event was dispatched from the " + evt.target.tagName.toLowerCase() + " element.");
+      });
+    });
+
+  // Check initial state upon load
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+add_task(async function click_playbutton() {
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
+  await waitForEvent("play");
+  is(video.paused, false, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+add_task(async function click_pausebutton() {
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
+  await waitForEvent("pause");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+add_task(async function mute_volume() {
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, true, "checking video mute state");
+});
+
+add_task(async function unmute_volume() {
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+/*
+ * Bug 470596: Make sure that having CSS border or padding doesn't
+ * break the controls (though it should move them)
+ */
+add_task(async function styled_video() {
+  video.style.border = "medium solid purple";
+  video.style.borderWidth = "30px 40px 50px 60px";
+  video.style.padding = "10px 20px 30px 40px";
+  // totals: top: 40px, right: 60px, bottom: 80px, left: 100px
+
+  // Click the play button
+  synthesizeMouse(video, 100 + playButtonCenterX, 40 + playButtonCenterY, { });
+  await waitForEvent("play");
+  is(video.paused, false, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+
+  // Pause the video
+  video.pause();
+  await waitForEvent("pause");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+
+  // Click the mute button
+  synthesizeMouse(video, 100 + muteButtonCenterX, 40 + muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, true, "checking video mute state");
+
+  // Clear the style set
+  video.style.border = "";
+  video.style.borderWidth = "";
+  video.style.padding = "";
+
+  // Unmute the video
+  video.muted = false;
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+/*
+ * Previous tests have moved playback postion, reset it to 0.
+ */
+add_task(async function reset_currentTime() {
+  ok(true, "video position is at " + video.currentTime);
+  video.currentTime = 0.0;
+  await waitForEvent("seeking", "seeked");
+  // Bug 477434 -- sometimes we get 0.098999 here instead of 0!
+  // is(video.currentTime, 0.0, "checking playback position");
+  ok(true, "video position is at " + video.currentTime);
+});
+
+/*
+ * Drag the slider's thumb to the halfway point with the mouse.
+ */
+add_task(async function drag_slider() {
+  const beginDragX = scrubberOffsetX;
+  const endDragX = scrubberOffsetX + (scrubberWidth / 2);
+  const expectedTime = videoDuration / 2;
+
+  function mousemoved(evt) {
+    ok(false, "Mousemove event should not be handled by content while dragging; " +
+      "the event was dispatched from the " + evt.target.tagName.toLowerCase() + " element.");
+  }
+
+  window.addEventListener("mousemove", mousemoved);
+
+  synthesizeMouse(video, beginDragX, scrubberCenterY, {type: "mousedown", button: 0});
+  synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mousemove", button: 0});
+  synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mouseup",   button: 0});
+  await waitForEvent("seeking", "seeked");
+  ok(true, "video position is at " + video.currentTime);
+  // The width of srubber is not equal in every platform as we use system default font
+  // in duration and position box. We can not precisely drag to expected position, so
+  // we just make sure the difference is within 10% of video duration.
+  ok(Math.abs(video.currentTime - expectedTime) < videoDuration / 10, "checking expected playback position");
+
+  window.removeEventListener("mousemove", mousemoved);
+});
+
+/*
+ * Click the slider at the 1/4 point with the mouse (jump backwards)
+ */
+add_task(async function click_slider() {
+  synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, {});
+  await waitForEvent("seeking", "seeked");
+  ok(true, "video position is at " + video.currentTime);
+  // The scrubber currently just jumps towards the nearest pageIncrement point, not
+  // precisely to the point clicked. So, expectedTime isn't (videoDuration / 4).
+  // We should end up at 1.733, but sometimes we end up at 1.498. I guess
+  // it's timing depending if the <scale> things it's click-and-hold, or a
+  // single click. So, just make sure we end up less that the previous
+  // position.
+  const lastPosition = (videoDuration / 2) - 0.1;
+  ok(video.currentTime < lastPosition, "checking expected playback position");
+
+  // Set volume to 0.1 so one down arrow hit will decrease it to 0.
+  video.volume = 0.1;
+  await waitForEvent("volumechange");
+  is(video.volume, 0.1, "Volume should be set.");
+  ok(!video.muted, "Video is not muted.");
+});
+
+// See bug 694696.
+add_task(async function change_volume() {
+  video.focus();
+
+  synthesizeKey("KEY_ArrowDown");
+  await waitForEvent("volumechange");
+  is(video.volume, 0, "Volume should be 0.");
+  ok(!video.muted, "Video is not muted.");
+  ok(await isMuteButtonMuted(), "Mute button says it's muted");
+
+  synthesizeKey("KEY_ArrowUp");
+  await waitForEvent("volumechange");
+  is(video.volume, 0.1, "Volume is increased.");
+  ok(!video.muted, "Video is not muted.");
+  ok(!(await isMuteButtonMuted()), "Mute button says it's not muted");
+
+  synthesizeKey("KEY_ArrowDown");
+  await waitForEvent("volumechange");
+  is(video.volume, 0, "Volume should be 0.");
+  ok(!video.muted, "Video is not muted.");
+  ok(await isMuteButtonMuted(), "Mute button says it's muted");
+
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.5, "Volume should be 0.5.");
+  ok(!video.muted, "Video is not muted.");
+
+  synthesizeKey("KEY_ArrowUp");
+  await waitForEvent("volumechange");
+  is(video.volume, 0.6, "Volume should be 0.6.");
+  ok(!video.muted, "Video is not muted.");
+
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.6, "Volume should be 0.6.");
+  ok(video.muted, "Video is muted.");
+  ok(await isMuteButtonMuted(), "Mute button says it's muted");
+
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.6, "Volume should be 0.6.");
+  ok(!video.muted, "Video is not muted.");
+  ok(!(await isMuteButtonMuted()), "Mute button says it's not muted");
+
+  synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, {});
+  await waitForEvent("mozfullscreenchange");
+  is(video.volume, 0.6, "Volume should still be 0.6");
+  await isVolumeSliderShowingCorrectVolume(video.volume);
+
+  synthesizeKey("KEY_Escape");
+  await waitForEvent("mozfullscreenchange");
+  is(video.volume, 0.6, "Volume should still be 0.6");
+  await isVolumeSliderShowingCorrectVolume(video.volume);
+  forceReframe();
+
+  video.focus();
+  synthesizeKey("KEY_ArrowDown");
+  await waitForEvent("volumechange");
+  is(video.volume, 0.5, "Volume should be decreased by 0.1");
+  await isVolumeSliderShowingCorrectVolume(video.volume);
+});
+
+add_task(async function whitespace_pause_video() {
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
+  await waitForEvent("play");
+
+  video.focus();
+  sendString(" ");
+  await waitForEvent("pause");
+
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
+  await waitForEvent("play");
+});
+
+/*
+ * Bug 1352724: Click and hold on timeline should pause video immediately.
+ */
+add_task(async function click_and_hold_slider() {
+  synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {type: "mousedown", button: 0});
+  await waitForEvent("pause", "seeking", "seeked");
+
+  synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
+  await waitForEvent("play");
+});
+
+/*
+ * Bug 1402877: Don't let click event dispatch through media controls to video element.
+ */
+add_task(async function click_event_dispatch() {
+  const clientScriptClickHandler = (e) => {
+    ok(false, "Should not receive the event");
+  };
+  video.addEventListener("click", clientScriptClickHandler);
+
+  video.pause();
+  await waitForEvent("pause");
+  video.currentTime = 0.0;
+  await waitForEvent("seeking", "seeked");
+  is(video.paused, true, "checking video play state");
+  synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
+  await waitForEvent("seeking", "seeked");
+
+  video.removeEventListener("click", clientScriptClickHandler);
+});
+
+// Bug 1367194: Always ensure video is paused before finishing the test.
+add_task(async function ensure_video_pause() {
+  if (!video.paused) {
+    video.pause();
+    await waitForEvent("pause");
+  }
+});
+
+// Bug 1452342: Make sure the cursor hides and shows on full screen mode.
+add_task(async function ensure_fullscreen_cursor() {
+  video.removeAttribute("mozNoDynamicControls");
+  video.play();
+  await waitForEvent("play");
+
+  video.mozRequestFullScreen();
+  await waitForEvent("mozfullscreenchange");
+
+  const controlsSpacer = getElementWithinVideo(video, "controlsSpacer");
+  is(controlsSpacer.hasAttribute("hideCursor"), true, "Cursor is hidden");
+
+  let delta = 1;
+  await SimpleTest.promiseWaitForCondition(() => {
+    // Wiggle the mouse a bit
+    synthesizeMouse(video, playButtonCenterX  + delta, playButtonCenterY + delta, { type: "mousemove" });
+    delta = !delta;
+    return !controlsSpacer.hasAttribute("hideCursor");
+  }, "Waiting for hideCursor attribute to disappear");
+  is(controlsSpacer.hasAttribute("hideCursor"), false, "Cursor is shown");
+
+  // Restore
+  video.setAttribute("mozNoDynamicControls", "");
+  document.mozCancelFullScreen();
+  await waitForEvent("mozfullscreenchange");
+  if (!video.paused) {
+    video.pause();
+    await waitForEvent("pause");
+  }
+});
+
+// Bug 1505547: Make sure the fullscreen button works if the video element is in shadow tree.
+add_task(async function ensure_fullscreen_button() {
+  video.removeAttribute("mozNoDynamicControls");
+  let host = document.getElementById("host");
+  let root = host.attachShadow({ mode: "open" });
+  root.appendChild(video);
+
+  video.mozRequestFullScreen();
+  await waitForEvent("mozfullscreenchange");
+
+  // Compute the location to click on to hit the fullscreen button.
+  // Use the video size instead of the screen size here, because mozfullscreenchange does not
+  // guarantee that our document covers the screen, see bug 1575630.
+  const r = video.getBoundingClientRect();
+  const buttonCenterX = r.right - fullscreenButtonWidth / 2 - controlBarMargin;
+  const buttonCenterY = r.bottom - fullscreenButtonHeight / 2;
+
+  // Wiggle the mouse a bit
+  synthesizeMouse(video, buttonCenterX, buttonCenterY, { type: "mousemove" });
+
+  synthesizeMouse(video, buttonCenterX, buttonCenterY, {});
+  await waitForEvent("mozfullscreenchange");
+
+  // Restore
+  video.setAttribute("mozNoDynamicControls", "");
+  document.getElementById("content").appendChild(video);
+});
+
+</script>
+</pre>
+</body>
+</html>

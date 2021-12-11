@@ -1,0 +1,20 @@
+﻿<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=836349
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Bug 836349</title>
+  <script type="application/javascript">
+    function crash()
+    {
+      var pc = new RTCPeerConnection();
+      var ld = pc.localDescription;
+      dump(ld.sdp);
+    }
+  </script>
+</head>
+
+<body onload="crash();">
+</html>

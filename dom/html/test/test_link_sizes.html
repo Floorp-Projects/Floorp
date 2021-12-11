@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<title>Test link.sizes attribute</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" sizes="16x16 24x24 32x32 48x48">
+</head>
+<body>
+
+<pre id="test">
+<script>
+
+  var links = document.getElementsByTagName('link');
+  for (var i = 0; i < links.length; ++i) {
+    var link = links[i];
+    ok("sizes" in link, "link.sizes exists");
+
+    if (link.rel == 'shortcut icon') {
+      is(link.sizes.value, "16x16 24x24 32x32 48x48", 'link.sizes.value correct value');
+      is(link.sizes.length, 4, 'link.sizes.length correct value');
+      ok(link.sizes.contains('32x32'), 'link.sizes.contains() works');
+      link.sizes.add('64x64');
+      is(link.sizes.length, 5, 'link.sizes.length correct value');
+      link.sizes.remove('64x64');
+      is(link.sizes.length, 4, 'link.sizes.length correct value');
+      is(link.sizes + "", "16x16 24x24 32x32 48x48", 'link.sizes stringify correct value');
+    } else {
+      is(link.sizes.value, "", 'link.sizes correct value');
+    }
+  }
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,85 @@
+# This file is rendered via JSON-e in a hook with context:
+#   {
+#     tasks_for: 'hg-push',
+#     push: {owner, pushlog_id, pushdate},
+#     repository: {url, project, level},
+#     now,
+#     ownTaskId: // taskId of the task that will be created
+#   }
+---
+version: 1
+tasks:
+  - $let:
+      # sometimes the push user is just `ffxbld` or the like, but we want an
+      # email-like field..
+      ownerEmail:
+        $if: '"@" in push.owner'
+        then: '${push.owner}'
+        else: '${push.owner}@noreply.mozilla.org'
+      # ensure there's no trailing `/` on the repo URL
+      repoUrl:
+        $if: 'repository.url[-1] == "/"'
+        then: {$eval: 'repository.url[:-1]'}
+        else: {$eval: 'repository.url'}
+      # scheduler id
+      schedulerId: 'nss-level-${repository.level}'
+    in:
+      taskId: '${ownTaskId}'
+      taskGroupId: '${ownTaskId}'
+      schedulerId: '${schedulerId}'
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 day'}
+      expires: {$fromNow: '14 days'}
+
+      metadata:
+        owner: mozilla-taskcluster-maintenance@mozilla.com
+        source: "${repository.url}"
+        name: "NSS Decision Task"
+        description: |
+            The task that creates all of the other tasks in the task graph
+
+      workerType: "linux"
+      provisionerId: "nss-${repository.level}"
+
+      scopes:
+        - 'assume:repo:${repoUrl[8:]}:branch:default'
+      tags:
+        createdForUser: "${ownerEmail}"
+
+      routes:
+        - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+        - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+
+      payload:
+        # TODO: use nssdev org , not djmitche, once the image is pushed there
+        image: djmitche/nss-decision:0.0.3
+
+        env:
+          TC_OWNER: "${ownerEmail}"
+          TC_SOURCE: "${repository.url}"
+          TC_PROJECT: ${repository.project}
+          TC_SCHEDULER_ID: "${schedulerId}"
+          MOZ_SCM_LEVEL: "${repository.level}"
+          NSS_PUSHLOG_ID: '${push.pushlog_id}'
+          NSS_HEAD_REPOSITORY: '${repository.url}'
+          NSS_HEAD_REVISION: '${push.revision}'
+
+        maxRunTime: 1800
+
+        command:
+          - bash
+          - -cx
+          - >
+            bin/checkout.sh &&
+            nss/automation/taskcluster/scripts/extend_task_graph.sh
+
+        features:
+          taskclusterProxy: true
+
+      extra:
+        treeherder:
+          symbol: D
+          build:
+            platform: nss-decision
+          machine:
+            platform: nss-decision

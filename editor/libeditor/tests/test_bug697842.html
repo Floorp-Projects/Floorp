@@ -1,0 +1,114 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=697842
+-->
+<head>
+  <title>Test for Bug 697842</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <p id="editor" contenteditable style="min-height: 1.5em;"></p>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 697842 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  var editor = document.getElementById("editor");
+  editor.focus();
+
+  SimpleTest.executeSoon(function() {
+    var composingString = "";
+
+    function handler(aEvent) {
+      switch (aEvent.type) {
+        case "compositionstart":
+          // Selected string at starting composition must be empty in this test.
+          is(aEvent.data, "", "mismatch selected string");
+          break;
+        case "compositionupdate":
+        case "compositionend":
+          is(aEvent.data, composingString, "mismatch composition string");
+          break;
+        default:
+          break;
+      }
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
+    }
+
+    editor.addEventListener("compositionstart", handler, true);
+    editor.addEventListener("compositionend", handler, true);
+    editor.addEventListener("compositionupdate", handler, true);
+
+    // input first character
+    composingString = "\u306B";
+    synthesizeCompositionChange(
+      { "composition":
+        { "string": composingString,
+          "clauses":
+          [
+            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
+        },
+        "caret": { "start": 1, "length": 0 },
+      });
+
+    // input second character
+    composingString = "\u306B\u3085";
+    synthesizeCompositionChange(
+      { "composition":
+        { "string": composingString,
+          "clauses":
+          [
+            { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
+        },
+        "caret": { "start": 2, "length": 0 },
+      });
+
+    // convert them
+    synthesizeCompositionChange(
+      { "composition":
+        { "string": composingString,
+          "clauses":
+          [
+            { "length": 2,
+              "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+          ],
+        },
+        "caret": { "start": 2, "length": 0 },
+      });
+
+    synthesizeComposition({ type: "compositioncommitasis" });
+
+    is(editor.innerHTML, composingString,
+       "editor has unexpected result");
+
+    editor.removeEventListener("compositionstart", handler, true);
+    editor.removeEventListener("compositionend", handler, true);
+    editor.removeEventListener("compositionupdate", handler, true);
+    editor.removeEventListener("text", handler, true);
+
+    SimpleTest.finish();
+  });
+}
+
+
+</script>
+</body>
+
+</html>

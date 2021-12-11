@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=558788
+-->
+<head>
+  <title>Test for Bug 558788</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input, textarea { background-color: rgb(0,0,0) !important; }
+    :-moz-any(input,textarea):valid   { background-color: rgb(0,255,0) !important; }
+    :-moz-any(input,textarea):invalid { background-color: rgb(255,0,0) !important; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=558788">Mozilla Bug 558788</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 558788 **/
+
+/**
+ * This test checks the behavior of :valid and :invalid pseudo-classes
+ * when the user is typing/interacting with the element.
+ * Only <input> and <textarea> elements can have there validity changed by an
+ * user input.
+ */
+
+var gContent = document.getElementById('content');
+
+function checkValidApplies(elmt)
+{
+  is(window.getComputedStyle(elmt).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+}
+
+function checkInvalidApplies(elmt, aTodo)
+{
+  if (aTodo) {
+    todo_is(window.getComputedStyle(elmt).getPropertyValue('background-color'),
+            "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+    return;
+  }
+  is(window.getComputedStyle(elmt).getPropertyValue('background-color'),
+     "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+}
+
+function checkMissing(elementName)
+{
+  var element = document.createElement(elementName);
+  element.required = true;
+  gContent.appendChild(element);
+  checkInvalidApplies(element);
+
+  element.focus();
+
+  sendString("a");
+  checkValidApplies(element);
+
+  synthesizeKey("KEY_Backspace");
+  checkInvalidApplies(element);
+
+  gContent.removeChild(element);
+}
+
+function checkTooLong(elementName)
+{
+  var element = document.createElement(elementName);
+  element.value = "foo";
+  element.maxLength = 2;
+  gContent.appendChild(element);
+  checkInvalidApplies(element, true);
+
+  element.focus();
+
+  synthesizeKey("KEY_Backspace");
+  checkValidApplies(element);
+  gContent.removeChild(element);
+}
+
+function checkTextAreaMissing()
+{
+  checkMissing('textarea');
+}
+
+function checkTextAreaTooLong()
+{
+  checkTooLong('textarea');
+}
+
+function checkTextArea()
+{
+  checkTextAreaMissing();
+  checkTextAreaTooLong();
+}
+
+function checkInputMissing()
+{
+  checkMissing('input');
+}
+
+function checkInputTooLong()
+{
+  checkTooLong('input');
+}
+
+function checkInputEmail()
+{
+  var element = document.createElement('input');
+  element.type = 'email';
+  gContent.appendChild(element);
+  checkValidApplies(element);
+
+  element.focus();
+
+  sendString("a");
+  checkInvalidApplies(element);
+
+  sendString("@b.c");
+  checkValidApplies(element);
+
+  synthesizeKey("KEY_Backspace");
+  for (var i=0; i<4; ++i) {
+    if (i == 1) {
+      // a@b is a valid value.
+      checkValidApplies(element);
+    } else {
+      checkInvalidApplies(element);
+    }
+    synthesizeKey("KEY_Backspace");
+  }
+  checkValidApplies(element);
+
+  gContent.removeChild(element);
+}
+
+function checkInputURL()
+{
+  var element = document.createElement('input');
+  element.type = 'url';
+  gContent.appendChild(element);
+  checkValidApplies(element);
+
+  element.focus();
+
+  sendString("h");
+  checkInvalidApplies(element);
+
+  sendString("ttp://mozilla.org");
+  checkValidApplies(element);
+
+  for (var i=0; i<10; ++i) {
+    synthesizeKey("KEY_Backspace");
+    checkValidApplies(element);
+  }
+
+  synthesizeKey("KEY_Backspace");
+  // "http://" is now invalid
+  for (var i=0; i<7; ++i) {
+    checkInvalidApplies(element);
+    synthesizeKey("KEY_Backspace");
+  }
+  checkValidApplies(element);
+
+  gContent.removeChild(element);
+}
+
+function checkInputPattern()
+{
+  var element = document.createElement('input');
+  element.pattern = "[0-9]*"
+  gContent.appendChild(element);
+  checkValidApplies(element);
+
+  element.focus();
+
+  sendString("0");
+  checkValidApplies(element);
+
+  sendString("a");
+  checkInvalidApplies(element);
+
+  synthesizeKey("KEY_Backspace");
+  checkValidApplies(element);
+
+  synthesizeKey("KEY_Backspace");
+  checkValidApplies(element);
+
+  gContent.removeChild(element);
+}
+
+function checkInput()
+{
+  checkInputMissing();
+  checkInputTooLong();
+  checkInputEmail();
+  checkInputURL();
+  checkInputPattern();
+}
+
+checkTextArea();
+checkInput();
+
+</script>
+</pre>
+</body>
+</html>

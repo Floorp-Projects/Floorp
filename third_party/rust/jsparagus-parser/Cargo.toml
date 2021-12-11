@@ -1,0 +1,24 @@
+[package]
+name = "jsparagus-parser"
+version = "0.1.0"
+authors = ["Jason Orendorff <jason.orendorff@gmail.com>"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+bumpalo = "3.4.0"
+jsparagus-ast = { path = "../ast" }
+jsparagus-json-log = { path = "../json-log" }
+jsparagus-generated-parser = { path = "../generated_parser" }
+arrayvec = "0.5.1"
+
+[features]
+logging = ["jsparagus-json-log/logging"]
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "parser"
+harness = false
+

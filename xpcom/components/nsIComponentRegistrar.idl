@@ -1,0 +1,149 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * The nsIComponentRegistrar interface.
+ */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIFactory;
+
+[scriptable, uuid(2417cbfe-65ad-48a6-b4b6-eb84db174392)]
+interface nsIComponentRegistrar : nsISupports
+{
+    /**
+     * autoRegister
+     *
+     * Register a .manifest file, or an entire directory containing
+     * these files. Registration lasts for this run only, and is not cached.
+     *
+     * @note Formerly this method would register component files directly. This
+     *       is no longer supported.
+     */
+    void autoRegister(in nsIFile aSpec);
+
+    /**
+     * autoUnregister
+     * @status OBSOLETE: This method is no longer implemented, but preserved
+     *                   in this interface for binary compatibility with
+     *                   Mozilla 1.9.2.
+     */
+    void autoUnregister(in nsIFile aSpec);
+
+
+    /**
+     * registerFactory
+     *
+     * Register a factory with a given ContractID, CID and Class Name.
+     *
+     * @param aClass      : CID of object
+     * @param aClassName  : Class Name of CID (unused)
+     * @param aContractID : ContractID associated with CID aClass. May be null
+     *                      if no contract ID is needed.
+     * @param aFactory    : Factory that will be registered for CID aClass.
+     *                      If aFactory is null, the contract will be associated
+     *                      with a previously registered CID.
+     */
+    void registerFactory(in nsCIDRef aClass,
+                         in string aClassName,
+                         in string aContractID,
+                         in nsIFactory aFactory);
+
+    /**
+     * unregisterFactory
+     *
+     * Unregister a factory associated with CID aClass.
+     *
+     * @param aClass   : CID being unregistered
+     * @param aFactory : Factory previously registered to create instances of
+     *                   CID aClass.
+     *
+     * @throws NS_ERROR* Method failure.
+     */
+    void unregisterFactory(in nsCIDRef aClass,
+                           in nsIFactory aFactory);
+
+    /**
+     * registerFactoryLocation
+     * @status OBSOLETE: This method is no longer implemented, but preserved
+     *                   in this interface for binary compatibility with
+     *                   Mozilla 1.9.2.
+     */
+    void registerFactoryLocation(in nsCIDRef aClass,
+                                 in string aClassName,
+                                 in string aContractID,
+                                 in nsIFile aFile,
+                                 in string aLoaderStr,
+                                 in string aType);
+
+    /**
+     * unregisterFactoryLocation
+     * @status OBSOLETE: This method is no longer implemented, but preserved
+     *                   in this interface for binary compatibility with
+     *                   Mozilla 1.9.2.
+     */
+    void unregisterFactoryLocation(in nsCIDRef aClass,
+                                   in nsIFile aFile);
+
+    /**
+     * isCIDRegistered
+     *
+     * Returns true if a factory is registered for the CID.
+     *
+     * @param aClass : CID queried for registeration
+     * @return       : true if a factory is registered for CID
+     *                 false otherwise.
+     */
+    boolean isCIDRegistered(in nsCIDRef aClass);
+
+    /**
+     * isContractIDRegistered
+     *
+     * Returns true if a factory is registered for the contract id.
+     *
+     * @param aClass : contract id queried for registeration
+     * @return       : true if a factory is registered for contract id
+     *                 false otherwise.
+     */
+    boolean isContractIDRegistered(in string aContractID);
+
+    /**
+     * getContractIDs
+     *
+     * Return the list of all registered ContractIDs.
+     *
+     * @return : Array of ContractIDs. Elements of the array are the string
+     *           encoding of Contract IDs.
+     */
+    Array<ACString> getContractIDs();
+
+    /**
+     * CIDToContractID
+     * @status OBSOLETE: This method is no longer implemented, but preserved
+     *                   in this interface for binary compatibility with
+     *                   Mozilla 1.9.2.
+     */
+    string   CIDToContractID(in nsCIDRef aClass);
+
+    /**
+     * contractIDToCID
+     *
+     * Returns the CID for a given Contract ID, if one exists and is registered.
+     *
+     * @return : Contract ID.
+     */
+    nsCIDPtr contractIDToCID(in string aContractID);
+};
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var x = document.getElementById("x");
+  var y = document.createElement("span");
+  y.appendChild(document.createTextNode("c"));
+  x.parentNode.insertBefore(y, x);
+  document.documentElement.className = "";
+}
+
+</script>
+<style type="text/css">
+
+div:first-letter { color: green }
+
+</style>
+</head>
+
+<body onload="boom();"><div style="width: 0em;"><span>A B<span id="x">D</span></span></div></body>
+
+</html>

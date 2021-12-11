@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== tabbox.css =================================================
+  == Styles used by XUL tab-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: tabpanels ::::: */
+
+tabpanels {
+  appearance: auto;
+  -moz-default-appearance: tabpanels;
+  padding: 8px;
+  color: -moz-DialogText;
+}
+
+/* ::::: tab ::::: */
+
+tab {
+  appearance: auto;
+  -moz-default-appearance: tab;
+  margin-top: 2px;
+  padding: 1px 4px 2px;
+  color: -moz-DialogText;
+}
+
+.tab-text {
+  margin: 0 !important;
+}
+
+tab[visuallyselected="true"] {
+  margin-top: 0;
+  padding: 1px 6px 4px;
+}
+
+tab:-moz-focusring > .tab-middle {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
+}
+
+tab:first-of-type[visuallyselected="true"] {
+  padding-inline: 5px;
+}

@@ -1,0 +1,105 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Root idl declarations to be used by all.
+ */
+
+%{C++
+
+#include "nscore.h"
+typedef int64_t PRTime;
+
+/*
+ * Forward declarations for new string types
+ */
+#include "nsStringFwd.h"
+
+struct JSContext;
+
+/*
+ * Forward declaration of mozilla::dom::Promise
+ */
+namespace mozilla {
+namespace dom {
+class Promise;
+} // namespace dom
+} // namespace mozilla
+
+/*
+ * Start commenting out the C++ versions of the below in the output header
+ */
+#if 0
+%}
+
+typedef boolean             bool   ;
+typedef octet               uint8_t  ;
+typedef unsigned short      uint16_t ;
+typedef unsigned short      char16_t;
+typedef unsigned long       uint32_t ;
+typedef unsigned long long  uint64_t ;
+typedef long long           PRTime   ;
+typedef short               int16_t  ;
+typedef long                int32_t  ;
+typedef long long           int64_t  ;
+
+typedef unsigned long       nsrefcnt ;
+typedef unsigned long       nsresult ;
+
+// XXX need this built into xpidl compiler so that it's really size_t or size_t
+// and it's scriptable:
+typedef unsigned long       size_t;
+
+[ptr]         native voidPtr(void);
+[ptr]         native charPtr(char);
+[ptr]         native unicharPtr(char16_t);
+
+[ref, nsid]   native nsIDRef(nsID);
+[ref, nsid]   native nsIIDRef(nsIID);
+[ref, nsid]   native nsCIDRef(nsCID);
+
+[ptr, nsid]   native nsIDPtr(nsID);
+[ptr, nsid]   native nsIIDPtr(nsIID);
+[ptr, nsid]   native nsCIDPtr(nsCID);
+
+// NOTE: Be careful in using the following 3 types. The *Ref and *Ptr variants
+// are more commonly used (and better supported). Those variants require
+// nsMemory alloc'd copies when used as 'out' params while these types do not.
+// However, currently these types can not be used for 'in' params. And, methods
+// that use them as 'out' params *must* be declared [notxpcom] (with an explicit
+// return type of nsresult). This makes such methods implicitly not scriptable.
+// Use of these types in methods without a [notxpcom] declaration will cause
+// the xpidl compiler to raise an error.
+// See: http://bugzilla.mozilla.org/show_bug.cgi?id=93792
+
+[nsid]        native nsIID(nsIID);
+[nsid]        native nsID(nsID);
+[nsid]        native nsCID(nsCID);
+
+[ptr]         native nsQIResult(void);
+
+[ref, utf8string] native AUTF8String(ignored);
+[ref, utf8string] native AUTF8StringRef(ignored);
+[ptr, utf8string] native AUTF8StringPtr(ignored);
+
+[ref, cstring] native ACString(ignored);
+[ref, cstring] native ACStringRef(ignored);
+[ptr, cstring] native ACStringPtr(ignored);
+
+[ref, astring] native AString(ignored);
+[ref, astring] native AStringRef(ignored);
+[ptr, astring] native AStringPtr(ignored);
+
+[ref, jsval]  native jsval(jsval);
+              native jsid(jsid);
+
+[ptr, promise] native Promise(ignored);
+
+%{C++
+/*
+ * End commenting out the C++ versions of the above in the output header
+ */
+#endif
+%}

@@ -1,0 +1,79 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1137245 - Allow IndexedDB usage in ServiceWorkers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script src="utils.js"></script>
+<script class="testbody" type="text/javascript">
+
+  var regisration;
+  function simpleRegister() {
+    return navigator.serviceWorker.register("service_worker.js", {
+      scope: 'service_worker_client.html'
+    }).then(swr => waitForState(swr.installing, 'activated', swr));
+  }
+
+  function unregister() {
+    return registration.unregister();
+  }
+
+  function testIndexedDBAvailable(sw) {
+    registration = sw;
+    var p = new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          sw.active.postMessage("GO");
+          return;
+        }
+
+        if (!("available" in e.data)) {
+          ok(false, "Something went wrong");
+          reject();
+          return;
+        }
+
+        ok(e.data.available, "IndexedDB available in service worker.");
+        resolve();
+      }
+    });
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "service_worker_client.html");
+    content.appendChild(iframe);
+
+    return p.then(() => content.removeChild(iframe));
+  }
+
+  function runTest() {
+    simpleRegister()
+      .then(testIndexedDBAvailable)
+      .then(unregister)
+      .then(SimpleTest.finish)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

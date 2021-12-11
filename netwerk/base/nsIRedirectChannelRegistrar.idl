@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIParentChannel;
+
+/**
+ * Used on the chrome process as a service to join channel implementation
+ * and parent IPC protocol side under a unique id.  Provides this way a generic
+ * communication while redirecting to various protocols.
+ *
+ * See also nsIChildChannel and nsIParentChannel.
+ */
+
+[scriptable, uuid (efa36ea2-5b07-46fc-9534-a5acb8b77b72)]
+interface nsIRedirectChannelRegistrar : nsISupports
+{
+  /**
+   * Register the redirect target channel. The passed id needs to be a
+   * unique ID for that channel (see `nsContentUtils::GenerateLoadIdentifier`).
+   *
+   * Primarily used in ParentChannelListener::AsyncOnChannelRedirect to get
+   * a channel id sent to the HttpChannelChild being redirected.
+   */
+  void registerChannel(in nsIChannel channel, in uint64_t id);
+
+  /**
+   * First, search for the channel registered under the id.  If found return
+   * it.  Then, register under the same id the parent side of IPC protocol
+   * to let it be later grabbed back by the originator of the redirect and
+   * notifications from the real channel could be forwarded to this parent
+   * channel.
+   *
+   * Primarily used in parent side of an IPC protocol implementation
+   * in reaction to nsIChildChannel.connectParent(id) called from the child
+   * process.
+   */
+  nsIChannel linkChannels(in uint64_t id, in nsIParentChannel channel);
+
+  /**
+   * Returns back the channel previously registered under the ID with
+   * registerChannel method.
+   *
+   * Primarilly used in chrome IPC side of protocols when attaching a redirect
+   * target channel to an existing 'real' channel implementation.
+   */
+  nsIChannel getRegisteredChannel(in uint64_t id);
+
+  /**
+   * Returns the stream listener that shall be attached to the redirect target
+   * channel, all notification from the redirect target channel will be
+   * forwarded to this stream listener.
+   *
+   * Primarilly used in ParentChannelListener::OnRedirectResult callback
+   * to grab the created parent side of the channel and forward notifications
+   * to it.
+   */
+  nsIParentChannel getParentChannel(in uint64_t id);
+
+  /**
+   * To not force all channel implementations to support weak reference
+   * consumers of this service must ensure release of registered channels them
+   * self.  This releases both the real and parent channel registered under
+   * the id.
+   *
+   * Primarilly used in ParentChannelListener::OnRedirectResult callback.
+   */
+  void deregisterChannels(in uint64_t id);
+};

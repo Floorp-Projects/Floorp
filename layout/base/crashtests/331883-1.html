@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<head>
+<script>
+var numLoads = 0;
+function loaded()
+{
+  numLoads++;
+  if (numLoads == 5) {
+    document.documentElement.className = "";
+  }
+}
+</script>
+<body>
+<iframe onload="loaded()" src="331883-1-inner.html"></iframe>
+</body>
+</html>

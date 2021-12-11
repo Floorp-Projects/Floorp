@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "userScripts",
+    "permissions": ["manifest:user_scripts"],
+    "allowedContexts": ["content"],
+    "events": [
+      {
+        "name": "onBeforeScript",
+        "permissions": ["manifest:user_scripts.api_script"],
+        "allowedContexts": ["content", "content_only"],
+        "type": "function",
+        "description": "Event called when a new userScript global has been created",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "userScript",
+            "properties": {
+              "metadata": {
+                "type": "any",
+                "description": "The userScript metadata (as set in userScripts.register)"
+              },
+              "global": {
+                "type": "any",
+                "description": "The userScript global"
+              },
+              "defineGlobals": {
+                "type": "function",
+                "description": "Exports all the properties of a given plain object as userScript globals",
+                "parameters": [
+                  {
+                    "type": "object",
+                    "name": "sourceObject",
+                    "description": "A plain object whose properties are exported as userScript globals"
+                  }
+                ]
+              },
+              "export": {
+                "type": "function",
+                "description": "Convert a given value to make it accessible to the userScript code",
+                "parameters": [
+                  {
+                    "type": "any",
+                    "name": "value",
+                    "description": "A value to convert into an object accessible to the userScript"
+                  }
+                ],
+                "returns": {
+                  "type": "any"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

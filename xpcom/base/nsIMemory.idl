@@ -1,0 +1,63 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ *
+ * nsIMemory: interface to allocate and deallocate memory. Also provides
+ * for notifications in low-memory situations.
+ *
+ * The frozen exported symbols moz_xmalloc, moz_xrealloc, and free
+ * provide a more efficient way to access XPCOM memory allocation. Using
+ * those symbols is preferred to using the methods on this interface.
+ *
+ * A client that wishes to be notified of low memory situations (for
+ * example, because the client maintains a large memory cache that
+ * could be released when memory is tight) should register with the
+ * observer service (see nsIObserverService) using the topic
+ * "memory-pressure".  There are specific types of notications
+ * that can occur.  These types will be passed as the |aData|
+ * parameter of the of the "memory-pressure" notification:
+ *
+ * "low-memory"
+ * This will be passed as the extra data when the pressure
+ * observer is being asked to flush for low-memory conditions.
+ *
+ * "low-memory-ongoing"
+ * This will be passed when we continue to be in a low-memory
+ * condition and we want to flush caches and do other cheap
+ * forms of memory minimization, but heavy handed approaches like
+ * a GC are unlikely to succeed.
+ *
+ * "heap-minimize"
+ * This will be passed as the extra data when the pressure
+ * observer is being asked to flush because of a heap minimize
+ * call.
+ */
+
+[scriptable, uuid(1e004834-6d8f-425a-bc9c-a2812ed43bb7)]
+interface nsIMemory : nsISupports
+{
+    /**
+     * Attempts to shrink the heap.
+     * @param immediate - if true, heap minimization will occur
+     *   immediately if the call was made on the main thread. If
+     *   false, the flush will be scheduled to happen when the app is
+     *   idle.
+     * @throws NS_ERROR_FAILURE if 'immediate' is set an the call
+     *   was not on the application's main thread.
+     */
+    void heapMinimize(in boolean immediate);
+
+    /**
+     * This predicate can be used to determine if the platform is a "low-memory"
+     * platform. Callers may use this to dynamically tune their behaviour
+     * to favour reduced memory usage at the expense of performance. The value
+     * returned by this function will not change over the lifetime of the process.
+     */
+    boolean isLowMemoryPlatform();
+};
+

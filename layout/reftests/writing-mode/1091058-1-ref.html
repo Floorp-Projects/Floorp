@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+.h { writing-mode:horizontal-tb; }
+.v-lr { writing-mode:vertical-lr; }
+.v-rl { writing-mode:vertical-rl; }
+
+div {
+  width: 250px;
+  height: 250px;
+  border: 1px solid red;
+  margin: 10px;
+  display: inline-block;
+}
+</style>
+</head>
+
+<body>
+
+<div class="h">
+<u>方ABC方方</u><i><u>abc</u></i><u>方方方</u><i><u>xyz</u></i><u>方</u>
+</div>
+
+<div class="v-lr">
+<u>方ABC方方</u><i><u>abc</u></i><u>方方方</u><i><u>xyz</u></i><u>方</u>
+</div>
+
+<div class="v-rl">
+<u>方ABC方方</u><i><u>abc</u></i><u>方方方</u><i><u>xyz</u></i><u>方</u>
+</div>
+
+</body>
+</html>

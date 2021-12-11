@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: pausePlayAfterPlaybackStarted
+// Case: invoke pause() and then play() on an element that is already playing.
+// Expected result: resolve the promise with undefined.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.preload = "auto";
+  element.src = test.name;
+  element.play();
+  once(element, "playing").then(() => {
+    element.pause();
+    element.play().then(
+      (result) => {
+        if (result == undefined) {
+          ok(true, `${token} is resolved with ${result}.`);
+        } else {
+          ok(false, `${token} is resolved with ${result}.`);
+        }
+      },
+      (error) => {
+        ok(false, `${token} is rejected with ${error.name}.`);
+      }
+    ).then( () => { manager.finished(token); } );
+  });
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>

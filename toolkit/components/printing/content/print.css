@@ -1,0 +1,310 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html, body {
+  height: 100vh;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+body[loading] #print {
+  visibility: hidden;
+}
+
+*[hidden] {
+  display: none !important;
+}
+
+.section-block {
+  margin: 16px;
+}
+
+.section-block .block-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 1.8em;
+  margin-block: 2px;
+}
+
+.row.cols-2 {
+  flex-direction: row;
+  align-items: center;
+}
+
+#scale .row.cols-2,
+#more-settings-options > .row.cols-2 {
+  /* The margin-block of the checkboxes/radiobuttons
+     already provide the needed vertical spacing. */
+  margin-block: 0;
+}
+
+hr {
+  margin-inline: 8px;
+  margin-block: 0;
+}
+
+.header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex: 0 1 auto;
+  padding: 8px 18px;
+}
+.header-container > h2 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1;
+}
+
+#sheet-count {
+  font-size: 11px;
+  padding: 3px 8px;
+  margin: 0;
+}
+
+#sheet-count[loading],
+body[invalid] #sheet-count {
+  visibility: hidden;
+}
+
+form#print {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  font: menu;
+}
+
+select {
+  min-height: auto;
+  margin: 0;
+  padding: 0;
+}
+
+select:not([size], [multiple])[iconic] {
+  padding-inline-start: 28px;
+}
+
+#printer-picker {
+  background-size: auto 12px, 16px;
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/print.svg");
+  background-position: right 3px center, left 8px center;
+  width: 100%;
+}
+
+#printer-picker:dir(rtl) {
+  background-position-x: left 3px, right 8px;
+}
+
+#printer-picker[output="pdf"] {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/page-portrait.svg");
+}
+
+input[type="number"],
+input[type="text"] {
+  padding: 2px;
+  padding-inline-start: 8px;
+}
+
+.toggle-group-label {
+  padding: 4px 8px;
+}
+
+.body-container {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.twisty > summary {
+  list-style: none;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+}
+
+#more-settings > summary > .twisty {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 12px;
+  height: 12px;
+}
+
+#more-settings > summary > .label {
+  flex-grow: 1;
+}
+
+#more-settings[open] > summary > .twisty {
+  background-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
+
+#open-dialog-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#open-dialog-link::after {
+  display: block;
+  content: "";
+  background: url(chrome://global/skin/icons/open-in-new.svg) no-repeat center;
+  background-size: 12px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 12px;
+  height: 12px;
+}
+
+#open-dialog-link:dir(rtl)::after {
+  scale: -1 1;
+}
+
+.footer-container {
+  flex: 0 1 auto;
+}
+
+#print-progress {
+  background-image: url("chrome://global/skin/icons/loading.png");
+  background-repeat: no-repeat;
+  background-size: 16px;
+  background-position: left center;
+  padding-inline-start: 20px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #print-progress {
+    background-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
+}
+
+#print-progress:dir(rtl) {
+  background-position-x: right;
+}
+
+#button-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+#button-container > button {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+#custom-range {
+  margin-top: 4px;
+  margin-inline: 0;
+}
+
+.vertical-margins,
+.horizontal-margins {
+  display: flex;
+  gap: 20px;
+  margin-block: 5px;
+}
+
+.margin-pair {
+  width: calc(50% - 10px); /* Half minus the gap */
+}
+
+.margin-input {
+  /* FIXME: Important is needed to override the photon-number styles below,
+   * probably should be refactored */
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.margin-descriptor {
+  text-align: center;
+  display: block;
+  margin-top: 2px;
+}
+
+.toggle-group #landscape + .toggle-group-label::before {
+  content: url("chrome://global/skin/icons/page-landscape.svg");
+}
+.toggle-group #portrait + .toggle-group-label::before {
+  content: url("chrome://global/skin/icons/page-portrait.svg");
+}
+
+.error-message {
+  font-size: 12px;
+  color: var(--in-content-error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
+  margin-top: 4px;
+}
+
+#percent-scale {
+  margin-inline-start: 4px;
+}
+
+#percent-scale:disabled {
+  /* Let clicks on the disabled input select the radio button */
+  pointer-events: none;
+}
+
+input[type="number"].photon-number {
+  padding: 0;
+  padding-inline-start: 8px;
+  margin: 0;
+  height: 1.5em;
+  width: 4em;
+}
+
+input[type="number"].photon-number::-moz-number-spin-box {
+  height: 100%;
+  max-height: 100%;
+  border-inline-start: 1px solid var(--in-content-box-border-color);
+  width: 1em;
+  border-start-end-radius: 4px;
+  border-end-end-radius: 4px;
+}
+
+input[type="number"].photon-number:hover::-moz-number-spin-box {
+  border-color: var(--in-content-border-hover);
+}
+
+input[type="number"].photon-number::-moz-number-spin-up,
+input[type="number"].photon-number::-moz-number-spin-down {
+  border: 0;
+  border-radius: 0;
+  background-color: var(--in-content-button-background);
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-size: 8px;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  appearance: none;
+}
+
+input[type="number"].photon-number::-moz-number-spin-up {
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+input[type="number"].photon-number::-moz-number-spin-up:hover,
+input[type="number"].photon-number::-moz-number-spin-down:hover {
+  background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
+}
+
+input[type="checkbox"]:disabled + label,
+input[type="radio"]:disabled + label,
+input[type="radio"]:disabled + span > label {
+  opacity: 0.5;
+}

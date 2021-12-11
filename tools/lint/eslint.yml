@@ -1,0 +1,30 @@
+---
+eslint:
+    description: JavaScript linter
+    # ESLint infra handles its own path filtering, so just include cwd
+    include: ['.']
+    exclude: []
+    extensions: ['js', 'jsm', 'jsx', 'xul', 'html', 'xhtml', 'sjs']
+    support-files:
+        - '**/.eslintrc.js'
+        - '.eslintignore'
+        - 'tools/lint/eslint/**'
+        # Files that can influence global variables
+        - 'browser/base/content/nsContextMenu.js'
+        - 'browser/base/content/utilityOverlay.js'
+        - 'browser/components/customizableui/content/panelUI.js'
+        - 'browser/components/downloads/content/downloads.js'
+        - 'browser/components/downloads/content/indicator.js'
+        - 'testing/mochitest/tests/SimpleTest/EventUtils.js'
+        - 'testing/mochitest/tests/SimpleTest/MockObjects.js'
+        - 'testing/mochitest/tests/SimpleTest/SimpleTest.js'
+        - 'testing/mochitest/tests/SimpleTest/WindowSnapshot.js'
+        - 'toolkit/components/printing/content/printUtils.js'
+        - 'toolkit/components/viewsource/content/viewSourceUtils.js'
+        - 'toolkit/content/contentAreaUtils.js'
+        - 'toolkit/content/editMenuOverlay.js'
+        - 'toolkit/content/globalOverlay.js'
+        - 'toolkit/modules/Services.jsm'
+    type: external
+    payload: eslint:lint
+    setup: eslint:setup

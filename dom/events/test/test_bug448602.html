@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448602
+-->
+<head>
+  <title>Test for Bug 448602</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448602">Mozilla Bug 448602</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">          
+<script type="application/javascript">
+
+/** Test for Bug 448602 **/
+
+var els, root, l2, l3;
+
+var handlerCalled = false;
+var capturingListenerCalled = false;
+var bubblingListenerCalled = false;
+
+function clearListenerStates() {
+  handlerCalled = false;
+  capturingListenerCalled = false;
+  bubblingListenerCalled = false;
+}
+
+function runTests() {
+  els = SpecialPowers.Cc["@mozilla.org/eventlistenerservice;1"]
+                     .getService(SpecialPowers.Ci.nsIEventListenerService);
+
+  // Event listener info tests
+  root = document.getElementById("testroot");
+  var infos = els.getListenerInfoFor(root);
+  is(infos.length, 0, "Element shouldn't have listeners (1)");
+
+  var listenerSource = 'handlerCalled = true;';
+  root.setAttribute("onclick", listenerSource);
+  infos = els.getListenerInfoFor(root);
+  is(infos.length, 1, "Element should have listeners (1)");
+  is(infos[0].toSource(), 'function onclick(event) {\n' + listenerSource + '\n}',
+     "Unexpected serialization (1)");
+  is(infos[0].type, "click", "Wrong type (1)");
+  is(infos[0].capturing, false, "Wrong phase (1)");
+  is(infos[0].allowsUntrusted, true, "Should allow untrusted events (1)");
+  is(SpecialPowers.unwrap(infos[0].listenerObject), root.onclick,
+     "Should have the right listener object (1)");
+
+  // Test disabling and enabling the listener.
+  ok(!handlerCalled);
+  root.click();
+  ok(handlerCalled);
+
+  clearListenerStates()
+  infos[0].enabled = false;
+  root.click();
+  ok(!handlerCalled);
+
+  clearListenerStates()
+  infos[0].enabled = true;
+  root.click();
+  ok(handlerCalled);
+  clearListenerStates();
+
+  function capturingListener() {
+    capturingListenerCalled = true;
+  }
+  function bubblingListener() {
+    bubblingListenerCalled = true;
+  }
+  root.addEventListener("click", capturingListener, true);
+  root.addEventListener("click", bubblingListener);
+  root.addEventListener("fooevent", capturingListener, true);
+  root.addEventListener("fooevent", bubblingListener);
+  infos = els.getListenerInfoFor(root);
+  // Use a child node to dispatch events so that both capturing and bubbling
+  // listeners get called.
+  l2 = document.getElementById("testlevel2");
+  l2.click();
+  ok(handlerCalled);
+  ok(capturingListenerCalled);
+  ok(bubblingListenerCalled);
+  clearListenerStates();
+
+  infos[0].enabled = false;
+  l2.click();
+  ok(!handlerCalled);
+  ok(capturingListenerCalled);
+  ok(bubblingListenerCalled);
+  clearListenerStates();
+  infos[0].enabled = true;
+
+  infos[1].enabled = false;
+  l2.click();
+  ok(handlerCalled);
+  ok(!capturingListenerCalled);
+  ok(bubblingListenerCalled);
+  clearListenerStates();
+  infos[1].enabled = true;
+
+  infos[2].enabled = false;
+  l2.click();
+  ok(handlerCalled);
+  ok(capturingListenerCalled);
+  ok(!bubblingListenerCalled);
+  clearListenerStates();
+  infos[2].enabled = true;
+
+  root.removeEventListener("click", capturingListener, true);
+  root.removeEventListener("click", bubblingListener);
+  root.removeEventListener("fooevent", capturingListener, true);
+  root.removeEventListener("fooevent", bubblingListener);
+  root.removeAttribute("onclick");
+
+  root.setAttribute("onclick", "...invalid script...");
+  SimpleTest.expectUncaughtException(true);
+  infos = els.getListenerInfoFor(root);
+  SimpleTest.expectUncaughtException(false);
+  is(infos.length, 1);
+  is(infos[0].listenerObject, null);
+
+  root.removeAttribute("onclick");
+  infos = els.getListenerInfoFor(root);
+  is(infos.length, 0, "Element shouldn't have listeners (2)");
+
+  var l = function (e) { alert(e); };
+  root.addEventListener("foo", l, true, true);
+  root.addEventListener("foo", l, false, false);
+  infos = els.getListenerInfoFor(root);
+  is(infos.length, 2, "Element should have listeners (2)");
+  is(infos[0].toSource(), "(function (e) { alert(e); })",
+     "Unexpected serialization (2)");
+  is(infos[0].type, "foo", "Wrong type (2)");
+  is(infos[0].capturing, true, "Wrong phase (2)");
+  is(infos[0].allowsUntrusted, true, "Should allow untrusted events (2)");
+  is(SpecialPowers.unwrap(infos[0].listenerObject), l,
+     "Should have the right listener object (2)");
+  is(infos[1].toSource(), "(function (e) { alert(e); })",
+     "Unexpected serialization (3)");
+  is(infos[1].type, "foo", "Wrong type (3)");
+  is(infos[1].capturing, false, "Wrong phase (3)");
+  is(infos[1].allowsUntrusted, false, "Shouldn't allow untrusted events (1)");
+  is(SpecialPowers.unwrap(infos[1].listenerObject), l,
+     "Should have the right listener object (3)");
+
+  root.removeEventListener("foo", l, true);
+  root.removeEventListener("foo", l);
+  infos = els.getListenerInfoFor(root);
+  is(infos.length, 0, "Element shouldn't have listeners (3)");
+
+  root.onclick = l;
+  infos = els.getListenerInfoFor(root);
+  is(infos.length, 1, "Element should have listeners (3)");
+  is(infos[0].toSource(), '(function (e) { alert(e); })',
+     "Unexpected serialization (4)");
+  is(infos[0].type, "click", "Wrong type (4)");
+  is(infos[0].capturing, false, "Wrong phase (4)");
+  is(infos[0].allowsUntrusted, true, "Should allow untrusted events (3)");
+  is(SpecialPowers.unwrap(infos[0].listenerObject), l,
+     "Should have the right listener object (4)");
+
+  // Event target chain tests
+  l3 = document.getElementById("testlevel3");
+  var textnode = l3.firstChild;
+  var chain = els.getEventTargetChainFor(textnode, true);
+  ok(chain.length > 3, "Too short event target chain.");
+  ok(SpecialPowers.compare(chain[0], textnode), "Wrong chain item (1)");
+  ok(SpecialPowers.compare(chain[1], l3), "Wrong chain item (2)");
+  ok(SpecialPowers.compare(chain[2], l2), "Wrong chain item (3)");
+  ok(SpecialPowers.compare(chain[3], root), "Wrong chain item (4)");
+
+  var hasDocumentInChain = false;
+  var hasWindowInChain = false;
+  for (var i = 0; i < chain.length; ++i) {
+    if (SpecialPowers.compare(chain[i], document)) {
+      hasDocumentInChain = true;
+    } else if (SpecialPowers.compare(chain[i], window)) {
+      hasWindowInChain = true;
+    }
+  }
+
+  ok(hasDocumentInChain, "Should have document in event target chain!");
+  ok(hasWindowInChain, "Should have window in event target chain!");
+
+  try {
+    els.getListenerInfoFor(null);
+    ok(false, "Should have thrown an exception.");
+  } catch (ex) {
+    ok(true, "We should be still running.");
+  }
+  setTimeout(testAllListener, 0);
+}
+
+function dispatchTrusted(t, o) {
+  SpecialPowers.dispatchEvent(window, t, new Event("testevent", o));
+}
+
+function testAllListener() {
+  els = SpecialPowers.wrap(els);
+  var results = [];
+  var expectedResults =
+    [ { target: "testlevel3", phase: 3, trusted: false },
+      { target: "testlevel3", phase: 3, trusted: false },
+      { target: "testlevel3", phase: 3, trusted: true },
+      { target: "testlevel3", phase: 3, trusted: true },
+      { target: "testlevel3", phase: 3, trusted: true }
+    ];
+
+  function allListener(e) {
+    results.push({
+                   target: e.target.id,
+                   phase: e.eventPhase,
+                   trusted: e.isTrusted
+                  });
+    e.stopPropagation();
+  }
+  function allListenerTrustedOnly(e) {
+    results.push({
+                   target: e.target.id,
+                   phase: e.eventPhase,
+                   trusted: e.isTrusted
+                  });
+    e.stopPropagation();
+  }
+
+  els.addListenerForAllEvents(root, allListener, false, true);
+  var infos = els.getListenerInfoFor(root);
+  var nullTypes = 0;
+  for (var i = 0; i < infos.length; ++i) {
+    if (infos[i].type == null) {
+      ++nullTypes;
+    }
+  }
+  is(nullTypes, 1, "Should have one all-event-listener!");
+
+  els.addListenerForAllEvents(root, allListener, false, true, true);
+  els.addListenerForAllEvents(root, allListenerTrustedOnly, false, false, true);
+  l3.dispatchEvent(new Event("testevent", { bubbles: true, composed: true }));
+  dispatchTrusted(l3, { bubbles: true, composed: true });
+  els.removeListenerForAllEvents(root, allListener, false);
+  els.removeListenerForAllEvents(root, allListener, false, true);
+  els.removeListenerForAllEvents(root, allListenerTrustedOnly, false, true);
+  // make sure removeListenerForAllEvents works.
+  l3.dispatchEvent(new Event("testevent", { bubbles: true, composed : true }));
+  dispatchTrusted(l3, { bubbles: true, composed: true });
+
+  // Test the order of event listeners.
+  var clickListenerCalled = false;
+  var allListenerCalled = false;
+  function clickListener() {
+    clickListenerCalled = true;
+    ok(allListenerCalled, "Should have called '*' listener before normal listener!");
+  }
+  function allListener2() {
+    allListenerCalled = true;
+    ok(!clickListenerCalled, "Shouldn't have called click listener before '*' listener!");
+  }
+  root.onclick = null; // Remove the listener added in earlier tests.
+  root.addEventListener("click", clickListener);
+  els.addListenerForAllEvents(root, allListener2, false, true);
+  l3.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  root.removeEventListener("click", clickListener);
+  els.removeListenerForAllEvents(root, allListener2, false);
+  ok(allListenerCalled, "Should have called '*' listener");
+  ok(clickListenerCalled, "Should have called click listener");
+
+  is(results.length, expectedResults.length, "count");
+  for (var i = 0; i < expectedResults.length; ++i) {
+    for (var p in expectedResults[i]) {
+      is(results[i][p], expectedResults[i][p], p);
+    }
+  }
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+</script>
+</pre>
+<div id="testroot">
+  <div id="testlevel2">
+    <div id="testlevel3">
+      Test
+    </div>
+  </div>
+</div>
+</body>
+</html>

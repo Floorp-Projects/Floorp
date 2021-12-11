@@ -1,0 +1,547 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="DOMRequestHelper Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="start();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    const {DOMRequestIpcHelper} = ChromeUtils.import("resource://gre/modules/DOMRequestHelper.jsm");
+    let obs = Cc["@mozilla.org/observer-service;1"].
+              getService(Ci.nsIObserverService);
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+
+    function DummyHelperSubclass() {
+      this.onuninit = null;
+    }
+    DummyHelperSubclass.prototype = {
+      __proto__: DOMRequestIpcHelper.prototype,
+      uninit: function() {
+        if (typeof this.onuninit === "function") {
+          this.onuninit();
+        }
+        this.onuninit = null;
+      }
+    };
+
+    var dummy = new DummyHelperSubclass();
+    var isDOMRequestHelperDestroyed = false;
+
+    /**
+     * Init & destroy.
+     */
+    function initDOMRequestHelperTest(aMessages) {
+      // If we haven't initialized the DOMRequestHelper object, its private
+      // properties will be undefined, but once destroyDOMRequestHelper is
+      // called, they're set to null.
+      var expectedPrivatePropertyValues =
+        isDOMRequestHelperDestroyed ? null : undefined;
+
+      is(dummy._requests, expectedPrivatePropertyValues, "Request is expected");
+      is(dummy._messages, undefined, "Messages is undefined");
+      is(dummy._window, expectedPrivatePropertyValues, "Window is expected");
+
+      dummy.initDOMRequestHelper(window, aMessages);
+
+      ok(dummy._window, "Window exists");
+      is(dummy._window, window, "Correct window");
+      if (aMessages) {
+        is(typeof dummy._listeners, "object", "Listeners is an object");
+      }
+    }
+
+    function destroyDOMRequestHelperTest() {
+      dummy.destroyDOMRequestHelper();
+      isDOMRequestHelperDestroyed = true;
+
+      is(dummy._requests, null, "Request is null");
+      is(dummy._messages, undefined, "Messages is undefined");
+      is(dummy._window, null, "Window is null");
+    }
+
+    /**
+     * Message listeners.
+     */
+    function checkMessageListeners(aExpectedListeners, aCount) {
+      info("Checking message listeners\n" + "Expected listeners " +
+           JSON.stringify(aExpectedListeners) + " \nExpected count " + aCount);
+      let count = 0;
+      Object.keys(dummy._listeners).forEach(function(name) {
+        count++;
+        is(aExpectedListeners[name].weakRef, dummy._listeners[name].weakRef,
+           "Message found " + name + " - Same weakRef");
+        is(aExpectedListeners[name].count, dummy._listeners[name].count,
+           "Message found " + name + " - Same count");
+      });
+      is(aCount, count, "Correct number of listeners");
+    }
+
+    function addMessageListenersTest(aMessages, aExpectedListeners, aCount) {
+      dummy.addMessageListeners(aMessages);
+      info(JSON.stringify(dummy._listeners));
+      checkMessageListeners(aExpectedListeners, aCount);
+    }
+
+    function removeMessageListenersTest(aMessages, aExpectedListeners, aCount) {
+      dummy.removeMessageListeners(aMessages);
+      checkMessageListeners(aExpectedListeners, aCount);
+    }
+
+    /**
+     * Utility function to test window destruction behavior.  In general this
+     * function does the following:
+     *
+     *  1) Create a new iframe
+     *  2) Create a new DOMRequestHelper
+     *  3) initDOMRequestHelper(), optionally with weak or strong listeners
+     *  4) Optionally force a garbage collection to reap weak references
+     *  5) Destroy the iframe triggering an inner-window-destroyed event
+     *  6) Callback with a boolean indicating if DOMRequestHelper.uninit() was
+     *     called.
+     *
+     * Example usage:
+     *
+     *    checkWindowDestruction({ messages: ["foo"], gc: true },
+     *                           function(uninitCalled) {
+     *      // expect uninitCalled === false since GC with only weak refs
+     *    });
+     */
+    const TOPIC = "inner-window-destroyed";
+    function checkWindowDestruction(aOptions, aCallback) {
+      aOptions = aOptions || {};
+      aOptions.messages = aOptions.messages || [];
+      aOptions.gc = !!aOptions.gc;
+
+      if (typeof aCallback !== "function") {
+        aCallback = function() { };
+      }
+
+      let uninitCalled = false;
+
+      // Use a secondary observer so we know when to expect the uninit().  We
+      // can then reasonably expect uninitCalled to be set properly on the
+      // next tick.
+      let observer = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic !== TOPIC) {
+            return;
+          }
+          obs.removeObserver(observer, TOPIC);
+          setTimeout(function() {
+            aCallback(uninitCalled);
+          });
+        }
+      };
+
+      let frame = document.createXULElement("iframe");
+      frame.onload = function() {
+        obs.addObserver(observer, TOPIC);
+        // Create dummy DOMRequestHelper specific to checkWindowDestruction()
+        let cwdDummy = new DummyHelperSubclass();
+        cwdDummy.onuninit = function() {
+          uninitCalled = true;
+
+          if (!aOptions.messages || !aOptions.messages.length) {
+            return;
+          }
+
+          // If all message listeners are removed, cwdDummy.receiveMessage
+          // should never be called.
+          ppmm.broadcastAsyncMessage(aOptions.messages[0].name);
+        };
+
+        // Test if we still receive messages from ppmm.
+        cwdDummy.receiveMessage = function(aMessage) {
+          ok(false, "cwdDummy.receiveMessage should NOT be called: " + aMessage.name);
+        };
+
+        cwdDummy.initDOMRequestHelper(frame.contentWindow, aOptions.messages);
+        // Make sure to clear our strong ref here so that we can test our
+        // weak reference listeners and observer.
+        cwdDummy = null;
+        if (aOptions.gc) {
+          Cu.schedulePreciseGC(function() {
+            SpecialPowers.DOMWindowUtils.cycleCollect();
+            SpecialPowers.DOMWindowUtils.garbageCollect();
+            SpecialPowers.DOMWindowUtils.garbageCollect();
+            document.documentElement.removeChild(frame);
+          });
+          return;
+        }
+        document.documentElement.removeChild(frame);
+      };
+      document.documentElement.appendChild(frame);
+    }
+
+    /**
+     * Test steps.
+     */
+    var tests = [
+      function() {
+        info("== InitDOMRequestHelper no messages");
+        initDOMRequestHelperTest(null);
+        next();
+      },
+      function() {
+        info("== DestroyDOMRequestHelper");
+        destroyDOMRequestHelperTest();
+        next();
+      },
+      function() {
+        info("== InitDOMRequestHelper empty array");
+        initDOMRequestHelperTest([]);
+        checkMessageListeners({}, 0);
+        next();
+      },
+      function() {
+        info("== DestroyDOMRequestHelper");
+        destroyDOMRequestHelperTest();
+        next();
+      },
+      function() {
+        info("== InitDOMRequestHelper with strings array");
+        initDOMRequestHelperTest(["name1", "nameN"]);
+        checkMessageListeners({"name1": {weakRef: false, count: 1},
+                               "nameN": {weakRef: false, count: 1}}, 2);
+        next();
+      },
+      function() {
+        info("== DestroyDOMRequestHelper");
+        destroyDOMRequestHelperTest();
+        next();
+      },
+      function() {
+        info("== InitDOMRequestHelper with objects array");
+        initDOMRequestHelperTest([{
+          name: "name1",
+          weakRef: false
+        }, {
+          name: "nameN",
+          weakRef: true
+        }]);
+        checkMessageListeners({
+          "name1": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 2);
+        next();
+      },
+      function() {
+        info("== AddMessageListeners empty array");
+        addMessageListenersTest([], {
+        "name1": {weakRef: false, count: 1},
+        "nameN": {weakRef: true,  count: 1}
+        }, 2);
+        next();
+      },
+      function() {
+        info("== AddMessageListeners null");
+        addMessageListenersTest(null, {
+          "name1": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+          }, 2);
+        next();
+      },
+      function() {
+        info("== AddMessageListeners new listener, string only");
+        addMessageListenersTest("name2", {
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 3);
+        next();
+      },
+      function() {
+        info("== AddMessageListeners new listeners, strings array");
+        addMessageListenersTest(["name3", "name4"], {
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 5);
+        next();
+      },
+      function() {
+        info("== AddMessageListeners new listeners, objects array");
+        addMessageListenersTest([{
+          name: "name5",
+          weakRef: true
+        }, {
+          name: "name6",
+          weakRef: false
+        }], {
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 7);
+        next();
+      },
+      function() {
+        info("== RemoveMessageListeners, null");
+        removeMessageListenersTest(null, {
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 7);
+        next();
+      },
+      function() {
+        info("== RemoveMessageListeners, one message");
+        removeMessageListenersTest("name1", {
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 6);
+        next();
+      },
+      function() {
+        info("== RemoveMessageListeners, array of messages");
+        removeMessageListenersTest(["name2", "name3"], {
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 4);
+        next();
+      },
+      function() {
+        info("== RemoveMessageListeners, unknown message");
+        removeMessageListenersTest("unknown", {
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 4);
+        next();
+      },
+      function() {
+        try {
+          info("== AddMessageListeners, same message, same kind");
+          addMessageListenersTest("name4", {
+            "name4": {weakRef: false, count: 2},
+            "name5": {weakRef: true,  count: 1},
+            "name6": {weakRef: false, count: 1},
+            "nameN": {weakRef: true,  count: 1}
+          }, 4);
+          next();
+        } catch (ex) {
+          ok(false, "Unexpected exception " + ex);
+        }
+      },
+      function() {
+        info("== AddMessageListeners, same message, different kind");
+        try {
+          addMessageListenersTest({name: "name4", weakRef: true}, {
+            "name4": {weakRef: false, count: 2},
+            "name5": {weakRef: true,  count: 1},
+            "name6": {weakRef: false, count: 1},
+            "nameN": {weakRef: true,  count: 1}
+          }, 4);
+          ok(false, "Should have thrown an exception");
+        } catch (ex) {
+          ok(true, "Expected exception");
+          next();
+        }
+      },
+      function() {
+        info("== RemoveMessageListeners, message with two listeners");
+        try {
+          removeMessageListenersTest(["name4", "name5"], {
+            "name4": {weakRef: false, count: 1},
+            "name6": {weakRef: false, count: 1},
+            "nameN": {weakRef: true,  count: 1}
+          }, 3);
+          next();
+        } catch (ex) {
+          ok(false, "Unexpected exception " + ex);
+        }
+      },
+      function() {
+        info("== Test createRequest()");
+        ok(DOMRequest, "DOMRequest object exists");
+        var req = dummy.createRequest();
+        ok(req instanceof DOMRequest, "Returned a DOMRequest");
+        next();
+      },
+      function() {
+        info("== Test getRequestId(), removeRequest() and getRequest()");
+        var req = dummy.createRequest();
+        var id = dummy.getRequestId(req);
+        is(typeof id, "string", "id is a string");
+        var req_ = dummy.getRequest(id);
+        is(req, req_, "Got correct request");
+        dummy.removeRequest(id);
+        req = dummy.getRequest(id);
+        is(req, undefined, "No request");
+        next();
+      },
+      function() {
+        info("== Test createPromise()");
+        ok(Promise, "Promise object exists");
+        var promise = dummy.createPromise(function(resolve, reject) {
+          resolve(true);
+        });
+        ok(promise instanceof Promise, "Returned a Promise");
+        promise.then(next);
+      },
+      function() {
+        info("== Test createPromiseWithId()");
+        var _resolverId;
+        var promise = dummy.createPromiseWithId(function(resolverId) {
+          _resolverId = resolverId;
+        });
+        var resolver = dummy.getPromiseResolver(_resolverId);
+        ok(promise instanceof Promise, "Returned a Promise");
+        ok(typeof _resolverId === "string", "resolverId is a string");
+        ok(resolver != null, "resolverId is a valid id");
+        next();
+      },
+      function() {
+        info("== Test getResolver()");
+        var id;
+        var resolver;
+        var promise = dummy.createPromise(function(resolve, reject) {
+          var r = { resolve: resolve, reject: reject };
+          id = dummy.getPromiseResolverId(r);
+          resolver = r;
+          ok(typeof id === "string", "id is a string");
+          r.resolve(true);
+        }).then(function(unused) {
+          var r = dummy.getPromiseResolver(id);
+          ok(resolver === r, "Get succeeded");
+          next();
+        });
+      },
+      function() {
+        info("== Test removeResolver");
+        var id;
+        var promise = dummy.createPromise(function(resolve, reject) {
+          var r = { resolve: resolve, reject: reject };
+          id = dummy.getPromiseResolverId(r);
+          ok(typeof id === "string", "id is a string");
+
+          var resolver = dummy.getPromiseResolver(id);
+          info("Got resolver " + JSON.stringify(resolver));
+          ok(resolver === r, "Resolver get succeeded");
+
+          r.resolve(true);
+        }).then(function(unused) {
+          dummy.removePromiseResolver(id);
+          var resolver = dummy.getPromiseResolver(id);
+          ok(resolver === undefined, "removeResolver: get failed");
+          next();
+        });
+      },
+      function() {
+        info("== Test takeResolver");
+        var id;
+        var resolver;
+        var promise = dummy.createPromise(function(resolve, reject) {
+          var r = { resolve: resolve, reject: reject };
+          id = dummy.getPromiseResolverId(r);
+          resolver = r;
+          ok(typeof id === "string", "id is a string");
+
+          var gotR = dummy.getPromiseResolver(id);
+          ok(gotR === r, "resolver get succeeded");
+
+          r.resolve(true);
+        }).then(function(unused) {
+          var r = dummy.takePromiseResolver(id);
+          ok(resolver === r, "take should succeed");
+
+          r = dummy.getPromiseResolver(id);
+          ok(r === undefined, "takeResolver: get failed");
+          next();
+        });
+      },
+      function() {
+        info("== Test window destroyed without messages and without GC");
+        checkWindowDestruction({ gc: false }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
+          next();
+        });
+      },
+      function() {
+        info("== Test window destroyed without messages and with GC");
+        checkWindowDestruction({ gc: true }, function(uninitCalled) {
+          ok(!uninitCalled, "uninit() should NOT have been called");
+          next();
+        });
+      },
+      function() {
+        info("== Test window destroyed with weak messages and without GC");
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: true }],
+                                 gc: false }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
+          next();
+        });
+      },
+      function() {
+        info("== Test window destroyed with weak messages and with GC");
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: true }],
+                                 gc: true }, function(uninitCalled) {
+          ok(!uninitCalled, "uninit() should NOT have been called");
+          next();
+        });
+      },
+      function() {
+        info("== Test window destroyed with strong messages and without GC");
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: false }],
+                                 gc: false }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
+          next();
+        });
+      },
+      function() {
+        info("== Test window destroyed with strong messages and with GC");
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: false }],
+                                 gc: true }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
+          next();
+        });
+      }
+    ];
+
+    function next() {
+      if (!tests.length) {
+        SimpleTest.finish();
+        return;
+      }
+
+      var test = tests.shift();
+      test();
+    }
+
+    function start() {
+      SimpleTest.waitForExplicitFinish();
+      next();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

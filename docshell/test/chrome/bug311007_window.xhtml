@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="311007Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="startup();"
+        title="bug 311007 test">
+
+  <script type="application/javascript" src="docshell_helpers.js"></script>
+  <script type="application/javascript"><![CDATA[
+  // `content` is the id of the browser element used for the test.
+  /* global content */
+/*
+   Regression test for bug 283733 and bug 307027.
+
+   Bug 283733
+     "accessing a relative anchor in a secure page removes the
+      locked icon and yellow background UI"
+
+   Bug 307027
+     "Going back from secure page to error page does not clear yellow bar"
+
+    And enhancements:
+
+    Bug 478927
+      onLocationChange should notify whether or not loading an error page.
+
+ */
+
+const kDNSErrorURI = "https://example/err.html";
+const kSecureURI =
+  "https://example.com/tests/docshell/test/navigation/blank.html";
+
+/*
+  Step 1: load a network error page.   <err.html>       Not Secure
+  Step 2: load a secure page.          <blank.html>     Secure
+  Step 3: a secure page + hashchange.  <blank.html#foo> Secure     (bug 283733)
+  Step 4: go back to the error page.   <err.html>       Not Secure (bug 307027)
+ */
+
+var gListener = null;
+
+function WebProgressListener() {
+  this._callback = null;
+}
+
+WebProgressListener.prototype = {
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
+  ]),
+
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+    setTimeout(this._callback, 0, aWebProgress, aRequest, aLocation, aFlags);
+  },
+
+  set callback(aVal) {
+    this._callback = aVal;
+  }
+};
+
+function startup() {
+  gListener = new WebProgressListener();
+
+  document.getElementById("content")
+          .webProgress
+          .addProgressListener(gListener,
+                               Ci.nsIWebProgress
+                                 .NOTIFY_LOCATION);
+
+  setTimeout(step1A, 0);
+}
+
+/******************************************************************************
+ * Step 1: Load an error page, and confirm UA knows it's insecure.
+ ******************************************************************************/
+
+function step1A() {
+  gListener.callback = step1B;
+  content.location = kDNSErrorURI;
+}
+
+function step1B(aWebProgress, aRequest, aLocation, aFlags) {
+  is(aLocation.spec, kDNSErrorURI, "Error page's URI (1)");
+
+  ok(!(aFlags & Ci.nsIWebProgressListener
+                  .LOCATION_CHANGE_SAME_DOCUMENT),
+     "DocShell loaded a document (1)");
+
+  ok((aFlags & Ci.nsIWebProgressListener
+                 .LOCATION_CHANGE_ERROR_PAGE),
+     "This page is an error page.");
+
+  ok(!(document.getElementById("content")
+                   .browsingContext
+                   .secureBrowserUI.state &
+       Ci.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is not a secure page (1)");
+
+  /* Go to step 2. */
+  setTimeout(step2A, 0);
+}
+
+/******************************************************************************
+ * Step 2: Load a HTTPS page, and confirm it's secure.
+ ******************************************************************************/
+
+function step2A() {
+  gListener.callback = step2B;
+  content.location = kSecureURI;
+}
+
+function step2B(aWebProgress, aRequest, aLocation, aFlags) {
+  is(aLocation.spec, kSecureURI, "A URI on HTTPS (2)");
+
+  ok(!(aFlags & Ci.nsIWebProgressListener
+                  .LOCATION_CHANGE_SAME_DOCUMENT),
+     "DocShell loaded a document (2)");
+
+  ok(!(aFlags & Ci.nsIWebProgressListener
+                  .LOCATION_CHANGE_ERROR_PAGE),
+     "This page is not an error page.");
+
+  ok((document.getElementById("content")
+                  .browsingContext
+                  .secureBrowserUI.state &
+      Ci.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is a secure page (2)");
+
+  /* Go to step 3. */
+  setTimeout(step3A, 0);
+}
+
+/*****************************************************************************
+ * Step 3: Trigger hashchange within a secure page, and confirm UA knows
+ *         it's secure. (Bug 283733)
+ *****************************************************************************/
+
+function step3A() {
+  gListener.callback = step3B;
+  content.location += "#foo";
+}
+
+function step3B(aWebProgress, aRequest, aLocation, aFlags) {
+  is(aLocation.spec, kSecureURI + "#foo", "hashchange on HTTPS (3)");
+
+  ok((aFlags & Ci.nsIWebProgressListener
+                 .LOCATION_CHANGE_SAME_DOCUMENT),
+     "We are in the same document as before (3)");
+
+  ok(!(aFlags & Ci.nsIWebProgressListener
+                  .LOCATION_CHANGE_ERROR_PAGE),
+     "This page is not an error page.");
+
+  ok((document.getElementById("content")
+                  .browsingContext
+                  .secureBrowserUI.state &
+      Ci.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is a secure page (3)");
+
+  /* Go to step 4. */
+  setTimeout(step4A, 0);
+}
+
+/*****************************************************************************
+ * Step 4: Go back from a secure page to an error page, and confirm UA knows
+ *         it's not secure. (Bug 307027)
+ *****************************************************************************/
+
+function step4A() {
+  gListener.callback = step4B;
+  content.history.go(-2);
+}
+
+function step4B(aWebProgress, aRequest, aLocation, aFlags) {
+  is(aLocation.spec, kDNSErrorURI, "Go back to the error URI (4)");
+
+  ok(!(aFlags & Ci.nsIWebProgressListener
+                  .LOCATION_CHANGE_SAME_DOCUMENT),
+       "DocShell loaded a document (4)");
+
+  ok((aFlags & Ci.nsIWebProgressListener
+                 .LOCATION_CHANGE_ERROR_PAGE),
+     "This page is an error page.");
+
+  ok(!(document.getElementById("content")
+                   .browsingContext
+                   .secureBrowserUI.state &
+       Ci.nsIWebProgressListener.STATE_IS_SECURE),
+     "This is not a secure page (4)");
+
+  /* End. */
+  document.getElementById("content")
+          .webProgress.removeProgressListener(gListener);
+  gListener = null;
+  finish();
+}
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+</window>

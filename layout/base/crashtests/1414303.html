@@ -1,0 +1,11 @@
+<style>
+  * { counter-reset: c; }
+</style>
+<script>
+function go() {
+  host.attachShadow({ mode: "open" }).innerHTML = form.outerHTML;
+}
+</script>
+<body onload=go()>
+<form id="form" style="counter-reset: c">
+  <div id="host">

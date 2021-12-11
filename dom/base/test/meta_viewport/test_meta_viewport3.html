@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>meta viewport test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=320">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>width=320</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 80);
+      is(info.defaultZoom, 2.5,   "initial zoom fits the displayWidth");
+      is(info.width,       320,   "width is set explicitly");
+      is(info.height,      40,   "height is at the absolute minimum");
+      is(info.autoSize,    false, "width=device-width enables autoSize");
+      is(info.allowZoom,   true,  "zooming is enabled by default");
+
+      info = getViewportInfo(480, 800);
+      is(info.defaultZoom, 1.5,   "initial zoom fits the new displayWidth");
+      is(info.width,       320,   "explicit width is unchanged");
+      is(info.height,      533,   "height changes proportional to displayHeight");
+    });
+
+    add_task(async function test2() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.5));
+
+      // With an explicit width in CSS px, the scaleRatio has no effect.
+      let info = getViewportInfo(800, 80);
+      is(info.defaultZoom, 2.5,   "initial zoom still fits the displayWidth");
+      is(info.width,       320,   "width is still set explicitly");
+      is(info.height,      40,   "height is still minimum height");
+    });
+  </script>
+</body>
+</html>

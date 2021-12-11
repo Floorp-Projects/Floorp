@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.release_mark_as_shipped:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-balrog-scheduling
+    - release-bouncer-aliases
+    - release-version-bump
+
+job-defaults:
+    description: mark release as shipped in Ship-It
+    worker-type:
+        by-release-level:
+            production: scriptworker-k8s/gecko-3-shipit
+            staging: scriptworker-k8s/gecko-1-shipit
+    worker:
+        implementation: shipit-shipped
+    scopes:
+        by-release-level:
+            production:
+                - project:releng:ship-it:server:production
+                - project:releng:ship-it:action:mark-as-shipped
+            staging:
+                - project:releng:ship-it:server:staging
+                - project:releng:ship-it:action:mark-as-shipped
+    run-on-projects: []
+    shipping-phase: ship
+
+jobs:
+    firefox:
+        name: release-firefox_mark_as_shipped
+        shipping-product: firefox
+
+    devedition:
+        name: release-devedition_mark_as_shipped
+        shipping-product: devedition

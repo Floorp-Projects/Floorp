@@ -1,0 +1,77 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+toc {
+  position:fixed;
+  top:0; 
+  left:0; 
+  width:12em; 
+  height:100%;
+  border-right: 1px solid black;
+  background-color: #CCE6F3;
+  font-family: Arial;
+  overflow:auto;
+  color: darkblue;
+}
+
+toc > title {
+  display: block;
+  font-size:12pt;
+  font-weight: bold;
+  background-color: black;
+  color:white;
+}
+
+toclink:visited {
+  color: purple;
+}
+
+toclink:active {
+  color: red;
+}
+
+level1 {
+   display: block;
+   font-weight:bold;
+   font-size:12pt;
+   margin-left: 4px;
+   margin-bottom: 2px;
+}
+
+level1 > toclink {
+   list-style-position: inside;
+   text-decoration: none;
+   color: darkblue;
+}
+
+level2 {
+   display: block;
+   font-size:11pt;
+   margin-left: 8px;
+   margin-bottom: 2px;
+}
+
+level2 > toclink {
+   list-style-position: inside;
+   text-decoration: none;
+   color: darkblue;
+}
+
+level3 {
+   display: list-item;
+   font-size: 8pt;
+   margin-left: 12px;
+   margin-bottom: 2px;
+}
+
+level3 > toclink {
+   list-style-position: inside;
+   text-decoration: none;
+   color: darkblue;
+}
+
+toc img {
+   margin-right: 1em;
+}
+

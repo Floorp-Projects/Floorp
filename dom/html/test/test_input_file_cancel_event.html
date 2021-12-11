@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for the input type=file cancel event</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<input type=file></input>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.init(window);
+MockFilePicker.useBlobFile();
+MockFilePicker.returnValue = MockFilePicker.returnCancel;
+
+let input = document.querySelector('input[type=file]');
+input.addEventListener('cancel', event => {
+  ok(true, "cancel event correctly sent");
+
+  is(event.target, input, "Has correct event target");
+  is(event.isTrusted, true, "Event is trusted");
+  is(event.bubbles, true, "Event bubbles");
+  is(event.cancelable, false, "Event is not cancelable");
+  is(event.composed, false, "Event is not composed");
+
+  SimpleTest.executeSoon(function() {
+    MockFilePicker.cleanup();
+    SimpleTest.finish();
+  });
+});
+input.addEventListener('change' , () => {
+  ok(false, "unexpected change event");
+})
+input.click();
+</script>
+</body>
+</html>
+

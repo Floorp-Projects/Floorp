@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1581337
+-->
+<head>
+  <title>Test for Bug 1581337</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1581337">Mozilla Bug 1581337</a>
+  <p id="display"></p>
+
+  <div id="editor" contenteditable><span _moz_quote="true">foo bar</span></div>
+</body>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let editor = document.getElementById("editor");
+  editor.focus();
+  let selection = document.getSelection();
+  selection.collapse(editor.firstChild.firstChild, 4);
+  synthesizeKey("KEY_Backspace");
+  // FYI: `_moz_quote` attribute is ignored at serializing HTML content.
+  is(editor.innerHTML, "<span>foobar</span>", "Backspace should delete the previous whitespace");
+  synthesizeKey("KEY_Delete");
+  is(editor.innerHTML, "<span>fooar</span>", "Delete should delete the next character, \"b\"");
+  SimpleTest.finish();
+});
+</script>
+</html>

@@ -1,0 +1,21 @@
+<html>
+<body onload="fillCanvas('white'); fillCanvas('purple');">
+<script>
+function fillCanvas(gradColor) {
+    var c = document.getElementById(gradColor + 'Canvas');
+    var ctx = c.getContext("2d");
+    // Create solid-color gradient, with all stops same color
+    var grd = ctx.createRadialGradient(75,50,5,90,60,100);
+    grd.addColorStop(0,gradColor);
+    grd.addColorStop(1,gradColor);
+    // Fill with gradient, but effectively a solid fill
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,200,100);
+}
+</script>
+<canvas id="whiteCanvas" width="200" height="100"></canvas>
+<br>
+<canvas id="purpleCanvas" width="200" height="100"></canvas>
+</body>
+</html>
+

@@ -1,0 +1,177 @@
+[css-masonry]
+title = "experimental-features-css-masonry2"
+description = "experimental-features-css-masonry-description"
+description-links = {explainer = "https://github.com/w3c/csswg-drafts/blob/master/css-grid-2/MASONRY-EXPLAINER.md", w3c-issue = "https://github.com/w3c/csswg-drafts/issues/4650", bug = "https://bugzilla.mozilla.org/show_bug.cgi?id=1607439"}
+restart-required = false
+preference = "layout.css.grid-template-masonry-value.enabled"
+type = "boolean"
+bug-numbers = [1607954]
+is-public = true
+default-value = {default = false, nightly = true}
+
+[css-cascade-layers]
+title = "experimental-features-css-cascade-layers"
+description = "experimental-features-css-cascade-layers-description"
+description-links = {spec = "https://drafts.csswg.org/css-cascade-5/#layering", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1699215"}
+restart-required = false
+preference = "layout.css.cascade-layers.enabled"
+type = "boolean"
+bug-numbers = [1699215]
+is-public = true
+default-value = {default = false, nightly = true}
+
+[web-api-webgpu]
+title = "experimental-features-web-gpu2"
+description = "experimental-features-web-gpu-description2"
+description-links = {wikipedia = "https://en.wikipedia.org/wiki/Graphics%20Processing%20Unit", spec = "https://gpuweb.github.io/gpuweb/", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1602129"}
+restart-required = true
+preference = "dom.webgpu.enabled"
+type = "boolean"
+bug-numbers = [1602129]
+is-public = {default = false, nightly = true}
+default-value = false
+
+[media-jxl]
+title = "experimental-features-media-jxl"
+description = "experimental-features-media-jxl-description"
+description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1539075"}
+restart-required = false
+preference = "image.jxl.enabled"
+type = "boolean"
+bug-numbers = [1539075]
+is-public = {default = false, nightly = true}
+default-value = false
+
+[css-constructable-stylesheets]
+title = "experimental-features-css-constructable-stylesheets"
+description = "experimental-features-css-constructable-stylesheets-description"
+description-links = {mdn-cssstylesheet = "https://developer.mozilla.org/docs/Web/API/CSSStyleSheet", mdn-shadowdom = "https://developer.mozilla.org/docs/Web/Web_Components/Using_shadow_DOM", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1520690"}
+restart-required = false
+preference = "layout.css.constructable-stylesheets.enabled"
+type = "boolean"
+bug-numbers = [1520690]
+is-public = {default = false, nightly = true}
+default-value = false
+
+[devtools-execution-context-selector]
+title = "experimental-features-devtools-execution-context-selector"
+description = "experimental-features-devtools-execution-context-selector-description"
+description-links = {bugzilla1 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605154", bugzilla2 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605153"}
+restart-required = false
+preference = "devtools.webconsole.input.context"
+type = "boolean"
+bug-numbers = [1605154, 1605153]
+is-public = {default = false, nightly = true}
+default-value = {default = false, nightly = true}
+
+[devtools-compatibility-panel]
+title = "experimental-features-devtools-compatibility-panel"
+description = "experimental-features-devtools-compatibility-panel-description"
+description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1584464"}
+restart-required = false
+preference = "devtools.inspector.compatibility.enabled"
+type = "boolean"
+bug-numbers = [1605154, 1605153]
+is-public = true
+default-value = {default = false, nightly = true, dev-edition = true}
+
+[cookie-samesite-lax-by-default]
+title = "experimental-features-cookie-samesite-lax-by-default2"
+description = "experimental-features-cookie-samesite-lax-by-default2-description"
+restart-required = false
+preference = "network.cookie.sameSite.laxByDefault"
+type = "boolean"
+bug-numbers = [1618610]
+default-value = {default = false, nightly = true}
+is-public = true
+
+[cookie-samesite-none-requires-secure]
+title = "experimental-features-cookie-samesite-none-requires-secure2"
+description = "experimental-features-cookie-samesite-none-requires-secure2-description"
+restart-required = false
+preference = "network.cookie.sameSite.noneRequiresSecure"
+type = "boolean"
+bug-numbers = [1618610]
+is-public = true
+default-value = {default = false, nightly = true}
+
+[abouthome-startup-cache]
+title = "experimental-features-abouthome-startup-cache"
+description = "experimental-features-abouthome-startup-cache-description"
+restart-required = true
+preference = "browser.startup.homepage.abouthome_cache.enabled"
+type = "boolean"
+bug-numbers = [1614351]
+is-public = true
+default-value = {default = false, nightly = true}
+
+[cookie-samesite-schemeful]
+title = "experimental-features-cookie-samesite-schemeful"
+description = "experimental-features-cookie-samesite-schemeful-description"
+restart-required = false
+preference = "network.cookie.sameSite.schemeful"
+type = "boolean"
+bug-numbers = [1651119]
+is-public = true
+default-value = {default = false, nightly = true}
+
+[devtools-serviceworker-debugger-support]
+title = "experimental-features-devtools-serviceworker-debugger-support"
+description = "experimental-features-devtools-serviceworker-debugger-support-description"
+restart-required = true
+preference = "devtools.debugger.features.windowless-service-workers"
+type = "boolean"
+bug-numbers = [1651607]
+is-public = true
+default-value = false
+
+[webrtc-global-mute-toggles]
+title = "experimental-features-webrtc-global-mute-toggles"
+description = "experimental-features-webrtc-global-mute-toggles-description"
+restart-required = false
+preference = "privacy.webrtc.globalMuteToggles"
+type = "boolean"
+bug-numbers = [1643027]
+is-public = true
+default-value = false
+
+[win32-lockdown]
+title = "experimental-features-win32k-lockdown"
+description = "experimental-features-win32k-lockdown-description"
+restart-required = true
+preference = "security.sandbox.content.win32k-disable"
+type = "boolean"
+bug-numbers = [1697865]
+is-public = true
+default-value = false
+
+[fission]
+title = "experimental-features-fission"
+description = "experimental-features-fission-description"
+description-links = {wiki = "https://wiki.mozilla.org/Project_Fission"}
+restart-required = true
+preference = "fission.autostart"
+type = "boolean"
+bug-numbers = [1652134]
+is-public = true
+default-value = false
+
+[multi-pip]
+title = "experimental-features-multi-pip"
+description = "experimental-features-multi-pip-description"
+restart-required = false
+preference = "media.videocontrols.picture-in-picture.allow-multiple"
+type = "boolean"
+bug-numbers = [1676162]
+is-public = true
+default-value = true
+
+[url-bar-ime-search]
+title = "experimental-features-ime-search"
+description = "experimental-features-ime-search-description"
+restart-required = false
+preference = "browser.urlbar.keepPanelOpenDuringImeComposition"
+type = "boolean"
+bug-numbers = [1673971]
+is-public = true
+default-value = false

@@ -1,0 +1,75 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* these styles com from Photon. Keep in mind that the "default" style is not used
+   in panels, and we should use the "micro" instead for default, stand-alone buttons. */
+
+:root.theme-light {
+  --button-text-color: var(--grey-90);
+  --button-text-hover-color: var(--grey-90);
+  --button-text-pressed-color: var(--grey-90);
+  --button-background-color: var(--grey-90-a10);
+  --button-background-hover-color: var(--grey-90-a20);
+  --button-background-pressed-color: var(--grey-90-a30);
+}
+
+:root.theme-dark {
+  --button-text-color: var(--grey-40);
+  --button-text-hover-color: var(--grey-30);
+  --button-text-pressed-color: var(--grey-30);
+  --button-background-color: var(--grey-10-a20);
+  --button-background-hover-color: var(--grey-10-a25);
+  --button-background-pressed-color: var(--grey-10-a30);
+}
+
+.ui-button {
+  appearance: none;
+  transition: background-color 0.05s ease-in-out;
+
+  margin: 0;
+  height: calc(var(--base-unit) * 6);
+  padding-inline-start: calc(2 * var(--base-unit));
+  padding-inline-end: calc(2 * var(--base-unit));
+  border: none;
+  border-radius: calc(var(--base-unit) / 2);
+
+  color: var(--button-text-color);
+  background: var(--button-background-color);
+  font-size: var(--caption-10-font-size);
+}
+
+.ui-button:-moz-focusring {
+  outline: none;
+}
+.ui-button::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+.ui-button:enabled:hover {
+  background: var(--button-background-hover-color);
+  color: var(--button-text-hover-color);
+}
+
+.ui-button:enabled:active {
+  background: var(--button-background-pressed-color);
+  color: var(--button-text-pressed-color);
+}
+
+.ui-button:focus {
+  box-shadow: 0 0 0 1px var(--blue-50) inset,
+    0 0 0 1px var(--blue-50),
+    0 0 0 4px var(--blue-50-a30);
+}
+
+.ui-button:disabled {
+  opacity: 0.4;
+}
+
+/* Note: this "micro" variant here is not the same as the "micro" variant
+         in Photon docs (since we are using that one for our default size) */
+.ui-button--micro {
+  height: auto;
+  padding: calc(var(--base-unit) * 0.5) var(--base-unit);
+}

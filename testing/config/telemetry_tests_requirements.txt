@@ -1,0 +1,4 @@
+-r marionette_requirements.txt
+
+../telemetry/marionette/harness
+

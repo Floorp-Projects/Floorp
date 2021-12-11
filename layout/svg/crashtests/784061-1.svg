@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait">
+
+<defs><path id="x"/></defs>
+
+<script>
+function boom()
+{
+    document.getElementById("x").style.transform = "translate(0px)";
+    document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+</script>
+
+</svg>

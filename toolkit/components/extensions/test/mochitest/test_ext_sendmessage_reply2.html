@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function backgroundScript(token, id, otherId) {
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertEq(id, sender.id, `${id}: Got expected sender ID`);
+
+    if (msg === `content-${token}`) {
+      browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"),
+                              `${id}: sender url correct`);
+
+      let tabId = sender.tab.id;
+      browser.tabs.sendMessage(tabId, `${token}-contentMessage`);
+
+      sendReply(`${token}-done`);
+    } else if (msg === `tab-${token}`) {
+      browser.runtime.sendMessage(otherId, `${otherId}-tabMessage`);
+      browser.runtime.sendMessage(`${token}-tabMessage`);
+
+      sendReply(`${token}-done`);
+    } else {
+      browser.test.fail(`${id}: Unexpected runtime message received: ${msg} ${uneval(sender)}`);
+    }
+  });
+
+  browser.runtime.onMessageExternal.addListener((msg, sender, sendReply) => {
+    browser.test.assertEq(otherId, sender.id, `${id}: Got expected external sender ID`);
+
+    if (msg === `content-${id}`) {
+      browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"),
+                              `${id}: external sender url correct`);
+
+      sendReply(`${otherId}-done`);
+    } else if (msg === `tab-${id}`) {
+      sendReply(`${otherId}-done`);
+    } else if (msg !== `${id}-tabMessage`) {
+      browser.test.fail(`${id}: Unexpected runtime external message received: ${msg} ${uneval(sender)}`);
+    }
+  });
+
+  browser.tabs.create({url: "tab.html"});
+}
+
+function contentScript(token, id, otherId) {
+  let gotContentMessage = false;
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertEq(id, sender.id, `${id}: Got expected sender ID`);
+
+    browser.test.assertEq(`${token}-contentMessage`, msg,
+                          `${id}: Correct content script message`);
+    if (msg === `${token}-contentMessage`) {
+      gotContentMessage = true;
+    }
+  });
+
+  Promise.all([
+    browser.runtime.sendMessage(otherId, `content-${otherId}`).then(resp => {
+      browser.test.assertEq(`${id}-done`, resp, `${id}: Correct content script external response token`);
+    }),
+
+    browser.runtime.sendMessage(`content-${token}`).then(resp => {
+      browser.test.assertEq(`${token}-done`, resp, `${id}: Correct content script response token`);
+    }).catch(e => {
+      browser.test.fail(`content-${token} rejected with ${e.message}`);
+    }),
+  ]).then(() => {
+    browser.test.assertTrue(gotContentMessage, `${id}: Got content script message`);
+
+    browser.test.sendMessage("content-script-done");
+  });
+}
+
+async function tabScript(token, id, otherId) {
+  let gotTabMessage = false;
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertEq(id, sender.id, `${id}: Got expected sender ID`);
+
+    if (String(msg).startsWith("content-")) {
+      return;
+    }
+
+    browser.test.assertEq(`${token}-tabMessage`, msg,
+                          `${id}: Correct tab script message`);
+    if (msg === `${token}-tabMessage`) {
+      gotTabMessage = true;
+    }
+  });
+
+  browser.test.sendMessage("tab-script-loaded");
+
+  await new Promise(resolve => {
+    const listener = (msg) => {
+      if (msg !== "run-tab-script") {
+        return;
+      }
+      browser.test.onMessage.removeListener(listener);
+      resolve();
+    };
+    browser.test.onMessage.addListener(listener);
+  });
+
+  Promise.all([
+    browser.runtime.sendMessage(otherId, `tab-${otherId}`).then(resp => {
+      browser.test.assertEq(`${id}-done`, resp, `${id}: Correct tab script external response token`);
+    }),
+
+    browser.runtime.sendMessage(`tab-${token}`).then(resp => {
+      browser.test.assertEq(`${token}-done`, resp, `${id}: Correct tab script response token`);
+    }),
+  ]).then(() => {
+    browser.test.assertTrue(gotTabMessage, `${id}: Got tab script message`);
+
+    window.close();
+
+    browser.test.sendMessage("tab-script-done");
+  });
+}
+
+function makeExtension(id, otherId) {
+  let token = Math.random();
+
+  let args = `${token}, ${JSON.stringify(id)}, ${JSON.stringify(otherId)}`;
+
+  let extensionData = {
+    background: `(${backgroundScript})(${args})`,
+    manifest: {
+      "applications": {"gecko": {id}},
+
+      "permissions": ["tabs"],
+
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "js": ["content_script.js"],
+        "run_at": "document_start",
+      }],
+    },
+
+    files: {
+      "tab.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script src="tab.js"><\/script>
+          </head>
+        </html>`,
+
+      "tab.js": `(${tabScript})(${args})`,
+
+      "content_script.js": `(${contentScript})(${args})`,
+    },
+  };
+  return extensionData;
+}
+
+add_task(async function test_contentscript() {
+  const ID1 = "sendmessage1@mochitest.mozilla.org";
+  const ID2 = "sendmessage2@mochitest.mozilla.org";
+
+  let extension1 = ExtensionTestUtils.loadExtension(makeExtension(ID1, ID2));
+  let extension2 = ExtensionTestUtils.loadExtension(makeExtension(ID2, ID1));
+
+  await Promise.all([
+    extension1.startup(),
+    extension2.startup(),
+    extension1.awaitMessage("tab-script-loaded"),
+    extension2.awaitMessage("tab-script-loaded"),
+  ]);
+
+  extension1.sendMessage("run-tab-script");
+  extension2.sendMessage("run-tab-script");
+
+  let win = window.open("file_sample.html");
+
+  await waitForLoad(win);
+
+  await Promise.all([
+    extension1.awaitMessage("content-script-done"),
+    extension2.awaitMessage("content-script-done"),
+    extension1.awaitMessage("tab-script-done"),
+    extension2.awaitMessage("tab-script-done"),
+  ]);
+
+  win.close();
+
+  await extension1.unload();
+  await extension2.unload();
+});
+</script>
+
+</body>
+</html>

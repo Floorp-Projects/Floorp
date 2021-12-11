@@ -1,0 +1,136 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import "chrome://global/skin/global.css";
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+#topBar {
+  appearance: auto;
+  -moz-default-appearance: toolbar;
+  -moz-window-dragging: drag;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+#viewGroup {
+  margin: 4px 0 9px;
+}
+
+#viewGroup > radio,
+#viewGroup > toolbarbutton {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton;
+  font: menu;
+  margin: 0;
+  padding: 0 6px;
+  height: 22px;
+}
+
+@media (-moz-mac-big-sur-theme: 0) {
+  #viewGroup > radio[selected=true],
+  #viewGroup > toolbarbutton[checked=true] {
+    color: #FFF !important;
+    text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
+  }
+}
+
+#mainDeck {
+  padding: 10px;
+}
+
+/* Misc */
+tree {
+  margin: .5em;
+}
+
+html|input {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+html|input.header {
+  margin-inline-start: 0;
+}
+
+#imagecontainerbox {
+  margin: .5em;
+  background: white;
+  overflow: auto;
+  border: 1px solid ThreeDLightShadow;
+}
+
+html|input:disabled {
+  font-style: italic;
+}
+
+/* General Tab */
+
+#securityBox description {
+  margin-inline-start: 10px;
+}
+
+#general-security-identity {
+  white-space: pre-wrap;
+  line-height: 2em;
+}
+
+/* Media Tab */
+#imagetree {
+  min-height: 10em;
+  margin-bottom: 0;
+}
+
+#mediaSplitter {
+  background: none;
+}
+
+#mediaTable {
+  margin-bottom: 2em;
+}
+
+#mediaLabelColumn {
+  min-width: 10em;
+}
+
+#thepreviewimage {
+  margin: 1em;
+}
+
+treechildren::-moz-tree-cell-text(broken) {
+  font-style: italic;
+  color: graytext;
+}
+
+/* Permissions Tab */
+#permList {
+  margin: .5em;
+  overflow: auto;
+  appearance: auto;
+  -moz-default-appearance: listbox;
+  color: FieldText;
+}
+
+.permission {
+  padding: 6px 7px;
+  min-height: 25px;
+  border-bottom: 1px dotted ThreeDShadow;
+}
+
+.permissionLabel {
+  font-weight: bold;
+}
+
+.permission:hover {
+  background-color: -moz-dialog;
+  color: -moz-DialogText;
+}
+
+/* Security Tab */
+
+#securityPanel table {
+  margin-bottom: 1em;
+}

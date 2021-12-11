@@ -1,0 +1,501 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+;
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+async function waitAboutAddonsRendered(addonId) {
+  await ContentTaskUtils.waitForCondition(() => {
+    return content.document.querySelector(`div.addon-item[addonID="${addonId}"]`);
+  }, `wait Addon Item for ${addonId} to be rendered`);
+}
+
+async function navigateToAddonDetails(addonId) {
+  const item = content.document.querySelector(`div.addon-item[addonID="${addonId}"]`);
+  const rect = item.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  const domWinUtils = content.window.windowUtils;
+
+  domWinUtils.sendMouseEventToWindow("mousedown", x, y, 0, 1, 0);
+  domWinUtils.sendMouseEventToWindow("mouseup", x, y, 0, 1, 0);
+}
+
+async function waitAddonOptionsPage([addonId, expectedText]) {
+  await ContentTaskUtils.waitForCondition(() => {
+    const optionsIframe = content.document.querySelector(`#addon-options`);
+    return optionsIframe && optionsIframe.contentDocument.readyState === "complete" &&
+           optionsIframe.contentDocument.body.innerText.includes(expectedText);
+  }, `wait Addon Options ${expectedText} for ${addonId} to be loaded`);
+
+  const optionsIframe = content.document.querySelector(`#addon-options`);
+
+  return {
+    iframeHeight: optionsIframe.style.height,
+    documentHeight: optionsIframe.contentDocument.documentElement.scrollHeight,
+    bodyHeight: optionsIframe.contentDocument.body.scrollHeight,
+  };
+}
+
+async function clickOnLinkInOptionsPage(selector) {
+  const optionsIframe = content.document.querySelector(`#addon-options`);
+  optionsIframe.contentDocument.querySelector(selector).click();
+}
+
+async function clickAddonOptionButton() {
+  content.document.querySelector(`button#open-addon-options`).click();
+}
+
+async function navigateBack() {
+  content.window.history.back();
+}
+
+function waitDOMContentLoaded(checkUrlCb) {
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+
+  return new Promise(resolve => {
+    const listener = (event) => {
+      if (checkUrlCb(event.target.defaultView.location.href)) {
+        BrowserApp.deck.removeEventListener("DOMContentLoaded", listener);
+        resolve();
+      }
+    };
+
+    BrowserApp.deck.addEventListener("DOMContentLoaded", listener);
+  });
+}
+
+function waitAboutAddonsLoaded() {
+  return waitDOMContentLoaded(url => url === "about:addons");
+}
+
+function clickAddonDisable() {
+  content.document.querySelector("#disable-btn").click();
+}
+
+function clickAddonEnable() {
+  content.document.querySelector("#enable-btn").click();
+}
+
+add_task(async function test_options_ui_iframe_height() {
+  const addonID = "test-options-ui@mozilla.org";
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: {
+        gecko: {id: addonID},
+      },
+      name: "Options UI Extension",
+      description: "Longer addon description",
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      // An option page with the document element bigger than the body.
+      "options.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              html { height: 500px; border: 1px solid black; }
+              body { height: 200px; }
+            </style>
+          </head>
+          <body>
+            <h1>Options page 1</h1>
+            <a href="options2.html">go to page 2</a>
+          </body>
+        </html>
+      `,
+      // A second option page with the body element bigger than the document.
+      "options2.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              html { height: 200px; border: 1px solid black; }
+              body { height: 350px; }
+            </style>
+          </head>
+          <body>
+            <h1>Options page 2</h1>
+          </body>
+        </html>
+      `,
+    },
+  });
+
+  await extension.startup();
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+
+  BrowserApp.addTab("about:addons", {
+    selected: true,
+    parentId: BrowserApp.selectedTab.id,
+  });
+
+  await onceAboutAddonsLoaded;
+
+  is(BrowserApp.selectedTab.currentURI.spec, "about:addons",
+     "about:addons is the currently selected tab");
+
+  await SpecialPowers.spawn(BrowserApp.selectedTab.browser, [addonID], waitAboutAddonsRendered);
+
+  await SpecialPowers.spawn(BrowserApp.selectedTab.browser, [addonID], navigateToAddonDetails);
+
+  const optionsSizes = await SpecialPowers.spawn(
+    BrowserApp.selectedTab.browser, [[addonID, "Options page 1"]], waitAddonOptionsPage
+  );
+
+  ok(parseInt(optionsSizes.iframeHeight, 10) >= 500,
+     "The addon options iframe is at least 500px");
+
+  is(optionsSizes.iframeHeight, optionsSizes.documentHeight + "px",
+     "The addon options iframe has the expected height");
+
+  await SpecialPowers.spawn(BrowserApp.selectedTab.browser, ["a"], clickOnLinkInOptionsPage);
+
+  const options2Sizes = await SpecialPowers.spawn(
+    BrowserApp.selectedTab.browser, [[addonID, "Options page 2"]], waitAddonOptionsPage
+  );
+
+  // The second option page has a body bigger than the document element
+  // and we expect the iframe to be bigger than that.
+  ok(parseInt(options2Sizes.iframeHeight, 10) > 200,
+     `The iframe is bigger then 200px (${options2Sizes.iframeHeight})`);
+
+  // The second option page has a body smaller than the document element of the first
+  // page and we expect the iframe to be smaller than for the previous options page.
+  ok(parseInt(options2Sizes.iframeHeight, 10) < 500,
+     `The iframe is smaller then 500px (${options2Sizes.iframeHeight})`);
+
+  is(options2Sizes.iframeHeight, options2Sizes.documentHeight + "px",
+     "The second addon options page has the expected height");
+
+  await SpecialPowers.spawn(BrowserApp.selectedTab.browser, [], navigateBack);
+
+  const backToOptionsSizes =  await SpecialPowers.spawn(
+    BrowserApp.selectedTab.browser, [[addonID, "Options page 1"]], waitAddonOptionsPage
+  );
+
+  // After going back to the first options page,
+  // we expect the iframe to have the same size of the previous load.
+  is(backToOptionsSizes.iframeHeight, optionsSizes.iframeHeight,
+     `When navigating back, the old iframe size is restored (${backToOptionsSizes.iframeHeight})`);
+
+  BrowserApp.closeTab(BrowserApp.selectedTab);
+
+  await extension.unload();
+});
+
+add_task(async function test_options_ui_open_aboutaddons_details() {
+  const addonID = "test-options-ui-open-addon-details@mozilla.org";
+
+  function background() {
+    browser.test.onMessage.addListener(msg => {
+      if (msg !== "runtime.openOptionsPage") {
+        browser.test.fail(`Received unexpected test message: ${msg}`);
+        return;
+      }
+
+      browser.runtime.openOptionsPage();
+    });
+  }
+
+  function optionsScript() {
+    browser.test.sendMessage("options-page-loaded", window.location.href);
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    background,
+    manifest: {
+      applications: {
+        gecko: {id: addonID},
+      },
+      name: "Options UI open addon details Extension",
+      description: "Longer addon description",
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      "options.js": optionsScript,
+      "options.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <h1>Options page</h1>
+            <script src="options.js"><\/script>
+          </body>
+        </html>
+      `,
+    },
+  });
+
+  await extension.startup();
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+
+  BrowserApp.addTab("about:addons", {
+    selected: true,
+    parentId: BrowserApp.selectedTab.id,
+  });
+
+  await onceAboutAddonsLoaded;
+
+  is(BrowserApp.selectedTab.currentURI.spec, "about:addons",
+     "about:addons is the currently selected tab");
+
+  info("Wait runtime.openOptionsPage to open the about:addond details in the existent tab");
+  extension.sendMessage("runtime.openOptionsPage");
+  await extension.awaitMessage("options-page-loaded");
+
+  is(BrowserApp.selectedTab.currentURI.spec, "about:addons",
+     "about:addons is still the currently selected tab once the options has been loaded");
+
+  BrowserApp.closeTab(BrowserApp.selectedTab);
+
+  await extension.unload();
+});
+
+add_task(async function test_options_ui_open_in_tab() {
+  const addonID = "test-options-ui@mozilla.org";
+
+  function background() {
+    browser.test.onMessage.addListener(msg => {
+      if (msg !== "runtime.openOptionsPage") {
+        browser.test.fail(`Received unexpected test message: ${msg}`);
+        return;
+      }
+
+      browser.runtime.openOptionsPage();
+    });
+  }
+
+  function optionsScript() {
+    browser.test.sendMessage("options-page-loaded", window.location.href);
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    background,
+    manifest: {
+      applications: {
+        gecko: {id: addonID},
+      },
+      name: "Options UI open_in_tab Extension",
+      description: "Longer addon description",
+      options_ui: {
+        page: "options.html",
+        open_in_tab: true,
+      },
+    },
+    files: {
+      "options.js": optionsScript,
+      "options.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <h1>Options page</h1>
+            <script src="options.js"><\/script>
+          </body>
+        </html>
+      `,
+    },
+  });
+
+  await extension.startup();
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+
+  BrowserApp.selectOrAddTab("about:addons", {
+    selected: true,
+    parentId: BrowserApp.selectedTab.id,
+  });
+
+  await onceAboutAddonsLoaded;
+
+  const aboutAddonsTab = BrowserApp.selectedTab;
+
+  is(aboutAddonsTab.currentURI.spec, "about:addons",
+     "about:addons is the currently selected tab");
+
+  await SpecialPowers.spawn(aboutAddonsTab.browser, [addonID], waitAboutAddonsRendered);
+  await SpecialPowers.spawn(aboutAddonsTab.browser, [addonID], navigateToAddonDetails);
+
+  const onceAddonOptionsLoaded = waitDOMContentLoaded(url => url.endsWith("options.html"));
+
+  info("Click the Options button in the addon details");
+  await SpecialPowers.spawn(aboutAddonsTab.browser, [], clickAddonOptionButton);
+
+  info("Waiting that the addon options are loaded in a new tab");
+  await onceAddonOptionsLoaded;
+
+  const addonOptionsTab = BrowserApp.selectedTab;
+
+  ok(aboutAddonsTab.id !== addonOptionsTab.id,
+     "The Addon Options page has been loaded in a new tab");
+
+  let optionsURL = await extension.awaitMessage("options-page-loaded");
+
+  is(addonOptionsTab.currentURI.spec, optionsURL,
+     "Got the expected extension url opened in the addon options tab");
+
+  const waitTabClosed = (nativeTab) => {
+    return new Promise(resolve => {
+      const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+      const expectedBrowser = nativeTab.browser;
+
+      const tabCloseListener = (event) => {
+        const browser = event.target;
+        if (browser !== expectedBrowser) {
+          return;
+        }
+
+        BrowserApp.deck.removeEventListener("TabClose", tabCloseListener);
+        resolve();
+      };
+
+      BrowserApp.deck.addEventListener("TabClose", tabCloseListener);
+    });
+  };
+
+  const onceOptionsTabClosed = waitTabClosed(addonOptionsTab);
+  const onceAboutAddonsClosed = waitTabClosed(aboutAddonsTab);
+
+  info("Close the opened about:addons and options tab");
+  BrowserApp.closeTab(addonOptionsTab);
+  BrowserApp.closeTab(aboutAddonsTab);
+
+  info("Wait the tabs to be closed");
+  await Promise.all([onceOptionsTabClosed, onceAboutAddonsClosed]);
+
+  const oldSelectedTab = BrowserApp.selectedTab;
+  info("Call runtime.openOptionsPage");
+  extension.sendMessage("runtime.openOptionsPage");
+
+  info("Wait runtime.openOptionsPage to open the options in a new tab");
+  optionsURL = await extension.awaitMessage("options-page-loaded");
+  is(BrowserApp.selectedTab.currentURI.spec, optionsURL,
+     "runtime.openOptionsPage has opened the expected extension page");
+  ok(BrowserApp.selectedTab !== oldSelectedTab,
+     "runtime.openOptionsPage has opened a new tab");
+
+  BrowserApp.closeTab(BrowserApp.selectedTab);
+
+  await extension.unload();
+});
+
+add_task(async function test_options_ui_on_disable_and_enable() {
+  // Temporarily disabled for races.
+  /* eslint-disable no-unreachable */
+  return;
+
+  const addonID = "test-options-ui-disable-enable@mozilla.org";
+
+  function optionsScript() {
+    browser.test.sendMessage("options-page-loaded", window.location.href);
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: {
+        gecko: {id: addonID},
+      },
+      name: "Options UI open addon details Extension",
+      description: "Longer addon description",
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      "options.js": optionsScript,
+      "options.html": `<!DOCTYPE html>
+       <html>
+         <head>
+           <meta charset="utf-8">
+         </head>
+         <body>
+           <h1>Options page</h1>
+           <script src="options.js"><\/script>
+         </body>
+       </html>
+     `,
+    },
+  });
+
+  await extension.startup();
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+
+  BrowserApp.addTab("about:addons", {
+    selected: true,
+    parentId: BrowserApp.selectedTab.id,
+  });
+
+  await onceAboutAddonsLoaded;
+
+  const aboutAddonsTab = BrowserApp.selectedTab;
+
+  is(aboutAddonsTab.currentURI.spec, "about:addons",
+     "about:addons is the currently selected tab");
+
+  info("Wait the addon details to have been loaded");
+  await SpecialPowers.spawn(aboutAddonsTab.browser, [addonID], waitAboutAddonsRendered);
+  await SpecialPowers.spawn(aboutAddonsTab.browser, [addonID], navigateToAddonDetails);
+
+  info("Wait the addon options page to have been loaded");
+  await extension.awaitMessage("options-page-loaded");
+
+  info("Click the addon disable button");
+  await SpecialPowers.spawn(aboutAddonsTab.browser, [], clickAddonDisable);
+
+  // NOTE: Currently after disabling the addon the extension.awaitMessage seems
+  // to fail be able to receive events coming from the browser.test.sendMessage API
+  // (nevertheless `await extension.unload()` seems to be able to remove the extension),
+  // falling back to wait for the options page to be loaded here.
+  const onceAddonOptionsLoaded = waitDOMContentLoaded(url => url.endsWith("options.html"));
+
+  info("Click the addon enable button");
+  await SpecialPowers.spawn(aboutAddonsTab.browser, [], clickAddonEnable);
+
+  info("Wait the addon options page to have been loaded after clicking the addon enable button");
+  await onceAddonOptionsLoaded;
+
+  BrowserApp.closeTab(BrowserApp.selectedTab);
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

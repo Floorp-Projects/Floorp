@@ -1,0 +1,8 @@
+//error: message `Msg' requires more powerful send semantics than its protocol `tooWeakIntrSync' provides
+
+sync protocol tooWeakIntrSync {
+
+    // it's an error to declare a sync protocol with an interrupt message
+parent:
+  intr Msg();
+};

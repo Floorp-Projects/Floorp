@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1170334
+-->
+<head>
+  <title>Test for Bug 1170334 (nsWebBrowserPersist vs. XML stylesheets)</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1170334">Mozilla Bug 1170334</a>
+<p id="display"></p>
+<pre id="results"></pre>
+<div id="content">
+  <iframe src="bug1170334_iframe.xml" id="iframe"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const nameStem = "test_bug1170334_" + Date.now();
+const { Ci, Cc, Cu, Cr } = SpecialPowers;
+let iframe = document.getElementById("iframe");
+
+SimpleTest.waitForExplicitFinish();
+
+iframe.onload = function iframe_onload1() {
+  let doc = iframe.contentDocument;
+  ok(doc, "iframe content document exists");
+
+  let wbp = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+            .createInstance(Ci.nsIWebBrowserPersist);
+  let tmp = SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
+  let tmpFile = tmp.clone();
+  tmpFile.append(nameStem + "_iframe.xml");
+  let tmpDir = tmp.clone();
+  tmpDir.append(nameStem + "_files");
+
+  // When the document in the iframe is saved, try to load the result.
+  wbp.progressListener = {
+    onProgressChange() {},
+    onLocationChange() {},
+    onStatusChange() {},
+    onSecurityChange() {},
+    onContentBlockingEvent() {},
+    onStateChange: function wbp_stateChange(_wbp, _req, state, status) {
+      if ((state & Ci.nsIWebProgressListener.STATE_STOP) == 0) {
+        return;
+      }
+      is(status, Cr.NS_OK, "nsWebBrowserPersist status");
+      iframe.onload = function iframe_onload2() {
+        let elem = iframe.contentDocument.documentElement;
+        is(elem && elem.tagName, "thing", "document element tag");
+        if (elem && elem.tagName == "parsererror") {
+          ok(false, "Parser error: " + elem.textContent);
+        }
+
+        cleanUp();
+        SimpleTest.finish();
+      };
+      iframe.src = SpecialPowers.Services.io.newFileURI(tmpFile).spec;
+    },
+  };
+  wbp.saveDocument(doc, tmpFile, tmpDir, null, 0, 0);
+
+  function cleanUp() {
+    if (tmpFile.exists()) {
+      tmpFile.remove(/* recursive: */ false);
+    }
+    if (tmpDir.exists()) {
+      tmpDir.remove(/* recursive: */ true);
+    }
+  }
+};
+</script>
+</pre>
+</body>
+</html>

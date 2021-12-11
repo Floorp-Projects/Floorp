@@ -1,0 +1,215 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIURI;
+interface mozIDOMWindowProxy;
+interface nsISimpleEnumerator;
+
+[scriptable, function, uuid(0d79adad-b244-49A5-9997-2a8cad93fc44)]
+interface nsIFilePickerShownCallback : nsISupports
+{
+ /**
+  * Callback which is called when a filepicker is shown and a result
+  * is returned.
+  *
+  * @param aResult One of returnOK, returnCancel, or returnReplace
+  */
+  void done(in short aResult);
+};
+
+[scriptable, uuid(9285b984-02d3-46b4-9514-7da8c471a747)]
+interface nsIFilePicker : nsISupports
+{
+  const short modeOpen        = 0;              // Load a file or directory
+  const short modeSave        = 1;              // Save a file or directory
+  const short modeGetFolder   = 2;              // Select a folder/directory
+  const short modeOpenMultiple= 3;              // Load multiple files
+
+  const short returnOK        = 0;              // User hit Ok, process selection
+  const short returnCancel    = 1;              // User hit cancel, ignore selection
+  const short returnReplace   = 2;              // User acknowledged file already exists so ok to replace, process selection
+
+  const long filterAll        = 0x001;          // *.*
+  const long filterHTML       = 0x002;          // *.html; *.htm
+  const long filterText       = 0x004;          // *.txt
+  const long filterImages     = 0x008;          // *.jpe; *.jpg; *.jpeg; *.gif;
+                                                // *.png; *.bmp; *.ico; *.svg;
+                                                // *.svgz; *.tif; *.tiff; *.ai;
+                                                // *.drw; *.pct; *.psp; *.xcf;
+                                                // *.psd; *.raw; *.webp
+  const long filterXML        = 0x010;          // *.xml
+  const long filterXUL        = 0x020;          // *.xul
+  const long filterApps       = 0x040;          // Applications (per-platform implementation)
+  const long filterAllowURLs  = 0x080;          // Allow URLs
+  const long filterAudio      = 0x100;          // *.aac; *.aif; *.flac; *.iff;
+                                                // *.m4a; *.m4b; *.mid; *.midi;
+                                                // *.mp3; *.mpa; *.mpc; *.oga;
+                                                // *.ogg; *.ra; *.ram; *.snd;
+                                                // *.wav; *.wma
+  const long filterVideo      = 0x200;          // *.avi; *.divx; *.flv; *.m4v;
+                                                // *.mkv; *.mov; *.mp4; *.mpeg;
+                                                // *.mpg; *.ogm; *.ogv; *.ogx;
+                                                // *.rm; *.rmvb; *.smil; *.webm;
+                                                // *.wmv; *.xvid
+
+  const short captureNone     = 0;              // No capture target specified.
+  const short captureDefault  = 1;              // Missing/invalid value default.
+  const short captureUser     = 2;              // "user" capture target specified.
+  const short captureEnv      = 3;              // "environment" capture target specified.
+
+ /**
+  * Initialize the file picker widget.  The file picker is not valid until this
+  * method is called.
+  *
+  * @param      parent   mozIDOMWindow parent.  This dialog will be dependent
+  *                      on this parent. parent must be non-null.
+  * @param      title    The title for the file widget
+  * @param      mode     load, save, or get folder
+  *
+  */
+  void init(in mozIDOMWindowProxy parent, in AString title, in short mode);
+
+ /**
+  * Append to the  filter list with things from the predefined list
+  *
+  * @param      filters  mask of filters i.e. (filterAll | filterHTML)
+  *
+  */
+  void appendFilters(in long filterMask);
+
+ /**
+  * Add a filter
+  *
+  * @param      title    name of the filter
+  * @param      filter   extensions to filter -- semicolon and space separated
+  *
+  */
+  void appendFilter(in AString title,
+                    in AString filter);
+
+  /**
+   * Add a raw filter (eg, add a MIME type without transforming it to a list of
+   * extensions).
+   *
+   * @param     filter   a filter taken directly from the accept attribute
+   *                     without processing
+   *
+   */
+  void appendRawFilter(in AString filter);
+
+ /**
+  * The filename that should be suggested to the user as a default. This should
+  * include the extension.
+  *
+  * @throws NS_ERROR_FAILURE on attempts to get
+  */
+  attribute AString defaultString;
+
+ /**
+  * The extension that should be associated with files of the type we
+  * want to work with.  On some platforms, this extension will be
+  * automatically appended to filenames the user enters, if needed.
+  */
+  attribute AString defaultExtension;
+
+ /**
+  * The filter which is currently selected in the File Picker dialog
+  *
+  * @return Returns the index (0 based) of the selected filter in the filter list.
+  */
+  attribute long filterIndex;
+
+ /**
+  * Set the directory that the file open/save dialog initially displays
+  * Note that, if displaySpecialDirectory has been already set, this value will
+  * be ignored.
+  *
+  * @param      displayDirectory  the name of the directory
+  *
+  */
+  attribute nsIFile displayDirectory;
+
+ /**
+  * Set the directory that the file open/save dialog initially displays using
+  * one of the special name as such as 'Desk', 'TmpD', and so on.
+  * Note that, if displayDirectory has been already set, this value will be
+  * ignored.
+  *
+  * @param      displaySpecialDirectory  the name of the special directory
+  *
+  */
+  attribute AString displaySpecialDirectory;
+
+
+ /**
+  * Get the nsIFile for the file or directory.
+  *
+  * @return Returns the file currently selected
+  */
+  readonly attribute nsIFile file;
+
+ /**
+  * Get the nsIURI for the file or directory.
+  *
+  * @return Returns the file currently selected
+  */
+  readonly attribute nsIURI fileURL;
+
+ /**
+  * Get the enumerator for the selected files
+  * only works in the modeOpenMultiple mode
+  *
+  * @return Returns the files currently selected
+  */
+  readonly attribute nsISimpleEnumerator files;
+
+ /**
+  * Get the DOM File or the DOM Directory
+  *
+  * @return Returns the file or directory currently selected DOM object.
+  */
+  readonly attribute nsISupports domFileOrDirectory;
+
+ /**
+  * Get the enumerator for the selected files or directories
+  * only works in the modeOpenMultiple mode
+  *
+  * @return Returns the files/directories currently selected as DOM object.
+  */
+  readonly attribute nsISimpleEnumerator domFileOrDirectoryEnumerator;
+
+ /**
+  * Controls whether the chosen file(s) should be added to the system's recent
+  * documents list. This attribute will be ignored if the system has no "Recent
+  * Docs" concept, or if the application is in private browsing mode (in which
+  * case the file will not be added). Defaults to true.
+  */
+  attribute boolean addToRecentDocs;
+
+ /**
+  * Opens the file dialog asynchrounously.
+  * The passed in object's done method will be called upon completion.
+  */
+  void open(in nsIFilePickerShownCallback aFilePickerShownCallback);
+
+ /**
+  * The picker's mode, as set by the 'mode' argument passed to init()
+  * (one of the modeOpen et. al. constants specified above).
+  */
+  readonly attribute short mode;
+
+  /**
+   * If set to non-empty string, the nsIFilePicker implementation
+   * may use okButtonLabel as the label for the button the user uses to accept
+   * file selection.
+   */
+  attribute AString okButtonLabel;
+
+  attribute short capture;
+};

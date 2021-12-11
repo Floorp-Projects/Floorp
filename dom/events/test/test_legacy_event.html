@@ -1,0 +1,297 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1236979
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1236979 (events that have legacy alternative versions)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    @keyframes anim1 {
+      0%   { margin-left: 0px }
+      100% { margin-left: 100px }
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1236979">Mozilla Bug 1236979</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1236979 **/
+
+'use strict';
+SimpleTest.waitForExplicitFinish();
+
+// Array of info-bundles about each legacy event to be tested:
+var gLegacyEventInfo = [
+  {
+    legacy_name: "webkitTransitionEnd",
+    modern_name: "transitionend",
+    trigger_event: triggerShortTransition,
+  },
+  {
+    legacy_name: "webkitAnimationStart",
+    modern_name: "animationstart",
+    trigger_event: triggerShortAnimation,
+  },
+  {
+    legacy_name: "webkitAnimationEnd",
+    modern_name: "animationend",
+    trigger_event: triggerShortAnimation,
+  },
+  {
+    legacy_name: "webkitAnimationIteration",
+    modern_name: "animationiteration",
+    trigger_event: triggerAnimationIteration,
+  }
+];
+
+// EVENT-TRIGGERING FUNCTIONS
+// --------------------------
+// This function triggers a very short (1ms long) transition, which will cause
+// events to fire for the transition ending.
+function triggerShortTransition(node) {
+  node.style.transition = "1ms color linear" ;
+  node.style.color = "purple";
+  // Flush style, so that the above assignment value actually takes effect
+  // in the computed style, so that a transition will get triggered when it
+  // changes.
+  window.getComputedStyle(node).color;
+  node.style.color = "teal";
+}
+
+// This function triggers a very short (1ms long) animation, which will cause
+// events to fire for the animation beginning & ending.
+function triggerShortAnimation(node) {
+  node.style.animation = "anim1 1ms linear";
+}
+
+// This function triggers a very short (10ms long) animation with many
+// iterations, which will cause a start event followed by an iteration event
+// on each subsequent tick, to fire.
+//
+// NOTE: We need the many iterations since if an animation frame coincides
+// with the animation starting or ending we dispatch only the start or end
+// event and not the iteration event.
+function triggerAnimationIteration(node) {
+  node.style.animation = "anim1 10ms linear 20000";
+}
+
+// GENERAL UTILITY FUNCTIONS
+// -------------------------
+// Creates a new div and appends it as a child of the specified parentNode, or
+// (if no parent is specified) as a child of the element with ID 'display'.
+function createChildDiv(parentNode) {
+  if (!parentNode) {
+    parentNode = document.getElementById("display");
+    if (!parentNode) {
+      ok(false, "no 'display' element to append to");
+    }
+  }
+  var div = document.createElement("div");
+  parentNode.appendChild(div);
+  return div;
+}
+
+// Returns an event-handler function, which (when invoked) simply checks that
+// the event's type matches what's expected. If a callback is passed in, then
+// the event-handler will invoke that callback as well.
+function createHandlerWithTypeCheck(expectedEventType, extraHandlerLogic) {
+  var handler = function(e) {
+    is(e.type, expectedEventType,
+       "When an event handler for '" + expectedEventType + "' is invoked, " +
+       "the event's type field should be '" + expectedEventType + "'.");
+    if (extraHandlerLogic) {
+      extraHandlerLogic(e);
+    }
+  }
+  return handler;
+}
+
+// TEST FUNCTIONS
+// --------------
+// These functions expect to be passed an entry from gEventInfo, and they
+// return a Promise which performs the test & resolves when it's complete.
+// The function names all begin with "mp", which stands for "make promise".
+// So e.g. "mpTestLegacyEventSent" means "make a promise to test that the
+// legacy event is sent".
+
+// Tests that the legacy event type is sent, when only a legacy handler is
+// registered.
+function mpTestLegacyEventSent(eventInfo) {
+  return new Promise(
+    function(resolve, reject) {
+      // Create a node & register an event-handler for the legacy event:
+      var div = createChildDiv();
+
+      var handler = createHandlerWithTypeCheck(eventInfo.legacy_name,
+                                               function() {
+        // When event-handler is done, clean up & resolve:
+        div.remove();
+        resolve();
+      });
+      div.addEventListener(eventInfo.legacy_name, handler);
+
+      // Trigger the event:
+      eventInfo.trigger_event(div);
+    }
+  );
+}
+
+// Test that the modern event type (and only the modern event type) is fired,
+// when listeners of both modern & legacy types are registered. The legacy
+// listener should not be invoked.
+function mpTestModernBeatsLegacy(eventInfo) {
+  return new Promise(
+    function(resolve, reject) {
+      var div = createChildDiv();
+
+      var legacyHandler = function(e) {
+        reject("Handler for legacy event '" + eventInfo.legacy_name +
+               "' should not be invoked when there's a handler registered " +
+               "for both modern & legacy event type on the same node");
+      };
+
+      var modernHandler = createHandlerWithTypeCheck(eventInfo.modern_name,
+                                                     function() {
+        // Indicate that the test has passed (we invoked the modern handler):
+        ok(true, "Handler for modern event '" + eventInfo.modern_name +
+           "' should be invoked when there's a handler registered for " +
+           "both modern & legacy event type on the same node");
+        // When event-handler is done, clean up & resolve:
+        div.remove();
+        resolve();
+      });
+
+      div.addEventListener(eventInfo.legacy_name, legacyHandler);
+      div.addEventListener(eventInfo.modern_name, modernHandler);
+      eventInfo.trigger_event(div);
+    }
+  );
+}
+
+// Test that an event which bubbles may fire listeners of different flavors
+// (modern vs. legacy) at each bubbling level, depending on what's registered
+// at that level.
+function mpTestDiffListenersEventBubbling(eventInfo) {
+  return new Promise(
+    function(resolve, reject) {
+      var grandparent = createChildDiv();
+      var parent = createChildDiv(grandparent);
+      var target = createChildDiv(parent);
+      var didEventFireOnTarget = false;
+      var didEventFireOnParent = false;
+      var eventSentToTarget;
+
+      target.addEventListener(eventInfo.modern_name,
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+          ok(e.bubbles, "Expecting event to bubble");
+          eventSentToTarget = e;
+          didEventFireOnTarget = true;
+        }));
+
+      parent.addEventListener(eventInfo.legacy_name,
+        createHandlerWithTypeCheck(eventInfo.legacy_name, function(e) {
+          is(e, eventSentToTarget,
+             "Same event object should bubble, despite difference in type");
+          didEventFireOnParent = true;
+        }));
+
+      grandparent.addEventListener(eventInfo.modern_name,
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+        ok(didEventFireOnTarget,
+           "Event should have fired on child");
+        ok(didEventFireOnParent,
+           "Event should have fired on parent");
+        is(e, eventSentToTarget,
+           "Same event object should bubble, despite difference in type");
+        // Clean up.
+        grandparent.remove();
+        resolve();
+      }));
+
+      eventInfo.trigger_event(target);
+    }
+  );
+}
+
+// Test that an event in the capture phase may fire listeners of different
+// flavors (modern vs. legacy) at each level, depending on what's registered
+// at that level.
+function mpTestDiffListenersEventCapturing(eventInfo) {
+  return new Promise(
+    function(resolve, reject) {
+      var grandparent = createChildDiv();
+      var parent = createChildDiv(grandparent);
+      var target = createChildDiv(parent);
+      var didEventFireOnTarget = false;
+      var didEventFireOnParent = false;
+      var didEventFireOnGrandparent = false;
+      var eventSentToGrandparent;
+
+      grandparent.addEventListener(eventInfo.modern_name,
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+          eventSentToGrandparent = e;
+          didEventFireOnGrandparent = true;
+        }), true);
+
+      parent.addEventListener(eventInfo.legacy_name,
+        createHandlerWithTypeCheck(eventInfo.legacy_name, function(e) {
+          is(e.eventPhase, Event.CAPTURING_PHASE,
+             "event should be in capturing phase");
+          is(e, eventSentToGrandparent,
+             "Same event object should capture, despite difference in type");
+          ok(didEventFireOnGrandparent,
+             "Event should have fired on grandparent");
+          didEventFireOnParent = true;
+      }), true);
+
+      target.addEventListener(eventInfo.modern_name,
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+          is(e.eventPhase, Event.AT_TARGET,
+             "event should be at target phase");
+          is(e, eventSentToGrandparent,
+             "Same event object should capture, despite difference in type");
+          ok(didEventFireOnParent,
+             "Event should have fired on parent");
+          // Clean up.
+          grandparent.remove();
+          resolve();
+      }), true);
+
+      eventInfo.trigger_event(target);
+    }
+  );
+}
+
+// MAIN FUNCTION: Kick off the tests.
+function main() {
+  Promise.resolve().then(function() {
+    return Promise.all(gLegacyEventInfo.map(mpTestLegacyEventSent))
+  }).then(function() {
+    return Promise.all(gLegacyEventInfo.map(mpTestModernBeatsLegacy));
+  }).then(function() {
+    return Promise.all(gLegacyEventInfo.map(mpTestDiffListenersEventCapturing));
+  }).then(function() {
+    return Promise.all(gLegacyEventInfo.map(mpTestDiffListenersEventBubbling));
+  }).then(function() {
+    SimpleTest.finish();
+  }).catch(function(reason) {
+    ok(false, "Test failed: " + reason);
+    SimpleTest.finish();
+  });
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+if (AppConstants.platform === "android") {
+  SimpleTest.requestLongerTimeout(6);
+}
+
+let windowData, testWindow;
+
+add_task(async function setup() {
+  let chromeScript = SpecialPowers.loadChromeScript(function() {
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services.cache2.clear();
+  });
+  chromeScript.destroy();
+
+  testWindow = window.open("about:blank", "_blank", "width=100,height=100");
+  await waitForLoad(testWindow);
+
+  // Fetch the windowId and tabId we need to filter with WebRequest.
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "tabs",
+      ],
+    },
+    background() {
+      browser.tabs.query({currentWindow: true}).then(tabs => {
+        let tab = tabs.find(tab => tab.active);
+        let {windowId} = tab;
+
+        browser.test.log(`current window ${windowId} tabs: ${JSON.stringify(tabs.map(tab => [tab.id, tab.url]))}`);
+        browser.test.sendMessage("windowData", {windowId, tabId: tab.id});
+      });
+    },
+  });
+  await extension.startup();
+  windowData = await extension.awaitMessage("windowData");
+  info(`window is ${JSON.stringify(windowData)}`);
+  await extension.unload();
+});
+
+add_task(async function test_webRequest_filter_window() {
+  if (AppConstants.MOZ_BUILD_APP !== "browser") {
+    // Android does not support multiple windows.
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true],
+          ["network.http.rcwn.enabled", false]],
+  });
+
+  let events = {
+    "onBeforeRequest":     [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+    "onBeforeSendHeaders": [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["requestHeaders"]],
+    "onSendHeaders":       [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["requestHeaders"]],
+    "onBeforeRedirect":    [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+    "onHeadersReceived":   [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["responseHeaders"]],
+    "onResponseStarted":   [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+    "onCompleted":         [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["responseHeaders"]],
+    "onErrorOccurred":     [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+  };
+  let expect = {
+    "file_image_bad.png": {
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
+      type: "main_frame",
+    },
+  };
+
+  if (AppConstants.platform != "android") {
+    expect["favicon.ico"] = {
+      // These events only happen in non-e10s. See bug 1472156.
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
+      type: "image",
+      origin: SimpleTest.getTestFileURL("file_image_bad.png"),
+    };
+  }
+
+  let extension = makeExtension(events);
+  await extension.startup();
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+
+  // We should not get events for a new window load.
+  let newWindow = window.open("file_image_good.png", "_blank", "width=100,height=100");
+  await waitForLoad(newWindow);
+  newWindow.close();
+
+  // We should not get background events.
+  let registration = await navigator.serviceWorker.register("webrequest_worker.js?test0", {scope: "."});
+  await waitForState(registration.installing, "activated");
+
+  // We should get events for the reload.
+  testWindow.location = "file_image_bad.png";
+  await extension.awaitMessage("done");
+
+  testWindow.location = "about:blank";
+  await registration.unregister();
+  await extension.unload();
+});
+
+add_task(async function test_webRequest_filter_tab() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true]],
+  });
+
+  let img = `file_image_good.png?r=${Math.random()}`;
+
+  let events = {
+    "onBeforeRequest":     [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+    "onBeforeSendHeaders": [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["requestHeaders"]],
+    "onSendHeaders":       [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["requestHeaders"]],
+    "onBeforeRedirect":    [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+    "onHeadersReceived":   [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["responseHeaders"]],
+    "onResponseStarted":   [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+    "onCompleted":         [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["responseHeaders"]],
+    "onErrorOccurred":     [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+  };
+  let expect = {
+    "file_image_good.png": {
+      // These events only happen in non-e10s. See bug 1472156.
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
+      type: "main_frame",
+      // cached: AppConstants.MOZ_BUILD_APP === "browser",
+    },
+  };
+
+  if (AppConstants.platform != "android") {
+    // A favicon request may be initiated, and complete or be aborted.
+    expect["favicon.ico"] = {
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived", "onResponseStarted", "onCompleted", "onErrorOccurred"],
+      type: "image",
+      origin: SimpleTest.getTestFileURL(img),
+    };
+  }
+
+  let extension = makeExtension(events);
+  await extension.startup();
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+
+  if (AppConstants.MOZ_BUILD_APP === "browser") {
+    // We should not get events for a new window load.
+    let newWindow = window.open(img, "_blank", "width=100,height=100");
+    await waitForLoad(newWindow);
+    newWindow.close();
+  }
+
+  // We should not get background events.
+  let registration = await navigator.serviceWorker.register("webrequest_worker.js?test1", {scope: "."});
+  await waitForState(registration.installing, "activated");
+
+  // We should get events for the reload.
+  testWindow.location = img;
+  await extension.awaitMessage("done");
+
+  testWindow.location = "about:blank";
+  await registration.unregister();
+  await extension.unload();
+});
+
+
+add_task(async function test_webRequest_filter_background() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true]],
+  });
+
+  let events = {
+    "onBeforeRequest":     [{urls: ["<all_urls>"], tabId: -1}],
+    "onBeforeSendHeaders": [{urls: ["<all_urls>"], tabId: -1}, ["requestHeaders"]],
+    "onSendHeaders":       [{urls: ["<all_urls>"], tabId: -1}, ["requestHeaders"]],
+    "onBeforeRedirect":    [{urls: ["<all_urls>"], tabId: -1}],
+    "onHeadersReceived":   [{urls: ["<all_urls>"], tabId: -1}, ["responseHeaders"]],
+    "onResponseStarted":   [{urls: ["<all_urls>"], tabId: -1}],
+    "onCompleted":         [{urls: ["<all_urls>"], tabId: -1}, ["responseHeaders"]],
+    "onErrorOccurred":     [{urls: ["<all_urls>"], tabId: -1}],
+  };
+  let expect = {
+    "webrequest_worker.js": {
+      type: "script",
+    },
+    "example.txt": {
+      status: 404,
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived", "onResponseStarted"],
+      optional_events: ["onCompleted", "onErrorOccurred"],
+      type: "xmlhttprequest",
+      origin: SimpleTest.getTestFileURL("webrequest_worker.js?test2"),
+    },
+  };
+
+  let extension = makeExtension(events);
+  await extension.startup();
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+
+  // We should not get events for a window.
+  testWindow.location = "file_image_bad.png";
+
+  // We should get events for the background page.
+  let registration = await navigator.serviceWorker.register(SimpleTest.getTestFileURL("webrequest_worker.js?test2"), {scope: "."});
+  await waitForState(registration.installing, "activated");
+  await extension.awaitMessage("done");
+  testWindow.location = "about:blank";
+  await registration.unregister();
+
+  await extension.unload();
+});
+
+add_task(async function teardown() {
+  testWindow.close();
+});
+</script>
+</head>
+<body>
+
+</body>
+</html>

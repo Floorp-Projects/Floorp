@@ -1,0 +1,40 @@
+<html><head>
+<title>More tests of propagation of text-decoration</title>
+<style>
+textarea { -moz-appearance: none }
+textarea + textarea { margin-left: 10px }
+</style>
+</head>
+<body>
+<!-- t-d should not propagate to the content of a form control -->
+<form>
+<span style="text-decoration:underline">This text should be underlined.</span><br>
+<textarea rows="2" cols="40">This text should not be underlined.</textarea
+><textarea rows="2" cols="40" style="text-decoration:line-through"
+>This text should be struck out.</textarea>
+<p style="text-decoration:underline">This text should also be underlined.</p>
+</form>
+<!-- t-d should propagate from parent elements to table-cells, except
+     not through a table element in quirks mode, per
+     https://quirks.spec.whatwg.org/#the-text-decoration-doesn't-propagate-into-tables-quirk
+     -->
+<div>
+  <table>
+    <tr>
+      <td>
+	<span style="text-decoration:overline">
+	<span style="text-decoration:line-through">
+	overlined, and struck out
+	</span></span>
+      </td>
+    </tr>
+  </table>
+</div>
+<!-- t-d on a float itself should apply -->
+<div>
+  <p style="text-decoration:underline">This text should be underlined.</p>
+  <p style="float:left; text-decoration:overline"
+  >This text should be overlined (only).</p>
+</div>
+</body>
+</html>

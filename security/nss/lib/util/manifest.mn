@@ -1,0 +1,90 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+EXPORTS = \
+	base64.h \
+	ciferfam.h \
+	eccutil.h \
+	hasht.h \
+	nssb64.h \
+	nssb64t.h \
+	nsslocks.h \
+	nssilock.h \
+	nssilckt.h \
+	nssrwlk.h \
+	nssrwlkt.h \
+	nssutil.h \
+	pkcs11.h \
+	pkcs11f.h \
+	pkcs11p.h \
+	pkcs11t.h \
+	pkcs11n.h \
+	pkcs11u.h \
+	pkcs1sig.h \
+	portreg.h \
+	secasn1.h \
+	secasn1t.h \
+	seccomon.h \
+	secder.h \
+	secdert.h \
+	secdig.h \
+	secdigt.h \
+	secitem.h \
+	secoid.h \
+	secoidt.h \
+	secport.h \
+	secerr.h \
+	utilmodt.h \
+	utilrename.h \
+	utilpars.h \
+	utilparst.h \
+	pkcs11uri.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+        verref.h \
+	templates.c \
+	$(NULL)
+
+CSRCS = \
+	quickder.c \
+	secdig.c \
+	derdec.c \
+	derenc.c \
+	dersubr.c \
+	dertime.c \
+	errstrs.c \
+	nssb64d.c \
+	nssb64e.c \
+	nssrwlk.c \
+	nssilock.c \
+	oidstring.c \
+	pkcs1sig.c \
+	portreg.c \
+	secalgid.c \
+	secasn1d.c \
+	secasn1e.c \
+	secasn1u.c \
+	secitem.c \
+	secload.c \
+	secoid.c \
+	sectime.c \
+	secport.c \
+	templates.c \
+	utf8.c \
+	utilmod.c \
+	utilpars.c \
+	pkcs11uri.c \
+	$(NULL)
+
+MODULE = nss
+
+LIBRARY_NAME = nssutil
+LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

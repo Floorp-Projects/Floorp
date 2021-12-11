@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test accessible recreation</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function textLeafUpdate(aID, aIsTextLeafLinkable) {
+      this.node = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.node.parentNode),
+      ];
+
+      this.finalCheck = function textLeafUpdate_finalCheck() {
+        var textLeaf = getAccessible(this.node).firstChild;
+        is(textLeaf.actionCount, (aIsTextLeafLinkable ? 1 : 0),
+           "Wrong action numbers!");
+      };
+    }
+
+    function setOnClickAttr(aID) {
+      var node = getNode(aID);
+      node.setAttribute("onclick", "alert(3);");
+      var textLeaf = getAccessible(node).firstChild;
+      is(textLeaf.actionCount, 1, "setOnClickAttr: wrong action numbers!");
+    }
+
+    function removeOnClickAttr(aID) {
+      var node = getNode(aID);
+      node.removeAttribute("onclick");
+      var textLeaf = getAccessible(node).firstChild;
+      is(textLeaf.actionCount, 0,
+         "removeOnClickAttr: wrong action numbers!");
+    }
+
+    function setOnClickNRoleAttrs(aID) {
+      this.__proto__ = new textLeafUpdate(aID, true);
+
+      this.invoke = function setOnClickAttr_invoke() {
+        this.node.setAttribute("role", "link");
+        this.node.setAttribute("onclick", "alert(3);");
+      };
+
+      this.getID = function setOnClickAttr_getID() {
+        return "make " + prettyName(aID) + " linkable";
+      };
+    }
+
+    function removeTextData(aID, aRole) {
+      this.containerNode = getNode(aID);
+      this.textNode = this.containerNode.firstChild;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+      ];
+
+      this.invoke = function removeTextData_invoke() {
+        var tree = {
+          role: aRole,
+          children: [
+            {
+              role: ROLE_TEXT_LEAF,
+              name: "text",
+            },
+          ],
+        };
+        testAccessibleTree(this.containerNode, tree);
+
+        this.textNode.data = "";
+      };
+
+      this.finalCheck = function removeTextData_finalCheck() {
+        var tree = {
+          role: aRole,
+          children: [],
+        };
+        testAccessibleTree(this.containerNode, tree);
+      };
+
+      this.getID = function removeTextData_finalCheck() {
+        return "remove text data of text node inside '" + aID + "'.";
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Test
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest() {
+      // adds onclick on element, text leaf should inherit its action
+      setOnClickAttr("div");
+      // remove onclick attribute, text leaf shouldn't have any action
+      removeOnClickAttr("div");
+
+      // Call rest of event tests.
+      gQueue = new eventQueue();
+
+      // set onclick attribute making span accessible, it's inserted into tree
+      // and adopts text leaf accessible, text leaf should have an action
+      gQueue.push(new setOnClickNRoleAttrs("span"));
+
+      // text data removal of text node should remove its text accessible
+      gQueue.push(new removeTextData("p", ROLE_PARAGRAPH));
+      gQueue.push(new removeTextData("pre", ROLE_TEXT_CONTAINER));
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Clean up the code of accessible initialization and binding to the tree"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=545465">
+    Mozilla Bug 545465
+  </a>
+  <a target="_blank"
+     title="Make sure accessible tree is correct when rendered text is changed"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=625652">
+    Mozilla Bug 625652
+  </a>
+  <a target="_blank"
+     title="Remove text accesible getting no text inside a preformatted area"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=706335">
+    Mozilla Bug 706335
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="container">
+    <div id="div">div</div>
+    <span id="span">span</span>
+  </div>
+
+  <p id="p">text</p>
+  <pre id="pre">text</pre>
+
+  <div id="eventdump"></div>
+</body>
+</html>

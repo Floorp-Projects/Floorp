@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.import-summary {
+  display: grid;
+  grid-template-columns: max-content max-content max-content;
+}
+
+.import-summary > * > span {
+  margin-block: 0 2px;
+  margin-inline: 0 10px;
+}
+
+.import-items-row {
+  grid-column: 1 / 4;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+.result-count {
+  text-align: end;
+  font-weight: bold;
+}
+
+.result-meta {
+  font-style: italic;
+}
+.import-items-errors .result-meta {
+  color: var(--dialog-warning-text-color);
+}
+
+.open-detailed-report {
+  margin-block-start: 30px;
+  font-weight: 600;
+}

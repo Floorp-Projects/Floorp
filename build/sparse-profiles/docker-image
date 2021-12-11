@@ -1,0 +1,26 @@
+%include build/sparse-profiles/mach
+
+[include]
+path:taskcluster/
+
+# Required for loading taskgraph.parameters.
+path:browser/config/version_display.txt
+path:browser/config/version.txt
+
+# Result from `grep -hr %include taskcluster/docker | grep -v " taskcluster/" | sort -u`
+path:python/mozbuild/mozbuild/action/tooltool.py
+path:testing/mozharness/external_tools/performance-artifact-schema.json
+path:testing/mozharness/external_tools/robustcheckout.py
+path:tools/lint/spell/codespell_requirements.txt
+path:tools/lint/eslint/eslint-plugin-mozilla/manifest.tt
+path:tools/lint/eslint/manifest.tt
+path:tools/lint/python/flake8_requirements.txt
+path:tools/lint/python/pylint_requirements.txt
+path:tools/lint/python/black_requirements.txt
+path:tools/lint/tox/tox_requirements.txt
+
+# Required for the webrender docker image
+path:gfx/wr/ci-scripts/docker-image/setup.sh
+
+# for the system-symbol images
+path:tools/crashreporter/system-symbols/

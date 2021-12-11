@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script type="text/javascript">
+      function bodyonload() {
+        var canvas=document.getElementById('test');
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = 'green';
+        ctx.fillRect(150, 50, -151, 50); // left at -1
+        ctx.fillStyle = 'red';
+        ctx.rect(150, 100, -151, 50); // left at -1
+        ctx.fill();
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(150, 150, -150, 50); // left at 0
+      }
+    </script>
+  </head>
+  <body onload="bodyonload();">
+    <canvas id="test" width="200" height="200"></canvas>
+  </body>
+</html>
+

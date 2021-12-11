@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<!--
+http://sub1.test1.example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper.html
+-->
+<head>
+  <title>postMessage joined domains, inner frame</title>
+  <script type="application/javascript">
+    function receiveMessage(evt)
+    {
+      var response, target, providedOrigin;
+      var data = evt.data;
+      if (data === "subframe-test-finished")
+      {
+        target = window.parent;
+        providedOrigin = "http://mochi.test:8888";
+        response = "test-passed";
+      }
+      else if (data === "start-test")
+      {
+        target = window.frames.innermost;
+        providedOrigin = "http://example.org";
+        response = "start-test";
+      }
+      else
+      {
+        target = window.parent;
+        providedOrigin = "http://mochi.test:8888";
+        response = "not reached";
+      }
+
+      if (evt.lastEventId !== "")
+        response += " wrong-lastEventId(" + evt.lastEventId + ")";
+
+      if (evt.type !== "message")
+        response += " wrong-type(" + evt.type + ")";
+
+      if (evt.target !== window)
+      {
+        response += " wrong-target(" + evt.target + ")";
+        response += " location(" + window.location.href + ")";
+      }
+
+      var origin;
+      if (data == "subframe-test-finished")
+        origin = "http://example.org";
+      else if (data === "start-test")
+        origin = "http://mochi.test:8888";
+      else
+        origin = "unreached";
+
+      if (evt.origin !== origin)
+      {
+        response += " wrong-origin(" + evt.origin + ")";
+        response += " location(" + window.location.href + ")";
+      }
+
+      target.postMessage(response, providedOrigin);
+    }
+
+    function setup()
+    {
+      var oldDomain = document.domain;
+      var newDomain = "example.org";
+
+      document.domain = newDomain;
+
+      var target = document.getElementById("location");
+      target.textContent = "Location: " + oldDomain +
+                           ", effective domain: " + newDomain;
+
+      window.addEventListener("message", receiveMessage);
+    }
+
+    window.addEventListener("load", setup);
+  </script>
+</head>
+<body>
+<p id="location">No location!</p>
+
+<iframe src="http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper2.html"
+        name="innermost"></iframe>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIMacUtils: Generic globally-available Mac-specific utilities.
+ */
+
+[scriptable, uuid(5E9072D7-FF95-455E-9466-8AF9841A72EC)]
+interface nsIMacUtils : nsISupports
+{
+  /**
+   * Returns a string containing a list of architectures delimited
+   * by "-". Architecture sets are always in the same order:
+   * ppc > i386 > ppc64 > x86_64 > (future additions)
+   */
+  readonly attribute AString architecturesInBinary;
+
+  /**
+   * True when running under binary translation (Rosetta).
+   */
+  readonly attribute boolean isTranslated;
+};

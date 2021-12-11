@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body {
+  columns: 5;
+  column-fill: auto;
+  height: 100px;
+}
+div {
+  display: grid;
+  grid-template-columns: 30px 30px 30px;
+  grid-auto-rows: 30px;
+  border:5px solid;
+}
+span {
+  border:1px solid black;
+}
+</style>
+<script>
+setTimeout(function(){ window.close(); },1000);
+window.onload = function(){
+  let a = document.getElementsByTagName("x")[0],
+      b = document.createTextNode("ｶ쾊紋鴺");
+  a.appendChild(b);
+  setTimeout(function(){
+    b.remove();
+  }, 0);
+};
+</script>
+</head>
+<body>
+<div>
+<span><x>某שּׁ큤</x></span>
+The quick brown fox jumps over the lazy dog.
+</div>
+</body>
+</html>

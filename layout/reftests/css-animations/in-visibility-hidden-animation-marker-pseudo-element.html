@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>In visibility hidden color animation on pseudo element</title>
+<style>
+
+@keyframes color {
+  0% { color: black }
+  1% { color: blue }
+  100% { color: blue }
+}
+
+div::marker {
+  visibility: visible;
+  content: "Color Animation";
+  animation: color 0.1s 1 forwards;
+}
+
+div {
+  color: black;
+  visibility: hidden;
+  display: list-item;
+  list-style-position: inside;
+}
+
+</style>
+<div id="target">color animation on visible pseudo element attached to invisible element</div>
+<script>
+
+document.getElementById("target").addEventListener("animationend", AnimationEndListener);
+
+function AnimationEndListener(event) {
+  setTimeout(RemoveReftestWait, 0);
+}
+
+function RemoveReftestWait() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>

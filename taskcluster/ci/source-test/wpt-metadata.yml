@@ -1,0 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    platform: lint/opt
+    treeherder:
+        kind: test
+        tier: 2
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+
+summary:
+    description: Summarize wpt metadata
+    treeherder:
+        symbol: wpt-meta
+    index:
+        product: source
+        job-name: source-wpt-metadata-summary
+    run:
+        using: mach
+        mach: wpt-metadata-summary --out-dir=/builds/worker/artifacts
+    worker:
+        artifacts:
+            - type: directory
+              path: /builds/worker/artifacts
+              name: public
+        max-run-time: 2700
+    when:
+        files-changed:
+            - 'testing/web-platform/meta/**'
+            - 'testing/web-platform/mozilla/meta/**'
+            - 'testing/web-platform/metasummary.py'
+
+
+fission-regression:
+    description: Summarize fission regressions in wpt
+    treeherder:
+        symbol: wpt-fis
+    index:
+        product: source
+        job-name: source-wpt-fission-regressions
+    run:
+        using: mach
+        mach: wpt-fission-regressions --all-json /builds/worker/artifacts/regressions.json --untriaged /builds/worker/artifacts/untriaged.txt
+    worker:
+        artifacts:
+            - type: directory
+              path: /builds/worker/artifacts
+              name: public
+        max-run-time: 2700
+    when:
+        files-changed:
+            - 'testing/web-platform/meta/**'
+            - 'testing/web-platform/mozilla/meta/**'
+            - 'testing/web-platform/fissionregressions.py'

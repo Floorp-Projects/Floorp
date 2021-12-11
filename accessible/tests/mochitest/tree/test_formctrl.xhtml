@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<!-- Firefox toolbar -->
+<?xml-stylesheet href="chrome://browser/content/browser.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL checkbox and radio hierarchy tests">
+
+  <!-- Firefox toolbar -->
+  <script type="application/javascript"
+          src="chrome://browser/content/browser.js"/>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTest()
+    {
+      // checkbox
+      var accTree = {
+        role: ROLE_CHECKBUTTON,
+        children: [ ]
+      };
+
+      testAccessibleTree("checkbox", accTree);
+
+      // radiogroup
+      accTree = {
+        role: ROLE_RADIO_GROUP,
+        children: [
+          {
+            role: ROLE_RADIOBUTTON,
+            children: [ ]
+          },
+          {
+            role: ROLE_RADIOBUTTON,
+            children: [ ]
+          }
+        ]
+      };
+
+      testAccessibleTree("radiogroup", accTree);
+
+      // toolbar
+      accTree = {
+        role: ROLE_TOOLBAR,
+        name: "My toolbar",
+        children: [
+          {
+            role: ROLE_PUSHBUTTON,
+            name: "hello",
+            children: [ ]
+          }
+        ]
+      };
+
+      testAccessibleTree("toolbar", accTree);
+
+      // toolbar
+      accTree = {
+        role: ROLE_TOOLBAR,
+        name: "My second toolbar",
+        children: [
+          {
+            role: ROLE_PUSHBUTTON,
+            name: "hello",
+            children: [ ]
+          }
+        ]
+      };
+
+      testAccessibleTree("toolbar2", accTree);
+
+      if (!SEAMONKEY)
+        testAccessibleTree("tb_customizable", { TOOLBAR: [] });
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045"
+         title="Fix O(n^2) access to all the children of a container">
+        Mozilla Bug 342045
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <checkbox id="checkbox" label="checkbox"/>
+      <radiogroup id="radiogroup">
+        <radio label="radio1"/>
+        <radio label="radio2"/>
+      </radiogroup>
+      <toolbar id="toolbar" toolbarname="My toolbar">
+        <toolbarbutton id="button1" label="hello"/>
+      </toolbar>
+      <toolbar id="toolbar2" toolbarname="2nd" aria-label="My second toolbar">
+        <toolbarbutton id="button2" label="hello"/>
+      </toolbar>
+
+      <toolbar id="tb_customizable" customizable="true"/>
+    </vbox>
+  </hbox>
+
+</window>
+

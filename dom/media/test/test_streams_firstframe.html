@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a non-autoplaying, non-playing element with a MediaStream source triggers canplay and shows a first frame</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+async function runTest() {
+  const canvas = document.createElement("canvas");
+  canvas.getContext("2d");
+  const helper = new CaptureStreamTestHelper2D(100, 100);
+
+  const video = document.createElement("video");
+  document.body.appendChild(video);
+
+  video.srcObject = canvas.captureStream();
+  helper.drawColor(canvas, helper.red);
+
+  await Promise.race([
+    new Promise(r => video.oncanplay = r),
+    new Promise(r => setTimeout(r, 30000))
+      .then(() => Promise.reject(new Error("Canplay timeout"))),
+  ]);
+
+  ok(true, "Got \"canplay\"");
+  is(video.readyState, video.HAVE_ENOUGH_DATA, "Expected readyState");
+  ok(helper.isPixel(helper.getPixel(video), helper.red),
+    "First frame is rendered before playing");
+
+  helper.drawColor(canvas, helper.green);
+  await helper.pixelMustNotBecome(video, helper.green, {
+    time: 1000,
+    infoString: "Rendered first frame doesn't change on new frame from source"
+  });
+  ok(helper.isPixel(helper.getPixel(video), helper.red),
+    "First frame is still rendered");
+
+  video.play();
+  helper.drawColor(canvas, helper.blue);
+  await helper.pixelMustBecome(video, helper.blue, {
+    infoString: "New frame gets rendered when playing"
+  });
+
+  video.srcObject.getTracks().forEach(t => t.stop());
+}
+
+(async function() {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("Explicit timeout reasons");
+  try {
+    await runTest();
+  } catch(e) {
+    ok(false, e);
+  }
+  SimpleTest.finish();
+})();
+
+</script>
+</pre>
+</body>
+</html>

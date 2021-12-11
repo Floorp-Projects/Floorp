@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>touchmove coalescing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    let tests = [
+      "file_coalesce_touchmove_ipc.html",
+      "file_coalesce_touchmove_browserchild.html",
+      "file_coalesce_touchmove_browserchild2.html",
+    ];
+
+    function finish() {
+      info("finish");
+      if (tests.length) {
+        SimpleTest.executeSoon(run);
+        return;
+      }
+      SimpleTest.finish();
+    }
+
+    function run() {
+      info(`run ${tests[0]}`);
+      window.open(tests.shift());
+    }
+  </script>
+</head>
+<body onload="run();">
+</body>
+</html>

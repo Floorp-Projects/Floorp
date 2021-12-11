@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Load dynamically imported async modules which errors</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+  setup({allow_uncaught_exception: true});
+  var test = async_test("Load dynamically imported async modules with error")
+  window.addEventListener("error", scriptError);
+  function scriptError(e) {
+    // An error is expected
+    test.step(() => assert_true(e.message !== "FAIL"));
+  }
+  function scriptLoaded() {
+    test.done();
+  }
+  function testNoError() {
+    test.step(() => assert_unreached("No event expected here"));
+    test.done();
+  }
+</script>
+<script type="module"
+				src="./support/async_dynamic_module_error.js"
+        onerror="testNoError()"
+        onload="scriptLoaded()"></script>

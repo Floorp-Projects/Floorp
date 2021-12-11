@@ -1,0 +1,69 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIRunnable;
+
+[scriptable, uuid(2f712b52-19c5-4e0c-9e8f-b5c7c3b67049)]
+interface nsIUploadChannel2 : nsISupports
+{
+    /**
+     * Sets a stream to be uploaded by this channel with the specified
+     * Content-Type and Content-Length header values.
+     *
+     * Most implementations of this interface require that the stream:
+     *   (1) implement threadsafe addRef and release
+     *   (2) implement nsIInputStream::readSegments
+     *   (3) implement nsISeekableStream::seek
+     *
+     * @param aStream
+     *        The stream to be uploaded by this channel.
+     * @param aContentType
+     *        This value will replace any existing Content-Type
+     *        header on the HTTP request, regardless of whether
+     *        or not its empty.
+     * @param aContentLength
+     *        A value of -1 indicates that the length of the stream should be
+     *        determined by calling the stream's |available| method.
+     * @param aMethod
+     *        The HTTP request method to set on the stream.
+     * @param aStreamHasHeaders
+     *        True if the stream already contains headers for the HTTP request.
+     */
+    void explicitSetUploadStream(in nsIInputStream aStream,
+                                 in ACString aContentType,
+                                 in long long aContentLength,
+                                 in ACString aMethod,
+                                 in boolean aStreamHasHeaders);
+
+    /**
+     * Value of aStreamHasHeaders from the last successful call to
+     * explicitSetUploadStream.  TRUE indicates the attached upload stream
+     * contains request headers.
+     */
+    readonly attribute boolean uploadStreamHasHeaders;
+
+    /**
+     * Ensure the upload stream, if any, is cloneable.  This may involve
+     * async copying, so a callback runnable must be provided.  It will
+     * invoked on the current thread when the upload stream is ready
+     * for cloning.  If the stream is already cloneable, then the callback
+     * will be invoked synchronously.
+     */
+    [noscript]
+    void ensureUploadStreamIsCloneable(in nsIRunnable aCallback);
+
+    /**
+     * Clones the upload stream.  May return failure if the upload stream
+     * is not cloneable.  If this is not acceptable, use the
+     * ensureUploadStreamIsCloneable() method first.
+     * aContentLength could be -1 in case the size of the stream is unknown,
+     * otherwise it will contain the known size of the stream.
+     */
+    [noscript]
+    nsIInputStream cloneUploadStream(out long long aContentLength);
+};

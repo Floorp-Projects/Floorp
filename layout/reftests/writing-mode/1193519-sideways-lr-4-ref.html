@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+div { display: inline-block; border: 1px solid silver; padding: 5px;
+      line-height: 2em; writing-mode: sideways-rl; transform: rotate(180deg); }
+span { padding: 5px; color: transparent; }
+span:nth-child(1) { background: red;    }
+span:nth-child(2) { background: orange; }
+span:nth-child(3) { background: yellow; }
+span:nth-child(4) { background: green;  }
+span:nth-child(5) { background: blue;   }
+span:nth-child(6) { background: indigo; }
+span:nth-child(7) { background: violet; }
+</style>
+</head>
+
+<body>
+
+<div><span>"One</span> <span>two</span>
+ <span>three</span> <span>four</span> <span>five</span>
+ <span>six</span> <span>seven."</span></div>
+
+<div dir=rtl><span>"One</span> <span>two</span>
+ <span>three</span> <span>four</span> <span>five</span>
+ <span>six</span> <span>seven."</span></div>

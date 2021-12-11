@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 1131327 - Test ServiceWorkerRegistration.onupdatefound on ServiceWorker</title>
+</head>
+<body>
+<script>
+  navigator.serviceWorker.onmessage = function(e) {
+    dump("NSM iframe got message " + e.data + "\n");
+    window.parent.postMessage(e.data, "*");
+  };
+</script>
+</body>

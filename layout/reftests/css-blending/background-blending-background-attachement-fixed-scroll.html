@@ -1,0 +1,40 @@
+<!-- Blend two background images having background-attachment: fixed and scroll respectively -->
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+#parent {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+}
+
+#child {
+  background: url('as-image/green100x100.png'), url('as-image/green100x100.png');
+  background-attachment: fixed, scroll;
+  background-size: 100px 100px, 200px 200px;
+  background-repeat: no-repeat no-repeat;
+  background-blend-mode: difference;
+
+  height: 400px;
+}
+
+body {
+  margin: 0px;
+}
+</style>
+<script>
+  function onLoad() {
+    var parent = document.getElementById("parent");
+    parent.scrollTop = 100;
+  }
+</script>
+</head>
+
+<body onload="onLoad()">
+    <div id="parent">
+      <div id="child">
+      </div>
+    </div>
+</body>
+</html>

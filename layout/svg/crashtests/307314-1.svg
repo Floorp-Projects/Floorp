@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait" onload="setTimeout(function() { var g = document.getElementById('N1'), h = document.getElementById('N2'); g.appendChild(h); document.documentElement.removeAttribute("class"); }, 20);">
+
+  <text id="N1"/>
+  <text id="N2">
+    <tspan>
+      <textPath/>
+    </tspan>
+  </text>
+</svg>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        /* Force a large line-height so that we don't get a positioning
+           discrepancy on the test span depending on which font's metrics
+           are used in line-height computation. */
+        font: 64px/2 serif;
+      }
+      span {
+        /* Times does NOT support Mongolian characters, so the entire text
+           should be rendered as a single Mongolian Baiti run, including
+           the initial U+202F, even though it _is_ available in Times. */
+        font-family: "Times New Roman", "Mongolian Baiti", serif;
+        font-size: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <span>&#x202F;&#x1824;&#x1828;</span>
+  </body>
+</html>

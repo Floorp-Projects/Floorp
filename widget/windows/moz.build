@@ -1,0 +1,200 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+    SCHEDULES.exclusive = ["windows"]
+
+with Files("*CompositorWidget*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
+with Files("*IMEHandler*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*IMMHandler*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*KeyboardLayout*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("OSK*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*TSFTextStore*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+TEST_DIRS += ["tests"]
+
+EXPORTS += [
+    "nsdefs.h",
+    "WindowHook.h",
+    "WinUtils.h",
+]
+
+EXPORTS.mozilla += [
+    "ShellHeaderOnlyUtils.h",
+    "UrlmonHeaderOnlyUtils.h",
+    "WindowsConsole.h",
+    "WinHeaderOnlyUtils.h",
+]
+
+EXPORTS.mozilla.widget += [
+    "AudioSession.h",
+    "CompositorWidgetChild.h",
+    "CompositorWidgetParent.h",
+    "InProcessWinCompositorWidget.h",
+    "WinCompositorWidget.h",
+    "WinCompositorWindowThread.h",
+    "WinContentSystemParameters.h",
+    "WindowsEMF.h",
+    "WindowsSMTCProvider.h",
+    "WinEventObserver.h",
+    "WinMessages.h",
+    "WinModifierKeyState.h",
+    "WinTaskbar.h",
+    "WinWindowOcclusionTracker.h",
+]
+
+UNIFIED_SOURCES += [
+    "AudioSession.cpp",
+    "CompositorWidgetChild.cpp",
+    "GfxInfo.cpp",
+    "IEnumFE.cpp",
+    "IMMHandler.cpp",
+    "InkCollector.cpp",
+    "JumpListItem.cpp",
+    "KeyboardLayout.cpp",
+    "LSPAnnotator.cpp",
+    "nsAppShell.cpp",
+    "nsClipboard.cpp",
+    "nsColorPicker.cpp",
+    "nsDataObj.cpp",
+    "nsDataObjCollection.cpp",
+    "nsDragService.cpp",
+    "nsLookAndFeel.cpp",
+    "nsNativeBasicThemeWin.cpp",
+    "nsNativeDragSource.cpp",
+    "nsNativeDragTarget.cpp",
+    "nsNativeThemeWin.cpp",
+    "nsSound.cpp",
+    "nsToolkit.cpp",
+    "nsUserIdleServiceWin.cpp",
+    "nsUXThemeData.cpp",
+    "nsWindow.cpp",
+    "nsWindowBase.cpp",
+    "nsWindowDbg.cpp",
+    "nsWindowGfx.cpp",
+    "nsWinGesture.cpp",
+    "OSKTabTipManager.cpp",
+    "OSKVRManager.cpp",
+    "RemoteBackbuffer.cpp",
+    "ScreenHelperWin.cpp",
+    "ScrollbarUtil.cpp",
+    "SystemStatusBar.cpp",
+    "TaskbarPreview.cpp",
+    "TaskbarPreviewButton.cpp",
+    "TaskbarTabPreview.cpp",
+    "TaskbarWindowPreview.cpp",
+    "WidgetTraceEvent.cpp",
+    "WinCompositorWindowThread.cpp",
+    "WindowHook.cpp",
+    "WindowsConsole.cpp",
+    "WinEventObserver.cpp",
+    "WinIMEHandler.cpp",
+    "WinPointerEvents.cpp",
+    "WinTaskbar.cpp",
+    "WinTextEventDispatcherListener.cpp",
+    "WinUtils.cpp",
+    "WinWindowOcclusionTracker.cpp",
+]
+
+# The following files cannot be built in unified mode because of name clashes.
+SOURCES += [
+    "CompositorWidgetParent.cpp",
+    "InProcessWinCompositorWidget.cpp",
+    "JumpListBuilder.cpp",
+    "MediaKeysEventSourceFactory.cpp",
+    "nsBidiKeyboard.cpp",
+    "nsFilePicker.cpp",
+    "nsSharePicker.cpp",
+    "nsWidgetFactory.cpp",
+    "OSKInputPaneManager.cpp",
+    "WinCompositorWidget.cpp",
+    "WinContentSystemParameters.cpp",
+    "WindowsSMTCProvider.cpp",
+    "WindowsUIUtils.cpp",
+    "WinMouseScrollHandler.cpp",
+]
+
+# These files redefine the winsdk api version macro and we don't want it to leak to other files.
+SOURCES += [
+    "DirectManipulationOwner.cpp",
+]
+
+# Needs INITGUID and we don't allow INITGUID in unified sources since bug 970429.
+SOURCES += [
+    "InputDeviceUtils.cpp",
+    "TSFTextStore.cpp",
+]
+
+if CONFIG["NS_PRINTING"]:
+    UNIFIED_SOURCES += [
+        "nsDeviceContextSpecWin.cpp",
+        "nsPrintDialogWin.cpp",
+        "nsPrinterWin.cpp",
+        "nsPrintSettingsServiceWin.cpp",
+        "nsPrintSettingsWin.cpp",
+    ]
+    SOURCES += [
+        "nsPrintDialogUtil.cpp",
+    ]
+
+if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
+    UNIFIED_SOURCES += [
+        "WindowsEMF.cpp",
+    ]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
+    LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+
+LOCAL_INCLUDES += [
+    "/gfx/cairo/cairo/src",
+    "/layout/forms",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/xul",
+    "/toolkit/xre",
+    "/widget",
+    "/widget/headless",
+    "/xpcom/base",
+]
+
+DEFINES["MOZ_UNICODE"] = True
+
+for var in "MOZ_ENABLE_D3D10_LAYER":
+    if CONFIG[var]:
+        DEFINES[var] = True
+
+OS_LIBS += [
+    "rpcrt4",
+    "urlmon",
+]
+
+if CONFIG["CC_TYPE"] == "clang-cl":
+    SOURCES += [
+        "ToastNotification.cpp",
+        "ToastNotificationHandler.cpp",
+    ]
+
+REQUIRES_UNIFIED_BUILD = True

@@ -1,0 +1,20 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+BROWSER_CHROME_MANIFESTS += [
+    "browser/browser.ini",
+    "browser/disable_app_update/browser.ini",
+    "browser/disable_default_bookmarks/browser.ini",
+    "browser/disable_developer_tools/browser.ini",
+    "browser/disable_forget_button/browser.ini",
+    "browser/disable_fxscreenshots/browser.ini",
+    "browser/hardware_acceleration/browser.ini",
+    "browser/homepage_button/browser.ini",
+    "browser/managedbookmarks/browser.ini",
+    "browser/show_home_button/browser.ini",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]

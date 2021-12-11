@@ -1,0 +1,30 @@
+<!-- This test's animation sets x=100 from 1sec to 1.5sec.  We'll
+     remove the animate element at time 1.1sec to capture this, and
+     then wait a little, and make sure the animation is frozen there. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+  <script>
+    function go() {
+      var rect1 = document.getElementById("rect1");
+      var rect2 = document.getElementById("rect2");
+      var anim = document.getElementById("anim");
+      rect2.appendChild(anim);
+
+      // Wait >= 1s before taking screenshot, to give animation time to finish
+      setTimeout('document.documentElement.removeAttribute("class")', 1100);
+    }
+    function delay_go() {
+      setTimeout(go, 1100);
+    }
+    document.addEventListener("MozReftestInvalidate", delay_go, false);
+    setTimeout(delay_go, 4000); // fallback for running outside reftest
+  </script>
+  <rect id="rect1" y="40" width="10" height="10" fill="blue">
+    <animate id="anim" attributeName="x" 
+             dur="2s" values="0; 50; 100; 150"
+             calcMode="discrete" />
+  </rect>
+  <rect id="rect2" y="80" width="10" height="10" fill="blue">
+  </rect>
+</svg>

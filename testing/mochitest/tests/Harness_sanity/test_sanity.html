@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mochitest harness sanity</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display">
+  <input id="testKeyEvent1" onkeypress="press1 = true">
+  <input id="testKeyEvent2" onkeydown="return false;" onkeypress="press2 = true">
+  <input id="testKeyEvent3" onkeypress="press3 = true">
+  <input id="testKeyEvent4" onkeydown="return false;" onkeypress="press4 = true">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for sanity  **/
+ok(true, "true must be ok");
+isnot(1, true, "1 must not be true");
+isnot(1, false, "1 must not be false");
+isnot(0, false, "0 must not be false");
+isnot(0, true, "0 must not be true");
+isnot("", 0, "Empty string must not be 0");
+isnot("1", 1, "Numeric string must not equal the number");
+isnot("", null, "Empty string must not be null");
+isnot(undefined, null, "Undefined must not be null");
+
+var press1 = false;
+$("testKeyEvent1").focus();
+sendString("x");
+is($("testKeyEvent1").value, "x", "synthesizeKey should work");
+is(press1, true, "synthesizeKey should dispatch keyPress");
+
+var press2 = false;
+$("testKeyEvent2").focus();
+sendString("x");
+is($("testKeyEvent2").value, "", "synthesizeKey should respect keydown preventDefault");
+is(press2, false, "synthesizeKey should not dispatch keyPress with default prevented");
+
+var press3 = false;
+$("testKeyEvent3").focus();
+sendChar("x")
+is($("testKeyEvent3").value, "x", "sendChar should work");
+is(press3, true, "sendChar should dispatch keyPress");
+
+var press4 = false;
+$("testKeyEvent4").focus();
+sendChar("x")
+is($("testKeyEvent4").value, "", "sendChar should respect keydown preventDefault");
+is(press4, false, "sendChar should not dispatch keyPress with default prevented");
+
+
+</script>
+</pre>
+</body>
+</html>

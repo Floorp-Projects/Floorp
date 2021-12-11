@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=806506
+-->
+<head>
+  <title>Test for inert elements in ShadowRoot</title>
+  <script type="text/javascript" src="head.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var content = '<div id="grabme"></div>';
+createIframe(content).then(aDocument => {
+  var element = aDocument.getElementById("grabme");
+  var shadow = element.attachShadow({mode: "open"});
+
+  // Check that <base> is inert.
+  shadow.innerHTML = '<base href="http://www.example.org/" />';
+  isnot(aDocument.baseURI, "http://www.example.org/", "Base element should be inert in ShadowRoot.");
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

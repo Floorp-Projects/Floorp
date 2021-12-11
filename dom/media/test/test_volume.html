@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: volume attribute set</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<video id='v1'></video><audio id='a1'></audio>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function test(element, value, shouldThrow) {
+  var threw = null;
+  try {
+    element.volume = value;
+  } catch (ex) {
+    threw = ex.name;
+  }
+  is(shouldThrow, threw, "Case: " +element.id+ " setVolume=" + value);
+}
+
+
+var ids = [document.getElementById('v1'), document.getElementById('a1')];
+
+for (let i=0; i<ids.length; i++) {
+  var element = ids[i];
+  test(element, 0.0, null);
+  test(element, 1.0, null);
+  test(element, -0.1, "IndexSizeError");
+  test(element, 1.1, "IndexSizeError");
+  test(element, undefined, "TypeError");
+  test(element, NaN, "TypeError");
+}
+
+</script>
+</pre>
+</body>
+</html>

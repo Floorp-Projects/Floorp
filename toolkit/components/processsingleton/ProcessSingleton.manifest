@@ -1,0 +1,1 @@
+category app-startup MainProcessSingleton service,@mozilla.org/main-process-singleton;1 process=main

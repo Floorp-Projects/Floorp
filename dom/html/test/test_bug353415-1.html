@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<iframe name="submit_frame"></iframe>
+<form method="get" id="form1" target="submit_frame" action="../../../../../blah">
+<input type="text" name="field1" value="teststring"><br>
+<input type="radio" name="field2" value="0" checked> 0
+<input type="radio" name="field3" value="1"> 1<br>
+<input type="checkbox" name="field4" value="1" checked> 1
+<input type="checkbox" name="field5" value="2"> 2
+<input type="checkbox" name="field6" value="3" checked> 3
+<select name="field7">
+<option value="1">1</option>
+<option value="2" selected>2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>
+<input name="field8" value="8">
+<input name="field9" value="9">
+<input type="image" name="field10">
+<label name="field11">
+<input name="field12">
+<input type="button" name="field13" value="button">
+</form>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  addLoadEvent(function() {
+    document.getElementsByName('submit_frame')[0].onload = function() {
+      is(frames.submit_frame.location.href, `${location.origin}/blah?field1=teststring&field2=0&field4=1&field6=3&field7=2&field8=8&field9=9&field12=`, "Submit string was correct.");
+      SimpleTest.finish();
+    };
+
+    document.forms[0].submit();
+  });
+</script>
+</body>
+</html>

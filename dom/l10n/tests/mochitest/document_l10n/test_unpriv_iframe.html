@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ensure unprivilaged document cannot access document.l10n in an iframe</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  addLoadEvent(function() {
+    let frame = document.getElementById("frame");
+    let frame2 = document.getElementById("frame2");
+
+    is("l10n" in frame.contentDocument, false);
+    is("l10n" in frame2.contentDocument, false);
+  });
+  addLoadEvent(SimpleTest.finish);
+  </script>
+</head>
+<body>
+  <iframe id="frame" src="about:blank"></iframe>
+  <iframe id="frame2" src="about:crashes"></iframe>
+</body>
+</html>

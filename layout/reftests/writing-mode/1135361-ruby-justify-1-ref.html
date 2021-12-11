@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for bug 1135361</title>
+    <style>
+    body {
+      font: 48px sans-serif;
+    }
+    div {
+      display: inline-block;
+      width: 3em;
+      border: 1px solid silver;
+      padding: .5em;
+    }
+    p {
+      writing-mode: vertical-rl;
+      -webkit-writing-mode: vertical-rl;
+      -ms-writing-mode: tb-rl; /* old syntax. IE */
+      text-orientation: upright;
+      -webkit-text-orientation: upright;
+      height: 4ch;
+    }
+    rt {
+      font-size: 20%; /* ensure ruby is small enough that it won't affect inline spacing */
+    }
+    span {
+      display: inline-block;
+      height: .5ch; /* shim for fake justification */
+    }
+    </style>
+  </head>
+  <body>
+   <div>
+    <p>
+      <span></span><ruby>東<rt>to</rt></ruby>
+    </p>
+   </div>
+   <div>
+    <p style="text-align:right;">
+      <ruby>京<rt>kyo</rt></ruby><span></span>
+    </p>
+   </div>
+  </body>
+</html>

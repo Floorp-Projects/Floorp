@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="load-device">
+<dialog id="loaddevice"
+        buttons="accept,cancel">
+
+  <linkset>
+    <html:link rel="localization" href="security/certificates/deviceManager.ftl"/>
+  </linkset>
+
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+  <script src="chrome://pippki/content/pippki.js"/>
+  <script src="chrome://pippki/content/load_device.js"/>
+
+  <html:style>
+    #device_name,
+    #device_path {
+      -moz-box-flex: 1;
+    }
+  </html:style>
+
+  <description data-l10n-id="load-device-info"></description>
+  <hbox align="center">
+    <label data-l10n-id="load-device-modname"
+           control="device_name"/>
+    <html:input id="device_name"
+                data-l10n-id="load-device-modname-default"
+                data-l10n-attrs="value"
+                onchange="validateModuleName();"/>
+  </hbox>
+  <hbox align="center">
+    <label data-l10n-id="load-device-filename"
+           control="device_path"/>
+    <html:input id="device_path" />
+    <button id="browse" flex="1"
+            data-l10n-id="load-device-browse"
+            oncommand="onBrowseBtnPress();"/>
+  </hbox>
+  <label id="helpText" value=""/>
+
+</dialog>
+</window>

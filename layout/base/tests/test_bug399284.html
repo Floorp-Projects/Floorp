@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=399284
+-->
+<head>
+  <title>Test for Bug 399284</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=399284">Mozilla Bug 399284</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 399284 **/
+const testContent = "<p id='testPara'>The quick brown fox jumps over the lazy dog";
+
+var decoders = [
+    "Big5",
+    "Big5-HKSCS",
+    "EUC-JP",
+    "EUC-KR",
+    "gb18030",
+    "IBM866",
+    "ISO-2022-JP",
+    "ISO-8859-3",
+    "ISO-8859-4",
+    "ISO-8859-5",
+    "ISO-8859-6",
+    "ISO-8859-7",
+    "ISO-8859-8",
+    "ISO-8859-8-I",
+    "ISO-8859-10",
+    "ISO-8859-13",
+    "ISO-8859-14",
+    "ISO-8859-15",
+    "ISO-8859-16",
+    "ISO-8859-2",
+    "KOI8-R",
+    "KOI8-U",
+    "Shift_JIS",
+    "windows-1250",
+    "windows-1251",
+    "windows-1252",
+    "windows-1253",
+    "windows-1254",
+    "windows-1255",
+    "windows-1256",
+    "windows-1257",
+    "windows-1258",
+    "windows-874",
+    "x-mac-cyrillic",
+    "UTF-8",
+    "UTF-16LE",
+    "UTF-16BE"
+];
+
+var decoder;
+for (var i = 0; i < decoders.length; i++) {
+    var decoder = decoders[i];
+    var data;
+    
+    // encode the content for non-ASCII compatible encodings
+    if (decoder == "UTF-16BE")
+        data = encodeUTF16BE(testContent);
+    else if (decoder == "UTF-16LE")
+        data = encodeUTF16LE(testContent);
+    else
+        data = encodeURI(testContent);
+    var dataURI = "data:text/html;charset=" + decoder + "," + data;
+   
+    var testFrame = document.createElement("iframe");
+    frameID = decoder;
+    testFrame.setAttribute("id", frameID);
+    var testFrameObj = document.body.appendChild(testFrame);
+    testFrameObj.setAttribute("onload", "testFontSize('" + decoder + "')");
+    testFrameObj.contentDocument.location.assign(dataURI);
+}
+
+function encodeUTF16BE(string)
+{
+    var encodedString = "";
+    for (i = 0; i < string.length; ++i) {
+        encodedString += "%00";
+        encodedString += encodeURI(string.charAt(i));
+    }
+    return encodedString;
+}
+
+function encodeUTF16LE(string)
+{
+    var encodedString = "";
+    for (i = 0; i < string.length; ++i) {
+        encodedString += encodeURI(string.charAt(i));
+        encodedString += "%00";
+    }
+    return encodedString;
+}
+
+function testFontSize(frame)
+{
+    var iframeDoc = SpecialPowers.wrap($(frame)).contentDocument;
+    var size = parseInt(iframeDoc.defaultView.
+                getComputedStyle(iframeDoc.getElementById("testPara")).
+                getPropertyValue("font-size"));
+    ok(size > 0, "font size assigned for " + frame);
+}
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,61 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that when an item in the Tree component is clicked, it steals focus from
+other inputs.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        { onFocus: x => renderTree({ focused: x }) },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
+
+    const tree = renderTree();
+
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+
+    input.focus();
+    is(document.activeElement, input, "The text input should be focused.");
+
+    document.querySelector(".tree-node").click();
+    await forceRender(tree);
+
+    isnot(document.activeElement, input,
+          "The input should have had it's focus stolen by clicking on a tree item.");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

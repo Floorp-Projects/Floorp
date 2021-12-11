@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<style type="text/css">
+button {
+  writing-mode: vertical-rl;
+  -moz-appearance: none;
+}
+#a { }
+#b { width: 50px; }
+#c { padding: 20px; }
+#d { padding-left: 20px; }
+#e { padding-right: 20px; }
+#f { width: 50px; padding: 20px; visibility: hidden; } /* expected to mismatch */
+#g { width: 50px; padding-left: 20px; }
+#h { width: 50px; padding-right: 20px; }
+#i { padding-top: 20px; }
+#j { padding-bottom: 20px; }
+</style>
+
+<!-- except for button #f, these should all render the same in both
+     vertical-rl and vertical-lr writing modes -->
+<button id="a">Button</button>
+<button id="b">Button</button>
+<button id="c">Button</button>
+<button id="d">Button</button>
+<button id="e">Button</button>
+<button id="f">Button</button>
+<button id="g">Button</button>
+<button id="h">Button</button>
+<button id="i">Button</button>
+<button id="j">Button</button>

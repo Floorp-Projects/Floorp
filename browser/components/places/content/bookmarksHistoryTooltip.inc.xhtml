@@ -1,0 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Bookmarks and history tooltip -->
+<tooltip id="bhTooltip" noautohide="true"
+         class="places-tooltip"
+         onpopupshowing="return window.top.BookmarksEventHandler.fillInBHTooltip(this, event)"
+         onpopuphiding="this.removeAttribute('position')">
+  <vbox class="places-tooltip-box" flex="1">
+    <description class="tooltip-label places-tooltip-title"/>
+    <description crop="center" class="tooltip-label places-tooltip-uri uri-element"/>
+  </vbox>
+</tooltip>

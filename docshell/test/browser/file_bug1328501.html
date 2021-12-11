@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Page with iframes</title>
+    <script type="application/javascript">
+    let promiseResolvers = {
+      "testFrame1": {},
+      "testFrame2": {},
+    };
+    let promises = [
+      new Promise(r => promiseResolvers.testFrame1.resolve = r),
+      new Promise(r => promiseResolvers.testFrame2.resolve = r),
+    ];
+    function frameLoaded(frame) {
+      promiseResolvers[frame].resolve();
+    }
+    Promise.all(promises).then(() => window.dispatchEvent(new Event("frames-loaded")));
+    </script>
+  </head>
+  <body onunload="">
+    <div>
+      <iframe id="testFrame1" src="dummy_page.html" onload="frameLoaded(this.id);" ></iframe>
+      <iframe id="testFrame2" src="dummy_page.html" onload="frameLoaded(this.id);" ></iframe>
+    </div>
+  </body>
+</html>

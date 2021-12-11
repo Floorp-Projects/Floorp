@@ -1,0 +1,225 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getUserMedia Basic Screenshare Test",
+    bug: "1211656",
+    visible: true,
+  });
+
+  const verifyScreenshare =
+      async (video, helper, upleft, upright, downleft, downright) => {
+    if (video.readyState < video.HAVE_CURRENT_DATA) {
+      info("Waiting for data");
+      await new Promise(r => video.onloadeddata = r);
+    }
+
+    // We assume video size will not change. Offsets help to account for a
+    // square fullscreen-canvas, while the screen is rectangular.
+    const offsetX = Math.max(0, video.videoWidth - video.videoHeight) / 2;
+    const offsetY = Math.max(0, video.videoHeight - video.videoWidth) / 2;
+
+    const verifyAround = async (internalX, internalY, color) => {
+      // Pick a couple of samples around a coordinate to check for a color.
+      // We check multiple rows and columns, to avoid most artifact issues.
+      let areaSamples = [
+        {dx: 0, dy: 0},
+        {dx: 1, dy: 3},
+        {dx: 8, dy: 5},
+      ];
+      for (let {dx, dy} of areaSamples) {
+        const x = offsetX + dx + internalX;
+        const y = offsetY + dy + internalY;
+        info(`Checking pixel (${[x,y]}) of total resolution `
+          + `${video.videoWidth}x${video.videoHeight} against ${color.name}.`);
+        let lastPixel = [-1, -1, -1, -1];
+        await helper.waitForPixel(video, px => {
+          lastPixel = Array.from(px);
+          return helper.isPixel(px, color, 48);
+        }, {
+          offsetX: x,
+          offsetY: y,
+          cancel: wait(30000).then(_ =>
+            new Error(`Checking ${[x,y]} against ${color.name} timed out. ` +
+                      `Got [${lastPixel}].`)),
+        });
+        ok(true, `Pixel (${[x,y]}) passed. Got [${lastPixel}].`);
+      }
+    };
+
+    const screenSizeSq = Math.min(video.videoWidth, video.videoHeight);
+
+    info("Waiting for upper left quadrant to become " + upleft.name);
+    await verifyAround(screenSizeSq / 4, screenSizeSq / 4, upleft);
+
+    info("Waiting for upper right quadrant to become " + upright.name);
+    await verifyAround(screenSizeSq * 3 / 4, screenSizeSq / 4, upright);
+
+    info("Waiting for lower left quadrant to become " + downleft.name);
+    await verifyAround(screenSizeSq / 4, screenSizeSq * 3 / 4, downleft);
+
+    info("Waiting for lower right quadrant to become " + downright.name);
+    await verifyAround(screenSizeSq * 3 / 4, screenSizeSq * 3 / 4, downright);
+  };
+
+  /**
+   * Run a test to verify that we can complete a start and stop media playback
+   * cycle for a screenshare MediaStream on a video HTMLMediaElement.
+   */
+  runTest(async function () {
+    await pushPrefs(
+      ["full-screen-api.enabled", true],
+      ["full-screen-api.allow-trusted-requests-only", false],
+      ["full-screen-api.transition-duration.enter", "0 0"],
+      ["full-screen-api.transition-duration.leave", "0 0"],
+    );
+
+    // Improve real estate for screenshots
+    const test = document.getElementById("test");
+    test.setAttribute("style", "height:0;margin:0;");
+    const display = document.getElementById("display");
+    display.setAttribute("style", "margin:0;");
+    const testVideo = createMediaElement('video', 'testVideo');
+    testVideo.removeAttribute("width");
+    testVideo.removeAttribute("height");
+    testVideo.setAttribute("style", "max-height:240px;");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 20;
+    document.getElementById("content").appendChild(canvas);
+    const draw = ([upleft, upright, downleft, downright]) => {
+      helper.drawColor(canvas, helper[upleft], {offsetX: 0, offsetY: 0});
+      helper.drawColor(canvas, helper[upright], {offsetX: 10, offsetY: 0});
+      helper.drawColor(canvas, helper[downleft], {offsetX: 0, offsetY: 10});
+      helper.drawColor(canvas, helper[downright], {offsetX: 10, offsetY: 10});
+    };
+    const helper = new CaptureStreamTestHelper2D(1, 1);
+
+    const doVerify = async (stream, [upleft, upright, downleft, downright]) => {
+      // Reset from potential earlier verification runs.
+      testVideo.srcObject = null;
+      const playback = new MediaStreamPlayback(testVideo, stream);
+      playback.startMedia();
+      await playback.verifyPlaying();
+      const settings = stream.getTracks()[0].getSettings();
+      is(settings.width, testVideo.videoWidth,
+         "Width setting should match video width");
+      is(settings.height, testVideo.videoHeight,
+         "Height setting should match video height");
+      await SpecialPowers.wrap(canvas).requestFullscreen();
+      try {
+        await verifyScreenshare(testVideo, helper, helper[upleft], helper[upright],
+                                helper[downleft], helper[downright]);
+      } finally {
+        await playback.stopTracksForStreamInMediaPlayback();
+        await SpecialPowers.wrap(document).exitFullscreen();
+        // We wait a bit extra here to make sure we have completely left
+        // fullscreen when the --screenshot-on-fail screenshot is captured.
+        await wait(300);
+      }
+    };
+
+    info("Testing screenshare without constraints");
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    let stream = await getUserMedia({video: {mediaSource: "screen"}});
+    let settings = stream.getTracks()[0].getSettings();
+    ok(settings.width <= 8192,
+       `Width setting ${settings.width} should be set after gUM (or 0 per bug 1453247)`);
+    ok(settings.height <= 8192,
+       `Height setting ${settings.height} should be set after gUM (or 0 per bug 1453247)`);
+    let colors = ["red", "blue", "green", "grey"];
+    draw(colors);
+    await doVerify(stream, colors);
+    const screenWidth = testVideo.videoWidth;
+    const screenHeight = testVideo.videoHeight;
+
+    info("Testing screenshare with size and framerate constraints");
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    stream = await getUserMedia({
+      video: {
+        mediaSource: 'screen',
+        width: {
+          min: '10',
+          max: '100'
+        },
+        height: {
+          min: '10',
+          max: '100'
+        },
+        frameRate: {
+          min: '10',
+          max: '15'
+        },
+      },
+    });
+    settings = stream.getTracks()[0].getSettings();
+    ok(settings.width == 0 || (settings.width >= 10 && settings.width <= 100),
+       `Width setting ${settings.width} should be correct after gUM (or 0 per bug 1453247)`);
+    ok(settings.height == 0 || (settings.height >= 10 && settings.height <= 100),
+       `Height setting ${settings.height} should be correct after gUM (or 0 per bug 1453247)`);
+    colors = ["green", "red", "grey", "blue"];
+    draw(colors);
+    await doVerify(stream.clone(), colors);
+    settings = stream.getTracks()[0].getSettings();
+    ok(settings.width >= 10 && settings.width <= 100,
+       `Width setting ${settings.width} should be within constraints`);
+    ok(settings.height >= 10 && settings.height <= 100,
+       `Height setting ${settings.height} should be within constraints`);
+    is(settings.width, testVideo.videoWidth,
+       "Width setting should match video width");
+    is(settings.height, testVideo.videoHeight,
+       "Height setting should match video height");
+    let expectedHeight = (screenHeight * settings.width) / screenWidth;
+    ok(Math.abs(expectedHeight - settings.height) <= 1,
+       "Aspect ratio after constrained gUM should be close enough");
+
+    info("Testing modifying screenshare with applyConstraints");
+    testVideo.srcObject = stream;
+    testVideo.play();
+    await new Promise(r => testVideo.onloadeddata = r);
+    const resize = haveEvent(
+      testVideo, "resize", wait(5000, new Error("Timeout waiting for resize")));
+    await stream.getVideoTracks()[0].applyConstraints({
+      mediaSource: 'screen',
+      width: 200,
+      height: 200,
+      frameRate: {
+        min: '5',
+        max: '10'
+      }
+    });
+    // getSettings() should report correct size as soon as applyConstraints()
+    // resolves - bug 1453259. Until fixed, check that we at least report
+    // something sane.
+    const newSettings = stream.getTracks()[0].getSettings();
+    ok(newSettings.width > settings.width && newSettings.width < screenWidth,
+       `Width setting ${newSettings.width} should have increased after applyConstraints`);
+    ok(newSettings.height > settings.height && newSettings.height < screenHeight,
+       `Height setting ${newSettings.height} should have increased after applyConstraints`);
+    await resize;
+    settings = stream.getTracks()[0].getSettings();
+    ok(settings.width > 100 && settings.width < screenWidth,
+       `Width setting ${settings.width} should have increased after first frame after applyConstraints`);
+    ok(settings.height > 100 && settings.height < screenHeight,
+       `Height setting ${settings.height} should have increased after first frame after applyConstraints`);
+    is(settings.width, testVideo.videoWidth,
+       "Width setting should match video width");
+    is(settings.height, testVideo.videoHeight,
+       "Height setting should match video height");
+    expectedHeight = (screenHeight * settings.width) / screenWidth;
+    ok(Math.abs(expectedHeight - settings.height) <= 1,
+       "Aspect ratio after applying constraints should be close enough");
+    colors = ["grey", "green", "blue", "red"];
+    draw(colors);
+    await doVerify(stream, colors);
+  });
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+
+<style id="ss" type="text/css">
+
+span, popupgroup { display: table; position: absolute; }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var ss = document.getElementById("ss");
+  ss.removeChild(ss.firstChild);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();">
+
+<span><xul:popupgroup/></span>
+
+</body>
+</html>

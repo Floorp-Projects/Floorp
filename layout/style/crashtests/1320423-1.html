@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<style>
+#target {
+  cursor: url(file:///somewhere/cursor.png), pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: yellow;
+}
+#target:hover {
+  background: green;
+}
+</style>
+<div id=target></div>
+<script>
+var target = document.getElementById("target");
+var x = window.outerWidth / 2, y = window.outerHeight / 2;
+SpecialPowers.DOMWindowUtils.sendMouseEvent("mouseover", x, y, 0, 0, 0);
+</script>

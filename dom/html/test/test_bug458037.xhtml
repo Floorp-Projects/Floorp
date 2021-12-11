@@ -1,0 +1,112 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=458037
+-->
+<head>
+  <title>Test for Bug 458037</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=458037">Mozilla Bug 458037</a>
+<p id="display"></p>
+<div id="content" >
+<div id="a"></div>
+<div id="b" contenteditable="true"></div>
+<div id="c" contenteditable="false"></div>
+<div id="d" contenteditable="inherit"></div>
+<div contenteditable="true">
+  <div id="e"></div>
+</div>
+<div contenteditable="false">
+  <div id="f"></div>
+</div>
+<div contenteditable="true">
+  <div id="g" contenteditable="false"></div>
+</div>
+<div contenteditable="false">
+  <div id="h" contenteditable="true"></div>
+</div>
+<div contenteditable="true">
+  <div id="i" contenteditable="inherit"></div>
+</div>
+<div contenteditable="false">
+  <div id="j" contenteditable="inherit"></div>
+</div>
+<div contenteditable="true">
+  <xul:box>
+    <div id="k"></div>
+  </xul:box>
+</div>
+<div contenteditable="false">
+  <xul:box>
+    <div id="l"></div>
+  </xul:box>
+</div>
+<div contenteditable="true">
+  <xul:box>
+    <div id="m" contenteditable="inherit"></div>
+  </xul:box>
+</div>
+<div contenteditable="false">
+  <xul:box>
+    <div id="n" contenteditable="inherit"></div>
+  </xul:box>
+</div>
+<div id="x"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 458037 **/
+
+function test(id, expected) {
+  is(document.getElementById(id).isContentEditable, expected,
+     "Element " + id + " should " + (expected ? "" : "not ") + "be editable");
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  test("a", false);
+  test("b", true);
+  test("c", false);
+  test("d", false);
+  test("e", true);
+  test("f", false);
+  test("g", false);
+  test("h", true);
+  test("i", true);
+  test("j", false);
+  test("k", true);
+  test("l", false);
+  test("m", true);
+  test("n", false);
+
+  var d = document.getElementById("x");
+  test("x", false);
+  d.setAttribute("contenteditable", "true");
+  test("x", true);
+  d.setAttribute("contenteditable", "false");
+  test("x", false);
+  d.setAttribute("contenteditable", "inherit");
+  test("x", false);
+  d.removeAttribute("contenteditable");
+  test("x", false);
+  d.contentEditable = "true";
+  test("x", true);
+  d.contentEditable = "false";
+  test("x", false);
+  d.contentEditable = "inherit";
+  test("x", false);
+
+  // Make sure that isContentEditable is read-only
+  var origValue = d.isContentEditable;
+  d.isContentEditable = !origValue;
+  is(d.isContentEditable, origValue, "isContentEditable should be read only");
+});
+
+</script>
+</pre>
+</body>
+</html>
+

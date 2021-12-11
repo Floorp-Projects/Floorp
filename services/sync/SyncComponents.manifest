@@ -1,0 +1,3 @@
+# Register resource aliases
+# (Note, for tests these are also set up in addResourceAlias)
+resource services-sync resource://gre/modules/services-sync/

@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=695385
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 695385</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=695385">Mozilla Bug 695385</a>
+<br>
+<!-- These iframes' renderings are expected to match: -->
+<iframe src="http://mochi.test:8888/tests/layout/svg/tests/file_filter_crossorigin.svg"></iframe>
+<iframe src="file_black_yellow.svg"></iframe>
+<br>
+<!-- These iframes' renderings are expected to match: -->
+<iframe src="http://example.org/tests/layout/svg/tests/file_filter_crossorigin.svg"></iframe>
+<iframe src="file_yellow_black.svg"></iframe>
+
+<pre id="test">
+<script type="application/javascript">
+
+function promiseExecuteSoon() {
+  return new Promise(SimpleTest.executeSoon);
+}
+
+// Main Function
+async function run() {
+  SimpleTest.waitForExplicitFinish();
+
+  // XXXdholbert Wait a few ticks, to give the iframes a little more
+  // opportunity to load their external resources before we call
+  // snapshotWindow. This is an attempt at a workaround/diagnostic for
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1706542
+  for (let i = 0; i < 60; i++) {
+    await promiseExecuteSoon();
+  }
+
+  let snapshots = new Array(4);
+  for (let i = 0; i < snapshots.length; i++) {
+    snapshots[i] = await snapshotWindow(frames[i], false);
+  }
+
+  // Compare mochi.test iframe against its reference:
+  assertSnapshots(snapshots[0], snapshots[1], true, null,
+                  "Testcase loaded from mochi.test", "Reference: black/yellow");
+
+  // Compare example.org iframe against its reference:
+  assertSnapshots(snapshots[2], snapshots[3], true, null,
+                  "Testcase loaded from example.org", "Reference: yellow/black");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

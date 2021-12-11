@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<rss version="2.0">
+  <channel>
+    <title>feed title</title>
+    <ttl>180</ttl>
+    <item>
+      <title>linked feed item</title>
+	    <link>http://feed-item-link.com</link>
+    </item>
+    <item>
+      <title>link-less feed item</title>
+    </item>
+    <item>
+      <title>linked feed item</title>
+	    <link>http://feed-item-link.com</link>
+    </item>
+  </channel>
+</rss>

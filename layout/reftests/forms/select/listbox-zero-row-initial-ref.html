@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<title>Reference for initial reflow of zero height options</title>
+<style>
+
+  html { overflow: hidden }
+  option { height: 0; min-height: 0 }
+
+</style>
+
+<select size="3">
+  <option>One</option>
+  <option>Two</option>
+  <option>Three</option>
+</select>
+
+<script>
+
+  document.body.offsetHeight; // flush layout
+  document.body.style.fontSize = "60px";
+  document.body.offsetHeight; // flush layout
+  document.body.style.fontSize = "";
+
+</script>

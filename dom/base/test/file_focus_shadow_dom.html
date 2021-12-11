@@ -1,0 +1,995 @@
+<html>
+  <head>
+    <title>Test for Bug 1453693</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+
+      class TestNode extends HTMLElement {
+      constructor() {
+        super();
+        const styles = "<style>:focus{background-color:yellow;}</style>";
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.innerHTML =
+          `${styles}<div tabindex='-1'>test node</div> <slot></slot>`;
+      }}
+
+      window.customElements.define('test-node', TestNode);
+
+      var lastFocusTarget;
+      function focusLogger(event) {
+        lastFocusTarget = event.target;
+        console.log(event.target + " under " + event.target.parentNode);
+        event.stopPropagation();
+      }
+
+      function testTabbingThroughShadowDOMWithTabIndexes() {
+        var anchor = document.createElement("a");
+        anchor.onfocus = focusLogger;
+        anchor.href = "#";
+        anchor.textContent = "in light DOM";
+        document.body.appendChild(anchor);
+
+        var host = document.createElement("div");
+        document.body.appendChild(host);
+
+        var sr = host.attachShadow({mode: "open"});
+        var shadowAnchor = anchor.cloneNode(false);
+        shadowAnchor.onfocus = focusLogger;
+        shadowAnchor.textContent = "in shadow DOM";
+        sr.appendChild(shadowAnchor);
+        var shadowInput = document.createElement("input");
+        shadowInput.onfocus = focusLogger;
+        shadowInput.tabIndex = 1;
+        sr.appendChild(shadowInput);
+
+        var shadowDate = document.createElement("input");
+        shadowDate.type = "date";
+        shadowDate.onfocus = focusLogger;
+        shadowDate.tabIndex = 1;
+        sr.appendChild(shadowDate);
+
+        var shadowIframe = document.createElement("iframe");
+        shadowIframe.tabIndex = 1;
+        sr.appendChild(shadowIframe);
+        shadowIframe.contentDocument.body.innerHTML = "<input>";
+
+        var input = document.createElement("input");
+        input.onfocus = focusLogger;
+        input.tabIndex = 1;
+        document.body.appendChild(input);
+
+        var input2 = document.createElement("input");
+        input2.onfocus = focusLogger;
+        document.body.appendChild(input2);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input, "Should have focused input element. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, anchor, "Should have focused anchor element. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput, "Should have focused input element in shadow DOM. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.documentElement,
+                  "Should have focused document element in shadow iframe. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.body.firstChild,
+                  "Should have focused input element in shadow iframe. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input2, "Should have focused input[2] element. (3)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.body.firstChild,
+                  "Should have focused input element in shadow iframe. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.documentElement,
+                  "Should have focused document element in shadow iframe. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput, "Should have focused input element in shadow DOM. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, anchor, "Should have focused anchor element. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input, "Should have focused input element. (4)");
+
+        document.body.innerHTML = null;
+      }
+
+      function testTabbingThroughSimpleShadowDOM() {
+        var anchor = document.createElement("a");
+        anchor.onfocus = focusLogger;
+        anchor.href = "#";
+        anchor.textContent = "in light DOM";
+        document.body.appendChild(anchor);
+        anchor.focus();
+
+        var host = document.createElement("div");
+        document.body.appendChild(host);
+
+        var sr = host.attachShadow({mode: "open"});
+        var shadowAnchor = anchor.cloneNode(false);
+        shadowAnchor.onfocus = focusLogger;
+        shadowAnchor.textContent = "in shadow DOM";
+        sr.appendChild(shadowAnchor);
+        var shadowInput = document.createElement("input");
+        shadowInput.onfocus = focusLogger;
+        sr.appendChild(shadowInput);
+
+        var hiddenShadowButton = document.createElement("button");
+        hiddenShadowButton.setAttribute("style", "display: none;");
+        sr.appendChild(hiddenShadowButton);
+
+        var input = document.createElement("input");
+        input.onfocus = focusLogger;
+        document.body.appendChild(input);
+
+        var input2 = document.createElement("input");
+        input2.onfocus = focusLogger;
+        document.body.appendChild(input2);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM.");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput, "Should have focused input element in shadow DOM.");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input, "Should have focused input element.");
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input2, "Should have focused input[2] element.");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input, "Should have focused input element. (2)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput, "Should have focused input element in shadow DOM. (2)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM. (2)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, anchor, "Should have focused anchor element. (2)");
+
+        host.remove();
+        input.remove();
+        input2.remove();
+      }
+
+      function testTabbingThroughNestedShadowDOM() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (1)");
+
+        var host = document.createElement("div");
+        host.id = "host";
+        document.body.appendChild(host);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.innerHTML = "<button id='button'>X</button><br id='br'><div id='h1'></div><div id='h2'></div>";
+        var button = sr0.getElementById("button");
+        button.onfocus = focusLogger;
+
+        var h1 = sr0.getElementById("h1");
+        var sr1 = h1.attachShadow({mode: "open"});
+        sr1.innerHTML = "h1 <input id='h11' placeholder='click me and press tab'><input id='h12' placeholder='and then tab again'>";
+        var input11 = sr1.getElementById("h11");
+        input11.onfocus = focusLogger;
+        var input12 = sr1.getElementById("h12");
+        input12.onfocus = focusLogger;
+
+        var h2 = sr0.getElementById("h2");
+        var sr2 = h2.attachShadow({mode: "open"});
+        sr2.innerHTML = "h2 <input id='h21'><input id='h22'>";
+        var input21 = sr2.getElementById("h21");
+        input21.onfocus = focusLogger;
+        var input22 = sr2.getElementById("h22");
+        input22.onfocus = focusLogger;
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, button, "[nested shadow] Should have focused button element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input11, "[nested shadow] Should have focused input element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input12, "[nested shadow] Should have focused input element. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input21, "[nested shadow] Should have focused input element. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input22, "[nested shadow] Should have focused input element. (4)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input21, "[nested shadow] Should have focused input element. (5)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input12, "[nested shadow] Should have focused input element. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input11, "[nested shadow] Should have focused input element. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, button, "[nested shadow] Should have focused button element. (8)");
+
+        // Back to beginning, outside of Shadow DOM.
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (2)");
+
+        host.remove();
+      }
+
+      function testTabbingThroughDisplayContentsHost() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (1)");
+
+        var host = document.createElement("div");
+        host.id = "host";
+        host.setAttribute("style", "display: contents; border: 1px solid black;");
+        document.body.appendChild(host);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.innerHTML = "<input id='shadowInput1'><input id='shadowInput2'>";
+        var shadowInput1 = sr0.getElementById("shadowInput1");
+        shadowInput1.onfocus = focusLogger;
+        var shadowInput2 = sr0.getElementById("shadowInput2");
+        shadowInput2.onfocus = focusLogger;
+
+        var host1 = document.createElement("div");
+        host1.id = "host";
+        host1.tabIndex = 0;
+        host1.setAttribute("style", "display: contents; border: 1px solid black;");
+        document.body.appendChild(host1);
+
+        var sr1 = host1.attachShadow({mode: "open"});
+        sr1.innerHTML = "<input id='shadowInput1'><input id='shadowInput2'>";
+        var shadowInput3 = sr1.getElementById("shadowInput1");
+        shadowInput3.onfocus = focusLogger;
+        var shadowInput4 = sr1.getElementById("shadowInput2");
+        shadowInput4.onfocus = focusLogger;
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput1, "Should have focused input element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput2, "Should have focused input element. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput3, "Should have focused input element. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput4, "Should have focused input element. (4)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput3, "Should have focused input element. (5)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput2, "Should have focused input element. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput1, "Should have focused input element. (7)");
+
+        // Back to beginning, outside of Shadow DOM.
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (2)");
+
+        host.remove();
+        host1.remove();
+      }
+
+      function testTabbingThroughLightDOMShadowDOMLightDOM() {
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        var host = document.createElement("span");
+        host.innerHTML = "\n";
+        host.id = "host";
+        document.body.appendChild(host);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.innerHTML = document.getElementById("template").innerHTML;
+        var p1 = sr0.getElementById("p1");
+        p1.onfocus = focusLogger;
+        var p2 = sr0.getElementById("p2");
+        p2.onfocus = focusLogger;
+
+        var p = document.createElement("p");
+        p.innerHTML = " <a href='#p'>link 1</a> ";
+        var a = p.firstElementChild;
+        a.onfocus = focusLogger;
+        document.body.appendChild(p);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, p1, "Should have focused p1.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, p2, "Should have focused p2.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, a, "Should have focused a.");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, p2, "Should have focused p2.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, p1, "Should have focused p1.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host.remove();
+        p.remove();
+      }
+
+      function testFocusableHost() {
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        var host = document.createElement("div");
+        host.id = "host";
+        host.tabIndex = 0;
+        host.onfocus = focusLogger;
+        document.body.appendChild(host);
+
+        var slotted = document.createElement("div");
+        slotted.tabIndex = 0;
+        slotted.onfocus = focusLogger;
+        host.appendChild(slotted);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.appendChild(document.createElement("slot"));
+
+        var p = document.createElement("p");
+        p.innerHTML = " <a href='#p'>link 1</a> ";
+        var a = p.firstElementChild;
+        a.onfocus = focusLogger;
+        document.body.appendChild(p);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, host, "Should have focused host.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slotted, "Should have focused slotted.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, a, "Should have focused a.");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slotted, "Should have focused slotted.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, host, "Should have focused host.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host.remove();
+        p.remove();
+      }
+
+      function testShiftTabbingThroughFocusableHost() {
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        var host = document.createElement("div");
+        host.id = "host";
+        host.tabIndex = 0;
+        host.onfocus = focusLogger;
+        document.body.appendChild(host);
+
+        var sr = host.attachShadow({mode: "open"});
+        var shadowButton = document.createElement("button");
+        shadowButton.innerText = "X";
+        shadowButton.onfocus = focusLogger;
+        sr.appendChild(shadowButton);
+
+        var shadowInput = document.createElement("input");
+        shadowInput.onfocus = focusLogger;
+        sr.appendChild(shadowInput);
+        sr.appendChild(document.createElement("br"));
+
+        var input = document.createElement("input");
+        input.onfocus = focusLogger;
+        document.body.appendChild(input);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, host, "Should have focused host element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowButton, "Should have focused button element in shadow DOM. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput, "Should have focused input element in shadow DOM. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input, "Should have focused input element. (4)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput, "Should have focused input element in shadow DOM. (5)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowButton, "Should have focused button element in shadow DOM. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        // focus is already on host
+        opener.is(sr.activeElement, null,
+                  "Focus should have left button element in shadow DOM. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host.remove();
+        input.remove();
+      }
+
+      function testTabbingThroughNestedSlot() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        var host0 = document.createElement("div");
+        var sr0 = host0.attachShadow({mode: "open"});
+        sr0.innerHTML = "<slot></slot>";
+        document.body.appendChild(host0);
+
+        // focusable
+        var host00 = document.createElement("div");
+        var sr00 = host00.attachShadow({mode: "open"});
+        var div00 = document.createElement("div");
+        div00.tabIndex = 0;
+        div00.onfocus = focusLogger;
+        sr00.appendChild(div00);
+        host0.appendChild(host00);
+
+        // not focusable
+        var host01 = document.createElement("div");
+        var sr01 = host01.attachShadow({mode: "open"});
+        sr01.innerHTML = "<div></div>";
+        host0.appendChild(host01);
+
+        // focusable
+        var host02 = document.createElement("div");
+        var sr02 = host02.attachShadow({mode: "open"});
+        var div02 = document.createElement("div");
+        div02.tabIndex = 0;
+        div02.onfocus = focusLogger;
+        sr02.appendChild(div02);
+        host0.appendChild(host02);
+
+        var host1 = document.createElement("div");
+        var sr1 = host1.attachShadow({mode: "open"});
+        sr1.innerHTML = "<slot></slot>";
+        document.body.appendChild(host1);
+
+        var host10 = document.createElement("div");
+        var sr10 = host10.attachShadow({mode: "open"});
+        sr10.innerHTML = "<slot></slot>";
+        host1.appendChild(host10);
+
+        var input10 = document.createElement("input");
+        input10.onfocus = focusLogger;
+        host10.appendChild(input10);
+
+        var host11 = document.createElement("div");
+        var sr11 = host11.attachShadow({mode: "open"});
+        sr11.innerHTML = "<slot></slot>";
+        host1.appendChild(host11);
+
+        var input11 = document.createElement("input");
+        input11.onfocus = focusLogger;
+        host11.appendChild(input11);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, div00, "Should have focused div element in shadow DOM. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, div02, "Should have focused div element in shadow DOM. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input10, "Should have focused input element in shadow DOM. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input11, "Should have focused button element in shadow DOM. (4)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input10, "Should have focused input element in shadow DOM. (5)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, div02, "Should have focused input element in shadow DOM. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, div00, "Should have focused input element in shadow DOM. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host0.remove();
+        host1.remove();
+      }
+
+      function testTabbingThroughSlotInLightDOM() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        var input0 = document.createElement("input");
+        input0.onfocus = focusLogger;
+        document.body.appendChild(input0);
+
+        var slot1 = document.createElement("slot");
+        document.body.appendChild(slot1);
+
+        var input10 = document.createElement("input");
+        input10.onfocus = focusLogger;
+        slot1.appendChild(input10);
+
+        var input11 = document.createElement("input");
+        input11.onfocus = focusLogger;
+        slot1.appendChild(input11);
+
+        var input2 = document.createElement("input");
+        input2.onfocus = focusLogger;
+        document.body.appendChild(input2);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input0, "Should have focused input element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input10, "Should have focused input element in slot. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input11, "Should have focused input element in slot. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input2, "Should have focused input element. (4)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input11, "Should have focused input element in slot. (5)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input10, "Should have focused input element in slot. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input0, "Should have focused input element. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        input0.remove();
+        slot1.remove();
+        input2.remove();
+      }
+
+      function testTabbingThroughFocusableSlotInLightDOM() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        var slot0 = document.createElement("slot");
+        slot0.tabIndex = 0;
+        slot0.setAttribute("style", "display: inline;");
+        slot0.onfocus = focusLogger;
+        document.body.appendChild(slot0);
+
+        var slot00 = document.createElement("slot");
+        slot00.tabIndex = 0;
+        slot00.setAttribute("style", "display: inline;");
+        slot00.onfocus = focusLogger;
+        slot0.appendChild(slot00);
+
+        var input000 = document.createElement("input");
+        input000.onfocus = focusLogger;
+        slot00.appendChild(input000);
+
+        var input01 = document.createElement("input");
+        input01.onfocus = focusLogger;
+        slot0.appendChild(input01);
+
+        var input1 = document.createElement("input");
+        input1.onfocus = focusLogger;
+        document.body.appendChild(input1);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slot0, "Should have focused slot element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slot00, "Should have focused slot element. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input000, "Should have focused input element in slot. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input01, "Should have focused input element in slot. (4)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input1, "Should have focused input element. (5)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input01, "Should have focused input element in slot. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input000, "Should have focused input element in slot. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slot00, "Should have focused slot element. (8)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slot0, "Should have focused slot element. (9)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        slot0.remove();
+        input1.remove();
+      }
+
+      function testTabbingThroughScrollableShadowDOM() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        var host0 = document.createElement("div");
+        host0.setAttribute("style", "height: 50px; overflow: auto;");
+        host0.onfocus = focusLogger;
+        document.body.appendChild(host0);
+
+        var sr0 = host0.attachShadow({mode: "open"});
+        sr0.innerHTML = `
+          <style>
+            div,slot {
+              height: 30px;
+              display: block;
+              overflow: auto;
+            }
+            input {
+              display: block;
+            }
+          </style>
+        `;
+
+        var input00 = document.createElement("input");
+        input00.setAttribute("style", "background-color: red;");
+        input00.onfocus = focusLogger;
+        sr0.appendChild(input00);
+
+        var container01 = document.createElement("div");
+        container01.onfocus = focusLogger;
+        sr0.appendChild(container01);
+
+        var input010 = document.createElement("input");
+        input010.onfocus = focusLogger;
+        container01.appendChild(input010);
+
+        var input011 = document.createElement("input");
+        input011.onfocus = focusLogger;
+        container01.appendChild(input011);
+
+        var slot02 = document.createElement("slot");
+        slot02.onfocus = focusLogger;
+        sr0.appendChild(slot02);
+
+        var input020 = document.createElement("input");
+        input020.setAttribute("style", "display: block;");
+        input020.onfocus = focusLogger;
+        host0.appendChild(input020);
+
+        var input021 = document.createElement("input");
+        input021.setAttribute("style", "display: block;");
+        input021.onfocus = focusLogger;
+        host0.appendChild(input021);
+
+        var input1 = document.createElement("input");
+        input1.onfocus = focusLogger;
+        document.body.appendChild(input1);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, host0, "Should have focused shadow host element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input00, "Should have focused input element in shadow dom. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, container01, "Should have focused scrollable element in shadow dom. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input010, "Should have focused input element in shadow dom. (4)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input011, "Should have focused input element in shadow dom. (5)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slot02, "Should have focused slot element in shadow dom. (6)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input020, "Should have focused input element in slot. (7)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input021, "Should have focused input element in slot. (8)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input1, "Should have focused input element in light dom. (9)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input021, "Should have focused input element in slot. (10)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input020, "Should have focused input element in slot. (11)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slot02, "Should have focused slot element in shadow dom. (12)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input011, "Should have focused input element in shadow dom. (13)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input010, "Should have focused input element in shadow dom. (14)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, container01, "Should have focused scrollable element in shadow dom. (15)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input00, "Should have focused input element in shadow dom. (16)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        // focus is already on host
+        opener.is(sr0.activeElement, null,
+                  "Focus should have left input element in shadow DOM. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host0.remove();
+        input1.remove();
+      }
+
+      // Bug 1604140
+      function testTabbingThroughScrollableShadowHost() {
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        let aboveFirstHost = document.createElement("div");
+        aboveFirstHost.tabIndex = 0;
+        aboveFirstHost.onfocus = focusLogger;
+        document.body.appendChild(aboveFirstHost);
+
+        let firstHost = document.createElement("div");
+        firstHost.style = "overflow: scroll";
+        document.body.appendChild(firstHost);
+
+        let firstShadow = firstHost.attachShadow({mode: "open"});
+        let divInFirstShadow = document.createElement("div");
+        divInFirstShadow.tabIndex = 0;
+        divInFirstShadow.onfocus = focusLogger;
+        firstShadow.appendChild(divInFirstShadow);
+
+        let aboveSecondHost = document.createElement("div");
+        aboveSecondHost.tabIndex = 0;
+        aboveSecondHost.onfocus = focusLogger;
+        document.body.appendChild(aboveSecondHost);
+
+        let secondHost = document.createElement("div");
+        secondHost.style = "overflow: scroll";
+        secondHost.tabIndex = 0;
+        secondHost.onfocus = focusLogger;
+        document.body.appendChild(secondHost);
+
+        let secondShadow = secondHost.attachShadow({mode: "open"});
+        let divInSecondShadow = document.createElement("div");
+        divInSecondShadow.tabIndex = 0;
+        divInSecondShadow.onfocus = focusLogger;
+        secondShadow.appendChild(divInSecondShadow);
+
+        let belowSecondHost = document.createElement("div");
+        belowSecondHost.tabIndex = 0;
+        belowSecondHost.onfocus = focusLogger;
+        document.body.appendChild(belowSecondHost);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, aboveFirstHost, "Should have focused div above first host element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, divInFirstShadow, "Should have focused div in first shadow dom. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, aboveSecondHost, "Should have focused div above second host element. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, secondHost, "Should have focused second host element. (4)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, divInSecondShadow, "Should have focused div in second shadow dom. (5)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, belowSecondHost, "Should have focused div below second host. (6)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, divInSecondShadow, "Should have focused div in second shadow dom. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        // focus is already on second host, so lastFocusTarget won't get updated.
+        opener.is(document.activeElement, secondHost, "Should have focused second host element. (8)");
+        opener.is(secondShadow.activeElement, null, "Focus should have left div in second shadow dom. (8)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, aboveSecondHost, "Should have focused div above second host element. (9)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, divInFirstShadow, "Should have focused div in first shadow dom. (10)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, aboveFirstHost, "Should have focused div above first host element. (11)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        aboveFirstHost.remove();
+        firstHost.remove();
+        aboveSecondHost.remove();
+        secondHost.remove();
+        belowSecondHost.remove();
+      }
+
+      function testDeeplyNestedShadowTree() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+        var host1 = document.createElement("test-node");
+        var lastHost = host1;
+        for (var i = 0; i < 20; ++i) {
+          lastHost.appendChild(document.createElement("test-node"));
+          lastHost = lastHost.firstChild;
+        }
+
+        var input = document.createElement("input");
+        document.body.appendChild(host1);
+        document.body.appendChild(input);
+        document.body.offsetLeft;
+
+        // Test shadow tree which doesn't have anything tab-focusable.
+        host1.shadowRoot.querySelector("div").focus();
+        synthesizeKey("KEY_Tab");
+        is(document.activeElement, input, "Should have focused input element.");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        // Same test but with focusable elements in the tree...
+        var input2 = document.createElement("input");
+        var host2 = host1.firstChild;
+        var host3 = host2.firstChild;
+        host2.insertBefore(input2, host3);
+        var input3 = document.createElement("input");
+        lastHost.appendChild(input3);
+        document.body.offsetLeft;
+        host3.shadowRoot.querySelector("div").focus();
+        synthesizeKey("KEY_Tab");
+        is(document.activeElement, input3, "Should have focused input3 element.");
+
+        // ...and backwards
+        host3.shadowRoot.querySelector("div").focus();
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        is(document.activeElement, input2, "Should have focused input2 element.");
+
+        // Remove elements added to body element.
+        host1.remove();
+        input.remove();
+
+        // Tests expect body.firstChild to have focus.
+        document.body.firstChild.focus();
+      }
+
+      // Bug 1558393
+      function testBackwardsTabbingWithSlotsWithoutFocusableContent() {
+        let first = document.createElement("div");
+        first.tabIndex = 0;
+        let host = document.createElement("div");
+        host.tabIndex = 0;
+        let second = document.createElement("div");
+        second.tabIndex = 0;
+        host.appendChild(document.createTextNode("foo"));
+        host.attachShadow({ mode: "open" }).innerHTML = `<slot></slot>`;
+
+        document.body.appendChild(first);
+        document.body.appendChild(host);
+        document.body.appendChild(second);
+        document.body.offsetLeft;
+
+        first.focus();
+        opener.is(document.activeElement, first, "First light div should have focus");
+        synthesizeKey("KEY_Tab");
+        opener.is(document.activeElement, host, "Host should be focused");
+        synthesizeKey("KEY_Tab");
+        opener.is(document.activeElement, second, "Second light div should be focused");
+
+        // Now backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, host, "Focus should return to host");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, first, "Focus should return to first light div");
+
+        second.remove();
+        host.remove();
+        first.remove();
+      }
+
+      function runTest() {
+
+        testTabbingThroughShadowDOMWithTabIndexes();
+        testTabbingThroughSimpleShadowDOM();
+        testTabbingThroughNestedShadowDOM();
+        testTabbingThroughDisplayContentsHost();
+        testTabbingThroughLightDOMShadowDOMLightDOM();
+        testFocusableHost();
+        testShiftTabbingThroughFocusableHost();
+        testTabbingThroughNestedSlot();
+        testTabbingThroughSlotInLightDOM();
+        testTabbingThroughFocusableSlotInLightDOM();
+        testTabbingThroughScrollableShadowDOM();
+        testTabbingThroughScrollableShadowHost();
+        testDeeplyNestedShadowTree();
+        testBackwardsTabbingWithSlotsWithoutFocusableContent();
+
+        opener.didRunTests();
+        window.close();
+      }
+
+      function init() {
+        SimpleTest.waitForFocus(runTest);
+      }
+    </script>
+    <style>
+    </style>
+    <template id="template">
+      <div style="overflow: hidden">
+        <p tabindex="0" id="p1">component</p>
+        <p tabindex="0" id="p2">/component</p>
+      </div>
+    </template>
+  </head>
+  <body onload="init()">
+  </body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=427537
+-->
+<head>
+  <title>Test for Bug 427537</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=427537">Mozilla Bug 427537</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 427537 **/
+
+var e = document.createEvent("CustomEvent");
+ok(e, "Should have custom event!");
+
+// Test initCustomEvent and also cycle collection handling by
+// passing reference to the event as 'detail' parameter.
+e.initCustomEvent("foobar", true, true, e);
+
+var didCallListener = false;
+document.addEventListener("foobar",
+  function(evt) {
+    didCallListener = true;
+    is(evt.type, "foobar", "Should get 'foobar' event!");
+    is(evt.detail, evt, ".detail should point to the event itself.");
+    ok(e.bubbles, "Event should bubble!");
+    ok(e.cancelable, "Event should be cancelable.");
+  }, true);
+
+document.dispatchEvent(e);
+ok(didCallListener, "Should have called listener!");
+
+e = document.createEvent("CustomEvent");
+e.initEvent("foo", true, true);
+is(e.detail, null, "Default detail should be null.");
+
+e = document.createEvent("CustomEvent");
+e.initCustomEvent("foobar", true, true, 1);
+is(e.detail, 1, "Detail should be 1.");
+
+e = document.createEvent("CustomEvent");
+e.initCustomEvent("foobar", true, true, "test");
+is(e.detail, "test", "Detail should be 'test'.");
+
+e = document.createEvent("CustomEvent");
+e.initCustomEvent("foobar", true, true, true);
+is(e.detail, true, "Detail should be true.");
+
+</script>
+</pre>
+</body>
+</html>

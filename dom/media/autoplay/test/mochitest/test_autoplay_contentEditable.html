@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: play() method</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body contenteditable="true">
+<pre id="test">
+
+<script>
+/* import-globals-from ../../../test/manifest.js */
+var manager = new MediaTestManager;
+
+var tokens = {
+  0:                ["canplay"],
+  "canplay":        ["canplay", "canplaythrough"],
+  "canplaythrough": ["canplay", "canplaythrough"]
+};
+
+var eventList = ["play", "canplay", "playing", "canplaythrough", "ended"];
+
+function gotPlayEvent(event) {
+  var v = event.target;
+  ok(tokens[v._state].includes(event.type),
+     "Check expected event got " + event.type +
+     " at " + v._state + " for " + v._name);
+  v._state = event.type;
+  if (event.type == 'canplaythrough') {
+    // Remove all event listeners to avoid running tests after finishing test case.
+    eventList.forEach(function (e) {
+      v.removeEventListener(e, gotPlayEvent);
+    });
+    v.pause();
+    goToNext(v);
+  }
+}
+
+function goToNext(v) {
+  v.remove();
+  manager.finished(v.token);
+}
+
+function initTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  manager.started(token);
+  v._state = 0;
+
+  eventList.forEach(function (e) {
+    v.addEventListener(e, gotPlayEvent);
+  });
+
+  v.src = test.name;
+  v._name = test.name;
+  v.autoplay = true;
+  document.body.appendChild(v); // Causes load.
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>
+</pre>
+</body>
+</html>

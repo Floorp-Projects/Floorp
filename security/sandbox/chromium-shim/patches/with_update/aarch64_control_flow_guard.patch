@@ -1,0 +1,65 @@
+# HG changeset patch
+# User David Major <dmajor@mozilla.com>
+# Date 1560264749 -3600
+#      Tue Jun 11 15:52:29 2019 +0100
+# Node ID 6acdba6bd34e773d5e2d6a8461e3679a33340f77
+# Parent  a0adb2e7f668ed430948ae1ffaa42ec011ffde50
+Bug 1523526: Don't allow CFG on old releases of Windows for arm64
+
+There's a bug in ole32.dll on arm64 versions of Windows prior to 1809, that crashes our content processes if we enable CFG. We've reported the issue, but even if it gets fixed, we can't assume users will have the update.
+
+This patch uses process mitigation policy flags to disable CFG on arm64 before 1809. Based on testing, we only need to do this in the sandbox for child processes, and it's not strictly necessary for the launcher stub to set the flag on the main process. But I've included that anyway as a guard against some yet-undiscovered scenario that might hit the issue and make the browser unusable.
+
+The effects of this patch won't be visible until we actually enable CFG in a subsequent landing.
+
+Differential Revision: https://phabricator.services.mozilla.com/D29474
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+--- a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
++++ b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+@@ -431,16 +431,21 @@ void ConvertProcessMitigationsToPolicy(M
+ 
+   // Mitigations >= Win8.1:
+   //----------------------------------------------------------------------------
+   if (version >= base::win::Version::WIN8_1) {
+     if (flags & MITIGATION_DYNAMIC_CODE_DISABLE) {
+       *policy_value_1 |=
+           PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON;
+     }
++
++    if (flags & MITIGATION_CONTROL_FLOW_GUARD_DISABLE) {
++      *policy_value_1 |=
++          PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF;
++    }
+   }
+ 
+   // Mitigations >= Win10:
+   //----------------------------------------------------------------------------
+   if (version >= base::win::Version::WIN10) {
+     if (flags & MITIGATION_NONSYSTEM_FONT_DISABLE) {
+       *policy_value_1 |=
+           PROCESS_CREATION_MITIGATION_POLICY_FONT_DISABLE_ALWAYS_ON;
+diff --git a/security/sandbox/chromium/sandbox/win/src/security_level.h b/security/sandbox/chromium/sandbox/win/src/security_level.h
+--- a/security/sandbox/chromium/sandbox/win/src/security_level.h
++++ b/security/sandbox/chromium/sandbox/win/src/security_level.h
+@@ -282,11 +282,20 @@ const MitigationFlags MITIGATION_IMAGE_L
+ const MitigationFlags MITIGATION_IMAGE_LOAD_PREFER_SYS32 = 0x00100000;
+ 
+ // Prevents hyperthreads from interfering with indirect branch predictions.
+ // (SPECTRE Variant 2 mitigation.)  Corresponds to
+ // PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_ALWAYS_ON.
+ const MitigationFlags MITIGATION_RESTRICT_INDIRECT_BRANCH_PREDICTION =
+     0x00200000;
+ 
++// Begin Mozilla-added flags.
++// Working down from the high bit to avoid conflict with new upstream flags.
++
++// Disable Control Flow Guard. This may seem more like an anti-mitigation, but
++// this flag allows code to make targeted changes to CFG to avoid bugs, while
++// leaving it enabled in the common case. Corresponds to
++// PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON.
++const MitigationFlags MITIGATION_CONTROL_FLOW_GUARD_DISABLE = 0x80000000;
++
+ }  // namespace sandbox
+ 
+ #endif  // SANDBOX_SRC_SECURITY_LEVEL_H_

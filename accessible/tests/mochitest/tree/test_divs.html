@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>div element creation tests</title>
+<link rel="stylesheet" type="text/css"
+      href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="application/javascript"
+        src="../common.js"></script>
+<script type="application/javascript"
+        src="../role.js"></script>
+<script type="application/javascript"
+        src="../attributes.js"></script>
+
+<script type="application/javascript">
+function getAccessibleDescendantFor(selector) {
+  return gAccService.getAccessibleDescendantFor(document.querySelector(selector));
+}
+
+function doTest() {
+  // All below test cases are wrapped in a div which always gets rendered.
+  // c1 through c10 are the containers, the actual test cases are inside.
+
+  // c1: Expose the div with text content
+  let tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // inner div
+          children: [
+            { TEXT_LEAF: [] },
+          ], // end children inner div
+        }, // end inner div
+      ], // end children outer div
+    };
+  testAccessibleTree("c1", tree);
+
+  // c2: Only the outermost and innermost divs are exposed.
+  // The middle one is skipped. This is identical to the above tree.
+  testAccessibleTree("c2", tree);
+
+  // c3: Make sure the inner div with ID is exposed, but the middle one is
+  // skipped.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // inner div
+          attributes: { id: "b" },
+          children: [
+            { TEXT_LEAF: [] },
+          ], // end children inner div
+        }, // end inner div
+      ], // end children outer div
+    };
+  testAccessibleTree("c3", tree);
+
+  // c4: Expose all three divs including the middle one due to its ID.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // middle div
+          attributes: { id: "a" },
+          children: [
+            { role: ROLE_SECTION, // inner div
+              attributes: { id: "b" },
+              children: [
+                { TEXT_LEAF: [] },
+              ], // end children inner div
+            }, // end inner div
+          ], // end children middle div
+        }, // end middle div
+      ], // end children outer div
+    };
+  testAccessibleTree("c4", tree);
+
+  // c5: Expose the inner div with class b due to its text contents.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // inner div with class and text
+          attributes: { class: "b" },
+          children: [
+            { TEXT_LEAF: [] },
+          ], // end children inner div
+        }, // end inner div
+      ], // end children outer div
+    };
+  testAccessibleTree("c5", tree);
+
+  // c6: Expose the outer div due to its ID, and the two inner divs due to
+  // their text contents. Skip the middle one.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // first inner div
+          children: [
+            { TEXT_LEAF: [] },
+          ], // end children first inner div
+        }, // end first inner div
+        { role: ROLE_SECTION, // second inner div
+          children: [
+            { TEXT_LEAF: [] },
+          ], // end children second inner div
+        }, // end second inner div
+      ], // end children outer div
+    };
+  testAccessibleTree("c6", tree);
+
+  // c7: Expose all three divs including the middle one due to it being block
+  // breaking.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // middle div
+          children: [
+            { TEXT_LEAF: [] }, // foo
+            { role: ROLE_SECTION, // inner div
+              children: [
+                { TEXT_LEAF: [] }, // bar
+              ], // end children inner div
+            }, // end inner div
+            { TEXT_LEAF: [] }, // baz
+          ], // end children middle div
+        }, // end middle div
+      ], // end children outer div
+    };
+  testAccessibleTree("c7", tree);
+
+  // c8: Expose all divs due to them all being text block breakers.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // foo div
+          children: [
+            { TEXT_LEAF: [] }, // foo
+            { role: ROLE_SECTION, // baz div
+              children: [
+                { role: ROLE_SECTION, // bar div
+                  children: [
+                    { TEXT_LEAF: [] }, // bar
+                  ], // end children bar div
+                }, // end bar div
+                { TEXT_LEAF: [] }, // baz
+              ], // end children baz div
+            }, // end baz div
+          ], // end children foo div
+        }, // end foo div
+      ], // end children outer div
+    };
+  testAccessibleTree("c8", tree);
+
+  // c9: The same, but in a different nesting order.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // c div
+          children: [
+            { role: ROLE_SECTION, // b div
+              children: [
+                { role: ROLE_SECTION, // a div
+                  children: [
+                    { TEXT_LEAF: [] }, // a
+                  ], // end children a div
+                }, // end a div
+                { TEXT_LEAF: [] }, // b
+              ], // end children b div
+            }, // end b div
+            { TEXT_LEAF: [] }, // c
+          ], // end children c div
+        }, // end foo div
+      ], // end children outer div
+    };
+  testAccessibleTree("c9", tree);
+
+  // c10: Both inner divs must be exposed so there is a break after b.
+  tree =
+    { role: ROLE_SECTION, // outer div with ID
+      children: [
+        { role: ROLE_SECTION, // first inner div
+          children: [
+            { TEXT_LEAF: [] }, // a
+            { TEXT_LEAF: [] }, // b
+          ], // end children first inner div
+        }, // end first inner div
+        { role: ROLE_SECTION, // second inner div
+          children: [
+            { TEXT_LEAF: [] }, // c
+            { TEXT_LEAF: [] }, // d
+          ], // end children second inner div
+        }, // end second inner div
+      ], // end children outer div
+    };
+  testAccessibleTree("c10", tree);
+
+  // c11: A div must be exposed if it contains a br element.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { role: ROLE_SECTION, // First line
+          children: [
+            { TEXT_LEAF: [] }, // text
+          ], // end children first line
+        }, // end first line
+        { role: ROLE_SECTION, // Second line
+          children: [
+            { WHITESPACE: [] }, // whitespace
+          ], // end children second line
+        }, // end second line
+        { role: ROLE_SECTION, // Third line
+          children: [
+            { TEXT_LEAF: [] }, // text
+          ], // end children third line
+        }, // end third line
+      ], // end children outer div
+    };
+  testAccessibleTree("c11", tree);
+
+  // c12: Div shouldn't be rendered if first/last child text node is invisible.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { role: ROLE_PARAGRAPH,
+          children: [
+            { TEXT_LEAF: [] }, // text
+          ],
+        },
+      ], // end children outer div
+    };
+  testAccessibleTree("c12", tree);
+
+  // c13: Div should be rendered if there is an inline frame after/before
+  // invisible text nodes.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { TEXT_LEAF: [] }, // l1
+        { role: ROLE_SECTION, // l2
+          children: [
+            { TEXT_LEAF: [] }, // l2
+          ], // end children l2
+        },
+      ], // end children outer div
+    };
+  testAccessibleTree("c13", tree);
+
+  // c14: Div should be rendered if it contains an inline-block.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { TEXT_LEAF: [] }, // l1
+        { role: ROLE_SECTION, // l2
+          children: [
+            { role: ROLE_PUSHBUTTON,
+              children: [
+                { TEXT_LEAF: [] },
+              ],
+            },
+          ], // end children l2
+        },
+      ], // end children outer div
+    };
+  testAccessibleTree("c14", tree);
+
+  // c15: Div should be rendered if previous sibling is text.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { TEXT_LEAF: [] }, // l1
+        { SECTION: [] }, // Block break
+        { TEXT_LEAF: [] }, // l2
+      ], // end children outer div
+    };
+  testAccessibleTree("c15", tree);
+
+  // Test getting descendants of unrendered nodes.
+  ok(!getAccessibleDescendantFor("#c16 > span"),
+     "Span has no accessible children");
+
+  ok(!getAccessibleDescendantFor("#c17 > span"),
+     "Span with relocated child should return null");
+
+  is(getAccessibleDescendantFor("#c12 > div").role, ROLE_PARAGRAPH,
+     "Descendant has correct role")
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addA11yLoadEvent(doTest);
+</script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Expose the div if it has plain text contents -->
+  <div id="c1"><div>foo</div></div>
+
+  <!-- Expose the outer and inner div, skip the middle one. -->
+  <div id="c2"><div><div>foo</div></div></div>
+
+  <!-- Expose the outer and inner divs due to the ID, but skip the middle one. -->
+  <div id="c3"><div><div id="b">foo</div></div></div>
+
+  <!-- Expose all three divs and their IDs. -->
+  <div id="c4"><div id="a"><div id="b">foo</div></div></div>
+
+  <!-- Expose outer and inner divs, due to text content, not class. -->
+  <div id="c5"><div class="a"><div class="b">foo</div></div></div>
+
+  <!-- Expose the outer and two inner divs, skip the single middle one. -->
+  <div id="c6"><div><div>foo</div><div>bar</div></div></div>
+
+  <!-- Expose all divs due to the middle one being block breaking. -->
+  <div id="c7"><div>foo<div>bar</div>baz</div></div>
+
+  <!-- Expose all divs due to them all being text block breakers. -->
+  <div id="c8"><div>foo<div><div>bar</div>baz</div></div></div>
+  <div id="c9"><div><div><div>a</div>b</div>c</div></div>
+
+  <!-- Both inner divs need to be rendered so there is a break after b. -->
+  <div id="c10"><div><b>a</b>b</div><div><b>c</b><b>d</b></div></div>
+
+  <!-- Div must be rendered if it contains a br -->
+  <div id="c11"><div>first line.</div><div><br /></div><div>third line</div></div>
+
+  <!-- Inner div shouldn't be rendered because although its first and last
+    children are text nodes, they are invisible.
+    -->
+  <div id="c12"><div> <p>Test</p> </div></div>
+
+  <!-- Inner div should be rendered because despite the first/last invisible
+    text nodes, there is also an inline frame.
+    -->
+  <div id="c13">l1<div> <span>l2 </span> </div></div>
+
+  <!-- Inner div should be rendered because it contains an inline-block. -->
+  <div id="c14">l1<div><button>l2</button></div></div>
+
+  <!-- Inner div should be rendered because previous sibling is text. -->
+  <div id="c15">l1<div></div>l2</div>
+
+  <div id="c16">hello <span></span> world</div>
+
+  <div id="c17"><div aria-owns="c"></div>hello <span><button id="c">b</button></span> world</div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Tab Center Reborn options</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <h1 id="optionsAppearanceTitle"></h1>
+  <p><label for="animations"><input id="animations" type="checkbox"/><span id="optionsAnimations"></span></label></p>
+  <p><label for="themeIntegration"><input id="themeIntegration" type="checkbox"/><span id="optionsThemeIntegration"></span></label></p>
+  <p id="optionsThemeIntegrationExplanation" class="explanation"></p>
+  <p class="radio-config-row"><span id="optionsCompactMode"></span><span class="radio-group"><label for="radioCompactModeDynamic"><input id="radioCompactModeDynamic" name="compactMode" type="radio" value="1"/><span id="optionsCompactModeDynamic"></span></label><label for="radioCompactModeStrict"><input id="radioCompactModeStrict" name="compactMode" type="radio" value="2"/><span id="optionsCompactModeStrict"></span></label><label for="radioCompactModeOff"><input id="radioCompactModeOff" name="compactMode" type="radio" value="0"/><span id="optionsCompactModeOff"></span></label></span>
+  </p>
+  <div class="modal">
+    <div class="close_modal">
+      <button type="button">✕</button>
+    </div>
+    <div class="outer">
+      <div class="inner">
+         <div class="editable" contenteditable="true"></div>
+      </div>
+    </div>
+</div>
+  <p id="optionsCompactModeExplanation" class="explanation"></p>
+  <p><label for="compactPins"><input id="compactPins" type="checkbox"/><span id="optionsCompactPins"></span></label></p>
+  <h1 id="optionsBehaviorTitle"></h1>
+  <p><input id="switchLastActiveTab" type="checkbox" /><label for="switchLastActiveTab" id="optionsSwitchLastActiveTab"></label></p>
+  <p id="optionsSwitchLastActiveTabExplanation" class="explanation"></p>
+  <p class="radio-config-row"><span id="optionsSwitchByScrolling"></span><span class="radio-group"><label for="radioSwitchByScrollingWithCtrl"><input id="radioSwitchByScrollingWithCtrl" name="switchByScrolling" type="radio" value="0"/><span id="optionsSwitchByScrollingWithCtrl"></span></label><label for="radioSwitchByScrollingAlways"><input id="radioSwitchByScrollingAlways" name="switchByScrolling" type="radio" value="1"/><span id="optionsSwitchByScrollingAlways"></span></label><label for="radioSwitchByScrollingNever"><input id="radioSwitchByScrollingNever" name="switchByScrolling" type="radio" value="2"/><span id="optionsSwitchByScrollingNever"></span></label></span>
+  </p>
+  <p id="optionsSwitchByScrollingWithCtrlExplanation" class="explanation"></p>
+  <p><input id="notifyClosingManyTabs" type="checkbox" /><label for="notifyClosingManyTabs" id="optionsNotifyClosingManyTabs"></label></p>
+  <p id="optionsNotifyClosingManyTabsExplanation" class="explanation"></p>
+  <h1 id="optionsAdvancedTitle"></h1>
+  <p><label for="useCustomCSS"><input id="useCustomCSS" type="checkbox"/><span id="optionsCustomCSS"></span></label></p><textarea id="customCSS" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+  <p><button id="optionsSaveCustomCSS"></button></p>
+  <ul>
+    <li><a id="optionsCustomCSSWikiLink" href="https://framagit.org/ariasuni/tabcenter-reborn/wikis/home"></a></li>
+    <li><a id="optionsCustomCSSChangelogLink" href="https://framagit.org/ariasuni/tabcenter-reborn/blob/main/CHANGELOG.md"></a></li>
+  </ul>
+  <script src="./options.js"></script>
+  <p><a href="#" onclick="history.back(); return false;">戻る</a></p>
+</body>
+</html>

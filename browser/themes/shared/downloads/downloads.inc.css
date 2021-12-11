@@ -1,0 +1,234 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+
+%define keyfocus #downloadsPanel[keyfocus]
+%define notKeyfocus #downloadsPanel:not([keyfocus])
+%define item #downloadsListBox > richlistitem
+%define itemFinished @item@[state="1"]
+%define itemNotFinished @item@:not([state="1"])
+%define itemFocused #downloadsListBox:focus > @item@[selected]
+
+/*** Panel and outer controls ***/
+
+#downloadsListBox {
+  background: transparent;
+  color: inherit;
+  appearance: none;
+  margin: 0;
+}
+
+#emptyDownloads {
+  padding: 1.5em 8px 2.1em;
+  margin: 0;
+  pointer-events: none;
+}
+
+@item@ {
+  /* Leave space for the 32x32 icon with 16px vertical padding, and/or
+   * the text in the item, with the same padding, whichever is bigger: */
+  height: max(48px, calc(16px + 2em));
+  padding-inline-end: 4px;
+  margin: 0 0 8px;
+  border-radius: 4px;
+}
+
+.downloadMainArea {
+  padding-block: 8px;
+  padding-inline-start: 4px;
+  border-radius: 4px;
+}
+
+@itemFinished@[exists].hoveringMainArea:hover,
+@item@:is(.openWhenFinished).hoveringMainArea:hover,
+@item@:not([verdict]) > .downloadButton:hover,
+@item@[verdict]:hover,
+.downloadsPanelFooterButton:hover {
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
+@itemFinished@[exists].hoveringMainArea:hover:active,
+@item@:is(.openWhenFinished).hoveringMainArea:hover:active,
+@item@:not([verdict]) > .downloadButton:hover:active,
+.downloadsPanelFooterButton[open="true"],
+@item@[verdict]:hover:active {
+  background-color: var(--panel-item-active-bgcolor);
+}
+
+@item@[verdict="Insecure"] .downloadDetails,
+@item@[verdict="Malware"] .downloadDetails {
+  color: #C50042;
+  /* The details text usually gets an opacity reduction, but for the error
+     states we disable that, because it would reduce the contrast too much. */
+  opacity: inherit;
+}
+
+:root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadDetails,
+:root[lwt-popup-brighttext] @item@[verdict="Malware"] .downloadDetails {
+  color: #FF848B;
+}
+
+.downloadTypeIcon {
+  margin-inline-end: 0.7em;
+}
+
+#downloadsPanel-blockedSubview-buttons {
+  display: flex;
+  margin-top: 1.5em;
+}
+
+@notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
+  outline: none;
+}
+
+#downloadsSummary {
+  background: var(--arrowpanel-dimmed);
+  border-top: 1px solid var(--panel-separator-color);
+  /* Reserve the same space as the button and separator in download items. */
+  padding-inline-end: 59px;
+}
+
+#downloadsSummary {
+  -moz-user-focus: normal;
+}
+
+#downloadsSummary > .downloadTypeIcon {
+  list-style-image: url("chrome://browser/skin/downloads/download-summary.svg");
+}
+
+#downloadsSummaryDescription {
+  color: -moz-nativehyperlinktext;
+}
+
+:root[lwt-popup-brighttext] #downloadsSummaryDescription {
+  color: #75baff; /* --blue-30 */
+}
+
+/*** List items and similar elements in the summary ***/
+#downloadsSummary {
+  height: var(--downloads-item-height);
+}
+
+@item@ {
+  background: transparent;
+  color: inherit;
+}
+
+@item@:last-child {
+  margin-bottom: 0;
+}
+
+.downloadTypeIcon {
+  width: 32px;
+  height: 32px;
+}
+
+#downloadsSummaryDescription,
+.downloadTarget {
+  margin: 0;
+}
+
+#downloadsSummaryDetails,
+.downloadDetails {
+  font-size: calc(100% * var(--downloads-item-font-size-factor));
+  opacity: var(--downloads-item-details-opacity);
+  /* Use calc() to keep the height consistent with .downloadTarget, so that the
+     progress bar can be vertically centered. */
+  margin: 4px 0 calc(1em / var(--downloads-item-font-size-factor) - 1em);
+}
+
+/* When hovering the mouse pointer over the item, instead of the normal message
+   we display a more detailed one. For blocked downloads the entire area shows
+   the hover message, for other downloads only the main area does. */
+@item@[verdict]:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
+@item@[verdict]:not(:hover) > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+.downloadMainArea:hover > .downloadContainer > .downloadDetailsNormal,
+@item@:not([verdict]) > .downloadMainArea:not(:hover) > .downloadContainer > .downloadDetailsHover {
+  display: none;
+}
+
+/* When hovering the action button in particular, instead of the usual hover
+   message we display the command associated with the button. */
+@item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
+@item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+@item@:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover {
+  display: none;
+}
+
+.downloadButton {
+  appearance: none;
+  min-width: 32px;
+  height: 32px;
+  margin: 0;
+  margin-inline-start: 4px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 4px;
+}
+
+.downloadButton > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+  margin: 1px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.downloadButton > .button-box > .button-text {
+  margin: 0 !important;
+  padding: 0;
+}
+
+/*** Button icons ***/
+
+.downloadIconCancel > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+}
+
+.downloadIconShow > .button-box > .button-icon {
+%ifdef XP_MACOSX
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+%else
+  list-style-image: url("chrome://browser/skin/folder.png");
+%endif
+}
+
+.downloadIconRetry > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
+}
+
+.downloadIconSubviewArrow > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
+}
+
+.downloadIconSubviewArrow > .button-box > .button-icon:-moz-locale-dir(ltr) {
+  list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
+}
+
+/*** Blocked subview ***/
+#downloadsPanel-blockedSubview-title {
+  font-size: calc(100% * var(--downloads-item-font-size-factor));
+  margin-bottom: 1.5em;
+}
+
+#downloadsPanel-blockedSubview-details1,
+#downloadsPanel-blockedSubview-details2 {
+  font-size: calc(100% * var(--downloads-item-font-size-factor));
+  margin-bottom: 0.5em;
+  opacity: var(--downloads-item-details-opacity);
+}
+
+/*** Toolbarseparator ***/
+#downloadsFooterButtons > toolbarseparator {
+  margin-inline: 0;
+}
+
+/*** Progressmeter ***/
+%include progressmeter.inc.css
+
+/*** Blocked iconography ***/
+%include download-blockedStates.inc.css

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>HTML form controls tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // input@type="checkbox"
+      var accTree = {
+        role: ROLE_CHECKBUTTON,
+        children: [ ],
+      };
+
+      testAccessibleTree("checkbox", accTree);
+
+      // input@type="radio"
+      accTree = {
+        role: ROLE_RADIOBUTTON,
+        children: [ ],
+      };
+
+      testAccessibleTree("radio", accTree);
+
+      // input@type="button" and input@type="submit"
+      // button
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF, // XXX Bug 567203
+          },
+        ],
+      };
+
+      testAccessibleTree("btn1", accTree);
+      testAccessibleTree("submit", accTree);
+      testAccessibleTree("btn2", accTree);
+
+      // input@type="image"
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        children: [
+          {
+            role: ROLE_STATICTEXT,
+          },
+        ],
+      };
+      testAccessibleTree("image_submit", accTree);
+
+      // input@type="range"
+      accTree = { SLIDER: [ ] };
+      testAccessibleTree("range", accTree);
+
+      // input@type="number"
+      accTree = { SPINBUTTON: [ ] };
+      testAccessibleTree("number", accTree);
+
+      // output
+      accTree = {
+        role: ROLE_STATUSBAR,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+          },
+        ],
+      };
+      testAccessibleTree("output", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Fix O(n^2) access to all the children of a container"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045">
+    Bug 342045
+  </a>
+  <a target="_blank"
+    title="add test for role of input type='image'"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=524521">
+     Bug 524521
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=558036"
+     title="make HTML <output> accessible">
+    Bug 558036
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=559764"
+     title="make HTML5 input@type=range element accessible">
+    Bug 559764
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input type="checkbox" id="checkbox">
+  <input type="radio" id="radio">
+  <input type="button" value="button" id="btn1">
+  <button id="btn2">button</button>
+
+  <input type="submit" id="submit">
+  <input type="image" id="image_submit">
+  <input type="range" id="range">
+  <input type="number" id="number">
+  <output id="output">1337</output>
+
+</body>
+</html>

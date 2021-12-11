@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for undo with editing UI</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editable1" contenteditable="true">
+<table id="table1" border="1">
+<tr id="tr1"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+<tr id="tr2"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+</table>
+<div id="edit1">test</div>
+<img id="img1" src="green.png">
+<div id="abs1" style="position: absolute; top: 100px; left: 300px; width: 100px; height: 100px; background-color: green;"></div>
+</div>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+add_task(async function testAbsPosUI() {
+  await new Promise((resolve) => {
+    SimpleTest.waitForFocus(() => {
+      SimpleTest.executeSoon(resolve);
+    }, window);
+  });
+
+  document.execCommand("enableAbsolutePositionEditing", false, "true");
+  ok(document.queryCommandState("enableAbsolutePositionEditing"),
+    "Enable absolute positioned editor");
+
+  let edit1 = document.getElementById("edit1");
+  edit1.innerText = "test";
+  synthesizeMouseAtCenter(edit1, {});
+  synthesizeKey("a");
+  isnot(edit1.firstChild.textContent, "test", "Text is modified");
+  let abs1 = document.getElementById("abs1");
+  ok(!abs1.hasAttribute("_moz_abspos"), "_moz_abspos attribute should be false yet");
+
+  let promiseForAbsEditor = new Promise((resolve) => {
+    document.addEventListener("selectionchange", () => {
+      resolve();
+    }, {once: true});
+  });
+  synthesizeMouseAtCenter(abs1, {});
+  await promiseForAbsEditor;
+  ok(abs1.hasAttribute("_moz_abspos"), "_moz_abspos attribute should be true");
+
+  synthesizeKey("z", { accelKey: true });
+  is(edit1.firstChild.textContent, "test", "Text is restored by undo");
+
+  // TODO: no good way to move absolute position grab.
+
+  document.execCommand("enableAbsolutePositionEditing", false, "false");
+});
+
+add_task(function testResizerUI() {
+  document.execCommand("enableObjectResizing", false, "true");
+  ok(document.queryCommandState("enableObjectResizing"),
+    "Enable object resizing  editor");
+
+  let edit1 = document.getElementById("edit1");
+  edit1.innerText = "test";
+  synthesizeMouseAtCenter(edit1, {});
+  synthesizeKey("h");
+  isnot(edit1.firstChild.textContent, "test", "Text is modified");
+
+  let img1 = document.getElementById("img1");
+  synthesizeMouseAtCenter(img1, {});
+  ok(img1.hasAttribute("_moz_resizing"),
+     "_moz_resizing attribute should be true");
+
+  synthesizeKey("z", { accelKey: true });
+  is(edit1.firstChild.textContent, "test", "Text is restored by undo");
+
+  // Resizer
+
+  synthesizeMouseAtCenter(edit1, {});
+  synthesizeKey("j");
+  isnot(edit1.firstChild.textContent, "test", "Text is modified");
+
+  synthesizeMouseAtCenter(img1, {});
+  ok(img1.hasAttribute("_moz_resizing"),
+     "_moz_resizing attribute should be true");
+
+  // Emulate drag & drop
+  let origWidth = img1.width;
+  let posX = img1.clientWidth;
+  let posY = img1.clientHeight - (img1.height / 2);
+  synthesizeMouse(img1, posX, posY, {type: "mousedown"});
+  synthesizeMouse(img1, posX + 100, posY, {type: "mousemove"});
+  synthesizeMouse(img1, posX + 100, posY, {type: "mouseup"});
+
+  isnot(img1.width, origWidth, "Image is resized");
+  synthesizeKey("z", { accelKey: true });
+  is(img1.width, origWidth, "Image width is restored by undo");
+
+  synthesizeKey("z", { accelKey: true });
+  is(edit1.firstChild.textContent, "test", "Text is restored by undo");
+
+  document.execCommand("enableObjectResizing", false, "false");
+});
+
+add_task(async function testInlineTableUI() {
+  document.execCommand("enableInlineTableEditing", false, "true");
+  ok(document.queryCommandState("enableInlineTableEditing"),
+    "Enable Inline Table editor");
+
+  let tr1 = document.getElementById("tr1");
+  synthesizeMouseAtCenter(tr1, {});
+  synthesizeKey("o");
+  isnot(tr1.firstChild.firstChild.textContent, "ABCDEFG",
+        "Text is modified");
+
+  let tr2 = document.getElementById("tr2");
+  synthesizeMouseAtCenter(tr2, {});
+  synthesizeKey("y");
+  isnot(tr2.firstChild.firstChild.textContent, "ABCDEFG",
+        "Text is modified");
+
+  synthesizeKey("z", { accelKey: true });
+  is(tr2.firstChild.firstChild.textContent, "ABCDEFG",
+     "Text is restored by undo");
+
+  synthesizeKey("z", { accelKey: true });
+  is(tr1.firstChild.firstChild.textContent, "ABCDEFG",
+     "Text is restored by undo");
+
+  synthesizeMouseAtCenter(tr1, {});
+  synthesizeKey("p");
+  isnot(tr1.firstChild.firstChild.textContent, "ABCDEFG",
+        "Text is modified");
+
+  // Inline table editing UI
+
+  synthesizeMouseAtCenter(tr2, {});
+  synthesizeMouse(tr2, 0, tr2.clientHeight / 2, {});
+  ok(!document.getElementById("tr2"),
+     "id=tr2 should be removed by a click in the row");
+
+  synthesizeKey("z", { accelKey: true });
+  ok(document.getElementById("tr2"), "id=tr2 should be restored by undo");
+
+  synthesizeKey("z", { accelKey: true });
+  is(tr1.firstChild.firstChild.textContent, "ABCDEFG",
+     "Text is restored by undo");
+
+  document.execCommand("enableInlineTableEditing", false, "false");
+});
+
+</script>
+</pre>
+</body>
+</html>

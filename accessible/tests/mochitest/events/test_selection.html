@@ -1,0 +1,115 @@
+<html>
+
+<head>
+  <title>Accessible selection event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    // gA11yEventDumpToConsole = true; // debuggin
+
+    var gQueue = null;
+    function doTests() {
+      gQueue = new eventQueue();
+
+      // open combobox
+      gQueue.push(new synthClick("combobox",
+                                 new invokerChecker(EVENT_FOCUS, "cb1_item1")));
+      gQueue.push(new synthDownKey("cb1_item1",
+                                   selChangeSeq("cb1_item1", "cb1_item2")));
+
+      // closed combobox
+      gQueue.push(new synthEscapeKey("combobox",
+                                     new invokerChecker(EVENT_FOCUS, "combobox")));
+      gQueue.push(new synthDownKey("cb1_item2",
+                                   selChangeSeq("cb1_item2", "cb1_item3")));
+
+      // listbox
+      gQueue.push(new synthClick("lb1_item1",
+                                 new invokerChecker(EVENT_SELECTION, "lb1_item1")));
+      gQueue.push(new synthDownKey("lb1_item1",
+                                   selChangeSeq("lb1_item1", "lb1_item2")));
+
+      // multiselectable listbox
+      gQueue.push(new synthClick("lb2_item1",
+                                 selChangeSeq(null, "lb2_item1")));
+      gQueue.push(new synthDownKey("lb2_item1",
+                                   selAddSeq("lb2_item2"),
+                                   { shiftKey: true }));
+      gQueue.push(new synthUpKey("lb2_item2",
+                                 selRemoveSeq("lb2_item2"),
+                                 { shiftKey: true }));
+      gQueue.push(new synthKey("lb2_item1", " ", { ctrlKey: true },
+                               selRemoveSeq("lb2_item1")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=414302"
+     title="Incorrect selection events in HTML, XUL and ARIA">
+    Bug 414302
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=810268"
+     title="There's no way to know unselected item when selection in single selection was changed">
+    Bug 810268
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="combobox">
+    <option id="cb1_item1" value="mushrooms">mushrooms
+    <option id="cb1_item2" value="greenpeppers">green peppers
+    <option id="cb1_item3" value="onions" id="onions">onions
+    <option id="cb1_item4" value="tomatoes">tomatoes
+    <option id="cb1_item5" value="olives">olives
+  </select>
+
+  <select id="listbox" size=5>
+    <option id="lb1_item1" value="mushrooms">mushrooms
+    <option id="lb1_item2" value="greenpeppers">green peppers
+    <option id="lb1_item3" value="onions" id="onions">onions
+    <option id="lb1_item4" value="tomatoes">tomatoes
+    <option id="lb1_item5" value="olives">olives
+  </select>
+
+  <p>Pizza</p>
+  <select id="listbox2" multiple size=5>
+    <option id="lb2_item1" value="mushrooms">mushrooms
+    <option id="lb2_item2" value="greenpeppers">green peppers
+    <option id="lb2_item3" value="onions" id="onions">onions
+    <option id="lb2_item4" value="tomatoes">tomatoes
+    <option id="lb2_item5" value="olives">olives
+  </select>
+</body>
+</html>

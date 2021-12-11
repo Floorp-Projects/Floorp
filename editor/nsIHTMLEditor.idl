@@ -1,0 +1,343 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+interface nsIContent;
+
+webidl Document;
+webidl Element;
+webidl Node;
+webidl Selection;
+
+[scriptable, builtinclass, uuid(87ee993e-985f-4a43-a974-0d9512da2fb0)]
+interface nsIHTMLEditor : nsISupports
+{
+%{C++
+  typedef short EAlignment;
+%}
+
+  // used by GetAlignment()
+  const short eLeft = 0;
+  const short eCenter = 1;
+  const short eRight = 2;
+  const short eJustify = 3;
+
+
+  /* ------------ Inline property methods -------------- */
+
+  /**
+   * SetInlineProperty() sets the aggregate properties on the current selection
+   *
+   * @param aProperty   the property to set on the selection
+   * @param aAttribute  the attribute of the property, if applicable.
+   *                    May be null.
+   *                    Example: aProperty="font", aAttribute="color"
+   * @param aValue      if aAttribute is not null, the value of the attribute.
+   *                    May be null.
+   *                    Example: aProperty="font", aAttribute="color",
+   *                             aValue="0x00FFFF"
+   */
+  [can_run_script]
+  void setInlineProperty(in AString aProperty,
+                         in AString aAttribute,
+                         in AString aValue);
+
+  /**
+   * getInlinePropertyWithAttrValue() gets aggregate properties of the current
+   * selection.  All object in the current selection are scanned and their
+   * attributes are represented in a list of Property object.
+   *
+   * @param aProperty   the property to get on the selection
+   * @param aAttribute  the attribute of the property, if applicable.
+   *                    May be null.
+   *                    Example: aProperty="font", aAttribute="color"
+   * @param aValue      if aAttribute is not null, the value of the attribute.
+   *                    May be null.
+   *                    Example: aProperty="font", aAttribute="color",
+   *                             aValue="0x00FFFF"
+   * @param aFirst      [OUT] PR_TRUE if the first text node in the
+   *                          selection has the property
+   * @param aAny        [OUT] PR_TRUE if any of the text nodes in the
+   *                          selection have the property
+   * @param aAll        [OUT] PR_TRUE if all of the text nodes in the
+   *                          selection have the property
+   */
+  [can_run_script]
+  AString getInlinePropertyWithAttrValue(in AString aProperty,
+                                         in AString aAttribute,
+                                         in AString aValue,
+                                         out boolean aFirst,
+                                         out boolean aAny,
+                                         out boolean aAll);
+
+  /**
+   * removeInlineProperty() removes a property which changes inline style of
+   * text.  E.g., bold, italic, super and sub.
+   *
+   * @param aProperty   Tag name whcih represents the inline style you want to
+   *                    remove.  E.g., "strong", "b", etc.
+   *                    If "href", <a> element which has href attribute will be
+   *                    removed.
+   *                    If "name", <a> element which has non-empty name
+   *                    attribute will be removed.
+   * @param aAttribute  If aProperty is "font", aAttribute should be "face",
+   *                    "size", "color" or "bgcolor".
+   */
+  [can_run_script]
+  void removeInlineProperty(in AString aProperty, in AString aAttribute);
+
+  /* ------------ HTML content methods -------------- */
+
+  /**
+   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD.
+   *   This does NOT consider CSS effect on display type
+   *
+   * @param aNode      the node to test
+   */
+  boolean nodeIsBlock(in Node node);
+
+  /**
+   * Insert some HTML source at the current location
+   *
+   * @param aInputString   the string to be inserted
+   */
+  [can_run_script]
+  void insertHTML(in AString aInputString);
+
+  /**
+   *  Rebuild the entire document from source HTML
+   *  Needed to be able to edit HEAD and other outside-of-BODY content
+   *
+   *  @param aSourceString   HTML source string of the entire new document
+   */
+  [can_run_script]
+  void rebuildDocumentFromSource(in AString aSourceString);
+
+  /**
+    * Insert an element, which may have child nodes, at the selection
+    * Used primarily to insert a new element for various insert element dialogs,
+    *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
+    *   be useful for other elements.
+    *
+    * @param aElement           The element to insert
+    * @param aDeleteSelection   Delete the selection before inserting
+    *     If aDeleteSelection is PR_FALSE, then the element is inserted
+    *     after the end of the selection for all element except
+    *     Named Anchors, which insert before the selection
+    */
+  [can_run_script]
+  void insertElementAtSelection(in Element aElement,
+                                in boolean aDeleteSelection);
+
+  /**
+   *   Set the BaseURL for the document to the current URL
+   *     but only if the page doesn't have a <base> tag
+   *   This should be done after the document URL has changed,
+   *     such as after saving a file
+   *   This is used as base for relativizing link and image urls
+   */
+  void updateBaseURL();
+
+
+  /* ------------ Selection manipulation -------------- */
+  /* Should these be moved to Selection? */
+
+  /**
+    * Set the selection at the suppled element
+    *
+    * @param aElement   An element in the document
+    */
+  [can_run_script]
+  void selectElement(in Element aElement);
+
+  /**
+   * getParagraphState returns what block tag paragraph format is in
+   * the selection.
+   * @param aMixed     True if there is more than one format
+   * @return           Name of block tag. "" is returned for none.
+   */
+  AString getParagraphState(out boolean aMixed);
+
+  /**
+   * getFontFaceState returns what font face is in the selection.
+   * @param aMixed    True if there is more than one font face
+   * @return          Name of face.  Note: "tt" is returned for
+   *                  tt tag.  "" is returned for none.
+   */
+  [can_run_script]
+  AString getFontFaceState(out boolean aMixed);
+
+  /**
+   * getHighlightColorState returns what the highlight color of the selection.
+   * @param aMixed     True if there is more than one font color
+   * @return           Color string. "" is returned for none.
+   */
+  [can_run_script]
+  AString getHighlightColorState(out boolean aMixed);
+
+  /**
+   * getListState returns what list type is in the selection.
+   * @param aMixed    True if there is more than one type of list, or
+   *                  if there is some list and non-list
+   * @param aOL       The company that employs me.  No, really, it's
+   *                  true if an "ol" list is selected.
+   * @param aUL       true if an "ul" list is selected.
+   * @param aDL       true if a "dl" list is selected.
+   */
+  void getListState(out boolean aMixed, out boolean aOL, out boolean aUL,
+                    out boolean aDL);
+
+  /**
+   * getListItemState returns what list item type is in the selection.
+   * @param aMixed    True if there is more than one type of list item, or
+   *                  if there is some list and non-list
+   *                  XXX This ignores `<li>` element selected state.
+   *                      For example, even if `<li>` and `<dt>` are selected,
+   *                      this is set to false.
+   * @param aLI       true if "li" list items are selected.
+   * @param aDT       true if "dt" list items are selected.
+   * @param aDD       true if "dd" list items are selected.
+   */
+  void getListItemState(out boolean aMixed, out boolean aLI,
+                        out boolean aDT, out boolean aDD);
+
+  /**
+   * getAlignment     returns what alignment is in the selection.
+   * @param aMixed    Always returns false.
+   * @param aAlign    enum value for first encountered alignment
+   *                  (left/center/right)
+   */
+  [can_run_script]
+  void getAlignment(out boolean aMixed, out short aAlign);
+
+  /**
+   * Document me!
+   *
+   */
+  [can_run_script]
+  void makeOrChangeList(in AString aListType, in boolean entireList,
+                        in AString aBulletType);
+
+  /**
+   * removeList removes list items (<li>, <dd>, and <dt>) and list structures
+   * (<ul>, <ol>, and <dl>).
+   *
+   * @param aListType  Unused.
+   */
+  [can_run_script]
+  void removeList(in AString aListType);
+
+  /**
+   * GetElementOrParentByTagName() returns an inclusive ancestor element whose
+   * name matches aTagName from aNode or anchor node of Selection to <body>
+   * element or null if there is no element matching with aTagName.
+   *
+   * @param aTagName        The tag name which you want to look for.
+   *                        Must not be empty string.
+   *                        If "list", the result may be <ul>, <ol> or <dl>
+   *                        element.
+   *                        If "td", the result may be <td> or <th>.
+   *                        If "href", the result may be <a> element
+   *                        which has "href" attribute with non-empty value.
+   *                        If "anchor", the result may be <a> which has
+   *                        "name" attribute with non-empty value.
+   * @param aNode           If non-null, this starts to look for the result
+   *                        from it.  Otherwise, i.e., null, starts from
+   *                        anchor node of Selection.
+   * @return                If an element which matches aTagName, returns
+   *                        an Element.  Otherwise, nullptr.
+   */
+  Element getElementOrParentByTagName(in AString aTagName,
+                                      in Node aNode);
+
+  /**
+   * getSelectedElement() returns a "selected" element node.  "selected" means:
+   * - there is only one selection range
+   * - the range starts from an element node or in an element
+   * - the range ends at immediately after same element
+   * - and the range does not include any other element nodes.
+   * Additionally, only when aTagName is "href", this thinks that an <a>
+   * element which has non-empty "href" attribute includes the range, the
+   * <a> element is selected.
+   *
+   * @param aTagName    Case-insensitive element name.
+   *                    If empty string, this returns any element node or null.
+   *                    If "href", this returns an <a> element which has
+   *                    non-empty "href" attribute or null.
+   *                    If "anchor", this returns an <a> element which has
+   *                    non-empty "name" attribute or null.
+   *                    Otherwise, returns an element node whose name is
+   *                    same as aTagName or null.
+   * @return            A "selected" element.
+   */
+  nsISupports getSelectedElement(in AString aTagName);
+
+  /**
+   * Return a new element with default attribute values
+   *
+   * This does not rely on the selection, and is not sensitive to context.
+   *
+   * Used primarily to supply new element for various insert element dialogs
+   *  (Image, Link, NamedAnchor, Table, and HorizontalRule
+   *   are the only returned elements as of 7/25/99)
+   *
+   * @param aTagName  The HTML tagname
+   *    Special input values for Links and Named anchors:
+   *    Use "href" to get a link node
+   *      (an "A" tag with the "href" attribute set)
+   *    Use "anchor" or "namedanchor" to get a named anchor node
+   *      (an "A" tag with the "name" attribute set)
+   * @return          The new element created.
+   */
+  [can_run_script]
+  Element createElementWithDefaults(in AString aTagName);
+
+  /**
+   * Insert an link element as the parent of the current selection
+   *
+   * @param aElement   An "A" element with a non-empty "href" attribute
+   */
+  [can_run_script]
+  void insertLinkAroundSelection(in Element aAnchorElement);
+
+  /**
+   * Set the value of the "bgcolor" attribute on the document's <body> element
+   *
+   * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
+   */
+  [can_run_script]
+  void setBackgroundColor(in AString aColor);
+
+  /**
+   * A boolean which is true is the HTMLEditor has been instantiated
+   * with CSS knowledge and if the CSS pref is currently checked
+   *
+   * @return    true if CSS handled and enabled
+   */
+  [setter_can_run_script] attribute boolean isCSSEnabled;
+
+  /**
+   * checkSelectionStateForAnonymousButtons() may refresh editing UI such as
+   * resizers, inline-table-editing UI, absolute positioning UI for current
+   * Selection and focus state.  When this method shows or hides UI, the
+   * editor (and/or its document/window) could be broken by mutation observers.
+   * FYI: Current user in script is only BlueGriffon.
+   */
+  [can_run_script]
+  void checkSelectionStateForAnonymousButtons();
+
+  boolean isAnonymousElement(in Element aElement);
+
+  /**
+   * A boolean indicating if a return key pressed in a paragraph creates
+   * another paragraph or just inserts a <br> at the caret
+   *
+   * @return    true if CR in a paragraph creates a new paragraph
+   */
+  attribute boolean returnInParagraphCreatesNewParagraph;
+};
+

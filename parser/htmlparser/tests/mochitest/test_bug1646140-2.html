@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<div id="div" contenteditable></div>
+<script>
+/* globals div svgRanScript */
+window.svgRanScript = false;
+document.addEventListener("copy", ev => {
+  ev.preventDefault();
+  ev.clipboardData.setData('text/html', "<svg><style><svg/onload=\"window.svgRanScript=true\">");
+});
+const o = new MutationObserver(mutations => {
+  o.disconnect();
+  setTimeout(() => {
+    ok(!svgRanScript, "svg onload must not fire");
+    SimpleTest.finish()
+  });
+});
+o.observe(div, {childList: true});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  getSelection().collapse(div);
+  SpecialPowers.doCommand(window, "cmd_copy");
+  SpecialPowers.doCommand(window, "cmd_paste");
+});
+</script>

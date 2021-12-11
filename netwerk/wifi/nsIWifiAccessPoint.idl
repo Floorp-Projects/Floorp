@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(E28E614F-8F86-44FF-BCF5-5F18225834A0)]
+interface nsIWifiAccessPoint : nsISupports
+{
+
+  /*
+   * The mac address of the WiFi node.  The format of this string is:
+   * XX-XX-XX-XX-XX-XX
+   */
+
+  readonly attribute ACString mac;
+
+  /*
+   * Public name of a wireless network.  The charset of this string is ASCII.
+   * This string will be null if not available.
+   *
+   * Note that this is a conversion of the SSID which makes it "displayable".
+   * for any comparisons, you want to use the Raw SSID.
+   */
+
+  readonly attribute AString ssid;
+
+  /*
+   * Public name of a wireless network.  These are the bytes that are read off
+   * of the network, may contain nulls, and generally shouldn't be displayed to
+   * the user.
+   *
+   */
+
+  readonly attribute ACString rawSSID;
+
+  /*
+   * Current signal strength measured in dBm.
+   */
+  readonly attribute long signal;
+};

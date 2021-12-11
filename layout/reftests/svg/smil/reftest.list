@@ -1,0 +1,296 @@
+# Tests related to SVG Animation (using SMIL)
+# XXXdholbert Partial list of features that still need reftests:
+#   - calcMode=discrete, paced, spline
+#   - Stacking of additive=[sum|replace] animations
+#   - Stacking of additive animations, w/ "hybrid case of to-animation"
+#   - Repeating animations, w/ & w/out accumulate=sum
+#   - Interpolation between different units (e.g. font-size attr, 3em to 50px)
+#   - Correct behavior for em/ex font-size animations, when context changes
+#      (with change happening 1. when completed/frozen and 2. when animating)
+#   - CSS properties
+#   - DOM interfaces:
+#    * Section 6.2 of http://www.w3.org/TR/smil-animation/
+#    * Animation-related bits of http://www.w3.org/TR/SVG/struct.html#DOMInterfaces
+#   - Some more "anim-retarget" tests, with attributeType being changed/cleared.
+#     (after we've got support for SVG/SMIL animation of CSS properties)
+
+# animateMotion tests
+include motion/reftest.list
+
+# animation sort-order tests
+include sort/reftest.list
+
+# set tests
+include set/reftest.list
+
+# style tests
+include style/reftest.list
+
+# animateTransform tests
+include transform/reftest.list
+
+# time-dependent tests
+# XXXdholbert Disabling this class of tests for now, because most of them
+# can & should be converted so they don't depend on specific timeout values.
+# (to prevent sporadic failures due to nondeterminism)
+# include timed/reftest.list
+
+# time container tests
+include container/reftest.list
+
+# repeat tests
+include repeat/reftest.list
+
+# restart tests
+include restart/reftest.list
+
+# pause tests
+include pause/reftest.list
+
+# syncbase tests
+include syncbase/reftest.list
+
+# seek tests
+include seek/reftest.list
+
+# event tests
+include event/reftest.list
+
+# General tests
+== anim-discrete-values-1.svg      anim-standard-ref.svg
+== anim-discrete-values-2.svg      anim-standard-ref.svg
+== anim-discrete-values-3.svg      anim-standard-ref.svg
+== anim-discrete-replace-sum-1.svg anim-standard-ref.svg
+== anim-discrete-sum-none-1.svg    anim-standard-ref.svg
+== anim-discrete-sum-sum-1.svg     anim-standard-ref.svg
+
+== anim-discrete-to-1.svg          anim-standard-ref.svg
+== anim-discrete-to-2.svg          anim-standard-ref.svg
+== anim-discrete-to-3.svg          anim-standard-ref.svg
+== anim-discrete-to-4.svg          anim-standard-ref.svg
+
+== anim-indefinite-to-1.svg        anim-standard-ref.svg
+== anim-indefinite-to-2.svg        anim-standard-ref.svg
+== anim-indefinite-to-3.svg        anim-standard-ref.svg
+== anim-indefinite-to-4.svg        anim-standard-ref.svg
+
+fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
+== anim-fillopacity-1none.svg anim-standard-ref.svg
+== anim-fillopacity-1css.svg  anim-standard-ref.svg
+== anim-fillopacity-1xml.svg  anim-standard-ref.svg
+
+fuzzy(0-1,0-3600) == anim-opacity-01.svg lime.svg
+
+== anim-height-done-1a.svg anim-standard-ref.svg
+== anim-height-done-1b.svg anim-standard-ref.svg
+== anim-height-done-2.svg lime.svg
+== anim-height-interp-1.svg anim-height-interp-1-ref.svg
+== anim-height-interp-2.svg anim-height-interp-2-ref.svg
+== anim-height-interp-3.svg anim-height-interp-3-ref.svg
+== anim-height-interp-4.svg anim-height-interp-4-ref.svg
+== anim-height-interp-5.svg anim-height-interp-5-ref.svg
+== anim-height-interp-6.svg anim-height-interp-6-ref.svg
+
+# check conditional processing
+== anim-conditions-01.svg lime.svg
+== anim-conditions-02.svg lime.svg
+
+# animate some <length> attributes:
+== anim-filter-primitive-size-01.svg lime.svg
+== anim-filter-size-01.svg lime.svg
+== anim-length-reset-01.svg lime.svg
+== anim-nonpixel-length-reset-01.svg lime.svg
+== anim-use-length-01.svg lime.svg
+== anim-use-length-02.svg lime.svg
+
+# animate some <number> attributes:
+== anim-feComponentTransfer-01.svg lime.svg
+== anim-feDistantLight-01.svg anim-feDistantLight-01-ref.svg
+== anim-feOffset-01.svg lime.svg
+== anim-feSpotLight-01.svg anim-feSpotLight-01-ref.svg
+== anim-offset-01.svg lime.svg
+== anim-pathLength-01.svg anim-pathLength-01-ref.svg
+
+# animate some <number-optional-number> attributes:
+fuzzy(0-1,0-600) == anim-feGaussianBlur-01.svg lime.svg
+
+# animate some <integer> attributes:
+== anim-feTurbulence-numOctaves-01.svg anim-feTurbulence-numOctaves-01-ref.svg
+
+# animate some <integer-optional-integer> attributes:
+== anim-feConvolveMatrix-order-01.svg anim-feConvolveMatrix-order-01-ref.svg
+
+# animate some <angle> attributes:
+== anim-marker-orient-01.svg lime.svg
+== anim-marker-orient-02.svg lime.svg
+
+#animate points list:
+== anim-polygon-points-01.svg anim-polygon-points-01-ref.svg
+== anim-polyline-points-01.svg anim-polyline-points-01-ref.svg
+
+# animate path data:
+== anim-path-d-01.svg anim-path-d-01-ref.svg
+
+# animate some enumeration attributes:
+== anim-feComposite-operator-01.svg lime.svg
+== anim-filter-filterUnits-01.svg lime.svg
+
+# animate some boolean attributes:
+== anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg
+
+# animate some viewBox attributes
+fuzzy-if(Android,0-4,0-1) == anim-svg-viewBox-01.svg lime.svg
+== anim-svg-viewBox-02.svg lime.svg
+== anim-svg-viewBox-03.svg lime.svg
+== anim-view-01.svg#view lime.svg
+
+# animate some preserveAspectRatio attributes
+== anim-feImage-preserveAspectRatio-01.svg lime.svg
+== anim-svg-preserveAspectRatio-01.svg lime.svg
+
+# animate some string attributes:
+== anim-filter-href-01.svg lime.svg
+== anim-gradient-href-01.svg lime.svg
+== anim-image-href-01.svg lime.svg
+== anim-pattern-href-01.svg lime.svg
+== anim-use-href-01.svg lime.svg
+
+# animate the class attribute
+== anim-class-01.svg lime.svg
+== anim-class-02.svg lime.svg
+== anim-class-03.svg lime.svg
+== anim-class-04.svg anim-class-04-ref.svg
+
+# animate with some paint server values
+== anim-paintserver-1.svg anim-paintserver-1-ref.svg
+
+# animate attributes on text content children
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-text-attr-01.svg anim-text-attr-01-ref.svg # Bug 1392106
+
+# animate where the base value is non-interpolatable but will be replaced anyway
+== anim-fill-overpaintserver-1.svg lime.svg
+== anim-fill-overpaintserver-2.svg lime.svg
+
+# animate where we fallback from 'additive' animation to non-additive
+== anim-additive-fallback-1.svg anim-standard-ref.svg
+
+== anim-remove-1.svg anim-standard-ref.svg
+== anim-remove-2.svg anim-standard-ref.svg
+== anim-remove-3.svg anim-standard-ref.svg
+== anim-remove-4.svg anim-standard-ref.svg
+== anim-remove-5.svg anim-standard-ref.svg
+== anim-remove-6.svg anim-standard-ref.svg
+== anim-remove-7.svg anim-standard-ref.svg
+== anim-remove-8css.svg anim-standard-ref.svg
+== anim-remove-8xml.svg anim-standard-ref.svg
+== anim-remove-9.svg anim-standard-ref.svg
+== anim-retarget-1.svg anim-standard-ref.svg
+== anim-retarget-2.svg anim-standard-ref.svg
+== anim-retarget-3.svg anim-standard-ref.svg
+== anim-retarget-4.svg anim-standard-ref.svg
+== anim-retarget-5.svg anim-standard-ref.svg
+== anim-retarget-6.svg anim-standard-ref.svg
+== anim-retarget-7.svg anim-standard-ref.svg
+== anim-retarget-8.svg anim-standard-ref.svg
+
+fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
+== anim-strokewidth-1xml.svg anim-standard-ref.svg
+
+== anim-targethref-1.svg anim-standard-ref.svg
+== anim-targethref-2.svg anim-standard-ref.svg
+== anim-targethref-3.svg anim-standard-ref.svg
+== anim-targethref-4.svg anim-standard-ref.svg
+== anim-targethref-5.svg anim-standard-ref.svg
+== anim-targethref-6.svg anim-standard-ref.svg
+== anim-targethref-7.svg anim-standard-ref.svg
+== anim-targethref-8.svg anim-standard-ref.svg
+== anim-targethref-9.svg anim-standard-ref.svg
+== anim-targethref-10.svg anim-standard-ref.svg
+
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-text-rotate-01.svg anim-text-rotate-01-ref.svg # Bug 1392106
+== anim-feFuncR-tableValues-01.svg anim-feFuncR-tableValues-01-ref.svg
+
+skip == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
+
+== anim-width-done-1a.svg anim-standard-ref.svg
+== anim-width-done-1b.svg anim-standard-ref.svg
+
+== anim-x-done-1a.svg anim-standard-ref.svg
+== anim-x-done-1b.svg anim-standard-ref.svg
+== anim-x-interp-1.svg anim-x-interp-1-ref.svg
+== anim-x-interp-2.svg anim-x-interp-2-ref.svg
+== anim-x-interp-3.svg anim-x-interp-3-ref.svg
+== anim-x-interp-4.svg anim-x-interp-4-ref.svg
+== anim-x-interp-5.svg anim-x-interp-5-ref.svg
+== anim-x-interp-6.svg anim-x-interp-6-ref.svg
+
+== anim-y-done-1a.svg anim-standard-ref.svg
+== anim-y-done-1b.svg anim-standard-ref.svg
+== anim-y-interp-1.svg anim-y-interp-1-ref.svg
+== anim-y-interp-2.svg anim-y-interp-2-ref.svg
+== anim-y-interp-3.svg anim-y-interp-3-ref.svg
+== anim-y-interp-4.svg anim-y-interp-4-ref.svg
+== anim-y-interp-5.svg anim-y-interp-5-ref.svg
+== anim-y-interp-6.svg anim-y-interp-6-ref.svg
+
+# Test we don't rely on HasAttr to see if an attribute has been set
+== anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
+fuzzy(0-1,0-350) == anim-pattern-attr-presence-01.svg anim-pattern-attr-presence-01-ref.svg
+fails == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
+# ^ bug 621651
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-2) == anim-gradient-attr-presence-01.svg anim-gradient-attr-presence-01-ref.svg
+
+== api-sanity-1.svg lime.svg
+
+== freeze-applied-late-1.svg anim-standard-ref.svg
+== freeze-applied-late-2.svg anim-standard-ref.svg
+== freeze-applied-late-3.svg anim-standard-ref.svg
+== freeze-applied-late-4.svg anim-standard-ref.svg
+== frozen-to-anim-1.svg lime.svg
+
+== inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
+== inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
+
+== mapped-attr-long-url-1.svg lime.svg
+== mapped-attr-long-url-2.svg lime.svg
+
+== min-1.svg lime.svg
+
+== shadow-dom-01.html lime.svg
+
+== smil-transitions-interaction-1a.svg lime.svg
+== smil-transitions-interaction-1b.svg lime.svg
+== smil-transitions-interaction-2a.svg lime.svg
+== smil-transitions-interaction-2b.svg lime.svg
+== smil-transitions-interaction-3a.svg lime.svg
+== smil-transitions-interaction-3b.svg lime.svg
+== smil-transitions-interaction-4a.svg lime.svg
+== smil-transitions-interaction-4b.svg lime.svg
+
+# Test filtering of excessive times
+== filtered-instance-time-1.svg anim-standard-ref.svg
+
+# Animation tests disable reduceTimerPrecision because they use a screenshot
+# mechanism that relies on performance.now(), and on low precision that can be
+# finnicky.
+
+# Test animation using defs element
+pref(privacy.reduceTimerPrecision,false) == anim-defs-gradient-property.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-defs-gradient-attribute.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-defs-fill.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-defs-width.svg lime.svg
+
+# Test animation that changes 'display' attribute
+pref(privacy.reduceTimerPrecision,false) == anim-display.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-display-in-g-element.svg lime.svg
+
+# Test animation that change 'display' style value to 'none'
+== anim-change-display-none-for-ancestor-elem.html lime.html
+== anim-change-display-none-for-target-elem.html lime.html
+== anim-change-display-none-for-dynamically-appended-elem.html lime.html
+== anim-change-display-block-for-dynamically-appended-elem.html anim-standard-ref.html
+
+fuzzy(0-31,0-308) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
+
+# Test animations for overflow.
+== anim-overflow-shorthand.svg anim-overflow-shorthand-ref.svg

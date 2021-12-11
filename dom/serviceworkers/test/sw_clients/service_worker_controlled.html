@@ -1,0 +1,38 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>controlled page</title>
+  <!--
+    Paged controlled by a service worker for testing matchAll().
+    See bug 982726, 1058311.
+  -->
+<script class="testbody" type="text/javascript">
+  function fail(msg) {
+    info("service_worker_controlled.html: " + msg);
+    opener.postMessage("FAIL", "*");
+  }
+
+  if (!parent) {
+      info("service_worker_controlled.html should not be launched directly!");
+  }
+
+  window.onload = function() {
+    navigator.serviceWorker.ready.then(function(swr) {
+      parent.postMessage("READY", "*");
+    });
+  }
+
+  navigator.serviceWorker.onmessage = function(msg) {
+    // forward message to the test page.
+    parent.postMessage(msg.data, "*");
+  };
+</script>
+
+</head>
+<body>
+</body>
+</html>

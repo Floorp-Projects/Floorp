@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -e
+
+WORKDIR=$(mktemp -d)
+cd $WORKDIR
+
+mkdir -p a/foo/bar/bar
+mkdir -p a/foo/bar/baz
+mkdir -p b/foo/bar/bar
+mkdir -p b/foo/bar/baz
+
+# A file that is modified
+echo qux > a/foo/bar/qux
+echo quz > b/foo/bar/qux
+
+# A binary file that is modified
+cp $(which ls) a/foo/bin
+cp $(which cat) b/foo/bin
+
+# A file that is removed
+echo hoge > a/foo/bar/bar/hoge
+
+# A file that is created
+echo fuga > b/foo/bar/baz/fuga
+
+# Also add a zip file with the same contents
+(cd a/foo; zip -r bar.zip bar)
+(cd b/foo; zip -r bar.zip bar)
+
+if TERM=linux diffoscope --no-progress --text diff.txt a b; then
+	echo "diffoscope didn't find differences?"
+	exit 1
+fi
+
+cat > expected.txt <<EOF
+TEST-UNEXPECTED-FAIL | foo/bar.zip differs. See the diff.html or diff.txt artifact
+TEST-UNEXPECTED-FAIL | foo/bar/bar differs. See the diff.html or diff.txt artifact
+TEST-UNEXPECTED-FAIL | foo/bar/baz differs. See the diff.html or diff.txt artifact
+TEST-UNEXPECTED-FAIL | foo/bar/qux differs. See the diff.html or diff.txt artifact
+TEST-UNEXPECTED-FAIL | foo/bin differs. See the diff.html or diff.txt artifact
+EOF
+
+$(dirname $0)/report_error diff | diff -u - expected.txt || exit 1
+
+cd $OLDPWD
+rm -rf $WORKDIR

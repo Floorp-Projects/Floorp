@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+  <html reftest-zoom="0.2">
+  <head>
+    <!-- Default to invisible text -->
+    <style type="text/css" media="screen, print">
+      .hidden {
+        color: white;
+      }
+      .visible {
+        color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nest successive radicals and test that the horizontal bar of one of them is drawn.
+         Because the comparison is for inequality with about:blank, at most one can be visible -->
+    <math>
+      <mrow>
+        <msqrt class="hidden">
+          <mspace width="1em" height="1em" />
+          <msqrt class="hidden">
+            <mspace width="1em" height="1em" />
+            <msqrt class="hidden">
+              <mspace width="1em" height="1em" />
+              <msqrt class="hidden">
+                <mspace width="1em" height="1em" />
+                <msqrt class="hidden">
+                  <mspace width="1em" height="1em" />
+                  <msqrt class="visible">
+                    <mspace width="1em" height="1em" />
+                    <msqrt class="hidden">
+                      <mspace width="20em" height="1em" />
+                    </msqrt>
+                  </msqrt>
+                </msqrt>
+              </msqrt>
+            </msqrt>
+          </msqrt>
+        </msqrt>
+      </mrow>
+    </math>
+
+    <!-- Block out all but the horizontal bar of the visible radical -->
+    <div style="position: absolute; top: 5px; left: 0px;
+                width: 20em; height: 10em; background: white;"></div>
+  </body>
+</html>

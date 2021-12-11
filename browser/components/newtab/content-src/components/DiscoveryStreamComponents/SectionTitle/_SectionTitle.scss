@@ -1,0 +1,18 @@
+.ds-section-title {
+  text-align: center;
+  margin-top: 24px;
+
+  .title {
+    color: var(--newtab-text-primary-color);
+    line-height: 48px;
+    font-size: 36px;
+    font-weight: 300;
+  }
+
+  .subtitle {
+    line-height: 24px;
+    font-size: 14px;
+    color: var(--newtab-text-secondary-color);
+    margin-top: 4px;
+  }
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=421436
+-->
+<head>
+  <title>Test for Bug 421436</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=421436">Mozilla Bug 421436</a>
+<p id="display"></p>
+<div id="content">
+<span id="outer"><span id="inner">Hello</span><br></span>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 421436 **/
+var inner = document.getElementById("inner");
+var outer = document.getElementById("outer");
+
+is(inner.getBoundingClientRect().left, outer.getBoundingClientRect().left, "left edges equal");
+todo_is(inner.getBoundingClientRect().right, outer.getBoundingClientRect().right, "right edges equal");
+
+</script>
+</pre>
+</body>
+</html>

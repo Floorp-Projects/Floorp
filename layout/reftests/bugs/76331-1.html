@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<head><title>bug 76311 table empty-cells:hide</title>
+<style>
+table   {
+  empty-cells:hide;
+  background-color:red;
+  padding:0;
+  border-spacing:0;
+}
+table.empty {
+  background-color:green;
+}
+td {
+  background-color:green;
+  padding:0;
+  color:green;
+}
+td.empty {
+  background-color:red;
+}
+</style>
+</head>
+
+<body>
+ <!-- empty elements should be marked as empty-->
+ <table class="empty">
+  <tr><td class="empty"></td><td>X</td></tr>
+  <tr><td>X</td><td class="empty"></td></tr>
+ </table>
+ <!-- collapsed whitespace:  space + CR  should be marked as empty-->
+ <table class="empty">
+  <tr><td class="empty">                </td><td>X</td></tr>
+  <tr><td>X</td><td class="empty">
+  
+  
+  </td></tr>
+ </table>
+ <!-- not collapsed whitespace:  space + tab  should not be marked as empty-->
+ <table style="white-space: pre">
+  <tr><td>  </td><td>X</td></tr>
+  <tr><td>X</td><td>	</td></tr>
+ </table>
+ 
+ 
+ <!-- div with whitespace, empty span - should not be marked as empty -->
+ <table>
+  <tr><td><div> </div></td><td>X</td></tr>
+  <tr><td>X</td><td><span></span></td></tr>
+ </table>
+ 
+  <!--float empty or not  should not be marked as empty -->
+ <table>
+  <tr><td><div style="float:left;">X</div></td><td>X</td></tr>
+  <tr><td>X</td><td><div style="float:left;"></div></td></tr>
+ </table>
+ 
+ <!-- position:fixed and position:absolute  - both should be marked as empty -->
+ <table class="empty">
+  <tr><td class="empty"><div style="position:fixed; left: 30px;">X</div></td><td>X</td></tr>
+  <tr><td>X</td><td class="empty"><div style="position:absolute; left: 30px;">X</div></td></tr>
+ </table>
+ <!-- font size 0 makes textframes with no extent -->
+ <table>
+  <tr><td style="font-size:0">xxxx</td><td>X</td></tr>
+  <tr><td>X</td><td><img src="" style="width:0; height:0"></td></tr>
+ </table>
+ 
+</body>
+</html>

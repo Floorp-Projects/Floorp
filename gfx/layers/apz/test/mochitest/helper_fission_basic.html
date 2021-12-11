@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Basic sanity test that runs inside a fission-enabled window</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+
+// The actual test
+
+async function test() {
+  let iframeElement = document.getElementById("testframe");
+  ok(SpecialPowers.wrap(window)
+       .docShell
+       .QueryInterface(SpecialPowers.Ci.nsILoadContext)
+       .useRemoteSubframes,
+     "OOP iframe is actually OOP");
+  let iframeResult = await FissionTestHelper.sendToOopif(iframeElement, "20 + 22");
+  is(iframeResult, 42, "Basic content fission test works");
+}
+
+  </script>
+</head>
+<body>
+<iframe id="testframe"></iframe>
+</body>
+</html>

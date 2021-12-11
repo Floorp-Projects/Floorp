@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <title>Test page for bug 1681664</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script>
+      SimpleTest.waitForExplicitFinish()
+      async function init() {
+        var Services = SpecialPowers.Services;
+        var observer = {
+          observe(subject, topic, data) {
+            if (topic === "process-hang-report") {
+              var report = subject.QueryInterface(Ci.nsIHangReport);
+              report.terminateScript();
+              Services.obs.removeObserver(observer, "process-hang-report");
+            }
+          }
+        }
+
+        Services.obs.addObserver(observer, "process-hang-report");
+        try {
+          await import("test_bug1681664_helper.js");
+          result.textContent = "FAIL";
+        } catch (ex) {
+          result.textContent = "PASS";
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <p id="result"></p>
+    <script>
+      (async function() {
+        await init();
+        is(result.textContent, "PASS", "Infinite loop script should not cause browser crash");
+        SimpleTest.finish()
+      })();
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,280 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder State Transition</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+// List of operation tests for media recorder objects to verify if running
+// these operations should result in an exception or not
+var operationTests = [
+  {
+    operations: ['stop'],
+    isValid: true
+  },
+  {
+    operations: ['requestData'],
+    isValid: false
+  },
+  {
+    operations: ['pause'],
+    isValid: false
+  },
+  {
+    operations: ['resume'],
+    isValid: false
+  },
+  {
+    operations: ['start'],
+    isValid: true
+  },
+  {
+    operations: ['start'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'pause'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['pause', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['resume', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['requestData', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['stop', 'start'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'requestData'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'requestData'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'pause', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'pause', 'pause'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'requestData'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'resume', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'resume', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'resume', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'resume', 'stop'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'pause'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'stop', 'resume'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'stop', 'requestData'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'stop', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'resume', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'resume', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'pause', 'pause', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'pause', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'stop'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'pause'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'pause'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'requestData'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'requestData'],
+    isValid: true,
+    timeSlice: 200
+  },
+];
+
+/**
+ * Runs through each available state transition test by running all
+ * available operations on a media recorder object. Then, we report
+ * back if the test was expected through an exception or not.
+ *
+ * @param {MediaStream} testStream the media stream used for media recorder
+ *                                 operation tests
+ */
+function runStateTransitionTests(testStream) {
+  for (const operationTest of operationTests) {
+    var mediaRecorder = new MediaRecorder(testStream);
+    var operationsString = operationTest.operations.toString();
+
+    try {
+      for (const operation of operationTest.operations) {
+        if (operationTest.timeSlice && operation === 'start') {
+          operationsString += ' with timeslice ' + operationTest.timeSlice;
+          mediaRecorder[operation](operationTest.timeSlice);
+        } else {
+          mediaRecorder[operation]();
+        }
+      }
+
+      ok(operationTest.isValid, `${operationsString} should succeed`);
+    } catch (err) {
+      if (operationTest.isValid) {
+        ok(false, `${operationsString} failed unexpectedly with ${err.name}`);
+      } else {
+        is(err.name, "InvalidStateError",
+          `${operationsString} expected to fail with InvalidStateError`);
+      }
+    }
+  }
+}
+
+/**
+ * Starts a test on every media recorder file included to check that various
+ * state transition flows that can happen in the media recorder object throw
+ * exceptions when they are expected to and vice versa.
+ */
+function startTest(test, token) {
+  var element = document.createElement('audio');
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStream();
+
+  element.oncanplaythrough = function () {
+    element.oncanplaythrough = null;
+    runStateTransitionTests(element.stream);
+    manager.finished(token);
+  };
+
+  element.play();
+}
+
+manager.runTests(gMediaRecorderTests, startTest);
+</script>
+</pre>
+</body>
+</html>

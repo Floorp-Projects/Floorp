@@ -1,0 +1,12 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+
+. "$topsrcdir/build/mozconfig.common"
+
+ac_add_options --enable-debug
+
+# Add the static checker
+ac_add_options --enable-clang-plugin
+
+. "$topsrcdir/build/unix/mozconfig.stdcxx"
+
+. "$topsrcdir/build/mozconfig.common.override"

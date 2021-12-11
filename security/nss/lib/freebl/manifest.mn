@@ -1,0 +1,200 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# NOTE: any ifdefs in this file must be defined on the gmake command line
+# (if anywhere).  They cannot come from Makefile or config.mk
+
+CORE_DEPTH = ../..
+
+MODULE = nss
+
+# copied from Linux.mk. We have a chicken and egg issue here. We need to set
+# Library name before we call the platform code in coreconf, but we need to
+# Pick up the automatic setting of FREEBL_LOWHASH before we  can set the
+# Library name... so for now we mimic the code in Linux.mk to get the
+# automatic setting early...
+#
+# On Linux 2.6 or later, build libfreebl3.so with no NSPR and libnssutil3.so
+# dependencies by default.  Set FREEBL_NO_DEPEND to 0 in the environment to
+# override this.
+#
+#
+include $(CORE_DEPTH)/coreconf/arch.mk
+ifeq ($(OS_ARCH),Linux)
+ifneq ($(OS_TARGET),Android)
+ifeq (2.6,$(firstword $(sort 2.6 $(OS_RELEASE))))
+ifndef FREEBL_NO_DEPEND
+FREEBL_NO_DEPEND = 1
+FREEBL_LOWHASH = 1
+endif
+endif
+endif
+endif
+
+
+LIBRARY_NAME = freebl
+LIBRARY_VERSION = 3
+
+ifdef FREEBL_CHILD_BUILD
+  ifdef USE_ABI32_INT32
+    LIBRARY_NAME = freebl_32int
+  endif
+  ifdef USE_ABI32_INT64
+    LIBRARY_NAME = freebl_32int64
+  endif
+  ifdef USE_ABI32_FPU
+    LIBRARY_NAME = freebl_32fpu
+  endif
+  ifdef USE_ABI64_INT
+    LIBRARY_NAME = freebl_64int
+  endif
+  ifdef USE_ABI64_FPU
+    LIBRARY_NAME = freebl_64fpu
+  endif
+  ifdef FREEBL_LOWHASH
+    LIBRARY_NAME = freeblpriv
+  endif
+  ifdef USE_STUB_BUILD
+    # for the stub build, reset name to the default (from freeblpriv)
+    LIBRARY_NAME = freebl
+  endif
+endif
+
+# if the library name contains _, we prefix the version with _
+ifneq (,$(findstring _,$(LIBRARY_NAME)))
+  LIBRARY_VERSION := _$(LIBRARY_VERSION)
+endif
+
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+
+SOFTOKEN_LIBRARY_VERSION = 3
+
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" \
+	-DSHLIB_VERSION=\"$(LIBRARY_VERSION)\" \
+	-DSOFTOKEN_SHLIB_VERSION=\"$(SOFTOKEN_LIBRARY_VERSION)\"
+
+REQUIRES =
+
+EXPORTS = \
+	blapit.h \
+	shsign.h \
+	ecl-exp.h \
+	$(LOWHASH_EXPORTS) \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	cmac.h \
+	alghmac.h \
+	blake2b.h \
+	blapi.h \
+	chacha20poly1305.h \
+	hmacct.h \
+	secmpi.h \
+	secrng.h \
+	ec.h \
+	ecl.h \
+	ecl-curve.h \
+	eclt.h \
+	$(NULL)
+
+MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h mp_gf2m.h
+MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c mp_gf2m.c
+
+
+ECL_HDRS = ecl-exp.h ecl.h ecp.h ecl-priv.h
+ECL_SRCS = ecl.c ecl_mult.c ecl_gf.c \
+	ecp_aff.c ecp_jac.c ecp_mont.c \
+	ec_naf.c ecp_jm.c ecp_256.c ecp_384.c ecp_521.c \
+	ecp_256_32.c ecp_25519.c ecp_secp384r1.c ecp_secp521r1.c
+SHA_SRCS = sha_fast.c
+MPCPU_SRCS = mpcpucache.c
+VERIFIED_SRCS = $(NULL)
+
+CSRCS = \
+	freeblver.c \
+	ldvector.c \
+	sysrand.c \
+	$(SHA_SRCS) \
+	md2.c \
+	md5.c \
+	sha512.c \
+	cmac.c \
+	alghmac.c \
+	rawhash.c \
+	arcfour.c \
+	arcfive.c \
+	crypto_primitives.c \
+	blake2b.c \
+	desblapi.c \
+	des.c \
+	drbg.c \
+	chacha20poly1305.c \
+	cts.c \
+	ctr.c \
+	blinit.c \
+	fipsfreebl.c \
+	gcm.c \
+	hmacct.c \
+	rijndael.c \
+	aeskeywrap.c \
+	camellia.c \
+	dh.c \
+	ec.c \
+	ecdecode.c \
+	pqg.c \
+	dsa.c \
+	rsa.c \
+	rsapkcs.c \
+	shvfy.c \
+	tlsprfalg.c \
+	jpake.c \
+	$(MPI_SRCS) \
+	$(MPCPU_SRCS) \
+	$(ECL_SRCS) \
+	$(VERIFIED_SRCS) \
+	$(STUBS_SRCS) \
+	$(LOWHASH_SRCS) \
+	$(EXTRA_SRCS) \
+	$(NULL)
+
+ifndef NSS_DISABLE_DEPRECATED_SEED
+	CSRCS += deprecated/seed.c
+endif
+
+ifndef NSS_DISABLE_DEPRECATED_RC2
+	CSRCS += deprecated/alg2268.c
+endif
+
+ALL_CSRCS := $(CSRCS)
+
+ALL_HDRS =  \
+	cmac.h \
+	alghmac.h \
+	blake2b.h \
+	blapi.h \
+	blapit.h \
+	des.h \
+	ec.h \
+	loader.h \
+	rijndael.h \
+	camellia.h \
+	secmpi.h \
+	sha_fast.h \
+	sha256.h \
+	shsign.h \
+	vis_proto.h \
+	seed.h \
+	$(NULL)
+
+
+ifdef AES_GEN_VAL
+DEFINES += -DRIJNDAEL_GENERATE_VALUES
+else
+ifdef AES_GEN_VAL_M
+DEFINES += -DRIJNDAEL_GENERATE_VALUES_MACRO
+else
+DEFINES += -DRIJNDAEL_INCLUDE_TABLES
+endif
+endif

@@ -1,0 +1,63 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIStreamListener.idl"
+
+interface nsIDirIndex;
+
+/**
+ * This interface is used to receive contents of directory index listings
+ * from a protocol. They can then be transformed into an output format
+ * (such as rdf, html, etc)
+ */
+[scriptable, uuid(fae4e9a8-1dd1-11b2-b53c-8f3aa1bbf8f5)]
+interface nsIDirIndexListener : nsISupports {
+    /**
+     * Called for each directory entry
+     *
+     * @param request - the request
+     * @param ctxt - opaque parameter
+     * @param index - new index to add
+     */
+    void onIndexAvailable(in nsIRequest aRequest,
+                          in nsISupports aCtxt,
+                          in nsIDirIndex aIndex);
+
+    /**
+     * Called for each information line
+     *
+     * @param request - the request
+     * @param ctxt - opaque parameter
+     * @param info - new info to add
+     */
+    void onInformationAvailable(in nsIRequest aRequest,
+                                in nsISupports aCtxt,
+                                in AString aInfo);
+
+};
+
+/**
+ * A parser for application/http-index-format
+ */
+[scriptable, uuid(38e3066c-1dd2-11b2-9b59-8be515c1ee3f)]
+interface nsIDirIndexParser : nsIStreamListener {
+    /**
+     * The interface to use as a callback for new entries
+     */
+    attribute nsIDirIndexListener listener;
+
+    /**
+     * The comment given, if any
+     * This result is only valid _after_ OnStopRequest has occurred,
+     * because it can occur anywhere in the datastream
+     */
+    readonly attribute string comment;
+
+    /**
+     * The encoding to use
+     */
+    attribute string encoding;
+};
+

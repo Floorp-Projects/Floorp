@@ -1,0 +1,23 @@
+<!doctype html>
+<html class="reftest-wait">
+<div id="test" contenteditable>
+  <div id="first"></div>
+</div>
+<script>
+document.body.offsetTop;
+let anim = document.createElement('div');
+anim.animate({ color: ['red', 'green' ] }, 1000);
+first.appendChild(anim);
+
+let child = document.createElement('span');
+child.innerText = 'text';
+
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    anim.appendChild(child);
+    test.appendChild(anim);
+    document.documentElement.className = "";
+  });
+});
+</script>
+</html>

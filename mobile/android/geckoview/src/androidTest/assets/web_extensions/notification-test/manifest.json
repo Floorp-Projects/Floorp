@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "Notification test",
+  "version": "1.0",
+  "description": "Send a notification.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "notification@example.com"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "notifications"
+  ]
+}

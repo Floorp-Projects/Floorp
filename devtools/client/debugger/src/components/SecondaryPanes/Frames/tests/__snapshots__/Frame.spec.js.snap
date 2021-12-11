@@ -1,0 +1,476 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Frame getFrameTitle 1`] = `
+<div
+  className="frame"
+  key="1"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  role="listitem"
+  tabIndex={0}
+  title="Jump to https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js:10"
+>
+  <FrameIndent />
+  <FrameTitle
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "renderFoo",
+        "generatedLocation": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "id": "1",
+        "index": 0,
+        "location": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
+          "url": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
+  <FrameLocation
+    displayFullUrl={false}
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "renderFoo",
+        "generatedLocation": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "id": "1",
+        "index": 0,
+        "location": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
+          "url": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+  />
+  <br
+    className="clipboard-only"
+  />
+</div>
+`;
+
+exports[`Frame library frame 1`] = `
+<div
+  className="frame selected"
+  key="3"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  role="listitem"
+  tabIndex={0}
+>
+  <FrameIndent />
+  <FrameTitle
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "updateEvents",
+        "generatedLocation": Object {
+          "line": 12,
+          "sourceId": "source",
+        },
+        "id": "3",
+        "index": 0,
+        "library": "backbone",
+        "location": Object {
+          "line": 12,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "backbone.js",
+          "url": "backbone.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
+  <FrameLocation
+    displayFullUrl={false}
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "updateEvents",
+        "generatedLocation": Object {
+          "line": 12,
+          "sourceId": "source",
+        },
+        "id": "3",
+        "index": 0,
+        "library": "backbone",
+        "location": Object {
+          "line": 12,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "backbone.js",
+          "url": "backbone.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+  />
+  <br
+    className="clipboard-only"
+  />
+</div>
+`;
+
+exports[`Frame user frame (not selected) 1`] = `
+<div
+  className="frame"
+  key="1"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  role="listitem"
+  tabIndex={0}
+>
+  <FrameIndent />
+  <FrameTitle
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "renderFoo",
+        "generatedLocation": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "id": "1",
+        "index": 0,
+        "location": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "foo-view.js",
+          "url": "foo-view.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
+  <FrameLocation
+    displayFullUrl={false}
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "renderFoo",
+        "generatedLocation": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "id": "1",
+        "index": 0,
+        "location": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "foo-view.js",
+          "url": "foo-view.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+  />
+  <br
+    className="clipboard-only"
+  />
+</div>
+`;
+
+exports[`Frame user frame 1`] = `
+<div
+  className="frame selected"
+  key="1"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  role="listitem"
+  tabIndex={0}
+>
+  <FrameIndent />
+  <FrameTitle
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "renderFoo",
+        "generatedLocation": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "id": "1",
+        "index": 0,
+        "location": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "foo-view.js",
+          "url": "foo-view.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
+  <FrameLocation
+    displayFullUrl={false}
+    frame={
+      Object {
+        "asyncCause": null,
+        "displayName": "renderFoo",
+        "generatedLocation": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "id": "1",
+        "index": 0,
+        "location": Object {
+          "line": 10,
+          "sourceId": "source",
+        },
+        "scope": Object {
+          "actor": "scope-actor",
+          "bindings": Object {
+            "arguments": Array [],
+            "variables": Object {},
+          },
+          "function": null,
+          "object": null,
+          "parent": null,
+          "scopeKind": "",
+          "type": "block",
+        },
+        "source": Object {
+          "extensionName": null,
+          "id": "source",
+          "isBlackBoxed": false,
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "relativeUrl": "foo-view.js",
+          "url": "foo-view.js",
+        },
+        "state": "on-stack",
+        "this": Object {},
+        "thread": "FakeThread",
+        "type": "call",
+      }
+    }
+  />
+  <br
+    className="clipboard-only"
+  />
+</div>
+`;

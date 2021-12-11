@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebugger with frozen workers"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WINDOW1_URL = "WorkerDebugger_frozen_window1.html";
+    const WINDOW2_URL = "WorkerDebugger_frozen_window2.html";
+
+    const WORKER1_URL = "WorkerDebugger_frozen_worker1.js";
+    const WORKER2_URL = "WorkerDebugger_frozen_worker2.js";
+
+    function test() {
+      (async function() {
+        SimpleTest.waitForExplicitFinish();
+
+        SpecialPowers.pushPrefEnv({set:
+          [["browser.sessionhistory.max_total_viewers", 10]]});
+
+        let promise = waitForMultiple([
+          waitForRegister(WORKER1_URL),
+          waitForWindowMessage(window, "ready"),
+        ]);
+        let testWin = window.open(WINDOW1_URL, "testWin");;
+        let [dbg1] = await promise;
+        is(dbg1.isClosed, false,
+           "debugger for worker on page 1 should not be closed");
+
+        promise = waitForMultiple([
+          waitForUnregister(WORKER1_URL),
+          waitForDebuggerClose(dbg1),
+          waitForRegister(WORKER2_URL),
+          waitForWindowMessage(window, "ready"),
+        ]);
+        testWin.location = WINDOW2_URL;
+        let [,, dbg2] = await promise;
+        is(dbg1.isClosed, true,
+           "debugger for worker on page 1 should be closed");
+        is(dbg2.isClosed, false,
+           "debugger for worker on page 2 should not be closed");
+
+        promise = Promise.all([
+          waitForUnregister(WORKER2_URL),
+          waitForDebuggerClose(dbg2),
+          waitForRegister(WORKER1_URL)
+        ]);
+        testWin.history.back();
+        [,, dbg1] = await promise;
+        is(dbg1.isClosed, false,
+           "debugger for worker on page 1 should not be closed");
+        is(dbg2.isClosed, true,
+           "debugger for worker on page 2 should be closed");
+
+        SimpleTest.finish();
+      })();
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

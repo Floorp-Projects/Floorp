@@ -1,0 +1,17 @@
+<body>
+	<script>
+	    let touchEvents = ["touchstart", "touchmove", "touchend"];
+	    let pointerEvents = ["pointerdown", "pointermove", "pointerup"];
+
+	    touchEvents.forEach((event) => {
+	        document.addEventListener(event, (e) => {
+	            parent.postMessage("iframe1 " + e.type, "*");
+	        }, { once: true });
+	    });
+	    pointerEvents.forEach((event) => {
+	        document.addEventListener(event, (e) => {
+	            parent.postMessage("iframe1 " + e.type, "*");
+	        }, { once: true });
+	    });
+	</script>
+</body>

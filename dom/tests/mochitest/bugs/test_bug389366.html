@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=389366
+-->
+<head>
+  <title>Test for Bug 389366</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=389366">Mozilla Bug 389366</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <h4>Canvas testcase</h4>
+  
+  Canvas, with pixel set to #ff0000 at 50% opacity:<br>
+  <canvas id="canvas1" width="10" height="10"></canvas>
+  <br>
+  <canvas id="canvas2" width="10" height="10"></canvas>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test()
+{
+  // Draw to canvas1
+  var canvas1 = document.getElementById("canvas1");
+  var ctx1 = canvas1.getContext("2d");
+
+  ctx1.globalAlpha = 0.502;
+  ctx1.fillStyle = "#FF0000";
+  ctx1.fillRect(0, 0, 10, 10);
+
+  var data1 = ctx1.getImageData(0,0,1,1).data;
+  isDeeply(data1, [255, 0, 0, 128], "expected half-transparent red canvas 1");
+
+  // half-transparent red 10x10 square
+  var imgData = ctx1.createImageData(10, 10);
+  var rgba = [ 255, 0, 0, 128 ];
+  for (i = 0; i < 50; ++i) {
+    for (j = 0; j < 4; ++j) {
+      imgData.data[(i * 4) + j] = rgba[j];
+    }
+  }
+
+  var canvas2 = document.getElementById("canvas2");
+  var ctx2 = canvas2.getContext("2d");
+  ctx2.putImageData(imgData, 0, 0);
+
+  var data2 = ctx2.getImageData(0,0,1,1).data;
+  isDeeply(data2, [255, 0, 0, 128], "expected half-transparent red canvas 2");
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(test);
+
+</script>
+</pre>
+</body>
+</html>

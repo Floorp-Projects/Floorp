@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers extension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest();">
+
+<div id="content" style="display: none">
+  <canvas id="testcanvas" width="200" height="200">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var eventCount = 0;
+function testEventListener(e) {
+  ++eventCount;
+}
+
+function testEventListener2(e) {
+  ++eventCount;
+}
+
+function dispatchTestEvent() {
+  var e = document.createEvent("Event");
+  e.initEvent("TestEvent", true, true);
+  window.dispatchEvent(e);
+}
+
+dump("\nSPECIALPTEST:::Test script loaded " + (new Date).getTime() + "\n");
+SimpleTest.waitForExplicitFinish();
+var startTime = new Date();
+async function starttest(){
+  dump("\nSPECIALPTEST:::Test script running after load " + (new Date).getTime() + "\n");
+
+  /** Test for SpecialPowers extension **/
+  is(SpecialPowers.sanityCheck(), "foo", "check to see whether the Special Powers extension is installed.");
+
+  // Test a sync call into chrome
+  await SpecialPowers.setBoolPref('extensions.checkCompatibility', true);
+  is(SpecialPowers.getBoolPref('extensions.checkCompatibility'), true, "Check to see if we can set a preference properly");
+  await SpecialPowers.clearUserPref('extensions.checkCompatibility');
+
+  // Test a int pref
+  await SpecialPowers.setIntPref('extensions.foobar', 42);
+  is(SpecialPowers.getIntPref('extensions.foobar'), 42, "Check int pref");
+  await SpecialPowers.clearUserPref('extensions.foobar');
+
+  // Test a string pref
+  await SpecialPowers.setCharPref("extensions.foobaz", "hi there");
+  is(SpecialPowers.getCharPref("extensions.foobaz"), "hi there", "Check string pref");
+  await SpecialPowers.clearUserPref("extensions.foobaz");
+
+  // Test an invalid pref
+  var retVal = null;
+  // eslint-disable-next-line mozilla/use-default-preference-values
+  try {
+    retVal = SpecialPowers.getBoolPref('extensions.checkCompat0123456789');
+  } catch (ex) {
+    retVal = ex;
+  }
+  is(retVal.result, SpecialPowers.Cr.NS_ERROR_UNEXPECTED,
+     "received an exception trying to get an unset preference value");
+
+  SpecialPowers.addChromeEventListener("TestEvent", testEventListener, true, true);
+  SpecialPowers.addChromeEventListener("TestEvent", testEventListener2, true, false);
+  dispatchTestEvent();
+  is(eventCount, 1, "Should have got an event!");
+
+  SpecialPowers.removeChromeEventListener("TestEvent", testEventListener, true);
+  SpecialPowers.removeChromeEventListener("TestEvent", testEventListener2, true);
+  dispatchTestEvent();
+  is(eventCount, 1, "Shouldn't have got an event!");
+
+  // Test Complex Pref - TODO: Without chrome access, I don't know how you'd actually
+  // set this preference since you have to create an XPCOM object.
+  // Leaving untested for now.
+
+  // Test a DOMWindowUtils method and property
+  is(SpecialPowers.DOMWindowUtils.getClassName(window), "Proxy");
+  is(SpecialPowers.DOMWindowUtils.docCharsetIsForced, false);
+
+  // QueryInterface and getPrivilegedProps tests
+  is(SpecialPowers.can_QI(SpecialPowers), false);
+  let doc = SpecialPowers.wrap(document);
+  is(SpecialPowers.getPrivilegedProps(doc, "baseURIObject.fileName"), null,
+     "Should not have a fileName property yet");
+  let uri = SpecialPowers.getPrivilegedProps(doc, "baseURIObject");
+  ok(SpecialPowers.can_QI(uri));
+  ok(SpecialPowers.do_QueryInterface(uri, "nsIURL"));
+  is(SpecialPowers.getPrivilegedProps(doc, "baseURIObject.fileName"),
+     "test_SpecialPowersExtension.html",
+     "Should have a fileName property now");
+
+  //try to run garbage collection
+  SpecialPowers.gc();
+
+  //
+  // Test the SpecialPowers wrapper.
+  //
+
+  let fp = SpecialPowers.Cc["@mozilla.org/filepicker;1"].createInstance(SpecialPowers.Ci.nsIFilePicker);
+  is(fp.mode, SpecialPowers.Ci.nsIFilePicker.modeOpen, "Should be able to get props off privileged objects");
+  var testURI = SpecialPowers.Cc['@mozilla.org/network/standard-url-mutator;1']
+                             .createInstance(SpecialPowers.Ci.nsIURIMutator)
+                             .setSpec("http://www.foobar.org/")
+                             .finalize();
+  is(testURI.spec, "http://www.foobar.org/", "Getters/Setters should work correctly");
+  is(SpecialPowers.wrap(document).getElementsByTagName('details').length, 0, "Should work with proxy-based DOM bindings.");
+
+  // Play with the window object.
+  var docShell = SpecialPowers.wrap(window).docShell;
+  ok(docShell.browsingContext, "Able to pull properties off of docshell!");
+
+  // Make sure Xray-wrapped functions work.
+  try {
+    SpecialPowers.wrap(SpecialPowers.Components).ID('{00000000-0000-0000-0000-000000000000}');
+    ok(true, "Didn't throw");
+  }
+  catch (e) {
+    ok(false, "Threw while trying to call Xray-wrapped function.");
+  }
+
+  // Check constructors.
+  var BinaryInputStream = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/binaryinputstream;1");
+  var bis = new BinaryInputStream();
+  ok(/nsISupports/.exec(bis.toString()), "Should get the proper object out of the constructor");
+  function TestConstructor() {
+    SpecialPowers.wrap(this).foo = 2;
+  }
+  var WrappedConstructor = SpecialPowers.wrap(TestConstructor);
+  is((new WrappedConstructor()).foo, 2, "JS constructors work properly when wrapped");
+
+  // Try messing around with QuickStubbed getters/setters and make sure the wrapper deals.
+  var ctx = SpecialPowers.wrap(document).getElementById('testcanvas').getContext('2d');
+  var pixels = ctx.getImageData(0,0,1,1);
+  try {
+    pixels.data;
+    ok(true, "Didn't throw getting quickstubbed accessor prop from proto");
+  }
+  catch (e) {
+    ok(false, "Threw while getting quickstubbed accessor prop from proto");
+  }
+
+  // Check functions that return null.
+  var returnsNull = function() { return null; }
+  is(SpecialPowers.wrap(returnsNull)(), null, "Should be able to handle functions that return null.");
+
+  // Check a function that throws.
+  var thrower = function() { throw new Error('hah'); }
+  try {
+    SpecialPowers.wrap(thrower)();
+    ok(false, "Should have thrown");
+  } catch (e) {
+    ok(SpecialPowers.isWrapper(e), "Exceptions should be wrapped for call");
+    is(e.message, 'hah', "Correct message");
+  }
+  try {
+    var ctor = SpecialPowers.wrap(thrower);
+    new ctor();
+    ok(false, "Should have thrown");
+  } catch (e) {
+    ok(SpecialPowers.isWrapper(e), "Exceptions should be wrapped for construct");
+    is(e.message, 'hah', "Correct message");
+  }
+
+  // Play around with a JS object to check the non-xray path.
+  var noxray_proto = {a: 3, b: 12};
+  var noxray = {a: 5, c: 32};
+  noxray.__proto__ = noxray_proto;
+  var noxray_wrapper = SpecialPowers.wrap(noxray);
+  is(noxray_wrapper.c, 32, "Regular properties should work.");
+  is(noxray_wrapper.a, 5, "Shadow properties should work.");
+  is(noxray_wrapper.b, 12, "Proto properties should work.");
+  noxray.b = 122;
+  is(noxray_wrapper.b, 122, "Should be able to shadow.");
+
+  // Try setting file input values via an Xray wrapper.
+  SpecialPowers.wrap(document).title = "foo";
+  is(document.title, "foo", "Set property correctly on Xray-wrapped DOM object");
+  is(SpecialPowers.wrap(document).URI, document.URI, "Got property correctly on Xray-wrapped DOM object");
+
+  info("\nProfile::SpecialPowersRunTime: " + (new Date() - startTime) + "\n");
+
+  // bug 855192
+  ok(SpecialPowers.MockPermissionPrompt, "check mock permission prompt");
+
+  // Set a pref using pushPrefEnv to make sure that flushPrefEnv is
+  // automatically called before we invoke
+  // test_SpecialPowersExtension2.html.
+  SpecialPowers.pushPrefEnv({set: [['testing.some_arbitrary_pref', true]]},
+                            function() { SimpleTest.finish(); });
+}
+</script>
+</pre>
+</body>
+</html>

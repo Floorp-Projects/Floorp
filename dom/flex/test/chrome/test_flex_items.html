@@ -1,0 +1,316 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+  .container {
+    display: flex;
+    background-color: grey;
+    font: 14px sans-serif;
+    height: 50px;
+  }
+  #flex-sanity {
+    /* This just needs to be large enough so that no shrinking is required. */
+    width: 1600px;
+  }
+  .clamped-huge-item {
+    flex: 1 1 1650px; /* This needs to be bigger than #flex-sanity, to test
+                         the scenario it's aiming to test (early clamping of a
+                         flex item which, if left unclamped, would've reversed
+                         the direction of flexing & made everything shrink). */
+    max-width: 10px;
+  }
+
+  .base        { align-self: baseline; }
+  .lastbase    { align-self: last baseline; }
+
+  .offset      { margin-top: 10px;
+                 margin-bottom: 3px; }
+
+  .lime        { background: lime;   }
+  .yellow      { background: yellow; }
+  .orange      { background: orange; }
+  .pink        { background: pink;   }
+  .tan         { background: tan;    }
+  .white       { background: white;  }
+
+  .crossMinMax { min-height: 40px;
+                 max-height: 120px; }
+
+  .mainMinMax  { min-width: 120px;
+                 max-width: 500px; }
+
+  .flexGrow    { flex-grow: 1; }
+  .spacer150   { width: 150px;
+                 box-sizing: border-box;
+                 height: 10px;
+                 border: 1px solid teal; }
+
+</style>
+
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const TEXT_NODE = Node.TEXT_NODE;
+
+function testItemMatchesExpectedValues(item, values, index) {
+  if (typeof(values.node) != "undefined") {
+    is(item.node, values.node, "Item index " + index + " has expected node.");
+  }
+
+  if (typeof(values.mainBaseSize) != "undefined") {
+    is(item.mainBaseSize, values.mainBaseSize, "Item index " + index + " has expected mainBaseSize.");
+  }
+
+  if (typeof(values.mainDeltaSize) != "undefined") {
+    is(item.mainDeltaSize, values.mainDeltaSize, "Item index " + index + " has expected mainDeltaSize.");
+  }
+
+  if (typeof(values.mainMinSize) != "undefined") {
+    is(item.mainMinSize, values.mainMinSize, "Item index " + index + " has expected mainMinSize.");
+  }
+
+  if (typeof(values.mainMaxSize) != "undefined") {
+    is(item.mainMaxSize, values.mainMaxSize, "Item index " + index + " has expected mainMaxSize.");
+  } else {
+    // If we didn't specify an expected mainMaxSize, then it's implied
+    // that the max main-size property (max-width/max-height) is at its
+    // default "none" value, which our FlexItem API represents as +infinity.
+    is(item.mainMaxSize, Number.POSITIVE_INFINITY,
+       "Item index " + index + " has expected (default) mainMaxSize.");
+  }
+
+  if (typeof(values.crossMinSize) != "undefined") {
+    is(item.crossMinSize, values.crossMinSize, "Item index " + index + " has expected crossMinSize.");
+  }
+
+  if (typeof(values.crossMaxSize) != "undefined") {
+    is(item.crossMaxSize, values.crossMaxSize, "Item index " + index + " has expected crossMaxSize.");
+  } else {
+    // As above for mainMaxSize, no-expected-value implies we expect +infinity.
+    is(item.crossMaxSize, Number.POSITIVE_INFINITY,
+       "Item index " + index + " has expected (default) crossMaxSize.");
+  }
+}
+
+// Test for items in "flex-sanity" flex container:
+function testFlexSanity() {
+  let container = document.getElementById("flex-sanity");
+  let flex = container.getAsFlexContainer();
+  let lines = flex.getLines();
+  is(lines.length, 1, "Container should have expected number of lines.");
+
+  let line = lines[0];
+  let containerHeight = container.getBoundingClientRect().height;
+  is(line.crossSize, containerHeight,
+     "Line crossSize should equal the height of the container.");
+
+  // We can't compare baselines precisely, so we'll just confirm that they
+  // appear somewhere within the elements that determine them.
+  // (This assumes the first rect is baseline-aligned.)
+  let firstRect = container.firstElementChild.getBoundingClientRect();
+  ok(line.firstBaselineOffset > firstRect.top &&
+     line.firstBaselineOffset < firstRect.bottom,
+     "Line firstBaselineOffset should land somewhere within the element " +
+     "that determines it.");
+
+  // For last baseline, it's measured from the bottom, so we have to compare
+  // against the element bounds subtracted from the container height.
+  // We use the first node which uses last-baseline ("lb") alignment to
+  // provide the rect:
+  let lbElem = document.querySelector(".lastbase");
+  let lbElemBoundingRect = lbElem.getBoundingClientRect();
+  ok(line.lastBaselineOffset > containerHeight - lbElemBoundingRect.bottom &&
+     line.lastBaselineOffset < containerHeight - lbElemBoundingRect.top,
+     "Line lastBaselineOffset should land somewhere within the element" +
+     "that determines it.");
+
+  let expectedValues = [
+    { crossMinSize: 0 },
+    { mainBaseSize: 100,
+      mainDeltaSize: 0 },
+    { crossMinSize: 40,
+      crossMaxSize: 120,
+      mainDeltaSize: 0 },
+    { mainMinSize: 120,
+      mainMaxSize: 500,
+      mainDeltaSize: 0 },
+    { mainMinSize: 120,
+      mainMaxSize: 500,
+      mainBaseSize: 150,
+      mainDeltaSize: 0 },
+    { mainBaseSize:  10,
+      mainMaxSize:   5,
+      mainDeltaSize: 0 },
+    { mainBaseSize: 10,
+      mainMinSize:  15,
+      mainDeltaSize: 0 },
+    { mainBaseSize: 50,
+      mainMaxSize: 10 },
+    { mainBaseSize: 1650,
+      mainMaxSize: 10,
+      mainDeltaSize: 0 },
+    { mainDeltaSize: 0 },
+    { /* final item is anonymous flex item */ },
+  ];
+
+  let items = line.getItems();
+  is(items.length, expectedValues.length,
+     "Line should have expected number of items.");
+  is(items.length, container.children.length + 1,
+     "Line should have as many items as the flex container has child elems, " +
+     "plus 1 for anonymous flex item");
+
+  for (let i = 0; i < items.length; ++i) {
+    let item = items[i];
+    let values = expectedValues[i];
+    // set the expected node to the node we're currently iterating over,
+    // except for:
+    // - the display:contents element (whose item is its first child)
+    // - the final item (which is an anonymous flex item around text)
+    if (i < container.children.length) {
+      let curElem = container.children[i];
+      values.node = (curElem.style.display == "contents"
+                     ? curElem.firstElementChild
+                     : curElem);
+    } else {
+      is(container.lastChild.nodeType, TEXT_NODE,
+         "container's last child should be a text node");
+      values.node = container.lastChild;
+    }
+    testItemMatchesExpectedValues(item, values, i);
+  }
+
+  // Check that the delta size of the first item is (roughly) equal to the
+  // actual size minus the base size.
+  isfuzzy(items[0].mainDeltaSize, firstRect.width - items[0].mainBaseSize, 1e-4,
+          "flex-grow item should have expected mainDeltaSize.");
+}
+
+// Test for items in "flex-growing" flex container:
+function testFlexGrowing() {
+  let expectedValues = [
+    { mainBaseSize:  10,
+      mainDeltaSize: 10,
+      mainMinSize:   35 },
+    { mainBaseSize:  20,
+      mainDeltaSize: 5,
+      mainMinSize:   28 },
+    { mainBaseSize:  30,
+      mainDeltaSize: 7  },
+    { mainBaseSize:  0,
+      mainDeltaSize: 48,
+      mainMaxSize:   20 },
+  ];
+
+  let container = document.getElementById("flex-growing");
+  let items = container.getAsFlexContainer().getLines()[0].getItems();
+  is(items.length, container.children.length,
+     "Line should have as many items as the flex container has child elems");
+
+  for (let i = 0; i < items.length; ++i) {
+    let item = items[i];
+    let values = expectedValues[i];
+    testItemMatchesExpectedValues(item, values, i);
+  }
+}
+
+function runTests() {
+  testFlexSanity();
+  testFlexGrowing();
+  SimpleTest.finish();
+}
+</script>
+</head>
+
+<body onLoad="runTests();">
+  <!-- First flex container to be tested: "flex-sanity".
+       We test a few general things, e.g.:
+       - accuracy of reported baselines.
+       - accuracy of reported flex base size, min/max sizes, & trivial deltas.
+       - flex items formation for display:contents subtrees & text nodes.
+   -->
+  <div id="flex-sanity" class="container">
+    <div class="lime base flexGrow">one line (first)</div>
+    <div class="yellow lastbase" style="width: 100px">one line (last)</div>
+    <div class="orange offset lastbase crossMinMax">two<br/>lines and offset (last)</div>
+    <div class="pink offset base mainMinMax">offset (first)</div>
+    <!-- Inflexible item w/ content-derived flex base size, which has min/max
+         but doesn't violate them: -->
+    <div class="tan mainMinMax">
+      <div class="spacer150"></div>
+    </div>
+    <!-- Inflexible item that is trivially clamped to smaller max-width: -->
+    <div style="flex: 0 0 10px; max-width: 5px"></div>
+    <!-- Inflexible item that is trivially clamped to larger min-width: -->
+    <div style="flex: 0 0 10px; min-width: 15px"></div>
+    <!-- Item that wants to grow but is trivially clamped to max-width
+         below base size: -->
+    <div style="flex: 1 1 50px; max-width: 10px"></div>
+    <div class="clamped-huge-item"></div>
+    <div style="display:contents">
+      <div class="white">replaced</div>
+    </div>
+    anon item for text
+  </div>
+
+  <!-- Second flex container to be tested, with items that grow by specific
+       predictable amounts. This ends up triggering 4 passes of the main
+       flexbox layout algorithm loop - and note that for each item, we only
+       report (via 'mainDeltaSize') the delta that it wanted in the *last pass
+       of the loop before that item was frozen*.
+
+       Here's what goes on in each pass (and the tentative deltas)
+     * PASS 1
+        - Available space = 120 - 10 - 20 - 30 - 0 = 60px.
+        - Sum of flex values = 1+1+2+16 = 20. So 1 "share" is 60px/20 = 3px.
+        - Deltas (space distributed): +3px, +3px, +6px, +48px
+          VIOLATIONS:
+            item0 is now 10+3 = 13px, which under its min
+            item1 is now 20+3 = 23px, which under its min
+            item3 is now 0+48 = 48px, which over its max
+        - the magnitude of max-violations (how far we're out of bounds) exceeds
+          magnitude of min-violations, so we prioritize the max-violations.
+        - So we freeze item3 at its max-width, 20px, leaving its final "desired"
+          mainDeltaSize at +48px from this pass.
+
+     * PASS 2
+        - Available space = 120 - 10 - 20 - 30 - 20 = 40px.
+        - Sum of flex values = 1+1+2 = 4. So 1 "share" is 40px/4 = 10px.
+        - Deltas (space distributed): +10px, +10px, +20px, +0px.
+          VIOLATIONS:
+            item0 is now 10+10 = 20px, which is under its min
+        - So we freeze item0 at its min-width, 35px, leaving its final "desired"
+          mainDeltaSize at +10px from this pass.
+
+     * PASS 3
+        - Available space = 120 - 35 - 20 - 30 - 20 = 15px.
+        - Sum of flex values = 1+2 = 3. So 1 "share" is 15px/3 = 5px.
+        - Deltas (space distributed): +0px, +5px, +10px, +0px.
+          VIOLATIONS:
+            item1 is now 20+5 = 25px, which is under its min
+        - So we freeze item1 at its min-width, 28px, leaving its final "desired"
+          mainDeltaSize at +5px from this pass.
+
+     * PASS 4
+        - Available space = 120 - 35 - 28 - 30 - 20 = 7px.
+        - Sum of flex values = 2. So 1 "share" is 7px/2 = 3.5px
+        - Deltas (space distributed): +0px, +0px, +7px, +0px.
+          VIOLATIONS:
+            None! (So, we'll be done after this pass!)
+        - So we freeze item2 (the only unfrozen item) at its flexed size, 37px,
+          and set its final "desired" mainDeltaSize to +7px from this pass.
+        - And we're done!
+       -->
+  <div id="flex-growing" class="container" style="width: 120px">
+    <div style="flex: 1 10px; min-width: 35px"></div>
+    <div style="flex: 1 20px; min-width: 28px"></div>
+    <div style="flex: 2 30px; min-width: 0"></div>
+    <div style="flex: 16 0px; max-width: 20px"></div>
+  </div>
+</body>
+</html>

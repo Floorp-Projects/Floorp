@@ -1,0 +1,84 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBDatabaseFile;
+include protocol PBackgroundIDBDatabaseRequest;
+include protocol PBackgroundIDBFactory;
+include protocol PBackgroundIDBTransaction;
+include protocol PBackgroundIDBVersionChangeTransaction;
+include protocol PBackgroundMutableFile;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
+include protocol PRemoteLazyInputStream; // FIXME: bug 792908
+
+include IPCBlob;
+include InputStreamParams;
+include PBackgroundIDBSharedTypes;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
+
+using mozilla::dom::IDBTransaction::Mode
+  from "mozilla/dom/IDBTransaction.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct CreateFileParams
+{
+  nsString name;
+  nsString type;
+};
+
+union DatabaseRequestParams
+{
+  CreateFileParams;
+};
+
+sync protocol PBackgroundIDBDatabase
+{
+  manager PBackgroundIDBFactory;
+
+  manages PBackgroundIDBDatabaseFile;
+  manages PBackgroundIDBDatabaseRequest;
+  manages PBackgroundIDBTransaction;
+  manages PBackgroundIDBVersionChangeTransaction;
+  manages PBackgroundMutableFile;
+
+parent:
+  async DeleteMe();
+
+  async Blocked();
+
+  async Close();
+
+  async PBackgroundIDBDatabaseFile(IPCBlob blob);
+
+  async PBackgroundIDBDatabaseRequest(DatabaseRequestParams params);
+
+  async PBackgroundIDBTransaction(nsString[] objectStoreNames, Mode mode);
+
+child:
+  async __delete__();
+
+  async VersionChange(uint64_t oldVersion, uint64_t? newVersion);
+
+  async Invalidate();
+
+  async CloseAfterInvalidationComplete();
+
+  async PBackgroundIDBVersionChangeTransaction(uint64_t currentVersion,
+                                               uint64_t requestedVersion,
+                                               int64_t nextObjectStoreId,
+                                               int64_t nextIndexId);
+
+  async PBackgroundMutableFile(nsString name, nsString type);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

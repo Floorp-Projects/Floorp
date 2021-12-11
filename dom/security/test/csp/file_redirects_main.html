@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>CSP redirect tests</title>
+</head>
+<body>
+<div id="container"></div>
+</body>
+
+<script>
+var thisSite = "http://mochi.test:8888";
+var otherSite = "http://example.com";
+var page = "/tests/dom/security/test/csp/file_redirects_page.sjs";
+
+var tests = { "font-src": thisSite+page+"?testid=font-src",
+              "frame-src": thisSite+page+"?testid=frame-src",
+              "img-src":  thisSite+page+"?testid=img-src",
+              "media-src":  thisSite+page+"?testid=media-src",
+              "object-src":  thisSite+page+"?testid=object-src",
+              "script-src":  thisSite+page+"?testid=script-src",
+              "style-src":  thisSite+page+"?testid=style-src",
+              "xhr-src":  thisSite+page+"?testid=xhr-src",
+              "from-worker": thisSite+page+"?testid=from-worker",
+              "from-blob-worker": thisSite+page+"?testid=from-blob-worker",
+              "img-src-from-css":  thisSite+page+"?testid=img-src-from-css",
+            };
+
+var container = document.getElementById("container");
+
+// load each test in its own iframe
+for (tid in tests) {
+  var i = document.createElement("iframe");
+  i.id = tid;
+  i.src = tests[tid];
+  container.appendChild(i);
+}
+</script>
+</html>

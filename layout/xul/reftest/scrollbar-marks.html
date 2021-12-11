@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+  function doTest() {
+    window.setScrollMarks([20]);
+    document.documentElement.removeAttribute("class");
+  }
+</script>
+</head>
+<body onload="doTest()">
+  <p>This is some text</p>
+  <p style="height: 1000px;">Box 1</p>
+  <p>This is some text</p>
+  <p style="height: 1000px;">Box 2</p>
+  <p>This is some text</p>
+</body>
+</html>

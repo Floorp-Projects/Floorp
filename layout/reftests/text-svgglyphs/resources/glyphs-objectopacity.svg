@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<!--
+    Test SVG glyphs for text object opacity inheritance
+    Covers glyph ID range 53 (R) to 60 (Y)
+-->
+  <!-- R -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    fill="context-fill" stroke="context-stroke"
+    fill-opacity="context-fill-opacity"
+    stroke-opacity="context-stroke-opacity" id="glyph53"/>
+
+  <!-- S -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    fill="context-fill" stroke="context-stroke"
+    fill-opacity="context-stroke-opacity"
+    stroke-opacity="context-fill-opacity" id="glyph54"/>
+
+  <!-- T -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    fill="context-stroke" stroke="context-fill"
+    fill-opacity="context-fill-opacity"
+    stroke-opacity="context-stroke-opacity" id="glyph55"/>
+
+  <!-- U -->
+  <!--  Test for bug where explicit `inherit' would fail for
+      *-opacity="objectStrokeOpacity" or "objectFillOpacity" -->
+  <g style="fill-opacity : context-stroke-opacity; stroke-opacity : context-fill-opacity">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+      fill="context-stroke" stroke="context-fill"
+      fill-opacity="inherit" stroke-opacity="inherit" id="glyph56"/>
+  </g>
+
+  <!-- W -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    fill="darkorchid" stroke="goldenrod"
+    fill-opacity="context-fill-opacity"
+    stroke-opacity="context-stroke-opacity" id="glyph58"/>
+
+  <!-- X -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    fill="darkorchid" stroke="goldenrod"
+    fill-opacity="context-stroke-opacity"
+    stroke-opacity="context-fill-opacity" id="glyph59"/>
+
+  <style type="text/css"><![CDATA[
+  #glyph60 {
+    fill-opacity : context-fill-opacity;
+    stroke-opacity : context-stroke-opacity;
+  }
+  #ychild {
+    color-interpolation : sRGB;
+  }
+  ]]></style>
+  <!-- Y -->
+  <g id="glyph60">
+    <rect x="100" y="-900" width="800" height="300" stroke="red" stroke-width="50"/>
+    <rect x="100" y="-400" width="800" height="300" stroke="red" stroke-width="50" id="ychild" />
+  </g>
+</svg>

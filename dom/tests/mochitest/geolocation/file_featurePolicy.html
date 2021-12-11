@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+resume_geolocationProvider(function() {
+  force_prompt(true, test_currentPosition);
+});
+
+let tests = [];
+
+function test_currentPosition() {
+  navigator.geolocation.getCurrentPosition(() => {
+    tests.push("allowed");
+    test_watchPosition();
+  }, () => {
+    tests.push("denied");
+    test_watchPosition();
+  })
+}
+
+function test_watchPosition() {
+  navigator.geolocation.watchPosition(() => {
+    tests.push("allowed");
+    send_results();
+  }, () => {
+    tests.push("denied");
+    send_results();
+  });
+}
+
+function send_results() {
+  if (tests.length != 2 || tests[0] != tests[1]) {
+    parent.continueTest("error");
+    return;
+  }
+
+  parent.continueTest(tests[0]);
+}
+
+</script>
+</body>
+</html>

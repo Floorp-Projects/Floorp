@@ -1,0 +1,291 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIBFCacheEntry;
+interface nsISHEntry;
+interface nsISHistoryListener;
+interface nsIURI;
+webidl BrowsingContext;
+
+%{C++
+#include "nsTArrayForwardDeclare.h"
+#include "mozilla/Maybe.h"
+struct EntriesAndBrowsingContextData;
+namespace mozilla {
+namespace dom {
+class SHEntrySharedParentState;
+} // namespace dom
+} // namespace mozilla
+%}
+
+[ref] native nsDocshellIDArray(nsTArray<nsID>);
+native MaybeInt32(mozilla::Maybe<int32_t>);
+[ptr] native SHEntrySharedParentStatePtr(mozilla::dom::SHEntrySharedParentState);
+/**
+ * An interface to the primary properties of the Session History
+ * component. In an embedded browser environment, the nsIWebBrowser
+ * object creates an instance of session history for each open window.
+ * A handle to the session history object can be obtained from
+ * nsIWebNavigation. In a non-embedded situation, the  owner of the
+ * session history component must create a instance of it and set
+ * it in the nsIWebNavigation object.
+ * This interface is accessible from javascript.
+ */
+
+[builtinclass, scriptable, uuid(7b807041-e60a-4384-935f-af3061d8b815)]
+interface nsISHistory: nsISupports
+{
+  /**
+   * A readonly property of the interface that returns
+   * the number of toplevel documents currently available
+   * in session history.
+   */
+  [infallible] readonly attribute long count;
+
+  /**
+   * The index of the current document in session history. Not infallible
+   * because setting can fail if the assigned value is out of range.
+   */
+  attribute long index;
+
+  /**
+   * A readonly property of the interface that returns
+   * the index of the last document that started to load and
+   * didn't finished yet. When document finishes the loading
+   * value -1 is returned.
+   */
+  [infallible] readonly attribute long requestedIndex;
+
+  /**
+   * Artifically set the |requestedIndex| for this nsISHEntry to the given
+   * index. This is used when resuming a cross-process load from a different
+   * process.
+   */
+  [noscript, notxpcom]
+  void internalSetRequestedIndex(in long aRequestedIndex);
+
+  /**
+   * Get the history entry at a given index. Returns non-null on success.
+   *
+   * @param index             The index value whose entry is requested.
+   *                          The oldest entry is located at index == 0.
+   * @return                  The found entry; never null.
+   */
+  nsISHEntry getEntryAtIndex(in long aIndex);
+
+  /**
+   * Called to purge older documents from history.
+   * Documents can be removed from session history for various
+   * reasons. For example to  control memory usage of the browser, to
+   * prevent users from loading documents from history, to erase evidence of
+   * prior page loads etc...
+   *
+   * @param numEntries        The number of toplevel documents to be
+   *                          purged from history. During purge operation,
+   *                          the latest documents are maintained and older
+   *                          'numEntries' documents are removed from history.
+   * @throws                  <code>NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA</code>
+   *                          Purge was vetod.
+   * @throws                  <code>NS_ERROR_FAILURE</code> numEntries is
+   *                          invalid or out of bounds with the size of history.
+   */
+  void purgeHistory(in long aNumEntries);
+
+  /**
+   * Called to register a listener for the session history component.
+   * Listeners are notified when pages are loaded or purged from history.
+   *
+   * @param aListener         Listener object to be notified for all
+   *                          page loads that initiate in session history.
+   *
+   * @note                    A listener object must implement
+   *                          nsISHistoryListener and nsSupportsWeakReference
+   *
+   * @see nsISHistoryListener
+   * @see nsSupportsWeakReference
+   */
+  void addSHistoryListener(in nsISHistoryListener aListener);
+
+  /**
+   * Called to remove a listener for the session history component.
+   * Listeners are notified when pages are loaded from history.
+   *
+   * @param aListener         Listener object to be removed from
+   *                          session history.
+   *
+   * @note                    A listener object must implement
+   *                          nsISHistoryListener and nsSupportsWeakReference
+   * @see nsISHistoryListener
+   * @see nsSupportsWeakReference
+   */
+  void removeSHistoryListener(in nsISHistoryListener aListener);
+
+  void reloadCurrentEntry();
+
+  /**
+   * Load the entry at the particular index.
+   */
+  [noscript]
+  void gotoIndex(in long aIndex, in boolean aUserActivation);
+
+  /**
+   * If an element exists at the particular index and
+   * whether it has user interaction.
+   */
+  [noscript,notxpcom]
+  boolean hasUserInteractionAtIndex(in long aIndex);
+
+  /**
+   * Called to obtain the index to a given history entry.
+   *
+   * @param aEntry            The entry to obtain the index of.
+   *
+   * @return                  <code>NS_OK</code> index for the history entry
+   *                          is obtained successfully.
+   *                          <code>NS_ERROR_FAILURE</code> Error in obtaining
+   *                          index for the given history entry.
+   */
+  [noscript, notxpcom]
+  long getIndexOfEntry(in nsISHEntry aEntry);
+
+  /**
+   * Add a new Entry to the History List.
+   *
+   * @param aEntry            The entry to add.
+   * @param aPersist          If true this specifies that the entry should
+   *                          persist in the list. If false, this means that
+   *                          when new entries are added this element will not
+   *                          appear in the session history list.
+   */
+  void addEntry(in nsISHEntry aEntry, in boolean aPersist);
+
+  /**
+   * Update the index maintained by sessionHistory
+   */
+  void updateIndex();
+
+  /**
+   * Replace the nsISHEntry at a particular index
+   *
+   * @param aIndex            The index at which the entry should be replaced.
+   * @param aReplaceEntry     The replacement entry for the index.
+   */
+  void replaceEntry(in long aIndex, in nsISHEntry aReplaceEntry);
+
+  /**
+   * Notifies all registered session history listeners about an impending
+   * reload.
+   *
+   * @return                  Whether the operation can proceed.
+   */
+  boolean notifyOnHistoryReload();
+
+  /**
+   * Evict content viewers which don't lie in the "safe" range around aIndex.
+   * In practice, this should leave us with no more than gHistoryMaxViewers
+   * viewers associated with this SHistory object.
+   *
+   * Also make sure that the total number of content viewers in all windows is
+   * not greater than our global max; if it is, evict viewers as appropriate.
+   *
+   * @param aIndex           The index around which the "safe" range is
+   *                         centered.  In general, if you just navigated the
+   *                         history, aIndex should be the index history was
+   *                         navigated to.
+   */
+  void evictOutOfRangeContentViewers(in long aIndex);
+
+  /**
+   * Evict the content viewer associated with a bfcache entry that has timed
+   * out.
+   */
+  [noscript, notxpcom]
+  void evictExpiredContentViewerForEntry(in SHEntrySharedParentStatePtr aEntry);
+
+  /**
+   * Evict all the content viewers in this session history
+   */
+  void evictAllContentViewers();
+
+  /**
+   * Add a BFCache entry to expiration tracker so it gets evicted on
+   * expiration.
+   */
+  [noscript, notxpcom]
+  void addToExpirationTracker(in SHEntrySharedParentStatePtr aEntry);
+
+  /**
+   * Remove a BFCache entry from expiration tracker.
+   */
+  [noscript, notxpcom]
+  void removeFromExpirationTracker(in SHEntrySharedParentStatePtr aEntry);
+
+  /**
+   * Remove dynamic entries found at given index.
+   *
+   * @param aIndex           Index to remove dynamic entries from. It will be
+   *                         passed to RemoveEntries as aStartIndex.
+   * @param aEntry (optional)  The entry to start looking in for dynamic
+   *                         entries. Only the dynamic descendants of the
+   *                         entry will be removed. If not given, all dynamic
+   *                         entries at the index will be removed.
+   */
+  [noscript, notxpcom]
+  void RemoveDynEntries(in long aIndex, in nsISHEntry aEntry);
+
+  /**
+   * Similar to RemoveDynEntries, but instead of specifying an index, use the
+   * given BFCacheEntry to find the index and remove dynamic entries from the
+   * index.
+   *
+   * The method takes no effect if the bfcache entry is not or no longer hold
+   * by the SHistory instance.
+   *
+   * @param aEntry           The bfcache entry to look up for index to remove
+   *                         dynamic entries from.
+   */
+  [noscript, notxpcom]
+  void RemoveDynEntriesForBFCacheEntry(in nsIBFCacheEntry aEntry);
+
+  /**
+   * Removes entries from the history if their docshellID is in
+   * aIDs array.
+   */
+  [noscript, notxpcom]
+  void RemoveEntries(in nsDocshellIDArray aIDs, in long aStartIndex);
+
+  /**
+   * Collect docshellIDs from aEntry's children and remove those
+   * entries from history.
+   *
+   * @param aEntry           Children docshellID's will be collected from
+   *                         this entry and passed to RemoveEntries as aIDs.
+  */
+  [noscript, notxpcom]
+  void RemoveFrameEntries(in nsISHEntry aEntry);
+
+  [noscript]
+  void Reload(in unsigned long aReloadFlags);
+
+  [notxpcom] void EnsureCorrectEntryAtCurrIndex(in nsISHEntry aEntry);
+
+  [notxpcom] void EvictContentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in bool aReplace);
+
+  nsISHEntry createEntry();
+
+  [noscript] void AddToRootSessionHistory(in bool aCloneChildren, in nsISHEntry aOSHE,
+                                          in BrowsingContext aRootBC, in nsISHEntry aEntry,
+                                          in unsigned long aLoadType,
+                                          in bool aShouldPersist,
+                                          out MaybeInt32 aPreviousEntryIndex,
+                                          out MaybeInt32 aLoadedEntryIndex);
+
+  [noscript] void AddChildSHEntryHelper(in nsISHEntry aCloneRef, in nsISHEntry aNewEntry,
+                                        in BrowsingContext aRootBC, in bool aCloneChildren);
+
+  [noscript, notxpcom] boolean isEmptyOrHasEntriesForSingleTopLevelPage();
+};

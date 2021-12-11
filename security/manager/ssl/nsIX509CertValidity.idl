@@ -1,0 +1,72 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Information on the validity period of a X.509 certificate.
+ */
+[scriptable, uuid(e701dfd8-1dd1-11b2-a172-ffa6cc6156ad)]
+interface nsIX509CertValidity : nsISupports {
+
+  /**
+   *  The earliest point in time where
+   *  a certificate is valid.
+   */
+  readonly attribute PRTime notBefore;
+
+  /**
+   *  "notBefore" attribute formatted as a time string
+   *  according to the environment locale,
+   *  according to the environment time zone.
+   */
+  [must_use]
+  readonly attribute AString notBeforeLocalTime;
+
+  /**
+   *  The day portion of "notBefore" formatted as a time string
+   *  according to the environment locale,
+   *  according to the environment time zone.
+   */
+  readonly attribute AString notBeforeLocalDay;
+
+  /**
+   *  "notBefore" attribute formatted as a string
+   *  according to the environment locale,
+   *  displayed as GMT / UTC.
+   */
+  [must_use]
+  readonly attribute AString notBeforeGMT;
+
+  /**
+   *  The latest point in time where
+   *  a certificate is valid.
+   */
+  readonly attribute PRTime notAfter;
+
+  /**
+   *  "notAfter" attribute formatted as a time string
+   *  according to the environment locale,
+   *  according to the environment time zone.
+   */
+  [must_use]
+  readonly attribute AString notAfterLocalTime;
+
+  /**
+   *  The day portion of "notAfter" formatted as a time string
+   *  according to the environment locale,
+   *  according to the environment time zone.
+   */
+  readonly attribute AString notAfterLocalDay;
+
+  /**
+   *  "notAfter" attribute formatted as a time string
+   *  according to the environment locale,
+   *  displayed as GMT / UTC.
+   */
+  [must_use]
+  readonly attribute AString notAfterGMT;
+};

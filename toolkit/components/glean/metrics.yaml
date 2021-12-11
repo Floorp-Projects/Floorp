@@ -1,0 +1,100 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by the Glean SDK. They are
+# automatically converted to platform-specific code at build time using the
+# `glean_parser` PyPI package.
+
+# This file is presently for Internal FOG Use Only.
+# You should not add metrics here until probably about January of 2021.
+# If you're looking for the metrics.yaml for Geckoveiw Streaming Telemetry,
+# you can find that one in toolkit/components/telemetry/geckoview/streaming.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+fog:
+  initialization:
+    type: timespan
+    time_unit: nanosecond
+    description: |
+      Time the FOG initialization takes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1662123
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1662123#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - jrediger@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+  failed_idle_registration:
+    type: boolean
+    lifetime: application
+    description: |
+      True if we failed to register with the idle service. Absent otherwise.
+      Means IPC probably isn't working well.
+      Child-process data will likely be absent, or incomplete.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+fog.ipc:
+  replay_failures:
+    type: counter
+    description: |
+      The number of times the ipc buffer failed to be replayed in the
+      parent process.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+  buffer_sizes:
+    type: memory_distribution
+    memory_unit: byte
+    description: |
+      The number and size of the IPC buffers being received over FOG IPC.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+  flush_durations:
+    type: timing_distribution
+    time_unit: microsecond
+    description: |
+      The length of time between asking the child processes for their
+      IPC buffers and all of them being received by the parent.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never

@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various mouse tests that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var subtests = [
+  // Sanity test to synthesize a mouse click
+  {"file": "helper_click.html?dtc=false"},
+  // Same as above, but with a dispatch-to-content region that exercises the
+  // main-thread notification codepaths for mouse events
+  {"file": "helper_click.html?dtc=true"},
+  // Sanity test for click but with some mouse movement between the down and up
+  {"file": "helper_drag_click.html"},
+  // Test for dragging on the scrollbar of the root scrollable element works.
+  // This takes different codepaths with async zooming support enabled and
+  // disabled, and so needs to be tested separately for both.
+  {"file": "helper_drag_root_scrollbar.html", "prefs": [["apz.allow_zooming", false]]},
+  {"file": "helper_drag_root_scrollbar.html", "prefs": [["apz.allow_zooming", true]]},
+  // Test for dragging on a fake-scrollbar element that scrolls the page
+  {"file": "helper_drag_scroll.html"},
+  // Test for dragging the scrollbar with a fixed-pos element overlaying it
+  {"file": "helper_bug1346632.html"},
+  // Test for scrollbar-dragging on a scrollframe that's inactive
+  {"file": "helper_bug1326290.html"},
+  // Test for scrollbar-dragging on a scrollframe inside an SVGEffects
+  {"file": "helper_bug1331693.html"},
+  // Test for scrollbar-dragging on a transformed scrollframe inside a fixed-pos item
+  {"file": "helper_bug1462961.html"},
+  // Scrollbar dragging where we exercise the snapback behaviour by moving the
+  // mouse away from the scrollbar during drag
+  {"file": "helper_scrollbar_snap_bug1501062.html"},
+  // Tests for scrollbar-dragging on scrollframes inside nested transforms
+  {"file": "helper_bug1490393.html"},
+  {"file": "helper_bug1490393-2.html"},
+  // Scrollbar-dragging on scrollframes inside filters inside transforms
+  {"file": "helper_bug1550510.html"},
+  // Drag-select some text after reconstructing the RSF of a non-RCD to ensure
+  // the pending visual offset update doesn't get stuck
+  {"file": "helper_visualscroll_nonrcd_rsf.html"},
+  // Scrollbar-dragging on scrollframes inside nested transforms with scale
+  {"file": "helper_bug1662800.html"},
+  // Scrollbar-dragging on subframe with enclosing translation transform
+  {"file": "helper_drag_bug1719913.html"},
+];
+
+// Android, mac, and linux (at least in our automation) do not have scrollbar buttons.
+if (getPlatform() == "windows") {
+  subtests.push(
+    // Basic test that click and hold on a scrollbar button works as expected
+    { file: "helper_scrollbarbutton_repeat.html", "prefs": [["general.smoothScroll", false]] }
+  );
+}
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectAssertions(0, 2); // from helper_bug1550510.html, bug 1232856
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

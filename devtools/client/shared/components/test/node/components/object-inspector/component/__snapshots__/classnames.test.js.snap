@@ -1,0 +1,348 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - classnames has the expected class 1`] = `
+<div
+  className="tree object-inspector"
+  onBlur={[Function]}
+  onFocus={[Function]}
+  onKeyDown={[Function]}
+  onKeyPress={[Function]}
+  onKeyUp={[Function]}
+  role="tree"
+  style={Object {}}
+  tabIndex="0"
+>
+  <TreeNode
+    active={false}
+    depth={0}
+    expanded={false}
+    focused={false}
+    id="root"
+    index={0}
+    isExpandable={false}
+    item={
+      Object {
+        "contents": Object {
+          "value": 42,
+        },
+        "name": "root",
+        "path": "root",
+      }
+    }
+    key="root-inactive"
+    onClick={[Function]}
+    onCollapse={[Function]}
+    onExpand={[Function]}
+    renderItem={[Function]}
+    shouldItemUpdate={[Function]}
+  >
+    <div
+      aria-level={1}
+      className="tree-node"
+      data-expandable={false}
+      id="root"
+      onClick={[Function]}
+      onKeyDownCapture={null}
+      role="treeitem"
+    >
+      <ObjectInspectorItem
+        addWatchpoint={[Function]}
+        arrow={null}
+        autoExpandDepth={0}
+        closeObjectInspector={[Function]}
+        depth={0}
+        evaluations={Map {}}
+        expanded={false}
+        expandedPaths={Set {}}
+        focused={false}
+        invokeGetter={[Function]}
+        item={
+          Object {
+            "contents": Object {
+              "value": 42,
+            },
+            "name": "root",
+            "path": "root",
+          }
+        }
+        loadedProperties={Map {}}
+        nodeCollapse={[Function]}
+        nodeExpand={[Function]}
+        nodeLoadProperties={[Function]}
+        nodePropertiesLoaded={[Function]}
+        onContextMenu={[Function]}
+        removeWatchpoint={[Function]}
+        renderItemActions={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": 42,
+              },
+              "name": "root",
+              "path": "root",
+            },
+          ]
+        }
+        rootsChanged={[Function]}
+        setExpanded={[Function]}
+      >
+        <div
+          className="node object-node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <span
+            className="object-label"
+          >
+            root
+          </span>
+          <span
+            className="object-delimiter"
+          >
+            : 
+          </span>
+          <span
+            className="objectBox objectBox-number"
+            title={null}
+          >
+            42
+          </span>
+        </div>
+      </ObjectInspectorItem>
+    </div>
+  </TreeNode>
+</div>
+`;
+
+exports[`ObjectInspector - classnames has the inline class when inline prop is true 1`] = `
+<div
+  className="tree object-inspector inline"
+  onBlur={[Function]}
+  onFocus={[Function]}
+  onKeyDown={[Function]}
+  onKeyPress={[Function]}
+  onKeyUp={[Function]}
+  role="tree"
+  style={Object {}}
+  tabIndex="0"
+>
+  <TreeNode
+    active={false}
+    depth={0}
+    expanded={false}
+    focused={false}
+    id="root"
+    index={0}
+    isExpandable={false}
+    item={
+      Object {
+        "contents": Object {
+          "value": 42,
+        },
+        "name": "root",
+        "path": "root",
+      }
+    }
+    key="root-inactive"
+    onClick={[Function]}
+    onCollapse={[Function]}
+    onExpand={[Function]}
+    renderItem={[Function]}
+    shouldItemUpdate={[Function]}
+  >
+    <div
+      aria-level={1}
+      className="tree-node"
+      data-expandable={false}
+      id="root"
+      onClick={[Function]}
+      onKeyDownCapture={null}
+      role="treeitem"
+    >
+      <ObjectInspectorItem
+        addWatchpoint={[Function]}
+        arrow={null}
+        autoExpandDepth={0}
+        closeObjectInspector={[Function]}
+        depth={0}
+        evaluations={Map {}}
+        expanded={false}
+        expandedPaths={Set {}}
+        focused={false}
+        inline={true}
+        invokeGetter={[Function]}
+        item={
+          Object {
+            "contents": Object {
+              "value": 42,
+            },
+            "name": "root",
+            "path": "root",
+          }
+        }
+        loadedProperties={Map {}}
+        nodeCollapse={[Function]}
+        nodeExpand={[Function]}
+        nodeLoadProperties={[Function]}
+        nodePropertiesLoaded={[Function]}
+        onContextMenu={[Function]}
+        removeWatchpoint={[Function]}
+        renderItemActions={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": 42,
+              },
+              "name": "root",
+              "path": "root",
+            },
+          ]
+        }
+        rootsChanged={[Function]}
+        setExpanded={[Function]}
+      >
+        <div
+          className="node object-node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <span
+            className="object-label"
+          >
+            root
+          </span>
+          <span
+            className="object-delimiter"
+          >
+            : 
+          </span>
+          <span
+            className="objectBox objectBox-number"
+            title={null}
+          >
+            42
+          </span>
+        </div>
+      </ObjectInspectorItem>
+    </div>
+  </TreeNode>
+</div>
+`;
+
+exports[`ObjectInspector - classnames has the nowrap class when disableWrap prop is true 1`] = `
+<div
+  className="tree object-inspector nowrap"
+  onBlur={[Function]}
+  onFocus={[Function]}
+  onKeyDown={[Function]}
+  onKeyPress={[Function]}
+  onKeyUp={[Function]}
+  role="tree"
+  style={Object {}}
+  tabIndex="0"
+>
+  <TreeNode
+    active={false}
+    depth={0}
+    expanded={false}
+    focused={false}
+    id="root"
+    index={0}
+    isExpandable={false}
+    item={
+      Object {
+        "contents": Object {
+          "value": 42,
+        },
+        "name": "root",
+        "path": "root",
+      }
+    }
+    key="root-inactive"
+    onClick={[Function]}
+    onCollapse={[Function]}
+    onExpand={[Function]}
+    renderItem={[Function]}
+    shouldItemUpdate={[Function]}
+  >
+    <div
+      aria-level={1}
+      className="tree-node"
+      data-expandable={false}
+      id="root"
+      onClick={[Function]}
+      onKeyDownCapture={null}
+      role="treeitem"
+    >
+      <ObjectInspectorItem
+        addWatchpoint={[Function]}
+        arrow={null}
+        autoExpandDepth={0}
+        closeObjectInspector={[Function]}
+        depth={0}
+        disableWrap={true}
+        evaluations={Map {}}
+        expanded={false}
+        expandedPaths={Set {}}
+        focused={false}
+        invokeGetter={[Function]}
+        item={
+          Object {
+            "contents": Object {
+              "value": 42,
+            },
+            "name": "root",
+            "path": "root",
+          }
+        }
+        loadedProperties={Map {}}
+        nodeCollapse={[Function]}
+        nodeExpand={[Function]}
+        nodeLoadProperties={[Function]}
+        nodePropertiesLoaded={[Function]}
+        onContextMenu={[Function]}
+        removeWatchpoint={[Function]}
+        renderItemActions={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": 42,
+              },
+              "name": "root",
+              "path": "root",
+            },
+          ]
+        }
+        rootsChanged={[Function]}
+        setExpanded={[Function]}
+      >
+        <div
+          className="node object-node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <span
+            className="object-label"
+          >
+            root
+          </span>
+          <span
+            className="object-delimiter"
+          >
+            : 
+          </span>
+          <span
+            className="objectBox objectBox-number"
+            title={null}
+          >
+            42
+          </span>
+        </div>
+      </ObjectInspectorItem>
+    </div>
+  </TreeNode>
+</div>
+`;

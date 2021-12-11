@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 978847</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=978847">Mozilla Bug 978847</a>
+<p id="display"></p>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  var x;
+  var y;
+
+  // window should be constrained to the screen rect,
+  // which we assume is less than 10000px square
+  var w1 = window.open("about:blank", "", "left=16000,top=16000,width=100,height=100");
+  SimpleTest.waitForFocus(function() {
+    ok(w1.screenX < 10000 && w1.screenY < 10000,
+       "window should not be opened off-screen: got location " +
+       w1.screenX + "," + w1.screenY);
+    x = w1.screenX;
+    y = w1.screenY;
+    w1.close();
+
+    // larger window dimensions should result in a shift of the constrained location
+    var w2 = window.open("about:blank", "", "left=16000,top=16000,width=150,height=150");
+    SimpleTest.waitForFocus(function() {
+      ok(w2.screenX == x - 50 && w2.screenY == y - 50,
+         "constrained window position did not depend on size as expected: got " +
+         w2.screenX + "," + w2.screenY + ", expected " + (x - 50) + "," + (y - 50));
+      w2.close();
+
+      // now try with coordinates that are close to MAXINT,
+      // so adding width/height risks 32-bit integer overflow
+      var w3 = window.open("about:blank", "", "left=2147483600,top=2147483600,width=100,height=100");
+      SimpleTest.waitForFocus(function() {
+        ok(w3.screenX < 10000 && w3.screenY < 10000,
+           "window should not be opened off-screen: got location " +
+           w3.screenX + "," + w3.screenY);
+        w3.close();
+        SimpleTest.finish();
+      }, w3, true);
+    }, w2, true);
+  }, w1, true);
+}, window, false);
+
+</script>
+</pre>
+</body>
+</html>

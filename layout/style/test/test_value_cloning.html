@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375363
+-->
+<head>
+  <title>Test for cloning of CSS property values (including 'inherit', 'initial' and 'unset')</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"><iframe id="iframe" src="about:blank"></iframe></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const { AppConstants } = SpecialPowers.Cu.import(
+  "resource://gre/modules/AppConstants.jsm",
+  {}
+);
+
+/** Test for cloning of CSS property values (including 'inherit', 'initial' and 'unset') **/
+var test_queue = [];
+var iframe = document.getElementById("iframe");
+
+SimpleTest.waitForExplicitFinish();
+
+for (var prop in gCSSProperties) {
+  let info = gCSSProperties[prop];
+
+  test_queue.push({ prop: prop, value: "inherit",
+                    inherited_value: info.initial_values[0] });
+  test_queue.push({ prop: prop, value: "inherit",
+                    inherited_value: info.other_values[0] });
+  test_queue.push({ prop: prop, value: "initial" });
+  if (info.inherited) {
+    test_queue.push({ prop: prop, value: "unset",
+                      inherited_value: info.initial_values[0] });
+    test_queue.push({ prop: prop, value: "unset",
+                      inherited_value: info.other_values[0] });
+  } else {
+    test_queue.push({ prop: prop, value: "unset" });
+  }
+  for (let idx in info.initial_values) {
+    test_queue.push({ prop: prop, value: info.initial_values[idx] });
+  }
+  for (let idx in info.other_values) {
+    test_queue.push({ prop: prop, value: info.other_values[idx] });
+  }
+}
+
+test_queue.reverse();
+
+doTest();
+
+function doTest()
+{
+  var sheet_data = "";
+
+  for (let idx = 0; idx < test_queue.length; ++idx) {
+    var current_item = test_queue[idx];
+
+    let info = gCSSProperties[current_item.prop];
+
+    sheet_data += "#parent"+idx+", #test"+idx+" { ";
+    for (var prereq in info.prereqs) {
+      sheet_data += prereq + ": " + info.prereqs[prereq] + ";";
+    }
+    sheet_data += " }";
+
+    sheet_data += "#parent"+idx+" { ";
+    if ("inherited_value" in current_item) {
+      sheet_data += current_item.prop + ": " + current_item.inherited_value;
+    }
+    sheet_data += "}";
+
+    sheet_data += "#test"+idx+" { ";
+    sheet_data += current_item.prop + ": " + current_item.value;
+    sheet_data += "}";
+  }
+
+  var sheet_url = "data:text/css," + escape(sheet_data);
+
+  var doc_data =
+    "<!DOCTYPE HTML>\n" +
+    "<link rel='stylesheet' type='text/css' href='" + sheet_url + "'>\n" +
+    "<link rel='stylesheet' type='text/css' href='" + sheet_url + "'>\n" +
+    "<body>\n";
+
+
+  for (let idx = 0; idx < test_queue.length; ++idx) {
+    var current_item = test_queue[idx];
+
+    if ("inherited_value" in current_item) {
+      doc_data += "<span id='parent"+idx+"'>";
+    }
+    doc_data += "<span id='test"+idx+"'></span>";
+    if ("inherited_value" in current_item) {
+      doc_data += "</span>";
+    }
+  }
+
+  var doc_url = "data:text/html," + escape(doc_data);
+  iframe.onload = iframe_loaded;
+  iframe.src = doc_url;
+}
+
+function iframe_loaded(event)
+{
+  if (event.target != iframe)
+    return;
+
+  var start_ser = [];
+  var start_compute = [];
+  var test_cs = [];
+  var wrappedFrame = SpecialPowers.wrap(iframe);
+  var ifdoc = wrappedFrame.contentDocument;
+  var ifwin = wrappedFrame.contentWindow;
+
+  for (let idx = 0; idx < test_queue.length; ++idx) {
+    var current_item = test_queue[idx];
+    var info = gCSSProperties[current_item.prop];
+
+    var test = ifdoc.getElementById("test" + idx);
+    var cur_cs = ifwin.getComputedStyle(test);
+    test_cs.push(cur_cs);
+    var cur_ser = ifdoc.styleSheets[0].cssRules[3*idx+2].style.getPropertyValue(current_item.prop);
+    if (cur_ser == "") {
+      isnot(cur_ser, "",
+	    "serialization should be nonempty for " +
+	    current_item.prop + ": " + current_item.value);
+    }
+    start_ser.push(cur_ser);
+
+    var cur_compute = get_computed_value(cur_cs, current_item.prop);
+    if (cur_compute == "") {
+      isnot(cur_compute, "",
+            "computed value should be nonempty for " +
+            current_item.prop + ": " + current_item.value);
+    }
+    start_compute.push(cur_compute);
+  }
+
+  // In case the above access didn't force a clone already (though it
+  // currently does), clone the second style sheet's inner and then
+  // remove the first.
+  ifdoc.styleSheets[1].insertRule("#nonexistent { color: red }", 0);
+  var firstlink = ifdoc.getElementsByTagName("link")[0];
+  firstlink.remove();
+
+  // Force a flush
+  ifdoc.body.style.display="none";
+  var ow = ifdoc.body.offsetWidth;
+  ifdoc.body.style.display="";
+
+  for (let idx = 0; idx < test_queue.length; ++idx) {
+    var current_item = test_queue[idx];
+    var info = gCSSProperties[current_item.prop];
+
+    var end_ser =
+      ifdoc.styleSheets[0].cssRules[3*idx+3].style.getPropertyValue(current_item.prop);
+    is(end_ser, start_ser[idx],
+       "serialization should match when cloning " +
+       current_item.prop + ": " + current_item.value);
+
+    var end_compute = get_computed_value(test_cs[idx], current_item.prop);
+    // Output computed values only when the test failed.
+    // Computed values may be very long.
+    if (end_compute == start_compute[idx]) {
+      ok(true,
+         "computed values should match when cloning " +
+         current_item.prop + ": " + current_item.value);
+    } else {
+      is(end_compute, start_compute[idx],
+         "computed values should match when cloning " +
+         current_item.prop + ": " + current_item.value);
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1299483 - CSP: Implement 'strict-dynamic'</title>
+</head>
+<body>
+<div id="testdiv">blocked</div>
+
+<script nonce="foo">
+  // generates a parser inserted script with a valid nonce- and should be allowed
+  document.write("<script nonce='foo' src='http://example.com/tests/dom/security/test/csp/file_strict_dynamic.js'><\/script>");
+</script>
+
+</body>
+</html>

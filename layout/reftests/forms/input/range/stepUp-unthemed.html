@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when changing the 'value' IDL property, the thumb of the range
+             should be moved to the appropriate position -->
+  <script type="text/javascript">
+    function setValue()
+    {
+      document.getElementById('i').stepUp();
+      document.documentElement.className = '';
+    }
+    document.addEventListener("MozReftestInvalidate", setValue);
+  </script>
+  <body>
+    <input type=range id='i' value=50 step=25 style='-moz-appearance:none'>
+  </body>
+</html>

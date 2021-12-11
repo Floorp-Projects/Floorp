@@ -1,0 +1,26 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1040346",
+    title: "Basic H.264 GMP video-only peer connection"
+  });
+
+  var test;
+  runNetworkTest(async function (options) {
+    matchPlatformH264CodecPrefs();
+    options = options || { };
+    options.h264 = true;
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{video: true}], [{video: true}]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

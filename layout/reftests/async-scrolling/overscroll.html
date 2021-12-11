@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html
+      reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="-200">
+<head>
+  <style>
+    html {
+      scrollbar-width: none;
+    }
+    body {
+      height: 3000px;
+      margin: 0;
+    }
+    div {
+      position: absolute;
+      top: 0px;
+      width: 200px;
+      height: 200px;
+      background: green;
+    }
+  </style>
+</head>
+<body >
+  <!-- Test that an overscroll past one end of a viewport is rendered
+      as having the content create a gutter, and that
+      the overscroll is reduced by some factor such that 
+      a 100px scroll must produce a rendered translation of less than
+      100px.
+
+      Current overscroll physics mean that an instantaneous overscroll
+      by 200px produces an 8px gutter. This is governed by the logic in
+      Axis::ApplyResistance(); if that logic is changed, this test will
+      need to be modified to account for the new result.
+  -->
+  <div></div>
+</body>
+</html>

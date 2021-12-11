@@ -1,0 +1,86 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "mozilla/BasePrincipal.h"
+%}
+native OriginAttributesNativePtr(const mozilla::OriginAttributes*);
+
+interface nsILoadContext;
+interface nsIDOMWindow;
+
+/**
+ * Helper interface to carry informatin about the load context
+ * encapsulating origin attributes and IsAnonymous, IsPrivite properties.
+ * It shall be used where nsILoadContext cannot be used or is not
+ * available.
+ */
+
+[scriptable, builtinclass, uuid(555e2f8a-a1f6-41dd-88ca-ed4ed6b98a22)]
+interface nsILoadContextInfo : nsISupports
+{
+  /**
+   * Whether the context is in a Private Browsing mode
+   */
+  readonly attribute boolean isPrivate;
+
+  /**
+   * Whether the load is initiated as anonymous
+   */
+  readonly attribute boolean isAnonymous;
+
+  /**
+   * OriginAttributes hiding all the security context attributes
+   */
+  [implicit_jscontext]
+  readonly attribute jsval originAttributes;
+  [noscript, notxpcom, nostdcall, binaryname(OriginAttributesPtr)]
+  OriginAttributesNativePtr binaryOriginAttributesPtr();
+
+%{C++
+  /**
+   * De-XPCOMed getters
+   */
+  bool IsPrivate()
+  {
+    bool pb;
+    GetIsPrivate(&pb);
+    return pb;
+  }
+
+  bool IsAnonymous()
+  {
+    bool anon;
+    GetIsAnonymous(&anon);
+    return anon;
+  }
+
+  bool Equals(nsILoadContextInfo *aOther)
+  {
+    return IsAnonymous() == aOther->IsAnonymous() &&
+           *OriginAttributesPtr() == *aOther->OriginAttributesPtr();
+  }
+%}
+};
+
+/**
+ * Since OriginAttributes struct limits the implementation of
+ * nsILoadContextInfo (that needs to be thread safe) to C++,
+ * we need a scriptable factory to create instances of that
+ * interface from JS.
+ */
+[scriptable, uuid(c1c7023d-4318-4f99-8307-b5ccf0558793)]
+interface nsILoadContextInfoFactory : nsISupports
+{
+  readonly attribute nsILoadContextInfo default;
+  readonly attribute nsILoadContextInfo private;
+  readonly attribute nsILoadContextInfo anonymous;
+  [implicit_jscontext]
+  nsILoadContextInfo custom(in boolean aAnonymous, in jsval aOriginAttributes);
+  nsILoadContextInfo fromLoadContext(in nsILoadContext aLoadContext, in boolean aAnonymous);
+  nsILoadContextInfo fromWindow(in nsIDOMWindow aWindow, in boolean aAnonymous);
+};

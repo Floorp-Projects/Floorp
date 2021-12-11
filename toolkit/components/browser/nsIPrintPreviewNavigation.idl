@@ -1,0 +1,52 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+
+/**
+ * The nsIPrintPreviewNavigation
+ */
+[scriptable, uuid(8148E3F1-2E8B-11d5-A86C-00105A183419)]
+interface nsIPrintPreviewNavigation  : nsISupports
+{
+
+  readonly attribute long pageCount;
+
+
+  /**
+   * Preview the next Page
+   *
+   * Return - PR_TRUE if success
+   */
+  boolean	nextPage();
+
+  /**
+   * Preview the previous Page
+   *
+   * Return - PR_TRUE if success
+   */
+  boolean	previousPage();
+
+  /**
+   * Go to a page to preview
+   *
+   * aPageNumber - Page to go preview
+   * Return - PR_TRUE if success
+   */
+  boolean	goToPage(unsigned long aPageNumber);
+
+
+  /**
+   * Skip pages
+   *
+   * aNumPages - number of pages to skip including the current page. Neg. goes back
+   * Return - true if success
+   */
+  boolean	skipPages(long aNumPages);
+
+
+};

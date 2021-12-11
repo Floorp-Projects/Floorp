@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1096263
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1096263</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1096263 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function simpleGetTest() {
+  var x = new XMLHttpRequest();
+  x.open("GET", "echo.sjs");
+  x.onload = function() {
+      ok(true, "Should have processed GET");
+      simplePostTest();
+    }
+  x.send({});
+}
+
+function simplePostTest() {
+  var x = new XMLHttpRequest();
+  x.open("POST", "echo.sjs");
+  x.onload = function() {
+      is(x.responseText, "somedata", "Should have processed POST");
+      undefinedPostTest();
+    }
+    x.send({toString() { return "somedata"; }});
+}
+
+function undefinedPostTest() {
+  var x = new XMLHttpRequest();
+  x.open("POST", "echo.sjs");
+  x.onload = function() {
+      is(x.responseText, "undefined", "Should have processed POST");
+      nullPostTest();
+    }
+    x.send({toString() { return undefined; }});
+}
+
+function nullPostTest() {
+  var x = new XMLHttpRequest();
+  x.open("POST", "echo.sjs");
+  x.onload = function() {
+      is(x.responseText, "null", "Should have processed POST");
+      testExceptionInToString();
+    }
+    x.send({toString() { return null; }});
+}
+
+function testExceptionInToString() {
+  var x = new XMLHttpRequest();
+  x.open("GET", "echo.sjs");
+  x.onload = function() {
+    ok(false);
+    SimpleTest.finish();
+  }
+  try {
+    x.send({toString() { throw new Error("dummy"); }});
+  } catch(ex) {
+    is(ex.message, "dummy");
+    SimpleTest.finish();
+  }
+}
+
+  </script>
+</head>
+<body onload="simpleGetTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1096263">Mozilla Bug 1096263</a>
+<p id="display"></p>
+<div id="content">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

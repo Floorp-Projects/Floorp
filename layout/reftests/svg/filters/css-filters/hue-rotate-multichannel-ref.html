@@ -1,0 +1,37 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Hue Rotate an HTML Element Containing Colors with Multiple RGB Channels</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    #target {
+      width: 150px;
+      height: 150px;
+    }
+    .color-strip {
+      height: 50px;
+    }
+    #color-strip-1 {
+      background-color: rgb(64, 187, 46);
+    }
+    #color-strip-2 {
+      background-color: rgb(64, 250, 255);
+    }
+    #color-strip-3 {
+      background-color: rgb(255, 14, 109);
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a horizontal green strip, followed by a cyan strip, followed by a magenta strip.</p>
+  <div id="target">
+    <div id="color-strip-1" class="color-strip"></div>
+    <div id="color-strip-2" class="color-strip"></div>
+    <div id="color-strip-3" class="color-strip"></div>
+  </div>
+</body>
+</html>

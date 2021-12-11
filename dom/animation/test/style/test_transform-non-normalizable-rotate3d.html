@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<script src='../testcommon.js'></script>
+<div id='log'></div>
+<script type='text/javascript'>
+'use strict';
+
+test(function(t) {
+  var target = addDiv(t);
+  target.style.transform = 'rotate3d(0, 0, 1, 90deg)';
+  target.style.transition = 'all 10s linear -5s';
+  getComputedStyle(target).transform;
+
+  target.style.transform = 'rotate3d(0, 0, 0, 270deg)';
+  var interpolated_matrix = 'matrix(' + Math.cos(Math.PI / 4) + ',' +
+                                        Math.sin(Math.PI / 4) + ',' +
+                                       -Math.sin(Math.PI / 4) + ',' +
+                                        Math.cos(Math.PI / 4) + ',' +
+                                        '0, 0)';
+  assert_matrix_equals(getComputedStyle(target).transform, interpolated_matrix,
+                       'transition from a normal rotate3d to a ' +
+                       'non-normalizable rotate3d');
+}, 'Test interpolation on non-normalizable rotate3d function');
+
+</script>
+</html>

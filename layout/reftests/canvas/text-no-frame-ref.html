@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure non-framed canvas inherits properties</title>
+</head>
+<body>
+<div style="font: 40px sans-serif">
+<canvas id="c" width="512" height="256" style="direction: rtl;"></canvas>
+</div>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  var str = 'BLEARGH!';
+  ctx.font = '1em sans-serif';
+  ctx.fillStyle = 'black';
+  ctx.textAlign = 'center';
+  ctx.fillText(str, 256, 128);
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE HTML><html class="reftest-wait"><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div contenteditable="true">
+<p id="p">A B CD EFG<br>
+  1234567890</p>
+</div>
+x
+<script>
+  // Position the caret at the end of the P element
+  var p = document.getElementById('p');
+  var div = p.parentNode;
+  div.focus();
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+  onSpellCheck(div, function () {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    var range = document.createRange();
+    range.setStart(p, p.childNodes.length);
+    range.setEnd(p, p.childNodes.length);
+    sel.addRange(range);
+    document.documentElement.classList.remove("reftest-wait");
+  });
+</script>
+
+</body>
+</html>

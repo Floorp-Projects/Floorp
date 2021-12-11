@@ -1,0 +1,26 @@
+/* Override default style */
+textarea {
+  border: 0px;
+}
+
+textarea.ref {
+  background-color: green;
+}
+
+textarea:invalid {
+  box-shadow: none;
+}
+
+textarea.notvalid {
+  background-color: green;
+}
+textarea.notvalid:-moz-ui-valid {
+  background-color: red;
+}
+
+textarea.valid {
+  background-color: red;
+}
+textarea.valid:-moz-ui-valid {
+  background-color: green;
+}

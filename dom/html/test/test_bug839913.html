@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for HTMLAreaElement's stringifier</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var area = document.createElement("area");
+  area.href = "http://example.org/";
+  assert_equals(area.href, "http://example.org/");
+  assert_equals(String(area), "http://example.org/");
+}, "Area elements should stringify to the href attribute");
+</script>

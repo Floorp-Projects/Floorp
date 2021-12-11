@@ -1,0 +1,138 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+#ifdef ACCESSIBILITY
+include protocol PDocAccessible;
+#endif
+
+include DOMTypes;
+include PPrintingTypes;
+
+include "mozilla/LayoutMessageUtils.h";
+include "mozilla/dom/BindingIPCUtils.h";
+include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
+
+using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
+using class mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
+using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
+using mozilla::dom::EffectsInfo from "mozilla/dom/EffectsInfo.h";
+using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
+using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
+using struct nsRect from "nsRect.h";
+using CallerType from "mozilla/dom/BindingDeclarations.h";
+using nsIntRect from "nsRect.h";
+using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
+[RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
+using mozilla::IntrinsicSize from "nsIFrame.h";
+using mozilla::AspectRatio from "mozilla/AspectRatio.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * A PBrowserBridge connects an iframe/browser in a content process to the
+ * PBrowser that manages the embedded content.
+ *
+ * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
+ * actors.
+ */
+[RefCounted] async protocol PBrowserBridge {
+  manager PBrowser;
+
+child:
+  /**
+   * Request that the IPC child / Web parent process move focus to the
+   * browser's frame. If canRaise is true, the window can be raised if
+   * it is inactive.
+   */
+  async RequestFocus(bool canRaise, CallerType aCallerType);
+
+  /**
+   * When IPC parent / Web child sends this message, the IPC child / Web parent
+   * should move focus to the next or previous focusable element or document.
+   */
+  async MoveFocus(bool forward, bool forDocumentNavigation);
+
+  /**
+   * Send the child the COM proxy for the embedded document accessible.
+   */
+  async SetEmbeddedDocAccessibleCOMProxy(IDispatchHolder aCOMProxy);
+
+  /**
+   * Called once this PBrowserBridge's OOP subdoc no longer blocks its
+   * embedding element's and embedding doc's 'load' events.
+   */
+  async MaybeFireEmbedderLoadEvents(EmbedderElementEventType aFireEventAtEmbeddingElement);
+
+  async ScrollRectIntoView(nsRect aRect, ScrollAxis aVertical,
+                           ScrollAxis aHorizontal, ScrollFlags aScrollFlags,
+                           int32_t aAppUnitsPerDevPixel);
+
+  async SubFrameCrashed();
+
+  async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
+                                    AspectRatio? aIntrinsicRatio);
+
+both:
+
+  // Destroy the remote web browser due to the nsFrameLoader going away.
+  // Before initialization we sync-delete it from the child. After
+  // initialization we sync-delete it from the parent after BeginDestroy().
+  async __delete__();
+
+parent:
+
+  async BeginDestroy();
+
+  // DocShell messaging.
+  async LoadURL(nsDocShellLoadState aLoadState);
+  async ResumeLoad(uint64_t aPendingSwitchID);
+
+  // Out of process rendering.
+  async Show(OwnerShowInfo info);
+  async ScrollbarPreferenceChanged(ScrollbarPreference pref);
+  [Compress=all] async UpdateDimensions(nsIntRect rect, ScreenIntSize size);
+  async RenderLayers(bool aEnabled, LayersObserverEpoch aEpoch);
+
+  async UpdateEffects(EffectsInfo aEffects);
+  async UpdateRemotePrintSettings(PrintData aPrintData);
+
+  /**
+   * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
+   */
+  async NavigateByKey(bool aForward, bool aForDocumentNavigation);
+
+  /**
+   * Dispatch the given synthesized mousemove event to the child.
+   */
+  async DispatchSynthesizedMouseEvent(WidgetMouseEvent event);
+
+  /**
+   * Sending an activate message moves focus to the iframe.
+   */
+  async Activate(uint64_t aActionId);
+
+  async Deactivate(bool aWindowLowering, uint64_t aActionId);
+
+  async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+
+  async WillChangeProcess();
+
+#ifdef ACCESSIBILITY
+  /**
+   * Tell the parent the accessible for this iframe's embedder
+   * OuterDocAccessible.
+   * aDoc is the actor for the containing document.
+   * aID is the unique id of the embedder accessible within that document.
+   */
+  async SetEmbedderAccessible(nullable PDocAccessible aDoc, uint64_t aID);
+#endif
+};
+
+}  // namespace dom
+}  // namespace mozilla

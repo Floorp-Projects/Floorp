@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLLinkElement attributes reflection</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLLinkElement attributes reflection **/
+
+// .href (URL)
+reflectURL({
+  element: document.createElement("link"),
+  attribute: "href",
+});
+
+// .crossOrigin (String or null)
+reflectLimitedEnumerated({
+  element: document.createElement("link"),
+  attribute: "crossOrigin",
+  // "" is a valid value per spec, but gets mapped to the "anonymous" state,
+  // just like invalid values, so just list it under invalidValues
+  validValues: [ "anonymous", "use-credentials" ],
+  invalidValues: [
+    "", "  aNOnYmous   ", "  UsE-CreDEntIALS  ", "foobar", "FOOBAR", " fOoBaR  "
+  ],
+  defaultValue: { invalid: "anonymous", missing: null },
+  nullable: true,
+})
+
+// .rel (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "rel",
+});
+
+// .media (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "media",
+});
+
+// .hreflang (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "hreflang",
+});
+
+// .type (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "type",
+});
+
+
+// .charset (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "charset",
+});
+
+// .rev (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "rev",
+});
+
+// .target (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "target",
+});
+
+// .as (String)
+reflectLimitedEnumerated({
+  element: document.createElement("link"),
+  attribute: "as",
+  validValues: [ "fetch", "audio", "font", "image", "script", "style",  "track", "video" ],
+  invalidValues: [
+    "", "audi", "doc", "Emb", "foobar", "FOOBAR", " fOoBaR  ", "OBJ", "document", "embed", "manifest", "object", "report", "serviceworker", "sharedworker", "worker", "xslt"
+  ],
+  defaultValue: { invalid: "", missing: "" },
+  nullable: false,
+})
+
+</script>
+</pre>
+</body>
+</html>

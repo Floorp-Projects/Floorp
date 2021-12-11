@@ -1,0 +1,19 @@
+[package]
+name = "mapped_hyph"
+description = "Hyphenation using precompiled memory-mapped tables"
+version = "0.4.3"
+authors = ["Jonathan Kew <jfkthame@gmail.com>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+memmap2 = "0.2.2"
+arrayref = "0.3.5"
+log = "0.4"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "bench"
+harness = false

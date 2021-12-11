@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for nsIConsoleMessages</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Make sure that nsIConsoleMessages are logged. See bug 859756.</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+SimpleTest.waitForExplicitFinish();
+
+let expectedMessages = [];
+
+async function startTest()
+{
+  removeEventListener("load", startTest);
+  const {state} = await attachConsole(["PageError"]);
+  onAttach(state);
+}
+
+function onAttach(aState)
+{
+  onLogMessage = onLogMessage.bind(null, aState);
+  aState.webConsoleFront.on("logMessage", onLogMessage);
+
+  expectedMessages = [{
+    message: "hello world! bug859756",
+    timeStamp: /^\d+$/,
+  }];
+
+  Services.console.logStringMessage("hello world! bug859756");
+
+  info("waiting for messages");
+}
+
+const receivedMessages = [];
+
+function onLogMessage(aState, aPacket)
+{
+  info("received message: " + aPacket.message);
+
+  let found = false;
+  for (const expected of expectedMessages) {
+    if (expected.message == aPacket.message) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    return;
+  }
+
+  receivedMessages.push(aPacket);
+  if (receivedMessages.length != expectedMessages.length) {
+    return;
+  }
+
+  aState.webConsoleFront.off("logMessage", onLogMessage);
+
+  checkObject(receivedMessages, expectedMessages);
+
+  closeDebugger(aState, () => SimpleTest.finish());
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

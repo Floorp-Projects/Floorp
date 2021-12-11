@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test adding new session history entries while navigating to another one</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    var win;
+
+    function waitForMessage(msg) {
+      return new Promise(
+        function(resolve) {
+          window.addEventListener("message",
+            function(event) {
+              is(event.data, msg, "Got the expected message " + msg);
+              resolve();
+            }, { once: true }
+          );
+        }
+      );
+    }
+
+    async function test() {
+
+      let loadPromise = waitForMessage("load");
+      win = window.open("file_new_shentry_during_history_navigation_1.html");
+      await loadPromise;
+
+      loadPromise = waitForMessage("load");
+      win.location.href = "file_new_shentry_during_history_navigation_2.html";
+      await loadPromise;
+
+      let beforeunloadPromise = waitForMessage("beforeunload");
+      win.history.back();
+      await beforeunloadPromise;
+      await waitForMessage("load");
+
+      win.history.back();
+      SimpleTest.requestFlakyTimeout("Test that history.back() does not work on the initial entry.");
+      setTimeout(function() {
+          win.onmessage = null;
+          win.close();
+          testBfcache();
+      }, 500);
+      window.onmessage = function(event) {
+        ok(false, "Should not get a message " + event.data);
+      }
+    }
+
+    async function testBfcache() {
+      let bc = new BroadcastChannel("new_shentry_during_history_navigation");
+      let pageshowCount = 0;
+      bc.onmessage = function(event) {
+        if (event.data.type == "pageshow") {
+          ++pageshowCount;
+          info("pageshow: " + pageshowCount + ", page: " + event.data.page);
+          if (pageshowCount == 1) {
+            ok(!event.data.persisted, "The page should not be bfcached.");
+            bc.postMessage("loadnext");
+          } else if (pageshowCount == 2) {
+            ok(!event.data.persisted, "The page should not be bfcached.");
+            bc.postMessage("loadnext");
+          } else if (pageshowCount == 3) {
+            ok(!event.data.persisted, "The page should not be bfcached.");
+            bc.postMessage("back");
+          } else if (pageshowCount == 4) {
+            ok(event.data.persisted, "The page should be bfcached.");
+            bc.postMessage("forward");
+          } else if (pageshowCount == 5) {
+            ok(event.data.page.includes("v2"), "Should have gone forward.");
+            bc.postMessage("close");
+            SimpleTest.finish();
+          }
+        }
+      };
+      win = window.open("file_new_shentry_during_history_navigation_3.html", "", "noopener");
+
+    }
+
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

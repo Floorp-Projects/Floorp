@@ -1,0 +1,12 @@
+== table-collapse-1.html table-collapse-1-ref.html
+== table-collapse-2.html table-collapse-2-ref.html
+== table-collapse-3.html table-collapse-3-ref.html
+== table-collapse-4.html table-collapse-4-ref.html
+== table-separate-1.html table-separate-1-ref.html
+== table-separate-2.html table-separate-2-ref.html
+== table-separate-3.html table-separate-3-ref.html
+== table-separate-4.html table-separate-4-ref.html
+== 1115999-1.html 1115999-1-ref.html
+== 1409114-1.html 1409114-1-ref.html
+!= 1409114-2.html about:blank
+!= 1409114-3.html about:blank

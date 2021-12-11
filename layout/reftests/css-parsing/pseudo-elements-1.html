@@ -1,0 +1,36 @@
+<!doctype html><style>
+  div { float: left }
+  /* Pseudo elements can appear only at the end of the selector. */
+  .good { color: red }
+  .bad { color: green }
+  #good1::first-letter { color: green }
+  #good2::first-letter, #good3 { color: green }
+  #good4, #good5::first-letter { color: green }
+  div > #good6::first-letter, #good7 { color:green }
+  div #good7 > ::first-letter, #good8 { color:green }
+
+  #bad1::first-letter *, #bad2 { color: red }
+  #bad4, #bad3::first-letter * { color: red }
+  div::first-line #bad5, #bad6 { color: red }
+  #bad7, div::first-line #bad8 { color: red }
+  #bad9, div ::first-line>#bad10 { color:red }
+</style><div
+><div class="good" id="good1">T</div
+><div class="good" id="good2">h</div
+><div class="good" id="good3">e</div
+><div class="good" id="good4">r</div
+><div class="good" id="good5">e</div
+><div class="good" id="good6">s</div
+><div class="good" id="good7">h</div
+><div class="good" id="good8">o</div
+><div class="bad"  id="bad1" >u</div
+><div class="bad"  id="bad2" >l</div
+><div class="bad"  id="bad3" >d</div
+><div class="bad"  id="bad4" >b</div
+><div class="bad"  id="bad5" >e</div
+><div class="bad"  id="bad6" >n</div
+><div class="bad"  id="bad7" >o</div
+><div class="bad"  id="bad8" >r</div
+><div class="bad"  id="bad9" >e</div
+><div class="bad"  id="bad10">d</div
+></div>

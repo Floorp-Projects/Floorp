@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+<script>
+function boom()
+{
+  // Remove the first 'a'.
+  document.documentElement.removeChild(document.getElementById("a"));
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("load", boom, false);
+</script>
+<animate id="a"/>
+<animate id="a" end="a.begin" />
+</svg>

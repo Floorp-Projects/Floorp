@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#b::first-letter { }
+#c::first-line { }
+</style>
+</head>
+<body>
+This page should not crash Mozilla
+<div id="c">
+  <table>
+    <div id="b" style="display:table-header-group;">
+      <q>
+        text
+        <div style="position:fixed;">
+          <q>y</q>
+        </div>
+      </q>  
+    </div>
+    <span style="display: table;"></span>
+</div>
+
+</body>
+</html>

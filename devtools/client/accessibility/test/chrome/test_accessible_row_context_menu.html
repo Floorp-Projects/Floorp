@@ -1,0 +1,149 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that openLink function is called if accessible object property is rendered as a link.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>AccessibilityRow context menu test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const { gDevTools } = require("devtools/client/framework/devtools");
+    const Services = browserRequire("Services");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory, createElement } =
+      browserRequire("devtools/client/shared/vendor/react");
+    const { Provider } = require("devtools/client/shared/vendor/react-redux");
+    const createStore = require("devtools/client/shared/redux/create-store");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const AccessibilityRow = createFactory(
+      browserRequire("devtools/client/accessibility/components/AccessibilityRow"));
+    const { FILTERS } = browserRequire("devtools/client/accessibility/constants");
+
+    async function withMockEnv(func) {
+      const { gTelemetry: originalTelemetry } = window;
+      window.gTelemetry = null;
+
+      await func();
+
+      window.gTelemetry = originalTelemetry;
+    }
+
+    function renderAccessibilityRow(newProps, newState) {
+      let container = document.getElementById("container");
+      if (container) {
+        container.remove();
+      }
+
+      const accRow = AccessibilityRow(newProps);
+      const mockStore = createStore((state, action) =>
+        action ? { ...state, ...action } : state, { initialState: newState });
+      const provider = createElement(Provider, { store: mockStore }, accRow);
+
+      container = document.createElement("div");
+      container.id = "container";
+      document.body.appendChild(container);
+      return ReactDOM.render(provider, container);
+    }
+
+    const ROW_ID = "test-row";
+    const JSON_URL_PREFIX = "data:application/json;charset=UTF-8,";
+    const SNAPSHOT = { "snapshot": true };
+    const defaultProps = {
+      id: ROW_ID,
+      member: {
+        object: {
+          name: "test",
+          value: "test",
+          loading: false,
+          selected: false,
+          hasChildren: false,
+          snapshot: async () => SNAPSHOT,
+          on: () => {},
+          off: () => {},
+          // This accessible mock has no actorID and should be treated as
+          // destroyed.
+          isDestroyed: () => true,
+        },
+      },
+      columns: [
+        { "id": "default", "title": "role" },
+        { "id": "value", "title": "name" },
+      ],
+      provider: {
+        getValue: (object, id) => object[id],
+      },
+      hasContextMenu: true,
+      toolboxDoc: document,
+    };
+
+    const auditState = { audit: { filters: { [FILTERS.CONTRAST]: false }}};
+
+    const defaultState = {
+      ui: { supports: {} },
+      ...auditState,
+    };
+
+    info("Check contextmenu default behaviour.");
+    renderAccessibilityRow(defaultProps, defaultState);
+    const row = document.getElementById(ROW_ID);
+
+    info("Get topmost document where the context meny will be rendered");
+    const menuDoc = document.defaultView.windowRoot.ownerGlobal.document;
+    await withMockEnv(async function() {
+      Simulate.contextMenu(row);
+
+      const menu = menuDoc.getElementById("accessibility-row-contextmenu");
+      const printtojsonMenuItem = menuDoc.getElementById("menu-printtojson");
+
+      ok(menu, "Accessibility row context menu is open");
+      ok(printtojsonMenuItem, "Print to JSON menu item is visible");
+
+      const browserWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+      const defaultOpenWebLinkIn = browserWindow.openWebLinkIn;
+
+      let openWebLinkInCalled;
+      const openWebLinkInPromise = new Promise(resolve => {
+        openWebLinkInCalled = resolve;
+      });
+
+      // Mock top chrome window's @openWebLinkIn method.
+      browserWindow.openWebLinkIn = (...args) => {
+        openWebLinkInCalled(args);
+      };
+      printtojsonMenuItem.click();
+
+      const [ url, where ] = await openWebLinkInPromise;
+      is(url, `${JSON_URL_PREFIX}${encodeURIComponent(JSON.stringify(SNAPSHOT))}`,
+         "Correct URL is opened");
+      is(where, "tab", "URL was opened correctly");
+
+      // Reset @openWebLinkIn to default.
+      browserWindow.openWebLinkIn = defaultOpenWebLinkIn;
+      menu.remove();
+    });
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

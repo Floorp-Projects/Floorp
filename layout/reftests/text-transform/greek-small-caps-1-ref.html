@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for Greek small-caps</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<style type="text/css">
+/* use a known font, to avoid dependency on platform font behavior */
+@font-face {
+  font-family: test;
+  src: url(../fonts/dejavu-sans/DejaVuSans.ttf);
+}
+div {
+  font: 150% test;
+  margin: 1em;
+}
+span {
+  font-variant: small-caps;
+}
+</style>
+</head>
+<body lang="en">
+<div>Π<span>ατάτα</span>, Α<span>έρας</span>, Μ<span>άιος</span>, <span>άυλος</span>, <span>αϋπνία</span>, Μ<span>αΐου</span>, <span>χούι</span>, ΆΈΉΊΌΎΏ, Ά<span>κλιτα</span></div>
+<div lang="el">Π<span>ατατα</span>, Α<span>ερας</span>, Μ<span>αϊος</span>, <span>αϋλος</span>, <span>αϋπνία</span>, Μ<span>αϊου</span>, <span>χουι<span>, ΑΕΗΙΟΥΩ, Α<span>κλιτα</span></div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.reverse-search {
+  display: flex;
+  font-size: inherit;
+  min-height: 26px;
+  color: var(--theme-body-color);
+  padding-block-start: 2px;
+  align-items: baseline;
+  border: 1px solid transparent;
+  border-top-color: var(--theme-splitter-color);
+  transition: border-color 0.2s ease-in-out;
+}
+
+.jsterm-editor .reverse-search {
+  border-inline-end-color: var(--theme-splitter-color);
+}
+
+/* Add a border radius match the borders of the window on Mac OS
+ * and hide the border radius on the right if the sidebar or editor
+ * is open. */
+:root[platform="mac"] .webconsole-app .reverse-search {
+  border-end-start-radius: 5px;
+}
+:root[platform="mac"] .webconsole-app:not(.jsterm-editor, .sidebar-visible) .reverse-search
+{
+  border-end-end-radius: 5px;
+}
+
+.reverse-search:focus-within {
+  border-color: var(--blue-50);
+}
+
+.reverse-search {
+  flex-shrink: 0;
+}
+
+.reverse-search input {
+  border: none;
+  flex-grow: 1;
+  background: transparent;
+  color: currentColor;
+  background-image: url(chrome://devtools/skin/images/search.svg);
+  background-repeat: no-repeat;
+  background-size: 12px;
+  --background-position-inline: 10px;
+  background-position: var(--background-position-inline) 2px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+  text-align: match-parent;
+  unicode-bidi: plaintext;
+  min-width: 80px;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.reverse-search:dir(ltr) input {
+  /* Be explicit about left/right direction to prevent the text/placeholder
+   * from overlapping the background image when the user changes the text
+   * direction manually (e.g. via Ctrl+Shift). */
+  padding-left: var(--console-inline-start-gutter);
+}
+
+.reverse-search:dir(rtl) input {
+  background-position-x: right var(--background-position-inline);
+  padding-right: var(--console-inline-start-gutter);
+}
+
+.reverse-search input:focus {
+  border: none;
+  outline: none;
+}
+
+.reverse-search:not(.no-result) input:focus {
+  fill: var(--theme-icon-checked-color);
+}
+
+.reverse-search-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+}
+
+.reverse-search-info {
+  flex-shrink: 0;
+  padding: 0 8px;
+  color: var(--comment-node-color);
+}
+
+.search-result-button-prev,
+.search-result-button-next,
+.reverse-search-close-button {
+  padding: 4px 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+.search-result-button-prev::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-up.svg");
+  background-size: 16px;
+  fill: var(--comment-node-color);
+}
+
+.search-result-button-next::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-down.svg");
+  background-size: 16px;
+  fill: var(--comment-node-color);
+}
+
+.reverse-search-close-button::before {
+  fill: var(--comment-node-color);
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
+.reverse-search.no-result input {
+  fill: var(--error-color);
+}
+
+.reverse-search.no-result,
+.reverse-search.no-result input {
+  color: var(--error-color);
+}

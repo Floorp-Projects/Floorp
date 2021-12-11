@@ -1,0 +1,136 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIApplicationReputationCallback;
+interface nsIApplicationReputationQuery;
+interface nsIArray;
+interface nsIURI;
+interface nsIReferrerInfo;
+
+/*
+ * A service for asynchronously querying an application reputation service
+ * based on metadata of the downloaded file.
+ */
+[scriptable, uuid(c9f03479-fd68-4393-acb2-c88d4f563174)]
+interface nsIApplicationReputationService : nsISupports {
+  /**
+   * Indicates the reason for the application reputation block.
+   */
+  const unsigned long VERDICT_SAFE = 0;
+  const unsigned long VERDICT_DANGEROUS = 1;
+  const unsigned long VERDICT_UNCOMMON = 2;
+  const unsigned long VERDICT_POTENTIALLY_UNWANTED = 3;
+  const unsigned long VERDICT_DANGEROUS_HOST = 4;
+
+  /**
+   * Start querying the application reputation service.
+   *
+   * @param aQuery
+   *        The nsIApplicationReputationQuery containing metadata of the
+   *        downloaded file.
+   *
+   * @param aCallback
+   *        The callback for receiving the results of the query.
+   *
+   * @remarks aCallback may not be null.  onComplete is guaranteed to be called
+   *          on aCallback. This function may not be called more than once with
+   *          the same query object. If any of the attributes of aQuery have
+   *          not been set or have been set with empty data (with the exception
+   *          of sourceURI), then a valid request can still be constructed and
+   *          will solicit a valid response, but won't produce any useful
+   *          information.
+   */
+  void queryReputation(in nsIApplicationReputationQuery aQuery,
+                       in nsIApplicationReputationCallback aCallback);
+
+  /**
+   * Check if a file with this name should be treated as a binary executable,
+   * and is therefore subject to application reputation checks.
+   * Will return true if the filename's extension is either:
+   * - in kBinaryFileExtensions in ApplicationReputation.cpp
+   * - in sExecutableExts in nsLocalFileCommon.h *and* not in
+   *   kNonBinaryExecutables in ApplicationReputation.cpp
+   *
+   * @param aFilename
+   *        The filename to check.
+   */
+  bool isBinary(in AUTF8String aFilename);
+};
+
+/**
+ * A single-use, write-once interface for recording the metadata of the
+ * downloaded file. nsIApplicationReputationService.Start() may only be called
+ * once with a single query.
+ */
+[scriptable, uuid(812d7509-a9a3-446e-a66f-3ed8cc91ebd0)]
+interface nsIApplicationReputationQuery : nsISupports {
+  /*
+   * The nsIURI from which the file was downloaded. This may not be null.
+   */
+  readonly attribute nsIURI sourceURI;
+
+  /*
+   * The reference, if any.
+   */
+  readonly attribute nsIReferrerInfo referrerInfo;
+
+  /*
+   * The target filename for the downloaded file, as inferred from the source
+   * URI or provided by the Content-Disposition attachment file name. If this
+   * is not set by the caller, it will be passed as an empty string but the
+   * query won't produce any useful information.
+   */
+  readonly attribute AUTF8String suggestedFileName;
+
+  /*
+   * The size of the downloaded file in bytes.
+   */
+  readonly attribute unsigned long fileSize;
+
+  /*
+   * The SHA256 hash of the downloaded file in raw bytes. If this is not set by
+   * the caller, it will be passed as an empty string but the query won't
+   * produce any useful information.
+   */
+  readonly attribute ACString sha256Hash;
+
+  /*
+   * The Array of Array of Array of bytes that verify for this
+   * binary, if it is signed.
+   */
+  readonly attribute Array<Array<Array<uint8_t> > > signatureInfo;
+
+  /*
+   * The nsIArray of nsIPrincipal of redirects that lead to this download. The
+   * most recent redirect is the last element.
+   */
+  readonly attribute nsIArray redirects;
+};
+
+[scriptable, function, uuid(9a228470-cfe5-11e2-8b8b-0800200c9a66)]
+interface nsIApplicationReputationCallback : nsISupports {
+  /**
+   * Callback for the result of the application reputation query.
+   * @param aStatus
+   *        NS_OK if and only if the query succeeded. If it did, then
+   *        shouldBlock is meaningful (otherwise it defaults to false). This
+   *        may be NS_ERROR_FAILURE if the response cannot be parsed, or
+   *        NS_ERROR_NOT_AVAILABLE if the service has been disabled or is not
+   *        reachable.
+   * @param aShouldBlock
+   *        Whether or not the download should be blocked.
+   * @param aVerdict
+   *        Indicates the result of the lookup that determines whether the
+   *        download should be blocked, according to the "VERDICT_" constants.
+   *        This may be set to a value different than "VERDICT_SAFE" even if
+   *        aShouldBlock is false, so you should always check aShouldBlock.
+   */
+  void onComplete(in bool aShouldBlock,
+                  in nsresult aStatus,
+                  in unsigned long aVerdict);
+};

@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <iframe srcdoc="<body contenteditable spellcheck=false><br /><div></div></body>"></iframe>
+    <script>
+      function start() {
+        var iframe = document.querySelector("iframe");
+        var win = iframe.contentWindow;
+        var doc = iframe.contentDocument;
+        iframe.focus();
+        doc.body.focus();
+        win.getSelection().collapse(doc.body, 0);
+        sendString("Here's some text.");
+        synthesizeKey("KEY_Enter");
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

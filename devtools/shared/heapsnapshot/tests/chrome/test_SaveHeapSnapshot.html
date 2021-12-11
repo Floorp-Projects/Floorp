@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1024774 - Sanity test that we can take a heap snapshot in a web window.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>ChromeUtils.saveHeapSnapshot test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+window.onload = function() {
+  ok(ChromeUtils, "The ChromeUtils interface should be exposed in chrome windows.");
+  ChromeUtils.saveHeapSnapshot({ runtime: true });
+  ok(true, "Should save a heap snapshot and shouldn't throw.");
+  SimpleTest.finish();
+};
+</script>
+</pre>
+</body>
+</html>

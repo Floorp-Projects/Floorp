@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=547850
+-->
+<head>
+  <title>Test for Bug 547850</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=547850">Mozilla Bug 547850</a>
+<script>
+document.write("<div id=content><f\u00c5></f\u00c5><r\u00e5></r\u00e5>");
+document.write("<span g\u00c5=a1 t\u00e5=a2></span></div>");
+</script>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var ch = $('content').childNodes;
+is(ch[0].localName, "f\u00c5", "upper case localName");
+is(ch[1].localName, "r\u00e5", "lower case localName");
+is(ch[0].nodeName, "F\u00c5", "upper case nodeName");
+is(ch[1].nodeName, "R\u00e5", "lower case nodeName");
+is(ch[0].tagName, "F\u00c5", "upper case tagName");
+is(ch[1].tagName, "R\u00e5", "lower case tagName");
+is(ch[2].getAttribute("g\u00c5"), "a1", "upper case attr name");
+is(ch[2].getAttribute("t\u00e5"), "a2", "lower case attr name");
+is(ch[2].getAttribute("G\u00c5"), "a1", "upper case attr name");
+is(ch[2].getAttribute("T\u00e5"), "a2", "lower case attr name");
+is(ch[2].getAttribute("g\u00e5"), null, "wrong lower case attr name");
+is(ch[2].getAttribute("t\u00c5"), null, "wrong upper case attr name");
+is($('content').getElementsByTagName("f\u00c5")[0], ch[0], "gEBTN upper case");
+is($('content').getElementsByTagName("f\u00c5").length, 1, "gEBTN upper case length");
+is($('content').getElementsByTagName("r\u00e5")[0], ch[1], "gEBTN lower case");
+is($('content').getElementsByTagName("r\u00e5").length, 1, "gEBTN lower case length");
+is($('content').getElementsByTagName("F\u00c5")[0], ch[0], "gEBTN upper case");
+is($('content').getElementsByTagName("F\u00c5").length, 1, "gEBTN upper case length");
+is($('content').getElementsByTagName("R\u00e5")[0], ch[1], "gEBTN lower case");
+is($('content').getElementsByTagName("R\u00e5").length, 1, "gEBTN lower case length");
+is($('content').getElementsByTagName("f\u00e5").length, 0, "gEBTN wrong upper case");
+is($('content').getElementsByTagName("r\u00c5").length, 0, "gEBTN wrong lower case");
+</script>
+</pre>
+</body>
+</html>

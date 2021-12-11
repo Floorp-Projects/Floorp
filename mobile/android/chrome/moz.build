@@ -1,0 +1,17 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# NOTE: I think there are a few other possible components in this directory
+with Files("**"):
+    BUG_COMPONENT = ("GeckoView", "General")
+
+DIRS += ["geckoview"]
+
+DEFINES["AB_CD"] = CONFIG["MOZ_UI_LOCALE"]
+DEFINES["PACKAGE"] = "browser"
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_VERSION_DISPLAY"] = CONFIG["MOZ_APP_VERSION_DISPLAY"]
+DEFINES["ANDROID_PACKAGE_NAME"] = CONFIG["ANDROID_PACKAGE_NAME"]

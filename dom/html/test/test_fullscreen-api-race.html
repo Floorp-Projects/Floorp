@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for race conditions of Fullscreen API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+
+function Deferred() {
+  this.promise = new Promise(resolve => {
+    this.resolve = resolve;
+  });
+}
+
+function checkIsChromeFullscreen(win, inFullscreen) {
+  return SimpleTest.promiseWaitForCondition(
+    () => win.fullScreen == inFullscreen,
+    "The window should exit fullscreen state");
+}
+
+SimpleTest.waitForExplicitFinish();
+// XXX This actually exposes a true race condition, but it could rarely
+// happen in real world, because it only happens when requestFullscreen
+// is called immediately after exiting fullscreen in certain condition,
+// and in real life, requestFullscreen can only be called inside a user
+// event handler. But we want to fix this race condition at some point,
+// via queuing all exiting request as well as entering request together
+// which we may eventually need to do for bug 1188256.
+SimpleTest.requestFlakyTimeout(
+  "Need to wait for potential fullscreen transition");
+addLoadEvent(function () {
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["full-screen-api.allow-trusted-requests-only", false],
+    ]
+  }, next);
+});
+
+const OPEN_WINDOW_FUNCS = [
+  function openNewTab() {
+    return new Promise(resolve => {
+      var win = window.open("about:blank");
+      win.addEventListener("load", () => {
+        resolve(win);
+      }, { once: true });
+    });
+  },
+  function openNewWindow() {
+    return new Promise(resolve => {
+      var win = window.open("about:blank", "", "width=300,height=200");
+      win.addEventListener("load", () => {
+        resolve(win);
+      }, { once: true });
+    });
+  }
+];
+
+const ACTION_FUNCS = [
+  function navigate(win) {
+    info("About to navigate to another page");
+    var promise = new Promise(resolve => {
+      window.addEventListener("message", () => {
+        SimpleTest.waitForFocus(() => {
+          checkIsChromeFullscreen(win, false).then(() => {
+            win.close();
+            resolve();
+          });
+        }, win);
+      }, { once: true });
+    });
+    win.location = "file_fullscreen-api-race.html";
+    return promise;
+  },
+  function closeWindow(win) {
+    info("About to close the window");
+    win.close();
+    return Promise.resolve();
+  },
+  function exitFullscreen(win) {
+    info("About to cancel fullscreen");
+    var deferred = new Deferred();
+    function listener() {
+      win.removeEventListener("fullscreenchange", listener);
+      ok(!win.document.fullscreenElement, "Should exit fullscreen");
+      checkIsChromeFullscreen(win, false).then(() => {
+        win.close();
+        deferred.resolve();
+      });
+    }
+    win.addEventListener("fullscreenchange", listener);
+    win.document.exitFullscreen();
+    return deferred.promise;
+  },
+  function exitAndClose(win) {
+    info("About to cancel fullscreen and close the window");
+    win.document.exitFullscreen();
+    win.close();
+    return Promise.resolve();
+  }
+];
+
+function* testGenerator() {
+  for (var openWinFunc of OPEN_WINDOW_FUNCS) {
+    for (var actionFunc of ACTION_FUNCS) {
+      info(`Testing ${openWinFunc.name}, ${actionFunc.name}`);
+      yield { openWinFunc, actionFunc };
+    }
+  }
+}
+
+function runTest(test) {
+  var winPromise = test.openWinFunc();
+  return winPromise.then((win) => {
+    return new Promise(resolve => {
+      SimpleTest.waitForFocus(() => resolve(win), win, true);
+    });
+  }).then((win) => {
+    return new Promise((resolve, reject) => {
+      var retried = false;
+      function listener(evt) {
+        if (!retried && evt.type == "fullscreenerror") {
+          todo(false, "Failed to enter fullscreen, but try again");
+          retried = true;
+          SimpleTest.waitForFocus(() => {
+            win.document.documentElement.requestFullscreen();
+          }, win, true);
+          return;
+        }
+        win.removeEventListener("fullscreenchange", listener);
+        win.removeEventListener("fullscreenerror", listener);
+        is(evt.type, "fullscreenchange", "Should get fullscreenchange");
+        ok(win.document.fullscreenElement, "Should have entered fullscreen");
+        ok(win.fullScreen, "The window should be in fullscreen");
+        test.actionFunc(win).then(() => resolve(win));
+      }
+      if (win.fullScreen) {
+        todo(false, "Should not open in fullscreen mode");
+        win.close();
+        reject();
+        return;
+      }
+      info("About to enter fullscreen");
+      win.addEventListener("fullscreenchange", listener);
+      win.addEventListener("fullscreenerror", listener);
+      win.document.documentElement.requestFullscreen();
+    });
+  }).then((win) => {
+    ok(win.closed, "The window should have been closed");
+  });
+}
+
+var tests = testGenerator();
+
+function next() {
+  var test = tests.next().value;
+  if (test) {
+    runTest(test).catch(() => {
+      return new Promise(resolve => {
+        SimpleTest.waitForFocus(resolve);
+      }).then(() => runTest(test));
+    }).catch(() => {
+      ok(false, "Fail to run test " +
+         `${test.openWinFunc.name}, ${test.actionFunc.name}`);
+    }).then(() => {
+      setTimeout(() => SimpleTest.waitForFocus(next), 1000);
+    });
+  } else {
+    SimpleTest.finish();
+    return;
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="height:3000px; overflow:hidden;">
+<script>
+function doTest() {
+  document.documentElement.scrollTop = 100;
+  document.documentElement.removeAttribute('class');
+}
+window.focus();
+document.documentElement.focus();
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

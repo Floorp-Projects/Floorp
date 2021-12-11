@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=348236
+-->
+<head>
+
+  <title>Test for Bug 348236</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+  #eSelect {
+    position: fixed; top:0; left: 350px; font-size: 24px; width: 100px
+  }
+  #eSelect option {
+    margin: 0; padding: 0; height: 24px
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=348236">Mozilla Bug 348236</a>
+<p id="display"></p>
+<div id="content">
+
+  <select id="eSelect" size="1" onchange="++this.onchangeCount">
+    <option selected>1</option>
+    <option>2</option>
+    <option id="option3">3</option>
+  </select>
+</div>
+<pre id="test">
+<script type="text/javascript">
+
+  /** Test for Bug 348236 **/
+
+SimpleTest.waitForExplicitFinish()
+addLoadEvent(function test() {
+
+    var
+        WinUtils = SpecialPowers.getDOMWindowUtils(window),
+        sec = netscape.security,
+        eSelect = $("eSelect"),
+        timeout = 0 // Choose a larger value like 500 ms if you want to see what's happening.
+
+    function keypressOnSelect(key) {
+        eSelect.focus();
+        synthesizeKey(key.key, {altKey: key.altKey});
+    }
+
+    function testKey(key, keyString, functionToContinue) {
+        var selectGotClick
+        function clickListener() { selectGotClick = true }
+        eSelect.selectedIndex = 0
+        eSelect.onchangeCount = 0
+
+        // Drop the SELECT down.
+        keypressOnSelect(key)
+        // This timeout and the following are necessary to let the sent events take effect.
+        setTimeout(cont1, timeout)
+        function cont1() {
+            // Move the mouse over option 3.
+            let option3 = document.getElementById("option3");
+            let rect = option3.getBoundingClientRect();
+            WinUtils.sendMouseEvent("mousemove", rect.left + 4, rect.top + 4, 0, 0, 0, true)
+            setTimeout(cont2, timeout)
+        }
+        function cont2() {
+            // Close the select.
+            keypressOnSelect(key)
+            setTimeout(cont3, timeout)
+        }
+        function cont3() {
+            is(eSelect.value, "3", "Select's value should be 3 after hovering over option 3 and pressing " + keyString + ".")
+            is(eSelect.onchangeCount, 1, "Onchange should have fired once.")
+
+            // Simulate click on area to the left of the select.
+            eSelect.addEventListener("click", clickListener, true)
+            selectGotClick = false
+            WinUtils.sendMouseEvent("mousedown", 320, 0, 0, 0, 0, true)
+            WinUtils.sendMouseEvent("mouseup", 320, 0, 0, 0, 0, true)
+            setTimeout(cont4, timeout)
+        }
+        function cont4() {
+            eSelect.removeEventListener("click", clickListener, true)
+            ok(!selectGotClick, "SELECT must not capture mouse events after closing it with " + keyString + ".")
+            functionToContinue()
+        }
+    }
+
+
+    // Quick sanity checks.
+    is(eSelect.value, "1", "SELECT value should be 1 after load.")
+    is(eSelect.selectedIndex, 0, "SELECT selectedIndex should be 0 after load.")
+
+    // Check if sending key events works.
+    keypressOnSelect({key: "KEY_ArrowDown"});
+    is(eSelect.value, "2", "SELECT value should be 2 after pressing Down.")
+      
+    // Test ALT-Down.
+    testKey({key: "KEY_ArrowDown", altKey: true}, "ALT-Down", nextKey1)
+    function nextKey1() {
+        // Test ALT-Up.
+        testKey({key: "KEY_ArrowUp", altKey: true}, "ALT-Up", nextKey2)
+    }
+    function nextKey2() {
+        // Test the F4 key on Windows.
+        if (/Win/i.test(navigator.platform))
+            testKey({key: "KEY_F4"}, "F4", finished)
+        else
+            finished()
+    }
+    function finished() {
+    // Reset value to get the expected value if we reload the page.
+        eSelect.selectedIndex = 0
+        SimpleTest.finish()
+    }
+})
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "822674",
+    title: "RTCPeerConnection isn't a true javascript object as it should be"
+  });
+
+  runNetworkTest(function () {
+    var pc = new RTCPeerConnection();
+
+    pc.thereIsNeverGoingToBeAPropertyWithThisNameOnThisInterface = 1;
+    is(pc.thereIsNeverGoingToBeAPropertyWithThisNameOnThisInterface, 1,
+       "Can set expandos on an RTCPeerConnection");
+
+    pc = null;
+  });
+</script>
+</pre>
+</body>
+</html>

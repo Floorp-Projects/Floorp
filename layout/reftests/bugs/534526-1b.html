@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      span { color: red; }
+      [style*=red] + * { color: green; }
+    </style>
+  </head>
+  <body onload="document.getElementById('x').style.color = 'red'">
+    <span id="x" style="color: blue"></span><span>This should be green</span>
+  </body>
+</html>

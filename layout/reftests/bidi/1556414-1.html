@@ -1,0 +1,24 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+</head>
+<body>
+    <custom-span text="בדיקה"></custom-span>
+</body>
+<script>
+	class CustomSpan extends HTMLElement {
+		constructor() {
+			super();
+
+			var shadow = this.attachShadow({ mode: 'open' });
+
+			const span = document.createElement('span');
+			span.innerText = this.getAttribute('text');
+
+			shadow.appendChild(span);
+		}
+	}
+
+    window.customElements.define('custom-span', CustomSpan);
+</script>
+</html>

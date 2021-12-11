@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -x
+
+if test -d richtext2; then
+  rm -drf richtext2;
+fi
+
+svn checkout http://browserscope.googlecode.com/svn/trunk/categories/richtext2 richtext2 | tail -1 | sed 's/[^0-9]//g' > current_revision
+
+find richtext2 -type d -name .svn -exec rm -drf \{\} \; 2> /dev/null
+
+# Remove test_set.py and other similarly named files because they confuse our mochitest runner
+find richtext2 =type f -name test_\* -exec rm -rf \{\} \; 2> /dev/null
+
+hg add current_revision richtext2
+
+hg stat .
+

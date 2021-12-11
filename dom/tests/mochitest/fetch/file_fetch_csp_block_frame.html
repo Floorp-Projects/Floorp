@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html>
+<script>
+addEventListener('message', evt => {
+  let url = '/tests/dom/security/test/csp/file_redirects_resource.sjs?redir=other&res=xhr-resp';
+  fetch(url).then(response => {
+    parent.postMessage('RESOLVED', '*');
+  }).catch(error => {
+    parent.postMessage('REJECTED', '*');
+  });
+}, { once: true });
+</script>
+</html>

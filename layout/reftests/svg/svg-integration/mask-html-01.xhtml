@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:svg="http://www.w3.org/2000/svg">
+<body style="margin:0">
+  <div style="mask: url(#m1); width:500px; height:500px; background:lime;"></div>
+  <svg:svg height="0">
+    <!-- so that other documents can svg:use this one and force it to
+         load before onload -->
+    <svg:g id="empty" />
+    <svg:mask id="m1" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+      <svg:linearGradient id="g" gradientUnits="objectBoundingBox" x2="0" y2="1">
+        <svg:stop stop-color="white" offset="0"/>
+        <svg:stop stop-color="white" stop-opacity="0" offset="1"/>
+      </svg:linearGradient>
+      <svg:circle cx="0.25" cy="0.25" r="0.25" id="circle" fill="white"/>
+      <svg:rect x="0.5" y="0" width="0.5" height="1" fill="url(#g)"/>
+    </svg:mask>
+  </svg:svg>
+</body>
+</html>

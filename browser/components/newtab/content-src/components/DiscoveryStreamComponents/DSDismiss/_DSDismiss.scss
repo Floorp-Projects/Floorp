@@ -1,0 +1,44 @@
+.ds-dismiss {
+  position: relative;
+  border-radius: 8px;
+  transition-duration: 250ms;
+  transition-property: background;
+
+  &:hover {
+    .ds-dismiss-button {
+      opacity: 1;
+    }
+  }
+
+  .ds-dismiss-button {
+    border: 0;
+    cursor: pointer;
+    height: 32px;
+    width: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset-inline-end: 0;
+    top: 0;
+    border-radius: 50%;
+    background-color: transparent;
+
+    .icon {
+      fill: var(--newtab-text-primary-color);
+    }
+
+    &:hover {
+      background: var(--newtab-element-hover-color);
+    }
+
+    &:active {
+      background: var(--newtab-element-active-color);
+    }
+
+    &:focus {
+      box-shadow: $shadow-secondary;
+    }
+  }
+}

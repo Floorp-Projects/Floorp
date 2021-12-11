@@ -1,0 +1,81 @@
+<!doctype html>
+<html><head>
+<title>background-clip interaction with border-radius</title>
+<style>
+/* If you fix bug #466572, you can substantially simplify this test
+   case. */
+
+table { table-layout: fixed; width: 550px }
+td { width: 110px; height: 110px; text-align: center }
+div.i {
+   z-index: 0;
+   width: 70px;
+   height: 70px;
+   border-style: solid;
+   border-color: green;
+   background-clip: padding-box;
+   background-image: url("data:image/gif;base64,R0lGODdhAQABAPAAAACAAAAAACwAAAAAAQABAAACAkQBADs=");
+}
+.rA div.i { border-radius: 10px; }
+.rB div.i { border-radius: 20px; }
+.rC div.i { border-radius: 30px; }
+.rD div.i { border-radius: 40px; }
+.rE div.i { border-radius: 50px; }
+
+.wA div.i { border-width: 10px 10px 10px 10px; }
+.wB div.i { border-width: 20px 20px 20px 20px; }
+.wC div.i { border-width: 5px 20px 5px 20px; }
+.wD div.i { border-width: 20px 20px 5px 5px; }
+.wE div.i { border-width: 5px 10px 15px 20px; }
+
+div.o {
+  display: inline-block;
+  position: relative;
+}
+img {
+  position: absolute; top: 0; left: 0;
+  z-index: 1;
+}
+</style>
+</head><body>
+<table>
+<tr class="wA">
+  <td class="rA"><div class="o"><div class="i"></div><img src="456219-1-mask-wArA.png"></div></td>
+  <td class="rB"><div class="o"><div class="i"></div><img src="456219-1-mask-wArB.png"></div></td>
+  <td class="rC"><div class="o"><div class="i"></div><img src="456219-1-mask-wArC.png"></div></td>
+  <td class="rD"><div class="o"><div class="i"></div><img src="456219-1-mask-wArD.png"></div></td>
+  <td class="rE"><div class="o"><div class="i"></div><img src="456219-1-mask-wArE.png"></div></td>
+</tr>
+<tr class="wB">
+  <td class="rA"><div class="o"><div class="i"></div><img src="456219-1-mask-wBrA.png"></div></td>
+  <td class="rB"><div class="o"><div class="i"></div><img src="456219-1-mask-wBrB.png"></div></td>
+  <td class="rC"><div class="o"><div class="i"></div><img src="456219-1-mask-wBrC.png"></div></td>
+  <td class="rD"><div class="o"><div class="i"></div><img src="456219-1-mask-wBrD.png"></div></td>
+  <td class="rE"><div class="o"><div class="i"></div><img src="456219-1-mask-wBrE.png"></div></td>
+</tr>
+<tr class="wC">
+  <td class="rA"><div class="o"><div class="i"></div><img src="456219-1-mask-wCrA.png"></div></td>
+  <td class="rB"><div class="o"><div class="i"></div><img src="456219-1-mask-wCrB.png"></div></td>
+  <td class="rC"><div class="o"><div class="i"></div><img src="456219-1-mask-wCrC.png"></div></td>
+  <td class="rD"><div class="o"><div class="i"></div><img src="456219-1-mask-wCrD.png"></div></td>
+  <td class="rE"><div class="o"><div class="i"></div><img src="456219-1-mask-wCrE.png"></div></td>
+</tr>
+<tr class="wD">
+  <td class="rA"><div class="o"><div class="i"></div><img src="456219-1-mask-wDrA.png"></div></td>
+  <td class="rB"><div class="o"><div class="i"></div><img src="456219-1-mask-wDrB.png"></div></td>
+  <td class="rC"><div class="o"><div class="i"></div><img src="456219-1-mask-wDrC.png"></div></td>
+  <td class="rD"><div class="o"><div class="i"></div><img src="456219-1-mask-wDrD.png"></div></td>
+  <td class="rE"><div class="o"><div class="i"></div><img src="456219-1-mask-wDrE.png"></div></td>
+</tr>
+<tr class="wE">
+  <td class="rA"><div class="o"><div class="i"></div><img src="456219-1-mask-wErA.png"></div></td>
+  <td class="rB"><div class="o"><div class="i"></div><img src="456219-1-mask-wErB.png"></div></td>
+  <td class="rC"><div class="o"><div class="i"></div><img src="456219-1-mask-wErC.png"></div></td>
+  <td class="rD"><div class="o"><div class="i"></div><img src="456219-1-mask-wErD.png"></div></td>
+  <td class="rE"><div class="o"><div class="i"></div><img src="456219-1-mask-wErE.png"></div></td>
+</tr>
+</table>
+
+<p>Inside each green shape, there should be no white.</p>
+
+</body></html>

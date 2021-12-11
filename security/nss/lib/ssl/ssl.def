@@ -1,0 +1,242 @@
+;+#
+;+# This Source Code Form is subject to the terms of the Mozilla Public
+;+# License, v. 2.0. If a copy of the MPL was not distributed with this
+;+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+;+#
+;+# OK, this file is meant to support SUN, LINUX, AIX and WINDOWS
+;+#   1. For all unix platforms, the string ";-"  means "remove this line"
+;+#   2. For all unix platforms, the string " DATA " will be removed from any
+;+#     line on which it occurs.
+;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
+;+#      On AIX, lines containing ";+" will be removed.
+;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   5. For all unix platforms, after the above processing has taken place,
+;+#    all characters after the first ";" on the line will be removed.
+;+#    And for AIX, the first ";" will also be removed.
+;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
+;+#   directives are hidden behind ";", ";+", and ";-"
+;+
+;+NSS_3.2 {       # NSS 3.2 release
+;+    global:
+LIBRARY ssl3 ;-
+EXPORTS ;-
+SSL_ImplementedCiphers DATA ;
+SSL_NumImplementedCiphers DATA ;
+NSS_CmpCertChainWCANames;
+NSS_FindCertKEAType;
+NSS_GetClientAuthData;
+NSS_SetDomesticPolicy;
+NSS_SetExportPolicy;
+NSS_SetFrancePolicy;
+SSL_AuthCertificate;
+SSL_AuthCertificateHook;
+SSL_BadCertHook;
+SSL_CertDBHandleSet;
+SSL_CipherPolicyGet;
+SSL_CipherPolicySet;
+SSL_CipherPrefGet;
+SSL_CipherPrefGetDefault;
+SSL_CipherPrefSet;
+SSL_CipherPrefSetDefault;
+SSL_ClearSessionCache;
+SSL_ConfigMPServerSIDCache;
+SSL_ConfigSecureServer;
+SSL_ConfigServerSessionIDCache;
+SSL_DataPending;
+SSL_ForceHandshake;
+SSL_GetClientAuthDataHook;
+SSL_GetSessionID;
+SSL_GetStatistics;
+SSL_HandshakeCallback;
+SSL_ImportFD;
+SSL_InheritMPServerSIDCache;
+SSL_InvalidateSession;
+SSL_OptionGet;
+SSL_OptionGetDefault;
+SSL_OptionSet;
+SSL_OptionSetDefault;
+SSL_PeerCertificate;
+SSL_PreencryptedFileToStream;
+SSL_PreencryptedStreamToFile;
+SSL_ReHandshake;
+SSL_ResetHandshake;
+SSL_RestartHandshakeAfterCertReq;
+SSL_RestartHandshakeAfterServerCert;
+SSL_RevealCert;
+SSL_RevealPinArg;
+SSL_RevealURL;
+SSL_SecurityStatus;
+SSL_SetPKCS11PinArg;
+SSL_SetSockPeerID;
+SSL_SetURL;
+;+    local:
+;+*;
+;+};
+;+NSS_3.2.1 {       # NSS 3.2.1 release
+;+    global:
+NSSSSL_VersionCheck;
+;+    local:
+;+*;
+;+};
+;+NSS_3.4 {         # NSS 3.4   release
+;+    global:
+SSL_GetChannelInfo;
+SSL_GetCipherSuiteInfo;
+SSL_GetMaxServerCacheLocks;
+SSL_LocalCertificate;
+SSL_SetMaxServerCacheLocks;
+;+    local:
+;+*;
+;+};
+;+NSS_3.7.4 {       # NSS 3.7.4 release
+;+    global:
+SSL_ShutdownServerSessionIDCache;
+;+    local:
+;+*;
+;+};
+;+NSS_3.11.4 {      # NSS 3.11.4 release
+;+    global:
+SSL_ForceHandshakeWithTimeout;
+SSL_ReHandshakeWithTimeout;
+;+    local:
+;+*;
+;+};
+;+NSS_3.11.8 {      # NSS 3.11.8 release
+;+    global:
+SSL_CanBypass;
+;+    local:
+;+*;
+;+};
+;+NSS_3.12.6 {      # NSS 3.12.6 release
+;+    global:
+SSL_ConfigServerSessionIDCacheWithOpt;
+SSL_GetImplementedCiphers;
+SSL_GetNegotiatedHostInfo;
+SSL_GetNumImplementedCiphers;
+SSL_HandshakeNegotiatedExtension;
+SSL_ReconfigFD;
+SSL_SetTrustAnchors;
+SSL_SNISocketConfigHook;
+;+    local:
+;+*;
+;+};
+;+NSS_3.12.10 {      # NSS 3.12.10 release
+;+    global:
+SSL_ConfigSecureServerWithCertChain;
+;+    local:
+;+*;
+;+};
+;+NSS_3.13 {    # NSS 3.13 release
+;+    global:
+NSSSSL_GetVersion;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.13.2 {    # NSS 3.13.2 release
+;+    global:
+SSL_SetNextProtoCallback;
+SSL_SetNextProtoNego;
+SSL_GetNextProto;
+SSL_AuthCertificateComplete;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.14 {      # NSS 3.14 release
+;+    global:
+DTLS_GetHandshakeTimeout;
+DTLS_ImportFD;
+SSL_ExportKeyingMaterial;
+SSL_VersionRangeGet;
+SSL_VersionRangeGetDefault;
+SSL_VersionRangeGetSupported;
+SSL_VersionRangeSet;
+SSL_VersionRangeSetDefault;
+SSL_GetSRTPCipher;
+SSL_SetSRTPCiphers;
+;+    local:
+;+*;
+;+};
+;+NSS_3.15 {      # NSS 3.15 release
+;+    global:
+SSL_PeerStapledOCSPResponses;
+SSL_SetStapledOCSPResponses;
+;+    local:
+;+*;
+;+};
+;+NSS_3.15.4 {    # NSS 3.15.4 release
+;+    global:
+SSL_PeerCertificateChain;
+SSL_RecommendedCanFalseStart;
+SSL_SetCanFalseStartCallback;
+;+    local:
+;+*;
+;+};
+;+NSS_3.20 {    # NSS 3.20 release
+;+    global:
+SSL_DHEGroupPrefSet;
+SSL_EnableWeakDHEPrimeGroup;
+;+    local:
+;+*;
+;+};
+;+NSS_3.21 {    # NSS 3.21 release
+;+    global:
+SSL_GetPreliminaryChannelInfo;
+SSL_SignaturePrefSet;
+SSL_SignaturePrefGet;
+SSL_SignatureMaxCount;
+;+    local:
+;+*;
+;+};
+;+NSS_3.22 {    # NSS 3.22 release
+;+    global:
+SSL_PeerSignedCertTimestamps;
+SSL_SetSignedCertTimestamps;
+;+    local:
+;+*;
+;+};
+;+NSS_3.23 {    # NSS 3.23 release
+;+    global:
+SSL_SetDowngradeCheckVersion;
+;+    local:
+;+*;
+;+};
+;+NSS_3.24 {    # NSS 3.24 release
+;+    global:
+SSL_ConfigServerCert;
+;+    local:
+;+*;
+;+};
+;+NSS_3.27 {    # NSS 3.27 release
+;+    global:
+SSL_NamedGroupConfig;
+;+    local:
+;+*;
+;+};
+;+NSS_3.28 {    # NSS 3.28 release
+;+    global:
+SSL_ExportEarlyKeyingMaterial;
+SSL_SendAdditionalKeyShares;
+SSL_SignatureSchemePrefSet;
+SSL_SignatureSchemePrefGet;
+;+    local:
+;+*;
+;+};
+;+NSS_3.30 {    # NSS 3.30 release
+;+    global:
+SSL_SetSessionTicketKeyPair;
+;+    local:
+;+*;
+;+};
+;+NSS_3.30.0.1 { # Additional symbols for NSS 3.30 release
+;+    global:
+SSL_AlertReceivedCallback;
+SSL_AlertSentCallback;
+;+    local:
+;+*;
+;+};
+;+NSS_3.33 {    # NSS 3.33 release
+;+    global:
+SSL_GetExperimentalAPI;
+;+    local:
+;+*;
+;+};

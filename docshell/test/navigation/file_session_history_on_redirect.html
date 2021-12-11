@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+    window.onpagehide = function(event) {
+      opener.is(event.persisted, false, "Should have disabled bfcache for this test.");
+    }
+
+    window.onpageshow = function(event) {
+      opener.pageshow();
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>

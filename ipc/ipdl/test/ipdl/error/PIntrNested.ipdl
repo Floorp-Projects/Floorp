@@ -1,0 +1,6 @@
+//error: intr message `Msg' cannot specify [Nested]
+
+intr protocol PIntrNested {
+child:
+  [Nested=inside_sync] intr Msg();
+};

@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=799315
+-->
+<head>
+  <title>Test for MP4 and MP3 support</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<video id="v"></video>
+
+<pre id="test">
+<script>
+
+function check_mp4(v, enabled) {
+  function check(type, expected) {
+    var ex = enabled ? expected : "";
+    is(v.canPlayType(type), ex, type + "='" + ex + "'");
+  }
+
+  check("video/mp4", "maybe");
+  check("video/x-m4v", "maybe");
+  check("audio/mp4", "maybe");
+  check("audio/x-m4a", "maybe");
+
+  // Not the MIME type that other browsers respond to, so we won't either.
+  check("audio/m4a", "");
+  check("video/m4v", "");
+
+  check("audio/aac", "maybe");
+  check("audio/aacp", "maybe");
+
+  // H.264 Constrained Baseline Profile Level 3.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"", "probably");
+
+  // H.264 Constrained Baseline Profile Level 3.0, mp3
+  check("video/mp4; codecs=\"avc1.42E01E, mp3\"", "probably");
+
+  check("video/mp4; codecs=\"avc1.42001E, mp4a.40.2\"", "probably");
+  check("video/mp4; codecs=\"avc1.58A01E, mp4a.40.2\"", "probably");
+
+  // H.264 Main Profile Level 3.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.4D401E, mp4a.40.2\"", "probably");
+  // H.264 Main Profile Level 3.1, AAC-LC
+  check("video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"", "probably");
+  // H.264 Main Profile Level 4.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.4D4028, mp4a.40.2\"", "probably");
+  // H.264 High Profile Level 3.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.64001E, mp4a.40.2\"", "probably");
+  // H.264 High Profile Level 3.1, AAC-LC
+  check("video/mp4; codecs=\"avc1.64001F, mp4a.40.2\"", "probably");
+
+  check("video/mp4; codecs=\"avc1.42E01E\"", "probably");
+  check("video/mp4; codecs=\"avc1.42001E\"", "probably");
+  check("video/mp4; codecs=\"avc1.58A01E\"", "probably");
+  check("video/mp4; codecs=\"avc1.4D401E\"", "probably");
+  check("video/mp4; codecs=\"avc1.64001F\"", "probably");
+
+  // AAC-LC
+  check("audio/mp4; codecs=\"mp4a.40.2\"", "probably");
+  check("audio/mp4; codecs=mp4a.40.2", "probably");
+  check("audio/x-m4a; codecs=\"mp4a.40.2\"", "probably");
+  check("audio/x-m4a; codecs=mp4a.40.2", "probably");
+
+  check("audio/mp4; codecs=\"mp4a.40.2,\"", ""); // Invalid codecs string
+
+  // HE-AAC v1
+  check("audio/mp4; codecs=\"mp4a.40.5\"", "probably");
+  check("audio/mp4; codecs=mp4a.40.5", "probably");
+  check("audio/x-m4a; codecs=\"mp4a.40.5\"", "probably");
+  check("audio/x-m4a; codecs=mp4a.40.5", "probably");
+  // HE-AAC v2
+  check("audio/mp4; codecs=\"mp4a.40.29\"", "probably");
+
+  // Opus
+  check("audio/mp4; codecs=\"opus\"", "probably");
+  check("audio/mp4; codecs=opus", "probably");
+
+  // Flac.
+  var haveFlac = getPref("media.flac.enabled");
+  check("audio/mp4; codecs=\"flac\"", haveFlac ? "probably" : "");
+  check("audio/mp4; codecs=flac", haveFlac ? "probably" : "");
+
+  // VP9.
+  [ "video/mp4; codecs=vp9",
+    "video/mp4; codecs=\"vp9\"",
+    "video/mp4; codecs=\"vp9.0\""
+  ].forEach((codec) => {
+    // canPlayType should support VP9 in MP4...
+    check(codec, "probably");
+    if (!IsSupportedAndroid()) {
+      // VP9 codec is disabled on Android devices with no HW decoder. So skip it
+      // on Android for now.
+      ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
+    }
+  });
+
+  var haveAV1 = getPref("media.av1.enabled");
+  check("video/mp4; codecs=\"av1\"", haveAV1 ? "probably" : "");
+}
+
+function check_mp3(v, enabled) {
+  function check(type, expected) {
+    var ex = enabled ? expected : "";
+    is(v.canPlayType(type), ex, type + "='" + ex + "'");
+  }
+
+  check("audio/mpeg", "maybe");
+  check("audio/mp3", "maybe");
+
+  check("audio/mpeg; codecs=\"mp3\"", "probably");
+  check("audio/mpeg; codecs=mp3", "probably");
+
+  check("audio/mp3; codecs=\"mp3\"", "probably");
+  check("audio/mp3; codecs=mp3", "probably");
+}
+
+function IsMacOS() {
+  return navigator.userAgent.includes("Mac OS");
+}
+
+function IsLinux() {
+  return navigator.userAgent.includes("Linux");
+}
+
+function getPref(name) {
+  return SpecialPowers.getBoolPref(name, false);
+}
+
+function IsSupportedAndroid() {
+  return getAndroidVersion() >= 14;
+}
+
+function IsJellyBeanOrLater() {
+  return getAndroidVersion() >= 16;
+}
+
+var haveMp4 =
+  getPref("media.wmf.enabled") ||
+  IsMacOS() ||
+  (IsSupportedAndroid() &&
+    (IsJellyBeanOrLater() || getPref("media.plugins.enabled"))) ||
+  (IsLinux() && getPref("media.ffmpeg.enabled"));
+
+check_mp4(document.getElementById('v'), haveMp4);
+
+var haveMp3 =
+  getPref("media.wmf.enabled") ||
+  (IsLinux() && getPref("media.ffmpeg.enabled")) ||
+  (IsSupportedAndroid() &&
+    ((IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
+      getPref("media.plugins.enabled"))) ||
+  IsMacOS();
+
+check_mp3(document.getElementById('v'), haveMp3);
+
+mediaTestCleanup();
+</script>
+</pre>
+</body>
+</html>

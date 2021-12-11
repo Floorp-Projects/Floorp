@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <ExecutablePath>$(DXSDK_DIR)\Utilities\bin\x86;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>USE_SSE2;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions);MFBT_STAND_ALONE;XP_WIN</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+    </Link>
+    <PreBuildEvent>
+      <Command>xcopy $(ProjectDir)..\..\mfbt\*.h mozilla\ /Y</Command>
+      <Message>Copying MFBT files</Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>USE_SSE2;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>./</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="2D.h" />
+    <ClInclude Include="BaseMargin.h" />
+    <ClInclude Include="BasePoint.h" />
+    <ClInclude Include="BaseRect.h" />
+    <ClInclude Include="BaseSize.h" />
+    <ClInclude Include="DrawEventRecorder.h" />
+    <ClInclude Include="DrawTargetD2D.h" />
+    <ClInclude Include="DrawTargetDual.h" />
+    <ClInclude Include="DrawTargetRecording.h" />
+    <ClInclude Include="GradientStopsD2D.h" />
+    <ClInclude Include="HelpersD2D.h" />
+    <ClInclude Include="ImageScaling.h" />
+    <ClInclude Include="Logging.h" />
+    <ClInclude Include="Matrix.h" />
+    <ClInclude Include="PathD2D.h" />
+    <ClInclude Include="PathHelpers.h" />
+    <ClInclude Include="PathRecording.h" />
+    <ClInclude Include="Point.h" />
+    <ClInclude Include="RecordedEvent.h" />
+    <ClInclude Include="RecordingTypes.h" />
+    <ClInclude Include="Rect.h" />
+    <ClInclude Include="ScaledFontBase.h" />
+    <ClInclude Include="ScaledFontDWrite.h" />
+    <ClInclude Include="SourceSurfaceD2D.h" />
+    <ClInclude Include="SourceSurfaceD2DTarget.h" />
+    <ClInclude Include="SourceSurfaceRawData.h" />
+    <ClInclude Include="Tools.h" />
+    <ClInclude Include="Types.h" />
+    <ClInclude Include="UserData.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DrawEventRecorder.cpp" />
+    <ClCompile Include="DrawTargetD2D.cpp" />
+    <ClCompile Include="DrawTargetDual.cpp" />
+    <ClCompile Include="DrawTargetRecording.cpp" />
+    <ClCompile Include="Factory.cpp" />
+    <ClCompile Include="ImageScaling.cpp" />
+    <ClCompile Include="ImageScalingSSE2.cpp" />
+    <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="PathD2D.cpp" />
+    <ClCompile Include="PathRecording.cpp" />
+    <ClCompile Include="RecordedEvent.cpp" />
+    <ClCompile Include="ScaledFontBase.cpp" />
+    <ClCompile Include="ScaledFontDWrite.cpp" />
+    <ClCompile Include="SourceSurfaceD2D.cpp" />
+    <ClCompile Include="SourceSurfaceD2DTarget.cpp" />
+    <ClCompile Include="SourceSurfaceRawData.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile.in" />
+    <CustomBuild Include="ShadersD2D.fx">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">fxc /Tfx_4_0 /FhShadersD2D.h ShadersD2D.fx /Vn d2deffect</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ShadersD2D.h</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

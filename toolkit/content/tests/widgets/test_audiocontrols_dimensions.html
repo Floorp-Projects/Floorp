@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Audio controls test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <audio id="audio" controls preload="auto"></audio>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  const audio = document.getElementById("audio");
+  const controlBar = getElementWithinVideo(audio, "controlBar");
+
+  add_task(async function setup() {
+    await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
+    await new Promise(resolve => {
+      audio.addEventListener("loadedmetadata", resolve, {once: true});
+      audio.src = "audio.wav";
+    });
+  });
+
+  add_task(async function check_audio_height() {
+    is(audio.clientHeight, 40, "checking height of audio element");
+  });
+
+  add_task(async function check_controlbar_width() {
+    const originalControlBarWidth = controlBar.clientWidth;
+
+    isnot(originalControlBarWidth, 400, "the default audio width is not 400px");
+
+    audio.style.width = "400px";
+    audio.offsetWidth; // force reflow
+
+    isnot(controlBar.clientWidth, originalControlBarWidth, "new width should differ from the origianl width");
+    is(controlBar.clientWidth, 400, "controlbar's width should grow with audio width");
+  });
+
+  add_task(function check_audio_height_construction_sync() {
+    let el = new Audio();
+    el.src = "audio.wav";
+    el.controls = true;
+    document.body.appendChild(el);
+    is(el.clientHeight, 40, "Height of audio element with controls");
+    document.body.removeChild(el);
+  });
+
+  add_task(function check_audio_height_add_control_sync() {
+    let el = new Audio();
+    el.src = "audio.wav";
+    document.body.appendChild(el);
+    is(el.clientHeight, 0, "Height of audio element without controls");
+    el.controls = true;
+    is(el.clientHeight, 40, "Height of audio element with controls");
+    document.body.removeChild(el);
+  });
+</script>
+</pre>
+</body>
+</html>

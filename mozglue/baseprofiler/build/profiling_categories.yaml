@@ -1,0 +1,275 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Profiling categories
+# ====================
+# This file defines all profiling categories with their sub-categories. It is
+# parsed by generate_profiling_categories.py at build time to create
+# ProfilingCategoryList.h and profiling_categories.rs files.
+#
+# Profiling sub-categories are applied to each sampled stack to describe the
+# type of workload that the CPU is busy with. Only one sub-category can be
+# assigned so be mindful that these are non-overlapping. The active category is
+# set by pushing a label to the profiling stack, or by the unwinder in cases
+# such as JITs. A profile sample in arbitrary C++/Rust will typically be
+# categorized based on the top of the label stack.
+#
+# Each category consists of a name and a set of attributes that are described below:
+#
+# name [required]
+# ====
+# Name of the profiling category. This will be used in the C++ enum fields (not
+# by Rust).
+#
+# label [required]
+# =====
+# Label of the profiling category. This a more human readable string for the
+# category. Label will be displayed in the Firefox Profiler front-end. But also
+# this will be used as a Rust enum field (with non-alphanumeric characters
+# removed) because it's more suitable for Rust enums since name field is a snake
+# cased field with all caps. This is not idiomatic to rust enum field. On the
+# other hand, this field produces idiomatic fields.
+#
+# color [required]
+# =====
+# Color that this category will show up as in the Firefox Profiler front-end.
+# The list of available color names for categories is:
+# - transparent
+# - blue
+# - green
+# - grey
+# - lightblue
+# - magenta
+# - orange
+# - purple
+# - yellow
+#
+# subcategories [required]
+# =============
+# A list of sub-categories that belong to this category.
+# There must be at least one sub-category for each category and there must be at
+# least one category with the same name as the category to indicate the default
+# sub-category. Each sub-category must have name and label attributes.
+#
+# name attribute should either be the same as the category (for default
+# sub-category) or should start with parent category name + underscore
+# (e.g. JS_Parsing).
+#
+# label attribute is the same as parent category label attribute. Except that
+# this field is only used by the default sub-category. This is because the name
+# of the default sub-category is the same with parent category. label field
+# ensures that they are different.
+#
+# For example:
+# - name: JS
+#   subcategories:
+#     - name: JS
+#       label: Other
+#     - name: JS_Parsing
+#       label: Parsing
+#
+# Note that the first sub-category has the same name with the category. This is
+# the default category. Also note the other categories starting with the category
+# name + underscore.
+#
+
+- name: IDLE
+  label: Idle
+  color: transparent
+  subcategories:
+    - name: IDLE
+      label: Other
+
+- name: OTHER
+  label: Other
+  color: grey
+  subcategories:
+    - name: OTHER
+      label: Other
+    - name: OTHER_PreferenceRead
+      label: Preference Read
+    - name: OTHER_Profiling
+      label: Profiling
+
+- name: TEST
+  label: Test
+  color: darkgray
+  subcategories:
+    - name: TEST
+      label: Test
+
+- name: LAYOUT
+  label: Layout
+  color: purple
+  subcategories:
+    - name: LAYOUT
+      label: Other
+    - name: LAYOUT_FrameConstruction
+      label: Frame construction
+    - name: LAYOUT_Reflow
+      label: Reflow
+    - name: LAYOUT_CSSParsing
+      label: CSS parsing
+    - name: LAYOUT_SelectorQuery
+      label: Selector query
+    - name: LAYOUT_StyleComputation
+      label: Style computation
+
+- name: JS
+  label: JavaScript
+  color: yellow
+  subcategories:
+    - name: JS
+      label: Other
+    - name: JS_Parsing
+      label: Parsing
+    - name: JS_BaselineCompilation
+      label: JIT Compile (baseline)
+    - name: JS_IonCompilation
+      label: JIT Compile (ion)
+    - name: JS_Interpreter
+      label: Interpreter
+    - name: JS_BaselineInterpret
+      label: JIT (baseline-interpreter)
+    - name: JS_Baseline
+      label: JIT (baseline)
+    - name: JS_IonMonkey
+      label: JIT (ion)
+
+- name: GCCC
+  label: GC / CC
+  color: orange
+  subcategories:
+    - name: GCCC
+      label: Other
+    - name: GCCC_MinorGC
+      label: Minor GC
+    - name: GCCC_MajorGC
+      label: Major GC (Other)
+    - name: GCCC_MajorGC_Mark
+      label: Major GC (Mark)
+    - name: GCCC_MajorGC_Sweep
+      label: Major GC (Sweep)
+    - name: GCCC_MajorGC_Compact
+      label: Major GC (Compact)
+    - name: GCCC_UnmarkGray
+      label: Unmark Gray
+    - name: GCCC_Barrier
+      label: Barrier
+    - name: GCCC_FreeSnowWhite
+      label: CC (Free Snow White)
+    - name: GCCC_BuildGraph
+      label: CC (Build Graph)
+    - name: GCCC_ScanRoots
+      label: CC (Scan Roots)
+    - name: GCCC_CollectWhite
+      label: CC (Collect White)
+    - name: GCCC_Finalize
+      label: CC (Finalize)
+
+- name: NETWORK
+  label: Network
+  color: lightblue
+  subcategories:
+    - name: NETWORK
+      label: Other
+
+- name: GRAPHICS
+  label: Graphics
+  color: green
+  subcategories:
+    - name: GRAPHICS
+      label: Other
+    - name: GRAPHICS_DisplayListBuilding
+      label: DisplayList building
+    - name: GRAPHICS_DisplayListMerging
+      label: DisplayList merging
+    - name: GRAPHICS_LayerBuilding
+      label: Layer building
+    - name: GRAPHICS_TileAllocation
+      label: Tile allocation
+    - name: GRAPHICS_WRDisplayList
+      label: WebRender display list
+    - name: GRAPHICS_Rasterization
+      label: Rasterization
+    - name: GRAPHICS_FlushingAsyncPaints
+      label: Flushing async paints
+    - name: GRAPHICS_ImageDecoding
+      label: Image decoding
+
+- name: DOM
+  label: DOM
+  color: blue
+  subcategories:
+    - name: DOM
+      label: Other
+
+- name: JAVA_ANDROID
+  label: Android
+  color: yellow
+  subcategories:
+    - name: JAVA_ANDROID
+      label: Other
+
+- name: JAVA_ANDROIDX
+  label: AndroidX
+  color: orange
+  subcategories:
+    - name: JAVA_ANDROIDX
+      label: Other
+
+- name: JAVA_LANGUAGE
+  label: Java
+  color: blue
+  subcategories:
+    - name: JAVA_LANGUAGE
+      label: Other
+
+- name: JAVA_MOZILLA
+  label: Mozilla
+  color: green
+  subcategories:
+    - name: JAVA_MOZILLA
+      label: Other
+
+- name: JAVA_KOTLIN
+  label: Kotlin
+  color: purple
+  subcategories:
+    - name: JAVA_KOTLIN
+      label: Other
+
+- name: JAVA_BLOCKED
+  label: Blocked
+  color: lightblue
+  subcategories:
+    - name: JAVA_BLOCKED
+      label: Other
+
+- name: IPC
+  label: IPC
+  color: lightgreen
+  subcategories:
+    - name: IPC
+      label: Other
+
+- name: MEDIA
+  label: Media
+  color: orange
+  subcategories:
+    - name: MEDIA
+      label: Other
+    - name: MEDIA_CUBEB
+      label: Cubeb
+    - name: MEDIA_PLAYBACK
+      label: Playback
+    - name: MEDIA_RT
+      label: Real-time rendering
+
+- name: PROFILER
+  label: Profiler
+  color: lightred
+  subcategories:
+    - name: PROFILER
+      label: Other

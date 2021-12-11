@@ -1,0 +1,25 @@
+<script>
+o1 = new window.AudioContext(2, 16, 44100);
+o2 = o1.createBufferSource();
+o12 = o1.createBiquadFilter();
+o1.destination.channelCountMode = 'max';
+o2.buffer = function(){
+    var buffer = o1.createBuffer(2, 326, 77632);
+    for(var c=0; c<2; c++) {
+        for(var i=0; i<326; i++) {
+            buffer.getChannelData(c)[i] = -1;
+        }
+    }
+    return buffer;
+}();
+o2.connect(o1.destination);
+o2.buffer = function(){
+    var buffer = o1.createBuffer(3, 405, o1.sampleRate);
+    for(var c=0; c<3; c++) {
+        for(var i=0; i<405; i++) {
+            buffer.getChannelData(c)[i] = 1;
+        }
+    }
+    return buffer;
+}();
+</script>

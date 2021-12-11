@@ -1,0 +1,109 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#include "nsIFile.idl"
+
+%{C++
+struct PRFileDesc;
+%}
+
+[ptr] native PRFileDescStar(PRFileDesc);
+
+[scriptable, builtinclass, uuid(e7a3a954-384b-4aeb-a5f7-55626b0de9be)]
+interface nsILocalFileWin : nsIFile
+{
+    /**
+     *  initWithCommandLine
+     *
+     *  Initialize this object based on the main app path of a commandline
+     *  handler.
+     *
+     *   @param aCommandLine
+     *       the commandline to parse an app path out of.
+     */
+    void initWithCommandLine(in AString aCommandLine);
+   /**
+    * getVersionInfoValue
+    *
+    * Retrieve a metadata field from the file's VERSIONINFO block.
+    * Throws NS_ERROR_FAILURE if no value is found, or the value is empty.
+    *
+    * @param   aField         The field to look up.
+    *
+    */
+    AString getVersionInfoField(in string aField);
+
+    /**
+     * The canonical path of the file, which avoids short/long
+     * pathname inconsistencies. The nsIFile persistent
+     * descriptor is not guaranteed to be canonicalized (it may
+     * persist either the long or the short path name). The format of
+     * the canonical path will vary with the underlying file system:
+     * it will typically be the short pathname on filesystems that
+     * support both short and long path forms.
+     */
+    readonly attribute AString canonicalPath;
+    [noscript] readonly attribute ACString nativeCanonicalPath;
+
+    /**
+     * Windows specific file attributes.
+     */
+
+    /*
+     * WFA_SEARCH_INDEXED: Generally the default on files in Windows except
+     * those created in temp locations. Valid on XP and up. When set the
+     * file or directory is marked to be indexed by desktop search services.
+     */
+    const unsigned long WFA_SEARCH_INDEXED = 1;
+
+    /*
+     * WFA_READONLY: Whether the file is readonly or not.
+     */
+    const unsigned long WFA_READONLY = 2;
+
+    /*
+     * WFA_READWRITE: Used to clear the readonly attribute.
+     */
+    const unsigned long WFA_READWRITE = 4;
+
+    /**
+     * fileAttributesWin
+     *
+     * Set or get windows specific file attributes.
+     *
+     * Throws NS_ERROR_FILE_INVALID_PATH for an invalid file.
+     * Throws NS_ERROR_FAILURE if the set or get fails.
+     */
+    attribute unsigned long fileAttributesWin;
+
+    /**
+     * Setting this to true will prepend the prefix "\\?\" to all parsed file
+     * paths which match ^[A-Za-z]:\\.* (regex) syntax.
+     *
+     * There are two known issues (and potentially more) which can be resolved
+     * by the prefix:
+     * - In the Windows API, the maximum length for a path is MAX_PATH in
+     *   general. However, Windows API has many functions that also have Unicode
+     *   versions to permit an extended-length path for a maximum total path
+     *   length of 32,767 characters.
+     *
+     * - A path component which ends with a dot is not allowed for Windows
+     *   API.
+     *
+     * If either of these issues are expected to be common in your code, you
+     * should set this flag to true. (You should probably not have to set this
+     * flag to true.)
+     */
+    attribute boolean useDOSDevicePathSyntax;
+
+    /**
+     * Identical to nsIFile::openNSPRFileDesc except it also uses the
+     * FILE_SHARE_DELETE flag.
+    */
+    [noscript] PRFileDescStar openNSPRFileDescShareDelete(in long flags,
+                                                          in long mode);
+};
+

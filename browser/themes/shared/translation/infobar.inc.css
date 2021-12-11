@@ -1,0 +1,94 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+notification[value="translation"] .messageImage {
+  list-style-image: url(chrome://browser/skin/translation-16.png) !important;
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+@media (min-resolution: 1.25dppx) {
+  notification[value="translation"] .messageImage {
+    list-style-image: url(chrome://browser/skin/translation-16@2x.png) !important;
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+}
+
+notification[value="translation"][state="translating"] .messageImage {
+  list-style-image: url(chrome://browser/skin/translating-16.png) !important;
+  -moz-image-region: auto;
+}
+
+@media (min-resolution: 1.25dppx) {
+  notification[value="translation"][state="translating"] .messageImage {
+    list-style-image: url(chrome://browser/skin/translating-16@2x.png) !important;
+  }
+}
+
+notification[value="translation"] hbox[anonid="details"] {
+  overflow: hidden;
+}
+
+notification[value="translation"] menulist::part(dropmarker) {
+  display: -moz-box;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+}
+
+notification[value="translation"] menulist::part(dropmarker-icon) {
+  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+notification[value="translation"] menulist > menupopup {
+  margin: 0; /* override popup.css */
+}
+
+.translation-attribution {
+  cursor: pointer;
+  -moz-box-align: end;
+  font-size: small;
+  padding-block: 5px;
+}
+
+.translation-attribution > label {
+  margin-bottom: 0;
+}
+
+.translation-attribution > image {
+  width: 70px;
+}
+
+.translation-welcome-panel {
+  width: 305px;
+}
+
+.translation-welcome-panel::part(content) {
+  /* Prevent from stretching logo height */
+  -moz-box-align: start;
+}
+
+.translation-welcome-logo {
+  height: 32px;
+  width: 32px;
+  list-style-image: url(chrome://browser/skin/translation-16@2x.png);
+  -moz-image-region: rect(0, 64px, 32px, 32px);
+}
+
+.translation-welcome-content {
+  margin-inline-start: 16px;
+}
+
+.translation-welcome-headline {
+  font-size: larger;
+  font-weight: bold;
+  margin-inline-start: 0;
+}
+
+.translation-welcome-body {
+  padding: 1em 0;
+  margin: 0 0;
+}

@@ -1,0 +1,69 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              { "name": "about+home+1", "dir": true },
+              { "name": "about+home+1+q", "dir": true },
+              {
+                "name": "about+reader+url=https%3A%2F%2Fexample.com",
+                "dir": true
+              },
+              { "name": "chrome+++content+browser.xul", "dir": true },
+              {
+                "name": "https+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "asmjs", "dir": true },
+                  {
+                    "name": "idb",
+                    "dir": true,
+                    "entries": [{ "name": "UUID123.tmp", "dir": false }]
+                  }
+                ]
+              },
+              { "name": "moz-safe-about+++home", "dir": true }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "https+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          { "name": "ls-archive.sqlite", "dir": false }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]

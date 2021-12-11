@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testcase for bug 776265 - checks min-height with box-sizing: border-box</title>
+<style type="text/css">
+textarea {
+    float: left;
+    height: 40px;
+    width: 50px;
+    min-height: 50px;
+    border: 1px solid #aaa;
+    padding: 4px;
+    box-sizing: border-box;
+}
+</style>
+</head>
+<body><textarea></textarea>
+</body>
+</html>

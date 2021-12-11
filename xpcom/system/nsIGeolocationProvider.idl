@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIDOMGeoPosition;
+interface nsIGeolocationPrompt;
+
+/**
+
+ * Interface provides a way for a geolocation provider to
+ * notify the system that a new location is available.
+ */
+[scriptable, uuid(643dc5e9-b911-4b2c-8d44-603162696baf)]
+interface nsIGeolocationUpdate : nsISupports {
+
+  /**
+   * Notify the geolocation service that a new geolocation
+   * has been discovered.
+   * This must be called on the main thread
+   */
+  void update(in nsIDOMGeoPosition position);
+  /**
+   * Notify the geolocation service of an error.
+   * This must be called on the main thread.
+   * The parameter refers to one of the constants in the
+   * nsIDOMGeoPositionError interface.
+   * Use this to report spurious errors coming from the
+   * provider; for errors occurring inside the methods in
+   * the nsIGeolocationProvider interface, just use the return
+   * value.
+   */
+  [can_run_script]
+  void notifyError(in unsigned short error);
+};
+
+
+/**
+ * Interface provides location information to the nsGeolocator
+ * via the nsIDOMGeolocationCallback interface.  After
+ * startup is called, any geo location change should call
+ * callback.update().
+ */
+[scriptable, uuid(AC4A133B-9F92-4F7C-B369-D40CB6B17650)]
+interface nsIGeolocationProvider : nsISupports {
+
+  /**
+   * Start up the provider.  This is called before any other
+   * method.  may be called multiple times.
+   */
+  void startup();
+
+  /**
+   * watch
+   * When a location change is observed, notify the callback.
+   */
+  void watch(in nsIGeolocationUpdate callback);
+
+  /**
+   * shutdown
+   * Shuts down the location device.
+   */
+  void shutdown();
+
+  /**
+   * hint to provide to use any amount of power to provide a better result
+   */
+  void setHighAccuracy(in boolean enable);
+
+};
+
+%{C++
+/*
+    This must be implemented by geolocation providers.  It
+    must support nsIGeolocationProvider.
+*/
+#define NS_GEOLOCATION_PROVIDER_CONTRACTID "@mozilla.org/geolocation/provider;1"
+%}

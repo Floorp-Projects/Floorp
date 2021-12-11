@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+namespace mozilla {
+namespace dom {
+class ContentChild;
+class JSActorManager;
+} // namespace dom
+} // namespace mozilla
+%}
+[ptr] native ContentChildPtr(mozilla::dom::ContentChild);
+[ptr] native JSActorManagerPtr(mozilla::dom::JSActorManager);
+
+webidl JSProcessActorChild;
+
+/**
+ * Child actor interface for a process which can host DOM content.
+ *
+ * Implemented by either `InProcessChild` for the parent process, or
+ * `ContentChild` for a content process.
+ */
+[scriptable, builtinclass, uuid(b0c6e5f3-02f1-4f11-a0af-336fc231f3bf)]
+interface nsIDOMProcessChild: nsISupports {
+  %{C++
+  /**
+   * Get the nsIDOMProcessChild singleton for this content process. This will
+   * either be an InProcessChild in the parent process, or ContentChild in the
+   * child process.
+   *
+   * Implemented in ContentChild.cpp
+   */
+  static nsIDOMProcessChild* GetSingleton();
+  %}
+
+  /**
+   * Internal child process ID. `0` is reserved for the parent process.
+   */
+  [infallible] readonly attribute unsigned long long childID;
+
+  /**
+   * Lookup a JSProcessActorChild managed by this interface by name.
+   */
+  [implicit_jscontext] JSProcessActorChild getActor(in ACString name);
+  JSProcessActorChild getExistingActor(in ACString name);
+
+  /** Can the actor still send messages? */
+  [infallible] readonly attribute boolean canSend;
+
+  [notxpcom, nostdcall] ContentChildPtr AsContentChild();
+
+  /** Cast this nsIDOMProcessChild to a JSActorManager */
+  [notxpcom, nostdcall] JSActorManagerPtr AsJSActorManager();
+};

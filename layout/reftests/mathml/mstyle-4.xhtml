@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type"
+  content="application/xhtml+xml; charset=us-ascii" />
+  <title>Test mstyle</title>
+  <style type="text/css">
+    table { width: 100%;  border-collapse: collapse; }
+    td { border: solid black 1px; }
+  </style>
+</head>
+
+<body>
+
+<!-- The attributes below should no longer have effect on <mstyle>/<math>
+     elements. See bug 838509 -->
+
+<table>
+  <tbody>
+    <tr>
+      <td>mover: accent</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accent="false">
+          <mstyle accent="false">
+            <mover>
+              <!-- We assume &#x23de; is accent in the operator dictionary -->
+              <mrow>
+                <mi>x</mi>
+                <mo>+</mo>
+                <mi>y</mi>
+                <mo>+</mo>
+                <mi>z</mi>
+              </mrow>
+              <mo>&#x23de;</mo>
+            </mover>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>munder: accentunder</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accentunder="false">
+          <mstyle accentunder="false">
+            <munder>
+              <!-- We assume &#x23df; is accent in the operator dictionary -->
+              <mrow>
+                <mi>x</mi>
+                <mo>+</mo>
+                <mi>y</mi>
+                <mo>+</mo>
+                <mi>z</mi>
+              </mrow>
+              <mo>&#x23df;</mo>
+            </munder>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>munderover: accent, accentunder</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accent="false" accentunder="false">
+          <mstyle accent="false" accentunder="false">
+            <munderover>
+              <!-- We assume &#x23de; and &#x23df; are accents in the operator dictionary -->
+              <mrow>
+                <mi>x</mi>
+                <mo>+</mo>
+                <mi>y</mi>
+                <mo>+</mo>
+                <mi>z</mi>
+              </mrow>
+              <mo>&#x23df;</mo>
+              <mo>&#x23de;</mo>
+            </munderover>
+          </mstyle>
+        </math></td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

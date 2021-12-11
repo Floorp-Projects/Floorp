@@ -1,0 +1,10 @@
+//error: `nullable' qualifier for type `int' makes no sense
+
+union Union {
+    nullable int;
+};
+
+protocol Nullable2 {
+child:
+    async Msg(Union i);
+};

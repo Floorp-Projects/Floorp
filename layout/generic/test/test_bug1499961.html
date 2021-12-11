@@ -1,0 +1,409 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1499961
+
+Some tests ported from IntersectionObserver/polyfill/intersection-observer-test.html
+
+Original license header:
+
+Copyright 2016 Google Inc. All Rights Reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1499961</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="onLoad()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1499961">Mozilla Bug 1499961</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+  /* eslint-disable no-shadow */
+  var tests = [];
+  var curDescribeMsg = '';
+  var curItMsg = '';
+
+  function beforeEach_fn() { };
+  function afterEach_fn() { };
+
+  function before(fn) {
+    fn();
+  }
+
+  function beforeEach(fn) {
+    beforeEach_fn = fn;
+  }
+
+  function afterEach(fn) {
+    afterEach_fn = fn;
+  }
+
+  function it(msg, fn) {
+    tests.push({
+      msg: `${msg} [${curDescribeMsg}]`,
+      fn: fn
+    });
+  }
+
+  var callbacks = [];
+  function callDelayed(fn) {
+    callbacks.push(fn);
+  }
+
+  requestAnimationFrame(function tick() {
+    var i = callbacks.length;
+    while (i--) {
+      var cb = callbacks[i];
+      SimpleTest.executeSoon(function() { SimpleTest.executeSoon(cb) });
+      callbacks.splice(i, 1);
+    }
+    requestAnimationFrame(tick);
+  });
+
+  function expect(val) {
+    return {
+      to: {
+        throwException: function (regexp) {
+          try {
+            val();
+            ok(false, `${curItMsg} - an exception should have beeen thrown`);
+          } catch (e) {
+            ok(regexp.test(e), `${curItMsg} - supplied regexp should match thrown exception`);
+          }
+        },
+        get be() {
+          var fn = function (expected) {
+            is(val, expected, curItMsg);
+          };
+          fn.ok = function () {
+            ok(val, curItMsg);
+          };
+          fn.greaterThan = function (other) {
+            ok(val > other, `${curItMsg} - ${val} should be greater than ${other}`);
+          };
+          fn.lessThan = function (other) {
+            ok(val < other, `${curItMsg} - ${val} should be less than ${other}`);
+          };
+          return fn;
+        },
+        eql: function (expected) {
+          if (Array.isArray(expected)) {
+            if (!Array.isArray(val)) {
+              ok(false, curItMsg, `${curItMsg} - should be an array,`);
+              return;
+            }
+            is(val.length, expected.length, curItMsg, `${curItMsg} - arrays should be the same length`);
+            if (expected.length != val.length) {
+              return;
+            }
+            for (var i = 0; i < expected.length; i++) {
+              is(val[i], expected[i], `${curItMsg} - array elements at position ${i} should be equal`);
+              if (expected[i] != val[i]) {
+                return;
+              }
+            }
+            ok(true);
+          }
+        },
+      }
+    }
+  }
+
+  function describe(msg, fn) {
+    curDescribeMsg = msg;
+    fn();
+    curDescribeMsg = '';
+  }
+
+  function next() {
+    var test = tests.shift();
+    if (test) {
+      console.log(test.msg);
+      curItMsg = test.msg;
+      var fn = test.fn;
+      beforeEach_fn();
+      if (fn.length) {
+        fn(function () {
+          afterEach_fn();
+          next();
+        });
+      } else {
+        fn();
+        afterEach_fn();
+        next();
+      }
+    } else {
+      SimpleTest.finish();
+    }
+  }
+
+  var sinon = {
+    spy: function () {
+      var callbacks = [];
+      var fn = function () {
+        fn.callCount++;
+        fn.lastCall = { args: arguments };
+        if (callbacks.length) {
+          callbacks.shift()();
+        }
+      };
+      fn.callCount = 0;
+      fn.lastCall = { args: [] };
+      fn.waitForNotification = (fn) => {
+        callbacks.push(fn);
+      };
+      return fn;
+    }
+  };
+
+  var ASYNC_TIMEOUT = 300;
+
+
+  var io;
+  var noop = function() {};
+
+
+  // References to DOM elements, which are accessible to any test
+  // and reset prior to each test so state isn't shared.
+  var rootEl;
+  var grandParentEl;
+  var parentEl;
+  var targetEl1;
+  var targetEl2;
+  var targetEl3;
+  var targetEl4;
+  var targetEl5;
+
+
+  describe('IntersectionObserver', function() {
+
+    before(function() {
+
+    });
+
+
+    beforeEach(function() {
+      addStyles();
+      addFixtures();
+    });
+
+
+    afterEach(function() {
+      if (io && 'disconnect' in io) io.disconnect();
+      io = null;
+
+      window.onmessage = null;
+
+      removeStyles();
+      removeFixtures();
+    });
+
+
+    describe('constructor', function() {
+
+      it('move iframe and check reflow', function(done) {
+
+        var spy = sinon.spy();
+        io = new IntersectionObserver(spy, {root: rootEl});
+
+        runSequence([
+          // Do a first change and wait for its intersection observer
+          // notification, to ensure one full reflow was completed.
+          function(done) {
+            targetEl1.style.top = '0px';
+            io.observe(targetEl1);
+            spy.waitForNotification(function() {
+              var records = sortRecords(spy.lastCall.args[0]);
+              expect(records.length).to.be(1);
+              expect(records[0].target).to.be(targetEl1);
+              done();
+            });
+          },
+          // Do another change, which may trigger an incremental reflow only.
+          function(done) {
+            targetEl4.style.top = '-20px';
+            targetEl4.style.left = '20px';
+            io.observe(targetEl4);
+            spy.waitForNotification(function() {
+              expect(spy.callCount).to.be(2);
+              var records = sortRecords(spy.lastCall.args[0]);
+              expect(records.length).to.be(1);
+              expect(records[0].target).to.be(targetEl4);
+              // After the iframe is moved, reflow should include its parent,
+              // even if the iframe is a reflow root.
+              // If moved correctly (outside of rootEl), the intersection ratio
+              // should now be 0.
+              expect(records[0].intersectionRatio).to.be(0);
+              done();
+            });
+          }
+        ], done);
+
+      });
+
+    });
+
+  });
+
+
+  /**
+   * Runs a sequence of function and when finished invokes the done callback.
+   * Each function in the sequence is invoked with its own done function and
+   * it should call that function once it's complete.
+   * @param {Array<Function>} functions An array of async functions.
+   * @param {Function} done A final callback to be invoked once all function
+   *     have run.
+   */
+  function runSequence(functions, done) {
+    var next = functions.shift();
+    if (next) {
+      next(function() {
+        runSequence(functions, done);
+      });
+    } else {
+      done && done();
+    }
+  }
+
+
+  /**
+   * Sorts an array of records alphebetically by ascending ID. Since the current
+   * native implementation doesn't sort change entries by `observe` order, we do
+   * that ourselves for the non-polyfill case. Since all tests call observe
+   * on targets in sequential order, this should always match.
+   * https://crbug.com/613679
+   * @param {Array<IntersectionObserverEntry>} entries The entries to sort.
+   * @return {Array<IntersectionObserverEntry>} The sorted array.
+   */
+  function sortRecords(entries) {
+    entries = entries.sort(function(a, b) {
+      return a.target.id < b.target.id ? -1 : 1;
+    });
+    return entries;
+  }
+
+
+  /**
+   * Adds the common styles used by all tests to the page.
+   */
+  function addStyles() {
+    var styles = document.createElement('style');
+    styles.id = 'styles';
+    document.documentElement.appendChild(styles);
+
+    var cssText =
+        '#root {' +
+        '  position: relative;' +
+        '  width: 400px;' +
+        '  height: 200px;' +
+        '  background: #eee' +
+        '}' +
+        '#grand-parent {' +
+        '  position: relative;' +
+        '  width: 200px;' +
+        '  height: 200px;' +
+        '}' +
+        '#parent {' +
+        '  position: absolute;' +
+        '  top: 0px;' +
+        '  left: 200px;' +
+        '  overflow: hidden;' +
+        '  width: 200px;' +
+        '  height: 200px;' +
+        '  background: #ddd;' +
+        '}' +
+        '#target1, #target2, #target3, #target4 {' +
+        '  position: absolute;' +
+        '  top: 0px;' +
+        '  left: 0px;' +
+        '  width: 20px;' +
+        '  height: 20px;' +
+        '  transform: translateX(0px) translateY(0px);' +
+        '  transition: transform .5s;' +
+        '  background: #f00;' +
+        '  border: none;' +
+        '}';
+
+    styles.innerHTML = cssText;
+  }
+
+
+  /**
+   * Adds the DOM fixtures used by all tests to the page and assigns them to
+   * global variables so they can be referenced within the tests.
+   */
+  function addFixtures() {
+    var fixtures = document.createElement('div');
+    fixtures.id = 'fixtures';
+
+    fixtures.innerHTML =
+        '<div id="root">' +
+        '  <div id="grand-parent">' +
+        '    <div id="parent">' +
+        '      <div id="target1"></div>' +
+        '      <div id="target2"></div>' +
+        '      <div id="target3"></div>' +
+        '      <iframe id="target4"></iframe>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>';
+
+    document.body.appendChild(fixtures);
+
+    rootEl = document.getElementById('root');
+    grandParentEl = document.getElementById('grand-parent');
+    parentEl = document.getElementById('parent');
+    targetEl1 = document.getElementById('target1');
+    targetEl2 = document.getElementById('target2');
+    targetEl3 = document.getElementById('target3');
+    targetEl4 = document.getElementById('target4');
+  }
+
+
+  /**
+   * Removes the common styles from the page.
+   */
+  function removeStyles() {
+    var styles = document.getElementById('styles');
+    styles.remove();
+  }
+
+
+  /**
+   * Removes the DOM fixtures from the page and resets the global references.
+   */
+  function removeFixtures() {
+    var fixtures = document.getElementById('fixtures');
+    fixtures.remove();
+
+    rootEl = null;
+    grandParentEl = null;
+    parentEl = null;
+    targetEl1 = null;
+    targetEl2 = null;
+    targetEl3 = null;
+    targetEl4 = null;
+  }
+
+  function onLoad() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.IntersectionObserver.enabled", true]]}, next);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<div id="log">
+</div>
+</body>
+</html>

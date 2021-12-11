@@ -1,0 +1,285 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=378028
+-->
+<window title="Mozilla Bug 378028"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=378028"
+     target="_blank">Mozilla Bug 378028</a>
+  </body>
+
+  <!-- richlistbox currently has no way of giving us a defined number of
+       rows, so we just choose an arbitrary height limit that should give
+       us plenty of vertical scrollability -->
+  <richlistbox id="richlistbox" style="height:50px;">
+    <richlistitem id="richlistbox_item0" hidden="true"><label value="Item 0"/></richlistitem>
+    <richlistitem id="richlistbox_item1"><label value="Item 1"/></richlistitem>
+    <richlistitem id="richlistbox_item2"><label value="Item 2"/></richlistitem>
+    <richlistitem id="richlistbox_item3"><label value="Item 3"/></richlistitem>
+    <richlistitem id="richlistbox_item4"><label value="Item 4"/></richlistitem>
+    <richlistitem id="richlistbox_item5"><label value="Item 5"/></richlistitem>
+    <richlistitem id="richlistbox_item6"><label value="Item 6"/></richlistitem>
+    <richlistitem id="richlistbox_item7"><label value="Item 7"/></richlistitem>
+    <richlistitem id="richlistbox_item8"><label value="Item 8"/></richlistitem>
+  </richlistbox>
+
+  <box orient="horizontal">
+    <arrowscrollbox id="hscrollbox" clicktoscroll="true" orient="horizontal"
+     smoothscroll="false" style="max-width:80px;" flex="1">
+      <hbox style="width:40px; height:20px; background:black;" hidden="true"/>
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+    </arrowscrollbox>
+  </box>
+
+  <arrowscrollbox id="vscrollbox" clicktoscroll="true" orient="vertical"
+   smoothscroll="false" style="max-height:80px;" flex="1">
+      <vbox style="width:100px; height:40px; background:black;" hidden="true"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+  </arrowscrollbox>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+/** Test for Bug 378028 **/
+/*   and for Bug 350471 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(prepareRunningTests);
+
+// Some tests need to wait until stopping scroll completely.  At this time,
+// setTimeout() will retry to check up to MAX_RETRY_COUNT times.
+const MAX_RETRY_COUNT = 5;
+
+const deltaModes = [
+  WheelEvent.DOM_DELTA_PIXEL,  // 0
+  WheelEvent.DOM_DELTA_LINE,   // 1
+  WheelEvent.DOM_DELTA_PAGE    // 2
+];
+
+function sendWheelAndWait(aScrollTaget, aX, aY, aEvent, aChecker)
+{
+  function continueTestsIfScrolledAsExpected() {
+    if (!aChecker())
+      SimpleTest.executeSoon(()=>{ continueTestsIfScrolledAsExpected(aChecker) });
+    else
+      runTests();
+  }
+
+  sendWheelAndPaint(aScrollTaget, aX, aY, aEvent, ()=>{
+    // sendWheelAndPaint may wait not enough for <scrollbox>.
+    // Let's check the position before using is() for avoiding random orange.
+    // So, this test may detect regressions with timeout.
+    continueTestsIfScrolledAsExpected(aChecker);
+  });
+}
+
+function* testRichListbox(id)
+{
+  var listbox = document.getElementById(id);
+
+  function* helper(aStart, aDelta, aIntDelta, aDeltaMode) {
+    listbox.ensureElementIsVisible(listbox.getItemAtIndex(aStart),true);
+
+    let event = {
+      deltaMode: aDeltaMode,
+      deltaY: aDelta,
+      lineOrPageDeltaY: aIntDelta
+    };
+    // We don't need to wait for finishing the scroll in this test.
+    yield sendWheelAndWait(listbox, 10, 10, event, ()=>{ return true; });
+    var change = listbox.getIndexOfFirstVisibleRow() - aStart;
+    var direction = (change > 0) - (change < 0);
+    var expected = (aDelta > 0) - (aDelta < 0);
+    is(direction, expected,
+     "testRichListbox(" + id +  "): vertical, starting " + aStart +
+       " delta " + aDelta + " lineOrPageDeltaY " + aIntDelta +
+       " aDeltaMode " + aDeltaMode);
+
+    // Check that horizontal scrolling has no effect
+    event = {
+      deltaMode: aDeltaMode,
+      deltaX: aDelta,
+      lineOrPageDeltaX: aIntDelta
+    };
+
+    listbox.ensureElementIsVisible(listbox.getItemAtIndex(aStart),true);
+    yield sendWheelAndWait(listbox, 10, 10, event, ()=>{ return true; });
+    is(listbox.getIndexOfFirstVisibleRow(), aStart,
+       "testRichListbox(" + id +  "): horizontal, starting " + aStart +
+         " delta " + aDelta + " lineOrPageDeltaX " + aIntDelta +
+         " aDeltaMode " + aDeltaMode);
+  }
+
+  // richlistbox currently uses native XUL scrolling, so the "line"
+  // amounts don't necessarily correspond 1-to-1 with listbox items. So
+  // we just check that scrolling up/down scrolls in the right direction.
+  for (let i = 0; i < deltaModes.length; i++) {
+    let delta = (deltaModes[i] == WheelEvent.DOM_DELTA_PIXEL) ? 32.0 : 2.0;
+    yield* helper(5, -delta, -1, deltaModes[i]);
+    yield* helper(5, -delta,  0, deltaModes[i]);
+    yield* helper(5,  delta,  1, deltaModes[i]);
+    yield* helper(5,  delta,  0, deltaModes[i]);
+  }
+}
+
+function* testArrowScrollbox(id)
+{
+  var arrowscrollbox = document.getElementById(id);
+  var scrollbox = arrowscrollbox.scrollbox;
+  var orient = scrollbox.getAttribute("orient");
+  var orientIsHorizontal = (orient == "horizontal");
+
+  function* helper(aStart, aDelta, aDeltaMode, aExpected)
+  {
+    var lineOrPageDelta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? aDelta / 10 : aDelta;
+
+    scrollbox.scrollTo(aStart, aStart);
+    for (let i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
+      // Note, vertical mouse scrolling is allowed to scroll horizontal
+      // arrowscrollboxes, because many users have no horizontal mouse scroll
+      // capability
+      let expected = !i ? aExpected : aStart;
+      let getPos = ()=>{
+        return orientIsHorizontal ? scrollbox.scrollLeft :
+                                    scrollbox.scrollTop;
+      };
+      let oldPos = -1;
+      let retry = 0;
+      yield sendWheelAndWait(scrollbox, 5, 5,
+                             { deltaMode: aDeltaMode, deltaY: aDelta,
+                               lineOrPageDeltaY: lineOrPageDelta },
+                             ()=>{
+                                if (getPos() == expected) {
+                                  return true;
+                                }
+                                if (oldPos == getPos()) {
+                                  // If scroll stopped completely, let's continue the test.
+                                  return ++retry == MAX_RETRY_COUNT;
+                                }
+                                oldPos = getPos();
+                                retry = 0;
+                                return false;
+                             });
+      is(getPos(), expected,
+         "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
+           " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
+           " aDeltaMode " + aDeltaMode);
+    }
+
+    scrollbox.scrollTo(aStart, aStart);
+    for (let i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
+      // horizontal mouse scrolling is never allowed to scroll vertical
+      // arrowscrollboxes
+      let expected = (!i && orientIsHorizontal) ? aExpected : aStart;
+      let getPos = ()=>{
+        return orientIsHorizontal ? scrollbox.scrollLeft :
+                                    scrollbox.scrollTop;
+      };
+      let oldPos = -1;
+      let retry = 0;
+      yield sendWheelAndWait(scrollbox, 5, 5,
+                             { deltaMode: aDeltaMode, deltaX: aDelta,
+                               lineOrPageDeltaX: lineOrPageDelta },
+                             ()=>{
+                                if (getPos() == expected) {
+                                  return true;
+                                }
+                                if (oldPos == getPos()) {
+                                  // If scroll stopped completely, let's continue the test.
+                                  return ++retry == MAX_RETRY_COUNT;
+                                }
+                                oldPos = getPos();
+                                retry = 0;
+                                return false;
+                             });
+      is(getPos(), expected,
+         "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
+           " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
+           " aDeltaMode " + aDeltaMode);
+    }
+  }
+
+  var line = arrowscrollbox.lineScrollAmount;
+  var scrolledWidth = scrollbox.scrollWidth;
+  var scrolledHeight = scrollbox.scrollHeight;
+  var scrollMaxX = scrolledWidth - scrollbox.getBoundingClientRect().width;
+  var scrollMaxY = scrolledHeight - scrollbox.getBoundingClientRect().height;
+  var scrollMax = orientIsHorizontal ? scrollMaxX : scrollMaxY;
+
+  for (let deltaMode of deltaModes) {
+    const start = 50;
+    const delta = 1000;
+    let expectedNegative = 0;
+    let expectedPositive = scrollMax;
+    if (deltaMode == WheelEvent.DOM_DELTA_LINE) {
+      let maxDelta = Math.floor(Math.max(1, arrowscrollbox.scrollClientSize / line)) * line;
+      expectedNegative = Math.max(0, start - maxDelta);
+      expectedPositive = Math.min(scrollMax, start + maxDelta);
+    }
+    yield* helper(start, -delta, deltaMode, expectedNegative);
+    yield* helper(start,  delta, deltaMode, expectedPositive);
+  }
+}
+
+var gTestContinuation = null;
+
+function runTests()
+{
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    var winUtils = SpecialPowers.getDOMWindowUtils(window);
+    winUtils.restoreNormalRefresh();
+    SimpleTest.finish();
+  }
+}
+
+async function prepareRunningTests()
+{
+  // Before actually running tests, we disable auto-dir scrolling, becasue the
+  // horizontal scrolling tests in this file are mostly meant to ensure that the
+  // tested controls in the default style should only have one scrollbar and it
+  // must always be in the block-flow direction so they are not really meant to
+  // test default actions for wheel events, so we simply disabled auto-dir
+  // scrolling, which are well tested in
+  // dom/events/test/window_wheel_default_action.html.
+  await SpecialPowers.pushPrefEnv({"set": [["mousewheel.autodir.enabled",
+                                            false]]});
+
+  runTests();
+}
+
+function* testBody()
+{
+  yield* testRichListbox("richlistbox");
+  yield* testArrowScrollbox("hscrollbox");
+  yield* testArrowScrollbox("vscrollbox");
+}
+
+  ]]></script>
+</window>

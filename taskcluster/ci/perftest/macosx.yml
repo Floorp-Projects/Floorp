@@ -1,0 +1,250 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: t-osx-1015-r8
+    fetches:
+        build:
+            - artifact: target.mozinfo.json
+            - artifact: target.common.tests.tar.gz
+            - artifact: target.xpcshell.tests.tar.gz
+            - artifact: target.perftests.tests.tar.gz
+            - artifact: target.dmg
+              extract: false
+        toolchain:
+            - macosx64-geckodriver
+            - macosx64-node
+    platform: macosx1014-64-shippable/opt
+    require-build:
+        macosx1014-64-shippable/opt: build-macosx64-shippable/opt
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
+
+try-xpcshell:
+    description: Run ./mach perftest on macOs
+    treeherder:
+        symbol: perftest(macos-xpcshell)
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            --on-try
+            --flavor desktop-browser
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --xpcshell-binary ${MOZ_FETCHES_DIR}/bin/xpcshell
+            --xpcshell-mozinfo ${MOZ_FETCHES_DIR}/target.mozinfo.json
+            --xpcshell-nodejs ${MOZ_FETCHES_DIR}/node/bin/node
+            --xpcshell-xre-path ${MOZ_FETCHES_DIR}/target.dmg
+
+try-browsertime:
+    description: Run ./mach perftest on macOs
+    treeherder:
+        symbol: perftest(macos-bt)
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            --on-try
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --flavor desktop-browser
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
+
+domcount:
+    description: Run DOM test on macOS
+    treeherder:
+        symbol: perftest(macos-dom)
+    attributes:
+        batch: false
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            browser/base/content/test/perftest_browser_xhtml_dom.js
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --flavor desktop-browser
+            --perfherder
+            --perfherder-metrics name:totalDOMCount,unit:count name:panelMenuCount,unit:count name:lightDOMCount,unit:count name:lightDOMDetails,unit:count
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
+
+http3:
+    description: Run HTTP/3 test
+    treeherder:
+        symbol: perftest(http3)
+    attributes:
+        batch: false
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            xpcshell/tests/netwerk/test/unit/test_http3_perf.js
+            --flavor xpcshell
+            --perfherder
+            --perfherder-metrics name:speed,unit:bps
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --xpcshell-binary ${MOZ_FETCHES_DIR}/bin/xpcshell
+            --xpcshell-mozinfo ${MOZ_FETCHES_DIR}/target.mozinfo.json
+            --xpcshell-nodejs ${MOZ_FETCHES_DIR}/node/bin/node
+            --xpcshell-cycles 13
+            --xpcshell-xre-path ${MOZ_FETCHES_DIR}/target.dmg
+
+
+livesites:
+    description: Live site performance testing
+    variants: [http3]
+    treeherder:
+        symbol: perftest({symbol})
+    attributes:
+        batch: false
+        cron: true
+    perftest:
+        - [cloudflare, netwerk/test/perf/perftest_http3_cloudflareblog.js]
+        # broken: bug 1678588
+        # - [fb-scroll, netwerk/test/perf/perftest_http3_facebook_scroll.js]
+        - [g-image, netwerk/test/perf/perftest_http3_google_image.js]
+        - [g-search, netwerk/test/perf/perftest_http3_google_search.js]
+        - [lq-fetch, netwerk/test/perf/perftest_http3_lucasquicfetch.js]
+        # broken: bug 1695871
+        # - [ytw, netwerk/test/perf/perftest_http3_youtube_watch.js]
+        # - [ytw-scroll, netwerk/test/perf/perftest_http3_youtube_watch_scroll.js]
+    perftest-metrics:
+        by-perftest:
+            cloudflare:
+                # Example of how the specify settings for each metric
+                resources:
+                    extraOptions: []
+                firstPaint: {}
+                navigationTiming: {}
+                pageTimings: {}
+                timeToContentfulPaint: {}
+            # broken: bug 1678588
+            # fb-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, requestsPerSecond]
+            g-image: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, imagesPerSecond, imageLoadTime]
+            g-search: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
+            lq-fetch: [navigationTiming, pageTimings, resources, timeToContentfulPaint, resourceLoadTime, imagesLoaded, imagesMissed]
+            # broken: bug 1695871
+            # ytw: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, droppedFrames, decodedFrames]
+            # ytw-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, droppedFrames, decodedFrames]
+            default: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
+    # Leave this here so people know this exists when looking
+    # for examples
+    perftest-perfherder-global:
+        extraOptions: []
+    perftest-extra-options:
+        by-perftest:
+            cloudflare:
+                - --perfherder-split-by browserScripts.pageinfo.url
+            g-search:
+                - --perfherder-split-by browserScripts.pageinfo.url
+            lq-fetch:
+                - --perfherder-split-by browserScripts.pageinfo.url
+            default: []
+    perftest-btime-variants:
+        by-perftest:
+            cloudflare:
+                - ["10s", browsertime.waitTime=10000]
+                - ["25s", browsertime.waitTime=25000]
+                - ["35s", browsertime.waitTime=35000]
+                - ["60s", browsertime.waitTime=60000]
+            # broken: bug 1678588
+            # fb-scroll:
+            #     - ["10s", browsertime.waitTime=10000]
+            #     - ["25s", browsertime.waitTime=25000]
+            #     - ["35s", browsertime.waitTime=35000]
+            #     - ["60s", browsertime.waitTime=60000]
+            g-search:
+                - ["10s", browsertime.waitTime=10000]
+                - ["25s", browsertime.waitTime=25000]
+                - ["35s", browsertime.waitTime=35000]
+                - ["60s", browsertime.waitTime=60000]
+            lq-fetch:
+                - [null, "browsertime.waitTime=1000,browsertime.cycles=5"]
+            # broken: bug 1695871
+            # ytw:
+            #     - [null, browsertime.waitTime=20000]
+            # ytw-scroll:
+            #     - [null, browsertime.waitTime=20000]
+            default:
+                - [null, browsertime.waitTime=1000]
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            {perftest_testname}
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --browsertime-iterations 10
+            --flavor desktop-browser
+            --perfherder
+            --perfherder-metrics {perftest_metrics}
+            --perfherder-simplify-names
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
+
+controlled:
+    description: Controlled performance testing
+    treeherder:
+        symbol: perftest(controlled)
+    worker:
+        max-run-time: 14400
+    attributes:
+        batch: false
+        cron: false
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            python3 python/mozperftest/mozperftest/runner.py
+            netwerk/test/perf/perftest_http3_controlled.js
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --browsertime-iterations 1
+            --browsertime-cycles 96
+            --hooks netwerk/test/perf/hooks_throttling.py
+            --flavor desktop-browser
+            --perfherder
+            --perfherder-metrics name:navigationTiming,unit:ms name:pageTimings,unit:ms name:resources,unit:ms name:firstPaint,unit:ms name:timeToContentfulPaint,unit:ms
+            --perfherder-simplify-names
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
+
+perfstats:
+    description: Run PerfStats pageload test
+    treeherder:
+        symbol: perftest(macos-perfstats)
+    attributes:
+        batch: false
+        cron: false
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --flavor desktop-browser
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --perfherder
+            --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
+            --browsertime-iterations 10
+            --hooks testing/performance/hooks_perfstats.py
+            testing/performance/perftest_perfstats.js

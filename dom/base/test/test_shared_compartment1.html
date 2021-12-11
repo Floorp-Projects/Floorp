@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1530608</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1530608 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var Cu = SpecialPowers.Cu;
+  var isSameCompartment = Cu.getJSTestingFunctions().isSameCompartment;
+
+  var testsDone = 0;
+  function finishIfDone() {
+    testsDone++;
+    if (testsDone === 4) {
+      SimpleTest.finish();
+    }
+  }
+
+  // Test 1: same-origin iframe.
+  function testFrame1() {
+    var frameWin = document.getElementById("frame1").contentWindow;
+    ok(isSameCompartment(window, frameWin),
+       "Same-origin iframe must be same-compartment");
+    finishIfDone();
+  }
+
+  // Test 2: cross-origin iframe.
+  function testFrame2() {
+    var frameWin = document.getElementById("frame2").contentWindow;
+    ok(!isSameCompartment(window, frameWin),
+       "Cross-origin iframe must be cross-compartment");
+    finishIfDone();
+  }
+
+  // Test 3: same-site, cross-origin iframe.
+  function testFrame3() {
+    var frame = document.getElementById("frame3");
+    ok(!isSameCompartment(window, frame.contentWindow),
+       "Same-site cross-origin iframe must be cross-compartment");
+
+    // Now load a same-origin page in this iframe.
+    frame.onload = function() {
+      ok(isSameCompartment(window, frame.contentWindow),
+         "Frame must be same-compartment now");
+      finishIfDone();
+    };
+    frame.src = "file_empty.html";
+  }
+
+  // Test 4: dynamically created iframe.
+  addLoadEvent(function() {
+    var frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+    ok(isSameCompartment(window, frame.contentWindow),
+       "Newly created iframe must be same-compartment");
+    finishIfDone();
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1530608">Mozilla Bug 1530608</a>
+
+<iframe id="frame1" onload="testFrame1()" src="file_empty.html"></iframe>
+<iframe id="frame2" onload="testFrame2()" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<iframe id="frame3" onload="testFrame3()" src="http://test1.mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+
+</body>
+</html>

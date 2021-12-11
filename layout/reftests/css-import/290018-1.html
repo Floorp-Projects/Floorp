@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<body>
+  <iframe></iframe>
+  <script>
+    var win = window.frames[0];
+    win.document.open();
+    win.document.write("<!DOCTYPE html><html><head></head><body></body></html>");
+    win.document.close();
+    win.document.body.innerHTML = "<link rel='stylesheet' type='text/css' href='outer-sheet.css' />";
+    win.document.body.innerHTML += "<p style='padding:2px'>test</p>";
+  </script>
+</body>
+                                              

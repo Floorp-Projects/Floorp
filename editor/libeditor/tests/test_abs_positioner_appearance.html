@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for absolute positioner appearance</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editor" contenteditable></div>
+<div id="clickaway" style="width: 3px; height: 3px;"></div>
+<img src="green.png"><!-- for ensuring to load the image at first test of <img> case -->
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  async function waitForSelectionChange() {
+    return new Promise(resolve => {
+      document.addEventListener("selectionchange", () => {
+        resolve();
+      }, {once: true});
+    });
+  }
+
+  let editor = document.getElementById("editor");
+  let outOfEditor = document.getElementById("clickaway");
+
+  async function testIfAppears() {
+    const kTests = [
+      { description: "absolute positioned <div>",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; top: 50px; left: 50px;\">positioned</div>",
+        movable: true,
+      },
+      { description: "fixed positioned <div>",
+        innerHTML: "<div id=\"target\" style=\"position: fixed; top: 50px; left: 50px;\">positioned</div>",
+        movable: false,
+      },
+      { description: "relative positioned <div>",
+        innerHTML: "<div id=\"target\" style=\"position: relative; top: 50px; left: 50px;\">positioned</div>",
+        movable: false,
+      },
+    ];
+
+    for (const kTest of kTests) {
+      const kDescription = "testIfAppears, " + kTest.description + ": ";
+      editor.innerHTML = kTest.innerHTML;
+      let target = document.getElementById("target");
+
+      document.execCommand("enableAbsolutePositionEditing", false, false);
+      ok(!document.queryCommandState("enableAbsolutePositionEditing"),
+         kDescription + "Absolute positioned element editor should be disabled by the call of execCommand");
+
+      synthesizeMouseAtCenter(outOfEditor, {});
+      let promiseSelectionChangeEvent1 = waitForSelectionChange();
+      synthesizeMouseAtCenter(target, {});
+      await promiseSelectionChangeEvent1;
+
+      ok(!target.hasAttribute("_moz_abspos"),
+         kDescription + "While enableAbsolutePositioner is disabled, positioner shouldn't appear");
+
+      document.execCommand("enableAbsolutePositionEditing", false, true);
+      ok(document.queryCommandState("enableAbsolutePositionEditing"),
+         kDescription + "Absolute positioned element editor should be enabled by the call of execCommand");
+
+      synthesizeMouseAtCenter(outOfEditor, {});
+      let promiseSelectionChangeEvent2 = waitForSelectionChange();
+      synthesizeMouseAtCenter(target, {});
+      await promiseSelectionChangeEvent2;
+
+      is(target.hasAttribute("_moz_abspos"), kTest.movable,
+         kDescription + (kTest.movable ? "While enableAbsolutePositionEditing is enabled, positioner should appear" :
+                                         "Even while enableAbsolutePositionEditing is enabled, positioner shouldn't appear"));
+
+      document.execCommand("enableAbsolutePositionEditing", false, false);
+      ok(!target.hasAttribute("_moz_abspos"),
+         kDescription + "When enableAbsolutePositionEditing is disabled even while positioner is visible, positioner should disappear");
+
+      document.execCommand("enableAbsolutePositionEditing", false, true);
+      is(target.hasAttribute("_moz_abspos"), kTest.movable,
+         kDescription + (kTest.movable ?
+                           "When enableAbsolutePositionEditing is enabled when absolute positioned element is selected, positioner should appear" :
+                           "Even if enableAbsolutePositionEditing is enabled when static positioned element is selected, positioner shouldn't appear"));
+    }
+  }
+
+  async function testStyle() {
+    // See HTMLEditor::GetTemporaryStyleForFocusedPositionedElement().
+    const kTests = [
+      { description: "background-color: transparent; color: white;",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; " +
+                                              "top: 50%; left: 50%; " +
+                                              "background-color: transparent; " +
+                                              "color: white;\">positioned</div>",
+        value: "black",
+      },
+      { description: "background-color: transparent; color: black;",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; " +
+                                              "top: 50%; left: 50%; " +
+                                              "background-color: transparent; " +
+                                              "color: black;\">positioned</div>",
+        value: "white",
+      },
+      { description: "background-color: black; color: white;",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; " +
+                                              "top: 50%; left: 50%; " +
+                                              "background-color: black; " +
+                                              "color: white;\">positioned</div>",
+        value: "",
+      },
+      { description: "background-color: white; color: black;",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; " +
+                                              "top: 50%; left: 50%; " +
+                                              "background-color: white; " +
+                                              "color: black;\">positioned</div>",
+        value: "",
+      },
+      { description: "background-image: green.png; background-color: black; color: white;",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; " +
+                                              "top: 50%; left: 50%; " +
+                                              "background-image: green.png; " +
+                                              "background-color: black; " +
+                                              "color: white;\">positioned</div>",
+        value: "",
+      },
+      { description: "background-image: green.png; background-color: white; color: black;",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; " +
+                                              "top: 50%; left: 50%; " +
+                                              "background-image: green.png; " +
+                                              "background-color: white; " +
+                                              "color: black;\">positioned</div>",
+        value: "",
+      },
+      { description: "background-image: green.png;",
+        innerHTML: "<div id=\"target\" style=\"position: absolute; " +
+                                              "top: 50%; left: 50%; " +
+                                              "background-image: green.png;\">positioned</div>",
+        value: "white", // XXX Why? background-image is not "none"...
+      },
+    ];
+
+    document.execCommand("enableAbsolutePositionEditing", false, true);
+    ok(document.queryCommandState("enableAbsolutePositionEditing"),
+       "testStyle, Absolute positioned element editor should be enabled by the call of execCommand");
+
+    for (const kTest of kTests) {
+      const kDescription = "testStyle, " + kTest.description + ": ";
+
+      editor.innerHTML = kTest.innerHTML;
+      let target = document.getElementById("target");
+
+      synthesizeMouseAtCenter(outOfEditor, {});
+      let promiseSelectionChangeEvent = waitForSelectionChange();
+      synthesizeMouseAtCenter(target, {});
+      await promiseSelectionChangeEvent;
+
+      is(target.getAttribute("_moz_abspos"), kTest.value,
+         kDescription + "The value of _moz_abspos attribute is unexpected");
+    }
+  }
+
+  await testIfAppears();
+  await testStyle();
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

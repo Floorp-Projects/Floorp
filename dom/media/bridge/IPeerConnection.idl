@@ -1,0 +1,58 @@
+#include "nsIThread.idl"
+#include "nsIDOMWindow.idl"
+#include "nsIPropertyBag2.idl"
+
+/* Do not confuse with nsIDOMRTCPeerConnection. This interface is purely for
+ * communication between the PeerConnection JS DOM binding and the C++
+ * implementation in SIPCC.
+ *
+ * See media/webrtc/signaling/include/PeerConnectionImpl.h
+ */
+[scriptable, uuid(d7dfe148-0416-446b-a128-66a7c71ae8d3)]
+interface IPeerConnectionObserver : nsISupports
+{
+};
+
+[scriptable, uuid(14afc8e7-e421-4d0c-99a5-69308d871481)]
+interface IPeerConnection : nsISupports
+{
+  const unsigned long kHintAudio = 0x00000001;
+  const unsigned long kHintVideo = 0x00000002;
+
+  const long kActionNone = -1;
+  const long kActionOffer = 0;
+  const long kActionAnswer = 1;
+  const long kActionPRAnswer = 2;
+  const long kActionRollback = 3;
+
+  const long kIceGathering = 0;
+  const long kIceWaiting = 1;
+  const long kIceChecking = 2;
+  const long kIceConnected = 3;
+  const long kIceFailed = 4;
+
+  /* for readyState on Peer Connection */
+  const long kNew = 0;
+  const long kNegotiating = 1;
+  const long kActive = 2;
+  const long kClosing = 3;
+  const long kClosed = 4;
+
+  /* for 'type' in DataChannelInit dictionary */
+  const unsigned short kDataChannelReliable = 0;
+  const unsigned short kDataChannelPartialReliableRexmit = 1;
+  const unsigned short kDataChannelPartialReliableTimed = 2;
+
+  /* Constants for 'name' in error callbacks */
+  const unsigned long kNoError                          = 0; // Test driver only
+  const unsigned long kInvalidCandidate                 = 2;
+  const unsigned long kInvalidMediastreamTrack          = 3;
+  const unsigned long kInvalidState                     = 4;
+  const unsigned long kInvalidSessionDescription        = 5;
+  const unsigned long kIncompatibleSessionDescription   = 6;
+  const unsigned long kIncompatibleMediaStreamTrack     = 8;
+  const unsigned long kInternalError                    = 9;
+  const unsigned long kTypeError                        = 10;
+  const unsigned long kOperationError                   = 11;
+  const unsigned long kMaxErrorType                     = 11; // Same as final error
+};

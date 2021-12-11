@@ -1,0 +1,12 @@
+/**
+ * tsky.in - Content of the form is shifted to the right
+ * Bug #1704653 - https://bugzilla.mozilla.org/show_bug.cgi?id=1704653
+ * WebCompat issue #61521 - https://webcompat.com/issues/61521
+ *
+ * The form is shifted off screen due to combination of negative
+ * margins and float, which is https://bugzilla.mozilla.org/show_bug.cgi?id=1400958
+ * Clearing the float fixes the issue
+ */
+.modal-body .InfoMsg + div {
+  clear: both;
+}

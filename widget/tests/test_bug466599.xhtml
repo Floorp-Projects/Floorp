@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=466599
+-->
+<window title="Mozilla Bug 466599"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="initAndRunTests()">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <!-- test code goes here -->
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 466599 **/
+
+function getLoadContext() {
+  return window.docShell.QueryInterface(Ci.nsILoadContext);
+}
+
+function copyToClipboard(txt)
+{
+  var clipid = Ci.nsIClipboard;
+  var clip =
+    Cc['@mozilla.org/widget/clipboard;1'].createInstance(clipid);
+  if (!clip)
+    return false;
+  var trans =
+    Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable);
+  if (!trans)
+    return false;
+  trans.init(getLoadContext());
+  trans.addDataFlavor('text/html');
+  var str =
+    Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
+  var copytext = txt;
+  str.data = copytext;
+  trans.setTransferData("text/html",str);
+  if (!clip)
+    return false;
+  clip.setData(trans,null,clipid.kGlobalClipboard);
+  return true;
+}
+
+function readFromClipboard()
+{
+  var clipid = Ci.nsIClipboard;
+  var clip =
+    Cc['@mozilla.org/widget/clipboard;1'].createInstance(clipid);
+  if (!clip)
+    return "";
+  var trans =
+    Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable);
+  if (!trans)
+    return "";
+  trans.init(getLoadContext());
+  trans.addDataFlavor('text/html');
+  clip.getData(trans,clipid.kGlobalClipboard);
+  var str = {};
+  trans.getTransferData("text/html",str);
+  if (str)
+    str = str.value.QueryInterface(Ci.nsISupportsString);
+  return str?.data;
+}
+
+function encodeHtmlEntities(s)
+{
+  var result = '';
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charAt(i);
+    result += {'<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;'}[c] || c;
+  }
+  return result;
+}
+
+function initAndRunTests()
+{
+  var source = '<p>Lorem ipsum</p>';
+  var expect = new RegExp('<html>.*charset=utf-8.*' + source + '.*</html>', 'im');
+
+  var result = copyToClipboard(source);
+  ok(result, "copied HTML data to system pasteboard");
+
+  result = readFromClipboard();
+  ok(expect.test(result), "data on system pasteboard is wrapped with charset metadata");
+
+  // eslint-disable-next-line no-unsanitized/property
+  $("display").innerHTML =
+    '<em>source:</em> <pre>' + encodeHtmlEntities(source) + '</pre><br/>' +
+    '<em>result:</em> <pre>' + encodeHtmlEntities(result) + '</pre>';
+}
+
+  ]]>
+  </script>
+</window>

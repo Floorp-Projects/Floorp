@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=789713
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+
+<script type="application/javascript">
+
+/** Test for Bug 789713 **/
+
+function go() {
+  var ifr = document.getElementById('ifr');
+  var pass = true;
+  var doc = ifr.contentDocument;
+  var win = ifr.contentWindow;
+
+  var walker = doc.createTreeWalker(doc.body);
+  pass = pass && (walker.root === doc.body);
+  walker.foo = "expando";
+
+  win.bar = "another-expando";
+
+  // First, do the document.domain operation. This shouldn't crash.
+  document.domain = "example.org";
+
+  // Now make sure we can still access properties on "walker".
+  try {
+    walker.root;
+    pass = pass && walker.foo == "expando";
+  } catch (e) {
+    pass = false;
+  }
+
+  // And make sure we can't access properties on "win", because the
+  // document.domain change revoked the access.
+  try {
+    win.bar;
+    pass = false;
+  } catch (e) { pass = pass && /Permission denied/.exec(e.message); }
+  window.parent.postMessage(pass, '*');
+}
+
+</script>
+<iframe id="ifr" src="file_empty.html" onload="go()"></iframe>
+</pre>
+</body>
+</html>

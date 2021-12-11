@@ -1,0 +1,63 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["COMPILE_ENVIRONMENT"] and CONFIG["ACCESSIBILITY"]:
+    DIRS += [
+        "handler",
+        "typelib",
+    ]
+
+if CONFIG["ACCESSIBILITY"]:
+    IPDL_SOURCES += ["PDocAccessible.ipdl"]
+
+    EXPORTS.mozilla.a11y += [
+        "COMPtrTypes.h",
+        "DocAccessibleChild.h",
+        "HandlerProvider.h",
+        "PlatformChild.h",
+        "RemoteAccessible.h",
+    ]
+
+    SOURCES += [
+        "!./handler/HandlerData_c.c",
+        "COMPtrTypes.cpp",
+        "DocAccessibleChild.cpp",
+        "HandlerProvider.cpp",
+        "PlatformChild.cpp",
+        "RemoteAccessible.cpp",
+    ]
+
+    # Give some symbols a unique name in each translation unit, to avoid
+    # collisions caused by https://llvm.org/pr41817.
+    if CONFIG["CC_TYPE"] == "clang-cl":
+        SOURCES["!./handler/HandlerData_c.c"].flags += [
+            "-DUserMarshalRoutines=UserMarshalRoutines__HandlerData_c"
+        ]
+
+    LOCAL_INCLUDES += [
+        "/accessible/base",
+        "/accessible/generic",
+        "/accessible/windows/ia2",
+        "/accessible/windows/msaa",
+        "/accessible/xpcom",
+    ]
+
+    # Suppress warnings from the MIDL generated code.
+    if CONFIG["CC_TYPE"] == "clang-cl":
+        CFLAGS += [
+            "-Wno-extern-initializer",
+            "-Wno-incompatible-pointer-types",
+            "-Wno-missing-braces",
+            "-Wno-unused-const-variable",
+        ]
+
+        CXXFLAGS += [
+            "-Wno-missing-braces",
+        ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"

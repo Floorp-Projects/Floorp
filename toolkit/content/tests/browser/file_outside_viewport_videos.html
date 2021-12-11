@@ -1,0 +1,41 @@
+<html>
+<head>
+  <title>outside viewport videos</title>
+<style>
+/**
+ * These CSS would move elements to the far left/right/top/bottom where user
+ * can not see elements in the viewport if user doesn't scroll the page.
+ */
+.outside-left {
+  position: absolute;
+  left: -1000%;
+}
+.outside-right {
+  position: absolute;
+  right: -1000%;
+}
+.outside-top {
+  position: absolute;
+  top: -1000%;
+}
+.outside-bottom {
+  position: absolute;
+  bottom: -1000%;
+}
+</style>
+</head>
+<body>
+	<div class="outside-left">
+		<video id="left" src="gizmo.mp4">
+	</div>
+	<div class="outside-right">
+		<video id="right" src="gizmo.mp4">
+	</div>
+	<div class="outside-top">
+		<video id="top" src="gizmo.mp4">
+	</div>
+	<div class="outside-bottom">
+		<video id="bottom" src="gizmo.mp4">
+	</div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="context-fill #0b0b0b" stroke="context-stroke #0b0b0b">
+  <ellipse cx="8" cy="8" rx="4" ry="4"/>
+  <path d="M8 1V2M8 14V15M1 8H2M14 8H15M3.05024 3.05025L3.75735 3.75736M12.2426 12.2426L12.9497 12.9497M3.05024 12.9497L3.75735 12.2426M12.2426 3.75736L12.9497 3.05025" stroke-width="2" stroke-linecap="round"/>
+</svg>

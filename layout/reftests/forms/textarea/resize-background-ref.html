@@ -1,0 +1,30 @@
+<html>
+<script>
+function sizeResizer() {
+    // reference resizer
+    var img = document.getElementsByTagName("img")[0];
+    // hidden textarea
+    var textarea = document.getElementsByTagName("textarea")[0];
+    var width = 200 - textarea.clientWidth;
+    var height = 200 - textarea.clientHeight;
+    // (Leave test failing if a scrollbar is missing)
+    if (width != 0 && height != 0) {
+        img.style.width = width + "px";
+        img.style.left = textarea.clientWidth + "px";
+        img.style.height = height + "px";
+        img.style.top = textarea.clientHeight + "px";
+    }
+}
+</script>
+<body onload="sizeResizer()">
+<textarea style="width: 200px; height: 200px; margin: 0; border: none;
+                 background: red; font-size: 400px;">
+M
+</textarea>
+<div style="position: relative; top: -200px;
+            width: 200px; height: 200px; margin: 0; border: none;
+            background: lightgreen">
+  <img style="position: relative;" src="chrome://global/skin/icons/resizer.svg">
+</div>
+</body>
+</html>

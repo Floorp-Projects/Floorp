@@ -1,0 +1,139 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Main cookie object interface.
+ */
+
+typedef long nsCookieStatus;
+typedef long nsCookiePolicy;
+
+[builtinclass, scriptable, uuid(adf0db5e-211e-45a3-be14-4486ac430a58)]
+interface nsICookie : nsISupports {
+    const uint32_t SAMESITE_NONE   = 0;
+    const uint32_t SAMESITE_LAX    = 1;
+    const uint32_t SAMESITE_STRICT = 2;
+
+    /**
+     * the name of the cookie
+     */
+    readonly attribute ACString name;
+
+    /**
+     * the cookie value
+     */
+    readonly attribute AUTF8String value;
+
+    /**
+     * true if the cookie is a domain cookie, false otherwise
+     */
+    readonly attribute boolean isDomain;
+
+    /**
+     * the host (possibly fully qualified) of the cookie
+     */
+    readonly attribute AUTF8String host;
+
+    /**
+     * the host (possibly fully qualified) of the cookie,
+     * without a leading dot to represent if it is a
+     * domain cookie.
+     */
+    readonly attribute AUTF8String rawHost;
+
+    /**
+     * the path pertaining to the cookie
+     */
+    readonly attribute AUTF8String path;
+
+    /**
+     * true if the cookie was transmitted over ssl, false otherwise
+     */
+    readonly attribute boolean isSecure;
+
+    /**
+     * @DEPRECATED use nsICookie.expiry and nsICookie.isSession instead.
+     *
+     * expiration time in seconds since midnight (00:00:00), January 1, 1970 UTC.
+     * expires = 0 represents a session cookie.
+     * expires = 1 represents an expiration time earlier than Jan 1, 1970.
+     */
+    readonly attribute uint64_t expires;
+
+    /**
+     * the actual expiry time of the cookie, in seconds
+     * since midnight (00:00:00), January 1, 1970 UTC.
+     *
+     * this is distinct from nsICookie::expires, which
+     * has different and obsolete semantics.
+     */
+    readonly attribute int64_t expiry;
+
+    /**
+     * The origin attributes for this cookie
+     */
+    [implicit_jscontext]
+    readonly attribute jsval originAttributes;
+
+    /**
+     * true if the cookie is a session cookie.
+     * note that expiry time will also be honored
+     * for session cookies (see below); thus, whichever is
+     * the more restrictive of the two will take effect.
+     */
+    readonly attribute boolean isSession;
+
+    /**
+     * true if the cookie is an http only cookie
+     */
+    readonly attribute boolean isHttpOnly;
+
+    /**
+     * the creation time of the cookie, in microseconds
+     * since midnight (00:00:00), January 1, 1970 UTC.
+     */
+    readonly attribute int64_t creationTime;
+
+    /**
+     * the last time the cookie was accessed (i.e. created,
+     * modified, or read by the server), in microseconds
+     * since midnight (00:00:00), January 1, 1970 UTC.
+     *
+     * note that this time may be approximate.
+     */
+    readonly attribute int64_t lastAccessed;
+
+    /**
+     * the SameSite attribute; this controls the cookie behavior for cross-site
+     * requests as per
+     * https://tools.ietf.org/html/draft-west-first-party-cookies-07
+     *
+     * This should be one of:
+     * - SAMESITE_NONE - the SameSite attribute is not present
+     * - SAMESITE_LAX - the SameSite attribute is present, but not strict
+     * - SAMESITE_STRICT - the SameSite attribute is present and strict
+     */
+    readonly attribute int32_t sameSite;
+
+    /**
+     * The list of possible schemes of cookies. It's a bitmap because a cookie
+     * can be set on HTTP and HTTPS. At the moment, we treat it as the same
+     * cookie.
+     */
+    cenum schemeType : 8 {
+      SCHEME_UNSET = 0x00,
+      SCHEME_HTTP = 0x01,
+      SCHEME_HTTPS = 0x02,
+      SCHEME_FILE = 0x04,
+    };
+
+    /**
+     * Bitmap of schemes.
+     */
+    readonly attribute nsICookie_schemeType schemeMap;
+};

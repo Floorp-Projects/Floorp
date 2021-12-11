@@ -1,0 +1,46 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Content Processes")
+
+XPIDL_MODULE = "toolkit_processtools"
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+XPIDL_SOURCES += [
+    "nsIProcessToolsService.idl",
+]
+
+EXPORTS.mozilla += [
+    "ProcInfo.h",
+]
+
+EXPORTS += [
+    "ProcessToolsService.h",
+]
+
+UNIFIED_SOURCES += [
+    "ProcessToolsService.cpp",
+]
+
+FINAL_LIBRARY = "xul"
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
+# Platform-specific implementations of `ProcInfo`.
+toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
+if toolkit == "gtk" or toolkit == "android":
+    UNIFIED_SOURCES += ["ProcInfo_linux.cpp"]
+elif toolkit == "windows":
+    UNIFIED_SOURCES += ["ProcInfo_win.cpp"]
+elif toolkit == "cocoa":
+    UNIFIED_SOURCES += ["ProcInfo.mm"]
+
+include("/ipc/chromium/chromium-config.mozbuild")

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>max-content, min-content, -moz-fit-content, and -moz-available values of CSS width property, on table cells with table-layout: auto</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+    body { font-size: 10px; line-height: 1; }
+
+    td td {
+      border-left: 1px solid;
+      padding-left: 2px;
+      padding-right: 4px;
+      border-right: 8px solid;
+
+      background: yellow;
+    }
+
+  </style>
+</head>
+<body>
+
+<table border><tr>
+<td>
+<!-- width -->
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+
+</td>
+<td>
+<!-- min-width -->
+
+<table border><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+
+<table border><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+
+</td>
+<td>
+<!-- max-width -->
+
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td>A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+<table border><tr><td style="width: 150px">A B</td></tr></table>
+<table border width="1"><tr><td>A B</td></tr></table>
+
+
+</td>
+</tr></table>
+
+
+</body>
+</html>

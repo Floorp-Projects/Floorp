@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.accordion {
+  background-color: var(--theme-sidebar-background);
+  width: 100%;
+  list-style-type: none;
+  padding: 0px;
+  margin-top: 0px;
+}
+
+.accordion ._header {
+  background-color: var(--theme-accordion-header-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+  font-size: 12px;
+  line-height: calc(16 / 12);
+  padding: 4px 6px;
+  width: 100%;
+  align-items: center;
+  margin: 0px;
+  font-weight: normal;
+  cursor: default;
+  user-select: none;
+}
+
+.accordion ._header:hover {
+  background-color: var(--theme-accordion-header-hover);
+}
+
+.accordion ._header .arrow {
+  margin-inline-end: 4px;
+}
+
+.accordion ._header .header-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--theme-toolbar-color);
+}
+
+.accordion ._header .header-buttons {
+  display: flex;
+  margin-inline-start: auto;
+}
+
+.accordion ._header .header-buttons button {
+  color: var(--theme-body-color);
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0 2px;
+  width: 16px;
+  height: 16px;
+}
+
+.accordion ._header .header-buttons button::-moz-focus-inner {
+  border: none;
+}
+
+.accordion ._header .header-buttons button .img {
+  display: block;
+}
+
+.accordion ._content {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: var(--theme-body-font-size);
+}
+
+.accordion div:last-child ._content {
+  border-bottom: none;
+}

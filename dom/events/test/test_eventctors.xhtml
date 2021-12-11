@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=675884
+-->
+<window title="Mozilla Bug 675884"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=675884"
+     target="_blank">Mozilla Bug 675884</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 675884 **/
+
+  // Most of the tests are in .html file, but test here that
+  // isTrusted is handled correctly in chrome.
+
+  var receivedEvent;
+  document.addEventListener("hello", function(e) { receivedEvent = e; }, true);
+
+  // Event
+  var e;
+  var ex = false;
+  try {
+    e = new Event();
+  } catch(exp) {
+    ex = true;
+  }
+  ok(ex, "First parameter is required!");
+  ex = false;
+
+  e = new Event("hello");
+  is(e.type, "hello", "Wrong event type!");
+  ok(e.isTrusted, "Event should be trusted!");
+  ok(!e.bubbles, "Event shouldn't bubble!");
+  ok(!e.cancelable, "Event shouldn't be cancelable!");
+  document.dispatchEvent(e);
+  is(receivedEvent, e, "Wrong event!");
+
+  ]]>
+  </script>
+</window>

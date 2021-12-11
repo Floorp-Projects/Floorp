@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=461555
+-->
+<head>
+  <title>Test for Bug 461555</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=461555">Mozilla Bug 461555</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function writeIt(n) {
+  document.write("<span>" + n + "</span>");
+}
+
+function done() {
+  nodes = document.getElementsByTagName('span');
+  is(nodes.length, 3, "wrong length");
+  for (i = 0; i < nodes.length; ++i) {
+    is(nodes[i].textContent, String(i + 1), "wrong order");
+  }
+  SimpleTest.finish();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  done();
+});
+
+writeIt(1);
+
+</script>
+<script defer>
+writeIt(2);
+</script>
+<script>
+writeIt(3);
+</script>

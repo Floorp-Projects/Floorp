@@ -1,0 +1,936 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=675884
+-->
+<head>
+  <title>Test for Bug 675884</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=675884">Mozilla Bug 675884</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 675884 **/
+
+var receivedEvent;
+document.addEventListener("hello", function(e) { receivedEvent = e; }, true);
+
+function isMethodResultInitializer(aPropName)
+{
+  return aPropName.startsWith("modifier");
+}
+
+function getPropValue(aEvent, aPropName)
+{
+  if (aPropName.startsWith("modifier")) {
+    return aEvent.getModifierState(aPropName.substr("modifier".length));
+  }
+  return aEvent[aPropName];
+}
+
+// Event
+var e;
+var ex = false;
+try {
+  e = new Event();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+try {
+  e = new Event("foo", 123);
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "2nd parameter should be an object!");
+ex = false;
+
+try {
+  e = new Event("foo", "asdf");
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "2nd parameter should be an object!");
+ex = false;
+
+
+try {
+  e = new Event("foo", false);
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "2nd parameter should be an object!");
+ex = false;
+
+
+e = new Event("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+e.isTrusted = true;
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+
+try {
+  e.__defineGetter__("isTrusted", function() { return true });
+} catch (exp) {
+  ex = true;
+}
+ok(ex, "Shouldn't be able to re-define the getter for isTrusted.");
+ex = false;
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+
+ok(!("isTrusted" in Object.getPrototypeOf(e)))
+
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+is(receivedEvent, e, "Wrong event!");
+
+e = new Event("hello", null);
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+is(receivedEvent, e, "Wrong event!");
+
+e = new Event("hello", undefined);
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+is(receivedEvent, e, "Wrong event!");
+
+e = new Event("hello", {});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+is(receivedEvent, e, "Wrong event!");
+
+e = new Event("hello", { bubbles: true, cancelable: true });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// CustomEvent
+
+try {
+  e = new CustomEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new CustomEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new CustomEvent("hello", { bubbles: true, cancelable: true, detail: window });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, window , "Wrong event.detail!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new CustomEvent("hello", { cancelable: true, detail: window });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, window , "Wrong event.detail!");
+
+e = new CustomEvent("hello", { detail: 123 });
+is(e.detail, 123, "Wrong event.detail!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+
+var dict = { get detail() { return document.body } };
+e = new CustomEvent("hello", dict);
+is(e.detail, dict.detail, "Wrong event.detail!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+
+var dict = { get detail() { throw "foo"; } };
+
+try {
+  e = new CustomEvent("hello", dict);
+} catch (exp) {
+  ex = true;
+}
+ok(ex, "Should have thrown an exception!");
+ex = false;
+
+// BlobEvent
+
+try {
+  e = new BlobEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+try {
+  e = new BlobEvent("hello");
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "data attribute is required in init dict");
+ex = false;
+
+var blob = new Blob();
+e = new BlobEvent("hello", {data: blob});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+try {
+  e.__defineGetter__("isTrusted", function() { return true });
+} catch (exp) {
+  ex = true;
+}
+ok(ex, "Shouldn't be able to re-define the getter for isTrusted.");
+ex = false;
+ok(!e.isTrusted, "BlobEvent shouldn't be trusted!");
+
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new BlobEvent("hello", { bubbles: true, cancelable: true, data: blob });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.data, blob , "Wrong event.data!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new BlobEvent("hello", {data: blob});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event should be cancelable1!");
+is(e.data, blob , "Wrong event.data!");
+
+try {
+  e = new BlobEvent("hello", { data: null });
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "data attribute cannot be null");
+ex = false;
+blob = null;
+
+// CloseEvent
+
+try {
+  e = new CloseEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new CloseEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.wasClean, false, "wasClean should be false!");
+is(e.code, 0, "code should be 0!");
+is(e.reason, "", "reason should be ''!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new CloseEvent("hello",
+  { bubbles: true, cancelable: true, wasClean: true, code: 1, reason: "foo" });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.wasClean, true, "wasClean should be true!");
+is(e.code, 1, "code should be 1!");
+is(e.reason, "foo", "reason should be 'foo'!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new CloseEvent("hello",
+  { bubbles: true, cancelable: true, wasClean: true, code: 1 });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.wasClean, true, "wasClean should be true!");
+is(e.code, 1, "code should be 1!");
+is(e.reason, "", "reason should be ''!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+
+// HashChangeEvent
+
+try {
+  e = new HashChangeEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new HashChangeEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.oldURL, "", "oldURL should be ''");
+is(e.newURL, "", "newURL should be ''");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new HashChangeEvent("hello",
+  { bubbles: true, cancelable: true, oldURL: "old", newURL: "new" });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.oldURL, "old", "oldURL should be 'old'");
+is(e.newURL, "new", "newURL should be 'new'");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new HashChangeEvent("hello",
+  { bubbles: true, cancelable: true, newURL: "new" });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.oldURL, "", "oldURL should be ''");
+is(e.newURL, "new", "newURL should be 'new'");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// InputEvent
+
+e = new InputEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.detail, 0, "detail should be 0");
+ok(!e.isComposing, "isComposing should be false");
+
+e = new InputEvent("hi!", { bubbles: true, detail: 5, isComposing: false });
+is(e.type, "hi!", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.detail, 5, "detail should be 5");
+ok(!e.isComposing, "isComposing should be false");
+
+e = new InputEvent("hi!", { cancelable: true, detail: 0, isComposing: true });
+is(e.type, "hi!", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, 0, "detail should be 0");
+ok(e.isComposing, "isComposing should be true");
+
+// KeyboardEvent
+
+try {
+  e = new KeyboardEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "KeyboardEvent: First parameter is required!");
+ex = false;
+
+e = new KeyboardEvent("hello");
+is(e.type, "hello", "KeyboardEvent: Wrong event type!");
+ok(!e.isTrusted, "KeyboardEvent: Event shouldn't be trusted!");
+ok(!e.bubbles, "KeyboardEvent: Event shouldn't bubble!");
+ok(!e.cancelable, "KeyboardEvent: Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "KeyboardEvent: Wrong event!");
+
+var keyboardEventProps =
+[
+  { bubbles: false },
+  { cancelable: false },
+  { view: null },
+  { detail: 0 },
+  { key: "" },
+  { code: "" },
+  { location: 0 },
+  { ctrlKey: false },
+  { shiftKey: false },
+  { altKey: false },
+  { metaKey: false },
+  { modifierAltGraph: false },
+  { modifierCapsLock: false },
+  { modifierFn: false },
+  { modifierFnLock: false },
+  { modifierNumLock: false },
+  { modifierOS: false },
+  { modifierScrollLock: false },
+  { modifierSymbol: false },
+  { modifierSymbolLock: false },
+  { repeat: false },
+  { isComposing: false },
+  { charCode: 0 },
+  { keyCode: 0 },
+  { which: 0 },
+];
+
+var testKeyboardProps =
+[
+  { bubbles: true },
+  { cancelable: true },
+  { view: window },
+  { detail: 1 },
+  { key: "CustomKey" },
+  { code: "CustomCode" },
+  { location: 1 },
+  { ctrlKey: true },
+  { shiftKey: true },
+  { altKey: true },
+  { metaKey: true },
+  { modifierAltGraph: true },
+  { modifierCapsLock: true },
+  { modifierFn: true },
+  { modifierFnLock: true },
+  { modifierNumLock: true },
+  { modifierOS: true },
+  { modifierScrollLock: true },
+  { modifierSymbol: true },
+  { modifierSymbolLock: true },
+  { repeat: true },
+  { isComposing: true },
+  { charCode: 2 },
+  { keyCode: 3 },
+  { which: 4 },
+  { charCode: 5, which: 6 },
+  { keyCode: 7, which: 8 },
+  { keyCode: 9, charCode: 10 },
+  { keyCode: 11, charCode: 12, which: 13 },
+];
+
+var defaultKeyboardEventValues = {};
+for (var i = 0; i < keyboardEventProps.length; ++i) {
+  for (prop in keyboardEventProps[i]) {
+    if (!isMethodResultInitializer(prop)) {
+      ok(prop in e, "keyboardEvent: KeyboardEvent doesn't have property " + prop + "!");
+    }
+    defaultKeyboardEventValues[prop] = keyboardEventProps[i][prop];
+  }
+}
+
+while (testKeyboardProps.length) {
+  var p = testKeyboardProps.shift();
+  e = new KeyboardEvent("foo", p);
+  for (var def in defaultKeyboardEventValues) {
+    if (!(def in p)) {
+      is(getPropValue(e, def), defaultKeyboardEventValues[def],
+         "KeyboardEvent: Wrong default value for " + def + "!");
+    } else {
+      is(getPropValue(e, def), p[def],
+         "KeyboardEvent: Wrong event init value for " + def + "!");
+    }
+  }
+}
+
+// PageTransitionEvent
+
+try {
+  e = new PageTransitionEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new PageTransitionEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.persisted, false, "persisted should be false");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new PageTransitionEvent("hello",
+  { bubbles: true, cancelable: true, persisted: true});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.persisted, true, "persisted should be true");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new PageTransitionEvent("hello", { persisted: true});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.persisted, true, "persisted should be true");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// PopStateEvent
+
+try {
+  e = new PopStateEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new PopStateEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.state, null, "persisted should be null");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new PopStateEvent("hello",
+  { bubbles: true, cancelable: true, state: window});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.state, window, "persisted should be window");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+
+e = new PopStateEvent("hello", { state: window});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.state, window, "persisted should be window");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// UIEvent
+
+try {
+  e = new UIEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+try {
+  e = new UIEvent("foo", { view: {} });
+  e.view.onunload;
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "{} isn't a valid value.");
+ex = false;
+
+try {
+  e = new UIEvent("foo", { view: null });
+} catch(exp) {
+  ex = true;
+}
+ok(!ex, "null is a valid value.");
+is(e.view, null);
+ex = false;
+
+e = new UIEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.detail, 0, "detail should be 0");
+is(e.view, null, "view should be null");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new UIEvent("hello",
+  { bubbles: true, cancelable: true, view: window, detail: 1});
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, 1, "detail should be 1");
+is(e.view, window, "view should be window");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// StorageEvent
+
+e = document.createEvent("StorageEvent");
+ok(e, "Should have created an event!");
+
+try {
+  e = new StorageEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new StorageEvent("hello");
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.key, null, "key should be null");
+is(e.oldValue, null, "oldValue should be null");
+is(e.newValue, null, "newValue should be null");
+is(e.url, "", "url should be ''");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new StorageEvent("hello",
+  { bubbles: true, cancelable: true, key: "key",
+    oldValue: "oldValue", newValue: "newValue", url: "url",
+    storageArea: localStorage });
+is(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.key, "key", "Wrong value");
+is(e.oldValue, "oldValue", "Wrong value");
+is(e.newValue, "newValue", "Wrong value");
+is(e.url, "url", "Wrong value");
+is(e.storageArea, localStorage, "Wrong value");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// MouseEvent
+
+try {
+  e = new MouseEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "MouseEvent: First parameter is required!");
+ex = false;
+
+e = new MouseEvent("hello",  { buttons: 1, movementX: 2, movementY: 3});
+is(e.type, "hello", "MouseEvent: Wrong event type!");
+ok(!e.isTrusted, "MouseEvent: Event shouldn't be trusted!");
+ok(!e.bubbles, "MouseEvent: Event shouldn't bubble!");
+ok(!e.cancelable, "MouseEvent: Event shouldn't be cancelable!");
+is(e.buttons, 1);
+is(e.movementX, 2);
+is(e.movementY, 3);
+document.dispatchEvent(e);
+is(receivedEvent, e, "MouseEvent: Wrong event!");
+
+var mouseEventProps =
+[ { screenX: 0 },
+  { screenY: 0 },
+  { clientX: 0 },
+  { clientY: 0 },
+  { ctrlKey: false },
+  { shiftKey: false },
+  { altKey: false },
+  { metaKey: false },
+  { modifierAltGraph: false },
+  { modifierCapsLock: false },
+  { modifierFn: false },
+  { modifierFnLock: false },
+  { modifierNumLock: false },
+  { modifierOS: false },
+  { modifierScrollLock: false },
+  { modifierSymbol: false },
+  { modifierSymbolLock: false },
+  { button: 0 },
+  { buttons: 0 },
+  { relatedTarget: null },
+];
+
+var testProps =
+[
+  { screenX: 1 },
+  { screenY: 2 },
+  { clientX: 3 },
+  { clientY: 4 },
+  { ctrlKey: true },
+  { shiftKey: true },
+  { altKey: true },
+  { metaKey: true },
+  { modifierAltGraph: true },
+  { modifierCapsLock: true },
+  { modifierFn: true },
+  { modifierFnLock: true },
+  { modifierNumLock: true },
+  { modifierOS: true },
+  { modifierScrollLock: true },
+  { modifierSymbol: true },
+  { modifierSymbolLock: true },
+  { button: 5 },
+  { buttons: 6 },
+  { relatedTarget: window }
+];
+
+var defaultMouseEventValues = {};
+for (var i = 0; i < mouseEventProps.length; ++i) {
+  for (prop in mouseEventProps[i]) {
+    if (!isMethodResultInitializer(prop)) {
+      ok(prop in e, "MouseEvent: MouseEvent doesn't have property " + prop + "!");
+    }
+    defaultMouseEventValues[prop] = mouseEventProps[i][prop];
+  }
+}
+
+while (testProps.length) {
+  var p = testProps.shift();
+  e = new MouseEvent("foo", p);
+  for (var def in defaultMouseEventValues) {
+    if (!(def in p)) {
+      is(getPropValue(e, def), defaultMouseEventValues[def],
+         "MouseEvent: Wrong default value for " + def + "!");
+    } else {
+      is(getPropValue(e, def), p[def], "MouseEvent: Wrong event init value for " + def + "!");
+    }
+  }
+}
+
+// PopupBlockedEvent
+
+try {
+  e = new PopupBlockedEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "PopupBlockedEvent: First parameter is required!");
+ex = false;
+
+e = new PopupBlockedEvent("hello");
+is(e.type, "hello", "PopupBlockedEvent: Wrong event type!");
+ok(!e.isTrusted, "PopupBlockedEvent: Event shouldn't be trusted!");
+ok(!e.bubbles, "PopupBlockedEvent: Event shouldn't bubble!");
+ok(!e.cancelable, "PopupBlockedEvent: Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "PopupBlockedEvent: Wrong event!");
+
+e = new PopupBlockedEvent("hello",
+                          { requestingWindow: window,
+                            popupWindowFeatures: "features",
+                            popupWindowName: "name"
+                          });
+is(e.requestingWindow, window);
+is(e.popupWindowFeatures, "features");
+is(e.popupWindowName, "name");
+
+// WheelEvent
+
+try {
+  e = new WheelEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "WheelEvent: First parameter is required!");
+ex = false;
+
+e = new WheelEvent("hello",  { buttons: 1, movementX: 2, movementY: 3});
+is(e.type, "hello", "WheelEvent: Wrong event type!");
+is(e.buttons, 1);
+is(e.movementX, 2);
+is(e.movementY, 3);
+ok(!e.isTrusted, "WheelEvent: Event shouldn't be trusted!");
+ok(!e.bubbles, "WheelEvent: Event shouldn't bubble!");
+ok(!e.cancelable, "WheelEvent: Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "WheelEvent: Wrong event!");
+
+var wheelEventProps =
+[ { screenX: 0 },
+  { screenY: 0 },
+  { clientX: 0 },
+  { clientY: 0 },
+  { ctrlKey: false },
+  { shiftKey: false },
+  { altKey: false },
+  { metaKey: false },
+  { modifierAltGraph: false },
+  { modifierCapsLock: false },
+  { modifierFn: false },
+  { modifierFnLock: false },
+  { modifierNumLock: false },
+  { modifierOS: false },
+  { modifierScrollLock: false },
+  { modifierSymbol: false },
+  { modifierSymbolLock: false },
+  { button: 0 },
+  { buttons: 0 },
+  { relatedTarget: null },
+  { deltaX: 0.0 },
+  { deltaY: 0.0 },
+  { deltaZ: 0.0 },
+  { deltaMode: 0 }
+];
+
+var testWheelProps =
+[
+  { screenX: 1 },
+  { screenY: 2 },
+  { clientX: 3 },
+  { clientY: 4 },
+  { ctrlKey: true },
+  { shiftKey: true },
+  { altKey: true },
+  { metaKey: true },
+  { modifierAltGraph: true },
+  { modifierCapsLock: true },
+  { modifierFn: true },
+  { modifierFnLock: true },
+  { modifierNumLock: true },
+  { modifierOS: true },
+  { modifierScrollLock: true },
+  { modifierSymbol: true },
+  { modifierSymbolLock: true },
+  { button: 5 },
+  { buttons: 6 },
+  { relatedTarget: window },
+  { deltaX: 7.8 },
+  { deltaY: 9.1 },
+  { deltaZ: 2.3 },
+  { deltaMode: 4 }
+];
+
+var defaultWheelEventValues = {};
+for (var i = 0; i < wheelEventProps.length; ++i) {
+  for (prop in wheelEventProps[i]) {
+    if (!isMethodResultInitializer(prop)) {
+      ok(prop in e, "WheelEvent: WheelEvent doesn't have property " + prop + "!");
+    }
+    defaultWheelEventValues[prop] = wheelEventProps[i][prop];
+  }
+}
+
+while (testWheelProps.length) {
+  var p = testWheelProps.shift();
+  e = new WheelEvent("foo", p);
+  for (var def in defaultWheelEventValues) {
+    if (!(def in p)) {
+      is(getPropValue(e, def), defaultWheelEventValues[def],
+         "WheelEvent: Wrong default value for " + def + "!");
+    } else {
+      is(getPropValue(e, def), p[def], "WheelEvent: Wrong event init value for " + def + "!");
+    }
+  }
+}
+
+// DragEvent
+
+try {
+  e = new DragEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "DragEvent: First parameter is required!");
+ex = false;
+
+e = new DragEvent("hello", { buttons: 1, movementX: 2, movementY: 3});
+is(e.type, "hello", "DragEvent: Wrong event type!");
+is(e.buttons, 1);
+is(e.movementX, 2);
+is(e.movementY, 3);
+document.dispatchEvent(e);
+is(receivedEvent, e, "DragEvent: Wrong event!");
+
+// TransitionEvent
+e = new TransitionEvent("hello", { propertyName: "color", elapsedTime: 3.5, pseudoElement: "", foobar: "baz" })
+is("propertyName" in e, true, "Transition events have propertyName property");
+is("foobar" in e, false, "Transition events do not copy random properties from event init");
+is(e.propertyName, "color", "Transition event copies propertyName from TransitionEventInit");
+is(e.elapsedTime, 3.5, "Transition event copies elapsedTime from TransitionEventInit");
+is(e.pseudoElement, "", "Transition event copies pseudoElement from TransitionEventInit");
+is(e.bubbles, false, "Lack of bubbles property in TransitionEventInit");
+is(e.cancelable, false, "Lack of cancelable property in TransitionEventInit");
+is(e.type, "hello", "Wrong event type!");
+is(e.isTrusted, false, "Event shouldn't be trusted!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+
+// AnimationEvent
+e = new AnimationEvent("hello", { animationName: "bounce3", elapsedTime: 3.5, pseudoElement: "", foobar: "baz" })
+is("animationName" in e, true, "Animation events have animationName property");
+is("foobar" in e, false, "Animation events do not copy random properties from event init");
+is(e.animationName, "bounce3", "Animation event copies animationName from AnimationEventInit");
+is(e.elapsedTime, 3.5, "Animation event copies elapsedTime from AnimationEventInit");
+is(e.pseudoElement, "", "Animation event copies pseudoElement from AnimationEventInit");
+is(e.bubbles, false, "Lack of bubbles property in AnimationEventInit");
+is(e.cancelable, false, "Lack of cancelable property in AnimationEventInit");
+is(e.type, "hello", "Wrong event type!");
+is(e.isTrusted, false, "Event shouldn't be trusted!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+
+// InputEvent
+let dataTransfer = new DataTransfer();
+dataTransfer.setData("text/plain", "foo");
+e = new InputEvent("hello", {data: "something data", dataTransfer, inputType: "invalid input type", isComposing: true});
+is(e.type, "hello", "InputEvent should set type attribute");
+is(e.data, "something data", "InputEvent should have data attribute");
+is(e.dataTransfer, dataTransfer, "InputEvent should have the dataTransfer");
+is(e.dataTransfer.getData("text/plain"), "foo", "InputEvent.dataTransfer should keep handling its data");
+try {
+  e.dataTransfer.setData("text/plain", "bar");
+} catch (exp) {
+  ok(false, `InputEvent.dataTransfer.setData("text/plain", "bar") shouldn't fail (${exp})`);
+}
+is(e.dataTransfer.getData("text/plain"), "bar", "InputEvent.dataTransfer should be modified by a call of its setData()");
+is(e.inputType, "invalid input type", "InputEvent should have inputType attribute");
+is(e.isComposing, true, "InputEvent should have isComposing attribute");
+
+dataTransfer = new DataTransfer();
+e = new InputEvent("hello", {data: "", dataTransfer, inputType: "insertText"});
+is(e.data, "", "InputEvent.data should be empty string when empty string is specified explicitly");
+is(e.dataTransfer, dataTransfer, "InputEvent.dataTransfer should have the empty dataTransfer");
+is(e.inputType, "insertText", "InputEvent.inputType should return valid inputType from EditorInputType enum");
+e = new InputEvent("hello", {data: "foo", inputType: "deleteWordBackward"});
+is(e.data, "foo", "InputEvent.data should be the specified string");
+is(e.inputType, "deleteWordBackward", "InputEvent.inputType should return valid inputType from EditorInputType enum");
+e = new InputEvent("hello", {inputType: "formatFontName"});
+is(e.inputType, "formatFontName", "InputEvent.inputType should return valid inputType from EditorInputType enum");
+
+e = new InputEvent("input", {});
+is(e.data, null, "InputEvent.data should be null in default");
+is(e.dataTransfer, null, "InputEvent.dataTransfer should be null in default");
+is(e.inputType, "", "InputEvent.inputType should be empty string in default");
+is(e.isComposing, false, "InputEvent.isComposing should be false in default");
+
+</script>
+</pre>
+</body>
+</html>

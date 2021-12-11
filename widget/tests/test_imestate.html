@@ -1,0 +1,1563 @@
+<html style="ime-mode: disabled;">
+<head>
+  <title>Test for IME state controling</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body onload="setTimeout(runTests, 0);" style="ime-mode: disabled;">
+<div id="display" style="ime-mode: disabled;">
+  <!-- input elements -->
+  <input type="text"     id="text"/><br/>
+  <input type="text"     id="text_readonly" readonly="readonly"/><br/>
+  <input type="password" id="password"/><br/>
+  <input type="password" id="password_readonly" readonly="readonly"/><br/>
+  <input type="checkbox" id="checkbox"/><br/>
+  <input type="radio"    id="radio"/><br/>
+  <input type="submit"   id="submit"/><br/>
+  <input type="reset"    id="reset"/><br/>
+  <input type="file"     id="file"/><br/>
+  <input type="button"   id="ibutton"/><br/>
+  <input type="image"    id="image" alt="image"/><br/>
+
+  <!-- html5 input elements -->
+  <input type="url"      id="url"/><br/>
+  <input type="email"    id="email"/><br/>
+  <input type="search"   id="search"/><br/>
+  <input type="tel"      id="tel"/><br/>
+  <input type="number"   id="number"/><br/>
+  <input type="date"     id="date"/><br/>
+  <input type="datetime-local" id="datetime-local"/><br/>
+  <input type="time"     id="time"/><br/>
+  <!-- TODO(bug 1283382, bug 1283382): month and week -->
+  <input type="week"     id="week"/><br/>
+  <input type="month"    id="month"/><br/>
+
+  <!-- form controls -->
+  <button id="button">button</button><br/>
+  <textarea id="textarea">textarea</textarea><br/>
+  <textarea id="textarea_readonly" readonly="readonly">textarea[readonly]</textarea><br/>
+  <select id="select">
+    <option value="option" selected="selected"/>
+  </select><br/>
+  <select id="select_multiple" multiple="multiple">
+    <option value="option" selected="selected"/>
+  </select><br/>
+  <isindex id="isindex" prompt="isindex"/><br/>
+
+  <!-- a element -->
+  <a id="a_href" href="about:blank">a[href]</a><br/>
+
+  <!-- multimedia element -->
+  <audio id="audio_with_controls" controls=""></audio><br/>
+  <video id="video_with_controls" controls=""></video><br/>
+
+  <!-- ime-mode test -->
+  <input type="text" id="ime_mode_auto"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_url"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_url"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_url"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_url" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_url" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_email"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_email"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_email"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_email" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_email" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_search"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_search"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_search"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_search" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_search" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_tel"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_tel"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_tel"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_tel" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_tel" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_number"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_number"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_number"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_number" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_number" style="ime-mode: disabled;"/><br/>
+
+  <input type="password" id="ime_mode_auto_p"     style="ime-mode: auto;"/><br/>
+  <input type="password" id="ime_mode_normal_p"   style="ime-mode: normal;"/><br/>
+  <input type="password" id="ime_mode_active_p"   style="ime-mode: active;"/><br/>
+  <input type="password" id="ime_mode_inactive_p" style="ime-mode: inactive;"/><br/>
+  <input type="password" id="ime_mode_disabled_p" style="ime-mode: disabled;"/><br/>
+  <textarea id="ime_mode_auto_t"     style="ime-mode: auto;">textarea</textarea><br/>
+  <textarea id="ime_mode_normal_t"   style="ime-mode: normal;">textarea</textarea><br/>
+  <textarea id="ime_mode_active_t"   style="ime-mode: active;">textarea</textarea><br/>
+  <textarea id="ime_mode_inactive_t" style="ime-mode: inactive;">textarea</textarea><br/>
+  <textarea id="ime_mode_disabled_t" style="ime-mode: disabled;">textarea</textarea><br/>
+
+  <!-- plugin -->
+  <object type="application/x-test" id="plugin"></object><br/>
+
+  <!-- contenteditable editor -->
+  <div id="contenteditableEditor" contenteditable="true"></div>
+
+  <!-- designMode editor -->
+  <iframe id="designModeEditor"
+   onload="document.getElementById('designModeEditor').contentDocument.designMode = 'on';"
+   src="data:text/html,<html><body></body></html>"></iframe><br/>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+SimpleTest.waitForExplicitFinish();
+
+function hitEventLoop(aFunc, aTimes) {
+  if (--aTimes) {
+    setTimeout(hitEventLoop, 0, aFunc, aTimes);
+  } else {
+    setTimeout(aFunc, 20);
+  }
+}
+
+var gUtils = window.windowUtils;
+var gFM = Services.focus;
+const kIMEEnabledSupported = navigator.platform.indexOf("Mac") == 0 ||
+                             navigator.platform.indexOf("Win") == 0 ||
+                             navigator.platform.indexOf("Linux") == 0;
+
+// We support to control IME open state on Windows and Mac actually.  However,
+// we cannot test it on Mac if the current keyboard layout is not CJK. And also
+// we cannot test it on Win32 if the system didn't be installed IME. So,
+// currently we should not run the open state testing.
+const kIMEOpenSupported = false;
+
+function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
+  var onIMEFocusBlurHandler = null;
+  var TIPCallback = function(aTIP, aNotification) {
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-focus":
+      case "notify-blur":
+        if (onIMEFocusBlurHandler) {
+          onIMEFocusBlurHandler(aNotification);
+        }
+        break;
+    }
+    return true;
+  };
+
+  var TIP = Cc["@mozilla.org/text-input-processor;1"]
+              .createInstance(Ci.nsITextInputProcessor);
+  if (!TIP.beginInputTransactionForTests(window, TIPCallback)) {
+    ok(false, "runBasicTest(): failed to begin input transaction");
+    return;
+  }
+
+  function test(aTest) {
+    function moveFocus(aTestInner, aFocusEventHandler) {
+      function getFocusedElement() {
+        let focusedElement = gFM.focusedElement;
+        if (aTest.idInUAWidget === undefined &&
+            focusedElement?.containingShadowRoot?.isUAWidget()) {
+          focusedElement = focusedElement.containingShadowRoot.host;
+        }
+        return focusedElement;
+      }
+
+      if (aInDesignMode) {
+        if (document.activeElement) {
+          document.activeElement.blur();
+        }
+      } else if (aIsEditable) {
+        document.getElementById("display").focus();
+      } else if (aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED) {
+        document.getElementById("password").focus();
+      } else {
+        document.getElementById("text").focus();
+      }
+      var previousFocusedElement = getFocusedElement();
+      var element = document.getElementById(aTest.id);
+      if (aTest.idInUAWidget !== undefined) {
+        element = SpecialPowers.wrap(element).
+          openOrClosedShadowRoot.getElementById(aTest.idInUAWidget);
+      }
+      var focusEventTarget = element;
+      if (element.contentDocument) {
+        focusEventTarget = element.contentDocument;
+        element = element.contentDocument.documentElement;
+      }
+
+      focusEventTarget.addEventListener("focus", aFocusEventHandler, true);
+      onIMEFocusBlurHandler = aFocusEventHandler;
+
+      element.focus();
+
+      focusEventTarget.removeEventListener("focus", aFocusEventHandler, true);
+      onIMEFocusBlurHandler = null;
+
+      let focusedElement = getFocusedElement();
+      if (aTest.focusable) {
+        is(focusedElement, element,
+           aDescription + ": " + aTest.description + ", focus didn't move");
+        return (element == focusedElement);
+      }
+      is(focusedElement, previousFocusedElement,
+         aDescription + ": " + aTest.description + ", focus moved as unexpected");
+      return (previousFocusedElement == focusedElement);
+    }
+
+    function testOpened(aTestInner, aOpened) {
+      document.getElementById("text").focus();
+      gUtils.IMEIsOpen = aOpened;
+      if (!moveFocus(aTest)) {
+        return;
+      }
+      var message = aDescription + ": " + aTest.description +
+                                            ", wrong opened state";
+      is(gUtils.IMEIsOpen,
+         aTest.changeOpened ? aTest.expectedOpened : aOpened, message);
+    }
+
+    // IME Enabled state testing
+    var enabled = gUtils.IME_STATUS_ENABLED;
+    if (kIMEEnabledSupported) {
+      var focusEventCount = 0;
+      var IMEReceivesFocus = 0;
+      var IMEReceivesBlur = 0;
+      var IMEHasFocus = false;
+
+      function onFocus(aEvent) {
+        switch (aEvent.type) {
+          case "focus":
+            focusEventCount++;
+            is(gUtils.IMEStatus, aTest.expectedEnabled,
+               aDescription + ": " + aTest.description + ", wrong enabled state at focus event");
+            break;
+          case "notify-focus":
+            IMEReceivesFocus++;
+            IMEHasFocus = true;
+            is(gUtils.IMEStatus, aTest.expectedEnabled,
+               aDescription + ": " + aTest.description +
+                 ", IME should receive a focus notification after IME state is updated");
+            break;
+          case "notify-blur":
+            IMEReceivesBlur++;
+            IMEHasFocus = false;
+            var changingStatus = !(aIsEditable && aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED);
+            if (aTest.toDesignModeEditor) {
+              is(gUtils.IME_STATUS_ENABLED, aTest.expectedEnabled,
+                 aDescription + ": " + aTest.description +
+                   ", IME should receive a blur notification after IME state is updated");
+            } else if (changingStatus) {
+              isnot(gUtils.IMEStatus, aTest.expectedEnabled,
+                    aDescription + ": " + aTest.description +
+                      ", IME should receive a blur notification before IME state is updated");
+            } else {
+              is(gUtils.IMEStatus, aTest.expectedEnabled,
+                 aDescription + ": " + aTest.description +
+                   ", IME should receive a blur notification and its context has expected IME state if the state isn't being changed");
+            }
+            break;
+        }
+      }
+
+      if (!moveFocus(aTest, onFocus)) {
+        return;
+      }
+
+      if (aTest.focusable) {
+        if (!aTest.focusEventNotFired) {
+          ok(focusEventCount > 0,
+             aDescription + ": " + aTest.description + ", focus event is never fired");
+          if (aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED || aTest.expectedEnabled == gUtils.IME_STATUS_PASSWORD) {
+            ok(IMEReceivesFocus > 0,
+               aDescription + ": " + aTest.description + ", IME should receive a focus notification");
+            if (aInDesignMode && !aTest.toDesignModeEditor) {
+              is(IMEReceivesBlur, 0,
+                 aDescription + ": " + aTest.description +
+                   ", IME shouldn't receive a blur notification in designMode since focus isn't moved from another editor");
+            } else {
+              ok(IMEReceivesBlur > 0,
+                 aDescription + ": " + aTest.description +
+                   ", IME should receive a blur notification for the previous focused editor");
+            }
+            ok(IMEHasFocus,
+               aDescription + ": " + aTest.description +
+                 ", IME should have focus right now");
+          } else {
+            is(IMEReceivesFocus, 0,
+               aDescription + ": " + aTest.description +
+                 ", IME shouldn't receive a focus notification");
+            ok(IMEReceivesBlur > 0,
+               aDescription + ": " + aTest.description +
+                 ", IME should receive a blur notification");
+            ok(!IMEHasFocus,
+               aDescription + ": " + aTest.description +
+                 ", IME shouldn't have focus right now");
+          }
+        } else {
+          todo(focusEventCount > 0,
+               aDescription + ": " + aTest.description + ", focus event should be fired");
+        }
+      } else {
+        is(IMEReceivesFocus, 0,
+           aDescription + ": " + aTest.description +
+             ", IME shouldn't receive a focus notification at testing non-focusable element");
+        is(IMEReceivesBlur, 0,
+           aDescription + ": " + aTest.description +
+             ", IME shouldn't receive a blur notification at testing non-focusable element");
+      }
+
+      enabled = gUtils.IMEStatus;
+      var inputtype = gUtils.focusedInputType;
+      is(enabled, aTest.expectedEnabled,
+         aDescription + ": " + aTest.description + ", wrong enabled state");
+      if (aTest.expectedType && !aInDesignMode) {
+        is(inputtype, aTest.expectedType,
+           aDescription + ": " + aTest.description + ", wrong input type");
+      } else if (aInDesignMode) {
+        is(inputtype, "",
+           aDescription + ": " + aTest.description + ", wrong input type");
+      }
+    }
+
+    if (!kIMEOpenSupported || enabled != gUtils.IME_STATUS_ENABLED ||
+        aTest.expectedEnabled != gUtils.IME_STATUS_ENABLED) {
+      return;
+    }
+
+    // IME Open state testing
+    testOpened(aTest, false);
+    testOpened(aTest, true);
+  }
+
+  if (kIMEEnabledSupported) {
+    // make sure there is an active element
+    document.getElementById("text").focus();
+    document.activeElement.blur();
+    is(gUtils.IMEStatus,
+       aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED,
+       aDescription + ": unexpected enabled state when no element has focus");
+  }
+
+  // Form controls except text editable elements are "disable" in normal
+  // condition, however, if they are editable, they are "enabled".
+  // XXX Probably there are some bugs: If the form controls editable, they
+  //     shouldn't be focusable.
+  const kEnabledStateOnNonEditableElement =
+    (aInDesignMode || aIsEditable) ? gUtils.IME_STATUS_ENABLED :
+                                     gUtils.IME_STATUS_DISABLED;
+  const kEnabledStateOnPasswordField =
+    aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_PASSWORD;
+  const kEnabledStateOnReadonlyField =
+    aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
+  const kEnabledStateInUAWidget =
+    aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
+  const kTests = [
+    { id: "text",
+      description: "input[type=text]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "text" },
+    { id: "text_readonly",
+      description: "input[type=text][readonly]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField },
+    { id: "password",
+      description: "input[type=password]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField,
+      expectedType: "password" },
+    { id: "password_readonly",
+      description: "input[type=password][readonly]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField },
+    { id: "checkbox",
+      description: "input[type=checkbox]",
+      focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "radio",
+      description: "input[type=radio]",
+      focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "submit",
+      description: "input[type=submit]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "reset",
+      description: "input[type=reset]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "file",
+      description: "input[type=file]",
+      focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "button",
+      description: "input[type=button]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "image",
+      description: "input[type=image]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "url",
+      description: "input[type=url]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "url" },
+    { id: "email",
+      description: "input[type=email]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "email" },
+    { id: "search",
+      description: "input[type=search]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "search" },
+    { id: "tel",
+      description: "input[type=tel]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "tel" },
+    { id: "number",
+      description: "input[type=number]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "number" },
+    { id: "date",
+      description: "input[type=date]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField,
+      expectedType: "date" },
+    { id: "datetime-local",
+      description: "input[type=datetime-local]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField,
+      expectedType: "datetime-local" },
+    { id: "time",
+      description: "input[type=time]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField,
+      expectedType: "time" },
+    // TODO(bug 1283382, bug 1283382): month and week
+
+    // form controls
+    { id: "button",
+      description: "button",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "textarea",
+      description: "textarea",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "textarea_readonly",
+      description: "textarea[readonly]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField },
+    { id: "select",
+      description: "select (dropdown list)",
+      focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "select_multiple",
+      description: "select (list box)",
+      focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+
+    // a element
+    { id: "a_href",
+      description: "a[href]",
+      focusable: !aIsEditable && !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+
+    // audio element
+    { id: "audio_with_controls",
+      description: "audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "audio_with_controls",
+      idInUAWidget: "playButton",
+      description: "playButton in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "audio_with_controls",
+      idInUAWidget: "scrubber",
+      description: "scrubber in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "audio_with_controls",
+      idInUAWidget: "muteButton",
+      description: "muteButton in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "audio_with_controls",
+      idInUAWidget: "volumeControl",
+      description: "volumeControl in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+
+    // video element
+    { id: "video_with_controls",
+      description: "video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "video_with_controls",
+      idInUAWidget: "playButton",
+      description: "playButton in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "video_with_controls",
+      idInUAWidget: "scrubber",
+      description: "scrubber in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "video_with_controls",
+      idInUAWidget: "muteButton",
+      description: "muteButton in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "video_with_controls",
+      idInUAWidget: "volumeControl",
+      description: "volumeControl in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+
+    // ime-mode
+    { id: "ime_mode_auto",
+      description: "input[type=text][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal",
+      description: "input[type=text][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active",
+      description: "input[type=text][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive",
+      description: "input[type=text][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled",
+      description: "input[type=text][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_url",
+      description: "input[type=url][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_url",
+      description: "input[type=url][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_url",
+      description: "input[type=url][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_url",
+      description: "input[type=url][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_url",
+      description: "input[type=url][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_email",
+      description: "input[type=email][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_email",
+      description: "input[type=email][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_email",
+      description: "input[type=email][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_email",
+      description: "input[type=email][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_email",
+      description: "input[type=email][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_search",
+      description: "input[type=search][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_search",
+      description: "input[type=search][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_search",
+      description: "input[type=search][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_search",
+      description: "input[type=search][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_search",
+      description: "input[type=search][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_tel",
+      description: "input[type=tel][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_tel",
+      description: "input[type=tel][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_tel",
+      description: "input[type=tel][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_tel",
+      description: "input[type=tel][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_tel",
+      description: "input[type=tel][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_number",
+      description: "input[type=number][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_number",
+      description: "input[type=number][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_number",
+      description: "input[type=number][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_number",
+      description: "input[type=number][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_number",
+      description: "input[type=number][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_p",
+      description: "input[type=password][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+    { id: "ime_mode_normal_p",
+      description: "input[type=password][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_p",
+      description: "input[type=password][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_p",
+      description: "input[type=password][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_p",
+      description: "input[type=password][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+    { id: "ime_mode_auto",
+      description: "textarea[style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal",
+      description: "textarea[style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active",
+      description: "textarea[style=\"ime-mode: active;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive",
+      description: "textarea[style=\"ime-mode: inactive;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled",
+      description: "textarea[style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    // HTML editors
+    { id: "contenteditableEditor",
+      description: "div[contenteditable=\"true\"]",
+      focusable: !aIsEditable && !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "designModeEditor",
+      description: "designMode editor",
+      focusable: true,
+      toDesignModeEditor: true,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+  ];
+
+  for (var i = 0; i < kTests.length; i++) {
+    test(kTests[i]);
+  }
+}
+
+function runPluginTest() {
+  if (!kIMEEnabledSupported) {
+    return;
+  }
+
+  var plugin = document.getElementById("plugin");
+
+  // Plugins are not supported and their elements should not accept focus;
+  // therefore, IME should not enable when we play with it.
+
+  document.activeElement.blur();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when no element has focus");
+
+  plugin.focus();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when attempting to give focus to plugin");
+
+  plugin.blur();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state after unfocusing plugin");
+
+  plugin.focus();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when attempting to give focus to plugin #2");
+
+  var parent = plugin.parentNode;
+  parent.removeChild(plugin);
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when plugin is removed from tree");
+
+  document.getElementById("text").focus();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     "runPluginTest: unexpected enabled state when input[type=text] has focus");
+}
+
+function runTypeChangingTest() {
+  if (!kIMEEnabledSupported)
+    return;
+
+  const kInputControls = [
+    { id: "text",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"text\"]" },
+    { id: "text_readonly",
+      type: "text",     expected: gUtils.IME_STATUS_DISABLED, isReadonly: true,
+      description: "[type=\"text\"][readonly]" },
+    { id: "password",
+      type: "password", expected: gUtils.IME_STATUS_PASSWORD,
+      description: "[type=\"password\"]" },
+    { id: "password_readonly",
+      type: "password", expected: gUtils.IME_STATUS_DISABLED, isReadonly: true,
+      description: "[type=\"password\"][readonly]" },
+    { id: "checkbox",
+      type: "checkbox", expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"checkbox\"]" },
+    { id: "radio",
+      type: "radio",    expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"radio\"]" },
+    { id: "submit",
+      type: "submit",   expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"submit\"]" },
+    { id: "reset",
+      type: "reset",    expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"reset\"]" },
+    { id: "file",
+      type: "file",     expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"file\"]" },
+    { id: "ibutton",
+      type: "button",   expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"button\"]" },
+    { id: "image",
+      type: "image",    expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"image\"]" },
+    { id: "url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"url\"]" },
+    { id: "email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"email\"]" },
+    { id: "search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"search\"]" },
+    { id: "tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"tel\"]" },
+    { id: "number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"number\"]" },
+    { id: "date",
+      type: "date",     expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"date\"]" },
+    { id: "datetime-local",
+      type: "datetime-local", expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"datetime-local\"]" },
+    { id: "time",
+      type: "time",       expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"time\"]" },
+    // TODO(bug 1283382, bug 1283382): month and week
+    { id: "ime_mode_auto",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: normal;]" },
+    { id: "ime_mode_active",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled",
+      type: "text",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"text\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_url",
+      type: "url",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"url\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_email",
+      type: "email",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"email\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_search",
+      type: "search",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"search\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_number",
+      type: "number",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"number\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_p",
+      type: "password", expected: gUtils.IME_STATUS_PASSWORD,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_p",
+      type: "password", expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_p",
+      type: "password", expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_p",
+      type: "password", expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_p",
+      type: "password", expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"password\"][ime-mode: disabled;]" },
+  ];
+
+  const kInputTypes = [
+    { type: "",         expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "text",     expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "password", expected: gUtils.IME_STATUS_PASSWORD },
+    { type: "checkbox", expected: gUtils.IME_STATUS_DISABLED },
+    { type: "radio",    expected: gUtils.IME_STATUS_DISABLED },
+    { type: "submit",   expected: gUtils.IME_STATUS_DISABLED },
+    { type: "reset",    expected: gUtils.IME_STATUS_DISABLED },
+    { type: "file",     expected: gUtils.IME_STATUS_DISABLED },
+    { type: "button",   expected: gUtils.IME_STATUS_DISABLED },
+    { type: "image",    expected: gUtils.IME_STATUS_DISABLED },
+    { type: "url",      expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "email",    expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "search",   expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "tel",      expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "number",   expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "date",     expected: gUtils.IME_STATUS_DISABLED },
+    { type: "datetime-local", expected: gUtils.IME_STATUS_DISABLED },
+    { type: "time",     expected: gUtils.IME_STATUS_DISABLED },
+    // TODO(bug 1283382, bug 1283382): month and week
+  ];
+
+  function getExpectedIMEEnabled(aNewType, aInputControl) {
+    if (aNewType.expected == gUtils.IME_STATUS_DISABLED ||
+        aInputControl.isReadonly)
+      return gUtils.IME_STATUS_DISABLED;
+    return aInputControl.imeMode ? aInputControl.expected : aNewType.expected;
+  }
+
+  const kOpenedState = [ true, false ];
+
+  for (var i = 0; i < kOpenedState.length; i++) {
+    const kOpened = kOpenedState[i];
+    for (var j = 0; j < kInputControls.length; j++) {
+      const kInput = kInputControls[j];
+      var e = document.getElementById(kInput.id);
+      e.focus();
+      for (var k = 0; k < kInputTypes.length; k++) {
+        const kType = kInputTypes[k];
+        var typeChangingDescription =
+          "\"" + e.getAttribute("type") + "\" to \"" + kInput.type + "\"";
+        e.setAttribute("type", kInput.type);
+        is(gUtils.IMEStatus, kInput.expected,
+           "type attr changing test (IMEStatus): " + typeChangingDescription +
+             " (" + kInput.description + ")");
+        is(gUtils.focusedInputType, kInput.type,
+           "type attr changing test (type): " + typeChangingDescription +
+             " (" + kInput.description + ")");
+
+        const kTestOpenState = kIMEOpenSupported &&
+                gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED &&
+                getExpectedIMEEnabled(kType, kInput) == gUtils.IME_STATUS_ENABLED;
+        if (kTestOpenState) {
+          gUtils.IMEIsOpen = kOpened;
+        }
+
+        typeChangingDescription =
+          "\"" + e.getAttribute("type") + "\" to \"" + kType.type + "\"";
+        if (kType.type != "")
+          e.setAttribute("type", kType.type);
+        else
+          e.removeAttribute("type");
+
+        is(gUtils.IMEStatus, getExpectedIMEEnabled(kType, kInput),
+           "type attr changing test (IMEStatus): " + typeChangingDescription +
+             " (" + kInput.description + ")");
+        is(gUtils.focusedInputType, kType.type,
+           "type attr changing test (type): " + typeChangingDescription +
+             " (" + kInput.description + ")");
+        if (kTestOpenState && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
+          is(gUtils.IMEIsOpen, kOpened,
+             "type attr changing test (open state is changed): " +
+               typeChangingDescription + " (" + kInput.description + ")");
+        }
+      }
+      // reset the type to default
+      e.setAttribute("type", kInput.type);
+    }
+    if (!kIMEOpenSupported)
+      break;
+  }
+}
+
+function runReadonlyChangingTest() {
+  if (!kIMEEnabledSupported)
+    return;
+
+  const kInputControls = [
+    { id: "text",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "password",
+      type: "password", expected: gUtils.IME_STATUS_PASSWORD },
+    { id: "url",
+      type: "url",      expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "email",
+      type: "email",    expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "search",
+      type: "search",   expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "tel",
+      type: "tel",      expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "number",
+      type: "number",   expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "textarea",
+      type: "textarea", expected: gUtils.IME_STATUS_ENABLED  },
+  ];
+  const kOpenedState = [ true, false ];
+
+  for (var i = 0; i < kOpenedState.length; i++) {
+    const kOpened = kOpenedState[i];
+    for (var j = 0; j < kInputControls.length; j++) {
+      const kInput = kInputControls[j];
+      var e = document.getElementById(kInput.id);
+      e.focus();
+      if (kIMEOpenSupported && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
+        gUtils.IMEIsOpen = kOpened;
+      }
+      e.setAttribute("readonly", "readonly");
+      is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+         "readonly attr setting test: type=" + kInput.type);
+      e.removeAttribute("readonly");
+      is(gUtils.IMEStatus, kInput.expected,
+         "readonly attr removing test: type=" + kInput.type);
+      if (kIMEOpenSupported && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
+        is(gUtils.IMEIsOpen, kOpened,
+           "readonly attr removing test (open state is changed): type=" +
+           kInput.type);
+      }
+    }
+    if (!kIMEOpenSupported)
+      break;
+  }
+}
+
+function runComplexContenteditableTests() {
+  if (!kIMEEnabledSupported) {
+    return;
+  }
+
+  var description = "runReadonlyChangingOnContenteditable: ";
+
+  var container = document.getElementById("display");
+  var button = document.getElementById("button");
+
+  // the editor has focus directly.
+  container.setAttribute("contenteditable", "true");
+  container.focus();
+
+  is(gFM.focusedElement, container,
+     description + "The editor doesn't get focus");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "IME isn't enabled on HTML editor");
+  const kReadonly = Ci.nsIEditor.eEditorReadonlyMask;
+  var editor = window.docShell.editor;
+  var flags = editor.flags;
+  editor.flags = flags | kReadonly;
+  is(gFM.focusedElement, container,
+     description + "The editor loses focus by flag change");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     description + "IME is still enabled on readonly HTML editor");
+  editor.flags = flags;
+  is(gFM.focusedElement, container,
+     description + "The editor loses focus by flag change #2");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "IME is still disabled, the editor isn't readonly now");
+  container.removeAttribute("contenteditable");
+  todo_is(gFM.focusedElement, null,
+          description + "The container still has focus, the editor has been no editable");
+  todo_is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+          description + "IME is still enabled on the editor, the editor has been no editable");
+
+  // a button which is in the editor has focus
+  button.focus();
+  is(gFM.focusedElement, button,
+     description + "The button doesn't get focus");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     description + "IME is enabled on the button");
+  container.setAttribute("contenteditable", "true");
+  is(gFM.focusedElement, button,
+     description + "The button loses focus, the container is editable now");
+  todo_is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+          description + "IME is still disabled on the button, the container is editable now");
+  editor = window.docShell.editor;
+  flags = editor.flags;
+  editor.flags = flags | kReadonly;
+  is(gFM.focusedElement, button,
+     description + "The button loses focus by changing editor flags");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     description + "IME is still enabled on the button, the container is readonly now");
+  editor.flags = flags;
+  is(gFM.focusedElement, button,
+     description + "The button loses focus by changing editor flags #2");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "IME is still disabled on the button, the container isn't readonly now");
+  container.removeAttribute("contenteditable");
+  is(gFM.focusedElement, button,
+     description + "The button loses focus, the container has been no editable");
+  todo_is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+          description + "IME is still enabled on the button, the container has been no editable");
+
+  description = "testOnIndependentEditor: ";
+  function testOnIndependentEditor(aEditor, aEditorDescription) {
+    var expectedState =
+      aEditor.readOnly ? gUtils.IME_STATUS_DISABLED : gUtils.IME_STATUS_ENABLED;
+    var unexpectedStateDescription =
+      expectedState != gUtils.IME_STATUS_ENABLED ? "enabled" : "disabled";
+    aEditor.focus();
+    is(gFM.focusedElement, aEditor,
+       description + "The " + aEditorDescription + " doesn't get focus");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME is " + unexpectedStateDescription +
+         " on the " + aEditorDescription);
+    container.setAttribute("contenteditable", "true");
+    is(gFM.focusedElement, aEditor,
+       description + "The " + aEditorDescription +
+         " loses focus, the container is editable now");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription +
+         " on the " + aEditorDescription + ", the container is editable now");
+    editor = window.docShell.editor;
+    flags = editor.flags;
+    editor.flags = flags | kReadonly;
+    is(gFM.focusedElement, aEditor,
+       description + "The " + aEditorDescription +
+         " loses focus by changing editor flags");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription + " on the " +
+         aEditorDescription + ", the container is readonly now");
+    editor.flags = flags;
+    is(gFM.focusedElement, aEditor,
+       description + "The " + aEditorDescription +
+         " loses focus by changing editor flags #2");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription + " on the " +
+         aEditorDescription + ", the container isn't readonly now");
+    container.removeAttribute("contenteditable");
+    is(gFM.focusedElement, aEditor,
+       description + "The " + aEditorDescription +
+         " loses focus, the container has been no editable");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription + " on the " +
+         aEditorDescription + ", the container has been no editable");
+  }
+
+  // a textarea which is in the editor has focus
+  testOnIndependentEditor(document.getElementById("textarea"),
+                          "textarea");
+  // a readonly textarea which is in the editor has focus
+  testOnIndependentEditor(document.getElementById("textarea_readonly"),
+                          "textarea[readonly]");
+  // an input field which is in the editor has focus
+  testOnIndependentEditor(document.getElementById("text"),
+                          "input[type=\"text\"]");
+  // a readonly input field which is in the editor has focus
+  testOnIndependentEditor(document.getElementById("text_readonly"),
+                          "input[type=\"text\"][readonly]");
+
+  description = "testOnOutsideOfEditor: ";
+  function testOnOutsideOfEditor(aFocusNode, aFocusNodeDescription, aEditor) {
+    if (aFocusNode) {
+      aFocusNode.focus();
+      is(gFM.focusedElement, aFocusNode,
+         description + "The " + aFocusNodeDescription + " doesn't get focus");
+    } else {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+      is(gFM.focusedElement, null,
+         description + "Unexpected element has focus");
+    }
+    var expectedState =
+      aFocusNode ? gUtils.IMEStatus : gUtils.IME_STATUS_DISABLED;
+    var unexpectedStateDescription =
+      expectedState != gUtils.IME_STATUS_ENABLED ? "enabled" : "disabled";
+
+    aEditor.setAttribute("contenteditable", "true");
+    is(gFM.focusedElement, aFocusNode,
+       description + "The " + aFocusNodeDescription +
+         " loses focus, a HTML editor is editable now");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription +
+         " on the " + aFocusNodeDescription +
+         ", the HTML editor is editable now");
+    editor = window.docShell.editor;
+    flags = editor.flags;
+    editor.flags = flags | kReadonly;
+    is(gFM.focusedElement, aFocusNode,
+       description + aFocusNodeDescription +
+         " loses focus by changing HTML editor flags");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription + " on " +
+         aFocusNodeDescription + ", the HTML editor is readonly now");
+    editor.flags = flags;
+    is(gFM.focusedElement, aFocusNode,
+       description + aFocusNodeDescription +
+         " loses focus by changing HTML editor flags #2");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription + " on " +
+         aFocusNodeDescription + ", the HTML editor isn't readonly now");
+    container.removeAttribute("contenteditable");
+    is(gFM.focusedElement, aFocusNode,
+       description + aFocusNodeDescription +
+         " loses focus, the HTML editor has been no editable");
+    is(gUtils.IMEStatus, expectedState,
+       description + "IME becomes " + unexpectedStateDescription + " on " +
+         aFocusNodeDescription + ", the HTML editor has been no editable");
+  }
+
+  var div = document.getElementById("contenteditableEditor");
+  // a textarea which is outside of the editor has focus
+  testOnOutsideOfEditor(document.getElementById("textarea"), "textarea", div);
+  // a readonly textarea which is outside of the editor has focus
+  testOnOutsideOfEditor(document.getElementById("textarea_readonly"),
+                        "textarea[readonly]", div);
+  // an input field which is outside of the editor has focus
+  testOnOutsideOfEditor(document.getElementById("text"),
+                        "input[type=\"text\"]", div);
+  // a readonly input field which outside of the editor has focus
+  testOnOutsideOfEditor(document.getElementById("text_readonly"),
+                        "input[type=\"text\"][readonly]", div);
+  // a readonly input field which outside of the editor has focus
+  testOnOutsideOfEditor(document.getElementById("button"), "button", div);
+  // nobody has focus.
+  testOnOutsideOfEditor(null, "nobody", div);
+}
+
+function runEditorFlagChangeTests() {
+  if (!kIMEEnabledSupported) {
+    return;
+  }
+
+  var description = "runEditorFlagChangeTests: ";
+
+  var container = document.getElementById("display");
+
+  // Reset selection from previous tests.
+  window.getSelection().collapse(container, 0);
+
+  // the editor has focus directly.
+  container.setAttribute("contenteditable", "true");
+  container.focus();
+
+  is(gFM.focusedElement, container,
+     description + "The editor doesn't get focus");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "IME isn't enabled on HTML editor");
+  const kIMEStateChangeFlags = Ci.nsIEditor.eEditorReadonlyMask;
+  const kFlagsNotAllowedWithHTMLEditor =
+    Ci.nsIEditor.eEditorPasswordMask |
+    Ci.nsIEditor.eEditorSingleLineMask;
+  var editor = window.docShell.editor;
+  var flags = editor.flags;
+
+  // input characters
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3078\u3093\u3057\u3093",
+        "clauses":
+        [
+          { "length": 4, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
+      },
+      "caret": { "start": 4, "length": 0 },
+    });
+
+  editor.flags &= ~kIMEStateChangeFlags;
+  ok(editor.composing,
+     description + "#1 IME composition was committed unexpectedly");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "#1 IME isn't enabled on HTML editor");
+
+  editor.flags |=
+      ~(kIMEStateChangeFlags | kFlagsNotAllowedWithHTMLEditor);
+  ok(editor.composing,
+     description + "#2 IME composition was committed unexpectedly");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "#2 IME isn't enabled on HTML editor");
+
+  editor.flags = flags;
+  ok(editor.composing,
+     description + "#3 IME composition was committed unexpectedly");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "#3 IME isn't enabled on HTML editor");
+
+  // cancel the composition
+  synthesizeComposition({ type: "compositioncommit", data: "" });
+
+  container.removeAttribute("contenteditable");
+}
+
+function runEditableSubframeTests() {
+  window.open("window_imestate_iframes.html", "_blank",
+              "width=600,height=600");
+}
+
+function runTestPasswordFieldOnDialog() {
+  if (!kIMEEnabledSupported) {
+    return;
+  }
+
+  if (document.activeElement) {
+    document.activeElement.blur();
+  }
+
+  var dialog;
+
+  function WindowObserver() {
+    Services.obs.addObserver(this, "domwindowopened");
+  }
+
+  WindowObserver.prototype = {
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+
+    observe(subject, topic, data) {
+      if (topic === "domwindowopened") {
+        ok(true, "dialog window is created");
+        dialog = subject;
+        dialog.addEventListener("load", onPasswordDialogLoad);
+      }
+    },
+  };
+
+  var observer = new WindowObserver();
+  var arg1 = {}, arg2 = {};
+  Services.prompt.promptPassword(window, "title", "text", arg1, "msg", arg2);
+
+  ok(true, "password dialog was closed");
+
+  Services.obs.removeObserver(observer, "domwindowopened");
+
+  var passwordField;
+
+  function onPasswordDialogLoad() {
+    ok(true, "onPasswordDialogLoad is called");
+    dialog.removeEventListener("load", onPasswordDialogLoad);
+    passwordField = dialog.document.getElementById("password1Textbox");
+    passwordField.addEventListener("focus", onPasswordFieldFocus);
+  }
+
+  function onPasswordFieldFocus() {
+    ok(true, "onPasswordFieldFocus is called");
+    passwordField.removeEventListener("focus", onPasswordFieldFocus);
+    var utils = dialog.windowUtils;
+    is(utils.IMEStatus, utils.IME_STATUS_PASSWORD,
+       "IME isn't disabled on a password field of password dialog");
+    synthesizeKey("VK_ESCAPE", { }, dialog);
+  }
+}
+
+// Bug 580388 and bug 808287
+async function runEditorReframeTests() {
+  if (document.activeElement) {
+    document.activeElement.blur();
+  }
+
+  var IMEFocus = 0;
+  var IMEBlur = 0;
+  var IMEHasFocus = false;
+  var TIPCallback = function(aTIP, aNotification) {
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-focus":
+        IMEFocus++;
+        IMEHasFocus = true;
+        break;
+      case "notify-blur":
+        IMEBlur++;
+        IMEHasFocus = false;
+        break;
+    }
+    return true;
+  };
+
+  var TIP = Cc["@mozilla.org/text-input-processor;1"]
+              .createInstance(Ci.nsITextInputProcessor);
+  if (!TIP.beginInputTransactionForTests(window, TIPCallback)) {
+    ok(false, "runEditorReframeTests(): failed to begin input transaction");
+    return;
+  }
+
+  var input = document.getElementById("text");
+  input.focus();
+
+  is(IMEFocus, 1, "runEditorReframeTests(): IME should receive a focus notification by a call of <input>.focus()");
+  is(IMEBlur, 0, "runEditorReframeTests(): IME shouldn't receive a blur notification by a call of <input>.focus()");
+  ok(IMEHasFocus, "runEditorReframeTests(): IME should have focus because <input>.focus() is called");
+
+  IMEFocus = IMEBlur = 0;
+
+  input.style.overflow = "visible";
+
+  var onInput = function(aEvent) {
+    aEvent.target.style.overflow = "hidden";
+  };
+  input.addEventListener("input", onInput, true);
+
+  var AKey = new KeyboardEvent("", { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A });
+  TIP.keydown(AKey);
+  TIP.keyup(AKey);
+
+  await new Promise(r => hitEventLoop(r, 20));
+
+  is(IMEFocus, 0, "runEditorReframeTests(): IME shouldn't receive a focus notification during reframing");
+  is(IMEBlur, 0, "runEditorReframeTests(): IME shouldn't receive a blur notification during reframing");
+  ok(IMEHasFocus, "runEditorReframeTests(): IME must have focus even after reframing");
+
+  var onFocus = function(aEvent) {
+    // Perform a style change and query during focus to trigger reframing
+    input.style.overflow = "visible";
+    synthesizeQuerySelectedText();
+  };
+  input.addEventListener("focus", onFocus);
+  IMEFocus = IMEBlur = 0;
+
+  input.blur();
+  input.focus();
+  TIP.keydown(AKey);
+  TIP.keyup(AKey);
+
+  await new Promise(r => hitEventLoop(r, 20));
+
+  is(IMEFocus, 1, "runEditorReframeTests(): IME should receive a focus notification at focus but shouldn't receive it during reframing");
+  is(IMEBlur, 1, "runEditorReframeTests(): IME should receive a blur notification at blur but shouldn't receive it during reframing");
+  ok(IMEHasFocus, "runEditorReframeTests(): IME sould have focus after reframing during focus");
+
+  input.removeEventListener("input", onInput, true);
+  input.removeEventListener("focus", onFocus);
+
+  input.style.overflow = "visible";
+  input.value = "";
+
+  TIP = null;
+
+  await new Promise(r => hitEventLoop(r, 20));
+}
+
+async function runTests() {
+  if (!kIMEEnabledSupported && !kIMEOpenSupported)
+    return;
+
+  // test for normal contents.
+  runBasicTest(false, false, "Testing of normal contents");
+
+  // test for plugin contents
+  runPluginTest();
+
+  var container = document.getElementById("display");
+  // test for contentEditable="true"
+  container.setAttribute("contenteditable", "true");
+  runBasicTest(true, false, "Testing [contentEditable=\"true\"]");
+
+  // test for contentEditable="false"
+  container.setAttribute("contenteditable", "false");
+  runBasicTest(false, false, "Testing [contentEditable=\"false\"]");
+
+  // test for removing contentEditable
+  container.setAttribute("contenteditable", "true");
+  container.removeAttribute("contenteditable");
+  runBasicTest(false, false, "Testing after contentEditable to be removed");
+
+  // test designMode
+  document.designMode = "on";
+  runBasicTest(true, true, "Testing designMode=\"on\"");
+  document.designMode = "off";
+  document.getElementById("text").focus();
+  runBasicTest(false, false, "Testing designMode=\"off\"");
+
+  // changing input[type] values
+  // XXX currently, type attribute changing doesn't work fine. bug 559728.
+  // runTypeChangingTest();
+
+  // changing readonly attribute
+  runReadonlyChangingTest();
+
+  // complex contenteditable editor's tests
+  runComplexContenteditableTests();
+
+  // test whether the IME state and composition are not changed unexpectedly
+  runEditorFlagChangeTests();
+
+  // test password field on dialog
+  // XXX temporary disable against failure
+  // runTestPasswordFieldOnDialog();
+
+  // Asynchronous tests
+  await runEditorReframeTests();
+
+  // This will call onFinish(), so, this test must be the last.
+  runEditableSubframeTests();
+}
+
+function onFinish() {
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

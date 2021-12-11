@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: 'grid-row-gap'</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176792">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#gutters">
+  <link rel="match" href="grid-row-gap-001-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+separator { clear:both; display:block; height:6px; }
+
+.grid {
+  display: grid;
+  float: left;
+  position: relative;
+  border: 1px solid;
+  border-block-start: 2px solid blue;
+  grid-template: 3px 5px 7px / 11px 7px 5px;
+  padding: 1px 1px 3px 2px;
+  margin-right: 4px;
+  width: 40px;
+  height: 40px;
+  grid-row-gap: 1px;
+}
+
+item1,item2,item3 {
+  display: block;
+  background: grey;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+item1 { grid-area: 1 / 1; }
+item2 { grid-area: 2 / 2; }
+item3 { grid-area: 3 / 3; }
+
+.hl  { writing-mode: horizontal-tb; direction:ltr; }
+.hr  { writing-mode: horizontal-tb; direction:rtl; }
+.vl  { writing-mode: vertical-lr; }
+.vr  { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+.astart { align-content:start; }
+.aend { align-content:end; }
+.aflexstart { align-content:flex-start; }
+.aflexend { align-content:flex-end; }
+.acenter { align-content:center; }
+.aleft { align-content:left; }
+.aright { align-content:right; }
+
+.aspace-between{ align-content:space-between; }
+.aspace-around { align-content:space-around;  }
+.aspace-evenly { align-content:space-evenly;  }
+
+.astretch1, .astretch2, .astretch3, .astretch4 { align-content:stretch; }
+.astretch2 { grid-template-rows: minmax(3px,auto) 5px 7px; }
+.astretch3 { grid-template-rows: minmax(3px,auto) minmax(5px,auto) 7px; }
+.astretch4 { grid-template-rows: minmax(3px,auto) minmax(5px,auto) minmax(7px,auto); }
+
+</style>
+</head>
+<body>
+
+<script>
+var gridwm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
+var test = [ "start", "end", "flexstart", "flexend", "center", "left", "right",
+             "space-between", "space-around", "space-evenly",
+             "stretch1", "stretch2", "stretch3", "stretch4" ];
+for (var k = 0; k < test.length; ++k) {
+  for (var i = 0; i < gridwm.length; ++i) {
+      var div = document.createElement("div");
+      div.className = "grid a" + test[k] + " " + gridwm[i];
+      div.appendChild(document.createElement("item1"));
+      div.appendChild(document.createElement("item2"));
+      div.appendChild(document.createElement("item3"));
+      document.body.appendChild(div)
+  }
+    document.body.appendChild(document.createElement("separator"));
+}
+</script>
+
+
+</body>
+</html>

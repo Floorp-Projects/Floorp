@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsISimpleEnumerator.idl"
+
+interface nsIFile;
+
+/**
+ * This interface provides a means for enumerating the contents of a directory.
+ * It is similar to nsISimpleEnumerator except the retrieved entries are QI'ed
+ * to nsIFile, and there is a mechanism for closing the directory when the
+ * enumeration is complete.
+ */
+[scriptable, uuid(31f7f4ae-6916-4f2d-a81e-926a4e3022ee)]
+interface nsIDirectoryEnumerator : nsISimpleEnumerator
+{
+  /**
+   * Retrieves the next file in the sequence. The "nextFile" element is the
+   * first element upon the first call. This attribute is null if there is no
+   * next element.
+   */
+  readonly attribute nsIFile nextFile;
+
+  /**
+   * Closes the directory being enumerated, releasing the system resource.
+   * @throws NS_OK if the call succeeded and the directory was closed.
+   *         NS_ERROR_FAILURE if the directory close failed.
+   *         It is safe to call this function many times.
+   */
+  void close();
+};
+

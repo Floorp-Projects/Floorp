@@ -1,0 +1,22 @@
+<!doctype html>
+<style>
+.foo > div::before {
+  display: block;
+  width: 100px;
+  height: 100px;
+  background: red;
+  content: "";
+}
+.foo.bar > div::before {
+  background: green;
+}
+</style>
+<div class="foo">
+  <div>
+  </div>
+</div>
+<script>
+onload = function() {
+  document.querySelector('.foo').className = 'foo bar';
+}
+</script>

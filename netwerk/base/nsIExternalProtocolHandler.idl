@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIProtocolHandler.idl"
+
+[scriptable, uuid(0e61f3b2-34d7-4c79-bfdc-4860bc7341b7)]
+interface nsIExternalProtocolHandler: nsIProtocolHandler
+{
+    /**
+     * This method checks if the external handler exists for a given scheme.
+     *
+     * @param scheme external scheme.
+     * @return TRUE if the external handler exists for the input scheme, FALSE otherwise.
+     */
+    boolean externalAppExistsForScheme(in ACString scheme);
+};

@@ -1,0 +1,22 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsISDBConnection;
+interface nsISDBRequest;
+
+[scriptable, function, uuid(8cbd576c-c6bf-42fd-96ee-3b824dafe1d4)]
+interface nsISDBCallback : nsISupports
+{
+  void onComplete(in nsISDBRequest aRequest);
+};
+
+[scriptable, function, uuid(e0821d43-62b9-40fe-99f8-ff9ab3184cbf)]
+interface nsISDBCloseCallback : nsISupports
+{
+  void onClose(in nsISDBConnection aConnection);
+};

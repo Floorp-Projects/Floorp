@@ -1,0 +1,103 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that openLink function is called if accessible object property is rendered as a link.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Accessible component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory, createElement } =
+      browserRequire("devtools/client/shared/vendor/react");
+    const { Provider } = require("devtools/client/shared/vendor/react-redux");
+    const createStore = require("devtools/client/shared/redux/create-store");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Accessible = createFactory(
+      browserRequire("devtools/client/accessibility/components/Accessible"));
+
+    const a = Accessible({ labelledby: "Test Accessible" });
+    ok(a, "Should be able to create Accessible instances");
+
+    const mockState = {
+      details: {
+        DOMNode: {},
+        accessible: {
+          on: () => {},
+          off: () => {},
+          // This accessible mock has no actorID and should be treated as
+          // destroyed.
+          isDestroyed: () => true,
+        },
+      },
+      ui: { supports: {} }
+    };
+
+    const mockStore = createStore((state, action) =>
+      action ? { ...state, ...action } : state, { initialState: mockState });
+    const provider = createElement(Provider, { store: mockStore }, a);
+    const accessible = ReactDOM.render(provider, window.document.body);
+    ok(accessible, "Should be able to mount Accessible instances");
+    let relationsNode = document.getElementById("/relations");
+    ok(relationsNode, "Relations are rendered when supported.");
+    let arrow = relationsNode.querySelector(".arrow.theme-twisty");
+    is(arrow.style.visibility, "hidden", "Relations are empty.");
+
+    info("Render accessible object with relations.");
+    const state = {
+      details: {
+        ...mockState.details,
+        relations: {
+          "containing document": {
+            actorID: "server1.conn2.child1/accessible29",
+            typeName: "accessible",
+            name: "New Tab",
+            role: "document",
+          },
+        },
+      },
+    };
+    await mockStore.dispatch({ type: "update", ...state });
+    relationsNode = document.getElementById("/relations");
+    ok(relationsNode, "Relations are rendered when supported.");
+    arrow = relationsNode.querySelector(".arrow.theme-twisty");
+    ok(!arrow.style.visibility,
+      "There is at least one relation for the current accessible object.");
+
+    Simulate.click(arrow, null);
+    const relationNode = document.getElementById("/relations/containing document");
+    ok(relationNode, "Relation node is rendered.");
+    ok(relationNode.textContent.includes(
+      state.details.relations["containing document"].name),
+      "Relation target's name is rendered");
+    ok(relationNode.textContent.includes(
+      state.details.relations["containing document"].role),
+      "Relation target's name is rendered");
+    ok(relationNode.querySelector(".open-accessibility-inspector"),
+      "Select accessible button is rendered.");
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

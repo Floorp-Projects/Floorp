@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(28915cca-3366-4034-ba1d-b7afb9b37639)]
+interface nsIAccessibleEditableText : nsISupports
+{
+  /**
+   * Replaces the text represented by this object by the given text.
+   */
+  void setTextContents (in AString text);
+
+  /**
+   * Inserts text at the specified position.
+   *
+   * @param text - text that is inserted.
+   * @param position - index at which to insert the text.
+   */
+  void insertText(in AString text, in long position);
+
+  /**
+   * Copies the text range into the clipboard.
+   *
+   * @param startPos - start index of the text to moved into the clipboard.
+   * @param endPos - end index of the text to moved into the clipboard.
+   */
+  void copyText(in long startPos, in long endPos);
+
+  /**
+   * Deletes a range of text and copies it to the clipboard.
+   *
+   * @param startPos - start index of the text to be deleted.
+   * @param endOffset - end index of the text to be deleted.
+   */
+  void cutText(in long startPos, in long endPos);
+
+  /**
+   * Deletes a range of text.
+   *
+   * @param startPos - start index of the text to be deleted.
+   * @param endPos - end index of the text to be deleted.
+   */
+  void deleteText(in long startPos, in long endPos);
+
+  /**
+   * Pastes text from the clipboard.
+   *
+   * @param position - index at which to insert the text from the system
+   *                   clipboard into the text represented by this object.
+   */
+  [can_run_script]
+  void pasteText(in long position);
+};

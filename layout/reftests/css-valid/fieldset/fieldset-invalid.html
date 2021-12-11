@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: fieldset undergoes constraint validation.
+             It should be affected by :invalid pseudo-class. -->
+  <style>
+    fieldset:invalid { display: none; }
+  </style>
+  <body onload="document.getElementById('f').setCustomValidity('foo'); document.documentElement.className='';">
+    <fieldset>
+      <input id='f'>
+    </fieldset>
+  </body>
+</html>

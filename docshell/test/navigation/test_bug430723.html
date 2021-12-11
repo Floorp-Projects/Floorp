@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=430723
+-->
+<head>
+  <title>Test for Bug 430723</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>  
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=430723">Mozilla Bug 430723</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// <![CDATA[
+
+/** Test for Bug 430723 **/
+
+var BASE_URI = "http://mochi.test:8888/tests/docshell/test/navigation/";
+var gTallRedBoxURI = BASE_URI + "redbox_bug430723.html";
+var gTallBlueBoxURI = BASE_URI + "bluebox_bug430723.html";
+
+window.onload = runTest;
+
+var testWindow;
+var testNum = 0;
+
+var smoothScrollPref = "general.smoothScroll";
+function runTest() {
+  SpecialPowers.pushPrefEnv({"set": [[smoothScrollPref, false]]}, function() {
+    testWindow = window.open(gTallRedBoxURI, "testWindow", "width=300,height=300,location=yes,scrollbars=yes");
+  });
+}
+
+var nextTest = function() {
+  testNum++;
+  switch (testNum) {
+    case 1: setTimeout(step1, 0); break;
+    case 2: setTimeout(step2, 0); break;
+    case 3: setTimeout(step3, 0); break;
+  }
+};
+
+var step1 = function() {
+  window.is(String(testWindow.location), gTallRedBoxURI, "Ensure red page loaded.");
+
+  // Navigate down and up.
+  is(testWindow.document.body.scrollTop, 0,
+     "Page1: Ensure the scrollpane is at the top before we start scrolling.");
+  testWindow.addEventListener("scroll", function() {
+    isnot(testWindow.document.body.scrollTop, 0,
+          "Page1: Ensure we can scroll down.");
+    SimpleTest.executeSoon(step1_2);
+  }, {capture: true, once: true});
+  sendKey("DOWN", testWindow);
+
+  function step1_2() {
+    testWindow.addEventListener("scroll", function() {
+      is(testWindow.document.body.scrollTop, 0,
+         "Page1: Ensure we can scroll up, back to the top.");
+
+      // Nav to blue box page. This should fire step2.
+      testWindow.location = gTallBlueBoxURI;
+    }, {capture: true, once: true});
+    sendKey("UP", testWindow);
+  }
+};
+
+
+var step2 = function() {
+  window.is(String(testWindow.location), gTallBlueBoxURI, "Ensure blue page loaded.");
+
+  // Scroll around a bit.
+  is(testWindow.document.body.scrollTop, 0,
+     "Page2: Ensure the scrollpane is at the top before we start scrolling.");
+
+  var scrollTest = function() {
+    if (++count < 2) {
+      SimpleTest.executeSoon(function() { sendKey("DOWN", testWindow); });
+    } else {
+      testWindow.removeEventListener("scroll", scrollTest, true);
+
+      isnot(testWindow.document.body.scrollTop, 0,
+            "Page2: Ensure we could scroll.");
+
+      // Navigate backwards. This should fire step3.
+      testWindow.history.back();
+    }
+  };
+
+  var count = 0;
+  testWindow.addEventListener("scroll", scrollTest, true);
+  sendKey("DOWN", testWindow);
+};
+
+var step3 = function() {
+  window.is(String(testWindow.location), gTallRedBoxURI,
+            "Ensure red page restored from history.");
+
+  // Check we can still scroll with the keys.
+  is(testWindow.document.body.scrollTop, 0,
+     "Page1Again: Ensure scroll pane at top before we scroll.");
+  testWindow.addEventListener("scroll", function() {
+    isnot(testWindow.document.body.scrollTop, 0,
+          "Page2Again: Ensure we can still scroll.");
+
+    testWindow.close();
+    window.SimpleTest.finish();
+  }, {capture: true, once: true});
+  sendKey("DOWN", testWindow);
+};
+
+SimpleTest.waitForExplicitFinish();
+
+// ]]>
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,78 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+@template
+def SignedAppFile(name, flags, app_directory="app/"):
+    if not CONFIG["COMPILE_ENVIRONMENT"]:
+        return
+
+    GENERATED_FILES += [name]
+    props = GENERATED_FILES[name]
+    props.script = "/security/manager/ssl/tests/unit/sign_app.py"
+    props.inputs = [app_directory]
+    props.flags = flags
+    # Turn RELATIVEDIR into list entry: like
+    # 'security/manager/ssl/tests/unit/test_signed_apps' ->
+    # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_signed_apps.
+    files = TEST_HARNESS_FILES.xpcshell
+    for part in RELATIVEDIR.split("/"):
+        files = files[part]
+    files += ["!%s" % name]
+
+
+# Except for unusual testcases (unknown issuer, unsigned app, empty
+# signerInfos), the naming scheme is as follows:
+# app_mf{-1,-256}_sf{-1,-256}_p7{-1,-256}.zip, where:
+# "mf" refers to the manifest file, "sf" refers to the signature file,
+# and "p7" refers to the pkcs#7 file. The "{-1,-256}" indicates which
+# hash algorithms are present in the corresponding file (both may be
+# present).
+# For example, "app_mf-1_sf-1-256_p7-256.zip" means that the manifest
+# file has sha-1 hashes, the signature file has sha-1 hashes and sha-256
+# hashes, and the pkcs#7 file only has sha-256.
+#
+# Temporarily disabled. See bug 1256495.
+# signed_app_files = (
+#    ['unknown_issuer_app.zip', '-i', 'unknown issuer', '-p', 'sha256'],
+#    ['unsigned_app.zip'],
+#    ['empty_signerInfos.zip', '-e'],
+# )
+#
+# for signed_app_file_params in signed_app_files:
+#    SignedAppFile(signed_app_file_params[0], signed_app_file_params[1:])
+#
+# for mf_algs in [['1'], ['256'], ['1', '256']]:
+#    for sf_algs in [['1'], ['256'], ['1', '256']]:
+#        for p7_algs in [['1'], ['256'], ['1', '256']]:
+#            filename = "app_mf-%s_sf-%s_p7-%s.zip" % ('-'.join(mf_algs), '-'.join(sf_algs), '-'.join(p7_algs))
+#            args = []
+#            for mf_alg in mf_algs:
+#                args.append('-m')
+#                args.append('sha%s' % mf_alg)
+#            for sf_alg in sf_algs:
+#                args.append('-s')
+#                args.append('sha%s' % sf_alg)
+#            for p7_alg in p7_algs:
+#                args.append('-p')
+#                args.append('sha%s' % p7_alg)
+#            SignedAppFile(filename, args)
+#
+# COSE test-cases
+# SignedAppFile('cose_signed_with_pkcs7.zip', ['-c', 'ES256', '-p', 'sha256'])
+# SignedAppFile('cose_int_signed_with_pkcs7.zip', ['-c', 'ES256', '-r', 'xpcshell signed apps test root', '-p', 'sha256'])
+# SignedAppFile('cose_multiple_signed_with_pkcs7.zip', ['-c', 'ES256', '-c', 'ES384', '-p', 'sha256'])
+# SignedAppFile('only_cose_signed.zip', ['-c', 'ES256'])
+# SignedAppFile('only_cose_multiple_signed.zip', ['-c', 'ES384', '-c', 'ES256'])
+# SignedAppFile('cose_tampered_good_pkcs7.zip', ['-m', 'sha1', '-s', 'sha1', '-p', 'sha1'], 'app_cose_tampered/')
+# SignedAppFile('big_manifest.zip', ['-p', 'sha256', '--pad-headers', '2'])
+# SignedAppFile('huge_manifest.zip', ['-p', 'sha256', '--pad-headers', '10'])
+# SignedAppFile('validity_expired.zip', ['-c', 'ES256', '-p', 'sha256', '--cert-validity', '19700101-19701212'])
+# SignedAppFile('validity_not_yet_valid.zip', ['-c', 'ES256', '-p', 'sha256', '--cert-validity', '99990101-99991212'])
+
+# To generate a new entry, add SignedAppFile, run mach build and copy from
+# objdir/_tests/xpcshell/security/manager/ssl/tests/unit/test_signed_apps/
+# to this directory.

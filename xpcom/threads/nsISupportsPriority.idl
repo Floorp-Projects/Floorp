@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface exposes the general notion of a scheduled object with a
+ * integral priority value.  Following UNIX conventions, smaller (and possibly
+ * negative) values have higher priority.
+ *
+ * This interface does not strictly define what happens when the priority of an
+ * object is changed.  An implementation of this interface is free to define
+ * the side-effects of changing the priority of an object.  In some cases,
+ * changing the priority of an object may be disallowed (resulting in an
+ * exception being thrown) or may simply be ignored.
+ */
+[scriptable, uuid(aa578b44-abd5-4c19-8b14-36d4de6fdc36)]
+interface nsISupportsPriority : nsISupports
+{
+  /**
+   * Typical priority values.
+   */
+  const long PRIORITY_HIGHEST = -20;
+  const long PRIORITY_HIGH    = -10;
+  const long PRIORITY_NORMAL  =   0;
+  const long PRIORITY_LOW     =  10;
+  const long PRIORITY_LOWEST  =  20;
+
+  /**
+   * This attribute may be modified to change the priority of this object.  The
+   * implementation of this interface is free to truncate a given priority
+   * value to whatever limits are appropriate.  Typically, this attribute is
+   * initialized to PRIORITY_NORMAL, but implementations may choose to assign a
+   * different initial value.
+   */
+  attribute long priority;
+
+  /**
+   * This method adjusts the priority attribute by a given delta.  It helps
+   * reduce the amount of coding required to increment or decrement the value
+   * of the priority attribute.
+   */
+  void adjustPriority(in long delta);
+};

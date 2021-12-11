@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <meta charset=utf8>
+    <title>Console API test page</title>
+    <script type="text/javascript">
+      window.foobar585956c = function(a) {
+        console.trace();
+        return a + "c";
+      };
+
+      /* global foobar585956c */
+      function foobar585956b(a) {
+        return foobar585956c(a + "b");
+      }
+
+      function foobar585956a(omg) {
+        return foobar585956b(omg + "a");
+      }
+
+      function foobar646025(omg) {
+        console.log(omg, "o", "d");
+      }
+
+      function startTimer(timer) {
+        console.time(timer);
+      }
+
+      function stopTimer(timer) {
+        console.timeEnd(timer);
+      }
+
+      function namelessTimer() {
+        console.time();
+        console.timeEnd();
+      }
+
+      function test() {
+        var str = "Test Message.";
+        console.foobar(str); // if this throws, we don't execute following funcs
+        console.log(str);
+        console.info(str);
+        console.warn(str);
+        console.error(str);
+        console.exception(str);
+        console.assert(false, str);
+        console.count(str);
+      }
+
+      function testGroups() {
+        console.groupCollapsed("a", "group");
+        console.group("b", "group");
+        console.groupEnd();
+      }
+
+      function nativeCallback() {
+        new Promise(function(resolve, reject) { resolve(42); }).then(console.log);
+      }
+
+      function timeStamp(val) {
+        console.timeStamp(val);
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Console API Test Page</h1>
+    <button onclick="test();">Log stuff</button>
+    <button id="test-trace" onclick="foobar585956a('omg');">Test trace</button>
+    <button id="test-location" onclick="foobar646025('omg');">Test location</button>
+    <button id="test-nativeCallback" onclick="nativeCallback();">Test nativeCallback</button>
+    <button id="test-groups" onclick="testGroups();">Test groups</button>
+    <button id="test-time" onclick="startTimer('foo');">Test time</button>
+    <button id="test-timeEnd" onclick="stopTimer('foo');">Test timeEnd</button>
+    <button id="test-namelessTimer" onclick="namelessTimer();">Test namelessTimer</button>
+    <button id="test-timeStamp" onclick="timeStamp('!!!')">Test timeStamp</button>
+    <button id="test-emptyTimeStamp" onclick="timeStamp();">Test emptyTimeStamp</button>
+  </body>
+</html>

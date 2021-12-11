@@ -1,0 +1,12 @@
+{
+   "name": "youtube",
+   "addons": {},
+   "prefs": {
+      "media.eme.enabled": true,
+      "media.gmp-manager.updateEnabled": true,
+      "media.eme.require-app-approval": false
+   },
+   "scenario": {
+       "full": {"max_urls": 150}
+   }
+}

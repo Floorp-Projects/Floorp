@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IssuePane component renders no issues 1`] = `
+<Localized
+  id="compatibility-no-issues-found"
+>
+  <p
+    className="devtools-sidepanel-no-result"
+  >
+    compatibility-no-issues-found
+  </p>
+</Localized>
+`;
+
+exports[`IssuePane component renders some issues 1`] = `
+<IssueList
+  issues={
+    Array [
+      Object {
+        "deprecated": false,
+        "experimental": true,
+        "property": "border-block-color",
+        "type": "CSS_PROPERTY",
+        "unsupportedBrowsers": Array [],
+        "url": "https://developer.mozilla.org/docs/Web/CSS/border-block-color",
+      },
+      Object {
+        "aliases": Array [
+          "user-modify",
+        ],
+        "deprecated": true,
+        "experimental": false,
+        "property": "user-modify",
+        "type": "CSS_PROPERTY_ALIASES",
+        "unsupportedBrowsers": Array [],
+        "url": "https://developer.mozilla.org/docs/Web/CSS/user-modify",
+      },
+    ]
+  }
+/>
+`;

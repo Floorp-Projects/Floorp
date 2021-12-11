@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+html,body {
+  font-size:12px;
+  font-family:monospace;
+}
+.grid {
+  height: 60px;
+  border: 1px solid green;
+  position: relative;
+}
+
+span {
+  position: absolute;
+  background: lime;
+  border: 1px solid black;
+  box-sizing: border-box;
+}
+
+.test1 span {
+  top: 0;
+  left: 40px;
+  width: 100px;
+  height: 20px;
+}
+
+.test2 .a {
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 40px;
+}
+.test2 .b {
+  top: 40px;
+  left: 20px;
+  width: 60px;
+  height: 20px;
+}
+.test2 .c {
+  top: 0;
+  left: 60px;
+  width: 60px;
+  height: 20px;
+}
+
+.test3 span {
+  top: 0;
+  left: 40px;
+  width: 100px;
+  height: 20px;
+}
+
+.test4 span {
+  top: 0;
+  left: 40px;
+  width: 100px;
+  height: 20px;
+}
+    </style>
+</head>
+<body>
+
+<div class="grid test1"><span>a</span></div>
+
+<div class="grid test2">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+</div>
+
+<div class="grid test3"><span>a</span></div>
+
+<div class="grid test4"><span>a</span></div>
+
+</body>
+</html>

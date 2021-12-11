@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test FinalizationRegistry works in the browser</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      let registry1, holdings1;
+      let registry2, holdings2;
+      let registry3, holdings3;
+      let registry4, holdings4;
+      let registry5, holdings5;
+      let registry6, holdings6;
+      let registry7, holdings7;
+      let registry8, holdings8;
+      let registry9, holdings9;
+
+      let object4 = {};
+
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        // Registry with no registered objects.
+        holdings1 = [];
+        registry1 = new FinalizationRegistry(v => { holdings1.push(v); });
+
+        // Registry with three registered objects.
+        holdings2 = [];
+        registry2 = new FinalizationRegistry(v => { holdings2.push(v); });
+        registry2.register({}, 1);
+        registry2.register({}, 2);
+        registry2.register({}, 3);
+
+        // Registry with registered object that is then unregistered.
+        holdings3 = [];
+        registry3 = new FinalizationRegistry(v => { holdings3.push(v); });
+        let token3 = {}
+        registry3.register({}, 1, token3);
+        registry3.unregister(token3);
+
+        // Registry with registered object that doesn't die.
+        holdings4 = [];
+        registry4 = new FinalizationRegistry(v => { holdings4.push(v); });
+        registry4.register(object4, 1);
+
+        // Registry observing cyclic JS data structure.
+        holdings5 = [];
+        registry5 = new FinalizationRegistry(v => { holdings5.push(v); });
+        registry5.register(makeJSCycle(4), 5);
+
+        // Registry observing DOM object without preserved wrappers.
+        holdings6 = [];
+        registry6 = new FinalizationRegistry(v => { holdings6.push(v); });
+        registry6.register(document.createElement("div"), 6);
+
+        // Registry observing DOM object with preserved wrappers.
+        holdings7 = [];
+        registry7 = new FinalizationRegistry(v => { holdings7.push(v); });
+        let object = document.createElement("div");
+        object.someProperty = true;
+        registry7.register(object, 7);
+        object = null;
+
+        // Registry observing reachable DOM object without preserved wrappers.
+        holdings8 = [];
+        registry8 = new FinalizationRegistry(v => { holdings8.push(v); });
+        document.body.appendChild(document.createElement("div"));
+        registry8.register(document.body.lastChild, 8);
+
+        // Registry observing cyclic DOM/JS data structure.
+        holdings9 = [];
+        registry9 = new FinalizationRegistry(v => { holdings9.push(v); });
+        registry9.register(makeDOMCycle(4), 9);
+
+        // Need to run full GC/CC/GC cycle to collect cyclic garbage through DOM
+        // and JS heaps.
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+        SpecialPowers.DOMWindowUtils.cycleCollect();
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+
+        // Microtasks are run before cleanup callbacks.
+        Promise.resolve().then(() => {
+          is(holdings1.length, 0);
+          is(holdings2.length, 0);
+          is(holdings3.length, 0);
+          is(holdings4.length, 0);
+          is(holdings5.length, 0);
+          is(holdings6.length, 0);
+          is(holdings7.length, 0);
+          is(holdings8.length, 0);
+          is(holdings9.length, 0);
+        });
+
+        // setTimeout queues a task which will run after cleanup callbacks.
+        setTimeout(task2, 0);
+      }
+
+      function task2() {
+        is(holdings1.length, 0);
+
+        let result = holdings2.sort((a, b) => a - b);
+        is(result.length, 3);
+        is(result[0], 1);
+        is(result[1], 2);
+        is(result[2], 3);
+
+        is(holdings3.length, 0);
+        is(holdings4.length, 0);
+
+        is(holdings5.length, 1);
+        is(holdings5[0], 5);
+
+        is(holdings6.length, 1);
+        is(holdings6[0], 6);
+
+        is(holdings7.length, 1);
+        is(holdings7[0], 7);
+
+        is(holdings8.length, 0);
+
+        is(holdings9.length, 1);
+        is(holdings9[0], 9);
+
+        document.body.removeChild(document.body.lastChild);
+
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+        SpecialPowers.DOMWindowUtils.cycleCollect();
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+
+        setTimeout(task3, 0);
+      }
+
+      function task3()  {
+        is(holdings8.length, 1);
+        is(holdings8[0], 8);
+
+        SimpleTest.finish();
+      }
+
+      function makeJSCycle(size) {
+        let first = {};
+        let current = first;
+        for (let i = 0; i < size; i++) {
+          current.next = {};
+          current = current.next;
+        }
+        current.next = first;
+        return first;
+      }
+
+      function makeDOMCycle(size) {
+        let first = {};
+        let current = first;
+        for (let i = 0; i < size; i++) {
+          if (i % 2 === 0) {
+            current.next = document.createElement("div");
+          } else {
+            current.next = {};
+          }
+          current = current.next;
+        }
+        current.next = first;
+        return first;
+      }
+    </script>
+  </head>
+  <body onload="go()"></body>
+</html>

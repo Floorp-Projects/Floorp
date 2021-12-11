@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=404320
+-->
+<head>
+  <title>Test for Bug 404320</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=404320">Mozilla Bug 404320</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="testIframe"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 404320 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var win = document.getElementById("testIframe").contentWindow;
+  var doc = document.getElementById("testIframe").contentDocument;
+
+  function testFormatBlock(tag, withAngleBrackets, shouldSucceed) {
+    win.getSelection().selectAllChildren(doc.body.firstChild);
+    doc.execCommand("FormatBlock", false,
+                    withAngleBrackets ? tag : "<" + tag + ">");
+    var resultNode;
+    if (shouldSucceed && (tag == "dd" || tag == "dt")) {
+      is(doc.body.firstChild.tagName, "DL", "tag was changed");
+      resultNode = doc.body.firstChild.firstChild;
+    } else {
+      resultNode = doc.body.firstChild;
+    }
+
+    is(resultNode.tagName, shouldSucceed ? tag.toUpperCase() : "P", "tag was changed");
+  }
+
+  function formatBlockTests(tags, shouldSucceed) {
+    var html = "<p>Content</p>";
+    for (var i = 0; i < tags.length; ++i) {
+      var tag = tags[i];
+
+      doc.body.innerHTML = html;
+      testFormatBlock(tag, false, shouldSucceed);
+
+      doc.body.innerHTML = html;
+      testFormatBlock(tag, true, shouldSucceed);
+    }
+  }
+
+  doc.designMode = "on";
+
+  var goodTags = [ "address",
+                   "blockquote",
+                   "dd",
+                   "div",
+                   "dl",
+                   "dt",
+                   "h1",
+                   "h2",
+                   "h3",
+                   "h4",
+                   "h5",
+                   "h6",
+                   "p",
+                   "pre" ];
+  var badTags =  [ "b",
+                   "i",
+                   "span",
+                   "foo" ];
+
+  formatBlockTests(goodTags, true);
+  formatBlockTests(badTags, false);
+  SimpleTest.finish();
+}
+
+addLoadEvent(runTests);
+
+</script>
+</pre>
+</body>
+</html>

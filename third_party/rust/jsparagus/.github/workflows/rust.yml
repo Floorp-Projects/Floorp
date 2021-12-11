@@ -1,0 +1,24 @@
+name: Rust
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+      branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - name: Initialize repository
+      run: make init
+    - name: Build & Test
+      run: RUSTFLAGS="-D warnings" make check

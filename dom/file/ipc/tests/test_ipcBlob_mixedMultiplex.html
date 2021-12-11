@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test an empty IPCBlob together with other parts</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+
+let url = SimpleTest.getTestFileURL("script_file.js");
+let data = new Array(1024*1024).join('A');
+
+let script = SpecialPowers.loadChromeScript(url);
+script.addMessageListener("file.opened", message => {
+  let blob = new Blob([data]);
+
+  let form = new FormData();
+  form.append("blob1", blob);
+  form.append("blob2", message.file);
+  form.append("blob3", blob);
+
+  fetch("ok.sjs", {
+    method: "POST",
+    body: form,
+  })
+  .then(r => r.text())
+  .then(r => {
+    ok(parseInt(r, 10) > (data.length * 2), "We have data");
+  })
+  . then(SimpleTest.finish);
+});
+
+script.sendAsyncMessage("file.open");
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

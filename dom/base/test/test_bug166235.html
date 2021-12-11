@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=166235
+https://bugzilla.mozilla.org/show_bug.cgi?id=816298
+-->
+<head>
+  <title>Test for Bug 166235</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235 and Bug 816298</a>
+<p id="test0">This text should be copied.</p>
+<p id="test1">This text should<span style="user-select: none;"> NOT</span> be copied.</p>
+<p id="test2">This<span style="user-select: none;"><span style="user-select: text"> text should</span> NOT</span> be copied.</p>
+<p id="test3">This text should<span style="user-select: -moz-none;"> NOT</span> be copied.</p>
+<p id="test4">This<span style="user-select: -moz-none;"><span style="user-select: text"> text should</span> NOT</span> be copied.</p>
+<p id="test5">This<span style="user-select: all"> text should</span> be copied.</p>
+<div id="content" style="display: none">
+  
+</div>
+<textarea id="input"></textarea>
+<pre id="test">
+<script type="application/javascript">
+  "use strict";
+
+/** Test for Bug 166235 **/
+  var Cc = SpecialPowers.Cc;
+  var Ci = SpecialPowers.Ci;
+
+  var docShell = SpecialPowers.wrap(window).docShell;
+
+  var documentViewer = docShell.contentViewer
+                               .QueryInterface(SpecialPowers.Ci.nsIContentViewerEdit);
+
+  var clipboard = Cc["@mozilla.org/widget/clipboard;1"]
+                    .getService(SpecialPowers.Ci.nsIClipboard);
+
+  var textarea = SpecialPowers.wrap(document.getElementById('input'));
+
+  function getLoadContext() {
+    return SpecialPowers.wrap(window).docShell
+                                     .QueryInterface(Ci.nsILoadContext);
+  }
+
+  function copyChildrenToClipboard(id) {
+    textarea.blur();
+    clipboard.emptyClipboard(1);
+    window.getSelection().selectAllChildren(document.getElementById(id));
+    documentViewer.copySelection();
+
+    is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1), true);
+    is(clipboard.hasDataMatchingFlavors(["text/html"], 1), true);
+  }
+  function getClipboardData(mime) {
+    var transferable = Cc['@mozilla.org/widget/transferable;1']
+                         .createInstance(SpecialPowers.Ci.nsITransferable);
+    transferable.init(getLoadContext());
+    transferable.addDataFlavor(mime);
+    clipboard.getData(transferable, 1);
+    var data = SpecialPowers.createBlankObject();
+    transferable.getTransferData(mime, data) ;
+    return SpecialPowers.wrap(data);
+  }
+  function testHtmlClipboardValue(mime, expected, test) {
+    var expectedValue = expected;
+    // For Windows, navigator.platform returns "Win32".
+    if (navigator.platform.includes("Win")) {
+      expectedValue = kTextHtmlPrefixClipboardDataWindows + expected + kTextHtmlSuffixClipboardDataWindows;
+    }
+    testClipboardValue(mime, expectedValue, test);
+  }
+  function testClipboardValue(mime, expected, test) {
+    var data = getClipboardData(mime);
+    is (data.value == null ? data.value :
+        data.value.QueryInterface(SpecialPowers.Ci.nsISupportsString).data,
+      expected,
+      mime + " value in the clipboard");
+    return data.value;
+  }
+  function testPasteText(expected, test) {
+    textarea.value="";
+    textarea.focus();
+    textarea.editor.paste(1);
+    is(textarea.value, expected, test + ": textarea paste");
+  }
+  function testInnerHTML(id, expected) {
+    var value = document.getElementById(id).innerHTML;
+    is(value, expected, id + ".innerHTML");
+  }
+
+// expected results for Selection.toString()
+var originalStrings = [
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.'
+];
+
+// expected results for clipboard text/html
+var clipboardHTML = [
+  '<p id=\"test0\">This text should be copied.</p>',
+  '<p id=\"test1\">This text should be copied.</p>',
+  '<p id=\"test2\">This<span style=\"user-select: text\"> text should</span> be copied.</p>',
+  '<p id=\"test3\">This text should be copied.</p>',
+  '<p id=\"test4\">This<span style=\"user-select: text\"> text should</span> be copied.</p>',
+  '<p id=\"test5\">This<span style=\"user-select: all\"> text should</span> be copied.</p>',
+];
+
+// expected results for clipboard text/unicode
+var clipboardUnicode = [
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.'
+];
+
+// expected results for .innerHTML
+var innerHTMLStrings = [
+  'This text should be copied.',
+  'This text should<span style=\"user-select: none;\"> NOT</span> be copied.',
+  'This<span style=\"user-select: none;\"><span style=\"user-select: text\"> text should</span> NOT</span> be copied.',
+  'This text should<span style=\"user-select: -moz-none;\"> NOT</span> be copied.',
+  'This<span style=\"user-select: -moz-none;\"><span style=\"user-select: text\"> text should</span> NOT</span> be copied.',
+  'This<span style=\"user-select: all\"> text should</span> be copied.',
+];
+
+// expected results for pasting into a TEXTAREA
+var textareaStrings = [
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.'
+];
+
+for (var i = 0; i < originalStrings.length; i++) {
+  var id = 'test' + i;
+  copyChildrenToClipboard(id);
+  is(window.getSelection().toString(), originalStrings[i], id + ' Selection.toString()');
+  testHtmlClipboardValue("text/html", clipboardHTML[i], id);
+  testClipboardValue("text/unicode", clipboardUnicode[i], id);
+  testInnerHTML(id, innerHTMLStrings[i]);
+  testPasteText(textareaStrings[i], id + '.innerHTML');
+}
+
+</script>
+</pre>
+</body>
+</html>

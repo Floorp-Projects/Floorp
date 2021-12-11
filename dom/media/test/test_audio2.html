@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: Audio Constructor Test 2</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var tmpAudio = new Audio();
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  if (!tmpAudio.canPlayType(test.type))
+    return;
+  manager.started(token);
+  var a1 = new Audio(test.name);
+  is(a1.getAttribute("preload"), "auto", "Preload automatically set to auto");
+  ok(a1.src.endsWith("/" + test.name), "src OK");
+  manager.finished(token);
+}
+
+manager.runTests(gAudioTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

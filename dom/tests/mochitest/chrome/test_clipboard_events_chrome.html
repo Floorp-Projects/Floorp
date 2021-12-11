@@ -1,0 +1,60 @@
+<html>
+<body onload="runTest()">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<script>
+// This test checks that the dom.event.clipboardevents.enabled does not apply to chrome shells.
+
+SimpleTest.waitForExplicitFinish();
+function runTest()
+{
+  SpecialPowers.pushPrefEnv({"set": [['dom.event.clipboardevents.enabled', false]]}, function() {
+    window.openDialog("file_clipboard_events_chrome.html", "_blank", "chrome,width=200,height=200,noopener", window);
+  });
+}
+
+var event_fired = false;
+
+function doChecks(win)
+{
+  var windowFocused = function() {
+    var textbox = win.document.getElementById("i");
+    textbox.value = "Sample Text";
+
+    textbox.oncut = function() { event_fired = true; };
+    textbox.oncopy = function() { event_fired = true; };
+    textbox.onpaste = function() { event_fired = true; };
+
+    textbox.select();
+    textbox.focus();
+
+    textbox.setSelectionRange(1, 4);
+    synthesizeKey("x", {accelKey: 1}, win);
+    is(textbox.value, "Sle Text", "cut changed text when preference is disabled");
+    ok(event_fired, "cut event fired when preference is disabled")
+
+    event_fired = false;
+    textbox.setSelectionRange(4, 6);
+    synthesizeKey("c", {accelKey: 1}, win);
+    is(textbox.value, "Sle Text", "cut changed text when preference is disabled");
+    ok(event_fired, "copy event fired when preference is disabled")
+
+    event_fired = false;
+    textbox.setSelectionRange(1, 4);
+    synthesizeKey("v", {accelKey: 1}, win);
+    is(textbox.value, "STeText", "paste changed text when preference is disabled");
+    ok(event_fired, "paste event fired when preference is disabled")
+
+    win.close();
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForFocus(windowFocused, win);
+}
+
+</script>
+
+<p id="display"></p>
+</body></html>

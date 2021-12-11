@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <style>
+      :nth-last-child(2) { -moz-appearance:listbox }
+    </style>
+    <script>
+    try { o1 = document.createElement('tr') } catch(e) { }
+    try { o2 = document.createElement('th') } catch(e) { }
+    try { o3 = document.createElement('canvas') } catch(e) { }
+    try { document.documentElement.appendChild(o1) } catch(e) { }
+    try { o1.appendChild(o2) } catch(e) { }
+    try { o1.appendChild(o3) } catch(e) { }
+    </script>
+  </head>
+</html>

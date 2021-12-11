@@ -1,0 +1,73 @@
+fuzzy-if(Android,0-8,0-30) fails-if(useDrawSnapshot) == background-image-zoom-1.html background-image-zoom-1-ref.html
+fails-if(usesRepeatResampling&&!winWidget) fails-if(useDrawSnapshot) == background-image-zoom-2.html about:blank
+== image-in-iframe-1.html image-in-iframe-1-ref.html
+== image-seam-1a.html image-seam-1-ref.html
+== image-seam-1b.html image-seam-1-ref.html
+fuzzy-if(Android,0-255,0-154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
+fails-if(useDrawSnapshot) == image-zoom-1.html image-zoom-1-ref.html
+fails-if(useDrawSnapshot) == image-zoom-2.html image-zoom-1-ref.html
+== invalid-url-image-1.html invalid-url-image-1-ref.html
+== sync-image-switch-1a.html sync-image-switch-1-ref.html
+== sync-image-switch-1b.html sync-image-switch-1-ref.html
+== sync-image-switch-1c.html sync-image-switch-1-ref.html
+== sync-image-switch-1d.html sync-image-switch-1-ref.html
+
+# Tests for "object-fit" & "object-position"
+== image-object-fit-dyn-1.html image-object-fit-dyn-1-ref.html
+== image-object-fit-with-background-1.html image-object-fit-with-background-1-ref.html
+fuzzy-if(swgl&&cocoaWidget,0-1,0-2) == image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
+== image-object-position-dyn-1.html image-object-position-dyn-1-ref.html
+== image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
+fuzzy-if(winWidget,0-117,0-374) fuzzy-if(cocoaWidget&&swgl,0-1,0-3) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
+
+# Tests for image-orientation used with 'from-image' (note that all
+# image-orientation tests are fuzzy because the JPEG images do not perfectly
+# reproduce blocks of solid color, even at maximum quality):
+fuzzy(0-2,0-5) == image-orientation-from-image.html?none     image-orientation-ref.html?0
+fuzzy(0-1,0-1) == image-orientation-from-image.html?0        image-orientation-ref.html?0
+fuzzy(0-1,0-1) == image-orientation-from-image.html?90       image-orientation-ref.html?90
+fuzzy(0-1,0-1) == image-orientation-from-image.html?180      image-orientation-ref.html?180
+fuzzy(0-1,0-1) == image-orientation-from-image.html?270      image-orientation-ref.html?270
+fuzzy(0-1,0-1) == image-orientation-from-image.html?0&flip   image-orientation-ref.html?0&flip
+fuzzy(0-1,0-1) == image-orientation-from-image.html?90&flip  image-orientation-ref.html?90&flip
+fuzzy(0-1,0-1) == image-orientation-from-image.html?180&flip image-orientation-ref.html?180&flip
+fuzzy(0-1,0-1) == image-orientation-from-image.html?270&flip image-orientation-ref.html?270&flip
+
+# Tests for image-orientation used with an explicit 'none' orientation:
+fuzzy(0-1,0-1) == image-orientation-explicit-none.html image-orientation-ref.html?0
+
+# Tests for image-orientation:from-image used on generated content:
+fuzzy(0-1,0-1) == image-orientation-generated-content.html image-orientation-generated-content-ref.html
+
+fuzzy(0-1,0-1) == image-orientation-dynamic.html image-orientation-dynamic-ref.html
+
+# <img srcset> tests
+== image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x-ref.html
+== image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x-ref.html
+== image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(useDrawSnapshot) == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x-ref.html # Bug 1392106
+== image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x-ref.html
+== image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x-ref.html
+== image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-default-2x.html image-srcset-default-2x-ref.html
+== image-srcset-default-1x.html image-srcset-default-1x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-default-src-2x.html image-srcset-default-src-2x-ref.html
+== image-srcset-default-src-1x.html image-srcset-default-src-1x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-isize.html image-srcset-isize-ref.html
+fails-if(useDrawSnapshot) == image-srcset-svg-3x.html image-srcset-svg-3x-ref.html
+== image-srcset-svg-2x.html image-srcset-svg-2x-ref.html
+== image-srcset-svg-1x.html image-srcset-svg-1x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-svg-default-2x.html image-srcset-svg-default-2x-ref.html
+== image-srcset-svg-default-1x.html image-srcset-svg-default-1x-ref.html
+
+== image-resize-percent-height.html image-resize-ref.html
+== image-resize-percent-width.html image-resize-ref.html
+
+== moz-broken-matching-1.html moz-broken-matching-1-ref.html
+pref(dom.image-lazy-loading.enabled,true) == moz-broken-matching-lazy-load.html moz-broken-matching-1-ref.html
+
+== img-invalidation-local-transform-1.html img-invalidation-local-transform-1-ref.html
+== unknown-protocol.html unknown-protocol-ref.html

@@ -1,0 +1,61 @@
+<html>
+<head>
+<title></title>
+
+<script type="text/javascript">
+
+var scriptItem = "untouched";
+
+function checkLoads() {
+  var title = document.getElementById("title");
+  title.textContent = window.parent.shouldLoad ?
+                      "The following should be hidden:" :
+                      "The following should not be hidden:";
+
+  if (window.parent.shouldLoad) {
+    window.parent.is(scriptItem, "loaded malware javascript!", "Should load bad javascript");
+  } else {
+    window.parent.is(scriptItem, "untouched", "Should not load bad javascript");
+  }
+
+  var elt = document.getElementById("styleImport");
+  var style = document.defaultView.getComputedStyle(elt);
+  window.parent.isnot(style.visibility, "visible", "Should load clean css");
+
+  // Make sure the css did not load.
+  elt = document.getElementById("styleCheck");
+  style = document.defaultView.getComputedStyle(elt);
+  if (window.parent.shouldLoad) {
+    window.parent.isnot(style.visibility, "visible", "Should load bad css");
+  } else {
+    window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
+  }
+
+  elt = document.getElementById("styleBad");
+  style = document.defaultView.getComputedStyle(elt);
+  if (window.parent.shouldLoad) {
+    window.parent.isnot(style.visibility, "visible", "Should import bad css");
+  } else {
+    window.parent.isnot(style.visibility, "hidden", "Should not import bad css");
+  }
+}
+
+</script>
+
+<!-- Try loading from a malware javascript URI -->
+<script type="text/javascript" src="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
+
+<!-- Try loading from an uwanted software css URI -->
+<link rel="stylesheet" type="text/css" href="http://unwanted.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+
+<!-- Try loading a marked-as-malware css through an @import from a clean URI -->
+<link rel="stylesheet" type="text/css" href="import.css"></link>
+</head>
+
+<body onload="checkLoads()">
+<div id="title"></div>
+<div id="styleCheck">STYLE EVIL</div>
+<div id="styleBad">STYLE BAD</div>
+<div id="styleImport">STYLE IMPORT</div>
+</body>
+</html>

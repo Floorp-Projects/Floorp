@@ -1,0 +1,213 @@
+<html>
+
+<head>
+  <title>Test updating of accessible relations</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function testRelated(aRelAttr, aHostRelation, aDependentRelation,
+                         aHostID, aHostNodeID, aDependent1ID, aDependent2ID) {
+      // no attribute
+      testRelation(aDependent1ID, aDependentRelation, null);
+      testRelation(aDependent2ID, aDependentRelation, null);
+      if (aHostRelation)
+        testRelation(aHostID, aHostRelation, null);
+
+      // set attribute
+      getNode(aHostNodeID).setAttribute(aRelAttr, aDependent1ID);
+      testRelation(aDependent1ID, aDependentRelation, aHostID);
+      testRelation(aDependent2ID, aDependentRelation, null);
+      if (aHostRelation)
+        testRelation(aHostID, aHostRelation, aDependent1ID);
+
+      // change attribute
+      getNode(aHostNodeID).setAttribute(aRelAttr, aDependent2ID);
+      testRelation(aDependent1ID, aDependentRelation, null);
+      testRelation(aDependent2ID, aDependentRelation, aHostID);
+      if (aHostRelation)
+        testRelation(aHostID, aHostRelation, aDependent2ID);
+
+      // remove attribute
+      getNode(aHostNodeID).removeAttribute(aRelAttr);
+      testRelation(aDependent1ID, aDependentRelation, null);
+      testRelation(aDependent2ID, aDependentRelation, null);
+      if (aHostRelation)
+        testRelation(aHostID, aHostRelation, null);
+    }
+
+    function insertRelated(aHostRelAttr, aDependentID, aInsertHostFirst,
+                           aHostRelation, aDependentRelation) {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, document),
+      ];
+
+      this.invoke = function insertRelated_invoke() {
+        this.hostNode = document.createElement("div");
+        this.hostNode.setAttribute(aHostRelAttr, aDependentID);
+
+        this.dependentNode = document.createElement("div");
+        this.dependentNode.setAttribute("id", aDependentID);
+
+        if (aInsertHostFirst) {
+          document.body.appendChild(this.hostNode);
+          document.body.appendChild(this.dependentNode);
+        } else {
+          document.body.appendChild(this.dependentNode);
+          document.body.appendChild(this.hostNode);
+        }
+      };
+
+      this.finalCheck = function insertRelated_finalCheck() {
+        testRelation(this.dependentNode, aDependentRelation, this.hostNode);
+        if (aHostRelation)
+          testRelation(this.hostNode, aHostRelation, this.dependentNode);
+      };
+
+      this.getID = function insertRelated_getID() {
+        return "Insert " + aHostRelAttr + "='" + aDependentID + "' node" +
+          (aInsertHostFirst ? " before" : "after") + " dependent node";
+      };
+    }
+
+    /**
+     * Relative accessible recreation shouldn't break accessible relations.
+     * Note: modify this case if the invoke function doesn't change accessible
+     * tree due to changes in layout module. It can be changed on any case
+     * when accessibles are recreated.
+     */
+    function recreateRelatives(aContainerID, aLabelID, aElmID) {
+      this.containerNode = getNode(aContainerID);
+      this.container = getNode(this.containerNode);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.container),
+        new invokerChecker(EVENT_SHOW, this.containerNode),
+      ];
+
+      this.invoke = function recreateRelatives_invoke() {
+        testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
+        testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
+
+        this.containerNode.setAttribute('role', 'group');
+      };
+
+      this.finalCheck = function recreateRelatives_finalCheck() {
+        testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
+        testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
+      };
+
+      this.getID = function recreateRelatives_getID() {
+        return "recreate relatives ";
+      };
+    }
+
+    // gA11yEventDumpToConsole = true; // debug
+
+    var gQueue = null;
+
+    function doTest() {
+      // Relation updates on ARIA attribute changes.
+      testRelated("aria-labelledby",
+                  RELATION_LABELLED_BY, RELATION_LABEL_FOR,
+                  "host", "host", "dependent1", "dependent2");
+
+      testRelated("aria-describedby",
+                  RELATION_DESCRIBED_BY, RELATION_DESCRIPTION_FOR,
+                  "host", "host", "dependent1", "dependent2");
+
+      testRelated("aria-controls",
+                  RELATION_CONTROLLER_FOR, RELATION_CONTROLLED_BY,
+                  "host", "host", "dependent1", "dependent2");
+
+      testRelated("aria-flowto",
+                  RELATION_FLOWS_TO, RELATION_FLOWS_FROM,
+                  "host", "host", "dependent1", "dependent2");
+
+      // Document relation updates on ARIA attribute change.
+      testRelated("aria-labelledby",
+                  RELATION_LABELLED_BY, RELATION_LABEL_FOR,
+                  document, "body", "dependent1", "dependent2");
+
+      // Insert related accessibles into tree.
+      gQueue = new eventQueue();
+      gQueue.push(new insertRelated("aria-labelledby", "dependent3", true,
+                                    RELATION_LABELLED_BY, RELATION_LABEL_FOR));
+      gQueue.push(new insertRelated("aria-labelledby", "dependent4", false,
+                                    RELATION_LABELLED_BY, RELATION_LABEL_FOR));
+
+      gQueue.push(new insertRelated("aria-describedby", "dependent5", true,
+                                    RELATION_DESCRIBED_BY,
+                                    RELATION_DESCRIPTION_FOR));
+      gQueue.push(new insertRelated("aria-describedby", "dependent6", false,
+                                    RELATION_DESCRIBED_BY,
+                                    RELATION_DESCRIPTION_FOR));
+
+      gQueue.push(new insertRelated("aria-controls", "dependent9", true,
+                                    RELATION_CONTROLLER_FOR,
+                                    RELATION_CONTROLLED_BY));
+      gQueue.push(new insertRelated("aria-controls", "dependent10", false,
+                                    RELATION_CONTROLLER_FOR,
+                                    RELATION_CONTROLLED_BY));
+
+      gQueue.push(new insertRelated("aria-flowto", "dependent11", true,
+                                    RELATION_FLOWS_TO, RELATION_FLOWS_FROM));
+      gQueue.push(new insertRelated("aria-flowto", "dependent12", false,
+                                    RELATION_FLOWS_TO, RELATION_FLOWS_FROM));
+
+      // Update relations when accessibles are recreated
+      gQueue.push(new recreateRelatives("container", "label", "input"));
+
+      gQueue.invoke(); // will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body id="body">
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=573469"
+     title="Cache relations defined by ARIA attributes">
+    Mozilla Bug 573469
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=631068"
+     title="Accessible recreation breaks relations">
+    Mozilla Bug 631068
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=635346"
+     title="Allow relations for document defined on document content">
+    Mozilla Bug 635346
+  </a>
+  <br>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="dependent1">label</div>
+  <div id="dependent2">label2</div>
+  <div role="checkbox" id="host"></div>
+
+  <form id="container" style="overflow: hidden;">
+    <label for="input" id="label">label</label>
+    <input id="input">
+  </form>
+</body>
+</html>

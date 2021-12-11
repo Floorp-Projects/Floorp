@@ -1,0 +1,122 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=481335
+-->
+<head>
+  <title>Test for Bug 481335</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    a { color:blue; }
+    a:visited { color:red; }
+  </style>
+  <base href="https://example.com/" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481335">Mozilla Bug 481335</a>
+<p id="display">
+  <a id="t">A link</a>
+  <iframe id="i"></iframe>
+</p>
+<p id="newparent"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 481335 **/
+SimpleTest.waitForExplicitFinish();
+var rand = Date.now() + "-" + Math.random();
+
+is($("t").href, "",
+   "Unexpected href before set");
+is($("t").href, "",
+   "Unexpected cached href before set");
+
+$("t").setAttribute("href", rand);
+is($("t").href, "https://example.com/" + rand,
+   "Unexpected href after set");
+is($("t").href, "https://example.com/" + rand,
+   "Unexpected cached href after set");
+const unvisitedColor = "rgb(0, 0, 255)";
+const visitedColor = "rgb(255, 0, 0)";
+
+let tests = testIterator();
+function continueTest() {
+  tests.next();
+}
+
+function checkLinkColor(aElmId, aExpectedColor, aMessage) {
+  // Because link coloring is asynchronous, we wait until we get the right
+  // result, or we will time out (resulting in a failure).
+  function getColor() {
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    return utils.getVisitedDependentComputedStyle($(aElmId), "", "color");
+  }
+  while (getColor() != aExpectedColor) {
+    requestIdleCallback(continueTest);
+    return false;
+  }
+  is(getColor(), aExpectedColor, aMessage);
+  return true;
+}
+
+let win;
+
+function* testIterator() {
+  // After first load
+  $("newparent").appendChild($("t"));
+  is($("t").href, "https://example.com/" + rand,
+     "Unexpected href after move");
+  is($("t").href, "https://example.com/" + rand,
+     "Unexpected cached href after move");
+  while (!checkLinkColor("t", unvisitedColor, "Should be unvisited now"))
+    yield undefined;
+
+  win.close();
+  win = window.open($("t").href, "_blank");
+
+  // After second load
+  while (!checkLinkColor("t", visitedColor, "Should be visited now"))
+    yield undefined;
+  $("t").pathname = rand;
+  while (!checkLinkColor("t", visitedColor,
+            "Should still be visited after setting pathname to its existing value")) {
+    yield undefined;
+  }
+
+  /* TODO uncomment this test with the landing of bug 534526.  See
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=461199#c167
+  $("t").pathname += "x";
+  while (!checkLinkColor("t", unvisitedColor,
+            "Should not be visited after changing pathname")) {
+    yield undefined;
+  }
+  $("t").pathname = $("t").pathname;
+  while (!checkLinkColor("t", unvisitedColor,
+            "Should not be visited after setting unvisited pathname to existing value")) {
+    yield undefined;
+  }
+  */
+
+  win.close();
+  win = window.open($("t").href, "_blank");
+
+  // After third load
+  while (!checkLinkColor("t", visitedColor,
+                         "Should be visited now after third load")) {
+    yield undefined;
+  }
+  win.close();
+  SimpleTest.finish();
+}
+
+addLoadEvent(function() {
+  win = window.open($("t").href, "_blank");
+  requestIdleCallback(continueTest);
+});
+]]>
+</script>
+</pre>
+</body>
+</html>

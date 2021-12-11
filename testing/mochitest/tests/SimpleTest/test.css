@@ -1,0 +1,39 @@
+.test_ok {
+  color: #0d0;
+  display: none;
+}
+
+.test_not_ok {
+  color: red;
+  display: block;
+}
+
+.test_todo {
+  /* color: orange; */
+  display: block;
+}
+
+.test_ok, .test_not_ok, .test_todo {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  border-bottom-color: black;
+}
+
+.all_pass {
+  background-color: #0d0;
+}
+
+.some_fail {
+  background-color: red;
+}
+
+.todo_only {
+  background-color: orange;
+}
+
+.tests_report {
+  border-width: 2px;
+  border-style: solid;
+  width: 20em;
+  display: table;
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy window</title>
+  <style>
+    video {
+      width: 50%;
+      height: 50%;
+    }
+  </style>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        window.is = window.opener.is;
+        window.info = window.opener.info;
+
+        async function testPlayBeforeLoadedMetata(testCase, parent_window) {
+          info("testPlayBeforeLoadedMetata: " + testCase.resource);
+
+          let element = document.createElement("video");
+          element.preload = "auto";
+          element.muted = testCase.muted;
+          element.src = testCase.resource;
+          document.body.appendChild(element);
+
+          is(element.paused, true, testCase.resource + " - should start out paused.");
+
+          let playEventFired = false;
+          once(element, "play").then(() => { playEventFired = true; });
+          let playingEventFired = false;
+          once(element, "playing").then(() => { playingEventFired = true;});
+          let pauseEventFired = false;
+          once(element, "pause").then(() => { pauseEventFired = true; });
+
+          let played = await element.play().then(() => true, () => false);
+
+          let playMsg = testCase.resource + " should " + (!testCase.shouldPlay ? "not " : "") + "play";
+          is(played, testCase.shouldPlay, playMsg);
+          is(playEventFired, testCase.shouldPlay, testCase.resource + " - should get play event if we played");
+          is(playingEventFired, testCase.shouldPlay, testCase.resource + "- should get playing event if we played");
+          is(pauseEventFired, false, testCase.resource + " - should not get pause event if we played");
+          removeNodeAndSource(element);
+        }
+
+        nextWindowMessage().then(
+          async (event) => {
+            await testPlayBeforeLoadedMetata(event.data, event.source);
+            event.source.postMessage("done", "*");
+          });
+
+      </script>
+    </pre>
+</body>
+
+</html>

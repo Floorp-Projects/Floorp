@@ -1,0 +1,90 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+#include "nsITransferable.idl"
+#include "nsIClipboardOwner.idl"
+
+interface nsIArray;
+
+[scriptable, uuid(ceaa0047-647f-4b8e-ad1c-aff9fa62aa51)]
+interface nsIClipboard : nsISupports
+{
+    const long kSelectionClipboard = 0;
+    const long kGlobalClipboard = 1;
+    const long kFindClipboard = 2;
+    // Used to cache current selection on (nsClipboard) for macOS service menu.
+    const long kSelectionCache = 3;
+
+   /**
+    * Given a transferable, set the data on the native clipboard
+    *
+    * @param  aTransferable The transferable
+    * @param  anOwner The owner of the transferable
+    * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+    * @result NS_Ok if no errors
+    */
+
+    void setData ( in nsITransferable aTransferable, in nsIClipboardOwner anOwner,
+                    in long aWhichClipboard ) ;
+
+   /**
+    * Given a transferable, get the clipboard data.
+    *
+    * @param  aTransferable The transferable
+    * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+    * @result NS_Ok if no errors
+    */
+
+    void getData ( in nsITransferable aTransferable, in long aWhichClipboard ) ;
+
+   /**
+    * This empties the clipboard and notifies the clipboard owner.
+    * This empties the "logical" clipboard. It does not clear the native clipboard.
+    *
+    * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+    * @result NS_OK if successful.
+    */
+
+    void emptyClipboard ( in long aWhichClipboard ) ;
+
+   /**
+    * This provides a way to give correct UI feedback about, for instance, a paste
+    * should be allowed. It does _NOT_ actually retreive the data and should be a very
+    * inexpensive call. All it does is check if there is data on the clipboard matching
+    * any of the flavors in the given list.
+    *
+    * @param  aFlavorList     An array of ASCII strings.
+    * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+    * @outResult - if data is present matching one of
+    * @result NS_OK if successful.
+    */
+    boolean hasDataMatchingFlavors ( in Array<ACString> aFlavorList,
+                                     in long aWhichClipboard ) ;
+
+   /**
+    * Allows clients to determine if the implementation supports the concept of a
+    * separate clipboard for selection.
+    *
+    * @outResult - true if
+    * @result NS_OK if successful.
+    */
+    boolean supportsSelectionClipboard ( ) ;
+
+    /**
+    * Allows clients to determine if the implementation supports the concept of a
+    * separate clipboard for find search strings.
+    *
+    * @result NS_OK if successful.
+    */
+    boolean supportsFindClipboard ( ) ;
+};
+
+
+%{ C++
+
+%}

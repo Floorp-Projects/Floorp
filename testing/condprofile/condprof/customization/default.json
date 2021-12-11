@@ -1,0 +1,10 @@
+{
+   "name": "default",
+   "addons": {},
+   "prefs": {
+      "gfx.webrender.precache-shaders": true
+   },
+   "scenario": {
+       "full": {"max_urls": 150}
+   }
+}

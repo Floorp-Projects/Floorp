@@ -1,0 +1,87 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+include "ipc/nsGUIEventIPC.h";
+
+include protocol PCompositorBridge;
+
+using CSSRect from "Units.h";
+using LayoutDeviceCoord from "Units.h";
+using mozilla::LayoutDevicePoint from "Units.h";
+using ScreenPoint from "Units.h";
+using ZoomTarget from "mozilla/layers/DoubleTapToZoom.h";
+using mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
+using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
+using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
+using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
+using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
+using class mozilla::layers::KeyboardMap from "mozilla/layers/KeyboardMap.h";
+using mozilla::wr::RenderRoot from "mozilla/webrender/WebRenderTypes.h";
+
+using mozilla::Modifiers from "mozilla/EventForwards.h";
+using mozilla::PinchGestureInput::PinchGestureType from "InputData.h";
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * PAPZCTreeManager is a protocol for remoting an IAPZCTreeManager. PAPZCTreeManager
+ * lives on the PCompositorBridge protocol which either connects to the compositor
+ * thread in the main process, or to the compositor thread in the gpu processs.
+ *
+ * PAPZCTreeManagerParent lives in the compositor thread, while PAPZCTreeManagerChild
+ * lives in the main thread of the main or the content process. APZCTreeManagerParent
+ * and APZCTreeManagerChild implement this protocol.
+ */
+protocol PAPZCTreeManager
+{
+manager PCompositorBridge;
+
+parent:
+
+  // These messages correspond to the methods
+  // on the IAPZCTreeManager interface
+
+  async ZoomToRect(ScrollableLayerGuid aGuid, ZoomTarget aZoomTarget, uint32_t Flags);
+
+  async ContentReceivedInputBlock(uint64_t aInputBlockId, bool PreventDefault);
+
+  async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] Targets);
+
+  async UpdateZoomConstraints(ScrollableLayerGuid aGuid, ZoomConstraints? aConstraints);
+
+  async SetKeyboardMap(KeyboardMap aKeyboardMap);
+
+  async SetDPI(float aDpiValue);
+
+  async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aValues);
+
+  async StartScrollbarDrag(ScrollableLayerGuid aGuid, AsyncDragMetrics aDragMetrics);
+
+  async StartAutoscroll(ScrollableLayerGuid aGuid, ScreenPoint aAnchorLocation);
+
+  async StopAutoscroll(ScrollableLayerGuid aGuid);
+
+  async SetLongTapEnabled(bool aTapGestureEnabled);
+
+  async __delete__();
+
+child:
+
+  async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
+                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+
+  async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
+                           LayoutDevicePoint aFocusPoint, LayoutDeviceCoord aSpanChange,
+                           Modifiers aModifiers);
+
+  async CancelAutoscroll(ViewID aScrollId);
+};
+
+} // namespace gfx
+} // namespace mozilla

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Subtest for Login Manager notifications with 2 password fields and 1 username field and one other text field before the first password field</title>
+</head>
+<body>
+<h2>1 username field followed by a text field followed by 2 username fields</h2>
+<form id="form" action="formsubmit.sjs">
+  <input id="user"  name="user"  value="staticpw">
+  <input id="city"  name="city"  value="city">
+  <input id="pass"  name="pass"  type="password">
+  <input id="pin"   name="pin"   type="password" value="static-pin">
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  SpecialPowers.wrap(userField).setUserInput("notifyu1");
+  SpecialPowers.wrap(passField).setUserInput("notifyp1");
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+var userField = document.getElementById("user");
+var passField = document.getElementById("pass");
+
+</script>
+</body>
+</html>

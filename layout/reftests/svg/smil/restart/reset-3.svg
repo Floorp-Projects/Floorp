@@ -1,0 +1,39 @@
+<!--
+  A variation on reset-2.svg.
+  
+  Perhaps surprisingly, restart behaviour only applies for the second interval
+  onwards. This is inconsistent but it's the spec
+  (see http://lists.w3.org/Archives/Public/www-smil/2009OctDec/0004.html)
+
+  In this test we ensure that times are NOT cleared upon starting the first
+  interval.
+
+  Therefore we build up the following graph:
+
+    |..|
+    1  2
+
+  But at t=0.5s we add a begin instance at t=1.5s. This should NOT be cleared
+  when we start at t=1s and hence the animation should STILL be playing
+  at t=2.0s.
+ -->
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="reftest-wait"
+  onload="addInstanceTimes()">
+  <script type="text/ecmascript"><![CDATA[
+    function addInstanceTimes() {
+      var svg = document.documentElement;
+      svg.pauseAnimations();
+      svg.setCurrentTime(0.5);
+      var anim = document.getElementById('anim');
+      anim.beginElementAt(1);
+      setTimeAndSnapshot(2.0, true);
+    }
+  ]]></script>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <rect width="100" height="100" fill="red">
+    <set attributeName="fill" attributeType="CSS"
+      to="green" begin="1s" dur="1s" fill="remove" id="anim"/>
+  </rect>
+</svg>

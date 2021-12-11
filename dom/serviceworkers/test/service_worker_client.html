@@ -1,0 +1,28 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>controlled page</title>
+<script class="testbody" type="text/javascript">
+  if (!parent) {
+      info("service_worker_client.html should not be launched directly!");
+  }
+
+  window.onload = function() {
+    navigator.serviceWorker.onmessage = function(msg) {
+      // Forward messages coming from the service worker to the test page.
+      parent.postMessage(msg.data, "*");
+    };
+    navigator.serviceWorker.ready.then(function(swr) {
+      parent.postMessage("READY", "*");
+    });
+  }
+</script>
+
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+    "stages": "1",
+    "build_libcxx": true,
+    "build_wasm": true,
+    "build_type": "Release",
+    "assertions": false,
+    "osx_cross_compile": true,
+    "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",
+    "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang++",
+    "as": "{MOZ_FETCHES_DIR}/clang/bin/clang",
+    "ar": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ar",
+    "ranlib": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ranlib",
+    "libtool": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-libtool",
+    "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
+    "patches": [
+      "static-llvm-symbolizer_clang_12.patch",
+      "compiler-rt-cross-compile.patch",
+      "revert-llvmorg-13-init-7827-g2a078c307204.patch",
+      "revert-llvmorg-13-init-8182-gc2297544c047.patch",
+      "llvmorg-14-init-6706-g6404f4b5af39.patch",
+      "compiler-rt-13-no-codesign.patch",
+      "revert-ga478b0a199f4.patch"
+    ]
+}

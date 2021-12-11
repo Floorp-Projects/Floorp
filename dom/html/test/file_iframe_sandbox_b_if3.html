@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+  function ok(result, message) {
+    window.parent.postMessage({ok: result, desc: message}, "*");
+  }
+
+  function testXHR() {
+    // Standard URL should be blocked as we have a unique origin.
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "file_iframe_sandbox_b_if1.html");
+    xhr.onreadystatechange = function (oEvent) {
+      var result = false;
+      if (xhr.readyState == 4) {
+        if (xhr.status == 0) {
+          result = true;
+        }
+        ok(result, "XHR should be blocked in an iframe sandboxed WITHOUT 'allow-same-origin'");
+      }
+    }
+    xhr.send(null);
+
+    // Blob URL should work as it will have our unique origin.
+    var blobXhr = new XMLHttpRequest();
+    var blobUrl = URL.createObjectURL(new Blob(["wibble"], {type: "text/plain"}));
+    blobXhr.open("GET", blobUrl);
+    blobXhr.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        ok(this.status == 200 && this.response == "wibble", "XHR for a blob URL created in this document should NOT be blocked in an iframe sandboxed WITHOUT 'allow-same-origin'");
+      }
+    }
+    try {
+      blobXhr.send();
+    } catch(e) {
+      ok(false, "failed to send XHR for blob URL: error: " + e);
+    }
+
+    // Data URL should work as it inherits the loader's origin.
+    var dataXhr = new XMLHttpRequest();
+    dataXhr.open("GET", "data:text/html,wibble");
+    dataXhr.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        ok(this.status == 200 && this.response == "wibble", "XHR for a data URL should NOT be blocked in an iframe sandboxed WITHOUT 'allow-same-origin'");
+      }
+    }
+    try {
+      dataXhr.send();
+    } catch(e) {
+      ok(false, "failed to send XHR for data URL: error: " + e);
+    }
+  }
+
+  function doStuff() {
+    try {
+      window.parent.ok(false, "documents sandboxed without 'allow-same-origin' should NOT be able to access their parent");
+    } catch (error) {
+      ok(true, "documents sandboxed without 'allow-same-origin' should NOT be able to access their parent");
+    }
+
+    // should NOT be able to access document.cookie
+    try {
+      var foo = document.cookie;
+    } catch(error) {
+      ok(true, "a document sandboxed without allow-same-origin should NOT be able to access document.cookie");
+    }
+
+    // should NOT be able to access localStorage
+    try {
+      var foo = window.localStorage;
+    } catch(error) {
+      ok(true, "a document sandboxed without allow-same-origin should NOT be able to access localStorage");
+    }
+
+    // should NOT be able to access sessionStorage
+    try {
+      var foo = window.sessionStorage;
+    } catch(error) {
+      ok(true, "a document sandboxed without allow-same-origin should NOT be able to access sessionStorage");
+    }
+
+    testXHR();
+  }
+</script>
+<body onLoad="doStuff()">
+  I am sandboxed but with "allow-scripts"
+</body>
+</html>

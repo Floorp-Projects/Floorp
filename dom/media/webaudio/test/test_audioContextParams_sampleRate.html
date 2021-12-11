@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+createHTML({
+  title: "Parallel MTG by setting AudioContextParam sample rate",
+  bug: "1387454",
+  visible: true
+});
+
+runTest(async () => {
+  // Test an AudioContext of specific sample rate.
+  // Verify that the oscillator produces a tone.
+  const rate1 = 500;
+  const ac1 = new AudioContext({sampleRate: 44100});
+  const dest_ac1 = ac1.createMediaStreamDestination();
+  const osc_ac1 = ac1.createOscillator();
+  osc_ac1.frequency.value = rate1;
+  osc_ac1.connect(dest_ac1);
+  osc_ac1.start(0);
+
+  const analyser = new AudioStreamAnalyser(ac1, dest_ac1.stream);
+  analyser.enableDebugCanvas();
+  await analyser.waitForAnalysisSuccess( array => {
+    const freg_50Hz   = array[analyser.binIndexForFrequency(50)];
+    const freq_rate1  = array[analyser.binIndexForFrequency(rate1)];
+    const freq_4000Hz = array[analyser.binIndexForFrequency(4000)];
+
+    info("Analysing audio frequency - low:target1:high = "
+            + freg_50Hz + ':' + freq_rate1 + ':' + freq_4000Hz);
+    return freg_50Hz < 50 && freq_rate1 > 200 && freq_4000Hz < 50;
+  })
+  osc_ac1.stop();
+
+  // Same test using a  new AudioContext of different sample rate.
+  const rate2 = 1500;
+  const ac2 = new AudioContext({sampleRate: 48000});
+  const dest_ac2 = ac2.createMediaStreamDestination();
+  const osc_ac2 = ac2.createOscillator();
+  osc_ac2.frequency.value = rate2;
+  osc_ac2.connect(dest_ac2);
+  osc_ac2.start(0);
+
+  const analyser2 = new AudioStreamAnalyser(ac2, dest_ac2.stream);
+  analyser2.enableDebugCanvas();
+  await analyser2.waitForAnalysisSuccess( array => {
+    const freg_50Hz   = array[analyser2.binIndexForFrequency(50)];
+    const freq_rate2  = array[analyser2.binIndexForFrequency(rate2)];
+    const freq_4000Hz = array[analyser2.binIndexForFrequency(4000)];
+
+    info("Analysing audio frequency - low:target2:high = "
+            + freg_50Hz + ':' + freq_rate2 + ':' + freq_4000Hz);
+    return freg_50Hz < 50 && freq_rate2 > 200 && freq_4000Hz < 50;
+  })
+  osc_ac2.stop();
+
+  // Two AudioContexts with different sample rate cannot communicate.
+  mustThrowWith("Connect nodes with different sample rate", "NotSupportedError",
+                () => ac2.createMediaStreamSource(dest_ac1.stream));
+
+  // Two AudioContext with the same sample rate can communicate.
+  const ac3 = new AudioContext({sampleRate: 48000});
+  const dest_ac3 = ac3.createMediaStreamDestination();
+  const source_ac2 = ac2.createMediaStreamSource(dest_ac3.stream);
+  ok(true, "Connect nodes with the same sample rate is ok");
+
+  mustThrowWith("Invalid zero samplerate", "NotSupportedError",
+    () => new AudioContext({sampleRate: 0}));
+
+  mustThrowWith("Invalid negative samplerate", "NotSupportedError",
+    () => new AudioContext({sampleRate: -1}));
+});
+</script>
+</pre>
+</body>
+</html>

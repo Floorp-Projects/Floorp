@@ -1,0 +1,12 @@
+<script>
+  var bc = new BroadcastChannel("bug660404");
+  window.onload = function() {
+    setTimeout(() => {
+      window.onpagehide = function(ev) {
+        bc.postMessage({command: "pagehide", persisted: ev.persisted});
+        bc.close();
+      };
+      window.location.href = "file_bug660404";
+    }, 0);
+  };
+</script>

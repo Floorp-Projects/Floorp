@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Used to enumerate over elements defined by its implementor.
+ * Although hasMoreElements() can be called independently of getNext(),
+ * getNext() must be pre-ceeded by a call to hasMoreElements(). There is
+ * no way to "reset" an enumerator, once you obtain one.
+ *
+ * @version 1.0
+ */
+
+/**
+ * A wrapper for an nsISimpleEnumerator instance which implements the
+ * JavaScript iteration protocol.
+ */
+[scriptable, uuid(4432e8ae-d4d3-42a6-a4d1-829f1c29512b)]
+interface nsIJSEnumerator : nsISupports {
+  [symbol]
+  nsIJSEnumerator iterator();
+
+  [implicit_jscontext]
+  jsval next();
+};
+
+[scriptable, uuid(796f340d-0a2a-490b-9c60-640765e99782)]
+interface nsISimpleEnumeratorBase : nsISupports {
+  /**
+   * Returns a JavaScript iterator for all remaining entries in the enumerator.
+   * Each entry is typically queried to the appropriate interface for the
+   * enumerator.
+   */
+  [symbol]
+  nsIJSEnumerator iterator();
+
+  /**
+   * Returns JavaScript iterator for all remaining entries in the enumerator.
+   * Each entry is queried only to the supplied interface. If any element
+   * fails to query to that interface, the error is propagated to the caller.
+   */
+  nsIJSEnumerator entries(in nsIIDRef aIface);
+};
+
+[scriptable, uuid(D1899240-F9D2-11D2-BDD6-000064657374)]
+interface nsISimpleEnumerator : nsISimpleEnumeratorBase {
+  /**
+   * Called to determine whether or not the enumerator has
+   * any elements that can be returned via getNext(). This method
+   * is generally used to determine whether or not to initiate or
+   * continue iteration over the enumerator, though it can be
+   * called without subsequent getNext() calls. Does not affect
+   * internal state of enumerator.
+   *
+   * @see getNext()
+   * @return true if there are remaining elements in the enumerator.
+   *         false if there are no more elements in the enumerator.
+   */
+  boolean hasMoreElements();
+
+  /**
+   * Called to retrieve the next element in the enumerator. The "next"
+   * element is the first element upon the first call. Must be
+   * pre-ceeded by a call to hasMoreElements() which returns PR_TRUE.
+   * This method is generally called within a loop to iterate over
+   * the elements in the enumerator.
+   *
+   * @see hasMoreElements()
+   * @throws NS_ERROR_FAILURE if there are no more elements
+   *                          to enumerate.
+   * @return the next element in the enumeration.
+   */
+  nsISupports getNext();
+};

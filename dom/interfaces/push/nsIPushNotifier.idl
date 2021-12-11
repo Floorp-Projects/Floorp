@@ -1,0 +1,92 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define PUSHNOTIFIER_CONTRACTID \
+  "@mozilla.org/push/Notifier;1"
+
+// These constants are duplicated in `PushComponents.js`.
+#define OBSERVER_TOPIC_PUSH "push-message"
+#define OBSERVER_TOPIC_SUBSCRIPTION_CHANGE "push-subscription-change"
+#define OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED "push-subscription-modified"
+%}
+
+interface nsIPrincipal;
+
+/**
+ * Fires XPCOM observer notifications and service worker events for
+ * messages sent to push subscriptions.
+ */
+[scriptable, builtinclass, uuid(b00dfdeb-14e5-425b-adc7-b531442e3216)]
+interface nsIPushNotifier : nsISupports
+{
+  /**
+   * Fires a `push-message` observer notification, and sends a `push` event to
+   * the service worker registered for the |scope|. |messageId| is an opaque ID
+   * used to report errors if the worker fails to handle the message.
+   */
+  void notifyPush(in ACString scope, in nsIPrincipal principal,
+                  in AString messageId);
+
+  /**
+   * Same as `notifyPush`, except the subject of the observer notification
+   * receives an `nsIPushMessage` instance containing the |data|. Service
+   * workers can access the |data| via the `PushMessageData` WebIDL interface.
+   */
+  void notifyPushWithData(in ACString scope, in nsIPrincipal principal,
+                          in AString messageId,
+                          in Array<uint8_t> data);
+
+  /**
+   * Fires a `push-subscription-change` observer notification, and sends a
+   * `pushsubscriptionchange` event to the service worker registered for the
+   * |scope|.
+   */
+  void notifySubscriptionChange(in ACString scope, in nsIPrincipal principal);
+
+  /**
+   * Fires a `push-subscription-modified` observer notification. Chrome code
+   * can listen for this notification to see when a subscription is added,
+   * updated, removed, or expired for any |scope|.
+   *
+   * This is useful for Dev Tools and debugging add-ons that passively observe
+   * when subscriptions are created or dropped. Other callers should listen for
+   * `push-subscription-change` and resubscribe instead.
+   */
+  void notifySubscriptionModified(in ACString scope, in nsIPrincipal principal);
+
+  void notifyError(in ACString scope, in nsIPrincipal principal,
+                   in AString message, in uint32_t flags);
+};
+
+/**
+ * Provides methods for retrieving push message data in different formats.
+ * This interface resembles the `PushMessageData` WebIDL interface.
+ */
+[scriptable, builtinclass, uuid(dfc4f151-cead-40df-8eb7-7a7a67c54b16)]
+interface nsIPushData : nsISupports
+{
+  /** Extracts the data as a UTF-8 text string. */
+  AString text();
+
+  /** Extracts the data as a JSON value. */
+  [implicit_jscontext] jsval json();
+
+  /** Extracts the raw binary data. */
+  Array<uint8_t> binary();
+};
+
+/**
+ * The subject of a `push-message` observer notification. |data| may be |null|
+ * for messages without data.
+ */
+[scriptable, builtinclass, uuid(b9d063ca-0e3f-4fee-be4b-ea9103263433)]
+interface nsIPushMessage : nsISupports
+{
+  readonly attribute nsIPrincipal principal;
+  readonly attribute nsIPushData data;
+};

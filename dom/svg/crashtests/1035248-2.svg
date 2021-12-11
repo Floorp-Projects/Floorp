@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script>
+
+window.addEventListener("load", function() {
+    var div = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+    var tr = document.createElementNS('http://www.w3.org/1999/xhtml', 'tr');
+    tr.style.display = "table-row";
+    document.removeChild(document.documentElement);
+    div.appendChild(tr);
+    document.appendChild(div);
+}, false);
+
+</script>
+
+</svg>

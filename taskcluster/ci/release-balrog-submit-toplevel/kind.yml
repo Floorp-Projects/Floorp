@@ -1,0 +1,73 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release:run_on_releases
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.scriptworker:add_balrog_scopes
+    - gecko_taskgraph.transforms.balrog_toplevel:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    run-on-projects: []  # to make sure this never runs in CI
+    shipping-phase: promote
+    worker-type: balrog
+    worker:
+        implementation: balrog
+        balrog-action: v2-submit-toplevel
+        require-mirrors: true
+        archive-domain:
+            by-release-level:
+                production: archive.mozilla.org
+                staging: ftp.stage.mozaws.net
+        download-domain:
+            by-release-level:
+                production: download.mozilla.org
+                staging: bouncer-bouncer-releng.stage.mozaws.net
+    whats-new-config: browser/config/whats_new_page.yml
+
+jobs:
+    firefox:
+        name: submit-toplevel-firefox-release-to-balrog
+        description: Submit toplevel Firefox release to balrog
+        shipping-product: firefox
+        worker:
+            product: firefox
+            channel-names:
+                by-release-type:
+                    beta: ["beta", "beta-localtest", "beta-cdntest"]
+                    release(-rc)?: ["release", "release-localtest", "release-cdntest"]
+                    esr.*: ["esr", "esr-localtest", "esr-cdntest", "esr-localtest-next", "esr-cdntest-next"]
+                    default: []
+            rules-to-update:
+                by-release-type:
+                    beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+                    release(-rc)?: ["firefox-release-cdntest", "firefox-release-localtest"]
+                    esr78: ["firefox-esr78-cdntest", "firefox-esr78-localtest"]
+                    esr91: ["firefox-esr91-cdntest", "firefox-esr91-localtest"]
+                    default: []
+            platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(BPFx)
+            tier: 1
+            kind: build
+
+    devedition:
+        name: submit-toplevel-devedition-release-to-balrog
+        description: submit toplevel Devedition release to balrog
+        shipping-product: devedition
+        run-on-releases: [beta]
+        worker:
+            product: devedition
+            channel-names: ["aurora", "aurora-localtest", "aurora-cdntest"]
+            rules-to-update: ["devedition-cdntest", "devedition-localtest"]
+            platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(BPDev)
+            tier: 1
+            kind: build

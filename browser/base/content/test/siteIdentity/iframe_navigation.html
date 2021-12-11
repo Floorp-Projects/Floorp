@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body class="running">
+  <script>
+    window.addEventListener("message", doNavigation);
+
+    function doNavigation() {
+      let destination;
+      let destinationIdentifier = window.location.hash.substring(1);
+      switch (destinationIdentifier) {
+        case "blank":
+          destination = "about:blank";
+          break;
+        case "secure":
+          destination =
+            "https://example.com/browser/browser/base/content/test/siteIdentity/dummy_page.html";
+          break;
+        case "insecure":
+          destination =
+            "http://example.com/browser/browser/base/content/test/siteIdentity/dummy_page.html";
+          break;
+      }
+      setTimeout(() => {
+        let frame = document.getElementById("navigateMe");
+        frame.onload = done;
+        frame.onerror = done;
+        frame.src = destination;
+      }, 0);
+    }
+
+    function done() {
+      document.body.classList.toggle("running");
+    }
+  </script>
+  <iframe id="navigateMe" src="dummy_page.html">
+  </iframe>
+</body>
+</html>

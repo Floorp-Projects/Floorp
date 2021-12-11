@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.manifest-item {
+  vertical-align: baseline;
+}
+
+.manifest-item__label {
+  box-sizing: border-box;
+  min-width: calc(var(--base-unit) * 32);
+  padding-inline-end: calc(var(--base-unit) * 4);
+  padding-inline-start: 0;
+  vertical-align: top;
+  color: var(--theme-text-color-alt);
+  font-weight: inherit;
+  text-align: start;
+}
+
+.manifest-item__value {
+  word-break: break-all;
+  vertical-align: top;
+}
+
+.manifest-item__label,
+.manifest-item__value {
+  padding-block: calc(var(--base-unit) * 1);
+}

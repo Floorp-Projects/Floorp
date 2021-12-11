@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Test that setting a block element to display:none can create frames
+     for text around it -->
+<style>
+body > div { border:1px solid black; margin:1em;
+             font-family:sans-serif; letter-spacing:2px; }
+</style>
+<script>
+function hide(id) {
+  var e = document.getElementById(id);
+  e.style.display = 'none';
+}
+function loaded() {
+  document.body.offsetHeight;
+  hide("d1");
+  hide("d2");
+  hide("d3");
+  hide("d4");
+}
+</script>
+</head>
+<body onload="loaded()">
+  <div><span>Hello</span><div id="d1">X</div> <span>Kitty</span></div>
+  <div><span>Hello</span> <div id="d2">X</div><span>Kitty</span></div>
+  <!-- we'll create frames here, but they won't make a difference to the rendering -->
+  <div><div id="d3">X</div> <span>Hello</span> <span>Kitty</span></div>
+  <div><span>Hello</span> <span>Kitty</span><div id="d4">X</div></div>
+</body>
+</html>

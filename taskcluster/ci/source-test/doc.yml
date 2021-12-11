@@ -1,0 +1,64 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+generate:
+    description: Generate the Sphinx documentation
+    platform: doc/opt
+    treeherder:
+        symbol: doc(generate)
+        kind: test
+        tier: 1
+    run-on-projects: ['trunk']
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+        artifacts:
+            - type: file
+              name: public/docs.tar.gz
+              path: /builds/worker/checkouts/gecko/docs-out/main.tar.gz
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >
+            cp -r /build/node_modules_eslint node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
+            ./mach doc --outdir docs-out --no-open --no-serve --archive
+        sparse-profile: sphinx-docs
+    optimization:
+        skip-unless-schedules: [docs]
+
+upload:
+    description: Generate and upload the Sphinx documentation
+    platform: doc/opt
+    attributes:
+        code-review: true
+    treeherder:
+        symbol: doc(upload)
+        kind: test
+        tier: 2
+    run-on-projects: [mozilla-central]
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+        taskcluster-proxy: true
+        artifacts:
+            - type: file
+              name: public/firefox-source-docs-url.txt
+              path: /builds/worker/firefox-source-docs-url.txt
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >
+            cp -r /build/node_modules_eslint node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
+            ./mach doc --upload --no-open --no-serve --write-url /builds/worker/firefox-source-docs-url.txt
+        sparse-profile: sphinx-docs
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
+    optimization:
+        skip-unless-schedules: [docs]

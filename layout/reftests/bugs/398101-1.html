@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var c = document.getElementById("c");
+  var space = document.createTextNode(" ");
+  c.parentNode.insertBefore(space, c);
+}
+
+</script>
+</head>
+<body style="font-family: monospace;" onload="boom();">
+
+<div style="width: 3ch; border: 1px solid orange;">
+  <span>a</span> <span>b</span><span id="c">c</span>
+</div>
+
+</body>
+</html>

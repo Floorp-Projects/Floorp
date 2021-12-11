@@ -1,0 +1,64 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=539697 
+-->
+<head>
+  <title>Test valueAsString behavior</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=539697">Mozilla Bug 539697</a>
+<p id="display"></p>
+<div id="content">
+
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="1" id="svg">
+    <circle id='c' r='1em' display='none'/>
+    <marker id='m' orient='20rad' display='none'/>
+  </svg>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var c = document.getElementById("c");
+  var m = document.getElementById("m");
+
+  is(SVGLength.SVG_LENGTHTYPE_EMS, c.r.baseVal.unitType, "unexpected units");
+  c.r.baseVal.valueAsString = "2px";
+  is(SVGLength.SVG_LENGTHTYPE_PX, c.r.baseVal.unitType, "unexpected units");
+
+  try {
+    c.r.baseVal.valueAsString = "rubbish";
+    ok(false, "setting a length to rubbish should fail");
+  } catch (e) {
+    is(e.name, "SyntaxError", "syntax error expected");
+    is(e.code, DOMException.SYNTAX_ERR, "syntax error expected");
+  }
+
+  is(SVGAngle.SVG_ANGLETYPE_RAD, m.orientAngle.baseVal.unitType, "unexpected units");
+  m.orientAngle.baseVal.valueAsString = "2grad";
+  is(SVGAngle.SVG_ANGLETYPE_GRAD, m.orientAngle.baseVal.unitType, "unexpected units");
+
+  try {
+    m.orientAngle.baseVal.valueAsString = "rubbish";
+    ok(false, "setting an angle to rubbish should fail");
+  } catch (e) {
+    is(e.name, "SyntaxError", "syntax error expected");
+    is(e.code, DOMException.SYNTAX_ERR, "syntax error expected");
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

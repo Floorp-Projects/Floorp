@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html,body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    scrollbar-width: none;
+  }
+</style>
+<!--
+  this green box should be attached at the right edge of the layout viewport so
+  it should not be visible in the initial viewport position(0,0).
+-->
+<div style="position:fixed; top:0; right: 0; width:100px; height: 100px; background-color: green"></div>
+<div style="width: 200%; height: 200%;"></div>

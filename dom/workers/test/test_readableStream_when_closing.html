@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for ReadableStream+fetch when the worker is closing</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+  <script>
+
+function workerCode() {
+  onmessage = () => {
+    const BIG_BUFFER_SIZE = 1000000;
+    const fibStream = new ReadableStream({
+        start(controller) {},
+
+        pull(controller) {
+          const buffer = new Uint8Array(BIG_BUFFER_SIZE);
+          buffer.fill(42);
+          controller.enqueue(buffer);
+        }
+    });
+
+    const r = new Response(fibStream);
+
+    const p = r.blob();
+    self.postMessage("reading");
+
+    p.then(() => {
+      // really?
+    });
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["javascript.options.streams", true],
+]}).then(() => {
+  const b = new Blob([workerCode+'workerCode();']);
+  const url = URL.createObjectURL(b);
+  const w = new Worker(url);
+  w.onmessage = function(e) {
+    ok(true, 'Worker is reading');
+
+    const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
+                getService(Ci.nsIWorkerDebuggerManager);
+    wdm.addListener({
+      onUnregister (dbg) {
+        if (dbg.url == url) {
+          ok(true, "Debugger with url " + url + " should be unregistered.");
+          wdm.removeListener(this);
+          SimpleTest.finish();
+        }
+      }
+    });
+
+    w.terminate();
+  }
+  w.postMessage("start");
+});
+
+  </script>
+</body>
+</html>

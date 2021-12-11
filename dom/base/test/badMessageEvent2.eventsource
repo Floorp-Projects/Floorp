@@ -1,0 +1,5 @@
+retry:500
+data: ok
+
+id: invalid-id
+data: not-ok

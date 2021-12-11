@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+// The purpose of this test is making sure that the implementation enabled by
+// default for the storage.local and storage.sync APIs does work across all
+// platforms/builds/apps
+add_task(async function test_storage_smoke_test() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      for (let storageArea of ["sync", "local"]) {
+        let storage = browser.storage[storageArea];
+
+        browser.test.assertTrue(!!storage, `StorageArea ${storageArea} is present.`)
+
+        let data = await storage.get();
+        browser.test.assertEq(0, Object.keys(data).length,
+            `Storage starts out empty for ${storageArea}`);
+
+        data = await storage.get("test");
+        browser.test.assertEq(0, Object.keys(data).length,
+            `Can read non-existent keys for ${storageArea}`);
+
+        await storage.set({
+          "test1": "test-value1",
+          "test2": "test-value2",
+          "test3": "test-value3"
+        });
+
+        browser.test.assertEq(
+            "test-value1",
+            (await storage.get("test1")).test1,
+            `Can set and read back single values for ${storageArea}`);
+
+        browser.test.assertEq(
+            "test-value2",
+            (await storage.get("test2")).test2,
+            `Can set and read back single values for ${storageArea}`);
+
+        data = await storage.get();
+        browser.test.assertEq(3, Object.keys(data).length,
+            `Can set and read back all values for ${storageArea}`);
+        browser.test.assertEq("test-value1", data.test1,
+            `Can set and read back all values for ${storageArea}`);
+        browser.test.assertEq("test-value2", data.test2,
+            `Can set and read back all values for ${storageArea}`);
+        browser.test.assertEq("test-value3", data.test3,
+            `Can set and read back all values for ${storageArea}`);
+
+        data = await storage.get(["test1", "test2"]);
+        browser.test.assertEq(2, Object.keys(data).length,
+            `Can set and read back array of values for ${storageArea}`);
+        browser.test.assertEq("test-value1", data.test1,
+            `Can set and read back array of values for ${storageArea}`);
+        browser.test.assertEq("test-value2", data.test2,
+            `Can set and read back array of values for ${storageArea}`);
+
+        await storage.remove("test1");
+        data = await storage.get(["test1", "test2"]);
+        browser.test.assertEq(1, Object.keys(data).length,
+            `Data can be removed for ${storageArea}`);
+        browser.test.assertEq("test-value2", data.test2,
+            `Data can be removed for ${storageArea}`);
+
+        data = await storage.get({
+          test1: 1,
+          test2: 2,
+        });
+        browser.test.assertEq(2, Object.keys(data).length,
+            `Expected a key-value pair for every property for ${storageArea}`);
+        browser.test.assertEq(1, data.test1,
+            `Use default value if key was deleted for ${storageArea}`);
+        browser.test.assertEq("test-value2", data.test2,
+            `Use stored value if found for ${storageArea}`);
+
+        await storage.clear();
+        data = await storage.get();
+        browser.test.assertEq(0, Object.keys(data).length,
+            `Data is empty after clear for ${storageArea}`);
+      }
+
+      browser.test.sendMessage("done");
+    },
+    manifest: {
+      permissions: ["storage"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

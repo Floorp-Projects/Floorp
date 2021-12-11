@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "784519",
+    title: "setLocalDescription (offer) in 'have-remote-offer'"
+  });
+
+runNetworkTest(function () {
+  const test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.removeAfter("PC_REMOTE_SET_REMOTE_DESCRIPTION");
+
+  test.chain.append([
+    async function PC_REMOTE_SET_LOCAL_OFFER(test) {
+      const err = await test.pcRemote.setLocalDescriptionAndFail(test.pcLocal._latest_offer);
+      is(err.name, "InvalidModificationError", "Error is InvalidModificationError");
+    }
+  ]);
+
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

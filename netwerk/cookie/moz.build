@@ -1,0 +1,76 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking: Cookies")
+
+# export required interfaces, even if --disable-cookies has been given
+XPIDL_SOURCES += [
+    "nsICookie.idl",
+    "nsICookieJarSettings.idl",
+    "nsICookieManager.idl",
+    "nsICookiePermission.idl",
+    "nsICookieService.idl",
+]
+
+XPIDL_MODULE = "necko_cookie"
+
+
+EXPORTS.mozilla.net = [
+    "CookieJarSettings.h",
+    "CookieKey.h",
+    "CookiePersistentStorage.h",
+    "CookiePrivateStorage.h",
+    "CookieService.h",
+    "CookieServiceChild.h",
+    "CookieServiceParent.h",
+    "CookieStorage.h",
+]
+UNIFIED_SOURCES += [
+    "Cookie.cpp",
+    "CookieCommons.cpp",
+    "CookieJarSettings.cpp",
+    "CookieLogging.cpp",
+    "CookiePersistentStorage.cpp",
+    "CookiePrivateStorage.cpp",
+    "CookieService.cpp",
+    "CookieServiceChild.cpp",
+    "CookieServiceParent.cpp",
+    "CookieStorage.cpp",
+]
+XPCSHELL_TESTS_MANIFESTS += [
+    "test/unit/xpcshell.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+]
+
+MOCHITEST_MANIFESTS += [
+    "test/mochitest/mochitest.ini",
+]
+
+IPDL_SOURCES = [
+    "PCookieService.ipdl",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/intl/uconv",
+    "/netwerk/base",
+    "/netwerk/protocol/http",
+]
+
+TESTING_JS_MODULES += [
+    "CookieXPCShellUtils.jsm",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

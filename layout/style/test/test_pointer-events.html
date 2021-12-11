@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for pointer-events in HTML</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  div       { height: 10px; width: 10px; background: black; }
+
+  </style>
+</head>
+<!-- need a set timeout because we need things to start after painting suppression ends -->
+<body onload="setTimeout(run_test, 0)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<div id="display" style="position: absolute; top: 0; left: 0; width: 300px; height: 300px">
+
+  <div id="one"></div>
+  <div id="two" style="pointer-events: visiblePainted;"></div>
+  <div id="three" style="height: 20px; pointer-events: none;">
+    <div id="four"style="margin-top: 10px;"></div>
+  </div>
+  <a id="five" style="pointer-events: none;" href="http://mozilla.org/">link</a>
+  <input id="six" style="pointer-events: none;" type="button" value="button" />
+  <table>
+    <tr style="pointer-events: none;">
+      <td id="seven">no</td>
+      <td id="eight" style="pointer-events: visiblePainted;">yes</td>
+      <td id="nine" style="pointer-events: auto;">yes</td>
+    </td>
+    <tr style="opacity: 0.5; pointer-events: none;">
+      <td id="ten">no</td>
+      <td id="eleven" style="pointer-events: visiblePainted;">yes</td>
+     <td id="twelve" style="pointer-events: auto;">yes</td>
+    </td>
+  </table>
+  <iframe id="thirteen" style="pointer-events: none;" src="about:blank" width="100" height="100"></iframe>
+  <script type="application/javascript">
+    var iframe = document.getElementById("thirteen");
+    iframe.contentDocument.open();
+    iframe.contentDocument.writeln("<script type='application/javascript'>");
+    iframe.contentDocument.writeln("document.addEventListener('mousedown', fail, false);");
+    iframe.contentDocument.writeln("function fail() { parent.ok(false, 'thirteen: iframe content must not get pointer events with explicit none') }");
+    iframe.contentDocument.writeln("<"+"/script>");
+    iframe.contentDocument.close();
+  </script>
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.expectAssertions(0, 1);
+
+SimpleTest.waitForExplicitFinish();
+
+function catches_pointer_events(element_id)
+{
+    // we just assume the element is on top here.
+    var element = document.getElementById(element_id);
+    var bounds = element.getBoundingClientRect();
+    var point = { x: bounds.left + bounds.width/2, y: bounds.top + bounds.height/2 };
+    return element == document.elementFromPoint(point.x, point.y);
+}
+
+function synthesizeMouseEvent(type,                // string
+                              x,                   // float
+                              y,                   // float
+                              button,              // long
+                              clickCount,          // long
+                              modifiers,           // long
+                              ignoreWindowBounds)  // boolean
+{
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendMouseEvent(type, x, y, button, clickCount,
+                       modifiers, ignoreWindowBounds);
+}
+
+function run_test()
+{
+    ok(catches_pointer_events("one"), "one: div should default to catching pointer events");
+    ok(catches_pointer_events("two"), "two: div should catch pointer events with explicit visiblePainted");
+    ok(!catches_pointer_events("three"), "three: div should not catch pointer events with explicit none");
+    ok(!catches_pointer_events("four"), "four: div should not catch pointer events with inherited none");
+    ok(!catches_pointer_events("five"), "five: link should not catch pointer events with explicit none");
+    ok(!catches_pointer_events("six"), "six: native-themed form control should not catch pointer events with explicit none");
+    ok(!catches_pointer_events("seven"), "seven: td should not catch pointer events with inherited none");
+    ok(catches_pointer_events("eight"), "eight: td should catch pointer events with explicit visiblePainted overriding inherited none");
+    ok(catches_pointer_events("nine"), "nine: td should catch pointer events with explicit auto overriding inherited none");
+    ok(!catches_pointer_events("ten"), "ten: td should not catch pointer events with inherited none");
+    ok(catches_pointer_events("eleven"), "eleven: td should catch pointer events with explicit visiblePainted overriding inherited none");
+    ok(catches_pointer_events("twelve"), "twelve: td should catch pointer events with explicit auto overriding inherited none");
+
+    // elementFromPoint can't be used for iframe
+    var iframe = document.getElementById("thirteen");
+    iframe.parentNode.addEventListener('mousedown', handleIFrameClick);
+    var bounds = iframe.getBoundingClientRect();
+    var x = bounds.left + bounds.width/2;
+    var y = bounds.top + bounds.height/2;
+    synthesizeMouseEvent('mousedown', x, y, 0, 1, 0, true);
+}
+
+function handleIFrameClick()
+{
+    ok(true, "thirteen: iframe content must not get pointer events with explicit none");
+
+    document.getElementById("display").style.display = "none";
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# test defaults
+defaults pref(foo.bar,true)
+== foo.html foo-ref.html
+
+# reset defaults
+defaults
+== bar.html bar-ref.html

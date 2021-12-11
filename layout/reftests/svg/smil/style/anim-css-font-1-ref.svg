@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="300px" height="400px">
+
+  <!-- 'inherit' to 'caption' -->
+  <text x="0px"   y="50px" style="font: inherit">abc
+  </text>
+  <text x="50px"  y="50px" style="font: inherit">abc
+  </text>
+  <text x="100px" y="50px" style="font: inherit">abc
+  </text>
+  <text x="150px" y="50px" style="font: caption">abc
+  </text>
+  <text x="200px" y="50px" style="font: caption">abc
+  </text>
+
+  <!-- 'caption' to 'inherit' -->
+  <text x="0px"   y="100px" style="font: inherit">abc
+  </text>
+  <text x="50px"  y="100px" style="font: caption">abc
+  </text>
+  <text x="100px" y="100px" style="font: caption">abc
+  </text>
+  <text x="150px" y="100px" style="font: inherit">abc
+  </text>
+  <text x="200px" y="100px" style="font: inherit">abc
+  </text>
+
+  <!-- 'caption' to 'icon' -->
+  <text x="0px"   y="150px" style="font: inherit">abc
+  </text>
+  <text x="50px"  y="150px" style="font: caption">abc
+  </text>
+  <text x="100px" y="150px" style="font: caption">abc
+  </text>
+  <text x="150px" y="150px" style="font: icon">abc
+  </text>
+  <text x="200px" y="150px" style="font: icon">abc
+  </text>
+
+  <!-- 'caption' to 'menu' -->
+  <text x="0px"   y="200px" style="font: inherit">abc
+  </text>
+  <text x="50px"  y="200px" style="font: caption">abc
+  </text>
+  <text x="100px" y="200px" style="font: caption">abc
+  </text>
+  <text x="150px" y="200px" style="font: menu">abc
+  </text>
+  <text x="200px" y="200px" style="font: menu">abc
+  </text>
+
+  <!-- 'caption' to 'message-box' -->
+  <text x="0px"   y="250px" style="font: inherit">abc
+  </text>
+  <text x="50px"  y="250px" style="font: caption">abc
+  </text>
+  <text x="100px" y="250px" style="font: caption">abc
+  </text>
+  <text x="150px" y="250px" style="font: message-box">abc
+  </text>
+  <text x="200px" y="250px" style="font: message-box">abc
+  </text>
+
+  <!-- 'caption' to 'small-caption' -->
+  <text x="0px"   y="300px" style="font: inherit">abc
+  </text>
+  <text x="50px"  y="300px" style="font: caption">abc
+  </text>
+  <text x="100px" y="300px" style="font: caption">abc
+  </text>
+  <text x="150px" y="300px" style="font: small-caption">abc
+  </text>
+  <text x="200px" y="300px" style="font: small-caption">abc
+  </text>
+</svg>

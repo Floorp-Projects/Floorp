@@ -1,0 +1,30 @@
+# test defaults
+
+# test defaults with a pref()
+defaults pref(font.size.variable.x-western,24)
+!= font-default.html font-size-16.html
+== font-default.html font-size-24.html
+
+# test that a default preference can be overridden
+pref(font.size.variable.x-western,16) == font-default.html font-size-16.html
+pref(font.size.variable.x-western,16) != font-default.html font-size-24.html
+
+# test that default preferences are kept when other test-specific preferences are set
+pref(font.size.variable.zh-HK,36) != font-default.html font-size-16.html
+pref(font.size.variable.zh-HK,36) == font-default.html font-size-24.html
+
+# test defaults with test-pref() and ref-pref()
+defaults test-pref(font.size.variable.x-western,16) ref-pref(font.size.variable.x-western,24)
+!= font-default.html font-default.html
+== font-default.html font-size-16.html
+== font-size-24.html font-default.html
+
+# test defaults with skip and skip-if
+defaults skip
+== font-size-16.html font-size-24.html
+defaults skip-if(true)
+== font-size-16.html font-size-24.html
+
+# test resetting defaults
+defaults
+== font-default.html font-default.html

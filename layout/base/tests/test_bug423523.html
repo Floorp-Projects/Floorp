@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=423523
+-->
+<head>
+  <title>Test for Bug 423523</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body onload="setTimeout(runtests, 200)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=423523">Mozilla Bug 423523</a>
+<p id="display"></p>
+
+  <table>
+    <tbody><tr>
+  <td class="tdABB" id="tdTo">
+  <p id="par1">Some text...</p></td>
+  <td>
+  <div id="div1" style="border: 1px solid silver; width: 250px;" contenteditable="true">This is some editable text.</div>
+  </td></tr>
+  </tbody></table>
+
+
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 423523 **/
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+
+ 
+  function divIsFocused() {
+    // Check if div is directly focused.
+    var divNode = document.getElementById("div1");
+    if (window.getSelection().focusNode == divNode) {
+      return true;
+    }
+    // Check if one of the div's children has focus.
+    var node = window.getSelection().focusNode;
+    var childNodes = divNode.childNodes;
+    for (var i=0; i<childNodes.length; i++) {
+      if (childNodes[i] == node) {
+        return true;
+      }
+    }
+    // Not focused (at least not the first gen kids, and
+    // that's ok for this test).
+    return false;
+  }
+  
+  function selectionOffsetIs(expectedOffset) {
+    return window.getSelection().focusOffset == expectedOffset;
+  }
+  
+  function sendMouseClick() {
+    var rect=document.getElementById('div1').getBoundingClientRect();
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    utils.sendMouseEvent('mousedown', rect.left+1, rect.top+1, 0, 1, 0);
+    utils.sendMouseEvent('mouseup', rect.left+1, rect.top+1, 0, 1, 0);
+  }
+ 
+  function runtests() {
+    sendMouseClick();
+    window.getSelection().collapse(document.getElementById("div1").firstChild, 0);
+    ok(divIsFocused(), "Div should be focused [0].");
+
+    ok(divIsFocused(), "Div should be focused [1].");
+    ok(selectionOffsetIs(0), "Caret should be at offset 0");
+    
+    synthesizeKey("KEY_ArrowLeft");
+    ok(divIsFocused(), "Div should be focused [2].");    
+    ok(selectionOffsetIs(0), "Caret should be at offset 0");
+    
+    synthesizeKey("KEY_ArrowRight");
+    ok(divIsFocused(), "Div should be focused [3].");
+    ok(selectionOffsetIs(1), "Caret should be at offset 1");
+    
+    synthesizeKey("KEY_ArrowLeft");
+    ok(divIsFocused(), "Div should be focused [4].");
+    ok(selectionOffsetIs(0), "Caret should be at offset 0");
+
+    ok(divIsFocused(), "Div should be focused [5].");    
+    ok(selectionOffsetIs(0), "Caret should be at offset 0");
+    sendMouseClick();
+
+    ok(divIsFocused(), "Div should be focused [6].");    
+    ok(selectionOffsetIs(0), "Caret should be at offset 0");    
+    synthesizeKey("KEY_ArrowLeft");
+
+    ok(divIsFocused(), "Div should be focused [7].");
+    ok(selectionOffsetIs(0), "Caret should be at offset 0");
+    SimpleTest.finish();
+  }
+  
+
+</script>
+</pre>
+</body>
+</html>
+

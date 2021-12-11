@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="ahem.css" />
+  <title>Preserved whitespace should contribute to overall backplate sizing.</title>
+  <style>
+    body {
+      font: 20px Ahem;
+    }
+    .sample {
+      background-image: url("blue.png");
+      white-space: pre;
+      padding: 10px;
+    }
+    </style>
+</head>
+<body>
+ppppp ppppp<div class="sample">     ppppp ppppp</div>ppppp ppppp
+<div class="sample">ppppp ppppp     </div>
+<div class="sample">     </div>
+</body>
+</html>

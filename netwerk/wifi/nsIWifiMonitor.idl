@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIWifiListener;
+
+[scriptable, uuid(F289701E-D9AF-4685-BC2F-E4226FF7C018)]
+interface nsIWifiMonitor : nsISupports
+{
+
+  /*
+   * startWatching
+   * aListener will be called once, then each time the list of wifi access points change.
+   */
+  void startWatching(in nsIWifiListener aListener);
+
+  /*
+   * stopWatching
+   * cancels all notifications to the |aListener|.
+   */
+  void stopWatching(in nsIWifiListener aListener);
+};

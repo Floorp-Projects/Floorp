@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" reftest-async-scroll>
+<meta charset="utf-8">
+<title>Perspective in unscrolled state</title>
+
+<style>
+
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  perspective: 1px;
+  perspective-origin: top left;
+  overflow: auto;
+}
+
+.transformed {
+  transform: translateZ(-1px) scale(2);
+  transform-origin: -100px -200px;
+  margin: 200px 100px;
+  width: 200px;
+  height: 200px;
+  border: 10px solid black;
+}
+
+.spacer {
+  height: 4000px;
+}
+
+</style>
+
+<body reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="0"> <!-- no async scrolling -->
+
+<div class="transformed"></div>
+<div class="spacer"></div>

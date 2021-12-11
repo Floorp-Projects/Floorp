@@ -1,0 +1,28 @@
+{
+  "icons": {
+    "128": "icon.svg"
+  },
+  "browser_style": true,
+  "applications": {
+    "gecko": {
+      "id": "qr-code@mozilla.org"
+    }
+  },
+  "manifest_version": 2,
+  "name": "qr-code",
+  "page_action": {
+    "browser_style": true,
+    "default_icon": "icon.svg",
+    "default_popup": "popup.html",
+    "show_matches": [
+      "<all_urls>"
+    ]
+  },
+  "permissions": [
+    "activeTab"
+  ],
+  "optional_permissions": [
+    "clipboardWrite"
+  ],
+  "version": "1"
+}

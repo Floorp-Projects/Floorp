@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for ...</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+   var div = document.createElement("div");
+   var attr = document.createAttribute("FOO");
+   attr.value = "bar";
+   div.setAttributeNode(attr);
+   assert_equals(div.getAttribute("FOO"), "bar");
+}, "getAttribute should be able to get an attribute created via createAttribute");
+</script>

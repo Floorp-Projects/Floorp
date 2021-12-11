@@ -1,0 +1,5 @@
+{
+  "classify-client": "/api/v1/classify_client/",
+  "extension-list": "/api/v1/extension/",
+  "recipe-signed": "/api/v1/recipe/signed/"
+}

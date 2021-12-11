@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+ <style>
+  .first:first-letter { color: red; }
+  .right              { direction: rtl; }
+ </style>
+ <script>
+  function tweak() {
+    document.body.style.background = 'lightblue';
+    document.documentElement.className = "";
+  }
+ </script>
+</head>
+
+<body onload="tweak();">
+  <div class="first"><span>abc</span></div>
+  <div class="first"><span class="right">def</span></div>
+  <div class="first right"><span>geh</span></div>
+</body>
+
+</html>

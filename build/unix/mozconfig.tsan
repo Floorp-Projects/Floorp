@@ -1,0 +1,19 @@
+. "$topsrcdir/build/unix/mozconfig.unix"
+
+export LLVM_SYMBOLIZER="$MOZ_FETCHES_DIR/llvm-symbolizer/llvm-symbolizer"
+
+# Enable TSan specific code and build workarounds
+ac_add_options --enable-thread-sanitizer
+
+# The ThreadSanitizer is not compatible with sandboxing
+# (see bug 1182565)
+ac_add_options --disable-sandbox
+
+# These are required by TSan
+ac_add_options --disable-jemalloc
+ac_add_options --disable-crashreporter
+ac_add_options --disable-profiling
+
+# Keep symbols to symbolize TSan traces
+ac_add_options --enable-debug-symbols
+ac_add_options --disable-install-strip

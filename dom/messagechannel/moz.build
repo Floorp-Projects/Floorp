@@ -1,0 +1,38 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: postMessage")
+
+TEST_DIRS += ["tests"]
+
+EXPORTS.mozilla.dom += [
+    "MessageChannel.h",
+    "MessagePort.h",
+    "MessagePortChild.h",
+    "MessagePortParent.h",
+]
+
+UNIFIED_SOURCES += [
+    "MessageChannel.cpp",
+    "MessagePort.cpp",
+    "MessagePortChild.cpp",
+    "MessagePortParent.cpp",
+    "MessagePortService.cpp",
+]
+
+IPDL_SOURCES += [
+    "PMessagePort.ipdl",
+]
+
+LOCAL_INCLUDES += [
+    "../base",
+    "../events",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"

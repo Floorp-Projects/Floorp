@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait">
+
+  <title>Testcase for removing display:none from foreignObject child</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=281260 -->
+
+  <script type="application/ecmascript">
+  <![CDATA[
+
+function doTest(event)
+{
+  document.getElementById('div').style.display = 'block';
+  document.documentElement.removeAttribute('class');
+}
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+setTimeout(doTest, 4000); // fallback for running outside reftest
+
+  ]]>
+  </script>
+  <rect width="100%" height="100%" fill="red"/>
+  <foreignObject width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="div"
+         style="display:none; background:lime; width:100%; height:100%;"/>
+  </foreignObject>
+</svg>

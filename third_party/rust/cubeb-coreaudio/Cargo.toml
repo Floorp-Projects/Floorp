@@ -1,0 +1,21 @@
+[package]
+name = "cubeb-coreaudio"
+version = "0.1.0"
+authors = ["Chun-Min Chang <chun.m.chang@gmail.com>", "Paul Adenot <paul@paul.cx>"]
+license = "ISC"
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+atomic = "0.4"
+bitflags = "1.0"
+coreaudio-sys-utils = { path = "coreaudio-sys-utils" }
+cubeb-backend = "0.9"
+float-cmp = "0.6"
+libc = "0.2"
+lazy_static = "1.2"
+mach = "0.3"
+audio-mixer = "0.1"
+ringbuf = "0.2.6"
+triple_buffer = "5.0.5"

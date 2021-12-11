@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=254337
+-->
+<head>
+  <title>Test for Bug 254337</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=254337">Mozilla Bug 254337</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 254337 **/
+
+var el = document.createElement("div");
+el.setAttribute("class", "foobar1");
+is(el.className, "foobar1", "Wrong className!");
+el.className += " foobar2 ";
+is(el.className, "foobar1 foobar2 ", "Appending to className didn't work!");
+el.className += "foobar3";
+is(el.className, "foobar1 foobar2 foobar3", "Appending to className didn't work!");
+
+var el = document.createElement("div");
+el.setAttribute("class", " foobar1 ");
+is(el.className, " foobar1 ", "Wrong className!");
+el.className += "foobar2";
+is(el.className, " foobar1 foobar2", "Appending to className didn't work!");
+el.setAttribute("class", "   ");
+is(el.getAttribute("class"), "   ", "class attribute didn't store the right value!");
+
+</script>
+</pre>
+</body>
+</html>
+

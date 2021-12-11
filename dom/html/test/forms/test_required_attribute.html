@@ -1,0 +1,420 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345822
+-->
+<head>
+  <title>Test for Bug 345822</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345822">Mozilla Bug 345822</a>
+<p id="display"></p>
+<div id="content">
+  <form>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 345822 **/
+
+function checkNotSufferingFromBeingMissing(element, doNotApply)
+{
+  ok(!element.validity.valueMissing,
+    "Element should not suffer from value missing");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "Element should be valid");
+  is(element.validationMessage, "",
+    "Validation message should be the empty string");
+
+  if (doNotApply) {
+    ok(!element.matches(':valid'), ":valid should not apply");
+    ok(!element.matches(':invalid'), ":invalid should not apply");
+    ok(!element.matches(':-moz-ui-valid'), ":-moz-ui-valid should not apply");
+    ok(!element.matches(':-moz-ui-invalid'), ":-moz-ui-invalid should not apply");
+  } else {
+    ok(element.matches(':valid'), ":valid should apply");
+    ok(!element.matches(':invalid'), ":invalid should not apply");
+    ok(element.matches(':-moz-ui-valid'), ":-moz-ui-valid should apply");
+    ok(!element.matches(':-moz-ui-invalid'), ":-moz-ui-invalid should not apply");
+  }
+}
+
+function checkSufferingFromBeingMissing(element, hasMozUIInvalid)
+{
+  ok(element.validity.valueMissing, "Element should suffer from value missing");
+  ok(!element.validity.valid, "Element should not be valid");
+  ok(!element.checkValidity(), "Element should not be valid");
+
+  if (element.type == 'checkbox')
+  {
+    is(element.validationMessage,
+      "Please check this box if you want to proceed.",
+      "Validation message is wrong");
+  }
+  else if (element.type == 'radio')
+  {
+    is(element.validationMessage,
+      "Please select one of these options.",
+      "Validation message is wrong");
+  }
+  else if (element.type == 'file')
+  {
+    is(element.validationMessage,
+      "Please select a file.",
+      "Validation message is wrong");
+  }
+  else if (element.type == 'number')
+  {
+    is(element.validationMessage,
+      "Please enter a number.",
+      "Validation message is wrong");
+  }
+  else // text fields
+  {
+    is(element.validationMessage,
+      "Please fill out this field.",
+      "Validation message is wrong");
+  }
+
+  ok(!element.matches(':valid'), ":valid should apply");
+  ok(element.matches(':invalid'), ":invalid should not apply");
+  ok(!element.matches(':-moz-ui-valid'), ":-moz-ui-valid should not apply");
+  is(element.matches(':-moz-ui-invalid'), hasMozUIInvalid, ":-moz-ui-invalid expected state is " + hasMozUIInvalid);
+}
+
+function checkTextareaRequiredValidity()
+{
+  var element = document.createElement('textarea');
+  document.forms[0].appendChild(element);
+
+  SpecialPowers.wrap(element).value = '';
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element, true);
+
+  element.readOnly = true;
+  checkNotSufferingFromBeingMissing(element, true);
+
+  element.readOnly = false;
+  checkSufferingFromBeingMissing(element, true);
+
+  SpecialPowers.wrap(element).value = 'foo';
+  checkNotSufferingFromBeingMissing(element);
+
+  SpecialPowers.wrap(element).value = '';
+  checkSufferingFromBeingMissing(element, true);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.focus();
+  element.required = true;
+  SpecialPowers.wrap(element).value = 'foobar';
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  SpecialPowers.wrap(element).value = '';
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  // TODO: for the moment, a textarea outside of a document is mutable.
+  SpecialPowers.wrap(element).value = ''; // To make -moz-ui-valid apply.
+  element.required = false;
+  document.forms[0].removeChild(element);
+  checkNotSufferingFromBeingMissing(element);
+}
+
+function checkInputRequiredNotApply(type, isBarred)
+{
+  var element = document.createElement('input');
+  element.type = type;
+  document.forms[0].appendChild(element);
+
+  SpecialPowers.wrap(element).value = '';
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element, isBarred);
+
+  element.required = true;
+  checkNotSufferingFromBeingMissing(element, isBarred);
+
+  element.required = false;
+
+  document.forms[0].removeChild(element);
+  checkNotSufferingFromBeingMissing(element, isBarred);
+}
+
+function checkInputRequiredValidity(type)
+{
+  var element = document.createElement('input');
+  element.type = type;
+  document.forms[0].appendChild(element);
+
+  SpecialPowers.wrap(element).value = '';
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element, true);
+
+  element.readOnly = true;
+  checkNotSufferingFromBeingMissing(element, true);
+
+  element.readOnly = false;
+  checkSufferingFromBeingMissing(element, true);
+
+  if (element.type == 'email') {
+    SpecialPowers.wrap(element).value = 'foo@bar.com';
+  } else if (element.type == 'url') {
+    SpecialPowers.wrap(element).value = 'http://mozilla.org/';
+  } else if (element.type == 'number') {
+    SpecialPowers.wrap(element).value = '42';
+  } else if (element.type == 'date') {
+    SpecialPowers.wrap(element).value = '2010-10-10';
+  } else if (element.type == 'time') {
+    SpecialPowers.wrap(element).value = '21:21';
+  } else if (element.type = 'month') {
+    SpecialPowers.wrap(element).value = '2010-10';
+  } else {
+    SpecialPowers.wrap(element).value = 'foo';
+  }
+  checkNotSufferingFromBeingMissing(element);
+
+  SpecialPowers.wrap(element).value = '';
+  checkSufferingFromBeingMissing(element, true);
+
+  element.focus();
+  element.required = true;
+  SpecialPowers.wrap(element).value = 'foobar';
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  SpecialPowers.wrap(element).value = '';
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  SpecialPowers.wrap(element).value = ''; // To make :-moz-ui-valid apply.
+  checkSufferingFromBeingMissing(element, true);
+  document.forms[0].removeChild(element);
+  // Removing the child changes nothing about whether it's valid
+  checkSufferingFromBeingMissing(element, true);
+}
+
+function checkInputRequiredValidityForCheckbox()
+{
+  var element = document.createElement('input');
+  element.type = 'checkbox';
+  document.forms[0].appendChild(element);
+
+  element.checked = false;
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element, true);
+
+  element.checked = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.checked = false;
+  checkSufferingFromBeingMissing(element, true);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.focus();
+  element.required = true;
+  element.checked = true;
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  element.checked = false;
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  element.checked = false;
+  document.forms[0].removeChild(element);
+  checkSufferingFromBeingMissing(element, true);
+}
+
+function checkInputRequiredValidityForRadio()
+{
+  var element = document.createElement('input');
+  element.type = 'radio';
+  element.name = 'test'
+  document.forms[0].appendChild(element);
+
+  element.checked = false;
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element, true);
+
+  element.checked = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.checked = false;
+  checkSufferingFromBeingMissing(element, true);
+
+  // A required radio button should not suffer from value missing if another
+  // radio button from the same group is checked.
+  var element2 = document.createElement('input');
+  element2.type = 'radio';
+  element2.name = 'test';
+
+  element2.checked = true;
+  element2.required = false;
+  document.forms[0].appendChild(element2);
+
+  // Adding a checked radio should make required radio in the group not
+  // suffering from being missing.
+  checkNotSufferingFromBeingMissing(element);
+
+  element.checked = false;
+  element2.checked = false;
+  checkSufferingFromBeingMissing(element, true);
+
+  // The other radio button should not be disabled.
+  // A disabled checked radio button in the radio group
+  // is enough to not suffer from value missing.
+  element2.checked = true;
+  element2.disabled = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  // If a radio button is not required but another radio button is required in
+  // the same group, the not required radio button should suffer from value
+  // missing.
+  element2.disabled = false;
+  element2.checked = false;
+  element.required = false;
+  element2.required = true;
+  checkSufferingFromBeingMissing(element, true);
+  checkSufferingFromBeingMissing(element2, true);
+
+  element.checked = true;
+  checkNotSufferingFromBeingMissing(element2);
+
+  // The checked radio is not in the group anymore, element2 should be invalid.
+  element.form.removeChild(element);
+  checkNotSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element2, true);
+
+  element2.focus();
+  element2.required = true;
+  element2.checked = true;
+  element2.blur();
+  element2.form.reset();
+  checkSufferingFromBeingMissing(element2, false);
+
+  element2.required = true;
+  element2.checked = false;
+  element2.form.reportValidity();
+  checkSufferingFromBeingMissing(element2, true);
+
+  element2.form.reset();
+  checkSufferingFromBeingMissing(element2, false);
+
+  element2.required = true;
+  element2.checked = false;
+  document.forms[0].removeChild(element2);
+  checkSufferingFromBeingMissing(element2, true);
+}
+
+function checkInputRequiredValidityForFile()
+{
+  var element = document.createElement('input');
+  element.type = 'file'
+  document.forms[0].appendChild(element);
+
+  var file = new File([""], "345822_file");
+
+  SpecialPowers.wrap(element).value = "";
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element, true);
+
+  SpecialPowers.wrap(element).mozSetFileArray([file]);
+  checkNotSufferingFromBeingMissing(element);
+
+  SpecialPowers.wrap(element).value = "";
+  checkSufferingFromBeingMissing(element, true);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.focus();
+  SpecialPowers.wrap(element).mozSetFileArray([file]);
+  element.required = true;
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  SpecialPowers.wrap(element).value = '';
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  SpecialPowers.wrap(element).value = '';
+  document.forms[0].removeChild(element);
+  checkSufferingFromBeingMissing(element, true);
+}
+
+checkTextareaRequiredValidity();
+
+// The require attribute behavior depend of the input type.
+// First of all, checks for types that make the element barred from
+// constraint validation.
+var typeBarredFromConstraintValidation = ["hidden", "button", "reset"];
+for (type of typeBarredFromConstraintValidation) {
+  checkInputRequiredNotApply(type, true);
+}
+
+// Then, checks for the types which do not use the required attribute.
+var typeRequireNotApply = ['range', 'color', 'submit', 'image'];
+for (type of typeRequireNotApply) {
+  checkInputRequiredNotApply(type, false);
+}
+
+// Now, checking for all types which accept the required attribute.
+var typeRequireApply = ["text", "password", "search", "tel", "email", "url",
+                        "number", "date", "time", "month", "week",
+                        "datetime-local"];
+
+for (type of typeRequireApply) {
+  checkInputRequiredValidity(type);
+}
+
+checkInputRequiredValidityForCheckbox();
+checkInputRequiredValidityForRadio();
+checkInputRequiredValidityForFile();
+
+</script>
+</pre>
+</body>
+</html>

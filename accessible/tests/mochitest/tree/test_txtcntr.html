@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>HTML text containers tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      var accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("c1", accTree);
+      testAccessibleTree("c2", accTree);
+
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "Hello1",
+          },
+          {
+            role: ROLE_WHITESPACE,
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "Hello2",
+          },
+          {
+            role: ROLE_SEPARATOR,
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "Hello3 ",
+          },
+          {
+            role: ROLE_PARAGRAPH,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF,
+                name: "Hello4 ",
+              },
+            ],
+          },
+        ],
+      };
+
+      testAccessibleTree("c3", accTree);
+
+      // contentEditable div
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "helllo ",
+          },
+          {
+            role: ROLE_PARAGRAPH,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF,
+                name: "blabla",
+              },
+            ],
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "hello ",
+          },
+        ],
+      };
+
+      testAccessibleTree("c4", accTree);
+
+      // blockquote
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // block quote
+            role: ROLE_BLOCKQUOTE,
+            children: [
+              { // text child
+                role: ROLE_TEXT_LEAF,
+                name: "Hello",
+                children: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      testAccessibleTree("c5", accTree);
+
+      // abbreviation tag
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: "This ",
+            children: [],
+          },
+          { // abbr tag
+            role: ROLE_TEXT,
+            name: "accessibility",
+            children: [
+              { // text leaf with actual text
+                role: ROLE_TEXT_LEAF,
+                name: "a11y",
+                children: [],
+              },
+            ],
+          },
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: " test",
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("c6", accTree);
+
+      // acronym tag
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: "This ",
+            children: [],
+          },
+          { // acronym tag
+            role: ROLE_TEXT,
+            name: "personal computer",
+            children: [
+              { // text leaf with actual text
+                role: ROLE_TEXT_LEAF,
+                name: "PC",
+                children: [],
+              },
+            ],
+          },
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: " is broken",
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("c7", accTree);
+
+      // only whitespace between images should be exposed
+      accTree = {
+        SECTION: [
+          { GRAPHIC: [] },
+          { TEXT_LEAF: [] },
+          { GRAPHIC: [] },
+        ],
+      };
+      testAccessibleTree("c8", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="overflowed content doesn't expose child text accessibles"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=489306">
+    Mozilla Bug 489306</a>
+  <a target="_blank"
+     title="Create child accessibles for text controls from native anonymous content"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=542824">
+    Mozilla Bug 542824</a>
+  <a target="_blank"
+     title="Update accessible tree on content insertion after layout"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=498015">
+    Mozilla Bug 498015</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1" style="width: 100px; height: 100px; overflow: auto;">
+    1hellohello 2hellohello 3hellohello 4hellohello 5hellohello 6hellohello 7hellohello
+  </div>
+  <div id="c2">
+    1hellohello 2hellohello 3hellohello 4hellohello 5hellohello 6hellohello 7hellohello
+  </div>
+  <div id="c3">
+    Hello1<br>
+    Hello2<hr>
+    Hello3
+    <p>
+      Hello4
+    </p>
+  </div>
+  <div id="c4" contentEditable="true">
+    helllo <p>blabla</p> hello
+  </div>
+  <div id="c5"><blockquote>Hello</blockquote></div>
+  <div id="c6">This <abbr title="accessibility">a11y</abbr> test</div>
+  <div id="c7">This <acronym title="personal computer">PC</acronym> is broken</div>
+
+  <!-- Whitespace between images should be exposed. Whitespace between the
+       div and img tags will be inconsistent depending on the image cache
+       state and what optimizations layout was able to apply. -->
+  <div id="c8"><img src="../moz.png">   <img src="../moz.png"></div>
+</body>
+</html>

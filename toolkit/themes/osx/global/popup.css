@@ -1,0 +1,124 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+menupopup,
+panel {
+  appearance: auto;
+  -moz-default-appearance: menupopup;
+  /* We set the default background here, rather than on ::part(content),
+   * because otherwise it'd interfere with the native look. Non-native-looking
+   * popups should get their background via --panel-background */
+  background-color: Menu;
+  --panel-background: none;
+  --panel-color: MenuText;
+  --panel-padding: 0;
+  --panel-border-color: transparent;
+  --panel-border-radius: 0;
+  --panel-width: initial;
+}
+
+menupopup > menu > menupopup {
+  margin-top: -4px;
+}
+
+menupopup {
+  --panel-padding: 4px 0;
+}
+
+panel[titlebar] {
+  appearance: none; /* to disable rounded corners */
+}
+
+panel[type="arrow"] {
+  appearance: none;
+  background: transparent;
+}
+
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-inline: -25px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-block: -25px;
+}
+
+:is(panel, menupopup)::part(content) {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  -moz-font-smoothing-background-color: var(--panel-background, -moz-mac-menupopup);
+  background: var(--panel-background);
+  color: var(--panel-color);
+  border-radius: var(--panel-border-radius);
+  box-shadow: 0 0 0 1px var(--panel-border-color);
+  padding: var(--panel-padding);
+  width: var(--panel-width);
+  border: none;
+}
+
+:is(panel, menupopup)[orient=vertical]::part(content) {
+  -moz-box-orient: vertical;
+}
+
+panel[type="arrow"]::part(content) {
+  margin: 1px;
+}
+
+panel[type="arrow"].panel-no-padding::part(content) {
+  padding: 0;
+  overflow: hidden; /* Don't let panel content overflow the border-radius */
+}
+
+:is(panel, menupopup)::part(arrow) {
+  -moz-context-properties: fill, stroke;
+  fill: var(--panel-background);
+  stroke: var(--panel-border-color);
+}
+
+:is(panel, menupopup)[side="top"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  margin-inline: 16px;
+  margin-bottom: -1px;
+}
+
+:is(panel, menupopup)[side="bottom"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  -moz-transform: scaleY(-1);
+  margin-inline: 16px;
+  margin-top: -1px;
+}
+
+:is(panel, menupopup)[side="left"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  margin-block: 16px;
+  margin-right: -1px;
+}
+
+:is(panel, menupopup)[side="right"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  transform: scaleX(-1);
+  margin-block: 16px;
+  margin-left: -1px;
+}
+
+/* rules for popups associated with menulists */
+
+menulist > menupopup {
+  min-width: 0;
+  --panel-padding: 4px 0;
+}
+
+menulist > menupopup:not([position]) {
+  margin-inline-start: -13px;
+  margin-top: -2px;
+}
+
+menupopup[customoptionstyling="true"] {
+  appearance: none;
+  padding-block: 0;
+}

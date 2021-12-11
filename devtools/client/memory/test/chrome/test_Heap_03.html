@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that we show a throbber while computing and fetching dominator trees,
+but not in other dominator tree states.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+    <pre id="test">
+        <script src="head.js" type="application/javascript"></script>
+        <script type="application/javascript">
+         "use strict";
+         window.onload = async function() {
+           try {
+             const container = document.getElementById("container");
+
+             for (const state of [dominatorTreeState.COMPUTING, dominatorTreeState.FETCHING]) {
+               await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+                 view: { state: viewState.DOMINATOR_TREE },
+                 snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                   dominatorTree: immutableUpdate(TEST_HEAP_PROPS.snapshot.dominatorTree, {
+                     state,
+                     root: null,
+                     dominatorTreeId: state === dominatorTreeState.FETCHING ? 1 : null,
+                   }),
+                 }),
+               })), container);
+
+               ok(container.querySelector(".devtools-throbber"),
+                  `Should show a throbber for state = ${state}`);
+             }
+
+             for (
+              const state of [
+               dominatorTreeState.LOADED, dominatorTreeState.INCREMENTAL_FETCHING,
+              ]) {
+               await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+                 view: { state: viewState.DOMINATOR_TREE },
+                 snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                   dominatorTree: immutableUpdate(TEST_HEAP_PROPS.snapshot.dominatorTree, {
+                     state,
+                     activeFetchRequestCount:
+                      state === dominatorTreeState.INCREMENTAL_FETCHING ? 1 : undefined,
+                   }),
+                 }),
+               })), container);
+
+               ok(!container.querySelector(".devtools-throbber"),
+                  `Should not show a throbber for state = ${state}`);
+             }
+
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               view: { state: viewState.DOMINATOR_TREE },
+               snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                 dominatorTree: {
+                   state: dominatorTreeState.ERROR,
+                   error: new Error("example error for testing"),
+                 },
+               }),
+             })), container);
+
+             ok(!container.querySelector(".devtools-throbber"),
+                `Should not show a throbber for ERROR state`);
+           } catch (e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         };
+        </script>
+    </pre>
+</body>
+</html>

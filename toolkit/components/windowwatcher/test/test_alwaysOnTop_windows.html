@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests the alwaysOnTop window feature for the Windows OS.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test an alwaysOnTop window on Windows</title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+  <script type="application/javascript">
+
+  const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+  const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  function assertAlwaysOnTop(win, expected) {
+    let docShell = win.docShell;
+    let chromeFlags = docShell.treeOwner
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIAppWindow)
+                              .chromeFlags;
+    let hasFlag = !!(chromeFlags & Ci.nsIWebBrowserChrome.CHROME_ALWAYS_ON_TOP);
+    is(hasFlag, expected, "Window should have CHROME_ALWAYS_ON_TOP flag.");
+
+    const hWND = Number(win.docShell.treeOwner.nsIBaseWindow.nativeHandle);
+    const WS_EX_TOPMOST = 0x00000008;
+    const GWL_EXSTYLE = -20;
+
+    let lib = ctypes.open("user32.dll");
+    // On 32-bit systems, the function we need to call is GetWindowLongW. On
+    // 64-bit systems, the function is GetWindowLongPtrW. Interestingly,
+    // the MSDN page[1] for GetWindowLongPtrW claims that calling it should work
+    // on both 32-bit and 64-bit, but that didn't appear to be the case here
+    // with local testing, hence the conditional.
+    //
+    // [1]: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getwindowlongptrw
+    let GetWindowFuncSymbol = Services.appinfo.is64Bit ? "GetWindowLongPtrW"
+                                                       : "GetWindowLongW";
+    let GetWindowFunc = lib.declare(GetWindowFuncSymbol, ctypes.winapi_abi,
+                                    ctypes.intptr_t, ctypes.uintptr_t,
+                                    ctypes.int);
+
+    let styles = GetWindowFunc(hWND, GWL_EXSTYLE);
+    let isAlwaysOnTop = !!(styles & WS_EX_TOPMOST);
+    is(isAlwaysOnTop, expected, "Window should be always on top.");
+    lib.close();
+  }
+
+  if (Services.appinfo.OS != "WINNT") {
+    ok(false, "This test is only designed to run on Windows.");
+  } else {
+    add_task(async function() {
+      let normalWinOpened = BrowserTestUtils.domWindowOpenedAndLoaded();
+      window.openDialog("about:blank",
+                        "_blank", "chrome,width=100,height=100,noopener", null);
+      let normalWin = await normalWinOpened;
+      ok(normalWin, "Normal window opened");
+      assertAlwaysOnTop(normalWin, false);
+      await BrowserTestUtils.closeWindow(normalWin);
+
+      let alwaysOnTopWinOpened = BrowserTestUtils.domWindowOpenedAndLoaded();
+      window.openDialog("about:blank",
+                        "_blank", "chrome,width=100,height=100,alwaysOnTop,noopener", null);
+      let alwaysOnTopWin = await alwaysOnTopWinOpened;
+      ok(alwaysOnTopWin, "AlwaysOnTop window opened");
+      assertAlwaysOnTop(alwaysOnTopWin, true);
+      await BrowserTestUtils.closeWindow(alwaysOnTopWin);
+    });
+  }
+
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

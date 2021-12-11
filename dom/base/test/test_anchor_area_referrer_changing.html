@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test anchor and area policy attribute for Bug 1174913</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing that anchor and area referrer attributes are honoured correctly
+  This test is split due to errors on b2g
+  * testing setAttribute and .referrer (generate-anchor-changing-test)
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1174913
+  -->
+
+  <script type="application/javascript">
+
+  const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "REL"];
+
+  const testCases = [
+    {ACTION: ["generate-anchor-changing-policy-test-set-attribute", "generate-area-changing-policy-test-set-attribute"],
+      TESTS: [
+        {ATTRIBUTE_POLICY: 'unsafe-url',
+         NEW_ATTRIBUTE_POLICY: 'no-referrer',
+         NAME: 'no-referrer-unsafe-url-with-origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "no-referrer (anchor, orginally unsafe-url) with origin in meta",
+         RESULT: 'none'},
+        {ATTRIBUTE_POLICY: 'origin',
+         NEW_ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'unsafe-url-origin-with-no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         DESC: "unsafe-url (anchor, orginally origin) with no-referrer in meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin',
+         NEW_ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'unsafe-url-origin-with-no-referrer-in-meta-rel',
+         META_POLICY: 'no-referrer',
+         DESC: "unsafe-url (anchor, orginally origin) with no-referrer in meta and rel=noreferrer",
+         RESULT: 'none',
+         REL: 'noreferrer'}]},
+    {ACTION: ["generate-anchor-changing-policy-test-property", "generate-area-changing-policy-test-property"],
+      TESTS: [
+        {ATTRIBUTE_POLICY: 'no-referrer',
+         NEW_ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'unsafe-url-no-referrer-with-origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "unsafe-url (anchor, orginally no-referrer) with origin in meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'no-referrer',
+         NEW_ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'unsafe-url-no-referrer-with-origin-in-meta-rel',
+         META_POLICY: 'origin',
+         DESC: "unsafe-url (anchor, orginally no-referrer) with origin in meta and rel=noreferrer",
+         RESULT: 'none',
+         REL: 'noreferrer'}]}
+  ];
+  </script>
+  <script type="application/javascript" src="/tests/dom/base/test/referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>
+

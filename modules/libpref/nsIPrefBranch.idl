@@ -1,0 +1,482 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "nsLiteralString.h"
+%}
+
+interface nsIObserver;
+
+/**
+ * The nsIPrefBranch interface is used to manipulate the preferences data. This
+ * object may be obtained from the preferences service (nsIPrefService) and
+ * used to get and set default and/or user preferences across the application.
+ *
+ * This object is created with a "root" value which describes the base point in
+ * the preferences "tree" from which this "branch" stems. Preferences are
+ * accessed off of this root by using just the final portion of the preference.
+ * For example, if this object is created with the root "browser.startup.",
+ * the preferences "browser.startup.page", "browser.startup.homepage",
+ * and "browser.startup.homepage_override" can be accessed by simply passing
+ * "page", "homepage", or "homepage_override" to the various Get/Set methods.
+ *
+ * @see nsIPrefService
+ */
+
+[scriptable, builtinclass, uuid(55d25e49-793f-4727-a69f-de8b15f4b985)]
+interface nsIPrefBranch : nsISupports
+{
+
+  /**
+   * Values describing the basic preference types.
+   *
+   * @see getPrefType
+   */
+  const long PREF_INVALID = 0;
+  const long PREF_STRING = 32;
+  const long PREF_INT = 64;
+  const long PREF_BOOL = 128;
+
+  /**
+   * Called to get the root on which this branch is based, such as
+   * "browser.startup."
+   */
+  readonly attribute ACString root;
+
+  /**
+   * Called to determine the type of a specific preference.
+   *
+   * @param aPrefName The preference to get the type of.
+   *
+   * @return long     A value representing the type of the preference. This
+   *                  value will be PREF_STRING, PREF_INT, or PREF_BOOL.
+   */
+  long getPrefType(in string aPrefName);
+
+  /**
+   * Called to get the state of an individual boolean preference.
+   *
+   * @param aPrefName The boolean preference to get the state of.
+   * @param aDefaultValue The value to return if the preference is not set.
+   *
+   * @return boolean  The value of the requested boolean preference.
+   *
+   * @see setBoolPref
+   */
+  [optional_argc,binaryname(GetBoolPrefWithDefault)]
+  boolean getBoolPref(in string aPrefName, [optional] in boolean aDefaultValue);
+  [noscript,binaryname(GetBoolPref)]
+  boolean getBoolPrefXPCOM(in string aPrefName);
+
+  /**
+   * Called to set the state of an individual boolean preference.
+   *
+   * @param aPrefName The boolean preference to set the state of.
+   * @param aValue    The boolean value to set the preference to.
+   *
+   * @throws Error if setting failed or the preference has a default
+             value of a type other than boolean.
+   *
+   * @see getBoolPref
+   */
+  void setBoolPref(in string aPrefName, in boolean aValue);
+
+  /**
+   * Called to get the state of an individual floating-point preference.
+   * "Floating point" preferences are really string preferences that
+   * are converted to floating point numbers.
+   *
+   * @param aPrefName The floating point preference to get the state of.
+   * @param aDefaultValue The value to return if the preference is not set.
+   *
+   * @return float  The value of the requested floating point preference.
+   *
+   * @see setCharPref
+   */
+  [optional_argc,binaryname(GetFloatPrefWithDefault)]
+  float getFloatPref(in string aPrefName, [optional] in float aDefaultValue);
+  [noscript,binaryname(GetFloatPref)]
+  float getFloatPrefXPCOM(in string aPrefName);
+
+  /**
+   * Called to get the state of an individual ascii string preference.
+   *
+   * @param aPrefName The string preference to retrieve.
+   * @param aDefaultValue The string to return if the preference is not set.
+   *
+   * @return ACString   The value of the requested string preference.
+   *
+   * @see setCharPref
+   */
+  [optional_argc,binaryname(GetCharPrefWithDefault)]
+  ACString getCharPref(in string aPrefName,
+                       [optional] in ACString aDefaultValue);
+  [noscript,binaryname(GetCharPref)]
+  ACString getCharPrefXPCOM(in string aPrefName);
+
+  /**
+   * Called to set the state of an individual ascii string preference.
+   *
+   * @param aPrefName The string preference to set.
+   * @param aValue    The string value to set the preference to.
+   *
+   * @throws Error if setting failed or the preference has a default
+             value of a type other than string.
+   *
+   * @see getCharPref
+   */
+  void setCharPref(in string aPrefName, in ACString aValue);
+
+  /**
+   * Called to get the state of an individual unicode string preference.
+   *
+   * @param aPrefName The string preference to retrieve.
+   * @param aDefaultValue The string to return if the preference is not set.
+   *
+   * @return AUTF8String   The value of the requested string preference.
+   *
+   * @see setStringPref
+   */
+  [optional_argc]
+  AUTF8String getStringPref(in string aPrefName,
+                            [optional] in AUTF8String aDefaultValue);
+
+  /**
+   * Called to set the state of an individual unicode string preference.
+   *
+   * @param aPrefName The string preference to set.
+   * @param aValue    The string value to set the preference to.
+   *
+   * @throws Error if setting failed or the preference has a default
+             value of a type other than string.
+   *
+   * @see getStringPref
+   */
+  void setStringPref(in string aPrefName, in AUTF8String aValue);
+
+  /**
+   * Called to get the state of an individual integer preference.
+   *
+   * @param aPrefName The integer preference to get the value of.
+   * @param aDefaultValue The value to return if the preference is not set.
+   *
+   * @return long     The value of the requested integer preference.
+   *
+   * @see setIntPref
+   */
+  [optional_argc,binaryname(GetIntPrefWithDefault)]
+  long getIntPref(in string aPrefName, [optional] in long aDefaultValue);
+  [noscript,binaryname(GetIntPref)]
+  long getIntPrefXPCOM(in string aPrefName);
+
+  /**
+   * Called to set the state of an individual integer preference.
+   *
+   * @param aPrefName The integer preference to set the value of.
+   * @param aValue    The integer value to set the preference to.
+   *
+   * @throws Error if setting failed or the preference has a default
+             value of a type other than integer.
+   *
+   * @see getIntPref
+   */
+  void setIntPref(in string aPrefName, in long aValue);
+
+  /**
+   * Called to get the state of an individual complex preference. A complex
+   * preference is a preference which represents an XPCOM object that can not
+   * be easily represented using a standard boolean, integer or string value.
+   *
+   * @param aPrefName The complex preference to get the value of.
+   * @param aType     The XPCOM interface that this complex preference
+   *                  represents. Interfaces currently supported are:
+   *                    - nsIFile
+   *                    - nsIPrefLocalizedString (Localized UniChar)
+   * @param aValue    The XPCOM object into which to the complex preference
+   *                  value should be retrieved.
+   *
+   * @throws Error The value does not exist or is the wrong type.
+   *
+   * @see setComplexValue
+   */
+  void getComplexValue(in string aPrefName, in nsIIDRef aType,
+                       [iid_is(aType), retval] out nsQIResult aValue);
+
+  /**
+   * Called to set the state of an individual complex preference. A complex
+   * preference is a preference which represents an XPCOM object that can not
+   * be easily represented using a standard boolean, integer or string value.
+   *
+   * @param aPrefName The complex preference to set the value of.
+   * @param aType     The XPCOM interface that this complex preference
+   *                  represents. Interfaces currently supported are:
+   *                    - nsIFile
+   *                    - nsISupportsString (UniChar)
+   *                      (deprecated; see setStringPref)
+   *                    - nsIPrefLocalizedString (Localized UniChar)
+   * @param aValue    The XPCOM object from which to set the complex preference
+   *                  value.
+   *
+   * @throws Error if setting failed or the value is the wrong type.
+   *
+   * @see getComplexValue
+   */
+  void setComplexValue(in string aPrefName, in nsIIDRef aType, in nsISupports aValue);
+
+  /**
+   * Called to clear a user set value from a specific preference. This will, in
+   * effect, reset the value to the default value. If no default value exists
+   * the preference will cease to exist.
+   *
+   * @param aPrefName The preference to be cleared.
+   *
+   * @note
+   * This method does nothing if this object is a default branch.
+   */
+  void clearUserPref(in string aPrefName);
+
+  /**
+   * Called to lock a specific preference. Locking a preference will cause the
+   * preference service to always return the default value regardless of
+   * whether there is a user set value or not.
+   *
+   * @param aPrefName The preference to be locked.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on the default branch.
+   *
+   * @throws Error The preference does not exist or an error occurred.
+   *
+   * @see unlockPref
+   */
+  void lockPref(in string aPrefName);
+
+  /**
+   * Called to check if a specific preference has a user value associated to
+   * it.
+   *
+   * @param aPrefName The preference to be tested.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on the user branch.
+   *
+   * @note
+   * If a preference was manually set to a value that equals the default value,
+   * then the preference no longer has a user set value, i.e. it is
+   * considered reset to its default value.
+   * In particular, this method will return false for such a preference and
+   * the preference will not be saved to a file by nsIPrefService.savePrefFile.
+   *
+   * @return boolean  true  The preference has a user set value.
+   *                  false The preference only has a default value.
+   */
+  boolean prefHasUserValue(in string aPrefName);
+
+  /**
+   * Called to check if a specific preference is locked. If a preference is
+   * locked calling its Get method will always return the default value.
+   *
+   * @param aPrefName The preference to be tested.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on the default branch.
+   *
+   * @return boolean  true  The preference is locked.
+   *                  false The preference is not locked.
+   *
+   * @see lockPref
+   * @see unlockPref
+   */
+  boolean prefIsLocked(in string aPrefName);
+
+  /**
+   * Called to unlock a specific preference. Unlocking a previously locked
+   * preference allows the preference service to once again return the user set
+   * value of the preference.
+   *
+   * @param aPrefName The preference to be unlocked.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on the default branch.
+   *
+   * @throws Error The preference does not exist or an error occurred.
+   *
+   * @see lockPref
+   */
+  void    unlockPref(in string aPrefName);
+
+
+  /**
+   * Called to remove all of the preferences referenced by this branch.
+   *
+   * @param aStartingAt The point on the branch at which to start the deleting
+   *                    preferences. Pass in "" to remove all preferences
+   *                    referenced by this branch.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on both.
+   *
+   * @throws Error The preference(s) do not exist or an error occurred.
+   */
+  void deleteBranch(in string aStartingAt);
+
+  /**
+   * Returns an array of strings representing the child preferences of the
+   * root of this branch.
+   *
+   * @param aStartingAt The point on the branch at which to start enumerating
+   *                    the child preferences. Pass in "" to enumerate all
+   *                    preferences referenced by this branch.
+   * @return            The array of child preferences.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on both.
+   *
+   * @throws Error The preference(s) do not exist or an error occurred.
+   */
+  Array<ACString> getChildList(in string aStartingAt);
+
+  /**
+   * Called to reset all of the preferences referenced by this branch to their
+   * default values.
+   *
+   * @param aStartingAt The point on the branch at which to start the resetting
+   *                    preferences to their default values. Pass in "" to
+   *                    reset all preferences referenced by this branch.
+   *
+   * @note
+   * This method can be called on either a default or user branch but, in
+   * effect, always operates on the user branch.
+   *
+   * @throws Error The preference(s) do not exist or an error occurred.
+   */
+  void resetBranch(in string aStartingAt);
+
+  /**
+   * Add a preference change observer. On preference changes, the following
+   * arguments will be passed to the nsIObserver.observe() method:
+   *   aSubject - The nsIPrefBranch object (this)
+   *   aTopic   - The string defined by NS_PREFBRANCH_PREFCHANGE_TOPIC_ID
+   *   aData    - The name of the preference which has changed, relative to
+   *              the |root| of the aSubject branch.
+   *
+   * aSubject.get*Pref(aData) will get the new value of the modified
+   * preference. For example, if your observer is registered with
+   * addObserver("bar.", ...) on a branch with root "foo.", modifying
+   * the preference "foo.bar.baz" will trigger the observer, and aData
+   * parameter will be "bar.baz".
+   *
+   * @param aDomain   The preference on which to listen for changes. This can
+   *                  be the name of an entire branch to observe.
+   *                  e.g. Holding the "root" prefbranch and calling
+   *                  addObserver("foo.bar.", ...) will observe changes to
+   *                  foo.bar.baz and foo.bar.bzip
+   * @param aObserver The object to be notified if the preference changes.
+   * @param aHoldWeak true  Hold a weak reference to |aObserver|. The object
+   *                        must implement the nsISupportsWeakReference
+   *                        interface or this will fail.
+   *                  false Hold a strong reference to |aObserver|.
+   *
+   * @note
+   * Registering as a preference observer can open an object to potential
+   * cyclical references which will cause memory leaks. These cycles generally
+   * occur because an object both registers itself as an observer (causing the
+   * branch to hold a reference to the observer) and holds a reference to the
+   * branch object for the purpose of getting/setting preference values. There
+   * are 3 approaches which have been implemented in an attempt to avoid these
+   * situations.
+   * 1) The nsPrefBranch object supports nsISupportsWeakReference. Any consumer
+   *    may hold a weak reference to it instead of a strong one.
+   * 2) The nsPrefBranch object listens for xpcom-shutdown and frees all of the
+   *    objects currently in its observer list. This ensures that long lived
+   *    objects (services for example) will be freed correctly.
+   * 3) The observer can request to be held as a weak reference when it is
+   *    registered. This insures that shorter lived objects (say one tied to an
+   *    open window) will not fall into the cyclical reference trap.
+   *
+   * @note
+   * The list of registered observers may be changed during the dispatch of
+   * nsPref:changed notification. However, the observers are not guaranteed
+   * to be notified in any particular order, so you can't be sure whether the
+   * added/removed observer will be called during the notification when it
+   * is added/removed.
+   *
+   * @note
+   * It is possible to change preferences during the notification.
+   *
+   * @note
+   * It is not safe to change observers during this callback in Gecko
+   * releases before 1.9. If you want a safe way to remove a pref observer,
+   * please use an nsITimer.
+   *
+   * @see nsIObserver
+   * @see removeObserver
+   */
+  [binaryname(AddObserverImpl)]
+  void addObserver(in ACString aDomain, in nsIObserver aObserver,
+                   [optional] in boolean aHoldWeak);
+
+  /**
+   * Remove a preference change observer.
+   *
+   * @param aDomain   The preference which is being observed for changes.
+   * @param aObserver An observer previously registered with addObserver().
+   *
+   * @note
+   * Note that you must call removeObserver() on the same nsIPrefBranch
+   * instance on which you called addObserver() in order to remove aObserver;
+   * otherwise, the observer will not be removed.
+   *
+   * @see nsIObserver
+   * @see addObserver
+   */
+  [binaryname(RemoveObserverImpl)]
+  void removeObserver(in ACString aDomain, in nsIObserver aObserver);
+
+  %{C++
+  nsresult AddObserver(const nsACString& aDomain, nsIObserver* aObserver,
+                       bool aHoldWeak = false)
+  {
+    return AddObserverImpl(aDomain, aObserver, aHoldWeak);
+  }
+
+  template <int N>
+  nsresult AddObserver(const char (&aDomain)[N], nsIObserver* aObserver,
+                       bool aHoldWeak = false)
+  {
+    return AddObserverImpl(nsLiteralCString(aDomain), aObserver, aHoldWeak);
+  }
+
+  nsresult RemoveObserver(const nsACString& aDomain, nsIObserver* aObserver)
+  {
+    return RemoveObserverImpl(aDomain, aObserver);
+  }
+
+  template <int N>
+  nsresult RemoveObserver(const char (&aDomain)[N], nsIObserver* aObserver)
+  {
+    return RemoveObserverImpl(nsLiteralCString(aDomain), aObserver);
+  }
+  %}
+};
+
+
+%{C++
+
+#define NS_PREFBRANCH_CONTRACTID "@mozilla.org/preferencesbranch;1"
+/**
+ * Notification sent when a preference changes.
+ */
+#define NS_PREFBRANCH_PREFCHANGE_TOPIC_ID "nsPref:changed"
+
+%}

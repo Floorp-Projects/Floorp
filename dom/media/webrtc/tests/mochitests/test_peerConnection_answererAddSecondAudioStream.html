@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: answerer adds second audio stream"
+  });
+
+  runNetworkTest(function (options) {
+    const test = new PeerConnectionTest(options);
+    addRenegotiationAnswerer(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{audio: true}, {audio: true}],
+                                   [{audio: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
+        },
+      ]
+    );
+
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

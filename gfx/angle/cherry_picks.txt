@@ -1,0 +1,126 @@
+commit 23851a53779dfd3239b4cceb7f93df9ea6efb9c3
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Tue Sep 14 18:11:05 2021 -0700
+
+    If RoUninitialize iff SUCCEEDED(RoInitialize).
+    
+    S_FALSE is success, so `SUCCEEDED(result) || result == S_FALSE` == `SUCCEEDED(result)`.
+    RPC_E_CHANGED_MODE is an Error, so we should not call RoUninitialize in that case.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1717151
+    
+    Change-Id: Ia42fe38967425522964a4f27034e38e9292ab249
+
+commit c79c27ff20b6a13441807d54ce2b8a487cc57d4a
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Mon Jul 19 16:46:50 2021 -0700
+
+    Define ANGLE_IS_64_BIT_CPU in common/platform.h.
+    
+    This is more reliable and reduces reliance on build flags.
+    Vendoring into Firefox, it's not trivial to replicate build flags,
+    but C++-native checks always work.
+    
+    Bug: angleproject:6186
+    Change-Id: Idafd4ef1954efbfa79eae86cddfaa8f2e3992296
+
+commit 33ffc12336370c17ba8da02c8e1f0eeb44951a7b
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Thu Jul 29 10:40:38 2021 -0700
+
+    Always include mac-only sources.
+    
+    Fixes build issues on mac until we can take b8d6f8aa93 instead.
+    
+    Change-Id: I4dafc86cdb167d23e8dd419ded9d0edfb3f76f3a
+
+commit 631763e48d2906e680112c79dd161522f553e0cc
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Jul 15 15:56:45 2021 -0700
+
+    Add missing header to build config.
+
+commit 5cf86083d48f3bae5a169d51e56b538afda56367
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Feb 11 17:34:00 2021 -0800
+
+    Don't assert for non-sampleable non-ms sources in blitRenderbufferRect if we can CopySubResource.
+    
+    In Firefox, we can have a source from DirectComposition without
+    D3D11_BIND_SHADER_RESOURCE. This is fine so long as our formats etc
+    match enough to hit the CopySubResource path.
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1692355
+
+commit 400476a0b2e1ba6dfa8413375e20c15c2ec9188a
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Feb 3 18:50:38 2021 -0800
+
+    Add ANGLE_TRANSLATOR_ESSL_ONLY instead of using build system logic to choose.
+    
+    Build system logic is really hard to handle when vendoring into Gecko for Firefox.
+
+commit 406e1ed92a6fc4180257e65ec88398342a7015e7
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Feb 1 17:35:56 2021 -0800
+
+    Build fixes needed by Gecko.
+
+commit d408f3f0f8d74427eef8a9200d29687629525502
+Author: Jeff Muizelaar <jrmuizel@gmail.com>
+Date:   Mon Nov 9 17:09:12 2020 -0500
+
+    Bug 1620075. Add a feature flag to allow ES3 on 10.0 devices. (#26)
+    
+    This lets us run WebRender on devices that only support D3D 10.0
+
+commit 53f3a3515e4bcf626042cfe0bf445cca4e728cf1
+Author: Jeff Muizelaar <jrmuizel@gmail.com>
+Date:   Wed May 6 14:04:42 2020 -0400
+
+    Don't use ClearView if we previously used dual source blending on Intel gen6. (#22)
+    
+    Doing a ClearView after a dual source blend seems to cause a TDR on
+    Intel SandyBridge. Presumeably this is because the ClearView is
+    implemented as a regular draw and the driver doesn't properly set up the
+    state.
+    
+    If we detect that this is going to happen we fall back to the manual
+    draw call path. This lets us use ClearView most of the time still.
+
+commit 988c40cee12de022c9e7aa63d3d2de86d1310e1f
+Author: Dzmitry Malyshau <dmalyshau@mozilla.com>
+Date:   Thu Dec 5 13:02:14 2019 -0500
+
+    Restrict the slow texture upload workaround to 128bit formats. (#21)
+    
+    The workaround is slow for having a CPU-visible mirror of the texture, but that mirror is not properly recycled with regards to GPU usage, thus causing a CPU stall on update.
+    
+    Original reports were related to WebRender vertex texture updates that are RGBA32F and RGBA32U formats. Limiting the workaround to these formats would allow the affected platforms to upload regular texture data faster without stalls.
+
+commit 3a1d51f5784f13373f60e4138c80dcbebdab5524
+Author: Miko Mynttinen <mikokm@gmail.com>
+Date:   Tue Sep 3 18:54:54 2019 +0200
+
+    Disable debug layers
+
+Cherries picked
+================================================================================
+Merge base from: origin/chromium/4515
+
+commit 018f85dea11fd5e41725750c6958695a6b8e8409
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Fri Sep 3 09:34:10 2021 -0400
+
+    WebGL: Make unsuccessful links fail subsequent draw calls.
+    
+    This protects against incomplete state updates during a failed
+    link call that can interfere with draw calls.
+    
+    Bug: angleproject:6358
+    Bug: chromium:1241123
+    Change-Id: Ie892654c3a58c69d6e35ba3c41758ab6269d8193
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/3140496
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Yuly Novikov <ynovikov@chromium.org>
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/3152556
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>

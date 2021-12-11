@@ -1,0 +1,312 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist Key Navigation Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<button id="button1" label="One"/>
+<menulist id="list">
+  <menupopup id="popup" onpopupshowing="return gShowPopup;">
+    <menuitem id="i1" label="One"/>
+    <menuitem id="i2" label="Two"/>
+    <menuitem id="i2b" disabled="true" label="Two and a Half"/>
+    <menuitem id="i3" label="Three"/>
+    <menuitem id="i4" label="Four"/>
+  </menupopup>
+</menulist>
+<button id="button2" label="Two"/>
+<menulist id="list2">
+  <menupopup id="popup" onpopupshown="checkCursorNavigation();">
+    <menuitem id="b1" label="One"/>
+    <menuitem id="b2" label="Two" selected="true"/>
+    <menuitem id="b3" label="Three"/>
+    <menuitem id="b4" label="Four"/>
+  </menupopup>
+</menulist>
+<menulist id="list3" sizetopopup="none">
+  <menupopup>
+    <menuitem id="s1" label="One"/>
+    <menuitem id="s2" label="Two"/>
+    <menuitem id="s3" label="Three"/>
+    <menuitem id="s4" label="Four"/>
+  </menupopup>
+</menulist>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gShowPopup = false;
+var gModifiers = 0;
+var gOpenPhase = false;
+
+var list = $("list");
+let expectCommandEvent;
+
+var iswin = (navigator.platform.indexOf("Win") == 0);
+var ismac = (navigator.platform.indexOf("Mac") == 0);
+
+function runTests()
+{
+  list.focus();
+
+  // on Mac, up and cursor keys open the menu, but on other platforms, the
+  // cursor keys navigate between items without opening the menu
+  if (!ismac) {
+    expectCommandEvent = true;
+    keyCheck(list, "KEY_ArrowDown", 2, 1, "cursor down");
+    keyCheck(list, "KEY_ArrowDown", 3, 1, "cursor down skip disabled");
+    keyCheck(list, "KEY_ArrowUp", 2, 1, "cursor up skip disabled");
+    keyCheck(list, "KEY_ArrowUp", 1, 1, "cursor up");
+
+    // On Windows, wrapping doesn't occur.
+    keyCheck(list, "KEY_ArrowUp", iswin ? 1 : 4, 1, "cursor up wrap");
+
+    list.selectedIndex = 4;
+    list.activeChild = list.selectedItem;
+    keyCheck(list, "KEY_ArrowDown", iswin ? 4 : 1, 4, "cursor down wrap");
+
+    list.selectedIndex = 0;
+    list.activeChild = list.selectedItem;
+  }
+
+  // check that attempting to open the menulist does not change the selection
+  synthesizeKey("KEY_ArrowDown", {altKey: !ismac});
+  is(list.selectedItem, $("i1"), "open menulist down selectedItem");
+  synthesizeKey("KEY_ArrowUp", {altKey: !ismac});
+  is(list.selectedItem, $("i1"), "open menulist up selectedItem");
+
+  list.selectedItem = $("i1");
+
+  pressLetter();
+}
+
+function pressLetter()
+{
+  // A command event should be fired only if the menulist is closed, or on Windows,
+  // where items are selected immediately.
+  expectCommandEvent = !gOpenPhase || iswin;
+
+  sendString("G");
+  is(list.selectedItem, $("i1"), "letter pressed not found selectedItem");
+
+  keyCheck(list, "T", 2, 1, "letter pressed");
+
+  if (!gOpenPhase) {
+    SpecialPowers.setIntPref("ui.menu.incremental_search.timeout", 0); // prevent to timeout
+    keyCheck(list, "T", 2, 1, "same letter pressed");
+    SpecialPowers.clearUserPref("ui.menu.incremental_search.timeout");
+  }
+
+  setTimeout(pressedAgain, 1200);
+}
+
+function pressedAgain()
+{
+  keyCheck(list, "T", 3, 1, "letter pressed again");
+  SpecialPowers.setIntPref("ui.menu.incremental_search.timeout", 0); // prevent to timeout
+  keyCheck(list, "W", 2, 1, "second letter pressed");
+  SpecialPowers.clearUserPref("ui.menu.incremental_search.timeout");
+  setTimeout(differentPressed, 1200);
+}
+
+function differentPressed()
+{
+  keyCheck(list, "O", 1, 1, "different letter pressed");
+
+  if (gOpenPhase) {
+    list.open = false;
+    tabAndScroll();
+  }
+  else {
+     // Run the letter tests again with the popup open
+    info("list open phase");
+
+    list.selectedItem = $("i1");
+
+    // Hide and show the list to avoid using any existing incremental key state.
+    list.hidden = true;
+    list.clientWidth;
+    list.hidden = false;
+
+    gShowPopup = true;
+    gOpenPhase = true;
+
+    list.addEventListener("popupshown", function popupShownListener() {
+      pressLetter();
+    }, { once: true});
+
+    list.open = true;
+  }
+}
+
+function tabAndScroll()
+{
+  list = $("list");
+
+  if (!ismac) {
+    $("button1").focus();
+    synthesizeKeyExpectEvent("KEY_Tab", {}, list, "focus", "focus to menulist");
+    synthesizeKeyExpectEvent("KEY_Tab", {}, $("button2"), "focus", "focus to button");
+    is(document.activeElement, $("button2"), "tab from menulist focused button");
+  }
+
+  // now make sure that using a key scrolls the menu correctly
+
+  for (let i = 0; i < 65; i++) {
+    list.appendItem("Item" + i, "item" + i);
+  }
+  list.open = true;
+  is(list.getBoundingClientRect().width, list.menupopup.getBoundingClientRect().width,
+     "menu and popup width match");
+  var minScrollbarWidth = window.matchMedia("(-moz-overlay-scrollbars)").matches ? 0 : 3;
+  ok(list.getBoundingClientRect().width >= list.getItemAtIndex(0).getBoundingClientRect().width + minScrollbarWidth,
+     "menuitem width accounts for scrollbar");
+  list.open = false;
+
+  list.menupopup.maxHeight = 100;
+  list.open = true;
+
+  var rowdiff = list.getItemAtIndex(1).getBoundingClientRect().top -
+                list.getItemAtIndex(0).getBoundingClientRect().top;
+
+  var item = list.getItemAtIndex(10);
+  var originalPosition = item.getBoundingClientRect().top;
+
+  list.activeChild = item;
+  ok(item.getBoundingClientRect().top < originalPosition,
+    "position of item 1: " + item.getBoundingClientRect().top + " -> " + originalPosition);
+
+  originalPosition = item.getBoundingClientRect().top;
+
+  synthesizeKey("KEY_ArrowDown");
+  is(item.getBoundingClientRect().top, originalPosition - rowdiff, "position of item 10");
+
+  list.open = false;
+
+  checkEnter();
+}
+
+function keyCheck(list, key, index, defaultindex, testname)
+{
+  var item = $("i" + index);
+  var defaultitem = $("i" + defaultindex || 1);
+
+  synthesizeKeyExpectEvent(key, { }, item, expectCommandEvent ? "command" : "!command", testname);
+  is(list.selectedItem, expectCommandEvent ? item : defaultitem, testname + " selectedItem----" + list.selectedItem.id);
+}
+
+function checkModifiers(event)
+{
+  var expectedModifiers = (gModifiers == 1);
+  is(event.shiftKey, expectedModifiers, "shift key pressed");
+  is(event.ctrlKey, expectedModifiers, "ctrl key pressed");
+  is(event.altKey, expectedModifiers, "alt key pressed");
+  is(event.metaKey, expectedModifiers, "meta key pressed");
+  gModifiers++;
+}
+
+function checkEnter()
+{
+  list.addEventListener("popuphidden", checkEnterWithModifiers);
+  list.addEventListener("command", checkModifiers);
+  list.open = true;
+  synthesizeKey("KEY_Enter");
+}
+
+function checkEnterWithModifiers()
+{
+  is(gModifiers, 1, "modifiers checked when not set");
+
+  ok(!list.open, "list closed on enter press");
+  list.removeEventListener("popuphidden", checkEnterWithModifiers);
+
+  list.addEventListener("popuphidden", verifyPopupOnClose);
+  list.open = true;
+
+  synthesizeKey("KEY_Enter", {shiftKey: true, ctrlKey: true, altKey: true, metaKey: true});
+}
+
+function verifyPopupOnClose()
+{
+  is(gModifiers, 2, "modifiers checked when set");
+
+  ok(!list.open, "list closed on enter press with modifiers");
+  list.removeEventListener("popuphidden", verifyPopupOnClose);
+
+  list = $("list2");
+  list.focus();
+  list.open = true;
+}
+
+function checkCursorNavigation()
+{
+  var commandEventsCount = 0;
+  list.addEventListener("command", event => {
+    is(event.target, list.selectedItem, "command event fired on selected item");
+    commandEventsCount++;
+  });
+
+  is(list.selectedIndex, 1, "selectedIndex before cursor down");
+  synthesizeKey("KEY_ArrowDown");
+  is(list.selectedIndex, iswin ? 2 : 1, "selectedIndex after cursor down");
+  is(commandEventsCount, iswin ? 1 : 0, "selectedIndex after cursor down command event");
+  is(list.menupopup.state, "open", "cursor down popup state");
+  synthesizeKey("KEY_PageDown");
+  is(list.selectedIndex, iswin ? 3 : 1, "selectedIndex after page down");
+  is(commandEventsCount, iswin ? 2 : 0, "selectedIndex after page down command event");
+  is(list.menupopup.state, "open", "page down popup state");
+
+  // Check whether cursor up and down wraps.
+  list.selectedIndex = 0;
+  list.activeChild = list.selectedItem;
+  synthesizeKey("KEY_ArrowUp");
+  is(list.activeChild,
+     document.getElementById(iswin || ismac ? "b1" : "b4"), "cursor up wrap while open");
+
+  list.selectedIndex = 3;
+  list.activeChild = list.selectedItem;
+  synthesizeKey("KEY_ArrowDown");
+  is(list.activeChild,
+     document.getElementById(iswin || ismac ? "b4" : "b1"), "cursor down wrap while open");
+
+  synthesizeKey("KEY_ArrowUp", {altKey: true});
+  is(list.open, ismac, "alt+up closes popup");
+
+  if (ismac) {
+    list.open = false;
+  }
+
+  // Finally, test a menulist with sizetopopup="none" to ensure keyboard navigation
+  // still works when the popup has not been opened.
+  if (!ismac) {
+    let unsizedMenulist = document.getElementById("list3");
+    unsizedMenulist.focus();
+    synthesizeKey("KEY_ArrowDown");
+    is(unsizedMenulist.selectedIndex, 1, "correct menulist index on keydown");
+    is(unsizedMenulist.label, "Two", "correct menulist label on keydown");
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

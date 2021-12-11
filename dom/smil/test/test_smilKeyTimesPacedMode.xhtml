@@ -1,0 +1,123 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Tests updated intervals</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=555026">Mozilla Bug 555026</a>
+<p id="display"></p>
+<div id="content">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle r="10" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test that we ignore keyTimes attr when calcMode="paced" **/
+
+/* Global Variables */
+const SVGNS = "http://www.w3.org/2000/svg";
+const ANIM_DUR = "2s";
+const HALF_TIME = "1";
+const ATTR_NAME = "cx"
+const KEYTIMES_TO_TEST = [
+  // potentially-valid values (depending on number of values in animation)
+  "0; 0.2; 1",
+  "0; 0.5",
+  "0; 1",
+  // invalid values:
+  "", "abc", "-0.5", "0; 0.5; 1.01", "5"
+];
+const gSvg = document.getElementById("svg");
+const gCircle = document.getElementById("circle");
+
+SimpleTest.waitForExplicitFinish();
+
+
+// MAIN FUNCTIONS
+function main() {
+  ok(gSvg.animationsPaused(), "should be paused by <svg> load handler");
+  is(gSvg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  testByAnimation();
+  testToAnimation();
+  testValuesAnimation();
+  SimpleTest.finish();
+}
+
+function testByAnimation() {
+  for (var i = 0; i < KEYTIMES_TO_TEST.length; i++) {
+    setupTest();
+    var anim = createAnim();
+    anim.setAttribute("by", "200");
+    var curKeyTimes = KEYTIMES_TO_TEST[i];
+    anim.setAttribute("keyTimes", curKeyTimes);
+
+    gSvg.setCurrentTime(HALF_TIME);
+    is(gCircle.cx.animVal.value, 100,
+       "Checking animVal with 'by' and keyTimes='" + curKeyTimes + "'");
+
+    anim.remove(); // clean up
+  }
+}
+
+function testToAnimation() {
+  for (var i = 0; i < KEYTIMES_TO_TEST.length; i++) {
+    setupTest();
+    var anim = createAnim();
+    anim.setAttribute("to", "200");
+    var curKeyTimes = KEYTIMES_TO_TEST[i];
+    anim.setAttribute("keyTimes", curKeyTimes);
+
+    gSvg.setCurrentTime(HALF_TIME);
+    is(gCircle.cx.animVal.value, 100,
+       "Checking animVal with 'to' and keyTimes='" + curKeyTimes + "'");
+
+    anim.remove(); // clean up
+  }
+}
+
+function testValuesAnimation() {
+  for (var i = 0; i < KEYTIMES_TO_TEST.length; i++) {
+    setupTest();
+    var anim = createAnim();
+    anim.setAttribute("values", "100; 110; 200");
+    var curKeyTimes = KEYTIMES_TO_TEST[i];
+    anim.setAttribute("keyTimes", curKeyTimes);
+
+    gSvg.setCurrentTime(HALF_TIME);
+    is(gCircle.cx.animVal.value, 150,
+       "Checking animVal with 'values' and keyTimes='" + curKeyTimes + "'");
+
+    anim.remove(); // clean up
+  }
+}
+
+// HELPER FUNCTIONS
+// Common setup code for each test function: seek to 0, and make sure
+// the previous test cleaned up its animations.
+function setupTest() {
+  gSvg.setCurrentTime(0);
+  if (gCircle.firstChild) {
+    ok(false, "Previous test didn't clean up after itself.");
+  }
+}
+
+function createAnim() {
+  var anim = document.createElementNS(SVGNS,"animate");
+  anim.setAttribute("attributeName", ATTR_NAME);
+  anim.setAttribute("dur", ANIM_DUR);
+  anim.setAttribute("begin", "0s");
+  anim.setAttribute("calcMode", "paced");
+  return gCircle.appendChild(anim);
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

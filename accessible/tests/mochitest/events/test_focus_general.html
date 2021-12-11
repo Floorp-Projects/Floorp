@@ -1,0 +1,176 @@
+<html>
+
+<head>
+  <title>Accessible focus testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function focusElmWhileSubdocIsFocused(aID) {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function focusElmWhileSubdocIsFocused_invoke() {
+        this.DOMNode.focus();
+      };
+
+      this.eventSeq = [
+        new focusChecker(this.DOMNode),
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.DOMNode.ownerDocument),
+      ];
+
+      this.getID = function focusElmWhileSubdocIsFocused_getID() {
+        return "Focus element while subdocument is focused " + prettyName(aID);
+      };
+    }
+
+    function imageMapChecker(aID) {
+      var node = getNode(aID);
+      this.type = EVENT_FOCUS;
+      this.match = function imageMapChecker_match(aEvent) {
+        return aEvent.DOMNode == node;
+      };
+    }
+
+    function topMenuChecker() {
+      this.type = EVENT_FOCUS;
+      this.match = function topMenuChecker_match(aEvent) {
+        return aEvent.accessible.role == ROLE_PARENT_MENUITEM;
+      };
+    }
+
+    function contextMenuChecker() {
+      this.type = EVENT_MENUPOPUP_START;
+      this.match = function contextMenuChecker_match(aEvent) {
+        return aEvent.accessible.role == ROLE_MENUPOPUP;
+      };
+    }
+
+    function focusContextMenuItemChecker() {
+      this.__proto__ = new focusChecker();
+
+      this.match = function focusContextMenuItemChecker_match(aEvent) {
+        return aEvent.accessible.role == ROLE_MENUITEM;
+      };
+    }
+
+    /**
+     * Do tests.
+     */
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTests() {
+      var frameDoc = document.getElementById("iframe").contentDocument;
+
+      var editableDoc = document.getElementById("editabledoc").contentDocument;
+      editableDoc.designMode = "on";
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthFocus("editablearea"));
+      gQueue.push(new synthFocus("navarea"));
+      gQueue.push(new synthTab("navarea", new focusChecker(frameDoc)));
+      gQueue.push(new focusElmWhileSubdocIsFocused("link"));
+
+      gQueue.push(new synthTab(editableDoc, new focusChecker(editableDoc)));
+      if (WIN || LINUX) {
+        // Alt key is used to active menubar and focus menu item on Windows,
+        // other platforms requires setting a ui.key.menuAccessKeyFocuses
+        // preference.
+        gQueue.push(new toggleTopMenu(editableDoc, new topMenuChecker()));
+        gQueue.push(new toggleTopMenu(editableDoc, new focusChecker(editableDoc)));
+      }
+      if (!(MAC && Services.prefs.getBoolPref("widget.macos.native-context-menus", false))) {
+        // Context menu accessibility is handled natively and not testable when
+        // native context menus are used on macOS.
+        gQueue.push(new synthContextMenu(editableDoc, new contextMenuChecker()));
+        gQueue.push(new synthDownKey(editableDoc, new focusContextMenuItemChecker()));
+        gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
+      } else {
+        // If this test is run as part of multiple tests, it is displayed in the test harness iframe.
+        // In the non-native context menu case, right-clicking the editableDoc causes the editableDoc
+        // to scroll fully into view, and as a side-effect, the img below it ends up on the screen.
+        // When we're skipping the context menu check, scroll img onto the screen manually, because
+        // otherwise it may remain out-of-view and clipped by the test harness iframe.
+        var img = document.querySelector("img");
+        gQueue.push(new scrollIntoView(img, new nofocusChecker(img)));
+      }
+      if (SEAMONKEY) {
+        todo(false, "shift tab from editable document fails on (Windows) SeaMonkey! (Bug 718235)");
+      } else if (LINUX || MAC) {
+        todo(false, "shift tab from editable document fails on linux and Mac, bug 746519!");
+      } else {
+        gQueue.push(new synthShiftTab("link", new focusChecker("link")));
+      } // ! SEAMONKEY
+
+      gQueue.push(new synthFocus("a", new imageMapChecker("a")));
+      gQueue.push(new synthFocus("b", new imageMapChecker("b")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=352220"
+     title="Inconsistent focus events when returning to a document frame">
+    Mozilla Bug 352220
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=550338"
+     title="Broken focus when returning to editable documents from menus">
+    Mozilla Bug 550338
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+     title="Rework accessible focus handling">
+    Mozilla Bug 673958
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=961696"
+     title="Accessible object:state-changed:focused events for imagemap links are broken">
+    Mozilla Bug 961696
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="editablearea" contentEditable="true">editable area</div>
+  <div id="navarea" tabindex="0">navigable area</div>
+  <iframe id="iframe" src="data:text/html,<html></html>"></iframe>
+  <a id="link" href="">link</a>
+  <iframe id="editabledoc" src="about:blank"></iframe>
+
+  <map name="atoz_map">
+    <area id="a" coords="0,0,13,14" shape="rect">
+    <area id="b" coords="17,0,30,14" shape="rect">
+  </map>
+  <img width="447" height="15" usemap="#atoz_map" src="../letters.gif">
+
+  <div id="eventdump"></div>
+</body>
+</html>

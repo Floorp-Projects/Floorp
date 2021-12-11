@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+  <title>Testcase, bug 386401</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <style type="text/css">
+
+  table { border-spacing: 2px; width: 30em; }
+  td { border: 1px solid; padding: 2px; }
+  tbody { overflow: scroll; }
+
+  </style>
+</head>
+<body>
+
+<table>
+  <thead><tr><td>Header</td><td id="appendhere">Header</td><td>A really big header</td></tr></thead>
+  <tfoot><tr><td>Footer</td><td>Footer</td><td>Footer</td></tr></tfoot>
+  <tbody>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>

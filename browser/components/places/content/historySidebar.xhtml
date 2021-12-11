@@ -1,0 +1,98 @@
+<?xml version="1.0"?> <!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/sidebar.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuDTD;
+]>
+
+<window id="history-panel"
+        class="sidebar-panel"
+        orient="vertical"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="HistorySidebarInit();"
+        onunload="PlacesUIUtils.setMouseoverURL('', window);"
+        data-l10n-id="places-history">
+
+  <script src="chrome://browser/content/places/historySidebar.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://browser/content/contentTheme.js"/>
+  <script src="chrome://browser/content/places/places-tree.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/places.ftl"/>
+  </linkset>
+
+#include placesCommands.inc.xhtml
+
+#include ../../../../toolkit/content/editMenuKeys.inc.xhtml
+#ifdef XP_MACOSX
+  <keyset id="editMenuKeysExtra">
+    <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
+  </keyset>
+#endif
+
+#include placesContextMenu.inc.xhtml
+#include bookmarksHistoryTooltip.inc.xhtml
+
+  <hbox id="sidebar-search-container">
+    <search-textbox id="search-box" flex="1"
+                    data-l10n-id="places-history-search"
+                    data-l10n-attrs="placeholder"
+                    aria-controls="historyTree"
+                    oncommand="searchHistory(this.value);"/>
+    <button id="viewButton" style="min-width:0px !important;" type="menu"
+            data-l10n-id="places-view" selectedsort="day"
+            persist="selectedsort">
+      <menupopup>
+        <menuitem id="bydayandsite"
+                  data-l10n-id="places-by-day-and-site" type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'dayandsite'); GroupBy('dayandsite');"/>
+        <menuitem id="bysite"
+                  data-l10n-id="places-by-site"
+                  type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'site'); GroupBy('site');"/>
+        <menuitem id="byday"
+                  data-l10n-id="places-by-date"
+                  type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'day'); GroupBy('day');"/>
+        <menuitem id="byvisited"
+                  data-l10n-id="places-by-most-visited"
+                  type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'visited'); GroupBy('visited');"/>
+        <menuitem id="bylastvisited"
+                  data-l10n-id="places-by-last-visited"
+                  type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'lastvisited'); GroupBy('lastvisited');"/>
+      </menupopup>
+    </button>
+  </hbox>
+
+  <tree id="historyTree"
+        class="sidebar-placesTree"
+        flex="1"
+        is="places-tree"
+        hidecolumnpicker="true"
+        context="placesContext"
+        singleclickopens="true"
+        onkeypress="PlacesUIUtils.onSidebarTreeKeyPress(event);"
+        onclick="PlacesUIUtils.onSidebarTreeClick(event);"
+        onmousemove="PlacesUIUtils.onSidebarTreeMouseMove(event);"
+        onmouseout="PlacesUIUtils.setMouseoverURL('', window);">
+    <treecols>
+      <treecol id="title" flex="1" primary="true" hideheader="true"/>
+    </treecols>
+    <treechildren class="sidebar-placesTreechildren" flex="1" tooltip="bhTooltip"/>
+  </tree>
+</window>

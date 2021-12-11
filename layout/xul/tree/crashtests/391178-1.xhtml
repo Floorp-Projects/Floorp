@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+
+var ccc;
+
+function boom()
+{
+  var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+  var hbox = document.createElementNS(XUL_NS, 'hbox');
+  var tree = document.createElementNS(XUL_NS, 'tree');
+  var treecol = document.createElementNS(XUL_NS, 'treecol');
+
+  ccc = document.getElementById("ccc");
+
+  ccc.style.position = "fixed";
+
+  hbox.appendChild(treecol);
+  tree.appendChild(hbox);
+  ccc.appendChild(tree);
+  
+  setTimeout(boom2, 200);
+}
+
+function boom2()
+{
+  ccc.style.position = "";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="ccc">
+</div>
+
+</body>
+</html>

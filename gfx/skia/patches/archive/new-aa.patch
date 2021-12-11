@@ -1,0 +1,22 @@
+diff --git a/gfx/skia/src/core/SkScan_AntiPath.cpp b/gfx/skia/src/core/SkScan_AntiPath.cpp
+--- a/gfx/skia/src/core/SkScan_AntiPath.cpp
++++ b/gfx/skia/src/core/SkScan_AntiPath.cpp
+@@ -31,17 +31,17 @@
+     - supersampled coordinates, scale equal to the output * SCALE
+ 
+     NEW_AA is a set of code-changes to try to make both paths produce identical
+     results. Its not quite there yet, though the remaining differences may be
+     in the subsequent blits, and not in the different masks/runs...
+  */
+ //#define FORCE_SUPERMASK
+ //#define FORCE_RLE
+-//#define SK_SUPPORT_NEW_AA
++#define SK_SUPPORT_NEW_AA
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+ /// Base class for a single-pass supersampled blitter.
+ class BaseSuperBlitter : public SkBlitter {
+ public:
+     BaseSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
+                      const SkRegion& clip);

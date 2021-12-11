@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=366936
+-->
+<head>
+  <meta charset=utf-8>
+  <title>Test for Bug 366936</title>
+  <script type="text/javascript" 
+	  src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" /> 
+  <script type="application/javascript"
+          src="parser_datreader.js"></script>
+  <script type="application/javascript"
+          src="html5_tree_construction_exceptions.js"></script>
+  <script class="testbody" type="application/javascript">
+   var parserDatFiles = ["adoption01.dat",
+                         "adoption02.dat",
+                         "comments01.dat",
+                         "doctype01.dat",
+                         "domjs-unsafe.dat",
+                         "entities01.dat",
+                         "entities02.dat",
+                         "html5test-com.dat",
+                         "inbody01.dat",
+                         "isindex.dat",
+                         "pending-spec-changes.dat",
+                         "pending-spec-changes-plain-text-unsafe.dat",
+                         "plain-text-unsafe.dat",
+                         "scripted/adoption01.dat",
+                         "scripted/webkit01.dat",
+                         "scripted/ark.dat",
+                         "scriptdata01.dat",
+                         "tables01.dat",
+                         "template.dat",
+                         "tests10.dat",
+                         "tests11.dat",
+                         "tests12.dat",
+                         "tests14.dat",
+                         "tests15.dat",
+                         "tests16.dat"];
+
+  </script>
+  <script type="application/javascript"
+          src="parser_web_testrunner.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=366936"
+   target="_blank">Mozilla Bug 366936</a>
+<div id="content">
+<iframe src="" id="testframe"></iframe>
+</div>
+See https://github.com/html5lib/html5lib-tests for original test data<br>
+<div id="display">
+
+</div>
+</body>
+</html>
+

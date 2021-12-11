@@ -1,0 +1,68 @@
+.confirmation-dialog {
+  .modal {
+    box-shadow: $shadow-secondary;
+    left: 0;
+    margin: auto;
+    position: fixed;
+    right: 0;
+    top: 20%;
+    width: 400px;
+  }
+
+  section {
+    margin: 0;
+  }
+
+  .modal-message {
+    display: flex;
+    padding: 16px;
+    padding-bottom: 0;
+
+    p {
+      margin: 0;
+      margin-bottom: 16px;
+    }
+  }
+
+  .actions {
+    border: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    padding: 0 16px;
+
+    button {
+      margin-inline-end: 16px;
+      padding-inline-end: 18px;
+      padding-inline-start: 18px;
+      white-space: normal;
+      width: 50%;
+
+      &.done {
+        margin-inline-end: 0;
+        margin-inline-start: 0;
+      }
+    }
+  }
+
+  .icon {
+    margin-inline-end: 16px;
+  }
+}
+
+.modal-overlay {
+  background: var(--newtab-overlay-color);
+  height: 100%;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 11001;
+}
+
+.modal {
+  background: var(--newtab-background-color-secondary);
+  border: $border-secondary;
+  border-radius: 5px;
+  font-size: 15px;
+  z-index: 11002;
+}

@@ -1,0 +1,51 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads relative load
+-->
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var index = -1;
+
+  var urls = [
+    "relativeLoad_worker.js",
+    "subdir/relativeLoad_sub_worker.js"
+  ];
+
+  function messageHandler(event) {
+    if (index >= 0) {
+      is(event.data, urls[index], "Bad url!");
+      if (index == urls.length - 1) {
+        SimpleTest.finish();
+        return;
+      }
+    }
+
+    var worker = new Worker(urls[++index]);
+    worker.onmessage = messageHandler;
+    worker.onerror = function(e) {
+      ok(false, "Worker had an error: " + e.message);
+      SimpleTest.finish();
+    };
+    worker.postMessage("start");
+  }
+
+  messageHandler();
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

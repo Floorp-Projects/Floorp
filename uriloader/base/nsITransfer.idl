@@ -1,0 +1,141 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIWebProgressListener2.idl"
+
+interface nsIArray;
+interface nsIURI;
+interface nsICancelable;
+interface nsIMIMEInfo;
+interface nsIFile;
+interface nsIReferrerInfo;
+webidl BrowsingContext;
+
+[scriptable, uuid(37ec75d3-97ad-4da8-afaa-eabe5b4afd73)]
+interface nsITransfer : nsIWebProgressListener2 {
+
+    const unsigned long DOWNLOAD_ACCEPTABLE = 0;
+    const unsigned long DOWNLOAD_FORBIDDEN = 1;
+    const unsigned long DOWNLOAD_POTENTIALLY_UNSAFE = 2;
+
+    /**
+     * Initializes the transfer with certain properties.  This function must
+     * be called prior to accessing any properties on this interface.
+     *
+     * @param aSource The source URI of the transfer. Must not be null.
+     *
+     * @param aTarget The target URI of the transfer. Must not be null.
+     *
+     * @param aDisplayName The user-readable description of the transfer.
+     *                     Can be empty.
+     *
+     * @param aMIMEInfo The MIME info associated with the target,
+     *                  including MIME type and helper app when appropriate.
+     *                  This parameter is optional.
+     *
+     * @param startTime Time when the download started (ie, when the first
+     *                  response from the server was received)
+     *                  XXX presumably wbp and exthandler do this differently
+     *
+     * @param aTempFile The location of a temporary file; i.e. a file in which
+     *                  the received data will be stored, but which is not
+     *                  equal to the target file. (will be moved to the real
+     *                  target by the caller, when the download is finished)
+     *                  May be null.
+     *
+     * @param aCancelable An object that can be used to abort the download.
+     *                    Must not be null.
+     *                    Implementations are expected to hold a strong
+     *                    reference to this object until the download is
+     *                    finished, at which point they should release the
+     *                    reference.
+     *
+     * @param aIsPrivate Used to determine the privacy status of the new transfer.
+     *                   If true, indicates that the transfer was initiated from
+     *                   a source that desires privacy.
+     *
+     * @param aDownloadClassification Indicates wheter the download is unwanted,
+     *                                should be considered dangerous or insecure. 
+     * @param aReferrerInfo The Referrer this download is started with
+     */
+    void init(in nsIURI aSource,
+              in nsIURI aTarget,
+              in AString aDisplayName,
+              in nsIMIMEInfo aMIMEInfo,
+              in PRTime startTime,
+              in nsIFile aTempFile,
+              in nsICancelable aCancelable,
+              in boolean aIsPrivate,
+              in long aDownloadClassification,
+              in nsIReferrerInfo aReferrerInfo);
+
+    /**
+     * Same as init, but allows for passing the browsingContext
+     * which will allow for opening the download with the same
+     * userContextId
+     *
+     * @param aBrowsingContext BrowsingContext of the initiating document.
+     *
+     * @param aHandleInternally Set to true if the download should be opened within
+     *                          the browser.
+     */
+    void initWithBrowsingContext(in nsIURI aSource,
+                                 in nsIURI aTarget,
+                                 in AString aDisplayName,
+                                 in nsIMIMEInfo aMIMEInfo,
+                                 in PRTime startTime,
+                                 in nsIFile aTempFile,
+                                 in nsICancelable aCancelable,
+                                 in boolean aIsPrivate,
+                                 in long aDownloadClassification,
+                                 in nsIReferrerInfo aReferrerInfo,
+                                 in BrowsingContext aBrowsingContext,
+                                 in boolean aHandleInternally);
+
+    /*
+     * Used to notify the transfer object of the hash of the downloaded file.
+     * Must be called on the main thread, only after the download has finished
+     * successfully.
+     * @param aHash The SHA-256 hash in raw bytes of the downloaded file.
+     */
+    void setSha256Hash(in ACString aHash);
+
+    /*
+     * Used to notify the transfer object of the signature of the downloaded
+     * file.  Must be called on the main thread, only after the download has
+     * finished successfully.
+     * @param aSignatureInfo The Array of Array of Array of bytes
+     *        certificates of the downloaded file.
+     */
+    void setSignatureInfo(in Array<Array<Array<uint8_t> > > aSignatureInfo);
+
+    /*
+     * Used to notify the transfer object of the redirects associated with the
+     * channel that terminated in the downloaded file.  Must be called on the
+     * main thread, only after the download has finished successfully.
+     * @param aRedirects The nsIArray of nsIPrincipal of redirected URIs
+     *        associated with the downloaded file.
+     */
+    void setRedirects(in nsIArray aRedirects);
+};
+
+%{C++
+/**
+ * A component with this contract ID will be created each time a download is
+ * started, and nsITransfer::Init will be called on it and an observer will be set.
+ *
+ * Notifications of the download progress will happen via
+ * nsIWebProgressListener/nsIWebProgressListener2.
+ *
+ * INTERFACES THAT MUST BE IMPLEMENTED:
+ *   nsITransfer
+ *   nsIWebProgressListener
+ *   nsIWebProgressListener2
+ *
+ * XXX move this to nsEmbedCID.h once the interfaces (and the contract ID) are
+ * frozen.
+ */
+#define NS_TRANSFER_CONTRACTID "@mozilla.org/transfer;1"
+%}

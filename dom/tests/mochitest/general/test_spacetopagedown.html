@@ -1,0 +1,75 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+
+var windowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+function pressKey(isShift)
+{
+  return new Promise(resolve => {
+    synthesizeKey(" ", { shiftKey: isShift });
+    windowUtils.advanceTimeAndRefresh(100);
+    SimpleTest.executeSoon(resolve);
+  });
+}
+
+function initTest()
+{
+  SpecialPowers.pushPrefEnv({"set":[["general.smoothScroll", false]]}, runTest);
+}
+
+function runTest()
+{
+  (async function() {
+    await pressKey(false);
+
+    ok(window.scrollY > 0, "Space with no focus" + window.scrollY);
+    await pressKey(true);
+    is(window.scrollY, 0, "Shift+Space with no focus");
+
+    let checkbox = document.getElementById("checkbox");
+    checkbox.focus();
+    await pressKey(false);
+
+    is(window.scrollY, 0, "Space with checkbox focused");
+    ok(checkbox.checked, "Space with checkbox focused, checked");
+    await pressKey(true);
+    is(window.scrollY, 0, "Shift+Space with checkbox focused");
+    ok(!checkbox.checked, "Space with checkbox focused, unchecked");
+
+    let input = document.getElementById("input");
+    input.focus();
+    await pressKey(false);
+    is(window.scrollY, 0, "Space with input focused");
+    is(input.value, " ", "Space with input focused, value");
+    await pressKey(true);
+    is(window.scrollY, 0, "Shift+Space with input focused");
+    is(input.value, "  ", "Space with input focused, value");
+
+    windowUtils.restoreNormalRefresh();
+    SimpleTest.finish();
+  })();
+}
+
+  </script>
+</head>
+<body onload="SimpleTest.waitForFocus(initTest)">
+
+<input id="checkbox" type="checkbox">Checkbox
+<input id="input">
+<p style="height: 4000px">Text</p>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

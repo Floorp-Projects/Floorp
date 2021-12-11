@@ -1,0 +1,20 @@
+# Please see the comment at the beginning of reftest.list
+
+fuzzy-if(geckoview,0-2,0-1382) == topN-heightA-bottomA.html?margin_abspos topN-heightA-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == topN-heightA-bottomN.html?margin_abspos topN-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == topA-heightN-bottomA.html?margin_abspos topA-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == topN-heightN-bottomA.html?margin_abspos topN-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == topA-heightN-bottomN.html?margin_abspos topA-heightN-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == topA-heightA-bottomN.html?margin_abspos topA-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topN-heightA-bottomA.html?margin_abspos toauto-topN-heightA-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topN-heightA-bottomN.html?margin_abspos toauto-topN-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topA-heightN-bottomA.html?margin_abspos toauto-topA-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topN-heightN-bottomA.html?margin_abspos toauto-topN-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topA-heightN-bottomN.html?margin_abspos toauto-topA-heightN-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == toauto-topA-heightA-bottomN.html?margin_abspos toauto-topA-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topN-heightA-bottomA.html?margin_abspos topN-heightA-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topN-heightA-bottomN.html?margin_abspos topN-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topA-heightN-bottomA.html?margin_abspos topA-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topN-heightN-bottomA.html?margin_abspos topN-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topA-heightN-bottomN.html?margin_abspos topA-heightN-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-topA-heightA-bottomN.html?margin_abspos topA-heightA-bottomN-ref.html?margin_abspos

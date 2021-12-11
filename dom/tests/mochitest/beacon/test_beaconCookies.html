@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936340
+-->
+<head>
+  <title>Test whether sendBeacon sets cookies</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936340">Mozilla Bug 936340</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// not enabled by default yet.
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+var baseURL = "http://mochi.test:8888/chrome/dom/tests/mochitest/beacon/";
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished");
+}
+
+function testOnWindow(options, callback) {
+  var mainWindow = window.browsingContext.topChromeWindow;
+
+  var win = mainWindow.OpenBrowserWindow(options);
+  windowsToClose.push(win);
+  whenDelayedStartupFinished(win, function() {
+    callback(win);
+  });
+};
+
+var windowsToClose = [];
+var next;
+
+function beginTest() {
+  testOnWindow({}, function(aNormalWindow) {
+    Services.obs.addObserver(function waitCookie() {
+      Services.obs.removeObserver(waitCookie, "cookie-changed");
+      ok(true, "cookie set by beacon request in normal window");
+      testOnPrivateWindow();
+    }, "cookie-changed");
+    BrowserTestUtils.loadURI(aNormalWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
+  });
+}
+
+function testOnPrivateWindow() {
+  testOnWindow({private: true}, function(aPrivateWindow) {
+    Services.obs.addObserver(function waitCookie() {
+      Services.obs.removeObserver(waitCookie, "private-cookie-changed");
+      ok(true, "private cookie set by beacon request in private window");
+      cleanup();
+    }, "private-cookie-changed");
+    BrowserTestUtils.loadURI(aPrivateWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
+  });
+}
+
+function cleanup() {
+  for (var i = 0; i < windowsToClose.length; ++i) {
+    windowsToClose[i].close();
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ShadowRoot hit tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+</head>
+<body>
+
+  <a target="_blank"
+     title="Test getChildAtPoint works for shadow DOM content"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1027315">
+    Mozilla Bug 1027315
+  </a><br/>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    window.onload = () => {
+      var iframe = document.createElement("iframe");
+      iframe.src = "test_shadowroot_subframe.html";
+      document.body.appendChild(iframe);
+    };
+
+  </script>
+
+</body>
+</html>

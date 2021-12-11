@@ -1,0 +1,19 @@
+== bounds-1.html bounds-1-ref.html
+fuzzy(0-65,0-3) == size-1.html size-1-ref.html
+== size-2.html size-2-ref.html
+== baseline-1.html baseline-1-ref.html
+== chrome://reftest/content/forms/input/text/centering-1.xhtml chrome://reftest/content/forms/input/text/centering-1-ref.xhtml
+== chrome://reftest/content/forms/input/text/dynamic-height-1.xhtml chrome://reftest/content/forms/input/text/dynamic-height-1-ref.xhtml
+fuzzy(0-1,0-500) needs-focus == select.html select-ref.html
+== intrinsic-size.html intrinsic-size-ref.html
+== line-height-0.5.html line-height-1.0.html
+!= line-height-2.5.html line-height-1.0.html
+== shadow-rules.html shadow-rules-ref.html
+!= height-small-font.html height-small-font-notref.html
+
+# Autofill tests
+== autofill-blank.html autofill-preview-blank.html
+!= autofill.html autofill-blank.html
+!= autofill-preview.html autofill-preview-blank.html
+!= autofill.html autofill-preview.html
+== autofill-prefilled-value.html autofill-preview.html

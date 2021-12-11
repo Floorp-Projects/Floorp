@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test cloneElementVisually</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="https://example.com:443/tests/dom/media/test/cloneElementVisually_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="content">
+  <h1>Original</h1>
+  <video id="original"></video>
+  <h1>Clone</h1>
+</div>
+<div id="results">
+  <h1>Results</h1>
+  <canvas id="left"></canvas>
+  <canvas id="right"></canvas>
+</div>
+
+<script type="application/javascript">
+
+/* import-globals-from cloneElementVisually_helpers.js */
+
+/**
+ * Test that when we start cloning a paused video, the clone displays
+ * the first paused frame.
+ */
+add_task(async () => {
+  await setup();
+
+  let originalVideo = document.getElementById("original");
+  await withNewClone(originalVideo, async clone => {
+    await SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
+
+    ok(await assertVideosMatch(originalVideo, clone),
+       "Initial paused frame should match.");
+  });
+});
+
+</script>
+
+</body>
+</html>

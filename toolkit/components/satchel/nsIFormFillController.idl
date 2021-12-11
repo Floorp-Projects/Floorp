@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAutoCompletePopup;
+
+webidl Document;
+webidl Element;
+webidl Event;
+webidl HTMLInputElement;
+
+/*
+ * nsIFormFillController is an interface for controlling form fill behavior
+ * on HTML documents.  Any number of docShells can be controller concurrently.
+ * While a docShell is attached, all HTML documents that are loaded within it
+ * will have a focus listener attached that will listen for when a text input
+ * is focused.  When this happens, the input will be bound to the
+ * global nsIAutoCompleteController service.
+ */
+
+[scriptable, uuid(07f0a0dc-f6e9-4cdd-a55f-56d770523a4c)]
+interface nsIFormFillController : nsISupports
+{
+  /*
+   * The input element the form fill controller is currently bound to.
+   */
+  readonly attribute HTMLInputElement focusedInput;
+
+  /*
+   * Whether the autocomplete popup on a password field was automatically opened
+   * by the form fill controller (upon focus).
+   */
+  readonly attribute boolean passwordPopupAutomaticallyOpened;
+
+  // Only used by tests.
+  void attachPopupElementToDocument(in Document document, in Element popup);
+  void detachFromDocument(in Document document);
+
+  /*
+   * Mark the specified <input> element as being managed by password manager.
+   * Autocomplete requests will be handed off to the password manager, and will
+   * not be stored in form history.
+   *
+   * @param aInput - The HTML <input> element to tag
+   */
+  [can_run_script] void markAsLoginManagerField(in HTMLInputElement aInput);
+
+  /*
+   * Mark the specified <input> element as being managed by a form autofill component.
+   * Autocomplete requests will be handed off to the autofill component.
+   *
+   * @param aInput - The HTML <input> element to mark
+   */
+  [can_run_script] void markAsAutofillField(in HTMLInputElement aInput);
+
+  /*
+   * Open the autocomplete popup, if possible.
+   */
+  [can_run_script] void showPopup();
+};

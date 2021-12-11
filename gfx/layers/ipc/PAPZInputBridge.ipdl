@@ -1,0 +1,84 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using LayoutDeviceIntPoint from "Units.h";
+using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
+using struct mozilla::layers::APZEventResult from "mozilla/layers/APZInputBridge.h";
+
+using EventMessage from "mozilla/EventForwards.h";
+using class mozilla::MultiTouchInput from "InputData.h";
+using class mozilla::MouseInput from "InputData.h";
+using class mozilla::PanGestureInput from "InputData.h";
+using class mozilla::PinchGestureInput from "InputData.h";
+using class mozilla::TapGestureInput from "InputData.h";
+using class mozilla::ScrollWheelInput from "InputData.h";
+using class mozilla::KeyboardInput from "InputData.h";
+
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+
+include protocol PGPU;
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * This protocol is used to send input events from the UI process to the
+ * GPU process for handling by APZ. There is one instance per top-level
+ * compositor, or in other words, one instance per concrete APZCTreeManager
+ * instance. The child side lives on the main thread in the UI process,
+ * and the parent side lives on the main thread in the GPU process. If there
+ * is no GPU process, then this protocol is not instantiated.
+ */
+[RefCounted] sync protocol PAPZInputBridge
+{
+manager PGPU;
+
+parent:
+  // The following messages are used to
+  // implement the ReceiveInputEvent methods
+
+  sync ReceiveMultiTouchInputEvent(MultiTouchInput aEvent)
+    returns (APZEventResult  aOutResult,
+             MultiTouchInput aOutEvent);
+
+  sync ReceiveMouseInputEvent(MouseInput aEvent)
+    returns (APZEventResult aOutResult,
+             MouseInput     aOutEvent);
+
+  sync ReceivePanGestureInputEvent(PanGestureInput aEvent)
+    returns (APZEventResult  aOutResult,
+             PanGestureInput aOutEvent);
+
+  sync ReceivePinchGestureInputEvent(PinchGestureInput aEvent)
+    returns (APZEventResult    aOutResult,
+             PinchGestureInput aOutEvent);
+
+  sync ReceiveTapGestureInputEvent(TapGestureInput aEvent)
+    returns (APZEventResult  aOutResult,
+             TapGestureInput aOutEvent);
+
+  sync ReceiveScrollWheelInputEvent(ScrollWheelInput aEvent)
+    returns (APZEventResult   aOutResult,
+             ScrollWheelInput aOutEvent);
+
+  sync ReceiveKeyboardInputEvent(KeyboardInput aEvent)
+    returns (APZEventResult aOutResult,
+             KeyboardInput  aOutEvent);
+
+  async UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
+                               EventMessage aEventMessage,
+                               ScrollableLayerGuid? aTargetGuid);
+
+  sync ProcessUnhandledEvent(LayoutDeviceIntPoint aRefPoint)
+    returns (LayoutDeviceIntPoint   aOutRefPoint,
+             ScrollableLayerGuid    aOutTargetGuid,
+             uint64_t               aOutFocusSequenceNumber,
+             LayersId               aOutLayersId);
+
+  async __delete__();
+};
+
+} // namespace gfx
+} // namespace mozilla

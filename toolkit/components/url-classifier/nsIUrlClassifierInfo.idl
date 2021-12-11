@@ -1,0 +1,80 @@
+ /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /* This Source Code Form is subject to the terms of the Mozilla Public
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+/**
+ * nsIUrlClassifierPositiveCacheEntry Represents a positive cache entry.
+ */
+[scriptable, uuid(b3c27f8c-7db8-4f3f-97a5-5a94d781e565)]
+interface nsIUrlClassifierPositiveCacheEntry : nsISupports {
+  /**
+   * Fullhash for the positive cache entry.
+   */
+  readonly attribute ACString fullhash;
+
+  /**
+   * Positive cache expiry.
+   */
+  readonly attribute long long expiry;
+};
+
+/**
+ * nsIUrlClassifierCacheEntry contains cache information for
+ * a given prefix.
+ */
+[scriptable, uuid(d6297907-8236-4126-adaf-c3aa239a0d40)]
+interface nsIUrlClassifierCacheEntry : nsISupports {
+  /**
+   * Prefix for this cache entry.
+   */
+  readonly attribute ACString prefix;
+
+  /**
+   * Negative cache expiry.
+   */
+  readonly attribute long long expiry;
+
+  /**
+   * An array of nsIUrlClassifierPositiveCacheEntry, each item represents
+   * a positive cache entry with its fullhash and expiry.
+   */
+  readonly attribute nsIArray matches;
+};
+
+/**
+ * Cache information for a given table.
+ */
+[scriptable, function, uuid(69384f24-d9c5-4462-b24e-351c69e3b46a)]
+interface nsIUrlClassifierCacheInfo : nsISupports {
+  /**
+   * Table name.
+   */
+  readonly attribute ACString table;
+
+  /*
+   * An array of nsIUrlClassifierCacheEntry.
+   */
+  readonly attribute nsIArray entries;
+};
+
+[scriptable, uuid(26e12ea4-14ff-4c77-858f-6745998b7659)]
+interface nsIUrlClassifierGetCacheCallback : nsISupports {
+
+  void onGetCacheComplete(in nsIUrlClassifierCacheInfo info);
+};
+
+/**
+ * Interface to query url-classifier information.
+ */
+[scriptable, function, uuid(411bbff4-1b88-4687-aa36-e2bbdd93f6e8)]
+interface nsIUrlClassifierInfo : nsISupports {
+  /**
+   * An asynchronous call to return cache information for the table.
+   */
+  void getCacheInfo(in ACString table,
+                    in nsIUrlClassifierGetCacheCallback callback);
+};

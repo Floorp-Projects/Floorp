@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .dark {
+      filter:  invert(1) url("#balance-color") ;
+    }
+  </style>
+</head>
+<body>
+
+  <svg class="dark" width="400" height="110">
+    <rect width="300" height="100" style="fill:rgb(255,255,255);" />
+  </svg>
+
+  <svg width="10" height="10">
+    <defs>
+      <filter id="balance-color">
+        <feColorMatrix type="matrix"
+        values="1 0 0 0 0   0 1 0 0 0   0 0 1 0 0   0 0 0 1 0">
+        </feColorMatrix>
+      </filter>
+    </defs>
+  </svg>
+
+</body>
+</html>

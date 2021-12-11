@@ -1,0 +1,109 @@
+<!doctype html>
+<head>
+  <title>Test content script in cross-origin frame</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+add_task(async function test_content_script_cross_origin_frame() {
+
+  const extensionData = {
+    manifest: {
+      content_scripts: [{
+        matches: ["http://example.net/*/file_sample.html"],
+        all_frames: true,
+        js: ["cs.js"],
+      }],
+      permissions: ["http://example.net/"],
+    },
+
+    background() {
+      browser.runtime.onConnect.addListener(port => {
+        port.onMessage.addListener(async num => {
+          let { tab, url, frameId } = port.sender;
+
+          browser.test.assertTrue(frameId > 0, "sender frameId is ok");
+          browser.test.assertTrue(url.endsWith("file_sample.html"), "url is ok");
+
+          let shared = await browser.tabs.executeScript(tab.id, {
+            allFrames: true,
+            code: `window.sharedVal`,
+          });
+          browser.test.assertEq(shared[0], 357, "CS runs in a shared Sandbox");
+
+          let code = "does.not.exist";
+          await browser.test.assertRejects(
+            browser.tabs.executeScript(tab.id, { allFrames: true, code }),
+            /does is not defined/,
+            "Got the expected rejection from tabs.executeScript"
+          );
+
+          code = "() => {}";
+          await browser.test.assertRejects(
+            browser.tabs.executeScript(tab.id, { allFrames: true, code }),
+            /Script .* result is non-structured-clonable data/,
+            "Got the expected rejection from tabs.executeScript"
+          );
+
+          let result = await browser.tabs.sendMessage(tab.id, num);
+          port.postMessage(result);
+          port.disconnect();
+        });
+      });
+    },
+
+    files: {
+      "cs.js"() {
+        let text = document.getElementById("test").textContent;
+        browser.test.assertEq(text, "Sample text", "CS can access page DOM");
+
+        let manifest = browser.runtime.getManifest();
+        browser.test.assertEq(manifest.version, "1.0");
+        browser.test.assertEq(manifest.name, "Generated extension");
+
+        browser.runtime.onMessage.addListener(async num => {
+          browser.test.log("content script received tabs.sendMessage");
+          return num * 3;
+        })
+
+        let response;
+        window.sharedVal = 357;
+
+        let port = browser.runtime.connect();
+        port.onMessage.addListener(num => {
+          response = num;
+        });
+        port.onDisconnect.addListener(() => {
+          browser.test.assertEq(response, 21, "Got correct response");
+          browser.test.notifyPass();
+        });
+        port.postMessage(7);
+      },
+    },
+  };
+
+  info("Load first extension");
+  let ext1 = ExtensionTestUtils.loadExtension(extensionData);
+  await ext1.startup();
+
+  info("Load a page, test content scripts in new frame with extension loaded");
+  let base = "http://example.org/tests/toolkit/components/extensions/test";
+  let win = window.open(`${base}/mochitest/file_with_xorigin_frame.html`);
+
+  await ext1.awaitFinish();
+  await ext1.unload();
+
+  info("Load second extension, test content scripts in existing frame");
+  let ext2 = ExtensionTestUtils.loadExtension(extensionData);
+  await ext2.startup();
+  await ext2.awaitFinish();
+
+  win.close();
+  await ext2.unload();
+});
+
+</script>

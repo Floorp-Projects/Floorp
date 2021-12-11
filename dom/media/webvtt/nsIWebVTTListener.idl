@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Listener for a JS WebVTT parser (vtt.js).
+ */
+[scriptable, uuid(8a2d7780-2045-4a29-99f4-df15cae5fc49)]
+interface nsIWebVTTListener : nsISupports
+{
+  /**
+   * Is called when the WebVTTParser successfully parses a WebVTT cue.
+   *
+   * @param cue An object representing the data of a parsed WebVTT cue.
+   */
+  [implicit_jscontext]
+  void onCue(in jsval cue);
+
+  /**
+   * Is called when the WebVTT parser successfully parses a WebVTT region.
+   *
+   * @param region An object representing the data of a parsed
+   *               WebVTT region.
+   */
+  [implicit_jscontext]
+  void onRegion(in jsval region);
+
+  /**
+   * Is called when the WebVTT parser encounters a parsing error.
+   *
+   * @param error The error code of the ParserError the occured.
+   */
+  [implicit_jscontext]
+  void onParsingError(in long errorCode);
+};

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+code {
+  display: block;
+  hyphens: auto;
+  border: 1px solid black;
+  /* Prefer Courier New if available, as otherwise Menlo may be used,
+     and its HYPHEN and HYPHEN-MINUS glyphs don't match. */
+  font-family: Courier New, Courier, monospace;
+}
+</style>
+</head>
+<body lang="en-us">
+<!--
+  Test checks that automatic hyphenation opportunities should honor
+  manual hyphenation opportunities even if they are within an extreme long word.
+-->
+<code style="width:100ch;">
+abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzsuper&shy;cali&shy;fragi&shy;listic&shy;expiali&shy;docious&shy;abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz
+</code>
+</body>
+</html>

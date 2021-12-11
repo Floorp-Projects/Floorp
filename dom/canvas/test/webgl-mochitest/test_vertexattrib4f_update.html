@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Bug 1426289 - vertexAttrib4f should actually update.</title>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+    <script src='webgl-util.js'></script>
+  </head>
+  <body>
+    <script id='eVertSource' type='none'>
+attribute vec4 aColor;
+varying vec4 vColor;
+
+void main() {
+  gl_PointSize = 64.0;
+  gl_Position = vec4(vec3(0.0), 1.0);
+  vColor = aColor;
+}
+    </script>
+    <script id='eFragSource' type='none'>
+precision mediump float;
+varying vec4 vColor;
+
+void main() {
+  gl_FragColor = vColor;
+}
+    </script>
+    <script>
+const canvas = document.createElement('canvas');
+canvas.width = 1;
+canvas.height = 1;
+const gl = canvas.getContext('webgl');
+
+const prog = WebGLUtil.linkProgramByIds(gl, eVertSource, eFragSource);
+gl.useProgram(prog);
+
+function getRgb() {
+  const data = new Uint32Array(1);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data.buffer));
+  return data[0] & 0xffffff;
+}
+
+gl.clearColor(0.0, 0.0, 0.0, 1.0);
+gl.clear(gl.COLOR_BUFFER_BIT);
+let was = getRgb();
+ok(was == 0x000000, '0x'+was.toString(16));
+
+gl.disableVertexAttribArray(prog.aColor);
+
+gl.vertexAttrib4f(prog.aColor, 1, 0, 0, 1);
+gl.drawArrays(gl.POINTS, 0, 1);
+was = getRgb();
+ok(was == 0x0000ff, '0x'+was.toString(16));
+
+gl.vertexAttrib4f(prog.aColor, 0, 1, 0, 1);
+gl.drawArrays(gl.POINTS, 0, 1);
+was = getRgb();
+ok(was == 0x00ff00, '0x'+was.toString(16));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;">
+<!-- Test to ensure that changing the poster after video has painted its first
+     frame doesn't render the poster. The video frame should not change to the
+     poster, since it's already painted its first video frame. -->
+<video src="black140x100.ogv"
+       preload="auto"
+       id="v"
+       autoplay
+       onended="document.getElementById('v').poster = 'blue250x200.png'; setTimeout(function(){document.documentElement.className = '';},0);"></video>
+</body>
+</html>

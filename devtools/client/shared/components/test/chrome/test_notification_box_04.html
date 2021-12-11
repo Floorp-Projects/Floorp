@@ -1,0 +1,67 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for Notification Box. The test is checking:
+* Adding a mdnLink to a notification
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Notification Box</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
+
+    // Render notification
+    const boxElement = React.createElement(NotificationBox);
+    const notificationBox = TestUtils.renderIntoDocument(boxElement);
+    const notificationNode = ReactDOM.findDOMNode(notificationBox);
+
+    const mdnLink = "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors"
+
+    const mdnLinkButton = {mdnUrl: mdnLink, label: "learn more about error" }
+
+    // Append a notification with a learn-more link
+    notificationBox.appendNotification(
+      "Info message",
+      "id1",
+      null,
+      PriorityLevels.PRIORITY_INFO_LOW,
+      [mdnLinkButton],
+      (e) => false,
+    );
+
+    const linkNode = notificationNode.querySelector(
+      "a.learn-more-link");
+
+    ok(linkNode, "Link is present");
+
+    is(linkNode.title, "learn more about error", "link has correct title");
+    ok(linkNode.classList.contains("devtools-button"), "link has correct class")
+
+
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

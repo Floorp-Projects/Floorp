@@ -1,0 +1,540 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2400
+            default: 1800
+    suite: raptor
+    run-on-projects:
+        by-test-platform:
+            linux.*shippable[^-qr].*: [mozilla-central]
+            default: []
+    limit-platforms:
+        by-app:
+            chrome:
+                - .*shippable.*
+            chromium:
+                - .*shippable.*
+            default: []
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    tier: 3
+    virtualization: hardware
+    mozharness:
+        script: raptor_script.py
+        config:
+            by-test-platform:
+                macosx.*:
+                    - raptor/mac_config.py
+                windows.*:
+                    - raptor/windows_config.py
+                default:
+                    - raptor/linux_config.py
+        extra-options:
+            - --browsertime
+            - --conditioned-profile=settled
+    python-3: true
+
+browsertime-tp6:
+    <<: &tp6-defaults
+        apps: [firefox, chrome, chromium]
+        description: Raptor (browsertime) tp6 page-load tests
+        limit-platforms:
+            by-app:
+                chrome:
+                    - .*shippable.*
+                chromium:
+                    - .*shippable.*
+                default: []
+        max-run-time: 4000
+        mozharness:
+            extra-options:
+                by-test-platform:
+                    windows10-64.*shippable.*-qr.*:
+                        - --chimera
+                        - --browsertime
+                        - --browsertime-no-ffwindowrecorder
+                        - --conditioned-profile=settled
+                    default:
+                        - --chimera
+                        - --browsertime
+                        - --conditioned-profile=settled
+        raptor-test: tp6
+        variants: [fission]
+        run-on-projects:
+            by-variant:
+                fission:
+                    by-test-platform:
+                        windows.*-32.*: []
+                        .*shippable-qr/.*: [mozilla-central]
+                        default: []
+                default:
+                    by-app:
+                        firefox:
+                            by-test-platform:
+                                (linux|windows|macos)(?!.*-qr).*: []
+                                linux.*shippable.*: [trunk, mozilla-beta]
+                                macosx1014-64-shippable-qr.*: [trunk]
+                                macosx1015.*shippable-qr.*: [trunk, mozilla-beta]
+                                windows10-64.*shippable.*: [trunk, mozilla-beta]
+                                default: []
+                        default: []
+        run-visual-metrics: true
+        treeherder-symbol: Btime(tp6)
+    raptor-subtests:
+        - buzzfeed
+        - ebay
+        - espn
+        - expedia
+        - [facebook, fb]
+        - [google-docs, gdocs]
+        - [google-docs-canvas, gcanvas]
+        - [google-mail, gmail]
+        - [google-search, gsearch]
+        - imdb
+        - imgur
+        - linkedin
+        - microsoft
+        - netflix
+        - nytimes
+        - office
+        - outlook
+        - paypal
+        - pinterest
+        - reddit
+        - tumblr
+        - twitch
+        - wikia
+        - youtube
+    tier:
+        by-variant:
+            fission: 2
+            default:
+                by-app:
+                    firefox: 2
+                    default: 3
+
+browsertime-responsiveness:
+    <<: *tp6-defaults
+    raptor-subtests:
+        - cnn-nav
+    mozharness:
+        extra-options:
+            by-test-platform:
+                windows10-.*:
+                    - --cold
+                    - --browsertime
+                    - --browsertime-no-ffwindowrecorder
+                    - --conditioned-profile=settled
+                default:
+                    - --cold
+                    - --browsertime
+                    - --conditioned-profile=settled
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
+            default:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            .*clang.*: []
+                            linux.*shippable.*: [mozilla-central]
+                            macosx1015.*shippable.*: [mozilla-central]
+                            windows10-64.*shippable.*: [mozilla-central]
+                            default: []
+                    default: []
+    tier:
+        by-app:
+            firefox: 2
+            default: 3
+
+browsertime-tp6-essential:
+    <<: *tp6-defaults
+    raptor-subtests:
+        - amazon
+        - [bing-search, bing]
+        - cnn
+        - fandom
+        - [google-slides, gslides]
+        - instagram
+        - twitter
+        - wikipedia
+        - yahoo-mail
+    run-on-projects:
+        by-app:
+            firefox:
+                by-test-platform:
+                    linux.*shippable.*: [trunk, mozilla-beta]
+                    macosx1014-64-shippable-qr.*: [trunk]
+                    macosx1015.*shippable.*: [trunk, mozilla-beta]
+                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                    macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
+                    default: []
+            default: []
+    tier:
+        by-test-platform:
+            linux1804-64-clang-trunk-qr/opt: 2
+            default:
+                by-app:
+                    firefox: 1
+                    default: 3
+
+browsertime-benchmark:
+    description: Raptor (browsertime) Benchmark tests
+    raptor-subtests:
+        - ares6
+        - [assorted-dom, dom]
+        - [jetstream2, js2]
+        - [motionmark-animometer, mm-a]
+        - [motionmark-htmlsuite, mm-h]
+        - [speedometer, sp]
+        - [stylebench, sb]
+        - [sunspider, ss]
+        - [unity-webgl, ugl]
+        - [webaudio, wa]
+    apps: [firefox, chrome, chromium]
+    treeherder-symbol: Btime()
+    tier:
+        by-variant:
+            fission: 3
+            default:
+                by-app:
+                    firefox:
+                        by-subtest:
+                            motionmark-animometer:
+                                by-test-platform:
+                                    linux1804-64-clang-trunk-qr/opt: 2
+                                    default: 1
+                            unity-webgl: 3
+                            default:
+                                by-test-platform:
+                                    windows10-64-ccov.*/.*: 3
+                                    linux64-ccov.*/.*: 3
+                                    default: 2
+                    default:
+                        by-subtest:
+                            unity-webgl: 3
+                            default: 2
+    variants: [fission]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
+            default:
+                by-subtest:
+                    assorted-dom:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
+                                    linux.*shippable.*: [trunk, mozilla-beta]
+                                    macosx1014-64-shippable-qr.*: [trunk]
+                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
+                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                                    default: []
+                            default: []
+                    motionmark-htmlsuite:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
+                                    linux.*shippable.*: [trunk, mozilla-beta]
+                                    macosx1014-64-shippable-qr.*: [trunk]
+                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
+                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                                    default: []
+                            default: []
+                    speedometer:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
+                                    linux.*shippable.*: [trunk, mozilla-beta]
+                                    macosx1014-64-shippable-qr.*: [trunk]
+                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
+                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                                    default: []
+                            default: []
+                    jetstream2:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    windows.*-32.*/opt: []
+                                    (linux|windows10-64|macos)(?!.*shippable).*: []
+                                    (linux|windows|macosx1015)(?!.*-qr).*: []
+                                    default: ['mozilla-central']
+                            default: []
+                    unity-webgl:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    windows.*-32.*: []
+                                    (linux|windows10-64|macos)(?!.*shippable).*: []
+                                    (linux|windows|macosx1015)(?!.*-qr).*: []
+                                    default: [autoland]
+                            default: []
+                    default:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    (linux|windows|macosx1015)(?!.*-qr).*: []
+                                    linux.*shippable.*: [trunk, mozilla-beta]
+                                    macosx1014-64-shippable-qr.*: [trunk]
+                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
+                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                                    default: []
+                            default: []
+    max-run-time:
+        by-subtest:
+            assorted-dom:
+                by-test-platform:
+                    .*-qr/.*: 2100
+                    default: 1500
+            jetstream2: 8000
+            motionmark-htmlsuite: 1500
+            unity-webgl: 1500
+            default: 900
+    fetches:
+        fetch:
+            - assorted-dom
+            - jetstream2
+            - unity-webgl
+
+browsertime-benchmark-wasm:
+    description: Raptor (browsertime) WASM benchmarks
+    raptor-subtests:
+        by-app:
+            firefox:
+                - [wasm-godot, godot]
+                - [wasm-godot-baseline, godot-b]
+                - [wasm-godot-optimizing, godot-i]
+                - [wasm-misc, wm]
+                - [wasm-misc-baseline, wm-b]
+                - [wasm-misc-optimizing, wm-i]
+            default:
+                - [wasm-misc, wm]
+                - [wasm-godot, godot]
+    apps: [firefox, chrome, chromium]
+    treeherder-symbol: Btime()
+    tier: 2
+    variants: [fission]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    macosx1014.*: []
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
+            default:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            macosx1014.*: []
+                            (linux|windows|macos)(?!.*shippable).*: []
+                            (linux|windows|macos)(?!.*-qr).*: []
+                            linux.*shippable.*: [trunk, mozilla-beta]
+                            macosx1015.*shippable.*: [trunk, mozilla-beta]
+                            windows10-64.*shippable.*: [trunk, mozilla-beta]
+                            default: []
+                    default: []
+    max-run-time:
+        by-subtest:
+            wasm-godot: 1500
+            wasm-godot-baseline: 1500
+            default: 900
+    fetches:
+        fetch:
+            - wasm-misc
+
+browsertime-youtube-playback:
+    description: Browsertime YouTube Playback on Firefox
+    raptor-subtests:
+        by-app:
+            firefox:
+                - [youtube-playback-av1-sfr, ytp-av1-sfr]
+                - [youtube-playback-h264-sfr, ytp-h264-sfr]
+                - [youtube-playback-hfr, ytp-hfr]
+                - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
+                - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+                - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+                - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
+    apps: [firefox]
+    treeherder-symbol: Btime()
+    variants: [fission]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
+            default:
+                by-test-platform:
+                    windows.*-32.*/opt: []
+                    (linux|windows.*64|macos)(.*shippable).*: [mozilla-central]
+                    default: []
+    tier: 2
+    limit-platforms:
+        by-subtest:
+            youtube-playback-av1-sfr:
+                - macosx1015-64-shippable-qr/opt
+            default: []
+    max-run-time:
+        by-subtest:
+            youtube-playback-hfr: 3600
+            youtube-playback-widevine.*: 3600
+            default:
+                by-test-platform:
+                    windows10-aarch64/opt: 3600
+                    default: 2700
+
+browsertime-tp6-live:
+    <<: *tp6-defaults
+    description: Raptor (browsertime) tp6 on live-sites
+    mozharness:
+        extra-options:
+            - --browser-cycles=15
+            - --chimera
+            - --live-sites
+    raptor-subtests:
+        - amazon
+        - [bing-search, bing]
+        - ebay
+        - [facebook, fb]
+        - fandom
+        - [google-docs, gdocs]
+        - [google-mail, gmail]
+        - [google-search, gsearch]
+        - [google-slides, gslides]
+        - imdb
+        - imgur
+        - instagram
+        - linkedin
+        - microsoft
+        - netflix
+        # - office (site loads blank page if not signed in)
+        - outlook
+        - paypal
+        - pinterest
+        - reddit
+        - tumblr
+        - twitch
+        - twitter
+        - wikipedia
+        - yahoo-mail
+        - youtube
+    run-on-projects: []
+    tier: 3
+    treeherder-symbol: Btime-live(tp6)
+
+browsertime-tp6-live-sheriffed:
+    <<: *tp6-defaults
+    apps: [firefox]
+    description: Raptor (browsertime) tp6 on live-sites
+    mozharness:
+        extra-options:
+            - --browser-cycles=5
+            - --chimera
+            - --live-sites
+    raptor-subtests:
+        - cnn
+    run-on-projects:
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    (linux|windows10-64|macos)(?!.*shippable).*: []
+                    (linux|windows|macosx1015)(?!.*-qr).*: []
+                    windows.*-32.*: []
+                    macosx1014.*: []
+                    default: []
+    tier: 2
+    treeherder-symbol: Btime-live(tp6)
+
+browsertime-tp6-profiling:
+    <<: *tp6-defaults
+    apps: [firefox]
+    description: Raptor (browsertime) tp6 page-load tests with Gecko Profiling
+    mozharness:
+        extra-options:
+            - --chimera
+            - --gecko-profile
+    raptor-subtests: [amazon]
+    run-on-projects:
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    (linux|windows|macosx1015)(?!.*-qr).*: []
+                    (linux|windows|macosx1015).*shippable-qr.*: [mozilla-central]
+                    default: []
+    tier:
+        by-variant:
+            fission: 2
+            default: 3
+    treeherder-symbol: Btime-Prof(tp6)
+
+browsertime-custom:
+    apps: [firefox]
+    description: Raptor (browsertime) custom pageload tests
+    run-visual-metrics: true
+    max-run-time: 2700
+    mozharness:
+        extra-options:
+            - --chimera
+    raptor-subtests: [[process-switch, ps]]
+    variants: [fission]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
+            default:
+                by-test-platform:
+                    (linux|windows10-64|macosx).*shippable-qr.*: [mozilla-central]
+                    default: []
+    tier: 2
+    treeherder-symbol: Btime(ps)
+
+browsertime-first-install:
+    apps: [firefox]
+    description: Raptor (browsertime) custom pageload tests
+    run-visual-metrics: true
+    max-run-time: 2700
+    mozharness:
+        extra-options:
+            - --chimera
+    raptor-subtests: [welcome]
+    variants: [fission]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
+            default:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*-qr).*: []
+                    linux.*shippable.*: [autoland, mozilla-central]
+                    macos.*shippable-qr.*: [autoland, mozilla-central]
+                    windows10-64.*shippable.*: [autoland, mozilla-central]
+                    default: []
+    tier: 2
+    treeherder-symbol: Btime(welcome)

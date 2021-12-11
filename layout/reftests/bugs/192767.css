@@ -1,0 +1,17 @@
+body > * 
+{ 
+  width: 100px;
+  height: 100px;
+  overflow: auto;
+  border: thick solid purple;
+  margin: 10px; 
+}
+
+body > * > *
+{ 
+  margin: 10px; 
+  border: medium solid green; 
+  background: yellow;
+  width: 200px; 
+  height: 200px;
+}

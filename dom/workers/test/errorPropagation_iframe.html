@@ -1,0 +1,55 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <meta charset="utf-8">
+  <body>
+    <script type="text/javascript">
+      var worker;
+
+      function start(workerCount, messageCallback) {
+        var seenWindowError;
+        window.onerror = function(message, filename, lineno) {
+          if (!seenWindowError) {
+            seenWindowError = true;
+            messageCallback({
+              type: "window",
+              data: { message, filename, lineno }
+            });
+            return true;
+          }
+        };
+
+        worker = new Worker("errorPropagation_worker.js");
+
+        worker.onmessage = function(event) {
+          messageCallback(event.data);
+        };
+
+        var seenWorkerError;
+        worker.onerror = function(event) {
+          if (!seenWorkerError) {
+            seenWorkerError = true;
+            messageCallback({
+              type: "worker",
+              data: {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno
+              }
+            });
+            event.preventDefault();
+          }
+        };
+
+        worker.postMessage(workerCount);
+      }
+
+      function stop() {
+        worker.terminate();
+      }
+    </script>
+  </body>
+</html>

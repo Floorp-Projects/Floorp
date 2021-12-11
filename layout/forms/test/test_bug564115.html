@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=564115
+-->
+<head>
+  <title>Test for Bug 564115</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body>
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug?id=564115">Mozilla Bug 564115</a>
+
+<pre id="test">
+<script>
+
+const TEST_URL = "/tests/layout/forms/test/bug564115_window.html";
+
+addLoadEvent(function() {
+  var win = open(TEST_URL, "", "width=600,height=600");
+  SimpleTest.waitForFocus(function() {
+    var doc = win.document;
+    var input = doc.querySelector("input");
+
+    // Focus the input box, and wait for the focus to actually happen
+    input.focus();
+    win.requestAnimationFrame(function() {
+      win.requestAnimationFrame(function() {
+        // Scroll down a bit
+        win.scrollTo(0, 5000);
+
+        setTimeout(function() {
+          is(Math.round(win.pageYOffset), 5000, "Page should be scrolled correctly");
+
+          // Refocus the window
+          SimpleTest.waitForFocus(function() {
+            SimpleTest.waitForFocus(function() {
+              is(Math.round(win.pageYOffset), 5000,
+                 "The page's scroll offset should not have been changed");
+
+              win.close();
+              SimpleTest.finish();
+            }, win);
+          });
+        }, 0);
+      });
+    });
+  }, win);
+});
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+
+</body>
+</html>

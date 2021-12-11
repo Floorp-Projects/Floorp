@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>pseudo double SetInitialChildlist</title>
+  <style>
+   .cat::-moz-table-row-group { overflow: scroll;}
+   tr { position: absolute;}
+  </style>
+ </head>
+
+ <body>
+
+  <table class="cat">
+   <tr>
+    <td>Cell</td>
+   </tr>
+  </table>
+
+ </body>
+</html>

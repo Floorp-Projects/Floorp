@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=369950
+-->
+<head>
+  <title>Test for Bug 369950</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=369950">Mozilla Bug 369950</a>
+<p id="display">
+  <iframe id="i" src="bug369950-subframe.xml" width="200" height="100"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 369950 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  // Can't just run our code here, because we might not have painting
+  // unsuppressed yet.  Do it async.
+  SimpleTest.executeSoon(doTheTest);
+});
+
+function doTheTest() {
+  // do a layout flush
+  var rect = $("i").getBoundingClientRect();
+  var rect2 = $("i").contentDocument.documentElement.getBoundingClientRect();
+
+  // And do the rest of it later
+  SimpleTest.executeSoon(reallyDoTheTest);
+}
+
+function reallyDoTheTest() {
+  var rect = $("i").getBoundingClientRect();
+  var rect2 = $("i").contentDocument.documentElement.getBoundingClientRect();
+
+  // We want coords relative to the iframe, so subtract off rect2.left/top.
+  // 7px is a guess to get us from the bottom of the iframe into the scrollbar
+  // groove for the horizontal scrollbar on the bottom.
+  synthesizeMouse($("i").contentDocument.documentElement,
+                  -rect2.left + rect.width / 2,  rect.height - rect2.top - 7,
+                  {}, $("i").contentWindow);
+  // Scroll is async, so give it time
+  SimpleTest.executeSoon(checkScroll);
+};
+
+function checkScroll() {
+  // do a layout flush
+  var rect = $("i").getBoundingClientRect();
+  // And do the rest of it later
+  SimpleTest.executeSoon(reallyCheckScroll);
+}
+
+function reallyCheckScroll() {
+  var rect = $("i").getBoundingClientRect();
+  var rect2 = $("i").contentDocument.documentElement.getBoundingClientRect();
+  isnot($("i").contentWindow.scrollX, 0, "Clicking scrollbar should scroll");
+
+  // Not doing things below here, since avoiding the scroll arrows
+  // cross-platform is a huge pain.
+  SimpleTest.finish();
+  return;
+
+  // 8px horizontal offset is a guess to get us into the scr
+  synthesizeMouse($("i").contentDocument.documentElement, -rect2.left + 8,
+                  rect.height - rect2.top - 7, {}, $("i").contentWindow);
+  // Scroll is async, so give it time
+  SimpleTest.executeSoon(finishUp);
+}
+
+function finishUp() {
+  is($("i").contentWindow.scrollX, 0, "Clicking scrollbar should scroll back");
+  SimpleTest.finish();
+};
+
+
+
+
+</script>
+</pre>
+</body>
+</html>

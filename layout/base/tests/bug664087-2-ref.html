@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <textarea dir="rtl" onfocus="done()" spellcheck="false" style="-moz-appearance: none">ab
+c</textarea>
+    <script>
+      var textarea = document.querySelector("textarea");
+      function start() {
+        textarea.focus();
+      }
+      function done() {
+        synthesizeKey("KEY_ArrowRight");
+        synthesizeKey("KEY_ArrowRight");
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

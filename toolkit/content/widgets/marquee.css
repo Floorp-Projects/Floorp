@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.outerDiv {
+  overflow: hidden;
+  width: -moz-available;
+}
+
+.horizontal > .innerDiv {
+  width: max-content;
+  /* We want to create overflow of twice our available space. */
+  padding: 0 100%;
+}
+
+/* disable scrolling in contenteditable */
+:host(:read-write) .innerDiv {
+  padding: 0 !important;
+}
+
+/* When printing or when the user doesn't want movement, we disable scrolling */
+@media print, (prefers-reduced-motion) {
+  .innerDiv {
+    padding: 0 !important;
+  }
+}

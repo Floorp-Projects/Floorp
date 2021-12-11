@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head>
+<style type="text/css">
+  div.image {
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQMAAACQp+OdAAAABlBMVEUAAAD///+l2Z/dAAAAGElEQVR42mNggIHcbbfBCMEYlRqVIiQFAPco1xfL/SakAAAAAElFTkSuQmCC");
+    background-position: center center;
+    width: 32px;
+    height: 32px;
+  }
+
+  div.cell {
+    float: left;
+    width: 100px;
+  }
+
+  body > div { height:100px; }
+
+  /* ensure that font heights do not affect image placement. Fractional image offsets can
+     affect exactly which pixel rects get painted. */
+  p { font-size: 12px; height:20px; }
+</style>
+</head><body>
+
+<div>
+<div class="cell"><p>31    x 32</p><div style="width:31px"    class="image"></div></div>
+<div class="cell"><p>31.1  x 32</p><div style="width:31.1px"  class="image"></div></div>
+<div class="cell"><p>31.5  x 32</p><div style="width:31.5px"  class="image"></div></div>
+<div class="cell"><p>31.8  x 32</p><div style="width:31.8px"  class="image"></div></div>
+</div>
+
+<div>
+<div class="cell"><p>32    x 32</p><div style="width:32px"    class="image"></div></div>
+<div class="cell"><p>32.1  x 32</p><div style="width:32.1px"  class="image"></div></div>
+<div class="cell"><p>32.5  x 32</p><div style="width:32.5px"  class="image"></div></div>
+<div class="cell"><p>32.8  x 32</p><div style="width:32.8px"  class="image"></div></div>
+</div>
+
+<div>
+<div class="cell"><p>32 x 31   </p><div style="height:31px"    class="image"></div></div>
+<div class="cell"><p>32 x 31.1 </p><div style="height:31.1px"  class="image"></div></div>
+<div class="cell"><p>32 x 31.5 </p><div style="height:31.5px"  class="image"></div></div>
+<div class="cell"><p>32 x 31.8 </p><div style="height:31.8px"  class="image"></div></div>
+</div>
+
+<div>
+<div class="cell"><p>32 x 32   </p><div style="height:32px"    class="image"></div></div>
+<div class="cell"><p>32 x 32.1 </p><div style="height:32.1px"  class="image"></div></div>
+<div class="cell"><p>32 x 32.5 </p><div style="height:32.5px"  class="image"></div></div>
+<div class="cell"><p>32 x 32.8 </p><div style="height:32.8px"  class="image"></div></div>
+</div>
+
+</body></html>

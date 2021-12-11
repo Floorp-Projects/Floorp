@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>focus() before iframe loaded same site</title>
+</head>
+<body>
+<script>
+var pendingTimeout = false;
+window.onmessage = function(e) {
+    if (e.data == "onload") {
+        if (pendingTimeout) {
+            return;
+        }
+        pendingTimeout = opener.step_timeout(function() {
+            opener.postMessage("FAIL missing onfocus", "*");
+        }, 2000);
+        return;
+    }
+    if (pendingTimeout) {
+        clearTimeout(pendingTimeout);
+    }
+    pendingTimeout = true;
+    if (e.data == "onfocus") {
+        // Test not upstreamed, because this even is a Firefoxism
+        // https://github.com/whatwg/html/issues/6209
+        opener.postMessage("PASS", "*");
+        return;
+    }
+    opener.postMessage("FAIL " + e.data, "*");
+}
+
+var iframe = document.createElement("iframe");
+iframe.src = "focus-before-iframe-loaded-same-site-inner.html";
+document.body.appendChild(iframe);
+iframe.focus();
+if (document.activeElement != iframe) {
+    pendingTimeout = true;
+    opener.postMessage("FAIL activeElement", "*");
+}
+</script>
+</body>
+</html>

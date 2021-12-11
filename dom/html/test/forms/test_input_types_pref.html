@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=764481
+-->
+<head>
+  <title>Test for Bug 764481</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=764481">Mozilla Bug 764481</a>
+<p id="display"></p>
+<div id="content" style="display: none" >
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+  var input = document.createElement("input");
+
+  var testData = [
+    {
+      prefs: [["dom.forms.datetime.others", false]],
+      inputType: "month",
+      expectedType: "text"
+    }, {
+      prefs: [["dom.forms.datetime.others", false]],
+      inputType: "month",
+      expectedType: "text"
+    }, {
+      prefs: [["dom.forms.datetime.others", true]],
+      inputType: "month",
+      expectedType: "month"
+    }, {
+      prefs: [["dom.forms.datetime.others", false]],
+      inputType: "week",
+      expectedType: "text"
+    }, {
+      prefs: [["dom.forms.datetime.others", false]],
+      inputType: "week",
+      expectedType: "text"
+    }, {
+      prefs: [["dom.forms.datetime.others", true]],
+      inputType: "week",
+      expectedType: "week"
+    }, {
+      prefs: [["dom.forms.datetime-local", false]],
+      inputType: "datetime-local",
+      expectedType: "text"
+    }, {
+      prefs: [["dom.forms.datetime-local", false]],
+      inputType: "datetime-local",
+      expectedType: "text"
+    }, {
+      prefs: [["dom.forms.datetime-local", true]],
+      inputType: "datetime-local",
+      expectedType: "datetime-local"
+    }
+  ];
+
+  function testInputTypePreference(aData) {
+    return SpecialPowers.pushPrefEnv({'set': aData.prefs})
+      .then(() => {
+        // Change the type of input to text and then back to the tested input type,
+        // so that HTMLInputElement::ParseAttribute gets called with the pref enabled.
+        input.type = "text";
+        input.type = aData.inputType;
+        is(input.type, aData.expectedType, "input type should be '" +
+           aData.expectedType + "'' when pref " + aData.prefs + " is set");
+        is(input.getAttribute('type'), aData.inputType,
+           "input 'type' attribute should not change");
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  let promise = Promise.resolve();
+  for (let i = 0; i < testData.length; i++) {
+    let data = testData[i];
+    promise = promise.then(() => testInputTypePreference(data));
+  }
+
+  promise.catch(error => ok(false, "Promise reject: " + error))
+    .then(() => SimpleTest.finish());
+
+</script>
+</pre>
+</body>
+</html>

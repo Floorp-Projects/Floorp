@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+const WalkerActor = require("devtools/server/actors/inspector/walker");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+const testSummaryLength = 10;
+WalkerActor.setValueSummaryLength(testSummaryLength);
+SimpleTest.registerCleanupFunction(function() {
+  WalkerActor.setValueSummaryLength(WalkerActor.DEFAULT_VALUE_SUMMARY_LENGTH);
+});
+
+let gInspectee = null;
+let gWalker = null;
+let valueNode;
+var valueFront;
+var longStringFront;
+var longString = "stringstringstringstringstringstringstringstringstringstringstring";
+var shortString = "str";
+var shortString2 = "str2";
+
+addTest(async function setup() {
+  const url = document.getElementById("inspectorContent").href;
+  const { target, doc } = await attachURL(url);
+  const inspector = await target.getFront("inspector");
+  gInspectee = doc;
+  gWalker = inspector.walker;
+  runNextTest();
+});
+
+addTest(setupValueTest);
+addTest(testKeepLongValue);
+addTest(testSetShortValue);
+addTest(testKeepShortValue);
+addTest(testSetLongValue);
+addTest(setupFrameValueTest);
+addTest(testKeepLongValue);
+addTest(testSetShortValue);
+addTest(testKeepShortValue);
+addTest(testSetLongValue);
+
+function setupValueTest() {
+  valueNode = gInspectee.querySelector("#longstring").firstChild;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#longstring").then(node => {
+    longStringFront = node;
+    return gWalker.children(node);
+  }).then(children => {
+    valueFront = children.nodes[0];
+  }).then(runNextTest));
+}
+
+function setupFrameValueTest() {
+  const frame = gInspectee.querySelector("#childFrame");
+  valueNode = frame.contentDocument.querySelector("#longstring").firstChild;
+
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#childFrame").then(childFrame => {
+    return gWalker.children(childFrame);
+  }).then(children => {
+    const nodes = children.nodes;
+    is(nodes.length, 1, "There should be only one child of the iframe");
+    is(nodes[0].nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
+    return gWalker.querySelector(nodes[0], "#longstring");
+  }).then(node => {
+    longStringFront = node;
+    return gWalker.children(node);
+  }).then(children => {
+    valueFront = children.nodes[0];
+  }).then(runNextTest));
+}
+
+function checkNodeFrontValue(front, expectedValue) {
+  return front.getNodeValue().then(longstring => {
+    return longstring.string();
+  }).then(str => {
+    is(str, expectedValue, "Node value is as expected");
+  });
+}
+
+function testKeepLongValue() {
+  // After first setup we should have a long string in the node
+  ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+
+  valueNode.nodeValue = longString;
+  gWalker.once("mutations", (changes) => {
+    ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+    ok(!changes.some(change => change.type === "inlineTextChild"),
+      "No inline text child mutation was fired.");
+    checkNodeFrontValue(valueFront, longString).then(runNextTest);
+  });
+}
+
+function testSetShortValue() {
+  ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+
+  valueNode.nodeValue = shortString;
+  gWalker.once("mutations", (changes) => {
+    ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+    ok(changes.some(change => change.type === "inlineTextChild"),
+      "An inlineTextChild mutation was fired.");
+    checkNodeFrontValue(valueFront, shortString).then(runNextTest);
+  });
+}
+
+function testKeepShortValue() {
+  ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+
+  valueNode.nodeValue = shortString2;
+  gWalker.once("mutations", (changes) => {
+    ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+    ok(!changes.some(change => change.type === "inlineTextChild"),
+      "No inline text child mutation was fired.");
+    checkNodeFrontValue(valueFront, shortString2).then(runNextTest);
+  });
+}
+
+function testSetLongValue() {
+  ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+
+  valueNode.nodeValue = longString;
+  gWalker.once("mutations", (changes) => {
+    ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+    ok(changes.some(change => change.type === "inlineTextChild"),
+      "An inlineTextChild mutation was fired.");
+    checkNodeFrontValue(valueFront, longString).then(runNextTest);
+  });
+}
+
+addTest(function cleanup() {
+  gInspectee = null;
+  gWalker = null;
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

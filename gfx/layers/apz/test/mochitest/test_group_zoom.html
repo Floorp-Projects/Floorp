@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various zoom-related tests that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var prefs = [
+  // We need the APZ paint logging information
+  ["apz.test.logging_enabled", true],
+  // Dropping the touch slop to 0 makes the tests easier to write because
+  // we can just do a one-pixel drag to get over the pan threshold rather
+  // than having to hard-code some larger value.
+  ["apz.touch_start_tolerance", "0.0"],
+  // The subtests in this test do touch-drags to pan the page, but we don't
+  // want those pans to turn into fling animations, so we increase the
+  // fling-min threshold velocity to an arbitrarily large value.
+  ["apz.fling_min_velocity_threshold", "10000"],
+  // The helper_bug1280013's div gets a displayport on scroll, but if the
+  // test takes too long the displayport can expire before we read the value
+  // out of the test. So we disable displayport expiry for these tests.
+  ["apz.displayport_expiry_ms", 0],
+  // Prevent the dynamic toolbar from interfering with main-thread scroll
+  // offset values.
+  ["browser.chrome.dynamictoolbar", false],
+  // Explicitly enable pinch-zooming, so this test can run on desktop
+  // even though zooming isn't enabled by default on desktop yet.
+  ["apz.allow_zooming", true],
+  // Increase the content response timeout because some tests do preventDefault
+  // and we want to make sure APZ actually waits for them.
+  ["apz.content_response_timeout", 60000],
+  // Disable touch resampling so that touch events are processed without delay
+  // and we don't zoom more than expected due to overprediction.
+  ["android.touch_resampling.enabled", false],
+  // Tests depend on window.visualViewport
+  ["dom.visualviewport.enabled", true],
+];
+
+// Increase the tap timeouts so the one-touch-pinch gesture is still detected
+// in case of random delays during testing. Also ensure that the feature is
+// actually enabled (which it should be by default, but it's good to be safe).
+var onetouchpinch_prefs = [
+  ...prefs,
+  ["apz.one_touch_pinch.enabled", true],
+  ["ui.click_hold_context_menus.delay", 10000],
+  ["apz.max_tap_time", 10000],
+];
+
+// For helper_fixed_pos_displayport the mechanism we use to record the
+// fixed-pos displayport only takes effect when not in a partial display list
+// update. So for this test we just disable retained display lists entirely.
+var no_rdl_prefs = [
+  ...prefs,
+  ["layout.display-list.retain", false],
+];
+
+var subtests = [
+  {"file": "helper_basic_zoom.html", "prefs": prefs},
+  {"file": "helper_basic_onetouchpinch.html", "prefs": onetouchpinch_prefs},
+  {"file": "helper_zoom_prevented.html", "prefs": prefs},
+  {"file": "helper_zoomed_pan.html", "prefs": prefs},
+  {"file": "helper_fixed_position_scroll_hittest.html", "prefs": prefs},
+  {"file": "helper_onetouchpinch_nested.html", "prefs": onetouchpinch_prefs},
+  {"file": "helper_visual_smooth_scroll.html", "prefs": prefs},
+  {"file": "helper_scroll_into_view_bug1516056.html", "prefs": prefs},
+  {"file": "helper_scroll_into_view_bug1562757.html", "prefs": prefs},
+  {"file": "helper_fixed_pos_displayport.html", "prefs": no_rdl_prefs},
+  // If you're adding more tests, add them to test_group_zoom-2.html
+];
+
+if (isApzEnabled()) {
+  // This has a lot of subtests, and Android emulators are slow.
+  SimpleTest.requestLongerTimeout(2);
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

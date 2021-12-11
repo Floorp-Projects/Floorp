@@ -1,0 +1,120 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIObserver.idl"
+#include "nsICommandParams.idl"
+
+interface mozIDOMWindowProxy;
+
+%{C++
+class nsCommandManager;
+%}
+
+/*
+ * nsICommandManager is an interface used to executing user-level commands,
+ * and getting the state of available commands.
+ *
+ * Commands are identified by strings, which are documented elsewhere.
+ * In addition, the list of required and optional parameters for
+ * each command, that are passed in via the nsICommandParams, are
+ * also documented elsewhere. (Where? Need a good location for this).
+ */
+
+
+[scriptable, builtinclass, uuid(bb5a1730-d83b-4fa2-831b-35b9d5842e84)]
+interface nsICommandManager : nsISupports
+{
+  /*
+   * Register an observer on the specified command. The observer's Observe
+   * method will get called when the state (enabled/disabled, or toggled etc)
+   * of the command changes.
+   *
+   * You can register the same observer on multiple commmands by calling this
+   * multiple times.
+   */
+  void        addCommandObserver(in nsIObserver aCommandObserver,
+                                 in string aCommandToObserve);
+
+  /*
+   * Stop an observer from observering the specified command. If the observer
+   * was also registered on ther commands, they will continue to be observed.
+   *
+   * Passing an empty string in 'aCommandObserved' will remove the observer
+   * from all commands.
+   */
+  void        removeCommandObserver(in nsIObserver aCommandObserver,
+                                    in string aCommandObserved);
+
+  /*
+   * Ask the command manager if the specified command is supported.
+   * If aTargetWindow is null, the focused window is used.
+   *
+   */
+  boolean     isCommandSupported(in string aCommandName,
+                                 in mozIDOMWindowProxy aTargetWindow);
+
+  /*
+   * Ask the command manager if the specified command is currently.
+   * enabled.
+   * If aTargetWindow is null, the focused window is used.
+   */
+  boolean     isCommandEnabled(in string aCommandName,
+                               in mozIDOMWindowProxy aTargetWindow);
+
+  /*
+   * Get the state of the specified commands.
+   *
+   * On input: aCommandParams filled in with values that the caller cares
+   * about, most of which are command-specific (see the command documentation
+   * for details). One boolean value, "enabled", applies to all commands,
+   * and, in return will be set to indicate whether the command is enabled
+   * (equivalent to calling isCommandEnabled).
+   *
+   * aCommandName is the name of the command that needs the state
+   * aTargetWindow is the source of command controller
+   *      (null means use focus controller)
+   * On output: aCommandParams: values set by the caller filled in with
+   * state from the command.
+   */
+  void        getCommandState(in string aCommandName,
+                              in mozIDOMWindowProxy aTargetWindow,
+                  /* inout */ in nsICommandParams aCommandParams);
+
+  /*
+   * Execute the specified command.
+   * The command will be executed in aTargetWindow if it is specified.
+   * If aTargetWindow is null, it will go to the focused window.
+   *
+   * param: aCommandParams, a list of name-value pairs of command parameters,
+   * may be null for parameter-less commands.
+   *
+   */
+  [can_run_script]
+  void        doCommand(in string aCommandName,
+                        in nsICommandParams aCommandParams,
+                        in mozIDOMWindowProxy aTargetWindow);
+
+%{C++
+  /**
+   * In order to avoid circular dependency issues, these methods are defined
+   * in nsCommandManager.h.  Consumers need to #include that header.
+   */
+  inline nsCommandManager* AsCommandManager();
+  inline const nsCommandManager* AsCommandManager() const;
+%}
+};
+
+
+/*
+
+Arguments to observers "Observe" method are as follows:
+
+  void Observe(   in nsISupports aSubject,          // The nsICommandManager calling this Observer
+                  in string      aTopic,            // Name of the command
+                  in wstring     aDummy );          // unused
+
+*/
+

@@ -1,0 +1,852 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=156716
+-->
+<head>
+  <title>Test for Bug 156716</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome/chrome-only-media-queries.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=156716">Mozilla Bug 156716</a>
+<iframe id="subdoc" src="media_queries_iframe.html"></iframe>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 156716 **/
+
+// Note that many other tests are in test_acid3_test46.html .
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+
+var iframe;
+
+function getScreenPixelsPerCSSPixel() {
+  return SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixel;
+}
+
+function run() {
+  iframe = document.getElementById("subdoc");
+  var subdoc = iframe.contentDocument;
+  var subwin = iframe.contentWindow;
+  var style = subdoc.getElementById("style");
+  var iframe_style = iframe.style;
+  var body_cs = subdoc.defaultView.getComputedStyle(subdoc.body);
+
+  function query_applies(q) {
+    style.setAttribute("media", q);
+    return body_cs.getPropertyValue("text-decoration-line") == "underline";
+  }
+
+  function should_apply(q) {
+    ok(query_applies(q), q + " should apply");
+    test_serialization(q, true, true);
+  }
+
+  function should_not_apply(q) {
+    ok(!query_applies(q), q + " should not apply");
+    test_serialization(q, true, false);
+  }
+
+  /* for queries that are parseable standalone but not within CSS */
+  function should_apply_unbalanced(q) {
+    ok(query_applies(q), q + " should apply");
+  }
+
+  /* for queries that are parseable standalone but not within CSS */
+  function should_not_apply_unbalanced(q) {
+    ok(!query_applies(q), q + " should not apply");
+  }
+
+  /*
+   * Functions to test whether a query is parseable at all.  (Should not
+   * be used for parse errors within expressions.)
+   */
+  var parse_test_style_element = document.createElement("style");
+  parse_test_style_element.type = "text/css";
+  parse_test_style_element.disabled = true; // for performance, hopefully
+  var parse_test_style_text = document.createTextNode("");
+  parse_test_style_element.appendChild(parse_test_style_text);
+  document.getElementsByTagName("head")[0]
+    .appendChild(parse_test_style_element);
+
+  function query_is_parseable(q) {
+    parse_test_style_text.data = "@media screen, " + q + " {}";
+    var sheet = parse_test_style_element.sheet; // XXX yikes, not live!
+    if (sheet.cssRules.length == 1 &&
+        sheet.cssRules[0].type == CSSRule.MEDIA_RULE)
+      return sheet.cssRules[0].media.mediaText != "screen, not all";
+    ok(false, "unexpected result testing whether query " + q +
+              " is parseable");
+    return true; // doesn't matter, we already failed
+  }
+
+  function query_should_be_parseable(q) {
+    ok(query_is_parseable(q), "query " + q + " should be parseable");
+    test_serialization(q, false, false);
+  }
+
+  function query_should_not_be_parseable(q) {
+    ok(!query_is_parseable(q), "query " + q + " should not be parseable");
+  }
+
+  /*
+   * Functions to test whether a single media expression is parseable.
+   */
+  function expression_is_parseable(e) {
+    style.setAttribute("media", "all and (" + e + ")");
+    return style.sheet.media.mediaText != "not all";
+  }
+
+  function expression_should_be_parseable(e) {
+    ok(expression_is_parseable(e),
+       "expression " + e + " should be parseable");
+    test_serialization("all and (" + e + ")", false, false);
+  }
+
+  function expression_should_not_be_parseable(e) {
+    ok(!expression_is_parseable(e),
+       "expression " + e + " should not be parseable");
+  }
+
+  // Helper to share code between -moz & -webkit device-pixel-ratio versions:
+  function test_device_pixel_ratio(equal_name, min_name, max_name) {
+    var real_dpr = 1.0 * getScreenPixelsPerCSSPixel();
+    var high_dpr = 1.1 * getScreenPixelsPerCSSPixel();
+    var low_dpr = 0.9 * getScreenPixelsPerCSSPixel();
+    should_apply("all and (" + max_name + ": " + real_dpr + ")");
+    should_apply("all and (" + min_name + ": " + real_dpr + ")");
+    should_not_apply("not all and (" + max_name + ": " + real_dpr + ")");
+    should_not_apply("not all and (" + min_name + ": " + real_dpr + ")");
+    should_apply("all and (" + min_name + ": " + low_dpr + ")");
+    should_apply("all and (" + max_name + ": " + high_dpr + ")");
+    should_not_apply("all and (" + max_name + ": " + low_dpr + ")");
+    should_not_apply("all and (" + min_name + ": " + high_dpr + ")");
+    should_apply("not all and (" + max_name + ": " + low_dpr + ")");
+    should_apply("not all and (" + min_name + ": " + high_dpr + ")");
+    should_apply("(" + equal_name + ": " + real_dpr + ")");
+    should_not_apply("(" + equal_name + ": " + high_dpr + ")");
+    should_not_apply("(" + equal_name + ": " + low_dpr + ")");
+    should_apply("(" + equal_name + ")");
+    expression_should_not_be_parseable(min_name);
+    expression_should_not_be_parseable(max_name);
+  }
+
+  function test_serialization(q, test_application, expected_to_apply) {
+    style.setAttribute("media", q);
+    var ser1 = style.sheet.media.mediaText;
+    isnot(ser1, "", "serialization of '" + q + "' should not be empty");
+    style.setAttribute("media", ser1);
+    var ser2 = style.sheet.media.mediaText;
+    is(ser2, ser1, "parse+serialize of '" + q + "' should be idempotent");
+    if (test_application) {
+      let applies = body_cs.getPropertyValue("text-decoration-line") ==
+                    "underline";
+      is(applies, expected_to_apply,
+         "Media query '" + q + "' should " + (expected_to_apply ? "" : "NOT ") +
+         "apply after serialize + reparse");
+    }
+
+    // Test cloning
+    var sheet = "@media " + q + " { body { text-decoration: underline } }"
+    var sheeturl = "data:text/css," + escape(sheet);
+    var link = "<link rel='stylesheet' href='" + sheeturl + "'>";
+    var htmldoc = "<!DOCTYPE HTML>" + link + link  + "<body>";
+    post_clone_test(htmldoc, function() {
+      var clonedoc = iframe.contentDocument;
+      var clonewin = iframe.contentWindow;
+      var links = clonedoc.getElementsByTagName("link");
+      // cause a clone
+      var clonedsheet = links[1].sheet;
+      clonedsheet.insertRule("#nonexistent { color: purple}", 1);
+      // remove the uncloned sheet
+      links[0].remove();
+
+      var ser3 = clonedsheet.cssRules[0].media.mediaText;
+      is(ser3, ser1, "cloning query '" + q + "' should not change " +
+                     "serialization");
+      if (test_application) {
+        let applies = clonewin.getComputedStyle(clonedoc.body).
+                        textDecorationLine == "underline";
+        is(applies, expected_to_apply,
+           "Media query '" + q + "' should " + (expected_to_apply ? "" : "NOT ") +
+           "apply after cloning");
+      }
+    });
+  }
+
+  // The no-type syntax doesn't mix with the not and only keywords.
+  query_should_be_parseable("(orientation)");
+  query_should_be_parseable("not (orientation)");
+  query_should_not_be_parseable("only (orientation)");
+  query_should_be_parseable("all and (orientation)");
+  query_should_be_parseable("not all and (orientation)");
+  query_should_be_parseable("only all and (orientation)");
+
+  query_should_not_be_parseable("not not (orientation)");
+  query_should_be_parseable("(orientation) and (orientation)");
+  query_should_be_parseable("(orientation) or (orientation)");
+  query_should_be_parseable("(orientation) or ((orientation) and ((orientation) or (orientation) or (not (orientation))))");
+
+  query_should_not_be_parseable("all and (orientation) or (orientation)");
+  query_should_be_parseable("all and (orientation) and (orientation)");
+
+  query_should_not_be_parseable("(orientation) and (orientation) or (orientation)");
+  query_should_not_be_parseable("(orientation) and not (orientation)");
+
+
+  query_should_be_parseable("(-moz-device-orientation)");
+  query_should_be_parseable("not (-moz-device-orientation)");
+  query_should_not_be_parseable("only (-moz-device-orientation)");
+  query_should_be_parseable("all and (-moz-device-orientation)");
+  query_should_be_parseable("not all and (-moz-device-orientation)");
+  query_should_be_parseable("only all and (-moz-device-orientation)");
+
+  // Test that the 'not', 'only', 'and', and 'or' keywords are not
+  // allowed as media types.
+  query_should_not_be_parseable("not");
+  query_should_not_be_parseable("and");
+  query_should_not_be_parseable("or");
+  query_should_not_be_parseable("only");
+  query_should_be_parseable("unknowntype");
+  query_should_not_be_parseable("not not");
+  query_should_not_be_parseable("not and");
+  query_should_not_be_parseable("not or");
+  query_should_not_be_parseable("not only");
+  query_should_be_parseable("not unknowntype");
+  query_should_not_be_parseable("only not");
+  query_should_not_be_parseable("only and");
+  query_should_not_be_parseable("only or");
+  query_should_not_be_parseable("only only");
+  query_should_be_parseable("only unknowntype");
+  query_should_not_be_parseable("not and (width)");
+  query_should_not_be_parseable("and and (width)");
+  query_should_not_be_parseable("or and (width)");
+  query_should_not_be_parseable("only and (width)");
+  query_should_be_parseable("unknowntype and (width)");
+  query_should_not_be_parseable("not not and (width)");
+  query_should_not_be_parseable("not and and (width)");
+  query_should_not_be_parseable("not or and (width)");
+  query_should_not_be_parseable("not only and (width)");
+  query_should_be_parseable("not unknowntype and (width)");
+  query_should_not_be_parseable("only not and (width)");
+  query_should_not_be_parseable("only and and (width)");
+  query_should_not_be_parseable("only or and (width)");
+  query_should_not_be_parseable("only only and (width)");
+  query_should_be_parseable("only unknowntype and (width)");
+
+  var features = [ "width", "height", "device-width", "device-height" ];
+  var separators = [ ":", ">", ">=", "=", "<=", "<" ];
+
+  var feature;
+  var i;
+  for (i in features) {
+    feature = features[i];
+    expression_should_be_parseable(feature);
+    expression_should_not_be_parseable("min-" + feature);
+    expression_should_not_be_parseable("max-" + feature);
+    for (let separator of separators) {
+      expression_should_be_parseable(feature + " " + separator + " 0");
+      expression_should_be_parseable(feature + " " + separator + " 0px");
+      expression_should_be_parseable(feature + " " + separator + " 0em");
+      expression_should_be_parseable(feature + " " + separator + " -0");
+      expression_should_be_parseable(feature + " " + separator + " -0cm");
+      expression_should_be_parseable(feature + " " + separator + " 1px");
+      expression_should_be_parseable(feature + " " + separator + " 0.001mm");
+      expression_should_be_parseable(feature + " " + separator + " 100000px");
+      if (separator == ":") {
+        expression_should_be_parseable("min-" + feature + " " + separator + " -0");
+        expression_should_be_parseable("max-" + feature + " " + separator + " -0");
+      } else {
+        expression_should_not_be_parseable("min-" + feature + " " + separator + " -0");
+        expression_should_not_be_parseable("max-" + feature + " " + separator + " -0");
+      }
+      expression_should_not_be_parseable(feature + " " + separator + " -1px");
+      expression_should_not_be_parseable("min-" + feature + " " + separator + " -1px");
+      expression_should_not_be_parseable("max-" + feature + " " + separator + " -1px");
+      expression_should_not_be_parseable(feature + " " + separator + " -0.00001mm");
+      expression_should_not_be_parseable(feature + " " + separator + " -100000em");
+    }
+  }
+
+  var mediatypes = ["browser", "minimal-ui", "standalone", "fullscreen"];
+
+  mediatypes.forEach(function(type) {
+    expression_should_be_parseable("display-mode: " + type);
+  });
+
+  expression_should_not_be_parseable("display-mode: invalid")
+
+  var content_div = document.getElementById("content");
+  content_div.style.font = "initial";
+  var em_size =
+    getComputedStyle(content_div, "").fontSize.match(/^(\d+)px$/)[1];
+
+  // in this test, assume the common underlying implementation is correct
+  var width_val = 117; // pick two not-too-round numbers
+  var height_val = 76;
+  change_state(function() {
+    iframe_style.width = width_val + "px";
+    iframe_style.height = height_val + "px";
+  });
+  var device_width = window.screen.width;
+  var device_height = window.screen.height;
+  features = {
+    "width": width_val,
+    "height": height_val,
+    "device-width": device_width,
+    "device-height": device_height
+  };
+  for (feature in features) {
+    var value = features[feature];
+    should_apply("all and (" + feature + ": " + value + "px)");
+    should_apply("all and (" + feature + " = " + value + "px)");
+    should_not_apply("all and (" + feature + ": " + (value + 1) + "px)");
+    should_not_apply("all and (" + feature + ": " + (value - 1) + "px)");
+    should_not_apply("all and (" + feature + " = " + (value + 1) + "px)");
+    should_not_apply("all and (" + feature + " = " + (value - 1) + "px)");
+
+    should_apply("all and (min-" + feature + ": " + value + "px)");
+    should_not_apply("all and (min-" + feature + ": " + (value + 1) + "px)");
+    should_apply("all and (min-" + feature + ": " + (value - 1) + "px)");
+    should_apply("all and (max-" + feature + ": " + value + "px)");
+    should_apply("all and (max-" + feature + ": " + (value + 1) + "px)");
+    should_not_apply("all and (max-" + feature + ": " + (value - 1) + "px)");
+    should_not_apply("all and (min-" + feature + ": " +
+                     (Math.ceil(value/em_size) + 1) + "em)");
+    should_apply("all and (min-" + feature + ": " +
+                 (Math.floor(value/em_size) - 1) + "em)");
+    should_apply("all and (max-" + feature + ": " +
+                 (Math.ceil(value/em_size) + 1) + "em)");
+    should_not_apply("all and (max-" + feature + ": " +
+                     (Math.floor(value/em_size) - 1) + "em)");
+    should_not_apply("all and (min-" + feature + ": " +
+                     (Math.ceil(value/em_size) + 1) + "rem)");
+    should_apply("all and (min-" + feature + ": " +
+                 (Math.floor(value/em_size) - 1) + "rem)");
+    should_apply("all and (max-" + feature + ": " +
+                 (Math.ceil(value/em_size) + 1) + "rem)");
+    should_not_apply("all and (max-" + feature + ": " +
+                     (Math.floor(value/em_size) - 1) + "rem)");
+
+    should_apply("(" + feature + " <= " + value + "px)");
+    should_apply("(" + feature + " >= " + value + "px)");
+    should_not_apply("(" + feature + " < " + value + "px)");
+    should_not_apply("(" + feature + " > " + value + "px)");
+
+    should_apply("(" + feature + " < " + (value + 1) + "px)");
+    should_apply("(" + feature + " <= " + (value + 1) + "px)");
+    should_not_apply("(" + feature + " > " + (value + 1) + "px)");
+    should_not_apply("(" + feature + " >= " + (value + 1) + "px)");
+
+    should_apply("(" + feature + " > " + (value - 1) + "px)");
+    should_apply("(" + feature + " >= " + (value - 1) + "px)");
+    should_not_apply("(" + feature + " < " + (value - 1) + "px)");
+    should_not_apply("(" + feature + " <= " + (value - 1) + "px)");
+  }
+
+  change_state(function() {
+    iframe_style.width = "0";
+  });
+  should_apply("all and (height)");
+  should_not_apply("all and (width)");
+  change_state(function() {
+    iframe_style.height = "0";
+  });
+  should_not_apply("all and (height)");
+  should_not_apply("all and (width)");
+  should_apply("all and (device-height)");
+  should_apply("all and (device-width)");
+  change_state(function() {
+    iframe_style.width = width_val + "px";
+  });
+  should_not_apply("all and (height)");
+  should_apply("all and (width)");
+  change_state(function() {
+    iframe_style.height = height_val + "px";
+  });
+  should_apply("all and (height)");
+  should_apply("all and (width)");
+
+  // ratio that reduces to 59/40
+  change_state(function() {
+    iframe_style.width = "236px";
+    iframe_style.height = "160px";
+  });
+  expression_should_be_parseable("orientation");
+  expression_should_be_parseable("orientation: portrait");
+  expression_should_be_parseable("orientation: landscape");
+  expression_should_not_be_parseable("min-orientation");
+  expression_should_not_be_parseable("min-orientation: portrait");
+  expression_should_not_be_parseable("min-orientation: landscape");
+  expression_should_not_be_parseable("max-orientation");
+  expression_should_not_be_parseable("max-orientation: portrait");
+  expression_should_not_be_parseable("max-orientation: landscape");
+  should_apply("(orientation)");
+  should_apply("(orientation: landscape)");
+  should_not_apply("(orientation: portrait)");
+  should_apply("not all and (orientation: portrait)");
+  // ratio that reduces to 59/80
+  change_state(function() {
+    iframe_style.height = "320px";
+  });
+  should_apply("(orientation)");
+  should_not_apply("(orientation: landscape)");
+  should_apply("not all and (orientation: landscape)");
+  should_apply("(orientation: portrait)");
+
+  expression_should_be_parseable("-moz-device-orientation");
+  expression_should_be_parseable("-moz-device-orientation: portrait");
+  expression_should_be_parseable("-moz-device-orientation: landscape");
+  expression_should_not_be_parseable("min--moz-device-orientation");
+  expression_should_not_be_parseable("min--moz-device-orientation: portrait");
+  expression_should_not_be_parseable("min--moz-device-orientation: landscape");
+  expression_should_not_be_parseable("max--moz-device-orientation");
+  expression_should_not_be_parseable("max--moz-device-orientation: portrait");
+  expression_should_not_be_parseable("max--moz-device-orientation: landscape");
+
+  // determine the actual configuration of the screen and test against it
+  var device_orientation = (device_width > device_height) ? "landscape" : "portrait";
+  var not_device_orientation = (device_orientation == "landscape") ? "portrait" : "landscape";
+  should_apply("(-moz-device-orientation)");
+  should_apply("(-moz-device-orientation: " + device_orientation + ")");
+  should_not_apply("(-moz-device-orientation: " + not_device_orientation + ")");
+  should_apply("not all and (-moz-device-orientation: " + not_device_orientation + ")");
+
+  should_apply("(aspect-ratio: 59/80)");
+  should_not_apply("(aspect-ratio: 58/80)");
+  should_not_apply("(aspect-ratio: 59/81)");
+  should_not_apply("(aspect-ratio: 60/80)");
+  should_not_apply("(aspect-ratio: 59/79)");
+  should_apply("(aspect-ratio: 177/240)");
+  should_apply("(aspect-ratio: 413/560)");
+  should_apply("(aspect-ratio: 5900/8000)");
+  should_not_apply("(aspect-ratio: 5901/8000)");
+  should_not_apply("(aspect-ratio: 5899/8000)");
+  should_not_apply("(aspect-ratio: 5900/8001)");
+  should_not_apply("(aspect-ratio: 5900/7999)");
+  should_apply("(aspect-ratio)");
+
+  // Test "unreasonable", but still valid aspect ratios, such as aspect ratios with negative numbers,
+  // and zeros, and with numbers near 2^32 and 2^64 (to check overflow).
+  should_not_apply("(aspect-ratio: 0/1)");
+  should_not_apply("(aspect-ratio: 1/0)");
+  should_not_apply("(aspect-ratio: -1/1)");
+  should_not_apply("(aspect-ratio: 1/-1)");
+  should_not_apply("(aspect-ratio: -1/-1)");
+  should_not_apply("(aspect-ratio: -59/-80)");
+  should_not_apply("(aspect-ratio: 4294967295/4294967295)");
+  should_not_apply("(aspect-ratio: 4294967297/4294967297)");
+  should_not_apply("(aspect-ratio: 18446744073709560000/18446744073709560000)");
+
+  // Test min and max aspect ratios.
+  should_apply("(min-aspect-ratio: 59/80)");
+  should_apply("(min-aspect-ratio: 58/80)");
+  should_apply("(min-aspect-ratio: 59/81)");
+  should_not_apply("(min-aspect-ratio: 60/80)");
+  should_not_apply("(min-aspect-ratio: 59/79)");
+  expression_should_not_be_parseable("min-aspect-ratio");
+
+  should_apply("(max-aspect-ratio: 59/80)");
+  should_not_apply("(max-aspect-ratio: 58/80)");
+  should_not_apply("(max-aspect-ratio: 59/81)");
+  should_apply("(max-aspect-ratio: 60/80)");
+  should_apply("(max-aspect-ratio: 59/79)");
+  expression_should_not_be_parseable("max-aspect-ratio");
+
+  var real_dar = device_width + "/" + device_height;
+  var high_dar_1 = (device_width + 1) + "/" + device_height;
+  var high_dar_2 = device_width + "/" + (device_height - 1);
+  var low_dar_1 = (device_width - 1) + "/" + device_height;
+  var low_dar_2 = device_width + "/" + (device_height + 1);
+  should_apply("(device-aspect-ratio: " + real_dar + ")");
+  should_apply("not all and (device-aspect-ratio: " + high_dar_1 + ")");
+  should_not_apply("all and (device-aspect-ratio: " + high_dar_2 + ")");
+  should_not_apply("all and (device-aspect-ratio: " + low_dar_1 + ")");
+  should_apply("not all and (device-aspect-ratio: " + low_dar_2 + ")");
+  should_apply("(device-aspect-ratio)");
+
+  should_apply("(min-device-aspect-ratio: " + real_dar + ")");
+  should_not_apply("all and (min-device-aspect-ratio: " + high_dar_1 + ")");
+  should_apply("not all and (min-device-aspect-ratio: " + high_dar_2 + ")");
+  should_not_apply("not all and (min-device-aspect-ratio: " + low_dar_1 + ")");
+  should_apply("all and (min-device-aspect-ratio: " + low_dar_2 + ")");
+  expression_should_not_be_parseable("min-device-aspect-ratio");
+
+  should_apply("all and (max-device-aspect-ratio: " + real_dar + ")");
+  should_apply("(max-device-aspect-ratio: " + high_dar_1 + ")");
+  should_apply("(max-device-aspect-ratio: " + high_dar_2 + ")");
+  should_not_apply("all and (max-device-aspect-ratio: " + low_dar_1 + ")");
+  should_apply("not all and (max-device-aspect-ratio: " + low_dar_2 + ")");
+  expression_should_not_be_parseable("max-device-aspect-ratio");
+
+  // Tests for -moz- & -webkit versions of "device-pixel-ratio"
+  // (Note that the vendor prefixes go in different places.)
+  test_device_pixel_ratio("-moz-device-pixel-ratio",
+                          "min--moz-device-pixel-ratio",
+                          "max--moz-device-pixel-ratio");
+  test_device_pixel_ratio("-webkit-device-pixel-ratio",
+                          "-webkit-min-device-pixel-ratio",
+                          "-webkit-max-device-pixel-ratio");
+
+  // Make sure that we don't accidentally start accepting *unprefixed*
+  // "device-pixel-ratio" expressions:
+  expression_should_be_parseable("-webkit-device-pixel-ratio: 1.0");
+  expression_should_not_be_parseable("device-pixel-ratio: 1.0");
+  expression_should_be_parseable("-webkit-min-device-pixel-ratio: 1.0");
+  expression_should_not_be_parseable("min-device-pixel-ratio: 1.0");
+  expression_should_be_parseable("-webkit-max-device-pixel-ratio: 1.0");
+  expression_should_not_be_parseable("max-device-pixel-ratio: 1.0");
+
+  should_apply("(-webkit-transform-3d)");
+
+  features = [ "max-aspect-ratio", "device-aspect-ratio" ];
+  for (i in features) {
+    feature = features[i];
+    expression_should_be_parseable(feature + ": 1/1");
+    expression_should_be_parseable(feature + ": 1  /1");
+    expression_should_be_parseable(feature + ": 1  / \t\n1");
+    expression_should_be_parseable(feature + ": 1/\r1");
+    expression_should_be_parseable(feature + ": 1");
+    expression_should_be_parseable(feature + ": 0.5");
+    expression_should_be_parseable(feature + ": 1.0/1");
+    expression_should_be_parseable(feature + ": 1/1.0");
+    expression_should_be_parseable(feature + ": 1.0/1.0");
+    expression_should_be_parseable(feature + ": 1.5/1.2");
+    expression_should_be_parseable(feature + ": 1.5");
+    expression_should_be_parseable(feature + ": calc(1.2 * 1.3)");
+    expression_should_be_parseable(feature + ": 1.1/calc(2.2 * 2.3)");
+    expression_should_be_parseable(feature + ": calc(1.2 * 1.3)/2.2");
+    expression_should_be_parseable(feature + ": calc(1.2 * 1.3)/calc(2.2 * 2.3)");
+    expression_should_be_parseable(feature + ": 0/1");
+    expression_should_be_parseable(feature + ": 1/0");
+    expression_should_be_parseable(feature + ": 0/0");
+    expression_should_not_be_parseable(feature + ": -1/1");
+    expression_should_not_be_parseable(feature + ": 1/-1");
+    expression_should_not_be_parseable(feature + ": -1/-1");
+    expression_should_not_be_parseable(feature + ": -1/-1");
+    expression_should_not_be_parseable(feature + ": -1/-1");
+    expression_should_not_be_parseable(feature + ": invalid");
+    expression_should_not_be_parseable(feature + ": 1 / invalid");
+    expression_should_not_be_parseable(feature + ": 1 invalid");
+  }
+
+  var is_monochrome = query_applies("all and (min-monochrome: 1)");
+  test_serialization("all and (min-monochrome: 1)", true, is_monochrome);
+  var is_color = query_applies("all and (min-color: 1)");
+  test_serialization("all and (min-color: 1)", true, is_color);
+  isnot(is_monochrome, is_color, "should be either monochrome or color");
+
+  function depth_query(prefix, depth) {
+    return "all and (" + prefix + (is_color ? "color" : "monochrome") +
+           ":" + depth + ")";
+  }
+
+  var depth = 0;
+  do {
+    if (depth > 50) {
+      ok(false, "breaking from loop, depth > 50");
+      break;
+    }
+  } while (query_applies(depth_query("min-", ++depth)));
+  --depth;
+
+  should_apply(depth_query("", depth));
+  should_not_apply(depth_query("", depth - 1));
+  should_not_apply(depth_query("", depth + 1));
+  should_apply(depth_query("max-", depth));
+  should_not_apply(depth_query("max-", depth - 1));
+  should_apply(depth_query("max-", depth + 1));
+
+  (is_color ? should_apply : should_not_apply)("all and (color)");
+  expression_should_not_be_parseable("max-color");
+  expression_should_not_be_parseable("min-color");
+  (is_color ? should_not_apply : should_apply)("all and (monochrome)");
+  expression_should_not_be_parseable("max-monochrome");
+  expression_should_not_be_parseable("min-monochrome");
+  (is_color ? should_apply : should_not_apply)("not all and (monochrome)");
+  (is_color ? should_not_apply : should_apply)("not all and (color)");
+  (is_color ? should_apply : should_not_apply)("only all and (color)");
+  (is_color ? should_not_apply : should_apply)("only all and (monochrome)");
+
+  features = [ "color", "min-monochrome", "max-color-index" ];
+  for (i in features) {
+    feature = features[i];
+    expression_should_be_parseable(feature + ": 1");
+    expression_should_be_parseable(feature + ": 327");
+    expression_should_be_parseable(feature + ": 0");
+    expression_should_not_be_parseable(feature + ": 1.0");
+    expression_should_not_be_parseable(feature + ": -1");
+    expression_should_not_be_parseable(feature + ": 1/1");
+  }
+
+  // Presume that we never support indexed color (at least not usefully
+  // enough to call it indexed color).
+  should_apply("(color-index: 0)");
+  should_not_apply("(color-index: 1)");
+  should_apply("(min-color-index: 0)");
+  should_not_apply("(min-color-index: 1)");
+  should_apply("(max-color-index: 0)");
+  should_apply("(max-color-index: 1)");
+  should_apply("(max-color-index: 157)");
+
+  features = [ "resolution", "min-resolution", "max-resolution" ];
+  for (i in features) {
+    feature = features[i];
+    expression_should_be_parseable(feature + ": 3dpi");
+    expression_should_be_parseable(feature + ":3dpi");
+    expression_should_be_parseable(feature + ": 3.0dpi");
+    expression_should_be_parseable(feature + ": 3.4dpi");
+    expression_should_be_parseable(feature + "\t: 120dpcm");
+    expression_should_be_parseable(feature + ": 1dppx");
+    expression_should_be_parseable(feature + ": 1x");
+    expression_should_be_parseable(feature + ": 1.5dppx");
+    expression_should_be_parseable(feature + ": 1.5x");
+    expression_should_be_parseable(feature + ": 2.0dppx");
+    expression_should_not_be_parseable(feature + ": 0dpi");
+    expression_should_not_be_parseable(feature + ": -3dpi");
+    expression_should_not_be_parseable(feature + ": 0dppx");
+    expression_should_not_be_parseable(feature + ": 0x");
+  }
+
+  // Find the resolution using max-resolution
+  var resolution = 0;
+  do {
+    ++resolution;
+    if (resolution > 10000) {
+      ok(false, "resolution greater than 10000dpi???");
+      break;
+    }
+  } while (!query_applies("(max-resolution: " + resolution + "dpi)"));
+
+  // resolution should now be Math.ceil() of the actual resolution.
+  var dpi_high;
+  var dpi_low = resolution - 1;
+  if (query_applies("(min-resolution: " + resolution + "dpi)")) {
+    // It's exact!
+    should_apply("(resolution: " + resolution + "dpi)");
+    should_apply("(resolution: " + Math.floor(resolution/96) + "dppx)");
+    should_apply("(resolution: " + Math.floor(resolution/96) + "x)");
+    should_not_apply("(resolution: " + (resolution + 1) + "dpi)");
+    should_not_apply("(resolution: " + (resolution - 1) + "dpi)");
+    dpi_high = resolution + 1;
+  } else {
+    // We have no way to test resolution applying since it need not be
+    // an integer.
+    should_not_apply("(resolution: " + resolution + "dpi)");
+    should_not_apply("(resolution: " + (resolution - 1) + "dpi)");
+    dpi_high = resolution;
+  }
+
+  should_apply("(min-resolution: " + dpi_low + "dpi)");
+  should_not_apply("not all and (min-resolution: " + dpi_low + "dpi)");
+  should_apply("not all and (min-resolution: " + dpi_high + "dpi)");
+  should_not_apply("all and (min-resolution: " + dpi_high + "dpi)");
+
+  // Test dpcm units based on what we computed in dpi.
+  var dpcm_high = Math.ceil(dpi_high / 2.54);
+  var dpcm_low = Math.floor(dpi_low / 2.54);
+  should_apply("(min-resolution: " + dpcm_low + "dpcm)");
+  should_apply("(max-resolution: " + dpcm_high + "dpcm)");
+  should_not_apply("(max-resolution: " + dpcm_low + "dpcm)");
+  should_apply("not all and (min-resolution: " + dpcm_high + "dpcm)");
+
+  expression_should_be_parseable("scan");
+  expression_should_be_parseable("scan: progressive");
+  expression_should_be_parseable("scan:interlace");
+  expression_should_not_be_parseable("min-scan:interlace");
+  expression_should_not_be_parseable("scan: 1");
+  expression_should_not_be_parseable("max-scan");
+  expression_should_not_be_parseable("max-scan: progressive");
+  // Assume we don't support tv devices.
+  should_not_apply("(scan)");
+  should_not_apply("(scan: progressive)");
+  should_not_apply("(scan: interlace)");
+  should_apply("not all and (scan)");
+  should_apply("not all and (scan: progressive)");
+  should_apply("not all and (scan: interlace)");
+
+  expression_should_be_parseable("grid");
+  expression_should_be_parseable("grid: 0");
+  expression_should_be_parseable("grid: 1");
+  expression_should_be_parseable("grid: 1");
+  expression_should_not_be_parseable("min-grid");
+  expression_should_not_be_parseable("min-grid:0");
+  expression_should_not_be_parseable("max-grid: 1");
+  expression_should_not_be_parseable("grid: 2");
+  expression_should_not_be_parseable("grid: -1");
+
+  // Assume we don't support grid devices
+  should_not_apply("(grid)");
+  should_apply("(grid: 0)");
+  should_not_apply("(grid: 1)");
+  should_not_apply("(grid: 2)");
+  should_not_apply("(grid: -1)");
+
+  for (let toggle of CHROME_ONLY_TOGGLES) {
+    expression_should_not_be_parseable(toggle);
+    expression_should_not_be_parseable(toggle + ": 1");
+    expression_should_not_be_parseable(toggle + ": 0");
+    expression_should_not_be_parseable(toggle + ": -1");
+    expression_should_not_be_parseable(toggle + ": true");
+    expression_should_not_be_parseable(toggle + ": false");
+  }
+
+  for (let toggle of CHROME_ONLY_QUERIES) {
+    expression_should_not_be_parseable(toggle);
+  }
+
+  {
+    let should_be_parseable_if_enabled = SpecialPowers.getBoolPref('layout.css.prefers-contrast.enabled')
+      ? expression_should_be_parseable
+      : expression_should_not_be_parseable;
+    should_be_parseable_if_enabled("prefers-contrast");
+    should_be_parseable_if_enabled("prefers-contrast: high");
+    should_be_parseable_if_enabled("prefers-contrast: low");
+    should_be_parseable_if_enabled("prefers-contrast: no-preference");
+  }
+
+  {
+    let should_be_parseable_if_enabled = SpecialPowers.getBoolPref('layout.css.forced-colors.enabled')
+      ? expression_should_be_parseable
+      : expression_should_not_be_parseable;
+    should_be_parseable_if_enabled("forced-colors");
+    should_be_parseable_if_enabled("forced-colors: none");
+    should_be_parseable_if_enabled("forced-colors: active");
+  }
+
+  // OpenType SVG media features
+  query_should_not_be_parseable("(-moz-is-glyph)");
+  query_should_not_be_parseable("not (-moz-is-glyph)");
+  query_should_not_be_parseable("only (-moz-is-glyph)");
+  query_should_not_be_parseable("all and (-moz-is-glyph)");
+  query_should_not_be_parseable("not all and (-moz-is-glyph)");
+  query_should_not_be_parseable("only all and (-moz-is-glyph)");
+
+  query_should_not_be_parseable("(-moz-is-glyph:0)");
+  query_should_not_be_parseable("not (-moz-is-glyph:0)");
+  query_should_not_be_parseable("only (-moz-is-glyph:0)");
+  query_should_not_be_parseable("all and (-moz-is-glyph:0)");
+  query_should_not_be_parseable("not all and (-moz-is-glyph:0)");
+  query_should_not_be_parseable("only all and (-moz-is-glyph:0)");
+
+  query_should_not_be_parseable("(-moz-is-glyph:1)");
+  query_should_not_be_parseable("not (-moz-is-glyph:1)");
+  query_should_not_be_parseable("only (-moz-is-glyph:1)");
+  query_should_not_be_parseable("all and (-moz-is-glyph:1)");
+  query_should_not_be_parseable("not all and (-moz-is-glyph:1)");
+  query_should_not_be_parseable("only all and (-moz-is-glyph:1)");
+
+  query_should_not_be_parseable("(min--moz-is-glyph:0)");
+  query_should_not_be_parseable("(max--moz-is-glyph:0)");
+  query_should_not_be_parseable("(min--moz-is-glyph:1)");
+  query_should_not_be_parseable("(max--moz-is-glyph:1)");
+
+  should_not_apply("not all and (-moz-is-glyph)");
+  should_not_apply("(-moz-is-glyph:0)");
+  should_not_apply("not all and (-moz-is-glyph:1)");
+  should_not_apply("only all and (-moz-is-glyph:0)");
+  should_not_apply("(-moz-is-glyph)");
+  should_not_apply("(-moz-is-glyph:1)");
+  should_not_apply("not all and (-moz-is-glyph:0)");
+  should_not_apply("only all and (-moz-is-glyph:1)");
+
+  // Resource documents (UA-only).
+  query_should_not_be_parseable("(-moz-is-resource-document)");
+
+  // Parsing tests
+  // bug 454227
+  should_apply_unbalanced("(orientation");
+  should_not_apply_unbalanced("not all and (orientation");
+  should_not_apply_unbalanced("(orientation:");
+  should_apply_unbalanced("all,(orientation:");
+  should_not_apply_unbalanced("(orientation:,all");
+  should_apply_unbalanced("not all and (grid");
+  should_not_apply_unbalanced("only all and (grid");
+  should_not_apply_unbalanced("(grid");
+  should_apply_unbalanced("all,(grid");
+  should_not_apply_unbalanced("(grid,all");
+  // bug 454226
+  should_apply(",all");
+  should_apply("all,");
+  should_apply(",all,");
+  should_apply("all,badmedium");
+  should_apply("badmedium,all");
+  should_not_apply(",badmedium,");
+  should_apply("all,(badexpression)");
+  should_apply("(badexpression),all");
+  should_not_apply("(badexpression),badmedium");
+  should_not_apply("badmedium,(badexpression)");
+  should_apply("all,[badsyntax]");
+  should_apply("[badsyntax],all");
+  should_not_apply("badmedium,[badsyntax]");
+  should_not_apply("[badsyntax],badmedium");
+  // bug 528096
+  should_not_apply_unbalanced("((resolution),all");
+  should_not_apply_unbalanced("(resolution(),all");
+  should_not_apply_unbalanced("(resolution (),all");
+  should_not_apply_unbalanced("(resolution:(),all");
+
+  handle_posted_items();
+}
+
+/*
+ * The cloning tests have to post tests that wait for onload.  However,
+ * we also make a bunch of state changes during the tests above.  So we
+ * always change state using the change_state call, with both makes the
+ * change immediately and posts an item in the same queue so that we
+ * make the same state change again later.
+ */
+
+var posted_items = [];
+
+function change_state(func)
+{
+  func();
+  posted_items.push({state: func});
+}
+
+function post_clone_test(srcdoc, testfunc)
+{
+  posted_items.push({srcdoc, testfunc});
+}
+
+function handle_posted_items()
+{
+  if (posted_items.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  if ("state" in posted_items[0]) {
+    var item = posted_items.shift();
+    item.state();
+    handle_posted_items();
+    return;
+  }
+
+  var srcdoc = posted_items[0].srcdoc;
+  iframe.onload = handle_iframe_onload;
+  iframe.srcdoc = srcdoc;
+}
+
+function handle_iframe_onload(event)
+{
+  if (event.target != iframe)
+    return;
+
+  var item = posted_items.shift();
+  item.testfunc();
+  handle_posted_items();
+}
+
+</script>
+</pre>
+</body>
+</html>

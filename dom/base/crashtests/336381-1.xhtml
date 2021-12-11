@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  var zz = document.getElementById("d").childNodes[0];
+
+  zz.parentNode.removeChild(zz);
+
+  var r = document.createRange();
+  r.setStart(zz, 0);
+  r.setEnd(zz, 0);
+
+  try {
+    r.insertNode(document.createTextNode('5'));
+  } catch (e) {
+  }
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+
+<div id="d">3</div>
+
+</body>
+</html>

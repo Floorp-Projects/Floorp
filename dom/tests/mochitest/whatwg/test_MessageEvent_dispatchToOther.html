@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>Dispatching MessageEvent across origins</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://example.com/" name="otherDomain"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  try
+  {
+    var msg = new MessageEvent('message', { bubbles: true, cancelable: true,
+                                            data: "foo", origin: "http://evil.com",
+                                            source: window });
+
+    try
+    {
+      var ex;
+      window.frames.otherDomain.dispatchEvent(msg);
+      ok(false, "should have thrown a security exception per HTML5");
+    }
+    catch (e)
+    {
+      ok(true, "correctly threw an exception (security exception, but " +
+               "what that entails isn't yet defined in the spec)");
+    }
+  }
+  catch (e)
+  {
+    ok(false, "threw exception during execution: " + e);
+  }
+  finally
+  {
+    SimpleTest.finish();
+  }
+}
+
+addLoadEvent(run);
+
+</script>
+</pre>
+</body>
+</html>

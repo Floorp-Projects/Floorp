@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NaN renders NaN Rep as expected 1`] = `
+<span
+  className="objectBox objectBox-nan"
+  title={null}
+>
+  NaN
+</span>
+`;

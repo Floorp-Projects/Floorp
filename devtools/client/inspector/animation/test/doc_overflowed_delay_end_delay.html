@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      width: 100px;
+      height: 100px;
+      outline: 1px solid lime;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="target"></div>
+    <script>
+    "use strict";
+
+    const target = document.getElementById("target");
+    target.animate(
+      {
+        color: ["red", "lime"],
+      },
+      {
+        id: "big-delay",
+        duration: 1000,
+        delay: Number.MAX_VALUE,
+        iterations: Infinity,
+      });
+
+    target.animate(
+      {
+        opacity: [1, 0],
+      },
+      {
+        id: "big-end-delay",
+        duration: 1000,
+        endDelay: Number.MAX_VALUE,
+        iterations: Infinity,
+      });
+
+    target.animate(
+      {
+        marginLeft: ["0px", "100px"],
+      },
+      {
+        id: "negative-big-delay",
+        duration: 1000,
+        delay: -Number.MAX_VALUE,
+        iterations: Infinity,
+      });
+
+    target.animate(
+      {
+        paddingLeft: ["0px", "100px"],
+      },
+      {
+        id: "negative-big-end-delay",
+        duration: 1000,
+        endDelay: -Number.MAX_VALUE,
+        iterations: Infinity,
+      });
+
+    target.animate(
+      {
+        backgroundColor: ["lime", "white"],
+      },
+      {
+        id: "big-iteration-start",
+        duration: 1000,
+        iterations: Infinity,
+        iterationStart: Number.MAX_VALUE,
+      });
+    </script>
+  </body>
+</html>

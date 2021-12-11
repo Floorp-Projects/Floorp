@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Label Checkbox Tests" width="200" height="200"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<hbox>
+  <label control="checkbox" value="Label" id="label"/>
+  <checkbox id="checkbox"/>
+  <label control="radio2" value="Label" id="label2"/>
+  <radiogroup>
+    <radio/>
+    <radio id="radio2"/>
+  </radiogroup>
+</hbox>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+  let SimpleTest = opener.SimpleTest;
+  SimpleTest.waitForFocus(() => {
+    let ok = SimpleTest.ok;
+    let label = document.getElementById("label");
+    let checkbox = document.getElementById("checkbox");
+    let label2 = document.getElementById("label2");
+    let radio2 = document.getElementById("radio2");
+    checkbox.checked = true;
+    radio2.selected = false;
+    ok(checkbox.checked, "sanity check");
+    ok(!radio2.selected, "sanity check");
+    setTimeout(() => {
+      synthesizeMouseAtCenter(label, {});
+      ok(!checkbox.checked, "Checkbox should be unchecked");
+      synthesizeMouseAtCenter(label2, {});
+      ok(radio2.selected, "Radio2 should be selected");
+      opener.postMessage("done", "*");
+      window.close();
+    }, 0);
+  });
+
+]]>
+</script>
+
+</window>

@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ensure irregular areas on top of OOPIFs hit-test properly</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+let make_oopif_scrollable = function() {
+  // ensure the oopif is scrollable, and wait for the paint so that the
+  // compositor also knows it's scrollable.
+  document.body.style.height = "200vh";
+  promiseApzFlushedRepaints().then(() => {
+    let utils = SpecialPowers.getDOMWindowUtils(window);
+    let result = {
+      layersId: utils.getLayersId(),
+      viewId: utils.getViewId(document.scrollingElement)
+    };
+    dump(`OOPIF computed IDs ${JSON.stringify(result)}\n`);
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Scrollable", result);
+  });
+  return true;
+};
+
+async function test() {
+  let iframe = document.getElementById("testframe");
+
+  let oopifScrollerIds = promiseOneEvent(window, "OOPIF:Scrollable", null);
+  ok(await FissionTestHelper.sendToOopif(iframe, `(${make_oopif_scrollable})()`),
+     "Ran code to make OOPIF scrollable");
+  oopifScrollerIds = (await oopifScrollerIds).data;
+
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  // The triangle_overlay div overlays a part of the iframe. We do 3 hit-tests:
+  // - one that hits the opaque part of the overlay
+  // - one that hits the clipped-away part of the overlay div but is still
+  //   inside the bounding box
+  // - one that is not on the overlay at all, but on the part of the iframe not
+  //   covered by the overlay.
+  // For the latter two, we expect the hit-test to hit the OOPIF.
+
+  checkHitResult(await fissionHitTest({x: 20, y: 100}, iframe),
+                 APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "opaque part of overlay should hit parent doc hosting the OOPIF");
+
+  checkHitResult(await fissionHitTest({x: 180, y: 100}, iframe),
+                 APZHitResultFlags.VISIBLE,
+                 oopifScrollerIds.viewId,
+                 oopifScrollerIds.layersId,
+                 "clipped-away part of overlay should hit OOPIF");
+
+  checkHitResult(await fissionHitTest({x: 250, y: 100}, iframe),
+                 APZHitResultFlags.VISIBLE,
+                 oopifScrollerIds.viewId,
+                 oopifScrollerIds.layersId,
+                 "part of OOPIF outside the overlay bounding rect should hit the OOPIF");
+}
+
+  </script>
+</head>
+<body>
+<style>
+html, body {
+    margin: 0;
+}
+iframe {
+    position: absolute;
+    width: 300px;
+    height: 200px;
+}
+
+#triangle_overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 200px;
+    background-color: green;
+    clip-path: polygon(0% 0%, 100% 100%, 0% 100%);
+}
+</style>
+<iframe id="testframe"></iframe>
+<div id="triangle_overlay"></div>
+</body>
+</html>

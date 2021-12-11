@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's MutationObserver</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+title = Hello World
+title2 = Hello Another World
+` },
+  ];
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      [],
+      false,
+      l10nReg,
+      ["en-US"],
+    );
+
+    const h1 = document.querySelectorAll("h1")[0];
+
+    domLoc.addResourceIds(["/mock.ftl"]);
+    domLoc.connectRoot(document.body);
+
+    await domLoc.translateRoots();
+
+    is(h1.textContent, "Hello World");
+
+
+    const mo = new MutationObserver(function onMutations(mutations) {
+      is(h1.textContent, "Hello Another World");
+      mo.disconnect();
+      SimpleTest.finish();
+    });
+
+    mo.observe(h1, { childList: true, characterData: true });
+
+    domLoc.setAttributes(h1, "title2");
+  };
+  </script>
+</head>
+<body>
+  <div>
+    <h1 data-l10n-id="title"></h1>
+  </div>
+</body>
+</html>

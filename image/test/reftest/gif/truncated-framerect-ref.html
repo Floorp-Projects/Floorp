@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>Bug 1234077 - Make sure GIFs still render correctly with a truncated frameRect</title>
+    <style type="text/css">
+      div, img {
+        padding: 0;
+        margin: 0;
+        border: 0;
+        overflow: hidden;
+        width: 200px;
+        height: 200px;
+      }
+
+      div img {
+        margin: 136px 0 0 136px;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="truncated-framerect-interlaced-ref.gif" />
+
+    <div>
+      <img src="truncated-framerect-ref.gif" />
+    </div>
+
+    <div>
+      <img src="truncated-framerect-interlaced-ref.gif" />
+    </div>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 12;
+
+function test_seek12(v, seekTime, is, ok, finish) {
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return;
+  ok(!v.seeking, "seeking should default to false");
+  v.currentTime = seekTime;
+  is(v.currentTime, seekTime, "currentTime must report seek target immediately");
+  is(v.seeking, true, "seeking flag on start should be true");
+}
+
+function seekStarted() {
+  if (completed)
+    return;
+  //is(v.currentTime, seekTime, "seeking: currentTime must be seekTime");
+  ok(Math.abs(v.currentTime - seekTime) < 0.01, "seeking: currentTime must be seekTime");
+}
+
+function seekEnded() {
+  if (completed)
+    return;
+  completed = true;
+  //is(v.currentTime, seekTime, "seeked: currentTime must be seekTime");
+  ok(Math.abs(v.currentTime - seekTime) < 0.01, "seeked: currentTime must be seekTime");
+  is(v.seeking, false, "seeking flag on end should be false");
+  finish();
+}
+
+v.addEventListener("loadedmetadata", startTest);
+v.addEventListener("seeking", seekStarted);
+v.addEventListener("seeked", seekEnded);
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title data-i18n-text="yourLivemarks"></title>
+  <meta charset="utf-8">
+  <link href="/css/main.css" rel="stylesheet">
+  <link href="settings.css" rel="stylesheet">
+</head>
+<body>
+  <main>
+    <div class="toolbar flex">
+      <h2 class="grow" data-i18n-text="yourLivemarks"></h2></div>
+    <div class="empty-notice grow" id="feeds">
+    </div>
+    <button data-i18n-text="moreOptions" class="icon settings float-right" id="settings-toggle"></button><br>
+    <button data-i18n-text="newLivemark" class="icon new icon-white primary float-right" id="add"></button><br>
+  </main>
+  <div id="dialog-overlay" hidden></div>
+  <div class="card dialog" id="settings-dialog" hidden>
+    <div class="dialog-content"><div> <!-- Nested <div> needed here for layout -->
+      <div class="section">
+        <h3 data-i18n-text="settings_importExport_heading"></h3>
+        <p data-i18n-text="settings_importExport_description"></p>
+        <a class="button">
+          <input id="import-feeds" name="files[]" type="file">
+          <span data-i18n-text="settings_importExport_importFeeds"></span>
+        </a>
+        <a>
+        </a>
+        <a class="button" id="export-feeds" download="livemarks-opml.xml" data-i18n-text="settings_importExport_exportFeeds"></a>
+      </div>
+      <form id="settings-form">
+        <div class="section">
+          <h3 data-i18n-text="settings_refreshInterval_heading"></h3>
+          <p data-i18n-text="settings_refreshInterval_description"></p>
+          <div class="flex">
+            <input class="short" name="pollInterval" min="1" required type="number">
+            <label class="grow" data-i18n-text="settings_refreshInterval_minutes"></label>
+          </div>
+        </div>
+        <div class="section">
+          <h3 data-i18n-text="settings_defaultFolder_heading"></h3>
+          <p data-i18n-text="settings_defaultFolder_description"></p>
+          <select name="defaultFolder"></select>
+        </div>
+        <div class="section">
+          <h3 data-i18n-text="settings_prefixes_heading"></h3>
+          <p data-i18n-text="settings_prefixes_description"></p>
+          <div>
+            <label data-i18n-text="settings_prefixes_unread"></label>
+            <input class="short" name="unreadPrefix">
+            <label data-i18n-text="settings_prefixes_read"></label>
+            <input class="short" name="readPrefix">
+          </div>
+          <br/>
+          <div>
+            <div class="flex">
+              <input type="checkbox" id="prefixFeedFolder" name="prefixFeedFolder">
+              <label class="grow" for="prefixFeedFolder" data-i18n-text="settings_prefixes_feed_folder"></label>
+            </div>
+            <div class="flex indent">
+              <input type="checkbox" id="prefixParentFolders" name="prefixParentFolders">
+              <label class="grow" for="prefixParentFolders" data-i18n-text="settings_prefixes_parent_folders"></label>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <h3 data-i18n-text="settings_feedPreview_heading"></h3>
+          <div class="flex">
+            <input type="checkbox" id="feedPreview" name="feedPreview">
+            <label class="grow" for="feedPreview" data-i18n-text="settings_feedPreview_description"></label>
+          </div>
+        </div>
+      </form>
+      <div class="section">
+        <h3 data-i18n-text="settings_about_heading"></h3>
+        <div>
+          <p data-i18n-text="settings_about_description_authors"></p>
+          <ul>
+            <li><a href="https://twitter.com/floorp_Browser">Floorp Twitter</a></li>
+            <li><a href="https://twitter.com/Ablaze_Mirai">Ablaze Twitter</a></li>
+          </ul>
+          <p>
+            <span data-i18n-text="settings_about_description_before_foxish"></span><a href="https://github.com/davidhampgonsalves/foxish"> Foxish </a>と<a href="https://github.com/nt1m/livemarks/"> Livemarks </a><span data-i18n-text="settings_about_description_after_foxish">に基づき、作成されました。</span>
+          </p>
+          <p data-i18n-text="settings_about_description_support"></p>
+        </div>
+        <div>
+          <span></span>
+          <a data-i18n-text="settings_about_reviewing" href="https://addons.mozilla.org/firefox/addon/livemarks/reviews/add" class="button" target="_blank"></a>
+        </div>
+      </div>
+    </div></div> <!-- End .dialog-content -->
+    <div class="dialog-footer">
+      <button data-i18n-text="settings_close" class="dialog-cancel"></button>
+    </div>
+  </div>
+  <form class="card dialog" id="edit-livemark-dialog" hidden>
+    <div class="form-row">
+      <label for="title" data-i18n-text="editLivemark_name"></label>
+      <div class="flex">
+        <input name="title" class="grow" required>
+        <a href="#" data-i18n-title="editLivemark_remove" class="icon delete button"></a>
+      </div>
+    </div>
+    <div class="flex">
+      <div class="form-row grow">
+        <label for="feedUrl" data-i18n-text="editLivemark_feedURL"></label>
+        <input type="url" name="feedUrl" required>
+      </div>
+      <div class="form-row grow">
+        <label for="siteUrl" data-i18n-text="editLivemark_siteURL"></label>
+        <input type="url" name="siteUrl">
+      </div>
+    </div>
+    <div class="flex">
+      <div class="form-row grow">
+        <label for="parentId" data-i18n-text="editLivemark_parentFolder"></label>
+        <select name="parentId" required></select>
+      </div>
+      <div class="form-row">
+        <label for="maxItems" data-i18n-text="editLivemark_maxItems"></label>
+        <div><input name="maxItems" type="number" required value="25" min="1" class="short"></div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <a class="button dialog-cancel" data-i18n-text="editLivemark_cancel"></a>
+      <button type="submit" class="primary" data-i18n-text="editLivemark_save"></button>
+    </div>
+  </form>
+
+  <form class="card dialog" id="select-folder-dialog" hidden>
+    <div class="form-row">
+      <label for="livemarkFolder" data-i18n-text="selectFolder_folder"></label>
+      <div class="flex">
+        <select name="livemarkFolder" class="grow" required></select>
+        <a href="#" data-i18n-title="editLivemark_remove" class="icon delete button"></a>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <a class="button dialog-cancel" data-i18n-text="editLivemark_cancel"></a>
+      <button type="submit" class="primary" data-i18n-text="editLivemark_save"></button>
+    </div>
+  </form>
+
+  <script src="/shared/i18n.js"></script>
+  <script src="/shared/prefix-utils.js"></script>
+  <script src="/shared/settings.js"></script>
+  <script src="/shared/livemark-store.js"></script>
+  <script src="/shared/feed-parser.js"></script>
+  <script src="opml-utils.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var mo = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mo");
+  var t1 = document.createTextNode("123456 ");
+  mo.appendChild(t1);
+  document.body.appendChild(mo);
+  var t2 = document.createTextNode("x");
+  document.body.appendChild(t2);
+
+  var r1 = document.createRange();
+  r1.setEnd(t1, 7);
+  var r3 = document.createRange();
+  r3.setStart(t1, 7);
+
+  document.documentElement.offsetHeight;
+
+  t1.splitText(t1.length);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

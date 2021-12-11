@@ -1,0 +1,37 @@
+<html><head>
+<title>Bug 426646, Using location.replace breaks iframe history</title>
+<script type="text/javascript">
+var BASE_URI = "http://mochi.test:8888/tests/dom/base/test/";
+var url1 = BASE_URI + "iframe1_bug426646.html";
+
+function soon(f) {
+  return function() { setTimeout(f, 0); };
+}
+
+function doe() {
+  document.body.innerHTML = "<iframe src='about:blank'></iframe>";
+  document.body.innerHTML += "<iframe src='about:blank'></iframe>";
+  window.frames[0].frameElement.onload = soon(doe2);
+  window.frames[0].location.replace(url1);
+}
+
+function doe2() {
+  window.frames[0].location = 'iframe2_bug426646.html';
+  window.frames[0].frameElement.onload = soon(doe3);
+}
+
+function doe3() {
+  window.frames[0].frameElement.onload = soon(doe4);
+  history.go(-1);
+}
+
+function doe4() {
+  opener.is(String(window.frames[0].location), url1, "History.go(-1) didn't work?");
+  opener.is(String(window.frames[1].location), "about:blank",
+            "History.go(-1) didn't work?");
+  close();
+}
+</script>
+</head>
+<body onload="doe();" onunload="opener.nextTest();">
+</body></html>

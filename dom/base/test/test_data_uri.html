@@ -1,0 +1,189 @@
+<html>
+<head>
+  <title>Tests for Data URI</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <style>
+    @font-face {
+      font-family: 'DataFont';
+      src: url(data:font/opentype;base64,AAEAAAANAIAAAwBQRkZUTU6u6MkAAAXcAAAAHE9TLzJWYWQKAAABWAAAAFZjbWFwAA8D7wAAAcAAAAFCY3Z0IAAhAnkAAAMEAAAABGdhc3D//wADAAAF1AAAAAhnbHlmCC6aTwAAAxQAAACMaGVhZO8ooBcAAADcAAAANmhoZWEIkAV9AAABFAAAACRobXR4EZQAhQAAAbAAAAAQbG9jYQBwAFQAAAMIAAAACm1heHAASQA9AAABOAAAACBuYW1lehAVOgAAA6AAAAIHcG9zdP+uADUAAAWoAAAAKgABAAAAAQAAMhPyuV8PPPUACwPoAAAAAMU4Lm0AAAAAxTgubQAh/5wFeAK8AAAACAACAAAAAAAAAAEAAAK8/5wAWgXcAAAAAAV4AAEAAAAAAAAAAAAAAAAAAAAEAAEAAAAEAAwAAwAAAAAAAgAAAAEAAQAAAEAALgAAAAAAAQXcAfQABQAAAooCvAAAAIwCigK8AAAB4AAxAQIAAAIABgkAAAAAAAAAAAABAAAAAAAAAAAAAAAAUGZFZABAAEEAQQMg/zgAWgK8AGQAAAABAAAAAAAABdwAIQAAAAAF3AAABdwAZAAAAAMAAAADAAAAHAABAAAAAAA8AAMAAQAAABwABAAgAAAABAAEAAEAAABB//8AAABB////wgABAAAAAAAAAQYAAAEAAAAAAAAAAQIAAAACAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhAnkAAAAqACoAKgBGAAAAAgAhAAABKgKaAAMABwAusQEALzyyBwQA7TKxBgXcPLIDAgDtMgCxAwAvPLIFBADtMrIHBgH8PLIBAgDtMjMRIREnMxEjIQEJ6MfHApr9ZiECWAAAAwBk/5wFeAK8AAMABwALAAABNSEVATUhFQE1IRUB9AH0/UQDhPu0BRQB9MjI/tTIyP7UyMgAAAAAAA4ArgABAAAAAAAAACYATgABAAAAAAABAAUAgQABAAAAAAACAAYAlQABAAAAAAADACEA4AABAAAAAAAEAAUBDgABAAAAAAAFABABNgABAAAAAAAGAAUBUwADAAEECQAAAEwAAAADAAEECQABAAoAdQADAAEECQACAAwAhwADAAEECQADAEIAnAADAAEECQAEAAoBAgADAAEECQAFACABFAADAAEECQAGAAoBRwBDAG8AcAB5AHIAaQBnAGgAdAAgACgAYwApACAAMgAwADAAOAAgAE0AbwB6AGkAbABsAGEAIABDAG8AcgBwAG8AcgBhAHQAaQBvAG4AAENvcHlyaWdodCAoYykgMjAwOCBNb3ppbGxhIENvcnBvcmF0aW9uAABNAGEAcgBrAEEAAE1hcmtBAABNAGUAZABpAHUAbQAATWVkaXVtAABGAG8AbgB0AEYAbwByAGcAZQAgADIALgAwACAAOgAgAE0AYQByAGsAQQAgADoAIAA1AC0AMQAxAC0AMgAwADAAOAAARm9udEZvcmdlIDIuMCA6IE1hcmtBIDogNS0xMS0yMDA4AABNAGEAcgBrAEEAAE1hcmtBAABWAGUAcgBzAGkAbwBuACAAMAAwADEALgAwADAAMAAgAABWZXJzaW9uIDAwMS4wMDAgAABNAGEAcgBrAEEAAE1hcmtBAAAAAgAAAAAAAP+DADIAAAABAAAAAAAAAAAAAAAAAAAAAAAEAAAAAQACACQAAAAAAAH//wACAAAAAQAAAADEPovuAAAAAMU4Lm0AAAAAxTgubQ==);
+    }
+  </style>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", false);
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
+});
+
+function imgListener(img) {
+  return new Promise((resolve, reject) => {
+    img.addEventListener("load", () => resolve());
+    img.addEventListener("error", () => reject());
+  });
+}
+
+function runTests()
+{
+  var iframe = document.getElementById("iframe");
+  iframe.src="data:text/html,hello";
+  let p1 = new Promise((resolve, reject) => {
+    iframe.onload = function() {
+      ok(SpecialPowers.wrap(iframe).contentDocument.nodePrincipal.isNullPrincipal,
+         "iframe should have NullPrincipal.");
+      resolve();
+    }
+  });
+
+  var iframe1 = document.getElementById("iframe1");
+  iframe1.src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82";
+  let p2 = new Promise((resolve, reject) => {
+    iframe1.onload = function() {
+      ok(SpecialPowers.wrap(iframe1).contentDocument.nodePrincipal.isNullPrincipal,
+         "iframe1 should have NullPrincipal.");
+      resolve();
+    }
+  });
+
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.fillRect(0, 0, canvas.height, canvas.width);
+  ctx.fillStyle = '#000';
+  var data = canvas.toDataURL('image/png');
+  var img = new Image();
+  img.src = data;
+  let p3 = imgListener(img).then(() => {
+    dump("img onload\n");
+    ctx.drawImage(img, 0, 0);
+    return new Promise((resolve, reject) => {
+      try {
+        ctx.getImageData(0, 0, 1, 1);
+        ok(true, "data:image should be same origin.");
+        resolve();
+      } catch (e) {
+        ok(false, "data:image is cross-origin.");
+        reject();
+      }});
+  }).then(() => {
+    ctx.clearRect(0, 0, canvas.height, canvas.width);
+    ctx.drawImage(document.getElementById('img'), 0, 0);
+    return new Promise((resolve, reject) => {
+      try {
+        canvas.toDataURL();
+        ok(true, "data:image should be same origin.");
+        resolve();
+      } catch (e) {
+        ok(false, "data:image is cross-origin.");
+        reject();
+      }});
+  }).then(() => {
+    var win = window.open("data:text/html,<script>parent.opener.postMessage('ok', '*');<\/script>");
+    return new Promise(resolve => {
+      window.onmessage = function (evt) {
+        is(evt.origin, "null", "The origin of data:text/html should be null.");
+        win.close();
+        resolve();
+      }});
+  });
+
+  var obj_doc = document.getElementById("obj_doc");
+  obj_doc.data="data:text/html,%3Cbody%3E%3Cbutton%3EChild%3C/button%3E%3C/body%3E"
+  let p4 = new Promise((resolve, reject) => {
+    obj_doc.onload = function() {
+      ok(SpecialPowers.wrap(obj_doc).contentDocument.nodePrincipal.isNullPrincipal,
+         "obj_doc.document should have NullPrincipal.");
+      resolve();
+    }
+  });
+
+  var obj_svg = document.getElementById("obj_svg");
+  obj_svg.data='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 200 200"><circle cx="100" cy="100" r="100" fill="green" fill-opacity="0.8"/></svg>'
+  let p5 = new Promise((resolve, reject) => {
+    obj_svg.onload = function() {
+      ok(SpecialPowers.wrap(obj_svg).contentDocument.nodePrincipal.isNullPrincipal,
+         "obj_svg.contentDocument should have NullPrincipal.");
+      ok(SpecialPowers.wrap(obj_svg).getSVGDocument().nodePrincipal.isNullPrincipal,
+         "obj_svg.getSVGDocument() should have NullPrincipal.");
+      resolve();
+    }
+  });
+
+  // Test if data:stylesheet is considered same origin.
+  let p6 = new Promise((resolve, reject) => {
+    // 1. Dynamically include a css by inserting a <link> tag.
+    let link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = "data:text/css,.green-text{color:rgb(0, 255, 0)}";
+    link.onload = function() {
+      let dataStyleSheet;
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        let sheet = document.styleSheets[i];
+        if (sheet.href === link.href) {
+          dataStyleSheet = sheet;
+          break;
+        }
+      }
+      ok(dataStyleSheet, "Should have found data:stylesheet");
+
+      // 2. Try to access the rule. If data:stylesheet is not considered
+      // same origin, an exception will be thrown.
+      try {
+        let rule = dataStyleSheet.cssRules;
+        ok(true, "data:stylesheet is considered same origin.");
+      } catch (ex) {
+        ok(false, "data:stylesheet is NOT considered same origin: " + ex);
+      }
+
+      resolve();
+    };
+    document.head.appendChild(link);
+  });
+
+  // Test if data:font is same-origin.
+  let p7 = new Promise((resolve, reject) => {
+    let text = document.createElement('p');
+    // Cross-domain font will not load according to [1] so we try to apply
+    // data:font to this text and see if the font can be loaded.
+    // [1] https://www.w3.org/TR/css-fonts-3/#same-origin-restriction
+    text.style = 'font-family: DataFont';
+    text.innerHTML = "This text should trigger 'TestFont' to load.";
+    document.body.appendChild(text);
+
+    document.fonts.ready.then(fontFaces => {
+      is(fontFaces.size, 1, "should FontFace entry for data:font");
+      fontFaces.forEach(fontFace => {
+        is(fontFace.status, "loaded", "data:font should be same-origin");
+      });
+      resolve();
+    },
+    _ => {
+      ok(false, "data:font is not same-origin.");
+      reject();
+    });
+  });
+
+  Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(() => {
+    SimpleTest.finish();
+  }).catch((e) => {
+    ok(false, "throwing " + e);
+    SimpleTest.finish();
+  });
+}
+</script>
+
+<body onload="runTests()">
+<img style="width: 100px; height: 100px;"
+     src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82"
+     id="img">
+<iframe id="iframe"></iframe>
+<iframe id="iframe1" ></iframe>
+<canvas id="canvas" class="output" width="100" height="50"></canvas>
+
+<object id="obj_doc"></object>
+<object id="obj_svg"></object>
+
+</body>
+</html>

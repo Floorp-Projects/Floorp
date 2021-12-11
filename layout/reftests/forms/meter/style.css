@@ -1,0 +1,38 @@
+div.meter-element {
+  display: inline-block;
+  height: 1em;
+  width: 5em;
+  vertical-align: -0.2em;
+
+  background-color: grey;
+}
+
+div.meter-element.vertical {
+  height: 5em;
+  width: 1em;
+}
+
+div.meter-bar {
+  float: none ! important;
+
+  height: 100%;
+  /*
+   * We can't apply the following style to the reference because it will have
+   * underisable effectes:
+   * width: 100%;
+   */
+
+  background-color: green;
+}
+
+meter, meter::-moz-meter-bar, div.meter-element, div.meter-bar {
+  -moz-appearance: none;
+}
+
+meter {
+  background: grey;
+}
+
+meter::-moz-meter-bar {
+  background: green;
+}

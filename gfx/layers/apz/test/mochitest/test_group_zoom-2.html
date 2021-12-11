@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various zoom-related tests that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var prefs = [
+  // We need the APZ paint logging information
+  ["apz.test.logging_enabled", true],
+  // Dropping the touch slop to 0 makes the tests easier to write because
+  // we can just do a one-pixel drag to get over the pan threshold rather
+  // than having to hard-code some larger value.
+  ["apz.touch_start_tolerance", "0.0"],
+  // The subtests in this test do touch-drags to pan the page, but we don't
+  // want those pans to turn into fling animations, so we increase the
+  // fling-min threshold velocity to an arbitrarily large value.
+  ["apz.fling_min_velocity_threshold", "10000"],
+  // The helper_bug1280013's div gets a displayport on scroll, but if the
+  // test takes too long the displayport can expire before we read the value
+  // out of the test. So we disable displayport expiry for these tests.
+  ["apz.displayport_expiry_ms", 0],
+  // Prevent the dynamic toolbar from interfering with main-thread scroll
+  // offset values.
+  ["browser.chrome.dynamictoolbar", false],
+  // Explicitly enable pinch-zooming, so this test can run on desktop
+  // even though zooming isn't enabled by default on desktop yet.
+  ["apz.allow_zooming", true],
+  // Increase the content response timeout because some tests do preventDefault
+  // and we want to make sure APZ actually waits for them.
+  ["apz.content_response_timeout", 60000],
+  // Use the desktop zooming scrollbars
+  ["apz.force_disable_desktop_zooming_scrollbars", false],
+  // Force consistent scroll-to-click behaviour across all platforms.
+  ["ui.scrollToClick", 0],
+  // Disable touch resampling so that touch events are processed without delay
+  // and we don't zoom more than expected due to overprediction.
+  ["android.touch_resampling.enabled", false],
+  // Tests depend on window.visualViewport
+  ["dom.visualviewport.enabled", true],
+];
+
+var instant_repaint_prefs = [
+  // When zooming, trigger repaint requests for each scale event rather than
+  // delaying the repaints
+  ["apz.scale_repaint_delay_ms", 0],
+  ... prefs
+];
+
+var subtests = [
+  {"file": "helper_bug1280013.html", "prefs": prefs},
+  {"file": "helper_zoom_restore_position_tabswitch.html", "prefs": prefs},
+  {"file": "helper_zoom_with_dynamic_toolbar.html", "prefs": prefs},
+  {"file": "helper_visual_scrollbars_pagescroll.html", "prefs": prefs},
+  {"file": "helper_click_interrupt_animation.html", "prefs": prefs},
+  {"file": "helper_overflowhidden_zoom.html", "prefs": prefs},
+  {"file": "helper_zoom_keyboardscroll.html", "prefs": prefs},
+  {"file": "helper_zoom_out_clamped_scrollpos.html", "prefs": instant_repaint_prefs},
+  {"file": "helper_zoom_out_with_mainthread_clamping.html", "prefs": instant_repaint_prefs},
+  {"file": "helper_fixed_html_hittest.html", "prefs": prefs},
+  // {"file": "helper_zoom_oopif.html", "prefs": prefs}, // disabled, see bug 1716127
+];
+
+if (isApzEnabled()) {
+  // This has a lot of subtests, and Android emulators are slow.
+  SimpleTest.requestLongerTimeout(2);
+  SimpleTest.waitForExplicitFinish();
+
+  if (getPlatform() == "linux") {
+        subtests.push(
+          {"file": "helper_zoom_with_touchpad.html", "prefs": prefs},
+          {"file": "helper_zoom_oopif.html?touchpad", "prefs": prefs},
+        );
+  }
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

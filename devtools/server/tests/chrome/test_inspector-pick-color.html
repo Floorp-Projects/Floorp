@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the inspector actor has the pickColorFromPage and cancelPickColorFromPage
+methods and that when a color is picked the color-picked event is emitted and that when
+the eyedropper is dimissed, the color-pick-canceled event is emitted.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1262439
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1262439</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  let win = null;
+  let inspector = null;
+
+  addAsyncTest(async function() {
+    info("Setting up inspector actor");
+
+    const url = document.getElementById("inspectorContent").href;
+    const { target, doc } = await attachURL(url);
+    inspector = await target.getFront("inspector");
+    win = doc.defaultView;
+    runNextTest();
+  });
+
+  addAsyncTest(async function() {
+    info("Start picking a color from the page");
+    await inspector.pickColorFromPage();
+
+    info("Click in the page and make sure a color-picked event is received");
+    const onColorPicked = waitForEvent("color-picked");
+    win.document.body.click();
+    const color = await onColorPicked;
+
+    is(color, "#000000", "The color-picked event was received with the right color");
+
+    runNextTest();
+  });
+
+  addAsyncTest(async function() {
+    info("Start picking a color from the page");
+    await inspector.pickColorFromPage();
+
+    info("Use the escape key to dismiss the eyedropper");
+    const onPickCanceled = waitForEvent("color-pick-canceled");
+
+    const keyboardEvent = new win.KeyboardEvent("keydown", {
+      bubbles: true,
+      cancelable: true,
+      view: win,
+      keyCode: 27
+    });
+    win.document.dispatchEvent(keyboardEvent);
+
+    await onPickCanceled;
+    ok(true, "The color-pick-canceled event was received");
+
+    runNextTest();
+  });
+
+  addAsyncTest(async function() {
+    info("Start picking a color from the page");
+    await inspector.pickColorFromPage();
+
+    info("And cancel the color picking");
+    await inspector.cancelPickColorFromPage();
+
+    runNextTest();
+  });
+
+  function waitForEvent(name) {
+    return new Promise(resolve => inspector.once(name, resolve));
+  }
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+<a id="inspectorContent" target="_blank" href="inspector-eyedropper.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

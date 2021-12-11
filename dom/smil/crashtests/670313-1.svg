@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait">
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  try {
+    document.getElementById("x").beginElementAt(36028797018963970);
+  } catch (e) { }
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+<animate id="x" begin="a" />
+</svg>

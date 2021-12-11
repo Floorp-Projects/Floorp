@@ -1,0 +1,88 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "1007+f+app+++system.gaiamobile.org",
+                "dir": true,
+                "entries": [{ "name": ".metadata", "dir": false }]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [{ "name": ".metadata", "dir": false }]
+              },
+              {
+                "name": "1007+t+https+++developer.cdn.mozilla.net",
+                "dir": true,
+                "entries": [{ "name": ".metadata", "dir": false }]
+              },
+              {
+                "name": "1007+t+https+++developer.cdn.mozilla.org",
+                "dir": true,
+                "entries": [{ "name": ".metadata", "dir": false }]
+              },
+              {
+                "name": "https+++developer.cdn.mozilla.org",
+                "dir": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "todo": "This shouldn't exist, it regressed after accidental changes done in bug 1320404",
+                "name": "https+++developer.cdn.mozilla.net",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "https+++developer.cdn.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          { "name": "ls-archive.sqlite", "dir": false }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]

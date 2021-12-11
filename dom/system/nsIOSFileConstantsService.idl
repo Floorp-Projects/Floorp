@@ -1,0 +1,28 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(d6dd239f-34d6-4b34-baa1-f69ab4a20bc4)]
+interface nsIOSFileConstantsService: nsISupports
+{
+  /**
+   * Inject module OS.Constants in the environment.
+   *
+   * This method must be called only from the main thread.
+   * Method is idempotent.
+   */
+  [implicit_jscontext]
+  void init();
+};
+
+%{ C++
+
+// {4BBE1B96-8956-457F-A03F-9C27435F2AFA}
+#define OSFILECONSTANTSSERVICE_CID {0x4BBE1B96,0x8956,0x457F,{0xA0,0x3F,0x9C,0x27,0x43,0x5F,0x2A,0xFA}}
+#define OSFILECONSTANTSSERVICE_CONTRACTID "@mozilla.org/net/osfileconstantsservice;1"
+
+%}

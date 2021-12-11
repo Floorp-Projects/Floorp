@@ -1,0 +1,215 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- This file tests filtering in about:memory. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  "use strict";
+
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  // Hide all the real reporters;  we'll restore them at the end.
+  mgr.blockRegistrationAndHideExistingReporters();
+
+  // Setup various fake-but-deterministic reporters.
+  const KB = 1024;
+  const MB = KB * KB;
+  const HEAP  = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER = Ci.nsIMemoryReporter.KIND_OTHER;
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+
+  let fakeReporters = [
+    { collectReports(aCbObj, aClosure, aAnonymize) {
+        function f(aP, aK, aA) {
+          aCbObj.callback("Main Process", aP, aK, BYTES, aA, "Desc.", aClosure);
+        }
+        f("heap-allocated",     OTHER,   250 * MB);
+        f("explicit/a/b",       HEAP,     50 * MB);
+        f("explicit/a/c/d",     HEAP,     25 * MB);
+        f("explicit/a/c/e",     HEAP,     15 * MB);
+        f("explicit/a/f",       HEAP,     30 * MB);
+        f("explicit/g",         HEAP,    100 * MB);
+        f("explicit/h/i",       HEAP,     10 * MB);
+        f("explicit/h/i2",      HEAP,      9 * MB);
+        f("explicit/j/k",       HEAP,    0.5 * MB);
+        f("explicit/j/k2",      HEAP,    0.3 * MB);
+        f("explicit/a/l/m",     HEAP,    0.1 * MB);
+        f("explicit/a/l/n",     HEAP,    0.1 * MB);
+      }
+    }
+  ];
+
+  for (let i = 0; i < fakeReporters.length; i++) {
+    mgr.registerStrongReporterEvenIfBlocked(fakeReporters[i]);
+  }
+
+  ]]>
+  </script>
+
+  <iframe id="amFrame"  height="500" src="about:memory"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  function finish()
+  {
+    mgr.unblockRegistrationAndRestoreOriginalReporters();
+    SimpleTest.finish();
+  }
+
+  // Click on the identified element, then cut+paste the entire page and
+  // check that the cut text matches what we expect.
+  function testClick(aId, aExpected, aNext) {
+    let win = document.getElementById("amFrame").contentWindow;
+
+    win.document.getElementById(aId).click();
+
+    testClipboard(aExpected, aNext, 0);
+  }
+
+  // Apply the specified filter, then cut+paste the entire page and
+  // check that the cut text matches what we expect.
+  function testFilter(aFilterString, aRegEx, aExpected, aNext) {
+    let win = document.getElementById("amFrame").contentWindow;
+
+    let filterInput = win.document.querySelector(".filterInput");
+    let filterRegExCheckbox =
+      win.document.querySelector(".filterInput + * input[type=checkbox]");
+
+    filterInput.value = aFilterString;
+    filterRegExCheckbox.checked = aRegEx;
+
+    // Dispatch a synthetic input event, since assigning to .value above
+    // doesn't trigger this.
+    filterInput.dispatchEvent(new win.Event("input"));
+
+    // about:memory delays 300 ms before applying the filter, so we wait a
+    // a bit longer than that before checking the clipboard.
+    testClipboard(aExpected, aNext, /* delay */ 600);
+  }
+
+  function testClipboard(aExpected, aNext, aDelay) {
+    setTimeout(function() {
+      let mostRecentActual;
+      document.getElementById("amFrame").focus();
+      SimpleTest.waitForClipboard(
+        function(aActual) {
+          mostRecentActual = aActual;
+          let rslt = aActual.trim() === aExpected.trim();
+          if (!rslt) {
+            // Try copying again.
+            synthesizeKey("A", {accelKey: true});
+            synthesizeKey("C", {accelKey: true});
+          }
+
+          return rslt;
+        },
+        function() {
+          synthesizeKey("A", {accelKey: true});
+          synthesizeKey("C", {accelKey: true});
+        },
+        aNext,
+        function() {
+          ok(false, "pasted text doesn't match");
+          dump("******EXPECTED******\n");
+          dump(aExpected);
+          dump("*******ACTUAL*******\n");
+          dump(mostRecentActual);
+          dump("********************\n");
+          finish();
+        }
+      );
+    }, aDelay);
+  }
+
+  // Returns a function that chains together one test() call per id.
+  function chain(aIds) {
+    let x = aIds.shift();
+    if (x) {
+      if (x.click) {
+        return function() { testClick(x.click, x.expected, chain(aIds)); }
+      }
+      return function() { testFilter(x.filter, x.regex, x.expected, chain(aIds)); }
+    }
+    return function() { finish(); };
+  }
+
+  let startExpected =
+"\
+Main Process\n\
+Explicit Allocations\n\
+\n\
+250.00 MB (100.0%) -- explicit\n\
+├──120.20 MB (48.08%) -- a\n\
+│  ├───50.00 MB (20.00%) ── b\n\
+│  ├───40.00 MB (16.00%) -- c\n\
+│  │   ├──25.00 MB (10.00%) ── d\n\
+│  │   └──15.00 MB (06.00%) ── e\n\
+│  ├───30.00 MB (12.00%) ── f\n\
+│  └────0.20 MB (00.08%) ++ l\n\
+├──100.00 MB (40.00%) ── g\n\
+├───19.00 MB (07.60%) -- h\n\
+│   ├──10.00 MB (04.00%) ── i\n\
+│   └───9.00 MB (03.60%) ── i2\n\
+├───10.00 MB (04.00%) ── heap-unclassified\n\
+└────0.80 MB (00.32%) ++ j\n\
+\n\
+Other Measurements\n\
+\n\
+250.00 MB ── heap-allocated\n\
+\n\
+End of Main Process\n\
+";
+
+  let acFilterExpected =
+"\
+Main Process\n\
+Explicit Allocations\n\
+\n\
+40.00 MB (100.0%) -- explicit\n\
+└──40.00 MB (100.0%) -- a/c\n\
+   ├──25.00 MB (62.50%) ── d\n\
+   └──15.00 MB (37.50%) ── e\n\
+\n\
+End of Main Process\n\
+";
+
+  let hjFilterExpected =
+"\
+Main Process\n\
+Explicit Allocations\n\
+\n\
+19.80 MB (100.0%) -- explicit\n\
+├──19.00 MB (95.96%) -- h\n\
+│  ├──10.00 MB (50.51%) ── i\n\
+│  └───9.00 MB (45.45%) ── i2\n\
+└───0.80 MB (04.04%) -- j\n\
+    ├──0.50 MB (02.53%) ── k\n\
+    └──0.30 MB (01.52%) ── k2\n\
+\n\
+End of Main Process\n\
+";
+
+  let filtersToApplyOrIdsToClick = [
+    { click: "measureButton",               expected: startExpected },
+    { filter: "a/c",          regex: false, expected: acFilterExpected },
+    { filter: "/[hj]",        regex: false, expected: "No results found." },
+    { filter: "/[hj]",        regex: true,  expected: hjFilterExpected },
+  ];
+
+  SimpleTest.waitForFocus(chain(filtersToApplyOrIdsToClick));
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

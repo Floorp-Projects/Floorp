@@ -1,0 +1,34 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The result of query content events.  succeeded propery can be used always.
+ * Whether other properties can be used or not depends on the event.
+ * See nsIDOMWindowUtils.idl, which properites can be used was documented.
+ */
+
+[scriptable, uuid(e2c39e0e-345f-451a-a7b2-e0230d555847)]
+interface nsIQueryContentEventResult : nsISupports
+{
+  readonly attribute unsigned long offset;
+  readonly attribute unsigned long tentativeCaretOffset;
+  readonly attribute boolean reversed;
+
+  readonly attribute long left;
+  readonly attribute long top;
+  readonly attribute long width;
+  readonly attribute long height;
+  readonly attribute AString text;
+
+  void getCharacterRect(in long offset,
+                        out long left, out long top,
+                        out long width, out long height);
+
+  readonly attribute boolean succeeded;
+  readonly attribute boolean notFound;
+  readonly attribute boolean tentativeCaretOffsetNotFound;
+};

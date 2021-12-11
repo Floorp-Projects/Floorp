@@ -1,0 +1,16 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIPreloadedStyleSheet interface is an opaque interface for
+ * style sheets returned by nsIStyleSheetService.preloadSheet, and
+ * which can be passed to nsIDOMWindowUtils.addSheet.
+ */
+[scriptable, builtinclass, uuid(2e2a84d0-2102-4b9e-9b78-1670623a582d)]
+interface nsIPreloadedStyleSheet : nsISupports
+{
+};

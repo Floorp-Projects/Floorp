@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+  <meta charset="utf-8">
+  <style>
+    .container {
+      width: 100px;
+      height: 20px;
+      border: 5px solid black;
+    }
+    .container > * {
+      height: 18px;
+      float: left;
+    }
+    .itemA {
+      width: 38px;
+      background: purple;
+      border: 1px solid indigo;
+    }
+    .itemB {
+      width: 58px;
+      background: teal;
+      border: 1px solid lightblue;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="itemA"></div>
+    <div class="itemB"></div>
+  </div>
+</body>
+</html>

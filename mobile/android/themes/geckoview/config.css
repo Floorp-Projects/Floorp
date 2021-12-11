@@ -1,0 +1,379 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+    --background-color: #fff;
+    --text-color: #0c0c0d;
+    --border-color: #e1e1e2;
+
+    --toolbar-background-color: #f9f9fa;
+    --searchbar-background-color: #ededf0;
+    --searchbar-focused-background-color: #fff;
+
+    --deemphasized-border-color: rgba(0,0,0,0.05);
+    --deemphasized-text-color: rgba(0,0,0,0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #292833;
+        --text-color: #f9f9fa;
+        --border-color: rgba(255,255,255,0.15);
+
+        --toolbar-background-color: #1c1b22;
+        --searchbar-background-color: #3f3e46;
+        --searchbar-focused-background-color: #4c4a54;
+
+        --deemphasized-border-color: rgba(249,249,250,0.05);
+        --deemphasized-text-color: rgba(249,249,250,0.5);
+    }
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    font-family: sans-serif;
+    -moz-text-size-adjust: none;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.toolbar {
+    width: 100%;
+    min-height: 3em;
+    display: flow-root;
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background-color: var(--toolbar-background-color);
+    font-weight: bold;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.25);
+}
+
+.toolbar-container {
+    max-width: 40em;
+    margin-inline: auto;
+}
+
+#filter-container {
+    margin: 0.375em;
+    height: 2em;
+    background-color: var(--searchbar-background-color);
+    border-radius: 0.25em;
+    border: 1px solid transparent;
+    overflow: hidden;
+    display: flex;
+    float: inline-end;
+}
+
+#filter-container:focus-within {
+    background-color: var(--searchbar-focused-background-color);
+    box-shadow: 0 1px 6px rgba(0,0,0,.1);
+}
+
+#filter-input {
+    border: none;
+    background: none;
+    color: inherit;
+    flex-grow: 1;
+    height: 100%;
+    box-sizing: border-box;
+    opacity: 0.75;
+}
+
+#new-pref-toggle-button {
+    background-image: url("chrome://geckoview/skin/images/add.svg");
+    background-size: 1.25em;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 3em;
+    width: 3em;
+    outline: none;
+    float: inline-start;
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor;
+    fill-opacity: 0.8;
+}
+
+#filter-search-button,
+#filter-input-clear-button {
+    background-size: 1em;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 2em;
+    width: 2em;
+    outline: none;
+    display: inline-block;
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor;
+    fill-opacity: 0.8;
+}
+
+#filter-search-button {
+    background-image: url("chrome://geckoview/skin/images/search.svg");
+}
+
+#filter-search-button:dir(rtl) {
+    scale: -1 1;
+}
+
+#filter-input-clear-button {
+    background-image: url("chrome://geckoview/skin/images/search-clear.svg");
+}
+
+#filter-input:placeholder-shown + #filter-input-clear-button {
+    visibility: hidden; /* display: none; causes the input size to change */
+}
+
+.toolbar-item {
+    display: inline-block;
+    height: 3em;
+    min-width: 3em;
+    float: right;
+}
+
+#content {
+    position: relative;
+    margin: 0 auto;
+    padding-inline: 0;
+    min-height: 100%;
+    max-width: 40em;
+}
+
+#prefs-container {
+    list-style: none;
+    min-height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+#prefs-container li {
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+#new-pref-container {
+    width: 100%;
+    margin: 0;
+    background-color: var(--background-color);
+    box-shadow: 0 5px 18px rgba(0,0,0,.2);
+    box-sizing: border-box;
+    overflow-x: hidden;
+    max-width: 40em;
+    max-height: 100%;
+    position: fixed;
+    top: 3em;
+    left: auto;
+    display: none;
+    z-index: 5;
+}
+
+#new-pref-container input,
+#new-pref-container select {
+    border: none;
+    background: none;
+}
+
+#new-pref-container.show {
+    display: block;
+}
+
+#new-pref-line-boolean,
+#new-pref-value-string,
+#new-pref-value-int {
+    display: none;
+}
+#new-pref-item[typestyle="boolean"] #new-pref-line-boolean,
+#new-pref-item[typestyle="string"] #new-pref-value-string,
+#new-pref-item[typestyle="int"] #new-pref-value-int {
+    display: flex;
+}
+#new-pref-item[typestyle="boolean"] #new-pref-line-input {
+    border-top: none;
+}
+
+.pref-name,
+.pref-value {
+    padding: 15px 10px;
+    text-align: match-parent;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    background: none;
+    color: inherit;
+    direction: ltr;
+}
+
+.pref-value {
+    flex: 1 1 auto;
+    border: none;
+    unicode-bidi: plaintext;
+}
+
+.pref-name[locked] {
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor;
+    fill-opacity: 0.8;
+    background-image: url("chrome://geckoview/skin/images/lock.svg");
+    background-repeat: no-repeat;
+    background-position-y: center;
+    background-size: 1em;
+}
+
+:dir(ltr) > .pref-name[locked] {
+    background-position-x: right 10px;
+    padding-right: 30px;
+}
+
+:dir(rtl) > .pref-name[locked] {
+    background-position-x: 10px;
+    padding-left: 30px;
+}
+
+#new-pref-name {
+    width: 30em;
+}
+
+#new-pref-type {
+    appearance: none;
+    color: inherit;
+    border-inline-start: 1px solid var(--deemphasized-border-color) !important;
+    text-align: center;
+    width: 9em;
+    padding-inline: 8px;
+}
+
+.pref-item-line {
+    border-top: 1px solid var(--deemphasized-border-color);
+    color: var(--deemphasized-text-color);
+    display: flex;
+}
+
+#new-pref-value-boolean {
+    flex: 1 1 auto;
+}
+
+#new-pref-container .pref-button.toggle {
+    display: flex;
+    opacity: 1;
+    flex: 0 1 auto;
+    float: right;
+}
+
+#new-pref-container .pref-button.cancel,
+#new-pref-container .pref-button.create {
+    display: inline-block;
+    opacity: 1;
+    flex: 1 1 auto;
+}
+
+.pref-item-line {
+    pointer-events: none;
+}
+
+#new-pref-container .pref-item-line,
+.pref-item.selected .pref-item-line,
+.pref-item:not(.selected) .pref-button.reset {
+    pointer-events: auto;
+}
+
+#new-pref-container .pref-button.create[disabled] {
+    opacity: 0.5;
+}
+
+.pref-item.selected {
+    background-color: hsla(0,0%,60%,.2);
+}
+
+.pref-button {
+    display: inline-flex;
+    box-sizing: border-box;
+    align-items: center;
+    text-align: center;
+    padding: 10px 1em;
+    border-inline-start: 1px solid var(--deemphasized-border-color);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 500ms;
+}
+
+.pref-item.selected .pref-item-line .pref-button {
+    opacity: 1;
+}
+
+.pref-item:not(.selected) .pref-item-line .pref-button:not(.reset) {
+    display: none;
+}
+
+.pref-item:not(.selected) .pref-button.reset {
+    opacity: 1;
+}
+
+.pref-button:active,
+#new-pref-type:active {
+    background-color: hsla(0,0%,60%,.4);
+}
+
+.pref-button[disabled] {
+    display: none;
+}
+
+.pref-button.up,
+.pref-button.down {
+    -moz-context-properties: fill, fill-opacity;
+    fill: var(--text-color);
+    fill-opacity: 0.8;
+    background-size: 1em;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.pref-button.up {
+    background-image: url("chrome://geckoview/skin/images/arrow-up.svg");
+}
+
+.pref-button.down {
+    background-image: url("chrome://geckoview/skin/images/arrow-down.svg");
+}
+
+#prefs-shield {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.45);
+    position: fixed;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 500ms;
+    display: none;
+}
+
+#prefs-shield[shown] {
+    display: block;
+    opacity: 1;
+}
+
+#loading-container::before {
+    content: "";
+    display: block;
+    width: 1.25em;
+    height: 1.25em;
+    border: 0.15em solid currentColor;
+    margin: 1em auto;
+    border-right-color: transparent;
+    border-radius: 100%;
+    opacity: 0.8;
+    animation: 1.1s linear infinite spin;
+}
+
+@keyframes spin {
+    from { transform: none; }
+    to { transform: rotate(360deg); }
+}

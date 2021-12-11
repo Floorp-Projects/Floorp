@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIContentPolicy.idl"
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIURI;
+interface nsIObserver;
+
+[scriptable, uuid(9b0353a7-ab46-4914-9178-2215ee221e4e)]
+interface nsIUrlClassifierBlockedChannel: nsISupports
+{
+  // blocked reason
+  const unsigned long TRACKING_PROTECTION = 0;
+  const unsigned long SOCIAL_TRACKING_PROTECTION = 1;
+  const unsigned long FINGERPRINTING_PROTECTION = 2;
+  const unsigned long CRYPTOMINING_PROTECTION = 3;
+
+  // Feature that blocks this channel.
+  readonly attribute uint8_t reason;
+
+  // Comma separated list of tables that find a match for the channel's url.
+  readonly attribute ACString tables;
+
+  readonly attribute AString url;
+
+  readonly attribute uint64_t tabId;
+
+  readonly attribute uint64_t channelId;
+
+  readonly attribute boolean isPrivateBrowsing;
+
+  readonly attribute AString topLevelUrl;
+
+  // Unblock the load, but inform the UI that the tracking content will be
+  // replaced with a shim. The unblocked channel is still considered as a
+  // tracking channel. The only difference to allow() is the event sent to the
+  // UI. Calls to replace will only unblock the channel. Callers are responsible
+  // for replacing the tracking content.
+  void replace();
+
+  // Unblock the load and inform the UI that the channel has been allowed to
+  // load. The unblocked channel is still considered as a tracking channel.
+  void allow();
+};
+
+[scriptable, uuid(9411409c-5dac-40b9-ba36-2738a7237a4c)]
+interface nsIChannelClassifierService : nsISupports
+{
+  // when a channel is blocked, the observer should receive
+  // "urlclassifier-before-block-channel" callback an alternative way is to
+  // use a custom callback instead of using nsIObserver
+  void addListener(in nsIObserver aObserver);
+
+  void removeListener(in nsIObserver aObserver);
+};

@@ -1,0 +1,11 @@
+//error: constructor messages can't use compression (here, in protocol `compressCtor')
+//error: destructor messages can't use compression (here, in protocol `compressCtorManagee')
+
+include protocol compressCtor;
+
+intr protocol compressCtorManagee {
+    manager compressCtor;
+
+child:
+    [Compress] async __delete__();
+};

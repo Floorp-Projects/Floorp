@@ -1,0 +1,37 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Experimental panel -->
+
+<script src="chrome://browser/content/preferences/experimental.js"/>
+<html:template id="template-paneExperimental">
+<vbox id="firefoxExperimentalCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneExperimental">
+  <html:h1 style="-moz-box-flex: 1;" data-l10n-id="pane-experimental-title"/>
+  <label><html:h2 id="pane-experimental-subtitle" data-l10n-id="pane-experimental-subtitle"/></label>
+  <hbox pack="end">
+    <button id="experimentalCategory-reset"
+            class="accessory-button"
+            data-l10n-id="pane-experimental-reset"/>
+  </hbox>
+</vbox>
+
+<groupbox data-category="paneExperimental"
+          id="pane-experimental-featureGates"
+          hidden="true">
+  <label class="search-header" hidden="true">
+    <html:h2 id="pane-experimental-search-results-header" data-l10n-id="pane-experimental-search-results-header"/>
+  </label>
+  <html:p data-l10n-id="pane-experimental-description2"/>
+</groupbox>
+</html:template>
+
+<html:template id="template-featureGate">
+    <html:div class="featureGate">
+        <checkbox class="featureGateCheckbox"/>
+        <label class="featureGateDescription"/>
+    </html:div>
+</html:template>

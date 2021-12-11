@@ -1,0 +1,447 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+const expectedBaseProps = {
+  // On Desktop builds, if "browse.chrome.guess_favicon" is set to true,
+  // a favicon requests may be triggered at a random time while the test
+  // cases are running, we include it the ignore list by default to prevent
+  // intermittent failures (e.g. see Bug 1733781 and Bug 1633189).
+  ignore: ["favicon.ico"],
+};
+
+function promiseWindowEvent(name, accept) {
+  return new Promise(resolve => {
+    window.addEventListener(name, function listener(event) {
+      if (event.data !== accept) {
+        return;
+      }
+      window.removeEventListener(name, listener);
+      resolve(event);
+    });
+  });
+}
+
+if (AppConstants.platform === "android") {
+  SimpleTest.requestLongerTimeout(3);
+}
+
+let extension;
+add_task(async function setup() {
+  // Clear the image cache, since it gets in the way otherwise.
+  let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
+  let cache = imgTools.getImgCacheForDocument(document);
+  cache.clearCache(false);
+  function clearCache() {
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services.cache2.clear();
+  }
+  SpecialPowers.loadChromeScript(clearCache);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.http.rcwn.enabled", false]],
+  });
+
+  extension = makeExtension();
+  await extension.startup();
+});
+
+// expect is a set of test values used by the background script.
+//
+// type: type of request action
+// events: optional, If defined only the events listed are expected for the
+//                   request. If undefined, all events except onErrorOccurred
+//                   and onBeforeRedirect are expected.  Must be in order received.
+// redirect: url to redirect to during onBeforeSendHeaders
+// status: number    expected status during onHeadersReceived, 200 default
+// cancel: event in which we return cancel=true.  cancelled message is sent.
+// cached: expected fromCache value, default is false, checked in onCompletion
+// headers: request or response headers to modify
+// origin: The expected originUrl, a default origin can be passed for all files
+
+add_task(async function test_webRequest_links() {
+  let expect = {
+    "file_style_bad.css": {
+      type: "stylesheet",
+      events: ["onBeforeRequest", "onErrorOccurred"],
+      cancel: "onBeforeRequest",
+    },
+    "file_style_redirect.css": {
+      type: "stylesheet",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      optional_events: ["onHeadersReceived"],
+      redirect: "file_style_good.css",
+    },
+    "file_style_good.css": {
+      type: "stylesheet",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+  addStylesheet("file_style_bad.css");
+  await extension.awaitMessage("cancelled");
+  // we redirect to style_good which completes the test
+  addStylesheet(`file_style_redirect.css?nocache=${Math.random()}`);
+  await extension.awaitMessage("done");
+});
+
+add_task(async function test_webRequest_images() {
+  let expect = {
+    "file_image_bad.png": {
+      type: "image",
+      events: ["onBeforeRequest", "onErrorOccurred"],
+      cancel: "onBeforeRequest",
+    },
+    "file_image_redirect.png": {
+      type: "image",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      optional_events: ["onHeadersReceived"],
+      redirect: "file_image_good.png",
+    },
+    "file_image_good.png": {
+      type: "image",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+  addImage("file_image_bad.png");
+  await extension.awaitMessage("cancelled");
+  // we redirect to image_good which completes the test
+  addImage("file_image_redirect.png");
+  await extension.awaitMessage("done");
+});
+
+add_task(async function test_webRequest_scripts() {
+  let expect = {
+    "file_script_bad.js": {
+      type: "script",
+      events: ["onBeforeRequest", "onErrorOccurred"],
+      cancel: "onBeforeRequest",
+    },
+    "file_script_redirect.js": {
+      type: "script",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      optional_events: ["onHeadersReceived"],
+      redirect: "file_script_good.js",
+    },
+    "file_script_good.js": {
+      type: "script",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+  let message = promiseWindowEvent("message", "test1");
+  addScript("file_script_bad.js");
+  await extension.awaitMessage("cancelled");
+  // we redirect to script_good which completes the test
+  addScript("file_script_redirect.js?q=test1");
+  await extension.awaitMessage("done");
+
+  is((await message).data, "test1", "good script ran");
+});
+
+add_task(async function test_webRequest_xhr_get() {
+  let expect = {
+    "file_script_xhr.js": {
+      type: "script",
+    },
+    "xhr_resource": {
+      status: 404,
+      type: "xmlhttprequest",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+  addScript("file_script_xhr.js");
+  await extension.awaitMessage("done");
+});
+
+add_task(async function test_webRequest_nonexistent() {
+  let expect = {
+    "nonexistent_script_url.js": {
+      status: 404,
+      type: "script",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+  addScript("nonexistent_script_url.js");
+  await extension.awaitMessage("done");
+});
+
+add_task(async function test_webRequest_checkCached() {
+  let expect = {
+    "file_image_good.png": {
+      type: "image",
+      cached: true,
+    },
+    "file_script_good.js": {
+      type: "script",
+      cached: true,
+    },
+    "file_style_good.css": {
+      type: "stylesheet",
+      cached: false,
+    },
+    "nonexistent_script_url.js": {
+      status: 404,
+      type: "script",
+      cached: false,
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+  let message = promiseWindowEvent("message", "test1");
+
+  addImage("file_image_good.png");
+  addScript("file_script_good.js?q=test1");
+
+  is((await message).data, "test1", "good script ran");
+
+  addStylesheet(`file_style_good.css?nocache=${Math.random()}`);
+  addScript("nonexistent_script_url.js");
+  await extension.awaitMessage("done");
+});
+
+add_task(async function test_webRequest_headers() {
+  let expect = {
+    "file_script_nonexistent.js": {
+      type: "script",
+      status: 404,
+      headers: {
+        request: {
+          add: {
+            "X-WebRequest-request": "text",
+            "X-WebRequest-request-binary": "binary",
+          },
+          modify: {
+            "user-agent": "WebRequest",
+          },
+          remove: [
+            "referer",
+          ],
+        },
+        response: {
+          add: {
+            "X-WebRequest-response": "text",
+            "X-WebRequest-response-binary": "binary",
+          },
+          modify: {
+            "server": "WebRequest",
+            "content-type": "text/html; charset=utf-8",
+          },
+          remove: [
+            "connection",
+          ],
+        },
+      },
+      completion: "onCompleted",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  await extension.awaitMessage("continue");
+  addScript("file_script_nonexistent.js");
+  await extension.awaitMessage("done");
+});
+
+add_task(async function test_webRequest_tabId() {
+  function background() {
+    let tab;
+    browser.tabs.onCreated.addListener(newTab => {
+      tab = newTab;
+    });
+
+    browser.test.onMessage.addListener(msg => {
+      if (msg === "close-tab") {
+        browser.tabs.remove(tab.id);
+        browser.test.sendMessage("tab-closed");
+      }
+    });
+  }
+
+  let tabExt = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "tabs",
+      ],
+    },
+    background,
+  });
+  await tabExt.startup();
+
+  let linkUrl = `file_WebRequest_page3.html?trigger=a&nocache=${Math.random()}`;
+  let expect = {
+    "file_WebRequest_page3.html": {
+      type: "main_frame",
+    },
+  };
+
+  extension.sendMessage("set-expected", {
+    ...expectedBaseProps,
+    expect,
+    origin: location.href,
+  });
+  await extension.awaitMessage("continue");
+  let a = addLink(linkUrl);
+  a.click();
+  await extension.awaitMessage("done");
+
+  let closed = tabExt.awaitMessage("tab-closed");
+  tabExt.sendMessage("close-tab");
+  await closed;
+
+  await tabExt.unload();
+});
+
+add_task(async function test_webRequest_tabId_browser() {
+  async function background(url) {
+    let tabId;
+    browser.test.onMessage.addListener(async (msg, expected) => {
+      if (msg == "create") {
+        let tab = await browser.tabs.create({url});
+        tabId = tab.id;
+        return;
+      }
+      if (msg == "done") {
+        await browser.tabs.remove(tabId);
+        browser.test.sendMessage("done");
+      }
+    });
+    browser.test.sendMessage("origin", browser.runtime.getURL("/"));
+  }
+
+  let pageUrl = `${SimpleTest.getTestFileURL("file_sample.html")}?nocache=${Math.random()}`;
+  let tabExt = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "tabs",
+      ],
+    },
+    background: `(${background})('${pageUrl}')`,
+  });
+
+  let expect = {
+    "file_sample.html": {
+      type: "main_frame",
+    },
+  };
+
+  await tabExt.startup();
+  let origin = await tabExt.awaitMessage("origin");
+
+  // expecting origin == extension baseUrl
+  extension.sendMessage("set-expected", {
+    ...expectedBaseProps,
+    expect,
+    origin,
+  });
+  await extension.awaitMessage("continue");
+
+  // open a tab from an extension principal
+  tabExt.sendMessage("create");
+  await extension.awaitMessage("done");
+  tabExt.sendMessage("done");
+  await tabExt.awaitMessage("done");
+  await tabExt.unload();
+});
+
+add_task(async function test_webRequest_frames() {
+  let expect = {
+    "redirection.sjs": {
+      status: 302,
+      type: "sub_frame",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived", "onBeforeRedirect"],
+    },
+    "dummy_page.html": {
+      type: "sub_frame",
+      status: 404,
+    },
+    "badrobot": {
+      type: "sub_frame",
+      status: 404,
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onErrorOccurred"],
+      // When an url's hostname fails to be resolved, an NS_ERROR_NET_ON_RESOLVED/RESOLVING
+      // onError event may be fired right before the NS_ERROR_UNKNOWN_HOST
+      // (See Bug 1516862 for a rationale).
+      optional_events: ["onErrorOccurred"],
+      error: ["NS_ERROR_UNKNOWN_HOST", "NS_ERROR_NET_ON_RESOLVED", "NS_ERROR_NET_ON_RESOLVING"],
+    },
+  };
+  extension.sendMessage("set-expected", {
+    ...expectedBaseProps,
+    expect,
+    origin: location.href
+  });
+  await extension.awaitMessage("continue");
+  addFrame("redirection.sjs");
+  addFrame("https://nonresolvablehostname.invalid/badrobot");
+  await extension.awaitMessage("done");
+});
+
+add_task(async function teardown() {
+  await extension.unload();
+});
+
+add_task(async function test_case_preserving() {
+  const manifest = {
+    permissions: [
+      "webRequest",
+      "webRequestBlocking",
+      "http://mochi.test/",
+    ],
+  };
+
+  async function background() {
+    // This is testing if header names preserve case,
+    // so the case-sensitive comparison is on purpose.
+    function ua({url, requestHeaders}) {
+      if (url.endsWith("?blind-add")) {
+        requestHeaders.push({name: "user-agent", value: "Blind/Add"});
+        return {requestHeaders};
+      }
+      for (const header of requestHeaders) {
+        if (header.name === "User-Agent") {
+          header.value = "Case/Sensitive";
+        }
+      }
+      return {requestHeaders};
+    }
+
+    await browser.webRequest.onBeforeSendHeaders.addListener(ua, {urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]);
+    browser.test.sendMessage("ready");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  const response1 = await fetch(SimpleTest.getTestFileURL("return_headers.sjs"));
+  const headers1 = JSON.parse(await response1.text());
+
+  is(headers1["user-agent"], "Case/Sensitive", "User-Agent header matched and changed.");
+
+  const response2 = await fetch(SimpleTest.getTestFileURL("return_headers.sjs?blind-add"));
+  const headers2 = JSON.parse(await response2.text());
+
+  is(headers2["user-agent"], "Blind/Add", "User-Agent header blindly added.");
+
+  await extension.unload();
+});
+
+</script>
+</head>
+<body>
+<div id="test">Sample text</div>
+
+</body>
+</html>

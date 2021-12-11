@@ -1,0 +1,16 @@
+ideal_width = 80
+max_width = 120
+
+newline_style = "Unix"
+normalize_comments = false
+
+force_explicit_abi = true
+fn_args_density = "Vertical"
+
+chain_indent = "Visual"
+chain_one_line_max = 90
+
+struct_lit_multiline_style = "ForceMulti"
+
+match_block_trailing_comma = true
+where_trailing_comma = true

@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Utility interfaces for testing.
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, function, uuid(d58a82ab-d8f7-4ca9-9273-b3290d42a0cf)]
+interface nsIXPCTestFunctionInterface : nsISupports {
+  string echo(in string arg);
+};
+
+[scriptable, uuid(1e9cddeb-510d-449a-b152-3c1b5b31d41d)]
+interface nsIXPCTestUtils : nsISupports {
+  nsIXPCTestFunctionInterface doubleWrapFunction(in nsIXPCTestFunctionInterface f);
+};

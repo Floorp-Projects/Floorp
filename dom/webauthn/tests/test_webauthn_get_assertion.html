@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Tests for GetAssertion for W3C Web Authentication</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Tests for GetAssertion for W3C Web Authentication</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
+    isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+    isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
+    isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoint must exist");
+
+    let gAssertionChallenge = new Uint8Array(16);
+    window.crypto.getRandomValues(gAssertionChallenge);
+
+    let invalidCred = {type: "Magic", id: base64ToBytes("AAA=")};
+    let unknownCred = {type: "public-key", id: base64ToBytes("AAA=")};
+    let validCred = null;
+
+    function requestGetAssertion(params) {
+      return navigator.credentials.get(params);
+    }
+
+    function arrivingHereIsGood(aResult) {
+      ok(true, "Good result! Received a: " + aResult);
+    }
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectNotAllowedError(aResult) {
+      ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError, got " + aResult);
+    }
+
+    function expectInvalidStateError(aResult) {
+      ok(aResult.toString().startsWith("InvalidStateError"), "Expecting a InvalidStateError, got " + aResult);
+    }
+
+    function expectTypeError(aResult) {
+      ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError, got " + aResult);
+    }
+
+    function expectAbortError(aResult) {
+      is(aResult.code, DOMException.ABORT_ERR, "Expecting an AbortError");
+    }
+
+    add_task(() => {
+      return SpecialPowers.pushPrefEnv({"set": [
+        ["security.webauth.webauthn", true],
+        ["security.webauth.webauthn_enable_softtoken", true],
+        ["security.webauth.webauthn_enable_usbtoken", false],
+        ["security.webauth.webauthn_enable_android_fido2", false],
+      ]});
+    });
+
+    // Set up a valid credential
+    add_task(async () => {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+      };
+
+      return navigator.credentials.create({publicKey})
+      .then(res => validCred = {type: "public-key", id: res.rawId} );
+    });
+
+    // Test basic good call, but without giving a credential so expect failures
+    // this is OK by the standard, but not supported by U2F-backed authenticators
+    // like the soft token in use here.
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsBad)
+        .catch(expectInvalidStateError);
+    });
+
+    // Test with a valid credential
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        allowCredentials: [validCred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+    });
+
+    // Test with an unexpected option. That won't stop anything, and we'll
+    // fail with InvalidState just as if we had no valid credentials -- which
+    // we don't.
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        unknownValue: "hi"
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsBad)
+        .catch(expectInvalidStateError);
+    });
+
+    // Test with an unexpected option but a valid credential
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        unknownValue: "hi",
+        allowCredentials: [validCred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+    });
+
+    // Test with an unexpected transport on a valid credential
+    add_task(async () => {
+      let cred = validCred;
+      cred.transports = ["unknown", "usb"];
+
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        unknownValue: "hi",
+        allowCredentials: [cred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+    });
+
+    // Test with an invalid credential
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        allowCredentials: [invalidCred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsBad)
+        .catch(expectTypeError);
+    });
+
+    // Test with an unknown credential
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        allowCredentials: [unknownCred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsBad)
+        .catch(expectInvalidStateError);
+    });
+
+    // Test with an unexpected option and an invalid credential
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        unknownValue: "hi",
+        allowCredentials: [invalidCred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsBad)
+        .catch(expectTypeError);
+    });
+
+    // Test with an empty credential list
+    // This will return InvalidStateError since the softotken consents, but
+    // there are no valid credentials.
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        allowCredentials: []
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsBad)
+        .catch(expectInvalidStateError);
+    });
+
+    add_task(() => {
+      // Enable USB tokens.
+      return SpecialPowers.pushPrefEnv({"set": [
+        ["security.webauth.webauthn", true],
+        ["security.webauth.webauthn_enable_softtoken", false],
+        ["security.webauth.webauthn_enable_usbtoken", true]
+      ]});
+    });
+
+    // Test with an empty credential list
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        allowCredentials: []
+      };
+
+      let ctrl = new AbortController();
+      let request = requestGetAssertion({publicKey, signal: ctrl.signal})
+                         .then(arrivingHereIsBad)
+                         .catch(expectAbortError);
+
+      // Wait a tick for the statemachine to start.
+      await Promise.resolve();
+
+      // The request should time out. We'll abort it here and will fail or
+      // succeed upon resolution, when the error code is checked.
+      ctrl.abort();
+      await request;
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=660663
+-->
+<head>
+  <title>Test for Bug 660663</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=660663">Mozilla Bug 660663</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 660663 **/
+reflectLimitedEnumerated({
+  element: document.createElement("div"),
+  attribute: "dir",
+  validValues: ["ltr", "rtl", "auto"],
+  invalidValues: ["cheesecake", ""]
+});
+</script>
+</pre>
+</body>
+</html>

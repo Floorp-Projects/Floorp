@@ -1,0 +1,27 @@
+<script>
+window.requestIdleCallback(function() {
+  document.documentElement.style.display="none";
+  document.documentElement.getBoundingClientRect();
+  document.documentElement.style.display="";
+});
+</script>
+<style>
+#a {
+  display: table-caption;
+}
+:not(altGlyphDef) {
+  text-indent: 1vw;
+  overflow-x: scroll;
+}
+#b {
+  bottom: 0em;
+  font: small/7% cursive;
+  transform: translate3d(0px, 1px, -1px);
+  max-height: 3mm;
+  filter: brightness(0);
+}
+</style>
+<button id="a">
+<dialog id="b" open="">
+<h5>&
+

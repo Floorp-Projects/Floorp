@@ -1,0 +1,27 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
+
+# The addons blocklist is also in mobile/android/installer/package-manifest.in
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    # Remove this once bug 1639050 is resolved.
+    FINAL_TARGET_FILES.defaults.settings.blocklists += ["addons.json"]
+else:
+    FINAL_TARGET_FILES.defaults.settings.blocklists += [
+        "addons-bloomfilters.json",
+        "gfx.json",
+        "plugins.json",
+    ]
+
+FINAL_TARGET_FILES.defaults.settings.blocklists["addons-bloomfilters"] += [
+    "addons-bloomfilters/addons-mlbf.bin",
+    "addons-bloomfilters/addons-mlbf.bin.meta.json",
+]
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DIST_SUBDIR = "browser"

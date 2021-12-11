@@ -1,0 +1,255 @@
+libteora 1.2.0alpha1 (2010 September 23)
+
+- New 'ptalarbvorm' encoder with better rate/distortion optimization
+- New th_encode_ctl option for copying configuration from an existing
+  setup header, useful for splicing streams.
+- Returns TH_DUPFRAME in more cases.
+- Add ARM optimizations
+- Add TI C64x+ DSP optimizations
+- Other performance improvements
+- Rename speedlevel 2 to 3 and provide a new speedlevel 2
+- Various minor bug fixes
+
+libtheora 1.1.2 (unreleased snapshot)
+
+ - Fix Huffman table decoding with OC_HUFF_SLUSH is set to 0
+ - Fix a frame size bug in player_example
+ - Add support for passing a buffer the size of the picture
+   region, rather than a full padded frame to th_encode_ycbcr_in()
+   as was possible with the legacy pre-1.0 API.
+ - 4:4:4 support in player_example using software yuv->rgb
+ - Better rgb->yuv conversion in png2theora
+ - Clean up warnings and local variables
+ - Build and documentation fixes
+
+libtheora 1.1.1 (2009 October 1)
+
+ - Fix problems with MSVC inline assembly
+ - Add the missing encoder_disabled.c to the distribution
+ - build updates: autogen.sh should work better after switching systems
+   and the MSVC project now defaults to the dynamic runtime library
+ - Namespace some variables to avoid conflicts on wince.
+
+libtheora 1.1.0 (2009 September 24)
+
+ - Fix various small issues with the example and telemetry code
+ - Fix handing a zero-byte packet as the first frame
+ - Documentation cleanup
+ - Two minor build fixes
+
+libtheora 1.1beta3 (2009 August 22)
+
+ - Rate control fixes to smooth quality
+ - MSVC build now exports all of the 1.0 api
+ - Assorted small bug fixes
+
+libtheora 1.1beta2 (2009 August 12)
+
+ - Fix a rate control problem with difficult input
+ - Build fixes for OpenBSD and Apple Xcode
+ - Examples now all use the 1.0 api
+ - TH_ENCCTL_SET_SPLEVEL works again
+ - Various bug fixes and source tree rearrangement
+
+libtheora 1.1beta1 (2009 August 5)
+
+ - Support for two-pass encoding
+ - Performance optimization of both encoder and decoder
+ - Encoder supports dynamic adjustment of quality and 
+   bitrate targets
+ - Encoder is generally more configurable, and all
+   rate control modes perform better
+ - Encoder now accepts 4:2:2 and 4:4:4 chroma sampling
+ - Decoder telemetry output shows quantization choice
+   and a breakdown of bitrate usage in the frame
+ - MSVC assembly optimizations up to date and functional
+
+libtheora 1.1alpha2 (2009 May 26)
+
+ - Reduce lambda for small quantizers.
+ - New encoder fDCT does better on smooth gradients
+ - Use SATD for mode decisions (1-2% bitrate reduction)
+ - Assembly rewrite for new features and general speed up
+ - Share code between the encoder and decoder for performance
+ - Fix 4:2:2 decoding and telemetry
+ - MSVC project files updated, but assembly is disabled.
+ - New configure option --disable-spec to work around toolchain
+   detection failures.
+ - Limit symbol exports on MacOS X.
+ - Port remaining unit tests from the 1.0 release.
+
+libtheora 1.1alpha1 (2009 March 27)
+
+ - Encoder rewrite with much improved vbr quality/bitrate and
+   better tracking of the target rate in cbr mode.
+ - MSVC project files do not work in this release.
+
+libtheora 1.0 (2008 November 3)
+
+ - Merge x86 assembly for forward DCT from Thusnelda branch.
+ - Update 32 bit MMX with loop filter fix.
+ - Check for an uninitialized state before dereferencing in propagating
+   decode calls.
+ - Remove all TH_DEBUG statements.
+ - Rename the bitpacker source files copied from libogg to avoid
+   confusing simple build systems using both libraries.
+ - Declare bitfield entries to be explicitly signed for Solaris cc.
+ - Set quantization parameters to default values when an empty buffer is
+   passed with TH_ENCCTL_SET_QUANT_PARAMS.
+ - Split encoder and decoder tests depending on configure settings.
+ - Return lstylex.sty to the distribution.
+ - Disable inline assembly on gcc versions prior to 3.1.
+ - Remove extern references for OC_*_QUANT_MIN.
+ - Make various data tables static const so they can be read-only.
+ - Remove ENCCTL codes from the old encoder API.
+ - Implement TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE ctl.
+ - Fix segfault when exactly one of the width or height is not a multiple
+   of 16, but the other is.
+ - Compute the correct vertical offset for chroma.
+ - cpuid assembly fix for MSVC.
+ - Add VS2008 project files.
+ - Build updates for 64-bit platforms, Mingw32, VS and XCode.
+ - Do not clobber the cropping rectangle.
+ - Declare ourselves 1.0final to pkg-config to sort after beta releases.
+ - Fix the scons build to include asm in libtheoradec/enc.
+
+libtheora 1.0beta3 (2008 April 16)
+
+ - Build new libtheoradec and libtheoraenc libraries
+   supporting the new API from theora-exp. This API should
+   not be considered stable yet.
+ - Change granule_frame() to return an index as documented.
+   This is a change of behaviour from 1.0beta1.
+ - Document that granule_time() returns the end of the
+   presentation interval.
+ - Use a custom copy of the libogg bitpacker in the decoder
+   to avoid function call overhead.
+ - MMX code improved and ported to MSVC.
+ - Fix a problem with the MMX code on SELinux.
+ - Fix a problem with decoder quantizer initialization.
+ - Fix a page queue problem with png2theora.
+ - Improved robustness.
+ - Updated VS2005 project files.
+ - Dropped build support for Microsoft VS2003.
+ - Dropped build support for the unreleased libogg2.
+ - Added the specification to the autotools build.
+ - Specification corrections.
+
+libtheora 1.0beta2 (2007 October 12)
+
+ - Fix a crash bug on char-is-unsigned architectures (PowerPC)
+ - Fix a buffer sizing issue that caused rare encoder crashes
+ - Fix a buffer alignment issue
+ - Build fixes for MingW32, MSVC
+ - Improved format documentation.
+
+libtheora 1.0beta1 (2007 September 22)
+
+ - Granulepos scheme modified to match other codecs. This bumps
+   the bitstream revision to 3.2.1. Bitstreams marked 3.2.0 are
+   handled correctly by this decoder. Older decoders will show
+   a one frame sync error in the less noticeable direction.
+
+libtheora 1.0alpha8 (2007 September 18)
+
+ - Switch to new spec compliant decoder from theora-exp branch.
+   Written by Dr. Timothy Terriberry.
+ - Add support to the encoder for using quantization settings
+   provided by the application.
+ - more assembly optimizations
+
+libtheora 1.0alpha7 (2006 June 20)
+
+ - Enable mmx assembly by default
+ - Avoid some relocations that caused problems on SELinux
+ - Other build fixes
+ - time testing mode (-f) for the dump_video example
+
+libtheora 1.0alpha6 (2006 May 30)
+
+ * Merge theora-mmx simd acceleration (x86_32 and x86_64)
+ * Major RTP payload specification update
+ * Minor format specification updates
+ * Fix some spurious calls to free() instead of _ogg_free()
+ * Fix invalid array indexing in PixelLineSearch()
+ * Improve robustness against invalid input
+ * General warning cleanup
+ * The offset_y member now means what every application thought it meant
+   (offset from the top). This will mean some old files (those with a 
+   non-centered image created with a buggy encoder) will display differently.
+
+libtheora 1.0alpha5 (2005 August 20)
+
+ * Fixed bitrate management bugs that caused popping and encode
+   errors
+ * Fixed a crash problem with the theora_state internals not
+   being intialized properly.
+ * new utility function:
+   - theora_granule_shift()
+ * dump_video example now makes YUV4MPEG files by default, so
+   the results can be fed back to encoder_example and similar
+   tools. The old behavior is restored through the '-r' switch.
+ * ./configure now prints a summary
+ * simple unit test of the comment api under 'make check'
+ * misc code cleanup, warning and leak fixes
+
+libtheora 1.0alpha4 (2004 December 15)
+
+ * first draft of the Theora I Format Specification
+ * API documentation generated from theora.h with Doxygen
+ * fix a double-update bug in the motion analysis
+ * apply the loop filter before filling motion vector border 
+   in the reference frame
+ * new utility functions:
+   - theora_packet_isheader(),
+   - theora_packet_iskeyframe()
+   - theora_granule_frame()
+ * optional support for building without floating point
+ * optional support for building without encode support 
+ * various build and packaging fixes
+ * pkg-config support
+ * SymbianOS build support
+
+libtheora 1.0alpha3 (2004 March 20)
+
+ UPDATE: on 2004 July 1 the Theora I bitstream format was frozen. Files
+ produced by the libtheora 1.0alpha3 reference encoder will always be
+ decodable by the Theora I spec.
+
+ * Bitstream info header FORMAT CHANGES:
+   - move the granulepos shift field to maintain byte alignment longer.
+   - reserve 5 additional bits for subsampling and interlace flags.
+ * Bitstream setup header FORMAT CHANGES:
+   - support for a range of interpolated quant matricies.
+   - include the in-loop block filter coeff.
+ * Bitsteam data packet FORMAT CHANGES:
+   - Reserve a bit for per-block Q index selection.
+   - Flip the coded image orientation for compatibility with VP3.
+     This allows lossless transcoding of VP3 content, but files
+     encoded with earlier theora releases would play upside down.
+ * example VP3 lossless transcoder
+ * optional support for libogg2
+ * timing improvements in the example player
+ * packaging and build system updates and fixes
+
+libtheora 1.0alpha2 (2003 June 9)
+
+ * bitstream FORMAT CHANGES:
+   - store the quant tables in a third setup header for
+     future encoder flexibility
+   - store the huffman tables in the third setup header
+   - add a field for marking the colorspace to the info header
+   - add crop parameters for non-multiple-of-16 frame sizes
+   - add a second vorbiscomment-style metadata header
+ * API changes to handle multiple headers with a single 
+   theora_decode_header() call, like libvorbis
+ * code cleanup and minor fixes
+ * new dump_video code example/utility
+ * experimental win32 code examples
+
+libtheora 1.0alpha1 (2002 September 25)
+
+ * First release of the theora reference implementation
+ * Port of the newly opened VP3 code to the Ogg container
+ * Rewrite of the code for portability and to use the libogg bitpacker
+

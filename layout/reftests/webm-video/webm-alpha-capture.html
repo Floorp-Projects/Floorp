@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Test that if a WebM video has an alpha channel, it is displayed correctly when captured.</title>
+<script>
+async function runTest() {
+  const v = document.createElement("video");
+  document.body.appendChild(v);
+  const vout = document.createElement("video");
+  document.body.appendChild(vout);
+  v.preload = "auto";
+  v.src = "webm-alpha.webm";
+  await new Promise(r => v.onloadeddata = r);
+  vout.srcObject = v.mozCaptureStream();
+  v.play();
+  await new Promise(r => vout.onloadeddata = r);
+  document.documentElement.removeAttribute("class");
+}
+</script>
+<body style="background:grey;" onload="runTest()">
+</body>
+</html>

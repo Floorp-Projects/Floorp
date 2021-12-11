@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=534785
+-->
+<head>
+  <title>Test for Bug 534785</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=534785">Mozilla Bug 534785</a>
+<p id="display"></p>
+<input type="text" value="test">
+<div id="reframe">
+<textarea></textarea>
+<textarea>test</textarea>
+<input type="text">
+<input type="text" value="test">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 534785 **/
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  var i = document.querySelector("input");
+  i.addEventListener("focus", function() {
+    is(i.value, "test", "Sanity check");
+
+    is(document.activeElement, i, "Should be focused before frame reconstruction");
+    sendString("1");
+    is(i.value, "1test", "Can accept keyboard events before frame reconstruction");
+
+    // force frame reconstruction
+    i.style.display = "none";
+    document.offsetHeight;
+    i.style.display = "";
+    document.offsetHeight;
+
+    is(document.activeElement, i, "Should be focused after frame reconstruction");
+    sendString("2");
+    is(i.value, "12test", "Can accept keyboard events after frame reconstruction");
+
+    // Make sure reframing happens gracefully
+    var reframeDiv = document.getElementById("reframe");
+    var textAreaWithoutValue = reframeDiv.querySelectorAll("textarea")[0];
+    var textAreaWithValue = reframeDiv.querySelectorAll("textarea")[1];
+    var inputWithoutValue = reframeDiv.querySelectorAll("input")[0];
+    var inputWithValue = reframeDiv.querySelectorAll("input")[1];
+    reframeDiv.style.display = "none";
+    document.body.offsetWidth;
+    reframeDiv.style.display = "";
+    document.body.offsetWidth;
+    [textAreaWithoutValue, inputWithoutValue].forEach(function (elem) {
+      is(elem.value, "", "Value should persist correctly");
+    });
+    [textAreaWithValue, inputWithValue].forEach(function (elem) {
+      is(elem.value, "test", "Value should persist correctly");
+    });
+    [inputWithoutValue, inputWithValue].forEach(elem => elem.type = "submit");
+    document.body.offsetWidth;
+    is(inputWithoutValue.value, "", "Value should persist correctly");
+    is(inputWithValue.value, "test", "Value should persist correctly");
+    [inputWithoutValue, inputWithValue].forEach(elem => elem.type = "text");
+    document.body.offsetWidth;
+    is(inputWithoutValue.value, "", "Value should persist correctly");
+    is(inputWithValue.value, "test", "Value should persist correctly");
+    [inputWithoutValue, inputWithValue].forEach(elem => elem.focus()); // initialze the editor
+    reframeDiv.style.display = "none";
+    document.body.offsetWidth;
+    reframeDiv.style.display = "";
+    document.body.offsetWidth;
+    is(inputWithoutValue.value, "", "Value should persist correctly with editor");
+    is(inputWithValue.value, "test", "Value should persist correctly with editor");
+
+    SimpleTest.finish();
+  });
+  i.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body bgcolor="#FFFFFF">
+
+<table border="1" bgcolor="green">
+<tr>
+<td>Some text</td>
+<td>Some text</td>
+<td>Some text</td>
+</tr>
+</table>
+
+</body>
+</html>

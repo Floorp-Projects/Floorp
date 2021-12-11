@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Subtest for Login Manager notifications with 2 password fields and no username</title>
+</head>
+<body>
+<h2>Subtest 24</h2>
+<form id="form" action="formsubmit.sjs">
+  <input id="pass1" name="pass1" type="password" value="staticpw">
+  <input id="pass" name="pass" type="password">
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  SpecialPowers.wrap(pass).setUserInput("notifyp1");
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+var pass      = document.getElementById("pass");
+
+</script>
+</body>
+</html>

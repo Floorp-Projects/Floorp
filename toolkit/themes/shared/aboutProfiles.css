@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/info-pages.css");
+
+#profiles {
+  clear: both;
+}
+
+button {
+  margin-inline: 0 8px;
+}
+
+.opendir {
+  margin-inline-start: 3px;
+}

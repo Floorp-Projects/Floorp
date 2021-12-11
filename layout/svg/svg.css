@@ -1,0 +1,104 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url(http://www.w3.org/2000/svg);
+@namespace xml url(http://www.w3.org/XML/1998/namespace);
+
+style, script {
+ display: none;
+}
+
+/*
+ * This is only to be overridden by the rule right below.
+ *
+ * NOTE(emilio): NodeCouldBeRendered in SVGUseElement.cpp relies on this.
+ */
+symbol {
+ display: none !important;
+}
+
+/*
+ * From https://svgwg.org/svg2-draft/struct.html#SymbolNotes:
+ *
+ * > The generated instance of a 'symbol' that is the direct referenced element
+ * > of a 'use' element must always have a computed value of inline for the
+ * > display property. In other words, it must be rendered whenever the host
+ * > 'use' element is rendered.
+ *
+ * NOTE(emilio): other browsers instead just replace the `<symbol>` element by
+ * an `<svg>` element while cloning, but they don't implement the SVG2
+ * selector-matching rules that would make that observable via selectors.
+ */
+symbol:-moz-use-shadow-tree-root {
+  display: inline !important;
+}
+
+svg:not(:root), symbol, image, marker, pattern, foreignObject {
+ overflow: hidden;
+}
+
+@media all and (-moz-is-glyph) {
+ :root {
+   fill: context-fill;
+   fill-opacity: context-fill-opacity;
+   stroke: context-stroke;
+   stroke-opacity: context-stroke-opacity;
+   stroke-width: context-value;
+   stroke-dasharray: context-value;
+   stroke-dashoffset: context-value;
+ }
+}
+
+foreignObject {
+  appearance: none ! important;
+  margin: 0 ! important;
+  padding: 0 ! important;
+  border-width: 0 ! important;
+  white-space: normal;
+}
+
+@media all and (-moz-is-resource-document) {
+ foreignObject *|* {
+   appearance: none !important;
+ }
+}
+
+*|*::-moz-svg-foreign-content {
+  display: block !important;
+  /* We need to be an absolute and fixed container */
+  transform: translate(0) !important;
+  text-indent: 0;
+}
+
+/* Set |transform-origin:0 0;| for all SVG elements except outer-<svg>,
+   noting that 'svg' as a child of 'foreignObject' counts as outer-<svg>.
+*/
+*:not(svg),
+*:not(foreignObject) > svg {
+  transform-origin:0 0;
+}
+
+*|*::-moz-svg-text {
+  unicode-bidi: inherit;
+  vector-effect: inherit;
+}
+
+*[xml|space=preserve] {
+  white-space: -moz-pre-space;
+}
+
+*|*::-moz-svg-marker-anon-child {
+  clip-path: inherit;
+  filter: inherit;
+  mask: inherit;
+  opacity: inherit;
+}
+
+/* Make SVG shapes unselectable to avoid triggering AccessibleCaret on tap.
+   <mesh> will be supported in bug 1238882. */
+circle, ellipse, line, mesh, path, polygon, polyline, rect {
+  user-select: none;
+}

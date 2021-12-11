@@ -1,0 +1,67 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>focus move tests caused by a call of Selection.addRange() into iframe</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body onload="doTest()">
+<div style="height: 3000px;">Spacer to check whether or not page was scrolled down to focused editor</div>
+<p>Here is an iframe:</p>
+<iframe src="Selection_addRange_into_iframe_iframe.html"></iframe>
+<script>
+"use strict";
+
+setup({explicit_done:true});
+
+function doTest() {
+    var selection = document.getSelection();
+    var childDocument = document.getElementsByTagName("iframe")[0].contentDocument;
+    var childSelection = childDocument.getSelection();
+    test(function() {
+        selection.collapse(document.body.firstChild, 0);
+        childSelection.collapse(childDocument.body.firstChild, 0);
+
+        document.documentElement.scrollTop = 0;
+        childDocument.documentElement.scrollTop = 0;
+        childSelection.removeAllRanges();
+        var range = childDocument.createRange();
+        range.selectNodeContents(childDocument.getElementById("editor1"));
+        childSelection.addRange(range);
+        assert_equals(document.activeElement, document.body);
+        assert_equals(childDocument.activeElement, childDocument.getElementById("editor1"));
+        assert_equals(document.documentElement.scrollTop, 0);
+        assert_equals(childDocument.documentElement.scrollTop, 0);
+    }, "Active element should be 'editor1' in the <iframe> after Selection.addRange() but parent's active document should be the <body>");
+    test(function() {
+        selection.collapse(document.body.firstChild, 0);
+        childSelection.collapse(childDocument.getElementById("editor1").firstChild, 0);
+
+        document.documentElement.scrollTop = 0;
+        childDocument.documentElement.scrollTop = 0;
+        childSelection.removeAllRanges();
+        var range = childDocument.createRange();
+        range.selectNodeContents(childDocument.getElementById("editor2"));
+        childSelection.addRange(range);
+        assert_equals(document.activeElement, document.body);
+        assert_equals(childDocument.activeElement, childDocument.getElementById("editor2"));
+        assert_equals(document.documentElement.scrollTop, 0);
+        assert_equals(childDocument.documentElement.scrollTop, 0);
+    }, "Active element should be 'editor2' in the <iframe> after Selection.addRange() but parent's active document should be the <body>");
+    test(function() {
+        selection.collapse(document.body.firstChild, 0);
+        childSelection.collapse(childDocument.getElementById("editor2").firstChild, 0);
+
+        document.documentElement.scrollTop = 0;
+        childDocument.documentElement.scrollTop = 0;
+        childSelection.removeAllRanges();
+        var range = childDocument.createRange();
+        range.selectNodeContents(childDocument.getElementById("non-editor"));
+        childSelection.addRange(range);
+        assert_equals(document.activeElement, document.body);
+        assert_equals(childDocument.activeElement, childDocument.getElementById("editor2"));
+        assert_equals(document.documentElement.scrollTop, 0);
+        assert_equals(childDocument.documentElement.scrollTop, 0);
+    }, "Active element should be 'editor2' in the <iframe> after Selection.addRange() to non-editable <div> and parent's active document should be the <body>");
+
+    done();
+}
+</script>

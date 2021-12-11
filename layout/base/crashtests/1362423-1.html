@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    * {
+      unicode-bidi: bidi-override;
+      column-width: 1px;
+      height: 1px;
+    }
+    *::first-letter { unicode-bidi: auto; }
+  </style>
+  <script>
+    o1 = document.createElement('div');
+    o1.innerText = "0\u202A\uD843\uDFF30\u8F4F\DFC\u5DFC9\u0669u";
+    document.documentElement.appendChild(o1);
+  </script>
+</head>

@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the Console API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the Console API</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+let expectedConsoleCalls = [];
+
+function doConsoleCalls(aState)
+{
+  const longString = (new Array(DevToolsServer.LONG_STRING_LENGTH + 2)).join("a");
+
+  top.console.log("foobarBaz-log", undefined);
+
+  top.console.log("Float from not a number: %f", "foo");
+  top.console.log("Float from string: %f", "1.2");
+  top.console.log("Float from number: %f", 1.3);
+
+  top.console.info("foobarBaz-info", null);
+  top.console.warn("foobarBaz-warn", top.document.documentElement);
+  top.console.debug(null);
+  top.console.trace();
+  top.console.dir(top.document, top.location);
+  top.console.log("foo", longString);
+
+  const sandbox = new Cu.Sandbox(null, { invisibleToDebugger: true });
+  const sandboxObj = sandbox.eval("new Object");
+  top.console.log(sandboxObj);
+
+  function fromAsmJS() {
+      top.console.error("foobarBaz-asmjs-error", undefined);
+  }
+
+  (function(global, foreign) {
+    "use asm";
+    function inAsmJS2() { foreign.fromAsmJS() }
+    function inAsmJS1() { inAsmJS2() }
+    return inAsmJS1
+  })(null, { fromAsmJS:fromAsmJS })();
+
+  expectedConsoleCalls = [
+    {
+      level: "log",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-log", { type: "undefined" }],
+    },
+    {
+      level: "log",
+      arguments: ["Float from not a number: NaN"],
+    },
+    {
+      level: "log",
+      arguments: ["Float from string: 1.200000"],
+    },
+    {
+      level: "log",
+      arguments: ["Float from number: 1.300000"],
+    },
+    {
+      level: "info",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-info", { type: "null" }],
+    },
+    {
+      level: "warn",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
+    },
+    {
+      level: "debug",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [{ type: "null" }],
+    },
+    {
+      level: "trace",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      stacktrace: [
+        {
+          filename: /test_consoleapi/,
+          functionName: "doConsoleCalls",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "onAttach",
+        },
+      ],
+    },
+    {
+      level: "dir",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [
+        {
+          type: "object",
+          actor: /[a-z]/,
+          class: "HTMLDocument",
+        },
+        {
+          type: "object",
+          actor: /[a-z]/,
+          class: "Location",
+        }
+      ],
+    },
+    {
+      level: "log",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [
+        "foo",
+        {
+          type: "longString",
+          initial: longString.substring(0,
+            DevToolsServer.LONG_STRING_INITIAL_LENGTH),
+          length: longString.length,
+          actor: /[a-z]/,
+        },
+      ],
+    },
+    {
+      level: "log",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [
+        {
+          type: "object",
+          actor: /[a-z]/,
+          class: "InvisibleToDebugger: Object",
+        },
+      ],
+    },
+    {
+      level: "error",
+      filename: /test_consoleapi/,
+      functionName: "fromAsmJS",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-asmjs-error", { type: "undefined" }],
+
+      stacktrace: [
+        {
+          filename: /test_consoleapi/,
+          functionName: "fromAsmJS",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "inAsmJS2",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "inAsmJS1",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "doConsoleCalls",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "onAttach",
+        },
+      ],
+    },
+  ];
+}
+
+async function startTest()
+{
+  removeEventListener("load", startTest);
+
+  const {state, response} = await attachConsoleToTab(["ConsoleAPI"]);
+  onAttach(state, response);
+}
+
+function onAttach(aState, aResponse)
+{
+  onConsoleAPICall = onConsoleAPICall.bind(null, aState);
+  aState.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
+  doConsoleCalls(aState.actor);
+}
+
+let consoleCalls = [];
+
+function onConsoleAPICall(aState, aPacket)
+{
+  info("received message level: " + aPacket.message.level);
+
+  consoleCalls.push(aPacket.message);
+  if (consoleCalls.length != expectedConsoleCalls.length) {
+    return;
+  }
+
+  aState.webConsoleFront.off("consoleAPICall", onConsoleAPICall);
+
+  expectedConsoleCalls.forEach(function(aMessage, aIndex) {
+    info("checking received console call #" + aIndex);
+    checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
+  });
+
+
+  consoleCalls = [];
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<!--
+  Test backwards seeking with cross-time container dependencies.
+ -->
+<head>
+<script>
+function snapshot()
+{
+  var a = document.getElementById("svg-a");
+  var b = document.getElementById("svg-b");
+  a.pauseAnimations();
+  b.pauseAnimations();
+  a.setCurrentTime(0);
+  b.setCurrentTime(2); // 'b' has now begun and 'a' has a begin time of '-1s' in
+                       // a's container time
+  b.setCurrentTime(1); // Perform a backwards seek--'a' should now have a begin
+                       // time of '0s' in container time
+  a.setCurrentTime(1); // So seeking forward 1s should get us to the middle of
+                       // the interval
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="snapshot()">
+<svg xmlns="http://www.w3.org/2000/svg" width="230px" height="230px" id="svg-a">
+  <rect x="100" y="15" width="200" height="200" fill="blue">
+    <animate attributeName="x" from="0" to="30" begin="b.begin" dur="2s"/>
+  </rect>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="230px" height="230px" id="svg-b">
+  <set attributeName="y" to="0" begin="1s" id="b"/>
+</svg>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=478438
+-->
+<head>
+  <title>Test for Bug 478438</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    function fail(s, e) { ok(false, s + e) }
+    function pass(s, e) { ok(true, s) }
+    (pass.opposite = fail).opposite = pass;
+
+    function test() {
+      if (test.calledAlready)
+        return;
+      test.calledAlready = true;
+
+      var iwin = document.getElementById("f").contentWindow;
+
+      function testOne(fn, onAllow, infinitive) {
+        try { fn(); onAllow("able " + infinitive, "") }
+        catch (e) { onAllow.opposite("unable " + infinitive, ": " + e) }
+      }
+
+      testOne(() => iwin.focus, pass,
+              "to resolve/get allAccess property iwin.focus");
+
+      testOne(() => iwin.focus(), pass,
+              "to call allAccess method iwin.focus");
+
+      testOne(() => iwin.alert, fail,
+              "to resolve/get restricted property iwin.alert");
+
+      testOne(() => iwin.alert(), fail,
+              "to call restricted method iwin.alert");
+
+      testOne(() => iwin.location.toString(), fail,
+              "to call restricted method iwin.location.toString");
+
+      testOne(function() { iwin.location = "http://example.org" }, pass,
+              "to set writable property iwin.location");
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478438">Mozilla Bug 478438</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="f" src="http://example.com" onload="test()"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 478438 **/
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

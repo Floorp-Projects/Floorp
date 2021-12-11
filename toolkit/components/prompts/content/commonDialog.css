@@ -1,0 +1,154 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  min-width: 29em;
+}
+
+dialog[insecureauth] {
+  --icon-url: url("chrome://global/skin/icons/security-broken.svg");
+}
+
+#dialogGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  max-height: 100%;
+}
+
+.dialogRow:not([hidden]) {
+  display: contents;
+}
+
+#iconContainer {
+  align-self: start;
+}
+
+#infoContainer {
+  max-width: 45em;
+}
+
+#infoTitle {
+  margin-bottom: 1em;
+}
+
+#infoBody {
+  -moz-user-focus: normal;
+  user-select: text;
+  cursor: text !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+  unicode-bidi: plaintext;
+}
+
+.sizeDetermined #infoBody {
+  overflow-y: auto;
+}
+
+.sizeDetermined,
+.sizeDetermined::part(content-box) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sizeDetermined > div {
+  display: contents;
+}
+
+#loginLabel, #password1Label {
+  text-align: start;
+}
+
+#loginTextbox,
+#password1Textbox {
+  text-align: match-parent;
+}
+
+/* use flexbox instead of grid: */
+dialog[subdialog],
+dialog[subdialog] #dialogGrid,
+dialog[subdialog] #infoContainer,
+dialog[subdialog] .dialogRow:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+dialog[subdialog] #infoContainer {
+  max-height: 100%;
+}
+
+dialog[subdialog] #infoContainer,
+dialog[subdialog] #checkboxContainer {
+  /* Needed to ensure text wrapping happens correctly. Without this, when
+   * text wraps unexpectedly, the overall dialog height is off by the height
+   * of a line of text. This is 100% of the width, minus the grid padding, 8px
+   * of which is inline padding on the contents of these containers. */
+  max-width: calc(100vw - 2 * var(--grid-padding) + 8px);
+}
+
+.sizeDetermined #infoRow {
+  min-height: 0;
+}
+
+dialog[subdialog] #iconContainer {
+  display: none;
+}
+
+/* Fix padding/spacing */
+dialog[subdialog] {
+  --grid-padding: 16px;
+  /* All the inner items should have 4px inline margin, leading to 1.16em spacing
+   * between the dialog and its contents, and 8px horizontal spacing between items. */
+  padding: var(--grid-padding) calc(var(--grid-padding) - 4px);
+}
+
+/* Use an ID selector for the dialog to win on specificity... */
+#commonDialog[subdialog] description,
+#commonDialog[subdialog] checkbox {
+  margin: 0 4px;
+}
+
+#commonDialog[subdialog] checkbox {
+  /* Align the checkbox to the first line of text using "baseline" to be less
+   * sensitive than "start" to the label's font-size and line-height. */
+  -moz-box-align: baseline;
+}
+
+#commonDialog[subdialog] label {
+  margin: 4px; /* Labels for input boxes should get block as well as the regular inline margin. */
+}
+
+#commonDialog[subdialog] .checkbox-label {
+  /* The checkbox already has the horizontal margin, so override the rule
+   * above. */
+  margin: 0;
+}
+
+#commonDialog[subdialog] .checkbox-check {
+  margin-block: 0;
+  /* With "baseline" alignment, if the checkbox is larger than the label, it
+   * behaves like "start" positioned to the top; otherwise, it is positioned to
+   * the bottom edge of the label, so shift back up to center it with text.  */
+  translate: 0 calc(-0.35 * max(1em - 100%, 0px) + 1px);
+}
+
+#commonDialog[subdialog] input {
+  margin: 0 4px 4px;
+}
+
+/* Add vertical spaces between rows: */
+dialog[subdialog] .dialogRow {
+  margin-block: 0 var(--grid-padding);
+}
+
+/* Fix spacing in the `prompt()` case: */
+dialog[subdialog] #loginLabel[value=""] {
+  display: none;
+}
+
+dialog[subdialog][windowtype="prompt:prompt"] #infoRow {
+  margin-bottom: 4px;
+}

@@ -1,0 +1,43 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for console API and blobs</title>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  </head>
+  <body>
+    <script type="text/javascript">
+
+  function consoleListener() {
+    SpecialPowers.addObserver(this, "console-api-log-event");
+  }
+
+  var order = 0;
+  consoleListener.prototype  = {
+    observe(aSubject, aTopic, aData) {
+    ok(true, "Something has been received");
+    is(aTopic, "console-api-log-event");
+
+    var obj = aSubject.wrappedJSObject;
+    if (obj.arguments[0] && obj.arguments[0].msg === 'consoleAndBlobs') {
+      SpecialPowers.removeObserver(this, "console-api-log-event");
+      is(obj.arguments[0].blob.size, 3, "The size is correct");
+      is(obj.arguments[0].blob.type, 'foo/bar', "The type is correct");
+      SimpleTest.finish();
+    }
+  }
+  }
+
+  var cl = new consoleListener();
+
+  new Worker('worker_consoleAndBlobs.js');
+  SimpleTest.waitForExplicitFinish();
+
+    </script>
+  </body>
+</html>

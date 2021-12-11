@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=562932
+-->
+<head>
+  <title>Test for Bug 562932</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=562932">Mozilla Bug 562932</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <!-- No @for, we have to check the content -->
+  <label id='l1'><input id='i1'></label>
+  <label id='l2'><input id='i2'><input></label>
+  <label id='l3'></label>
+  <label id='l4a'><fieldset id='f'>foo</fieldset></label>
+  <label id='l4b'><label id='l4c'><input id='i3'></label></label>
+  <label id='l4d'><label id='l4e'><input id='i3b'></label><input></label>
+
+  <!-- With @for, we do no check the content -->
+  <label id='l5' for='i1'></label>
+  <label id='l6' for='i4'></label>
+  <label id='l7' for='i4'><input></label>
+  <label id='l8' for='i1 i2'></label>
+  <label id='l9' for='i1 i2'><input></label>
+  <label id='l10' for='f'></label>
+  <label id='l11' for='i4'></label>
+  <label id='l12' for='i5'></label>
+  <label id='l13' for=''><input></label>
+  <!-- <label id='l14'> is created in script -->
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 562932 **/
+
+function checkControl(aLabelId, aElementId, aMsg)
+{
+  var element = null;
+
+  if (aElementId != null) {
+    element = document.getElementById(aElementId);
+  }
+
+  is(document.getElementById(aLabelId).control, element, aMsg);
+}
+
+ok('control' in document.createElement('label'),
+   "label element should have a control IDL attribute");
+
+checkControl('l1', 'i1', "label control should be the first form element");
+checkControl('l2', 'i2', "label control should be the first form element");
+checkControl('l3', null, "label control should be null when there is no child");
+checkControl('l4a', null, "label control should be null when there is no \
+             labelable form element child");
+checkControl('l4b', 'i3', "label control should be the first labelable element \
+             in tree order");
+checkControl('l4c', 'i3', "label control should be the first labelable element \
+             in tree order");
+checkControl('l4d', 'i3b', "label control should be the first labelable element \
+             in tree order");
+checkControl('l4e', 'i3b', "label control should be the first labelable element \
+             in tree order");
+checkControl('l5', 'i1', "label control should be the id in @for");
+checkControl('l6', null,
+             "label control should be null if the id in @for is not valid");
+checkControl('l7', null,
+             "label control should be null if the id in @for is not valid");
+checkControl('l8', null,
+             "label control should be null if there are more than one id in @for");
+checkControl('l9', null,
+             "label control should be null if there are more than one id in @for");
+checkControl('l10', null, "label control should be null if the id in @for \
+             is not an id from a labelable form element");
+
+var inputOutOfDocument = document.createElement('input');
+inputOutOfDocument.id = 'i4';
+checkControl('l11', null, "label control should be null if the id in @for \
+             is not an id from an element in the document");
+
+var inputInDocument = document.createElement('input');
+inputInDocument.id = 'i5';
+document.getElementById('content').appendChild(inputInDocument);
+checkControl('l12', 'i5', "label control should be the id in @for");
+
+checkControl('l13', null, "label control should be null if the id in @for \
+             is empty");
+
+var labelOutOfDocument = document.createElement('label');
+labelOutOfDocument.htmlFor = 'i1';
+is(labelOutOfDocument.control, null, "out of document label shouldn't \
+   labelize a form control");
+
+</script>
+</pre>
+</body>
+</html>

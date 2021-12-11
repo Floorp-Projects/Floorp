@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Rounded rectangle clipping test</title>
+<style>
+.clipround {
+  left:100px;
+  top:100px;
+  position:absolute;
+  width:700px;
+  height:380px;
+  overflow:hidden;
+  border-radius:45px;
+}
+canvas {
+  position:absolute;
+}
+#nrcCanvas0 {
+  left:0px;
+  top:0px;
+}
+#nrcCanvas1 {
+  left:320px;
+  top:0px;
+}
+#nrcCanvas2 {
+  left:0px;
+  top:240px;
+}
+</style>
+</head>
+
+<body>
+<div class="clipround">
+<canvas id="nrcCanvas0" width="320" height="260"></canvas> 
+<canvas id="nrcCanvas1" width="320" height="260"></canvas>
+<canvas id="nrcCanvas2" width="320" height="260"></canvas> 
+</div>
+
+<script>
+  drawShapes('nrcCanvas0');
+  drawShapes('nrcCanvas1');
+  drawShapes('nrcCanvas2');
+    
+  function drawShapes(elName) {
+    var ctxt = document.getElementById(elName).getContext('2d');
+    ctxt.fillStyle = '#00ff00';
+    ctxt.fillRect(0, 0, 300, 230);
+  }
+</script>
+</body>
+</html>

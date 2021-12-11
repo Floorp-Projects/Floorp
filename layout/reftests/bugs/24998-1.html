@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>border-radius background image clipping (bug 24998)</title>
+    <style type="text/css">
+      div {
+        height: 100px;
+        width: 100px;
+        border-radius: 100px;
+        /* this must be bigger than 1x1 */
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACEAIAAACtREYwAAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAACAAAAAgBqLH6AAAAAGUlEQVQI12NkYGBg+P+fgYGBgYGBiQEJAAApJQICMg0uAAAAAABJRU5ErkJggg==);
+      }
+    </style>
+  </head>
+  <body>
+    <div></div>
+  </body>
+</html>

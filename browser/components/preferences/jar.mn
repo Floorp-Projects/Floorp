@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+   content/browser/preferences/preferences.js
+   content/browser/preferences/extensionControlled.js
+*  content/browser/preferences/preferences.xhtml
+
+   content/browser/preferences/main.js
+   content/browser/preferences/home.js
+   content/browser/preferences/search.js
+   content/browser/preferences/privacy.js
+   content/browser/preferences/containers.js
+   content/browser/preferences/sync.js
+   content/browser/preferences/experimental.js
+   content/browser/preferences/moreFromMozilla.js
+   content/browser/preferences/fxaPairDevice.xhtml
+   content/browser/preferences/fxaPairDevice.js
+   content/browser/preferences/findInPage.js

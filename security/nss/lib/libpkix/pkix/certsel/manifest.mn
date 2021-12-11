@@ -1,0 +1,20 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../../../..
+
+PRIVATE_EXPORTS = \
+	pkix_certselector.h \
+	pkix_comcertselparams.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	pkix_certselector.c \
+	pkix_comcertselparams.c \
+	$(NULL)
+
+LIBRARY_NAME = pkixcertsel
+SHARED_LIBRARY = $(NULL)

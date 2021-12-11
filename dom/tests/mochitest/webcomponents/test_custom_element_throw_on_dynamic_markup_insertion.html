@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1378079
+-->
+<head>
+  <title>Test throw on dynamic markup insertion when creating element synchronously from parser</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1378079">Bug 1378079</a>
+<div id="container"></div>
+
+<script>
+
+class DoDocumentOpenInCtor extends HTMLElement {
+  constructor() {
+    super();
+    document.open();
+  }
+};
+customElements.define('x-document-open-in-ctor', DoDocumentOpenInCtor);
+
+class DoDocumentWriteInCtor extends HTMLElement {
+  constructor() {
+    super();
+    document.write('<div>This should not be shown</div>');
+  }
+};
+customElements.define('x-document-write-in-ctor', DoDocumentWriteInCtor);
+
+class DoDocumentCloseInCtor extends HTMLElement {
+  constructor() {
+    super();
+    document.close();
+  }
+};
+customElements.define('x-document-close-in-ctor', DoDocumentCloseInCtor);
+
+window.errors = [];
+window.onerror = function(message, url, lineNumber, columnNumber, error) {
+  errors.push(error.name);
+  return true;
+}
+var expectedErrorCount = 0;
+
+document.write("<x-document-open-in-ctor></x-document-open-in-ctor>");
+expectedErrorCount++;
+is(window.errors.length, expectedErrorCount, "expectedErrorCount should be " + expectedErrorCount);
+is(window.errors[expectedErrorCount - 1], 'InvalidStateError', "Error name should be 'InvalidStateError'");
+
+document.write("<x-document-write-in-ctor></x-document-write-in-ctor>");
+expectedErrorCount++;
+is(window.errors.length, expectedErrorCount, "expectedErrorCount should be " + expectedErrorCount);
+is(window.errors[expectedErrorCount - 1], 'InvalidStateError', "Error name should be 'InvalidStateError'");
+
+document.write("<x-document-close-in-ctor></x-document-close-in-ctor>");
+expectedErrorCount++;
+is(window.errors.length, expectedErrorCount, "expectedErrorCount should be " + expectedErrorCount);
+is(window.errors[expectedErrorCount - 1], 'InvalidStateError', "Error name should be 'InvalidStateError'");
+
+</script>
+
+</body>
+</html>

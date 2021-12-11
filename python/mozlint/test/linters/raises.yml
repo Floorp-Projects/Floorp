@@ -1,0 +1,6 @@
+---
+RaisesLinter:
+    description: Raises an exception
+    include: ['.']
+    type: external
+    payload: external:raises

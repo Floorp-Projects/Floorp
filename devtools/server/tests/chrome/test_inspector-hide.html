@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+let gWalker = null;
+let gInspectee = null;
+
+addTest(async function setup() {
+  const url = document.getElementById("inspectorContent").href;
+  const { target, doc } = await attachURL(url);
+  const inspector = await target.getFront("inspector");
+  gInspectee = doc;
+  gWalker = inspector.walker;
+  runNextTest();
+});
+
+addTest(function testRearrange() {
+  let listFront = null;
+  const listNode = gInspectee.querySelector("#longlist");
+
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#longlist").then(front => {
+    listFront = front;
+  }).then(() => {
+    const computed = gInspectee.defaultView.getComputedStyle(listNode);
+    is(computed.visibility, "visible", "Node should be visible to start with");
+    return gWalker.hideNode(listFront);
+  }).then(response => {
+    const computed = gInspectee.defaultView.getComputedStyle(listNode);
+    is(computed.visibility, "hidden", "Node should be hidden");
+    return gWalker.unhideNode(listFront);
+  }).then(() => {
+    const computed = gInspectee.defaultView.getComputedStyle(listNode);
+    is(computed.visibility, "visible", "Node should be visible again.");
+  }).then(runNextTest));
+});
+
+addTest(function cleanup() {
+  gWalker = null;
+  gInspectee = null;
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

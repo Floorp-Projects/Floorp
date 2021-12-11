@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>font-variant-position fallback</title>
+<meta charset="UTF-8">
+<style>
+
+/* sups: 0-9 + - ( ) =  subs: 0-9 + - ( ) */
+@font-face {
+  font-family: subsuper;
+  src: url(../fonts/subsuper.woff); /* FiraSans with blank omega */
+}
+
+body {
+  margin: 20px;
+  font-family: subsuper, sans-serif;
+}
+
+p {
+  margin: 10px;
+  font-size: 50px;
+  line-height: 2;
+  width: -moz-fit-content;
+  background: black;
+}
+h4 { font-weight: normal; }
+span.sub { font-variant-position: sub; }
+span.super { font-variant-position: super; }
+</style>
+</head>
+<body>
+<h4>The black bars should NOT be the same length</h4>
+<p>&nbsp;XXXXXXXXXX&nbsp;</p>
+<p>&nbsp;X<span class=sub>XXXXXXXX</span>X&nbsp;</p>
+<p>&nbsp;X<span class=super>XXXXXXXX</span>X&nbsp;</p>
+</body>
+</html>

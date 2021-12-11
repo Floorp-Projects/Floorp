@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=229915
+-->
+<head>
+  <title>Test for Bug 229915</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  p { color: black; background: transparent; }
+  p.prev + p { color: green; }
+  p.prev ~ p { background: white; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=229915">Mozilla Bug 229915</a>
+<div id="display">
+
+<div>
+  <p id="toinsertbefore">After testing, this should turn green.</p>
+</div>
+
+<div>
+  <p id="toreplace">To be replaced.</p>
+  <p id="replacecolor">After testing, this should turn green.</p>
+</div>
+
+<div>
+  <p class="prev">Previous paragraph.</p>
+  <p id="toremove">To be removed.</p>
+  <p id="removecolor">After testing, this should turn green.</p>
+</div>
+
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 229915 **/
+
+const GREEN = "rgb(0, 128, 0)";
+const BLACK = "rgb(0, 0, 0)";
+const TRANSPARENT = "rgba(0, 0, 0, 0)";
+const WHITE = "rgb(255, 255, 255)";
+
+function make_prev() {
+  var result = document.createElement("p");
+  result.setAttribute("class", "prev");
+  var t = document.createTextNode("Dynamically created previous paragraph.");
+  result.appendChild(t);
+  return result;
+}
+
+function color(id) {
+  return getComputedStyle(document.getElementById(id), "").color;
+}
+function bg(id) {
+  return getComputedStyle(document.getElementById(id), "").backgroundColor;
+}
+
+var node;
+
+// test insert
+is(color("toinsertbefore"), BLACK, "initial state (insertion test)");
+is(bg("toinsertbefore"), TRANSPARENT, "initial state (insertion test)");
+node = document.getElementById("toinsertbefore");
+node.parentNode.insertBefore(make_prev(), node);
+is(color("toinsertbefore"), GREEN, "inserting should turn node green");
+is(bg("toinsertbefore"), WHITE, "inserting should turn background white");
+
+// test replace
+is(color("replacecolor"), BLACK, "initial state (replacement test)");
+is(bg("replacecolor"), TRANSPARENT, "initial state (replacement test)");
+node = document.getElementById("toreplace");
+node.parentNode.replaceChild(make_prev(), node);
+is(color("replacecolor"), GREEN, "replacing should turn node green");
+is(bg("replacecolor"), WHITE, "replacing should turn background white");
+
+// test remove
+is(color("removecolor"), BLACK, "initial state (removal test)");
+is(bg("removecolor"), WHITE, "initial state (removal test; no change)");
+node = document.getElementById("toremove");
+node.remove();
+is(color("removecolor"), GREEN, "removing should turn node green");
+is(bg("removecolor"), WHITE, "removing should leave background");
+
+</script>
+</pre>
+</body>
+</html>

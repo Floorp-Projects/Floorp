@@ -1,0 +1,56 @@
+# Tests for grid and flex sizing in buttons
+== button-display-flex-fullsize-1.html button-display-flex-fullsize-1-ref.html
+== button-display-grid-fullsize-1.html button-display-grid-fullsize-1-ref.html
+
+== first-letter-1.html first-letter-1-ref.html
+!= first-letter-1.html first-letter-1-noref.html
+
+== max-height.html max-height-ref.html
+== min-height.html min-height-ref.html
+
+# Android is off ever-so-slightly on the points where the text
+# runs into the border on this text, so a little fuzz is needed.
+fuzzy-if(Android,0-1,0-16) == overflow-areas-1.html overflow-areas-1-ref.html
+
+# The buttons in these tests have some fancy shading applied to their corners
+# on Android, despite their "-moz-appearance: none; background: gray", so they
+# don't quite match the reference case's normal <div>. That's why they're fuzzy.
+fuzzy-if(Android,0-125,0-20) == percent-height-child.html percent-height-child-ref.html
+fuzzy-if(Android,0-125,0-20) == percent-width-child.html  percent-width-child-ref.html
+
+== vertical-centering.html vertical-centering-ref.html
+
+!= line-height-button-0.5.html line-height-button-1.0.html
+!= line-height-button-1.5.html line-height-button-1.0.html
+!= line-height-input-0.5.html line-height-input-1.0.html
+!= line-height-input-1.5.html line-height-input-1.0.html
+
+# Looks like Android changes the text color, but to something slightly
+# different from ColorGray
+== disabled-1.html disabled-1-ref.html
+== disabled-2.html disabled-2-ref.html
+
+!= disabled-3.html disabled-3-notref.html
+!= disabled-4.html disabled-4-notref.html
+!= disabled-5.html disabled-5-notref.html
+!= disabled-6.html disabled-6-notref.html
+
+!= author-padding.html author-padding-notref.html
+
+== width-auto-size-em-ltr.html width-auto-size-em-ltr-ref.html
+== width-auto-size-ltr.html width-auto-size-ltr-ref.html
+== width-exact-fit-ltr.html width-auto-size-ltr-ref.html
+== width-auto-size-em-rtl.html width-auto-size-em-rtl-ref.html
+== width-auto-size-rtl.html width-auto-size-rtl-ref.html
+== width-exact-fit-rtl.html width-auto-size-rtl-ref.html
+== display-grid-flex-columnset.html display-grid-flex-columnset-ref.html
+== button-empty-columns.html button-empty-columns-ref.html
+== 1317351.html 1317351-ref.html
+
+== dynamic-text-indent.html dynamic-text-indent-ref.html
+
+fuzzy-if(!nativeThemePref,0-5,0-1) == 1349646.html 1349646-ref.html
+
+== appearance-revert.html appearance-revert-ref.html
+
+needs-focus == focus-non-themed.html focus-non-themed-ref.html

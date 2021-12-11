@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=523771
+-->
+<head>
+  <title>Test for Bug 523771</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/EventUtils.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=523771">Mozilla Bug 523771</a>
+<p id="display"></p>
+<iframe name="target_iframe" id="target_iframe"></iframe>
+<form action="form_submit_server.sjs" target="target_iframe" id="form"
+      method="POST" enctype="multipart/form-data">
+  <table>
+    <tr>
+      <td>Control type</td>
+      <td>Name and value</td>
+      <td>Name, empty value</td>
+      <td>Name, no value</td>
+      <td>Empty name, with value</td>
+      <td>No name, with value</td>
+      <td>No name or value</td>
+    </tr>
+    <tr>
+      <td>Submit input</td>
+      <td><input type=submit name="n1_1" value="v1_1"></td>
+      <td><input type=submit name="n1_2" value=""></td>
+      <td><input type=submit name="n1_3"></td>
+      <td><input type=submit name="" value="v1_4"></td>
+      <td><input type=submit value="v1_5"></td>
+      <td><input type=submit></td>
+    </tr>
+    <tr>
+      <td>Image input</td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="n2_1" value="v2_1"></td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="n2_2" value=""></td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="n2_3"></td>
+      <td><input type=image src="file_formSubmission_img.jpg" name="" value="v2_4"></td>
+      <td><input type=image src="file_formSubmission_img.jpg" value="v2_5"></td>
+      <td><input type=image src="file_formSubmission_img.jpg"></td>
+    </tr>
+    <tr>
+      <td>Submit button</td>
+      <td><button type=submit name="n3_1" value="v3_1"></button></td>
+      <td><button type=submit name="n3_2" value=""></button></td>
+      <td><button type=submit name="n3_3"></button></td>
+      <td><button type=submit name="" value="v3_4"></button></td>
+      <td><button type=submit value="v3_5"></button></td>
+      <td><button type=submit ></button></td>
+    </tr>
+    <tr>
+      <td>Submit button with text</td>
+      <td><button type=submit name="n4_1" value="v4_1">text here</button></td>
+      <td><button type=submit name="n4_2" value="">text here</button></td>
+      <td><button type=submit name="n4_3">text here</button></td>
+      <td><button type=submit name="" value="v4_4">text here</button></td>
+      <td><button type=submit value="v4_5">text here</button></td>
+      <td><button type=submit>text here</button></td>
+    </tr>
+  </table>
+</form>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var gen = runTest();
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  gen.next();
+});
+
+var expectedSub = [
+  // Submit input
+  [{ name: "n1_1", value: "v1_1" }],
+  [{ name: "n1_2", value: "" }],
+  [{ name: "n1_3", value: "Submit Query" }],
+  [],
+  [],
+  [],
+  // Image input
+  [{ name: "n2_1.x", value: "10" },
+   { name: "n2_1.y", value: "7"  }],
+  [{ name: "n2_2.x", value: "10" },
+   { name: "n2_2.y", value: "7"  }],
+  [{ name: "n2_3.x", value: "10" },
+   { name: "n2_3.y", value: "7"  }],
+  [{ name: "x", value: "10" },
+   { name: "y", value: "7"  }],
+  [{ name: "x", value: "10" },
+   { name: "y", value: "7"  }],
+  [{ name: "x", value: "10" },
+   { name: "y", value: "7"  }],
+  // Submit button
+  [{ name: "n3_1", value: "v3_1" }],
+  [{ name: "n3_2", value: "" }],
+  [{ name: "n3_3", value: "" }],
+  [],
+  [],
+  [],
+  // Submit button with text
+  [{ name: "n4_1", value: "v4_1" }],
+  [{ name: "n4_2", value: "" }],
+  [{ name: "n4_3", value: "" }],
+  [],
+  [],
+  [],
+];
+
+function checkSubmission(sub, expected) {
+  function getPropCount(o) {
+    var x, l = 0;
+    for (x in o) ++l;
+    return l;
+  }
+
+  is(sub.length, expected.length,
+     "Correct number of items");
+  var i;
+  for (i = 0; i < expected.length; ++i) {
+    if (!("fileName" in expected[i])) {
+      is(sub[i].headers["Content-Disposition"],
+         "form-data; name=\"" + expected[i].name + "\"",
+         "Correct name");
+      is (getPropCount(sub[i].headers), 1,
+          "Wrong number of headers");
+    }
+    else {
+      is(sub[i].headers["Content-Disposition"],
+         "form-data; name=\"" + expected[i].name + "\"; filename=\"" +
+           expected[i].fileName + "\"",
+         "Correct name");
+      is(sub[i].headers["Content-Type"],
+         expected[i].contentType,
+         "Correct content type");
+      is (getPropCount(sub[i].headers), 2,
+          "Wrong number of headers");
+    }
+    is(sub[i].body,
+       expected[i].value,
+       "Correct value");
+  }
+}
+
+function clickImage(aTarget, aX, aY)
+{
+  aTarget.style.position = "absolute";
+  aTarget.style.top = "0";
+  aTarget.style.left = "0";
+  aTarget.offsetTop;
+
+  var wu = SpecialPowers.getDOMWindowUtils(aTarget.ownerDocument.defaultView);
+
+  wu.sendMouseEvent('mousedown',  aX, aY, 0, 1, 0);
+  wu.sendMouseEvent('mouseup',  aX, aY, 0, 0, 0);
+
+  aTarget.style.position = "";
+  aTarget.style.top = "";
+  aTarget.style.left = "";
+}
+
+function* runTest() {
+  // Make normal submission
+  var form = $("form");
+  var iframe = $("target_iframe");
+  iframe.onload = function() { gen.next(); };
+
+  var elements = form.querySelectorAll("input, button");
+
+  is(elements.length, expectedSub.length,
+     "tests vs. expected out of sync");
+
+  var i;
+  for (i = 0; i < elements.length && i < expectedSub.length; ++i) {
+    elem = elements[i];
+    if (elem.localName != "input" || elem.type != "image") {
+      elem.click();
+    }
+    else {
+      clickImage(elem, 10, 7);
+    }
+    yield undefined;
+
+    var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+    checkSubmission(submission, expectedSub[i]);
+  }
+
+  // Disabled controls
+  var i;
+  for (i = 0; i < elements.length && i < expectedSub.length; ++i) {
+    elem = elements[i];
+    form.onsubmit = function() {
+      elem.disabled = true;
+    }
+    if (elem.localName != "input" || elem.type != "image") {
+      elem.click();
+    }
+    else {
+      clickImage(elem, 10, 7);
+    }
+    yield undefined;
+
+    is(elem.disabled, true, "didn't disable");
+    elem.disabled = false;
+    form.onsubmit = undefined;
+
+    var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+    checkSubmission(submission, []);
+  }
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

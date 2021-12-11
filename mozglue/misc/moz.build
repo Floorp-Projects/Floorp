@@ -1,0 +1,134 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+FINAL_LIBRARY = "mozglue"
+
+EXPORTS.mozilla += [
+    "AutoProfilerLabel.h",
+    "AwakeTimeStamp.h",
+    "decimal/Decimal.h",
+    "decimal/DoubleConversion.h",
+    "IntegerPrintfMacros.h",
+    "MmapFaultHandler.h",
+    "PlatformConditionVariable.h",
+    "PlatformMutex.h",
+    "Printf.h",
+    "Sprintf.h",
+    "StackWalk.h",
+    "TimeStamp.h",
+    "Uptime.h",
+]
+
+EXPORTS.mozilla.glue += [
+    "Debug.h",
+    "WinUtils.h",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    EXPORTS.mozilla += [
+        "GetKnownFolderPath.h",
+        "PreXULSkeletonUI.h",
+        "StackWalk_windows.h",
+        "StackWalkThread.h",
+        "TimeStamp_windows.h",
+        "WindowsDpiAwareness.h",
+    ]
+
+SOURCES += [
+    "AutoProfilerLabel.cpp",
+    "AwakeTimeStamp.cpp",
+    "MmapFaultHandler.cpp",
+    "Printf.cpp",
+    "StackWalk.cpp",
+    "TimeStamp.cpp",
+    "Uptime.cpp",
+]
+
+OS_LIBS += CONFIG["REALTIME_LIBS"]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    EXPORTS.mozilla += [
+        "DynamicallyLinkedFunctionPtr.h",
+        "ImportDir.h",
+        "NativeNt.h",
+        "WindowsDpiInitialization.h",
+        "WindowsEnumProcessModules.h",
+        "WindowsMapRemoteView.h",
+        "WindowsProcessMitigations.h",
+    ]
+    EXPORTS.mozilla.glue += [
+        "WindowsUnicode.h",
+    ]
+    SOURCES += [
+        "GetKnownFolderPath.cpp",
+        "TimeStamp_windows.cpp",
+        "WindowsDpiInitialization.cpp",
+        "WindowsMapRemoteView.cpp",
+        "WindowsProcessMitigations.cpp",
+        "WindowsUnicode.cpp",
+    ]
+
+    OS_LIBS += [
+        "dbghelp",
+        "oleaut32",
+        "ole32",
+    ]
+
+    if not CONFIG["JS_STANDALONE"]:
+        SOURCES += [
+            "/ipc/mscom/COMWrappers.cpp",
+            "/ipc/mscom/ProcessRuntime.cpp",
+            "PreXULSkeletonUI.cpp",
+        ]
+
+    if CONFIG["ACCESSIBILITY"]:
+        SOURCES += [
+            "/ipc/mscom/ActivationContext.cpp",
+        ]
+
+elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
+    SOURCES += [
+        "TimeStamp_posix.cpp",
+    ]
+elif CONFIG["OS_ARCH"] == "Darwin":
+    SOURCES += [
+        "TimeStamp_darwin.cpp",
+    ]
+elif CONFIG["COMPILE_ENVIRONMENT"]:
+    error("No TimeStamp implementation on this platform.  Build will not succeed")
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    SOURCES += [
+        "ConditionVariable_windows.cpp",
+        "Mutex_windows.cpp",
+    ]
+# WASI hasn't supported cond vars and mutexes yet so noop implementation is used.
+elif CONFIG["OS_ARCH"] == "WASI":
+    SOURCES += [
+        "ConditionVariable_noop.cpp",
+        "Mutex_noop.cpp",
+    ]
+else:
+    SOURCES += [
+        "ConditionVariable_posix.cpp",
+        "Mutex_posix.cpp",
+    ]
+
+if CONFIG["MOZ_LINKER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    LOCAL_INCLUDES += [
+        "/mozglue/linker",
+    ]
+
+SOURCES += [
+    "decimal/Decimal.cpp",
+]
+
+if CONFIG["CC_TYPE"] == "clang":
+    # Suppress warnings from third-party V8 Decimal code.
+    SOURCES["decimal/Decimal.cpp"].flags += ["-Wno-implicit-fallthrough"]
+
+for var in ("MOZ_APP_BASENAME", "MOZ_APP_VENDOR"):
+    DEFINES[var] = '"%s"' % CONFIG[var]

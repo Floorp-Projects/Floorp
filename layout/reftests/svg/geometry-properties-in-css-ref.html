@@ -1,0 +1,25 @@
+<!doctype html>
+<svg width="800" height="600">
+  <g>
+    <rect x="40" y="40" width="100" height="100" rx="30" ry="30" fill="purple" />
+    <rect x="40" y="150" width="30" height="200" rx="20" ry="20" fill="magenta" />
+  </g>
+  <circle cx="170" cy="340" r="70px" fill="pink" />
+  <g>
+    <circle cx="230" cy="130" r="70px" fill="skyblue" />
+  </g>
+  <svg x="300" width="200" height="200" viewBox="0 0 100 100">
+    <ellipse cx="30" cy="100" rx="20" ry="40" fill="cyan" />
+    <ellipse cx="80" cy="50" rx="20" ry="40" fill="navy" />
+  </svg>
+  <foreignObject x="450" y="200" width="80" height="130">
+    <svg>
+      <rect width="50" height="50" rx="4" ry="4" fill="brown" />
+    </svg>
+  </foreignObject>
+  <rect x="300" y="260" width="50" height="50" fill="red" />
+  <defs>
+      <rect id="r3" width="80" height="80" fill="skyblue" />
+  </defs>
+  <use x="400" y="310" href="#r3"/>
+</svg>

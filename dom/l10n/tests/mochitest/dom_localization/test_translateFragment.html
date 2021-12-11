@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.translateFragment</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+title = Hello World
+subtitle = Welcome to FluentBundle
+` },
+  ];
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      ["/mock.ftl"],
+      false,
+      l10nReg,
+      ["en-US"],
+    );
+
+    const frag = document.querySelectorAll("div")[0];
+    const h1 = document.querySelectorAll("h1")[0];
+    const p1 = document.querySelectorAll("p")[0];
+
+    await domLoc.translateFragment(frag);
+    is(h1.textContent, "Hello World");
+    is(p1.textContent, "Welcome to FluentBundle");
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <div>
+    <h1 data-l10n-id="title" />
+    <p data-l10n-id="subtitle" />
+  </div>
+</body>
+</html>

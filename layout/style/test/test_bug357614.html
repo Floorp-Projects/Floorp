@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=357614
+-->
+<head>
+  <title>Test for Bug 357614</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style type="text/css" id="style">
+  a { color: red; }
+  a { color: green; }
+  </style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=357614">Mozilla Bug 357614</a>
+<p id="display"><a href="http://www.FOO.com/" rel="next" rev="PREV" foo="bar">a link</a></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 357614 **/
+
+var sheet = document.getElementById("style").sheet;
+var rule1 = sheet.cssRules[0];
+var rule2 = sheet.cssRules[1];
+
+var a = document.getElementById("display").firstChild;
+var cs = getComputedStyle(a, "");
+
+function change_selector_text(selector) {
+  // rule2.selectorText = selector; // NOT IMPLEMENTED
+
+  sheet.deleteRule(1);
+  sheet.insertRule(selector + " { color: green; }", 1);
+}
+
+var cs_green = cs.getPropertyValue("color");
+change_selector_text('p');
+var cs_red = cs.getPropertyValue("color");
+isnot(cs_green, cs_red, "computed values for green and red are different");
+
+change_selector_text('a[href="http://www.FOO.com/"]');
+is(cs.getPropertyValue("color"), cs_green, "selector on href value matches case-sensitively");
+
+change_selector_text('a[href="http://www.foo.com/"]');
+is(cs.getPropertyValue("color"), cs_red, "selector on href value does not match case-insensitively");
+
+change_selector_text('a[rel="next"]');
+is(cs.getPropertyValue("color"), cs_green, "selector on rel value matches case-sensitively");
+
+change_selector_text('a[rel="NEXT"]');
+is(cs.getPropertyValue("color"), cs_green, "selector on rel value matches case-insensitively");
+
+change_selector_text('a[rev="PREV"]');
+is(cs.getPropertyValue("color"), cs_green, "selector on rev value matches case-sensitively");
+
+change_selector_text('a[rev="prev"]');
+is(cs.getPropertyValue("color"), cs_green, "selector on rev value matches case-insensitively");
+
+change_selector_text('a[foo="bar"]');
+is(cs.getPropertyValue("color"), cs_green, "selector on foo value matches case-sensitively");
+
+change_selector_text('a[foo="Bar"]');
+is(cs.getPropertyValue("color"), cs_red, "selector on foo value does not match case-insensitively");
+
+</script>
+</pre>
+</body>
+</html>
+

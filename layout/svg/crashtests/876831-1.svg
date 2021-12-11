@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script>
+
+function boom()
+{
+    var x = document.getElementById("x").firstChild;
+    x.data = x.data.slice(1);
+    document.caretPositionFromPoint(0, 0);
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+
+<text><tspan id="x">@&#x062A;</tspan></text>
+
+</svg>

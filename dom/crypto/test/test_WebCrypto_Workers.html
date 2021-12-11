@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/* <![CDATA[*/
+"use strict";
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Send a CryptoKey to a Worker and use it to encrypt data",
+  function() {
+    var worker = new Worker(`data:text/plain,
+      onmessage = ({data: {key, data, nonce}}) => {
+        var alg = { name: "AES-GCM", iv: nonce };
+        crypto.subtle.encrypt(alg, key, data).then(postMessage);
+      };
+    `);
+
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var nonce = crypto.getRandomValues(new Uint8Array(16));
+    var alg = { name: "AES-GCM", length: 128 };
+    var that = this;
+
+    // Generate a new AES key.
+    crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"]).then(key => {
+      // Wait for ciphertext, check and decrypt.
+      worker.addEventListener("message", ({data: ciphertext}) => {
+        crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, key, ciphertext)
+          .then(memcmp_complete(that, data), error(that));
+      });
+
+      // Send it to the worker.
+      worker.postMessage({key, data, nonce});
+    });
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Get a CryptoKey from a Worker and encrypt/decrypt data",
+  function() {
+    var worker = new Worker(`data:text/plain,
+      var alg = { name: "AES-GCM", length: 128 };
+      crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"])
+        .then(postMessage);
+    `);
+
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var nonce = crypto.getRandomValues(new Uint8Array(16));
+    var alg = { name: "AES-GCM", iv: nonce };
+    var that = this;
+
+    // Wait for the key from the worker.
+    worker.addEventListener("message", ({data: key}) => {
+      // Encrypt some data with the key.
+      crypto.subtle.encrypt(alg, key, data).then(ciphertext => {
+        // Verify and decrypt.
+        crypto.subtle.decrypt(alg, key, ciphertext)
+          .then(memcmp_complete(that, data), error(that));
+      });
+    });
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Web crypto in terminating Worker",
+  function() {
+    var worker = new Worker(`data:text/plain,
+      function infiniteEncrypt(key, data, nonce) {
+        var alg = { name: "AES-GCM", iv: nonce };
+        return crypto.subtle.encrypt(alg, key, data).then(_ => {
+          infiniteEncrypt(key, data, nonce);
+        });
+      }
+      onmessage = ({data: {key, data, nonce}}) => {
+        infiniteEncrypt(key, data, nonce);
+        postMessage("started");
+      };
+    `);
+
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var nonce = crypto.getRandomValues(new Uint8Array(16));
+    var alg = { name: "AES-GCM", length: 128 };
+    var that = this;
+
+    // Generate a new AES key.
+    crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"]).then(key => {
+      worker.addEventListener("message", ({data: msg}) => {
+          if (msg === "started") {
+            // Terminate the worker while its busy doing crypto work
+            worker.terminate();
+            worker = null;
+
+            // Just end the test immediate since we can't receive any
+            // more messages from the worker after calling terminate().
+            // If we haven't crashed, then the test is a success.
+            that.complete(true);
+          }
+      });
+
+      // Send it to the worker.
+      worker.postMessage({key, data, nonce});
+    });
+  }
+);
+/* ]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>

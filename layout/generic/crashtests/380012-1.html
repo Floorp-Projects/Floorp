@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+
+<style>
+  .fl:first-line { }
+  .inh { position: inherit; }
+  .abs { position: absolute; }
+</style>
+ 
+<script>
+
+var x, y;
+
+function boom()
+{
+  x = document.getElementById("x");
+  y = document.getElementById("y");
+
+  x.setAttribute('class', "fl abs");
+  y.setAttribute('class', "inh");
+  setTimeout(boom2, 5);
+}
+
+function boom2()
+{
+  y.setAttribute('class', "abs");
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="setTimeout(boom, 5);">
+<div id="x">
+  <p id="y">foo</p>
+</div>
+</body>
+
+</html>

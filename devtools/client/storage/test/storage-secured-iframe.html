@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Iframe for testing multiple host detetion in storage actor
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<script type="application/javascript">
+"use strict";
+const cookieExpiresTime = 2000000000000;
+document.cookie = "sc1=foobar;";
+document.cookie = "sc2=foobar-2; expires=" +
+  new Date(cookieExpiresTime).toGMTString() + ";";
+localStorage.setItem("iframe-s-ls1", "foobar");
+sessionStorage.setItem("iframe-s-ss1", "foobar-2");
+dump("added cookies and storage from secured iframe\n");
+
+const idbGenerator = async function () {
+  let request = indexedDB.open("idb-s1", 1);
+  request.onerror = function() {
+    throw new Error("error opening db connection");
+  };
+  const db = await new Promise(done => {
+    request.onupgradeneeded = event => {
+      const _db = event.target.result;
+      const store1 = _db.createObjectStore("obj-s1", { keyPath: "id" });
+      store1.transaction.oncomplete = () => {
+        done(_db);
+      };
+    };
+  });
+  await new Promise(done => {
+    request.onsuccess = done;
+  });
+
+  let transaction = db.transaction(["obj-s1"], "readwrite");
+  const store1 = transaction.objectStore("obj-s1");
+  store1.add({id: 6, name: "foo", email: "foo@bar.com"});
+  store1.add({id: 7, name: "foo2", email: "foo2@bar.com"});
+  await new Promise(success => {
+    transaction.oncomplete = success;
+  });
+
+  db.close();
+
+  request = indexedDB.open("idb-s2", 1);
+  const db2 = await new Promise(done => {
+    request.onupgradeneeded = event => {
+      const _db2 = event.target.result;
+      const store3 =
+        _db2.createObjectStore("obj-s2", { keyPath: "id3", autoIncrement: true });
+      store3.createIndex("name2", "name2", { unique: true });
+      store3.transaction.oncomplete = () => {
+        done(_db2);
+      };
+    };
+  });
+  await new Promise(done => {
+    request.onsuccess = done;
+  });
+
+  transaction = db2.transaction(["obj-s2"], "readwrite");
+  const store3 = transaction.objectStore("obj-s2");
+  store3.add({id3: 16, name2: "foo", email: "foo@bar.com"});
+  await new Promise(success => {
+    transaction.oncomplete = success;
+  });
+
+  db2.close();
+  dump("added indexedDB from secured iframe\n");
+};
+
+function deleteDB(dbName) {
+  return new Promise(resolve => {
+    dump("removing database " + dbName + " from " + document.location + "\n");
+    indexedDB.deleteDatabase(dbName).onsuccess = resolve;
+  });
+}
+
+window.setup = async function () {
+  await idbGenerator();
+};
+
+window.clear = async function () {
+  await deleteDB("idb-s1");
+  await deleteDB("idb-s2");
+
+  dump("removed indexedDB data from " + document.location + "\n");
+};
+</script>
+</body>
+</html>

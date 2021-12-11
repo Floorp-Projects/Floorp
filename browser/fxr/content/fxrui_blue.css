@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ /* These not-very-descriptive variable names for colors come
+  * from the design documents and are maintained to make it
+  * easier to map between the stylesheet and the design doc.
+  */
+:root {
+  --num01: #1D2E3B;
+  --num02: #4C495C;
+  --num03: #7D8896;
+  --num04: #B3BECC;
+  --num06: #FFFFFF;
+  --num07: #00B3E3;
+  --num08: #56D9F6;
+  --num09: #0968B6;
+  --num13: #2C3A50;
+  --num13_alpha: #2C3A5080;
+  --num14: #596677;
+  --num14_alpha: #59667780;
+  --num16: #E7EAF0;
+  --num19: #FFFFFF;
+
+  --secure: #f7ce4d;
+}
+
+body {
+  background-color: var(--num01);
+  color: var(--num06);
+}
+
+.icon_container {
+  background-color: var(--num02);
+  border-color: transparent;
+  fill: var(--num06);
+}
+.icon_container:hover {
+  background-color: var(--num01);
+  fill: var(--num06);
+}
+.icon_container:active {
+  background-color: var(--num04);
+  fill: var(--num06);
+}
+.icon_container:disabled {
+  background-color: var(--num16);
+  fill: var(--num14);
+}
+
+.urlbar_container {
+  border-color: transparent;
+  background-color: var(--num02);
+}
+.urlbar_container:hover {
+  border-color:var(--num04);
+}
+.urlbar_container:focus-within {
+  border-color:var(--num08);
+  background-color: var(--num01);
+}
+
+.urlbar_secure_icon {
+  fill: var(--secure);
+}
+
+.urlbar_input {
+  color: var(--num06);
+}
+.urlbar_input::selection {
+  background-color: var(--num08);
+}

@@ -1,0 +1,14 @@
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        const element = document.createElementNS('', 't')
+        document.designMode = 'on'
+        const range = new Range()
+        range.selectNodeContents(element)
+        range.surroundContents(document.documentElement)
+        document.execCommand('insertHorizontalRule', false, null)
+      })
+    </script>
+</head>
+</html>

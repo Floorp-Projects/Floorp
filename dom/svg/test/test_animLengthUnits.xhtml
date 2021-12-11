@@ -1,0 +1,125 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=507067
+-->
+<head>
+  <title>Test for units of SVG animated lengths</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=507067">Mozilla Bug 507067</a>
+<p id="display"></p>
+<div id="content">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <g font-size="10px">
+    <circle cx="-100" cy="20" r="15" fill="blue" id="circle">
+      <animate attributeName="cx" from="0em" to="10em" dur="8s" begin="1s"
+        fill="freeze" id="animate"/>
+    </circle>
+  </g>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test units of animated lengths **/
+
+/* Global Variables */
+const svgns = "http://www.w3.org/2000/svg";
+var svg = document.getElementById("svg");
+var circle = document.getElementById("circle");
+var animate = document.getElementById("animate");
+
+SimpleTest.waitForExplicitFinish();
+
+// Interop comments are based on:
+//
+//  Opera -- 10 beta 2
+//  WebKit -- July 09 trunk build
+//  Batik -- 1.7
+//  Firefox -- July 09 trunk build
+//
+
+function main() {
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  // Sanity check: check initial values
+  is(circle.cx.baseVal.valueInSpecifiedUnits, -100,
+    "Unexpected initial baseVal");
+  is(circle.cx.baseVal.unitType, SVGLength.SVG_LENGTHTYPE_NUMBER,
+    "Unexpected initial baseVal units");
+  is(circle.cx.animVal.valueInSpecifiedUnits, -100,
+    "Unexpected initial animVal");
+  is(circle.cx.animVal.unitType, SVGLength.SVG_LENGTHTYPE_NUMBER,
+    "Unexpected initial animVal units");
+
+  // Sample mid-way through the animation
+  svg.setCurrentTime(5);
+
+  // (1) Check the absolute value is right
+  //
+  // We're not too worried about the units. Based on our testing we get:
+  // Opera: Will use user units for the animVal
+  // Safari: Doesn't work
+  // Batik: Will use the units specified on the animation function provided they
+  //        are the same
+  // FF: Will use the units of the baseVal for the animVal
+  //
+  is(circle.cx.baseVal.value, -100,
+    "(1) Unexpected value for baseVal during animation");
+  is(circle.cx.animVal.value, 50,
+    "(1) Unexpected value for animVal during animation");
+
+  // Change font-size and check
+  circle.parentNode.setAttribute("font-size", "5px");
+
+  // Currently, changing the font-size on a parent doesn't force a resample (see
+  // bug 508206) so we have to give the animation a chance to run
+  window.requestAnimationFrame(checkAfterChangeFontSize);
+}
+
+function checkAfterChangeFontSize() {
+  // (2) Check that changing the font-size of the parent element is reflected in
+  // the anim val
+  is(circle.cx.baseVal.value, -100,
+    "(2) Unexpected value for baseVal after changing font-size during " +
+    "animation");
+  is(circle.cx.animVal.value, 25,
+    "(2) Unexpected value for animVal after changing font-size during " +
+    "animation");
+
+  // Do the same again, when the animation is frozen
+  svg.setCurrentTime(10);
+  circle.parentNode.setAttribute("font-size", "7px");
+
+  // Again, due to bug 508206 we need to give the animation a chance to resample
+  window.requestAnimationFrame(checkWhilstFrozen);
+}
+
+function checkWhilstFrozen() {
+  // (3) Check that changing the font-size of the parent element is reflected in
+  // the anim val
+  is(circle.cx.baseVal.value, -100,
+    "(3) Unexpected value for baseVal after changing font-size whilst " +
+    "frozen");
+  is(circle.cx.animVal.value, 70,
+    "(3) Unexpected value for animVal after changing font-size whilst " +
+    "frozen");
+
+  SimpleTest.finish();
+}
+
+if (animate && animate.targetElement) {
+  window.addEventListener("load", main);
+} else {
+  ok(true); // Skip tests but don't report 'todo' either
+  SimpleTest.finish();
+}
+]]>
+</script>
+</pre>
+</body>
+</html>

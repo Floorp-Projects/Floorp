@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[ptr] native nsNonConstIDPtr(nsID);
+
+/**
+ * nsIUUIDGenerator is implemented by a service that can generate
+ * universally unique identifiers, ideally using any platform-native
+ * method for generating UUIDs.
+ */
+[scriptable, uuid(138ad1b2-c694-41cc-b201-333ce936d8b8)]
+interface nsIUUIDGenerator : nsISupports
+{
+  /**
+   * Obtains a new UUID using appropriate platform-specific methods to
+   * obtain a nsID that can be considered to be globally unique.
+   *
+   * @returns an nsID filled in with a new UUID.
+   *
+   * @throws NS_ERROR_FAILURE if a UUID cannot be generated (e.g. if
+   * an underlying source of randomness is not available)
+   */
+  nsIDPtr generateUUID();
+
+  /**
+   * Obtain a new UUID like the generateUUID method, but place it in
+   * the provided nsID pointer instead of allocating a new nsID.
+   *
+   * @param id an existing nsID pointer where the UUID will be stored.
+   *
+   * @throws NS_ERROR_FAILURE if a UUID cannot be generated (e.g. if
+   * an underlying source of randomness is not available)
+   */
+  [noscript] void generateUUIDInPlace(in nsNonConstIDPtr id);
+};

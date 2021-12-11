@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript">
+/* Disable Test
+ *
+ * If we succeed in getting a WebGL context, we will fill
+ * the canvas with red. If we fail to acquire a WebGL context,
+ * we will use Canvas2D to instead fill it with green.
+ *
+ * Note that this test differs from the others in that
+ * it will draw differently if it receives a WebGL context.
+ * Other tests are designed to fallback silently to Canvas2D.
+ *
+ * We use this test to assure that when we disable WebGL,
+ * WebGL does not function. This is trivially true for systems
+ * that don't support WebGL. This test is not viable for testing
+ * that WebGL works, as blocklisted systems will always draw green.
+ */
+
+"use strict";
+
+function renderGL(gl) {
+  gl.clearColor(1.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.finish();
+}
+
+function renderBackup(canvas) {
+  var context = canvas.getContext("2d");
+  context.fillStyle = "rgba(0, 255, 0, 1.0)";
+  context.fillRect(0, 0, 256, 256);
+}
+
+function runTest() {
+  var canvas = document.getElementById("canvas");
+  var gl = initGL(canvas);
+
+  if (gl)
+    renderGL(gl);
+  else
+    renderBackup(canvas);
+
+  waitForComposite(testComplete);
+}
+
+function testComplete() {
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="rAF(runTest);">
+  <canvas id="canvas" width="256" height="256"></canvas>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "__MSG_extensionName__",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "multilocale@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "__MSG_extensionDescription__",
+  "icons": {
+    "16": "__MSG_extensionIcon__"
+  },
+  "default_locale": "af",
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "__MSG_extensionName__",
+      "search_url": "__MSG_searchUrl__",
+      "suggest_url": "__MSG_searchUrl__"
+    }
+  }
+}

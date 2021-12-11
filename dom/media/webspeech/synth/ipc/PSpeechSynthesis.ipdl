@@ -1,0 +1,49 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PSpeechSynthesisRequest;
+
+namespace mozilla {
+namespace dom {
+
+struct RemoteVoice {
+  nsString voiceURI;
+  nsString name;
+  nsString lang;
+  bool localService;
+  bool queued;
+};
+
+sync protocol PSpeechSynthesis
+{
+  manager PContent;
+  manages PSpeechSynthesisRequest;
+
+child:
+
+    async VoiceAdded(RemoteVoice aVoice);
+
+    async VoiceRemoved(nsString aUri);
+
+    async SetDefaultVoice(nsString aUri, bool aIsDefault);
+
+    async IsSpeakingChanged(bool aIsSpeaking);
+
+    async NotifyVoicesChanged();
+
+    async InitialVoicesAndState(RemoteVoice[] aVoices, nsString[] aDefaults,
+                                bool aIsSpeaking);
+
+parent:
+    async __delete__();
+
+    async PSpeechSynthesisRequest(nsString aText, nsString aUri, nsString aLang,
+                                  float aVolume, float aRate, float aPitch, bool aIsChrome);
+};
+
+} // namespace dom
+} // namespace mozilla

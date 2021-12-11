@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <style>
+  fieldset.outer {
+    column-count: 1;
+    transform: rotate(180deg);
+    width: 100px;
+    height: 50px;
+    border: 1px solid blue;
+  }
+
+  div.fixed {
+    position: fixed;
+    background: green;
+  }
+  </style>
+
+  <!-- All the children under the fieldset should be upside down
+       since 'transform' create a stacking context. -->
+  <fieldset class="outer">
+    <legend>Legend</legend>
+    <div class="fixed">ABC</div>
+  </fieldset>
+</html>

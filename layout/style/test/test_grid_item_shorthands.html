@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test parsing of grid item shorthands (grid-column, grid-row, grid-area)</title>
+  <link rel="author" title="Simon Sapin" href="mailto:simon.sapin@exyr.org">
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel='stylesheet' href='/resources/testharness.css'>
+</head>
+<body>
+
+<script>
+
+// For various specified values of the grid-column and grid-row shorthands,
+// test the computed values of the corresponding longhands.
+var grid_column_row_test_cases = [
+    {
+        specified: "3 / 4",
+        expected_start: "3",
+        expected_end: "4",
+    },
+    {
+        specified: "foo / span bar",
+        expected_start: "foo",
+        expected_end: "span bar",
+    },
+    // http://dev.w3.org/csswg/css-grid/#placement-shorthands
+    // "When the second value is omitted,
+    //  if the first value is a <custom-ident>,
+    //  the grid-row-end/grid-column-end longhand
+    //  is also set to that <custom-ident>;
+    //  otherwise, it is set to auto."
+    {
+        specified: "foo",
+        expected_start: "foo",
+        expected_end: "foo",
+    },
+    {
+        specified: "7",
+        expected_start: "7",
+        expected_end: "auto",
+    },
+    {
+        specified: "foo 7",
+        expected_start: "7 foo",
+        expected_end: "auto",
+    },
+    {
+        specified: "span foo",
+        expected_start: "span foo",
+        expected_end: "auto",
+    },
+    {
+        specified: "foo 7 span",
+        expected_start: "span 7 foo",
+        expected_end: "auto",
+    },
+    {
+        specified: "7 span",
+        expected_start: "span 7",
+        expected_end: "auto",
+    },
+];
+
+// For various specified values of the grid-area shorthand,
+// test the computed values of the corresponding longhands.
+var grid_area_test_cases = [
+    {
+        specified: "10 / 20 / 30 / 40",
+        gridRowStart: "10",
+        gridColumnStart: "20",
+        gridRowEnd: "30",
+        gridColumnEnd: "40",
+    },
+    {
+        specified: "foo / bar / baz",
+        gridRowStart: "foo",
+        gridColumnStart: "bar",
+        gridRowEnd: "baz",
+        gridColumnEnd: "bar",
+    },
+    {
+        specified: "foo / span bar / baz",
+        gridRowStart: "foo",
+        gridColumnStart: "span bar",
+        gridRowEnd: "baz",
+        gridColumnEnd: "auto",
+    },
+    {
+        specified: "foo / bar",
+        gridRowStart: "foo",
+        gridColumnStart: "bar",
+        gridRowEnd: "foo",
+        gridColumnEnd: "bar",
+    },
+    {
+        specified: "foo / 4",
+        gridRowStart: "foo",
+        gridColumnStart: "4",
+        gridRowEnd: "foo",
+        gridColumnEnd: "auto",
+    },
+    {
+        specified: "foo",
+        gridRowStart: "foo",
+        gridColumnStart: "foo",
+        gridRowEnd: "foo",
+        gridColumnEnd: "foo",
+    },
+    {
+        specified: "7",
+        gridRowStart: "7",
+        gridColumnStart: "auto",
+        gridRowEnd: "auto",
+        gridColumnEnd: "auto",
+    },
+]
+
+grid_column_row_test_cases.forEach(function(test_case) {
+    ["Column", "Row"].forEach(function(axis) {
+        var shorthand = "grid" + axis;
+        var start_longhand = "grid" + axis + "Start";
+        var end_longhand = "grid" + axis + "End";
+        test(function() {
+            var element = document.createElement('div');
+            document.body.appendChild(element);
+            element.style[shorthand] = test_case.specified;
+            var computed = window.getComputedStyle(element);
+            assert_equals(computed[start_longhand], test_case.expected_start);
+            assert_equals(computed[end_longhand], test_case.expected_end);
+        }, "test parsing of '" + shorthand + ": " + test_case.specified + "'");
+    });
+});
+
+grid_area_test_cases.forEach(function(test_case) {
+    test(function() {
+        var element = document.createElement('div');
+        document.body.appendChild(element);
+        element.style.gridArea = test_case.specified;
+        var computed = window.getComputedStyle(element);
+        [
+            "gridRowStart", "gridColumnStart", "gridRowEnd", "gridColumnEnd"
+        ].forEach(function(longhand) {
+            assert_equals(computed[longhand], test_case[longhand], longhand);
+        });
+    }, "test parsing of 'grid-area: " + test_case.specified + "'");
+});
+
+</script>
+
+</body>
+</html>

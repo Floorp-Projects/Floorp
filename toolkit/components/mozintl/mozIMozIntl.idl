@@ -1,0 +1,94 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This is a set of APIs that are of general usefulness for user interface
+ * internationalization.
+ *
+ * They're all in various stages of the standardization process through
+ * ECMA402, so they are exposed to privileged content only but are written
+ * in the way to allow for easy migration to standard Intl object once
+ * the appropriate stage of the ECMA402 is achieved.
+ *
+ * The exact structure of the code is a little bit complex because of that:
+ *
+ * 1) The core is in SpiderMonkey together with other Intl APIs
+ *
+ * This allows us to write the code once, stick to the spec language
+ * of the proposal, reuse our ICU bindings in Spidermonkey and use
+ * the code to inform us on refining the spec proposal for the given API itself.
+ *
+ * 2) The MozIntlHelper API exposes the SpiderMonkey APIs
+ *
+ * This helper API allows attaching the new APIs on any regular object.
+ *
+ * 3) The MozIntl API provides the access to those APIs
+ *
+ * This API exposes the actual functionality and wraps around the MozIntlHelper
+ * lazily retrieving and setting the accessors.
+ * On top of that, the API also binds additional functionality like using
+ * current application locale by default, and fetching OS regional preferences
+ * for date time format.
+ */
+[scriptable, uuid(7f63279a-1a29-4ae6-9e7a-dc9684a23530)]
+interface mozIMozIntl : nsISupports
+{
+  jsval getCalendarInfo([optional] in jsval locales);
+
+  /**
+   * Helper for IntlUtils.webidl, will be removed once Intl.DisplayNames
+   * supports date-time types in non-privileged code.
+   */
+  jsval getDisplayNamesDeprecated([optional] in jsval locales, [optional] in jsval options);
+
+
+  /**
+   * Returns a list of locale codes for a given type.
+   * At the moment only type="region" is supported.
+   *
+   * Example:
+   *   let codes = getAvailableLocaleDisplayNames("region");
+   *   codes === ["ar", "ae", "af", ...]
+   */
+  jsval getAvailableLocaleDisplayNames(in jsval type);
+
+  /**
+   * Returns a list of language names formatted for display.
+   *
+   * Example:
+   *   let langs = getLanguageDisplayNames(["pl"], ["fr", "de", "en"]);
+   *   langs === ["Francuski", "Niemiecki", "Angielski"]
+   */
+  jsval getLanguageDisplayNames(in jsval locales, in jsval langCodes);
+
+  /**
+   * Returns a list of region names formatted for display.
+   *
+   * Example:
+   *   let regs = getRegionDisplayNames(["pl"], ["US", "CA", "MX"]);
+   *   regs === ["Stany Zjednoczone", "Kanada", "Meksyk"]
+   */
+  jsval getRegionDisplayNames(in jsval locales, in jsval regionCodes);
+
+  /**
+   * Returns a list of locale names formatted for display.
+   *
+   * Example:
+   *   let locs = getLocaleDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
+   *   locs === ["Serbski (Rosja)", "Hiszpański (Meksyk)", "Francuski (Kanada)"]
+   */
+  jsval getLocaleDisplayNames(in jsval locales, in jsval localeCodes);
+
+  readonly attribute jsval Collator;
+  readonly attribute jsval DateTimeFormat;
+  readonly attribute jsval DisplayNames;
+  readonly attribute jsval ListFormat;
+  readonly attribute jsval Locale;
+  readonly attribute jsval NumberFormat;
+  readonly attribute jsval PluralRules;
+  readonly attribute jsval RelativeTimeFormat;
+};

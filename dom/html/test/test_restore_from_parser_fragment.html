@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=644959
+-->
+<head>
+  <title>Test for Bug 644959</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=644959">Mozilla Bug 644959</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 644959 **/
+
+var content = document.getElementById('content');
+
+function appendHTML(aParent, aElementString)
+{
+  aParent.innerHTML = "<form>" + aElementString + "</form>";
+}
+
+function clearHTML(aParent)
+{
+  aParent.innerHTML = "";
+}
+
+var tests = [
+  [  "button", "<button></button>" ],
+  [  "input", "<input>" ],
+  [  "textarea", "<textarea></textarea>" ],
+  [  "select", "<select></select>" ],
+];
+
+var element = null;
+
+for (var test of tests) {
+  appendHTML(content, test[1]);
+  element = content.getElementsByTagName(test[0])[0];
+  is(element.disabled, false, "element shouldn't be disabled");
+  element.disabled = true;
+  is(element.disabled, true, "element should be disabled");
+
+  clearHTML(content);
+
+  appendHTML(content, test[1]);
+  element = content.getElementsByTagName(test[0])[0];
+  is(element.disabled, false, "element shouldn't be disabled");
+}
+
+</script>
+</pre>
+</body>
+</html>

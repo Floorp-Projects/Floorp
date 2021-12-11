@@ -1,0 +1,23 @@
+<html>
+<div id="target" ontouchstart="alert();"></div>
+<script type="application/javascript">
+
+/** Test for Bug 760131 **/
+
+function accessTouches(evt)
+{
+  var thrown = false;
+  try {
+    var a = evt.touches;
+  } catch (e) {
+    thrown = true;
+  }
+  ok(!thrown, "Unwrapping a TouchList shouldn't throw");
+}
+
+document.getElementById("target").ontouchstart = accessTouches;
+
+</script>
+</pre>
+</body>
+</html>

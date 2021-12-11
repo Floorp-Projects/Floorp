@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>table-layout: fixed width distribution with unassigned space</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	table, td { margin: 0; padding: 0; }
+
+	table {
+		table-layout: fixed;
+		width: 600px;
+		border-spacing: 0;
+		margin-bottom: 2px;
+	}
+
+	td { color: black; background: yellow; }
+	td + td { background: aqua; }
+	td + td + td { background: fuchsia; }
+
+	</style>
+</head>
+<body>
+
+<!--
+
+A copy of 445142-1a.html where one of the widths is specified on a col
+instead of a td.
+
+-->
+
+<table>
+  <col style="width: 100px">
+  <tr>
+    <td>100px</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 700px">
+  <tr>
+    <td>700px</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 600px">
+  <tr>
+    <td>600px</td>
+  </tr>
+</table>
+
+<table>
+  <col>
+  <col style="width: 200px">
+  <tr>
+    <td style="width: 100px">100px</td>
+    <td>200px</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 150px">
+  <col>
+  <tr>
+    <td style="width: 9999px">150px</td>
+    <td style="width: 300px">300px</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 20%">
+  <tr>
+    <td>20%</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 100%">
+  <tr>
+    <td>100%</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 120%">
+  <tr>
+    <td>120%</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 20%">
+  <col>
+  <tr>
+    <td>20%</td>
+    <td style="width: 40%">40%</td>
+  </tr>
+</table>
+
+<table>
+  <col>
+  <col style="width: 60%">
+  <tr>
+    <td style="width: 30%">30%</td>
+    <td style="width: 9999px">60%</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 20%">
+  <col>
+  <tr>
+    <td>20%</td>
+    <td style="width: 100px">100px</td>
+  </tr>
+</table>
+
+<table>
+  <col>
+  <col style="width: 100px">
+  <col>
+  <tr>
+    <td style="width: 20%">20%</td>
+    <td style="width: 5%">100px</td>
+    <td><div style="width: 100px">div</div></td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 20%">
+  <col>
+  <tr>
+    <td>20%</td>
+    <td style="width: 0">0</td>
+  </tr>
+</table>
+
+<table>
+  <col>
+  <col style="width: 0%">
+  <tr>
+    <td style="width: 20%">20%</td>
+    <td>0%</td>
+  </tr>
+</table>
+
+<table>
+  <col>
+  <col style="width: 0">
+  <tr>
+    <td style="width: 100px">100px</td>
+    <td>0</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 100px">
+  <col>
+  <tr>
+    <td>100px</td>
+    <td style="width: 0%">0%</td>
+  </tr>
+</table>
+
+<table>
+  <col style="width: 0">
+  <col>
+  <tr>
+    <td>0</td>
+    <td style="width: 0">0</td>
+  </tr>
+</table>
+
+<table>
+  <col>
+  <col style="width: 0">
+  <tr>
+    <td style="width: 0%">0%</td>
+    <td>0</td>
+  </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=700764
+
+Verify that an ESC key press in a subdoc of a full-screen doc causes us to
+exit DOM full-screen mode.
+
+-->
+<head>
+  <title>Test for Bug 700764</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+  <style>
+  body:fullscreen, div:fullscreen {
+    background-color: red;
+  }
+  </style>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function ok(condition, msg) {
+  opener.ok(condition, "[esc-exit] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[esc-exit] " + msg);
+}
+
+function finish() {
+  opener.nextTest();
+}
+
+function fullscreenchange1(event) {
+  is(document.fullscreenElement, document.body, "FSE should be doc");
+  addFullscreenChangeContinuation("exit", fullscreenchange2);
+  ok(!document.getElementById("subdoc").contentWindow.escKeySent, "Should not yet have sent ESC key press.");
+  document.getElementById("subdoc").contentWindow.startTest();
+}
+
+function fullscreenchange2(event) {
+  ok(document.getElementById("subdoc").contentWindow.escKeySent, "Should have sent ESC key press.");
+  ok(!document.getElementById("subdoc").contentWindow.escKeyReceived, "ESC key press to exit should not be delivered.");
+  ok(!document.fullscreenElement, "Should have left full-screen mode on ESC key press");
+  finish();
+}
+
+function begin() {
+  addFullscreenChangeContinuation("enter", fullscreenchange1);
+  document.body.requestFullscreen();
+}
+
+</script>
+
+<!-- This subframe conducts the test. -->
+<iframe id="subdoc" src="file_fullscreen-esc-exit-inner.html"></iframe>
+
+</pre>
+</body>
+</html>

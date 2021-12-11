@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var r = document.documentElement;
+  var i = document.getElementById("i");
+
+  document.removeChild(r);
+  document.appendChild(r);
+  w("dump('A\\n')");
+  document.removeChild(r);
+  w("dump('B\\n')");
+  document.appendChild(r);
+
+  function w(s)
+  {
+    var ns = document.createElement("script");
+    var nt = document.createTextNode(s);
+    ns.appendChild(nt);
+    i.appendChild(ns);
+  }
+}
+
+</script>
+</head>
+
+<body onload="boom();"><input id="i"></body>
+</html>

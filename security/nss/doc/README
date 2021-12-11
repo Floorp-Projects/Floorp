@@ -1,0 +1,7 @@
+A convenient tool to edit these files is
+  https://sourceforge.net/projects/xml-copy-editor/
+
+Assuming the documentation text will remain plain US-ASCII,
+please disable the option
+  "Save UTF-8 byte order mark".
+

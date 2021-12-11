@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for flex-grow and flex-shrink animation (Bug 696253)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  /* Set flex-grow and flex-shrink to nonzero values,
+     when no animations are applied. */
+
+  * { flex-grow: 10; flex-shrink: 20 }
+
+  /* Animations that we'll test (individually) in the script below: */
+  @keyframes flexGrowTwoToThree {
+     0%   { flex-grow: 2 }
+     100% { flex-grow: 3 }
+  }
+  @keyframes flexShrinkTwoToThree {
+     0%   { flex-shrink: 2 }
+     100% { flex-shrink: 3 }
+  }
+  @keyframes flexGrowZeroToZero {
+     0%   { flex-grow: 0 }
+     100% { flex-grow: 0 }
+  }
+  @keyframes flexShrinkZeroToZero {
+     0%   { flex-shrink: 0 }
+     100% { flex-shrink: 0 }
+  }
+  @keyframes flexGrowZeroToOne {
+     0%   { flex-grow: 0 }
+     100% { flex-grow: 1 }
+  }
+  @keyframes flexShrinkZeroToOne {
+     0%   { flex-shrink: 0 }
+     100% { flex-shrink: 1 }
+  }
+  @keyframes flexGrowOneToZero {
+     0%   { flex-grow: 1 }
+     100% { flex-grow: 0 }
+  }
+  @keyframes flexShrinkOneToZero {
+     0%   { flex-shrink: 1 }
+     100% { flex-shrink: 0 }
+  }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
+<div id="display">
+  <div id="myDiv"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for flex-grow and flex-shrink animation (Bug 696253) **/
+
+// take over the refresh driver
+advance_clock(0);
+
+// ANIMATIONS THAT SHOULD AFFECT COMPUTED STYLE
+// --------------------------------------------
+
+// flexGrowTwoToThree: 2.0 at 0%, 2.5 at 50%, 10 after animation is over
+var [ div, cs ] = new_div("animation: flexGrowTwoToThree linear 1s");
+is_approx(+cs.flexGrow, 2, 0.01, "flexGrowTwoToThree at 0.0s");
+advance_clock(500);
+is_approx(+cs.flexGrow, 2.5, 0.01, "flexGrowTwoToThree at 0.5s");
+advance_clock(1000);
+is(cs.flexGrow, "10", "flexGrowTwoToThree at 1.5s");
+done_div();
+
+// flexShrinkTwoToThree: 2.0 at 0%, 2.5 at 50%, 20 after animation is over
+[ div, cs ] = new_div("animation: flexShrinkTwoToThree linear 1s");
+is_approx(cs.flexShrink, 2, 0.01,  "flexShrinkTwoToThree at 0.0s");
+advance_clock(500);
+is_approx(cs.flexShrink, 2.5, 0.01, "flexShrinkTwoToThree at 0.5s");
+advance_clock(1000);
+is(cs.flexShrink, "20", "flexShrinkTwoToThree at 1.5s");
+done_div();
+
+// flexGrowZeroToZero: 0 at 0%, 0 at 50%, 10 after animation is over
+[ div, cs ] = new_div("animation: flexGrowZeroToZero linear 1s");
+is(cs.flexGrow, "0", "flexGrowZeroToZero at 0.0s");
+advance_clock(500);
+is(cs.flexGrow, "0", "flexGrowZeroToZero at 0.5s");
+advance_clock(1000);
+is(cs.flexGrow, "10", "flexGrowZeroToZero at 1.5s");
+done_div();
+
+// flexShrinkZeroToZero: 0 at 0%, 0 at 50%, 20 after animation is over
+[ div, cs ] = new_div("animation: flexShrinkZeroToZero linear 1s");
+is(cs.flexShrink, "0", "flexShrinkZeroToZero at 0.0s");
+advance_clock(500);
+is(cs.flexShrink, "0", "flexShrinkZeroToZero at 0.5s");
+advance_clock(1000);
+is(cs.flexShrink, "20", "flexShrinkZeroToZero at 1.5s");
+done_div();
+
+// ANIMATIONS THAT DIDN'T USED TO AFFECT COMPUTED STYLE, BUT NOW DO
+// ----------------------------------------------------------------
+// (In an older version of the flexbox spec, flex-grow & flex-shrink were not
+// allowed to animate between 0 and other values. But now that's allowed.)
+
+// flexGrowZeroToOne: 0 at 0%, 0.5 at 50%, 10 after animation is over.
+[ div, cs ] = new_div("animation: flexGrowZeroToOne linear 1s");
+is(cs.flexGrow, "0", "flexGrowZeroToOne at 0.0s");
+advance_clock(500);
+is(cs.flexGrow, "0.5", "flexGrowZeroToOne at 0.5s");
+advance_clock(1000);
+is(cs.flexGrow, "10", "flexGrowZeroToOne at 1.5s");
+done_div();
+
+// flexShrinkZeroToOne: 0 at 0%, 0.5 at 50%, 20 after animation is over.
+[ div, cs ] = new_div("animation: flexShrinkZeroToOne linear 1s");
+is(cs.flexShrink, "0",  "flexShrinkZeroToOne at 0.0s");
+advance_clock(500);
+is(cs.flexShrink, "0.5", "flexShrinkZeroToOne at 0.5s");
+advance_clock(1000);
+is(cs.flexShrink, "20", "flexShrinkZeroToOne at 1.5s");
+done_div();
+
+// flexGrowOneToZero: 1 at 0%, 0.5 at 50%, 10 after animation is over.
+[ div, cs ] = new_div("animation: flexGrowOneToZero linear 1s");
+is(cs.flexGrow, "1", "flexGrowOneToZero at 0.0s");
+advance_clock(500);
+is(cs.flexGrow, "0.5", "flexGrowOneToZero at 0.5s");
+advance_clock(1000);
+is(cs.flexGrow, "10", "flexGrowOneToZero at 1.5s");
+done_div();
+
+// flexShrinkOneToZero: 1 at 0%, 0.5 at 50%, 20 after animation is over.
+[ div, cs ] = new_div("animation: flexShrinkOneToZero linear 1s");
+is(cs.flexShrink, "1",  "flexShrinkOneToZero at 0.0s");
+advance_clock(500);
+is(cs.flexShrink, "0.5", "flexShrinkOneToZero at 0.5s");
+advance_clock(1000);
+is(cs.flexShrink, "20", "flexShrinkOneToZero at 1.5s");
+done_div();
+
+SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+</script>
+</pre>
+</body>
+</html>

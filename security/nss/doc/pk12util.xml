@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY date SYSTEM "date.xml">
+<!ENTITY version SYSTEM "version.xml">
+]>
+
+<refentry id="pk12util">
+
+  <refentryinfo>
+    <date>&date;</date>
+    <title>NSS Security Tools</title>
+    <productname>nss-tools</productname>
+    <productnumber>&version;</productnumber>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>PK12UTIL</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>pk12util</refname>
+    <refpurpose>Export and import keys and certificate to or from a PKCS #12 file and the NSS database</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>pk12util</command>
+      <arg>-i p12File|-l p12File|-o p12File</arg>
+      <arg>-c keyCipher</arg>
+      <arg>-C certCipher</arg>
+      <arg>-d directory</arg>
+      <arg>-h tokenname</arg>
+      <arg>-m | --key-len  keyLength</arg>
+      <arg>-M hashAlg</arg>
+      <arg>-n certname</arg>
+      <arg>-P dbprefix</arg>
+      <arg>-r</arg>
+      <arg>-v</arg>
+      <arg>--cert-key-len  certKeyLength</arg>
+      <arg>-k slotPasswordFile|-K slotPassword</arg>
+      <arg>-w p12filePasswordFile|-W p12filePassword</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsection>
+    <title>STATUS</title>
+    <para>This documentation is still work in progress. Please contribute to the initial review in <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=836477">Mozilla NSS bug 836477</ulink>
+    </para>
+  </refsection>
+
+  <refsection id="description">
+    <title>Description</title>
+    <para>The PKCS #12 utility, <command>pk12util</command>, enables sharing certificates among any server that supports PKCS #12. The tool can import certificates and keys from PKCS #12 files into security databases, export certificates, and list certificates and keys.</para>
+  </refsection>
+  
+  <refsection id="options">
+    <title>Options and Arguments</title>
+    <para><command>Options</command></para>
+    <variablelist>
+      <varlistentry>
+        <term>-i p12file</term>
+        <listitem><para>Import keys and certificates from a PKCS #12 file into a security database.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-l p12file</term>
+        <listitem><para>List the keys and certificates in PKCS #12 file.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-o p12file</term>
+        <listitem><para>Export keys and certificates from the security database to a PKCS #12 file.</para></listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para><command>Arguments</command></para>
+    <variablelist>
+      <varlistentry>
+        <term>-c keyCipher</term>
+        <listitem><para>Specify the key encryption algorithm.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-C certCipher</term>
+        <listitem><para>Specify the certiticate encryption algorithm.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-d directory</term>
+        <listitem><para>Specify the database directory into which to import to or export from certificates and keys.</para>
+	<para><command>pk12util</command> supports two types of databases: the legacy security databases (<filename>cert8.db</filename>, <filename>key3.db</filename>, and <filename>secmod.db</filename>) and new SQLite databases (<filename>cert9.db</filename>, <filename>key4.db</filename>, and <filename>pkcs11.txt</filename>). If the prefix <command>dbm:</command> is not used, then the tool assumes that the given databases are in the SQLite format.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-h tokenname</term>
+        <listitem><para>Specify the name of the token to import into or export from.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-k slotPasswordFile</term>
+        <listitem><para>Specify the text file containing the slot's password.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-K slotPassword</term>
+        <listitem><para>Specify the slot's password.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-m | --key-len  keyLength</term>
+        <listitem><para>Specify the desired length of the symmetric key to be used to encrypt the private key.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-M hashAlg</term>
+        <listitem><para>Specify the hash algorithm used in the pkcs #12 mac. This algorithm also specifies the HMAC used in the prf when using pkcs #5 v2.</para></listitem>
+      </varlistentry>
+
+
+      <varlistentry>
+        <term>--cert-key-len  certKeyLength</term>
+        <listitem><para>Specify the desired length of the symmetric key to be used to encrypt the certificates and other meta-data.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-n certname</term>
+        <listitem><para>Specify the nickname of the cert and private key to export.</para>
+	<para>The nickname can also be a PKCS #11 URI. For example, if you have a certificate named "my-server-cert" on the internal certificate store, it can be unambiguously specified as "pkcs11:token=NSS%20Certificate%20DB;object=my-server-cert". For details about the format, see RFC 7512.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-P prefix</term>
+        <listitem><para>Specify the prefix used on the certificate and key databases. This option is provided as a special case. 
+          Changing the names of the certificate and key databases is not recommended.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-r</term>
+        <listitem><para>Dumps all of the data in raw (binary) form. This must be saved as a DER file. The default is to return information in a pretty-print ASCII format, which displays the information about the certificates and public keys in the p12 file.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v </term>
+        <listitem><para>Enable debug logging when importing.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-w p12filePasswordFile</term>
+        <listitem><para>Specify the text file containing the pkcs #12 file password.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-W p12filePassword</term>
+        <listitem><para>Specify the pkcs #12 file password.</para></listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsection>
+
+  <refsection id="return-codes">
+    <title>Return Codes</title>
+	<itemizedlist>
+	<listitem>
+        <para> 0 - No error</para>
+	</listitem>
+	<listitem>
+        <para> 1 - User Cancelled</para>
+	</listitem>
+	<listitem>
+        <para> 2 - Usage error</para>
+	</listitem>
+	<listitem>
+        <para> 6 - NLS init error</para>
+	</listitem>
+	<listitem>
+        <para> 8 - Certificate DB open error</para>
+	</listitem>
+	<listitem>
+        <para> 9 - Key DB open error</para>
+	</listitem>
+	<listitem>
+        <para> 10 - File initialization error</para>
+	</listitem>
+	<listitem>
+        <para> 11 - Unicode conversion error</para>
+	</listitem>
+	<listitem>
+        <para> 12 - Temporary file creation error</para>
+	</listitem>
+	<listitem>
+        <para> 13 - PKCS11 get slot error</para>
+	</listitem>
+	<listitem>
+        <para> 14 - PKCS12 decoder start error</para>
+	</listitem>
+	<listitem>
+        <para> 15 - error read from import file</para>
+	</listitem>
+	<listitem>
+        <para> 16 - pkcs12 decode error</para>
+	</listitem>
+	<listitem>
+        <para> 17 - pkcs12 decoder verify error</para>
+	</listitem>
+	<listitem>
+        <para> 18 - pkcs12 decoder validate bags error</para>
+	</listitem>
+	<listitem>
+        <para> 19 - pkcs12 decoder import bags error</para>
+	</listitem>
+	<listitem>
+        <para> 20 - key db conversion version 3 to version 2 error</para>
+	</listitem>
+	<listitem>
+        <para> 21 - cert db conversion version 7 to version 5 error</para>
+	</listitem>
+	<listitem>
+        <para> 22 - cert and key dbs patch error</para>
+	</listitem>
+	<listitem>
+        <para> 23 - get default cert db error</para>
+	</listitem>
+	<listitem>
+        <para> 24 - find cert by nickname error</para>
+	</listitem>
+	<listitem>
+        <para> 25 - create export context error</para>
+	</listitem>
+	<listitem>
+        <para> 26 - PKCS12 add password itegrity error</para>
+	</listitem>
+	<listitem>
+        <para> 27 - cert and key Safes creation error</para>
+	</listitem>
+	<listitem>
+        <para> 28 - PKCS12 add cert and key error</para>
+	</listitem>
+	<listitem>
+        <para> 29 - PKCS12 encode error</para>
+	</listitem>
+	</itemizedlist>
+  </refsection>
+
+  <refsection id="examples">
+    <title>Examples</title>
+    <para><command>Importing Keys and Certificates</command></para>
+    <para>The most basic usage of <command>pk12util</command> for importing a certificate or key is the PKCS #12 input file (<option>-i</option>) and some way to specify the security database being accessed (either <option>-d</option> for a directory or <option>-h</option> for a token).
+    </para>
+    <para>
+    pk12util -i p12File [-h tokenname] [-v] [-d directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]
+    </para>
+    <para>For example:</para>
+    <para> </para>
+    <programlisting># pk12util -i /tmp/cert-files/users.p12 -d /home/my/sharednssdb
+
+Enter a password which will be used to encrypt your keys.
+The password should be at least 8 characters long,
+and should contain at least one non-alphabetic character.
+
+Enter new password: 
+Re-enter password: 
+Enter password for PKCS12 file: 
+pk12util: PKCS12 IMPORT SUCCESSFUL</programlisting>
+
+    <para><command>Exporting Keys and Certificates</command></para>
+    <para>Using the <command>pk12util</command> command to export certificates and keys requires both the name of the certificate to extract from the database (<option>-n</option>) and the PKCS #12-formatted output file to write to. There are optional parameters that can be used to encrypt the file to protect the certificate material.
+    </para>
+    <para>pk12util -o p12File -n certname [-c keyCipher] [-C certCipher] [-m|--key_len keyLen] [-n|--cert_key_len certKeyLen] [-d directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
+    <para>For example:</para>
+    <programlisting># pk12util -o certs.p12 -n Server-Cert -d /home/my/sharednssdb
+Enter password for PKCS12 file: 
+Re-enter password: </programlisting>
+
+    <para><command>Listing Keys and Certificates</command></para>
+    <para>The information in a <filename>.p12</filename> file are not human-readable. The certificates and keys in the file can be printed (listed) in a human-readable pretty-print format that shows information for every certificate and any public keys in the <filename>.p12</filename> file.
+    </para>
+    <para>pk12util -l p12File [-h tokenname] [-r] [-d directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
+    <para>For example, this prints the default ASCII output:</para>
+    <programlisting># pk12util -l certs.p12
+
+Enter password for PKCS12 file: 
+Key(shrouded):
+    Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) Ltd. ID
+
+    Encryption algorithm: PKCS #12 V2 PBE With SHA-1 And 3KEY Triple DES-CBC
+        Parameters:
+            Salt:
+                45:2e:6a:a0:03:4d:7b:a1:63:3c:15:ea:67:37:62:1f
+            Iteration Count: 1 (0x1)
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 13 (0xd)
+        Signature Algorithm: PKCS #1 SHA-1 With RSA Encryption
+        Issuer: "E=personal-freemail@thawte.com,CN=Thawte Personal Freemail C
+            A,OU=Certification Services Division,O=Thawte Consulting,L=Cape T
+            own,ST=Western Cape,C=ZA"
+    </programlisting>
+    <para>Alternatively, the <option>-r</option> prints the certificates and then exports them into separate DER binary files. This allows the certificates to be fed to another application that supports <filename>.p12</filename> files. Each certificate is written to a sequentially-number file, beginning with <filename>file0001.der</filename> and continuing through <filename>file000N.der</filename>, incrementing the number for every certificate:</para>
+    <programlisting>pk12util -l test.p12 -r
+Enter password for PKCS12 file: 
+Key(shrouded):
+    Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) Ltd. ID
+
+    Encryption algorithm: PKCS #12 V2 PBE With SHA-1 And 3KEY Triple DES-CBC
+        Parameters:
+            Salt:
+                45:2e:6a:a0:03:4d:7b:a1:63:3c:15:ea:67:37:62:1f
+            Iteration Count: 1 (0x1)
+Certificate    Friendly Name: Thawte Personal Freemail Issuing CA - Thawte Consulting
+
+Certificate    Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) Ltd. ID
+    </programlisting>
+  </refsection>
+
+  <refsection id="encryption">
+    <title>Password Encryption</title>
+    <para>PKCS #12 provides for not only the protection of the private keys but also the certificate and meta-data associated with the keys. Password-based encryption is used to protect private keys on export to a PKCS #12 file and, optionally, the associated certificates. If no algorithm is specified, the tool defaults to using PKCS #12 SHA-1 and 3-key triple DES for private key encryption. When not in FIPS mode, PKCS #12 SHA-1 and 40-bit RC4 is used for certificate encryption. When in FIPS mode, there is no certificate encryption. If certificate encryption is not wanted, specify <userinput>"NONE"</userinput> as the argument of the <option>-C</option> option.</para>
+    <para>The private key is always protected with strong encryption by default.</para>
+    <para>Several types of ciphers are supported.</para>
+    <variablelist>
+    
+      <varlistentry>
+        <term>PKCS #5 password-based encryption</term>
+        <listitem>
+	  <itemizedlist>
+	    <listitem><para>PBES2 with AES-CBC-Pad as underlying encryption scheme (<userinput>"AES-128-CBC"</userinput>, <userinput>"AES-192-CBC"</userinput>, and <userinput>"AES-256-CBC"</userinput>)</para></listitem>
+	  </itemizedlist>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>PKCS #12 password-based encryption</term>
+        <listitem>
+	  <itemizedlist>
+	    <listitem><para>SHA-1 and 128-bit RC4 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 128 Bit RC4"</userinput> or <userinput>"RC4"</userinput>)</para></listitem>
+	    <listitem><para>SHA-1 and 40-bit RC4 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 40 Bit RC4"</userinput>) (used by default for certificate encryption in non-FIPS mode)</para></listitem>
+	    <listitem><para>SHA-1 and 3-key triple-DES (<userinput>"PKCS #12 V2 PBE With SHA-1 And 3KEY Triple DES-CBC"</userinput> or <userinput>"DES-EDE3-CBC"</userinput>)</para></listitem>
+	    <listitem><para>SHA-1 and 128-bit RC2 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 128 Bit RC2 CBC"</userinput> or <userinput>"RC2-CBC"</userinput>)</para></listitem>
+	    <listitem><para>SHA-1 and 40-bit RC2 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 40 Bit RC2 CBC"</userinput>)</para></listitem>
+	  </itemizedlist>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>With PKCS #12, the crypto provider may be the soft token module or an external hardware module. If the cryptographic module does not support the requested algorithm, then the next best fit will be selected (usually the default). If no suitable replacement for the desired algorithm can be found, the tool returns the error <emphasis>no security module can perform the requested operation</emphasis>.</para>
+  </refsection>
+
+<refsection id="databases"><title>NSS Database Types</title>
+<para>NSS originally used BerkeleyDB databases to store security information. 
+The last versions of these <emphasis>legacy</emphasis> databases are:</para>
+<itemizedlist>
+	<listitem>
+		<para>
+			cert8.db for certificates
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			key3.db for keys
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			secmod.db for PKCS #11 module information
+		</para>
+	</listitem>
+</itemizedlist>
+
+<para>BerkeleyDB has performance limitations, though, which prevent it from being easily used by multiple applications simultaneously. NSS has 
+some flexibility that allows applications to use their own, independent database engine while keeping a shared database and working around the access issues. Still, NSS
+requires more flexibility to provide a truly shared security database.</para>
+
+<para>In 2009, NSS introduced a new set of databases that are SQLite databases rather than 
+BerkleyDB. These new databases provide more accessibility and performance:</para>
+<itemizedlist>
+	<listitem>
+		<para>
+			cert9.db for certificates
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			key4.db for keys
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			pkcs11.txt, which is listing of all of the PKCS #11 modules contained in a new subdirectory in the security databases directory
+		</para>
+	</listitem>
+</itemizedlist>
+
+<para>Because the SQLite databases are designed to be shared, these are the <emphasis>shared</emphasis> database type. The shared database type is preferred; the legacy format is included for backward compatibility.</para>
+
+<para>By default, the tools (<command>certutil</command>, <command>pk12util</command>, <command>modutil</command>) assume that the given security databases use the SQLite type
+Using the legacy databases must be manually specified by using the <command>dbm:</command> prefix with the given security directory. For example:</para>
+
+<programlisting># pk12util -i /tmp/cert-files/users.p12 -d dbm:/home/my/sharednssdb</programlisting>
+
+<para>To set the legacy database type as the default type for the tools, set the <envar>NSS_DEFAULT_DB_TYPE</envar> environment variable to <envar>dbm</envar>:</para>
+<programlisting>export NSS_DEFAULT_DB_TYPE="dbm"</programlisting>
+
+<para>This line can be set added to the <filename>~/.bashrc</filename> file to make the change permanent.</para>
+
+<itemizedlist>
+	<listitem>
+		<para>
+			https://wiki.mozilla.org/NSS_Shared_DB_Howto</para>
+	</listitem>
+</itemizedlist>
+<para>For an engineering draft on the changes in the shared NSS databases, see the NSS project wiki:</para>
+<itemizedlist>
+	<listitem>
+		<para>
+			https://wiki.mozilla.org/NSS_Shared_DB
+		</para>
+	</listitem>
+</itemizedlist>
+</refsection>
+
+  <refsection id="compatibility">
+    <title>Compatibility Notes</title>
+    <para>The exporting behavior of <command>pk12util</command> has changed over time, while importing files exported with older versions of NSS is still supported.</para>
+    <para>Until the 3.30 release, <command>pk12util</command> used the UTF-16 encoding for the PKCS #5 password-based encryption schemes, while the recommendation is to encode passwords in UTF-8 if the used encryption scheme is defined outside of the PKCS #12 standard.</para>
+    <para>Until the 3.31 release, even when <userinput>"AES-128-CBC"</userinput> or <userinput>"AES-192-CBC"</userinput> is given from the command line, <command>pk12util</command> always used 256-bit AES as the underlying encryption scheme.</para>
+    <para>For historical reasons, <command>pk12util</command> accepts password-based encryption schemes not listed in this document.  However, those schemes are not officially supported and may have issues in interoperability with other tools.</para>
+  </refsection>
+
+  <refsection id="seealso">
+    <title>See Also</title>
+    <para>certutil (1)</para>
+    <para>modutil (1)</para>
+
+	<para>The NSS wiki has information on the new database design and how to configure applications to use it.</para>
+<itemizedlist>
+	<listitem>
+		<para>
+			https://wiki.mozilla.org/NSS_Shared_DB_Howto</para>
+	</listitem>
+	<listitem>
+		<para>
+			https://wiki.mozilla.org/NSS_Shared_DB
+		</para>
+	</listitem>
+</itemizedlist>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="resources">
+    <title>Additional Resources</title>
+	<para>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <ulink url="http://www.mozilla.org/projects/security/pki/nss/">http://www.mozilla.org/projects/security/pki/nss/</ulink>. The NSS site relates directly to NSS code changes and releases.</para>
+	<para>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</para>
+	<para>IRC: Freenode at #dogtag-pki</para>
+  </refsection>
+
+<!-- fill in your name first; keep the other names for reference -->
+  <refsection id="authors">
+    <title>Authors</title>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
+    <para>
+	Authors: Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com>.
+    </para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="license">
+    <title>LICENSE</title>
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    </para>
+  </refsection>
+
+</refentry>

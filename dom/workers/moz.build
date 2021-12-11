@@ -1,0 +1,108 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Workers")
+
+DIRS += ["remoteworkers", "sharedworkers"]
+
+# Public stuff.
+EXPORTS.mozilla.dom += [
+    "ChromeWorker.h",
+    "JSExecutionManager.h",
+    "Worker.h",
+    "WorkerCommon.h",
+    "WorkerDebugger.h",
+    "WorkerDebuggerManager.h",
+    "WorkerError.h",
+    "WorkerLoadInfo.h",
+    "WorkerLocation.h",
+    "WorkerNavigator.h",
+    "WorkerPrivate.h",
+    "WorkerRef.h",
+    "WorkerRunnable.h",
+    "WorkerScope.h",
+    "WorkerStatus.h",
+    "WorkerTestUtils.h",
+]
+
+# Private stuff.
+EXPORTS.mozilla.dom.workerinternals += [
+    "JSSettings.h",
+    "Queue.h",
+    "RuntimeService.h",
+    "ScriptLoader.h",
+]
+
+XPIDL_MODULE = "dom_workers"
+
+XPIDL_SOURCES += [
+    "nsIWorkerDebugger.idl",
+    "nsIWorkerDebuggerManager.idl",
+]
+
+UNIFIED_SOURCES += [
+    "ChromeWorker.cpp",
+    "ChromeWorkerScope.cpp",
+    "JSExecutionManager.cpp",
+    "MessageEventRunnable.cpp",
+    "Principal.cpp",
+    "RegisterBindings.cpp",
+    "RuntimeService.cpp",
+    "ScriptLoader.cpp",
+    "Worker.cpp",
+    "WorkerCSPEventListener.cpp",
+    "WorkerDebugger.cpp",
+    "WorkerDebuggerManager.cpp",
+    "WorkerError.cpp",
+    "WorkerEventTarget.cpp",
+    "WorkerLoadInfo.cpp",
+    "WorkerLocation.cpp",
+    "WorkerNavigator.cpp",
+    "WorkerPrivate.cpp",
+    "WorkerRef.cpp",
+    "WorkerRunnable.cpp",
+    "WorkerScope.cpp",
+    "WorkerTestUtils.cpp",
+    "WorkerThread.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/caps",
+    "/dom/base",
+    "/dom/bindings",
+    "/dom/system",
+    "/dom/workers/remoteworkers",
+    "/js/xpconnect/loader",
+    "/netwerk/base",
+    "/xpcom/build",
+    "/xpcom/threads",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    LOCAL_INCLUDES += [
+        "/xpcom/base",
+    ]
+
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+MOCHITEST_MANIFESTS += [
+    "test/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "test/chrome.ini",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

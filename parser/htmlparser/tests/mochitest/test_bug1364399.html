@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1364399
+-->
+<head>
+  <title>Test for Bug 1364399</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1364399">Mozilla Bug 1364399</a>
+<p id="display"></p>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1364399 **/
+// Non-data: version at dom/base/test/test_bug518104.html
+SimpleTest.waitForExplicitFinish();
+
+function done() {
+  // document.write should have gotten ignored due to the
+  // ignore-destructive-writes counter. Then document.close should
+  // have gotten ignored due to the parser still being not-script-created.
+  var iframe = document.getElementById("iframe");
+  var divs = iframe.contentWindow.document.getElementsByTagName("div").length;
+  is(divs, 2, "<div>s are still there.");
+  var ps = iframe.contentWindow.document.getElementsByTagName("p").length;
+  is(ps, 0, "<p> did not get written.");
+  SimpleTest.finish();
+}
+
+</script>
+<div id="content" style="display: none">
+  <iframe id='iframe' srcdoc="
+    <div></div><div></div>
+    <script defer src='data:application/javascript,document.write(&quot;<p></p>&quot;);parent.done();document.close();'></script>">
+  </iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

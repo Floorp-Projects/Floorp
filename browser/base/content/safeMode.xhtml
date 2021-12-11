@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/content/safeMode.css"?>
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            data-l10n-id="troubleshoot-mode-window"
+            data-l10n-attrs="title,style"
+            onload="onLoad()">
+<dialog id="safeModeDialog"
+            buttons="accept,extra1"
+            buttonidaccept="start-troubleshoot-mode"
+            buttonidextra1="refresh-profile">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/safeMode.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/safeMode.js"/>
+
+
+  <vbox id="autoSafeMode" hidden="true">
+    <description data-l10n-id="auto-safe-mode-description"/>
+  </vbox>
+
+  <vbox id="safeMode">
+    <label data-l10n-id="troubleshoot-mode-description" />
+    <separator class="thin"/>
+    <label id="resetProfileInstead" data-l10n-id="skip-troubleshoot-refresh-profile"/>
+  </vbox>
+
+  <vbox id="resetProfile" hidden="true">
+    <label data-l10n-id="refresh-profile-instead" />
+  </vbox>
+
+  <separator class="thin"/>
+</dialog>
+</window>

@@ -1,0 +1,9 @@
+/**
+ * nexity.fr - Overlapping elements prevent page navigation.
+ * Bug #1727080 - https://bugzilla.mozilla.org/show_bug.cgi?id=1727080
+ * WebCompat issue #75869 - https://webcompat.com/issues/75869
+ */
+
+svg[data-v-4c956def] {
+  width: 15px;
+}

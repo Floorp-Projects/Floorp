@@ -1,0 +1,78 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>sessionStorage replace test</title>
+
+<!--
+  This test checks that sessionStorage object doesn't leak
+  in a window that changes its location. We do this by switching
+  frame location inside of this window and then by changing location
+  of a top level window.
+-->
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+var shell;
+var shellType;
+var failureRegExp = new RegExp("^FAILURE");
+
+window.addEventListener("message", onMessageReceived);
+
+function onMessageReceived(event)
+{
+  //alert("onMessageReceived "+event.data);
+  switch (event.data)
+  {
+    case "init_done":
+      // This is frame with different origin in the same browsing context
+      // as the first frame adding data to sessionStorage of the first origin.
+      shell.location = "http://example.com/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?check&" + shellType;
+      break;
+
+    case "check_done":
+      // Recheck and clean the sessionStorage of the first origin.
+      shell.location = "http://example.org:80/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?clean&" + shellType;
+      break;
+
+    case "clean_done":
+      switch (shellType)
+      {
+        case "frame":
+          // We finished testing in a frame
+          // proceed with test in a separate window
+          shellType = "window";
+          shell = window.open("http://example.org/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?init&" + shellType);
+          break;
+
+        case "window":
+          shell.close();
+          window.setTimeout(function() {SimpleTest.finish();}, 0);
+          break;
+      }
+      break;
+
+    default:
+      SimpleTest.ok(!event.data.match(failureRegExp), event.data);
+      break;
+  }
+}
+
+function startTest()
+{
+  shellType = "frame";
+  shell = frame;
+  shell.location = "http://example.org/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?init&" + shellType;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" name="frame"></iframe>
+</body>
+</html>

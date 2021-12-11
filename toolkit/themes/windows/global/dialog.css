@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== dialog.css =====================================================
+  == Styles used by the XUL dialog element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: dialog ::::: */
+
+:host {
+  padding-block: 8px 10px;
+  padding-inline: 8px 10px;
+}
+
+/* ::::: dialog buttons ::::: */
+
+button {
+  font: menu;
+  margin-top: 6px;
+}

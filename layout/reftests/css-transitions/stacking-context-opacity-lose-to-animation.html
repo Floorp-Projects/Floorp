@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>
+Opacity transition and animation overridden by !important rule creates a
+stacking context
+</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  position: fixed;
+  background: green;
+  top: 50px;
+}
+@keyframes Opacity0 {
+  from, to { opacity: 0; }
+}
+#test {
+  width: 100px; height: 100px;
+  background: blue;
+  opacity: 0 ! important;
+  transition: opacity 100s steps(1, start);
+  animation: Opacity0 100s;
+}
+</style>
+<span></span>
+<div id="test"></div>
+<script>
+window.addEventListener("load", () => {
+  var target = document.getElementById("test");
+  getComputedStyle(target).opacity;
+
+  // Change the opacity style to 100%.
+  target.style.setProperty("opacity", "1", "important");
+  // Important style is changed but there is a CSS animation,
+  // so transition won't be visible and the CSS animation is overridden by
+  // the !important rule. As a result opacity style here should be 100%
+  // specified by the important rule, but we should create a stacking
+  // context for it because there are animations.
+
+  getComputedStyle(target).opacity;
+  document.documentElement.classList.remove("reftest-wait");
+});
+</script>

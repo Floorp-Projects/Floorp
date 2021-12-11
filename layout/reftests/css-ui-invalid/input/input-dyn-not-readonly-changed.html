@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if input is no longer readonly, invalid and has it's value changed,
+             it's affected by :-moz-ui-invalid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i').removeAttribute('readonly');
+                document.getElementById('i').value = '';
+                document.documentElement.className='';">
+    <input class='invalid' id='i' readonly required>
+  </body>
+</html>

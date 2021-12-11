@@ -1,0 +1,610 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+if (AppConstants.platform === "android") {
+  SimpleTest.requestLongerTimeout(3);
+}
+
+/* globals sendMouseEvent */
+
+function backgroundScript() {
+  const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+  const URL = BASE + "/file_WebNavigation_page1.html";
+
+  const EVENTS = [
+    "onTabReplaced",
+    "onBeforeNavigate",
+    "onCommitted",
+    "onDOMContentLoaded",
+    "onCompleted",
+    "onErrorOccurred",
+    "onReferenceFragmentUpdated",
+    "onHistoryStateUpdated",
+  ];
+
+  let expectedTabId = -1;
+
+  function gotEvent(event, details) {
+    if (!details.url.startsWith(BASE)) {
+      return;
+    }
+    browser.test.log(`Got ${event} ${details.url} ${details.frameId} ${details.parentFrameId}`);
+
+    if (expectedTabId == -1) {
+      browser.test.assertTrue(details.tabId !== undefined, "tab ID defined");
+      expectedTabId = details.tabId;
+    }
+
+    browser.test.assertEq(details.tabId, expectedTabId, "correct tab");
+
+    browser.test.sendMessage("received", {url: details.url, event});
+
+    if (details.url == URL) {
+      browser.test.assertEq(0, details.frameId, "root frame ID correct");
+      browser.test.assertEq(-1, details.parentFrameId, "root parent frame ID correct");
+    } else {
+      browser.test.assertEq(0, details.parentFrameId, "parent frame ID correct");
+      browser.test.assertTrue(details.frameId != 0, "frame ID probably okay");
+    }
+
+    browser.test.assertTrue(details.frameId !== undefined, "frameId != undefined");
+    browser.test.assertTrue(details.parentFrameId !== undefined, "parentFrameId != undefined");
+  }
+
+  let listeners = {};
+  for (let event of EVENTS) {
+    listeners[event] = gotEvent.bind(null, event);
+    browser.webNavigation[event].addListener(listeners[event]);
+  }
+
+  browser.test.sendMessage("ready");
+}
+
+const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+const URL = BASE + "/file_WebNavigation_page1.html";
+const FORM_URL = URL + "?";
+const FRAME = BASE + "/file_WebNavigation_page2.html";
+const FRAME2 = BASE + "/file_WebNavigation_page3.html";
+const FRAME_PUSHSTATE = BASE + "/file_WebNavigation_page3_pushState.html";
+const REDIRECT = BASE + "/redirection.sjs";
+const REDIRECTED = BASE + "/dummy_page.html";
+const CLIENT_REDIRECT = BASE + "/file_webNavigation_clientRedirect.html";
+const CLIENT_REDIRECT_HTTPHEADER = BASE + "/file_webNavigation_clientRedirect_httpHeaders.html";
+const FRAME_CLIENT_REDIRECT = BASE + "/file_webNavigation_frameClientRedirect.html";
+const FRAME_REDIRECT = BASE + "/file_webNavigation_frameRedirect.html";
+const FRAME_MANUAL = BASE + "/file_webNavigation_manualSubframe.html";
+const FRAME_MANUAL_PAGE1 = BASE + "/file_webNavigation_manualSubframe_page1.html";
+const FRAME_MANUAL_PAGE2 = BASE + "/file_webNavigation_manualSubframe_page2.html";
+const INVALID_PAGE = "https://invalid.localhost/";
+
+const REQUIRED = [
+  "onBeforeNavigate",
+  "onCommitted",
+  "onDOMContentLoaded",
+  "onCompleted",
+];
+
+var received = [];
+var completedResolve;
+var waitingURL, waitingEvent;
+
+function loadAndWait(win, event, url, script) {
+  received = [];
+  waitingEvent = event;
+  waitingURL = url;
+  dump(`RUN ${script}\n`);
+  script();
+  return new Promise(resolve => { completedResolve = resolve; });
+}
+
+add_task(async function webnav_transitions_props() {
+  function backgroundScriptTransitions() {
+    const EVENTS = [
+      "onCommitted",
+      "onHistoryStateUpdated",
+      "onReferenceFragmentUpdated",
+      "onCompleted",
+    ];
+
+    function gotEvent(event, details) {
+      browser.test.log(`Got ${event} ${details.url} ${details.transitionType} ${details.transitionQualifiers && JSON.stringify(details.transitionQualifiers)}`);
+
+      browser.test.sendMessage("received", {url: details.url, details, event});
+    }
+
+    let listeners = {};
+    for (let event of EVENTS) {
+      listeners[event] = gotEvent.bind(null, event);
+      browser.webNavigation[event].addListener(listeners[event]);
+    }
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background: backgroundScriptTransitions,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  extension.onMessage("received", ({url, event, details}) => {
+    received.push({url, event, details});
+
+    if (event == waitingEvent && url == waitingURL) {
+      completedResolve();
+    }
+  });
+
+  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  info("webnavigation extension loaded");
+
+  let win = window.open();
+
+  await loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
+
+  // transitionType: reload
+  received = [];
+  await loadAndWait(win, "onCompleted", URL, () => { win.location.reload(); });
+
+  let found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "reload",
+       "Got the expected 'reload' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "transitionQualifiers found in the OnCommitted events");
+  }
+
+  // transitionType: auto_subframe
+  found = received.find((data) => (data.event == "onCommitted" && data.url == FRAME));
+
+  ok(found, "Got the sub-frame onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "transitionQualifiers found in the OnCommitted events");
+  }
+
+  // transitionType: form_submit
+  received = [];
+  await loadAndWait(win, "onCompleted", FORM_URL, () => {
+    win.document.querySelector("form").submit();
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == FORM_URL));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "form_submit",
+       "Got the expected 'form_submit' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "transitionQualifiers found in the OnCommitted events");
+  }
+
+  // transitionQualifier: server_redirect
+  received = [];
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = REDIRECT; });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "server_redirect"),
+       "Got the expected 'server_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: forward_back
+  received = [];
+  await loadAndWait(win, "onCompleted", FORM_URL, () => { win.history.back(); });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == FORM_URL));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "forward_back"),
+       "Got the expected 'forward_back' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: client_redirect
+  // (from meta http-equiv tag)
+  received = [];
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => {
+    win.location = CLIENT_REDIRECT;
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "client_redirect"),
+       "Got the expected 'client_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: client_redirect
+  // (from http headers)
+  received = [];
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => {
+    win.location = CLIENT_REDIRECT_HTTPHEADER;
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "client_redirect"),
+       "Got the expected 'client_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: client_redirect (sub-frame)
+  // (from meta http-equiv tag)
+  received = [];
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => {
+    win.location = FRAME_CLIENT_REDIRECT;
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "client_redirect"),
+       "Got the expected 'client_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: server_redirect (sub-frame)
+  received = [];
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = FRAME_REDIRECT; });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECT));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+    // TODO BUG 1264936: currently the server_redirect is not detected in sub-frames
+    // once we fix it we can test it here:
+    //
+    // ok(Array.isArray(found.details.transitionQualifiers) &&
+    //    found.details.transitionQualifiers.find((q) => q == "server_redirect"),
+    //    "Got the expected 'server_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionType: manual_subframe
+  received = [];
+  await loadAndWait(win, "onCompleted", FRAME_MANUAL, () => { win.location = FRAME_MANUAL; });
+  found = received.find((data) => (data.event == "onCommitted" &&
+                                   data.url == FRAME_MANUAL_PAGE1));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+  }
+
+  received = [];
+  await loadAndWait(win, "onCompleted", FRAME_MANUAL_PAGE2, () => {
+    let el = win.document.querySelector("iframe")
+                .contentDocument.querySelector("a");
+    sendMouseEvent({type: "click"}, el, win);
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" &&
+                                   data.url == FRAME_MANUAL_PAGE2));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    if (AppConstants.MOZ_BUILD_APP === "browser") {
+      is(found.details.transitionType, "manual_subframe",
+         "Got the expected 'manual_subframe' transitionType in the OnCommitted event");
+    } else {
+      is(found.details.transitionType, "auto_subframe",
+         "Got the expected 'manual_subframe' transitionType in the OnCommitted event");
+    }
+  }
+
+  // Test transitions properties on onHistoryStateUpdated events.
+
+  received = [];
+  await loadAndWait(win, "onCompleted", FRAME2, () => { win.location = FRAME2; });
+
+  received = [];
+  await loadAndWait(win, "onHistoryStateUpdated", `${FRAME2}/pushState`, () => {
+    win.history.pushState({}, "History PushState", `${FRAME2}/pushState`);
+  });
+
+  found = received.find((data) => (data.event == "onHistoryStateUpdated" &&
+                                   data.url == `${FRAME2}/pushState`));
+
+  ok(found, "Got the onHistoryStateUpdated event");
+
+  if (found) {
+    is(typeof found.details.transitionType, "string",
+       "Got transitionType in the onHistoryStateUpdated event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "Got transitionQualifiers in the onHistoryStateUpdated event");
+  }
+
+  // Test transitions properties on onReferenceFragmentUpdated events.
+
+  received = [];
+  await loadAndWait(win, "onReferenceFragmentUpdated", `${FRAME2}/pushState#ref2`, () => {
+    win.history.pushState({}, "ReferenceFragment Update", `${FRAME2}/pushState#ref2`);
+  });
+
+  found = received.find((data) => (data.event == "onReferenceFragmentUpdated" &&
+                                   data.url == `${FRAME2}/pushState#ref2`));
+
+  ok(found, "Got the onReferenceFragmentUpdated event");
+
+  if (found) {
+    is(typeof found.details.transitionType, "string",
+       "Got transitionType in the onReferenceFragmentUpdated event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "Got transitionQualifiers in the onReferenceFragmentUpdated event");
+  }
+
+  // cleanup phase
+  win.close();
+
+  await extension.unload();
+  info("webnavigation extension unloaded");
+});
+
+add_task(async function webnav_ordering() {
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background: backgroundScript,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  extension.onMessage("received", ({url, event}) => {
+    received.push({url, event});
+
+    if (event == waitingEvent && url == waitingURL) {
+      completedResolve();
+    }
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  info("webnavigation extension loaded");
+
+  let win = window.open();
+
+  await loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
+
+  function checkRequired(url) {
+    for (let event of REQUIRED) {
+      let found = false;
+      for (let r of received) {
+        if (r.url == url && r.event == event) {
+          found = true;
+        }
+      }
+      ok(found, `Received event ${event} from ${url}`);
+    }
+  }
+
+  checkRequired(URL);
+  checkRequired(FRAME);
+
+  function checkBefore(action1, action2) {
+    function find(action) {
+      for (let i = 0; i < received.length; i++) {
+        if (received[i].url == action.url && received[i].event == action.event) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    let index1 = find(action1);
+    let index2 = find(action2);
+    ok(index1 != -1, `Action ${JSON.stringify(action1)} happened`);
+    ok(index2 != -1, `Action ${JSON.stringify(action2)} happened`);
+    ok(index1 < index2, `Action ${JSON.stringify(action1)} happened before ${JSON.stringify(action2)}`);
+  }
+
+  // As required in the webNavigation API documentation:
+  // If a navigating frame contains subframes, its onCommitted is fired before any
+  // of its children's onBeforeNavigate; while onCompleted is fired after
+  // all of its children's onCompleted.
+  checkBefore({url: URL, event: "onCommitted"}, {url: FRAME, event: "onBeforeNavigate"});
+  checkBefore({url: FRAME, event: "onCompleted"}, {url: URL, event: "onCompleted"});
+
+  // As required in the webNAvigation API documentation, check the event sequence:
+  // onBeforeNavigate -> onCommitted -> onDOMContentLoaded -> onCompleted
+  let expectedEventSequence = [
+    "onBeforeNavigate", "onCommitted", "onDOMContentLoaded", "onCompleted",
+  ];
+
+  for (let i = 1; i < expectedEventSequence.length; i++) {
+    let after = expectedEventSequence[i];
+    let before = expectedEventSequence[i - 1];
+    checkBefore({url: URL, event: before}, {url: URL, event: after});
+    checkBefore({url: FRAME, event: before}, {url: FRAME, event: after});
+  }
+
+  await loadAndWait(win, "onCompleted", FRAME2, () => { win.frames[0].location = FRAME2; });
+
+  checkRequired(FRAME2);
+
+  let navigationSequence = [
+    {
+      action: () => { win.frames[0].document.getElementById("elt").click(); },
+      waitURL: `${FRAME2}#ref`,
+      expectedEvent: "onReferenceFragmentUpdated",
+      description: "clicked an anchor link",
+    },
+    {
+      action: () => { win.frames[0].history.pushState({}, "History PushState", `${FRAME2}#ref2`); },
+      waitURL: `${FRAME2}#ref2`,
+      expectedEvent: "onReferenceFragmentUpdated",
+      description: "history.pushState, same pathname, different hash",
+    },
+    {
+      action: () => { win.frames[0].history.pushState({}, "History PushState", `${FRAME2}#ref2`); },
+      waitURL: `${FRAME2}#ref2`,
+      expectedEvent: "onHistoryStateUpdated",
+      description: "history.pushState, same pathname, same hash",
+    },
+    {
+      action: () => {
+        win.frames[0].history.pushState({}, "History PushState", `${FRAME2}?query_param1=value#ref2`);
+      },
+      waitURL: `${FRAME2}?query_param1=value#ref2`,
+      expectedEvent: "onHistoryStateUpdated",
+      description: "history.pushState, same pathname, same hash, different query params",
+    },
+    {
+      action: () => {
+        win.frames[0].history.pushState({}, "History PushState", `${FRAME2}?query_param2=value#ref3`);
+      },
+      waitURL: `${FRAME2}?query_param2=value#ref3`,
+      expectedEvent: "onHistoryStateUpdated",
+      description: "history.pushState, same pathname, different hash, different query params",
+    },
+    {
+      action: () => { win.frames[0].history.pushState(null, "History PushState", FRAME_PUSHSTATE); },
+      waitURL: FRAME_PUSHSTATE,
+      expectedEvent: "onHistoryStateUpdated",
+      description: "history.pushState, different pathname",
+    },
+  ];
+
+  for (let navigation of navigationSequence) {
+    let {expectedEvent, waitURL, action, description} = navigation;
+    info(`Waiting ${expectedEvent} from ${waitURL} - ${description}`);
+    await loadAndWait(win, expectedEvent, waitURL, action);
+    info(`Received ${expectedEvent} from ${waitURL} - ${description}`);
+  }
+
+  for (let i = navigationSequence.length - 1; i > 0; i--) {
+    let {waitURL: fromURL, expectedEvent} = navigationSequence[i];
+    let {waitURL} = navigationSequence[i - 1];
+    info(`Waiting ${expectedEvent} from ${waitURL} - history.back() from ${fromURL} to ${waitURL}`);
+    await loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.back(); });
+    info(`Received ${expectedEvent} from ${waitURL} - history.back() from ${fromURL} to ${waitURL}`);
+  }
+
+  for (let i = 0; i < navigationSequence.length - 1; i++) {
+    let {waitURL: fromURL} = navigationSequence[i];
+    let {waitURL, expectedEvent} = navigationSequence[i + 1];
+    info(`Waiting ${expectedEvent} from ${waitURL} - history.forward() from ${fromURL} to ${waitURL}`);
+    await loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.forward(); });
+    info(`Received ${expectedEvent} from ${waitURL} - history.forward() from ${fromURL} to ${waitURL}`);
+  }
+
+  win.close();
+
+  await extension.unload();
+  info("webnavigation extension unloaded");
+});
+
+add_task(async function webnav_error_event() {
+  function backgroundScriptErrorEvent() {
+    browser.webNavigation.onErrorOccurred.addListener((details) => {
+      browser.test.log(`Got onErrorOccurred ${details.url} ${details.error}`);
+
+      browser.test.sendMessage("received", {url: details.url, details, event: "onErrorOccurred"});
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background: backgroundScriptErrorEvent,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  extension.onMessage("received", ({url, event, details}) => {
+    received.push({url, event, details});
+
+    if (event == waitingEvent && url == waitingURL) {
+      completedResolve();
+    }
+  });
+
+  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  info("webnavigation extension loaded");
+
+  let win = window.open();
+
+  received = [];
+  await loadAndWait(win, "onErrorOccurred", INVALID_PAGE, () => { win.location = INVALID_PAGE; });
+
+  let found = received.find((data) => (data.event == "onErrorOccurred" &&
+                                   data.url == INVALID_PAGE));
+
+  ok(found, "Got the onErrorOccurred event");
+
+  if (found) {
+    ok(found.details.error.match(/Error code [0-9]+/),
+       "Got the expected error string in the onErrorOccurred event");
+  }
+
+  // cleanup phase
+  win.close();
+
+  await extension.unload();
+  info("webnavigation extension unloaded");
+});
+</script>
+
+</body>
+</html>

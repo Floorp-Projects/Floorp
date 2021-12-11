@@ -1,0 +1,42 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+USE_LIBS += [
+    "static:xul",
+]
+
+# This library is entirely composed of Rust code, and needs to come after
+# all the C++ code so any possible C++ -> Rust calls can be resolved.
+USE_LIBS += ["gkrust"]
+
+Libxul("xul-real")
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
+        full_libname = SHARED_LIBRARY_NAME
+    else:
+        full_libname = "%s%s%s" % (
+            CONFIG["DLL_PREFIX"],
+            SHARED_LIBRARY_NAME,
+            CONFIG["DLL_SUFFIX"],
+        )
+    GeneratedFile(
+        "dependentlibs.list",
+        "dependentlibs.list.gtest",
+        script="dependentlibs.py",
+        entry_point="gen_list",
+        inputs=["!%s" % full_libname],
+    )
+    FINAL_TARGET_FILES += ["!dependentlibs.list", "!dependentlibs.list.gtest"]
+
+# Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
+# too old to support Python pretty-printers; if this changes, we could
+# make this 'ifdef __GNUC__'.
+if CONFIG["OS_ARCH"] == "Linux":
+    # Create a GDB Python auto-load file alongside the libxul shared library
+    # in the build directory.
+    DEFINES["topsrcdir"] = TOPSRCDIR
+    OBJDIR_FILES.toolkit.library.build += ["../libxul.so-gdb.py"]

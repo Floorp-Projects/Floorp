@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1638441
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test for Bug 1638441</title>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <style>
+    #target {
+      position: fixed;
+      bottom: 50px;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div id="target">
+  <script type="application/javascript">
+
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  // Do a large visual scroll to scroll the visual viewport to the bottom
+  // of the layout viewport.
+  let visualScrollPromise = new Promise(resolve => {
+    window.visualViewport.addEventListener("scroll", resolve, { once: true });
+  });
+  utils.scrollToVisual(0, 900, utils.UPDATE_TYPE_MAIN_THREAD,
+                       utils.SCROLL_MODE_INSTANT);
+  await visualScrollPromise;
+  await promiseApzFlushedRepaints();
+
+  // Tap the position-fixed element which is near the bottom of the
+  // layout viewport (and therefore visible now that the visual
+  // viewport is scrolled to the bottom of the layout viewport).
+  // The intention is to test that the visual-to-layout transform
+  // is applied correctly during the hit test.
+  let target = document.getElementById("target");
+  let mouseDownEvent = null;
+  let mouseDownPromise = new Promise(resolve => {
+    target.addEventListener("mousedown", function(e) {
+      mouseDownEvent = e;
+      resolve();
+    });
+  });
+
+  synthesizeNativeTap(target, 10, 10);
+  await mouseDownPromise;
+
+  is(mouseDownEvent.target, target, "mousedown event targeted the correct element");
+}
+
+SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</body>
+</html>

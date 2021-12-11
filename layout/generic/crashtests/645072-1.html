@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html lang=ru>
+<head>
+<meta charset=windows-1251>
+<title>Testcase, bug 645072</title>
+</head>
+<body>
+<table cellspacing=0 cellpadding=0 border=0>
+	<tr valign=top><td>Размытые,зеленые,но&shy;<wbr> классные)<br>&shy;<wbr><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAABpJREFUWMPtwQEBAAAAgiD/r25IQAEAAADvBhAgAAGX91fXAAAAAElFTkSuQmCC" alt="">&shy;<wbr>
+</table>
+<script>
+// simulate image loading
+document.body.offsetWidth;
+document.getElementsByTagName("img")[0].style.width = "604px";
+document.getElementsByTagName("img")[0].style.height = "405px";
+</script>

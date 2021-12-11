@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Table accessible tree and table interface tests for ARIA grid</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // Pure ARIA grid
+      var cellsArray = [
+        [kColHeaderCell, kColHeaderCell, kColHeaderCell],
+        [kRowHeaderCell, kDataCell,      kDataCell],
+        [kRowHeaderCell, kDataCell,      kDataCell],
+      ];
+
+      testTableStruct("table", cellsArray);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // HTML table based ARIA grid
+      cellsArray = [
+        [kColHeaderCell, kColHeaderCell, kColHeaderCell],
+        [kDataCell,      kDataCell,      kDataCell],
+        [kDataCell,      kDataCell,      kDataCell],
+      ];
+
+      testTableStruct("grid", cellsArray);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA grid with HTML table elements
+      cellsArray = [
+        [kColHeaderCell, kColHeaderCell],
+        [kDataCell,      kDataCell],
+      ];
+
+      testTableStruct("grid2", cellsArray);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA grid of wrong markup
+      cellsArray = [ ];
+      testTableStruct("grid3", cellsArray);
+
+      cellsArray = [ [] ];
+      testTableStruct("grid4", cellsArray);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA table with tr inside a shadow root (bug 1698097).
+      testTableStruct("tableShadow", [ [ kDataCell ] ]);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     title="ARIA grid based on HTML table"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=491683">Mozilla Bug 491683</a>
+  <a target="_blank"
+     title="implement IAccessibleTable2"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">Mozilla Bug 512424</a>
+  <a target="_blank"
+     title="nsHTMLTableCellAccessible is used in dojo's ARIA grid"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
+  <a target="_blank"
+     title="Crash [@ AccIterator::GetNext()]"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=675861">Mozilla Bug 675861</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Not usual markup to avoid text accessible between cell accessibles -->
+  <div id="table" role="grid">
+    <div role="row"><span
+      id="table_ch_1" role="columnheader">col_1</span><span
+      id="table_ch_2" role="columnheader">col_2</span><span
+      id="table_ch_3" role="columnheader">col_3</span></div>
+    <div role="row"><span
+      id="table_rh_1" role="rowheader">row_1</span><span
+      id="table_dc_1" role="gridcell">cell1</span><span
+      id="table_dc_2" role="gridcell">cell2</span></div>
+    <div role="row"><span
+      id="table_rh_2" role="rowheader">row_2</span><span
+      id="table_dc_3" role="gridcell">cell3</span><span
+      id="table_dc_4" role="gridcell">cell4</span></div>
+  </div>
+
+  <table role="grid" id="grid" border="1" cellpadding="10" cellspacing="0">
+    <thead>
+      <tr role="row">
+        <th role="columnheader">subject</td>
+        <th role="columnheader">sender</th>
+        <th role="columnheader">date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr role="row">
+        <td role="gridcell" tabindex="0">about everything</td>
+        <td role="gridcell">president</td>
+        <td role="gridcell">today</td>
+      </tr>
+      <tr role="row">
+        <td role="gridcell">new bugs</td>
+        <td role="gridcell">mozilla team</td>
+        <td role="gridcell">today</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ARIA grid containing presentational HTML:table with HTML:td used as ARIA
+    grid cells (focusable and not focusable cells) -->
+  <div role="grid" id="grid2">
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="columnheader">header1</td>
+          <td role="columnheader">header2</td>
+        </tr>
+      </table>
+    </div>
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="gridcell">cell1</td>
+          <td role="gridcell" tabindex="-1">cell2</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Wrong markup ARIA grid -->
+  <div role="grid" id="grid3"></div>
+  <div role="grid" id="grid4"><div role="row"></div></div>
+
+  <div id="tableShadow" role="table"></div>
+  <script>
+    let host = document.getElementById("tableShadow");
+    let shadow = host.attachShadow({mode: "open"});
+    let tr = document.createElement("tr");
+    shadow.append(tr);
+    tr.setAttribute("role", "row");
+    let td = document.createElement("td");
+    tr.append(td);
+    td.textContent = "test";
+  </script>
+</body>
+</html>

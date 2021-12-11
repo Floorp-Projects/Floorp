@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>
+    <style type="text/css">
+      iframe { width: 90%; height: 50px; }
+    </style>
+<script>
+if (!navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
+window.onload = async function() {
+  navigateByLocation(frames[0]);
+  navigateByOpen("child1");
+  navigateByForm("child2");
+  navigateByHyperlink("child3");
+
+  await waitForFinishedFrames(4);
+  await isNavigated(frames[0], "Should be able to navigate off-domain child by setting location.");
+  await isNavigated(frames[1], "Should be able to navigate off-domain child by calling window.open.");
+  await isNavigated(frames[2], "Should be able to navigate off-domain child by submitting form.");
+  await isNavigated(frames[3], "Should be able to navigate off-domain child by targeted hyperlink.");
+
+  await cleanupWindows();
+  SimpleTest.finish();
+};
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408052">Mozilla Bug 408052</a>
+<div id="frames">
+<iframe name="child0" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe name="child1" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe name="child2" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe name="child3" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+</div>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

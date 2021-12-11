@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<title>Empty canvas objects and images that do not share lines with text should not receive backplates.</title>
+<style>
+  .outer {
+    background-image: url("blue.png");
+  }
+  canvas {
+    height: 100px;
+    width: 100px;
+  }
+</style>
+<div class="outer">
+  <canvas></canvas>
+  <br>
+  <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'></svg>" style="border:1px solid black; height:100px; width:100px;">
+  <br>
+  <img src="data:image/png," alt="Here is some alt text">
+</div>

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1687342 - Check blocked-uri in csp-reports after frame redirect</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id='testframe'></iframe>
+
+<script class="testbody" type="text/javascript">
+
+ /* Description of the test:
+  * We load a document from http://mochi.test with a CSP of `frame-src example.com`.
+  * We then load an iframe from example.com which redirects to test1.example.com and
+  * ensure that the report-uri is the origin of the frame before the blocked redirect.
+  */
+
+SimpleTest.waitForExplicitFinish();
+
+const BLOCKED_URI =
+  "http://example.com/tests/dom/security/test/csp/file_blocked_uri_redirect_frame_src_server.sjs?doredirect";
+
+var chromeScriptUrl = SimpleTest.getTestFileURL("file_report_chromescript.js");
+var script = SpecialPowers.loadChromeScript(chromeScriptUrl);
+
+script.addMessageListener('opening-request-completed', function ml(msg) {
+  if (msg.error) {
+    ok(false, "Could not query report (exception: " + msg.error + ")");
+    return;
+  }
+  try {
+    var reportObj = JSON.parse(msg.report);
+  } catch (e) {
+    ok(false, "Could not parse JSON (exception: " + e + ")");
+  }
+  try {
+    var cspReport = reportObj["csp-report"];
+    is(cspReport["blocked-uri"], BLOCKED_URI, "Incorrect blocked-uri");
+  } catch (e) {
+    ok(false, "Could not query report (exception: " + e + ")");
+  }
+
+  script.removeMessageListener('opening-request-completed', ml);
+  script.sendAsyncMessage("finish");
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  let testframe = document.getElementById("testframe");
+  testframe.src = "file_blocked_uri_redirect_frame_src.html";
+}
+
+runTest();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=722599
+-->
+<head>
+<title>Test for Bug 722599</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=722599">Mozilla Bug 722599</a>
+<p id="display"></p>
+<div id="content">
+<input type="file" id="fileInput"></input>
+<textarea id="textarea" onchange="++textareaChange;"></textarea>
+<input type="text" id="input_text" onchange="++textInputChange[0];"></input>
+<input type="email" id="input_email" onchange="++textInputChange[1];"></input>
+<input type="search" id="input_search" onchange="++textInputChange[2];"></input>
+<input type="tel" id="input_tel" onchange="++textInputChange[3];"></input>
+<input type="url" id="input_url" onchange="++textInputChange[4];"></input>
+<input type="password" id="input_password" onchange="++textInputChange[5];"></input>
+ 
+<!-- "Non-text" inputs-->
+<input type="button" id="input_button" onchange="++NonTextInputChange[0];"></input>
+<input type="submit" id="input_submit" onchange="++NonTextInputChange[1];"></input>
+<input type="image" id="input_image" onchange="++NonTextInputChange[2];"></input>
+<input type="reset" id="input_reset" onchange="++NonTextInputChange[3];"></input>
+<input type="radio" id="input_radio" onchange="++NonTextInputChange[4];"></input>
+<input type="checkbox" id="input_checkbox" onchange="++NonTextInputChange[5];"></input>
+<input type="number" id="input_number" onchange="++numberChange;"></input>
+<input type="range" id="input_range" onchange="++rangeChange;"></input>
+
+<!-- Input text with default value and blurs on focus-->
+<input type="text" id="input_text_value" onchange="++textInputValueChange"
+  onfocus="this.blur();" value="foo"></input>
+ 
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /** Test for Bug 722599 **/
+
+  const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+
+  var textareaChange = 0;
+  var fileInputChange = 0;
+  var textInputValueChange = 0;
+
+  var textInputTypes = ["text", "email", "search", "tel", "url", "password"];
+  var textInputChange = [0, 0, 0, 0, 0, 0];
+
+  var NonTextInputTypes = ["button", "submit", "image", "reset", "radio", "checkbox"];
+  var NonTextInputChange = [0, 0, 0, 0, 0, 0];
+
+  var numberChange = 0;
+  var rangeChange = 0;
+
+  var blurTestCalled = false; //Sentinel to prevent infinite loop.
+
+  SimpleTest.waitForExplicitFinish();
+  var MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window);
+
+  function fileInputBlurTest() {
+    var btn = document.getElementById('fileInput');
+    btn.focus()
+    btn.blur();
+    is(fileInputChange, 1, "change event shouldn't be dispatched on blur for file input element(1)");
+  }
+
+  function testUserInput() {
+    //Simulating an OK click and with a file name return.
+    MockFilePicker.useBlobFile();
+    MockFilePicker.returnValue = MockFilePicker.returnOK;
+    var input = document.getElementById('fileInput');
+    input.focus();
+
+    input.addEventListener("change", function (aEvent) {
+      ++fileInputChange;
+      if (!blurTestCalled) {
+        is(fileInputChange, 1, "change event should have been dispatched on file input.");
+        blurTestCalled = true;
+        fileInputBlurTest();
+      }
+      else {
+        is(fileInputChange, 1, "change event shouldn't be dispatched on blur for file input element (2)");
+      }
+    });
+    input.click();
+    // blur the file input, we can't use blur() because of bug 760283
+    document.getElementById('input_text').focus();
+    setTimeout(testUserInput2, 0);
+  }
+
+  function testUserInput2() {
+    var input = document.getElementById('fileInput');
+    // remove it, otherwise cleanup() opens a native file picker!
+    input.remove();
+    MockFilePicker.cleanup(); 
+
+    //text, email, search, telephone, url & password input tests
+    for (var i = 0; i < textInputTypes.length; ++i) {
+      input = document.getElementById("input_" + textInputTypes[i]);
+      input.focus();
+      synthesizeKey("KEY_Enter");
+      is(textInputChange[i], 0, "Change event shouldn't be dispatched on " + textInputTypes[i] + " input element");
+
+      sendString("m");
+      synthesizeKey("KEY_Enter");
+      is(textInputChange[i], 1, textInputTypes[i] + " input element should have dispatched change event.");
+    }
+
+    //focus and blur text input
+    input = document.getElementById("input_text");
+    input.focus();
+    sendString("f");
+    input.blur();
+    is(textInputChange[0], 2, "text input element should have dispatched change event (2).");
+
+    // value being set while focused
+    input.focus();
+    input.value = 'foo';
+    input.blur();
+    is(textInputChange[0], 2, "text input element should not have dispatched change event (2).");
+
+    // value being set while focused after being modified manually
+    input.focus();
+    sendString("f");
+    input.value = 'bar';
+    input.blur();
+    is(textInputChange[0], 3, "text input element should have dispatched change event (3).");
+
+    //focus and blur textarea
+    var textarea = document.getElementById("textarea");
+    textarea.focus();
+    sendString("f");
+    textarea.blur();
+    is(textareaChange, 1, "Textarea element should have dispatched change event.");
+
+    // value being set while focused
+    textarea.focus();
+    textarea.value = 'foo';
+    textarea.blur();
+    is(textareaChange, 1, "textarea should not have dispatched change event (1).");
+
+    // value being set while focused after being modified manually
+    textarea.focus();
+    sendString("f");
+    textarea.value = 'bar';
+    textarea.blur();
+    is(textareaChange, 2, "textearea should have dispatched change event (2).");
+
+    //Non-text input tests:
+    for (var i = 0; i < NonTextInputTypes.length; ++i) {
+      //button, submit, image and reset input type tests.
+      if (i < 4) {
+        input = document.getElementById("input_" + NonTextInputTypes[i]);
+        input.focus();
+        input.click();
+        is(NonTextInputChange[i], 0, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element");
+        input.blur();
+        is(NonTextInputChange[i], 0, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element(2)");
+      }
+      //for radio and and checkboxes, we require that change event should ONLY be dispatched on setting the value.
+      else {
+        input = document.getElementById("input_" + NonTextInputTypes[i]);
+        input.focus();
+        input.click();
+        is(NonTextInputChange[i], 1, NonTextInputTypes[i] + " input element should have dispatched change event.");
+        input.blur();
+        is(NonTextInputChange[i], 1, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element");
+
+        // Test that change event is not dispatched if click event is cancelled.
+        function preventDefault(e) {
+          e.preventDefault();
+        }
+        input.addEventListener("click", preventDefault);
+        input.click();
+        is(NonTextInputChange[i], 1, "Change event shouldn't be dispatched if click event is cancelled");
+        input.removeEventListener("click", preventDefault);
+      }
+    }
+
+    // Special case type=number
+    var number = document.getElementById("input_number");
+    number.focus();
+    sendString("a");
+    number.blur();
+    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for key changes that don't change its value");
+    number.value = "";
+    number.focus();
+    sendString("12");
+    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for keyboard input until it loses focus");
+    number.blur();
+    is(numberChange, 1, "Change event should be dispatched on number input element on blur");
+    is(number.value, "12", "Sanity check that number keys were actually handled");
+    if (isDesktop) { // up/down arrow keys not supported on android/b2g
+      number.value = "";
+      number.focus();
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_ArrowDown");
+      is(numberChange, 4, "Change event should be dispatched on number input element for up/down arrow keys (a special case)");
+      is(number.value, "1", "Sanity check that number and arrow keys were actually handled");
+    }
+
+    // Special case type=range
+    var range = document.getElementById("input_range");
+    range.focus();
+    sendString("a");
+    range.blur();
+    is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes that don't change its value");
+    range.focus();
+    synthesizeKey("VK_HOME");
+    is(rangeChange, 1, "Change event should be dispatched on range input element for key changes");
+    range.blur();
+    is(rangeChange, 1, "Change event shouldn't be dispatched on range input element on blur");
+    range.focus();
+    var bcr = range.getBoundingClientRect();
+    var centerOfRangeX = bcr.width / 2;
+    var centerOfRangeY = bcr.height / 2;
+    synthesizeMouse(range, centerOfRangeX - 10, centerOfRangeY, { type: "mousedown" });
+    is(rangeChange, 1, "Change event shouldn't be dispatched on range input element for mousedown");
+    synthesizeMouse(range, centerOfRangeX - 5, centerOfRangeY, { type: "mousemove" });
+    is(rangeChange, 1, "Change event shouldn't be dispatched on range input element during drag of thumb");
+    synthesizeMouse(range, centerOfRangeX, centerOfRangeY, { type: "mouseup" });
+    is(rangeChange, 2, "Change event should be dispatched on range input element at end of drag");
+    range.blur();
+    is(rangeChange, 2, "Change event shouldn't be dispatched on range input element when range loses focus after a drag");
+    synthesizeMouse(range, centerOfRangeX - 10, centerOfRangeY, {});
+    is(rangeChange, 3, "Change event should be dispatched on range input element for a click that gives the range focus");
+
+    if (isDesktop) { // up/down arrow keys not supported on android/b2g
+      synthesizeKey("KEY_ArrowUp");
+      is(rangeChange, 4, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowUp)");
+      synthesizeKey("KEY_ArrowDown");
+      is(rangeChange, 5, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowDown)");
+      synthesizeKey("KEY_ArrowRight");
+      is(rangeChange, 6, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowRight)");
+      synthesizeKey("KEY_ArrowLeft");
+      is(rangeChange, 7, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowLeft)");
+      synthesizeKey("KEY_ArrowUp", {shiftKey: true});
+      is(rangeChange, 8, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowUp)");
+      synthesizeKey("KEY_ArrowDown", {shiftKey: true});
+      is(rangeChange, 9, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowDown)");
+      synthesizeKey("KEY_ArrowRight", {shiftKey: true});
+      is(rangeChange, 10, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowRight)");
+      synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+      is(rangeChange, 11, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowLeft)");
+      synthesizeKey("KEY_PageUp");
+      is(rangeChange, 12, "Change event should be dispatched on range input element for key changes that change its value (KEY_PageUp)");
+      synthesizeKey("KEY_PageDown");
+      is(rangeChange, 13, "Change event should be dispatched on range input element for key changes that change its value (KEY_PageDown");
+      synthesizeKey("KEY_ArrowRight", {shiftKey: true});
+      is(rangeChange, 14, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_PageUp)");
+      synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+      is(rangeChange, 15, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_PageDown)");
+    }
+    //Input type change test.
+    input = document.getElementById("input_checkbox");
+    input.type = "text";
+    input.focus();
+    input.click();
+    input.blur();
+    is(NonTextInputChange[5], 1, "Change event shouldn't be dispatched for checkbox ---> text input type change");
+
+    setTimeout(testInputWithDefaultValue, 0);
+  }
+
+  function testInputWithDefaultValue() {
+    // focus and blur an input text should not trigger change event if content hasn't changed.
+    var input = document.getElementById('input_text_value');
+    input.focus();
+    is(textInputValueChange, 0, "change event shouldn't be dispatched on input text with default value");
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(testUserInput);
+ 
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,103 @@
+== blend-canvas.html blend-canvas-ref.html
+== blend-constant-background-color.html blend-constant-background-color-ref.html
+== blend-gradient-background-color.html blend-gradient-background-color-ref.html
+== blend-image.html blend-image-ref.html
+fuzzy-if(geckoview&&device,3-3,5-5) == blend-difference-stacking.html blend-difference-stacking-ref.html
+
+fuzzy(0-1,0-30000) == background-blending-alpha.html background-blending-alpha-ref.html
+== background-blending-gradient-color.html background-blending-gradient-color-ref.html
+fuzzy(0-2,0-9450) fuzzy-if(!geckoview,0-1,0-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
+fuzzy-if(azureSkiaGL,0-2,0-7174) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
+fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-10000) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
+== background-blending-image-color-png.html background-blending-image-color-ref.html
+== background-blending-image-color-svg.html background-blending-image-color-ref.html
+fuzzy-if(azureSkiaGL,0-2,0-7174) == background-blending-image-gradient.html background-blending-gradient-color-ref.html
+== background-blending-image-image.html background-blending-image-color-ref.html
+== background-blending-isolation.html background-blending-isolation-ref.html
+random-if(useDrawSnapshot) == background-blending-list-repeat.html background-blending-list-repeat-ref.html
+== background-blending-multiple-images.html background-blending-multiple-images-ref.html
+
+== background-blending-color-burn.html background-blending-color-burn-ref.svg
+== background-blending-color-dodge.html background-blending-color-dodge-ref.svg
+# need to investigate why these tests are fuzzy - first suspect is a possible color space conversion on some platforms; same for mix-blend-mode tests
+fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(d2d,0-1,0-8000) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-color.html background-blending-color-ref.svg
+== background-blending-darken.html background-blending-darken-ref.svg
+== background-blending-difference.html background-blending-difference-ref.svg
+fuzzy(0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
+fuzzy-if(cocoaWidget||d2d||swgl||/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
+fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
+== background-blending-lighten.html background-blending-lighten-ref.svg
+fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
+fuzzy(0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
+== background-blending-normal.html background-blending-normal-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||gtkWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
+fuzzy-if(d2d,0-1,0-3200) fuzzy-if(azureSkia||gtkWidget,0-2,0-12800) == background-blending-saturation.html background-blending-saturation-ref.svg
+fuzzy-if(d2d||azureSkia||gtkWidget,0-1,0-1600) == background-blending-screen.html background-blending-screen-ref.svg
+fuzzy-if(d2d||azureSkia||gtkWidget,0-10,0-4800) == background-blending-soft-light.html background-blending-soft-light-ref.svg
+
+fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-40000) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
+
+#fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
+fuzzy(0-65,0-53) fuzzy-if(geckoview&&device,63-64,163-328) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
+
+fuzzy-if(d3d11,0-49,0-200) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
+fuzzy-if(d3d11,0-1,0-6) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
+
+fuzzy(0-2,0-14400) fuzzy-if(geckoview&&device,3-3,700-700) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
+
+== mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
+== mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
+== mix-blend-mode-dest-alpha-1135271.html mix-blend-mode-dest-alpha-1135271-ref.html
+fuzzy-if(Android,0-3,0-850) == clipped-mixblendmode-containing-unclipped-stuff.html clipped-mixblendmode-containing-unclipped-stuff-ref.html
+fuzzy(0-1,0-6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-opacity-containing-unclipped-mixblendmode-ref.html
+
+# Test plan 5.3.1 Blending between the background layers and the background color for an element with background-blend-mode
+# Test 9
+== background-blending-image-color-svg-as-data-uri.html background-blending-image-color-ref.html
+# Test 10
+test-pref(image.animation_mode,"none") == background-blending-image-color-gif.html background-blending-image-color-gif-ref.html
+== background-blending-image-color-transform3d.html background-blending-image-color-ref.html
+
+# Test plan 5.3.2 Background layers do not blend with content outside the background (or behind the element) - tests 2 and 3
+== background-blending-isolation-parent-child-color.html background-blending-isolation-parent-child-ref.html
+== background-blending-isolation-parent-child-image.html background-blending-isolation-parent-child-ref.html
+
+# Test plan 5.3.6 background-blend-mode for an element with background-position
+== background-blending-background-position-percentage.html background-blending-background-position-percentage-ref.html
+
+# Test plan 5.3.7 background-blend-mode for an element with background-size
+== background-blending-background-size-contain.html background-blending-background-size-ref.html
+== background-blending-background-size-cover.html background-blending-background-size-ref.html
+== background-blending-background-size-percentage.html background-blending-background-size-ref.html
+== background-blending-background-size-pixels.html background-blending-background-size-ref.html
+
+# Test plan 5.3.8 background-blend-mode for an element with background-repeat
+# Tests 2 and 3 are not added because space and round are not currently supported
+== background-blending-background-repeat-no-repeat.html background-blending-background-repeat-no-repeat-ref.html
+
+# Test plan 5.3.9 background-blend-mode for an element with background-clip
+== background-blending-background-clip-content-box.html background-blending-background-clip-content-box-ref.html
+== background-blending-background-clip-padding-box.html background-blending-background-clip-padding-box-ref.html
+
+# Test plan 5.3.10 background-blend-mode for an element with background-origin
+== background-blending-background-origin-border-box.html background-blending-background-origin-ref.html
+== background-blending-background-origin-content-box.html background-blending-background-origin-ref.html
+
+# Test plan 5.3.11 background-blend-mode for an element with background-attachement
+== background-blending-background-attachement-fixed.html background-blending-background-attachement-fixed-ref.html
+== background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
+
+fuzzy(0-1,0-49719) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
+fuzzy(0-1,0-78472) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
+
+== background-blend-mode-body-fixed.html background-blend-mode-body-fixed-ref.html
+
+== background-blending-moz-element.html background-blending-moz-element-ref.html
+
+fuzzy(0-1,0-40000) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
+fuzzy(0-1,0-40000) == mix-blend-mode-transformed.html mix-blend-mode-transformed-ref.html
+
+# Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
+== blend-isolation.html blend-isolation-ref.html
+
+fuzzy(0-1,0-8192) == bug1281593.html bug1281593-ref.html

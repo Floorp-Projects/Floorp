@@ -1,0 +1,88 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+  Description: Currently only functions to enhance plain text with HTML tags.
+  <p>
+  Wrapper class for various parsing routines, that convert plain text to HTML.
+  They try to recognize cites, URLs, plain text formattting like *bold* etc.
+  See <http://www.bucksch.org/1/projects/mozilla/16507/> for a description.
+ */
+
+#include "nsIStreamConverter.idl"
+
+%{C++
+// {77c0e42a-1dd2-11b2-8ebf-edc6606f2f4b}
+#define MOZITXTTOHTMLCONV_CID \
+    { 0x77c0e42a, 0x1dd2, 0x11b2, \
+    { 0x8e, 0xbf, 0xed, 0xc6, 0x60, 0x6f, 0x2f, 0x4b } }
+
+#define MOZ_TXTTOHTMLCONV_CONTRACTID \
+  "@mozilla.org/txttohtmlconv;1"
+
+%}
+
+[scriptable, uuid(77c0e42a-1dd2-11b2-8ebf-edc6606f2f4b)]
+interface mozITXTToHTMLConv : nsIStreamConverter {
+  const unsigned long kEntities = 0;  // just convert < & > to &lt; &amp; and &gt;
+  const unsigned long kURLs = 1 << 1;
+  const unsigned long kGlyphSubstitution = 1 << 2;  // Smilies, &reg; etc.
+  const unsigned long kStructPhrase = 1 << 3;       // E.g. *bold* -> <strong>
+
+/**
+  @param text: plain text to scan. May be a line, paragraph (recommended)
+               or just a substring.<p>
+               Must be non-escaped, pure unicode.<p>
+               <em>Note:</em> ScanTXT(a, o) + ScanTXT(b, o) may be !=
+               Scan(a + b, o)
+  @param whattodo: Bitfield describing the modes of operation
+  @result      "<", ">" and "&" are escaped and HTML tags are inserted where
+               appropriate.
+ */
+  AString   scanTXT(in AString text, in unsigned long whattodo);
+
+/**
+  Adds additional formatting to user edited text, that the user was too lazy
+  or "unknowledged" (DELETEME: is that a word?) to make.
+  <p>
+  <em>Note:</em> Don't use kGlyphSubstitution with this function. This option
+  generates tags, that are unuseable for UAs other than Mozilla. This would
+  be a data loss bug.
+
+  @param text: HTML source to scan. May be a line, paragraph (recommended)
+               or just a substring.<p>
+               Must be correct HTML. "<", ">" and "&" must be escaped,
+               other chars must be pure unicode.<p>
+               <em>Note:</em> ScanTXT(a, o) + ScanTXT(b, o) may be !=
+               Scan(a + b, o)
+  @param whattodo: Bitfield describing the modes of operation
+  @result      Additional HTML tags are inserted where appropriate.
+ */
+  AString   scanHTML(in AString text, in unsigned long whattodo);
+
+/**
+  @param line: line in original msg, possibly starting starting with
+               txt quote tags like ">"
+  @param logLineStart: pos in line, where the real content (logical line)
+               begins, i.e. pos after all txt quote tags.
+               E.g. position of "t" in "> > text".
+               Initial value must be 0, unless line is not real line.
+  @return      Cite Level, i.e. number of txt quote tags found, i.e. number of
+               nested quotes.
+ */
+  unsigned long   citeLevelTXT(in wstring line,
+                               out unsigned long logLineStart);
+
+/**
+ @param a wide string to scan for the presence of a URL.
+ @param aLength --> the length of the buffer to be scanned
+ @param aPos --> the position in the buffer to start scanning for a url
+
+ aStartPos --> index into the start of a url (-1 if no url found)
+ aEndPos --> index of the last character in the url (-1 if no url found)
+ */
+
+  void findURLInPlaintext(in wstring text, in long aLength, in long aPos, out long aStartPos, out long aEndPos);
+};

@@ -1,0 +1,735 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    index:
+        product: firefox
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        secrets: true
+        script: "mozharness/scripts/fx_desktop_build.py"
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-dump_syms
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - sysroot-x86_64-linux-gnu
+
+macosx64/debug:
+    description: "MacOS X x64 Cross-compile"
+    index:
+        job-name: macosx64-debug
+    attributes:
+        enable-build-signing: true
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: osx-cross/debug
+        symbol: B
+        tier: 1
+    worker:
+        max-run-time: 5400
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-debug
+        mozconfig-variant: debug
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-hybrid/plain:
+    description: "MacOS X x64 Hybrid Cross-compile"
+    index:
+        job-name: macosx64-hybrid
+    treeherder:
+        platform: osx-cross/plain
+        symbol: Bp-hybrid
+        tier: 1
+    worker:
+        max-run-time: 5400
+        env:
+            PERFHERDER_EXTRA_OPTIONS: hybrid
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        mozconfig-variant: hybrid
+        extra-config:
+            disable_package_metrics: true
+    use-sccache: true
+    run-on-projects: ['integration']
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64/opt:
+    description: "MacOS X x64 Cross-compile"
+    index:
+        job-name: macosx64-opt
+    attributes:
+        enable-build-signing: true
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: osx-cross/opt
+        symbol: B
+        tier: 1
+    worker:
+        max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+    run-on-projects: ['integration']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-asan-fuzzing/opt:
+    description: "MacOS X x64 Cross-compile Fuzzing ASAN"
+    index:
+        job-name: macosx64-fuzzing-asan-opt
+    treeherder:
+        platform: osx-cross/asan
+        symbol: Bof
+    worker:
+        max-run-time: 5400
+        env:
+            PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-fuzzing-asan
+        mozconfig-variant: nightly-fuzzing-asan
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-llvm-symbolizer
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+    optimization:
+        skip-unless-expanded: null
+
+macosx64-fuzzing/debug:
+    description: "MacOS X x64 Cross-compile Fuzzing Debug"
+    index:
+        job-name: macosx64-fuzzing-debug
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: osx-cross/debug
+        symbol: Bf
+    worker:
+        max-run-time: 5400
+        env:
+            PERFHERDER_EXTRA_OPTIONS: fuzzing
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-fuzzing-debug
+        mozconfig-variant: debug-fuzzing
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+    optimization:
+        skip-unless-expanded: null
+
+macosx64-x64-devedition/opt:
+    description: "MacOS X Dev Edition x64 (shippable)"
+    use-pgo: macosx64-shippable/opt
+    attributes:
+        enable-full-crashsymbols: true
+        skip-verify-test-packaging: true
+    shipping-phase: build
+    shipping-product: devedition
+    index:
+        product: devedition
+        job-name: macosx64-x64-opt
+        type: shippable
+    treeherder:
+        platform: osx-cross-devedition/opt
+        symbol: Bx
+        tier: 1
+    worker:
+        max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: macosx64-devedition
+        mozconfig-variant: devedition
+    run-on-projects: ['mozilla-beta']
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-aarch64-devedition/opt:
+    description: "MacOS X Dev Edition Aarch64 (shippable)"
+    use-pgo: macosx64-shippable/opt
+    attributes:
+        enable-full-crashsymbols: true
+        skip-verify-test-packaging: true
+    shipping-phase: build
+    shipping-product: devedition
+    index:
+        product: devedition
+        job-name: macosx64-aarch64-opt
+        type: shippable
+    treeherder:
+        platform: osx-aarch64-devedition/opt
+        symbol: B
+        tier: 1
+    worker:
+        max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            PERFHERDER_EXTRA_OPTIONS: aarch64
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: macosx64-aarch64-devedition
+            mozconfig_platform: macosx64-aarch64
+        mozconfig-variant: devedition
+    run-on-projects: ['mozilla-beta']
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - macosx64-sdk-11.0
+            - sysroot-wasm32-wasi
+
+macosx64-devedition/opt:
+    description: "MacOS X Dev Edition Universal"
+    attributes:
+        shippable: true
+        enable-build-signing: true
+        skip-upload-crashsymbols: true
+        skip-verify-test-packaging: true
+    shipping-phase: build
+    shipping-product: devedition
+    index:
+        product: devedition
+        job-name: macosx64-opt
+        type: shippable
+    treeherder:
+        platform: osx-cross-devedition/opt
+        symbol: B
+        tier: 1
+    run-on-projects: ['mozilla-beta']
+    worker:
+        max-run-time: 1800
+    run:
+        job-script: taskcluster/scripts/misc/unify.sh
+        config:
+            - builds/releng_base_firefox.py
+    dependencies:
+        macosx64-x64-devedition-opt: build-macosx64-x64-devedition/opt
+        macosx64-aarch64-devedition-opt: build-macosx64-aarch64-devedition/opt
+    fetches:
+        macosx64-x64-devedition-opt:
+            - artifact: target.dmg
+              extract: false
+              dest: x64
+            - artifact: buildhub.json
+              extract: false
+              dest: ../artifacts
+            - artifact: host/bin/mar
+              extract: false
+              dest: ../artifacts/host/bin
+            - artifact: host/bin/mbsdiff
+              extract: false
+              dest: ../artifacts/host/bin
+            - artifact: target.txt
+              extract: false
+              dest: ../artifacts
+            - artifact: target_info.txt
+              extract: false
+              dest: ../artifacts
+            - artifact: target.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.mozinfo.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.test_packages.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.perftests.tests.tar.gz
+              extract: false
+              dest: ../artifacts
+            - artifact: target.common.tests.tar.gz
+              dest: x64/common
+            - artifact: target.cppunittest.tests.tar.gz
+              dest: x64/cppunittest
+            - artifact: target.gtest.tests.tar.gz
+              dest: x64/gtest
+            - artifact: target.jittest.tests.tar.gz
+              dest: x64/jittest
+            - artifact: target.jsreftest.tests.tar.gz
+              dest: x64/jsreftest
+            - artifact: target.mochitest.tests.tar.gz
+              dest: x64/mochitest
+            - artifact: target.reftest.tests.tar.gz
+              dest: x64/reftest
+            - artifact: target.talos.tests.tar.gz
+              dest: x64/talos
+            - artifact: target.raptor.tests.tar.gz
+              dest: x64/raptor
+            - artifact: target.condprof.tests.tar.gz
+              dest: x64/confprof
+            - artifact: target.awsy.tests.tar.gz
+              dest: x64/awsy
+            - artifact: target.xpcshell.tests.tar.gz
+              dest: x64/xpcshell
+            - artifact: target.web-platform.tests.tar.gz
+              dest: x64/web-platform
+            - artifact: target.updater-dep.tests.tar.gz
+              dest: x64/updater-dep
+            - artifact: target.crashreporter-symbols.zip
+              dest: x64/crashreporter-symbols
+            - artifact: target.jsshell.zip
+              dest: x64/jsshell
+            - artifact: target.generated-files.tar.gz
+              extract: false
+              dest: ../artifacts
+            - artifact: target.langpack.xpi
+              extract: false
+              dest: ../artifacts
+            - artifact: mozharness.zip
+              extract: false
+              dest: ../artifacts
+        macosx64-aarch64-devedition-opt:
+            - artifact: target.dmg
+              extract: false
+              dest: aarch64
+            - artifact: target.common.tests.tar.gz
+              dest: aarch64/common
+            - artifact: target.cppunittest.tests.tar.gz
+              dest: aarch64/cppunittest
+            - artifact: target.gtest.tests.tar.gz
+              dest: aarch64/gtest
+            - artifact: target.jittest.tests.tar.gz
+              dest: aarch64/jittest
+            - artifact: target.jsreftest.tests.tar.gz
+              dest: aarch64/jsreftest
+            - artifact: target.mochitest.tests.tar.gz
+              dest: aarch64/mochitest
+            - artifact: target.reftest.tests.tar.gz
+              dest: aarch64/reftest
+            - artifact: target.talos.tests.tar.gz
+              dest: aarch64/talos
+            - artifact: target.raptor.tests.tar.gz
+              dest: aarch64/raptor
+            - artifact: target.condprof.tests.tar.gz
+              dest: aarch64/confprof
+            - artifact: target.awsy.tests.tar.gz
+              dest: aarch64/awsy
+            - artifact: target.xpcshell.tests.tar.gz
+              dest: aarch64/xpcshell
+            - artifact: target.web-platform.tests.tar.gz
+              dest: aarch64/web-platform
+            - artifact: target.updater-dep.tests.tar.gz
+              dest: aarch64/updater-dep
+            - artifact: target.crashreporter-symbols.zip
+              dest: aarch64/crashreporter-symbols
+            - artifact: target.jsshell.zip
+              dest: aarch64/jsshell
+        toolchain:
+            - linux64-cctools-port
+
+macosx64-noopt/debug:
+    description: "MacOS X x64 No-optimize Debug"
+    index:
+        job-name: macosx64-noopt-debug
+    treeherder:
+        platform: osx-cross-noopt/debug
+        symbol: B
+        tier: 2
+    worker:
+        max-run-time: 3600
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-noopt-debug
+        mozconfig-variant: cross-noopt-debug
+        keep-artifacts: false
+    run-on-projects: ['mozilla-central']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-add-on-devel/opt:
+    description: "MacOS X x64 add-on-devel"
+    index:
+        job-name: macosx64-add-on-devel
+    treeherder:
+        platform: osx-cross-add-on-devel/opt
+        symbol: B
+        tier: 2
+    worker:
+        max-run-time: 3600
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: add-on-devel
+        mozconfig-variant: add-on-devel
+    run-on-projects: ['mozilla-beta', 'mozilla-release']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-x64-shippable/opt:
+    description: "MacOS X x64 Cross-compile"
+    use-pgo: macosx64-shippable/opt
+    attributes:
+        enable-full-crashsymbols: true
+        skip-verify-test-packaging: true
+    shipping-phase: build
+    shipping-product: firefox
+    index:
+        job-name: macosx64-x64-opt
+        type: shippable
+    treeherder:
+        platform: osx-shippable/opt
+        symbol: Bpgo(Bx)
+        tier: 1
+    run-on-projects: ['release']
+    worker:
+        max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+            - taskcluster_nightly.py
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-aarch64-shippable/opt:
+    description: "MacOS X aarch64 Cross-compile"
+    use-pgo: macosx64-shippable/opt
+    attributes:
+        enable-full-crashsymbols: true
+        skip-verify-test-packaging: true
+    shipping-phase: build
+    shipping-product: firefox
+    index:
+        job-name: macosx64-aarch64-opt
+        type: shippable
+    treeherder:
+        platform: osx-aarch64-shippable/opt
+        symbol: Bpgo(B)
+        tier: 1
+    run-on-projects: ['release']
+    worker:
+        max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            PERFHERDER_EXTRA_OPTIONS: aarch64
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+            - taskcluster_nightly.py
+        extra-config:
+            mozconfig_platform: macosx64-aarch64
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - macosx64-sdk-11.0
+            - sysroot-wasm32-wasi
+
+macosx64-shippable/opt:
+    description: "MacOS X Universal"
+    attributes:
+        shippable: true
+        enable-build-signing: true
+        skip-upload-crashsymbols: true
+        skip-verify-test-packaging: true
+    shipping-phase: build
+    shipping-product: firefox
+    index:
+        job-name: macosx64-opt
+        type: shippable
+    treeherder:
+        platform: osx-shippable/opt
+        symbol: Bpgo(B)
+        tier: 1
+    run-on-projects: ['release']
+    worker:
+        max-run-time: 1800
+    run:
+        job-script: taskcluster/scripts/misc/unify.sh
+        config:
+            - builds/releng_base_firefox.py
+    dependencies:
+        macosx64-x64-shippable-opt: build-macosx64-x64-shippable/opt
+        macosx64-aarch64-shippable-opt: build-macosx64-aarch64-shippable/opt
+    fetches:
+        macosx64-x64-shippable-opt:
+            - artifact: target.dmg
+              extract: false
+              dest: x64
+            - artifact: buildhub.json
+              extract: false
+              dest: ../artifacts
+            - artifact: host/bin/mar
+              extract: false
+              dest: ../artifacts/host/bin
+            - artifact: host/bin/mbsdiff
+              extract: false
+              dest: ../artifacts/host/bin
+            - artifact: target.txt
+              extract: false
+              dest: ../artifacts
+            - artifact: target_info.txt
+              extract: false
+              dest: ../artifacts
+            - artifact: target.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.mozinfo.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.test_packages.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.perftests.tests.tar.gz
+              extract: false
+              dest: ../artifacts
+            - artifact: target.common.tests.tar.gz
+              dest: x64/common
+            - artifact: target.cppunittest.tests.tar.gz
+              dest: x64/cppunittest
+            - artifact: target.gtest.tests.tar.gz
+              dest: x64/gtest
+            - artifact: target.jittest.tests.tar.gz
+              dest: x64/jittest
+            - artifact: target.jsreftest.tests.tar.gz
+              dest: x64/jsreftest
+            - artifact: target.mochitest.tests.tar.gz
+              dest: x64/mochitest
+            - artifact: target.reftest.tests.tar.gz
+              dest: x64/reftest
+            - artifact: target.talos.tests.tar.gz
+              dest: x64/talos
+            - artifact: target.raptor.tests.tar.gz
+              dest: x64/raptor
+            - artifact: target.condprof.tests.tar.gz
+              dest: x64/confprof
+            - artifact: target.awsy.tests.tar.gz
+              dest: x64/awsy
+            - artifact: target.xpcshell.tests.tar.gz
+              dest: x64/xpcshell
+            - artifact: target.web-platform.tests.tar.gz
+              dest: x64/web-platform
+            - artifact: target.updater-dep.tests.tar.gz
+              dest: x64/updater-dep
+            - artifact: target.crashreporter-symbols.zip
+              dest: x64/crashreporter-symbols
+            - artifact: target.jsshell.zip
+              dest: x64/jsshell
+            - artifact: target.generated-files.tar.gz
+              extract: false
+              dest: ../artifacts
+            - artifact: target.langpack.xpi
+              extract: false
+              dest: ../artifacts
+            - artifact: mozharness.zip
+              extract: false
+              dest: ../artifacts
+        macosx64-aarch64-shippable-opt:
+            - artifact: target.dmg
+              extract: false
+              dest: aarch64
+            - artifact: target.common.tests.tar.gz
+              dest: aarch64/common
+            - artifact: target.cppunittest.tests.tar.gz
+              dest: aarch64/cppunittest
+            - artifact: target.gtest.tests.tar.gz
+              dest: aarch64/gtest
+            - artifact: target.jittest.tests.tar.gz
+              dest: aarch64/jittest
+            - artifact: target.jsreftest.tests.tar.gz
+              dest: aarch64/jsreftest
+            - artifact: target.mochitest.tests.tar.gz
+              dest: aarch64/mochitest
+            - artifact: target.reftest.tests.tar.gz
+              dest: aarch64/reftest
+            - artifact: target.talos.tests.tar.gz
+              dest: aarch64/talos
+            - artifact: target.raptor.tests.tar.gz
+              dest: aarch64/raptor
+            - artifact: target.condprof.tests.tar.gz
+              dest: aarch64/confprof
+            - artifact: target.awsy.tests.tar.gz
+              dest: aarch64/awsy
+            - artifact: target.xpcshell.tests.tar.gz
+              dest: aarch64/xpcshell
+            - artifact: target.web-platform.tests.tar.gz
+              dest: aarch64/web-platform
+            - artifact: target.updater-dep.tests.tar.gz
+              dest: aarch64/updater-dep
+            - artifact: target.crashreporter-symbols.zip
+              dest: aarch64/crashreporter-symbols
+            - artifact: target.jsshell.zip
+              dest: aarch64/jsshell
+        toolchain:
+            - linux64-cctools-port
+
+macosx64-ccov/opt:
+    description: "MacOS X x64 Cross-compile Code Coverage"
+    index:
+        job-name: macosx64-ccov-opt
+    treeherder:
+        platform: osx-cross-ccov/opt
+        symbol: B
+        tier: 1
+    worker:
+        max-run-time: 7200
+        env:
+            RUSTC_BOOTSTRAP: '1'
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: code-coverage-opt
+        mozconfig-variant: code-coverage
+    run-on-projects: ['mozilla-central']
+    use-sccache: false
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-gcp/debug:
+    description: "MacOS X x64 Cross-compile - built on GCP"
+    index:
+        job-name: macosx64-gcp-debug
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: osx-cross/debug
+        symbol: B-gcp
+        tier: 2
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 3600
+        env:
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-debug
+        mozconfig-variant: debug
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+    optimization:
+        skip-unless-backstop: null
+
+macosx64-gcp/opt:
+    description: "MacOS X x64 Cross-compile - built on GCP"
+    index:
+        job-name: macosx64-gcp-opt
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: osx-cross/opt
+        symbol: B-gcp
+        tier: 2
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 7200
+        env:
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+    run-on-projects: ['mozilla-central']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi

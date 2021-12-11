@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+// Test that the default paths searched for native host manifests
+// are the ones we expect.
+add_task(async function test_default_paths() {
+  let expectUser, expectGlobal;
+  switch (AppConstants.platform) {
+    case "macosx": {
+      expectUser = OS.Path.join(OS.Constants.Path.homeDir,
+                                "Library/Application Support/Mozilla");
+      expectGlobal = "/Library/Application Support/Mozilla";
+
+      break;
+    }
+
+    case "linux": {
+      expectUser = OS.Path.join(OS.Constants.Path.homeDir, ".mozilla");
+
+      const libdir = AppConstants.HAVE_USR_LIB64_DIR ? "lib64" : "lib";
+      expectGlobal = OS.Path.join("/usr", libdir, "mozilla");
+      break;
+    }
+
+    default:
+      // Fixed filesystem paths are only defined for MacOS and Linux,
+      // there's nothing to test on other platforms.
+      ok(false, `This test does not apply on ${AppConstants.platform}`);
+      break;
+  }
+
+  let userDir = Services.dirsvc.get("XREUserNativeManifests", Ci.nsIFile).path;
+  is(userDir, expectUser, "user-specific native messaging directory is correct");
+
+  let globalDir = Services.dirsvc.get("XRESysNativeManifests", Ci.nsIFile).path;
+  is(globalDir, expectGlobal, "system-wide native messaing directory is correct");
+});
+
+</script>
+
+</body>
+</html>

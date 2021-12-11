@@ -1,0 +1,95 @@
+<html>
+<head>
+  <title>Test for Bug 551434</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+</div>
+<pre id="test">
+<input id="i1" onkeydown="gKeyDown1++; $('i2').focus();" onkeypress="gKeyPress1++;" onkeyup="gKeyUp1++;"/>
+<input id="i2" onkeydown="gKeyDown2++;" onkeypress="gKeyPress2++;" onkeyup="gKeyUp2++;"/>
+
+<input id="i3" onkeydown="gKeyDown3++; frames[0].document.getElementById('i4').focus();"
+       onkeypress="gKeyPress3++;" onkeyup="gKeyUp3++;"/>
+<iframe id="iframe" src="http://example.org/chrome/layout/base/tests/chrome/bug551434_childframe.html"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var gKeyDown1 = 0, gKeyPress1 = 0, gKeyUp1 = 0;
+var gKeyDown2 = 0, gKeyPress2 = 0, gKeyUp2 = 0;
+var gKeyDown3 = 0, gKeyPress3 = 0, gKeyUp3 = 0;
+
+function runTest()
+{
+  $("i1").focus();
+
+  // key events should not be retargeted when the focus changes to an
+  // element in the same document.
+  synthesizeKey("a", {type: "keydown"});
+  is(document.activeElement, $("i2"), "input 2 in focused");
+
+  synthesizeKey("a", {type: "keyup"});
+
+  is(gKeyDown1, 1, "keydown on input 1");
+  is(gKeyPress1, 0, "keypress on input 1");
+  is(gKeyUp1, 0, "keyup on input 1");
+  is(gKeyDown2, 0, "keydown on input 2");
+  is(gKeyPress2, 1, "keypress on input 2");
+  is(gKeyUp2, 1, "keyup on input 2");
+
+  is($("i1").value, "", "input 1 value");
+  is($("i2").value, "a", "input 2 value");
+
+  // key events should however be retargeted when the focus changes to an
+  // element in the a content document from a chrome document.
+  $("i3").focus();
+
+  var childWinObj = frames[0].wrappedJSObject;
+
+  sendString("b");
+  is(gKeyDown3, 1, "keydown on input 3");
+  is(gKeyPress3, 1, "keypress on input 3");
+  is(gKeyUp3, 1, "keyup on input 3");
+  is(childWinObj.gKeyDownChild, 0, "keydown on input 4");
+  is(childWinObj.gKeyPressChild, 0, "keypress on input 4");
+  is(childWinObj.gKeyUpChild, 0, "keyup on input 4");
+
+  var i4 = frames[0].document.getElementById("i4");
+  is($("i3").value, "b", "input 3 value");
+  is(i4.value, "", "input 4 value");
+
+  is(document.activeElement, $("iframe"), "parent focus");
+  is(frames[0].document.activeElement, i4, "child focus");
+
+  // key events should also be retargeted when the focus changes to an
+  // element in a chrome document from a content document.
+  i4.addEventListener("keydown", () => $("i3").focus());
+
+  sendString("c");
+
+  is(gKeyDown3, 1, "keydown on input 3");
+  is(gKeyPress3, 1, "keypress on input 3");
+  is(gKeyUp3, 1, "keyup on input 3");
+  is(childWinObj.gKeyDownChild, 1, "keydown on input 4");
+  is(childWinObj.gKeyPressChild, 1, "keypress on input 4");
+  is(childWinObj.gKeyUpChild, 1, "keyup on input 4");
+
+  is($("i3").value, "b", "input 3 value");
+  is(i4.value, "c", "input 4 value");
+
+  is(document.activeElement, $("i3"), "parent focus");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTest);
+
+</script>
+</pre>
+</body>
+</html>
+

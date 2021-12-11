@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Web Component connecting into Document's l10n</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="browser/preferences/preferences.ftl"></link>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    // In this test we are introducing two widgets. The only difference between them
+    // is that the first one is using `connectRoot` with the `aTranslate` argument set to `true`,
+    // and the other one to `false`.
+    //
+    // In this test, we will inject both of them into the DOM for parsing.
+    // For a test that verifies the behavior when they're injected lazily, see
+    // `test_connectRoot_webcomponent_lazy.html` test.
+    //
+    // Since both widgets get injected into DOM during parsing, we expect both of them
+    // to get translated before `document.l10n.ready` is resolved.
+
+    let passedTests = 0;
+
+    class FluentWidget extends HTMLElement {
+      constructor() {
+        super();
+        const shadowRoot = this.attachShadow({mode: "open"});
+        const t = document.querySelector("#fluent-widget-template");
+        const instance = t.content.cloneNode(true);
+        shadowRoot.appendChild(instance);
+      }
+      async connectedCallback() {
+        MozXULElement.insertFTLIfNeeded("browser/preferences/preferences.ftl");
+
+        document.l10n.connectRoot(this.shadowRoot, true);
+
+        let label = this.shadowRoot.getElementById("label");
+
+        await document.l10n.ready;
+        is(label.textContent, "Learn more", "localization content applied to element");
+        passedTests++;
+        if (passedTests == 2) {
+          SimpleTest.finish();
+        }
+      }
+    }
+
+    class FluentWidget2 extends HTMLElement {
+      constructor() {
+        super();
+        const shadowRoot = this.attachShadow({mode: "open"});
+        const t = document.querySelector("#fluent-widget-template");
+        const instance = t.content.cloneNode(true);
+        shadowRoot.appendChild(instance);
+      }
+      async connectedCallback() {
+        MozXULElement.insertFTLIfNeeded("browser/preferences/preferences.ftl");
+
+        document.l10n.connectRoot(this.shadowRoot, false);
+
+        let label = this.shadowRoot.getElementById("label");
+
+        await document.l10n.ready;
+        is(label.textContent, "Learn more", "localization content applied to element");
+        passedTests++;
+        if (passedTests == 2) {
+          SimpleTest.finish();
+        }
+      }
+    }
+
+    customElements.define("fluent-widget", FluentWidget);
+    customElements.define("fluent-widget2", FluentWidget2);
+  </script>
+</head>
+<body>
+  <template id="fluent-widget-template">
+    <div>
+      <button id="label" data-l10n-id="do-not-track-learn-more"></button>
+    </div>
+  </template>
+  <fluent-widget></fluent-widget>
+  <fluent-widget2></fluent-widget2>
+  <script>
+    // This trick makes sure that we connect the widgets before parsing is completed.
+    document.write("");
+  </script>
+</body>
+</html>

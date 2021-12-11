@@ -1,0 +1,20 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stretchy munderover</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  </head>
+  <body>
+    <!-- See bug 687807 -->
+    <math>
+      <msup>
+        <munderover>
+          <mo stretchy="true">&#x2192;</mo>
+          <mtext>AAAAAA</mtext>
+          <mtext>BBBBBB</mtext>
+        </munderover>
+        <mtext>CCCCCC</mtext>
+      </msup>
+    </math>
+  </body>
+</html>

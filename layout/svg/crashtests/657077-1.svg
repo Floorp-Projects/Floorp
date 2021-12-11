@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<svg id="a" requiredExtensions="x"/>
+
+<script>
+<![CDATA[
+
+function boom()
+{
+  document.getElementById("a").unsuspendRedrawAll();
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+</svg>

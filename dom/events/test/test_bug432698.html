@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=432698
+-->
+<head>
+  <title>Test for Bug 432698</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=432698">Mozilla Bug 432698</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 432698 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+var outer;
+var middle;
+var inner;
+var outside;
+var container;
+var file;
+var iframe;
+var checkRelatedTarget = false;
+var expectedRelatedEnter = null;
+var expectedRelatedLeave = null;
+var mouseentercount = 0;
+var mouseleavecount = 0;
+var mouseovercount = 0;
+var mouseoutcount = 0;
+
+function sendMouseEvent(t, elem) {
+  var r = elem.getBoundingClientRect();
+  synthesizeMouse(elem, r.width / 2, r.height / 2, {type: t});
+}
+
+var expectedMouseEnterTargets = [];
+var expectedMouseLeaveTargets = [];
+
+function runTests() {
+  outer = document.getElementById("outertest");
+  middle = document.getElementById("middletest");
+  inner = document.getElementById("innertest");
+  outside = document.getElementById("outside");
+  container = document.getElementById("container");
+  file = document.getElementById("file");
+  iframe = document.getElementById("iframe");
+
+  // Make sure ESM thinks mouse is outside the test elements.
+  sendMouseEvent("mousemove", outside);
+
+  mouseentercount = 0;
+  mouseleavecount = 0;
+  mouseovercount = 0;
+  mouseoutcount = 0;
+  checkRelatedTarget = true;
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = inner;
+  expectedMouseEnterTargets = ["outertest", "middletest", "innertest"];
+  sendMouseEvent("mousemove", inner);
+  is(mouseentercount, 3, "Unexpected mouseenter event count!");
+  is(mouseovercount, 1, "Unexpected mouseover event count!");
+  is(mouseoutcount, 0, "Unexpected mouseout event count!");
+  is(mouseleavecount, 0, "Unexpected mouseleave event count!");
+  expectedRelatedEnter = inner;
+  expectedRelatedLeave = outside;
+  expectedMouseLeaveTargets = ["innertest", "middletest", "outertest"];
+  sendMouseEvent("mousemove", outside);
+  is(mouseentercount, 3, "Unexpected mouseenter event count!");
+  is(mouseovercount, 1, "Unexpected mouseover event count!");
+  is(mouseoutcount, 1, "Unexpected mouseout event count!");
+  is(mouseleavecount, 3, "Unexpected mouseleave event count!");
+
+  // Event handling over native anonymous content.
+  var r = file.getBoundingClientRect();
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = file;
+  synthesizeMouse(file, r.width / 6, r.height / 2, {type: "mousemove"});
+  is(mouseentercount, 4, "Unexpected mouseenter event count!");
+  is(mouseovercount, 2, "Unexpected mouseover event count!");
+  is(mouseoutcount, 1, "Unexpected mouseout event count!");
+  is(mouseleavecount, 3, "Unexpected mouseleave event count!");
+
+  // Moving mouse over type="file" shouldn't cause mouseover/out/enter/leave events
+  synthesizeMouse(file, r.width - (r.width / 6), r.height / 2, {type: "mousemove"});
+  is(mouseentercount, 4, "Unexpected mouseenter event count!");
+  is(mouseovercount, 2, "Unexpected mouseover event count!");
+  is(mouseoutcount, 1, "Unexpected mouseout event count!");
+  is(mouseleavecount, 3, "Unexpected mouseleave event count!");
+
+  expectedRelatedEnter = file;
+  expectedRelatedLeave = outside;
+  sendMouseEvent("mousemove", outside);
+  is(mouseentercount, 4, "Unexpected mouseenter event count!");
+  is(mouseovercount, 2, "Unexpected mouseover event count!");
+  is(mouseoutcount, 2, "Unexpected mouseout event count!");
+  is(mouseleavecount, 4, "Unexpected mouseleave event count!");
+  
+  // Initialize iframe
+  iframe.contentDocument.documentElement.style.overflow = "hidden";
+  iframe.contentDocument.body.style.margin = "0px";
+  iframe.contentDocument.body.style.width = "100%";
+  iframe.contentDocument.body.style.height = "100%";
+  iframe.contentDocument.body.innerHTML =
+    "<div style='width: 100%; height: 50%; border: 1px solid black;'></div>" +
+    "<div style='width: 100%; height: 50%; border: 1px solid black;'></div>";
+  iframe.contentDocument.body.offsetLeft; // flush
+
+  iframe.contentDocument.body.firstChild.onmouseenter = menter;
+  iframe.contentDocument.body.firstChild.onmouseleave = mleave;
+  iframe.contentDocument.body.lastChild.onmouseenter = menter;
+  iframe.contentDocument.body.lastChild.onmouseleave = mleave;
+  r = iframe.getBoundingClientRect();
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = iframe;
+  // Move mouse inside the iframe.
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "mousemove"},
+                  iframe.contentWindow);
+  synthesizeMouse(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "mousemove"},
+                  iframe.contentWindow);
+  is(mouseentercount, 7, "Unexpected mouseenter event count!");
+  expectedRelatedEnter = iframe;
+  expectedRelatedLeave = outside;
+  sendMouseEvent("mousemove", outside);
+  is(mouseleavecount, 7, "Unexpected mouseleave event count!");
+
+  checkRelatedTarget = false;
+
+  iframe.contentDocument.body.firstChild.onmouseenter = null;
+  iframe.contentDocument.body.firstChild.onmouseleave = null;
+  iframe.contentDocument.body.lastChild.onmouseenter = null;
+  iframe.contentDocument.body.lastChild.onmouseleave = null;
+
+  container.onmouseenter = null;
+  container.onmouseleave = null;
+  container.onmouseout = null;
+  container.onmouseover = null;
+
+  var children = container.getElementsByTagName('*');
+  for (var i=0;i<children.length;i++) {
+    children[i].onmouseenter = null;
+    children[i].onmouseleave = null;
+    children[i].onmouseout = null;
+    children[i].onmouseover = null;
+  }
+
+  SimpleTest.finish();
+}
+
+function menter(evt) {
+  ++mouseentercount;
+  evt.stopPropagation();
+  if (expectedMouseEnterTargets.length) {
+    var t = expectedMouseEnterTargets.shift();
+    is(evt.target.id, t, "Wrong event target!");
+  }
+  is(evt.bubbles, false, evt.type + " should not bubble!");
+  is(evt.cancelable, false, evt.type + " is not cancelable!");
+  is(evt.target, evt.currentTarget, "Wrong event target!");
+  ok(!evt.relatedTarget || evt.target.ownerDocument == evt.relatedTarget.ownerDocument,
+     "Leaking nodes to another document?");
+  if (checkRelatedTarget && evt.target.ownerDocument == document) {
+    is(evt.relatedTarget, expectedRelatedEnter, "Wrong related target (mouseenter)");
+  }
+}
+
+function mleave(evt) {
+  ++mouseleavecount;
+  evt.stopPropagation();
+  if (expectedMouseLeaveTargets.length) {
+    var t = expectedMouseLeaveTargets.shift();
+    is(evt.target.id, t, "Wrong event target!");
+  }
+  is(evt.bubbles, false, evt.type + " should not bubble!");
+  is(evt.cancelable, false, evt.type + " is not cancelable!");
+  is(evt.target, evt.currentTarget, "Wrong event target!");
+  ok(!evt.relatedTarget || evt.target.ownerDocument == evt.relatedTarget.ownerDocument,
+     "Leaking nodes to another document?");
+  if (checkRelatedTarget && evt.target.ownerDocument == document) {
+    is(evt.relatedTarget, expectedRelatedLeave, "Wrong related target (mouseleave)");
+  }
+}
+
+function mover(evt) {
+  ++mouseovercount;
+  evt.stopPropagation();
+}
+
+function mout(evt) {
+  ++mouseoutcount;
+  evt.stopPropagation();
+}
+
+</script>
+</pre>
+<div id="container" onmouseenter="menter(event)" onmouseleave="mleave(event)"
+                    onmouseout="mout(event)" onmouseover="mover(event)">
+  <div id="outside" onmouseout="event.stopPropagation()" onmouseover="event.stopPropagation()">foo</div>
+  <div id="outertest" onmouseenter="menter(event)" onmouseleave="mleave(event)"
+                      onmouseout="mout(event)" onmouseover="mover(event)">
+    <div id="middletest" onmouseenter="menter(event)" onmouseleave="mleave(event)"
+                         onmouseout="mout(event)" onmouseover="mover(event)">
+      <div id="innertest" onmouseenter="menter(event)" onmouseleave="mleave(event)"
+                          onmouseout="mout(event)" onmouseover="mover(event)">foo</div>
+    </div>
+  </div>
+  <input type="file" id="file"
+         onmouseenter="menter(event)" onmouseleave="mleave(event)"
+         onmouseout="mout(event)" onmouseover="mover(event)">
+  <br>
+  <iframe id="iframe" width="50px" height="50px"
+          onmouseenter="menter(event)" onmouseleave="mleave(event)"
+          onmouseout="mout(event)" onmouseover="mover(event)"></iframe>
+</div>
+</body>
+</html>

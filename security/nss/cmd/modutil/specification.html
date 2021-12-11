@@ -1,0 +1,322 @@
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+<title>Modutil Specification</title>
+</head>
+<body bgcolor=white fgcolor=black>
+<center><h1>PKCS #11 Module Management Utility
+<br><i>Specification</i></h1></center>
+
+<!---------------------------------------------------------------------->
+<!-------------------------- capabilities ------------------------------>
+<!---------------------------------------------------------------------->
+<h2>Capabilities</h2>
+<ul>
+<li>Add a PKCS #11 module, specifying a name and library file.
+(<a href="#add">-add</a>)
+<li>Add a PKCS #11 module from a server-formatted JAR file.
+(<a href="#jar">-jar</a>)
+<li>Change the password on or initialize a token.
+(<a href="#changepw">-changepw</a>)
+<li>Create databases (secmod[ule].db, key3.db, cert7.db) from scratch.
+(<a href="#create">-create</a>)
+<li>Switch to and from FIPS-140 compliant mode.
+(<a href="#fips">-fips</a>)
+<li>Delete a PKCS #11 module. (<a href="#delete">-delete</a>)
+<li>List installed PKCS #11 modules. (<a href="#list">-list</a>)
+<li>List detailed info on a particular module and its tokens, including 
+whether needs login, is hardware, needs user init
+(<a href="#list">-list</a>)
+<li>Specify which modules should be the default provider of various
+cryptographic operations.(<a href="#default">-default</a>,
+<a href="#undefault">-undefault</a>)
+<li>Disable and enable slots, find out whether and why they are disabled.
+(<a href="#disable">-disable</a>, <a href="#enable">-enable</a>,
+<a href="#list">-list</a>)
+</ul>
+
+<hr>
+
+<!---------------------------------------------------------------------->
+<!-------------------------- Usage ------------------------------------->
+<!---------------------------------------------------------------------->
+<h2>Usage</h2>
+<code>modutil [<i>command</i>] [<i>options</i>]</code>
+<p>At most one command can be specified. With no arguments,
+<code>modutil</code> prints a usage message.
+<h3>Commands:</h3>
+<table border>
+<tr bgcolor="#cccccc">
+<th>Command</th><th>Description</th>
+</tr>
+
+<!---------------------------- -add ------------------------------>
+<tr>
+<td> <a name="add"></a>
+<code>-add <u><i>module name</i></u> -libfile <u><i>library file</i></u>
+ [-ciphers <u><i>cipher enable list</i></u>]
+ [-mechanisms <u><i>default mechanism list</i></u>]
+</code></td>
+<td>Adds a new module to the database with the given name.
+
+<p><u><i>library file</i></u> is the path of the DLL or other library file
+containing the module's implementation of the PKCS #11 interface.
+
+<p><u><i>cipher enable flags</i></u> is a colon-separated list of ciphers
+that will be enabled on this module. The list should be enclosed within quotes
+if necessary to prevent shell interpretation. The following ciphers are
+currently available:
+<ul>
+<li>FORTEZZA
+</ul>
+
+<p><u><i>default mechanism flags</i></u> is a colon-separated list of
+mechanisms for which this module should be the default provider. The
+list should be enclosed within quotes if necessary to prevent shell
+interpretation. <b>This
+list does not enable the mechanisms; it only specifies that this module
+will be a default provider for the listed mechanisms.</b> If more than
+one module claims to be a default provider for a given mechanism, it is
+undefined which will actually be chosen to provide that mechanism. The 
+following mechanisms are currently available:
+<ul>
+<li>RSA
+<li>DSA
+<li>RC2
+<li>RC4
+<li>RC5
+<li>DES
+<li>DH
+<li>FORTEZZA
+<li>SHA1
+<li>MD5
+<li>MD2
+<li>RANDOM <i>(random number generation)</i>
+<li>FRIENDLY <i>(certificates are publicly-readable)</i>
+</ul>
+</td>
+</tr>
+
+<!-------------------------- -changepw ------------------------------------->
+<tr>
+<td><a name="changepw"></a><code>-changepw <u><i>token name</i></u>
+[-pwfile <u><i>old password file</i></u>]
+[-newpwfile <u><i>new password file</i></u>]</code></td>
+<td>Changes the password on the named token.  If the token has not been
+initialized, this command will initialize the PIN.
+If a password file is given, the password will be read from that file;
+otherwise, the password will be obtained interactively.
+<b>Storing passwords in a file is much less secure than supplying them
+interactively.</b>
+<p>The password on the Netscape internal module cannot be changed if
+the <code>-nocertdb</code> option is specified.
+</td>
+</tr>
+
+<!-------------------------- -create ------------------------------------->
+<tr>
+<td><a name="create"></a><code>-create</code></td>
+<td>Creates a new secmod[ule].db, key3.db, and cert7.db in the directory
+specified with the
+<code>-dbdir</code> option, if one is specified.  If no directory is
+specified, UNIX systems will use the user's .netscape directory, while other
+systems will return with an error message.  If any of these databases already
+exist in the chosen directory, an error message is returned.
+<p>If used with <code>-nocertdb</code>, only secmod[ule].db will be created;
+cert7.db and key3.db will not be created.
+</td>
+</tr>
+
+<!------------------------------ -default -------------------------------->
+<tr>
+<td> <a name="default"></a> <code>-default <u><i>module name</i></u>
+-mechanisms <u><i>mechanism list</i></u></code>
+</td>
+<td>Specifies that the given module will be a default provider of the
+listed mechanisms.  The mechanism list is the same as in the <code>-add</code>
+command.
+</td>
+</tr>
+
+<!-------------------------- -delete ------------------------------------->
+<tr>
+<td><a name="delete"></a><code>-delete <u><i>module name</i></u></code></td>
+<td>Deletes the named module from the database</td>
+</tr>
+
+<!-------------------------- -disable ------------------------------------->
+<tr>
+<td> <a name="disable"></a> <code>-disable <u><i>module name</i></u>
+[-slot <u><i>slot name</i></u>]</code></td>
+<td>Disables the named slot. If no slot is specified, all slots on
+the module are disabled.</td>
+</tr>
+
+<!-------------------------- -enable ------------------------------------->
+<tr>
+<td> <a name="enable"></a> <code>-enable <u><i>module name</i></u>
+[-slot <u><i>slot name</i></u>]</code></td>
+<td>Enables the named slot. If no slot is specified, all slots on
+the module are enabled.</td>
+</tr>
+
+<!-------------------------- -fips ------------------------------------->
+<tr>
+<td><a name="fips"></a><code>-fips [true | false]</code></td>
+<td>Enables or disables FIPS mode on the internal module.  Passing
+<code>true</code> enables FIPS mode, passing <code>false</code> disables
+FIPS mode.</td>
+</tr>
+
+<!-------------------------- -force ------------------------------------->
+<tr>
+<td><a name="force"></a><code>-force</code></td>
+<td>Disables interactive prompts, so modutil can be run in a script. 
+Should only be used by experts, since the prompts may relate to security
+or database integrity. Before using this option, test the command
+interactively once to see the warnings that are produced.</td>
+</tr>
+
+<!-------------------------- -jar ------------------------------------->
+<tr>
+<td><a name="jar"></a><code>-jar <u><i>JAR file</i></u>
+-installdir <u><i>root installation directory</i></u>
+[-tempdir <u><i>temporary directory</i></u>]</code></td>
+<td>Adds a new module from the given JAR file. The JAR file uses the 
+server <a href="pk11jar.html">PKCS #11 JAR format</a> to describe the names of
+any files that need to be installed, the name of the module, mechanism flags,
+and cipher flags.  The <u><i>root installation directory</i></u>
+is the directory relative to which files will be installed. This should be a
+ directory 
+under which it would be natural to store dynamic library files, such as
+a server's root directory, or Communicator's root directory.
+The <u><i>temporary directory</i></u> is where temporary modutil files
+will be created in the course of the installation.  If no temporary directory
+is specified, the current directory will be used.
+<p>If used with the <code>-nocertdb</code> option, the signatures on the JAR
+file will not be checked.</td>
+</tr>
+
+<!----------------------------- -list ------------------------------>
+<tr>
+<td><a name="list"></a><code>-list [<u><i>module name</i></u>]</code></td>
+<td>Without an argument, lists the PKCS #11 modules present in the module
+database.
+<blockquote>
+<pre>
+% <b>modutil -list</b>
+Using database directory /u/nicolson/.netscape...
+
+Listing of PKCS #11 Modules
+-----------------------------------------------------------
+  1. Netscape Internal PKCS #11 Module
+         slots: 2 slots attached
+        status: loaded
+
+         slot: Communicator Internal Cryptographic Services Version 4.0
+        token: Communicator Generic Crypto Svcs
+
+         slot: Communicator User Private Key and Certificate Services
+        token: Communicator Certificate DB
+-----------------------------------------------------------
+</pre>
+</blockquote>
+<p>With an argument, provides a detailed description of the named module
+and its slots and tokens.
+<blockquote>
+<pre>
+% <b>modutil -list "Netscape Internal PKCS #11 Module"</b>
+Using database directory /u/nicolson/.netscape...
+
+-----------------------------------------------------------
+Name: Netscape Internal PKCS #11 Module
+Library file: **Internal ONLY module**
+Manufacturer: Netscape Communications Corp    
+Description: Communicator Internal Crypto Svc
+PKCS #11 Version 2.0
+Library Version: 4.0
+Cipher Enable Flags: None
+Default Mechanism Flags: RSA:DSA:RC2:RC4:DES:SHA1:MD5:MD2
+
+  Slot: Communicator Internal Cryptographic Services Version 4.0
+  Manufacturer: Netscape Communications Corp    
+  Type: Software
+  Version Number: 4.1
+  Firmware Version: 0.0
+  Status: Enabled
+  Token Name: Communicator Generic Crypto Svcs
+  Token Manufacturer: Netscape Communications Corp    
+  Token Model: Libsec 4.0      
+  Token Serial Number: 0000000000000000
+  Token Version: 4.0
+  Token Firmware Version: 0.0
+  Access: Write Protected
+  Login Type: Public (no login required)
+  User Pin: NOT Initialized
+
+  Slot: Communicator User Private Key and Certificate Services
+  Manufacturer: Netscape Communications Corp    
+  Type: Software
+  Version Number: 3.0
+  Firmware Version: 0.0
+  Status: Enabled
+  Token Name: Communicator Certificate DB     
+  Token Manufacturer: Netscape Communications Corp    
+  Token Model: Libsec 4.0      
+  Token Serial Number: 0000000000000000
+  Token Version: 7.0
+  Token Firmware Version: 0.0
+  Access: NOT Write Protected
+  Login Type: Login required
+  User Pin: Initialized
+
+-----------------------------------------------------------
+</pre>
+</blockquote>
+</td>
+</tr>
+
+<!------------------------------ Undefault ------------------------------->
+<tr>
+<td><a name="undefault"></a><code>-undefault <u><i>module name</i></u>
+-mechanisms <u><i>mechanism list</i></u></code></td>
+<td>Specifies that the given module will NOT be a default provider of 
+the listed mechanisms. This command clears the default mechanism flags
+for the given module.</td>
+</tr>
+
+</table>
+
+<!------------------------------------------------------------------------>
+<!------------------------------ Options --------------------------------->
+<!------------------------------------------------------------------------>
+<h3>Options:</h3>
+<table border>
+<tr bgcolor="#cccccc"><th>Option</th><th>Description</th> </tr>
+
+<!------------------------------ -dbdir ---------------------------------->
+<tr>
+<td><code>-dbdir <u><i>directory</i></u></code></td>
+<td>Specifies which directory holds the module database. On UNIX systems,
+the user's netscape directory is the default. On other systems, there is
+no default, and this option must be used.</td>
+</tr>
+
+<!------------------------------ -dbdir ---------------------------------->
+<tr>
+<td><code>-nocertdb</code></td>
+<td>Do not open the certificate or key databases.  This has several effects.
+With the <code>-create</code> command, this means that only a secmod.db file
+will be created; cert7.db and key3.db will not be created.  With the
+<code>-jar</code> command, signatures on the JAR file will not be checked.
+With the <code>-changepw</code> command, the password on the Netscape internal 
+module cannot be set or changed, since this password is stored in key3.db.
+</td>
+</tr>
+
+</table>
+
+</body>
+</html>

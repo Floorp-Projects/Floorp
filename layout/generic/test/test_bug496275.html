@@ -1,0 +1,288 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=496275
+-->
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test for Bug 496275</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body onload="run()" style="font-family: monospace">
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=496275">
+  Mozilla Bug 496275
+</a>
+<p id="display"></p>
+<div id="c" contenteditable="true">
+  <p id="p1">The first paragraph. Another sentence.  Even more text.</p>
+  <p id="p2">Paragraph no. 2.</p>
+  <p id="p3">This paragraph<br>
+is broken up<br>
+into four<br>
+lines</p>
+</div>
+
+<div id="ltr" contenteditable="true">
+  <p id="l1">םלש Hello</p>
+  <p id="l2">Goodbye</p>
+</div>
+
+<div id="rtl" contenteditable="true" dir="rtl">
+  <p id="r1">התרגום האחרון שפיתחנו הוא עבור Firefox 3.5.6.</p>
+  <p id="r2">קראו את הערות ההפצה (אנגלית) להוראות ורשימת בעיות ידועות.</p>
+</div>
+
+<!-- Special characters: لا is actually two characters, while تَ should be
+     treated as one character. -->
+<div id="special" contenteditable="true">
+  <p id="s1">a لا b تَ c</p>
+</div>
+
+<div>
+  <p>Anchor offset: <span id="anchor-offset"></span></p>
+  <p>Focus offset: <span id="focus-offset"></span></p>
+</div>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.requestFlakyTimeout("untriaged");
+
+function isOrIsParent(actual, expected, msg) {
+  // actual should be expected or actual's parent node should be expected.
+  msg += " Expected " + actual + " or " + actual.parentNode +
+         " to be " + expected + ".";
+
+  ok(actual == expected || actual.parentNode == expected, msg);
+}
+
+function isAt(anchorNode, anchorOffset, focusNode, focusOffset, msg) {
+  var sel = window.getSelection();
+
+  isOrIsParent(sel.anchorNode, $(anchorNode), msg + ": Wrong anchor node.");
+  is(sel.anchorOffset, anchorOffset, msg + ": Wrong anchor offset.");
+  isOrIsParent(sel.focusNode, $(focusNode), msg + ": Wrong focus node.");
+  is(sel.focusOffset, $(focusOffset), msg + ": Wrong focus offset.");
+}
+
+function run() {
+  var sel = window.getSelection();
+
+  // If nothing is focused, selection.modify() should silently fail.
+  sel.removeAllRanges();
+  sel.modify("move", "forward", "character");
+
+  // Now focus our first div and put the cursor at the beginning of p1.
+  $("c").focus();
+  sel.collapse($("p1"), 0);
+
+  // We're intentionally inconsistent with the capitalization of "move",
+  // "extend", etc. below to test the case-insensitivity of modify().
+
+  // If we move backward, selection.modify() shouldn't do anything, since we're
+  // already at the beginning of the frame.
+  isAt("p1", 0, "p1", 0, "test 0a");
+  sel.modify("Move", "Backward", "Character");
+  isAt("p1", 0, "p1", 0, "test 0b");
+
+  // After this move, the cursor should be at the second character of p1
+  sel.modify("Move", "Forward", "Character");
+  isAt("p1", 1, "p1", 1, "test 1");
+
+  // Select the first character in p1
+  sel.collapse($("p1"), 0);
+  sel.modify("Extend", "Forward", "Character");
+  isAt("p1", 0, "p1", 1, "test 2");
+  sel.modify("Move", "Forward", "Character");
+  isAt("p1", 2, "p1", 2, "test 2a");
+
+  // Select all of p1, then move the selection forward one character a few
+  // times.
+  sel.collapse($("p1"), 0);
+  sel.extend($("p1"), 1);
+  sel.modify("move", "forward", "character");
+  isAt("p2", 0, "p2", 0, "test 3a");
+  sel.modify("move", "forward", "character");
+  isAt("p2", 1, "p2", 1, "test 3b");
+
+  // Put the cursor at the beginning of p3, then extend forward one line.
+  // Now go back twice and forward once.  Focus should now be at the end of p3.
+  sel.collapse($("p3"), 0);
+  sel.modify("Extend", "Forward", "Line");
+  sel.modify("extend", "backward", "character");
+  sel.modify("extend", "backward", "character");
+  sel.modify("extend", "forward", "character");
+  isAt("p3", 0, "p3", 14, "test 4");
+
+  // Put the cursor at the beginning of p3, then go forward a few words
+  sel.collapse($("p3"), 0);
+  sel.modify("Move", "Forward", "Word");
+  isAt("p3", 4, "p3", 4, "test 4a");
+  sel.modify("move", "forward", "word");
+  // Go back and forward so the indexes are correct.
+  sel.modify("move", "backward", "character");
+  sel.modify("move", "forward", "character");
+  isAt("p3", 14, "p3", 14, "test 4b");
+
+  // Test the lineboundary granularity
+  sel.collapse($("p3"), 0);
+  sel.modify("Move", "Forward", "Lineboundary");
+  // Go back and forward so the indexes are correct.
+  sel.modify("move", "Backward", "character");
+  sel.modify("move", "forward", "character");
+  isAt("p3", 14, "p3", 14, "test 5");
+
+  //
+  // Test RTL text within a dir=LTR div.
+  //
+  $("ltr").focus();
+  sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
+  isAt("l1", 0, "l1", 0, "test 6a");
+  sel.modify("Move", "Left", "Character");
+  isAt("l1", 1, "l1", 1, "test 6b");
+  sel.modify("Extend", "Backward", "Character");
+  isAt("l1", 1, "l1", 0, "test 6c");
+  sel.modify("extend", "forward", "character");
+  isAt("l1", 1, "l1", 1, "test 6d");
+  sel.modify("Extend", "Right", "Character");
+  isAt("l1", 1, "l1", 0, "test 6e");
+
+  sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
+  sel.modify("move", "left", "character");
+  sel.modify("extend", "right", "Word");
+  isAt("l1", 1, "l1", 3, "test 7a");
+  sel.modify("move", "left", "word");
+  isAt("l1", 3, "l1", 3, "test 7b");
+  sel.modify("move", "forward", "word");
+  isAt("l1", 9, "l1", 9, "test 7c");
+  sel.modify("extend", "backward", "word");
+  isAt("l1", 9, "l1", 4, "test 7d");
+  sel.modify("move", "left", "word");
+  isAt("l1", 3, "l1", 3, "test 7e");
+
+  sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
+  sel.modify("extend", "left", "lineboundary");
+  isAt("l1", 0, "l1", 0, "test 8a");
+  sel.modify("move", "forward", "lineboundary");
+  isAt("l1", 9, "l1", 9, "test 8b");
+  sel.modify("extend", "backward", "lineboundary");
+  isAt("l1", 9, "l1", 0, "test 8c");
+  sel.modify("move", "left", "lineboundary");
+  isAt("l1", 0, "l1", 0, "test 8d");
+  sel.modify("extend", "forward", "lineboundary");
+  isAt("l1", 0, "l1", 9, "test 8e");
+
+  // Put the cursor at the left edge of the first line so that when we go up
+  // and down, where we end up doesn't depend on how the characters line up.
+  sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
+  sel.modify("move", "left", "lineboundary");
+  isAt("l1", 0, "l1", 0, "test 9a");
+  sel.modify("move", "forward", "Line");
+  // Offset becomes non-zero because the line boundary was in the middle of the
+  // line.  See bug 1667129
+  isAt("l2", 3, "l2", 3, "test 9b");
+  sel.modify("extend", "backward", "Line");
+  // Going back to the beginning of the previous line
+  isAt("l2", 3, "l1", 0, "test 9c");
+
+  // Same test as above, now with absolute directions.
+  sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
+  sel.modify("move", "left", "lineboundary");
+  isAt("l1", 0, "l1", 0, "test 10a");
+  sel.modify("move", "right", "line");
+  // Also bug 1667129
+  isAt("l2", 3, "l2", 3, "test 10b");
+  sel.modify("extend", "left", "line");
+  isAt("l2", 3, "l1", 0, "test 10c");
+
+  //
+  // Test RTL text within a dir=RTL div.
+  //
+  $("rtl").focus();
+  sel.collapse($("r1"), 0);
+  sel.modify("move", "forward", "character");
+  isAt("r1", 1, "r1", 1, "test 11a");
+  sel.modify("extend", "backward", "character");
+  isAt("r1", 1, "r1", 0, "test 11b");
+  sel.modify("move", "forward", "word");
+  isAt("r1", 6, "r1", 6, "test 11c");
+  sel.modify("extend", "backward", "word");
+  isAt("r1", 6, "r1", 0, "test 11d");
+  sel.modify("extend", "forward", "lineboundary");
+  isAt("r1", 6, "r1", 45, "test 11e");
+
+  // Same as above, but with absolute directions.
+  sel.collapse($("r1"), 0);
+  sel.modify("move", "left", "character");
+  isAt("r1", 1, "r1", 1, "test 12a");
+  sel.modify("extend", "right", "character");
+  isAt("r1", 1, "r1", 0, "test 12b");
+  sel.modify("move", "left", "word");
+  isAt("r1", 6, "r1", 6, "test 12c");
+  sel.modify("extend", "right", "word");
+  isAt("r1", 6, "r1", 0, "test 12d");
+
+  // Test that move left/right is correct within the RTL div.
+  sel.collapse($("r1"), 0);
+  sel.modify("extend", "left", "lineboundary");
+  isAt("r1", 0, "r1", 45, "test 13a");
+  sel.modify("move", "right", "lineboundary");
+  isAt("r1", 0, "r1", 0, "test 13b");
+
+  // Test that up/down at the first/last line correctly wraps to the
+  // beginning/end of the line.
+  sel.collapse($("r1"), 0);
+  sel.modify("move", "forward", "word");
+  isAt("r1", 6, "r1", 6, "test 14a");
+  // Even in RTL text, "left" still means up.
+  sel.modify("extend", "left", "Line");
+  isAt("r1", 6, "r1", 0, "test 14b");
+  sel.modify("move", "right", "line");
+  isAt("r2", 0, "r2", 0, "test 14c");
+  sel.modify("extend", "forward", "line");
+  isAt("r2", 0, "r2", 57, "test 14d");
+  sel.modify("move", "backward", "line");
+  isAt("r1", 45, "r1", 45, "test 14e");
+
+  // Test some special characters.
+  $("special").focus();
+  sel.collapse($("s1"), 0);
+  sel.modify("move", "forward", "character");
+  sel.modify("move", "forward", "character");
+  sel.modify("move", "forward", "character");
+  isAt("s1", 3, "s1", 3, "test 15a");
+  sel.modify("move", "forward", "character");
+  isAt("s1", 4, "s1", 4, "test 15b");
+  sel.modify("move", "backward", "word");
+  isAt("s1", 2, "s1", 2, "test 15c");
+  sel.modify("move", "forward", "word");
+  sel.modify("move", "forward", "word");
+  sel.modify("move", "forward", "word");
+  isAt("s1", 9, "s1", 9, "test 15d");
+
+  SimpleTest.finish();
+}
+
+function update_debug_info() {
+  var sel = window.getSelection();
+  document.getElementById("anchor-offset").innerHTML = sel.anchorOffset;
+  document.getElementById("focus-offset").innerHTML = sel.focusOffset;
+  setTimeout(update_debug_info, 100);
+}
+
+setTimeout(update_debug_info, 100);
+
+</script>
+</body>
+</html>

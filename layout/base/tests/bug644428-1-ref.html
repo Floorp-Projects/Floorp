@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="setupCaret()">
+    <div contenteditable>a</div>
+    <script>
+      function setupCaret() {
+        var div = document.querySelector("div");
+        div.focus();
+        var sel = window.getSelection();
+        sel.collapse(div, 1);
+      }
+    </script>
+  </body>
+</html>

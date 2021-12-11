@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test page for https://bugzilla.mozilla.org/show_bug.cgi?id=1471989
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test page for Bug 1471989</title>
+</head>
+<body onUnload="onUnload();">
+<p><span id="samplepage">sample page</span></p>
+<script type="application/javascript">
+  // Get something sent to ConsoleStorageAPI that has a stack.
+  console.trace("whatever");
+
+  function onUnload() {
+    console.log('in unload');
+  }
+</script>
+</body>
+</html>

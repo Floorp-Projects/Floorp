@@ -1,0 +1,39 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include("sources.mozbuild")
+
+# This should contain all of the _PUBLIC_HEADERS from files.mk
+EXPORTS.graphite2 += [
+    '../geckoextra/include/GraphiteExtra.h',
+    '../geckoextra/include/GraphiteStructsForRLBox.h',
+    '../include/graphite2/Font.h',
+    '../include/graphite2/Log.h',
+    '../include/graphite2/Segment.h',
+    '../include/graphite2/Types.h',
+]
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    UNIFIED_SOURCES += [
+        'direct_machine.cpp'
+    ]
+else:
+    UNIFIED_SOURCES += [
+        'call_machine.cpp'
+    ]
+UNIFIED_SOURCES += graphite_sources
+
+for k, v in graphite_defines:
+    DEFINES[k] = v
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+
+# provide a custom header that overrides malloc() and friends,
+# to ensure safe OOM handling. Don't do this in the wasm sandbox.
+DEFINES['GRAPHITE2_CUSTOM_HEADER'] = '"MozGrMalloc.h"'

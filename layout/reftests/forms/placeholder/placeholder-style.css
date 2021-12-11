@@ -1,0 +1,10 @@
+textarea.placeholder,
+input.placeholder,
+input::placeholder,
+textarea::placeholder {
+  /* Unfortunately, we can't style the <input> or <textarea> text so we can't
+     set it to opacity: 0.54; which means we have to revert the style to
+     something that doesn't include an opacity. */
+  color: GrayText;
+  opacity: 1.0;
+}

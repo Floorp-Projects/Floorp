@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Animation Behavior on CSS Properties</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <script type="text/javascript" src="db_smilMappedAttrList.js"></script>
+  <script type="text/javascript" src="db_smilCSSPropertyList.js"></script>
+  <script type="text/javascript" src="db_smilCSSFromBy.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="200px" height="200px" font-size="50px" style="color: rgb(50,50,50)"
+     onload="this.pauseAnimations()">
+  <rect x="20" y="20" width="200" height="200"/>
+  <!-- NOTE: hard-wiring 'line-height' so that computed value of 'font' is
+       more predictable. (otherwise, line-height varies depending on platform)
+    -->
+  <text x="20" y="20" style="line-height: 10px !important">testing 123</text>
+  <line/>
+  <marker/>
+  <filter><feDiffuseLighting/></filter>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  // Start out with document paused
+  var svg = SMILUtil.getSVGRoot();
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  var testBundles = convertCSSBundlesToMappedAttr(gFromByBundles);
+  testBundleList(testBundles, new SMILTimingData(1.0, 1.0));
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

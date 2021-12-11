@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bug 1704473 - Remove head requirement for meta name=referrer</title>
+
+</head>
+<body>
+  <meta name="referrer" content="no-referrer" />
+  <script type="application/javascript">
+    fetch("https://example.com");
+  </script>
+</body>
+</html>

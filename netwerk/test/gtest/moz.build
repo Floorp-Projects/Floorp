@@ -1,0 +1,81 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    "TestBase64Stream.cpp",
+    "TestBind.cpp",
+    "TestBufferedInputStream.cpp",
+    "TestCommon.cpp",
+    "TestCookie.cpp",
+    "TestDNSPacket.cpp",
+    "TestHeaders.cpp",
+    "TestHttpAuthUtils.cpp",
+    "TestHttpChannel.cpp",
+    "TestHttpResponseHead.cpp",
+    "TestInputStreamTransport.cpp",
+    "TestIsValidIp.cpp",
+    "TestMIMEInputStream.cpp",
+    "TestMozURL.cpp",
+    "TestProtocolProxyService.cpp",
+    "TestReadStreamToString.cpp",
+    "TestServerTimingHeader.cpp",
+    "TestSocketTransportService.cpp",
+    "TestStandardURL.cpp",
+    "TestUDPSocket.cpp",
+]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    UNIFIED_SOURCES += [
+        "TestNamedPipeService.cpp",
+    ]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-shadow"]
+
+# skip the test on windows10-aarch64
+if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
+    UNIFIED_SOURCES += [
+        "TestPACMan.cpp",
+        "TestPartiallySeekableInputStream.cpp",
+        "TestURIMutator.cpp",
+    ]
+
+# run the test on windows only
+if CONFIG["OS_TARGET"] == "WINNT":
+    UNIFIED_SOURCES += ["TestNetworkLinkIdHashingWindows.cpp"]
+
+# run the test on mac only
+if CONFIG["OS_TARGET"] == "Darwin":
+    UNIFIED_SOURCES += ["TestNetworkLinkIdHashingDarwin.cpp"]
+
+TEST_HARNESS_FILES.gtest += [
+    "urltestdata.json",
+]
+
+USE_LIBS += [
+    "jsoncpp",
+]
+
+LOCAL_INCLUDES += [
+    "/netwerk/base",
+    "/netwerk/cookie",
+    "/toolkit/components/jsoncpp/include",
+    "/xpcom/tests/gtest",
+]
+
+# windows includes only
+if CONFIG["OS_TARGET"] == "WINNT":
+    LOCAL_INCLUDES += ["/netwerk/system/win32"]
+
+# mac includes only
+if CONFIG["OS_TARGET"] == "Darwin":
+    LOCAL_INCLUDES += ["/netwerk/system/mac"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul-gtest"
+
+LOCAL_INCLUDES += ["!/xpcom", "/xpcom/components"]

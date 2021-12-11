@@ -1,0 +1,92 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArrayExtensions.idl"
+
+/**
+ * nsIMutableArray
+ * A separate set of methods that will act on the array. Consumers of
+ * nsIArray should not QueryInterface to nsIMutableArray unless they
+ * own the array.
+ *
+ * As above, it is legal to add null elements to the array. Note also
+ * that null elements can be created as a side effect of
+ * insertElementAt(). Conversely, if insertElementAt() is never used,
+ * and null elements are never explicitly added to the array, then it
+ * is guaranteed that queryElementAt() will never return a null value.
+ *
+ * Any of these methods may throw NS_ERROR_OUT_OF_MEMORY when the
+ * array must grow to complete the call, but the allocation fails.
+ */
+[scriptable, builtinclass, uuid(af059da0-c85b-40ec-af07-ae4bfdc192cc)]
+interface nsIMutableArray : nsIArrayExtensions
+{
+    /**
+     * appendElement()
+     *
+     * Append an element at the end of the array.
+     *
+     * @param element The element to append.
+     */
+    void appendElement(in nsISupports element);
+
+    /**
+     * removeElementAt()
+     *
+     * Remove an element at a specific position, moving all elements
+     * stored at a higher position down one.
+     * To remove a specific element, use indexOf() to find the index
+     * first, then call removeElementAt().
+     *
+     * @param index the position of the item
+     *
+     */
+    void removeElementAt(in unsigned long index);
+
+    /**
+     * insertElementAt()
+     *
+     * Insert an element at the given position, moving the element
+     * currently located in that position, and all elements in higher
+     * position, up by one.
+     *
+     * @param element The element to insert
+     * @param index   The position in the array:
+     *                If the position is lower than the current length
+     *                of the array, the elements at that position and
+     *                onwards are bumped one position up.
+     *                If the position is equal to the current length
+     *                of the array, the new element is appended.
+     *                An index lower than 0 or higher than the current
+     *                length of the array is invalid and will be ignored.
+     */
+    void insertElementAt(in nsISupports element, in unsigned long index);
+
+    /**
+     * replaceElementAt()
+     *
+     * Replace the element at the given position.
+     *
+     * @param element The new element to insert
+     * @param index   The position in the array
+     *                If the position is lower than the current length
+     *                of the array, an existing element will be replaced.
+     *                If the position is equal to the current length
+     *                of the array, the new element is appended.
+     *                If the position is higher than the current length
+     *                of the array, empty elements are appended followed
+     *                by the new element at the specified position.
+     *                An index lower than 0 is invalid and will be ignored.
+     */
+    void replaceElementAt(in nsISupports element, in unsigned long index);
+
+
+    /**
+     * clear()
+     *
+     * clear the entire array, releasing all stored objects
+     */
+    void clear();
+};

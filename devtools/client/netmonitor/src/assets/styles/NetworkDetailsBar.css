@@ -1,0 +1,557 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Network details panel */
+
+.network-monitor .network-details-bar {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.network-monitor .panel-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.network-monitor .panel-container .tree-container .objectBox {
+  white-space: normal;
+  word-wrap: break-word;
+  unicode-bidi: plaintext;
+}
+
+.network-monitor .properties-view {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  overflow: auto;
+}
+
+.network-monitor .properties-view .searchbox-section {
+  flex: 0 1 auto;
+}
+
+.network-monitor .properties-view .devtools-searchbox {
+  padding: 0;
+}
+
+.network-monitor .properties-view .devtools-searchbox input {
+  margin: 1px 3px;
+}
+
+/* Empty notices in tab panels */
+
+.network-monitor .empty-notice {
+  color: var(--theme-text-color-inactive);
+  padding: 3px 8px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 24px;
+}
+
+/* Accordions in the tab panels */
+
+.network-monitor .accordion-content .treeIcon {
+  margin-left: 16px;
+}
+
+.network-monitor .accordion {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.network-monitor .accordion-item:last-child {
+  position: relative;
+  height: 100%;
+}
+
+.network-monitor .accordion-item:last-child .accordion-header {
+  position: relative;
+}
+
+.network-monitor .accordion-item:last-child .accordion-content {
+  position: relative;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: inherit;
+}
+
+
+/* Text inputs in tab panels */
+
+.network-monitor .textbox-input {
+  text-overflow: ellipsis;
+  border: none;
+  background: none;
+  color: inherit;
+  width: 100%;
+}
+
+.network-monitor .textbox-input:focus {
+  outline: 0;
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+}
+
+/* Tree table in tab panels */
+
+.network-monitor .tree-container, .tree-container .treeTable {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  flex: 1;
+}
+
+.network-monitor .tree-container .treeTable,
+.network-monitor .tree-container .treeTable tbody {
+  display: flex;
+  flex-direction: column;
+}
+
+.network-monitor .tree-container .treeTable tbody {
+  height: 100%;
+}
+
+.network-monitor .tree-container .treeTable tr {
+  display: block;
+  position: relative;
+}
+
+/* Make right td fill available horizontal space */
+.network-monitor .tree-container .treeTable td:last-child {
+  width: 100%;
+}
+
+.network-monitor .tree-container .treeTable .tree-section,
+.network-monitor .properties-view .raw-headers-container {
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
+}
+
+.network-monitor .tree-container .treeTable tr.tree-section:not(:first-child) td:not([class=""]) {
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
+.network-monitor .tree-container .treeTable tr.tree-section:not(:last-child) td:not([class=""]) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.network-monitor .tree-container .treeTable .tree-section > * {
+  vertical-align: middle;
+}
+
+.network-monitor .tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel,
+.network-monitor .tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel:hover,
+.network-monitor .tree-container .treeTable .treeRow.tree-section > .treeValueCell:not(:hover) * {
+  color: var(--theme-toolbar-color);
+}
+
+/* Force the twisty icon to gray even if the treeRow has the selected class */
+.network-monitor .tree-container .treeTable .treeRow.tree-section .theme-twisty {
+  fill: var(--theme-icon-dimmed-color);
+}
+
+/* Make the twisties rotate to the right in code-only sections on RTL. */
+.network-monitor .tab-panel.panel-with-code tr:not(.tree-section).hasChildren .theme-twisty:not(.open):dir(rtl) {
+  transform: rotate(-90deg);
+}
+
+.network-monitor .tree-container .treeTable .treeValueCell {
+  /* FIXME: Make value cell can be reduced to shorter width */
+  max-width: 0;
+  padding-inline-end: 5px;
+}
+
+.network-monitor .tree-container .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  text-decoration: none;
+}
+
+.network-monitor .tab-panel.panel-with-code .tree-container .treeTable tr:not(.tree-section):dir(rtl) {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Source editor in tab panels */
+
+/* If there is a source editor shows up in the last row of TreeView,
+ * it should occupy the available vertical space.
+ */
+.network-monitor .editor-row-container,
+.network-monitor .tree-container .treeTable tr:last-child td[colspan="2"] {
+  display: block;
+  height: 100%;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.network-monitor .responseTextContainer {
+  overflow-x: auto;
+  width: 100%;
+  height: 100%;
+  padding-left: 5px;
+}
+
+/* If there is a source editor shows up in the last row of TreeView,
+ * its height should not collapse into zero
+ */
+.network-monitor .tree-container .treeTable tr:last-child.editor-row-container {
+  overflow: visible;
+}
+
+.network-monitor .source-editor-mount {
+  width: 100%;
+  height: 100%;
+}
+
+.network-monitor .headers-summary-label,
+.network-monitor .tree-container .objectBox {
+  white-space: nowrap;
+}
+
+/* Params and Response error messages */
+
+.network-monitor .request-error-header,
+.network-monitor .response-error-header {
+  margin: 0;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background-color: var(--red-60);
+  color: white;
+  line-height: 16px;
+}
+
+.theme-dark .network-monitor .request-error-header,
+.theme-dark .network-monitor .response-error-header {
+  background-color: var(--red-70);
+}
+
+/* Response tabpanel */
+
+.network-monitor .response-image-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.network-monitor .response-image {
+  background: #fff;
+  border: 1px dashed GrayText;
+  margin-bottom: 10px;
+  max-width: 300px;
+  max-height: 100px;
+}
+
+.network-monitor #response-panel .response-font-box {
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.network-monitor .response-font {
+  margin-bottom: 10px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.network-monitor .tree-container .treeTable tr.response-preview-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.network-monitor .tree-container .treeTable tr.response-preview-container td {
+  display: block;
+  height: 100%;
+}
+
+.network-monitor .html-preview {
+  height: 100%;
+}
+
+.network-monitor .html-preview iframe {
+  background-color: #fff;
+  border: none;
+  height: 100%;
+  width: 100%;
+}
+
+/* The editor container should only become a flex item when inside a container
+ * with other flex items. In this case, the HTML preview is a flex item and we
+ * can grow the editor. Otherwise, there may be overflow and
+ * .editor-row-container will become 0px tall. */
+.network-monitor .contains-html-preview .editor-row-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Request and response data */
+
+.network-monitor #response-panel .panel-container {
+  overflow-y: hidden;
+}
+
+.network-monitor .data-header {
+  background: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  color: var(--theme-toolbar-color);
+  font-size: inherit;
+  font-weight: normal;
+  line-height: 16px;
+  margin: 0;
+  padding: 2px 4px;
+  width: 100%;
+  align-items: center;
+  display: flex;
+  user-select: none;
+}
+
+.network-monitor .data-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: inherit;
+  line-height: 20px;
+  color: var(--theme-toolbar-color);
+}
+
+.network-monitor .raw-data-toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 50%;
+  margin-inline-start: auto;
+  padding-inline-start: 4px;
+}
+
+.network-monitor .raw-data-toggle-label {
+  white-space: nowrap;
+  color: var(--theme-toolbar-color);
+}
+
+.network-monitor .raw-data-toggle-input > input {
+  display: inline-block;
+  width: 2em;
+  vertical-align: bottom;
+  font-size: 12px;
+}
+
+.network-monitor #response-panel .notificationbox .notification[data-key="CORS-error"].notification[data-type="info"] {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.network-monitor #response-panel .notification[data-key="CORS-error"] .notificationInner .messageText {
+  white-space: normal;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Timings tabpanel */
+
+.network-monitor .timings-container {
+  display: flex;
+}
+
+.network-monitor .timings-overview {
+  display: flex;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 4px;
+}
+
+.network-monitor .timings-overview-item {
+  display: inline-flex;
+}
+
+.network-monitor .timings-overview-item:not(:first-of-type)::before {
+  content: "";
+  display: inline-flex;
+  margin-inline: 10px;
+  width: 1px;
+  background: var(--theme-splitter-color);
+}
+
+.network-monitor .timings-label {
+  width: 10em;
+}
+
+.network-monitor .requests-list-timings-container {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.network-monitor .requests-list-timings-offset {
+  transition: width 0.2s ease-out;
+}
+
+.network-monitor .requests-list-timings-box {
+  border: none;
+  min-width: 1px;
+  transition: width 0.2s ease-out;
+}
+
+.network-monitor .label-separator {
+  margin-block: 5px;
+  margin-inline-start: 4px;
+  font-weight: 600;
+  color: var(--theme-comment);
+}
+
+.theme-light .network-monitor .requests-list-timings-box {
+  --timing-server-color-1: rgba(104, 195, 179, 0.8); /* teal */
+  --timing-server-color-2: rgba(123, 102, 167, 0.8); /* purple */
+  --timing-server-color-3: rgba(233, 236, 130, 0.8); /* yellow */
+  --timing-server-color-total: rgba(186, 90, 140, 0.8); /* pink */
+}
+
+.theme-dark .network-monitor .requests-list-timings-box {
+  --timing-server-color-1: rgba(74, 228, 201, 0.8); /* teal */
+  --timing-server-color-2: rgba(156, 119, 233, 0.8); /* purple */
+  --timing-server-color-3: rgba(234, 239, 73, 0.8); /* yellow */
+  --timing-server-color-total: rgba(186, 74, 133, 0.8); /* pink */
+}
+
+.network-monitor .server-timings-color-1 {
+  background: var(--timing-server-color-1);
+}
+
+.network-monitor .server-timings-color-2 {
+  background: var(--timing-server-color-2);
+}
+
+.network-monitor .server-timings-color-3 {
+  background: var(--timing-server-color-3);
+}
+
+.network-monitor .server-timings-color-total {
+  background: var(--timing-server-color-total);
+}
+
+
+/* Stack trace panel */
+
+.network-monitor .stack-trace {
+  font-family: var(--monospace-font-family);
+  /* The markup contains extra whitespace to improve formatting of clipboard text.
+     Make sure this whitespace doesn't affect the HTML rendering */
+  white-space: normal;
+  padding: 5px;
+  direction: ltr;
+}
+
+.network-monitor .stack-trace .frame-link-source,
+.network-monitor .message-location .frame-link-source {
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: end;
+}
+
+.network-monitor .stack-trace .frame-link-source-inner,
+.network-monitor .message-location .frame-link-source-inner {
+  /* Enforce LTR direction for the file name - fixes bug 1290056 */
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.network-monitor .stack-trace .frame-link-function-display-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-inline-end: 1ch;
+}
+
+/* Security tabpanel */
+
+/* Overwrite tree-view cell colon `:` for security panel and tree section */
+.network-monitor .security-panel .treeTable .treeLabelCell::after,
+.network-monitor .treeTable .tree-section .treeLabelCell::after {
+  content: "";
+}
+
+/* Layout additional warning icon in tree value cell  */
+.network-monitor .security-info-value {
+  display: flex;
+}
+
+.network-monitor .security-warning-icon {
+  width: 12px;
+  height: 12px;
+  vertical-align: -1px;
+  margin-inline-start: 5px;
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: var(--yellow-60);
+}
+
+/* Custom request panel */
+
+.network-monitor .custom-request-panel {
+  height: 100%;
+  background-color: var(--theme-sidebar-background);
+}
+
+.theme-dark .network-monitor .custom-request-panel {
+  color: var(--theme-selection-color);
+}
+
+.network-monitor .custom-request-label {
+  font-weight: 600;
+}
+
+.network-monitor .custom-request-panel textarea {
+  resize: none;
+  font: message-box;
+  font-size: var(--theme-body-font-size);
+}
+
+.network-monitor .custom-header,
+.network-monitor .custom-method-and-url,
+.network-monitor .custom-request,
+.network-monitor .custom-section {
+  display: flex;
+}
+
+.network-monitor .custom-header {
+  flex-grow: 1;
+  font-size: 1.1em;
+  padding-top: 4px;
+}
+
+.network-monitor .custom-section {
+  flex-direction: column;
+  margin-top: 0.5em;
+}
+
+.network-monitor .custom-method-value {
+  width: 4.5em;
+}
+
+.network-monitor .custom-url-value {
+  flex-grow: 1;
+  margin-inline-start: 6px;
+}
+
+#timings-panel .learn-more-link {
+  width: -moz-max-content;
+}

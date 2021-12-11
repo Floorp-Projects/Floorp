@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=263683
+-->
+
+<head>
+  <title>Test for Bug 263683</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body onload="onLoad();" onunload="onUnload();">
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=263683">
+    Mozilla Bug 263683
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 263683 **/
+    
+      SimpleTest.waitForExplicitFinish();
+
+      var userSetBG = false;
+      var userValueBG = null;
+      var prefNameBG = "ui.textHighlightBackground";
+      var userSetFG = false;
+      var userValueFG = null;
+      var prefNameFG = "ui.textHighlightForeground";
+
+      function onLoad() {
+        SpecialPowers.pushPrefEnv({'set': [[prefNameBG, "#EF0FFF"], [prefNameFG, "#FFFFFF"]]}, startTest);
+      }
+
+      function startTest() {
+        var textToSelect = document.getElementById("selecttext");
+
+        // Take a snapshot now. This will be used to check that removing the
+        // ranges removes the highlighting correctly
+        var noHighlight = snapshotWindow(window);
+
+        var controller = SpecialPowers.wrap(window).
+           docShell.
+           QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+           getInterface(SpecialPowers.Ci.nsISelectionDisplay).
+           QueryInterface(SpecialPowers.Ci.nsISelectionController);
+
+        // Get selection
+        var findSelection = controller.getSelection(controller.SELECTION_FIND);
+
+        // Lastly add range
+        var range = document.createRange();
+        range.selectNodeContents(textToSelect);
+        findSelection.addRange(range);
+
+        // Take a snapshot of the highlighting
+        var highlighted = snapshotWindow(window);
+
+        // Clear the highlighting, and take another snapshot
+        findSelection.removeAllRanges();
+        var removedHighlight = snapshotWindow(window);
+
+        // Manually "highlight" the text so we can check the rendering
+        textToSelect.style.backgroundColor="#EF0FFF";
+        textToSelect.style.color="#FFFFFF";
+        var manualHighlight = snapshotWindow(window);
+
+        // Test 1: Did the highlighting render correctly?
+        var res = compareSnapshots(highlighted, manualHighlight, true);
+        ok(res[0], "SELECTION_FIND highlighting renders correctly");
+
+        // Test 2: Does removing the ranges from the SELECTION_FIND selection
+        // work as expected?
+        res = compareSnapshots(removedHighlight, noHighlight, true);
+        ok(res[0], "Removing ranges from FIND_SELECTION works correctly");
+
+        SimpleTest.finish();
+      }
+
+    </script>
+  </pre>
+
+  <p><span id="selecttext">Text to be selected</span></p>
+</body>
+</html>

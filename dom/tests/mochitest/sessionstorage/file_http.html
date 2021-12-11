@@ -1,0 +1,40 @@
+<html>
+<head>
+<script>
+
+window.addEventListener("message", onMessageReceived);
+
+function postMsg(msg)
+{
+  parent.postMessage(msg, "http://mochi.test:8888");
+}
+
+function onMessageReceived(event)
+{
+  if (event.data == "check") {
+    postMsg(sessionStorage.getItem("foo"));
+
+    var gotValue = "threw";
+    try {
+      gotValue = sessionStorage.getItem("foo-https");
+    } catch (e) {
+    }
+
+    postMsg(gotValue);
+
+    postMsg("the end");
+  }
+}
+
+function start()
+{
+  sessionStorage.setItem("foo", "insecure");
+  postMsg(sessionStorage.getItem("foo"));
+}
+
+</script>
+</head>
+<body onload="start();">
+insecure
+</body>
+</html>

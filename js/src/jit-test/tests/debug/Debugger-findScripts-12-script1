@@ -1,0 +1,19 @@
+// -*- mode: js2 -*-
+// Script for Debugger-findScripts-12.js to load.
+// Line numbers in this script are cited in the test.
+
+function f() {
+                                                        // line 6
+    function ff() {
+        return "my wuv, I want you always beside me";   // line 8
+    };
+    ff.global = this;
+    return ff;
+};
+
+function g() {
+    return "to Oz";                                     // line 15
+}
+
+f.global = this;
+g.global = this;

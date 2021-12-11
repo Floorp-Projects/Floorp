@@ -1,0 +1,9 @@
+== progressbar-fallback-default-style.html progressbar-fallback-default-style-ref.html
+fuzzy(0-8,0-480) fuzzy-if(!nativeThemePref,0-31,0-67) == meter-native-style.html meter-native-style-ref.html
+skip-if(!cocoaWidget&&nativeThemePref) fuzzy-if(!nativeThemePref,0-11,0-332) == meter-vertical-native-style.html meter-vertical-native-style-ref.html # dithering
+== meter-fallback-default-style.html meter-fallback-default-style-ref.html
+load 664925.xhtml
+pref(apz.allow_zooming,true) pref(ui.useOverlayScrollbars,0) skip-if(!cocoaWidget) != scaled-scrollbar.html about:blank
+
+# Test that scrollbar buttons are inhibited on Linux using the non-native theme.
+skip-if(!gtkWidget) pref(widget.non-native-theme.enabled,true) test-pref(ui.scrollArrowStyle,4097) ref-pref(ui.scrollArrowStyle,0) == scrollbar-buttons.html scrollbar-buttons.html

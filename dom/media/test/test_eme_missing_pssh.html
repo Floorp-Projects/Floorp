@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test Encrypted Media Extensions</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="eme.js"></script>
+  </head>
+  <body>
+    <audio controls id="audio"></audio>
+    <pre id="test">
+    <script class="testbody" type="text/javascript">
+
+      // Tests that a fragmented MP4 file without a PSSH, but with valid encrypted
+      // tracks with valid TENC boxes, is able to load with EME.
+      // We setup MSE before starting up EME, so that we exercise the "waiting for
+      // cdm" step in the MediaDecoderStateMachine.
+
+      SimpleTest.waitForExplicitFinish();
+
+      var pssh = [
+        0x00, 0x00, 0x00, 0x00,
+        0x70, 0x73, 0x73, 0x68, // BMFF box header (76 bytes, 'pssh')
+        0x01, 0x00, 0x00, 0x00,                         // Full box header (version = 1, flags = 0)
+        0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, // SystemID
+        0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b,
+        0x00, 0x00, 0x00, 0x01,                         // KID_count (1)
+        0x2f, 0xef, 0x8a, 0xd8, 0x12, 0xdf, 0x42, 0x97,
+        0x83, 0xe9, 0xbf, 0x6e, 0x5e, 0x49, 0x3e, 0x53,
+        0x00, 0x00, 0x00, 0x00                         // Size of Data (0)
+      ];
+
+      var audio = document.getElementById("audio");
+
+      function LoadEME() {
+        var options = [{
+          initDataType: 'cenc',
+          audioType: 'audio/mp4; codecs="mp4a.40.2"',
+        }];
+        navigator.requestMediaKeySystemAccess("org.w3.clearkey", options)
+          .then((keySystemAccess) => {
+            return keySystemAccess.createMediaKeys();
+          }, bail("Failed to request key system access."))
+
+          .then((mediaKeys) => {
+            audio.setMediaKeys(mediaKeys);
+            var session = mediaKeys.createSession();
+            once(session, "message", (message) => {
+              is(message.messageType, 'license-request', "Expected a license-request");
+              var license = new TextEncoder().encode(JSON.stringify({
+                'keys': [{
+                  'kty':'oct',
+                  'kid':'L--K2BLfQpeD6b9uXkk-Uw',
+                  'k':HexToBase64('7f412f0575f44f718259beef56ec7771')
+                 }],
+                 'type': 'temporary'
+              }));
+              session.update(license);
+            });
+            session.generateRequest('cenc', new Uint8Array(pssh));
+          });
+      }
+
+      function DownloadMedia(url, type, mediaSource) {
+        return new Promise(function(resolve, reject) {
+          var sourceBuffer = mediaSource.addSourceBuffer(type);
+          fetchWithXHR(url, (response) => {
+            once(sourceBuffer, "updateend", resolve);
+            sourceBuffer.appendBuffer(new Uint8Array(response));
+          });
+        });
+      }
+
+      function LoadMSE() {
+        var ms = new MediaSource();
+        audio.src = URL.createObjectURL(ms);
+
+        once(ms, "sourceopen", ()=>{
+          DownloadMedia('short-audio-fragmented-cenc-without-pssh.mp4', 'audio/mp4; codecs="mp4a.40.2"', ms)
+            .then(() => { ms.endOfStream(); LoadEME();});
+        });
+
+        audio.addEventListener("loadeddata", SimpleTest.finish);
+      }
+
+      LoadMSE();
+
+  </script>
+  </pre>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+NoVisibilityFlags()
+
+EXPORTS.mozilla += [
+    "cxxalloc.h",
+    "mozalloc.h",
+    "mozalloc_abort.h",
+    "mozalloc_oom.h",
+]
+
+if CONFIG["WRAP_STL_INCLUDES"]:
+    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+        EXPORTS.mozilla += ["throw_gcc.h"]
+    elif CONFIG["CC_TYPE"] == "clang-cl":
+        DEFINES["_HAS_EXCEPTIONS"] = 0
+        SOURCES += [
+            "msvc_raise_wrappers.cpp",
+        ]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    # Keep this file separate to avoid #include'ing windows.h everywhere.
+    SOURCES += [
+        "winheap.cpp",
+    ]
+
+UNIFIED_SOURCES += [
+    "mozalloc.cpp",
+    "mozalloc_abort.cpp",
+    "mozalloc_oom.cpp",
+]
+
+if CONFIG["MOZ_MEMORY"]:
+    # In MinGW, we don't want to actually export these functions out of the library
+    # as the functions in libc++ correctly forward to jemalloc and exporting them
+    # produces duplicate symbol errors.
+    if not (CONFIG["CC_TYPE"] == "clang" and CONFIG["OS_TARGET"] == "WINNT"):
+        SOURCES += [
+            "cxxalloc.cpp",
+        ]
+
+FINAL_LIBRARY = "mozglue"
+
+# The strndup declaration in string.h is in an ifdef __USE_GNU section
+DEFINES["_GNU_SOURCE"] = True
+
+DisableStlWrapping()
+
+LOCAL_INCLUDES += [
+    "!/xpcom",
+    "/memory/build",
+]
+
+DIST_INSTALL = True
+
+REQUIRES_UNIFIED_BUILD = True

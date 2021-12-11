@@ -1,0 +1,35 @@
+<html>
+
+
+<body>
+ Firefox: <a href="javascript:noCrash()">no crash</a> | <a href="javascript:crash()">crash</a><br/>
+ <canvas id="foo" width="200" height="200">
+ </canvas>
+ <script>
+   function d(lineWidth){
+    var c = document.getElementById("foo").getContext("2d")
+    c.clearRect(0,0,200,200)
+    c.lineWidth = lineWidth
+    c.beginPath()
+    c.arc(100,100,80, Math.PI, 2*Math.PI, 1)
+    c.stroke()
+    c.beginPath()
+    c.arc(50,50, 20, 0, 2*Math.PI, 1)
+    c.stroke()
+    c.beginPath()
+    c.arc(150,50, 20, 0, 2*Math.PI, 1)
+    c.stroke()
+   }
+   function noCrash() {
+     d(Math.random()*20+5)
+   }
+   function crash() {
+     d( '_' )
+   }
+
+   crash();
+ </script>
+
+</body>
+
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Clamp 'automatic minimum size' to definite max-sizing for intrinsic ratio item</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1300369">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  grid-gap: 1px;
+  align-items: start;
+  justify-items: start;
+  float: left;
+  border: 1px dashed;
+  margin-right: 16px;
+  margin-bottom: 14px;
+}
+.sz {
+  width: 40px;
+  height: 40px;
+}
+
+.stretch .grid {
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+img {
+  grid-area: 1 / 1;
+  border: 1px solid;
+  padding: 1px 3px 5px 7px;
+  margin: 3px 5px 7px 1px;
+  min-width: 0;
+  min-height: 0;
+}
+.span2 {
+  grid-area: 1 / 1 / span 2 / span 2;
+}
+
+x {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  justify-self: stretch;
+  background: cyan;
+}
+
+br {
+  clear: both;
+}
+  </style>
+</head>
+<body>
+
+<div id="tests">
+<div class="grid a"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid definite"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid a2"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+<div class="grid definite"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+
+<div class="grid sz"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid sz definite"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid sz"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+<div class="grid sz definite"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+
+<br>
+
+<div class="grid min"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid min"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+<div class="grid sz min"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid sz min"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+
+<div class="grid x1 max"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid max"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+<div class="grid x1 sz max"><x></x><img src="support/solidblue-20x32.png"></div>
+<div class="grid sz max"><x></x><img class="span2" src="support/solidblue-20x32.png"></div>
+
+<br>
+
+</div>
+
+<script>
+var tests = document.getElementById('tests');
+
+var n = tests.cloneNode(true);
+var wrap = document.createElement('div');
+wrap.className = 'larger';
+wrap.appendChild(n);
+document.body.appendChild(wrap);
+
+var n = tests.cloneNode(true);
+var wrap = document.createElement('div');
+wrap.className = 'stretch';
+wrap.appendChild(n);
+document.body.appendChild(wrap);
+
+var n = tests.cloneNode(true);
+var wrap = document.createElement('div');
+wrap.className = 'stretch larger';
+wrap.appendChild(n);
+document.body.appendChild(wrap);
+
+</script>
+
+
+<script>
+var imgSizes =
+[
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['0px', '0px'],
+  ['0px', '0px'],
+  ['13px', '3px'],
+  ['13px', '3px'],
+  ['0px', '0px'],
+  ['0px', '0px'],
+  ['13px', '3px'],
+  ['13px', '3px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['7px', '10px'],
+  ['7px', '10px'],
+  ['33px', '39px'],
+  ['33px', '39px'],
+  ['7px', '10px'],
+  ['7px', '10px'],
+  ['22px', '32px'],
+  ['33px', '39px'],
+  ['20px', '32px'],
+  ['33px', '39px'],
+  ['20px', '32px'],
+  ['22px', '32px'],
+  ['20px', '32px'],
+  ['33px', '39px'],
+  ['20px', '32px'],
+  ['22px', '32px'],
+];
+var imgs = document.querySelectorAll('img');
+for (var i = 0; i < imgs.length; ++i) {
+  imgs[i].style.width = imgSizes[i][0];
+  imgs[i].style.height = imgSizes[i][1];
+}
+
+
+var track_sizes =
+[
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 11px / 25px 14px'],
+  ['28px 28px / 25px 25px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 11px / 25px 14px'],
+  ['28px 28px / 25px 25px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+];
+
+var grids = document.querySelectorAll('.grid');
+for (var i = 0; i < grids.length; ++i) {
+  grids[i].style.grid = track_sizes[i];
+  grids[i].style.gridGap = "1px";
+}
+
+
+</script>
+
+</body></html>

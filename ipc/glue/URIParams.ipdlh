@@ -1,0 +1,110 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+include PBackgroundSharedTypes;
+
+namespace mozilla {
+namespace ipc {
+
+struct SimpleURIParams
+{
+  nsCString scheme;
+  nsCString path;
+  nsCString ref;
+  nsCString query;
+};
+
+struct DefaultURIParams
+{
+  nsCString spec;
+};
+
+struct StandardURLSegment
+{
+  uint32_t position;
+  int32_t length;
+};
+
+struct StandardURLParams
+{
+  uint32_t urlType;
+  int32_t port;
+  int32_t defaultPort;
+  nsCString spec;
+  StandardURLSegment scheme;
+  StandardURLSegment authority;
+  StandardURLSegment username;
+  StandardURLSegment password;
+  StandardURLSegment host;
+  StandardURLSegment path;
+  StandardURLSegment filePath;
+  StandardURLSegment directory;
+  StandardURLSegment baseName;
+  StandardURLSegment extension;
+  StandardURLSegment query;
+  StandardURLSegment ref;
+  bool supportsFileURL;
+  bool isSubstituting;
+};
+
+struct JARURIParams
+{
+  URIParams jarFile;
+  URIParams jarEntry;
+  nsCString charset;
+};
+
+struct IconURIParams
+{
+  URIParams? uri;
+  uint32_t size;
+  nsCString contentType;
+  nsCString fileName;
+  nsCString stockIcon;
+  int32_t iconSize;
+  int32_t iconState;
+};
+
+struct HostObjectURIParams
+{
+  SimpleURIParams simpleParams;
+  bool revoked;
+};
+
+union URIParams
+{
+  SimpleURIParams;
+  StandardURLParams;
+  JARURIParams;
+  IconURIParams;
+  JSURIParams;
+  SimpleNestedURIParams;
+  HostObjectURIParams;
+  DefaultURIParams;
+  NestedAboutURIParams;
+};
+
+struct JSURIParams
+{
+  SimpleURIParams simpleParams;
+  URIParams? baseURI;
+};
+
+struct SimpleNestedURIParams
+{
+  SimpleURIParams simpleParams;
+  URIParams innerURI;
+};
+
+struct NestedAboutURIParams
+{
+  SimpleNestedURIParams nestedParams;
+  URIParams? baseURI;
+};
+
+} // namespace ipc
+} // namespace mozilla

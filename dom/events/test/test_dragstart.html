@@ -1,0 +1,656 @@
+<html>
+<head>
+  <title>Tests for the dragstart event</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<!--
+ This test checks the dragstart event and the DataTransfer object
+  -->
+ 
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var gDragInfo;
+var gDataTransfer = null;
+var gExtraDragTests = 0;
+
+function runTests()
+{
+  // first, create a selection and try dragging it
+  var draggable = $("draggable");
+  window.getSelection().selectAllChildren(draggable);
+  synthesizeMouse(draggable, 6, 6, { type: "mousedown" });
+  synthesizeMouse(draggable, 14, 14, { type: "mousemove" });
+  // drags are asynchronous on Linux, so this extra event is needed to make
+  // sure the drag gets processed
+  synthesizeMouse(draggable, 15, 15, { type: "mousemove" });
+}
+
+function afterDragTests()
+{
+  // the dragstart should have occurred due to moving the mouse. gDataTransfer
+  // caches the dataTransfer that was used, however it should now be empty and
+  // be read only.
+  ok(gDataTransfer instanceof DataTransfer, "DataTransfer after dragstart event");
+  checkTypes(gDataTransfer, [], 0, "after dragstart event");
+
+  expectError(() => gDataTransfer.setData("text/plain", "Some Text"),
+              "NoModificationAllowedError", "setData when read only");
+  expectError(() => gDataTransfer.clearData("text/plain"),
+              "NoModificationAllowedError", "clearData when read only");
+  expectError(() => gDataTransfer.addElement(draggable),
+              "NoModificationAllowedError", "addElement when read only");
+
+  var evt = document.createEvent("dragevent");
+  ok(evt instanceof DragEvent, "synthetic dragevent class")
+  ok(evt instanceof MouseEvent, "synthetic event inherits from MouseEvent")
+  evt.initDragEvent("dragstart", true, true, window, 1, 40, 35, 20, 15,
+                    false, true, false, false, 0, null, null);
+  $("synthetic").dispatchEvent(evt);
+
+  var evt = document.createEvent("dragevent");
+  ok(evt instanceof DragEvent, "synthetic dragevent class")
+  evt.initDragEvent("dragover", true, true, window, 0, 40, 35, 20, 15,
+                    true, false, true, true, 2, document.documentElement, null);
+  $("synthetic2").dispatchEvent(evt);
+
+  // next, dragging links and images
+  sendMouseEventsForDrag("link");
+  sendMouseEventsForDrag("image");
+
+//  disable testing input dragging for now, as it doesn't seem to be testable 
+//  draggable = $("input");
+//  draggable.setSelectionRange(0, 4);
+//  synthesizeMouse(draggable, 8, 8, { type: "mousedown" });
+//  synthesizeMouse(draggable, 15, 15, { type: "mousemove" });
+//  sendMouseEventsForDrag("input");
+
+  // draggable elements inside a shadow root
+  sendMouseEventsForShadowRootDrag("shadow_host_containing_draggable");
+  sendMouseEventsForShadowRootDrag("shadow_host_containing_image");
+
+  // next, check if the draggable attribute can be used to adjust the drag target
+  gDragInfo = { target: $("dragtrue"), testid: "draggable true node" };
+  sendMouseEventsForDrag("dragtrue");
+  gDragInfo = { target: $("dragtrue"), testid: "draggable true child" };
+  sendMouseEventsForDrag("spantrue");
+  gDragInfo = { target: $("dragfalse").firstChild, testid: "draggable false node" };
+  sendMouseEventsForDrag("dragfalse");
+  gDragInfo = { target: $("spanfalse").firstChild, testid: "draggable false child" };
+  sendMouseEventsForDrag("spanfalse");
+
+  synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+  if (gExtraDragTests == 6)
+    SimpleTest.finish();
+}
+
+function sendMouseEventsForDrag(nodeid)
+{
+  var draggable = $(nodeid);
+  synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
+  synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
+  synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
+}
+function sendMouseEventsForShadowRootDrag(host)
+{
+  var draggable = $(host).shadowRoot.firstElementChild;
+  synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
+  synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
+  synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
+}
+
+function doDragStartSelection(event)
+{
+  is(event.type, "dragstart", "dragstart event type");
+  is(event.target, $("draggable").firstChild, "dragstart event target");
+  is(event.bubbles, true, "dragstart event bubbles");
+  is(event.cancelable, true, "dragstart event cancelable");
+
+  is(event.clientX, 14, "dragstart clientX");
+  is(event.clientY, 14, "dragstart clientY");
+  ok(event.screenX > 0, "dragstart screenX");
+  ok(event.screenY > 0, "dragstart screenY");
+  is(event.layerX, 14, "dragstart layerX");
+  is(event.layerY, 14, "dragstart layerY");
+  is(event.pageX, 14, "dragstart pageX");
+  is(event.pageY, 14, "dragstart pageY");
+
+  var dt = event.dataTransfer;
+  ok(dt instanceof DataTransfer, "dataTransfer is DataTransfer");
+  gDataTransfer = dt;
+
+  var types = dt.types;
+  ok(Array.isArray(types), "initial types is an Array");
+  checkTypes(dt, ["text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "initial selection");
+
+  is(dt.getData("text/plain"), "This is a draggable bit of text.", "initial selection text/plain");
+  is(dt.getData("text/html"), "<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>",
+     "initial selection text/html");
+
+  // text/unicode and Text are available for compatibility. They retrieve the
+  // text/plain data
+  is(dt.getData("text/unicode"), "This is a draggable bit of text.", "initial selection text/unicode");
+  is(dt.getData("Text"), "This is a draggable bit of text.", "initial selection Text");
+  is(dt.getData("TEXT"), "This is a draggable bit of text.", "initial selection TEXT");
+  is(dt.getData("text/UNICODE"), "This is a draggable bit of text.", "initial selection text/UNICODE"); 
+
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial selection item count");
+
+  dt.clearData("text/plain");
+  dt.clearData("text/html");
+  dt.clearData("text/_moz_htmlinfo");
+  dt.clearData("text/_moz_htmlcontext");
+
+  test_DataTransfer(dt);
+  setTimeout(afterDragTests, 0);
+}
+
+function test_DataTransfer(dt)
+{
+  is(SpecialPowers.wrap(dt).mozItemCount, 0, "empty itemCount");
+
+  var types = dt.types;
+  ok(Array.isArray(types), "empty types is an Array");
+  // The above test fails if we have SpecialPowers.wrap(dt).types instead of dt.types
+  // because chrome consumers get the 'ReturnValueNeedsContainsHack'.
+  // So wrap with special powers after the test
+  dt = SpecialPowers.wrap(dt);
+  checkTypes(dt, [], 0, "empty");
+  is(dt.getData("text/plain"), "", "empty data is empty");
+
+  // calling setDataAt requires an index that is 0 <= index <= dt.itemCount
+  expectError(() => dt.mozSetDataAt("text/plain", "Some Text", 1),
+              "IndexSizeError", "setDataAt index too high");
+
+  is(dt.mozUserCancelled, false, "userCancelled");
+
+  // because an exception occurred, the data should not have been added
+  is(dt.mozItemCount, 0, "empty setDataAt index too high itemCount");
+  dt.getData("text/plain", "", "empty setDataAt index too high getData");
+
+  // if the type is '', do nothing, or return ''
+  dt.setData("", "Invalid Type");
+  is(dt.types.length, 0, "invalid type setData");
+  is(dt.getData(""), "", "invalid type getData"),
+  dt.mozSetDataAt("", "Invalid Type", 0);
+  is(dt.types.length, 0, "invalid type setDataAt");
+  is(dt.mozGetDataAt("", 0), null, "invalid type getDataAt"),
+
+  // similar with clearDataAt and getDataAt
+  expectError(() => dt.mozGetDataAt("text/plain", 1),
+              "IndexSizeError", "getDataAt index too high");
+  expectError(() => dt.mozClearDataAt("text/plain", 1),
+              "IndexSizeError", "clearDataAt index too high");
+
+  dt.setData("text/plain", "Sample Text");
+  is(dt.mozItemCount, 1, "added plaintext itemCount");
+  checkOneDataItem(dt, ["text/plain"], ["Sample Text"], 0, "added plaintext");
+
+   // after all those exceptions, the data should still be the same
+  checkOneDataItem(dt, ["text/plain"], ["Sample Text"], 0, "added plaintext after exception");
+
+  // modifying the data associated with the format should give it the new value
+  dt.setData("text/plain", "Modified Text");
+  is(dt.mozItemCount, 1, "modified plaintext itemCount");
+  checkOneDataItem(dt, ["text/plain"], ["Modified Text"], 0, "modified plaintext");
+
+  dt.setData("text/html", "<strong>Modified Text</strong>");
+  is(dt.mozItemCount, 1, "modified html itemCount");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                       ["Modified Text", "<strong>Modified Text</strong>"],
+                       0, "modified html");
+
+  // modifying data for a type that already exists should adjust it in place,
+  // not reinsert it at the beginning
+  dt.setData("text/plain", "New Text");
+  is(dt.mozItemCount, 1, "modified text again itemCount");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                       ["New Text", "<strong>Modified Text</strong>"],
+                       0, "modified text again");
+
+  var draggable = $("draggable");
+  dt.setData("application/-moz-node", draggable);
+  checkOneDataItem(dt, ["text/plain", "text/html", "application/-moz-node"],
+                       ["New Text", "<strong>Modified Text</strong>", draggable.toString()],
+                       0, "added node");
+
+  dt.clearData(""); // null means clear all
+  is(dt.mozItemCount, 0, "itemCount after clearData empty string");
+  checkTypes(dt, [], 0, "empty after clearData empty string");
+  
+  dt.setData("text/plain", 22);
+  dt.setData("text/html", 5.6);
+  dt.setData("text/xml", 5.6);
+  checkTypes(dt, ["text/plain", "text/html", "text/xml"], ["22", "5.6", ""], 0, "add numeric and empty data");
+
+  dt.clearData(); // no argument means clear all
+  is(dt.mozItemCount, 0, "itemCount after clearData no argument");
+  checkTypes(dt, [], 0, "empty after clearData no argument");
+
+  // check 'Text' type which should convert into text/plain
+  dt.setData("Text", "Sample Text");
+  checkOneDataItem(dt, ["text/plain"], ["Sample Text"], 0, "set Text");
+  is(dt.getData("Text"), "Sample Text", "getData Text");
+  is(dt.mozGetDataAt("Text", 0), "Sample Text", "getDataAt Text");
+  dt.setData("text/plain", "More Text");
+  checkOneDataItem(dt, ["text/plain"], ["More Text"], 0, "set text/plain after set Text");
+
+  dt.mozClearDataAt("", 0); // null means clear all
+  is(dt.mozItemCount, 0, "itemCount after clearDataAt empty string");
+  checkTypes(dt, [], 0, "empty after clearDataAt empty string");
+
+  // check text/uri-list type
+  dt.setData("text/uri-list", "http://www.mozilla.org");
+  checkURL(dt, "http://www.mozilla.org", "http://www.mozilla.org", 0, "set text/uri-list");
+
+  // check URL type which should add text/uri-list data
+  dt.setData("URL", "ftp://ftp.example.com");
+  checkURL(dt, "ftp://ftp.example.com", "ftp://ftp.example.com", 0, "set URL");
+  checkTypes(dt, ["text/uri-list"], ["ftp://ftp.example.com"], "url types");
+
+  // clearing text/uri-list data
+  dt.clearData("text/uri-list");
+  is(dt.mozItemCount, 0, "itemCount after clear url-list");
+  is(dt.getData("text/uri-list"), "", "text/uri-list after clear url-list");
+  is(dt.getData("URL"), "", "URL after clear url-list");
+
+  // check text/uri-list parsing
+  dt.setData("text/uri-list", "#http://www.mozilla.org\nhttp://www.xulplanet.com\nhttp://www.example.com");
+  checkURL(dt, "http://www.xulplanet.com",
+           "#http://www.mozilla.org\nhttp://www.xulplanet.com\nhttp://www.example.com",
+           0, "uri-list 3 lines");
+
+  dt.setData("text/uri-list", "#http://www.mozilla.org");
+  is(dt.getData("URL"), "", "uri-list commented");
+  dt.setData("text/uri-list", "#http://www.mozilla.org\n");
+  is(dt.getData("URL"), "", "uri-list commented with newline");
+
+  // check that clearing the URL type also clears the text/uri-list type
+  dt.clearData("URL");
+  is(dt.getData("text/uri-list"), "", "clear URL");
+
+  dt.setData("text/uri-list", "#http://www.mozilla.org\n\n\n\n\n");
+  is(dt.getData("URL"), "", "uri-list with blank lines");
+  dt.setData("text/uri-list", "");
+  is(dt.getData("URL"), "", "empty uri-list");
+  dt.setData("text/uri-list", "#http://www.mozilla.org\n#Sample\nhttp://www.xulplanet.com  \r\n");
+  is(dt.getData("URL"), "http://www.xulplanet.com", "uri-list mix");
+  dt.setData("text/uri-list", "\nhttp://www.mozilla.org");
+  is(dt.getData("URL"), "", "empty line to start uri-list");
+  dt.setData("text/uri-list", "  http://www.mozilla.org#anchor  ");
+  is(dt.getData("URL"), "http://www.mozilla.org#anchor", "uri-list with spaces and hash");
+
+  // ensure that setDataAt works the same way
+  dt.mozSetDataAt("text/uri-list", "#http://www.mozilla.org\n#Sample\nhttp://www.xulplanet.com  \r\n", 0);
+  checkURL(dt, "http://www.xulplanet.com",
+           "#http://www.mozilla.org\n#Sample\nhttp://www.xulplanet.com  \r\n",
+           0, "uri-list mix setDataAt");
+
+  // now test adding multiple items to be dragged using the setDataAt method
+  dt.clearData();
+  dt.mozSetDataAt("text/plain", "First Item", 0);
+  dt.mozSetDataAt("text/plain", "Second Item", 1);
+  expectError(() => dt.mozSetDataAt("text/plain", "Some Text", 3),
+              "IndexSizeError", "setDataAt index too high with two items");
+  is(dt.mozItemCount, 2, "setDataAt item itemCount");
+  checkOneDataItem(dt, ["text/plain"], ["First Item"], 0, "setDataAt item at index 0");
+  checkOneDataItem(dt, ["text/plain"], ["Second Item"], 1, "setDataAt item at index 1");
+
+  dt.mozSetDataAt("text/html", "<em>First Item</em>", 0);
+  dt.mozSetDataAt("text/html", "<em>Second Item</em>", 1);
+  is(dt.mozItemCount, 2, "setDataAt two types item itemCount");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["First Item", "<em>First Item</em>"], 0, "setDataAt two types item at index 0");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["Second Item", "<em>Second Item</em>"], 1, "setDataAt two types item at index 1");
+
+  dt.mozSetDataAt("text/html", "<em>Changed First Item</em>", 0);
+  dt.mozSetDataAt("text/plain", "Changed Second Item", 1);
+  is(dt.mozItemCount, 2, "changed with setDataAt item itemCount");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["First Item", "<em>Changed First Item</em>"], 0, "changed with setDataAt item at index 0");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["Changed Second Item", "<em>Second Item</em>"], 1, "changed with setDataAt item at index 1");
+
+  dt.setData("text/html", "Changed with setData");
+  is(dt.mozItemCount, 2, "changed with setData");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["First Item", "Changed with setData"], 0, "changed with setData item at index 0");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["Changed Second Item", "<em>Second Item</em>"], 1, "changed with setData item at index 1");
+
+  dt.mozSetDataAt("application/-moz-node", "draggable", 2);
+  is(dt.mozItemCount, 3, "setDataAt node itemCount");
+  checkOneDataItem(dt, ["application/-moz-node"], ["draggable"], 2, "setDataAt node item at index 2");
+
+  // Try to add and then remove a non-string type to the DataTransfer and ensure
+  // that the type appears in DataTransfer.types.
+  {
+    dt.mozSetDataAt("application/-x-body", document.body, 0);
+    let found = false;
+    for (let i = 0; i < dt.types.length; ++i) {
+      if (dt.types[i] == "application/-x-body") {
+        found = true;
+        break;
+      }
+    }
+    ok(found, "Data should appear in datatransfer.types despite having a non-string type");
+    dt.mozClearDataAt("application/-x-body", 0);
+  }
+
+  dt.mozClearDataAt("text/html", 1);
+  is(dt.mozItemCount, 3, "clearDataAt itemCount");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["First Item", "Changed with setData"], 0, "clearDataAt item at index 0");
+  checkOneDataItem(dt, ["text/plain"], ["Changed Second Item"], 1, "clearDataAt item at index 1");
+
+  dt.mozClearDataAt("text/plain", 1);
+  is(dt.mozItemCount, 2, "clearDataAt last type itemCount");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["First Item", "Changed with setData"], 0, "clearDataAt last type at index 0");
+  checkOneDataItem(dt, ["application/-moz-node"], ["draggable"], 1, "clearDataAt last type item at index 2");
+  expectError(() => dt.mozGetDataAt("text/plain", 2),
+              "IndexSizeError", "getDataAt after item removed index too high");
+
+  dt.mozSetDataAt("text/unknown", "Unknown type", 2);
+  dt.mozSetDataAt("text/unknown", "Unknown type", 1);
+  is(dt.mozItemCount, 3, "add unknown type");
+  checkOneDataItem(dt, ["application/-moz-node", "text/unknown"],
+                   ["draggable", "Unknown type"], 1, "add unknown type item at index 1");
+  checkOneDataItem(dt, ["text/unknown"], ["Unknown type"], 2, "add unknown type item at index 2");
+
+  dt.mozClearDataAt("", 1);
+  is(dt.mozItemCount, 2, "clearDataAt empty string");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["First Item", "Changed with setData"], 0, "clearDataAt empty string item at index 0");
+  checkOneDataItem(dt, ["text/unknown"],
+                   ["Unknown type"], 1, "clearDataAt empty string item at index 1");
+
+  // passing a format that doesn't exist to clearData or clearDataAt should just
+  // do nothing
+  dt.clearData("text/something");
+  dt.mozClearDataAt("text/something", 1);
+  is(dt.mozItemCount, 2, "clearData type that does not exist");
+  checkOneDataItem(dt, ["text/plain", "text/html"],
+                   ["First Item", "Changed with setData"], 0, "clearData type that does not exist item at index 0");
+  checkOneDataItem(dt, ["text/unknown"],
+                   ["Unknown type"], 1, "clearData type that does not exist item at index 1");
+
+  expectError(() => dt.mozClearDataAt("text/plain", 3),
+              "IndexSizeError", "clearData index too high with two items");
+
+  // ensure that clearData() removes all data associated with the first item, but doesn't
+  // shift the second item down into the first item's slot.
+  dt.clearData();
+  is(dt.mozItemCount, 2, "clearData no argument with multiple items itemCount");
+  checkOneDataItem(dt, [], [], 0,
+                   "clearData no argument with multiple items item at index 0");
+  checkOneDataItem(dt, ["text/unknown"],
+                   ["Unknown type"], 1, "clearData no argument with multiple items item at index 1");
+
+  // remove tha remaining data in index 1. As index 0 is empty at this point, this will actually
+  // drop mozItemCount to 0. (XXX: This is because of spec-compliance reasons related
+  // to the more-recent dt.item API. It's an unfortunate, but hopefully rare edge case)
+  dt.mozClearDataAt("", 1);
+  is(dt.mozItemCount, 0, "all data cleared");
+
+  // now check the effectAllowed and dropEffect properties
+  is(dt.dropEffect, "none", "initial dropEffect");
+  is(dt.effectAllowed, "uninitialized", "initial effectAllowed");
+
+  ["copy", "none", "link", "", "other", "copyMove", "all", "uninitialized", "move"].forEach(
+    function (i) {
+      dt.dropEffect = i;
+      is(dt.dropEffect, i == "" || i == "other" || i == "copyMove" ||
+                        i == "all" || i == "uninitialized" ? "link" : i,
+         "dropEffect set to " + i);
+      is(dt.effectAllowed, "uninitialized", "effectAllowed not modified by dropEffect set to " + i);
+    }
+  );
+
+  ["move", "copy", "link", "", "other", "moveCopy", "copyMove",
+   "linkMove", "copyLink", "all", "uninitialized", "none"].forEach(
+    function (i) {
+      dt.effectAllowed = i;
+      is(dt.dropEffect, "move", "dropEffect not modified by effectAllowed set to " + i);
+      is(dt.effectAllowed, i == "" || i == "other" || i == "moveCopy" ? "link" : i,
+         "effectAllowed set to " + i);
+    }
+  );
+}
+
+function doDragStartLink(event)
+{
+  var dt = event.dataTransfer;
+  checkTypes(dt, ["text/x-moz-url", "text/x-moz-url-data", "text/x-moz-url-desc", "text/uri-list",
+                  "text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "initial link");
+
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial link item count");
+  is(dt.getData("text/uri-list"), "http://www.mozilla.org/", "link text/uri-list");
+  is(dt.getData("text/plain"), "http://www.mozilla.org/", "link text/plain");
+
+  event.preventDefault();
+
+  gExtraDragTests++;
+}
+
+function doDragStartImage(event)
+{
+  var dataurl = $("image").src;
+
+  var dt = event.dataTransfer;
+  checkTypes(dt, ["text/x-moz-url", "text/x-moz-url-data", "text/x-moz-url-desc", "text/uri-list",
+                  "text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "initial image");
+
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial image item count");
+  is(dt.getData("text/uri-list"), dataurl, "image text/uri-list");
+  is(dt.getData("text/plain"), dataurl, "image text/plain");
+
+  event.preventDefault();
+
+  gExtraDragTests++;
+}
+
+function doDragStartInput(event)
+{
+  var dt = event.dataTransfer;
+  checkTypes(dt, ["text/plain"], 0, "initial input");
+
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial input item count");
+//  is(dt.getData("text/plain"), "Text", "input text/plain");
+
+//  event.preventDefault();
+}
+
+
+function doDragStartInShadowRoot(event)
+{
+  is(event.type, "dragstart", "shadow root dragstart event type");
+  is(event.target, $("shadow_host_containing_draggable"), "shadow root dragstart event target");
+  is(event.bubbles, true, "shadow root dragstart event bubbles");
+  is(event.cancelable, true, "shadow root dragstart event cancelable");
+
+  event.preventDefault();
+
+  gExtraDragTests++;
+}
+
+function doDragStartShadowRootImage(event)
+{
+  var dt = event.dataTransfer;
+
+  checkTypes(dt, ["text/x-moz-url", "text/x-moz-url-data", "text/x-moz-url-desc", "text/uri-list",
+                  "text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "shadow root link with image");
+
+  is(dt.getData("text/uri-list"), "http://example.org/", "shadow root link text/uri-list");
+  is(dt.getData("text/plain"), "http://example.org/", "shadow root link text/plain");
+
+  event.preventDefault();
+
+  gExtraDragTests++;
+}
+
+function doDragStartSynthetic(event)
+{
+  is(event.type, "dragstart", "synthetic dragstart event type");
+
+  var dt = event.dataTransfer;
+  todo(dt instanceof DataTransfer, "synthetic dragstart dataTransfer is DataTransfer");
+//  Uncomment next line once the todo instanceof above is fixed.
+//  checkTypes(dt, [], 0, "synthetic dragstart");
+
+  is(event.detail, 1, "synthetic dragstart detail");
+  is(event.screenX, 40, "synthetic dragstart screenX");
+  is(event.screenY, 35, "synthetic dragstart screenY");
+  is(event.clientX, 20, "synthetic dragstart clientX");
+  is(event.clientY, 15, "synthetic dragstart clientY");
+  is(event.ctrlKey, false, "synthetic dragstart ctrlKey");
+  is(event.altKey, true, "synthetic dragstart altKey");
+  is(event.shiftKey, false, "synthetic dragstart shiftKey");
+  is(event.metaKey, false, "synthetic dragstart metaKey");
+  is(event.button, 0, "synthetic dragstart button ");
+  is(event.relatedTarget, null, "synthetic dragstart relatedTarget");
+
+//  Uncomment next two lines once the todo instanceof above is fixed.
+//  dt.setData("text/plain", "Text");
+//  is(dt.getData("text/plain"), "Text", "synthetic dragstart data is set after adding");
+}
+
+function doDragOverSynthetic(event)
+{
+  is(event.type, "dragover", "synthetic dragover event type");
+
+  var dt = event.dataTransfer;
+  todo(dt instanceof DataTransfer, "synthetic dragover dataTransfer is DataTransfer");
+//  Uncomment next line once the todo instanceof above is fixed.
+// checkTypes(dt, [], 0, "synthetic dragover");
+
+  is(event.detail, 0, "synthetic dragover detail");
+  is(event.screenX, 40, "synthetic dragover screenX");
+  is(event.screenY, 35, "synthetic dragover screenY");
+  is(event.clientX, 20, "synthetic dragover clientX");
+  is(event.clientY, 15, "synthetic dragover clientY");
+  is(event.ctrlKey, true, "synthetic dragover ctrlKey");
+  is(event.altKey, false, "synthetic dragover altKey");
+  is(event.shiftKey, true, "synthetic dragover shiftKey");
+  is(event.metaKey, true, "synthetic dragover metaKey");
+  is(event.button, 2, "synthetic dragover button");
+  is(event.relatedTarget, document.documentElement, "synthetic dragover relatedTarget");
+
+//  Uncomment next two lines once the todo instanceof above is fixed.
+//  dt.setData("text/plain", "Text");
+//  is(dt.getData("text/plain"), "Text", "synthetic dragover data is set after adding");
+}
+
+function onDragStartDraggable(event)
+{
+  var dt = event.dataTransfer;
+  ok(SpecialPowers.wrap(dt).mozItemCount == 0 && dt.types.length == 0 && event.originalTarget == gDragInfo.target, gDragInfo.testid);
+
+  event.preventDefault();
+  gExtraDragTests++;
+}
+
+// Expects dt wrapped in SpecialPowers
+function checkOneDataItem(dt, expectedtypes, expecteddata, index, testid)
+{
+  checkTypes(dt, expectedtypes, index, testid);
+  for (var f = 0; f < expectedtypes.length; f++) {
+    if (index == 0)
+      is(dt.getData(expectedtypes[f]), expecteddata[f], testid + " getData " + expectedtypes[f]);
+    is(dt.mozGetDataAt(expectedtypes[f], index), expecteddata[f] ? expecteddata[f] : null,
+       testid + " getDataAt " + expectedtypes[f]);
+  }
+}
+
+function checkTypes(dt, expectedtypes, index, testid)
+{
+  if (index == 0) {
+    var types = dt.types;
+    is(types.length, expectedtypes.length, testid + " types length");
+    for (var f = 0; f < expectedtypes.length; f++) {
+      is(types[f], expectedtypes[f], testid + " " + types[f] + " check");
+    }
+  }
+
+  types = SpecialPowers.wrap(dt).mozTypesAt(index);
+  is(types.length, expectedtypes.length, testid + " typesAt length");
+  for (var f = 0; f < expectedtypes.length; f++) {
+    is(types[f], expectedtypes[f], testid + " " + types[f] + " at " + index + " check");
+  }
+}
+
+// Expects dt wrapped in SpecialPowers
+function checkURL(dt, url, fullurllist, index, testid)
+{
+  is(dt.getData("text/uri-list"), fullurllist, testid + " text/uri-list");
+  is(dt.getData("URL"), url, testid + " URL");
+  is(dt.mozGetDataAt("text/uri-list", 0), fullurllist, testid + " text/uri-list");
+  is(dt.mozGetDataAt("URL", 0), fullurllist, testid + " URL");
+}
+
+function expectError(fn, eid, testid)
+{
+  var error = "";
+  try {
+    fn();
+  } catch (ex) {
+    error = ex.name;
+  }
+  is(error, eid, testid + " causes exception " + eid);
+}
+
+</script>
+
+</head>
+
+<body style="height: 300px; overflow: auto;" onload="setTimeout(runTests, 0)">
+
+<div id="draggable" ondragstart="doDragStartSelection(event)">This is a <em>draggable</em> bit of text.</div>
+
+<fieldset>
+<a id="link" href="http://www.mozilla.org/" ondragstart="doDragStartLink(event)">mozilla.org</a>
+</fieldset>
+
+<label>
+<img id="image" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82"
+     ondragstart="doDragStartImage(event)">
+</label>
+
+<input id="input" value="Text in a box" ondragstart="doDragStartInput(event)">
+
+<div ondragstart="onDragStartDraggable(event)">
+  <div id="dragtrue" draggable="true">
+    This is a <span id="spantrue">draggable</span> area.
+  </div>
+  <div id="dragfalse" draggable="false">
+    This is a <span id="spanfalse">non-draggable</span> area.
+  </div>
+</div>
+
+<!--iframe src="http://www.mozilla.org" width="400" height="400"></iframe-->
+
+<div id="synthetic" ondragstart="doDragStartSynthetic(event)">Synthetic Event Dispatch</div>
+<div id="synthetic2" ondragover="doDragOverSynthetic(event)">Synthetic Event Dispatch</div>
+
+<div draggable="true" id="shadow_host_containing_draggable"></div>
+
+<script>
+shadow_host_containing_draggable.attachShadow({ mode: 'open' }).innerHTML = 
+`<span>Inside shadow root</span>`;
+shadow_host_containing_draggable.addEventListener("dragstart", doDragStartInShadowRoot);
+</script>
+
+<a href="http://example.org" ondragstart="doDragStartShadowRootImage(event)">
+  <div id="shadow_host_containing_image"></div>
+</a>
+
+<script>
+shadow_host_containing_image.attachShadow({ mode: 'open' }).innerHTML = 
+`<img src="${$("image").src}" alt="Alt Text"></img>`;
+</script>
+</body>
+</html>

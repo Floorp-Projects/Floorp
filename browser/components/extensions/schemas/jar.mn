@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+    content/browser/schemas/bookmarks.json
+    content/browser/schemas/chrome_settings_overrides.json
+    content/browser/schemas/commands.json
+    content/browser/schemas/devtools.json
+    content/browser/schemas/devtools_inspected_window.json
+    content/browser/schemas/devtools_network.json
+    content/browser/schemas/devtools_panels.json
+    content/browser/schemas/find.json
+    content/browser/schemas/history.json
+    content/browser/schemas/menus.json
+    content/browser/schemas/menus_child.json
+    content/browser/schemas/normandyAddonStudy.json
+    content/browser/schemas/omnibox.json
+    content/browser/schemas/pkcs11.json
+    content/browser/schemas/search.json
+    content/browser/schemas/sessions.json
+    content/browser/schemas/sidebar_action.json
+    content/browser/schemas/tabs.json
+    content/browser/schemas/top_sites.json
+    content/browser/schemas/url_overrides.json
+    content/browser/schemas/urlbar.json
+    content/browser/schemas/windows.json

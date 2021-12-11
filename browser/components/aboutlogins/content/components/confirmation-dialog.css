@@ -1,0 +1,84 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ .overlay {
+  position: fixed;
+  z-index: 1;
+  inset: 0;
+  /* TODO: this color is used in the about:preferences overlay, but
+           why isn't it declared as a variable? */
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+}
+
+.container {
+  z-index: 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 250px;
+  max-width: 500px;
+  min-height: 200px;
+  margin: auto;
+  background: var(--in-content-page-background);
+  color: var(--in-content-page-color);
+  box-shadow: var(--shadow-30);
+  /* show a border in high contrast mode */
+  outline: 1px solid transparent;
+}
+
+.title {
+  font-size: 1.5em;
+  font-weight: normal;
+  user-select: none;
+  margin: 0;
+}
+
+.message {
+  color: var(--in-content-deemphasized-text);
+  margin-bottom: 0;
+}
+
+.dismiss-button {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  min-width: 20px;
+  min-height: 20px;
+  margin: 16px;
+  padding: 0;
+  line-height: 0;
+}
+
+.dismiss-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.warning-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 40px;
+  height: 40px;
+  margin: 16px;
+}
+
+.content,
+.buttons {
+  text-align: center;
+  padding: 16px 32px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.buttons.macosx > .confirm-button {
+  order: 1;
+}
+
+.buttons > button {
+  min-width: 140px;
+}

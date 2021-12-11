@@ -1,0 +1,33 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include IPCNavigationPreloadState;
+include PBackgroundSharedTypes;
+
+namespace mozilla {
+namespace dom {
+
+struct ServiceWorkerRegistrationData
+{
+  nsCString scope;
+  nsCString currentWorkerURL;
+  bool currentWorkerHandlesFetch;
+
+  nsString cacheName;
+
+  PrincipalInfo principal;
+
+  uint16_t updateViaCache;
+
+  int64_t currentWorkerInstalledTime;
+  int64_t currentWorkerActivatedTime;
+  int64_t lastUpdateTime;
+
+  IPCNavigationPreloadState navigationPreloadState;
+};
+
+} // namespace dom
+} // namespace mozilla

@@ -1,0 +1,274 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+background_update:
+  client_id:
+    type: uuid
+    description: >
+      The Telemetry client ID of the default profile.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - highly_sensitive
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  final_state:
+    type: string
+    description: >
+      String description of the final state the update state machine reached.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  states:
+    type: string_list
+    description: >
+      Ordered list of string descriptions of the states that the update state
+      machine reached.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  reasons:
+    type: string_list
+    description: >
+      List of reasons that the background update task did not run.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  exit_code_success:
+    type: boolean
+    description: >
+      True if the exit code/status of the background update task is 0, which
+      means success.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  exit_code_exception:
+    type: boolean
+    description: >
+      True if the exit code/status of the background update task is 3, which
+      means an exception was thrown.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+update:
+  service_enabled:
+    type: boolean
+    description: >
+      Preference "app.update.service.enabled": whether the Mozilla Maintenance
+      Service is enabled.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  auto_download:
+    type: boolean
+    description: >
+      Per-installation preference "app.update.auto": whether to fetch and
+      install updates without user intervention.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  background_update:
+    type: boolean
+    description: >
+      Per-installation preference "app.update.background.enabled": whether to
+      fetch and install updates in the background when Firefox is not running.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  enabled:
+    type: boolean
+    description: >
+      True when policies are disabled or when the "DisableAppUpdate" is not in
+      effect.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  channel:
+    type: string
+    description: >
+      The update channel.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  can_usually_apply_updates:
+    type: boolean
+    description: >
+      Whether or not the Update Service can usually download and install
+      updates.
+      See `canUsuallyApplyUpdates` in
+      https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  can_usually_check_for_updates:
+    type: boolean
+    description: >
+      Whether or not the Update Service can usually check for updates.
+      See `canUsuallyCheckForUpdates` in
+      https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  can_usually_stage_updates:
+    type: boolean
+    description: >
+      Whether the Update Service is usually able to stage updates.
+      See `canUsuallyStageUpdates` in
+      https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  can_usually_use_bits:
+    type: boolean
+    description: >
+      On Windows, whether the Update Service can usually use BITS.
+      See `canUsuallyUseBits` in
+      https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update

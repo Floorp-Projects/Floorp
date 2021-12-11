@@ -1,0 +1,167 @@
+<html>
+<!--
+Tests for document.all
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Tests for document.all</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=259332">Mozilla Bug 259332</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=393629">Mozilla Bug 393629</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448904">Mozilla Bug 448904</a>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  <a id="id1">A</a>
+  <a id="id2">B</a>
+  <a id="id2">C</a>
+  <a id="id3">D</a>
+  <a id="id3">E</a>
+  <a id="id3">F</a>
+</div>
+<iframe id="subframe" srcdoc="<span id='x'></span>"
+        style="display: none"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+p = document.getElementById("content");
+
+// Test that several elements with the same id or name behave correctly
+function testNumSame() {
+  is(document.all.id0, undefined, "no ids");
+  is(document.all.namedItem("id0"), null, "no ids");
+  is(document.all.id1, p.children[0], "one id");
+  is(document.all.id2[0], p.children[1], "two ids");
+  is(document.all.id2[1], p.children[2], "two ids");
+  is(document.all.id2.length, 2, "two length");
+  is(document.all.id3[0], p.children[3], "three ids");
+  is(document.all.id3[1], p.children[4], "three ids");
+  is(document.all.id3[2], p.children[5], "three ids");
+  is(document.all.id3.length, 3, "three length");
+}
+testNumSame();
+p.innerHTML = p.innerHTML.replace(/id=/g, "name=");
+testNumSame();
+
+
+// Test that dynamic changes behave properly
+
+// Add two elements and check that they are added to the correct lists
+child = Array.prototype.slice.call(p.children);
+child[6] = document.createElement("a");
+child[6].id = "id0";
+p.appendChild(child[6]);
+child[7] = document.createElement("a");
+child[7].id = "id1";
+p.appendChild(child[7]);
+is(document.all.id0, child[6], "now one id");
+is(document.all.id1[0], child[0], "now two ids");
+is(document.all.id1[1], child[7], "now two ids");
+is(document.all.id1.length, 2, "now two length");
+
+// Remove and element and check that the list shrinks
+rC(child[1]);
+is(document.all.id2, child[2], "now just one id");
+
+// Change an id and check that its removed and added to the correct lists
+child[4].name = "id1";
+is(document.all.id1[0], child[0], "now three ids");
+is(document.all.id1[1], child[4], "now three ids");
+is(document.all.id1[2], child[7], "now three ids");
+is(document.all.id1.length, 3, "now three length");
+is(document.all.id3[1], child[5], "now just two ids");
+is(document.all.id3.length, 2, "now two length");
+
+// Remove all elements from a list and check that it goes empty
+id3list = document.all.id3;
+rC(child[3]);
+is(id3list.length, 1, "now one length");
+rC(child[5]);
+is(document.all.id3, undefined, "now none");
+is(document.all.namedItem("id3"), null, "now none (namedItem)");
+is(id3list.length, 0, "now none length");
+
+// Give an element both a name and id and check that it appears in two lists
+p.insertBefore(child[1], child[2]); // restore previously removed
+id1list = document.all.id1;
+id2list = document.all.id2;
+child[1].id = "id1";
+is(id1list[0], child[0], "now four ids");
+is(id1list[1], child[1], "now four ids");
+is(id1list[2], child[4], "now four ids");
+is(id1list[3], child[7], "now four ids");
+is(id1list.length, 4, "now four length");
+is(id2list[0], child[1], "still two ids");
+is(id2list[1], child[2], "still two ids");
+is(id2list.length, 2, "still two length");
+
+
+// Check that document.all behaves list a list of all elements
+allElems = document.getElementsByTagName("*");
+ok(testArraysSame(document.all, allElems), "arrays same");
+length = document.all.length;
+expectedLength = length + p.getElementsByTagName("*").length + 1;
+p.appendChild(p.cloneNode(true));
+ok(testArraysSame(document.all, allElems), "arrays still same");
+is(document.all.length, expectedLength, "grew correctly");
+
+// Check which elements the 'name' attribute works on
+var elementNames =
+  ['abbr','acronym','address','area','a','b','base',
+   'bgsound','big','blockquote','br','canvas','center','cite','code',
+   'col','colgroup','dd','del','dfn','dir','div','dir','dl','dt','em','embed',
+   'fieldset','font','form','frame','frameset','head','i','iframe','img',
+   'input','ins','isindex','kbd','keygen','label','li','legend','link','menu',
+   'multicol','noscript','noframes','object','spacer','table','td','td','th',
+   'thead','tfoot','tr','textarea','select','option','spacer','param',
+   'marquee','hr','title','hx','tt','u','ul','var','wbr','sub','sup','cite',
+   'code','q','nobr','ol','p','pre','s','samp','small','body','html','map',
+   'bdo','legend','listing','style','script','tbody','caption','meta',
+   'optgroup','button','span','strike','strong','td'].sort();
+var hasName =
+  ['a','embed','form','iframe','img','input','object','textarea',
+   'select','map','meta','button','frame','frameset'].sort();
+
+elementNames.forEach(function (name) {
+  nameval = 'namefor' + name;
+
+  e = document.createElement(name);
+  p.appendChild(e);
+  e.setAttribute('name', nameval);
+
+  if (name == hasName[0]) {
+    is(document.all[nameval], e, "should have name");
+    hasName.shift();
+  }
+  else {
+    is(document.all[nameval], undefined, "shouldn't have name");
+    is(document.all.namedItem(nameval), null, "shouldn't have name (namedItem)");
+  }
+});
+is(hasName.length, 0, "found all names");
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var subdoc = $("subframe").contentDocument;
+  is(subdoc.all.x, subdoc.body.firstChild,
+     "document.all should work in a subdocument");
+  SimpleTest.finish();
+});
+
+// Utility functions
+function rC(node) {
+  node.remove();
+}
+function testArraysSame(a1, a2) {
+  return Array.prototype.every.call(a1, function(e, index) {
+    return a2[index] === e;
+  }) && a1.length == a2.length;
+}
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,119 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl XULTreeElement;
+
+[scriptable, uuid(ab6fe746-300b-4ab4-abb9-1c0e3977874c)]
+interface nsITreeSelection : nsISupports
+{
+  /**
+   * The tree widget for this selection.
+   */
+  attribute XULTreeElement tree;
+
+  /**
+   * This attribute is a boolean indicating single selection.
+   */
+  readonly attribute boolean single;
+
+  /**
+   * The number of rows currently selected in this tree.
+   */
+  readonly attribute long count;
+
+  /**
+   * Indicates whether or not the row at the specified index is
+   * part of the selection.
+   */
+  boolean isSelected(in long index);
+
+  /**
+   * Deselect all rows and select the row at the specified index.
+   */
+  void select(in long index);
+
+  /**
+   * Perform a timed select.
+   */
+  void timedSelect(in long index, in long delay);
+
+  /**
+   * Toggle the selection state of the row at the specified index.
+   */
+  void toggleSelect(in long index);
+
+  /**
+   * Select the range specified by the indices.  If augment is true,
+   * then we add the range to the selection without clearing out anything
+   * else.  If augment is false, everything is cleared except for the specified range.
+   */
+  void rangedSelect(in long startIndex, in long endIndex, in boolean augment);
+
+  /**
+   * Clears the range.
+   */
+  void clearRange(in long startIndex, in long endIndex);
+
+  /**
+   * Clears the selection.
+   */
+  void clearSelection();
+
+  /**
+   * Selects all rows.
+   */
+  void selectAll();
+
+  /**
+   * Iterate the selection using these methods.
+   */
+  long getRangeCount();
+  void getRangeAt(in long i, out long min, out long max);
+
+  /**
+   * Can be used to invalidate the selection.
+   */
+  void invalidateSelection();
+
+  /**
+   * Called when the row count changes to adjust selection indices.
+   */
+  void adjustSelection(in long index, in long count);
+
+  /**
+   * This attribute is a boolean indicating whether or not the
+   * "select" event should fire when the selection is changed using
+   * one of our methods.  A view can use this to temporarily suppress
+   * the selection while manipulating all of the indices, e.g., on
+   * a sort.
+   * Note: setting this attribute to false will fire a select event.
+   */
+  attribute boolean selectEventsSuppressed;
+
+  /**
+   * The current item (the one that gets a focus rect in addition to being
+   * selected).
+   */
+  attribute long currentIndex;
+
+  /**
+   * The selection "pivot".  This is the first item the user selected as
+   * part of a ranged select.
+   */
+  readonly attribute long shiftSelectPivot;
+};
+
+/**
+ * The following interface is not scriptable and MUST NEVER BE MADE scriptable.
+ * Native treeselections implement it, and we use this to check whether a
+ * treeselection is native (and therefore suitable for use by untrusted content).
+ */
+[uuid(1bd59678-5cb3-4316-b246-31a91b19aabe)]
+interface nsINativeTreeSelection : nsITreeSelection
+{
+  [noscript] void ensureNative();
+};

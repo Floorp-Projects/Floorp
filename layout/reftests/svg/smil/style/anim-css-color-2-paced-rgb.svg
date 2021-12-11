@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <style>
+    rect { color: yellow; fill: currentColor; stroke: black; }
+  </style>
+  <script xlink:href="../smil-grid.js" type="text/javascript"/>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    function go() {
+      var animAttrHash = { "attributeName" : "color",
+                           "calcMode"      : "paced",
+                           "values" : "rgb(0, 10, 20); " +
+                                      "rgb(20, 50, 80); " +
+                                      "rgb(140, 130, 120)" };
+      testAnimatedRectGrid("animate", [animAttrHash]);
+    }
+  </script>
+</svg>

@@ -1,0 +1,38 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+webidl Element;
+
+[scriptable, builtinclass, uuid(8b396020-69d3-451f-80c1-1a96a7da25a9)]
+interface nsIHTMLObjectResizer : nsISupports
+{
+%{C++
+  typedef short EResizerLocation;
+%}
+  const short eTopLeft = 0;
+  const short eTop = 1;
+  const short eTopRight = 2;
+  const short eLeft = 3;
+  const short eRight = 4;
+  const short eBottomLeft = 5;
+  const short eBottom = 6;
+  const short eBottomRight = 7;
+
+  /**
+   * a boolean indicating if object resizing is enabled in the editor
+   */
+  [setter_can_run_script]
+  attribute boolean objectResizingEnabled;
+
+  /**
+   * Hide resizers if they are visible.  If this is called while there is no
+   * visible resizers, this does not throw exception, just does nothing.
+   */
+  void hideResizers();
+};
+

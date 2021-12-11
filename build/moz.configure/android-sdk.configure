@@ -1,0 +1,132 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Ensure Android SDK and build-tools versions depending on mobile target.
+
+
+@depends(host, toolchains_base_dir, "--help")
+@imports(_from="os.path", _import="isdir")
+def default_android_sdk_root(host, toolchains_base_dir, _):
+    sdk_basename = {
+        "Darwin": "android-sdk-macosx",
+        "Linux": "android-sdk-linux",
+        "WINNT": "android-sdk-windows",
+    }.get(host.kernel, "android-sdk")
+    for sdk_basename in (sdk_basename, "android-sdk"):
+        path = os.path.join(toolchains_base_dir, sdk_basename)
+        if isdir(path):
+            return path
+
+
+option(
+    "--with-android-sdk",
+    nargs=1,
+    default=default_android_sdk_root,
+    help="location where the Android SDK can be found (like ~/.mozbuild/android-sdk-linux){|}",
+)
+
+
+@depends("--with-android-sdk")
+@imports(_from="os.path", _import="isdir")
+def android_sdk_root(value):
+    if value:
+        if not isdir(value[0]):
+            die(
+                "The path you specified with --with-android-sdk (%s) is not "
+                "a directory" % value[0]
+            )
+        return value[0]
+
+    die(
+        "You must specify --with-android-sdk=/path/to/sdk when targeting Android, "
+        "or try |mach bootstrap|."
+    )
+
+
+@dependable
+def android_sdk_version():
+    return namespace(build_tools_version="30.0.2", target_sdk_version="30")
+
+
+@depends(android_sdk_root, android_sdk_version)
+@checking("for Android build-tools")
+@imports(_from="os.path", _import="exists")
+@imports(_from="os.path", _import="isdir")
+def android_build_tools(sdk_root, sdk_version):
+    android_build_tools_base = os.path.join(sdk_root, "build-tools")
+    version = sdk_version.build_tools_version
+    if isdir(os.path.join(android_build_tools_base, version)):
+        tools = os.path.join(android_build_tools_base, version)
+        for zipalign in ("zipalign", "zipalign.exe"):
+            if exists(os.path.join(tools, zipalign)):
+                return [tools]
+
+    die(
+        "You must install the Android build-tools version %s.  "
+        "Try |mach bootstrap|.  (Looked for %s/%s)"
+        % (version, android_build_tools_base, version)
+    )
+
+
+@depends(android_sdk_root)
+@checking("for Android tools")
+@imports(_from="os.path", _import="isdir")
+def android_tools(sdk_root):
+    tools = os.path.join(sdk_root, "tools")
+    if isdir(tools):
+        return tools
+
+    die("You must install the Android tools.  Try |mach bootstrap|")
+
+
+@depends(android_sdk_root)
+@checking("for Android platform-tools")
+@imports(_from="os.path", _import="exists")
+@imports(_from="os.path", _import="isdir")
+def android_platform_tools(sdk_root):
+    tools = os.path.join(sdk_root, "platform-tools")
+    for adb in ("adb", "adb.exe"):
+        if exists(os.path.join(tools, adb)):
+            return [tools]
+
+    die(
+        "You must install the Android platform-tools.  Try |mach bootstrap|.  (Looked for %s)"
+        % tools
+    )
+
+
+@depends(android_sdk_root)
+def android_emulator_path(sdk_root):
+    return [os.path.join(sdk_root, "emulator")]
+
+
+@template
+def check_android_tools(tool, tool_dir):
+    check = check_prog(
+        tool.upper(), (tool, tool + ".exe"), paths=tool_dir, allow_missing=True
+    )
+
+    @depends(check)
+    def require_tool(result):
+        if result is None:
+            die("The program %s was not found.  Try |mach bootstrap|" % tool)
+        return result
+
+    return require_tool
+
+
+check_android_tools("zipalign", android_build_tools)
+check_android_tools("adb", android_platform_tools)
+check_android_tools("emulator", android_emulator_path)
+
+set_config("ANDROID_SDK_ROOT", android_sdk_root)
+set_config("ANDROID_TOOLS", android_tools)
+
+set_config("ANDROID_BUILD_TOOLS_VERSION", android_sdk_version.build_tools_version)
+set_config("ANDROID_TARGET_SDK", android_sdk_version.target_sdk_version)
+add_old_configure_assignment(
+    "ANDROID_TARGET_SDK", android_sdk_version.target_sdk_version
+)

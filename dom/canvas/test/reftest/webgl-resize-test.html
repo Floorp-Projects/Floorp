@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <head>
+    <meta charset='UTF-8'>
+    <script type='text/javascript' src='webgl-utils.js'></script>
+  </head>
+
+  <body>
+    <canvas id='e_canvas'></canvas>
+    <br>
+    <div id='e_log'></div>
+    <script>
+/* Resize Test
+ *
+ * Create canvas of wrong size.
+ * Clear the canvas to red.
+ * Resize to correct size.
+ * Clear to green.
+ */
+
+'use strict';
+
+async function awaitComposite() {
+  await new Promise((res, rej) => {
+    waitForComposite(res);
+  });
+}
+
+function testComplete() {
+  document.documentElement.removeAttribute('class');
+}
+
+(async function() {
+  const gl = initGL(e_canvas);
+  if (!gl) {
+    e_log.textContent = 'WebGL failed.';
+  } else {
+    gl.clearColor(1.0, 0.0, 0.0, 1.0); // red
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    await awaitComposite();
+
+    gl.canvas.width = 256;
+    gl.canvas.height = 256;
+    gl.clearColor(0.0, 1.0, 0.0, 1.0); // green
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+
+  await awaitComposite();
+  testComplete();
+})();
+    </script>
+  </body>
+</html>

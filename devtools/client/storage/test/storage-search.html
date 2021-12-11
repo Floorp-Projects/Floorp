@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1224115 - Storage Inspector table filtering
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector table filtering test</title>
+
+  <script type="text/javascript">
+    "use strict";
+
+    /* exported setup */
+    function setup() {
+      document.cookie = "01234=56789";
+      document.cookie = "ANIMAL=hOrSe";
+      document.cookie = "food=energy bar";
+      document.cookie = "FOO=bArBaz";
+      document.cookie = "money=##$$$**";
+      document.cookie = "sport=football";
+      document.cookie = "year=2016";
+    }
+  </script>
+
+</head>
+<body>
+</body>
+</html>

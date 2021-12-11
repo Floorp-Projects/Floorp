@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testing table captions with overflow:auto/scroll/hidden</title>
+    <style type="text/css">
+
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; height:100%;
+}
+	
+caption { border:1px solid; overflow:auto; height:100px; }
+.s { overflow:scroll; }
+.h { overflow:hidden; }
+    </style>
+</head>
+<body>
+
+<table border="0" cellspacing="0" cellpadding="0">
+<caption>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</caption>
+<tr><td>TTTTTTTTTT</td></tr>
+</table>
+
+<table border="0" cellspacing="0" cellpadding="0">
+<caption>00000<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</caption>
+<tr><td>T</td></tr>
+</table>
+
+<table border="0" cellspacing="0" cellpadding="0">
+<caption class="s">00000<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</caption>
+<tr><td>T</td></tr>
+</table>
+
+<table border="0" cellspacing="0" cellpadding="0">
+<caption class="s">00000<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</caption>
+<tr><td>TTTTTTTTTT</td></tr>
+</table>
+
+<table border="0" cellspacing="0" cellpadding="0">
+<caption class="h">00000<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</caption>
+<tr><td>T</td></tr>
+</table>
+
+<table border="0" cellspacing="0" cellpadding="0">
+<caption class="h">00000<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</caption>
+<tr><td>TTTTTTTTTT</td></tr>
+</table>
+
+</body>
+</html>

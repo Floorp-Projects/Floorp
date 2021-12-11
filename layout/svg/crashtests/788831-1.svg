@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <pattern id="pattern" width="40" height="40"><stop/></pattern>
+  <rect id="rect" width="200" height="100"/>
+  <use xlink:href="#rect" stroke="url(#pattern)" />
+</svg>

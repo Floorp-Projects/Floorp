@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=415498
+-->
+<window title="Mozilla Bug 415498"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="init()">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/chrome-harness.js"></script>
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=415498">Mozilla Bug 415498</a>
+
+  <p id="display"></p>
+
+  <pre id="test">
+  <script class="testbody" type="application/javascript"><![CDATA[
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+    /** Test for Bug 415498 **/
+    SimpleTest.waitForExplicitFinish();
+
+    var gTestsIterator;
+    var gConsole;
+    var gConsoleListener;
+    var gMessages = [];
+
+    function init() {
+      gTestsIterator = testsIterator();
+
+      gConsole = Cc["@mozilla.org/consoleservice;1"].
+                 getService(Ci.nsIConsoleService);
+
+      gConsoleListener = {
+        observe: function(aObject) {
+          gMessages.push(aObject);
+        }
+      };
+      gConsole.registerListener(gConsoleListener);
+
+      nextTest();
+    }
+
+    function nextTest() {
+      let {done} = gTestsIterator.next();
+      if (done) {
+        if (gConsole && gConsoleListener) {
+          gConsole.unregisterListener(gConsoleListener);
+        }
+        SimpleTest.finish();
+      }
+    }
+
+    function* testsIterator() {
+
+      var browser = $("browser");
+      browser.addEventListener("load", function() {
+        setTimeout(nextTest, 0)
+      }, false);
+
+      // 1) This document uses addEventListener to register a method throwing an exception
+      var chromeDir = getRootDirectory(window.location.href);
+      BrowserTestUtils.loadURI(browser, chromeDir + "bug415498-doc1.html");
+      yield undefined;
+
+      ok(verifyErrorReceived("HierarchyRequestError"),
+         "Error message not reported in event listener callback!");
+      gMessages = [];
+
+      // 2) This document sets window.onload to register a method throwing an exception
+      var chromeDir = getRootDirectory(window.location.href);
+      BrowserTestUtils.loadURI(browser, chromeDir + "bug415498-doc2.html");
+      yield undefined;
+
+      ok(verifyErrorReceived("HierarchyRequestError"),
+         "Error message not reported in window.onload!");
+    }
+    
+    function verifyErrorReceived(errorString) {
+      for (var i = 0; i < gMessages.length; i++) {
+        if (gMessages[i].message.includes(errorString))
+          return true;
+      }
+      return false;
+    }
+  ]]></script>
+  </pre>
+</body>
+
+<browser id="browser" type="content" flex="1" src="about:blank"/>
+
+</window>

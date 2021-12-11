@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1432170  - Block alert box and new window open as per the sandbox
+         allow-scripts CSP</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+<script>
+
+/* Description of the test:
+ * We apply the sanbox allow-scripts CSP to the blob iframe and check
+ * if the alert box and new window open is blocked correctly by the CSP.
+ */
+var testsToRun = {
+  block_window_open_test: false,
+  block_alert_test: false,
+  block_top_nav_alert_test: false,
+};
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("have to test that alert dialogue is blocked");
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  switch (event.data.test) {
+    case "block_window_open_test":
+      testsToRun.block_window_open_test = true;
+      break;
+    case "block_alert_test":
+      is(event.data.msg, "alert blocked by CSP", "alert blocked by CSP");
+      testsToRun.block_alert_test = true;
+      break;
+    case "block_top_nav_alert_test":
+      testsToRun.block_top_nav_alert_test = true;
+      break;
+  }
+}
+
+var w;
+// Set "privacy.partition.bloburl_per_agent_cluster" to false until Bug 1667348 is fixed.
+SpecialPowers.pushPrefEnv({
+  set: [["privacy.partition.bloburl_per_agent_cluster", false]]}, () => {
+    // start the test
+    document.getElementById("testframe").src = "file_blob_uri_blocks_modals.html";
+    w = window.open("file_blob_top_nav_block_modals.html");
+});
+
+// If alert window is not blocked by CSP then event message is not recieved and
+// test fails after setTimeout interval of 1 second.
+setTimeout(function () {
+    is(testsToRun.block_top_nav_alert_test, true,
+      "blob top nav alert should be blocked by CSP");
+    testsToRun.block_top_nav_alert_test = true;
+    is(testsToRun.block_alert_test, true,
+      "alert should be blocked by CSP");
+    testsToRun.block_alert_test = true;
+    checkTestsCompleted();
+  },1000);
+
+function checkTestsCompleted() {
+  for (var prop in testsToRun) {
+    // some test hasn't run yet so we're not done
+    if (!testsToRun[prop]) {
+      return;
+    }
+  }
+  window.removeEventListener("message", receiveMessage);
+  w.close();
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

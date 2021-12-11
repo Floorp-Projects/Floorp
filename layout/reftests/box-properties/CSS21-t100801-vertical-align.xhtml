@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>CSS 2.1 Test Suite: vertical-align (on an inline-block)</title>
+		<link rel="author" title="L. David Baron" href="https://dbaron.org/" />
+		<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+		<link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#blockwidth" />
+		<meta name="flags" content="" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<style type="text/css"><![CDATA[
+
+		body { width: 500px; height: 500px; margin: 0; position: relative; }
+		body > div { position: absolute; width: 500px; }
+
+		b { display:inline-block; height: 50px; width: 1px; background:green; }
+
+		]]></style>
+	</head>
+	<body>
+
+<!--
+
+  The basic structure of this test is that each passing item will create
+  a box 1 pixel wide and 50px tall (stretching from 100px to 150px from
+  the top of the page).  Together these items will line up to form a
+  rectangle.
+
+  This test only tests the 'top', 'bottom', 'text-top', 'text-bottom',
+  'baseline', <length>, and <percentage> values of 'vertical-align'.  It
+  does not test 'sub', 'super', or 'middle', and it does not test
+  anything relative to actual font metrics.
+
+  -->
+
+<!-- vertical-align: top -->
+
+<div style="top: 100px; left: 0;">
+  <b style="vertical-align:top"></b>
+</div>
+
+<div style="top: 100px; left: 1px;">
+  <b style="vertical-align:top"></b>
+  <span style="visibility:hidden; font-size: 10px;">text</span>
+</div>
+
+<div style="top: 100px; left: 2px;">
+  <b style="vertical-align:top"></b>
+  <span style="visibility:hidden; font-size: 100px;">text</span>
+</div>
+
+<div style="top: 100px; right: 496px; text-align: right;">
+  <span style="visibility:hidden; font-size: 10px;">text</span>
+  <b style="vertical-align:top"></b>
+</div>
+
+<div style="top: 100px; right: 495px; text-align: right;">
+  <span style="visibility:hidden; font-size: 100px;">text</span>
+  <b style="vertical-align:top"></b>
+</div>
+
+<!-- Test behavior of the rest of the line when there's a single loose
+	 subtree with vertical-align: top.  This isn't required by the spec, but
+	 test it anyway. -->
+
+<div style="top: 100px; left: 5px;">
+  <b style="vertical-align:baseline"></b>
+  <span style="visibility:hidden; vertical-align: top; font-size: 100px;">text</span>
+</div>
+
+<div style="top: 100px; left: 6px;">
+  <b style="vertical-align:baseline"></b>
+  <span style="visibility:hidden; vertical-align: top; font-size: 10px;">text</span>
+</div>
+
+<div style="top: 100px; right: 492px; text-align: right;">
+  <span style="visibility:hidden; vertical-align: top; font-size: 100px;">text</span>
+  <b style="vertical-align:baseline"></b>
+</div>
+
+<div style="top: 100px; right: 491px; text-align: right;">
+  <span style="visibility:hidden; vertical-align: top; font-size: 10px;">text</span>
+  <b style="vertical-align:baseline"></b>
+</div>
+
+<!-- Test that we align the loose subtree, not just the box (118501) -->
+
+<div style="top: 100px; left: 9px;">
+  <span style="font-size: 10px; vertical-align: top"><b></b></span>
+</div>
+
+<div style="top: 100px; left: 10px;">
+  <span style="font-size: 100px; vertical-align: top; line-height: 0;"><b style="vertical-align:text-top"></b></span>
+</div>
+
+<!-- vertical-align: bottom -->
+
+<div style="bottom: 350px; left: 11px;">
+  <b style="vertical-align:bottom"></b>
+</div>
+
+<div style="bottom: 350px; left: 12px;">
+  <b style="vertical-align:bottom"></b>
+  <span style="visibility:hidden; font-size: 10px;">text</span>
+</div>
+
+<div style="bottom: 350px; left: 13px;">
+  <b style="vertical-align:bottom"></b>
+  <span style="visibility:hidden; font-size: 100px;">text</span>
+</div>
+
+<div style="bottom: 350px; right: 485px; text-align: right;">
+  <span style="visibility:hidden; font-size: 10px;">text</span>
+  <b style="vertical-align:bottom"></b>
+</div>
+
+<div style="bottom: 350px; right: 484px; text-align: right;">
+  <span style="visibility:hidden; font-size: 100px;">text</span>
+  <b style="vertical-align:bottom"></b>
+</div>
+
+<!-- Test behavior of the rest of the line when there's a single loose
+	 subtree with vertical-align: bottom.  This isn't required by the spec, but
+	 test it anyway. -->
+
+<div style="bottom: 350px; left: 16px;">
+  <b style="vertical-align:text-top"></b>
+  <span style="visibility:hidden; vertical-align: bottom; font-size: 100px;">text</span>
+</div>
+
+<div style="bottom: 350px; left: 17px;">
+  <b style="vertical-align:text-top"></b>
+  <span style="visibility:hidden; vertical-align: bottom; font-size: 10px;">text</span>
+</div>
+
+<div style="bottom: 350px; right: 481px; text-align: right;">
+  <span style="visibility:hidden; vertical-align: bottom; font-size: 100px;">text</span>
+  <b style="vertical-align:text-top"></b>
+</div>
+
+<div style="bottom: 350px; right: 480px; text-align: right;">
+  <span style="visibility:hidden; vertical-align: bottom; font-size: 10px;">text</span>
+  <b style="vertical-align:text-top"></b>
+</div>
+
+<!-- Test that we align the loose subtree, not just the box (118501) -->
+
+<div style="bottom: 350px; left: 20px;">
+  <span style="font-size: 10px; vertical-align: bottom"><b style="vertical-align:text-top"></b></span>
+</div>
+
+<div style="bottom: 350px; left: 21px;">
+  <span style="font-size: 100px; vertical-align: bottom; line-height: 0;"><b style="vertical-align:text-bottom"></b></span>
+</div>
+
+<!-- test top and bottom nested within other things -->
+
+<div style="top: 100px; left: 22px;">
+  <span style="font-size: 100px; vertical-align: text-top">
+    <span style="font-size: 10px; vertical-align: text-bottom">
+      <b style="vertical-align:top"></b>
+    </span>
+  </span>
+</div>
+
+<div style="bottom: 350px; left: 23px;">
+  <span style="font-size: 100px; vertical-align: text-bottom">
+    <span style="font-size: 10px; vertical-align: text-top">
+      <b style="vertical-align:bottom"></b>
+    </span>
+  </span>
+</div>
+
+<!-- test top and bottom within the same box -->
+
+<div style="top: 100px; left: 24px;">
+  <b style="vertical-align:top"></b
+  ><b style="vertical-align:bottom"></b>
+</div>
+
+<div style="bottom: 350px; left: 26px; font-size: 10px">
+  <b style="vertical-align:bottom"></b
+  ><b style="vertical-align:top"></b
+  ><b style="vertical-align: -10px"></b>
+</div>
+
+<div style="top: 100px; left: 29px; font-size: 10px">
+  <b style="vertical-align: -10px"></b
+  ><b style="vertical-align:top"></b
+  ><b style="vertical-align:bottom"></b>
+</div>
+
+<!-- test vertical-align: length -->
+
+<div style="top: 100px; left: 32px; font-size: 10px">
+  <b style="vertical-align: baseline; height: 40px"></b
+  ><b style="vertical-align: 20px; height: 20px"></b
+  ><b style="vertical-align: -10px; height: 10px; margin-left: -2px"></b
+  ><b style="vertical-align: -10px; height: 30px"></b>
+</div>
+
+<!-- test vertical-align: percentage -->
+
+<div style="top: 100px; left: 34px; font-size: 10px; line-height: 10px;">
+  <b style="vertical-align: baseline; height: 40px"></b
+  ><b style="vertical-align: 200%; height: 20px"></b
+  ><b style="vertical-align: -25%; height: 10px; margin-left: -2px; line-height: 40px;"></b
+  ><b style="vertical-align: -100%; height: 30px;line-height:10px"></b>
+</div>
+
+<!-- test vertical-align: text-top -->
+
+<div style="top: 100px; left: 36px; font-size: 10px; line-height: 2px;">
+  <!-- we're testing:
+	1) that the top of the first b's background is even with the top of
+	   the span's background, which is likewise even with the top of the
+	   line box (thanks to the b's contribution)
+	2) that the second b (which serves to fill the area under the span)
+	   is aligned relative to its parent, not to the line box
+    -->
+  <span style="background:green"
+    ><b style="vertical-align: text-top"></b
+    ><span style="vertical-align: -8px"
+      ><b style="vertical-align: text-top; height: 42px"></b
+    ></span
+  ></span>
+</div>
+
+<!-- test vertical-align: text-bottom -->
+
+<div style="bottom: 350px; left: 38px; font-size: 10px; line-height: 2px;">
+  <!-- we're testing:
+	1) that the bottom of the first b's background is even with the bottom of
+	   the span's background, which is likewise even with the bottom of the
+	   line box (thanks to the b's contribution)
+	2) that the second b (which serves to fill the area under the span)
+	   is aligned relative to its parent, not to the line box
+    -->
+  <span style="background:green"
+    ><b style="vertical-align: text-bottom"></b
+    ><span style="vertical-align: 8px"
+      ><b style="vertical-align: text-bottom; height: 42px"></b
+    ></span
+  ></span>
+</div>
+
+	</body>
+</html>

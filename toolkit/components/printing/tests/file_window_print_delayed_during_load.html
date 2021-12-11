@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset="utf-8">
+<body>
+<script>
+  onload = function() {
+    let div = document.createElement("div");
+    div.id = "added-during-load";
+    div.innerHTML = "I should be printed";
+    document.body.appendChild(div);
+  };
+
+  window.print(); // This should be delayed until after load.
+  window.close(); // So should this.
+</script>

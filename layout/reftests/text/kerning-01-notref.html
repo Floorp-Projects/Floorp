@@ -1,0 +1,25 @@
+<html>
+<head>
+<style type="text/css">
+@font-face {
+  font-family: mplus;
+  src: url(../fonts/mplus/mplus-1p-regular-no-OT.ttf);
+  /* a copy of M+ with OpenType tables removed, so only legacy 'kern' is present */
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  font-size: 40px;
+  font-family: mplus;
+}
+span {
+  font-family: serif;
+}
+</style>
+</head>
+<body>
+<!-- the ZWNJ characters with font change should prevent kerning at those positions;
+     if the testcase looks the same, then kerning failed altogether -->
+AVA<span>&zwnj;</span>V<span>&zwnj;</span>A
+</body>
+</html>

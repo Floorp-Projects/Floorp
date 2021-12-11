@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+    <!--
+              https://bugzilla.mozilla.org/show_bug.cgi?id=782751
+              -->
+    <head>
+        <title>Test for Bug 782751</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <script src="/tests/SimpleTest/SimpleTest.js"></script>
+        <script type="text/javascript" src="test_performance_user_timing.js"></script>
+    </head>
+    <body>
+        <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=782751">Mozilla Bug 782751 - User Timing API</a>
+        <div id="content">
+        </div>
+        <pre id="test">
+            <script class="testbody" type="text/javascript">
+             var index = 0;
+
+             function next() {
+                 ok(true, "Begin!");
+                 var arr;
+                 for (var i = 0; i < steps.length; ++i) {
+                     try {
+                         performance.clearMarks();
+                         performance.clearMeasures();
+                         performance.clearResourceTimings();
+                         is(performance.getEntriesByType("resource").length, 0, "clearing performance resource entries");
+                         is(performance.getEntriesByType("mark").length, 0, "clearing performance mark entries");
+                         is(performance.getEntriesByType("measure").length, 0, "clearing performance measure entries");
+                         steps[i]();
+                     } catch(ex) {
+                         ok(false, "Caught exception", ex);
+                     }
+                 }
+
+                SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
+                SimpleTest.finish();
+             }
+
+             var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+             SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
+
+             SimpleTest.waitForExplicitFinish();
+             addLoadEvent(next);
+            </script>
+        </pre>
+    </body>
+</html>

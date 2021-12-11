@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <head>
+    <style>
+      table table
+        { border-collapse: collapse; border-style: solid; border-width: 10px }
+    </style>
+  </head>
+</head>
+<body>
+<table><tr>
+  <td style="border: 0px solid green; color: red">
+    <table style="border-color: inherit">
+      <tr><td></td></tr>
+    </table>    
+    <table id="test">
+      <tr><td></td></tr>
+    </table>
+    <script>
+      document.body.offsetWidth;
+      document.getElementById("test").style.borderColor = "inherit";
+    </script>
+  </td>
+</tr></table>
+</body>
+</html>

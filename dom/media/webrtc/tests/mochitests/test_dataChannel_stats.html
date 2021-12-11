@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1218356",
+    title: "DataChannel stats"
+  });
+
+  runNetworkTest(function (options) {
+    const test = new PeerConnectionTest(options);
+    test.chain.remove('PC_LOCAL_CHECK_STATS');
+    test.chain.remove('PC_REMOTE_CHECK_STATS');
+    addInitialDataChannel(test.chain);
+    test.chain.removeAfter("PC_REMOTE_CHECK_ICE_CONNECTIONS");
+    test.chain.insertAfter("PC_REMOTE_CHECK_ICE_CONNECTIONS",
+      async function TEST_DATA_CHANNEL_STATS(test) {
+        const channel = test.pcLocal.dataChannels[0];
+        test.pcRemote.dataChannels[0].onbufferedamountlow = () => {};
+        test.pcRemote.dataChannels[0].send(`Sending Message`);
+        channel.onbufferedamountlow = () => {};
+        const event = await new Promise( r => channel.onmessage = r);
+        info(`Received message: "${event.data}"`);
+        const report = await test.pcLocal.getStats();
+        info(`Received Stats ${JSON.stringify([...report.values()], null, 2)}\n`);
+        const stats = [...report.values()].find(block => block.type == "data-channel");
+        info(`DataChannel stats ${JSON.stringify(stats, null, 2)}`);
+        is(stats.label, channel.label, 'DataChannel stats has correct label');
+        is(stats.protocol, channel.protocol,
+           'DataChannel stats has correct protocol');
+        is(stats.dataChannelIdentifier, channel.id,
+           'DataChannel stats has correct dataChannelIdentifier');
+        is(stats.state, channel.readyState, 'DataChannel has correct state');
+        is(stats.bytesReceived, 15, 'DataChannel has correct bytesReceived');
+        is(stats.bytesSent, 0, 'DataChannel has correct bytesSent');
+        is(stats.messagesReceived, 1,
+           'DataChannel has correct messagesReceived');
+        is(stats.messagesSent, 0, 'DataChannel has correct messagesSent');
+    });
+    return test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RegistrationListEmpty renders the expected snapshot 1`] = `
+<article
+  className="app-page__icon-container js-registration-list-empty"
+>
+  <aside>
+    <Localized
+      attrs={
+        Object {
+          "alt": true,
+        }
+      }
+      id="sidebar-item-service-workers"
+    >
+      <img
+        className="app-page__icon"
+        src="chrome://devtools/skin/images/debugging-workers.svg"
+      />
+    </Localized>
+  </aside>
+  <div>
+    <Localized
+      id="serviceworker-empty-intro2"
+    >
+      <h1
+        className="app-page__title"
+      />
+    </Localized>
+    <Localized
+      a={
+        <a
+          onClick={[Function]}
+        />
+      }
+      id="serviceworker-empty-suggestions2"
+      span={
+        <a
+          onClick={[Function]}
+        />
+      }
+    >
+      <p />
+    </Localized>
+    <p>
+      <Localized
+        id="serviceworker-empty-intro-link"
+      >
+        <a
+          onClick={[Function]}
+        />
+      </Localized>
+    </p>
+    <p>
+      <Localized
+        id="serviceworker-empty-suggestions-aboutdebugging2"
+      >
+        <a
+          className="js-trusted-link"
+          onClick={[Function]}
+        />
+      </Localized>
+    </p>
+  </div>
+</article>
+`;

@@ -1,0 +1,26 @@
+<html><head><title>Testcase bug 286491 - Crash with evil testcase with iframe and flash inside it</title>
+<style>a:hover{display:block;}</style>
+<script>
+function doe(){
+document.links[1].style.display='block';
+setTimeout(doe2,0);
+}
+function doe2(){
+document.links[1].style.display='';
+document.links[0].style.display='block';
+setTimeout(doe3,0);
+}
+function doe3(){
+document.links[0].style.display='';
+}
+</script>
+</head>
+<body onload="setInterval(doe,20)">
+<button onclick="doe()">doe()</button>
+<button onclick="setInterval(doe,20)">setInterval(doe,20)</button><br>
+<span><a href="#">link1</a><a href="#">link2</a></span>
+<br>
+<iframe src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3C/head%3E%3Cbody%3E%0A%3Cobject%20classid%3D%22clsid%3AD27CDB6E-AE6D-11cf-96B8-444553540000%22%20codebase%3D%22https%3A//download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab%23version%3D3%2C0%2C0%2C0%22%3E%3Cembed%20src%3D%22data%3Aapplication/x-shockwave-flash%2CFWS%2505d%2500%2500%2500%2560%2500%253E%2580%2500%2519%2500%2500%250C%2501%2500C%2502%25FF%25CC%2500%253F%250C%250E%2500%2500%2500%2501%2500%2511%2500%2505Arial%2500%2500%2502%2500%257F%2509%2523%2500%2500%2500%2502%2500g%25EC%252Fg%25EC%250F0%250D0%2501%2500%2518%2501%2500%2500%2500%25FF%2502%2500%2500%2500%2500%2500%2500%28%2500mytext%2500%2589%2506%2506%2501%2500%2502%2500%2514%2583%2516%2520%2540%2500%2500%2500%22%20pluginspage%3D%22http%3A//www.macromedia.com/go/getflashplayer%22%20type%3D%22application/x-shockwave-flash%22%20height%3D%2240%22%20width%3D%22100%22%3E%3C/object%3E%0A%3C/body%3E%3C/html%3E"></iframe>
+
+
+</body></html>

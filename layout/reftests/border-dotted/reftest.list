@@ -1,0 +1,16 @@
+# Composing dotted/dashed border rendering and not-filled or not-unfilled mask
+# matches to full-filled box, using fuzzyy because of anti-aliasing.
+# These check filled and unfilled regions with solid opaque color,
+# so difference less than 80 is ignorable.
+
+# XXX: We mark fails-if to these tests for now to enable styled border in WR.
+# We should remove them after Bug 1399485 is fixed.
+fuzzy(0-80,0-1500) fails == border-dotted-interaction.html masked.html
+fuzzy(0-80,0-1500) fails == border-dotted-no-radius.html masked.html
+fuzzy(0-80,0-1500) fails == border-dotted-radius.html masked.html
+fuzzy(0-80,0-1500) fails == border-dashed-no-radius.html masked.html
+fuzzy(0-80,0-1500) fails == border-dashed-radius.html masked.html
+fuzzy(0-80,0-1500) fails == border-mixed.html masked.html
+fuzzy(0-80,0-1500) fails == border-dashed-non-integer.html masked.html
+fuzzy(0-80,0-1500) fails fails-if(useDrawSnapshot) == border-dashed-radius-zoom.html masked-zoom.html
+fuzzy(0-80,0-1500) fails-if(!useDrawSnapshot) == border-dotted-radius-zero.html masked-small.html

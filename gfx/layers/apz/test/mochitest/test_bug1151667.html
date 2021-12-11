@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1151667
+-->
+<head>
+  <title>Test for Bug 1151667</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #subframe {
+    margin-top: 100px;
+    height: 500px;
+    width: 500px;
+    overflow: scroll;
+  }
+  #subframe-content {
+    height: 1000px;
+    width: 500px;
+    /* the background is so that we can see it scroll*/
+    background: repeating-linear-gradient(#EEE, #EEE 100px, #DDD 100px, #DDD 200px);
+  }
+  #page-content {
+    height: 5000px;
+    width: 500px;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151667">Mozilla Bug 1151667</a>
+<p id="display"></p>
+<div id="subframe">
+  <!-- This makes sure the subframe is scrollable -->
+  <div id="subframe-content"></div>
+</div>
+<!-- This makes sure the page is also scrollable, so it (rather than the subframe)
+     is considered the primary async-scrollable frame, and so the subframe isn't
+     layerized upon page load. -->
+<div id="page-content"></div>
+<pre id="test">
+<script type="application/javascript">
+
+async function test() {
+  var subframe = document.getElementById("subframe");
+  await promiseNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10);
+
+  is(subframe.scrollTop > 0, true, "We should have scrolled the subframe down");
+  is(document.documentElement.scrollTop, 0, "We should not have scrolled the page");
+}
+
+SimpleTest.waitForExplicitFinish();
+waitUntilApzStable()
+  .then(test)
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+
+</script>
+</pre>
+</body>
+</html>

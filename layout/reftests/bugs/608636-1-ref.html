@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html style="background:white">
+<body>
+<canvas id="b" style="position:absolute; left:0; top:0" width="20" height="20"></canvas>
+<div style="position:absolute; left:0; top:0; -moz-transform:rotate(45deg); height:400px; width:400px; opacity:0.5; border:1px solid black;"></div>
+<div style="position:absolute; left:-3px; top:-3px; -moz-transform:rotate(45deg); height:390px; width:390px; border:10px solid red;"></div>
+<script>
+function fillCanvas(id) {
+  var ctx = document.getElementById(id).getContext("2d");
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, 10, 10);
+}
+fillCanvas("b");
+</script>
+</body>
+</html>

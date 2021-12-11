@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<title>Testcase, Mozilla bug 1411799</title>
+<style>
+  section {
+    width: 42em;
+  }
+
+  ul {
+    padding: 0;
+    list-style-type: none;
+    columns: 14em;
+    column-gap: 0;
+  }
+
+  li {
+    margin: 0 0 8px 0;
+    padding: 0;
+  }
+
+  li::before {
+    display: inline-block;
+    margin-left: 4px;
+    width: 16px;
+    content: 'o';
+  }
+
+</style>
+
+<section>
+  <ul>
+    <li>Future</li>
+    <li>Firefox 70</li>
+    <li>Firefox 69</li>
+    <li>Firefox 68</li>
+    <li>Previous Versions</li>
+  </ul>
+</section>

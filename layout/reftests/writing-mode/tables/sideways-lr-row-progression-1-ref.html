@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<title>CSS Reference: sideways-lr Table Row/Rowgroup/Cell Ordering</title>
+<link rel="author" title="Jonathan Kew" href="mailto:jfkthame@gmail.com">
+<link rel="help" href="http://www.w3.org/TR/css-writing-modes-3/#writing-mode">
+<!-- based on vertical-rl Table Row/Rowgroup/Cell Ordering tests by Elika J. Etemad -->
+
+<style>
+  table {
+    border-spacing: 0;
+    margin: 1em;
+  }
+  td {
+    width: 1em;
+    height: 1em;
+    border: solid gray;
+  }
+
+  .a { background: navy}
+  .b { background: blue }
+  .c { background: aqua }
+  .d { background: teal }
+  .e { background: purple }
+  .f { background: fuchsia }
+  .g { background: yellow }
+  .h { background: orange }
+</style>
+
+<table>
+  <tr>
+    <td rowspan=2>
+    <td class="e">
+    <td rowspan=2 colspan=2>
+    <td rowspan=3>
+    <td class="d">
+  </tr>
+  <tr>
+    <td rowspan=2>
+    <td class="c">
+  </tr>
+  <tr>
+    <td class="b">
+    <td class="f">
+    <td class="g">
+    <td rowspan=2>
+  </tr>
+  <tr>
+    <td class="a">
+    <td colspan=3>
+    <td class="h">
+  </tr>
+</table>

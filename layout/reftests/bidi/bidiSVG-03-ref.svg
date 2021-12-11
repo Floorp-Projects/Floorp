@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200">
+  <text x="400" y="20" direction="ltr" unicode-bidi="bidi-override" text-anchor="end">in right-to-left element תירבע םע left-to-right text</text>
+</svg>

@@ -1,0 +1,73 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<body>
+<div id="log"></div>
+<script>
+'use strict';
+
+function waitForSetPref(pref, value) {
+  return SpecialPowers.pushPrefEnv({ 'set': [[pref, value]] });
+}
+
+/*
+ * These tests rely on the fact that the -webkit-line-clamp property is
+ * disabled by the layout.css.webkit-line-clamp.enabled pref. If we ever remove
+ * that pref we will need to substitute some other pref:property combination.
+ */
+
+promise_test(function(t) {
+  return waitForSetPref('layout.css.webkit-line-clamp.enabled', true).then(() => {
+    var anim = addDiv(t).animate({ webkitLineClamp: [ '2', '4' ]});
+    assert_equals(anim.effect.getKeyframes().length, 2,
+                  'A property-indexed keyframe specifying only enabled'
+                  + ' properties produces keyframes');
+    return waitForSetPref('layout.css.webkit-line-clamp.enabled', false);
+  }).then(() => {
+    var anim = addDiv(t).animate({ webkitLineClamp: [ '2', '4' ]});
+    assert_equals(anim.effect.getKeyframes().length, 0,
+                  'A property-indexed keyframe specifying only disabled'
+                  + ' properties produces no keyframes');
+  });
+}, 'Specifying a disabled property using a property-indexed keyframe');
+
+promise_test(function(t) {
+  var createAnim = () => {
+    var anim = addDiv(t).animate([ { webkitLineClamp: '2' },
+                                   { webkitLineClamp: '4' } ]);
+    assert_equals(anim.effect.getKeyframes().length, 2,
+                  'Animation specified using a keyframe sequence should'
+                  + ' return the same number of keyframes regardless of'
+                  + ' whether or not the specified properties are disabled');
+    return anim;
+  };
+
+  var assert_has_property = (anim, index, descr, property) => {
+    assert_true(
+      anim.effect.getKeyframes()[index].hasOwnProperty(property),
+      `${descr} should have the '${property}' property`);
+  };
+  var assert_does_not_have_property = (anim, index, descr, property) => {
+    assert_false(
+      anim.effect.getKeyframes()[index].hasOwnProperty(property),
+      `${descr} should NOT have the '${property}' property`);
+  };
+
+  return waitForSetPref('layout.css.webkit-line-clamp.enabled', true).then(() => {
+    var anim = createAnim();
+    assert_has_property(anim, 0, 'Initial keyframe', 'webkitLineClamp');
+    assert_has_property(anim, 1, 'Final keyframe', 'webkitLineClamp');
+    return waitForSetPref('layout.css.webkit-line-clamp.enabled', false);
+  }).then(() => {
+    var anim = createAnim();
+    assert_does_not_have_property(anim, 0, 'Initial keyframe',
+                                  'webkitLineClamp');
+    assert_does_not_have_property(anim, 1, 'Final keyframe',
+                                  'webkitLineClamp');
+  });
+}, 'Specifying a disabled property using a keyframe sequence');
+
+</script>
+</body>

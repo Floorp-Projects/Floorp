@@ -1,0 +1,58 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPI_NAME = "mozscreenshots"
+
+USE_EXTENSION_MANIFEST = True
+
+FINAL_TARGET_FILES += [
+    "api.js",
+    "manifest.json",
+    "schema.json",
+]
+
+FINAL_TARGET_FILES.resources += [
+    "Screenshot.jsm",
+    "TestRunner.jsm",
+]
+
+FINAL_TARGET_FILES.resources.configurations += [
+    "configurations/AppMenu.jsm",
+    "configurations/Buttons.jsm",
+    "configurations/ControlCenter.jsm",
+    "configurations/CustomizeMode.jsm",
+    "configurations/DevTools.jsm",
+    "configurations/LightweightThemes.jsm",
+    "configurations/PermissionPrompts.jsm",
+    "configurations/Preferences.jsm",
+    "configurations/Tabs.jsm",
+    "configurations/TabsInTitlebar.jsm",
+    "configurations/Toolbars.jsm",
+    "configurations/UIDensities.jsm",
+    "configurations/WindowSize.jsm",
+]
+
+FINAL_TARGET_FILES.resources.lib += [
+    "lib/borderify.xpi",
+    "lib/mozscreenshots-script.js",
+    "lib/mozscreenshots-style.css",
+    "lib/mozscreenshots.html",
+    "lib/permissionPrompts.html",
+    "lib/robot.png",
+    "lib/robot_center.png",
+    "lib/robot_cropped_diagonal.png",
+    "lib/robot_diagonal.png",
+    "lib/robot_uncropped.png",
+    "lib/robot_upperleft.png",
+]
+
+FINAL_TARGET_FILES.resources.lib.controlCenter += [
+    "lib/controlCenter/mixed.html",
+    "lib/controlCenter/mixed_active.html",
+    "lib/controlCenter/mixed_passive.html",
+    "lib/controlCenter/password.html",
+    "lib/controlCenter/tracking.html",
+]

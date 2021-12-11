@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for search textbox
+  -->
+<window title="Search textbox test" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <hbox id="searchbox-container">
+    <search-textbox id="searchbox"
+                    oncommand="doSearch(this.value);"
+                    placeholder="random placeholder"
+                    timeout="1"/>
+  </hbox>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gExpectedValue;
+var gLastTest;
+
+function doTests() {
+  var textbox = $("searchbox");
+
+  // Reconnect the searchbox to ensure connectedCallback only runs once
+  // (bug 1650486).
+  textbox.remove();
+  $("searchbox-container").append(textbox);
+  is(textbox.shadowRoot.querySelectorAll(".textbox-search-sign").length, 1,
+      "only one search icon in the search box");
+
+  var icons = textbox._searchIcons;
+  var searchIcon = icons.querySelector(".textbox-search-icon");
+  var clearIcon = icons.querySelector(".textbox-search-clear");
+
+  ok(icons, "icon deck found");
+  ok(searchIcon, "search icon found");
+  ok(clearIcon, "clear icon found");
+  is(icons.selectedPanel, searchIcon, "search icon is displayed");
+
+  is(textbox.placeholder, "random placeholder", "search textbox supports placeholder");
+  is(textbox.value, "", "placeholder doesn't interfere with the real value");
+  is(textbox.shadowRoot.querySelector("input").getAttribute("inputmode"), "search", "inputmode of search textbox is search by default");
+
+  function iconClick(aIcon) {
+    is(icons.selectedPanel, aIcon, aIcon.className + " icon must be displayed in order to be clickable");
+
+    //XXX synthesizeMouse worked on Linux but failed on Windows an Mac
+    //    for unknown reasons. Manually dispatch the event for now.
+    //synthesizeMouse(aIcon, 0, 0, {});
+
+    var event = document.createEvent("MouseEvent");
+    event.initMouseEvent("click", true, true, window, 1,
+                         0, 0, 0, 0,
+                         false, false, false, false,
+                         0, null);
+    aIcon.dispatchEvent(event);
+  }
+
+  iconClick(searchIcon);
+  is(textbox.getAttribute("focused"), "true", "clicking the search icon focuses the textbox");
+
+  textbox.value = "foo";
+  is(icons.selectedPanel, clearIcon, "clear icon is displayed when setting a value");
+
+  textbox.value = "";
+  is(textbox.defaultValue, "", "defaultValue is empty");
+  is(textbox.value, "", "reset method clears the textbox");
+  is(icons.selectedPanel, searchIcon, "search icon is displayed after clearing value");
+
+  textbox.value = "foo";
+  gExpectedValue = "";
+  iconClick(clearIcon);
+  is(textbox.value, "", "clicking the clear icon clears the textbox");
+  ok(gExpectedValue == null, "search triggered when clearing the textbox with the clear icon");
+
+  textbox.value = "foo";
+  gExpectedValue = "";
+  synthesizeKey("KEY_Escape");
+  is(textbox.value, "", "escape key clears the textbox");
+  ok(gExpectedValue == null, "search triggered when clearing the textbox with the escape key");
+
+  textbox.value = "bar";
+  gExpectedValue = "bar";
+  textbox.doCommand();
+  ok(gExpectedValue == null, "search triggered with doCommand");
+
+  gExpectedValue = "bar";
+  synthesizeKey("KEY_Enter");
+  ok(gExpectedValue == null, "search triggered with enter key");
+
+  textbox.value = "";
+  textbox.searchButton = true;
+  is(textbox.getAttribute("searchbutton"), "true", "searchbutton attribute set on the textbox");
+
+  textbox.value = "foo";
+  is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode if there's a value");
+
+  gExpectedValue = "foo";
+  iconClick(searchIcon);
+  ok(gExpectedValue == null, "search triggered when clicking the search icon in search button mode");
+  is(icons.selectedPanel, clearIcon, "clear icon displayed in search button mode after submitting");
+
+  sendString("o");
+  is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode when typing a key");
+
+  gExpectedValue = "fooo";
+  iconClick(searchIcon); // display the clear icon (tested above)
+
+  textbox.value = "foo";
+  is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode when the value is changed");
+
+  gExpectedValue = "foo";
+  synthesizeKey("KEY_Enter");
+  ok(gExpectedValue == null, "search triggered with enter key in search button mode");
+  is(icons.selectedPanel, clearIcon, "clear icon displayed in search button mode after submitting with enter key");
+
+  textbox.value = "x";
+  synthesizeKey("KEY_Backspace");
+  is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode when deleting the value with the backspace key");
+
+  gExpectedValue = "";
+  synthesizeKey("KEY_Enter");
+  ok(gExpectedValue == null, "search triggered with enter key in search button mode");
+  is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode after submitting an empty string");
+
+  textbox.readOnly = true;
+  gExpectedValue = "foo";
+  textbox.value = "foo";
+  iconClick(searchIcon);
+  ok(gExpectedValue == null, "search triggered when clicking the search icon in search button mode while the textbox is read-only");
+  is(icons.selectedPanel, searchIcon, "search icon persists in search button mode after submitting while the textbox is read-only");
+  textbox.readOnly = false;
+
+  textbox.disabled = true;
+  is(searchIcon.getAttribute("disabled"), "true", "disabled attribute inherited to the search icon");
+  is(clearIcon.getAttribute("disabled"), "true", "disabled attribute inherited to the clear icon");
+  gExpectedValue = false;
+  textbox.value = "foo";
+  iconClick(searchIcon);
+  ok(!gExpectedValue, "search *not* triggered when clicking the search icon in search button mode while the textbox is disabled");
+  is(icons.selectedPanel, searchIcon, "search icon persists in search button mode when trying to submit while the textbox is disabled");
+  textbox.disabled = false;
+  ok(!searchIcon.hasAttribute("disabled"), "disabled attribute removed from the search icon");
+  ok(!clearIcon.hasAttribute("disabled"), "disabled attribute removed from the clear icon");
+
+  textbox.searchButton = false;
+  ok(!textbox.hasAttribute("searchbutton"), "searchbutton attribute removed from the textbox");
+
+  gLastTest = true;
+  gExpectedValue = "123";
+  textbox.value = "1";
+  sendString("23");
+}
+
+function doSearch(aValue) {
+  is(aValue, gExpectedValue, "search triggered with expected value");
+  gExpectedValue = null;
+  if (gLastTest)
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(doTests);
+
+  ]]></script>
+
+</window>

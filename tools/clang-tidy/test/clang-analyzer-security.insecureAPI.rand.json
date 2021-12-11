@@ -1,0 +1,1 @@
+"[[\"warning\", \"The 'random' function produces a sequence of values that an adversary may be able to predict.  Use 'arc4random' instead\", \"clang-analyzer-security.insecureAPI.rand\"]]"

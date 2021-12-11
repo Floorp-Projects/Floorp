@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for High Resolution Timer</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <script>
+    ok(window.performance, "Performance object should exist.");
+    ok(typeof window.performance.now == 'function', "Performance object should have a 'now' method.");
+    var n = window.performance.now(), d = Date.now();
+    ok(n >= 0, "The value of now() should be equal to or greater than 0.");
+    ok(window.performance.now() >= n, "The value of now() should monotonically increase.");
+
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("using setTimeout() to measure performance.now()");
+
+    // Spin on setTimeout() until performance.now() increases. Due to recent
+    // security developments, the hr-time working group has not yet reached
+    // consensus on what the recommend minimum clock resolution should be:
+    // https://w3c.github.io/hr-time/#clock-resolution
+    // Since setTimeout might return too early/late, our goal is for
+    // performance.now() to increase before a 2 ms deadline rather than specific
+    // number of setTimeout(N) invocations.
+    // See bug 749894 (intermittent failures of this test)
+    var checks = 0;
+
+    function checkAfterTimeout() {
+      checks++;
+      var d2 = Date.now();
+      var n2 = window.performance.now();
+
+      // Spin on setTimeout() until performance.now() increases. Abort the
+      // test if it runs for more than 2 ms or 50 timeouts.
+      let elapsedTime = d2 - d;
+      let elapsedPerf = n2 - n;
+      if (elapsedPerf == 0 && elapsedTime < 2 && checks < 50) {
+        setTimeout(checkAfterTimeout, 1);
+        return;
+      }
+
+      // Our implementation provides 1 ms resolution (bug 1451790).
+      ok(elapsedPerf >= 1,
+         `Loose - the value of now() should increase by no less than 1 ms ` +
+         `after 2 ms. delta now(): ${elapsedPerf} ms`);
+
+      // If we need more than 1 iteration, then either performance.now()
+      // resolution is shorter than 1 ms or setTimeout() is returning too early.
+      ok(checks == 1,
+         `Strict - the value of now() should increase after one setTimeout. ` +
+         `iters: ${checks}, dt: ${elapsedTime}, now(): ${n2}`);
+
+      SimpleTest.finish();
+    };
+    setTimeout(checkAfterTimeout, 1);
+  </script>
+</body>
+</html>

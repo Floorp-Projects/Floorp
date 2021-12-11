@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 895360 - [app manager] Device meta data actor
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+"use strict";
+
+window.onload = function() {
+  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const {DevToolsClient} = require("devtools/client/devtools-client");
+  const {DevToolsServer} = require("devtools/server/devtools-server");
+  const Services = require("Services");
+
+  SimpleTest.waitForExplicitFinish();
+
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
+  client.connect().then(function onConnect() {
+    return client.mainRoot.getFront("device");
+  }).then(function(d) {
+    let desc;
+    const appInfo = Services.appinfo;
+    const utils = window.windowUtils;
+
+    const localDesc = {
+      appid: appInfo.ID,
+      vendor: appInfo.vendor,
+      name: appInfo.name,
+      version: appInfo.version,
+      appbuildid: appInfo.appBuildID,
+      platformbuildid: appInfo.platformBuildID,
+      platformversion: appInfo.platformVersion,
+      geckobuildid: appInfo.platformBuildID,
+      geckoversion: appInfo.platformVersion,
+      useragent: window.navigator.userAgent,
+      locale: Services.locale.appLocaleAsBCP47,
+      os: appInfo.OS,
+      processor: appInfo.XPCOMABI.split("-")[0],
+      compiler: appInfo.XPCOMABI.split("-")[1],
+      dpi: utils.displayDPI,
+      width: window.screen.width,
+      height: window.screen.height,
+    };
+
+    function checkValues() {
+      for (const key in localDesc) {
+        is(desc[key], localDesc[key], "valid field (" + key + ")");
+      }
+
+      const currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      const profileDir = currProfD.path;
+      ok(profileDir.includes(desc.profile.length > 0 && desc.profile),
+         "valid profile name");
+
+      client.close().then(() => {
+        DevToolsServer.destroy();
+        SimpleTest.finish();
+      });
+    }
+
+    d.getDescription().then(function(v) {
+      desc = v;
+    }).then(checkValues);
+  });
+};
+</script>
+</pre>
+</body>
+</html>

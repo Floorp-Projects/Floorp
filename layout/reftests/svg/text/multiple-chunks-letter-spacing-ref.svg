@@ -1,0 +1,25 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="200" viewBox="0 0 700 200">
+  <g transform="translate(100,100)" style="font: 16px sans-serif">
+    <!--
+      Place characters, end-anchored, as follows:
+
+      First anchored chunk:
+        "h": 100 - adv("e") - 2 * letter-spacing
+        "e": 100 - letter-spacing
+
+      Second anchored chunk:
+        "l": 300 - adv("lo") - 3 * letter-spacing
+        "l": 300 - adv("o") - 2 * letter-spacing
+        "o": 300 - letter-spacing
+    -->
+    <text x='100' text-anchor='end' dx="-40">h<tspan fill="none">e</tspan></text>
+    <text x='100' text-anchor='end' dx="-20">e</text>
+    <text x='300' text-anchor='end' dx="-60">l<tspan fill="none">lo</tspan></text>
+    <text x='300' text-anchor='end' dx="-40">l<tspan fill="none">o</tspan></text>
+    <text x='300' text-anchor='end' dx="-20">o</text>
+  </g>
+</svg>

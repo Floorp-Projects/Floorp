@@ -1,0 +1,109 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "afterInitTemporaryStorage",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {"name":"ls-archive.sqlite","dir":false},
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "default",
+            "dir": true,
+            "todo": "Add entry invalid+++example.com once bug 1594075 is fixed",
+            "entries": [
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "todo": "Add entry invalid+++example.com once bug 1594075 is fixed",
+            "entries": [
+              { "name": "foo.bar", "dir": false }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

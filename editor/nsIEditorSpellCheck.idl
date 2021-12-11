@@ -1,0 +1,164 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIEditor;
+interface nsIEditorSpellCheckCallback;
+
+[scriptable, uuid(a171c25f-e4a8-4d08-adef-b797e6377bdc)]
+interface nsIEditorSpellCheck : nsISupports
+{
+
+ /**
+   * Returns true if we can enable spellchecking. If there are no available
+   * dictionaries, this will return false.
+   */
+  boolean       canSpellCheck();
+
+  /**
+   * Turns on the spell checker for the given editor. enableSelectionChecking
+   * set means that we only want to check the current selection in the editor,
+   * (this controls the behavior of GetNextMisspelledWord). For spellchecking
+   * clients with no modal UI (such as inline spellcheckers), this flag doesn't
+   * matter.  Initialization is asynchronous and is not complete until the given
+   * callback is called.
+   */
+  void          InitSpellChecker(in nsIEditor editor, in boolean enableSelectionChecking,
+                                 [optional] in nsIEditorSpellCheckCallback callback);
+
+  /**
+   * When interactively spell checking the document, this will return the
+   * value of the next word that is misspelled. This also computes the
+   * suggestions which you can get by calling GetSuggestedWord.
+   *
+   * @see mozSpellChecker::GetNextMisspelledWord
+   */
+  [can_run_script]
+  AString       GetNextMisspelledWord();
+
+  /**
+   * Used to get suggestions for the last word that was checked and found to
+   * be misspelled. The first call will give you the first (best) suggestion.
+   * Subsequent calls will iterate through all the suggestions, allowing you
+   * to build a list. When there are no more suggestions, an empty string
+   * (not a null pointer) will be returned.
+   *
+   * @see mozSpellChecker::GetSuggestedWord
+   */
+  AString       GetSuggestedWord();
+
+  /**
+   * Check a given word. In spite of the name, this function checks the word
+   * you give it, returning true if the word is misspelled. If the word is
+   * misspelled, it will compute the suggestions which you can get from
+   * GetSuggestedWord().
+   *
+   * @see mozSpellChecker::CheckCurrentWord
+   */
+  boolean       CheckCurrentWord(in AString suggestedWord);
+
+  /**
+   * Check a given word then returns suggestion words via Promise if a given
+   * word is misspelled. If not misspelled, returns empty string array.
+   */
+  [implicit_jscontext]
+  Promise       suggest(in AString aCheckingWorkd, in unsigned long aMaxCount);
+
+  /**
+   * Use when modally checking the document to replace a word.
+   *
+   * @see mozSpellChecker::CheckCurrentWord
+   */
+  [can_run_script]
+  void          ReplaceWord(in AString misspelledWord, in AString replaceWord, in boolean allOccurrences);
+
+  /**
+   * @see mozSpellChecker::IgnoreAll
+   */
+  void          IgnoreWordAllOccurrences(in AString word);
+
+  /**
+   * Fills an internal list of words added to the personal dictionary. These
+   * words can be retrieved using GetPersonalDictionaryWord()
+   *
+   * @see mozSpellChecker::GetPersonalDictionary
+   * @see GetPersonalDictionaryWord
+   */
+  void          GetPersonalDictionary();
+
+  /**
+   * Used after you call GetPersonalDictionary() to iterate through all the
+   * words added to the personal dictionary. Will return the empty string when
+   * there are no more words.
+   */
+  AString       GetPersonalDictionaryWord();
+
+  /**
+   * Adds a word to the current personal dictionary.
+   *
+   * @see mozSpellChecker::AddWordToDictionary
+   */
+  void          AddWordToDictionary(in AString word);
+
+  /**
+   * Removes a word from the current personal dictionary.
+   *
+   * @see mozSpellChecker::RemoveWordFromPersonalDictionary
+   */
+  void          RemoveWordFromDictionary(in AString word);
+
+  /**
+   * Retrieves a list of the currently available dictionaries. The strings will
+   * typically be language IDs, like "en-US".
+   *
+   * @see mozISpellCheckingEngine::GetDictionaryList
+   */
+  Array<ACString> GetDictionaryList();
+
+  /**
+   * @see mozSpellChecker::GetCurrentDictionary
+   */
+  ACString      GetCurrentDictionary();
+
+  /**
+   * @see mozSpellChecker::SetCurrentDictionary
+   */
+  void          SetCurrentDictionary(in ACString dictionary);
+
+  /**
+   * Call this to free up the spell checking object. It will also save the
+   * current selected language as the default for future use.
+   *
+   * If you have called CanSpellCheck but not InitSpellChecker, you can still
+   * call this function to clear the cached spell check object, and no
+   * preference saving will happen.
+   */
+  void          UninitSpellChecker();
+
+  const unsigned long FILTERTYPE_NORMAL = 1;
+  const unsigned long FILTERTYPE_MAIL = 2;
+
+  /**
+   * Used to filter the content (for example, to skip blockquotes in email from
+   * spellchecking. Call this before calling InitSpellChecker; calling it
+   * after initialization will have no effect.
+   */
+  void          setFilterType(in unsigned long filterType);
+
+  /**
+   * Update the dictionary in use to be sure it corresponds to what the editor
+   * needs.  The update is asynchronous and is not complete until the given
+   * callback is called.
+   */
+  void          UpdateCurrentDictionary([optional] in nsIEditorSpellCheckCallback callback);
+
+};
+
+[scriptable, function, uuid(5f0a4bab-8538-4074-89d3-2f0e866a1c0b)]
+interface nsIEditorSpellCheckCallback : nsISupports
+{
+  void editorSpellCheckDone();
+};

@@ -1,0 +1,20 @@
+<svg width="178" height="178"
+    xmlns="http://www.w3.org/2000/svg">
+  <clipPath id="topside"><path d="M175,0 L35,70 L0,0 z" /></clipPath>
+  <clipPath id="leftside"><path d="M0,0 L35,70 L25,75 L0,175 z" /></clipPath>
+  <clipPath id="bottomside"><path d="M0,175 L25,75 L75,75 L175,175 z" /></clipPath>
+  <clipPath id="rightside"><path d="M75,75 L75,50 L175,0 L175,175 z" /></clipPath>
+  <rect x="0" y="0" width="175" height="175" rx="75" ry="75" clip-path="url(#topside)" fill="red" />
+  <rect x="0" y="0" width="175" height="175" rx="75" ry="75" clip-path="url(#leftside)" fill="green" />
+  <rect x="0" y="0" width="175" height="175" rx="75" ry="75" clip-path="url(#bottomside)" fill="blue" />
+  <rect x="0" y="0" width="175" height="175" rx="75" ry="75" clip-path="url(#rightside)" fill="black" />
+  <path d="M75,50 L75,75 L25,75 A50,25 0 0,1 75,50" fill="white" />
+
+  <rect x="0" y="0" width="175" height="175" rx="75" ry="75" fill="none" stroke="orange" stroke-width="3" />
+  <line x1="145" y1="15" x2="75" y2="50" stroke="orange" stroke-width="3" />
+  <line x1="153.033004761" y1="153.033004761" x2="75" y2="75" stroke="orange" stroke-width="3" />
+  <line x1="9.580468178" y1="136.678131104" x2="25" y2="75" stroke="orange" stroke-width="3" />
+  <line x1="15.000000954" y1="30.000001907" x2="31.386978149" y2="62.773956299" stroke="orange" stroke-width="3" />
+  <path d="M75,50 L75,75 L25,75 A50,25 0 0,1 75,50" fill="none" stroke="orange" stroke-width="3" />
+</svg>
+

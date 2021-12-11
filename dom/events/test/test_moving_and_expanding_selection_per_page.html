@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for expanding selection per page</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(() => {
+  open("window_empty_document.html", "_blank", "width=500,height=500");
+});
+
+async function doTests(aWindow) {
+  // On macOS, there is no shortcut keys to extend selection per page.
+  // Therefore, we need to use nsISelectionController.pageMove() instead.
+  const kUseKeyboardEvent = !navigator.platform.includes("Mac");
+  let selectionController = SpecialPowers.wrap(aWindow)
+                                         .docShell
+                                         .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                                         .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
+                                         .QueryInterface(SpecialPowers.Ci.nsISelectionController);
+  // On Windows, per-page selection to start or end expands selection to same
+  // column of first or last line.  On the other platforms, it expands selection
+  // to start or end of first or last line.
+  const kSelectToStartOrEnd = !navigator.platform.includes("Win");
+
+  await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
+  await SimpleTest.promiseFocus(aWindow);
+
+  function getNodeDescription(aNode) {
+    function getElementDescription(aElement) {
+      if (aElement.getAttribute("id") !== null) {
+        return `${aElement.tagName.toLowerCase()}#${aElement.getAttribute("id")}`;
+      }
+      if (aElement.tagName === "BR") {
+        return `${getElementDescription(aElement.previousSibling)} + br`;
+      }
+      return aElement.tagName.toLowerCase();
+    }
+    switch (aNode.nodeType) {
+      case aNode.TEXT_NODE:
+        return `text node in ${getElementDescription(aNode.parentElement)}`;
+      case aNode.ELEMENT_NODE:
+        return getElementDescription(aNode);
+      default:
+        return "unknown node";
+    }
+  }
+
+  function doTest(aExpandSelection) {
+    // Note that when neither editor has focus nor in caret mode, key navigation
+    // does not call nsISelectionController::PageMove().  Therefore, in such
+    // cases, you need to call doPageDown() and doPageUp() with setting true
+    // to aUseSelectionController.
+    function doPageDown(aUseSelectionController) {
+      if (kUseKeyboardEvent && !aUseSelectionController) {
+        synthesizeKey("KEY_PageDown", {shiftKey: aExpandSelection}, aWindow);
+      } else {
+        selectionController.pageMove(true, aExpandSelection);
+      }
+    }
+
+    function doPageUp(aUseSelectionController) {
+      if (kUseKeyboardEvent && !aUseSelectionController) {
+        synthesizeKey("KEY_PageUp", {shiftKey: aExpandSelection}, aWindow);
+      } else {
+        selectionController.pageMove(false, aExpandSelection);
+      }
+    }
+
+    let doc = aWindow.document;
+    let body = doc.body;
+    let selection = doc.getSelection();
+    let container;
+
+    body.innerHTML = '<span id="s1">first line</span><br>' +
+                     '<span id="s2">second line</span><br>' +
+                     '<span id="s3">last line</span>';
+    container = doc.documentElement;
+
+    let description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to forward in non-scrollable body: `;
+    is(container.scrollTop, 0, description + "scrollTop should be 0 at initialization");
+    selection.collapse(doc.getElementById("s1").firstChild, 3);
+    doPageDown(!aExpandSelection);
+    is(container.scrollTop, 0, description + "this test shouldn't create scrollable document");
+    let range = selection.getRangeAt(0);
+    if (aExpandSelection) {
+      is(range.startContainer, doc.getElementById("s1").firstChild,
+         `${description} selection should be expanded from the first line (got: ${getNodeDescription(range.startContainer)})`);
+      is(range.startOffset, 3,
+         `${description} selection should be expanded from the first line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+    is(range.endContainer, doc.getElementById("s3").firstChild,
+       `${description} selection should be expanded into the last line (got: ${getNodeDescription(range.endContainer)})`);
+    if (kSelectToStartOrEnd) {
+      is(range.endOffset, range.endContainer.length,
+         `${description} selection should be expanded to end of the last line`);
+    } else {
+      isfuzzy(range.endOffset, 3, 2,
+              `${description} selection should be expanded to around the last line's 3rd insertion point`);
+    }
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to backward in non-scrollable body: `;
+    selection.collapse(doc.getElementById("s3").firstChild, 3);
+    doPageUp(!aExpandSelection);
+    is(container.scrollTop, 0, description + "this test shouldn't create scrollable document");
+    range = selection.getRangeAt(0);
+    is(range.startContainer, doc.getElementById("s1").firstChild,
+       `${description} selection should be expanded into the first line (got: ${getNodeDescription(range.startContainer)})`);
+    if (kSelectToStartOrEnd) {
+      is(range.startOffset, 0,
+         `${description} selection should be expanded to start of the first line`);
+    } else {
+      isfuzzy(range.startOffset, 3, 2,
+              `${description} selection should be expanded to around the first line's 3rd insertion point`);
+    }
+    if (aExpandSelection) {
+      is(range.endContainer, doc.getElementById("s3").firstChild,
+         `${description} selection should be expanded from the last line (got: ${getNodeDescription(range.endContainer)})`);
+      is(range.endOffset, 3,
+         `${description} selection should be expanded from the last line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+
+    body.innerHTML = '<span id="s1">first line in the body</span>' +
+                       '<div id="d1" style="height: 2em; line-height: 1em; overflow: auto;">' +
+                         '<span id="s2">first line</span><br>' +
+                         '<span id="s3">second line</span><br>' +
+                         '<span id="s4">third line</span><br>' +
+                         '<span id="s5">last line</span>' +
+                       "</div>" +
+                     '<span id="s6">last line in the body</span>';
+    container = doc.getElementById("d1");
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to forward in scrollable area in the body: `;
+    is(container.scrollTop, 0, description + "scrollTop should be 0 at initialization");
+    selection.collapse(doc.getElementById("s2").firstChild, 3);
+    doPageDown(!aExpandSelection);
+    isnot(container.scrollTop, 0, description + "should be scrolled down");
+    range = selection.getRangeAt(0);
+    if (aExpandSelection) {
+      is(range.startContainer, doc.getElementById("s2").firstChild,
+         `${description} selection should be expanded from the first line (got: ${getNodeDescription(range.startContainer)})`);
+      is(range.startOffset, 3,
+         `${description} selection should be expanded from the first line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+    is(range.endContainer, doc.getElementById("s4").firstChild,
+       `${description} selection should be expanded into the 3rd line (got: ${getNodeDescription(range.endContainer)})`);
+    isfuzzy(range.endOffset, 3, 2,
+            `${description} selection should be expanded to around the 3rd line's 3rd insertion point`);
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to backward in scrollable area in the body: `;
+    selection.collapse(doc.getElementById("s4").firstChild, 3);
+    let previousScrollTop = container.scrollTop;
+    doPageUp(!aExpandSelection);
+    ok(container.scrollTop < previousScrollTop, description + "should be scrolled up");
+    range = selection.getRangeAt(0);
+    is(range.startContainer, doc.getElementById("s2").firstChild,
+       `${description} selection should be expanded into the first line (got: ${getNodeDescription(range.startContainer)})`);
+    isfuzzy(range.startOffset, 3, 2,
+            `${description} selection should be expanded to around the first line's 3rd insertion point`);
+    if (aExpandSelection) {
+      is(range.endContainer, doc.getElementById("s4").firstChild,
+         `${description} selection should be expanded from the 3rd line (got: ${getNodeDescription(range.endContainer)})`);
+      is(range.endOffset, 3,
+         `${description} selection should be expanded from the 3rd line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+
+    body.innerHTML = '<span id="s1">first line in the body</span>' +
+                       '<div id="d1" contenteditable style="height: 2em; line-height: 1em; overflow: auto;">' +
+                         '<span id="s2">first line</span><br>' +
+                         '<span id="s3">second line</span><br>' +
+                         '<span id="s4">third line</span><br>' +
+                         '<span id="s5">last line</span>' +
+                       "</div>" +
+                     '<span id="s6">last line in the body</span>';
+    container = doc.getElementById("d1");
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to forward in scrollable editable div in the body: `;
+    is(container.scrollTop, 0, description + "scrollTop should be 0 at initialization");
+    selection.collapse(doc.getElementById("s2").firstChild, 3);
+    doPageDown();
+    isnot(container.scrollTop, 0, description + "should be scrolled down");
+    range = selection.getRangeAt(0);
+    if (aExpandSelection) {
+      is(range.startContainer, doc.getElementById("s2").firstChild,
+         `${description} selection should be expanded from the first line (got: ${getNodeDescription(range.startContainer)})`);
+      is(range.startOffset, 3,
+         `${description} selection should be expanded from the first line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+    is(range.endContainer, doc.getElementById("s4").firstChild,
+       `${description} selection should be expanded into the 3rd line (got: ${getNodeDescription(range.endContainer)})`);
+    isfuzzy(range.endOffset, 3, 2,
+            `${description} selection should be expanded to around the 3rd line's 3rd insertion point`);
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to backward in scrollable editable div in the body: `;
+    selection.collapse(doc.getElementById("s4").firstChild, 3);
+    previousScrollTop = container.scrollTop;
+    doPageUp();
+    ok(container.scrollTop < previousScrollTop, description + "should be scrolled up");
+    range = selection.getRangeAt(0);
+    is(range.startContainer, doc.getElementById("s2").firstChild,
+       `${description} selection should be expanded into the first line (got: ${getNodeDescription(range.startContainer)})`);
+    isfuzzy(range.startOffset, 3, 2,
+            `${description} selection should be expanded to around the first line's 3rd insertion point`);
+    if (aExpandSelection) {
+      is(range.endContainer, doc.getElementById("s4").firstChild,
+         `${description} selection should be expanded from the 3rd line (got: ${getNodeDescription(range.endContainer)})`);
+      is(range.endOffset, 3,
+         `${description} selection should be expanded from the 3rd line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+
+    body.innerHTML = '<span id="s1">first line in the body</span>' +
+                       '<div id="d1" contenteditable>' +
+                         '<span id="s2">first line</span><br>' +
+                         '<span id="s3">second line</span><br>' +
+                         '<span id="s4">third line</span><br>' +
+                         '<span id="s5">last line</span>' +
+                       "</div>" +
+                     '<span id="s6">last line in the body</span>';
+    container = doc.getElementById("d1");
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to forward in non-scrollable editable div in the body: `;
+    is(container.scrollTop, 0, description + "scrollTop should be 0 at initialization");
+    selection.collapse(doc.getElementById("s2").firstChild, 3);
+    doPageDown();
+    is(container.scrollTop, 0, description + "editable div shouldn't be scrollable");
+    range = selection.getRangeAt(0);
+    if (aExpandSelection) {
+      is(range.startContainer, doc.getElementById("s2").firstChild,
+         `${description} selection should be expanded from the first line (got: ${getNodeDescription(range.startContainer)})`);
+      is(range.startOffset, 3,
+         `${description} selection should be expanded from the first line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+    is(range.endContainer, doc.getElementById("s5").firstChild,
+       `${description} selection should be expanded into the last line (got: ${getNodeDescription(range.endContainer)})`);
+    if (kSelectToStartOrEnd) {
+      is(range.endOffset, range.endContainer.length,
+         `${description} selection should be expanded to end of the last line`);
+    } else {
+      isfuzzy(range.endOffset, 3, 2,
+              `${description} selection should be expanded to around the last line's 3rd insertion point`);
+    }
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to backward in non-scrollable editable div in the body: `;
+    selection.collapse(doc.getElementById("s5").firstChild, 3);
+    doPageUp();
+    is(container.scrollTop, 0, description + "editable div shouldn't be scrollable");
+    range = selection.getRangeAt(0);
+    is(range.startContainer, doc.getElementById("s2").firstChild,
+       `${description} selection should be expanded into the first line (got: ${getNodeDescription(range.startContainer)})`);
+    if (kSelectToStartOrEnd) {
+      is(range.startOffset, 0,
+         `${description} selection should be expanded to start of the first line`);
+    } else {
+      isfuzzy(range.startOffset, 3, 2,
+              `${description} selection should be expanded to around the first line's 3rd insertion point`);
+    }
+    if (aExpandSelection) {
+      is(range.endContainer, doc.getElementById("s5").firstChild,
+         `${description} selection should be expanded from the last line (got: ${getNodeDescription(range.endContainer)})`);
+      is(range.endOffset, 3,
+         `${description} selection should be expanded from the last line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+
+    body.innerHTML = '<span id="s1">first line in the body</span>' +
+                       '<div id="d1" contenteditable>' +
+                         '<span id="s2">first editable line</span><br>' +
+                         '<div id="d2" style="height: 3em; line-height: 1em; overflow: auto;">' +
+                           '<span id="s3">first line</span><br>' +
+                           '<span id="s4">second line</span>' +
+                         "</div>" +
+                         '<span id="s5">last editable line</span>' +
+                       "</div>" +
+                     '<span id="s6">last line in the body</span>';
+    container = doc.getElementById("d2");
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to forward in scrollable div (but not scrollable along y-axis) in the editable div: `;
+    is(container.scrollTop, 0, description + "scrollTop should be 0 at initialization");
+    selection.collapse(doc.getElementById("s3").firstChild, 3);
+    doPageDown();
+    is(container.scrollTop, 0, description + "scrollable div in the editable div (but not scrollable along y-axis) shouldn't be scrollable");
+    range = selection.getRangeAt(0);
+    if (aExpandSelection) {
+      is(range.startContainer, doc.getElementById("s3").firstChild,
+         `${description} selection should be expanded from the first line (got: ${getNodeDescription(range.startContainer)})`);
+      is(range.startOffset, 3,
+         `${description} selection should be expanded from the first line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+    is(range.endContainer, doc.getElementById("s5").firstChild,
+       `${description} selection should be expanded into the last editable line (got: ${getNodeDescription(range.endContainer)})`);
+    if (kSelectToStartOrEnd) {
+      is(range.endOffset, range.endContainer.length,
+         `${description} selection should be expanded to end of the last editable line`);
+    } else {
+      isfuzzy(range.endOffset, 3, 2,
+              `${description} selection should be expanded to around the last editable line's 3rd insertion point`);
+    }
+
+    description = `${aExpandSelection ? "Expanding selection" : "Moving caret"} to backward in scrollable div (but not scrollable along y-axis) in the editable div: `;
+    selection.collapse(doc.getElementById("s4").firstChild, 3);
+    doPageUp();
+    is(container.scrollTop, 0, description + "scrollable div (but not scrollable along y-axis) in the editable div shouldn't be scrollable");
+    range = selection.getRangeAt(0);
+    is(range.startContainer, doc.getElementById("s2").firstChild,
+       `${description} selection should be expanded into the first editable line (got: ${getNodeDescription(range.startContainer)})`);
+    if (kSelectToStartOrEnd) {
+      is(range.startOffset, 0,
+         `${description} selection should be expanded to start of the first editable line`);
+    } else {
+      isfuzzy(range.startOffset, 3, 2,
+              `${description} selection should be expanded to around the first editable line's 3rd insertion point`);
+    }
+    if (aExpandSelection) {
+      is(range.endContainer, doc.getElementById("s4").firstChild,
+         `${description} selection should be expanded from the last line (got: ${getNodeDescription(range.endContainer)})`);
+      is(range.endOffset, 3,
+         `${description} selection should be expanded from the last line's 3rd insertion point`);
+    } else {
+      ok(range.collapsed, `${description} selection should be collapsed`);
+    }
+  }
+
+  doTest(false);
+  doTest(true);
+
+  aWindow.close();
+  SimpleTest.finish();
+}
+</script>
+</html>

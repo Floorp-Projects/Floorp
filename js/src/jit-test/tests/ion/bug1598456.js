@@ -1,0 +1,3 @@
+(function() {
+    if (arguments) {}
+})();

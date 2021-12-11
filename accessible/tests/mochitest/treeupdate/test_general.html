@@ -1,0 +1,174 @@
+<html>
+
+<head>
+  <title>Testing the tree updates</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+    // //////////////////////////////////////////////////////////////////////////
+
+    function prependAppend(aContainer) {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer),
+      ];
+
+      this.invoke = function prependAppend_invoke() {
+        var checkbox = document.createElement("input");
+        checkbox.setAttribute("type", "checkbox");
+        getNode(aContainer).insertBefore(checkbox, getNode(aContainer).firstChild);
+
+        var button = document.createElement("input");
+        button.setAttribute("type", "button");
+        getNode(aContainer).appendChild(button);
+      };
+
+      this.finalCheck = function prependAppend_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { CHECKBUTTON: [ ] },
+            { ENTRY: [ ] },
+            { PUSHBUTTON: [ ] },
+          ] };
+        testAccessibleTree(aContainer, accTree);
+      };
+
+      this.getID = function prependAppend_getID() {
+        return "prepends a child and appends a child";
+      };
+    }
+
+    function removeRemove(aContainer) {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer),
+      ];
+
+      this.invoke = function removeRemove_invoke() {
+        getNode(aContainer).firstChild.remove();
+      };
+
+      this.finalCheck = function removeRemove_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { PUSHBUTTON: [ ] },
+          ] };
+        testAccessibleTree(aContainer, accTree);
+      };
+
+      this.getID = function removeRemove_getID() {
+        return "remove first and second children";
+      };
+    }
+
+    function insertInaccessibleAccessibleSiblings() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, "c3"),
+      ];
+
+      this.invoke = function insertInaccessibleAccessibleSiblings_invoke() {
+        getNode("c3").appendChild(document.createElement("span"));
+        getNode("c3").appendChild(document.createElement("input"));
+      };
+
+      this.finalCheck = function insertInaccessibleAccessibleSiblings_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { PUSHBUTTON: [
+              { TEXT_LEAF: [] },
+            ] },
+            { ENTRY: [ ] },
+          ] };
+        testAccessibleTree("c3", accTree);
+      };
+
+      this.getID = function insertInaccessibleAccessibleSiblings_getID() {
+        return "insert inaccessible and then accessible siblings";
+      };
+    }
+
+    // Test for bug 1500416.
+    function displayContentsInsertion() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, "c4"),
+      ];
+
+      this.invoke = function displayContentsInsertion_invoke() {
+        document.body.offsetTop; // Flush layout.
+
+        let list = document.createElement("ul");
+        list.style.display = "contents";
+        list.appendChild(document.createElement("li"));
+        list.firstChild.appendChild(document.createTextNode("Text"));
+        getNode("c4").appendChild(list);
+      };
+
+      this.finalCheck = function displayContentsInsertion_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { LIST: [
+              { LISTITEM: [
+                { LISTITEM_MARKER: [] },
+                { TEXT_LEAF: [] },
+              ] },
+            ] },
+          ] };
+        testAccessibleTree("c4", accTree);
+      };
+
+      this.getID = function displayContentsInsertion_getID() {
+        return "insert accessible display: contents element.";
+      };
+    }
+
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+    // //////////////////////////////////////////////////////////////////////////
+
+    var gQueue = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new prependAppend("c1"));
+      gQueue.push(new removeRemove("c2"));
+      gQueue.push(new insertInaccessibleAccessibleSiblings());
+      gQueue.push(new displayContentsInsertion());
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1"><input></div>
+  <div id="c2"><span><input type="checkbox"><input></span><input type="button"></div>
+
+  <div id="c3"><input type="button" value="button"></div>
+  <div id="c4"></div>
+
+</body>
+</html>

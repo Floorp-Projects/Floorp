@@ -1,0 +1,549 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ *  Debug Target Info layout
+ *  +------------+--------------+------------------------+
+ *  | connection | runtime info | target info icon + text |
+ *  +------------+--------------+------------------------+
+ */
+.debug-target-info {
+  --border-inline-end-width: 1px;
+  --padding-inline-end-size: 24px;
+  display: flex;
+  background: var(--theme-tab-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 4px 0;
+  font-size: 1.35em;
+  color: var(--theme-toolbar-color);
+}
+
+/*
+ *  Debug Target labels with icon layout
+ *  +------+------------------------+---------------+
+ *  | icon | label text (bold)      | optional text |
+ *  | 20px |     max-content        | max-content   |
+ *  +------+------------------------+---------------+
+ */
+.debug-target-info .iconized-label {
+  display: grid;
+  align-items: center;
+  white-space: nowrap;
+  grid-column-gap: 8px;
+  grid-template-columns: 20px auto auto;
+  padding: 0 var(--padding-inline-end-size);
+}
+
+.debug-target-navigation {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+.debug-target-info .iconized-label:not(:last-child) {
+  border-inline-end: var(--border-inline-end-width) solid var(--theme-splitter-color);
+}
+
+.debug-target-info .iconized-label img {
+  width: 20px;
+  height: 20px;
+}
+
+.debug-target-info img {
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
+}
+
+/*
+ * XXX: This was added to match the padding 8px used by the reload button.
+ * This padding makes the debug target component taller and also creates
+ * spacing with the debug-target-title separator.
+ * See Bug 1641920 for improving the CSS of the DebugTargetInfo component.
+ */
+.debug-target-info .debug-target-url-readonly {
+  padding: 8px;
+}
+
+.debug-target-info .navigation-button {
+  padding: 8px;
+  margin: auto 2px;
+  grid-column-gap: 0;
+  border: 0;
+  background: var(--theme-toolbarbutton-background);
+  --border-inline-end-width: 0;
+}
+
+.debug-target-info .navigation-button > img:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.debug-target-info .navigation-button:hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+.debug-target-info .navigation-button:focus {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3)
+}
+
+.debug-target-info .navigation-button:active {
+  background-color: var(--theme-toolbarbutton-active-background);
+}
+
+.debug-target-info .navigation-button img {
+  fill: var(--theme-toolbarbutton-color);
+}
+
+.debug-target-info .navigation-button:active img {
+  fill: var(--theme-toolbarbutton-active-color);
+}
+
+.debug-target-info .debug-target-url {
+  display: flex;
+  flex-grow: 1;
+  padding-inline-end: var(--padding-inline-end-size);
+  align-self: center;
+}
+
+.debug-target-info .debug-target-url-input {
+  border: 1px solid var(--theme-toolbarbutton-active-background);
+  border-radius: 2px;
+  height: 20px;
+  padding-inline-start: 10px;
+  /* Ensure that the url is displayed correctly for RTL locales. */
+  unicode-bidi: plaintext;
+  text-align: match-parent;
+}
+
+.debug-target-info .debug-target-url-input,
+.debug-target-info .debug-target-url-form {
+  width: 100%;
+}
+
+/* Toolbox tabbar */
+
+.devtools-tabbar {
+  appearance: none;
+  /* For narrow devtool width, we define the each column width of tabbar.
+    Defined layout is as follow:
+
+    -------------------------------------------------
+    | Picker |  tooltabs  |  commands |   controls  |
+    |  auto  | 26px ~ 1fr |    auto   |  max-content|
+    -------------------------------------------------
+  */
+  display: grid;
+  grid-template-columns: auto minmax(26px, 1fr) auto max-content;
+  background: var(--theme-tab-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  box-sizing: border-box;
+  min-height: 29px;
+}
+
+.dragging #toolbox-panel-iframe-webconsole {
+  pointer-events: none;
+}
+
+.toolbox-tabs-wrapper {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
+
+/* These classes use to stretch the tool tabs wrapper width if toolbox does'n
+  have start buttons or end buttons element. */
+
+.devtools-tabbar .toolbox-tabs-wrapper {
+  grid-column-start: 2;
+  grid-column-end: 3;
+}
+
+.devtools-tabbar-has-start .toolbox-tabs-wrapper {
+  grid-column-start: 1;
+}
+
+.devtools-tabbar-has-end .toolbox-tabs-wrapper {
+  grid-column-end: 4;
+}
+
+.toolbox-tabs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  margin: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Set flex attribute to Toolbox buttons and Picker container so,
+   they don't overlap with the tab bar */
+#toolbox-buttons-start,
+#toolbox-buttons-end,
+#toolbox-controls {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+/* Toolbox tabs */
+
+.devtools-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 24px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--theme-toolbar-color);
+  background-color: transparent;
+}
+
+.devtools-tab-label {
+  font-size: 12px;
+  mask-image: linear-gradient(to left, transparent 0, black 6px);
+  /* Set the end padding on the label to make sure the label gets faded out properly */
+  padding-inline-end: 8px;
+  min-width: 1px;
+}
+
+.devtools-tab-label:-moz-locale-dir(rtl) {
+  mask-image: linear-gradient(to right, transparent 0, black 6px);
+}
+
+.devtools-tab .devtools-tab-badge {
+  color: var(--theme-highlight-blue);
+  font-size: 80%;
+  font-weight: 500;
+  margin-inline-start: 4px;
+}
+
+.devtools-tab-icon-only {
+  min-width: 26px;
+}
+
+.devtools-tab:hover,
+.devtools-tab:focus {
+  background-color: var(--theme-toolbar-hover);
+}
+
+/* Remove system control border from devtools-tab. */
+.devtools-tab::-moz-focus-inner {
+  border: 0;
+}
+
+.devtools-tab:hover:active {
+  background-color: var(--theme-toolbar-hover-active);
+}
+
+.devtools-tab.selected {
+  color: var(--theme-toolbar-selected-color);
+}
+
+.devtools-tab > img {
+  border: none;
+  margin: 0;
+  margin-inline: 8px 6px;
+  height: 16px;
+  width: 16px;
+  vertical-align: text-top;
+  flex-shrink: 0;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
+}
+
+.devtools-tab.selected > img {
+  fill: var(--theme-toolbar-selected-color);
+}
+
+.devtools-tab.highlighted > img {
+  fill: var(--theme-toolbar-highlighted-color);
+}
+
+/* Toolbox controls */
+
+.devtools-tabbar-button {
+  appearance: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  margin: 0;
+  padding: 4px;
+  border: none;
+  direction: ltr;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--theme-icon-color);
+  background-color: transparent;
+}
+
+/* Button icon style */
+.devtools-tabbar-button::before {
+  content: "";
+  flex: none;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 1px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.devtools-tabbar-button::-moz-focus-inner {
+  border: none;
+}
+
+.devtools-tabbar-button:focus {
+  outline: none;
+  background-color: var(--theme-toolbar-hover);
+}
+
+.devtools-tabbar-button:hover,
+.devtools-tabbar-button.checked {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.devtools-tabbar-button.checked,
+.devtools-tabbar-button:active {
+  color: var(--theme-icon-checked-color);
+}
+
+.devtools-tabbar-button:disabled {
+  color: var(--theme-icon-dimmed-color) !important;
+  background-color: transparent !important;
+}
+
+#tools-chevron-menu-button::before {
+  background-image: url("chrome://devtools/skin/images/command-chevron.svg");
+}
+
+#tools-chevron-menu-button:-moz-locale-dir(rtl)::before {
+  transform: rotate(180deg);
+}
+
+/* On OSX the cursor turns into a window-resizing cursor at the edges of the
+ * window, so bring the end of the toolbox in. */
+:root[platform="mac"] #toolbox-controls {
+  margin-inline-end: 2px;
+}
+
+#toolbox-buttons-start > .devtools-separator {
+  margin-inline: 0;
+}
+
+#toolbox-buttons-end > .devtools-separator {
+  margin-inline: 5px;
+}
+
+#toolbox-close::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
+#toolbox-meatball-menu-button::before {
+  background-image: url("chrome://devtools/skin/images/more.svg");
+}
+
+#toolbox-meatball-menu-dock-bottom {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-bottom.svg");
+}
+
+#toolbox-meatball-menu-dock-left {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-side-left.svg");
+}
+
+#toolbox-meatball-menu-dock-right {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-side-right.svg");
+}
+
+#toolbox-meatball-menu-dock-window {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-undock.svg");
+}
+
+#toolbox-meatball-menu-dock-window:-moz-locale-dir(rtl) .label::before {
+  transform: scaleX(-1);
+}
+
+#toolbox-meatball-menu-splitconsole {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/command-console.svg");
+}
+
+#toolbox-meatball-menu-noautohide {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/command-noautohide.svg");
+}
+
+#toolbox-meatball-menu-settings {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/settings.svg");
+}
+
+.toolbox-error {
+  background-color: transparent !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbox-error::before {
+  background-image: url("chrome://devtools/skin/images/error-small.svg");
+  fill: var(--theme-icon-error-color) !important;
+}
+
+.toolbox-error:hover {
+  background-color: var(--toolbarbutton-hover-background) !important;
+}
+
+/* Command buttons */
+
+#command-button-pick {
+  min-width: 32px;
+}
+
+#command-button-pick::before {
+  background-image: url("chrome://devtools/skin/images/command-pick.svg");
+}
+
+#command-button-pick.accessibility::before {
+  background-image: url("chrome://devtools/skin/images/command-pick-accessibility.svg");
+}
+
+/* Command button images */
+
+#command-button-paintflashing::before {
+  background-image: url("chrome://devtools/skin/images/command-paintflashing.svg");
+}
+
+#command-button-screenshot::before {
+  background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
+}
+
+#command-button-responsive::before {
+  background-image: url("chrome://devtools/skin/images/command-responsivemode.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
+}
+
+#command-button-responsive.checked::before {
+  fill-opacity: 0.15;
+}
+
+.theme-dark #command-button-responsive.checked::before {
+  fill-opacity: 0.25;
+}
+
+#command-button-experimental-prefs::before {
+  background-image: url("chrome://global/skin/icons/experiments.svg");
+  background-size: cover;
+}
+
+.experimental-pref-icon::before {
+  content: "";
+  background-image: url("chrome://devtools/skin/images/help.svg");
+  -moz-context-properties: fill;
+  fill: var(--theme-body-color);
+  display: block;
+  background-size: 12px;
+  width: 12px;
+  height: 12px;
+}
+
+#command-button-rulers::before {
+  background-image: url("chrome://devtools/skin/images/command-rulers.svg");
+}
+
+#command-button-measure::before {
+  background-image: url("chrome://devtools/skin/images/command-measure.svg");
+}
+
+#command-button-frames::before {
+  background-image: url("chrome://devtools/skin/images/command-frames.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
+}
+
+#command-button-frames.checked::before {
+  fill-opacity: 0.15;
+}
+
+.theme-dark #command-button-frames.checked::before {
+  fill-opacity: 0.25;
+}
+
+/* Tooltip of frames menu  */
+
+#command-button-frames-panel > .tooltip-panel {
+  max-width: 500px;
+  overflow-y: auto;
+}
+
+#toolbox-frame-menu span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Toolbox panels */
+
+.toolbox-panel {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  visibility: collapse;
+}
+
+.toolbox-panel[selected] {
+  visibility: visible;
+}
+
+/**
+ * When panels are collapsed or hidden, making sure that they are also
+ * inaccessible by keyboard. This is not the case by default because the are
+ * predominantly hidden using visibility: collapse; style or collapsed
+ * attribute.
+ */
+.toolbox-panel *,
+#toolbox-panel-webconsole[collapsed] * {
+  -moz-user-focus: ignore;
+}
+
+/**
+ * Enrure that selected toolbox panel's contents are keyboard accessible as they
+ * are explicitly made not to be when hidden (default).
+ */
+.toolbox-panel[selected] * {
+  -moz-user-focus: normal;
+}
+
+/* Let the component gain focus when a click hits an empty area */
+#toolbox-container {
+  -moz-user-focus: normal;
+}
+
+#toolbox-container:focus {
+  outline: 0;
+}
+
+/* Toolbox tabs reordering */
+#toolbox-container.tabs-reordering > .theme-body {
+  pointer-events: none;
+}
+
+#toolbox-container.tabs-reordering
+  .devtools-tab:not(.selected):hover
+  .devtools-tab-line {
+  background: transparent;
+  opacity: 0;
+  transition: none;
+}
+
+#toolbox-container.tabs-reordering .devtools-tab.selected {
+  background-color: var(--theme-toolbar-hover);
+  z-index: 1;
+}

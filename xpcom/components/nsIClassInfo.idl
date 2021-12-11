@@ -1,0 +1,75 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIXPCScriptable;
+
+/**
+ * Provides information about a specific implementation class.  If you want
+ * your class to implement nsIClassInfo, see nsIClassInfoImpl.h for
+ * instructions--you most likely do not want to inherit from nsIClassInfo.
+ */
+
+[scriptable, uuid(a60569d7-d401-4677-ba63-2aa5971af25d)]
+interface nsIClassInfo : nsISupports
+{
+    /**
+     * Returns a list of the interfaces which instances of this class promise
+     * to implement. Note that nsISupports is an implicit member of any such
+     * list, and need not be included.
+     */
+    readonly attribute Array<nsIIDRef> interfaces;
+
+    /**
+     * Return an object to assist XPConnect in supplying JavaScript-specific
+     * behavior to callers of the instance object, or null if not needed.
+     */
+    nsIXPCScriptable getScriptableHelper();
+
+    /**
+     * A contract ID through which an instance of this class can be created
+     * (or accessed as a service, if |flags & SINGLETON|), or null/void.
+     */
+    readonly attribute AUTF8String contractID;
+
+    /**
+     * A human readable string naming the class, or null/void.
+     */
+    readonly attribute AUTF8String classDescription;
+
+    /**
+     * A class ID through which an instance of this class can be created
+     * (or accessed as a service, if |flags & SINGLETON|), or null.
+     */
+    readonly attribute nsCIDPtr classID;
+
+    /**
+     * Bitflags for 'flags' attribute.
+     */
+    const uint32_t SINGLETON            = 1 << 0;
+    const uint32_t THREADSAFE           = 1 << 1;
+    const uint32_t MAIN_THREAD_ONLY     = 1 << 2;
+    const uint32_t SINGLETON_CLASSINFO  = 1 << 5;
+
+    // The high order bit is RESERVED for consumers of these flags.
+    // No implementor of this interface should ever return flags
+    // with this bit set.
+    const uint32_t RESERVED             = 1 << 31;
+
+
+    readonly attribute uint32_t flags;
+
+    /**
+     * Also a class ID through which an instance of this class can be created
+     * (or accessed as a service, if |flags & SINGLETON|).  If the class does
+     * not have a CID, it should return NS_ERROR_NOT_AVAILABLE.  This attribute
+     * exists so C++ callers can avoid allocating and freeing a CID, as would
+     * happen if they used classID.
+     */
+    [noscript] readonly attribute nsCID classIDNoAlloc;
+
+};

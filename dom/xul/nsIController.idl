@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(D5B61B82-1DA4-11d3-BF87-00105A1B0627)]
+interface nsIController : nsISupports {
+  boolean isCommandEnabled(in string command);
+  boolean supportsCommand(in string command);
+
+  [can_run_script]
+  void doCommand(in string command);
+
+  void onEvent(in string eventName);
+};
+
+
+/*
+
+  Enhanced controller interface that allows for passing of parameters
+  to commands.
+
+*/
+
+interface nsICommandParams;
+
+[scriptable, uuid(EEC0B435-7F53-44FE-B00A-CF3EED65C01A)]
+interface nsICommandController : nsISupports
+{
+
+  void        getCommandStateWithParams( in string command, in nsICommandParams aCommandParams);
+
+  [can_run_script]
+  void        doCommandWithParams(in string command, in nsICommandParams aCommandParams);
+
+  Array<ACString> getSupportedCommands();
+};

@@ -1,0 +1,974 @@
+# Full list is tracked through meta bug 793882
+
+####################################
+#  Leaks in third party libraries  #
+####################################
+
+{
+   Bug 793537
+   Memcheck:Leak
+   ...
+   obj:/usr/lib64/libpango-1.0.so.0.2800.1
+   ...
+}
+{
+   Bug 793598
+   Memcheck:Leak
+   ...
+   obj:/lib64/libdbus-1.so.3.4.0
+   ...
+}
+# Fontconfig is going fancy with its cache structure and that confuses valgrind.
+# https://bugs.freedesktop.org/show_bug.cgi?id=8215
+# https://bugs.freedesktop.org/show_bug.cgi?id=8428
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:FcPatternObjectInsertElt
+   ...
+}
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcPatternObjectInsertElt
+   ...
+}
+{
+   Bug 1533462 (comment 9)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcNameParseCharSet
+   fun:FcNameConvert
+   fun:FcNameParse
+   ...
+}
+# With older versions of fontconfig (e.g. 2.8.0 on taskcluster systems),
+# there's an uninitialized memory usage and leak when loading app fonts.
+{
+   Bug 1231701
+   Memcheck:Param
+   write(buf)
+   ...
+   fun:FcDirCacheWrite
+   fun:FcDirCacheScan
+   fun:FcConfigAddDirList
+   ...
+}
+{
+   Bug 1231701
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcDirScanConfig
+   fun:FcDirCacheScan
+   fun:FcConfigAddDirList
+   ...
+}
+{
+   Bug 1231701
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcDirScanConfig
+   fun:FcDirScanConfig
+   fun:FcDirCacheScan
+   fun:FcConfigAddDirList
+   ...
+}
+{
+   Bug 1231701
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcDirScanConfig
+   obj:/usr/lib/x86_64-linux-gnu/libfontconfig.so.1.5.0
+   fun:FcDirCacheScan
+   fun:FcConfigAddDirList
+   ...
+}
+# Leaks due to either Gtk+3 or cairo, but Gecko is not directly involved with
+# those cairo interactions.  One suspected cause is Gecko not closing the
+# display to work around a bug in old Gtk+3 versions.  See also bug 1228724.
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_cairo_freelist_alloc
+   fun:_cairo_xlib_display_queue_resource
+   fun:_cairo_xlib_surface_finish
+   ...
+}
+# The following leak is deep in Gtk+3, and it doesn't seem we're doing
+# anything wrong on our end with the container objects. This suppression
+# is purposefully verbose so as to avoid catching actual leaks due to
+# Gecko code.
+# Note: valgrind doesn't support more than 24 elements in a suppression stack.
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_list_prepend
+   fun:gtk_combo_box_get_path_for_child
+   fun:gtk_container_get_path_for_child
+   fun:gtk_widget_get_path
+   fun:_gtk_widget_update_path
+   fun:reset_style_recurse
+   fun:gtk_widget_reset_style
+   fun:gtk_widget_set_parent
+   fun:gtk_combo_box_add
+   fun:g_cclosure_marshal_VOID__OBJECTv
+   fun:_g_closure_invoke_va
+   fun:g_signal_emit_valist
+   fun:g_signal_emit
+   fun:gtk_combo_box_constructor
+   fun:g_object_newv
+   fun:g_object_new_valist
+   fun:g_object_new
+   ...
+}
+# set_color() in gtkstyle.c of GTK version 3.4.4 only can leak GdkRGBA
+# allocations when the theme has transparent colors:
+# https://git.gnome.org/browse/gtk+/tree/gtk/deprecated/gtkstyle.c?h=3.4.4#n676
+{
+   Bug 1250704
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_slice_copy
+   fun:boxed_proxy_lcopy_value
+   fun:gtk_style_context_get_valist
+   fun:gtk_style_context_get
+   fun:set_color
+   fun:gtk_style_update_from_context
+   fun:gtk_style_constructed
+   fun:g_object_newv
+   fun:g_object_new_valist
+   fun:g_object_new
+   ...
+}
+{
+   Bug 794366
+   Memcheck:Leak
+   ...
+   obj:/usr/lib64/libgtk-x11-2.0.so.0.1800.9
+   ...
+}
+{
+   Bug 794368
+   Memcheck:Leak
+   ...
+   obj:/usr/lib64/libXrandr.so.2.2.0
+   ...
+}
+{
+   Bug 794373
+   Memcheck:Leak
+   ...
+   obj:/lib64/libgobject-2.0.so.0.2200.5
+   ...
+}
+{
+   Bug 966673
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/x86_64-linux-gnu/libresolv-2.13.so
+   ...
+   fun:gaih_inet
+   fun:getaddrinfo
+   fun:PR_GetAddrInfoByName
+   ...
+}
+{
+   Bug 979242
+   Memcheck:Leak
+   fun:calloc
+   fun:xcb_connect_to_fd
+   fun:xcb_connect_to_display_with_auth_info
+   fun:_XConnectXCB
+   fun:XOpenDisplay
+   fun:gdk_display_open
+   ...
+}
+{
+   _g_io_module_get_default
+   Memcheck:Leak
+   ...
+   fun:g_io_module_new
+   fun:g_io_modules_scan_all_in_directory_with_scope
+   fun:_g_io_modules_ensure_loaded
+   fun:_g_io_module_get_default
+}
+{
+   dlopen leak triggered by bug 1492121
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   ...
+}
+{
+    gtk leak triggered by bug 1707957. Relatively minor, and seems fixed in newer GTK versions.
+    Memcheck:Leak
+    match-leak-kinds: definite
+    ...
+    fun:gtk_css_keyframes_new
+    ...
+    fun:settings_update_theme
+    ...
+}
+{
+    gtk leaks from not using gdk_display_close because it causes crashes in _gtk_settings_get_style_cascade
+    Memcheck:Leak
+    match-leak-kinds: definite
+    ...
+    fun:__glXInitialize
+    fun:GetGLXPrivScreenConfig
+    fun:glXQueryServerString
+    fun:epoxy_glx_version
+    fun:gdk_x11_screen_init_gl
+    fun:_gdk_x11_screen_update_visuals_for_gl
+    fun:_gdk_x11_screen_init_visuals
+    fun:_gdk_x11_screen_new
+    fun:_gdk_x11_display_open
+    fun:gdk_display_manager_open_display
+    fun:_ZN7XREMain15XRE_mainStartupEPb
+    fun:_ZN7XREMain8XRE_mainEiPPcRKN7mozilla15BootstrapConfigE
+    fun:_Z8XRE_mainiPPcRKN7mozilla15BootstrapConfigE
+    fun:do_main
+    fun:main
+}
+
+###################################
+#  Leaks in short lived processes #
+###################################
+
+{
+   Bug 984196
+   Memcheck:Leak
+   ...
+   fun:childgltest
+   ...
+}
+
+#########################################
+#  Uninitialised value false positives  #
+#########################################
+
+# This concerns a false positive pertaining to Memcheck's overly-
+# conservative instrumentation of CPUID.  See bug 1288618 comments
+# 119 through 127.
+{
+   Bug 1288618 comments 119 through 127
+   Memcheck:Cond
+   fun:_ZN6SkOptsL4initEv
+   fun:sk_once_no_arg_adaptor
+}
+
+{
+   Bug 1288618 comments 119 through 127 part 2
+   Memcheck:Cond
+   fun:__get_cpuid
+   fun:cpuid
+   fun:_ZN6SkOptsL4initEv
+   fun:sk_once_no_arg_adaptor
+}
+
+# More stuff to do with CPUID and Skia.  Apparently we could get rid of
+# these if we could patch our in-tree Skia, but that's not favoured.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xFDD1D97: SkCpu::CacheRuntimeFeatures()
+#    by 0xFE8A66E: SkGraphics::Init()
+#    by 0xE757308: gfxPlatform::Init()
+#    by 0xE75772C: gfxPlatform::GetPlatform()
+{
+   Skia and CPUID, Jan 2017, #1
+   Memcheck:Cond
+   fun:_ZN5SkCpu20CacheRuntimeFeaturesEv
+   fun:_ZN10SkGraphics4InitEv
+   fun:_ZN11gfxPlatform4InitEv
+   fun:_ZN11gfxPlatform11GetPlatformEv
+}
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xFD5B218: SkOpts::Init()
+#    by 0xE757308: gfxPlatform::Init()
+#    by 0xE75772C: gfxPlatform::GetPlatform()
+#    by 0xF1A3691: mozilla::dom::ContentProcess::Init()
+#               or mozilla::dom::ContentChild::RecvSetXPCOMProcessAttributes()
+{
+   Skia and CPUID, Jan 2017, #2
+   Memcheck:Cond
+   fun:_ZN6SkOpts4InitEv
+   fun:_ZN11gfxPlatform4InitEv
+   fun:_ZN11gfxPlatform11GetPlatformEv
+   fun:_ZN7mozilla3dom*Content*
+}
+
+# False positives triggered by rust 1.20.0 (at least) builds of stylo.
+# See bug 1394696. The diagnosis is an llvm optimization transforming
+# `if A && B` to `if B && A` if is can be proven that A is false
+# whenever B is uninitialized. Confusing, but valid.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x113ED01E: selectors::matching::matches_complex_selector_internal (option.rs:421)
+#    by 0x113ECF19: selectors::matching::matches_complex_selector (matching.rs:501)
+#    by 0x113EBAC0: <style::selector_map::SelectorMap<style::stylist::Rule>>::get_matching_rules (matching.rs:397)
+{
+  Bug 1394696 Stylo selector, Sept 2017, part 1
+  Memcheck:Cond
+  fun:_ZN9selectors8matching33matches_complex_selector_internal*
+  fun:_ZN9selectors8matching24matches_complex_selector*
+  ...
+  fun:_ZN69_$LT$style..selector_map..SelectorMap$LT$style..stylist..Rule$GT$$GT$18get_matching_rules*
+}
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x113EFFDE: selectors::matching::matches_complex_selector_internal (option.rs:421)
+#    by 0x113EFED9: selectors::matching::matches_complex_selector (matching.rs:501)
+#    by 0x113DFE55: style::stylist::Stylist::match_revalidation_selectors::{{closure}} (matching.rs:397)
+{
+  Bug 1394696 Stylo selector, Sept 2017, part 2
+  Memcheck:Cond
+  fun:_ZN9selectors8matching33matches_complex_selector_internal*
+  fun:_ZN9selectors8matching24matches_complex_selector*
+  ...
+  fun:_ZN5style9traversal13compute_style*
+  fun:recalc_style_at<style::gecko::wrapper::GeckoElement,style::gecko::traversal::RecalcStyleOnly,closure>
+}
+
+# Similar issue triggered by rust 1.23.0 on builds of stylo.
+#
+# at 0x11819B3E: std::sync::once::Once::call_once::{{closure}} (raw_vec.rs:225)
+# by 0x118FDCCC: std::sync::once::Once::call_inner (once.rs:341)
+# by 0x1139C761: UnknownInlinedFun (once.rs:228)
+{
+  Bug 1418083 Servo::TraverseSubtree, January 2018
+  Memcheck:Cond
+  fun:*ZN3std4sync4once4Once9call_once*
+  fun:*ZN3std4sync4once4Once10call_inner*
+  ...
+  fun:Servo_TraverseSubtree
+}
+
+# Issue triggered by rust 1.23.0 on builds of stylo.
+{
+  Bug 1418083 SelectorList::parse, January 2018
+  Memcheck:Cond
+  fun:_ZN36_$LT$smallvec..SmallVec*
+  fun:_ZN52_$LT$selectors..parser..SelectorList*
+}
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x118720EA: <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::all::{{closure}} (mod.rs:1173)
+#    by 0x11871EF6: style::media_queries::MediaList::evaluate (mod.rs:1277)
+{
+  Bug 1430608 nsMediaFeatures, January 2018
+	Memcheck:Cond
+	fun:_ZN91_$LT$core..slice..Iter$LT$$u27$a$C$$u20$T$GT$$u20$as$u20$core..iter..iterator..Iterator$GT$3all*
+	fun:_ZN5style13media_queries9MediaList8evaluate*
+}
+
+# Several issues triggered by enabling stylo-chrome.
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x11F88693: style::properties::LonghandId::parse_value (heap.rs:0)
+#    by 0x1203BBAB: style::properties::UnparsedValue::substitute_variables (parser.rs:594)
+#    by 0x11CFCE33: style::properties::cascade (properties.rs:135672)
+{
+  Bug 1437796 LonghandId::parse_value, January 2018
+  Memcheck:Cond
+  fun:_ZN5style10properties10LonghandId11parse_value*
+  fun:_ZN5style10properties13UnparsedValue20substitute_variables*
+  fun:_ZN5style10properties7cascade*
+}
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x11DF7AF6: <smallvec::SmallVec<A>>::grow (raw_vec.rs:0)
+#    by 0x11DF6ED0: Servo_InvalidateStyleForDocStateChanges (lib.rs:475)
+#    by 0x10394B7E: mozilla::ServoStyleSet::InvalidateStyleForDocumentStateChanges(mozilla::EventStates) (ServoStyleSet.cpp:248)
+{
+   Bug 1437796 SmallVec::grow in Servo_InvalidateStyleForDocStateChanges, January 2018
+   Memcheck:Cond
+   fun:_ZN36_$LT$smallvec..SmallVec$LT$A$GT$$GT$4grow*
+   fun:Servo_InvalidateStyleForDocStateChanges
+   fun:_ZN7mozilla13ServoStyleSet38InvalidateStyleForDocumentStateChangesENS_11EventStatesE
+}
+
+
+##############################################################################
+## BEGIN suppressions for Stylo as compiled by rustc 1.25.0
+# Even more similar issues, resulting from transitioning to rustc 1.25.0.
+# See bug 1447137.
+
+
+# Suppressions rooted at *style*values*specified*color*Color*style*parser*Parse*parse*
+
+{
+   bug1447137
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+}
+
+##########################################
+# Suppressions rooted at *selectors*parser*SelectorList*Impl*parse*
+
+{
+   bug1454511
+   Memcheck:Cond
+   fun:*selectors*parser*SelectorList*Impl*parse*
+}
+
+##########################################
+# Suppressions rooted at *style*properties*shorthands*
+
+{
+   bug1447137-17
+   Memcheck:Cond
+   fun:*style*properties*shorthands*
+   fun:*style*properties*PropertyDeclaration*parse_into*
+   fun:*style*parse_value*
+   fun:*cssparser*Iterator*next*
+}
+
+## END suppressions for Stylo as compiled by rustc 1.25.0
+##############################################################################
+
+
+# Another suppression for Stylo, August 2018.  See bug 1479055.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at style::[..]::clip_path::cascade_property (gecko_properties.rs:17152)
+#    by style::properties::cascade_rules (properties.rs:83642)
+#    by [..]::cascade_style_and_visited (properties.rs:83129)
+#    by [..]::cascade_primary_style (style/style_resolver.rs:216)
+{
+   Bug 1479055: style::properties::longhands::clip_path::cascade_property
+   Memcheck:Cond
+   fun:_ZN5style10properties9longhands9clip_path16cascade_property*
+   fun:_ZN5style10properties13cascade_rules*
+   fun:_ZN109_$LT$style*style_resolver*cascade_style_and_visited*
+   fun:_ZN109_$LT$style*cascade_primary_style*
+}
+
+# Another suppression for Stylo, October 2018.  See bug 1496486.
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x108E2931: style::properties::longhands::font_language_override::cascade_property+81 (font.rs:2095)
+#    by 0x107E95B4: style::properties::cascade::Cascade::apply_properties+580 (cascade.rs:463)
+#    by 0x107E82D8: style::properties::cascade::cascade_rules+2440 (cascade.rs:303)
+#    by 0x107E7206: <style::style_resolver::StyleResolverForElement<'a, 'ctx, 'le, E>>::cascade_style_and_visited+310 (cascade.rs:93)
+#  Uninitialised value was created by a stack allocation
+#    at 0x10A42A40: style::properties::shorthands::font::parse_value (font.rs:376)
+{
+   Bug 1496486: style::properties::longhands::font_language_override::cascade_property
+   Memcheck:Cond
+   fun:_ZN5style10properties9longhands22font_language_override16cascade_property*
+   fun:_ZN5style10properties7cascade7Cascade16apply_properties*
+   fun:_ZN5style10properties7cascade13cascade_rules*
+}
+
+###################################################
+#  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
+#  See bug 1248365.
+#  These are specific to Ubuntu 12.04.5, 64-bit.
+###################################################
+
+
+# Not sure what this is.  Is it the well-known
+# Memcheck-being-confused-by-zlib thing?  I suspect so.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xB6154E0: inflateReset2 (in /lib/x86_64-linux-gnu/libz.so.1.2.3.4)
+#    by 0xB6155D8: inflateInit2_ (in /lib/x86_64-linux-gnu/libz.so.1.2.3.4)
+#    by 0xADDE253: png_create_read_struct_2
+#                  (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#  Uninitialised value was created by a heap allocation
+#    at 0x4C2D027: malloc (coregrind/m_replacemalloc/vg_replace_malloc.c:298)
+#    by 0xADE960F: png_malloc (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#    by 0xADD1B95: ??? (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#    by 0xB6155B6: inflateInit2_ (in /lib/x86_64-linux-gnu/libz.so.1.2.3.4)
+#    by 0xADDE253: png_create_read_struct_2
+#                  (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#    by 0x15707869: ??? (in /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/
+#                   loaders/libpixbufloader-png.so)
+{
+   Bug 1248365: mochitest-libz-1
+   Memcheck:Cond
+   fun:inflateReset2
+   fun:inflateInit2_
+   fun:png_create_read_struct_2
+}
+
+
+# I don't know what this is.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x39608257: ??? (in /usr/lib/x86_64-linux-gnu/librsvg-2.so.2.36.1)
+#    by 0x39608E96: rsvg_handle_get_pixbuf_sub (in /usr/lib/x86_64-linux-gnu/l
+#    by 0x37D00D2A: ??? (in /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/lo
+#    by 0x88FF740: gdk_pixbuf_loader_close (in /usr/lib/x86_64-linux-gnu/libgd
+#    by 0x88FBA48: ??? (in /usr/lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0.26
+#    by 0x88FD290: gdk_pixbuf_new_from_stream_at_scale (in /usr/lib/x86_64-lin
+#    by 0x6EF96A7: ??? (in /usr/lib/x86_64-linux-gnu/libgtk-3.so.0.400.2)
+#    by 0x6EFC2B1: gtk_icon_info_load_icon (in /usr/lib/x86_64-linux-gnu/libgt
+#  Uninitialised value was created by a stack allocation
+#    at 0xAB786B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+{
+   Bug 1248365: mochitest-librsvg-1
+   Memcheck:Cond
+   obj:/*/librsvg-2.so.2.36*
+   fun:rsvg_handle_get_pixbuf_sub
+   obj:/*/libpixbufloader-svg.so*
+   fun:gdk_pixbuf_loader_close
+}
+
+
+# There now follow some suppressions to do with libpixman.  There are two
+# variants, one for errors in the system libpixman, and one for errors in
+# our in-tree copy.  I suspect that all of these sse2 compositing reports
+# are Memcheck false positives, possibly to do with inaccurate
+# instrumentation of the function combine1() in
+# gfx/cairo/libpixman/src/pixman-sse2.c.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xAB93A10: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+#    by 0xAB78927: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+#    by 0xAB40B0B: pixman_image_composite32 (in /usr/lib/x86_64-linux-gnu/libp
+#    by 0x865C95C: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x865E3CB: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x865F6EA: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x865F968: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x867D7C3: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#  Uninitialised value was created by a stack allocation
+#    at 0xAB786B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+{
+   Bug 1248365: mochitest-libpixman-1
+   Memcheck:Cond
+   obj:/*/libpixman-1.so.0.30*
+   obj:/*/libpixman-1.so.0.30*
+   fun:pixman_image_composite32
+}
+
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xF9EA219: sse2_composite_over_8888_8888
+#    by 0xF9F5B5F: _moz_pixman_image_composite32
+#    by 0xF96E29E: _clip_and_composite_boxes
+#    by 0xF96F79D: _cairo_image_surface_fill
+#    by 0xF98790C: _cairo_surface_fill
+#    by 0xF96FE2E: _cairo_gstate_fill
+#    by 0xF98B3D9: _moz_cairo_fill_preserve
+#    by 0xE4CF383: mozilla::gfx::DrawTargetCairo::DrawPattern(mozilla::gfx:
+#  Uninitialised value was created by a stack allocation
+#    at 0xB8E46B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+{
+   Bug 1248365: mochitest-libpixman-2
+   Memcheck:Cond
+   fun:sse2_composite_over_8888_8888
+   fun:_moz_pixman_image_composite32
+   fun:_clip_and_composite_boxes
+   fun:_cairo_image_surface_fill
+}
+
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xF9D56AE: sse2_combine_over_u (in /builds/worker/workspace/build/applic
+#    by 0xF9D05D4: general_composite_rect (in /builds/worker/workspace/build/app
+#    by 0xF9F5B5F: _moz_pixman_image_composite32 (in /builds/worker/workspace/bu
+#    by 0xF96CF63: _clip_and_composite (in /builds/worker/workspace/build/applic
+#    by 0xF96D656: _clip_and_composite_boxes.part.32 (in /builds/worker/workspac
+#    by 0xF96E328: _clip_and_composite_boxes (in /builds/worker/workspace/build/
+#    by 0xF96F79D: _cairo_image_surface_fill (in /builds/worker/workspace/build/
+#    by 0xF98790C: _cairo_surface_fill (in /builds/worker/workspace/build/applic
+#  Uninitialised value was created by a stack allocation
+#    at 0xF9D024D: general_composite_rect (in /builds/worker/workspace/build/app
+#
+{
+   Bug 1248365: mochitest-libpixman-3
+   Memcheck:Cond
+   fun:sse2_combine_over_u
+   fun:general_composite_rect
+   fun:_moz_pixman_image_composite32
+   fun:_clip_and_composite*
+}
+
+
+# Not sure what this.  I can't reproduce it locally despite much trying.
+# Syscall param sendmsg(msg.msg_iov[0]) points to uninitialised byte(s)
+#    at 0x4E4533D: ??? (syscall-template.S:82)
+#    by 0xE12C0A7: IPC::Channel::ChannelImpl::ProcessOutgoingMessages() (in /h
+#    by 0xE142FD0: RunnableMethod<IPC::Channel, bool (IPC::Channel::*)(IPC::Me
+#    by 0xE1240EA: MessageLoop::RunTask(Task*) (in /builds/worker/workspace/buil
+#    by 0xE128A46: MessageLoop::DeferOrRunPendingTask(MessageLoop::PendingTask
+#    by 0xE128B6D: MessageLoop::DoWork() (in /builds/worker/workspace/build/appl
+#    by 0xE12272C: base::MessagePumpLibevent::Run(base::MessagePump::Delegate*
+#    by 0xE124155: MessageLoop::Run() (in /builds/worker/workspace/build/applica
+{
+   Bug 1248365: mochitest-sendmsg-1
+   Memcheck:Param
+   sendmsg(msg.msg_iov[0])
+   obj:/lib/x86_64-linux-gnu/libpthread-2.15.so
+   fun:_ZN3IPC7Channel11ChannelImpl23ProcessOutgoingMessagesEv
+   fun:_ZN14RunnableMethodIN3IPC7ChannelEMS1_FbPNS0_7MessageEEN7mozilla5Tuple*
+}
+
+
+# I can't repro this either.
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x418E7E7C: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x4192D620: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x4192E717: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x41711BC4: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x41B08B6A: avcodec_open2 (in /usr/lib/x86_64-linux-gnu/libavcodec.so.
+#    by 0xEEAD89C: mozilla::FFmpegDataDecoder<53>::InitDecoder() (in /home/wor
+#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /builds/worker/wo
+#    by 0xEEA4C07: mozilla::H264Converter::Init() (in /builds/worker/workspace/b
+#  Uninitialised value was created by a heap allocation
+#    at 0x4C2D11F: realloc (vg_replace_malloc.c:785)
+#    by 0x406196: moz_xrealloc (in /builds/worker/workspace/build/application/fi
+#    by 0xDEB43AC: nsTArrayInfallibleAllocator::ResultTypeProxy nsTArray_base<
+#    by 0xEEAD850: mozilla::FFmpegDataDecoder<53>::InitDecoder() (in /home/wor
+#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /builds/worker/wo
+{
+   Bug 1248365: mochitest-libavcodec-1-c
+   Memcheck:Cond
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+}
+{
+   Bug 1248365: mochitest-libavcodec-1-v8
+   Memcheck:Value8
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+}
+
+
+# Not sure what this is, but I am inclined to think it is also probably a
+# SSE2-induced false positive similar to mochitest-libpixman-2 above.
+# Use of uninitialised value of size 8
+#    at 0xE4F3E89: FastConvertYUVToRGB32Row (in /builds/worker/workspace/build/a
+#    by 0xE4F4A6D: mozilla::gfx::ConvertYCbCrToRGB32(unsigned char const*, uns
+#    by 0xE4F4B17: mozilla::gfx::ConvertYCbCrToRGB(mozilla::layers::PlanarYCbC
+#    by 0xE5227CB: mozilla::layers::PlanarYCbCrImage::GetAsSourceSurface() (in
+#    by 0xE5B2465: mozilla::layers::SharedPlanarYCbCrImage::GetAsSourceSurface
+#    by 0xE52FE44: mozilla::layers::BasicImageLayer::Paint(mozilla::gfx::DrawT
+#    by 0xE5618A1: mozilla::layers::BasicLayerManager::PaintSelfOrChildren(moz
+#    by 0xE560F83: mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*,
+#  Uninitialised value was created by a stack allocation
+#    at 0x434B36B2: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+{
+   Bug 1248365: FastConvertYUVToRGB32Row-1
+   Memcheck:Value8
+   fun:FastConvertYUVToRGB32Row
+   fun:_ZN7mozilla3gfx19ConvertYCbCrToRGB32*
+   fun:_ZN7mozilla3gfx17ConvertYCbCrToRGB*
+   fun:_ZN7mozilla6layers16PlanarYCbCrImage18GetAsSourceSurface*
+}
+
+# Similarly:
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xFDAD1D1: sse41::blit_row_s32a_opaque(unsigned int*, unsigned int con
+#    by 0xFD60FA9: Sprite_D32_S32::blitRect(int, int, int, int) (in /home/work
+#    by 0xFEB9E0D: SkScan::FillIRect(SkIRect const&, SkRegion const*, SkBlitte
+#    by 0xFEBDDF3: SkScan::FillIRect(SkIRect const&, SkRasterClip const&, SkBl
+{
+   SKIA and SSE4, Jan 2017
+   Memcheck:Cond
+   fun:_ZN5sse41L20blit_row_s32a_opaque*
+   fun:_ZN14Sprite_D32_S328blitRect*
+   fun:_ZN6SkScan9FillIRect*
+   fun:_ZN6SkScan9FillIRect*
+}
+
+# This is probably a V false positive, due to an insufficiently accurate
+# description of the ioctl(SIOCETHTOOL) behavior.
+# Syscall param ioctl(SIOCETHTOOL) points to uninitialised byte(s)
+#    at 0x5D5CBF7: ioctl (syscall-template.S:82)
+#    by 0xF58EB67: nr_stun_get_addrs (in /builds/worker/workspace/build/applica
+#    by 0xF594791: nr_stun_find_local_addresses (in /builds/worker/workspace/bu
+#    by 0xF58A237: nr_ice_get_local_addresses (in /builds/worker/workspace/buil
+#    by 0xF58ADDE: nr_ice_gather (in /builds/worker/workspace/build/application
+#    by 0xE43F35F: mozilla::NrIceCtx::StartGathering() (in /builds/worker/works
+#    by 0xE419560: mozilla::PeerConnectionMedia::EnsureIceGathering_s() (in /
+#    by 0xE41A11C: mozilla::runnable_args_memfn<RefPtr<mozilla::PeerConnectio
+#  Address 0x1cc3fb48 is on thread 6's stack
+#  in frame #1, created by nr_stun_get_addrs (???:)
+{
+   Bug 1248365: mochitest-ioctl(SIOCETHTOOL)-1
+   Memcheck:Param
+   ioctl(SIOCETHTOOL)
+   fun:ioctl
+   fun:nr_stun_get_addrs
+   fun:nr_stun_find_local_addresses
+}
+
+
+# This looks like uninitialised padding bytes in a structure owned
+# by libfontconfig.  So there's nothing we can do about it.
+# Syscall param write(buf) points to uninitialised byte(s)
+#    at 0x4E44CCD: ??? (syscall-template.S:82)
+#    by 0x9F1FF56: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F2679B: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22B98: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22C5F: FcConfigAppFontAddDir (in /usr/lib/x86_64-linux-gnu/libfon
+#    by 0xE850173: gfxFcPlatformFontList::ActivateBundledFonts() (in /home/wo
+#    by 0xE852258: gfxFcPlatformFontList::InitFontListForPlatform() (in /home
+#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /builds/worker/works
+#  Address 0x2316663c is 156 bytes inside a block of size 1,448 alloc'd
+#    at 0x4C2CF71: malloc (vg_replace_malloc.c:299)
+#    by 0x9F1FD1D: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F26788: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22B98: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22C5F: FcConfigAppFontAddDir (in /usr/lib/x86_64-linux-gnu/libfon
+#    by 0xE850173: gfxFcPlatformFontList::ActivateBundledFonts() (in /home/wo
+#    by 0xE852258: gfxFcPlatformFontList::InitFontListForPlatform() (in /home
+#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /builds/worker/works
+{
+   Bug 1248365: libfontconfig-1
+   Memcheck:Param
+   write(buf)
+   obj:/*/libpthread*.so*
+   obj:/*/libfontconfig.so*
+   ...
+   obj:/*/libfontconfig.so*
+   fun:FcConfigAppFontAddDir
+}
+
+
+# There's nothing we can do about these short of throwing in
+# --show-mismatched-frees=no, but that's a bit drastic, so for now,
+# just suppress them.  A typical error is:
+#
+# Mismatched free() / delete / delete []
+#    at 0x4C2BE97: free (vg_replace_malloc.c:530)
+#    by 0xFCD09EC: ots::ots_post_free(ots::Font*) (in /builds/worker/workspace/
+#    by 0xFCC600E: ots::Font::~Font() (in /builds/worker/workspace/build/applic
+#    by 0xFCCBFA5: ots::OTSContext::Process(ots::OTSStream*, unsigned char co
+#    by 0xE7D7C8D: gfxUserFontEntry::SanitizeOpenTypeData(unsigned char const
+#    by 0xE7E371D: gfxUserFontEntry::LoadPlatformFont(unsigned char const*, u
+#    by 0xE7E48AA: gfxUserFontEntry::FontDataDownloadComplete(unsigned char c
+#    by 0xF49D25B: nsFontFaceLoader::OnStreamComplete(nsIStreamLoader*, nsISu
+#  Address 0x15671f00 is 0 bytes inside a block of size 490 alloc'd
+#    at 0x4C2CAEE: operator new(unsigned long) (vg_replace_malloc.c:332)
+#    by 0xF6AB737: std::vector<unsigned short, std::allocator<unsigned short>
+#    by 0xFCD0FDE: ots::ots_post_parse(ots::Font*, unsigned char const*, unsi
+#    by 0xFCCA3D9: (anonymous namespace)::ProcessGeneric(ots::OpenTypeFile*,
+#    by 0xFCCB17E: (anonymous namespace)::ProcessTTF(ots::OpenTypeFile*, ots:
+#    by 0xFCCBA54: ots::OTSContext::Process(ots::OTSStream*, unsigned char co
+#    by 0xE7D7C8D: gfxUserFontEntry::SanitizeOpenTypeData(unsigned char const
+#    by 0xE7E371D: gfxUserFontEntry::LoadPlatformFont(unsigned char const*, u
+{
+   Bug 1248365: ots::Font::~Font()-1
+   Memcheck:Free
+   fun:free
+   fun:_ZN3ots13ots_post_free*
+   fun:_ZN3ots4FontD1Ev
+   fun:_ZN3ots10OTSContext7Process*
+}
+
+# and various similar:
+{
+   ots mismatched frees, Jan 2017, #1
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots14ots_glyf_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN12_GLOBAL__N_110ProcessTTFEPN3ots12OpenTypeFile*
+}
+{
+   ots mismatched frees, Jan 2017, #2
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots13ots_cff_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN3ots10OTSContext7ProcessEPNS_9OTSStream*
+}
+{
+   ots mismatched frees, Jan 2017, #3
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots13ots_cff_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN12_GLOBAL__N_110Process*
+}
+{
+   ots mismatched frees, Jan 2017, #4
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots12ots_cff_free*
+   fun:_ZN3ots4FontD1Ev*
+   fun:_ZN3ots10OTSContext7Process*
+}
+{
+   ots mismatched frees, Jan 2017, #5
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots13ots_loca_free*
+   fun:_ZN3ots4FontD1Ev*
+   fun:_ZN3ots10OTSContext7Process*
+}
+{
+   ots mismatched frees, Jan 2017, #6
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots14ots_glyf_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN3ots10OTSContext7ProcessEPNS_9OTSStream*
+}
+
+{
+   map_or<selectors::parser::Combinator,bool,closure> #1 (see bug 1365915)
+   Memcheck:Cond
+   fun:map_or<selectors::parser::Combinator,bool,closure>
+   fun:_ZN9selectors8matching33matches_complex_selector_internal*
+   fun:_ZN9selectors8matching24matches_complex_selector*
+   fun:matches_selector<style::gecko::wrapper::GeckoElement,closure>
+}
+
+{
+   map_or<selectors::parser::Combinator,bool,closure> #2 (see bug 1365915)
+   Memcheck:Cond
+   fun:map_or<selectors::parser::Combinator,bool,closure>
+   fun:_ZN9selectors8matching33matches_complex_selector_internal*
+   fun:_ZN9selectors8matching24matches_complex_selector*
+   fun:{{closure}}<closure>
+}
+
+# more leaks in libLLVM-3.6-mesa.so, August 2017.  See bug 1338651.
+{
+   static-object-leaks-in-libLLVM-3.6-mesa.so.  See bug 1338651.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   obj:/*/lib*/libLLVM-3.6-mesa.so
+   obj:/*/lib*/libLLVM-3.6-mesa.so
+}
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser29parse_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9cssparser6parser18parse_until_before17h*
+   fun:_ZN5style5gecko15selector_parser94_$LT$impl$u20$selectors..parser..Parser$u20$for$u20$style..selector_parser..SelectorParser$GT$36parse_non_ts_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser29parse_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser25parse_one_simple_selector17*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser29parse_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser25parse_one_simple_selector17*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
+
+{
+   Starting with rust 1.52
+   Memcheck:Cond
+   ...
+   fun:_ZN5style10properties10shorthands4font10parse_into*
+   fun:_ZN5style10properties19PropertyDeclaration10parse_into*
+   fun:_ZN5style10properties17declaration_block31parse_property_declaration_list*
+   fun:_ZN124_$LT$style..stylesheets..rule_parser..NestedRuleParser$u20$as$u20$cssparser..rules_and_declarations..QualifiedRuleParser$GT$11parse_block*
+}
+
+# Suppression for Software WebRender, June 2021. See bug 1715267.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x162B199F: webrender::renderer::upload::upload_to_texture_cache+10639 (mod.rs:2045)
+#    by 0x162A7567: webrender::renderer::Renderer::update_texture_cache+5191 (mod.rs:2241)
+#    by 0x1629EF2F: webrender::renderer::Renderer::render_impl+3647 (mod.rs:1874)
+#  Uninitialised value was created by a stack allocation
+#    at 0x162AF01D: webrender::renderer::upload::upload_to_texture_cache+13 (upload.rs:50)
+{
+   Bug 1715267: webrender::renderer::upload::upload_to_texture_cache
+   Memcheck:Cond
+   fun:_ZN9webrender8renderer6upload23upload_to_texture_cache17h*
+   fun:_ZN9webrender8renderer8Renderer20update_texture_cache17h*
+   fun:_ZN9webrender8renderer8Renderer11render_impl17h*
+}
+
+# Suppression for Software WebRender, June 2021. See bug 1715290.
+#
+# 24 bytes in 1 blocks are definitely lost in loss record 3,311 of 10,861
+#    at 0x4C28FC0: malloc+112 (vg_replace_malloc.c:307)
+#    by 0x162F6CC9: wr_thread_pool_new+2729 (library/std/src/sys/unix/alloc.rs:14)
+#    by 0x11EB0814: WebRenderThreadPool (checkouts/gecko/gfx/webrender_bindings/RenderThread.cpp:1037)
+#    by 0x11EB0814: RenderThread (checkouts/gecko/gfx/webrender_bindings/RenderThread.cpp:64)
+#    by 0x11EB0814: mozilla::wr::RenderThread::Start()+116 (checkouts/gecko/gfx/webrender_bindings/RenderThread.cpp:96)
+{
+   Bug 1715290: wr_thread_pool_new / WebRenderThreadPool / RenderThread
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:wr_thread_pool_new
+   fun:WebRenderThreadPool
+   fun:RenderThread
+   fun:_ZN7mozilla2wr12RenderThread5StartEv
+}
+
+{
+   Bug 1715523 / 1715533
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:moz_xmalloc
+   fun:operator new
+   fun:MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>
+   fun:RacyRegisteredThread
+   fun:_ZN16RegisteredThreadC1EP10ThreadInfoP9nsIThreadPv
+}
+
+{
+  Bug 1728618 / 1716579
+  Memcheck:Cond
+  fun:_ZN9webrender8renderer8Renderer20update_texture_cache*
+  fun:_ZN9webrender8renderer8Renderer11render_impl*
+}

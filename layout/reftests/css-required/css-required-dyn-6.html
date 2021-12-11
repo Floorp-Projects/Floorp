@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: Remove the required attribute from an element to make it optional. -->
+  <link rel='stylesheet' type='text/css' href='css-required-style-2.css'>
+
+  <script type="text/javascript">
+    function removeRequired()
+    {
+      document.getElementById('i').removeAttribute('required');
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="removeRequired(); disableReftestWait();">
+    <input type="text" id="i" required>
+  </body>
+</html>

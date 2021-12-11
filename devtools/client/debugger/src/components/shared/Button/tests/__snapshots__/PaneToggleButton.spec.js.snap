@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaneToggleButton renders default 1`] = `
+<CommandBarButton
+  className="toggle-button start vertical"
+  onClick={[Function]}
+  title="Collapse Sources and Outline panes"
+>
+  <AccessibleImage
+    className="pane-collapse"
+  />
+</CommandBarButton>
+`;

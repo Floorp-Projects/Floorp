@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "857765",
+    title: "Throw in PeerConnection callbacks"
+  });
+
+runNetworkTest(function () {
+  let finish;
+  const onfinished = new Promise(r => finish = async () => {
+    window.onerror = oldOnError;
+    is(error_count, 7, "Seven expected errors verified.");
+    r();
+  });
+
+  function getFail() {
+    return err => {
+      window.onerror = oldOnError;
+      generateErrorCallback()(err);
+    };
+  }
+
+  let error_count = 0;
+  let oldOnError = window.onerror;
+  window.onerror = (errorMsg, url, lineNumber) => {
+    if (!errorMsg.includes("Expected")) {
+      getFail()(errorMsg);
+    }
+    error_count += 1;
+    info("onerror " + error_count + ": " + errorMsg);
+    if (error_count == 7) {
+      finish();
+    }
+    throw new Error("window.onerror may throw");
+    return false;
+  }
+
+  let pc0, pc1, pc2;
+  // Test failure callbacks (limited to 1 for now)
+  pc0 = new RTCPeerConnection();
+  pc0.close();
+  pc0.createOffer(getFail(), function(err) {
+    pc1 = new RTCPeerConnection();
+    pc2 = new RTCPeerConnection();
+
+    // Test success callbacks (happy path)
+    navigator.mozGetUserMedia({video:true}, function(video1) {
+      pc1.addStream(video1);
+      pc1.createOffer(function(offer) {
+        pc1.setLocalDescription(offer, function() {
+          pc2.setRemoteDescription(offer, function() {
+            pc2.createAnswer(function(answer) {
+              pc2.setLocalDescription(answer, function() {
+                pc1.setRemoteDescription(answer, function() {
+                  throw new Error("Expected");
+                }, getFail());
+                throw new Error("Expected");
+              }, getFail());
+              throw new Error("Expected");
+            }, getFail());
+            throw new Error("Expected");
+          }, getFail());
+          throw new Error("Expected");
+        }, getFail());
+        throw new Error("Expected");
+      }, getFail());
+    }, getFail());
+    throw new Error("Expected");
+  });
+
+  return onfinished;
+});
+
+</script>
+</pre>
+</body>
+</html>

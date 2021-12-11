@@ -1,0 +1,17 @@
+[package]
+name = "chardetng_c"
+description = "C bindings for chardetng"
+version = "0.1.2"
+authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+readme = "README.md"
+documentation = "https://docs.rs/chardetng_c/"
+homepage = "https://docs.rs/chardetng_c/"
+repository = "https://github.com/hsivonen/chardetng-c"
+keywords = ["encoding", "web", "unicode", "charset"]
+categories = ["text-processing", "encoding", "web-programming", "internationalization"]
+
+[dependencies]
+encoding_rs = "0.8.17"
+chardetng = "0.1.1"

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for performance.timeOrigin</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  </head>
+  <body>
+    <script type="text/js-worker" id="worker-src">
+      postMessage({ now: performance.now(), timeOrigin: performance.timeOrigin });
+    </script>
+
+    <script type="text/js-worker" id="shared-worker-src">
+      onconnect = function(evt) {
+        evt.ports[0].postMessage({ now: performance.now(), timeOrigin: performance.timeOrigin });
+      };
+    </script>
+
+    <script class="testbody" type="text/javascript">
+
+function testBasic() {
+  ok("timeOrigin" in performance, "Performance.timeOrigin exists.");
+  ok(performance.timeOrigin > 0, "TimeOrigin must be greater than 0.");
+  next();
+}
+
+function testWorker() {
+  var now = performance.now();
+
+  var blob = new Blob([ document.getElementById("worker-src").textContent ],
+                      { type: "text/javascript" });
+  var w = new Worker(URL.createObjectURL(blob));
+  w.onmessage = function(e) {
+    ok (e.data.now + e.data.timeOrigin > now + performance.timeOrigin, "Comparing worker.now and window.now");
+    next();
+  }
+}
+
+function testSharedWorker() {
+  var now = performance.now();
+
+  var blob = new Blob([ document.getElementById("shared-worker-src").textContent ],
+                      { type: "text/javascript" });
+  var w = new SharedWorker(URL.createObjectURL(blob));
+  w.port.onmessage = function(e) {
+    ok (e.data.now + e.data.timeOrigin > now + performance.timeOrigin, "Comparing worker.now and window.now");
+    next();
+  }
+}
+
+var tests = [ testBasic, testWorker, testSharedWorker ];
+function next() {
+  if (!tests.length) {
+    SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// It is a known issue that comparing time between a worker and a window
+// when timer clamping is in effect may cause time to go backwards.
+// Do not run this test with this preference set. For large values of
+// clamping you will see failures. For small values, it is intermitant.
+var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
+
+addLoadEvent(next);
+      </script>
+    </pre>
+  </body>
+</html>

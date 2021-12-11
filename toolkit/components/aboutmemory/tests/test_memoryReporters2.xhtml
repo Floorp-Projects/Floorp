@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Memory reporters with child processes"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- This file tests (in a rough fashion) whether the memory reporters are
+       producing sensible results in the presence of child processes. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+  let socketProcessRunning = 0;
+  if (SpecialPowers.Services.io.socketProcessLaunched) {
+    socketProcessRunning = 1;
+  }
+  let numToOpen = 3;
+  const expectedNumRemotes = numToOpen + socketProcessRunning;
+  let numReady = 0;
+
+  // Create some remote processes, and set up message-passing so that
+  // we know when each child is fully initialized.
+  let remotes = [];
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 3]]}).then(function() {
+    for (let i = 0; i < numToOpen; i++) {
+      let w = remotes[i] = window.browsingContext.topChromeWindow.open("remote.xhtml", "", "chrome");
+
+      w.addEventListener("load", function loadHandler() {
+        let remoteBrowser = w.document.getElementById("remote");
+        let mm = remoteBrowser.messageManager;
+        mm.addMessageListener("test:ready", function readyHandler() {
+          mm.removeMessageListener("test:ready", readyHandler);
+          numReady++;
+          if (numReady == numToOpen) {
+            // All the remote processes are ready.  Do memory reporting.
+            doReports();
+          }
+        });
+        mm.loadFrameScript("data:," + encodeURI("sendAsyncMessage('test:ready');"), true);
+      }, {once: true});
+    }
+  });
+
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  function doReports()
+  {
+    let residents = {};
+
+    let handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+      if (aPath === "resident") {
+        ok(100 * 1000 <= aAmount && aAmount <= 10 * 1000 * 1000 * 1000,
+           "resident is reasonable");
+        residents[aProcess] = aAmount;
+      }
+    }
+
+    let processReports = function() {
+      // First, test a failure case:  calling getReports() before the previous
+      // getReports() has finished should silently abort.  (And the arguments
+      // won't be used.)
+      mgr.getReports(
+        () => ok(false, "handleReport called for nested getReports() call"),
+        null, null, null, /* anonymize = */ false
+      );
+
+      // Close the remote processes.
+      for (let i = 0; i < numToOpen; i++) {
+        remotes[i].close();
+      }
+
+      // Check the results.
+
+      let processes = Object.keys(residents);
+      ok(processes.length == expectedNumRemotes + 1, "correct resident count");
+
+      let numEmptyProcesses = 0, numNonEmptyProcesses = 0;
+      for (let i = 0; i < processes.length; i++) {
+        if (processes[i] == "") {
+          numEmptyProcesses++;
+        } else {
+          ok(processes[i].startsWith("Browser (") || processes[i].startsWith("Web Content (") ||
+             (processes[i].startsWith("Socket (") && socketProcessRunning)
+             || processes[i].startsWith("web ("),
+             "correct non-empty process name prefix: " + processes[i]);
+          numNonEmptyProcesses++;
+        }
+      }
+      ok(numEmptyProcesses == 1, "correct empty process name count");
+      ok(numNonEmptyProcesses == expectedNumRemotes,
+                                 "correct non-empty process name count");
+
+      SimpleTest.finish();
+    }
+
+    mgr.getReports(handleReport, null, processReports, null,
+                   /* anonymize = */ false);
+  }
+
+  ]]></script>
+</window>

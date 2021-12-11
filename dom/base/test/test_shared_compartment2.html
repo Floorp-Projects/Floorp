@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1530608</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1530608 **/
+  SimpleTest.waitForExplicitFinish();
+
+  // We have the following origins:
+  //
+  // 1: this page:    mochi.test:8888
+  // 2: iframe:       test1.mochi.test:8888
+  // 3: inner iframe: mochi.test:8888
+  //
+  // Test that 1 and 2 are cross-compartment (because cross-origin), but 1 and 3
+  // are same-compartment.
+
+  function go(innerWin) {
+    var Cu = SpecialPowers.Cu;
+    var isSameCompartment = Cu.getJSTestingFunctions().isSameCompartment;
+
+    var frame = document.getElementById("frame");
+    ok(!isSameCompartment(window, frame.contentWindow),
+       "Cross-origin iframe must be cross-compartment");
+
+    ok(isSameCompartment(window, innerWin),
+       "Same-origin inner iframe must be same-compartment");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1530608">Mozilla Bug 1530608</a>
+
+<iframe id="frame" src="http://test1.mochi.test:8888/tests/dom/base/test/iframe_shared_compartment2a.html"></iframe>
+
+</body>
+</html>

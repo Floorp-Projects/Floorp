@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 1;
+
+function test_seek1(v, seekTime, is, ok, finish) {
+
+var startPassed = false;
+var endPassed = false;
+var seekFlagStart = false;
+var seekFlagEnd = false;
+var readonly = true;
+var completed = false;
+
+function startTest() {
+  ok(!completed, "Should not be completed yet");
+  ok(!v.seeking, "seeking should default to false");
+  try {
+    v.seeking = true;
+    readonly = v.seeking === false;
+  }
+  catch(e) {
+    readonly = "threw exception: " + e;
+  }
+  is(readonly, true, "seeking should be readonly");
+
+  v.currentTime = seekTime;
+  seekFlagStart = v.seeking;
+}
+
+function seekStarted() {
+  ok(!completed, "should not be completed yet");
+  ok(Math.abs(v.currentTime - seekTime) < 0.1,
+     "Video currentTime should be around " + seekTime + ": " + v.currentTime + " (seeking)");
+  startPassed = true;
+}
+
+function seekEnded() {
+  ok(!completed, "shuld not be completed yet");
+  ok(Math.abs(v.currentTime - seekTime) < 0.1,
+     "Video currentTime should be around " + seekTime + ": " + v.currentTime + " (seeked)");
+  endPassed = true;
+  seekFlagEnd = v.seeking;
+  v.play();
+}
+
+function playbackEnded() {
+  ok(!completed, "should not be completed yet");
+
+  completed = true;
+  ok(startPassed, "seeking event");
+  ok(endPassed, "seeked event");
+  ok(seekFlagStart, "seeking flag on start should be true");
+  ok(!seekFlagEnd, "seeking flag on end should be false");
+  finish();
+}
+
+once(v, "ended", playbackEnded);
+once(v, "loadedmetadata", startTest);
+once(v, "seeking", seekStarted);
+once(v, "seeked", seekEnded);
+
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

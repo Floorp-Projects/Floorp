@@ -1,0 +1,81 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * These constants control the scrolling of an object or substring into a
+ * window. Note, keep them synchronized with IA2ScrollType.
+ */
+[scriptable, builtinclass, uuid(05cd38b1-94b3-4cdf-8371-3935a9611405)]
+interface nsIAccessibleScrollType : nsISupports
+{
+  /**
+   * Scroll the top left of the object or substring to the top left of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_TOP_LEFT =0x00;
+
+  /**
+   * Scroll the bottom right of the object or substring to the bottom right of
+   * the window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_BOTTOM_RIGHT = 0x01;
+
+  /**
+   * Scroll the top edge of the object or substring to the top edge of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_TOP_EDGE = 0x02;
+
+  /**
+   * Scroll the bottom edge of the object or substring to the bottom edge of
+   * the window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_BOTTOM_EDGE = 0x03;
+
+  /**
+   * Scroll the left edge of the object or substring to the left edge of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_LEFT_EDGE =0x04;
+
+  /**
+   * Scroll the right edge of the object or substring to the right edge of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_RIGHT_EDGE = 0x05;
+
+  /**
+   * Scroll an object the minimum amount necessary in order for the entire
+   * frame to be visible (if possible).
+   */
+  const unsigned long SCROLL_TYPE_ANYWHERE = 0x06;
+};
+
+
+/**
+ * These constants define which coordinate system a point is located in.
+ */
+[scriptable, builtinclass, uuid(c9fbdf10-619e-436f-bf4b-8566686f1577)]
+interface nsIAccessibleCoordinateType : nsISupports
+{
+  /**
+   * The coordinates are relative to the screen.
+   */
+  const unsigned long COORDTYPE_SCREEN_RELATIVE = 0x00;
+
+  /**
+   * The coordinates are relative to the window.
+   */
+  const unsigned long COORDTYPE_WINDOW_RELATIVE = 0x01;
+
+  /**
+   * The coordinates are relative to the upper left corner of the bounding box
+   * of the immediate parent.
+   */
+  const unsigned long COORDTYPE_PARENT_RELATIVE = 0x02;
+};
+

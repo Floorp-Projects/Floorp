@@ -1,0 +1,128 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+include InputStreamParams;
+include URIParams;
+include PBackgroundSharedTypes;
+include NeckoChannelParams;
+include IPCServiceWorkerDescriptor;
+include IPCStream;
+include HttpChannelParams;
+
+include "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/net/NeckoMessageUtils.h";
+
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+
+namespace mozilla {
+namespace net {
+
+//-------------------------------------------------------------------
+[RefCounted] protocol PHttpChannel
+{
+  manager PNecko;
+
+parent:
+  // Note: channels are opened during construction, so no open method here:
+  // see PNecko.ipdl
+
+  async SetClassOfService(uint32_t cos);
+
+  async Suspend();
+  async Resume();
+
+  async Cancel(nsresult status, uint32_t requestBlockingReason);
+
+  // Reports approval/veto of redirect by child process redirect observers
+  async Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
+                        uint32_t sourceRequestBlockingReason,
+                        ChildLoadInfoForwarderArgs? targetLoadInfoForwarder,
+                        uint32_t loadFlags, nsIReferrerInfo referrerInfo,
+                        URIParams? apiRedirectTo,
+                        CorsPreflightArgs? corsPreflightArgs);
+
+  // For document loads we keep this protocol open after child's
+  // OnStopRequest, and send this msg (instead of __delete__) to allow
+  // partial cleanup on parent.
+  async DocumentChannelCleanup(bool clearCacheEntry);
+
+  // Child has detected a CORS check failure, so needs to tell the parent
+  // to remove any matching entry from the CORS preflight cache.
+  async RemoveCorsPreflightCacheEntry(URIParams uri,
+                                      PrincipalInfo requestingPrincipal,
+                                      OriginAttributes originAttributes);
+
+  // After receiving this message, the parent calls SendDeleteSelf, and makes
+  // sure not to send any more messages after that.
+  async DeletingChannel();
+
+  // Called to get the input stream when altData was delivered.
+  async OpenOriginalCacheInputStream();
+
+  // Tell the parent the amount bytes read by child for the e10s back pressure
+  // flow control
+  async BytesRead(int32_t count);
+
+  async __delete__();
+
+child:
+  // Used to cancel child channel if we hit errors during creating and
+  // AsyncOpen of nsHttpChannel on the parent.
+  async FailedAsyncOpen(nsresult status);
+
+  // OnStartRequest is sent over PHttpBackgroundChannel. However, sometime we
+  // need to wait for some PContent IPCs, e.g., permission, cookies. Those IPC
+  // are sent just before the background thread OnStartRequest, which is racy.
+  // Therefore, need one main thread IPC event for synchronizing the event
+  // sequence.
+  async OnStartRequestSent();
+
+  // Called to initiate content channel redirect, starts talking to sinks
+  // on the content process and reports result via Redirect2Verify above
+  async Redirect1Begin(uint32_t           registrarId,
+                       URIParams          newOriginalUri,
+                       uint32_t           newLoadFlags,
+                       uint32_t           redirectFlags,
+                       ParentLoadInfoForwarderArgs loadInfoForwarder,
+                       nsHttpResponseHead responseHead,
+                       nsCString          securityInfoSerialization,
+                       uint64_t           channelId,
+                       NetAddr            oldPeerAddr,
+                       ResourceTimingStructArgs timing);
+
+  // Called if redirect successful so that child can complete setup.
+  async Redirect3Complete();
+
+  // Report a security message to the console associated with this
+  // channel.
+  async ReportSecurityMessage(nsString messageTag, nsString messageCategory);
+
+  // Tell child to delete channel (all IPDL deletes must be done from child to
+  // avoid races: see bug 591708).
+  async DeleteSelf();
+
+  // When CORS blocks the request in the parent process, it doesn't have the
+  // correct window ID, so send the message to the child for logging to the web
+  // console.
+  async LogBlockedCORSRequest(nsString message, nsCString category);
+
+  async LogMimeTypeMismatch(nsCString messageName,
+                            bool warning,
+                            nsString url,
+                            nsString contentType);
+
+  async OriginalCacheInputStreamAvailable(IPCStream? stream);
+
+
+both:
+  async SetPriority(int16_t priority);
+};
+
+
+} // namespace net
+} // namespace mozilla

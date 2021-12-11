@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=277890
+-->
+<head>
+  <title>Test for Bug 277890</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=277890">Mozilla Bug 277890</a>
+<p id="display"></p>
+<div id="content">
+<iframe src="bug277890_iframe.html" id="a"></iframe> 
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 277890 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var submitted = function() {
+  ok(true, "Disabling button after form submission doesn't prevent submitting");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

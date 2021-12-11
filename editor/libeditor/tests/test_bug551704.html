@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=551704
+-->
+<head>
+  <title>Test for Bug 551704</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=551704">Mozilla Bug 551704</a>
+<p id="display"></p>
+<div id="content">
+  <div id="preformatted" style="white-space: pre" contenteditable>a&#10;b</div>
+  <div id="test1" contenteditable><br></div>
+  <div id="test2" contenteditable>a<br></div>
+  <div id="test3" contenteditable style="white-space: pre"><br></div>
+  <div id="test4" contenteditable style="white-space: pre">a<br></div>
+  <div id="test5" contenteditable></div>
+  <div id="test6" contenteditable>a</div>
+  <div id="test7" contenteditable style="white-space: pre"></div>
+  <div id="test8" contenteditable style="white-space: pre">a</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+function testLineBreak(div, type, expectedText, expectedHTML, callback) {
+  div.focus();
+  getSelection().collapse(div, 0);
+  type();
+  is(div.innerHTML, expectedHTML, "The expected HTML after editing should be correct");
+  requestAnimationFrame(function() {
+    SimpleTest.waitForClipboard(expectedText,
+      function() {
+        getSelection().selectAllChildren(div);
+        synthesizeKey("C", {accelKey: true});
+      },
+      function() {
+        var t = document.createElement("textarea");
+        document.body.appendChild(t);
+        t.focus();
+        synthesizeKey("V", {accelKey: true});
+        is(t.value, expectedText, "The expected text should be copied to the clipboard");
+        callback();
+      },
+      function() {
+        SimpleTest.finish();
+      }
+    );
+  });
+}
+
+function typeABCDEF() {
+  sendString("a");
+  typeBCDEF_chars();
+}
+
+function typeBCDEF() {
+  synthesizeKey("KEY_ArrowRight");
+  typeBCDEF_chars();
+}
+
+function typeBCDEF_chars() {
+  sendString("bc");
+  synthesizeKey("KEY_Enter");
+  sendString("def");
+}
+
+/** Test for Bug 551704 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  document.execCommand("defaultParagraphSeparator", false, "div");
+
+  var preformatted = document.getElementById("preformatted");
+  is(preformatted.innerHTML, "a\nb", "No BR node should be injected for preformatted editable fields");
+
+  var iframe = document.createElement("iframe");
+  iframe.addEventListener("load", function() {
+    var sel = iframe.contentWindow.getSelection();
+    is(sel.rangeCount, 0, "There should be no range in the selection initially");
+    iframe.contentDocument.designMode = "on";
+    sel = iframe.contentWindow.getSelection();
+    is(sel.rangeCount, 1, "There should be a single range in the selection after setting designMode");
+    var range = sel.getRangeAt(0);
+    ok(range.collapsed, "The range should be collapsed");
+    is(range.startContainer, iframe.contentDocument.body.firstChild, "The range should start on the text");
+    is(range.startOffset, 0, "The start offset should be zero");
+
+    continueTest();
+  });
+  iframe.srcdoc = "foo";
+  document.getElementById("content").appendChild(iframe);
+});
+
+function continueTest() {
+  var divs = [];
+  for (var i = 0; i < 8; ++i) {
+    divs[i] = document.getElementById("test" + (i + 1));
+  }
+  var current = 0;
+  function doNextTest() {
+    if (current == divs.length) {
+      SimpleTest.finish();
+      return;
+    }
+    var div = divs[current++];
+    let type;
+    if (div.textContent == "a") {
+      type = typeBCDEF;
+    } else {
+      type = typeABCDEF;
+    }
+    var expectedHTML = "<div>abc</div><div>def<br></div>";
+    var expectedText = "abc\ndef";
+    testLineBreak(div, type, expectedText, expectedHTML, doNextTest);
+  }
+
+  doNextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

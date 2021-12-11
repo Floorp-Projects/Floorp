@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hashed kid for test_postMessage_hash.html</title>
+  <script type="application/javascript">
+function receiveMessage(evt)
+{
+  var response = "response-message";
+
+  if (window.location.href !== "http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash")
+    response += " kid-at-wrong-uri(" + window.location.href + ")";
+
+  if (evt.origin !== "http://mochi.test:8888")
+    response += " wrong-origin(" + evt.origin + ")";
+  if (evt.source !== window.parent)
+    response += " wrong-source";
+  if (evt.data !== "from-parent")
+    response += " wrong-data(" + evt.data + ")";
+  if (evt.lastEventId !== "")
+    response += " wrong-lastEventId(" + evt.lastEventId + ")";
+
+  window.parent.postMessage(response, "http://mochi.test:8888");
+}
+
+window.addEventListener("message", receiveMessage);
+  </script>
+</head>
+<body>
+<p>Kid iframe</p>
+</body>
+</html>

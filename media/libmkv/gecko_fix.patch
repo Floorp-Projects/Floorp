@@ -1,0 +1,133 @@
+diff --git a/EbmlBufferWriter.h b/EbmlBufferWriter.h
+index c135f29..d5116ce 100644
+--- a/EbmlBufferWriter.h
++++ b/EbmlBufferWriter.h
+@@ -11,6 +11,9 @@ typedef struct {
+   unsigned int offset;
+ } EbmlGlobal;
+ 
++void Ebml_Write(EbmlGlobal *glob, const void *buffer_in, unsigned long len);
++void Ebml_Serialize(EbmlGlobal *glob, const void *buffer_in,
++                    int buffer_size, unsigned long len);
+ void Ebml_StartSubElement(EbmlGlobal *glob, EbmlLoc *ebmlLoc, unsigned long class_id);
+ void Ebml_EndSubElement(EbmlGlobal *glob,  EbmlLoc *ebmlLoc);
+ 
+diff --git a/EbmlIDs.h b/EbmlIDs.h
+index 44d4385..3b5da19 100644
+--- a/EbmlIDs.h
++++ b/EbmlIDs.h
+@@ -119,7 +119,7 @@ enum mkv {
+   /* video */
+   Video = 0xE0,
+   FlagInterlaced = 0x9A,
+-  StereoMode = 0x53B8,
++  WEBM_StereoMode = 0x53B8,
+   AlphaMode = 0x53C0,
+   PixelWidth = 0xB0,
+   PixelHeight = 0xBA,
+diff --git a/EbmlWriter.c b/EbmlWriter.c
+index ebefc1a..087e817 100644
+--- a/EbmlWriter.c
++++ b/EbmlWriter.c
+@@ -12,6 +12,7 @@
+ #include <wchar.h>
+ #include <string.h>
+ #include <limits.h>
++#include "EbmlBufferWriter.h"
+ #if defined(_MSC_VER)
+ #define LITERALU64(n) n
+ #else
+diff --git a/EbmlWriter.h b/EbmlWriter.h
+index a0a848b..3aee2b3 100644
+--- a/EbmlWriter.h
++++ b/EbmlWriter.h
+@@ -7,10 +7,16 @@
+  *  in the file PATENTS.  All contributing project authors may
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ #ifndef EBMLWRITER_HPP
+ #define EBMLWRITER_HPP
+ #include <stddef.h>
+ #include "vpx/vpx_integer.h"
++#include "EbmlBufferWriter.h"
+ 
+ /* note: you must define write and serialize functions as well as your own
+  * EBML_GLOBAL
+@@ -18,9 +24,9 @@
+  * These functions MUST be implemented
+  */
+ 
+-typedef struct EbmlGlobal EbmlGlobal;
+-void  Ebml_Serialize(EbmlGlobal *glob, const void *, int, unsigned long);
+-void  Ebml_Write(EbmlGlobal *glob, const void *, unsigned long);
++// typedef struct EbmlGlobal EbmlGlobal;
++// void  Ebml_Serialize(EbmlGlobal *glob, const void *, int, unsigned long);
++// void  Ebml_Write(EbmlGlobal *glob, const void *, unsigned long);
+ 
+ /*****/
+ 
+@@ -41,3 +47,7 @@ void Ebml_SerializeData(EbmlGlobal *glob, unsigned long class_id, unsigned char
+ void Ebml_WriteVoid(EbmlGlobal *glob, unsigned long vSize);
+ /* TODO need date function */
+ #endif
++
++#ifdef __cplusplus
++}
++#endif
+diff --git a/WebMElement.c b/WebMElement.c
+index 02eefa4..0d5056d 100644
+--- a/WebMElement.c
++++ b/WebMElement.c
+@@ -6,8 +6,6 @@
+ // in the file PATENTS.  All contributing project authors may
+ // be found in the AUTHORS file in the root of the source tree.
+ 
+-
+-#include "EbmlBufferWriter.h"
+ #include "EbmlIDs.h"
+ #include "WebMElement.h"
+ #include <stdio.h>
+diff --git a/WebMElement.h b/WebMElement.h
+index d9ad0a0..987582a 100644
+--- a/WebMElement.h
++++ b/WebMElement.h
+@@ -6,10 +6,15 @@
+ // in the file PATENTS.  All contributing project authors may
+ // be found in the AUTHORS file in the root of the source tree.
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
+ 
+ #ifndef MKV_CONTEXT_HPP
+ #define MKV_CONTEXT_HPP 1
+ 
++#include "EbmlWriter.h"
++
+ void writeSimpleBock(EbmlGlobal *ebml, unsigned char trackNumber, unsigned short timeCode,
+                      int isKeyframe, unsigned char lacingFlag, int  discardable,
+                      unsigned char *data, unsigned long dataLength);
+@@ -24,12 +29,14 @@ void writeVideoTrack(EbmlGlobal *ebml, unsigned int trackNumber, int flagLacing,
+                      double frameRate);
+ void writeAudioTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
+                      char *codecId, double samplingFrequency, unsigned int channels,
+-                     unsigned char *private, unsigned long privateSize);
++                     unsigned char *private_, unsigned long privateSize);
+ 
+ void writeSimpleBlock(EbmlGlobal *ebml, unsigned char trackNumber, short timeCode,
+                       int isKeyframe, unsigned char lacingFlag, int discardable,
+                       unsigned char *data, unsigned long dataLength);
+ 
++#endif
+ 
+-
+-#endif
+\ No newline at end of file
++#ifdef __cplusplus
++}
++#endif

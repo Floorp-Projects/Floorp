@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for textbox with Add and Undo Add to Dictionary
+  -->
+<window title="Textbox Add and Undo Add to Dictionary Test" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <hbox>
+    <moz-input-box id="t1" oncontextmenu="runContextMenuTest()" spellcheck="true">
+      <html:input class="textbox-input" value="Hellop" spellcheck="true"/>
+    </moz-input-box>
+  </hbox>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var inputBox;
+var testNum;
+
+function bringUpContextMenu(element)
+{
+  synthesizeMouseAtCenter(element, { type: "contextmenu", button: 2});
+}
+
+function leftClickElement(element)
+{
+  synthesizeMouseAtCenter(element, { button: 0 });
+}
+
+var onSpellCheck;
+function startTests()
+{
+  inputBox = document.getElementById("t1");
+  inputBox._input.focus();
+  testNum = 0;
+
+  ({onSpellCheck} = ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"));
+  onSpellCheck(inputBox._input, function () {
+    bringUpContextMenu(inputBox);
+  });
+}
+
+function runContextMenuTest()
+{
+  SimpleTest.executeSoon(function() {
+    var contextMenu = inputBox.menupopup;
+
+    switch(testNum)
+    {
+      case 0: // "Add to Dictionary" button
+        var addToDict = inputBox.getMenuItem("spell-add-to-dictionary");
+        ok(!addToDict.hidden, "Is Add to Dictionary visible?");
+
+        var separator = inputBox.getMenuItem("spell-suggestions-separator");
+        ok(!separator.hidden, "Is separator visible?");
+
+        addToDict.doCommand();
+
+        contextMenu.hidePopup();
+        testNum++;
+
+        onSpellCheck(inputBox._input, function () {
+          bringUpContextMenu(inputBox);
+        });
+        break;
+
+      case 1: // "Undo Add to Dictionary" button
+        var undoAddDict = inputBox.getMenuItem("spell-undo-add-to-dictionary");
+        ok(!undoAddDict.hidden, "Is Undo Add to Dictioanry visible?");
+
+        separator = inputBox.getMenuItem("spell-suggestions-separator");
+        ok(!separator.hidden, "Is separator hidden?");
+
+        undoAddDict.doCommand();
+
+        contextMenu.hidePopup();
+        onSpellCheck(inputBox._input, function () {
+          SimpleTest.finish();
+        });
+        break;
+    }
+  });
+}
+
+SimpleTest.waitForFocus(startTests);
+
+  ]]></script>
+
+</window>

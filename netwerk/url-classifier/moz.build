@@ -1,0 +1,68 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
+
+XPIDL_SOURCES += [
+    "nsIChannelClassifierService.idl",
+    "nsIURIClassifier.idl",
+    "nsIUrlClassifierExceptionListService.idl",
+    "nsIUrlClassifierFeature.idl",
+]
+
+XPIDL_MODULE = "url-classifier"
+
+EXTRA_JS_MODULES += [
+    "UrlClassifierExceptionListService.jsm",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
+
+UNIFIED_SOURCES += [
+    "AsyncUrlChannelClassifier.cpp",
+    "ChannelClassifierService.cpp",
+    "nsChannelClassifier.cpp",
+    "UrlClassifierCommon.cpp",
+    "UrlClassifierFeatureBase.cpp",
+    "UrlClassifierFeatureCryptominingAnnotation.cpp",
+    "UrlClassifierFeatureCryptominingProtection.cpp",
+    "UrlClassifierFeatureCustomTables.cpp",
+    "UrlClassifierFeatureFactory.cpp",
+    "UrlClassifierFeatureFingerprintingAnnotation.cpp",
+    "UrlClassifierFeatureFingerprintingProtection.cpp",
+    "UrlClassifierFeatureFlash.cpp",
+    "UrlClassifierFeatureLoginReputation.cpp",
+    "UrlClassifierFeaturePhishingProtection.cpp",
+    "UrlClassifierFeatureResult.cpp",
+    "UrlClassifierFeatureSocialTrackingAnnotation.cpp",
+    "UrlClassifierFeatureSocialTrackingProtection.cpp",
+    "UrlClassifierFeatureTrackingAnnotation.cpp",
+    "UrlClassifierFeatureTrackingProtection.cpp",
+]
+
+EXPORTS.mozilla.net += [
+    "AsyncUrlChannelClassifier.h",
+    "ChannelClassifierService.h",
+    "UrlClassifierCommon.h",
+    "UrlClassifierFeatureFactory.h",
+    "UrlClassifierFeatureResult.h",
+]
+
+LOCAL_INCLUDES += [
+    "/netwerk/base",
+    "/netwerk/protocol/http",
+    "/toolkit/components/url-classifier",
+]
+
+FINAL_LIBRARY = "xul"
+
+include("/ipc/chromium/chromium-config.mozbuild")

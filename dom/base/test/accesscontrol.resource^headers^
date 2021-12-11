@@ -1,0 +1,5 @@
+Access-Control-Allow-Origin: http://mochi.test:8888
+Access-Control-Allow-Credentials: true
+Content-Type: text/event-stream
+Cache-Control: no-cache, must-revalidate
+

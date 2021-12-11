@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=556013
+-->
+<head>
+  <title>Test for Bug 556013</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=556013">Mozilla Bug 556013</a>
+<p id="display"></p>
+<iframe style='width:50px; height: 50px;' name='t'></iframe>
+<div id="content">
+  <form target='t' action='data:text/html,' novalidate>
+    <input id='av' required>
+    <input id='a' type='submit'>
+  </form>
+  <form target='t' action='data:text/html,' novalidate>
+    <input id='bv' type='checkbox' required>
+    <button id='b' type='submit'></button>
+  </form>
+  <form target='t' action='data:text/html,' novalidate>
+    <input id='c' required>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 556013 **/
+
+/**
+ * novalidate should prevent form validation, thus not blocking form submission.
+ *
+ * NOTE: if there is no invalidformsubmit observer, the form submission will
+ * never be blocked and this test might be a false-positive but that should not
+ * be a problem.
+ */
+document.forms[0].addEventListener("submit", function(aEvent) {
+  ok(true, "novalidate has been correctly used for first form");
+  document.getElementById('b').click();
+}, {once: true});
+
+document.forms[1].addEventListener("submit", function(aEvent) {
+  ok(true, "novalidate has been correctly used for second form");
+  var c = document.getElementById('c');
+  c.focus();
+  synthesizeKey("KEY_Enter");
+}, {once: true});
+
+document.forms[2].addEventListener("submit", function(aEvent) {
+  ok(true, "novalidate has been correctly used for third form");
+  SimpleTest.executeSoon(SimpleTest.finish);
+}, {once: true});
+
+/**
+ * We have to be sure invalid events are not send too.
+ * They should be sent before the submit event so we can just create a test
+ * failure if we got one. All of them should be catched if sent.
+ * At worst, we got random green which isn't harmful.
+ */
+function invalidHandling(aEvent)
+{
+  aEvent.target.removeEventListener("invalid", invalidHandling);
+  ok(false, "invalid event should not be sent");
+}
+
+document.getElementById('av').addEventListener("invalid", invalidHandling);
+document.getElementById('bv').addEventListener("invalid", invalidHandling);
+document.getElementById('c').addEventListener("invalid", invalidHandling);
+
+SimpleTest.waitForExplicitFinish();
+
+// This is going to call all the tests (with a chain reaction).
+SimpleTest.waitForFocus(function() {
+  document.getElementById('a').click();
+});
+
+</script>
+</pre>
+</body>
+</html>

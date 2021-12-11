@@ -1,0 +1,48 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBFactory;
+include protocol PBackgroundIDBDatabase;
+
+include PBackgroundSharedTypes;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct OpenDatabaseRequestResponse
+{
+  PBackgroundIDBDatabase database;
+};
+
+struct DeleteDatabaseRequestResponse
+{
+  uint64_t previousVersion;
+};
+
+union FactoryRequestResponse
+{
+  nsresult;
+  OpenDatabaseRequestResponse;
+  DeleteDatabaseRequestResponse;
+};
+
+protocol PBackgroundIDBFactoryRequest
+{
+  manager PBackgroundIDBFactory;
+
+child:
+  async __delete__(FactoryRequestResponse response);
+
+  async PermissionChallenge(PrincipalInfo principalInfo);
+
+  async Blocked(uint64_t currentVersion);
+
+parent:
+  async PermissionRetry();
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

@@ -1,0 +1,44 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads XHR(Bug 450452 )
+-->
+<head>
+  <title>Test for DOM Worker Threads XHR (Bug 450452 )</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads XHR (Bug 450452)</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script language="javascript" src="xhrAbort_worker.js"></script>
+<script class="testbody" language="javascript">
+
+  function postMessage(data) {
+    dump(data.toString() + "\n");
+
+    var worker = new Worker("xhrAbort_worker.js");
+
+    worker.onmessage = function(event) {
+      is (data.toString(), event.data.toString(), "Got different results!");
+      SimpleTest.finish();
+    };
+
+    worker.postMessage("start");
+  }
+
+  runTest();
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

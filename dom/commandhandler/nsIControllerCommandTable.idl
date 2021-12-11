@@ -1,0 +1,103 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIControllerCommand.idl"
+#include "nsICommandParams.idl"
+
+%{C++
+class nsControllerCommandTable;
+%}
+
+/**
+ * nsIControllerCommandTable
+ *
+ * An interface via which a controller can maintain a series of commands,
+ * and efficiently dispatch commands to their respective handlers.
+ *
+ * Controllers that use an nsIControllerCommandTable should support
+ * nsIInterfaceRequestor, and be able to return an interface to their
+ * controller command table via getInterface().
+ *
+ */
+
+[scriptable, builtinclass, uuid(c847f90e-b8f3-49db-a4df-8867831f2800)]
+interface nsIControllerCommandTable : nsISupports
+{
+  /**
+   * Make this command table immutable, so that commands cannot
+   * be registered or unregistered. Some command tables are made
+   * mutable after command registration so that they can be
+   * used as singletons.
+   */
+  void  makeImmutable();
+
+  /**
+   * Register and unregister commands with the command table.
+   *
+   * @param aCommandName  the name of the command under which to register or
+   *                      unregister the given command handler.
+   *
+   * @param aCommand      the handler for this command.
+   */
+  void    registerCommand(in string aCommandName, in nsIControllerCommand aCommand);
+  void    unregisterCommand(in string aCommandName, in nsIControllerCommand aCommand);
+
+  /**
+   * Find the command handler which has been registered to handle the named command.
+   *
+   * @param aCommandName  the name of the command to find the handler for.
+   */
+  nsIControllerCommand findCommandHandler(in string aCommandName);
+
+  /**
+   * Get whether the named command is enabled.
+   *
+   * @param aCommandName    the name of the command to test
+   * @param aCommandRefCon  the command context data
+   */
+	boolean isCommandEnabled(in string aCommandName, in nsISupports aCommandRefCon);
+
+  /**
+   * Tell the command to update its state (if it is a state updating command)
+   *
+   * @param aCommandName    the name of the command to update
+   * @param aCommandRefCon  the command context data
+   */
+	void  updateCommandState(in string aCommandName, in nsISupports aCommandRefCon);
+
+  /**
+   * Get whether the named command is supported.
+   *
+   * @param aCommandName    the name of the command to test
+   * @param aCommandRefCon  the command context data
+   */
+	boolean supportsCommand(in string aCommandName, in nsISupports aCommandRefCon);
+
+  /**
+   * Execute the named command.
+   *
+   * @param aCommandName    the name of the command to execute
+   * @param aCommandRefCon  the command context data
+   */
+  [can_run_script]
+	void    doCommand(in string aCommandName, in nsISupports aCommandRefCon);
+
+  [can_run_script]
+	void    doCommandParams(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
+
+	void    getCommandState(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
+
+  Array<ACString> getSupportedCommands();
+
+%{C++
+  /**
+   * In order to avoid circular dependency issues, these methods are defined
+   * in nsControllerCommandTable.h.  Consumers need to #include that header.
+   */
+  inline nsControllerCommandTable* AsControllerCommandTable();
+  inline const nsControllerCommandTable* AsControllerCommandTable() const;
+%}
+};
+

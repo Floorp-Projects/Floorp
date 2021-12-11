@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.connectRoot with Web Components</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    class FluentWidget extends HTMLElement {
+      constructor() {
+        super();
+        const shadowRoot = this.attachShadow({mode: "open"});
+        const t = document.querySelector("#fluent-widget-template");
+        const instance = t.content.cloneNode(true);
+        shadowRoot.appendChild(instance);
+      }
+      connectedCallback() {
+        document.domLoc.connectRoot(this.shadowRoot);
+        ok(true);
+
+        let label = this.shadowRoot.getElementById("label");
+
+        // Test for mutations applied.
+        let verifyL10n = () => {
+          if (label.textContent.length > 0) {
+            window.removeEventListener("MozAfterPaint", verifyL10n);
+            // Notice: In normal tests we do not want to test against any particular
+            // value as per https://firefox-source-docs.mozilla.org/intl/l10n/l10n/fluent_tutorial.html#testing
+            // But in this particular test, since we do not rely on actual real
+            // localization, but instead we mock it in the test, we can test
+            // against the actual value safely.
+            is(label.textContent, "Value for Key 1", "localization content applied to element");
+            SimpleTest.finish();
+          }
+        };
+        window.addEventListener("MozAfterPaint", verifyL10n);
+
+        document.domLoc.setAttributes(label, "key1");
+      }
+    }
+    customElements.define("fluent-widget", FluentWidget);
+  </script>
+  <script type="application/javascript">
+  "use strict";
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+key1 = Value for Key 1
+` },
+  ];
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  document.domLoc = new DOMLocalization(
+    ["/mock.ftl"],
+    false,
+    l10nReg,
+    ["en-US"],
+  );
+  </script>
+</head>
+<body>
+  <template id="fluent-widget-template">
+    <div>
+      <p id="label"></p>
+    </div>
+  </template>
+  <fluent-widget id="widget1"></fluent-widget>
+</body>
+</html>

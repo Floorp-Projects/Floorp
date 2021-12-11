@@ -1,0 +1,7 @@
+//error: union `X' is only partially defined
+
+union X { X?; };
+
+protocol maybe_SelfRecUnion {
+child: async Msg(X? aa);
+};

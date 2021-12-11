@@ -1,0 +1,27 @@
+<!--
+  According to the SMIL pseudocode if no end attribute is specified the end of
+  an interval is just the active end. This, however, effectively makes
+  endElement useless on animations which have no end attribute specified. This
+  seems counter-intuitive, so this test checks that endElement still takes
+  effect on animation without an end attribute.
+ -->
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="reftest-wait"
+  onload="addInstanceTimes()">
+  <script type="text/ecmascript"><![CDATA[
+    function addInstanceTimes() {
+      var svg = document.documentElement;
+      svg.pauseAnimations();
+      svg.setCurrentTime(1.0);
+      var anim = document.getElementById('anim');
+      anim.endElementAt(0.5);
+      setTimeAndSnapshot(1.5, true);
+    }
+  ]]></script>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <rect width="100" height="100" fill="green">
+    <set attributeName="fill" attributeType="CSS"
+      to="red" begin="1s" dur="1s" fill="remove" id="anim"/>
+  </rect>
+</svg>

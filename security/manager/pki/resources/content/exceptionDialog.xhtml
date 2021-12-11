@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pippki/content/exceptionDialog.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<window windowtype="mozilla:exceptiondialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="exception-mgr"
+        onload="initExceptionDialog();">
+<dialog id="exceptiondialog"
+        buttonidextra1="exception-mgr-extra-button"
+        buttons="cancel,extra1,extra2"
+        defaultButton="extra2">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="security/certificates/certManager.ftl"/>
+  </linkset>
+
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+  <script src="chrome://pippki/content/pippki.js"/>
+  <script src="chrome://pippki/content/exceptionDialog.js"/>
+
+  <hbox>
+    <vbox>
+#ifdef MOZ_WIDGET_GTK
+      <image src="moz-icon://stock/gtk-dialog-warning?size=dialog"/>
+#else
+      <image src="chrome://global/skin/icons/warning-large.png"/>
+#endif
+      <spacer flex="1"/>
+    </vbox>
+    <vbox flex="1">
+      <!-- Note that because of the styling, there must be no whitespace within
+      the description tags -->
+      <description id="warningText"/>
+      <description id="warningSupplemental"
+                   data-l10n-id="exception-mgr-supplemental-warning"/>
+    </vbox>
+  </hbox>
+
+  <hbox align="center">
+    <label control="locationTextBox"
+           id="certLocationLabel"
+           data-l10n-id="exception-mgr-cert-location-url"/>
+    <html:input id="locationTextBox"
+                oninput="handleTextChange();"
+                value="https://"
+                class="uri-element"/>
+    <button id="checkCertButton"
+            disabled="true"
+            dlgtype="extra2"
+            data-l10n-id="exception-mgr-cert-location-download"/>
+  </hbox>
+
+  <hbox align="center">
+    <description id="headerDescription"
+                 flex="1"/>
+    <button id="viewCertButton"
+            data-l10n-id="exception-mgr-cert-status-view-cert"
+            disabled="true"
+            oncommand="viewCertButtonClick();"/>
+  </hbox>
+  <description id="statusDescription"
+               class="description"/>
+  <description id="statusLongDescription"
+               class="longDescription"/>
+  <description id="status2Description"
+               class="description"/>
+  <description id="status2LongDescription"
+               class="longDescription"/>
+  <description id="status3Description"
+               class="description"/>
+  <description id="status3LongDescription"
+               class="longDescription"/>
+  <checkbox id="permanent"
+            disabled="true"
+            data-l10n-id="exception-mgr-permanent"/>
+</dialog>
+</window>

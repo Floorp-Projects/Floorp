@@ -1,0 +1,11 @@
+# Success cases
+content  test1  test/  application={39885e5f-f6b4-4e2a-87e5-6259ecf79011}
+content  test2  test/  application!={d51eecae-eab5-4779-85cb-45f1ec8657c8}
+content  test3  test/  application!=
+
+# Failure cases
+content  test4  test/  application=
+content  test5  test/  application={d51eecae-eab5-4779-85cb-45f1ec8657c8}
+content  test6  test/  application!={39885e5f-f6b4-4e2a-87e5-6259ecf79011}
+content  test7  test/  appversion=={39885e5f-f6b4-4e2a-87e5-6259ecf79011}
+content  test8  test/  application!!{d51eecae-eab5-4779-85cb-45f1ec8657c8}

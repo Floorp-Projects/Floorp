@@ -1,0 +1,11 @@
+//error: |manages| declaration in protocol `ForgottenManager' does not match any |manager| declaration in protocol `ManageeForgot'
+
+include protocol ManageeForgot;
+
+// ManageeForgot should have this protocol as its manager.
+
+protocol ForgottenManager {
+    manages ManageeForgot;
+child:
+    async ManageeForgot();
+};

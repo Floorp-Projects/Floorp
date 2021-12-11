@@ -1,0 +1,133 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<vbox id="editBookmarkPanelContent" flex="1">
+  <hbox id="editBMPanel_selectionCount" pack="center">
+    <label id="editBMPanel_itemsCountText"/>
+  </hbox>
+
+  <vbox id="editBookmarkPanelRows">
+    <vbox id="editBMPanel_nameRow"
+          collapsed="true">
+      <label data-l10n-id="bookmark-overlay-name-2"
+             control="editBMPanel_namePicker"/>
+      <html:input id="editBMPanel_namePicker"
+                  type="text"
+                  onchange="gEditItemOverlay.onNamePickerChange().catch(Cu.reportError);"/>
+    </vbox>
+
+    <vbox id="editBMPanel_locationRow"
+          collapsed="true">
+      <label data-l10n-id="bookmark-overlay-url"
+             control="editBMPanel_locationField"/>
+      <html:input id="editBMPanel_locationField"
+                  type="text"
+                  class="uri-element"
+                  onchange="gEditItemOverlay.onLocationFieldChange();"/>
+    </vbox>
+
+    <vbox id="editBMPanel_folderRow"
+          collapsed="true">
+      <label data-l10n-id="bookmark-overlay-location-2"
+             control="editBMPanel_folderMenuList"/>
+      <hbox flex="1" align="center">
+        <menulist id="editBMPanel_folderMenuList"
+                  class="folder-icon"
+                  flex="1"
+                  size="large"
+                  oncommand="gEditItemOverlay.onFolderMenuListCommand(event).catch(Cu.reportError);">
+          <menupopup>
+            <!-- Static item for special folders -->
+            <menuitem id="editBMPanel_toolbarFolderItem"
+                      class="menuitem-iconic folder-icon"/>
+            <menuitem id="editBMPanel_bmRootItem"
+                      class="menuitem-iconic folder-icon"/>
+            <menuitem id="editBMPanel_unfiledRootItem"
+                      class="menuitem-iconic folder-icon"/>
+            <menuseparator id="editBMPanel_chooseFolderSeparator"/>
+            <menuitem id="editBMPanel_chooseFolderMenuItem"
+                      data-l10n-id="bookmark-overlay-choose"
+                      class="menuitem-iconic folder-icon"/>
+            <menuseparator id="editBMPanel_foldersSeparator" hidden="true"/>
+          </menupopup>
+        </menulist>
+        <button id="editBMPanel_foldersExpander"
+                class="expander-down panel-button"
+                data-l10n-id="bookmark-overlay-folders-expander"
+                data-l10n-attrs="tooltiptextdown, tooltiptextup"
+                oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"/>
+      </hbox>
+    </vbox>
+
+    <vbox id="editBMPanel_folderTreeRow"
+          collapsed="true">
+      <!-- editBMPanel_folderTree will go here when this is shown -->
+      <hbox id="editBMPanel_newFolderBox">
+        <button data-l10n-id="bookmark-overlay-new-folder-button"
+                id="editBMPanel_newFolderButton"
+                oncommand="gEditItemOverlay.newFolder().catch(Cu.reportError);"/>
+      </hbox>
+    </vbox>
+
+    <vbox id="editBMPanel_tagsRow"
+          collapsed="true">
+      <label data-l10n-id="bookmark-overlay-tags-2"
+             control="editBMPanel_tagsField"/>
+      <hbox flex="1" align="center" role="combobox">
+        <html:input id="editBMPanel_tagsField"
+                 type="text"
+                 is="autocomplete-input"
+                 style="-moz-box-flex: 1;"
+                 autocompletesearch="places-tag-autocomplete"
+                 autocompletepopup="editBMPanel_tagsAutocomplete"
+                 completedefaultindex="true"
+                 completeselectedindex="true"
+                 tabscrolling="true"
+                 data-l10n-id="bookmark-overlay-tags-empty-description"
+                 data-l10n-attrs="placeholder"
+                 aria-describedby="tags-field-info"
+                 onchange="gEditItemOverlay.onTagsFieldChange();"/>
+        <button id="editBMPanel_tagsSelectorExpander"
+                class="expander-down panel-button"
+                data-l10n-id="bookmark-overlay-tags-expander"
+                data-l10n-attrs="tooltiptextdown, tooltiptextup"
+                oncommand="gEditItemOverlay.toggleTagsSelector().catch(Cu.reportError);"/>
+        <popupset>
+          <panel is="autocomplete-richlistbox-popup"
+                 type="autocomplete-richlistbox"
+                 id="editBMPanel_tagsAutocomplete"
+                 role="group"
+                 noautofocus="true"
+                 hidden="true"
+                 overflowpadding="4"
+                 norolluponanchor="true"
+                 nomaxresults="true"/>
+        </popupset>
+      </hbox>
+      <div id="tags-field-info"
+           class="caption-label"
+           data-l10n-id="bookmark-overlay-tags-caption-label"/>
+    </vbox>
+
+    <vbox id="editBMPanel_tagsSelectorRow"
+          collapsed="true">
+      <richlistbox id="editBMPanel_tagsSelector"
+                   styled="true"
+                   height="150"/>
+    </vbox>
+
+    <vbox id="editBMPanel_keywordRow"
+          collapsed="true">
+      <label data-l10n-id="bookmark-overlay-keyword-2"
+             control="editBMPanel_keywordField"/>
+      <html:input id="editBMPanel_keywordField"
+                  type="text"
+                  aria-describedby="keyword-field-info"
+                  onchange="gEditItemOverlay.onKeywordFieldChange();"/>
+      <div id="keyword-field-info"
+           class="caption-label"
+           data-l10n-id="bookmark-overlay-keyword-caption-label-2"/>
+    </vbox>
+  </vbox>
+</vbox>

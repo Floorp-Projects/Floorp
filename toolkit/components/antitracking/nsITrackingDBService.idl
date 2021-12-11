@@ -1,0 +1,64 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface nsIAsyncInputStream;
+
+[scriptable, uuid(650934db-1939-4424-be26-6ffb0375424d)]
+interface nsITrackingDBService : nsISupports
+{
+  /**
+   * Record entries from a content blocking log in the tracking database.
+   * This function is typically called at the end of the document lifecycle,
+   * since calling it multiple times results in multiple new entries.
+   *
+   * @param data    a json string containing the content blocking log.
+   */
+  void recordContentBlockingLog(in ACString data);
+
+  /**
+   * Save new events in the content blocking database
+   * @param data    a json string containing the content blocking log.
+   */
+  Promise saveEvents(in AString data);
+
+  /**
+   * Clear all content blocking database entries.
+   */
+  Promise clearAll();
+
+  /**
+   * Clear all content blocking database entries added since the specified time.
+   * @param since   a unix timestamp representing the number of milliseconds from
+   *                Jan 1, 1970 00:00:00 UTC.
+   */
+  Promise clearSince(in int64_t since);
+
+  /**
+   * Fetch events from the content blocking database
+   * @param dateFrom   a unix timestamp.
+   * @param dateTo     a unix timestamp.
+   */
+  Promise getEventsByDateRange(in int64_t dateFrom, in int64_t dateTo);
+
+  /**
+   * Return a count of all tracking events.
+   */
+  Promise sumAllEvents();
+
+  /**
+   * Return the earliest recorded date.
+   */
+  Promise getEarliestRecordedDate();
+
+  const unsigned long OTHER_COOKIES_BLOCKED_ID = 0;
+  const unsigned long TRACKERS_ID = 1;
+  const unsigned long TRACKING_COOKIES_ID = 2;
+  const unsigned long CRYPTOMINERS_ID = 3;
+  const unsigned long FINGERPRINTERS_ID = 4;
+  const unsigned long SOCIAL_ID = 5;
+};

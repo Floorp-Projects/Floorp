@@ -1,0 +1,7 @@
+//error: union `X' is only partially defined
+
+union X { X; };
+
+protocol undefSelfRecUnion {
+child: async __delete__(X x);
+};

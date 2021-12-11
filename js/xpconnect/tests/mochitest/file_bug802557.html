@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+var gTS = window.location.toString;
+var gGHR = Object.getOwnPropertyDescriptor(window.location, 'href').get;
+function getTests(fromOuter) {
+
+  function loc() {
+    return fromOuter ? window.location : location;
+  }
+  return {
+    getLocationImplicit: function() {
+      return loc() + "";
+    },
+    getLocationExplicit: function() {
+      return loc().toString();
+    },
+    getLocationApply1: function() {
+      return gTS.call(loc());
+    },
+    getLocationApply2: function() {
+      return gTS.apply(loc(), []);
+    },
+    getLocationApply3: function() {
+      return Function.call.apply(gTS, [loc()]);
+    },
+    getHref: function() {
+      return loc().href;
+    },
+    getHrefViaApply: function() {
+      return Function.call.apply(gGHR, [loc()]);
+    },
+  }
+};
+
+function mungeNames(obj, suffix) {
+  var rv = {};
+  Object.getOwnPropertyNames(obj)
+        .forEach(name => rv[name + suffix] = obj[name]);
+  return rv;
+}
+
+function mergeObjects(a, b) {
+  var rv = {};
+  Object.getOwnPropertyNames(a).forEach(name => rv[name] = a[name]);
+  Object.getOwnPropertyNames(b).forEach(name => rv[name] = b[name]);
+  return rv;
+}
+
+function getAllTests() {
+  var innerTests = getTests(false);
+  var outerTests = getTests(true);
+  return mergeObjects(mungeNames(innerTests, '_inner'),
+                      mungeNames(outerTests, '_outer'));
+}
+
+</script>
+</head>
+<body>
+</body>
+</html>

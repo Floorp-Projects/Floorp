@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+
+<script>
+
+function boom()
+{
+  o = {};
+  o.__proto__ = o.constructor;
+  p = o.constructor.prototype;
+  p.__proto__ = window;
+  null.__proto__ = {};
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+
+</body>
+</html>

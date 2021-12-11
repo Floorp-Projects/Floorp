@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=656954
+-->
+<head>
+  <title>Test for Bug 656954</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=656954">Mozilla Bug 656954</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 656954 **/
+
+var e = document.createEvent("Event");
+is(e.defaultPrevented, false,
+   "After creating event defaultPrevented should be false");
+e.initEvent("foo", true, true);
+var el = document.createElement("div");
+el.addEventListener("foo", 
+  function(evt) {
+    evt.preventDefault();
+  });
+el.dispatchEvent(e);
+is(e.defaultPrevented, true, "preventDefault() should have been called!");
+
+e = document.createEvent("Event");
+e.initEvent("foo", true, false);
+el.dispatchEvent(e);
+is(e.defaultPrevented, false, "preventDefault() should not have any effect!");
+
+</script>
+</pre>
+</body>
+</html>

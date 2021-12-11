@@ -1,0 +1,21 @@
+@template
+def Template(foo, bar=[]):
+    SOURCES += foo
+    DIRS += bar
+
+@template
+def TemplateError(foo):
+    ILLEGAL = foo
+
+@template
+def TemplateGlobalVariable():
+    SOURCES += illegal
+
+@template
+def TemplateGlobalUPPERVariable():
+    SOURCES += DIRS
+
+@template
+def TemplateInherit(foo):
+    USE_LIBS += ['foo']
+    Template(foo)

@@ -1,0 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This binary should never open a console window in release builds, because
+# it's going to run in the background when the user may not expect it, and
+# we don't want a console window to just appear out of nowhere on them.
+# For debug builds though, it's okay to use the existing MOZ_WINCONSOLE value.
+ifndef MOZ_DEBUG
+MOZ_WINCONSOLE = 0
+endif
+
+# Rebuild if the resources or manifest change.
+EXTRA_DEPS += $(srcdir)/default-browser-agent.exe.manifest
+
+include $(topsrcdir)/config/rules.mk

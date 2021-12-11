@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<title>Reference: Only lines containing visible content (visibility: visible) should receive backplates.</title>
+<style>
+  .outer {
+    background-image: url("blue.png");
+  }
+  .hidden {
+    visibility: hidden;
+  }
+  .visible {
+    visibility: visible;
+  }
+  .fake-backplate {
+    background-color: white;
+  }
+</style>
+<div class="outer">
+  <div>
+    <span class="fake-backplate">AAAA</span>
+    <div class="hidden">BBBB</div>
+    <span class="fake-backplate">CCCC</span>
+    <div class="hidden">
+      DDDD
+      <div class="visible"><span class="fake-backplate">EEEE</span></div>
+      FFFF
+    </div>
+  </div>
+  <div class="fake-backplate" style="display: inline-block;">
+    <span class="fake-backplate">GGGG</span>
+    <br>
+    <span class="fake-backplate">HHHH</span>
+    <span class="hidden">IIII</span>
+    <span class="fake-backplate">JJJJ</span>
+    <span class="hidden">
+      KKKK
+      <span class="visible fake-backplate">LLLL</span>
+      MMMM
+    </span>
+    <span class="fake-backplate">NNNN</span>
+    <span class="hidden">
+      <span style="display:inline-block">
+        1
+        <span class="visible fake-backplate">2</span>
+      </span>
+      <span style="display:inline-block" class="visible fake-backplate">
+        3
+      </span>
+    4
+  </span>
+  </div>
+</div>

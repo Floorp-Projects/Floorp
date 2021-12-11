@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style type="text/css">
+      .crop {
+        /* Wrapper-div to simulate the cropping that happens in
+           the testcase. (In the testcase, "object-position" pushes
+           the image's destination rect off towards the bottom-right,
+           and crops it to the content-box.) */
+        height: 32px;
+        width: 32px;
+        overflow: hidden;
+        margin-bottom: 2px;
+      }
+      .test {
+        background: salmon;
+        padding-top: 5px;
+        padding-left: 5px;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="crop">
+      <img    class="test"    src="blue-32x32.png">
+    </div>
+    <div class="crop">
+      <embed  class="test"    src="blue-32x32.png">
+    </div>
+    <div class="crop">
+      <object class="test"   data="blue-32x32.png"></object>
+    </div>
+    <div class="crop">
+      <video  class="test" poster="blue-32x32.png"></video>
+    </div>
+  </body>
+</html>

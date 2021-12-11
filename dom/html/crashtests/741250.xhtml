@@ -1,0 +1,9 @@
+<input form="f" id="x" xmlns="http://www.w3.org/1999/xhtml">
+<form id="f"></form>
+<script>
+window.addEventListener("load", function() {
+  var x = document.getElementById("x");
+  x.appendChild(x.cloneNode(true));
+}, false);
+</script>
+</input>

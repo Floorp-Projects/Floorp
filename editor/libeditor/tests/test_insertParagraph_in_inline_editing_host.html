@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test "insertParagraph" command in inline editing host</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<span contenteditable>foobar</span>
+<hr>
+<p><span contenteditable>foobar</span></p>
+<hr>
+<div><span contenteditable>foobar</span></div>
+<hr>
+<div contenteditable><p contenteditable="false"><span contenteditable>foobar</span></p></div>
+
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  var selection = document.getSelection();
+  var editors = document.querySelectorAll("span[contenteditable]");
+
+  var editor = editors.item(0);
+  editor.focus();
+  selection.collapse(editor.firstChild, 3);
+  document.execCommand("insertParagraph", false);
+  is(editor.innerHTML, "foo<br>bar",
+     "insertParagraph should insert <br> element (inline editing host is in <body>)");
+
+  editor = editors.item(1);
+  editor.focus();
+  selection.collapse(editor.firstChild, 3);
+  document.execCommand("insertParagraph", false);
+  is(editor.parentNode.innerHTML, "<span contenteditable=\"\">foo<br>bar</span>",
+     "insertParagraph should insert <br> element (inline editing host is in <p>)");
+
+  editor = editors.item(2);
+  editor.focus();
+  selection.collapse(editor.firstChild, 3);
+  document.execCommand("insertParagraph", false);
+  is(editor.parentNode.innerHTML, "<span contenteditable=\"\">foo<br>bar</span>",
+     "insertParagraph should insert <br> element (inline editing host is in <div>)");
+
+  editor = editors.item(3);
+  editor.focus();
+  selection.collapse(editor.firstChild, 3);
+  document.execCommand("insertParagraph", false);
+  is(editor.parentNode.parentNode.innerHTML, "<p contenteditable=\"false\"><span contenteditable=\"\">foo<br>bar</span></p>",
+     "insertParagraph should insert <br> element (inline editing host is in <p contenteditable=\"false\"> in <div contenteditable>)");
+
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+
+</html>

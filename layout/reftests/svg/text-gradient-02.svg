@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<title>Testcase for gradient on text</title>
+
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=577850 -->
+
+  <defs>
+    <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0.00" stop-color="rgb(0, 0, 0)"/>
+      <stop offset="0.50" stop-color="rgb(255, 255, 255)"/>
+      <stop offset="1.00" stop-color="rgb(0, 0, 0)"/>
+    </linearGradient>
+  </defs>
+
+  <text fill="url(#gradient)" font-size="60" transform="translate(50, 80)">
+    <tspan x="0, 30, 60" y="0" >Foo</tspan>
+    <tspan x="0, 40, 70" dy="1em">Bar</tspan>
+  </text>
+</svg>

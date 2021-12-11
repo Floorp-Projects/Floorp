@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink" 
+     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+     onload="boom();">
+     
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("b").style.position = "absolute";
+  document.getElementById("a").style.color = "green";
+}
+
+</script>
+
+<defs>
+  <g id="a"><xul:listbox/></g>
+</defs>
+
+<g id="b"><use xlink:href="#a"/></g>
+
+</svg>

@@ -1,0 +1,28 @@
+{
+  "name": "OLX.ba",
+  "description": "OLX.ba pretraživač",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "olx@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "OLX.ba",
+      "search_url": "https://www.olx.ba/pretraga",
+      "search_form": "https://www.olx.ba/",
+      "search_url_get_params": "trazilica={searchTerms}",
+      "suggest_url": "https://www.olx.ba/sugestije/firefox_pojmovi",
+      "suggest_url_get_params": "sta={searchTerms}"
+    }
+  }
+}

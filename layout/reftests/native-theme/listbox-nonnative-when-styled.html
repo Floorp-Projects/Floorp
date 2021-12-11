@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<body onload="dump('\nDEBUG-bug660226: ' + document.activeElement + '\n\n');">
+<!-- these should make the select non-native -->
+<select size="3" style="border-width: 0"></select>
+<select size="3" style="border-width: 1px"></select>
+<select size="3" style="border-width: 2px"></select>
+<select size="3" style="border-width: 3px"></select>
+<select size="3" style="border-width: 4px"></select>
+<select size="3" style="border-width: 5px"></select>
+<select size="3" style="border-width: 6px"></select>
+<select size="3" style="border-style: dotted"></select>
+<select size="3" style="border-color: green"></select>
+<select size="3" style="background-color: transparent"></select>
+<select size="3" style="background-color: white"></select>
+
+<!-- these should let it stay native -->
+<select size="3" style="color: black"></select>
+<select size="3" style="font-weight: normal"></select>
+</body>

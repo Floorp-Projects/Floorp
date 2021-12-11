@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=544834
+-->
+<head>
+  <title>Test for Bug 544834</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  :-moz-any(#display, #display2) { text-decoration-line: underline }
+  p:-moz-any([foo], [bar]) { z-index: 17 }
+
+  </style>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=544834">Mozilla Bug 544834</a>
+<p id="display" style="position:absolute"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 544834
+ *
+ * In particular, test that we go through :-moz-any() in AddRule.
+ */
+
+function run()
+{
+  var p = document.getElementById("display");
+  var cs = getComputedStyle(p, "");
+  is(cs.textDecorationLine, "underline", "should match first rule");
+  is(cs.zIndex, "auto", "should not match second rule");
+  p.removeAttribute("id");
+  is(cs.textDecorationLine, "none", "should not match first rule");
+  is(cs.zIndex, "auto", "should not match second rule");
+  p.setAttribute("foo", "v");
+  is(cs.textDecorationLine, "none", "should not match first rule");
+  is(cs.zIndex, "17", "should match second rule");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

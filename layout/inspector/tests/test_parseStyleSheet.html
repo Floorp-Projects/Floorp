@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1195978
+-->
+  <head>
+    <title>Test for Bug 1195978</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <style>
+      body {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="application/javascript">
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+var sheet = document.styleSheets[1];
+is(InspectorUtils.getRelativeRuleLine(sheet.cssRules[0]), 2,
+   "initial relative rule line");
+is(InspectorUtils.getRuleLine(sheet.cssRules[0]), 11,
+   "initial rule line");
+
+InspectorUtils.parseStyleSheet(sheet, "\nbody {\n  color: blue;\n}\n");
+is(InspectorUtils.getRelativeRuleLine(sheet.cssRules[0]), 2,
+   "relative rule line after reparsing");
+is(InspectorUtils.getRuleLine(sheet.cssRules[0]), 11,
+   "relative rule line after reparsing");
+    </script>
+  </body>
+</html>

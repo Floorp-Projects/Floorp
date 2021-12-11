@@ -1,0 +1,540 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIURI;
+interface nsIObjectInputStream;
+interface nsIURIMutator;
+
+%{C++
+#include "nsString.h"
+#include "nsCOMPtr.h"
+#include <utility>
+
+#undef SetPort  // XXX Windows!
+
+namespace mozilla {
+class Encoding;
+}
+
+namespace mozilla {
+namespace ipc {
+class URIParams;
+} // namespace ipc
+} // namespace mozilla
+
+template <class T>
+class BaseURIMutator
+{
+// This is the base class that can be extended by implementors of nsIURIMutator
+// in order to avoid code duplication
+// Class type T should be the type of the class that implements nsIURI
+protected:
+  virtual T* Create()
+  {
+    return new T();
+  }
+
+  [[nodiscard]] nsresult InitFromURI(T* aURI)
+  {
+    nsCOMPtr<nsIURI> clone;
+    nsresult rv = aURI->Clone(getter_AddRefs(clone));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mURI = static_cast<T*>(clone.get());
+    return NS_OK;
+  }
+
+  [[nodiscard]] nsresult InitFromInputStream(nsIObjectInputStream* aStream)
+  {
+    RefPtr<T> uri = Create();
+    nsresult rv = uri->ReadPrivate(aStream);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mURI = std::move(uri);
+    return NS_OK;
+  }
+
+  [[nodiscard]] nsresult InitFromIPCParams(const mozilla::ipc::URIParams& aParams)
+  {
+    RefPtr<T> uri = Create();
+    bool ret = uri->Deserialize(aParams);
+    if (!ret) {
+      return NS_ERROR_FAILURE;
+    }
+    mURI = std::move(uri);
+    return NS_OK;
+  }
+
+  [[nodiscard]] nsresult InitFromSpec(const nsACString& aSpec)
+  {
+    nsresult rv = NS_OK;
+    RefPtr<T> uri;
+    if (mURI) {
+      // This only works because all other Init methods create a new object
+      mURI.swap(uri);
+    } else {
+      uri = Create();
+    }
+
+    rv = uri->SetSpecInternal(aSpec);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mURI = std::move(uri);
+    return NS_OK;
+  }
+
+  RefPtr<T> mURI;
+};
+
+// Since most implementations of nsIURIMutator would extend BaseURIMutator,
+// some methods would have the same implementation. We provide a useful macro
+// to avoid code duplication.
+#define NS_DEFINE_NSIMUTATOR_COMMON                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  Deserialize(const mozilla::ipc::URIParams& aParams) override                \
+  {                                                                           \
+    return InitFromIPCParams(aParams);                                        \
+  }                                                                           \
+                                                                              \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  Finalize(nsIURI** aURI) override                                            \
+  {                                                                           \
+    mURI.forget(aURI); return NS_OK;                                          \
+  }                                                                           \
+                                                                              \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetSpec(const nsACString& aSpec, nsIURIMutator** aMutator) override         \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return InitFromSpec(aSpec);                                               \
+  }                                                                           \
+
+// Implements AddRef, Release and QueryInterface for the mutator
+#define NS_IMPL_NSIURIMUTATOR_ISUPPORTS(aClass, ...)                          \
+  NS_IMPL_ADDREF(aClass)                                                      \
+  NS_IMPL_RELEASE(aClass)                                                     \
+  NS_IMPL_NSIURIMUTATOR_QUERY_INTERFACE(aClass, __VA_ARGS__)                  \
+
+// The list of interfaces is queried and an AddRef-ed pointer is returned if
+// there is a match. Otherwise, we call QueryInterface on mURI and return.
+// The reason for this specialized QueryInterface implementation is that we
+// we want to be able to instantiate the mutator for a given CID of a
+// nsIURI implementation, call nsISerializable.Read() on the mutator to
+// deserialize the URI then QueryInterface the mutator to an nsIURI interface.
+// See bug 1442239.
+// If you QueryInterface a mutator to an interface of the URI
+// implementation this is similar to calling Finalize.
+#define NS_IMPL_NSIURIMUTATOR_QUERY_INTERFACE(aClass, ...)                    \
+  static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                               \
+                "Need more arguments");                                       \
+  NS_INTERFACE_MAP_BEGIN(aClass)                                              \
+    nsCOMPtr<nsIURI> uri;                                                     \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIMutator)              \
+    MOZ_FOR_EACH(NS_INTERFACE_MAP_ENTRY, (), (__VA_ARGS__))                   \
+    if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                              \
+      foundInterface = nullptr;                                               \
+    } else                                                                    \
+    if (mURI &&                                                               \
+        NS_SUCCEEDED(mURI->QueryInterface(aIID, getter_AddRefs(uri)))) {      \
+        mURI = nullptr;                                                       \
+        foundInterface = uri.get();                                           \
+    } else                                                                    \
+  NS_INTERFACE_MAP_END                                                        \
+
+%}
+
+[ptr] native Encoding(const mozilla::Encoding);
+[ref] native const_URIParams_ref(const mozilla::ipc::URIParams);
+
+[scriptable, builtinclass, uuid(1fc53257-898b-4c5e-b69c-05bc84b4cd8f)]
+interface nsIURISetSpec : nsISupports
+{
+  /**
+   * This setter is different from all other setters because it may be used to
+   * initialize the object. We define it separately allowing mutator implementors
+   * to define it separately, while the rest of the setters may be simply
+   * forwarded to the mutable URI.
+   */
+  [must_use] nsIURIMutator setSpec(in AUTF8String aSpec);
+};
+
+/**
+ * These methods allow the mutator to change various parts of the URI.
+ * They return the same nsIURIMutator so that we may chain setter operations:
+ * Example:
+ * let newURI = uri.mutate()
+ *                 .setSpec("http://example.com")
+ *                 .setQuery("hello")
+ *                 .finalize();
+ */
+[scriptable, builtinclass, uuid(5403a6ec-99d7-405e-8b45-9f805bbdfcef)]
+interface nsIURISetters : nsIURISetSpec
+{
+  /**
+   * Setting the scheme outside of a protocol handler implementation is highly
+   * discouraged since that will generally lead to incorrect results.
+   */
+  [must_use] nsIURIMutator setScheme(in AUTF8String aScheme);
+  [must_use] nsIURIMutator setUserPass(in AUTF8String aUserPass);
+  [must_use] nsIURIMutator setUsername(in AUTF8String aUsername);
+  [must_use] nsIURIMutator setPassword(in AUTF8String aPassword);
+
+  /**
+   * If you setHostPort to a value that only has a host part, the port
+   * will not be reset. To reset the port set it to -1 beforehand.
+   * If setting the host succeeds, this method will return NS_OK, even if
+   * setting the port fails (error in parsing the port, or value out of range)
+   */
+  [must_use] nsIURIMutator setHostPort(in AUTF8String aHostPort);
+  [must_use] nsIURIMutator setHost(in AUTF8String aHost);
+  [must_use] nsIURIMutator setPort(in long aPort);
+  [must_use] nsIURIMutator setPathQueryRef(in AUTF8String aPathQueryRef);
+  [must_use] nsIURIMutator setRef(in AUTF8String aRef);
+  [must_use] nsIURIMutator setFilePath(in AUTF8String aFilePath);
+  [must_use] nsIURIMutator setQuery(in AUTF8String aQuery);
+  [must_use, noscript] nsIURIMutator setQueryWithEncoding(in AUTF8String query, in Encoding encoding);
+};
+
+%{C++
+
+// Using this macro instead of NS_FORWARD_SAFE_NSIURISETTERS makes chaining
+// setter operations possible.
+#define NS_FORWARD_SAFE_NSIURISETTERS_RET(_to)                                \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetScheme(const nsACString& aScheme, nsIURIMutator** aMutator) override     \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetScheme(aScheme);            \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetUserPass(const nsACString& aUserPass, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetUserPass(aUserPass);        \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetUsername(const nsACString& aUsername, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetUsername(aUsername);        \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetPassword(const nsACString& aPassword, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetPassword(aPassword);        \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetHostPort(const nsACString& aHostPort, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostPort(aHostPort);        \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetHost(const nsACString& aHost, nsIURIMutator** aMutator) override         \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetHost(aHost);                \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetPort(int32_t aPort, nsIURIMutator** aMutator) override                   \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetPort(aPort);                \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetPathQueryRef(const nsACString& aPathQueryRef, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetPathQueryRef(aPathQueryRef); \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetRef(const nsACString& aRef, nsIURIMutator** aMutator) override           \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetRef(aRef);                  \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetFilePath(const nsACString& aFilePath, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetFilePath(aFilePath);        \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetQuery(const nsACString& aQuery, nsIURIMutator** aMutator) override       \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetQuery(aQuery);              \
+  }                                                                           \
+  [[nodiscard]] NS_IMETHOD                                                    \
+  SetQueryWithEncoding(const nsACString& query, const mozilla::Encoding *encoding, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetQueryWithEncoding(query, encoding); \
+  }                                                                           \
+
+%}
+
+[scriptable, builtinclass, uuid(4d1f3103-1c44-4dcd-b717-5d22a697a7d9)]
+interface nsIURIMutator : nsIURISetters
+{
+  /**
+   * Initalizes the URI by reading IPC URIParams.
+   * See nsIURI.
+   */
+  [noscript, notxpcom, must_use]
+  nsresult deserialize(in const_URIParams_ref aParams);
+
+  /**
+   * Finishes changing or constructing the URI and returns an immutable URI.
+   */
+  [must_use]
+  nsIURI finalize();
+};
+
+%{C++
+
+// This templated struct is used to extract the class type of the method
+template <typename Method>
+struct nsMethodTypeTraits;
+
+template <class C, typename R, typename... As>
+struct nsMethodTypeTraits<R(C::*)(As...)>
+{
+  typedef C class_type;
+};
+
+#ifdef NS_HAVE_STDCALL
+template <class C, typename R, typename... As>
+struct nsMethodTypeTraits<R(__stdcall C::*)(As...)>
+{
+  typedef C class_type;
+};
+#endif
+
+
+// This class provides a useful helper that allows chaining of setter operations
+class MOZ_STACK_CLASS NS_MutateURI
+{
+public:
+  explicit NS_MutateURI(nsIURI* aURI);
+  explicit NS_MutateURI(const char * aContractID);
+
+  explicit NS_MutateURI(nsIURIMutator* m)
+  {
+    mStatus = m ? NS_OK : NS_ERROR_NULL_POINTER;
+    mMutator = m;
+    NS_ENSURE_SUCCESS_VOID(mStatus);
+  }
+
+  NS_MutateURI& SetSpec(const nsACString& aSpec)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetSpec(aSpec, nullptr);
+    return *this;
+  }
+  NS_MutateURI& SetScheme(const nsACString& aScheme)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetScheme(aScheme, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetUserPass(const nsACString& aUserPass)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetUserPass(aUserPass, nullptr);
+    return *this;
+  }
+  NS_MutateURI& SetUsername(const nsACString& aUsername)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetUsername(aUsername, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetPassword(const nsACString& aPassword)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetPassword(aPassword, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetHostPort(const nsACString& aHostPort)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetHostPort(aHostPort, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetHost(const nsACString& aHost)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetHost(aHost, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetPort(int32_t aPort)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetPort(aPort, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetPathQueryRef(const nsACString& aPathQueryRef)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetPathQueryRef(aPathQueryRef, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetRef(const nsACString& aRef)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetRef(aRef, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetFilePath(const nsACString& aFilePath)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetFilePath(aFilePath, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetQuery(const nsACString& aQuery)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetQuery(aQuery, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+  NS_MutateURI& SetQueryWithEncoding(const nsACString& query, const mozilla::Encoding *encoding)
+  {
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
+    mStatus = mMutator->SetQueryWithEncoding(query, encoding, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    return *this;
+  }
+
+  /**
+   * This method allows consumers to call the methods declared in other
+   * interfaces implemented by the mutator object.
+   *
+   * Example:
+   * nsCOMPtr<nsIURI> uri;
+   * nsresult rv = NS_MutateURI(new URIClass::Mutator())
+   *                 .SetSpec(aSpec)
+   *                 .Apply(&SomeInterface::Method, arg1, arg2)
+   *                 .Finalize(uri);
+   *
+   * If mMutator does not implement SomeInterface, do_QueryInterface will fail
+   * and the method will not be called.
+   * If aMethod does not exist, or if there is a mismatch between argument
+   * types, or the number of arguments, then there will be a compile error.
+   */
+  template <typename Method, typename... Args>
+  NS_MutateURI& Apply(Method aMethod, Args&&... aArgs)
+  {
+    typedef typename nsMethodTypeTraits<Method>::class_type Interface;
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    nsCOMPtr<Interface> target = do_QueryInterface(mMutator, &mStatus);
+    MOZ_ASSERT(NS_SUCCEEDED(mStatus), "URL object must implement interface");
+    NS_ENSURE_SUCCESS(mStatus, *this);
+    mStatus = (target->*aMethod)(std::forward<Args>(aArgs)...);
+    return *this;
+  }
+
+  template <class C>
+  [[nodiscard]] nsresult Finalize(nsCOMPtr<C>& aURI)
+  {
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    nsCOMPtr<nsIURI> uri;
+    mStatus = mMutator->Finalize(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    aURI = do_QueryInterface(uri, &mStatus);
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
+    return NS_OK;
+  }
+
+  // Overload for nsIURI to avoid query interface.
+  [[nodiscard]] nsresult Finalize(nsCOMPtr<nsIURI>& aURI)
+  {
+    if (NS_FAILED(mStatus)) return mStatus;
+    mStatus = mMutator->Finalize(getter_AddRefs(aURI));
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
+    return NS_OK;
+  }
+
+  template <class C>
+  [[nodiscard]] nsresult Finalize(C** aURI)
+  {
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    nsCOMPtr<nsIURI> uri;
+    mStatus = mMutator->Finalize(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    nsCOMPtr<C> result = do_QueryInterface(uri, &mStatus);
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    result.forget(aURI);
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
+    return NS_OK;
+  }
+
+  [[nodiscard]] nsresult Finalize(nsIURI** aURI)
+  {
+    if (NS_FAILED(mStatus)) return mStatus;
+    mStatus = mMutator->Finalize(aURI);
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
+    return NS_OK;
+  }
+
+  nsresult GetStatus() { return mStatus; }
+private:
+  nsresult mStatus;
+  nsCOMPtr<nsIURIMutator> mMutator;
+};
+
+%}

@@ -1,0 +1,382 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Permissions */
+
+#trackingGroup {
+  --section-highlight-background-color: color-mix(in srgb, var(--in-content-accent-color) 20%, transparent);
+}
+
+.content-blocking-icon,
+.permission-icon,
+.content-blocking-checkbox {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+.permission-icon {
+  margin-inline-end: 0.2em;
+}
+
+.content-blocking-icon,
+.permission-icon,
+.content-blocking-category .checkbox-label-box,
+.extra-information-label > image,
+.arrowhead,
+.reload-tabs-button,
+.content-blocking-warning-image {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.content-blocking-icon[disabled] {
+  fill: GrayText;
+}
+
+.geo-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/geo.svg);
+}
+
+.xr-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/xr.svg);
+}
+
+.camera-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
+}
+
+.microphone-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
+}
+
+.desktop-notification-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
+}
+
+.autoplay-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media.svg);
+}
+
+.midi-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
+}
+
+/* Content Blocking */
+
+/* Override styling that sets descriptions as grey */
+#trackingGroup description.indent,
+#trackingGroup .indent > description {
+  color: inherit;
+}
+
+[data-subcategory="trackingprotection"] {
+  margin-top: 10px;
+}
+
+#trackingProtectionShield {
+  list-style-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  width: 64px;
+  height: 64px;
+  margin-inline-end: 10px;
+}
+
+.content-blocking-category,
+#fpiIncompatibilityWarning {
+  margin: 3px 0;
+}
+
+#fpiIncompatibilityWarning {
+  background-color: var(--section-highlight-background-color);
+}
+
+#fpiIncompatibilityWarning,
+#contentBlockingCategories {
+  margin-top: 16px;
+}
+
+.content-blocking-category {
+  border-color: var(--in-content-box-border-color);
+}
+
+.content-blocking-category.disabled {
+  opacity: 0.5;
+}
+
+.content-blocking-category.disabled .radio-check {
+  opacity: 1;
+}
+
+.content-blocking-category > .indent {
+  margin-inline-end: 22px;
+}
+
+.arrowhead {
+  appearance: none;
+  border: none;
+  border-radius: 2px;
+  min-height: 20px;
+  min-width: 20px;
+  max-height: 20px;
+  max-width: 20px;
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  background-color: transparent;
+  padding: 3px;
+}
+
+.arrowhead:not([disabled]):hover {
+  cursor: pointer;
+  background-color: var(--in-content-button-background-hover);
+}
+
+.arrowhead:not([disabled]):hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+.arrowhead.up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
+
+.content-blocking-category.expanded:not(.selected) .reload-tabs {
+  display: none;
+}
+
+.content-blocking-warning.reload-tabs:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.content-blocking-reload-desc-container {
+  /* 345px is enough for (almost) twice the size of the default English
+   * string at default font sizes. If this and the button do not fit
+   * on one line, the button will get wrapped to the next line and this
+   * item will stretch to fill all available space. */
+  flex: 1 1 345px;
+  display: flex;
+  align-self: center;
+}
+
+.content-blocking-reload-description {
+  line-height: 1.8em;
+  margin-inline-end: 5px;
+}
+
+.reload-tabs-button {
+  max-height: 30px;
+  min-height: 30px;
+  padding: 0 20px;
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
+  align-self: center;
+}
+
+.reload-tabs-button .button-icon {
+  margin: 0 6px;
+  color: inherit;
+}
+
+.reload-tabs-button .button-text {
+  color: inherit;
+}
+
+.content-blocking-category.selected .content-blocking-warning {
+  background-color: var(--section-highlight-background-color);
+}
+
+.content-blocking-category.selected .arrowhead {
+  display: none;
+}
+
+.content-blocking-category.selected {
+  border-color: var(--in-content-accent-color);
+}
+
+@media (prefers-contrast) {
+  .content-blocking-category.selected {
+    outline: 2px solid var(--in-content-accent-color);
+  }
+}
+
+@media not (prefers-contrast) {
+  .content-blocking-category {
+    background-color: rgba(215, 215, 219, 0.1);
+  }
+
+  .content-blocking-category.selected {
+    background-color: var(--section-highlight-background-color);
+  }
+}
+
+.content-blocking-warning-title,
+.content-blocking-category .radio-label-box {
+  font-weight: bold;
+}
+
+.content-blocking-extra-information {
+  visibility: collapse;
+}
+
+.extra-information-label {
+  margin-top: 18px;
+}
+
+/* Apply display: block to the containers of all the category information, as
+ * without this the flex-wrapped blocks inside don't stretch vertically to
+ * enclose their content. */
+.content-blocking-category > .indent {
+  display: block;
+}
+
+.content-blocking-category.expanded .content-blocking-extra-information,
+.content-blocking-category.selected .content-blocking-extra-information {
+  visibility: visible;
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+}
+
+.content-blocking-extra-information > .indent {
+  margin-bottom: 18px;
+}
+
+.content-blocking-extra-information > .custom-option {
+  margin: 10px 0;
+}
+
+.content-blocking-warning {
+  /* Match .indent's horizontal padding, minus the border added via .info-box-container: */
+  padding-inline: calc(22px - 1px);
+  margin: 10px 0;
+}
+
+.content-blocking-warning:not([hidden]) + .content-blocking-warning {
+  margin-top: 0;
+}
+
+.content-blocking-extra-blocking-desc {
+  margin-inline-start: 0.5em;
+  position: relative;
+  top: 0.65em;
+}
+
+.content-blocking-label {
+  display: list-item;
+  line-height: 1.2em;
+}
+
+.content-blocking-warning-image {
+  list-style-image: url("chrome://global/skin/icons/warning.svg");
+  margin-inline-end: 6px;
+}
+
+#blockCookiesMenu {
+  width: 450px;
+}
+
+#blockCookiesMenu,
+#trackingProtectionMenu {
+  margin: 0;
+}
+
+#changeBlockListLink {
+  margin-inline-start: 56px;
+}
+
+#telemetry-container {
+  margin-block: 4px;
+  line-height: 1.8em;
+  width: 100%;
+}
+
+.content-blocking-category-description {
+  font-size: 90%;
+  opacity: 0.6;
+}
+
+.warning-description {
+  background: url(chrome://global/skin/icons/warning.svg) no-repeat 0 5px;
+  opacity: 0.6;
+  -moz-context-properties: fill, stroke;
+  fill: #d7b600;
+  stroke: white;
+  padding-inline-start: 20px;
+}
+
+.reject-trackers-warning-icon:-moz-locale-dir(rtl) {
+  background-position-x: right 0;
+}
+
+#contentBlockingChangeCookieSettings {
+  padding: 0.25em 0.75em;
+  margin: 4px 8px;
+}
+
+#deleteOnCloseNote {
+  margin-top: 8px;
+  margin-inline-end: 32px;
+}
+
+#submitHealthReportBox {
+  display: -moz-inline-box;
+}
+
+/* Address bar */
+
+.firefoxSuggestOptionBox {
+  /* With this value we're trying to keep the apparent vertical space between
+     option boxes the same as the apparent vertical space between the labels of
+     the checkboxes above the Firefox Suggest subsection. */
+  margin-block-start: 11px;
+}
+
+.firefoxSuggestOptionBox:first-child {
+  /* Similar here: Make the apparent vertical space between the last checkbox
+     and first option box the same as elsewhere. */
+  margin-block-start: 5px;
+}
+
+.firefoxSuggestToggle {
+  /* These variables and comments are copied from and override
+     toggle-button.css. We include values for all variables, even those that are
+     the same at the time this comment was written, for sanity and locality of
+     reference. */
+  --button-height: 16px !important;
+  --button-half-height: 8px !important;
+  --button-width: 32px !important;
+  --button-border-width: 1px !important;
+  /* dot-size = button-height - 2*dot-margin - 2*button-border-width */
+  --dot-size: 14px !important;
+  --dot-margin: 0px !important;
+  /* --dot-transform-x = button-width - 2*dot-margin - dot-size - 2*button-border-width */
+  --dot-transform-x: 16px !important;
+}
+
+.firefoxSuggestOptionDescription {
+  /* Prevent the description from flowing under the toggle button.
+     32px = toggle button width
+     1em = a little extra */
+  padding-inline-end: calc(32px + 1em);
+  color: var(--in-content-deemphasized-text);
+}
+
+#firefoxSuggestInfoBox {
+  margin-block-start: 16px;
+  padding: 12px;
+}
+
+#firefoxSuggestInfoBox > description {
+  margin-inline-start: 2px;
+  margin-block: 2px;
+}
+
+#openSearchEnginePreferences {
+  margin-block-start: 6px;
+  line-height: 30px;
+}
+
+#openSearchEnginePreferences.extraMargin {
+  margin-block-start: 24px;
+}

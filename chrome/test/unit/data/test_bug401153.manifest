@@ -1,0 +1,11 @@
+# Should work
+resource test1 test1/
+
+# Mapping into jar files should work
+resource test3 jar:test3.jar!/resources/
+
+# Invalid line
+resource test4
+
+# Check we made it through the whole manifest
+resource test5 test5/

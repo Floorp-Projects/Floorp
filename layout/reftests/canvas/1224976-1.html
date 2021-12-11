@@ -1,0 +1,10 @@
+<!DOCTYPE HTML>
+<canvas id="c"></canvas>
+<script>
+var ctx = c.getContext('2d');
+ctx.scale(0,1);
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, 10, 10);
+ctx.setTransform(1, 0, 0, 1, 0, 0);
+ctx.fillRect(0, 0, 10, 10);
+</script>

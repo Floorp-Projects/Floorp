@@ -1,0 +1,6 @@
+issuer:int-p256
+subject:ee-p521
+issuerKey:secp256r1
+subjectKey:secp521r1
+signature:ecdsaWithSHA256
+validity:3650

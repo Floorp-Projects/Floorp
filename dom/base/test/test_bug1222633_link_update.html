@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1222633
+-->
+<head>
+  <title>Test for Bug 1222633</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1222633">Mozilla Bug 1222633</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1222633 **/
+
+// Test changing as attribute from an empty value to "foo" to "image". The empty value and "foo" will
+// not trigger any event and "image" should trigger an load event.
+function testPreloadEventAsAttributeChange(url) {
+  return new Promise((resolve) => {
+    var link = document.createElement("LINK");
+    link.setAttribute("rel", "preload");
+    link.setAttribute("href", url);
+
+    link.addEventListener("load", () => {
+      ok(link.as == "image", "Only image will trigger a load event");
+      link.remove();
+      resolve();
+    });
+    link.addEventListener("error", () => {
+      ok(false, "We should not get an error event.");
+    });
+
+    document.head.appendChild(link);
+    link.setAttribute("as", "foo");
+    link.setAttribute("as", "image");
+  });
+}
+
+function testPreloadEventAttributeChange(url, attr, invalidValue, validValue) {
+  return new Promise((resolve) => {
+    var count = 0;
+    var link = document.createElement("LINK");
+    link.setAttribute("rel", "preload");
+    link.setAttribute("href", url);
+    link.setAttribute("as", "image");
+
+    link.setAttribute(attr, invalidValue);
+
+    let firedLoad = false;
+    link.addEventListener("load", () => {
+      ok(!firedLoad, "expecting first load event for " + url);
+      firedLoad = true;
+      link.remove();
+      resolve();
+    });
+    link.addEventListener("error", () => {
+      ok(false, "shouldn't fire error events");
+    });
+    document.head.appendChild(link);
+    SimpleTest.executeSoon(function() {
+      ok(!firedLoad, "Invalid value shouldn't fire load event");
+      link.setAttribute(attr, validValue);
+    })
+  });
+}
+
+function testPreloadEventSetCrossOrigin(url) {
+  return new Promise((resolve) => {
+    var link = document.createElement("LINK");
+    link.setAttribute("rel", "preload");
+    link.setAttribute("href", url);
+    link.setAttribute("as", "fetch");
+    count = 0;
+
+    link.addEventListener("load", () => {
+      count++;
+      if ((count == 1) || (count == 3) || (count == 5)) {
+        ok(true, "expecting " + count + ". load event for " + url);
+      } else {
+        ok(false, "expecting " + count + ". event for " + url);
+      }
+      if ((count == 1) || (count == 3)) {
+        link.setAttribute("crossorigin", "");
+      } else {
+        link.remove();
+        resolve();
+      }
+    });
+
+    link.addEventListener("error", () => {
+      count++;
+      if ((count == 2) || (count == 4)) {
+        ok(true, "expecting " + count + ". error event for " + url);
+      } else {
+        ok(false, "expecting " + count + ". error event for " + url);
+      }
+      link.removeAttribute("crossorigin");
+    });
+    document.head.appendChild(link);
+  });
+}
+
+const IMAGE_PATH = window.location.pathname.replace(/[^/]+$/, "file_mozfiledataurl_img.jpg");
+const SJS_PATH = window.location.pathname.replace(/[^/]+$/, "file_bug1268962.sjs");
+const SAME_ORIGIN = "http://mochi.test:8888";
+const CROSS_ORIGIN = "http://example.com";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
+
+// Test changing as parameter from a wrong to a correct one.
+.then(() => testPreloadEventAsAttributeChange(SAME_ORIGIN + IMAGE_PATH))
+// Test changing type parameter from a wrong to a correct one for given as parameter.
+.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "type", "text/vtt", "image/png"))
+// Test changing media parameter from a wrong to a correct one.
+.then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "media", "foo", "all"))
+// Test changing crossorigin parameter.
+.then(() => testPreloadEventSetCrossOrigin(CROSS_ORIGIN + SJS_PATH + "?statusCode=404&cacheControl=max-age%3D120&allowOrigin=*"))
+
+.catch((err) => ok(false, "promise rejected: " + err))
+.then(() => SimpleTest.finish());
+
+</script>
+</body>
+</html>

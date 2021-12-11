@@ -1,0 +1,154 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsINetAddr;
+
+%{ C++
+#include "nsTArrayForwardDeclare.h"
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
+%}
+native NetAddr(mozilla::net::NetAddr);
+
+/**
+ * Network link status monitoring service.
+ */
+[scriptable, uuid(103e5293-77b3-4b70-af59-6e9e4a1f994a)]
+interface nsINetworkLinkService : nsISupports
+{
+  /* Link type constants */
+  const unsigned long LINK_TYPE_UNKNOWN = 0;
+  const unsigned long LINK_TYPE_ETHERNET = 1;
+  const unsigned long LINK_TYPE_USB = 2;
+  const unsigned long LINK_TYPE_WIFI = 3;
+  const unsigned long LINK_TYPE_WIMAX = 4;
+  const unsigned long LINK_TYPE_MOBILE = 9;
+
+  /**
+   * This is set to true when the system is believed to have a usable
+   * network connection.
+   *
+   * The link is only up when network connections can be established. For
+   * example, the link is down during DHCP configuration (unless there
+   * is another usable interface already configured).
+   *
+   * If the link status is not currently known, we generally assume that
+   * it is up.
+   */
+  readonly attribute boolean isLinkUp;
+
+  /**
+   * This is set to true when we believe that isLinkUp is accurate.
+   */
+  readonly attribute boolean linkStatusKnown;
+
+  /**
+   * The type of network connection.
+   */
+  readonly attribute unsigned long linkType;
+
+  /**
+   * A string uniquely identifying the current active network interfaces.
+   * Empty when there are no active network interfaces.
+   */
+  readonly attribute ACString networkID;
+
+  /**
+   * The list of DNS suffixes for the currently active network interfaces.
+   */
+  readonly attribute Array<ACString> dnsSuffixList;
+
+  /**
+   * The IPs of the DNS resolvers currently used by the platform.
+   */
+  [noscript] readonly attribute Array<NetAddr> nativeResolvers;
+
+  /**
+   * Same as previous - returns the IPs of DNS resolvers but this time as
+   * XPCOM objects usable by extensions.
+   */
+  readonly attribute Array<nsINetAddr> resolvers;
+
+  const unsigned long NONE_DETECTED = 0;
+  const unsigned long VPN_DETECTED = 1 << 0;
+  const unsigned long PROXY_DETECTED = 1 << 1;
+  const unsigned long NRPT_DETECTED = 1 << 2;
+
+  /**
+   * A bitfield that encodes the platform attributes we detected which
+   * indicate that we should only use DNS, not TRR.
+   */
+  readonly attribute unsigned long platformDNSIndications;
+};
+
+%{C++
+/**
+ * We send notifications through nsIObserverService with topic
+ * NS_NETWORK_LINK_TOPIC whenever one of isLinkUp or linkStatusKnown
+ * changes. We pass one of the NS_NETWORK_LINK_DATA_ constants below
+ * as the aData parameter of the notification.
+ */
+#define NS_NETWORK_LINK_TOPIC "network:link-status-changed"
+
+/**
+ * isLinkUp is now true, linkStatusKnown is true.
+ */
+#define NS_NETWORK_LINK_DATA_UP      "up"
+/**
+ * isLinkUp is now false, linkStatusKnown is true.
+ */
+#define NS_NETWORK_LINK_DATA_DOWN    "down"
+/**
+ * isLinkUp is still true, but the network setup is modified.
+ * linkStatusKnown is true.
+ */
+#define NS_NETWORK_LINK_DATA_CHANGED "changed"
+/**
+ * linkStatusKnown is now false.
+ */
+#define NS_NETWORK_LINK_DATA_UNKNOWN "unknown"
+
+/**
+ * network ID has changed.
+ */
+#define NS_NETWORK_ID_CHANGED_TOPIC "network:networkid-changed"
+
+/**
+ * DNS suffix list has updated.
+ */
+#define NS_DNS_SUFFIX_LIST_UPDATED_TOPIC "network:dns-suffix-list-updated"
+
+/**
+ * We send notifications through nsIObserverService with topic
+ * NS_NETWORK_LINK_TYPE_TOPIC whenever the network connection type
+ * changes. We pass one of the valid connection type constants
+ * below as the aData parameter of the notification.
+ */
+#define NS_NETWORK_LINK_TYPE_TOPIC "network:link-type-changed"
+
+/** We were unable to determine the network connection type */
+#define NS_NETWORK_LINK_TYPE_UNKNOWN  "unknown"
+
+/** A standard wired ethernet connection */
+#define NS_NETWORK_LINK_TYPE_ETHERNET    "ethernet"
+
+/** A connection via a USB port */
+#define NS_NETWORK_LINK_TYPE_USB    "usb"
+
+/** A connection via a WiFi access point (IEEE802.11) */
+#define NS_NETWORK_LINK_TYPE_WIFI "wifi"
+
+/** A connection via WiMax (IEEE802.16) */
+#define NS_NETWORK_LINK_TYPE_WIMAX "wimax"
+
+/** A mobile connection (e.g. 2G, 3G, etc) */
+#define NS_NETWORK_LINK_TYPE_MOBILE "mobile"
+%}

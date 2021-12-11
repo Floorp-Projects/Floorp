@@ -1,0 +1,624 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+interface nsIURI;
+interface nsIContent;
+interface nsISelectionController;
+interface nsIDocumentStateListener;
+interface nsIOutputStream;
+interface nsITransactionManager;
+interface nsITransaction;
+interface nsIEditActionListener;
+interface nsIInlineSpellChecker;
+interface nsITransferable;
+
+webidl Document;
+webidl Element;
+webidl Node;
+webidl Selection;
+
+%{C++
+namespace mozilla {
+class EditorBase;
+class HTMLEditor;
+class TextEditor;
+} // namespace mozilla
+%}
+
+[scriptable, builtinclass, uuid(094be624-f0bf-400f-89e2-6a84baab9474)]
+interface nsIEditor  : nsISupports
+{
+%{C++
+  typedef short EDirection;
+  typedef short EStripWrappers;
+%}
+  const short eNone = 0;
+  const short eNext = 1;
+  const short ePrevious = 2;
+  const short eNextWord = 3;
+  const short ePreviousWord = 4;
+  const short eToBeginningOfLine = 5;
+  const short eToEndOfLine = 6;
+
+  const short eStrip = 0;
+  const short eNoStrip = 1;
+
+  // If you want an HTML editor to behave as a plaintext editor, specify this
+  // flag.  Note that this is always set if the instance is a text editor.
+  const long eEditorPlaintextMask       = 0x0001;
+  // We don't support single line editor mode with HTML editors.  Therefore,
+  // don't specify this for HTML editor.
+  const long eEditorSingleLineMask      = 0x0002;
+  // We don't support password editor mode with HTML editors.  Therefore,
+  // don't specify this for HTML editor.
+  const long eEditorPasswordMask        = 0x0004;
+  // When the editor should be in readonly mode (currently, same as "disabled"),
+  // you can specify this flag with any editor instances.  Note that setting
+  // this flag does not change the style of editor.  This just changes the
+  // internal editor's readonly state.
+  const long eEditorReadonlyMask        = 0x0008;
+  // If you want an HTML editor to work as an email composer, specify this flag.
+  // And you can specify this to text editor too for making spellchecker for
+  // the text editor should work exactly same as email composer's.
+  const long eEditorMailMask            = 0x0020;
+  // allow the editor to set font: monospace on the root node
+  const long eEditorEnableWrapHackMask  = 0x0040;
+  // If you want to move focus from an HTML editor with tab navigation,
+  // specify this flag.  This is not available with text editors becase
+  // it's always tabbable.
+  // Note that if this is not specified, link navigation is also enabled in
+  // the editable content.
+  const long eEditorAllowInteraction    = 0x0200;
+  // when this flag is set, the internal direction of the editor is RTL.
+  // if neither of the direction flags are set, the direction is determined
+  // from the text control's content node.
+  const long eEditorRightToLeft         = 0x0800;
+  // when this flag is set, the internal direction of the editor is LTR.
+  const long eEditorLeftToRight         = 0x1000;
+  // when this flag is set, the editor's text content is not spell checked.
+  const long eEditorSkipSpellCheck      = 0x2000;
+
+  /*
+   * The valid values for newlines handling.
+   * Can't change the values unless we remove
+   * use of the pref.
+   */
+  const long eNewlinesPasteIntact                = 0;
+  const long eNewlinesPasteToFirst               = 1;
+  const long eNewlinesReplaceWithSpaces          = 2;
+  const long eNewlinesStrip                      = 3;
+  const long eNewlinesReplaceWithCommas          = 4;
+  const long eNewlinesStripSurroundingWhitespace = 5;
+
+  readonly attribute Selection selection;
+
+  [can_run_script]
+  void setAttributeOrEquivalent(in Element element,
+                                in AString sourceAttrName,
+                                in AString sourceAttrValue,
+                                in boolean aSuppressTransaction);
+  [can_run_script]
+  void removeAttributeOrEquivalent(in Element element,
+                                   in AString sourceAttrName,
+                                   in boolean aSuppressTransaction);
+
+  /** edit flags for this editor.  May be set at any time. */
+  [setter_can_run_script] attribute unsigned long flags;
+
+  /**
+   * the MimeType of the document
+   */
+  attribute AString contentsMIMEType;
+
+  /** Returns true if we have a document that is not marked read-only */
+  readonly attribute boolean isDocumentEditable;
+
+  /** Returns true if the current selection anchor is editable */
+  readonly attribute boolean isSelectionEditable;
+
+  /**
+   * the DOM Document this editor is associated with, refcounted.
+   */
+  readonly attribute Document document;
+
+  /** the body element, i.e. the root of the editable document.
+   */
+  readonly attribute Element rootElement;
+
+  /**
+   * the selection controller for the current presentation, refcounted.
+   */
+  readonly attribute nsISelectionController selectionController;
+
+
+  /* ------------ Selected content removal -------------- */
+
+  /**
+   * DeleteSelection removes all nodes in the current selection.
+   * @param aDir  if eNext, delete to the right (for example, the DEL key)
+   *              if ePrevious, delete to the left (for example, the BACKSPACE key)
+   * @param stripWrappers If eStrip, strip any empty inline elements left
+   *                      behind after the deletion; if eNoStrip, don't.  If in
+   *                      doubt, pass eStrip -- eNoStrip is only for if you're
+   *                      about to insert text or similar right after.
+   */
+  [can_run_script]
+  void deleteSelection(in short action, in short stripWrappers);
+
+
+  /* ------------ Document info and file methods -------------- */
+
+  /** Returns true if the document has no *meaningful* content */
+  readonly attribute boolean documentIsEmpty;
+
+  /** Returns true if the document is modifed and needs saving */
+  readonly attribute boolean documentModified;
+
+  /**
+   * Sets document's character set.  This is available only when the editor
+   * instance is an HTMLEditor since it's odd to change character set of
+   * parent document of `<input>` and `<textarea>`.
+   */
+  [setter_can_run_script]
+  attribute ACString documentCharacterSet;
+
+  /** to be used ONLY when we need to override the doc's modification
+    * state (such as when it's saved).
+    */
+  [can_run_script]
+  void resetModificationCount();
+
+  /** Gets the modification count of the document we are editing.
+    * @return the modification count of the document being edited.
+    *         Zero means unchanged.
+    */
+  long getModificationCount();
+
+  /** called each time we modify the document.
+    * Increments the modification count of the document.
+    * @param  aModCount  the number of modifications by which
+    *                    to increase or decrease the count
+    */
+  [can_run_script]
+  void incrementModificationCount(in long aModCount);
+
+  /* ------------ Transaction methods -------------- */
+
+  /** transactionManager Get the transaction manager the editor is using.
+    */
+  readonly attribute nsITransactionManager transactionManager;
+
+  /** turn the undo system on or off
+    * @param aEnable  if PR_TRUE, the undo system is turned on if available
+    *                 if PR_FALSE the undo system is turned off if it
+    *                 was previously on
+    * @return         if aEnable is PR_TRUE, returns NS_OK if
+    *                 the undo system could be initialized properly
+    *                 if aEnable is PR_FALSE, returns NS_OK.
+    */
+  void enableUndo(in boolean enable);
+
+  /** undo reverses the effects of the last Do operation,
+    * if Undo is enabled in the editor.
+    * It is provided here so clients need no knowledge of whether
+    * the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to undo,
+    * and the result of that undo is returned.
+    * Otherwise, the Undo request is ignored and an
+    * error NS_ERROR_NOT_AVAILABLE is returned.
+    *
+    */
+  [can_run_script]
+  void undo(in unsigned long count);
+
+  /** returns state information about the undo system.
+    * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
+    * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is
+    *                         currently ready to be undone.
+    */
+  void canUndo(out boolean isEnabled, out boolean canUndo);
+
+  /** redo reverses the effects of the last Undo operation
+    * It is provided here so clients need no knowledge of whether
+    * the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to redo and the
+    * result of the previously undone transaction is reapplied to the document.
+    * If no transaction is available for Redo, or if the document
+    * has no transaction manager, the Redo request is ignored and an
+    * error NS_ERROR_NOT_AVAILABLE is returned.
+    *
+    */
+  [can_run_script]
+  void redo(in unsigned long count);
+
+  /** returns state information about the redo system.
+    * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
+    * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is
+                              currently ready to be redone.
+    */
+  void canRedo(out boolean isEnabled, out boolean canRedo);
+
+  /** beginTransaction is a signal from the caller to the editor that
+    * the caller will execute multiple updates to the content tree
+    * that should be treated as a single logical operation,
+    * in the most efficient way possible.<br>
+    * All transactions executed between a call to beginTransaction and
+    * endTransaction will be undoable as an atomic action.<br>
+    * endTransaction must be called after beginTransaction.<br>
+    * Calls to beginTransaction can be nested, as long as endTransaction
+    * is called once per beginUpdate.
+    */
+  [can_run_script]
+  void beginTransaction();
+
+  /** endTransaction is a signal to the editor that the caller is
+    * finished updating the content model.<br>
+    * beginUpdate must be called before endTransaction is called.<br>
+    * Calls to beginTransaction can be nested, as long as endTransaction
+    * is called once per beginTransaction.
+    */
+  [can_run_script]
+  void endTransaction();
+
+  /**
+   * While setting the flag with this method to false, CreateElementTransaction,
+   * DeleteRangeTransaction, DeleteTextTransaction, InsertNodeTransaction,
+   * InsertTextTransaction and SplitNodeTransaction won't change Selection
+   * after modifying the DOM tree.
+   * Note that calling this with false does not guarantee that Selection won't
+   * be changed because other transaction may ignore this flag, editor itself
+   * may change selection, and current selection may become invalid after
+   * changing the DOM tree, etc.
+   * After calling this method with true, the caller should guarantee that
+   * Selection should be positioned where user expects.
+   *
+   * @param should    false if you don't want above transactions to modify
+   *                  Selection automatically after modifying the DOM tree.
+   *                  Note that calling this with false does not guarantee
+   *                  that Selection is never changed.
+   */
+  void setShouldTxnSetSelection(in boolean should);
+
+  /* ------------ Inline Spell Checking methods -------------- */
+
+  /** Returns the inline spell checker associated with this object. The spell
+    * checker is lazily created, so this function may create the object for
+    * you during this call.
+    * @param  autoCreate  If true, this will create a spell checker object
+    *                     if one does not exist yet for this editor. If false
+    *                     and the object has not been created, this function
+    *                     WILL RETURN NULL.
+    */
+  nsIInlineSpellChecker getInlineSpellChecker(in boolean autoCreate);
+
+  /** Called when the user manually overrides the spellchecking state for this
+    * editor.
+    * @param  enable  The new state of spellchecking in this editor, as
+    *                 requested by the user.
+    */
+  void setSpellcheckUserOverride(in boolean enable);
+
+  /* ------------ Clipboard methods -------------- */
+
+  /** cut the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+    */
+  [can_run_script]
+  void cut();
+
+  /**
+   * canCut() returns true if selected content is allowed to be copied to the
+   * clipboard and to be removed.
+   * Note that this always returns true if the editor is in a non-chrome
+   * HTML/XHTML document.
+   * FYI: Current user in script is only BlueGriffon.
+   */
+  [can_run_script]
+  boolean canCut();
+
+  /** copy the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+    */
+  void copy();
+
+  /**
+   * canCopy() returns true if selected content is allowed to be copied to
+   * the clipboard.
+   * Note that this always returns true if the editor is in a non-chrome
+   * HTML/XHTML document.
+   * FYI: Current user in script is only BlueGriffon.
+   */
+  [can_run_script]
+  boolean canCopy();
+
+  /** paste the text in the OS clipboard at the cursor position, replacing
+    * the selected text (if any)
+    */
+  [can_run_script]
+  void paste(in long aClipboardType);
+
+  /** Paste the text in |aTransferable| at the cursor position, replacing the
+    * selected text (if any).
+    */
+  [can_run_script]
+  void pasteTransferable(in nsITransferable aTransferable);
+
+  /** Can we paste? True if the doc is modifiable, and we have
+    * pasteable data in the clipboard.
+    */
+  boolean canPaste(in long aClipboardType);
+
+  /* ------------ Selection methods -------------- */
+
+  /** sets the document selection to the entire contents of the document */
+  [can_run_script]
+  void selectAll();
+
+  /**
+   * Collapses selection at start of the document.  If it's an HTML editor,
+   * collapses selection at start of current editing host (<body> element if
+   * it's in designMode) instead.  If there is a non-editable node before any
+   * editable text nodes or inline elements which can have text nodes as their
+   * children, collapses selection at start of the editing host.  If there is
+   * an editable text node which is not collapsed, collapses selection at
+   * start of the text node.  If there is an editable inline element which
+   * cannot have text nodes as its child, collapses selection at before the
+   * element node.  Otherwise, collapses selection at start of the editing
+   * host.
+   */
+  [can_run_script]
+  void beginningOfDocument();
+
+  /** sets the document selection to the end of the document */
+  void endOfDocument();
+
+  /* ------------ Node manipulation methods -------------- */
+
+  /**
+   * setAttribute() sets the attribute of aElement.
+   * No checking is done to see if aAttribute is a legal attribute of the node,
+   * or if aValue is a legal value of aAttribute.
+   *
+   * @param aElement    the content element to operate on
+   * @param aAttribute  the string representation of the attribute to set
+   * @param aValue      the value to set aAttribute to
+   */
+  [can_run_script]
+  void setAttribute(in Element aElement, in AString attributestr,
+                    in AString attvalue);
+
+  /**
+   * removeAttribute() deletes aAttribute from the attribute list of aElement.
+   * If aAttribute is not an attribute of aElement, nothing is done.
+   *
+   * @param aElement      the content element to operate on
+   * @param aAttribute    the string representation of the attribute to get
+   */
+  [can_run_script]
+  void removeAttribute(in Element aElement,
+                       in AString aAttribute);
+
+  /**
+   * cloneAttributes() is similar to Node::cloneNode(),
+   *   it assures the attribute nodes of the destination are identical
+   *   with the source node by copying all existing attributes from the
+   *   source and deleting those not in the source.
+   *   This is used when the destination element already exists
+   *
+   * @param aDestNode     the destination element to operate on
+   * @param aSourceNode   the source element to copy attributes from
+   */
+  [can_run_script]
+  void cloneAttributes(in Element aDestElement, in Element aSourceElement);
+
+  /**
+   * insertNode inserts aNode into aParent at aPosition.
+   * No checking is done to verify the legality of the insertion.
+   * That is the responsibility of the caller.
+   * @param aNode     The DOM Node to insert.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   */
+  [can_run_script]
+  void insertNode(in Node node,
+                  in Node parent,
+                  in unsigned long aPosition);
+
+
+  /**
+   * deleteNode removes aChild from aParent.
+   * @param aChild    The node to delete
+   */
+  [can_run_script]
+  void deleteNode(in Node child);
+
+/* ------------ Output methods -------------- */
+
+  /**
+   * Output methods:
+   * aFormatType is a mime type, like text/plain.
+   */
+  AString outputToString(in AString formatType,
+                         in unsigned long flags);
+
+  /* ------------ Various listeners methods --------------
+   * nsIEditor holds strong references to the editor observers, action listeners
+   * and document state listeners.
+   */
+
+  /** add an EditActionListener to the editors list of listeners. */
+  void addEditActionListener(in nsIEditActionListener listener);
+
+  /** Remove an EditActionListener from the editor's list of listeners. */
+  void removeEditActionListener(in nsIEditActionListener listener);
+
+  /** Add a DocumentStateListener to the editors list of doc state listeners. */
+  void addDocumentStateListener(in nsIDocumentStateListener listener);
+
+  /** Remove a DocumentStateListener to the editors list of doc state listeners. */
+  void removeDocumentStateListener(in nsIDocumentStateListener listener);
+
+  /**
+   * forceCompositionEnd() force the composition end
+   */
+  void forceCompositionEnd();
+
+  /**
+   * whether this editor has active IME transaction
+   */
+  readonly attribute boolean composing;
+
+  /**
+   * unmask() is available only when the editor is a passwrod field.  This
+   * unmasks characters in specified by aStart and aEnd.  If there have
+   * already unmasked characters, they are masked when this is called.
+   * Note that if you calls this without non-zero `aTimeout`, you bear
+   * responsibility for masking password with calling `mask()`.  I.e.,
+   * user inputting password won't be masked automacitally.  If user types
+   * a new character and echo is enabled, unmasked range is expanded to
+   * including it.
+   *
+   * @param aStart      Optional, first index to show the character.  If you
+   *                    specify middle of a surrogate pair, this expands the
+   *                    range to include the prceding high surrogate
+   *                    automatically.
+   *                    If omitted, it means that all characters of the
+   *                    password becomes unmasked.
+   * @param aEnd        Optional, next index of last unmasked character.  If
+   *                    you specify middle of a surrogate pair, the expands
+   *                    the range to include the following low surrogate.
+   *                    If omitted or negative value, it means unmasking all
+   *                    characters after aStart.  Specifying same index
+   *                    throws an exception.
+   * @param aTimeout    Optional, specify milliseconds to hide the unmasked
+   *                    characters if you want to show them temporarily.
+   *                    If omitted or 0, it means this won't mask the characters
+   *                    automatically.
+   */
+  [can_run_script, optional_argc] void unmask(
+      [optional] in unsigned long aStart,
+      [optional] in long long aEnd,
+      [optional] in unsigned long aTimeout);
+
+  /**
+   * mask() is available only when the editor is a password field.  This masks
+   * all unmasked characters immediately.
+   */
+  [can_run_script] void mask();
+
+  /**
+   * These attributes are available only when the editor is a password field.
+   * unmaskedStart is first unmasked character index, or 0 if there is no
+   * unmasked characters.
+   * unmaskedEnd is next index of the last unmasked character.  0 means there
+   * is no unmasked characters.
+   */
+  readonly attribute unsigned long unmaskedStart;
+  readonly attribute unsigned long unmaskedEnd;
+
+  /**
+   * autoMaskingEnabled is true if unmasked range and newly inputted characters
+   * are masked automatically.  That's the default state.  If false, until
+   * `mask()` is called, unmasked range and newly inputted characters are
+   * unmasked.
+   */
+  readonly attribute boolean autoMaskingEnabled;
+
+  /**
+   * passwordMask attribute is a mask character which is used to mask password.
+   */
+  readonly attribute AString passwordMask;
+
+  /**
+    * The length of the contents in characters.
+    */
+  readonly attribute unsigned long textLength;
+
+  /** Get and set the body wrap width.
+    *
+    * Special values:
+    *    0 = wrap to window width
+    *   -1 = no wrap at all
+    */
+  attribute long wrapWidth;
+
+  /** Get and set newline handling.
+   *
+   *  Values are the constants defined above.
+   */
+  attribute long newlineHandling;
+
+  /**
+   * Inserts a string at the current location,
+   * given by the selection.
+   * If the selection is not collapsed, the selection is deleted
+   * and the insertion takes place at the resulting collapsed selection.
+   *
+   * @param aString   the string to be inserted
+   */
+   [can_run_script]
+   void insertText(in AString aStringToInsert);
+
+  /**
+   * Insert a line break into the content model.
+   * The interpretation of a break is up to the implementation:
+   * it may enter a character, split a node in the tree, etc.
+   * This may be more efficient than calling InsertText with a newline.
+   */
+  [can_run_script]
+  void insertLineBreak();
+
+%{C++
+  inline bool IsHTMLEditor() const;
+  inline bool IsTextEditor() const;
+
+  /**
+   * AsEditorBase() returns a pointer to EditorBase class.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/EditorBase.h.  Consumers need to #include that header.
+   */
+  inline mozilla::EditorBase* AsEditorBase();
+  inline const mozilla::EditorBase* AsEditorBase() const;
+
+  /**
+   * AsTextEditor() and GetTextEditor() return a pointer to TextEditor class.
+   * AsTextEditor() does not check the concrete class type.  So, it never
+   * returns nullptr.  GetAsTextEditor() does check the concrete class type.
+   * So, it may return nullptr.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/TextEditor.h.  Consumers need to #include that header.
+   */
+  inline mozilla::TextEditor* AsTextEditor();
+  inline const mozilla::TextEditor* AsTextEditor() const;
+  inline mozilla::TextEditor* GetAsTextEditor();
+  inline const mozilla::TextEditor* GetAsTextEditor() const;
+
+  /**
+   * AsHTMLEditor() and GetHTMLEditor() return a pointer to HTMLEditor class.
+   * AsHTMLEditor() does not check the concrete class type.  So, it never
+   * returns nullptr.  GetAsHTMLEditor() does check the concrete class type.
+   * So, it may return nullptr.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/HTMLEditor.h.  Consumers need to #include that header.
+   */
+  inline mozilla::HTMLEditor* AsHTMLEditor();
+  inline const mozilla::HTMLEditor* AsHTMLEditor() const;
+  inline mozilla::HTMLEditor* GetAsHTMLEditor();
+  inline const mozilla::HTMLEditor* GetAsHTMLEditor() const;
+%}
+};

@@ -1,0 +1,49 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_DIRS += ["test"]
+
+XPIDL_SOURCES += [
+    "nsIChromeRegistry.idl",
+    "nsIToolkitChromeRegistry.idl",
+]
+
+XPIDL_MODULE = "chrome"
+
+EXPORTS += [
+    "nsChromeProtocolHandler.h",
+]
+
+EXPORTS.mozilla.chrome += [
+    "RegistryMessageUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "nsChromeProtocolHandler.cpp",
+    "nsChromeRegistry.cpp",
+    "nsChromeRegistryChrome.cpp",
+    "nsChromeRegistryContent.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "!/xpcom",
+    "/dom/base",
+    "/netwerk/base",
+    "/netwerk/protocol/res",
+    "/xpcom/components",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
+
+REQUIRES_UNIFIED_BUILD = True

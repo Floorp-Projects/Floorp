@@ -1,0 +1,150 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# ** Note: The comment below along with the CPP_UNIT_TESTS and LIBS variables
+# ** were commented out in the original Makefile.in, and should be restored
+# ** some day, perhaps as a gtest.
+#
+# ParseCSS.cpp used to be built as a test program, but it was not
+# being used for anything, and recent changes to the CSS loader have
+# made it fail to link.  Further changes are planned which should make
+# it buildable again.
+
+DIRS += ["gtest"]
+
+HostSimplePrograms(
+    [
+        "host_ListCSSProperties",
+    ]
+)
+
+MOCHITEST_MANIFESTS += [
+    "mochitest.ini",
+]
+BROWSER_CHROME_MANIFESTS += ["browser.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["chrome/chrome.ini"]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test.chrome += [
+    "chrome/display_mode_reflow_iframe.html",
+    "chrome/moz_document_helper.html",
+    "media_queries_iframe.html",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test["css-visited"] += [
+    "/layout/reftests/css-visited/border-1-ref.html",
+    "/layout/reftests/css-visited/border-1.html",
+    "/layout/reftests/css-visited/border-2-ref.html",
+    "/layout/reftests/css-visited/border-2a.html",
+    "/layout/reftests/css-visited/border-2b.html",
+    "/layout/reftests/css-visited/border-collapse-1-ref.html",
+    "/layout/reftests/css-visited/border-collapse-1.html",
+    "/layout/reftests/css-visited/caret-color-on-visited-1-ref.html",
+    "/layout/reftests/css-visited/caret-color-on-visited-1.html",
+    "/layout/reftests/css-visited/color-choice-1-ref.html",
+    "/layout/reftests/css-visited/color-choice-1.html",
+    "/layout/reftests/css-visited/color-on-bullets-1-ref.html",
+    "/layout/reftests/css-visited/color-on-bullets-1.html",
+    "/layout/reftests/css-visited/color-on-link-1-ref.html",
+    "/layout/reftests/css-visited/color-on-link-1.html",
+    "/layout/reftests/css-visited/color-on-link-before-1.html",
+    "/layout/reftests/css-visited/color-on-text-decoration-1-ref.html",
+    "/layout/reftests/css-visited/color-on-text-decoration-1.html",
+    "/layout/reftests/css-visited/color-on-visited-1-ref.html",
+    "/layout/reftests/css-visited/color-on-visited-1.html",
+    "/layout/reftests/css-visited/color-on-visited-before-1.html",
+    "/layout/reftests/css-visited/color-on-visited-text-1-ref.html",
+    "/layout/reftests/css-visited/color-on-visited-text-1.html",
+    "/layout/reftests/css-visited/column-rule-1-notref.html",
+    "/layout/reftests/css-visited/column-rule-1-ref.html",
+    "/layout/reftests/css-visited/column-rule-1.html",
+    "/layout/reftests/css-visited/content-before-1-ref.html",
+    "/layout/reftests/css-visited/content-color-on-link-before-1-ref.html",
+    "/layout/reftests/css-visited/content-color-on-link-before-1.html",
+    "/layout/reftests/css-visited/content-color-on-visited-before-1-ref.html",
+    "/layout/reftests/css-visited/content-color-on-visited-before-1.html",
+    "/layout/reftests/css-visited/content-on-link-before-1.html",
+    "/layout/reftests/css-visited/content-on-visited-before-1.html",
+    "/layout/reftests/css-visited/first-line-1-ref.html",
+    "/layout/reftests/css-visited/first-line-1.html",
+    "/layout/reftests/css-visited/inherit-keyword-1-ref.html",
+    "/layout/reftests/css-visited/inherit-keyword-1.xhtml",
+    "/layout/reftests/css-visited/link-root-1-ref.xhtml",
+    "/layout/reftests/css-visited/link-root-1.xhtml",
+    "/layout/reftests/css-visited/logical-box-border-color-visited-link-001.html",
+    "/layout/reftests/css-visited/logical-box-border-color-visited-link-002.html",
+    "/layout/reftests/css-visited/logical-box-border-color-visited-link-003.html",
+    "/layout/reftests/css-visited/logical-box-border-color-visited-link-ref.html",
+    "/layout/reftests/css-visited/mathml-links-ref.html",
+    "/layout/reftests/css-visited/mathml-links.html",
+    "/layout/reftests/css-visited/outline-1-ref.html",
+    "/layout/reftests/css-visited/outline-1.html",
+    "/layout/reftests/css-visited/placeholder-1-ref.html",
+    "/layout/reftests/css-visited/placeholder-1.html",
+    "/layout/reftests/css-visited/selector-adj-sibling-1-ref.html",
+    "/layout/reftests/css-visited/selector-adj-sibling-1.html",
+    "/layout/reftests/css-visited/selector-adj-sibling-2-ref.html",
+    "/layout/reftests/css-visited/selector-adj-sibling-2.html",
+    "/layout/reftests/css-visited/selector-adj-sibling-3-ref.xhtml",
+    "/layout/reftests/css-visited/selector-adj-sibling-3.xhtml",
+    "/layout/reftests/css-visited/selector-any-sibling-1-ref.html",
+    "/layout/reftests/css-visited/selector-any-sibling-1.html",
+    "/layout/reftests/css-visited/selector-any-sibling-2-ref.html",
+    "/layout/reftests/css-visited/selector-any-sibling-2.html",
+    "/layout/reftests/css-visited/selector-child-1-ref.html",
+    "/layout/reftests/css-visited/selector-child-1.html",
+    "/layout/reftests/css-visited/selector-child-2-ref.xhtml",
+    "/layout/reftests/css-visited/selector-child-2.xhtml",
+    "/layout/reftests/css-visited/selector-descendant-1-ref.html",
+    "/layout/reftests/css-visited/selector-descendant-1.html",
+    "/layout/reftests/css-visited/selector-descendant-2-ref.xhtml",
+    "/layout/reftests/css-visited/selector-descendant-2.xhtml",
+    "/layout/reftests/css-visited/subject-of-selector-1-ref.html",
+    "/layout/reftests/css-visited/subject-of-selector-adj-sibling-1.html",
+    "/layout/reftests/css-visited/subject-of-selector-any-sibling-1.html",
+    "/layout/reftests/css-visited/subject-of-selector-child-1.html",
+    "/layout/reftests/css-visited/subject-of-selector-descendant-1.html",
+    "/layout/reftests/css-visited/subject-of-selector-descendant-2-ref.xhtml",
+    "/layout/reftests/css-visited/subject-of-selector-descendant-2.xhtml",
+    "/layout/reftests/css-visited/svg-paint-currentcolor-visited-ref.svg",
+    "/layout/reftests/css-visited/svg-paint-currentcolor-visited.svg",
+    "/layout/reftests/css-visited/transition-on-visited-ref.html",
+    "/layout/reftests/css-visited/transition-on-visited.html",
+    "/layout/reftests/css-visited/visited-inherit-1-ref.html",
+    "/layout/reftests/css-visited/visited-inherit-1.html",
+    "/layout/reftests/css-visited/visited-page.html",
+    "/layout/reftests/css-visited/white-to-transparent-1-ref.html",
+    "/layout/reftests/css-visited/white-to-transparent-1.html",
+    "/layout/reftests/css-visited/width-1-ref.html",
+    "/layout/reftests/css-visited/width-on-link-1.html",
+    "/layout/reftests/css-visited/width-on-visited-1.html",
+    "/layout/reftests/fonts/Ahem.ttf",
+    "/layout/reftests/svg/as-image/svg-image-visited-1-ref.html",
+    "/layout/reftests/svg/as-image/svg-image-visited-1a-helper.svg",
+    "/layout/reftests/svg/as-image/svg-image-visited-1a.html",
+    "/layout/reftests/svg/as-image/svg-image-visited-1b-helper.svg",
+    "/layout/reftests/svg/as-image/svg-image-visited-1b.html",
+    "/layout/reftests/svg/as-image/svg-image-visited-1c-helper.svg",
+    "/layout/reftests/svg/as-image/svg-image-visited-1c.html",
+    "/layout/reftests/svg/as-image/svg-image-visited-1d-helper.svg",
+    "/layout/reftests/svg/as-image/svg-image-visited-1d.html",
+    "/layout/reftests/svg/pseudo-classes-02-ref.svg",
+    "/layout/reftests/svg/pseudo-classes-02.svg",
+]
+
+DEFINES["MOZILLA_INTERNAL_API"] = True
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    GeneratedFile(
+        "css_properties.js",
+        script="gen-css-properties.py",
+        inputs=[
+            "css_properties_like_longhand.js",
+            "!host_ListCSSProperties%s" % CONFIG["HOST_BIN_SUFFIX"],
+        ],
+    )
+    TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test += [
+        "!css_properties.js"
+    ]

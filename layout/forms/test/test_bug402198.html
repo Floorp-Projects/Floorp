@@ -1,0 +1,77 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=402198
+-->
+<head>
+  <title>Test for Bug 402198</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=402198">Mozilla Bug 402198</a>
+<p id="display">
+  <select></select>
+  <select><optgroup></optgroup></select>
+  <legend style="overflow: scroll;">
+    <select></select>
+  </legend>
+  <span></span>
+  <span style="display: -moz-box;">
+    <select></select>
+  </span>
+  <legend style=" ">
+    <label style="overflow: scroll; display: -moz-box;">
+      <select></select>
+    </label>
+  </legend>
+  <legend>
+    <label style=" display: table;">
+      <select id="a">
+        <option>High Grade</option>
+        <option>Medium Grade</option>
+      </select>
+    </label>
+  </legend>
+
+  <input>
+  <select multiple="multiple"></select>
+  <select style="overflow: scroll; display: -moz-box;">
+    <optgroup></optgroup>
+    <optgroup style="display: table-cell;"></optgroup>
+  </select>
+</p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function doe3() {
+  document.documentElement.style.display = 'none';
+  document.body.offsetHeight;
+  document.documentElement.style.display = '';
+  document.body.offsetHeight;
+
+  document.getElementById('a').focus();
+  document.body.style.display = 'none';
+
+  synthesizeKey('KEY_Tab', {shiftKey: true});
+
+  is(0, 0, "this is a crash/assertion test, so we're ok if we survived this far");
+  setTimeout(function() {document.body.style.display = ''; SimpleTest.finish();}, 0);
+}
+
+function do_test() {
+  setTimeout(doe3,300);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+addLoadEvent(do_test);
+</script>
+</pre>
+
+<style>
+* {quotes: "quote" "quote" !important;}
+</style>
+
+</body>
+</html>

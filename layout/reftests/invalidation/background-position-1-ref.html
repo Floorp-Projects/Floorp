@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Changes to background-position should not cause things to repaint that don't intersect the background image.</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+#background {
+  height: 512px;
+  background-image: url(image_rgrg-256x256.png);
+  background-repeat: no-repeat;
+  background-position: 300px 100px;
+}
+
+#not-intersecting-background {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  margin: 50px;
+  border: 1px solid lime;
+}
+
+</style>
+
+<div id="background">
+  <div id="not-intersecting-background"></div>
+</div>

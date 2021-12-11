@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="Mozilla Bug 503926"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=964293"
+     target="_blank">Cu.cloneInto()</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  const TypedArrayThings = [
+    'Int8Array',
+    'Uint8Array',
+    'Uint8ClampedArray',
+    'Int16Array',
+    'Uint16Array',
+    'Int32Array',
+    'Uint32Array',
+    'Float32Array',
+    'Float64Array',
+  ];
+
+  function checkThrows(f, msg, rgxp) {
+    try {
+      f();
+      ok(false, "Should have thrown: " + msg);
+    } catch (e) {
+      ok(true, "Threw correctly - " + msg + " - " + e);
+      if (rgxp)
+        ok(rgxp.test(e), "Should throw correct exception: " + e);
+    }
+  }
+
+  function getType(a) {
+    if (a === null || a === undefined)
+      return 'null';
+
+    if (Array.isArray(a))
+      return 'array';
+
+    if (a instanceof File)
+      return 'file';
+
+    if (a instanceof Blob)
+      return 'blob';
+
+    if (TypedArrayThings.includes(a.constructor.name))
+      return a.constructor.name;
+
+    if (typeof a == 'object')
+      return 'object';
+
+    if (typeof a == 'function')
+      return 'function';
+
+    return 'primitive';
+  }
+
+  function compare(a, b) {
+    is (getType(a), getType(b), 'Type matches');
+
+    var type = getType(a);
+    if (type == 'array') {
+      is (a.length, b.length, 'Array.length matches');
+      for (var i = 0; i < a.length; ++i) {
+        compare(a[i], b[i]);
+      }
+
+      return;
+    }
+
+    if (type == 'file' || type == 'blob') {
+      ok ( a === b, 'They should match');
+      return;
+    }
+
+    if (type == 'object') {
+      ok ( a !== b, 'They should not match');
+
+      var aProps = [];
+      for (var p in a) aProps.push(p);
+
+      var bProps = [];
+      for (var p in b) bProps.push(p);
+
+      is (aProps.length, bProps.length, 'Props match');
+      is (aProps.sort().toString(), bProps.sort().toString(), 'Props names match');
+
+      for (var p in a) {
+        compare(a[p], b[p]);
+      }
+
+      return;
+    }
+
+    if (type == 'function') {
+      ok ( a !== b, 'They should not match');
+      return;
+    }
+
+    if (type != 'null') {
+      is (a, b, 'Same value');
+    }
+  }
+
+  var sandboxOptions = {
+    wantXrays: true,
+    wantExportHelpers: true,
+  };
+  var sandbox = new Cu.Sandbox(window, sandboxOptions);
+  // The second sandbox is for testing the exportHelper version of the cloneInto
+  var sandbox2 = new Cu.Sandbox("http://example.com", sandboxOptions);
+  sandbox.sandbox2 = sandbox2;
+  sandbox2.sandbox = sandbox;
+
+  function cloneAndTest(test) {
+    var output = sandbox.test = Cu.cloneInto(test, sandbox);
+    compare(test, output);
+
+    output = Cu.evalInSandbox('cloneInto(test, sandbox2)', sandbox);
+    compare(test, output);
+  }
+
+  function cloneAndTestWithFunctions(test) {
+    var output = sandbox.test = Cu.cloneInto(test, sandbox, { cloneFunctions: true });
+    compare(test, output);
+
+    output = Cu.evalInSandbox('cloneInto(test, sandbox2, { cloneFunctions: true })', sandbox);
+    // Note - We need to waive here, because functions are filtered out by object Xrays.
+    compare(test, Cu.waiveXrays(output));
+  }
+
+  var tests = [
+    1,
+    null,
+    true,
+    'hello world',
+    [1, 2, 3],
+    { a: 1, b: 2 },
+    new Date(),
+    { a: 1, b: {}, c: [1, 2, 3, {} ], e: 'hello world' },
+  ];
+
+  for (var i = 0; i < tests.length; ++i) {
+    cloneAndTest(tests[i]);
+  }
+
+  checkThrows(function() { Cu.cloneInto({ a: function() {} }, sandbox); },
+              'Function should not be cloned by default');
+
+  checkThrows(function() { Cu.cloneInto({ a: document }, sandbox); },
+              'Reflectors should not be wrapped by default');
+
+  var withReflectors = Cu.cloneInto({ doc: document, win: window }, sandbox,
+                                    { wrapReflectors: true });
+  is(Cu.unwaiveXrays(Cu.waiveXrays(withReflectors).doc), document, "Document passes");
+  is(Cu.unwaiveXrays(Cu.waiveXrays(withReflectors).win), window, "Window passes");
+
+
+  checkThrows(function() { Cu.evalInSandbox('cloneInto({}, sandbox)', sandbox2); },
+              'CloneInto should only work on less privileged target scopes.',
+              /denied|insecure/);
+
+  var cloneTarget = new Cu.Sandbox('http://example.com');
+  var sameOriginSB = new Cu.Sandbox('http://example.com', { wantGlobalProperties: ['XMLHttpRequest'] });
+  var crossOriginSB = new Cu.Sandbox('http://example.net', { wantGlobalProperties: ['XMLHttpRequest'] });
+  sandbox2.cloneTarget = cloneTarget;
+  sandbox2.soXHR = Cu.evalInSandbox('new XMLHttpRequest()', sameOriginSB);
+  sandbox2.xoXHR = Cu.evalInSandbox('new XMLHttpRequest()', crossOriginSB);
+  sandbox2.chromeDoc = document;
+  Cu.evalInSandbox('function tryToClone(x) { return cloneInto({val: x}, cloneTarget, { wrapReflectors: true }).val; }', sandbox2);
+  is(Cu.evalInSandbox('tryToClone(soXHR)', sandbox2), sandbox2.soXHR, 'Same-origin wrapReflectors works');
+  checkThrows(function() { Cu.evalInSandbox('tryToClone(chromeDoc)', sandbox2); },
+              'wrapReflectors may not wrap cross-origin reflectors', /unsupported value type/);
+
+
+  var test = { a: function() { return 42; } };
+  cloneAndTestWithFunctions(test);
+
+  // Check that inputs are properly passed through cloned functions:
+  test = { a: function(obj) { return obj; } };
+  var clonedTest = Cu.cloneInto(test, sandbox, {cloneFunctions: true});
+  var testInput = {};
+  is(clonedTest.a(testInput), testInput, "Objects should be identical");
+  ]]>
+  </script>
+</window>

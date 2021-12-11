@@ -1,0 +1,738 @@
+<html>
+
+<head>
+  <title>Text attributes tests</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    .gencontent:before { content: "*"; }
+    .gencontent:after  { content: "*"; }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script src="../common.js"></script>
+  <script src="../attributes.js"></script>
+  <script src="../events.js"></script>
+
+  <script>
+    var gComputedStyle = null;
+
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // area1
+      var ID = "area1";
+      var defAttrs = buildDefaultTextAttrs(ID, "10pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      var attrs = {};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 7);
+
+      attrs = { "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 7, attrs, defAttrs, 7, 11);
+
+      attrs = {};
+      testTextAttrs(ID, 12, attrs, defAttrs, 11, 18);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area2
+      ID = "area2";
+      defAttrs = buildDefaultTextAttrs(ID, "14pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 7);
+
+      attrs = { "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 7, attrs, defAttrs, 7, 12);
+
+      var tempElem = getNode(ID).firstChild.nextSibling.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"font-style": gComputedStyle.fontStyle,
+               "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 13, attrs, defAttrs, 12, 19);
+
+      attrs = { "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 20, attrs, defAttrs, 19, 23);
+
+      attrs = {};
+      testTextAttrs(ID, 24, attrs, defAttrs, 23, 30);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area3
+      ID = "area3";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      tempElem = getNode(ID).firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 6);
+
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 6, attrs, defAttrs, 6, 26);
+
+      tempElem = tempElem.parentNode;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 26, attrs, defAttrs, 26, 27);
+
+      tempElem = tempElem.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color,
+               "background-color": gComputedStyle.backgroundColor};
+      testTextAttrs(ID, 27, attrs, defAttrs, 27, 50);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area4
+      ID = "area4";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      tempElem = getNode(ID).firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 16);
+
+      tempElem = tempElem.nextSibling.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 16, attrs, defAttrs, 16, 33);
+
+      tempElem = tempElem.parentNode;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 34, attrs, defAttrs, 33, 46);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area5: "Green!*!RedNormal"
+      ID = "area5";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      // Green
+      tempElem = getNode(ID).firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
+
+      // br
+      attrs = {};
+      testTextAttrs(ID, 5, attrs, defAttrs, 5, 6);
+
+      // img, embedded accessible, no attributes
+      attrs = {};
+      testTextAttrs(ID, 6, attrs, {}, 6, 7);
+
+      // br
+      attrs = {};
+      testTextAttrs(ID, 7, attrs, defAttrs, 7, 8);
+
+      // Red
+      tempElem = tempElem.nextSibling.nextSibling.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 9, attrs, defAttrs, 8, 11);
+
+      // Normal
+      attrs = {};
+      testTextAttrs(ID, 11, attrs, defAttrs, 11, 18);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area6 (CSS vertical-align property, refer to bug 445938 for details
+      // and sup and sub elements, refer to bug 735645 for details)
+      ID = "area6";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
+
+      attrs = { "text-position": "super", "font-size": "10pt" };
+      testTextAttrs(ID, 5, attrs, defAttrs, 5, 13);
+
+      attrs = {};
+      testTextAttrs(ID, 13, attrs, defAttrs, 13, 27);
+
+      attrs = { "text-position": "super" };
+      testTextAttrs(ID, 27, attrs, defAttrs, 27, 35);
+
+      attrs = {};
+      testTextAttrs(ID, 35, attrs, defAttrs, 35, 39);
+
+      attrs = { "text-position": "sub", "font-size": "10pt" };
+      testTextAttrs(ID, 39, attrs, defAttrs, 39, 50);
+
+      attrs = {};
+      testTextAttrs(ID, 50, attrs, defAttrs, 50, 55);
+
+      attrs = { "text-position": "sub" };
+      testTextAttrs(ID, 55, attrs, defAttrs, 55, 64);
+
+      attrs = {};
+      testTextAttrs(ID, 64, attrs, defAttrs, 64, 69);
+
+      attrs = { "text-position": "super" };
+      testTextAttrs(ID, 69, attrs, defAttrs, 69, 84);
+
+      attrs = {};
+      testTextAttrs(ID, 84, attrs, defAttrs, 84, 89);
+
+      attrs = { "text-position": "sub" };
+      testTextAttrs(ID, 89, attrs, defAttrs, 89, 102);
+
+      attrs = {};
+      testTextAttrs(ID, 102, attrs, defAttrs, 102, 107);
+
+      attrs = { "text-position": "super" };
+      testTextAttrs(ID, 107, attrs, defAttrs, 107, 123);
+
+      attrs = {};
+      testTextAttrs(ID, 123, attrs, defAttrs, 123, 128);
+
+      attrs = { "text-position": "sub" };
+      testTextAttrs(ID, 128, attrs, defAttrs, 128, 142);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area7
+      ID = "area7";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      defAttrs.language = "en";
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = {"language": "ru"};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 6);
+
+      attrs = {};
+      testTextAttrs(ID, 6, attrs, defAttrs, 6, 7);
+
+      tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = { "background-color": gComputedStyle.backgroundColor};
+      testTextAttrs(ID, 13, attrs, defAttrs, 7, 20);
+
+      attrs = {};
+      testTextAttrs(ID, 20, attrs, defAttrs, 20, 21);
+
+      attrs = {"language": "de"};
+      testTextAttrs(ID, 21, attrs, defAttrs, 21, 36);
+
+      attrs = {};
+      testTextAttrs(ID, 36, attrs, defAttrs, 36, 44);
+
+      attrs = {};
+      testTextAttrs(ID, 37, attrs, defAttrs, 36, 44);
+
+      tempElem = tempElem.nextSibling.nextSibling.nextSibling.nextSibling.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 44, attrs, defAttrs, 44, 51);
+
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"font-weight": kBoldFontWeight,
+               "color": gComputedStyle.color};
+      testTextAttrs(ID, 51, attrs, defAttrs, 51, 55);
+
+      tempElem = tempElem.parentNode;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"color": gComputedStyle.color};
+      testTextAttrs(ID, 55, attrs, defAttrs, 55, 62);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area9, different single style spans in styled paragraph
+      ID = "area9";
+      defAttrs = buildDefaultTextAttrs(ID, "10pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 6);
+
+      attrs = { "font-size": "12pt" };
+      testTextAttrs(ID, 7, attrs, defAttrs, 6, 12);
+
+      attrs = {};
+      testTextAttrs(ID, 13, attrs, defAttrs, 12, 21);
+
+      // Walk to the span with the different background color
+      tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = { "background-color": gComputedStyle.backgroundColor };
+      testTextAttrs(ID, 22, attrs, defAttrs, 21, 36);
+
+      attrs = {};
+      testTextAttrs(ID, 37, attrs, defAttrs, 36, 44);
+
+      // Walk from the background color span to the one with font-style
+      tempElem = tempElem.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = { "font-style": gComputedStyle.fontStyle };
+      testTextAttrs(ID, 45, attrs, defAttrs, 44, 61);
+
+      attrs = {};
+      testTextAttrs(ID, 62, attrs, defAttrs, 61, 69);
+
+      // Walk from span with font-style to the one with font-family.
+      tempElem = tempElem.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = { "font-family": kMonospaceFontFamily };
+      testTextAttrs(ID, 70, attrs, defAttrs, 69, 83);
+
+      attrs = {};
+      testTextAttrs(ID, 84, attrs, defAttrs, 83, 91);
+
+      attrs = {
+        "text-underline-style": "solid",
+        "text-underline-color": gComputedStyle.color,
+      };
+      testTextAttrs(ID, 92, attrs, defAttrs, 91, 101);
+
+      attrs = {};
+      testTextAttrs(ID, 102, attrs, defAttrs, 101, 109);
+
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": gComputedStyle.color,
+      };
+      testTextAttrs(ID, 110, attrs, defAttrs, 109, 122);
+
+      attrs = {};
+      testTextAttrs(ID, 123, attrs, defAttrs, 122, 130);
+
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": gComputedStyle.color,
+      };
+      testTextAttrs(ID, 131, attrs, defAttrs, 130, 143);
+
+      attrs = {};
+      testTextAttrs(ID, 144, attrs, defAttrs, 143, 151);
+
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": gComputedStyle.color,
+      };
+      testTextAttrs(ID, 152, attrs, defAttrs, 151, 164);
+
+      attrs = {};
+      testTextAttrs(ID, 165, attrs, defAttrs, 164, 172);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area10, different single style spans in non-styled paragraph
+      ID = "area10";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 7);
+
+      attrs = { "font-size": "14pt" };
+      testTextAttrs(ID, 7, attrs, defAttrs, 7, 13);
+
+      attrs = {};
+      testTextAttrs(ID, 13, attrs, defAttrs, 13, 22);
+
+      // Walk to the span with the different background color
+      tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = { "background-color": gComputedStyle.backgroundColor };
+      testTextAttrs(ID, 23, attrs, defAttrs, 22, 37);
+
+      attrs = {};
+      testTextAttrs(ID, 38, attrs, defAttrs, 37, 45);
+
+      // Walk from the background color span to the one with font-style
+      tempElem = tempElem.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = {"font-style": gComputedStyle.fontStyle};
+      testTextAttrs(ID, 46, attrs, defAttrs, 45, 62);
+
+      attrs = {};
+      testTextAttrs(ID, 63, attrs, defAttrs, 62, 70);
+
+      // Walk from span with font-style to the one with font-family.
+      tempElem = tempElem.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
+      attrs = { "font-family": kMonospaceFontFamily };
+      testTextAttrs(ID, 71, attrs, defAttrs, 70, 84);
+
+      attrs = {};
+      testTextAttrs(ID, 85, attrs, defAttrs, 84, 92);
+
+      attrs = {
+        "text-underline-style": "solid",
+        "text-underline-color": gComputedStyle.color,
+      };
+      testTextAttrs(ID, 93, attrs, defAttrs, 92, 102);
+
+      attrs = {};
+      testTextAttrs(ID, 103, attrs, defAttrs, 102, 110);
+
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": gComputedStyle.color,
+      };
+      testTextAttrs(ID, 111, attrs, defAttrs, 110, 123);
+
+      attrs = {};
+      testTextAttrs(ID, 124, attrs, defAttrs, 123, 131);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area11, "font-weight" tests
+      ID = "area11";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt", kBoldFontWeight);
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = { };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 13);
+
+      attrs = { "font-weight": kNormalFontWeight };
+      testTextAttrs(ID, 13, attrs, defAttrs, 13, 20);
+
+      attrs = { };
+      testTextAttrs(ID, 20, attrs, defAttrs, 20, 27);
+
+      attrs = { "font-weight": kNormalFontWeight };
+      testTextAttrs(ID, 27, attrs, defAttrs, 27, 33);
+
+      attrs = { };
+      testTextAttrs(ID, 33, attrs, defAttrs, 33, 51);
+
+      attrs = { "font-weight": kNormalFontWeight };
+      testTextAttrs(ID, 51, attrs, defAttrs, 51, 57);
+
+      attrs = { };
+      testTextAttrs(ID, 57, attrs, defAttrs, 57, 97);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // test out of range offset
+      testTextAttrsWrongOffset("area12", -1);
+      testTextAttrsWrongOffset("area12", 500);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // test zero offset on empty hypertext accessibles
+      ID = "area13";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      attrs = { };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
+
+      ID = "area14";
+      defAttrs = buildDefaultTextAttrs(ID, kInputFontSize,
+                                       kNormalFontWeight, kInputFontFamily);
+
+      attrs = { };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area15, embed char tests, "*plain*plain**bold*bold*"
+      ID = "area15";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+
+      // p
+      testTextAttrs(ID, 0, { }, { }, 0, 1);
+      // plain
+      testTextAttrs(ID, 1, { }, defAttrs, 1, 6);
+      // p
+      testTextAttrs(ID, 6, { }, { }, 6, 7);
+      // plain
+      testTextAttrs(ID, 7, { }, defAttrs, 7, 12);
+      // p and img
+      testTextAttrs(ID, 12, { }, { }, 12, 14);
+      // bold
+      attrs = { "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 14, attrs, defAttrs, 14, 18);
+      // p
+      testTextAttrs(ID, 18, { }, { }, 18, 19);
+      // bold
+      attrs = { "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 19, attrs, defAttrs, 19, 23);
+      // p
+      testTextAttrs(ID, 23, { }, { }, 23, 24);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area16, "font-family" tests
+      ID = "area16";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = { "font-family": kMonospaceFontFamily };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 4);
+
+      attrs = { };
+      testTextAttrs(ID, 4, attrs, defAttrs, 4, 9);
+
+      attrs = { "font-family": kSerifFontFamily };
+      testTextAttrs(ID, 9, attrs, defAttrs, 9, 13);
+
+      attrs = { };
+      testTextAttrs(ID, 13, attrs, defAttrs, 13, 18);
+
+      attrs = { "font-family": kAbsentFontFamily };
+      testTextAttrs(ID, 18, attrs, defAttrs, 18, 22);
+
+      // bug 1224498 - this fails with 'cursive' fontconfig lookup
+      if (!LINUX) {
+        attrs = { };
+        testTextAttrs(ID, 22, attrs, defAttrs, 22, 27);
+
+        attrs = { "font-family": kCursiveFontFamily };
+        testTextAttrs(ID, 27, attrs, defAttrs, 27, 31);
+
+        attrs = { };
+        testTextAttrs(ID, 31, attrs, defAttrs, 31, 45);
+      }
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area17, "text-decoration" tests
+      ID = "area17";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = {
+        "text-underline-style": "solid",
+        "text-underline-color": getSystemColor("CanvasText"),
+      };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
+
+      attrs = {
+        "text-underline-style": "solid",
+        "text-underline-color": "rgb(0, 0, 255)",
+      };
+      testTextAttrs(ID, 10, attrs, defAttrs, 10, 15);
+
+      attrs = {
+        "text-underline-style": "dotted",
+        "text-underline-color": getSystemColor("CanvasText"),
+      };
+      testTextAttrs(ID, 15, attrs, defAttrs, 15, 22);
+
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": getSystemColor("CanvasText"),
+      };
+      testTextAttrs(ID, 22, attrs, defAttrs, 22, 34);
+
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": "rgb(0, 0, 255)",
+      };
+      testTextAttrs(ID, 34, attrs, defAttrs, 34, 39);
+
+      attrs = {
+        "text-line-through-style": "wavy",
+        "text-line-through-color": getSystemColor("CanvasText"),
+      };
+      testTextAttrs(ID, 39, attrs, defAttrs, 39, 44);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // area18, "auto-generation text" tests
+      ID = "area18";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = {
+        "auto-generated": "true",
+        "font-family": "-moz-bullet-font",
+      };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 2);
+      testTextAttrs(ID, 3, { }, defAttrs, 3, 7);
+      attrs = {
+        "auto-generated": "true",
+      };
+      testTextAttrs(ID, 7, attrs, defAttrs, 7, 8);
+
+       // ////////////////////////////////////////////////////////////////////////
+      // area19, "HTML5 mark tag" test
+      // text enclosed in mark tag will have a different background color
+      // However, since bug 982125, it is its own accessible.
+      // Therefore, anything other than the default background color is
+      // unexpected.
+      ID = "area19";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
+
+      ID = "area19mark";
+      let defMarkAttrs = buildDefaultTextAttrs(ID, "12pt");
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, defMarkAttrs, 0, 7);
+
+      ID = "area19";
+      attrs = {};
+      testTextAttrs(ID, 11, attrs, defAttrs, 11, 22);
+
+       // ////////////////////////////////////////////////////////////////////////
+      // area20, "aOffset as -1 (Mozilla Bug 789621)" test
+
+      ID = "area20";
+      defAttrs = buildDefaultTextAttrs(ID, "15pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      testTextAttrs(ID, -1, {}, defAttrs, 0, 11);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body style="font-size: 12pt">
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=345759"
+     title="Implement text attributes">
+    Mozilla Bug 345759
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=473569"
+     title="Restrict text-position to allowed values">
+    Mozilla Bug 473569
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=473576"
+     title="font-family text attribute should expose actual font used">
+    Mozilla Bug 473576
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=523304"
+     title="expose text-underline-color and text-line-through-color text attributes">
+    Mozilla Bug 523304
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=735645"
+     title="expose sub and sup elements in text attributes">
+    Mozilla Bug 735645
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=445516"
+     title="Support auto-generated text attribute on bullet lists">
+    Mozilla Bug 445516
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=789621"
+     title="getTextAttributes doesn't work with magic offsets">
+    Mozilla Bug 789621
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="area1" style="font-size: smaller">Normal <b>Bold</b> Normal</p>
+  <p id="area2" style="font-size: 120%">Normal <b>Bold <i>Italic </i>Bold</b> Normal</p>
+  <p id="area3" style="background-color: blue;">
+    <span style="color: green; background-color: rgb(0, 0, 255)">
+      Green
+      <span style="color: red">but children are red</span>
+    </span><span style="color: green; background-color: rgb(255, 255, 0);">
+      Another green section.
+    </span>
+  </p>
+  <p id="area4">
+    <span style="color: green">
+      Green
+    </span><span style="color: green">
+      Green too
+      <span style="color: red">with red children</span>
+      Green again
+    </span>
+  </p>
+  <!-- Green!*!RedNormal-->
+  <p id="area5">
+    <span style="color: green">Green</span>
+    <img src="../moz.png" alt="image"/>
+    <span style="color: red">Red</span>Normal
+  </p>
+  <p id="area6">
+    This <sup>sentence</sup> has the word
+    <span style="vertical-align:super;">sentence</span> in
+    <sub>superscript</sub> and
+    <span style="vertical-align:sub;">subscript</span> and
+    <span style="vertical-align:20%;">superscript 20%</span> and
+    <span style="vertical-align:-20%;">subscript 20%</span> and
+    <span style="vertical-align:20px;">superscript 20px</span> and
+    <span style="vertical-align:-20px;">subscript 20px</span>
+  </p>
+
+  <p lang="en" id="area7">
+    <span lang="ru">Привет</span>
+    <span style="background-color: blue">Blue BG color</span>
+    <span lang="de">Ich bin/Du bist</span>
+    <span lang="en">
+      Normal
+      <span style="color: magenta">Magenta<b>Bold</b>Magenta</span>
+    </span>
+  </p>
+
+  <p id="area9" style="font-size: smaller">Small
+    <span style="font-size: 120%">bigger</span> smaller
+    <span style="background-color: blue;">background blue</span> normal
+    <span style="font-style: italic;">Different styling</span> normal
+    <span style="font-family: monospace;">Different font</span> normal
+    <span style="text-decoration: underline;">underlined</span> normal
+    <span style="text-decoration: line-through;">strikethrough</span> normal
+    <s>strikethrough</s> normal
+    <strike>strikethrough</strike> normal
+  </p>
+
+  <p id="area10">Normal
+    <span style="font-size: 120%">bigger</span> smaller
+    <span style="background-color: blue;">background blue</span> normal
+    <span style="font-style: italic;">Different styling</span> normal
+    <span style="font-family: monospace;">Different font</span> normal
+    <span style="text-decoration: underline;">underlined</span> normal
+    <span style="text-decoration: line-through;">strikethrough</span> normal
+  </p>
+
+  <p id="area11" style="font-weight: bolder;">
+    <span style="font-weight: bolder;">bolder</span>bolder
+    <span style="font-weight: lighter;">lighter</span>bolder
+    <span style="font-weight: normal;">normal</span>bolder
+    <b>bold</b>bolder
+    <span style="font-weight: 400;">normal</span>bolder
+    <span style="font-weight: 700;">bold</span>bolder
+    <span style="font-weight: bold;">bold</span>bolder
+    <span style="font-weight: 900;">bold</span>bolder
+  </p>
+
+  <p id="area12">hello</p>
+  <p id="area13"></p>
+  <input id="area14">
+
+  <!-- *plain*plain**bold*bold*-->
+  <div id="area15"><p>embed</p>plain<p>embed</p>plain<p>embed</p><img src="../moz.png" alt="image"/><b>bold</b><p>embed</p><b>bold</b><p>embed</p></div>
+
+  <p id="area16" style="font-family: sans-serif;">
+    <span style="font-family: monospace;">text</span>text
+    <span style="font-family: serif;">text</span>text
+    <span style="font-family: BodoniThatDoesntExist;">text</span>text
+    <span style="font-family: Comic Sans MS, cursive;">text</span>text
+    <span style="font-family: sans-serif, fantasy;">text</span>text
+  </p>
+
+  <p id="area17">
+    <span style="text-decoration-line: underline;">underline
+    </span><span style="text-decoration: underline; text-decoration-color: blue;">blue
+    </span><span style="text-decoration: underline; text-decoration-style: dotted;">dotted
+    </span><span style="text-decoration-line: line-through;">linethrough
+    </span><span style="text-decoration: line-through; text-decoration-color: blue;">blue
+    </span><span style="text-decoration: line-through; text-decoration-style: wavy;">wavy
+    </span>
+  </p>
+
+  <ul>
+    <li id="area18" class="gencontent">item</li>
+  </ul>
+
+  <p id="area19">uncolored
+    <mark id="area19mark">colored</mark> uncolored
+  </p>
+
+  <p id="area20" style="font-size: 15pt;">offset test</p>
+
+</body>
+</html>

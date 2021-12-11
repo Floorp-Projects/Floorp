@@ -1,0 +1,134 @@
+{
+    "page_size": 25,
+    "page_count": 1,
+    "count": 4,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "name": "Repo Add-on 1",
+            "type": "extension",
+            "guid": "test_AddonRepository_1@tests.mozilla.org",
+            "current_version": {
+                "version": "2.1",
+                "files": [
+                    {
+                        "platform": "all",
+                        "size": 9,
+                        "url": "http://example.com/repo/1/install.xpi"
+                    }
+                ]
+            },
+            "authors": [
+                {
+                    "name": "Repo Add-on 1 - Creator",
+                    "url": "http://example.com/repo/1/creator.html"
+                },
+                {
+                    "name": "Repo Add-on 1 - First Developer",
+                    "url": "http://example.com/repo/1/firstDeveloper.html"
+                },
+                {
+                    "name": "Repo Add-on 1 - Second Developer",
+                    "url": "http://example.com/repo/1/secondDeveloper.html"
+                }
+            ],
+            "summary": "Repo Add-on 1 - Description<br>Second line",
+            "description": "<p>Repo Add-on 1 - Full Description &amp; some extra</p>",
+            "icons": {
+              "32": "http://example.com/repo/1/icon.png"
+            },
+            "ratings": {
+                "count": 1234,
+                "text_count": 1111,
+                "average": 1
+            },
+            "homepage": "http://example.com/repo/1/homepage.html",
+            "support_url": "http://example.com/repo/1/support.html",
+            "contributions_url": "http://example.com/repo/1/meetDevelopers.html",
+            "ratings_url": "http://example.com/repo/1/review.html",
+            "weekly_downloads": 3331,
+            "last_updated": "1970-01-01T00:00:09Z"
+        },
+        {
+            "name": "Repo Add-on 2",
+            "type": "theme",
+            "guid": "test_AddonRepository_2@tests.mozilla.org",
+            "current_version": {
+                "version": "2.2",
+                "files": [
+                    {
+                        "platform": "all",
+                        "size": 9,
+                        "url": "http://example.com/repo/2/install.xpi"
+                    }
+                ]
+            },
+            "authors": [
+                {
+                    "name": "Repo Add-on 2 - Creator",
+                    "url": "http://example.com/repo/2/creator.html"
+                },
+                {
+                    "name": "Repo Add-on 2 - First Developer",
+                    "url": "http://example.com/repo/2/firstDeveloper.html"
+                },
+                {
+                    "name": "Repo Add-on 2 - Second Developer",
+                    "url": "http://example.com/repo/2/secondDeveloper.html"
+                }
+            ],
+            "summary": "Repo Add-on 2 - Description",
+            "description": "Repo Add-on 2 - Full Description",
+            "icons": {
+              "32": "http://example.com/repo/2/icon.png"
+            },
+            "previews": [
+                {
+                    "image_url": "http://example.com/repo/2/firstFull.png",
+                    "thumbnail_url": "http://example.com/repo/2/firstThumbnail.png",
+                    "caption": "Repo Add-on 2 - First Caption"
+                },
+                {
+                    "image_url": "http://example.com/repo/2/secondFull.png",
+                    "thumbnail_url": "http://example.com/repo/2/secondThumbnail.png",
+                    "caption": "Repo Add-on 2 - Second Caption"
+                }
+            ],
+            "ratings": {
+                "count": 2223,
+                "text_count": 1112,
+                "average": 2
+            },
+            "homepage": "http://example.com/repo/2/homepage.html",
+            "support_url": "http://example.com/repo/2/support.html",
+            "contributions_url": "http://example.com/repo/2/meetDevelopers.html",
+            "ratings_url": "http://example.com/repo/2/review.html",
+            "weekly_downloads": 3332,
+            "last_updated": "1970-01-01T00:00:09Z"
+        },
+        {
+            "name": "Repo Add-on 3",
+            "type": "theme",
+            "guid": "test_AddonRepository_3@tests.mozilla.org",
+            "current_version": {
+                "version": "2.3"
+            },
+            "icons": {
+              "32": "http://example.com/repo/3/icon.png"
+            },
+            "previews": [
+                {
+                    "image_url": "http://example.com/repo/3/firstFull.png",
+                    "thumbnail_url": "http://example.com/repo/3/firstThumbnail.png",
+                    "caption": "Repo Add-on 3 - First Caption"
+                },
+                {
+                    "image_url": "http://example.com/repo/3/secondFull.png",
+                    "thumbnail_url": "http://example.com/repo/3/secondThumbnail.png",
+                    "caption": "Repo Add-on 3 - Second Caption"
+                }
+            ]
+        }
+    ]
+}

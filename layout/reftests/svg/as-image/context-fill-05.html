@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test context-fill with different fill values (test image caching correctness)</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  -moz-context-properties: fill;
+}
+
+#img1 {
+  fill: blue;
+}
+
+#img2 {
+  fill: yellow;
+}
+
+    </style>
+  </head>
+  <body>
+    <img id="img1" src="context-fill-05.svg">
+    <img id="img2" src="context-fill-05.svg">
+  </body>
+</html>

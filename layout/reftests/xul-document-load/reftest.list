@@ -1,0 +1,9 @@
+== chrome://reftest/content/xul-document-load/test003.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test004.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test005.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test006.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test008.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test010.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test012.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test013.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml
+== chrome://reftest/content/xul-document-load/test022.xhtml chrome://reftest/content/xul-document-load/reference-green-window.xhtml

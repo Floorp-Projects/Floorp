@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=733553
+-->
+<head>
+  <title>Test for Bug 733553</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="initializeOnload()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=733553">Mozilla Bug 733553</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var testIndex = -1;
+var testParts = [
+  [1, "red.png"],
+  [40, "animated-gif2.gif"],
+  [1, "red.png"],
+  [100, "lime100x100.svg"],
+  [100, "lime100x100.svg"],
+  [40, "animated-gif2.gif"],
+  [1, "red.png"],
+  // Note a failure of the next 'red.png' may indicate failure of resniffing on
+  // this part ('shaver.png'); see bug 907575.
+  [177, "shaver.png"],
+  [1, "red.png"],
+  [80, "damon.jpg"],
+  [80, "damon.jpg"],
+  [80, "damon.jpg"],
+  // An invalid image (from bug 787899) that is further delivered with a
+  // "special" bad MIME type that indicates that the necko
+  // multipart/x-mixed-replace parser wasn't able to parse it.
+  // We use a width of 80 because MultipartImage will just drop rillybad.jpg
+  // and re-present damon.jpg.
+  [80, "rillybad.jpg"],
+  [80, "damon.jpg"],
+  // Similarly, we'll drop bad.jpg, so we use damon.jpg's width.
+  [80, "bad.jpg"],
+  [1, "red.png"],
+  // We also drop invalid.jpg, so we use red.png's width.
+  [1, "invalid.jpg"],
+  [40, "animated-gif2.gif"]
+];
+
+// We'll append the part number to this, and tell the informant
+const BASE_URL = "bug733553-informant.sjs?";
+
+function initializeOnload() {
+  var firstimg = document.createElement('img');
+  firstimg.addEventListener("load", imageLoad);
+  firstimg.addEventListener("error", imageLoad);
+  firstimg.alt = "";
+  firstimg.src = "bug733553.sjs";
+  document.getElementById('content').appendChild(firstimg);
+
+  // Really ready for first, but who's counting
+  readyForNext();
+}
+
+function readyForNext() {
+  var loader = document.getElementById("loader");
+  loader.src = BASE_URL + ++testIndex;
+}
+
+function imageLoad(aEvent) {
+  var [width, fileName] = testParts[testIndex];
+  is(aEvent.target.width, width,
+     "Test " + testIndex + " " + fileName + " width correct");
+
+  // Always call readyForNext here, as it's the closest we have to a cleanup
+  readyForNext();
+  if (testParts.length == testIndex) {
+    var firstimg = document.getElementsByTagName('img')[0];
+    firstimg.removeEventListener("load", imageLoad);
+    firstimg.removeEventListener("error", imageLoad);
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+<div id="content"> <!-- style="display: none" -->
+<iframe id="loader"></iframe>
+</div>
+</body>
+</html>

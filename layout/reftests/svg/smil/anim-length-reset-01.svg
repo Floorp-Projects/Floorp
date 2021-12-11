@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="document.documentElement.setCurrentTime(0);
+             if (document.getElementById('x').width.animVal.value != 0) {
+	       /* fail */
+               document.documentElement.textContent = '';     
+             }
+             setTimeAndSnapshot(1, true)">
+  <title>Test that an animation for a length correctly restores the original
+         pixel size when the animation is done.</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect width="100%" height="100%" fill="lime"/>
+  <rect width="100" height="100" fill="red"/>
+  <rect width="100" height="100" fill="lime" id="x">
+    <set attributeName="width" to="0" dur="1s" begin="0s"/>
+  </rect>
+</svg>

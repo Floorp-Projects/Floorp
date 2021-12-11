@@ -1,0 +1,68 @@
+<html>
+
+<head>
+  <title>Accessible ARIA object attribute changes</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+    function updateAttribute(aID, aAttr, aValue) {
+      this.node = getNode(aID);
+      this.accessible = getAccessible(this.node);
+
+      this.eventSeq = [
+        new objAttrChangedChecker(aID, aAttr),
+      ];
+
+      this.invoke = function updateAttribute_invoke() {
+        this.node.setAttribute(aAttr, aValue);
+      };
+
+      this.getID = function updateAttribute_getID() {
+        return aAttr + " for " + aID + " " + aValue;
+      };
+    }
+
+    // gA11yEventDumpToConsole = true;
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new updateAttribute("sortable", "aria-sort", "ascending"));
+
+      // For experimental ARIA extensions
+      gQueue.push(new updateAttribute("custom", "aria-blah", "true"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="sortable" role="columnheader" aria-sort="none">aria-sort</div>
+
+  <div id="custom" role="custom" aria-blah="false">Fat free cheese</div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<body xmlns="http://www.w3.org/1999/xhtml">
+</body>
+  <!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(3);
+window.openDialog("printpreview_helper.xhtml", "printpreview", "chrome,width=100,height=100,noopener", window);
+]]></script>
+</window>

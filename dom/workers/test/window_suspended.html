@@ -1,0 +1,71 @@
+<script>
+const WORKER_URL = "worker_suspended.js";
+var testUrl2 = "window_suspended.html?page2Shown";
+
+let cacheDataPromise = {};
+cacheDataPromise.promise = new Promise(resolve => {
+  cacheDataPromise.resolve = resolve;
+});
+var bcName = location.search.split('?')[1];
+var bc = new BroadcastChannel(bcName);
+if (bcName == "page1Shown") {
+  bc.onmessage = async (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "startWorker") {
+      // Create a worker and subworkers
+      let { worker, promise } = postMessageWorker(msg.workerMessage);
+      promise.then(function() {
+        bc.postMessage({command: "verifyCacheData"});
+        return cacheDataPromise.promise;
+      })
+      .then(function() {
+        location.href = testUrl2;
+      });
+    } else if (command == "changeLocation") {
+      cacheDataPromise.resolve();
+    } else if (command == "finish") {
+      bc.postMessage({command: "finished"});
+      bc.close();
+      window.close();
+    }
+  }
+} else if (bcName == "page2Shown") {
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "startWorker") {
+      let { worker, promise } = postMessageWorker(msg.workerMessage);
+      promise.then(function() {
+        bc.postMessage({command: "verifyCacheData"});
+        return cacheDataPromise.promise;
+      })
+      .then(function() {
+        bc.close();
+        history.back();
+      });
+    } else if (command == "goBack") {
+      cacheDataPromise.resolve();
+    }
+  }
+}
+
+function postMessageWorker(message) {
+  let worker = new window.Worker(WORKER_URL);
+
+  var promise = new Promise((resolve, reject) => {
+    // Waiting until workers are ready
+    worker.addEventListener("message", function onmessage(msg) {
+      bc.postMessage({command: "workerMessage", workerMessage: msg.data});
+      worker.removeEventListener("message", onmessage);
+      resolve();
+    });
+    worker.postMessage(message);
+  });
+  return { worker, promise };
+}
+
+onpageshow = function(e) {
+  bc.postMessage({command: "onpageshow", persisted: e.persisted, location: location.href});
+}
+</script>

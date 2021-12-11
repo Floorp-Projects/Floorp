@@ -1,0 +1,396 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Manifest does not render the issues section when the manifest is valid 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="name"
+          label="name"
+        >
+          foo
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="lorem"
+          label="lorem"
+        >
+          ipsum
+        </ManifestItem>
+        <ManifestItem
+          key="foo"
+          label="foo"
+        >
+          bar
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest does render the issues section when the manifest is not valid 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-0"
+    title="manifest-item-warnings"
+  >
+    <ManifestIssueList
+      issues={
+        Array [
+          Object {
+            "level": "warning",
+            "message": "This is a warning",
+          },
+        ]
+      }
+    />
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="name"
+          label="name"
+        >
+          foo
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="lorem"
+          label="lorem"
+        >
+          ipsum
+        </ManifestItem>
+        <ManifestItem
+          key="foo"
+          label="foo"
+        >
+          bar
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a manifest with color members 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody>
+        <ManifestColorItem
+          key="background_color"
+          label="background_color"
+          value="red"
+        />
+        <ManifestColorItem
+          key="theme_color"
+          label="theme_color"
+          value="rgb(0, 0, 0)"
+        />
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a manifest with icon members 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody>
+        <ManifestIconItem
+          key="0"
+          label={
+            Object {
+              "contentType": "image/png",
+              "sizes": "1x1",
+            }
+          }
+          value={
+            Object {
+              "purpose": "any",
+              "src": "something.png",
+            }
+          }
+        />
+        <ManifestIconItem
+          key="1"
+          label={
+            Object {
+              "contentType": "",
+              "sizes": "",
+            }
+          }
+          value={
+            Object {
+              "purpose": "any maskable",
+              "src": "something.svg",
+            }
+          }
+        />
+      </tbody>
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a manifest with string members 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="name"
+          label="name"
+        >
+          foo
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a manifest with unknown types 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="lorem"
+          label="lorem"
+        >
+          ipsum
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a manifest with url members 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody>
+        <ManifestUrlItem
+          key="start_url"
+          label="start_url"
+          value="https://example.com/"
+        />
+        <ManifestUrlItem
+          key="scope"
+          label="scope"
+          value="https://example.com/"
+        />
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;

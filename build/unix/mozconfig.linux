@@ -1,0 +1,21 @@
+. "$topsrcdir/build/unix/mozconfig.unix"
+
+case "$PERFHERDER_EXTRA_OPTIONS" in
+base-toolchains*)
+  # We don't build against wayland for base-toolchain builds.
+  ;;
+x11)
+  ac_add_options --enable-default-toolkit=cairo-gtk3
+  ;;
+*)
+  ac_add_options --enable-default-toolkit=cairo-gtk3-wayland
+  ;;
+esac
+
+export MOZ_NO_PIE_COMPAT=1
+
+if [ -z "$USE_ARTIFACT" -a -z "$TASKCLUSTER_PGO_PROFILE_USE" -a -z "$FORCE_GCC" ]; then
+    # Use LLD on most builds, for faster builds, but not on shippable ones because we
+    # want to keep elfhack there, which is incompatible.
+    ac_add_options --enable-linker=lld
+fi

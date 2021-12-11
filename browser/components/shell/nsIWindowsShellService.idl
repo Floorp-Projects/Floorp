@@ -1,0 +1,111 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+
+[scriptable, uuid(fb9b59db-5a91-4e67-92b6-35e7d6e6d3fd)]
+interface nsIWindowsShellService : nsISupports
+{
+  void createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
+    in AString aDescription, in nsIFile aIconFile, in AString aAppUserModelId,
+    in nsIFile aTarget);
+
+  /*
+   * Pin the current app to the taskbar
+   *
+   * This MUST only be used in response to an active request from the user.
+   *
+   * Uses an existing shortcut on the Desktop or Start Menu, which would have
+   * been created by the installer (for All Users or Current User), in order
+   * to ensure that the pin is associated with this executable and AUMID for
+   * proper launching and grouping.
+   *
+   * NOTE: This method probably shouldn't be used on the main thread, it
+   * performs blocking disk I/O.
+   *
+   * NOTE: It is possible for the shortcut match to fail even when a
+   * shortcut refers to the current executable, if the paths differ due
+   * to e.g. symlinks. This should be rare.
+   *
+   * This will definitely fail on an OS before Windows 10 build 1809
+   * (October 2018 Update).
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         if OS is not at least Windows 10 build 1809, or if creating the
+   *         Taskband Pin object fails
+   * @throws NS_ERROR_FILE_NOT_FOUND
+   *         if a shortcut matching this app's AUMID and exe path wasn't found
+   * @throws NS_ERROR_FAILURE
+   *         for unexpected errors
+   */
+  void pinCurrentAppToTaskbar();
+
+  /*
+   * Do a dry run of pinCurrentAppToTaskbar()
+   *
+   * This does all the same checks and setup, throws the same errors, but doesn't
+   * do the final step of creating the pin.
+   *
+   * NOTE: This method probably shouldn't be used on the main thread, it
+   * performs blocking disk I/O.
+   *
+   * @throws same as pinCurrentAppToTaskbar()
+   */
+  void checkPinCurrentAppToTaskbar();
+
+  /*
+   * Search for the current executable among taskbar pins
+   *
+   * NOTE: Can only be run on the main thread, but the actual work occurs on a
+   * background thread.
+   *
+   * NOTE: It is possible for the check to fail even when a taskbar pin refers
+   * to this executable, if the paths differ due to e.g. symlinks.
+   * It is also possible for the check to succeed with a shortcut that doesn't
+   * actually appear on the taskbar.
+   * These cases should be rare.
+   *
+   * @return Promise that always resolves, true if pinned, false otherwise
+   * @throws NS_ERROR_NOT_SAME_THREAD if not run on the main thread
+   *
+   */
+  [implicit_jscontext]
+  Promise isCurrentAppPinnedToTaskbarAsync();
+
+  /*
+   * Determine where a given shortcut likely appears in the shell.
+   *
+   * Returns one of:
+   * - "StartMenu", Current User or All Users Start Menu, including pins
+   * - "Desktop", Current User or All Users Desktop
+   * - "Taskbar", Taskbar Pins
+   * - "" otherwise
+   *
+   * NOTE: This tries to avoid I/O, so paths are compared directly as
+   * strings, which may not be accurate in all cases. It is intended
+   * for noncritical telemetry use.
+   */
+  AString classifyShortcut(in AString aPath);
+
+  /*
+   * Check if setDefaultBrowserUserChoice() is expected to succeed.
+   *
+   * This checks the ProgIDs for this installation, and the hash of the existing
+   * UserChoice association.
+   *
+   * @return true if the check succeeds, false otherwise.
+   */
+  bool canSetDefaultBrowserUserChoice();
+
+  /*
+   * checkAllProgIDsExist() and checkBrowserUserChoiceHashes() are components
+   * of canSetDefaultBrowserUserChoice(), broken out for telemetry purposes.
+   *
+   * @return true if the check succeeds, false otherwise.
+   */
+  bool checkAllProgIDsExist();
+  bool checkBrowserUserChoiceHashes();
+};

@@ -1,0 +1,123 @@
+<!doctype html>
+<html><head>
+<!-- baseline -->
+<style>
+body, html { margin: 0; padding: 0; overflow: hidden }
+div {
+  width: 60px;
+  height: 20px;
+  position: relative;
+}
+p {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+}
+p + p { left: 22px }
+
+#IA1i, #IA1l, #IA2i, #IA2l, #IB1i, #IB1l, #IB2i, #IB2l,
+#IC1i, #IC1l, #IC2i, #IC2l, #ID1i, #ID1l, #ID2i, #ID2l
+ { background-color: red }
+
+#JA1i, #JA1l, #JA2i, #JA2l, #JB1i, #JB1l, #JB2i, #JB2l,
+#JC1i, #JC1l, #JC2i, #JC2l, #JD1i, #JD1l, #JD2i, #JD2l
+ { background-color: lime }
+
+#IA3i, #IA3l, #IB3i, #IB3l, #IC3i, #IC3l, #ID3i, #ID3l,
+#JA3i, #JA3l, #JB3i, #JB3l, #JC3i, #JC3l, #JD3i, #JD3l
+ { background-color: lime }
+</style>
+
+<!-- @import rules -->
+<style>
+@import url("ccd.sjs?IA1is");
+@import url("ccd.sjs?IA2is");
+@import url("ccd.sjs?IA3is");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?IB1is");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?IB2is");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?IB3is");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC1is");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC2is");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC3is");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID1is");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID2is");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID3is");
+@import url("ccd.sjs?JA1is");
+@import url("ccd.sjs?JA2is");
+@import url("ccd.sjs?JA3is");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?JB1is");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?JB2is");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?JB3is");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC1is");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC2is");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC3is");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD1is");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD2is");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD3is");
+</style>
+
+<!-- link directives -->
+<link rel="stylesheet" href="ccd.sjs?IA1ls">
+<link rel="stylesheet" href="ccd.sjs?IA2ls">
+<link rel="stylesheet" href="ccd.sjs?IA3ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB1ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB2ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB3ls">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC1ls">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC2ls">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC3ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID1ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID2ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID3ls">
+<link rel="stylesheet" href="ccd.sjs?JA1ls">
+<link rel="stylesheet" href="ccd.sjs?JA2ls">
+<link rel="stylesheet" href="ccd.sjs?JA3ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB1ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB2ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB3ls">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC1ls">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC2ls">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC3ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD1ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD2ls">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD3ls">
+
+</head><body>
+<div></div>
+<div></div>
+<div><p id="IA1i"></p><p id="IA1l"></p></div>
+<div><p id="IA2i"></p><p id="IA2l"></p></div>
+<div><p id="IA3i"></p><p id="IA3l"></p></div>
+<div></div>
+<div><p id="IB1i"></p><p id="IB1l"></p></div>
+<div><p id="IB2i"></p><p id="IB2l"></p></div>
+<div><p id="IB3i"></p><p id="IB3l"></p></div>
+<div></div>
+<div><p id="IC1i"></p><p id="IC1l"></p></div>
+<div><p id="IC2i"></p><p id="IC2l"></p></div>
+<div><p id="IC3i"></p><p id="IC3l"></p></div>
+<div></div>
+<div><p id="ID1i"></p><p id="ID1l"></p></div>
+<div><p id="ID2i"></p><p id="ID2l"></p></div>
+<div><p id="ID3i"></p><p id="ID3l"></p></div>
+<div></div>
+<div></div>
+<div><p id="JA1i"></p><p id="JA1l"></p></div>
+<div><p id="JA2i"></p><p id="JA2l"></p></div>
+<div><p id="JA3i"></p><p id="JA3l"></p></div>
+<div></div>
+<div><p id="JB1i"></p><p id="JB1l"></p></div>
+<div><p id="JB2i"></p><p id="JB2l"></p></div>
+<div><p id="JB3i"></p><p id="JB3l"></p></div>
+<div></div>
+<div><p id="JC1i"></p><p id="JC1l"></p></div>
+<div><p id="JC2i"></p><p id="JC2l"></p></div>
+<div><p id="JC3i"></p><p id="JC3l"></p></div>
+<div></div>
+<div><p id="JD1i"></p><p id="JD1l"></p></div>
+<div><p id="JD2i"></p><p id="JD2l"></p></div>
+<div><p id="JD3i"></p><p id="JD3l"></p></div>
+</body></html>

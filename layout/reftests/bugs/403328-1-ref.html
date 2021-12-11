@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>Testcase for bug 403328</title>
+<style>
+body {
+	margin-left:40px;
+}
+div.cb {
+	background-color: lime;
+	width: 80px;
+}
+div.spcb {
+	background-color: blue;
+    margin-left:auto;
+    margin-right:auto;
+	width: 40px;
+}
+div.abs {
+	background-color: red;
+	height: 40px;
+}
+div.extrawide {
+	width: 100px;
+}
+div.narrow {
+	width: 20px;
+}
+
+</style>
+</head><body>
+
+<div class="cb">
+<div class="spcb">
+<div class="abs narrow" style="margin-left:auto;"></div>
+<div class="abs narrow"></div>
+<div class="abs extrawide" style="margin-left:-20px;"></div>
+<div class="abs extrawide" style="margin-left:-40px;"></div>
+<div class="abs narrow" style="margin-left:-20px;"></div>
+<div class="abs narrow" style="margin-left:auto; margin-right:-20px;"></div>
+<div class="abs narrow" style="margin-left:auto;"></div>
+<div class="abs narrow"></div>
+</div>
+</div>
+
+</body></html>

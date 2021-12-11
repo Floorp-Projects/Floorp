@@ -1,0 +1,16 @@
+body {
+  background: #222 url("chrome://global/skin/media/imagedoc-darknoise.png");
+  margin: 0;
+}
+
+img {
+  display: block;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: hsl(0,0%,90%) url("chrome://global/skin/media/imagedoc-lightnoise.png");
+  color: #222;
+}

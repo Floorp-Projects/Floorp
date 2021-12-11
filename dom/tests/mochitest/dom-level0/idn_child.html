@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Child window on a site whose "base" domain contains IDN</title>
+  <script type="application/javascript">
+function run()
+{
+  var target = document.getElementById("location");
+  target.textContent = location.hostname + ":" + (location.port || 80);
+}
+
+function receiveMessage(evt)
+{
+  if (evt.origin !== "http://mochi.test:8888")
+    return;
+
+  var message = evt.data + "-response";
+
+  var domain = document.domain;
+  if (/test$/.test(domain))
+  {
+    if (domain !== "sub1.xn--exaple-kqf.test")
+      message += " wrong-initial-domain(" + domain + ")";
+  }
+  else
+  {
+    if (domain !== "sub1.xn--hxajbheg2az3al.xn--jxalpdlp")
+      message += " wrong-initial-domain(" + domain + ")";
+  }
+
+  switch (location.search)
+  {
+    case "?idn-whitelist":
+      message += idnTest("παράδειγμα.δοκιμή");
+      break;
+
+    case "?punycode-whitelist":
+      message  += punycodeTest("xn--hxajbheg2az3al.xn--jxalpdlp");
+      break;
+
+    case "?idn-nowhitelist":
+      message += idnTest("exaмple.test");
+      break;
+
+    case "?punycode-nowhitelist":
+      message  += punycodeTest("xn--exaple-kqf.test");
+      break;
+
+    default:
+      message += " unexpected-query(" + location.search + ")";
+      break;
+  }
+
+  evt.source.postMessage(message, evt.origin);
+}
+
+function idnTest(newDomain)
+{
+  var errors = "";
+
+  try
+  {
+    document.domain = newDomain;
+  }
+  catch (e)
+  {
+    errors += " error-thrown-setting-to-idn(" + String(e).split("").join(",") + ")";
+  }
+
+  return errors;
+}
+
+function punycodeTest(newDomain)
+{
+  var errors = "";
+
+  try
+  {
+    document.domain = newDomain;
+  }
+  catch (e)
+  {
+    errors += " error-thrown-setting-to-punycode(" + String(e).split("").join(",") + ")";
+  }
+
+  return errors;
+}
+
+window.addEventListener("message", receiveMessage);
+window.addEventListener("load", run);
+  </script>
+</head>
+<body>
+<h1 id="location">Somewhere!</h1>
+</body>
+</html>

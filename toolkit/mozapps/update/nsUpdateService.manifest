@@ -1,0 +1,1 @@
+category update-timer nsUpdateService @mozilla.org/updates/update-service;1,getService,background-update-timer,app.update.interval,43200,86400

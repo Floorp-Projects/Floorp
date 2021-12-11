@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- Nested fieldsets should all become invalid -->
+<html>
+  <head>
+    <style>
+      fieldset:invalid { display: none ;}
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <fieldset>
+        <input required value="">
+      </fieldset>
+    </fieldset>
+  </body>
+</html>
+

@@ -1,0 +1,4 @@
+0 nistp256
+1 nistp384
+# the following tests are not yet implemented
+2 nistp521

@@ -1,0 +1,156 @@
+<svg
+  width="500px" height="500px" viewBox="0 0 500 500"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  >
+  <title>Filters and offsets, user space origins, invalidation</title>
+  <defs>
+    <filter id="flood-boundingBox"
+            filterUnits="objectBoundingBox"
+            x="0%" y="0%" width="100%" height="100%"
+            color-interpolation-filters="sRGB">
+      <feFlood flood-color="lime"/>
+    </filter>
+    <filter id="matrix-boundingBox"
+            filterUnits="objectBoundingBox"
+            x="0%" y="0%" width="100%" height="100%"
+            color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 1 0 0 0
+                                           1 0 0 0 0
+                                           0 0 1 0 0
+                                           0 0 0 1 0"/>
+    </filter>
+    <filter id="matrix-fillPaint-boundingBox"
+            filterUnits="objectBoundingBox"
+            x="0%" y="0%" width="100%" height="100%"
+            color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 1 0 0 0
+                                           1 0 0 0 0
+                                           0 0 1 0 0
+                                           0 0 0 1 0" in="FillPaint"/>
+    </filter>
+    <filter id="flood-userSpace-atZero"
+            filterUnits="userSpaceOnUse"
+            x="0" y="0" width="100" height="100"
+            color-interpolation-filters="sRGB">
+      <feFlood flood-color="lime"/>
+    </filter>
+    <filter id="matrix-userSpace-atZero"
+            filterUnits="userSpaceOnUse"
+            x="0" y="0" width="100" height="100"
+            color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 1 0 0 0
+                                           1 0 0 0 0
+                                           0 0 1 0 0
+                                           0 0 0 1 0"/>
+    </filter>
+    <filter id="flood-userSpace-at100"
+            filterUnits="userSpaceOnUse"
+            x="100" y="100" width="100" height="100"
+            color-interpolation-filters="sRGB">
+      <feFlood flood-color="lime"/>
+    </filter>
+    <filter id="matrix-userSpace-at100"
+            filterUnits="userSpaceOnUse"
+            x="100" y="100" width="100" height="100"
+            color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 1 0 0 0
+                                           1 0 0 0 0
+                                           0 0 1 0 0
+                                           0 0 0 1 0"/>
+    </filter>
+    <filter id="matrix-fillPaint-userSpace-at100"
+            filterUnits="userSpaceOnUse"
+            x="100" y="100" width="100" height="100"
+            color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 1 0 0 0
+                                           1 0 0 0 0
+                                           0 0 1 0 0
+                                           0 0 0 1 0" in="FillPaint"/>
+    </filter>
+    <mask id="boundingBox" maskContentUnits="objectBoundingBox">
+      <rect x="0" y="0" width="1" height="1" fill="white"/>
+    </mask>
+    <mask id="userSpace-atZero" maskContentUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="100" height="100" fill="white"/>
+    </mask>
+    <mask id="userSpace-at100" maskContentUnits="userSpaceOnUse">
+      <rect x="100" y="100" width="100" height="100" fill="white"/>
+    </mask>
+    <g id="usedRect">
+      <rect class="fillColor" width="100" height="100"/>
+    </g>
+  </defs>
+  <g transform="translate(40,40)">
+    <rect stroke-width="1" stroke="black" fill="none" x="99.5" y="99.5" width="101" height="101"/>
+
+    <rect x="0" y="100" width="100" height="100" class="fillColor offsetContainer" id="rect"/>
+    <use xlink:href="#usedRect" x="0" y="100" class="offsetContainer" id="use"/>
+    <svg x="0" y="100" width="100" height="100" class="offsetContainer" id="innerSVG">
+      <rect class="fillColor" width="100" height="100"/>
+    </svg>
+    <foreignObject x="0" y="100" width="100" height="100" class="offsetContainer" id="foreignObject">
+      <svg width="100" height="100">
+        <rect class="fillColor" width="100" height="100"/>
+      </svg>
+    </foreignObject>
+  </g>
+  <script><![CDATA[
+
+var options = {
+  offsetContainer: "rect",
+  filter: null,
+  mask: null,
+  updateOffsetOn: "reftestInvalidate" // | "initial" | "timeout"
+};
+
+location.search.substr(1).split("&").forEach(function (s) {
+  var pv = s.split("=");
+  options[pv[0]] = pv[1] || true;
+});
+
+var offsetContainer = document.getElementById(options.offsetContainer);
+
+function updateOffsetNow() {
+  offsetContainer.setAttribute("x", "100");
+}
+
+function updateOffsetOnReftestInvalidate() {
+  document.documentElement.setAttribute("class", "reftest-wait");
+  document.addEventListener("MozReftestInvalidate", function () {
+    updateOffsetNow();
+    document.documentElement.removeAttribute("class");
+  }, false);
+}
+
+function updateOffsetOnTimeout() {
+  setTimeout(updateOffsetNow, 500);
+}
+
+options.updateOffset = options.updateOffsetOn == "initial" ? updateOffsetNow :
+                         (options.updateOffsetOn == "timeout" ? updateOffsetOnTimeout :
+                          updateOffsetOnReftestInvalidate);
+
+var offsetContainers = Array.prototype.slice.call(document.getElementsByClassName("offsetContainer"), 0);
+for (var i = 0; i < offsetContainers.length; i++) {
+  if (offsetContainers[i] != offsetContainer) {
+    offsetContainers[i].parentNode.removeChild(offsetContainers[i]);
+  }
+}
+
+var fillColor = options.filter ? "red" : "lime";
+if (options.filter) {
+  offsetContainer.setAttribute("filter", "url(#" + options.filter + ")");
+}
+if (options.mask) {
+  offsetContainer.setAttribute("mask", "url(#" + options.mask + ")");
+}
+
+var fillColors = document.getElementsByClassName("fillColor");
+for (var j = 0; j < fillColors.length; j++) {
+  fillColors[j].setAttribute("fill", fillColor);
+}
+
+options.updateOffset();
+
+]]></script>
+</svg>

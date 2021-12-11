@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html id="a" id="b">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=324378
+-->
+<head id="c" id="d">
+    <head id="j" foo="k" foo="l">
+  <title>Test for Bug 324378</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body id="e" id="f">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=324378">Mozilla Bug 324378</a>
+<script>
+  var html = document.documentElement;
+  is(document.getElementsByTagName("html").length, 1,
+     "Unexpected number of htmls");
+  is(document.getElementsByTagName("html")[0], html,
+     "Unexpected <html> element");
+  is(document.getElementsByTagName("head").length, 1,
+     "Unexpected number of heads");
+  is(html.getElementsByTagName("head").length, 1,
+     "Unexpected number of heads in <html>");
+  is(document.getElementsByTagName("body").length, 1,
+     "Unexpected number of bodies");
+  is(html.getElementsByTagName("body").length, 1,
+     "Unexpected number of bodies in <html>");
+  var head = document.getElementsByTagName("head")[0];
+  var body = document.getElementsByTagName("body")[0];
+</script>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <html id="g" foo="h" foo="i">
+      <body id="m" foo="n" foo="o">  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 324378 **/
+  is(document.getElementsByTagName("html").length, 1,
+     "Unexpected number of htmls after additions");
+  is(document.getElementsByTagName("html")[0], html,
+     "Unexpected <html> element");
+  is(document.documentElement, html,
+     "Unexpected root node");
+  is(document.getElementsByTagName("head").length, 1,
+     "Unexpected number of heads after additions");
+  is(document.getElementsByTagName("head")[0], head,
+     "Unexpected <head> element");
+  is(document.getElementsByTagName("body").length, 1,
+     "Unexpected number of bodies after additions");
+  is(document.getElementsByTagName("body")[0], body,
+     "Unexpected <body> element");
+
+  is(html.id, "a", "Unexpected <html> id");
+  is(head.id, "c", "Unexpected <head> id");
+  is(body.id, "e", "Unexpected <body> id");
+  is($("a"), html, "Unexpected node with id=a");
+  is($("b"), null, "Unexpected node with id=b");
+  is($("c"), head, "Unexpected node with id=c");
+  is($("d"), null, "Unexpected node with id=d");
+  is($("e"), body, "Unexpected node with id=e");
+  is($("f"), null, "Unexpected node with id=f");
+  is($("g"), null, "Unexpected node with id=g");
+  is($("j"), null, "Unexpected node with id=j");
+  is($("m"), null, "Unexpected node with id=m");
+
+  is(html.getAttribute("foo"), "h", "Unexpected 'foo' value on <html>");
+  is(head.getAttribute("foo"), null, "Unexpected 'foo' value on <head>");
+  is(body.getAttribute("foo"), "n", "Unexpected 'foo' value on <body>");
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<title>test for font selection by language reference</title>
+	<!-- A unique name is included in font-family
+	     to force a new cache entry for each element.
+	     -->
+	<style type="text/css">
+	p.a {
+	        font-family: sans-serif, font-selection-by-lang-1;
+	}
+	p.b {
+	        font-family: sans-serif, font-selection-by-lang-2;
+	}
+	</style>
+</head>
+<body>
+  <p class="a" lang="ja">0123456789<p>
+  <p class="b" lang="en">0123456789<p>
+</body>
+</html>

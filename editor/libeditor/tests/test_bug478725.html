@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>Test for bug 478725</title>
+<style src="/tests/SimpleTest/test.css" type="text/css"></style>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script class="testbody" type="application/javascript">
+
+function runTest() {
+  function verifyContent(s) {
+    var e = document.getElementById("i1");
+    var doc = e.contentDocument;
+    is(doc.body.innerHTML, s, "");
+  }
+
+  function pasteInto(html, target_id) {
+    var e = document.getElementById("i1");
+    var doc = e.contentDocument;
+    doc.designMode = "on";
+    doc.body.innerHTML = html;
+    e = doc.getElementById(target_id);
+    doc.defaultView.focus();
+    var selection = doc.defaultView.getSelection();
+    selection.removeAllRanges();
+    selection.selectAllChildren(e);
+    selection.collapseToEnd();
+    SpecialPowers.wrap(doc).execCommand("paste", false, null);
+   return e;
+  }
+
+  function copyToClipBoard(s, asHTML, target_id) {
+    var e = document.getElementById("i2");
+    var doc = e.contentDocument;
+    if (asHTML) {
+      doc.body.innerHTML = s;
+    } else {
+      var text = doc.createTextNode(s);
+      doc.body.appendChild(text);
+    }
+    doc.designMode = "on";
+    doc.defaultView.focus();
+    var selection = doc.defaultView.getSelection();
+    selection.removeAllRanges();
+    if (!target_id) {
+      selection.selectAllChildren(doc.body);
+    } else {
+      var range = document.createRange();
+      range.selectNode(doc.getElementById(target_id));
+      selection.addRange(range);
+    }
+    SpecialPowers.wrap(doc).execCommand("copy", false, null);
+    return e;
+  }
+
+  copyToClipBoard("<dl><dd>Hello Kitty</dd></dl>", true);
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
+  verifyContent('<ol><li id="paste_here">X<dl><dd>Hello Kitty</dd></dl></li></ol>');
+
+  copyToClipBoard("<li>Hello Kitty</li>", true);
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
+  verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li></ol>');
+
+  copyToClipBoard("<ol><li>Hello Kitty</li></ol>", true);
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
+  verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li></ol>');
+
+  copyToClipBoard("<ul><li>Hello Kitty</li></ul>", true);
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
+  verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li></ol>');
+
+  copyToClipBoard("<ul><li>Hello</li><ul><li>Kitty</li></ul></ul>", true);
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
+  verifyContent('<ol><li id="paste_here">X</li><li>Hello</li><ul><li>Kitty</li></ul></ol>');
+
+  copyToClipBoard("<dl><dd>Hello</dd><dd>Kitty</dd></dl>", true);
+  pasteInto('<dl><dd id="paste_here">X</dd></dl>', "paste_here");
+  verifyContent('<dl><dd id="paste_here">X</dd><dd>Hello</dd><dd>Kitty</dd></dl>');
+
+  copyToClipBoard("<dl><dd>Hello</dd><dd>Kitty</dd></dl>", true);
+  pasteInto('<dl><dt id="paste_here">X</dt></dl>', "paste_here");
+  verifyContent('<dl><dt id="paste_here">X</dt><dd>Hello</dd><dd>Kitty</dd></dl>');
+
+  copyToClipBoard("<dl><dt>Hello</dt><dd>Kitty</dd></dl>", true);
+  pasteInto('<dl><dd id="paste_here">X</dd></dl>', "paste_here");
+  verifyContent('<dl><dd id="paste_here">X</dd><dt>Hello</dt><dd>Kitty</dd></dl>');
+
+  copyToClipBoard("<pre>Kitty</pre>", true);
+  pasteInto('<pre id="paste_here">Hello </pre>', "paste_here");
+  verifyContent('<pre id="paste_here">Hello Kitty</pre>');
+
+// I was expecting these to trigger the special TABLE/TR rules in nsHTMLEditor::InsertHTMLWithContext
+// but they don't for some reason...
+//  copyToClipBoard('<table><tr id="copy_here"><td>Kitty</td></tr></table>', true, "copy_here");
+//  pasteInto('<table><tr id="paste_here"><td>Hello</td></tr></table>',"paste_here");
+//  verifyContent('');
+//
+//  copyToClipBoard('<table id="copy_here"><tr><td>Kitty</td></tr></table>', true, "copy_here");
+//  pasteInto('<table><tr id="paste_here"><td>Hello</td></tr></table>',"paste_here");
+//  verifyContent('');
+//
+//  copyToClipBoard('<table id="copy_here"><tr><td>Kitty</td></tr></table>', true, "copy_here");
+//  pasteInto('<table id="paste_here"><tr><td>Hello</td></tr></table>',"paste_here");
+//  verifyContent('');
+//
+//  copyToClipBoard('<table><tr id="copy_here"><td>Kitty</td></tr></table>', true, "copy_here");
+//  pasteInto('<table id="paste_here"><tr><td>Hello</td></tr></table>',"paste_here");
+//  verifyContent('');
+
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478725">Mozilla Bug 478725</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+
+
+<iframe id="i1" width="200" height="100" src="about:blank"></iframe><br>
+<iframe id="i2" width="200" height="100" src="about:blank"></iframe><br>
+
+</body>
+</html>

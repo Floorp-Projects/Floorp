@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Load the script as a module</title>
+</head>
+<body>
+  <!-- crossorigin="use-credentials", because if we do an anonymous load that --
+    -- won't use the cache at all -->
+  <script id="watchme" src="file_js_cache.js" type="module"
+          crossorigin="use-credentials"></script>
+</body>
+</html>

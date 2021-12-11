@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+// This file defines content scripts.
+/* eslint-env mozilla/frame-script */
+
+let baseUrl = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/mochitest/authenticate.sjs";
+function testXHR(url) {
+  return new Promise((resolve, reject) => {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.onload = resolve;
+    xhr.onabort = reject;
+    xhr.onerror = reject;
+    xhr.send();
+  });
+}
+
+function getAuthHandler(result, blocking = true) {
+  function background(result) {
+    browser.webRequest.onAuthRequired.addListener((details) => {
+      browser.test.succeed(`authHandler.onAuthRequired called with ${details.requestId} ${details.url} result ${JSON.stringify(result)}`);
+      browser.test.sendMessage("onAuthRequired");
+      return result;
+    }, {urls: ["*://mochi.test/*"]}, ["blocking"]);
+    browser.webRequest.onCompleted.addListener((details) => {
+      browser.test.succeed(`authHandler.onCompleted called with ${details.requestId} ${details.url}`);
+      browser.test.sendMessage("onCompleted");
+    }, {urls: ["*://mochi.test/*"]});
+    browser.webRequest.onErrorOccurred.addListener((details) => {
+      browser.test.succeed(`authHandler.onErrorOccurred called with ${details.requestId} ${details.url}`);
+      browser.test.sendMessage("onErrorOccurred");
+    }, {urls: ["*://mochi.test/*"]});
+  }
+
+  let permissions = [
+    "webRequest",
+    "*://mochi.test/*",
+  ];
+  if (blocking) {
+    permissions.push("webRequestBlocking");
+  }
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions,
+    },
+    background: `(${background})(${JSON.stringify(result)})`,
+  });
+}
+
+add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
+  // The chrome script sets up a default auth handler on the channel, the
+  // extension does not return anything in the authRequred call.  We should
+  // get the call in the extension first, then in the chrome code where we
+  // cancel the request to avoid dealing with the prompt dialog here.  The test
+  // is to ensure that WebRequest calls the previous notificationCallbacks
+  // if the authorization is not handled by the onAuthRequired handler.
+
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    let observer = channel => {
+      if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test" &&
+            channel.URI.spec.includes("authenticate.sjs"))) {
+        return;
+      }
+      Services.obs.removeObserver(observer, "http-on-modify-request");
+      channel.notificationCallbacks = {
+        QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor",
+                                                "nsIAuthPromptProvider",
+                                                "nsIAuthPrompt2"]),
+        getInterface: ChromeUtils.generateQI(["nsIAuthPromptProvider",
+                                              "nsIAuthPrompt2"]),
+        promptAuth(channel, level, authInfo) {
+          throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+        },
+        getAuthPrompt(reason, iid) {
+          return this;
+        },
+        asyncPromptAuth(channel, callback, context, level, authInfo) {
+          // We just cancel here, we're only ensuring that non-webrequest
+          // notificationcallbacks get called if webrequest doesn't handle it.
+          Promise.resolve().then(() => {
+            callback.onAuthCancelled(context, false);
+            channel.cancel(Cr.NS_BINDING_ABORTED);
+            sendAsyncMessage("callback-complete");
+          });
+        },
+      };
+    };
+    Services.obs.addObserver(observer, "http-on-modify-request");
+    sendAsyncMessage("chrome-ready");
+  });
+  await chromeScript.promiseOneMessage("chrome-ready");
+  let callbackComplete = chromeScript.promiseOneMessage("callback-complete");
+
+  let handlingExt = getAuthHandler();
+  await handlingExt.startup();
+
+  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuth&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`),
+                       ProgressEvent,
+                       "caught rejected xhr");
+
+  await callbackComplete;
+  await handlingExt.awaitMessage("onAuthRequired");
+  // We expect onErrorOccurred because the "default" authprompt above cancelled
+  // the auth request to avoid a dialog.
+  await handlingExt.awaitMessage("onErrorOccurred");
+  await handlingExt.unload();
+  chromeScript.destroy();
+});
+
+add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
+  // The chrome script sets up a default auth handler on the channel, the
+  // extension does not return anything in the authRequred call.  We should
+  // get the call in the extension first, then in the chrome code where we
+  // cancel the request to avoid dealing with the prompt dialog here.  The test
+  // is to ensure that WebRequest calls the previous notificationCallbacks
+  // if the authorization is not handled by the onAuthRequired handler.
+
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    let observer = channel => {
+      if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test" &&
+            channel.URI.spec.includes("authenticate.sjs"))) {
+        return;
+      }
+      Services.obs.removeObserver(observer, "http-on-modify-request");
+      channel.notificationCallbacks = {
+        QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor",
+                                                "nsIAuthPrompt2"]),
+        getInterface: ChromeUtils.generateQI(["nsIAuthPrompt2"]),
+        promptAuth(request, level, authInfo) {
+          throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+        },
+        asyncPromptAuth(request, callback, context, level, authInfo) {
+          // We just cancel here, we're only ensuring that non-webrequest
+          // notificationcallbacks get called if webrequest doesn't handle it.
+          Promise.resolve().then(() => {
+            request.cancel(Cr.NS_BINDING_ABORTED);
+            sendAsyncMessage("callback-complete");
+          });
+        },
+      };
+    };
+    Services.obs.addObserver(observer, "http-on-modify-request");
+    sendAsyncMessage("chrome-ready");
+  });
+  await chromeScript.promiseOneMessage("chrome-ready");
+  let callbackComplete = chromeScript.promiseOneMessage("callback-complete");
+
+  let handlingExt = getAuthHandler();
+  await handlingExt.startup();
+
+  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuthPromptProvider&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`),
+                       ProgressEvent,
+                       "caught rejected xhr");
+
+  await callbackComplete;
+  await handlingExt.awaitMessage("onAuthRequired");
+  // We expect onErrorOccurred because the "default" authprompt above cancelled
+  // the auth request to avoid a dialog.
+  await handlingExt.awaitMessage("onErrorOccurred");
+  await handlingExt.unload();
+  chromeScript.destroy();
+});
+</script>
+</head>
+<body>
+<div id="test">Authorization Test</div>
+
+</body>
+</html>

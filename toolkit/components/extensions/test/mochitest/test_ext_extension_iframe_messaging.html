@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test moz-extension iframe messaging</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+
+add_task(async function test_moz_extension_iframe_messaging() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "content_scripts": [{
+        "js": ["cs.js"],
+        "matches": ["http://mochi.test/*/file_sample.html"],
+      }],
+      "permissions": ["tabs"],
+    },
+    files: {
+      "cs.js"() {
+        let iframe = document.createElement("iframe");
+        iframe.src = browser.runtime.getURL("iframe.html");
+        document.body.append(iframe);
+      },
+
+      "iframe.html": `<!doctype html><script src=iframe.js><\/script>`,
+      async "iframe.js"() {
+        browser.runtime.onMessage.addListener(async msg => {
+          browser.test.assertEq(msg, "from-background", "Correct message.");
+          return "iframe-response";
+        });
+
+        browser.runtime.onConnect.addListener(async port => {
+          port.postMessage("port-message");
+        });
+
+        await browser.test.assertRejects(
+          browser.runtime.sendMessage("from-iframe"),
+          "Could not establish connection. Receiving end does not exist.",
+          "No onMessage listener in the background."
+        );
+
+        await new Promise(resolve => {
+          let port = browser.runtime.connect();
+          port.onDisconnect.addListener(() => {
+            browser.test.assertEq(
+              port.error.message,
+              "Could not establish connection. Receiving end does not exist.",
+              "No onConnect listener in the background."
+            );
+            resolve();
+          })
+        });
+
+        // TODO: If/when the tabs API is available from extension iframes, test
+        // that it won't send a message to itself via browser.tabs.sendMessage()
+        browser.test.assertEq(browser.tabs, undefined, "No tabs API");
+
+        browser.test.sendMessage("iframe-done");
+      },
+    },
+    background() {
+      browser.test.onMessage.addListener(async msg => {
+
+        await browser.test.assertRejects(
+          browser.runtime.sendMessage("from-background"),
+          "Could not establish connection. Receiving end does not exist.",
+          "No onMessage listener in another extension page."
+        );
+
+        await new Promise(resolve => {
+          let port = browser.runtime.connect();
+          port.onDisconnect.addListener(() => {
+            browser.test.assertEq(
+              port.error.message,
+              "Could not establish connection. Receiving end does not exist.",
+              "No onConnect listener in another extension page."
+            );
+            resolve();
+          })
+        });
+
+        let [tab] = await browser.tabs.query({
+          url: "http://mochi.test/*/file_sample.html",
+        });
+        let res = await browser.tabs.sendMessage(tab.id, "from-background");
+        browser.test.assertEq(res, "iframe-response", "Correct response.");
+
+        let port = browser.tabs.connect(tab.id);
+        port.onMessage.addListener(msg => {
+          browser.test.assertEq(msg, "port-message", "Correct port message.");
+          browser.test.notifyPass("done");
+        });
+      })
+    }
+  });
+
+  await extension.startup();
+
+  let win = window.open("file_sample.html");
+  await extension.awaitMessage("iframe-done");
+
+  extension.sendMessage("run-background");
+  await extension.awaitFinish("done");
+  win.close();
+
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

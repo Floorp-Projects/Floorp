@@ -1,0 +1,22 @@
+[package]
+name = "qcms"
+authors = ["Jeff Muizelaar", "Benoit Girard", "Andrew Osmond"]
+version = "0.2.0"
+edition = "2018"
+include = ["src/**/*", "build.rs"]
+description = "lightweight color management"
+documentation = "https://docs.rs/qcms"
+license = "MIT"
+repository = "https://github.com/FirefoxGraphics/qcms"
+keywords = ["color"]
+categories = ["graphics"]
+
+[features]
+default = ["iccv4-enabled", "cmyk"]
+c_bindings = ["libc"]
+neon = []
+iccv4-enabled = []
+cmyk = []
+
+[dependencies]
+libc = {version = "0.2", optional = true }

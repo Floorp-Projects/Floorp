@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XML roles tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest() {
+      // Some AT may look for this
+      testAttrs("nav", {"xml-roles": "navigation"}, true);
+      testAttrs("header", {"xml-roles": "banner"}, true);
+      testAbsentAttrs("article_header", {"xml-roles": "banner"});
+      testAbsentAttrs("main_header", {"xml-roles": "banner"});
+      testAbsentAttrs("section_header", {"xml-roles": "banner"});
+      testAttrs("footer", {"xml-roles": "contentinfo"}, true);
+      testAbsentAttrs("article_footer", {"xml-roles": "contentinfo"});
+      testAbsentAttrs("main_footer", {"xml-roles": "contentinfo"});
+      testAbsentAttrs("section_footer", {"xml-roles": "contentinfo"});
+      testAttrs("aside", {"xml-roles": "complementary"}, true);
+      testAbsentAttrs("section", {"xml-roles": "region"}, true);
+      testAttrs("main", {"xml-roles": "main"}, true); // // ARIA override
+      testAttrs("form", {"xml-roles": "form"}, true);
+      testAttrs("feed", {"xml-roles": "feed"}, true);
+      testAttrs("article", {"xml-roles": "article"}, true);
+      testAttrs("main_element", {"xml-roles": "main"}, true);
+      testAttrs("figure", {"xml-roles": "figure"}, true);
+
+      testAttrs("search", {"xml-roles": "searchbox"}, true);
+
+      testAttrs("code", {"xml-roles": "code"}, true);
+
+      testAttrs("open-1", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-2", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-3", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-4", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-5", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-6", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-7", {"xml-roles": "open-fence"}, true);
+
+      testAttrs("sep-1", {"xml-roles": "separator"}, true);
+      testAttrs("sep-2", {"xml-roles": "separator"}, true);
+      testAttrs("sep-3", {"xml-roles": "separator"}, true);
+      testAttrs("sep-4", {"xml-roles": "separator"}, true);
+      testAttrs("sep-5", {"xml-roles": "separator"}, true);
+      testAttrs("sep-6", {"xml-roles": "separator"}, true);
+      testAttrs("sep-7", {"xml-roles": "separator"}, true);
+
+      testAttrs("close-1", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-2", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-3", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-4", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-5", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-6", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-7", {"xml-roles": "close-fence"}, true);
+
+      testAttrs("num", {"xml-roles": "numerator"}, true);
+      testAttrs("den", {"xml-roles": "denominator"}, true);
+
+      testAttrs("sub-1", {"xml-roles": "subscript"}, true);
+      testAttrs("sub-2", {"xml-roles": "subscript"}, true);
+      testAttrs("sub-3", {"xml-roles": "subscript"}, true);
+      testAttrs("sup-1", {"xml-roles": "superscript"}, true);
+      testAttrs("sup-2", {"xml-roles": "superscript"}, true);
+      testAttrs("sup-3", {"xml-roles": "superscript"}, true);
+      testAttrs("sup-4", {"xml-roles": "superscript"}, true);
+      testAttrs("presub-1", {"xml-roles": "presubscript"}, true);
+      testAttrs("presub-2", {"xml-roles": "presubscript"}, true);
+      testAttrs("presup-1", {"xml-roles": "presuperscript"}, true);
+
+      testAttrs("under-1", {"xml-roles": "underscript"}, true);
+      testAttrs("under-2", {"xml-roles": "underscript"}, true);
+      testAttrs("over-1", {"xml-roles": "overscript"}, true);
+      testAttrs("over-2", {"xml-roles": "overscript"}, true);
+
+      testAttrs("root-index-1", {"xml-roles": "root-index"}, true);
+
+      testAttrs("base-1", {"xml-roles": "base"}, true);
+      testAttrs("base-2", {"xml-roles": "base"}, true);
+      testAttrs("base-3", {"xml-roles": "base"}, true);
+      testAttrs("base-4", {"xml-roles": "base"}, true);
+      testAttrs("base-5", {"xml-roles": "base"}, true);
+      testAttrs("base-6", {"xml-roles": "base"}, true);
+      testAttrs("base-7", {"xml-roles": "base"}, true);
+      testAttrs("base-8", {"xml-roles": "base"}, true);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Provide mappings for html5 <nav> <header> <footer> <article>"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=593368">
+    Bug 593368
+  </a><br/>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=613502"
+     title="Map <article> like we do aria role article">
+    Bug 613502
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=610650"
+     title="Change implementation of HTML5 landmark elements to conform">
+    Bug 610650
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=614310"
+     title="Map section to pane (like role=region)">
+    Mozilla Bug 614310
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=734982"
+     title="Map ARIA role FORM">
+    Bug 734982
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=761891"
+     title="HTML5 article element should expose xml-roles:article object attribute">
+    Bug 761891
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=849624"
+     title="modify HTML5 header and footer accessibility API mapping">
+    Bug 849624
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1121518"
+     title="ARIA 1.1: Support role 'searchbox'">
+    Bug 1121518
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1356049"
+     title="Map ARIA figure role">
+    Bug 1356049
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <nav id="nav">a nav</nav>
+  <header id="header">a header</header>
+  <footer id="footer">a footer</footer>
+  <article id="article_with_header_and_footer">
+    <header id="article_header">a header within an article</header>
+    <footer id="article_footer">a footer within an article</footer>
+  </article>
+  <main id="main_with_header_and_footer">
+    <header id="main_header">a header within a main</header>
+    <footer id="main_footer">a footer within a main</footer>
+  </main>
+  <section id="section_with_header_and_footer">
+    <header id="section_header">a header within an section</header>
+    <footer id="section_footer">a footer within an section</footer>
+  </section>
+  <aside id="aside">by the way I am an aside</aside>
+  <section id="section">a section</section>
+  <article id="main" role="main">a main area</article>
+  <article id="form" role="form">a form area</article>
+  <div id="feed" role="feed">a feed</div>
+  <article id="article">article</article>
+  <main id="main_element">another main area</main>
+  <div id="figure" role="figure">a figure</div>
+
+  <input id="search" type="search"/>
+
+  <div id="code" role="code"></div>
+
+  <!-- open-fence, separator, close-fence -->
+  <math><mo id="open-1">(</mo><mi>x</mi><mo id="sep-1">,</mo><mi>y</mi><mo id="close-1">)</mo></math>
+  <math><mrow><mo id="open-2">(</mo><mi>x</mi><mo id="sep-2">,</mo><mi>y</mi><mo id="close-2">)</mo></mrow></math>
+  <math><mstyle><mo id="open-3">(</mo><mi>x</mi><mo id="sep-3">,</mo><mi>y</mi><mo id="close-3">)</mo></mstyle></math>
+  <math><msqrt><mo id="open-4">(</mo><mi>x</mi><mo id="sep-4">,</mo><mi>y</mi><mo id="close-4">)</mo></msqrt></math>
+  <math><menclose><mo id="open-5">(</mo><mi>x</mi><mo id="sep-5">,</mo><mi>y</mi><mo id="close-5">)</mo></menclose></math>
+  <math><merror><mo id="open-6">(</mo><mi>x</mi><mo id="sep-6">,</mo><mi>y</mi><mo id="close-6">)</mo></merror></math>
+  <math><mtable><mtr><mtd><mo id="open-7">(</mo><mi>x</mi><mo id="sep-7">,</mo><mi>y</mi><mo id="close-7">)</mo></mtd></mtr></mtable></math>
+
+  <!-- numerator, denominator -->
+  <math>
+    <mfrac>
+      <mi id="num">a</mi>
+      <mi id="den">b</mi>
+    </mfrac>
+  </math>
+
+  <!-- subscript, superscript, presubscript, presuperscript -->
+  <math>
+    <msub>
+      <mi id="base-1">a</mi>
+      <mi id="sub-1">b</mi>
+    </msub>
+  </math>
+  <math>
+    <msup>
+      <mi id="base-2">a</mi>
+      <mi id="sup-1">b</mi>
+    </msup>
+  </math>
+  <math>
+    <msubsup>
+      <mi id="base-3">a</mi>
+      <mi id="sub-2">b</mi>
+      <mi id="sup-2">c</mi>
+    </msubsup>
+  </math>
+  <math>
+    <mmultiscripts>
+      <mi id="base-4">a</mi>
+      <mi id="sub-3">b</mi>
+      <mi id="sup-3">c</mi>
+      <none/>
+      <mi id="sup-4">d</mi>
+      <mprescripts/>
+      <mi id="presub-1">e</mi>
+      <none/>
+      <mi id="presub-2">f</mi>
+      <mi id="presup-1">g</mi>
+    </mmultiscripts>
+  </math>
+
+  <!-- underscript, overscript -->
+  <math>
+    <munder>
+      <mi id="base-5">a</mi>
+      <mi id="under-1">b</mi>
+    </munder>
+  </math>
+  <math>
+    <mover>
+      <mi id="base-6">a</mi>
+      <mi id="over-1">b</mi>
+    </mover>
+  </math>
+  <math>
+    <munderover>
+      <mi id="base-7">a</mi>
+      <mi id="under-2">b</mi>
+      <mi id="over-2">c</mi>
+    </munderover>
+  </math>
+
+  <!-- root-index -->
+  <math>
+    <mroot>
+      <mi id="base-8">a</mi>
+      <mi id="root-index-1">b</mi>
+    </mroot>
+  </math>
+
+</body>
+</html>

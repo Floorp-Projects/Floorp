@@ -1,0 +1,13 @@
+--testingtesting
+Content-Type: text/html
+
+<script>
+  var bc = new BroadcastChannel("bug660404_multipart");
+  bc.postMessage({command: "finishTest",
+    textContent: window.document.documentElement.textContent,
+    innerHTML: window.document.documentElement.innerHTML
+  });
+  bc.close();
+  window.close();
+</script>
+--testingtesting--

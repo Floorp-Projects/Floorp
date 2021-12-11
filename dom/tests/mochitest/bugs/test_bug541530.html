@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=541530
+-->
+<head>
+  <title>Test for Bug 411103</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=541530">Mozilla Bug 541530</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var orig = window;
+window = {};
+
+var origLocation = location;
+
+ok(window === orig, "can't override window");
+ok(window.location === location, "properties are properly aliased");
+ok(document.location === location, "properties are properly aliased");
+
+var canDefine = false;
+try {
+    this.__defineGetter__.call(this, 'bar', function() {});
+    this.__defineSetter__.call(this, 'bar', function() {});
+    canDefine = true;
+} catch (e) {}
+ok(canDefine, "Should have access to __defineGetter__ and __defineSetter__");
+
+try {
+    this.__defineGetter__('window', function() {});
+    ok(false, "should not be able to defineGetter(window)");
+} catch (e) {
+}
+
+try {
+    this.__defineGetter__.call(window, 'location', function(){});
+    ok(false, "should not be able to defineGetter(window.location)");
+} catch (e) {
+}
+
+try {
+    this.__defineGetter__.call(window.location, 'href', function(){});
+    ok(false, "shouldn't be able to override location.href");
+} catch (e) {
+    ok(/shadow/.exec(e.message) ||
+       /can't redefine non-configurable/.exec(e.message),
+       "Should be caught by the anti-shadow mechanism.");
+}
+
+// Try deleting the property.
+delete window.location.href;
+ok(typeof window.location.href !== 'undefined',
+   "shouldn't be able to delete the inherited property");
+delete Object.getPrototypeOf(window.location).href;
+ok(typeof window.location.href !== 'undefined',
+   "shouldn't be able to delete the property off of the prototype");
+
+this.__defineGetter__.call(Object.getPrototypeOf(window.location), 'href', function(){});
+ok(true, "should be able to define things on the prototype");
+
+try {
+    this.__defineSetter__.call(window.location, 'href', function(){});
+    ok(false, "overrode a setter for location.href?");
+} catch (e) {
+    ok(/shadow/.exec(e.message) ||
+       /can't redefine non-configurable/.exec(e.message),
+       "Should be caught by the anti-shadow mechanism.");
+}
+
+try {
+    this.__defineGetter__.call(document, 'location', function(){});
+    ok(false, "shouldn't be able to override document.location");
+} catch (e) {
+}
+
+ok(window === orig, "can't override window");
+ok(window.location === origLocation, "properties are properly aliased");
+ok(document.location === origLocation, "properties are properly aliased");
+
+location.href = 'javascript:ok(true, "was able to set location.href through a watchpoint")';
+
+</script>
+</pre>
+</body>
+</html>

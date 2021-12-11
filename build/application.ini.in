@@ -1,0 +1,56 @@
+#ifdef MOZ_BUILD_APP_IS_BROWSER
+; This file is not used. If you modify it and want the application to use
+; your modifications, move it under the browser/ subdirectory and start with
+; the "-app /path/to/browser/application.ini" argument.
+#else
+; This file is not used. If you modify it and want the application to use
+; your modifications, start with the "-app /path/to/application.ini"
+; argument.
+#endif
+#if 0
+; This Source Code Form is subject to the terms of the Mozilla Public
+; License, v. 2.0. If a copy of the MPL was not distributed with this
+; file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#endif
+#filter substitution
+#include @TOPOBJDIR@/buildid.h
+#include @TOPOBJDIR@/source-repo.h
+[App]
+Vendor=@MOZ_APP_VENDOR@
+Name=@MOZ_APP_BASENAME@
+RemotingName=@MOZ_APP_REMOTINGNAME@
+#ifdef MOZ_APP_DISPLAYNAME
+CodeName=@MOZ_APP_DISPLAYNAME@
+#endif
+Version=@MOZ_APP_VERSION@
+#ifdef MOZ_APP_PROFILE
+Profile=@MOZ_APP_PROFILE@
+#endif
+BuildID=@MOZ_BUILDID@
+#ifdef MOZ_SOURCE_REPO
+SourceRepository=@MOZ_SOURCE_REPO@
+#endif
+#ifdef MOZ_SOURCE_STAMP
+SourceStamp=@MOZ_SOURCE_STAMP@
+#endif
+ID=@MOZ_APP_ID@
+
+[Gecko]
+MinVersion=@GRE_MILESTONE@
+MaxVersion=@GRE_MILESTONE@
+
+[XRE]
+#ifdef MOZ_PROFILE_MIGRATOR
+EnableProfileMigrator=1
+#endif
+
+#if MOZ_CRASHREPORTER
+[Crash Reporter]
+Enabled=1
+ServerURL=@MOZ_CRASHREPORTER_URL@/submit?id=@MOZ_APP_ID@&version=@MOZ_APP_VERSION@&buildid=@MOZ_BUILDID@
+#endif
+
+#if MOZ_UPDATER
+[AppUpdate]
+URL=https://@MOZ_APPUPDATE_HOST@/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml
+#endif

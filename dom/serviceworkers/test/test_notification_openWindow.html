@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1578070</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="utils.js"></script>
+  <script type="text/javascript" src="/tests/dom/notification/test/mochitest/MockServices.js"></script>
+  <script type="text/javascript" src="/tests/dom/notification/test/mochitest/NotificationTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.webnotifications.workers.enabled", true],
+    ["dom.webnotifications.serviceworker.enabled", true],
+    ["notification.prompt.testing", true],
+    ["dom.serviceWorkers.disable_open_click_delay", 1000],
+    ["dom.serviceWorkers.idle_timeout", 299999],
+    ["dom.serviceWorkers.idle_extended_timeout", 299999]
+  ]});
+
+  MockServices.register();
+  SimpleTest.requestFlakyTimeout("Mock alert service dispatches show and click events.");
+  SimpleTest.registerCleanupFunction(() => {
+    MockServices.unregister();
+  });
+});
+
+add_task(async function test() {
+  info("Registering service worker.");
+  let swr = await navigator.serviceWorker.register("notification_openWindow_worker.js");
+  await waitForState(swr.installing, "activated");
+
+  SimpleTest.registerCleanupFunction(async () => {
+    await swr.unregister();
+    navigator.serviceWorker.onmessage = null;
+  });
+
+  for (let prefValue of [
+    SpecialPowers.Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW,
+    SpecialPowers.Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW,
+    SpecialPowers.Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+  ]) {
+    if (prefValue == SpecialPowers.Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW) {
+      // Let's open a new tab and focus on it. When the service
+      // worker notification is shown, the document will open in the focused tab.
+      // If we don't open a new tab, the document will be opened in the
+      // current test-runner tab and mess up the test setup.
+      window.open("");
+    }
+    info(`Setting browser.link.open_newwindow to ${prefValue}.`);
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.link.open_newwindow", prefValue]],
+    });
+
+    // The onclicknotification handler uses Clients.openWindow() to open a new
+    // window. This newly created window will attempt to open another window with
+    // Window.open() and some arbitrary URL. We crash before the second window
+    // finishes loading.
+    info("Showing notification.");
+    await swr.showNotification("notification");
+
+    info("Waiting for \"DONE\" from worker.");
+    await new Promise(resolve => {
+      navigator.serviceWorker.onmessage = event => {
+        if (event.data !== "DONE") {
+          ok(false, `Unexpected message from service worker: ${JSON.stringify(event.data)}`);
+        }
+        resolve();
+      }
+    });
+
+    // If we make it here, then we didn't crash.
+    ok(true, "Didn't crash!");
+
+    navigator.serviceWorker.onmessage = null;
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>

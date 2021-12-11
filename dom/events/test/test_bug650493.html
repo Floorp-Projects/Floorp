@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650493
+-->
+<head>
+  <title>Test for Bug 650493</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650493">Mozilla Bug 650493</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function getNodes() {
+  var walker = document.createTreeWalker($('content'), NodeFilter.SHOW_ALL, null);
+  var nodes = [];
+  do {
+    nodes.push(walker.currentNode);
+  } while(walker.nextNode());
+
+  return nodes;
+}
+
+function check() {
+  var current = getNodes();
+  is(nodes.length, current.length, "length after " + testName);
+  nodes.forEach(function(val, index) {
+    ok(current.indexOf(val) > -1, "nodes[" + index + "] (" + val + ") shouldn't exist after " + testName);
+  });
+}
+
+var nodes = getNodes();
+var testName = "empty";
+var mutateCount = 0;
+
+check();
+
+// Set up listeners
+root = $('content');
+root.addEventListener("DOMNodeInserted", function(e) {
+  mutateCount++;
+  is(e.isTrusted, true, "untrusted mutation event");
+  var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null);
+  do {
+    is(nodes.indexOf(w.currentNode), -1, "already have inserted node (" + w.currentNode + ") when " + testName);
+    nodes.push(w.currentNode);
+  } while(w.nextNode());
+});
+root.addEventListener("DOMNodeRemoved", function(e) {
+  mutateCount++;
+  is(e.isTrusted, true, "untrusted mutation event");
+  var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null);
+  do {
+    var index = nodes.indexOf(w.currentNode);
+    ok(index != -1, "missing removed node (" + w.currentNode + ") when " + testName);
+    nodes.splice(index, 1);
+  } while(w.nextNode());
+});
+
+testName = "text-only innerHTML";
+root.innerHTML = "hello world";
+check();
+
+testName = "innerHTML with <b>";
+root.innerHTML = "<b>bold</b> world";
+check();
+
+testName = "complex innerHTML";
+root.innerHTML = "<b>b<span>old</span></b> <strong>world";
+check();
+
+testName = "replacing using .textContent";
+root.textContent = "i'm just a plain text minding my own business";
+check();
+
+testName = "clearing using .textContent";
+root.textContent = "";
+check();
+
+testName = "inserting using .textContent";
+root.textContent = "i'm new text!!";
+check();
+
+testName = "inserting using .textContent";
+root.textContent = "i'm new text!!";
+check();
+
+testName = "preparing to normalize";
+root.innerHTML = "<u><b>foo</b></u>  ";
+var u = root.firstChild;
+is(u.nodeName, "U", "got the right node");
+var b = u.firstChild;
+is(b.nodeName, "B", "got the right node");
+b.insertBefore(document.createTextNode(""), b.firstChild);
+b.insertBefore(document.createTextNode(""), b.firstChild);
+b.appendChild(document.createTextNode(""));
+b.appendChild(document.createTextNode("hello"));
+b.appendChild(document.createTextNode("world"));
+u.appendChild(document.createTextNode("foo"));
+u.appendChild(document.createTextNode(""));
+u.appendChild(document.createTextNode("bar"));
+check();
+
+testName = "normalizing";
+root.normalize();
+check();
+
+testName = "self replace firstChild";
+mutateCount = 0;
+root.replaceChild(root.firstChild, root.firstChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self replace second child";
+mutateCount = 0;
+root.replaceChild(root.firstChild.nextSibling, root.firstChild.nextSibling);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self replace lastChild";
+mutateCount = 0;
+root.replaceChild(root.lastChild, root.lastChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self insertBefore firstChild";
+mutateCount = 0;
+root.insertBefore(root.firstChild, root.firstChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self insertBefore second child";
+mutateCount = 0;
+root.insertBefore(root.firstChild.nextSibling, root.firstChild.nextSibling);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self insertBefore lastChild";
+mutateCount = 0;
+root.insertBefore(root.lastChild, root.lastChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "appendChild last";
+mutateCount = 0;
+root.appendChild(root.lastChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "prepare script/style";
+script = document.createElement("script");
+script.appendChild(document.createTextNode("void(0);"));
+root.appendChild(script);
+style = document.createElement("style");
+root.appendChild(style);
+check();
+
+testName = "set something in script";
+script.text = "something";
+check();
+
+testName = "set something in style";
+style.innerHTML = "something { dislay: none; }";
+check();
+
+testName = "moving style";
+root.insertBefore(style, root.firstChild);
+check();
+
+testName = "replacing script";
+root.replaceChild(b, script);
+check();
+
+testName = "doc-fragment insert in the middle";
+frag = document.createDocumentFragment();
+frag.addEventListener("DOMNodeRemoved", function(e) {
+  var index = children.indexOf(e.target);
+  ok(index != -1, "unknown child removed from fragment");
+  children.splice(index, 1);
+});
+var children = [];
+children.push(document.createTextNode("foo"));
+children.push(document.createTextNode("bar"));
+children.push(document.createElement("span"));
+children.push(document.createElement("b"));
+children[2].appendChild(document.createElement("i"));
+children.forEach(function(child) { frag.appendChild(child); });
+ok(root.firstChild, "need to have children in order to test inserting before end");
+root.replaceChild(frag, root.firstChild);
+check();
+is(children.length, 0, "should have received DOMNodeRemoved for all frag children when inserting");
+is(frag.childNodes.length, 0, "fragment should be empty when inserting");
+
+testName = "doc-fragment append at the end";
+children.push(document.createTextNode("foo"));
+children.push(document.createTextNode("bar"));
+children.push(document.createElement("span"));
+children.push(document.createElement("b"));
+children[2].appendChild(document.createElement("i"));
+children.forEach(function(child) { frag.appendChild(child); });
+root.appendChild(frag);
+check();
+is(children.length, 0, "should have received DOMNodeRemoved for all frag children when appending");
+is(frag.childNodes.length, 0, "fragment should be empty when appending");
+
+</script>
+</body>
+</html>
+

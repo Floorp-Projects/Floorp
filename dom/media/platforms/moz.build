@@ -1,0 +1,142 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "agnostic/AgnosticDecoderModule.h",
+    "agnostic/BlankDecoderModule.h",
+    "agnostic/DummyMediaDataDecoder.h",
+    "agnostic/OpusDecoder.h",
+    "agnostic/TheoraDecoder.h",
+    "agnostic/VorbisDecoder.h",
+    "agnostic/VPXDecoder.h",
+    "agnostic/WAVDecoder.h",
+    "AllocationPolicy.h",
+    "MediaTelemetryConstants.h",
+    "PDMFactory.h",
+    "PEMFactory.h",
+    "PlatformDecoderModule.h",
+    "PlatformEncoderModule.h",
+    "ReorderQueue.h",
+    "SimpleMap.h",
+    "wrappers/AudioTrimmer.h",
+    "wrappers/MediaChangeMonitor.h",
+    "wrappers/MediaDataDecoderProxy.h",
+]
+
+UNIFIED_SOURCES += [
+    "agnostic/AgnosticDecoderModule.cpp",
+    "agnostic/BlankDecoderModule.cpp",
+    "agnostic/DummyMediaDataDecoder.cpp",
+    "agnostic/NullDecoderModule.cpp",
+    "agnostic/OpusDecoder.cpp",
+    "agnostic/TheoraDecoder.cpp",
+    "agnostic/VorbisDecoder.cpp",
+    "agnostic/VPXDecoder.cpp",
+    "agnostic/WAVDecoder.cpp",
+    "AllocationPolicy.cpp",
+    "PDMFactory.cpp",
+    "PEMFactory.cpp",
+    "PlatformDecoderModule.cpp",
+    "wrappers/AudioTrimmer.cpp",
+    "wrappers/MediaChangeMonitor.cpp",
+    "wrappers/MediaDataDecoderProxy.cpp",
+]
+
+DIRS += ["agnostic/bytestreams", "agnostic/eme", "agnostic/gmp", "omx"]
+
+if CONFIG["MOZ_WMF"]:
+    DIRS += ["wmf"]
+
+if CONFIG["MOZ_FFVPX"] or CONFIG["MOZ_FFMPEG"]:
+    # common code to either FFmpeg or FFVPX
+    EXPORTS += [
+        "ffmpeg/FFmpegRDFTTypes.h",
+    ]
+    UNIFIED_SOURCES += [
+        "ffmpeg/FFmpegLibWrapper.cpp",
+    ]
+
+if CONFIG["MOZ_FFVPX"]:
+    DIRS += [
+        "ffmpeg/ffvpx",
+    ]
+
+if CONFIG["MOZ_FFMPEG"]:
+    DIRS += [
+        "ffmpeg",
+    ]
+
+if CONFIG["MOZ_AV1"]:
+    EXPORTS += [
+        "agnostic/AOMDecoder.h",
+        "agnostic/DAV1DDecoder.h",
+    ]
+    UNIFIED_SOURCES += [
+        "agnostic/AOMDecoder.cpp",
+        "agnostic/DAV1DDecoder.cpp",
+    ]
+
+if CONFIG["MOZ_OMX"]:
+    EXPORTS += [
+        "omx/OmxCoreLibLinker.h",
+    ]
+    UNIFIED_SOURCES += [
+        "omx/OmxCoreLibLinker.cpp",
+    ]
+
+if CONFIG["MOZ_APPLEMEDIA"]:
+    EXPORTS += [
+        "apple/AppleDecoderModule.h",
+        "apple/AppleEncoderModule.h",
+    ]
+    UNIFIED_SOURCES += [
+        "apple/AppleATDecoder.cpp",
+        "apple/AppleDecoderModule.cpp",
+        "apple/AppleEncoderModule.cpp",
+        "apple/AppleVTDecoder.cpp",
+        "apple/AppleVTEncoder.cpp",
+    ]
+    LOCAL_INCLUDES += [
+        "/media/libyuv/libyuv/include",
+    ]
+    OS_LIBS += [
+        "-framework AudioToolbox",
+        "-framework CoreMedia",
+        "-framework VideoToolbox",
+        # For some unknown reason, the documented method of using weak_import
+        # attribute doesn't work with VideoToolbox's functions.
+        # We want to lazily load _VTRegisterSupplementalVideoDecoderIfAvailable
+        # symbol as it's only available in macOS 11 and later.
+        "-Wl,-U,_VTRegisterSupplementalVideoDecoderIfAvailable",
+        # Same for VTIsHardwareDecodeSupported available from macOS 10.13.
+        "-Wl,-U,_VTIsHardwareDecodeSupported",
+    ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    EXPORTS += [
+        "android/AndroidDecoderModule.h",
+        "android/AndroidEncoderModule.h",
+        "android/JavaCallbacksSupport.h",
+    ]
+    UNIFIED_SOURCES += [
+        "android/AndroidDataEncoder.cpp",
+        "android/AndroidDecoderModule.cpp",
+        "android/AndroidEncoderModule.cpp",
+        "android/RemoteDataDecoder.cpp",
+    ]
+    LOCAL_INCLUDES += [
+        "/media/libyuv/libyuv/include",
+    ]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

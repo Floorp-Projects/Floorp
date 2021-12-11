@@ -1,0 +1,42 @@
+<html>
+<body>
+  <script>
+// Helper methods.
+function ok(a, msg) {
+  parent.postMessage({ check: !!a, msg }, "*")
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+function finish() {
+  parent.postMessage({ done: true }, "*");
+}
+  </script>
+
+  <script id="a" nomodule>42</script>
+  <script id="b">42</script>
+  <script>
+// Let's test the behavior of nomodule attribute and noModule getter/setter.
+var a = document.getElementById("a");
+is(a.noModule, true, "HTMLScriptElement with nomodule attribute has noModule set to true");
+a.removeAttribute("nomodule");
+is(a.noModule, false, "HTMLScriptElement without nomodule attribute has noModule set to false");
+a.noModule = true;
+ok(a.hasAttribute('nomodule'), "HTMLScriptElement.noModule = true add the nomodule attribute");
+
+var b = document.getElementById("b");
+is(b.noModule, false, "HTMLScriptElement without nomodule attribute has noModule set to false");
+b.noModule = true;
+ok(b.hasAttribute('nomodule'), "HTMLScriptElement.noModule = true add the nomodule attribute");
+  </script>
+
+  <script>var foo = 42;</script>
+  <script nomodule>foo = 43;</script>
+  <script>
+is(foo, 42, "nomodule HTMLScriptElements should not be executed in modern browsers");
+finish();
+  </script>
+</body>
+</html>

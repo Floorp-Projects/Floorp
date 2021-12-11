@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for Animation.playbackRate on compositor animations</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translate(0px) }
+      100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(SimpleTest.finish);
+}, SimpleTest.finish, SpecialPowers);
+
+addAsyncAnimTest(async function() {
+  var [ div, cs ] = new_div("animation: anim 10s 1 linear forwards");
+  var animation = div.getAnimations()[0];
+  animation.playbackRate = 10;
+
+  advance_clock(300);
+
+  await waitForPaints();
+  omta_is(div, "transform", { tx: 30 }, RunningOn.Compositor,
+          "at 300ms");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  var [ div, cs ] = new_div("animation: anim 10s 1 linear forwards");
+  var animation = div.getAnimations()[0];
+  advance_clock(300);
+  await waitForPaints();
+
+  animation.playbackRate = 0;
+
+  await waitForPaintsFlushed();
+
+  omta_is(div, "transform", { tx: 3 }, RunningOn.MainThread,
+          "animation with zero playback rate should stay in the " +
+          "same position and be running on the main thread");
+
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  var [ div, cs ] = new_div("animation: anim 10s 1s");
+  var animation = div.getAnimations()[0];
+  animation.playbackRate = 0.5;
+
+  advance_clock(2000); // 1s * (1 / playbackRate)
+
+  await waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.Compositor,
+          "animation with positive delay and playbackRate > 1 should " +
+          "start from the initial position at the beginning of the " +
+          "active duration");
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  var [ div, cs ] = new_div("animation: anim 10s 1s");
+  var animation = div.getAnimations()[0];
+  animation.playbackRate = 2.0;
+
+  advance_clock(500); // 1s * (1 / playbackRate)
+
+  await waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.Compositor,
+          "animation with positive delay and playbackRate < 1 should " +
+          "start from the initial position at the beginning of the " +
+          "active duration");
+  done_div();
+});
+</script>
+</body>
+</html>

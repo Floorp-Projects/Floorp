@@ -1,0 +1,82 @@
+<html>
+
+<head>
+  <title>Listbox group attribute tests</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    async function doTest() {
+      // First test the whole lot.
+      testGroupAttrs("a", 1, 6);
+      testGroupAttrs("b", 2, 6);
+      testGroupAttrs("c", 3, 6);
+      testGroupAttrs("d", 4, 6);
+      testGroupAttrs("e", 5, 6);
+      testGroupAttrs("f", 6, 6);
+      // Remove c, reducing the set to 5.
+      let listbox = getAccessible("listbox");
+      let updated = waitForEvent(EVENT_REORDER, listbox);
+      c.remove();
+      await updated;
+      testGroupAttrs("a", 1, 5);
+      testGroupAttrs("b", 2, 5);
+      testGroupAttrs("d", 3, 5);
+      testGroupAttrs("e", 4, 5);
+      testGroupAttrs("f", 5, 5);
+      // Now, remove the first element.
+      updated = waitForEvent(EVENT_REORDER, listbox);
+      a.remove();
+      await updated;
+      testGroupAttrs("b", 1, 4);
+      testGroupAttrs("d", 2, 4);
+      testGroupAttrs("e", 3, 4);
+      testGroupAttrs("f", 4, 4);
+      // Remove the last item.
+      updated = waitForEvent(EVENT_REORDER, listbox);
+      f.remove();
+      await updated;
+      testGroupAttrs("b", 1, 3);
+      testGroupAttrs("d", 2, 3);
+      testGroupAttrs("e", 3, 3);
+      // Finally, remove the middle item.
+      updated = waitForEvent(EVENT_REORDER, listbox);
+      d.remove();
+      await updated;
+      testGroupAttrs("b", 1, 2);
+      testGroupAttrs("e", 2, 2);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Group information updated after removal of list items, bug 1515186 -->
+  <div id="listbox" role="listbox">
+    <div id="a" role="option">Option a</div>
+    <div id="b" role="option">Option b</div>
+    <div id="c" role="option">Option c</div>
+    <div id="d" role="option">Option d</div>
+    <div id="e" role="option">Option e</div>
+    <div id="f" role="option">Option f</div>
+  </div>
+
+</body>
+</html>

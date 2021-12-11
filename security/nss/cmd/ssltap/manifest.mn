@@ -1,0 +1,21 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = nss
+
+CSRCS = ssltap.c	\
+	$(NULL)
+
+PROGRAM =  ssltap
+
+REQUIRES = seccmd dbm
+
+PACKAGE_FILES = ssltap-manual.html licence.doc ssltap.exe
+
+ARCHIVE_NAME = ssltap
+

@@ -1,0 +1,55 @@
+{
+  "name": "eslint-plugin-mozilla",
+  "version": "2.11.2",
+  "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "mozilla",
+    "firefox"
+  ],
+  "bugs": {
+    "url": "https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Lint"
+  },
+  "homepage": "http://firefox-source-docs.mozilla.org/tools/lint/linters/eslint-plugin-mozilla.html",
+  "repository": {
+    "type": "hg",
+    "url": "https://hg.mozilla.org/mozilla-central/"
+  },
+  "author": "Mike Ratcliffe",
+  "main": "lib/index.js",
+  "dependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/eslint-parser": "^7.15.0",
+    "eslint-scope": "^5.1.1",
+    "eslint-visitor-keys": "^2.1.0",
+    "estraverse": "^4.3.0",
+    "htmlparser2": "^6.0.1",
+    "multi-ini": "^2.1.2",
+    "sax": "^1.2.4"
+  },
+  "devDependencies": {
+    "eslint": "7.32.0",
+    "mocha": "9.0.3"
+  },
+  "peerDependencies": {
+    "eslint": "^7.23.0",
+    "eslint-config-prettier": "^8.0.0",
+    "eslint-plugin-fetch-options": "^0.0.5",
+    "eslint-plugin-html": "^6.0.0",
+    "eslint-plugin-no-unsanitized": "^3.0.0",
+    "eslint-plugin-prettier": "^3.0.0",
+    "prettier": "^1.19.1"
+  },
+  "engines": {
+    "node": ">=6.9.1"
+  },
+  "scripts": {
+    "prepack": "node scripts/createExports.js",
+    "test": "mocha --reporter 'reporters/mozilla-format.js' tests",
+    "postpublish": "rm -f lib/modules.json lib/environments/saved-globals.json lib/rules/saved-rules-data.json",
+    "update-tooltool": "./update.sh"
+  },
+  "license": "MPL-2.0"
+}

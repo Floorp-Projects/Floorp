@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<!-- check that U+FEFF doesn't disrupt glyph rendering, see bug 389074 comments 26, 30 -->
+<html>
+  <div style="font-size: large; font-family: sans-serif;">
+    <p>&#xfeff;A&#xfeff;B&#xfeff;C&#xfeff;</p>
+  </div>
+</html>

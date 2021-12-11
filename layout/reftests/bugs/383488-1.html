@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+  span { font-family: sans-serif }
+  #a14 { font-size:72px; }
+</style>
+<script>
+window.onload = function()
+{
+  function S(id) {
+    return document.getElementById(id).style;
+  }
+  S("a1").setProperty("font-size", "illegal", "important");
+  S("a2").setProperty("font-size", "24px;", "important");
+  S("a3").setProperty("font-size", "24px; font-size-adjust:2", "important");
+  S("a4").setProperty("font-size", ";", "important");
+  S("a5").setProperty("font", "24px sans-serif;", "important");
+  S("a6").setProperty("font", "24px;", "important");
+  S("a7").setProperty("font-size", "  72px  ", "important"); // correct
+  S("a8").setProperty("font", ";", "important");
+  S("a9").setProperty("font", "  72px sans-serif  ", "important"); // correct
+  S("a10").setProperty("font-size", "!", "important");
+  S("a11").setProperty("font-size", "!important", "important");
+  S("a12").setProperty("font-size", "}", "important");
+  S("a13").setProperty("font-size", "; font-size:24px", "important");
+  S("a14").setProperty("font-size", "", "important");  // correct
+  S("a15").setProperty("font-size", "24px !important;", "important");
+  S("a16").setProperty("font-size", "24px !important; height:1px", "important");
+}
+</script>
+</head><body>
+<p>The X'es below should have the same size:</p>
+<!-- The wonky placement of line breaks below is to eliminate all
+     significant whitespace within the paragraph. -->
+<p
+><span id="a1" style="font-size:72px!important;">X</span
+><span id="a2" style="font-size:72px!important;">X</span
+><span id="a3" style="font-size:72px!important;">X</span
+><span id="a4" style="font-size:72px!important;">X</span
+><span id="a5" style="font-size:72px!important;">X</span
+><span id="a6" style="font-size:72px!important;">X</span
+><span id="a7" style="font-size:24px!important;">X</span
+><span id="a8" style="font-size:72px!important;">X</span
+><span id="a9" style="font:24px sans-serif!important;">X</span
+><span id="a10" style="font-size:72px!important;">X</span
+><span id="a11" style="font-size:72px!important;">X</span
+><span id="a12" style="font-size:72px!important;">X</span
+><span id="a13" style="font-size:72px!important;">X</span
+><span id="a14" style="font-size:24px!important;">X</span
+><span id="a15" style="font-size:72px!important;">X</span
+><span id="a16" style="font-size:72px!important;">X</span
+></p>
+</body></html>

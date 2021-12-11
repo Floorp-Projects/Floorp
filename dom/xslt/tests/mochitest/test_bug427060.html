@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=427060
+-->
+<head>
+  <title>Test for Bug 427060</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=427060">Mozilla Bug 427060</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 427060 **/
+
+var xmldoc, xsltdoc;
+
+xmldoc = new DOMParser().parseFromString('<opml version="1.0"><body></body></opml>', "text/xml");
+xsltdoc = new DOMParser().parseFromString('<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
+    	<xsl:template match="/opml">\n\
+    		<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">\n\
+    			<head>\n\
+    				<base target="_blank"></base>\n\
+    			</head>\n\
+    			<body></body>\n\
+    		</html>\n\
+    	</xsl:template>\n\
+    </xsl:stylesheet>', "text/xml");
+
+var processor = new XSLTProcessor;
+processor.importStylesheet(xsltdoc);
+try
+{
+  var result = processor.transformToDocument(xmldoc);
+}
+catch (e)
+{
+}
+ok(result && result instanceof Document, "XSLT transform should have created a document");
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that scaled elements with scrolled contents don't repaint unnecessarily when we scroll inside them</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<!-- Need a timeout here to allow paint unsuppression before we start the test -->
+<body>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {"set": [["layers.single-tile.enabled", false]]},
+  function() {
+    window.open("transformed_scrolling_repaints_3_window.html", "transformed_scrolling_repaints_3",
+                "chrome,width=350,height=450");
+  }
+);
+</script>
+</pre>
+</body>
+</html>

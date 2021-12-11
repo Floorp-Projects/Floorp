@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "gn toolchain build"
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run-on-projects:
+        - trunk
+    run:
+        resources:
+            - 'taskcluster/scripts/misc/build-gn-common.sh'
+        toolchain-artifact: public/build/gn.tar.zst
+    fetches:
+        fetch:
+            - gn
+
+linux64-gn:
+    treeherder:
+        symbol: TL(gn)
+    run:
+        script: build-gn-linux.sh
+
+macosx64-gn:
+    treeherder:
+        symbol: TM(gn)
+    run:
+        script: build-gn-macosx.sh
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
+            - macosx64-sdk-11.0
+
+win32-gn:
+    treeherder:
+        symbol: TW64(gn)
+    worker-type: b-win2012
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        script: build-gn-win32.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - ninja

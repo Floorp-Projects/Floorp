@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<p style="text-decoration-style: dotted;">
+  Here is specified the decoration style as dotted but no decoration lines,
+  however,
+  <span style="font-size: 2em;
+               text-decoration: underline line-through overline;">
+    here has solid decoration lines</span>, and here has no decoration lines.
+</p>
+<p style="text-decoration-style: dashed;">
+  Here is specified the decoration style as dashed but no decoration lines,
+  however,
+  <span style="font-size: 2em;
+               text-decoration: underline line-through overline;
+               text-decoration-style: inherit;">
+    here has inherited decoration lines</span>,
+  and here has no decoration lines.
+</p>
+<p style="text-decoration: underline line-through overline;
+          text-decoration-style: double;">
+  Here has double decoration lines,
+  <span style="font-size: 2em;
+               text-decoration-style: dashed;">
+    here is specified as dashed decoration lines but should be ignored</span>,
+  and here has double decoration lines.
+</p>
+<p style="text-decoration: underline line-through overline;
+          text-decoration-style: -moz-none;">
+  Here is specified the decoration style as -moz-none.
+</p>
+<p style="text-decoration-style: dotted;
+          text-decoration: underline line-through overline;">
+  Here has solid decoration lines even if its style is specified as dotted
+  before text-decoration.
+</p>

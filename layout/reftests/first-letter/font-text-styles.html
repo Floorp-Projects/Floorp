@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testing first-letter handling of font/text styles</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+html { overflow: hidden; }
+body {
+  margin: 1em;
+  font-size: 25px;
+  line-height: 1.2em;
+  font-family: serif;
+}
+
+div { width: 200px; }
+p { width: 0.5em; margin: 0; }
+p:first-letter { font-weight: bold; text-transform: uppercase; }
+p.reverse:first-letter { font-style: italic; text-transform: lowercase; }
+span.floater { float: left; }
+span.floater:first-letter { font-family: sans-serif; text-transform: uppercase; }
+span.special { display: inline-block; }
+span.special:first-letter { font-weight: bold; text-transform: uppercase; }
+</style>
+
+</head>
+<body>
+<div>
+<p>yellow corndog</p>
+<p class="reverse">HIPPIE BANANA</p>
+<p><span class="floater">gonzo macadamia</span></p>
+<p class="reverse">FELICITOUS <span class="special">raspberry</span></p>
+</div>
+</body>
+</html>

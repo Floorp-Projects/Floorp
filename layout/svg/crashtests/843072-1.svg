@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <text id="t"></text>
+  </defs>
+
+  <script>
+    window.addEventListener("load", function() {
+      document.getElementById("t").getExtentOfChar(0);
+    }, false);
+  </script>
+</svg>

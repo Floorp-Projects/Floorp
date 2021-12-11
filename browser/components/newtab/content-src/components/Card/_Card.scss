@@ -1,0 +1,327 @@
+@use 'sass:math';
+
+.card-outer {
+  @include context-menu-button;
+  background: var(--newtab-background-color-secondary);
+  border-radius: $border-radius-new;
+  display: inline-block;
+  height: $card-height;
+  margin-inline-end: $base-gutter;
+  position: relative;
+  width: 100%;
+
+  &:is(:focus):not(.placeholder) {
+    @include ds-focus;
+
+    transition: none;
+  }
+
+  &:hover {
+    box-shadow: none;
+    transition: none;
+  }
+
+  &.placeholder {
+    background: transparent;
+
+    .card-preview-image-outer,
+    .card-context {
+      display: none;
+    }
+  }
+
+  .card {
+    border-radius: $border-radius-new;
+    box-shadow: $shadow-card;
+    height: 100%;
+  }
+
+  > a {
+    color: inherit;
+    display: block;
+    height: 100%;
+    outline: none;
+    position: absolute;
+    width: 100%;
+
+    &:is(:focus) {
+      .card {
+        @include ds-focus;
+      }
+    }
+
+    &:is(.active, :focus) {
+      .card {
+        @include fade-in-card;
+      }
+
+      .card-title {
+        color: var(--newtab-primary-action-background);
+      }
+    }
+  }
+
+  &:is(:hover, :focus, .active):not(.placeholder) {
+    @include context-menu-button-hover;
+    outline: none;
+
+    .card-title {
+      color: var(--newtab-primary-action-background);
+    }
+
+    .alternate ~ .card-host-name {
+      display: none;
+    }
+
+    .card-host-name.alternate {
+      display: block;
+    }
+  }
+
+  .card-preview-image-outer {
+    background-color: var(--newtab-element-secondary-color);
+    border-radius: $border-radius-new $border-radius-new 0 0;
+    height: $card-preview-image-height;
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+      border-bottom: 1px solid var(--newtab-card-hairline-color);
+      bottom: 0;
+      content: '';
+      position: absolute;
+      width: 100%;
+    }
+
+    .card-preview-image {
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 1s $photon-easing;
+      width: 100%;
+
+      &.loaded {
+        opacity: 1;
+      }
+    }
+  }
+
+  .card-details {
+    padding: 15px 16px 12px;
+  }
+
+  .card-text {
+    max-height: 4 * $card-text-line-height + $card-title-margin;
+    overflow: hidden;
+
+    &.no-host-name,
+    &.no-context {
+      max-height: 5 * $card-text-line-height + $card-title-margin;
+    }
+
+    &.no-host-name.no-context {
+      max-height: 6 * $card-text-line-height + $card-title-margin;
+    }
+
+    &:not(.no-description) .card-title {
+      max-height: 3 * $card-text-line-height;
+      overflow: hidden;
+    }
+  }
+
+  .card-host-name {
+    color: var(--newtab-text-secondary-color);
+    font-size: 10px;
+    overflow: hidden;
+    padding-bottom: 4px;
+    text-overflow: ellipsis;
+    text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
+    white-space: nowrap;
+  }
+
+  .card-host-name.alternate { display: none; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: $card-text-line-height;
+    margin: 0 0 $card-title-margin;
+    word-wrap: break-word;
+  }
+
+  .card-description {
+    font-size: 12px;
+    line-height: $card-text-line-height;
+    margin: 0;
+    overflow: hidden;
+    word-wrap: break-word;
+  }
+
+  .card-context {
+    bottom: 0;
+    color: var(--newtab-text-secondary-color);
+    display: flex;
+    font-size: 11px;
+    inset-inline-start: 0;
+    padding: 9px 16px 9px 14px;
+    position: absolute;
+  }
+
+  .card-context-icon {
+    fill: var(--newtab-text-secondary-color);
+    height: 22px;
+    margin-inline-end: 6px;
+  }
+
+  .card-context-label {
+    flex-grow: 1;
+    line-height: 22px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.normal-cards {
+  .card-outer {
+    // Wide layout styles
+    @media (min-width: $break-point-widest) {
+      $line-height: 23px;
+      height: $card-height-large;
+
+      .card-preview-image-outer {
+        height: $card-preview-image-height-large;
+      }
+
+      .card-details {
+        padding: 13px 16px 12px;
+      }
+
+      .card-text {
+        max-height: 6 * $line-height + $card-title-margin;
+      }
+
+      .card-host-name {
+        font-size: 12px;
+        padding-bottom: 5px;
+      }
+
+      .card-title {
+        font-size: 17px;
+        line-height: $line-height;
+        margin-bottom: 0;
+      }
+
+      .card-text:not(.no-description) {
+        .card-title {
+          max-height: 3 * $line-height;
+        }
+      }
+
+      .card-description {
+        font-size: 15px;
+        line-height: $line-height;
+      }
+
+      .card-context {
+        bottom: 4px;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+.compact-cards {
+  $card-detail-vertical-spacing: 12px;
+  $card-title-font-size: 12px;
+
+  .card-outer {
+    height: $card-height-compact;
+
+    .card-preview-image-outer {
+      height: $card-preview-image-height-compact;
+    }
+
+    .card-details {
+      padding: $card-detail-vertical-spacing 16px;
+    }
+
+    .card-host-name {
+      line-height: 10px;
+    }
+
+    .card-text {
+      .card-title,
+      &:not(.no-description) .card-title {
+        font-size: $card-title-font-size;
+        line-height: $card-title-font-size + 1;
+        max-height: $card-title-font-size + 5;
+        overflow: hidden;
+        padding: 0 0 4px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .card-description {
+      display: none;
+    }
+
+    .card-context {
+      $icon-size: 16px;
+      $container-size: 32px;
+      background-color: var(--newtab-background-color-secondary);
+      border-radius: math.div($container-size, 2);
+      clip-path: inset(-1px -1px $container-size - ($card-height-compact - $card-preview-image-height-compact - 2 * $card-detail-vertical-spacing));
+      height: $container-size;
+      width: $container-size;
+      padding: math.div($container-size - $icon-size, 2);
+      // The -1 at the end is so both opacity borders don't overlap, which causes bug 1629483
+      top: $card-preview-image-height-compact - math.div($container-size, 2) - 1;
+      inset-inline-end: 12px;
+      inset-inline-start: auto;
+
+      &::after {
+        border: 1px solid var(--newtab-card-hairline-color);
+        border-bottom: 0;
+        border-radius: math.div($container-size, 2) + 1 math.div($container-size, 2) + 1 0 0;
+        content: '';
+        position: absolute;
+        height: math.div($container-size + 2, 2);
+        width: $container-size + 2;
+        top: -1px;
+        left: -1px;
+      }
+
+      .card-context-icon {
+        margin-inline-end: 0;
+        height: $icon-size;
+        width: $icon-size;
+
+        &.icon-bookmark-added {
+          fill: $bookmark-icon-fill;
+        }
+
+        &.icon-download {
+          fill: $download-icon-fill;
+        }
+
+        &.icon-pocket {
+          fill: $pocket-icon-fill;
+        }
+      }
+
+      .card-context-label {
+        display: none;
+      }
+    }
+  }
+
+  @media not all and (min-width: $break-point-widest) {
+    .hide-for-narrow {
+      display: none;
+    }
+  }
+}

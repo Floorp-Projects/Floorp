@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+FINAL_TARGET_FILES.defaults.settings.main += [
+    "anti-tracking-url-decoration.json",
+    "example.json",
+    "hijack-blocklists.json",
+    "language-dictionaries.json",
+    "password-recipes.json",
+    "password-rules.json",
+    "search-config.json",
+    "search-default-override-allowlist.json",
+    "search-telemetry.json",
+    "sites-classification.json",
+    "top-sites.json",
+    "url-classifier-skip-urls.json",
+    "websites-with-shared-credential-backends.json",
+]
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DIST_SUBDIR = "browser"

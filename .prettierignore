@@ -1,0 +1,63 @@
+# This list automatically picks up exclusions from .eslintignore
+
+# These files are disabled due to parsing errors when using Prettier.
+# Bug 1560186
+*.html
+*.xhtml
+*.xul
+*.xml
+
+# CSS files have not been formatted and are not check by ./mach lint
+# Disable prettier on CSS files to avoid unexpected formatting changes.
+# Bug 1606785, Bug 1606787
+*.css
+
+# Ignore default pref files which have a .js suffix but aren't parsed normally as JavaScript.
+browser/app/profile/channel-prefs.js
+browser/app/profile/firefox.js
+browser/branding/aurora/pref/firefox-branding.js
+browser/branding/nightly/pref/firefox-branding.js
+browser/branding/official/pref/firefox-branding.js
+browser/branding/unofficial/pref/firefox-branding.js
+devtools/client/preferences/debugger.js
+extensions/pref/autoconfig/test/unit/autoconfig.js
+mobile/android/app/geckoview-prefs.js
+mobile/android/app/mobile.js
+mobile/android/installer/mobile-l10n.js
+modules/libpref/init/all.js
+modules/libpref/test/unit/data/testParser.js
+modules/libpref/test/unit/data/testPrefLocked.js
+modules/libpref/test/unit/data/testPrefSticky.js
+modules/libpref/test/unit/extdata/testExt.js
+services/sync/tests/unit/prefs_test_prefs_store.js
+
+# Ignore testing pref files which aren't parsed normally.
+testing/profiles/**/user.js
+
+# Ignore CORS fixtures which require specific resource hashes.
+dom/security/test/sri/script*
+
+# Ignore other DOM fixtures with funky chars.
+dom/base/test/file_bug687859-charset.js
+dom/base/test/file_bug687859-inherit.js
+
+# Ignore preprocessed files.
+js/src/builtin/**/*.js
+js/src/shell/**/*.js
+
+# Ignore devtools debugger files
+# Keep in sync with devtools/client/debugger/.prettierignore
+devtools/client/debugger/src/workers/parser/tests/fixtures/functionNames.js
+devtools/client/debugger/src/workers/parser/tests/fixtures/scopes/*.js
+devtools/client/debugger/src/workers/parser/tests/fixtures/pause/*.js
+devtools/client/debugger/src/test/mochitest/examples/babel/polyfill-bundle.js
+devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/input.js
+devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js
+devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js.map
+devtools/client/debugger/src/test/mochitest/examples/ember/quickstart
+
+# These are source mapped and the locations are asserted in the test case.
+devtools/client/webconsole/test/browser/test-mangled-function.*
+
+# Ignore backgroundtasks preferences files.
+toolkit/components/backgroundtasks/defaults

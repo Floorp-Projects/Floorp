@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<title>test src: local()</title>
+	<!--
+
+	  Most systems are expected to have either Linotype's Helvetica or a
+	  substitute.  These are needed for PostScript or PDF support.  MS
+	  systems will have Monotype's Arial installed.  Systems with
+	  ghostscript will normally have Nimbus Sans L.  Linux systems without
+	  ghostscript may have Adobe's bitmap Helvetica for X11 or Ascender /
+	  Red Hat's Liberation Sans.
+
+	  The result will be compared with fonts chosen through font-family.
+	  Platform aliases (on Windows and Linux) will map family names from
+	  one substitute to another, but similar aliasing does not happen with
+	  face names in local().  Therefore, all Helvetica substitute fonts
+	  are included in the @font-face rules.
+
+	  Full names are specified for all fonts for MS Windows and Linux, and
+	  PostScript names are included for Mac for all fonts up to
+	  Helvetica, which is expected to be on every Mac.
+
+	  The generic fallback is chosen to be serif, which is not expected to
+	  be the same as any of the local (sans-serif) faces in the @font-face
+	  rules, so that it makes failure to reference the local faces more
+	  obvious.
+
+	  -->
+	<style type="text/css">
+	  @font-face {
+	     font-family: "Local";
+	     src: local(Nimbus Sans L), local(NimbusSansL-Regu),
+	          local(Helvetica), local(Bitstream Vera Sans),
+	          local(Arial), local(Liberation Sans), local(SwissA),
+	          local(Fira Sans OT), local(Fira Sans),
+	          local(Droid Sans), local(Roboto);
+	     font-weight: 100;
+	  }
+	  @font-face {
+	     font-family: "Local";
+	     src: local(Nimbus Sans L Bold), local(NimbusSansL-Bold),
+	          local(Helvetica Bold), local(Helvetica-Bold),
+                  local(Bitstream Vera Sans  Bold),
+	          local(Arial Bold), local(Liberation Sans Bold), local(SwissA Bold),
+	          local(Fira Sans OT Bold), local(Fira Sans Bold),
+	          local(Droid Sans Bold), local(Roboto Bold);
+	     font-weight: normal;
+	  }
+	  body { font-family: Local, serif }
+	</style>
+</head>
+<body>
+  <p style="font-weight: 100">
+    The quick brown fox jumped over the lazy dog
+  </p>
+  <p style="font-weight: normal;">
+    The quick brown fox jumped over the lazy dog
+  </p>
+</body>
+</html>

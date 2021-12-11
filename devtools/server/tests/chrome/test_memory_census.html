@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1067491 - Test taking a census over the RDP.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  (async function() {
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
+
+    const census = await memory.takeCensus();
+    is(typeof census, "object");
+
+    await memory.detach();
+    destroyServerAndFinish(target);
+  })();
+};
+</script>
+</pre>
+</body>
+</html>

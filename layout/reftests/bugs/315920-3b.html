@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      input {color: red }
+      #two { color: green }
+      input[disabled]:disabled {color: green}
+      input:not([disabled]):not(:disabled) + #two:enabled {color: red}
+    </style>
+  </head>
+  <body onload='var elem = document.getElementById("one");
+                elem.setAttribute("disabled", "disabled");'>
+    <input type="submit" id="one" value="Should be no red"/>
+    <input type="submit" id="two" value="Should be no red"/>
+  </body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - KeyHandler</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto"></video>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  const video = document.getElementById("video");
+
+  const playButton = getElementWithinVideo(video, "playButton");
+  const scrubber = getElementWithinVideo(video, "scrubber");
+  const volumeControl = getElementWithinVideo(video, "volumeControl");
+  const muteButton = getElementWithinVideo(video, "muteButton");
+
+  // Setup video
+  tests.push(done => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["media.cache_size", 40000],
+      ["media.videocontrols.keyboard-tab-to-all-controls", true],
+    ]}, done);
+  }, done => {
+    video.src = "seek_with_sound.ogg";
+    video.addEventListener("loadedmetadata", done);
+  });
+
+  // Bug 1350191, video should not seek while changing volume by
+  // pressing up/down arrow key after clicking the scrubber.
+  tests.push(done => {
+    video.addEventListener("play", done, { once: true });
+    synthesizeMouseAtCenter(playButton, {});
+  }, done => {
+    video.addEventListener("seeked", done, { once: true });
+    synthesizeMouseAtCenter(scrubber, {});
+  }, done => {
+    let counter = 0;
+    let keys = ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowUp"];
+
+    const onSeeked = () => ok(false, "should not trigger seeked event");
+    video.addEventListener("seeked", onSeeked);
+    const onVolumeChange = () => {
+      if (++counter === keys.length) {
+        ok(true, "change volume by up/down arrow key without trigger 'seeked' event");
+        video.removeEventListener("seeked", onSeeked);
+        video.removeEventListener("volumechange", onVolumeChange);
+        done();
+      }
+
+      if (counter > keys.length) {
+        ok(false, "trigger too much volumechange events");
+      }
+    };
+    video.addEventListener("volumechange", onVolumeChange);
+
+    for (let key of keys) {
+      synthesizeKey(key);
+    }
+  });
+
+  // However, if the scrubber is *focused* (e.g. by keyboard), it should handle
+  // up/down arrow keys.
+  tests.push(done => {
+    info("Focusing the scrubber");
+    scrubber.focus();
+    video.addEventListener("seeked", () =>  {
+      ok(true, "DownArrow seeked the video");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowDown");
+  }, done => {
+    video.addEventListener("seeked", () =>  {
+      ok(true, "UpArrow seeked the video");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowUp");
+  });
+
+  // Similarly, if the volume control is focused, left/right arrows should
+  // adjust the volume.
+  tests.push(done => {
+    info("Focusing the volume control");
+    volumeControl.focus();
+    video.addEventListener("volumechange", () =>  {
+      ok(true, "LeftArrow changed the volume");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowLeft");
+  }, done => {
+    video.addEventListener("volumechange", () =>  {
+      ok(true, "RightArrow changed the volume");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowRight");
+  });
+
+  // If something other than a button has focus, space should pause/play.
+  tests.push(done => {
+    ok(volumeControl.matches(":focus"), "Volume control still has focus");
+    video.addEventListener("pause", () => {
+      ok(true, "Space paused the video");
+      done();
+    }, {once: true});
+    synthesizeKey(" ");
+  }, done => {
+    video.addEventListener("play", () => {
+      ok(true, "Space played the video");
+      done();
+    }, {once: true});
+    synthesizeKey(" ");
+  });
+
+  // If a button has focus, space should activate it, *not* pause/play.
+  tests.push(done => {
+    info("Focusing the mute button");
+    muteButton.focus();
+    const onPause = () => ok(false, "Shouldn't pause the video");
+    video.addEventListener("pause", onPause);
+    let volChanges = 0;
+    const onVolChange = () => {
+      if (++volChanges == 2) {
+        ok(true, "Space twice muted then unmuted the video");
+        video.removeEventListener("pause", onPause);
+        video.removeEventListener("volumechange", onVolChange);
+        done();
+      }
+    };
+    video.addEventListener("volumechange", onVolChange);
+    // Press space twice. The first time should mute, the second should unmute.
+    synthesizeKey(" ");
+    synthesizeKey(" ");
+  });
+
+  tests.push(SimpleTest.finish);
+
+  window.addEventListener("load", executeTests);
+</script>
+</pre>
+</body>
+</html>

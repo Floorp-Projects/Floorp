@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test accessible delayed removal</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    .gentext:before {
+      content: "START"
+    }
+    .gentext:after {
+      content: "END"
+    }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+
+    async function hideDivFromInsideSpan() {
+      let msg = "hideDivFromInsideSpan";
+      info(msg);
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, "div1"], [EVENT_REORDER, "span1"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("div1").style.display = "none";
+      await events;
+
+      testAccessibleTree("c1", { SECTION: [ { REGION: [] }, ] });
+    }
+
+    async function showDivFromInsideSpan() {
+      let msg = "showDivFromInsideSpan";
+      info(msg);
+      let events = waitForOrderedEvents(
+        [[EVENT_SHOW, "div2"], [EVENT_REORDER, "span2"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("div2").style.display = "block";
+      await events;
+
+      testAccessibleTree("c2",
+        { SECTION: [ { REGION: [{ SECTION: [ { TEXT_LEAF: [] } ] }] }, ] });
+    }
+
+    async function removeDivFromInsideSpan() {
+      let msg = "removeDivFromInsideSpan";
+      info(msg);
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, getNode("div3")], [EVENT_REORDER, "span3"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("div3").remove();
+      await events;
+
+      testAccessibleTree("c3", { SECTION: [ { REGION: [] }, ] });
+    }
+
+    // Test to see that generated content is inserted
+    async function addCSSGeneratedContent() {
+      let msg = "addCSSGeneratedContent";
+      let c4_child = getAccessible("c4_child");
+      info(msg);
+      let events = waitForOrderedEvents([
+        [EVENT_SHOW, evt => evt.accessible == c4_child.firstChild],
+        [EVENT_SHOW, evt => evt.accessible == c4_child.lastChild],
+        [EVENT_REORDER, c4_child]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("c4_child").classList.add('gentext');
+      await events;
+
+      testAccessibleTree("c4", { SECTION: [ // container
+            { SECTION: [ // inserted node
+              { STATICTEXT: [] }, // :before
+              { TEXT_LEAF: [] }, // primary text
+              { STATICTEXT: [] }, // :after
+            ] },
+          ] });
+    }
+
+    // Test to see that generated content gets removed
+    async function removeCSSGeneratedContent() {
+      let msg = "removeCSSGeneratedContent";
+      let c5_child = getAccessible("c5_child");
+      info(msg);
+      let events = waitForEvents([
+        [EVENT_HIDE, c5_child.firstChild],
+        [EVENT_HIDE, c5_child.lastChild],
+        [EVENT_REORDER, c5_child]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("c5_child").classList.remove('gentext');
+      await events;
+
+      testAccessibleTree("c5",{ SECTION: [ // container
+            { SECTION: [ // inserted node
+              { TEXT_LEAF: [] }, // primary text
+            ] },
+          ] });
+    }
+
+    // Test to see that a non-accessible intermediate container gets its accessible
+    // descendants removed and inserted correctly.
+    async function intermediateNonAccessibleContainers() {
+      let msg = "intermediateNonAccessibleContainers";
+      info(msg);
+
+      testAccessibleTree("c6",{ SECTION: [
+            { SECTION: [
+              { role: ROLE_PUSHBUTTON, name: "Hello" },
+            ] },
+          ] });
+
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, "b1"], [EVENT_SHOW, "b2"], [EVENT_REORDER, "scrollarea"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("scrollarea").style.overflow = "auto";
+      document.querySelector("#scrollarea > div > div:first-child").style.display = "none";
+      document.querySelector("#scrollarea > div > div:last-child").style.display = "block";
+      await events;
+
+      testAccessibleTree("c6",{ SECTION: [
+            { SECTION: [
+              { role: ROLE_PUSHBUTTON, name: "Goodbye" },
+            ] },
+          ] });
+    }
+
+    // Test to see that the button gets reparented into the new accessible container.
+    async function intermediateNonAccessibleContainerBecomesAccessible() {
+      let msg = "intermediateNonAccessibleContainerBecomesAccessible";
+      info(msg);
+
+      testAccessibleTree("c7",{ SECTION: [
+        { role: ROLE_PUSHBUTTON, name: "Hello" },
+        { TEXT_LEAF: [] }
+      ] });
+
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, "b3"],
+          // b3 show event coalesced into its new container
+         [EVENT_SHOW, evt => evt.DOMNode.classList.contains('intermediate')],
+         [EVENT_REORDER, "c7"]], msg);
+      document.body.offsetTop; // Flush layout.
+      document.querySelector("#c7 > div").style.display = "block";
+      await events;
+
+      testAccessibleTree("c7",{ SECTION: [
+        { SECTION: [ { role: ROLE_PUSHBUTTON, name: "Hello" } ] }
+      ] });
+    }
+
+    // Test to ensure that relocated accessibles are removed when a DOM
+    // ancestor is hidden.
+    async function removeRelocatedWhenDomAncestorHidden() {
+      info("removeRelocatedWhenDomAncestorHidden");
+
+      testAccessibleTree("c8",{ SECTION: [
+        { EDITCOMBOBOX: [ // c8_owner
+          { COMBOBOX_LIST: [] }, // c8_owned
+        ]},
+        { SECTION: [] }, // c8_owned_container
+      ] });
+
+      let events = waitForOrderedEvents([
+        [EVENT_HIDE, "c8_owned_container"],
+        [EVENT_HIDE, "c8_owned"],
+        [EVENT_REORDER, "c8"],
+      ], "removeRelocatedWhenDomAncestorHidden");
+      document.body.offsetTop; // Flush layout.
+      getNode("c8_owned_container").hidden = true;
+      await events;
+
+      testAccessibleTree("c8",{ SECTION: [
+        { EDITCOMBOBOX: [] }, // c8_owner
+      ] });
+    }
+
+    // Bug 1572829
+    async function removeShadowRootHost() {
+      info("removeShadowRootHost");
+      document.body.offsetTop; // Flush layout.
+
+      let event = waitForEvent(EVENT_REORDER, "c9", "removeShadowRootHost");
+      getNode("c9").firstElementChild.attachShadow({mode: "open"});
+      getNode("c9").firstElementChild.replaceWith("");
+
+      await event;
+    }
+
+    function listItemReframe() {
+      testAccessibleTree("li",{ LISTITEM: [
+        { LISTITEM_MARKER: [] },
+        { TEXT_LEAF: [] },
+      ] });
+
+      getNode("li").style.listStylePosition = "inside";
+      document.body.offsetTop; // Flush layout.
+      window.windowUtils.advanceTimeAndRefresh(100);
+
+      testAccessibleTree("li",{ LISTITEM: [
+        { LISTITEM_MARKER: [] },
+        { TEXT_LEAF: [] },
+      ] });
+
+      window.windowUtils.restoreNormalRefresh();
+    }
+
+    // Check to see that a reframed body gets its children pruned correctly.
+    async function bodyReframe(argument) {
+      // Load sub-document in iframe.
+      let event = waitForEvent(EVENT_REORDER, "iframe", "bodyReframe");
+      getNode("iframe").src =
+        `data:text/html,<div>Hello</div><div style="display: none">World</div>`;
+      await event;
+
+      // Initial tree should have one section leaf.
+      testAccessibleTree("c10",{ SECTION: [
+        { INTERNAL_FRAME: [
+          { DOCUMENT: [
+            { SECTION: [
+              { role: ROLE_TEXT_LEAF, name: "Hello" }
+            ] }
+          ]}
+        ] }
+      ] });
+
+
+      let iframeDoc = getNode("iframe").contentWindow.document;
+
+      // Trigger coalesced reframing. Both the body node and its children
+      // will need reframing.
+      event = waitForEvent(EVENT_REORDER, iframeDoc, "bodyReframe");
+      iframeDoc.body.style.display = "inline-block";
+      iframeDoc.querySelector("div:first-child").style.display = "none";
+      iframeDoc.querySelector("div:last-child").style.display = "block";
+
+      await event;
+
+      // Only the second section should be showing
+      testAccessibleTree("c10",{ SECTION: [
+        { INTERNAL_FRAME: [
+          { DOCUMENT: [
+            { SECTION: [
+              { role: ROLE_TEXT_LEAF, name: "World" }
+            ] }
+          ]}
+        ] }
+      ] });
+    }
+
+    // Ensure that embed elements recreate their Accessible if they started
+    // without an src and then an src is set later.
+    async function embedBecomesOuterDoc() {
+      let msg = "embedBecomesOuterDoc";
+      info(msg);
+
+      testAccessibleTree("c12", { SECTION: [
+        { TEXT: [] }
+      ] });
+
+      let events = waitForOrderedEvents([
+          [EVENT_HIDE, "embed"],
+          [EVENT_SHOW, "embed"],
+          [EVENT_REORDER, "c12"],
+        ], msg);
+      getNode("embed").src = "data:text/html,";
+      await events;
+
+      testAccessibleTree("c12", { SECTION: [
+        { INTERNAL_FRAME: [
+          { DOCUMENT: [] }
+        ] }
+      ] });
+    }
+
+    // Test that we get a text removed event when removing generated content from a button
+    async function testCSSGeneratedContentRemovedFromButton() {
+      let msg = "testCSSGeneratedContentRemovedFromButton";
+      info(msg);
+
+      testAccessibleTree("c13", { SECTION: [
+        { role: ROLE_PUSHBUTTON, name: "beforego",
+          children: [{ STATICTEXT: [] }, { TEXT_LEAF: [] }] }
+      ] });
+
+      let events = waitForOrderedEvents([
+          [EVENT_HIDE, evt => evt.accessible.name == "before"],
+          [EVENT_TEXT_REMOVED, evt => evt.accessible.role == ROLE_PUSHBUTTON],
+          [EVENT_SHOW, evt => evt.DOMNode.tagName == "HR"],
+          [EVENT_REORDER, "c13"],
+        ], msg);
+      getNode("b13").click();
+      await events;
+
+      testAccessibleTree("c13", { SECTION: [
+        { role: ROLE_PUSHBUTTON, name: "go",
+          children: [{ TEXT_LEAF: [] }] },
+        { SEPARATOR: [] }
+      ] });
+    }
+
+    // Slack seems to often restyle containers and change children
+    // simultaneously, this results in an insertion queue filled with
+    // redundant insertions and unparented nodes.
+    // This test duplicates some of this.
+    async function testSlack() {
+      let msg = "testSlack";
+      info(msg);
+
+      window.windowUtils.advanceTimeAndRefresh(100);
+      let event = waitForEvent(EVENT_REORDER, "c14", "testSlack");
+
+      let keyContainer = document.querySelector("#c14 .intermediate");
+      keyContainer.style.display = "inline-block";
+      document.body.offsetTop; // Flush layout.
+
+      let one = document.querySelector("#c14 [aria-label='one']");
+      let three = document.querySelector("#c14 [aria-label='three']");
+      one.remove();
+      three.remove();
+      // insert one first
+      keyContainer.firstChild.before(one.cloneNode());
+      // insert three last
+      keyContainer.lastChild.after(three.cloneNode());
+
+      keyContainer.style.display = "flex";
+      document.body.offsetTop; // Flush layout.
+
+      window.windowUtils.restoreNormalRefresh();
+
+      await event;
+
+      is(getAccessible("c14").name, "one two three", "subtree has correct order");
+    }
+
+    // Ensure that a node is removed when visibility: hidden is set but the
+    // layout frame is reconstructed; e.g. because of position: fixed. Also
+    // ensure that visible children aren't clobbered.
+    async function visibilityHiddenWithReframe() {
+      let msg = "visibilityHiddenWithReframe";
+      info(msg);
+
+      testAccessibleTree("c15", { SECTION: [ // c15
+        { SECTION: [ // c15_inner
+          { TEXT_LEAF: [] }, // Text
+          { PARAGRAPH: [
+            { TEXT_LEAF: [] } // Para
+          ] },
+          { HEADING: [ // c15_visible
+            { TEXT_LEAF: [] } // Visible
+          ] }, // c15_visible
+        ] } // c15_inner
+      ] });
+
+      let events = waitForOrderedEvents([
+          [EVENT_HIDE, "c15_inner"],
+          [EVENT_SHOW, "c15_visible"],
+          [EVENT_REORDER, "c15"],
+        ], msg);
+      getNode("c15_inner").style = "visibility: hidden; position: fixed;";
+      await events;
+
+      testAccessibleTree("c15", { SECTION: [ // c15
+        { HEADING: [ // c15_visible
+          { TEXT_LEAF: [] } // Visible
+        ] }, // c15_visible
+      ] });
+    }
+
+    async function doTest() {
+      await hideDivFromInsideSpan();
+
+      await showDivFromInsideSpan();
+
+      await removeDivFromInsideSpan();
+
+      await addCSSGeneratedContent();
+
+      await removeCSSGeneratedContent();
+
+      await intermediateNonAccessibleContainers();
+
+      await intermediateNonAccessibleContainerBecomesAccessible();
+
+      await removeRelocatedWhenDomAncestorHidden();
+
+      await removeShadowRootHost();
+
+      listItemReframe();
+
+      await bodyReframe();
+
+      await embedBecomesOuterDoc();
+
+      await testCSSGeneratedContentRemovedFromButton();
+
+      await testSlack();
+
+      await visibilityHiddenWithReframe();
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1">
+    <span role="region" id="span1" aria-label="region"><div id="div1">hello</div></span>
+  </div>
+
+  <div id="c2">
+    <span role="region" id="span2" aria-label="region"><div id="div2" style="display: none">hello</div></span>
+  </div>
+
+  <div id="c3">
+    <span role="region" id="span3" aria-label="region"><div id="div3">hello</div></span>
+  </div>
+
+  <div id="c4"><div id="c4_child">text</div></div>
+
+  <div id="c5"><div id="c5_child" class="gentext">text</div></div>
+
+  <div id="c6">
+    <div id="scrollarea" style="overflow:hidden;">
+      <div><div role="none"><button id="b1">Hello</button></div><div role="none" style="display: none"><button id="b2">Goodbye</button></div></div>
+    </div>
+  </div>
+
+  <div id="c7">
+    <div style="display: inline;" class="intermediate">
+      <button id="b3">Hello</button>
+    </div>
+  </div>
+
+  <div id="c8">
+    <div id="c8_owner" role="combobox" aria-owns="c8_owned"></div>
+    <div id="c8_owned_container">
+      <div id="c8_owned" role="listbox"></div>
+    </div>
+  </div>
+
+  <div id="c9">
+    <div><dir>a</dir></div>
+  </div>
+
+  <div id="c11">
+    <ul>
+        <li id="li">Test</li>
+    </ul>
+  </div>
+
+  <div id="c12"><embed id="embed"></embed></div>
+
+  <div id="c10">
+    <iframe id="iframe"></iframe>
+  </div>
+
+  <div id="c13">
+    <style>
+    .before::before { content: 'before' }
+    </style>
+    <button id="b13" class="before" onclick="this.className = ''; this.insertAdjacentElement('afterend', document.createElement('hr'))">go</button>
+  </div>
+
+  <div role="heading" id="c14" data-qa="virtual-list-item">
+    <div class="intermediate">
+      <div role="img" aria-label="one"></div> two <div role="img"
+        aria-label="three"></div>
+    </div>
+  </div>
+
+  <div id="c15"><div id="c15_inner">
+    Text
+    <p>Para</p>
+    <h1 id="c15_visible" style="visibility: visible;">Visible</h1>
+  </div></div>
+
+  <div id="eventdump"></div>
+</body>
+</html>

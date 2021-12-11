@@ -1,0 +1,9 @@
+[package]
+name = "jsparagus-stencil"
+version = "0.1.0"
+authors = ["The jsparagus Project Developers"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+jsparagus-ast = { path = "../ast" }

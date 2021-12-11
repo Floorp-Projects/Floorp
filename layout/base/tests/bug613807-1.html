@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<textarea id="t" rows="4" style="-moz-appearance: none"></textarea>
+<script>
+  if (typeof(addLoadEvent) == 'undefined') {
+    _newCallStack = function(path) {
+      var rval = function () {
+        var callStack = arguments.callee.callStack;
+        for (var i = 0; i < callStack.length; i++) {
+          if (callStack[i].apply(this, arguments) === false) {
+            break;
+          }
+        }
+        try {
+          this[path] = null;
+        } catch (e) {
+          // pass
+        }
+      };
+      rval.callStack = [];
+      return rval;
+    };
+    function addLoadEvent(func) {
+      var existing = window.onload;
+      var regfunc = existing;
+      if (!(typeof(existing) == 'function'
+            && typeof(existing.callStack) == "object"
+            && existing.callStack !== null)) {
+        regfunc = _newCallStack("onload");
+        if (typeof(existing) == 'function') {
+          regfunc.callStack.push(existing);
+        }
+        window.onload = regfunc;
+      }
+      regfunc.callStack.push(func);
+    };
+  }
+
+  addLoadEvent(function() {
+    var area = document.getElementById('t');
+    area.focus();
+
+    var domWindowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+    // input raw characters
+    synthesizeCompositionChange(
+      { composition:
+        { string: "\u306D",
+          clauses: [
+            { length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }
+          ]
+        },
+        caret: { start: 1, length: 0 }
+      });
+    synthesizeCompositionChange(
+      { composition:
+        { string: "\u306D\u3053",
+          clauses: [
+            { length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }
+          ]
+        },
+        caret: { start: 2, length: 0 }
+      });
+
+    // convert
+    synthesizeCompositionChange(
+      { composition:
+        { string: "\u732B",
+          clauses: [
+            { length: 1, attr: COMPOSITION_ATTR_SELECTED_CLAUSE }
+          ]
+        },
+        caret: { start: 1, length: 0 }
+      });
+
+    // commit
+    synthesizeComposition({ type: "compositioncommitasis" });
+
+    document.body.clientWidth;
+
+    // undo
+    synthesizeKey("Z", {accelKey: true});
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+createHTML({
+  title: "Test that the audio constraints that observe at the audio constraints we expect.",
+  bug: "1509842"
+});
+
+runTest(async () => {
+  // We need a real device to get a MediaEngine supporting constraints
+  let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!audioDevice) {
+    todo(false, "No device set by framework. Try --use-test-media-devices");
+    return;
+  }
+
+  // Get a gUM track with the default settings, check that they are what we
+  // expect.
+  let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  let track = stream.getAudioTracks()[0];
+  let defaultSettings = track.getSettings();
+
+  is(defaultSettings.echoCancellation, true,
+      "Echo cancellation should be ON by default.");
+  is(defaultSettings.noiseSuppression, true,
+      "Noise suppression should be ON by default.");
+  is(defaultSettings.autoGainControl, true,
+      "Automatic gain control should be ON by default.");
+
+  track.stop();
+
+  // This is UA-dependant, and belongs in a Mochitest, not in a WPT.
+  // When a gUM track has been requested with `echoCancellation` OFF, check that
+  // `noiseSuppression` and `autoGainControl` are off as well.
+  stream =
+    await navigator.mediaDevices.getUserMedia({audio:{echoCancellation: false}});
+  track = stream.getAudioTracks()[0];
+  defaultSettings = track.getSettings();
+
+  is(defaultSettings.echoCancellation, false,
+      "Echo cancellation should be OFF when requested.");
+  is(defaultSettings.noiseSuppression, false,
+      `Noise suppression should be OFF when echoCancellation is the only
+      constraint and is OFF.`);
+  is(defaultSettings.autoGainControl, false,
+      `Automatic gain control should be OFF when echoCancellation is the only
+      constraint and is OFF.`);
+
+  track.stop();
+
+  // When a gUM track has been requested with `echoCancellation` OFF, check that
+  // `noiseSuppression` and `autoGainControl` are not OFF as well if another
+  // constraint has been specified.
+  stream =
+    await navigator.mediaDevices.getUserMedia({audio:{echoCancellation: false,
+                                                      autoGainControl: true}});
+  track = stream.getAudioTracks()[0];
+  defaultSettings = track.getSettings();
+
+  is(defaultSettings.echoCancellation, false,
+      "Echo cancellation should be OFF when requested.");
+  is(defaultSettings.noiseSuppression, false,
+      `Noise suppression should be OFF when echoCancellation is OFF and another
+      constraint has been specified.`);
+  is(defaultSettings.autoGainControl, true,
+      "Auto gain control should be ON when requested.");
+
+  track.stop();
+});
+</script>
+</pre>
+</body>
+</html>

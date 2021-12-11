@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSS Test: Dynamic ::before and ::after generation by a style attribute</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<link rel="match" href="generated-content-inherit-001-ref.html">
+<link rel="help" href="https://drafts.csswg.org/css-pseudo/#generated-content">
+<meta name="flags" content="">
+<meta name="assert" content="Tests that changes to the style attribute of an element properly generate generated content">
+<!--
+  TODO(emilio): upstream this to WPT once
+  https://github.com/w3c/csswg-drafts/issues/1757 is resolved
+-->
+<style>
+.first::before, .second::after {
+  content: inherit;
+}
+</style>
+<p>Test passes if you see two PASS lines below:</p>
+<div class="first">SS</div>
+<div class="second">PA</div>
+<script>
+document.body.offsetTop;
+document.querySelector(".first").style.content = "\"PA\"";
+document.querySelector(".second").style.content = "\"SS\"";
+</script>

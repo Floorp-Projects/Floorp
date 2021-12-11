@@ -1,0 +1,18 @@
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-official-branding
+ac_add_options --disable-nodejs
+
+. "$topsrcdir/build/mozconfig.no-compile"
+
+if test `uname -m` = "x86_64"; then
+  ac_add_options --target=i686-pc-linux
+  ac_add_options --host=i686-pc-linux
+fi
+
+export MOZILLA_OFFICIAL=1
+
+# Don't autoclobber l10n, as this can lead to missing binaries and broken builds
+# Bug 1283438
+mk_add_options AUTOCLOBBER=
+
+. "$topsrcdir/build/mozconfig.common.override"

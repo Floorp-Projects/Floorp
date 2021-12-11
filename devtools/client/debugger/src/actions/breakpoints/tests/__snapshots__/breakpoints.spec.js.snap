@@ -1,0 +1,135 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`breakpoints should add a breakpoint 1`] = `
+Array [
+  Object {
+    "breakpoints": Array [
+      Object {
+        "astLocation": Object {
+          "index": 0,
+          "name": undefined,
+          "offset": Object {
+            "column": 1,
+            "line": 2,
+            "sourceId": "a",
+            "sourceUrl": "http://localhost:8000/examples/a",
+          },
+        },
+        "disabled": false,
+        "generatedLocation": Object {
+          "column": 1,
+          "line": 2,
+          "sourceId": "a",
+          "sourceUrl": "http://localhost:8000/examples/a",
+        },
+        "id": "a:2:1",
+        "location": Object {
+          "column": 1,
+          "line": 2,
+          "sourceId": "a",
+          "sourceUrl": "http://localhost:8000/examples/a",
+        },
+        "options": Object {},
+        "originalText": "return a",
+        "text": "return a",
+      },
+    ],
+    "source": Object {
+      "extensionName": null,
+      "id": "a",
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isOriginal": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "/examples/a",
+      "url": "http://localhost:8000/examples/a",
+    },
+  },
+]
+`;
+
+exports[`breakpoints should not re-add a breakpoint 1`] = `Array []`;
+
+exports[`breakpoints should not show a breakpoint that does not have text 1`] = `Array []`;
+
+exports[`breakpoints should not show a breakpoint that does not have text 2`] = `Array []`;
+
+exports[`breakpoints should remap breakpoints on pretty print 1`] = `
+Object {
+  "astLocation": Object {
+    "index": 0,
+    "name": "a",
+    "offset": Object {
+      "column": undefined,
+      "line": 0,
+    },
+  },
+  "disabled": false,
+  "generatedLocation": Object {
+    "column": 0,
+    "line": 1,
+    "sourceId": "a.js",
+    "sourceUrl": "http://localhost:8000/examples/a.js",
+  },
+  "id": "a.js/originalSource-d6d70368d5c252598541e693a7ad6c27:1:",
+  "location": Object {
+    "column": 0,
+    "line": 1,
+    "sourceId": "a.js/originalSource-d6d70368d5c252598541e693a7ad6c27",
+    "sourceUrl": "http://localhost:8000/examples/a.js:formatted",
+  },
+  "options": Object {},
+  "originalText": "function a() {",
+  "text": "function a() {",
+}
+`;
+
+exports[`breakpoints should show a disabled breakpoint that does not have text 1`] = `
+Array [
+  Object {
+    "breakpoints": Array [
+      Object {
+        "astLocation": Object {
+          "index": 0,
+          "name": undefined,
+          "offset": Object {
+            "column": 1,
+            "line": 5,
+            "sourceId": "a",
+            "sourceUrl": "http://localhost:8000/examples/a",
+          },
+        },
+        "disabled": true,
+        "generatedLocation": Object {
+          "column": 1,
+          "line": 5,
+          "sourceId": "a",
+          "sourceUrl": "http://localhost:8000/examples/a",
+        },
+        "id": "a:5:1",
+        "location": Object {
+          "column": 1,
+          "line": 5,
+          "sourceId": "a",
+          "sourceUrl": "http://localhost:8000/examples/a",
+        },
+        "options": Object {},
+        "originalText": "",
+        "text": "",
+      },
+    ],
+    "source": Object {
+      "extensionName": null,
+      "id": "a",
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isOriginal": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "/examples/a",
+      "url": "http://localhost:8000/examples/a",
+    },
+  },
+]
+`;

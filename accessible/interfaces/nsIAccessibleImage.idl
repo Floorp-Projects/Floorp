@@ -1,0 +1,31 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(09086623-0f09-4310-ac56-c2cda7c29648)]
+interface nsIAccessibleImage : nsISupports
+{
+  /**
+   * Returns the coordinates of the image.
+   *
+   * @param coordType  specifies coordinates origin (for available constants
+   *                   refer to nsIAccessibleCoordinateType)
+   * @param x          the x coordinate
+   * @param y          the y coordinate
+   */
+  void getImagePosition(in unsigned long coordType,
+                        out long x,
+                        out long y);
+
+  /**
+   * Returns the size of the image.
+   *
+   * @param width      the heigth
+   * @param height     the width
+   */
+  void getImageSize(out long width, out long height);
+};
+

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>
+    Crashtest to make sure that a sync XHR during pageload doesn't prevent
+    pagehide event from firing.
+  </title>
+  <script>
+    function finishTest() {
+      // Visual indication that we got this far, for humans viewing the test:
+      document.documentElement.style.backgroundColor = "lime";
+
+      // Actually finish the test:
+      document.documentElement.className = "";
+    }
+  </script>
+</head>
+<body>
+  <iframe src="xhr-with-pagehide-1-helper.html"></iframe>
+</body>
+</html>

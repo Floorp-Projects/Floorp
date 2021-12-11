@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=450160
+-->
+<head>
+  <title>Test for Bug 450160</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450160">Mozilla Bug 450160</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 450160 **/
+
+
+function testHTMLDocument() {
+  var doc = document.implementation.createHTMLDocument();
+  ok(!!doc.documentElement, "Document should have document element!");
+  ok(!!doc.body, "Should have .body!");
+  ok(doc instanceof HTMLDocument,
+     "Document should be an HTML document!");
+}
+
+function testSVGDocument() {
+  var docType1 =
+      document.implementation.createDocumentType("svg",
+                                                 "-//W3C//DTD SVG 1.1//EN",
+                                                 null);
+  ok(docType1, "No doctype?");
+  ok(docType1.ownerDocument, "docType should have ownerDocument!");
+  var doc1 = document.implementation.createDocument(null, null, docType1);
+  is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
+  ok(!doc1.documentElement, "Document shouldn't have document element!");
+  ok(!(doc1 instanceof HTMLDocument),
+     "Document shouldn't be an HTML document!");
+  ok(doc1 instanceof XMLDocument,
+     "Document should be an XML document!");
+
+  // SVG documents have .documentElement.
+  ok("documentElement" in doc1, "No .documentElement in document");
+
+  var docType2 =
+      document.implementation.createDocumentType("svg",
+                                                 "-//W3C//DTD SVG 1.1//EN",
+                                                 null);
+  var doc2 = document.implementation.createDocument("http://www.w3.org/2000/svg",
+                                                    "svg", docType2);
+  ok(doc2.documentElement, "Document should have document element!");
+  is(doc2.documentElement.localName, "svg", "Wrong .documentElement!");
+}
+
+function testFooBarDocument() {
+  var docType1 =
+      document.implementation.createDocumentType("FooBar", "FooBar", null);
+  ok(docType1, "No doctype?");
+  ok(docType1.ownerDocument, "docType should have ownerDocument!");
+  var doc1 = document.implementation.createDocument(null, null, docType1);
+  is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
+  ok(!doc1.documentElement, "Document shouldn't have document element!");
+  ok(!(doc1 instanceof HTMLDocument),
+     "Document shouldn't be an HTML document!");
+
+  var docType2 =
+      document.implementation.createDocumentType("FooBar", "FooBar", null);
+  var doc2 = document.implementation.createDocument("FooBarNS",
+                                                    "FooBar", docType2);
+  ok(doc2.documentElement, "Document should have document element!");
+  is(doc2.documentElement.namespaceURI, "FooBarNS", "Wrong namespaceURI!");
+  is(doc2.documentElement.localName, "FooBar", "Wrong localName!");
+}
+
+function testNullDocTypeDocument() {
+  var doc1 = document.implementation.createDocument(null, null, null);
+  ok(!doc1.documentElement, "Document shouldn't have document element!");
+  ok(!(doc1 instanceof HTMLDocument),
+     "Document shouldn't be an HTML document!");
+
+  var doc2 = document.implementation.createDocument("FooBarNS",
+                                                    "FooBar", null);
+  ok(doc2.documentElement, "Document should have document element!");
+  is(doc2.documentElement.namespaceURI, "FooBarNS", "Wrong namespaceURI!");
+  is(doc2.documentElement.localName, "FooBar", "Wrong localName!");
+}
+
+testHTMLDocument();
+testSVGDocument();
+testFooBarDocument();
+testNullDocTypeDocument();
+
+</script>
+</pre>
+</body>
+</html>

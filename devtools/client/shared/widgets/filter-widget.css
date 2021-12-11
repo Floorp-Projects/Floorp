@@ -1,0 +1,242 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Main container: Displays the filters and presets in 2 columns */
+
+#filter-container {
+  width: 510px;
+  height: 200px;
+  display: flex;
+  position: relative;
+  padding: 5px;
+  box-sizing: border-box;
+  /* when opened in a xul:panel, a gray color is applied to text */
+  color: var(--theme-body-color);
+}
+
+#filter-container.dragging {
+  user-select: none;
+}
+
+#filter-container .filters-list,
+#filter-container .presets-list {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+#filter-container .filters-list {
+  /* Allow the filters list to take the full width when the presets list is
+     hidden */
+  flex-grow: 1;
+  padding: 0 6px;
+}
+
+#filter-container .presets-list {
+  /* Make sure that when the presets list is shown, it has a fixed width */
+  width: 200px;
+  padding-left: 6px;
+  transition: width .1s;
+  flex-shrink: 0;
+  border-left: 1px solid var(--theme-splitter-color);
+}
+
+#filter-container:not(.show-presets) .presets-list {
+  width: 0;
+  border-left: none;
+  padding-left: 0;
+  /* To hide also element's children, not on only the element */
+  overflow: hidden;
+}
+
+#filter-container.show-presets .filters-list {
+  width: 300px;
+}
+
+/* The list of filters and list of presets should push their footers to the
+   bottom, so they can take as much space as there is */
+
+#filter-container #filters,
+#filter-container #presets {
+  flex-grow: 1;
+  /* Avoid pushing below the tooltip's area */
+  overflow-y: auto;
+}
+
+/* The filters and presets list both have footers displayed at the bottom.
+   These footers have some input (taking up as much space as possible) and an
+   add button next */
+
+#filter-container .footer {
+  display: flex;
+  margin: 10px 3px;
+  align-items: center;
+}
+
+#filter-container .footer :not(button) {
+  flex-grow: 1;
+  margin-right: 3px;
+}
+
+/* Styles for 1 filter function item */
+
+#filter-container .filter,
+#filter-container .filter-name,
+#filter-container .filter-value {
+  display: flex;
+  align-items: center;
+}
+
+#filter-container .filter {
+  margin: 5px 0;
+}
+
+#filter-container .filter-name {
+  width: 120px;
+  margin-right: 10px;
+}
+
+#filter-container .filter-name label {
+  user-select: none;
+  flex-grow: 1;
+}
+
+#filter-container .filter-name label.devtools-draglabel {
+  cursor: ew-resize;
+}
+
+/* drag/drop handle */
+
+#filter-container .filter-name i {
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  cursor: grab;
+  background: linear-gradient(to bottom,
+                              currentColor 0,
+                              currentcolor 1px,
+                              transparent 1px,
+                              transparent 2px);
+  background-repeat: repeat-y;
+  background-size: auto 4px;
+  background-position: 0 1px;
+}
+
+#filter-container .filter-value {
+  min-width: 150px;
+  margin-right: 10px;
+  flex: 1;
+}
+
+#filter-container .filter-value input {
+  flex-grow: 1;
+}
+
+/* Fix the size of inputs */
+/* Especially needed on Linux where input are bigger */
+#filter-container input {
+  width: 8em;
+}
+
+#filter-container .preset {
+  display: flex;
+  margin-bottom: 10px;
+  cursor: pointer;
+  padding: 3px 5px;
+
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+#filter-container .preset label,
+#filter-container .preset span {
+  display: flex;
+  align-items: center;
+}
+
+#filter-container .preset label {
+  flex: 1 0;
+  cursor: pointer;
+  color: var(--theme-body-color);
+}
+
+#filter-container .preset:hover {
+  background: var(--theme-selection-background);
+}
+
+#filter-container .preset:hover label,
+#filter-container .preset:hover span {
+  color: var(--theme-selection-color);
+}
+
+#filter-container .preset .remove-button {
+  order: 2;
+}
+
+#filter-container .preset span {
+  flex: 2 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  order: 3;
+  color: var(--theme-text-color-alt);
+}
+
+#filter-container .remove-button {
+  width: 16px;
+  height: 16px;
+  background: url(chrome://devtools/skin/images/close.svg);
+  background-size: cover;
+  font-size: 0;
+  border: none;
+  cursor: pointer;
+}
+
+#filter-container .hidden {
+  display: none !important;
+}
+
+#filter-container .dragging {
+  position: relative;
+  z-index: 10;
+  cursor: grab;
+}
+
+/* message shown when there's no filter specified */
+#filter-container p {
+  text-align: center;
+  line-height: 20px;
+}
+
+#filter-container .add,
+#toggle-presets {
+  background-size: cover;
+  border: none;
+  width: 16px;
+  height: 16px;
+  font-size: 0;
+  vertical-align: middle;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+#filter-container .add {
+  background: url(chrome://devtools/skin/images/add.svg);
+}
+
+#toggle-presets {
+  background: url(chrome://devtools/skin/images/pseudo-class.svg);
+}
+
+#filter-container .add,
+#filter-container .remove-button,
+#toggle-presets {
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
+}
+
+.show-presets #toggle-presets {
+  fill: var(--theme-icon-checked-color);
+}

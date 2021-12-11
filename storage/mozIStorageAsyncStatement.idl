@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozIStorageBaseStatement.idl"
+
+/**
+ * An asynchronous SQL statement.  This differs from mozIStorageStatement by
+ * only being usable for asynchronous execution.  (mozIStorageStatement can
+ * be used for both synchronous and asynchronous purposes.)  This specialization
+ * for asynchronous operation allows us to avoid needing to acquire
+ * synchronization primitives also used by the asynchronous execution thread.
+ * In contrast, mozIStorageStatement may need to acquire the primitives and
+ * consequently can cause the main thread to lock for extended intervals while
+ * the asynchronous thread performs some long-running operation.
+ */
+[scriptable, builtinclass, uuid(52e49370-3b2e-4a27-a3fc-79e20ad4056b)]
+interface mozIStorageAsyncStatement : mozIStorageBaseStatement {
+  /*
+   * 'params' provides a magic JS helper that lets you assign parameters by
+   * name.  Unlike the helper on mozIStorageStatement, you cannot enumerate
+   * in order to find out what parameters are legal.
+   *
+   * This does not work for BLOBs.  You must use an explicit binding API for
+   * that.
+   *
+   * example:
+   *  stmt.params.foo = 1;
+   *  stmt.params["bar"] = 2;
+   *  let argName = "baz";
+   *  stmt.params[argName] = 3;
+   *
+   * readonly attribute nsIMagic params;
+   */
+};

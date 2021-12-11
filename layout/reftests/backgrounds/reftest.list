@@ -1,0 +1,184 @@
+include vector/reftest.list
+
+== layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
+== layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
+== layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
+== layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
+== layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
+fuzzy(0-1,0-5000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
+fuzzy(0-1,0-5000) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
+fuzzy(0-1,0-5000) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
+!= viewport-translucent-color-ref.html about:blank
+fuzzy(0-1,0-10000) == iframe-translucent-color-1.html iframe-translucent-color-ref.html
+fuzzy(0-1,0-1024) == translucent-color-1.html translucent-color-ref.html
+fuzzy(0-1,0-1024) == translucent-color-2.html translucent-color-ref.html
+fuzzy(0-1,0-1024) == translucent-color-3.html translucent-color-ref.html
+!= translucent-color-ref.html about:blank
+== root-element-display-none-1.html root-element-display-none-ref.html
+== continuous-inline-1a.html continuous-inline-1ab-ref.html
+== continuous-inline-1b.html continuous-inline-1ab-ref.html
+== continuous-inline-1c.html continuous-inline-1cd-ref.html
+== continuous-inline-1d.html continuous-inline-1cd-ref.html
+== continuous-inline-2a.html continuous-inline-2-ref.html
+== continuous-inline-2b.html continuous-inline-2-ref.html
+== continuous-inline-3.html continuous-inline-3-ref.html
+== continuous-inline-4a.html continuous-inline-4-ref.html
+== continuous-inline-4b.html continuous-inline-4-ref.html
+== continuous-inline-5a.html continuous-inline-5-ref.html
+== continuous-inline-5b.html continuous-inline-5-ref.html
+== background-redraw-237766.html background-redraw-237766-ref.html
+
+== background-clip-1.html background-clip-1-ref.html
+== background-clip-2.html background-clip-2-ref.html
+
+== background-position-1a.html background-position-1-ref.html
+== background-position-1b.html background-position-1-ref.html
+== background-position-1c.html background-position-1-ref.html
+== background-position-1d.html background-position-1-ref.html
+== background-position-1e.html background-position-1-ref.html
+== background-position-1f.html background-position-1-ref.html
+== background-position-2a.html background-position-2-ref.html
+== background-position-2b.html background-position-2-ref.html
+== background-position-2c.html background-position-2-ref.html
+== background-position-2d.html background-position-2-ref.html
+== background-position-3a.html background-position-3-ref.html
+== background-position-3b.html background-position-3-ref.html
+== background-position-3c.html background-position-3-ref.html
+== background-position-3d.html background-position-3-ref.html
+== background-position-4a.html background-position-4-ref.html
+== background-position-4b.html background-position-4-ref.html
+== background-position-4c.html background-position-4-ref.html
+== background-position-4d.html background-position-4-ref.html
+== background-position-4e.html background-position-4-ref.html
+== background-position-5.html background-position-5-ref.html
+== background-position-6a.html background-position-6-ref.html
+== background-position-6b.html background-position-6-ref.html
+== background-position-7.html background-position-7-ref.html
+== background-position-8.html background-position-8-ref.html
+
+== background-size-auto-auto.html background-size-auto-ref.html
+== background-size-auto.html background-size-auto-ref.html
+== background-size-contain.html background-size-contain-ref.html
+== background-size-cover.html background-size-cover-ref.html
+== background-size-auto-length.html background-size-auto-length-ref.html
+== background-size-length-auto.html background-size-auto-length-ref.html
+== background-size-length.html background-size-auto-length-ref.html
+== background-size-auto-percent.html background-size-auto-length-ref.html
+== background-size-percent-auto.html background-size-auto-length-ref.html
+== background-size-percent.html background-size-auto-length-ref.html
+== background-size-length-percent.html background-size-length-percent-ref.html
+== background-size-percent-length.html background-size-length-percent-ref.html
+== background-size-percent-percent.html background-size-percent-percent-ref.html
+== background-size-length-length.html background-size-length-length-ref.html
+== background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html
+
+== background-size-body-percent-percent.html background-size-body-percent-percent-ref.html
+== background-size-body-percent-percent-no-repeat.html background-size-body-percent-percent-ref.html
+== background-size-body-percent-percent-not-fixed.html background-size-body-percent-percent-ref.html
+== background-size-body-cover.html background-size-body-cover-ref.html
+== background-size-body-cover-no-repeat.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-single-not-fixed.html
+
+# relies on reftest window having greater height than width
+== background-size-body-contain.html background-size-body-cover-ref.html
+!= background-size-body-contain-no-repeat.html background-size-body-cover-ref.html
+!= background-size-body-contain-not-fixed.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-contain-not-fixed.html
+
+!= background-size-body-percent-percent-overflow.html background-size-body-percent-percent-overflow-ref.html
+
+fails-if(useDrawSnapshot) == background-size-zoom-no-repeat.html background-size-zoom-no-repeat-ref.html # drawSnapshot doesn't deal with zoom properly.
+
+== background-size-contain-clip-padding.html background-size-contain-clip-padding-ref.html
+== background-size-contain-clip-border.html background-size-contain-clip-border-ref.html
+== background-size-contain-position-fifty-fifty.html background-size-contain-position-fifty-fifty-ref.html
+== background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border-ref.html
+== background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding-ref.html
+
+== background-layers-1a.html background-layers-1-ref.html
+fuzzy-if(OSX,0-1,0-324) == background-layers-1b.html background-layers-1-ref.html
+
+# box-decoration-break's effect on backgrounds is touchy and hard to test due to stretching
+# artifacts and the difficulty of covering exact lines, so just make sure
+# background-size results in a different rendering when present.
+!= background-size-cover-slice.html background-size-slice.html
+!= background-size-cover-clone.html background-size-clone.html
+
+# ...and make sure each rendering with background-size is different from the
+# other
+!= background-size-cover-slice.html background-size-cover-clone.html
+
+random-if(OSX==1010) == background-size-monster-ch.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-cm.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-em.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-ex.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-inches.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-mm.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-pc.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-pt.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-px.html background-size-monster-ref.html # bug 1129300
+random-if(OSX==1010) == background-size-monster-rem.html background-size-monster-ref.html # bug 1129300
+
+fails-if(useDrawSnapshot) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html # drawSnapshot doesn't deal with zoom properly.
+
+# -moz-default-background-color and -moz-default-color (bug 591341)
+== background-moz-default-background-color.html background-moz-default-background-color-ref.html
+
+== fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
+fuzzy(0-2,0-83) == fixed-bg-border-radius.html fixed-bg-border-radius-ref.html
+
+HTTP == root-background-1.html root-background-ref.html
+HTTP != root-background-1.html about:blank
+
+== really-big-background.html really-big-background-ref.html
+== body-background.html body-background-ref.html
+== table-background.html table-background-ref.html
+!= div-background.html div-background-ref.html
+
+== background-repeat-1-ref.html background-repeat-1.html
+
+== multi-background-clip-content-border.html multi-background-clip-content-border-ref.html
+
+HTTP == background-referrer.html background-referrer-ref.html
+
+== attachment-scroll-positioning-1.html attachment-scroll-positioning-1-ref.html
+== attachment-local-positioning-1.html attachment-local-positioning-1-ref.html
+== attachment-local-positioning-2.html attachment-local-positioning-2-ref.html
+== attachment-local-positioning-3.html attachment-local-positioning-3-ref.html
+== attachment-local-positioning-4.html attachment-local-positioning-4-ref.html
+== attachment-local-positioning-5.html attachment-local-positioning-5-ref.html
+
+== attachment-local-clipping-color-1.html attachment-local-clipping-color-1-ref.html
+== attachment-local-clipping-color-2.html attachment-local-clipping-color-1-ref.html  # Same ref as the previous test.
+== attachment-local-clipping-color-3.html attachment-local-clipping-color-3-ref.html
+fuzzy(0-1,0-300) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
+fuzzy(0-1,0-400) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
+fuzzy(0-51,0-320) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
+
+== attachment-local-clipping-image-1.html attachment-local-clipping-image-1-ref.html
+== attachment-local-clipping-image-2.html attachment-local-clipping-image-1-ref.html  # Same ref as the previous test.
+== attachment-local-clipping-image-3.html attachment-local-clipping-image-3-ref.html
+# The next three tests are fuzzy due to bug 1128229.
+fuzzy(0-95,0-2206) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
+fuzzy(0-95,0-2206) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
+fuzzy(0-109,0-908) fuzzy-if(geckoview&&device,64-64,2010-2830) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
+
+fuzzy(0-1,0-84) == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
+fuzzy(0-11,0-49600) fails-if(useDrawSnapshot) == background-repeat-large-area.html background-repeat-large-area-ref.html # bug 1734383
+
+fuzzy(0-31,0-474) fails-if(useDrawSnapshot) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html # drawSnapshot doesn't deal with zoom properly
+
+skip-if(!cocoaWidget) == background-repeat-resampling.html background-repeat-resampling-ref.html
+
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1a.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1b.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1c.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1d.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1e.html background-clip-text-1-ref.html # Bug 1392106
+
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-2.html background-clip-text-2-ref.html # Bug 1392106
+
+random-if(Android) == background-clip-text-scale.html background-clip-text-scale-ref.html # bug 1733942
+!= background-clip-text-translate.html about:blank
+!= text-clip-and-stroke.html text-clip-and-no-stroke.html

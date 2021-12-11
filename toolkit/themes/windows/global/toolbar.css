@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== toolbar.css ====================================================
+  == Styles used by XUL toolbar-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+toolbox {
+  appearance: auto;
+  -moz-default-appearance: toolbox;
+}
+
+toolbar {
+  appearance: auto;
+  -moz-default-appearance: toolbar;
+  min-width: 1px;
+  min-height: 19px;
+}
+
+toolbar:first-child {
+  min-width: 1px;
+}
+
+toolbox:-moz-lwtheme,
+toolbar:-moz-lwtheme {
+  appearance: none;
+}
+
+toolbarseparator {
+  appearance: auto;
+  -moz-default-appearance: separator;
+}
+
+toolbarspacer {
+  width: 15px;
+}
+
+toolbarpaletteitem {
+  cursor: grab;
+}
+
+/* Drag and drop feedback */
+
+toolbarpaletteitem[place="toolbar"] {
+  margin-inline: -2px;
+  border-inline: 2px solid transparent;
+}
+
+toolbarpaletteitem[dragover="left"] {
+  border-left-color: #000000;
+}
+
+toolbarpaletteitem[dragover="right"] {
+  border-right-color: #000000;
+}

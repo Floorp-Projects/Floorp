@@ -1,0 +1,199 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SPHINX_TREES["/toolkit/components/glean"] = "docs"
+
+# Needed so that we can include IPC things.
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+EXPORTS.mozilla += [
+    "ipc/FOGIPC.h",
+]
+
+EXPORTS.mozilla.glean += [
+    "!GleanMetrics.h",
+    "!GleanPings.h",
+]
+
+EXPORTS.mozilla.glean.bindings += [
+    "!EventGIFFTMap.h",
+    "!GleanJSMetricsLookup.h",
+    "!GleanJSPingsLookup.h",
+    "!HistogramGIFFTMap.h",
+    "!ScalarGIFFTMap.h",
+    "bindings/Category.h",
+    "bindings/Glean.h",
+    "bindings/GleanPings.h",
+    "bindings/MetricTypes.h",
+    "bindings/private/Boolean.h",
+    "bindings/private/Common.h",
+    "bindings/private/Counter.h",
+    "bindings/private/CustomDistribution.h",
+    "bindings/private/Datetime.h",
+    "bindings/private/Denominator.h",
+    "bindings/private/DistributionData.h",
+    "bindings/private/Event.h",
+    "bindings/private/Labeled.h",
+    "bindings/private/MemoryDistribution.h",
+    "bindings/private/Numerator.h",
+    "bindings/private/Ping.h",
+    "bindings/private/Quantity.h",
+    "bindings/private/Rate.h",
+    "bindings/private/String.h",
+    "bindings/private/StringList.h",
+    "bindings/private/Timespan.h",
+    "bindings/private/TimingDistribution.h",
+    "bindings/private/Uuid.h",
+]
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    EXPORTS.mozilla.glean += [
+        "!fog_ffi_generated.h",
+    ]
+
+    CbindgenHeader("fog_ffi_generated.h", inputs=["/toolkit/components/glean"])
+
+UNIFIED_SOURCES += [
+    "bindings/Category.cpp",
+    "bindings/Glean.cpp",
+    "bindings/GleanPings.cpp",
+    "bindings/private/Boolean.cpp",
+    "bindings/private/Common.cpp",
+    "bindings/private/Counter.cpp",
+    "bindings/private/CustomDistribution.cpp",
+    "bindings/private/Datetime.cpp",
+    "bindings/private/Denominator.cpp",
+    "bindings/private/Event.cpp",
+    "bindings/private/Labeled.cpp",
+    "bindings/private/MemoryDistribution.cpp",
+    "bindings/private/Numerator.cpp",
+    "bindings/private/Ping.cpp",
+    "bindings/private/Quantity.cpp",
+    "bindings/private/Rate.cpp",
+    "bindings/private/String.cpp",
+    "bindings/private/StringList.cpp",
+    "bindings/private/Timespan.cpp",
+    "bindings/private/TimingDistribution.cpp",
+    "bindings/private/Uuid.cpp",
+    "ipc/FOGIPC.cpp",
+    "ipc/Support.cpp",
+]
+
+SOURCES += [
+    "!EventExtraGIFFTMaps.cpp",
+]
+
+# Provides us the list of dependent metrics|pings.yaml.
+include("metrics_index.py")
+# GeneratedFile's `inputs` are relative to our dir.
+# The yamls arrays are relative to topsrcdir, so we need to transform:
+metrics_yamls = ["../../../" + x for x in metrics_yamls]
+pings_yamls = ["../../../" + x for x in pings_yamls]
+# If you change the length of this deps list, update DEPS_LEN in run_glean_parser.py
+deps = [
+    "metrics_index.py",
+    "build_scripts/glean_parser_ext/cpp.py",
+    "build_scripts/glean_parser_ext/js.py",
+    "build_scripts/glean_parser_ext/run_glean_parser.py",
+    "build_scripts/glean_parser_ext/rust.py",
+    "build_scripts/glean_parser_ext/string_table.py",
+    "build_scripts/glean_parser_ext/util.py",
+    "build_scripts/glean_parser_ext/templates/cpp.jinja2",
+    "build_scripts/glean_parser_ext/templates/cpp_pings.jinja2",
+    "build_scripts/glean_parser_ext/templates/gifft.jinja2",
+    "build_scripts/glean_parser_ext/templates/gifft_events.jinja2",
+    "build_scripts/glean_parser_ext/templates/js.jinja2",
+    "build_scripts/glean_parser_ext/templates/js_pings.jinja2",
+    "build_scripts/glean_parser_ext/templates/rust.jinja2",
+    "build_scripts/glean_parser_ext/templates/rust_pings.jinja2",
+]
+
+GeneratedFile(
+    "api/src/metrics.rs",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    flags=[CONFIG["MOZ_APP_VERSION"]],
+    inputs=deps + metrics_yamls,
+)
+
+GeneratedFile(
+    "GleanMetrics.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="cpp_metrics",
+    flags=[CONFIG["MOZ_APP_VERSION"]],
+    inputs=deps + metrics_yamls,
+)
+
+GeneratedFile(
+    "GleanJSMetricsLookup.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="js_metrics",
+    flags=[CONFIG["MOZ_APP_VERSION"]],
+    inputs=deps + metrics_yamls,
+)
+
+GeneratedFile(
+    "api/src/pings.rs",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    flags=[CONFIG["MOZ_APP_VERSION"]],
+    inputs=deps + pings_yamls,
+)
+
+GeneratedFile(
+    "GleanPings.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="cpp_metrics",
+    flags=[CONFIG["MOZ_APP_VERSION"]],
+    inputs=deps + pings_yamls,
+)
+
+GeneratedFile(
+    "GleanJSPingsLookup.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="js_metrics",
+    flags=[CONFIG["MOZ_APP_VERSION"]],
+    inputs=deps + pings_yamls,
+)
+
+# Glean Interface For Firefox Telemetry Maps from Glean MetricId to Telemetry ProbeId
+# We split it one map per header to avoid unused function warnings on build.
+GeneratedFile(
+    "EventGIFFTMap.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="gifft_map",
+    flags=[CONFIG["MOZ_APP_VERSION"], "Event"],
+    inputs=deps + metrics_yamls,
+)
+
+GeneratedFile(
+    "HistogramGIFFTMap.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="gifft_map",
+    flags=[CONFIG["MOZ_APP_VERSION"], "Histogram"],
+    inputs=deps + metrics_yamls,
+)
+
+GeneratedFile(
+    "ScalarGIFFTMap.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="gifft_map",
+    flags=[CONFIG["MOZ_APP_VERSION"], "Scalar"],
+    inputs=deps + metrics_yamls,
+)
+
+DIRS += [
+    "tests",  # Must be in DIRS, not TEST_DIRS or python-test won't find it.
+    "xpcom",
+]
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+REQUIRES_UNIFIED_BUILD = True

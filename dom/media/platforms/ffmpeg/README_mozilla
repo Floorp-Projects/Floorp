@@ -1,0 +1,11 @@
+These headers are taken from Libav versions 0.8.9, 0.9 and 1.0.
+
+These headers are licensed under the GNU Lesser General Public License version
+2.1. For more information see the file COPYING.LGPLv2.1
+
+While the function ABIs of FFmpeg/Libav tend to be stable between even major
+versions, the class layouts can change considerably. This can lead to major
+crashes if we build against the wrong headers. We include these headers to make
+sure we have the same version every time we build, and to ease the pain of
+acquiring the correct libraries for a build, especially for those distributions
+who oppose distributing such packages.

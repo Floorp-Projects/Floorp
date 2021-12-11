@@ -1,0 +1,91 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIFile;
+interface nsIInterfaceRequestor;
+interface nsIArray;
+
+[scriptable, uuid(2e97e5dd-467b-4aea-a1bb-6773c0f2beb0)]
+interface nsIParentalControlsService : nsISupports
+{
+  /**
+   * Action types that can be blocked for users.
+   */
+  const short DOWNLOAD = 1; // Downloading files
+  const short INSTALL_EXTENSION = 2; // Installing extensions
+  const short INSTALL_APP = 3; // Installing webapps
+  const short BROWSE = 4; // Opening specific urls
+  const short SHARE = 5; // Sharing
+  const short BOOKMARK = 6; // Creating bookmarks
+  const short ADD_CONTACT = 7; // Add contacts to the system database
+  const short SET_IMAGE = 8; // Setting images as wall paper
+  const short MODIFY_ACCOUNTS = 9; // Modifying system accounts
+  const short REMOTE_DEBUGGING = 10; // Remote debugging
+  const short IMPORT_SETTINGS = 11; // Importing settings from other apps
+  const short PRIVATE_BROWSING = 12; // Disallow usage of private browsing
+  const short DATA_CHOICES = 13; // Choose whether or not to send usage information
+  const short CLEAR_HISTORY = 14; // Clear browsing history
+  const short MASTER_PASSWORD = 15; // Setting master password for logins
+  const short GUEST_BROWSING = 16; // Disallow usage of guest browsing
+  const short ADVANCED_SETTINGS = 17; // Advanced settings
+  const short CAMERA_MICROPHONE = 18; // Camera and microphone (WebRTC)
+  const short BLOCK_LIST = 19; // Block websites that include sensitive content
+  const short TELEMETRY = 20; // Submit telemetry data
+  const short HEALTH_REPORT = 21; // Submit FHR data
+  const short DEFAULT_THEME = 22; // Use default theme or a special parental controls theme
+
+  /**
+   * @returns true if the current user account has parental controls
+   * restrictions enabled.
+   */
+  readonly attribute boolean parentalControlsEnabled;
+
+  /**
+   * @returns true if the current user account parental controls
+   * restrictions include the blocking of all file downloads.
+   */
+  readonly attribute boolean blockFileDownloadsEnabled;
+
+  /**
+   * Check if the user can do the prescibed action for this uri.
+   *
+   * @param aAction             Action being performed
+   * @param aUri                The uri requesting this action
+   * @param aWindow             The window generating this event.
+   */
+   boolean isAllowed(in short aAction, [optional] in nsIURI aUri);
+
+  /**
+   * @returns true if the current user account has parental controls
+   * logging enabled. If true, applications should log relevent events
+   * using 'log'.
+   */
+  readonly attribute boolean loggingEnabled;
+
+  /**
+   * Log entry types. Additional types can be defined and implemented
+   * as needed. Other possible event types might include email events,
+   * media related events, and IM events.
+   */
+  const short ePCLog_URIVisit = 1;    /* Web content */
+  const short ePCLog_FileDownload = 2;  /* File downloads */
+
+  /**
+   * Log an application specific parental controls
+   * event.
+   *
+   * @param aEntryType       Constant defining the type of event.
+   * @param aFlag            A flag indicating if the subject content
+   *                         was blocked.
+   * @param aSource          The URI source of the subject content.
+   * @param aTarget          The location the content was saved to if
+   *                         no blocking occurred.
+   */
+  void log(in short aEntryType, in boolean aFlag, in nsIURI aSource, [optional] in nsIFile aTarget);
+};

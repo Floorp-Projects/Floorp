@@ -1,0 +1,81 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(51191434-1dd2-11b2-a17c-e49c4e99a4e3)]
+interface nsIPK11Token : nsISupports
+{
+  /*
+   * The name of the token
+   */
+  [must_use]
+  readonly attribute AUTF8String tokenName;
+  [must_use]
+  readonly attribute boolean isInternalKeyToken;
+  /**
+   * Manufacturer ID of the token.
+   */
+  [must_use]
+  readonly attribute AUTF8String tokenManID;
+  /**
+   * Hardware version of the token.
+   */
+  [must_use]
+  readonly attribute AUTF8String tokenHWVersion;
+  /**
+   * Firmware version of the token.
+   */
+  [must_use]
+  readonly attribute AUTF8String tokenFWVersion;
+  [must_use]
+  readonly attribute AUTF8String tokenSerialNumber;
+
+  /*
+   * Login information
+   */
+  [must_use]
+  boolean isLoggedIn();
+  [must_use]
+  void login(in boolean force);
+  [must_use]
+  void logoutSimple();
+  [must_use]
+  void logoutAndDropAuthenticatedResources();
+  [must_use]
+  boolean needsLogin();
+  [must_use]
+  readonly attribute boolean needsUserInit;
+
+  /*
+   * Reset password
+   */
+  [must_use]
+  void reset();
+
+  /**
+   * Checks whether the given password is correct. Logs the token out if an
+   * incorrect password is given.
+   *
+   * @param password The password to check.
+   * @return true if the password was correct, false otherwise.
+   */
+  [must_use]
+  boolean checkPassword(in AUTF8String password);
+  [must_use]
+  void initPassword(in AUTF8String initialPassword);
+  [must_use]
+  void changePassword(in AUTF8String oldPassword, in AUTF8String newPassword);
+
+  /*
+   * True if a password has been configured for this token, and false otherwise.
+   * (Whether or not the user is currently logged in makes no difference.)
+   * In particular, this can be used to determine if a user has set a master
+   * password (if this is the internal key token).
+   */
+  [must_use]
+  readonly attribute boolean hasPassword;
+};

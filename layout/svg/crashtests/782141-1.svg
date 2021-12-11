@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     onload="go()">
+  <script>
+
+function go() {
+  var f = document.getElementById('f');
+  var fm = document.getElementById('fm');
+  f.appendChild(fm.cloneNode(1));
+}
+
+  </script>
+  <filter id="f">
+    <feMorphology id="fm" radius="2147483500"/>
+  </filter>
+  <rect height="28" width="256" filter="url(#f)" />
+</svg>

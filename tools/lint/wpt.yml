@@ -1,0 +1,10 @@
+---
+wpt:
+    description: web-platform-tests lint
+    include:
+        - testing/web-platform/tests
+    exclude: []
+    support-files:
+        - tools/lint/wpt/wpt.py
+    type: external
+    payload: wpt.wpt:lint

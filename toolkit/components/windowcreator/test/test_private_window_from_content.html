@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  // Make sure that we cannot open private browsing windows from unprivileged content
+  var win = window.open("about:blank", "_blank", "private");
+  ok(!SpecialPowers.isContentWindowPrivate(win));
+  win.close();
+  // Also, make sure that passing non-private doesn't make any difference either
+  win = window.open("about:blank", "_blank", "non-private");
+  ok(!SpecialPowers.isContentWindowPrivate(win));
+  win.close();
+</script>

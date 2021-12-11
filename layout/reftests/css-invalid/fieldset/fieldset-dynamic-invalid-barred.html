@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- fieldset with one invalid element and dynamically made it element with
+barred constraints -->
+<html class='reftest-wait'>
+  <head>
+    <style>
+      fieldset:valid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('i').readOnly = true;
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <fieldset id="fieldset">
+      <input id='i' required>
+    </fieldset>
+  </body>
+</html>

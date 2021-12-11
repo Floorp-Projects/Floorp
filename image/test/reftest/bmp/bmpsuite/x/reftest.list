@@ -1,0 +1,10 @@
+# bmpsuite 'files in formats related to BMP, that you might not consider to
+# truly be in "BMP format"' tests
+
+# See ../README.mozilla for details.
+
+# "This image uses the OS/2v2 “Bitmap Array” (BA) container format. Although a
+# BA file may contain multiple images, this file has only one."
+== wrapper.html?ba-bm.bmp about:blank
+
+

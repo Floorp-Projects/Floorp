@@ -1,0 +1,200 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "chrome_settings_overrides": {
+            "type": "object",
+            "optional": true,
+            "additionalProperties": { "$ref": "UnrecognizedProperty" },
+            "properties": {
+              "homepage": {
+                "type": "string",
+                "format": "homepageUrl",
+                "optional": true,
+                "preprocess": "localize"
+              },
+             "search_provider": {
+                "type": "object",
+                "optional": true,
+                "additionalProperties": { "$ref": "UnrecognizedProperty" },
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "preprocess": "localize"
+                  },
+                  "keyword": {
+                    "optional": true,
+                    "choices": [
+                      {
+                        "type": "string",
+                        "preprocess": "localize"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "preprocess": "localize"
+                        },
+                        "minItems": 1
+                      }
+                    ]
+                  },
+                  "search_url": {
+                    "type": "string",
+                    "format": "url",
+                    "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d*)?(/|$)).*$",
+                    "preprocess": "localize"
+                  },
+                  "favicon_url": {
+                    "choices": [
+                      {
+                        "type": "string",
+                        "format": "relativeUrl",
+                        "max_manifest_version": 2
+                      },
+                      {
+                        "type": "string",
+                        "format": "strictRelativeUrl"
+                      }
+                    ],
+                    "optional": true,
+                    "preprocess": "localize"
+                  },
+                  "suggest_url": {
+                    "type": "string",
+                    "optional": true,
+                    "pattern": "^$|^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d*)?(/|$)).*$",
+                    "preprocess": "localize"
+                  },
+                  "instant_url": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "image_url": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "search_url_get_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "description": "GET parameters to the search_url as a query string."
+                  },
+                  "search_url_post_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "description": "POST parameters to the search_url as a query string."
+                  },
+                  "suggest_url_get_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "description": "GET parameters to the suggest_url as a query string."
+                  },
+                  "suggest_url_post_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "description": "POST parameters to the suggest_url as a query string."
+                  },
+                  "instant_url_post_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "image_url_post_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "search_form": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d*)?(/|$)).*$",
+                    "preprocess": "localize"
+                  },
+                  "alternate_urls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "url",
+                      "preprocess": "localize"
+                    },
+                    "optional": true,
+                    "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "prepopulated_id": {
+                    "type": "integer",
+                    "optional": true,
+                    "deprecated": "Unsupported on Firefox."
+                  },
+                  "encoding": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "Encoding of the search term."
+                  },
+                  "is_default": {
+                    "type": "boolean",
+                    "optional": true,
+                    "description": "Sets the default engine to a built-in engine only."
+                  },
+                  "params": {
+                    "optional": true,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "A url parameter name"
+                        },
+                        "condition": {
+                          "type": "string",
+                          "optional": true,
+                          "enum": ["purpose", "pref"],
+                          "description": "The type of param can be either \"purpose\" or \"pref\"."
+                        },
+                        "pref": {
+                          "type": "string",
+                          "optional": true,
+                          "description": "The preference to retrieve the value from.",
+                          "preprocess": "localize"
+                        },
+                        "purpose": {
+                          "type": "string",
+                          "optional": true,
+                          "enum": ["contextmenu", "searchbar", "homepage", "keyword", "newtab"],
+                          "description": "The context that initiates a search, required if condition is \"purpose\"."
+                        },
+                        "value": {
+                          "type": "string",
+                          "optional": true,
+                          "description": "A url parameter value.",
+                          "preprocess": "localize"
+                        }
+                      }
+                    },
+                    "description": "A list of optional search url parameters. This allows the additon of search url parameters based on how the search is performed in Firefox."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+]

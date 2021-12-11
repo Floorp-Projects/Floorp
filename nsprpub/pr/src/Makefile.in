@@ -1,0 +1,355 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#! gmake
+
+MOD_DEPTH	= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+DIRS = io linking malloc md memory misc threads
+
+ifeq ($(USE_PTHREADS), 1)
+	DIRS += pthreads
+endif
+
+ifeq ($(USE_BTHREADS), 1)
+	DIRS += bthreads
+endif
+
+ifeq ($(USE_CPLUS), 1)
+	DIRS += cplus
+endif
+
+#
+# Define platform-dependent OS_LIBS
+#
+
+ifeq ($(OS_ARCH),SunOS)
+MAPFILE = $(OBJDIR)/nsprmap.sun
+GARBAGE += $(MAPFILE)
+ifdef NS_USE_GCC
+ifdef GCC_USE_GNU_LD
+MKSHLIB += -Wl,--version-script,$(MAPFILE)
+else
+MKSHLIB += -Wl,-M,$(MAPFILE)
+endif
+else
+MKSHLIB += -M $(MAPFILE)
+endif
+#
+# In Solaris 2.6 or earlier, -lrt is called -lposix4.
+# 
+LIBRT_TEST=$(firstword $(sort 5.7 $(OS_RELEASE)))
+ifeq (5.7, $(LIBRT_TEST))
+LIBRT=-lrt
+else
+LIBRT=-lposix4
+endif
+
+ifdef USE_PTHREADS
+OS_LIBS			= -lpthread ${LIBRT} -lsocket -lnsl -ldl -lc
+else
+OS_LIBS			= -lsocket -lnsl -ldl -lc
+endif	# USE_PTHREADS
+ifeq ($(CPU_ARCH),sparc)
+ifndef USE_64
+DSO_LDOPTS	+= -Wl,-f,\$$ORIGIN/cpu/\$$ISALIST/lib$(ULTRASPARC_LIBRARY)$(LIBRARY_VERSION).so
+endif
+endif	# sparc
+endif	# SunOS
+
+ifeq ($(OS_ARCH),AIX)
+DSO_LDOPTS	+= -binitfini::_PR_Fini
+OS_LIBS		= -lodm -lcfg
+ifeq ($(CLASSIC_NSPR),1)
+ifeq ($(OS_RELEASE),4.1)
+OS_LIBS		+= -lsvld -lc
+else
+OS_LIBS		+= -ldl -lc
+endif
+else
+ifeq ($(OS_RELEASE),4.1)
+OS_LIBS		+= -lpthreads -lsvld -lC_r -lC -lc_r -lm /usr/lib/libc.a
+else
+OS_LIBS		+= -lpthreads -ldl -lC_r -lC -lc_r -lm /usr/lib/libc.a
+endif
+endif
+endif
+
+# On AIX, we override malloc in non-pthread versions.  On AIX 4.2 or
+# above, this requires that we use the rtl-enabled version of libc.a.
+ifeq ($(OS_ARCH),AIX)
+ifneq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
+ifneq ($(USE_PTHREADS),1)
+BUILD_AIX_RTL_LIBC = 1
+AIX_RTL_LIBC	= $(OBJDIR)/libc.a
+endif
+endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).def
+ADD_TO_DEF_FILE = cat $(srcdir)/os2extra.def >> $(MAPFILE)
+GARBAGE += $(MAPFILE)
+MKSHLIB += $(MAPFILE)
+endif
+
+# Linux, GNU/Hurd, and GNU/kFreeBSD systems
+ifneq (,$(filter Linux GNU%,$(OS_ARCH)))
+ifeq ($(USE_PTHREADS), 1)
+ifeq ($(OS_TARGET),Android)
+# Android has no libpthread.so in NDK
+OS_LIBS		= -ldl
+else
+OS_LIBS		= -lpthread -ldl
+endif
+else
+OS_LIBS		= -ldl
+endif
+ifneq ($(OS_TARGET),Android)
+# Android has no librt - realtime functions are in libc
+OS_LIBS		+= -lrt
+endif
+endif
+
+ifeq ($(OS_ARCH),HP-UX)
+ifeq ($(USE_PTHREADS), 1)
+OS_LIBS 	= -lpthread -lrt
+endif
+ifeq ($(PTHREADS_USER), 1)
+OS_LIBS 	= -lpthread
+endif
+ifeq ($(basename $(OS_RELEASE)),A.09)
+OS_LIBS		+= -ldld -L/lib/pa1.1 -lm
+else
+OS_LIBS		+= -ldld -lm -lc
+endif
+ifneq ($(OS_TEST),ia64)
+ifndef USE_64
+DSO_LDOPTS	+= +I PR_HPUX10xInit
+endif
+endif
+endif
+
+ifeq ($(OS_ARCH),UNIXWARE)
+OS_LIBS		= -lsocket -lc
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+ifdef NS_USE_GCC
+OS_LIBS		= -ladvapi32 -lws2_32 -lmswsock -lwinmm
+else
+OS_LIBS		= advapi32.lib ws2_32.lib mswsock.lib winmm.lib
+endif
+endif
+
+ifeq ($(OS_ARCH),WINCE)
+OS_LIBS		= ws2.lib
+endif
+
+ifeq ($(OS_TARGET),Android)
+OS_LIBS		+= -llog
+endif
+
+EXTRA_LIBS += $(OS_LIBS)
+
+#
+# Define platform-dependent OBJS
+#
+
+OBJS = \
+    $(OBJDIR)/prvrsion.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prfdcach.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prmwait.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prmapopt.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/priometh.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/pripv6.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prlayer.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prlog.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prmmap.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prpolevt.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prprf.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prscanf.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prstdio.$(OBJ_SUFFIX) \
+    threads/$(OBJDIR)/prcmon.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prrwlock.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prtpd.$(OBJ_SUFFIX) \
+    linking/$(OBJDIR)/prlink.$(OBJ_SUFFIX) \
+    malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX) \
+    malloc/$(OBJDIR)/prmem.$(OBJ_SUFFIX) \
+    md/$(OBJDIR)/prosdep.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prshm.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prshma.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prseg.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pralarm.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pratom.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prcountr.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prdtoa.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prenv.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prerr.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prerror.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prerrortable.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prinit.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prinrval.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pripc.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prlog2.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/praton.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prolock.$(OBJ_SUFFIX)	 \
+    misc/$(OBJDIR)/prrng.$(OBJ_SUFFIX)	 \
+    misc/$(OBJDIR)/prsystem.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prthinfo.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prtpool.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prtrace.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prtime.$(OBJ_SUFFIX)
+
+ifdef USE_PTHREADS
+OBJS += \
+    pthreads/$(OBJDIR)/ptsynch.$(OBJ_SUFFIX) \
+    pthreads/$(OBJDIR)/ptio.$(OBJ_SUFFIX) \
+    pthreads/$(OBJDIR)/ptthread.$(OBJ_SUFFIX) \
+    pthreads/$(OBJDIR)/ptmisc.$(OBJ_SUFFIX)
+else
+OBJS += \
+    io/$(OBJDIR)/prdir.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prfile.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prio.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pripcsem.$(OBJ_SUFFIX)
+
+ifndef USE_BTHREADS
+OBJS += \
+	threads/$(OBJDIR)/prcthr.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prdump.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prmon.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prsem.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prucpu.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prucv.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prulock.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prustack.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/pruthr.$(OBJ_SUFFIX)
+endif
+
+endif
+
+ifeq ($(USE_CPLUS), 1)
+OBJS += \
+	cplus/$(OBJDIR)/rcbase.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rccv.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcfileio.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcinrval.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcio.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rclock.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcnetdb.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcnetio.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcthread.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rctime.$(OBJ_SUFFIX)
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+RES=$(OBJDIR)/nspr.res
+RESNAME=nspr.rc
+endif # WINNT
+
+include $(srcdir)/md/$(PR_MD_ARCH_DIR)/objs.mk
+ifdef USE_BTHREADS
+include $(srcdir)/bthreads/objs.mk
+endif
+
+LIBRARY_NAME = nspr
+LIBRARY_VERSION = $(MOD_MAJOR_VERSION)
+
+RELEASE_LIBS = $(TARGETS)
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(BUILD_AIX_RTL_LIBC),1)
+TARGETS		+= $(AIX_RTL_LIBC)
+# XXX is this a shared library?
+endif
+
+#
+# Version information generation (begin)
+#
+ECHO = echo
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+TINC = $(OBJDIR)/_pr_bld.h
+
+ifeq ($(OS_TARGET),OS2)
+PROD = nspr$(MOD_MAJOR_VERSION).$(DLL_SUFFIX)
+else
+PROD = $(notdir $(SHARED_LIBRARY))
+endif
+
+NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
+SH_DATE = $(shell date "+%Y-%m-%d %T")
+SH_NOW = $(shell $(NOW))
+
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
+	SUF = i64
+else
+	SUF = LL
+endif
+
+DEFINES		+= -D_NSPR_BUILD_
+
+GARBAGE += $(TINC)
+
+$(TINC):
+	@$(MAKE_OBJDIR)
+	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)
+	@if test ! -z "$(SH_NOW)"; then \
+	    $(ECHO) '#define _BUILD_TIME $(SH_NOW)$(SUF)' >> $(TINC); \
+	else \
+	    true; \
+	fi
+	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
+
+
+$(OBJDIR)/prvrsion.$(OBJ_SUFFIX): prvrsion.c $(TINC)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) $<
+else
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
+endif
+#
+# Version information generation (end)
+#
+
+
+# We use a 'build' target here to ensure that we build $(TARGETS) after
+# looping over $(DIRS) to create the object files in a parallel build.
+# Recipe commands are executed sequentially in a parallel build while
+# target dependencies are executed in parallel.
+export::
+	$(MAKE) build
+
+#
+# The Client build wants the shared libraries in $(dist_bindir)
+# so we also install them there.
+#
+
+build:: $(TARGETS)
+	$(INSTALL) -m 444 $(TARGETS) $(dist_libdir)
+ifdef SHARED_LIBRARY
+ifeq ($(OS_ARCH),HP-UX)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_libdir)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_bindir)
+else
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_bindir)
+endif
+endif
+
+ifeq ($(BUILD_AIX_RTL_LIBC),1)
+$(AIX_RTL_LIBC): /usr/ccs/lib/libc.a
+	rtl_enable -o $@ $<
+endif

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<head>
+  <!-- See ssty-1-ref.html for an explanation of this font -->
+  <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "sstyfont";
+      src: url("ssty.woff");
+    }
+  </style>
+</head>
+<body>
+  <!-- Test whether the ssty font feature setting is used appropriately for
+       mroot, mfrac, munderover et al. 
+       Assumes NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER is 0.71-->
+  <math>
+    <mstyle style="font-family: 'sstyfont';">
+      <mroot>
+        <mo>D</mo>
+        <mo>C</mo>
+      </mroot>
+
+      <mfrac>
+        <mo>B</mo>
+        <mo>B</mo>
+      </mfrac>
+
+      <mfrac>
+        <mfrac>
+          <mo>C</mo>
+          <mo>C</mo>
+        </mfrac>
+        <mfrac>
+          <mo>C</mo>
+          <mo>C</mo>
+        </mfrac>
+      </mfrac>
+
+    <mfrac>
+      <mroot>
+        <mo>B</mo>
+        <mo>C</mo>
+      </mroot>
+      <mo>B</mo>
+    </mfrac>
+
+    <mover>
+      <mo>D</mo>
+      <mover>
+        <mo>B</mo>
+        <mo>C</mo>
+      </mover>
+    </mover>
+
+    <munder>
+      <mo>D</mo>
+      <munder>
+        <mo>B</mo>
+        <mo>C</mo>
+      </munder>
+    </munder>
+
+    <munderover>
+      <mo>D</mo>
+      <munderover>
+        <mo>B</mo>
+        <mo>C</mo>
+        <mo>C</mo>
+      </munderover>
+      <munderover>
+        <mo>B</mo>
+        <mo>C</mo>
+        <mo>C</mo>
+      </munderover>
+    </munderover>
+
+    </mstyle>
+  </math>
+
+  <p>
+  <!-- ssty font feature not set on mfrac et al when displaystyle is
+       set (still allowed on mroot, mover et al.)-->
+  <math>
+    <mstyle style="font-family: 'sstyfont';" displaystyle="true">
+      <mroot>
+        <mo>D</mo>
+        <mo>C</mo>
+      </mroot>
+
+      <mfrac>
+        <mo>D</mo>
+        <mo>D</mo>
+      </mfrac>
+
+      <mfrac>
+        <mfrac>
+          <!-- ssty gets set as script level incremented because displaystyle
+               is now false -->
+          <mo>B</mo>
+          <mo>B</mo>
+        </mfrac>
+        <mfrac>
+          <mo>B</mo>
+          <mo>B</mo>
+        </mfrac>
+      </mfrac>
+
+    <mfrac>
+      <mroot>
+        <mo>D</mo>
+        <mo>C</mo>
+      </mroot>
+      <mo>D</mo>
+    </mfrac>
+
+    <mover>
+      <mo>D</mo>
+      <mover>
+        <mo>B</mo>
+        <mo>C</mo>
+      </mover>
+    </mover>
+
+    <munder>
+      <mo>D</mo>
+      <munder>
+        <mo>B</mo>
+        <mo>C</mo>
+      </munder>
+    </munder>
+
+    <munderover>
+      <mo>D</mo>
+      <munderover>
+        <mo>B</mo>
+        <mo>C</mo>
+        <mo>C</mo>
+      </munderover>
+      <munderover>
+        <mo>B</mo>
+        <mo>C</mo>
+        <mo>C</mo>
+      </munderover>
+    </munderover>
+    </mstyle>
+  </math>
+
+      <p>
+
+  <math>
+    <!-- scriptlevel is not incremented when accent for overframes and
+         accentunder for underframes are true, so there shouldn't be a
+         change in the ssty value -->
+    <mstyle style="font-family: 'sstyfont';">
+      <mover accent="true">
+        <mo>D</mo>
+        <mover accent="true">
+          <mo>D</mo>
+          <mo>D</mo>
+        </mover>
+      </mover>
+
+      <munder accentunder="true">
+        <mo>D</mo>
+        <munder accentunder="true">
+          <mo>D</mo>
+          <mo>D</mo>
+        </munder>
+      </munder>
+
+      <munderover accentunder="true" accent="true">
+        <mo>D</mo>
+        <munderover accentunder="true" accent="true">
+          <mo>D</mo>
+          <mo>D</mo>
+          <mo>D</mo>
+        </munderover>
+        <munderover accentunder="true" accent="true">
+          <mo>D</mo>
+          <mo>D</mo>
+          <mo>D</mo>
+        </munderover>
+      </munderover>
+
+      <mover accent="true">
+        <mo>D</mo>
+        <mover accent="false">
+          <mo>D</mo>
+          <mo>B</mo>
+        </mover>
+      </mover>
+
+      <munder accentunder="true">
+        <mo>D</mo>
+        <munder accentunder="false">
+          <mo>D</mo>
+          <mo>B</mo>
+        </munder>
+      </munder>
+
+      <munderover accentunder="true" accent="true">
+        <mo>D</mo>
+        <munderover accentunder="false" accent="false">
+          <mo>D</mo>
+          <mo>B</mo>
+          <mo>B</mo>
+        </munderover>
+        <munderover accentunder="false" accent="false">
+          <mo>D</mo>
+          <mo>B</mo>
+          <mo>B</mo>
+        </munderover>
+      </munderover>
+
+      <mover accentunder="false" accent="false">
+        <mo>D</mo>
+        <mover accentunder="true" accent="true">
+          <mo>B</mo>
+          <mo>B</mo>
+        </mover>
+      </mover>
+
+      <munder accentunder="false" accent="false">
+        <mo>D</mo>
+        <munder accentunder="true" accent="true">
+          <mo>B</mo>
+          <mo>B</mo>
+        </munder>
+      </munder>
+
+      <munderover accentunder="false" accent="false">
+        <mo>D</mo>
+        <munderover accentunder="true" accent="true">
+          <mo>B</mo>
+          <mo>B</mo>
+          <mo>B</mo>
+        </munderover>
+        <munderover accentunder="true" accent="true">
+          <mo>B</mo>
+          <mo>B</mo>
+          <mo>B</mo>
+        </munderover>
+      </munderover>
+
+      <munderover accentunder="false" accent="true">
+        <mo>D</mo>
+        <munderover accentunder="false" accent="true">
+          <mo>B</mo>
+          <mo>C</mo>
+          <mo>B</mo>
+        </munderover>
+        <munderover accentunder="false" accent="true">
+          <mo>D</mo>
+          <mo>B</mo>
+          <mo>D</mo>
+        </munderover>
+      </munderover>
+
+      <munderover accentunder="true" accent="false">
+        <mo>D</mo>
+        <munderover accentunder="true" accent="false">
+          <mo>D</mo>
+          <mo>D</mo>
+          <mo>B</mo>
+        </munderover>
+        <munderover accentunder="true" accent="false">
+          <mo>B</mo>
+          <mo>B</mo>
+          <mo>C</mo>
+        </munderover>
+      </munderover>
+
+    </mstyle>
+  </math>
+
+</body>

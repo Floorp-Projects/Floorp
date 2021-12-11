@@ -1,0 +1,117 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1182113 - Test service worker XSLT interception</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test"></pre>
+<script src="utils.js"></script>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var worker;
+
+  function start() {
+    return navigator.serviceWorker.register("xslt_worker.js",
+                                            { scope: "./" })
+      .then((swr) => {
+        registration = swr;
+
+        // Ensure the registration is active before continuing
+        return waitForState(swr.installing, 'activated');
+      });
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+  function getXmlString(xmlObject) {
+    serializer = new XMLSerializer();
+    return serializer.serializeToString(iframe.contentDocument);
+  }
+
+  function synthetic() {
+    content = document.getElementById("content");
+    ok(content, "parent exists.");
+
+    iframe = document.createElement("iframe");
+    content.appendChild(iframe);
+
+    iframe.setAttribute('src', "xslt/test.xml");
+
+    var p = new Promise(function(res, rej) {
+      iframe.onload = function(e) {
+        dump("Set request mode\n");
+        registration.active.postMessage("synthetic");
+        xmlString = getXmlString(iframe.contentDocument);
+        ok(!xmlString.includes("Error"), "Load synthetic cross origin XSLT should be allowed");
+        res();
+      };
+    });
+
+    return p;
+  }
+
+  function cors() {
+    var p = new Promise(function(res, rej) {
+      iframe.onload = function(e) {
+        xmlString = getXmlString(iframe.contentDocument);
+        ok(!xmlString.includes("Error"), "Load CORS cross origin XSLT should be allowed");
+        res();
+      };
+    });
+
+    registration.active.postMessage("cors");
+    iframe.setAttribute('src', "xslt/test.xml");
+
+    return p;
+  }
+
+  function opaque() {
+    var p = new Promise(function(res, rej) {
+      iframe.onload = function(e) {
+        xmlString = getXmlString(iframe.contentDocument);
+        ok(xmlString.includes("Error"), "Load opaque cross origin XSLT should not be allowed");
+        res();
+      };
+    });
+
+    registration.active.postMessage("opaque");
+    iframe.setAttribute('src', "xslt/test.xml");
+
+    return p;
+  }
+
+  function runTest() {
+     start()
+      .then(synthetic)
+      .then(opaque)
+      .then(cors)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

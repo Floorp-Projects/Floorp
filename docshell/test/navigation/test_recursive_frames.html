@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Recursive Loads</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1597427">Mozilla Bug 1597427</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+  const TEST_CASES = [
+    { // too many recursive iframes
+      frameId: "recursiveFrame",
+      expectedLocations: [
+        "http://example.com/tests/docshell/test/navigation/frame_recursive.html",
+        "http://example.com/tests/docshell/test/navigation/frame_recursive.html",
+        "about:blank",
+      ],
+    },
+    { // too many recursive iframes
+      frameId: "twoRecursiveIframes",
+      expectedLocations: [
+        "http://example.com/tests/docshell/test/navigation/frame_load_as_example_com.html",
+        "http://example.org/tests/docshell/test/navigation/frame_load_as_example_org.html",
+        "http://example.com/tests/docshell/test/navigation/frame_load_as_example_com.html",
+        "http://example.org/tests/docshell/test/navigation/frame_load_as_example_org.html",
+        "about:blank",
+      ],
+    },
+    { // too many recursive iframes
+      frameId: "threeRecursiveIframes",
+      expectedLocations: [
+        "http://sub1.test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host1.html",
+        "http://example.com/tests/docshell/test/navigation/frame_load_as_host2.html",
+        "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host3.html",
+        "http://sub1.test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host1.html",
+        "http://example.com/tests/docshell/test/navigation/frame_load_as_host2.html",
+        "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host3.html",
+        "about:blank",
+      ],
+    },
+    { // too many nested iframes
+      frameId: "sixRecursiveIframes",
+      expectedLocations: [
+        "http://example.com/tests/docshell/test/navigation/frame_1_out_of_6.html",
+        "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_2_out_of_6.html",
+        "http://sub1.test1.mochi.test:8888/tests/docshell/test/navigation/frame_3_out_of_6.html",
+        "http://sub2.xn--lt-uia.mochi.test:8888/tests/docshell/test/navigation/frame_4_out_of_6.html",
+        "http://test2.mochi.test:8888/tests/docshell/test/navigation/frame_5_out_of_6.html",
+        "http://example.org/tests/docshell/test/navigation/frame_6_out_of_6.html",
+        "http://example.com/tests/docshell/test/navigation/frame_1_out_of_6.html",
+        "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_2_out_of_6.html",
+      ],
+    },
+    { // too many recursive objects
+      frameId: "recursiveObject",
+      expectedLocations: [
+        "http://sub2.xn--lt-uia.mochi.test:8888/tests/docshell/test/navigation/object_recursive_load.html",
+        "http://sub2.xn--lt-uia.mochi.test:8888/tests/docshell/test/navigation/object_recursive_load.html",
+      ],
+    },
+    { // 3 nested srcdocs, should show all of them
+      frameId: "nestedSrcdoc",
+      expectedLocations: [
+        "about:srcdoc",
+        "http://example.com/tests/docshell/test/navigation/file_nested_srcdoc.html",
+        "about:srcdoc",
+        "about:srcdoc",
+      ],
+    },
+  ];
+
+  async function checkRecursiveLoad(level) {
+    let el = content.document.getElementById("static");
+    let documentURI = await SpecialPowers.spawn(
+      el,
+      [],
+      () => this.content.document.documentURI
+    );
+    if (documentURI == "about:blank") {
+      // If we had too many recursive frames, the most inner iframe's uri will be about:blank
+      return [documentURI];
+    }
+    if (documentURI == "about:srcdoc" && level == 3) {
+      // Check that we have the correct most inner srcdoc iframe
+      let innerText = await SpecialPowers.spawn(
+        el,
+        [],
+        () => this.content.document.body.innerText
+      );
+      is(innerText, "Third nested srcdoc", "correct most inner srcdoc iframe");
+    }
+    let nestedIfrOrObjectURI = [];
+    try {
+      // Throws an error when we have too many nested frames/objects, because we
+      // claim to have no content window for the inner most frame/object.
+      nestedIfrOrObjectURI = await SpecialPowers.spawn(
+        el,
+        [level + 1],
+        checkRecursiveLoad
+      );
+    } catch (err) {
+      info(
+        `Tried to spawn another task in the iframe/object, but got err: ${err}, must have had too many nested iframes/objects\n`
+      );
+    }
+    return [documentURI, ...nestedIfrOrObjectURI];
+  }
+
+  add_task(async () => {
+    for (const testCase of TEST_CASES) {
+      let el = document.getElementById(testCase.frameId);
+      let loc = await SpecialPowers.spawn(
+        el,
+        [],
+        () => this.content.location.href
+      );
+      let locations = await SpecialPowers.spawn(el, [1], checkRecursiveLoad);
+      isDeeply(
+        [loc, ...locations],
+        testCase.expectedLocations,
+        "iframes/object loaded in correct order"
+      );
+    }
+  });
+
+  </script>
+</pre>
+<div>
+  <iframe style="height: 100vh; width:25%;" id="recursiveFrame" src="http://example.com/tests/docshell/test/navigation/frame_recursive.html"></iframe>
+  <iframe style="height: 100vh; width:25%;" id="twoRecursiveIframes" src="http://example.com/tests/docshell/test/navigation/frame_load_as_example_com.html"></iframe>
+  <iframe style="height: 100vh; width:25%;" id="threeRecursiveIframes" src="http://sub1.test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host1.html"></iframe>
+  <iframe style="height: 100vh; width:25%;" id="sixRecursiveIframes" src="http://example.com/tests/docshell/test/navigation/frame_1_out_of_6.html"></iframe>
+  <object width="400" height="300" id="recursiveObject" data="http://sub2.xn--lt-uia.mochi.test:8888/tests/docshell/test/navigation/object_recursive_load.html"></object> 
+  <iframe id="nestedSrcdoc" srcdoc="Srcdoc that will embed an iframe &lt;iframe id=&quot;static&quot; src=&quot;http://example.com/tests/docshell/test/navigation/file_nested_srcdoc.html&quot;&gt;&lt;/iframe&gt;"></iframe>
+</div>
+</body>
+</html>

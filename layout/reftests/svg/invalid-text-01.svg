@@ -1,0 +1,15 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+
+  <title>Testcase for invalid text</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=445687 -->
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <text x="50" y="50" font-size="30"><tspan><text x="50" y="50" font-size="30">Should not see this</text></tspan></text>
+
+</svg>

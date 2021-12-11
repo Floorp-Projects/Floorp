@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1414336
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1414336</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="text/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #target0 {
+    width: 200px;
+    height: 400px;
+    touch-action: auto;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1414336">Mozilla Bug 1414336</a>
+<p id="display"></p>
+<div id="target0">
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+  <p>Test bug1414336</p>
+</div>
+<script type="text/javascript">
+/** Test for Bug 1414336 **/
+waitUntilApzStable().then(() => {
+  let target0 = window.document.getElementById("target0");
+  let target0_events = ["pointerdown", "pointermove"];
+
+  target0_events.forEach((elem, index, arr) => {
+    target0.addEventListener(elem, (event) => {
+      is(event.type, target0_events[0], "receive " + event.type + " on target0");
+      target0_events.shift();
+    }, { once: true });
+  });
+
+  target0.addEventListener("pointercancel", (event) => {
+    ok(false, "Shouldn't receive pointercancel when content prevents default on touchstart");
+    // Wait until the event is done processing before we end the subtest,
+    // otherwise on Android the pointer events pref is flipped back to false
+    // and debug builds will assert.
+    setTimeout(subtestDone, 0);
+  }, { once: true });
+
+  target0.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+  }, { once: true });
+
+  target0.addEventListener("pointerup", (event) => {
+    ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
+    // Wait until the event is done processing before we end the subtest,
+    // otherwise on Android the pointer events pref is flipped back to false
+    // and debug builds will assert.
+    setTimeout(subtestDone, 0);
+  }, { once: true });
+
+  synthesizeNativeTouchDrag(target0, 2, 2, 0, 80);
+});
+
+</script>
+</body>
+</html>

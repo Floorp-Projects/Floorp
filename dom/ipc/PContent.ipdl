@@ -1,0 +1,1886 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBrowser;
+include protocol PCompositorManager;
+include protocol PContentPermissionRequest;
+include protocol PCycleCollectWithLogs;
+include protocol PDocumentChannel;
+include protocol PExtensions;
+include protocol PExternalHelperApp;
+include protocol PHandlerService;
+include protocol PFileDescriptorSet;
+include protocol PHal;
+include protocol PHeapSnapshotTempFileHelper;
+include protocol PProcessHangMonitor;
+include protocol PImageBridge;
+include protocol PRemoteLazyInputStream;
+include protocol PLoginReputation;
+include protocol PMedia;
+include protocol PNecko;
+include protocol PStreamFilter;
+include protocol PGMPContent;
+include protocol PGMPService;
+include protocol PGMP;
+include protocol PPrinting;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+#ifdef MOZ_WEBSPEECH
+include protocol PSpeechSynthesis;
+#endif
+include protocol PTestShell;
+include protocol PRemoteSpellcheckEngine;
+include protocol PWebBrowserPersistDocument;
+include protocol PWebrtcGlobal;
+include protocol PWindowGlobal;
+include protocol PURLClassifier;
+include protocol PURLClassifierLocal;
+include protocol PVRManager;
+include protocol PRemoteDecoderManager;
+include protocol PProfiler;
+include protocol PScriptCache;
+include protocol PSessionStorageObserver;
+include protocol PBenchmarkStorage;
+include DOMTypes;
+include WindowGlobalTypes;
+include IPCBlob;
+include IPCStream;
+include PPrintingTypes;
+include PTabContext;
+include ProtocolTypes;
+include PBackgroundSharedTypes;
+include PContentPermission;
+include GraphicsMessages;
+include MemoryReportTypes;
+include ClientIPCTypes;
+include HangTypes;
+include PrefsTypes;
+include NeckoChannelParams;
+include PSMIPCTypes;
+include LookAndFeelTypes;
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+include protocol PSandboxTesting;
+#endif
+
+include "ipc/MediaControlIPC.h";
+include "mozilla/AntiTrackingIPCUtils.h";
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/dom/BindingIPCUtils.h";
+include "mozilla/dom/CSPMessageUtils.h";
+include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/dom/FeaturePolicyUtils.h";
+include "mozilla/dom/MediaSessionIPCUtils.h";
+include "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/ipc/ByteBufUtils.h";
+include "mozilla/ipc/URIUtils.h";
+include "mozilla/PermissionDelegateIPCUtils.h";
+
+[RefCounted] using class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
+[RefCounted] using class nsIAlertNotification from "mozilla/AlertNotificationIPCSerializer.h";
+
+using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
+using struct SubstitutionMapping from "mozilla/chrome/RegistryMessageUtils.h";
+using struct OverrideMapping from "mozilla/chrome/RegistryMessageUtils.h";
+using base::ProcessId from "base/process.h";
+using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
+using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+using mozilla::a11y::IHandlerControlHolder from "mozilla/a11y/IPCTypes.h";
+using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
+using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
+using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::widget::ThemeChangeKind from "mozilla/widget/WidgetMessageUtils.h";
+using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
+using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedHistogramAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
+
+#if defined(XP_WIN)
+[MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
+#endif  // defined(XP_WIN)
+
+using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
+using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::PermitUnloadResult from "nsIContentViewer.h";
+using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
+using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
+using base::SharedMemoryHandle from "base/shared_memory.h";
+using mozilla::fontlist::Pointer from "SharedFontList.h";
+using gfxSparseBitSet from "gfxFontUtils.h";
+using FontVisibility from "gfxFontEntry.h";
+using mozilla::dom::MediaControlAction from "mozilla/dom/MediaControlKeySource.h";
+using mozilla::dom::MediaPlaybackState from "mozilla/dom/MediaPlaybackStatus.h";
+using mozilla::dom::MediaAudibleState from "mozilla/dom/MediaPlaybackStatus.h";
+using mozilla::dom::MediaMetadataBase from "mozilla/dom/MediaMetadata.h";
+using mozilla::dom::MediaSessionAction from "mozilla/dom/MediaSessionBinding.h";
+using mozilla::dom::MediaSessionPlaybackState from "mozilla/dom/MediaSessionBinding.h";
+using mozilla::dom::PositionState from "mozilla/dom/MediaSession.h";
+[RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
+using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
+using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
+using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBlockingNotifier.h";
+using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/ContentBlocking.h";
+using JSActorMessageKind from "mozilla/dom/JSActor.h";
+using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
+using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/PermissionDelegateHandler.h";
+[RefCounted] using class nsILayoutHistoryState from "nsILayoutHistoryState.h";
+using class mozilla::dom::SessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
+using struct nsPoint from "nsPoint.h";
+using struct mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
+using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
+using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
+using mozilla::dom::PerformanceTimingData from "mozilla/dom/PerformanceTiming.h";
+[RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
+
+union ChromeRegistryItem
+{
+    ChromePackage;
+    OverrideMapping;
+    SubstitutionMapping;
+};
+
+namespace mozilla {
+namespace dom {
+
+// SetXPCOMProcessAttributes passes an array of font data to the child,
+// but each platform needs different details so we have platform-specific
+// versions of the SystemFontListEntry type:
+#if defined(ANDROID)
+// Used on Android to pass the list of fonts on the device
+// to the child process
+struct SystemFontListEntry {
+    nsCString familyName;
+    nsCString faceName;
+    nsCString filepath;
+    uint32_t  weightRange;
+    uint32_t  stretchRange;
+    uint32_t  styleRange;
+    uint8_t   index;
+    FontVisibility visibility;
+};
+#elif defined(XP_MACOSX)
+// Used on Mac OS X to pass the list of font families (not faces)
+// from chrome to content processes.
+// The entryType field distinguishes several types of font family
+// record; see gfxMacPlatformFontList.h for values and meaning.
+struct SystemFontListEntry {
+    nsCString familyName;
+    FontVisibility visibility;
+    uint8_t   entryType;
+};
+#else
+// Used on Linux to pass list of font patterns from chrome to content.
+// (Unused on Windows, but there needs to be a definition of the type.)
+struct SystemFontListEntry {
+    nsCString pattern;
+    bool      appFontFamily;
+};
+#endif
+
+#ifdef MOZ_WIDGET_GTK
+struct SystemFontOptions {
+    int32_t antialias; // cairo_antialias_t
+    int32_t subpixelOrder; // cairo_subpixel_order_t
+    int32_t hintStyle; // cairo_hint_style_t
+    int32_t lcdFilter; // cairo_lcd_filter_t
+};
+#endif
+
+struct SystemFontList {
+    SystemFontListEntry[] entries;
+#ifdef MOZ_WIDGET_GTK
+    SystemFontOptions options;
+#endif
+};
+
+union SystemParameterValue {
+  bool;
+  float;
+};
+
+struct SystemParameterKVPair {
+  uint8_t id;
+  SystemParameterValue value;
+};
+
+struct ClipboardCapabilities {
+  bool supportsSelectionClipboard;
+  bool supportsFindClipboard;
+};
+
+union FileDescOrError {
+    FileDescriptor;
+    nsresult;
+};
+
+struct DomainPolicyClone
+{
+    bool        active;
+    nsIURI[] blocklist;
+    nsIURI[] allowlist;
+    nsIURI[] superBlocklist;
+    nsIURI[] superAllowlist;
+};
+
+struct AndroidSystemInfo
+{
+    nsString device;
+    nsString manufacturer;
+    nsString release_version;
+    nsString hardware;
+    uint32_t sdk_version;
+    bool     isTablet;
+};
+
+struct GetFilesResponseSuccess
+{
+  IPCBlob[] blobs;
+};
+
+struct GetFilesResponseFailure
+{
+  nsresult errorCode;
+};
+
+union GetFilesResponseResult
+{
+  GetFilesResponseSuccess;
+  GetFilesResponseFailure;
+};
+
+struct BlobURLRegistrationData
+{
+  nsCString url;
+  IPCBlob blob;
+  nsIPrincipal principal;
+  nsID? agentClusterId;
+  bool revoked;
+};
+
+struct JSWindowActorEventDecl
+{
+  nsString name;
+  bool capture;
+  bool systemGroup;
+  bool allowUntrusted;
+  bool? passive;
+  bool createActor;
+};
+
+struct JSWindowActorInfo
+{
+  nsCString name;
+  bool allFrames;
+
+  // The module of the url.
+  nsCString? url;
+
+  JSWindowActorEventDecl[] events;
+
+  // Observer notifications this actor listens to.
+  nsCString[] observers;
+  nsString[] matches;
+  nsCString[] remoteTypes;
+  nsString[] messageManagerGroups;
+};
+
+struct JSProcessActorInfo
+{
+    // The name of the actor.
+    nsCString name;
+    // The module of the url.
+    nsCString? url;
+
+    // Observer notifications this actor listens to.
+    nsCString[] observers;
+    nsCString[] remoteTypes;
+};
+
+struct GMPAPITags
+{
+    nsCString api;
+    nsCString[] tags;
+};
+
+struct GMPCapabilityData
+{
+    nsCString name;
+    nsCString version;
+    GMPAPITags[] capabilities;
+};
+
+struct L10nFileSourceDescriptor {
+  nsCString name;
+  nsCString metasource;
+  nsCString[] locales;
+  nsCString prePath;
+  nsCString[] index;
+};
+
+struct XPCOMInitData
+{
+    bool isOffline;
+    bool isConnected;
+    int32_t captivePortalState;
+    bool isLangRTL;
+    bool haveBidiKeyboards;
+    nsCString[] dictionaries;
+    ClipboardCapabilities clipboardCaps;
+    DomainPolicyClone domainPolicy;
+    nsIURI userContentSheetURL;
+    GfxVarUpdate[] gfxNonDefaultVarUpdates;
+    ContentDeviceData contentDeviceData;
+    GfxInfoFeatureStatus[] gfxFeatureStatus;
+    nsCString[] appLocales;
+    nsCString[] requestedLocales;
+    L10nFileSourceDescriptor[] l10nFileSources;
+    DynamicScalarDefinition[] dynamicScalarDefs;
+    SystemParameterKVPair[] systemParameters;
+};
+
+struct VisitedQueryResult
+{
+    nsIURI uri;
+    bool visited;
+};
+
+struct StringBundleDescriptor
+{
+    nsCString bundleURL;
+    FileDescriptor mapFile;
+    uint32_t mapSize;
+};
+
+struct IPCURLClassifierFeature
+{
+    nsCString featureName;
+    nsCString[] tables;
+    nsCString exceptionHostList;
+};
+
+// Transport structure for Notifications API notifications
+// (https://developer.mozilla.org/en-US/docs/Web/API/notification) instances
+// used exclusively by the NotificationEvent PContent method.
+struct NotificationEventData
+{
+    nsCString originSuffix;
+    nsCString scope;
+    nsString ID;
+    nsString title;
+    nsString dir;
+    nsString lang;
+    nsString body;
+    nsString tag;
+    nsString icon;
+    nsString data;
+    nsString behavior;
+};
+
+struct PostMessageData
+{
+    MaybeDiscardedBrowsingContext source;
+    nsString origin;
+    nsString targetOrigin;
+    nsIURI targetOriginURI;
+    nsIPrincipal callerPrincipal;
+    nsIPrincipal subjectPrincipal;
+    nsIURI callerURI;
+    bool isFromPrivateWindow;
+    nsCString scriptLocation;
+    uint64_t innerWindowId;
+};
+
+union SyncedContextInitializer
+{
+    BrowsingContextInitializer;
+    WindowContextInitializer;
+};
+
+union BlobURLDataRequestResult
+{
+  IPCBlob;
+  nsresult;
+};
+
+/**
+ * The PContent protocol is a top-level protocol between the UI process
+ * and a content process. There is exactly one PContentParent/PContentChild pair
+ * for each content process.
+ */
+[NestedUpTo=inside_cpow] sync protocol PContent
+{
+    manages PBrowser;
+    manages PContentPermissionRequest;
+    manages PCycleCollectWithLogs;
+    manages PExtensions;
+    manages PExternalHelperApp;
+    manages PFileDescriptorSet;
+    manages PHal;
+    manages PHandlerService;
+    manages PHeapSnapshotTempFileHelper;
+    manages PRemoteLazyInputStream;
+    manages PMedia;
+    manages PNecko;
+    manages PPrinting;
+    manages PChildToParentStream;
+    manages PParentToChildStream;
+#ifdef MOZ_WEBSPEECH
+    manages PSpeechSynthesis;
+#endif
+    manages PTestShell;
+    manages PRemoteSpellcheckEngine;
+    manages PWebBrowserPersistDocument;
+    manages PWebrtcGlobal;
+    manages PURLClassifier;
+    manages PURLClassifierLocal;
+    manages PScriptCache;
+    manages PLoginReputation;
+    manages PSessionStorageObserver;
+    manages PBenchmarkStorage;
+
+    // Depending on exactly how the new browser is being created, it might be
+    // created from either the child or parent process!
+    //
+    // The child creates the PBrowser as part of
+    // BrowserChild::BrowserFrameProvideWindow (which happens when the child's
+    // content calls window.open()), and the parent creates the PBrowser as part
+    // of ContentParent::CreateBrowser.
+    //
+    // When the parent constructs a PBrowser, the child trusts the attributes it
+    // receives from the parent.  In that case, the context should be
+    // FrameIPCTabContext.
+    //
+    // When the child constructs a PBrowser, the parent doesn't trust the
+    // attributes it receives from the child.  In this case, context must have
+    // type PopupIPCTabContext.  The parent checks that if the opener is a
+    // browser element, the context is also for a browser element.
+    //
+    // If |sameTabGroupAs| is non-zero, the new tab should go in the same
+    // TabGroup as |sameTabGroupAs|. This parameter should always be zero
+    // for PBrowser messages sent from the child to the parent.
+    //
+    // Separate messages are used for the parent and child side constructors due
+    // to the differences in data and actor setup required.
+    //
+    // Keep the last 3 attributes in sync with GetProcessAttributes!
+parent:
+    async ConstructPopupBrowser(ManagedEndpoint<PBrowserParent> browserEp,
+                                ManagedEndpoint<PWindowGlobalParent> windowEp,
+                                TabId tabId, IPCTabContext context,
+                                WindowGlobalInit windowInit,
+                                uint32_t chromeFlags);
+
+    // TODO: Do I need to make this return something to watch for completion?
+    // Guess we'll see how we end up triggering the actual print, for preview
+    // this should be enough...
+    async CloneDocumentTreeInto(MaybeDiscardedBrowsingContext aSourceBc,
+                                MaybeDiscardedBrowsingContext aTargetBc,
+                                PrintData aPrintData);
+
+    async UpdateRemotePrintSettings(MaybeDiscardedBrowsingContext aBc,
+                                    PrintData aPrintData);
+
+    async PExtensions();
+
+child:
+    async ConstructBrowser(ManagedEndpoint<PBrowserChild> browserEp,
+                           ManagedEndpoint<PWindowGlobalChild> windowEp,
+                           TabId tabId,
+                           IPCTabContext context,
+                           WindowGlobalInit windowInit,
+                           uint32_t chromeFlags, ContentParentId cpId,
+                           bool isForBrowser, bool isTopLevel);
+
+both:
+    async PFileDescriptorSet(FileDescriptor fd);
+
+    // For parent->child, aBrowser must be non-null; aContext can
+    // be null to indicate the browser's current root document, or non-null
+    // to persist a subdocument.  For child->parent, arguments are
+    // ignored and should be null.
+    async PWebBrowserPersistDocument(nullable PBrowser aBrowser,
+                                     MaybeDiscardedBrowsingContext aContext);
+
+    async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
+                     ClonedMessageData? aStack);
+
+child:
+    async InitGMPService(Endpoint<PGMPServiceChild> service);
+    async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
+    async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
+
+    // Give the content process its endpoints to the compositor.
+    async InitRendering(
+      Endpoint<PCompositorManagerChild> compositor,
+      Endpoint<PImageBridgeChild> imageBridge,
+      Endpoint<PVRManagerChild> vr,
+      Endpoint<PRemoteDecoderManagerChild> video,
+      uint32_t[] namespaces);
+
+    // Re-create the rendering stack using the given endpoints. This is sent
+    // after the compositor process has crashed. The new endpoints may be to a
+    // newly launched GPU process, or the compositor thread of the UI process.
+    async ReinitRendering(
+      Endpoint<PCompositorManagerChild> compositor,
+      Endpoint<PImageBridgeChild> bridge,
+      Endpoint<PVRManagerChild> vr,
+      Endpoint<PRemoteDecoderManagerChild> video,
+      uint32_t[] namespaces);
+
+    async NetworkLinkTypeChange(uint32_t type);
+
+    // Re-create the rendering stack for a device reset.
+    async ReinitRenderingForDeviceReset();
+
+    /**
+     * Enable system-level sandboxing features, if available.  Can
+     * usually only be performed zero or one times.  The child may
+     * abnormally exit if this fails; the details are OS-specific.
+     */
+    async SetProcessSandbox(FileDescriptor? aBroker);
+
+    async RequestMemoryReport(uint32_t generation,
+                              bool anonymize,
+                              bool minimizeMemoryUsage,
+                              FileDescriptor? DMDFile)
+        returns (uint32_t aGeneration);
+
+    async RequestPerformanceMetrics(nsID aID);
+
+#if defined(XP_WIN)
+    /**
+     * Used by third-party modules telemetry (aka "untrusted modules" telemetry)
+     * to pull data from content processes.
+     */
+    async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+#endif  // defined(XP_WIN)
+
+    /**
+     * Communication between the PuppetBidiKeyboard and the actual
+     * BidiKeyboard hosted by the parent
+     */
+    async BidiKeyboardNotify(bool isLangRTL, bool haveBidiKeyboards);
+
+    /**
+     * Dump this process's GC and CC logs to the provided files.
+     *
+     * For documentation on the other args, see dumpGCAndCCLogsToFile in
+     * nsIMemoryInfoDumper.idl
+     */
+    async PCycleCollectWithLogs(bool dumpAllTraces,
+                                FileDescriptor gcLog,
+                                FileDescriptor ccLog);
+
+    async PTestShell();
+
+    async PScriptCache(FileDescOrError cacheFile, bool wantCacheData);
+
+    async RegisterChrome(ChromePackage[] packages, SubstitutionMapping[] substitutions,
+                         OverrideMapping[] overrides, nsCString locale, bool reset);
+    async RegisterChromeItem(ChromeRegistryItem item);
+
+    async ClearImageCacheFromPrincipal(nsIPrincipal aPrincipal);
+
+    async ClearImageCacheFromBaseDomain(nsCString aBaseDomain);
+
+    async ClearImageCache(bool privateLoader, bool chrome);
+
+    async ClearStyleSheetCache(nsIPrincipal? aForPrincipal,
+                               nsCString? aBaseDomain);
+
+    async SetOffline(bool offline);
+    async SetConnectivity(bool connectivity);
+    async SetCaptivePortalState(int32_t aState);
+
+    async NotifyVisited(VisitedQueryResult[] uri);
+
+    /**
+     * Tell the child that the system theme has changed, and that a repaint is
+     * necessary.
+     */
+    async ThemeChanged(FullLookAndFeel lookAndFeelData, ThemeChangeKind aKind);
+
+    async UpdateSystemParameters(SystemParameterKVPair[] aUpdates);
+
+    async PreferenceUpdate(Pref pref);
+    async VarUpdate(GfxVarUpdate var);
+
+    async UpdatePerfStatsCollectionMask(uint64_t aMask);
+    async CollectPerfStatsJSON() returns (nsCString aStats);
+
+    async CollectScrollingMetrics() returns (uint32_t pixelsScrolled, uint32_t scrollDurationMS);
+
+    async NotifyAlertsObserver(nsCString topic, nsString data);
+
+    async GeolocationUpdate(nsIDOMGeoPosition aPosition);
+
+    async GeolocationError(uint16_t errorCode);
+
+    async UpdateDictionaryList(nsCString[] dictionaries);
+
+    async UpdateFontList(SystemFontList fontList);
+
+    /**
+     * The shared font list has been updated by the parent, so child processes
+     * should globally reflow everything to pick up new character coverage etc.
+     * If aFullRebuild is true, child processes must discard and recreate
+     * their mappings to the shmem blocks, as those are no longer valid.
+     * This message has raised priority so that it will take precedence over
+     * vsync messages to the child.
+     */
+    [Priority=mediumhigh] async RebuildFontList(bool aFullRebuild);
+
+    /**
+     * The shared font list has been modified, potentially adding matches
+     * for src:local() names that were previously not known, so content
+     * may need to be reflowed.
+     */
+    async FontListChanged();
+
+    /**
+     * The font list or prefs have been updated in such a way that we might need
+     * to do a reflow and maybe reframe.
+     */
+    async ForceGlobalReflow(bool aNeedsReframe);
+
+    /**
+     * A new shmem block has been added to the font list; the child process
+     * should map the new block and add to its index.
+     */
+    async FontListShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
+                                SharedMemoryHandle aHandle);
+
+    async UpdateAppLocales(nsCString[] appLocales);
+    async UpdateRequestedLocales(nsCString[] requestedLocales);
+
+    async UpdateL10nFileSources(L10nFileSourceDescriptor[] sources);
+
+    async RegisterStringBundles(StringBundleDescriptor[] stringBundles);
+
+    async UpdateSharedData(FileDescriptor mapFile, uint32_t aSize,
+                           IPCBlob[] blobs,
+                           nsCString[] changedKeys);
+
+    // nsIPermissionManager messages
+    async AddPermission(Permission permission);
+    async RemoveAllPermissions();
+
+    async FlushMemory(nsString reason);
+
+    async ApplicationBackground();
+    async ApplicationForeground();
+    async GarbageCollect();
+    async CycleCollect();
+    async UnlinkGhosts();
+
+    /**
+     * Start accessibility engine in content process.
+     * @param aTid is the thread ID of the chrome process main thread. Only used
+     *             on Windows; pass 0 on other platforms.
+     * @param aMsaaID is an a11y-specific unique id for the content process
+     *                that is generated by the chrome process. Only used on
+     *                Windows; pass 0 on other platforms.
+     */
+    async ActivateA11y(uint32_t aMainChromeTid, uint32_t aMsaaID);
+
+    /**
+     * Shutdown accessibility engine in content process (if not in use).
+     */
+    async ShutdownA11y();
+
+    async AppInfo(nsCString version, nsCString buildID, nsCString name, nsCString UAName,
+                  nsCString ID, nsCString vendor, nsCString sourceURL, nsCString updateURL);
+
+    /**
+     * Send the remote type associated with the content process.
+     */
+    async RemoteType(nsCString aRemoteType);
+
+    /**
+     * Send BlobURLRegistrationData to child process.
+     */
+    async InitBlobURLs(BlobURLRegistrationData[] registrations);
+
+    /**
+     * Send JS{Content, Window}ActorInfos to child process.
+     */
+    async InitJSActorInfos(JSProcessActorInfo[] aContentInfos, JSWindowActorInfo[] aWindowInfos);
+
+    /**
+     * Unregister a previously registered JSWindowActor in the child process.
+     */
+    async UnregisterJSWindowActor(nsCString name);
+
+    /**
+     * Unregister a previously registered JSProcessActor in the child process.
+     */
+    async UnregisterJSProcessActor(nsCString name);
+
+    async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
+                                    StructuredCloneData initialData,
+                                    FullLookAndFeel lookAndFeeldata,
+                                    /* used on MacOSX/Linux/Android only: */
+                                    SystemFontList systemFontList,
+                                    SharedMemoryHandle? sharedUASheetHandle,
+                                    uintptr_t sharedUASheetAddress,
+                                    SharedMemoryHandle[] sharedFontListBlocks);
+
+    // Notify child that last-pb-context-exited notification was observed
+    async LastPrivateDocShellDestroyed();
+
+    async NotifyProcessPriorityChanged(ProcessPriority priority);
+    async MinimizeMemoryUsage();
+
+    /**
+     * Used to manage nsIStyleSheetService across processes.
+     */
+    async LoadAndRegisterSheet(nsIURI uri, uint32_t type);
+    async UnregisterSheet(nsIURI uri, uint32_t type);
+
+    /**
+     * Notify idle observers in the child
+     */
+    async NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
+
+    async InvokeDragSession(MaybeDiscardedWindowContext aContext,
+                            IPCDataTransfer[] transfers, uint32_t action);
+
+    async EndDragSession(bool aDoneDrag, bool aUserCancelled,
+                         LayoutDeviceIntPoint aDragEndPoint,
+                         uint32_t aKeyModifiers);
+
+    async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
+
+    /**
+     * Notify the child to shutdown. The child will in turn call FinishShutdown
+     * and let the parent close the channel.
+     */
+    async Shutdown();
+
+    async LoadProcessScript(nsString url);
+
+    /**
+     * Requests a full native update of a native plugin child window. This is
+     * a Windows specific call.
+     */
+    async UpdateWindow(uintptr_t aChildId);
+
+    /**
+     * Notify the child that cache is emptied.
+     */
+    async NotifyEmptyHTTPCache();
+
+    /**
+     * Send a `push` event without data to a service worker in the child.
+     */
+    async Push(nsCString scope, Principal principal, nsString messageId);
+
+    /**
+     * Send a `push` event with data to a service worker in the child.
+     */
+    async PushWithData(nsCString scope, Principal principal,
+                       nsString messageId, uint8_t[] data);
+
+    /**
+     * Send a `pushsubscriptionchange` event to a service worker in the child.
+     */
+    async PushSubscriptionChange(nsCString scope, Principal principal);
+
+    async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
+
+    async BlobURLRegistration(nsCString aURI, IPCBlob aBlob,
+                              Principal aPrincipal,
+                              nsID? aAgentClusterId);
+
+    async BlobURLUnregistration(nsCString aURI);
+
+    async GMPsChanged(GMPCapabilityData[] capabilities);
+
+
+    async PParentToChildStream();
+
+    async ProvideAnonymousTemporaryFile(uint64_t aID, FileDescOrError aFD);
+
+    async SetPermissionsWithKey(nsCString aPermissionKey, Permission[] aPermissions);
+
+    async RefreshScreens(ScreenDetails[] aScreens);
+
+    async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
+
+    async ShareCodeCoverageMutex(CrossProcessMutexHandle handle);
+    async FlushCodeCoverageCounters() returns (bool unused);
+
+    /*
+     * IPC message to enable the input event queue on the main thread of the
+     * content process.
+     */
+    async SetInputEventQueueEnabled();
+
+    /*
+     * IPC message to flush the input event queue on the main thread of the
+     * content process.
+     *
+     * When the ContentParent stops sending the input event with input priority,
+     * there may be some pending events in the input event queue and normal
+     * event queue. Here is a possible scenario.
+     * R: Runnables.
+     * D: Enable the input priority event.
+     * E: Disable the input priority evnet.
+     *
+     *                     D       E
+     * Normal Queue: R1      R2      R3
+     * Input Queue:     II      I2      I3
+     *
+     * To avoid the newly added normal events (e.g. R2, which may be an input
+     * event) preempt the pending input events (e.g. I1), or the newly added
+     * input events (e.g. I3) preempt the pending normal events (e.g. R2), we
+     * have to flush all pending events before enabling and disabling the input
+     * priority event.
+     *
+     * To flush the normal event queue and the input event queue, we use three
+     * IPC messages as the followings.
+     * FI: Flush the input queue.
+     * SI: Suspend the input queue.
+     * RI: Resume the input queue.
+     *
+     * Normal Queue: R1    FI    RI R2   FI    RI R3
+     * Input Queue:     II    SI      I2    SI       I3
+     *
+     * When the flush input request is processed before the other two requests,
+     * we consume all input events until the suspend request. After handling the
+     * suspend request, we stop consuming the input events until the resume
+     * request to make sure we consume all pending normal events.
+     *
+     * If we process the suspend request before the other two requests, we
+     * ignore the flush request and consume all pending normal events until the
+     * resume request.
+     */
+    async FlushInputEventQueue();
+
+    /*
+     * IPC message to resume consuming the pending events in the input event
+     * queue.
+     */
+    async ResumeInputEventQueue();
+
+    /*
+     * IPC message to suspend consuming the pending events in the input event
+     * queue.
+     */
+    [Priority=input] async SuspendInputEventQueue();
+
+    /*
+     * IPC message to propagate dynamic scalar definitions, added after the
+     * content process is spawned, from the parent to the child.
+     * Dynamic scalar definitions added at the process startup are handled
+     * using the |TelemetryIPC::AddDynamicScalarDefinitions| functions.
+     */
+    async AddDynamicScalars(DynamicScalarDefinition[] definitions);
+
+    // This message is sent to content processes, and triggers the creation of a
+    // new HttpChannelChild that will be connected to the parent channel
+    // represented by registrarId.
+    // This is on PContent not PNecko, as PNecko may not be initialized yet.
+    // The returned loadInfo needs to be set on the channel - since the channel
+    // moved to a new process it now has different properties.
+
+    async CrossProcessRedirect(RedirectToRealChannelArgs args,
+                               Endpoint<PStreamFilterParent>[] aEndpoint)
+        returns (nsresult rv);
+
+    /**
+    * This method is used to notifty content process to start delayed autoplay
+    * media via browsing context.
+    */
+    async StartDelayedAutoplayMediaComponents(MaybeDiscardedBrowsingContext aContext);
+
+    /**
+     * This method is used to dispatch MediaControlAction to content process in
+     * order to control media within a specific browsing context tree.
+     */
+    async UpdateMediaControlAction(MaybeDiscardedBrowsingContext aContext,
+                                   MediaControlAction aAction);
+
+    // Begin subscribing to a new BrowsingContextGroup, sending down the current
+    // value for every individual BrowsingContext.
+    async RegisterBrowsingContextGroup(uint64_t aGroupId, SyncedContextInitializer[] aInits);
+
+    // The BrowsingContextGroup has been destroyed in the parent process. The
+    // content process won't destroy the group until it receives this message or
+    // during shutdown.
+    //
+    // When the content process receives this message, all contexts in the group
+    // should have already been destroyed.
+    async DestroyBrowsingContextGroup(uint64_t aGroupId);
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+    // Initialize top-level actor for testing content process sandbox.
+    async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
+#endif
+
+    async LoadURI(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aSetNavigating)
+        returns (bool aSuccess);
+
+    async InternalLoad(nsDocShellLoadState aLoadState);
+
+    async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
+
+    async GoBack(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction, bool aUserActivation);
+    async GoForward(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction, bool aUserActivation);
+    async GoToIndex(MaybeDiscardedBrowsingContext aContext, int32_t aIndex, int32_t? aCancelContentJSEpoch, bool aUserActivation);
+    async Reload(MaybeDiscardedBrowsingContext aContext, uint32_t aReloadFlags);
+    async StopLoad(MaybeDiscardedBrowsingContext aContext, uint32_t aStopFlags);
+
+    async OnAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
+                           nsCString aTrackingOrigin,
+                           uint32_t aCookieBehavior,
+                           StorageAccessPermissionGrantedReason aReason);
+
+    async OnContentBlockingDecision(MaybeDiscardedBrowsingContext aContext,
+                                    BlockingDecision aReason,
+                                    uint32_t aRejectedReason);
+
+    /**
+     * Abort orientationPendingPromises for documents in the child which
+     * are part of a BrowsingContextGroup.
+     */
+    async AbortOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
+
+    async HistoryCommitIndexAndLength(MaybeDiscardedBrowsingContext aContext,
+                                      uint32_t aIndex, uint32_t aLength,
+                                      nsID aChangeID);
+
+   async DispatchLocationChangeEvent(MaybeDiscardedBrowsingContext aContext);
+
+  // Dispatches a "beforeunload" event to each in-process content window in the
+  // subtree beginning at `aStartingAt`, and returns the result as documented in
+  // the `PermitUnloadResult` enum.
+  async DispatchBeforeUnloadToSubtree(MaybeDiscardedBrowsingContext aStartingAt)
+      returns (PermitUnloadResult result);
+
+  async CanSavePresentation(MaybeDiscardedBrowsingContext aTopLevelContext,
+      uint64_t? aDocumentChannelId) returns (bool success);
+
+  // Update the cached list of codec supported in the given process.
+  async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
+
+  async FlushTabState(MaybeDiscardedBrowsingContext aBrowsingContext)
+      returns(bool aHadContext);
+
+  // Send the list of the supported mimetypes in the given process. GeckoView-specific
+  async DecoderSupportedMimeTypes(nsCString[] supportedTypes);
+
+  // Used to initialize the global variable in content processes with the
+  // latched value in the parent process. See dom/LocalStorageCommon.h for more
+  // details.
+  async InitNextGenLocalStorageEnabled(bool enabled);
+
+parent:
+
+    async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
+                                        nsILayoutHistoryState aState);
+
+    async SessionHistoryEntryTitle(MaybeDiscardedBrowsingContext aContext,
+                                   nsString aTitle);
+
+    async SessionHistoryEntryScrollRestorationIsManual(MaybeDiscardedBrowsingContext aContext,
+                                                       bool aIsManual);
+    async SessionHistoryEntryScrollPosition(MaybeDiscardedBrowsingContext aContext,
+                                            int32_t aX, int32_t aY);
+
+    async SessionHistoryEntryCacheKey(MaybeDiscardedBrowsingContext aContext,
+                                      uint32_t aCacheKey);
+
+    async SessionHistoryEntryStoreWindowNameInContiguousEntries(MaybeDiscardedBrowsingContext aContext,
+                                                                nsString aName);
+
+    async GetLoadingSessionHistoryInfoFromParent(MaybeDiscardedBrowsingContext aContext)
+        returns (LoadingSessionHistoryInfo? aLoadingInfo);
+
+    async RemoveFromBFCache(MaybeDiscardedBrowsingContext aContext);
+
+    async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
+
+    async CreateGMPService();
+
+    async InitStreamFilter(uint64_t channelId, nsString addonId)
+        returns (Endpoint<PStreamFilterChild> aEndpoint);
+
+    async PRemoteSpellcheckEngine();
+
+    async InitCrashReporter(NativeThreadId tid);
+
+    sync IsSecureURI(nsIURI aURI, uint32_t aFlags,
+                     OriginAttributes aOriginAttributes)
+        returns (bool isSecureURI);
+
+    async AccumulateMixedContentHSTS(nsIURI aURI, bool aActive,
+                                     OriginAttributes aOriginAttributes);
+
+    [Nested=inside_cpow] async PHal();
+
+    async PHeapSnapshotTempFileHelper();
+
+    async PNecko();
+
+    async PPrinting();
+
+    async PChildToParentStream();
+
+#ifdef MOZ_WEBSPEECH
+    async PSpeechSynthesis();
+#endif
+
+    async PMedia();
+
+    async PWebrtcGlobal();
+
+    async CreateAudioIPCConnection() returns (FileDescOrError fd);
+
+    sync PURLClassifier(Principal principal)
+        returns (bool success);
+
+    async PURLClassifierLocal(nsIURI uri, IPCURLClassifierFeature[] features);
+
+    async PLoginReputation(nsIURI formURI);
+
+    async PSessionStorageObserver();
+
+    async PBenchmarkStorage();
+
+    // Services remoting
+
+    async StartVisitedQueries(nsIURI[] uri);
+    async SetURITitle(nsIURI uri, nsString title);
+
+    async LoadURIExternal(nsIURI uri,
+                          nsIPrincipal triggeringPrincipal,
+                          MaybeDiscardedBrowsingContext browsingContext,
+                          bool wasExternallyTriggered);
+    async ExtProtocolChannelConnectParent(uint64_t registrarId);
+
+    // PrefService message
+    sync GetGfxVars() returns (GfxVarUpdate[] vars);
+
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData)
+      returns (StructuredCloneData[] retval);
+
+    async ShowAlert(nsIAlertNotification alert);
+
+    async CloseAlert(nsString name);
+
+    async DisableNotifications(Principal principal);
+
+    async OpenNotificationSettings(Principal principal);
+
+    async AddSecurityState(MaybeDiscardedWindowContext aContext, uint32_t aStateFlags);
+
+    // Request that the ServiceWorkerManager in the parent process create a
+    // notification "click" or "close" event and dispatch it on the relevant
+    // ServiceWorker. This needs to happen because when a notification is
+    // created it is tied to a specific content process and when the user clicks
+    // on the notification, it will be that content process that is notified.
+    // However, even if the ServiceWorker lives in that process (it may no
+    // longer be in that process, or may have never lived there), the right/only
+    // way to talk through the ServiceWorker is through the parent.
+    //
+    // This happens on PContent because the ServiceWorkerManager lives on the
+    // main thread and bouncing this off of PBackground would be silly and
+    // complex. In the long run, the notification implementation will be
+    // overhauled to directly process the notification click/close and directly
+    // translate that to a ServiceWorker event.
+    async NotificationEvent(nsString type, NotificationEventData data);
+
+    // Creates a helper for forwarding data from an nsExternalAppHandler
+    // running in the content process, to one running in the parent
+    // process.
+    // Bug 1574372 aims to run nsExternalAppHandler entirely in the
+    // parent so that we can remove this.
+    //
+    // Serializes the uri, loadInfo, contentType, referrer, contentDisposition
+    // headers and contentLength of the channel so that we can make them
+    // available to the parent instance via a nsIChannel helper. Also
+    // passes whether the original channel was an instance of nsIFileChannel.
+    //
+    // aContext is the BrowsingContext that initiated the load, and created the
+    // channel.
+    //
+    // Pass true for aForceSave to always save this content to disk, regardless of
+    // nsIMIMEInfo and other such influences.
+    // Pass true for aShouldCloseWindow to specify that aContext was opened specifically
+    // for this load, and should be closed once we've handled it.
+    async PExternalHelperApp(nsIURI uri,
+                             LoadInfoArgs? loadInfoArgs,
+                             nsCString aMimeContentType,
+                             nsCString aContentDisposition,
+                             uint32_t aContentDispositionHint,
+                             nsString aContentDispositionFilename,
+                             bool aForceSave,
+                             int64_t aContentLength,
+                             bool aWasFileChannel,
+                             nsIURI aReferrer,
+                             MaybeDiscardedBrowsingContext aContext,
+                             bool aShouldCloseWindow);
+
+    async PHandlerService();
+
+    async AddGeolocationListener(bool highAccuracy);
+    async RemoveGeolocationListener();
+    async SetGeolocationHigherAccuracy(bool enable);
+
+    async ConsoleMessage(nsString message);
+    async ScriptErrorWithStack(nsString message, nsString sourceName, nsString sourceLine,
+                               uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
+                               nsCString category, bool privateWindow,
+                               bool fromChromeContext, ClonedMessageData stack);
+
+    // Places the items within dataTransfer on the clipboard.
+    async SetClipboard(IPCDataTransfer aDataTransfer,
+                       bool aIsPrivateData,
+                       Principal aRequestingPrincipal,
+                       nsContentPolicyType aContentPolicyType,
+                       int32_t aWhichClipboard);
+
+    // Given a list of supported types, returns the clipboard data for the
+    // first type that matches.
+    sync GetClipboard(nsCString[] aTypes, int32_t aWhichClipboard)
+        returns (IPCDataTransfer dataTransfer);
+
+    // Returns a list of formats supported by the clipboard
+    sync GetExternalClipboardFormats(int32_t aWhichClipboard, bool aPlainTextOnly) returns (nsCString[] aTypes);
+
+    // Clears the clipboard.
+    async EmptyClipboard(int32_t aWhichClipboard);
+
+    // Returns true if data of one of the specified types is on the clipboard.
+    sync ClipboardHasType(nsCString[] aTypes, int32_t aWhichClipboard)
+        returns (bool hasType);
+
+    // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
+    // the content process.
+    [Compress] async PlaySound(nsIURI aURL);
+    [Compress] async Beep();
+    [Compress] async PlayEventSound(uint32_t aEventId);
+
+    sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
+        returns (uint8_t[] bits);
+
+    // Tell the parent that the child has gone idle for the first time.
+    async FirstIdle();
+
+    async DeviceReset();
+
+    async CopyFavicon(nsIURI oldURI, nsIURI newURI, bool isPrivate);
+
+    /**
+     * Notifies the parent about a recording device is starting or shutdown.
+     * @param recordingStatus starting or shutdown
+     * @param pageURL URL that request that changing the recording status
+     * @param isAudio recording start with microphone
+     * @param isVideo recording start with camera
+     */
+    async RecordingDeviceEvents(nsString recordingStatus,
+                                nsString pageURL,
+                                bool isAudio,
+                                bool isVideo);
+
+    // Graphics errors
+    async GraphicsError(nsCString aError);
+
+    // Driver crash guards. aGuardType must be a member of CrashGuardType.
+    sync BeginDriverCrashGuard(uint32_t aGuardType) returns (bool crashDetected);
+    sync EndDriverCrashGuard(uint32_t aGuardType);
+
+    async AddIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
+    async RemoveIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
+
+    /**
+     * This message is only used on X11 platforms.
+     *
+     * Send a dup of the plugin process's X socket to the parent
+     * process.  In theory, this scheme keeps the plugin's X resources
+     * around until after both the plugin process shuts down *and* the
+     * parent process closes the dup fd.  This is used to prevent the
+     * parent process from crashing on X errors if, e.g., the plugin
+     * crashes *just before* a repaint and the parent process tries to
+     * use the newly-invalid surface.
+     */
+    async BackUpXResources(FileDescriptor aXSocketFd);
+
+    async RequestAnonymousTemporaryFile(uint64_t aID);
+
+    /**
+     * Sets "offline-app" permission for the principal.  Called when we hit
+     * a web app with the manifest attribute in <html>
+     */
+    async SetOfflinePermission(Principal principal);
+
+    /**
+     * Notifies the parent to continue shutting down after the child performs
+     * its shutdown tasks.
+     */
+    async FinishShutdown();
+
+    async UpdateDropEffect(uint32_t aDragAction, uint32_t aDropEffect);
+
+    /**
+     * Initiates an asynchronous request for permission for the
+     * provided principal.
+     *
+     * @param aRequests
+     *   The array of permissions to request.
+     * @param aPrincipal
+     *   The principal of the request.
+     * @param aTopLevelPrincipal
+     *   The principal of the top level page the request comes from.
+     * @param tabId
+     *   To identify which tab issues this request.
+     *
+     * NOTE: The principal is untrusted in the parent process. Only
+     *       principals that can live in the content process should
+     *       provided.
+     */
+    async PContentPermissionRequest(PermissionRequest[] aRequests,
+                                    Principal aPrincipal,
+                                    Principal aTopLevelPrincipal,
+                                    bool aIsHandlingUserInput,
+                                    bool aMaybeUnsafePermissionDelegate,
+                                    TabId tabId);
+
+    async ShutdownProfile(nsCString aProfile);
+
+    /**
+     * Request graphics initialization information from the parent.
+     */
+    sync GetGraphicsDeviceInitData()
+        returns (ContentDeviceData aData);
+
+    /**
+     * Request a buffer containing the contents of the output color profile.
+     * If set, this is the file pointed to by
+     * gfx.color_management.display_profile, otherwise it contains a
+     * platform-specific default
+     */
+    sync GetOutputColorProfileData()
+        returns (uint8_t[] aOutputColorProfileData);
+
+    /**
+     * A shared font list (see gfx/thebes/SharedFontList.*) contains a list
+     * of shared-memory blocks that are used to store all the font list data.
+     * The font list created in the parent process is the only one that can
+     * create or store objects into the shared memory; content processes font
+     * lists have read-only access to it.
+     *
+     * To minimize the cost of record allocations, the shared font list
+     * bump-allocates new objects that it adds to the shared memory blocks
+     * (i.e. the records stored in the shared memory blocks are only ever
+     * appended, and never freed except when the entire font list is
+     * reconstructed).
+     *
+     * When initially created by the parent process, the font list may contain
+     * nothing except a header, and the list of the system's installed font
+     * family names. Additional data about the families (styled faces available
+     * and character coverage) is appended to the font list during the session
+     * as a given font is considered for use, because loading all data for all
+     * installed fonts during startup is too expensive/slow.
+     *
+     * During content process launch, a content process's first step in
+     * gaining access to the font list is to call GetFontListShmBlock,
+     * passing index zero in order to get access to the first block, which
+     * contains the font list header and the list of font-family records
+     * (which may be virtually all uninitialized at this time, containing
+     * nothing but the family names). Once a content process determines a
+     * font-family name it wants to use (e.g. from a CSS font-family list, or
+     * from preferences), if that Family record has not yet been initialized,
+     * it will call InitializeFamily (below) to have the parent process
+     * populate Face records in the shared memory with the family's styles.
+     * The content process can then pick the face with best style match from
+     * the available faces according to the CSS font matching algorithm, load
+     * its character map, then send the map to the parent process using
+     * SetCharacterMap (so that the parent process can share the map with all
+     * processes to avoid duplication of work).
+     *
+     * At some point, as the parent process adds data to the font list, a new
+     * shared-memory block will probably be needed. At that point the parent
+     * will create a new block and append it to its share memory block list.
+     * The new Block index will start to appear in Pointer records in the
+     * shared memory, and the content process's can then fetch those other
+     * blocks using this function as needed.
+     *
+     * @param aGeneration
+     *   The font list has a Generation ID stored in its Header, and any time
+     *   the parent process needs to reinitialize the list (because of a change
+     *   in the available font repertoire) a new Generation ID is assigned.
+     *   Content processes pass the Generation of the list they're using in
+     *   all messages, so that the parent can recognize if they're out of date
+     *   and safely ignore such messages. (When the parent rebuilds the list,
+     *   it will notify all content processes, but they may still send a few
+     *   messages that relate to the obsolete list before they have processed
+     *   this notification.)
+     * @param aIndex
+     *   (Zero-based) index of the shared-memory block to be mapped.
+     *   In a typical case, there will be a handful of blocks altogether, so
+     *   each content process only needs to make this request a few times.
+     * @returns aHandle
+     *   Handle that can be used to construct a SharedMemory that maps the
+     *   requested block of memory.
+     *   If aGeneration does not match the parent's font list generation ID, or
+     *   if requesting a block that does not exist (i.e. with aIndex greater
+     *   than or equal to the number of blocks actually in existence), returns
+     *   a null handle.
+     *
+     * This is a sync message because the content process needs font data in
+     * order to perform font-matching (e.g. during reflow), and cannot continue
+     * until it has mapped the font-list memory.
+     */
+    sync GetFontListShmBlock(uint32_t aGeneration, uint32_t aIndex)
+        returns (SharedMemoryHandle aHandle);
+
+    /**
+     * Ask the parent to initialize a given font family, so that face metadata
+     * will be available. Content processes will only call this for families
+     * where the Face data has not yet been populated, so it will generally be
+     * called no more than once per family. (It may not be needed at all, if
+     * the parent process has already initialized the families that content
+     * wants to use.)
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aFamilyIndex
+     *   The 0-based index of the Family within the font-list that a content
+     *   process needs to use.
+     * @param aLoadCmaps
+     *   If true, the parent should eagerly load character maps for the faces
+     *   in the family.
+     *
+     * This is a sync message because the content process cannot complete its
+     * font-matching until the family is fully populated with Face records.
+     * If we make it async, content processes will reflow using fallbacks,
+     * and then have to reflow again once all the font information needed
+     * becomes available.
+     */
+    sync InitializeFamily(uint32_t aGeneration, uint32_t aFamilyIndex,
+                          bool aLoadCmaps);
+
+    /**
+     * Record the character map of a given Face in the font list.
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aFacePtr
+     *   Font-list shared-memory "pointer" to the Face record to be updated.
+     *   A Pointer is a record of a shared-memory block index and an offset
+     *   within that block, which each process that maps the block can convert
+     *   into a real pointer in its address space.
+     * @param aMap
+     *   The character coverage map of the face. (This will be stored as a
+     *   SharedBitSet record within the shared font list, and the Face record
+     *   will be updated to reference it.)
+     */
+    async SetCharacterMap(uint32_t aGeneration, Pointer aFacePtr, gfxSparseBitSet aMap);
+
+    /**
+     * Ask the parent to set up the merged charmap for a family, to accelerate
+     * future fallback searches.
+     * aFamilyPtr may refer to an element of either the Families() or AliasFamilies().
+     */
+    async SetupFamilyCharMap(uint32_t aGeneration, Pointer aFamilyPtr);
+
+    /**
+     * Ask the parent to try and complete the InitOtherFamilyNames task, because
+     * we're trying to look up a localized font name. This is a sync method so that
+     * the update will be available before the child continues reflow; however, it
+     * is possible the task will have timed-out in the parent and not actually
+     * completed during this call.
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aDefer
+     *   Parameter aDeferOtherFamilyNamesLoading to be passed to
+     *   gfxPlatformFontList::InitOtherFamilyNames, to determine whether name
+     *   loading should be deferred to a background task or run immediately.
+     * @param aLoaded
+     *   Returns whether the font name loading process has completed.
+     *
+     * TODO: This is currently a sync message but can probably be made async,
+     * at the cost of an increased chance of some testcases failing because
+     * they depend on lazily-loaded font names.
+     */
+    sync InitOtherFamilyNames(uint32_t aGeneration, bool aDefer) returns (bool aLoaded);
+
+    /**
+     * Ask the parent to load all font character maps, as we need to do an
+     * exhaustive font-fallback search. This is done asynchronously; when it
+     * finishes, the parent will trigger global reflow so that font selection
+     * is re-done in all content, making use of the newly-loaded cmaps.
+     * Normally this will only happen once per browser session (unless the
+     * font list is rebuilt due to installation/removal of system fonts).
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aStartIndex
+     *   The family index to start from; the sender has determined that cmaps
+     *   up to this point are already loaded.
+     */
+    async StartCmapLoading(uint32_t aGeneration, uint32_t aStartIndex);
+
+    /**
+     * Ask the parent for a specific hyphenation resource (identified by URI)
+     * as a shared memory block.
+     *
+     * This is a sync method because at the point where a content process finds
+     * that it requires a particular hyphenation dictionary, this is blocking
+     * reflow; making it async would require scheduling another reflow after
+     * the resource is available, and a possible layout "jump" as line-breaks
+     * change. Note that the content process retains a reference to each such
+     * resource it requests, so it will only make this call once per locale for
+     * which hyphenation data exists.
+     *
+     * @param aURI
+     *   The URI (which currently must always point to an omnijar resource)
+     *   for the required hyphenation dictionary.
+     * @param aHandle
+     *   Returns the shmem handle to the resource (or an invalid shmem handle
+     *   in case of failure).
+     * @param aLoaded
+     *   Returns the size in bytes of the resource.
+     */
+    sync GetHyphDict(nsIURI aURI) returns (SharedMemoryHandle aHandle, uint32_t aSize);
+
+    async CreateWindow(PBrowser aThisTab,
+                       MaybeDiscardedBrowsingContext aParent,
+                       PBrowser aNewTab,
+                       uint32_t aChromeFlags,
+                       bool aCalledFromJS,
+                       bool aWidthSpecified,
+                       bool aForPrinting,
+                       bool aForWindowDotPrint,
+                       nsIURI aURIToLoad,
+                       nsCString aFeatures,
+                       float aFullZoom,
+                       Principal aTriggeringPrincipal,
+                       nsIContentSecurityPolicy aCsp,
+                       nsIReferrerInfo aReferrerInfo,
+                       OriginAttributes aOriginAttributes)
+        returns (CreatedWindowInfo window);
+
+    async CreateWindowInDifferentProcess(
+      PBrowser aThisTab,
+      MaybeDiscardedBrowsingContext aParent,
+      uint32_t aChromeFlags,
+      bool aCalledFromJS,
+      bool aWidthSpecified,
+      nsIURI aURIToLoad,
+      nsCString aFeatures,
+      float aFullZoom,
+      nsString aName,
+      nsIPrincipal aTriggeringPrincipal,
+      nsIContentSecurityPolicy aCsp,
+      nsIReferrerInfo aReferrerInfo,
+      OriginAttributes aOriginAttributes);
+
+    /**
+     * Tells the parent to ungrab the pointer on the default display.
+     *
+     * This is for GTK platforms where we have to ensure the pointer ungrab happens in the
+     * chrome process as that's the process that receives the pointer event.
+     */
+    sync UngrabPointer(uint32_t time);
+
+    sync RemovePermission(Principal principal, nsCString permissionType) returns (nsresult rv);
+
+    /**
+     * Tell the parent that a decoder's' benchmark has been completed.
+     * The result can then be stored in permanent storage.
+     */
+    async NotifyBenchmarkResult(nsString aCodecName, uint32_t aDecodeFPS);
+
+    /**
+     * Notify `push-message` observers without data in the parent.
+     */
+    async NotifyPushObservers(nsCString scope, Principal principal,
+                              nsString messageId);
+
+    /**
+     * Notify `push-message` observers with data in the parent.
+     */
+    async NotifyPushObserversWithData(nsCString scope, Principal principal,
+                                      nsString messageId, uint8_t[] data);
+
+    /**
+     * Notify `push-subscription-change` observers in the parent.
+     */
+    async NotifyPushSubscriptionChangeObservers(nsCString scope,
+                                                Principal principal);
+
+     async GetFilesRequest(nsID aID, nsString aDirectory, bool aRecursiveFlag);
+     async DeleteGetFilesRequest(nsID aID);
+
+     async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
+                                                Principal principal,
+                                                nsID? aAgentClusterId);
+
+     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, Principal principal);
+
+    /**
+     * Messages for communicating child Telemetry to the parent process
+     */
+    async AccumulateChildHistograms(HistogramAccumulation[] accumulations);
+    async AccumulateChildKeyedHistograms(KeyedHistogramAccumulation[] accumulations);
+    async UpdateChildScalars(ScalarAction[] updates);
+    async UpdateChildKeyedScalars(KeyedScalarAction[] updates);
+    async RecordChildEvents(ChildEventData[] events);
+    async RecordDiscardedData(DiscardedData data);
+
+    sync GetA11yContentId() returns (uint32_t aContentId);
+    async A11yHandlerControl(uint32_t aPid,
+                             IHandlerControlHolder aHandlerControl);
+
+    async AddMemoryReport(MemoryReport aReport);
+
+    async BHRThreadHang(HangDetails aHangDetails);
+
+    async AddPerformanceMetrics(nsID aID, PerformanceInfo[] aMetrics);
+
+    /*
+     * Adds a certificate exception for the given hostname and port.
+     */
+    async AddCertException(nsCString aSerializedCert, uint32_t aFlags,
+                           nsCString aHostName, int32_t aPort, OriginAttributes aOriginAttributes,
+                           bool aIsTemporary)
+          returns (nsresult success);
+
+    /*
+     * Determines whether storage access can be granted automatically by the
+     * storage access API without showing a user prompt.
+     */
+    async AutomaticStorageAccessPermissionCanBeGranted(Principal aPrincipal)
+          returns (bool success);
+
+    /*
+     * A 3rd party tracking origin (aTrackingOrigin) has received the permission
+     * granted to have access to aGrantedOrigin when loaded by aParentWindowId.
+     */
+    async StorageAccessPermissionGrantedForOrigin(uint64_t aTopLevelWindowId,
+                                                  MaybeDiscardedBrowsingContext aParentContext,
+                                                  Principal aTrackingPrincipal,
+                                                  nsCString aTrackingOrigin,
+                                                  int aAllowMode,
+                                                  StorageAccessPermissionGrantedReason? aReason)
+          returns (bool unused);
+
+    async CompleteAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
+                                 uint64_t aTopLevelWindowId,
+                                 Principal aTrackingPrincipal,
+                                 nsCString aTrackingOrigin,
+                                 uint32_t aCookieBehavior,
+                                 StorageAccessPermissionGrantedReason aReason)
+          returns (StorageAccessPromptChoices? choice);
+
+    async StoreUserInteractionAsPermission(Principal aPrincipal);
+
+    async AsyncShouldAllowAccessFor(MaybeDiscardedBrowsingContext aContext,
+                                    Principal aPrincipal)
+          returns (bool allowed, uint32_t rejectReason);
+
+   /**
+    * When media element's controlled state changed in the content process, we
+    * have to notify the chrome process in order to update the status of the
+    * corresponding media controller, which is used to control all media in the
+    * certain tab. We would use the browsing context to find the corresponding
+    * controller.
+    */
+    async NotifyMediaPlaybackChanged(MaybeDiscardedBrowsingContext aContext,
+                                     MediaPlaybackState aState);
+
+   /**
+    * When media became audible or inaudible in content process, we have to
+    * notify chrome process in order to which tab is audible.
+    */
+    async NotifyMediaAudibleChanged(MaybeDiscardedBrowsingContext aContext,
+                                    MediaAudibleState aState);
+
+   /**
+    * When media enabled or disabled the Picture-in-Picture mode, we have to
+    * update that to the media controller in the chrome process.
+    */
+    async NotifyPictureInPictureModeChanged(
+        MaybeDiscardedBrowsingContext aContext, bool aEnabled);
+
+   /**
+    * This method is used to update media session's status when it's being
+    * created or destroyed.
+    */
+    async NotifyMediaSessionUpdated(MaybeDiscardedBrowsingContext aContext, bool aIsCreated);
+
+    /**
+     * This method is used to update media session's media metadata whenever its
+     * metadata is being updated.
+     */
+    async NotifyUpdateMediaMetadata(MaybeDiscardedBrowsingContext aContext,
+                                    MediaMetadataBase? aMetadata);
+
+    /**
+     * This method is used to update media session's playback state whenever its
+     * playback state is changed.
+     */
+    async NotifyMediaSessionPlaybackStateChanged(
+        MaybeDiscardedBrowsingContext aContext,
+        MediaSessionPlaybackState aMetadata);
+
+    /**
+     * This method is used to update media session's supported media session
+     * action when the action becomes supported or unsupported.
+     */
+    async NotifyMediaSessionSupportedActionChanged(
+        MaybeDiscardedBrowsingContext aContext,
+        MediaSessionAction aAction,
+        bool aEnabled);
+
+    /**
+     * This method is used to notify the media controller in chrome process that
+     * the media element in the browsing context entered fullscreen.
+     */
+    async NotifyMediaFullScreenState(
+        MaybeDiscardedBrowsingContext aContext,
+        bool aIsInFullScreen);
+
+    /**
+     * This method is used to update media session's position state whenever its
+     * position state is being updated.
+     */
+    async NotifyPositionStateChanged(
+        MaybeDiscardedBrowsingContext aContext,
+        PositionState aState);
+
+    /**
+     * This method will make canonical browsing context to update the count of
+     * callers which want to keep the page from being suspended even if the page
+     * is inactive.
+     */
+    async AddOrRemovePageAwakeRequest(MaybeDiscardedBrowsingContext aContext,
+                                      bool aShouldAddCount);
+
+#if defined(XP_WIN)
+    /**
+     * Due to sandboxing, a child process's UntrustedModulesProcessor cannot
+     * obtain enough information about a DLL file to determine its
+     * trustworthiness. This API asks the chrome process to perform that
+     * evaluation.
+     */
+    async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
+        returns (ModulesMapResult? modMapResult);
+#endif  // defined(XP_WIN)
+
+    /**
+     * Used to route shutdown diagnostic info from the content process
+     * ServiceWorkers to the parent process' ServiceWorkerManager's
+     * ServiceWorkerShutdownBlocker. (The only other actor chain available
+     * for this would be very convoluted and create ordering problems).
+     */
+    async ReportServiceWorkerShutdownProgress(uint32_t aShutdownStateId,
+                                              Progress aProgress);
+
+    /**
+     * Whenever a document is updating the OrientationLock, we need to
+     * reject the orientationPendingPromises in other processes.
+     */
+    async AbortOtherOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
+
+    async HistoryReload(MaybeDiscardedBrowsingContext aContext, uint32_t aReloadFlags);
+
+    async NotifyOnHistoryReload(MaybeDiscardedBrowsingContext aContext,
+                                bool aForceReload)
+            returns (bool canReload, nsDocShellLoadState? loadState,
+                     bool? reloadActiveEntry);
+
+    async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
+                        uint64_t aLoadID, nsID aChangeID, uint32_t aLoadType,
+                        bool aPersist, bool aCloneEntryChildren,
+                        bool aChannelExpired);
+
+    async HistoryGo(MaybeDiscardedBrowsingContext aContext, int32_t aOffset,
+                    uint64_t aHistoryEpoch, bool aRequireUserInteraction,
+                    bool aUserActivation) returns(int32_t requestedIndex);
+
+    async BlobURLDataRequest(nsCString aBlobURL,
+                             nsIPrincipal aTriggeringPrincipal,
+                             nsIPrincipal aLoadingPrincipal,
+                             OriginAttributes aOriginAttributes,
+                             uint64_t aInnerWindowId,
+                             nsID? aAgentClusterId)
+      returns (BlobURLDataRequestResult aResult);
+
+    async SetActiveSessionHistoryEntry(MaybeDiscardedBrowsingContext context,
+                                       nsPoint? previousScrollPosition,
+                                       SessionHistoryInfo info, uint32_t loadType,
+                                       uint32_t updatedCacheKey, nsID changeID);
+    async ReplaceActiveSessionHistoryEntry(
+        MaybeDiscardedBrowsingContext context, SessionHistoryInfo info);
+
+    async RemoveDynEntriesFromActiveSessionHistoryEntry(
+        MaybeDiscardedBrowsingContext aContext);
+
+    async RemoveFromSessionHistory(
+        MaybeDiscardedBrowsingContext aContext, nsID changeID);
+
+both:
+    async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
+                      uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
+                      nsCString category, bool privateWindow, uint64_t innerWindowId,
+                      bool fromChromeContext);
+
+    /**
+     * Used in fission to report timing data when the parent window is in
+     * another process. Child frame will send data to its ContentParent which
+     * will then identify the ContentParent for the innerWindowId and pass
+     * the data to the correct process.
+     * aData must be non-null.
+     */
+    async ReportFrameTimingData(uint64_t innerWindowId, nsString entryName,
+                                nsString initiatorType,
+                                UniquePtr<PerformanceTimingData> aData);
+
+    async CommitBrowsingContextTransaction(MaybeDiscardedBrowsingContext aContext,
+                                           BrowsingContextTransaction aTransaction,
+                                           uint64_t aEpoch);
+
+    async AsyncMessage(nsString aMessage, ClonedMessageData aData);
+
+    /**
+     * Notify `push-subscription-modified` observers in the parent and child.
+     */
+    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
+                                                  Principal principal);
+
+    /**
+     * Send a Push error message to all service worker clients in the parent or
+     * child.
+     */
+    async PushError(nsCString scope, Principal principal, nsString message,
+                    uint32_t flags);
+
+    /**
+     * Creates a new BrowsingContext, initialized with the values provided in
+     * `BrowsingContextInitializer`.
+     *
+     * This message may only be sent to the parent in limited situations. If the
+     * new BrowsingContext has a parent window, it must be owned by the
+     * embedding process, otherwise it must be owned by the opener, if set.
+     */
+    async CreateBrowsingContext(uint64_t aGroupId, BrowsingContextInitializer aInit);
+
+    /**
+     * If aDoDiscard is true, discards the passed-in BrowsingContext. If the
+     * BrowsingContext has already been discarded, this message does nothing.
+     * If the receiver is the parent process, resolves when all content
+     * processes have flagged the BrowsingContext as discarded, and if the
+     * receiver is a child process, resolves when that child process has flagged
+     * the BrowsingContext as discarded.
+     */
+    async DiscardBrowsingContext(MaybeDiscardedBrowsingContext aContext, bool aDoDiscard)
+            returns (uint64_t unused);
+
+    async AdjustWindowFocus(MaybeDiscardedBrowsingContext aContext,
+                            bool aIsVisible, uint64_t aActionId);
+    async WindowClose(MaybeDiscardedBrowsingContext aContext,
+                      bool aTrustedCaller);
+    async WindowFocus(MaybeDiscardedBrowsingContext aContext,
+                      CallerType aCallerType, uint64_t aActionId);
+    async WindowBlur(MaybeDiscardedBrowsingContext aContext,
+                     CallerType aCallerType);
+    async RaiseWindow(MaybeDiscardedBrowsingContext aContext, CallerType aCallerType, uint64_t aActionId);
+    async ClearFocus(MaybeDiscardedBrowsingContext aContext);
+    async SetFocusedBrowsingContext(MaybeDiscardedBrowsingContext aContext, uint64_t aActionId);
+    async SetActiveBrowsingContext(MaybeDiscardedBrowsingContext aContext, uint64_t aActionId);
+    async UnsetActiveBrowsingContext(MaybeDiscardedBrowsingContext aContext, uint64_t aActionId);
+    async SetFocusedElement(MaybeDiscardedBrowsingContext aContext, bool aNeedsFocus);
+    async FinalizeFocusOuter(MaybeDiscardedBrowsingContext aContext, bool aCanFocus,
+                             CallerType aCallerType);
+parent:
+    async InsertNewFocusActionId(uint64_t aActionId);
+    async BlurToParent(MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
+                      MaybeDiscardedBrowsingContext aBrowsingContextToClear,
+                      MaybeDiscardedBrowsingContext aAncestorBrowsingContextToFocus,
+                      bool aIsLeavingDocument, bool aAdjustWidget,
+                      bool aBrowsingContextToClearHandled,
+                      bool aAncestorBrowsingContextToFocusHandled, uint64_t aActionId);
+child:
+    async BlurToChild(MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
+                      MaybeDiscardedBrowsingContext aBrowsingContextToClear,
+                      MaybeDiscardedBrowsingContext aAncestorBrowsingContextToFocus,
+                      bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId);
+    async SetupFocusedAndActive(MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
+                                uint64_t aActionIdForFocused,
+                                MaybeDiscardedBrowsingContext aActiveBrowsingContext,
+                                uint64_t aActionId);
+    async ReviseActiveBrowsingContext(uint64_t aOldActionId,
+                                      MaybeDiscardedBrowsingContext aActiveBrowsingContext,
+                                      uint64_t aNewActionId);
+    async ReviseFocusedBrowsingContext(uint64_t aOldActionId,
+                                       MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
+                                       uint64_t aNewActionId);
+both:
+    async MaybeExitFullscreen(MaybeDiscardedBrowsingContext aContext);
+    async WindowPostMessage(MaybeDiscardedBrowsingContext aContext,
+                            ClonedOrErrorMessageData aMessage,
+                            PostMessageData aData);
+
+    async CommitWindowContextTransaction(MaybeDiscardedWindowContext aContext,
+                                         WindowContextTransaction aTransaction,
+                                         uint64_t aEpoch);
+
+child:
+    // NOTE: These methods are only needed on the child, as the parent
+    // WindowContext is managed using the PWindowGlobal actor's lifecycle.
+    async CreateWindowContext(WindowContextInitializer aInit);
+    async DiscardWindowContext(uint64_t aContextId) returns (bool unused);
+
+parent:
+    // Temporary (bug 1641989) conduit for Glean data in content processes.
+    // Sent from time-to-time to limit the amount of data vulnerable to loss.
+    // Buffer contains bincoded Rust structs.
+    async FOGData(ByteBuf buf);
+
+child:
+    // Temporary (bug 1641989) conduit for Glean data in content processes.
+    // Tells the child to flush any pending data. Used in tests and ping
+    // assembly. Buffer contains bincoded Rust structs.
+    async FlushFOGData() returns (ByteBuf buf);
+
+parent:
+    async SetContainerFeaturePolicy(MaybeDiscardedBrowsingContext aContainerContext,
+                                    FeaturePolicy aContainerFeaturePolicy);
+
+    // Obtain an icon from the system widget toolkit, in nsIconDecoder
+    // format.  Not supported (or needed) on all platforms; see the
+    // implementation in ContentParent::RecvGetSystemIcon for details.
+    async GetSystemIcon(nsIURI aURI) returns (nsresult aResult, ByteBuf? aData);
+};
+
+}
+}

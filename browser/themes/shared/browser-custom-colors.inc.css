@@ -1,0 +1,69 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@media not (prefers-contrast) {
+  @media (-moz-proton) {
+  :root:not(:-moz-lwtheme) {
+    --button-primary-bgcolor: rgb(0,97,224);
+    --button-primary-hover-bgcolor: rgb(2,80,187);
+    --button-primary-active-bgcolor: rgb(5,62,148);
+    --button-primary-color: rgb(251,251,254);
+    --button-bgcolor: rgba(207,207,216,.33);
+    --button-hover-bgcolor: rgba(207,207,216,.66);
+    --button-active-bgcolor: rgb(207,207,216);
+    --button-color: rgb(21,20,26);
+
+    --focus-outline-color: var(--button-primary-bgcolor);
+
+    --checkbox-border-color: var(--input-border-color);
+    --checkbox-unchecked-bgcolor: var(--button-bgcolor);
+    --checkbox-unchecked-hover-bgcolor: var(--button-hover-bgcolor);
+    --checkbox-unchecked-active-bgcolor: var(--button-active-bgcolor);
+    --checkbox-checked-border-color: transparent;
+    --checkbox-checked-bgcolor: var(--button-primary-bgcolor);
+    --checkbox-checked-color: var(--button-primary-color);
+    --checkbox-checked-hover-bgcolor: var(--button-primary-hover-bgcolor);
+    --checkbox-checked-active-bgcolor: var(--button-primary-active-bgcolor);
+
+    --arrowpanel-dimmed: color-mix(in srgb, currentColor 12%, transparent);
+    --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 20%, transparent);
+    --panel-disabled-color: color-mix(in srgb, currentColor 40%, transparent);
+    --panel-shortcut-color: rgb(91,91,102);
+
+    --error-text-color: rgb(197,0,66);
+
+    --input-color: rgb(21,20,26);
+    --input-bgcolor: rgb(255,255,255);
+    --input-border-color: color-mix(in srgb, currentColor 41%, transparent);
+    --input-error-border-color: #E22850;
+
+    --tab-line-color: rgba(128,128,142,0.9);
+    --tab-selected-bgcolor: rgb(255,255,255);
+    --tabs-border-color: transparent;
+    --tab-icon-overlay-stroke: rgb(255,255,255);
+    --tab-icon-overlay-fill: rgb(91,91,102);
+    --toolbar-color: rgb(21,20,26);
+    --toolbar-non-lwt-bgcolor: #f9f9fb;
+    --toolbar-non-lwt-textcolor: rgb(21, 20, 26);
+    --toolbarbutton-icon-fill: rgb(91,91,102);
+    --toolbarbutton-icon-fill-attention: rgb(0,97,224);
+
+    --urlbar-popup-action-color: rgb(91,91,102);
+    --urlbar-popup-url-color: rgb(0,97,224);
+    --urlbar-icon-fill-opacity: 0.72;
+
+    --autocomplete-popup-separator-color: rgb(240,240,244);
+    --toolbar-field-border-color: transparent;
+    --arrowpanel-border-color: rgb(240,240,244);
+    --chrome-content-separator-color: rgb(204,204,204);
+
+    --toolbar-field-background-color: rgb(46, 46, 46);
+    --toolbar-field-color: rgb(21,20,26);
+
+    --autocomplete-popup-highlight-background: #e0e0e6;
+    --autocomplete-popup-highlight-color: rgb(21,20,26);
+    --autocomplete-popup-hover-background: rgb(240,240,244);
+  }
+  } /** END Proton **/
+}

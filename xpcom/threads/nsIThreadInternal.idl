@@ -1,0 +1,110 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIThread.idl"
+
+interface nsIRunnable;
+interface nsIThreadObserver;
+
+/**
+ * The XPCOM thread object implements this interface, which allows a consumer
+ * to observe dispatch activity on the thread.
+ */
+[builtinclass, scriptable, uuid(a3a72e5f-71d9-4add-8f30-59a78fb6d5eb)]
+interface nsIThreadInternal : nsIThread
+{
+  /**
+   * Get/set the current thread observer (may be null).  This attribute may be
+   * read from any thread, but must only be set on the thread corresponding to
+   * this thread object.  The observer will be released on the thread
+   * corresponding to this thread object after all other events have been
+   * processed during a call to Shutdown.
+   */
+  attribute nsIThreadObserver observer;
+
+  /**
+   * Add an observer that will *only* receive onProcessNextEvent,
+   * beforeProcessNextEvent. and afterProcessNextEvent callbacks. Always called
+   * on the target thread, and the implementation does not have to be
+   * threadsafe. Order of callbacks is not guaranteed (i.e.
+   * afterProcessNextEvent may be called first depending on whether or not the
+   * observer is added in a nested loop). Holds a strong ref.
+   */
+  void addObserver(in nsIThreadObserver observer);
+
+  /**
+   * Remove an observer added via the addObserver call. Once removed the
+   * observer will never be called again by the thread.
+   */
+  void removeObserver(in nsIThreadObserver observer);
+};
+
+/**
+ * This interface provides the observer with hooks to implement a layered
+ * event queue.  For example, it is possible to overlay processing events
+ * for a GUI toolkit on top of the events for a thread:
+ *
+ *   var NativeQueue;
+ *   Observer = {
+ *     onDispatchedEvent() {
+ *       NativeQueue.signal();
+ *     }
+ *     onProcessNextEvent(thread, mayWait) {
+ *       if (NativeQueue.hasNextEvent())
+ *         NativeQueue.processNextEvent();
+ *       while (mayWait && !thread.hasPendingEvent()) {
+ *         NativeQueue.wait();
+ *         NativeQueue.processNextEvent();
+ *       }
+ *     }
+ *   };
+ *
+ * NOTE: The implementation of this interface must be threadsafe.
+ *
+ * NOTE: It is valid to change the thread's observer during a call to an
+ *       observer method.
+ *
+ * NOTE: Will be split into two interfaces soon: one for onProcessNextEvent and
+ *       afterProcessNextEvent, then another that inherits the first and adds
+ *       onDispatchedEvent.
+ */
+[uuid(cc8da053-1776-44c2-9199-b5a629d0a19d)]
+interface nsIThreadObserver : nsISupports
+{
+  /**
+   * This method is called after an event has been dispatched to the thread.
+   * This method may be called from any thread.
+   */
+  void onDispatchedEvent();
+
+  /**
+   * This method is called when nsIThread::ProcessNextEvent is called.  It does
+   * not guarantee that an event is actually going to be processed.  This method
+   * is only called on the target thread.
+   *
+   * @param thread
+   *   The thread being asked to process another event.
+   * @param mayWait
+   *   Indicates whether or not the method is allowed to block the calling
+   *   thread.  For example, this parameter is false during thread shutdown.
+   */
+  void onProcessNextEvent(in nsIThreadInternal thread, in boolean mayWait);
+
+  /**
+   * This method is called (from nsIThread::ProcessNextEvent) after an event
+   * is processed.  It does not guarantee that an event was actually processed
+   * (depends on the value of |eventWasProcessed|.  This method is only called
+   * on the target thread.  DO NOT EVER RUN SCRIPT FROM THIS CALLBACK!!!
+   *
+   * @param thread
+   *   The thread that processed another event.
+   * @param eventWasProcessed
+   *   Indicates whether an event was actually processed. May be false if the
+   *   |mayWait| flag was false when calling nsIThread::ProcessNextEvent().
+   */
+  void afterProcessNextEvent(in nsIThreadInternal thread,
+                             in bool eventWasProcessed);
+};

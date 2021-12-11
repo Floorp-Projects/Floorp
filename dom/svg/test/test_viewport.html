@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=483389
+-->
+<head>
+  <title>Test for Bug 483389</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=483389">Mozilla Bug 483389</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="viewport-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var doc = $("svg").contentWindow.document;
+
+  var root = doc.documentElement;
+  var inner = doc.getElementById("inner");
+  var g1 = doc.getElementById("g1");
+  var outer = doc.getElementById("outer");
+  var g2 = doc.getElementById("g2");
+  var g3 = doc.getElementById("g3");
+  var sym = doc.getElementById("sym");
+  var symbolRect = doc.getElementById("symbolRect");
+
+  <!-- ownerSVGElement -->
+  is(root.ownerSVGElement, null, "root.ownerSVGElement");
+  is(inner.ownerSVGElement, root, "inner.ownerSVGElement");
+  is(g1.ownerSVGElement, inner, "g1.ownerSVGElement");
+  is(outer.ownerSVGElement, null, "outer.ownerSVGElement");
+  is(g2.ownerSVGElement, outer, "g2.ownerSVGElement");
+  is(g3.ownerSVGElement, null, "g3.ownerSVGElement");
+  is(symbolRect.ownerSVGElement, root, "symbolRect.ownerSVGElement");
+
+  <!-- viewportElement -->
+  is(root.viewportElement, null, "root.viewportElement");
+  is(inner.viewportElement, root, "inner.viewportElement");
+  is(g1.viewportElement, inner, "g1.viewportElement");
+  is(outer.viewportElement, null, "outer.viewportElement");
+  is(g2.viewportElement, outer, "g2.viewportElement");
+  is(g3.viewportElement, null, "g3.viewportElement");
+  is(symbolRect.viewportElement, sym, "symbolRect.viewportElement");
+
+  <!-- nearestViewportElement -->
+  is(root.nearestViewportElement, null, "root.nearestViewportElement");
+  is(inner.nearestViewportElement, root, "inner.nearestViewportElement");
+  is(g1.nearestViewportElement, inner, "g1.nearestViewportElement");
+  is(outer.nearestViewportElement, null, "outer.nearestViewportElement");
+  is(g2.nearestViewportElement, outer, "g2.nearestViewportElement");
+  is(g3.nearestViewportElement, null, "g3.nearestViewportElement");
+  is(symbolRect.nearestViewportElement, sym, "symbolRect.nearestViewportElement");
+
+  <!-- farthestViewportElement -->
+  is(root.farthestViewportElement, null, "root.farthestViewportElement");
+  is(inner.farthestViewportElement, root, "inner.farthestViewportElement");
+  is(g1.farthestViewportElement, root, "g1.farthestViewportElement");
+  is(outer.farthestViewportElement, null, "outer.farthestViewportElement");
+  is(g2.farthestViewportElement, outer, "g2.farthestViewportElement");
+  is(g3.farthestViewportElement, null, "g3.farthestViewportElement");
+  is(symbolRect.farthestViewportElement, root, "symbolRect.farthestViewportElement");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTest);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=479863
+-->
+<head>
+  <title>Test for Bug 479863</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479863">Mozilla Bug 479863</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<video id='v1'></video><audio id='a1'></audio>
+<video id='v2' preload="auto"></video><audio id='a2' preload="auto"></audio>
+
+<pre id="test">
+<script type="application/javascript">
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+var v2 = document.getElementById('v2');
+var a2 = document.getElementById('a2');
+is(v1.getAttribute("preload"), null, "video preload via getAttribute should be null by default");
+is(a1.getAttribute("preload"), null, "video preload via getAttribute should be null by default");
+is(v1.preload, "", "v1.preload should be empty by default");
+is(a1.preload, "", "a1.preload should be empty by default");
+is(v2.preload, "auto", "v2.preload should be auto");
+is(a2.preload, "auto", "a2.preload should be auto");
+
+v1.preload = "auto";
+a1.preload = "auto";
+is(v1.preload, "auto", "video.preload should be auto");
+is(a1.preload, "auto", "audio.preload should be auto");
+is(v1.getAttribute("preload"), "auto", "video preload attribute should be auto");
+is(a1.getAttribute("preload"), "auto", "video preload attribute should be auto");
+
+</script>
+</pre>
+</body>
+</html>

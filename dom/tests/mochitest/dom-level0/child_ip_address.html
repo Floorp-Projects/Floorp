@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Child window at 127.0.0.1</title>
+  <script type="application/javascript">
+function run()
+{
+  var target = document.getElementById("location");
+  target.textContent = location.hostname + ":" + (location.port || 80);
+
+  var message = "child-response";
+
+  var domain = document.domain;
+  if (domain !== "127.0.0.1")
+    message += " wrong-initial-domain(" + domain + ")";
+
+  try
+  {
+    document.domain = "0.0.1";
+    domain = document.domain;
+    message += " ip-address-shortened-to(" + domain + ")";
+  }
+  catch (e)
+  {
+    domain = document.domain;
+    if (domain !== "127.0.0.1")
+      message += " ip-address-mutated-on-throw(" + domain + ")";
+  }
+
+  window.parent.postMessage(message, "http://mochi.test:8888");
+}
+
+window.addEventListener("load", run);
+  </script>
+</head>
+<body>
+<h1 id="location">Somewhere!</h1>
+</body>
+</html>

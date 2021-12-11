@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for pointer capture</title>
+<script type="application/javascript"  src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript"  src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="#">Test for pointer capture</a>
+<div id="content"></div>
+<pre id="test">
+<script type="application/javascript">
+/**
+ * Pointer capture tests.
+ **/
+
+SimpleTest.waitForExplicitFinish();
+
+let gTestFiles = [
+  "file_pointercapture_xorigin_iframe.html",
+  "file_pointercapture_xorigin_iframe_pointerlock.html",
+  "file_pointercapture_xorigin_iframe_touch.html",
+];
+
+let gTestWindow = null;
+let gTestIndex = 0;
+
+SpecialPowers.pushPrefEnv({"set": [
+  // This will make dispatched event going through parent process.
+  ["test.events.async.enabled", true]
+]}, nextTest);
+
+function nextTest() {
+  if (gTestWindow) {
+    gTestWindow.close();
+  }
+  SimpleTest.waitForFocus(runNextTest);
+}
+
+function runNextTest() {
+  if (gTestIndex < gTestFiles.length) {
+    let file = gTestFiles[gTestIndex];
+    gTestIndex++;
+
+    info(`Testing ${file}`);
+    gTestWindow = window.open(file, "", "width=500,height=500");
+  } else {
+    SimpleTest.finish();
+  }
+}
+</script>
+</pre>
+</body>
+</html>

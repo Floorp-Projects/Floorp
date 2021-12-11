@@ -1,0 +1,115 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')
+
+EXPORTS.theora += [
+    'include/theora/codec.h',
+    'include/theora/theoradec.h',
+    'include/theora/theoraenc.h',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+
+# The encoder is currently not included.
+DEFINES['THEORA_DISABLE_ENCODE'] = True
+
+# Suppress warnings in third-party code.
+CFLAGS += ['-Wno-type-limits']
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CFLAGS += [
+        '-Wno-shift-negative-value',
+        '-Wno-tautological-compare',
+    ]
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    CFLAGS += [
+        '-Wno-parentheses',
+        '-Wno-pointer-sign',
+    ]
+
+UNIFIED_SOURCES += [
+    'lib/bitpack.c',
+    'lib/decinfo.c',
+    'lib/decode.c',
+    'lib/dequant.c',
+    'lib/fragment.c',
+    'lib/huffdec.c',
+    'lib/idct.c',
+    'lib/info.c',
+    'lib/internal.c',
+    'lib/quant.c',
+    'lib/state.c',
+]
+
+LOCAL_INCLUDES += ['include']
+
+if CONFIG['INTEL_ARCHITECTURE']:
+    if CONFIG['OS_ARCH'] != 'SunOS':
+        if CONFIG['CC_TYPE'] == 'clang-cl':
+            # clang-cl can't handle libtheora's inline asm.
+            pass
+        elif CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['CPU_ARCH'] != 'x86_64':
+            DEFINES['OC_X86_ASM'] = True
+            if CONFIG['CPU_ARCH'] == 'x86_64':
+                DEFINES['OC_X86_64_ASM'] = True
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        # clang-cl can't handle libtheora's inline asm.
+        pass
+        #SOURCES += [
+        #    'lib/x86_vc/mmxfrag.c',
+        #    'lib/x86_vc/mmxidct.c',
+        #    'lib/x86_vc/mmxstate.c',
+        #    'lib/x86_vc/x86cpu.c',
+        #    'lib/x86_vc/x86state.c',
+        #]
+    else:
+        SOURCES += [
+            'lib/x86/mmxfrag.c',
+            'lib/x86/mmxidct.c',
+            'lib/x86/mmxstate.c',
+            'lib/x86/sse2idct.c',
+            'lib/x86/x86cpu.c',
+            'lib/x86/x86state.c',
+        ]
+
+if CONFIG['GNU_AS']:
+    if CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += [
+            'lib/arm/armcpu.c',
+            'lib/arm/armstate.c',
+        ]
+        for var in ('OC_ARM_ASM',
+                    'OC_ARM_ASM_EDSP',
+                    'OC_ARM_ASM_MEDIA',
+                    'OC_ARM_ASM_NEON'):
+            DEFINES[var] = True
+        # The Android NDK doesn't pre-define anything to indicate the OS it's
+        # on, so do it for them.
+        if CONFIG['OS_TARGET'] == 'Android':
+            DEFINES['__linux__'] = True
+
+        SOURCES += [ '!%s.s' % f for f in [
+            'armbits-gnu',
+            'armfrag-gnu',
+            'armidct-gnu',
+            'armloop-gnu',
+        ]]
+
+        # These flags are a lie; they're just used to enable the requisite
+        # opcodes; actual arch detection is done at runtime.
+        ASFLAGS += [
+            '-march=armv7-a',
+        ]
+        ASFLAGS += CONFIG['NEON_FLAGS']
+
+        if CONFIG['CC_TYPE'] == 'clang':
+            ASFLAGS += [
+                '-no-integrated-as',
+            ]

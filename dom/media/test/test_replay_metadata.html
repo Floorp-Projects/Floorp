@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=467972
+-->
+<head>
+  <title>Test for Bug 467972</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=467972">Mozilla Bug 467972</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+// Test for Bug 467972. Tests that when we play to end, seek to 0, and play again, that we don't
+// send/receive multiple loadeddata and loadedmetadata events.
+
+var manager = new MediaTestManager;
+
+function seekStarted(evt) {
+  var v = evt.target;
+  v._gotSeekStarted = true;
+}
+
+function seekEnded(evt) {
+  var v = evt.target;
+  v._gotSeekEnded = true;
+  v.play();
+}
+
+function loadedData(evt) {
+  var v = evt.target;
+  v._loadedDataCount++;
+  ok(v._loadedDataCount <= 1, "No more than 1 onloadeddata event for " + v._name);
+}
+
+function loadedMetaData(evt) {
+  var v = evt.target;
+  v._loadedMetaDataCount++;
+  ok(v._loadedMetaDataCount <= 1, "No more than 1 onloadedmetadata event for " + v._name);
+  checkMetadata(v._name, v, v._test);
+  v.play();
+}
+
+function playing(evt) {
+  evt.target._playingCount++;
+}
+
+function removeNodeAndListener(n) {
+  n.removeEventListener("loadedmetadata", loadedMetaData);
+  n.removeEventListener("ended", playbackEnded);
+  n.removeEventListener("playing", playing);
+  n.removeEventListener("loadeddata", loadedData);
+  n.removeEventListener("seeking", seekStarted);
+  n.removeEventListener("seeked", seekEnded);
+  removeNodeAndSource(n);
+}
+
+function playbackEnded(evt) {
+  var v = evt.target;
+  v._endCount++;
+  ok(v.currentTime >= v.duration-0.1 && v.currentTime <= v.duration + 0.1,
+     "CurrentTime (" + v.currentTime + ") should be around " + v.duration
+      + " for " + v._name);
+  if (!v._playedOnce) {
+    v.currentTime = 0;
+    ok(v.seeking, "seeking should be true for " + v._name);
+    ok(!v.ended, "ended shouldn't be true once seeking has begun for " + v._name);
+    v._playedOnce = true;
+  } else {
+    ok(v._gotSeekEnded, "Should have received seekended for " + v._name);
+    ok(v._gotSeekStarted, "Should have received seekstarted for " + v._name);
+    is(v._loadedDataCount, 1, "Should have 1 onloadeddata event for " + v._name);
+    is(v._loadedMetaDataCount, 1, "Should have 1 onloadedmetadata event for " + v._name);
+    is(v._endCount, 2, "Should have received two ended events for " + v._name);
+    ok(v._playingCount > 0, "Should have at least one playing event for " + v._name);
+    v._finished = true;
+    removeNodeAndListener(v);
+    manager.finished(v.token);
+  }
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "auto";
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v._name = test.name;
+  v._playedOnce = false;
+  v._gotSeekEnded = false;
+  v._gotSeekStarted = false;
+  v._loadedDataCount = 0;
+  v._loadedMetaDataCount = 0;
+  v._playingCount = 0;
+  v._endCount = 0;
+  v._test = test;
+  v._finished = false;
+  v.addEventListener("loadedmetadata", loadedMetaData);
+  v.addEventListener("ended", playbackEnded);
+  v.addEventListener("playing", playing);
+  v.addEventListener("loadeddata", loadedData);
+  v.addEventListener("seeking", seekStarted);
+  v.addEventListener("seeked", seekEnded);
+  document.body.appendChild(v);
+}
+
+manager.runTests(gSmallTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

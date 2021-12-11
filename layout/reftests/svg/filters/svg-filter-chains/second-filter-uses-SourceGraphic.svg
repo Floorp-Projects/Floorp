@@ -1,0 +1,17 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <filter id="blur">
+    <!-- Blur the red rect. -->
+    <feGaussianBlur stdDeviation="3"/>
+  </filter>
+  <filter id="hue-rotate">
+    <feFlood flood-color="#0000ff"/>
+    <!-- Turn the red rect into a green rect. feColorMatrix should use the
+         result of the #blur filter, not feFlood, as its SourceGraphic. -->
+    <feColorMatrix in="SourceGraphic" type="hueRotate" values="90"/>
+  </filter>
+  <rect x="20" y="20" width="100" height="100" fill="#ff0000" filter="url(#blur) url(#hue-rotate)"/>
+</svg>

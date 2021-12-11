@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<marker><text><tspan id="x"/></text></marker>
+
+<script>
+window.addEventListener("load", function() {
+  document.getElementById("x").appendChild(document.createTextNode("\u062Ax"));
+}, false);
+</script>
+
+</svg>

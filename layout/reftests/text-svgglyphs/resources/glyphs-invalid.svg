@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<!--
+    Test handling of invalid ids
+-->
+  <!-- not valid: leading space not allowed -->
+  <g id="glyph 48">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+          fill="red"/>
+  </g>
+  <!-- not valid: leading zero not allowed -->
+  <g id="glyph048">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+          fill="red"/>
+  </g>
+  <!-- not valid: trailing garbage not allowed -->
+  <g id="glyph48xxx">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+          fill="red"/>
+  </g>
+  <!-- not valid: trailing space not allowed -->
+  <g id="glyph48 ">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+          fill="red"/>
+  </g>
+  <!-- not valid: floating point not allowed -->
+  <g id="glyph48.0">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+          fill="red"/>
+  </g>
+  <!-- char = M -->
+  <g id="glyph48">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+          fill="lime"/>
+  </g>
+  <!-- Ensure first glyph48 is picked -->
+  <g id="glyph48">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+          fill="red"/>
+  </g>
+</svg>

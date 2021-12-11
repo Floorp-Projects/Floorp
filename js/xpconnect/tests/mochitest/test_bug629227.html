@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629227
+-->
+<head>
+  <title>Test for Bug 629227</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=629227">Mozilla Bug 629227</a>
+<p id="display">
+  <iframe id="testTarget"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 629227 **/
+SimpleTest.waitForExplicitFinish();
+
+$("testTarget").src =
+  "http://test1.example.org" +
+  location.pathname.replace(/test_bug629227.html/, "file1_bug629227.html");
+
+window.onmessage = function(ev) {
+  if (ev.data == "finish") {
+    SimpleTest.finish();
+  } else {
+    var data = JSON.parse(ev.data);
+    if ("ok" in data) {
+      ok(data.ok, data.reason);
+    }
+  }
+}
+
+addLoadEvent(function() {
+  $("testTarget").contentWindow.postMessage("start", "*");
+});
+
+</script>
+</pre>
+</body>
+</html>

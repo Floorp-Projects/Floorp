@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Testcase for border-image + box-decoration-break</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=988653">
+  <link rel="help" href="http://dev.w3.org/csswg/css-break/#break-decoration">
+  <link rel="match" href="box-decoration-break-border-image-ref.html">
+  <meta charset="utf-8">
+  <style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+}
+* { font-family: DejaVuSansMono; }
+
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; padding-left:10px; margin:0;
+}
+
+.b {
+  border: 5px solid red;
+  border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD%2FgAIDAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoUlEQVR42u3bwQ0AIAgEwcOmtXttgScmsxWQCTyp3EysJo61IliwYMGCBUuwYMGCBQuWYMGCBQsWLMGCBQsWLFiCBQsWLFiwBAsWLFiwYAkWLFiwYMESLFiwYMGCpXaVka%2BsO8dmOUNYggULFixYsAQLFixYsGAJFixYsGDBEixYsGDBgiVYsGDBggVLsGDBggULlmDBggULFizBggUL1t89N%2FYEtBGStpoAAAAASUVORK5CYII%3D) 10 10 repeat;
+  background: pink;
+  border-image-outset: 7px 3px 5px 9px;
+}
+
+.columns {
+  columns: 2;
+  width: 200px;
+  height: 50px;
+  background: grey;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  float:left;
+}
+.col3 {
+  columns: 3;
+}
+.unbalanced { column-fill:auto; }
+.vbreak { height:66px; width:41px; }
+.h { width:30px;height:30px; background:grey; }
+.m { margin-left:15px; }
+.col3 .vbreak { height:116px; }
+.clone { box-decoration-break:clone; }
+.slice { box-decoration-break:slice; }
+x { display:inline-block; width:31px; height:18px; line-height:1; }
+y { display:inline-block; width:47px; height:18px; line-height:1; }
+pos1 { position:absolute; top:50px; width:700px; }
+pos2 { position:absolute; top:150px; width:700px; }
+pos3 { position:absolute; top:380px; width:700px; }
+pos4 { position:absolute; top:510px; width:700px; }
+  </style>
+</head>
+<body>
+<pre>box-decoration-break:slice</pre>
+
+<pos1>
+<div class="columns"><div class="b vbreak slice"></div></div>
+<div class="columns col3"><div class="b vbreak slice"></div></div>
+</pos1>
+
+<pos2>
+<span class="b slice" style="border-style:dashed;"><x></x><div class="h"></div><y></y></span><span class="b slice m" style="border-style:dashed;"><x></x><div class="h"></div><y></y><div class="h"></div><y></y></span>
+
+<pre>box-decoration-break:clone</pre>
+</pos2>
+
+<pos3>
+<div class="unbalanced columns"><div class="b vbreak clone"></div></div>
+<div class="unbalanced columns col3"><div class="b vbreak clone"></div></div>
+</pos3>
+
+<pos4>
+<span class="b clone" style="border-style:dashed;"><x></x><div class="h"></div><y></y></span>
+<span class="b clone m" style="border-style:dashed;"><x></x><div class="h"></div><y></y><div class="h"></div><y></y></span>
+</pos4>
+
+</body>
+</html>

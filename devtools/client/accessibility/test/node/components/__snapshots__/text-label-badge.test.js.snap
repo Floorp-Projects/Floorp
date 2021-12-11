@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TextLabelBadge component: best practices render 1`] = `"<span class=\\"audit-badge badge\\" data-score=\\"BEST_PRACTICES\\" title=\\"Does not meet WCAG standards for text alternative.\\" aria-label=\\"text label\\">text label</span>"`;
+
+exports[`TextLabelBadge component: error render 1`] = `null`;
+
+exports[`TextLabelBadge component: fail render 1`] = `"<span class=\\"audit-badge badge\\" data-score=\\"FAIL\\" title=\\"Does not meet WCAG standards for text alternative.\\" aria-label=\\"text label\\">text label</span>"`;
+
+exports[`TextLabelBadge component: warning render 1`] = `"<span class=\\"audit-badge badge\\" data-score=\\"WARNING\\" title=\\"Does not meet WCAG standards for text alternative.\\" aria-label=\\"text label\\">text label</span>"`;

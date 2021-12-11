@@ -1,0 +1,22 @@
+textarea::placeholder {
+  color: green;
+  opacity: 1.0;
+}
+
+textarea:placeholder-shown {
+  appearance: none;
+  color: FieldText;
+  background-color: red;
+}
+
+textarea:placeholder-shown.shown,
+textarea.shown-ref {
+  appearance: none;
+  color: green;
+  background-color: #c7c7c7;
+  font-style: italic;
+  border: 2px solid green;
+  height: 200px;
+  width: 200px;
+}
+

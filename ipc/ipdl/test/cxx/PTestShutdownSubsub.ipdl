@@ -1,0 +1,14 @@
+include protocol PTestShutdownSub;
+
+namespace mozilla {
+namespace _ipdltest {
+
+sync protocol PTestShutdownSubsub {
+    manager PTestShutdownSub;
+
+parent:
+    sync __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

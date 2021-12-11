@@ -1,0 +1,9 @@
+%include build/sparse-profiles/mach
+
+[include]
+path:build/
+path:testing/talos/talos
+path:testing/profiles/
+path:third_party/webkit/
+path:tools/quitter/
+path:taskcluster/scripts/misc

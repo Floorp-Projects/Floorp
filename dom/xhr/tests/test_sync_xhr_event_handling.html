@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<!-- vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: -->
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body >
+  <script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var receivedAllEvents = false;
+
+  var subTab = null;
+  function startSlowXHR() {
+    setTimeout(() => {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "slow.sjs", false);
+      subTab.triggerKeys();
+      xhr.send(null);
+      ok(!receivedAllEvents, "Input Event should be blocked during sync XHR");
+      window.requestIdleCallback(() => {
+        ok(receivedAllEvents, "Input Event should be processed after synx XHR");
+        SimpleTest.finish();
+      });
+    }, 0);
+  }
+
+  async function runTest() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.input_events.canSuspendInBCG.enabled", true]]
+    });
+    subTab = window.open("file_sync_xhr_event_handling_helper.html");
+  }
+  runTest();
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 544642</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=544642"
+   target="_blank" >Mozilla Bug 544642</a>
+<p id="display"></p>
+<iframe id=iframe></iframe>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+var gen = runTest();
+
+addLoadEvent(function() { gen.next(); });
+
+function* runTest() {
+  var iframe = $('iframe');
+  iframe.onerror = function() { gen.next("error"); };
+  iframe.onload = function() { gen.next("load"); };
+
+  iframe.src = "data:text/plain,hello";
+  is((yield), "load", "plaintext data");
+
+  iframe.src = "file://foo/bar";
+  is((yield), "error", "file");
+
+  // We should do this test too, however it brings up a modal dialog which
+  // we can't dismiss.
+  //iframe.src = "http:////";
+  //is((yield), "error", "invalid http");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

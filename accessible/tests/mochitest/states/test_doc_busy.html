@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>states of document</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    const { BrowserTestUtils } = ChromeUtils.import(
+      "resource://testing-common/BrowserTestUtils.jsm");
+    const { Downloads } = ChromeUtils.import(
+      "resource://gre/modules/Downloads.jsm");
+
+    function matchDocBusyChange(isBusy) {
+      return function(event) {
+        const scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
+        return (
+          event.DOMNode == document &&
+          scEvent.state === STATE_BUSY &&
+          scEvent.isEnabled === isBusy
+        );
+      };
+    }
+
+    function getDownloadStartedPromise() {
+      if (Services.prefs.getBoolPref("browser.download.improvements_to_download_panel", false)) {
+        return Downloads.getList(Downloads.PUBLIC).then(list => {
+          return new Promise(resolve => {
+            list.addView({
+              onDownloadAdded(download) {
+                resolve(download);
+              }
+            })
+          });
+        });
+      }
+      return BrowserTestUtils.domWindowOpenedAndLoaded(
+        null,
+        win => win.location?.href == "chrome://mozapps/content/downloads/unknownContentType.xhtml"
+      );
+    }
+
+    async function downloadHandled(downloadResult) {
+      if (Window.isInstance(downloadResult)) {
+        return BrowserTestUtils.closeWindow(downloadResult);
+      }
+      // downloadResult is a download object.
+      await downloadResult.finalize(true);
+      return Downloads.getList(Downloads.PUBLIC).then(list => list.remove(downloadResult));
+    }
+
+    async function doTest() {
+      // Because of variable timing, there are two acceptable possibilities:
+      // 1. We get an event for busy and an event for not busy.
+      // 2. The two events get coalesced, so no events are fired.
+      // However, we fail this test if we get the first event but not the
+      // second.
+      let gotBusy = false;
+      let gotNotBusy = false;
+      const busyEvents = async function() {
+        await waitForEvent(EVENT_STATE_CHANGE, matchDocBusyChange(true));
+        info("Got busy event");
+        gotBusy = true;
+        await waitForEvent(EVENT_STATE_CHANGE, matchDocBusyChange(false));
+        info("Got not-busy event");
+        gotNotBusy = true;
+      }();
+
+      const downloadStarted = getDownloadStartedPromise();
+
+      info("Clicking link to trigger download");
+      synthesizeMouse(getNode("link"), 1, 1, {});
+      info("Waiting for download prompt to open");
+      const downloadResult = await downloadStarted;
+
+      // Once we no longer show a dialog for downloads, the not busy event
+      // might show up a bit later.
+      if (gotBusy && !gotNotBusy) {
+        await busyEvents;
+      }
+
+      // Any busy events should have been fired by the time the download
+      // prompt has opened.
+      if (gotBusy && gotNotBusy) {
+        ok(true, "Got both busy change and not-busy change");
+      } else if (!gotBusy && !gotNotBusy) {
+        ok(true, "No busy events, coalesced");
+      } else {
+        ok(false, "Got busy change but didn't get not-busy change!");
+      }
+      testStates(document, 0, 0, STATE_BUSY, 0, "Document not busy");
+
+      // Clean up.
+      info("Closing download prompt");
+      await downloadHandled(downloadResult);
+      // We might still be waiting on busy events. Remove any pending observers.
+      for (let observer of Services.obs.enumerateObservers(
+        "accessible-event")
+      ) {
+        Services.obs.removeObserver(observer, "accessible-event");
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     title="Missing busy state change event when downloading files"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=446469">Bug 446469</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <a id="link" href="http://example.com/a11y/accessible/tests/mochitest/dumbfile.zip">a file</a>
+</body>
+</html>

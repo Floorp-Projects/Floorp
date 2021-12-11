@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    input { color: green; }
+    input.notdefault:default { color: red; }
+    input.default:not(:default) { color: red; }
+  </style>
+  <body>
+    <form id="one"></form>
+    <input type="submit" form="one" class="default" id="test">
+    <form id="two">
+      <input type="submit" class="notdefault">
+    </form>
+    <script>
+      document.body.offsetWidth;
+      document.getElementById("test").setAttribute("form", "two");
+    </script>
+  </body>
+</html>

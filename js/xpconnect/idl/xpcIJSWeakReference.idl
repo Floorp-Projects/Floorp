@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(75767928-ecb1-4e6c-9f55-c118b297fcef)]
+interface xpcIJSWeakReference : nsISupports
+{
+  /**
+   * To be called from JS only.
+   *
+   * Returns the referenced JS object or null if the JS object has
+   * been garbage collected.
+   */
+  [implicit_jscontext] jsval get();
+};

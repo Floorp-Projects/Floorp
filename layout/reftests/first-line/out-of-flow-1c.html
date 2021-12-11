@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS 2.1 Test Suite: :first-line</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/selector.html#first-line"/>
+    <meta name="flags" content="dom" />
+    <style>
+      div { color: green }
+      div::first-line { color: red }
+    </style>
+  </head>
+  <body>
+    <div>
+      <span class="some value" style="float: left">
+        This should be green
+      </span>
+    </div>
+  </body>
+</html>

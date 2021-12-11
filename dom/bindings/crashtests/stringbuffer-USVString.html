@@ -1,0 +1,11 @@
+<!doctype html>
+<script>
+  var div = document.createElement("div");
+  // Need a long-enough string that when we get it from the DOM it will not get
+  // inlined and will be an external stringbuffer string.
+  var str = "http://" + (new Array(200).join("a"));
+  div.setAttribute("x", str);
+  str = div.getAttribute("x");
+  // Now pass it as a USVString
+  new URL(str);
+</script>

@@ -1,0 +1,39 @@
+# HG changeset patch
+# Parent e378875000890099fffcdb4cbc4ab12828ac34ee
+# User Daniel Holbert <dholbert@cs.stanford.edu>
+Bug 890539: Annotate SK_COMPILE_ASSERT's typedef as permissibly unused, to fix GCC 4.8 build warning. r=gw280
+
+diff --git a/gfx/skia/include/core/SkTypes.h b/gfx/skia/include/core/SkTypes.h
+--- a/gfx/skia/include/core/SkTypes.h
++++ b/gfx/skia/include/core/SkTypes.h
+@@ -121,18 +121,29 @@ inline void operator delete(void* p) {
+     #define SkDEVCODE(code)
+     #define SK_DEVELOPER_TO_STRING()
+ #endif
+ 
+ template <bool>
+ struct SkCompileAssert {
+ };
+ 
++/*
++ * The SK_COMPILE_ASSERT definition creates an otherwise-unused typedef.  This
++ * triggers compiler warnings with some versions of gcc, so mark the typedef
++ * as permissibly-unused to disable the warnings.
++ */
++#  if defined(__GNUC__)
++#    define SK_COMPILE_ASSERT_UNUSED_ATTRIBUTE __attribute__((unused))
++#  else
++#    define SK_COMPILE_ASSERT_UNUSED_ATTRIBUTE /* nothing */
++#  endif
++
+ #define SK_COMPILE_ASSERT(expr, msg) \
+-    typedef SkCompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
++    typedef SkCompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] SK_COMPILE_ASSERT_UNUSED_ATTRIBUTE
+ 
+ /*
+  *  Usage:  SK_MACRO_CONCAT(a, b)   to construct the symbol ab
+  *
+  *  SK_MACRO_CONCAT_IMPL_PRIV just exists to make this work. Do not use directly
+  *
+  */
+ #define SK_MACRO_CONCAT(X, Y)           SK_MACRO_CONCAT_IMPL_PRIV(X, Y)

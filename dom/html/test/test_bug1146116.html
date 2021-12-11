@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1146116
+-->
+<head>
+  <title>Test for Bug 1146116</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1146116">Mozilla Bug 1146116</a>
+<p id="display">
+  <input type="file" id="file">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for bug 1146116 **/
+
+SimpleTest.waitForExplicitFinish();
+
+const helperURL = SimpleTest.getTestFileURL("simpleFileOpener.js");
+const helper = SpecialPowers.loadChromeScript(helperURL);
+helper.addMessageListener("fail", function onFail(message) {
+  is(message, null, "chrome script failed");
+  SimpleTest.finish();
+});
+helper.addMessageListener("file.opened", onFileOpened);
+helper.sendAsyncMessage("file.open", "test_bug1146116.txt");
+
+function getGlobal(thing) {
+  return SpecialPowers.unwrap(SpecialPowers.Cu.getGlobalForObject(thing));
+}
+
+function onFileOpened(message) {
+  const file = message.domFile;
+  const elem = document.getElementById("file");
+  is(getGlobal(elem), window,
+     "getGlobal() works as expected");
+  is(getGlobal(file), window,
+     "File from MessageManager is not wrapped");
+  SpecialPowers.wrap(elem).mozSetFileArray([file]);
+  is(getGlobal(elem.files[0]), window,
+     "File read back from input element is not wrapped");
+  helper.addMessageListener("file.removed", onFileRemoved);
+  helper.sendAsyncMessage("file.remove", null);
+}
+
+function onFileRemoved() {
+  helper.destroy();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

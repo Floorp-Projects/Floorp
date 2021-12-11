@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     https://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track 'min-content' min-sizing function with 'min-width:auto' on an item with an intrinsic aspect ratio</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218178">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#min-size-auto">
+  <link rel="match" href="grid-min-content-min-sizing-transferred-size-002-ref.html">
+  <style type="text/css">
+html,body { color:black; background-color:white; font:12px monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  border: 1px solid;
+  align-items: start;
+  justify-items: start;
+  margin-bottom: 1em;
+}
+
+.col { grid-template-columns:min-content; grid-auto-rows:10px; }
+.col img { min-height:0; }
+
+br { clear:both; }
+
+  </style>
+</head>
+<body>
+
+
+<script>
+var coltest = [
+"height:30px; max-width:200%", "height:30px; width:200%", "height:30px; width:50%",
+"width:50%", "max-width:50%", "height:30px", "height:200%; width:80px", "height:50%",
+"height:50%; width:20px", "max-height:50%", "max-height:50%; max-width:6px",
+"min-height:40%", "min-height:40%; max-width:30px"
+];
+
+var h3 = document.createElement('h3');
+h3.appendChild(document.createTextNode("grid-template-columns:min-content"));
+document.body.appendChild(h3);
+for (var i = 0; i < coltest.length; ++i) {
+  var grid = document.createElement('div');
+  grid.setAttribute("class","grid col");
+  var img = document.createElement('img');
+  img.setAttribute("src","support/lime-24x2.png");
+  img.setAttribute("style",coltest[i]);
+  grid.appendChild(img);
+  document.body.appendChild(document.createTextNode("24x2.png -- "+coltest[i]+'\n'));
+  document.body.appendChild(document.createElement('br'));
+  document.body.appendChild(grid);
+  document.body.appendChild(document.createElement('br'));
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 391979</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+        .float { float:left; clear:both; }
+        .t1 { column-count:2; column-width: 9ch; column-gap: 2ch; background:red; height:4ch; }
+
+        .abs { position:absolute; width:20ch; height:4ch; }
+
+        .red { background:red; }
+        .green { background:green; }
+    </style>
+</head>
+<body>
+<div class="abs green" style="left:0; top:0;">green</div>
+<div class="abs red" style="left:0; top:4ch; z-index:-1;">green</div>
+<div class="abs green" style="left:0; top:8ch; z-index:2;">green</div>
+<div class="abs red" style="left:0; top:12ch;">green</div>
+
+<div class="float">
+  <div class="t1 red">green</div>
+</div>
+
+<div class="float">
+  <div class="t1 green">green</div>
+</div>
+
+<div class="t1" style="position: absolute; top:8ch; ">green</div>
+<div class="t1 green" style="position: absolute; top:12ch; z-index:2;">green</div>
+
+</body>
+</html>

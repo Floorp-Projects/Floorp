@@ -1,0 +1,20 @@
+<html class="reftest-wait"><head>
+<title>Testcase bug - Crash [@ nsIFrame::Invalidate] with display: inherit, large margin and padding and generated content</title>
+<script>
+function addstyle(){
+var x=document.createElementNS('http://www.w3.org/1999/xhtml','style');
+x.innerHTML='body::before {content: "text"; }';
+document.documentElement.appendChild(x);
+document.documentElement.offsetHeight;
+document.documentElement.removeAttribute("class");
+}
+</script>
+
+</head>
+<body onload="setTimeout(addstyle,0);">
+<div style="display: table;">
+<div style="display: inherit;float: left;margin-bottom: -9999999px;padding-top: 9999999999px;">
+<span style="position: fixed;">t</span>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1709069: Test that Data URI which makes a top-level request gets updated in https-first</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("message", receiveMessage);
+
+// HTML site which makes a top-level http request
+const HTML = `
+<html>
+<body>
+  DATA HTML
+<script>
+ window.open("http://example.com/tests/dom/security/test/https-first/file_data_uri.html");
+<\/script>
+<\/body>
+<\/html>
+`;
+
+const DATA_HTML = "data:text/html, " + HTML;
+
+// Verify that data uri top-level request got upgraded to https and
+// the reached location is correct
+async function receiveMessage(event){
+  let data = event.data;
+  is(data.location, "https://example.com/tests/dom/security/test/https-first/file_data_uri.html",
+   "Reached the correct location");
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+function test_toplevel_https() {
+  document.getElementById("testframe").src = DATA_HTML;
+}
+
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true],
+  ]}, test_toplevel_https);
+
+
+</script>
+</body>
+</html>

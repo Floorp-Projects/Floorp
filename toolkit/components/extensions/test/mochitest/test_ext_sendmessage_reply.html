@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function background() {
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
+
+    if (msg == 0) {
+      sendReply("reply1");
+    } else if (msg == 1) {
+      window.setTimeout(function() {
+        sendReply("reply2");
+      }, 0);
+      return true;
+    } else if (msg == 2) {
+      browser.test.notifyPass("sendmessage_reply");
+    }
+  });
+}
+
+function contentScript() {
+  browser.runtime.sendMessage(0, function(resp1) {
+    if (resp1 != "reply1") {
+      return; // test failed
+    }
+    browser.runtime.sendMessage(1, function(resp2) {
+      if (resp2 != "reply2") {
+        return; // test failed
+      }
+      browser.runtime.sendMessage(2);
+    });
+  });
+}
+
+let extensionData = {
+  background,
+  manifest: {
+    "permissions": ["tabs"],
+    "content_scripts": [{
+      "matches": ["http://mochi.test/*/file_sample.html"],
+      "js": ["content_script.js"],
+      "run_at": "document_idle",
+    }],
+  },
+
+  files: {
+    "content_script.js": contentScript,
+  },
+};
+
+add_task(async function test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let win = window.open("file_sample.html");
+
+  await Promise.all([waitForLoad(win), extension.awaitFinish("sendmessage_reply")]);
+
+  win.close();
+
+  await extension.unload();
+  info("extension unloaded");
+});
+</script>
+
+</body>
+</html>

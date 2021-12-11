@@ -1,0 +1,65 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Core
+  component: "Audio/Video: Playback"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: dav1d
+
+  description: dav1d, a fast AV1 decoder
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://code.videolan.org/videolan/dav1d
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: commit f52aee04fbd711cddab23d0aa9b196e9c963e7b8 (2021-10-04T21:58:36.000+00:00).
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: f52aee04fbd711cddab23d0aa9b196e9c963e7b8
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: BSD-2-Clause
+
+  license-file: COPYING
+
+updatebot:
+    maintainer-phab: jbauman
+    maintainer-bz: jbauman@mozilla.com
+    tasks:
+      - type: vendoring
+        enabled: true
+        frequency: release
+
+vendoring:
+  url: https://code.videolan.org/videolan/dav1d.git
+  source-hosting: gitlab
+  vendor-directory: third_party/dav1d
+
+  exclude:
+    - build/.gitattributes
+    - build/.gitignore
+    - doc
+    - examples
+    - package
+    - tools
+
+  update-actions:
+    - action: copy-file
+      from: include/vcs_version.h.in
+      to: '{yaml_dir}/vcs_version.h'
+    - action: replace-in-file
+      pattern: '@VCS_TAG@'
+      with: '{revision}'
+      file: '{yaml_dir}/vcs_version.h'

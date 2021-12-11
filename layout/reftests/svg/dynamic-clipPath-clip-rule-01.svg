@@ -1,0 +1,32 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" class="reftest-wait">
+  <title>Testcase for dynamic changes to clip-rule</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1077993 -->
+  <script>
+
+function doTest() {
+  document.getElementById("p2").setAttribute("style", "clip-rule: winding;");
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest, false);
+window.setTimeout(doTest, 4000); // fallback for running outside reftest
+
+  </script>
+  <defs>
+    <clipPath id="p2" style="clip-rule:evenodd">
+        <path
+          d="M100,50 l0,150 50,0 0,-100 -100,0 0,50 150,0 0,-50 -50,0 0,-50 z"/>
+    </clipPath>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <path fill-rule="winding" fill="red"
+        d="M100,50 l0,150 50,0 0,-100 -100,0 0,50 150,0 0,-50 -50,0 0,-50 z"/>
+
+ <rect width="100%" height="100%" fill="lime" clip-path="url(#p2)"/>
+</svg>
+

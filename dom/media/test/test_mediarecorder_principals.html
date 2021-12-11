@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=489415
+-->
+<head>
+  <title>Test for MediaRecorder Reaction to Principal Change</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<div>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1018299">Test for MediaRecorder Principal Handling</a>
+</div>
+
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+let throwOutside = e => setTimeout(() => { throw e; });
+
+// Loading data from a resource that changes origins while streaming should
+// be detected by the media cache and result in a null principal so that the
+// MediaRecorder usages below fail.
+
+// This test relies on midflight-redirect.sjs returning the the first quarter of
+// the resource as a byte range response, and then hanging up, and when Firefox
+// requests the remainder midflight-redirect.sjs serves a redirect to another origin.
+
+async function testPrincipals(resource) {
+  if (!resource) {
+    todo(false, "No types supported");
+    return;
+  }
+  await testPrincipals1(resource);
+  await testPrincipals2(resource);
+}
+
+function makeVideo() {
+  let video = document.createElement("video");
+  video.preload = "metadata";
+  video.controls = true;
+  document.body.appendChild(video);
+  return video;
+}
+
+// First test: Load file from same-origin first, then get redirected to
+// another origin before attempting to record stream.
+async function testPrincipals1(resource) {
+  let video = makeVideo();
+  video.src =
+      "http://mochi.test:8888/tests/dom/media/test/midflight-redirect.sjs" +
+      "?resource=" + resource.name + "&type=" + resource.type;
+
+  let errorBarrier = once(video, "error");
+  // Wait for the video to load to metadata. We can then start capturing.
+  // Must also handle the download bursting and hitting the error before we
+  // reach loadedmetadata. Normally we reach loadedmetadata first, but
+  // rarely we hit the redirect first.
+  await Promise.race([once(video, "loadedmetadata"), errorBarrier]);
+
+  let rec = new MediaRecorder(video.mozCaptureStreamUntilEnded());
+  video.play();
+
+  // Wait until we hit a playback error. This means our download has hit the redirect.
+  await errorBarrier;
+
+  // Try to record, it should be blocked with a security error.
+  try {
+    rec.start();
+    ok(false, "mediaRecorder.start() must throw SecurityError, but didn't throw at all");
+  } catch (ex) {
+    is(ex.name, "SecurityError", "mediaRecorder.start() must throw SecurityError");
+  }
+  removeNodeAndSource(video);
+}
+
+// Second test: Load file from same-origin first, but record ASAP, before
+// getting redirected to another origin.
+async function testPrincipals2(resource) {
+  let video = makeVideo();
+  video.src =
+      "http://mochi.test:8888/tests/dom/media/test/midflight-redirect.sjs" +
+      "?resource=" + resource.name + "&type=" + resource.type;
+
+  // Wait for the video to load to metadata. We can then start capturing.
+  // Must also handle the download bursting and hitting the error before we
+  // reach loadedmetadata. Normally we reach loadedmetadata first, but
+  // rarely we hit the redirect first.
+  await Promise.race([once(video, "loadedmetadata"), once(video, "error")]);
+
+  let ended = false;
+  once(video, "ended", () => ended = true);
+
+  // Start capturing. It should work.
+  let rec;
+  let errorBarrier;
+  try {
+    rec = new MediaRecorder(video.mozCaptureStreamUntilEnded());
+    errorBarrier = nextEvent(rec, "error");
+    rec.start();
+    ok(true, "mediaRecorder.start() should not throw here, and didn't");
+  } catch (ex) {
+    ok(false, "mediaRecorder.start() unexpectedly threw " + ex.name + " (" + ex.message + ")");
+  }
+
+  // Play the video, this should result in a SecurityError on the recorder.
+  let hasStopped = once(rec, "stop");
+  video.play();
+  let error = (await errorBarrier).error;
+  is(error.name, "SecurityError", "mediaRecorder.onerror must fire SecurityError");
+  ok(error.stack.includes('test_mediarecorder_principals.html'),
+    'Events fired from onerror should include an error with a stack trace indicating ' +
+    'an error in this test');
+  is(ended, false, "Playback should not have reached end");
+  await hasStopped;
+  is(ended, false, "Playback should definitely not have reached end");
+
+  removeNodeAndSource(video);
+}
+
+testPrincipals({ name:"pixel_aspect_ratio.mp4", type:"video/mp4", duration:28 })
+  .catch(e => throwOutside(e))
+  .then(() => SimpleTest.finish());
+
+</script>
+</pre>
+
+</body>
+</html>

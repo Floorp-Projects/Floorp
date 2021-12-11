@@ -1,0 +1,229 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<window windowtype="mozilla:certmanager"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="certmgr-title"
+        onload="LoadCerts();"
+        style="min-width: 45em; min-height: 32em;"
+        persist="screenX screenY width height">
+<dialog id="certmanager"
+        buttons="accept">
+
+  <linkset>
+    <html:link rel="localization" href="security/certificates/certManager.ftl"/>
+  </linkset>
+
+  <script src="chrome://pippki/content/pippki.js"/>
+  <script src="chrome://pippki/content/certManager.js"/>
+
+  <vbox flex="1">
+    <tabbox id="certmanagertabs" flex="1" style="margin:5px" persist="selectedIndex">
+      <tabs id="certMgrTabbox">
+        <tab id="mine_tab" data-l10n-id="certmgr-tab-mine"/>
+        <tab id="remembered_tab" data-l10n-id="certmgr-tab-remembered"/>
+        <tab id="others_tab" data-l10n-id="certmgr-tab-people"/>
+        <tab id="websites_tab" data-l10n-id="certmgr-tab-servers"/>
+        <tab id="ca_tab" data-l10n-id="certmgr-tab-ca" selected="true"/>
+      </tabs>
+      <tabpanels flex="1">
+        <vbox id="myCerts" flex="1">
+          <description data-l10n-id="certmgr-mine"></description>
+          <separator class="thin"/>
+          <tree id="user-tree" flex="1" enableColumnDrag="true"
+                    onselect="mine_enableButtons()">
+            <treecols>
+              <!--
+                The below code may suggest that 'ordinal' is still a supported XUL
+                XUL attribute. It is not. This is a crutch so that we can
+                continue persisting the CSS -moz-box-ordinal-group attribute,
+                which is the appropriate replacement for the ordinal attribute
+                but cannot yet be easily persisted. The code that synchronizes
+                the attribute with the CSS lives in
+                toolkit/content/widget/tree.js and is specific to tree elements.
+              -->
+              <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
+                           persist="hidden width ordinal" flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="tokencol" data-l10n-id="certmgr-token-name"
+                           persist="hidden width ordinal" flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="serialnumcol" data-l10n-id="certmgr-serial"
+                           persist="hidden width ordinal" flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="issuedcol" data-l10n-id="certmgr-begins-label"
+                           hidden="true" persist="hidden width ordinal" flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="expiredcol" data-l10n-id="certmgr-expires-label"
+                           persist="hidden width ordinal" flex="1"/>
+            </treecols>
+            <treechildren ondblclick="viewCerts();"/>
+          </tree>
+
+          <separator class="thin"/>
+
+          <hbox>
+             <button id="mine_viewButton" class="normal"
+                     data-l10n-id="certmgr-view"
+                     disabled="true" oncommand="viewCerts();"/>
+             <button id="mine_backupButton" class="normal"
+                     data-l10n-id="certmgr-backup"
+                     disabled="true" oncommand="backupCerts();"/>
+             <button id="mine_backupAllButton" class="normal"
+                     data-l10n-id="certmgr-backup-all"
+                     oncommand="backupAllCerts();"/>
+             <button id="mine_restoreButton" class="normal"
+                     data-l10n-id="certmgr-restore"
+                     oncommand="restoreCerts();"/>
+             <button id="mine_deleteButton" class="normal"
+                     data-l10n-id="certmgr-delete"
+                     disabled="true" oncommand="deleteCerts();"/>
+          </hbox>
+        </vbox>
+        <vbox id="rememberedCerts" flex="1">
+          <description data-l10n-id="certmgr-remembered"></description>
+          <separator class="thin"/>
+
+           <listheader equalsize="always">
+             <treecol id="hostcol" data-l10n-id="certmgr-cert-host" primary="true"
+                           persist="hidden width ordinal" flex="1"/>
+             <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
+                           persist="hidden width ordinal" flex="1"/>
+             <treecol id="serialnumcol" data-l10n-id="certmgr-serial"
+                           persist="hidden width ordinal" flex="1"/>
+           </listheader>
+           <richlistbox class="certManagerRichlistBox" id="rememberedList" flex="1" selected="false"/>
+
+          <separator class="thin"/>
+
+          <hbox>
+             <button id="remembered_deleteButton" class="normal"
+                     data-l10n-id="certmgr-delete"
+
+                     oncommand="rememberedDecisionsRichList.deleteSelectedRichListItem()"/>
+
+             <button id="remembered_viewButton" class="normal"
+                     data-l10n-id="certmgr-view"
+
+                     oncommand="rememberedDecisionsRichList.viewSelectedRichListItem()"/>
+          </hbox>
+        </vbox>
+        <vbox id="othersCerts" flex="1">
+          <description data-l10n-id="certmgr-people"></description>
+          <separator class="thin"/>
+          <tree id="email-tree" flex="1"
+                    onselect="email_enableButtons()">
+            <treecols>
+              <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
+                           flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="emailcol" data-l10n-id="certmgr-email"
+                           flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="expiredcol" data-l10n-id="certmgr-expires-label"
+                       flex="1"/>
+            </treecols>
+            <treechildren flex="1" ondblclick="viewCerts();"/>
+          </tree>
+
+          <separator class="thin"/>
+
+          <hbox>
+            <button id="email_viewButton"
+                    data-l10n-id="certmgr-view"
+                    disabled="true" oncommand="viewCerts();"/>
+            <button id="email_addButton"
+                    data-l10n-id="certmgr-restore"
+                    oncommand="addEmailCert();"/>
+            <button id="email_exportButton"
+                    data-l10n-id="certmgr-export"
+                    disabled="true" oncommand="exportCerts();"/>
+            <button id="email_deleteButton"
+                    data-l10n-id="certmgr-delete"
+                    disabled="true" oncommand="deleteCerts();"/>
+          </hbox>
+        </vbox>
+
+        <vbox id="webCerts" flex="1">
+          <description data-l10n-id="certmgr-server"></description>
+          <separator class="thin"/>
+
+           <listheader equalsize="always">
+             <treecol id="sitecol" data-l10n-id="certmgr-cert-server" primary="true" flex="1"/>
+             <treecol id="certcol" data-l10n-id="certmgr-cert-name" flex="1"/>
+             <treecol id="lifetimecol" data-l10n-id="certmgr-override-lifetime" flex="1"/>
+           </listheader>
+           <richlistbox ondblclick="serverRichList.viewSelectedRichListItem();" class="certManagerRichlistBox" id="serverList" flex="1" selected="false"/>
+
+          <separator class="thin"/>
+
+          <hbox>
+            <button id="websites_viewButton"
+                    data-l10n-id="certmgr-view" oncommand="serverRichList.viewSelectedRichListItem();"/>
+            <button id="websites_exportButton"
+                    data-l10n-id="certmgr-export" oncommand="serverRichList.exportSelectedRichListItem();"/>
+            <button id="websites_deleteButton"
+                    data-l10n-id="certmgr-delete" oncommand="serverRichList.deleteSelectedRichListItem();"/>
+            <button id="websites_exceptionButton"
+                    data-l10n-id="certmgr-add-exception"
+                    oncommand="serverRichList.addException();"/>
+          </hbox>
+        </vbox>
+        <vbox id="CACerts" flex="1">
+          <description data-l10n-id="certmgr-ca"></description>
+          <separator class="thin"/>
+          <tree id="ca-tree" flex="1" enableColumnDrag="true"
+                    onselect="ca_enableButtons()">
+            <treecols>
+              <!--
+                The below code may suggest that 'ordinal' is still a supported XUL
+                XUL attribute. It is not. This is a crutch so that we can
+                continue persisting the CSS -moz-box-ordinal-group attribute,
+                which is the appropriate replacement for the ordinal attribute
+                but cannot yet be easily persisted. The code that synchronizes
+                the attribute with the CSS lives in
+                toolkit/content/widget/tree.js and is specific to tree elements.
+              -->
+              <treecol id="certcol" data-l10n-id="certmgr-cert-name" primary="true"
+                           persist="hidden width ordinal" flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="tokencol" data-l10n-id="certmgr-token-name"
+                           persist="hidden width ordinal" flex="1"/>
+            </treecols>
+            <treechildren ondblclick="viewCerts();"/>
+          </tree>
+
+          <separator class="thin"/>
+
+          <hbox>
+            <button id="ca_viewButton"
+                    data-l10n-id="certmgr-view"
+                    disabled="true" oncommand="viewCerts();"/>
+            <button id="ca_editButton"
+                    data-l10n-id="certmgr-edit"
+                    disabled="true" oncommand="editCerts();"/>
+            <button id="ca_addButton"
+                    data-l10n-id="certmgr-restore"
+                    oncommand="addCACerts();"/>
+            <button id="ca_exportButton"
+                    data-l10n-id="certmgr-export"
+                    disabled="true" oncommand="exportCerts();"/>
+            <button id="ca_deleteButton"
+                    data-l10n-id="certmgr-delete-builtin"
+                    disabled="true" oncommand="deleteCerts();"/>
+          </hbox>
+        </vbox>
+      </tabpanels>
+    </tabbox>
+
+  </vbox>
+
+</dialog>
+</window>

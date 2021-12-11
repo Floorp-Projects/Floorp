@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=302971
+-->
+<head>
+  <title>Test for Bug 302971</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=302971">Mozilla Bug 302971</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="scientific-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+	SimpleTest.waitForExplicitFinish();
+
+	function runTests() {
+	  var doc = $("svg").contentWindow.document;
+	  var rect = doc.getElementById("rect");
+
+	  // ordinary
+
+	  rect.setAttribute("stroke-width", "5");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "5px", "Ordinary");
+
+	  // valid exponential notation
+
+	  rect.setAttribute("stroke-width", "4E1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "40px", "Exponent");
+
+	  rect.setAttribute("stroke-width", "6e1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "60px", "Lower-case Exponent");
+
+	  rect.setAttribute("stroke-width", "2E+1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "20px", "Positive Exponent");
+
+	  rect.setAttribute("stroke-width", "100E-1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "10px", "Negative Exponent");
+
+	  rect.setAttribute("stroke-width", "0.7E1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "7px", "Floating Point with Exponent");
+
+	  rect.setAttribute("stroke-width", "50.0E-1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "5px", "Floating Point with Negative Exponent");
+
+	  rect.setAttribute("stroke-width", "0.8E+1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "8px", "Floating Point with Positive Exponent");
+
+	  rect.setAttribute("stroke-width", "4E1px");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "40px", "Units");
+
+	  // check units that begin with the letter e
+
+	  var font_size = doc.defaultView.getComputedStyle(rect).getPropertyValue("font-size");
+
+	  rect.setAttribute("stroke-width", "1em");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), font_size, "em Units");
+
+	  // invalid exponential notation
+
+	  rect.setAttribute("stroke-width", "1E1.1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "Floating Point Exponent");
+
+	  rect.setAttribute("stroke-width", "E1");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "No Mantissa");
+
+	  rect.setAttribute("stroke-width", "1 e");
+	  is(doc.defaultView.getComputedStyle(rect).getPropertyValue("stroke-width"), "1px", "Spaces");
+
+	  SimpleTest.finish();
+	}
+
+	window.addEventListener("load", runTests);
+</script>
+</pre>
+</body>
+</html>

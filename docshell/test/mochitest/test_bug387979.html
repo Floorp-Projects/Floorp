@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=387979
+-->
+<head>
+  <title>Test for Bug 387979</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=387979">Mozilla Bug 387979</a>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 387979 **/
+function a(s) {
+  var r;
+  try { r = frames[0].document.body; } catch (e) { r = e; }
+  is(r instanceof frames[0].HTMLBodyElement, true, "Can't get body" + s);
+}
+var p = 0;
+function b() {
+  switch (++p) {
+    case 1:
+      frames[0].location = "about:blank";
+    break;
+    case 2:
+      a("before reload");
+      frames[0].location.reload();
+    break;
+    case 3:
+      a("after reload");
+      SimpleTest.finish();
+    break;
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<p id="display">
+  <iframe onload="b()"></iframe>
+  <pre id="p">-</pre>
+</p>
+</body>
+</html>
+

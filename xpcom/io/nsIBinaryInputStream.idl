@@ -1,0 +1,118 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIInputStream.idl"
+
+/**
+ * This interface allows consumption of primitive data types from a "binary
+ * stream" containing untagged, big-endian binary data, i.e. as produced by an
+ * implementation of nsIBinaryOutputStream.  This might be used, for example,
+ * to implement network protocols or to read from architecture-neutral disk
+ * files, i.e. ones that can be read and written by both big-endian and
+ * little-endian platforms.
+ *
+ * @See nsIBinaryOutputStream
+ */
+
+[scriptable, uuid(899b826b-2eb3-469c-8b31-4c29f5d341a6)]
+interface nsIBinaryInputStream : nsIInputStream {
+    void setInputStream(in nsIInputStream aInputStream);
+
+    /**
+     * Read 8-bits from the stream.
+     *
+     * @return that byte to be treated as a boolean.
+     */
+    boolean readBoolean();
+
+    uint8_t read8();
+    uint16_t read16();
+    uint32_t read32();
+    uint64_t read64();
+
+    float readFloat();
+    double readDouble();
+
+    /**
+     * Read an 8-bit pascal style string from the stream.
+     * 32-bit length field, followed by length 8-bit chars.
+     */
+    ACString readCString();
+
+    /**
+     * Read an 16-bit pascal style string from the stream.
+     * 32-bit length field, followed by length PRUnichars.
+     */
+    AString readString();
+
+    /**
+     * Read an opaque byte array from the stream.
+     *
+     * @param aLength the number of bytes that must be read.
+     *
+     * @throws NS_ERROR_FAILURE if it can't read aLength bytes
+     */
+    void readBytes(in uint32_t aLength,
+                   [size_is(aLength), retval] out string aString);
+
+    /**
+     * Read an opaque byte array from the stream, storing the results
+     * as an array of PRUint8s.
+     *
+     * @param aLength the number of bytes that must be read.
+     *
+     * @throws NS_ERROR_FAILURE if it can't read aLength bytes
+     */
+    Array<uint8_t> readByteArray(in uint32_t aLength);
+
+    /**
+     * Read opaque bytes from the stream, storing the results in an ArrayBuffer.
+     *
+     * @param aLength the number of bytes that must be read
+     * @param aArrayBuffer the arraybuffer in which to store the results
+     * Note: passing view.buffer, where view is an ArrayBufferView of an
+     *       ArrayBuffer, is not valid unless view.byteOffset == 0.
+     *
+     * @return The number of bytes actually read into aArrayBuffer.
+     */
+    [implicit_jscontext]
+    uint64_t readArrayBuffer(in uint64_t aLength, in jsval aArrayBuffer);
+};
+
+%{C++
+
+#ifdef MOZILLA_INTERNAL_API
+#include "nsString.h"
+
+inline nsresult
+NS_ReadOptionalCString(nsIBinaryInputStream* aStream, nsACString& aResult)
+{
+    bool nonnull;
+    nsresult rv = aStream->ReadBoolean(&nonnull);
+    if (NS_SUCCEEDED(rv)) {
+        if (nonnull)
+            rv = aStream->ReadCString(aResult);
+        else
+            aResult.Truncate();
+    }
+    return rv;
+}
+
+inline nsresult
+NS_ReadOptionalString(nsIBinaryInputStream* aStream, nsAString& aResult)
+{
+    bool nonnull;
+    nsresult rv = aStream->ReadBoolean(&nonnull);
+    if (NS_SUCCEEDED(rv)) {
+        if (nonnull)
+            rv = aStream->ReadString(aResult);
+        else
+            aResult.Truncate();
+    }
+    return rv;
+}
+#endif
+
+%}

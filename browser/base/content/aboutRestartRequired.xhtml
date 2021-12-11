@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+    <title data-l10n-id="restart-required-title"></title>
+    <link rel="stylesheet" type="text/css" media="all"
+          href="chrome://browser/skin/aboutRestartRequired.css"/>
+    <!-- If the location of the favicon is changed here, the
+         FAVICON_ERRORPAGE_URL symbol in
+         toolkit/components/places/src/nsFaviconService.h should be updated. -->
+    <link rel="icon" type="image/png" id="favicon"
+          href="chrome://global/skin/icons/info.svg"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/aboutRestartRequired.ftl"/>
+  </head>
+  <body>
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div id="errorPageContainer">
+      <div id="text-container">
+        <div id="title">
+          <h1 id="title-text" data-l10n-id="restart-required-header"></h1>
+        </div>
+        <div id="errorLongContent">
+          <div id="errorLongDesc">
+            <p data-l10n-id="restart-required-intro-brand"></p>
+            <p data-l10n-id="restart-required-description"></p>
+          </div>
+        </div>
+      </div>
+      <!-- Restart Button -->
+      <div id="restartButtonContainer" class="button-container">
+        <button id="restart" data-l10n-id="restart-button-label" class="primary" autocomplete="off"></button>
+      </div>
+    </div>
+  </body>
+  <script src="chrome://browser/content/aboutRestartRequired.js"/>
+</html>

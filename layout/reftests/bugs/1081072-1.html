@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <!-- NOTE: This bug was triggered by scrollbar opacity-fading, so this
+       testcase needs to be loaded with this pref...
+           layout.testing.overlay-scrollbars.always-visible
+       ...set to *false* in order to have a chance to trigger the bug.
+
+       We don't have to worry about this producing any screenshots of
+       unpredictable partially-faded-scrollbars in our reftest snapshot,
+       because our scrollbars don't actually paint here, since the
+       scrollable element has "overflow:auto" and doesn't overflow
+       (because it's auto-sized to fit its content). -->
+  <style>
+    .container {
+      display: flex;
+      overflow-y: auto;
+      border: 1px solid black;
+    }
+  </style>
+  <script type='text/javascript'>
+    window.addEventListener("MozReftestInvalidate", startTest);
+
+    function startTest() {
+      // NOTE: setTimeout in tests is evil, but it's necessary here -- we need
+      // to wait until the scrollbars have finished fading, and there's no
+      // event we can listen for to signal that, AFAIK. Fortunately, there
+      // shouldn't be *visible* scrollbars in this testcase, so even if our
+      // setTimeout fires too early/late, the test will still pass. (So, there
+      // shouldn't be spurious failures; any failures that happen will be real.)
+      setTimeout(endTest, 800);
+    }
+
+    function endTest() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div>T</div>
+  </div>
+</body>
+</html>

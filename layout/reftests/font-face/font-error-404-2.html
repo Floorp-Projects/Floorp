@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+/* Chunkfive.sjs with a 200 (OK) status should work identically to Chunkfive.otf */
+@font-face {
+  font-family: foo;
+  src: url(../fonts/Chunkfive.sjs?statusCode=200&statusReason=OK);
+}
+body {
+  font-family: foo, monospace;
+  font-size: 36px;
+}
+</style>
+</head>
+<body>
+Hello world
+</body>
+</html>

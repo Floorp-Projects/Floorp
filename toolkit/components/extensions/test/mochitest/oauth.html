@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+  "use strict";
+
+  onload = () => {
+    let url = new URL(location);
+    if (url.searchParams.get("post")) {
+      let server_redirect = `${url.searchParams.get("server_uri")}?redirect_uri=${encodeURIComponent(url.searchParams.get("redirect_uri"))}`;
+      let form = document.forms.testform;
+      form.setAttribute("action", server_redirect);
+      form.submit();
+    } else {
+      let end = new URL(url.searchParams.get("redirect_uri"));
+      end.searchParams.set("access_token", "here ya go");
+      location.href = end.href;
+    }
+  };
+  </script>
+</head>
+<body>
+  <form name="testform" action="" method="POST">
+  </form>
+</body>
+</html>

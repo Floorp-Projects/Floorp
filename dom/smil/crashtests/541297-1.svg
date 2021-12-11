@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"><svg id="w"><animate/></svg><script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  anim = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+  document.documentElement.appendChild(anim);
+  document.documentElement.removeChild(anim);
+  
+  setTimeout(t, 0);
+  
+  function t()
+  {
+    document.getElementById("w").appendChild(anim);
+  }
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></svg>

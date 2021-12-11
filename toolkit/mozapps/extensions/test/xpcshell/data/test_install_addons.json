@@ -1,0 +1,31 @@
+{
+    "page_size": 25,
+    "page_count": 1,
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "name": "Real Test 2",
+            "type": "extension",
+            "guid": "addon2@tests.mozilla.org",
+            "current_version": {
+                "version": "1.0",
+                "files": [
+                    {
+                        "size": 2,
+                        "url": "http://example.com/browser/toolkit/mozapps/extensions/test/browser/addons/browser_install1_2.xpi"
+                    }
+                ]
+            },
+            "authors": [
+                {
+                    "name": "Test Creator",
+                    "url": "http://example.com/creator.html"
+                }
+            ],
+            "summary": "Repository summary",
+            "description": "Repository description"
+        }
+    ]
+}

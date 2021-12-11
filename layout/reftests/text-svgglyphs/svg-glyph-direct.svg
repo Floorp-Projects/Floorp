@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Test for SVG glyphs being painted when painting properties are simple</title>
+
+  <style>
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src: url(resources/svg.woff);
+      }
+      text {
+        font-family: Liberation;
+        font-size: 200px;
+      }
+    ]]>
+  </style>
+
+  <text x="0" y="200">L</text>
+</svg>

@@ -1,0 +1,14 @@
+# Success cases
+content  test1  test/  appversion=5
+content  test2  test/  appversion<6
+content  test3  test/  appversion>4
+content  test4  test/  appversion>=5
+content  test5  test/  appversion<=5
+
+# Failure cases
+content  test6  test/  appversion>5
+content  test7  test/  appversion<5
+content  test8  test/  appversion>
+content  test9  test/  appversion<
+content  test10  test/  appversion=
+content  test11  test/  appversion

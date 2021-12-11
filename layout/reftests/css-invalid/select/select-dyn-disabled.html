@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if select is disabled and invalid, it is barred from constraint
+             validation and should not be affected by :invalid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function onLoadHandler()
+    {
+      var e = document.getElementById('s');
+      e.setCustomValidity('foo');
+      e.disabled = 'true';
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onLoadHandler();">
+    <select class='notinvalid' id='s'></select>
+  </body>
+</html>

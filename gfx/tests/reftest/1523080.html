@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<style>
+html, body {
+    margin: 0;
+}
+</style>
+<div id="red" style="position:absolute; width: 400px; height: 400px; background-color: red; top: 0px; left: 0px"></div>
+<div id="scroller" style="overflow:hidden; width:400px; height: 400px">
+  <div style="filter: blur(20px); width: 800px; height: 800px; background-color: green"></div>
+</div>
+<script>
+    document.getElementById('scroller').scrollTo(100, 100);
+</script>

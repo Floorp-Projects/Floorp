@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=866823
+-->
+<window title="Mozilla Bug 866823"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=866823"
+     target="_blank">Mozilla Bug 866823</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 866823 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function go() {
+    var iwin = $('ifr').contentWindow;
+
+    // Make sure that Xray waivers can't be transitively extended onto objects
+    // for whom the extender may not waive.
+    var sb = new Cu.Sandbox(iwin, { wantXrays: true });
+    sb.iwin = iwin;
+    ok(Cu.evalInSandbox('iwin.wrappedJSObject.top == iwin.top', sb), "Waiver does not propagate");
+    Cu.evalInSandbox('iwin.wrappedJSObject.waiver = iwin.wrappedJSObject', sb);
+    ok(iwin.wrappedJSObject.eval('waiver == window'), "Waivers disappear same-compartment");
+
+    // Make sure that standard prototypes don't get COWs.
+    sb.objProto = Object.prototype;
+    try {
+      sb.eval('objProto.toString;', sb);
+      ok(false, "Should have thrown");
+    } catch (e) {
+      ok(/denied|insecure/, "No silent failure when accessing properties on forbidden prototype");
+    }
+
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="go();" type="content" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

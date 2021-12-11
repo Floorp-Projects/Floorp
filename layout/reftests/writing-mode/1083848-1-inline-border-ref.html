@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face {
+  font-family: dejavu;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+.test {
+  margin:10px;
+  border:1px solid blue;
+  font-family: dejavu;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  word-break:break-all;
+  text-orientation:upright;
+  width:7em;
+  height:7em;
+}
+
+.h { writing-mode:horizontal-tb; letter-spacing: 0.4em }
+.v-lr { writing-mode:vertical-lr; }
+.v-rl { writing-mode:vertical-rl; }
+
+b {
+  background-color: yellow;
+}
+
+.bh1 {
+  border-left: 3px solid cyan;
+}
+.bh2 {
+  border-right: 3px solid magenta;
+}
+
+.bv1 {
+  border-top: 3px solid cyan;
+}
+.bv2 {
+  border-bottom: 3px solid magenta;
+}
+</style>
+</head>
+
+<body>
+
+<div class="test h">ABCDE<b class="bh1">F</b><b>GHIJKLMNOPQRS</b><b class="bh2">T</b>UVWXYZ</div>
+
+<div class="test v-lr">ABCDE<b class="bv1">F</b><b>GHIJKLMNOPQRS</b><b class="bv2">T</b>UVWXYZ</div>
+
+<div class="test v-rl">ABCDE<b class="bv1">F</b><b>GHIJKLMNOPQRS</b><b class="bv2">T</b>UVWXYZ</div>
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "menus",
+    "Preview",
+]
+
+CompiledModules(
+    "Breakpoint.js",
+    "Breakpoints.js",
+    "ColumnBreakpoint.js",
+    "ColumnBreakpoints.js",
+    "ConditionalPanel.js",
+    "DebugLine.js",
+    "EditorMenu.js",
+    "EmptyLines.js",
+    "Exception.js",
+    "Exceptions.js",
+    "Footer.js",
+    "HighlightCalls.js",
+    "HighlightLine.js",
+    "HighlightLines.js",
+    "index.js",
+    "InlinePreview.js",
+    "InlinePreviewRow.js",
+    "InlinePreviews.js",
+    "SearchBar.js",
+    "Tab.js",
+    "Tabs.js",
+)

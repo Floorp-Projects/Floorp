@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that css-logic calculates CSS specificity properly
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test css-logic specificity</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body style="background:blue;">
+  <script type="application/javascript">
+  "use strict";
+
+  window.onload = function() {
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+    const {CssLogic, CssSelector} = require("devtools/server/actors/inspector/css-logic");
+    const InspectorUtils = SpecialPowers.InspectorUtils;
+
+    const TEST_DATA = [
+      {text: "*", expected: 0},
+      {text: "LI", expected: 1},
+      {text: "UL LI", expected: 2},
+      {text: "UL OL + LI", expected: 3},
+      {text: "H1 + [REL=\"up\"]", expected: 1025},
+      {text: "UL OL LI.red", expected: 1027},
+      {text: "LI.red.level", expected: 2049},
+      {text: ".red .level", expected: 2048},
+      {text: "#x34y", expected: 1048576},
+      {text: "#s12:not(FOO)", expected: 1048577},
+      {text: "body#home div#warning p.message", expected: 2098179},
+      {text: "* body#home div#warning p.message", expected: 2098179},
+      {text: "#footer :not(nav) li", expected: 1048578},
+      {text: "bar:nth-child(n)", expected: 1025},
+      {text: "li::marker", expected: 2},
+      {text: "a:hover", expected: 1025},
+    ];
+
+    function createDocument() {
+      let text = TEST_DATA.map(i=>i.text).join(",");
+      text = '<style type="text/css">' + text + " {color:red;}</style>";
+      // eslint-disable-next-line no-unsanitized/property
+      document.body.innerHTML = text;
+    }
+
+    function getExpectedSpecificity(selectorText) {
+      return TEST_DATA.filter(i => i.text === selectorText)[0].expected;
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    createDocument();
+    const cssLogic = new CssLogic();
+
+    cssLogic.highlight(document.body);
+    const cssSheet = cssLogic.sheets[0];
+    const cssRule = cssSheet.domSheet.cssRules[0];
+    const selectors = CssLogic.getSelectors(cssRule);
+
+    info("Iterating over the test selectors");
+    for (let i = 0; i < selectors.length; i++) {
+      const selectorText = selectors[i];
+      info("Testing selector " + selectorText);
+
+      const selector = new CssSelector(cssRule, selectorText, i);
+      const expected = getExpectedSpecificity(selectorText);
+      const specificity = InspectorUtils.getSpecificity(selector.cssRule,
+                                                      selector.selectorIndex);
+      is(specificity, expected,
+        'Selector "' + selectorText + '" has a specificity of ' + expected);
+    }
+
+    info("Testing specificity of element.style");
+    const colorProp = cssLogic.getPropertyInfo("background");
+    is(colorProp.matchedSelectors[0].specificity, 0x40000000,
+       "Element styles have specificity of 0x40000000 (1073741824).");
+
+    SimpleTest.finish();
+  };
+  </script>
+</body>
+</html>

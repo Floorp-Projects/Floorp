@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+function boom()
+{
+  var tbody = document.getElementById("tbody");
+  var table = tbody.parentNode;
+  table.removeChild(tbody);
+  document.documentElement.offsetHeight;
+  table.appendChild(tbody);
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<table>
+<col>
+<col style="visibility: collapse;"><col>
+<tbody id="tbody">
+  <tr>
+    <td>one</td>
+    <td>two</td>
+  </tr>
+  <tr>
+    <td>one</td>
+    <td>two</td>
+  </tr>
+</tbody>
+</table>
+
+</body>
+</html>

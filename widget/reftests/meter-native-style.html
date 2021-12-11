@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <meter vaue=0></meter>
+    <!-- Should be green. -->
+    <meter min=0 low=0 high=10 optimum=10 max=10 value=10></meter>
+    <!-- Should be orange. -->
+    <meter min=0 low=9 high=10 optimum=8 max=10 value=10></meter>
+    <!-- Should be red. -->
+    <meter min=0 low=8 high=9 optimum=0 max=10 value=10></meter>
+    <!-- Half-full orange. -->
+    <meter min=0 low=3 high=4 optimum=4 max=10 value=5></meter>
+    <!-- Half-full orange. -->
+    <meter min=0 low=9 high=10 optimum=10 max=10 value=5></meter>
+    <!-- Test RTL -->
+    <meter dir='rtl' value=0.5></meter>
+  </body>
+</html>

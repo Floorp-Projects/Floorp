@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
+  <script type="application/javascript" src="../pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getIdentityAssertion Tests",
+    bug: "942367"
+  });
+
+function checkIdentity(assertion, identity) {
+  // here we dig into the payload, which means we need to know something
+  // about how the IdP actually works (not good in general, but OK here)
+  var assertion = JSON.parse(atob(assertion)).assertion;
+  var user = JSON.parse(assertion).username;
+  is(user, identity, 'id should be "' + identity + '" is "' + user + '"');
+}
+
+function getAssertion(t, instructions, userHint) {
+  dump('instructions: ' + instructions + '\n');
+  dump('userHint: ' + userHint + '\n');
+  t.pcLocal.setIdentityProvider('example.com',
+                                { protocol: 'idp.js' + instructions,
+                                  usernameHint: userHint });
+  return t.pcLocal._pc.getIdentityAssertion();
+}
+
+var test;
+function theTest() {
+  test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.removeAfter('PC_REMOTE_CHECK_INITIAL_SIGNALINGSTATE');
+  test.chain.append([
+    function PC_LOCAL_IDENTITY_ASSERTION_FAILS_WITHOUT_PROVIDER(t) {
+      return t.pcLocal._pc.getIdentityAssertion()
+        .then(a => ok(false, 'should fail without provider'),
+              e => ok(e, 'should fail without provider'));
+    },
+
+    function PC_LOCAL_IDENTITY_ASSERTION_FAILS_WITH_BAD_PROVIDER(t) {
+      t.pcLocal._pc.setIdentityProvider('example.com',
+                                        { protocol: 'idp-bad.js',
+                                          usernameHint: '' });
+      return t.pcLocal._pc.getIdentityAssertion()
+        .then(a => ok(false, 'should fail with bad provider'),
+              e => {
+                is(e.name, 'IdpError', 'should fail with bad provider');
+                ok(e.message, 'should include a nice message');
+              });
+    },
+
+    function PC_LOCAL_GET_TWO_ASSERTIONS(t) {
+      return Promise.all([
+        getAssertion(t, ''),
+        getAssertion(t, '')
+      ]).then(assertions => {
+        is(assertions.length, 2, "Two assertions generated");
+        assertions.forEach(a => checkIdentity(a, 'someone@example.com'));
+      });
+    },
+
+    function PC_LOCAL_IDP_FAILS(t) {
+      return getAssertion(t, '#fail')
+        .then(a => ok(false, '#fail should not get an identity result'),
+              e => is(e.name, 'IdpError', '#fail should cause rejection'));
+    },
+
+    function PC_LOCAL_IDP_LOGIN_ERROR(t) {
+      return getAssertion(t, '#login')
+        .then(a => ok(false, '#login should not work'),
+              e => {
+                is(e.name, 'IdpLoginError', 'name is IdpLoginError');
+                is(t.pcLocal._pc.idpLoginUrl.split('#')[0],
+                   'https://example.com/.well-known/idp-proxy/login.html',
+                   'got the right login URL from the IdP');
+              });
+    },
+
+    function PC_LOCAL_IDP_NOT_READY(t) {
+      return getAssertion(t, '#not_ready')
+        .then(a => ok(false, '#not_ready should not get an identity result'),
+              e => is(e.name, 'IdpError', '#not_ready should cause rejection'));
+    },
+
+    function PC_LOCAL_ASSERTION_WITH_SPECIFIC_NAME(t) {
+      return getAssertion(t, '', 'user@example.com')
+        .then(a => checkIdentity(a, 'user@example.com'));
+    }
+  ]);
+  return test.run();
+}
+runNetworkTest(theTest);
+
+</script>
+</pre>
+</body>
+</html>

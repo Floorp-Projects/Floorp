@@ -1,0 +1,213 @@
+MPI Library Timing Tests
+
+Hardware/OS
+(A) SGI O2 1 x MIPS R10000 250MHz IRIX 6.5.3
+(B) IBM RS/6000 43P-240 1 x PowerPC 603e 223MHz AIX 4.3
+(C) Dell GX1/L+ 1 x Pentium III 550MHz Linux 2.2.12-20
+(D) PowerBook G3 1 x PowerPC 750 266MHz LinuxPPC 2.2.6-15apmac
+(E) PowerBook G3 1 x PowerPC 750 266MHz MacOS 8.5.1
+(F) PowerBook G3 1 x PowerPC 750 400MHz MacOS 9.0.2
+
+Compiler
+(1) MIPSpro C 7.2.1 -O3 optimizations
+(2) GCC 2.95.1 -O3 optimizations
+(3) IBM AIX xlc -O3 optimizations (version unknown)
+(4) EGCS 2.91.66 -O3 optimizations
+(5) Metrowerks CodeWarrior 5.0 C, all optimizations
+(6) MIPSpro C 7.30 -O3 optimizations
+(7) same as (6), with optimized libmalloc.so
+
+Timings are given in seconds, computed using the C library's clock()
+function.  The first column gives the hardware and compiler
+configuration used for the test. The second column indicates the
+number of tests that were aggregated to get the statistics for that
+size.  These were compiled using 16 bit digits.
+
+Source data were generated randomly using a fixed seed, so they should
+be internally consistent, but may vary on different systems depending
+on the C library.  Also, since the resolution of the timer accessed by
+clock() varies, there may be some variance in the precision of these
+measurements.
+
+Prime Generation (primegen)
+
+128 bits:
+A1      200     min=0.03, avg=0.19, max=0.72, sum=38.46
+A2      200     min=0.02, avg=0.16, max=0.62, sum=32.55
+B3      200     min=0.01, avg=0.07, max=0.22, sum=13.29
+C4      200     min=0.00, avg=0.03, max=0.20, sum=6.14
+D4      200     min=0.00, avg=0.05, max=0.33, sum=9.70
+A6      200     min=0.01, avg=0.09, max=0.36, sum=17.48
+A7      200     min=0.00, avg=0.05, max=0.24, sum=10.07
+
+192 bits:
+A1      200     min=0.05, avg=0.45, max=3.13, sum=89.96
+A2      200     min=0.04, avg=0.39, max=2.61, sum=77.55
+B3      200     min=0.02, avg=0.18, max=1.25, sum=36.97
+C4      200     min=0.01, avg=0.09, max=0.33, sum=18.24
+D4      200     min=0.02, avg=0.15, max=0.54, sum=29.63
+A6      200     min=0.02, avg=0.24, max=1.70, sum=47.84
+A7      200     min=0.01, avg=0.15, max=1.05, sum=30.88
+
+256 bits:
+A1      200     min=0.08, avg=0.92, max=6.13, sum=184.79
+A2      200     min=0.06, avg=0.76, max=5.03, sum=151.11
+B3      200     min=0.04, avg=0.41, max=2.68, sum=82.35
+C4      200     min=0.02, avg=0.19, max=0.69, sum=37.91
+D4      200     min=0.03, avg=0.31, max=1.15, sum=63.00
+A6      200     min=0.04, avg=0.48, max=3.13, sum=95.46
+A7      200     min=0.03, avg=0.37, max=2.36, sum=73.60
+
+320 bits:
+A1      200     min=0.11, avg=1.59, max=6.14, sum=318.81
+A2      200     min=0.09, avg=1.27, max=4.93, sum=254.03
+B3      200     min=0.07, avg=0.82, max=3.13, sum=163.80
+C4      200     min=0.04, avg=0.44, max=1.91, sum=87.59
+D4      200     min=0.06, avg=0.73, max=3.22, sum=146.73
+A6      200     min=0.07, avg=0.93, max=3.50, sum=185.01
+A7      200     min=0.05, avg=0.76, max=2.94, sum=151.78
+
+384 bits:
+A1      200     min=0.16, avg=2.69, max=11.41, sum=537.89
+A2      200     min=0.13, avg=2.15, max=9.03, sum=429.14
+B3      200     min=0.11, avg=1.54, max=6.49, sum=307.78
+C4      200     min=0.06, avg=0.81, max=4.84, sum=161.13
+D4      200     min=0.10, avg=1.38, max=8.31, sum=276.81
+A6      200     min=0.11, avg=1.73, max=7.36, sum=345.55
+A7      200     min=0.09, avg=1.46, max=6.12, sum=292.02
+
+448 bits:
+A1      200     min=0.23, avg=3.36, max=15.92, sum=672.63
+A2      200     min=0.17, avg=2.61, max=12.25, sum=522.86
+B3      200     min=0.16, avg=2.10, max=9.83, sum=420.86
+C4      200     min=0.09, avg=1.44, max=7.64, sum=288.36
+D4      200     min=0.16, avg=2.50, max=13.29, sum=500.17
+A6      200     min=0.15, avg=2.31, max=10.81, sum=461.58
+A7      200     min=0.14, avg=2.03, max=9.53, sum=405.16
+
+512 bits:
+A1      200     min=0.30, avg=6.12, max=22.18, sum=1223.35
+A2      200     min=0.25, avg=4.67, max=16.90, sum=933.18
+B3      200     min=0.23, avg=4.13, max=14.94, sum=825.45
+C4      200     min=0.13, avg=2.08, max=9.75, sum=415.22
+D4      200     min=0.24, avg=4.04, max=20.18, sum=808.11
+A6      200     min=0.22, avg=4.47, max=16.19, sum=893.83
+A7      200     min=0.20, avg=4.03, max=14.65, sum=806.02
+
+Modular Exponentation (metime)
+
+The following results are aggregated from 200 pseudo-randomly
+generated tests, based on a fixed seed. 
+
+                      base, exponent, and modulus size (bits)
+P/C       128   192   256   320   384   448   512   640   768   896  1024
+------- -----------------------------------------------------------------
+A1      0.015 0.027 0.047 0.069 0.098 0.133 0.176 0.294 0.458 0.680 1.040
+A2      0.013 0.024 0.037 0.053 0.077 0.102 0.133 0.214 0.326 0.476 0.668
+B3      0.005 0.011 0.021 0.036 0.056 0.084 0.121 0.222 0.370 0.573 0.840
+C4      0.002 0.006 0.011 0.020 0.032 0.048 0.069 0.129 0.223 0.344 0.507
+D4      0.004 0.010 0.019 0.034 0.056 0.085 0.123 0.232 0.390 0.609 0.899
+E5      0.007 0.015 0.031 0.055 0.088 0.133 0.183 0.342 0.574 0.893 1.317
+A6      0.008 0.016 0.038 0.042 0.064 0.093 0.133 0.239 0.393 0.604 0.880
+A7      0.005 0.011 0.020 0.036 0.056 0.083 0.121 0.223 0.374 0.583 0.855
+
+Multiplication and Squaring tests, (mulsqr)
+
+The following results are aggregated from 500000 pseudo-randomly
+generated tests, based on a per-run wall-clock seed.  Times are given
+in seconds, except where indicated in microseconds (us).
+
+(A1)
+
+bits    multiply    square  ad  percent time/mult   time/square
+64      9.33        9.15    >   1.9     18.7us      18.3us
+128     10.88       10.44   >   4.0     21.8us      20.9us
+192     13.30       11.89   >   10.6    26.7us      23.8us
+256     14.88       12.64   >   15.1    29.8us      25.3us
+320     18.64       15.01   >   19.5    37.3us      30.0us
+384     23.11       17.70   >   23.4    46.2us      35.4us
+448     28.28       20.88   >   26.2    56.6us      41.8us
+512     34.09       24.51   >   28.1    68.2us      49.0us
+640     47.86       33.25   >   30.5    95.7us      66.5us
+768     64.91       43.54   >   32.9    129.8us     87.1us
+896     84.49       55.48   >   34.3    169.0us     111.0us
+1024    107.25      69.21   >   35.5    214.5us     138.4us
+1536    227.97      141.91  >   37.8    456.0us     283.8us
+2048    394.05      242.15  >   38.5    788.1us     484.3us
+
+(A2)
+
+bits    multiply    square  ad  percent time/mult   time/square
+64      7.87        7.95    <   1.0     15.7us      15.9us
+128     9.40        9.19    >   2.2     18.8us      18.4us
+192     11.15       10.59   >   5.0     22.3us      21.2us
+256     12.02       11.16   >   7.2     24.0us      22.3us
+320     14.62       13.43   >   8.1     29.2us      26.9us
+384     17.72       15.80   >   10.8    35.4us      31.6us
+448     21.24       18.51   >   12.9    42.5us      37.0us
+512     25.36       21.78   >   14.1    50.7us      43.6us
+640     34.57       29.00   >   16.1    69.1us      58.0us
+768     46.10       37.60   >   18.4    92.2us      75.2us
+896     58.94       47.72   >   19.0    117.9us     95.4us
+1024    73.76       59.12   >   19.8    147.5us     118.2us
+1536    152.00      118.80  >   21.8    304.0us     237.6us
+2048    259.41      199.57  >   23.1    518.8us     399.1us
+
+(B3)
+
+bits    multiply    square  ad  percent time/mult   time/square
+64      2.60        2.47    >   5.0     5.20us      4.94us
+128     4.43        4.06    >   8.4     8.86us      8.12us
+192     7.03        6.10    >   13.2    14.1us      12.2us
+256     10.44       8.59    >   17.7    20.9us      17.2us
+320     14.44       11.64   >   19.4    28.9us      23.3us
+384     19.12       15.08   >   21.1    38.2us      30.2us
+448     24.55       19.09   >   22.2    49.1us      38.2us
+512     31.03       23.53   >   24.2    62.1us      47.1us
+640     45.05       33.80   >   25.0    90.1us      67.6us
+768     63.02       46.05   >   26.9    126.0us     92.1us
+896     83.74       60.29   >   28.0    167.5us     120.6us
+1024    106.73      76.65   >   28.2    213.5us     153.3us
+1536    228.94      160.98  >   29.7    457.9us     322.0us
+2048    398.08      275.93  >   30.7    796.2us     551.9us
+
+(C4)
+
+bits    multiply    square  ad  percent time/mult   time/square
+64      1.34        1.28    >   4.5     2.68us      2.56us
+128     2.76        2.59    >   6.2     5.52us      5.18us
+192     4.52        4.16    >   8.0     9.04us      8.32us
+256     6.64        5.99    >   9.8     13.3us      12.0us
+320     9.20        8.13    >   11.6    18.4us      16.3us
+384     12.01       10.58   >   11.9    24.0us      21.2us
+448     15.24       13.33   >   12.5    30.5us      26.7us
+512     19.02       16.46   >   13.5    38.0us      32.9us
+640     27.56       23.54   >   14.6    55.1us      47.1us
+768     37.89       31.78   >   16.1    75.8us      63.6us
+896     49.24       41.42   >   15.9    98.5us      82.8us
+1024    62.59       52.18   >   16.6    125.2us     104.3us
+1536    131.66      107.72  >   18.2    263.3us     215.4us
+2048    226.45      182.95  >   19.2    453.0us     365.9us
+
+(A7)
+
+bits    multiply    square  ad  percent time/mult   time/square
+64      1.74        1.71    >   1.7     3.48us      3.42us
+128     3.48        2.96    >   14.9    6.96us      5.92us
+192     5.74        4.60    >   19.9    11.5us      9.20us
+256     8.75        6.61    >   24.5    17.5us      13.2us
+320     12.5        8.99    >   28.1    25.0us      18.0us
+384     16.9        11.9    >   29.6    33.8us      23.8us
+448     22.2        15.2    >   31.7    44.4us      30.4us
+512     28.3        19.0    >   32.7    56.6us      38.0us
+640     42.4        28.0    >   34.0    84.8us      56.0us
+768     59.4        38.5    >   35.2    118.8us     77.0us
+896     79.5        51.2    >   35.6    159.0us     102.4us
+1024    102.6	    65.5    >	36.2	205.2us	    131.0us
+1536    224.3	    140.6   >	37.3	448.6us	    281.2us
+2048    393.4	    244.3   >	37.9	786.8us	    488.6us
+
+------------------------------------------------------------------
+ This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.

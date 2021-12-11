@@ -1,0 +1,43 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "mozilla/WeakPtr.h"
+
+namespace mozilla {
+class AudioSegment;
+namespace dom {
+class SpeechRecognition;
+class SpeechRecognitionResultList;
+class SpeechGrammarList;
+class SpeechGrammar;
+}
+}
+%}
+
+native SpeechRecognitionWeakPtr(mozilla::WeakPtr<mozilla::dom::SpeechRecognition>);
+[ptr] native AudioSegmentPtr(mozilla::AudioSegment);
+[ptr] native SpeechGrammarPtr(mozilla::dom::SpeechGrammar);
+[ptr] native SpeechGrammarListPtr(mozilla::dom::SpeechGrammarList);
+
+[uuid(6fcb6ee8-a6db-49ba-9f06-355d7ee18ea7)]
+interface nsISpeechGrammarCompilationCallback : nsISupports {
+    void grammarCompilationEnd(in SpeechGrammarPtr grammarObject, in boolean success);
+};
+
+[uuid(8e97f287-f322-44e8-8888-8344fa408ef8)]
+interface nsISpeechRecognitionService : nsISupports {
+    void initialize(in SpeechRecognitionWeakPtr aSpeechRecognition);
+    void processAudioSegment(in AudioSegmentPtr aAudioSegment, in long aSampleRate);
+    void validateAndSetGrammarList(in SpeechGrammarPtr aSpeechGrammar, in nsISpeechGrammarCompilationCallback aCallback);
+    void soundEnd();
+    void abort();
+};
+
+%{C++
+#define NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "@mozilla.org/webspeech/service;1?name="
+%}

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Wait for it...</title>
+  </head>
+  <body>
+  Try to go to another page.
+  <script>
+    addEventListener("StartLongLoop", function() {
+      setTimeout(() => {
+        const start = Date.now();
+        while (Date.now() - start < 7500);
+        window.dispatchEvent(new CustomEvent("LongLoopEnded"));
+      });
+    });
+  </script>
+  </body>
+</html>

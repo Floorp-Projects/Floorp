@@ -1,0 +1,41 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PKIX_DEPTH = ..
+PLAT_DEPTH = $(PKIX_DEPTH)/..
+CORE_DEPTH = $(PKIX_DEPTH)/../../..
+
+# MODULE public and private header directories are implicitly REQUIRED.
+MODULE = nss
+
+CSRCS = \
+	pkixutil.c \
+	$(NULL)
+
+PROGRAM = pkixutil
+
+TOOLS_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
+
+EXTRA_LIBS += \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolperf.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolcertsel.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolparams.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolmodule.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolpki.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolsys.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolresults.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolstore.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtooltop.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolutil.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolsmplapps.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolchecker.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtoolcrlsel.$(LIB_SUFFIX) \
+	$(TOOLS_LIB_DIR)/$(LIB_PREFIX)pkixtooltestutil.$(LIB_SUFFIX) \
+	$(NULL)
+
+NO_MD_RELEASE = 1
+
+USE_STATIC_LIBS = 1
+

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  onmessage = function(e) {
+    parent.postMessage(e.data, "*");
+  };
+</script>
+<iframe src="embedder2.html"></iframe>
+</body>
+</html>

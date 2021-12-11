@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1073406. Pausing a video element should not pause another playing the same stream.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="gUM_support.js"></script>
+</head>
+<body>
+<video id="video1" autoplay></video>
+<video id="video2" autoplay></video>
+<script class="testbody" type="text/javascript">
+function getVideoImagePixelData(v) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(v, 0, 0);
+  const imgData = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
+  return "r" + imgData[0] +
+         "g" + imgData[1] +
+         "b" + imgData[2] +
+         "a" + imgData[3];
+}
+
+async function startTest() {
+  // This test expects fake devices so that the video color will change
+  // over time, explicitly request fakes.
+  await pushGetUserMediaTestPrefs({fakeAudio: true, fakeVideo: true});
+  const stream = await navigator.mediaDevices.getUserMedia({video: true});
+  const video1 = document.getElementById('video1');
+  const video2 = document.getElementById('video2');
+
+  video1.srcObject = stream;
+  video2.srcObject = stream;
+
+  await new Promise(r => video1.onplaying = r);
+  video1.pause();
+  await new Promise(r => video1.onpause = r);
+
+  const v1PausedImageData = getVideoImagePixelData(video1);
+  const v2PausedImageData = getVideoImagePixelData(video2);
+
+  while (getVideoImagePixelData(video2) == v2PausedImageData) {
+    info("video2 has not progressed. Waiting.");
+    await new Promise(r => video2.ontimeupdate = r);
+  }
+
+  // Wait for a while to be sure video1 would have gotten a frame
+  // if it is playing.
+  for (let i = 3; i != 0; i--) {
+    await new Promise(r => video2.ontimeupdate = r);
+  }
+  info("video2 progressed OK");
+
+  isnot(video1.currentTime, video2.currentTime,
+        "v1 and v2 should not be at the same currentTime");
+  is(getVideoImagePixelData(video1), v1PausedImageData,
+     "video1 video frame should not have updated since video1 paused");
+
+  for (const t of stream.getTracks()) {
+    t.stop();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+(async function() {
+  try {
+    await startTest();
+  } catch(error) {
+    ok(false, "getUserMedia should not fail, got " + error.name);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+</script>
+</body>
+</html>

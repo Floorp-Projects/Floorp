@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!--
+  XUL Widget Test for preferences window
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="prefwindow"
+        title="preferences window"
+        windowtype="test:preferences2"
+        onload="RunTest(window.arguments)">
+<dialog id="window_preferences2_dialog"
+        buttons="accept,cancel">
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+    function RunTest(aArgs)
+    {
+      // open child
+      openDialog("window_preferences3.xhtml", "", "modal,centerscreen,resizable=no", {test: aArgs[0], accept: aArgs[1]});
+      // close dialog
+      let dialog = document.getElementById("window_preferences2_dialog");
+      dialog[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
+    }
+  ]]>
+  </script>
+
+  <vbox id="sample_pane" class="prefpane" label="Sample Prefpane"/>
+</dialog>
+</window>

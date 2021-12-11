@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=420609
+-->
+<head>
+  <title>Test for Bug 420609</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=420609">Mozilla Bug 420609</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+&nbsp;&mdash;&sup1;&hellip;
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 420609 **/
+    var request = new XMLHttpRequest();
+    request.open("GET", window.location.href, false);
+    request.send(null);
+
+    ok(request.responseXML && request.responseXML.documentElement.tagName == "html", "XMLHttpRequest should load XHTML document with entities");
+    is(document.getElementById("content").textContent, request.responseXML.getElementById("content").textContent, "Entities should be expanded in the document loaded by XMLHttpRequest");
+]]>
+</script>
+</pre>
+</body>
+</html>
+

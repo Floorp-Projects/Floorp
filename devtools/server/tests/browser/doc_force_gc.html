@@ -1,0 +1,31 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Performance tool + garbage collection test page</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">
+    "use strict";
+
+    var x = 1;
+    /* global test */
+    window.test = function() {
+      SpecialPowers.Cu.forceGC();
+      document.body.style.borderTop = x + "px solid red";
+      x = 1 ^ x;
+      // flush pending reflows
+      document.body.innerHeight;
+
+      // Prevent this script from being garbage collected.
+      setTimeout(window.test, 100);
+    };
+    test();
+    </script>
+  </body>
+
+</html>

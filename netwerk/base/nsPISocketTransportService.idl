@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISocketTransportService.idl"
+
+/**
+ * This is a private interface used by the internals of the networking library.
+ * It will never be frozen.  Do not use it in external code.
+ */
+[builtinclass, scriptable, uuid(18f73bf1-b35b-4b7b-aa9a-11bcbdbc389c)]
+interface nsPISocketTransportService : nsIRoutedSocketTransportService
+{
+  /**
+   * init/shutdown routines.
+   */
+  void init();
+  void shutdown(in bool aXpcomShutdown);
+
+  /**
+   * controls the TCP sender window clamp
+   */
+  readonly attribute long sendBufferSize;
+
+  /**
+   * Controls whether the socket transport service is offline.
+   * Setting it offline will cause non-local socket detachment.
+   */
+  attribute boolean offline;
+
+  /**
+   * Controls the default timeout (in seconds) for sending keepalive probes.
+   */
+  readonly attribute long keepaliveIdleTime;
+
+  /**
+   * Controls the default interval (in seconds) between retrying keepalive probes.
+   */
+  readonly attribute long keepaliveRetryInterval;
+
+  /**
+   * Controls the default retransmission count for keepalive probes.
+   */
+  readonly attribute long keepaliveProbeCount;
+};
+
+%{C++
+/*
+ * I/O activity observer topic. Sends out information about the
+ * amount of data we're sending/receiving via sockets and disk files.
+ *
+ * Activated via the "io.activity.enabled" preference.
+ */
+#define NS_IO_ACTIVITY "io-activity"
+
+
+%}

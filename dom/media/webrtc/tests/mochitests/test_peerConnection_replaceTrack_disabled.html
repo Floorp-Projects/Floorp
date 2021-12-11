@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="pc.js"></script>
+<script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script>
+createHTML({
+  bug: "1576771",
+  title: "Replace a disabled video track with an enabled one",
+  visible: true,
+});
+
+runNetworkTest(() => {
+  const helper = new CaptureStreamTestHelper2D(240, 160);
+  const emitter = new VideoFrameEmitter(helper.green, helper.green, 240, 160);
+  const test = new PeerConnectionTest();
+  test.setMediaConstraints([{video: true}], []);
+  test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW", [
+    function PC_LOCAL_DISABLE_SENDTRACK(test) {
+      test.pcLocal._pc.getSenders()[0].track.enabled = false;
+    },
+    function PC_REMOTE_WAIT_FOR_BLACK(test) {
+      return helper.pixelMustBecome(
+        test.pcRemote.remoteMediaElements[0], helper.black, {
+          threshold: 128,
+          infoString: "Remote disabled track becomes black",
+          cancel: wait(10000).then(
+            () => new Error("Timeout waiting for black"))});
+    },
+    function PC_LOCAL_REPLACETRACK_WITH_ENABLED_TRACK(test) {
+      emitter.start();
+      test.pcLocal._pc.getSenders()[0].replaceTrack(
+        emitter.stream().getTracks()[0]);
+    },
+  ]);
+  test.chain.append([
+    function PC_REMOTE_WAIT_FOR_GREEN(test) {
+      return helper.pixelMustBecome(
+        test.pcRemote.remoteMediaElements[0], helper.green, {
+          threshold: 128,
+          infoString: "Remote disabled track becomes green",
+          cancel: wait(10000).then(
+            () => new Error("Timeout waiting for green"))});
+    },
+    function CLEANUP(test) {
+      emitter.stop();
+      for (const track of emitter.stream().getTracks()) {
+        track.stop();
+      }
+    },
+  ]);
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

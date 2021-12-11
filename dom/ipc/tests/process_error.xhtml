@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	orient="vertical">
+
+  <browser id="thebrowser" type="content" remote="true" />
+  <script type="application/javascript"><![CDATA[
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+    const ok = window.arguments[0].ok;
+    const is = window.arguments[0].is;
+    const done = window.arguments[0].done;
+    const SimpleTest = window.arguments[0].SimpleTest;
+
+    // Parse test options.
+    const url = new URL(document.location);
+    const crashType = url.searchParams.get("crashType");
+
+    // Allow the browser to get connected before using the messageManager to cause
+    // a crash:
+    addEventListener("DOMContentLoaded", () => {
+      let browser = document.getElementById('thebrowser');
+
+      let observerPromise = new Promise(resolve => {
+        let crashObserver = (subject, topic, data) => {
+          is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
+          ok(subject instanceof Ci.nsIPropertyBag2,
+             'Subject implements nsIPropertyBag2.');
+
+          var dumpID;
+          if ('nsICrashReporter' in Ci) {
+            dumpID = subject.getPropertyAsAString('dumpID');
+            ok(dumpID, "dumpID is present and not an empty string");
+
+            // Let's check whether we have correctly reported OOM.
+            var isLikelyOOM = subject.getPropertyAsBool('isLikelyOOM');
+            is(isLikelyOOM, crashType == 'CRASH_OOM', 'isLikelyOOM is correct');
+          }
+
+          Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
+          resolve();
+        }
+
+        Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
+      });
+
+      let browsingContextId = browser.frameLoader.browsingContext.id;
+
+      let eventFiredPromise = BrowserTestUtils.waitForEvent(browser, "oop-browser-crashed");
+      let eventPromise = eventFiredPromise.then(event => {
+        is(event.browsingContextId, browsingContextId,
+           "Expected the right browsing context id on the oop-browser-crashed event.");
+      })
+
+      BrowserTestUtils.crashFrame(browser, true, false, /* Default browsing context */ null, { crashType });
+
+      Promise.all([observerPromise, eventPromise]).then(done);
+    });
+  ]]></script>
+
+</window>

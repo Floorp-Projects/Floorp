@@ -1,0 +1,70 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "prinit.h"
+#include <winver.h>
+
+#define MY_LIBNAME "plc"
+#define MY_FILEDESCRIPTION "PLC Library"
+
+#define STRINGIZE(x) #x
+#define STRINGIZE2(x) STRINGIZE(x)
+#define PR_VMAJOR_STR STRINGIZE2(PR_VMAJOR)
+
+#ifdef _DEBUG
+#define MY_DEBUG_STR " (debug)"
+#define MY_FILEFLAGS_1 VS_FF_DEBUG
+#else
+#define MY_DEBUG_STR ""
+#define MY_FILEFLAGS_1 0x0L
+#endif
+#if PR_BETA
+#define MY_FILEFLAGS_2 MY_FILEFLAGS_1|VS_FF_PRERELEASE
+#else
+#define MY_FILEFLAGS_2 MY_FILEFLAGS_1
+#endif
+
+#ifdef WINNT
+#define MY_FILEOS VOS_NT_WINDOWS32
+#define MY_INTERNAL_NAME "lib" MY_LIBNAME PR_VMAJOR_STR
+#else
+#define MY_FILEOS VOS__WINDOWS32
+#define MY_INTERNAL_NAME MY_LIBNAME PR_VMAJOR_STR
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version-information resource
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION PR_VMAJOR,PR_VMINOR,PR_VPATCH,0
+ PRODUCTVERSION PR_VMAJOR,PR_VMINOR,PR_VPATCH,0
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+ FILEFLAGS MY_FILEFLAGS_2
+ FILEOS MY_FILEOS
+ FILETYPE VFT_DLL
+ FILESUBTYPE 0x0L // not used
+
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0" // Lang=US English, CharSet=Unicode
+        BEGIN
+            VALUE "CompanyName", "Mozilla Foundation\0"
+            VALUE "FileDescription", MY_FILEDESCRIPTION MY_DEBUG_STR "\0"
+            VALUE "FileVersion", PR_VERSION "\0"
+            VALUE "InternalName", MY_INTERNAL_NAME "\0"
+            VALUE "OriginalFilename", MY_INTERNAL_NAME ".dll\0"
+            VALUE "ProductName", "Netscape Portable Runtime\0"
+            VALUE "ProductVersion", PR_VERSION "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIUrlClassifierFeature.idl"
+
+%{C++
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
+%}
+[ref] native StringArrayRef(nsTArray<nsCString>);
+
+interface nsIChannel;
+interface nsISerialEventTarget;
+interface nsIPrincipal;
+interface nsIURI;
+interface nsIUrlClassifierFeatureCallback;
+
+/**
+ * Callback function for nsIURIClassifier lookups.
+ */
+[scriptable, function, uuid(8face46e-0c96-470f-af40-0037dcd797bd)]
+interface nsIURIClassifierCallback : nsISupports
+{
+  /**
+   * Called by the URI classifier service when it is done checking a URI.
+   *
+   * Clients are responsible for associating callback objects with classify()
+   * calls.
+   *
+   * @param aErrorCode
+   *        The error code with which the channel should be cancelled, or
+   *        NS_OK if the load should continue normally.
+   * @param aList
+   *        Name of the list that matched
+   * @param aProvider
+   *        Name of provider that matched
+   * @param aFullHash
+   *        Full hash of URL that matched
+   */
+  void onClassifyComplete(in nsresult aErrorCode,
+                          in ACString aList,
+                          in ACString aProvider,
+                          in ACString aFullHash);
+};
+
+/**
+ * The URI classifier service checks a URI against lists of phishing
+ * and malware sites.
+ */
+[scriptable, uuid(596620cc-76e3-4133-9d90-360e59a794cf)]
+interface nsIURIClassifier : nsISupports
+{
+  /**
+   * Classify a Principal using its URI.
+   *
+   * @param aPrincipal
+   *        The principal that should be checked by the URI classifier.
+   *
+   * @param nsISerialEventTarget
+   *        Event target for constructing actor in content process.
+   *        The event target should be tied to Docgroup/Tabgroup by
+   *        using EventTargetFor
+   *
+   * @param aCallback
+   *        The URI classifier will call this callback when the URI has been
+   *        classified.
+   *
+   * @return <code>false</code> if classification is not necessary.  The
+   *         callback will not be called.
+   *         <code>true</code> if classification will be performed.  The
+   *         callback will be called.
+   */
+  boolean classify(in nsIPrincipal aPrincipal,
+                   in nsISerialEventTarget aEventTarget,
+                   in nsIURIClassifierCallback aCallback);
+
+  /**
+   * Asynchronously classify a URI with list of features. This does not make
+   * network requests.
+   */
+  void asyncClassifyLocalWithFeatures(in nsIURI aURI,
+                                      in Array<nsIUrlClassifierFeature> aFeatures,
+                                      in nsIUrlClassifierFeature_listType aListType,
+                                      in nsIUrlClassifierFeatureCallback aCallback);
+
+  /**
+   * Returns a feature named aFeatureName.
+   */
+  nsIUrlClassifierFeature getFeatureByName(in ACString aFeatureName);
+
+  /**
+   * Returns all the feature names.
+   */
+  Array<ACString> getFeatureNames();
+
+  /**
+   * Create a new feature with a list of tables. This method is just for
+   * testing! Don't use it elsewhere.
+   */
+  nsIUrlClassifierFeature createFeatureWithTables(in ACString aName,
+                                                  in Array<ACString> aBlocklistTables,
+                                                  in Array<ACString> aEntitylistTables);
+
+  /**
+   * Report to the provider that a Safe Browsing warning was shown.
+   *
+   * @param aChannel
+   *        Channel for which the URL matched something on the threat list.
+   * @param aProvider
+   *        Provider to notify.
+   * @param aList
+   *        List where the full hash was found.
+   * @param aFullHash
+   *        Full URL hash that triggered the warning.
+   */
+
+  void sendThreatHitReport(in nsIChannel aChannel, in ACString aProvider,
+                           in ACString aList, in ACString aFullHash);
+};

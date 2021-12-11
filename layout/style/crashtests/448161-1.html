@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var r = document.createRange();
+  r.setStart(document.body, 0);
+  r.setEnd(document.getElementById("g"), 0);
+  r.deleteContents();
+
+  // Give spell-check a chance to run
+  setTimeout(function() { document.documentElement.className = ""; },
+             50);
+}
+
+</script>
+</head>
+
+<body onload="boom();" contenteditable="true"><span><span contenteditable="true"><a href="http://www.mozilla.org/">5</a></span></span><span id="g"></span></body>
+
+</html>

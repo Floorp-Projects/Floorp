@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html style="overflow: hidden;">
+<head>
+  <title>Test that scaled elements with scrolled contents don't repaint unnecessarily when we scroll inside them</title>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<!-- Need a timeout here to allow paint unsuppression before we start the test -->
+<body onload="setTimeout(startTest,0)" style="background:white;">
+<iframe id="t" style="-moz-transform: scale(0.48979); -moz-transform-origin:top left; width:500px; height:600px;"
+        src="transformed_scrolling_repaints_3_window_frame.html">
+</iframe>
+<pre id="test">
+<script type="application/javascript">
+var SimpleTest = window.opener.SimpleTest;
+var SpecialPowers = window.opener.SpecialPowers;
+var is = window.opener.is;
+var smoothScrollPref = "general.smoothScroll";
+
+function startTest() {
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
+}
+
+async function runTest() {
+  let t = document.getElementById("t");
+  let e = t.contentDocument.getElementById("e");
+  t.contentWindow.scrollTo(0,0);
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  for (let i = 0; i < 15; i++) {
+    let painted = utils.checkAndClearPaintedState(e);
+    // We ignore the first few scrolls, to ensure we have triggered activity
+    // heuristics.
+    if (i >= 5) {
+      is(painted, false,
+         "Fully-visible scrolled element should not have been painted");
+    }
+    t.contentWindow.scrollByLines(1);
+    await promiseAllPaintsDone(null, true);
+  }
+  SimpleTest.finish();
+  window.close();
+}
+</script>
+</pre>
+</body>
+</html>

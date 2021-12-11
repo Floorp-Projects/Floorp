@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset=utf-8>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+<title>Tests metrics with dynamic toolbar</title>
+<script>
+const ok = opener.ok.bind(opener);
+const is = opener.is.bind(opener);
+const original_finish = opener.SimpleTest.finish;
+const SimpleTest = opener.SimpleTest;
+const add_task = opener.add_task;
+SimpleTest.finish = function finish() {
+  self.close();
+  original_finish();
+}
+</script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<style>
+html {
+  scrollbar-width: none;
+}
+#percent {
+  position: absolute;
+  height: 100%;
+}
+#vh {
+  position: absolute;
+  height: 100vh;
+}
+</style>
+<div id="percent"></div>
+<div id="vh"></div>
+<script>
+'use strict';
+
+SpecialPowers.DOMWindowUtils.setDynamicToolbarMaxHeight(0);
+
+let percentHeight = getComputedStyle(percent).height;
+let vhHeight = getComputedStyle(vh).height;
+is(percentHeight, vhHeight,
+   "%-units and vh-units should be the same when the dynamic toolbar max " +
+   "height is zero");
+
+SpecialPowers.DOMWindowUtils.setDynamicToolbarMaxHeight(50);
+
+percentHeight = getComputedStyle(percent).height;
+vhHeight = getComputedStyle(vh).height;
+is(parseInt(percentHeight) + 50, parseInt(vhHeight),
+   "vh units should be 50px greater than %-units");
+is(document.documentElement.clientHeight, parseInt(percentHeight),
+   "documentElement.clientHeight should equal to %-units");
+ok(matchMedia(`(height: ${percentHeight})`).matches,
+   "Media Queries' height is not including the dynamic toolbar max height");
+
+SimpleTest.finish();
+
+</script>

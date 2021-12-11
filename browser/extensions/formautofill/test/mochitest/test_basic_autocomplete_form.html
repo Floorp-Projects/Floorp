@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: simple form address autofill
+
+<script>
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+
+"use strict";
+
+let MOCK_STORAGE = [{
+  organization: "Sesame Street",
+  "street-address": "123 Sesame Street.\n2-line\n3-line",
+  tel: "+13453453456",
+  country: "US",
+  "address-level1": "NY",
+}, {
+  organization: "Mozilla",
+  "street-address": "331 E. Evelyn Avenue\n2-line\n3-line",
+  tel: "+16509030800",
+  country: "US",
+  "address-level1": "CA",
+}];
+
+async function setupAddressStorage() {
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
+}
+
+async function setupFormHistory() {
+  await updateFormHistory([
+    {op: "add", fieldname: "tel", value: "+1234567890"},
+    {op: "add", fieldname: "email", value: "foo@mozilla.com"},
+  ]);
+}
+
+initPopupListener();
+
+// Form with history only.
+add_task(async function history_only_menu_checking() {
+  await setupFormHistory();
+
+  await setInput("#tel", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(["+1234567890"], false);
+});
+
+// Display history search result if less than 3 inputs are covered by all saved
+// fields in the storage.
+add_task(async function all_saved_fields_less_than_threshold() {
+  await addAddress({
+    email: "test@test.com",
+  });
+
+  await setInput("#email", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(["foo@mozilla.com"], false);
+
+  await cleanUpAddresses();
+});
+
+// Form with both history and address storage.
+add_task(async function check_menu_when_both_existed() {
+  await setupAddressStorage();
+
+  await setInput("#organization", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({
+      primary: address.organization,
+      secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+    })
+  ));
+
+  await setInput("#street-address", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({
+      primary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+      secondary: address.organization,
+    })
+  ));
+
+  await setInput("#tel", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({
+      primary: address.tel,
+      secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+    })
+  ));
+
+  await setInput("#address-line1", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({
+      primary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+      secondary: address.organization,
+    })
+  ));
+});
+
+// Display history search result if no matched data in addresses.
+add_task(async function check_fallback_for_mismatched_field() {
+  await setInput("#email", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(["foo@mozilla.com"], false);
+});
+
+// Display history search result if address autofill is disabled.
+add_task(async function check_search_result_for_pref_off() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.formautofill.addresses.enabled", false]],
+  });
+
+  await setInput("#tel", "");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(["+1234567890"], false);
+
+  await SpecialPowers.popPrefEnv();
+});
+
+// Autofill the address from dropdown menu.
+add_task(async function check_fields_after_form_autofill() {
+  const focusedInput = await setInput("#organization", "Moz");
+  await notExpectPopup();
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({
+      primary: address.organization,
+      secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+    })
+  ).slice(1));
+  synthesizeKey("KEY_ArrowDown");
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
+  synthesizeKey("KEY_Escape");
+  is(focusedInput.value, "Mozilla", "Filled field shouldn't be reverted by ESC key");
+});
+
+// Fallback to history search after autofill address.
+add_task(async function check_fallback_after_form_autofill() {
+  await setInput("#tel", "", true);
+  await triggerPopupAndHoverItem("#tel", 0);
+  checkMenuEntries(["+1234567890"], false);
+  await triggerAutofillAndCheckProfile({
+    tel: "+1234567890",
+  });
+});
+
+// Resume form autofill once all the autofilled fileds are changed.
+add_task(async function check_form_autofill_resume() {
+  document.querySelector("#tel").blur();
+  document.querySelector("#form1").reset();
+  await setInput("#tel", "");
+  await triggerPopupAndHoverItem("#tel", 0);
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({
+      primary: address.tel,
+      secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+    })
+  ));
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>organization: <input id="organization" name="organization" autocomplete="organization" type="text"></label></p>
+    <p><label>streetAddress: <input id="street-address" name="street-address" autocomplete="street-address" type="text"></label></p>
+    <p><label>address-line1: <input id="address-line1" name="address-line1" autocomplete="address-line1" type="text"></label></p>
+    <p><label>tel: <input id="tel" name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>email: <input id="email" name="email" autocomplete="email" type="text"></label></p>
+    <p><label>country: <select id="country" name="country" autocomplete="country">
+      <option/>
+      <option value="US">United States</option>
+    </select></label></p>
+    <p><label>states: <select id="address-level1" name="address-level1" autocomplete="address-level1">
+      <option/>
+      <option value="CA">California</option>
+      <option value="NY">New York</option>
+      <option value="WA">Washington</option>
+    </select></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

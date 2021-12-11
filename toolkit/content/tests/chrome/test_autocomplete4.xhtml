@@ -1,0 +1,282 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Autocomplete Widget Test 4"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<html:input id="autocomplete"
+            is="autocomplete-input"
+            completedefaultindex="true"
+            autocompletesearch="simple"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+// Set to indicate whether or not we want autoCompleteSimple to return a result
+var returnResult = true;
+
+const IS_MAC = navigator.platform.includes("Mac");
+
+const ACR = Ci.nsIAutoCompleteResult;
+
+// This result can't be constructed in-line, because otherwise we leak memory.
+function nsAutoCompleteSimpleResult(aString)
+{
+  this.searchString = aString;
+  if (returnResult) {
+    this.searchResult = ACR.RESULT_SUCCESS;
+    this.matchCount = 1;
+    this._param = "Result";
+  }
+}
+
+nsAutoCompleteSimpleResult.prototype = {
+ _param: "",
+ searchString: null,
+ searchResult: ACR.RESULT_FAILURE,
+ defaultIndex: 0,
+ errorDescription: null,
+ matchCount: 0,
+ getValueAt() { return this._param; },
+ getCommentAt() { return null; },
+ getStyleAt() { return null; },
+ getImageAt() { return null; },
+ getFinalCompleteValueAt() { return this.getValueAt(); },
+ getLabelAt() { return null; },
+ removeValueAt() {}
+};
+
+// A basic autocomplete implementation that either returns one result or none
+var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
+var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
+var autoCompleteSimple = {
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIAutoCompleteSearch"]),
+
+  createInstance(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  startSearch(aString, aParam, aResult, aListener) {
+    var result = new nsAutoCompleteSimpleResult(aString);
+    aListener.onSearchResult(this, result);
+  },
+
+  stopSearch() {}
+};
+
+var componentManager = Components.manager
+                                 .QueryInterface(Ci.nsIComponentRegistrar);
+componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
+                                 autoCompleteSimpleName, autoCompleteSimple);
+
+let element = document.getElementById("autocomplete");
+
+// Create stub to intercept `onSearchComplete` event.
+element.onSearchComplete = function(original) {
+  return function() {
+    original.apply(this, arguments);
+    searchComplete();
+  };
+}(element.onSearchComplete);
+
+// Test Bug 325842 - completeDefaultIndex
+
+SimpleTest.waitForExplicitFinish();
+
+setTimeout(nextTest, 0);
+
+var currentTest = null;
+
+// Note the entries for these tests (key) are incremental.
+const tests = [
+  {
+    desc: "HOME key remove selection",
+    key: "KEY_Home",
+    removeSelection: true,
+    result: "re",
+    start: 0, end: 0
+  },
+  {
+    desc: "LEFT key remove selection",
+    key: "KEY_ArrowLeft",
+    removeSelection: true,
+    result: "re",
+    start: 1, end: 1
+  },
+  { desc: "RIGHT key remove selection",
+    key: "KEY_ArrowRight",
+    removeSelection: true,
+    result: "re",
+    start: 2, end: 2
+  },
+  { desc: "ENTER key remove selection",
+    key: "KEY_Enter",
+    removeSelection: true,
+    result: "re",
+    start: 2, end: 2
+  },
+  {
+    desc: "HOME key",
+    key: "KEY_Home",
+    removeSelection: false,
+    result: "Result",
+    start: 0, end: 0
+  },
+  {
+    desc: "LEFT key",
+    key: "KEY_ArrowLeft",
+    removeSelection: false,
+    result: "Result",
+    start: 5, end: 5
+  },
+  { desc: "RIGHT key",
+    key: "KEY_ArrowRight",
+    removeSelection: false,
+    result: "Result",
+    start: 6, end: 6
+  },
+  { desc: "RETURN key",
+    key: "KEY_Enter",
+    removeSelection: false,
+    result: "Result",
+    start: 6, end: 6
+  },
+  { desc: "TAB key should confirm suggestion when forcecomplete is set",
+    key: "KEY_Tab",
+    removeSelection: false,
+    forceComplete: true,
+    result: "Result",
+    start: 6, end: 6
+  },
+
+  { desc: "RIGHT key complete from middle",
+    key: "KEY_ArrowRight",
+    forceComplete: true,
+    completeFromMiddle: true,
+    result: "Result",
+    start: 6, end: 6
+  },
+  {
+    desc: "RIGHT key w/ minResultsForPopup=2",
+    key: "KEY_ArrowRight",
+    removeSelection: false,
+    minResultsForPopup: 2,
+    result: "Result",
+    start: 6, end: 6
+  },
+];
+
+function nextTest() {
+  if (!tests.length) {
+    // No more tests to run, finish.
+    setTimeout(function() {
+      // Unregister the factory so that we don't get in the way of other tests
+      componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
+      SimpleTest.finish();
+    }, 0);
+    return;
+  }
+
+  var autocomplete = $("autocomplete");
+  autocomplete.value = "";
+  currentTest = tests.shift();
+
+  // HOME key works differently on Mac, so we skip tests using it.
+  if (currentTest.key == "KEY_Home" && IS_MAC)
+    nextTest();
+  else
+    setTimeout(runCurrentTest, 0);
+}
+
+function runCurrentTest() {
+  var autocomplete = $("autocomplete");
+  if ("minResultsForPopup" in currentTest)
+    autocomplete.setAttribute("minresultsforpopup", currentTest.minResultsForPopup)
+  else
+    autocomplete.removeAttribute("minresultsforpopup");
+
+  autocomplete.focus();
+
+  if (!currentTest.completeFromMiddle) {
+    sendString("re");
+  }
+  else {
+    sendString("lt");
+  }
+}
+
+function searchComplete() {
+  var autocomplete = $("autocomplete");
+  autocomplete.setAttribute("forcecomplete", currentTest.forceComplete);
+
+  if (currentTest.completeFromMiddle) {
+    if (!currentTest.forceComplete) {
+      synthesizeKey(currentTest.key);
+    }
+    else if (!/ >> /.test(autocomplete.value)) {
+      // At this point we should have a value like "lt >> Result" showing.
+      throw new Error("Expected an middle-completed value, got " + autocomplete.value);
+    }
+
+    // For forceComplete a blur should cause a value from the results to get
+    // completed to. E.g. "lt >> Result" will turn into "Result".
+    if (currentTest.forceComplete)
+      autocomplete.blur();
+
+    checkResult();
+    return;
+  }
+
+  is(autocomplete.value, "result",
+     "Test '" + currentTest.desc + "': autocomplete.value should equal 'result'");
+
+  if (autocomplete.selectionStart == 2) {  // Finished inserting "re" string.
+    if (currentTest.removeSelection) {
+      // remove current selection
+      synthesizeKey("KEY_Delete");
+    }
+
+    synthesizeKey(currentTest.key);
+
+    checkResult();
+  }
+}
+
+function checkResult() {
+  var autocomplete = $("autocomplete");
+
+  is(autocomplete.value, currentTest.result,
+     "Test '" + currentTest.desc + "': autocomplete.value should equal '" +
+     currentTest.result + "'");
+
+  is(autocomplete.selectionStart, currentTest.start,
+     "Test '" + currentTest.desc + "': autocomplete selection should start at " +
+     currentTest.start);
+
+  is(autocomplete.selectionEnd, currentTest.end,
+     "Test '" + currentTest.desc + "': autocomplete selection should end at " +
+     currentTest.end);
+
+  setTimeout(nextTest, 0);
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

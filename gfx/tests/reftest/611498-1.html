@@ -1,0 +1,19 @@
+<!doctype html>
+<html class="reftest-wait">
+<script type="text/javascript">
+function done()
+{
+  document.documentElement.className = "";
+}
+function move()
+{
+  elem = document.getElementById("moving");
+  elem.addEventListener("transitionend", done, true);
+  elem.style.position = "relative";
+  elem.style.top = 0;
+}
+</script>
+<body style="background: url('bwinton.jpg'); background-attachment: fixed" onload="move()">
+<div id="moving" style="position: absolute; top: 50px; background-image: url('blacktrans.png'); width: 100px; height: 100px; -moz-transition: top 0.1s; padding: 2px;">blah blah blah</div>
+</body>
+</html>

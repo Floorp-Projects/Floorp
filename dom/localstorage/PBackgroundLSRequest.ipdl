@@ -1,0 +1,102 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace dom {
+
+struct LSRequestPreloadDatastoreResponse
+{
+};
+
+struct LSRequestPrepareDatastoreResponse
+{
+  uint64_t datastoreId;
+};
+
+struct LSRequestPrepareObserverResponse
+{
+  uint64_t observerId;
+};
+
+/**
+ * Discriminated union which can contain an error code (`nsresult`) or
+ * particular request response.
+ */
+union LSRequestResponse
+{
+  nsresult;
+  LSRequestPreloadDatastoreResponse;
+  LSRequestPrepareDatastoreResponse;
+  LSRequestPrepareObserverResponse;
+};
+
+/**
+ * An asynchronous protocol for issuing requests that are used in a synchronous
+ * fashion by LocalStorage via LSObject's RequestHelper mechanism.  This differs
+ * from LSSimpleRequest which is implemented and used asynchronously.
+ *
+ * See `PBackgroundLSSharedTypes.ipdlh` for more on the request types, the
+ * response types above for their corresponding responses, and `RequestHelper`
+ * for more on the usage and lifecycle of this mechanism.
+ */
+protocol PBackgroundLSRequest
+{
+  manager PBackground;
+
+parent:
+  // The Cancel message is used to avoid a possible dead lock caused by a CPOW
+  // sending a synchronous message from the main thread in the chrome process
+  // to the main thread in the content process at the time we are blocking
+  // the main thread in the content process to handle a request.
+  // We use the PBackground thread on the parent side to handle requests, but
+  // sometimes we need to get information from principals and that's currently
+  // only possible on the main thread. So if the main thread in the chrome
+  // process is blocked by a CPOW operation, our request must wait for the CPOW
+  // operation to complete. However the CPOW operation can't complete either
+  // because we are blocking the main thread in the content process.
+  // The dead lock is prevented by canceling our nested event loop in the
+  // content process when we receive a synchronous IPC message from the parent.
+  //
+  // Note that cancellation isn't instantaneous.  It's just an asynchronous flow
+  // that definitely doesn't involve the main thread in the parent process, so
+  // we're guaranteed to unblock the main-thread in the content process and
+  // allow the sync IPC to make progress.  When Cancel() is received by the
+  // parent, it will Send__delete__.  The child will either send Cancel or
+  // Finish, but not both.
+  async Cancel();
+
+  /**
+   * Sent by the child in response to Ready, requesting that __delete__ be sent
+   * with the result.  The child will either send Finish or Cancel, but not
+   * both.  No further message will be sent from the child after invoking one.
+   */
+  async Finish();
+
+child:
+  /**
+   * The deletion is sent with the result of the request directly in response to
+   * either Cancel or Finish.
+   */
+  async __delete__(LSRequestResponse response);
+
+  /**
+   * Sent by the parent when it has completed whatever async stuff it needs to
+   * do and is ready to send the results.  It then awaits the Finish() call to
+   * send the results.  This may seem redundant, but it's not.  If the
+   * __delete__ was sent directly, it's possible there could be a race where
+   * Cancel() would be received by the parent after it had already sent
+   * __delete__.  (Which may no longer be fatal thanks to improvements to the
+   * IPC layer, but it would still lead to warnings, etc.  And we don't
+   * expect PBackground to be highly contended nor the RemoteLazyInputStream
+   * thread.)
+   */
+  async Ready();
+};
+
+} // namespace dom
+} // namespace mozilla

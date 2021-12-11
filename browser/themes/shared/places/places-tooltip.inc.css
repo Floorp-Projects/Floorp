@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* This stylesheet is not loaded by the sidebars since it relies
+   on extra theming and proton variables that would need to be
+   injected into the sidebar. */
+
+@media (-moz-proton-places-tooltip) {
+.places-tooltip-title {
+  font-weight: 600;
+%ifdef XP_MACOSX
+  font-size: 1.1em;
+%endif
+  /* Clip after 2 lines, this should ideally use a different method like -webkit-line-clamp or
+     overflow: hidden; to get ellipsis support but XUL tooltip sizing makes that difficult. */
+  max-height: 2.5em;
+  overflow-y: clip;
+}
+
+.places-tooltip-uri {
+  color: color-mix(in srgb, currentColor 50%, transparent);
+}
+
+#places-tooltip-insecure-icon {
+  /* Using the same broken-lock icon as the main identity-block styles. */
+  list-style-image: url(chrome://global/skin/icons/security-broken.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 1em;
+  height: 1em;
+  margin-inline-start: 0;
+  margin-inline-end: .2em;
+}
+
+%if defined(XP_MACOSX) || defined(XP_WIN)
+@media not (prefers-contrast) {
+  .places-tooltip {
+    --places-tooltip-shadow-size: 6px;
+    appearance: none;
+    background: transparent;
+    border: none;
+    /* The tooltip has internal padding to allow for the
+       box-shadow to not get clipped. The negative margin
+       here keeps the tooltip aligned horizontally with the
+       anchor, and should match the padding-inline-start of
+       the tooltip. */
+    padding: var(--places-tooltip-shadow-size);
+  }
+
+  .places-tooltip[position] {
+    margin-inline-start: calc(-1 * var(--places-tooltip-shadow-size));
+    margin-block-start: calc(-1 * var(--places-tooltip-shadow-size));
+  }
+
+  .places-tooltip-box {
+    padding: 3px 5px;
+    background: var(--arrowpanel-background);
+    color: var(--arrowpanel-color);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    box-shadow: 0 2px var(--places-tooltip-shadow-size) rgba(58,57,68,.2);
+  }
+
+  .places-tooltip-uri {
+    color: var(--panel-description-color);
+  }
+}
+%endif
+} /*** END proton ***/

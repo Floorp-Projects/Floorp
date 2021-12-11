@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=422537
+-->
+<head>
+  <title>Test for bug 422537</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=422537">Mozilla Bug 422537</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 422537 **/
+var isupports_string = SpecialPowers.Cc["@mozilla.org/supports-string;1"]
+                                    .createInstance(SpecialPowers.Ci.nsISupportsString);
+isupports_string.data = "foo";
+
+const url = "http://mochi.test:8888";
+var body = [
+  document,
+  "foo",
+  isupports_string
+];
+
+for (var i of body) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", url, true);
+  if (i == isupports_string)
+    SpecialPowers.wrap(xhr).send(i);
+  else
+    xhr.send(i);
+  var chan = SpecialPowers.wrap(xhr).channel;
+  if (!SpecialPowers.call_Instanceof(chan, SpecialPowers.Ci.nsIUploadChannel))
+    throw "Must be an upload channel";
+  var stream = chan.uploadStream;
+  if (!stream || !SpecialPowers.call_Instanceof(stream, SpecialPowers.Ci.nsISeekableStream))
+    throw "Stream must be seekable";
+  // the following is a no-op, but should not throw an exception
+  stream.seek(SpecialPowers.Ci.nsISeekableStream.NS_SEEK_CUR, 0);
+}
+
+ok(true, "xhr is seekable");
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,11 @@
+//error: Trying to load `PDouble' from a file when we'd already seen it in file
+
+// This will load extra/PDouble.ipdl because extra/ is earlier
+// in the list of include directories than the current working
+// directory. Loading the same protocol from two files is
+// obviously bad.
+include protocol PDouble;
+
+protocol PDouble {
+child: async Msg();
+};

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448534
+-->
+
+<head>
+  <title>Test for Bug 448534</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448535">Mozilla Bug 448534</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function loaded(event) {
+  var v = event.target;
+  info(v.token + ": event=" + event.type);
+  if (v._finished)
+    return;
+  v.play();
+}
+
+function started(event) {
+  var v = event.target;
+  info(v.token + ": event=" + event.type);
+  // For a short file, it could reach the end before 'play' received. We will
+  // skip the test for 'paused' would be true when ended.
+  if (v._finished || v.ended)
+    return;
+  ok(!v.paused, v.token + ": Video should not be paused while playing");
+  v.remove();
+  v._played = true;
+}
+
+function stopped(event) {
+  var v = event.target;
+  info(v.token + ": event=" + event.type);
+  if (v._finished)
+    return;
+  v._finished = true;
+  ok(v.paused, v.token + ": Video should be paused after removing from the Document");
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v._played = false;
+  v._finished = false;
+  v.addEventListener("loadedmetadata", loaded);
+  v.addEventListener("play", started);
+  v.addEventListener("pause", stopped);
+  document.body.appendChild(v);
+}
+
+manager.runTests(gSmallTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Deferred tree</title>
+    <script src="deferred-tree-util.js" type="text/javascript"/>
+    <script>
+        function animate()
+        {
+          // Set up
+          var div = makeDiv();
+          var svg = makeSvg();
+          var target = document.getElementById('tree-container');
+
+          div.appendChild(svg);
+          target.appendChild(div);
+
+          // Create another div container, and move svg element there
+          // (temporarily detaching it from the document).
+          div2 = makeDiv();
+          div2.appendChild(svg);
+
+          // These calls *should* have an effect, since they happen
+          // after 'svg' has been attached to the XHTML document (even though
+          // it's not currently attached)
+          svg.setCurrentTime(1.0);
+          svg.pauseAnimations();
+
+          // Attach the div2+svg subtree onto the document. Our current
+          // behavior (which matches Opera 9.64) is to preserve svg's time
+          // container through this manipulation.
+          div.appendChild(div2);
+
+          // Reftest Snapshot
+          document.documentElement.removeAttribute("class");
+        }
+    </script>
+  </head>
+
+  <body onload="animate()">
+    <p id="tree-container"/>
+  </body>
+</html>

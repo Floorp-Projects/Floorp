@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test cloneElementVisually</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="https://example.com:443/tests/dom/media/test/cloneElementVisually_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="content">
+  <h1>Original</h1>
+  <video id="original"></video>
+  <h1>MediaStream</h1>
+  <video id="streamTarget"></video>
+  <h1>Clone</h1>
+</div>
+<div id="results">
+  <h1>Results</h1>
+  <canvas id="left"></canvas>
+  <canvas id="right"></canvas>
+</div>
+
+<script type="application/javascript">
+
+/* import-globals-from cloneElementVisually_helpers.js */
+
+/**
+ * Tests that cloning survives changes to the underlying video resource.
+ */
+add_task(async () => {
+  await setup();
+
+  let originalVideo = document.getElementById("original");
+  originalVideo.setAttribute("loop", true);
+  await originalVideo.play();
+
+  await withNewClone(originalVideo, async clone => {
+    SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
+
+    await waitForEventOnce(originalVideo, "timeupdate");
+
+    originalVideo.pause();
+    await waitForEventOnce(originalVideo, "pause");
+
+    ok(await assertVideosMatch(originalVideo, clone),
+       "Initial video should match.");
+
+    await setVideoSrc(originalVideo, TEST_VIDEO_2);
+
+    await originalVideo.play();
+    await waitForEventOnce(originalVideo, "timeupdate");
+
+    originalVideo.pause();
+    await waitForEventOnce(originalVideo, "pause");
+
+    ok(await assertVideosMatch(originalVideo, clone),
+       "New video should match.");
+  });
+
+  await setVideoSrc(originalVideo, TEST_VIDEO_1);
+});
+
+</script>
+
+</body>
+</html>

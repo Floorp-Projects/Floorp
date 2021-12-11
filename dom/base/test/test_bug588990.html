@@ -1,0 +1,332 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=588990
+-->
+<head>
+  <title>Test for Bug 588990</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=588990">Mozilla Bug 588990</a>
+<!-- DOM to muck around with for tests -->
+<p id="root">
+<img name="n1">
+<img name="n2">
+<img name="n2">
+<img name="n3">
+<img name="n3">
+<img name="n3">
+</p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+root = $('root');
+i1_1 = root.children[0];
+i2_1 = root.children[1];
+i2_2 = root.children[2];
+i3_1 = root.children[3];
+i3_2 = root.children[4];
+i3_3 = root.children[5];
+
+function checkHasName(test) {
+  // Check name first to avoid flushes from hiding problems
+  checkHasNameNoDocProp(test);
+
+  is(document.n1, i1_1, "i1_1 doc.name " + test);
+  is(document.n2[0], i2_1, "i2_1 doc.name " + test);
+  is(document.n2[1], i2_2, "i2_2 doc.name " + test);
+  is(document.n2.length, 2, "doc.name.length " + test);
+  is(document.n3[0], i3_1, "i3_1 doc.name " + test);
+  is(document.n3[1], i3_2, "i3_2 doc.name " + test);
+  is(document.n3[2], i3_3, "i3_3 doc.name " + test);
+  is(document.n3.length, 3, "doc.name.length " + test);
+}
+
+function checkHasNameNoDocProp(test) {
+  is(i1_1.name, "n1", "i1_1 name " + test);
+  is(i2_1.name, "n2", "i2_1 name " + test);
+  is(i2_2.name, "n2", "i2_2 name " + test);
+  is(i3_1.name, "n3", "i3_1 name " + test);
+  is(i3_2.name, "n3", "i3_2 name " + test);
+  is(i3_3.name, "n3", "i3_3 name " + test);
+}
+
+function checkHasNoName(removed, test) {
+  is(i1_1.name, "", "i1_1 name " + test);
+  is(i2_1.name, "", "i2_1 name " + test);
+  is(i2_2.name, "", "i2_2 name " + test);
+  is(i3_1.name, "", "i3_1 name " + test);
+  is(i3_2.name, "", "i3_2 name " + test);
+  is(i3_3.name, "", "i3_3 name " + test);
+
+  var attrValue = removed ? null : "";
+  is(i1_1.getAttribute("name"), attrValue, "i1_1 getAttribute " + test);
+  is(i2_1.getAttribute("name"), attrValue, "i2_1 getAttribute " + test);
+  is(i2_2.getAttribute("name"), attrValue, "i2_2 getAttribute " + test);
+  is(i3_1.getAttribute("name"), attrValue, "i3_1 getAttribute " + test);
+  is(i3_2.getAttribute("name"), attrValue, "i3_2 getAttribute " + test);
+  is(i3_3.getAttribute("name"), attrValue, "i3_3 getAttribute " + test);
+  
+  is(document.n1,  undefined, "doc.n1 " + test);
+  is(document.n2,  undefined, "doc.n2 " + test);
+  is(document.n3,  undefined, "doc.n3 " + test);
+}
+
+// Check that dynamic modifications of attribute work
+
+checkHasName("in markup");
+
+i1_1.name = "";
+i2_1.name = "";
+i2_2.name = "";
+i3_1.name = "";
+i3_2.name = "";
+i3_3.name = "";
+
+checkHasNoName(false, "set to empty");
+
+i1_1.name = "n1";
+i2_1.name = "n2";
+i2_2.name = "n2";
+i3_1.name = "n3";
+i3_2.name = "n3";
+i3_3.name = "n3";
+
+checkHasName("set using .name");
+
+i1_1.setAttribute("name", "");
+i2_1.setAttribute("name", "");
+i2_2.setAttribute("name", "");
+i3_1.setAttribute("name", "");
+i3_2.setAttribute("name", "");
+i3_3.setAttribute("name", "");
+
+checkHasNoName(false, "setAttribute to empty");
+
+i1_1.name = "n1";
+i2_1.name = "n2";
+i2_2.name = "n2";
+i3_1.name = "n3";
+i3_2.name = "n3";
+i3_3.name = "n3";
+
+checkHasName("set again using .name");
+
+i1_1.removeAttribute("name");
+i2_1.removeAttribute("name");
+i2_2.removeAttribute("name");
+i3_1.removeAttribute("name");
+i3_2.removeAttribute("name");
+i3_3.removeAttribute("name");
+
+checkHasNoName(true, "removed attribute");
+
+i1_1.setAttribute("name", "n1");
+i2_1.setAttribute("name", "n2");
+i2_2.setAttribute("name", "n2");
+i3_1.setAttribute("name", "n3");
+i3_2.setAttribute("name", "n3");
+i3_3.setAttribute("name", "n3");
+
+checkHasName("set using setAttribute");
+
+t1 = document.createElement("img");
+t1.name = "n1";
+t2 = document.createElement("img");
+t2.name = "n2";
+t3 = document.createElement("img");
+t3.name = "n2";
+t4 = document.createElement("img");
+t4.name = "n3";
+t5 = document.createElement("img");
+t5.name = "n3";
+t6 = document.createElement("img");
+t6.name = "n3";
+
+// Check that inserting elements before/after existing work
+
+function insertAfter(newChild, existing) {
+  existing.parentNode.insertBefore(newChild, existing.nextSibling);
+}
+function insertBefore(newChild, existing) {
+  existing.parentNode.insertBefore(newChild, existing);
+}
+function removeNode(child) {
+  child.remove();
+}
+
+insertAfter(t1, i1_1);
+insertAfter(t2, i2_1);
+insertAfter(t3, i2_2);
+insertAfter(t4, i3_1);
+insertAfter(t5, i3_2);
+insertAfter(t6, i3_3);
+
+checkHasNameNoDocProp("inserted after");
+is(document.n1[0], i1_1, "i1_1 doc.name inserted after");
+is(document.n1[1], t1, "t1 doc.name inserted after");
+is(document.n1.length, 2, "doc.name1.length inserted after");
+is(document.n2[0], i2_1, "i2_1 doc.name inserted after");
+todo_is(document.n2[1], t2, "This is where t2 should show up. The elements in here should be in order-in-document rather than order-of-insertion");
+is(document.n2[1], i2_2, "i2_2 doc.name inserted after");
+is(document.n2[2], t2, "t2 doc.name inserted after");
+is(document.n2[3], t3, "t3 doc.name inserted after");
+is(document.n2.length, 4, "doc.name2.length inserted after");
+is(document.n3[0], i3_1, "i3_1 doc.name inserted after");
+is(document.n3[1], i3_2, "i3_3 doc.name inserted after");
+is(document.n3[2], i3_3, "i3_2 doc.name inserted after");
+is(document.n3[3], t4, "t4 doc.name inserted after");
+is(document.n3[4], t5, "t5 doc.name inserted after");
+is(document.n3[5], t6, "t6 doc.name inserted after");
+is(document.n3.length, 6, "doc.name3.length inserted after");
+
+
+insertBefore(t1, i1_1);
+insertBefore(t2, i2_1);
+insertBefore(t3, i2_2);
+insertBefore(t4, i3_1);
+insertBefore(t5, i3_2);
+insertBefore(t6, i3_3);
+
+checkHasNameNoDocProp("inserted before");
+is(document.n1[0], i1_1, "i1_1 doc.name inserted before");
+is(document.n1[1], t1, "t1 doc.name inserted before");
+is(document.n1.length, 2, "doc.name1.length inserted before");
+is(document.n2[0], i2_1, "i2_1 doc.name inserted before");
+is(document.n2[1], i2_2, "i2_2 doc.name inserted before");
+is(document.n2[2], t2, "t2 doc.name inserted before");
+is(document.n2[3], t3, "t3 doc.name inserted before");
+is(document.n2.length, 4, "doc.name2.length inserted before");
+is(document.n3[0], i3_1, "i3_1 doc.name inserted before");
+is(document.n3[1], i3_2, "i3_3 doc.name inserted before");
+is(document.n3[2], i3_3, "i3_2 doc.name inserted before");
+is(document.n3[3], t4, "t4 doc.name inserted before");
+is(document.n3[4], t5, "t5 doc.name inserted before");
+is(document.n3[5], t6, "t6 doc.name inserted before");
+is(document.n3.length, 6, "doc.name3.length inserted before");
+
+t1.removeAttribute("name");
+t2.removeAttribute("name");
+t3.removeAttribute("name");
+t4.removeAttribute("name");
+t5.removeAttribute("name");
+t6.removeAttribute("name");
+
+checkHasName("removed tx attribute");
+
+t1.setAttribute("name", "n1");
+t2.setAttribute("name", "n2");
+t3.setAttribute("name", "n2");
+t4.setAttribute("name", "n3");
+t5.setAttribute("name", "n3");
+t6.setAttribute("name", "n3");
+
+checkHasNameNoDocProp("inserted before");
+is(document.n1[0], i1_1, "i1_1 doc.name inserted before");
+is(document.n1[1], t1, "t1 doc.name inserted before");
+is(document.n1.length, 2, "doc.name1.length inserted before");
+is(document.n2[0], i2_1, "i2_1 doc.name inserted before");
+is(document.n2[1], i2_2, "i2_2 doc.name inserted before");
+is(document.n2[2], t2, "t2 doc.name inserted before");
+is(document.n2[3], t3, "t3 doc.name inserted before");
+is(document.n2.length, 4, "doc.name2.length inserted before");
+is(document.n3[0], i3_1, "i3_1 doc.name inserted before");
+is(document.n3[1], i3_2, "i3_3 doc.name inserted before");
+is(document.n3[2], i3_3, "i3_2 doc.name inserted before");
+is(document.n3[3], t4, "t4 doc.name inserted before");
+is(document.n3[4], t5, "t5 doc.name inserted before");
+is(document.n3[5], t6, "t6 doc.name inserted before");
+is(document.n3.length, 6, "doc.name3.length inserted before");
+
+removeNode(t1);
+removeNode(t2);
+removeNode(t3);
+removeNode(t4);
+removeNode(t5);
+removeNode(t6);
+
+checkHasName("removed temporaries");
+
+removeNode(i1_1);
+removeNode(i2_1);
+removeNode(i2_2);
+removeNode(i3_1);
+removeNode(i3_2);
+removeNode(i3_3);
+
+checkHasNameNoDocProp("removed node");
+
+// Check that removing an element during UnsetAttr works
+is(i1_1.name, "n1", "i1_1 has name set");
+var mutateFired = false;
+root.appendChild(i1_1);
+i1_1.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, i1_1, "target is i1_1");
+  is(i1_1.name, "", "i1_1 no longer has name");
+  is(i1_1.getAttribute("name"), null, "i1_1 no longer has name attr");
+  removeNode(i1_1);
+  is(i1_1.parentNode, null, "i1_1 was removed");
+  mutateFired = true;
+}, {once: true});
+i1_1.removeAttribute("name");
+ok(mutateFired, "mutation event fired");
+SpecialPowers.gc();
+
+// Check that removing an element during SetAttr works
+i2_1.name = "";
+mutateFired = false;
+root.appendChild(i2_1);
+i2_1.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, i2_1, "target is i2_1");
+  is(i2_1.name, "n2", "i2_1 no longer has name");
+  is(i2_1.getAttribute("name"), "n2", "i2_1 no longer has name attr");
+  removeNode(i2_1);
+  is(i2_1.parentNode, null, "i2_1 was removed");
+  mutateFired = true;
+}, {once: true});
+i2_1.name = "n2";
+ok(mutateFired, "mutation event fired");
+SpecialPowers.gc();
+
+// Re-add the name inside a mutation event on a HTML element
+is(i2_2.name, "n2", "i2_2 has name set");
+root.appendChild(i2_2);
+mutateFired = false;
+root.appendChild(i2_2);
+i2_2.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, i2_2, "target is i2_2");
+  is(i2_2.name, "", "i2_2 no longer has name");
+  is(i2_2.getAttribute("name"), "", "i2_2 has empty name attr");
+  i2_2.name = "n2";
+  mutateFired = true;
+}, {once: true});
+i2_2.name = "";
+ok(mutateFired, "mutation event fired");
+is(document.n2, i2_2, "named was readded during mutation");
+removeNode(i2_2);
+SpecialPowers.gc();
+
+// Re-remove the name inside a mutation event on a HTML element
+i3_1.name = "";
+root.appendChild(i3_1);
+mutateFired = false;
+root.appendChild(i3_1);
+i3_1.addEventListener("DOMAttrModified", function(e) {
+  is(e.target, i3_1, "target is i3_1");
+  is(i3_1.name, "n3", "i3_1 no longer has name");
+  is(i3_1.getAttribute("name"), "n3", "i3_1 has empty name attr");
+  i3_1.removeAttribute("name");
+  mutateFired = true;
+}, {once: true});
+i3_1.name = "n3";
+ok(mutateFired, "mutation event fired");
+is(document.n3, undefined, "named was readded during mutation");
+removeNode(i3_1);
+SpecialPowers.gc();
+
+</script>
+</pre>
+</body>
+</html>

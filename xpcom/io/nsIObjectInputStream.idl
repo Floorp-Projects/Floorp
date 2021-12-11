@@ -1,0 +1,56 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIBinaryInputStream.idl"
+
+/**
+ * @see nsIObjectOutputStream
+ * @see nsIBinaryInputStream
+ */
+
+[scriptable, builtinclass, uuid(6c248606-4eae-46fa-9df0-ba58502368eb)]
+interface nsIObjectInputStream : nsIBinaryInputStream
+{
+    /**
+     * Read an object from this stream to satisfy a strong or weak reference
+     * to one of its interfaces.  If the interface was not along the primary
+     * inheritance chain ending in the "root" or XPCOM-identity nsISupports,
+     * readObject will QueryInterface from the deserialized object root to the
+     * correct interface, which was specified when the object was serialized.
+     *
+     * @see nsIObjectOutputStream
+     */
+    nsISupports readObject(in boolean aIsStrongRef);
+
+    [notxpcom] nsresult readID(out nsID aID);
+
+    /**
+     * Optimized deserialization support -- see nsIStreamBufferAccess.idl.
+     */
+    [notxpcom] charPtr getBuffer(in uint32_t aLength, in uint32_t aAlignMask);
+    [notxpcom] void    putBuffer(in charPtr aBuffer, in uint32_t aLength);
+};
+
+%{C++
+
+already_AddRefed<nsIObjectInputStream>
+NS_NewObjectInputStream(nsIInputStream* aOutputStream);
+
+inline nsresult
+NS_ReadOptionalObject(nsIObjectInputStream* aStream, bool aIsStrongRef,
+                      nsISupports* *aResult)
+{
+    bool nonnull;
+    nsresult rv = aStream->ReadBoolean(&nonnull);
+    if (NS_SUCCEEDED(rv)) {
+        if (nonnull)
+            rv = aStream->ReadObject(aIsStrongRef, aResult);
+        else
+            *aResult = nullptr;
+    }
+    return rv;
+}
+
+%}

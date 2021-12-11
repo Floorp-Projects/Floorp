@@ -1,0 +1,200 @@
+<html>
+
+<head>
+  <title>nsIAccessible actions testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../actions.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      var actionsArray = [
+        {
+          ID: "clickable",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "button",
+          actionName: "press",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "checkbox_unchecked",
+          actionName: "check",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "checkbox_checked",
+          actionName: "uncheck",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "checkbox_mixed",
+          actionName: "cycle",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "combobox_collapsed",
+          actionName: "open",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "combobox_expanded",
+          actionName: "close",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "link",
+          actionName: "jump",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "menuitem",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "menuitemcheckbox",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "menuitemradio",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "option",
+          actionName: "select",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "radio",
+          actionName: "select",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "switch_unchecked",
+          actionName: "check",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "switch_checked",
+          actionName: "uncheck",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "tab",
+          actionName: "switch",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "textbox",
+          actionName: "activate",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "treeitem",
+          actionName: "activate",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "sortable",
+          actionName: "sort",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "expandable",
+          actionName: "expand",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "collapseable",
+          actionName: "collapse",
+          events: CLICK_EVENTS,
+        },
+      ];
+      testActions(actionsArray);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410765"
+     title="nsIAccessible actions testing">
+    Mozilla Bug 410765
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="clickable" onclick="">Clickable text</div>
+
+  <div id="button" role="button">Button</div>
+
+  <div id="checkbox_unchecked" role="checkbox">Checkbox</div>
+
+  <div id="checkbox_checked" role="checkbox" aria-checked="true">Checkbox</div>
+
+  <div id="checkbox_mixed" role="checkbox" aria-checked="mixed">Checkbox</div>
+
+  <div id="combobox_collapsed" role="combobox">
+    <div id="option" role="option">Option of collapsed combobox</div>
+  </div>
+
+  <div id="combobox_expanded" role="combobox" aria-expanded="true">
+    <div role="option">Option of expanded combobox</div>
+  </div>
+
+  <div id="link" role="link">Link</div>
+
+  <div role="menu">
+    <div id="menuitem" role="menuitem">Menuitem</div>
+    <div id="menuitemcheckbox" role="menuitemcheckbox">Menuitem checkbox</div>
+    <div id="menuitemradio" role="menuitemradio">Menuitem radio</div>
+  </div>
+
+  <div role="radiogroup">
+    <div id="radio" role="radio">Radio</div>
+  </div>
+
+  <div id="switch_unchecked" role="switch">Switch</div>
+
+  <div id="switch_checked" role="switch" aria-checked="true">Switch</div>
+
+  <div role="tablist">
+    <div id="tab" role="tab">Tab</div>
+  </div>
+
+  <div id="textbox" role="textbox">Textbox</div>
+
+  <div role="tree">
+    <div id="treeitem" role="treeitem">Treeitem</div>
+  </div>
+
+  <div role="grid">
+    <div id="sortable" role="columnheader" aria-sort="ascending">
+      Columnheader
+    </div>
+  </div>
+  
+  <div id="expandable" aria-expanded="false">collapsed</div>
+  <div id="collapseable" aria-expanded="true">expanded</div>
+</body>
+</html>

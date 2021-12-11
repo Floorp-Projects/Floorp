@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>ex unit with Ahem font</title>
+<style type="text/css">
+html { background: white; }
+body { font-family: Ahhhem; font-size: 50px;
+       height: 2ex; width: 2ex; position: relative;
+       background: blue;  }
+</style>
+<script type="application/ecmascript">
+function run() {
+  document.getElementsByTagName("iframe")[0].contentWindow.arm();
+  document.getElementsByTagName("style")[0].sheet.insertRule(
+    '@font-face { font-family: "Ahhhem"; src: url(../fonts/Ahem.ttf); }',
+    0);
+}
+</script>
+<body onload="setTimeout(run, 20)">
+<iframe style="visibility:hidden;position:absolute;height:100%;width:100%" src="resize-detector-iframe.html"></iframe>
+</body>

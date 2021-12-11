@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIScriptElement;
+interface nsIURI;
+
+[scriptable, uuid(7b787204-76fb-4764-96f1-fb7a666db4f4)]
+interface nsIScriptLoaderObserver : nsISupports {
+
+  /**
+   * The script is available for evaluation. For inline scripts, this
+   * method will be called synchronously. For externally loaded scripts,
+   * this method will be called when the load completes.
+   *
+   * @param aResult A result code representing the result of loading
+   *        a script. If this is a failure code, script evaluation
+   *        will not occur.
+   * @param aElement The element being processed.
+   * @param aIsInline Is this an inline classic script (as opposed to an
+   *        externally loaded classic script or module script)?
+   * @param aURI What is the URI of the script (the document URI if
+   *        it is inline).
+   * @param aLineNo At what line does the script appear (generally 1
+   *        if it is a loaded script).
+   */
+  void scriptAvailable(in nsresult aResult,
+                       in nsIScriptElement aElement,
+                       in boolean aIsInlineClassicScript,
+                       in nsIURI aURI,
+                       in int32_t aLineNo);
+
+  /**
+   * The script has been evaluated.
+   *
+   * @param aResult A result code representing the success or failure of
+   *        the script evaluation.
+   * @param aElement The element being processed.
+   * @param aIsInline Is this an inline script or externally loaded?
+   */
+  void scriptEvaluated(in nsresult aResult,
+                       in nsIScriptElement aElement,
+                       in boolean aIsInline);
+};

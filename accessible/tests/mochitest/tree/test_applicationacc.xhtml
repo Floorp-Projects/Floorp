@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible Application Accessible hierarchy tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    // Note: bug 560239 can be tested if this test runs in standalone mode only.
+ 
+    var gURL = "../tree/wnd.xhtml"
+    var gWnd = window.openDialog(gURL, "wnd", "chrome,width=600,height=600");
+
+    function doTest()
+    {
+      // Application accessible should contain two root document accessibles,
+      // one is for browser window, another one is for open dialog window.
+      var accTree = {
+        role: ROLE_APP_ROOT,
+        children: [
+          {
+            role: ROLE_CHROME_WINDOW,
+            name: "Accessibility Chrome Test Harness - Minefield"
+          },
+          {
+            role: ROLE_CHROME_WINDOW,
+            name: "Empty Window"
+          }
+        ]
+      };
+      testAccessibleTree(getApplicationAccessible(), accTree);
+
+      gWnd.close();
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    // We need to open dialog window before accessibility is started.
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=560239"
+         title="no children of application accessible for windows open before accessibility was started">
+        Mozilla Bug 560239
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+  </hbox>
+
+</window>
+

@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for X-Frame-Options response header</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<iframe style="width:100%;height:300px;" id="harness"></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/dom/base/test/";
+
+var testFramesLoaded = async function() {
+  var harness = document.getElementById("harness").contentDocument;
+
+  // iframe from same origin, no X-F-O header - should load
+  var frame = harness.getElementById("control1");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test1 = this.content.document.getElementById("test").textContent;
+    Assert.equal(test1, "control1", "test control1");
+  });
+
+  // iframe from different origin, no X-F-O header - should load
+  frame = harness.getElementById("control2");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test2 = this.content.document.getElementById("test").textContent;
+    Assert.equal(test2, "control2", "test control2");
+  });
+
+  // iframe from same origin, X-F-O: DENY - should not load
+  frame = harness.getElementById("deny");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test3 = this.content.document.getElementById("test");
+    Assert.equal(test3, null, "test deny");
+  });
+
+  // iframe from same origin, X-F-O: SAMEORIGIN - should load
+  frame = harness.getElementById("sameorigin1");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test4 = this.content.document.getElementById("test").textContent;
+    Assert.equal(test4, "sameorigin1", "test sameorigin1");
+  });
+
+  // iframe from different origin, X-F-O: SAMEORIGIN - should not load
+  frame = harness.getElementById("sameorigin2");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test5 = this.content.document.getElementById("test");
+    Assert.equal(test5, null, "test sameorigin2");
+  });
+
+  // iframe from different origin, X-F-O: SAMEORIGIN, SAMEORIGIN - should not load
+  frame = harness.getElementById("sameorigin5");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test6 = this.content.document.getElementById("test");
+    Assert.equal(test6, null, "test sameorigin5");
+  });
+
+  // iframe from same origin, X-F-O: SAMEORIGIN, SAMEORIGIN - should load
+  frame = harness.getElementById("sameorigin6");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test7 = this.content.document.getElementById("test").textContent;
+    Assert.equal(test7, "sameorigin6", "test sameorigin6");
+  });
+
+  // iframe from same origin, X-F-O: SAMEORIGIN,SAMEORIGIN, SAMEORIGIN - should load
+  frame = harness.getElementById("sameorigin7");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test8 = this.content.document.getElementById("test").textContent;
+    Assert.equal(test8, "sameorigin7", "test sameorigin7");
+  });
+
+  // iframe from same origin, X-F-O: SAMEORIGIN,SAMEORIGIN, SAMEORIGIN - should not load
+  frame = harness.getElementById("sameorigin8");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test9 = this.content.document.getElementById("test");
+    Assert.equal(test9, null, "test sameorigin8");
+  });
+
+  // iframe from same origin, X-F-O: DENY,SAMEORIGIN - should not load
+  frame = harness.getElementById("mixedpolicy");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test10 = this.content.document.getElementById("test");
+    Assert.equal(test10, null, "test mixedpolicy");
+  });
+
+  // iframe from different origin, allow-from: this origin - should load
+  frame = harness.getElementById("allow-from-allow");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test11 = this.content.document.getElementById("test").textContent;
+    Assert.equal(test11, "allow-from-allow", "test allow-from-allow");
+  });
+
+  // iframe from different origin, with allow-from: other - should load as we no longer support allow-from (Bug 1301529)
+  frame = harness.getElementById("allow-from-deny");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test12 = this.content.document.getElementById("test");
+    Assert.notEqual(test12, null, "test allow-from-deny");
+  });
+
+  // iframe from different origin, X-F-O: SAMEORIGIN, multipart - should not load
+  frame = harness.getElementById("sameorigin-multipart");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test13 = this.content.document.getElementById("test");
+    Assert.equal(test13, null, "test sameorigin-multipart");
+  });
+
+  // iframe from same origin, X-F-O: SAMEORIGIN, multipart - should load
+  frame = harness.getElementById("sameorigin-multipart2");
+  await SpecialPowers.spawn(frame, [], () => {
+    var test14 = this.content.document.getElementById("test").textContent;
+    Assert.equal(test14, "sameorigin-multipart2", "test sameorigin-multipart2");
+  });
+
+
+  // frames from bug 836132 tests, no longer supported allow-from
+  {
+    frame = harness.getElementById("allow-from-allow-1");
+    var theTestResult = frame.contentDocument.getElementById("test");
+    isnot(theTestResult, null, "test afa1 should have been allowed");
+    if(theTestResult) {
+      is(theTestResult.textContent, "allow-from-allow-1", "test allow-from-allow-1");
+    }
+  }
+  // Verify allow-from no longer works
+  for (var i = 1; i<=14; i++) {
+    frame = harness.getElementById("allow-from-deny-" + i);
+    var theTestResult = frame.contentDocument.getElementById("test");
+    isnot(theTestResult, null, "test allow-from-deny-" + i);
+  }
+
+  // call tests to check principal comparison, e.g. a document can open a window
+  // to a data: or javascript: document which frames an
+  // X-Frame-Options: SAMEORIGIN document and the frame should load
+  testFrameInJSURI();
+};
+
+// test that a document can be framed under a javascript: URL opened by the
+// same site as the frame
+// We can't set a load event listener before calling document.open/document.write, because those will remove such listeners.  So we need to define a function that the new window will be able to call.
+function frameInJSURILoaded(win) {
+  var test = win.document.getElementById("sameorigin3")
+                .contentDocument.getElementById("test");
+  ok(test != null, "frame under javascript: URL should have loaded.");
+  win.close();
+
+  testFrameNotLoadedInDataURI();
+}
+
+var testFrameInJSURI = function() {
+  var html = '<iframe id="sameorigin3" src="http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=sameorigin3&xfo=sameorigin"></iframe>';
+  var win = window.open();
+  win.location.href = "javascript:document.open(); onload = opener.frameInJSURILoaded.bind(null, window); document.write('"+html+"');document.close();";
+};
+
+// test an iframe with X-FRAME-OPTIONS shouldn't be loaded in a cross-origin window,
+var testFrameNotLoadedInDataURI = function() {
+  // In this case we load two iframes, one is sameorigin4, which will have X-FRAME-OPTIONS,
+  // the other is postmessage, which won't get the XFO header.
+  // And because now window is navigated to a data: URI, which is considered as cross origin,
+  // So win.onload won't be fired, so we use the iframe 'postmessage' to know the iframes
+  // have been loaded.
+  var html = `<iframe id="sameorigin4" src="http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=sameorigin4&xfo=sameorigin"></iframe>
+              <iframe id="postmessage" src="http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=postmessage"></iframe>`;
+  var win = window.open();
+  window.onmessage = function(evt) {
+    var iframe = SpecialPowers.wrap(win).document.getElementById("sameorigin4");
+    var test = iframe.contentDocument.getElementById("test");
+    ok(test == null, "frame under data: URL should have blocked.");
+    win.close();
+
+    SimpleTest.finish();
+  };
+  win.location.href = "data:text/html,"+html;
+};
+
+SimpleTest.waitForExplicitFinish();
+
+// load the test harness
+SpecialPowers.pushPrefEnv({
+  "set": [["security.data_uri.block_toplevel_data_uri_navigations", false],]
+}, function() {
+  document.getElementById("harness").src = "file_x-frame-options_main.html";
+});
+
+</script>
+</pre>
+
+</body>
+</html>

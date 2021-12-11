@@ -1,0 +1,197 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Toolbars */
+.devtools-toolbar,
+.devtools-sidebar-tabs tabs {
+  appearance: none;
+  padding: 0;
+  border-width: 0;
+  border-bottom-width: 1px;
+  border-style: solid;
+  /* Reserve 1px for the border */
+  height: calc(var(--theme-toolbar-height) + 1px);
+  /* Line-height based vertical centering technique used in panels
+     which don't use Flexbox (mostly XUL panels). */
+  line-height: var(--theme-toolbar-height);
+  box-sizing: border-box;
+}
+
+.devtools-toolbar {
+  padding: 0 3px;
+}
+
+/* <thead> nor <tr> support border, we have to style the <td> */
+.devtools-toolbar td {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.devtools-toolbar-bottom {
+  border-top-width: 1px;
+  border-bottom: none;
+}
+
+/* Input toolbars (toolbars that have a full height text input) */
+
+.devtools-input-toolbar {
+  display: flex;
+  /* @TODO: Remove the !important in bug 1535956 */
+  background-color: var(--theme-body-background) !important;
+  color: inherit;
+}
+
+.devtools-input-toolbar > .devtools-searchbox:first-child {
+  margin-inline-start: -3px; /* This needs to match .devtools-toolbar's padding */
+}
+
+/* Expected space around a separator:
+ * -----------------------
+ *            4
+ * [button] 2 | 2 [button]
+ *            4
+ * -----------------------
+ * We're using a 1px horizontal margin, since buttons already have their own
+ * 1px horizontal margin, and margins don't collapse between flex items.
+ * Some separators may be using a bigger, 6px horizontal margin.
+ */
+.devtools-separator {
+  border-inline-start: 1px solid var(--theme-toolbar-separator);
+  height: calc(100% - 8px);
+  margin: 4px 1px;
+}
+
+/* In-tools sidebar */
+.devtools-sidebar-tabs {
+  appearance: none;
+  margin: 0;
+  height: 100%;
+}
+
+.devtools-sidebar-tabs > tabpanels {
+  appearance: none;
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+
+.theme-light .devtools-sidebar-tabs > tabpanels {
+  background: var(--theme-sidebar-background);
+  color: var(--theme-body-color);
+}
+
+.devtools-sidebar-tabs tabs {
+  position: static;
+  font: inherit;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.devtools-sidebar-alltabs {
+  appearance: none;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 4px;
+  margin: 0;
+  border-width: 0 0 1px 0;
+  border-inline-start-width: 1px;
+  border-style: solid;
+}
+
+.devtools-sidebar-alltabs .toolbarbutton-icon {
+  display: none;
+}
+
+.devtools-sidebar-tabs tabs > .tabs-right,
+.devtools-sidebar-tabs tabs > .tabs-left {
+  display: none;
+}
+
+.devtools-sidebar-tabs tabs > tab {
+  appearance: none;
+  /* We want to match the height of a toolbar with a toolbarbutton
+   * First, we need to replicated the padding of toolbar (4px),
+   * then we need to take the border of the buttons into account (1px).
+   */
+  padding: 0 3px;
+  margin: 0;
+  min-width: 78px;
+  text-align: center;
+  background-color: transparent;
+  color: inherit;
+  -moz-box-flex: 1;
+  border-width: 0;
+  border-inline-start-width: 1px;
+  border-style: solid;
+  border-radius: 0;
+  position: static;
+  text-shadow: none;
+}
+
+.devtools-sidebar-tabs tabs > tab {
+  border-image: linear-gradient(transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%) 1 1;
+}
+
+.devtools-sidebar-tabs tabs > tab[selected],
+.devtools-sidebar-tabs tabs > tab[selected] + tab {
+  border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
+}
+
+.devtools-sidebar-tabs tabs > tab:first-child {
+  border-inline-start-width: 0;
+}
+
+.devtools-sidebar-tabs tabs > tab:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.devtools-sidebar-tabs tabs > tab:hover:active {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.devtools-sidebar-tabs tabs > tab[selected],
+.devtools-sidebar-tabs tabs > tab[selected]:hover:active {
+  color: var(--theme-selection-color);
+  background: var(--theme-selection-background);
+}
+
+.devtools-invisible-splitter {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+splitter.devtools-horizontal-splitter,
+.devtools-side-splitter {
+  background-color: var(--theme-splitter-color);
+}
+
+/* Dropdown Menu Button */
+.devtools-dropdown-button {
+  background-image: url("chrome://devtools/skin/images/select-arrow.svg") !important;
+  background-position: right center !important;
+  background-repeat: no-repeat !important;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-inline: 2px 10px !important;
+  fill: var(--theme-icon-color);
+  -moz-context-properties: fill;
+}
+
+.devtools-dropdown-button:dir(rtl) {
+  background-position-x: left !important;
+}
+
+.devtools-dropdown-button:not(:hover) {
+  background-color: transparent;
+}
+
+/* Style for title holder inside the dropdown menu button */
+.devtools-dropdown-button .title {
+  display: inline-block;
+  width: 100%;
+  overflow: hidden;
+  padding-top: 0.15em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

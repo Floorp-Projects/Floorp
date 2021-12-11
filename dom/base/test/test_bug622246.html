@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=622246
+-->
+<head>
+  <title>Test for Bug 622246</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=622246">Mozilla Bug 622246</a>
+<p id="display">
+  <iframe id="testframe"
+          srcdoc="<span onclick='this.parentNode.removeChild(this)'><a href='PASS.html'>Click me</a></span>">
+  </iframe>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 622246 **/
+SimpleTest.waitForExplicitFinish();
+
+const { testframe } = document.all;
+
+waitUntilApzStable().then(async () => {
+  testframe.onload = function() {
+    is(this.contentDocument.documentElement.innerText, "PASS", "Should have loaded link");
+    SimpleTest.finish();
+  };
+
+  is(testframe.contentDocument.readyState, "complete", "iframe is not loaded yet?");
+
+  var win = testframe.contentWindow;
+  await SimpleTest.promiseFocus(win);
+
+  var a = win.document.getElementsByTagName("a")[0];
+  synthesizeMouseAtCenter(a, {}, win);
+});
+</script>
+</pre>
+</body>
+</html>

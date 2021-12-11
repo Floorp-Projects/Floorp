@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=484107
+-->
+<head>
+  <title>Test for Bug 484107</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=484107">Mozilla Bug 484107</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 484107 **/
+
+  var text = "first group",
+      xpcWin = new XPCSafeJSObjectWrapper(window);
+  function get$1() { return RegExp.$1 };
+
+  function reset() {
+    var match = /(.*)/.exec(text);
+    if (!reset.skipStupidTests) {
+      reset.skipStupidTests = true;
+      ok(match, "No match?");
+      is(match[1], text, "Bad match?");
+      is(text, RegExp.$1, "RegExp.$1 missing?");
+      is(text, get$1(), "RegExp.$1 inaccessible?");
+    }
+  }
+
+  function test_XPC_SJOW_Call() {
+    isnot(text, xpcWin.get$1(), "Able to see RegExp.$1 from wrapped method.");
+    is("", xpcWin.get$1(), "Saw something other than an empty string for " +
+                           "RegExp.$1 from wrapped method.");
+    is(text, window.get$1(), "Unable to see RegExp.$1 from non-wrapped method.");
+  }
+
+  function test_XPC_SJOW_Call_foreign_obj() {
+    var obj = {
+      xpcGet: xpcWin.get$1,
+      rawGet: window.get$1
+    };
+    isnot(text, obj.xpcGet(), "obj.xpcGet() returned matched text.");
+    is("", obj.xpcGet(), "obj.xpcGet() returned something other than the empty string.");
+    is(text, obj.rawGet(), "obj.rawGet() did not return matched text.");
+  }
+
+  function test_XPC_SJOW_toString() {
+    var str = new XPCSafeJSObjectWrapper({
+      toString: function() { return RegExp.$1 }
+    }) + "";
+    isnot(text, str, "toString() returned the matched text.");
+    is("", str, "toString() returned something other than the empty string.");
+  }
+
+  function test_XPC_SJOW_GetOrSetProperty() {
+    window.__defineGetter__("firstMatch", function() { return RegExp.$1 });
+    isnot(text, xpcWin.firstMatch, "Getter xpcWin.firstMatch returned matched text.");
+    is("", xpcWin.firstMatch,
+       "Getter xpcWin.firstMatch returned something other than the empty string.");
+    is(text, window.firstMatch, "Getter window.firstMatch did not return matched text.");
+  }
+
+  function test_XPC_SJOW_Create() {
+    function ctor() {
+      this.match = RegExp.$1;
+      return this; // XXX Why is this necessary?
+    }
+    ctor.prototype.getMatch = function() { return this.match };
+    var xpcCtor = new XPCSafeJSObjectWrapper(ctor),
+        match = (new xpcCtor).getMatch();
+    isnot(text, match, "(new xpcCtor).getMatch() was the matched text.");
+    is("", match, "(new xpcCtor).getMatch() was not the empty string.");
+  }
+
+  var tests = [
+    test_XPC_SJOW_Call,
+    test_XPC_SJOW_Call_foreign_obj,
+    test_XPC_SJOW_toString,
+    test_XPC_SJOW_GetOrSetProperty,
+    test_XPC_SJOW_Create
+  ];
+
+  for (var i = 0; i < tests.length; i++) {
+    reset();
+    tests[i]();
+    is(text, RegExp.$1, "RegExp.$1 was clobbered.");
+  }
+
+</script>
+</pre>
+</body>
+</html>

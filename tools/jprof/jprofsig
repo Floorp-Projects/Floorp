@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#
+# Find Mozilla PID and send it a signal, to be used
+# with the jprof tool.
+#
+
+jpsignal_usage() {
+  echo "Usage: jprofsig [start|stop]"
+  exit 1
+}
+
+if [ $# != 1 ]; then
+  echo "Wrong number of arguments."
+  jpsignal_usage
+fi
+
+jpsignal_arg="$1"
+
+# Find & print mozilla PID
+tmpmoz=`ps aux | grep mozilla-bin | head -1 | awk '{ print $2 }'`
+echo "Mozilla PID = $tmpmoz"
+
+# See how we were called.
+case "$jpsignal_arg" in
+  start)
+    if [ "$JP_REALTIME" = 1 ]; then
+      kill -ALRM $tmpmoz
+    else
+      # Normal, non-realtime mode.
+      kill -PROF $tmpmoz
+    fi
+    ;;
+  stop)
+    kill -USR1 $tmpmoz
+    ;;
+  *)
+    jpsignal_usage
+    exit 1
+esac
+
+exit 0

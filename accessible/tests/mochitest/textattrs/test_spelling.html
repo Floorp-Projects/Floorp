@@ -1,0 +1,52 @@
+<html>
+
+<head>
+  <title>Spell check text attribute tests</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    async function doTest() {
+      const misspelledAttrs = {"invalid": "spelling"};
+
+      let editable = document.getElementById("div_after_misspelling");
+      // The attr change event gets fired on the last accessible containing a
+      // spelling error.
+      let spellDone = waitForEvent(EVENT_TEXT_ATTRIBUTE_CHANGED, "div_after_misspelling_div2");
+      editable.focus();
+      await spellDone;
+      testTextAttrs("div_after_misspelling_div1", 0, {}, {}, 0, 5, true);
+      testTextAttrs("div_after_misspelling_div1", 5, misspelledAttrs, {}, 5, 9, true);
+      testTextAttrs("div_after_misspelling_div2", 0, {}, {}, 0, 5, true);
+      testTextAttrs("div_after_misspelling_div2", 5, misspelledAttrs, {}, 5, 9, true);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Text attribute offsets for accessibles after first spelling error (bug 1479678) -->
+  <div id="div_after_misspelling" contenteditable="true" spellcheck="true" lang="en-US">
+    <div id="div_after_misspelling_div1">Test tset</div>
+    <div id="div_after_misspelling_div2">test tset</div>
+  </div>
+
+</body>
+</html>

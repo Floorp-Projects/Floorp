@@ -1,0 +1,66 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("mp4_demuxer_gtest")
+
+if CONFIG["OS_TARGET"] != "Android":
+    SOURCES += [
+        "TestParser.cpp",
+    ]
+
+SOURCES += [
+    "TestInterval.cpp",
+]
+
+TEST_HARNESS_FILES.gtest += [
+    "test_case_1156505.mp4",
+    "test_case_1181213.mp4",
+    "test_case_1181215.mp4",
+    "test_case_1181223.mp4",
+    "test_case_1181719.mp4",
+    "test_case_1185230.mp4",
+    "test_case_1187067.mp4",
+    "test_case_1200326.mp4",
+    "test_case_1204580.mp4",
+    "test_case_1216748.mp4",
+    "test_case_1296473.mp4",
+    "test_case_1296532.mp4",
+    "test_case_1301065-harder.mp4",
+    "test_case_1301065-i64max.mp4",
+    "test_case_1301065-i64min.mp4",
+    "test_case_1301065-max-ez.mp4",
+    "test_case_1301065-max-ok.mp4",
+    "test_case_1301065-overfl.mp4",
+    "test_case_1301065-u32max.mp4",
+    "test_case_1301065-u64max.mp4",
+    "test_case_1301065.mp4",
+    "test_case_1329061.mov",
+    "test_case_1351094.mp4",
+    "test_case_1388991.mp4",
+    "test_case_1389299.mp4",
+    "test_case_1389527.mp4",
+    "test_case_1395244.mp4",
+    "test_case_1410565.mp4",
+    "test_case_1513651-2-sample-description-entries.mp4",
+    "test_case_1519617-cenc-init-with-track_id-0.mp4",
+    "test_case_1519617-track2-trafs-removed.mp4",
+    "test_case_1519617-video-has-track_id-0.mp4",
+    "test_case_1714125-2-sample-description-entires-with-identical-crypto.mp4",
+]
+
+UNIFIED_SOURCES += [
+    "TestMP4.cpp",
+]
+
+TEST_HARNESS_FILES.gtest += [
+    "../../test/street.mp4",
+]
+LOCAL_INCLUDES += [
+    "../../mp4",
+    "/toolkit/components/telemetry/tests/gtest",
+]
+
+FINAL_LIBRARY = "xul-gtest"

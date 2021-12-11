@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIDOMWindowUtils::elementFromPoint test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style>
+    body {
+      /* Make room for scrolling */
+    }
+  </style>
+</head>
+
+<body id="body">
+  <script type="application/javascript">
+    /*
+      void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+    */
+    function doTests() {
+      testScrollXY();
+      testHiddenIframe();
+
+      SimpleTest.finish();
+    }
+
+    function testScrollXY() {
+      let iframe = document.getElementById("iframe");
+      let cwindow = iframe.contentWindow;
+      let domWindowUtils = SpecialPowers.getDOMWindowUtils(cwindow);
+
+      function checkGetScrollXYState(flush, vals, testName) {
+        let scrollX = {}, scrollY = {};
+        domWindowUtils.getScrollXY(flush, scrollX, scrollY);
+        is(Math.round(scrollX.value), vals[0], "getScrollXY x for test: " + testName);
+        is(Math.round(scrollY.value), vals[1], "getScrollXY y for test: " + testName);
+      }
+
+      function checkWindowScrollState(vals, testName) {
+        is(Math.round(cwindow.scrollX), vals[0], "scrollX for test: " + testName);
+        is(Math.round(cwindow.scrollY), vals[1], "scrollY for test: " + testName);
+      }
+
+      // Check initial state (0, 0)
+      checkGetScrollXYState(false, [0, 0], "initial getScrollXY state");
+      checkGetScrollXYState(true, [0, 0], "initial getScrollXY state+flush");
+      checkWindowScrollState([0, 0], "initial window.scroll* state");
+
+      // scroll
+      cwindow.scrollTo(900, 1000);
+      checkGetScrollXYState(false, [900, 1000], "after scroll getScrollXY state");
+      checkGetScrollXYState(true, [900, 1000], "after scroll getScrollXY state+flush");
+      checkWindowScrollState([900, 1000], "after scroll window.scroll* state");
+
+      // ensure flush=false works
+      cwindow.document.body.style.width = 'auto';
+      cwindow.document.body.style.height = 'auto';
+      checkGetScrollXYState(false, [900, 1000], "didn't flush layout for getScrollXY");
+      checkGetScrollXYState(true, [0, 0], "flushed layout for getScrollXY");
+    }
+
+    function testHiddenIframe() {
+      let iframe = document.getElementById("hidden-iframe");
+      let cwindow = iframe.contentWindow;
+      let domWindowUtils = SpecialPowers.getDOMWindowUtils(cwindow);
+
+      // make sure getScrollXY doesn't throw
+      let scrollX = {}, scrollY = {};
+      domWindowUtils.getScrollXY(false, scrollX, scrollY);
+
+      is(Math.round(scrollX.value), 0, "scrollX is zero for display:none iframe");
+      is(Math.round(scrollY.value), 0, "scrollY is zero for display:none iframe");
+    }
+
+    SimpleTest.waitForExplicitFinish();
+  </script>
+
+  <!-- can't run this in the test document, since it potentially runs in a
+       scrolling="no" test harness iframe, and that causes a failure for some
+       reason -->
+  <iframe srcdoc="<body style='width: 100000px; height: 100000px;'><p>top</p></body>"
+          id="iframe"
+          onload="doTests();">
+  </iframe>
+
+  <iframe id="hidden-iframe" style="display: none;"></iframe>
+
+  <p id="display"></p>
+
+</body>
+</html>

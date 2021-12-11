@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsICommandLine.idl"
+
+[ptr] native nsArgvArray(const char* const);
+
+/**
+ * Extension of nsICommandLine that allows for initialization of new command lines
+ * and running the command line actions by processing the command line handlers.
+ *
+ * @status INTERNAL - This interface is not meant for use by embedders, and is
+ *                    not intended to be frozen. If you are an embedder and need
+ *                    functionality provided by this interface, talk to Benjamin
+ *                    Smedberg <benjamin@smedbergs.us>.
+ */
+
+[uuid(c9f2996c-b25a-4d3d-821f-4cd0c4bc8afb)]
+interface nsICommandLineRunner : nsICommandLine
+{
+  /**
+   * This method assumes a native character set, and is meant to be called
+   * with the argc/argv passed to main(). Talk to bsmedberg if you need to
+   * create a command line using other data. argv will not be altered in any
+   * way.
+   *
+   * On Windows, the "native" character set is UTF-8, not the native codepage.
+   *
+   * @param workingDir The working directory for resolving file and URI paths.
+   *                   Can be null, in which case resolving files will not
+   *                   work, and only absolute URIs will be resolvable.
+   * @param state      The nsICommandLine.state flag.
+   */
+  void init(in long argc, in nsArgvArray argv,
+            in nsIFile workingDir, in unsigned long state);
+
+  /**
+   * Process the command-line handlers in the proper order, calling "handle()" on
+   * each.
+   *
+   * @throws NS_ERROR_ABORT if any handler throws NS_ERROR_ABORT. All other errors
+   *         thrown by handlers will be silently ignored.
+   */
+  void run();
+
+  /**
+   * Process and combine the help text provided by each command-line handler.
+   */
+  readonly attribute AUTF8String helpText;
+};

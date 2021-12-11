@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <style>
+    tr::before {
+      content: "Some text";
+      display: table-cell;
+    }
+    tr.i::before {
+      text-indent: 50px;
+    }
+  </style>
+  <table cellpadding="0">
+    <tr></tr>
+  </table>
+  <script>
+    onload = function() {
+      var tr = document.querySelector("tr");
+      // Make sure it's laid out
+      window.w = tr.offsetWidth;
+      document.querySelector("tr").className = "i";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

@@ -1,0 +1,185 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.frames [role="list"] {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.frames [role="list"] [role="listitem"] {
+  padding-bottom: 2px;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  column-gap: 0.5em;
+  flex-direction: row;
+  align-items: center;
+  margin: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.frames [role="list"] [role="listitem"] * {
+  user-select: none;
+}
+
+.frames .badge {
+  flex-shrink: 0;
+  margin-inline-end: 10px;
+}
+
+.frames .location {
+  font-weight: normal;
+  margin: 0;
+  flex-grow: 1;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  /* Trick to get the ellipsis at the start of the string */
+  text-overflow: ellipsis;
+  direction: rtl;
+}
+
+.call-stack-pane:dir(ltr) .frames .location {
+  padding-right: 10px;
+  text-align: right;
+}
+
+.call-stack-pane:dir(rtl) .frames .location {
+  padding-left: 10px;
+  text-align: left;
+}
+
+.call-stack-pane .location-async-cause {
+  color: var(--theme-comment);
+}
+
+.theme-light .frames .location {
+  color: var(--theme-comment);
+}
+
+:root.theme-dark .frames .location {
+  color: var(--theme-body-color);
+  opacity: 0.6;
+}
+
+.frames .title {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-inline-start: 10px;
+}
+
+.frames-group .title {
+  padding-inline-start: 40px;
+}
+
+.frames [role="list"] [role="listitem"]:hover,
+.frames [role="list"] [role="listitem"]:focus {
+  background-color: var(--theme-toolbar-background-alt);
+}
+
+.frames [role="list"] [role="listitem"]:hover .location-async-cause,
+.frames [role="list"] [role="listitem"]:focus .location-async-cause,
+.frames [role="list"] [role="listitem"]:hover .async-label,
+.frames [role="list"] [role="listitem"]:focus .async-label {
+  background-color: var(--theme-body-background);
+}
+
+.theme-dark .frames [role="list"] [role="listitem"]:focus,
+.theme-dark .frames [role="list"] [role="listitem"]:focus .async-label,
+.theme-dark .frames [role="list"] [role="listitem"]:focus .async-label {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.frames [role="list"] [role="listitem"].selected,
+.frames [role="list"] [role="listitem"].selected .async-label {
+  background-color: var(--theme-selection-background);
+  color: white;
+}
+
+.frames [role="list"] [role="listitem"].selected i.annotation-logo svg path {
+  fill: white;
+}
+
+:root.theme-light .frames [role="list"] [role="listitem"].selected .location,
+:root.theme-dark .frames [role="list"] [role="listitem"].selected .location {
+  color: white;
+}
+
+.frames .show-more-container {
+  display: flex;
+  min-height: 24px;
+  padding: 4px 0;
+}
+
+.frames .show-more {
+  text-align: center;
+  padding: 8px 0px;
+  margin: 7px 10px 7px 7px;
+  border: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-tab-toolbar-background);
+  width: 100%;
+  font-size: inherit;
+  color: inherit;
+}
+
+.frames .show-more:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.frames .img.annotation-logo {
+  margin-inline-end: 4px;
+  background-color: currentColor;
+}
+
+/*
+ * We also show the library icon in locations, which are forced to RTL.
+ */
+.frames .location .img.annotation-logo {
+  margin-inline-start: 4px;
+}
+
+/* Some elements are added to the DOM only to be printed into the clipboard
+   when the user copy some elements. We don't want those elements to mess with
+   the layout so we put them outside of the screen
+*/
+.frames .clipboard-only {
+  position: absolute;
+  left: -9999px;
+}
+
+.call-stack-pane [role="listitem"] .location-async-cause {
+  height: 20px;
+  line-height: 20px;
+  color: var(--theme-icon-dimmed-color);
+  display: block;
+  z-index: 4;
+  position: relative;
+  padding-inline-start: 17px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.frames-group .location-async-cause {
+  padding-inline-start: 47px;
+}
+
+.call-stack-pane [role="listitem"] .location-async-cause::after {
+  content: " ";
+  position: absolute;
+  left: 0;
+  z-index: -1;
+  height: 30px;
+  top: 50%;
+  width: 100%;
+  border-top: 1px solid var(--theme-tab-toolbar-background);;
+}
+
+.call-stack-pane .async-label {
+  z-index: 1;
+  background-color: var(--theme-sidebar-background);
+  padding: 0 3px;
+  display: inline-block;
+}

@@ -1,0 +1,75 @@
+commit dfec2c249915560cedd2b49326c6629ad8a0b0f2
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Tue Mar 2 16:01:41 2010 -0500
+
+    add a stash of cairo_t's
+
+diff --git a/src/cairo.c b/src/cairo.c
+index 3c9d892..4b27b83 100644
+--- a/src/cairo.c
++++ b/src/cairo.c
+@@ -119,7 +119,63 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
+     _cairo_status_set_error (&cr->status, _cairo_error (status));
+ }
+ 
+-#if HAS_ATOMIC_OPS
++#if defined(_MSC_VER)
++#pragma intrinsic(_BitScanForward)
++static __forceinline int
++ffs(int x)
++{
++    unsigned long i;
++
++    if (_BitScanForward(&i, x) != 0)
++	return i + 1;
++
++    return 0;
++}
++#endif
++
++
++#if CAIRO_NO_MUTEX
++/* We keep a small stash of contexts to reduce malloc pressure */
++#define CAIRO_STASH_SIZE 4
++static struct {
++    cairo_t pool[CAIRO_STASH_SIZE];
++    int occupied;
++} _context_stash;
++
++static cairo_t *
++_context_get (void)
++{
++    int avail, old, new;
++
++    old = _context_stash.occupied;
++    avail = ffs (~old) - 1;
++    if (avail >= CAIRO_STASH_SIZE)
++	return malloc (sizeof (cairo_t));
++
++    new = old | (1 << avail);
++    _context_stash.occupied = new;
++
++    return &_context_stash.pool[avail];
++}
++
++static void
++_context_put (cairo_t *cr)
++{
++    int old, new, avail;
++
++    if (cr < &_context_stash.pool[0] ||
++	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
++    {
++	free (cr);
++	return;
++    }
++
++    avail = ~(1 << (cr - &_context_stash.pool[0]));
++    old = _context_stash.occupied;
++    new = old & avail;
++    _context_stash.occupied = new;
++}
++#elif HAS_ATOMIC_OPS
+ /* We keep a small stash of contexts to reduce malloc pressure */
+ #define CAIRO_STASH_SIZE 4
+ static struct {

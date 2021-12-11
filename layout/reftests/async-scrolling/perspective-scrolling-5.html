@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" reftest-async-scroll>
+<meta charset="utf-8">
+<title>Perspective scrolling</title>
+<style>
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  overflow: auto;
+  height: 100%;
+  scrollbar-width: none;
+  margin: 0;
+}
+
+.scene {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  perspective: 100px;
+  transform-style: preserve-3d;
+}
+
+.face {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  top: 0;
+  left: 0;
+}
+
+.front  {
+  background-color: lime;
+}
+
+/*
+ * This one should never be visible, and should be always
+ * behind the front face.
+ */
+.back {
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  left: -100px;
+  transform: translateZ(-100px);
+  background-color: red;
+}
+</style>
+
+<body reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="200">
+<div style="height: 200px"></div>
+<div class="scene">
+  <div class="face front"></div>
+  <div class="face back"></div>
+</div>
+<div style="height: 5000px"></div>

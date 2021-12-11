@@ -1,0 +1,9 @@
+{
+   "description": {
+      "description": "Extension description in manifest. Should not exceed 132 characters.",
+      "message": "It is the description of fake extension 1."
+   },
+   "name": {
+      "message": "Fake Extension 1"
+   }
+}

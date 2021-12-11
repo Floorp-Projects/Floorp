@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "834270",
+    title: "Align PeerConnection error handling with WebRTC specification"
+  });
+
+  function validateReason(reason) {
+    ok(reason.name.length, "Reason name = " + reason.name);
+    ok(reason.message.length, "Reason message = " + reason.message);
+  };
+
+  function testCreateAnswerError() {
+    var pc = new RTCPeerConnection();
+    info ("Testing createAnswer error");
+    return pc.createAnswer()
+    .then(generateErrorCallback("createAnswer before offer should fail"),
+          validateReason);
+  };
+
+  function testSetLocalDescriptionError() {
+    var pc = new RTCPeerConnection();
+    info ("Testing setLocalDescription error");
+    return pc.setLocalDescription({ sdp: "Picklechips!", type: "offer" })
+    .then(generateErrorCallback("setLocalDescription with nonsense SDP should fail"),
+          validateReason);
+  };
+
+  function testSetRemoteDescriptionError() {
+    var pc = new RTCPeerConnection();
+    info ("Testing setRemoteDescription error");
+    return pc.setRemoteDescription({ sdp: "Who?", type: "offer" })
+    .then(generateErrorCallback("setRemoteDescription with nonsense SDP should fail"),
+          validateReason);
+  };
+
+  // No test for createOffer errors -- there's nothing we can do at this
+  // level to evoke an error in createOffer.
+
+  runNetworkTest(function () {
+    return testCreateAnswerError()
+    .then(testSetLocalDescriptionError)
+    .then(testSetRemoteDescriptionError);
+  });
+
+</script>
+</pre>
+</body>
+</html>

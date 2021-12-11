@@ -1,0 +1,774 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_HARNESS_FILES["web-platform"] += [
+    "mach_commands_base.py",
+    "mach_test_package_commands.py",
+    "outbound/**",
+    "runtests.py",
+    "wptrunner.ini",
+]
+
+PYTHON_UNITTEST_MANIFESTS += ["python.ini"]
+
+with Files("**"):
+    SCHEDULES.exclusive = [
+        "web-platform-tests",
+        "web-platform-tests-reftest",
+        "web-platform-tests-wdspec",
+    ]
+
+with Files("moz.build"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("README.md"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("wptrunner.ini"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("meta/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("products/README"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("outbound/README"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("outbound/meta/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("outbound/tests/placeholder"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mozilla/README"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mozilla/meta/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mozilla/tests/dom/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mozilla/tests/editor/**"):
+    BUG_COMPONENT = ("Core", "DOM: Editor")
+
+with Files("mozilla/tests/fetch/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("mozilla/tests/focus/**"):
+    BUG_COMPONENT = ("Core", "DOM: Editor")
+
+with Files("mozilla/tests/html/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mozilla/tests/html/semantics/forms/**"):
+    BUG_COMPONENT = ("Core", "Layout: Form Controls")
+
+with Files("mozilla/tests/html/semantics/scripting-1/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mozilla/tests/placeholder"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("update/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mach*"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("*.py"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/*.md"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+    SCHEDULES.inclusive += ["test-verify-wpt"]
+
+with Files("tests/testharness_runner.html"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/wpt"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/wpt.py"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+
+with Files("tests/FileAPI/**"):
+    BUG_COMPONENT = ("Core", "DOM: File")
+
+with Files("tests/IndexedDB/**"):
+    BUG_COMPONENT = ("Core", "Storage: IndexedDB")
+
+with Files("tests/WebCryptoAPI/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/xhr/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("tests/accelerometer/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/ambient-light/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/annotation-model/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/annotation-protocol/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/annotation-vocab/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/apng/**"):
+    BUG_COMPONENT = ("Core", "ImageLib")
+
+with Files("tests/audio-output/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/background-fetch/**"):
+    BUG_COMPONENT = ("Core", "DOM: Service Workers")
+
+with Files("tests/battery-status/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/beacon/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("tests/bluetooth/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/clear-site-data/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/clipboard-apis/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/common/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+# Appears to be testing -webkit specific css properties
+with Files("tests/compat/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/conformance-checkers/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/console/**"):
+    BUG_COMPONENT = ("DevTools", "Console")
+
+with Files("tests/content-security-policy/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/cookies/**"):
+    BUG_COMPONENT = ("Core", "Networking: Cookies")
+
+with Files("tests/core-aam/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("tests/cors/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/credential-management/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/css/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/compositing/**"):
+    BUG_COMPONENT = ("Core", "Web Painting")
+
+with Files("tests/css/css-align/**"):
+    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+
+with Files("tests/css/css-animations/**"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
+
+with Files("tests/css/css-backgrounds/**"):
+    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+
+with Files("tests/css/css-box/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-break/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-cascade/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-color/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-color-adjust/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-conditional/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-contain/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-content/**"):
+    BUG_COMPONENT = ("Core", "Layout: Generated Content, Lists, and Counters")
+
+with Files("tests/css/css-counter-styles/**"):
+    BUG_COMPONENT = ("Core", "Layout: Generated Content, Lists, and Counters")
+
+with Files("tests/css/css-device-adapt/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-display/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-easing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Animation")
+
+with Files("tests/css/css-env/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-exclusions/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-fill-stroke/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/css/css-flexbox/**"):
+    BUG_COMPONENT = ("Core", "Layout: Flexbox")
+
+with Files("tests/css/css-font-loading/**"):
+    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+
+with Files("tests/css/css-fonts/**"):
+    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+
+with Files("tests/css/css-forced-color-adjust/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-gcpm/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-grid/**"):
+    BUG_COMPONENT = ("Core", "Layout: Grid")
+
+with Files("tests/css/css-images/**"):
+    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+
+with Files("tests/css/css-inline/**"):
+    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+
+with Files("tests/css/css-layout-api/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-lists/**"):
+    BUG_COMPONENT = ("Core", "Layout: Generated Content, Lists, and Counters")
+
+with Files("tests/css/css-logical/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-masking/**"):
+    BUG_COMPONENT = ("Core", "Web Painting")
+
+with Files("tests/css/css-multicol/**"):
+    BUG_COMPONENT = ("Core", "Layout: Columns")
+
+with Files("tests/css/css-namespaces/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-overflow/**"):
+    BUG_COMPONENT = ("Core", "Layout: Scrolling and Overflow")
+
+with Files("tests/css/css-overscroll-behavior/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-page/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-paint-api/**"):
+    BUG_COMPONENT = ("Core", "Web Painting")
+
+with Files("tests/css/css-parser-api/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-position/**"):
+    BUG_COMPONENT = ("Core", "Layout: Positioned")
+
+with Files("tests/css/css-properties-values-api/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-pseudo/**"):
+    BUG_COMPONENT = ("Core", "Layout: Generated Content, Lists, and Counters")
+
+with Files("tests/css/css-round-display/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-ruby/**"):
+    BUG_COMPONENT = ("Core", "Layout: Ruby")
+
+with Files("tests/css/css-scoping/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-scroll-anchoring/**"):
+    BUG_COMPONENT = ("Core", "Layout: Scrolling and Overflow")
+
+with Files("tests/css/css-scroll-snap/**"):
+    BUG_COMPONENT = ("Core", "Layout: Scrolling and Overflow")
+
+with Files("tests/css/css-scrollbars/**"):
+    BUG_COMPONENT = ("Core", "Layout: Scrolling and Overflow")
+
+with Files("tests/css/css-shadow-parts/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-shapes/**"):
+    BUG_COMPONENT = ("Core", "Layout: Floats")
+
+with Files("tests/css/css-size-adjust/**"):
+    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+
+with Files("tests/css/css-sizing/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-speech/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-style-attr/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-syntax/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-tables/**"):
+    BUG_COMPONENT = ("Core", "Layout: Tables")
+
+with Files("tests/css/css-text/**"):
+    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+
+with Files("tests/css/css-text-decor/**"):
+    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+
+with Files("tests/css/css-transforms/**"):
+    BUG_COMPONENT = ("Core", "Web Painting")
+
+with Files("tests/css/css-transitions/**"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
+
+with Files("tests/css/css-typed-om/**"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
+
+with Files("tests/css/css-ui/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-values/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-variables/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/css-will-change/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/css-writing-modes/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/css/cssom/**"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
+
+with Files("tests/css/cssom-view/**"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
+
+with Files("tests/css/filter-effects/**"):
+    BUG_COMPONENT = ("Core", "Web Painting")
+
+with Files("tests/css/geometry/**"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
+
+with Files("tests/css/mediaqueries/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css/motion/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/css/selectors/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/custom-elements/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/docs/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/dom/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/domparsing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/domxpath/**"):
+    BUG_COMPONENT = ("Core", "XSLT")
+
+with Files("tests/dpub-aam/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("tests/dpub-aria/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("tests/editing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Editor")
+
+with Files("tests/element-timing/**"):
+    BUG_COMPONENT = ("Core", "Performance")
+# as per Bug 746911
+with Files("tests/encoding/**"):
+    BUG_COMPONENT = ("Core", "Internationalization")
+
+with Files("tests/encoding-detection/**"):
+    BUG_COMPONENT = ("Core", "Internationalization")
+
+with Files("tests/encrypted-media/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/entries-api/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/eventsource/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/feature-policy/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/fetch/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("tests/fonts/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/fonts/math/**"):
+    BUG_COMPONENT = ("Core", "MathML")
+
+with Files("tests/fullscreen/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/gamepad/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/geolocation-API/**"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("tests/gyroscope/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/hr-time/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/html/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/html-longdesc/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+# Not implemented yet, see Bug 741393
+with Files("tests/html-media-capture/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/imagebitmap-renderingcontext/**"):
+    BUG_COMPONENT = ("Core", "Canvas: 2D")
+
+with Files("tests/images/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/infrastructure/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/input-events/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/interfaces/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/intersection-observer/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/js/**"):
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
+
+# To be implemented in bug 1348405
+with Files("tests/keyboard-lock/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+# No reference to longtask in bugzilla or codebase
+with Files("tests/longtask-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+# depends on generic-sensor, check bug 1359076
+with Files("tests/magnetometer/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/mathml/**"):
+    BUG_COMPONENT = ("Core", "MathML")
+
+with Files("tests/media/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/media-capabilities/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
+
+with Files("tests/mediasession/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/media-source/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/mediacapture-fromelement/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Recording")
+
+with Files("tests/mediacapture-image/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Recording")
+
+with Files("tests/mediacapture-record/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Recording")
+
+with Files("tests/mediacapture-streams/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
+
+with Files("tests/mixed-content/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/navigation-timing/**"):
+    BUG_COMPONENT = ("Core", "Performance")
+
+with Files("tests/netinfo/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/notifications/**"):
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+
+with Files("tests/old-tests/submission/Microsoft/foreigncontent/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/old-tests/submission/Microsoft/history/**"):
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
+
+with Files("tests/old-tests/submission/Microsoft/selection/**"):
+    BUG_COMPONENT = ("Core", "DOM: Selection")
+
+with Files("tests/orientation-event/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/orientation-sensor/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/page-visibility/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/paint-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+# No tests in here
+with Files("tests/payment-handler/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
+# No tests in here
+with Files("tests/payment-method-basic-card/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
+# No tests in here
+with Files("tests/payment-method-id/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
+with Files("tests/payment-request/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
+with Files("tests/performance-timeline/**"):
+    BUG_COMPONENT = ("Core", "Performance")
+
+with Files("tests/picture-in-picture/**"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+
+with Files("tests/pointerevents/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/pointerlock/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/preload/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/presentation-api/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/proximity/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/quirks/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/remote-playback/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/referrer-policy/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/requestidlecallback/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+# To be implemented in bug 1272409
+with Files("tests/resize-observer/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/resource-timing/**"):
+    BUG_COMPONENT = ("Core", "Performance")
+
+with Files("tests/resources/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/sanitizer-api/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/screen-capture/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
+
+with Files("tests/screen-orientation/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/secure-contexts/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/selection/**"):
+    BUG_COMPONENT = ("Core", "DOM: Selection")
+
+with Files("tests/server-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/service-workers/**"):
+    BUG_COMPONENT = ("Core", "DOM: Service Workers")
+
+with Files("tests/shadow-dom/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/speech-api/**"):
+    BUG_COMPONENT = ("Core", "Web Speech")
+
+with Files("tests/storage/**"):
+    BUG_COMPONENT = ("Core", "Storage: Quota Manager")
+
+with Files("tests/streams/**"):
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
+
+with Files("tests/subresource-integrity/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/svg/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/svg-aam/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/touch-events/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/tools/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/trusted-types/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/uievents/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/upgrade-insecure-requests/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/url/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("tests/user-timing/**"):
+    BUG_COMPONENT = ("Core", "Performance")
+
+with Files("tests/vibration/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/visual-viewport/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/wai-aria/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("tests/wasm/**"):
+    BUG_COMPONENT = ("Core", "Javascript: WebAssembly")
+
+with Files("tests/web-animations/**"):
+    BUG_COMPONENT = ("Core", "DOM: Animation")
+
+with Files("tests/webaudio/**"):
+    BUG_COMPONENT = ("Core", "Web Audio")
+
+with Files("tests/webauthn/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Authentication")
+
+with Files("tests/webdriver/**"):
+    BUG_COMPONENT = ("Testing", "geckodriver")
+
+with Files("tests/webgl/**"):
+    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+
+with Files("tests/webmessaging/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/web-nfc/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/webrtc/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-extensions/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-identity/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-stats/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-svc/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/web-share/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/websockets/**"):
+    BUG_COMPONENT = ("Core", "Networking: WebSockets")
+
+with Files("tests/webstorage/**"):
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
+
+with Files("tests/webusb/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/webvr/**"):
+    BUG_COMPONENT = ("Core", "WebVR")
+
+with Files("tests/webxr/**"):
+    BUG_COMPONENT = ("Core", "WebVR")
+
+with Files("tests/webvtt/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/workers/**"):
+    BUG_COMPONENT = ("Core", "DOM: Workers")
+
+# to be implemented in bug 1315239
+with Files("tests/worklets/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/x-frame-options/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+SPHINX_TREES["/web-platform"] = "tests/docs"

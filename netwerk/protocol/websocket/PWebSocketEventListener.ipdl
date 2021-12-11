@@ -1,0 +1,52 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+
+using class mozilla::net::WebSocketFrameData from "mozilla/net/WebSocketFrame.h";
+
+namespace mozilla {
+namespace net {
+
+async protocol PWebSocketEventListener
+{
+  manager PNecko;
+
+child:
+  async WebSocketCreated(uint32_t awebSocketSerialID,
+                         nsString aURI,
+                         nsCString aProtocols);
+
+  async WebSocketOpened(uint32_t awebSocketSerialID,
+                        nsString aEffectiveURI,
+                        nsCString aProtocols,
+                        nsCString aExtensions,
+                        uint64_t aHttpChannelId);
+
+  async WebSocketMessageAvailable(uint32_t awebSocketSerialID,
+                                  nsCString aData,
+                                  uint16_t aMessageType);
+
+  async WebSocketClosed(uint32_t awebSocketSerialID,
+                        bool aWasClean,
+                        uint16_t aCode,
+                        nsString aReason);
+
+  async FrameReceived(uint32_t aWebSocketSerialID,
+                      WebSocketFrameData aFrameData);
+
+  async FrameSent(uint32_t aWebSocketSerialID,
+                  WebSocketFrameData aFrameData);
+
+  async __delete__();
+
+parent:
+  async Close();
+};
+
+} //namespace net
+} //namespace mozilla

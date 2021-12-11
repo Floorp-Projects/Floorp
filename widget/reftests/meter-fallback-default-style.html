@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    meter { padding: 5px }
+    body > meter:nth-child(1) { -moz-appearance: none; }
+    body > meter:nth-child(2)::-moz-meter-bar { -moz-appearance: none; }
+    body > meter:nth-child(3) { background: red; }
+    body > meter:nth-child(4)::-moz-meter-bar { background: red; }
+    body > meter:nth-child(5) { border: 2px solid red; }
+    body > meter:nth-child(6)::-moz-meter-bar { border: 5px solid red; }
+  </style>
+  <body>
+    <meter value=1></meter>
+    <meter value=1></meter>
+    <meter value=1></meter>
+    <meter value=1></meter>
+    <meter value=1></meter>
+    <meter value=1></meter>
+  </body>
+</html>

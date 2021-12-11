@@ -1,0 +1,12 @@
+<?xml-stylesheet type="application/xml" href="485286.xml"?>
+<transform xmlns="http://www.w3.org/1999/XSL/Transform" version="1.0">
+  <variable name="v">
+    <for-each select="/">
+      <value-of select="count(1)"/>
+    </for-each>
+  </variable>
+  <key name="k" match="/" use="$v"/>
+  <template match="/">
+    <value-of select="key('k', /..)"/>
+  </template>
+</transform>

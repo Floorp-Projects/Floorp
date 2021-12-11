@@ -1,0 +1,26 @@
+diff --git a/gfx/skia/include/core/SkPostConfig.h b/gfx/skia/include/core/SkPostConfig.h
+--- a/gfx/skia/include/core/SkPostConfig.h
++++ b/gfx/skia/include/core/SkPostConfig.h
+@@ -325,19 +325,19 @@
+             // Some documentation suggests we should be using __attribute__((override)),
+             // but it doesn't work.
+             #define SK_OVERRIDE override
+         #elif defined(__has_extension)
+             #if __has_extension(cxx_override_control)
+                 #define SK_OVERRIDE override
+             #endif
+         #endif
+-    #else
+-        // Linux GCC ignores "__attribute__((override))" and rejects "override".
+-        #define SK_OVERRIDE
++    #endif
++    #ifndef SK_OVERRIDE
++	#define SK_OVERRIDE
+     #endif
+ #endif
+ 
+ //////////////////////////////////////////////////////////////////////
+ 
+ #ifndef SK_PRINTF_LIKE
+ #if defined(__clang__) || defined(__GNUC__)
+ #define SK_PRINTF_LIKE(A, B) __attribute__((format(printf, (A), (B))))

@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether we can create an AudioContext interface</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish()
+
+function frameToTime(frame, rate)
+{
+  return frame / rate;
+}
+
+const RATE = 44100;
+
+var oc = new OfflineAudioContext(1, 44100, RATE);
+// This allows us to have a source that is simply a DC offset.
+var source = oc.createBufferSource();
+var buf = oc.createBuffer(1, 1, RATE);
+buf.getChannelData(0)[0] = 1;
+source.loop = true;
+source.buffer = buf;
+
+source.start(0);
+
+var gain = oc.createGain();
+
+source.connect(gain).connect(oc.destination);
+
+var gain2 = oc.createGain();
+var rv2 = gain2.gain.linearRampToValueAtTime(0.1, 0.5);
+ok(rv2 instanceof AudioParam, "linearRampToValueAtTime returns an AudioParam.");
+ok(rv2 == gain2.gain, "linearRampToValueAtTime returns the right AudioParam.");
+
+rv2 = gain2.gain.exponentialRampToValueAtTime(0.01, 1.0);
+ok(rv2 instanceof AudioParam,
+    "exponentialRampToValueAtTime returns an AudioParam.");
+ok(rv2 == gain2.gain,
+    "exponentialRampToValueAtTime returns the right AudioParam.");
+
+rv2 = gain2.gain.setTargetAtTime(1.0, 2.0, 0.1);
+ok(rv2 instanceof AudioParam, "setTargetAtTime returns an AudioParam.");
+ok(rv2 == gain2.gain, "setTargetAtTime returns the right AudioParam.");
+
+var array = new Float32Array(10);
+rv2 = gain2.gain.setValueCurveAtTime(array, 10, 11);
+ok(rv2 instanceof AudioParam, "setValueCurveAtTime returns an AudioParam.");
+ok(rv2 == gain2.gain, "setValueCurveAtTime returns the right AudioParam.");
+
+// We chain three automation methods, making a gain step.
+var rv = gain.gain.setValueAtTime(0, frameToTime(0, RATE))
+                  .setValueAtTime(0.5, frameToTime(22000, RATE))
+                  .setValueAtTime(1, frameToTime(44000, RATE));
+
+ok(rv instanceof AudioParam, "setValueAtTime returns an AudioParam.");
+ok(rv == gain.gain, "setValueAtTime returns the right AudioParam.");
+
+oc.startRendering().then(function(rendered) {
+    console.log(rendered.getChannelData(0));
+    is(rendered.getChannelData(0)[0], 0,
+      "The value of the first step is correct.");
+    is(rendered.getChannelData(0)[22050], 0.5,
+      "The value of the second step is correct");
+    is(rendered.getChannelData(0)[44099], 1,
+      "The value of the third step is correct.");
+    SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

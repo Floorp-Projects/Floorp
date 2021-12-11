@@ -1,0 +1,53 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "ipc",
+]
+
+EXPORTS += [
+    "PaymentRequestData.h",
+    "PaymentRequestService.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "MerchantValidationEvent.h",
+    "PaymentAddress.h",
+    "PaymentMethodChangeEvent.h",
+    "PaymentRequest.h",
+    "PaymentRequestManager.h",
+    "PaymentRequestUpdateEvent.h",
+    "PaymentResponse.h",
+]
+
+UNIFIED_SOURCES += [
+    "BasicCardPayment.cpp",
+    "MerchantValidationEvent.cpp",
+    "PaymentActionResponse.cpp",
+    "PaymentAddress.cpp",
+    "PaymentMethodChangeEvent.cpp",
+    "PaymentRequest.cpp",
+    "PaymentRequestData.cpp",
+    "PaymentRequestManager.cpp",
+    "PaymentRequestService.cpp",
+    "PaymentRequestUpdateEvent.cpp",
+    "PaymentRequestUtils.cpp",
+    "PaymentResponse.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]

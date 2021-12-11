@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+async function boom()
+{
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["media.cubeb.force_null_context", true],
+  ]});
+  new Audio().mozCaptureStreamUntilEnded();
+  var ac = new window.AudioContext();
+  ac.resume();
+  ac.close();
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
+

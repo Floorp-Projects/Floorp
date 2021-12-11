@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=580069
+-->
+<head>
+  <title>Test for Bug 580069</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=580069">Mozilla Bug 580069</a>
+
+<script type="application/javascript">
+
+add_task(async function() {
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("src", "file_bug580069_1.html");
+
+  // Insert the initial <iframe> document, and wait for page1Load to be called
+  // after it loads.
+  document.body.appendChild(iframe);
+  await new Promise(resolve => {
+    window.page1Load = resolve;
+  });
+  let iframeCw = iframe.contentWindow;
+
+  info("iframe's location is: " + iframeCw.location + "\n");
+
+  // Submit the forum and wait for the initial page load using a POST load.
+  iframeCw.document.getElementById("form").submit();
+  let method1 = await new Promise(resolve => {
+    window.page2Load = resolve;
+  });
+  info("iframe's location is: " + iframeCw.location + ", method is " + method1 + "\n");
+  is(method1, "POST", "Method for first load should be POST.");
+
+  // Push a new state, and refresh the page. This refresh shouldn't pop up the
+  // "are you sure you want to refresh a page with POST data?" dialog. If it
+  // does, this test will hang and fail, and we'll see 'Refreshing iframe...' at
+  // the end of the test log.
+  iframeCw.history.replaceState("", "", "?replaced");
+
+  info("Refreshing iframe...\n");
+  iframeCw.location.reload();
+  let method2 = await new Promise(resolve => {
+    window.page2Load = resolve;
+  });
+
+  info("iframe's location is: " + iframeCw.location + ", method is " + method2 + "\n");
+  is(method2, "GET", "Method for second load should be GET.");
+  is(iframeCw.location.search, "?replaced", "Wrong search on iframe after refresh.");
+});
+</script>
+
+</body>
+</html>

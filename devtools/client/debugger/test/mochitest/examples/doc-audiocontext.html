@@ -1,0 +1,49 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Debugger test page</title>
+</head>
+
+<body>
+<button id="start" onclick="myFunction()">start ac</button>
+<button id="suspend" onclick="suspendAC()">suspend ac</button>
+<button id="break" onclick="debuggerStatement()">break</button>
+<button id="check" onclick="checkACState()">check ac state</button>
+<script type="text/javascript">
+var ac = null;
+async function suspendAC() {
+  await ac.suspend();
+}
+
+function debuggerStatement() {
+  debugger;
+}
+
+function checkACState() {
+  if (ac.state != "suspended") {
+    throw "AudioContext should be suspended.";
+  }
+}
+
+async function myFunction() {
+  await new Promise((resolve) => {
+    ac = new AudioContext();
+    function statechange_suspend() {
+      ac.onstatechange = statechange_fail;
+    }
+    function statechange_fail() {
+      throw "No state change should occur when paused in the debugger.";
+    }
+    ac.onstatechange = function() {
+      ac.onstatechange = statechange_suspend;
+      resolve();
+    }
+  });
+}
+</script>
+</body>
+</html>

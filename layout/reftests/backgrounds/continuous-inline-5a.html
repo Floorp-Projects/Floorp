@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      span.b { display: inline-block; height: 20px; }
+      span.break::before { content: "\A"; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <span style="background: url(blue-16x20-green-16x20.png)">
+      <span class="b" style="width: 24px"></span><span class="break"></span>
+      <span class="b" style="width: 24px"></span>
+    </span>
+  </body>
+</html>

@@ -1,0 +1,85 @@
+<html style="width: 1px;" class="reftest-wait"><head style="float: left; position: fixed; display: initial;" id="head">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+
+
+<script style="display: none;" type="text/javascript">
+
+var iter;
+var interv;
+
+function olo()
+{
+  iter = foo();
+  interv = setInterval(neext, 30);
+}
+
+function neext()
+{
+  let {done} = iter.next();
+  if (done) {
+    clearInterval(interv);
+  }
+}
+
+function* foo()
+{
+  var docElem = document.documentElement;
+  var head = document.getElementById("head");
+  var br1 = document.getElementById("br1");
+  var br2 = document.getElementById("br2");
+  var br3 = document.getElementById("br3");
+  var br4 = document.getElementById("br4");
+  var br5 = document.getElementById("br5");
+  var br6 = document.getElementById("br6");
+  var br7 = document.getElementById("br7");
+  var tableRow = document.getElementById("tableRow");
+      
+  br6.style.width = "1px";
+  br1.style.overflow = "visible";
+  head.style.cssFloat = "left";
+  br4.style.position = "static";
+  br7.style.color = "green";
+  br3.style.height = "auto";
+  yield;
+
+  br7.style.width = "2px";
+  yield;
+
+  br5.style.background = "yellow";
+  br7.style.color = "black";
+  yield;
+
+  br7.style.display = "table-cell";
+  head.style.position = "fixed";
+  br5.style.display = "inline";
+  br3.style.clear = "both";
+  br6.style.visibility = "visible";
+  yield;
+
+  tableRow.style.display = "list-item";
+  br3.style.width = "auto";
+  br2.style.clear = "none";
+  head.style.display = "initial"; // doesn't seem to crash when this is "block"!
+  docElem.style.width = "1px";
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<style>
+</style>
+
+</head><body onload="setTimeout(olo, 30);">
+
+<br style="overflow: visible;" id="br1">
+<br style="clear: none;" id="br2">
+<br style="height: auto; clear: both; width: auto;" id="br3">
+<br style="position: static;" id="br4">
+<br style="background: yellow none repeat scroll 0% 0%; background-clip: initial; background-origin: initial; display: inline;" id="br5">
+<br style="width: 1px; visibility: visible;" id="br6">
+<br style="color: black; width: 2px; display: table-cell;" id="br7">
+<table border="1"><tbody><tr style="display: list-item;" id="tableRow"><td>x</td></tr></tbody></table>
+
+</body></html>

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+
+  <script>
+    addEventListener("StartFetch", async function() {
+      let comResult;
+      let orgResult;
+
+      await Promise.all([
+        fetch("http://example.com/")
+          .then(() => {
+            comResult = "success";
+          })
+          .catch(() => {
+            comResult = "error";
+          }),
+        fetch("http://example.org/")
+          .then(() => {
+            orgResult = "success";
+          })
+          .catch(() => {
+            orgResult = "error";
+          }),
+      ]);
+
+      window.dispatchEvent(new CustomEvent("FetchEnded", {
+        detail: { comResult, orgResult }
+      }));
+
+      })
+  </script>
+</head>
+
+<body>
+  <h2>Https-Only: CORS and MixedContent tests</h2>
+  <p><a href="https://bugzilla.mozilla.org/bug/1659505">Bug 1659505</a></p>
+</body>
+
+</html>

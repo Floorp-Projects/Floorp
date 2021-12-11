@@ -1,0 +1,15 @@
+<html>
+<head>
+<style>
+html::first-letter { float: right; }
+html::before { content:"before text"; float:right; }
+span::before { content:"before text"; float:right; }
+</style>
+</head>
+<body>
+<span>
+  <div></div>
+</span>
+<button onclick="document.body.style.width='100px'">Click</button>
+</body>
+</html>

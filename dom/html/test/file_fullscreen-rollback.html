@@ -1,0 +1,128 @@
+ <!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=700764
+
+Verifies that cancelFullScreen() rolls back to have the previous full-screen
+element full-screen.
+
+Tests:
+* Request full-screen in doc.
+* Request full-screen in doc on element not descended from full-screen element. Request should be denied.
+* Request full-screen in subdoc.
+* Cancel full-screen in subdoc, doc should be full-screen.
+* Request full-screen in subdoc.
+* Removing FSE should fully-exit full-screen.
+
+
+-->
+<head>
+  <title>Test for Bug 700764</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+
+<div id="fse">
+  <div id="fse-inner">
+    <iframe id="subdoc" allowfullscreen srcdoc="<html><body bgcolor='black'></body></html>"></iframe>
+  </div>
+</div>
+
+<div id="non-fse"></div>
+
+<script type="application/javascript">
+
+/** Test for Bug 700764 **/
+
+function ok(condition, msg) {
+  opener.ok(condition, "[rollback] " + msg);
+  if (!condition) {
+    opener.finish();
+  }
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[rollback] " + msg);
+  if (a != b) {
+    opener.finish();
+  }
+}
+
+function enterFullscreen(element, callback) {
+  addFullscreenChangeContinuation("enter", callback);
+  element.focus();
+  element.requestFullscreen();
+}
+
+function revertFullscreen(doc, callback) {
+  ok(doc.fullscreenElement != null, "Should only exit fullscreen on a fullscreen doc");
+  addFullscreenChangeContinuation("exit", callback, doc);
+  doc.exitFullscreen();
+}
+
+function e(id) {
+  return document.getElementById(id);
+}
+
+function requestFullscreen(element) {
+  element.focus();
+  element.requestFullscreen();
+}
+
+function begin() {
+  enterFullscreen(e("fse"), change1);
+}
+
+function change1() {
+  is(document.fullscreenElement, e("fse"), "Body should be FSE");
+  // Request full-screen from element not descendent from current FSE.
+  addFullscreenErrorContinuation(error1);
+  requestFullscreen(e("non-fse"));
+}
+
+function error1() {
+  is(document.fullscreenElement, e("fse"), "FSE should not change");
+  var iframe = e("subdoc");
+  enterFullscreen(iframe.contentDocument.body, change2);
+}
+
+function change2() {
+  var iframe = e("subdoc");
+  is(document.fullscreenElement, iframe, "Subdoc container should be FSE.");
+  is(iframe.contentDocument.fullscreenElement, iframe.contentDocument.body, "Subdoc body should be FSE in subdoc");
+  revertFullscreen(document, change3);
+}
+
+function change3() {
+  is(document.fullscreenElement, e("fse"), "FSE should rollback to FSE.");
+  revertFullscreen(document, change4);
+}
+
+function change4() {
+  is(document.fullscreenElement, null, "Should have left full-screen entirely");
+  enterFullscreen(e("fse"), change5);
+}
+
+function change5() {
+  is(document.fullscreenElement, e("fse"), "FSE should be e('fse')");
+  enterFullscreen(e("fse-inner"), change6);
+}
+
+function change6() {
+  addFullscreenChangeContinuation("exit", change7);
+  var element = e('fse-inner');
+  is(document.fullscreenElement, element, "FSE should be e('fse-inner')");
+  element.remove();
+}
+
+function change7() {
+  is(document.fullscreenElement, null, "Should have fully exited full-screen mode when removed FSE from doc");
+  opener.nextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

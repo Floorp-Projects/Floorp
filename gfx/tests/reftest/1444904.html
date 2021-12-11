@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+    #container {
+        float: left;
+        position: sticky;
+        top: 0;
+        margin-top: -20px;
+        z-index: 100;
+    }
+
+    #target {
+        margin-top: 80px;
+        width: 20px;
+        height: 20px;
+        background: green;
+    }
+
+    #necessary-fixed-box {
+        position: fixed;
+        top: 0;
+        width: 20px;
+        height: 20px;
+
+    }
+    </style>
+  </head>
+
+  <body style="height: 10000px;">
+    <div id="container">
+      <div id="target"></div>
+      <div id="necessary-fixed-box"></div>
+    </div>
+  </body>
+</html>

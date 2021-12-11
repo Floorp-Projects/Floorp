@@ -1,0 +1,40 @@
+---
+app_version: 60.0.1
+base_repository: https://hg.mozilla.org/mozilla-unified
+build_date: 1526441057
+build_number: 1
+do_not_optimize: []
+existing_tasks: {}
+filters:
+    - target_tasks_method
+head_ref: efbcc205a0d3562691bf62bb0cb55bb7e891e8ff
+head_repository: https://hg.mozilla.org/releases/mozilla-esr60
+head_rev: efbcc205a0d3562691bf62bb0cb55bb7e891e8ff
+hg_branch: default
+level: "3"
+message: " "
+moz_build_date: "20180516032417"
+next_version: 60.0.2
+optimize_target_tasks: true
+owner: nthomas@mozilla.com
+project: mozilla-esr60
+pushdate: 1526441057
+pushlog_id: "35"
+release_enable_emefree: false
+release_enable_partners: false
+release_eta: "2018-05-16T13:00:00+00:00"
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: null
+release_product: firefox
+release_type: "esr60"
+target_tasks_method: promote_desktop
+try_mode: null
+try_options: null
+try_task_config: {}
+version: 60.0.1esr
+required_signoffs: []
+signoff_urls: {}
+phabricator_diff:
+tasks_for: actions

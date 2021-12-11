@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for bug 457632
+  -->
+<window title="Bug 457632" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+
+  <vbox id="nb"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"
+        onload="test()"/>
+
+  <!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+var gNotificationBox;
+
+function completeAnimation(nextTest) {
+  if (!gNotificationBox._animating) {
+    nextTest();
+    return;
+  }
+
+  setTimeout(completeAnimation, 50, nextTest);
+}
+
+function test() {
+  SimpleTest.waitForExplicitFinish();
+  gNotificationBox = new MozElements.NotificationBox(e => {
+    document.getElementById("nb").appendChild(e);
+  });
+
+  is(gNotificationBox.allNotifications.length, 0, "There should be no initial notifications");
+  gNotificationBox.appendNotification("notification1",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  is(gNotificationBox.allNotifications.length, 1, "Notification exists while animating in");
+  let notification = gNotificationBox.getNotificationWithValue("notification1");
+  ok(notification, "Notification should exist while animating in");
+
+  // Wait for the notificaton to finish displaying
+  completeAnimation(test1);
+}
+
+// Tests that a notification that is fully animated in gets removed immediately
+function test1() {
+  let notification = gNotificationBox.getNotificationWithValue("notification1");
+  gNotificationBox.removeNotification(notification);
+  notification = gNotificationBox.getNotificationWithValue("notification1");
+  ok(!notification, "Test 1 showed notification was still present");
+  ok(!gNotificationBox.currentNotification, "Test 1 said there was still a current notification");
+  is(gNotificationBox.allNotifications.length, 0, "Test 1 should show no notifications present");
+
+  // Wait for the notificaton to finish hiding
+  completeAnimation(test2);
+}
+
+// Tests that a notification that is animating in gets removed immediately
+function test2() {
+  let notification = gNotificationBox.appendNotification("notification2",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  gNotificationBox.removeNotification(notification);
+  notification = gNotificationBox.getNotificationWithValue("notification2");
+  ok(!notification, "Test 2 showed notification was still present");
+  ok(!gNotificationBox.currentNotification, "Test 2 said there was still a current notification");
+  is(gNotificationBox.allNotifications.length, 0, "Test 2 should show no notifications present");
+
+  // Get rid of the hiding notifications
+  gNotificationBox.removeAllNotifications(true);
+  test3();
+}
+
+// Tests that a background notification goes away immediately
+function test3() {
+  let notification = gNotificationBox.appendNotification("notification3",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  let notification2 = gNotificationBox.appendNotification("notification4",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  is(gNotificationBox.allNotifications.length, 2, "Test 3 should show 2 notifications present");
+  gNotificationBox.removeNotification(notification);
+  is(gNotificationBox.allNotifications.length, 1, "Test 3 should show 1 notifications present");
+  notification = gNotificationBox.getNotificationWithValue("notification3");
+  ok(!notification, "Test 3 showed notification was still present");
+  gNotificationBox.removeNotification(notification2);
+  is(gNotificationBox.allNotifications.length, 0, "Test 3 should show 0 notifications present");
+  notification2 = gNotificationBox.getNotificationWithValue("notification4");
+  ok(!notification2, "Test 3 showed notification2 was still present");
+  ok(!gNotificationBox.currentNotification, "Test 3 said there was still a current notification");
+
+  // Get rid of the hiding notifications
+  gNotificationBox.removeAllNotifications(true);
+  test4();
+}
+
+// Tests that a foreground notification hiding a background one goes away
+function test4() {
+  let notification = gNotificationBox.appendNotification("notification5",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  let notification2 = gNotificationBox.appendNotification("notification6",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  gNotificationBox.removeNotification(notification2);
+  notification2 = gNotificationBox.getNotificationWithValue("notification6");
+  ok(!notification2, "Test 4 showed notification2 was still present");
+  is(gNotificationBox.currentNotification, notification, "Test 4 said the current notification was wrong");
+  is(gNotificationBox.allNotifications.length, 1, "Test 4 should show 1 notifications present");
+  gNotificationBox.removeNotification(notification);
+  notification = gNotificationBox.getNotificationWithValue("notification5");
+  ok(!notification, "Test 4 showed notification was still present");
+  ok(!gNotificationBox.currentNotification, "Test 4 said there was still a current notification");
+  is(gNotificationBox.allNotifications.length, 0, "Test 4 should show 0 notifications present");
+
+  // Get rid of the hiding notifications
+  gNotificationBox.removeAllNotifications(true);
+  test5();
+}
+
+// Tests that removeAllNotifications gets rid of everything
+function test5() {
+  let notification = gNotificationBox.appendNotification("notification7",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  let notification2 = gNotificationBox.appendNotification("notification8",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  gNotificationBox.removeAllNotifications();
+  notification = gNotificationBox.getNotificationWithValue("notification7");
+  notification2 = gNotificationBox.getNotificationWithValue("notification8");
+  ok(!notification, "Test 5 showed notification was still present");
+  ok(!notification2, "Test 5 showed notification2 was still present");
+  ok(!gNotificationBox.currentNotification, "Test 5 said there was still a current notification");
+  is(gNotificationBox.allNotifications.length, 0, "Test 5 should show 0 notifications present");
+
+  gNotificationBox.appendNotification("notification9",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+
+  // Wait for the notificaton to finish displaying
+  completeAnimation(test6);
+}
+
+// Tests whether removing an already removed notification doesn't break things
+function test6() {
+  let notification = gNotificationBox.getNotificationWithValue("notification9");
+  ok(notification, "Test 6 should have an initial notification");
+  gNotificationBox.removeNotification(notification);
+  gNotificationBox.removeNotification(notification);
+
+  ok(!gNotificationBox.currentNotification, "Test 6 shouldn't be any current notification");
+  is(gNotificationBox.allNotifications.length, 0, "Test 6 allNotifications.length should be 0");
+  notification = gNotificationBox.appendNotification("notification10",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
+  is(notification, gNotificationBox.currentNotification, "Test 6 should have made the current notification");
+  gNotificationBox.removeNotification(notification);
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+
+</window>

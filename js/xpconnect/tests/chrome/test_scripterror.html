@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Tests for nsIScriptError</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<div id="log"></div>
+<script>
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+function awaitScriptError(fun) {
+  // Use setTimeout in order to prevent throwing from test frame
+  // and to have a clean stack frame.
+  setTimeout(fun, 0)
+
+  return new Promise(resolve => {
+    const observer = {
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+      observe(message) {
+        if (!(message instanceof Ci.nsIScriptError)) {
+          return;
+        }
+
+        Services.console.unregisterListener(observer);
+        resolve(message);
+      }
+    };
+
+    Services.console.registerListener(observer);
+  });
+}
+
+function hasExpectedProperties(message, exception) {
+  is(message.hasException, true, "has exception");
+  is(message.exception, exception, "has correct exception");
+
+  ok(message.stack != null, "has stack");
+  is(message.stack?.source, location.href, "correct stack source")
+
+  is(message.sourceName, location.href, "has correct sourceName/filename");
+  ok(message.lineNumber > 0, "has lineNumber");
+
+  is(message.innerWindowID, window.windowGlobalChild.innerWindowId,
+     "correct innerWindowID");
+}
+
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["javascript.options.asyncstack_capture_debuggee_only", false],
+  ]});
+
+  const TESTS = [
+    "abc",
+    new Error("foobar"),
+    {foo: "bar"}
+  ];
+
+  for (let test of TESTS) {
+    // First test as regular throw
+    SimpleTest.expectUncaughtException();
+    let message = await awaitScriptError(function testName() {
+        throw test;
+    });
+    hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, false, "not a rejected promise");
+
+    // Now test as uncaught promise rejection
+    message = await awaitScriptError(function testName() {
+        Promise.reject(test);
+    });
+    hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, true, "is a rejected promise");
+
+    // Uncaught rejection from async function
+    message = await awaitScriptError(async function testName() {
+        throw test;
+    });
+    hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, true, "is a rejected promise");
+
+    // Uncaught rejection from then callback
+    message = await awaitScriptError(async function testName() {
+        Promise.resolve().then(() => {
+          throw test;
+        });
+    });
+    hasExpectedProperties(message, test);
+    is(message.isPromiseRejection, true, "is a rejected promise");
+  }
+});
+</script>

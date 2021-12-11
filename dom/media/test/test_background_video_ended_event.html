@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Video Suspends</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript">
+"use strict";
+
+var manager = new MediaTestManager;
+
+startTest({
+  desc: "Test background video doesn't fire the 'ended' event twice.",
+  prefs: [
+    [ "media.test.video-suspend", true ],
+    [ "media.suspend-bkgnd-video.enabled", true ],
+    [ "media.suspend-bkgnd-video.delay-ms", 100 ]
+  ],
+  tests: gDecodeSuspendTests,
+  runTest: (test, token) => {
+    let v = appendVideoToDoc(test.name, token);
+    manager.started(token);
+
+    let count = 0;
+    v.addEventListener("ended", function() {
+      is(++count, 1, `${token} should get only one 'ended' event.`);
+    });
+
+    /*
+     * This test checks that, after a video element had finished its playback,
+     * resuming video decoder doesn't dispatch 2nd ended event.
+     * This issue was found in bug 1349097.
+     */
+    waitUntilPlaying(v)
+      .then(() => testVideoSuspendsWhenHidden(v))
+      .then(() => waitUntilEnded(v))
+      .then(() => testVideoResumesWhenShown(v))
+      .then(() => {
+        // Wait for a while and finish the test. We should get only one 'ended' event.
+        setTimeout(function() {
+          removeNodeAndSource(v);
+          manager.finished(token);
+        }, 3000);
+      });
+  }
+});
+</script>

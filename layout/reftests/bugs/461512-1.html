@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <style type="text/css">
+      body { background-color: white; margin: 0; padding: 0; }
+      p {
+        margin: 10px;
+        padding: 0;
+        border: 10px solid rgba(200, 160, 120, 0.5);
+        height: 10px;
+      }
+
+      /**
+       * XXX we cannot test the corner by this testing because when the corner
+       *     is joined with anti-aliased, the edge isn't matching with the
+       *     reference.  The dashed and dotted line's anti-aliasing are same.
+       */
+
+      /* Cover the coners by the white div element */
+      div {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: white;
+      }
+      div.tr {
+        right: 10px;
+      }
+      div.tl {
+        left: 10px;
+      }
+      div.bl {
+        left: 10px;
+        margin-top: 20px;
+      }
+      div.br {
+        right: 10px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <p style="border-style: solid;">&nbsp;</p>
+    <!-- <p style="border-style: dashed;">&nbsp;</p> -->
+    <!-- <p style="border-style: dotted;">&nbsp;</p> -->
+    <p style="border-style: double;">&nbsp;</p>
+    <div class="tr"></div>
+    <div class="bl"></div>
+    <p style="border-style: ridge;">&nbsp;</p>
+    <div class="tr"></div>
+    <div class="bl"></div>
+    <p style="border-style: groove;">&nbsp;</p>
+    <div class="tr"></div>
+    <div class="bl"></div>
+    <p style="border-style: inset;">&nbsp;</p>
+    <div class="tr"></div>
+    <div class="bl"></div>
+    <p style="border-style: outset;">&nbsp;</p>
+  </body>
+</html>

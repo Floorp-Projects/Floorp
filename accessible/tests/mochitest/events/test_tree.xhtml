@@ -1,0 +1,358 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="DOM TreeRowCountChanged and a11y name change events.">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../treeview.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    var gView;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invoker's checkers
+
+    /**
+     * Check TreeRowCountChanged event.
+     */
+    function rowCountChangedChecker(aMsg, aIdx, aCount)
+    {
+      this.type = "TreeRowCountChanged";
+      this.target = gTree;
+      this.check = function check(aEvent)
+      {
+        var propBag = aEvent.detail.QueryInterface(Ci.nsIPropertyBag2);
+        var index = propBag.getPropertyAsInt32("index");
+        is(index, aIdx, "Wrong 'index' data of 'treeRowCountChanged' event.");
+
+        var count = propBag.getPropertyAsInt32("count");
+        is(count, aCount, "Wrong 'count' data of 'treeRowCountChanged' event.");
+      }
+      this.getID = function getID()
+      {
+        return aMsg + "TreeRowCountChanged";
+      }
+    }
+
+    /**
+     * Check TreeInvalidated event.
+     */
+    function treeInvalidatedChecker(aMsg, aStartRow, aEndRow, aStartCol, aEndCol)
+    {
+      this.type = "TreeInvalidated";
+      this.target = gTree;
+      this.check = function check(aEvent)
+      {
+        var propBag = aEvent.detail.QueryInterface(Ci.nsIPropertyBag2);
+        try {
+          var startRow = propBag.getPropertyAsInt32("startrow");
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
+          startRow = null;
+        }
+        is(startRow, aStartRow,
+           "Wrong 'startrow' of 'treeInvalidated' event on " + aMsg);
+
+        try {
+          var endRow = propBag.getPropertyAsInt32("endrow");
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
+          endRow = null;
+        }
+        is(endRow, aEndRow,
+           "Wrong 'endrow' of 'treeInvalidated' event on " + aMsg);
+
+        try {
+          var startCol = propBag.getPropertyAsInt32("startcolumn");
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
+          startCol = null;
+        }
+        is(startCol, aStartCol,
+           "Wrong 'startcolumn' of 'treeInvalidated' event on " + aMsg);
+
+        try {
+          var endCol = propBag.getPropertyAsInt32("endcolumn");
+        } catch (e) {
+          if (e.name != 'NS_ERROR_NOT_AVAILABLE') {
+            throw e;
+          }
+          endCol = null;
+        }
+        is(endCol, aEndCol,
+           "Wrong 'endcolumn' of 'treeInvalidated' event on " + aMsg);
+      }
+      this.getID = function getID()
+      {
+        return "TreeInvalidated on " + aMsg;
+      }
+    }
+
+    /**
+     * Check name changed a11y event.
+     */
+    function nameChangeChecker(aMsg, aRow, aCol)
+    {
+      this.type = EVENT_NAME_CHANGE;
+
+      function targetGetter()
+      {
+        var acc = getAccessible(gTree);
+
+        var tableAcc = getAccessible(acc, [nsIAccessibleTable]);
+        return tableAcc.getCellAt(aRow, aCol);
+      }
+      Object.defineProperty(this, "target", { get: targetGetter });
+
+      this.getID = function getID()
+      {
+        return aMsg + "name changed";
+      }
+    }
+
+    /**
+     * Check name changed a11y event for a row.
+     */
+    function rowNameChangeChecker(aMsg, aRow)
+    {
+      this.type = EVENT_NAME_CHANGE;
+
+      function targetGetter()
+      {
+        var acc = getAccessible(gTree);
+        return acc.getChildAt(aRow + 1);
+      }
+      Object.defineProperty(this, "target", { get: targetGetter });
+
+      this.getID = function getID()
+      {
+        return aMsg + "name changed";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    /**
+     * Set tree view.
+     */
+    function setTreeView()
+    {
+      this.invoke = function setTreeView_invoke()
+      {
+        gTree.view = gView;
+      }
+
+      this.getID = function setTreeView_getID() { return "set tree view"; }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, gTree)
+      ];
+    };
+
+    /**
+     * Insert row at 0 index and checks TreeRowCountChanged and TreeInvalidated
+     * event.
+     */
+    function insertRow()
+    {
+      this.invoke = function insertRow_invoke()
+      {
+        gView.appendItem("last");
+        gTree.rowCountChanged(0, 1);
+      }
+
+      this.eventSeq =
+      [
+        new rowCountChangedChecker("insertRow: ", 0, 1),
+        new treeInvalidatedChecker("insertRow", 0, 5, null, null)
+      ];
+
+      this.getID = function insertRow_getID()
+      {
+        return "insert row";
+      }
+    }
+
+    /**
+     * Invalidates first column and checks six name changed events for each
+     * treeitem plus TreeInvalidated event.
+     */
+    function invalidateColumn()
+    {
+      this.invoke = function invalidateColumn_invoke()
+      {
+        // Make sure accessible subtree of XUL tree is created otherwise no
+        // name change events for cell accessibles are emitted.
+        var tree = getAccessible(gTree);
+        var child = tree.firstChild;
+        var walkDown = true;
+        while (child != tree) {
+          if (walkDown) {
+            var grandChild = child.firstChild;
+            if (grandChild) {
+              child = grandChild;
+              continue;
+            }
+          }
+
+          var sibling = child.nextSibling;
+          if (sibling) {
+            child = sibling;
+            walkDown = true;
+            continue;
+          }
+
+          child = child.parent;
+          walkDown = false;
+        }
+
+        // Fire 'TreeInvalidated' event by InvalidateColumn()
+        var firstCol = gTree.columns.getFirstColumn();
+        for (var i = 0; i < gView.rowCount; i++)
+          gView.setCellText(i, firstCol, "hey " + String(i) + "x0");
+
+        gTree.invalidateColumn(firstCol);
+      }
+
+      this.eventSeq =
+      [
+        new nameChangeChecker("invalidateColumn: ", 0, 0),
+        new nameChangeChecker("invalidateColumn: ", 1, 0),
+        new nameChangeChecker("invalidateColumn: ", 2, 0),
+        new nameChangeChecker("invalidateColumn: ", 3, 0),
+        new nameChangeChecker("invalidateColumn: ", 4, 0),
+        new nameChangeChecker("invalidateColumn: ", 5, 0),
+        new treeInvalidatedChecker("invalidateColumn", null, null, 0, 0)
+      ];
+
+      this.getID = function invalidateColumn_getID()
+      {
+        return "invalidate column";
+      }
+    }
+
+    /**
+     * Invalidates second row and checks name changed event for first treeitem
+     * (note, there are two name changed events on linux due to different
+     * accessible tree for xul:tree element) plus TreeInvalidated event.
+     */
+    function invalidateRow()
+    {
+      this.invoke = function invalidateRow_invoke()
+      {
+        // Fire 'TreeInvalidated' event by InvalidateRow()
+        // eslint-disable-next-line no-unused-vars
+        var colCount = gTree.columns.count;
+        var column = gTree.columns.getFirstColumn();
+        while (column) {
+          gView.setCellText(1, column, "aloha 1x" + String(column.index));
+          column = column.getNext();
+        }
+
+        gTree.invalidateRow(1);
+      }
+
+      this.eventSeq =
+      [
+        new nameChangeChecker("invalidateRow: ", 1, 0),
+        new nameChangeChecker("invalidateRow: ", 1, 1),
+        new rowNameChangeChecker("invalidateRow: ", 1),
+        new treeInvalidatedChecker("invalidateRow", 1, 1, null, null)
+      ];
+
+      this.getID = function invalidateRow_getID()
+      {
+        return "invalidate row";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    var gTree = null;
+    var gTreeView = null;
+    var gQueue = null;
+
+    // gA11yEventDumpID = "debug";
+    gA11yEventDumpToConsole = true; // debuggin
+
+    function doTest()
+    {
+      // Initialize the tree
+      gTree = document.getElementById("tree");
+      gView = new nsTableTreeView(5);
+
+      // Perform actions
+      gQueue = new eventQueue();
+
+      gQueue.push(new setTreeView());
+      gQueue.push(new insertRow());
+      gQueue.push(new invalidateColumn());
+      gQueue.push(new invalidateRow());
+
+      gQueue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=368835"
+         title="Fire TreeViewChanged/TreeRowCountChanged events.">
+        Mozilla Bug 368835
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=308564"
+         title="No accessibility events when data in a tree row changes.">
+        Mozilla Bug 308564
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=739524"
+         title="replace TreeViewChanged DOM event on direct call from XUL tree.">
+        Mozilla Bug 739524
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=743568"
+         title="Thunderbird message list tree emitting incorrect focus signals after message deleted.">
+        Mozilla Bug 743568
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox id="debug"/>
+    <tree id="tree" flex="1">
+      <treecols>
+        <treecol id="col1" flex="1" primary="true" label="column"/>
+        <treecol id="col2" flex="1" label="column 2"/>
+      </treecols>
+      <treechildren id="treechildren"/>
+    </tree>
+  </hbox>
+
+</window>

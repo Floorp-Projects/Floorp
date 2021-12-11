@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testing if keypress event is fired when alt key is pressed</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+  <input id="input">
+  <input id="password" type="password">
+  <input id="readonly-input" readonly>
+  <textarea id="textarea"></textarea>
+  <textarea id="readonly-textarea" readonly></textarea>
+  <button id="button">button</button>
+</div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+async function testNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
+                             aChars, aUnmodifiedChars) {
+  // XXX Need to listen keyup event here because synthesizeNativeKey() does not
+  //     guarantee that its callback will be called after "keypress" and "keyup".
+  let waitForKeyUp = new Promise(resolve => {
+    document.addEventListener("keyup", resolve, {once: true});
+  });
+  let keypress;
+  document.addEventListener("keypress", (aKeyPressEvent) => {
+    keypress = aKeyPressEvent;
+  }, {once: true});
+  synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers, aChars, aUnmodifiedChars);
+  await waitForKeyUp;
+  return keypress;
+}
+
+async function runTests() {
+  const kTests =
+    [ { target: "input", isEditable: true },
+      { target: "password", isEditable: true },
+      { target: "readonly-input", isEditable: false },
+      { target: "textarea", isEditable: true },
+      { target: "readonly-textarea", isEditable: false },
+      { target: "button", isEditable: false } ];
+  for (const kTest of kTests) {
+    let element = document.getElementById(kTest.target);
+    element.focus();
+
+    const kDescription = kTest.target + ": ";
+
+    let keypress = await testNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {}, "a", "a");
+    ok(keypress,
+       kDescription + "'a' key press should cause firing keypress event");
+
+    keypress = await testNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {shiftKey: true}, "A", "A");
+    ok(keypress,
+       kDescription + "'a' key press with shift key should cause firing keypress event");
+    ok(keypress.shiftKey,
+       kDescription + "shiftKey of 'a' key press with shift key should be true");
+
+    // When a key inputs a character with option key, we need to unset altKey for our editor.
+    // Otherwise, altKey should be true for compatibility with the other browsers.
+    keypress = await testNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {altKey: true}, "\u00E5", "a");
+    ok(keypress,
+       kDescription + "'a' key press with option key should cause firing keypress event");
+    is(keypress.altKey, !kTest.isEditable,
+       kDescription + "altKey of 'a' key press with option key should be " + !kTest.isEditable);
+
+    keypress = await testNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {altKey: true, shiftKey: true}, "\u00C5", "A");
+    ok(keypress,
+       kDescription + "'a' key press with option key  and shift key should cause firing keypress event");
+    is(keypress.altKey, !kTest.isEditable,
+       kDescription + "altKey of 'a' key press with option key and shift key should be " + !kTest.isEditable);
+    ok(keypress.shiftKey,
+       kDescription + "shiftKey of 'a' key press with option key and shift key should be true");
+
+    keypress = await testNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {ctrlKey: true}, "\u0001", "a");
+    ok(!keypress,
+       kDescription + "'a' key press with control key should not cause firing keypress event");
+
+    keypress = await testNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {altKey: true, ctrlKey: true}, "\u0001", "a");
+    ok(!keypress,
+       kDescription + "'a' key press with option key and control key should not cause firing keypress event");
+
+    // XXX Cannot test with command key for now since keyup event won't be fired due to macOS's limitation.
+
+    // Some keys of Arabic - PC keyboard layout do not input any character with option key.
+    // In such case, we shouldn't dispatch keypress event.
+    keypress = await testNativeKey(KEYBOARD_LAYOUT_ARABIC_PC, MAC_VK_ANSI_7, {altKey: true}, "", "\u0667");
+    ok(!keypress,
+       kDescription + "'7' key press with option key should not cause firing keypress event");
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+</script>
+</body>
+</html>

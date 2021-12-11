@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+  textarea {
+    min-height: 100px;
+  }
+</style>
+<div>
+  <iframe src="about:blank"></iframe>
+</div>
+<script>
+  let div = document.querySelector('div');
+  let iframe = document.querySelector('iframe');
+  iframe.onload = function() {
+    let doc = iframe.contentDocument;
+    let e = doc.createElement('textarea');
+    doc.body.appendChild(e);
+    setTimeout(function() {
+      getComputedStyle(e).minHeight;
+      div.style.display = 'none';
+      setTimeout(function() {
+        getComputedStyle(e).minHeight;
+        document.documentElement.className = "";
+      }, 0);
+    }, 0);
+  };
+</script>

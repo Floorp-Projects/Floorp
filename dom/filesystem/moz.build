@@ -1,0 +1,50 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: File")
+
+DIRS += ["compat"]
+
+TEST_DIRS += ["tests"]
+
+EXPORTS.mozilla.dom += [
+    "Directory.h",
+    "FileSystemBase.h",
+    "FileSystemRequestParent.h",
+    "FileSystemSecurity.h",
+    "FileSystemTaskBase.h",
+    "FileSystemUtils.h",
+    "GetFilesHelper.h",
+    "OSFileSystem.h",
+]
+
+UNIFIED_SOURCES += [
+    "Directory.cpp",
+    "FileSystemBase.cpp",
+    "FileSystemRequestParent.cpp",
+    "FileSystemSecurity.cpp",
+    "FileSystemTaskBase.cpp",
+    "FileSystemUtils.cpp",
+    "GetDirectoryListingTask.cpp",
+    "GetFileOrDirectoryTask.cpp",
+    "GetFilesHelper.cpp",
+    "GetFilesTask.cpp",
+    "OSFileSystem.cpp",
+]
+
+FINAL_LIBRARY = "xul"
+
+IPDL_SOURCES += [
+    "PFileSystemParams.ipdlh",
+    "PFileSystemRequest.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+]

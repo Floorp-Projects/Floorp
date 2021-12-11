@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Tree in Popup Test"
+        onload="setTimeout(runTests, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<panel id="panel" onpopupshown="treeClick()" onpopuphidden="SimpleTest.finish()">
+  <tree id="tree" width="350" rows="5">
+    <treecols>
+      <treecol id="name" label="Name" flex="1"/>
+      <treecol id="address" label="Street" flex="1"/>
+    </treecols>
+    <treechildren id="treechildren">
+      <treeitem>
+        <treerow>
+          <treecell label="Justin Thyme"/>
+          <treecell label="800 Bay Street"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell label="Mary Goround"/>
+          <treecell label="47 University Avenue"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+</panel>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  $("panel").openPopup(null, "overlap", 2, 2);
+}
+
+function treeClick()
+{
+  var tree = $("tree");
+  is(tree.currentIndex, -1, "selectedIndex before click");
+  synthesizeMouseExpectEvent($("treechildren"), 2, 2, { }, $("treechildren"), "click", "");
+  is(tree.currentIndex, 0, "selectedIndex after click");
+
+  var rect = tree.getCoordsForCellItem(1, tree.columns.address, "");
+  synthesizeMouseExpectEvent($("treechildren"), rect.x, rect.y + 2,
+                             { }, $("treechildren"), "click", "");
+  is(tree.currentIndex, 1, "selectedIndex after second click " + rect.x + "," + rect.y);
+
+  $("panel").hidePopup();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

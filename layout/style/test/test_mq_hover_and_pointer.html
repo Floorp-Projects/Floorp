@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1035774
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1035774</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1035774">Mozilla Bug 1035774</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script>
+
+const NO_POINTER            = 0x00;
+const COARSE_POINTER        = 0x01;
+const FINE_POINTER          = 0x02;
+const HOVER_CAPABLE_POINTER = 0x04;
+
+var isAndroid = navigator.appVersion.includes("Android");
+
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [ ['privacy.resistFingerprinting', true] ]
+  });
+
+  // When resistFingerprinting is enabled, we pretend that the system has a
+  // mouse pointer (or finger on mobile).
+  let invertIfAndroid = function(b) { return isAndroid ? !b : b; };
+
+  ok(!matchMedia("(pointer: none)").matches,
+                 "Doesn't match (pointer: none)");
+
+  ok(matchMedia("(pointer)").matches, "Matches (pointer)");
+
+  ok(invertIfAndroid(!matchMedia("(pointer: coarse)").matches),
+                 "Doesn't match (pointer: coarse)");
+  ok(invertIfAndroid(matchMedia("(pointer: fine)").matches), "Matches (pointer: fine)");
+
+  ok(invertIfAndroid(!matchMedia("(hover: none)").matches), "Doesn't match (hover: none)");
+  ok(invertIfAndroid(matchMedia("(hover: hover)").matches), "Matches (hover: hover)");
+  ok(invertIfAndroid(matchMedia("(hover)").matches), "Matches (hover)");
+
+  await SpecialPowers.flushPrefEnv();
+});
+
+add_task(async () => {
+  // No pointer.
+  await SpecialPowers.pushPrefEnv({
+    set: [ ['ui.primaryPointerCapabilities', NO_POINTER] ]
+  });
+
+  ok(matchMedia("(pointer: none)").matches, "Matches (pointer: none)");
+  ok(!matchMedia("(pointer: coarse)").matches,
+                 "Doesn't match (pointer: coarse)");
+  ok(!matchMedia("(pointer: fine)").matches, "Doesn't match (pointer: fine)");
+  ok(!matchMedia("(pointer)").matches, "Matches (pointer)");
+
+  ok(matchMedia("(hover: none)").matches, "Matches (hover: none)");
+  ok(!matchMedia("(hover: hover)").matches, "Doesn't match (hover: hover)");
+  ok(!matchMedia("(hover)").matches, "Doesn't match (hover)");
+});
+
+add_task(async () => {
+  // Mouse type pointer.
+  await SpecialPowers.pushPrefEnv({
+    set: [ ['ui.primaryPointerCapabilities', FINE_POINTER | HOVER_CAPABLE_POINTER] ]
+  });
+
+  ok(!matchMedia("(pointer: none)").matches,
+                 "Doesn't match (pointer: none)");
+  ok(!matchMedia("(pointer: coarse)").matches,
+                 "Doesn't match (pointer: coarse)");
+  ok(matchMedia("(pointer: fine)").matches, "Matches (pointer: fine)");
+  ok(matchMedia("(pointer)").matches, "Matches (pointer)");
+
+  ok(!matchMedia("(hover: none)").matches, "Doesn't match (hover: none)");
+  ok(matchMedia("(hover: hover)").matches, "Matches (hover: hover)");
+  ok(matchMedia("(hover)").matches, "Matches (hover)");
+});
+
+add_task(async () => {
+  // Mouse type pointer.
+  await SpecialPowers.pushPrefEnv({
+    set: [ ['ui.primaryPointerCapabilities',
+            FINE_POINTER |
+            HOVER_CAPABLE_POINTER] ]
+  });
+
+  ok(!matchMedia("(pointer: none)").matches,
+                 "Doesn't match (pointer: none)");
+  ok(!matchMedia("(pointer: coarse)").matches,
+                 "Doesn't match (pointer: coarse)");
+  ok(matchMedia("(pointer: fine)").matches, "Matches (pointer: fine)");
+  ok(matchMedia("(pointer)").matches, "Matches (pointer)");
+
+  ok(!matchMedia("(hover: none)").matches, "Doesn't match (hover: none)");
+  ok(matchMedia("(hover: hover)").matches, "Matches (hover: hover)");
+  ok(matchMedia("(hover)").matches, "Matches (hover)");
+});
+
+add_task(async () => {
+  // Touch screen.
+  await SpecialPowers.pushPrefEnv({
+    set: [ ['ui.primaryPointerCapabilities', COARSE_POINTER] ]
+  });
+
+  ok(!matchMedia("(pointer: none)").matches, "Doesn't match (pointer: none)");
+  ok(matchMedia("(pointer: coarse)").matches, "Matches (pointer: coarse)");
+  ok(!matchMedia("(pointer: fine)").matches, "Doesn't match (pointer: fine)");
+  ok(matchMedia("(pointer)").matches, "Matches (pointer)");
+
+  ok(matchMedia("(hover: none)").matches, "Match (hover: none)");
+  ok(!matchMedia("(hover: hover)").matches, "Doesn't match (hover: hover)");
+  ok(!matchMedia("(hover)").matches, "Doesn't match (hover)");
+});
+
+</script>
+</body>
+</html>

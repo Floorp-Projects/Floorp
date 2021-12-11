@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.sidebar-toggle {
+  display: block;
+}
+
+.sidebar-toggle::before,
+.sidebar-toggle.pane-collapsed:dir(rtl)::before {
+  background-image: url(chrome://devtools/skin/images/pane-collapse.svg);
+}
+
+.sidebar-toggle.pane-collapsed::before,
+.sidebar-toggle:dir(rtl)::before {
+  background-image: url(chrome://devtools/skin/images/pane-expand.svg);
+}
+
+.sidebar-toggle.alignRight::before {
+  transform: scaleX(-1);
+}
+
+.sidebar-toggle.alignRight {
+  order: 10
+}
+
+/* Rotate button icon 90deg if the toolbox container is
+  in vertical mode (sidebar displayed under the main panel) */
+@media (max-width: 700px) {
+  .sidebar-toggle:not(.disableVerticalBehaviour)::before {
+    transform: rotate(90deg);
+  }
+
+  /* Since RTL swaps the used images, we need to flip them
+     the other way round */
+  .sidebar-toggle:not(.disableVerticalBehaviour):dir(rtl)::before {
+    transform: rotate(-90deg);
+  }
+}

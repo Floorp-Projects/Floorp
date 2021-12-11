@@ -1,0 +1,82 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=226361
+-->
+<head>
+  <title>Test for Bug 226361</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body id="body1">
+<p id="display">
+
+ <a id="b1" tabindex="1" href="http://home.mozilla.org">start</a><br />
+<br />
+
+<iframe id="iframe" tabindex="2" src="bug226361_iframe.xhtml"></iframe>
+
+ <a id="b2" tabindex="3" href="http://home.mozilla.org">end</a>
+
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 226361 **/
+
+// accessibility.tabfocus must be set to value 7 before running test also
+// on a mac.
+function setTabFocus() {
+  SpecialPowers.pushPrefEnv({ set: [[ "accessibility.tabfocus", 7 ]] }, doTest);
+}
+
+// =================================
+
+var doc = document;
+function tab_to(id) {
+  synthesizeKey("KEY_Tab", {});
+  is(doc.activeElement.id, id, "element with id=" + id + " should have focus");
+}
+
+function tab_iframe() {
+  doc = document;
+  tab_to('iframe');
+
+  // inside iframe
+  doc = document.getElementById('iframe').contentDocument
+  tab_to('a3');tab_to('a5');tab_to('a1');tab_to('a2');tab_to('a4');
+}
+
+
+function doTest() {
+  window.getSelection().removeAllRanges();
+  document.getElementById('body1').focus();
+  is(document.activeElement.id, document.body.id, "body element should be focused");
+
+  doc = document;
+  tab_to('b1');
+
+  tab_iframe();
+
+  doc=document
+  document.getElementById('iframe').focus()
+  tab_to('b2');
+  // Change tabindex so the next TAB goes back to the IFRAME
+  document.getElementById('iframe').setAttribute('tabindex','4');
+
+  tab_iframe();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(setTabFocus);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

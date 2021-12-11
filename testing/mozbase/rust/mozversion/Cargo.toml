@@ -1,0 +1,14 @@
+[package]
+name = "mozversion"
+version = "0.4.2"
+authors = ["Mozilla"]
+description = "Utility for accessing Firefox version metadata"
+keywords = ["mozilla", "firefox"]
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozversion"
+license = "MPL-2.0"
+edition = "2018"
+
+[dependencies]
+regex = { version = "1", default-features = false, features = ["perf", "std"] }
+rust-ini = "0.10"
+semver = "0.9"

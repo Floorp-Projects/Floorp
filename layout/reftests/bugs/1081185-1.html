@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  margin-top:100px;
+  opacity:0.5;
+}
+
+.container {
+  width: 120px;
+  height: 120px;
+  perspective: 100px;
+  transform-style: preserve-3d;
+}
+
+.bottom {
+  width: 120px;
+  height: 120px;
+  position: absolute;
+  background-color: rgba(255,0,255,1);
+  transform: translateZ(60px) translateY(120px) rotateX(-90deg);
+  transform-origin: left top;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="bottom"></div>
+</div>
+</body>
+</html>

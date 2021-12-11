@@ -1,0 +1,11 @@
+//error: union `X' is only partially defined
+//error: union `Y' is only partially defined
+//error: union `Z' is only partially defined
+
+union X { Y; };
+union Y { Z; };
+union Z { X; };
+
+protocol undefMutualRecUnion {
+child: async __delete__(X x);
+};

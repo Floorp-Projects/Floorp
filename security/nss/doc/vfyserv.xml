@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY date SYSTEM "date.xml">
+<!ENTITY version SYSTEM "version.xml">
+]>
+
+<refentry id="vfyserv">
+
+  <refentryinfo>
+    <date>&date;</date>
+    <title>NSS Security Tools</title>
+    <productname>nss-tools</productname>
+    <productnumber>&version;</productnumber>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>VFYSERV</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>vfyserv </refname>
+    <refpurpose>TBD</refpurpose>
+  </refnamediv>
+
+ <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>vfyserv</command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsection>
+    <title>STATUS</title>
+    <para>This documentation is still work in progress. Please contribute to the initial review in <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=836477">Mozilla NSS bug 836477</ulink>
+    </para>
+  </refsection>
+
+  <refsection id="description">
+    <title>Description</title>
+    <para>The <command>vfyserv </command> tool verifies a certificate chain</para>
+
+  </refsection>
+
+  <refsection id="options">
+    <title>Options</title>
+    
+    <variablelist>
+
+      <varlistentry>
+        <term><option></option> <replaceable></replaceable></term>
+        <listitem>
+          <simpara></simpara>
+          <simpara></simpara>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="resources">
+    <title>Additional Resources</title>
+	<para>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <ulink url="http://www.mozilla.org/projects/security/pki/nss/">http://www.mozilla.org/projects/security/pki/nss/</ulink>. The NSS site relates directly to NSS code changes and releases.</para>
+	<para>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</para>
+	<para>IRC: Freenode at #dogtag-pki</para>
+  </refsection>
+
+<!-- fill in your name first; keep the other names for reference -->
+  <refsection id="authors">
+    <title>Authors</title>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
+    <para>
+	Authors: Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com>.
+    </para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="license">
+    <title>LICENSE</title>
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    </para>
+  </refsection>
+
+</refentry>

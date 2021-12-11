@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<head><meta charset="utf-8"></head>
+<body>
+	<canvas id="canvas" width="200" height="200"></canvas>
+    <script>
+	let canvas = document.getElementById('canvas');
+	let ctx = canvas.getContext('2d');
+    for (let i=0; i<100; i+=50) {
+        let arr = new Uint8ClampedArray(Array(40000).fill(200));
+	    createImageBitmap(new ImageData(arr, 100)).then(img => {
+		    ctx.drawImage(img, i, i);
+	    });
+    }
+	</script>
+</body>

@@ -1,0 +1,7 @@
+<!doctype html>
+<canvas></canvas>
+<script>
+var canvas = document.body.firstChild,
+    gl = canvas.getContext("experimental-webgl");
+gl.texImage2D(0, 0, 0, 0, 0, { width: 10, height: 10, data: 7 });
+</script>

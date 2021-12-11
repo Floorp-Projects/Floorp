@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1672590",
+    title: "Jitter sanity check"
+  });
+
+const checkJitter = stats => {
+  stats.forEach((stat, mapKey) => {
+    if (stat.type == "remote-inbound-rtp") {
+      // This should be much lower for audio, TODO: Bug 1330575
+      const expectedJitter = stat.kind == "video" ? 0.5 : 1;
+
+      ok(stat.jitter < expectedJitter,
+          stat.type + ".jitter is sane number for a local only test. value="
+          + stat.jitter);
+    }
+  });
+};
+
+const PC_LOCAL_TEST_LOCAL_JITTER = async test => {
+  checkJitter(await test.pcLocal.waitForSyncedRtcp());
+}
+
+const PC_REMOTE_TEST_REMOTE_JITTER = async test => {
+  checkJitter(await test.pcRemote.waitForSyncedRtcp());
+}
+
+runNetworkTest(async function (options) {
+  // We don't know how to get QP value when using Android system codecs.
+  if (navigator.userAgent.includes("Android")) {
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                    ["media.webrtc.hw.h264.enabled", false]);
+  }
+
+  const test = new PeerConnectionTest(options);
+
+  test.chain.insertAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW",
+    [PC_LOCAL_TEST_LOCAL_JITTER]);
+
+  test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+    [PC_REMOTE_TEST_REMOTE_JITTER]);
+
+  test.setMediaConstraints([{audio: true}, {video: true}],
+                           [{audio: true}, {video: true}]);
+  await test.run();
+});
+</script>
+</pre>
+</body>
+</html>

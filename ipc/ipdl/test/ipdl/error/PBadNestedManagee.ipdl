@@ -1,0 +1,9 @@
+//error: protocol `PBadNestedManagee' requires more powerful send semantics than its manager `PBadNestedManager' provides
+
+include protocol PBadNestedManager;
+
+[NestedUpTo=inside_sync] async protocol PBadNestedManagee {
+    manager PBadNestedManager;
+child:
+    async __delete__();
+};

@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1378586
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1378586</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1378586">Mozilla Bug 1378586</a>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+// We need to clear our nesting level periodically.  We do this by firing
+// a postMessage() to get a runnable on the event loop without any setTimeout()
+// nesting.
+function clearNestingLevel() {
+  return new Promise(resolve => {
+    window.addEventListener('message', () => {
+      resolve();
+    }, {once: true});
+    postMessage('done', '*');
+  });
+}
+
+function delayByTimeoutChain(iterations) {
+  return new Promise(resolve => {
+    let count = 0;
+    function tick() {
+      count += 1;
+      if (count >= iterations) {
+        resolve();
+        return;
+      }
+      setTimeout(tick, 0);
+    }
+    setTimeout(tick, 0);
+  });
+}
+
+function delayByInterval(iterations) {
+  return new Promise(resolve => {
+    let count = 0;
+    function tick() {
+      count += 1;
+      if (count >= iterations) {
+        resolve();
+        return;
+      }
+    }
+    setInterval(tick, 0);
+  });
+}
+
+function testNestedIntervals() {
+  return new Promise(resolve => {
+    const runCount = 100;
+    let counter = 0;
+    let intervalId = 0;
+    let prevInitTime = performance.now();
+    let totalTime = 0;
+    function intervalCallback() {
+      let now = performance.now();
+      let delay = now - prevInitTime;
+      totalTime += delay;
+      prevInitTime = now;
+      clearInterval(intervalId);
+      if (++counter < runCount) {
+        intervalId = setInterval(intervalCallback, 0);
+      } else {
+        // Delays should be clamped to 4ms after the initial calls, but allow
+        // some fuzziness, so divide by 2.
+        let expectedTime = runCount * 4 / 2;
+        ok(totalTime > expectedTime, "Should not run callbacks too fast.");
+        resolve();
+      }
+    }
+
+    // Use the timeout value defined in the spec, 4ms.
+    SpecialPowers.pushPrefEnv({ 'set': [["dom.min_timeout_value", 4]]},
+                              intervalCallback);
+  });
+}
+
+// Use a very long clamp delay to make it easier to measure the change
+// in automation.  Some of our test servers are very slow and noisy.
+const clampDelayMS = 10000;
+
+// We expect that we will clamp on the 5th callback.  This should
+// be the same for both setTimeout() chains and setInterval().
+const expectedClampIteration = 5;
+
+async function runTests() {
+  // Things like pushPrefEnv() can use setTimeout() internally which may give
+  // us a nesting level.  Clear the nesting level to start so this doesn't
+  // confuse the test.
+  await clearNestingLevel();
+
+  // Verify a setTimeout() chain clamps correctly
+  let start = performance.now();
+  await delayByTimeoutChain(expectedClampIteration);
+  let stop = performance.now();
+  let delta = stop - start;
+
+  ok(delta >= clampDelayMS, "setTimeout() chain clamped: " + stop + " - " + start + " = " + delta);
+  ok(delta < (2*clampDelayMS), "setTimeout() chain did not clamp twice");
+
+  await clearNestingLevel();
+
+  // Verify setInterval() clamps correctly
+  start = performance.now();
+  await delayByInterval(expectedClampIteration);
+  stop = performance.now();
+  delta = stop - start;
+
+  ok(delta >= clampDelayMS, "setInterval() clamped: " + stop + " - " + start + " = " + delta);
+  ok(delta < (2*clampDelayMS), "setInterval() did not clamp twice");
+
+  await clearNestingLevel();
+
+  // Verify a setTimeout() chain will continue to clamp past the first
+  // expected iteration.
+  const expectedDelay = (1 + expectedClampIteration) * clampDelayMS;
+
+  start = performance.now();
+  await delayByTimeoutChain(2 * expectedClampIteration);
+  stop = performance.now();
+  delta = stop - start;
+
+  ok(delta >= expectedDelay, "setTimeout() chain continued to clamp: " + stop + " - " + start + " = " + delta);
+
+  await clearNestingLevel();
+
+  // Verify setInterval() will continue to clamp past the first expected
+  // iteration.
+  start = performance.now();
+  await delayByTimeoutChain(2 * expectedClampIteration);
+  stop = performance.now();
+  delta = stop - start;
+
+  ok(delta >= expectedDelay, "setInterval() continued to clamp: " + stop + " - " + start + " = " + delta);
+
+  await testNestedIntervals();
+
+  SimpleTest.finish();
+}
+
+// It appears that it's possible to get unlucky with time jittering and fail this test.
+// If start is jittered upwards, everything executes very quickly, and delta has
+// a very high midpoint, we may have taken between 10 and 10.002 seconds to execute; but
+// it will appear to be 9.998. Turn off jitter (and add logging) to test this.
+SpecialPowers.pushPrefEnv({ 'set': [
+  ["dom.min_timeout_value", clampDelayMS],
+  ["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false],
+  ]}, runTests);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+-e .
+mock
+pytest
+pytest-mock
+flake8
+coverage
+unittest2; python_version < '2.7'

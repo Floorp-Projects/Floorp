@@ -1,0 +1,103 @@
+<!--This test should be updated each time new functionality is added to SimpleTest-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Profiling test suite for SimpleTest</title>
+  <script type="text/javascript">
+  var start = new Date();
+  </script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript">
+  var loadTime = new Date();
+  </script>
+</head>
+<body>
+<input id="textB"/>
+<script class="testbody" type="text/javascript">
+info("Profile::SimpleTestLoadTime: " + (loadTime - start));
+var startTime = new Date();
+SimpleTest.waitForExplicitFinish();
+function starttest() {
+  SimpleTest.waitForFocus(
+    function() {
+      //test log
+      info("Logging some info")
+
+      //basic usage
+      ok(true, "test ok");
+      SimpleTest.record(true, "test ok", "diagnostic information");
+      is(0, 0, "is() test failed");
+      isnot(0, 1, "isnot() test failed");
+
+      //todo tests
+      todo(false, "test todo", "todo() test should not pass");
+      todo_is(false, true, "test todo_is");
+      todo_isnot(true, true, "test todo_isnot");
+
+      //misc
+      SimpleTest.requestLongerTimeout(1);
+
+      //note: this test may alter runtimes as it waits
+      var check = false;
+      $('textB').focus();
+      SimpleTest.waitForClipboard("a",
+        function () {
+          SpecialPowers.clipboardCopyString("a");
+        },
+        function () {
+          check = true;
+          is(check, true, "waitForClipboard should work");
+          manipulateElements();
+        },
+        function () {
+          check = false;
+          is(check, false, "waitForClipboard should work");
+          manipulateElements();
+        }
+      );
+
+      //use helper functions
+      function manipulateElements()
+      {
+        var div1 = createEl('div', {'id': 'somediv', 'display': 'block'}, "I am a div");
+        document.body.appendChild(div1);
+        var divObj = this.getElement('somediv');
+        is(divObj, div1, 'createEl did not create element as expected');
+        is($('somediv'), divObj, '$ helper did not get element as expected');
+        is(computedStyle(divObj, 'display'), 'block', 'computedStyle did not get right display value');
+        document.body.removeChild(div1);
+
+        /* note: expectChildProcessCrash is not being tested here, as it causes wildly variable
+         * run times. It is currently being tested in:
+         *  dom/plugins/test/test_hanging.html and dom/plugins/test/test_crashing.html
+         */
+
+        //note: this also adds a short wait period
+        SimpleTest.executeSoon(
+          function () {
+            //finish() calls a slew of SimpleTest functions
+            SimpleTest.finish();
+            //call this after finish so we can make sure it works and doesn't hang our process
+            var endTime = new Date();
+            info("Profile::SimpleTestRunTime: " + (endTime-startTime));
+            //expect and throw exception here. Otherwise, any code that follows the throw call will never be executed
+            SimpleTest.expectUncaughtException();
+            //make sure we catch this error
+            // eslint-disable-next-line no-throw-literal
+            throw "i am an uncaught exception"
+          }
+        );
+      }
+    }
+  );
+};
+//use addLoadEvent
+addLoadEvent(
+  function() {
+    starttest();
+  }
+);
+</script>
+</body>
+</html>

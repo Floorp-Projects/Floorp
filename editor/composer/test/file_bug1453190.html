@@ -1,0 +1,12 @@
+<script>
+window.onload = function () {
+  document.createElement("frameset").setAttribute("onunload", "go()")
+}
+function go() {
+  let a = document.getElementById("a");
+  let b = document.getElementById("b");
+  a.appendChild(b);
+}
+</script>
+<div id="a">
+<li id="b" contenteditable="true">

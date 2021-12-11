@@ -1,0 +1,48 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace dom {
+
+struct FileSystemGetDirectoryListingParams
+{
+  nsString filesystem;
+  nsString realPath;
+  nsString domPath;
+
+  // 'filters' could be an array rather than a semicolon separated string
+  // (we'd then use nsTArray<nsString> internally), but that is
+  // wasteful.  E10s requires us to pass the filters over as a string anyway,
+  // so avoiding using an array avoids serialization on the side passing the
+  // filters.  Since an nsString can share its buffer when copied,
+  // using that instead of nsTArray<nsString> makes copying the filters
+  // around in any given process a bit more efficient too, since copying a
+  // single nsString is cheaper than copying nsTArray member data and
+  // each nsString that it contains.
+  nsString filters;
+};
+
+struct FileSystemGetFilesParams
+{
+  nsString filesystem;
+  nsString realPath;
+  nsString domPath;
+  bool recursiveFlag;
+};
+
+struct FileSystemGetFileOrDirectoryParams
+{
+  nsString filesystem;
+  nsString realPath;
+};
+
+union FileSystemParams
+{
+  FileSystemGetDirectoryListingParams;
+  FileSystemGetFilesParams;
+  FileSystemGetFileOrDirectoryParams;
+};
+
+} // dom namespace
+} // mozilla namespace

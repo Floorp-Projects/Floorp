@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1529893 - Test upgrade-insecure-requests for opening window through nsWindowWatcher</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe name='frameA' width="100%" src="http://example.com/tests/dom/security/test/csp/file_windowwatcher_frameA.html"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+// The CSP of subframe C should cause the window to be opened to be upgraded from http to https.
+
+SimpleTest.waitForExplicitFinish();
+
+let finalURI = "https://example.com/tests/dom/security/test/csp/file_windowwatcher_win_open.html";
+
+window.addEventListener("message", receiveMessage);
+
+function receiveMessage(event) {
+  is(event.data.result, finalURI, "opened window correctly upgraded to https");
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

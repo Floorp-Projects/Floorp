@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Test appends -->
+<style>
+body > div { border:1px solid black; margin:1em;
+             font-family:sans-serif; letter-spacing:2px; }
+#d2:after { content:"Kitty"; }
+#d3:after { content:"ty"; }
+</style>
+<script>function flush() { document.body.offsetHeight; }</script>
+</head>
+<body>
+  <div id="d1"><span>Hello</span> <script>flush();</script><span>Kitty</span></div>
+  <div id="d2"><script>flush();</script><span>Hello</span> </div>
+  <div id="d3"><span>Hello</span> <script>flush();</script><span>Kit</span></div>
+  <div id="d4"><span>Hello</span><script>flush();</script> <span>Kitty</span></div>
+</body>
+</html>

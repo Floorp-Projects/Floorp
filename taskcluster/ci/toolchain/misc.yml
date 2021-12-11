@@ -1,0 +1,297 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+
+linux64-binutils-2.31.1:
+    description: "Binutils toolchain build"
+    treeherder:
+        symbol: TL(binutil2.31)
+    run:
+        script: build-binutils-linux.sh
+        resources:
+            - 'build/unix/build-binutils/build-binutils.sh'
+        toolchain-artifact: public/build/binutils.tar.zst
+    fetches:
+        fetch:
+            - binutils-2.31.1
+        toolchain:
+            # C++ code in gold doesn't compile with recent versions of GCC.
+            - linux64-gcc-7
+            - linux64-toolchain-sysroot
+
+linux64-binutils:
+    description: "Binutils toolchain build"
+    treeherder:
+        symbol: TL(binutil)
+    run:
+        script: build-binutils-linux.sh
+        resources:
+            - 'build/unix/build-binutils/build-binutils.sh'
+        toolchain-artifact: public/build/binutils.tar.zst
+    fetches:
+        fetch:
+            - binutils-2.36.1
+        toolchain:
+            - linux64-toolchain-sysroot
+
+linux64-hfsplus:
+    description: "hfsplus toolchain build"
+    treeherder:
+        symbol: TL(hfs+)
+    run:
+        script: build-hfsplus-linux.sh
+        resources:
+            - 'build/unix/build-hfsplus/build-hfsplus.sh'
+        toolchain-artifact: public/build/hfsplus-tools.tar.zst
+    fetches:
+        fetch:
+            - hfsplus-tools
+        toolchain:
+            - linux64-clang-13
+
+linux64-libdmg:
+    description: "libdmg-hfsplus toolchain build"
+    treeherder:
+        symbol: TL(libdmg-hfs+)
+    run:
+        script: build-libdmg-hfsplus.sh
+        toolchain-artifact: public/build/dmg.tar.zst
+    fetches:
+        fetch:
+            - libdmg-hfsplus
+        toolchain:
+            - linux64-clang-13
+            - linux64-toolchain-sysroot
+
+linux64-mar-tools:
+    description: "mar-tools toolchain build"
+    treeherder:
+        symbol: TL(mar-tools)
+    fetches:
+        toolchain:
+            - linux64-clang-7
+            - linux64-binutils
+    run:
+        script: build-mar-tools.sh
+        sparse-profile: null
+        toolchain-artifact: public/build/mar-tools.tar.zst
+        resources:
+            - build/moz.configure
+            - modules/libmar/
+            - moz.configure
+            - other-licenses/bsdiff/
+            - other-licenses/nsis/Contrib/CityHash/cityhash/
+            - toolkit/mozapps/update/updater/bspatch/
+            - tools/update-packaging/
+
+linux64-upx:
+    description: "UPX build"
+    treeherder:
+        symbol: TL(upx)
+        tier: 1
+    run:
+        script: build-upx.sh
+        toolchain-artifact: public/build/upx.tar.zst
+
+linux64-msix-packaging:
+    description: "msix-packaging build"
+    treeherder:
+        symbol: TL(msix-packaging)
+        tier: 1
+    run:
+        script: build-msix-packaging.sh
+        toolchain-artifact: public/build/msix-packaging.tar.zst
+    fetches:
+        fetch:
+            - msix-packaging
+        toolchain:
+            - linux64-clang
+            - linux64-toolchain-sysroot
+
+linux64-custom-v8:
+    description: "Custom v8 build"
+    treeherder:
+        symbol: TL(custom-v8)
+    worker:
+        docker-image: {in-tree: custom-v8}
+        max-run-time: 3600
+    run:
+        script: build-custom-v8.sh
+        arguments: [
+            d8.tar.zst,
+            is_debug=false,
+            target_cpu="x64"
+        ]
+        toolchain-artifact: public/build/d8.tar.zst
+
+browsertime:
+    description: "npm install browsertime node_modules"
+    treeherder:
+        symbol: TL(browsertime)
+    run:
+        script: browsertime.sh
+        sparse-profile: null
+        resources:
+            - 'tools/browsertime/package.json'
+            - 'tools/browsertime/package-lock.json'
+            - 'tools/browsertime/mach_commands.py'
+        toolchain-artifact: public/build/browsertime.tar.zst
+    fetches:
+        toolchain:
+            - linux64-node
+
+wrench-deps:
+    description: "Downloads all the crates needed for building wrench"
+    treeherder:
+        symbol: WR(wrench-deps)
+    worker:
+        docker-image: {in-tree: webrender}
+    run:
+        script: wrench-deps-vendoring.sh
+        sparse-profile: null
+        resources:
+            - 'gfx/wr/Cargo.lock'
+            - 'gfx/wr/ci-scripts/install-meson.sh'
+        toolchain-artifact: public/build/wrench-deps.tar.zst
+    fetches:
+        fetch:
+            - android-rs-glue
+        toolchain:
+            - linux64-rust-1.47  # whatever m-c is built with
+
+linux64-liblowercase:
+    description: "liblowercase"
+    treeherder:
+        symbol: TL(lc)
+    run:
+        script: build-liblowercase.sh
+        sparse-profile: liblowercase
+        toolchain-artifact: public/build/liblowercase.tar.zst
+        resources:
+            - build/liblowercase/
+    fetches:
+        toolchain:
+            - linux64-rust-1.47
+
+linux64-wine:
+    description: "Wine build for Windows Cross Compile"
+    treeherder:
+        symbol: TL(wine)
+        tier: 1
+    worker:
+        max-run-time: 10800
+    run:
+        script: build-wine.sh
+        toolchain-artifact: public/build/wine.tar.zst
+    fetches:
+        fetch:
+            - wine
+
+win32-pdbstr:
+    description: "pdbstr for 32-bits Windows"
+    treeherder:
+        symbol: TW32(pdbstr)
+    worker-type: b-win2012
+    worker:
+        artifacts:
+            - name: project/gecko/pdbstr/pdbstr.tar.zst
+              path: pdbstr.tar.zst
+              type: file
+    run:
+        script: exfiltrate-pdbstr.sh
+        arguments: ['x86']
+        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.zst
+
+win64-pdbstr:
+    description: "pdbstr for 64-bits Windows"
+    treeherder:
+        symbol: TW64(pdbstr)
+    worker-type: b-win2012
+    worker:
+        artifacts:
+            - name: project/gecko/pdbstr/pdbstr.tar.zst
+              path: pdbstr.tar.zst
+              type: file
+    run:
+        script: exfiltrate-pdbstr.sh
+        arguments: ['x64']
+        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.zst
+
+linux64-winchecksec:
+    description: "winchecksec"
+    treeherder:
+        symbol: TL(winchecksec)
+    run:
+        script: build-winchecksec.sh
+        toolchain-artifact: public/build/winchecksec.tar.zst
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - winchecksec
+
+win64-winchecksec:
+    description: "winchecksec"
+    treeherder:
+        symbol: TW64(winchecksec)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        script: build-winchecksec.sh
+        toolchain-artifact: public/build/winchecksec.tar.zst
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - winchecksec
+        toolchain:
+            - linux64-clang-win-cross
+            - linux64-liblowercase
+
+linux64-makecab:
+    description: "makecab toolchain build"
+    treeherder:
+        symbol: TL(cab)
+    run:
+        script: build-makecab.sh
+        toolchain-artifact: public/build/makecab.tar.zst
+    fetches:
+        fetch:
+            - makecab
+        toolchain:
+            - linux64-rust-1.47
+
+win64-mozmake:
+    description: "mozmake for Windows"
+    treeherder:
+        symbol: TW64(mozmake)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    worker-type: b-win2012
+    run:
+        script: build-mozmake.sh
+        toolchain-artifact: public/build/mozmake.tar.zst
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - gnumake
+
+nsis:
+    description: "NSIS for Linux and Windows"
+    treeherder:
+        symbol: TL(nsis)
+    run:
+        script: build-nsis.sh
+        toolchain-artifact: public/build/nsis.tar.zst
+    fetches:
+        fetch:
+            - nsis-3.07
+            - nsis-3.07-win
+        toolchain:
+            - linux64-clang-13
+            - sysroot-x86_64-linux-gnu

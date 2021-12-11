@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=534833
+-->
+<head>
+  <title>Test for Bug 534833</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=534833">Mozilla Bug 534833</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 534833 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+var input1GotClick = 0;
+var input2GotClick = 0;
+var textarea1GotClick = 0;
+var textarea2GotClick = 0;
+var div1GotClick = 0;
+var div2GotClick = 0;
+
+var tests = [ { element: "text",  clickText: true  },
+              { element: "text2", clickText: false },
+              { element: "area",  clickText: true  },
+              { element: "area2", clickText: false  },
+              { element: "d",     clickText: true  },
+              { element: "d",     clickText: false },
+              { element: "d2",    clickText: true  },
+              { element: "d2",    clickText: false }
+             ];
+
+function nextTest_() {
+  if (!tests.length) {
+    finishTests();
+    return;
+  }
+
+  var test = tests.shift();
+  var el = document.getElementById(test.element);
+  el.scrollIntoView(true);
+  if (test.clickText) {
+    synthesizeMouse(el, 5, 5, {type : "mousedown" });
+    synthesizeMouse(el, 5, 5, {type : "mouseup" });
+  } else {
+    synthesizeMouse(el, el.getBoundingClientRect().width - 5, 5, {type : "mousedown" });
+    synthesizeMouse(el, el.getBoundingClientRect().width - 5, 5, {type : "mouseup" });
+  }
+  nextTest();
+}
+
+function nextTest() {
+  var el = document.getElementById("initialfocus");
+
+  el.addEventListener("focus", function() {
+    setTimeout(nextTest_, 0);
+  }, {once: true});
+  el.focus();
+}
+
+function runTests() {
+  var t = document.getElementById("text");
+  var t2 = document.getElementById("text2");
+  var a = document.getElementById("area");
+  var a2 = document.getElementById("area2");
+  var d = document.getElementById("d");
+  var d2 = document.getElementById("d2");
+
+  // input 1
+  t.onfocus = function(e) {
+    t.value = "";
+  }
+  t.onclick = function(e) {
+    ++input1GotClick;
+  }
+
+  // input 2
+  t2.onfocus = function(e) {
+    t2.value = "";
+  }
+  t2.onclick = function(e) {
+    ++input2GotClick;
+  }
+
+  // textarea 1
+  a.onfocus = function(e) {
+    a.value = "";
+  }
+  a.onclick = function(e) {
+    ++textarea1GotClick;
+  }
+
+  // textarea 2
+  a2.onfocus = function(e) {
+    a2.value = "";
+  }
+  a2.onclick = function(e) {
+    ++textarea2GotClick;
+  }
+
+  // div 1
+  var c = 0;
+  d.onmousedown = function(e) {
+    d.textContent = (++c) + " / click before or after |";
+  }
+  d.onclick = function(e) {
+    ++div1GotClick;
+  }
+
+  // div 2
+  var c2 = 0;
+  d2.onmousedown = function(e) {
+    d2.firstChild.data = (++c2) + " / click before or after |";
+  }
+  d2.onclick = function(e) {
+    ++div2GotClick;
+  }
+  nextTest();
+}
+
+function finishTests() {
+  is(input1GotClick, 1, "input element should have got a click!");
+  is(input2GotClick, 1, "input element should have got a click! (2)");
+  is(textarea1GotClick, 1, "textarea element should have got a click!");
+  is(textarea2GotClick, 1, "textarea element should have got a click! (2)");
+  is(div1GotClick, 2, "div element's content text was replaced, it should have got 2 click!");
+  is(div2GotClick, 2, "div element's content text was modified, it should have got 2 clicks!");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<input type="text" id="initialfocus"><br>
+<input type="text" id="text" value="click before |" style="width: 95%;"><br>
+<input type="text" id="text2" value="click after |" style="width: 95%;">
+<br>
+<textarea id="area" rows="2" style="width: 95%;">
+ click before
+            |
+</textarea><br>
+<textarea id="area2" rows="2" style="width: 95%;">
+ click after |
+</textarea>
+<div id="d" style="border: 1px solid black;">click before or after |</div>
+<div id="d2" style="border: 1px solid black;">click before or after |</div>
+</body>
+</html>

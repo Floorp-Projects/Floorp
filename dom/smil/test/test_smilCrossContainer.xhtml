@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for moving animations between time containers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svga" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle cx="-20" cy="20" r="15" fill="blue" id="circlea"/>
+</svg>
+<svg id="svgb" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle cx="-20" cy="20" r="15" fill="blue" id="circleb">
+    <set attributeName="cy" to="120" begin="4s" dur="1s" id="syncb"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for moving animations between time containers **/
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  var svga = getElement("svga");
+  ok(svga.animationsPaused(), "should be paused by <svg> load handler");
+  is(svga.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+  svga.setCurrentTime(1);
+
+  var svgb = getElement("svgb");
+  ok(svgb.animationsPaused(), "should be paused by <svg> load handler");
+  is(svgb.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+  svgb.setCurrentTime(1);
+
+  // Create animation and check initial state
+  var anim = createAnim();
+  ok(noStart(anim), "Animation has start time before attaching to document");
+
+  // Attach animation to first container
+  var circlea = getElement("circlea");
+  var circleb = getElement("circleb");
+  circlea.appendChild(anim);
+
+  // Check state after attaching
+  is(anim.getStartTime(), 2,
+    "Unexpected start time after attaching animation to target");
+  is(circlea.cx.animVal.value, -20,
+    "Unexpected animated value for yet-to-start animation");
+  is(circleb.cx.animVal.value, -20,
+    "Unexpected animated value for unanimated target");
+
+  // Move animation from first container to second
+  circleb.appendChild(anim);
+
+  // Advance first container and check animation has no effect
+  svga.setCurrentTime(2);
+  is(anim.getStartTime(), 2,
+    "Unexpected start time after moving animation");
+  is(circlea.cx.animVal.value, -20,
+    "Unexpected animated value for non-longer-animated target");
+  is(circleb.cx.animVal.value, -20,
+    "Unexpected animated value for now yet-to-start animation");
+
+  // Advance second container and check the animation only affects it
+  svgb.setCurrentTime(2);
+  is(anim.getStartTime(), 2, "Start time changed after time container seek");
+  is(circlea.cx.animVal.value, -20,
+    "Unanimated target changed after seek on other container");
+  is(circleb.cx.animVal.value, 100, "Animated target not animated after seek");
+
+  // Remove animation so that it belongs to no container and check that
+  // advancing the second container to the next milestone doesn't cause a crash
+  // (when the animation controller goes to run the next milestone sample).
+  anim.remove();
+  svgb.setCurrentTime(3);
+
+  // Do likewise with syncbase relationships
+
+  // Create the syncbase relationship
+  anim.setAttribute('begin', 'syncb.begin');
+
+  // Attach to second time container (where t=3s)
+  circleb.appendChild(anim);
+  is(anim.getStartTime(), 4,
+    "Unexpected start time for cross-time container syncbase dependency");
+
+  // Move to first time container (where t=1s).
+  // Because we're dealing with different time containers and both are paused,
+  // future times are effectively unresolved.
+  circlea.appendChild(anim);
+  ok(noStart(anim), "Unexpected start time for paused time container");
+
+  SimpleTest.finish();
+}
+
+function createAnim() {
+  const svgns="http://www.w3.org/2000/svg";
+  var anim = document.createElementNS(svgns,'set');
+  anim.setAttribute('attributeName','cx');
+  anim.setAttribute('to','100');
+  anim.setAttribute('begin','2s');
+  anim.setAttribute('dur','1s');
+  return anim;
+}
+
+function noStart(elem) {
+  var exceptionCaught = false;
+
+  try {
+    elem.getStartTime();
+  } catch(e) {
+    exceptionCaught = true;
+    is (e.name, "InvalidStateError",
+        "Unexpected exception from getStartTime.");
+    is (e.code, DOMException.INVALID_STATE_ERR,
+        "Unexpected exception code from getStartTime");
+  }
+
+  return exceptionCaught;
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

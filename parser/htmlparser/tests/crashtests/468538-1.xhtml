@@ -1,0 +1,15 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var v = document.getElementById("v");
+  document.body.removeChild(document.body.firstChild);
+  v.innerHTML = "f";
+}
+
+</script>
+</head>
+<body onload="boom();"><xul:box><div id="v"/></xul:box></body>
+</html>

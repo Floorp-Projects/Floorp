@@ -1,0 +1,20 @@
+namespace mozilla {
+namespace _ipdltest {
+
+intr protocol PTestRaceDeadlock {
+both:
+    async StartRace();
+
+parent:
+    intr Lose();
+
+child:
+    intr Win();
+    intr Rpc();
+    async __delete__();
+
+/* Tests that race resolution does not cause deadlocks */
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

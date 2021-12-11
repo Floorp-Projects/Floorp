@@ -1,0 +1,21 @@
+namespace mozilla {
+namespace _ipdltest {
+
+[NestedUpTo=inside_cpow] sync protocol PTestDemon
+{
+child:
+    async Start();
+
+both:
+    async AsyncMessage(int n);
+    [Nested=inside_sync] sync HiPrioSyncMessage();
+
+parent:
+    sync SyncMessage(int n);
+
+    [Nested=inside_cpow] async UrgentAsyncMessage(int n);
+    [Nested=inside_cpow] sync UrgentSyncMessage(int n);
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

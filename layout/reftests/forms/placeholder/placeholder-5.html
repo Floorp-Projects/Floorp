@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: placeholder has to be shown if value is reseted via javascript -->
+  <link rel='stylesheet' type='text/css' href='placeholder-style.css'>
+  <script type="text/javascript">
+    function setValue()
+    {
+      document.getElementById('p1').value = "";
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setValue(); disableReftestWait();">
+    <input type="text" id="p1" value="my value" placeholder="my placeholder">
+  </body>
+</html>

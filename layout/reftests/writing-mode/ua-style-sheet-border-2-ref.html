@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on tr elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; padding: 16px; }
+tr { border: none; }
+.ltr tr { border-top: thin solid; border-bottom: thin solid; }
+.rtl tr { border-top: thin solid; border-bottom: thin solid; }
+.v-rl tr { border-left: thin solid; border-right: thin solid; }
+</style>
+<div class=ltr>
+  <table rules=rows>
+    <tr><td>A1</td><td>A2</td><td>A3</td></tr>
+    <tr><td>B1</td><td>B2</td><td>B3</td></tr>
+  </table>
+</div>
+<div class=rtl dir=rtl>
+  <table rules=rows>
+    <tr><td>A1</td><td>A2</td><td>A3</td></tr>
+    <tr><td>B1</td><td>B2</td><td>B3</td></tr>
+  </table>
+</div>
+<div class=v-rl>
+  <table rules=rows>
+    <tr><td>A1</td><td>A2</td><td>A3</td></tr>
+    <tr><td>B1</td><td>B2</td><td>B3</td></tr>
+  </table>
+</div>

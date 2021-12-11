@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html reftest-zoom="2">
+<head>
+  <title>background-size: 64px 40px; repeat, zoom</title>
+  <style type="text/css">
+html
+{
+  margin: 0;
+  padding: 0;
+}
+body
+{
+  margin: 0;
+  padding: 10px;
+}
+#outer
+{
+  /*
+   * PRE-ZOOM:
+   *   2x size the image, then tile it 4x4 across the div; sampling artifacts at
+   *   32px horizontal offset, then every 64px for the full height of the div.
+   * POST-ZOOM:
+   *   4x size the image, then tile it 4x4 across the div; sampling artifacts at
+   *   64px horizontal offset, then every 128px for the full height of the div.
+   */
+  width: 256px;
+  height: 160px;
+  background-image: url(blue-16x20-green-16x20.png);
+  background-repeat: repeat;
+  background-size: 64px 40px;
+}
+
+/* Aargh, sampling artifacts, we hates them, precioussss. */
+#outer > div
+{
+  display: inline-block;
+  width: 28px;
+  height: 160px;
+}
+.blue
+{
+  border-right: 4px solid black;
+}
+.green
+{
+  border-left: 4px solid black;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div
+  class="blue"></div><div
+  class="green"></div><div
+  class="blue"></div><div
+  class="green"></div><div
+  class="blue"></div><div
+  class="green"></div><div
+  class="blue"></div><div
+  class="green"></div></div>
+</body>
+</html>

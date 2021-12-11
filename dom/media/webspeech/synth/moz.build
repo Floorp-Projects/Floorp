@@ -1,0 +1,68 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["MOZ_WEBSPEECH"]:
+    MOCHITEST_MANIFESTS += [
+        "test/mochitest.ini",
+        "test/startup/mochitest.ini",
+    ]
+
+    XPIDL_MODULE = "dom_webspeechsynth"
+
+    XPIDL_SOURCES += ["nsISpeechService.idl", "nsISynthVoiceRegistry.idl"]
+
+    EXPORTS.mozilla.dom += [
+        "ipc/SpeechSynthesisChild.h",
+        "ipc/SpeechSynthesisParent.h",
+        "nsSpeechTask.h",
+        "nsSynthVoiceRegistry.h",
+        "SpeechSynthesis.h",
+        "SpeechSynthesisUtterance.h",
+        "SpeechSynthesisVoice.h",
+    ]
+
+    UNIFIED_SOURCES += [
+        "ipc/SpeechSynthesisChild.cpp",
+        "ipc/SpeechSynthesisParent.cpp",
+        "nsSpeechTask.cpp",
+        "nsSynthVoiceRegistry.cpp",
+        "SpeechSynthesis.cpp",
+        "SpeechSynthesisUtterance.cpp",
+        "SpeechSynthesisVoice.cpp",
+    ]
+
+    if CONFIG["MOZ_WEBSPEECH_TEST_BACKEND"]:
+        UNIFIED_SOURCES += ["test/nsFakeSynthServices.cpp"]
+
+        XPCOM_MANIFESTS += [
+            "test/components.conf",
+        ]
+
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+        DIRS += ["windows"]
+
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+        DIRS += ["cocoa"]
+
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+        DIRS += ["android"]
+
+    if CONFIG["MOZ_SYNTH_SPEECHD"]:
+        DIRS += ["speechd"]
+
+    IPDL_SOURCES += [
+        "ipc/PSpeechSynthesis.ipdl",
+        "ipc/PSpeechSynthesisRequest.ipdl",
+    ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    "ipc",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

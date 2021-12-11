@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=841579
+-->
+<head>
+  <title>Test for Bug 841579</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=841579">Mozilla Bug 841579</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 841579**/
+
+SimpleTest.requestFlakyTimeout("Early failure timeout");
+SimpleTest.waitForExplicitFinish();
+
+const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const gContent = document.getElementById("content");
+
+var gImg;
+var gMyDecoderObserver;
+var gIsTestFinished = false;
+var gFiles;
+var gNotifications = 0;
+var gLoads = 0;
+var gRemovals = 0;
+var gExpected = 5;
+
+function* fileToLoad() {
+  yield "red.png";
+  yield "invalid.jpg";
+  yield "lime100x100.svg";
+  yield "bad.jpg";
+  yield "rillybad.jpg";
+}
+
+function onSizeAvailable(aRequest) {
+  ok(true, "AfterLoad.onSizeAvailable called for " + gImg.src);
+}
+function onLoadComplete(aRequest) {
+  ok(gExpected > gLoads, "AfterLoad.onLoadComplete called for " + gImg.src);
+  gLoads++;
+  SimpleTest.executeSoon(function() {
+    try {
+      gContent.removeChild(gImg);
+    } 
+    catch (e) {}
+    gRemovals++;
+    maybeAdvance();
+  });
+}
+function onDecodeComplete(aRequest) {
+  ok(true, "AfterLoad.onDecodeComplete called for " + gImg.src);
+}
+
+function failTest() {
+  ok(false, "timing out after " + FAILURE_TIMEOUT + "ms.  " +
+            "currently displaying " + gImg.src);
+  cleanUpAndFinish();
+}
+
+function onNotification()
+{
+  gNotifications++;
+  maybeAdvance();
+}
+
+function maybeAdvance()
+{
+  if (gRemovals != gNotifications) {
+    return;
+  }
+
+  let {done, value} = gFiles.next();
+  if (done) {
+    cleanUpAndFinish();
+    return;
+  }
+  gImg.src = value;
+  gContent.appendChild(gImg);
+}
+
+function cleanUpAndFinish() {
+  // On the off chance that failTest and myOnStopFrame are triggered
+  // back-to-back, use a flag to prevent multiple calls to SimpleTest.finish.
+  if (gIsTestFinished) {
+    return;
+  }
+  let imgLoadingContent = SpecialPowers.wrap(gImg);
+  imgLoadingContent.removeObserver(gMyDecoderObserver);
+  // TODO: this isn't the case until post-bug 716140's refactorings
+  // ok(gNotifications == gLoads, "Should be notified the same number of times as loads");
+  SimpleTest.finish();
+  gIsTestFinished = true;
+}
+
+function main() {
+  gFiles = fileToLoad();
+  gImg = new Image();
+  gImg.onload = onNotification;
+  gImg.onerror = onNotification;
+
+  // Create, customize & attach decoder observer
+  var observer = new ImageDecoderObserverStub();
+  observer.sizeAvailable = onSizeAvailable;
+  observer.loadComplete = onLoadComplete;
+  observer.decodeComplete = onDecodeComplete;
+  gMyDecoderObserver =
+    Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+      .createScriptedObserver(SpecialPowers.wrapCallbackObject(observer));
+  let imgLoadingContent = SpecialPowers.wrap(gImg);
+  imgLoadingContent.addObserver(gMyDecoderObserver);
+
+  // We want to test the cold loading behavior, so clear cache in case an
+  // earlier test got our image in there already.
+  clearAllImageCaches();
+
+  // kick off image-loading! myOnStopFrame handles the rest.
+  gImg.setAttribute("src", gFiles.next());
+
+  // In case something goes wrong, fail earlier than mochitest timeout,
+  // and with more information.
+  setTimeout(failTest, FAILURE_TIMEOUT);
+}
+
+window.onload = main;
+
+</script>
+</pre>
+</body>
+</html>

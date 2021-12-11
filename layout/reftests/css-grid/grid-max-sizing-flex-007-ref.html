@@ -1,0 +1,134 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+  -->
+<!DOCTYPE html>
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track flex max-sizing with min/max</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309407">
+  <style type="text/css">
+.grid {
+   display: grid;
+   border:1px dashed;
+   margin: 3px;
+}
+.rows {
+   float: left;
+   grid: minmax(10px, 0.5fr) minmax(10px, 2fr) / 50px;
+   grid-row-gap: 33px;
+}
+.cols {
+   display: inline-grid;
+   grid: 50px / minmax(10px, 0.5fr) minmax(10px, 2fr);
+   grid-column-gap: 33px;
+}
+
+.item:nth-child(1) { background-color: purple; }
+.item:nth-child(2) { background-color: blue; }
+
+.w70 { width: 70px; }
+.w90 { width: 90px; }
+.h70 { height: 70px; }
+.h90 { height: 90px; }
+</style>
+
+</head><body>
+
+<!--
+  NOTE: The resulting size (in the relevant axis) is 83px for all tests below
+        in the "If the free space is an indefinite length" algo here:
+        https://drafts.csswg.org/css-grid/#algo-flex-tracks
+  These tests verifies that we then also apply min/max sizes per the spec:
+  "If using this flex fraction would cause the grid to be smaller than the grid
+   container’s min-width/height (or larger than the grid container’s max-width/
+   height), then redo this step, treating the free space as definite and the
+   available grid space as equal to the grid container’s content box size when
+   it’s sized to its min-width/height (max-width/height)."
+-->
+
+<pre>These grids should look the same:</pre>
+<div class="grid rows h70" style="max-height:70px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows h70" style="min-height:70px; max-height:60px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows h70" style="height:70px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+
+<br clear="all">
+
+<pre>These grids should look the same:</pre>
+<div class="grid rows h90" style="min-height:90px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows h90" style="min-height:90px; max-height:60px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows h90" style="height:90px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+
+<br clear="all">
+
+<pre>These grids should look the same:</pre>
+<div class="grid cols w70"  style="max-width:70px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid cols w70"  style="min-width:70px; max-width:60px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid cols w70"  style="width:70px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+
+<pre>These grids should look the same:</pre>
+<div class="grid cols w90"  style="min-width:90px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid cols w90"  style="min-width:90px; max-width:60px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid cols w90"  style="width:90px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+
+<pre>The first 6 grids should look the same:</pre>
+<div class="grid rows" style="grid: 1fr / 30px; height:83px">
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="grid: 10px 1fr / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"></div>
+</div>
+<div class="grid rows" style="grid: 1fr / 30px; height:83px">
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="grid: 1fr 1fr / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:90px"></div></div>
+</div>
+<div class="grid rows" style="grid: 1fr auto / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:90px"></div></div>
+</div>
+<div class="grid rows" style="grid: 10px 1fr / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:90px"></div></div>
+</div>
+<div class="grid rows" style="grid: 1fr 1fr / 30px; grid-row-gap:10px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:40px"></div></div>
+  <div class="item"><div style="height:40px"></div></div>
+</div>
+
+</body></html>

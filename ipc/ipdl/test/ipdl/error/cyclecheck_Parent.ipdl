@@ -1,0 +1,12 @@
+//error: cycle(s) detected in manager/manages hierarchy: `cyclecheck_Parent -> cyclecheck_Child -> cyclecheck_Grandchild -> cyclecheck_Parent'
+
+include protocol cyclecheck_Child;
+
+protocol cyclecheck_Parent {
+    manages cyclecheck_Child;
+
+child:
+    async cyclecheck_Child();
+    async __delete__();
+};
+

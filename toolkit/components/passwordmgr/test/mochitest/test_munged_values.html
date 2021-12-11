@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test handling of possibly-manipulated username values</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript">
+let readyPromise = registerRunTests();
+
+const DEFAULT_ORIGIN = window.location.origin;
+
+function removeAllUserFacingLoginsInParent() {
+  runInParent(function removeAllUserFacingLogins() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services.logins.removeAllUserFacingLogins();
+  });
+}
+
+function add2logins() {
+  removeAllUserFacingLoginsInParent();
+  addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""], [DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "user2", "pass2", "", ""]);
+}
+
+function addSingleLogin() {
+  removeAllUserFacingLoginsInParent();
+  addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""])
+}
+
+/**
+ *  For any test including the character "!", generate a version of that test for every known munge
+ *  character.
+ **/
+ function generateTestCases(test) {
+  const MUNGE_CHARS = ["*", ".", "•"];
+
+  let nothingToReplace = Object.values(test).every(value => typeof value !== "string" || !value.includes("!"));
+  if (nothingToReplace) {
+    return test;
+  };
+
+  return MUNGE_CHARS.map(char => {
+    let newTest = {};
+    for (let [propName, val] of Object.entries(test)) {
+      if (typeof val === "string") {
+        newTest[propName] = val.replace(/!/g, char);
+      } else {
+        newTest[propName] = val;
+      }
+  };
+  return newTest;
+})};
+
+let loadPromise = new Promise(resolve => {
+  document.addEventListener("DOMContentLoaded", () => {
+    resolve();
+  });
+});
+
+add_task(async function setup() {
+  info("Waiting for setup and page and window loads");
+  await readyPromise;
+  await loadPromise;
+});
+
+add_task(async function test_new_logins() {
+  const TEST_CASES = [
+  // ! is replaced with characters commonly used for munging
+  {
+    testName: "test_middle!MaskedUsername",
+    username: "so!!!ne",
+    expected: null,
+  },
+  {
+    testName: "test_start!MaskedUsername",
+    username: "!!!eone",
+    expected: null,
+  },
+  {
+    testName: "test_end!MaskedUsername",
+    username: "some!!!",
+    expected: null,
+  },
+  {
+    testName: "test_ok!Username",
+    username: "obelixand!",
+    expected: "obelixand!",
+  },
+  {
+    testName: "test_ok!Username2",
+    username: "!!username!!",
+    expected: "!!username!!",
+  },
+  {
+    // We should only consider a username munged if it repeats of the same character
+    testName: "test_combinedMungeCharacters",
+    username: "*.•*.•*.•*.•*.•*.•",
+    expected: "*.•*.•*.•*.•*.•*.•",
+  },
+].flatMap(generateTestCases);
+  for (let tc of TEST_CASES) {
+    info("Starting testcase: " + JSON.stringify(tc));
+    // Create a new window for each test case, because if we instead try to use
+    // the same window and change the page using window.location, that will trigger
+    // an onLocationChange event, which can trigger unwanted FormSubmit outside of
+    // clicking the submit button in each test document.
+    let win = window.open("about:blank");
+    let html = `
+      <form id="form1" onsubmit="return false;">
+        <input  type="text"       name="uname" value="${tc.username}">
+        <input  type="password"   name="pword" value="thepassword">
+        <button type="submit" id="submitBtn">Submit</button>
+      </form>`;
+    await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+    await SpecialPowers.spawn(win, [html], function(contentHtml) {
+      let doc = this.content.document;
+      for (let field of doc.querySelectorAll("input")) {
+        let actualValue = field.value;
+        field.value = "";
+        SpecialPowers.wrap(field).setUserInput(actualValue);
+      }
+    });
+    await SpecialPowers.spawn(win, [tc], function(testcase) {
+      let doc = this.content.document;
+      Assert.equal(doc.querySelector("[name='uname']").value, testcase.username, "Checking for filled username");
+    });
+
+    // Check data sent via PasswordManager:onFormSubmit
+    let processedPromise = getSubmitMessage();
+    await SpecialPowers.spawn(win, [], function() {
+      this.content.document.getElementById("submitBtn").click();
+    });
+
+    let { data } = await processedPromise;
+    info("Got submitted result: " + JSON.stringify(data));
+
+    if (tc.expected === null) {
+      is(data.usernameField, tc.expected, "Check usernameField");
+    } else {
+      is(data.usernameField.value, tc.expected, "Check usernameField");
+    }
+
+    win.close();
+    await SimpleTest.promiseFocus(window);
+  }
+});
+
+add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
+  const TEST_CASES = [
+  {
+      testName: "test_passFullyMungedBy!",
+      password: "!!!!!!!!!",
+      shouldShowPrompt: false,
+    },
+    {
+      testName: "test_passStartsMungedBy!",
+      password: "!!!!!!!butThenAPassword",
+      shouldShowPrompt: true,
+    },
+    {
+      testName: "test_passEndsMungedBy!",
+      password: "aRealPasswordAndThen!!!!!!!",
+      shouldShowPrompt: true,
+    },
+    {
+      testName: "test_passMostlyMungedBy!",
+      password: "!!!a!!!!",
+      shouldShowPrompt: true,
+    },
+    {
+      testName: "test_combinedMungedCharacters",
+      password: "*.•*.•*.•*.•",
+      shouldShowPrompt: true,
+    },
+  ].flatMap(generateTestCases);
+
+  for (let tc of TEST_CASES) {
+    info("Starting testcase: " + tc.testName)
+    // Create a new window for each test case, because if we instead try to use
+    // the same window and change the page using window.location, that will trigger
+    // an onLocationChange event, which can trigger unwanted FormSubmit outside of
+    // clicking the submit button in each test document.
+    let win = window.open("about:blank");
+    let html = `
+      <form id="form1" onsubmit="return false;">
+        <input  type="text"       name="uname" value="username">
+        <input  type="password"   name="pword" value="${tc.password}">
+        <button type="submit" id="submitBtn">Submit</button>
+      </form>`;
+    await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+    await SpecialPowers.spawn(win, [html], function(contentHtml) {
+      let doc = this.content.document;
+      for (let field of doc.querySelectorAll("input")) {
+        let actualValue = field.value;
+        field.value = "";
+        SpecialPowers.wrap(field).setUserInput(actualValue);
+      }
+    });
+    await SpecialPowers.spawn(win, [tc], function(testcase) {
+      let doc = this.content.document;
+      Assert.equal(doc.querySelector("[name='pword']").value, testcase.password, "Checking for filled password");
+    });
+
+    let formSubmitListener = SpecialPowers.spawn(win, [], function() {
+      return new Promise(resolve => {
+        this.content.windowRoot.addEventListener(
+            "PasswordManager:onFormSubmit",
+            event => {
+              info(`PasswordManager:onFormSubmit called. Event: ${JSON.stringify(event)}`);
+              resolve(event.detail.messageSent);
+            }
+          );
+      });
+    });
+
+    await SpecialPowers.spawn(win, [], function() {
+      this.content.document.getElementById("submitBtn").click();
+    });
+
+    let dialogRequested = await formSubmitListener;
+
+    is(dialogRequested, tc.shouldShowPrompt, "Verify 'show save/update prompt' message sent to parent process");
+
+    win.close();
+    await SimpleTest.promiseFocus(window);
+  }
+});
+
+add_task(async function test_no_autofill_munged_username_matching_password() {
+  // run this test with 2 matching logins from this origin so we don't autofill
+  await add2logins();
+  let allLogins = await LoginManager.getAllLogins();
+  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
+  is(matchingLogins.length, 2, "Expected number of matching logins");
+
+  let bulletLogin = matchingLogins.find(l => l.username == "real••••user");
+  ok(bulletLogin, "Found the real••••user login");
+
+  let timesUsed = bulletLogin.timesUsed;
+  let guid = bulletLogin.guid;
+
+  let win = window.open("about:blank");
+  let html =
+    `<form id="form1" onsubmit="return false;">
+      <input  type="text"       name="uname" value="">
+      <input  type="password"   name="pword" value="">
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>`;
+  await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+  await SpecialPowers.spawn(win, [html], function(contentHtml) {
+    let doc = this.content.document;
+    for (let field of doc.querySelectorAll("input")) {
+      let actualValue = field.value;
+      field.value = "";
+      SpecialPowers.wrap(field).setUserInput(actualValue);
+    }
+  });
+  await SpecialPowers.spawn(win, [], function() {
+    let doc = this.content.document;
+    Assert.equal(doc.querySelector("[name='uname']").value, "", "Check username didn't get autofilled");
+    SpecialPowers.wrap(doc.querySelector("[name='uname']")).setUserInput("real••••user");
+    SpecialPowers.wrap(doc.querySelector("[name='pword']")).setUserInput("pass1");
+  });
+
+  // we shouldn't get the save password doorhanger...
+  let popupShownPromise = promiseNoUnexpectedPopupShown();
+
+  // Check data sent via PasswordManager:onFormSubmit
+  let processedPromise = getSubmitMessage();
+  await SpecialPowers.spawn(win, [], function() {
+    this.content.document.getElementById("submitBtn").click();
+  });
+
+  let { data } = await processedPromise;
+  info("Got submitted result: " + JSON.stringify(data));
+
+  is(data.usernameField, null, "Check usernameField");
+
+  let updatedLogins = await LoginManager.getAllLogins();
+  let updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
+  ok(updatedLogin, "Got the login via guid");
+  is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
+
+  await popupShownPromise;
+
+  win.close();
+  await SimpleTest.promiseFocus(window);
+});
+
+
+add_task(async function test_autofill_munged_username_matching_password() {
+  // only a single matching login so we autofill the username
+  await addSingleLogin();
+
+  let allLogins = await LoginManager.getAllLogins();
+  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
+  is(matchingLogins.length, 1, "Expected number of matching logins");
+
+  info("matched login: " + matchingLogins[0].username);
+  let bulletLogin = matchingLogins.find(l => l.username == "real••••user");
+  ok(bulletLogin, "Found the real••••user login");
+
+  let timesUsed = bulletLogin.timesUsed;
+  let guid = bulletLogin.guid;
+
+  let win = window.open("about:blank");
+  let html =
+    `<form id="form1" onsubmit="return false;">
+      <input  type="text"       name="uname" value="">
+      <input  type="password"   name="pword" value="">
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>`;
+  await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+  await SpecialPowers.spawn(win, [html], function(contentHtml) {
+    let doc = this.content.document;
+    for (let field of doc.querySelectorAll("input")) {
+      let actualValue = field.value;
+      field.value = "";
+      SpecialPowers.wrap(field).setUserInput(actualValue);
+    }
+  });
+  await SpecialPowers.spawn(win, [], function() {
+    let doc = this.content.document;
+    Assert.equal(doc.querySelector("[name='uname']").value, "real••••user", "Check username did get autofilled");
+    doc.querySelector("[name='pword']").setUserInput("pass1");
+  });
+
+  // we shouldn't get the save/update password doorhanger as it didn't change
+  let popupShownPromise =  promiseNoUnexpectedPopupShown();
+
+  // Check data sent via PasswordManager:onFormSubmit
+  let processedPromise = getSubmitMessage();
+  await SpecialPowers.spawn(win, [], function() {
+    this.content.document.getElementById("submitBtn").click();
+  });
+
+  let { data } = await processedPromise;
+  info("Got submitted result: " + JSON.stringify(data));
+
+  is(data.usernameField, null, "Check usernameField");
+
+  let updatedLogins = await LoginManager.getAllLogins();
+  let updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
+  ok(updatedLogin, "Got the login via guid");
+  is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
+
+  await popupShownPromise;
+
+  win.close();
+  await SimpleTest.promiseFocus(window);
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+</div>
+<pre id="test"></pre>
+</body>
+</html>

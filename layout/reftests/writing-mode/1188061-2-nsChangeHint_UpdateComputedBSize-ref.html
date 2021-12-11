@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<style>
+
+html { writing-mode: vertical-rl; }
+
+</style>
+<body>
+
+<p>The following image should have uniform padding around all sides.</p>
+
+
+<div style="width: 150px; float: left; background: yellow; padding: 5px;">
+  <div style="width: 100%">
+    <!-- 32x32 blue image -->
+    <img style="width: 100%" src="data:image/png; charset=binary;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUEBAAAEBLCjf2dK8NsKrJLJp84zgUAgEAgEAoFAcGUBocYBP+pqhN4AAAAASUVORK5CYII=">
+  </div>
+</div>
+
+<p style="clear:left">Note that if you zoom the page after it loads
+it fixes the problem by causing a reflow.</p>

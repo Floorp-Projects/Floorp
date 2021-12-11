@@ -1,0 +1,77 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#! gmake
+
+MOD_DEPTH	= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+CSRCS = mygetval.c mysetval.c
+
+INCLUDES = -I$(dist_includedir)
+
+OBJS = $(OBJDIR)/mygetval.$(OBJ_SUFFIX) \
+	$(OBJDIR)/mysetval.$(OBJ_SUFFIX)
+
+ifeq ($(OS_TARGET), WIN16)
+W16OBJS = $(subst $(space),$(comma)$(space),$(OBJS))
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(OS_TARGET), WIN16)
+# do nothing
+else
+RES=$(OBJDIR)/my.res
+RESNAME=../../../pr/src/nspr.rc
+endif
+endif
+
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+IMPORT_LIBRARY	= $(OBJDIR)/my.$(LIB_SUFFIX)
+SHARED_LIBRARY	= $(OBJDIR)/my.dll
+ifeq ($(OS_ARCH), OS2)
+MAPFILE		= $(OBJDIR)/my.def
+GARBAGE		+= $(MAPFILE)
+MKSHLIB		+= $(MAPFILE)
+endif
+TARGETS		= $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
+else
+ifdef MKSHLIB
+SHARED_LIBRARY	= $(OBJDIR)/libmy.$(DLL_SUFFIX)
+endif
+TARGETS		= $(SHARED_LIBRARY)
+endif
+
+#
+# To create a loadable module on Darwin, we must override
+# -dynamiclib with -bundle.
+#
+ifeq ($(OS_ARCH),Darwin)
+DSO_LDOPTS = -bundle
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_TARGET), WIN16)
+# Note: The Win16 target: my.dll requires these macros
+# to be overridden to build the test .dll
+# default values in win16...mk are for release targets.
+#
+OS_DLL_OPTION = NOCASEEXACT
+OS_LIB_FLAGS = -irn
+endif
+
+ifdef SHARED_LIBRARY
+export:: $(TARGETS)
+
+clean::
+	rm -rf $(TARGETS)
+endif

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait"
+      reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="1000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="-50"
+      reftest-async-zoom="2.0">
+<head>
+  <style>
+    html {
+      scrollbar-width: none;
+    }
+    body {
+      height: 3000px;
+      margin: 0;
+    }
+    div {
+      position: sticky;
+      top: 0;
+      width: 100px;
+      height: 100px;
+      background: green;
+    }
+  </style>
+</head>
+<body onload="scrollTo(0, 1000); document.documentElement.classList.remove('reftest-wait');">
+  <!-- This test is identical to the position-fixed-async-zoom-2 test, but for
+       position:sticky elements. -->
+  <div></div>
+</body>
+</html>

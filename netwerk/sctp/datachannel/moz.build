@@ -1,0 +1,37 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.net += [
+    "DataChannel.h",
+    "DataChannelListener.h",
+    "DataChannelLog.h",
+    "DataChannelProtocol.h",
+]
+
+SOURCES += [
+    "DataChannel.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/dom/media/webrtc",
+    "/dom/media/webrtc/transport",
+    "/media/webrtc",
+    "/netwerk/sctp/src",
+]
+
+DEFINES["SCTP_DEBUG"] = 1
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    DEFINES["__Userspace_os_Windows"] = 1
+else:
+    DEFINES["__Userspace_os_%s" % CONFIG["OS_TARGET"]] = 1
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

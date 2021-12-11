@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=708620
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 708620</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=708620"
+   >Mozilla Bug 708620</a>
+<iframe></iframe>
+<script>
+/** Test for Bug 708620 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.monitorConsole(SimpleTest.finish, [
+  { errorMessage: "A form was submitted in the windows-1252 encoding "+
+                  "which cannot encode all Unicode characters, so user "+
+                  "input may get corrupted. To avoid this problem, the "+
+                  "page should be changed so that the form is submitted "+
+                  "in the UTF-8 encoding either by changing the encoding "+
+                  "of the page itself to UTF-8 or by specifying "+
+                  "accept-charset=utf-8 on the form element.",
+    isWarning: true }
+]);
+
+window.onload = function () {
+  document.getElementsByTagName("iframe")[0].src = "file_bug708620.html";
+}
+
+function finish() {
+  SimpleTest.endMonitorConsole();
+}
+</script>
+</body>
+</html>

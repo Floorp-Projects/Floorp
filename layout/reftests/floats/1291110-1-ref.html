@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<style>
+.container {
+  position: relative;
+  width: 250px;
+  height: 300px;
+  border: 1px solid blue;
+}
+
+.float1 {
+  position: absolute;
+  width: 100px;
+  height: 50px;
+  background-color: green;
+}
+
+.float2 {
+  position: absolute;
+  top: 50px;
+  width: 180px;
+  height: 50px;
+  background-color: lightgreen;
+}
+
+.box {
+  position: absolute;
+  left: 180px;
+  width: 30px;
+  height: 80px;
+  background-color: blue;
+}
+</style>
+
+<div class="container">
+  <div class="float1"></div>
+  <div class="float2"></div>
+  <div class="box"></div>
+</div>
+<p>The test pass if the inline blue box does not overlap any of the green float boxes.</p>

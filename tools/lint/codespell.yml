@@ -1,0 +1,89 @@
+---
+codespell:
+    description: Check code for common misspellings
+    include:
+        - browser/base/content/docs/
+        - browser/branding/
+        - browser/components/newtab/docs/
+        - browser/components/newtab/content-src/asrouter/docs/
+        - browser/components/touchbar/docs/
+        - browser/components/urlbar/docs/
+        - browser/extensions/formautofill/locales/en-US/
+        - browser/extensions/report-site-issue/locales/en-US/
+        - browser/installer/windows/docs/
+        - browser/locales/en-US/
+        - build/docs/
+        - devtools/client/locales/en-US/
+        - devtools/docs/
+        - devtools/shared/locales/en-US/
+        - devtools/startup/locales/en-US/
+        - docs/
+        - dom/docs/
+        - dom/locales/en-US/
+        - gfx/docs/
+        - intl/docs/
+        - intl/locales/en-US/
+        - js/src/doc/
+        - layout/tools/layout-debug/ui/locale/en-US/
+        - mobile/android/branding/
+        - mobile/android/docs/
+        - mobile/android/locales/en-US/
+        - mobile/locales/en-US/
+        - netwerk/locales/en-US/
+        - netwerk/docs/
+        - python/docs/
+        - python/mach/docs/
+        - python/mozlint/
+        - remote/doc/
+        - remote/marionette/doc/
+        - security/manager/locales/en-US/
+        - services/sync/locales/en-US/
+        - taskcluster/docs/
+        - testing/geckodriver/doc/
+        - testing/mozbase/docs/
+        - toolkit/components/extensions/docs/
+        - toolkit/components/normandy/docs/
+        - toolkit/components/search/docs/
+        - toolkit/components/telemetry/docs/
+        - toolkit/crashreporter/docs/
+        - toolkit/docs/
+        - toolkit/locales/en-US/
+        - toolkit/modules/docs/
+        - tools/code-coverage/docs/
+        - tools/fuzzing/docs/
+        - tools/moztreedocs/
+        - tools/lint/
+        - tools/sanitizer/docs/
+        - tools/tryselect/
+        - uriloader/docs/
+    exclude:
+        - devtools/docs/contributor/tools/storage/
+        - tools/lint/cpp/mingw-headers.txt
+        - tools/lint/test/test_codespell.py
+        - "**/package-lock.json"
+    # List of extensions coming from:
+    # tools/lint/{flake8,eslint}.yml
+    # tools/mach_commands.py (clang-format)
+    # + documentation
+    # + localization files
+    extensions:
+        - js
+        - jsm
+        - jxs
+        - xml
+        - html
+        - xhtml
+        - cpp
+        - c
+        - h
+        - configure
+        - py
+        - properties
+        - rst
+        - md
+        - ftl
+    support-files:
+        - 'tools/lint/spell/**'
+    type: external
+    setup: spell:setup
+    payload: spell:lint

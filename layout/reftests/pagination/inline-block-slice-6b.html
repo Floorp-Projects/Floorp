@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-paged">
+<head>
+<style>
+@page {
+  size: 5in 3in;
+  margin: 0.5in;
+}
+@font-face {
+  font-family: Ahem;
+  src: url(../fonts/Ahem.ttf);
+}
+
+html,body {
+  color:black; background-color:white; font:20px/1 Ahem; padding:0; margin:0;
+  writing-mode: vertical-lr;
+}
+html { block-size: 40vw; }
+
+.ib {
+  display: inline-block;
+  inline-size: 50vh;
+  block-size: 210vw;
+  vertical-align: top;
+  border: 5px solid black;
+}
+
+.after {
+  display: block;
+  inline-size: 60vh;
+  block-size: 10vw;
+  border: 5px dashed grey;
+  background-color: grey;
+}
+</style>
+</head>
+<body>
+  X<div class="ib"></div>p
+  <div class="after"></div>
+</body>
+</html>

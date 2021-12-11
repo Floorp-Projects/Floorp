@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=602256
+-->
+<head>
+  <title>Test for Bug 602256</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602256">Mozilla Bug 602256</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 602256 **/
+
+SimpleTest.waitForExplicitFinish();
+var win = window.open("file_framedhistoryframes.html");
+
+function done() {
+  win.close();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

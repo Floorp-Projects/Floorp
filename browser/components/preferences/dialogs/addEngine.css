@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+input {
+  -moz-box-flex: 1;
+}
+
+hbox {
+  width: 100%;
+}
+
+#engineNameLabel,
+#engineUrlLabel,
+#engineAliasLabel {
+  /* Align the labels with the inputs */
+  margin-inline-start: 4px;
+}
+
+#engineUrl {
+  /* Full URLs should always be displayed as LTR */
+  direction: ltr;
+  text-align: match-parent;
+}

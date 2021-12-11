@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({ title: "Test group id of MediaDeviceInfo", bug: "1213453" });
+
+let getDefaultDevices = async () => {
+  let devices = await navigator.mediaDevices.enumerateDevices();
+  is(devices.length, 2, "Two fake devices found.");
+
+  devices.forEach(d => isnot(d.groupId, "", "GroupId is included in every device"));
+
+  let videos = devices.filter(d => d.kind == "videoinput");
+  is(videos.length, 1, "One video device found.");
+  let audios = devices.filter(d => d.kind == "audioinput");
+  is(audios.length, 1, "One microphone device found.");
+
+  return {audio: audios[0], video: videos[0]};
+}
+
+runTest(async () => {
+  // Force fake devices in order to be able to change camera name by pref.
+  await pushPrefs(["media.navigator.streams.fake", true],
+                  ["media.audio_loopback_dev", ""],
+                  ["media.video_loopback_dev", ""]);
+
+  let {audio, video} = await getDefaultDevices();
+
+  /* The low level method to correlate groupIds is by device names.
+   * Use a similar comparison here to verify that it works.
+   * Multiple devices of the same device name are not expected in
+   * automation. */
+  isnot(audio.groupId, video.groupId, "Not the same groupIds");
+  // Change video name to match.
+  await pushPrefs(["media.getusermedia.fake-camera-name", audio.label]);
+  ({audio, video} = await getDefaultDevices());
+  is(audio.groupId, video.groupId, "GroupIds should be the same");
+});
+</script>
+</pre>
+</body>
+</html>

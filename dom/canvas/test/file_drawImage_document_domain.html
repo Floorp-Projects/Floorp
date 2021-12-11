@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+  <canvas id="c" width="1" height="1"></canvas>
+  <img id="img" src="image_green-1x1.png">
+<script>
+  window.onmessage = function(ev) {
+    if (ev.data != "start") {
+      parent.postMessage({ msg: "unknown_message", data: ev.data }, "*");
+      return;
+    }
+
+    // Set document.domain to itself, so we trigger the
+    // "set effective script origin" cases.
+    document.domain = document.domain
+    var ctx = document.getElementById("c").getContext("2d");
+    ctx.drawImage(document.getElementById("img"), 0, 0);
+    try {
+      var data = ctx.getImageData(0, 0, 1, 1).data;
+      parent.postMessage(
+        {
+          msg: "color",
+          data: "rgba(" + data[0] + ", " + data[1] + ", " + data[2] + ", " + data[3]/255 + ")"
+        },
+        "*");
+    } catch (e) {
+      parent.postMessage({ msg: "exception", data: e.toString() }, "*");
+    }
+
+    parent.postMessage({ msg: "done" }, "*");
+  }
+</script>

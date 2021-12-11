@@ -1,0 +1,20 @@
+; This Source Code Form is subject to the terms of the Mozilla Public
+; License, v. 2.0. If a copy of the MPL was not distributed with this
+; file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+    ;
+    ; Support plugins that were explicitly linked to the Visual Age
+    ;   version of nspr4.dll.
+    ;
+    PR_NewMonitor
+    PR_EnterMonitor
+    PR_ExitMonitor
+    PR_GetCurrentThread
+    PR_AttachThread
+    PR_DetachThread
+    ;
+    ; Exception handler functions that are used by nsAppRunner.cpp
+    ;
+    _PR_OS2_SetFloatExcpHandler
+    _PR_OS2_UnsetFloatExcpHandler
+

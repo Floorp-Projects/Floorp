@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UnsupportedBrowserList component renders the browsers 1`] = `
+<ul
+  className="compatibility-unsupported-browser-list"
+>
+  <UnsupportedBrowserItem
+    id="firefox"
+    key="firefox"
+    name="Firefox"
+    versions={
+      Array [
+        Object {
+          "alias": "beta",
+          "version": "69",
+        },
+        Object {
+          "alias": "nightly",
+          "version": "70",
+        },
+      ]
+    }
+  />
+  <UnsupportedBrowserItem
+    id="test-browser"
+    key="test-browser"
+    name="Test Browser"
+    versions={
+      Array [
+        Object {
+          "alias": undefined,
+          "version": "1",
+        },
+        Object {
+          "alias": undefined,
+          "version": "2",
+        },
+      ]
+    }
+  />
+  <UnsupportedBrowserItem
+    id="sample-browser"
+    key="sample-browser"
+    name="Sample Browser"
+    versions={
+      Array [
+        Object {
+          "alias": undefined,
+          "version": "100",
+        },
+      ]
+    }
+  />
+</ul>
+`;

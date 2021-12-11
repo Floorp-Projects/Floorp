@@ -1,0 +1,4 @@
+[RefCounted] async protocol PRefcounted {
+child:
+    async __delete__();
+};

@@ -1,0 +1,32 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+
+namespace mozilla {
+
+struct ProfilerInitParams {
+  bool enabled;
+  uint32_t entries;
+  double? duration;
+  double interval;
+  uint32_t features;
+  uint64_t activeTabID;
+  nsCString[] filters;
+};
+
+struct ProfileBufferChunkMetadata {
+  TimeStamp doneTimeStamp;
+  uint32_t bufferBytes;
+};
+
+struct ProfileBufferChunkManagerUpdate {
+  uint64_t unreleasedBytes;
+  uint64_t releasedBytes;
+  TimeStamp oldestDoneTimeStamp;
+  ProfileBufferChunkMetadata[] newlyReleasedChunks;
+};
+
+} // namespace mozilla

@@ -1,0 +1,88 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/setDesktopBackground.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        windowtype="Shell:SetDesktopBackground"
+        onload="gSetBackground.load();"
+        data-l10n-id="set-desktop-background-window"
+        style="width: 30em;">
+
+<linkset>
+  <html:link rel="localization" href="browser/setDesktopBackground.ftl"/>
+</linkset>
+
+<dialog id="SetDesktopBackgroundDialog"
+#ifndef XP_MACOSX
+        buttons="accept,cancel"
+#else
+        buttons="accept"
+#endif
+        buttonidaccept="set-desktop-background-accept">
+
+#ifdef XP_MACOSX
+#include ../../../base/content/macWindow.inc.xhtml
+#else
+    <script src="chrome://browser/content/utilityOverlay.js"/>
+#endif
+
+    <stringbundle id="backgroundBundle"
+                  src="chrome://browser/locale/shellservice.properties"/>
+    <script src="chrome://browser/content/setDesktopBackground.js"/>
+    <script src="chrome://global/content/contentAreaUtils.js"/>
+
+#ifndef XP_MACOSX
+    <hbox align="center">
+      <label data-l10n-id="set-background-position"/>
+      <menulist id="menuPosition"
+                oncommand="gSetBackground.updatePosition();" native="true">
+        <menupopup>
+          <menuitem data-l10n-id="set-background-center"  value="CENTER"/>
+          <menuitem data-l10n-id="set-background-tile"    value="TILE"/>
+          <menuitem data-l10n-id="set-background-stretch" value="STRETCH"/>
+          <menuitem data-l10n-id="set-background-fill"    value="FILL"/>
+          <menuitem data-l10n-id="set-background-fit"     value="FIT"/>
+          <menuitem data-l10n-id="set-background-span"    value="SPAN" id="spanPosition"/>
+        </menupopup>
+      </menulist>
+      <spacer flex="1"/>
+      <label data-l10n-id="set-background-color"/>
+      <html:input id="desktopColor"
+                  type="color"
+                  onchange="gSetBackground.updateColor(this.value);"/>
+    </hbox>
+#endif
+
+    <vbox align="center">
+      <!-- default to 16:9, will be adjusted to match user's actual screen -->
+      <stack>
+        <html:canvas id="screen" width="202" height="114" role="presentation"/>
+        <vbox pack="center">
+          <html:p id="preview-unavailable" hidden="" data-l10n-id="set-background-preview-unavailable"></html:p>
+        </vbox>
+      </stack>
+      <image id="monitor-base"/>
+    </vbox>
+
+#ifdef XP_MACOSX
+    <separator/>
+
+    <hbox pack="end">
+      <button id="setDesktopBackground"
+              data-l10n-id="set-desktop-background-accept"
+              oncommand="gSetBackground.setDesktopBackground();"/>
+      <button id="showDesktopPreferences"
+              data-l10n-id="open-desktop-prefs"
+              oncommand="gSetBackground.showDesktopPrefs();"
+              hidden="true"/>
+    </hbox>
+#endif
+
+</dialog>
+</window>

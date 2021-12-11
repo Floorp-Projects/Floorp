@@ -1,0 +1,18 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom() {
+  let r = new Request("#a#a");
+  setTimeout(function(){
+    r.formData();
+    setTimeout(function(){
+      r.blob();
+    }, 0);
+  }, 0);
+}
+addEventListener("DOMContentLoaded", boom);
+</script>
+</head>
+</html>

@@ -1,0 +1,23 @@
+In file included from base_refcounted.cpp:5:
+./base_refcounted.h:45:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
+  ~PublicRefCountedDtorInHeader() {}
+  ^
+./base_refcounted.h:57:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
+  ~PublicRefCountedThreadSafeDtorInHeader() {}
+  ^
+./base_refcounted.h:94:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
+  ~DerivedProtectedToPublicInHeader() {}
+  ^
+./base_refcounted.h:99:1: warning: [chromium-style] Classes that are ref-counted should have explicit destructors that are protected or private.
+class ImplicitDerivedProtectedToPublicInHeader
+^
+base_refcounted.cpp:16:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
+  ~AnonymousDerivedProtectedToPublicInImpl() {}
+  ^
+base_refcounted.cpp:26:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
+  ~PublicRefCountedDtorInImpl() {}
+  ^
+base_refcounted.cpp:52:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
+  ~UnsafeTypedefChainInImpl() {}
+  ^
+7 warnings generated.

@@ -1,0 +1,103 @@
+{
+  "type": "object",
+  "required": [
+    "telemetryId",
+    "searchPageRegexp",
+    "queryParamName"
+  ],
+  "properties": {
+    "telemetryId": {
+      "type": "string",
+      "title": "Telemetry Id",
+      "description": "The telemetry identifier for the provider.",
+      "pattern": "^[a-z0-9-._]*$"
+    },
+    "searchPageRegexp": {
+      "type": "string",
+      "title": "Search Page Regular Expression",
+      "description": "A regular expression which matches the search page of the provider."
+    },
+    "queryParamName": {
+      "type": "string",
+      "title": "Search Query Parameter Name",
+      "description": "The name of the query parameter for the user's search string."
+    },
+    "codeParamName": {
+      "type": "string",
+      "title": "Partner Code Parameter Name",
+      "description": "The name of the query parameter for the partner code."
+    },
+    "codePrefixes": {
+      "type": "array",
+      "title": "Partner Code Prefixes",
+      "description": "An array of prefixes (or complete values) to match against the partner code paramters in the url.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9-._]*$"
+      }
+    },
+    "followOnParamNames": {
+      "type": "array",
+      "title": "Follow-on Search Parameter Names",
+      "description": "An array of query parameter names that are used when a follow-on search occurs.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-._]*$"
+      }
+    },
+    "followOnCookies": {
+      "type": "array",
+      "title": "Follow-on Cookies",
+      "description": "An array of cookie details that are used to identify follow-on searches.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "extraCodeParamName": {
+            "type": "string",
+            "description": "The query parameter name in the URL that indicates this might be a follow-on search.",
+            "pattern": "^[a-z0-9-._]*$"
+          },
+          "extraCodePrefixes": {
+            "type": "array",
+            "description": "Possbile values for the query parameter in the URL that indicates this might be a follow-on search.",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-._]*$"
+            }
+          },
+          "host": {
+            "type": "string",
+            "description": "The hostname on which the cookie is stored.",
+            "pattern": "^[a-z0-9-._]*$"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the cookie to check.",
+            "pattern": "^[a-zA-Z0-9-._]*$"
+          },
+          "codeParamName": {
+            "type": "string",
+            "description": "The name of parameter within the cookie.",
+            "pattern": "^[a-zA-Z0-9-._]*$"
+          },
+          "codePrefixes": {
+            "type": "array",
+            "description": "Possbile values for the parameter within the cookie.",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-._]*$"
+            }
+          }
+        }
+      }
+    },
+    "extraAdServersRegexps": {
+      "type": "array",
+      "title": "Extra Ad Server Regular Expressions",
+      "description": "An array of regular expressions that match URLs of potential ad servers.",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

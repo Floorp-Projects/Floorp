@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+  textarea {
+    min-height: 100px;
+  }
+</style>
+<div>
+  <iframe src="about:blank"></iframe>
+</div>
+<script>
+  let div = document.querySelector('div');
+  let iframe = document.querySelector('iframe');
+  iframe.onload = function() {
+    let doc = iframe.contentDocument;
+    let e = doc.createElement('textarea');
+    doc.body.appendChild(e);
+    setTimeout(function() {
+      var cs = getComputedStyle(e);
+      cs.minHeight;
+      div.style.display = 'none';
+      setTimeout(function() {
+        div.style.display = 'block';
+        setTimeout(function() {
+          cs.minHeight;
+          document.documentElement.className = "";
+        }, 0);
+      }, 0);
+    }, 0);
+  };
+</script>

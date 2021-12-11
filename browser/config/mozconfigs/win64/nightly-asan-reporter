@@ -1,0 +1,18 @@
+. "$topsrcdir/build/mozconfig.win-common"
+. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
+. "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
+
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
+ac_add_options --enable-address-sanitizer-reporter
+
+. "$topsrcdir/build/win64/mozconfig.asan"
+
+export MOZ_PKG_SPECIAL=asan-reporter
+
+ac_add_options --with-branding=browser/branding/nightly
+
+# Sandboxing is currently not compatible with the way the ASan reporter works
+ac_add_options --disable-sandbox
+
+. "$topsrcdir/build/mozconfig.common.override"

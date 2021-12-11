@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: testing removeAsync and appendBufferAsync</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addMSEPrefs(
+  ["media.mediasource.eviction_threshold.audio", 524288],
+  ["media.dormant-on-pause-timeout-ms", -1], // FIXME: bug 1319292
+  ["media.mediasource.experimental.enabled", true]
+);
+
+// We fill up the source buffer with audio data until the buffer is full.
+// We ensure that QuotaExceededError is thrown once the buffer is full.
+// We then seek to half the content. By that time, another appendBuffer must succeed
+// as the auto-eviction would succeed (removing all data prior currentTime)
+// The test then fills the audio buffer and plays until the end.
+
+// Fill up the SourceBuffer by appending data repeatedly via doAppendDataFunc until
+// an exception is thrown.
+async function fillUpSourceBuffer(sourceBuffer, doAppendDataFunc, onCaughtExceptionCallback) {
+  try {
+    // We are appending data repeatedly in sequence mode, there should be no gaps.
+    while (true) {
+      ok(sourceBuffer.buffered.length <= 1, "there should be no gap in buffered ranges.");
+      await doAppendDataFunc();
+    }
+  } catch (ex) {
+    ok(true, "appendBuffer promise got rejected");
+    onCaughtExceptionCallback(ex);
+  }
+}
+
+runWithMSE(async function(ms, el) {
+  el.controls = true;
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+
+  // Test removeAsync
+  audiosb.mode = "sequence";
+  const audioInitBuffer = await fetchWithXHR("bipbop/bipbop_audioinit.mp4");
+  await audiosb.appendBufferAsync(audioInitBuffer);
+  const audioBuffer = await fetchWithXHR("bipbop/bipbop_audio1.m4s");
+  fillUpSourceBuffer(audiosb,
+    function() { // doAppendDataFunc
+      return audiosb.appendBufferAsync(audioBuffer);
+    },
+    async function(ex1) { // onCaughtExceptionCallback
+      is(ex1.name, "QuotaExceededError", "QuotaExceededError thrown");
+      is(audiosb.buffered.end(0), el.duration, "Duration is end of buffered range");
+      const seekTime = audiosb.buffered.end(0) / 2;
+      el.currentTime = seekTime;
+      await once(el, "seeked");
+      dump("dump: seeked to " + seekTime);
+      is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
+      await audiosb.appendBufferAsync(audioBuffer).catch(async function(ex2) {
+        ok(false, "Shouldn't throw another time when data can be evicted");
+        dump(JSON.stringify(await SpecialPowers.wrap(el).mozRequestDebugInfo()));
+        SimpleTest.finish();
+      });
+      // Test that an error in remove return a rejected promise
+      await audiosb.removeAsync(5, 0).catch(async function(ex3) {
+        ok(true, "remove promise got rejected with end <= start");
+        is(ex3.name, "TypeError");
+        await audiosb.removeAsync(ms.duration + 1, Infinity).catch(async function(ex4) {
+          ok(true, "remove promise got rejected with start > duration");
+          is(ex4.name, "TypeError");
+          await audiosb.removeAsync(0, Infinity).catch(function(ex5) {
+            ok(false, "shouldn't throw");
+          });
+          ok(true, "remove succeeded");
+          is(audiosb.buffered.length, 0, "buffered should be empty");
+          audiosb.mode = "segment";
+          audiosb.timestampOffset = 0;
+          el.currentTime = 0;
+          await fetchAndLoadAsync(audiosb, "bipbop/bipbop_audio", range(1, 4), ".m4s");
+          ms.endOfStream();
+          el.play();
+          await once(el, "ended");
+          is(el.currentTime, el.duration, "played to the end");
+          SimpleTest.finish();
+          throw ex4; // ensure we don't fallback on lines below.
+        });
+        ok(false, "should have returned an error");
+      });
+      ok(false, "should have returned an error");
+    }
+  );
+});
+
+</script>
+</pre>
+</body>
+</html>

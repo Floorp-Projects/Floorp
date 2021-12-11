@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupportsPrimitives.idl"
+
+%{C++
+#define ENTERPRISE_POLICIES_ENABLED_KEY "EnterprisePoliciesEnabled"
+%}
+
+/**
+ * This interface is designed to provide scriptable access to the macOS
+ * preferences system.
+ *
+ * This interface is highly macOS specific.
+ */
+[scriptable, uuid(b0f20595-88ce-4738-a1a4-24de78eb8051)]
+interface nsIMacPreferencesReader : nsISupports
+{
+  /**
+   * This method checks whether macOS policies are enabled.
+   *
+   * @return true if macOS policies are enabled, false otherwise.
+   */
+  bool policiesEnabled();
+
+  /**
+   * This method reads and returns the macOS preferences.
+   *
+   * @return A JSON object containing all macOS preferences.
+   */
+  [implicit_jscontext]
+  jsval readPreferences();
+};

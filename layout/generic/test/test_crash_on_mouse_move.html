@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>
+    This is a crash test to make sure handling mouse move events on an input
+    element doesn't crash even if the input type has been changed during the
+    events
+  </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<input style="width:1000px;height:300px"
+       onmousemove="this.setAttribute('type','text')"
+       id="formPassword" type="password" disabled/>
+<pre id="test"></pre>
+</body>
+<script>
+SimpleTest.waitForExplicitFinish();
+window.onload = () => {
+  const position = formPassword.getBoundingClientRect();
+  for (let i = 0; i < 100; i++) {
+    synthesizeMouseAtPoint(position.x + i, position.y + i,
+                           { type: "mousemove" });
+
+  }
+  ok(true, "mouse movement on a input element whose type is going to be " +
+           "changed by the mouse movement doesn't crash");
+  SimpleTest.finish();
+}
+</script>
+</html>

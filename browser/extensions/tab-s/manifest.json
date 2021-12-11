@@ -1,0 +1,57 @@
+{
+  
+  "name": "Vertical tab",
+  "manifest_version": 2,
+  "version": "1",
+  "default_locale": "en",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "vertical-tab@mozilla.org"
+    }
+  },
+  "sidebar_action": {
+    "default_area":"tabstrip",
+    "default_title": "__MSG_sidebar_name__",
+    "default_panel": "sidebar/sidebar.html",
+    "default_icon": "tabcenter.svg"
+  },
+  "icons": {
+    "48": "tabcenter.svg",
+    "96": "tabcenter.svg"
+  },
+  "permissions": [
+    "<all_urls>",
+    "bookmarks",
+    "browserSettings",
+    "contextualIdentities",
+    "cookies",
+    "menus",
+    "menus.overrideContext",
+    "notifications",
+    "search",
+    "sessions",
+    "storage",
+    "tabs",
+    "theme",
+    "webNavigation"
+  ],
+  "background": {
+    "scripts": [
+      "background/background.js"
+    ]
+  },
+  "commands": {
+    "_execute_sidebar_action": {
+      "suggested_key": {
+        "default": "Ctrl+Space"
+      },
+      "description": "__MSG_browserActionTitle__"
+    },
+    "switch-to-last-active-tab": {
+      "suggested_key": {
+        "default": "Shift+F2"
+      },
+      "description": "__MSG_optionsSwitchLastActiveTab__"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+include protocol PBrowser;
+include protocol PTransportProvider;
+include IPCStream;
+include NeckoChannelParams;
+
+include protocol PFileDescriptorSet; //FIXME: bug #792908
+include protocol PChildToParentStream; //FIXME: bug #792908
+include protocol PParentToChildStream; //FIXME: bug #792908
+
+using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
+[RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
+
+namespace mozilla {
+namespace net {
+
+async protocol PWebSocket
+{
+  manager PNecko;
+
+parent:
+  // Forwarded methods corresponding to methods on nsIWebSocketChannel
+  async AsyncOpen(nsIURI aURI,
+                  nsCString aOrigin,
+                  OriginAttributes aOriginAttributes,
+                  uint64_t aInnerWindowID,
+                  nsCString aProtocol,
+                  bool aSecure,
+                  // ping values only meaningful if client set them
+                  uint32_t aPingInterval,
+                  bool aClientSetPingInterval,
+                  uint32_t aPingTimeout,
+                  bool aClientSetPingTimeout,
+                  LoadInfoArgs? aLoadInfoArgs,
+                  PTransportProvider? aProvider,
+                  nsCString aNegotiatedExtensions);
+  async Close(uint16_t code, nsCString reason);
+  async SendMsg(nsCString aMsg);
+  async SendBinaryMsg(nsCString aMsg);
+  async SendBinaryStream(IPCStream aStream, uint32_t aLength);
+
+  async DeleteSelf();
+
+child:
+  // Forwarded notifications corresponding to the nsIWebSocketListener interface
+  async OnStart(nsCString aProtocol, nsCString aExtensions,
+                nsString aEffectiveURL, bool aEncrypted,
+                uint64_t aHttpChannelId);
+  async OnStop(nsresult aStatusCode);
+  async OnMessageAvailable(nsDependentCSubstring aMsg, bool aMoreData);
+  async OnBinaryMessageAvailable(nsDependentCSubstring aMsg, bool aMoreData);
+  async OnAcknowledge(uint32_t aSize);
+  async OnServerClose(uint16_t code, nsCString aReason);
+
+  async __delete__();
+
+};
+
+} //namespace net
+} //namespace mozilla

@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=270145
+-->
+<head>
+  <title>Test the html copy encoder with XHTML </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=270145">Mozilla Bug 270145</a>
+<p id="display"></p>
+<div id="content" >
+<p id="foo"><![CDATA[a text to copy]]></p>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+//<![CDATA[
+function testHtmlCopyEncoder () {
+  var encoder = SpecialPowers.Cu.createHTMLCopyEncoder();
+  var out, expected;
+  
+  var node = document.getElementById('draggable');
+
+  var select = window.getSelection();
+  select.removeAllRanges();
+
+  node = document.getElementById("foo").firstChild;
+  var range = document.createRange();
+  range.setStart(node, 0);
+  range.setEnd(node, "a text to copy".length);
+  select.addRange(range);
+  encoder.init(document, "text/html", 0);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = "a text to copy";
+  is(out, expected, "test xhtml copy");
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testHtmlCopyEncoder);
+//]]>
+</script>
+</pre>
+
+</body>
+</html>

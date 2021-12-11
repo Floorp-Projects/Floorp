@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1205109: Make `pushsubscriptionchange` extendable.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1205109</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1205109">Mozilla Bug 1205109</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+  var registration;
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
+    await setPushPermission(true);
+
+    var url = "worker.js?" + (Math.random());
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
+  });
+
+  var controlledFrame;
+  add_task(async function createControlledIFrame() {
+    controlledFrame = await injectControlledFrame();
+  });
+
+  add_task(async function togglePermission() {
+    var subscription = await registration.pushManager.subscribe();
+    ok(subscription, "Should create a push subscription");
+
+    await setPushPermission(false);
+    var permissionState = await registration.pushManager.permissionState();
+    is(permissionState, "denied", "Should deny push permission");
+
+    subscription = await registration.pushManager.getSubscription();
+    is(subscription, null, "Should not return subscription when permission is revoked");
+
+    var changePromise = controlledFrame.waitOnWorkerMessage("changed");
+    await setPushPermission(true);
+    await changePromise;
+
+    subscription = await registration.pushManager.getSubscription();
+    is(subscription, null, "Should drop subscription after reinstating permission");
+  });
+
+  add_task(async function unsubscribe() {
+    controlledFrame.remove();
+    await registration.unregister();
+  });
+
+</script>
+</body>
+</html>

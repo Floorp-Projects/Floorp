@@ -1,0 +1,53 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head style="display: none ! important;">
+
+<style>
+#a { direction: rtl; }
+#a { position: absolute; }
+#a { right: 5px; }
+#a { left: -10em; }
+#b { direction: ltr; }
+#b { width: 10%; }
+#b { display: -moz-inline-block; }
+#c { display: -moz-inline-block; }
+#e { display: -moz-inline-block; }
+#d { display: -moz-inline-block; }
+#d { padding: 5px 10px; }
+#d dl, #d dt, #d dd { display: inline; }
+#d dt { margin-left: 5px; }
+#d dd { margin-left: 2px; }
+#d dd:before { content: "="; }
+</style>
+
+<style id="newstyle"></style>
+<script>
+function change()
+{
+  document.getElementById("newstyle").appendChild(document.createTextNode("#b { white-space: pre; }"));
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+</head>
+
+<body onload="setTimeout(change, 1);">
+
+<div id="a"><div id="b">
+
+<div id="c"></div>
+
+<div id="d">   
+<dl>
+<dt>0</dt><dd><span id="e">Accessibility Statement</span></dd>
+<dt>1</dt><dd>Main Page</dd>
+<dt>2</dt><dd>Skip to Content</dd>
+<dt>3</dt><dd>List of Posts</dd>
+<dt>4</dt><dd>Search</dd>
+<dt>p</dt><dd>Previous (individual/monthly archive page)</dd>
+</dl>
+</div>
+
+</div></div>
+
+</body>
+</html>

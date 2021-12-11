@@ -1,0 +1,88 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL Behavior in Data Documents</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529387">Mozilla Bug 529387</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL Behavior in Data Documents, with XMLHttpRequest **/
+
+SimpleTest.waitForExplicitFinish();
+
+function tryPausing(svg) {
+  // Check that pausing has no effect
+  ok(!svg.animationsPaused(),
+     "shouldn't be paused (because we shouldn't have even started");
+  svg.pauseAnimations();
+  ok(!svg.animationsPaused(), "attempts to pause should have no effect");
+  svg.unpauseAnimations();
+  ok(!svg.animationsPaused(), "still shouldn't be paused, after pause/unpause");
+}
+
+function trySeeking(svg) {
+  // Check that seeking is ineffective
+  is(svg.getCurrentTime(), 0, "should start out at time=0");
+  svg.setCurrentTime(1);
+  is(svg.getCurrentTime(), 0, "shouldn't be able to seek away from time=0");
+}
+
+function tryBeginEnd(anim) {
+  // Check that beginning / ending a particular animation element will trigger
+  // exceptions.
+  var didThrow = false;
+  ok(anim, "need a non-null animate element");
+  try {
+     anim.beginElement();
+  } catch (e) {
+    didThrow = true;
+  }
+  ok(didThrow, "beginElement should fail");
+
+  didThrow = false;
+  try {
+    anim.endElement();
+  } catch (e) {
+    didThrow = true;
+  }
+  ok(didThrow, "endElement should fail");
+}
+
+function main() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "smilXHR_helper.svg", false);
+  xhr.send();
+  var xdoc = xhr.responseXML;
+
+  var svg  = xdoc.getElementById("svg");
+  var circ = xdoc.getElementById("circ");
+  var animXML = xdoc.getElementById("animXML");
+  var animCSS = xdoc.getElementById("animCSS");
+
+  tryPausing(svg);
+  trySeeking(svg);
+  tryBeginEnd(animXML);
+  tryBeginEnd(animCSS);
+
+  // Check that the actual values of our animated attr/prop aren't affected
+  is(circ.cx.animVal.value, circ.cx.baseVal.value,
+     "animation of attribute shouldn't be taking effect");
+  is(SMILUtil.getComputedStyleSimple(circ, "opacity"), "1",
+     "animation of CSS property shouldn't be taking effect");
+ 
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

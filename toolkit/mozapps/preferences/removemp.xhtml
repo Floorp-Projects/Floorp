@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        style="width: 35em;"
+        onload="gRemovePasswordDialog.init()"
+        data-l10n-id="remove-primary-password">
+<dialog id="removemp">
+
+  <script src="chrome://mozapps/content/preferences/removemp.js"/>
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/preferences/preferences.ftl"/>
+  </linkset>
+
+  <vbox id="warnings">
+    <description data-l10n-id="remove-primary-password-warning1"></description>
+    <description class="header" data-l10n-id="remove-primary-password-warning2"></description>
+  </vbox>
+
+  <separator class="thin"/>
+
+  <groupbox>
+    <label data-l10n-id="remove-info"/>
+
+    <hbox align="center">
+      <label control="password" data-l10n-id="remove-password-old-password"/>
+      <html:input id="password" type="password"
+                  oninput="gRemovePasswordDialog.validateInput();"
+                  aria-describedby="warnings"/>
+    </hbox>
+  </groupbox>
+
+  <separator/>
+
+</dialog>
+</window>

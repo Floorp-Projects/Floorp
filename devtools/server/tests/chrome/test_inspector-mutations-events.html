@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1157469
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1157469</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  const prevPrefValue = Services.prefs.getBoolPref("devtools.chrome.enabled");
+  Services.prefs.setBoolPref("devtools.chrome.enabled", true);
+
+  let inspectee = null;
+  let inspector = null;
+  let walker = null;
+  const eventListener1 = function() {};
+  const eventListener2 = function() {};
+  let eventNode1;
+  let eventNode2;
+  let eventFront1;
+  let eventFront2;
+
+  addAsyncTest(async function setup() {
+    info("Setting up inspector and walker actors.");
+    const url = document.getElementById("inspectorContent").href;
+    const { target, doc } = await attachURL(url);
+    inspectee = doc;
+    inspector = await target.getFront("inspector");
+    walker = inspector.walker;
+
+    runNextTest();
+  });
+
+  addAsyncTest(async function setupEventTest() {
+    eventNode1 = inspectee.querySelector("#a");
+    eventNode2 = inspectee.querySelector("#b");
+
+    eventFront1 = await walker.querySelector(walker.rootNode, "#a");
+    eventFront2 = await walker.querySelector(walker.rootNode, "#b");
+
+    runNextTest();
+  });
+
+  addAsyncTest(async function testChangeEventListenerOnSingleNode() {
+    checkNodesHaveNoEventListener();
+
+    info("add event listener on a single node");
+    eventNode1.addEventListener("click", eventListener1);
+
+    let mutations = await waitForMutations();
+    is(mutations.length, 1, "one mutation expected");
+    is(mutations[0].target, eventFront1, "mutation targets eventFront1");
+    is(mutations[0].type, "events", "mutation type is events");
+    is(mutations[0].hasEventListeners, true,
+       "mutation target should have event listeners");
+    is(eventFront1.hasEventListeners, true, "eventFront1 should have event listeners");
+
+    info("remove event listener on a single node");
+    eventNode1.removeEventListener("click", eventListener1);
+
+    mutations = await waitForMutations();
+    is(mutations.length, 1, "one mutation expected");
+    is(mutations[0].target, eventFront1, "mutation targets eventFront1");
+    is(mutations[0].type, "events", "mutation type is events");
+    is(mutations[0].hasEventListeners, false,
+       "mutation target should have no event listeners");
+    is(eventFront1.hasEventListeners, false,
+       "eventFront1 should have no event listeners");
+
+    info("perform several event listener changes on a single node");
+    eventNode1.addEventListener("click", eventListener1);
+    eventNode1.addEventListener("click", eventListener2);
+    eventNode1.removeEventListener("click", eventListener1);
+    eventNode1.removeEventListener("click", eventListener2);
+
+    mutations = await waitForMutations();
+    is(mutations.length, 1, "one mutation expected");
+    is(mutations[0].target, eventFront1, "mutation targets eventFront1");
+    is(mutations[0].type, "events", "mutation type is events");
+    is(mutations[0].hasEventListeners, false,
+       "no event listener expected on mutation target");
+    is(eventFront1.hasEventListeners, false, "no event listener expected on node");
+
+    runNextTest();
+  });
+
+  addAsyncTest(async function testChangeEventsOnSeveralNodes() {
+    checkNodesHaveNoEventListener();
+
+    info("add event listeners on both nodes");
+    eventNode1.addEventListener("click", eventListener1);
+    eventNode2.addEventListener("click", eventListener2);
+
+    let mutations = await waitForMutations();
+    is(mutations.length, 2, "two mutations expected, one for each modified node");
+    // first mutation
+    is(mutations[0].target, eventFront1, "first mutation targets eventFront1");
+    is(mutations[0].type, "events", "mutation type is events");
+    is(mutations[0].hasEventListeners, true,
+       "mutation target should have event listeners");
+    is(eventFront1.hasEventListeners, true, "eventFront1 should have event listeners");
+    // second mutation
+    is(mutations[1].target, eventFront2, "second mutation targets eventFront2");
+    is(mutations[1].type, "events", "mutation type is events");
+    is(mutations[1].hasEventListeners, true,
+       "mutation target should have event listeners");
+    is(eventFront2.hasEventListeners, true, "eventFront1 should have event listeners");
+
+    info("remove event listeners on both nodes");
+    eventNode1.removeEventListener("click", eventListener1);
+    eventNode2.removeEventListener("click", eventListener2);
+
+    mutations = await waitForMutations();
+    is(mutations.length, 2, "one mutation registered for event listener change");
+    // first mutation
+    is(mutations[0].target, eventFront1, "first mutation targets eventFront1");
+    is(mutations[0].type, "events", "mutation type is events");
+    is(mutations[0].hasEventListeners, false,
+       "mutation target should have no event listeners");
+    is(eventFront1.hasEventListeners, false,
+       "eventFront2 should have no event listeners");
+    // second mutation
+    is(mutations[1].target, eventFront2, "second mutation targets eventFront2");
+    is(mutations[1].type, "events", "mutation type is events");
+    is(mutations[1].hasEventListeners, false,
+       "mutation target should have no event listeners");
+    is(eventFront2.hasEventListeners, false,
+       "eventFront2 should have no event listeners");
+
+    runNextTest();
+  });
+
+  addAsyncTest(async function testRemoveMissingEvent() {
+    checkNodesHaveNoEventListener();
+
+    info("try to remove an event listener not previously added");
+    eventNode1.removeEventListener("click", eventListener1);
+
+    info("set any attribute on the node to trigger a mutation");
+    eventNode1.setAttribute("data-attr", "somevalue");
+
+    const mutations = await waitForMutations();
+    is(mutations.length, 1, "expect only one mutation");
+    isnot(mutations.type, "events", "mutation type should not be events");
+
+    Services.prefs.setBoolPref("devtools.chrome.enabled", prevPrefValue);
+    runNextTest();
+  });
+
+  function checkNodesHaveNoEventListener() {
+    is(eventFront1.hasEventListeners, false,
+       "eventFront1 hasEventListeners should be false");
+    is(eventFront2.hasEventListeners, false,
+       "eventFront2 hasEventListeners should be false");
+  }
+
+  function waitForMutations() {
+    return new Promise(resolve => {
+      walker.once("mutations", mutations => {
+        resolve(mutations);
+      });
+    });
+  }
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1157469">Mozilla Bug 1157469</a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1,0 +1,53 @@
+# Check for 24-bit color mode (test for bug 414720)
+== colordepth.html about:blank
+
+# "PngSuite, the official set of PNG test images"
+# Images by Willem van Schaik
+#
+# http://www.schaik.com/pngsuite/pngsuite.html
+# http://www.libpng.org/pub/png/pngsuite.html
+include pngsuite-basic-n/reftest.list
+include pngsuite-basic-i/reftest.list
+include pngsuite-ancillary/reftest.list
+include pngsuite-background/reftest.list
+include pngsuite-chunkorder/reftest.list
+include pngsuite-corrupted/reftest.list
+include pngsuite-filtering/reftest.list
+include pngsuite-gamma/reftest.list
+include pngsuite-oddsizes/reftest.list
+include pngsuite-palettes/reftest.list
+include pngsuite-transparency/reftest.list
+include pngsuite-zlib/reftest.list
+
+# BMP tests
+skip-if(Android) include bmp/reftest.list
+
+# ICO tests
+skip-if(Android) include ico/reftest.list
+
+# JPEG tests
+include jpeg/reftest.list
+
+# JXL tests
+skip-if(Android||!jxl) include jxl/reftest.list
+
+# GIF tests
+include gif/reftest.list
+
+# APNG tests
+include apng/reftest.list
+
+# AVIF tests
+include avif/reftest.list
+
+# Generic image tests
+include generic/reftest.list
+
+# Color management test
+include color-management/reftest.list
+
+# Downscaling tests
+skip-if(useDrawSnapshot) include downscaling/reftest.list
+
+# Lossless encoders
+include encoders-lossless/reftest.list

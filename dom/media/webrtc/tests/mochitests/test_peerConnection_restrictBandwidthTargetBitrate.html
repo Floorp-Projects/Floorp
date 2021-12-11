@@ -1,0 +1,29 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "Bug 1404250",
+    title: "Extremely bitrate restricted video-only peer connection"
+  });
+
+  runNetworkTest(function (options) {
+    const test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{video: true}], [{video: true}]);
+    test.chain.insertAfter('PC_REMOTE_GET_OFFER', [
+      function PC_REMOTE_ADD_TIAS(test) {
+        test._local_offer.sdp = sdputils.addTiasBps(
+          test._local_offer.sdp, 25000);
+        info("Offer with TIAS: " + JSON.stringify(test._local_offer));
+      }
+    ]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

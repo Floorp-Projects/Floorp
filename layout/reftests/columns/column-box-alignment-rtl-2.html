@@ -1,0 +1,25 @@
+<!doctype html>
+<style>
+* {
+    margin: 0 0;
+    padding: 0 0;
+}
+
+div {
+    column-gap: 0;
+    column-count: 4;
+    inline-size: 600px;
+    font: 16px/1 sans-serif;
+}
+
+/* cosmetics */
+div {
+    border: 1px solid;
+}
+
+</style>
+The first column should be aligned with the right side of the block and the second column should be to its direct left.
+<div style="direction:rtl; text-align:right;">
+    <p>1st column</p>
+    <p>2nd column</p>
+</div>

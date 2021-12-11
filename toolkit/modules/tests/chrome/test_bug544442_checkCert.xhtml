@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<!--
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Test CertUtils.jsm checkCert - bug 340198 and bug 544442"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="testStart();">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+const {CertUtils} = ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
+
+function testStart() {
+  ok(true, "Entering testStart");
+
+  var request = new XMLHttpRequest();
+  request.open("GET", "https://example.com/", true);
+  request.channel.notificationCallbacks = new CertUtils.BadCertHandler(true);
+  request.onerror = function(event) { testXHRError(event); };
+  request.onload = function(event) { testXHRLoad(event); };
+  request.send(null);
+}
+
+function testXHRError(aEvent) {
+  ok(true, "Entering testXHRError - something went wrong");
+
+  var request = aEvent.target;
+  var status = 0;
+  try {
+    status = request.status;
+  }
+  catch (e) {
+  }
+
+  if (status == 0)
+    status = request.channel.QueryInterface(Ci.nsIRequest).status;
+
+  ok(false, "XHR onerror called: " + status);
+
+  SimpleTest.finish();
+}
+
+function getCheckCertResult(aChannel, aAllowNonBuiltIn, aCerts) {
+  try {
+    CertUtils.checkCert(aChannel, aAllowNonBuiltIn, aCerts);
+  }
+  catch (e) {
+    return e.result;
+  }
+  return Cr.NS_OK;
+}
+
+function testXHRLoad(aEvent) {
+  ok(true, "Entering testXHRLoad");
+
+  var channel = aEvent.target.channel;
+
+  var certs = null;
+  is(getCheckCertResult(channel, false, certs), Cr.NS_ERROR_ABORT,
+     "checkCert should throw NS_ERROR_ABORT when the certificate attributes " +
+     "array passed to checkCert is null and the certificate is not builtin");
+
+  is(getCheckCertResult(channel, true, certs), Cr.NS_OK,
+     "checkCert should not throw when the certificate attributes array " +
+     "passed to checkCert is null and builtin certificates aren't enforced");
+
+  certs = [ { invalidAttribute: "Invalid attribute" } ];
+  is(getCheckCertResult(channel, false, certs), Cr.NS_ERROR_ILLEGAL_VALUE,
+     "checkCert should throw NS_ERROR_ILLEGAL_VALUE when the certificate " +
+     "attributes array passed to checkCert has an element that has an " +
+     "attribute that does not exist on the certificate");
+
+  certs = [ { issuerName: "Incorrect issuerName" } ];
+  is(getCheckCertResult(channel, false, certs), Cr.NS_ERROR_ILLEGAL_VALUE,
+     "checkCert should throw NS_ERROR_ILLEGAL_VALUE when the certificate " +
+     "attributes array passed to checkCert has an element that has an " +
+     "issuerName that is not the same as the certificate's");
+
+  var cert = channel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo).
+             serverCert;
+
+  certs = [ { issuerName: cert.issuerName,
+              commonName: cert.commonName } ];
+  is(getCheckCertResult(channel, false, certs), Cr.NS_ERROR_ABORT,
+     "checkCert should throw NS_ERROR_ABORT when the certificate attributes " +
+     "array passed to checkCert has a single element that has the same " +
+     "issuerName and commonName as the certificate's and the certificate is " +
+     "not builtin");
+
+  is(getCheckCertResult(channel, true, certs), Cr.NS_OK,
+     "checkCert should not throw when the certificate attributes array " +
+     "passed to checkCert has a single element that has the same issuerName " +
+     "and commonName as the certificate's and and builtin certificates " +
+     "aren't enforced");
+
+  certs = [ { issuerName: "Incorrect issuerName",
+              invalidAttribute: "Invalid attribute" },
+            { issuerName: cert.issuerName,
+              commonName: "Invalid Common Name" },
+            { issuerName: cert.issuerName,
+              commonName: cert.commonName } ];
+  is(getCheckCertResult(channel, false, certs), Cr.NS_ERROR_ABORT,
+     "checkCert should throw NS_ERROR_ABORT when the certificate attributes " +
+     "array passed to checkCert has an element that has the same issuerName " +
+     "and commonName as the certificate's and the certificate is not builtin");
+
+  is(getCheckCertResult(channel, true, certs), Cr.NS_OK,
+     "checkCert should not throw when the certificate attributes array " +
+     "passed to checkCert has an element that has the same issuerName and " +
+     "commonName as the certificate's and builtin certificates aren't enforced");
+
+  var mockChannel = { originalURI: SpecialPowers.Services.io.newURI("http://example.com/") };
+
+  certs = [ ];
+  is(getCheckCertResult(mockChannel, false, certs), Cr.NS_ERROR_UNEXPECTED,
+     "checkCert should throw NS_ERROR_UNEXPECTED when the certificate " +
+     "attributes array passed to checkCert is not null and the channel's " +
+     "originalURI is not https");
+
+  certs = null;
+  is(getCheckCertResult(mockChannel, false, certs), Cr.NS_OK,
+     "checkCert should not throw when the certificate attributes object " +
+     "passed to checkCert is null and the the channel's originalURI is not " +
+     "https");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>

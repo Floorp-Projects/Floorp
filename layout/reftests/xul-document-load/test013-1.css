@@ -1,0 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/licenses/publicdomain/  */
+
+@import url(test013-1-import.css);
+window { 
+  background-color: red;
+}

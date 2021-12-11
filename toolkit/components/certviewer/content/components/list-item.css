@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  display: grid;
+  padding: 1em 0 1em;
+  border-block: 0.5px solid var(--in-content-border-color);
+  border-inline: 0.5px solid transparent;
+  position: relative;
+}
+
+:host(:hover) {
+  background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
+  border-inline-color: var(--in-content-border-color);
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.cert-url {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  align-items: center;
+  display: flex;
+}
+
+.cert-url > .item-name {
+  padding-inline-start: 0.8em;
+}
+
+.export {
+  position: absolute;
+  inset-inline-end: 2em;
+  align-self: center;
+  font-size: 1em;
+}
+
+.export a {
+  position: relative;
+}

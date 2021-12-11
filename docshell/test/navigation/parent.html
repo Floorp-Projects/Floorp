@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+This document contains a frame.
+<div><iframe src="blank.html"></iframe></div>
+<script>
+frames[0].name = window.name + "_child0";
+window.onload = function() {
+  opener.postMessage("ready", "*");
+};
+</script>
+</body>
+</html>
+

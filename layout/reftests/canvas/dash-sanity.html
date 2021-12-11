@@ -1,0 +1,98 @@
+<html>
+<head>
+  <script type="text/javascript">
+function assert(cond, msg) { if (!cond) { throw msg; } }
+window.onload = function() {
+    try {
+        var ctx = document.getElementById("c1").getContext("2d");
+
+        assert(0 === ctx.getLineDash().length,
+               "Default dash is [ ] (none)");
+        assert(0 === ctx.lineDashOffset,
+               "Default dashOffset is 0 (none)");
+
+        ctx.setLineDash([ 2 ]);
+        assert(2 === ctx.getLineDash().length &&
+               2 === ctx.getLineDash()[0] &&
+               2 === ctx.getLineDash()[1],
+               "dash = [ 2 ] works");
+        ctx.setLineDash([ 2 ]);
+        ctx.setLineDash([ ]);
+        assert(0 === ctx.getLineDash().length,
+               "dash = [ ] works");
+        ctx.setLineDash([ 2 ]);
+        ctx.setLineDash([ 0, 0, 0 ]);
+        assert(6 === ctx.getLineDash().length,
+               0 === ctx.getLineDash()[0] &&
+               0 === ctx.getLineDash()[1] &&
+               0 === ctx.getLineDash()[2] &&
+               0 === ctx.getLineDash()[3] &&
+               0 === ctx.getLineDash()[4] &&
+               0 === ctx.getLineDash()[5],
+               "dash = [ 0, 0, 0 ] works");
+
+        ctx.setLineDash([ 2 ]);
+        assert(0 === ctx.lineDashOffset, "dashOffset is 0");
+        ctx.lineDashOffset = 1;
+        assert(1 === ctx.lineDashOffset, "Setting dashOffset succeeded");
+        ctx.setLineDash([ ]);
+        assert(1 === ctx.lineDashOffset, "Changing dash does not reset dashOffset");
+
+        // NB: might want to add a |.dash = number| special case,
+        // don't test that it fails here.  Might also want to add a
+        // |.dash = [0]| special case for resetting, so don't test
+        // that either.
+        var badVals = [ -1,
+                        null,
+                        undefined,
+                        "",
+                        "string",
+                        { obj: true },
+                        function() {}
+        ]
+        ctx.setLineDash([ 2 ]);
+        for (var i = 0; i < badVals.length; ++i) {
+            var error = false;
+            try { ctx.setLineDash(badVals[i]); }
+            catch(e) { error = true; }
+            assert(error &&
+                   2 === ctx.getLineDash().length &&
+                   2 === ctx.getLineDash()[0] &&
+                   2 === ctx.getLineDash()[1],
+                   "Expected setLineDash("+ badVals[i] +") to throw exception and not change dash");
+        }
+
+        var ignoredVals = [
+                        [ "array of string" ],
+                        [ -1 ],
+                        [ 2, "string" ],
+        ];
+        ctx.setLineDash([ 2 ]);
+        for (var i = 0; i < ignoredVals.length; ++i) {
+            ctx.setLineDash(ignoredVals[i]);
+            assert(2 === ctx.getLineDash().length &&
+                   2 === ctx.getLineDash()[0] &&
+                   2 === ctx.getLineDash()[1],
+                   "Expected |setLineDash(" + ignoredVals[i] + ") to not change dash");
+        }
+
+        ctx.setLineDash([ 2 ]);
+        ctx.save();
+        ctx.setLineDash([ 1, 1, 1, 1 ]);
+        ctx.restore();
+        assert(2 === ctx.getLineDash().length &&
+               2 === ctx.getLineDash()[0] &&
+               2 === ctx.getLineDash()[1],
+               "dash was saved then restored");
+    } catch (e) {
+        document.body.innerHTML = "FAIL: "+ e.toString();
+        return;
+    }
+    document.body.innerHTML = "Pass";
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the inspector actor emits "resize" events when the page is resized.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1222409
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1222409</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  let win = null;
+  let inspector = null;
+
+  addAsyncTest(async function setup() {
+    info("Setting up inspector and walker actors.");
+
+    const url = document.getElementById("inspectorContent").href;
+
+    const { target, doc } = await attachURL(url);
+    inspector = await target.getFront("inspector");
+    win = doc.defaultView;
+    runNextTest();
+  });
+
+  addAsyncTest(async function() {
+    const walker = inspector.walker;
+
+    // We can't receive events from the walker if we haven't first executed a
+    // method on the actor to initialize it.
+    await walker.querySelector(walker.rootNode, "img");
+
+    const {outerWidth, outerHeight} = win;
+    // eslint-disable-next-line new-cap
+    const onResize = new Promise(resolve => {
+      walker.once("resize", () => {
+        resolve();
+      });
+    });
+    win.resizeTo(800, 600);
+    await onResize;
+
+    ok(true, "The resize event was emitted");
+    win.resizeTo(outerWidth, outerHeight);
+
+    runNextTest();
+  });
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+<a id="inspectorContent" target="_blank" href="inspector-search-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

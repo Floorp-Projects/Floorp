@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1223372
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1223372</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+/** Test for Bug 1223372 **/
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+async function go() {
+    SimpleTest.waitForExplicitFinish();
+    await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                             true]]});
+
+    var frame = $('subframe');
+    frame.onload = null;
+
+    var w = frame.contentWindow;
+
+    w.eval("checkDead = function() { return Components.utils.isDeadWrapper(this); };");
+    var checkDead = w.checkDead;
+
+    w.eval("getObject = function() { return {}; }");
+    var getObject = w.getObject;
+
+    ok(!checkDead(), "WindowProxy shouldn't be dead yet");
+
+    // Load a content page in the chrome frame.
+    w.location = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
+    tryWindow();
+
+    function tryWindow() {
+        if (w.document.title != 'empty test page') {
+            info("Document not loaded yet - retrying");
+            SimpleTest.executeSoon(tryWindow);
+            return;
+        }
+
+        let winID = w.docShell.outerWindowID;
+        // Remove the frame. This will nuke the WindowProxy wrapper from our chrome
+        // document's global, so evaluating 'this' in it will return a dead wrapper
+        // once the window is destroyed.
+        frame.remove();
+
+        TestUtils.topicObserved("outer-window-nuked", (subject, data) => {
+            let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+            return id == winID;
+        }).then(() => {
+            ok(checkDead(), "Expected a dead object wrapper");
+
+            // Wrapping the Window should return a dead wrapper now.
+            var global = Cu.getGlobalForObject(getObject());
+            ok(Cu.isDeadWrapper(global),
+               "Expected a dead wrapper when requesting the window's global");
+
+            SimpleTest.finish();
+        });
+    }
+}
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1223372">Mozilla Bug 1223372</a>
+
+<iframe id="subframe" src="./file_empty.html" onload="go()"></iframe>
+
+</body>
+</html>

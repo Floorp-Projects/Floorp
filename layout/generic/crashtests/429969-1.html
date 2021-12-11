@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+#inner:first-letter { }
+#outer { direction: rtl; }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.documentElement.style.whiteSpace = "pre";
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="outer"><div id="inner"><span id="s"><span>
+
+</span>AB</span></div></div></body>
+</html>

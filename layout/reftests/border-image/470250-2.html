@@ -1,0 +1,28 @@
+<!doctype html>
+<html class="reftest-wait"><head>
+<title>border-image, only middle part, table cell, testcase</title>
+<style>
+table {
+  width: 48px;
+  height: 48px;
+  border-collapse: separate;
+  border-width: 0;
+  border-style: solid;
+  border-image: url(3x3green-1DD813.png) 0 fill;
+}
+</style>
+</head><body>
+<iframe src="3x3green-1DD813.png" width="48" height="48"></iframe>
+<table>
+</table>
+<script>
+  // This is a wallpaper for bug 688897 until bug 697230 is fixed.
+  // MozReftestInvalidate is called after onload of all frames so it
+  // delays the snapshot until the used border image is loaded.
+  window.addEventListener("MozReftestInvalidate",
+    function() {
+      document.getElementsByTagName("iframe")[0].style.display = "none";
+      document.documentElement.className = "";
+    });
+</script>
+</body></html>

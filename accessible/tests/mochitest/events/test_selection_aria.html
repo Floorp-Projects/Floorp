@@ -1,0 +1,122 @@
+<html>
+
+<head>
+  <title>ARIA selection event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function selectItem(aSelectID, aItemID) {
+      this.selectNode = getNode(aSelectID);
+      this.itemNode = getNode(aItemID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SELECTION, aItemID),
+      ];
+
+      this.invoke = function selectItem_invoke() {
+        var itemNode = this.selectNode.querySelector("*[aria-selected='true']");
+        if (itemNode)
+          itemNode.removeAttribute("aria-selected");
+
+        this.itemNode.setAttribute("aria-selected", "true");
+      };
+
+      this.getID = function selectItem_getID() {
+        return "select item " + prettyName(aItemID);
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+
+    // gA11yEventDumpToConsole = true; // debug stuff
+
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new selectItem("tablist", "tab1"));
+      gQueue.push(new selectItem("tablist", "tab2"));
+
+      gQueue.push(new selectItem("tree", "treeitem1"));
+      gQueue.push(new selectItem("tree", "treeitem1a"));
+      gQueue.push(new selectItem("tree", "treeitem1a1"));
+
+      gQueue.push(new selectItem("tree2", "tree2item1"));
+      gQueue.push(new selectItem("tree2", "tree2item1a"));
+      gQueue.push(new selectItem("tree2", "tree2item1a1"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=569653"
+     title="Make selection events async">
+    Mozilla Bug 569653
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=804040"
+     title="Selection event not fired when selection of ARIA tab changes">
+    Mozilla Bug 804040
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="tablist" id="tablist">
+    <div role="tab" id="tab1">tab1</div>
+    <div role="tab" id="tab2">tab2</div>
+  </div>
+
+  <div id="tree" role="tree">
+    <div id="treeitem1" role="treeitem">Canada
+      <div id="treeitem1a" role="treeitem">- Ontario
+        <div id="treeitem1a1" role="treeitem">-- Toronto</div>
+      </div>
+      <div id="treeitem1b" role="treeitem">- Manitoba</div>
+    </div>
+    <div id="treeitem2" role="treeitem">Germany</div>
+    <div id="treeitem3" role="treeitem">Russia</div>
+  </div>
+
+  <div id="tree2" role="tree" aria-multiselectable="true">
+    <div id="tree2item1" role="treeitem">Canada
+      <div id="tree2item1a" role="treeitem">- Ontario
+        <div id="tree2item1a1" role="treeitem">-- Toronto</div>
+      </div>
+      <div id="tree2item1b" role="treeitem">- Manitoba</div>
+    </div>
+    <div id="tree2item2" role="treeitem">Germany</div>
+    <div id="tree2item3" role="treeitem">Russia</div>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>

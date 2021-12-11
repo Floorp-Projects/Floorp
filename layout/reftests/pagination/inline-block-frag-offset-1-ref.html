@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<head>
+    <style>
+    @page {
+        size: 5in 3in;
+        margin: 0.5in;
+    }
+
+    * {
+        margin: 0;
+    }
+
+    .green {
+        display: block;
+        width: 1in;
+        height: 3in;
+        background-color: green;
+    }
+
+    .blue {
+        width: 1in;
+        height: 1in;
+        background-color: blue;
+        position: absolute;
+        top: 1.5in;
+        z-index: 1;
+    }
+    </style>
+</head>
+<body>
+    <div class="green"></div>
+    <div class="blue"></div>
+</body>
+</html>

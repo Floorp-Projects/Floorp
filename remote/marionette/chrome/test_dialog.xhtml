@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE testdialog [
+<!ENTITY % dialogDTD SYSTEM "chrome://remote/content/marionette/test_dialog.dtd" >
+%dialogDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&testDialog.title;">
+<dialog id="testDialog"
+        buttons="accept,cancel">
+
+  <vbox flex="1" style="min-width: 300px; min-height: 500px;">
+    <label>&settings.label;</label>
+    <separator class="thin"/>
+    <richlistbox id="test-list" flex="1">
+        <richlistitem id="item-choose" orient="horizontal" selected="true">
+            <label id="choose-label" value="First Entry" flex="1"/>
+            <button id="choose-button" oncommand="" label="Choose..."/>
+        </richlistitem>
+    </richlistbox>
+    <separator class="thin"/>
+    <checkbox id="check-box" label="Test Mode 2" />
+    <hbox align="center">
+      <label id="text-box-label" control="text-box">Name:</label>
+      <input xmlns="http://www.w3.org/1999/xhtml" id="text-box" style="-moz-box-flex: 1;" />
+    </hbox>
+  </vbox>
+
+</dialog>
+</window>

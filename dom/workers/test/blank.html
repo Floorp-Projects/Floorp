@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Blank</title>
+  </head>
+  <body onload="notifyOnload();">
+    <script type="application/javascript">
+    function notifyOnload() {
+      opener.postMessage({event: 'load'}, '*');
+    }
+    </script>
+  </body>
+</html>

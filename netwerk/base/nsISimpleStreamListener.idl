@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIStreamListener.idl"
+
+interface nsIOutputStream;
+
+/**
+ * A simple stream listener can be used with AsyncRead to supply data to
+ * a output stream.
+ */
+[scriptable, uuid(a9b84f6a-0824-4278-bae6-bfca0570a26e)]
+interface nsISimpleStreamListener : nsIStreamListener
+{
+    /**
+     * Initialize the simple stream listener.
+     *
+     * @param aSink data will be read from the channel to this output stream.
+     *              Must implement writeFrom.
+     * @param aObserver optional stream observer (can be NULL)
+     */
+    void init(in nsIOutputStream aSink,
+              in nsIRequestObserver aObserver);
+};

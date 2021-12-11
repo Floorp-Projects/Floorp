@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1661423 - don't apply upgrade-insecure-requests on form submissions to localhost</title>
+</head>
+<body>
+
+<form id="form" action="http://127.0.0.1/bug-1661423-dont-upgrade-localhost">
+  <input type="submit">
+</form>>
+<script type="text/javascript">
+
+    form.submit();
+</script>
+</body>
+</html>

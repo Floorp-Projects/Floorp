@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1320229
+
+Checks if a user can paste a password longer than `maxlength` and if the field
+is then marked as `tooLong`.
+-->
+<head>
+  <title>Test pasting text longer than maxlength</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1320229">Mozilla Bug 1320229</a>
+<p id="display"></p>
+<div id="content">
+  <div id="src">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</div>
+  <input id="form-password" type="password" maxlength="20">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1320229 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["editor.truncate_user_pastes", false]]});
+  var src = document.getElementById("src");
+  var pwd = document.getElementById("form-password");
+  SimpleTest.waitForClipboard(src.textContent,
+    function() {
+      getSelection().selectAllChildren(src);
+      synthesizeKey("C", {accelKey: true});
+    },
+    function() {
+      pwd.focus();
+      synthesizeKey("V", {accelKey: true});
+      is(pwd.value, src.textContent,
+         "Pasting should paste the clipboard contents regardless of maxlength");
+      is(pwd.validity.tooLong, true, "Pasting over maxlength should set the tooLong flag")
+      SimpleTest.finish();
+    },
+    function() {
+      SimpleTest.finish();
+    }
+  );
+});
+
+</script>
+</pre>
+</body>
+</html>

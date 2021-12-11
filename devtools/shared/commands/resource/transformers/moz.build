@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    "console-messages.js",
+    "error-messages.js",
+    "network-events.js",
+    "storage-cache.js",
+    "storage-cookie.js",
+    "storage-indexed-db.js",
+    "storage-local-storage.js",
+    "storage-session-storage.js",
+    "thread-states.js",
+)

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<body>
+  <iframe></iframe>
+  <script>
+    var win = window.frames[0];
+    win.document.open();
+    win.document.write("<!DOCTYPE html><html><head><link rel='stylesheet' type='text/css' href='outer-sheet.css' /></head><body><p style='padding:2px'>test</p></body></html>");
+    win.document.close();
+  </script>
+</body>
+                                              

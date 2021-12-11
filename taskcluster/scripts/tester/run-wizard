@@ -1,0 +1,178 @@
+#!/usr/bin/env python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this,
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import print_function, unicode_literals
+
+import datetime
+import os
+import subprocess
+import sys
+import time
+from distutils.spawn import find_executable
+from textwrap import wrap
+
+here = os.path.dirname(os.path.abspath(__file__))
+MOZHARNESS_WORKDIR = os.path.expanduser(os.path.join('~', 'workspace', 'build'))
+
+MACH_SETUP_FINISHED = """
+Mozharness has finished downloading the build and tests to:
+{}
+
+A limited mach environment has also been set up and added to the $PATH, but
+it may be missing the command you need. To see a list of commands, run:
+    $ mach help
+""".lstrip().format(MOZHARNESS_WORKDIR)
+
+MACH_SETUP_FAILED = """
+Could not set up mach environment, no mach binary detected.
+""".lstrip()
+
+
+def call(cmd, **kwargs):
+    print(" ".join(cmd))
+    return subprocess.call(cmd, **kwargs)
+
+
+def wait_for_run_mozharness(timeout=60):
+    starttime = datetime.datetime.now()
+    while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
+        if os.path.isfile(os.path.join(here, 'run-mozharness')):
+            break
+        time.sleep(0.2)
+    else:
+        print("Timed out after %d seconds waiting for the 'run-mozharness' binary" % timeout)
+        return 1
+
+
+def setup_mach_environment():
+    mach_src = os.path.join(MOZHARNESS_WORKDIR, 'tests', 'mach')
+    if not os.path.isfile(mach_src):
+        return 1
+
+    mach_dest = os.path.expanduser(os.path.join('~', 'bin', 'mach'))
+    if os.path.exists(mach_dest):
+        os.remove(mach_dest)
+    os.symlink(mach_src, mach_dest)
+    return 0
+
+
+def run_mozharness(*args):
+    wait_for_run_mozharness()
+    try:
+        return call(['run-mozharness'] + list(args))
+    finally:
+        setup_mach_environment()
+
+
+def setup():
+    """Run the mozharness script without the 'run-tests' action.
+
+    This will do all the necessary setup steps like creating a virtualenv and
+    downloading the tests and firefox binary. But it stops before running the
+    tests.
+    """
+    status = run_mozharness('--no-run-tests')
+
+    if find_executable('mach'):
+        print(MACH_SETUP_FINISHED)
+    else:
+        print(MACH_SETUP_FAILED)
+
+    return status
+
+
+def clone():
+    """Clone the correct gecko repository and update to the proper revision."""
+    base_repo = os.environ['GECKO_HEAD_REPOSITORY']
+    dest = os.path.expanduser(os.path.join('~', 'gecko'))
+
+    # Specify method to checkout a revision. This defaults to revisions as
+    # SHA-1 strings, but also supports symbolic revisions like `tip` via the
+    # branch flag.
+    if os.environ.get('GECKO_HEAD_REV'):
+        revision_flag = b'--revision'
+        revision = os.environ['GECKO_HEAD_REV']
+    elif os.environ.get('GECKO_HEAD_REF'):
+        revision_flag = b'--branch'
+        revision = os.environ['GECKO_HEAD_REF']
+    else:
+        print('revision is not specified for checkout')
+        return 1
+
+    # TODO Bug 1301382 - pin hg.mozilla.org fingerprint.
+    call([
+        b'/usr/bin/hg', b'robustcheckout',
+        b'--sharebase', os.environ['HG_STORE_PATH'],
+        b'--purge',
+        b'--upstream', b'https://hg.mozilla.org/mozilla-unified',
+        revision_flag, revision,
+        base_repo, dest
+    ])
+    print("Finished cloning to {} at revision {}.".format(dest, revision))
+
+
+def exit():
+    pass
+
+
+OPTIONS = [
+    ('Resume task', run_mozharness,
+     "Resume the original task without modification. This can be useful for "
+     "passively monitoring it from another shell."),
+    ('Setup task', setup,
+     "Setup the task (download the application and tests) but don't run the "
+     "tests just yet. The tests can be run with a custom configuration later. "
+     "This will provide a mach environment (experimental)."),
+    ('Clone gecko', clone,
+     "Perform a clone of gecko using the task's repo and update it to the "
+     "task's revision."),
+    ('Exit', exit, "Exit this wizard and return to the shell.")
+]
+
+
+def _fmt_options():
+    max_line_len = 60
+    max_name_len = max(len(o[0]) for o in OPTIONS)
+
+    # TODO Pad will be off if there are more than 9 options.
+    pad = ' ' * (max_name_len+6)
+
+    msg = []
+    for i, (name, _, desc) in enumerate(OPTIONS):
+        desc = wrap(desc, width=max_line_len)
+        desc = [desc[0]] + [pad + l for l in desc[1:]]
+
+        optstr = '{}) {} - {}\n'.format(
+            i+1, name.ljust(max_name_len), '\n'.join(desc))
+        msg.append(optstr)
+    msg.append("Select one of the above options: ")
+    return '\n'.join(msg)
+
+
+def wizard():
+    print("This wizard can help you get started with some common debugging "
+          "workflows.\nWhat would you like to do?\n")
+    print(_fmt_options(), end="")
+    choice = None
+    while True:
+        choice = raw_input().decode('utf8')
+        try:
+            choice = int(choice)-1
+            if 0 <= choice < len(OPTIONS):
+                break
+        except ValueError:
+            pass
+
+        print("Must provide an integer from 1-{}:".format(len(OPTIONS)))
+
+    func = OPTIONS[choice][1]
+    ret = func()
+
+    print("Use the 'run-wizard' command to start this wizard again.")
+    return ret
+
+
+if __name__ == '__main__':
+    sys.exit(wizard())

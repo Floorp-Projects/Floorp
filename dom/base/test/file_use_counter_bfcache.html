@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<script>
+let goneBack = false;
+let w;
+
+onload = function() {
+  w = window.open("file_use_counter_bfcache_helper.html?a", "_blank");
+};
+
+onmessage = function() {
+  switch (event.data) {
+    case "a-doc-loaded":
+      if (!goneBack) {
+        w.postMessage("click-b-link", "*");
+      }
+      break;
+    case "b-doc-loaded":
+      if (!goneBack) {
+        goneBack = true;
+        w.postMessage("go-back", "*");
+      }
+      break;
+    case "a-doc-shown":
+      if (goneBack) {
+        w.postMessage("set-use-counter", "*");
+      }
+      break;
+    case "did-set-use-counter":
+      w.postMessage("click-c-link", "*");
+      break;
+    case "c-doc-loaded":
+      w.close();
+      // Signal that we've finished.
+      location.hash = "#finished";
+      break;
+  }
+};
+</script>

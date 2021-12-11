@@ -1,0 +1,412 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+<head>
+<title>xptcall Porting Status</title>
+</head>
+<body bgcolor = "white">
+<h2><center>xptcall Porting Status</center></h2>
+
+<h3>What is this?</h3>
+
+This is a status page for the multiplatform porting of xptcall.
+xptcall has a 
+<a href="http://www.mozilla.org/scriptable/xptcall-faq.html">FAQ</a>
+and a 
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/porting.html">Porting Guide</a>.
+
+<p>
+
+This is being maintained by <a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a>.
+Feel free to email me with questions or to volunteer to contribute xptcall code for any platform.
+
+<p>
+
+<a href="mailto:shaver@mozilla.org">Mike Shaver &lt;shaver@mozilla.org&gt;</a> 
+is the best contact regarding 'nix (Unix, Linux, Finux, etc.) ports of xptcall.
+
+<h3>Status</h3>
+
+<table BORDER="1">
+<TR align="left" BGCOLOR="yellow">
+<TH>Status</TH>
+<TH>Platform</TH>
+<TH><img src="http://tinderbox.mozilla.org/star.gif">Contributors and <font color="red"><b>?</b></font> Possible Contributors</TH>
+<TH>Notes</TH>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Win32 x86</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a>
+</TD>
+<TD>
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/win32">win32</a></TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Linux x86</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a><br>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:drepper@cygnus.com">Ulrich Drepper &lt;drepper@cygnus.com&gt;</a>
+</TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/unix">unix</a>
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>FreeBSD and NetBSD x86</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:toshok@hungry.com">Christoph Toshok &lt;toshok@hungry.com&gt;</a>,<BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/unix">unix</a> (same as Linux 86 code)</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>BSD/OS x86</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:bert_driehuis@nl.compuware.com">Bert Driehuis &lt;bert_driehuis@nl.compuware.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/unix">unix</a> (same as Linux 86 code)
+Bert contributed patches that *should* do the right thing for all the unixish-x86
+versions of this code for GCC 2.7 or 2.8 vs. EGCS 1.1. He notes that the vtbl 
+scheme is different. He is hoping that others will help test the changes using 
+these two compilers on the various platforms where this same code is used. 
+<a href="news://news.mozilla.org/372DD257.4248C821%40nl.compuware.com">Bert's details</a>
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Mac PPC</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+ <a href="mailto:rogerl@netscape.com">Roger Lawrence &lt;rogerl@netscape.com&gt;</a>,<BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:beard@netscape.com">Patrick Beard &lt;beard@netscape.com&gt;</a>
+</TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/mac">mac</a> (passing tests and checked in)</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Solaris Sparc</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:rogerl@netscape.com">Roger Lawrence &lt;rogerl@netscape.com&gt;</a>,<BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:mcafee@netscape.com">Chris McAfee &lt;mcafee@netscape.com&gt;</a>
+</TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/unix">unix</a> This is checked in and working.</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Solaris Sparc v9 (64bit)</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:pavlov@netscape.com">Stuart Parmenter &lt;pavlov@netscape.com&gt;</a>,<BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:cls@seawood.org">Chris Seawood &lt;cls@seawood.org&gt;</a>
+</TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/unix">unix</a> This is checked in and (pavlov claims!) working.</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>OS/2</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:mjf35@cam.ac.uk">John Fairhurst &lt;mjf35@cam.ac.uk&gt;</a></TD>
+<TD>I never heard exactly who did what. But mozilla has been working on OS/2 
+for a long time now.
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>OpenVMS Alpha</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:colin@theblakes.com">Colin R. Blake &lt;colin@theblakes.com&gt;</a></TD>
+<TD>
+Colin says this is passing all the tests on OpenVMS Alpha!
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>NT Alpha</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:bob@guiduck.com">bob meader &lt;bob@guiduck.com&gt;</a></TD>
+<TD>
+bob writes:<br>
+Enclosed is xptcall for alpha/nt target..
+<p>
+It is a variation of the IRIS port (only targeted for win32).
+<p>
+Notice the last 2 files (the change to mozilla\xpcom\build\makefile.win and
+mozilla\xpcom\build) are needed because I was unable to figure how to do a
+"declspecexport" from the assembler ASAXP ... if some knows how to do that then
+those last 2 files won't be needed.
+<p>
+I have had someone look over this code at bridge.com (the entry point to
+compaq/gem compiler team) and this code was given the OK. I consider it "done".
+<p>
+This code lives in the files where the name includes 'alpha' in the <a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/win32">win32</a> directory.<BR>
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Linux ARM</TD>
+<TD><img alt="Started" title="Started" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:sh990154@mail.uni-greifswald.de">Stefan Hanske&lt;sh990154@mail.uni-greifswald.de&gt;</a><BR>
+<font color="red"><b>?</b></font>
+<a href="mailto:willy@bofh.ai">Matthew Wilcox &lt;willy@bofh.ai&gt;</a></TD>
+<TD>
+Stefan's code is checked in and he says it is working.
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Linux Sparc</TD>
+<TD>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:anton@progsoc.uts.edu.au">Anton Blanchard &lt;anton@progsoc.uts.edu.au&gt;</a>,
+<BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:rogerl@netscape.com">Roger Lawrence &lt;rogerl@netscape.com&gt;</a>,
+<BR>
+<img  alt="Maybe" title="Maybe" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:ehle.3@osu.eduehle.3@osu.edu">Brandon Ehle &lt;ehle.3@osu.edu&gt;</a>
+</TD>
+<TD>
+Anton contributed patches to Roger's Sparc code. Anton says it works and passes the tests!<b>
+(24-Aug-1999) Brandon writes: I've finished testing XPTCALL Sparc Linux on 12 different Sparc machines and it checks out good.
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Linux PPC</TD>
+<TD> 
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:beard@netscape.com">Patrick Beard &lt;beard@netscape.com&gt;</a><BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:waterson@netscape.com">Chris Waterson &lt;waterson@netscape.com&gt;</a><BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:Franz.Sirl-kernel@lauterbach.com">Franz Sirl &lt;Franz.Sirl-kernel@lauterbach.com&gt;</a><BR>
+<font color="red"><b>?</b></font> 
+<a href="mailto:jsproul@condor.fddi.wesleyan.edu">Jason Y. Sproul &lt;jsproul@condor.fddi.wesleyan.edu&gt;</a><BR>
+ <font color="red"><b>?</b></font> 
+ <a href="mailto:darkmane@w-link.net">Sean Chitwood &lt;darkmane@w-link.net&gt;</a></TD>
+<TD>
+waterson said: <b>Mozilla runs on Linux/PPC</b>
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Linux Alpha</TD>
+<TD>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:glen.nakamura@usa.net">Glen Nakamura &lt;glen.nakamura@usa.net&gt;</a><BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:morrildl@nycap.rr.com">Dan Morril &lt;morrildl@nycap.rr.com&gt;</a><BR>
+</TD>
+<TD>
+Glen writes:
+<p>
+I am attaching a patch which contains my Linux Alpha xptcall code.
+It passes TestXPTCInvoke and TestXPC on my machine which runs
+kernel 2.2.7, glibc 2.1.1, and egcs 1.1.2.  I have not tested it
+with older GNU compilers such as gcc 2.8.x.  From looking at the
+Linux x86 code, I gather that the vtable layout is a little different
+for those compilers and the code will need minor modifications
+in order to work properly.
+<p>
+I am not sure how much of the code can be used for OpenVMS Alpha
+and/or Digital UNIX.  Currently the code is dependent on the g++
+name mangling convention and a few GNU extensions so I'm not sure
+how useful it will be for the other systems.  Hopefully the
+comments in the code are detailed enough to help people attempting
+a port.
+<p>
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>SunOS x86</TD>
+<TD> 
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:aljones@lbl.gov">Arthur Jones &lt;aljones@lbl.gov&gt;</a><BR>
+<font color="red"><b>?</b></font> 
+<a href="mailto:ppokorny@mindspring.com">Philip Pokorny &lt;ppokorny@mindspring.com&gt;</a><BR>
+</TD>
+<TD>
+The word I hear is that this is working and done
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>HP-UX</TD>
+<TD>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:wang@cup.hp.com">Thomas Wang &lt;wang@cup.hp.com&gt;</a><BR>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:mgleeson1@netscape.com">Mike Gleeson &lt;mgleeson1@netscape.com&gt;</a>
+</TD>
+<TD>I hear that this code is checked in and working. Though, there is some 
+doubt - see bug 
+#<a href="http://bugzilla.mozilla.org/show_bug.cgi?id=17997">17997</a>
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>AIX PPC</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:jdunn@netscape.com">Jim Dunn &lt;jdunn@netscape.com&gt;</a></TD>
+<TD>Philip K. Warren writes: <BR>
+
+We have gone through several releases of AIX without any problems.
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Irix</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:jasonh@m7.engr.sgi.com">Jason Heirtzler &lt;jasonh@m7.engr.sgi.com&gt;</a><BR>
+</TD>
+<TD>Jason has declared this done. Jason is no longer working at SGI and will 
+not be maintaining this code. There is some doubt as to whether or not this is 
+working for everyone - see bug 
+#<a href="http://bugzilla.mozilla.org/show_bug.cgi?id=10061">10061</a>. 
+<a href="mailto:shaver@mozilla.org">Mike&nbsp;Shaver&nbsp;&lt;shaver@mozilla.org&gt;</a> 
+is the interim maintainer until someone more suitable can be found.
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>BeOS x86</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:duncan@be.com">Duncan Wilcox &lt;duncan@be.com&gt;</a><BR>
+</TD>
+<TD>
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/md/unix">unix</a> (yet another reuse of the Linux 86 code!)<BR>
+Duncan says this is all working. He did the code for old cfront style 'this' adjustment for others to use too!
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>BeOS PPC</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Compaq Tru64 UNIX (Digital UNIX)</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:streeter@zk3.dec.com">Steve Streeter &lt;streeter@zk3.dec.com&gt;</a><BR>
+</TD>
+<TD>Code passes the tests and is checked in.</TD>
+</TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Working</b></font></TD>
+<TD>Neutrio x86</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:Jerry.Kirk@Nexwarecorp.com">Jerry L. Kirk &lt;Jerry.Kirk@Nexwarecorp.com&gt;</a><BR>
+</TD>
+<TD>
+Patches for xptc*_unixish_x86.cpp checked in. Waiting for verification that this is really finished. 
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Investigating</b></font></TD>
+<TD>SCO UW7 and OSR5</TD>
+<TD>
+<img alt="Investigating" title="Investigating" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:jkj@sco.com">J. Kean Johnston &lt;jkj@sco.com&gt;</a><BR>
+<img alt="Investigating" title="Investigating" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:evanh@sco.com">Evan Hunt &lt;evanh@sco.com&gt;</a><BR>
+</TD>
+<TD>Recent (Feb-2001) email from jkj@sco.com suggests that work will be occuring soon.</TD>
+</TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Works</b></font></TD>
+<TD>NetBSD/m68k</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:khym@bga.com">Dave Huang &lt;khym@bga.com&gt;</a><BR>
+</TD>
+<TD>
+Dave's changes are in the tree. Waiting for verification that it is really finished.</TD>
+</TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Partially Working</b></font></TD>
+<TD>NetBSD/arm32</TD>
+<TD><img alt="Investigating" title="Investigating" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:mpumford@black-star.demon.co.uk">Mike Pumford &lt;mpumford@black-star.demon.co.uk&gt;</a>
+</TD>
+<TD>Mike writes:<BR>
+I have started porting to the platform based on the code for Linux ARM. The 
+InvokeByIndex code works correctly when used with TestXPTCInvoke. I am 
+currently working on making TestXPC function correctly.
+<P>
+I am doing the porting work with egcs-1.1.2 on NetBSD 1.4P (NetBSD-current 
+snapshot from a couple of days ago).
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Linux ia64</TD>
+<TD><img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+HP<br>
+<img alt="Contributed code!" title="Contributed code!" src="http://tinderbox.mozilla.org/star.gif">
+<a href="mailto:drepper@redhat.com">Ulrich Drepper &lt;drepper@redhat.com&gt;</a>
+</TD>
+<TD><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=40950#c15">bug 40950 comment 15</a></TD>
+</TR>
+
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>All others!</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+
+</table>
+
+<p>
+
+<b>Note:</b> I've used the symbol (<font color="red"><b>?</b></font>) to 
+indicate people who have expressed an interest in <i>possibly</i> contributing code. 
+Just because these people are listed here does not mean that they have commited
+themselves to do the work. If <b>you</b> would like to contribute then let me 
+know. Feel free to email these folks and offer to help or find out what's going 
+on. We're all in this together.
+
+<p>
+
+<hr>
+<b>Author:</b> <a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a><br>
+<b>Last modified:</b> 3 February 2003
+
+</body>
+</html>

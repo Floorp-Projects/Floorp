@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+ <!--
+ https://bugzilla.mozilla.org/show_bug.cgi?id=1235899
+ -->
+ <head>
+  <title>Test for bug 1235899</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .outer {
+        height: 400px;
+        width: 415px;
+        overflow: hidden;
+        position: relative;
+    }
+    .inner {
+        height: 100%;
+        outline: none;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        position: relative;
+        scroll-behavior: smooth;
+    }
+    .outer.contentBefore::before {
+        top: 0;
+        content: '';
+        display: block;
+        height: 2px;
+        position: absolute;
+        width: 100%;
+        z-index: 99;
+    }
+  </style>
+ </head>
+ <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1235899">Mozilla Bug 1235899</a>
+<p id="display"></p>
+<div id="content">
+ <p>You should be able to fling this list without it stopping abruptly</p>
+ <div class="outer">
+  <div class="inner">
+   <ol>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+   </ol>
+  </div>
+ </div>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+async function test() {
+  var elm = document.getElementsByClassName("inner")[0];
+  elm.scrollTop = 0;
+  await promiseOnlyApzControllerFlushed();
+
+  // Take over control of the refresh driver and compositor
+  var utils = SpecialPowers.DOMWindowUtils;
+  utils.advanceTimeAndRefresh(0);
+
+  // Kick off an APZ smooth-scroll to 0,200
+  elm.scrollTo(0, 200);
+  await promiseAllPaintsDone();
+
+  // Let's do a couple of frames of the animation, and make sure it's going
+  utils.advanceTimeAndRefresh(16);
+  utils.advanceTimeAndRefresh(16);
+  await promiseOnlyApzControllerFlushed();
+  ok(elm.scrollTop > 0, "APZ animation in progress, scrollTop is now " + elm.scrollTop);
+  ok(elm.scrollTop < 200, "APZ animation not yet completed, scrollTop is now " + elm.scrollTop);
+
+  var frameReconstructionTriggered = 0;
+  // Register the listener that triggers the frame reconstruction
+  elm.onscroll = function() {
+    // Do the reconstruction
+    elm.parentNode.classList.add("contentBefore");
+    frameReconstructionTriggered++;
+    // schedule a thing to undo the changes above
+    setTimeout(function() {
+      elm.parentNode.classList.remove("contentBefore");
+    }, 0);
+  };
+
+  // and do a few more frames of the animation, this should trigger the listener
+  // and the frame reconstruction
+  utils.advanceTimeAndRefresh(16);
+  utils.advanceTimeAndRefresh(16);
+  await promiseOnlyApzControllerFlushed();
+  ok(elm.scrollTop < 200, "APZ animation not yet completed, scrollTop is now " + elm.scrollTop);
+  ok(frameReconstructionTriggered > 0, "Frame reconstruction triggered, reconstruction triggered " + frameReconstructionTriggered + " times");
+
+  // and now run to completion
+  for (var i = 0; i < 100; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  utils.restoreNormalRefresh();
+  await promiseAllPaintsDone();
+  await promiseOnlyApzControllerFlushed();
+
+  is(elm.scrollTop, 200, "Element should have scrolled by 200px");
+}
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectAssertions(0, 1); // this test triggers an assertion, see bug 1247050
+  waitUntilApzStable()
+  .then(test)
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=353334
+-->
+<head>
+  <title>Test for Bug 353334</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script>var x = "PASS"</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=353334">Mozilla Bug 353334</a>
+<p id="display">
+<iframe id="one"></iframe>
+<object id="two" data="about:blank"></object>
+<iframe id="three" srcdoc="<body>test</body>"></iframe>
+<object id="four" data="object_bug353334.html"></object>
+<iframe id="five" src="javascript:parent.x"></iframe>
+<object id="six" data="javascript:x"></object>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 353334 **/
+SimpleTest.waitForExplicitFinish();
+
+function doPrincipalTest(id) {
+  var doc = SpecialPowers.wrap($(id).contentDocument);
+
+  isnot(doc.nodePrincipal, undefined, "Should have a principal");
+  isnot(doc.nodePrincipal, null, "Should have a non-null principal");
+  is(doc.nodePrincipal.origin, SpecialPowers.wrap(document).nodePrincipal.origin,
+     "Wrong principal for document in node with id='" + id + "'");
+}
+
+function doContentTest(id) {
+  is($(id).contentDocument.documentElement.textContent, "PASS",
+     "Script executed in wrong context in node with id='" + id + "'");
+}
+
+function checkPrincipal() {
+  ok(SpecialPowers.call_Instanceof(SpecialPowers.wrap(document).nodePrincipal, SpecialPowers.Ci.nsIPrincipal),
+     "Should be a principal");
+}
+
+addLoadEvent(function() {
+  checkPrincipal();
+
+  for (var i of [ "one", "two", "three", "four" ]) {
+    doPrincipalTest(i);
+  }
+
+  for (i of [ "five", "six" ]) {
+    doContentTest(i);
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
+

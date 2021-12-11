@@ -1,0 +1,21 @@
+<html>
+<head>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-allowPDF'; base-uri 'self'">
+</head>
+<body>
+<iframe id="pdfFrame"></iframe>
+<br/>
+<button id="pdfButton">click to load pdf</button>
+<script nonce="allowPDF">
+  async function loadPDFIntoIframe() {
+    let response = await fetch("dummy.pdf");
+    let blob = await response.blob();
+    var blobUrl = URL.createObjectURL(blob);
+    var pdfFrame = document.getElementById("pdfFrame");
+    pdfFrame.src = blobUrl;
+  }
+  let pdfButton = document.getElementById("pdfButton");
+  pdfButton.addEventListener("click", loadPDFIntoIframe);
+</script>
+</body>
+</html>

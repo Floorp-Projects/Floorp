@@ -1,0 +1,200 @@
+<html>
+<head>
+  <title>Test subresources prompts (Bug 625187 and bug 1230462)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<!--
+   - Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/
+   -
+   - Contributor(s):
+   -   Mihai Sucan <mihai.sucan@gmail.com>
+   -->
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625187">Mozilla Bug 625187</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230462">Mozilla Bug 1230462</a>
+
+<p><button id="topbutton" onclick="alert('hello world')">Button</button></p>
+
+<iframe id="iframe_diff_origin" src="http://example.com/tests/toolkit/components/prompts/test/bug625187_iframe.html"></iframe>
+
+<iframe id="iframe_same_origin" src="bug625187_iframe.html"></iframe>
+
+<iframe id="iframe_prompt"></iframe>
+
+<pre id="test"></pre>
+
+<script class="testbody" type="text/javascript">
+var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
+var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
+var iframe_prompt = document.getElementById("iframe_prompt");
+
+// Depending on pref state we either show auth prompts as windows or on tab level.
+let authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
+  "prompts.modalType.httpAuth"
+);
+
+add_task(async function runTest() {
+  modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
+
+  info("Ensuring iframe1 has loaded...");
+  await iframe1Loaded;
+  info("Ensuring iframe2 has loaded...");
+  await iframe2Loaded;
+  let state, action;
+
+  state = {
+    msg: "hello world",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  let promptDone = handlePrompt(state, action);
+
+  await SpecialPowers.spawn(window, ["topbutton", "click"], dispatchMouseEvent);
+
+  await promptDone;
+
+  // mostly reusing same state/action
+  state.titleHidden = false;
+  state.msg = "hello world 2";
+  promptDone = handlePrompt(state, action);
+
+  var iframe = document.getElementById("iframe_diff_origin");
+  await SpecialPowers.spawn(iframe.contentWindow, ["btn1", "click"], dispatchMouseEvent);
+
+  await promptDone;
+
+  // mostly reusing same state/action
+  state.titleHidden = true;
+  state.msg = "hello world 2";
+  promptDone = handlePrompt(state, action);
+
+  iframe = document.getElementById("iframe_same_origin");
+  await SpecialPowers.spawn(iframe.contentWindow, ["btn1", "click"], dispatchMouseEvent);
+
+  await promptDone;
+
+  // mostly reusing same state/action
+  state.msg = "hello world 3";
+  promptDone = handlePrompt(state, action);
+  await SpecialPowers.spawn(iframe.contentWindow, ["btn2", "click"], dispatchMouseEvent);
+
+  await promptDone;
+});
+
+add_task(async function runTestAuth() {
+  // Following tests check prompt message for a cross-origin and not
+  // cross-origin subresources load
+
+  // Let prompt_common know what kind of modal type is enabled for auth prompts.
+  modalType = authPromptModalType;
+
+  let state, action;
+
+  state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+
+  action = {
+    buttonClick: "ok",
+    setCheckbox: false,
+    textField: "mochiuser1",
+    passField: "mochipass1",
+  };
+
+  let promptDone = handlePrompt(state, action);
+
+  var iframe3Loaded = onloadPromiseFor("iframe_prompt");
+  iframe_prompt.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  await promptDone;
+  await iframe3Loaded;
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                            iframe_prompt);
+
+  // Cross-origin subresourse test.
+  state = {
+    msg: "This site is asking you to sign in. Warning: Your login information " +
+      "will be shared with example.com, not the website you are currently visiting.",
+    title: "Authentication Required",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+
+  action = {
+    buttonClick: "ok",
+    setCheckbox: false,
+    textField: "mochiuser2",
+    passField: "mochipass2",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  iframe3Loaded = onloadPromiseFor("iframe_prompt");
+  iframe_prompt.src = "http://example.com/tests/toolkit/components/prompts/test/authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest";
+  await promptDone;
+  await iframe3Loaded;
+  await checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
+                            iframe_prompt);
+});
+
+/**
+ * Function to be passed to SpecialPowers.spawn that dispatches a MouseEvent
+ * of a certain type to some element in a subframe.
+ *
+ * @param {String} targetID The ID of the element that will have the event
+ * dispatched on.
+ * @param {String} type The type of MouseEvent.
+ * @returns Promise
+ * @resolves Once the event has been dispatched.
+ */
+async function dispatchMouseEvent(targetID, type) {
+  /* eslint-disable no-undef */
+  let document = content.document;
+  let element = document.getElementById(targetID);
+  let event = document.createEvent("MouseEvent");
+  event.initEvent(type, false, false, content, 0, 1, 1, 1, 1,
+                  false, false, false, false, 0, null);
+  content.windowUtils.dispatchDOMEventViaPresShellForTesting(element, event);
+  /* eslint-enable no-undef */
+}
+</script>
+</body>
+</html>

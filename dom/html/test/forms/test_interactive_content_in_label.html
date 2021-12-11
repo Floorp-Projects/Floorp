@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=229925
+-->
+<head>
+  <title>Test for Bug 229925</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=229925">Mozilla Bug 229925</a>
+<p id="display"></p>
+<form action="#">
+  <label>
+    <span id="text">label</span>
+    <input type="button" id="target" value="target">
+
+    <a class="yes" href="#">a</a>
+    <audio class="yes" controls></audio>
+    <button class="yes">button</button>
+    <details class="yes">details</details>
+    <embed class="yes">embed</embed>
+    <iframe class="yes" src="data:text/plain," style="width: 16px; height: 16px;"></iframe>
+    <img class="yes" src="data:image/png," usemap="#map">
+    <input class="yes" type="text" size="4">
+    <keygen class="no">
+    <label class="yes">label</label>
+    <object class="yes" usemap="#map">object</object>
+    <select class="yes"><option>select</option></select>
+    <textarea class="yes" cols="1" rows="1"></textarea>
+    <video class="yes" controls></video>
+
+    <!-- Tests related to shadow tree. -->
+    <div id="root1"> <!-- content will be added by script below. --> </div>
+    <button><div id="root2"> <!-- content will be added by script below. --> </div></button>
+
+    <a class="no">a</a>
+    <audio class="no"></audio>
+    <img class="no" src="data:image/png,">
+    <input class="no" type="hidden">
+    <object class="no">object</object>
+    <video class="no"></video>
+
+    <span class="no" tabindex="1">tabindex</span>
+    <audio class="no" tabindex="1"></audio>
+    <img class="no" src="data:image/png," tabindex="1">
+    <input class="no" type="hidden" tabindex="1">
+    <object class="no" tabindex="1">object</object>
+    <video class="no" tabindex="1"></video>
+  </label>
+</form>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 229925 **/
+
+var target = document.getElementById("target");
+
+var yes_nodes = Array.from(document.getElementsByClassName("yes"));
+
+var root1 = document.getElementById("root1");
+root1.attachShadow({ mode: "open" }).innerHTML = "<button class=yes>button in shadow tree</button>";
+var root2 = document.getElementById("root2");
+root2.attachShadow({ mode: "open" }).innerHTML = "<div class=yes>text in shadow tree</div>";
+var yes_nodes_in_shadow_tree =
+  Array.from(root1.shadowRoot.querySelectorAll(".yes")).concat(
+    Array.from(root2.shadowRoot.querySelectorAll(".yes")));
+
+var no_nodes = Array.from(document.getElementsByClassName("no"));
+
+var target_clicked = false;
+target.addEventListener("click", function() {
+  target_clicked = true;
+});
+
+var node;
+for (node of yes_nodes) {
+  target_clicked = false;
+  node.click();
+  is(target_clicked, false, "mouse click on interactive content " + node.nodeName + " shouldn't dispatch event to label target");
+}
+
+for (node of yes_nodes_in_shadow_tree) {
+  target_clicked = false;
+  node.click();
+  is(target_clicked, false, "mouse click on content in shadow tree " + node.nodeName + " shouldn't dispatch event to label target");
+}
+
+for (node of no_nodes) {
+  target_clicked = false;
+  node.click();
+  is(target_clicked, true, "mouse click on non interactive content " + node.nodeName + " should dispatch event to label target");
+}
+
+</script>
+</pre>
+</body>
+</html>
+

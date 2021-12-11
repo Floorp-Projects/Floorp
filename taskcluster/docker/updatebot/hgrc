@@ -1,0 +1,7 @@
+[ui]
+ssh = ssh -i $HOME/id_rsa -l updatebot@mozilla.com -o UserKnownHostsFile=$HOME/ssh_known_hosts
+username = Updatebot <updatebot@mozilla.com>
+
+[extensions]
+strip =
+push-to-try = $HOME/.mozbuild/version-control-tools/hgext/push-to-try

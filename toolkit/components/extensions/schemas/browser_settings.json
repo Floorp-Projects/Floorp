@@ -1,0 +1,141 @@
+  // Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "OptionalPermission",
+        "choices": [
+          {
+            "type": "string",
+            "enum": [
+              "browserSettings"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "namespace": "browserSettings",
+    "description": "Use the <code>browser.browserSettings</code> API to control global settings of the browser.",
+    "permissions": ["browserSettings"],
+    "types": [
+      {
+        "id": "ImageAnimationBehavior",
+        "type": "string",
+        "enum": ["normal", "none", "once"],
+        "description": "How images should be animated in the browser."
+      },
+      {
+        "id": "ContextMenuMouseEvent",
+        "type": "string",
+        "enum": ["mouseup", "mousedown"],
+        "description": "After which mouse event context menus should popup."
+      },
+      {
+        "id": "ColorManagementMode",
+        "type": "string",
+        "enum": ["off", "full", "tagged_only"],
+        "description": "Color management mode."
+      }
+    ],
+    "properties": {
+      "allowPopupsForUserEvents": {
+        "$ref": "types.Setting",
+        "description": "Allows or disallows pop-up windows from opening in response to user events."
+      },
+      "cacheEnabled": {
+        "$ref": "types.Setting",
+        "description": "Enables or disables the browser cache."
+      },
+      "closeTabsByDoubleClick": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether the selected tab can be closed with a double click."
+      },
+      "contextMenuShowEvent": {
+        "$ref": "types.Setting",
+        "description": "Controls after which mouse event context menus popup. This setting's value is of type ContextMenuMouseEvent, which has possible values of <code>mouseup</code> and <code>mousedown</code>."
+      },
+      "ftpProtocolEnabled": {
+        "$ref": "types.Setting",
+        "description": "Returns whether the FTP protocol is enabled. Read-only.",
+        "deprecated": "FTP support was removed from Firefox in bug 1574475"
+      },
+      "homepageOverride": {
+        "$ref": "types.Setting",
+        "description": "Returns the value of the overridden home page. Read-only."
+      },
+      "imageAnimationBehavior": {
+        "$ref": "types.Setting",
+        "description": "Controls the behaviour of image animation in the browser. This setting's value is of type ImageAnimationBehavior, defaulting to <code>normal</code>."
+      },
+      "newTabPageOverride": {
+        "$ref": "types.Setting",
+        "description": "Returns the value of the overridden new tab page. Read-only."
+      },
+      "newTabPosition": {
+        "$ref": "types.Setting",
+        "description": "Controls where new tabs are opened. `afterCurrent` will open all new tabs next to the current tab, `relatedAfterCurrent` will open only related tabs next to the current tab, and `atEnd` will open all tabs at the end of the tab strip. The default is `relatedAfterCurrent`."
+      },
+      "openBookmarksInNewTabs": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether bookmarks are opened in the current tab or in a new tab."
+      },
+      "openSearchResultsInNewTabs": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether search results are opened in the current tab or in a new tab."
+      },
+      "openUrlbarResultsInNewTabs": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether urlbar results are opened in the current tab or in a new tab."
+      },
+      "webNotificationsDisabled": {
+        "$ref": "types.Setting",
+        "description": "Disables webAPI notifications."
+      },
+      "overrideDocumentColors": {
+        "$ref": "types.Setting",
+        "description": "This setting controls whether the user-chosen colors override the page's colors."
+      },
+      "overrideContentColorScheme": {
+        "$ref": "types.Setting",
+        "description": "This setting controls whether a light or dark color scheme overrides the page's preferred color scheme."
+      },
+      "useDocumentFonts": {
+        "$ref": "types.Setting",
+        "description": "This setting controls whether the document's fonts are used."
+      },
+      "zoomFullPage": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether zoom is applied to the full page or to text only."
+      },
+      "zoomSiteSpecific": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether zoom is applied on a per-site basis or to the current tab only. If privacy.resistFingerprinting is true, this setting has no effect and zoom is applied to the current tab only."
+      }
+    }
+  },
+  {
+    "namespace": "browserSettings.colorManagement",
+    "description": "Use the <code>browserSettings.colorManagement</code> API to query and set items related to color management.",
+    "permissions": ["browserSettings"],
+    "properties": {
+      "mode": {
+        "$ref": "types.Setting",
+        "description": "This setting controls the mode used for color management and must be a string from $(ref:browserSettings.ColorManagementMode)"
+      },
+      "useNativeSRGB": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether or not native sRGB color management is used."
+      },
+      "useWebRenderCompositor": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether or not the WebRender compositor is used."
+      }
+    }
+  }
+]

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 100 100">
+  <defs>
+    <filter id="blur-filter" filterUnits="userSpaceOnUse" x="0" y="0">
+      <feGaussianBlur stdDeviation="0.5"/>
+    </filter>
+    <pattern id="pattern1" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M-1,1 l2,-2" stroke="blue" filter="url(#blur-filter)" />
+    </pattern>
+  </defs>
+
+  <rect x="-20%" y="-20%" width="10%" height="10%" fill="url(#pattern1)"/>
+</svg>
+

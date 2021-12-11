@@ -1,0 +1,756 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* TODO: May break up into component local CSS.  Pending future discussions by
+ * React component group on how to best handle CSS. */
+
+/**
+ * CSS Variables specific to the responsive design mode
+ */
+
+:root {
+  --toolbar-row-height: 28px;
+  --rdm-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+  --viewport-active-color: #3b3b3b;
+  --input-invalid-border-color: var(--red-60);
+  --custom-device-button-hover: var(--grey-30);
+  --device-list-grid-template-columns: auto auto max-content 1fr;
+}
+
+:root.theme-dark {
+  --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
+  --viewport-active-color: #fcfcfc;
+  --input-invalid-border-color: var(--red-50);
+  --custom-device-button-hover: var(--grey-70);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+:root,
+input,
+button {
+  font-size: 12px;
+}
+
+input,
+button {
+  color: var(--theme-toolbar-color);
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+  color: var(--theme-body-color);
+}
+
+input:-moz-focusring {
+  outline: none;
+}
+
+.text-input {
+  border: 1px solid var(--theme-splitter-color);
+  margin: 0 1px;
+  padding: 2px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--theme-selection-background);
+  transition: all 0.2s ease-in-out;
+}
+
+.text-input.invalid {
+  border-color: var(--input-invalid-border-color);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+/**
+ * Common styles for shared components
+ */
+
+.devtools-separator {
+  height: 100%;
+  margin: 0 1px;
+}
+
+/**
+ * Toolbar
+ */
+
+#toolbar {
+  background-color: var(--theme-tab-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: grid;
+  grid-template-columns: auto min-content;
+  width: 100%;
+  user-select: none;
+}
+
+#toolbar-center-controls,
+#toolbar-end-controls {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-rows: var(--toolbar-row-height);
+  grid-row-gap: 1px;
+  padding: 0 1px;
+}
+
+#toolbar-center-controls {
+  grid-gap: 2px;
+  grid-template-columns:
+    [device-selector]
+    minmax(auto, 120px)
+    [separator]
+    max-content
+    [size-selector]
+    max-content
+    [rotate-icon]
+    max-content
+    [separator]
+    max-content
+    [dpr]
+    minmax(auto, 60px)
+    [separator]
+    max-content
+    [throttling]
+    minmax(auto, max-content)
+    [separator]
+    max-content
+    [touch-simulation]
+    max-content;
+}
+
+#toolbar.user-agent #toolbar-center-controls {
+  grid-template-columns:
+    [device-selector]
+    minmax(auto, 120px)
+    [separator]
+    max-content
+    [size-selector]
+    max-content
+    [rotate-icon]
+    max-content
+    [separator]
+    max-content
+    [dpr]
+    minmax(auto, 60px)
+    [separator]
+    max-content
+    [throttling]
+    minmax(auto, max-content)
+    [separator]
+    max-content
+    [ua]
+    minmax(auto, 300px)
+    [separator]
+    max-content
+    [touch-simulation]
+    max-content;
+}
+
+#toolbar:not(.left-aligned) {
+  grid-template-columns: 1fr auto 1fr min-content;
+  justify-content: center;
+}
+
+#toolbar:not(.left-aligned) #toolbar-center-controls {
+  grid-column-start: 2;
+}
+
+#toolbar:not(.left-aligned) #toolbar-end-controls {
+  justify-content: end;
+}
+
+#user-agent-label {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 3px;
+  margin-inline-end: 3px;
+}
+
+#user-agent-input {
+  margin-inline-start: 3px;
+  flex: 1;
+}
+
+@media (max-width: 520px) {
+  /* When room becomes scarce, no need to constrain the selectors with a minmax like we
+     do in larger viewports, here they can occupy 1fr */
+  #toolbar.user-agent #toolbar-center-controls {
+    grid-template-columns:
+      [device-selector]
+      .8fr
+      [separator]
+      max-content
+      [size-selector]
+      max-content
+      [rotate-icon]
+      max-content
+      [separator]
+      max-content
+      [dpr]
+      .6fr
+      [separator]
+      max-content
+      [throttling]
+      1fr
+      [separator]
+      max-content
+      [touch-simulation]
+      max-content;
+  }
+
+  /* Drop the user agent label to the next line if there isn't enough space */
+  #user-agent-label {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-inline-start: 9px;
+  }
+
+  /* Since the UA is hidden, no need for a separator after it */
+  #user-agent-label + .devtools-separator {
+    display: none;
+  }
+
+  /* When the UA label is here and it's on a second line, draw a separator between the
+     2 lines*/
+  #toolbar.user-agent {
+    background-image: linear-gradient(to bottom,
+      transparent var(--toolbar-row-height),
+      var(--theme-splitter-color) var(--toolbar-row-height),
+      var(--theme-splitter-color) calc(var(--toolbar-row-height) + 1px),
+      transparent 0);
+  }
+}
+
+#rotate-button::before {
+  background-image: url("chrome://devtools/content/responsive/images/rotate-viewport.svg");
+}
+
+#rotate-button.viewport-orientation-landscape::before {
+  transform: rotate(90deg) scaleX(-1);
+}
+
+#touch-simulation-button::before {
+  background-image: url("chrome://devtools/content/responsive/images/touch-events.svg");
+}
+
+#screenshot-button::before {
+  background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
+}
+
+#settings-button::before {
+  background-image: url("chrome://devtools/skin/images/settings.svg");
+}
+
+#exit-button::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
+/* Briefly animate screenshot button when clicked */
+#screenshot-button:disabled {
+  opacity: 1 !important;
+}
+
+#screenshot-button:disabled::before {
+  fill: var(--theme-icon-checked-color);
+}
+
+#device-selector {
+  justify-self: end;
+  max-width: 100%;
+  margin-inline-start: 4px;
+}
+
+#device-selector .title {
+  display: grid;
+  grid-template-columns: var(--device-list-grid-template-columns);
+}
+
+#device-selector .title .device-name,
+#device-selector .title .device-os {
+  margin-inline-start: 6px;
+}
+
+#device-selector::before {
+  fill: var(--theme-icon-dimmed-color);
+}
+
+/* Override the style defined in tooltips.css */
+.tooltip-container[type="doorhanger"] .menuitem > .command.iconic.device-selector-item > .label::before {
+  fill: var(--theme-icon-dimmed-color);
+}
+
+/**
+ * Viewport Dimension Input
+ */
+
+.viewport-dimension {
+  display: flex;
+  align-items: center;
+  margin: 1px;
+}
+
+.viewport-dimension-input {
+  text-align: center;
+  width: 3em;
+  appearance: textfield;
+}
+
+.viewport-dimension-separator {
+  user-select: none;
+  padding: 0 0.2em;
+}
+
+/**
+ * Device Modal
+ */
+
+@keyframes fade-in-and-up {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes fade-down-and-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(5px);
+    visibility: hidden;
+  }
+}
+
+.device-modal {
+  display: grid;
+  grid-template-rows: minmax(80px, auto) auto;
+  background-color: var(--theme-toolbar-background);
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 2px;
+  box-shadow: var(--rdm-box-shadow);
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 90%;
+  height: 90%;
+  max-width: 750px;
+  max-height: 730px;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Handles the opening/closing of the modal */
+#device-modal-wrapper.opened .device-modal {
+  animation: fade-in-and-up 0.3s ease forwards;
+}
+
+#device-modal-wrapper.closed .device-modal {
+  animation: fade-down-and-out 0.3s ease forwards;
+}
+
+#device-modal-wrapper.opened .modal-overlay {
+  background-color: var(--theme-splitter-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+.device-modal-content {
+  display: grid;
+  grid-row-gap: 30px;
+  overflow: auto;
+  height: 100%;
+  padding: 10px 32px 50px 32px;
+}
+
+/* On screens that are >750px*/
+@media (min-width: 750px) {
+  #device-form {
+    grid-template-areas: "name size dpr"
+                         "user-agent touch buttons";
+  }
+
+  #device-form-name input,
+  #device-form-user-agent input {
+    width: 350px;
+  }
+
+  .device-modal-content {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "phone phone"
+                         "tablet laptop"
+                         "tv custom";
+  }
+
+  .device-type-phones .device-list {
+    grid-template-columns: repeat(2, var(--device-list-grid-template-columns));
+  }
+}
+
+/* On screens that are between 450px and 749px */
+@media (min-width: 450px) and (max-width: 749px) {
+  #device-form {
+    grid-template-areas: "name size"
+                         "user-agent dpr"
+                         "touch buttons";
+    grid-template-columns: 2fr 1fr;
+  }
+
+  #device-form-name {
+    grid-area: name;
+  }
+
+  #device-form-name input,
+  #device-form-user-agent input {
+    width: 100%;
+  }
+}
+
+/* On screens that are <450px */
+@media (max-width: 449px) {
+  #device-form {
+    grid-template-areas: "name"
+                         "size"
+                         "dpr"
+                         "user-agent"
+                         "touch"
+                         "buttons";
+  }
+
+  #device-form-name input,
+  #device-form-user-agent input {
+    width: 90%;
+  }
+
+  #device-form-size {
+    justify-self: unset;
+  }
+}
+
+@media (max-width: 749px) {
+  .device-modal-content {
+    grid-template-areas: "phone"
+                         "phone"
+                         "tablet"
+                         "laptop"
+                         "tv"
+                         "custom";
+  }
+
+  .device-modal-header {
+    flex-direction: column;
+  }
+}
+
+#device-close-button {
+  position: absolute;
+  top: 5px;
+  right: 2px;
+}
+
+#device-close-button::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
+.device-type {
+  display: flex;
+  flex-direction: column;
+}
+
+.device-header {
+  font-size: 17px;
+  margin-bottom: 7px;
+  height: 20px;
+  text-transform: capitalize;
+}
+
+.device-label {
+  color: var(--theme-body-color);
+  padding-bottom: 5px;
+  padding-top: 5px;
+  align-items: center;
+  display: grid;
+  grid-column: span 4;
+  grid-template-columns: subgrid;
+}
+
+.device-label > button {
+  visibility: hidden;
+}
+
+.device-label > span {
+  margin-right: 6px;
+}
+
+.device-label:focus-within > button,
+.device-label:hover > button {
+  visibility: visible;
+}
+
+.device-label:focus-within,
+.device-label:hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+.device-modal-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.device-modal-header > #device-add-button {
+  margin: 30px 75px 0 30px;
+}
+
+.device-list {
+  display: grid;
+  font-size: 13px;
+  grid-template-columns: var(--device-list-grid-template-columns);
+}
+
+.device-input-checkbox {
+  margin-right: 8px;
+}
+
+.device-modal-title {
+  font-size: 22px;
+  margin: 30px 0 0px 30px;
+}
+
+.device-browser {
+  width: 16px;
+  height: 16px;
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.device-browser.chrome {
+  background-image: url("chrome://devtools/skin/images/browsers/chrome.svg");
+}
+
+.device-browser.edge {
+  background-image: url("chrome://devtools/skin/images/browsers/edge.svg");
+}
+
+.device-browser.firefox {
+  background-image: url("chrome://devtools/skin/images/browsers/firefox.svg");
+}
+
+.device-browser.ie {
+  background-image: url("chrome://devtools/skin/images/browsers/ie.svg");
+}
+
+.device-browser.opera {
+  background-image: url("chrome://devtools/skin/images/browsers/opera.svg");
+}
+
+.device-browser.safari {
+  background-image: url("chrome://devtools/skin/images/browsers/safari.svg");
+}
+
+.device-remove-button:empty::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
+/**
+ * Device Form
+ */
+
+#device-form {
+  display: grid;
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
+  min-height: 150px;
+  padding: 15px 0 10px 20px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  overflow: auto;
+  z-index: 1;
+}
+
+#device-add-button,
+#device-form button {
+  background-color: rgba(12, 12, 13, 0.1);
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 2px;
+  cursor: pointer;
+  width: 167px;
+  height: 32px;
+}
+
+#device-edit-button::before {
+  background: url("chrome://devtools/skin/images/pencil-icon.svg") no-repeat 0 0;
+}
+
+#device-edit-button,
+#device-edit-remove {
+  cursor: pointer;
+}
+
+#device-edit-button:focus-within,
+#device-edit-button:hover,
+#device-edit-remove.device-remove-button:focus-within,
+#device-edit-remove.device-remove-button:hover {
+  background-color: var(--custom-device-button-hover);
+}
+
+#device-form label {
+  display: flex;
+  flex-direction: column;
+  margin: 5px;
+}
+
+#device-form label > .viewport-dimension {
+  color: var(--theme-body-color);
+  display: flex;
+  align-items: center;
+}
+
+#device-form input {
+  background: transparent;
+  border: 1px solid var(--theme-toolbarbutton-active-background);
+  border-radius: 2px;
+  text-align: center;
+  color: var(--theme-body-color);
+  transition: all 0.25s ease;
+}
+
+#device-form #device-form-name input,
+#device-form #device-form-user-agent input {
+  text-align: left;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#device-form input:focus {
+  color: var(--viewport-active-color);
+  border-color: var(--blue-55);
+}
+
+#device-form label > input:focus,
+#device-form label > .viewport-dimension:focus  {
+  outline: none;
+}
+
+#device-form-pixel-ratio {
+  grid-area: dpr;
+}
+
+#device-form-pixel-ratio input {
+  appearance: textfield;
+}
+
+#device-form-user-agent {
+  grid-area: user-agent;
+}
+
+#device-form-name input,
+#device-form-pixel-ratio input,
+#device-form-user-agent input,
+#device-form-size input {
+  height: 35px;
+}
+
+#device-form #device-form-touch {
+  flex-direction: row;
+  grid-area: touch;
+}
+
+#device-form-touch .device-form-label {
+  align-self: center;
+  margin-left: 5px;
+}
+
+#device-form #device-form-save {
+  background-color: #0060DF;
+  color: #fff;
+  border: 1px solid #0060DF;
+  width: 60px;
+}
+
+#device-form-size {
+  grid-area: size;
+}
+
+#device-form-size input,
+#device-form #device-form-cancel {
+  width: 60px;
+}
+
+#device-form-save,
+#device-form-cancel {
+  align-self: center;
+}
+
+.device-form-buttons {
+  display: flex;
+  grid-area: buttons;
+  justify-content: space-evenly;
+  width: 154px;
+}
+
+.device-form-label {
+  display: inline-block;
+  margin: 0 5px 5px 0;
+  min-width: 35px;
+  font-size: 13px;
+}
+
+/* Device Types */
+
+.device-type-phones {
+  grid-area: phone;
+}
+
+.device-type-custom {
+  grid-area: custom;
+  align-self: start;
+}
+
+.device-type-custom .device-list {
+  grid-template-columns: var(--device-list-grid-template-columns) auto auto;
+}
+
+.device-type-custom .device-label {
+  grid-column: span 6;
+}
+
+.device-type-tablets {
+  grid-area: tablet;
+}
+
+.device-type-laptops {
+  grid-area: laptop;
+}
+
+.device-type-televisions {
+  grid-area: tv;
+}

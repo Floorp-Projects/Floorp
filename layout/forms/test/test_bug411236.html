@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=411236
+-->
+<head>
+  <title>Test for Bug 411236</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=411236">Mozilla Bug 411236</a>
+<p id="display"></p>
+<div id="content">
+  <input type="file" onfocus="window.oTarget = event.originalTarget;"
+         onclick="window.fileInputGotClick = true; return false;"
+         id="fileinput">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 411236 **/
+
+window.oTarget = null;
+window.fileInputGotClick = false;
+
+function test() {
+  // Try to find the '<input>' using tabbing.
+  var i = 0;
+  while (!window.oTarget && i < 100) {
+    ++i;
+    synthesizeKey("KEY_Tab");
+  }
+
+  if (i >= 100) {
+    ok(false, "Couldn't find an input element!");
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(window.oTarget instanceof HTMLInputElement, "Should have focused the input element!");
+  var e = document.createEvent("mouseevents");
+  e.initMouseEvent("click", true, true, window, 0, 1, 1, 1, 1,
+                    false, false, false, false, 0, null);
+  SpecialPowers.wrap(window.oTarget).dispatchEvent(e);
+  ok(window.fileInputGotClick,
+     "File input should have got a click event, but not open the file dialog.");
+  SimpleTest.finish();
+}
+
+function beginTest() {
+  // accessibility.tabfocus must be set to value 7 before running test also
+  // on a mac.
+  SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]}, do_test);
+}
+
+function do_test() {
+  window.focus();
+  document.getElementById('fileinput').focus();
+  setTimeout(test, 100);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+addLoadEvent(beginTest);
+
+</script>
+</pre>
+</body>
+</html>

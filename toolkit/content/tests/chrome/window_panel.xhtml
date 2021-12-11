@@ -1,0 +1,295 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for panels
+  -->
+<window title="Titlebar" width="200" height="200"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<html:style>
+<![CDATA[
+  panel, panel::part(content) {
+    border: 0;
+    margin: 0;
+  }
+]]>
+</html:style>
+
+<tree id="tree" seltype="single" width="100" height="100">
+  <treecols>
+    <treecol flex="1"/>
+    <treecol flex="1"/>
+  </treecols>
+  <treechildren id="treechildren">
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+  </treechildren>
+</tree>
+
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var currentTest = null;
+
+function ok(condition, message) {
+  window.arguments[0].SimpleTest.ok(condition, message);
+}
+
+function is(left, right, message) {
+  window.arguments[0].SimpleTest.is(left, right, message);
+}
+
+function test_panels()
+{
+  checkTreeCoords();
+
+  addEventListener("popupshowing", popupShowing, false);
+  addEventListener("popupshown", popupShown, false);
+  addEventListener("popuphidden", nextTest, false);
+  nextTest();
+}
+
+function nextTest()
+{
+  if (!tests.length) {
+    window.close();
+    window.arguments[0].SimpleTest.finish();
+    return;
+  }
+
+  currentTest = tests.shift();
+  var panel = createPanel(currentTest.attrs);
+  currentTest.test(panel);
+}
+
+function popupShowing(event)
+{
+  var rect = event.target.getOuterScreenRect();
+  ok(!rect.left && !rect.top && !rect.width && !rect.height,
+     currentTest.testname + " empty rectangle during popupshowing");
+}
+
+var waitSteps = 0;
+function popupShown(event)
+{
+  var panel = event.target;
+
+  if (waitSteps > 0 && navigator.platform.includes("Linux") &&
+      panel.screenY == 210) {
+    waitSteps--;
+    setTimeout(popupShown, 10, event);
+    return;
+  }
+
+  currentTest.result(currentTest.testname + " ", panel);
+  panel.hidePopup();
+}
+
+function createPanel(attrs)
+{
+  var panel = document.createXULElement("panel");
+  for (var a in attrs) {
+    panel.setAttribute(a, attrs[a]);
+  }
+
+  var button = document.createXULElement("button");
+  panel.appendChild(button);
+  button.label = "OK";
+  button.width = 120;
+  button.height = 40;
+  button.setAttribute("style", "appearance: none; border: 0; margin: 0;");
+  panel.setAttribute("style", "appearance: none; border: 0; margin: 0;");
+  return document.documentElement.appendChild(panel);
+}
+
+function checkTreeCoords()
+{
+  var tree = $("tree");
+  var treechildren = $("treechildren");
+  tree.currentIndex = 0;
+  tree.scrollToRow(0);
+  synthesizeMouse(treechildren, 10, tree.rowHeight + 2, { });
+  is(tree.currentIndex, 1, "tree selection");
+
+  tree.scrollToRow(2);
+  synthesizeMouse(treechildren, 10, tree.rowHeight + 2, { });
+  is(tree.currentIndex, 3, "tree selection after scroll");
+}
+
+var tests = [
+  {
+    testname: "normal panel",
+    attrs: { },
+    test(panel) {
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 0, this.testname + " screen left before open");
+      is(screenRect.top, 0, this.testname + " screen top before open");
+      is(screenRect.width, 0, this.testname + " screen width before open");
+      is(screenRect.height, 0, this.testname + " screen height before open");
+
+      panel.openPopupAtScreen(200, 210);
+    },
+    result(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, 200 - window.mozInnerScreenX, testname + "left");
+      is(panelrect.top, 210 - window.mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 200, testname + " screen left");
+      is(screenRect.top, 210, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
+    }
+  },
+  {
+    // only noautohide panels support titlebars, so one shouldn't be shown here
+    testname: "autohide panel with titlebar",
+    attrs: { titlebar: "normal" },
+    test(panel) {
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 0, this.testname + " screen left before open");
+      is(screenRect.top, 0, this.testname + " screen top before open");
+      is(screenRect.width, 0, this.testname + " screen width before open");
+      is(screenRect.height, 0, this.testname + " screen height before open");
+
+      panel.openPopupAtScreen(200, 210);
+    },
+    result(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, 200 - window.mozInnerScreenX, testname + "left");
+      is(panelrect.top, 210 - window.mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 200, testname + " screen left");
+      is(screenRect.top, 210, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
+    }
+  },
+  {
+    testname: "noautohide panel with titlebar",
+    attrs: { noautohide: true, titlebar: "normal" },
+    test(panel) {
+      waitSteps = 25;
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 0, this.testname + " screen left before open");
+      is(screenRect.top, 0, this.testname + " screen top before open");
+      is(screenRect.width, 0, this.testname + " screen width before open");
+      is(screenRect.height, 0, this.testname + " screen height before open");
+
+      panel.openPopupAtScreen(200, 210);
+    },
+    result(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      ok(panelrect.left >= 200 - window.mozInnerScreenX, testname + "left");
+      if (!navigator.platform.includes("Linux")) {
+        ok(panelrect.top >= 210 - window.mozInnerScreenY, testname + "top greater " + panelrect.top + " " + window.mozInnerScreenY);
+      }
+      ok(panelrect.top <= 210 - window.mozInnerScreenY + 36, testname + "top less");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      if (!navigator.platform.includes("Linux")) {
+        is(screenRect.left, 200, testname + " screen left");
+        is(screenRect.top, 210, testname + " screen top");
+      }
+      ok(screenRect.width >= 120 && screenRect.width <= 140, testname + " screen width");
+      ok(screenRect.height >= 40 && screenRect.height <= 118, testname + " screen height");
+
+      var gotMouseEvent = false;
+      function mouseMoved(event)
+      {
+        is(event.clientY, panelrect.top + 10,
+           "popup clientY");
+        is(event.screenY, panel.screenY + 10,
+           "popup screenY");
+        is(event.originalTarget, panel.firstChild, "popup target");
+        gotMouseEvent = true;
+      }
+
+      panel.addEventListener("mousemove", mouseMoved, true);
+      synthesizeMouse(panel, 10, 10, { type: "mousemove" });
+      ok(gotMouseEvent, "mouse event on panel");      
+      panel.removeEventListener("mousemove", mouseMoved, true);
+
+      var tree = $("tree");
+      tree.currentIndex = 0;
+      panel.appendChild(tree);
+      checkTreeCoords();
+    }
+  },
+  {
+    // The panel should be allowed to appear and remain offscreen
+    testname: "normal panel with flip='none' off-screen",
+    attrs: { "flip": "none" },
+    test(panel) {
+      panel.openPopup(document.documentElement, "", -100 - window.mozInnerScreenX, -100 - window.mozInnerScreenY, false, false, null);
+    },
+    result(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, -100 - window.mozInnerScreenX, testname + "left");
+      is(panelrect.top, -100 - window.mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, -100, testname + " screen left");
+      is(screenRect.top, -100, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
+    }
+  },
+  {
+    // The panel should be allowed to remain offscreen after moving and it should follow the anchor
+    testname: "normal panel with flip='none' moved off-screen",
+    attrs: { "flip": "none" },
+    test(panel) {
+      panel.openPopup(document.documentElement, "", -100 - window.mozInnerScreenX, -100 - window.mozInnerScreenY, false, false, null);
+      window.moveBy(-50, -50);
+    },
+    result(testname, panel) {
+      if (navigator.platform.includes("Linux")) {
+        // The window position doesn't get updated immediately on Linux.
+        return;
+      }
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, -150 - window.mozInnerScreenX, testname + "left");
+      is(panelrect.top, -150 - window.mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, -150, testname + " screen left");
+      is(screenRect.top, -150, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
+    }
+  },
+];
+
+window.arguments[0].SimpleTest.waitForFocus(test_panels, window);
+
+]]>
+</script>
+
+</window>

@@ -1,0 +1,13 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="filter: url(#r);" class="reftest-wait"><head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("s").setAttribute("style", "display: -moz-box;");
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", function() { setTimeout(boom, 0); }, false);
+
+</script>
+</head><body><ms xmlns="http://www.w3.org/1998/Math/MathML" id="s"><maction id="r"/></ms></body></html>

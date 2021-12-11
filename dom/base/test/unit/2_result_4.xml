@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE whatever PUBLIC "-//MOZ//WHATEVER//EN" "http://mozilla.org/ns/foo">
+<foo xmlns="htp://mozilla.org/ns">
+    <baz/><!-- a comment --> <bar> &lt;robots&gt; &amp; &lt;aliens&gt;
+<mozilla> a a a a a éèàùûî</mozilla>
+        <firefox>Lorem ip<!-- aaa -->sum dolor sit amet, consectetuer 
+adipiscing elit. Nam eu sapien. Sed viverra lacus. Donec quis ipsum. 
+Nunc cursus aliquet lectus. Nunc vitae eros. Class aptent taciti 
+sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. 
+Nam tellus massa, fringilla aliquam, fermentum sit amet, posuere ac, 
+est. Duis tristique egestas ligula. Mauris quis felis. Fusce a ipsum non
+ lacus posuere aliquet. Sed fermentum posuere nulla. Donec tempor. Donec
+ sollicitudin tortor lacinia libero ullamcorper laoreet. Cras quis nisi 
+at odio consectetuer molestie.</firefox>
+        <?xml-foo "hey" ?>
+</bar>
+              <!-- a comment 
+         on several lines-->
+ <?xml-foo "another pi on two lines"  
+              example="hello"?>
+</foo>

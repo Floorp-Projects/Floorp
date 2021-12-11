@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import "chrome://devtools/skin/variables.css";
+@import "chrome://devtools/skin/common.css";
+@import "chrome://devtools/skin/toolbars.css";
+
+@import "chrome://devtools/content/shared/components/tree/TreeView.css";
+@import "chrome://devtools/content/shared/components/tabs/Tabs.css";
+
+@import "general.css";
+@import "search-box.css";
+@import "toolbar.css";
+@import "json-panel.css";
+@import "text-panel.css";
+@import "headers-panel.css";
+
+/******************************************************************************/
+/* Panel Content */
+
+.tab-panel-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panelContent {
+  direction: ltr;
+  overflow-y: auto;
+  width: 100%;
+  flex: 1;
+}
+
+/* The tree takes the entire horizontal space within the panel content. */
+.panelContent .treeTable {
+  width: 100%;
+  font-family: var(--monospace-font-family);
+}
+
+/* Make sure there is a little space between label and value columns. */
+.panelContent .treeTable .treeLabelCell {
+  padding-right: 17px;
+}

@@ -1,0 +1,83 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//")
+cpp_quote("// ISimpleDOMDocument")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("//")
+cpp_quote("// get_URL(out] BSTR *url)")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Get the internet URL associated with this document.")
+cpp_quote("//")
+cpp_quote("// get_title([out BSTR *title")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Get the document's title from the <TITLE> element")
+cpp_quote("//")
+cpp_quote("// get_mimeType([out BSTR *mimeType")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Get the registered mime type, such as text/html")
+cpp_quote("//")
+cpp_quote("// get_docType([out] BSTR *docType")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Get doctype associated with the <!DOCTYPE ..> element")
+cpp_quote("//")
+cpp_quote("// get_nameSpaceURIForID([in] short nameSpaceID, [out] BSTR *nameSpaceURI)")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Some of the methods for ISimpleDOMNode return a nameSpaceID (-1,0,1,2,3,....)")
+cpp_quote("// This method returns the associated namespace URI for each ID.")
+cpp_quote("//")
+cpp_quote("// set_alternateViewMediaTypes([in] BSTR *commaSeparatedMediaType)")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// For style property retrieval on nsISimpleDOMNode elements, ")
+cpp_quote("// set the additional alternate media types that properties are available for.")
+cpp_quote("// [in] BSTR *commaSeparatedMediaTypes is a comma separate list, for example \"aural, braille\".")
+cpp_quote("// The alternate media properties are requested with nsISimpleDOMNode::get_computedStyle.")
+cpp_quote("// Note: setting this value on a document will increase memory overhead, and may create a small delay.")
+cpp_quote("//")
+cpp_quote("// W3C media Types:")
+cpp_quote("// * all:        Suitable for all devices. ")
+cpp_quote("// * aural:      Intended for speech synthesizers. See the section on aural style sheets for details. ")
+cpp_quote("// * braille:    Intended for braille tactile feedback devices. ")
+cpp_quote("// * embossed:   Intended for paged braille printers. ")
+cpp_quote("// * handheld:   Intended for handheld devices - typically small screen, monochrome, limited bandwidth. ")
+cpp_quote("// * print:      Intended for paged, opaque material and for documents viewed on screen in print preview mode. Please consult the section on paged media for information about formatting issues that are specific to paged media. ")
+cpp_quote("// * projection: Intended for projected presentations, for example projectors or print to transparencies. Please consult the section on paged media for information about formatting issues that are specific to paged media. ")
+cpp_quote("// * screen:     Intended primarily for color computer screens. ")
+cpp_quote("// * tty:        intended for media using a fixed-pitch character grid, such as teletypes, terminals, or portable devices with limited display capabilities. Authors should not use pixel units with the tty media type. ")
+cpp_quote("// * tv:         Intended for television-type devices - low resolution, color, limited-scrollability screens, sound")
+cpp_quote("// * See latest W3C CSS specs for complete list of media types")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
+cpp_quote("")
+cpp_quote("")
+
+import "objidl.idl";
+import "oaidl.idl";
+
+[object, uuid(0D68D6D0-D93D-4d08-A30D-F00DD1F45B24)]
+interface ISimpleDOMDocument : IUnknown
+{
+  [propget] HRESULT URL(
+    [out, retval] BSTR * url
+  );
+  [propget] HRESULT title(
+    [out, retval] BSTR * title
+  );
+  [propget] HRESULT mimeType(
+    [out, retval] BSTR * mimeType
+  );
+  [propget] HRESULT docType(
+    [out, retval] BSTR * docType
+  );
+  [propget] HRESULT nameSpaceURIForID(
+    [in]  short nameSpaceID,
+    [out, retval] BSTR * nameSpaceURI
+  );
+  [propput] HRESULT alternateViewMediaTypes(
+    [in] BSTR * commaSeparatedMediaTypes
+	);
+}

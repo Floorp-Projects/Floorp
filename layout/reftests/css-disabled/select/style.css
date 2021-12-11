@@ -1,0 +1,19 @@
+.ref {
+  background-color: green;
+}
+
+.disabled {
+  background-color: red;
+}
+
+:disabled.disabled {
+  background-color: green;
+}
+
+.enabled {
+  background-color: green;
+}
+
+:disabled.enabled {
+  background-color: red;
+}

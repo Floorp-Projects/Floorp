@@ -1,0 +1,11 @@
+sync protocol PsyncProtocol {
+
+    // sanity check of sync protocols
+
+child:
+    async AsyncMsg();
+
+parent:
+    sync SyncMsg() returns (int i);
+
+};

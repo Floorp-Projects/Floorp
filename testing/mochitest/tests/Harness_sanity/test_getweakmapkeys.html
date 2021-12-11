@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers.nondeterministicGetWeakMapKeys</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<div id="content" class="testbody">
+  <script type="text/javascript">
+    var emptyMap = new WeakMap;
+    is(SpecialPowers.nondeterministicGetWeakMapKeys(emptyMap).length, 0, "Empty map has no keys");
+    var twoMap = new WeakMap;
+    var x = {};
+    var y = {};
+    twoMap.set(x, 1);
+    twoMap.set(y, 2);
+    var twoMapKeys = SpecialPowers.nondeterministicGetWeakMapKeys(twoMap);
+    is(twoMapKeys.length, 2, "Map with two things should have two keys");
+    ok(twoMapKeys[0] == x || twoMapKeys[1] == x, "One of the keys should be x");
+    ok(twoMapKeys[0] == y || twoMapKeys[1] == y, "One of the keys should be y");
+  </script>
+</div>
+</body>
+</html>

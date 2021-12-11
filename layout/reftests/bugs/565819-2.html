@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div { color: red; }
+      div:last-child { color: green; }
+    </style>
+    <script>
+      window.onload = function() {
+        var r = document.getElementById("r");
+        r.remove();
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Need extra wrapper div, because whitespace inside <body> is all weird -->
+    <div><div>This should be green</div><div id="r"></div></div></body>
+</html>

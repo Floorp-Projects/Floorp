@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_webRequest_serviceworker_events() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true]],
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "<all_urls>",
+      ],
+    },
+    background() {
+      let eventNames = new Set([
+        "onBeforeRequest",
+        "onBeforeSendHeaders",
+        "onSendHeaders",
+        "onHeadersReceived",
+        "onResponseStarted",
+        "onCompleted",
+        "onErrorOccurred",
+      ]);
+
+      function listener(name, details) {
+        browser.test.assertTrue(eventNames.has(name), `received ${name}`);
+        eventNames.delete(name);
+        if (name == "onCompleted") {
+          eventNames.delete("onErrorOccurred");
+        } else if (name == "onErrorOccurred") {
+          eventNames.delete("onCompleted");
+        }
+        if (eventNames.size == 0) {
+          browser.test.sendMessage("done");
+        }
+      }
+
+      for (let name of eventNames) {
+        browser.webRequest[name].addListener(
+          listener.bind(null, name),
+          {urls: ["https://example.com/*"]}
+        );
+      }
+    },
+  });
+
+  await extension.startup();
+  let registration = await navigator.serviceWorker.register("webrequest_worker.js", {scope: "."});
+  await waitForState(registration.installing, "activated");
+  await extension.awaitMessage("done");
+  await registration.unregister();
+  await extension.unload();
+});
+
+add_task(async function test_webRequest_background_events() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "<all_urls>",
+      ],
+    },
+    background() {
+      let eventNames = new Set([
+        "onBeforeRequest",
+        "onBeforeSendHeaders",
+        "onSendHeaders",
+        "onHeadersReceived",
+        "onResponseStarted",
+        "onCompleted",
+      ]);
+
+      function listener(name, details) {
+        browser.test.assertTrue(eventNames.has(name), `received ${name}`);
+        eventNames.delete(name);
+
+        if (eventNames.size === 0) {
+          browser.test.assertEq("xmlhttprequest", details.type, "correct type for fetch [see bug 1366710]");
+          browser.test.assertEq(0, eventNames.size, "messages received");
+          browser.test.sendMessage("done");
+        }
+      }
+
+      for (let name of eventNames) {
+        browser.webRequest[name].addListener(
+          listener.bind(null, name),
+          {urls: ["https://example.com/*"]}
+        );
+      }
+
+      fetch("https://example.com/example.txt").then(() => {
+        browser.test.succeed("Fetch succeeded.");
+      }, () => {
+        browser.test.fail("fetch received");
+        browser.test.sendMessage("done");
+      });
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

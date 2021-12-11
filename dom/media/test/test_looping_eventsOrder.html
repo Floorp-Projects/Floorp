@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Looping events order</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="text/javascript">
+/**
+ * This test is used to ensure the events order when media is looping back to
+ * the start position. We should see events in following order.
+ * 'seeking' -> 'timeupdate' -> 'seeked'.
+ */
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  { name:"small-shot.ogg", type:"audio/ogg" },
+  { name:"seek-short.webm", type:"video/webm" }
+];
+
+async function testTimeupdateChanged({name, type}) {
+  info(`- start testPlay for name=${name} -`);
+  const element = document.createElement(getMajorMimeType(type));
+  element.src = name;
+  element.loop = true;
+
+  await once(element, "canplay");
+  ok(await element.play().then(() => true, () => false), `start playing ${name}`);
+
+  let gotTimeUpdated = false;
+  await once(element, "seeking");
+  element.addEventListener("timeupdate", function() {
+    gotTimeUpdated = true;
+  }, {once: true});
+  await once(element, "seeked");
+  ok(gotTimeUpdated, "Got timeupdate between seeking and seeked.");
+
+  removeNodeAndSource(element);
+}
+
+(async function startTest() {
+  for (let test of tests) {
+    await testTimeupdateChanged(test);
+  }
+  SimpleTest.finish();
+})();
+
+</script>
+</pre>
+</body>
+</html>

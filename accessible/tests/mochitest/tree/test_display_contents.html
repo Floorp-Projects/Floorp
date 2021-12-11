@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>CSS display:contents tests</title>
+<link rel="stylesheet" type="text/css"
+      href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="application/javascript"
+        src="../common.js"></script>
+<script type="application/javascript"
+        src="../role.js"></script>
+
+<script type="application/javascript">
+function doTest() {
+  let tree =
+    { LIST: [
+      { LISTITEM: [
+        { LISTITEM_MARKER: [] },
+        { TEXT_LEAF: [] },
+      ]},
+      { LISTITEM: [
+        { LISTITEM_MARKER: [] },
+        { TEXT_LEAF: [] },
+      ]},
+    ] };
+  testAccessibleTree("ul", tree);
+
+  tree =
+    { TABLE: [
+      { ROW: [
+        { CELL: [{ TEXT_LEAF: [] } ] },
+        { CELL: [{ TEXT_LEAF: [] } ] },
+      ]},
+    ] };
+  testAccessibleTree("tableTableContents", tree);
+  testAccessibleTree("tableTbodyContents", tree);
+  testAccessibleTree("tableTrContents", tree);
+  testAccessibleTree("tableTdContents", tree);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addA11yLoadEvent(doTest);
+</script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ul id="ul" style="display: contents;">
+    <li>Supermarket 1</li>
+    <li>Supermarket 2</li>
+  </ul>
+
+  <!-- The summary attribute in these tables ensures they are treated as data
+    tables. -->
+  <table id="tableTableContents" summary="summary" style="display: contents;">
+    <tr><td>a</td><td>b</td></tr>
+  </table>
+  <table id="tableTbodyContents" summary="summary" style="display: block;">
+    <tbody style="display: contents;">
+      <tr><td>a</td><td>b</td></tr>
+    </tbody>
+  </table>
+  <table id="tableTrContents" summary="table" style="display: block;">
+    <tr style="display: contents;"><td>a</td><td>b</td></tr>
+  </table>
+  <table id="tableTdContents" summary="summary">
+    <tr>
+      <td style="display: contents;">a</td>
+      <td style="display: contents;">b</td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,143 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SPHINX_TREES["crashreporter"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+EXPORTS += [
+    "!CrashAnnotations.h",
+    "nsExceptionHandler.h",
+]
+
+JAR_MANIFESTS += ["jar.mn"]
+
+UNIFIED_SOURCES = [
+    "CrashAnnotations.cpp",
+    "nsExceptionHandlerUtils.cpp",
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["MOZ_CRASHREPORTER"]:
+    if CONFIG["OS_ARCH"] == "WINNT":
+        DIRS += [
+            "breakpad-windows-libxul",
+            "google-breakpad/src/common",
+            "google-breakpad/src/processor",
+            "mozwer",
+            "mozwer-rust",
+        ]
+
+        if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
+            DIRS += ["breakpad-windows-standalone"]
+
+    elif CONFIG["OS_ARCH"] == "Darwin":
+        DIRS += [
+            "breakpad-client",
+            "breakpad-client/mac/crash_generation",
+            "breakpad-client/mac/handler",
+            "google-breakpad/src/common",
+            "google-breakpad/src/common/mac",
+            "google-breakpad/src/processor",
+        ]
+
+    elif CONFIG["OS_ARCH"] == "Linux":
+        DIRS += [
+            "breakpad-client",
+            "breakpad-client/linux/",
+            "google-breakpad/src/common",
+            "google-breakpad/src/common/linux",
+            "google-breakpad/src/processor",
+        ]
+
+        if CONFIG["MOZ_OXIDIZED_BREAKPAD"]:
+            DIRS += ["rust_minidump_writer_linux"]
+
+    DIRS += [
+        "client",
+        "minidump-analyzer",
+    ]
+
+    if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
+        DIRS += ["injector"]
+        UNIFIED_SOURCES += [
+            "InjectCrashReporter.cpp",
+            "LoadLibraryRemote.cpp",
+        ]
+
+    if CONFIG["ENABLE_TESTS"]:
+        DIRS += ["test/gtest"]
+
+    TEST_DIRS += ["test"]
+
+    UNIFIED_SOURCES += [
+        "nsExceptionHandler.cpp",
+        "ThreadAnnotation.cpp",
+    ]
+
+    if CONFIG["OS_ARCH"] == "Darwin":
+        UNIFIED_SOURCES += [
+            "mac_utils.mm",
+        ]
+
+    EXTRA_JS_MODULES += [
+        "CrashReports.jsm",
+        "CrashSubmit.jsm",
+    ]
+
+    include("/ipc/chromium/chromium-config.mozbuild")
+
+    if CONFIG["OS_TARGET"] == "Android":
+        DEFINES["ANDROID_NDK_MAJOR_VERSION"] = CONFIG["ANDROID_NDK_MAJOR_VERSION"]
+        DEFINES["ANDROID_NDK_MINOR_VERSION"] = CONFIG["ANDROID_NDK_MINOR_VERSION"]
+        DEFINES["ANDROID_PACKAGE_NAME"] = '"%s"' % CONFIG["ANDROID_PACKAGE_NAME"]
+        # NDK5 workarounds
+        DEFINES["_STLP_CONST_CONSTRUCTOR_BUG"] = True
+        DEFINES["_STLP_NO_MEMBER_TEMPLATES"] = True
+        LOCAL_INCLUDES += [
+            "/toolkit/crashreporter/google-breakpad/src/common/android/include",
+        ]
+
+    DEFINES["UNICODE"] = True
+    DEFINES["_UNICODE"] = True
+
+    if CONFIG["MOZ_PHC"]:
+        DEFINES["MOZ_PHC"] = True
+
+    LOCAL_INCLUDES += [
+        "google-breakpad/src",
+    ]
+
+    PYTHON_UNITTEST_MANIFESTS += [
+        "tools/python.ini",
+    ]
+
+    include("/toolkit/crashreporter/crashreporter.mozbuild")
+
+    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+        CXXFLAGS += ["-Wno-shadow", "-Wno-error=stack-protector"]
+else:
+    UNIFIED_SOURCES += [
+        "nsDummyExceptionHandler.cpp",
+    ]
+
+# Generate CrashAnnotations.h
+GeneratedFile(
+    "CrashAnnotations.h",
+    script="generate_crash_reporter_sources.py",
+    entry_point="emit_header",
+    inputs=[
+        "CrashAnnotations.h.in",
+        "CrashAnnotations.yaml",
+    ],
+)
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
+
+REQUIRES_UNIFIED_BUILD = True

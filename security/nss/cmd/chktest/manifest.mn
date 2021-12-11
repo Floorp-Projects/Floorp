@@ -1,0 +1,21 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+MODULE = nss
+
+#REQUIRES = seccmd dbm softoken
+REQUIRES = seccmd dbm
+
+#INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
+
+PROGRAM = chktest
+
+USE_STATIC_LIBS = 1
+
+CSRCS = \
+	chktest.c \
+	$(NULL)
+

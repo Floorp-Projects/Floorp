@@ -1,0 +1,46 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PTexture;
+include protocol PRemoteDecoder;
+include LayersSurfaces;
+include "mozilla/dom/MediaIPCUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+
+using VideoInfo from "MediaInfo.h";
+using AudioInfo from "MediaInfo.h";
+using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
+using mozilla::CreateDecoderParams::OptionSet from "PlatformDecoderModule.h";
+using mozilla::DecoderDoctorDiagnostics from "DecoderDoctorDiagnostics.h";
+
+namespace mozilla {
+
+struct VideoDecoderInfoIPDL
+{
+  VideoInfo videoInfo;
+  float framerate;
+};
+
+union RemoteDecoderInfoIPDL
+{
+  AudioInfo;
+  VideoDecoderInfoIPDL;
+};
+
+sync protocol PRemoteDecoderManager
+{
+  manages PRemoteDecoder;
+
+parent:
+  async PRemoteDecoder(RemoteDecoderInfoIPDL info,
+                       OptionSet options,
+                       TextureFactoryIdentifier? identifier);
+
+  sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
+
+  async DeallocateSurfaceDescriptorGPUVideo(SurfaceDescriptorGPUVideo sd);
+};
+
+} // namespace mozilla

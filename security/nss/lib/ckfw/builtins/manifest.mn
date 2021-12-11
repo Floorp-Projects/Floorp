@@ -1,0 +1,36 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../../..
+
+DIRS = . testlib
+
+testlib: .
+
+MODULE = nss
+
+EXPORTS =		\
+	nssckbi.h	\
+	$(NULL)
+
+CSRCS =			\
+	anchor.c	\
+	constants.c	\
+	bfind.c		\
+	binst.c 	\
+	bobject.c	\
+	bsession.c	\
+	bslot.c		\
+	btoken.c	\
+	certdata.c	\
+	ckbiver.c	\
+	$(NULL)
+
+REQUIRES = nspr
+
+LIBRARY_NAME = nssckbi
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+LIBRARY = $(NULL)
+IMPORT_LIBRARY = $(NULL)

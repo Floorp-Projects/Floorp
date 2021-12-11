@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<body>
+<script>
+function syncXHR() {
+  let xhr = new XMLHttpRequest();
+  xhr.open("GET", window.location, false);
+  xhr.send(null);
+}
+
+addEventListener('load', evt => {
+  syncXHR();
+  document.open();
+  document.write(
+    '<body>' +
+    '<iframe src="about:blank"></iframe>' +
+    // eslint-disable-next-line no-useless-concat
+    '<script>window.opener.postMessage("DONE", "*");</' + 'script>' +
+    '</body>');
+  document.close();
+}, { once: true });
+</script>
+</body>

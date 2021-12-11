@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang=en>
+<title>Test for Bug 160403</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<span></span>
+<style>
+span {
+  border-inline-start: 0px solid rgb(0, 0, 0);
+  border-inline-end: 0px solid rgb(0, 0, 0);
+  transition: border 100s linear -50s;
+}
+span.transitioned {
+  border-inline-start: 100px solid rgb(100, 100, 100);
+  border-inline-end: 10px solid rgb(10, 10, 10);
+}
+</style>
+<script>
+// Test that transitioning each of border-{left,right}-{color,width}
+// works when the values are set through the -moz-border-{start,end}
+// shorthands.
+
+var e = document.querySelector("span");
+var cs = getComputedStyle(e);
+is(cs.borderLeftColor, "rgb(0, 0, 0)", "value of border-left-color before transition");
+is(cs.borderLeftWidth, "0px", "value of border-left-width before transition");
+is(cs.borderRightColor, "rgb(0, 0, 0)", "value of border-right-color before transition");
+is(cs.borderRightWidth, "0px", "value of border-right-width before transition");
+e.className = "transitioned";
+is(cs.borderLeftWidth, "50px", "value of border-left-width during transition");
+is(cs.borderLeftColor, "rgb(50, 50, 50)", "value of border-left-color during transition");
+is(cs.borderRightWidth, "5px", "value of border-right-width during transition");
+is(cs.borderRightColor, "rgb(5, 5, 5)", "value of border-right-color during transition");
+e.remove();
+</script>

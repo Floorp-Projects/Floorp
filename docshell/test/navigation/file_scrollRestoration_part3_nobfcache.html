@@ -1,0 +1,157 @@
+<html>
+  <head>
+    <script>
+      var oldHistoryObject = null;
+      var currCaseForIframe = 0;
+      var bc = new BroadcastChannel("bug1155730_part3");
+      bc.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "test") {
+          var currentCase = msg.currentCase;
+          test(currentCase);
+        }
+      }
+
+      // If onpopstate event takes place, check if we need to call 'test()'
+      var callTest = false;
+      var nextCase = 0;
+      window.onpopstate = (e) => {
+        if (callTest) {
+          callTest = false;
+          setTimeout(() => {
+            test(nextCase);
+          });
+        }
+      }
+
+      function test(currentCase) {
+        var assertIs = [];
+        var assertOk = [];
+        var assertIsNot = [];
+        switch (currentCase) {
+          case 1: {
+            history.scrollRestoration = "manual";
+            window.location.hash = "hash";
+            bc.postMessage({command: "nextCase"});
+            requestAnimationFrame(() => {
+              test(currentCase + 1);
+            });
+            break;
+          }
+          case 2: {
+            assertIsNot.push([Math.round(window.scrollY), 0, "Should have scrolled to #hash."]);
+            assertIs.push([history.scrollRestoration, "manual", "Should have the same scrollRestoration mode as before fragment navigation."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs, assertIsNot});
+            window.location.href = "file_scrollRestoration_navigate.html";
+            break;
+          }
+          case 3: {
+            assertIs.push([window.scrollY, 0, "Shouldn't have kept the old scroll position."]);
+            assertIs.push([history.scrollRestoration, "manual", "Should have the same scrollRestoration mode as before fragment navigation."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs});
+            history.scrollRestoration = "auto";
+            document.getElementById("bottom").scrollIntoView();
+            history.pushState({ state: "state1" }, "state1");
+            history.pushState({ state: "state2" }, "state2");
+            window.scrollTo(0, 0);
+            bc.postMessage({command: "nextCase"});
+            callTest = true;
+            nextCase = currentCase + 1;
+            history.back(); // go back to state 1
+            break;
+          }
+          case 4: {
+            assertIsNot.push([Math.round(window.scrollY), 0, "Should have scrolled back to the state1's position"]);
+            assertIs.push([history.state.state, "state1", "Unexpected state."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs, assertIsNot});
+
+            history.scrollRestoration = "manual";
+            document.getElementById("bottom").scrollIntoView();
+            history.pushState({ state: "state3" }, "state3");
+            history.pushState({ state: "state4" }, "state4");
+            window.scrollTo(0, 0);
+            bc.postMessage({command: "nextCase"});
+            callTest = true;
+            nextCase = currentCase + 1;
+            history.back(); // go back to state 3
+            break;
+          }
+          case 5: {
+            assertIs.push([Math.round(window.scrollY), 0, "Shouldn't have scrolled back to the state3's position"]);
+            assertIs.push([history.state.state, "state3", "Unexpected state."]);
+
+            history.pushState({ state: "state5" }, "state5");
+            history.scrollRestoration = "auto";
+            document.getElementById("bottom").scrollIntoView();
+            assertIsNot.push([Math.round(window.scrollY), 0, "Should have scrolled to 'bottom'."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs, assertIsNot});
+            bc.postMessage({command: "nextCase"});
+            callTest = true;
+            nextCase = currentCase + 1;
+            // go back to state 3 (state 4 was removed when state 5 was pushed)
+            history.back();
+            break;
+          }
+          case 6: {
+            window.scrollTo(0, 0);
+            bc.postMessage({command: "nextCase"});
+            callTest = true;
+            nextCase = currentCase + 1;
+            history.forward();
+            break;
+          }
+          case 7: {
+            assertIsNot.push([Math.round(window.scrollY), 0, "Should have scrolled back to the state5's position"]);
+            bc.postMessage({command: "asserts", currentCase, assertIsNot});
+
+            var ifr = document.createElement("iframe");
+            ifr.src = "data:text/html,";
+            document.body.appendChild(ifr);
+            bc.postMessage({command: "nextCase"});
+            currCaseForIframe = currentCase + 1;
+            ifr.onload = () => {
+              test(currCaseForIframe);
+            };
+            break;
+          }
+          case 8: {
+            oldHistoryObject = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]).contentWindow.history;
+            bc.postMessage({command: "nextCase"});
+            currCaseForIframe++;
+            document.getElementsByTagName("iframe")[0].src = "about:blank";
+            break;
+          }
+          case 9: {
+            try {
+              oldHistoryObject.scrollRestoration;
+              assertOk.push([false, "Should have thrown an exception."]);
+            } catch (ex) {
+              assertOk.push([ex != null, "Did get an exception"]);
+            }
+            try {
+              oldHistoryObject.scrollRestoration = "auto";
+              assertOk.push([false, "Should have thrown an exception."]);
+            } catch (ex) {
+              assertOk.push([ex != null, "Did get an exception"]);
+            }
+            bc.postMessage({command: "asserts", currentCase, assertOk});
+            bc.postMessage({command: "finishing"});
+            bc.close();
+            window.close();
+            break;
+          }
+        }
+      }
+      window.onpageshow = (event) => {
+        bc.postMessage({command: "pageshow", persisted: event.persisted});
+      }
+    </script>
+  </head>
+  <body>
+  <div style="border: 1px solid black; height: 5000px;">
+  &nbsp;</div>
+  <div id="bottom">Hello world</div>
+  <a href="#hash" name="hash">hash</a>
+  </body>
+</html>

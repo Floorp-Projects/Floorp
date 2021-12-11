@@ -1,0 +1,170 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+@media not print {
+  html, body {
+    height: 100%;
+  }
+}
+
+body {
+  display: flex;
+  align-items: stretch;
+}
+
+#sectionTitle {
+  float: inline-start;
+  padding-inline-start: 1rem;
+}
+
+/** Categories **/
+
+.category {
+  cursor: pointer;
+  /* Center category names */
+  display: flex;
+  align-items: center;
+}
+
+.category .category-name {
+  pointer-events: none;
+}
+
+#category-active {
+  background-image: url("chrome://browser/content/policies/policies-active.svg");
+}
+
+#category-documentation {
+  background-image: url("chrome://browser/content/policies/policies-documentation.svg");
+}
+
+#category-errors {
+  background-image: url("chrome://browser/content/policies/policies-error.svg");
+}
+
+/** Content area **/
+
+.main-content {
+  flex: 1;
+  scroll-padding: 25px;
+}
+
+.tab {
+  padding: 0.5em 0;
+}
+
+.tab table {
+  width: 100%;
+}
+
+tbody tr {
+  transition: background cubic-bezier(.07, .95, 0, 1) 250ms;
+}
+
+tbody tr:hover {
+  background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
+}
+
+th, td, table {
+  border-collapse: collapse;
+  border: none;
+  text-align: start;
+}
+
+th {
+  padding: 1rem;
+  font-size: larger;
+}
+
+td {
+  padding: 1rem;
+}
+
+/*
+ * In Documentation Tab, this property sets the policies row in an
+ * alternate color scheme of white and grey as each policy comprises
+ * of two tbody tags, one for the description and the other for the
+ * collapsible information block.
+ */
+
+.active-policies tr.odd:not(:hover),
+.errors tr:nth-child(odd):not(:hover),
+tbody:nth-child(4n + 1) {
+  background-color: var(--in-content-box-background-odd);
+}
+
+.arr_sep.odd:not(:last-child) td:not(:first-child) {
+  border-bottom: 2px solid #f9f9fa;
+}
+
+.arr_sep.even:not(:last-child) td:not(:first-child) {
+  border-bottom: 2px solid #ededf0;
+}
+
+.last_row:not(:last-child) td {
+  border-bottom: 2px solid #d7d7db !important;
+}
+
+.icon {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  -moz-context-properties: fill;
+  display: inline-block;
+  fill: var(--newtab-icon-primary-color);
+  height: 14px;
+  vertical-align: middle;
+  width: 14px;
+  margin-top: -.125rem;
+  margin-left: .5rem;
+}
+
+.collapsible {
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.content {
+  display: none;
+}
+
+.content-style {
+  background-color: var(--in-content-box-background);
+  color: var(--blue-50);
+}
+
+tbody.collapsible td {
+  padding-bottom: 1rem;
+}
+
+.schema {
+  font-family: monospace;
+  white-space: pre;
+  direction: ltr;
+}
+
+/*
+ * The Active tab has two messages: one for when the policy service
+ * is inactive and another for when the there are no specified
+ * policies. The three classes below control which message to display
+ * or to show the policy table.
+ */
+.no-specified-policies > table,
+.inactive-service > table {
+  display: none;
+}
+
+:not(.no-specified-policies) > .no-specified-policies-message,
+:not(.inactive-service) > .inactive-service-message {
+  display: none;
+}
+
+.no-specified-policies-message,
+.inactive-service-message {
+  padding: 1rem;
+}

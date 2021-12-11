@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1288361 - Block scripts with incorrect MIME type</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+const MIMETypes = [
+  ["application/javascript", true],
+  ["text/javascript", true],
+
+  ["audio/mpeg", false],
+  ["audio/", false],
+  ["image/jpeg", false],
+  ["image/", false],
+  ["video/mpeg", false],
+  ["video/", false],
+  ["text/csv", false],
+];
+
+// <script src="">
+function testScript([mime, shouldLoad]) {
+  return new Promise((resolve, reject) => {
+    let script = document.createElement("script");
+    script.onload = () => {
+      document.body.removeChild(script);
+      ok(shouldLoad, `script with mime '${mime}' should load`);
+      resolve();
+    };
+    script.onerror = () => {
+      document.body.removeChild(script);
+      ok(!shouldLoad, `script with wrong mime '${mime}' should be blocked`);
+      resolve();
+    };
+    script.src = "file_block_script_wrong_mime_server.sjs?type=script&mime="+mime;
+    document.body.appendChild(script);
+  });
+}
+
+// new Worker()
+function testWorker([mime, shouldLoad]) {
+  return new Promise((resolve, reject) => {
+    let worker = new Worker("file_block_script_wrong_mime_server.sjs?type=worker&mime="+mime);
+    worker.onmessage = (event) => {
+      ok(shouldLoad, `worker with mime '${mime}' should load`)
+      is(event.data, "worker-loaded", "worker should send correct message");
+      resolve();
+    };
+    worker.onerror = (error) => {
+      ok(!shouldLoad, `worker with wrong mime '${mime}' should be blocked`);
+      error.preventDefault();
+      resolve();
+    }
+    worker.postMessage("dummy");
+  });
+}
+
+// new Worker() with importScripts()
+function testWorkerImportScripts([mime, shouldLoad]) {
+  return new Promise((resolve, reject) => {
+    let worker = new Worker("file_block_script_wrong_mime_server.sjs?type=worker-import&mime="+mime);
+    worker.onmessage = (event) => {
+      ok(shouldLoad, `worker/importScripts with mime '${mime}' should load`)
+      is(event.data, "worker-loaded", "worker should send correct message");
+      resolve();
+    };
+    worker.onerror = (error) => {
+      ok(!shouldLoad, `worker/importScripts with wrong mime '${mime}' should be blocked`);
+      error.preventDefault();
+      resolve();
+    }
+    worker.postMessage("dummy");
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+Promise.all(MIMETypes.map(testScript)).then(() => {
+  return Promise.all(MIMETypes.map(testWorker));
+}).then(() => {
+  return Promise.all(MIMETypes.map(testWorkerImportScripts));
+}).then(() => {
+  return SpecialPowers.popPrefEnv();
+}).then(SimpleTest.finish);
+
+</script>
+</body>
+</html>

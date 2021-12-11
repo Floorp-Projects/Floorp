@@ -1,0 +1,12 @@
+<!-- This test is intentionally in quirks mode -->
+<style>
+  div { color: red; }
+  .TEST1 div { color: green; }
+  #TEST2 div { color: green; }
+</style>
+<div class="test1">
+  <div>This text should be green</div>
+</div>
+<div id="test2">
+  <div>This text should be green</div>
+</div>

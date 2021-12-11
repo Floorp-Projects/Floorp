@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666041
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 666041</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="flexbox_layout_testcases.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666041">Mozilla Bug 666041</a>
+<div id="display">
+  <div id="content">
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 666041 **/
+
+/* Flexbox Layout Tests
+ * --------------------
+ * This mochitest exercises our implementation of the flexbox layout algorithm
+ * by creating a flex container, inserting some flexible children, and then
+ * verifying that the computed width of those children is what we expect.
+ *
+ * See flexbox_layout_testcases.js for the actual testcases & testcase format.
+ */
+
+function getComputedStyleWrapper(elem, prop)
+{
+  return window.getComputedStyle(elem).getPropertyValue(prop);
+}
+
+function setPossiblyAliasedProperty(aElem, aPropertyName, aPropertyValue,
+                                    aPropertyMapping)
+{
+  let actualPropertyName = (aPropertyName in aPropertyMapping ?
+                            aPropertyMapping[aPropertyName] : aPropertyName);
+
+  if (!gCSSProperties[actualPropertyName]) {
+    ok(false, "Bug in test: property '" + actualPropertyName +
+              "' doesn't exist in gCSSProperties");
+  } else {
+    let domPropertyName = gCSSProperties[actualPropertyName].domProp;
+    aElem.style[domPropertyName] = aPropertyValue;
+  }
+}
+
+// Helper function to strip "px" off the end of a string
+// (so that we can compare two lengths using "isfuzzy()" with an epsilon)
+function stripPx(aLengthInPx)
+{
+  let pxOffset = aLengthInPx.length - 2; // subtract off length of "px"
+
+  // Sanity-check the arg:
+  ok(pxOffset > 0 && aLengthInPx.substr(pxOffset) == "px",
+     "expecting value with 'px' units");
+
+  return aLengthInPx.substr(0, pxOffset);
+}
+
+// The main test function.
+// aFlexboxTestcase is an entry from the list in flexbox_layout_testcases.js
+function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
+{
+  let content = document.getElementById("content");
+
+  // Create flex container
+  let flexContainer = document.createElement("div");
+  flexContainer.style.display = "flex";
+  flexContainer.style.flexDirection = aFlexDirection;
+  setPossiblyAliasedProperty(flexContainer, "_main-size",
+                             gDefaultFlexContainerSize,
+                             aPropertyMapping);
+
+  // Apply testcase's customizations for flex container (if any).
+  if (aFlexboxTestcase.container_properties) {
+    for (let propName in aFlexboxTestcase.container_properties) {
+      let propValue = aFlexboxTestcase.container_properties[propName];
+      setPossiblyAliasedProperty(flexContainer, propName, propValue,
+                                 aPropertyMapping);
+    }
+  }
+
+  // Create & append flex items
+  aFlexboxTestcase.items.forEach(function(aChildSpec) {
+    // Create an element for our item
+    let child = document.createElement("div");
+
+    // Set all the specified properties on our item
+    for (let propName in aChildSpec) {
+      // aChildSpec[propName] is either a specified value,
+      // or an array of [specifiedValue, computedValue]
+      let specifiedValue = Array.isArray(aChildSpec[propName]) ?
+        aChildSpec[propName][0] :
+        aChildSpec[propName];
+
+      // SANITY CHECK:
+      if (Array.isArray(aChildSpec[propName])) {
+        ok(aChildSpec[propName].length >= 2 &&
+           aChildSpec[propName].length <= 3,
+           "unexpected number of elements in array within child spec");
+      }
+
+      if (specifiedValue !== null) {
+        setPossiblyAliasedProperty(child, propName, specifiedValue,
+                                   aPropertyMapping);
+      }
+    }
+
+    // Append the item to the flex container
+    flexContainer.appendChild(child);
+  });
+
+  // Append the flex container
+  content.appendChild(flexContainer);
+
+  // NOW: Test the computed style on the flex items
+  let child = flexContainer.firstChild;
+  for (let i = 0; i < aFlexboxTestcase.items.length; i++) {
+    if (!child) { // sanity
+      ok(false, "should have created a child for each child-spec");
+    }
+
+    let childSpec = aFlexboxTestcase.items[i];
+    for (let propName in childSpec) {
+      if (Array.isArray(childSpec[propName])) {
+        let expectedVal = childSpec[propName][1];
+        let actualPropName = (propName in aPropertyMapping ?
+                              aPropertyMapping[propName] : propName);
+        let actualVal = getComputedStyleWrapper(child, actualPropName);
+        let message = "computed value of '" + actualPropName +
+                      "' should match expected";
+
+        if (childSpec[propName].length > 2) {
+          // 3rd entry in array is epsilon
+          // Need to strip off "px" units in order to use epsilon:
+          let actualValNoPx = stripPx(actualVal);
+          let expectedValNoPx = stripPx(expectedVal);
+          isfuzzy(actualValNoPx, expectedValNoPx,
+                  childSpec[propName][2], message);
+        } else {
+          is(actualVal, expectedVal, message);
+        }
+      }
+    }
+
+    child = child.nextSibling;
+  }
+
+  // Clean up: drop the flex container.
+  content.removeChild(flexContainer);
+}
+
+function main()
+{
+  gFlexboxTestcases.forEach(
+    function(aTestcase) {
+      testFlexboxTestcase(aTestcase, "",
+                          gRowPropertyMapping);
+      testFlexboxTestcase(aTestcase, "row",
+                          gRowPropertyMapping);
+      testFlexboxTestcase(aTestcase, "row-reverse",
+                          gRowReversePropertyMapping);
+      testFlexboxTestcase(aTestcase, "column",
+                          gColumnPropertyMapping);
+      testFlexboxTestcase(aTestcase, "column-reverse",
+                          gColumnReversePropertyMapping);
+    }
+  );
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,72 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+include NeckoChannelParams;
+
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+[RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
+
+namespace mozilla {
+namespace net {
+
+/**
+ * PCookieService
+ *
+ * Provides IPDL methods for setting and getting cookies. These are stored on
+ * and managed by the parent; the child process goes through the parent for
+ * all cookie operations. Lower-level programmatic operations (i.e. those
+ * provided by the nsICookieManager interface) are not
+ * currently implemented and requesting these interfaces in the child will fail.
+ *
+ * @see nsICookieService
+ * @see nsICookiePermission
+ */
+
+[NestedUpTo=inside_cpow] sync protocol PCookieService
+{
+  manager PNecko;
+
+parent:
+  [Nested=inside_cpow] async SetCookies(nsCString baseDomain,
+                                        OriginAttributes attrs,
+                                        nsIURI host,
+                                        bool fromHttp,
+                                        CookieStruct[] cookies);
+
+  async PrepareCookieList(nsIURI host,
+                          bool isForeign,
+                          bool isThirdPartyTrackingResource,
+                          bool isThirdPartySocialTrackingResource,
+                          bool firstPartyStorageAccessPermissionGranted,
+                          uint32_t rejectedReason,
+                          bool isSafeTopLevelNav,
+                          bool isSameSiteForeign,
+                          OriginAttributes attrs);
+
+  async __delete__();
+
+child:
+  async TrackCookiesLoad(CookieStruct[] cookiesList,
+                         OriginAttributes attrs);
+
+  async RemoveCookie(CookieStruct cookie,
+                     OriginAttributes attrs);
+
+  async RemoveBatchDeletedCookies(CookieStruct[] cookiesList,
+                                  OriginAttributes[] attrsList);
+
+  async RemoveAll();
+
+  async AddCookie(CookieStruct cookie,
+                  OriginAttributes attrs);
+
+};
+
+}
+}
+

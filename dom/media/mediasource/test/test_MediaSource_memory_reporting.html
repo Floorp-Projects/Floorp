@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: memory reporting</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, v) => {
+  // Load a webm video and play it.
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
+  await fetchAndLoad(sb, "seek", [""], ".webm");
+  const p = once(v, "ended");
+  ms.endOfStream();
+  v.play();
+  await p;
+
+  // Test that memory reporting works once we've played a video.
+  // Grab a memory report.
+  const mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
+      .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
+
+  let amount;
+  const handleReport = (aProcess, aPath, aKind, aUnits, aAmount) => {
+    if (aPath == "explicit/media/resources") {
+      amount = (amount || 0) + aAmount;
+    }
+  };
+
+  await new Promise(r => mgr.getReports(handleReport, null, r, null, /* anonymized = */ false));
+  ok(true, "Yay didn't crash!");
+  ok(amount !== undefined, "Got media resources amount");
+  ok(amount > 0, "Non-zero amount reported for media resources");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

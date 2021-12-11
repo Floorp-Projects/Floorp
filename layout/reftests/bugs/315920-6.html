@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      option {color: red}
+      option[selected] {color: green}
+      option[selected]:default + option {color: green}
+    </style>
+  </head>
+  <body onload='var elem = document.getElementById("one");
+                elem.setAttribute("selected", "selected");'>
+    <select size="2">
+      <option id="one">Should be no red</option>
+      <option id="two">Should be no red</option>
+    </select>
+  </body>
+</html>

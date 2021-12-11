@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=143220
+-->
+<head>
+  <title>Test for Bug 143220</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=143220">Mozilla Bug 143220</a>
+<p id="display">
+  <input type="file" id="i1">
+  <input type="file" id="i2">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 143220 **/
+SimpleTest.waitForExplicitFinish();
+const helperURL = SimpleTest.getTestFileURL("simpleFileOpener.js");
+const helper = SpecialPowers.loadChromeScript(helperURL);
+helper.addMessageListener("fail", function onFail(message) {
+  is(message, null, "chrome script failed");
+  SimpleTest.finish();
+});
+helper.addMessageListener("file.opened", onFileOpened);
+helper.sendAsyncMessage("file.open", "test_bug143220.txt");
+
+function onFileOpened(message) {
+  const { leafName, fullPath, domFile } = message;
+
+  function initControl1() {
+    SpecialPowers.wrap($("i1")).mozSetFileArray([domFile]);
+  }
+
+  function initControl2() {
+    SpecialPowers.wrap($("i2")).mozSetFileArray([domFile]);
+  }
+
+  // Check that we can't just set the value
+  try {
+    $("i1").value = fullPath;
+    is(0, 1, "Should have thrown exception on set!");
+  } catch(e) {
+    is($("i1").value, "", "Shouldn't have value here");
+  }
+
+  initControl1();
+  initControl2();
+
+  is($("i1").value, 'C:\\fakepath\\' + leafName, "Leaking full value?");
+  is($("i2").value, 'C:\\fakepath\\' + leafName, "Leaking full value?");
+
+  helper.addMessageListener("file.removed", onFileRemoved);
+  helper.sendAsyncMessage("file.remove", null);
+}
+
+function onFileRemoved() {
+  helper.destroy();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

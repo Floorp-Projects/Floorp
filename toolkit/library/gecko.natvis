@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <!-- Mozilla Gecko Visualizers -->
+
+  <!-- nsTArray -->
+  <Type Name="nsTArray&lt;*&gt;">
+    <DisplayString Condition="mHdr-&gt;mLength == 0 &amp;&amp; mHdr-&gt;mCapacity == 0">empty</DisplayString>
+    <DisplayString Condition="mHdr-&gt;mLength == mHdr-&gt;mCapacity">size = {mHdr-&gt;mLength}</DisplayString>
+    <DisplayString>size = {mHdr-&gt;mLength}, capacity = {mHdr-&gt;mCapacity}</DisplayString>
+    <Expand>
+      <ArrayItems Condition="mHdr->mLength &gt; 0">
+	<Size>mHdr-&gt;mLength</Size>
+	<ValuePointer>($T1*)(mHdr + 1)</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <!-- refcounts -->
+  <Type Name="nsAutoRefCnt">
+    <DisplayString>{mValue}</DisplayString>
+  </Type>
+
+  <Type Name="nsCycleCollectingAutoRefCnt">
+    <!-- this value needs to be updated if NS_NUMBER_OF_FLAGS_IN_REFCNT in xpcom/glue/nsISupportsImpl.h changes -->
+    <DisplayString>{mValue >> 2}</DisplayString>
+    <Expand>
+      <Synthetic Name="In Purple Buffer"><DisplayString>{mValue &amp; 1 != 0}</DisplayString></Synthetic>
+      <Synthetic Name="Is Purple"><DisplayString>{mValue &amp; 2 != 0}</DisplayString></Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="mozilla::ThreadSafeAutoRefCnt">
+    <DisplayString>{mValue.mValue._My_val}</DisplayString>
+  </Type>
+
+  <!-- smart pointer/refcount pointer things -->
+  <Type Name="nsRefPtr&lt;*&gt;">
+    <AlternativeType Name="nsCOMPtr&lt;*&gt;" />
+    <AlternativeType Name="nsAutoPtr&lt;*&gt;" />
+    <AlternativeType Name="mozilla::WebGLRefPtr&lt;*&gt;" />
+
+    <DisplayString Condition="mRawPtr == 0">NULL</DisplayString>
+    <DisplayString>{*($T1*)mRawPtr}</DisplayString>
+    <Expand>
+      <ExpandedItem>($T1*)mRawPtr</ExpandedItem>
+    </Expand>
+  </Type>
+
+  <!-- strings -->
+  <Type Name="nsACString">
+    <AlternativeType Name="nsACString_internal" />
+    <AlternativeType Name="nsCString" />
+    <AlternativeType Name="nsLiteralCString" />
+
+    <DisplayString>{mData,s}</DisplayString>
+    <StringView>mData,s</StringView>
+    <Expand>
+      <Item Name="Length">mLength</Item>
+      <Item Name="Flags">mFlags</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="nsAString">
+    <AlternativeType Name="nsAString_internal" />
+    <AlternativeType Name="nsString" />
+    <AlternativeType Name="nsLiteralString" />
+
+    <DisplayString>{mData,su}</DisplayString>
+    <StringView>mData,su</StringView>
+    <Expand>
+      <Item Name="Length">mLength</Item>
+      <Item Name="Flags">mFlags</Item>
+    </Expand>
+  </Type>
+
+  <!-- rects, points, etc. -->
+  <Type Name="mozilla::gfx::BaseRect&lt;*,*,*,*,*&gt;">
+    <AlternativeType Name="mozilla::gfx::Rect" />
+    <DisplayString>x={x}, y={y}, width={width}, height={height}</DisplayString>
+  </Type>
+
+  <Type Name="mozilla::gfx::BaseSize&lt;*,*&gt;">
+    <AlternativeType Name="mozilla::gfx::Size" />
+    <AlternativeType Name="nsIntSize" />
+    <DisplayString>width={width}, height={height}</DisplayString>
+  </Type>
+
+  <Type Name="mozilla::gfx::BasePoint&lt;*,*&gt;">
+    <AlternativeType Name="mozilla::gfx::Point" />
+    <DisplayString>x={x}, y={y}</DisplayString>
+  </Type>
+
+  <Type Name="mozilla::gfx::Matrix4x4">
+    <AlternativeType Name="gfx3DMatrix" />
+    <DisplayString Condition="(_11==_22==_33==_44==1) &amp;&amp; (_12==_13==_14==_21==_23==_24==_31==_32==_34==_41==_42==_43==0)">[Identity]</DisplayString>
+    <DisplayString Condition="(_11==_22==_33==_44==1) &amp;&amp; (_12==_13==_14==_21==_23==_24==_31==_32==_34==0)">[Translate: ({_41}, {_42}, {_43})]</DisplayString>
+    <DisplayString Condition="_44==1 &amp;&amp; (_12==_13==_14==_21==_23==_24==_31==_32==_34==_41==_42==_43==0)">[Scale: ({_11}, {_22}, {_33})]</DisplayString>
+    <DisplayString>[4x4 Matrix]</DisplayString>
+
+    <Expand>
+      <Synthetic Name="R1"><DisplayString>[{_11}, {_12}, {_13}, {_14}]</DisplayString></Synthetic>
+      <Synthetic Name="R2"><DisplayString>[{_21}, {_22}, {_23}, {_24}]</DisplayString></Synthetic>
+      <Synthetic Name="R3"><DisplayString>[{_31}, {_32}, {_33}, {_34}]</DisplayString></Synthetic>
+      <Synthetic Name="R4"><DisplayString>[{_41}, {_42}, {_43}, {_44}]</DisplayString></Synthetic>
+    </Expand>
+  </Type>
+
+  <!-- JS types -->
+  <Type Name="JS::Handle&lt;*&gt;">
+    <DisplayString Condition="ptr == 0">NULL</DisplayString>
+    <DisplayString>{*($T1*)ptr}</DisplayString>
+    <Expand>
+      <ExpandedItem>($T1*)ptr</ExpandedItem>
+    </Expand>
+  </Type>
+
+
+</AutoVisualizer>

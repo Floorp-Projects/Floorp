@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessibleText getText related function tests for rich text</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    #listitemnone {
+      list-style-type: none;
+    }
+    h6.gencontent:before {
+      content: "aga"
+    }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // null getText
+      // ////////////////////////////////////////////////////////////////////////
+
+      var emptyTextAcc = getAccessible("nulltext", [nsIAccessibleText]);
+      is(emptyTextAcc.getText(0, -1), "", "getText() END_OF_TEXT with null string");
+      is(emptyTextAcc.getText(0, 0), "", "getText() Len==0 with null string");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // hypertext
+      // ////////////////////////////////////////////////////////////////////////
+
+      // ! - embedded object char
+      // __h__e__l__l__o__ __!__ __s__e__e__ __!__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13
+
+      var IDs = [ "hypertext", "hypertext2", "ht_displaycontents" ];
+
+      // //////////////////////////////////////////////////////////////////////
+      // characterCount
+
+      testCharacterCount(IDs, 13);
+
+      // //////////////////////////////////////////////////////////////////////
+      // getText
+
+      testText(IDs, 0, 1, "h");
+      testText(IDs, 5, 7, " " + kEmbedChar);
+      testText(IDs, 10, 13, "e " + kEmbedChar);
+      testText(IDs, 0, 13, "hello " + kEmbedChar + " see " + kEmbedChar);
+
+      // //////////////////////////////////////////////////////////////////////
+      // getTextAtOffset line boundary
+
+      testTextAtOffset(0, BOUNDARY_LINE_START, "line ", 0, 5,
+                       "hypertext3", kOk, kOk, kOk);
+
+      // XXX: see bug 634202.
+      testTextAtOffset(0, BOUNDARY_LINE_START, "line ", 0, 5,
+                       "hypertext4", kTodo, kOk, kTodo);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // list
+      // ////////////////////////////////////////////////////////////////////////
+
+      IDs = [ "list" ];
+      testCharacterCount(IDs, 2);
+      testText(IDs, 0, 2, kEmbedChar + kEmbedChar);
+
+      IDs = [ "listitem" ];
+      testCharacterCount(IDs, 6);
+      testText(IDs, 0, 6, "1. foo");
+
+      IDs = [ "listitemnone" ];
+      testCharacterCount(IDs, 3);
+      testText(IDs, 0, 3, "bar");
+
+      testText(["testbr"], 0, 3, "foo");
+
+      testTextAtOffset(2, nsIAccessibleText.BOUNDARY_CHAR, "o", 2, 3, "testbr",
+                       kOk, kOk, kOk);
+      testTextAtOffset(2, nsIAccessibleText.BOUNDARY_WORD_START, "foo\n", 0, 4,
+                       "testbr", kOk, kOk, kOk);
+      testTextBeforeOffset(2, nsIAccessibleText.BOUNDARY_LINE_START, "foo\n",
+                           0, 4, "testbr", kTodo, kOk, kTodo);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Fix getText"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=630001">
+    Bug 630001, part3
+  </a>
+  <a target="_blank"
+     title="getTextAtOffset line boundary may return more than one line"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=638326">
+    Bug 638326
+  </a>
+  <a target="_blank"
+     title="getText(0, -1) fails with empty text"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=749810">
+    Bug 749810
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="nulltext"></div>
+
+  <div id="hypertext">hello <a>friend</a> see <img src="about:blank"></div>
+  <div id="hypertext2">hello <a>friend</a> see <input></div>
+  <div id="ht_displaycontents">hello <a>friend</a> see <ul id="ul" style="display: contents;">
+    <li>Supermarket 1</li>
+    <li>Supermarket 2</li>
+  </ul></div>
+  <ol id="list">
+    <li id="listitem">foo</li>
+    <li id="listitemnone">bar</li>
+  </ol>
+
+  <div id="hypertext3">line
+<!-- haha -->
+<!-- hahaha -->
+<h6>heading</h6>
+  </div>
+
+  <div id="hypertext4">line
+<!-- haha -->
+<!-- hahaha -->
+<h6 role="presentation" class="gencontent">heading</h6>
+  </div>
+
+  <div id="testbr">foo<br/></div>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+  vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, function, uuid(8cbf2dc2-91e0-44bc-984f-553638412071)]
+interface mozIStorageCompletionCallback : nsISupports {
+  /**
+   * Indicates that the event this callback was passed in for has completed.
+   *
+   * @param status
+   *        The status of the call. Generally NS_OK if the operation
+   *        completed successfully.
+   * @param value
+   *        If the operation produces a result, the result. Otherwise,
+   *        |null|.
+   *
+   * @see The calling method for expected values.
+   */
+  void complete(in nsresult status, [optional] in nsISupports value);
+};

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<style>
+#target:visited, div {
+  color: lime;
+}
+
+#target:link, div {
+  color: pink;
+}
+</style>
+</head>
+<body>
+  <a href="test" id="target">test-target</a>
+
+  <script>
+  const VISITED_SELECTOR = "#target:visited";
+  const LINK_SELECTOR = "#target:link";
+
+  const TEST_DATA = [
+    {
+      description: "Test for visited style",
+      isVisitedTest: true,
+      validSelector: VISITED_SELECTOR,
+      invalidSelector: LINK_SELECTOR,
+    },
+    {
+      description: "Test for unvisited style",
+      isVisitedTest: false,
+      validSelector: LINK_SELECTOR,
+      invalidSelector: VISITED_SELECTOR,
+    },
+  ];
+
+  function start() {
+    const target = document.getElementById("target");
+
+    for (const { description, isVisitedTest,
+                 validSelector, invalidSelector } of TEST_DATA) {
+      info(description);
+
+      const rules =
+        InspectorUtils.getCSSStyleRules(target, undefined, isVisitedTest);
+      ok(getRule(rules, validSelector),
+         `Rule of ${validSelector} is in rules`);
+      ok(!getRule(rules, invalidSelector),
+         `Rule of ${invalidSelector} is not in rules`);
+
+      const targetRule = getRule(rules, validSelector);
+      const isTargetSelectorMatched = InspectorUtils.selectorMatchesElement(
+        target, targetRule, 0, undefined, isVisitedTest
+      );
+      const isDivSelectorMatched = InspectorUtils.selectorMatchesElement(
+        target, targetRule, 1, undefined, isVisitedTest
+      );
+      ok(isTargetSelectorMatched,
+         `${validSelector} selector is matched for the rule`);
+      ok(!isDivSelectorMatched,
+         "div selector is not matched for the rule");
+    }
+
+    SimpleTest.finish();
+  }
+
+  function getRule(rules, selector) {
+    for (const rule of rules) {
+      if (rule.selectorText.startsWith(selector)) {
+        return rule;
+      }
+    }
+    return null;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  document.addEventListener('DOMContentLoaded', start);
+  </script>
+</body>
+</html>

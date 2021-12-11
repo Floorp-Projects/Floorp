@@ -1,0 +1,22 @@
+<html>
+<head>
+  <style>
+    #th {
+      width: 100px;
+      height: 100px;
+      transition-duration: 1s;
+    }
+  </style>
+  <script>
+    function start () {
+      var div = document.getElementById('th');
+      div.style.backgroundColor = 'green';
+    }
+  </script>
+</head>
+<body onload="start()">
+<table>
+  <tr style="background-color: blue;"><th id="th"></th></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=690056
+-->
+<head>
+  <title>Test for Bug 690056</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=690056">Mozilla Bug 690056</a>
+<p id="display">
+  <iframe id="x"></iframe>
+  <iframe style="display: none" id="y"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 690056 **/
+SimpleTest.waitForExplicitFinish();
+is(document.hidden, false, "Document should not be hidden during load");
+is(document.visibilityState, "visible",
+   "Document should be visible during load");
+
+addLoadEvent(function() {
+  var doc = document.implementation.createDocument("", "", null);
+  is(doc.hidden, true, "Data documents should be hidden");
+  is(doc.visibilityState, "hidden", "Data documents really should be hidden");
+
+  is(document.hidden, false, "Document should not be hidden onload");
+  is(document.visibilityState, "visible",
+     "Document should be visible onload");
+
+  is($("x").contentDocument.hidden, false,
+     "Subframe document should not be hidden onload");
+  is($("x").contentDocument.visibilityState, "visible",
+     "Subframe document should be visible onload");
+  is($("y").contentDocument.hidden, false,
+     "display:none subframe document should not be hidden onload");
+  is($("y").contentDocument.visibilityState, "visible",
+     "display:none subframe document should be visible onload");
+  
+  SimpleTest.finish();
+});
+
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,431 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
+
+:root {
+  --marginbox-color: #FDFFDF;
+  --borderbox-color: var(--grey-50);
+  --paddingbox-color: #E3DCFF;
+  --contentbox-color: #CFF0FB;
+  --marginbox-border-color: #D8E60A;
+  --contentbox-border-color: #54A9FF;
+  --position-border-color: var(--grey-50);
+}
+
+:root.theme-dark {
+  --marginbox-color: #73764A;
+  --borderbox-color: var(--grey-70);
+  --paddingbox-color: #6657A6;
+  --contentbox-color: #407AA4;
+  --marginbox-border-color: #BDCA00;
+  --contentbox-border-color: #00B8FF;
+  --position-border-color: var(--grey-40);
+}
+
+.boxmodel-container {
+  overflow: auto;
+  padding-bottom: 4px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Header */
+
+.boxmodel-header,
+.boxmodel-info {
+  display: flex;
+  align-items: center;
+  padding: 4px 19px;
+}
+
+.layout-geometry-editor::before {
+  background: url(images/geometry-editor.svg) no-repeat center center / 16px 16px;
+}
+
+/* Main: contains the box-model regions */
+
+.boxmodel-main {
+  position: relative;
+  color: var(--theme-selection-color);
+  /* Make sure there is some space between the window's edges and the regions */
+  margin: 14px auto;
+  width: calc(100% - 2 * 14px);
+  min-width: 240px;
+  /* The view will grow bigger as the window gets resized, until 400px */
+  max-width: 400px;
+}
+
+.boxmodel-box {
+  margin: 25px;
+}
+
+.boxmodel-size {
+  color: var(--grey-90);
+}
+
+.boxmodel-position,
+.boxmodel-margin,
+.boxmodel-padding {
+  color: var(--grey-50);
+}
+
+.theme-dark .boxmodel-margin,
+.theme-dark .boxmodel-border,
+.theme-dark .boxmodel-padding,
+.theme-dark .boxmodel-size {
+  color: var(--grey-10);
+}
+
+.theme-dark .boxmodel-position {
+  color: var(--grey-30);
+}
+
+/* Regions are 3 nested elements with wide borders and outlines */
+
+.boxmodel-contents {
+  height: 18px;
+  outline: dashed 1px var(--contentbox-border-color);
+}
+
+.boxmodel-margins {
+  border-width: 22px;
+  border-style: solid;
+  outline: dashed 1px var(--marginbox-border-color);
+}
+
+.boxmodel-borders {
+  border-width: 5px;
+  border-style: solid;
+}
+
+.boxmodel-paddings {
+  border-width: 27px;
+  border-style: solid;
+}
+
+/* Regions colors */
+
+.boxmodel-margins {
+  border-color: var(--marginbox-color);
+}
+
+.boxmodel-borders {
+  border-color: var(--borderbox-color);
+}
+
+.boxmodel-paddings {
+  border-color: var(--paddingbox-color);
+}
+
+.boxmodel-contents {
+  background-color: var(--contentbox-color);
+}
+
+/* Editable region sizes are contained in absolutely positioned <p> */
+
+.boxmodel-main > p,
+.boxmodel-size {
+  position: absolute;
+  pointer-events: none;
+  margin: 0;
+  text-align: center;
+  direction: ltr;
+}
+
+.boxmodel-main > p > span,
+.boxmodel-main > p > input,
+.boxmodel-content,
+.boxmodel-size > span {
+  vertical-align: middle;
+  pointer-events: auto;
+}
+
+/* Coordinates for the region sizes */
+
+.boxmodel-top,
+.boxmodel-bottom {
+  width: calc(100% - 2px);
+  text-align: center;
+  z-index: 1; /* workaround for bug 1559706 */
+}
+
+.boxmodel-padding.boxmodel-top {
+  top: 34px;
+}
+
+.boxmodel-padding.boxmodel-bottom {
+  bottom: 35px;
+}
+
+.boxmodel-border.boxmodel-top {
+  top: 17px;
+}
+
+.boxmodel-border.boxmodel-bottom {
+  bottom: 17px;
+}
+
+.boxmodel-margin.boxmodel-top {
+  top: 0px;
+}
+
+.boxmodel-margin.boxmodel-bottom {
+  bottom: 1px;
+}
+
+.boxmodel-size,
+.boxmodel-position.boxmodel-left,
+.boxmodel-position.boxmodel-right,
+.boxmodel-margin.boxmodel-left,
+.boxmodel-margin.boxmodel-right,
+.boxmodel-border.boxmodel-left,
+.boxmodel-border.boxmodel-right,
+.boxmodel-padding.boxmodel-left,
+.boxmodel-padding.boxmodel-right {
+  top: 22px;
+  line-height: 80px;
+  z-index: 1; /* workaround for bug 1559706 */
+}
+
+.boxmodel-size {
+  width: calc(100% - 2px);
+}
+
+.boxmodel-position.boxmodel-top,
+.boxmodel-position.boxmodel-bottom,
+.boxmodel-position.boxmodel-left,
+.boxmodel-position.boxmodel-right,
+.boxmodel-margin.boxmodel-right,
+.boxmodel-margin.boxmodel-left,
+.boxmodel-border.boxmodel-right,
+.boxmodel-border.boxmodel-left,
+.boxmodel-padding.boxmodel-right,
+.boxmodel-padding.boxmodel-left {
+  width: 21px;
+}
+
+.boxmodel-padding.boxmodel-left {
+  left: 56px;
+}
+
+.boxmodel-padding.boxmodel-right {
+  right: 56px;
+}
+
+.boxmodel-border.boxmodel-left {
+  left: 39px;
+}
+
+.boxmodel-border.boxmodel-right {
+  right: 39px;
+}
+
+.boxmodel-margin.boxmodel-right {
+  right: 24px;
+}
+
+.boxmodel-margin.boxmodel-left {
+  left: 24px;
+}
+
+.boxmodel-rotate.boxmodel-left:not(.boxmodel-editing) {
+  transform: rotate(-90deg);
+}
+
+.boxmodel-rotate.boxmodel-right:not(.boxmodel-editing) {
+  transform: rotate(90deg);
+}
+
+.boxmodel-rotate.boxmodel-left.boxmodel-position:not(.boxmodel-editing) {
+  border-top: none;
+  border-right: 1px solid var(--theme-highlight-purple);
+  width: auto;
+  height: 30px;
+}
+
+.boxmodel-size > p {
+  display: inline-block;
+  margin: auto;
+  line-height: 0;
+}
+
+.boxmodel-rotate.boxmodel-right.boxmodel-position:not(.boxmodel-editing) {
+  border-top: none;
+  border-left: 1px solid var(--theme-highlight-purple);
+  width: auto;
+  height: 30px;
+}
+
+/* Box Model Positioning: contains top, right, bottom, left */
+
+.boxmodel-position.boxmodel-top,
+.boxmodel-position.boxmodel-bottom {
+  border-left: 1px solid var(--position-border-color);
+  left: calc(50% - 2px);
+  padding-left: 1px;
+}
+
+.boxmodel-position.boxmodel-right,
+.boxmodel-position.boxmodel-left {
+  border-top: 1px solid var(--position-border-color);
+  line-height: 15px;
+  top: calc(50% - 1px);
+  width: 30px;
+}
+
+.boxmodel-position.boxmodel-top {
+  top: -18px;
+}
+
+.boxmodel-position.boxmodel-right {
+  right: -9px;
+}
+
+.boxmodel-position.boxmodel-bottom {
+  bottom: -18px;
+}
+
+.boxmodel-position.boxmodel-left {
+  left: -9px;
+}
+
+/* Legend: displayed inside regions */
+
+.boxmodel-legend {
+  position: absolute;
+  z-index: 1;
+  cursor: default;
+}
+
+.boxmodel-legend[data-box="margin"] {
+  margin-left: 9px;
+  margin-top: 4px;
+  color: var(--grey-90);
+}
+
+.boxmodel-legend[data-box="position"] {
+  color: var(--grey-90);
+  margin: -18px 13px;
+}
+
+.boxmodel-legend[data-box="padding"] {
+  margin-top: 12px;
+  margin-left: 12px;
+  color: var(--grey-90);
+}
+
+.boxmodel-legend[data-box="border"] {
+  background-color: var(--borderbox-color);
+  height: 15px;
+  padding-top: 1px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 3px;
+  margin: 0px 0px;
+}
+
+.theme-dark .boxmodel-legend[data-box="margin"],
+.theme-dark .boxmodel-legend[data-box="border"],
+.theme-dark .boxmodel-legend[data-box="padding"] {
+  color: var(--grey-10);
+}
+
+.theme-dark .boxmodel-legend[data-box="position"] {
+  color: var(--grey-30);
+}
+
+/* Editable fields */
+
+.boxmodel-editable {
+  position: relative;
+  border: 1px dashed transparent;
+  user-select: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.boxmodel-editable[data-box="border"] {
+  background-color: var(--borderbox-color);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.boxmodel-editable:hover {
+  border-bottom-color: hsl(0, 0%, 50%);
+}
+
+.boxmodel-editable:focus,
+.boxmodel-editable:active {
+  border: 1px solid var(--blue-50);
+  outline: none;
+}
+
+.boxmodel-editable[data-box="margin"]:hover {
+  background-color: var(--marginbox-border-color);
+}
+
+.boxmodel-editable[data-box="padding"]:hover {
+  background-color: #c78fc7b3;
+}
+
+.boxmodel-editable[data-box="border"]:hover {
+  background-color: #545454;
+}
+
+.boxmodel-editable[data-box="content"]:hover {
+  background-color: var(--contentbox-border-color);
+}
+
+.boxmodel-editable[data-box="margin"]:hover,
+.boxmodel-editable[data-box="padding"]:hover,
+.boxmodel-editable[data-box="border"]:hover,
+.boxmodel-editable[data-box="content"]:hover {
+  border-radius: 3px;
+}
+
+.boxmodel-size > span {
+  cursor: default;
+}
+
+/* Box Model Info: contains the position and size of the element */
+
+.boxmodel-element-size {
+  flex: 1;
+  direction: ltr;
+  text-align: match-parent;
+}
+
+.boxmodel-position-group {
+  display: flex;
+  align-items: center;
+}
+
+/* Tag displayed next to DOM Node previews (used to display reference elements) */
+
+.boxmodel-container .reference-element {
+  margin-inline-start: 14px;
+  margin-block-start: 4px;
+  display: block;
+}
+
+.boxmodel-container .reference-element-type {
+  background: var(--theme-highlight-purple);
+  color: white;
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-size: 9px;
+  margin-inline-end: 5px;
+}
+
+.theme-dark .boxmodel-container .reference-element-type {
+  color: black;
+}
+
+/* Box Model Main - Offset Parent */
+
+.boxmodel-offset-parent {
+  position: absolute;
+  top: -20px;
+  right: -10px;
+  color: var(--theme-highlight-purple);
+}

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait"><head>
+<meta name="viewport" content="initial-scale=1.25">
+<style> html { direction: rtl; } </style>
+</head>
+<body>
+<div style="height: 16000px; width: 7200px;"></div>
+<script>
+  window.addEventListener("MozReftestInvalidate",
+      function() {
+        // The zooming due to the initial-scale will not preserve the default
+        // scroll position (top right corner) for an RTL scroll frame, so
+        // scroll to it explicitly.
+        window.scrollTo(scrollMaxX, 0);
+        document.documentElement.className = "";
+      });
+</script>
+</body>
+</html>
+

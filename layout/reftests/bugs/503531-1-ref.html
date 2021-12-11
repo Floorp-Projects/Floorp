@@ -1,0 +1,23 @@
+<html class="reftest-wait"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #1 for bug 503531</title>
+<script>
+function boom() {
+  var caret = document.getElementById('caret');
+
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.selectNode(caret);
+  sel.addRange(range);
+  sel.collapseToStart();
+
+  setTimeout(function(){document.documentElement.className = '';}, 50)
+}
+</script>
+</head>
+<body contenteditable="true" onload="document.body.focus(); boom()">
+<div>BLOCK</div>
+<div id="caret"></div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.dom += [
+    "KeySystemNames.h",
+    "MediaEncryptedEvent.h",
+    "MediaKeyError.h",
+    "MediaKeyMessageEvent.h",
+    "MediaKeys.h",
+    "MediaKeySession.h",
+    "MediaKeyStatusMap.h",
+    "MediaKeySystemAccess.h",
+    "MediaKeySystemAccessManager.h",
+    "MediaKeySystemAccessPermissionRequest.h",
+]
+
+EXPORTS.mozilla += [
+    "CDMCaps.h",
+    "CDMProxy.h",
+    "DecryptorProxyCallback.h",
+    "DetailedPromise.h",
+    "EMEUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "CDMCaps.cpp",
+    "DetailedPromise.cpp",
+    "EMEUtils.cpp",
+    "MediaEncryptedEvent.cpp",
+    "MediaKeyError.cpp",
+    "MediaKeyMessageEvent.cpp",
+    "MediaKeys.cpp",
+    "MediaKeySession.cpp",
+    "MediaKeyStatusMap.cpp",
+    "MediaKeySystemAccess.cpp",
+    "MediaKeySystemAccessManager.cpp",
+    "MediaKeySystemAccessPermissionRequest.cpp",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    DIRS += ["mediadrm"]
+    LOCAL_INCLUDES += ["/dom/media/platforms/android"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"

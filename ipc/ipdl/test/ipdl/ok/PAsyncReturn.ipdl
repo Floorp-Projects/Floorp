@@ -1,0 +1,8 @@
+// Async messages are not allowed to return values.
+
+//error: asynchronous message `Msg' declares return values
+
+protocol PAsyncReturn {
+child:
+    async Msg() returns(int32_t aNumber);
+};

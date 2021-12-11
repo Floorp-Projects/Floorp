@@ -1,0 +1,23 @@
+include protocol PManagedEndpointManager;
+
+// Basic test that ManagedEndpoint types are declared for protocols, within
+// that protocol.
+
+struct ManagedWhatever {
+  ManagedEndpoint<PManagedEndpointDeclParent> par;
+  ManagedEndpoint<PManagedEndpointDeclChild> chi;
+};
+
+namespace mozilla {
+
+protocol PManagedEndpointDecl {
+  manager PManagedEndpointManager;
+
+child:
+  async Message(ManagedEndpoint<PManagedEndpointDeclParent> aEndpointParent,
+                ManagedEndpoint<PManagedEndpointDeclChild> aEndpointChild);
+
+  async __delete__();
+};
+
+}

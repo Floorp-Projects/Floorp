@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-position: top, bottom reference</title>
+  <style type="text/css">
+#outer
+{
+  border: 1px solid black;
+  width: 128px;
+  height: 128px;
+}
+#inner1
+{
+  margin-left: 48px; /** 128px - 128px * 0.50 + 32px * 0.50 - 32px **/
+  margin-top: 0px;
+  width: 32px;
+  height: 32px;
+  background-image: url(aqua-32x32.png);
+}
+#inner2
+{
+  margin-left: 48px; /** 128px - 32px - 32px **/
+  margin-top: 64px; /** 128px - 128px * 0.50 + 32px * 0.50 - 32px **/
+  width: 32px;
+  height: 32px;
+  background-image: url(aqua-32x32.png);
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner1"></div><div id="inner2"></div></div>
+</body>
+</html>

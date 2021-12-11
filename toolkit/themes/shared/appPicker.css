@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#app-picker {
+  width: 320px;
+}
+
+#content-description {
+  font-weight: bold;
+}
+
+#app-picker-listbox {
+  height: 212px;
+}
+
+#app-picker-listbox > richlistitem {
+  -moz-box-align: center;
+}
+
+#content-icon,
+#app-picker-listbox > richlistitem > image {
+  margin: 5px;
+  width: 32px;
+  height: 32px;
+}
+
+#app-picker-listbox > richlistitem > label {
+  margin: 0px;
+  padding: 5px;
+  white-space: nowrap;
+}

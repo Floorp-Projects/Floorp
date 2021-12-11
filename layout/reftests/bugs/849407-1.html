@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    legend {
+      display: flex;
+      width: 200px;
+      height: 100px;
+      overflow: scroll;
+      border: 2px dashed gray;
+    }
+    div.child {
+      background: lightblue;
+      height: 1000px;
+    }
+  </style>
+</head>
+<body>
+  <fieldset>
+    <legend>
+      <div class="child">
+        There should be scrollbars making this area scrollable.
+      </div>
+    </legend>
+  </fieldset>
+</body>
+</html>

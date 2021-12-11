@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<title>Test for clipping of border-radius</title>
+<style>
+body > div {
+  /* padding box is 100px by 200px */
+  display: inline-block; /* so margin doesn't collapse with body's */
+  height: 99px;
+  width: 194px;
+  overflow: hidden;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 1px 2px 4px 8px;
+  padding: 0px 1px 1px 5px;
+  margin: 17px;
+  border-radius: 25px 17px 14px 18px / 12px 15px 18px 17px;
+}
+body > div > div {
+  background: lime;
+  height: 100px;
+  width: 200px;
+  margin-left: -5px;
+}
+</style>
+<div><div></div></div>

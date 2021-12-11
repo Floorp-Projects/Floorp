@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=421839
+-->
+<head>
+  <title>Test for Bug 421839</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=421839">Mozilla Bug 421839</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+Moving with you mouse from above to below and back a few times across the iframe, shouldn't crash Mozilla<br/>
+
+<iframe id="iframe" src="data:text/html;charset=utf-8,text%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%0A%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3Etext%3Cbr%3E"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 421839 **/
+
+var counter = 0;
+
+SimpleTest.waitForExplicitFinish();
+
+var doc = document;
+if (document.getElementById('iframe'))
+  doc = document.getElementById('iframe').contentDocument;
+
+function toggleIframe(){
+  var x=document.getElementById('iframe');
+  x.style.display = x.style.display == 'none' ? x.style.display = '' : x.style.display = 'none';
+  setTimeout(toggleIframe,100);
+
+  if (++counter == 4)
+    setTimeout(finish, 200);
+
+}
+setTimeout(toggleIframe,100);
+
+function ctrlclick(i){
+  var wu = SpecialPowers.getDOMWindowUtils(doc.defaultView);
+  var wu2 = SpecialPowers.getDOMWindowUtils(top);
+
+  try
+  {
+    wu.sendMouseEvent('mousedown',  2*i, 2*i, 0, 1, 0);
+    wu2.sendMouseEvent('mousemove',  500*i, 500*i, 0, 0, 0);
+    //wu.sendMouseEvent('mouseup',  2*i, 2*i, 0, 1, 2);
+  }
+  catch(e)
+  {
+  }
+
+  i+=1;
+  if (i>50)
+    i =0;
+
+  setTimeout(ctrlclick,20,i);
+
+  if (++counter == 4)
+    setTimeout(finish, 200);
+
+}
+
+setTimeout(ctrlclick,20,0);
+
+function finish()
+{
+  ok(true, "This is a mochikit version of a crash test. To complete is to pass.");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<title>Bug xxxx</title>
+<style>
+p {
+  width:0;
+}
+.bmp {
+  color: green;
+}
+.supp {
+  color: blue;
+}
+</style>
+</head>
+<body>
+Line-breaking in the green (BMP) and blue (supplementary-plane) examples should match.
+<p class="bmp">abcdef &#x2018;&#x6587;&#x2019; abcdef</p>
+<p class="supp">&#x10408;&#x10409;&#x1040a;&#x1040b;&#x1040c;&#x1040d; &#x2018;&#x2000B;&#x2019; &#x10408;&#x10409;&#x1040a;&#x1040b;&#x1040c;&#x1040d;</p>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Anonymous content test</title>
+  <style type="text/css">
+    #pseudo::before {
+      content: "before";
+    }
+    #pseudo::after {
+      content: "after";
+    }
+    #shadow::before {
+      content: "Testing ::before on a shadow host";
+    }
+  </style>
+</head>
+<body>
+  <div id="pseudo"><span>middle</span></div>
+
+  <div id="shadow">light dom</div>
+
+  <div id="native"><input type="file"></div>
+
+  <script>
+  "use strict";
+  var host = document.querySelector("#shadow");
+  var root = host.attachShadow({ mode: "open" });
+  root.innerHTML = "<h3>Shadow DOM</h3><select multiple></select>";
+  </script>
+</body>
+</html>

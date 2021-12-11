@@ -1,0 +1,205 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option("--enable-simple", help="Enable simple")
+
+# Setting MOZ_WITH_ENV in the environment has the same effect as passing
+# --enable-with-env.
+option("--enable-with-env", env="MOZ_WITH_ENV", help="Enable with env")
+
+# Optional values
+option("--enable-values", nargs="*", help="Enable values")
+
+# Everything supported in the Option class is supported in option(). Assume
+# the tests of the Option class are extensive about this.
+
+# Alternatively to --enable/--disable, there also is --with/--without. The
+# difference is semantic only. Behavior is the same as --enable/--disable.
+
+# When the option name starts with --disable/--without, the default is for
+# the option to be enabled.
+option("--without-thing", help="Build without thing")
+
+# A --enable/--with option with a default of False is equivalent to a
+# --disable/--without option. This can be used to change the defaults
+# depending on e.g. the target or the built application.
+option("--with-stuff", default=False, help="Build with stuff")
+
+# Other kinds of arbitrary options are also allowed. This is effectively
+# equivalent to --enable/--with, with no possibility of --disable/--without.
+option("--option", env="MOZ_OPTION", help="Option")
+
+# It is also possible to pass options through the environment only.
+option(env="CC", nargs=1, help="C Compiler")
+
+# Call the function when the --enable-simple option is processed, with its
+# OptionValue as argument.
+@depends("--enable-simple")
+def simple(simple):
+    if simple:
+        return simple
+
+
+set_config("ENABLED_SIMPLE", simple)
+
+# There can be multiple functions depending on the same option.
+@depends("--enable-simple")
+def simple(simple):
+    return simple
+
+
+set_config("SIMPLE", simple)
+
+
+@depends("--enable-with-env")
+def with_env(with_env):
+    return with_env
+
+
+set_config("WITH_ENV", with_env)
+
+# It doesn't matter if the dependency is on --enable or --disable
+@depends("--disable-values")
+def with_env2(values):
+    return values
+
+
+set_config("VALUES", with_env2)
+
+# It is possible to @depends on environment-only options.
+@depends("CC")
+def is_gcc(cc):
+    return cc and "gcc" in cc[0]
+
+
+set_config("IS_GCC", is_gcc)
+
+# It is possible to depend on the result from another function.
+@depends(with_env2)
+def with_env3(values):
+    return values
+
+
+set_config("VALUES2", with_env3)
+
+# @depends functions can also return results for use as input to another
+# @depends.
+@depends(with_env3)
+def with_env4(values):
+    return values
+
+
+@depends(with_env4)
+def with_env5(values):
+    return values
+
+
+set_config("VALUES3", with_env5)
+
+# The result from @depends functions can also be used as input to options.
+# The result must be returned, not implied.
+@depends("--enable-simple")
+def simple(simple):
+    return "simple" if simple else "not-simple"
+
+
+option("--with-returned-default", default=simple, help="Returned default")
+
+
+@depends("--with-returned-default")
+def default(value):
+    return value
+
+
+set_config("DEFAULTED", default)
+
+
+@depends("--enable-values")
+def choices(values):
+    if len(values):
+        return {
+            "alpha": ("a", "b", "c"),
+            "numeric": ("0", "1", "2"),
+        }.get(values[0])
+
+
+option("--returned-choices", choices=choices, help="Choices")
+
+
+@depends("--returned-choices")
+def returned_choices(values):
+    return values
+
+
+set_config("CHOICES", returned_choices)
+
+# All options must be referenced by some @depends function.
+# It is possible to depend on multiple options/functions
+@depends("--without-thing", "--with-stuff", with_env4, "--option")
+def remainder(*args):
+    return args
+
+
+set_config("REMAINDER", remainder)
+
+# It is possible to include other files to extend the configuration script.
+include("included.configure")
+
+# It is also possible for the include file path to come from the result of a
+# @depends function.
+option("--enable-include", nargs=1, help="Include")
+
+
+@depends("--enable-include")
+def include_path(path):
+    return path[0] if path else None
+
+
+include(include_path)
+
+# Sandboxed functions can import from modules through the use of the @imports
+# decorator.
+# The order of the decorators matter: @imports needs to appear after other
+# decorators.
+option("--with-imports", nargs="?", help="Imports")
+
+# A limited set of functions from os.path are exposed by default.
+@depends("--with-imports")
+def with_imports(value):
+    if len(value):
+        return hasattr(os.path, "abspath")
+
+
+set_config("HAS_ABSPATH", with_imports)
+
+# It is still possible to import the full set from os.path.
+# It is also possible to cherry-pick builtins.
+@depends("--with-imports")
+@imports("os.path")
+def with_imports(value):
+    if len(value):
+        return hasattr(os.path, "getatime")
+
+
+set_config("HAS_GETATIME", with_imports)
+
+
+@depends("--with-imports")
+def with_imports(value):
+    if len(value):
+        return hasattr(os.path, "getatime")
+
+
+set_config("HAS_GETATIME2", with_imports)
+
+# This option should be attributed to this file in the --help output even though
+# included.configure is the actual file that defines the option.
+indirectly_define_option("--indirect-option", help="Indirectly defined option")
+
+
+@depends("--indirect-option")
+def indirect_option(option):
+    return option

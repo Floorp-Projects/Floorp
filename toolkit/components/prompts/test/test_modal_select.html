@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Modal Prompts Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+</head>
+<body>
+Prompter tests: modal prompts
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
+
+function checkPromptState(promptState, expectedState) {
+    // XXX check title? OS X has title in content
+    // XXX check focused element
+    // XXX check button labels?
+
+    is(promptState.msg, expectedState.msg, "Checking expected message");
+
+    // Compare listbox contents
+    is(promptState.items.length, expectedState.items.length, "Checking listbox length");
+
+    if (promptState.items.length)
+      is(promptState.selectedIndex, 0, "Checking selected index");
+
+    for (let i = 0; i < promptState.items; i++) {
+        is(promptState.items[i], expectedState.items[i], "Checking list item #" + i);
+    }
+}
+
+let selectVal = {};
+let isOK;
+
+function handlePrompt(state, action) {
+  return new Promise(resolve => {
+    gChromeScript.addMessageListener("promptHandled", function handled(msg) {
+      gChromeScript.removeMessageListener("promptHandled", handled);
+      checkPromptState(msg.promptState, state);
+      resolve(true);
+    });
+    gChromeScript.sendAsyncMessage("handlePrompt", { action, isSelect: true});
+  });
+}
+
+async function runTests(util) {
+    // Select prompt does not support tab or content prompts yet. See Bug 1622817.
+    if(util.modalType != Ci.nsIPrompt.MODAL_TYPE_WINDOW) {
+        info('Skipping modal type for select prompt...');
+        return;
+    }
+
+    // Empty list
+    info("Starting test: Select (0 items, ok)");
+    let state = {
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: [],
+    };
+    let action = {
+        buttonClick: "ok",
+    };
+    let promptDone = handlePrompt(state, action);
+    let items = [];
+    selectVal.value = null; // outparam, just making sure.
+    let result =  await util.prompt("select", ["TestTitle", "This is the select text.", items, util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, true, "checked expected retval");
+    is(util.useAsync ? result.selected : selectVal.value, -1, "checking selected index");
+    await promptDone;
+
+    // ok
+    info("Starting test: Select (3 items, ok)");
+    state = {
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: ["one", "two", "three"],
+    };
+    action = {
+        buttonClick: "ok",
+    };
+    promptDone = handlePrompt(state, action);
+    items = ["one", "two", "three"];
+    selectVal.value = null; // outparam, just making sure.
+    result = await util.prompt("select", ["TestTitle", "This is the select text.", items, util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, true, "checked expected retval");
+    is(util.useAsync ? result.selected : selectVal.value, 0, "checking selected index");
+    await promptDone;
+
+    // select item
+    info("Starting test: Select (3 items, selection changed, ok)");
+    state = {
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: ["one", "two", "three"],
+    };
+    action = {
+        buttonClick: "ok",
+        selectItem: 1,
+    };
+    promptDone = handlePrompt(state, action);
+    items = ["one", "two", "three"];
+    selectVal.value = null; // outparam, just making sure.
+    result = await util.prompt("select", ["TestTitle", "This is the select text.", items,  util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, true, "checked expected retval");
+    is(util.useAsync ? result.selected : selectVal.value, 1, "checking selected index");
+    await promptDone;
+
+    // cancel prompt
+    info("Starting test: Select (3 items, cancel)");
+    state = {
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: ["one", "two", "three"],
+    };
+    action = {
+        buttonClick: "cancel",
+    };
+    promptDone = handlePrompt(state, action);
+    items = ["one", "two", "three"];
+    selectVal.value = null; // outparam, just making sure.
+    result = await util.prompt("select", ["TestTitle", "This is the select text.", items,  util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, false, "checked expected retval");
+    ok(util.useAsync && result.selected == -1 || selectVal.value == 0, "checking selected index");
+    await promptDone;
+}
+
+add_task(async function runPromptTests() {
+    await runPromptCombinations(window, runTests);
+});
+
+</script>
+</pre>
+</body>
+</html>

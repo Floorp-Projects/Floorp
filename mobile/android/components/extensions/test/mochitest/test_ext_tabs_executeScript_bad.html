@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tabs executeScript Bad Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function* testHasNoPermission(params) {
+  const contentSetup = params.contentSetup || (() => Promise.resolve());
+
+  async function background(contentSetup) {
+    browser.test.onMessage.addListener(async msg => {
+      browser.test.assertEq(msg, "execute-script");
+
+      await browser.test.assertRejects(browser.tabs.executeScript({
+        file: "script.js",
+      }), /Missing host permission for the tab/);
+
+      browser.test.notifyPass("executeScript");
+    });
+
+    await contentSetup();
+
+    browser.test.sendMessage("ready");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: params.manifest,
+
+    background: `(${background})(${contentSetup})`,
+
+    files: {
+      "script.js": function() {
+        browser.runtime.sendMessage("first script ran");
+      },
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  if (params.setup) {
+    yield params.setup(extension);
+  }
+
+  extension.sendMessage("execute-script");
+
+  yield extension.awaitFinish("executeScript");
+  yield extension.unload();
+}
+
+add_task(async function testBadPermissions() {
+  const win = window.open("http://mochi.test:8888/");
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  info("Test no special permissions");
+  await testHasNoPermission({
+    manifest: {"permissions": []},
+  });
+
+  info("Test tabs permissions");
+  await testHasNoPermission({
+    manifest: {"permissions": ["tabs"]},
+  });
+
+  win.close();
+});
+
+add_task(async function testBadURL() {
+  async function background() {
+    const promises = [
+      new Promise(resolve => {
+        browser.tabs.executeScript({
+          file: "http://example.com/script.js",
+        }, result => {
+          browser.test.assertEq(undefined, result, "Result value");
+
+          browser.test.assertTrue(browser.runtime.lastError instanceof Error,
+                                  "runtime.lastError is Error");
+
+          browser.test.assertTrue(browser.runtime.lastError instanceof Error,
+                                  "runtime.lastError is Error");
+
+          browser.test.assertEq(
+            "Files to be injected must be within the extension",
+            browser.runtime.lastError && browser.runtime.lastError.message,
+            "runtime.lastError value");
+
+          browser.test.assertEq(
+            "Files to be injected must be within the extension",
+            browser.runtime.lastError && browser.runtime.lastError.message,
+            "runtime.lastError value");
+
+          resolve();
+        });
+      }),
+
+      browser.tabs.executeScript({
+        file: "http://example.com/script.js",
+      }).catch(error => {
+        browser.test.assertTrue(error instanceof Error, "Error is Error");
+
+        browser.test.assertEq(null, browser.runtime.lastError,
+                              "runtime.lastError value");
+
+        browser.test.assertEq(null, browser.runtime.lastError,
+                              "runtime.lastError value");
+
+        browser.test.assertEq(
+          "Files to be injected must be within the extension",
+          error && error.message,
+          "error value");
+      }),
+    ];
+
+    await Promise.all(promises);
+
+    browser.test.notifyPass("executeScript-lastError");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["<all_urls>"],
+    },
+
+    background,
+  });
+
+  await extension.startup();
+
+  await extension.awaitFinish("executeScript-lastError");
+
+  await extension.unload();
+});
+
+// TODO bug 1435100: Test that |executeScript| fails if the tab has navigated
+// to a new page, and no longer matches our expected state. This involves
+// intentionally trying to trigger a race condition.
+</script>
+
+</body>
+</html>

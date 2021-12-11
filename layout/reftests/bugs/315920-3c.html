@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      input {color: red}
+      #two { color: green }
+      input[disabled]:not(:enabled) {color: green}
+      input:not([disabled]):enabled + #two:enabled {color: red}
+    </style>
+  </head>
+  <body onload='var elem = document.getElementById("one");
+                elem.setAttribute("disabled", "disabled");'>
+    <input type="button" id="one" value="Should be no red"/>
+    <input type="button" id="two" value="Should be no red"/>
+  </body>
+</html>

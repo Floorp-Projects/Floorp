@@ -1,0 +1,199 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+#! gmake
+
+MOD_DEPTH	= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_TARGET), WIN16)
+OS_CFLAGS = $(OS_EXE_CFLAGS)
+endif
+
+CXXSRCS =           \
+	ranfile.cpp     \
+	thread.cpp      \
+	interval.cpp    \
+	time.cpp        \
+	fileio.cpp      \
+	switch.cpp      \
+	tpd.cpp         \
+	$(NULL)
+
+OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
+
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+PROG_SUFFIX = .exe
+else
+PROG_SUFFIX =
+endif
+
+PROGS = $(addprefix $(OBJDIR)/, $(CXXSRCS:.cpp=$(PROG_SUFFIX)))
+
+TARGETS = $(PROGS) $(OBJS)
+
+INCLUDES = -I.. -I$(dist_includedir)
+
+# Setting the variables LDOPTS and LIBPR.  We first initialize
+# them to the default values, then adjust them for some platforms.
+LDOPTS = -L$(dist_libdir)
+LIBPR = -lnspr$(MOD_MAJOR_VERSION)
+LIBPL = -lplc$(MOD_MAJOR_VERSION)
+
+# Solaris
+ifeq ($(OS_ARCH), SunOS)
+    ifdef NS_USE_GCC
+        LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(dist_libdir)
+    else
+        LDOPTS += -R $(PWD)/$(dist_libdir)
+    endif
+
+# SunOS 5.5 needs to link with -lpthread, even though we already
+# linked with this system library when we built libnspr.so.
+    ifeq ($(OS_RELEASE), 5.5)
+        ifdef USE_PTHREADS
+            EXTRA_LIBS = -lpthread
+        endif
+    endif
+endif # SunOS
+
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(OS_TARGET), WIN16)
+  LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).lib
+  LIBPL = $(dist_libdir)/plc$(MOD_MAJOR_VERSION).lib
+else
+  LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
+  LIBPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+  LIBPL = $(dist_libdir)/libplc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
+endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+LDOPTS += -Zomf -Zlinker /PM:VIO -lstdcpp
+endif
+
+ifneq ($(OS_ARCH), WINNT)
+PWD = $(shell pwd)
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+    LDOPTS += -Wl,+s,+b,$(PWD)/$(dist_libdir)
+endif
+
+# AIX
+ifeq ($(OS_ARCH),AIX)
+    LDOPTS += -blibpath:$(PWD)/$(dist_libdir):/usr/lib:/lib
+    ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
+        LIBPR = -lnspr$(MOD_MAJOR_VERSION)_shr
+        LIBPLC = -lplc$(MOD_MAJOR_VERSION)_shr
+    else
+        LDOPTS += -brtl
+        EXTRA_LIBS = -ldl
+    endif
+endif
+
+ifeq ($(OS_ARCH), Linux)
+    ifeq ($(OS_RELEASE), 1.2)
+        EXTRA_LIBS = -ldl
+    else
+        LDOPTS += -Xlinker -rpath $(PWD)/$(dist_libdir)
+        ifeq ($(USE_PTHREADS),1)
+            EXTRA_LIBS = -lpthread
+        endif
+    endif
+endif
+
+ifeq ($(OS_ARCH), SCO_SV)
+# SCO Unix needs to link against -lsocket again even though we
+# already linked with these system libraries when we built libnspr.so.
+EXTRA_LIBS = -lsocket
+# This hardcodes in the executable programs the directory to find
+# libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
+# option for ld on other platforms.
+export LD_RUN_PATH = $(PWD)/$(dist_libdir)
+endif
+
+ifeq ($(OS_ARCH), UNIXWARE)
+export LD_RUN_PATH = $(PWD)/$(dist_libdir)
+endif
+
+#####################################################
+#
+# The rules
+#
+#####################################################
+
+include $(topsrcdir)/config/rules.mk
+
+AIX_PRE_4_2 = 0
+ifeq ($(OS_ARCH),AIX)
+ifneq ($(OS_RELEASE),4.2)
+ifneq ($(USE_PTHREADS), 1)
+#AIX_PRE_4_2 = 1
+endif
+endif
+endif
+
+ifeq ($(AIX_PRE_4_2),1)
+
+# AIX releases prior to 4.2 need a special two-step linking hack
+# in order to both override the system select() and be able to 
+# get at the original system select().
+#
+# We use a pattern rule in ns/nspr20/config/rules.mk to generate
+# the .$(OBJ_SUFFIX) file from the .c source file, then do the
+# two-step linking hack below.
+
+$(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+	rm -f $@ $(AIX_TMP)
+	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
+	$(CC) -o $@ $(AIX_TMP) $(AIX_WRAP)
+	rm -f $(AIX_TMP)
+
+else
+
+# All platforms that are not AIX pre-4.2.
+
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(OS_TARGET),WIN16)
+	echo system windows         >w16link
+	echo option map             >>w16link
+	echo option stack=10K       >>w16link
+	echo option heapsize=32K    >>w16link
+	echo debug $(DEBUGTYPE) all >>w16link
+	echo name $@                >>w16link
+	echo file                   >>w16link
+	echo $<                     >>w16link
+	echo library                >>w16link
+	echo $(LIBPR),	            >>w16link
+	echo $(LIBPL),	            >>w16link
+	echo winsock.lib            >>w16link
+	wlink @w16link.
+else
+	link $(LDOPTS) $< $(LIBPR) $(LIBPL) ws2_32.lib -out:$@
+endif
+else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(LDOPTS) $< $(LIBGC) $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS) -o $@
+else
+	$(CCC) $(XCFLAGS) $< $(LDOPTS) $(LIBPR) $(LIBPL) $(EXTRA_LIBS) -o $@
+endif
+endif
+endif
+
+export:: $(TARGETS)
+clean::
+	rm -f $(TARGETS)
+

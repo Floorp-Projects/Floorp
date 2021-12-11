@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/info-pages.css");
+
+body {
+  background-size: 64px 32px;
+  background-repeat: repeat-x;
+  padding: 0;
+  /* info-pages.css sets a minimum width of 13em to the content
+   * container. If we don't set a min-width here, the content
+   * gets clipped in iframes with small width. We don't accomodate
+   * any padding to prioritize real estate in the small viewport. */
+  min-width: 13em;
+}
+
+.button-container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: end;
+}
+
+.button-spacer {
+  flex: 1;
+}
+
+@media only screen and (max-width: 959px) {
+  body {
+    padding: 0 75px;
+  }
+
+  .title {
+    background-image: none !important;
+    padding-inline-start: 0;
+    margin-inline-start: 0;
+  }
+
+  .title-text {
+    padding-top: 0;
+  }
+}
+
+@media only screen and (max-width: 640px) {
+  .title-text {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  body {
+    padding: 0 38px;
+  }
+
+  .container {
+    min-width: 0;
+  }
+
+  .button-container button {
+    width: 100%;
+    margin: 0.66em 0 0;
+  }
+
+  .title-text {
+    font-size: 26px;
+  }
+}
+
+@media only screen and (max-width: 320px) {
+  body {
+    padding: 0 12px;
+  }
+
+  /* At some point the screen gets so small that the cute
+   * critter image takes up too much valuable screen real
+   * estate to keep it showing. */
+  #errorPageContainer {
+    background-image: none !important;
+  }
+
+  /* When the critter is hidden, also use the full screen
+   * size for the error text */
+  .illustrated #text-container {
+    margin: unset;
+    padding-inline-start: 0;
+  }
+}
+
+@media only screen and (max-height: 480px) {
+  body {
+    /* Note: if you change the top padding, also update the image positioning
+     * media query in aboutNetError.css for the certificate error case. */
+    padding-top: 38px;
+    /* We get rid of bottom padding for width < 640px, but
+     * for height < 480px a bit of space between the content
+     * and the viewport edge is nice. */
+    padding-bottom: 38px;
+  }
+}

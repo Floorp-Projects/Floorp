@@ -1,0 +1,5 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+
+. $topsrcdir/browser/config/mozconfigs/win64/nightly
+
+ac_add_options  --disable-unified-build

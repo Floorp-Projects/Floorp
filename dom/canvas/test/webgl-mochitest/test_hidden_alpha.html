@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<title>WebGL test: Hidden alpha on no-alpha contexts</title>
+<script src='/tests/SimpleTest/SimpleTest.js'></script>
+<link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+<script src='driver-info.js'></script>
+<script src='webgl-util.js'></script>
+<body>
+<script id='vs' type='x-shader/x-vertex'>
+  attribute vec2 aPosCoord;
+
+  void main(void) {
+    gl_Position = vec4(aPosCoord, 0.0, 1.0);
+  }
+</script>
+
+<script id='fs' type='x-shader/x-fragment'>
+  precision mediump float;
+
+  void main(void) {
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  }
+</script>
+<canvas id='canvas' style='border: none;' width='100' height='100'></canvas>
+<script>
+
+var posCoords_arr = new Float32Array(2 * 4);
+var posCoords_buff = null;
+function DrawQuad(gl, prog, x0, y0, x1, y1) {
+  gl.useProgram(prog);
+
+  if (!posCoords_buff) {
+    posCoords_buff = gl.createBuffer();
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, posCoords_buff);
+  posCoords_arr[0] = x0;
+  posCoords_arr[1] = y0;
+
+  posCoords_arr[2] = x1;
+  posCoords_arr[3] = y0;
+
+  posCoords_arr[4] = x0;
+  posCoords_arr[5] = y1;
+
+  posCoords_arr[6] = x1;
+  posCoords_arr[7] = y1;
+  gl.bufferData(gl.ARRAY_BUFFER, posCoords_arr, gl.STREAM_DRAW);
+
+  gl.enableVertexAttribArray(prog.aPosCoord);
+  gl.vertexAttribPointer(prog.aPosCoord, 2, gl.FLOAT, false, 0, 0);
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+function DrawSquare(gl, prog, size) {
+  DrawQuad(gl, prog, -size, -size, size, size);
+}
+
+function Reset(gl) {
+  gl.canvas.width += 1;
+  gl.canvas.width -= 1;
+}
+
+function ReadCenterPixel(gl) {
+  var w = gl.drawingbufferWidth;
+  var h = gl.drawingbufferHeight;
+  var ret = new Uint8Array(4);
+  gl.readPixels(w/2, h/2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, ret);
+  return ret;
+}
+
+function Test(gl, prog) {
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ZERO, gl.DST_ALPHA);
+
+  var iColor = 64;
+  var fColor = iColor / 255.0;
+
+  //////////////////
+
+  ok(true, 'clear(R,G,B,0)');
+
+  Reset(gl);
+
+  gl.clearColor(fColor, fColor, fColor, 0.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  var dataURL_pre = gl.canvas.toDataURL();
+  //console.log('Before blending: ' + dataURL_pre);
+
+  DrawSquare(gl, prog, 0.7);
+
+  var pixel = ReadCenterPixel(gl);
+  ok(pixel[0] == iColor &&
+     pixel[1] == iColor &&
+     pixel[2] == iColor, 'Color should be the same.');
+  ok(pixel[3] == 255, 'No-alpha should always readback as 1.0 alpha.');
+
+  var dataURL_post = gl.canvas.toDataURL();
+  //console.log('After blending: ' + dataURL_post);
+  ok(dataURL_post == dataURL_pre,
+     'toDataURL should be unchanged after blending.');
+
+  //////////////////
+
+  ok(true, 'mask(R,G,B,0), clear(R,G,B,1)');
+
+  Reset(gl);
+
+  gl.colorMask(true, true, true, false);
+  gl.clearColor(fColor, fColor, fColor, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.colorMask(true, true, true, true);
+
+  dataURL_pre = gl.canvas.toDataURL();
+  //console.log('Before blending: ' + dataURL_pre);
+
+  DrawSquare(gl, prog, 0.7);
+
+  var pixel = ReadCenterPixel(gl);
+  ok(pixel[0] == iColor &&
+     pixel[1] == iColor &&
+     pixel[2] == iColor, 'Color should be the same.');
+  ok(pixel[3] == 255, 'No-alpha should always readback as 1.0 alpha.');
+  ok(gl.getError() == 0, 'Should have no errors.');
+
+  dataURL_post = gl.canvas.toDataURL();
+  //console.log('After blending: ' + dataURL_post);
+  ok(dataURL_post == dataURL_pre,
+     'toDataURL should be unchanged after blending.');
+
+  ok(true, 'Test complete.');
+  SimpleTest.finish();
+}
+
+(function(){
+  var canvas = document.getElementById('canvas');
+  var attribs = {
+    alpha: false,
+    antialias: false,
+    premultipliedAlpha: false,
+  };
+  var gl = canvas.getContext('experimental-webgl', attribs);
+  ok(gl, 'WebGL should work.');
+  ok(gl.getParameter(gl.ALPHA_BITS) == 0, 'Shouldn\'t have alpha bits.');
+
+  var prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+  ok(prog, 'Program should link.');
+  prog.aPosCoord = gl.getAttribLocation(prog, 'aPosCoord');
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+  setTimeout(function(){ Test(gl, prog); }, 500);
+})();
+
+</script>
+</body>

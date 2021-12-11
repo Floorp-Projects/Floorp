@@ -1,0 +1,406 @@
+<!DOCTYPE HTML>
+<html id="html" style="height:100%">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=780847
+-->
+<head>
+  <title>Test radii for mouse events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  .target { position:absolute; left:100px; top:100px; width:100px; height:100px; background:blue; }
+  </style>
+</head>
+<body id="body" onload="setTimeout(startTest, 0)" style="margin:0; width:100%; height:100%; overflow:hidden">
+<p id="display"></p>
+<div id="content">
+  <!-- We make the `t` target shorter than normal in case because we test the
+       bottom edge fluffing on this element, and the test page may be hosted
+       inside a short iframe in the test harness on some platforms.
+  -->
+  <div class="target" style="height:80px" id="t" onmousedown="x=1"></div>
+
+  <div class="target" id="t2" hidden></div>
+
+  <input class="target" id="t3_1" hidden></input>
+  <a href="#" class="target" id="t3_2" hidden></a>
+  <label class="target" id="t3_3" hidden></label>
+  <button class="target" id="t3_4" hidden></button>
+  <select class="target" id="t3_5" hidden></select>
+  <textarea class="target" id="t3_6" hidden></textarea>
+  <div role="button" class="target" id="t3_7" hidden></div>
+  <div role="key" class="target" id="t3_8" hidden></div>
+  <img class="target" id="t3_9" hidden></img>
+
+  <div class="target" style="transform:translate(-80px,0);" id="t4" onmousedown="x=1" hidden></div>
+
+  <div class="target" style="left:0; z-index:1" id="t5_left" onmousedown="x=1" hidden></div>
+  <div class="target" style="left:106px;" id="t5_right" onmousedown="x=1" hidden></div>
+  <div class="target" style="left:0; top:210px;" id="t5_below" onmousedown="x=1" hidden></div>
+
+  <div class="target" id="t6" onmousedown="x=1" style="width: 300px" hidden>
+    <div id="t6_inner" style="position:absolute; left:-40px; top:20px; width:60px; height:60px; background:yellow;"></div>
+    <div id="t6_inner_clickable" style="position:absolute; left:-40px; top: 80px; width: 60px; height: 5px; background:red" onmousedown="x=1"></div>
+  </div>
+  <div id="t6_outer" style="position:absolute; left:360px; top:120px; width:60px; height:60px; background:green;" onmousedown="x=1" hidden></div>
+
+  <div class="target" id="t7" onmousedown="x=1" hidden></div>
+  <div class="target" id="t7_over" hidden></div>
+
+  <div id="t8" contenteditable="true" class="target" hidden></div>
+
+  <div id="t9" class="target" ontouchend="x=1" hidden></div>
+
+  <div id="t10_left" class="target" style="left:-50px;" onmousedown="x=1" hidden></div>
+  <div id="t10_right" class="target" style="left:auto;right:-50px" onmousedown="x=1" hidden></div>
+  <div id="t10_top" class="target" style="top:-50px;" onmousedown="x=1" hidden></div>
+  <div id="t10_bottom" class="target" style="top:auto;bottom:-50px;" onmousedown="x=1" hidden></div>
+  <div id="t10_over" style="position:absolute; left:0; top:0; width:100%; height:100%; background:yellow;" hidden></div>
+
+  <div id="t11" class="target" style="cursor:pointer" hidden></div>
+  <div id="t11_with_child" class="target" style="cursor:pointer" hidden><div id="t11_child" style="width:100px; height:100px; background:green;"></div></div>
+  <div id="t11_covered" class="target" style="cursor:pointer" hidden><div id="t11_coverer" style="width:100px; height:100px; background:green; cursor:text"></div></div>
+
+  <div id="t12" class="target" hidden>
+    <input id="t12_input" style="width: 100px; height: 20px; border: 0; padding: 0"></input>
+    <div id="t12_zisland" style="width: 100px; height: 50px; position:relative; z-index: 5">
+      <div id="t12_target" style="width: 100px; height: 20px; background-color: green"></div>
+    </div>
+  </div>
+
+  <div id="t13" class="target" style="cursor:pointer" hidden>
+   <div id="t13_touchlistener" style="width: 50px; height: 50px; background:red" ontouchend="x=1"></div>
+   <div id="t13_notouchlistener" style="width: 50px; height: 50px; background:green"></div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+function startTest() {
+  SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.enabled", true],
+                                     ["ui.mouse.radius.inputSource.touchOnly", false],
+                                     ["ui.mouse.radius.leftmm", 12],
+                                     ["ui.mouse.radius.topmm", 4],
+                                     ["ui.mouse.radius.rightmm", 4],
+                                     ["ui.mouse.radius.bottommm", 4],
+                                     ["ui.mouse.radius.visitedweight", 50]]}, runTest);
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+let oldResolution = 1.0;
+
+function endTest() {
+  if (navigator.appVersion.includes("Android")) {
+    // Restore any resolution that was changed at the end of the test.
+    let topUtils = SpecialPowers.getDOMWindowUtils(window.top);
+    topUtils.setResolutionAndScaleTo(oldResolution);
+  }
+  SimpleTest.finish();
+}
+
+var eventTarget;
+window.onmousedown = function(event) { eventTarget = event.target; };
+
+function testMouseClick(idPosition, dx, dy, idTarget, msg, options) {
+  eventTarget = null;
+  synthesizeMouse(document.getElementById(idPosition), dx, dy, options || {});
+  try {
+    is(eventTarget.id, idTarget,
+       "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]");
+  } catch (ex) {
+    ok(false, "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]; got " + eventTarget);
+  }
+}
+
+var touchTarget;
+document.addEventListener('touchstart', event => { touchTarget = event.target; });
+
+function testTouch(idPosition, dx, dy, idTarget, msg, options) {
+  touchTarget = null;
+  synthesizeTouch(document.getElementById(idPosition), dx, dy, options || {});
+  try {
+    is(touchTarget.id, idTarget,
+       "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]");
+  } catch (ex) {
+    ok(false, "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]; got " + touchTarget);
+  }
+}
+
+function setShowing(id, show) {
+  var e = document.getElementById(id);
+  e.hidden = !show;
+}
+
+var mm;
+function runTest() {
+  let resolution = 1;
+  if (navigator.appVersion.includes("Android")) {
+    // Choose a roundish number for the resolution so that the "midpoint" test below
+    // doesn't mis-target an element due to rounding error.
+    let desiredResolution = 0.75;
+    let topUtils = SpecialPowers.getDOMWindowUtils(window.top);
+    // Save the old resolution for restoration at the end of the test.
+    oldResolution = topUtils.getResolution();
+    topUtils.setResolutionAndScaleTo(desiredResolution);
+    // This test runs on Android, zoomed out. Therefore we need to account
+    // for the resolution as well, because the fluff area is relative to screen
+    // pixels rather than CSS pixels.
+    resolution = topUtils.getResolution();
+    // Make sure we were actually able to zoom out to the desired level.
+    ok(resolution == desiredResolution, "Resolution is " + resolution);
+  }
+  mm = SpecialPowers.getDOMWindowUtils(window.top).physicalMillimeterInCSSPixels / resolution;
+  ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
+
+  // Test basic functionality: clicks sufficiently close to the element
+  // should be allowed to hit the element. We test points just inside and
+  // just outside the edges we set up in the prefs.
+  testMouseClick("t", 100 + 13*mm, 10, "body", "basic functionality");
+  testMouseClick("t", 100 + 11*mm, 10, "t", "basic functionality");
+  testMouseClick("t", 10, 80 + 5*mm, "body", "basic functionality");
+  testMouseClick("t", 10, 80 + 3*mm, "t", "basic functionality");
+  testMouseClick("t", -5*mm, 10, "body", "basic functionality");
+  testMouseClick("t", -3*mm, 10, "t", "basic functionality");
+  testMouseClick("t", 10, -5*mm, "body", "basic functionality");
+  testMouseClick("t", 10, -3*mm, "t", "basic functionality");
+
+  // When inputSource.touchOnly is true, mouse input is not retargeted.
+  SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.inputSource.touchOnly", true]]}, test2);
+}
+
+function test2() {
+  testMouseClick("t", 100 + 11*mm, 10, "body", "disabled for mouse input");
+  testMouseClick("t", 100 + 11*mm, 10, "t", "enabled for touch input", {
+    inputSource: MouseEvent.MOZ_SOURCE_TOUCH
+  });
+  testMouseClick("t", 100 + 13*mm, 10, "body", "basic functionality for touch", {
+    inputSource: MouseEvent.MOZ_SOURCE_TOUCH
+  });
+  SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.inputSource.touchOnly", false]]}, test3);
+}
+
+function test3() {
+  setShowing("t", false);
+
+  // Now test the criteria we use to determine which elements are hittable
+  // this way.
+
+  setShowing("t2", true);
+  var t2 = document.getElementById("t2");
+  // Unadorned DIVs are not click radius targets
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "unadorned DIV");
+  // DIVs with the right event handlers are click radius targets
+  t2.onmousedown = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onmousedown");
+  t2.onmousedown = null;
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onmousedown removed");
+  t2.onmouseup = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onmouseup");
+  t2.onmouseup = null;
+  t2.onclick = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onclick");
+  t2.onclick = null;
+  t2.onpointerdown = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onpointerdown");
+  t2.onpointerdown = null;
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onpointerdown removed");
+  t2.onpointerup = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onpointerup");
+  t2.onpointerup = null;
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onpointerup removed");
+  // Keypresses don't make click radius targets
+  t2.onkeypress = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onkeypress");
+  t2.onkeypress = null;
+  setShowing("t2", false);
+
+  // Now check that certain elements are click radius targets and others are not
+  for (var i = 1; i <= 9; ++i) {
+    var id = "t3_" + i;
+    var shouldHit = i <= 8;
+    setShowing(id, true);
+    testMouseClick(id, 100 + 11*mm, 10, shouldHit ? id : "body",
+                   "<" + document.getElementById(id).tagName + "> element");
+    setShowing(id, false);
+  }
+
+  // Check that our targeting computations take into account the effects of
+  // CSS transforms
+  setShowing("t4", true);
+  testMouseClick("t4", -1, 10, "t4", "translated DIV");
+  setShowing("t4", false);
+
+  // Test the prioritization of multiple targets based on distance to
+  // the target.
+  setShowing("t5_left", true);
+  setShowing("t5_right", true);
+  setShowing("t5_below", true);
+  testMouseClick("t5_left", 102, 10, "t5_left", "closest DIV is left");
+  testMouseClick("t5_left", 102.5, 10, "t5_left",
+    "closest DIV to midpoint is left because of its higher z-index");
+  testMouseClick("t5_left", 104, 10, "t5_right", "closest DIV is right");
+  testMouseClick("t5_left", 10, 104, "t5_left", "closest DIV is left");
+  testMouseClick("t5_left", 10, 105, "t5_left",
+    "closest DIV to midpoint is left because of its higher z-index");
+  testMouseClick("t5_left", 10, 106, "t5_below", "closest DIV is below");
+  setShowing("t5_left", false);
+  setShowing("t5_right", false);
+  setShowing("t5_below", false);
+
+  // Test behavior of nested elements.
+  // The following behaviors are questionable and may need to be changed.
+  setShowing("t6", true);
+  setShowing("t6_outer", true);
+  testMouseClick("t6_inner", -1, 10, "t6_inner",
+    "inner element is clickable because its parent is, even when it sticks outside parent");
+  testMouseClick("t6_inner", 39, -1, "t6_inner",
+    "when outside both inner and parent, but in range of both, the inner is selected");
+  testMouseClick("t6_inner", 45, -1, "t6_inner",
+    "clicking in clickable parent close to inner activates inner, not parent");
+  testMouseClick("t6_inner_clickable", 1, -1, "t6_inner",
+    "clicking on inner doesn't get redirected to inner_clickable because they are both clickable");
+  testMouseClick("t6_inner_clickable", 1, 1, "t6_inner_clickable",
+    "clicking on inner_clickable doesn't get redirected to inner because they are both clickable");
+  testMouseClick("t6_inner_clickable", 45, -1, "t6_inner",
+    "clicking on inner while backed by its parent still doesn't get redirected to inner_clickable");
+  testMouseClick("t6_inner_clickable", 45, 1, "t6_inner_clickable",
+    "clicking on inner_clickable while backed by its parent still doesn't get redirected to inner");
+  testMouseClick("t6_inner_clickable", 45, 6, "t6_inner_clickable",
+    "clicking on parent near inner_clickable gets redirected to inner_clickable rather than inner because it is closer");
+  // 280 is the distance from t6_inner's right edge to t6's right edge
+  // 240 is the distance from t6_inner's right edge to t6_outer's right edge.
+  // we want to click on t6, but at least 13mm away from t6_inner, so that
+  // t6_inner doesn't steal the click.
+  ok(13*mm < 280, "no point inside t6 that's not within radius of t6_inner; adjust layout of t6/inner/outer as needed");
+  testMouseClick("t6_outer", -240 + 13*mm, -1, "t6",
+    "clicking in clickable container close to outer activates parent, not outer");
+  testMouseClick("t6_outer", 1, 1, "t6_outer",
+    "clicking directly on the outer activates it");
+  setShowing("t6", false);
+  setShowing("t6_outer", false);
+
+  setShowing("t7", true);
+  setShowing("t7_over", true);
+  testMouseClick("t7", 100 + 11*mm, 10, "body", "covered div is not clickable");
+  testMouseClick("t7", 10, 10, "t7_over", "covered div is not clickable even within its bounds");
+  setShowing("t7", false);
+  setShowing("t7_over", false);
+
+  // Check that contenteditable elements are considered clickable for fluffing.
+  setShowing("t8", true);
+  var rect = document.getElementById("t8").getBoundingClientRect();
+  testMouseClick("t8", rect.left + 1, rect.top + 1, "t8", "content editable enabled for mouse input");
+  testMouseClick("t8", rect.left + 1, rect.top + 1, "t8", "content editable enabled for touch input", {
+    inputSource: MouseEvent.MOZ_SOURCE_TOUCH
+  });
+  setShowing("t8", false);
+
+  // Check that elements are touchable
+  setShowing("t9", true);
+  var rect = document.getElementById("t9").getBoundingClientRect();
+  testMouseClick("t9", rect.left + 1, rect.top + 1, "t9", "div enabled with mouse input");
+  testMouseClick("t9", rect.left + 1, rect.top + 1, "t9", "div enabled with touch input", {
+    inputSource: MouseEvent.MOZ_SOURCE_TOUCH
+  });
+  setShowing("t9", false);
+
+  setShowing("t10_over", true);
+  setShowing("t10_left", true);
+  setShowing("t10_right", true);
+  setShowing("t10_top", true);
+  setShowing("t10_bottom", true);
+  testMouseClick("t10_left", 51, 10, "t10_over", "element outside of visible area is not selected");
+  if (self.frameElement &&
+      (self.frameElement.offsetLeft + self.innerWidth >
+       SpecialPowers.wrap(top).innerWidth)) {
+    info("WARNING: Window is too narrow, can't test t10_right");
+  } else {
+    testMouseClick("t10_right", 49, 10, "t10_over", "element outside of visible area is not selected");
+  }
+  testMouseClick("t10_top", 10, 51, "t10_over", "element outside of visible area is not selected");
+  if (self.frameElement &&
+      (self.frameElement.offsetTop + self.innerHeight >
+       SpecialPowers.wrap(top).innerHeight)) {
+    info("WARNING: Window is too short, can't test t10_bottom");
+  } else {
+    testMouseClick("t10_bottom", 10, 49, "t10_over", "element outside of visible area is not selected");
+  }
+  setShowing("t10_over", false);
+  setShowing("t10_left", false);
+  setShowing("t10_right", false);
+  setShowing("t10_top", false);
+  setShowing("t10_bottom", false);
+
+  setShowing("t11", true);
+  testMouseClick("t11", 100 + 11*mm, 10, "t11",
+                 "Elements with cursor:pointer are fluff targets");
+  setShowing("t11", false);
+
+  setShowing("t11_with_child", true);
+  testMouseClick("t11_with_child", 100 + 11*mm, 10, "t11_child",
+                 "Elements that inherit cursor:pointer are fluff targets");
+  setShowing("t11_with_child", false);
+
+  setShowing("t11_covered", true);
+  testMouseClick("t11_covered", 100 + 11*mm, 10, "body",
+                 "Elements that override an inherited cursor:pointer are not fluff targets");
+  setShowing("t11_covered", false);
+
+  setShowing("t12", true);
+  testMouseClick("t12_target", 1, 1, "t12_target",
+                 "Event retargeting should not escape out from a z-index ancestor");
+  setShowing("t12", false);
+
+  // Not yet tested:
+  // -- visited link weight
+  // -- "Closest" using Euclidean distance
+
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", 1],
+                                     ["ui.touch.radius.enabled", true],
+                                     ["ui.touch.radius.leftmm", 12],
+                                     ["ui.touch.radius.topmm", 4],
+                                     ["ui.touch.radius.rightmm", 4],
+                                     ["ui.touch.radius.bottommm", 4],
+                                     ["ui.touch.radius.visitedweight", 50]]}, testTouchable);
+}
+
+function testTouchable() {
+  // Element "t" has a mousedown listener but no touch listener. So the touches
+  // that land immediately outside "t" should not hit "t"; only the touches
+  // directly aimed at "t" should hit it.
+  setShowing("t", true);
+  var rect = document.getElementById("t").getBoundingClientRect();
+  testTouch("t", rect.width - 1, 10, "t", "touch inside t right edge");
+  testTouch("t", rect.width + 1, 10, "body", "touch outside t right edge");
+  testTouch("t", 10, rect.height - 1, "t", "touch inside t bottom edge");
+  testTouch("t", 10, rect.height + 1, "body", "touch outside t bottom edge");
+  testTouch("t", 1, 10, "t", "touch inside t left edge");
+  testTouch("t", -1, 10, "body", "touch outside t left edge");
+  testTouch("t", 10, 1, "t", "touch inside t top edge");
+  testTouch("t", 10, -1, "body", "touch outside t top edge");
+  setShowing("t", false);
+
+  // Element "t9" has a touchend listener, so touches within the radius
+  // distance from it should hit it.
+  setShowing("t9", true);
+  testTouch("t9", -5*mm, 10, "body", "touch outside t9 left edge radius");
+  testTouch("t9", -3*mm, 10, "t9", "touch inside t9 left edge radius");
+  setShowing("t9", false);
+
+  // Element "t13" is clickable, so touches on descendants should not get retargeted.
+  // In particular, the touch that lands on t13_notouchlistener but within the touch radius
+  // of t13_touchlistener should not get retargeted.
+  setShowing("t13", true);
+  testTouch("t13", 10, 50 + (2*mm), "t13_notouchlistener", "touch outside t13_touchlistener bottom edge");
+  testTouch("t13", 10, 50 - (2*mm), "t13_touchlistener", "touch inside t13_touchlistener bottom edge");
+  setShowing("t13", false);
+
+  endTest();
+}
+</script>
+</pre>
+</body>
+</html>

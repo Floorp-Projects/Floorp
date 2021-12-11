@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="750"
+     xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+  <style type="text/css">
+text { font: 20px monospace; }
+  </style>
+
+<g id="g">
+  <text id="text1" x="5" y="25">abc</text>
+
+  <path id="MyPath2" d="M 100 125 L 100 200" stroke="red" fill="none"/>
+  <text id="text2"><textPath xlink:href="#MyPath2">abc</textPath></text>
+
+  <path id="MyPath" d="M 5 250 L 105 250 L 105 253 L 5 253 z" stroke="red" fill="none"/>
+  <text id="text3"><textPath xlink:href="#MyPath">abcdefghijklmnopqrstuvwxyz</textPath></text>
+
+  <text display="none" id="text4" x="5" y="25">abc</text>
+</g>
+</svg>

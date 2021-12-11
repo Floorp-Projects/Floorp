@@ -1,0 +1,191 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for backwards seeking behavior </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" />
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for backwards seeking behavior  **/
+
+var gSvg = document.getElementById("svg");
+
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  // Pause our document, so that the setCurrentTime calls are the only
+  // thing affecting document time
+  gSvg.pauseAnimations();
+
+  // We define a series of scenarios, sample times, and expected return values
+  // from getStartTime.
+  //
+  // Each scenario is basically a variation on the following arrangement:
+  //
+  // <svg>
+  //   <set ... dur="1s" begin="<A-BEGIN>"/>
+  //   <set ... dur="1s" begin="<B-BEGIN>"/>
+  // </svg>
+  //
+  // Each test then consists of the following:
+  //    animA: attributes to be applied to a
+  //    animB: attributes to be applied to b
+  //    times: a series of triples which consist of:
+  //             <sample time, a's expected start time, b's expected start time>
+  //           * The sample time is the time passed to setCurrentTime and so is
+  //             in seconds.
+  //           * The expected start times are compared with the return value of
+  //             getStartTime. To check for an unresolved start time where
+  //             getStartTime would normally throw an exception use
+  //             'unresolved'.
+  //           * We also allow the special notation to indicate a call to
+  //             beginElement
+  //             <'beginElementAt', id of animation element, offset>
+  //
+  // In the diagrams below '^' means the time before the seek and '*' is the
+  // seek time.
+  var testCases = Array();
+
+  // 0: Simple case
+  //
+  //   A:     +-------
+  //   B:     +-------       begin: a.begin
+  //        *            ^
+  testCases[0] = {
+    'animA': {'begin':'1s', 'id':'a'},
+    'animB': {'begin':'a.begin'},
+    'times': [ [0, 1, 1],
+               [1, 1, 1],
+               [2, 'unresolved', 'unresolved'],
+               [0, 1, 1],
+               [1.5, 1, 1],
+               [1, 1, 1],
+               [2, 'unresolved', 'unresolved'] ]
+  };
+
+  // 1: Restored times should be live
+  //
+  // When we restore times they should be live. So we have the following
+  // scenario.
+  //
+  //   A:     +-------
+  //   B:     +-------       begin: a.begin
+  //       *            ^
+  //
+  // Then we call beginElement at an earlier time which should give us the
+  // following.
+  //
+  //   A:   +-------
+  //   B:   +-------
+  //       *            ^
+  //
+  //  If the times are not live however we'll end up with this
+  //
+  //   A:   +-------
+  //   B:   +-+-------
+  //       *            ^
+  testCases[1] = {
+    'animA': {'begin':'1s', 'id':'a', 'restart':'whenNotActive'},
+    'animB': {'begin':'a.begin', 'restart':'always'},
+    'times': [ [0, 1, 1],
+               [2, 'unresolved', 'unresolved'],
+               [0.25, 1, 1],
+               ['beginElementAt', 'a', 0.25], // = start time of 0.5
+               [0.25, 0.5, 0.5],
+               [1, 0.5, 0.5],
+               [1.5, 'unresolved', 'unresolved'] ]
+  };
+
+  // 2: Multiple intervals A
+  //
+  //   A:  +-  +-
+  //   B:          +-  +-   begin: a.begin+4s
+  //             *    ^
+  testCases[2] = {
+    'animA': {'begin':'1s; 3s', 'id':'a'},
+    'animB': {'begin':'a.begin+4s'},
+    'times': [ [0, 1, 5],
+               [3, 3, 5],
+               [6.5, 'unresolved', 7],
+               [4, 'unresolved', 5],
+               [6, 'unresolved', 7],
+               [2, 3, 5],
+               ['beginElementAt', 'a', 0],
+               [2, 2, 5],
+               [5, 'unresolved', 5],
+               [6, 'unresolved', 6],
+               [7, 'unresolved', 7],
+               [8, 'unresolved', 'unresolved'] ]
+  };
+
+  for (var i = 0; i < testCases.length; i++) {
+    gSvg.setCurrentTime(0);
+    var test = testCases[i];
+
+    // Create animation elements
+    var animA = createAnim(test.animA);
+    var animB = createAnim(test.animB);
+
+    // Run samples
+    for (var j = 0; j < test.times.length; j++) {
+      var times = test.times[j];
+      if (times[0] == 'beginElementAt') {
+        var anim = getElement(times[1]);
+        anim.beginElementAt(times[2]);
+      } else {
+        gSvg.setCurrentTime(times[0]);
+        checkStartTime(animA, times[1], times[0], i, 'a');
+        checkStartTime(animB, times[2], times[0], i, 'b');
+      }
+    }
+
+    // Tidy up
+    animA.remove();
+    animB.remove();
+  }
+
+  SimpleTest.finish();
+}
+
+function createAnim(attr)
+{
+  const svgns = "http://www.w3.org/2000/svg";
+  var anim = document.createElementNS(svgns, 'set');
+  anim.setAttribute('attributeName','x');
+  anim.setAttribute('to','10');
+  anim.setAttribute('dur','1s');
+  for (name in attr) {
+    anim.setAttribute(name, attr[name]);
+  }
+  return gSvg.appendChild(anim);
+}
+
+function checkStartTime(anim, expectedStartTime, sampleTime, caseNum, id)
+{
+  var startTime = 'unresolved';
+  try {
+    startTime = anim.getStartTime();
+  } catch (e) {
+    if (e.name != "InvalidStateError" ||
+        e.code != DOMException.INVALID_STATE_ERR)
+      throw e;
+  }
+
+  var msg = "Test case " + caseNum + ", t=" + sampleTime + " animation '" +
+    id + "': Unexpected getStartTime:";
+  is(startTime, expectedStartTime, msg);
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

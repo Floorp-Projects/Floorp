@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for @-moz-document rules</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=398962">Mozilla Bug 398962</a>
+<iframe id="iframe" src="http://mochi.test:8888/tests/layout/style/test/chrome/moz_document_helper.html"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+var [gStyleSheetService, gIOService] = (function() {
+    return [
+            Cc["@mozilla.org/content/style-sheet-service;1"]
+                .getService(Ci.nsIStyleSheetService),
+            Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService)
+           ];
+})();
+function set_user_sheet(sheeturi)
+{
+    var uri = gIOService.newURI(sheeturi);
+    gStyleSheetService.loadAndRegisterSheet(uri, gStyleSheetService.USER_SHEET);
+}
+function remove_user_sheet(sheeturi)
+{
+    var uri = gIOService.newURI(sheeturi);
+    gStyleSheetService.unregisterSheet(uri, gStyleSheetService.USER_SHEET);
+}
+
+function run()
+{
+    var iframe = document.getElementById("iframe");
+    var subdoc = iframe.contentDocument;
+    var subwin = iframe.contentWindow;
+    var cs = subwin.getComputedStyle(subdoc.getElementById("display"));
+    var zIndexCounter = 0;
+
+    function test_document_rule(urltests, shouldapply)
+    {
+        var zIndex = ++zIndexCounter;
+        var encodedRule = encodeURI("@-moz-document " + urltests + " { ") +
+                          "%23" + // encoded hash character for "#display"
+                          encodeURI("display { z-index: " + zIndex + " } }");
+        var sheeturi = "data:text/css," + encodedRule;
+        set_user_sheet(sheeturi);
+        if (shouldapply) {
+            is(cs.zIndex, String(zIndex),
+               "@-moz-document " + urltests +
+               " should apply to this document");
+        } else {
+            is(cs.zIndex, "auto",
+               "@-moz-document " + urltests +
+               " should NOT apply to this document");
+        }
+        remove_user_sheet(sheeturi);
+    }
+
+    test_document_rule("domain(mochi.test)", true);
+    test_document_rule("domain(\"mochi.test\")", true);
+    test_document_rule("domain('mochi.test')", true);
+    test_document_rule("domain('test')", true);
+    test_document_rule("domain(.test)", false);
+    test_document_rule("domain('.test')", false);
+    test_document_rule("domain('ochi.test')", false);
+    test_document_rule("domain(ochi.test)", false);
+    test_document_rule("url-prefix(http://moch)", true);
+    test_document_rule("url-prefix(http://och)", false);
+    test_document_rule("url-prefix(http://mochi.test)", true);
+    test_document_rule("url-prefix(http://mochi.test:88)", true);
+    test_document_rule("url-prefix(http://mochi.test:8888)", true);
+    test_document_rule("url-prefix(http://mochi.test:8888/)", true);
+    test_document_rule("url-prefix('http://mochi.test:8888/tests/layout/style/test/chrome/moz_document_helper.html')", true);
+    test_document_rule("url-prefix('http://mochi.test:8888/tests/layout/style/test/chrome/moz_document_helper.htmlx')", false);
+    test_document_rule("url(http://mochi.test:8888/)", false);
+    test_document_rule("url('http://mochi.test:8888/tests/layout/style/test/chrome/moz_document_helper.html')", true);
+    test_document_rule("url('http://mochi.test:8888/tests/layout/style/test/chrome/moz_document_helper.htmlx')", false);
+    test_document_rule("regexp(.*ochi.*)", false); // syntax error
+    test_document_rule("regexp('.*ochi.*')", true);
+    test_document_rule("regexp('ochi.*')", false);
+    test_document_rule("regexp('.*ochi')", false);
+    test_document_rule("regexp('http:.*ochi.*')", true);
+    test_document_rule("regexp('http:.*ochi')", false);
+    test_document_rule("regexp('http:.*oCHi.*')", false); // case sensitive
+
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

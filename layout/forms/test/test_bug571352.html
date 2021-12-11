@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=571352
+-->
+<head>
+  <title>Test for Bug 571352</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=571352">Mozilla Bug 571352</a>
+<p id="display"><select multiple style="width:300px/*to avoid any overlay scrollbar messing with our mouse clicks*/"><option>0<option>1<option>2<option>3<option>4<option>5</select></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 571352 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function test() {
+  function focusList() {
+    $('display').firstChild.focus();
+  }
+  function option(index) {
+    return $('display').firstChild.childNodes[index];
+  }
+  function remove(index) {
+   var sel = $('display').firstChild;
+   sel.removeChild(sel.childNodes[index]);
+   document.body.clientHeight;
+  }
+  function up() { synthesizeKey("KEY_ArrowUp"); }
+  function shiftUp() { synthesizeKey("KEY_ArrowUp", {shiftKey:true}); }
+  function down() { synthesizeKey("KEY_ArrowDown"); }
+  function shiftDown() { synthesizeKey("KEY_ArrowDown", {shiftKey:true}); }
+  function mouseEvent(index,event) {
+    synthesizeMouse(option(index), 5, 5, event);
+  }
+
+  const click = {};
+  const shiftClick = {shiftKey:true};
+  focusList();
+  mouseEvent(0,click)
+  is(document.activeElement,$('display').firstChild,"<select> is focused");
+  ok(option(0).selected,"first option is selected");
+  mouseEvent(2,shiftClick)
+  remove(0);
+  ok(option(0).selected && option(1).selected,"first two options are selected");
+  mouseEvent(2,shiftClick)
+  ok(option(0).selected && option(1).selected && option(2).selected,"first three options are selected");
+  shiftUp();
+  ok(option(0).selected && option(1).selected,"first two options are selected");
+  remove(1);
+  ok(option(0).selected,"first option is selected");
+  shiftDown();
+  ok(option(0).selected && option(1).selected,"first two options are selected");
+  down();
+  ok(option(2).selected,"third option is selected");
+  shiftDown();
+  ok(option(2).selected && option(3).selected,"third & fourth option are selected");
+  remove(2);
+  shiftUp();
+  ok(option(1).selected && option(2).selected,"2nd & third option are selected");
+  remove(0);
+  mouseEvent(0,shiftClick)
+  ok(option(0).selected && option(1).selected,"all remaining 2 options are selected");
+  shiftDown();
+  remove(1);
+  ok(!option(0).selected,"first option is unselected");
+  remove(0);  // select is now empty
+  ok($('display').firstChild.firstChild==null,"all options were removed");
+
+  SimpleTest.finish();
+});
+
+
+
+
+</script>
+</pre>
+</body>
+</html>

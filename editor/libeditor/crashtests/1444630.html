@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+function load()
+{
+  let textarea = document.getElementById("editor");
+  textarea.focus();
+
+  SpecialPowers.Cu.import("resource://reftest/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(textarea, () => {
+    let isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
+    let sc = isc.spellChecker;
+
+    textarea.setAttribute("lang", "en-US");
+    sc.UpdateCurrentDictionary(() => {
+      document.documentElement.classList.remove("reftest-wait");
+    });
+    sc.UninitSpellChecker();
+  });
+}
+</script>
+</head>
+<body onload="load()">
+<textarea id="editor" spellchecker="true">ABC</textarea>
+</body>
+</html>

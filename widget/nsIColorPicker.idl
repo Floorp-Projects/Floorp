@@ -1,0 +1,72 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindowProxy;
+
+/**
+ * nsIColorPicker is representing colors as strings because the internal
+ * representation will depend on the underlying backend.
+ * The format of the colors taken in input and returned will always follow the
+ * format of the <input type='color'> value as described in the HTML
+ * specifications.
+ */
+
+[scriptable, uuid(d2ce78d1-40b5-49d1-b66d-5801fcb9a385)]
+interface nsIColorPickerShownCallback : nsISupports
+{
+ /**
+  * Callback called when the color picker requests a color update.
+  * This callback can not be called after done() was called.
+  * When this callback is used, the consumer can assume that the color value has
+  * changed.
+  *
+  * @param  color  The new selected color value following the format specifed on
+  *                top of this file.
+  */
+ void update(in AString color);
+
+ /**
+  * Callback called when the color picker is dismissed.
+  * When this callback is used, the color might have changed or could stay the
+  * same.
+  * If the color has not changed, the color parameter will be the empty string.
+  *
+  * @param  color  The new selected color value following the format specifed on
+  *                top of this file or the empty string.
+  */
+  void done(in AString color);
+};
+
+[scriptable, uuid(de229d37-a8a6-46f1-969a-0c1de33d0ad7)]
+interface nsIColorPicker : nsISupports
+{
+ /**
+  * Initialize the color picker widget. The color picker will not be shown until
+  * open() is called.
+  * If the backend doesn't support setting a title to the native color picker
+  * widget, the title parameter might be ignored.
+  * If the initialColor parameter does not follow the format specified on top of
+  * this file, the behavior will be unspecified. The initialColor could be the
+  * one used by the underlying backend or an arbitrary one. The backend could
+  * also assert.
+  *
+  * @param      parent       nsIDOMWindow parent. This dialog will be dependent
+  *                          on this parent. parent must be non-null.
+  * @param      title        The title for the color picker widget.
+  * @param      initialColor The color to show when the widget is opened. The
+  *                          parameter has to follow the format specified on top
+  *                          of this file.
+  */
+  void init(in mozIDOMWindowProxy parent, in AString title, in AString initialColor);
+
+ /**
+  * Opens the color dialog asynchrounously.
+  * The results are provided via the callback object.
+  */
+  void open(in nsIColorPickerShownCallback aColorPickerShownCallback);
+};

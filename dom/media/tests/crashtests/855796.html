@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=855796
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Bug 855796</title>
+  <script type="application/javascript">
+    var pc1, pc2, pc1_offer, pc2_answer;
+
+    function onFailure(code) {
+      stop();
+    }
+
+    function stop() {
+      pc1.close();
+      pc1 = null;
+      pc2.close();
+      pc2 = null;
+      document.documentElement.removeAttribute("class");
+    }
+
+    function step1(offer) {
+      pc1_offer = offer;
+      pc1_offer.sdp = "v=0\r\no=Mozilla-SIPUA 2208 0 IN IP4 0.0.0.0\r\ns=SIP Call\r\nt=0 0\r\na=ice-pwd:4450d5a4a5f097855c16fa079893be18\r\na=fingerprint:sha-256 23:9A:2E:43:94:42:CF:46:68:FC:62:F9:F4:48:61:DB:2F:8C:C9:FF:6B:25:54:9D:41:09:EF:83:A8:19:FC:B6\r\nm=audio 56187 RTP/SAVPF 109 0 8 101\r\nc=IN IP4 77.9.79.167\r\na=rtpmap:109 opus/48000/2\r\na=ptime:20\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:101 telephone-event/8000\r\na=fmtp:101 0-15\r\na=sendrecv\r\na=candidate:0 1 UDP 2113601791 192.168.178.20 56187 typ host\r\na=candidate:1 1 UDP 1694236671 77.9.79.167 56187 typ srflx raddr 192.168.178.20 rport 56187\r\na=candidate:0 2 UDP 2113601790 192.168.178.20 52955 typ host\r\na=candidate:1 2 UDP 1694236670 77.9.79.167 52955 typ srflx raddr 192.168.178.20 rport 52955\r\nm=video 49929 RTP/SAVPF 120\r\nc=IN IP4 77.9.79.167\r\na=rtpmap:120 VP8/90000\r\na=recvonly\r\na=candidate:0 1 UDP 2113601791 192.168.178.20 49929 typ host\r\na=candidate:1 1 UDP 1694236671 77.9.79.167 49929 typ srflx raddr 192.168.178.20 rport 49929\r\na=candidate:0 2 UDP 2113601790 192.168.178.20 50769 typ host\r\na=candidate:1 2 UDP 1694236670 77.9.79.167 50769 typ srflx raddr 192.168.178.20 rport 50769\r\nm=application 54054 SCTP/DTLS 5000 \r\nc=IN IP4 77.9.79.167\r\na=fmtp:HuRUu]Dtcl\\zM,7(OmEU%O$gU]x/z\tD protocol=webrtc-datachannel;streams=16\r\na=sendrecv\r\n";
+      pc1.setLocalDescription(pc1_offer, step2, onFailure);
+    }
+
+    function step2() {
+      pc2.setRemoteDescription(pc1_offer, step3, onFailure);
+    }
+
+    function step3() {
+      pc2.createAnswer(step4, onFailure);
+    }
+
+    function step4(answer) {
+      pc2_answer = answer;
+      pc2.setLocalDescription(pc2_answer, step5, onFailure);
+    }
+
+    function step5() {
+      pc1.setRemoteDescription(pc2_answer, step6, onFailure);
+    }
+
+    function step6() {
+      stop();
+    }
+
+    function start() {
+      pc1 = new RTCPeerConnection();
+      pc2 = new RTCPeerConnection();
+      navigator.mozGetUserMedia({audio:true, video:true, fake:true}, function(s) {
+          pc1.addStream(s);
+          navigator.mozGetUserMedia({audio:true, video:true, fake:true}, function(s) {
+            pc2.addStream(s);
+            pc1.createOffer(step1, onFailure);
+        }, onFailure);
+      }, onFailure);
+    }
+  </script>
+</head>
+
+<body onload="setTimeout(start, 100)">
+</html>

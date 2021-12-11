@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for MozAfterPaint</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+<div width="100" height="100" id="p" style="background-color: rgb(0,0,0)"/>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+var initialPaintCount, afterPaintCount;
+var color = 0;
+
+function onAfterPaint () {
+  afterPaintCount += 1;
+}
+
+function startTest() {
+  setTimeout(function () {
+    afterPaintCount = 0;
+    initialPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
+    window.addEventListener("MozAfterPaint", onAfterPaint, true);
+    doBackgroundFlicker();
+  }, 500);
+}
+
+document.addEventListener("DOMContentLoaded", startTest, true);
+
+// Unfortunately we cannot reliably assert that mozPaintCount and afterPaintCount increment perfectly
+// in sync, because they can diverge in the presence of OS-triggered paints or system load.
+// Instead, wait for a minimum number of afterPaint events to at least ensure that they are being fired.
+const minimumAfterPaintsToPass = 10;
+
+function doElementFlicker() {
+  ok(true, "Element color iteration " + color + 
+     ", afterpaint count: " + afterPaintCount +
+     ", mozpaint count: " + SpecialPowers.DOMWindowUtils.paintCount);
+  if (afterPaintCount >= minimumAfterPaintsToPass) { 
+    ok(true, "afterPaintCount incremented enough from color changes.");
+    SimpleTest.finish();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  document.getElementById("p").style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
+  setTimeout(doElementFlicker, 0);
+}
+
+function doBackgroundFlicker() {
+  ok(true, "Background color iteration " + color + 
+     ", afterpaint count: " + afterPaintCount +
+     ", mozpaint count: " + SpecialPowers.DOMWindowUtils.paintCount);
+  if (afterPaintCount >= minimumAfterPaintsToPass) {
+    ok(true, "afterPaintCount incremented enough from background color changes.");
+    afterPaintCount = 0;
+    initialPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
+    doElementFlicker();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  document.body.style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
+  setTimeout(doBackgroundFlicker, 0);
+}
+
+</script>
+</pre>
+
+<div style="height:4000px"></div>
+<a id="first"  href="http://www.mozilla.org/">first<br>link</a>
+<a id="second" href="http://www.mozilla.org/">second link</a>
+<a id="third"  href="http://www.mozilla.org/">third<br>link</a>
+<div style="height:4000px"></div>
+
+</body>
+</html>
+

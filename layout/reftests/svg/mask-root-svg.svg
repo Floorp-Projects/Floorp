@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0" mask="url(#mask1)">
+  <defs>
+    <mask id="mask1" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" x="0" y="0" width="0.5" height="0.5">
+      <rect x="0" y="0" width="1" height="1" style="stroke:none; fill: #ffffff"/>
+    </mask>
+  </defs>
+  <rect width="50%" height="50%" fill="white"/>
+  <rect x="30%" y="30%" width="20%" height="20%" fill="lime"/>
+</svg>

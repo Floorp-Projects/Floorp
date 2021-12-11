@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=492925
+-->
+<head>
+  <title>Test for Bug 492925</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    @media tv, print {
+      #div2 {
+        overflow: hidden;
+      }
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=492925">Mozilla Bug 492925</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 492925 **/
+
+var sheet = document.styleSheets[1];
+var rule = sheet.cssRules[0];
+var media = rule.media;
+
+is(media.mediaText, "tv, print", "Unexpected media string");
+is(media[0], "tv", "[0] should be 'tv'");
+is(media[1], "print", "[1] should be 'print'");
+is(media.item(0), "tv", ".item(0) should be 'tv'");
+is(media.item(1), "print", ".item(1) should be 'print'");
+
+
+
+
+</script>
+</pre>
+</body>
+</html>

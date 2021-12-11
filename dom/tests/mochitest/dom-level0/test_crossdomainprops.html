@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Cross domain access to properties</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTest()">
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<iframe name="frame1" src="file_crossdomainprops_inner.html"></iframe>
+<iframe name="frame2" src="http://example.com/tests/dom/tests/mochitest/dom-level0/file_crossdomainprops_inner.html"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  ok(frames.frame1.myVar == 10, "access same domain inner window variable");
+  var otherDomainVar = null;
+  try {
+    otherDomainVar = frames.frame2.myVar;
+  }
+  catch (e) {
+    otherDomainVar = -1;
+  }
+  is(otherDomainVar, -1, "access other domain inner window variable");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

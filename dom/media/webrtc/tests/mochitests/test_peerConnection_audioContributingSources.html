@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1363667",
+    title: "Test audio receiver getContributingSources"
+  });
+
+  // test_peerConnection_audioSynchronizationSources.html tests
+  // much of the functionality of getContributingSources as the implementation
+  // is shared.
+  var testGetContributingSources = async (test) => {
+    const remoteReceiver = test.pcRemote.getReceivers()[0];
+    const localReceiver = test.pcLocal.getReceivers()[0];
+
+    // Check that getContributingSources is empty as there is no MCU
+    is(remoteReceiver.getContributingSources().length, 0,
+       "remote contributing sources is empty");
+    is(localReceiver.getContributingSources().length, 0,
+       "local contributing sources is empty");
+    // Wait for the next JS event loop iteration, to clear the cache
+    await Promise.resolve().then();
+    // Insert new entries as if there were an MCU
+    const csrc0 = 124756;
+    const timestamp0 = performance.now() + performance.timeOrigin;
+    const rtpTimestamp0 = 11111;
+    const hasAudioLevel0 = true;
+    // Audio level as expected to be received in RTP
+    const audioLevel0 = 34;
+    // Audio level as expected to be returned
+    const expectedAudioLevel0 = 10 ** (-audioLevel0 / 20);
+
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
+        csrc0,
+        timestamp0,
+        rtpTimestamp0,
+        hasAudioLevel0,
+        audioLevel0);
+
+    const csrc1 = 5786;
+    const timestamp1 = timestamp0 - 200;
+    const rtpTimestamp1 = 22222;
+    const hasAudioLevel1 = false;
+    const audioLevel1 = 0;
+
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
+        csrc1,
+        timestamp1,
+        rtpTimestamp1,
+        hasAudioLevel1,
+        audioLevel1);
+
+    const csrc2 = 93487;
+    const timestamp2 = timestamp0 - 200;
+    const rtpTimestamp2 = 333333;
+    const hasAudioLevel2 = true;
+    const audioLevel2 = 127;
+
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
+        csrc2,
+        timestamp2,
+        rtpTimestamp2,
+        hasAudioLevel2,
+        audioLevel2);
+
+    const contributingSources = remoteReceiver.getContributingSources();
+    is(contributingSources.length, 3,
+       "Expected number of contributing sources");
+
+    // Check that both inserted were returned
+    const source0 = contributingSources.find(c => c.source == csrc0);
+    ok(source0, "first csrc was found");
+
+    const source1 = contributingSources.find(c => c.source == csrc1);
+    ok(source1, "second csrsc was found");
+
+    // Add a small margin of error in the timestamps
+    const compareTimestamps = (ts1, ts2) => Math.abs(ts1 - ts2) < 100;
+
+    // Check the CSRC with audioLevel
+    const isWithinErr = Math.abs(source0.audioLevel - expectedAudioLevel0)
+        < expectedAudioLevel0 / 50;
+    ok(isWithinErr,
+       `Contributing source has correct audio level. (${source0.audioLevel})`);
+    ok(compareTimestamps(source0.timestamp, timestamp0),
+       `Contributing source has correct timestamp (${source0.timestamp})`);
+    is(source0.rtpTimestamp, rtpTimestamp0,
+       `Contributing source has correct RTP timestamp (${source0.rtpTimestamp}`);
+    // Check the CSRC without audioLevel
+    is(source1.audioLevel, undefined,
+       `Contributing source has no audio level. (${source1.audioLevel})`);
+    ok(compareTimestamps(source1.timestamp, timestamp1),
+       `Contributing source has correct timestamp (${source1.timestamp})`);
+    is(source1.rtpTimestamp, rtpTimestamp1,
+       `Contributing source has correct RTP timestamp (${source1.rtpTimestamp}`);
+    // Check that a received RTP audio level 127 is exactly 0
+    const source2 = contributingSources.find(c => c.source == csrc2);
+    ok(source2, "third csrc was found");
+    is(source2.audioLevel, 0,
+      `Contributing source has audio level of 0 when RTP audio level is 127`);
+    // Check caching
+    is(JSON.stringify(contributingSources),
+       JSON.stringify(remoteReceiver.getContributingSources()),
+       "getContributingSources is cached");
+    // Check that sources are sorted in descending order by time stamp
+    const timestamp3 =  performance.now() + performance.timeOrigin;
+    const rtpTimestamp3 = 44444;
+    // Larger offsets are further back in time
+    const testOffsets = [3, 7, 5, 6, 1, 4];
+    for (const offset of testOffsets) {
+      SpecialPowers.wrap(localReceiver).mozInsertAudioLevelForContributingSource(
+          offset, // Using offset for SSRC for convenience
+          timestamp3 - offset,
+          rtpTimestamp3,
+          true,
+          offset);
+    }
+    const sources = localReceiver.getContributingSources();
+    const sourceOffsets = sources.map(s => s.source);
+    is(JSON.stringify(sourceOffsets),
+       JSON.stringify([...testOffsets].sort((a, b) => a - b)),
+          `Contributing sources are sorted in descending order by timestamp:`
+          + ` ${JSON.stringify(sources)}`);
+  };
+
+  var test;
+  runNetworkTest(async function(options) {
+    test = new PeerConnectionTest(options);
+    test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+      [testGetContributingSources]);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.pcLocal.audioElementsOnly = true;
+    await pushPrefs(["privacy.reduceTimerPrecision", false]);
+    await test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

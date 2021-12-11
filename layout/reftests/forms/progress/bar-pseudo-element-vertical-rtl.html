@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <style>
+    progress {
+      margin: 10px;
+      -moz-orient: vertical;
+    }
+    body > progress:nth-child(1)::-moz-progress-bar { margin: 4px; padding: 0px; }
+    body > progress:nth-child(2)::-moz-progress-bar { margin: 0px; padding: 4px; }
+    body > progress:nth-child(3)::-moz-progress-bar { margin: 4px; padding: 4px; }
+    body > progress:nth-child(4)::-moz-progress-bar { margin: 10px 0px 0px 0px; padding: 0px; }
+    body > progress:nth-child(5)::-moz-progress-bar { margin: 0px 10px 0px 0px; padding: 0px; }
+    body > progress:nth-child(6)::-moz-progress-bar { margin: 0px 0px 10px 0px; padding: 0px; }
+    body > progress:nth-child(7)::-moz-progress-bar { margin: 0px 0px 0px 10px; padding: 0px; }
+    body > progress:nth-child(8)::-moz-progress-bar { margin: 0px; padding: 10px 0px 0px 0px; }
+    body > progress:nth-child(9)::-moz-progress-bar { margin: 0px; padding: 0px 10px 0px 0px; }
+    body > progress:nth-child(10)::-moz-progress-bar { margin: 0px; padding: 0px 0px 10px 0px; }
+    body > progress:nth-child(11)::-moz-progress-bar { margin: 0px; padding: 0px 0px 0px 10px; }
+    body > progress:nth-child(12)::-moz-progress-bar { height: 1000px; }
+    body > progress:nth-child(13)::-moz-progress-bar { height: 10px; }
+    body > progress:nth-child(14)::-moz-progress-bar { height: 10%; }
+    body > progress:nth-child(15)::-moz-progress-bar { height: 200%; }
+    body > progress:nth-of-type(16)::-moz-progress-bar { margin: 64px; padding: 64px; }
+  </style>
+  <body dir='rtl'>
+    <!-- Those will be used to change padding/margin on ::-moz-progress-bar -->
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <!-- Those will be used to change width. -->
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <progress value='1'></progress>
+    <br><progress value='1'></progress>
+  </body>
+</html>

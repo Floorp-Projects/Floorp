@@ -1,0 +1,271 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#style-editor-chrome {
+  -moz-box-flex: 1;
+}
+
+.splitview-nav > li,
+.stylesheet-info,
+.stylesheet-more,
+.stylesheet-rule-count,
+li.splitview-active > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton,
+li:hover > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton {
+  display: -moz-box;
+}
+
+.devtools-toolbar > spacer {
+  -moz-box-flex: 1;
+}
+
+.style-editor-newButton {
+  list-style-image: url(images/add.svg);
+}
+
+.style-editor-importButton {
+  list-style-image: url(images/import.svg);
+}
+
+.stylesheet-details-container {
+  -moz-box-flex: 1;
+}
+
+.stylesheet-media-container {
+  overflow-y: auto;
+}
+
+.stylesheet-error-message {
+  display: none;
+}
+
+li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
+  display: block;
+}
+
+.stylesheet-title,
+.stylesheet-name {
+  text-decoration: none;
+}
+
+.stylesheet-name {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.stylesheet-name > label {
+  display: inline;
+  cursor: pointer;
+}
+
+.stylesheet-info > h1 {
+  -moz-box-flex: 1;
+}
+
+.splitview-nav > li > hgroup.stylesheet-info {
+  -moz-box-pack: center;
+}
+
+.stylesheet-more > spacer {
+  -moz-box-flex: 1;
+}
+
+.stylesheet-title,
+.stylesheet-name,
+.stylesheet-rule-count,
+.stylesheet-linked-file,
+.stylesheet-saveButton {
+  color: var(--theme-body-color);
+}
+
+.stylesheet-saveButton {
+  display: none;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.splitview-active .stylesheet-title,
+.splitview-active .stylesheet-name,
+.theme-light .splitview-active .stylesheet-rule-count,
+.theme-light .splitview-active .stylesheet-linked-file,
+.theme-light .splitview-active .stylesheet-saveButton {
+  color: var(--theme-selection-color);
+}
+
+.splitview-nav:focus {
+  outline: 0; /* focus ring is on the stylesheet name */
+}
+
+.splitview-nav > li {
+  -moz-box-orient: horizontal;
+}
+
+.splitview-nav > li > hgroup {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+}
+
+.splitview-nav > li.unsaved > hgroup .stylesheet-name {
+  font-style: italic;
+}
+
+.splitview-nav:-moz-locale-dir(ltr) > li.unsaved > hgroup .stylesheet-name:before,
+.splitview-nav:-moz-locale-dir(rtl) > li.unsaved > hgroup .stylesheet-name:after {
+  font-style: italic;
+}
+
+.splitview-nav.empty > p {
+  padding: 0 10px;
+}
+
+.stylesheet-sidebar {
+  max-width: 400px;
+  min-width: 100px;
+  border-color: var(--theme-splitter-color);
+}
+
+.media-rule-label {
+  display: flex;
+  padding: 4px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.media-responsive-mode-toggle {
+  color: var(--theme-highlight-blue);
+  text-decoration: underline;
+}
+
+.media-rule-line {
+  padding-inline-start: 4px;
+}
+
+.media-condition-unmatched {
+  opacity: 0.4;
+}
+
+.media-rule-condition {
+  flex: 1;
+  overflow: hidden;
+}
+
+.stylesheet-enabled {
+  display: -moz-box;
+  cursor: pointer;
+  padding: 8px 0;
+  margin: 0 8px;
+  background-image: url(images/item-toggle.svg);
+  background-repeat: no-repeat;
+  background-clip: content-box;
+  background-position: center;
+  background-size: 16px;
+  width: 24px;
+  height: 40px;
+
+  /* The icon color should always match the text color. */
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.disabled > .stylesheet-enabled {
+  opacity: 0.3;
+}
+
+.stylesheet-linked-file:not(:empty){
+  margin-inline-end: 0.4em;
+}
+
+.stylesheet-linked-file:not(:empty):before {
+  margin-inline-start: 0.4em;
+  content: " ↳ ";
+}
+
+li.unsaved > hgroup > h1 > .stylesheet-name:before {
+  content: "*";
+}
+
+li.linked-file-error .stylesheet-linked-file {
+  text-decoration: line-through;
+}
+
+li.linked-file-error .stylesheet-linked-file:after {
+  font-size: 110%;
+  content: " ✘";
+}
+
+li.linked-file-error .stylesheet-rule-count {
+  visibility: hidden;
+}
+
+.stylesheet-more > h3 {
+  font-size: 11px;
+  margin-inline-end: 2px;
+}
+
+.devtools-searchinput,
+.devtools-filterinput {
+  max-width: 25ex;
+  font-size: 11px;
+}
+
+.placeholder a {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3 {
+  font-size: inherit;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 700px) {
+  .stylesheet-sidebar {
+    width: 150px;
+  }
+}
+
+/* portrait mode */
+@media (max-width: 550px) {
+  li.splitview-active > hgroup > .stylesheet-more > .stylesheet-rule-count,
+  li:hover > hgroup > .stylesheet-more > .stylesheet-rule-count {
+    display: none;
+  }
+
+  .splitview-nav {
+    box-shadow: none;
+  }
+
+  .splitview-nav > li.splitview-active {
+    background-size: 0 0, 0 0, auto;
+  }
+
+  .stylesheet-enabled {
+    padding: 0;
+    height: 24px;
+  }
+
+  .splitview-nav > li > hgroup.stylesheet-info {
+    -moz-box-align: baseline;
+    -moz-box-orient: horizontal;
+    -moz-box-flex: 1;
+  }
+
+  .stylesheet-sidebar {
+    width: 180px;
+  }
+
+  .stylesheet-more {
+    -moz-box-flex: 1;
+    -moz-box-pack: end;
+  }
+
+  .stylesheet-more > spacer {
+    -moz-box-flex: 0;
+  }
+}

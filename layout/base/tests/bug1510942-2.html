@@ -1,0 +1,21 @@
+<!doctype html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Test for bug 1510942: Caret in a transformed empty block</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  #editable {
+    height: 300px;
+    width: 100px;
+    outline: 1px solid black;
+    opacity: 0;
+  }
+</style>
+<div id="editable" contenteditable></div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.getElementById("editable").focus();
+  document.documentElement.className ="";
+});
+</script>

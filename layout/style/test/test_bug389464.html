@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <!-- above is to force x-western language group -->
+  <title>Test for preference not to use document colors</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=58048">Mozilla Bug 58048</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=255411">Mozilla Bug 255411</a>
+<div id="display">
+
+<pre><font id="one" size="-1">text</font></pre>
+<p><font id="two" size="-1">text</font></p>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var cs1 = getComputedStyle(document.getElementById("one"), "");
+var cs2 = getComputedStyle(document.getElementById("two"), "");
+
+SpecialPowers.pushPrefEnv({'set': [['variable.x-western', 25], ['fixed.x-western', 20]]}, part1);
+
+function part1()
+{
+    var fs1 = cs1.fontSize.match(/(.*)px/)[1];
+    var fs2 = cs2.fontSize.match(/(.*)px/)[1];
+    ok(fs1 < fs2, "<font size=-1> shrinks relative to font-family: -moz-fixed");
+
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

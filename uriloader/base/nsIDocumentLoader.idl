@@ -1,0 +1,36 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsILoadGroup;
+interface nsIChannel;
+interface nsIURI;
+interface nsIWebProgress;
+interface nsIRequest;
+
+/**
+ * An nsIDocumentLoader is an interface responsible for tracking groups of
+ * loads that belong together (images, external scripts, etc) and subdocuments
+ * (<iframe>, <frame>, etc). It is also responsible for sending
+ * nsIWebProgressListener notifications.
+ * XXXbz this interface should go away, we think...
+ */
+[scriptable, uuid(bbe961ee-59e9-42bb-be50-0331979bb79f)]
+interface nsIDocumentLoader : nsISupports
+{
+  // Stop all loads in the loadgroup of this docloader
+  void stop();
+
+  // XXXbz is this needed?  For embedding?  What this does is does is not
+  // defined by this interface!
+  readonly attribute nsISupports container;
+
+  // The loadgroup associated with this docloader
+  readonly attribute nsILoadGroup loadGroup;
+
+  // The defaultLoadRequest of the loadgroup associated with this docloader
+  readonly attribute nsIChannel documentChannel;
+};
+

@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<script>
+if (location.search == "?x=") {
+  setTimeout(() => window.close(), 1000);
+} else {
+  document.fonts.onloadingdone = () => {
+    document.forms[1].submit();
+  };
+  window.onload = () => {
+    document.forms[0].submit();
+    setTimeout(() => {
+      document.documentElement.removeAttribute("class");
+    }, 1000);
+  };
+}
+</script>
+<body>
+<form target="bug1588259"><input name="x"></form>
+<form target="bug1588259"><input name="x"></form>
+</body>
+</html>

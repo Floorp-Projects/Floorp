@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+	<title>bug 536421</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>
+input { border:1px solid blue; }
+</style>
+</head>
+<body onload="doTest()">
+  <input value="test" id="textbox" onfocus="triggerBug();" type="text">
+  <script type="text/javascript">
+    function finishTest()
+    {
+      document.documentElement.removeAttribute("class");
+    }
+    function triggerBug()
+    {
+      var t = document.getElementById("textbox");
+      t.style.display = "none";
+      document.body.offsetWidth;
+      t.style.display = "";
+      finishTest();
+    }
+    function doTest()
+    {
+      var t = document.getElementById("textbox");
+      t.focus();
+    }
+  </script>
+</body>
+</html>

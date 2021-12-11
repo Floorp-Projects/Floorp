@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=454326
+-->
+<head>
+  <title>Test for Bug 454326</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=454326">Mozilla Bug 454326</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div id="partial-text-selection">Hello Hello <div></div>World!</div>
+<div id="partial-element-selection"><div id="begin">Hello Hello </div><div></div><div id="end">World!</div></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 454326 **/
+
+  function reinitPartialTextSelection() {
+    var pts = document.getElementById("partial-text-selection");
+    pts.textContent = null;
+    pts.appendChild(document.createTextNode("Hello Hello "));
+    pts.appendChild(document.createElement("div"));
+    pts.appendChild(document.createTextNode("World!"));
+  }
+
+
+  function doTest() {
+    var pts = document.getElementById("partial-text-selection");
+    var ex = null;
+    try {
+      var r1 = document.createRange();
+      r1.setStart(pts.firstChild, 6);
+      r1.setEnd(pts.lastChild, 6);
+      is(r1.toString(), "Hello World!", "Wrong range!");
+      r1.surroundContents(document.createElement("div"));
+      is(r1.toString(), "Hello World!", "Wrong range!");
+    } catch(e) {
+      ex = e;
+    }
+    is(ex, null, "Unexpected exception!");
+
+    reinitPartialTextSelection();
+    ex = null;
+    try {
+      var r2 = document.createRange();
+      r2.setStart(pts.firstChild, 6);
+      r2.setEnd(pts, 2);
+      is(r2.toString(), "Hello ", "Wrong range!");
+      r2.surroundContents(document.createElement("div"));
+      is(r2.toString(), "Hello ", "Wrong range!");
+    } catch(e) {
+      ex = e;
+    }
+    is(ex, null, "Unexpected exception!");
+
+    reinitPartialTextSelection();
+    ex = null;
+    try {
+      var r3 = document.createRange();
+      r3.setStart(pts, 1);
+      r3.setEnd(pts.lastChild, 6);
+      is(r3.toString(), "World!", "Wrong range!");
+      r3.surroundContents(document.createElement("div"));
+      is(r3.toString(), "World!", "Wrong range!");
+    } catch(e) {
+      ex = e;
+    }
+    is(ex, null, "Unexpected exception!");
+
+    reinitPartialTextSelection();
+    ex = null;
+    try {
+      var r3 = document.createRange();
+      r3.setStart(pts.firstChild, 6);
+      r3.setEnd(pts.firstChild.nextSibling, 0);
+      is(r3.toString(), "Hello ", "Wrong range!");
+      r3.surroundContents(document.createElement("div"));
+      is(r3.toString(), "Hello ", "Wrong range!");
+    } catch(e) {
+      ex = e;
+      is(e.name, "InvalidStateError", "Didn't get InvalidStateError exception!");
+      is(Object.getPrototypeOf(e), DOMException.prototype, "Didn't get DOMException!");
+      is(e.code, 11, "Didn't get INVALID_STATE_ERR exception!");
+    }
+    ok(ex, "There should have been an exception!");
+
+    reinitPartialTextSelection();
+    ex = null;
+    try {
+      var r3 = document.createRange();
+      r3.setStart(pts.firstChild.nextSibling, 0);
+      r3.setEnd(pts.lastChild, 6);
+      is(r3.toString(), "World!", "Wrong range!");
+      r3.surroundContents(document.createElement("div"));
+      is(r3.toString(), "World!", "Wrong range!");
+    } catch(e) {
+      ex = e;
+      is(e.name, "InvalidStateError", "Didn't get InvalidStateError exception!");
+      is(Object.getPrototypeOf(e), DOMException.prototype, "Didn't get DOMException!");
+      is(e.code, 11, "Didn't get INVALID_STATE_ERR exception!");
+    }
+    ok(ex, "There should have been an exception!");
+
+    ex = null;
+    try {
+      var pes = document.getElementById("partial-element-selection");
+      var r4 = document.createRange();
+      r4.setStart(pes.firstChild.firstChild, 6);
+      r4.setEnd(pes.lastChild.firstChild, 6);
+      is(r4.toString(), "Hello World!", "Wrong range!");
+      r4.surroundContents(document.createElement("div"));
+      is(r4.toString(), "Hello World!", "Wrong range!");
+    } catch(e) {
+      ex = e;
+      is(e.name, "InvalidStateError", "Didn't get InvalidStateError exception!");
+      is(Object.getPrototypeOf(e), DOMException.prototype, "Didn't get DOMException!");
+      is(e.code, 11, "Didn't get INVALID_STATE_ERR exception!");
+    }
+    ok(ex, "There should have been an exception!");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(doTest);
+  addLoadEvent(SimpleTest.finish);
+</script>
+</pre>
+</body>
+</html>
+

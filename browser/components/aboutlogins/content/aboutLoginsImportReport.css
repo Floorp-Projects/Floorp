@@ -1,0 +1,118 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#report-body {
+  display: grid;
+  grid-template-columns: repeat(6, auto);
+  grid-template-rows: 110px 145px auto;
+  grid-column: logins/login;
+}
+
+#branding-logo {
+  margin-block: auto;
+}
+
+.summary {
+  grid-column: 2 / 5;
+  grid-row-start: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.summary h2 {
+  font-size: 24px;
+  margin-block: 32px 8px;
+}
+
+
+.summary > a {
+  margin-top: 12px;
+}
+
+.new-logins,
+.exiting-logins,
+.duplicate-logins,
+.errors-logins {
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+  height: 100px;
+  align-items: center;
+  margin: auto;
+}
+
+.count-details {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.result-count {
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.new-logins {
+  grid-column: 2;
+  grid-row-start: 2;
+}
+
+.exiting-logins {
+  grid-column: 3;
+  grid-row-start: 2;
+}
+
+.duplicate-logins {
+  grid-column: 4;
+  grid-row-start: 2;
+}
+
+.errors-logins {
+  grid-column: 5;
+  grid-row-start: 2;
+}
+
+.logins-list {
+  grid-column: 2 / 6;
+  grid-row-start: 3;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  border-top: 1px solid var(--in-content-border-color);
+  padding-top: 35px;
+  grid-auto-rows: 28px;
+}
+
+.not-imported {
+  font-style: italic;
+  font-weight: bold;
+}
+
+.error {
+  color: var(--dialog-warning-text-color);
+}
+
+.not-imported-hidden {
+  visibility: hidden;
+}
+
+import-details-row:nth-child(odd) {
+  background-color: var(--in-content-box-background-odd);
+}
+
+import-details-row {
+  height: 20px;
+  margin-block: 1px;
+  display: grid;
+  grid-column: 1 / 3;
+  grid-template-columns: subgrid;
+  grid-gap: 16px;
+}
+
+import-details-row .row-count {
+  padding-inline: 8px 12px;
+}
+
+import-details-row .row-details {
+  padding-inline-start: 5px;
+}

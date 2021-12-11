@@ -1,0 +1,87 @@
+<html>
+
+<head>
+  <title>nsIAccessible::name calculation for HTML links (html:a)</title>
+
+  <link rel="stylesheet"
+        type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // aria-label
+      testName("aria_label", "anchor label");
+
+      // aria-labelledby
+      testName("aria_labelledby", "text");
+
+      // name from content
+      testName("namefromcontent", "1");
+
+      // name from content
+      testName("namefromimg", "img title");
+
+      // no name from content
+      testName("nonamefromcontent", null);
+
+      // title
+      testName("title", "title");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=459782"
+     title="nsIAccessible::name calculation for HTML links (html:a)">
+    Mozilla Bug 459782
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- aria-label -->
+  <a id="aria_label" href="mozilla.org"
+     aria-label="anchor label">1</a>
+  <br/>
+
+  <!-- aria-labelledby, preferred to html:label -->
+  <span id="text">text</span>
+  <label for="aria_labelledby">label</label>
+  <a id="aria_labelledby" href="mozilla.org"
+     aria-labelledby="text">1</a>
+  <br/>
+
+  <!-- name from content, preferred to @title -->
+  <a id="namefromcontent" href="mozilla.org"
+     title="title">1</a>
+  <br/>
+
+  <!-- name from content, preferred to @title -->
+  <a id="namefromimg" href="mozilla.org"
+     title="title"><img alt="img title" /></a>
+
+  <!-- no name from content, ARIA role overrides this rule -->
+  <a id="nonamefromcontent" href="mozilla.org" role="img">1</a>
+  <br/>
+
+  <!-- no content, name from @title -->
+  <a id="title" href="mozilla.org"
+     title="title"></a>
+
+</body>
+</html>

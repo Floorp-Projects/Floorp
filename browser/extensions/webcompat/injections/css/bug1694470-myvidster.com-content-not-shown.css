@@ -1,0 +1,11 @@
+/**
+ * m.myvidster.com - Content is not shown
+ * Bug #1694470 - https://bugzilla.mozilla.org/show_bug.cgi?id=1694470
+ * WebCompat issue #67308 - https://webcompat.com/issues/67308
+ *
+ * The site depends on Sencha Touch and should receive some specific
+ * -moz-box-flex to be working.
+ */
+#home_refresh_var {
+  -moz-box-flex: 1;
+}

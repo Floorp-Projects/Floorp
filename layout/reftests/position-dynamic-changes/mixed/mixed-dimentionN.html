@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="../handleprop.js" type="text/javascript"></script>
+    <style>
+      #child {
+        width: 100px;
+        height: 100px;
+        left: 100px;
+        top: 100px;
+      }
+    </style>
+    <script src="../horizontal/animate.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      var counter = 0;
+      function play() {
+        if (counter < 100) {
+          var child = document.getElementById("child");
+          child.style.left = (parseInt(getComputedStyle(child, null).left.replace("px", "")) + 20) + "px";
+          child.style.top = (parseInt(getComputedStyle(child, null).top.replace("px", "")) + 10) + "px";
+          rfa(play);
+          counter += 10;
+        } else {
+          document.documentElement.removeAttribute("class");
+        }
+      }
+
+      window.onload = function() { rfa(play) };
+    </script>
+  </head>
+  <body>
+    <div id="parent">
+      <div id="child">
+        <div class="floatLeft"></div>
+        <div class="floatLeft"></div>
+      </div>
+    </div>
+  </body>
+</html>

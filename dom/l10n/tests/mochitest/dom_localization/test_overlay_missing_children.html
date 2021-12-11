@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's DOMOverlay functionality</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+title = Visit <a data-l10n-name="mozilla-link">Mozilla</a> or <a data-l10n-name="firefox-link">Firefox</a> website!
+` },
+  ];
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      ["/mock.ftl"],
+      false,
+      l10nReg,
+      ["en-US"],
+    );
+
+    await domLoc.translateFragment(document.body);
+
+    const p1 = document.querySelectorAll("p")[0];
+    const linkList = p1.querySelectorAll("a");
+
+
+    is(linkList[0].getAttribute("href"), "http://www.mozilla.org");
+    is(linkList[0].textContent, "Mozilla");
+    is(linkList[1].getAttribute("href"), "http://www.firefox.com");
+    is(linkList[1].textContent, "Firefox");
+
+    is(linkList.length, 2, "There should be exactly two links in the result.");
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <p data-l10n-id="title">
+    <a href="http://www.mozilla.org" data-l10n-name="mozilla-link"></a>
+    <a href="http://www.firefox.com" data-l10n-name="firefox-link"></a>
+    <a href="http://www.w3.org" data-l10n-name="w3-link"></a>
+  </p>
+</body>
+</html>

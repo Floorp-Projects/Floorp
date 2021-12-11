@@ -1,0 +1,49 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads XHR(Bug 450452 )
+-->
+<head>
+  <title>Test for DOM Worker Threads XHR (Bug 450452 )</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads XHR (Bug 450452)</a>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  document.cookie = "a=cookie_is_set";
+
+  SpecialPowers.pushPrefEnv({ set: [[ "network.cookie.cookieBehavior", 1 ]] },
+                            () => {
+    let w = window.open("window_worker_xhr_3rdparty.html");
+
+    onmessage = e => {
+      if (e.data.type == "finish") {
+        w.close();
+        SimpleTest.finish();
+        return;
+      }
+
+      if (e.data.type == "test") {
+        ok(e.data.test, e.data.msg);
+        return;
+      }
+
+      ok(false, "Invalid message.");
+    }
+  });
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

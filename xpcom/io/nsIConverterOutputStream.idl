@@ -1,0 +1,30 @@
+/* vim:set expandtab ts=4 sw=4 sts=4 cin: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIUnicharOutputStream.idl"
+
+interface nsIOutputStream;
+
+/**
+ * This interface allows writing strings to a stream, doing automatic
+ * character encoding conversion.
+ */
+[scriptable, uuid(4b71113a-cb0d-479f-8ed5-01daeba2e8d4)]
+interface nsIConverterOutputStream : nsIUnicharOutputStream
+{
+    /**
+     * Initialize this stream. Must be called before any other method on this
+     * interface, or you will crash. The output stream passed to this method
+     * must not be null, or you will crash.
+     *
+     * @param aOutStream
+     *        The underlying output stream to which the converted strings will
+     *        be written.
+     * @param aCharset
+     *        The character set to use for encoding the characters. A null
+     *        charset will be interpreted as UTF-8.
+     */
+    void init(in nsIOutputStream aOutStream, in string aCharset);
+};

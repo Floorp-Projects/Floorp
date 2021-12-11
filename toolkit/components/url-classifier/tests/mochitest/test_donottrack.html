@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1258033 - Fix the DNT loophole for tracking protection</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var mainWindow = window.browsingContext.topChromeWindow;
+
+const tests = [
+  // DNT turned on and TP turned off, DNT signal sent in both private browsing
+  // and normal mode.
+  {
+    setting:  {dntPref: true, tpPref: false, tppbPref: false, pbMode: true},
+    expected: {dnt: "1"},
+  },
+  {
+    setting:  {dntPref: true,  tpPref: false, tppbPref: false, pbMode: false},
+    expected: {dnt: "1"},
+  },
+  // DNT turned off and TP turned on globally, DNT signal sent in both private
+  // browsing and normal mode.
+  {
+    setting:  {dntPref: false, tpPref: true,  tppbPref: false, pbMode: true},
+    expected: {dnt: "1"},
+  },
+  {
+    setting:  {dntPref: false, tpPref: true,  tppbPref: false, pbMode: false},
+    expected: {dnt: "1"},
+  },
+  // DNT turned off and TP in Private Browsing only, DNT signal sent in private
+  // browsing mode only.
+  {
+    setting:  {dntPref: false, tpPref: false, tppbPref: true,  pbMode: true},
+    expected: {dnt: "1"},
+  },
+  {
+    setting:  {dntPref: false, tpPref: false, tppbPref: true,  pbMode: false},
+    expected: {dnt: "unspecified"},
+  },
+  // DNT turned off and TP turned off, DNT signal is never sent.
+  {
+    setting:  {dntPref: false, tpPref: false, tppbPref: false, pbMode: true},
+    expected: {dnt: "unspecified"},
+  },
+  {
+    setting:  {dntPref: false, tpPref: false, tppbPref: false, pbMode: false},
+    expected: {dnt: "unspecified"},
+  },
+];
+
+const DNT_PREF = "privacy.donottrackheader.enabled";
+const TP_PREF = "privacy.trackingprotection.enabled";
+const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
+
+const contentPage =
+  "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/dnt.html";
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+function executeTest(test) {
+  SpecialPowers.pushPrefEnv({"set": [
+   [DNT_PREF, test.setting.dntPref],
+   [TP_PREF, test.setting.tpPref],
+   [TP_PB_PREF, test.setting.tppbPref],
+  ]});
+
+  var win = mainWindow.OpenBrowserWindow({private: test.setting.pbMode});
+
+  return new Promise(function(resolve, reject) {
+    win.addEventListener("load", function() {
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => {
+        win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+          if (win.content.location.href != contentPage) {
+            win.gBrowser.loadURI(contentPage, {
+              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+            });
+            return;
+          }
+
+          win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+
+          win.content.addEventListener("message", function(event) {
+            let [key, value] = event.data.split("=");
+            if (key == "finish") {
+              win.close();
+              resolve();
+            } else if (key == "navigator.doNotTrack") {
+              is(value, test.expected.dnt, "navigator.doNotTrack should be " + test.expected.dnt);
+            } else if (key == "DNT") {
+              let msg = test.expected.dnt == "1" ? "" : "not ";
+              is(value, test.expected.dnt, "DNT header should " + msg + "be sent");
+            } else {
+              ok(false, "unexpected message");
+            }
+          });
+        }, true);
+        SimpleTest.executeSoon(function() {
+          win.gBrowser.loadURI(contentPage, {
+            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          });
+        });
+      });
+    }, {capture: true, once: true});
+  });
+}
+
+let loop = function loop(index) {
+  if (index >= tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let test = tests[index];
+  let next = function next() {
+    loop(index + 1);
+  };
+  let result = executeTest(test);
+  result.then(next, next);
+};
+
+SimpleTest.waitForExplicitFinish();
+loop(0);
+
+</script>
+
+</pre>
+</body>
+</html>

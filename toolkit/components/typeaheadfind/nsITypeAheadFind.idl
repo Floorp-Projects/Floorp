@@ -1,0 +1,108 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+/********************************* #includes *********************************/
+
+#include "nsISupports.idl"              // nsISupports
+
+
+/******************************** Declarations *******************************/
+
+interface mozIDOMWindow;
+interface nsIDocShell;
+
+webidl Element;
+webidl Range;
+
+
+/****************************** nsTypeAheadFind ******************************/
+
+[scriptable, uuid(ae501e28-c57f-4692-ac74-410e1bed98b7)]
+interface nsITypeAheadFind : nsISupports
+{
+  /****************************** Initializer ******************************/
+
+  /* Necessary initialization that can't happen in the constructor, either
+   * because function calls here may fail, or because the docShell is
+   * required. */
+  void init(in nsIDocShell aDocShell);
+
+
+  /***************************** Core functions ****************************/
+
+  /* Find aSearchString in page.  If aLinksOnly is true, only search the page's
+   * hyperlinks for the string. */
+  unsigned short find(in AString aSearchString,
+                      in boolean aLinksOnly,
+                      in unsigned long aMode,
+                      in boolean aDontIterateFrames);
+
+  /* Return the range of the most recent match. */
+  Range getFoundRange();
+
+
+  /**************************** Helper functions ***************************/
+
+  /* Change searched docShell.  This happens when e.g. we use the same
+   * nsITypeAheadFind object to search different tabs. */
+  void setDocShell(in nsIDocShell aDocShell);
+
+  /* Change the look of the the "found match" selection to aToggle, and repaint
+   * the selection. */
+  void setSelectionModeAndRepaint(in short toggle);
+
+  /* Collapse the "found match" selection to its start.  Because not all
+   * matches are owned by the same selection controller, this doesn't
+   * necessarily happen automatically. */
+  void collapseSelection();
+
+  /* Check if a range is visible using heuristics */
+  boolean isRangeVisible(in Range aRange, in boolean aMustBeInViewPort);
+
+  /* Check if a range is actually rendered (out of viewport always false) */
+  boolean isRangeRendered(in Range aRange);
+
+  /******************************* Attributes ******************************/
+
+  readonly attribute AString searchString;
+                                        // Most recent search string
+  attribute boolean caseSensitive;      // Searches are case sensitive
+  attribute boolean matchDiacritics;    // Searches preserve diacritics
+  attribute boolean entireWord;         // Search for whole words only
+  readonly attribute Element foundLink;
+                                        // Most recent elem found, if a link
+  readonly attribute Element foundEditable;
+                                        // Most recent elem found, if editable
+  readonly attribute mozIDOMWindow currentWindow;
+                                        // Window of most recent match
+
+
+  /******************************* Constants *******************************/
+
+  /* Modes for Find() */
+  const unsigned long FIND_INITIAL = 0;
+  const unsigned long FIND_NEXT = 1;
+  const unsigned long FIND_PREVIOUS = 2;
+  const unsigned long FIND_FIRST = 3;
+  const unsigned long FIND_LAST = 4;
+
+  /* Find return codes */
+  const unsigned short FIND_FOUND    = 0;
+                                        // Successful find
+  const unsigned short FIND_NOTFOUND = 1;
+                                        // Unsuccessful find
+  const unsigned short FIND_WRAPPED  = 2;
+                                        // Successful find, but wrapped around
+  const unsigned short FIND_PENDING  = 3;
+                                        // Unknown status, find has not finished
+
+
+  /*************************************************************************/
+
+};
+
+
+/*****************************************************************************/

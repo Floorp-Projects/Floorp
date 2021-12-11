@@ -1,0 +1,170 @@
+<HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (WinNT; U) [Netscape]">
+   <META NAME="Author" CONTENT="Steve Parkinson">
+   <TITLE>SSLTap - manual</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+SSLTap Manual page</H1>
+
+<H3>
+Summary</H3>
+A command-line proxy which is SSL-aware. It snoops on TCP connections,
+and displays the data going by, including SSL records and handshaking&nbsp;
+if the connection is SSL.
+<H3>
+Synopsis</H3>
+<TT>ssltap [-vhfsxl] [-p port] hostname:port</TT>
+
+<P><TT>&nbsp;&nbsp; -v&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [prints version string]</TT>
+<BR><TT>&nbsp;&nbsp; -h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [outputs hex instead
+of ASCII]</TT>
+<BR><TT>&nbsp;&nbsp; -f&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [turn on Fancy HTML
+coloring]</TT>
+<BR><TT>&nbsp;&nbsp; -s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [turn on SSL decoding]</TT>
+<BR><TT>&nbsp;&nbsp; -x&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [turn on extra SSL
+hex dumps]</TT>
+<BR><TT>&nbsp;&nbsp; -p port [specify rendezvous port (default 1924)]</TT>
+<BR><TT>&nbsp;&nbsp; -l&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [loop - continue
+to wait for more connections]</TT>
+<H3>
+Description</H3>
+SSLTap opens a socket on a rendezvous port, and waits for an incoming connection
+(client side). Once this connection arrives, SSLTap makes another connection
+to hostname:port (server side). It passes any data sent by the client to
+the server, and vice versa. However, SSLTap will also display the data
+to the console. It can do this for plain HTTP connections, or any TCP protocol.
+However, SSLTap can also work with SSL streams, as detailed below.
+
+<P>Let's assume your development machine is called 'intercept'. The simplest
+usage of SSLTap is to run the command <TT>'ssltap www.netscape.com:80'</TT>
+on intercept. The program will wait for an incoming connection on port
+1924. Next you would want to go to your browser, and enter the URL http://intercept:1924.
+The page retrieved by the browser will actually be gotten from the server
+at www.netscape.com, but will go via SSLTap.
+
+<P>Data sent from the client to the server is surrounded by a '--> [ ]'
+symbol, and data sent from the server to the client, a '&lt;---[&nbsp;
+]' symbol.
+
+<P>You'll notice that the page retrieved with this example looks incomplete.
+This is because SSLTap by default closes down after the first connection
+is complete, so the browser is not able to load images. To make the SSLTap
+continue to accept connections, switch on looping mode with the -l option.
+
+<P>You can change the default rendezvous port to something else with the
+-p option.
+
+<P>The remaining options change the way the output is produced.
+
+<P>The -f option prints 'fancy' output - in colored HTML. Data sent from
+the client to the server is in blue. The server's reply is in red. This
+is designed so you can load the output up into a browser. When used with
+looping mode, the different connections are separated with horizontal lines.
+
+<P>-x will turn on HEX printing. Instead of being output as ascii, the
+data is shown as Hex, like this:
+<UL><TT>&lt;-- [</TT>
+<BR><TT>&nbsp;&nbsp; 0: 56 d5 16 3e&nbsp; a1 6b b1 4a&nbsp; 8f 67 c4 d7&nbsp;
+21 2f 6f dd&nbsp; | V..>.k.J.g..!/o.</TT>
+<BR><TT>&nbsp; 10: bb 22 c4 75&nbsp; 8c f4 ce 28&nbsp; 16 a6 20 aa&nbsp;
+fb 9a 59 a1&nbsp; | .".u...(.. ...Y.</TT>
+<BR><TT>&nbsp; 20: 51 91 14 d2&nbsp; fc 9f a7 ea&nbsp; 4d 9c f7 3a&nbsp;
+9d 83 62 4a&nbsp; | Q.......M..:..bJ</TT>
+<BR><TT>]</TT>
+<BR>&nbsp;</UL>
+
+<H4>
+SSL Parse mode</H4>
+The following options deal with SSL connections.
+<UL>-s will turn on SSL parsing. (SSLTap doesn't automatically detect SSL
+sessions.)
+<BR>-x will turn on extra SSL hexdumps. Mostly, if SSL can decode the data,
+it doesn't display the hex.</UL>
+The following SSL3 Data structures are parsed: Handshake, ClientHello,
+ServerHello, CertificateChain, Certificate. In addition, SSL2 ClientHello,
+ServerHello, ClientMasterKey are also partly parsed. NO DECRYPTION IS PERFORMED
+ON THE DATA. SSLTAP CANNOT DECRYPT the data.
+
+<P>If a certificate chain is detected, DER-encoded certificates will be
+saved into files in the current directory called 'cert.0x' where x is the
+sequence number of the certificate.
+<BR>&nbsp;
+<H3>
+Operation Hints</H3>
+Often, you'll find that the server certificate does not get transferred,
+or other parts of the handshake do not happen. This is because the browser
+is taking advantage of session-id-reuse (using the handshake results from
+a previous session). If you restart the browser, it'll clear the session
+id cache.
+
+<P>If you run the ssltap on a different machine that the ssl server you're
+trying to connect to, the browser will complain that the host name you're
+trying to connect to is different to the certificate, but it will still
+let you connect, after showing you a dialog.
+<H3>
+Bugs</H3>
+Please contact <A HREF="mailto:ssltap-support@netscape.com">ssltap-support@netscape.com</A>
+for bug reports.
+<H3>
+History</H3>
+2.1 - First public release (March 1998)
+<BR>&nbsp;
+<H3>
+Other</H3>
+For reference, here is a table of some well-known port numbers:
+<BR>&nbsp;
+<TABLE BORDER=2 >
+<TR>
+<TD>HTTP</TD>
+
+<TD>80</TD>
+</TR>
+
+<TR>
+<TD>SMTP</TD>
+
+<TD>25</TD>
+</TR>
+
+<TR>
+<TD>HTTPS</TD>
+
+<TD>443</TD>
+</TR>
+
+<TR>
+<TD>FTP</TD>
+
+<TD>21</TD>
+</TR>
+
+<TR>
+<TD>IMAPS</TD>
+
+<TD>993</TD>
+</TR>
+
+<TR>
+<TD>NNTP</TD>
+
+<TD>119</TD>
+</TR>
+
+<TR>
+<TD>NNTPS</TD>
+
+<TD>563</TD>
+</TR>
+</TABLE>
+&nbsp;
+
+<P>&nbsp;
+</BODY>
+</HTML>

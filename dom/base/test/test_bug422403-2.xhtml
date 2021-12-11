@@ -1,0 +1,296 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+-->
+<head>
+  <title>Test XHTML serializer with entities and selection</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=422043">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe" src="file_xhtmlserializer_2.xhtml">
+  </iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+//<![CDATA[
+
+function loadFileContent(aFile, aCharset) {
+    //if(aAsIso == undefined) aAsIso = false;
+    if(aCharset == undefined)
+        aCharset = 'UTF-8';
+
+    var baseUri = SpecialPowers.Cc['@mozilla.org/network/standard-url-mutator;1']
+                                  .createInstance(SpecialPowers.Ci.nsIURIMutator)
+                                  .setSpec(window.location.href)
+                                  .finalize();
+
+    var ios = SpecialPowers.Cc['@mozilla.org/network/io-service;1']
+            .getService(SpecialPowers.Ci.nsIIOService);
+    var chann = ios.newChannel(aFile,
+                               aCharset,
+                               baseUri,
+                               null,      // aLoadingNode
+                               SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
+                               null,      // aTriggeringPrincipal
+                               SpecialPowers.Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+                               SpecialPowers.Ci.nsIContentPolicy.TYPE_OTHER);
+
+    var cis = SpecialPowers.Ci.nsIConverterInputStream;
+
+    var inputStream = SpecialPowers.Cc["@mozilla.org/intl/converter-input-stream;1"]
+                       .createInstance(cis);
+    inputStream.init(chann.open(), aCharset, 1024, cis.DEFAULT_REPLACEMENT_CHARACTER);
+    var str = {}, content = '';
+    while (inputStream.readString(4096, str) != 0) {
+        content += str.value;
+    }
+    return content;
+}
+
+
+function testHtmlSerializer_1 () {
+  const de = SpecialPowers.Ci.nsIDocumentEncoder
+  var encoder = SpecialPowers.Cu.createDocumentEncoder("application/xhtml+xml");
+
+  var doc = $("testframe").contentDocument;
+  var out, expected;
+
+  // in the following tests, we must use the OutputLFLineBreak flag, to avoid
+  // to have the default line break of the platform in the result, so the test
+  // can pass on all platform
+
+  //------------ OutputEncodeW3CEntities
+  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputEncodeW3CEntities);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_xhtmlserializer_2_basic.xhtml");
+  is(out, expected, "test OutputEncodeW3CEntities");
+
+  //------------ OutputEncodeBasicEntities
+  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputEncodeBasicEntities);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_xhtmlserializer_2_basic.xhtml");
+  is(out, expected, "test OutputEncodeBasicEntities");
+
+  //------------ OutputEncodeLatin1Entities
+  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputEncodeLatin1Entities);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_xhtmlserializer_2_basic.xhtml");
+  is(out, expected, "test OutputEncodeLatin1Entities");
+
+  //------------ OutputEncodeHTMLEntities
+  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputEncodeHTMLEntities);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_xhtmlserializer_2_basic.xhtml");
+  is(out, expected, "test OutputEncodeHTMLEntities");
+
+  // tests on the serialization of selections
+
+  var node = document.getElementById('draggable');
+
+  var select = window.getSelection();
+  select.selectAllChildren(node);  
+
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = 'This is a <em xmlns=\"http://www.w3.org/1999/xhtml\">draggable</em> bit of text.';
+  is(out, expected, "test selection");
+
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(null);
+  encoder.setContainerNode(node);
+  out = encoder.encodeToString();
+  expected = 'This is a <em xmlns=\"http://www.w3.org/1999/xhtml\">draggable</em> bit of text.';
+  is(out, expected, "test container node");
+
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = "<div xmlns=\"http://www.w3.org/1999/xhtml\" id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>";
+  is(out, expected, "test node");
+
+  node = document.getElementById('aList');
+
+  var select = window.getSelection();
+  select.selectAllChildren(node);  
+
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '\n   <li xmlns=\"http://www.w3.org/1999/xhtml\">Lorem ipsum dolor</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong> </li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">adipiscing elit</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">aptent taciti</li>\n';
+  is(out, expected, "test list selection");
+
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(null);
+  encoder.setContainerNode(node);
+  out = encoder.encodeToString();
+  expected = '\n   <li xmlns=\"http://www.w3.org/1999/xhtml\">Lorem ipsum dolor</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong> </li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">adipiscing elit</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li xmlns=\"http://www.w3.org/1999/xhtml\">aptent taciti</li>\n';
+  is(out, expected, "test list container node");
+
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = "<ol xmlns=\"http://www.w3.org/1999/xhtml\" id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>";
+  is(out, expected, "test list node");
+
+  var liList = node.getElementsByTagName("li");
+  var range = document.createRange();
+
+  // selection start at the first child of the ol, and end after the element ol
+  range.setStart(node, 1);
+  range.setEnd(node.parentNode, 2);
+  select.removeAllRanges();
+  select.addRange(range);
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList"><li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection with range: selection start at the first child of the ol, and end after the element ol");
+
+  // selection start at the third child of the ol, and end after the element ol
+  range.setStart(node, 3);
+  range.setEnd(node.parentNode, 2);
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol");
+
+
+  // selection start at the third child of the ol, and end after the element ol + ol start at the value 5
+  range.setStart(node, 3);
+  range.setEnd(node.parentNode, 2);
+  node.setAttribute("start","5");
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<ol xmlns=\"http://www.w3.org/1999/xhtml\" id="aList" start="5"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol + ol start at the value 5");
+
+
+  // selection contains only some child of the ol
+  node.removeAttribute("start");
+  range.setStart(node, 3);
+  range.setEnd(node, 5);
+  encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
+  encoder.setSelection(select);
+  out = encoder.encodeToString();
+  expected = '<li xmlns=\"http://www.w3.org/1999/xhtml\">sit amet, <strong>consectetuer</strong> </li>\n  ';
+  is(out, expected, "test list selection with range: selection contains only some child of the ol");
+
+
+  // test on short attributes
+
+  node = document.getElementById('shortattr1');
+  encoder.init(document, "application/xhtml+xml",de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<input xmlns="http://www.w3.org/1999/xhtml" id="shortattr1" checked="checked" value="" disabled="disabled" ismap="ismap" readonly="readonly" foo:checked="" xmlns:foo="http://mozilla.org/ns/any" foo:disabled="" />';
+  is(out, expected, "test short attr #1");
+
+  node = document.getElementById('shortattr2');
+  encoder.init(document, "application/xhtml+xml",de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<ol xmlns="http://www.w3.org/1999/xhtml" id="shortattr2" compact="compact"><li></li></ol>';
+  is(out, expected, "test short attr #2");
+
+  node = document.getElementById('shortattr3');
+  encoder.init(document, "application/xhtml+xml",de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<object xmlns="http://www.w3.org/1999/xhtml" id="shortattr3" declare="declare"></object>';
+  is(out, expected, "test short attr #3");
+
+  node = document.getElementById('shortattr4');
+  encoder.init(document, "application/xhtml+xml",de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<script xmlns="http://www.w3.org/1999/xhtml" id="shortattr4" defer="defer"></script>';
+  is(out, expected, "test short attr #4");
+
+  node = document.getElementById('shortattr5');
+  encoder.init(document, "application/xhtml+xml",de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<select xmlns="http://www.w3.org/1999/xhtml" id="shortattr5" multiple="multiple"><option selected="selected">aaa</option></select>';
+  is(out, expected, "test short attr #5");
+
+  node = document.getElementById('shortattr6');
+  encoder.init(document, "application/xhtml+xml",de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<hr xmlns="http://www.w3.org/1999/xhtml" id="shortattr6" noshade="noshade" />';
+  is(out, expected, "test short attr #6");
+
+  node = document.getElementById('shortattr7');
+  encoder.init(document, "application/xhtml+xml",de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<div xmlns="http://www.w3.org/1999/xhtml" id="shortattr7"><foo:bar xmlns:foo="http://mozilla.org/ns/any" checked="" value="" disabled="" ismap="" readonly=""/></div>';
+  is(out, expected, "test short attr #7");
+
+  // test on _moz and -moz attr
+  node = document.getElementById('mozattr');
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<div id="mozattr" __moz_b="b"> lorem ipsum</div>';
+  is(out, expected, "test -moz/_moz attr");
+
+  node.setAttribute('_moz_c','barc');
+  node.setAttribute('_-moz_d','bard');
+  node.setAttribute('__moz_e','bare');
+
+  encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly | de.OutputRaw);
+  encoder.setNode(node);
+  out = encoder.encodeToString();
+  expected = '<div id="mozattr" __moz_b="b" _-moz_d="bard" __moz_e="bare"> lorem ipsum</div>';
+  is(out, expected, "test -moz/_moz attr #2");
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testHtmlSerializer_1);
+//]]>
+</script>
+</pre>
+<div style="display: none">
+
+<div id="draggable" ondragstart="doDragStartSelection(event)">This is a <em>draggable</em> bit of text.</div>
+
+</div>
+<div style="display: none">
+
+<ol id="aList">
+   <li>Lorem ipsum dolor</li>
+  <li>sit amet, <strong>consectetuer</strong> </li>
+  <li>adipiscing elit</li>
+  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>
+  <li>aptent taciti</li>
+</ol>
+
+<!-- test for some short attr -->
+<div id="shortattr" xmlns:foo="http://mozilla.org/ns/any">
+   <input id="shortattr1" checked="" value="" disabled="" ismap="" readonly="" foo:checked="" foo:disabled=""/>
+   <ol id="shortattr2" compact=""><li></li></ol>
+   <object id="shortattr3" declare="" />
+   <script id="shortattr4" defer="" />
+   <select id="shortattr5" multiple=""><option selected="">aaa</option></select>
+   <hr id="shortattr6" noshade=""/>
+   <div id="shortattr7"><foo:bar checked="" value="" disabled="" ismap="" readonly="" /></div>
+   <div id="mozattr" _moz_a="a" __moz_b="b"> lorem ipsum</div>
+</div>
+
+</div>
+</body>
+</html>
+
+

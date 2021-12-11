@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=443985
+-->
+<head>
+  <title>Test for Bug 443985</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=443985">Mozilla Bug 443985</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 443985 **/
+
+
+function listenerForNoScroll(evt) {
+  is(evt.clientX, evt.pageX, "Wrong .pageX");
+  is(evt.clientY, evt.pageY, "Wrong .pageY");
+  is(evt.screenX, 0, "Wrong .screenX");
+  is(evt.screenY, 0, "Wrong .screenY");
+  is(evt.clientX, 10, "Wrong .clientX");
+  is(evt.clientY, 10, "Wrong .clientY");
+}
+
+function listenerForScroll(evt) {
+  isnot(evt.clientX, evt.pageX, "Wrong .pageX");
+  isnot(evt.clientY, evt.pageY, "Wrong .pageY");
+  ok(evt.pageX > 3000, "Wrong .pageX");
+  ok(evt.pageY > 3000, "Wrong .pageY");
+  is(evt.screenX, 0, "Wrong .screenX");
+  is(evt.screenY, 0, "Wrong .screenY");
+  is(evt.clientX, 10, "Wrong .clientX");
+  is(evt.clientY, 10, "Wrong .clientY");
+}
+
+function doTest() {
+  window.scrollTo(0, 0);
+  var target = document.getElementById("testTarget");
+  target.addEventListener("click", listenerForNoScroll, true);
+  var me = document.createEvent("MouseEvent");
+  me.initMouseEvent("click", true, true, window, 0, 0, 0, 10, 10, 
+                    false, false, false, false, 0, null);
+  target.dispatchEvent(me);
+  target.removeEventListener("click", listenerForNoScroll, true);
+  
+  target.scrollIntoView(true);
+  target.addEventListener("click", listenerForScroll, true);
+  me = document.createEvent("MouseEvent");
+  me.initMouseEvent("click", true, true, window, 0, 0, 0, 10, 10, 
+                    false, false, false, false, 0, null);
+  target.dispatchEvent(me);
+  target.addEventListener("click", listenerForNoScroll, true);
+  
+  document.getElementsByTagName("a")[0].scrollIntoView(true);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+</script>
+</pre>
+<div style="min-height: 4000px; min-width: 4000px;"></div>
+<div style="min-width: 4000px; text-align: right;">
+  <span id="testTarget" style="border: 1px solid black;">testTarget</span>
+</div>
+</body>
+</html>
+

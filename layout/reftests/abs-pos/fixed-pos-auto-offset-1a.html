@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Testcase Bug 851514</title>
+  <style>
+  #parent {
+    position: fixed;
+    height: 30px;
+    width: 30px;
+    background: green;
+    left: 70px;
+    top: 70px;
+    overflow:hidden;
+    display: none; /* So we can make sure there is only one frame construction
+                      and one reflow for the parent + child thing */
+  }
+  #child {
+    position: fixed;
+    top: auto;
+    left: auto;
+    width: 10px;
+    height: 10px;
+    background: purple;
+  }
+  </style>
+  <script>
+    function doTest() {
+      var par = document.getElementById("parent");
+      // Flush layout
+      par.getBoundingClientRect();
+      par.style.display = "block";
+      document.documentElement.className = "";
+    }
+  </script>
+</head>
+<body onload="doTest();">
+  <div id="parent">
+    <div id="child"></div>
+  </div>
+  The purple block should be inside the green block.
+</body>
+</html>

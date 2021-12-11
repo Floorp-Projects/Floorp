@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1350780
+-->
+<head>
+<title>Test for Bug 1350780</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<style>
+#container {
+  width: 100px;
+}
+
+.gridBefore::before {
+  content: "";
+  display: grid;
+  grid-template-columns: auto;
+}
+
+.gridBeforeNoContent::before {
+  display: grid;
+  grid-template-columns: 40px;
+}
+</style>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function checkTemplateWithData(data) {
+  let obj = document.createElement("div");
+
+  // We need either a template or an additionalClass.
+  if (typeof(data.template != "undefined")) {
+    obj.style.display = "grid";
+    obj.style.gridTemplateColumns = data.template;
+  }
+
+  if (typeof(data.additionalClass != "undefined")) {
+    obj.className = data.additionalClass;
+  }
+
+  let container = document.getElementById("container");
+  container.appendChild(obj);
+
+  let computedStyle = getComputedStyle(obj, data.pseudo);
+  let computedTemplate = computedStyle.getPropertyValue("grid-template-columns");
+
+  let message = "Got expected template with pseudo " + data.pseudo;
+  if (typeof(data.additionalClass != "undefined")) {
+    message += " with class " + data.additionalClass;
+  }
+  message += ".";
+
+  is(computedTemplate, data.expected, message);
+
+  container.removeChild(obj);
+}
+
+function runTest() {
+  let dataToTest = [
+    { template: "40px",
+      pseudo: "::selection",
+      expected: "none"},
+    { template: "40px",
+      pseudo: "::before",
+      expected: "none" },
+    { additionalClass: "gridBefore",
+      pseudo: "::before",
+      expected: "100px" },
+    { additionalClass: "gridBeforeNoContent",
+      pseudo: "::before",
+      expected: "40px" },
+  ];
+
+  for (let i = 0; i < dataToTest.length; ++i) {
+    checkTemplateWithData(dataToTest[i]);
+  }
+
+  SimpleTest.finish();
+}
+
+</script>
+</head>
+<body onload="runTest()">
+<div id="container"></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1350780">Mozilla Bug 1350780</a>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of rule image properties</title>
+
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+@keyframes w {
+  0%, 33% { width:180px }
+  33%, 50% { width:400px }
+  50%, 100% { width:180px }
+}
+@keyframes h {
+  0%, 33% { height:150px }
+  33%, 50% { height:300px }
+  50%, 100% { height:150px }
+}
+
+.grid {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 50px);
+  width: 200px;
+  height: 240px;
+  place-content: space-around;
+
+  animation: w 5s infinite, h 5s infinite;
+
+  column-rule: min(100%, max(16px, 50%)) solid;
+  column-rule-image: linear-gradient(#f008,#fc08);
+  column-rule-align: rule;
+  column-rule-extent: all-long;
+
+  row-rule: min(16px, 100%) solid;
+  row-rule-image: url(h-diagonal-blue-16.png) 16 space;
+  row-rule-image: linear-gradient(90deg,#f008,#fc08);
+  row-rule-align: rule;
+  row-rule-extent: long;
+
+  border: 2px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+
+x {
+  block-size: 48px;
+  background: grey;
+}
+x:nth-child(2), x:nth-child(6) {
+  grid-column: span 2;
+}
+
+</style>
+
+<div class="grid test1"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div>

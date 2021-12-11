@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: truncating the media seeks to end of media and update buffered range</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// This test append data to a mediasource and then seek to half the duration
+// of the video.
+// We then shorten the video to 1/3rd of its original size by modifying the
+// mediasource.duration attribute.
+// We ensure that the buffered range immediately reflect the truncation
+// and that we've seeked to the new end of the media as per W3C spec and
+// video.currentTime got updated.
+
+SimpleTest.waitForExplicitFinish();
+
+const round = n => Math.round(n * 1000) / 1000;
+
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
+
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("seek.webm")));
+  await once(sb, "updateend");
+  v.currentTime = v.duration / 2;
+  is(v.currentTime, v.duration / 2, "current time was updated");
+  ok(v.seeking, "seeking is true");
+  await once(v, "seeked");
+  const duration = round(v.duration / 3);
+  is(sb.updating, false, "sourcebuffer isn't updating");
+  sb.remove(duration, Infinity);
+  await once(sb, "updateend");
+  ms.duration = duration;
+  // frames aren't truncated, so duration may be slightly more.
+  isfuzzy(v.duration, duration, 1 / 30, "element duration was updated");
+  sb.abort(); // this shouldn't abort updating the duration (bug 1130826).
+  ok(v.seeking, "seeking is true");
+  // test playback position was updated (bug 1130839).
+  is(v.currentTime, v.duration, "current time was updated");
+  is(sb.buffered.length, 1, "One buffered range");
+  // Truncated mediasource duration will cause the video element to seek.
+  await once(v, "seeking");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

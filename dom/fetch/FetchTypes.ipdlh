@@ -1,0 +1,86 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include IPCStream;
+include ChannelInfo;
+include PBackgroundSharedTypes;
+
+include protocol PRemoteLazyInputStream;
+
+include "mozilla/dom/FetchIPCTypes.h";
+
+using HeadersGuardEnum from "mozilla/dom/HeadersBinding.h";
+using ReferrerPolicy from "mozilla/dom/ReferrerPolicyBinding.h";
+using RequestCache from "mozilla/dom/RequestBinding.h";
+using RequestCredentials from "mozilla/dom/RequestBinding.h";
+using RequestMode from "mozilla/dom/RequestBinding.h";
+using RequestRedirect from "mozilla/dom/RequestBinding.h";
+using ResponseType from "mozilla/dom/ResponseBinding.h";
+using struct nsID from "nsID.h";
+
+namespace mozilla {
+namespace dom {
+
+struct HeadersEntry {
+  nsCString name;
+  nsCString value;
+};
+
+struct ParentToParentStream {
+  // Used as a key for RemoteLazyInputStreamStorage
+  nsID uuid;
+};
+
+struct ParentToChildStream {
+  PRemoteLazyInputStream actor;
+};
+
+struct ChildToParentStream {
+  IPCStream stream;
+};
+
+union BodyStreamVariant {
+  ParentToParentStream;
+  ParentToChildStream;
+  ChildToParentStream;
+};
+
+struct IPCInternalRequest {
+  nsCString method;
+  nsCString[] urlList;
+  HeadersGuardEnum headersGuard;
+  HeadersEntry[] headers;
+  BodyStreamVariant? body;
+  int64_t bodySize;
+  nsCString preferredAlternativeDataType;
+  uint32_t contentPolicyType;
+  nsString referrer;
+  ReferrerPolicy referrerPolicy;
+  RequestMode requestMode;
+  RequestCredentials requestCredentials;
+  RequestCache cacheMode;
+  RequestRedirect requestRedirect;
+  nsString integrity;
+  nsCString fragment;
+  PrincipalInfo? principalInfo;
+};
+
+struct IPCInternalResponse {
+  ResponseType type;
+  nsCString[] urlList;
+  uint16_t status;
+  nsCString statusText;
+  HeadersGuardEnum headersGuard;
+  HeadersEntry[] headers;
+  BodyStreamVariant? body;
+  int64_t bodySize;
+  nsresult errorCode;
+  nsCString alternativeDataType;
+  BodyStreamVariant? alternativeBody;
+  IPCChannelInfo channelInfo;
+  PrincipalInfo? principalInfo;
+};
+
+} // namespace ipc
+} // namespace mozilla

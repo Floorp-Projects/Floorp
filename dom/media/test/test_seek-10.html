@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 10;
+
+function test_seek10(v, seekTime, is, ok, finish) {
+
+// Test bug 523335 - ensure that if we close a stream while seeking, we
+// don't hang during shutdown. This test won't "fail" per se if it's regressed,
+// it will instead start to cause random hangs in the mochitest harness on
+// shutdown.
+
+function startTest() {
+  // Must be duration*0.9 rather than seekTime, else we don't hit that problem.
+  // This is probably due to the seek bisection finishing too quickly, before
+  // we can close the stream.
+  v.currentTime = v.duration * 0.9;
+}
+
+function done(evt) {
+  ok(true, "We don't acutally test anything...");
+  finish();
+}
+
+function seeking() {
+  ok(v.currentTime >= seekTime - 0.1, "Video currentTime should be around " + seekTime + ": " + v.currentTime);
+  v.onerror = done;
+  v.src = "not a valid video file.";
+  v.load(); // Cause the existing stream to close.
+}
+
+v.addEventListener("loadeddata", startTest);
+v.addEventListener("seeking", seeking);
+
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

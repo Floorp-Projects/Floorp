@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+<title>Test for CSS transitions and re-wrapping of inlines</title>
+<style type="text/css">
+#test { transition: 20ms color linear 0; }
+</style>
+<script type="text/javascript">
+
+window.onload = run;
+
+function run() {
+  var test = document.getElementById("test");
+  var unused = test.offsetWidth;
+  unused = getComputedStyle(test, "").color;
+  test.style.color = "green";
+  unused = test.offsetWidth;
+  unused = getComputedStyle(test, "").color;
+  setTimeout(step2, 100); // give transition time to run
+}
+function step2() {
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+<div style="width: 3em">
+<span id="test" style="color: red">
+This is some text with a transition.
+</span>
+</div>

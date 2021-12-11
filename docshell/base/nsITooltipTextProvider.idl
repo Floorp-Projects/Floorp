@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Node;
+
+/**
+ * An interface implemented by a tooltip text provider service. This
+ * service is called to discover what tooltip text is associated
+ * with the node that the pointer is positioned over.
+ *
+ * Embedders may implement and register their own tooltip text provider
+ * service if they wish to provide different tooltip text.
+ *
+ * The default service returns the text stored in the TITLE
+ * attribute of the node or a containing parent.
+ *
+ * @note
+ * The tooltip text provider service is registered with the contract
+ * defined in NS_TOOLTIPTEXTPROVIDER_CONTRACTID.
+ *
+ * @see nsITooltipListener
+ * @see nsIComponentManager
+ * @see Node
+ */
+[scriptable, uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
+interface nsITooltipTextProvider : nsISupports
+{
+    /**
+     * Called to obtain the tooltip text for a node.
+     *
+     * @arg aNode      The node to obtain the text from.
+     * @arg aText      The tooltip text.
+     * @arg aDirection The text direction (ltr or rtl) to use
+     *
+     * @return <CODE>PR_TRUE</CODE> if tooltip text is associated
+     *         with the node and was returned in the aText argument;
+     *         <CODE>PR_FALSE</CODE> otherwise.
+     */
+    boolean getNodeText(in Node aNode, out wstring aText, out wstring aDirection);
+};

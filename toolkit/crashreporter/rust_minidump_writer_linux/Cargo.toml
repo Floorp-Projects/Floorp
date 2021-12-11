@@ -1,0 +1,13 @@
+[package]
+name = "rust_minidump_writer_linux"
+version = "0.1.0"
+authors = ["Martin Sirringhaus"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+minidump_writer_linux = "0.1.0"
+libc = "0.2.74"
+anyhow = "1.0"
+nsstring = { path = "../../../xpcom/rust/nsstring/"}

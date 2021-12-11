@@ -1,0 +1,45 @@
+<svg id="svg-root"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <g id="testmeta">
+    <title>SVG Filter Chains: Intersecting Filter Regions</title>
+    <link rel="copyright"
+          href="http://www.w3.org/Graphics/SVG/Test/Copyright"/>
+    <link rel="license"
+          href="http://www.w3.org/Consortium/Legal/2008/03-bsd-license.html"/>
+    <link rel="author"
+          title="Max Vujovic"
+          href="mailto:mvujovic@adobe.com"/>
+    <link rel="help"
+          href="http://dev.w3.org/fxtf/filters/#FilterPrimitiveSubRegion"/>
+    <link rel="match"
+          href="intersecting-filter-regions-ref.svg" />
+    <metadata class="flags">namespace svg</metadata>
+    <desc class="assert">
+      In an SVG filter chain, this test verifies that filters with intersecting
+      filter regions render properly. If the test passes, you should see a green
+      square.
+    </desc>
+  </g>
+
+  <g id="test-body-content">
+    <filter id="flood" x="0" y="0" width="200" height="200" filterUnits="userSpaceOnUse">
+      <!--
+        This filter clips the SourceGraphic to its top left corner and fills it
+        with red.
+      -->
+      <feFlood flood-color="red"/>
+    </filter>
+    <filter id="hue-rotate" x="100" y="100" width="200" height="200" filterUnits="userSpaceOnUse">
+      <!--
+        This filter clips the output of the previous filter to the bottom right
+        corner, and it changes red into green. If the previous filter didn't run
+        or it didn't clip the SourceGraphic, this filter will change the
+        SourceGraphic's blue fill into red.
+      -->
+      <feColorMatrix type="hueRotate" values="90" style="color-interpolation-filters:sRGB"/>
+    </filter>
+    <rect x="0" y="0" width="300" height="300" filter="url(#flood) url(#hue-rotate)" fill="blue"/>
+  </g>
+</svg>

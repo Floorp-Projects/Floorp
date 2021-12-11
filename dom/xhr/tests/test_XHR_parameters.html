@@ -1,0 +1,97 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for XMLHttpRequest with system privileges</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests();">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+function runTests() {
+  SimpleTest.waitForExplicitFinish();
+
+  let validParameters = [
+    undefined,
+    null,
+    {},
+    {mozSystem: ""},
+    {mozSystem: 0},
+    {mozAnon: 1},
+    {mozAnon: []},
+    {get mozAnon() { return true; }},
+    0,
+    7,
+    Math.PI,
+    "string",
+    true,
+    false,
+  ];
+
+  let invalidParameters = [
+    {get mozSystem() { throw new Error("Bla"); } },
+  ];
+
+  let havePrivileges = false;
+
+  function testValidParameter(value) {
+    let xhr;
+    try {
+      xhr = new XMLHttpRequest(value);
+    } catch (ex) {
+      ok(false, "Got unexpected exception: " + ex);
+      return;
+    }
+    ok(xhr instanceof XMLHttpRequest, "passed " + JSON.stringify(value));
+
+    // If the page doesnt have privileges to create a system XHR,
+    // this flag will always be false no matter what is passed.
+    let expectedAnon = Boolean(value && value.mozAnon);
+    let expectedSystem = false;
+    if (havePrivileges) {
+      expectedSystem = Boolean(value && value.mozSystem);
+    }
+    is(xhr.mozAnon, expectedAnon, "testing mozAnon");
+    is(xhr.mozSystem, expectedSystem, "testing mozSystem");
+  }
+
+  function testInvalidParameter(value) {
+    let expectedError;
+    try {
+      new XMLHttpRequest(value);
+      ok(false, "invalid parameter did not cause exception: " +
+         JSON.stringify(value));
+    } catch (ex) {
+      expectedError = ex;
+    }
+    ok(expectedError, "invalid parameter raised exception as expected: " +
+       JSON.stringify(expectedError))
+  }
+
+  // Run the tests once without API privileges...
+  validParameters.forEach(testValidParameter);
+  invalidParameters.forEach(testInvalidParameter);
+
+  // ...and once with privileges.
+  havePrivileges = true;
+  SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], function() {
+    validParameters.forEach(testValidParameter);
+    invalidParameters.forEach(testInvalidParameter);
+
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>

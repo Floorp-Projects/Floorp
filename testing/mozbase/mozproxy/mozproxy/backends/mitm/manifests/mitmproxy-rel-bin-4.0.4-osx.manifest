@@ -1,0 +1,10 @@
+[
+  {
+    "size": 36939029,
+    "visibility": "public",
+    "digest": "3f933b142d7afb7cd409f436bc1151cc44c6f207368644ebe9fc9015607448b2c2d52dad4e5c71595bb6aa8accf4869e534f8db0ff6144725fad8f98daf50b40",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-4.0.4-osx.tar.gz",
+    "unpack": true
+  }
+]

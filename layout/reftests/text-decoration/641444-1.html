@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>Mozilla text-decoration bug if direction:rtl and text-indent &gt; 0</title>
+  <style type="text/css">
+   p { text-decoration: underline; }
+  </style>
+ </head>
+ <body>
+  <div dir="ltr">
+   <p style="text-indent:-1em">text-indent:-1em</p>
+   <p style="text-indent: 0em">text-indent: 0em</p>
+   <p style="text-indent: 1em">text-indent: 1em</p>
+   <p style="text-indent: 2em">text-indent: 2em</p>
+   <p style="text-indent: 3em">text-indent: 3em</p>
+   <p style="text-indent: 4em">text-indent: 4em</p>
+   <p style="text-indent: 5em">text-indent: 5em</p>
+   <p style="text-indent: 6em">text-indent: 6em</p>
+   <p style="text-indent: 7em">text-indent: 7em</p>
+   <p style="text-indent: 8em">text-indent: 8em</p>
+   <p style="text-indent: 9em">text-indent: 9em</p>
+  </div>
+  <div dir="rtl">
+   <p style="text-indent:-1em">text-indent:-1em</p>
+   <p style="text-indent: 0em">text-indent: 0em</p>
+   <p style="text-indent: 1em">text-indent: 1em</p>
+   <p style="text-indent: 2em">text-indent: 2em</p>
+   <p style="text-indent: 3em">text-indent: 3em</p>
+   <p style="text-indent: 4em">text-indent: 4em</p>
+   <p style="text-indent: 5em">text-indent: 5em</p>
+   <p style="text-indent: 6em">text-indent: 6em</p>
+   <p style="text-indent: 7em">text-indent: 7em</p>
+   <p style="text-indent: 8em">text-indent: 8em</p>
+   <p style="text-indent: 9em">text-indent: 9em</p>
+  </div>
+ </body>
+</html>

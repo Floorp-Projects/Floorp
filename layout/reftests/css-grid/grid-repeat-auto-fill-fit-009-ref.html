@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: repeat(auto-fill/auto-fit) with intrinsic min- or max-sizing function</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  position: relative;
+  border: 1px solid;
+  grid-auto-rows: 10px;
+  grid-gap: 2px;
+  margin-bottom: 2px;
+  padding-right: 3px;
+}
+.r1 { grid-template-columns: repeat(17, minmax(20px,auto)); }
+.r2 { grid-template-columns: repeat(18, minmax(auto,20px)); }
+.r3 { grid-template-columns: repeat(17, minmax(20px,1fr)); }
+.r4 { grid-template-columns: repeat(17, minmax(1fr,20px)); }
+.r5 { grid-template-columns: repeat(18, minmax(20px,min-content)); }
+.r6 { grid-template-columns: repeat(18, minmax(min-content,20px)); }
+.r7 { grid-template-columns: repeat(17, minmax(20px,max-content)); }
+.r8 { grid-template-columns: repeat(18, minmax(max-content,20px)); }
+.r1.w200 { grid-template-columns: repeat(9, minmax(20px,auto)); }
+.r2.w200 { grid-template-columns: repeat(9, minmax(auto,20px)); }
+.r3.w200 { grid-template-columns: repeat(9, minmax(20px,1fr)); }
+.r4.w200 { grid-template-columns: repeat(9, minmax(1fr,20px)); }
+.r5.w200 { grid-template-columns: repeat(9, minmax(20px,min-content)); }
+.r6.w200 { grid-template-columns: repeat(9, minmax(min-content,20px)); }
+.r7.w200 { grid-template-columns: repeat(9, minmax(20px,max-content)); }
+.r8.w200 { grid-template-columns: repeat(9, minmax(max-content,20px)); }
+
+fit .r1 { grid-template-columns: repeat(3, minmax(20px,auto)); }
+fit .r2 { grid-template-columns: repeat(18, minmax(auto,20px)); }
+fit .r3 { grid-template-columns: repeat(3, minmax(20px,1fr)); }
+fit .r4 { grid-template-columns: repeat(17, minmax(1fr,20px)); }
+fit .r5 { grid-template-columns: repeat(18, minmax(20px,min-content)); }
+fit .r6 { grid-template-columns: repeat(18, minmax(min-content,20px)); }
+fit .r7 { grid-template-columns: repeat(3, minmax(20px,max-content)); }
+fit .r8 { grid-template-columns: repeat(3, minmax(max-content,20px)); }
+fit .r1.w200 { grid-template-columns: repeat(3, minmax(20px,auto)); }
+fit .r2.w200 { grid-template-columns: repeat(9, minmax(auto,20px)); }
+fit .r3.w200 { grid-template-columns: repeat(3, minmax(20px,1fr)); }
+fit .r4.w200 { grid-template-columns: repeat(9, minmax(1fr,20px)); }
+fit .r5.w200 { grid-template-columns: repeat(9, minmax(20px,min-content)); }
+fit .r6.w200 { grid-template-columns: repeat(9, minmax(min-content,20px)); }
+fit .r7.w200 { grid-template-columns: repeat(3, minmax(20px,max-content)); }
+fit .r8.w200 { grid-template-columns: repeat(3, minmax(max-content,20px)); }
+
+.w200 { width: 200px; }
+
+x {
+  height: 10px;
+  background: grey;
+}
+a,b,c { display:inline-block; height:10px; width:10px; }
+
+x:first-child {
+  background: lime;
+}
+x:last-child {
+  background: blue;
+}
+
+fill,fit {
+  float: left;
+  width: 390px;
+}
+</style>
+</head>
+<body>
+
+<fill>
+
+<div class="grid r1"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r2"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r3"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r4"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r5"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r6"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r7"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r8"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+
+<br clear="all">
+
+<div class="grid r1 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r2 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r3 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r4 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r5 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r6 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r7 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r8 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+
+</fill>
+
+<fit>
+
+<div class="grid r1"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r2"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r3"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r4"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r5"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r6"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r7"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r8"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+
+<br clear="all">
+
+<div class="grid r1 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r2 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r3 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r4 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r5 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r6 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r7 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+<div class="grid r8 w200"><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x><x><a></a><b></b><c></c></x></div>
+
+</fit>
+
+
+</body>
+</html>

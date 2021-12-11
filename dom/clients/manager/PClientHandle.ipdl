@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PClientManager;
+include protocol PClientHandleOp;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PFileDescriptorSet;
+include protocol PRemoteLazyInputStream;
+include ClientIPCTypes;
+
+include "mozilla/ipc/ProtocolMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+protocol PClientHandle
+{
+  manager PClientManager;
+
+  manages PClientHandleOp;
+
+parent:
+  async Teardown();
+
+  async PClientHandleOp(ClientOpConstructorArgs aArgs);
+
+child:
+  async ExecutionReady(IPCClientInfo aClientInfo);
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

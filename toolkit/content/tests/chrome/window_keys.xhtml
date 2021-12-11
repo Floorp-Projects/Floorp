@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Key Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gExpected = null;
+
+const kIsWin = navigator.platform.includes("Win");
+
+// Only on Windows, osKey state is ignored when there is no shortcut key handler
+// which exactly matches with osKey state.
+var keysToTest = [
+  ["k-v", "V", { } ],
+  ["", "V", { shiftKey: true } ],
+  ["k-v-scy", "V", { ctrlKey: true } ],
+  ["", "V", { altKey: true } ],
+  ["", "V", { metaKey: true } ],
+  [kIsWin ? "k-v" : "", "V", { osKey: true } ],
+  ["k-v-scy", "V", { shiftKey: true, ctrlKey: true } ],
+  ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
+  ["k-e-y", "E", { } ],
+  ["", "E", { shiftKey: true } ],
+  ["", "E", { ctrlKey: true } ],
+  ["", "E", { altKey: true } ],
+  ["", "E", { metaKey: true } ],
+  [kIsWin ? "k-e-y" : "", "E", { osKey: true } ],
+  ["k-d-a", "D", { altKey: true } ],
+  ["k-8-m", "8", { metaKey: true } ],
+  [kIsWin ? "k-8-m" : "", "8", { metaKey: true, osKey: true } ],
+  ["k-a-o", "A", { osKey: true } ],
+  ["", "A", { osKey: true, metaKey: true } ],
+  ["", "B", {} ],
+  ["k-b-myo", "B", { osKey: true } ],
+  ["k-b-myo", "B", { osKey: true, metaKey: true } ],
+  ["k-f-oym", "F", { metaKey: true } ],
+  ["k-f-oym", "F", { metaKey: true, osKey: true } ],
+  ["k-c-scaym", "C", { metaKey: true } ],
+  ["k-c-scaym", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true } ],
+  [kIsWin ? "k-c-scaym" : "", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true, osKey: true } ],
+  ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
+  ["k-h-l", "H", { accelKey: true } ],
+//  ["k-j-s", "J", { accessKey: true } ],
+  ["", "T", { } ],
+  ["k-g-c", "G", { ctrlKey: true } ],
+  ["k-g-co", "G", { ctrlKey: true, osKey: true } ],
+  ["scommand", "Y", { } ],
+  ["", "U", { } ],
+];
+
+function runTest()
+{
+  iterateKeys(true, "normal");
+
+  var keyset = document.getElementById("keyset");
+  keyset.setAttribute("disabled", "true");
+  iterateKeys(false, "disabled");
+
+  keyset = document.getElementById("keyset");
+  keyset.removeAttribute("disabled");
+  iterateKeys(true, "reenabled");
+
+  keyset.remove();
+  iterateKeys(false, "removed");
+
+  document.documentElement.appendChild(keyset);
+  iterateKeys(true, "appended");
+
+  var accelText = menuitem => menuitem.getAttribute("acceltext").toLowerCase();
+
+  $("menubutton").open = true;
+
+  // now check if a menu updates its accelerator text when a key attribute is changed
+  var menuitem1 = $("menuitem1");
+  ok(accelText(menuitem1).includes("d"), "menuitem1 accelText before");
+  if (kIsWin) {
+    ok(accelText(menuitem1).includes("alt"), "menuitem1 accelText modifier before");
+  }
+
+  menuitem1.setAttribute("key", "k-s-c");
+  ok(accelText(menuitem1).includes("s"), "menuitem1 accelText after");
+  if (kIsWin) {
+    ok(accelText(menuitem1).includes("ctrl"), "menuitem1 accelText modifier after");
+  }
+
+  menuitem1.setAttribute("acceltext", "custom");
+  is(accelText(menuitem1), "custom", "menuitem1 accelText set custom");
+  menuitem1.removeAttribute("acceltext");
+  ok(accelText(menuitem1).includes("s"), "menuitem1 accelText remove");
+  if (kIsWin) {
+    ok(accelText(menuitem1).includes("ctrl"), "menuitem1 accelText modifier remove");
+  }
+
+  var menuitem2 = $("menuitem2");
+  is(accelText(menuitem2), "", "menuitem2 accelText before");
+  menuitem2.setAttribute("key", "k-s-c");
+  ok(accelText(menuitem2).includes("s"), "menuitem2 accelText before");
+  if (kIsWin) {
+    ok(accelText(menuitem2).includes("ctrl"), "menuitem2 accelText modifier before");
+  }
+
+  menuitem2.setAttribute("key", "k-h-l");
+  ok(accelText(menuitem2).includes("h"), "menuitem2 accelText after");
+  if (kIsWin) {
+    ok(accelText(menuitem2).includes("ctrl"), "menuitem2 accelText modifier after");
+  }
+
+  menuitem2.removeAttribute("key");
+  is(accelText(menuitem2), "", "menuitem2 accelText after remove");
+
+  $("menubutton").open = false;
+
+  window.close();
+  window.arguments[0].SimpleTest.finish();
+}
+
+function iterateKeys(enabled, testid)
+{
+  for (var k = 0; k < keysToTest.length; k++) {
+    gExpected = keysToTest[k];
+    var expectedKey = gExpected[0];
+    if (!gExpected[2].accessKey || !navigator.platform.includes("Mac")) {
+      synthesizeKey(gExpected[1], gExpected[2]);
+      ok((enabled && expectedKey) || expectedKey == "k-d-a" ?
+         !gExpected : gExpected, testid + " key step " + (k + 1));
+    }
+  }
+}
+
+function checkKey(event)
+{
+  // the first element of the gExpected array holds the id of the <key> element
+  // that was expected. If this is empty, a handler wasn't expected to be called
+  if (gExpected[0])
+    is(event.originalTarget.id, gExpected[0], "key " + gExpected[1]);
+  else
+    is("key " + event.originalTarget.id + " was activated", "", "key " + gExpected[1]);
+  gExpected = null;
+}
+
+function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
+function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
+
+SimpleTest.waitForFocus(runTest);
+
+]]>
+</script>
+
+<command id="scommand" oncommand="checkKey(event)"/>
+<command id="scommand-disabled" disabled="true"/>
+
+<keyset id="keyset">
+  <key id="k-v" key="v" oncommand="checkKey(event)"/>
+  <key id="k-v-scy" key="v" modifiers="shift any control" oncommand="checkKey(event)"/>
+  <key id="k-e-y" key="e" modifiers="any" oncommand="checkKey(event)"/>
+  <key id="k-8-m" key="8" modifiers="meta" oncommand="checkKey(event)"/>
+  <key id="k-a-o" key="a" modifiers="os" oncommand="checkKey(event)"/>
+  <key id="k-b-myo" key="b" modifiers="meta any os" oncommand="checkKey(event)"/>
+  <key id="k-f-oym" key="f" modifiers="os any meta" oncommand="checkKey(event)"/>
+  <key id="k-c-scaym" key="c" modifiers="shift control alt any meta" oncommand="checkKey(event)"/>
+  <key id="k-h-l" key="h" modifiers="accel" oncommand="checkKey(event)"/>
+  <key id="k-j-s" key="j" modifiers="access" oncommand="checkKey(event)"/>
+  <key id="k-t-y" disabled="true" key="t" oncommand="checkKey(event)"/>
+  <key id="k-g-c" key="g" modifiers="control" oncommand="checkKey(event)"/>
+  <key id="k-g-co" key="g" modifiers="control os" oncommand="checkKey(event)"/>
+  <key id="k-y" key="y" command="scommand"/>
+  <key id="k-u" key="u" command="scommand-disabled"/>
+</keyset>
+
+<keyset id="keyset2">
+  <key id="k-d-a" key="d" modifiers="alt" oncommand="checkKey(event)"/>
+  <key id="k-s-c" key="s" modifiers="control" oncommand="checkKey(event)"/>
+</keyset>
+
+<button id="menubutton" label="Menu" type="menu">
+  <menupopup>
+    <menuitem id="menuitem1" label="Item 1" key="k-d-a"/>
+    <menuitem id="menuitem2" label="Item 2"/>
+  </menupopup>
+</button>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

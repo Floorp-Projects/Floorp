@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 965872 - Storage inspector actor with cookies, local storage and session storage.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector test for listing hosts and storages</title>
+</head>
+<body>
+<iframe src="http://sectest1.example.org/browser/devtools/server/tests/browser/storage-unsecured-iframe.html"></iframe>
+<script type="application/javascript">
+"use strict";
+const partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
+const cookieExpiresTime1 = 2000000000000;
+const cookieExpiresTime2 = 2000000001000;
+// Setting up some cookies to eat.
+document.cookie = "c1=foobar; expires=" +
+  new Date(cookieExpiresTime1).toGMTString() + "; path=/browser";
+document.cookie = "cs2=sessionCookie; path=/; domain=" + partialHostname;
+document.cookie = "c3=foobar-2; expires=" +
+  new Date(cookieExpiresTime2).toGMTString() + "; path=/";
+// ... and some local storage items ..
+localStorage.setItem("ls1", "foobar");
+localStorage.setItem("ls2", "foobar-2");
+// ... and finally some session storage items too
+sessionStorage.setItem("ss1", "foobar-3");
+
+const idbGenerator = async function () {
+  let request = indexedDB.open("idb1", 1);
+  request.onerror = function() {
+    throw new Error("error opening db connection");
+  };
+  const db = await new Promise(done => {
+    request.onupgradeneeded = event => {
+      const dbResult = event.target.result;
+      const store1 = dbResult.createObjectStore("obj1", { keyPath: "id" });
+      store1.createIndex("name", "name", { unique: false });
+      store1.createIndex("email", "email", { unique: true });
+      dbResult.createObjectStore("obj2", { keyPath: "id2" });
+      store1.transaction.oncomplete = () => {
+        done(dbResult);
+      };
+    };
+  });
+
+  // Prevents AbortError
+  await new Promise(done => {
+    request.onsuccess = done;
+  });
+
+  const transaction = db.transaction(["obj1", "obj2"], "readwrite");
+  const store1 = transaction.objectStore("obj1");
+  const store2 = transaction.objectStore("obj2");
+  store1.add({id: 1, name: "foo", email: "foo@bar.com"});
+  store1.add({id: 2, name: "foo2", email: "foo2@bar.com"});
+  store1.add({id: 3, name: "foo2", email: "foo3@bar.com"});
+  store2.add({
+    id2: 1,
+    name: "foo",
+    email: "foo@bar.com",
+    extra: "baz"
+  });
+  // Prevents AbortError during close()
+  await new Promise(success => {
+    transaction.oncomplete = success;
+  });
+
+  db.close();
+
+  request = indexedDB.open("idb2", 1);
+  const db2 = await new Promise(done => {
+    request.onupgradeneeded = event => {
+      const db2Result = event.target.result;
+      const store3 = db2Result.createObjectStore("obj3", { keyPath: "id3" });
+      store3.createIndex("name2", "name2", { unique: true });
+      store3.transaction.oncomplete = () => {
+        done(db2Result);
+      }
+    };
+  });
+  // Prevents AbortError during close()
+  await new Promise(done => {
+    request.onsuccess = done;
+  });
+  db2.close();
+
+  console.log("added cookies and stuff from main page");
+};
+
+function deleteDB(dbName) {
+  return new Promise(resolve => {
+    dump("removing database " + dbName + " from " + document.location + "\n");
+    indexedDB.deleteDatabase(dbName).onsuccess = resolve;
+  });
+}
+
+window.setup = async function () {
+  await idbGenerator();
+};
+
+window.clear = async function () {
+  document.cookie = "c1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "c3=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "cs2=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+  localStorage.clear();
+
+  await deleteDB("idb1");
+  await deleteDB("idb2");
+
+  dump("removed cookies, localStorage and indexedDB data from " +
+       document.location + "\n");
+};
+</script>
+</body>
+</html>

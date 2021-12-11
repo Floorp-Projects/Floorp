@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Apply Opacity to an HTML Element Using a Percentage</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-opacity">
+  <link rel="match" href="opacity-percent-ref.html">
+  <meta name="assert"
+        content="Given a percentage, the CSS opacity filter function should make
+                 an HTML element translucent.">
+  <style type="text/css">
+    #target {
+      filter: opacity(25%);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a faded green square.</p>
+  <div id="target"></div>
+</body>
+</html>

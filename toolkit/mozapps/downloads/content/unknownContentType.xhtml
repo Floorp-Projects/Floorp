@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/downloads/unknownContentType.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % uctDTD SYSTEM "chrome://mozapps/locale/downloads/unknownContentType.dtd" >
+  %uctDTD;
+]>
+
+<window id="unknownContentTypeWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="dialog.initDialog();" onunload="if (dialog) dialog.onCancel();"
+#ifdef XP_WIN
+        style="width: 36em;"
+#else
+        style="width: 34em;"
+#endif
+        screenX="" screenY=""
+        persist="screenX screenY"
+        aria-describedby="intro location whichIs type from source unknownPrompt">
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="toolkit/global/unknownContentType.ftl"/>
+</linkset>
+<dialog id="unknownContentType">
+
+  <stringbundle id="strings" src="chrome://mozapps/locale/downloads/unknownContentType.properties"/>
+
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+  <vbox flex="1" id="container">
+    <description id="intro">&intro2.label;</description>
+    <separator class="thin"/>
+    <hbox align="start" class="small-indent">
+      <image id="contentTypeImage"/>
+      <vbox flex="1">
+        <description id="location" class="plain" crop="start" flex="1"/>
+        <separator class="thin"/>
+        <hbox align="center">
+          <label id="whichIs" value="&whichIs.label;"/>
+          <html:input id="type" class="plain" readonly="readonly" noinitialfocus="true"/>
+        </hbox>
+        <hbox align="center">
+          <label value="&from.label;" id="from"/>
+          <description id="source" class="plain" crop="start" flex="1"/>
+        </hbox>
+      </vbox>
+    </hbox>
+
+    <separator class="thin"/>
+
+    <hbox align="center" id="basicBox" collapsed="true">
+      <label id="unknownPrompt" value="&unknownPromptText.label;" flex="1"/>
+    </hbox>
+
+    <vbox flex="1" id="normalBox">
+      <separator/>
+      <label control="mode" class="header" value="&actionQuestion.label;"/>
+      <radiogroup id="mode" class="small-indent">
+        <radio id="handleInternally" hidden="true" data-l10n-id="unknowncontenttype-handleinternally"/>
+
+        <hbox>
+          <radio id="open" label="&openWith.label;" accesskey="&openWith.accesskey;"/>
+          <deck id="modeDeck" flex="1">
+            <hbox id="openHandlerBox" flex="1" align="center">
+              <menulist id="openHandler" flex="1" native="true">
+                <menupopup id="openHandlerPopup" oncommand="dialog.openHandlerCommand();">
+                  <menuitem id="defaultHandler" default="true" crop="right"/>
+                  <menuitem id="otherHandler" hidden="true" crop="left"/>
+                  <menuseparator/>
+                  <menuitem id="choose" label="&other.label;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+            <hbox flex="1" align="center">
+              <button id="chooseButton" oncommand="dialog.chooseApp();"
+#ifdef XP_MACOSX
+                      label="&chooseHandlerMac.label;" accesskey="&chooseHandlerMac.accesskey;"/>
+#else
+                      label="&chooseHandler.label;" accesskey="&chooseHandler.accesskey;"/>
+#endif
+            </hbox>
+          </deck>
+        </hbox>
+
+        <radio id="save" label="&saveFile.label;" accesskey="&saveFile.accesskey;"/>
+      </radiogroup>
+      <separator class="thin"/>
+      <hbox class="small-indent">
+        <checkbox id="rememberChoice" label="&rememberChoice.label;"
+                  accesskey="&rememberChoice.accesskey;"
+                  oncommand="dialog.toggleRememberChoice(event.target);"
+                  native="true"/>
+      </hbox>
+
+      <separator/>
+
+      <description id="settingsChange" hidden="true" data-l10n-id="unknowncontenttype-settingschange"/>
+
+      <separator class="thin"/>
+    </vbox>
+  </vbox>
+</dialog>
+</window>

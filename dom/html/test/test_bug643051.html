@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=643051
+-->
+<head>
+  <title>Test for Bug 643051</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=643051">Mozilla Bug 643051</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 643051 **/
+document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+
+// single cookie, should work
+document.cookie = "a=bar";
+is(document.cookie, "a=bar", "Can't read stored cookie!");
+
+document.cookie = "a2=bar\na3=bar";
+is(document.cookie, "a=bar; a2=bar", "Wrong cookie value");
+
+document.cookie = "a2=baz; a3=bar";
+is(document.cookie, "a=bar; a2=baz", "Wrong cookie value");
+
+// clear cookies again to avoid affecting other tests
+document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+</script>
+</pre>
+</body>
+</html>

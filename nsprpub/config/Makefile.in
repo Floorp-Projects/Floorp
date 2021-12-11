@@ -1,0 +1,108 @@
+#! gmake
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOD_DEPTH	= ..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+# Indicate that this directory builds build tools.
+INTERNAL_TOOLS	= 1
+
+# For sanity's sake, we compile nsinstall without the wrapped system
+# headers, so that we can use it to set up the wrapped system headers.
+VISIBILITY_FLAGS =
+
+# autoconf.mk must be deleted last (from the top-level directory)
+# because it is included by every makefile.
+DIST_GARBAGE	= nsprincl.mk nsprincl.sh nspr-config nspr.pc
+
+RELEASE_BINS	= nspr-config
+
+include $(topsrcdir)/config/config.mk
+
+CSRCS	= now.c
+
+# This version hasn't been ported for us; the one in mozilla/config has
+ifneq ($(OS_ARCH),OS2)
+CSRCS  += nsinstall.c
+ 
+PLSRCS	= nfspwd.pl
+endif
+
+ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
+PROG_SUFFIX = .exe
+else
+PROG_SUFFIX =
+endif
+
+# Temporary workaround to disable the generation of
+# library build time because now.c uses the 'long long'
+# data type that's not available on some platforms.
+ifeq (,$(filter-out QNX SCOOS UNIXWARE,$(OS_ARCH)))
+DEFINES += -DOMIT_LIB_BUILD_TIME
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+    ifeq ($(USE_64),1)
+        XLDOPTS += +DD64
+    endif
+endif
+
+ifeq ($(OS_ARCH), OS2)
+XCFLAGS = $(OS_CFLAGS)
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
+
+ifeq (,$(CROSS_COMPILE)$(filter-out OS2 WINNT,$(OS_ARCH)))
+TARGETS = $(PROGS)
+else
+ifeq (,$(filter-out WINCE,$(OS_ARCH)))
+TARGETS = $(PROGS)
+else
+PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)
+TARGETS = $(PROGS) $(PLSRCS:.pl=)
+endif
+endif
+
+OUTOPTION = -o # end of the line
+ifeq (,$(filter-out WINNT WIN95 WINCE,$(OS_TARGET)))
+ifndef NS_USE_GCC
+OUTOPTION = -Fe
+endif
+endif
+
+# Redefine MAKE_OBJDIR for just this directory
+define MAKE_OBJDIR
+if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); else true; fi
+endef
+
+export:: $(TARGETS)
+	rm -f $(dist_bindir)/nspr-config
+
+ifdef WRAP_SYSTEM_INCLUDES
+export::
+	if test ! -d system_wrappers; then mkdir system_wrappers; fi
+	$(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers < $(srcdir)/system-headers
+	$(INSTALL) system_wrappers $(dist_includedir)
+endif
+
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+	$(CC) $(XCFLAGS) $< $(LDFLAGS) $(XLDOPTS) $(OUTOPTION)$@
+
+install:: nspr.m4
+	$(NSINSTALL) -D $(DESTDIR)$(datadir)/aclocal
+	$(NSINSTALL) -t -m 0644 $< $(DESTDIR)$(datadir)/aclocal
+
+install:: nspr.pc
+	$(NSINSTALL) -D $(DESTDIR)$(libdir)/pkgconfig
+	$(NSINSTALL) -t -m 0644 $< $(DESTDIR)$(libdir)/pkgconfig

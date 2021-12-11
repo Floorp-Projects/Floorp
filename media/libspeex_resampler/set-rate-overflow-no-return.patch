@@ -1,0 +1,25 @@
+diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
+--- a/media/libspeex_resampler/src/resample.c
++++ b/media/libspeex_resampler/src/resample.c
+@@ -1141,18 +1141,19 @@ EXPORT int speex_resampler_set_rate_frac
+ 
+    st->num_rate /= fact;
+    st->den_rate /= fact;
+ 
+    if (old_den > 0)
+    {
+       for (i=0;i<st->nb_channels;i++)
+       {
+-         if (_muldiv(&st->samp_frac_num[i],st->samp_frac_num[i],st->den_rate,old_den) != RESAMPLER_ERR_SUCCESS)
+-            return RESAMPLER_ERR_OVERFLOW;
++         if (_muldiv(&st->samp_frac_num[i],st->samp_frac_num[i],st->den_rate,old_den) != RESAMPLER_ERR_SUCCESS) {
++           st->samp_frac_num[i] = st->den_rate-1;
++         }
+          /* Safety net */
+          if (st->samp_frac_num[i] >= st->den_rate)
+             st->samp_frac_num[i] = st->den_rate-1;
+       }
+    }
+ 
+    if (st->initialised)
+       return update_filter(st);

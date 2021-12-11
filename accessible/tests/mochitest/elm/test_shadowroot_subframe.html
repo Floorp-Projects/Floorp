@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>ShadowRoot tests</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+
+  <script type="application/javascript">
+    let SimpleTest = window.parent.SimpleTest;
+    let ok = window.parent.ok;
+    let is = window.parent.is;
+
+    function doTest() {
+      testElm("component", {
+        role: ROLE_GROUPING,
+        children: [
+        {
+          role: ROLE_PUSHBUTTON,
+        },
+        {
+          role: ROLE_LINK,
+        },
+        ],
+      });
+
+      // Shadow root boundary between table and row
+      testElm("table", {
+        role: ROLE_TABLE,
+        children: [
+        {
+          role: ROLE_ROW,
+        },
+        ],
+      });
+
+      SimpleTest.finish();
+    }
+
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+<body>
+  <div role="group" id="component"></div>
+  <div id="table" role="table" style="display: table;"></div>
+
+  <script>
+    var component = document.getElementById("component");
+    var shadow = component.attachShadow({mode: "open"});
+
+    var button = document.createElement("button");
+    button.append("Hello");
+
+    var a = document.createElement("a");
+    a.setAttribute("href", "#");
+    a.append(" World");
+
+    shadow.appendChild(button);
+    shadow.appendChild(a);
+
+    var table = document.getElementById("table");
+    shadow = table.attachShadow({mode: "open"});
+    shadow.innerHTML = "<div style='display: table-row'>" +
+      "<div style='display: table-cell'>hi</div>" +
+      "</div>";
+  </script>
+</body>

@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Tabbox focus testing">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      if (MAC) {
+        todo(false, "Tests disabled because of imminent failure.");
+        SimpleTest.finish();
+        return;
+      }
+
+      // Test focus events.
+      gQueue = new eventQueue();
+
+      var input = getNode("input");
+      gQueue.push(new synthClick("tab1", new focusChecker("tab1")));
+      gQueue.push(new synthTab("tab1", new focusChecker("checkbox1")));
+      gQueue.push(new synthKey("tab1", "VK_TAB", { ctrlKey: true },
+                               new focusChecker(input)));
+      gQueue.push(new synthKey("tab2", "VK_TAB", { ctrlKey: true },
+                               new focusChecker("tab3")));
+      gQueue.push(new synthKey("tab3", "VK_TAB", { ctrlKey: true },
+                               new focusChecker("tab1")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=370396"
+         title="Control+Tab to an empty tab panel in a tabbox causes focus to leave the tabbox">
+        Mozilla Bug 370396
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tabbox>
+        <tabs>
+          <tab id="tab1" label="Tab1" selected="true"/>
+          <tab id="tab2" label="Tab2" />
+          <tab id="tab3" label="Tab3" />
+        </tabs>
+        <tabpanels>
+          <tabpanel orient="vertical">
+            <groupbox orient="vertical">
+              <checkbox id="checkbox1" label="Monday" width="75"/>
+              <checkbox label="Tuesday" width="75"/>
+              <checkbox label="Wednesday" width="75"/>
+              <checkbox label="Thursday" width="75"/>
+              <checkbox label="Friday" width="75"/>
+              <checkbox label="Saturday" width="75"/>
+              <checkbox label="Sunday" width="75"/>
+            </groupbox>
+
+            <spacer style="height: 10px" />
+            <label value="Label After checkboxes" />
+          </tabpanel>
+          <tabpanel orient="vertical">
+            <html:input id="input" />
+          </tabpanel>
+          <tabpanel orient="vertical">
+            <description>Tab 3 content</description>
+          </tabpanel>
+        </tabpanels>
+      </tabbox>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>

@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<commandset id="placesCommands"
+            commandupdater="true"
+            events="focus,sort,places"
+            oncommandupdate="PlacesUIUtils.updateCommands(window);">
+  <command id="Browser:ShowAllBookmarks"
+           oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"/>
+  <command id="Browser:ShowAllHistory"
+           oncommand="PlacesCommandHook.showPlacesOrganizer('History');"/>
+
+  <command id="placesCmd_open"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open');"/>
+  <command id="placesCmd_open:window"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open:window');"/>
+  <command id="placesCmd_open:privatewindow"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open:privatewindow');"/>
+  <command id="placesCmd_open:tab"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open:tab');"/>
+
+  <command id="placesCmd_new:bookmark"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_new:bookmark');"/>
+  <command id="placesCmd_new:folder"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_new:folder');"/>
+  <command id="placesCmd_new:separator"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_new:separator');"/>
+  <command id="placesCmd_show:info"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_show:info');"/>
+  <command id="placesCmd_rename"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_show:info');"
+           observes="placesCmd_show:info"/>
+  <command id="placesCmd_sortBy:name"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_sortBy:name');"/>
+  <command id="placesCmd_deleteDataHost"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_deleteDataHost');"/>
+  <command id="placesCmd_createBookmark"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_createBookmark');"/>
+
+  <!-- Special versions of cut/copy/paste/delete which check for an open context menu. -->
+  <command id="placesCmd_cut"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_cut');"/>
+  <command id="placesCmd_copy"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_copy');"/>
+  <command id="placesCmd_paste"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_paste');"/>
+  <command id="placesCmd_delete"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_delete');"/>
+  <command id="placesCmd_showInFolder"
+           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_showInFolder');"/>
+</commandset>

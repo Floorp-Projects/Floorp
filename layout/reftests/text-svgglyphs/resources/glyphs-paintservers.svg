@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<!--
+    SVG test glyphs for paint servers within SVG glyphs
+    e: tests that we can refer to paint servers within the SVG glyph doc
+      (i.e. fill="url(#grad)" works)
+    f: tests that stop-color="context-{fill,stroke}" uses the context fill/stroke
+      fallback color
+-->
+  <defs>
+    <linearGradient id="grad">
+      <stop offset="0%" stop-color="papayawhip" />
+      <stop offset="100%" stop-color="plum" />
+    </linearGradient>
+
+    <linearGradient id="grad2">
+      <stop offset="0%" stop-color="context-fill" />
+      <stop offset="100%" stop-color="context-stroke" />
+    </linearGradient>
+  </defs>
+
+  <!-- char 'e' -->
+  <rect id="glyph72" x="250" y="-750" width="500" height="500"
+    fill="url(#grad)" />
+
+  <!-- char 'f' -->
+  <rect id="glyph73" x="250" y="-750" width="500" height="500"
+    fill="url(#grad2)" />
+</svg>

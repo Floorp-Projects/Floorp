@@ -1,0 +1,63 @@
+Usage: build.sh [-h] [-c|-cc] [-v] [-j <n>] [--gyp|-g] [--opt|-o]
+                [-t <x64|ia32|...>|--target=<x64|ia32|...>]
+                [--clang|--gcc|--msvc] [--scan-build[=dir]] [--disable-tests]
+                [--pprof] [--asan] [--msan] [--ubsan[=bool,shift,...]
+                [--fuzz[=tls|oss]] [--sancov[=edge|bb|func|...]]
+                [--emit-llvm] [--no-zdefs] [--static] [--ct-verif]
+                [--nspr|--with-nspr=<include>:<lib>|--system-nspr]
+                [--system-sqlite] [--enable-fips] [--enable-libpkix]
+                [--mozpkix-only] [-D<gyp-option>]
+                [--rebuild] [--enable-legacy-db]
+
+This script builds NSS with gyp and ninja.
+
+NSS build tool options:
+
+    -h               display this help and exit
+    -c               clean before build
+    -cc              clean without building
+    -v               verbose build
+    -j <n>           run at most <n> concurrent jobs
+    --gyp|-g         force a rerun of gyp
+    --opt|-o         do an opt build
+    --target|-t      specify target architecture (e.g., ia32, x64, aarch64)
+    --clang          build with clang and clang++
+    --gcc            build with gcc and g++
+    --msvc           build with MSVC
+    --scan-build     run the build with scan-build
+                     --scan-build=<dir> sets the output path for scan-build
+    --disable-tests  don't build tests and corresponding cmdline utils
+    --pprof          build with gperftool support
+    --asan           enable address sanitizer
+    --msan           enable memory sanitizer
+    --ubsan          enable undefined behavior sanitizer
+                     --ubsan=bool,shift,... sets specific UB sanitizers
+    --fuzz           build fuzzing targets (this always enables static builds)
+                     --fuzz=tls to enable TLS fuzzing mode
+                     --fuzz=oss to build for OSS-Fuzz
+    --sancov         do sanitize coverage builds
+                     --sancov=func sets coverage to function level for example
+    --emit-llvm      emit LLVM bitcode while building
+                     (requires the gold linker, use clang-3.8 for SAW)
+    --no-zdefs       don't set -Wl,-z,defs
+    --static         create static libraries and use static linking
+    --ct-verif       build with valgrind for ct-verif
+    --nspr           force a rebuild of NSPR
+    --nspr-test-build when building NSPR also build its tests
+    --nspr-test-run  when building NSPR tests also run its tests
+    --nspr-only      exit after building NSPR
+    --with-nspr      use the NSPR build at the given locations
+                     --with-nspr=<include>:<lib> sets include and lib paths
+    --system-nspr    attempt to use system nspr
+                     shorthand for --with-nspr=/usr/include/nspr:
+    --system-sqlite  use system sqlite
+    --enable-fips    enable FIPS checks
+    --enable-libpkix make libpkix part of the build
+    --enable-legacy-db enable the legacy db (libnssdbm)
+    --mozpkix-only   build only static mozpkix and mozpkix-test libraries
+                     support for this build option is limited
+    --disable-keylog disable support for logging key data to a file specified
+                     by the SSLKEYLOGFILE environment variable
+    -D<gyp-option>   pass an option directly to gyp
+    --rebuild        build again using the last set of options provided
+                     (all other arguments are ignored if --rebuild is used)

@@ -1,0 +1,9 @@
+<html>
+<head>
+  <title>ERROR</title>
+</head>
+<body>
+<p>This file should never be served by the web server because its name ends
+  with a caret not followed by another caret.</p>
+</body>
+</html>

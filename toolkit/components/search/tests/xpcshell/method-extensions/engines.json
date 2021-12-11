@@ -1,0 +1,41 @@
+{
+  "data": [
+    {
+      "webExtension": {
+        "id": "get@search.mozilla.org"
+      },
+      "params": {
+        "searchUrlGetParams": [
+          { "name": "config", "value": "1" },
+          { "name": "search", "value": "{searchTerms}" }
+        ],
+        "suggestUrlGetParams": [
+          { "name": "config", "value": "1" },
+          { "name": "suggest", "value": "{searchTerms}" }
+        ]
+      },
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "post@search.mozilla.org"
+      },
+      "params": {
+        "searchUrlPostParams": [
+          { "name": "config", "value": "1" },
+          { "name": "search", "value": "{searchTerms}" }
+        ],
+        "suggestUrlPostParams": [
+          { "name": "config", "value": "1" },
+          { "name": "suggest", "value": "{searchTerms}" }
+        ]
+      },
+      "appliesTo": [{
+        "included": { "everywhere": true }
+      }]
+    }
+  ]
+}

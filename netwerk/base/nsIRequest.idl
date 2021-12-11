@@ -1,0 +1,307 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsILoadGroup;
+
+typedef unsigned long nsLoadFlags;
+
+/**
+ * nsIRequest
+ */
+[scriptable, uuid(ef6bfbd2-fd46-48d8-96b7-9f8f0fd387fe)]
+interface nsIRequest : nsISupports
+{
+    /**
+     * The name of the request.  Often this is the URI of the request.
+     */
+    readonly attribute AUTF8String name;
+
+    /**
+     * Indicates whether the request is pending. nsIRequest::isPending is
+     * true when there is an outstanding asynchronous event that will make
+     * the request no longer be pending.  Requests do not necessarily start
+     * out pending; in some cases, requests have to be explicitly initiated
+     * (e.g. nsIChannel implementations are only pending once asyncOpen
+     * returns successfully).
+     *
+     * Requests can become pending multiple times during their lifetime.
+     *
+     * @return TRUE if the request has yet to reach completion.
+     * @return FALSE if the request has reached completion (e.g., after
+     *   OnStopRequest has fired).
+     * @note Suspended requests are still considered pending.
+     */
+    boolean isPending();
+
+    /**
+     * The error status associated with the request.
+     */
+    readonly attribute nsresult status;
+
+    /**
+     * Cancels the current request.  This will close any open input or
+     * output streams and terminate any async requests.  Users should
+     * normally pass NS_BINDING_ABORTED, although other errors may also
+     * be passed.  The error passed in will become the value of the
+     * status attribute.
+     *
+     * Implementations must not send any notifications (e.g. via
+     * nsIRequestObserver) synchronously from this function. Similarly,
+     * removal from the load group (if any) must also happen asynchronously.
+     *
+     * Requests that use nsIStreamListener must not call onDataAvailable
+     * anymore after cancel has been called.
+     *
+     * @param aStatus the reason for canceling this request.
+     *
+     * NOTE: most nsIRequest implementations expect aStatus to be a
+     * failure code; however, some implementations may allow aStatus to
+     * be a success code such as NS_OK.  In general, aStatus should be
+     * a failure code.
+     */
+    void cancel(in nsresult aStatus);
+
+    /**
+     * Suspends the current request.  This may have the effect of closing
+     * any underlying transport (in order to free up resources), although
+     * any open streams remain logically opened and will continue delivering
+     * data when the transport is resumed.
+     *
+     * Calling cancel() on a suspended request must not send any
+     * notifications (such as onstopRequest) until the request is resumed.
+     *
+     * NOTE: some implementations are unable to immediately suspend, and
+     * may continue to deliver events already posted to an event queue. In
+     * general, callers should be capable of handling events even after
+     * suspending a request.
+     */
+    void suspend();
+
+    /**
+     * Resumes the current request.  This may have the effect of re-opening
+     * any underlying transport and will resume the delivery of data to
+     * any open streams.
+     */
+    void resume();
+
+    /**
+     * The load group of this request.  While pending, the request is a
+     * member of the load group.  It is the responsibility of the request
+     * to implement this policy.
+     */
+    attribute nsILoadGroup loadGroup;
+
+    /**
+     * The load flags of this request.  Bits 0-15 are reserved.
+     *
+     * When added to a load group, this request's load flags are merged with
+     * the load flags of the load group.
+     */
+    attribute nsLoadFlags loadFlags;
+
+    /**
+     * Mask defining the bits reserved for nsIRequest LoadFlags
+     */
+    const unsigned long LOAD_REQUESTMASK = 0xFFFF;
+
+    /**************************************************************************
+     * Listed below are the various load flags which may be or'd together.
+     */
+
+    /**
+     * No special load flags:
+     */
+    const unsigned long LOAD_NORMAL = 0;
+
+    /**
+     * Do not deliver status notifications to the nsIProgressEventSink and
+     * do not block the loadgroup from completing (should this load belong to one).
+     * Note: Progress notifications will still be delivered.
+     */
+    const unsigned long LOAD_BACKGROUND = 1 << 0;
+
+    /**
+     * This flag marks the request as being made to load the data for an html
+     * <object> tag. This means that the LOAD_DOCUMENT_URI flag may be set after
+     * the channel has been provided with the MIME type.
+     */
+    const unsigned long LOAD_HTML_OBJECT_DATA = 1 << 1;
+
+    /**
+     * This flag marks the request as belonging to a document that requires access
+     * to the document.cookies API.
+     */
+    const unsigned long LOAD_DOCUMENT_NEEDS_COOKIE = 1 << 2;
+
+    cenum TRRMode : 8 {
+        TRR_DEFAULT_MODE = 0,
+        TRR_DISABLED_MODE = 1,
+        TRR_FIRST_MODE = 2,
+        TRR_ONLY_MODE = 3
+    };
+
+    /**
+     * These methods encode/decode the TRR mode to/from the loadFlags.
+     * Helper methods Get/SetTRRModeImpl are provided so implementations don't
+     * need to duplicate code.
+     *
+     * Requests with TRR_DEFAULT_MODE will use the mode indicated by the pref
+     *   - see network.trr.mode in all.js
+     * Requests with TRR_DISABLED_MODE will always use native DNS, even if the
+     *   pref is set to mode3 (TRR-only).
+     * Requests with TRR_DISABLED_MODE will first use TRR then fallback to
+     *   regular DNS, unless TRR is disabled by setting the pref to mode5,
+     *   parental control being enabled, or the domain being in the exclusion
+     *   list.
+     * Requests with TRR_ONLY_MODE will only use TRR, unless not allowed by
+     *   the same conditions mentioned above.
+     */
+    nsIRequest_TRRMode getTRRMode();
+    void setTRRMode(in nsIRequest_TRRMode mode);
+
+    %{C++
+        inline TRRMode GetTRRMode() {
+            TRRMode mode = TRR_DEFAULT_MODE;
+            GetTRRMode(&mode);
+            return mode;
+        }
+
+        inline nsresult GetTRRModeImpl(nsIRequest::TRRMode* aTRRMode) {
+          NS_ENSURE_ARG_POINTER(aTRRMode);
+          nsLoadFlags flags = nsIRequest::LOAD_NORMAL;
+          nsresult rv = GetLoadFlags(&flags);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          *aTRRMode = static_cast<nsIRequest::TRRMode>(
+              (flags & nsIRequest::LOAD_TRR_MASK) >> 3);
+          return NS_OK;
+        }
+
+        inline nsresult SetTRRModeImpl(nsIRequest::TRRMode aTRRMode) {
+          MOZ_ASSERT(aTRRMode <= 3, "invalid value");
+          nsLoadFlags flags = nsIRequest::LOAD_NORMAL;
+          nsresult rv = GetLoadFlags(&flags);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          flags = (flags & ~nsIRequest::LOAD_TRR_MASK) | (aTRRMode << 3);
+          return SetLoadFlags(flags);
+        }
+    %}
+
+    /**
+     * These two bits encode the TRR mode.
+     * Do not get/set manually, rather use the getTRRMode/setTRRMode methods.
+     */
+    const unsigned long LOAD_TRR_MASK = (1 << 3) | (1 << 4);
+    const unsigned long LOAD_TRR_DISABLED_MODE = 1 << 3;
+    const unsigned long LOAD_TRR_FIRST_MODE = 1 << 4;
+    const unsigned long LOAD_TRR_ONLY_MODE = (1 << 3) | (1 << 4);
+
+    /**
+     * This is used for a temporary workaround for a web-compat issue. The flag is
+     * only set on CORS preflight request to allowed sending client certificates
+     * on a connection for an anonymous request.
+     */
+    const long LOAD_ANONYMOUS_ALLOW_CLIENT_CERT = 1 << 5;
+
+    /**
+     * Record HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY telemetry for the delay between
+     * sending OnStartRequest from the socket thread to it being processed by the
+     * main thread.
+     * This is temporary while we collect telemetry around the value of
+     * handling OnStartRequest off the main thread.
+     */
+    const long LOAD_RECORD_START_REQUEST_DELAY = 1 << 6;
+
+    /**************************************************************************
+     * The following flags control the flow of data into the cache.
+     */
+
+    /**
+     * This flag prevents caching of any kind.  It does not, however, prevent
+     * cached content from being used to satisfy this request.
+     */
+    const unsigned long INHIBIT_CACHING = 1 << 7;
+
+    /**
+     * This flag prevents caching on disk (or other persistent media), which
+     * may be needed to preserve privacy.
+     */
+    const unsigned long INHIBIT_PERSISTENT_CACHING = 1 << 8;
+
+    /**************************************************************************
+     * The following flags control what happens when the cache contains data
+     * that could perhaps satisfy this request.  They are listed in descending
+     * order of precidence.
+     */
+
+    /**
+     * Force an end-to-end download of content data from the origin server.
+     * This flag is used for a shift-reload.
+     */
+    const unsigned long LOAD_BYPASS_CACHE = 1 << 9;
+
+    /**
+     * Attempt to force a load from the cache, bypassing ALL validation logic
+     * (note: this is stronger than VALIDATE_NEVER, which still validates for
+     * certain conditions).
+     *
+     * If the resource is not present in cache, it will be loaded from the
+     * network.  Combine this flag with LOAD_ONLY_FROM_CACHE if you wish to
+     * perform cache-only loads without validation checks.
+     *
+     * This flag is used when browsing via history.  It is not recommended for
+     * normal browsing as it may likely violate reasonable assumptions made by
+     * the server and confuse users.
+     */
+    const unsigned long LOAD_FROM_CACHE   = 1 << 10;
+
+    /**
+     * The following flags control the frequency of cached content validation
+     * when neither LOAD_BYPASS_CACHE or LOAD_FROM_CACHE are set.  By default,
+     * cached content is automatically validated if necessary before reuse.
+     *
+     * VALIDATE_ALWAYS forces validation of any cached content independent of
+     * its expiration time (unless it is https with Cache-Control: immutable)
+     *
+     * VALIDATE_NEVER disables validation of cached content, unless it arrived
+     * with the "Cache: no-store" header, or arrived via HTTPS with the
+     * "Cache: no-cache" header.
+     *
+     * VALIDATE_ONCE_PER_SESSION disables validation of expired content,
+     * provided it has already been validated (at least once) since the start
+     * of this session.
+     *
+     * NOTE TO IMPLEMENTORS:
+     *   These flags are intended for normal browsing, and they should therefore
+     *   not apply to content that must be validated before each use.  Consider,
+     *   for example, a HTTP response with a "Cache-control: no-cache" header.
+     *   According to RFC2616, this response must be validated before it can
+     *   be taken from a cache.  Breaking this requirement could result in
+     *   incorrect and potentially undesirable side-effects.
+     */
+    const unsigned long VALIDATE_ALWAYS           = 1 << 11;
+    const unsigned long VALIDATE_NEVER            = 1 << 12;
+    const unsigned long VALIDATE_ONCE_PER_SESSION = 1 << 13;
+
+    /**
+     * When set, this flag indicates that no user-specific data should be added
+     * to the request when opened. This means that things like authorization
+     * tokens or cookie headers should not be added.
+     */
+    const unsigned long LOAD_ANONYMOUS = 1 << 14;
+
+    /**
+     * When set, this flag indicates that caches of network connections,
+     * particularly HTTP persistent connections, should not be used.
+     * Use this together with LOAD_INITIAL_DOCUMENT_URI as otherwise it has no
+     * effect.
+     */
+    const unsigned long LOAD_FRESH_CONNECTION = 1 << 15;
+};

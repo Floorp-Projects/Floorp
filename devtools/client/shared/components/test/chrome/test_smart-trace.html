@@ -1,0 +1,82 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the rendering of a stack trace
+-->
+<head>
+  <meta charset="utf-8">
+  <title>StackTrace component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script src="head.js"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const SmartTrace = React.createFactory(
+    browserRequire("devtools/client/shared/components/SmartTrace"));
+  ok(SmartTrace, "Got the SmartTrace factory");
+
+  add_task(async function() {
+    const stacktrace = [
+      {
+        filename: "http://myfile.com/mahscripts.js",
+        lineNumber: 55,
+        columnNumber: 10,
+        functionName: null,
+      },
+      {
+        functionName: "loadFunc",
+        filename: "http://myfile.com/loader.js -> http://myfile.com/loadee.js",
+        lineNumber: 10,
+      },
+    ];
+
+    let onReadyCount = 0;
+
+    const props = {
+      stacktrace,
+      onViewSourceInDebugger: () => {},
+      onReady: () => {
+        onReadyCount++;
+      }
+    };
+
+    const trace = ReactDOM.render(SmartTrace(props), window.document.body);
+    await forceRender(trace);
+
+    const traceEl = ReactDOM.findDOMNode(trace);
+    ok(traceEl, "Rendered SmartTrace has an element");
+
+    const frameEls = Array.from(traceEl.querySelectorAll(".frame"));
+    ok(frameEls, "Rendered SmartTrace has frames");
+    is(frameEls.length, 2, "SmartTrace has 2 frames");
+
+    checkSmartFrameString({
+      el: frameEls[0],
+      functionName: "<anonymous>",
+      location: "http://myfile.com/mahscripts.js:55",
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55",
+    });
+
+    // Check the third frame, the source should be parsed into a valid source URL
+    checkSmartFrameString({
+      el: frameEls[1],
+      functionName: "loadFunc",
+      location: "http://myfile.com/loadee.js:10",
+      tooltip: "View source in Debugger → http://myfile.com/loadee.js:10",
+    });
+
+    is(onReadyCount, 1, "onReady was called once");
+  });
+};
+</script>
+</body>
+</html>

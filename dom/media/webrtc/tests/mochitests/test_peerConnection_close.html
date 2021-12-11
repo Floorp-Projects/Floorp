@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "991877",
+    title: "Basic RTCPeerConnection.close() tests"
+  });
+
+  runNetworkTest(function () {
+    var pc = new RTCPeerConnection();
+    var sender = pc.addTrack(getSilentTrack(), new MediaStream());
+    var exception = null;
+    var eTimeout = null;
+
+    // everything should be in initial state
+    is(pc.signalingState, "stable", "Initial signalingState is 'stable'");
+    is(pc.iceConnectionState, "new", "Initial iceConnectionState is 'new'");
+    is(pc.iceGatheringState, "new", "Initial iceGatheringState is 'new'");
+
+    var finish;
+    var finished = new Promise(resolve => finish = resolve);
+
+    var mustNotSettle = (p, ms, msg) => Promise.race([
+      p.then(() => ok(false, msg + " must not settle"),
+             e => ok(false, msg + " must not settle. Got " + e.name)),
+      wait(ms).then(() => ok(true, msg + " must not settle"))
+    ]);
+
+    var silence = mustNotSettle(pc.createOffer(), 1000,
+                                "createOffer immediately followed by close");
+    try {
+      pc.close();
+    } catch (e) {
+      exception = e;
+    }
+    is(exception, null, "closing the connection raises no exception");
+    is(pc.signalingState, "closed", "Final signalingState is 'closed'");
+    is(pc.iceConnectionState, "closed", "Final iceConnectionState is 'closed'");
+
+    // test that pc is really closed (and doesn't crash, bug 1259728)
+    try {
+      pc.getLocalStreams();
+    } catch (e) {
+      exception = e;
+    }
+    is(exception && exception.name, "InvalidStateError",
+       "pc.getLocalStreams should throw when closed");
+    exception = null;
+
+    try {
+      pc.close();
+    } catch (e) {
+      exception = e;
+    }
+    is(exception, null, "A second close() should not raise an exception");
+    is(pc.signalingState, "closed", "Final signalingState stays at 'closed'");
+    is(pc.iceConnectionState, "closed", "Final iceConnectionState stays at 'closed'");
+
+    // Due to a limitation in our WebIDL compiler that prevents overloads with
+    // both Promise and non-Promise return types, legacy APIs with callbacks
+    // are unable to continue to throw exceptions. Luckily the spec uses
+    // exceptions solely for "programming errors" so this should not hinder
+    // working code from working, which is the point of the legacy API. All
+    // new code should use the promise API.
+    //
+    // The legacy methods that no longer throw on programming errors like
+    // "invalid-on-close" are:
+    // - createOffer
+    // - createAnswer
+    // - setLocalDescription
+    // - setRemoteDescription
+    // - addIceCandidate
+    // - getStats
+    //
+    // These legacy methods fire the error callback instead. This is not
+    // entirely to spec but is better than ignoring programming errors.
+
+    var offer = new RTCSessionDescription({ sdp: "sdp", type: "offer" });
+    var answer = new RTCSessionDescription({ sdp: "sdp", type: "answer" });
+    var candidate = new RTCIceCandidate({ candidate: "dummy",
+                                             sdpMid: "test",
+                                             sdpMLineIndex: 3 });
+
+    var doesFail = (p, msg) => p.then(generateErrorCallback(msg),
+                                      r => is(r.name, "InvalidStateError", msg));
+    Promise.all([
+      [pc.createOffer(), "createOffer"],
+      [pc.createOffer({offerToReceiveAudio: true}), "createOffer({offerToReceiveAudio: true})"],
+      [pc.createOffer({offerToReceiveAudio: false}), "createOffer({offerToReceiveAudio: false})"],
+      [pc.createOffer({offerToReceiveVideo: true}), "createOffer({offerToReceiveVideo: true})"],
+      [pc.createOffer({offerToReceiveVideo: false}), "createOffer({offerToReceiveVideo: false})"],
+      [pc.createAnswer(), "createAnswer"],
+      [pc.setLocalDescription(offer), "setLocalDescription"],
+      [pc.setRemoteDescription(answer), "setRemoteDescription"],
+      [pc.addIceCandidate(candidate), "addIceCandidate"],
+      [new Promise((y, n) => pc.createOffer(y, n)), "Legacy createOffer"],
+      [new Promise((y, n) => pc.createAnswer(y, n)), "Legacy createAnswer"],
+      [new Promise((y, n) => pc.setLocalDescription(offer, y, n)), "Legacy setLocalDescription"],
+      [new Promise((y, n) => pc.setRemoteDescription(answer, y, n)), "Legacy setRemoteDescription"],
+      [new Promise((y, n) => pc.addIceCandidate(candidate, y, n)), "Legacy addIceCandidate"],
+      [sender.replaceTrack(getSilentTrack()), "replaceTrack"],
+    ].map(([p, name]) => doesFail(p, name + " fails on close")))
+    .catch(reason => ok(false, "unexpected failure: " + reason))
+    .then(finish);
+
+    // Other methods are unaffected.
+
+    SimpleTest.doesThrow(function() {
+      pc.updateIce("Invalid RTC Configuration")},
+      "updateIce() on closed PC raised expected exception");
+
+    SimpleTest.doesThrow(function() {
+      pc.addStream("Invalid Media Stream")},
+      "addStream() on closed PC raised expected exception");
+
+    SimpleTest.doesThrow(function() {
+      pc.createDataChannel({})},
+      "createDataChannel() on closed PC raised expected exception");
+
+    SimpleTest.doesThrow(function() {
+      pc.setIdentityProvider("Invalid Provider")},
+      "setIdentityProvider() on closed PC raised expected exception");
+
+    return Promise.all([finished, silence]);
+  });
+</script>
+</pre>
+</body>
+</html>

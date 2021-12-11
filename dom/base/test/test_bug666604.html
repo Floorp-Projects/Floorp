@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666604
+-->
+<head>
+  <title>Test for Bug 666604</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666604">Mozilla Bug 666604</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<a href="javascript:activationListener()" id="testlink">test</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 666604 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function hitEventLoop(times, next)
+{
+  if (times == 0) {
+     next();
+     return;
+   }
+ 
+  SimpleTest.executeSoon(function() {
+    hitEventLoop(times - 1, next);
+  });
+}
+
+var activationListener;
+
+function dispatchClick(target, ctrl) {
+  var e = document.createEvent("MouseEvent");
+  e.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, 
+                   ctrl, false, false, false, 0, null);
+  target.dispatchEvent(e);
+}
+
+function dispatchReturn(target, ctrl) {
+  var e = new KeyboardEvent("keypress", {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    ctrlKey: ctrl,
+    keyCode: 13,
+    charCode: 0,
+  });
+  target.dispatchEvent(e);
+}
+
+function dispatchDOMActivate(target) {
+  var e = document.createEvent("UIEvent");
+  e.initUIEvent("DOMActivate", true, true, window, 0);
+  target.dispatchEvent(e);
+}
+
+var testlink = document.getElementById("testlink");
+function test1() {
+  activationListener =
+    function() {
+      ok(true, "Untrusted click should activate a link");
+      test2();
+    }
+  dispatchClick(testlink, false);
+}
+
+function test2() {
+  activationListener =
+    function() {
+      ok(true, "Untrusted return keypress should activate a link");
+      test3();
+    }
+  dispatchReturn(testlink, false);
+}
+
+function test3() {
+  activationListener =
+  function() {
+    ok(false, "Untrusted click+ctrl should not activate a link");
+    test4();
+  }
+  dispatchClick(testlink, true);
+  hitEventLoop(10, test4);
+}
+
+function test4() {
+  activationListener =
+    function() {
+      ok(false, "Untrusted return keypress+ctrl should not activate a link");
+      test5();
+    }
+  dispatchReturn(testlink, true);
+  hitEventLoop(10, test5);
+}
+
+function test5() {
+  activationListener =
+    function() {
+      ok(true, "click() should activate a link");
+      test6();
+    }
+  testlink.click();
+}
+
+function test6() {
+  activationListener =
+    function() {
+      ok(true, "Untrusted DOMActivate should activate a link");
+      SpecialPowers.pushPrefEnv({"set":[["dom.disable_open_during_load", false]]}, test7);
+    }
+  dispatchDOMActivate(testlink);
+}
+
+function test7() {
+  testlink.href = "javascript:opener.activationListener(); window.close();";
+  testlink.target = "_blank";
+  testlink.rel = "opener";
+  activationListener =
+    function() {
+      ok(true, "Click() should activate a link");
+      SpecialPowers.pushPrefEnv({"set":[["dom.disable_open_during_load", true]]}, test8);
+    }
+  testlink.click();
+}
+
+function test8() {
+  testlink.href = "javascript:opener.activationListener(); window.close();";
+  testlink.target = "_blank";
+  testlink.rel = "opener";
+  activationListener =
+    function() {
+      ok(false, "Click() should not activate a link");
+    }
+  testlink.click();
+  SimpleTest.executeSoon(SimpleTest.finish);
+}
+addLoadEvent(test1);
+
+</script>
+</pre>
+</body>
+</html>

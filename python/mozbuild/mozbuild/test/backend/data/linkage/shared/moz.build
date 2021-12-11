@@ -1,0 +1,14 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+DIRS += [
+    "baz",
+]
+
+STATIC_LIBRARY_NAME = "baz_s"
+FORCE_STATIC_LIB = True
+
+OS_LIBS += ["-lfoo"]
+USE_LIBS += ["qux"]
+
+SharedLibrary("baz")

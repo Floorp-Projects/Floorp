@@ -1,0 +1,56 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+  <meta name="viewport" content="width=device-width">
+  <meta charset="utf-8">
+  <title>Checkerboard Analyzer</title>
+  <link rel="stylesheet" href="chrome://global/content/aboutCheckerboard.css" type="text/css"/>
+ </head>
+
+ <body>
+  <p>Checkerboard recording is <span id="enabled">undetermined</span>.
+     <button id="enableToggleButton">Toggle it!</button>.</p>
+  <p>If there are active reports in progress, you can stop and flush them by clicking here:
+     <button id="flushReportsButton">Flush active reports</button></p>
+  <table class="listing" cellspacing="0">
+   <tr>
+    <th>Most severe checkerboarding reports</th>
+    <th>Most recent checkerboarding reports</th>
+   </tr>
+   <tr>
+    <td><ul id="severe"></ul></td>
+    <td><ul id="recent"></ul></td>
+   </tr>
+  </table>
+
+  <hr>
+
+  <div id="player">
+   <div id="controls">
+    <button id="rewindButton">&#171;</button><!-- rewind button -->
+    <button id="stepBackButton">&lt;</button><!-- step back button -->
+    <button id="pauseButton">|| &#9654;</button><!-- pause button -->
+    <button id="stopButton">&#9744;</button><!-- stop button -->
+    <button id="stepForwardButton">&gt;</button><!-- step forward button -->
+    <button id="forwardButton">&#187;</button><!-- forward button -->
+   </div>
+   <canvas id="canvas" width="800" height="600">Canvas not supported!</canvas>
+   <pre id="active">(Details for currently visible replay frame)</pre>
+  </div>
+
+  <hr>
+
+  <div id="raw">
+   Raw log:<br>
+   <textarea id="trace" rows="10"></textarea>
+   <div>
+    <input type="checkbox" id="excludePageFromZoom"/><label for="excludePageFromZoom">Exclude page coordinates from zoom calculations</label><br>
+   </div>
+  </div>
+ </body>
+ <script src="chrome://global/content/aboutCheckerboard.js"></script>
+</html>

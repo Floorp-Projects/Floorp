@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=690659
+-->
+<head>
+  <title>Test for Bug 690659 and 739173</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=690659">Mozilla Bug 690659 & 739173</a>
+<script type="text/javascript" src="./formData_test.js"></script>
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runMainThreadAndWorker() {
+  var mt = new Promise(function(resolve) {
+    runTest(resolve);
+  });
+
+  var worker;
+  var w = new Promise(function(resolve) {
+    worker = new Worker("formData_worker.js");
+    worker.onmessage = function(event) {
+      if (event.data.type == 'finish') {
+        resolve();
+      } else if (event.data.type == 'status') {
+        ok(event.data.status, event.data.msg);
+      } else if (event.data.type == 'todo') {
+        todo(event.data.status, event.data.msg);
+      }
+    }
+
+    worker.onerror = function(event) {
+      ok(false, "Worker had an error: " + event.message + " at " + event.lineno);
+      resolve();
+    };
+
+    worker.postMessage(true);
+  });
+
+  return Promise.all([mt, w]);
+}
+
+runMainThreadAndWorker().then(SimpleTest.finish);
+</script>
+</body>
+</html>

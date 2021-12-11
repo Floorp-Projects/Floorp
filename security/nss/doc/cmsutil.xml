@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY date SYSTEM "date.xml">
+<!ENTITY version SYSTEM "version.xml">
+]>
+
+<refentry id="cmsutil">
+
+  <refentryinfo>
+    <date>&date;</date>
+    <title>NSS Security Tools</title>
+    <productname>nss-tools</productname>
+    <productnumber>&version;</productnumber>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>CMSUTIL</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>cmsutil</refname>
+    <refpurpose>Performs basic cryptograpic operations, such as encryption and decryption, on Cryptographic Message Syntax (CMS) messages.</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>cmsutil</command>
+      <arg><replaceable>options</replaceable></arg>
+      <arg>[<replaceable>arguments</replaceable>]</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsection>
+    <title>STATUS</title>
+    <para>This documentation is still work in progress. Please contribute to the initial review in <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=836477">Mozilla NSS bug 836477</ulink>
+    </para>
+  </refsection>
+
+  <refsection id="description">
+    <title>Description</title>
+
+    <para>The <command>cmsutil</command> command-line uses the S/MIME Toolkit to perform basic operations, such as encryption and decryption, on Cryptographic Message Syntax (CMS) messages.
+	</para>
+	<para>
+To run cmsutil, type the command cmsutil option [arguments] where option and arguments are combinations of the options and arguments listed in the following section. 
+Each command takes one option. Each option may take zero or more arguments. 
+To see a usage string, issue the command without options. 
+	</para>
+
+  </refsection>
+
+  <refsection id="options">
+    <title>Options and Arguments</title>
+	<para>
+	</para>
+   	<para><command>Options</command></para> 
+   	<para>
+Options specify an action. Option arguments modify an action. 
+The options and arguments for the cmsutil command are defined as follows:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>-C</term>
+        <listitem><para>Encrypt a message.</para></listitem>
+      </varlistentry>
+    
+      <varlistentry>
+        <term>-D </term>
+        <listitem><para>Decode a message.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-E </term>
+        <listitem><para>Envelope a message.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-O </term>
+        <listitem><para>Create a certificates-only message.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-S </term>
+        <listitem><para>Sign a message.</para></listitem>
+      </varlistentry>
+
+    </variablelist>
+
+	<para><command>Arguments</command></para>
+	<para>Option arguments modify an action.</para>
+	<variablelist>
+      <varlistentry>
+        <term>-b </term>
+        <listitem>
+          <para>Decode a batch of files named in infile.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-c content </term>
+        <listitem>
+          <para>Use this detached content (decode only).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-d dbdir</term>
+        <listitem>
+          <para>Specify the key/certificate database directory (default is ".")</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-e envfile</term>
+        <listitem>
+          <para>Specify a file containing an enveloped message for a set of recipients to which you would like to send an encrypted message. If this is the first encrypted message for that set of recipients, a new enveloped message will be created that you can then use for future messages (encrypt only).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f pwfile</term>
+        <listitem>
+          <para>Use password file to set password on all PKCS#11 tokens.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-G</term>
+        <listitem>
+          <para>Include a signing time attribute (sign only).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-H hash</term>
+        <listitem>
+          <para>Use specified hash algorithm (default:SHA1).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-h num</term>
+        <listitem>
+          <para>Generate email headers with info about CMS message (decode only).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-i infile</term>
+        <listitem>
+          <para>Use infile as a source of data (default is stdin).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-k</term>
+        <listitem>
+          <para>Keep decoded encryption certs in permanent cert db.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-N nickname</term>
+        <listitem>
+          <para>Specify nickname of certificate to sign with (sign only).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-n </term>
+        <listitem>
+          <para>Suppress output of contents (decode only).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-o outfile</term>
+        <listitem>
+          <para>Use outfile as a destination of data (default is stdout).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-P</term>
+        <listitem>
+          <para>Include an S/MIME capabilities attribute.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-p password</term>
+        <listitem>
+          <para>Use password as key database password.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-r recipient1,recipient2, ...</term>
+        <listitem>
+          <para>
+Specify list of recipients (email addresses) for an encrypted or enveloped message. 
+For certificates-only message, list of certificates to send.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-T</term>
+        <listitem>
+          <para>Suppress content in CMS message (sign only).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-u certusage</term>
+        <listitem>
+          <para>Set type of cert usage (default is certUsageEmailSigner).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+        <listitem>
+          <para>Print debugging information.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-Y ekprefnick</term>
+        <listitem>
+          <para>Specify an encryption key preference by nickname.</para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+
+  </refsection>
+
+  <refsection id="usage">
+    <title>Usage</title>
+    <para>Encrypt Example</para>
+      <programlisting>
+cmsutil -C [-i infile] [-o outfile] [-d dbdir] [-p password] -r "recipient1,recipient2, . . ." -e envfile
+      </programlisting>
+
+    <para>Decode Example</para>
+      <programlisting>
+cmsutil -D [-i infile] [-o outfile] [-d dbdir] [-p password] [-c content] [-n] [-h num]
+      </programlisting>
+
+    <para>Envelope Example</para>
+      <programlisting>
+cmsutil -E [-i infile] [-o outfile] [-d dbdir] [-p password] -r "recipient1,recipient2, ..."
+      </programlisting>
+
+    <para>Certificate-only Example</para>
+      <programlisting>
+cmsutil -O [-i infile] [-o outfile] [-d dbdir] [-p password] -r "cert1,cert2, . . ."
+      </programlisting>
+
+    <para>Sign Message Example</para>
+      <programlisting>
+cmsutil -S [-i infile] [-o outfile] [-d dbdir] [-p password] -N nickname[-TGP] [-Y ekprefnick]
+      </programlisting>
+
+  </refsection>
+
+  <refsection id="seealso">
+    <title>See also</title>
+    <para>certutil(1)</para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="resources">
+    <title>Additional Resources</title>
+	<para>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <ulink url="http://www.mozilla.org/projects/security/pki/nss/">http://www.mozilla.org/projects/security/pki/nss/</ulink>. The NSS site relates directly to NSS code changes and releases.</para>
+	<para>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</para>
+	<para>IRC: Freenode at #dogtag-pki</para>
+  </refsection>
+
+<!-- fill in your name first; keep the other names for reference -->
+  <refsection id="authors">
+    <title>Authors</title>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
+    <para>
+	Authors: Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com>.
+    </para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="license">
+    <title>LICENSE</title>
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    </para>
+  </refsection>
+
+</refentry>

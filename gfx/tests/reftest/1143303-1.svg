@@ -1,0 +1,26 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
+     width="100%" height="100%">
+  <title>Testcase for small circles</title>
+  <!--From https://bugzilla.mozilla.org/show_bug.cgi?id=1143303 -->
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <circle cx="200" cy="150" r="95" fill="red"/>
+  <g transform="translate(200, 150)" fill="lime">
+    <g transform="scale(1e8, 1e8)">
+      <circle cx="0" cy="0" r="1e-6"/>
+    </g>
+  </g>
+
+  <circle cx="342" cy="176.06" r="1" fill="red"/>
+  <g transform="translate(342,1098.55)" fill="lime">
+    <g transform="scale(418.2,-405.9)">
+      <circle cx="0" cy="2.2727" r=".006"/>
+    </g>
+  </g>
+
+</svg>

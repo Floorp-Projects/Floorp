@@ -1,0 +1,75 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "fix-stacks toolchain build"
+    attributes:
+        local-toolchain: true
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-fix-stacks.sh
+    run-on-projects:
+        - trunk
+    fetches:
+        fetch:
+            - fix-stacks
+
+linux64-fix-stacks:
+    treeherder:
+        symbol: TL(fix-stacks)
+    run:
+        arguments: ['x86_64-unknown-linux-gnu']
+        toolchain-artifact: public/build/fix-stacks.tar.zst
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang-13
+            - linux64-rust-1.47
+            - sysroot-x86_64-linux-gnu
+
+macosx64-fix-stacks:
+    treeherder:
+        symbol: TM(fix-stacks)
+    run:
+        arguments: ['x86_64-apple-darwin']
+        toolchain-artifact: public/build/fix-stacks.tar.zst
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
+            - linux64-rust-macos-1.47
+            - macosx64-sdk-11.0
+
+macosx64-aarch64-fix-stacks:
+    treeherder:
+        symbol: TM(fix-stacks-arm64)
+    run:
+        arguments: ['aarch64-apple-darwin']
+        toolchain-artifact: public/build/fix-stacks.tar.zst
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
+            - linux64-rust-macos-1.49
+            - macosx64-sdk-11.0
+
+win32-fix-stacks:
+    treeherder:
+        symbol: TW32(fix-stacks)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        arguments: ['i686-pc-windows-msvc']
+        toolchain-artifact: public/build/fix-stacks.tar.zst
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-clang-13
+            - linux64-liblowercase
+            - linux64-rust-windows-1.47

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<style>
+  div.outer {
+    width: 450px;
+    font-size: 12px;
+  }
+
+  button {
+    font-size: 12px;
+    height: 20px;
+  }
+
+  .invisible {
+    color: white;
+  }
+</style>
+<!--
+Because this button has a fixed height,
+font inflation should be disabled.
+-->
+<div class="outer">
+  <form><button>Add Comment</button></form>
+  <p class="invisible">Some text to ensure the button gets inflated - if it
+  wasn't size-restricted, that is - but which shouldn't influence the visual
+  result otherwise.</p>
+</div>

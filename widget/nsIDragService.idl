@@ -1,0 +1,200 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArray.idl"
+#include "nsISupports.idl"
+#include "nsIDragSession.idl"
+#include "nsIContentPolicy.idl"
+
+webidl DragEvent;
+webidl Node;
+webidl Selection;
+
+interface nsICookieJarSettings;
+
+%{C++
+#include "mozilla/EventForwards.h"
+
+namespace mozilla {
+namespace dom {
+class ContentParent;
+class DataTransfer;
+class RemoteDragStartData;
+} // namespace dom
+} // namespace mozilla
+%}
+
+[ptr] native ContentParentPtr(mozilla::dom::ContentParent);
+[ptr] native DataTransferPtr(mozilla::dom::DataTransfer);
+[ptr] native RemoteDragStartDataPtr(mozilla::dom::RemoteDragStartData);
+native EventMessage(mozilla::EventMessage);
+
+[scriptable, uuid(ebd6b3a2-af16-43af-a698-3091a087dd62), builtinclass]
+interface nsIDragService : nsISupports
+{
+  const long DRAGDROP_ACTION_NONE = 0;
+  const long DRAGDROP_ACTION_COPY = 1;
+  const long DRAGDROP_ACTION_MOVE = 2;
+  const long DRAGDROP_ACTION_LINK = 4;
+  const long DRAGDROP_ACTION_UNINITIALIZED = 64;
+
+  /**
+    * Starts a modal drag session with an array of transaferables.
+    *
+    * Note: This method is deprecated for non-native code.
+    *
+    * @param  aPrincipal - the triggering principal of the drag, or null if
+    *                      it's from browser chrome or OS
+    * @param aCsp - The csp of the triggering Document
+    * @param  aTransferables - an array of transferables to be dragged
+    * @param  aActionType - specified which of copy/move/link are allowed
+    * @param  aContentPolicyType - the contentPolicyType that will be
+    *           passed to the loadInfo when creating a new channel
+    *           (defaults to TYPE_OTHER)
+    */
+  [can_run_script]
+  void invokeDragSession (in Node aDOMNode,
+                          in nsIPrincipal aPrincipal,
+                          in nsIContentSecurityPolicy aCsp,
+                          in nsICookieJarSettings aCookieJarSettings,
+                          in nsIArray aTransferables,
+                          in unsigned long aActionType,
+                          [optional] in nsContentPolicyType aContentPolicyType);
+
+  /**
+   * Starts a modal drag session using an image. The first four arguments are
+   * the same as invokeDragSession.
+   *
+   * Note: This method is deprecated for non-native code.
+   *
+   * A custom image may be specified using the aImage argument. If this is
+   * supplied, the aImageX and aImageY arguments specify the offset within
+   * the image where the cursor would be positioned. That is, when the image
+   * is drawn, it is offset up and left the amount so that the cursor appears
+   * at that location within the image.
+   *
+   * If aImage is null, aImageX and aImageY are not used and the image is instead
+   * determined from the source node aDOMNode, and the offset calculated so that
+   * the initial location for the image appears in the same screen position as
+   * where the element is located. The node must be within a document.
+   *
+   * Currently, supported images are all DOM nodes. If this is an HTML <image> or
+   * <canvas>, the drag image is taken from the image data. If the element is in
+   * a document, it will be rendered at its displayed size, othewise, it will be
+   * rendered at its real size. For other types of elements, the element is
+   * rendered into an offscreen buffer in the same manner as it is currently
+   * displayed. The document selection is hidden while drawing.
+   *
+   * The aDragEvent must be supplied as the current screen coordinates of the
+   * event are needed to calculate the image location.
+   */
+  [noscript, can_run_script]
+  void invokeDragSessionWithImage(in Node aDOMNode,
+                                  in nsIPrincipal aPrincipal,
+                                  in nsIContentSecurityPolicy aCsp,
+                                  in nsICookieJarSettings aCookieJarSettings,
+                                  in nsIArray aTransferableArray,
+                                  in unsigned long aActionType,
+                                  in Node aImage,
+                                  in long aImageX,
+                                  in long aImageY,
+                                  in DragEvent aDragEvent,
+                                  in DataTransferPtr aDataTransfer);
+
+  /** Start a drag session with the data in aDragStartData from a child process.
+   *  Other arguments are the same as invokeDragSessionWithImage.
+   */
+  [noscript, can_run_script]
+  void invokeDragSessionWithRemoteImage(in Node aDOMNode,
+                                        in nsIPrincipal aPrincipal,
+                                        in nsIContentSecurityPolicy aCsp,
+                                        in nsICookieJarSettings aCookieJarSettings,
+                                        in nsIArray aTransferableArray,
+                                        in unsigned long aActionType,
+                                        in RemoteDragStartDataPtr aDragStartData,
+                                        in DragEvent aDragEvent,
+                                        in DataTransferPtr aDataTransfer);
+
+  /**
+   * Start a modal drag session using the selection as the drag image.
+   * The aDragEvent must be supplied as the current screen coordinates of the
+   * event are needed to calculate the image location.
+   *
+   * Note: This method is deprecated for non-native code.
+   */
+  [can_run_script]
+  void invokeDragSessionWithSelection(in Selection aSelection,
+                                      in nsIPrincipal aPrincipal,
+                                      in nsIContentSecurityPolicy aCsp,
+                                      in nsICookieJarSettings aCookieJarSettings,
+                                      in nsIArray aTransferableArray,
+                                      in unsigned long aActionType,
+                                      in DragEvent aDragEvent,
+                                      in DataTransferPtr aDataTransfer);
+
+  /**
+    * Returns the current Drag Session
+    */
+  nsIDragSession getCurrentSession();
+
+  /**
+    * Tells the Drag Service to start a drag session. This is called when
+    * an external drag occurs
+    */
+  void startDragSession() ;
+
+  /**
+   * Similar to startDragSession(), automated tests may want to start
+   * session for emulating an external drag.  At that time, this should
+   * be used instead of startDragSession().
+   *
+   * @param aAllowedEffect Set default drag action which means allowed effects
+   *                       in the session and every DnD events are initialized
+   *                       with one of specified value.  So, the value can be
+   *                       DRAGDROP_ACTION_NONE, or one or more values of
+   *                       DRAGDROP_ACTION_(MOVE|COPY|LINK).
+   */
+  void startDragSessionForTests(in unsigned long aAllowedEffect);
+
+  /**
+    * Tells the Drag Service to end a drag session. This is called when
+    * an external drag occurs
+    *
+    * If aDoneDrag is true, the drag has finished, otherwise the drag has
+    * just left the window.
+    */
+  [can_run_script]
+  void endDragSession(in boolean aDoneDrag,
+                      [optional] in unsigned long aKeyModifiers);
+
+  /**
+   * Fire a drag event at the source of the drag
+   */
+  [noscript, can_run_script]
+  void fireDragEventAtSource(in EventMessage aEventMessage,
+                             in unsigned long aKeyModifiers);
+
+  /**
+   * Increase/decrease dragging suppress level by one.
+   * If level is greater than one, dragging is disabled.
+   */
+  [can_run_script]
+  void suppress();
+  void unsuppress();
+
+  /**
+    * aX and aY are in LayoutDevice pixels.
+    */
+  [noscript] void dragMoved(in long aX, in long aY);
+
+  [notxpcom, nostdcall] boolean maybeAddChildProcess(in ContentParentPtr aChild);
+  [notxpcom, nostdcall] boolean removeAllChildProcesses();
+};
+
+
+%{ C++
+
+%}

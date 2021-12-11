@@ -1,0 +1,188 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="https://example.com:443/tests/dom/media/test/eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* import-globals-from eme.js */
+var manager = new MediaTestManager;
+
+function ArrayBuffersEqual(a, b) {
+  if (a.byteLength != b.byteLength) {
+    return false;
+  }
+  var ua = new Uint8Array(a);
+  var ub = new Uint8Array(b);
+  for (var i = 0; i < ua.length; i++) {
+    if (ua[i] != ub[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function KeysChangeFunc(session, keys, token) {
+  session.keyIdsReceived = [];
+  for (var keyid in keys) {
+    Log(token, "Set " + keyid + " to false in session[" + session.sessionId + "].keyIdsReceived");
+    session.keyIdsReceived[keyid] = false;
+  }
+  return function(ev) {
+    var s = ev.target;
+    s.gotKeysChanged = true;
+
+    var keyList = [];
+    var valueList = [];
+    var map = s.keyStatuses;
+
+    // Test that accessing keys not known to the CDM has expected behaviour.
+    var absentKey = new Uint8Array([0xeb, 0xdd, 0x62, 0xf1, 0x68, 0x14, 0xd2, 0x7b,
+                                    0x68, 0xef, 0x12, 0x2a, 0xfc, 0xe4, 0xae, 0x3c]);
+    is(map.has(absentKey), false, "Shouldn't have a key that's not in the media");
+    is(map.get(absentKey), undefined, "Unknown keys should undefined status");
+
+    // Verify known keys have expected status.
+    for (let [key, val] of map.entries()) {
+      is(key.constructor, ArrayBuffer, "keyId should be ArrayBuffer");
+      ok(map.has(key), "MediaKeyStatusMap.has() should work.");
+      is(map.get(key), val, "MediaKeyStatusMap.get() should work.");
+      keyList.push(key);
+      valueList.push(val);
+      is(val, "usable", token + ": key status should be usable");
+      var kid = Base64ToHex(window.btoa(ArrayBufferToString(key)));
+      ok(kid in s.keyIdsReceived, TimeStamp(token) + " session[" + s.sessionId + "].keyIdsReceived contained " + kid + " as expected.");
+      s.keyIdsReceived[kid] = true;
+    }
+
+    var index = 0;
+    for (var keyId of map.keys()) {
+      ok(ArrayBuffersEqual(keyId, keyList[index]), "MediaKeyStatusMap.keys() should correspond to entries");
+      index++;
+    }
+    index = 0;
+    for (let val of map.values()) {
+      is(val, valueList[index], "MediaKeyStatusMap.values() should correspond to entries");
+      index++;
+    }
+  }
+}
+
+function startTest(test, token)
+{
+  manager.started(token);
+
+  var sessions = [];
+
+  function onSessionCreated(session) {
+    sessions.push(session);
+    session.addEventListener("keystatuseschange", KeysChangeFunc(session, test.keys, token));
+
+    session.numKeystatuseschangeEvents = 0;
+    session.numOnkeystatuseschangeEvents = 0;
+
+    session.addEventListener("keystatuseschange", function() {
+      session.numKeystatuseschangeEvents += 1;
+    });
+    session.onkeystatuseschange = function() {
+      session.numOnkeystatuseschangeEvents += 1;
+    };
+
+    session.numMessageEvents = 0;
+    session.numOnMessageEvents = 0;
+    session.addEventListener("message", function() {
+      session.numMessageEvents += 1;
+    });
+    session.onmessage = function() {
+      session.numOnMessageEvents += 1;
+    };
+  }
+
+  let v = document.createElement("video");
+  document.body.appendChild(v);
+
+  var gotEncrypted = 0;
+  let finish = new EMEPromise;
+
+  v.addEventListener("encrypted", function(ev) {
+    gotEncrypted += 1;
+  });
+
+  v.addEventListener("loadedmetadata", function() {
+    ok(SpecialPowers.do_lookupGetter(v, "isEncrypted").apply(v),
+       TimeStamp(token) + " isEncrypted should be true");
+    is(v.isEncrypted, undefined, "isEncrypted should not be accessible from content");
+  });
+
+  v.addEventListener("ended", function(ev) {
+    ok(true, TimeStamp(token) + " got ended event");
+
+    is(gotEncrypted, test.sessionCount,
+       TimeStamp(token) + " encrypted events expected: " + test.sessionCount
+       + ", actual: " + gotEncrypted);
+
+    ok(Math.abs(test.duration - v.duration) < 0.1,
+       TimeStamp(token) + " Duration of video should be corrrect");
+    ok(Math.abs(test.duration - v.currentTime) < 0.1,
+       TimeStamp(token) + " Current time should be same as duration");
+
+    // Verify all sessions had all keys went sent to the CDM usable, and thus
+    // that we received keystatuseschange event(s).
+    is(sessions.length, test.sessionCount, TimeStamp(token) + " should have "
+                        + test.sessionCount
+                        + " session" + (test.sessionCount === 1 ? "" : "s"));
+    var keyIdsReceived = [];
+    for (var keyid in test.keys) { keyIdsReceived[keyid] = false; }
+    for (var i = 0; i < sessions.length; i++) {
+      var session = sessions[i];
+      ok(session.gotKeysChanged,
+         TimeStamp(token) + " session[" + session.sessionId
+         + "] should have received at least one keychange event");
+      for (let kid in session.keyIdsReceived) {
+        Log(token, "session[" + session.sessionId + "] key " + kid + " = " + (session.keyIdsReceived[kid] ? "true" : "false"));
+        if (session.keyIdsReceived[kid]) { keyIdsReceived[kid] = true; }
+      }
+      ok(session.numKeystatuseschangeEvents > 0, TimeStamp(token) + " should get key status changes");
+      is(session.numKeystatuseschangeEvents, session.numOnkeystatuseschangeEvents,
+         TimeStamp(token) + " should have as many keystatuseschange event listener calls as event handler calls.");
+
+      ok(session.numMessageEvents > 0, TimeStamp(token) + " should get message events");
+      is(session.numMessageEvents, session.numOnMessageEvents,
+         TimeStamp(token) + " should have as many message event listener calls as event handler calls.");
+    }
+    for (let kid in keyIdsReceived) {
+      ok(keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
+    }
+
+    CloseSessions(v, sessions).then(finish.resolve, finish.reject);
+  });
+
+  Promise.all([
+    LoadInitData(v, test, token),
+    CreateAndSetMediaKeys(v, test, token),
+    LoadTest(test, v, token)])
+  .then(values => {
+    v.play();
+    let initData = values[0];
+    initData.map(ev => {
+      let session = v.mediaKeys.createSession();
+      onSessionCreated(session);
+      MakeRequest(test, token, ev, session);
+    });
+    return finish.promise;
+  })
+  .catch(reason => ok(false, reason))
+  .then(() => manager.finished(token));
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(gEMETests, startTest);
+</script>
+</pre>
+</body>
+</html>

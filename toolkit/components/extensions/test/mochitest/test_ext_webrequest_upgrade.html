@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_webRequest_upgrade() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "*://mochi.test/tests/*",
+      ],
+    },
+    background() {
+      browser.webRequest.onSendHeaders.addListener((details) => {
+        // At this point, the request should have been upgraded.
+        browser.test.assertTrue(details.url.startsWith("https:"), "request is upgraded");
+        browser.test.assertTrue(details.url.includes("file_sample"), "redirect after upgrade worked");
+        browser.test.sendMessage("finished");
+      }, {urls: ["*://mochi.test/tests/*"]});
+
+      browser.webRequest.onBeforeRequest.addListener((details) => {
+        browser.test.log(`onBeforeRequest ${details.requestId} ${details.url}`);
+        let url = new URL(details.url);
+        if (url.protocol == "http:") {
+          return {upgradeToSecure: true};
+        }
+        // After the channel is initially upgraded, we get another onBeforeRequest
+        // call.  Here we can redirect again to a new url.
+        if (details.url.includes("file_mixed.html")) {
+          let redirectUrl = new URL("file_sample.html", details.url).href;
+          return {redirectUrl};
+        }
+      }, {urls: ["*://mochi.test/tests/*"]}, ["blocking"]);
+    },
+  });
+
+  await extension.startup();
+  let win = window.open("http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_mixed.html");
+  await extension.awaitMessage("finished");
+  win.close();
+  await extension.unload();
+});
+
+add_task(async function test_webRequest_redirect_wins() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "*://mochi.test/tests/*",
+      ],
+    },
+    background() {
+      browser.webRequest.onSendHeaders.addListener((details) => {
+        // At this point, the request should have been redirected instead of upgraded.
+        browser.test.assertTrue(details.url.includes("file_sample"), "request was redirected");
+        browser.test.sendMessage("finished");
+      }, {urls: ["*://mochi.test/tests/*"]});
+
+      browser.webRequest.onBeforeRequest.addListener((details) => {
+        if (details.url.includes("file_mixed.html")) {
+          let redirectUrl = new URL("file_sample.html", details.url).href;
+          return {upgradeToSecure: true, redirectUrl};
+        }
+      }, {urls: ["*://mochi.test/tests/*"]}, ["blocking"]);
+    },
+  });
+
+  await extension.startup();
+  let win = window.open("http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_mixed.html");
+  await extension.awaitMessage("finished");
+  win.close();
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

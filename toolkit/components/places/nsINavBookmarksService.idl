@@ -1,0 +1,326 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIURI;
+interface nsITransaction;
+interface nsINavHistoryBatchCallback;
+
+/**
+ * Observer for bookmarks changes.
+ */
+[scriptable, uuid(4d00c221-2c4a-47ab-a617-abb324110492)]
+interface nsINavBookmarkObserver : nsISupports
+{
+  /*
+   * This observer should not be called for items that are tags.
+   */
+  readonly attribute boolean skipTags;
+
+  /**
+   * Notifies that an item's information has changed.  This will be called
+   * whenever any attributes like "title" are changed.
+   *
+   * @param aItemId
+   *        The id of the item that was changed.
+   * @param aProperty
+   *        The property which changed.
+   * @param aIsAnnotationProperty
+   *        Obsolete and unused.
+   * @param aNewValue
+   *        For certain properties, this is set to the new value of the
+   *        property (see the list below).
+   * @param aLastModified
+   *        The updated last-modified value.
+   * @param aItemType
+   *        The type of the item to be removed (see TYPE_* constants below).
+   * @param aParentId
+   *        The id of the folder containing the item.
+   * @param aGuid
+   *        The unique ID associated with the item.
+   * @param aParentGuid
+   *        The unique ID associated with the item's parent.
+   * @param aOldValue
+   *        For certain properties, this is set to the new value of the
+   *        property (see the list below).
+   * @param aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*,
+   *        passed to the method that notifies the observer.
+   *
+   * @note List of values that may be associated with properties:
+   *       aProperty     | aNewValue
+   *       =====================================================================
+   *       guid          | The new bookmark guid.
+   *       cleartime     | Empty string (all visits to this item were removed).
+   *       title         | The new title.
+   *       uri           | new URL.
+   *       tags          | Empty string (tags for this item changed)
+   *       dateAdded     | PRTime (as string) when the item was first added.
+   *       lastModified  | PRTime (as string) when the item was last modified.
+   *
+   *       aProperty     | aOldValue
+   *       =====================================================================
+   *       guid          | The old bookmark guid.
+   *       cleartime     | Empty string (currently unused).
+   *       title         | Empty string (currently unused).
+   *       uri           | old URL.
+   *       tags          | Empty string (currently unused).
+   *       dateAdded     | Empty string (currently unused).
+   *       lastModified  | Empty string (currently unused).
+   */
+  void onItemChanged(in long long aItemId,
+                     in ACString aProperty,
+                     in boolean aIsAnnotationProperty,
+                     in AUTF8String aNewValue,
+                     in PRTime aLastModified,
+                     in unsigned short aItemType,
+                     in long long aParentId,
+                     in ACString aGuid,
+                     in ACString aParentGuid,
+                     in AUTF8String aOldValue,
+                     in unsigned short aSource);
+};
+
+/**
+ * The BookmarksService interface provides methods for managing bookmarked
+ * history items.  Bookmarks consist of a set of user-customizable
+ * folders.  A URI in history can be contained in one or more such folders.
+ */
+
+[scriptable, uuid(24533891-afa6-4663-b72d-3143d03f1b04)]
+interface nsINavBookmarksService : nsISupports
+{
+  /**
+   * The item ID of the Places root.
+   */
+  readonly attribute long long placesRoot;
+
+  /**
+   * The item ID of the bookmarks menu folder.
+   */
+  readonly attribute long long bookmarksMenuFolder;
+
+  /**
+   * The item ID of the top-level folder that contain the tag "folders".
+   */
+  readonly attribute long long tagsFolder;
+
+  /**
+   * The item ID of the personal toolbar folder.
+   */
+  readonly attribute long long toolbarFolder;
+
+  /**
+   * The total number of Sync changes (inserts, updates, deletes, merges, and
+   * uploads) recorded since Places startup for all bookmarks.
+   *
+   * Note that this is *not* the number of bookmark syncs. It's a monotonically
+   * increasing counter incremented for every change that affects a bookmark's
+   * `syncChangeCounter`.
+   *
+   * The counter can be used to avoid keeping an exclusive transaction open for
+   * time-consuming work. One way to do that is to store the current value of
+   * the counter, do the work, start a transaction, check the current value
+   * again, and compare it to the stored value to determine if the database
+   * changed during the work.
+   *
+   * The bookmarks mirror does this to check for changes between building and
+   * applying a merged tree. This avoids blocking the main Places connection
+   * during the merge, and ensures that the new tree still applies cleanly.
+   */
+  readonly attribute long long totalSyncChanges;
+
+  /**
+   * This value should be used for APIs that allow passing in an index
+   * where an index is not known, or not required to be specified.
+   * e.g.: When appending an item to a folder.
+   */
+  const short DEFAULT_INDEX = -1;
+
+  const unsigned short TYPE_BOOKMARK = 1;
+  const unsigned short TYPE_FOLDER = 2;
+  const unsigned short TYPE_SEPARATOR = 3;
+  // Dynamic containers are deprecated and unsupported.
+  // This const exists just to avoid reusing the value.
+  const unsigned short TYPE_DYNAMIC_CONTAINER = 4;
+
+  // Change source constants. These are used to distinguish changes made by
+  // Sync and bookmarks import from other Places consumers, though they can
+  // be extended to support other callers. Sources are passed as optional
+  // parameters to methods used by Sync, and forwarded to observers.
+  const unsigned short SOURCE_DEFAULT = 0;
+  const unsigned short SOURCE_SYNC = 1;
+  const unsigned short SOURCE_IMPORT = 2;
+  const unsigned short SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN = 4;
+  const unsigned short SOURCE_RESTORE = 5;
+  const unsigned short SOURCE_RESTORE_ON_STARTUP = 6;
+
+  /**
+   * Sync status flags, stored in Places for each item. These affect conflict
+   * resolution, when an item is changed both locally and remotely; deduping,
+   * when a local item matches a remote item with similar contents and different
+   * GUIDs; and whether we write a tombstone when an item is deleted locally.
+   *
+   * Status  | Description               | Conflict   | Can     | Needs
+   *         |                           | resolution | dedupe? | tombstone?
+   * -----------------------------------------------------------------------
+   * UNKNOWN | Automatically restored    | Prefer     | No      | No
+   *         | on startup to recover     | deletion   |         |
+   *         | from database corruption, |            |         |
+   *         | or sync ID change on      |            |         |
+   *         | server.                   |            |         |
+   * -----------------------------------------------------------------------
+   * NEW     | Item not uploaded to      | Prefer     | Yes     | No
+   *         | server yet, or Sync       | newer      |         |
+   *         | disconnected.             |            |         |
+   * -----------------------------------------------------------------------
+   * NORMAL  | Item uploaded to server.  | Prefer     | No      | Yes
+   *         |                           | newer      |         |
+   */
+  const unsigned short SYNC_STATUS_UNKNOWN = 0;
+  const unsigned short SYNC_STATUS_NEW = 1;
+  const unsigned short SYNC_STATUS_NORMAL = 2;
+
+  /**
+   * Inserts a child bookmark into the given folder.
+   *
+   *  @param aParentId
+   *         The id of the parent folder
+   *  @param aURI
+   *         The URI to insert
+   *  @param aIndex
+   *         The index to insert at, or DEFAULT_INDEX to append
+   *  @param aTitle
+   *         The title for the new bookmark
+   *  @param [optional] aGuid
+   *         The GUID to be set for the new item.  If not set, a new GUID is
+   *         generated.  Unless you've a very sound reason, such as an undo
+   *         manager implementation, do not pass this argument.
+   *  @param [optional] aSource
+   *         The change source. This is forwarded to all bookmark observers,
+   *         allowing them to distinguish between insertions from different
+   *         callers. Defaults to SOURCE_DEFAULT if omitted.
+   *  @return The ID of the newly-created bookmark.
+   *
+   *  @note aTitle will be truncated to TITLE_LENGTH_MAX and
+   *        aURI will be truncated to URI_LENGTH_MAX.
+   *  @throws if aGuid is malformed.
+   */
+  [can_run_script]
+  long long insertBookmark(in long long aParentId, in nsIURI aURI,
+                           in long aIndex, in AUTF8String aTitle,
+                           [optional] in ACString aGuid,
+                           [optional] in unsigned short aSource);
+
+  /**
+   * Removes a child item. Used to delete a bookmark or separator.
+   *  @param aItemId
+   *         The child item to remove
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
+   */
+  [can_run_script]
+  void removeItem(in long long aItemId, [optional] in unsigned short aSource);
+
+  /**
+   * Creates a new child folder and inserts it under the given parent.
+   *  @param aParentFolder
+   *         The id of the parent folder
+   *  @param aName
+   *         The name of the new folder
+   *  @param aIndex
+   *         The index to insert at, or DEFAULT_INDEX to append
+   *  @param [optional] aGuid
+   *         The GUID to be set for the new item.  If not set, a new GUID is
+   *         generated.  Unless you've a very sound reason, such as an undo
+   *         manager implementation, do not pass this argument.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
+   *  @return The ID of the newly-inserted folder.
+   *  @throws if aGuid is malformed.
+   */
+  [can_run_script]
+  long long createFolder(in long long aParentFolder, in AUTF8String name,
+                         in long index,
+                         [optional] in ACString aGuid,
+                         [optional] in unsigned short aSource);
+
+  /**
+   * Set the title for an item.
+   *  @param aItemId
+   *         The id of the item whose title should be updated.
+   *  @param aTitle
+   *         The new title for the bookmark.
+   *  @param [optional] aSource
+   *         The change source, forwarded to all bookmark observers. Defaults
+   *         to SOURCE_DEFAULT.
+   *
+   *  @note  aTitle will be truncated to TITLE_LENGTH_MAX.
+   */
+  [can_run_script]
+  void setItemTitle(in long long aItemId, in AUTF8String aTitle,
+                    [optional] in unsigned short aSource);
+
+  /**
+   * Get the title for an item.
+   *
+   * If no item title is available it will return a void string (null in JS).
+   *
+   *  @param aItemId
+   *         The id of the item whose title should be retrieved
+   *  @return The title of the item.
+   */
+  AUTF8String getItemTitle(in long long aItemId);
+
+  /**
+   * Set the last modified time for an item.
+   *
+   * @param aItemId
+   *        the id of the item whose last modified time should be updated.
+   * @param aLastModified
+   *        the new last modified value in microseconds.  Note that it is
+   *        rounded down to milliseconds precision.
+   * @param [optional] aSource
+   *        The change source, forwarded to all bookmark observers. Defaults
+   *        to SOURCE_DEFAULT.
+   *
+   * @note This is the only method that will send an itemChanged notification
+   *       for the property.  lastModified will still be updated in
+   *       any other method that changes an item property, but we will send
+   *       the corresponding itemChanged notification instead.
+   */
+  [can_run_script]
+  void setItemLastModified(in long long aItemId,
+                           in PRTime aLastModified,
+                           [optional] in unsigned short aSource);
+
+  /**
+   * Get the parent folder's id for an item.
+   */
+  long long getFolderIdForItem(in long long aItemId);
+
+  /**
+   * Adds a bookmark observer. If ownsWeak is false, the bookmark service will
+   * keep an owning reference to the observer.  If ownsWeak is true, then
+   * aObserver must implement nsISupportsWeakReference, and the bookmark
+   * service will keep a weak reference to the observer.
+   */
+  void addObserver(in nsINavBookmarkObserver observer,
+                   [optional] in boolean ownsWeak);
+
+  /**
+   * Removes a bookmark observer.
+   */
+  void removeObserver(in nsINavBookmarkObserver observer);
+
+  /**
+   * Gets an array of registered nsINavBookmarkObserver objects.
+   */
+  Array<nsINavBookmarkObserver> getObservers();
+};

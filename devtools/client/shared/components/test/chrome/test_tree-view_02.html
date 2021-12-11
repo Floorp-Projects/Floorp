@@ -1,0 +1,136 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+- License, v. 2.0. If a copy of the MPL was not distributed with this
+- file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that TreeView component filtering works with keyboard.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>TreeView component filtering keyboard test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/tree/TreeView.css" type="text/css">
+  <style>
+    .treeRow.hide {
+      display: none;
+    }
+   </style>
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = function() {
+  try {
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const {
+      Simulate,
+      findRenderedDOMComponentWithClass,
+      scryRenderedDOMComponentsWithClass,
+    } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const TreeView =
+      browserRequire("devtools/client/shared/components/tree/TreeView");
+
+      function testKeyboardInteraction(tree, treeViewEl, rows) {
+        // Expected tree when filtered (C is filtered)
+        //
+        // A
+        // |-- B
+        // `-- D
+        is(window.getComputedStyle(rows[1]).getPropertyValue("display"), "none",
+          "Row C must be hidden by default.");
+
+        const tests = [{
+          name: "Selected row must be set to the first row on initial focus. " +
+                "Keyboard focus must be set on TreeView's conatiner.",
+          action: () => {
+            Simulate.click(rows[0]);
+          },
+          activeElement: treeViewEl,
+          state: { selected: "/B" },
+        }, {
+          name: "Selecting next row must skip hidden row on ArrowDown.",
+          event: {
+            type: "keyDown",
+            el: treeViewEl,
+            options: { key: "ArrowDown" },
+          },
+          state: { selected: "/D" },
+        }, {
+          name: "Selecting previous row must be skip hidden row on ArrowUp.",
+          event: {
+            type: "keyDown",
+            el: treeViewEl,
+            options: { key: "ArrowUp" },
+          },
+          state: { selected: "/B" },
+        }];
+
+        for (const test of tests) {
+          const { action, event, state, name } = test;
+
+          info(name);
+          if (event) {
+            const { type, options, el } = event;
+            Simulate[type](el, options);
+          } else if (action) {
+            action();
+          }
+
+          for (const key in state) {
+            is(tree.state[key], state[key], `${key} state is correct.`);
+          }
+        }
+      }
+
+    info("Test hiding rows via decorator.");
+    const props = {
+      ...TEST_TREE_VIEW_INTERFACE,
+      decorator: {
+        getRowClass: ({ label }) => {
+          if (label === "C") {
+            return ["hide"];
+          }
+          return [];
+        }
+      }
+    };
+    let treeView = React.createElement(TreeView, props);
+    let tree = ReactDOM.render(treeView, document.body);
+    let treeViewEl = findRenderedDOMComponentWithClass(tree, "treeTable");
+    let rows = scryRenderedDOMComponentsWithClass(tree, "treeRow");
+
+    testKeyboardInteraction(tree, treeViewEl, rows);
+
+    // Remove TreeView component.
+    ReactDOM.unmountComponentAtNode(document.body);
+
+    info("Test hiding rows via onFilter.");
+    props.decorator = null;
+    props.onFilter = ({ label }) => {
+      console.log(`onFILTER ${label !== "C"}`)
+      return label !== "C";
+    };
+    treeView = React.createElement(TreeView, props);
+    tree = ReactDOM.render(treeView, document.body);
+    treeViewEl = findRenderedDOMComponentWithClass(tree, "treeTable");
+    rows = scryRenderedDOMComponentsWithClass(tree, "treeRow");
+
+    testKeyboardInteraction(tree, treeViewEl, rows);
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

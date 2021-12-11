@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLImageElement attributes reflection</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for HTMLImageElement attributes reflection **/
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "alt",
+})
+
+reflectURL({
+  element: document.createElement("img"),
+  attribute: "src",
+})
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "srcset",
+})
+
+reflectLimitedEnumerated({
+  element: document.createElement("img"),
+  attribute: "crossOrigin",
+  // "" is a valid value per spec, but gets mapped to the "anonymous" state,
+  // just like invalid values, so just list it under invalidValues
+  validValues: [ "anonymous", "use-credentials" ],
+  invalidValues: [
+    "", "  aNOnYmous   ", "  UsE-CreDEntIALS  ", "foobar", "FOOBAR", " fOoBaR  "
+  ],
+  defaultValue: { invalid: "anonymous", missing: null },
+  nullable: true,
+})
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "useMap",
+})
+
+reflectBoolean({
+  element: document.createElement("img"),
+  attribute: "isMap",
+})
+
+ok("width" in document.createElement("img"), "img.width is present")
+ok("height" in document.createElement("img"), "img.height is present")
+ok("naturalWidth" in document.createElement("img"), "img.naturalWidth is present")
+ok("naturalHeight" in document.createElement("img"), "img.naturalHeight is present")
+ok("complete" in document.createElement("img"), "img.complete is present")
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "name",
+})
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "align",
+})
+
+reflectUnsignedInt({
+  element: document.createElement("img"),
+  attribute: "hspace",
+})
+
+reflectUnsignedInt({
+  element: document.createElement("img"),
+  attribute: "vspace",
+})
+
+reflectURL({
+  element: document.createElement("img"),
+  attribute: "longDesc",
+})
+
+reflectString({
+  element: document.createElement("img"),
+  attribute: "border",
+  extendedAttributes: { TreatNullAs: "EmptyString" },
+})
+
+reflectURL({
+  element: document.createElement("img"),
+  attribute: "lowsrc",
+})
+
+ok("x" in document.createElement("img"), "img.x is present")
+ok("y" in document.createElement("img"), "img.y is present")
+
+</script>
+</pre>
+</body>
+</html>

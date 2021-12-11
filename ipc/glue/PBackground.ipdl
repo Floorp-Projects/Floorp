@@ -1,0 +1,306 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundDataBridge;
+include protocol PBackgroundIDBFactory;
+include protocol PBackgroundIndexedDBUtils;
+include protocol PBackgroundSDBConnection;
+include protocol PBackgroundLSDatabase;
+include protocol PBackgroundLSObserver;
+include protocol PBackgroundLSRequest;
+include protocol PBackgroundLSSimpleRequest;
+include protocol PBackgroundLocalStorageCache;
+include protocol PBackgroundSessionStorageManager;
+include protocol PBackgroundStorage;
+include protocol PBackgroundTest;
+include protocol PBroadcastChannel;
+include protocol PCache;
+include protocol PCacheStorage;
+include protocol PCacheStreamControl;
+include protocol PClientManager;
+include protocol PEndpointForReport;
+include protocol PFileDescriptorSet;
+include protocol PFileSystemRequest;
+include protocol PGamepadEventChannel;
+include protocol PGamepadTestChannel;
+include protocol PHttpBackgroundChannel;
+include protocol PIdleScheduler;
+include protocol PRemoteLazyInputStream;
+include protocol PMediaTransport;
+include protocol PRemoteWorker;
+include protocol PRemoteWorkerController;
+include protocol PRemoteWorkerService;
+include protocol PSharedWorker;
+include protocol PTemporaryIPCBlob;
+include protocol PFileCreator;
+include protocol PMessagePort;
+include protocol PCameras;
+include protocol PLockManager;
+include protocol PMIDIManager;
+include protocol PMIDIPort;
+include protocol PQuota;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PServiceWorker;
+include protocol PServiceWorkerContainer;
+include protocol PServiceWorkerManager;
+include protocol PServiceWorkerRegistration;
+include protocol PWebAuthnTransaction;
+include protocol PUDPSocket;
+include protocol PVerifySSLServerCert;
+include protocol PVsync;
+include protocol PRemoteDecoderManager;
+include protocol PWebSocketConnection;
+
+include DOMTypes;
+include IPCBlob;
+include IPCServiceWorkerDescriptor;
+include IPCServiceWorkerRegistrationDescriptor;
+include PBackgroundLSSharedTypes;
+include PBackgroundSharedTypes;
+include PBackgroundIDBSharedTypes;
+include PFileSystemParams;
+include ProtocolTypes;
+include PSMIPCTypes;
+include RemoteWorkerTypes;
+include MIDITypes;
+
+include "mozilla/dom/cache/IPCUtils.h";
+include "mozilla/dom/quota/SerializationHelpers.h";
+include "mozilla/dom/PermissionMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+
+using mozilla::dom::cache::Namespace
+  from "mozilla/dom/cache/Types.h";
+
+using class mozilla::dom::SSCacheCopy from "mozilla/dom/PBackgroundSessionStorageCache.h";
+
+namespace mozilla {
+namespace ipc {
+
+[RefCounted] sync protocol PBackground
+{
+  manages PBackgroundDataBridge;
+  manages PBackgroundIDBFactory;
+  manages PBackgroundIndexedDBUtils;
+  manages PBackgroundSDBConnection;
+  manages PBackgroundLSDatabase;
+  manages PBackgroundLSObserver;
+  manages PBackgroundLSRequest;
+  manages PBackgroundLSSimpleRequest;
+  manages PBackgroundLocalStorageCache;
+  manages PBackgroundSessionStorageManager;
+  manages PBackgroundStorage;
+  manages PBackgroundTest;
+  manages PBroadcastChannel;
+  manages PCache;
+  manages PCacheStorage;
+  manages PCacheStreamControl;
+  manages PClientManager;
+  manages PEndpointForReport;
+  manages PFileDescriptorSet;
+  manages PFileSystemRequest;
+  manages PGamepadEventChannel;
+  manages PGamepadTestChannel;
+  manages PHttpBackgroundChannel;
+  manages PIdleScheduler;
+  manages PRemoteLazyInputStream;
+  manages PLockManager;
+  manages PMediaTransport;
+  manages PRemoteWorker;
+  manages PRemoteWorkerController;
+  manages PRemoteWorkerService;
+  manages PSharedWorker;
+  manages PTemporaryIPCBlob;
+  manages PFileCreator;
+  manages PMessagePort;
+  manages PCameras;
+  manages PMIDIManager;
+  manages PMIDIPort;
+  manages PQuota;
+  manages PChildToParentStream;
+  manages PParentToChildStream;
+  manages PServiceWorker;
+  manages PServiceWorkerContainer;
+  manages PServiceWorkerManager;
+  manages PServiceWorkerRegistration;
+  manages PWebAuthnTransaction;
+  manages PWebSocketConnection;
+  manages PUDPSocket;
+  manages PVerifySSLServerCert;
+  manages PVsync;
+
+parent:
+  // Only called at startup during mochitests to check the basic infrastructure.
+  async PBackgroundTest(nsCString testArg);
+
+  async PBackgroundDataBridge(uint64_t channelID);
+
+  async PBackgroundIDBFactory(LoggingInfo loggingInfo);
+
+  async PBackgroundIndexedDBUtils();
+
+  // Use only for testing!
+  async FlushPendingFileDeletions();
+
+  async PBackgroundSDBConnection(PersistenceType persistenceType,
+                                 PrincipalInfo principalInfo);
+
+  async PBackgroundLSDatabase(PrincipalInfo principalInfo,
+                              uint32_t privateBrowsingId,
+                              uint64_t datastoreId);
+
+  async PBackgroundLSObserver(uint64_t observerId);
+
+  /**
+   * Issue an asynchronous request that will be used in a synchronous fashion
+   * through complex machinations described in `PBackgroundLSRequest.ipdl` and
+   * `LSObject.h`.
+   */
+  async PBackgroundLSRequest(LSRequestParams params);
+
+  /**
+   * Issues a simple, non-cancelable asynchronous request that's used in an
+   * asynchronous fashion by callers.  (LSRequest is not simple because it used
+   * in a synchronous fashion which leads to complexities regarding cancelation,
+   * see `PBackgroundLSRequest.ipdl` for details.)
+   */
+  async PBackgroundLSSimpleRequest(LSSimpleRequestParams params);
+
+  /**
+   * Asynchronously propagates the "last-pb-context-exited" observer
+   * notification to LocalStorage NextGen implementation so it can clear
+   * retained private-browsing in-memory Datastores.  Using a (same-process)
+   * IPC message avoids the need for the main-thread nsIObserver to have a
+   * reference to the PBackground thread and directly dispatch a runnable to it.
+   */
+  async LSClearPrivateBrowsing();
+
+  async PBackgroundLocalStorageCache(PrincipalInfo principalInfo,
+                                     nsCString originKey,
+                                     uint32_t privateBrowsingId);
+
+  async PBackgroundSessionStorageManager(uint64_t aTopContextId);
+
+  async PBackgroundStorage(nsString profilePath, uint32_t privateBrowsingId);
+
+  async PVsync();
+
+  async PCameras();
+
+  async PUDPSocket(PrincipalInfo? pInfo, nsCString filter);
+  async PBroadcastChannel(PrincipalInfo pInfo, nsCString origin, nsString channel);
+
+  async PServiceWorkerManager();
+
+  async ShutdownServiceWorkerRegistrar();
+
+  async PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
+
+  async PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
+
+  async PChildToParentStream();
+
+  async MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
+
+  async PQuota();
+
+  async ShutdownQuotaManager();
+
+  async ShutdownBackgroundSessionStorageManagers();
+
+  async PropagateBackgroundSessionStorageManager(uint64_t currentTopContextId, uint64_t targetTopContextId);
+
+  async RemoveBackgroundSessionStorageManager(uint64_t topContextId);
+
+  async GetSessionStorageManagerData(
+      uint64_t aTopContextId, uint32_t aSizeLimit, bool aCancelSessionStoreTimer)
+      returns(SSCacheCopy[] aCacheCopy);
+
+  async LoadSessionStorageManagerData(uint64_t aTopContextId, SSCacheCopy[] aOriginCacheCopy);
+
+  async PFileSystemRequest(FileSystemParams params);
+
+  async PGamepadEventChannel();
+
+  async PGamepadTestChannel();
+
+  async PHttpBackgroundChannel(uint64_t channelId);
+
+  async PWebAuthnTransaction();
+
+  async PSharedWorker(RemoteWorkerData data,
+                      uint64_t windowID,
+                      MessagePortIdentifier portIdentifier);
+
+  async PTemporaryIPCBlob();
+
+  async PFileCreator(nsString aFullPath, nsString aType, nsString aName,
+                     int64_t? lastModified, bool aExistenceCheck,
+                     bool aIsFromNsIFile);
+
+  async PClientManager();
+
+  async PMIDIManager();
+  async PMIDIPort(MIDIPortInfo portInfo, bool sysexEnabled);
+
+  // This method is used to propagate storage activities from the child actor
+  // to the parent actor. See StorageActivityService.
+  async StorageActivity(PrincipalInfo principalInfo);
+
+  async PServiceWorker(IPCServiceWorkerDescriptor aDescriptor);
+
+  async PRemoteWorkerController(RemoteWorkerData aData);
+
+  async PRemoteWorkerService();
+
+  async PServiceWorkerContainer();
+
+  async PServiceWorkerRegistration(IPCServiceWorkerRegistrationDescriptor aDescriptor);
+
+  async PEndpointForReport(nsString aGroupName, PrincipalInfo aPrincipalInfo);
+
+  async RemoveEndpoint(nsString aGroupName, nsCString aEndpointURL,
+                       PrincipalInfo aPrincipalInfo);
+
+  async PIdleScheduler();
+
+  async PMediaTransport();
+
+  async PVerifySSLServerCert(ByteArray aServerCert,
+                             ByteArray[] aPeerCertChain,
+                             nsCString aHostName,
+                             int32_t aPort,
+                             OriginAttributes aOriginAttributes,
+                             ByteArray? aStapledOCSPResponse,
+                             ByteArray? aSctsFromTLSExtension,
+                             DelegatedCredentialInfoArg? aDcInfo,
+                             uint32_t aProviderFlags,
+                             uint32_t aCertVerifierFlags);
+
+  async EnsureRDDProcessAndCreateBridge()
+      returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
+
+  async PWebSocketConnection(uint32_t aListenerId);
+
+  async PLockManager(ContentPrincipalInfo aPrincipalInfo, nsID aClientId);
+
+child:
+  async PCache();
+  async PCacheStreamControl();
+
+  async PParentToChildStream();
+
+  async PRemoteWorker(RemoteWorkerData data);
+
+both:
+  // PRemoteLazyInputStream is created on the parent side only if the child
+  // starts a migration.
+  async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
+
+  async PFileDescriptorSet(FileDescriptor fd);
+};
+
+} // namespace ipc
+} // namespace mozilla

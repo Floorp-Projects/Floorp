@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Prevent return key should not submit form</title>
+  <script type="application/javascript">
+  function init() {
+    let input = document.getElementById("input");
+    input.addEventListener("keydown", function(aEvent) {
+      if (aEvent.keyCode == 13) { // return key
+        alert("Hello!");
+        aEvent.preventDefault();
+        return false;
+      }
+      return true;
+    }, {once: true});
+
+    let form = document.getElementById("form");
+    form.addEventListener("submit", function() {
+      let result = document.getElementById("result");
+      result.innerHTML = "submitted";
+    }, {once: true});
+  }
+  </script>
+</head>
+
+<body onload="init()">
+  <form id="form">
+    <input type="text" id="input">
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>
+  <p id="result">not submitted</p>
+</body>
+</html>

@@ -1,0 +1,87 @@
+              # API
+              src/plugin/nr_plugin.h
+              src/share/nr_api.h
+              src/share/nr_common.h
+              src/share/nr_reg_keys.h
+
+              # libekr
+              src/util/libekr/assoc.h
+              src/util/libekr/debug.c
+              src/util/libekr/debug.h
+              src/util/libekr/r_assoc.c
+              src/util/libekr/r_assoc.h
+              src/util/libekr/r_common.h
+              src/util/libekr/r_crc32.c
+              src/util/libekr/r_crc32.h
+              src/util/libekr/r_data.c
+              src/util/libekr/r_data.h
+              src/util/libekr/r_defaults.h
+              src/util/libekr/r_errors.c
+              src/util/libekr/r_errors.h
+              src/util/libekr/r_includes.h
+              src/util/libekr/r_list.c
+              src/util/libekr/r_list.h
+              src/util/libekr/r_macros.h
+              src/util/libekr/r_memory.c
+              src/util/libekr/r_memory.h
+              src/util/libekr/r_replace.c
+              src/util/libekr/r_thread.h
+              src/util/libekr/r_time.c
+              src/util/libekr/r_time.h
+              src/util/libekr/r_types.h
+              src/util/libekr/debug.c
+              src/util/libekr/debug.h
+
+	      # Utilities
+              src/util/byteorder.c
+              src/util/byteorder.h
+              src/util/hex.c
+              src/util/hex.h
+              src/util/p_buf.c
+              src/util/p_buf.h
+              src/util/util.c
+              src/util/util.h
+
+	      # Events
+              src/event/async_timer.h
+              src/event/async_wait.h
+              src/event/async_wait_int.h
+
+	      # Logging
+              src/log/r_log.c
+              src/log/r_log.h
+
+	      # Registry
+              src/registry/c2ru.c
+              src/registry/c2ru.h
+              src/registry/registry.c
+              src/registry/registry.h
+              src/registry/registry_int.h
+              src/registry/registry_local.c
+              src/registry/registry_vtbl.h
+              src/registry/registrycb.c
+
+              src/port/darwin/include/csi_platform.h
+              src/port/win32/include/csi_platform.h
+              src/port/linux/include/csi_platform.h
+              src/port/linux/include/linux_funcs.h
+              src/port/linux/include/sys/ttycom.h
+              src/port/linux/port-impl.mk
+	      # sys/queue.h manually copied into src/port/generic
+
+              # Stats
+              src/stats/nrstats.h
+              
+              # Meta-files
+              COPYRIGHT
+              VERSION
+              README
+
+
+
+
+
+
+
+              
+

@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=816720
+-->
+<head>
+  <title>Test for Bug 816720</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css" id="style"></style>
+</head>
+<body>
+
+<pre id="test"></pre>
+
+<p><span id=control-serif>........</span></p>
+<p><span id=control-monospace>........</span></p>
+<p><span id=test-font>........</span></p>
+
+<style id=other-styles>
+  #test { font-size: 16px; animation: test 1s both }
+  #control-serif { font: 16px serif }
+  #test-font { font: 16px UnlikelyFontName, serif }
+</style>
+
+<p><span id=control-decimal></span></p>
+<p><span id=control-cjk-decimal></span></p>
+<p><span id=test-counter-style></span></p>
+
+<style>
+  #control-decimal::before { content: counter(a, decimal); }
+  #control-cjk-decimal::before { content: counter(a, cjk-decimal); }
+  #test-counter-style::before { content: counter(a, unlikely-counter-style); }
+</style>
+
+<script type="application/javascript">
+
+// Monospace fonts available on all the platforms we're testing on.
+//
+// XXX Once bug 817220 is fixed we could instead use the value of
+// font.name.monospace.x-western as the monospace font to use.
+var MONOSPACE_FONTS = [
+  "Courier",
+  "Courier New",
+  "Monaco",
+  "DejaVu Sans Mono",
+  "Droid Sans Mono"
+];
+
+var test = document.getElementById("test");
+var controlSerif = document.getElementById("control-serif");
+var controlMonospace = document.getElementById("control-monospace");
+var testFont = document.getElementById("test-font");
+var otherStyles = document.getElementById("other-styles");
+
+otherStyles.sheet.insertRule("#control-monospace { font: 16px " +
+                             MONOSPACE_FONTS + ", serif }", 0);
+
+var monospaceWidth = controlMonospace.getBoundingClientRect().width;
+var serifWidth = controlSerif.getBoundingClientRect().width;
+
+var controlDecimal = document.getElementById("control-decimal");
+var controlCJKDecimal = document.getElementById("control-cjk-decimal");
+var testCounterStyle = document.getElementById("test-counter-style");
+
+var decimalWidth = controlDecimal.getBoundingClientRect().width;
+var cjkDecimalWidth = controlCJKDecimal.getBoundingClientRect().width;
+
+// [at-rule type, passing condition, failing condition]
+var outerRuleInfo = [
+  ["@media", "all", "not all"],
+  ["@-moz-document", "url-prefix('')", "url-prefix('zzz')"],
+  ["@supports", "(color: green)", "(unknown: unknown)"]
+];
+
+// [rule, function to test whether the rule was successfully inserted and applied]
+var innerRuleInfo = [
+  ["#test { text-decoration: underline; }",
+   function(aApplied, aParent, aException) {
+     return !aException &&
+            window.getComputedStyle(test).textDecorationLine ==
+               (aApplied ? "underline" : "none");
+   }],
+  ["@page { margin: 4cm; }",
+   function(aApplied, aParent, aException) {
+     // just test whether it threw
+     return !aException;
+   }],
+  ["@keyframes test { from { font-size: 100px; } to { font-size: 100px; } }",
+   function(aApplied, aParent, aException) {
+     return !aException &&
+            window.getComputedStyle(test).fontSize ==
+                (aApplied ? "100px" : "16px")
+   }],
+  ["@font-face { font-family: UnlikelyFontName; src: " +
+     MONOSPACE_FONTS.map(function(s) { return "local('" + s + "')" }).join(", ") + "; }",
+   function(aApplied, aParent, aException) {
+     var width = testFont.getBoundingClientRect().width;
+     if (aException) {
+       return false;
+     }
+     if (navigator.oscpu.match(/Linux/) ||
+         navigator.oscpu.match(/Android/) ||
+         SpecialPowers.Services.appinfo.name == "B2G") {
+       return true;
+    }
+    return Math.abs(width - (aApplied ? monospaceWidth : serifWidth)) <= 1; // bug 769194 prevents local()
+                                             // fonts working on Android
+   }],
+  ["@import url(nothing.css);",
+   function(aApplied, aParent, aException) {
+     // just test whether it threw
+     return aParent instanceof CSSRule ? aException : !aException;
+   }],
+  ["@namespace test url(http://example.org);",
+   function(aApplied, aParent, aException) {
+     // just test whether it threw
+     return aParent instanceof CSSRule ? aException : !aException;
+   }],
+  ["@counter-style unlikely-counter-style { system: extends cjk-decimal; }",
+   function (aApplied, aParent, aException) {
+     var width = testCounterStyle.getBoundingClientRect().width;
+     if (aException) {
+       return false;
+     }
+     return width == (aApplied ? cjkDecimalWidth : decimalWidth);
+   }],
+];
+
+function runTest()
+{
+  // First, assert that our assumed available fonts are indeed available
+  // and have expected metrics.
+  ok(monospaceWidth > 0, "monospace text has width");
+  ok(serifWidth > 0, "serif text has width");
+  ok(Math.abs(monospaceWidth - serifWidth) > 1, "monospace and serif text have sufficiently different widths");
+
+  // And that the #test-font element starts off using the "serif" font.
+  var initialFontTestWidth = testFont.getBoundingClientRect().width;
+  is(initialFontTestWidth, serifWidth);
+
+  ok(decimalWidth > 0, "decimal counter has width");
+  ok(cjkDecimalWidth > 0, "cjk-decimal counter has width");
+  ok(decimalWidth != cjkDecimalWidth, "decimal and cjk-decimal counter have different width")
+
+  var initialCounterStyleWidth = testCounterStyle.getBoundingClientRect().width;
+  is(initialCounterStyleWidth, decimalWidth, "initial counter style is decimal");
+
+  // We construct a style sheet with zero, one or two levels of conditional
+  // grouping rules (taken from outerRuleInfo), with one of the inner rules
+  // at the deepest level.
+  var style = document.getElementById("style");
+
+  // For each of the outer rule types...
+  for (var outerRule1 = 0; outerRule1 < outerRuleInfo.length; outerRule1++) {
+    // For each of { 0 = don't create an outer rule,
+    //               1 = create an outer rule with a passing condition,
+    //               2 = create an outer rule with a failing condition }...
+    for (var outerRuleCondition1 = 0; outerRuleCondition1 <= 2; outerRuleCondition1++) {
+
+      // For each of the outer rule types again...
+      for (var outerRule2 = 0; outerRule2 < outerRuleInfo.length; outerRule2++) {
+        // For each of { 0 = don't create an outer rule,
+        //               1 = create an outer rule with a passing condition,
+        //               2 = create an outer rule with a failing condition } again...
+        for (var outerRuleCondition2 = 0; outerRuleCondition2 <= 2; outerRuleCondition2++) {
+
+          // For each of the inner rule types...
+          for (var innerRule = 0; innerRule < innerRuleInfo.length; innerRule++) {
+
+            // Clear rules
+            var object = style.sheet;
+            while (object.cssRules.length) {
+              object.deleteRule(0);
+            }
+
+            // We'll record whether the inner rule should have been applied,
+            // according to whether we put passing or failing conditional
+            // grouping rules around it.
+            var applied = true;
+
+            if (outerRuleCondition1) {
+              // Create an outer conditional rule.
+              object.insertRule([outerRuleInfo[outerRule1][0],
+                                 outerRuleInfo[outerRule1][outerRuleCondition1],
+                                 "{}"].join(" "), 0);
+              object = object.cssRules[0];
+
+              if (outerRuleCondition1 == 2) {
+                // If we used a failing condition, we don't expect the inner
+                // rule to be applied.
+                applied = false;
+              }
+            }
+
+            if (outerRuleCondition2) {
+              // Create another outer conditional rule as a child of the first
+              // outer conditional rule (or the style sheet, if we didn't create
+              // a first outer conditional rule).
+              object.insertRule([outerRuleInfo[outerRule2][0],
+                                 outerRuleInfo[outerRule2][outerRuleCondition2],
+                                 "{}"].join(" "), 0);
+              object = object.cssRules[0];
+
+              if (outerRuleCondition2 == 2) {
+                // If we used a failing condition, we don't expect the inner
+                // rule to be applied.
+                applied = false;
+              }
+            }
+
+            var outer = object instanceof CSSRule ? object.cssText : "style sheet";
+            var inner = innerRuleInfo[innerRule][0];
+
+            // Insert the inner rule.
+            var exception = null;
+            try {
+              object.insertRule(inner, 0);
+            } catch (e) {
+              exception = e;
+            }
+
+            ok(innerRuleInfo[innerRule][1](applied, object, exception),
+               "<" + [outerRule1, outerRuleCondition1, outerRule2,
+                      outerRuleCondition2, innerRule].join(",") + "> " +
+               "inserting " + inner + " into " + outer.replace(/ *\n */g, ' '));
+          }
+        }
+      }
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  { "set": [["layout.css.moz-document.content.enabled", true ]]},
+  runTest,
+);
+</script>
+</body>
+</html>

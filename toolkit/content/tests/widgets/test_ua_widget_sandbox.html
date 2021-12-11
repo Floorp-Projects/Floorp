@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>UA Widget sandbox test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const content = document.getElementById("content");
+
+const div = content.appendChild(document.createElement("div"));
+div.attachShadow({ mode: "open"});
+SpecialPowers.wrap(div.shadowRoot).setIsUAWidget();
+
+const sandbox = SpecialPowers.Cu.getUAWidgetScope(SpecialPowers.wrap(div).nodePrincipal);
+
+SpecialPowers.setWrapped(sandbox, "info", SpecialPowers.wrapFor(info, sandbox));
+SpecialPowers.setWrapped(sandbox, "is", SpecialPowers.wrapFor(is, sandbox));
+SpecialPowers.setWrapped(sandbox, "ok", SpecialPowers.wrapFor(ok, sandbox));
+
+const sandboxScript = function(shadowRoot) {
+  info("UA Widget scope tests");
+  is(typeof window, "undefined", "The sandbox has no window");
+  is(typeof document, "undefined", "The sandbox has no document");
+
+  let element = shadowRoot.host;
+  let doc = element.ownerDocument;
+  let win = doc.defaultView;
+
+  ok(shadowRoot instanceof win.ShadowRoot, "shadowRoot is a ShadowRoot");
+  ok(element instanceof win.HTMLDivElement, "Element is a <div>");
+
+  is("createElement" in doc, false, "No document.createElement");
+  is("createElementNS" in doc, false, "No document.createElementNS");
+  is("createTextNode" in doc, false, "No document.createTextNode");
+  is("createComment" in doc, false, "No document.createComment");
+  is("importNode" in doc, false, "No document.importNode");
+  is("adoptNode" in doc, false, "No document.adoptNode");
+
+  is("insertBefore" in element, false, "No element.insertBefore");
+  is("appendChild" in element, false, "No element.appendChild");
+  is("replaceChild" in element, false, "No element.replaceChild");
+  is("cloneNode" in element, false, "No element.cloneNode");
+
+  ok("importNodeAndAppendChildAt" in shadowRoot, "shadowRoot.importNodeAndAppendChildAt");
+  ok("createElementAndAppendChildAt" in shadowRoot, "shadowRoot.createElementAndAppendChildAt");
+
+  info("UA Widget special methods tests");
+
+  const span = shadowRoot.createElementAndAppendChildAt(shadowRoot, "span");
+  span.textContent = "Hello from <span>!";
+
+  is(shadowRoot.lastChild, span, "<span> inserted");
+
+  const parser = new win.DOMParser();
+  let parserDoc = parser.parseFromString(
+    `<div xmlns="http://www.w3.org/1999/xhtml">Hello from DOMParser!</div>`, "application/xml");
+  shadowRoot.importNodeAndAppendChildAt(shadowRoot, parserDoc.documentElement, true);
+
+  ok(shadowRoot.lastChild instanceof win.HTMLDivElement, "<div> inserted");
+  is(shadowRoot.lastChild.textContent, "Hello from DOMParser!", "Deep import node worked");
+
+  info("UA Widget reflectors tests");
+
+  win.wrappedJSObject.spanElementFromUAWidget = span;
+  win.wrappedJSObject.divElementFromUAWidget = shadowRoot.lastChild;
+};
+SpecialPowers.Cu.evalInSandbox("this.script = " + sandboxScript.toString(), sandbox);
+sandbox.script(div.shadowRoot);
+
+ok(SpecialPowers.call_Instanceof(window.spanElementFromUAWidget, HTMLSpanElement), "<span> exposed");
+ok(SpecialPowers.call_Instanceof(window.divElementFromUAWidget, HTMLDivElement), "<div> exposed");
+
+try {
+  window.spanElementFromUAWidget.textContent;
+  ok(false, "Should throw.");
+} catch (err) {
+  ok(/denied/.test(err), "Permission denied to access <span>");
+}
+
+try {
+  window.divElementFromUAWidget.textContent;
+  ok(false, "Should throw.");
+} catch (err) {
+  ok(/denied/.test(err), "Permission denied to access <div>");
+}
+
+</script>
+</pre>
+</body>
+</html>

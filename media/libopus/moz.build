@@ -1,0 +1,146 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')
+
+EXPORTS.opus += [
+    'include/opus.h',
+    'include/opus_defines.h',
+    'include/opus_multistream.h',
+    'include/opus_types.h',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['OPUS_BUILD'] = True
+DEFINES['OPUS_VERSION'] = '"v1.3-rc-19-g5cbd7d5f-mozilla"'
+DEFINES['USE_ALLOCA'] = True
+DEFINES['ENABLE_HARDENING'] = True
+
+# Don't export symbols
+DEFINES['OPUS_EXPORT'] = ''
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
+    DEFINES['OPUS_ARM_ASM'] = True
+    DEFINES['OPUS_ARM_EXTERNAL_ASM'] = True
+    DEFINES['OPUS_ARM_INLINE_ASM'] = True
+    if int(CONFIG['ARM_ARCH']) >= 6:
+        DEFINES['OPUS_ARM_INLINE_EDSP'] = True
+        DEFINES['OPUS_ARM_MAY_HAVE_EDSP'] = True
+        DEFINES['OPUS_ARM_MAY_HAVE_MEDIA'] = True
+        DEFINES['OPUS_ARM_MAY_HAVE_NEON'] = True
+
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['ENABLE_ASSERTIONS'] = True
+
+if CONFIG['OS_ARCH'] in ('Linux', 'Darwin', 'DragonFly', 'FreeBSD',
+                         'NetBSD', 'OpenBSD'):
+    DEFINES['HAVE_LRINTF'] = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['inline'] = '__inline'
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        DEFINES['HAVE_LRINTF'] = True
+
+if CONFIG['OS_ARCH'] == 'AIX':
+    DEFINES['alloca'] = '__alloca'
+
+if CONFIG['OS_ARCH'] == 'SunOS':
+    DEFINES['HAVE_ALLOCA_H'] = True
+
+if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+    DEFINES['FIXED_POINT'] = 1
+    DEFINES['DISABLE_FLOAT_API'] = True
+
+LOCAL_INCLUDES += [
+    'celt',
+    'include',
+    'silk',
+    'silk/fixed',
+    'silk/float',
+    'src',
+]
+
+# sources.mozbuild is generated from gen-sources.py when a new libopus is
+# imported.
+include('sources.mozbuild')
+
+UNIFIED_SOURCES += celt_sources
+UNIFIED_SOURCES += silk_sources
+UNIFIED_SOURCES += opus_sources
+SOURCES += opus_nonunified_sources
+
+if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+    UNIFIED_SOURCES += silk_sources_float
+    UNIFIED_SOURCES += opus_sources_float
+else:
+    UNIFIED_SOURCES += silk_sources_fixed
+
+if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    DEFINES['OPUS_HAVE_RTCD'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_SSE'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_SSE2'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_SSE4_1'] = True
+    DEFINES['OPUS_X86_MAY_HAVE_AVX'] = True
+    SOURCES += celt_sources_sse
+    SOURCES += celt_sources_sse2
+    SOURCES += celt_sources_sse4_1
+    SOURCES += silk_sources_sse4_1
+    if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        SOURCES += silk_sources_fixed_sse4_1
+    for f in SOURCES:
+        if f in celt_sources_sse:
+            SOURCES[f].flags += CONFIG['SSE_FLAGS']
+        if f in celt_sources_sse2:
+            SOURCES[f].flags += CONFIG['SSE2_FLAGS']
+        if f in celt_sources_sse4_1 or \
+           f in silk_sources_sse4_1 or \
+           f in silk_sources_fixed_sse4_1:
+            SOURCES[f].flags += ['-msse4.1']
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
+    SOURCES += celt_sources_arm
+    SOURCES += [
+        '!celt_pitch_xcorr_arm-gnu.s'
+    ]
+    # -Os is significantly slower, enable -O3 unless optimization is disabled
+    if CONFIG['MOZ_OPTIMIZE']:
+        CFLAGS += [
+            '-O3',
+        ]
+        CXXFLAGS += [
+            '-O3',
+        ]
+    # These flags are a lie; they're just used to enable the requisite
+    # opcodes; actual arch detection is done at runtime.
+    ASFLAGS += [
+        '-march=armv7-a',
+    ]
+    ASFLAGS += CONFIG['NEON_FLAGS']
+
+if CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    DEFINES['OPUS_ARM_PRESUME_AARCH64_NEON_INTR'] = True
+    DEFINES['OPUS_ARM_PRESUME_NEON'] = True
+    DEFINES['OPUS_ARM_PRESUME_NEON_INTR'] = True
+    SOURCES += celt_sources_arm_neon_intr
+    SOURCES += silk_sources_arm_neon_intr
+    if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        DEFINES['OPUS_ARM_MAY_HAVE_NEON'] = True
+        DEFINES['OPUS_ARM_MAY_HAVE_NEON_INTR'] = True
+    else:
+        SOURCES += silk_sources_fixed_arm_neon_intr
+
+# Suppress warnings in third-party code.
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    if CONFIG['CC_TYPE'] == 'clang':
+        CFLAGS += ['-Wno-#pragma-messages']
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

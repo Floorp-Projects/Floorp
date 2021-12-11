@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <title>Fail without robust_buffer_access_behavior</title>
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+</head>
+<body>
+<script>
+
+function AssertRBAB() {
+  const c = document.createElement('canvas');
+  const g = c.getContext('webgl');
+  const e = g.getExtension('MOZ_debug');
+  ok(e, 'Should have MOZ_debug.');
+
+  const does_index_validation = e.getParameter(e.DOES_INDEX_VALIDATION);
+  const err = g.getError();
+  ok(!err, 'Error should be 0, was 0x' + err.toString(16));
+  ok(!does_index_validation,
+     "Should have RBAB. Mark this test as failing on platforms that can't support it.");
+
+  SimpleTest.finish();
+}
+
+// -
+
+SimpleTest.waitForExplicitFinish();
+
+const prefPairList = [
+  ['webgl.force-enabled', true],
+  ['webgl.enable-privileged-extensions', true],
+];
+const prefEnv = {'set': prefPairList};
+SpecialPowers.pushPrefEnv(prefEnv, AssertRBAB);
+
+</script>
+</body>
+</html>

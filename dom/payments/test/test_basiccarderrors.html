@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1489968
+-->
+<meta charset="utf-8">
+<title>Test for Bug 1489968</title>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="./DefaultData.js"></script>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+const gUrl = SimpleTest.getTestFileURL("BasicCardErrorsChromeScript.js");
+const gScript = SpecialPowers.loadChromeScript(gUrl);
+
+function sendOnce(message) {
+  return data => {
+    return new Promise(resolve => {
+      const doneMsg = `${message}-complete`;
+      gScript.addMessageListener(doneMsg, function listener() {
+        gScript.removeMessageListener(doneMsg, listener);
+        resolve();
+      });
+      gScript.sendAsyncMessage(message, data);
+    });
+  };
+}
+const sendTearDown = sendOnce("teardown");
+
+async function teardown() {
+  await sendTearDown();
+  gScript.destroy();
+  SimpleTest.finish();
+}
+
+async function testBasicCardErrors() {
+  const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(
+    true
+  );
+  const request = new PaymentRequest(
+    [{ supportedMethods: "basic-card" }],
+    defaultDetails
+  );
+  const response = await request.show();
+  // Smoke test the initial state
+  is(response.details.cardNumber, "4111111111111111", "Expected cardNumber to initially be 4111111111111111");
+  // We send these up and have the chrome script echo them back to us.
+  const expected = {
+    cardholderName: "PASS",
+    cardNumber: "3566002020360505",
+    cardSecurityCode: "666",
+    expiryMonth: "02",
+    expiryYear: "2020",
+  };
+  await response.retry({ paymentMethod: expected });
+  // the values of the response would have been updated with the expected
+  for (const [member, expectedValue] of Object.entries(expected)) {
+    const actual = response.details[member];
+    is(
+      actual,
+      expectedValue,
+      `Expected member ${member} to be "${expectedValue}, but got "${actual}"`
+    );
+  }
+  await response.complete("success");
+  handler.destruct();
+}
+
+async function runTests() {
+  try {
+    await testBasicCardErrors();
+  } catch (err) {
+    ok(false, `Unexpected error: ${err} ${err.stack}.`);
+  } finally {
+    await teardown();
+  }
+}
+
+window.addEventListener("load", () => {
+  const prefs = [["dom.payments.request.enabled", true]];
+  SpecialPowers.pushPrefEnv({ set: prefs }, runTests);
+});
+</script>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1489968">Mozilla Bug 1489968</a>

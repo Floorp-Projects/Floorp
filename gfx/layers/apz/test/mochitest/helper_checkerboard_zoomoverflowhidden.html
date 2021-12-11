@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html id="root-element">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Checkerboarding in while scrolling a subframe when root scrollframe has
+         overflow hidden and pinch zoomed in</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+
+  var initial_resolution = await getResolution();
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+
+  var subframe = document.getElementById('bugzilla-body');
+
+  // layerize subframe
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: subframe,
+    offsetX: 10,
+    offsetY: 10,
+  });
+
+  // verify layerization
+  await promiseAllPaintsDone();
+  ok(isLayerized("bugzilla-body"), "subframe should be layerized at this point");
+  var subframeScrollId = utils.getViewId(subframe);
+  ok(subframeScrollId > 0, "subframe should have a scroll id");
+
+  // wait for the dust to settle
+  await promiseAllPaintsDone();
+
+  let touchEndPromise = promiseTouchEnd(document.documentElement, 2);
+
+  // Ensure that APZ gets updated hit-test info
+  await promiseAllPaintsDone();
+
+  var zoom_in = [
+      [ { x: 130, y: 280 }, { x: 150, y: 300 } ],
+      [ { x: 120, y: 250 }, { x: 160, y: 380 } ],
+      [ { x: 115, y: 200 }, { x: 180, y: 410 } ],
+      [ { x: 110, y: 150 }, { x: 200, y: 440 } ],
+      [ { x: 105, y: 120 }, { x: 210, y: 470 } ],
+      [ { x: 100, y: 100 }, { x: 230, y: 500 } ],
+  ];
+
+  var touchIds = [0, 1];
+  synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+
+  await touchEndPromise;
+  // Flush state and get the resolution we're at now
+  await promiseApzFlushedRepaints();
+  let final_resolution = await getResolution();
+  ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater than the initial resolution");
+
+  touchEndPromise = promiseTouchEnd(document.documentElement);
+
+  // pan back up to the top left
+  await promiseNativeTouchDrag(window,
+                               5,
+                               5,
+                               500,
+                               500,
+                               2);
+
+  await touchEndPromise; // wait for the touchend listener to fire
+  await promiseApzFlushedRepaints();
+  await promiseAllPaintsDone();
+
+  touchEndPromise = promiseTouchEnd(document.documentElement);
+
+  // pan right to expose the bug
+  await promiseNativeTouchDrag(window,
+                               100,
+                               20,
+                               -180,
+                               0,
+                               3);
+
+  await touchEndPromise; // wait for the touchend listener to fire
+  await promiseApzFlushedRepaints();
+
+  assertNotCheckerboarded(utils, subframeScrollId, "Subframe");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+html,
+body {
+  overflow-y: hidden;
+  height: 100%;
+}
+
+body {
+  position: absolute;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#wrapper {
+  position: initial !important;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+#bugzilla-body {
+  flex: auto;
+  position: relative;
+  outline: none;
+  padding: 0 15px;
+  overflow-x: auto;
+  overflow-y: scroll;
+  will-change: transform;
+}
+  </style>
+</head>
+<body>
+      <div id="wrapper">
+         <main id="bugzilla-body">
+           <p>STR:</p>
+           <ol>
+              <li>set <code>apz.allow_zoom</code> to <code>true</code></li>
+              <li>visit any bugzilla site (like this one)</li>
+              <li>zoom into the page and observe the left edge of the viewport</li>
+           </ol>
+           <p>ER: content should be shown<br>
+              AR: foreground content seems to disappear, looks like it's being cut off
+           </p>
+           <p>I attached a video of the STR to show the problem a little bit better. So far, I could only reproduce this on bugzilla. Words words words words words words words words words words words words words words words words words words words words words words.</p>
+
+           <div style="height: 10000px;"></div>
+         </main>
+      </div>
+</body>
+</html>

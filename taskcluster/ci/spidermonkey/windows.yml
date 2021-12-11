@@ -1,0 +1,123 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: b-win2012
+    worker:
+        max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        tooltool-downloads: internal
+
+sm-plain-win64/debug:
+    description: "Spidermonkey Plain win64 debug"
+    index:
+        job-name: sm-plain-win64-debug
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: SM(p)
+    run:
+        spidermonkey-variant: plaindebug
+        spidermonkey-platform: win64
+    fetches:
+        toolchain:
+            - win64-clang
+            - win64-rust
+            - win64-mozmake
+
+sm-plain-win32/debug:
+    description: "Spidermonkey Plain win32 debug"
+    index:
+        job-name: sm-plain-win32-debug
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: SM(p)
+        tier: 2
+    run:
+        spidermonkey-variant: plaindebug
+        spidermonkey-platform: win32
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - win64-clang
+            - win64-rust
+            - win64-mozmake
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+
+sm-plain-win64/opt:
+    description: "Spidermonkey Plain win64 opt"
+    index:
+        job-name: sm-plain-win64-opt
+    treeherder:
+        platform: windows2012-64/opt
+        symbol: SM(p)
+    run:
+        spidermonkey-variant: plain
+        spidermonkey-platform: win64
+    fetches:
+        toolchain:
+            - win64-clang
+            - win64-rust
+            - win64-mozmake
+
+sm-plain-win32/opt:
+    description: "Spidermonkey Plain win32 opt"
+    index:
+        job-name: sm-plain-win32-opt
+    treeherder:
+        platform: windows2012-32/opt
+        symbol: SM(p)
+        tier: 2
+    run:
+        spidermonkey-variant: plain
+        spidermonkey-platform: win32
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - win64-clang
+            - win64-rust
+            - win64-mozmake
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+
+sm-compacting-win64/debug:
+    description: "Spidermonkey Compacting win64 debug"
+    index:
+        job-name: sm-compacting-win64-debug
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: SM(cgc)
+    run:
+        spidermonkey-variant: compacting
+        spidermonkey-platform: win64
+    fetches:
+        toolchain:
+            - win64-clang
+            - win64-rust
+            - win64-mozmake
+
+sm-compacting-win32/debug:
+    description: "Spidermonkey Compacting win32 debug"
+    index:
+        job-name: sm-compacting-win32-debug
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: SM(cgc)
+        tier: 2
+    run:
+        spidermonkey-variant: compacting
+        spidermonkey-platform: win32
+    run-on-projects: []
+    fetches:
+        toolchain:
+            - win64-clang
+            - win64-rust
+            - win64-mozmake
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"

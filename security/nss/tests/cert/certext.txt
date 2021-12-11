@@ -1,0 +1,130 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# File syntax:
+# '#' comments.
+# If the line starts from '!'('! TEST_N Test Name String'),
+# then  'Test Name String' will be the name of a test(starting
+# from second space till the rest of the line).
+# All uncommented lines are hard codded answers to certutil
+# extension questions.
+# Line '= N string1|string2|string3': '=' is a stop sign
+# of certutil inputs and start of the test. 'N' is the number
+# of extension that will be tested. 'string1|string2|string3'
+# are grep patterns for test result verification. '_' in stringN
+# will be replaced to a space.
+# ################################################################
+! TEST_1 Certificate Key Usage Extension
+0
+1
+2
+3
+4
+5
+6
+10
+n
+= 1 Certificate_Key_Usage|Digital_Signature|Non-Repudiation|Key_Encipherment|Data_Encipherment|Key_Agreement|Certificate_Signing|CRL_Signing
+# ################################################################
+! TEST_2 Certificate Key Usage Extension
+0
+1
+2
+3
+4
+5
+6
+10
+y
+= 1 Certificate_Key_Usage|Digital_Signature|Critical:_True
+# ################################################################
+! TEST_3 Certificate Basic Constraints Extension
+y
+-1
+n
+= 2 Name:_Certificate_Basic_Constraints|Data:_Is_a_CA_with_no_maximum
+# ################################################################
+! TEST_4 Certificate Basic Constraints Extension
+n
+-1
+y
+= 2 Name:_Certificate_Basic_Constraints|Data:_Is_not_a_CA|Critical:_True
+# ################################################################
+! TEST_5 Certificate Authority Key Identifier Extension
+y
+12341235123
+
+
+y
+= 3 Name:_Certificate_Authority_Key_Identifier|Critical:_True|Key_ID:|12341235123
+# ################################################################
+! TEST_6 Certificate Authority Key Identifier Extension
+y
+
+3
+test.com
+
+214123
+y
+= 3 Name:_Certificate_Authority_Key_Identifier|Critical:_True|Issuer:|DNS_name:_"test.com"|Serial_Number:|214123
+# ################################################################
+! TEST_7 CRL Distribution Points Extension
+1
+2
+rfc822@name.tld
+3
+test.com
+8
+1.2.3.4
+9
+OID.0.2.213
+10
+0
+10
+n
+n
+= 4 Name:_CRL_Distribution_Points|rfc822@name.tld
+# #################################################################
+! TEST_8 CRL Distribution Points Extension
+2
+SN=asdfsdf
+4
+3
+test.com
+10
+n
+n
+= 4 Name:_CRL_Distribution_Points|asdfsdf|Reasons:|DNS_name:_"test.com"
+# ################################################################
+! TEST_9 Certificate Type Extension
+0
+1
+2
+10
+n
+= 5 Name:_Certificate_Type|Data:_<SSL_Client,SSL_Server,S/MIME>
+# ################################################################
+! TEST_10 Extended Key Usage Extension
+0
+1
+2
+3
+4
+5
+6
+10
+y
+= 6 Name:_Extended_Key_Usage|Critical:_True|TLS_Web_Server_Authentication_Certificate|TLS_Web_Client_Authentication_Certificate|Code_Signing_Certificate|E-Mail_Protection_Certificate|Time_Stamping_Certifcate|OCSP_Responder_Certificate|Strong_Crypto_Export_Approved
+# ################################################################
+! TEST_11 Certificate Key Usage Extension
+
+1
+2
+3
+4
+5
+6
+10
+n
+= 1 Certificate_Key_Usage|!Digital_Signature|Non-Repudiation|Key_Encipherment|Data_Encipherment|Key_Agreement|Certificate_Signing|CRL_Signing

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079453</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * JSON parsing/processing tests
+ * https://w3c.github.io/manifest/#processing
+ **/
+"use strict";
+var invalidJson = ["", ` \t \n ${whiteSpace} `, "{", "{[[}"];
+invalidJson.forEach((testString) => {
+  var expected = `Expect to recover from invalid JSON: ${testString}`;
+  data.jsonText = testString;
+  data.checkConformance = true;
+  var result = processor.process(data);
+  SimpleTest.is(result.start_url, docURL.href, expected);
+  SimpleTest.ok(
+    [...result.moz_validation].find(x => x.error && x.type === "json"),
+    "A JSON error message is included");
+});
+
+var validButUnhelpful = ["1", 1, "[{}]"];
+validButUnhelpful.forEach((testString) => {
+  var expected = `Expect to recover from valid JSON: ${testString}`;
+  data.jsonText = testString;
+  var result = processor.process(data);
+  SimpleTest.is(result.start_url, docURL.href, expected);
+});
+
+// Bug 1534756 - Allow for null manifests
+var input = {
+  jsonText: "null",
+  manifestURL,
+  docURL,
+};
+var result = processor.process(input);
+SimpleTest.is(result, null, "Expected null when the input is null");
+
+  </script>
+</head>

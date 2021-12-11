@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+  -->
+<html>
+<head>
+  <title>reference image-rendering</title>
+  <style>
+    canvas { position:absolute;left:0px;top:0px; }
+  </style>
+  <script type="text/javascript">
+    function draw() {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgb(255,0,0)";
+        ctx.fillRect(50,50,200,200);
+        ctx.fillStyle = "rgb(0,255,0)";
+        ctx.fillRect(50,50,100,100);
+    }
+  </script>
+</head>
+<body onload="draw();">
+  <canvas id="canvas" width="300" height="300"></canvas>
+</body>
+</html>

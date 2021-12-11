@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <style>
+      table     { width: 400px; height: 25px; font-size: 10px; }
+      td.blue   { background: lightblue;  color: rgba(0,0,0,0) }
+      td.green  { background: lightgreen; color: rgba(0,0,0,0) }
+      col.a     { width: 100px; }
+      col.c     { width: 100px; }
+    </style>
+  </head>
+  <body>
+    With colspan:
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue"></td>
+        <td class="green" colspan="2"></td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue">xxx</td>
+        <td class="green" colspan="2"></td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue"></td>
+        <td class="green" colspan="2">xxx</td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue">xxx</td>
+        <td class="green" colspan="2">xxx</td>
+      </tr></tbody>
+    </table>
+
+    Without colspan:
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue"></td>
+        <td class="green"></td>
+        <td class="green"></td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue">xxx</td>
+        <td class="green"></td>
+        <td class="green"></td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue"></td>
+        <td class="green">xxx</td>
+        <td class="green"></td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue"></td>
+        <td class="green"></td>
+        <td class="green">xxx</td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue">xxx</td>
+        <td class="green">xxx</td>
+        <td class="green"></td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue">xxx</td>
+        <td class="green"></td>
+        <td class="green">xxx</td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue"></td>
+        <td class="green">xxx</td>
+        <td class="green">xxx</td>
+      </tr></tbody>
+    </table>
+    <table cellspacing=0 cellpadding=0>
+      <colgroup><col class="a"/><col/><col class="c"/></colgroup>
+      <tbody><tr>
+        <td class="blue">xxx</td>
+        <td class="green">xxx</td>
+        <td class="green">xxx</td>
+      </tr></tbody>
+    </table>
+  </body>
+</html>

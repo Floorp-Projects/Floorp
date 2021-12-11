@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://global/content/commonDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/commonDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+
+<!DOCTYPE window>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        id="bookmarkproperties"
+        headerparent="bookmarkpropertiesdialog"
+        neediconheader="true"
+        onunload="BookmarkPropertiesPanel.onDialogUnload();"
+        style="min-width: 30em;"
+        persist="screenX screenY width">
+<dialog id="bookmarkpropertiesdialog"
+        buttons="accept, cancel">
+
+  <linkset>
+    <html:link rel="localization" href="browser/editBookmarkOverlay.ftl"/>
+  </linkset>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="stringBundle"
+                  src="chrome://browser/locale/places/bookmarkProperties.properties"/>
+  </stringbundleset>
+
+  <script src="chrome://browser/content/places/editBookmark.js"/>
+  <script src="chrome://browser/content/places/bookmarkProperties.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://browser/content/places/places-tree.js"/>
+  <script src="chrome://global/content/adjustableTitle.js"/>
+
+#include editBookmarkPanel.inc.xhtml
+
+</dialog>
+</window>

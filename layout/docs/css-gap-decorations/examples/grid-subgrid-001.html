@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of subgrid rules.</title>
+<style>
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 30px 50px 70px;
+  inline-size: 200px;
+  gap: 8px;
+  place-content: center;
+  border: 2px solid;
+
+  column-rule: auto solid;
+  column-rule-image: linear-gradient(#f008,#fc08);
+  column-rule-extent: all-long allow-overlap;
+  row-rule: 6px solid purple;
+  row-rule-extent: all-long;
+}
+
+.subgrid {
+  display: grid;
+  grid: subgrid / subgrid;
+  grid-column: 1 / span 2;
+  grid-row: 2 / span 2;
+  border: 1px dashed;
+  margin: 6px;
+
+  column-rule: 2px solid red;
+  row-rule: solid blue;
+  row-rule-align: rule;
+  row-rule-edge-align: gap-over;
+}
+
+.subgrid.larger {
+  gap: 16px;
+  row-rule-lateral-inset-start: 1px;
+}
+
+.subgrid.smaller {
+  gap: 4px;
+  row-rule-width: 100%;
+}
+
+x {
+  background: grey;
+  opacity: 0.5;
+}
+
+.grid::after {
+  position: absolute;
+  bottom: -3em;
+  font-size: 10px;
+  font-style: italic;
+  vertical-align: top;
+  content: attr(test);
+}
+</style>
+
+<div class="grid" test="A subgrid with a larger gap than the parent.">
+  <x>1</x><x>2</x><x>3</x>
+  <div class="subgrid larger"><x>4</x><x>5</x><x>6</x></div>
+  <x>7</x><x>8</x>
+</div>
+
+<div class="grid" test="A subgrid with a smaller gap than the parent.">
+  <x>1</x><x>2</x><x>3</x>
+  <div class="subgrid smaller"><x>4</x><x>5</x><x>6</x></div>
+  <x>7</x><x>8</x>
+</div>

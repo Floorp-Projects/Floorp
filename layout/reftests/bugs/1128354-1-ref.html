@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      .flexVert {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .flexIntermediateHoriz {
+        display: flex;
+      }
+
+      .flexInnerHoriz {
+        display: flex;
+        /* In this reference case, we make the inner elements be auto-height
+         * and aligned to the main-axis start side ("align-self:flex-start").
+         * That's how the corresponding piece of the testcase should render,
+         * given its "height: [unresolvable percent]" and implicit
+         * "align-self: stretch". */
+        align-self: flex-start;
+        background: pink;
+      }
+      .height50pct {
+        align-self: flex-start;
+        background: brown;
+      }
+      .height0pct {
+        align-self: flex-start;
+        background: yellow;
+      }
+      .spacer {
+        background: lightblue;
+        height: 200px;
+        width: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flexVert">
+      <div class="flexIntermediateHoriz">
+        <div class="flexInnerHoriz">text</div>
+        <div class="height50pct">fifty</div>
+        <div class="height0pct">zero</div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+  </body>
+</html>

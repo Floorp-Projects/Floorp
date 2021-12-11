@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    A simple case of a changing interval to check that instances times are
+    re-sorted.
+   -->
+  <rect width="100" height="100" fill="red">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="0s; 1s" dur="10s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="orange; green; purple"
+      begin="3s; a.end" dur="2s"/>
+  </rect>
+</svg>

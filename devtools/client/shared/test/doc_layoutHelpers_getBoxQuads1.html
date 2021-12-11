@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Layout Helpers</title>
+<style id="styles">
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  #hidden-node {
+    display: none;
+  }
+
+  #simple-node-with-margin-padding-border {
+    width: 200px;
+    height: 200px;
+    background: #f06;
+
+    padding: 20px;
+    margin: 50px;
+    border: 10px solid black;
+  }
+
+  #scrolled-node {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 300px;
+    height: 100px;
+    overflow: scroll;
+    background: linear-gradient(red, pink);
+  }
+
+  #sub-scrolled-node {
+    width: 200px;
+    height: 200px;
+    overflow: scroll;
+    background: linear-gradient(yellow, green);
+  }
+
+  #inner-scrolled-node {
+    width: 100px;
+    height: 400px;
+    background: linear-gradient(black, white);
+  }
+</style>
+<div id="hidden-node"></div>
+<div id="simple-node-with-margin-padding-border"></div>
+<!-- The inline encoded code below corresponds to:
+<iframe style="margin:10px;border:0;width:300px;height:300px;">
+  <iframe style="margin:10px;border:0;width:200px;height:200px;">
+    <div id="inner-node" style="width:100px;height:100px;border:10px solid red;margin:10px;padding:10px;"></div>
+  </iframe>
+</iframe>
+ -->
+<iframe src="data:text/html,%3Cstyle%3Ebody%7Bmargin:0;padding:0;%7D%3C/style%3E%3Ciframe%20src=%22data:text/html,%253Cstyle%253Ebody%257Bmargin:0;padding:0;%257D%253C/style%253E%253Cdiv%2520id='inner-node'%2520style='width:100px;height:100px;border:10px%2520solid%2520red;margin:10px;padding:10px;'%253E%253C/div%253E%22%20style=%22margin:10px;border:0;width:200px;height:200px;%22%3E%3C/iframe%3E" style="margin:10px;border:0;width:300px;height:300px;"></iframe>
+<div id="scrolled-node">
+  <div id="sub-scrolled-node">
+    <div id="inner-scrolled-node"></div>
+  </div>
+</div>
+<span id="inline">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus porttitor luctus sem id scelerisque. Cras quis velit sed risus euismod lacinia. Donec viverra enim eu ligula efficitur, quis vulputate metus cursus. Duis sed interdum risus. Ut blandit velit vitae faucibus efficitur. Lorem ipsum dolor sit amet, consectetur adipiscing elit.<br/ >
+Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed vitae dolor metus. Aliquam sed velit sit amet libero vestibulum aliquam vel a lorem. Integer eget ex eget justo auctor ullamcorper.<br/ >
+Praesent tristique maximus lacus, nec ultricies neque ultrices non. Phasellus vel lobortis justo. </span>

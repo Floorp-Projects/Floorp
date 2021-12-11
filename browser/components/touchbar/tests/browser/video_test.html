@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Touch Bar Fullscreen Video Test</title>
+</head>
+<style>
+  video {
+    display: block;
+    border: 1px solid black;
+  }
+</style>
+<body>
+  <video id="test-video" src="test-video.mp4" controls loop="true"></video>
+</body>
+<script>
+  let video = document.getElementById("test-video");
+
+  function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  }
+  document.addEventListener("keydown", function(e) {
+    if (e.keyCode == 13) {
+      toggleFullScreen();
+    }
+  });
+</script>
+</html>

@@ -1,0 +1,15 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISubstitutingProtocolHandler.idl"
+
+/**
+ * Protocol handler interface for the resource:// protocol
+ */
+[scriptable, uuid(241d34ac-9ed5-46d7-910c-7a9d914aa0c5)]
+interface nsIResProtocolHandler : nsISubstitutingProtocolHandler
+{
+  boolean allowContentToAccess(in nsIURI url);
+};

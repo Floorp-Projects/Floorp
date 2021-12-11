@@ -1,0 +1,178 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    platform: gecko-decision/opt
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 3600
+        artifacts:
+            - type: file
+              name: public/shadow-scheduler/optimized-tasks.json
+              path: /builds/worker/optimized-tasks.json
+        env:
+            DECISION_TASK_ID: {task-reference: <decision>}
+    treeherder:
+        kind: other
+        tier: 3
+    run-on-projects: ['autoland']
+    run:
+        using: mach
+        mach: taskgraph optimized -v --json -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized-tasks.json
+        sparse-profile: taskgraph
+
+relevant_tests:
+    description: Runs the relevant_tests optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(relevant_tests)
+    index:
+        product: source
+        job-name: shadow-scheduler-relevant_tests
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.relevant_tests
+
+bugbug_tasks_medium:
+    description: Runs the bugbug_tasks_medium optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_tasks_medium)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_tasks_medium
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_tasks_medium
+
+bugbug_tasks_high:
+    description: Runs the bugbug_tasks_high optimization strategy (with a high confidence threshold) instead of the default.
+    treeherder:
+        symbol: SS(bugbug_tasks_high)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_tasks_high
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_tasks_high
+
+bugbug_debug_disperse:
+    description: Runs the bugbug_debug_disperse optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_debug_disperse)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_debug_disperse
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_debug_disperse
+
+bugbug_disperse_low:
+    description: Runs the bugbug_disperse_low optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_disperse_low)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_disperse_low
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_disperse_low
+
+bugbug_disperse_medium:
+    description: Runs the bugbug_disperse_medium optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_disperse_med)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_disperse_medium
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_disperse_medium
+
+bugbug_disperse_reduced_medium:
+    description: Runs the bugbug_disperse_reduced_medium optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_di_r_med_noun)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_disperse_reduced_medium
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_disperse_reduced_medium
+
+bugbug_reduced_manifests_config_selection_low:
+    description: Runs the bugbug_reduced_manifests_config_selection_low optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_r_c_s_low)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_reduced_manifests_config_selection_low
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_reduced_manifests_config_selection_low
+
+bugbug_reduced_manifests_config_selection_medium:
+    description: Runs the bugbug_reduced_manifests_config_selection_medium optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_r_c_s_med)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_reduced_manifests_config_selection_medium
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_reduced_manifests_config_selection_medium
+
+bugbug_disperse_medium_no_unseen:
+    description: Runs the bugbug_disperse_medium_no_unseen optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_disp_med_noun)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_disperse_medium_no_unseen
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_disperse_medium_no_unseen
+
+bugbug_disperse_medium_only_one:
+    description: Runs the bugbug_disperse_medium_only_one optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_disp_med_one)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_disperse_medium_only_one
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_disperse_medium_only_one
+
+bugbug_disperse_high:
+    description: Runs the bugbug_disperse_high optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_disperse_high)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_disperse_high
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_disperse_high
+
+bugbug_reduced:
+    description: Runs the bugbug_reduced optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_reduced)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_reduced
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_reduced
+
+bugbug_reduced_high:
+    description: Runs the bugbug_reduced optimization strategy (with a low confidence threshold) instead of the default.
+    treeherder:
+        symbol: SS(bugbug_reduced_high)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_reduced_high
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: gecko_taskgraph.optimize:experimental.bugbug_reduced_high

@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filter Chains: Filters of the Same Type</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#FilterProperty">
+  <link rel="match" href="same-filter-ref.html">
+  <meta name="assert"
+        content="Multiple chained CSS filter functions of the same type should
+                 render correctly.">
+  <style type="text/css">
+    #target {
+      filter: blur(1px) blur(2px) blur(3px);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square.</p>
+  <div id="target"></div>
+</body>
+</html>

@@ -1,0 +1,191 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Bindings (WebIDL)")
+
+TEST_DIRS += ["test"]
+
+XPIDL_SOURCES += ["nsIScriptError.idl"]
+
+XPIDL_MODULE = "dom_bindings"
+
+EXPORTS.ipc += [
+    "ErrorIPCUtils.h",
+]
+
+EXPORTS.mozilla += [
+    "ErrorResult.h",
+    "RootedOwningNonNull.h",
+    "RootedRefPtr.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "AtomList.h",
+    "BindingCallContext.h",
+    "BindingDeclarations.h",
+    "BindingIPCUtils.h",
+    "BindingUtils.h",
+    "CallbackFunction.h",
+    "CallbackInterface.h",
+    "CallbackObject.h",
+    "DOMExceptionNames.h",
+    "DOMJSClass.h",
+    "DOMJSProxyHandler.h",
+    "DOMString.h",
+    "Errors.msg",
+    "Exceptions.h",
+    "FakeString.h",
+    "IterableIterator.h",
+    "JSSlots.h",
+    "NonRefcountedDOMObject.h",
+    "Nullable.h",
+    "PinnedStringId.h",
+    "PrimitiveConversions.h",
+    "Record.h",
+    "RemoteObjectProxy.h",
+    "RootedDictionary.h",
+    "SimpleGlobalObject.h",
+    "SpiderMonkeyInterface.h",
+    "ToJSValue.h",
+    "TypedArray.h",
+    "UnionMember.h",
+    "WebIDLGlobalNameHash.h",
+    "XrayExpandoClass.h",
+]
+
+if not CONFIG["MOZ_DOM_STREAMS"]:
+    EXPORTS.mozilla.dom += [
+        "ReadableStream.h",
+    ]
+
+# Generated bindings reference *Binding.h, not mozilla/dom/*Binding.h. And,
+# since we generate exported bindings directly to $(DIST)/include, we need
+# to add that path to the search list.
+#
+# Ideally, binding generation uses the prefixed header file names.
+# Bug 932082 tracks.
+LOCAL_INCLUDES += [
+    "!/dist/include/mozilla/dom",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/dom/battery",
+    "/dom/canvas",
+    "/dom/geolocation",
+    "/dom/html",
+    "/dom/indexedDB",
+    "/dom/media/webaudio",
+    "/dom/media/webrtc",
+    "/dom/media/webrtc/common/time_profiling",
+    "/dom/media/webrtc/jsapi",
+    "/dom/media/webrtc/libwebrtcglue",
+    "/dom/media/webrtc/transport",
+    "/dom/media/webspeech/recognition",
+    "/dom/svg",
+    "/dom/xml",
+    "/dom/xslt/base",
+    "/dom/xslt/xpath",
+    "/dom/xul",
+    "/js/xpconnect/src",
+    "/js/xpconnect/wrappers",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/xul/tree",
+    "/media/webrtc/",
+    "/netwerk/base/",
+    "/third_party/libwebrtc",
+    "/third_party/libwebrtc/webrtc",
+]
+
+LOCAL_INCLUDES += ["/third_party/msgpack/include"]
+
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
+
+UNIFIED_SOURCES += [
+    "BindingUtils.cpp",
+    "CallbackInterface.cpp",
+    "CallbackObject.cpp",
+    "DOMJSProxyHandler.cpp",
+    "Exceptions.cpp",
+    "IterableIterator.cpp",
+    "nsScriptError.cpp",
+    "nsScriptErrorWithStack.cpp",
+    "RemoteObjectProxy.cpp",
+    "SimpleGlobalObject.cpp",
+    "ToJSValue.cpp",
+    "WebIDLGlobalNameHash.cpp",
+]
+
+# Some tests, including those for for maplike and setlike, require bindings
+# to be built, which means they must be included in libxul. This breaks the
+# "no test classes are exported" rule stated in the test/ directory, but it's
+# the only way this will work. Test classes are only built in debug mode, and
+# all tests requiring use of them are only run in debug mode.
+if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
+    EXPORTS.mozilla.dom += [
+        "test/TestFunctions.h",
+        "test/TestInterfaceIterableDouble.h",
+        "test/TestInterfaceIterableDoubleUnion.h",
+        "test/TestInterfaceIterableSingle.h",
+        "test/TestInterfaceMaplike.h",
+        "test/TestInterfaceMaplikeJSObject.h",
+        "test/TestInterfaceMaplikeObject.h",
+        "test/TestInterfaceSetlike.h",
+        "test/TestInterfaceSetlikeNode.h",
+        "test/WrapperCachedNonISupportsTestInterface.h",
+    ]
+    UNIFIED_SOURCES += [
+        "test/TestFunctions.cpp",
+        "test/TestInterfaceIterableDouble.cpp",
+        "test/TestInterfaceIterableDoubleUnion.cpp",
+        "test/TestInterfaceIterableSingle.cpp",
+        "test/TestInterfaceMaplike.cpp",
+        "test/TestInterfaceMaplikeJSObject.cpp",
+        "test/TestInterfaceMaplikeObject.cpp",
+        "test/TestInterfaceSetlike.cpp",
+        "test/TestInterfaceSetlikeNode.cpp",
+        "test/WrapperCachedNonISupportsTestInterface.cpp",
+    ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+SPHINX_TREES["webidl"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+SPHINX_PYTHON_PACKAGE_DIRS += ["mozwebidlcodegen"]
+
+with Files("mozwebidlcodegen/**.py"):
+    SCHEDULES.inclusive += ["docs"]
+
+
+PYTHON_UNITTEST_MANIFESTS += [
+    "mozwebidlcodegen/test/python.ini",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+    # Suppress warnings in third-party code.
+    CXXFLAGS += [
+        "-Wno-maybe-uninitialized",
+    ]
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    GeneratedFile(
+        "CSS2Properties.webidl",
+        script="GenerateCSS2PropertiesWebIDL.py",
+        entry_point="generate",
+        inputs=[
+            "/dom/webidl/CSS2Properties.webidl.in",
+            "!/layout/style/ServoCSSPropList.py",
+        ],
+    )

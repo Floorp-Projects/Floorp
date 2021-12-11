@@ -1,0 +1,11 @@
+union Union {
+    nullable PNullable;
+    nullable PNullable[];
+};
+
+protocol PNullable {
+child:
+    async Msg(nullable PNullable n);
+    async Msg2(nullable PNullable[] N);
+    async Msg3(Union u);
+};

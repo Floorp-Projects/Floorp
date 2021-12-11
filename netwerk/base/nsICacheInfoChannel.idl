@@ -1,0 +1,207 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAsyncOutputStream;
+interface nsIInputStream;
+
+%{C++
+#include "nsTArray.h"
+namespace mozilla {
+namespace net {
+class PreferredAlternativeDataTypeParams;
+}
+} // namespace mozilla
+%}
+
+[ref] native ConstPreferredAlternativeDataTypeArray(const nsTArray<mozilla::net::PreferredAlternativeDataTypeParams>);
+
+[scriptable, uuid(1fb8ccf2-5fa5-45ec-bc57-8c8022a5d0d3)]
+interface nsIInputStreamReceiver : nsISupports
+{
+  void onInputStreamReady(in nsIInputStream aStream);
+};
+
+[scriptable, builtinclass, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
+interface nsICacheInfoChannel : nsISupports
+{
+  /**
+   * Get the number of times the cache entry has been opened. This attribute is
+   * equivalent to nsICachingChannel.cacheToken.fetchCount.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if the cache entry or the alternate data
+   *         cache entry cannot be read.
+   */
+  readonly attribute int32_t cacheTokenFetchCount;
+
+  /**
+   * Get expiration time from cache token. This attribute is equivalent to
+   * nsICachingChannel.cacheToken.expirationTime.
+   */
+  readonly attribute uint32_t cacheTokenExpirationTime;
+
+  /**
+   * TRUE if this channel's data is being loaded from the cache.  This value
+   * is undefined before the channel fires its OnStartRequest notification
+   * and after the channel fires its OnStopRequest notification.
+   */
+  boolean isFromCache();
+
+  /**
+   * Returns true if the channel raced the cache and network requests.
+   * In order to determine if the response is coming from the cache or the
+   * network, the consumer can check isFromCache().
+   * The method can only be called after the channel fires its OnStartRequest
+   * notification.
+   */
+  boolean isRacing();
+
+  /**
+   * The unique ID of the corresponding nsICacheEntry from which the response is
+   * retrieved. By comparing the returned value, we can judge whether the data
+   * of two distinct nsICacheInfoChannels is from the same nsICacheEntry. This
+   * scenario could be useful when verifying whether the alternative data from
+   * one nsICacheInfochannel matches the main data from another one.
+   *
+   * Note: NS_ERROR_NOT_AVAILABLE is thrown when a nsICacheInfoChannel has no
+   * valid corresponding nsICacheEntry.
+   */
+  uint64_t getCacheEntryId();
+
+  /**
+   * Set/get the cache key. This integer uniquely identifies the data in
+   * the cache for this channel.
+   *
+   * A cache key retrieved from a particular instance of nsICacheInfoChannel
+   * could be set on another instance of nsICacheInfoChannel provided the
+   * underlying implementations are compatible and provided the new
+   * channel instance was created with the same URI.  The implementation of
+   * nsICacheInfoChannel would be expected to use the cache entry identified
+   * by the cache token.  Depending on the value of nsIRequest::loadFlags,
+   * the cache entry may be validated, overwritten, or simply read.
+   *
+   * The cache key may be 0 indicating that the URI of the channel is
+   * sufficient to locate the same cache entry.  Setting a 0 cache key
+   * is likewise valid.
+   */
+  attribute unsigned long cacheKey;
+
+  /**
+   * Tells the channel to behave as if the LOAD_FROM_CACHE flag has been set,
+   * but without affecting the loads for the entire loadGroup in case of this
+   * channel being the default load group's channel.
+   */
+  attribute boolean allowStaleCacheContent;
+
+  /**
+   * Tells the priority for LOAD_CACHE is raised over LOAD_BYPASS_CACHE or
+   * LOAD_BYPASS_LOCAL_CACHE in case those flags are set at the same time.
+   */
+  attribute boolean preferCacheLoadOverBypass;
+
+  cenum PreferredAlternativeDataDeliveryType : 8 {
+    /**
+     * Do not deliver alternative data stream.
+     */
+    NONE = 0,
+
+    /**
+     * Deliver alternative data stream upon additional request.
+     */
+    ASYNC = 1,
+
+    /**
+     * Deliver alternative data stream during IPC parent/child serialization.
+     */
+    SERIALIZE = 2,
+  };
+
+  /**
+   * Tells the channel to be force validated during soft reload.
+   */
+  attribute boolean forceValidateCacheContent;
+
+  /**
+   * Calling this method instructs the channel to serve the alternative data
+   * if that was previously saved in the cache, otherwise it will serve the
+   * real data.
+   * @param type
+   *        a string identifying the alt-data format
+   * @param contentType
+   *        the contentType for which the preference applies.
+   *        an empty contentType means the preference applies for ANY contentType
+   * @param deliverAltData
+   *        if false, also if alt-data is available, the channel will deliver
+   *        the original data.
+   *
+   * The method may be called several times, with different type and contentType.
+   *
+   * Must be called before AsyncOpen.
+   */
+  void preferAlternativeDataType(in ACString type, in ACString contentType,
+                                 in nsICacheInfoChannel_PreferredAlternativeDataDeliveryType deliverAltData);
+
+  /**
+   * Get the preferred alternative data type set by preferAlternativeDataType().
+   * The returned types stand for the desired data type instead of the type of the
+   * information retrieved from the network stack.
+   */
+  [noscript, notxpcom, nostdcall]
+  ConstPreferredAlternativeDataTypeArray preferredAlternativeDataTypes();
+
+  /**
+   * Holds the type of the alternative data representation that the channel
+   * is returning.
+   * Is empty string if no alternative data representation was requested, or
+   * if the requested representation wasn't found in the cache.
+   * Can only be called during or after OnStartRequest.
+   */
+  readonly attribute ACString alternativeDataType;
+
+  /**
+   * If preferAlternativeDataType() has been called passing deliverAltData
+   * equal to false, this attribute will expose the alt-data inputStream if
+   * avaiable.
+   */
+  readonly attribute nsIInputStream alternativeDataInputStream;
+
+  /**
+   * Sometimes when the channel is delivering alt-data, we may want to somehow
+   * access the original content too. This method asynchronously opens the
+   * input stream and delivers it to the receiver.
+   */
+  void getOriginalInputStream(in nsIInputStreamReceiver aReceiver);
+
+  /**
+   * Opens and returns an output stream that a consumer may use to save an
+   * alternate representation of the data.
+   * Must be called after the OnStopRequest that delivered the real data.
+   * The consumer may choose to replace the saved alt representation.
+   * Opening the output stream will fail if there are any open input streams
+   * reading the already saved alt representation. After successfully opening
+   * an output stream, if there is an error before the entire alt data can be
+   * written successfully, the client must signal failure by passing an error
+   * code to CloseWithStatus().
+   *
+   * @param type
+   *        type of the alternative data representation
+   * @param predictedSize
+   *        Predicted size of the data that will be written. It's used to decide
+   *        whether the resulting entry would exceed size limit, in which case
+   *        an error is thrown. If the size isn't known in advance, -1 should be
+   *        passed.
+   */
+  nsIAsyncOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
+};
+
+%{ C++
+namespace mozilla {
+namespace net {
+
+using PreferredAlternativeDataDeliveryTypeIPC = nsICacheInfoChannel::PreferredAlternativeDataDeliveryType;
+
+}
+} // namespace mozilla
+%}

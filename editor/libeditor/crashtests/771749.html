@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var root = document.documentElement;
+  root.contentEditable = "true";
+  document.removeChild(root);
+  document.appendChild(root);
+  document.execCommand("insertunorderedlist", false, null);
+  document.execCommand("inserthtml", false, "<span></span>");
+  document.execCommand("outdent", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

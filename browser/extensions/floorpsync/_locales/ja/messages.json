@@ -1,0 +1,896 @@
+{
+  "Alert_AppUpdateAvailable_Title_Default": {
+    "message": "Floorp Sync の更新があります"
+  },
+  "Alert_AppUpdateAvailable_Message_Default": {
+    "message": "{version} はダウンロード可能です。詳細はクリックしてください。"
+  },
+  "Alert_AppUpdated_Title_Default": {
+    "message": "次のバージョンに更新します"
+  },
+  "Alert_AppUpdated_Message_Default": {
+    "message": "Floorp Sync が更新されました。同期は無効になりました。アップグレードプロセスを完了するには同期を再度有効にしてください。"
+  },
+  "Alert_BookmarkCreated_Default": {
+    "message": "ブックマークが作成 されました"
+  },
+  "Alert_BookmarkDeleted_Default": {
+    "message": "ブックマークが削除 されました"
+  },
+  "Alert_BookmarkUpdated_Default": {
+    "message": "ブックマークが 更新されました"
+  },
+  "Alert_GetMetadata_Message_Default": {
+    "message": "ブックマークのプロパティを取得しています。 クリックしてキャンセルします。"
+  },
+  "Alert_GetMetadata_Success_Default": {
+    "message": "ブックマークのプロパティを更新しました。 "
+  },
+  "Alert_Go_Default": {
+    "message": "進む！"
+  },
+  "Alert_WorkingOffline_Title_Default": {
+    "message": "オフラインで 利用可能にします"
+  },
+  "Alert_WorkingOffline_Message_Default": {
+    "message": "ネットワークに接続された場合、変更が同期されます。 "
+  },
+  "App_Description_Default": {
+    "message": "Firefox Sync、または Floorp Sync のどちらかを選ぶのはユーザの自由です。Floorp Sync の利用を強要することはありません。"
+  },
+  "App_Title_Default": {
+    "message": "Floorp Sync "
+  },
+  "Bookmarks_Container_Menu_Default": {
+    "message": "ブックマークのメニュー "
+  },
+  "Bookmarks_Container_Mobile_Default": {
+    "message": "スマートフォンのブックマーク"
+  },
+  "Bookmarks_Container_Other_Default": {
+    "message": "その他のブックマーク"
+  },
+  "Bookmarks_Container_Toolbar_Default": {
+    "message": "ツールバーのブックマーク"
+  },
+  "Button_AddBookmark_Default": {
+    "message": "ブックマークを追加"
+  },
+  "Button_Back_Default": {
+    "message": "戻る"
+  },
+  "Button_Cancel_Default": {
+    "message": "キャンセル"
+  },
+  "Button_Close_Default": {
+    "message": "閉じる"
+  },
+  "Button_Confirm_Default": {
+    "message": "はい！"
+  },
+  "Button_Continue_Default": {
+    "message": "続ける"
+  },
+  "Button_DeleteBookmark_Default": {
+    "message": "ブックマークを削除"
+  },
+  "Button_Deny_Default": {
+    "message": "いいえ"
+  },
+  "Button_Done_Default": {
+    "message": "完了！"
+  },
+  "Button_DownloadBackup_Default": {
+    "message": "バックアップをダウンロード"
+  },
+  "Button_EditBookmark_Default": {
+    "message": "ブックマークを編集"
+  },
+  "Button_Help_Default": {
+    "message": "ヘルプガイドを見る"
+  },
+  "Button_Next_Default": {
+    "message": "次へ"
+  },
+  "Button_OK_Default": {
+    "message": "始めましょう！"
+  },
+  "Button_ReleaseNotes_Default": {
+    "message": "リリースノートを見る"
+  },
+  "Button_Saving_Default": {
+    "message": "保存中..."
+  },
+  "Button_Settings_Default": {
+    "message": "Floorp Syncの設定"
+  },
+  "Button_ShareBookmark_Default": {
+    "message": "ブックマークを共有"
+  },
+  "Button_Undo_Default": {
+    "message": "元に戻す"
+  },
+  "Button_Update_Default": {
+    "message": "アップデート"
+  },
+  "Button_View_Default": {
+    "message": "表示"
+  },
+  "Exception_ContainerChanged_Message_Default": {
+    "message": "同期が壊れる可能性があるため、[xbs] フォルダの変更はしないでください"
+  },
+  "Exception_ContainerChanged_Title_Default": {
+    "message": "Floorp Sync はフォルダを変更しました"
+  },
+  "Exception_DailyNewSyncLimitReached_Message_Default": {
+    "message": "お使いの同期 ID を利用するか、別のサーバに切り替えるか再試行してください"
+  },
+  "Exception_DailyNewSyncLimitReached_Title_Default": {
+    "message": "今日の同期可能数の上限に達しました。"
+  },
+  "Exception_Default_Message_Default": {
+    "message": "問題が解決しない場合は、 <a href='https://support.ablaze.one/category/floorp/' class='new-tab'>Ablaze サポート</a> を利用できます"
+  },
+  "Exception_Default_Title_Default": {
+    "message": "問題が発生しました"
+  },
+  "Exception_FailedDownloadFile_Title_Default": {
+    "message": "バックアップに失敗しました"
+  },
+  "Exception_FailedGetDataToRestore_Title_Default": {
+    "message": "ファイルの閲覧に失敗しました"
+  },
+  "Exception_FailedGetPageMetadata_Message_Default": {
+    "message": "URLが無効またはWebページデータを取得できませんでした。"
+  },
+  "Exception_FailedGetPageMetadata_Title_Default": {
+    "message": "ブックマークのプロパティを取得できませんでした"
+  },
+  "Exception_FailedRefreshBookmarks_Title_Default": {
+    "message": "更新情報を取得できませんでした"
+  },
+  "Exception_FailedRestoreData_Message_Default": {
+    "message": "提供されるバックアップデータは、対応している形式ではありません。 "
+  },
+  "Exception_FailedRestoreData_Title_Default": {
+    "message": "ファイルを復元することができません。 "
+  },
+  "Exception_FailedShareUrlNotSynced_Title_Default": {
+    "message": "ブックマークを追加するには同期する必要があります"
+  },
+  "Exception_FailedShareUrl_Title_Default": {
+    "message": "共有ブックマークのURLを取得できません"
+  },
+  "Exception_HttpRequestFailed_Message_Default": {
+    "message": "ネットワーク接続を確認し、もう一度お試しください"
+  },
+  "Exception_HttpRequestFailed_Title_Default": {
+    "message": "サーバーへの接続が失われました。"
+  },
+  "Exception_InvalidCredentials_Message_Default": {
+    "message": "同期ID、パスワード、サーバのURLが正しく入力されていることを確認してください。"
+  },
+  "Exception_InvalidCredentials_Title_Default": {
+    "message": "無効なログイン情報"
+  },
+  "Exception_InvalidService_Message_Default": {
+    "message": "このサーバのURLは有効なFloorp Syncサービスではありません。"
+  },
+  "Exception_InvalidService_Title_Default": {
+    "message": "無効なFloorp Syncサービス"
+  },
+  "Exception_LocalContainerNotFound_Message_Default": {
+    "message": "ブラウザプロファイルが破損している可能性があります。問題が解決する可能性があるため、新しいプロファイルを作成してみてください。"
+  },
+  "Exception_LocalContainerNotFound_Title_Default": {
+    "message": "ブックマークの構造の読み取りができません"
+  },
+  "Exception_LocalSyncError_Message_Default": {
+    "message": "ローカルブラウザのデータが更新されました。最後の変更を再度適用してください。"
+  },
+  "Exception_LocalSyncError_Title_Default": {
+    "message": "同期エラー"
+  },
+  "Exception_MissingClientData_Message_Default": {
+    "message": "保存されたユーザの情報が見つかりません。同期を再度有効にして再度お試し下さい。"
+  },
+  "Exception_MissingClientData_Title_Default": {
+    "message": "ユーザの情報が間違っています"
+  },
+  "Exception_NoDataToRestore_Message_Default": {
+    "message": "復元する前に、現在有効な同期のバックアップしていることを確認してください。"
+  },
+  "Exception_NoDataToRestore_Title_Default": {
+    "message": "復元するファイルがありません。"
+  },
+  "Exception_NotAcceptingNewSyncs_Message_Default": {
+    "message": "別のサーバに切り替えるか、後でもう一度お試しください。"
+  },
+  "Exception_NotAcceptingNewSyncs_Title_Default": {
+    "message": "サーバが新しい同期を受け付けていません"
+  },
+  "Exception_OutOfSync_Message_Default": {
+    "message": "ローカルデータは同期されていないため、更新されました。最後の変更を再度適用してください。"
+  },
+  "Exception_OutOfSync_Title_Default": {
+    "message": "同期の競合を検出しました！"
+  },
+  "Exception_RequestEntityTooLarge_Message_Default": {
+    "message": "ブックマークを削除し、再度やり直すか、同期可能容量の大きいサーバに変更してください"
+  },
+  "Exception_RequestEntityTooLarge_Title_Default": {
+    "message": "同期可能容量の上限を超えました"
+  },
+  "Exception_ScanFailed_Message_Default": {
+    "message": "Syncに権限が付与されているか確認して再試行してください"
+  },
+  "Exception_ScanFailed_Title_Default": {
+    "message": "スキャンに失敗しました"
+  },
+  "Exception_ServiceOffline_Message_Default": {
+    "message": "Floorp Syncサービスは現在オフラインです。後でもう一度お試しください。"
+  },
+  "Exception_ServiceOffline_Title_Default": {
+    "message": "サービスはオフラインです"
+  },
+  "Exception_ShareFailed_Title_Default": {
+    "message": "共有に失敗しました"
+  },
+  "Exception_SyncRemoved_Message_Default": {
+    "message": "要求された同期は存在しません。非アクティブのため削除されている可能性があります。"
+  },
+  "Exception_SyncRemoved_Title_Default": {
+    "message": "同期が見つかりません"
+  },
+  "Exception_SyncVersionNotSupported_Message_Default": {
+    "message": "同期が以降のバージョンにアップグレードされたため、この ID はこの Floorp Sync のバージョンと同期できません。"
+  },
+  "Exception_SyncVersionNotSupported_Restore_Message_Default": {
+    "message": "このバージョンの Floorp Sync では、バックアップデータを復元することはできません。"
+  },
+  "Exception_SyncVersionNotSupported_Title_Default": {
+    "message": "サポートされていない API バージョンです。"
+  },
+  "Exception_TooManyRequests_Message_Default": {
+    "message": "同期が無効になりました。同期を再開するには再度同期を有効にしてください。"
+  },
+  "Exception_TooManyRequests_Title_Default": {
+    "message": "サーバへのリクエストの上限に達しました"
+  },
+  "Exception_UncommittedSyncs_Message_Default": {
+    "message": "サービスへの接続が復元されると、同期が保存されます。"
+  },
+  "Exception_UncommittedSyncs_Title_Default": {
+    "message": "変更は同期されていません"
+  },
+  "Exception_UnsupportedServiceApiVersion_Message_Default": {
+    "message": "このサーバはサポートされていないAPIバージョンを実行しています。"
+  },
+  "Exception_UnsupportedServiceApiVersion_Title_Default": {
+    "message": "このサーバはサポートされていません"
+  },
+  "Exception_UpgradeFailed_Message_Default": {
+    "message": "アップグレードを再試行するためにブラウザを再起動してください。問題が解決しない場合は、Floorp Sync を再インストールしてください。"
+  },
+  "Exception_UpgradeFailed_Title_Default": {
+    "message": "アップグレードできませんでした"
+  },
+  "Service_Status_Error_Default": {
+    "message": "ネットワークのエラー..."
+  },
+  "Service_Status_Loading_Default": {
+    "message": "チェック中..."
+  },
+  "Service_Status_NoNewSyncs_Default": {
+    "message": "サーバが新しい同期を受け付けていません"
+  },
+  "Service_Status_Offline_Default": {
+    "message": "オフライン"
+  },
+  "Service_Status_Online_Default": {
+    "message": "オンライン"
+  },
+  "Tooltip_NotSynced_Default": {
+    "message": "同期していません"
+  },
+  "Tooltip_Synced_Default": {
+    "message": "同期済み"
+  },
+  "Tooltip_Syncing_Default": {
+    "message": "同期中..."
+  },
+  "View_Bookmark_Add_Default": {
+    "message": "ブックマークを追加"
+  },
+  "View_Bookmark_Edit_Default": {
+    "message": "ブックマークを編集"
+  },
+  "View_Bookmark_Form_Title_Default": {
+    "message": "タイトル"
+  },
+  "View_Bookmark_Form_Url_Exists_Default": {
+    "message": "このURL は既にブックマークされています"
+  },
+  "View_Bookmark_Form_Url_Invalid_Default": {
+    "message": "有効な URL ではありません。"
+  },
+  "View_Bookmark_Form_Url_Label_Default": {
+    "message": "URL"
+  },
+  "View_Bookmark_Form_Url_Required_Default": {
+    "message": "URLが必要です。"
+  },
+  "View_Bookmark_Form_Description_Default": {
+    "message": "概要"
+  },
+  "View_Bookmark_Form_Tags_Label_Default": {
+    "message": "タグ"
+  },
+  "View_Bookmark_Form_Tags_Placeholder_Default": {
+    "message": "タグ 1, タグ 2, タグ 3, その他"
+  },
+  "View_Bookmark_Form_Tags_Clear_Default": {
+    "message": "タグをクリア"
+  },
+  "View_Bookmark_Form_Tags_Remove_Default": {
+    "message": "タグを削除"
+  },
+  "View_Bookmark_Form_Delete_Default": {
+    "message": "削除"
+  },
+  "View_Bookmark_Form_Share_Default": {
+    "message": "共有"
+  },
+  "View_Bookmark_Form_UpdateProperties_Default": {
+    "message": "ブックマークのプロパティを更新"
+  },
+  "View_Bookmark_InvalidUrlShared_Default": {
+    "message": "共有された値は有効な URL を含んでいません。"
+  },
+  "View_Help_AddingBookmarks_Default": {
+    "message": "<h4>ブックマークを追加する</h4><p> 検索パネルのブックマーク アイコンをクリックして、現在のページをブックマークに追加します。ブックマークのプロパティは自動的に入力されますが、より良い検索結果を得るために、説明といくつかのタグを追加してください。</p><p> 別の方法として、通常どおりブラウザの「このページをブックマーク」ボタンをクリックするだけで、Floorp Sync がブックマークのプロパティを自動的に入力します (これを動作させるには、追加の許可が必要です。設定パネルを確認してください)。</p>"
+  },
+  "View_Help_BackingUp_Default": {
+    "message": "<h4>バックアップすることを忘れないでください</h4> <p> Floorp Syncを使用する場合、データの管理はあなたの責任ですので、必ずバックアップを取ってください。</p> <p>設定パネルに移動して、バックアップしてください。 暗号化されていないデータをローカルファイルに保存します。必要に応じてデータを復元できます。</p> <p>ローカルブラウザのデータが破損し、バックアップがない場合は、いつでもデータをリセットできます。 Floorp Syncは初期状態に戻ります。</p>"
+  },
+  "View_Help_BeforeYouBegin_Default": {
+    "message": "<h4>始める前に</h4> <p> Floorp Syncはローカルブラウザデータを変更するため、万が一の場合や、他のブラウザ同期サービスやツールを使用している場合は、ブックマークや他のブラウザデータをバックアップすることをお勧めします（ <a href='https://support.ablaze.one/category/floorp/' class='new-tab'> Google Chromeの同期</a>など）競合を避けるために無効にしてください。</p>"
+  },
+  "View_Help_BeforeYouBegin_Brave": {
+    "message": "<h4>始める前に</h4> <p> Floorp Syncはローカルブラウザデータを変更するため、万が一の場合や、他のブラウザ同期サービスやツールを使用している場合は、ブックマークや他のブラウザデータをバックアップすることをお勧めします（ <a href='https://support.ablaze.one/category/floorp/' class='new-tab'> Braveの同期</a>など）競合を避けるために無効にしてください。</p>"
+  },
+  "View_Help_BeforeYouBegin_Edge": {
+    "message": "<h4>始める前に</h4> <p> Floorp Syncはローカルブラウザデータを変更するため、万が一の場合や、他のブラウザ同期サービスやツールを使用している場合は、ブックマークや他のブラウザデータをバックアップすることをお勧めします（ <a href='https://support.ablaze.one/category/floorp/' class='new-tab'> Edgeの同期</a>など）競合を避けるために無効にしてください。</p>"
+  },
+  "View_Help_BeforeYouBegin_Firefox": {
+    "message": "<h4>始める前に</h4> <p> Floorp Syncはローカルブラウザデータを変更するため、万が一の場合や、他のブラウザ同期サービスやツールを使用している場合は、ブックマークや他のブラウザデータをバックアップすることをお勧めします（ <a href='https://support.ablaze.one/category/floorp/' class='new-tab'> Floorp の Firefoxアカウントによる同期 </a>など）競合を避けるために無効にしてください。</p>"
+  },
+  "View_Help_ExistingId_Default": {
+    "message": "<h4>既存のIDで同期する</h4><p>「すでに同期IDをお持ちの方はこちら」をクリックして、既存の同期IDとパスワードを入力します。</p><p>Floorp Syncは、ローカルに保存されたパスワードを使用して暗号化されたデータを取得して復号化し、復号化されたデータから再入力する前にローカルブックマークを消去します。</p><p>同期されると、Floorp Syncは15分ごとにバックグラウンドで同期データの更新をチェックし、必要に応じてローカルブックマークを自動的に更新します。また、同期されたデータの利用可能な更新を設定パネルで手動で同期することもできます</p>。"
+  },
+  "View_Help_FirstSync_Default": {
+    "message": "<h4>Syncing for first time</h4><p>Floorp Sync がブラウザ データを同期する前に、暗号化パスワードを提供する必要があります。リセットやリマインダーはありませんので、忘れてしまうと同期されたデータにアクセスできなくなります。</p><p>あなたのブラウザ データはパスワードで暗号化され、設定パネルで設定されたアクティブな Floorp Sync サービスに保存されます。</p><p>同期されると、ローカルのブックマークに加えた変更は、Floorp Syncによって自動的に同期されます。</p>"
+  },
+  "View_Help_FurtherSupport_Default": {
+    "message": "<h4>その他のサポート</h4><p> <a href='https://support.ablaze.one/category/floorp/' class='new-tab'>FAQ</a>では、最も一般的な質問に対する答えを見つけることができます。また、現在の<a href='https://support.ablaze.one/category/floorp/' class='new-tab'>known issues</a>をチェックして、あなたの問題がそこに記載されているかどうかを確認してください。</p><p>あるいは、<a href='https://support.ablaze.one/category/floorp/' class='new-tab'>issue tracker</a>を使用して、問題を報告したり、新しい機能を要求したりしてください。</p>"
+  },
+  "View_Help_Mobile_Default": {
+    "message": "<h4>モバイル化</h4> <p> Floorp Sync Androidアプリを使用して、移動中に同期されたブックマークにアクセスします。このアプリは、<a href = 'https：//Ablaze.one/project/floorp/download-android' class = 'newで入手できます。 -tab '> Google Play </a>ストア、<a href='https://support.ablaze.one/category/floorp/' class='new-tab'> F-Droid </a>または<a href='https://support.ablaze.one/category/floorp/' class='new-tab'>直接ダウンロード</a></p>"
+  },
+  "View_Help_NativeFeatures_Default": {
+    "message": "<h4>サポートされているネイティブ機能</h4> <p>ブックマークバーやブックマークマネージャーなど、ブラウザのネイティブブックマーク機能を引き続き使用してください。行った変更はすべてバックグラウンドで自動的に同期されます。</p> <p>既存のブックマークをフォルダに整理している場合でも心配はいりません。Floorp Syncは既存のブックマーク階層を尊重して維持します。</p>"
+  },
+  "View_Help_NativeFeatures_Firefox": {
+    "message": "<h4>サポートされているネイティブ機能</h4> <p>ブックマークツールバーやブックマークライブラリなど、ブラウザのネイティブブックマーク機能を引き続き使用してください。行った変更はすべてバックグラウンドで自動的に同期されます。</p> <p>既存のブックマークをフォルダに整理している場合でも心配はいりません。Floorp Syncは既存のブックマーク階層を尊重して維持します。</p> <p>ただし、FirefoxのブックマークAPIはネイティブブックマークタグへのアクセスをまだサポートしていないため、 同期時に既存のタグは失われ、Floorp Syncを介して追加されたタグはネイティブタグとして保存されません。</p>"
+  },
+  "View_Help_Previous_Default": {
+    "message": "戻る"
+  },
+  "View_Help_Searching_Default": {
+    "message": "<h4>ブックマークの検索</h4> <p>同期したら、Enterキーを押して最近のブックマークを表示するか、キーワードまたはURLを入力してブックマークを検索します。</p> <p>検索結果とブックマークフォルダを切り替えます。 階層全体を参照します。</p> <p>ブックマークを編集または削除するには、ブックマークにカーソルを合わせ、ブックマークのタイトルの横に表示されている編集アイコンをクリックします。</p>"
+  },
+  "View_Help_Service_Default": {
+    "message": "<h4>別のサービスとの同期</h4> <p>デフォルトでは、データは<a href='https://support.ablaze.one/category/floorp/'class='new-tab'>公式Floorp Syncサービスに同期されます </a>ただし、データを別のFloorp Syncサービスに同期する場合は、同期する前にアクティブなサービスを切り替えることができます。</p> <p>利用可能な<a href='https://support.ablaze.one/category/floorp/' class='new-tab'> public Floorp Sync services </a>または<a href='https://support.ablaze.one/category/floorp/' class='new-tab'>独自のサービスを実行</a>して、究極のセキュリティとプライバシーのためにプライベートで使用するか、より多くの人がFloorp Syncを楽しめるようにパブリックで使用します。</p> <p> <strong>重要：</strong> Floorp Sync サービスはボランティアによって独立して運営されています。 サービス管理者はデータに対して責任を負わないため、定期的にバックアップすることを忘れないでください。</p>"
+  },
+  "View_Help_Shortcuts_Default": {
+    "message": "<h4>ショートカットを使用してください！</h4> <p>ブックマークをすばやく検索するには、デフォルトのキーボードショートカット（Ctrl + Space）を使用して拡張機能をアクティブにし、Enterキーを押して最近のブックマークを表示するか、入力を開始して検索します。</p> <p>ショートカットを変更するには、chrome://extensions/shortcutsにアクセスし、Floorp Syncで使用可能なショートカットを更新します。</p>"
+  },
+  "View_Help_Shortcuts_Brave": {
+    "message": "<h4>ショートカットを使用してください！</h4> <p>ブックマークをすばやく検索するには、デフォルトのキーボードショートカット（Ctrl + Space）を使用して拡張機能をアクティブにし、Enterキーを押して最近のブックマークを表示するか、入力を開始して検索します。</p> <p>ショートカットを変更するには、brave://extensions/shortcutsにアクセスし、Floorp Syncで使用可能なショートカットを更新します。</p>"
+  },
+  "View_Help_Shortcuts_Edge": {
+    "message": "<h4>ショートカットを使用してください！</h4> <p>ブックマークをすばやく検索するには、デフォルトのキーボードショートカット（Ctrl + Space）を使用して拡張機能をアクティブにし、Enterキーを押して最近のブックマークを表示するか、入力を開始して検索します。</p> <p>ショートカットを変更するには、edge://extensions/shortcutsにアクセスし、Floorp Syncで使用可能なショートカットを更新します。</p>"
+  },
+  "View_Help_Shortcuts_Firefox": {
+    "message": "<h4>ショートカットを使用!</h4><p>ブックマークをすばやく検索するには、デフォルトのキーボードショートカット(Ctrl + Space)を使用して拡張機能を有効にし、Enterキーを押して最近のブックマークを表示するか、検索を開始します。</p><p>ショートカットを変更するには、about:addonsを参照し、[設定]メニューの[拡張ショートカットの管理]をクリックし、Floorp Syncの下で利用可能なショートカットを更新します。</p>"
+  },
+  "View_Help_SyncId_Default": {
+    "message": "<h4>同期ID </h4> <p> Floorp Syncは、個人データが収集されることはなく、同期される前にブラウザデータが暗号化されるため、プライバシーを保護します。 同期されたデータを識別するために、パスワードと一緒に使用して他のブラウザやデバイスでデータを同期できる匿名の同期IDが提供されます。</p> <p>同期IDはFloorp Syncサービスでのみ機能することに注意してください。 それが作成された場所で、別のFloorp Syncサービスに切り替える場合は、新しい同期を作成するか、以前にそのサービスに同期したときに作成した既存の同期IDを使用する必要があります。</p> <p>同期するたびに、同期を表示できます [設定] パネルのIDをクリックしてクリックすると、モバイルデバイスで同期するときにスキャンする便利なQRコードが表示されます。</p>"
+  },
+  "View_Help_Welcome_Default": {
+    "message": "<h4> Floorp Syncへようこそ！</h4> <p>Floorp Syncは Google ChromeやMicrosoft Edgeを同期できるツールです。Floorpでご利用になれる同期機能です。詳細はFloorp ブラウザの開発ブログをご覧ください。GoogleやMicrosoftのように情報収集は行っていません。"
+  },
+  "View_Login_GetSyncId_Title_Default": {
+    "message": "同期IDが必要ですか？"
+  },
+  "View_Login_GetSyncId_Content_Default": {
+    "message": "Floorp Syncデスクトップブラウザ拡張機能をダウンロードし、ここでブックマークにアクセスするための新しい同期を作成します。"
+  },
+  "View_Login_Password_Confirm_Default": {
+    "message": "パスワードをもう一度入力"
+  },
+  "View_Login_Password_Existing_Default": {
+    "message": "パスワードを入力してください"
+  },
+  "View_Login_Password_Label_Default": {
+    "message": "暗号化パスワード"
+  },
+  "View_Login_Password_New_Default": {
+    "message": "暗号化パスワード"
+  },
+  "View_Login_Password_Show_Default": {
+    "message": "パスワードを表示"
+  },
+  "View_Login_Scan_Title_Default": {
+    "message": "同期に接続します"
+  },
+  "View_Login_Scan_Content_Default": {
+    "message": "デスクトップブラウザでFloorp Syncを開き、[設定] パネルに移動し、同期IDをクリックして、ここでスキャンできるQRコードを表示します。"
+  },
+  "View_Login_Scan_ScanCode_Default": {
+    "message": "QRコードをスキャン"
+  },
+  "View_Login_Scan_ManualEntry_Default": {
+    "message": "手動で情報を入力する"
+  },
+  "View_Login_Service_ApiVersion_Default": {
+    "message": "APIのバージョン"
+  },
+  "View_Login_Service_Confirm_Default": {
+    "message": "このサーバに同期しますか？"
+  },
+  "View_Login_Service_Location_Default": {
+    "message": "同期先の場所"
+  },
+  "View_Login_Service_MaxSyncSize_Default": {
+    "message": "最大の同期可能容量"
+  },
+  "View_Login_Service_Selected_Default": {
+    "message": "同期先のサーバ："
+  },
+  "View_Login_Service_Status_Default": {
+    "message": "サーバの状態"
+  },
+  "View_Login_Service_Update_Label_Default": {
+    "message": "Floorp Syncの同期先のサーバのURL"
+  },
+  "View_Login_Service_Update_Description_Default": {
+    "message": "代替の Floorp Sync サーバの URL を入力します。Floorp Sync サービスのリストを参照します。ですが、Floorp では既定でサーバを変更しなくても良い仕様になっています。"
+  },
+  "View_Login_Service_Update_Button_Default": {
+    "message": "サーバを変更する"
+  },
+  "View_Login_Service_Update_Required_Default": {
+    "message": "URLが必要です。"
+  },
+  "View_Login_Service_Update_InvalidService_Default": {
+    "message": "有効な Floorp Sync サービスではありません"
+  },
+  "View_Login_Service_Update_InvalidUrl_Default": {
+    "message": "有効な URL ではありません。"
+  },
+  "View_Login_Service_Update_Failed_Default": {
+    "message": "サーバーに接続できませんでした。"
+  },
+  "View_Login_Service_Update_Failed_NotSupported_Default": {
+    "message": "このサーバはサポートされていないAPIバージョンを実行しています。"
+  },
+  "View_Login_Service_Warning_Default": {
+    "message": "<strong>重要:</strong> Floorp Sync サービスはボランティアによって独立して実行されます。サービス管理者はあなたのデータに対して一切責任を負いませんので、定期的にバックアップすることを忘れないでください。"
+  },
+  "View_Login_Sync_Confirm_Title_Default": {
+    "message": "本当によろしいですか？"
+  },
+  "View_Login_Sync_Confirm_Content_Default": {
+    "message": "Floorp Sync は同期ブックマークを復元する前にすべての現在のブラウザのブックマークを削除します。続行しますか？"
+  },
+  "View_Login_Sync_DisableOthers_Title_Default": {
+    "message": "Floorp Syncを利用する前に"
+  },
+  "View_Login_Sync_DisableOthers_Content_Default": {
+    "message": "他のブックマーク同期ツール ( Chrome Syncによるの同期機能 など) がアクティブな間、ブラウザーデータを Floorp Sync と同期すると、重複やデータが破損する可能性があります。 続行する前にChrome Syncを無効にしてください。"
+  },
+  "View_Login_Sync_DisableOthers_Content_Brave": {
+    "message": "他のブックマーク同期ツール ( Brave Syncなど) がアクティブな間、ブラウザーデータを Floorp Sync と同期すると、重複やデータが破損する可能性があります。 続行する前にBrave Syncを無効にしてください。"
+  },
+  "View_Login_Sync_DisableOthers_Content_Edge": {
+    "message": "他のブックマーク同期ツール (Edgeの同期機能など) がアクティブな間、ブラウザーデータを Floorp Sync と同期すると、重複やデータが破損する可能性があります。 続行する前にEdgeの同期を無効にしてください。"
+  },
+  "View_Login_Sync_DisableOthers_Content_Firefox": {
+    "message": "他のブックマーク同期ツール ( Firefoxの同期機能など) がアクティブな間、ブラウザーデータを Floorp Sync と同期すると、重複やデータが破損する可能性があります。 続行する前にFirefoxの同期を無効にしてください。また、同期後、3週間利用されていない状況が続くと、サーバ上でデータが削除されます。"
+  },
+  "View_Login_Sync_Enable_Default": {
+    "message": "同期"
+  },
+  "View_Login_Sync_New_Default": {
+    "message": "同期IDを持っていない場合"
+  },
+  "View_Login_Sync_UpgradeReady_Title_Default": {
+    "message": "同期をアップグレードする準備はできましたか？"
+  },
+  "View_Login_Sync_UpgradeReady_Content_Default": {
+    "message": "<p>このバージョンの Floorp Sync と同期する前に、同期をアップグレードする必要があります。 アップグレード後、Floorp Sync の以前のバージョンと同期することができなくなります。</p><p>続行する前にすべての同期デバイスで Floorp Sync を更新してください。続行する準備ができましたか？</p>"
+  },
+  "View_Login_Sync_UpgradeRequired_Title_Default": {
+    "message": "同期をアップグレード"
+  },
+  "View_Login_Sync_UpgradeRequired_Content_Default": {
+    "message": "<p>このバージョンの Floorp Sync と同期する前に、同期をアップグレードする必要があります。 </p><p>Floorp Sync デスクトップブラウザ拡張機能を使用して同期をアップグレードし、ここで同期を再試行してください。</p>"
+  },
+  "View_Login_SyncId_Description_Default": {
+    "message": "同期IDを入力してください"
+  },
+  "View_Login_SyncId_Existing_Default": {
+    "message": "すでに同期IDを持っていますか？"
+  },
+  "View_Login_SyncId_Invalid_Default": {
+    "message": "有効な同期IDではありません"
+  },
+  "View_Login_SyncId_Label_Default": {
+    "message": "ID"
+  },
+  "View_Login_SyncId_New_Default": {
+    "message": "同期IDを取得"
+  },
+  "View_Permissions_Title_Default": {
+    "message": "ようこそ"
+  },
+  "View_Permissions_Content_Default": {
+    "message": "<p>新しい Floorp Sync はここにあります。より管理しやすく、使いやすくするためにサイドバーに統合されました。それ以外に変更はありません。いつも通りの同期機能として利用ましょう。新しくなった Floorp Sync をお楽しみください。</p>"
+  },
+  "View_Scan_Title_Default": {
+    "message": "利用中の同期IDのQRコードをスキャンする"
+  },
+  "View_Scan_ToggleLight_Default": {
+    "message": "トグルライト"
+  },
+  "View_Search_BookmarkTree_Default": {
+    "message": "ブックマークフォルダを表示"
+  },
+  "View_Search_Clear_Default": {
+    "message": "クリア"
+  },
+  "View_Search_FolderEmpty_Default": {
+    "message": "フォルダが空です"
+  },
+  "View_Search_NoBookmarks_Default": {
+    "message": "ブックマークがありません。追加しましょう！"
+  },
+  "View_Search_NoResults_Default": {
+    "message": "ブックマークが追加されていません"
+  },
+  "View_Search_Placeholder_Default": {
+    "message": "ブックマークを検索"
+  },
+  "View_Search_Pulling_Default": {
+    "message": "同期を引き下げる"
+  },
+  "View_Search_Pulled_Default": {
+    "message": "リリースで同期します"
+  },
+  "View_Search_SearchResults_Default": {
+    "message": "検索結果を表示"
+  },
+  "View_Settings_BackupRestore_Title_Default": {
+    "message": "バックアップと復元"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Title_Default": {
+    "message": "自動バックアップ"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Description_Default": {
+    "message": "自動的にバックアップをダウンロードします。"
+  },
+  "View_Settings_BackupRestore_AutoBackup_RunsAt_Default": {
+    "message": "バックアップ日時"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Every_Default": {
+    "message": "日時または時刻の指定"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Single_Default": {
+    "message": "１"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Two_Default": {
+    "message": "2"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Three_Default": {
+    "message": "3"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Four_Default": {
+    "message": "4"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Five_Default": {
+    "message": "5"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Six_Default": {
+    "message": "6"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Seven_Default": {
+    "message": "7"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Eight_Default": {
+    "message": "8"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Nine_Default": {
+    "message": "9"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Ten_Default": {
+    "message": "10"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Eleven_Default": {
+    "message": "11"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Numbers_Twelve_Default": {
+    "message": "12"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Units_Day_Default": {
+    "message": "日ごと"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Units_Week_Default": {
+    "message": "週ごと"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Units_Month_Default": {
+    "message": "月ごと"
+  },
+  "View_Settings_BackupRestore_AutoBackup_Confirmation_Default": {
+    "message": "バックアップのダウンロード時に「名前を付けて保存...」ダイアログが表示されないようにするには、ブラウザの設定「ダウンロードする前に各ファイルをどこに保存するか確認」を無効にしてください。"
+  },
+  "View_Settings_BackupRestore_Backup_Title_Default": {
+    "message": "バックアップの設定 "
+  },
+  "View_Settings_BackupRestore_Backup_Button_Default": {
+    "message": "バックアップをダウンロード "
+  },
+  "View_Settings_BackupRestore_Backup_Local_Default": {
+    "message": "ローカルブラウザのデータをお使いのデバイスにバックアップします。"
+  },
+  "View_Settings_BackupRestore_Backup_Synced_Default": {
+    "message": "同期されたデータをお使いのデバイスにバックアップします。"
+  },
+  "View_Settings_BackupRestore_Restore_Title_Default": {
+    "message": "復元"
+  },
+  "View_Settings_BackupRestore_Restore_Button_Default": {
+    "message": "バックアップから復元"
+  },
+  "View_Settings_BackupRestore_Restore_Local_Description_Default": {
+    "message": "バックアップからローカルブラウザデータを復元します。"
+  },
+  "View_Settings_BackupRestore_Restore_Local_Confirm_Default": {
+    "message": "<p>同期が現在無効になっているため、復元中のデータはローカルブラウザデータを上書きします。</p><p>よろしいですか？</p>"
+  },
+  "View_Settings_BackupRestore_Restore_Synced_Description_Default": {
+    "message": "バックアップからローカルブラウザデータを復元します。"
+  },
+  "View_Settings_BackupRestore_Restore_Synced_Confirm_Default": {
+    "message": "<p>現在同期が有効になっているため、復元中のデータは同期データを上書きします。 </p><p>ローカルブラウザのみにデータを復元するには、復元する前に同期を無効にしてください。</p><p>続行してよろしいですか？</p>"
+  },
+  "View_Settings_BackupRestore_Restore_Done_Default": {
+    "message": "バックアップが復元されました。"
+  },
+  "View_Settings_BackupRestore_Restore_SelectFile_Button_Default": {
+    "message": "ファイルを選択"
+  },
+  "View_Settings_BackupRestore_Restore_SelectFile_Placeholder_Default": {
+    "message": "復元するバックアップ ファイルを選択します。"
+  },
+  "View_Settings_BackupRestore_Restore_Copy_Default": {
+    "message": "バックアップファイルの内容をコピーしてデータを復元します。"
+  },
+  "View_Settings_BackupRestore_Restore_Paste_Default": {
+    "message": "バックアップデータを復元"
+  },
+  "View_Settings_BackupRestore_Restore_RestoreData_Default": {
+    "message": "データを復元する"
+  },
+  "View_Settings_BackupRestore_Restore_Invalid_Default": {
+    "message": "Floorp Sync のバックアップデータが無効です"
+  },
+  "View_Settings_BackupRestore_Reset_Confirm_Default": {
+    "message": "<p>続行すると、同期が無効になり、ローカルブラウザのデータが{date}にFloorp Syncがインストールされたときにリセットされます。</p> <p>続行しますか？</p>"
+  },
+  "View_Settings_BackupRestore_Reset_Button_Default": {
+    "message": "同期データをリセット"
+  },
+  "View_Settings_BackupRestore_Reset_Done_Default": {
+    "message": "ローカルブラウザのデータが初期インストール状態にリセットされました。"
+  },
+  "View_Settings_BackupRestore_Reset_Unavailable_Default": {
+    "message": "初期状態のデータが利用できません。リセットできません。"
+  },
+  "View_Settings_Issues_Title_Default": {
+    "message": "ヘルプとサポート"
+  },
+  "View_Settings_Issues_Help_Title_Default": {
+    "message": "ヘルプガイド"
+  },
+  "View_Settings_Issues_Help_Description_Default": {
+    "message": "質問がありますか？または、問題がありますか? ヘルプガイドを読んでください。そうでなければ、答えはFAQにあります。"
+  },
+  "View_Settings_Issues_Help_ViewFaqs_Default": {
+    "message": "FAQを確認"
+  },
+  "View_Settings_Issues_Tracker_Title_Default": {
+    "message": "サポート"
+  },
+  "View_Settings_Issues_Tracker_Description_Default": {
+    "message": "サポートが必要ですか？課題トラッカーを使用してバグを報告するか、機能をリクエストしてください。"
+  },
+  "View_Settings_Issues_Tracker_Report_Default": {
+    "message": "Ablaze サポートを利用"
+  },
+  "View_Settings_Issues_Log_Title_Default": {
+    "message": "アプリのログ"
+  },
+  "View_Settings_Issues_Log_Description_Default": {
+    "message": "問題をログに記録するときに、アプリケーションログをダウンロードして含めます。"
+  },
+  "View_Settings_Issues_Log_Clear_Default": {
+    "message": "ログをクリア"
+  },
+  "View_Settings_Issues_Log_Download_Default": {
+    "message": "ログをダウンロード"
+  },
+  "View_Settings_Issues_Log_Size_Default": {
+    "message": "現在のフォントサイズ"
+  },
+  "View_Settings_Permissions_Title_Default": {
+    "message": "Floorp Syncで利用する権限"
+  },
+  "View_Settings_Permissions_Add_Default": {
+    "message": "アクセス許可を付与"
+  },
+  "View_Settings_Permissions_Granted_Default": {
+    "message": "許可"
+  },
+  "View_Settings_Permissions_NotGranted_Default": {
+    "message": "許可しない"
+  },
+  "View_Settings_Permissions_Read_Title_Default": {
+    "message": "権限の利用方法"
+  },
+  "View_Settings_Permissions_Read_Description_Default": {
+    "message": "すべての権限は Floorp Sync が正常に動くようにするために使用されます。また、サイドバーに移行する為、要求する権限が増えました。ですが私たちはあなたがウェブサイトで何をしたか、どこにアクセスしたか、何をブックマークに登録したかなどのすべての情報を取得しないことを約束します。"
+  },
+  "View_Settings_Permissions_Remove_Default": {
+    "message": ""
+  },
+  "View_Settings_Prefs_AutoFetchMetadata_Label_Default": {
+    "message": "ブックマークメタデータの自動取得"
+  },
+  "View_Settings_Prefs_AutoFetchMetadata_Description_Default": {
+    "message": "ブックマークを追加するときに自動的にメタデータを取得します。"
+  },
+  "View_Settings_Prefs_CheckForAppUpdates_Label_Default": {
+    "message": "アップデートの確認"
+  },
+  "View_Settings_Prefs_CheckForAppUpdates_Description_Default": {
+    "message": "Floorp Sync の新しいバージョンが利用可能になったときに通知されます。"
+  },
+  "View_Settings_Prefs_DarkMode_Label_Default": {
+    "message": "ダークモードを有効にする"
+  },
+  "View_Settings_Prefs_DarkMode_Description_Default": {
+    "message": "暗い場所での使用に最適です。"
+  },
+  "View_Settings_Prefs_DefaultToFolderView_Label_Default": {
+    "message": "ブックマークフォルダを表示"
+  },
+  "View_Settings_Prefs_DefaultToFolderView_Description_Default": {
+    "message": "既定でブックマークフォルダを表示します。"
+  },
+  "View_Settings_Prefs_SearchBar_Label_Default": {
+    "message": "検索バーの位置を変更"
+  },
+  "View_Settings_Prefs_SearchBar_Description_Default": {
+    "message": "結果の下に検索バーを表示します。"
+  },
+  "View_Settings_Prefs_SyncToolbar_Label_Default": {
+    "message": "ブックマークツールバーを同期"
+  },
+  "View_Settings_Prefs_SyncToolbar_Description_Default": {
+    "message": "この設定を無効にすると、同期ブラウザ間で異なるツールバーブックマークを表示できます。"
+  },
+  "View_Settings_Prefs_SyncToolbar_Confirmation_Default": {
+    "message": "<p>この設定を有効にすると、現在ブックマークツールバーにあるブックマークが同期ブックマークに置き換えられます。</p><p>続行しますか？</p>"
+  },
+  "View_Settings_Prefs_Title_Default": {
+    "message": "環境設定"
+  },
+  "View_Settings_Sync_Title_Default": {
+    "message": "同期"
+  },
+  "View_Settings_Sync_Disable_Default": {
+    "message": "無効化する"
+  },
+  "View_Settings_Sync_Id_Label_Default": {
+    "message": "同期ID"
+  },
+  "View_Settings_Sync_Id_Description_Default": {
+    "message": "同期IDを使用して、他のデバイス上の同期データに接続します（クリックしてQRコードを表示）"
+  },
+  "View_Settings_Sync_Data_Label_Default": {
+    "message": "使用済みの使用量"
+  },
+  "View_Settings_Sync_Data_Description_Default": {
+    "message": "サーバで利用可能な容量うち以下の容量を利用しています"
+  },
+  "View_Settings_Sync_Service_Default": {
+    "message": "サーバ"
+  },
+  "View_Settings_Sync_UpdatesAvailable_False_Default": {
+    "message": "最終同期時刻： {date} "
+  },
+  "View_Settings_Sync_UpdatesAvailable_True_Default": {
+    "message": "次の同期は {date} に予定されいます"
+  },
+  "View_Settings_Sync_UpdatesAvailable_Sync_Default": {
+    "message": "今すぐ同期"
+  },
+  "View_Settings_Sync_Qr_Description_Default": {
+    "message": "同期データに接続するには、xBrowser SyncのAndroidアプリを使用してこのQRコードをスキャンしてください。"
+  },
+  "View_Settings_Sync_Qr_Show_Default": {
+    "message": "QR コードを表示"
+  },
+  "View_Settings_Sync_Qr_Copy_Default": {
+    "message": "クリップボードに ID をコピー"
+  },
+  "View_Settings_Sync_Qr_Copied_Default": {
+    "message": "コピーしました!"
+  },
+  "View_Settings_NotAvailable_Default": {
+    "message": "同期が有効になっているときに利用できる設定です。"
+  },
+  "View_Settings_FileDownloaded_Default": {
+    "message": "ファイルが「ダウンロード」に保存されました"
+  },
+  "View_Settings_Support_Default": {
+    "message": "同期サーバの管理者に寄付"
+  },
+  "View_Support_Title_Default": {
+    "message": "同期サーバの管理者に寄付"
+  },
+  "View_Support_Content_Default": {
+    "message": "<p>私たちはFloorp Syncを1番のブラウザ同期ツールにしたいと考えていますが、まだまだやるべきことはたくさんあります。</p><ul><li>ブラウザのタブと履歴の同期を追加する</li><li> <li>すべての主要なデスクトップブラウザをサポートする</li><li> <li>他の言語に翻訳する</li><li>そして <a href='https://support.ablaze.one/category/floorp/' class='new-tab'>その他</a>！</li></ul><p>皆様のサポートがあってこそ、Floorp Syncを継続的に改善し、オンラインプライバシーの保護と生産性の向上に効果的であり続けることができます。</p>"
+  },
+  "View_Support_Cryptos_Default": {
+    "message": "仮想通貨(Bitcoin)"
+  },
+  "View_Support_Liberapay_Default": {
+    "message": "Liberapay"
+  },
+  "View_Support_Patreon_Default": {
+    "message": "Patreon"
+  },
+  "View_SyncRemoved_Title_Default": {
+    "message": "同期が見つかりません"
+  },
+  "View_SyncRemoved_Content_Default": {
+    "message": "<p>あなたの同期が見つかりませんでした。最近使用されていないために削除された可能性があります。</p><p>新しい同期を作成する必要がありますが、まず下のボタンをクリックして同期データのバックアップをダウンロードし、新しい同期に復元してください。"
+  },
+  "View_Updated_Title_Default": {
+    "message": "次のバージョンに更新しました！"
+  },
+  "View_Updated_Content_Default": {
+    "message": "<p>Floorp Sync は最新の機能と修正で更新されました。</p><p>同期が有効になっていた場合、現在は無効になっており、このバージョンの Floorp Sync と同期する前に、まず同期をアップグレードする必要があります。</p><p>このリリースに含まれる変更点の詳細については、リリースノートをご覧ください。</p>"
+  },
+  "View_Working_Restoring_Default": {
+    "message": "復元中..."
+  },
+  "View_Working_Resetting_Default": {
+    "message": "リセット中..."
+  },
+  "View_Working_Syncing_Default": {
+    "message": "同期中..."
+  }
+}

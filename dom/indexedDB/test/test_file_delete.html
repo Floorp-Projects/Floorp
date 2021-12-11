@@ -1,0 +1,131 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+  function* testSteps()
+  {
+    const READ_WRITE = "readwrite";
+
+    const name = window.location.pathname;
+
+    const objectStoreName = "Blobs";
+
+    const fileData1 = { key: 1, file: getRandomFile("random1.bin", 110000) };
+    const fileData2 = { key: 2, file: getRandomFile("random2.bin", 120000) };
+    const fileData3 = { key: 3, file: getRandomFile("random3.bin", 130000) };
+
+    SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },
+                              continueToNextStep);
+    yield undefined;
+
+    {
+      let request = indexedDB.open(name, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      is(event.type, "upgradeneeded", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      let objectStore = db.createObjectStore(objectStoreName, { });
+
+      objectStore.add(fileData1.file, fileData1.key);
+      objectStore.add(fileData2.file, fileData2.key);
+      objectStore.add(fileData3.file, fileData3.key);
+
+      event = yield undefined;
+
+      is(event.type, "success", "Got correct event type");
+
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      trans.objectStore(objectStoreName).delete(fileData1.key);
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(event.type, "complete", "Got correct event type");
+
+      is(getFileDBRefCount(name, 1), 0, "Correct db ref count");
+
+      fileData1.file = null;
+      fileData2.file = null;
+      fileData3.file = null;
+    }
+
+    yield* assertEventuallyHasNoFileInfo(name, 1);
+    yield* assertEventuallyHasFileInfo(name, 2);
+    yield* assertEventuallyHasFileInfo(name, 3);
+
+    {
+      let request = indexedDB.open(name, 1);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      is(event.type, "success", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      let objectStore = trans.objectStore(objectStoreName);
+
+      request = objectStore.get(fileData2.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      let result = event.target.result;
+      ok(result, "Got result");
+
+      objectStore.delete(fileData2.key);
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(event.type, "complete", "Got correct event type");
+
+      is(getFileDBRefCount(name, 2), 0, "Correct db ref count");
+
+
+      trans = db.transaction([objectStoreName], READ_WRITE);
+      objectStore = trans.objectStore(objectStoreName);
+
+      objectStore.delete(fileData3.key);
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(event.type, "complete", "Got correct event type");
+
+      yield *assertEventuallyWithGC(() => -1 == getFileDBRefCount(name, 3),
+                                    "Correct db ref count");
+
+      event = null;
+      result = null;
+    }
+
+    yield* assertEventuallyHasNoFileInfo(name, 1);
+    yield* assertEventuallyHasNoFileInfo(name, 2);
+    yield* assertEventuallyHasNoFileInfo(name, 3);
+
+    finishTest();
+  }
+  </script>
+  <script type="text/javascript" src="file.js"></script>
+  <script type="text/javascript" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

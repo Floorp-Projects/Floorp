@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<head>
+<script>
+function write() {
+  document.getElementsByTagName("iframe")[0].contentDocument.write('\u003Cscript src="data:text/javascript,var i = 0;">\u003C\/script>TEXT\u003Cscript>parent.document.documentElement.removeAttribute("class");\u003c/script>');
+}
+</script>
+</head>
+<body onload="write();">
+  <iframe></iframe>
+</body>
+</html>
+

@@ -1,0 +1,35 @@
+<!doctype html>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<pre>
+<script>
+test(function() {
+  let originalWidth = window.innerWidth;
+  let originalHeight = window.innerHeight;
+
+  assert_equals(window.devicePixelRatio, 1, `precondition: ${originalWidth}x${originalHeight}`);
+
+  // This precondition holds because of:
+  // https://searchfox.org/mozilla-central/rev/50215d649d4854812837f1343e8f47bd998dacb5/browser/base/content/browser.js#1717
+  //
+  // But if this test starts failing you can just update the assert and the
+  // factor below accordingly so that the asserts keep passing.
+  assert_equals(originalWidth, 1280, "precondition");
+
+  // Set a fractional scale factor that guarantees that we get a fractional innerWidth
+  const kFactor = 1.5;
+  const kOneAppUnit = 1 / 60;
+
+  SpecialPowers.setFullZoom(window, kFactor);
+  assert_approx_equals(window.devicePixelRatio, kFactor, kOneAppUnit);
+  assert_not_equals(window.innerWidth, originalWidth);
+  assert_not_equals(window.innerHeight, originalHeight);
+  if (SpecialPowers.getBoolPref("dom.innerSize.rounded")) {
+    assert_equals(window.innerWidth, Math.round(originalWidth / kFactor));
+    assert_equals(window.innerHeight, Math.round(originalHeight / kFactor));
+  } else {
+    assert_not_equals(window.innerWidth, Math.round(window.innerWidth));
+  }
+  SpecialPowers.setFullZoom(window, 1); // Restore zoom so results can be seen fine...
+});
+</script>

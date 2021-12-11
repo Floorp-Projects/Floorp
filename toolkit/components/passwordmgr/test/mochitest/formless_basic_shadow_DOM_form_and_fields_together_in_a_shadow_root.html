@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<!-- Simple form with form, username and password fields together in a shadow root -->
+<!-- This form is based off of toolkit/components/passwordmgr/test/browser/formless_basic.html -->
+<span id="wrapper">
+</span>
+<!-- username, password and submit inputs generated programmatically below -->
+
+<script>
+  const wrapper = document.getElementById("wrapper");
+  const shadow = wrapper.attachShadow({mode: "closed"});
+  const fields = ["username", "password"];
+  for (let field of fields) {
+    const inputEle = document.createElement("input");
+    inputEle.id = field;
+    inputEle.name = field;
+    if (field === "password") {
+      inputEle.type = field;
+    }
+    shadow.append(inputEle);
+  }
+  const submitButton = document.createElement("input");
+  submitButton.id = "submit";
+  submitButton.type = "submit";
+  shadow.append(submitButton);
+</script>
+
+</body></html>

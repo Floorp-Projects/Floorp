@@ -1,0 +1,85 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "IUnknownImpl.h",
+]
+
+EXPORTS.mozilla.a11y += [
+    "AccessibleWrap.h",
+    "Compatibility.h",
+    "HyperTextAccessibleWrap.h",
+    "LazyInstantiator.h",
+    "MsaaAccessible.h",
+    "MsaaIdGenerator.h",
+    "nsWinUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "AccessibleWrap.cpp",
+    "ApplicationAccessibleWrap.cpp",
+    "Compatibility.cpp",
+    "CompatibilityUIA.cpp",
+    "DocAccessibleWrap.cpp",
+    "EnumVariant.cpp",
+    "GeckoCustom.cpp",
+    "HyperTextAccessibleWrap.cpp",
+    "IUnknownImpl.cpp",
+    "MsaaAccessible.cpp",
+    "MsaaDocAccessible.cpp",
+    "MsaaIdGenerator.cpp",
+    "MsaaRootAccessible.cpp",
+    "MsaaXULMenuAccessible.cpp",
+    "nsWinUtils.cpp",
+    "Platform.cpp",
+    "RootAccessibleWrap.cpp",
+]
+
+SOURCES += [
+    # This file cannot be built in unified mode because it redefines _WIN32_WINNT
+    "LazyInstantiator.cpp",
+    # This file cannot be built in unified mode because it includes ISimpleDOMNode_i.c.
+    "ServiceProvider.cpp",
+]
+
+OS_LIBS += [
+    "ntdll",
+]
+
+if CONFIG["MOZ_XUL"]:
+    UNIFIED_SOURCES += [
+        "XULMenuAccessibleWrap.cpp",
+    ]
+
+LOCAL_INCLUDES += [
+    "/accessible/base",
+    "/accessible/generic",
+    "/accessible/html",
+    "/accessible/ipc",
+    "/accessible/ipc/win",
+    "/accessible/windows",
+    "/accessible/windows/ia2",
+    "/accessible/windows/sdn",
+    "/accessible/windows/uia",
+    "/accessible/xpcom",
+    "/accessible/xul",
+    "/dom/base",
+    "/layout/style",
+]
+
+# The Windows MIDL code generator creates things like:
+#
+#   #endif !_MIDL_USE_GUIDDEF_
+#
+# which clang-cl complains about.  MSVC doesn't, so turn this warning off.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += ["-Wno-extra-tokens"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+REQUIRES_UNIFIED_BUILD = True

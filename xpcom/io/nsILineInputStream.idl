@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(c97b466c-1e6e-4773-a4ab-2b2b3190a7a6)]
+interface nsILineInputStream : nsISupports
+{
+  /**
+   * Read a single line from the stream, where a line is a
+   * possibly zero length sequence of 8bit chars terminated by a
+   * CR, LF, CRLF, LFCR, or eof.
+   * The line terminator is not returned.
+   * @retval false
+   *         End of file. This line is the last line of the file
+   *         (aLine is valid).
+   * @retval true
+   *         The file contains further lines.
+   * @note Do not mix readLine with other read functions.
+   *       Doing so can cause various problems and is not supported.
+   */
+  boolean readLine(out ACString aLine);
+};

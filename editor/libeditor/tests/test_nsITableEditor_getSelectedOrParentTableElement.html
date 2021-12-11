@@ -1,0 +1,283 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.getSelectedOrParentTableElement()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  selection.collapse(editor, 0);
+  let tagNameWrapper = {};
+  let countWrapper = {};
+  let cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, null,
+     "nsITableEditor.getSelectedOrParentTableElement() should return null if Selection does not select cells nor in <table>");
+  is(tagNameWrapper.value, "",
+     "nsITableEditor.getSelectedOrParentTableElement() should return empty string to tag name if Selection does not select cells nor in <table>");
+  is(countWrapper.value, 0,
+     "nsITableEditor.getSelectedOrParentTableElement() should return 0 to count if Selection does not select cells nor in <table>");
+
+  editor.innerHTML =
+    '<table id="table">' +
+      '<tr id="r1"><td id="c1-1">cell1-1</td><td id="c1-2">cell1-2</td><td id="c1-3">cell1-3</td><td id="c1-4" colspan="2" rowspan="2">cell1-4</td></tr>' +
+      '<tr id="r2"><th id="c2-1" rowspan="2">cell2-1</th><th id="c2-2">cell2-2</th><td id="c2-3">cell2-3</td></tr>' +
+      '<tr id="r3"><td id="c3-2">cell3-2</td><td id="c3-3">cell3-3</td><td id="c3-4" colspan="2">cell3-4</td></tr>' +
+      '<tr id="r4"><td id="c4-1" rowspan="4">cell4-1</td><td id="c4-2">cell4-2</td><td id="c4-3">' +
+        '<table id="table2">' +
+          '<tr id="r2-1"><th id="c2-1-1">cell2-1-1-</td><td id="c2-1-2">cell2-1-2</td></tr>' +
+          '<tr id="r2-2"><td id="c2-2-1">cell2-2-1-</td><th id="c2-2-2">cell2-2-2</th></tr>' +
+        "</table>" +
+        '</td><th id="c4-4">cell4-4</th><td id="c4-5">cell4-5</td></tr>' +
+      '<tr id="r5"><th id="c5-2">cell5-2</th><th id="c5-3" colspan="2">cell5-3</th><td id="c5-5">cell5-5</td></tr>' +
+      '<tr id="r6"><td id="c6-2">cell6-2</td><td id="c6-3">cell6-3</td><td id="c6-4"><p>cell6-4</p></td><td id="c6-5">cell6-5</td></tr>' +
+      '<tr id="r7"><td id="c7-2" colspan="4">cell7-2</td></tr>' +
+    "</table>";
+
+  let tr = document.getElementById("r1");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c1-1"),
+     "#1-1 nsITableEditor.getSelectedOrParentTableElement() should return the first cell element in the first row");
+  is(tagNameWrapper.value, "td",
+     "#1-1 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when a cell is selected");
+  is(countWrapper.value, 1,
+     "#1-1 nsITableEditor.getSelectedOrParentTableElement() should return 1 to count when a cell is selected");
+
+  tr = document.getElementById("r1");
+  selection.setBaseAndExtent(tr, 3, tr, 4);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c1-4"),
+     "#1-4 nsITableEditor.getSelectedOrParentTableElement() should return the last cell element whose colspan and rowspan are 2 in the first row");
+  is(tagNameWrapper.value, "td",
+     "#1-4 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when a cell is selected");
+  is(countWrapper.value, 1,
+     "#1-4 nsITableEditor.getSelectedOrParentTableElement() should return 1 to count when a cell is selected");
+
+  tr = document.getElementById("r2");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c2-1"),
+     "#2-1 nsITableEditor.getSelectedOrParentTableElement() should return the first cell element in the second row");
+  is(tagNameWrapper.value, "td",
+     "#2-1 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when a cell is selected but even if the cell is <th>");
+  is(countWrapper.value, 1,
+     "#2-1 nsITableEditor.getSelectedOrParentTableElement() should return 1 to count when a cell is selected");
+
+  tr = document.getElementById("r7");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c7-2"),
+     "#7-2 nsITableEditor.getSelectedOrParentTableElement() should return the second cell element in the last row");
+  is(tagNameWrapper.value, "td",
+     "#7-2 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when a cell is selected");
+  is(countWrapper.value, 1,
+     "#7-2 nsITableEditor.getSelectedOrParentTableElement() should return 1 to count when a cell is selected");
+
+  selection.removeAllRanges();
+  let range = document.createRange();
+  range.selectNode(document.getElementById("c2-2"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("c2-3"));
+  selection.addRange(range);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c2-2"),
+     "#2-2 nsITableEditor.getSelectedOrParentTableElement() should return the second cell element in the second row");
+  is(tagNameWrapper.value, "td",
+     "#2-2 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when first range selects a cell");
+  is(countWrapper.value, 2,
+     "#2-2 nsITableEditor.getSelectedOrParentTableElement() should return 2 to count when there are 2 selection ranges");
+
+  selection.removeAllRanges();
+  range = document.createRange();
+  range.selectNode(document.getElementById("c3-4"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("c5-2"));
+  selection.addRange(range);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c3-4"),
+     "#3-4 nsITableEditor.getSelectedOrParentTableElement() should return the last cell element in the third row");
+  is(tagNameWrapper.value, "td",
+     "#3-4 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when first range selects a cell");
+  is(countWrapper.value, 2,
+     "#3-4 nsITableEditor.getSelectedOrParentTableElement() should return 2 to count when there are 2 selection ranges");
+
+  cell = document.getElementById("c2-2");
+  selection.removeAllRanges();
+  range = document.createRange();
+  range.setStart(cell.firstChild, 0);
+  selection.addRange(range);
+  cell = document.getElementById("c2-1-1");
+  range = document.createRange();
+  range.setStart(cell.firstChild, 1);
+  range.setEnd(cell.firstChild, 2);
+  selection.addRange(range);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c2-1-1"),
+     "#2-1-1 nsITableEditor.getSelectedOrParentTableElement() should return the cell which contains the last selection range if first selection range does not select a cell");
+  is(tagNameWrapper.value, "td",
+     "#2-1-1 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when the first range does not select a cell and the last range is in a cell");
+  is(countWrapper.value, 0,
+     "#2-1-1 nsITableEditor.getSelectedOrParentTableElement() should return 0 to count when the first range does not select a cell");
+
+  tr = document.getElementById("r2-2");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c2-2-1"),
+     "#2-2-1 nsITableEditor.getSelectedOrParentTableElement() should return the first cell element in the first row of nested <table>");
+  is(tagNameWrapper.value, "td",
+     "#2-2-1 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when a cell in nested <table> is selected");
+  is(countWrapper.value, 1,
+     "#2-2-1 nsITableEditor.getSelectedOrParentTableElement() should return 1 to count when a cell in nested <table> is selected");
+
+  cell = document.getElementById("c2-1-2");
+  selection.setBaseAndExtent(cell.firstChild, 0, cell.firstChild, 0);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c2-1-2"),
+     "#2-1-2 nsITableEditor.getSelectedOrParentTableElement() should return the first cell element in the first row of nested <table>");
+  is(tagNameWrapper.value, "td",
+     "#2-1-2 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name when a cell in nested <table> contains the first selection range");
+  is(countWrapper.value, 0,
+     "#2-1-2 nsITableEditor.getSelectedOrParentTableElement() should return 0 to count when a cell in nested <table> contains the first selection range");
+
+  let table = document.getElementById("table2");
+  selection.removeAllRanges();
+  range = document.createRange();
+  range.selectNode(table);
+  selection.addRange(range);
+  table = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(table, document.getElementById("table2"),
+     "nsITableEditor.getSelectedOrParentTableElement() should return a <table> element which is selected");
+  is(tagNameWrapper.value, "table",
+     "nsITableEditor.getSelectedOrParentTableElement() should return 'table' to tag name when a <table> is selected");
+  is(countWrapper.value, 1,
+     "nsITableEditor.getSelectedOrParentTableElement() should return 1 to count when a <table> is selected");
+
+  selection.removeAllRanges();
+  range = document.createRange();
+  range.selectNode(document.getElementById("r2-1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("r2-2"));
+  selection.addRange(range);
+  table = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(table, document.getElementById("r2-2"),
+     "nsITableEditor.getSelectedOrParentTableElement() should return a <tr> element which is selected by the last selection range");
+  is(tagNameWrapper.value, "tr",
+     "nsITableEditor.getSelectedOrParentTableElement() should return 'tr' to tag name when a <tr> is selected");
+  is(countWrapper.value, 1,
+     "nsITableEditor.getSelectedOrParentTableElement() should return 1 to count when a <tr> is selected");
+
+  selection.removeAllRanges();
+  range = document.createRange();
+  range.selectNode(document.getElementById("r1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("c5-5"));
+  selection.addRange(range);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, document.getElementById("c5-5"),
+     "#5-5 nsITableEditor.getSelectedOrParentTableElement() should return the cell selected by the last range when first range selects <tr>");
+  is(tagNameWrapper.value, "td",
+     "#5-5 nsITableEditor.getSelectedOrParentTableElement() should return 'td' to tag name if the last range selects the cell when first range selects <tr>");
+  is(countWrapper.value, 2,
+     "#5-5 nsITableEditor.getSelectedOrParentTableElement() should return 2 to count if the last range selects <td> when first range selects <tr>");
+
+  selection.removeAllRanges();
+  range = document.createRange();
+  range.selectNode(document.getElementById("r1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("c5-2"));
+  selection.addRange(range);
+  cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+  is(cell, null,
+     "#5-5 nsITableEditor.getSelectedOrParentTableElement() should return null if the last range selects <th> when first range selects <tr>");
+  is(tagNameWrapper.value, "",
+     "#5-5 nsITableEditor.getSelectedOrParentTableElement() should return empty string to tag name if the last range selects <th> when first range selects <tr>");
+  is(countWrapper.value, 0,
+     "#5-5 nsITableEditor.getSelectedOrParentTableElement() should return 0 to count if the last range selects <th> when first range selects <tr>");
+
+  // XXX If cell is not selected, nsITableEditor.getSelectedOrParentTableElement()
+  //     returns null without throwing exception, however, if there is no
+  //     selection ranges, throwing an exception.  This inconsistency is odd.
+  selection.removeAllRanges();
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, countWrapper));
+    ok(false, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if there is no selection ranges");
+  } catch (e) {
+    ok(true, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if there is no selection ranges");
+  }
+
+  tr = document.getElementById("r6");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement());
+    ok(false, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if it does not have argument");
+  } catch (e) {
+    ok(true, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if it does not have argument");
+  }
+
+  tr = document.getElementById("r6");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(null));
+    ok(false, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its argument is only one null");
+  } catch (e) {
+    ok(true, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its argument is only one null");
+  }
+
+  tr = document.getElementById("r6");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(null, null));
+    ok(false, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its arguments are all null");
+  } catch (e) {
+    ok(true, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its arguments are all null");
+  }
+
+  tr = document.getElementById("r6");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(tagNameWrapper, null));
+    ok(false, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its count argument is null");
+  } catch (e) {
+    ok(true, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its count argument is null");
+  }
+
+  tr = document.getElementById("r6");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getSelectedOrParentTableElement(null, countWrapper));
+    ok(false, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its tag name argument is null");
+  } catch (e) {
+    ok(true, "nsITableEditor.getSelectedOrParentTableElement() should throw an exception if its tag name argument is null");
+  }
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" onload="setTimeout(removeText, 30);" class="reftest-wait">
+
+
+<script>
+
+function removeText()
+{
+  var x = document.getElementById("textPath");
+  x.removeChild(x.firstChild);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+
+<text x="30" y="30"><textPath id="textPath">Foo</textPath></text>
+
+
+</svg>

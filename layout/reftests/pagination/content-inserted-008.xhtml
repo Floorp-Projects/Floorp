@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Content Appended in Pagination before ::after</title>
+
+  <style type="text/css">
+    body {
+      font-size: 16px;
+    }
+
+    #colset {
+      height: 200px;
+      width: 450px;
+      column-width: 150px;
+      column-gap: 0;
+      border: 3px solid silver;
+    }
+
+    #shift {
+      height: 0;
+    }
+    #overflow {
+      height: 500px;
+    }
+</style>
+</head>
+
+<body onload="document.getElementById('colset').insertBefore(document.createTextNode('This must be in the first column.'), document.getElementById('x'))">
+
+<div id="colset">
+  <div id="shift">
+    <div id="overflow"></div>
+  </div
+  ><div id="x">
+  </div>
+</div>
+
+</body>
+
+</html>

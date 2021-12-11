@@ -1,0 +1,312 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Grid item blockifying</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1185140">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-auto-columns: 100px;
+  grid-auto-rows: 2px;
+  justify-content: start;
+  border: 1px solid blue;
+}
+
+x {
+  grid-column: span 2;
+  border:1px solid;
+}
+
+.itable  { display:inline-table; }
+.table   { display:table; }
+.caption { display: block; }
+.cell    { display: block; }
+.row     { display: block; }
+.rowg    { display: block; }
+.head    { display: block; }
+.foot    { display: block; }
+.col     { display: block; }
+.colg    { display: block; }
+
+.flex  { display:flex; }
+.iflex { display:flex; }
+
+.bgrid  { display:grid; }
+.igrid  { display:grid; }
+
+.list  { display:list-item; }
+
+.r   { display: block; }
+.rb  { display: block; }
+.rt  { display: block; }
+.rbc { display: block; }
+.rtc { display: block; }
+
+</style>
+</head>
+<body>
+
+<!-- These should produce two display:block grid items -->
+
+<div class="grid">
+<x class="cell"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="cell"></x>
+<x class="cell"></x>
+</div>
+</div>
+
+<div class="grid">
+<x class="cell"></x>
+<x class="row"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="row"></x>
+<x class="row"></x>
+</div>
+</div>
+
+<div class="grid">
+<x class="row"></x>
+<x class="row"></x>
+</div>
+
+<div class="grid">
+<x class="rowg"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="head"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="col"></x>
+<x class="col"></x>
+</div>
+
+<div class="grid">
+<x class="col"></x>
+<x class="colg"></x>
+</div>
+
+<div class="grid">
+<x class="colg"></x>
+<x class="colg"></x>
+</div>
+
+<div class="grid">
+<x class="cell"></x>
+<x class="col"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="caption"></x>
+<x class="caption"></x>
+</div>
+</div>
+
+<div class="grid">
+<x class="caption"></x>
+<x class="caption"></x>
+</div>
+
+<div class="grid">
+<x class="caption"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<x></x>
+<x></x>
+</div>
+
+<!-- These should produce two display:table grid items -->
+
+<div class="grid">
+<x class="table"></x>
+<x class="table"></x>
+</div>
+
+<div class="grid">
+<x class="itable"></x>
+<x class="itable"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="table"></x>
+<x class="itable"></x>
+</div>
+</div>
+
+<!-- These should produce one display:table grid item and one display:block grid item -->
+
+<div class="grid">
+<x class="table"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<x class="cell"></x>
+<x class="table"></x>
+</div>
+
+<div class="grid">
+<x class="itable"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<x class="table"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="itable"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="rowg"></x>
+<x class="itable"></x>
+</div>
+
+<!-- These should produce two display:flex grid items -->
+
+<div class="grid">
+<x class="flex"></x>
+<x class="iflex"></x>
+</div>
+
+<div class="grid">
+<x class="iflex"></x>
+<x class="iflex"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="flex"></x>
+<x class="flex"></x>
+</div>
+</div>
+
+<!-- This should produce one display:flex grid item and one display:block -->
+
+<div class="grid">
+<x class="iflex"></x>
+<x class="cell"></x>
+</div>
+
+<!-- These should produce two display:grid grid items -->
+
+<div class="grid">
+<x class="bgrid"></x>
+<x class="igrid"></x>
+</div>
+
+<div class="grid">
+<x class="igrid"></x>
+<x class="igrid"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="bgrid"></x>
+<x class="bgrid"></x>
+</div>
+</div>
+
+<!-- This should produce one display:grid grid item and one display:block -->
+
+<div class="grid">
+<x class="igrid"></x>
+<x class="cell"></x>
+</div>
+
+<!-- This should produce one display:list-item grid item and one display:block -->
+<div class="grid">
+<x class="list"></x>
+<x></x>
+</div>
+
+<!-- Various Ruby tests -->
+
+<div class="grid">
+<x class="r"></x>
+<x class="r"></x>
+</div>
+
+<div class="grid">
+<x class="rb"></x>
+<x class="rb"></x>
+</div>
+
+<div class="grid">
+<x class="rt"></x>
+<x class="rt"></x>
+</div>
+
+<div class="grid">
+<x class="rbc"></x>
+<x class="rbc"></x>
+</div>
+
+<div class="grid">
+<x class="rtc"></x>
+<x class="rtc"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="r"></x>
+<x class="r"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rb"></x>
+<x class="rb"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rt"></x>
+<x class="rt"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rbc"></x>
+<x class="rbc"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rtc"></x>
+<x class="rtc"></x>
+</div>
+</div>
+
+</body>
+</html>

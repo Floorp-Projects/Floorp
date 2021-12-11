@@ -1,0 +1,58 @@
+{
+  "manifest_version": 2,
+
+  "applications": {
+    "gecko": {
+      "id": "firefox-compact-dark@mozilla.org"
+    }
+  },
+
+  "name": "Chromium Floorp dark",
+  "description": "Chromium Dark Theme for Floorp Legacy",
+  "author": "Mozilla",
+  "version": "1.2",
+
+  "icons": {"32": "icon.svg"},
+
+  "theme": {
+    "images": {
+      "additional_backgrounds": [
+        "images/bg-000-5672c42860d5b06e1058dc477397f3ef.svg"
+      ]
+    },
+    "properties": {
+      "additional_backgrounds_alignment": [
+        "top"
+      ],
+      "additional_backgrounds_tiling": [
+        "repeat"
+      ]
+    },
+    "colors": {
+      "toolbar": "rgb(53, 54, 58)",
+      "toolbar_text": "rgb(241, 243, 244)",
+      "frame": "rgb(32, 33, 36)",
+      "tab_background_text": "rgb(189, 193, 198)",
+      "toolbar_field": "rgb(32, 33, 36)",
+      "toolbar_field_text": "rgb(241, 243, 244)",
+      "tab_line": "rgb(53, 54, 58)",
+      "popup": "rgb(53, 54, 58)",
+      "popup_text": "rgb(241, 243, 244)",
+      "ntp_background": "rgb(53, 54, 58)",
+      "ntp_text": "rgb(241, 243, 244)",
+      "popup_border": "rgb(53, 54, 58)",
+      "popup_highlight": "rgb(53, 54, 58)",
+      "sidebar_border": "rgb(53, 54, 58)",
+      "sidebar_text": "rgb(241, 243, 244)",
+      "sidebar": "rgb(53, 54, 58)",
+      "tab_background_separator": "rgb(32, 33, 36)",
+      "tab_selected": "rgb(53, 54, 58)",
+      "toolbar_field_border_focus": "rgb(79, 92, 115)",
+      "toolbar_field_highlight": "rgb(24, 90, 188)",
+      "toolbar_field_separator": "rgb(53, 54, 58)",
+      "toolbar_top_separator": "rgb(32, 33, 36)",
+      "toolbar_vertical_separator": "rgb(53, 54, 58)",
+      "tab_loading": "rgb(53, 54, 58)"
+    }
+  }
+}

@@ -1,0 +1,56 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "windows.h"
+%}
+
+/**
+ * Native types
+ */
+  [ptr] native nsDevMode(DEVMODEW);
+  native nsHdc(HDC);
+
+/**
+ * Simplified PrintSettings for Windows interface
+ */
+[uuid(c63eed41-6ac5-459e-8a64-033eb9ad770a)]
+interface nsIPrintSettingsWin : nsISupports
+{
+  /**
+   * Data Members
+   *
+   * Each of these data members make a copy
+   * of the contents. If you get the value,
+   * you own the memory.
+   *
+   * The following three pieces of data are needed
+   * to create a DC for printing. These are typcially
+   * gotten via the PrintDLG call ro can be obtained
+   * via the "m_pd" data member of the CPrintDialog
+   * in MFC.
+   */
+  [noscript] attribute AString deviceName;
+  [noscript] attribute AString driverName;
+
+  [noscript] attribute nsDevMode devMode;
+
+  /**
+   * Copy relevant print settings from native Windows device.
+   *
+   * @param hdc HDC to copy from
+   * @param devMode DEVMODE to copy from
+   */
+  [notxpcom] void copyFromNative(in nsHdc hdc, in nsDevMode devMode);
+
+  /**
+   * Copy relevant print settings to native windows structures.
+   *
+   * @param devMode DEVMODE to be populated.
+   */
+  [notxpcom] void copyToNative(in nsDevMode devMode);
+};

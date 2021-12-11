@@ -1,0 +1,53 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.soundtouch += [
+    'FIFOSamplePipe.h',
+    'SoundTouch.h',
+    'soundtouch_config.h',
+    'SoundTouchFactory.h',
+    'STTypes.h',
+]
+
+UNIFIED_SOURCES += [
+    'AAFilter.cpp',
+    'cpu_detect_x86.cpp',
+    'FIFOSampleBuffer.cpp',
+    'FIRFilter.cpp',
+    'InterpolateCubic.cpp',
+    'InterpolateLinear.cpp',
+    'InterpolateShannon.cpp',
+    'RateTransposer.cpp',
+    'SoundTouch.cpp',
+    'SoundTouchFactory.cpp',
+    'TDStretch.cpp',
+]
+
+if CONFIG['INTEL_ARCHITECTURE']:
+    if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        SOURCES += ['sse_optimized.cpp']
+        SOURCES['sse_optimized.cpp'].flags += CONFIG['SSE2_FLAGS']
+    else:
+        SOURCES += ['mmx_optimized.cpp']
+        SOURCES['mmx_optimized.cpp'].flags += CONFIG['MMX_FLAGS']
+
+if CONFIG['OS_ARCH'] != 'WINNT':
+    # GCC/Clang require permissions to be explicitly set for the soundtouch
+    # header.
+    CXXFLAGS += ['-include', SRCDIR + '/soundtouch_perms.h']
+else:
+    # Windows need alloca renamed to _alloca
+    DEFINES['alloca'] = '_alloca'
+
+DEFINES['BUILDING_SOUNDTOUCH'] = 1
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'lgpllibs'
+
+# Use abort() instead of exception in SoundTouch.
+DEFINES['ST_NO_EXCEPTION_HANDLING'] = 1

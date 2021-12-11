@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 13;
+
+function test_seek13(v, seekTime, is, ok, finish) {
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return;
+  ok(!v.seeking, "seeking should default to false");
+  v.currentTime = v.duration;
+  is(v.currentTime, v.duration, "currentTime must report seek target immediately");
+  is(v.seeking, true, "seeking flag on start should be true");
+}
+
+function seekStarted() {
+  if (completed)
+    return;
+  //is(v.currentTime, v.duration, "seeking: currentTime must be duration");
+  ok(Math.abs(v.currentTime - v.duration) < 0.01,
+     "seeking: currentTime (" + v.currentTime + ") must be duration (" + v.duration + ")");
+}
+
+function seekEnded() {
+  if (completed)
+    return;
+  //is(v.currentTime, v.duration, "seeked: currentTime must be duration");
+  ok(Math.abs(v.currentTime - v.duration) < 0.01,
+     "seeked: currentTime (" + v.currentTime + ") must be duration (" + v.duration + ")");
+  is(v.seeking, false, "seeking flag on end should be false");
+}
+
+function playbackEnded() {
+  if (completed)
+    return;
+  completed = true;
+  //is(v.currentTime, v.duration, "ended: currentTime must be duration");
+  ok(Math.abs(v.currentTime - v.duration) < 0.01,
+     "ended: currentTime (" + v.currentTime + ") must be duration (" + v.duration + ")");
+  is(v.seeking, false, "seeking flag on end should be false");
+  is(v.ended, true, "ended must be true");
+  finish();
+}
+
+v.addEventListener("loadedmetadata", startTest);
+v.addEventListener("seeking", seekStarted);
+v.addEventListener("seeked", seekEnded);
+v.addEventListener("ended", playbackEnded);
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

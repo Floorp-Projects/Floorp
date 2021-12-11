@@ -1,0 +1,97 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "accessibility",
+    "addon",
+    "compatibility",
+    "descriptors",
+    "emulation",
+    "highlighters",
+    "inspector",
+    "network-monitor",
+    "object",
+    "resources",
+    "targets",
+    "utils",
+    "watcher",
+    "webconsole",
+    "worker",
+]
+
+DevToolsModules(
+    "animation-type-longhand.js",
+    "animation.js",
+    "array-buffer.js",
+    "breakpoint-list.js",
+    "breakpoint.js",
+    "changes.js",
+    "common.js",
+    "css-properties.js",
+    "device.js",
+    "environment.js",
+    "errordocs.js",
+    "frame.js",
+    "framerate.js",
+    "heap-snapshot-file.js",
+    "highlighters.css",
+    "highlighters.js",
+    "layout.js",
+    "manifest.js",
+    "media-rule.js",
+    "memory.js",
+    "object.js",
+    "page-style.js",
+    "pause-scoped.js",
+    "perf.js",
+    "performance-recording.js",
+    "performance.js",
+    "preference.js",
+    "process.js",
+    "reflow.js",
+    "root.js",
+    "screenshot-content.js",
+    "screenshot.js",
+    "source.js",
+    "storage.js",
+    "string.js",
+    "style-rule.js",
+    "style-sheet.js",
+    "style-sheets.js",
+    "target-configuration.js",
+    "thread-configuration.js",
+    "thread.js",
+    "watcher.js",
+    "webbrowser.js",
+    "webconsole.js",
+)
+
+with Files("animation.js"):
+    BUG_COMPONENT = ("DevTools", "Inspector: Animations")
+
+with Files("breakpoint.js"):
+    BUG_COMPONENT = ("DevTools", "Debugger")
+
+with Files("css-properties.js"):
+    BUG_COMPONENT = ("DevTools", "Inspector: Rules")
+
+with Files("memory.js"):
+    BUG_COMPONENT = ("DevTools", "Memory")
+
+with Files("performance*"):
+    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
+
+with Files("source.js"):
+    BUG_COMPONENT = ("DevTools", "Debugger")
+
+with Files("storage.js"):
+    BUG_COMPONENT = ("DevTools", "Storage Inspector")
+
+with Files("stylesheets.js"):
+    BUG_COMPONENT = ("DevTools", "Style Editor")
+
+with Files("webconsole.js"):
+    BUG_COMPONENT = ("DevTools", "Console")

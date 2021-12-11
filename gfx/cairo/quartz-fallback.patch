@@ -1,0 +1,70 @@
+# HG changeset patch
+# User Robert O'Callahan <robert@ocallahan.org>
+# Date 1250204857 -43200
+# Node ID cc6bebbd93bb9d8606fe06b997f890acc17996fb
+# Parent  caea8b548962f0df38e8e9032e9f57ef0fd099ec
+Bug 507939 - Remove erroneous clip rect fixup which caused repainting errors with repeating radial gradients on Mac. r=jmuizelaar
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -1033,38 +1033,29 @@ typedef enum {
+     DO_TILED_IMAGE
+ } cairo_quartz_action_t;
+ 
+ static cairo_quartz_action_t
+ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
+ 				     const cairo_pattern_t *source)
+ {
+     CGRect clipBox = CGContextGetClipBoundingBox (surface->cgContext);
+-    CGAffineTransform ctm;
+     double x0, y0, w, h;
+ 
+     cairo_surface_t *fallback;
+     cairo_t *fallback_cr;
+     CGImageRef img;
+     cairo_pattern_t *source_copy;
+ 
+     cairo_status_t status;
+ 
+     if (clipBox.size.width == 0.0f ||
+ 	clipBox.size.height == 0.0f)
+ 	return DO_NOTHING;
+ 
+-    // the clipBox is in userspace, so:
+-    ctm = CGContextGetCTM (surface->cgContext);
+-    ctm = CGAffineTransformInvert (ctm);
+-    clipBox = CGRectApplyAffineTransform (clipBox, ctm);
+-
+-    // get the Y flip right -- the CTM will always have a Y flip in place
+-    clipBox.origin.y = surface->extents.height - (clipBox.origin.y + clipBox.size.height);
+-
+     x0 = floor(clipBox.origin.x);
+     y0 = floor(clipBox.origin.y);
+     w = ceil(clipBox.origin.x + clipBox.size.width) - x0;
+     h = ceil(clipBox.origin.y + clipBox.size.height) - y0;
+ 
+     /* Create a temporary the size of the clip surface, and position
+      * it so that the device origin coincides with the original surface */
+     fallback = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int) w, (int) h);
+@@ -1717,18 +1708,20 @@ _cairo_quartz_surface_paint (void *abstr
+     action = _cairo_quartz_setup_source (surface, source);
+ 
+     if (action == DO_SOLID || action == DO_PATTERN) {
+ 	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+ 							  surface->extents.y,
+ 							  surface->extents.width,
+ 							  surface->extents.height));
+     } else if (action == DO_SHADING) {
++	CGContextSaveGState (surface->cgContext);
+ 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
+ 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
++	CGContextRestoreGState (surface->cgContext);
+     } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
+ 	CGContextSaveGState (surface->cgContext);
+ 
+ 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
+ 	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
+ 	CGContextScaleCTM (surface->cgContext, 1, -1);
+ 
+ 	if (action == DO_IMAGE)

@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+test:
+    description: WebIDL parser tests
+    platform: lint/opt
+    treeherder:
+        symbol: Wp
+        kind: test
+        tier: 1
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: webidl-parser-test --verbose
+    when:
+        files-changed:
+            - 'dom/bindings/parser/runtests.py'
+            - 'dom/bindings/parser/WebIDL.py'
+            - 'dom/bindings/parser/tests/**'
+            - 'other-licenses/ply/**'

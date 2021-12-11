@@ -1,0 +1,60 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["JS_SHELL_NAME"]:
+    GeckoProgram(CONFIG["JS_SHELL_NAME"], linkage=None)
+    if CONFIG["JS_BUNDLED_EDITLINE"]:
+        DIRS += ["../editline"]
+        USE_LIBS += ["editline"]
+    USE_LIBS += ["static:js"]
+
+include("../js-config.mozbuild")
+include("../js-cxxflags.mozbuild")
+include("../js-standalone.mozbuild")
+
+UNIFIED_SOURCES += [
+    "js.cpp",
+    "jsoptparse.cpp",
+    "jsshell.cpp",
+    "ModuleLoader.cpp",
+    "OSObject.cpp",
+    "ShellModuleObjectWrapper.cpp",
+    "WasmTesting.cpp",
+]
+
+if CONFIG["FUZZING_INTERFACES"]:
+    UNIFIED_SOURCES += ["jsrtfuzzing/jsrtfuzzing.cpp"]
+    USE_LIBS += [
+        "static:fuzzer",
+    ]
+
+if CONFIG["FUZZING_JS_FUZZILLI"]:
+    OS_LIBS += ["rt"]
+
+DEFINES["EXPORT_JS_API"] = True
+
+LOCAL_INCLUDES += [
+    "!..",
+    "..",
+]
+
+OS_LIBS += CONFIG["EDITLINE_LIBS"]
+
+# Place a GDB Python auto-load file next to the shell executable, both in
+# the build directory and in the dist/bin directory.
+FINAL_TARGET_FILES += ["js-gdb.py"]
+OBJDIR_FILES.js.src.shell += ["!/dist/bin/js-gdb.py"]
+
+# People expect the js shell to wind up in the top-level JS dir.
+OBJDIR_FILES.js.src += ["!/dist/bin/js%s" % CONFIG["BIN_SUFFIX"]]
+
+# Stack size on Wasm/WASI
+# ==================================
+# Increase the default stack size (64KB) to 1MB.
+# Also make the stack grow towards 0 so that if SpiderMonkey's stack limiter is buggy, overflow will likely trap.
+if CONFIG["OS_ARCH"] == "WASI":
+    LDFLAGS += ["-Wl,-z,stack-size=1048576", "-Wl,--stack-first"]
+    OS_LIBS += ["wasi-emulated-process-clocks"]

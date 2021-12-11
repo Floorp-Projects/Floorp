@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: paused</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function ended(evt) {
+  var v = evt.target;
+  v.removeEventListener("ended", ended);
+  is(v.gotPause, true, "We should have received a \"pause\" event.")
+  is(v.paused, true, v._name + " must be paused after end");
+  manager.finished(v.token);
+  removeNodeAndSource(v);
+}
+
+function pause(evt) {
+  var v = evt.target;
+  v.removeEventListener("pause", pause);
+  v.gotPause = true;
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  document.body.appendChild(v);
+  v.token = token;
+  manager.started(v.token);
+  v.src = test.name;
+  v._name = test.name;
+  v._finished = false;
+  v.load();
+  is(v.paused, true,  v._name + " must be paused at start");
+
+  v.play();
+  is(v.paused, false, v._name + " must not be paused after play");
+
+  v.addEventListener("pause", pause);
+  v.addEventListener("ended", ended);
+}
+
+manager.runTests(gPausedAfterEndedTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

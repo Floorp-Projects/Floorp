@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: remove then add audio track"
+  });
+
+  runNetworkTest(function (options) {
+    const test = new PeerConnectionTest(options);
+    let originalTrack;
+    let haveMuteEvent = new Promise(() => {});
+    let haveUnmuteEvent = new Promise(() => {});
+    addRenegotiation(test.chain,
+      [
+        function PC_REMOTE_FIND_RECEIVER(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+             "pcRemote should have one receiver");
+          originalTrack = test.pcRemote._pc.getReceivers()[0].track;
+        },
+        function PC_LOCAL_REMOVE_AUDIO_TRACK(test) {
+          return test.pcLocal.removeSender(0);
+        },
+        function PC_LOCAL_ADD_AUDIO_TRACK(test) {
+          // The new track's pipeline will start with a packet count of
+          // 0, but the remote side will keep its old pipeline and packet
+          // count.
+          test.pcLocal.disableRtpCountChecking = true;
+          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
+        },
+      ],
+      [
+        function PC_REMOTE_WAIT_FOR_UNMUTE() {
+          return haveUnmuteEvent;
+        },
+        function PC_REMOTE_CHECK_ADDED_TRACK(test) {
+          is(test.pcRemote._pc.getTransceivers().length, 2,
+              "pcRemote should have two transceivers");
+          const track = test.pcRemote._pc.getTransceivers()[1].receiver.track;
+
+          const analyser = new AudioStreamAnalyser(
+              new AudioContext(), new MediaStream([track]));
+          const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+          return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
+        },
+        function PC_REMOTE_WAIT_FOR_MUTE() {
+          return haveMuteEvent;
+        },
+        function PC_REMOTE_CHECK_REMOVED_TRACK(test) {
+          is(test.pcRemote._pc.getTransceivers().length, 2,
+              "pcRemote should have two transceivers");
+          const track = test.pcRemote._pc.getTransceivers()[0].receiver.track;
+
+          const analyser = new AudioStreamAnalyser(
+              new AudioContext(), new MediaStream([track]));
+          const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+          return analyser.waitForAnalysisSuccess(arr => arr[freq] < 50);
+        }
+      ]
+    );
+
+    // The first track should mute when the connection is closed.
+    test.chain.insertBefore("PC_REMOTE_SET_REMOTE_DESCRIPTION", [
+      function PC_REMOTE_SETUP_ONMUTE(test) {
+        haveMuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[0].track, "mute");
+      }
+    ]);
+
+    // Second negotiation should cause the second track to unmute.
+    test.chain.insertAfter("PC_REMOTE_SET_REMOTE_DESCRIPTION", [
+      function PC_REMOTE_SETUP_ONUNMUTE(test) {
+        haveUnmuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[1].track, "unmute");
+      }
+    ], false, 1);
+
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

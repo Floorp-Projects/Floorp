@@ -1,0 +1,81 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Payment Request Testing</title>
+<script>
+const methods = [
+  {
+    supportedMethods: "basic-card",
+  },
+];
+const details = {
+  id: "simple details",
+  total: {
+    label: "Donation",
+    amount: { currency: "USD", value: "55.00" },
+  },
+};
+const updatedDetails = {
+  id: "simple details",
+  total: {
+    label: "Donation",
+    amount: { currency: "USD", value: "55.00" },
+  },
+  error: "",
+};
+
+let request;
+let shippingChangedEvent;
+
+let msg = "successful";
+try {
+  request = new PaymentRequest(methods, details);
+  request.onshippingoptionchange = (event) => {
+    shippingChangedEvent = event;
+    window.parent.postMessage("successful", "*");
+  };
+  request.onshippingaddresschange = (event) => {
+    shippingChangedEvent = event;
+    window.parent.postMessage("successful", "*");
+  };
+
+} catch (err) {
+  msg = err.name;
+}
+window.parent.postMessage(msg, "*");
+
+
+if (request) {
+  window.onmessage = async ({ data: action }) => {
+    msg = "successful";
+    switch (action) {
+      case "show PaymentRequest":
+        const responsePromise = request.show();
+        window.parent.postMessage(msg, "*");
+        try {
+          await responsePromise;
+        } catch (err) {
+          if (err.name !== "AbortError") {
+            msg = err.name;
+          }
+        }
+        window.parent.postMessage(msg, "*")
+        break;
+      case "updateWith PaymentRequest":
+        if (shippingChangedEvent) {
+          try {
+            shippingChangedEvent.updateWith(updatedDetails);
+          } catch(err) {
+            if (err.name !== "InvalidStateError") {
+              msg = err.name;
+            }
+          }
+          window.parent.postMessage(msg, "*");
+          shippingChangedEvent = undefined;
+        }
+        break;
+      default:
+        window.parent.postMessage(`fail - unknown postmessage action: ${action}`, "*");
+    }
+  };
+}
+</script>

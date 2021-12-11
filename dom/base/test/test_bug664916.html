@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=664916
+-->
+<head>
+  <title>Test for Bug 664916</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=664916">Mozilla Bug 664916</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+
+/** Test for Bug 664916 **/
+var div = document.createElement("div");
+var textNode = document.createTextNode("x")
+var tagNameGetter = div.__lookupGetter__("tagName");
+
+var tagName = "";
+try {
+  tagName = tagNameGetter.call(textNode);
+  ok(false, "Should throw when calling tagname getter on text node");
+} catch(e) {
+  ok(true, "Should throw when calling tagname getter on text node");
+}
+is(tagName, "", "Should not have changed tagName yet");
+tagName = tagNameGetter.call(div);
+is(tagName, "DIV", "Should get the right tag name");
+</script>
+</pre>
+</body>
+</html>

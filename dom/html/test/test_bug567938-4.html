@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=567938
+-->
+<head>
+  <title>Test for Bug 567938</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=567938">Mozilla Bug 567938</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input id='i' type='checkbox' onclick="return false;">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 567938 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+function runTests()
+{
+  document.getElementById('i').checked = false;
+
+  document.getElementById('i').addEventListener('click', function(aEvent) {
+    SimpleTest.executeSoon(function() {
+      ok(!aEvent.target.checked, "the input should not be checked");
+      SimpleTest.finish();
+    });
+    }, {once: true});
+
+  sendMouseEvent({type: 'click'}, 'i');
+}
+
+</script>
+</pre>
+</body>
+</html>

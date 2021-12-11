@@ -1,0 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#context-navigation > .menuitem-iconic {
+  -moz-box-flex: 1;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+}
+
+#context-navigation > .menuitem-iconic > .menu-iconic-left {
+  appearance: none;
+}
+
+#context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+  width: 1.25em;
+  height: auto;
+  margin: 7px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#context-back {
+  list-style-image: url("chrome://browser/skin/back.svg");
+}
+
+#context-forward {
+  list-style-image: url("chrome://browser/skin/forward.svg");
+}
+
+#context-reload {
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
+}
+
+#context-stop {
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+}
+
+#context-bookmarkpage {
+  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+
+#context-bookmarkpage[starred=true] {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+#context-back:-moz-locale-dir(rtl),
+#context-forward:-moz-locale-dir(rtl),
+#context-reload:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+#context-media-eme-learnmore {
+  list-style-image: url("chrome://browser/skin/drm-icon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}

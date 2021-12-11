@@ -1,0 +1,30 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * This CSS stylesheet defines the rules to be applied to any ImageDocuments,
+ * including those in frames.
+*/
+
+body {
+  /* To give the image access to our document's full viewport, we need to
+     override the margin that the html.css UA stylesheet would otherwise apply
+     to our body. */
+  margin: 0;
+}
+
+@media not print {
+  .shrinkToFit {
+    cursor: zoom-in;
+  }
+
+  .overflowingVertical, .overflowingHorizontalOnly {
+    cursor: zoom-out;
+  }
+}
+
+img {
+  display: block;
+}

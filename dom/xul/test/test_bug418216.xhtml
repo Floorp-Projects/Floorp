@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=418216
+-->
+<window title="Mozilla Bug 418216"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=418216"
+     target="_blank">Mozilla Bug 418216</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 418216 **/
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function onload() {
+    var element = $("item");
+    $("container").removeChild($("item"));
+    $("broadcaster").removeAttribute("disabled");
+    $("container").appendChild(element);
+    is($("item").hasAttribute("disabled"), $("broadcaster").hasAttribute("disabled"));
+    SimpleTest.finish();
+  }
+
+
+
+
+  ]]></script>
+
+<box id="container">
+<box id="item">
+    <observes element="broadcaster" attribute="disabled"/>
+</box>
+</box>
+
+<broadcasterset>
+    <broadcaster id="broadcaster" disabled="true"/>
+</broadcasterset>
+
+</window>

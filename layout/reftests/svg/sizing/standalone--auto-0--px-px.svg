@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     style="width:auto; height:0;" width="70" height="70">
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=294086 -->
+
+  <title>Test: width:auto; height:0; width="70" height="70"</title>
+
+  <desc>
+    This testcase checks that setting the CSS 'height' property to zero
+    prevents the SVG from being displayed. You should not see any red when
+    viewing this file.
+  </desc>
+
+  <rect width="1000" height="1000" fill="red"/>
+
+</svg>

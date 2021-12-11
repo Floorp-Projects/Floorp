@@ -1,0 +1,155 @@
+[
+  {
+    "_general_comment": "All plugins are version 5 and tests run against appVersion 3",
+    "_general_comment2": "Test 1-14 not listed, should never get blocked",
+
+    "_comment": "Should block for any version of the app",
+    "matchName": "^test_bug449027_15$",
+    "versionRange": [{
+      "targetApplication": [{"guid": "toolkit@mozilla.org"}]
+    }]
+  },
+  {
+    "_comment": "Should still block",
+    "matchName": "^test_bug449027_16$",
+    "versionRange": [{
+      "targetApplication": [{"guid": "toolkit@mozilla.org"}]
+    }]
+  },
+  {
+    "_comment": "Not blocked since neither version range matches",
+    "matchName": "^test_bug449027_17$",
+    "versionRange": [{
+      "targetApplication": [{
+        "minVersion": "9",
+        "guid": "toolkit@mozilla.org"
+      },{
+        "maxVersion": "7",
+        "guid": "toolkit@mozilla.org"
+      }]
+    }]
+  },
+  {
+    "_comment": "Invalid version range, should not block",
+    "matchName": "^test_bug449027_18$",
+    "versionRange": [{
+      "targetApplication": [{
+        "minVersion": "11",
+        "maxVersion": "9",
+        "guid": "toolkit@mozilla.org"
+      }]
+    }]
+  },
+  {
+    "_comment": "Should block all of the following",
+    "matchName": "^test_bug449027_19$",
+    "versionRange": [{
+      "targetApplication": [
+        {
+          "guid": "foo@bar.com"
+        },
+        {
+          "guid": "toolkit@mozilla.org",
+          "minVersion": "10",
+          "maxVersion": "11"
+        },
+        {
+          "minVersion": "8",
+          "maxVersion": "9"
+        },
+        {
+          "maxVersion": "7"
+        }
+      ]
+    }]
+  },
+  {
+    "matchName": "^test_bug449027_20$",
+    "versionRange": [{
+      "targetApplication": [
+        {
+          "guid": "toolkit@mozilla.org",
+          "maxVersion": "7"
+        },
+        {
+          "guid": "toolkit@mozilla.org",
+          "minVersion": "7",
+          "maxVersion": "8"
+        },
+        {
+          "guid": "toolkit@mozilla.org",
+          "minVersion": "9",
+          "maxVersion": "10"
+        },
+        {
+          "guid": "foo@bar.com"
+        }
+      ]
+    }]
+  },
+  {
+    "matchName": "^test_bug449027_21$",
+    "versionRange": [{
+      "targetApplication": [
+        {
+          "guid": "toolkit@mozilla.org",
+          "minVersion": "6",
+          "maxVersion": "6"
+        },
+        {
+          "guid": "toolkit@mozilla.org",
+          "minVersion": "7",
+          "maxVersion": "9"
+        },
+        {
+          "guid": "toolkit@mozilla.org",
+          "minVersion": "10",
+          "maxVersion": "11"
+        }
+      ]
+    }]
+  },
+  {
+    "matchName": "^test_bug449027_22$",
+    "versionRange": [{
+      "targetApplication": [{
+        "guid": "foo@bar.com"
+      },
+      {
+        "guid": "toolkit@mozilla.org",
+        "minVersion": "8"
+      }]
+    }]
+  },
+  {
+    "matchName": "^test_bug449027_23$",
+    "versionRange": [{
+      "targetApplication": [{
+        "guid": "toolkit@mozilla.org",
+        "minVersion": "7"
+      },
+      {
+        "guid": "foo@bar.com"
+      }]
+    }]
+  },
+  {
+    "matchName": "^test_bug449027_24$",
+    "versionRange": [{
+      "targetApplication": [{
+        "maxVersion": "8",
+        "guid": "toolkit@mozilla.org"
+      }]
+    }]
+  },
+  {
+    "matchName": "^test_bug449027_25$",
+    "versionRange": [{
+      "targetApplication": [{
+        "guid": "toolkit@mozilla.org",
+        "maxVersion": "9"
+      }]
+    }]
+  }
+]
+

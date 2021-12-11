@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test of animation sandwich priority based on syncbase dependencies.
+
+    Test for true dependency checking.
+
+    We construct a tree as follows:
+
+         b-c
+      a<
+         d
+
+    If we're doing naive dependency checking that only considers the depth of
+    a dependency in the tree we'll end up saying that 'c' is dependent on 'd'
+    but it's not.
+   -->
+  <rect width="100" height="100" fill="orange">
+    <set attributeName="fill" to="yellow" begin="1s"      dur="2s" id="a"/>
+    <set attributeName="fill" to="purple" begin="a.begin" dur="2s" id="b"/>
+    <set attributeName="fill" to="red"    begin="b.begin" dur="2s" id="c"/>
+    <set attributeName="fill" to="green"  begin="a.begin" dur="2s" id="d"/>
+  </rect>
+</svg>

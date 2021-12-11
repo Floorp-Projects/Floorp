@@ -1,0 +1,204 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* all localizable skin settings shall live here */
+@import url("chrome://global/locale/intl.css");
+@import url("chrome://global/content/widgets.css");
+
+@import url("close-icon.css");
+
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+:root {
+  /* ::::: Variables ::::: */
+  --arrowpanel-background: Field;
+  --arrowpanel-color: FieldText;
+  --arrowpanel-border-color: ThreeDShadow;
+  --arrowpanel-border-radius: 8px;
+  --arrowpanel-padding: 16px;
+
+  --arrowpanel-dimmed: color-mix(in srgb, currentColor 17%, transparent);
+  --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 30%, transparent);
+
+  --panel-description-color: GrayText;
+  --panel-disabled-color: GrayText;
+
+  --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
+  --toolbarbutton-icon-fill: currentColor;
+
+  --toolbar-field-background-color: Field;
+  --toolbar-field-color: FieldText;
+  --toolbar-field-border-color: ThreeDShadow;
+  --toolbar-field-focus-background-color: Field;
+  --toolbar-field-focus-color: FieldText;
+}
+
+:root:-moz-lwtheme {
+  --toolbar-field-background-color: rgba(255, 255, 255, 0.8);
+  --toolbar-field-focus-background-color: white;
+  --toolbar-field-color: black;
+  --toolbar-field-focus-color: black;
+  --toolbar-field-border-color: transparent;
+}
+
+:is(menupopup, panel)[type=arrow] {
+  --panel-background: var(--arrowpanel-background);
+  --panel-color: var(--arrowpanel-color);
+  --panel-border-color: var(--arrowpanel-border-color);
+  --panel-border-radius: var(--arrowpanel-border-radius);
+  --panel-padding: var(--arrowpanel-padding);
+}
+
+/* Lightweight theme roots */
+
+:root[lwtheme-image]:-moz-lwtheme-darktext {
+  text-shadow: 0 -0.5px 1.5px white;
+}
+
+:root[lwtheme-image]:-moz-lwtheme-brighttext {
+  text-shadow: 1px 1px 1.5px black;
+}
+
+/* General styles */
+
+*|*.plain {
+  appearance: none;
+  margin: 0 !important;
+  border: none;
+  padding: 0;
+}
+
+html|button,
+html|input,
+html|textarea {
+  font: inherit;
+}
+
+.header {
+  font-weight: bold;
+}
+
+.indent {
+  margin-inline-start: 23px;
+}
+
+.box-padded {
+  padding: 5px;
+}
+
+/* XUL iframe */
+
+xul|iframe {
+  border: none;
+  width: 100px;
+  height: 100px;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  /* In emulation, <iframe> is block instead of inline, so reset the width/height */
+  xul|iframe {
+    width: auto;
+    height: auto;
+  }
+}
+
+/* Label/description formatting */
+
+xul|description,
+xul|label {
+  cursor: default;
+  margin-block: 1px 2px;
+  margin-inline: 6px 5px;
+}
+
+xul|description {
+  margin-bottom: 4px;
+}
+
+xul|label[disabled="true"] {
+  color: GrayText;
+}
+
+.tooltip-label {
+  margin: 0;
+  word-wrap: break-word;
+  /* We must specify a min-width, otherwise word-wrap:break-word doesn't work.
+     See Bug 630864. */
+  min-width: 1px;
+}
+
+/* Links */
+
+.text-link {
+  color: -moz-nativehyperlinktext;
+  cursor: pointer;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.text-link:-moz-lwtheme {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Textbox context menu */
+
+.textbox-contextmenu:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
+/* Autoscroll popup */
+
+.autoscroller {
+  appearance: none;
+
+  /* Resets the native styles in windows and macOS */
+  border: none;
+  background-color: transparent;
+  -moz-window-shadow: none;
+
+  --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll.svg");
+  --panel-border-color: transparent;
+  --panel-padding: 0;
+  --panel-background: transparent no-repeat center / contain var(--autoscroll-background-image);
+  /* Set pointer-events: none; so that mousemove events can be handled by AutoScrollChild.jsm. */
+  pointer-events: none;
+}
+
+.autoscroller[scrolldir="NS"] {
+  --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll-vertical.svg");
+}
+
+.autoscroller[scrolldir="EW"] {
+  --autoscroll-background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
+}
+
+/* Combobox dropdown renderer */
+#ContentSelectDropdown > menupopup {
+  /* The menupopup itself should always be rendered LTR to ensure the scrollbar aligns with
+   * the dropdown arrow on the dropdown widget. If a menuitem is RTL, its style will be set accordingly */
+  direction: ltr;
+}
+
+#ContentSelectDropdown > menupopup::part(arrowscrollbox-scrollbox) {
+  scrollbar-width: var(--content-select-scrollbar-width, auto);
+}
+
+#ContentSelectDropdown > menupopup[customoptionstyling="true"]::part(arrowscrollbox) {
+  /* When authors specify a custom background, we use background-image to specify the author-supplied color.
+   * In that case, we don't want stuff like custom appearance or custom
+   * backgrounds, so we make sure to apply it on top of the default background. */
+  background-image: var(--content-select-background-image, none);
+  background-color: -moz-Combobox;
+}
+
+/* Indent options in optgroups */
+.contentSelectDropdown-ingroup .menu-iconic-text {
+  padding-inline-start: 2em;
+}

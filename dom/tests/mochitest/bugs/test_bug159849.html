@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=159849
+-->
+<head>
+  <title>Test for Bug 159849</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=159849">Mozilla Bug 159849</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 159849 **/
+function testFunc() {
+}
+
+var c = $("content");
+with (c) {
+  onmouseover = testFunc;
+  fooExpando = testFunc;
+}
+
+is(c.onmouseover, testFunc, "Event handler should have been set on node");
+ok(c.fooExpando === undefined,
+   "Expando should not have been set on node - " +
+   "got " + repr(c.fooExpando) + ", expected undefined");
+ok(window.onmouseover === null,
+   "Event handler should not have been set on window - " +
+   "got " + repr(window.onmouseover) + ", expected undefined");
+is(window.fooExpando, testFunc, "Expando should have been set on window");
+</script>
+</pre>
+</body>
+</html>
+

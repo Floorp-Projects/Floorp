@@ -1,0 +1,344 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+interface nsIPersistentProperties;
+interface nsIAccessibleDocument;
+interface nsIAccessibleRelation;
+
+webidl Node;
+
+%{C++
+#define NS_ACCESSIBLE_CACHE_TOPIC "accessible-cache"
+namespace mozilla {
+namespace a11y {
+class LocalAccessible;
+}
+}
+%}
+
+/**
+ * A cross-platform interface that supports platform-specific
+ * accessibility APIs like MSAA and ATK. Contains the sum of what's needed
+ * to support IAccessible as well as ATK's generic accessibility objects.
+ * Can also be used by in-process accessibility clients to get information
+ * about objects in the accessible tree. The accessible tree is a subset of
+ * nodes in the DOM tree -- such as documents, focusable elements and text.
+ * Mozilla creates the implementations of nsIAccessible on demand.
+ * See http://www.mozilla.org/projects/ui/accessibility for more information.
+ */
+[scriptable, builtinclass, uuid(de2869d9-563c-4943-996b-31a4daa4d097)]
+interface nsIAccessible : nsISupports
+{
+  /**
+   * Parent node in accessible tree.
+   */
+  readonly attribute nsIAccessible parent;
+
+  /**
+   * Next sibling in accessible tree
+   */
+  readonly attribute nsIAccessible nextSibling;
+
+  /**
+   * Previous sibling in accessible tree
+   */
+  readonly attribute nsIAccessible previousSibling;
+
+  /**
+   * First child in accessible tree
+   */
+  readonly attribute nsIAccessible firstChild;
+
+  /**
+   * Last child in accessible tree
+   */
+  readonly attribute nsIAccessible lastChild;
+
+  /**
+   * Array of all this element's children.
+   */
+  readonly attribute nsIArray children;
+
+  /**
+   * Number of accessible children
+   */
+  readonly attribute long childCount;
+
+  /**
+   * The 0-based index of this accessible in its parent's list of children,
+   * or -1 if this accessible does not have a parent.
+   */
+  readonly attribute long indexInParent;
+
+  /**
+   * The unique identifier of the accessible. ID is only guaranteed to be unique
+   * per document (Windows IDs are unique even across documents, but that is
+   * Windows specific and not exposed to core).
+   */
+  readonly attribute long long uniqueID;
+
+  /**
+   * The DOM node this nsIAccessible is associated with.
+   */
+  readonly attribute Node DOMNode;
+
+  /**
+    * For remote accessibles the id of the related DOM node.
+    */
+  readonly attribute AString id;
+
+  /**
+   * The document accessible that this access node resides in.
+   */
+  readonly attribute nsIAccessibleDocument document;
+
+  /**
+   * The root document accessible that this access node resides in.
+   */
+  readonly attribute nsIAccessibleDocument rootDocument;
+
+  /**
+   * The language for the current DOM node, e.g. en, de, etc.
+   */
+  readonly attribute AString language;
+
+  /**
+   * Accessible name -- the main text equivalent for this node. The name is
+   * specified by ARIA or by native markup. Example of ARIA markup is
+   * aria-labelledby attribute placed on element of this accessible. Example
+   * of native markup is HTML label linked with HTML element of this accessible.
+   *
+   * Value can be string or null. A null value indicates that AT may attempt to
+   * compute the name. Any string value, including the empty string, should be
+   * considered author-intentional, and respected.
+   */
+  readonly attribute AString name;
+
+  /**
+   * Accessible value -- a number or a secondary text equivalent for this node
+   * Widgets that use role attribute can force a value using the valuenow attribute
+   */
+  readonly attribute AString value;
+
+  /**
+   * Accessible description -- long text associated with this node
+   */
+  readonly attribute AString description;
+
+  /**
+   * Provides localized string of accesskey name, such as Alt+D.
+   * The modifier may be affected by user and platform preferences.
+   * Usually alt+letter, or just the letter alone for menu items.
+   */
+  readonly attribute AString accessKey;
+
+  /**
+   * Provides localized string of global keyboard accelerator for default
+   * action, such as Ctrl+O for Open file
+   */
+  readonly attribute AString keyboardShortcut;
+
+  /**
+   * Enumerated accessible role (see the constants defined in nsIAccessibleRole).
+   *
+   * @note  The values might depend on platform because of variations. Widgets
+   *        can use ARIA role attribute to force the final role.
+   */
+  readonly attribute unsigned long role;
+
+  /**
+   * Accessible states -- bit fields which describe boolean properties of node.
+   * Many states are only valid given a certain role attribute that supports
+   * them.
+   *
+   * @param aState - the first bit field (see nsIAccessibleStates::STATE_*
+   *                 constants)
+   * @param aExtraState - the second bit field
+   *                      (see nsIAccessibleStates::EXT_STATE_* constants)
+   */
+  void getState(out unsigned long aState, out unsigned long aExtraState);
+
+  /**
+   * Help text associated with node
+   *
+   * @note As of now, this just returns empty string.
+   */
+  readonly attribute AString help;
+
+  /**
+   * Focused accessible child of node
+   */
+  readonly attribute nsIAccessible focusedChild;
+
+  /**
+   * Attributes of accessible
+   */
+  readonly attribute nsIPersistentProperties attributes;
+
+  /**
+   * Platform specific interface for accessible
+   */
+  readonly attribute nsISupports nativeInterface;
+
+  /**
+   * Returns grouping information. Used for tree items, list items, tab panel
+   * labels, radio buttons, etc. Also used for collectons of non-text objects.
+   *
+   * @param groupLevel - 1-based, similar to ARIA 'level' property
+   * @param similarItemsInGroup - 1-based, similar to ARIA 'setsize' property,
+   *                              inclusive of the current item
+   * @param positionInGroup - 1-based, similar to ARIA 'posinset' property
+   */
+  void groupPosition(out long aGroupLevel, out long aSimilarItemsInGroup,
+                     out long aPositionInGroup);
+
+  /**
+   * Accessible child which contains the coordinate at (x, y) in screen pixels.
+   * If the point is in the current accessible but not in a child, the
+   * current accessible will be returned.
+   * If the point is in neither the current accessible or a child, then
+   * null will be returned.
+   *
+   * @param x  screen's x coordinate
+   * @param y  screen's y coordinate
+   * @return   the direct accessible child containing the given point
+   */
+  nsIAccessible getChildAtPoint(in long x, in long y);
+
+  /**
+   * Deepest accessible child which contains the coordinate at (x, y) in screen
+   * pixels. If the point is in the current accessible but not in a child, the
+   * current accessible will be returned. If the point is in neither the current
+   * accessible or a child, then null will be returned.
+   *
+   * @param x  screen's x coordinate
+   * @param y  screen's y coordinate
+   * @return   the deepest accessible child containing the given point
+   */
+  nsIAccessible getDeepestChildAtPoint(in long x, in long y);
+
+/**
+   * Like GetDeepestChildAtPoint, but restricted to the current process.
+   * If the point is within a remote document, the accessible for the browser
+   * element containing that document will be returned; i.e. this will not
+   * descend into the document. If called on an accessible inside a remote
+   * document, this will fail.
+   *
+   * @param x  screen's x coordinate
+   * @param y  screen's y coordinate
+   * @return   the deepest accessible child in this process containing the given
+   *           point
+   */
+  nsIAccessible getDeepestChildAtPointInProcess(in long x, in long y);
+
+  /**
+   * Nth accessible child using zero-based index or last child if index less than zero
+   */
+  nsIAccessible getChildAt(in long aChildIndex);
+
+  /**
+   * Return accessible relation by the given relation type (see.
+   * constants defined in nsIAccessibleRelation).
+   */
+  nsIAccessibleRelation getRelationByType(in unsigned long aRelationType);
+
+  /**
+   * Returns multiple accessible relations for this object.
+   */
+  nsIArray getRelations();
+
+  /**
+   * Return accessible's x and y coordinates relative to the screen and
+   * accessible's width and height in Dev pixels.
+   */
+  void getBounds(out long x, out long y, out long width, out long height);
+
+  /**
+   * Return accessible's x and y coordinates relative to the screen and
+   * accessible's width and height in CSS pixels.
+   */
+  void getBoundsInCSSPixels(out long aX, out long aY, out long aWidth, out long aHeight);
+
+  /**
+   * Add or remove this accessible to the current selection
+   */
+  void setSelected(in boolean isSelected);
+
+  /**
+   * Select this accessible node only
+   */
+  void takeSelection();
+
+  /**
+   * Focus this accessible node,
+   * The state STATE_FOCUSABLE indicates whether this node is normally focusable.
+   * It is the callers responsibility to determine whether this node is focusable.
+   * accTakeFocus on a node that is not normally focusable (such as a table),
+   * will still set focus on that node, although normally that will not be visually
+   * indicated in most style sheets.
+   */
+  void takeFocus();
+
+  /**
+   * The number of accessible actions associated with this accessible
+   */
+  readonly attribute uint8_t actionCount;
+
+  /**
+   * The name of the accessible action at the given zero-based index
+   */
+  AString getActionName(in uint8_t index);
+
+  /**
+   * The description of the accessible action at the given zero-based index
+   */
+  AString getActionDescription(in uint8_t aIndex);
+
+  /**
+   * Perform the accessible action at the given zero-based index
+   * Action number 0 is the default action
+   */
+  void doAction(in uint8_t index);
+
+  /**
+   * Makes an object visible on screen.
+   *
+   * @param scrollType - defines where the object should be placed on
+   *                     the screen (see nsIAccessibleScrollType for
+   *                     available constants).
+   */
+  [can_run_script]
+  void scrollTo(in unsigned long aScrollType);
+
+  /**
+   * Moves the top left of an object to a specified location.
+   *
+   * @param coordinateType [in] - specifies whether the coordinates are relative to
+   *                         the screen or the parent object (for available
+   *                         constants refer to nsIAccessibleCoordinateType)
+   * @param x [in] - defines the x coordinate
+   * @param y [in] - defines the y coordinate
+  */
+  void scrollToPoint(in unsigned long coordinateType, in long x, in long y);
+
+  /**
+   * Dispatches an ANNOUNCEMENT event with this accessible as target.
+   *
+   * @param announcement [in] - string to use in announcement.
+   * @param priority [in] - priority for announcement, could be
+   *                      nsIAccessibleAnnouncementEvent.POLITE or
+   *                      nsIAccessibleAnnouncementEvent.ASSERTIVE.
+   */
+  void announce(in AString announcement, in unsigned short priority);
+
+  %{C++
+  virtual mozilla::a11y::LocalAccessible* ToInternalAccessible() const = 0;
+  %}
+
+};
+

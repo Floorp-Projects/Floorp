@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!-- tests that Arabic characters shape across word breaks -->
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+@font-face {
+  font-family: dvm;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+textarea {
+  font-family: dvm;
+  line-height: 1.5em;
+  overflow: scroll;
+}
+  </style>
+  <title>Test Wordwrap</title>
+ </head>
+ <body>
+  <textarea rows="10" cols="20" dir="rtl">ذهعقروبلجيكا،الموسوﻋ
+ﺔكل,تمبوابةاقتصاديةﻫ
+ﺬه.ضمنهاالروسوحرماﻧﺒ
+ﻠﻌﺪد,يكنجسيمةلإعادةلم
+.يكنوالحلفاءبالقناﺑﻠ
+ﻬﻮ,بحثخسائرالدفاعباﻟ
+ﻬﺠﻮمعن.فرنسيةمارشاﻟﺒ
+ﻴﻨﻴﺘﻮدحرثم,وصلبشريةا
+لرايخبالحربتم.</textarea>
+ </body>
+</html>

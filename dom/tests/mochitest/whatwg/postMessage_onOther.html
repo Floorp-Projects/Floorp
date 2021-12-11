@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage called through another frame</title>
+  <script type="application/javascript">
+    var PATH = "/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html";
+
+    function receiveMessage(evt)
+    {
+      if (evt.lastEventId !== "")
+      {
+        fail("unexpected non-empty lastEventId");
+        return;
+      }
+
+      switch (window.location.href)
+      {
+        case "http://example.com" + PATH:
+          receiveTopDomain(evt);
+          break;
+
+        case "http://test1.example.com" + PATH:
+          receiveSubDomain(evt);
+          break;
+
+        default:
+          fail("unexpected location");
+      }
+    }
+
+    function fail(msg)
+    {
+      window.parent.postMessage("FAIL " + msg, "*");
+    }
+
+    // The parent frame sends "start-test" to the subdomain frame to start.
+    // The subdomain frame then sets document.domain to the top domain so that
+    // the top domain frame can access it.  It then sends a message to the top
+    // domain frame to tell it to do likewise; once that happens, the top domain
+    // frame can then call a method on the subdomain frame window, which will
+    // call a method *on the top domain window* to send a message to the parent
+    // window.  We thus expect to see an event whose source is the subdomain
+    // window -- *not* the top domain window.  Therefore, its .origin should be:
+    //
+    //   http://test1.example.com
+    //
+    // and not
+    //
+    //   http://example.com
+
+    function receiveSubDomain(evt)
+    {
+      if (evt.origin !== "http://mochi.test:8888")
+      {
+        fail("wrong top-domain origin: " + evt.origin);
+        return;
+      }
+      if (evt.data !== "start-test")
+      {
+        fail("wrong top-domain message: " + evt.origin);
+        return;
+      }
+
+      document.domain = "example.com";
+      window.parent.topDomainFrame.postMessage("domain-switch",
+                                               "http://example.com");
+    }
+    
+    function receiveTopDomain(evt)
+    {
+      if (evt.origin !== "http://test1.example.com")
+      {
+        fail("wrong subdomain origin: " + evt.origin);
+        return;
+      }
+      if (evt.data !== "domain-switch")
+      {
+        fail("wrong subdomain message: " + evt.origin);
+        return;
+      }
+      if (evt.source !== window.parent.subDomainFrame)
+      {
+        fail("wrong source on message from subdomain");
+        return;
+      }
+
+      document.domain = "example.com";
+      window.parent.subDomainFrame.testSiblingPostMessage();
+    }
+
+    function testSiblingPostMessage()
+    {
+      window.parent.postMessage("test-finished", "http://mochi.test:8888");
+    }
+
+    function setup()
+    {
+      var target = document.getElementById("location");
+      target.textContent = location.hostname + ":" + (location.port || 80);
+    }
+
+    window.addEventListener("message", receiveMessage);
+    window.addEventListener("load", setup);
+  </script>
+</head>
+<body>
+<h1 id="location">No location!</h1>
+</body>
+</html>

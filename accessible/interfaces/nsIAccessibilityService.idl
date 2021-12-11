@@ -1,0 +1,108 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAccessible;
+interface nsIWeakReference;
+interface nsIAccessiblePivot;
+
+webidl Node;
+
+/**
+ * An interface for in-process accessibility clients wishing to get an
+ * nsIAccessible for a given DOM node.  More documentation at:
+ *   http://www.mozilla.org/projects/ui/accessibility
+ */
+[scriptable, builtinclass, uuid(2188e3a0-c88e-11e7-8f1a-0800200c9a66)]
+interface nsIAccessibilityService : nsISupports
+{
+  /**
+   * Return application accessible.
+   */
+  nsIAccessible getApplicationAccessible();
+
+  /**
+   * Return an nsIAccessible for a DOM node in pres shell 0.
+   * Create a new accessible of the appropriate type if necessary,
+   * or use one from the accessibility cache if it already exists.
+   * @param aNode The DOM node to get an accessible for.
+   * @return The nsIAccessible for the given DOM node.
+   */
+  nsIAccessible getAccessibleFor(in Node aNode);
+
+  nsIAccessible getAccessibleDescendantFor(in Node aNode);
+
+   /**
+    * Returns accessible role as a string.
+    *
+    * @param aRole - the accessible role constants.
+    */
+  AString getStringRole(in unsigned long aRole);
+
+   /**
+    * Returns list which contains accessible states as a strings.
+    *
+    * @param aStates - accessible states.
+    * @param aExtraStates - accessible extra states.
+    */
+  nsISupports getStringStates(in unsigned long aStates,
+                              in unsigned long aExtraStates);
+
+  /**
+   * Get the type of accessible event as a string.
+   *
+   * @param aEventType - the accessible event type constant
+   * @return - accessible event type presented as human readable string
+   */
+  AString getStringEventType(in unsigned long aEventType);
+
+  /**
+   * Get the type of accessible relation as a string.
+   *
+   * @param aRelationType - the accessible relation type constant
+   * @return - accessible relation type presented as human readable string
+   */
+  AString getStringRelationType(in unsigned long aRelationType);
+
+  /**
+   * Return an accessible for the given DOM node from the cache.
+   * @note  the method is intended for testing purposes
+   *
+   * @param aNode  [in] the DOM node to get an accessible for
+   *
+   * @return       cached accessible for the given DOM node if any
+   */
+  nsIAccessible getAccessibleFromCache(in Node aNode);
+
+  /**
+   * Create a new pivot for tracking a position and traversing a subtree.
+   *
+   * @param aRoot [in] the accessible root for the pivot
+   * @return a new pivot
+   */
+  nsIAccessiblePivot createAccessiblePivot(in nsIAccessible aRoot);
+
+  /**
+   * Enable logging for the given modules, all other modules aren't logged.
+   *
+   * @param aModules [in] list of modules, format is comma separated list
+   *                      like 'docload,doccreate'.
+   * @note Works on debug build only.
+   * @see Logging.cpp for list of possible values.
+   */
+  void setLogging(in ACString aModules);
+
+  /**
+   * Return true if the given module is logged.
+   */
+  boolean isLogged(in AString aModule);
+
+  /**
+   * Get the current accessibility service consumers.
+   * @returns a JSON string representing the accessibility service consumers.
+   */
+  AString getConsumers();
+};

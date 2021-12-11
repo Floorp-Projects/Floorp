@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<style>
+@page {
+    margin: 0;
+}
+div {
+    position: absolute;
+    background: blue;
+    width: 1in;
+    height: 1in;
+}
+/* These positions assume the test case was placed in the upper left corner of
+ * the page, rather than being centered or scaled.
+ */
+.upper {
+    top: 0;
+}
+.lower{
+    top: 2in;
+}
+.left{
+    left: 0;
+}
+.right{
+    left: 2in;
+}
+</style>
+<body>
+<div class="upper left"></div>
+<div class="upper right"></div>
+<div class="lower left"></div>
+<div class="lower right"></div>
+</body>

@@ -1,0 +1,283 @@
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "mozIStorageAsyncConnection.idl"
+
+%{C++
+namespace mozilla::dom::quota {
+class QuotaObject;
+}
+
+namespace mozilla::storage {
+class SQLiteMutex;
+class SQLiteMutexAutoLock;
+}
+
+%}
+
+[ptr] native QuotaObject(mozilla::dom::quota::QuotaObject);
+native SQLiteMutex(mozilla::storage::SQLiteMutex&);
+native SQLiteMutexAutoLock(const mozilla::storage::SQLiteMutexAutoLock&);
+
+interface mozIStorageAggregateFunction;
+interface mozIStorageCompletionCallback;
+interface mozIStorageFunction;
+interface mozIStorageProgressHandler;
+interface mozIStorageBaseStatement;
+interface mozIStorageStatement;
+interface mozIStorageAsyncStatement;
+interface mozIStorageStatementCallback;
+interface mozIStoragePendingStatement;
+interface nsIFile;
+
+/**
+ * mozIStorageConnection represents a database connection attached to
+ * a specific file or to the in-memory data storage.  It is the
+ * primary interface for interacting with a database, including
+ * creating prepared statements, executing SQL, and examining database
+ * errors.
+ *
+ * @note From the main thread, you should rather use mozIStorageAsyncConnection.
+ *
+ * @threadsafe
+ */
+[scriptable, builtinclass, uuid(4aa2ac47-8d24-4004-9b31-ec0bd85f0cc3)]
+interface mozIStorageConnection : mozIStorageAsyncConnection {
+  /**
+   * Closes a database connection.  Callers must finalize all statements created
+   * for this connection prior to calling this method.  It is illegal to use
+   * call this method if any asynchronous statements have been executed on this
+   * connection.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *         If any statement has been executed asynchronously on this object.
+   * @throws NS_ERROR_UNEXPECTED
+   *         If is called on a thread other than the one that opened it.
+   */
+  void close();
+
+  /**
+   * Clones a database connection and makes the clone read only if needed.
+   * SQL Functions and attached on-disk databases are applied to the new clone.
+   *
+   * @param aReadOnly
+   *        If true, the returned database should be put into read-only mode.
+   *        Defaults to false.
+   * @return the cloned database connection.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *         If this connection is a memory database.
+   * @note If your connection is already read-only, you will get a read-only
+   *       clone.
+   * @note Due to a bug in SQLite, if you use the shared cache (openDatabase),
+   *       you end up with the same privileges as the first connection opened
+   *       regardless of what is specified in aReadOnly.
+   * @note The following pragmas are copied over to a read-only clone:
+   *        - cache_size
+   *        - temp_store
+   *       The following pragmas are copied over to a writeable clone:
+   *        - cache_size
+   *        - temp_store
+   *        - foreign_keys
+   *        - journal_size_limit
+   *        - synchronous
+   *        - wal_autocheckpoint
+   *       All SQL functions are copied over to read-only and writeable clones.
+   *       Additionally, all temporary tables, triggers, and views, as well as
+   *       any indexes on temporary tables, are copied over to writeable clones.
+   *       For temporary tables, only the schemas are copied, not their
+   *       contents.
+   *
+   */
+  mozIStorageConnection clone([optional] in boolean aReadOnly);
+
+  /**
+   * The default size for SQLite database pages used by mozStorage for new
+   * databases.
+   */
+  readonly attribute long defaultPageSize;
+
+  /**
+   * Indicates if the connection is open and ready to use.  This will be false
+   * if the connection failed to open, or it has been closed.
+   */
+  readonly attribute boolean connectionReady;
+
+  /**
+   * lastInsertRowID returns the row ID from the last INSERT
+   * operation.
+   */
+  readonly attribute long long lastInsertRowID;
+
+  /**
+   * affectedRows returns the number of database rows that were changed or
+   * inserted or deleted by last operation.
+   */
+  readonly attribute long affectedRows;
+
+  /**
+   * The last error SQLite error code.
+   */
+  readonly attribute long lastError;
+
+  /**
+   * The last SQLite error as a string (in english, straight from the
+   * sqlite library).
+   */
+  readonly attribute AUTF8String lastErrorString;
+
+  /**
+   * The schema version of the database.  This should not be used until the
+   * database is ready.  The schema will be reported as zero if it is not set.
+   */
+  attribute long schemaVersion;
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Statement creation
+
+  /**
+   * Create a mozIStorageStatement for the given SQL expression.  The
+   * expression may use ? to indicate sequential numbered arguments,
+   * ?1, ?2 etc. to indicate specific numbered arguments or :name and
+   * $var to indicate named arguments.
+   *
+   * @param aSQLStatement
+   *        The SQL statement to execute.
+   * @return a new mozIStorageStatement
+   */
+  mozIStorageStatement createStatement(in AUTF8String aSQLStatement);
+
+  /**
+   * Execute a SQL expression, expecting no arguments.
+   *
+   * @param aSQLStatement  The SQL statement to execute
+   */
+  void executeSimpleSQL(in AUTF8String aSQLStatement);
+
+  /**
+   * Check if the given table exists.
+   *
+   * @param aTableName
+   *        The table to check
+   * @return TRUE if table exists, FALSE otherwise.
+   */
+  boolean tableExists(in AUTF8String aTableName);
+
+  /**
+   * Check if the given index exists.
+   *
+   * @param aIndexName   The index to check
+   * @return TRUE if the index exists, FALSE otherwise.
+   */
+  boolean indexExists(in AUTF8String aIndexName);
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Transactions
+
+  /**
+   * Begin a new transaction. If a transaction is active, throws an error.
+   */
+  void beginTransaction();
+
+  /**
+   * Commits the current transaction.  If no transaction is active,
+   * @throws NS_ERROR_UNEXPECTED.
+   * @throws NS_ERROR_NOT_INITIALIZED.
+   */
+  void commitTransaction();
+
+  /**
+   * Rolls back the current transaction.  If no transaction is active,
+   * @throws NS_ERROR_UNEXPECTED.
+   * @throws NS_ERROR_NOT_INITIALIZED.
+   */
+  void rollbackTransaction();
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Tables
+
+  /**
+   * Create the table with the given name and schema.
+   *
+   * If the table already exists, NS_ERROR_FAILURE is thrown.
+   * (XXX at some point in the future it will check if the schema is
+   * the same as what is specified, but that doesn't happen currently.)
+   *
+   * @param aTableName
+   *        The table name to be created, consisting of [A-Za-z0-9_], and
+   *        beginning with a letter.
+   * @param aTableSchema
+   *        The schema of the table; what would normally go between the parens
+   *        in a CREATE TABLE statement: e.g., "foo  INTEGER, bar STRING".
+   *
+   * @throws NS_ERROR_FAILURE
+   *         If the table already exists or could not be created for any other
+   *         reason.
+   */
+  void createTable(in string aTableName,
+                   in string aTableSchema);
+
+  /**
+   * Controls SQLITE_FCNTL_CHUNK_SIZE setting in sqlite. This helps avoid fragmentation
+   * by growing/shrinking the database file in SQLITE_FCNTL_CHUNK_SIZE increments. To
+   * conserve memory on systems short on storage space, this function will have no effect
+   * on mobile devices or if less than 500MiB of space is left available.
+   *
+   * @param aIncrement
+   *        The database file will grow in multiples of chunkSize.
+   * @param aDatabaseName
+   *        Sqlite database name. "" means pass NULL for zDbName to sqlite3_file_control.
+   *        See http://sqlite.org/c3ref/file_control.html for more details.
+   * @throws NS_ERROR_FILE_TOO_BIG
+   *         If the system is short on storage space.
+   */
+  void setGrowthIncrement(in int32_t aIncrement, in AUTF8String aDatabaseName);
+
+  /**
+   * Enable a predefined virtual table implementation.
+   *
+   * @param aModuleName
+   *        The module to enable. Only "filesystem" is currently supported.
+   *
+   * @throws NS_ERROR_FAILURE
+   *         For unknown module names.
+   */
+  [noscript] void enableModule(in ACString aModuleName);
+
+  /**
+   * Get quota objects.
+   *
+   * @param[out] aDatabaseQuotaObject
+   *             The QuotaObject associated with the database file.
+   * @param[out] aJournalQuotaObject
+   *             The QuotaObject associated with the journal file.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED.
+   */
+  [noscript] void getQuotaObjects(out QuotaObject aDatabaseQuotaObject,
+                                  out QuotaObject aJournalQuotaObject);
+
+  /**
+   * The mutex used for protection of operations (BEGIN/COMMIT/ROLLBACK) in
+   * mozStorageTransaction. The lock must be held in a way that spans whole
+   * operation, not just when accessing the nesting level.
+   */
+  [notxpcom, nostdcall] readonly attribute SQLiteMutex sharedDBMutex;
+
+  /**
+   * Helper methods for managing the transaction nesting level. The methods
+   * must be called with a proof of lock. Currently only used by
+   * mozStorageTransaction.
+   */
+  [notxpcom, nostdcall] unsigned long getTransactionNestingLevel(
+      in SQLiteMutexAutoLock aProofOfLock);
+
+  [notxpcom, nostdcall] unsigned long increaseTransactionNestingLevel(
+      in SQLiteMutexAutoLock aProofOfLock);
+
+  [notxpcom, nostdcall] unsigned long decreaseTransactionNestingLevel(
+      in SQLiteMutexAutoLock aProofOfLock);
+};

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test onmessageerror event handlers</title>
+  </head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <script>
+    /**
+     * Test that ServiceWorkerGlobalScope and ServiceWorkerContainer handle
+     * `messageerror` events, using a test helper class `StructuredCloneTester`.
+     * Intances of this class can be configured to fail to serialize or
+     * deserialize, as it's difficult to artificially create the case where an
+     * object successfully serializes but fails to deserialize (which can be
+     * caused by out-of-memory failures or the target global not supporting a
+     * serialized interface).
+     */
+
+    let registration = null;
+    let serviceWorker = null;
+    let serviceWorkerContainer = null;
+    const swScript = 'onmessageerror_worker.js';
+
+    add_task(async () => {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ['dom.serviceWorkers.enabled', true],
+          ['dom.serviceWorkers.testing.enabled', true],
+          ['dom.testing.structuredclonetester.enabled', true],
+        ],
+      });
+
+      swContainer = navigator.serviceWorker;
+
+      registration = await swContainer.register(swScript);
+      ok(registration, 'Service Worker regsisters');
+
+      serviceWorker = registration.installing;
+      await waitForState(serviceWorker, 'activated');
+    }); // setup
+
+    add_task(async () => {
+      const serializable = true;
+      const deserializable = true;
+      let sct = new StructuredCloneTester(serializable, deserializable);
+
+      const p = new Promise((resolve, reject) => {
+        function onMessage(e) {
+          const expectedBehavior = 'Serializable and deserializable ' +
+            'StructuredCloneTester serializes and deserializes';
+
+          is(e.data.received, 'message', expectedBehavior);
+          swContainer.removeEventListener('message', onMessage);
+          resolve();
+        }
+
+        swContainer.addEventListener('message', onMessage);
+      });
+
+      serviceWorker.postMessage({ serializable, deserializable, sct });
+
+      await p;
+    });
+
+    add_task(async () => {
+      const serializable = false;
+      // if it's not serializable, being deserializable or not doesn't matter
+      const deserializable = false;
+      let sct = new StructuredCloneTester(serializable, deserializable);
+
+      try {
+        serviceWorker.postMessage({ serializable, deserializable, sct });
+        ok(false, 'StructuredCloneTester serialization should have thrown -- ' +
+          'this line should not have been reached.');
+      } catch (e) {
+        const expectedBehavior = 'Unserializable StructuredCloneTester fails ' +
+          `to send, with exception name: ${e.name}`;
+        is(e.name, 'DataCloneError', expectedBehavior);
+      }
+    });
+
+    add_task(async () => {
+      const serializable = true;
+      const deserializable = false;
+      let sct = new StructuredCloneTester(serializable, deserializable);
+
+      const p = new Promise((resolve, reject) => {
+        function onMessage(e) {
+          const expectedBehavior = 'ServiceWorkerGlobalScope handles ' +
+            'messageerror events';
+
+          is(e.data.received, 'messageerror', expectedBehavior);
+          swContainer.removeEventListener('message', onMessage);
+          resolve();
+        }
+
+        swContainer.addEventListener('message', onMessage);
+      });
+
+      serviceWorker.postMessage({ serializable, deserializable, sct });
+
+      await p;
+    }); // test ServiceWorkerGlobalScope onmessageerror
+
+    add_task(async () => {
+      const p = new Promise((resolve, reject) => {
+        function onMessageError(e) {
+          ok(true, 'ServiceWorkerContainer handles messageerror events');
+          swContainer.removeEventListener('messageerror', onMessageError);
+          resolve();
+        }
+
+        swContainer.addEventListener('messageerror', onMessageError);
+      });
+
+      serviceWorker.postMessage('send-bad-message');
+
+      await p;
+    }); // test ServiceWorkerContainer onmessageerror
+
+    add_task(async () => {
+      await SpecialPowers.popPrefEnv();
+      ok(await registration.unregister(), 'Service Worker unregisters');
+    }); // teardown
+  </script>
+  <body>
+  </body>
+</html>

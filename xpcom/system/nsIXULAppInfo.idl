@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIPlatformInfo.idl"
+
+/**
+ * A scriptable interface to the nsXULAppAPI structure. See nsXULAppAPI.h for
+ * a detailed description of each attribute.
+ */
+
+[scriptable, uuid(ddea4f31-3c5e-4769-ac68-21ab4b3d7845)]
+interface nsIXULAppInfo : nsIPlatformInfo
+{
+  /**
+   * @see XREAppData.vendor
+   * @returns an empty string if XREAppData.vendor is not set.
+   */
+  readonly attribute ACString vendor;
+
+  /**
+   * @see XREAppData.name
+   */
+  readonly attribute ACString name;
+
+  /**
+   * @see XREAppData.ID
+   * @returns an empty string if XREAppData.ID is not set.
+   */
+  readonly attribute ACString ID;
+
+  /**
+   * The version of the XUL application. It is different than the
+   * version of the XULRunner platform. Be careful about which one you want.
+   *
+   * @see XREAppData.version
+   * @returns an empty string if XREAppData.version is not set.
+   */
+  readonly attribute ACString version;
+
+  /**
+   * The build ID/date of the application. For xulrunner applications,
+   * this will be different than the build ID of the platform. Be careful
+   * about which one you want.
+   */
+  readonly attribute ACString appBuildID;
+
+  /**
+   * @see XREAppData.UAName
+   * @returns an empty string if XREAppData.UAName is not set.
+   */
+  readonly attribute ACString UAName;
+
+  /**
+   * @see XREAppData.sourceURL
+   * @returns an empty string if XREAppData.sourceURL is not set.
+   */
+  readonly attribute ACString sourceURL;
+
+  /**
+   * @see XREAppData.updateURL
+   */
+  readonly attribute ACString updateURL;
+};

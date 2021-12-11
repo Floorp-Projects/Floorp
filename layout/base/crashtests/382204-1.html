@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+
+<html style="display: table;" class="reftest-wait">
+
+<head>
+<script>
+function boom()
+{
+  document.documentElement.style.color = "blue";
+  document.getElementById("zeta").style.display = "inline";
+  
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);">
+  <div id="zeta">foo</div>
+</body>
+
+</html>

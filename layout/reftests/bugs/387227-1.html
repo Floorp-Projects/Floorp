@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+ <head>
+   <script>
+     function runTest() {
+       var div = document.createElement("div");
+       div.appendChild(document.createTextNode("New Div"));
+       document.body.insertBefore(div, document.getElementById("insertion"));
+     }
+   </script>
+ </head>
+ <body onload="runTest()">
+   <div style="display: table-cell">Table cell</div
+  ><div id="insertion">Block</div>
+ </body>
+</html>

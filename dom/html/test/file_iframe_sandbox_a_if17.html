@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 886262</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script>
+  function doTest() {
+    var if_18_19 = document.getElementById('if_18_19');
+    if_18_19.sandbox = "allow-scripts allow-same-origin";
+    if_18_19.contentWindow.postMessage("go", "*");
+  }
+</script>
+
+<body onload="doTest()">
+  I am sandboxed but with "allow-scripts". I change the sandbox flags on if_18_19 to
+  "allow-scripts allow-same-origin" then get it to re-navigate itself to
+  file_iframe_sandbox_a_if18.html, which attemps to call a function in my parent.
+  This should fail since my sandbox flags should be copied to it when the sandbox
+  flags are changed.
+
+  <iframe sandbox="allow-scripts" id="if_18_19" src="file_iframe_sandbox_a_if19.html" height="10" width="10"></iframe>
+</body>
+</html>
+

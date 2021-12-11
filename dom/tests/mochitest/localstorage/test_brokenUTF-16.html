@@ -1,0 +1,100 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>incomplete UTF-16 test</title>
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function startTest()
+{
+  // Check this works for a diacritics
+  var k = "valid UTF-16 key";
+  var v = "ěščřžýáíéúůĚŠČŘŽÝÁÍÉÚŮ";
+
+  localStorage.setItem(k, v);
+  is(localStorage.getItem(k), v, "UTF-16 value results from getItem");
+
+  localStorage.setItem(v, "a value");
+  is(localStorage.getItem(v), "a value", "value result using UTF-16 key from getItem");
+
+  localStorage.clear();
+
+  localStorage[k] = v;
+  is(localStorage[k], v, "UTF-16 value results from []");
+
+  localStorage[v] = "a value";
+  is(localStorage[v], "a value", "value result using UTF-16 key from []");
+
+  localStorage.clear();
+
+  localStorage.aKey = v;
+  is(localStorage.aKey, v, "UTF-16 value results from a dynamic property");
+
+  localStorage.clear();
+
+  // Broken UTF-16
+  k = "broken UTF-16 key";
+  v = "\uD800"; // broken UTF-16
+
+  localStorage.setItem(k, v);
+  is(localStorage.getItem(k), v, "broken value results from getItem");
+
+  localStorage.setItem(v, "a value");
+  is(localStorage.getItem(v), "a value", "value result using broken key from getItem");
+
+  localStorage.clear();
+
+  localStorage[k] = v;
+  is(localStorage[k], v, "broken value results from []");
+
+  localStorage[v] = "a value";
+  is(localStorage[v], "a value", "value result using broken key from []");
+
+  localStorage.clear();
+
+  localStorage.aKey = v;
+  is(localStorage.aKey, v, "broken value results from a dynamic property");
+
+  localStorage.clear();
+
+  // Another variant
+  v = "FcK"
+    + String.fromCharCode(0x8a)
+    + ".jp";
+
+  localStorage.setItem(k, v);
+  is(localStorage.getItem(k), v);
+
+  localStorage.setItem(v, "a value");
+  is(localStorage.getItem(v), "a value");
+
+  localStorage.clear();
+
+  // And yet another variant
+  v = "something"
+    + String.fromCharCode(355, 277, 349, 357, 533, 537, 101, 345);
+
+  localStorage.setItem(k, v);
+  is(localStorage.getItem(k), v);
+
+  localStorage.setItem(v, "a value");
+  is(localStorage.getItem(v), "a value");
+
+  localStorage.clear();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

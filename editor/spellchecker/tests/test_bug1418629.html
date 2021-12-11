@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mozilla bug 1418629</title>
+  <link rel=stylesheet href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/editor/spellchecker/tests/spellcheck.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1418629">Mozilla Bug 1418629</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<input id="input1" spellcheck="true">
+<textarea id="textarea1"></textarea>
+<div id="edit1" contenteditable=true></div>
+
+<script>
+const {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+SimpleTest.waitForExplicitFinish();
+
+function getEditor(input) {
+  if (input instanceof HTMLInputElement ||
+      input instanceof HTMLTextAreaElement) {
+    return SpecialPowers.wrap(input).editor;
+  }
+
+  return SpecialPowers.wrap(window).docShell.editor;
+}
+
+function resetEditableContent(input) {
+  if (input instanceof HTMLInputElement ||
+      input instanceof HTMLTextAreaElement) {
+    input.value = "";
+    return;
+  }
+  input.innerHTML = "";
+}
+
+async function test_with_single_quote(input) {
+  let misspeltWords = [];
+
+  input.focus();
+  resetEditableContent(input);
+
+  synthesizeKey("d");
+  synthesizeKey("o");
+  synthesizeKey("e");
+  synthesizeKey("s");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  let editor = getEditor(input);
+  // isSpellingCheckOk is defined in spellcheck.js
+  ok(isSpellingCheckOk(editor, misspeltWords), "no misspelt words");
+
+  synthesizeKey("n");
+  synthesizeKey("\'");
+  is(input.value || input.textContent, "doesn\'", "");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  // XXX This won't work since mozInlineSpellWordUtil::SplitDOM removes
+  // last single quote unfortunately that is during inputting.
+  // isSpellingCheckOk is defined in spellcheck.js
+  todo_is(isSpellingCheckOk(editor, misspeltWords, true), true,
+          "don't run spellchecker during inputting word");
+
+  synthesizeKey(" ");
+  is(input.value || input.textContent, "doesn\' ", "");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  misspeltWords.push("doesn");
+  // isSpellingCheckOk is defined in spellcheck.js
+  ok(isSpellingCheckOk(editor, misspeltWords), "should run spellchecker");
+}
+
+async function test_with_twice_characters(input, ch) {
+  let misspeltWords = [];
+
+  input.focus();
+  resetEditableContent(input);
+
+  synthesizeKey("d");
+  synthesizeKey("o");
+  synthesizeKey("e");
+  synthesizeKey("s");
+  synthesizeKey("n");
+  synthesizeKey(ch);
+  synthesizeKey(ch);
+  is(input.value || input.textContent, "doesn" + ch + ch, "");
+
+  // trigger spellchecker
+  synthesizeKey(" ");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  misspeltWords.push("doesn");
+  let editor = getEditor(input);
+  // isSpellingCheckOk is defined in spellcheck.js
+  ok(isSpellingCheckOk(editor, misspeltWords), "should run spellchecker");
+}
+
+async function test_between_single_quote(input) {
+  let misspeltWords = [];
+
+  input.focus();
+  resetEditableContent(input);
+
+  synthesizeKey("\'");
+  synthesizeKey("t");
+  synthesizeKey("e");
+  synthesizeKey("s");
+  synthesizeKey("t");
+  synthesizeKey("\'");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  let editor = getEditor(input);
+  ok(isSpellingCheckOk(editor, misspeltWords),
+     "don't run spellchecker between single qoute");
+}
+
+async function test_with_email(input) {
+  let misspeltWords = [];
+
+  input.focus();
+  resetEditableContent(input);
+
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("@");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey(".");
+  synthesizeKey("c");
+  synthesizeKey("o");
+  synthesizeKey("m");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  let editor = getEditor(input);
+  ok(isSpellingCheckOk(editor, misspeltWords),
+     "don't run spellchecker for email address");
+
+  synthesizeKey(" ");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  ok(isSpellingCheckOk(editor, misspeltWords),
+     "no misspelt words due to email address");
+}
+
+async function test_with_url(input) {
+  let misspeltWords = [];
+
+  input.focus();
+  resetEditableContent(input);
+
+  synthesizeKey("h");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("p");
+  synthesizeKey(":");
+  synthesizeKey("/");
+  synthesizeKey("/");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey("t");
+  synthesizeKey(".");
+  synthesizeKey("c");
+  synthesizeKey("o");
+  synthesizeKey("m");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  let editor = getEditor(input);
+  ok(isSpellingCheckOk(editor, misspeltWords),
+     "don't run spellchecker for URL");
+
+  synthesizeKey(" ");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  ok(isSpellingCheckOk(editor, misspeltWords),
+     "no misspelt words due to URL");
+}
+
+SimpleTest.waitForFocus(() => {
+  for (let n of ["input1", "textarea1", "edit1"])  {
+    add_task(test_with_single_quote.bind(null,
+                                         document.getElementById(n)));
+    add_task(test_with_twice_characters.bind(null,
+                                             document.getElementById(n),
+                                             "\'"));
+    add_task(test_with_twice_characters.bind(null,
+                                             document.getElementById(n),
+                                             String.fromCharCode(0x2019)));
+    add_task(test_between_single_quote.bind(null,
+                                            document.getElementById(n)));
+    add_task(test_with_email.bind(null, document.getElementById(n)));
+    add_task(test_with_url.bind(null, document.getElementById(n)));
+  }
+});
+</script>
+</body>
+</html>

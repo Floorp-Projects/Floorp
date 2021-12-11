@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* Typography from Photon */
+  /* See https://firefox-dev.tools/photon/visuals/typography.html */
+  --caption-10-font-size: 11px;
+  --caption-10-font-weight: 400;
+  --body-10-font-size: 13px;
+  --body-10-font-weight: 400;
+  --body-20-font-size: 15px;
+  --body-20-font-weight: 400;
+  --body-20-font-weight-bold: 700;
+  --title-10-font-size: 13px;
+  --title-10-font-weight: 600;
+  --title-20-font-size: 17px;
+  --title-20-font-weight: 400;
+  --title-30-font-size: 22px;
+
+  /* Global styles */
+  --base-line-height: 1.8;
+  --list-line-height: 1.25;
+
+ /* Global colours */
+  --separator-color: var(--theme-splitter-color);
+  --bg-color: var(--theme-toolbar-background);
+  --highlight-color: var(--theme-toolbar-background-hover);
+
+  /* extra, raw colors */
+  --blue-50-a30: rgba(10, 132, 255, 0.3);
+
+  /* Global layout vars */
+  --base-unit: 4px;
+
+  /* these are the color for icons in empty pages - note that these are not
+     available in devtools' variables.css */
+  --dimmed-icon-color: #d3d3d3;
+}
+
+:root.theme-dark {
+  --dimmed-icon-color: #484848;
+}
+
+/*
+* Reset some tags
+*/
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  line-height: var(--base-line-height);
+}
+
+ul {
+  line-height: var(--list-line-height);
+}
+
+a {
+  color: var(--theme-highlight-blue);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+p {
+  margin: 0;
+}
+
+table {
+  border-spacing: 0;
+}
+
+/*
+ * utility classes
+ */
+
+.technical-text {
+  font-family: monospace;
+}

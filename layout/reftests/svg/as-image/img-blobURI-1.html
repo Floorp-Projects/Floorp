@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!-- This test checks to be sure we can render SVG-as-an-image
+     from a 'blob' URI. -->
+<html class="reftest-wait">
+<head>
+  <script>
+    function go() {
+      // Generate a blob URL encoding of an SVG document
+      var blobURL = generateBlobURL();
+
+      // Tell our img element to render the URL
+      var img = document.getElementsByTagName("img")[0]
+      img.src = blobURL;
+
+      // Once our img loads, take reftest snapshot.
+      img.addEventListener("load", function() {
+        document.documentElement.removeAttribute("class");
+      });
+    }
+
+    // Helper function -- returns a blob URL representing a
+    // 100x100 fully-lime SVG document.
+    function generateBlobURL() {
+      var svg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
+          '<rect height="100%" width="100%" fill="lime"/>' +
+        '</svg>';
+      return self.URL.createObjectURL(new Blob([svg], {type: "image/svg+xml"}));
+    }
+  </script>
+</head>
+<body onload="go()">
+  <img src="">
+</body>
+</html>

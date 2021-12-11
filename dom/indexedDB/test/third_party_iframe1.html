@@ -1,0 +1,48 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Test</title>
+
+  <script type="text/javascript">
+    function messageListener(event) {
+      let message = JSON.parse(event.data);
+
+      if (message.source == "parent") {
+        document.getElementById("iframe2").src = message.href;
+      }
+      else if (message.source == "iframe2") {
+        parent.postMessage(event.data, "*");
+      }
+    }
+
+    function report(result) {
+      let message = { source: "iframe1" };
+      message.result = result;
+      window.parent.postMessage(JSON.stringify(message), "*");
+    }
+
+    function runIndexedDBTest() {
+      window.addEventListener('message', messageListener);
+
+      try {
+        let request = indexedDB.open(window.location.pathname, 1);
+        request.onsuccess = function(event) {
+          report(!!(event.target.result instanceof IDBDatabase));
+        };
+      }
+      catch (e) {
+        report(false);
+      }
+    }
+  </script>
+
+</head>
+
+<body onload="runIndexedDBTest();">
+  <iframe id="iframe2"></iframe>
+</body>
+
+</html>

@@ -1,0 +1,69 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test browsingData.remove indexedDB</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+// NB: Since plugins are disabled, there is never any data to clear.
+// We are really testing that these operations are no-ops.
+
+add_task(async function testPluginData() {
+  async function background() {
+    const REFERENCE_DATE = Date.now();
+    const TEST_CASES = [
+      // Clear plugin data with no since value.
+      {},
+      // Clear pluginData with recent since value.
+      { since: REFERENCE_DATE - 20000 },
+      // Clear pluginData with old since value.
+      { since: REFERENCE_DATE - 1000000 },
+      // Clear pluginData for specific hosts.
+      { hostnames: ["bar.com", "baz.com"] },
+      // Clear pluginData for no hosts.
+      { hostnames: [] },
+    ];
+
+    for (let method of ["removePluginData", "remove"]) {
+      for (let options of TEST_CASES) {
+        browser.test.log(`Testing ${method} with ${JSON.stringify(options)}`);
+        if (method == "removePluginData") {
+          await browser.browsingData.removePluginData(options);
+        } else {
+          await browser.browsingData.remove(options, { pluginData: true });
+        }
+      }
+    }
+
+    browser.test.sendMessage("done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["tabs", "browsingData"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+
+  // This test has no assertions because it's only meant to check that we don't
+  // throw when calling removePluginData and remove with pluginData: true.
+  ok(true, "dummy check");
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

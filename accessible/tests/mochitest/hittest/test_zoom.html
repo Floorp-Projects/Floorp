@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>childAtPoint when page is zoomed</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+  <script type="application/javascript"
+          src="../browser.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+if (!MAC) {
+      var tabDocument = currentTabDocument();
+      var p1 = tabDocument.body.firstElementChild;
+      var p2 = tabDocument.body.lastElementChild;
+
+      hitTest(tabDocument, p1, p1.firstChild);
+      hitTest(tabDocument, p2, p2.firstChild);
+
+      zoomDocument(tabDocument, 2.0);
+
+      hitTest(tabDocument, p1, p1.firstChild);
+      hitTest(tabDocument, p2, p2.firstChild);
+
+      closeBrowserWindow();
+} else {
+      todo(false, "Bug 746974 - deepest child must be correct on all platforms, disabling on Mac!");
+}
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest,
+                      "data:text/html,<html><body><p>para 1</p><p>para 2</p></body></html>",
+                      { left: 100, top: 100 });
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=727942"
+     title="childAtPoint may return incorrect accessibles when page zoomed">
+    Mozilla Bug 727942
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

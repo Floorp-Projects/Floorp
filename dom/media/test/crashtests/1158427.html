@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  dump("before capture\n");
+  document.createElement("audio").mozCaptureStreamUntilEnded();
+  dump("before context\n");
+  new window.AudioContext();
+  dump("before gc\n");
+  SpecialPowers.forceCC();
+  dump("after gc\n");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
+

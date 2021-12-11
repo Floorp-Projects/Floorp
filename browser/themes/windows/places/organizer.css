@@ -1,0 +1,372 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --organizer-color: -moz-DialogText;
+  --organizer-deemphasized-color: GrayText;
+
+  --organizer-toolbar-background: -moz-Dialog;
+  --organizer-pane-background: -moz-Dialog;
+  --organizer-content-background: -moz-Dialog;
+
+  --organizer-hover-background: SelectedItem;
+  --organizer-hover-color: SelectedItemText;
+  --organizer-selected-background: SelectedItem;
+  --organizer-selected-color: SelectedItemText;
+  --organizer-outline-color: SelectedItem;
+
+  --organizer-separator-color: ThreeDDarkShadow;
+  --organizer-border-color: ThreeDShadow;
+
+  --organizer-toolbar-field-background: Field;
+  --organizer-toolbar-field-background-focused: Field;
+  --organizer-toolbar-field-border-color: ThreeDShadow;
+  --organizer-toolbar-field-focus-border-color: var(--organizer-outline-color);
+  --organizer-toolbar-field-focus-box-shadow: unset;
+  --organizer-pane-field-border-color: ThreeDShadow;
+}
+
+@media not (prefers-contrast) {
+  :root {
+    --organizer-color: rgb(21,20,26);
+    --organizer-deemphasized-color: rgb(91,91,102);
+
+    --organizer-toolbar-background: rgb(249,249,251);
+    --organizer-pane-background: rgb(240,240,244);
+    --organizer-content-background: white;
+
+    --organizer-hover-background: rgba(207,207,216,.66);
+    --organizer-hover-color: var(--organizer-color);
+    --organizer-selected-background: rgb(207,207,216);
+    --organizer-selected-color: var(--organizer-color);
+    --organizer-outline-color: rgb(0,97,224);
+
+    --organizer-separator-color: var(--organizer-pane-field-border-color);
+    --organizer-border-color: ThreeDLightShadow;
+
+    --organizer-toolbar-field-background: rgb(240,240,244);
+    --organizer-toolbar-field-background-focused: Field;
+    --organizer-toolbar-field-border-color: transparent;
+    --organizer-toolbar-field-focus-border-color: color-mix(in srgb, var(--organizer-outline-color) 50%, transparent);
+    --organizer-toolbar-field-focus-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
+    --organizer-pane-field-border-color: color-mix(in srgb, currentColor 41%, transparent);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --organizer-color: rgb(251,251,254);
+      --organizer-deemphasized-color: rgb(191,191,201);
+
+      --organizer-toolbar-background: rgb(43,42,51);
+      --organizer-pane-background: rgb(35,34,43);
+      --organizer-content-background: rgb(28,27,34);
+
+      --organizer-hover-background: rgb(82,82,94);
+      --organizer-selected-background: rgb(91,91,102);
+      --organizer-outline-color: rgb(0,221,255);
+
+      --organizer-toolbar-field-background: rgb(28,27,34);
+      --organizer-toolbar-field-background-focused: rgb(66,65,77);
+      scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
+    }
+  }
+}
+
+/* Toolbar and menus */
+
+#placesToolbar {
+  appearance: none;
+  background-color: var(--organizer-toolbar-background);
+  color: var(--organizer-color);
+  border-bottom: 1px solid var(--organizer-border-color);
+  padding: 4px;
+  padding-inline-end: 6px;
+}
+
+#placesToolbar > toolbarbutton {
+  appearance: none;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+#placesToolbar > toolbarbutton[disabled] {
+  opacity: .6;
+}
+
+#placesToolbar > toolbarbutton:not([disabled]):hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#placesToolbar > toolbarbutton:not([disabled]):hover:active {
+  background-color: var(--organizer-selected-background);
+}
+
+#placesToolbar > toolbarbutton > .toolbarbutton-icon,
+#placesMenu > menu > image,
+#placesMenu > menu > .menubar-text {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#placesMenu {
+  margin-inline-start: 6px;
+}
+
+#placesMenu > menu {
+  appearance: none;
+  color: var(--organizer-color);
+  border-radius: 4px;
+  padding-block: 5px;
+  padding-inline-start: 5px;
+  margin-inline-end: 2px;
+}
+
+#placesMenu > menu:hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#placesMenu > menu:hover:active,
+#placesMenu > menu[open] {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
+}
+
+#placesMenu > menu > .menubar-text {
+  margin-block: 0 !important; /* override menu.css */
+  padding-inline-end: 8px;
+  background: url(chrome://global/skin/icons/arrow-down-12.svg) right center no-repeat;
+  background-size: 6px;
+}
+
+#placesMenu > menu > .menubar-text:-moz-locale-dir(rtl) {
+  background-position-x: left;
+}
+
+/* Toolbar icons */
+
+#back-button {
+  list-style-image: url("chrome://browser/skin/back.svg");
+}
+
+#forward-button {
+  list-style-image: url("chrome://browser/skin/forward.svg");
+}
+
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
+#organizeButton {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+#viewMenu {
+  list-style-image: url("chrome://browser/skin/sort.svg");
+}
+
+#maintenanceButton {
+  list-style-image: url("chrome://browser/skin/import-export.svg");
+}
+
+/* Search bar */
+
+#searchFilter {
+  appearance: none;
+  background-color: var(--organizer-toolbar-field-background);
+  color: var(--organizer-color);
+  border: 1px solid var(--organizer-toolbar-field-border-color);
+  border-radius: 4px;
+  margin: 0;
+  padding-block: 2px;
+  min-height: 24px;
+}
+
+#searchFilter[focused] {
+  box-shadow: var(--organizer-toolbar-field-focus-box-shadow);
+  background-color: var(--organizer-toolbar-field-background-focused);
+  border-color: transparent;
+  outline: 2px solid var(--organizer-toolbar-field-focus-border-color);
+  outline-offset: -2px;
+}
+
+/* Sidebar and splitter */
+
+#placesList {
+  background-color: var(--organizer-pane-background);
+}
+
+#placesView > splitter {
+  border: 0;
+  border-inline-end: 1px solid var(--organizer-border-color);
+  min-width: 0;
+  width: 3px;
+  background-color: transparent;
+  margin-inline-start: -3px;
+  position: relative;
+}
+
+/* Downloads pane */
+
+#downloadsRichListBox {
+  color: var(--organizer-color);
+  background-color: var(--organizer-content-background);
+}
+
+#clearDownloadsButton:focus-visible {
+  outline: 2px solid var(--organizer-outline-color);
+}
+
+/* Tree */
+
+#contentView treecol {
+  padding: 4px;
+  /* Use box-shadow to draw a bottom border instead of border-bottom
+   * because otherwise the items on contentView won't be perfectly
+   * aligned with the items on the sidebar. */
+  box-shadow: inset 0 -1px var(--organizer-border-color)
+}
+
+tree {
+  background-color: var(--organizer-content-background);
+  color: var(--organizer-color);
+}
+
+treechildren::-moz-tree-row {
+  background-color: transparent;
+}
+
+treechildren::-moz-tree-row(hover) {
+  background-color: var(--organizer-hover-background);
+}
+
+treechildren::-moz-tree-row(selected) {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
+  border: 1px solid transparent;
+}
+
+treechildren::-moz-tree-image(hover),
+treechildren::-moz-tree-twisty(hover),
+treechildren::-moz-tree-cell-text(hover) {
+  color: var(--organizer-hover-color);
+}
+
+treechildren::-moz-tree-image(selected),
+treechildren::-moz-tree-twisty(selected),
+treechildren::-moz-tree-cell-text(selected) {
+  color: var(--organizer-selected-color);
+}
+
+treechildren::-moz-tree-separator {
+  height: 1px;
+  border-color: var(--organizer-separator-color);
+}
+
+treechildren::-moz-tree-separator(hover) {
+  border-color: var(--organizer-hover-color);
+}
+
+treechildren::-moz-tree-separator(selected) {
+  border-color: var(--organizer-selected-color);
+}
+
+/* Info box */
+
+#detailsPane {
+  background-color: var(--organizer-pane-background);
+  color: var(--organizer-color);
+  padding: 5px;
+  border-top: 1px solid var(--organizer-border-color);
+}
+
+#editBookmarkPanelRows .expander-up,
+#editBookmarkPanelRows .expander-down {
+  appearance: none;
+  min-width: 0;
+  padding: 5px;
+  margin: 0;
+  margin-inline-end: 4px;
+  border: 1px solid var(--organizer-pane-field-border-color);
+  border-radius: 4px;
+  color: var(--organizer-color);
+  background-color: var(--organizer-content-background);
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#editBookmarkPanelRows .expander-up:hover,
+#editBookmarkPanelRows .expander-down:hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#editBookmarkPanelRows .expander-up:hover:active,
+#editBookmarkPanelRows .expander-down:hover:active {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
+}
+
+#editBookmarkPanelRows .expander-up:focus-visible,
+#editBookmarkPanelRows .expander-down:focus-visible {
+  outline: 2px solid var(--organizer-outline-color);
+  outline-offset: -1px;
+}
+
+#editBookmarkPanelRows .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
+
+#editBookmarkPanelRows .expander-up > .button-box,
+#editBookmarkPanelRows .expander-down > .button-box {
+  padding: 0;
+}
+
+#places input {
+  border: 1px solid var(--organizer-pane-field-border-color);
+  border-radius: 4px;
+  background-color: var(--organizer-content-background);
+  color: var(--organizer-color);
+  min-height: 20px;
+  padding-inline: 4px;
+}
+
+#places input:focus {
+  outline: 2px solid var(--organizer-outline-color);
+  outline-offset: -1px;
+}
+
+#places input:not(:read-write):focus {
+  outline: none;
+}
+
+.caption-label {
+  margin-inline-start: 8px;
+  color: var(--organizer-deemphasized-color);
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox {
+  appearance: none;
+  color: var(--organizer-color);
+  background-color: var(--organizer-content-background);
+  border: 1px solid var(--organizer-border-color);
+  border-radius: 4px;
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox > richlistitem {
+  border: 1px solid transparent;
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox > richlistitem:hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox > richlistitem[selected] {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
+}

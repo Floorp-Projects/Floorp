@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=574663
+-->
+<head>
+  <title>Test for Bug 574663</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=574663">Mozilla Bug 574663</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 574663 **/
+
+// SimpleTest's paint_listener does not work on other windows, so we inline
+// a smaller version here.
+function waitForPaint(win, utils, callback) {
+  win.document.documentElement.getBoundingClientRect();
+  if (!utils.isMozAfterPaintPending) {
+    win.requestAnimationFrame(function() {
+      setTimeout(callback);
+    });
+    return;
+  }
+
+  var onpaint = function() {
+    if (!utils.isMozAfterPaintPending) {
+      win.removeEventListener("MozAfterPaint", onpaint);
+      callback();
+      return;
+    }
+    if (utils.isTestControllingRefreshes) {
+      utils.advanceTimeAndRefresh(0);
+    }
+  }
+  win.addEventListener("MozAfterPaint", onpaint);
+  if (utils.isTestControllingRefreshes) {
+    utils.advanceTimeAndRefresh(0);
+  }
+}
+
+// This is a magic number representing how many device pixels we are attempting to
+// scroll or zoom.  We use it for sending the wheel events, but we don't actually
+// check that we have scrolled by that amount.
+var kDelta = 3;
+
+function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback) {
+  var win = scrollbox.ownerDocument.defaultView;
+  let winUtils = SpecialPowers.getDOMWindowUtils(win);
+
+  let event = {
+    deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+    deltaY: direction * kDelta,
+    lineOrPageDeltaY: direction,
+    ctrlKey: ctrl,
+    isMomentum: momentum
+  };
+
+  // Construct a promise that will resolve when either scroll or zoom has changed.
+  // --- Intermittent Warning ---
+  // Two wheel events are sent, but our promise resolves when any change has been
+  // made to scroll or zoom. That makes it possible that the effect of the second
+  // event may not yet be applied when the promise resolves. This shouldn't lead
+  // to any errors, since the two wheel events are moving in the same direction,
+  // and our later checks will only ensure that the value has changed from its
+  // initial value. This was done intentionally, because attempting to wait after
+  // both events yields problems when the second event has no effect, which does
+  // happen in testing. It's not clear why this is happening. Since the testing
+  // pattern is scroll (twice), then scroll back (twice), it's possible that the
+  // first scroll back event is sufficient to return the scrollbox to its minimal
+  // scrollTop position, and so the second event doesn't scroll any further.
+  const initialZoom = winUtils.fullZoom;
+  const initialScroll = scrollbox.scrollTop;
+
+  const effectOfWheelEvent = SimpleTest.promiseWaitForCondition(() => {
+    return ((winUtils.fullZoom != initialZoom) || (scrollbox.scrollTop != initialScroll));
+  }, "Mouse wheel should have caused us to either zoom or scroll.");
+
+  synthesizeWheel(scrollbox, 10, 10, event, win);
+
+  // then additional pixel scroll
+  event.lineOrPageDeltaY = 0;
+  synthesizeWheel(scrollbox, 10, 10, event, win);
+
+  effectOfWheelEvent.then(callback);
+}
+
+function runTest() {
+  var win = open('bug574663.html', '_blank', 'width=300,height=300');
+  let winUtils = SpecialPowers.getDOMWindowUtils(win);
+
+  let waitUntilPainted = function(callback) {
+    // Until the first non-blank paint, the parent will set the opacity of our
+    // browser to 0 using the 'blank' attribute.
+    // Until the blank attribute is removed, we can't send scroll events.
+    SimpleTest.waitForFocus(function() {
+      /* eslint-disable no-shadow */
+      let chromeScript = SpecialPowers.loadChromeScript(_ => {
+        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+        win.requestAnimationFrame(() => {
+          win.gBrowser.selectedBrowser.removeAttribute("blank");
+          win.requestAnimationFrame(() => {
+            sendAsyncMessage("blank-attribute-removed");
+          });
+        });
+      });
+      /* eslint-enable no-shadow */
+      chromeScript.promiseOneMessage("blank-attribute-removed").then(() => {
+        chromeScript.destroy();
+        waitForPaint(win, winUtils, callback);
+      });
+    }, win);
+  };
+
+  waitUntilPainted(function () {
+    var scrollbox = win.document.getElementById("scrollbox");
+    let outstandingTests = [
+      [false, false],
+      [false, true],
+      [true, false],
+      [true, true],
+    ];
+
+    // grab the refresh driver, since we want to make sure
+    // async scrolls happen in deterministic time
+    winUtils.advanceTimeAndRefresh(1000);
+
+    function nextTest() {
+      let [ctrlKey, isMomentum] = outstandingTests.shift();
+      let scrollTopBefore = scrollbox.scrollTop;
+      let zoomFactorBefore = winUtils.fullZoom;
+
+      let check = function() {
+        if (!ctrlKey) {
+          let postfix = isMomentum ? ", even after releasing the touchpad" : "";
+          // Normal scroll: scroll
+          is(winUtils.fullZoom, zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
+          isnot(scrollbox.scrollTop, scrollTopBefore,
+             "Normal scrolling should scroll" + postfix);
+        } else {
+          if (!isMomentum) {
+            isnot(winUtils.fullZoom, zoomFactorBefore, "Ctrl-scrolling should zoom while the user is touching the touchpad");
+            is(scrollbox.scrollTop, scrollTopBefore, "Ctrl-scrolling shouldn't scroll while the user is touching the touchpad");
+          } else {
+            is(winUtils.fullZoom, zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
+            isnot(scrollbox.scrollTop, scrollTopBefore,
+               "Momentum scrolling should scroll, even when pressing Ctrl");
+          }
+        }
+
+        if (!outstandingTests.length) {
+          winUtils.restoreNormalRefresh();
+          win.close();
+          SimpleTest.finish();
+          return;
+        }
+
+        // Revert the effect for the next test.
+        sendTouchpadScrollMotion(scrollbox, -1, ctrlKey, isMomentum, function() {
+          setTimeout(nextTest, 0);
+        });
+      }
+
+      sendTouchpadScrollMotion(scrollbox, 1, ctrlKey, isMomentum, check);
+    }
+    nextTest();
+  });
+}
+
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["general.smoothScroll", false],
+           ["mousewheel.acceleration.start", -1],
+           ["mousewheel.system_scroll_override.enabled", false],
+           ["mousewheel.with_control.action", 3]]}, runTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+</body>
+</html>

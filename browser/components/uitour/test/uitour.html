@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>UITour test</title>
+    <script type="application/javascript" src="UITour-lib.js">
+    </script>
+    <script type="application/javascript">
+      var callbackResult, callbackData;
+      function makeCallback(name) {
+        return (function(data) {
+          callbackResult = name;
+          callbackData = data;
+        });
+      }
+
+      // Defined in content to avoid weird issues when crossing between chrome/content.
+      function makeButtons() {
+        return [
+          {label: "Regular text", style: "text"},
+          {label: "Link", callback: makeCallback("link"), style: "link"},
+          {label: "Button 1", callback: makeCallback("button1")},
+          {label: "Button 2", callback: makeCallback("button2"), icon: "image.png",
+           style: "primary"},
+        ];
+      }
+
+      function makeInfoOptions() {
+        return {
+          closeButtonCallback: makeCallback("closeButton"),
+          targetCallback: makeCallback("target"),
+        };
+      }
+    </script>
+  </head>
+  <body>
+    <h1>UITour tests</h1>
+    <p>Because Firefox is...</p>
+    <p>Never gonna let you down</p>
+    <p>Never gonna give you up</p>
+  </body>
+</html>

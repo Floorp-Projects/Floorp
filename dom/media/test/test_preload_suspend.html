@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 479863</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function checkSuspendCount(evt) {
+  var v = evt.target;
+  ++v.suspendCount;
+  is(v.networkState, v.NETWORK_IDLE, v.name + " got suspended, count=" + v.suspendCount);
+  if (v.suspendCount == v.expectedSuspendCount) {
+    removeNodeAndSource(v);
+    manager.finished(v.name);
+  }
+  if (v.suspendCount > v.expectedSuspendCount) {
+    ok(false, v.name + " got too many suspend events");
+  }
+}
+
+var tests = [
+  {
+    name: 'v1',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.preload = 'auto';
+      }
+    }
+  },
+  {
+    name: 'v2',
+    preload: 'auto',
+    expectedSuspendCount: 1,
+    onsuspend: checkSuspendCount
+  },
+  {
+    name: 'v3',
+    preload: 'none',
+    autoplay: true,
+    expectedSuspendCount: 1,
+    onsuspend: checkSuspendCount
+  },
+  {
+    name: 'v4',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.play();
+      }
+    }
+  },
+  // disable v5 since media element doesn't support 'load' event anymore.
+  /*{
+    name: 'v5',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend: function(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.currentTime = 0.1;
+      }
+    }
+  },*/
+  {
+    name: 'v6',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.autoplay = true;
+      }
+    }
+  }
+];
+
+function startTest(test, token) {
+  var v = document.createElement("video");
+  v.name = test.name;
+  var key = Math.random();
+  v.src = "seek.ogv?key=" + key + "&id=" + v.name;
+  v.preload = test.preload;
+  v.suspendCount = 0;
+  v.expectedSuspendCount = test.expectedSuspendCount;
+  if (test.autoplay) {
+    v.autoplay = true;
+  }
+  v.onsuspend = test.onsuspend;
+  document.body.appendChild(v);
+  manager.started(v.name);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, function() {
+  manager.runTests(tests, startTest);
+});
+
+</script>
+</pre>
+</body>
+</html>

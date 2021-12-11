@@ -1,0 +1,86 @@
+<body onload="test()">
+<script>
+function test() {
+  document.body.offsetWidth;
+  let grid = document.querySelector(".container");
+  grid.style = "grid-template-columns:none";
+}
+</script>
+
+<style>
+body {
+  font: 1.2em Arial, Verdana, sans-serif;
+  background-color: #fff;
+}
+
+.container {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+}
+
+header,
+footer,
+aside,
+li,.box {
+  background-color: rgb(120, 70, 123);
+  border: 5px solid rgb(88, 55, 112);
+  color: #fff;
+  border-radius: 5px;
+  padding: 20px;
+}
+
+aside {
+  grid-row: 1 / -1;
+  grid-column: 1;
+}
+
+header {
+  grid-column: 2 / -2;
+}
+
+ul {
+  gap: 10px;
+  grid-row: 2;
+  grid-column: 2 / -1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+footer {
+  grid-row: 3;
+  grid-column: 2 / -1;
+}
+
+.box {
+  grid-column: -2;
+  grid-row:1;
+}
+
+</style>
+
+
+<div class="container">
+  <header>This is my header</header>
+  <div class="box"></div>
+  <aside>I should stretch from the top to the bottom of the grid</aside>
+  <ul>
+    <li>A</li>
+    <li>B</li>
+    <li>C</li>
+    <li>D</li>
+    <li>E</li>
+    <li>F</li>
+    <li>G</li>
+    <li>H</li>
+    <li>I</li>
+    <li>J</li>
+    <li>K</li>
+  </ul>
+  <footer>I am a footer</footer>
+</div>
+

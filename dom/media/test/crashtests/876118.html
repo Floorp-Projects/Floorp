@@ -1,0 +1,16 @@
+<script>
+var Context0= new AudioContext()
+var BufferSource7=Context0.createBufferSource();
+
+BufferSource7.connect(Context0.destination);
+BufferSource7.buffer=function(){
+	var length=7;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);for (var i = 0; i < length; ++i) { bufferData[i] = Math.sin(i*(-1))};
+	return Buffer;
+}();
+
+
+Context0.destination.channelCountMode="explicit";
+Context0.destination.channelCount=519910189000000;
+</script>

@@ -1,0 +1,38 @@
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {
+        writing-mode: sideways-rl;
+      }
+      textarea {
+        inline-size: 200px;
+        -moz-appearance: none;
+        appearance: none;
+        unicode-bidi: plaintext;
+      }
+      div {
+        inline-size: 200px;
+        block-size: 20px;
+        position: relative;
+        inset-block-start: -20px;
+        background: silver;
+      }
+    </style>
+    <script>
+      function start() {
+        var textarea = document.querySelector("textarea");
+        textarea.selectionStart = 1; // place caret between the letters
+        textarea.selectionEnd = 1;
+        textarea.focus();
+      }
+      function done() {
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </head>
+  <body onload="start()">
+    <textarea dir="rtl" onfocus="done()">aa</textarea>
+    <div></div>
+  </body>
+</html>

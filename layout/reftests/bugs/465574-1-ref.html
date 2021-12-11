@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Testcase</title>
+    <style>
+      table[dir="rtl"] {
+        background-color: #CCF;
+        /* 
+          Add a left margin for the 1-appunit <br> hack in bug 1242781
+          The margin should be removed after bug 421436 is fixed    
+        */
+        margin-left: 0.016667px; 
+      }
+      table[dir="ltr"] {background-color: #FCC}
+    </style>
+  </head>
+  <body>
+    1<table dir="ltr"><tr><td><span>lorem ipsum</span></td></tr></table>
+    2<table dir="rtl"><tr><td><span>lorem ipsum</span></td></tr></table>
+    3<table dir="ltr"><tr><td><span>לורם איפסום</span></td></tr></table>
+    4<table dir="rtl"><tr><td><span>לורם איפסום</span></td></tr></table>
+    5<table dir="ltr"><tr><td>lorem ipsum<span></span></td></tr></table>
+    6<table dir="rtl"><tr><td>לורם איפסום<span></span></td></tr></table>
+  </body>
+</html>

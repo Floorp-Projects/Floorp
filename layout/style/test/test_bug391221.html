@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=391221
+-->
+<head>
+  <title>Test for Bug 391221</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=391221">Mozilla Bug 391221</a>
+<p id="display">
+  <div id="width-ref" style="width: 2ch"></div>
+</p>
+<div id="content">
+
+<div id="one" style="width: 1000px; max-width: 2ch"></div>
+<div id="two" style="width: 0px; min-width: 2ch"></div>
+<div id="three" style="width: 1000ch; max-width: 2px"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 391221 **/
+function getComp(id) {
+ return document.defaultView.getComputedStyle($(id));
+}
+
+is(getComp("one").width, getComp("width-ref").width,
+   "max-width in ch units not working?");
+
+is(getComp("two").width, getComp("width-ref").width,
+   "min-width in ch units not working?");
+
+is(getComp("three").width, "2px", "max-width not applied to width in chars?");
+
+</script>
+</pre>
+</body>
+</html>
+

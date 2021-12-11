@@ -1,0 +1,10 @@
+root {
+ display: block;
+ margin: 20px 0;
+}
+leaf {
+ display: block;
+ background-color: green;
+ margin: 10px 0;
+ height: 100px;
+}

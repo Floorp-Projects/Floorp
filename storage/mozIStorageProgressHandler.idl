@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIStorageConnection;
+
+/**
+ * mozIProgressHandler is to be implemented by storage consumers that
+ * wish to receive callbacks during the request execution.
+ */
+[scriptable, uuid(a3a6fcd4-bf89-4208-a837-bf2a73afd30c)]
+interface mozIStorageProgressHandler : nsISupports {
+  /**
+   * onProgress is invoked periodically during long running calls.
+   *
+   * @param aConnection    connection, for which progress handler is
+   *                       invoked.
+   *
+   * @return true to abort request, false to continue work.
+   */
+
+  boolean onProgress(in mozIStorageConnection aConnection);
+};

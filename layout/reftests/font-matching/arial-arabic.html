@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bug 769475 - test for italicized Arabic script in Arial</title>
+<style type="text/css">
+body {
+  font-family: arial, serif;
+  font-size: 36px;
+  line-height: 72px;
+}
+span {
+  font-style: italic;
+  color: white;
+}
+</style>
+</head>
+<body lang="ar">
+<!-- the white span should have the same width whether it's italicized or not,
+  -- as Arial does not have Arabic characters in the italic face but we should
+  -- apply synthetic italic to the regular face, NOT fall back to a different
+  -- family from prefs.
+  -->
+<div>العربي <span>العربي</span> العربي</div>
+</body>
+</html>

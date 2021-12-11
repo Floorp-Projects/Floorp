@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1704473 - Remove head requirement for meta name=referrer</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="frame_meta_in_head"></iframe>
+<iframe id="frame_meta_notin_head"></iframe>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let testCounter = 0;
+function checkTestsDone() {
+  testCounter++;
+  if(testCounter == 2) {
+    SimpleTest.finish();
+  }
+}
+/* eslint-env mozilla/frame-script */
+var script = SpecialPowers.loadChromeScript(() => {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  Services.obs.addObserver(function onExamResp(subject, topic, data) {
+    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    if (!channel.URI.spec.startsWith("https://example.com")) {
+      return;
+    }
+
+    let refererHeaderSet = false;
+    try {
+      channel.getRequestHeader("referer");
+      refererHeaderSet = true;
+    } catch (e) {
+      refererHeaderSet = false;
+    }
+    ok(!refererHeaderSet, "the referer header should not be set");
+    sendAsyncMessage("checked-referer-header");
+  }, "http-on-stop-request");
+});
+
+script.addMessageListener("checked-referer-header", checkTestsDone);
+
+let frame1 = document.getElementById("frame_meta_in_head");
+frame1.src = "/tests/dom/security/test/general/file_meta_referrer_in_head.html";
+let frame2 = document.getElementById("frame_meta_notin_head");
+frame2.src = "/tests/dom/security/test/general/file_meta_referrer_notin_head.html";
+
+</script>
+</body>
+</html>

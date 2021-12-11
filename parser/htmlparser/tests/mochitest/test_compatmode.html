@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>Mochitest for DOCTYPE parsing</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=363883">Mozilla Bug 363883</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var doctypes = [
+/* from bug 363883 */
+"BackCompat", "<!DOCTYPE>",
+"BackCompat", "<!DOCTYPEz>",
+"BackCompat", "<! DOCTYPE>",
+"BackCompat", "<!zDOCTYPE>",
+"CSS1Compat", "<!DOCTYPEHTML>",
+"BackCompat", "<!DOCTYPEz HTML>",
+"CSS1Compat", "<!DOCTYPE HTML>",
+"BackCompat", "<!zDOCTYPE HTML>",
+"BackCompat", "<!DOCTYPE HTMLz>",
+"BackCompat", "<!DOCTYPE zHTML>",
+"BackCompat", "<!DOCTYPE XHTML>",
+"BackCompat", "<!DOCTYPE zzHTML>",
+"BackCompat", "<!DOCTYPEzHTML>",
+"BackCompat", "<!DOCTYPEzzHTML>",
+"BackCompat", '<!DOCTYPE "bla">',
+"BackCompat", '<!DOCTYPE HTML "bla">',
+"BackCompat", '<!DOCTYPE HTML "html">',
+"BackCompat", "<!DOCTYPE PUBLIC>",
+"BackCompat", '<!DOCTYPE PUBLIC "bla">',
+"BackCompat", '<!DOCTYPE PUBLIC "html">',
+"CSS1Compat", '<!DOCTYPE HTML PUBLIC "bla">',
+"BackCompat", '<!DOCTYPE HTML PUBLIC "html">',
+"BackCompat", '<!DOCTYPEz HTML PUBLIC "html">',
+"BackCompat", '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.2//en">',
+"BackCompat", '<!DOCTYPEz HTML PUBLIC "-//IETF//DTD HTML 3.2//en">',
+"BackCompat", '<!DOCTYPE HTMLz PUBLIC "DTD HTML 3.2">',
+"BackCompat", '<!DOCTYPE "DTD HTML 3.2">',
+/* end from bug 363883 */
+// from bug 502600
+"BackCompat", '<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',
+];
+
+window.addEventListener("message", verifyResult);
+
+function verifyResult(event) {
+  let i = event.data.index;
+  let curFrame = document.getElementById("test" + i);
+  let mode = SpecialPowers.wrap(curFrame).contentDocument.compatMode;
+  is(mode, doctypes[i], doctypes[i + 1]);
+  if (i == doctypes.length - 2) {
+    window.removeEventListener("message", verifyResult);
+    SimpleTest.finish();
+  }
+}
+
+// //
+// Insert a hidden iframe into the document, with the src
+// containing the test doctype.  The iframe's onload
+// function is set to call the test's verification step.
+//
+function insert_iframe(index, doctype) {
+  var elm = document.createElement("iframe");
+  elm.setAttribute("id", "test" + index);
+  elm.setAttribute("src", "data:text/html," + doctype +
+    '<html><body onload="parent.postMessage({index:' + index + '},\'*\');"></body>');
+  elm.setAttribute("style", "display:none");
+  document.getElementsByTagName("body")[0].appendChild(elm);
+}
+
+// //
+// Iterate over the tests
+//
+function doTest() {
+  for (var i = 0; i < doctypes.length; i += 2) {
+    insert_iframe(i, doctypes[i + 1]);
+  }
+}
+
+// //
+// Run the compatbility mode tests.
+//
+SimpleTest.waitForExplicitFinish();
+doTest();
+
+</script>
+</pre>
+</body>
+</html>

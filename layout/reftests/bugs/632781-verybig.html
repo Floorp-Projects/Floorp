@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <!--
+      This test makes sure that scrolling a huge canvas would correctly scroll
+      its contents.  We don't accelerate extremely large canvases because of
+      GPU maximum texture size limits, so this test makes sure that the
+      non-accelerated code path for this operation works correctly.
+
+      The padding in this test is added mostly to make sure that scrollLeft/Top
+      correctly skip the padding.
+    -->
+    <div id="container" style="width: 100px; height: 100px; padding: 10px; overflow: hidden">
+      <canvas width="10000" height="120" id="c"></canvas>
+    </div>
+    <script>
+      var ctx = document.getElementById("c").getContext("2d");
+      ctx.fillStyle = "red";
+      ctx.fillRect(0, 0, 10000, 5000);
+      ctx.fillStyle = "green";
+      ctx.fillRect(5000, 0, 10000, 5000);
+      var container = document.getElementById("container");
+      container.scrollLeft = 5010;
+      container.scrollTop = 10;
+    </script>
+  </body>
+</html>

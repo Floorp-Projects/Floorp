@@ -1,0 +1,222 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* nsISupports wrappers for single primitive pieces of data. */
+
+#include "nsISupports.idl"
+
+/**
+ * Primitive base interface.
+ *
+ * These first three are pointer types and do data copying
+ * using the nsIMemory. Be careful!
+ */
+
+[scriptable, builtinclass, uuid(d0d4b136-1dd1-11b2-9371-f0727ef827c0)]
+interface nsISupportsPrimitive : nsISupports
+{
+    const unsigned short TYPE_ID                = 1;
+    const unsigned short TYPE_CSTRING           = 2;
+    const unsigned short TYPE_STRING            = 3;
+    const unsigned short TYPE_PRBOOL            = 4;
+    const unsigned short TYPE_PRUINT8           = 5;
+    const unsigned short TYPE_PRUINT16          = 6;
+    const unsigned short TYPE_PRUINT32          = 7;
+    const unsigned short TYPE_PRUINT64          = 8;
+    const unsigned short TYPE_PRTIME            = 9;
+    const unsigned short TYPE_CHAR              = 10;
+    const unsigned short TYPE_PRINT16           = 11;
+    const unsigned short TYPE_PRINT32           = 12;
+    const unsigned short TYPE_PRINT64           = 13;
+    const unsigned short TYPE_FLOAT             = 14;
+    const unsigned short TYPE_DOUBLE            = 15;
+    // 16 was for TYPE_VOID
+    const unsigned short TYPE_INTERFACE_POINTER = 17;
+
+    readonly attribute unsigned short type;
+};
+
+/**
+ * Scriptable storage for nsID structures
+ */
+
+[scriptable, builtinclass, uuid(d18290a0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsID : nsISupportsPrimitive
+{
+    attribute nsIDPtr data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for ASCII strings
+ */
+
+[scriptable, builtinclass, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
+interface nsISupportsCString : nsISupportsPrimitive
+{
+    attribute ACString data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for Unicode strings
+ */
+
+[scriptable, builtinclass, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
+interface nsISupportsString : nsISupportsPrimitive
+{
+    attribute AString data;
+    wstring toString();
+};
+
+/**
+ * The rest are truly primitive and are passed by value
+ */
+
+/**
+ * Scriptable storage for booleans
+ */
+
+[scriptable, builtinclass, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRBool : nsISupportsPrimitive
+{
+    attribute boolean data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for 8-bit integers
+ */
+
+[scriptable, builtinclass, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint8 : nsISupportsPrimitive
+{
+    attribute uint8_t data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for unsigned 16-bit integers
+ */
+
+[scriptable, builtinclass, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint16 : nsISupportsPrimitive
+{
+    attribute uint16_t data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for unsigned 32-bit integers
+ */
+
+[scriptable, builtinclass, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint32 : nsISupportsPrimitive
+{
+    attribute uint32_t data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for 64-bit integers
+ */
+
+[scriptable, builtinclass, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint64 : nsISupportsPrimitive
+{
+    attribute uint64_t data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for NSPR date/time values
+ */
+
+[scriptable, builtinclass, uuid(e2563630-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRTime : nsISupportsPrimitive
+{
+    attribute PRTime data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for single character values
+ * (often used to store an ASCII character)
+ */
+
+[scriptable, builtinclass, uuid(e2b05e40-4a1c-11d3-9890-006008962422)]
+interface nsISupportsChar : nsISupportsPrimitive
+{
+    attribute char data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for 16-bit integers
+ */
+
+[scriptable, builtinclass, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRInt16 : nsISupportsPrimitive
+{
+    attribute int16_t data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for 32-bit integers
+ */
+
+[scriptable, builtinclass, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRInt32 : nsISupportsPrimitive
+{
+    attribute int32_t data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for 64-bit integers
+ */
+
+[scriptable, builtinclass, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRInt64 : nsISupportsPrimitive
+{
+    attribute int64_t data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for floating point numbers
+ */
+
+[scriptable, builtinclass, uuid(abeaa390-4ac0-11d3-baea-00805f8a5dd7)]
+interface nsISupportsFloat : nsISupportsPrimitive
+{
+    attribute float data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for doubles
+ */
+
+[scriptable, builtinclass, uuid(b32523a0-4ac0-11d3-baea-00805f8a5dd7)]
+interface nsISupportsDouble : nsISupportsPrimitive
+{
+    attribute double data;
+    string toString();
+};
+
+/**
+ * Scriptable storage for other XPCOM objects
+ */
+
+[scriptable, builtinclass, uuid(995ea724-1dd1-11b2-9211-c21bdd3e7ed0)]
+interface nsISupportsInterfacePointer : nsISupportsPrimitive
+{
+    attribute nsISupports data;
+    attribute nsIDPtr dataIID;
+
+    string toString();
+};

@@ -1,0 +1,121 @@
+From 5d150ee111c222f09e78f4f88540964476327844 Mon Sep 17 00:00:00 2001
+From: Nathan Froyd <froydnj@mozilla.com>
+Date: Mon, 4 May 2015 13:38:41 -0400
+Subject: Support new-style __atomic_* primitives
+
+Recent versions of GCC/clang feature a new set of compiler intrinsics
+for performing atomic operations, motivated by the operations needed to
+support the C++11 memory model.  These intrinsics are more flexible than
+the old __sync_* intrinstics and offer efficient support for atomic load
+and store operations.
+
+Having the load appear atomic to the compiler is particular important
+for tools like ThreadSanitizer so they don't report false positives on
+memory operations that we intend to be atomic.
+
+Patch from Nathan Froyd <froydnj@mozilla.com>
+
+diff --git a/src/cairo-atomic-private.h b/src/cairo-atomic-private.h
+index 327fed1..11b2887 100644
+--- a/src/cairo-atomic-private.h
++++ b/src/cairo-atomic-private.h
+@@ -53,6 +53,96 @@
+ 
+ CAIRO_BEGIN_DECLS
+ 
++/* C++11 atomic primitives were designed to be more flexible than the
++ * __sync_* family of primitives.  Despite the name, they are available
++ * in C as well as C++.  The motivating reason for using them is that
++ * for _cairo_atomic_{int,ptr}_get, the compiler is able to see that
++ * the load is intended to be atomic, as opposed to the __sync_*
++ * version, below, where the load looks like a plain load.  Having
++ * the load appear atomic to the compiler is particular important for
++ * tools like ThreadSanitizer so they don't report false positives on
++ * memory operations that we intend to be atomic.
++ */
++#if HAVE_CXX11_ATOMIC_PRIMITIVES
++
++#define HAS_ATOMIC_OPS 1
++
++typedef int cairo_atomic_int_t;
++
++static cairo_always_inline cairo_atomic_int_t
++_cairo_atomic_int_get (cairo_atomic_int_t *x)
++{
++    return __atomic_load_n(x, __ATOMIC_SEQ_CST);
++}
++
++static cairo_always_inline void *
++_cairo_atomic_ptr_get (void **x)
++{
++    return __atomic_load_n(x, __ATOMIC_SEQ_CST);
++}
++
++# define _cairo_atomic_int_inc(x) ((void) __atomic_fetch_add(x, 1, __ATOMIC_SEQ_CST))
++# define _cairo_atomic_int_dec(x) ((void) __atomic_fetch_sub(x, 1, __ATOMIC_SEQ_CST))
++# define _cairo_atomic_int_dec_and_test(x) (__atomic_fetch_sub(x, 1, __ATOMIC_SEQ_CST) == 1)
++
++#if SIZEOF_VOID_P==SIZEOF_INT
++typedef int cairo_atomic_intptr_t;
++#elif SIZEOF_VOID_P==SIZEOF_LONG
++typedef long cairo_atomic_intptr_t;
++#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
++typedef long long cairo_atomic_intptr_t;
++#else
++#error No matching integer pointer type
++#endif
++
++static cairo_always_inline cairo_bool_t
++_cairo_atomic_int_cmpxchg_impl(cairo_atomic_int_t *x,
++			       cairo_atomic_int_t oldv,
++			       cairo_atomic_int_t newv)
++{
++    cairo_atomic_int_t expected = oldv;
++    return __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
++}
++
++#define _cairo_atomic_int_cmpxchg(x, oldv, newv) \
++  _cairo_atomic_int_cmpxchg_impl(x, oldv, newv)
++
++static cairo_always_inline cairo_atomic_int_t
++_cairo_atomic_int_cmpxchg_return_old_impl(cairo_atomic_int_t *x,
++					  cairo_atomic_int_t oldv,
++					  cairo_atomic_int_t newv)
++{
++    cairo_atomic_int_t expected = oldv;
++    (void) __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
++    return expected;
++}
++
++#define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) \
++  _cairo_atomic_int_cmpxchg_return_old_impl(x, oldv, newv)
++
++static cairo_always_inline cairo_bool_t
++_cairo_atomic_ptr_cmpxchg_impl(void **x, void *oldv, void *newv)
++{
++    void *expected = oldv;
++    return __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
++}
++
++#define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
++  _cairo_atomic_ptr_cmpxchg_impl(x, oldv, newv)
++
++static cairo_always_inline void *
++_cairo_atomic_ptr_cmpxchg_return_old_impl(void **x, void *oldv, void *newv)
++{
++    void *expected = oldv;
++    (void) __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
++    return expected;
++}
++
++#define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) \
++  _cairo_atomic_ptr_cmpxchg_return_old_impl(x, oldv, newv)
++
++#endif
++
+ #if HAVE_INTEL_ATOMIC_PRIMITIVES
+ 
+ #define HAS_ATOMIC_OPS 1
+-- 
+cgit v0.10.2
+

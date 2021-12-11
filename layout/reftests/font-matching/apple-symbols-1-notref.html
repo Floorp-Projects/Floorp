@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Apple Symbols test</title>
+<style>
+@font-face {
+  font-family: "Ahem";
+  src: url(../fonts/Ahem.ttf);
+}
+body {
+  font-family: "Ahem", /* Ahem bullet first to establish consistent line metrics */
+               /* "Apple Symbols", */ /* Apple Symbols for the rest of the chars */
+               "Menlo", /* fallbacks for when Apple Symbols fails */
+               "Hiragino Kaku Gothic Pro",
+               sans-serif;
+  font-size: 36px;
+  line-height: 60px;
+}
+</style>
+</head>
+<body>
+&#x2219;&#x25E6;&#x25ce;&#x2611;&#x261e;
+</body>
+</html>

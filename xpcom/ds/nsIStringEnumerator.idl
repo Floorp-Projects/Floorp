@@ -1,0 +1,38 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIJSEnumerator;
+
+/**
+ * Used to enumerate over an ordered list of strings.
+ */
+
+/**
+ * Base class for C++-implemented string iterators. JS implementors need not
+ * be queryable to it.
+ */
+[scriptable, uuid(f5213d15-a4d1-4fb7-8a48-d69ccb7fb0eb)]
+interface nsIStringEnumeratorBase : nsISupports
+{
+    [symbol, binaryname(StringIterator)]
+    nsIJSEnumerator iterator();
+};
+
+[scriptable, uuid(50d3ef6c-9380-4f06-9fb2-95488f7d141c)]
+interface nsIStringEnumerator : nsIStringEnumeratorBase
+{
+    boolean hasMore();
+    AString getNext();
+};
+
+[scriptable, uuid(9bdf1010-3695-4907-95ed-83d0410ec307)]
+interface nsIUTF8StringEnumerator : nsIStringEnumeratorBase
+{
+    boolean hasMore();
+    AUTF8String getNext();
+};
+

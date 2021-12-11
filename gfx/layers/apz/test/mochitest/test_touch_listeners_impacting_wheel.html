@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1203140
+-->
+<head>
+  <title>Test for Bug 1203140</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1203140">Mozilla Bug 1203140</a>
+<p id="display"></p>
+<div id="content" style="overflow-y:scroll; height: 400px">
+  <p>The box below has a touch listener and a passive wheel listener. With touch events disabled, APZ shouldn't wait for any listeners.</p>
+  <div id="box" style="width: 200px; height: 200px; background-color: blue"></div>
+  <div style="height: 1000px; width: 10px">Div to make 'content' scrollable</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+const kResponseTimeoutMs = 2 * 60 * 1000; // 2 minutes
+
+function takeSnapshots(e) {
+  // Grab some snapshots, and make sure some of them are different (i.e. check
+  // the page is scrolling in the compositor, concurrently with this wheel
+  // listener running).
+  // Note that we want this function to take less time than the content response
+  // timeout, otherwise the scrolling will start even if we haven't returned,
+  // and that would invalidate purpose of the test.
+  var start = Date.now();
+  var lastSnapshot = null;
+  var success = false;
+
+  // Get the position of the 'content' div relative to the screen
+  var rect = rectRelativeToScreen(document.getElementById("content"));
+
+  for (var i = 0; i < 10; i++) {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(16);
+    var snapshot = getSnapshot(rect);
+    // dump("Took snapshot " + snapshot + "\n"); // this might help with debugging
+
+    if (lastSnapshot && lastSnapshot != snapshot) {
+      ok(true, "Found some different pixels in snapshot " + i + " compared to previous");
+      success = true;
+    }
+    lastSnapshot = snapshot;
+  }
+  ok(success, "Found some snapshots that were different");
+  ok((Date.now() - start) < kResponseTimeoutMs, "Snapshotting ran quickly enough");
+
+  // Until now, no scroll events will have been dispatched to content. That's
+  // because scroll events are dispatched on the main thread, which we've been
+  // hogging with the code above. At this point we restore the normal refresh
+  // behaviour and let the main thread go back to C++ code, so the scroll events
+  // fire and we unwind from the main test continuation.
+  SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+}
+
+async function test() {
+  var box = document.getElementById("box");
+
+  // Ensure the div is layerized by scrolling it
+  await promiseMoveMouseAndScrollWheelOver(box, 10, 10);
+
+  box.addEventListener("touchstart", function(e) {
+    ok(false, "This should never be run");
+  });
+  box.addEventListener("wheel", takeSnapshots, { capture: false, passive: true });
+
+  // Let the event regions and layerization propagate to the APZ
+  await promiseAllPaintsDone();
+  await promiseOnlyApzControllerFlushed();
+
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "mousemove",
+    target: box,
+    offsetX: 10,
+    offsetY: 10,
+  });
+
+  // Take over control of the refresh driver and compositor
+  var utils = SpecialPowers.DOMWindowUtils;
+  utils.advanceTimeAndRefresh(0);
+
+  // Trigger an APZ scroll using a wheel event. If APZ is waiting for a
+  // content response, it will wait for takeSnapshots to finish running before
+  // it starts scrolling, which will cause the checks in takeSnapshots to fail.
+  await promiseNativeWheelAndWaitForScrollEvent(box, 10, 10, 0, -50);
+}
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  // Disable touch events, so that APZ knows not to wait for touch listeners.
+  // Also explicitly set the content response timeout, so we know how long it
+  // is (see comment in takeSnapshots).
+  // Finally, enable smooth scrolling, so that the wheel-scroll we do as part
+  // of the test triggers an APZ animation rather than doing an instant scroll.
+  // Note that this pref doesn't work for the synthesized wheel events on OS X,
+  // those are hard-coded to be instant scrolls.
+  pushPrefs([["dom.w3c_touch_events.enabled", 0],
+             ["apz.content_response_timeout", kResponseTimeoutMs],
+             ["general.smoothscroll", true]])
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+}
+
+</script>
+</pre>
+
+</body>
+</html>

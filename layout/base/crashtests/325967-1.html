@@ -1,0 +1,29 @@
+<html class="reftest-wait">
+<head>
+
+<script>
+
+function init()
+{
+  var ww = document.getElementById("ww");
+  var inp = document.getElementById("inp");
+  
+  document.addEventListener("DOMNodeInserted", u);
+
+  document.body.appendChild(ww);
+  
+  function u()
+  { 
+    document.removeEventListener("DOMNodeInserted", u);
+    ww.removeChild(inp);
+    document.documentElement.removeAttribute("class");
+  }
+}
+
+</script>
+
+</head>
+
+<body onload="init()"><div id="ww"><input type="text" value="inputtext" id="inp">moretext</div></body>
+
+</html>

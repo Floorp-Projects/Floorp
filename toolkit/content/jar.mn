@@ -1,0 +1,115 @@
+toolkit.jar:
+%  content global %content/global/ contentaccessible=yes
+*  content/global/license.html
+   content/global/minimal-xul.css
+*  content/global/xul.css
+   content/global/autocomplete.css
+   content/global/aboutAbout.js
+   content/global/aboutAbout.html
+#ifdef MOZILLA_OFFICIAL
+   content/global/aboutRights.xhtml
+#else
+   content/global/aboutRights.xhtml           (aboutRights-unbranded.xhtml)
+#endif
+   content/global/aboutNetworking.js
+   content/global/aboutNetworking.html
+#ifndef ANDROID
+   content/global/aboutProfiles.js
+   content/global/aboutProfiles.xhtml
+#endif
+   content/global/aboutRights.js
+   content/global/aboutServiceWorkers.js
+   content/global/aboutServiceWorkers.xhtml
+   content/global/aboutwebrtc/aboutWebrtc.css   (aboutwebrtc/aboutWebrtc.css)
+   content/global/aboutwebrtc/aboutWebrtc.js    (aboutwebrtc/aboutWebrtc.js)
+   content/global/aboutwebrtc/aboutWebrtc.html (aboutwebrtc/aboutWebrtc.html)
+   content/global/aboutSupport.js
+*  content/global/aboutSupport.xhtml
+#ifndef MOZ_GLEAN_ANDROID
+   content/global/aboutGlean.js
+   content/global/aboutGlean.html
+   content/global/aboutGlean.css
+#endif
+   content/global/aboutTelemetry.js
+   content/global/aboutTelemetry.xhtml
+   content/global/aboutTelemetry.css
+   content/global/aboutUrlClassifier.js
+   content/global/aboutUrlClassifier.xhtml
+   content/global/aboutUrlClassifier.css
+   content/global/plugins.html
+   content/global/plugins.css
+   content/global/plugins.js
+*   content/global/buildconfig.html
+   content/global/buildconfig.css
+   content/global/contentAreaUtils.js
+   content/global/datepicker.xhtml
+#ifndef MOZ_FENNEC
+   content/global/editMenuOverlay.js
+#endif
+   content/global/filepicker.properties
+   content/global/customElements.js
+   content/global/globalOverlay.js
+   content/global/mozilla.html
+   content/global/aboutMozilla.css
+   content/global/preferencesBindings.js
+   content/global/process-content.js
+   content/global/resetProfile.css
+   content/global/resetProfile.js
+   content/global/resetProfile.xhtml
+   content/global/resetProfileProgress.xhtml
+   content/global/TopLevelVideoDocument.js
+   content/global/timepicker.xhtml
+   content/global/treeUtils.js
+#ifndef MOZ_FENNEC
+   content/global/viewZoomOverlay.js
+#endif
+   content/global/widgets.css
+   content/global/bindings/calendar.js         (widgets/calendar.js)
+   content/global/bindings/datekeeper.js       (widgets/datekeeper.js)
+   content/global/bindings/datepicker.js       (widgets/datepicker.js)
+   content/global/bindings/datetimebox.css     (widgets/datetimebox.css)
+   content/global/bindings/spinner.js          (widgets/spinner.js)
+   content/global/bindings/timekeeper.js       (widgets/timekeeper.js)
+   content/global/bindings/timepicker.js       (widgets/timepicker.js)
+   content/global/elements/autocomplete-input.js              (widgets/autocomplete-input.js)
+   content/global/elements/autocomplete-popup.js              (widgets/autocomplete-popup.js)
+   content/global/elements/autocomplete-richlistitem.js       (widgets/autocomplete-richlistitem.js)
+   content/global/elements/browser-custom-element.js          (widgets/browser-custom-element.js)
+   content/global/elements/button.js           (widgets/button.js)
+   content/global/elements/checkbox.js         (widgets/checkbox.js)
+   content/global/elements/datetimebox.js      (widgets/datetimebox.js)
+   content/global/elements/dialog.js           (widgets/dialog.js)
+   content/global/elements/findbar.js          (widgets/findbar.js)
+   content/global/elements/editor.js           (widgets/editor.js)
+   content/global/elements/general.js          (widgets/general.js)
+   content/global/elements/message-bar.css     (widgets/message-bar.css)
+   content/global/elements/message-bar.js      (widgets/message-bar.js)
+   content/global/elements/menu.js             (widgets/menu.js)
+   content/global/elements/menupopup.js        (widgets/menupopup.js)
+   content/global/elements/moz-input-box.js    (widgets/moz-input-box.js)
+   content/global/elements/named-deck.js       (widgets/named-deck.js)
+   content/global/elements/notificationbox.js  (widgets/notificationbox.js)
+   content/global/elements/panel.js            (widgets/panel.js)
+   content/global/elements/radio.js            (widgets/radio.js)
+   content/global/elements/richlistbox.js      (widgets/richlistbox.js)
+   content/global/elements/marquee.css         (widgets/marquee.css)
+   content/global/elements/marquee.js          (widgets/marquee.js)
+   content/global/elements/menulist.js         (widgets/menulist.js)
+   content/global/elements/popupnotification.js  (widgets/popupnotification.js)
+   content/global/elements/arrowscrollbox.js     (widgets/arrowscrollbox.js)
+   content/global/elements/search-textbox.js     (widgets/search-textbox.js)
+   content/global/elements/stringbundle.js     (widgets/stringbundle.js)
+   content/global/elements/tabbox.js           (widgets/tabbox.js)
+   content/global/elements/text.js             (widgets/text.js)
+   content/global/elements/toolbarbutton.js    (widgets/toolbarbutton.js)
+   content/global/elements/videocontrols.js    (widgets/videocontrols.js)
+   content/global/elements/tree.js             (widgets/tree.js)
+   content/global/elements/wizard.js           (widgets/wizard.js)
+#ifdef XP_MACOSX
+   content/global/macWindowMenu.js
+#endif
+   content/global/gmp-sources/openh264.json    (gmp-sources/openh264.json)
+   content/global/gmp-sources/widevinecdm.json (gmp-sources/widevinecdm.json)
+
+# Third party files
+   content/global/third_party/d3/d3.js         (/third_party/js/d3/d3.js)

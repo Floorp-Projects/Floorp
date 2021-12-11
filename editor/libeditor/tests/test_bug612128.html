@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=612128
+-->
+<head>
+  <title>Test for Bug 612128</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=612128">Mozilla Bug 612128</a>
+<p id="display"></p>
+<div id="content">
+<input>
+<div contenteditable></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/* eslint-disable no-useless-concat */
+
+/** Test for Bug 612128 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  document.querySelector("input").focus();
+  try {
+    is(document.execCommand("inserthtml", null, "<span>f" + "oo</span>"),
+       false, "The insertHTML command should return false");
+  } catch (e) {
+    ok(false, "insertHTML should not throw here");
+  }
+  is(document.querySelectorAll("span").length, 0, "No span element should be injected inside the page");
+  is(document.body.innerHTML.indexOf("f" + "oo"), -1, "No text should be injected inside the page");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

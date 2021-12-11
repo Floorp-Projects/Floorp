@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=611182
+-->
+<head>
+  <title>Test for Bug 611182</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=611182">Mozilla Bug 611182</a>
+<p id="display"></p>
+<div id="content">
+  <iframe></iframe>
+  <iframe id="ref" src="./file_bug611182.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 611182 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var iframe = document.querySelector("iframe");
+  var refElem = document.querySelector("#ref");
+  var ref = snapshotWindow(refElem.contentWindow, false);
+
+  function findTextNode(doc) {
+    var body = doc.documentElement;
+    var result = findTextNodeWorker(body);
+    ok(result, "Failed to find the text node");
+    return result;
+  }
+
+  function findTextNodeWorker(root) {
+    if (root.isContentEditable) {
+      root.focus();
+    }
+    for (var i = 0; i < root.childNodes.length; ++i) {
+      var node = root.childNodes[i];
+      if (node.nodeType == node.TEXT_NODE &&
+          node.nodeValue == "fooz bar") {
+        return node;
+      }
+      if (node.nodeType == node.ELEMENT_NODE) {
+        node = findTextNodeWorker(node);
+        if (node) {
+          return node;
+        }
+      }
+    }
+    return null;
+  }
+
+  function testBackspace(src, callback) {
+    ok(true, "Testing " + src);
+    iframe.addEventListener("load", function() {
+      var doc = iframe.contentDocument;
+      var win = iframe.contentWindow;
+      doc.body.setAttribute("spellcheck", "false");
+
+      iframe.focus();
+      var textNode = findTextNode(doc);
+      var sel = win.getSelection();
+      sel.collapse(textNode, 4);
+      synthesizeKey("KEY_Backspace");
+      is(textNode.textContent, "foo bar", "Backspace should work correctly");
+
+      var snapshot = snapshotWindow(win, false);
+      ok(compareSnapshots(snapshot, ref, true)[0],
+         "No padding <br> element should exist in the document");
+
+      callback();
+    }, {once: true});
+    iframe.src = src;
+  }
+
+  var totalTests = 0;
+  var currentTest = 0;
+  function runAllTests() {
+    if (currentTest == totalTests) {
+      SimpleTest.finish();
+      return;
+    }
+    testBackspace("file_bug611182.sjs?" + currentTest, runAllTests);
+    currentTest++;
+  }
+
+  // query total number of tests to be run from the server and
+  // start running all tests.
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "file_bug611182.sjs?queryTotalTests");
+  myXHR.onload = function(e) {
+    totalTests = myXHR.responseText;
+    runAllTests();
+  };
+  myXHR.send();
+});
+
+</script>
+</pre>
+</body>
+</html>

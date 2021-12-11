@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+.flex-container {
+  display: flex;
+  height: 100vh;
+}
+
+.column {
+  flex-direction: column;
+}
+
+.flex-child {
+  height: 100%;
+  width: 100%
+}
+</style>
+<div class="flex-container">
+  <div class="flex-child"></div>
+  <div id="flex-item-with-unauthored-min-width">
+      <h1>AAA</h1>
+  </div>
+</div>
+<div class="flex-container column">
+  <div class="flex-child"></div>
+  <div id="flex-item-with-unauthored-min-height">
+      <h1>BBB</h1>
+  </div>
+</div>

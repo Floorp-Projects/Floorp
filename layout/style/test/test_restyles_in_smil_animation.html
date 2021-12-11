@@ -1,0 +1,145 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Tests restyles in smil animation</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<div id="target-div">
+  <svg>
+    <rect id="svg-rect" width="100%" height="100%" fill="lime"/>
+  </svg>
+</div>
+
+<script>
+"use strict";
+
+// Waits for |frameCount| requestAnimationFrame callbacks.
+// Returns the number of frame actually waited.
+function waitForAnimationFrames(frameCount) {
+  return new Promise(function(resolve, reject) {
+    let previousTime = document.timeline.currentTime;
+    let framesWaited = 0;
+    function handleFrame() {
+      // SMIL uses a time resolution of 1ms but our software-based vsync timer
+      // sometimes produces ticks with an interval of less than 1ms. In such
+      // cases we will skip restyling for SMIL animations since the SMIL time
+      // will not change.
+      //
+      // In the following we attempt to detect such situations and wait an
+      // additional frame when we detect it. However, the detection is not
+      // completely accurate since it uses the timeline time which is based on
+      // the navigation start time whereas the SMIL start time is based on the
+      // refresh driver time.
+      //
+      // To account for this inaccuracy the Promise returned by this method
+      // resolves with the number of frames waited with the additional frames.
+      // This can be used by the call site to add a suitable tolerance to the
+      // number of restylings it expects to happen. For example, if a call site
+      // is anticipating each animation frame to cause restyling, then the
+      // number of restylings, x, it should expect is frameCount <= x <=
+      // framesWaited.
+      const difference = document.timeline.currentTime - previousTime;
+      framesWaited++;
+      if (difference >= 1.0 && --frameCount <= 0) {
+        resolve(framesWaited);
+        return;
+      }
+
+      previousTime = document.timeline.currentTime;
+      window.requestAnimationFrame(handleFrame); // wait another frame
+    }
+    window.requestAnimationFrame(handleFrame);
+  });
+}
+
+// Returns an object consisting of observed styling count and the number of
+// frames actually waited because we detected a possibly overflapping SMIL
+// time.
+function observeStyling(frameCount) {
+  var Ci = SpecialPowers.Ci;
+  var docShell = SpecialPowers.wrap(window).docShell;
+
+  docShell.recordProfileTimelineMarkers = true;
+  docShell.popProfileTimelineMarkers();
+
+  return new Promise(function(resolve) {
+    return waitForAnimationFrames(frameCount).then(framesWaited => {
+      var markers = docShell.popProfileTimelineMarkers();
+      docShell.recordProfileTimelineMarkers = false;
+      var stylingMarkers = Array.prototype.filter.call(markers, function(marker, index) {
+        return marker.name == 'Styles' && marker.isAnimationOnly;
+      });
+      resolve({
+        stylingCount: stylingMarkers.length,
+        framesWaited: framesWaited,
+      });
+    });
+  });
+}
+
+function ensureElementRemoval(aElement) {
+  return new Promise(function(resolve) {
+    aElement.remove();
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+function waitForPaintFlushed() {
+  return new Promise(function(resolve) {
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+add_task(async function smil_is_in_display_none_subtree() {
+  await waitForPaintFlushed();
+
+  var animate =
+    document.createElementNS("http://www.w3.org/2000/svg", "animate");
+  animate.setAttribute("attributeType", "XML");
+  animate.setAttribute("attributeName", "fill");
+  animate.setAttribute("values", "red;lime");
+  animate.setAttribute("dur", "1s");
+  animate.setAttribute("repeatCount", "indefinite");
+  document.getElementById("svg-rect").appendChild(animate);
+
+  await waitForAnimationFrames(2);
+
+  let result = await observeStyling(5);
+  // FIXME: Bug 866411: SMIL animations sometimes skip restyles when the target
+  // element is newly associated with an nsIFrame.
+  ok(result.stylingCount >= 4 &&
+     result.stylingCount <= result.framesWaited,
+     `should restyle in most frames (got ${result.stylingCount} restyles ` +
+     `over ${result.framesWaited} frames, expected 4~${result.framesWaited})`);
+
+  var div = document.getElementById("target-div");
+
+  div.style.display = "none";
+  getComputedStyle(div).display;
+  await waitForPaintFlushed();
+
+  result = await observeStyling(5);
+  is(result.stylingCount, 0, "should never restyle if display:none");
+
+  div.style.display = "";
+  getComputedStyle(div).display;
+  await waitForAnimationFrames(2);
+
+  result = await observeStyling(5);
+  // FIXME: Bug 866411: SMIL animations sometimes skip restyles when the target
+  // element is newly associated with an nsIFrame.
+  ok(result.stylingCount >= 4 &&
+     result.stylingCount <= result.framesWaited,
+     `should restyle again (got ${result.stylingCount} restyles over ` +
+     `${result.framesWaited} frames, expected 4~${result.framesWaited})`);
+
+  await ensureElementRemoval(animate);
+});
+</script>
+</body>

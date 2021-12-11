@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>
+    <style type="text/css">
+      iframe { width: 90%; height: 50px; }
+    </style>
+<script>
+if (!navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
+window.onload = async function() {
+  // navigateByLocation(window0);  // Don't have a handle to the window.
+  navigateByOpen("window1");
+  navigateByForm("window2");
+  navigateByHyperlink("window3");
+
+  await waitForFinishedFrames(6);
+
+  is((await getFramesByName("window1")).length, 2, "Should not be able to navigate popup's popup by calling window.open.");
+  is((await getFramesByName("window2")).length, 2, "Should not be able to navigate popup's popup by submitting form.");
+  is((await getFramesByName("window3")).length, 2, "Should not be able to navigate popup's popup by targeted hyperlink.");
+
+  // opener0.close();
+  opener1.close();
+  opener2.close();
+  opener3.close();
+
+  info("here")
+  await cleanupWindows();
+  info("there")
+  SimpleTest.finish();
+};
+
+// opener0 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window0", "_blank", "width=10,height=10");
+let opener1 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window1", "_blank", "width=10,height=10");
+let opener2 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window2", "_blank", "width=10,height=10");
+let opener3 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window3", "_blank", "width=10,height=10");
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408052">Mozilla Bug 408052</a>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

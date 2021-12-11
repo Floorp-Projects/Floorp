@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  appearance: auto;
+  -moz-default-appearance: -moz-menulist-arrow-button;
+  width: 16px;
+  height: 16px;
+  /* Cut off inheritance for dropmarkers within other widgets where
+     -moz-image-region might be set for the primary icon. */
+  -moz-image-region: auto;
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--Tests the fix for bug 1576990. We want to make sure the frames do not
+    become stuck due to decoders (in particular the Windows decoder) estimating
+    frame durations incorrectly.
+-->
+<head>
+<script type="text/javascript">
+function doTest() {
+  var video = document.getElementById("v1");
+  // Video from bug 1576990.
+  video.src = "uneven_frame_durations.mp4";
+  video.preload = "metadata";
+
+  // This frame differs depending on if the Windows' decoder is estimating
+  // frame duration or if we use Gecko durations.
+  video.currentTime = 3.8;
+
+  video.addEventListener("seeked", function() {
+    // Since our media pipeline sends the frame to imageBridge, then fires
+    // a seeked event, the target frame may not be shown on the screen.
+    // So using canvas to access the target frame in the imageContainer in
+    // videoElement.
+    var canvas = document.getElementById("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+    document.documentElement.removeAttribute("class");
+  });
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</head>
+<body>
+<video id="v1" style="position:absolute; left:0; top:0"></video>
+<canvas id="canvas" style="position:absolute; left:0; top:0"></video>
+</body>
+</html>

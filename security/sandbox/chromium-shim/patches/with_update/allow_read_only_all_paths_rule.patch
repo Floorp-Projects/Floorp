@@ -1,0 +1,142 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1490686576 -3600
+#      Tue Mar 28 08:36:16 2017 +0100
+# Node ID 698d43688097e19ac64db71a094905035cac4891
+# Parent  96707276b26997ea2a8e9fd8fdacc0c863717e7b
+Allow a special all paths rule in the Windows process sandbox when using semantics FILES_ALLOW_READONLY. r=jimm
+
+This also changes the read only related status checks in filesystem_interception.cc
+to include STATUS_NETWORK_OPEN_RESTRICTION (0xC0000201), which gets returned in
+some cases and fails because we never ask the broker.
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
+--- a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
++++ b/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
+@@ -11,16 +11,20 @@
+ #include "sandbox/win/src/ipc_tags.h"
+ #include "sandbox/win/src/policy_params.h"
+ #include "sandbox/win/src/policy_target.h"
+ #include "sandbox/win/src/sandbox_factory.h"
+ #include "sandbox/win/src/sandbox_nt_util.h"
+ #include "sandbox/win/src/sharedmem_ipc_client.h"
+ #include "sandbox/win/src/target_services.h"
+ 
++// This status occurs when trying to access a network share on the machine from
++// which it is shared.
++#define STATUS_NETWORK_OPEN_RESTRICTION ((NTSTATUS)0xC0000201L)
++
+ namespace sandbox {
+ 
+ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
+                                    PHANDLE file,
+                                    ACCESS_MASK desired_access,
+                                    POBJECT_ATTRIBUTES object_attributes,
+                                    PIO_STATUS_BLOCK io_status,
+                                    PLARGE_INTEGER allocation_size,
+@@ -29,17 +33,18 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
+                                    ULONG disposition,
+                                    ULONG options,
+                                    PVOID ea_buffer,
+                                    ULONG ea_length) {
+   // Check if the process can open it first.
+   NTSTATUS status = orig_CreateFile(
+       file, desired_access, object_attributes, io_status, allocation_size,
+       file_attributes, sharing, disposition, options, ea_buffer, ea_length);
+-  if (STATUS_ACCESS_DENIED != status)
++  if (STATUS_ACCESS_DENIED != status &&
++      STATUS_NETWORK_OPEN_RESTRICTION != status)
+     return status;
+ 
+   // We don't trust that the IPC can work this early.
+   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
+     return status;
+ 
+   do {
+     if (!ValidParameter(file, sizeof(HANDLE), WRITE))
+@@ -106,17 +111,18 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
+                                  ACCESS_MASK desired_access,
+                                  POBJECT_ATTRIBUTES object_attributes,
+                                  PIO_STATUS_BLOCK io_status,
+                                  ULONG sharing,
+                                  ULONG options) {
+   // Check if the process can open it first.
+   NTSTATUS status = orig_OpenFile(file, desired_access, object_attributes,
+                                   io_status, sharing, options);
+-  if (STATUS_ACCESS_DENIED != status)
++  if (STATUS_ACCESS_DENIED != status &&
++      STATUS_NETWORK_OPEN_RESTRICTION != status)
+     return status;
+ 
+   // We don't trust that the IPC can work this early.
+   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
+     return status;
+ 
+   do {
+     if (!ValidParameter(file, sizeof(HANDLE), WRITE))
+@@ -176,17 +182,18 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
+ }
+ 
+ NTSTATUS WINAPI
+ TargetNtQueryAttributesFile(NtQueryAttributesFileFunction orig_QueryAttributes,
+                             POBJECT_ATTRIBUTES object_attributes,
+                             PFILE_BASIC_INFORMATION file_attributes) {
+   // Check if the process can query it first.
+   NTSTATUS status = orig_QueryAttributes(object_attributes, file_attributes);
+-  if (STATUS_ACCESS_DENIED != status)
++  if (STATUS_ACCESS_DENIED != status &&
++      STATUS_NETWORK_OPEN_RESTRICTION != status)
+     return status;
+ 
+   // We don't trust that the IPC can work this early.
+   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
+     return status;
+ 
+   do {
+     if (!ValidParameter(file_attributes, sizeof(FILE_BASIC_INFORMATION), WRITE))
+@@ -232,17 +239,18 @@ TargetNtQueryAttributesFile(NtQueryAttri
+ 
+ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
+     NtQueryFullAttributesFileFunction orig_QueryFullAttributes,
+     POBJECT_ATTRIBUTES object_attributes,
+     PFILE_NETWORK_OPEN_INFORMATION file_attributes) {
+   // Check if the process can query it first.
+   NTSTATUS status =
+       orig_QueryFullAttributes(object_attributes, file_attributes);
+-  if (STATUS_ACCESS_DENIED != status)
++  if (STATUS_ACCESS_DENIED != status &&
++      STATUS_NETWORK_OPEN_RESTRICTION != status)
+     return status;
+ 
+   // We don't trust that the IPC can work this early.
+   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
+     return status;
+ 
+   do {
+     if (!ValidParameter(file_attributes, sizeof(FILE_NETWORK_OPEN_INFORMATION),
+diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
+--- a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
++++ b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
+@@ -77,17 +77,21 @@ namespace sandbox {
+ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
+                                      TargetPolicy::Semantics semantics,
+                                      LowLevelPolicy* policy) {
+   std::wstring mod_name(name);
+   if (mod_name.empty()) {
+     return false;
+   }
+ 
+-  if (!PreProcessName(&mod_name)) {
++  // Don't pre-process the path name and check for reparse points if it is the
++  // special case of allowing read access to all paths.
++  if (!(semantics == TargetPolicy::FILES_ALLOW_READONLY
++        && mod_name.compare(L"*") == 0)
++      && !PreProcessName(&mod_name)) {
+     // The path to be added might contain a reparse point.
+     NOTREACHED();
+     return false;
+   }
+ 
+   // TODO(cpu) bug 32224: This prefix add is a hack because we don't have the
+   // infrastructure to normalize names. In any case we need to escape the
+   // question marks.

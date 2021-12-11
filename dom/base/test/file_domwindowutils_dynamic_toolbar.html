@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+  const ok = window.opener.ok;
+
+  SpecialPowers.getDOMWindowUtils(window).setDynamicToolbarMaxHeight(100);
+  ok(window.visualViewport.width > 0,
+     "Setting the dynamic toolbar max height shouldn't clobber the visual " +
+     "viewport size");
+  ok(window.visualViewport.height > 0,
+     "Setting the dynamic toolbar max height shouldn't clobber the visual " +
+     "viewport size");
+
+  window.opener.next();
+  window.close();
+</script>
+</body>
+</html>

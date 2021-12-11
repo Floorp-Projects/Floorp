@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=389797
+-->
+<head>
+  <title>Test for Bug 389797</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=389797">Mozilla Bug 389797</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 389797 **/
+var allTags = [];
+var classInfos = {};
+var interfaces = {};
+var interfacesNonClassinfo = {};
+
+function getClassName(tag) {
+  return "HTML" + classInfos[tag] + "Element";
+}
+
+function HTML_TAG(aTagName, aImplClass) {
+  allTags.push(aTagName);
+  classInfos[aTagName] = aImplClass;
+  interfaces[aTagName] = [];
+
+  // Some interfaces don't appear in classinfo because other interfaces that
+  // inherit from them do.
+  interfacesNonClassinfo[aTagName] = [ ];
+
+  if (arguments.length > 2) {
+    for (var i = 0; i < arguments[2].length; ++i) {
+      interfaces[aTagName].push(arguments[2][i]);
+    }
+  }
+
+  if (arguments.length > 3) {
+    for (i = 0; i < arguments[3].length; ++i) {
+      interfacesNonClassinfo[aTagName].push(arguments[3][i]);
+    }
+  }
+}
+
+const objectIfaces = [
+    "imgINotificationObserver", "nsIRequestObserver", "nsIStreamListener",
+    "nsIObjectLoadingContent", "nsIChannelEventSink"
+  ];
+
+var objectIfaces2 = [];
+for (var iface of objectIfaces) {
+  objectIfaces2.push(iface);
+}
+objectIfaces2.push("nsIImageLoadingContent");
+
+/* List copy/pasted from nsHTMLTagList.h, with the second field modified to the
+   correct classinfo (instead of the impl class) in the following cases:
+
+   base
+   blockquote
+   dir
+   dl
+   embed
+   menu
+   ol
+   param
+   q
+   ul
+   wbr
+   head
+   html
+ */
+
+HTML_TAG("a", "Anchor");
+HTML_TAG("abbr", "");
+HTML_TAG("acronym", "");
+HTML_TAG("address", "");
+HTML_TAG("area", "Area");
+HTML_TAG("article", "");
+HTML_TAG("aside", "");
+HTML_TAG("b", "");
+HTML_TAG("base", "Base");
+HTML_TAG("bdi", "")
+HTML_TAG("bdo", "");
+HTML_TAG("bgsound", "Unknown");
+HTML_TAG("big", "");
+HTML_TAG("blockquote", "Quote");
+HTML_TAG("body", "Body");
+HTML_TAG("br", "BR");
+HTML_TAG("button", "Button");
+HTML_TAG("canvas", "Canvas");
+HTML_TAG("caption", "TableCaption");
+HTML_TAG("center", "");
+HTML_TAG("cite", "");
+HTML_TAG("code", "");
+HTML_TAG("col", "TableCol");
+HTML_TAG("colgroup", "TableCol");
+HTML_TAG("data", "Data");
+HTML_TAG("datalist", "DataList");
+HTML_TAG("dd", "");
+HTML_TAG("del", "Mod");
+HTML_TAG("dfn", "");
+HTML_TAG("dir", "Directory");
+HTML_TAG("div", "Div");
+HTML_TAG("dl", "DList");
+HTML_TAG("dt", "");
+HTML_TAG("em", "");
+HTML_TAG("embed", "Embed", [], objectIfaces);
+HTML_TAG("fieldset", "FieldSet");
+HTML_TAG("figcaption", "")
+HTML_TAG("figure", "")
+HTML_TAG("font", "Font");
+HTML_TAG("footer", "")
+HTML_TAG("form", "Form");
+HTML_TAG("frame", "Frame", [ "nsIDOMMozBrowserFrame" ]);
+HTML_TAG("frameset", "FrameSet");
+HTML_TAG("h1", "Heading");
+HTML_TAG("h2", "Heading");
+HTML_TAG("h3", "Heading");
+HTML_TAG("h4", "Heading");
+HTML_TAG("h5", "Heading");
+HTML_TAG("h6", "Heading");
+HTML_TAG("head", "Head");
+HTML_TAG("header", "")
+HTML_TAG("hgroup", "")
+HTML_TAG("hr", "HR");
+HTML_TAG("html", "Html");
+HTML_TAG("i", "");
+HTML_TAG("iframe", "IFrame", [ "nsIDOMMozBrowserFrame" ]);
+HTML_TAG("image", "");
+HTML_TAG("img", "Image", [ "nsIImageLoadingContent" ], []);
+HTML_TAG("input", "Input", [], [ "imgINotificationObserver",
+                                 "nsIImageLoadingContent" ]);
+HTML_TAG("ins", "Mod");
+HTML_TAG("kbd", "");
+HTML_TAG("keygen", "Unknown");
+HTML_TAG("label", "Label");
+HTML_TAG("legend", "Legend");
+HTML_TAG("li", "LI");
+HTML_TAG("link", "Link");
+HTML_TAG("listing", "Pre");
+HTML_TAG("main", "");
+HTML_TAG("map", "Map");
+HTML_TAG("mark", "");
+HTML_TAG("marquee", "Marquee");
+HTML_TAG("menu", "Menu");
+HTML_TAG("meta", "Meta");
+HTML_TAG("meter", "Meter");
+HTML_TAG("multicol", "Unknown");
+HTML_TAG("nav", "")
+HTML_TAG("nobr", "");
+HTML_TAG("noembed", "");
+HTML_TAG("noframes", "");
+HTML_TAG("noscript", "");
+HTML_TAG("object", "Object", [],
+                             objectIfaces.concat([ "nsIImageLoadingContent" ]));
+HTML_TAG("ol", "OList");
+HTML_TAG("optgroup", "OptGroup");
+HTML_TAG("option", "Option");
+HTML_TAG("p", "Paragraph");
+HTML_TAG("param", "Param");
+HTML_TAG("plaintext", "");
+HTML_TAG("pre", "Pre");
+HTML_TAG("q", "Quote");
+HTML_TAG("rb", "");
+HTML_TAG("rp", "");
+HTML_TAG("rt", "");
+HTML_TAG("rtc", "");
+HTML_TAG("ruby", "");
+HTML_TAG("s", "");
+HTML_TAG("samp", "");
+HTML_TAG("script", "Script", [ "nsIScriptLoaderObserver" ], []);
+HTML_TAG("section", "")
+HTML_TAG("select", "Select");
+HTML_TAG("small", "");
+HTML_TAG("span", "Span");
+HTML_TAG("strike", "");
+HTML_TAG("strong", "");
+HTML_TAG("style", "Style");
+HTML_TAG("sub", "");
+HTML_TAG("sup", "");
+HTML_TAG("table", "Table");
+HTML_TAG("tbody", "TableSection");
+HTML_TAG("td", "TableCell");
+HTML_TAG("textarea", "TextArea");
+HTML_TAG("tfoot", "TableSection");
+HTML_TAG("th", "TableCell");
+HTML_TAG("thead", "TableSection");
+HTML_TAG("template", "Template");
+HTML_TAG("time", "Time");
+HTML_TAG("title", "Title");
+HTML_TAG("tr", "TableRow");
+HTML_TAG("tt", "");
+HTML_TAG("u", "");
+HTML_TAG("ul", "UList");
+HTML_TAG("var", "");
+HTML_TAG("wbr", "");
+HTML_TAG("xmp", "Pre");
+
+function tagName(aTag) {
+  return "<" + aTag + ">";
+}
+
+for (var tag of allTags) {
+  var node = document.createElement(tag);
+
+  // Have to use the proto's toString(), since HTMLAnchorElement and company
+  // override toString().
+  var nodeString = HTMLElement.prototype.toString.apply(node);
+
+  // Debug builds have extra info, so chop off after "Element" if it's followed
+  // by ' ' or ']'
+  nodeString = nodeString.replace(/Element[\] ].*/, "Element");
+
+  var classInfoString = getClassName(tag);
+  is(nodeString, "[object " + classInfoString,
+     "Unexpected classname for " + tagName(tag));
+  is(node instanceof window[classInfoString], true,
+     tagName(tag) + " not an instance of " + classInfos[tag]);
+
+  if (classInfoString != 'HTMLUnknownElement') {
+    is(node instanceof HTMLUnknownElement, false,
+       tagName(tag) + " is an instance of HTMLUnknownElement");
+  } else {
+    is(node instanceof HTMLUnknownElement, true,
+       tagName(tag) + " is an instance of HTMLUnknownElement");
+  }
+
+  // Check that each node QIs to all the things we expect it to QI to
+  for (var iface of interfaces[tag].concat(interfacesNonClassinfo[tag])) {
+    is(iface in SpecialPowers.Ci, true,
+       iface + " not in Components.interfaces");
+    is(node instanceof SpecialPowers.Ci[iface], true,
+       tagName(tag) + " does not QI to " + iface);
+  }
+}
+</script>
+</pre>
+</body>
+</html>
+

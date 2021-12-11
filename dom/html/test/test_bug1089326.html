@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1089326
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1089326</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1089326 **/
+  function test() {
+    var b = document.getElementById("button");
+    var b_rect = b.getBoundingClientRect();
+    var a = document.getElementById("anchor");
+    var a_rect = a.getBoundingClientRect();
+
+    is(document.elementFromPoint(b_rect.x + 1, b_rect.y + 1), b,
+       "Should find button when doing hit test on top of it.");
+    is(document.elementFromPoint(a_rect.x + 1, a_rect.y + 1), a,
+       "Should find anchor when doing hit test on top of it.");
+
+    var expectedTarget;
+    var clickCount = 0;
+    var container = document.getElementById("interactiveContentContainer");
+    container.addEventListener("click", function(event) {
+        is(event.target, expectedTarget, "Got expected click event target.");
+        ++clickCount;
+      }, true);
+    var i1 = document.getElementById("interactiveContent1");
+    var s11 = document.getElementById("s11");
+    var s12 = document.getElementById("s12");
+
+    var i2 = document.getElementById("interactiveContent2");
+    var s21 = document.getElementById("s21");
+
+    expectedTarget = i1;
+    synthesizeMouseAtCenter(s11, { type: "mousedown" });
+    synthesizeMouseAtCenter(s12, { type: "mouseup" });
+    is(clickCount, 1, "Should have got a click event.");
+
+    expectedTarget = null;
+    synthesizeMouseAtCenter(s11, { type: "mousedown" });
+    synthesizeMouseAtCenter(s21, { type: "mouseup" });
+    is(clickCount, 1, "Should not have got a click event.");
+
+    expectedTarget = null;
+    synthesizeMouseAtCenter(s21, { type: "mousedown" });
+    synthesizeMouseAtCenter(s11, { type: "mouseup" });
+    is(clickCount, 1, "Should not have got a click event.");
+
+    var span1 = document.getElementById("span1");
+    var span2 = document.getElementById("span2");
+    expectedTarget = container;
+    synthesizeMouseAtCenter(span1, { type: "mousedown" });
+    synthesizeMouseAtCenter(span2, { type: "mouseup" });
+    is(clickCount, 2, "Should not have got a click event.");
+
+    button.addEventListener("click", function(event) {
+        is(event.target, expectedTarget, "Got expected click event target.");
+        ++clickCount;
+      }, true);
+
+    expectedTarget = a;
+    synthesizeMouseAtCenter(a, { type: "mousedown" });
+    synthesizeMouseAtCenter(a, { type: "mouseup" });
+    is(clickCount, 3, "Should have got a click event.");
+
+    expectedTarget = a;
+    synthesizeMouseAtCenter(b, { type: "mousedown" });
+    synthesizeMouseAtCenter(b, { type: "mouseup" });
+    is(clickCount, 4, "Should have got a click event.");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(test);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1089326">Mozilla Bug 1089326</a>
+<p id="display"></p>
+<button id="button">button <a id="anchor" href="#">anchor</a>button</button>
+
+<div id="interactiveContentContainer">
+  <a id="interactiveContent1" href="#">foo <span id="s11">s11</span><span id="s12">s12</span> bar</a>
+  <a id="interactiveContent2" href="#">foo <span id="s21">s21</span><span id="s22">s22</span> bar</a>
+
+  <div>
+    <span>
+      <span id="span1">span1</span>
+    </span>
+  </div>
+
+  <div>
+    <span>
+      <span id="span2">span2</span>
+    </span>
+  </div>
+</div>
+
+</body>
+</html>

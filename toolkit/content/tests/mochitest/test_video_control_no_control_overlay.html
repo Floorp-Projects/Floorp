@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Show 'click-to-play' icon on blocked autoplay media</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+/**
+ * This test is used to check whether 'click-to-play' icon would be showed
+ * correctly when autoplay media is blocked.
+ */
+add_task(async function testShowClickToPlayWhenAutoplayMediaGetsBlocked() {
+  info(`setting testing pref`);
+  await SpecialPowers.pushPrefEnv(
+    {"set": [["media.autoplay.default", 1 /* BLOCKED */]]}
+  );
+
+  info(`create video and load resource`);
+  let video = document.createElement('video');
+  video.src = "gizmo.mp4";
+  document.body.appendChild(video);
+
+  info(`blocking autoplay would reject media to play`);
+  ok(await video.play().then(_ => false, _ => true), "Play got rejected");
+
+  info(`'click-to-play' should display when autoplay media is blocked`);
+  const button = SpecialPowers.wrap(video).openOrClosedShadowRoot.querySelector(".clickToPlay");
+  ok(!button.hidden, "Click-to-play button is not hidden");
+});
+
+</script>
+</head>
+<body>
+</body>
+</html>

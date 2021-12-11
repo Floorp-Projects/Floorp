@@ -1,0 +1,38 @@
+<!-- This test's animation sets x=100 from 1sec to 1.5sec.  We'll
+     pause the animation at time 1.1sec to capture this, and then wait
+     a little, and make sure the animation is frozen there.       -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+  <script>
+    function go() {
+      // Use try/catch, so that we make sure to remove the reftest-wait 
+      // attribute  even on older browser versions that don't support
+      // pauseAnimations.
+      try {
+        document.documentElement.pauseAnimations();
+      } catch (e) {
+        // pauseAnimations not implemented. Change rect to red, 
+	    // and clear class to fail/end immediately.
+        document.documentElement.removeAttribute("class");
+        var rect = document.getElementById("rect");
+        rect.setAttributeNS(null, "fill", "red");
+        throw e;
+      }
+
+      // Wait > 0.5s before taking screenshot, to give animation time to
+      // jump to next value if the freeze didn't work.
+      setTimeout('document.documentElement.removeAttribute("class")', 600);
+    }
+    function delay_go() {
+      setTimeout(go, 1100);
+    }
+    document.addEventListener("MozReftestInvalidate", delay_go, false);
+    setTimeout(delay_go, 4000); // fallback for running outside reftest
+  </script>
+  <rect y="40" width="10" height="10" fill="blue">
+    <animate id="rect" attributeName="x" 
+             dur="3s" values="0; 50; 100; 150; 200; 250"
+             calcMode="discrete" fill="freeze"/>
+  </rect>
+</svg>

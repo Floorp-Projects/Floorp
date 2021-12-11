@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1271173 - Missing spec on Upgrade Insecure Requests(Navigational Upgrades) </title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+<iframe style="width:100%;" id="sandboxedtestframe"
+        sandbox="allow-scripts allow-top-navigation allow-same-origin allow-pointer-lock allow-popups"></iframe>
+
+<script class="testbody" type="text/javascript">
+/*
+ * Description of the test:
+ * We load a page into an iframe that performs a navigational request.
+ * We make sure that upgrade-insecure-requests applies and the page
+ * gets upgraded to https if same origin.
+ * Please note that uir only applies to sandboxed iframes if
+ * the value 'allow-same-origin' is specified.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  {
+    csp: "upgrade-insecure-requests;",
+    result: "https",
+    origin: "http://example.com",
+    desc: "upgrade-insecure-requests same origin should upgrade" 
+  },
+  {
+    csp: "",
+    result: "http",
+    origin: "http://example.com",
+    desc: "No upgrade-insecure-requests same origin should not upgrade"
+  },
+  {
+    csp: "upgrade-insecure-requests;",
+    result: "http",
+    origin: "http://mochi.test:8888",
+    desc: "upgrade-insecure-requests cross origin should not upgrade" 
+  },
+  {
+    csp: "",
+    result: "http",
+    origin: "http://mochi.test:8888",
+    desc: "No upgrade-insecure-requests cross origin should not upgrade"
+  },
+];
+
+// initializing to -1 so we start at index 0 when we start the test
+var counter = -1;
+
+function finishTest() {
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+var subtests = 0;
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  var result = event.data.result;
+  // query the scheme from the URL before comparing the result
+  var scheme = result.substring(0, result.indexOf(":"));
+  is(scheme, tests[counter].result, tests[counter].desc);
+
+  // @hardcoded 4:
+  // each test run contains of two subtests (frame and top-level)
+  // and we load each test into a regular iframe and into a
+  // sandboxed iframe. only move on to the next test once all
+  // four results from the subtests have bubbled up.
+  subtests++;
+  if (subtests != 4) {
+    return;
+  }
+  subtests = 0;
+  loadNextTest();
+}
+
+function loadNextTest() {
+  counter++;
+  if (counter == tests.length) {
+    finishTest();
+    return;
+  }
+
+  var src = tests[counter].origin;
+  src += "/tests/dom/security/test/csp/file_upgrade_insecure_navigation.sjs";
+  src += "?csp=" + escape(tests[counter].csp);
+  src += "&action=perform_navigation";
+  document.getElementById("testframe").src = src;
+  document.getElementById("sandboxedtestframe").src = src;
+}
+// Don't upgrade to https to test that upgrade-insecure-requests acts correctly
+// start running the tests
+SpecialPowers.pushPrefEnv({
+  set: [["dom.security.https_first", false]]
+}, loadNextTest);
+
+</script>
+</body>
+</html>

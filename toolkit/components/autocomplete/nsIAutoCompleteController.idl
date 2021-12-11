@@ -1,0 +1,182 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAutoCompleteInput;
+
+webidl Event;
+
+[scriptable, uuid(ff9f8465-204a-47a6-b3c9-0628b3856684)]
+interface nsIAutoCompleteController : nsISupports
+{
+  /*
+   * Possible values for the searchStatus attribute
+   */
+  const unsigned short STATUS_NONE = 1;
+  const unsigned short STATUS_SEARCHING = 2;
+  const unsigned short STATUS_COMPLETE_NO_MATCH = 3;
+  const unsigned short STATUS_COMPLETE_MATCH = 4;
+
+  /*
+   * The input widget that is currently being controlled.
+   */
+  [setter_can_run_script]
+  attribute nsIAutoCompleteInput input;
+
+  /*
+   * State which indicates the status of possible ongoing searches
+   */
+  readonly attribute unsigned short searchStatus;
+
+  /*
+   * The number of matches
+   */
+  readonly attribute unsigned long matchCount;
+
+  /*
+   * Start a search on a string, assuming the input property is already set.
+   */
+  [can_run_script] void startSearch(in AString searchString);
+
+  /*
+   * Stop all asynchronous searches
+   */
+  [can_run_script] void stopSearch();
+
+  /*
+   * Notify the controller that the user has changed text in the textbox.
+   * This includes all means of changing the text value, including typing a
+   * character, backspacing, deleting, pasting, committing composition or
+   * canceling composition.
+   *
+   * NOTE: handleText() must be called after composition actually ends, even if
+   *       the composition is canceled and the textbox value isn't changed.
+   *       Then, implementation of handleText() can access the editor when
+   *       it's not in composing mode. DOM compositionend event is not good
+   *       timing for calling handleText(). DOM input event immediately after
+   *       DOM compositionend event is the best timing to call this.
+   *
+   * @return whether this handler started a new search.
+   */
+  [can_run_script] boolean handleText();
+
+  /*
+   * Notify the controller that the user wishes to enter the current text. If
+   * aIsPopupSelection is true, then a selection was made from the popup, so
+   * fill this value into the input field before continuing. If false, just
+   * use the current value of the input field.
+   *
+   * @param aIsPopupSelection
+   *        Pass true if the selection was made from the popup.
+   * @param aEvent
+   *        The event that triggered the enter, like a key event if the user
+   *        pressed the Return key or a click event if the user clicked a popup
+   *        item.
+   * @return Whether the controller wishes to prevent event propagation and
+   *         default event.
+   */
+  [can_run_script] boolean handleEnter(in boolean aIsPopupSelection,
+                                       [optional] in Event aEvent);
+
+  /*
+   * Notify the controller that the user wishes to revert autocomplete
+   *
+   * @return Whether the controller wishes to prevent event propagation and
+   *         default event.
+   */
+  [can_run_script] boolean handleEscape();
+
+  /*
+   * Notify the controller that the user wishes to start composition
+   *
+   * NOTE: nsIAutoCompleteController implementation expects that this is called
+   *       by DOM compositionstart handler.
+   */
+  [can_run_script] void handleStartComposition();
+
+  /*
+   * Notify the controller that the user wishes to end composition
+   *
+   * NOTE: nsIAutoCompleteController implementation expects that this is called
+   *       by DOM compositionend handler.
+   */
+  void handleEndComposition();
+
+  /*
+   * Handle tab. Just closes up.
+   */
+  [can_run_script] void handleTab();
+
+  /*
+   * Notify the controller of the following key navigation events:
+   *   up, down, left, right, page up, page down
+   *
+   * @return Whether the controller wishes to prevent event propagation and
+   *         default event
+   */
+  [can_run_script] boolean handleKeyNavigation(in unsigned long key);
+
+  /*
+   * Notify the controller that the user chose to delete the current
+   * auto-complete result.
+   *
+   * @return Whether the controller removed a result item.
+   */
+  [can_run_script] boolean handleDelete();
+
+  /*
+   * Get the value of the result at a given index in the last completed search
+   */
+  AString getValueAt(in long index);
+
+  /*
+   * Get the label of the result at a given index in the last completed search
+   */
+  AString getLabelAt(in long index);
+
+  /*
+   * Get the comment of the result at a given index in the last completed search
+   */
+  AString getCommentAt(in long index);
+
+  /*
+   * Get the style hint for the result at a given index in the last completed search
+   */
+  AString getStyleAt(in long index);
+
+  /*
+   * Get the url of the image of the result at a given index in the last completed search
+   */
+  AString getImageAt(in long index);
+
+  /*
+   * For the last completed search, get the final value that should be completed
+   * when the user confirms the match at the given index
+   */
+  AString getFinalCompleteValueAt(in long index);
+
+  /*
+   * Get / set the current search string.  Note, setting will not start searching
+   */
+  attribute AString searchString;
+
+  /*
+   * Set the index of the result item that should be initially selected.
+   * This should be used when a search wants to pre-select an element before
+   * the user starts using results.
+   *
+   * @note Setting this is not the same as just setting selectedIndex in
+   * nsIAutocompletePopup, since this will take care of updating any internal
+   * tracking variables of features like completeSelectedIndex.
+   */
+  void setInitiallySelectedIndex(in long index);
+
+  /*
+   * Reset controller internal caches for cases where the input doesn't change
+   * but its context resets, thus it is about to start a completely new search
+   * session.
+   */
+  [can_run_script] void resetInternalState();
+};

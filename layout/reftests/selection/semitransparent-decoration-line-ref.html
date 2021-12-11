@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>semitransparent-decoration-line-ref</title>
+    <style>
+      *{
+         text-decoration-skip-ink: none;
+      }
+      .underline {
+        text-decoration: underline rgba(0,0,0,0.3);
+        font-size: 2em;
+      }
+      .overline {
+        text-decoration: overline rgba(0,0,0,0.3);
+        font-size: 2em;
+      }
+      .line-through {
+        text-decoration: line-through rgba(0,0,0,0.3);
+        font-size: 2em;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="underline">Lorem ipsum dolor sit amet</p>
+    <p class="overline">Lorem ipsum dolor sit amet</p>
+    <p class="line-through">Lorem ipsum dolor sit amet</p>
+  </body>
+</html>

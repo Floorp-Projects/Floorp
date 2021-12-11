@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<window xmlns:html="http://www.w3.org/1999/xhtml" class="reftest-wait" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="Testcase bug 311661 - Evil xul testcase, using display:table-row causes crash [@ nsTableRowGroupFrame::GetFirstRow]">
+<html:script><![CDATA[
+function doe() {
+document.documentElement.getElementsByTagName('*')[1].style.display='table-row';
+setTimeout(doe2,20);
+}
+function doe2(){
+document.documentElement.getElementsByTagName('*')[1].style.display='';
+setTimeout(doe,20);
+}
+]]></html:script>
+<button id="button" onclick="doe()" label="Mozilla should not crash, when clicking this button"/>
+<div style="display:table-row"/>
+<html:script>
+function clickbutton()
+{
+  var ev = document.createEvent('MouseEvents');
+  ev.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  var button = document.getElementById('button');
+  button.dispatchEvent(ev);
+
+  setTimeout(function() { document.documentElement.className = "" }, 500);
+}
+window.addEventListener("load", clickbutton, false);
+</html:script>
+
+</window>

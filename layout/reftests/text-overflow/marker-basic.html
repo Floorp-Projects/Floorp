@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: basic marker position tests
+-->
+<html><head>
+    <title>text-overflow: basic marker position tests</title>
+    <style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+
+.o {
+  text-overflow: ellipsis ellipsis;
+}
+
+.rel {
+  position: relative;
+  height:2em;
+}
+.abs0 {
+  position: absolute;
+  top:0; left:0;
+}
+
+.s {
+  width:4em;
+}
+.p {
+  overflow: hidden;
+  white-space:nowrap;
+  font-size:16px;
+}
+.auto {
+  overflow: auto;
+}
+.r {
+  text-align:right;
+}
+.a {
+  font-size:20px;
+}
+.l {
+  text-align:left;
+}
+i {
+  display:inline-block;
+  width: 1.5em;
+  height: 1em;
+  font-style:normal;
+  color:lime;
+  border: 1px solid magenta;
+  text-decoration:overline;
+}
+
+.c {
+  margin-left:-1em;
+  margin-right:-1em;
+  color: black;
+}
+.c5 {
+  margin-left:-0.5em;
+  margin-right:-0.5em;
+  color: black;
+}
+.outside {
+ width:1px; height:1px;
+}
+.overlap1 {
+ width:1.5em; height:1px;
+}
+.ins1 {
+ width:1em; height:1px;
+ margin: 0 0.8em;
+}
+.overlap2 {
+ width:1000px; height:1px;
+}
+.e { padding: 0 0.8em; }
+
+
+#test1a  { top:0;     left:0;     position:absolute; }
+#test1b  { top:0;     left:100px; position:absolute; }
+#test1c  { top:0;     left:200px; position:absolute; }
+#test1d  { top:0;     left:300px; position:absolute; }
+#test2a  { top:40px;  left:0;     position:absolute; }
+#test2b  { top:40px;  left:100px; position:absolute; }
+#test2c  { top:40px;  left:200px; position:absolute; }
+#test2d  { top:40px;  left:300px; position:absolute; }
+#test3a  { top:80px; left:0;     position:absolute; }
+#test3b  { top:80px; left:100px; position:absolute; }
+#test3c  { top:80px; left:200px; position:absolute; }
+#test3d  { top:80px; left:300px; position:absolute; }
+#test4a  { top:120px; left:0;     position:absolute; }
+#test4b  { top:120px; left:100px; position:absolute; }
+#test4c  { top:120px; left:200px; position:absolute; }
+#test4d  { top:120px; left:300px; position:absolute; }
+#test5a  { top:160px; left:0;     position:absolute; }
+#test5b  { top:160px; left:100px; position:absolute; }
+#test5c  { top:160px; left:200px; position:absolute; }
+#test5d  { top:160px; left:300px; position:absolute; }
+#test6a  { top:200px; left:0;     position:absolute; }
+#test6b  { top:200px; left:100px; position:absolute; }
+#test6c  { top:200px; left:200px; position:absolute; }
+#test6d  { top:200px; left:300px; position:absolute; }
+#test7a  { top:240px; left:0;     position:absolute; }
+#test7b  { top:240px; left:100px; position:absolute; }
+#test7c  { top:240px; left:200px; position:absolute; }
+#test7d  { top:240px; left:300px; position:absolute; }
+#test8a  { top:280px; left:0;     position:absolute; }
+#test8b  { top:280px; left:100px; position:absolute; }
+#test8c  { top:280px; left:200px; position:absolute; }
+#test8d  { top:280px; left:300px; position:absolute; }
+#test9a  { top:320px; left:0;     position:absolute; border:1px solid black; }
+#test9b  { top:320px; left:100px; position:absolute; border:1px solid black; }
+#test9c  { top:320px; left:200px; position:absolute; border:1px solid black; }
+#test9d  { top:320px; left:300px; position:absolute; border:1px solid black; }
+#test10a { top:360px; left:0;     position:absolute; }
+#test10b { top:360px; left:100px; position:absolute; }
+
+
+    </style>
+</head>
+<body>
+<div style="position: absolute; top:20px; left:50px;">
+
+<!-- start + end marker, aligned to text -->
+<div id="test1a"><div class="s a ltr"><div class="p o"><span class="c a lro">||||||||||</span></div></div></div>
+<div id="test1b"><div class="s a rtl"><div class="p o"><span class="c a lro">||||||||||</span></div></div></div>
+<div id="test1c"><div class="s a ltr"><div class="p o"><span class="c a rlo">||||||||||</span></div></div></div>
+<div id="test1d"><div class="s a rtl"><div class="p o"><span class="c a rlo">||||||||||</span></div></div></div>
+
+<!-- start marker, text outside marker edge, nothing to align with -->
+<div id="test2a"><div class="s a"><div class="p o ltr"><span class="c a">x</span></div></div></div>
+<div id="test2b"><div class="s a"><div class="p o rtl l"><span class="c a">x</span></div></div></div>
+<div id="test2c"><div class="s a"><div class="p o ltr r"><span class="c a">x</span></div></div></div>
+<div id="test2d"><div class="s a"><div class="p o rtl"><span class="c a">x</span></div></div></div>
+
+<!-- start marker, image outside marker edge, nothing to align with -->
+<div id="test3a"><div class="s a"><div class="p o ltr"><span class="c a"><img class="outside" src="../image/big.png"></span></div></div></div>
+<div id="test3b"><div class="s a"><div class="p o rtl l"><span class="c a"><img class="outside" src="../image/big.png"></span></div></div></div>
+<div id="test3c"><div class="s a"><div class="p o ltr r"><span class="c a"><img class="outside" src="../image/big.png"></span></div></div></div>
+<div id="test3d"><div class="s a"><div class="p o rtl"><span class="c a"><img class="outside" src="../image/big.png"></span></div></div></div>
+
+<!-- start marker, marker partly overlaps image, nothing to align with -->
+<div id="test4a"><div class="s a"><div class="p o ltr"><span class="c a"><img class="overlap1" src="../image/big.png"></span></div></div></div>
+<div id="test4b"><div class="s a"><div class="p o rtl l"><span class="c a"><img class="overlap1" src="../image/big.png"></span></div></div></div>
+<div id="test4c"><div class="s a"><div class="p o ltr r"><span class="c a"><img class="overlap1" src="../image/big.png"></span></div></div></div>
+<div id="test4d"><div class="s a"><div class="p o rtl"><span class="c a"><img class="overlap1" src="../image/big.png"></span></div></div></div>
+
+<!-- start marker + end, marker partly overlaps image, nothing to align with -->
+<div id="test5a"><div class="s a"><div class="p o ltr"><span class="c a"><img class="overlap2" src="../image/big.png"></span></div></div></div>
+<div id="test5b"><div class="s a"><div class="p o rtl l"><span class="c a"><img class="overlap2" src="../image/big.png"></span></div></div></div>
+<div id="test5c"><div class="s a"><div class="p o ltr r"><span class="c a"><img class="overlap2" src="../image/big.png"></span></div></div></div>
+<div id="test5d"><div class="s a"><div class="p o rtl"><span class="c a"><img class="overlap2" src="../image/big.png"></span></div></div></div>
+
+<!-- start marker, marker clips text, aligns to image -->
+<div id="test6a"><div class="s a"><div class="p o ltr"><span class="c a">|||<img class="overlap1" src="../image/big.png"></span></div></div></div>
+<div id="test6b"><div class="s a"><div class="p o rtl l"><span class="c a"><img class="overlap1" src="../image/big.png">|||</span></div></div></div>
+<div id="test6c"><div class="s a"><div class="p o ltr r"><span class="c a"><img class="overlap1" src="../image/big.png">|||</span></div></div></div>
+<div id="test6d"><div class="s a"><div class="p o rtl"><span class="c a">|||<img class="overlap1" src="../image/big.png"></span></div></div></div>
+
+<!-- start marker, marker aligns to image -->
+<div id="test7a"><div class="s a"><div class="p o ltr"><span class="c5 a">|<img class="ins1" src="../image/big.png"></span></div></div></div>
+<div id="test7b"><div class="s a"><div class="p o rtl"><span class="c5 a">|<img class="ins1" src="../image/big.png"></span></div></div></div>
+<!-- end marker, marker aligns to image -->
+<div id="test7c"><div class="s a"><div class="p o rtl l"><span class="c5 a"><img class="ins1" src="../image/big.png">|</span></div></div></div>
+<div id="test7d"><div class="s a"><div class="p o ltr r"><span class="c5 a"><img class="ins1" src="../image/big.png">|</span></div></div></div>
+
+<!-- start marker, marker aligns to empty element -->
+<div id="test8a"><div class="s a"><div class="a p o ltr"><span class="c5 a">|</span><span class="e"></span><span>&#x200c;</span></div></div></div>
+<div id="test8d"><div class="s a"><div class="a p o rtl"><span class="c5 a">|</span><span class="e"></span><span>&#x200c;</span></div></div></div>
+
+<!-- end marker, marker aligns to inline block with overflow -->
+<div id="test9a"><div class="s a"><div class="p o ltr"><span class="e"></span><i>&nbsp;&nbsp;&nbsp;&nbsp;</i><span class="e"></span><span class="c5 a">|||</span></div></div></div>
+<div id="test9b"><div class="s a"><div class="p o rtl"><span class="e"></span><i>&nbsp;&nbsp;&nbsp;&nbsp;</i><span class="e"></span><span class="c5 a">|||</span></div></div></div>
+<div id="test9c"><div class="s a"><div class="p o ltr"><span class="e"></span><i>&nbsp;&nbsp;&nbsp;&nbsp;</i><span class="e"></span><span class="c5 a">|||</span></div></div></div>
+<div id="test9d"><div class="s a"><div class="p o rtl"><span class="e"></span><i>&nbsp;&nbsp;&nbsp;&nbsp;</i><span class="e"></span><span class="c5 a">|||</span></div></div></div>
+
+<!-- no marker for overflow:auto that doesn't trigger scrollbar -->
+<div id="test10a"><div class="s a"><div class="p o ltr auto"><span style="margin-left:-5px" >||||||</span></div></div></div>
+<div id="test10b"><div class="s a"><div class="p o rtl auto"><span style="margin-right:-5px">||||||</span></div></div></div>
+
+</div>
+</body>
+</html>

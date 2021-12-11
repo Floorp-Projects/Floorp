@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1421568
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1421568</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript"><!--
+
+  /** Test for Bug 1421568 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function init() {
+    document.getElementById("content").innerHTML =
+      "<iframe src='about:blank' onload='test(this)'></iframe>";
+  }
+
+  function test(iframe) {
+    var d = iframe.contentDocument;
+    d.body.innerHTML = "<div>";
+    var div = d.body.firstChild;
+    var sr = div.attachShadow({mode: "closed"});
+    is(sr.mode, "closed", "Shadow root should be closed.");
+    is(div.shadowRoot, null, "Closed shadow root shouldn't be exposed.");
+    is(div.openOrClosedShadowRoot, undefined,
+       "openOrClosedShadowRoot should be exposed to the privileged scripts only.");
+    ok("openOrClosedShadowRoot" in SpecialPowers.wrap(div),
+       "Should have openOrClosedShadowRoot in privileged wrapper.")
+    is(SpecialPowers.unwrap(SpecialPowers.wrap(div).openOrClosedShadowRoot), sr);
+    SimpleTest.finish();
+  }
+
+  //--></script>
+</head>
+<body onload="init()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1421568">Mozilla Bug 1421568</a>
+<p id="display"></p>
+<div id="content">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

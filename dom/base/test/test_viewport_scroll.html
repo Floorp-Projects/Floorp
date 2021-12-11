@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mapping of scrollTop/scrollLeft to viewport</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="doTest()">
+<p id="display"></p>
+
+<iframe id="quirks"></iframe>
+<iframe id="standards"></iframe>
+<iframe id="xml"></iframe>
+
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var quirks = document.getElementById("quirks");
+var standards = document.getElementById("standards");
+var xml = document.getElementById("xml");
+
+quirks.src = "file_viewport_scroll_quirks.html";
+standards.srcdoc = "<!DOCTYPE HTML><html><body style='height:2000px; width:2000px;'>";
+xml.src = "file_viewport_scroll_xml.xml";
+
+function subtest(winProp, elemProp, win, correctElement, elemToSet, otherElem1, otherElem2) {
+  win.scrollTo(50, 50);
+  elemToSet[elemProp] = 100;
+  if (elemToSet == correctElement) {
+    is(Math.round(win[winProp]), 100, "Setting " + elemToSet.name + "." + elemProp + " should scroll");
+    is(elemToSet[elemProp], 100, "Reading back " + elemToSet.name + "." + elemProp + " after scrolling");
+  } else {
+    is(Math.round(win[winProp]), 50, "Setting " + elemToSet.name + "." + elemProp + " should not scroll");
+    is(elemToSet[elemProp], 0, "Reading back " + elemToSet.name + "." + elemProp + " after not scrolling");
+  }
+  if (otherElem1 == correctElement) {
+    is(otherElem1[elemProp], 50, "Reading back " + otherElem1.name + "." + elemProp + " (correct element) after not scrolling");
+  } else {
+    is(otherElem1[elemProp], 0, "Reading back " + otherElem1.name + "." + elemProp + " (irrelevant element)");
+  }
+  if (otherElem2 == correctElement) {
+    is(otherElem2[elemProp], 50, "Reading back " + otherElem2.name + "." + elemProp + " (correct element) after not scrolling");
+  } else {
+    is(otherElem2[elemProp], 0, "Reading back " + otherElem2.name + "." + elemProp + " (irrelevant element)");
+  }
+}
+
+function testScroll(winProp, elemProp, win, elemToSet, otherElem1, otherElem2) {
+  subtest(winProp, elemProp, win, elemToSet, elemToSet, otherElem1, otherElem2);
+  subtest(winProp, elemProp, win, elemToSet, otherElem1, elemToSet, otherElem2);
+  subtest(winProp, elemProp, win, elemToSet, otherElem2, elemToSet, otherElem1);
+}
+
+function doTest() {
+  var quirksRoot = quirks.contentDocument.documentElement;
+  quirksRoot.name = "quirks HTML";
+  var quirksBody = quirks.contentDocument.body;
+  quirksBody.name = "quirks BODY";
+  var quirksBody2 = quirks.contentDocument.createElement("body");
+  quirksBody2.name = "quirks other BODY";
+  quirksRoot.appendChild(quirksBody2);
+  testScroll("scrollX", "scrollLeft", quirks.contentWindow, quirksBody, quirksRoot, quirksBody2);
+  testScroll("scrollY", "scrollTop", quirks.contentWindow, quirksBody, quirksRoot, quirksBody2);
+
+  var standardsRoot = standards.contentDocument.documentElement;
+  standardsRoot.name = "standards HTML";
+  var standardsBody = standards.contentDocument.body;
+  standardsBody.name = "standards BODY";
+  var standardsBody2 = standards.contentDocument.createElement("body");
+  standardsBody2.name = "standards other BODY";
+  standardsRoot.appendChild(standardsBody2);
+  testScroll("scrollX", "scrollLeft", standards.contentWindow, standardsRoot, standardsBody, standardsBody2);
+  testScroll("scrollY", "scrollTop", standards.contentWindow, standardsRoot, standardsBody, standardsBody2);
+
+  var xmlRoot = xml.contentDocument.documentElement;
+  xmlRoot.name = "XML root";
+  var xmlOther = xmlRoot.firstChild;
+  xmlOther.name = "XML other";
+  testScroll("scrollX", "scrollLeft", xml.contentWindow, xmlRoot, xmlOther, xmlOther);
+  testScroll("scrollY", "scrollTop", xml.contentWindow, xmlRoot, xmlOther, xmlOther);
+
+  SimpleTest.finish();
+}
+</script>
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<html>
+
+<head>
+  <title>Accessible events testing for document</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../../common.js"></script>
+  <script type="application/javascript"
+          src="../../role.js"></script>
+  <script type="application/javascript"
+          src="../../events.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function changeIframeSrc(aIdentifier, aURL, aTitle) {
+      this.DOMNode = getNode(aIdentifier);
+
+      function getIframeDoc() {
+        return getAccessible(getNode(aIdentifier).contentDocument);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, getAccessible(this.DOMNode)),
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getIframeDoc),
+      ];
+
+      this.invoke = () => (this.DOMNode.src = aURL);
+
+      this.finalCheck = () =>
+        testAccessibleTree(this.DOMNode, {
+          role: ROLE_INTERNAL_FRAME,
+          children: [
+            {
+              role: ROLE_DOCUMENT,
+              name: aTitle,
+            },
+          ],
+        });
+
+      this.getID = () => `change iframe src on ${aURL}`;
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    function doTests() {
+      const gQueue = new eventQueue();
+      gQueue.push(new changeIframeSrc("iframe", "about:license", "Licenses"));
+      gQueue.push(new changeIframeSrc("iframe", "about:buildconfig", "Build Configuration"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=420845"
+     title="Fire event_reorder on any embedded frames/iframes whos document has just loaded">
+    Mozilla Bug 420845
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=754165"
+     title="Fire document load events on iframes too">
+    Mozilla Bug 754165
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="testContainer"><iframe id="iframe"></iframe></div>
+</body>
+</html>

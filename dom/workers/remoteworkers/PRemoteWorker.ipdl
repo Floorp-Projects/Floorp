@@ -1,0 +1,86 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PFetchEventOpProxy;
+
+include DOMTypes;
+include ServiceWorkerOpArgs;
+include RemoteWorkerTypes;
+
+namespace mozilla {
+namespace dom {
+
+struct RemoteWorkerSuspendOp
+{};
+
+struct RemoteWorkerResumeOp
+{};
+
+struct RemoteWorkerFreezeOp
+{};
+
+struct RemoteWorkerThawOp
+{};
+
+struct RemoteWorkerTerminateOp
+{};
+
+struct RemoteWorkerPortIdentifierOp
+{
+  MessagePortIdentifier portIdentifier;
+};
+
+struct RemoteWorkerAddWindowIDOp
+{
+  uint64_t windowID;
+};
+
+struct RemoteWorkerRemoveWindowIDOp
+{
+  uint64_t windowID;
+};
+
+union RemoteWorkerOp {
+  RemoteWorkerSuspendOp;
+  RemoteWorkerResumeOp;
+  RemoteWorkerFreezeOp;
+  RemoteWorkerThawOp;
+  RemoteWorkerTerminateOp;
+  RemoteWorkerPortIdentifierOp;
+  RemoteWorkerAddWindowIDOp;
+  RemoteWorkerRemoveWindowIDOp;
+};
+
+// This protocol is used to make a remote worker controllable from the parent
+// process. The parent process will receive operations from the
+// PRemoteWorkerController protocol.
+protocol PRemoteWorker
+{
+  manager PBackground;
+
+  manages PFetchEventOpProxy;
+
+parent:
+  async Created(bool aStatus);
+
+  async Error(ErrorValue aValue);
+
+  async Close();
+
+  async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);
+
+child:
+  async PFetchEventOpProxy(ServiceWorkerFetchEventOpArgs aArgs);
+
+  async __delete__();
+
+  async ExecOp(RemoteWorkerOp op);
+
+  async ExecServiceWorkerOp(ServiceWorkerOpArgs aArgs)
+      returns (ServiceWorkerOpResult aResult);
+};
+
+} // namespace dom
+} // namespace mozilla

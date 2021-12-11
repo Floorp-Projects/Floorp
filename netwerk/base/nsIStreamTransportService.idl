@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsITransport;
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIInputAvailableCallback;
+
+/**
+ * This service read/writes a stream on a background thread.
+ *
+ * Note: instead of using this interface, probably you want to use
+ * NS_MakeAsyncNonBlockingInputStream.
+ *
+ * Use this service to transform any blocking stream (e.g., file stream)
+ * into a fully asynchronous stream that can be read/written without
+ * blocking the main thread.
+ */
+[builtinclass, scriptable, uuid(5e0adf7d-9785-45c3-a193-04f25a75da8f)]
+interface nsIStreamTransportService : nsISupports
+{
+    /**
+     * CreateInputTransport
+     *
+     * @param aStream
+     *        The input stream that will be read on a background thread.
+     *        This stream must implement "blocking" stream semantics.
+     * @param aCloseWhenDone
+     *        Specify this flag to have the input stream closed once its
+     *        contents have been completely read.
+     *
+     * @return nsITransport instance.
+     */
+    nsITransport createInputTransport(in nsIInputStream aStream,
+                                      in boolean aCloseWhenDone);
+
+    void InputAvailable(in nsIInputStream aStream,
+                        in nsIInputAvailableCallback aCallback);
+};
+
+[builtinclass, uuid(ff2da731-44d0-4dd9-8236-c99387fec721)]
+interface nsIInputAvailableCallback : nsISupports
+{
+  void onInputAvailableComplete(in unsigned long long available,
+			        in nsresult available_return_code);
+};

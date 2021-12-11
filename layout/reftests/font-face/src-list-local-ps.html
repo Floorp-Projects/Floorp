@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>src local with postscript names</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+body {
+  margin: 50px;
+  font-size: 24pt;
+}
+
+/* use full names */
+
+@font-face {
+  font-family: test-regular;
+  src: local(HelveticaNeue), local(BitstreamVeraSans-Roman), local(FreeSans), 
+       local(SwissA), local(DejaVuSans), local(ArialMT);
+}
+
+/* use Helvetica on the Mac, since Futura has no bold face on 10.4, 10.5 */
+@font-face {
+  font-family: test-bold;
+  src: local(HelveticaNeue-Bold), local(BitstreamVeraSans-Bold), 
+       local(FreeSansBold), local(SwissA-Bold), local(DejaVuSans-Bold),
+       local(Arial-BoldMT);
+}
+
+@font-face {
+  font-family: test-italic;
+  src: local(HelveticaNeue-Italic), local(BitstreamVeraSans-Oblique), 
+       local(FreeSansOblique), local(SwissA-Italic),
+       local(DejaVuSans-Oblique), local(Arial-ItalicMT);
+}
+
+.regular { font-family: test-regular, serif; }
+.bold { font-family: test-bold, serif; }
+.italic { font-family: test-italic, serif; }
+
+</style>
+  
+<script type="text/javascript">
+
+</script>
+  
+</head>
+<body>
+
+<p class="regular">This should be a sans-serif face</p>
+
+<p class="bold">This should be a bold sans-serif face</p>
+
+<p class="italic">This should be an italic sans-serif face</p>
+
+</body>
+</html>

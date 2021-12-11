@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test the WebSocket debugger transport</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+
+window.onload = function() {
+  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const Services = require("Services");
+  // eslint-disable-next-line mozilla/reject-some-requires
+  const {DevToolsClient} = require("devtools/client/devtools-client");
+  const {DevToolsServer} = require("devtools/server/devtools-server");
+  const { SocketListener } = require("devtools/shared/security/socket");
+
+  Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
+  Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
+
+  SimpleTest.registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("devtools.debugger.remote-enabled");
+    Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
+  });
+
+  add_task(async function() {
+    DevToolsServer.init();
+    DevToolsServer.registerAllActors();
+
+    is(DevToolsServer.listeningSockets, 0, "0 listening sockets");
+
+    const socketOptions = {
+      portOrPath: -1,
+      webSocket: true,
+    };
+    const listener = new SocketListener(DevToolsServer, socketOptions);
+    ok(listener, "Socket listener created");
+    await listener.open();
+    is(DevToolsServer.listeningSockets, 1, "1 listening socket");
+
+    const transport = await DevToolsClient.socketConnect({
+      host: "127.0.0.1",
+      port: listener.port,
+      webSocket: true,
+    });
+    ok(transport, "Client transport created");
+
+    const client = new DevToolsClient(transport);
+    const onUnexpectedClose = () => {
+      ok(false, "Closed unexpectedly");
+    };
+    client.on("closed", onUnexpectedClose);
+
+    await client.connect();
+
+    // Send a message the server that will echo back
+    const message = "message";
+    const reply = await client.mainRoot.echo({ message });
+    is(reply.message, message, "Echo message matches");
+
+    client.off("closed", onUnexpectedClose);
+    transport.close();
+    listener.close();
+    is(DevToolsServer.listeningSockets, 0, "0 listening sockets");
+
+    DevToolsServer.destroy();
+  });
+};
+</script>
+</body>
+</html>

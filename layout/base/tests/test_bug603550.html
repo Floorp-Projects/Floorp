@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=603550
+-->
+<head>
+  <title>Test for Bug 603550</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  .test {
+    width: 20px;
+    height: 20px;
+    border: 1px solid black;
+    -moz-user-select: none;
+  }
+  </style>
+</head>
+<body onload="setTimeout('runTest()', 0)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=603550">Mozilla Bug 603550</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 603550 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function sendMouseMoveFaraway(el) {
+  var rect = el.getBoundingClientRect();
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendMouseEvent('mousemove', rect.left + 5000, rect.top + 5000, 0, 0, 0);
+}
+
+function sendMouseDown(el) {
+  var rect = el.getBoundingClientRect();
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendMouseEvent('mousedown', rect.left + 5, rect.top + 5, 0, 1, 0);
+}
+
+function sendMouseUp(el) {
+  var rect = el.getBoundingClientRect();
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendMouseEvent('mouseup', rect.left + 5, rect.top + 5, 0, 1, 0);
+}
+
+function fireEvent(target, event) {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.dispatchDOMEventViaPresShellForTesting(target, event);
+}
+
+function fireDrop(element) {
+  var ds = SpecialPowers.Cc["@mozilla.org/widget/dragservice;1"].
+    getService(SpecialPowers.Ci.nsIDragService);
+
+  ds.startDragSessionForTests(
+    SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_COPY |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_LINK
+  ); // Session for getting dataTransfer object.
+  try {
+    var event = document.createEvent("DragEvent");
+    event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
+    fireEvent(element, event);
+
+    event = document.createEvent("DragEvent");
+    event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
+    fireEvent(element, event);
+  } finally {
+    ds.endDragSession(false);
+    ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
+  }
+}
+
+function runTest() {
+  var d1 = document.getElementById("d1");
+  var didGetMouseMove = false;
+  sendMouseDown(d1);
+  document.addEventListener("mousemove",
+    function (e) {
+      didGetMouseMove = (e.target == document);
+    },
+    true);
+  sendMouseMoveFaraway(d1);
+  ok(didGetMouseMove, "Should have got mousemove!");
+  sendMouseUp(d1);
+  
+  didGetMouseMove = false;
+  document.addEventListener("mousedown",
+    function (e) {
+      e.preventDefault();
+    },
+    true);
+  sendMouseDown(d1);
+  sendMouseMoveFaraway(d1);
+  ok(didGetMouseMove, "Should have got mousemove! (2)");
+  sendMouseUp(d1);
+  
+  didGetMouseMove = false;
+  sendMouseDown(d1);
+  fireDrop(d1);
+  sendMouseMoveFaraway(d1);
+  ok(!didGetMouseMove, "Shouldn't have got mousemove!");
+  
+  
+  
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+<div class="test" id="d1">&nbsp;</div>
+</body>
+</html>

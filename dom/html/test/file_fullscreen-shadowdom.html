@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1430305
+  Bug 1430305 - Implement ShadowRoot.fullscreenElement
+  -->
+  <head>
+    <title>Bug 1430305</title>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=1430305">
+      Mozilla Bug 1430305</a>
+
+    <div id="host"></div>
+
+    <pre id="test">
+      <script type="application/javascript">
+
+        function begin() {
+          var host = document.getElementById("host");
+          var shadowRoot = host.attachShadow({mode: "open"});
+          shadowRoot.innerHTML = "<div>test</div>";
+          var elem = shadowRoot.firstChild;
+          var gotFullscreenEvent = false;
+
+          document.addEventListener("fullscreenchange", function (e) {
+            if (document.fullscreenElement === host) {
+              is(shadowRoot.fullscreenElement, elem,
+                 "Expected element entered fullsceen");
+              gotFullscreenEvent = true;
+              document.exitFullscreen();
+            } else {
+              opener.ok(gotFullscreenEvent, "Entered fullscreen as expected");
+              is(shadowRoot.fullscreenElement, null,
+                 "Shouldn't have fullscreenElement anymore.");
+              is(document.fullscreenElement, null,
+                 "Shouldn't have fullscreenElement anymore.");
+              opener.nextTest();
+            }
+          });
+          elem.requestFullscreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

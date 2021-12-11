@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<title>Test for incorrect inherited/aInherited use in -moz-transform-origin handling</title>
+<style type="text/css">
+
+p {
+  -moz-transform: scale(2);
+  height: 10px;
+  width: 10px;
+  background: green;
+  margin: 50px;
+}
+
+</style>
+<p style="-moz-transform-origin: 10px 10px"></p>
+<p style="-moz-transform-origin: 20px 20px"></p>

@@ -1,0 +1,211 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/dom/FeaturePolicyUtils.h";
+include "mozilla/dom/PermissionMessageUtils.h";
+include "mozilla/dom/SessionStoreMessageUtils.h";
+include "mozilla/ipc/TransportSecurityInfoUtils.h";
+include "mozilla/ipc/URIUtils.h";
+
+include protocol PBrowser;
+include protocol PInProcess;
+include protocol PBrowserBridge;
+
+include DOMTypes;
+include ClientIPCTypes;
+include NeckoChannelParams;
+include SessionStoreTypes;
+
+include "mozilla/layers/LayersMessageUtils.h";
+
+using JSActorMessageKind from "mozilla/dom/JSActor.h";
+using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
+[MoveOnly] using mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
+using nscolor from "nsColor.h";
+[RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
+using mozilla::dom::XPCOMPermitUnloadAction from "nsIContentViewer.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+[RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
+using mozilla::UseCounters from "mozilla/UseCounter.h";
+using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
+[RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
+[RefCounted] using mozilla::dom::SessionStoreRestoreData from "mozilla/dom/SessionStoreRestoreData.h";
+
+namespace mozilla {
+namespace dom {
+
+struct JSActorMessageMeta {
+  nsCString actorName;
+  nsString messageName;
+  uint64_t queryId;
+  JSActorMessageKind kind;
+};
+
+struct IPCWebShareData
+{
+  nsCString title;
+  nsCString text;
+  nsIURI url;
+};
+
+/**
+ * A PWindowGlobal actor has a lifetime matching that of a single Window Global,
+ * specifically a |nsGlobalWindowInner|. These actors will form a parent/child
+ * link either between the chrome/content process, or will be in-process, for
+ * documents which are loaded in the chrome process.
+ */
+[RefCounted] async protocol PWindowGlobal
+{
+  manager PBrowser or PInProcess;
+
+child:
+  async __delete__();
+
+  async MakeFrameLocal(MaybeDiscardedBrowsingContext aFrameContext,
+                       uint64_t aSwitchId);
+  async MakeFrameRemote(MaybeDiscardedBrowsingContext aFrameContext,
+                        ManagedEndpoint<PBrowserBridgeChild> aEndpoint,
+                        TabId aTabId, LayersId aLayersId) returns (bool success);
+
+  async DrawSnapshot(IntRect? aRect, float aScale, nscolor aBackgroundColor,
+                     uint32_t aFlags) returns (PaintFragment retval);
+
+  /**
+   * Returns the serialized security info associated with this window.
+   */
+  async GetSecurityInfo() returns(nsCString? serializedSecInfo);
+
+  async DispatchSecurityPolicyViolation(nsString aViolationEventJSON);
+
+  async SaveStorageAccessPermissionGranted();
+
+  async AddBlockedFrameNodeByClassifier(MaybeDiscardedBrowsingContext aNode);
+
+  /**
+   * Request from UI to reset the scaling zoom that is controlled by APZ.
+   */
+  async ResetScalingZoom();
+
+  async SetContainerFeaturePolicy(FeaturePolicy aContainerFeaturePolicy);
+
+  async RestoreDocShellState(DocShellRestoreState aState)
+    returns (bool success);
+
+  async RestoreTabContent(SessionStoreRestoreData aData) returns (bool success);
+
+both:
+  async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
+                   ClonedMessageData? aStack);
+
+parent:
+  // Load the given URI load state into the current owner process of the given
+  // BrowsingContext. aTargetBC must be in the same BrowsingContextGroup as this
+  // window global.
+  async LoadURI(MaybeDiscardedBrowsingContext aTargetBC,
+                nsDocShellLoadState aLoadState, bool aSetNavigating);
+
+  async InternalLoad(nsDocShellLoadState aLoadState);
+
+  /// Update the URI of the document in this WindowGlobal.
+  async UpdateDocumentURI(nsIURI aUri);
+
+  // We expose frameAncestors to web-extensions and they extract URIs from the
+  // principals collected. In order to be compatible with that API, we need to
+  // update the document's principal. This is only allowed if the principals are
+  // `equals` to each other.
+  async UpdateDocumentPrincipal(nsIPrincipal aPrincipal,
+                                nsIPrincipal aStoragePrincipal);
+
+  // Update document's `documentHasLoaded` bit in this WindowGlobal.
+  async UpdateDocumentHasLoaded(bool aDocumentHasLoaded);
+
+  // Update document's 'documentHasUserInteracted' bit in this WindowGlobal.
+  async UpdateDocumentHasUserInteracted(bool aDocumentHasUserInteracted);
+
+  // Update document's sandbox flags in this WindowGlobal.
+  async UpdateSandboxFlags(uint32_t aSandboxFlags);
+
+  // Update document csp's fields in this WindowGlobal.
+  async UpdateDocumentCspSettings(bool aBlockAllMixedContent, bool aUpgradeInsecureRequests);
+
+  // Update document's cookie settings in this WindowGlobal.
+  async UpdateCookieJarSettings(CookieJarSettingsArgs cookieJarSettings);
+
+  // Update the title of the document in this WindowGlobal.
+  async UpdateDocumentTitle(nsString aTitle);
+
+  async UpdateDocumentSecurityInfo(nsITransportSecurityInfo aSecurityInfo);
+
+  // Update the document's HTTPS-Only Mode flags in this WindowGlobal.
+  async UpdateHttpsOnlyStatus(uint32_t aHttpsOnlyStatus);
+
+  /// Send down initial document bit to the parent.
+  async SetIsInitialDocument(bool aIsInitialDocument);
+
+  // Attempts to perform a "Web Share".
+  async Share(IPCWebShareData aData) returns (nsresult rv);
+
+  // Get content blocking events from the parent process.
+  async GetContentBlockingEvents() returns (uint32_t events);
+
+  // Send the ClientInfo associated with a top-level document load.
+  async SetClientInfo(IPCClientInfo aClientInfo);
+
+  // Checks whether any "beforeunload" event listener in the document subtree
+  // wants to block unload, and prompts the user to allow if any does (depending
+  // on the action specified, using nsIContentViewer::PermitUnloadAction
+  // values). The sender is responsible for checking documents in its own
+  // process, and passing true for `aHasInProcessBlocker` if any exist. Windows
+  // hosted outside of the caller process will be checked automatically.
+  async CheckPermitUnload(bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction)
+    returns (bool permitUnload);
+
+  /**
+   * Informs the parent process that the document in aTop should expect to
+   * receive page use counter contributions from the document in this
+   * WindowGlobal.
+   */
+  async ExpectPageUseCounters(MaybeDiscardedWindowContext aTop);
+
+  /**
+   * Accumulates use counter data from the document in this WindowGlobal into
+   * the document previously passed into the ExpectPageUseCounters call.
+   */
+  async AccumulatePageUseCounters(UseCounters aUseCounters);
+
+  async RequestRestoreTabContent();
+
+  async UpdateSessionStore(FormData? aFormData, nsPoint? aScrollPosition,
+                           uint32_t aEpoch);
+
+  async ResetSessionStore(uint32_t aEpoch);
+
+  // Add the flags in aOnFlags to the current BFCache status and remove the
+  // flags in aOffFlags from the current BFCache status. See the BFCacheStatus
+  // enum for the valid flags.
+  async UpdateBFCacheStatus(uint32_t aOnFlags, uint32_t aOffFlags);
+
+  /**
+   * Used to notify the parent when there's a change in the number of requests
+   * in the loadgroup. If there are no requests this will be set to Nothing().
+   * If there is one request this will be set to the ID of that request, if it
+   * implements nsIIdentChannel. If there are more than one requests this will
+   * be set to 0.
+   * Note that some requests are ignored (eg. favicon loads).
+   */
+  async SetSingleChannelId(uint64_t? singleChannelId);
+
+  async SetDocumentDomain(nsIURI aDomain);
+
+  async Destroy();
+
+  async ReloadWithHttpsOnlyException();
+};
+
+} // namespace dom
+} // namespace mozilla

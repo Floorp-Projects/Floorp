@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=915962
+-->
+<head>
+  <title>Test for Bug 915962</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=915962">Mozilla Bug 915962</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 915962 **/
+
+var smoothScrollPref = "general.smoothScroll";
+SimpleTest.waitForExplicitFinish();
+var win = window.open("file_bug915962.html", "_blank",
+                      "width=600,height=600,scrollbars=yes");
+
+
+function waitForScrollEvent(aWindow) {
+  return new Promise(resolve => {
+    aWindow.addEventListener("scroll", () => { SimpleTest.executeSoon(resolve); }, {once: true, capture: true});
+  });
+}
+
+function waitAndCheckNoScrollEvent(aWindow) {
+  let gotScroll = false;
+  function recordScroll() {
+    gotScroll = true;
+  }
+  aWindow.addEventListener("scroll", recordScroll, {capture: true});
+  return waitToClearOutAnyPotentialScrolls(aWindow).then(function() {
+        aWindow.removeEventListener("scroll", recordScroll, {capture: true});
+        is(gotScroll, false, "check that we didn't get a scroll");
+      });
+}
+
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set": [[smoothScrollPref, false]]}, startTest);
+}, win);
+async function startTest() {
+  // Make sure that pressing Space when a tabindex=-1 element is focused
+  // will scroll the page.
+  var button = win.document.querySelector("button");
+  var sc = win.document.querySelector("div");
+  sc.focus();
+  await waitToClearOutAnyPotentialScrolls(win);
+  is(win.scrollY, 0, "Sanity check");
+  let waitForScrolling = waitForScrollEvent(win);
+  synthesizeKey(" ", {}, win);
+
+  await waitForScrolling;
+
+  isnot(win.scrollY, 0, "Page is scrolled down");
+  var oldY = win.scrollY;
+  waitForScrolling = waitForScrollEvent(win);
+  synthesizeKey(" ", {shiftKey: true}, win);
+
+  await waitForScrolling;
+
+  ok(win.scrollY < oldY, "Page is scrolled up");
+
+  // Make sure that pressing Space when a tabindex=-1 element is focused
+  // will not scroll the page, and will activate the element.
+  button.focus();
+  await waitToClearOutAnyPotentialScrolls(win);
+  var clicked = false;
+  button.onclick = () => clicked = true;
+  oldY = win.scrollY;
+  let waitForNoScroll = waitAndCheckNoScrollEvent(win);
+  synthesizeKey(" ", {}, win);
+
+  await waitForNoScroll;
+
+  ok(win.scrollY <= oldY, "Page is not scrolled down");
+  ok(clicked, "The button should be clicked");
+  synthesizeKey("VK_TAB", {}, win);
+
+  await waitToClearOutAnyPotentialScrolls(win);
+
+  oldY = win.scrollY;
+  waitForScrolling = waitForScrollEvent(win);
+  synthesizeKey(" ", {}, win);
+
+  await waitForScrolling;
+
+  ok(win.scrollY >= oldY, "Page is scrolled down");
+
+  win.close();
+
+  win = window.open("file_bug915962.html", "_blank",
+                    "width=600,height=600,scrollbars=yes");
+
+  SimpleTest.waitForFocus(async function() {
+    is(win.scrollY, 0, "Sanity check");
+    waitForScrolling = waitForScrollEvent(win);
+    synthesizeKey(" ", {}, win);
+
+    await waitForScrolling;
+
+    isnot(win.scrollY, 0, "Page is scrolled down without crashing");
+
+    win.close();
+
+    SimpleTest.finish();
+  }, win);
+}
+</script>
+</pre>
+</body>
+</html>

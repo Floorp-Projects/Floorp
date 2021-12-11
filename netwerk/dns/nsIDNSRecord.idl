@@ -1,0 +1,136 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
+#include "nsTArrayForwardDeclare.h"
+%}
+native NetAddr(mozilla::net::NetAddr);
+[ref] native nsNetAddrTArrayRef(nsTArray<mozilla::net::NetAddr>);
+interface nsINetAddr;
+
+/**
+ * nsIDNSRecord
+ *
+ * this interface represents the result of a DNS lookup.  since a DNS
+ * query may return more than one resolved IP address, the record acts
+ * like an enumerator, allowing the caller to easily step through the
+ * list of IP addresses.
+ */
+[scriptable, uuid(f92228ae-c417-4188-a604-0830a95e7eb9)]
+interface nsIDNSRecord : nsISupports
+{
+};
+
+[scriptable, uuid(cb260e20-943f-4309-953b-78c90d3a7638)]
+interface nsIDNSAddrRecord : nsIDNSRecord
+{
+    /**
+     * @return the canonical hostname for this record.  this value is empty if
+     * the record was not fetched with the RESOLVE_CANONICAL_NAME flag.
+     *
+     * e.g., www.mozilla.org --> rheet.mozilla.org
+     *
+     * That the result, if IDN will be returned as punycode.
+     * e.g., élève.w3c-test.org --> xn--lve-6lad.w3c-test.org
+     */
+    readonly attribute ACString canonicalName;
+
+    /**
+     * this function copies the value of the next IP address into the
+     * given NetAddr struct and increments the internal address iterator.
+     *
+     * @param aPort
+     *        A port number to initialize the NetAddr with.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
+     * the record.
+     */
+    [noscript] NetAddr getNextAddr(in uint16_t aPort);
+
+    /**
+     * this function copies the value of all working members of the RR
+     * set into the output array.
+     *
+     * @param aAddressArray
+     *        The result set
+     */
+    [noscript] void getAddresses(out nsNetAddrTArrayRef aAddressArray);
+
+    /**
+     * this function returns the value of the next IP address as a
+     * scriptable address and increments the internal address iterator.
+     *
+     * @param aPort
+     *        A port number to initialize the nsINetAddr with.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
+     * the record.
+     */
+    nsINetAddr getScriptableNextAddr(in uint16_t aPort);
+
+    /**
+     * this function returns the value of the next IP address as a
+     * string and increments the internal address iterator.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
+     * the record.
+     */
+    ACString getNextAddrAsString();
+
+    /**
+     * this function returns true if there is another address in the record.
+     */
+    boolean hasMore();
+
+    /**
+     * this function resets the internal address iterator to the first
+     * address in the record.
+     */
+    void rewind();
+
+    /**
+     * This function indicates that the last address obtained via getNextAddr*()
+     * was not usuable and should be skipped in future uses of this
+     * record if other addresses are available.
+     *
+     * @param aPort is the port number associated with the failure, if any.
+     *        It may be zero if not applicable.
+     */
+    void reportUnusable(in uint16_t aPort);
+
+    /**
+     * Record retreived with TRR.
+     */
+    bool IsTRR();
+
+    /**
+     * This attribute is only set if TRR is used and it measures time between
+     * asyncOpen on a channel and the time parsing of response if done.
+     * Thee time is measured in milliseconds.
+     */
+    readonly attribute double trrFetchDuration;
+
+    /**
+     * This attribute is only set if TRR is used and it measures time between
+     * sending a request and the time response is received from the network.
+     * This time is similat to the time above, but exludes a time needed to
+     * make a connection and a time neededto parse results (this also does not
+     * include delays that may be introduce because parsing is perform on the main
+     * thread).
+     * Thee time is measured in milliseconds.
+     */
+    readonly attribute double trrFetchDurationNetworkOnly;
+
+    /**
+     * The TRR mode this record is used.
+     */
+    readonly attribute unsigned long effectiveTRRMode;
+};

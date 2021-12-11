@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Testing that the (default) 'align-items:stretch' only stretches flex items with height:auto (not height:[other-keyword])</title>
+  <meta charset="utf-8">
+  <style>
+    .container {
+      display: flex;
+      height: 100px;
+      border: 1px solid black;
+    }
+    .min-content-height {
+      background: pink;
+      height: -moz-min-content;
+      height: min-content;
+    }
+    .max-content-height {
+      background: lightblue;
+      height: -moz-max-content;
+      height: max-content;
+    }
+    .auto-height {
+      background: orange;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="min-content-height">min</div>
+    <div class="max-content-height">max</div>
+    <div class="auto-height">auto</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<!-- vim: set shiftwidth=2 tabstop=8 expandtab :
+   -
+   -
+   - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window SYSTEM "chrome://layoutdebug/locale/layoutdebug.dtd">
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css" ?>
+
+<!--
+
+  NOTE:  Because this window is used for layout regression tests, the
+  persist attribute should never be used on anything.  Otherwise there
+  is a risk of running baseline and verify runs under different
+  conditions.
+
+-->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        id="main-window"
+        align="stretch"
+        title="&ldb.MainWindow.title;"
+        titlemodifier="&ldb.MainWindow.title;"
+        titlemenuseparator=" — "
+        windowtype="mozapp:layoutdebug"
+        onload="OnLDBLoad();"
+        onclose="OnLDBBeforeUnload(event);"
+        onunload="OnLDBUnload();"
+        width="1024" height="768"
+        screenX="4" screenY="4"
+        >
+
+  <script src="chrome://layoutdebug/content/layoutdebug.js"/>
+
+  <commandset id="tasksCommands">
+    <command id="cmd_open" oncommand="openFile();"/>
+    <command id="cmd_close" oncommand="window.close();"/>
+    <command id="cmd_focusURLBar" oncommand="focusURLBar();"/>
+    <command id="cmd_reload" oncommand="gBrowser.reload();"/>
+    <command id="cmd_dumpContent" oncommand="gDebugger.dumpContent();"/>
+    <command id="cmd_dumpFrames" oncommand="gDebugger.dumpFrames();"/>
+    <command id="cmd_dumpFramesInCSSPixels" oncommand="gDebugger.dumpFramesInCSSPixels();"/>
+    <command id="cmd_dumpTextRuns" oncommand="gDebugger.dumpTextRuns();"/>
+  </commandset>
+
+  <keyset id="tasksKeys">
+    <key id="key_open" key="O" modifiers="accel" command="cmd_open"/>
+    <key id="key_close" key="W" modifiers="accel" command="cmd_close"/>
+    <key id="key_focusURLBar" key="L" modifiers="accel" command="cmd_focusURLBar"/>
+    <key id="key_reload" key="R" modifiers="accel" command="cmd_reload"/>
+    <key id="key_dumpContent" key="D" modifiers="accel" command="cmd_dumpContent"/> <!-- "D" means DOM tree -->
+    <key id="key_dumpFrames" key="F" modifiers="accel" command="cmd_dumpFrames"/>
+    <key id="key_dumpFramesInCSSPixels" key="P" modifiers="accel" command="cmd_dumpFramesInCSSPixels"/>
+    <key id="key_dumpTextRuns" key="T" modifiers="accel" command="cmd_dumpTextRuns"/>
+  </keyset>
+
+  <vbox flex="1">
+
+    <toolbox>
+      <toolbar type="menubar">
+      <menubar id="main-menubar">
+        <menu id="menu_file" label="File" accesskey="F">
+          <menupopup id="menu_FilePopup">
+            <menuitem id="menu_open" label="Open File…" accesskey="O" key="key_open" command="cmd_open"/>
+            <menuitem id="menu_close" label="Close" accesskey="C" key="key_close" command="cmd_close"/>
+          </menupopup>
+        </menu>
+        <menu label="&ldb.ToggleMenu.label;"
+              accesskey="&ldb.ToggleMenu.accesskey;">
+          <menupopup>
+            <menuitem type="checkbox" id="menu_visualDebugging" label="&ldb.visualDebugging.label;" accesskey="&ldb.visualDebugging.accesskey;" oncommand="toggle(this);" />
+            <menuitem type="checkbox" id="menu_visualEventDebugging" label="&ldb.visualEventDebugging.label;" accesskey="&ldb.visualEventDebugging.accesskey;" oncommand="toggle(this);" />
+            <menuseparator />
+            <menuitem type="checkbox" id="menu_paintFlashing" label="&ldb.paintFlashing.label;" accesskey="&ldb.paintFlashing.accesskey;" oncommand="toggle(this);" />
+            <menuitem type="checkbox" id="menu_paintDumping" label="&ldb.paintDumping.label;" accesskey="&ldb.paintDumping.accesskey;" oncommand="toggle(this);" />
+            <menuitem type="checkbox" id="menu_invalidateDumping" label="&ldb.invalidateDumping.label;" accesskey="&ldb.invalidateDumping.accesskey;" oncommand="toggle(this);" />
+            <menuseparator />
+            <menuitem type="checkbox" id="menu_eventDumping" label="&ldb.eventDumping.label;" accesskey="&ldb.eventDumping.accesskey;" oncommand="toggle(this);" />
+            <menuitem type="checkbox" id="menu_motionEventDumping" label="&ldb.motionEventDumping.label;" accesskey="&ldb.motionEventDumping.accesskey;" oncommand="toggle(this);" />
+            <menuitem type="checkbox" id="menu_crossingEventDumping" label="&ldb.crossingEventDumping.label;" accesskey="&ldb.crossingEventDumping.accesskey;" oncommand="toggle(this);" />
+            <menuseparator />
+            <menuitem type="checkbox" id="menu_reflowCounts" label="&ldb.reflowCounts.label;" accesskey="&ldb.reflowCounts.accesskey;" oncommand="toggle(this);" />
+            <menuitem type="checkbox" id="menu_pagedMode" label="&ldb.pagedMode.label;" accesskey="&ldb.pagedMode.accesskey;" oncommand="toggle(this);" />
+          </menupopup>
+        </menu>
+        <menu label="&ldb.DumpMenu.label;"
+              accesskey="&ldb.DumpMenu.accesskey;">
+          <menupopup>
+            <menuitem id="menu_processIDs" label="Process IDs" accesskey="P" oncommand="gDebugger.dumpProcessIDs();" />
+            <menuitem id="menu_dumpContent" label="&ldb.dumpContent.label;" accesskey="&ldb.dumpContent.accesskey;" oncommand="gDebugger.dumpContent();" />
+            <menuitem id="menu_dumpFrames" label="&ldb.dumpFrames.label;" accesskey="&ldb.dumpFrames.accesskey;" oncommand="gDebugger.dumpFrames();" />
+            <menuitem id="menu_dumpFramesInCSSPixels" label="&ldb.dumpFramesInCSSPixels.label;" accesskey="&ldb.dumpFramesInCSSPixels.accesskey;" oncommand="gDebugger.dumpFramesInCSSPixels();" />
+            <menuitem id="menu_dumpTextRuns" label="&ldb.dumpTextRuns.label;" accesskey="&ldb.dumpTextRuns.accesskey;" oncommand="gDebugger.dumpTextRuns();" />
+            <menuitem id="menu_dumpViews" label="&ldb.dumpViews.label;" accesskey="&ldb.dumpViews.accesskey;" oncommand="gDebugger.dumpViews();" />
+            <menuitem id="menu_dumpCounterManager" label="&ldb.dumpCounterManager.label;" accesskey="&ldb.dumpCounterManager.accesskey;" oncommand="gDebugger.dumpCounterManager();" />
+            <menuseparator />
+            <menuitem id="menu_dumpStyleSheets" label="&ldb.dumpStyleSheets.label;" accesskey="&ldb.dumpStyleSheets.accesskey;" oncommand="gDebugger.dumpStyleSheets();" />
+            <menuitem id="menu_dumpMatchedRules" label="&ldb.dumpMatchedRules.label;" accesskey="&ldb.dumpMatchedRules.accesskey;" oncommand="gDebugger.dumpMatchedRules();" />
+            <menuitem id="menu_dumpComputedStyles" label="&ldb.dumpComputedStyles.label;" accesskey="&ldb.dumpComputedStyles.accesskey;" oncommand="gDebugger.dumpComputedStyles();" />
+            <menuseparator />
+            <menuitem id="menu_dumpReflowStats" label="&ldb.dumpReflowStats.label;" accesskey="&ldb.dumpReflowStats.accesskey;" oncommand="gDebugger.dumpReflowStats();" />
+          </menupopup>
+        </menu>
+        <menu id="tasksMenu"/>
+        <menu id="windowMenu"/>
+        <menu id="menu_Help"/>
+      </menubar>
+      </toolbar>
+
+      <toolbar>
+        <toolbarbutton id="back-button" class="toolbarbutton-1"
+                       label="&ldb.BackButton.label;"
+                       oncommand="gBrowser.goBack();" />
+        <toolbarbutton id="forward-button" class="toolbarbutton-1"
+                       label="&ldb.ForwardButton.label;"
+                       oncommand="gBrowser.goForward();" />
+        <toolbarbutton id="reload-button" class="toolbarbutton-1"
+                       label="&ldb.ReloadButton.label;"
+                       command="cmd_reload" />
+        <toolbarbutton id="stop-button" class="toolbarbutton-1"
+                       label="&ldb.StopButton.label;"
+                       oncommand="gBrowser.stop();" />
+
+        <html:input id="urlbar" style="-moz-box-flex: 1;" onkeypress="if (event.keyCode == 13) go();"/>
+      </toolbar>
+    </toolbox>
+
+    <browser flex="1" id="browser" type="content" primary="true" remote="true" remoteType="web"/>
+
+    <hbox>
+      <description id="status-text" value="" />
+    </hbox>
+  </vbox>
+</window>

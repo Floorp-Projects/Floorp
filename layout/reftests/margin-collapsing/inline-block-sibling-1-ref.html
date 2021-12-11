@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- specifying all heights in em units so that large font sizes
+     don't disrupt relationships; everything will scale together -->
+<style type="text/css">
+#parent {
+ width: 200px;
+ background-color: lightgreen;
+}
+#inline-block1, #inline-block2 {
+ height: 2em;
+ background-color: green;
+}
+#margin {
+ height: 2em;
+}
+</style>
+</head>
+<body>
+<div id="parent">
+ <div id="inline-block1"></div>
+ <div id="margin"></div>
+ <div id="inline-block2"></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1560259052 -3600
+#      Tue Jun 11 14:17:32 2019 +0100
+# Node ID ca1bafe49015cb6625648274f32959e4160a6ce9
+# Parent  3ec022faaf83642e3c1894d83ff99926bada990c
+Hash if out testing functions that cause dependency creep. r=aklotz
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/app_container_profile_base.cc b/security/sandbox/chromium/sandbox/win/src/app_container_profile_base.cc
+--- a/security/sandbox/chromium/sandbox/win/src/app_container_profile_base.cc
++++ b/security/sandbox/chromium/sandbox/win/src/app_container_profile_base.cc
+@@ -3,17 +3,19 @@
+ // found in the LICENSE file.
+ 
+ #include <memory>
+ 
+ #include <aclapi.h>
+ #include <userenv.h>
+ 
+ #include "base/strings/stringprintf.h"
++#if !defined(MOZ_SANDBOX)
+ #include "base/win/scoped_co_mem.h"
++#endif
+ #include "base/win/scoped_handle.h"
+ #include "sandbox/win/src/app_container_profile_base.h"
+ #include "sandbox/win/src/restricted_token_utils.h"
+ #include "sandbox/win/src/win_utils.h"
+ 
+ namespace sandbox {
+ 
+ namespace {
+@@ -167,39 +169,47 @@ bool AppContainerProfileBase::GetRegistr
+   HKEY key_handle;
+   if (FAILED(get_app_container_registry_location(desired_access, &key_handle)))
+     return false;
+   key->Set(key_handle);
+   return true;
+ }
+ 
+ bool AppContainerProfileBase::GetFolderPath(base::FilePath* file_path) {
++#if defined(MOZ_SANDBOX)
++  IMMEDIATE_CRASH();
++#else
+   static GetAppContainerFolderPathFunc* get_app_container_folder_path =
+       reinterpret_cast<GetAppContainerFolderPathFunc*>(GetProcAddress(
+           GetModuleHandle(L"userenv"), "GetAppContainerFolderPath"));
+   if (!get_app_container_folder_path)
+     return false;
+   std::wstring sddl_str;
+   if (!package_sid_.ToSddlString(&sddl_str))
+     return false;
+   base::win::ScopedCoMem<wchar_t> path_str;
+   if (FAILED(get_app_container_folder_path(sddl_str.c_str(), &path_str)))
+     return false;
+   *file_path = base::FilePath(path_str.get());
+   return true;
++#endif
+ }
+ 
+ bool AppContainerProfileBase::GetPipePath(const wchar_t* pipe_name,
+                                           base::FilePath* pipe_path) {
++#if defined(MOZ_SANDBOX)
++  IMMEDIATE_CRASH();
++#else
+   std::wstring sddl_str;
+   if (!package_sid_.ToSddlString(&sddl_str))
+     return false;
+   *pipe_path = base::FilePath(base::StringPrintf(L"\\\\.\\pipe\\%ls\\%ls",
+                                                  sddl_str.c_str(), pipe_name));
+   return true;
++#endif
+ }
+ 
+ bool AppContainerProfileBase::AccessCheck(const wchar_t* object_name,
+                                           SE_OBJECT_TYPE object_type,
+                                           DWORD desired_access,
+                                           DWORD* granted_access,
+                                           BOOL* access_status) {
+   GENERIC_MAPPING generic_mapping;

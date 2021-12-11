@@ -1,0 +1,21 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+webidl Element;
+webidl Node;
+
+[scriptable, uuid(9fbac05a-fb27-470d-8e5f-028b2dc54ad0)]
+interface nsIDOMXULRelatedElement : nsISupports
+{
+  /**
+   * Retrun an element associated with the given element. It's implemented
+   * by container elements having relation between their items. For example,
+   * this interface is implemented by XUL tabs and XUL tabpanels elements
+   * and used to get XUL tab element by linked tab panel and vice versa.
+   */
+  Element getRelatedElement(in Node aElement);
+};

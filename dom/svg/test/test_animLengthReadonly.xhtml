@@ -1,0 +1,219 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=506856
+-->
+<head>
+  <title>Test for read-only times of SVG animated lengths</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=506856">Mozilla Bug 506856</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg"
+     width="100px" height="100px" viewBox="0 0 100 100"
+     onload="this.pauseAnimations()">
+  <!-- Note: Need a viewBox on the SVG element, or else our percent-length
+       basis will be '0' (based off of the viewport width, which is 0 in this
+       case since we're in a display:none iframe. We use viewport width because
+       the lack of a viewbox forces us into the not-mViewBox::IsValid() case of
+       SVGSVGElement::GetLength).
+
+       And we don't want a percent-length basis of 0, because then when we call
+       convertToSpecifiedUnits to convert out of percent units, we divide by 0
+       and get unexpected results.
+    -->
+  <circle cx="-100" cy="-100" r="15" fill="blue" id="circle">
+    <animate attributeName="cx" from="0" to="100" dur="4s" begin="1s; 10s"
+      fill="freeze" id="animate"/>
+    <animate attributeName="cy" from="-100" to="-100" dur="4s" begin="1s; 10s"
+      fill="remove"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test read-only times of animated lengths **/
+
+/* Global Variables */
+const svgns = "http://www.w3.org/2000/svg";
+var svg = document.getElementById("svg");
+var circle = document.getElementById("circle");
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  // Sanity check: check initial values
+  is(circle.cx.baseVal.value, -100);
+  is(circle.cx.animVal.value, -100);
+  is(circle.cy.baseVal.value, -100);
+  is(circle.cy.animVal.value, -100);
+
+  // (1): Check before animation that animVal's are readonly
+  ok(checkReadOnly(circle.cx),
+    "(1) animVal cx is editable when not animated");
+  ok(checkReadOnly(circle.cy),
+    "(1) animVal cy is editable when not animated");
+
+  // Skip to mid-way through the animation
+  svg.setCurrentTime(4);
+
+  // (2): Check that whilst animations are active the animVal's are readonly
+  ok(checkReadOnly(circle.cx),
+    "(2) animVal cx is editable when animated");
+  ok(checkReadOnly(circle.cy),
+    "(2) animVal cy is editable when animated");
+
+  // Skip to past end
+  svg.setCurrentTime(6);
+
+  // (3): Check that frozen animations are readonly and have different values
+  ok(checkReadOnly(circle.cx),
+    "(3) animVal cx is editable when frozen");
+  checkDiffValue(circle.cx);
+
+  // (4): Check that finished animations are readonly and have same values
+  ok(checkReadOnly(circle.cy),
+    "(4) animVal cy is editable when inactive");
+  checkSameValue(circle.cy);
+
+  SimpleTest.finish();
+}
+
+function checkReadOnly(animLength) {
+  var exceptionCaught = false;
+  var oldAnimValue = animLength.animVal.value;
+
+  // Try changing value
+  try {
+    animLength.animVal.value = (animLength.animVal.value == 77) ? 88 : 77;
+  } catch (e) {
+    if (e.name == "NoModificationAllowedError" &&
+        e.code == DOMException.NO_MODIFICATION_ALLOWED_ERR) {
+      exceptionCaught = true;
+    } else {
+      ok(false, "Got unexpected exception " + e);
+      return false;
+    }
+  }
+  is(animLength.animVal.value, oldAnimValue,
+    "No exception thrown, but animVal was changed.");
+  if (animLength.animVal.value != oldAnimValue) return false;
+
+  // valueInSpecifiedUnits
+  try {
+    exceptionCaught = false;
+    animLength.animVal.valueInSpecifiedUnits = -100;
+  } catch (e) { exceptionCaught = true; }
+  ok(exceptionCaught, "animVal.valueInSpecifiedUnits failed to throw.");
+  if (!exceptionCaught) return false;
+
+  // valueAsString
+  try {
+    exceptionCaught = false;
+    animLength.animVal.valueAsString = "-100px";
+  } catch (e) { exceptionCaught = true; }
+  ok(exceptionCaught, "animVal.valueAsString failed to throw.");
+  if (!exceptionCaught) return false;
+
+  // newValueSpecifiedUnits
+  try {
+    exceptionCaught = false;
+    animLength.animVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, -100);
+  } catch (e) { exceptionCaught = true; }
+  ok(exceptionCaught, "animVal.newValueSpecifiedUnits failed to throw.");
+  if (!exceptionCaught) return false;
+
+  // convertToSpecifiedUnits
+  try {
+    exceptionCaught = false;
+    animLength.animVal.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_NUMBER);
+  } catch (e) { exceptionCaught = true; }
+  ok(exceptionCaught, "animVal.convertToSpecifiedUnits failed to throw.");
+
+  return exceptionCaught;
+}
+
+function checkSameValue(animLength) {
+  // value
+  animLength.baseVal.value = 1;
+  is(animLength.animVal.value, 1,
+    "un-animated animVal.value not changed after setting baseValue.value");
+
+  // valueInSpecifiedUnits
+  animLength.baseVal.valueInSpecifiedUnits = 2;
+  is(animLength.animVal.value, 2,
+    "un-animated animVal.value not changed after setting "
+    + "baseValue.valueInSpecifiedUnits");
+
+  // valueAsString
+  animLength.baseVal.valueAsString = "3";
+  is(animLength.animVal.value, 3,
+    "un-animated animVal.value not changed after setting "
+    + "baseValue.valueAsString");
+
+  // newValueSpecifiedUnits
+  animLength.baseVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_CM, 4);
+  is(animLength.animVal.valueInSpecifiedUnits, 4,
+    "un-animated animVal.value not changed after setting "
+    + "baseValue.newValueSpecifiedUnits");
+
+  // convertToSpecifiedUnits
+  animLength.baseVal.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_MM);
+  is(animLength.animVal.valueInSpecifiedUnits, 40,
+    "un-animated animVal.value not changed after calling "
+    + "baseValue.convertToSpecifiedUnits");
+}
+
+function checkDiffValue(animLength) {
+  // We assume here that the animation is not additive and hence changing the
+  // baseValue will not be reflected in the animValue
+  var origValue = animLength.animVal.value;
+
+  // value
+  animLength.baseVal.value = 1;
+  is(animLength.animVal.value, origValue,
+    "animated animVal.value changed after setting baseValue.value");
+
+  // valueInSpecifiedUnits
+  animLength.baseVal.valueInSpecifiedUnits = 2;
+  is(animLength.animVal.value, origValue,
+    "animated animVal.value changed after setting "
+    + "baseValue.valueInSpecifiedUnits");
+
+  // valueAsString
+  animLength.baseVal.valueAsString = "3";
+  is(animLength.animVal.value, origValue,
+    "animated animVal.value changed after setting baseValue.valueAsString");
+
+  // newValueSpecifiedUnits
+  // (Note: we'd like to convert to MM here and CM in the next step for
+  // consistency with the other tests. However, internally that will cause the
+  // animVal to be converted to MM and back again which, given certain dpi
+  // values such as we get in Linux, this may lead to rounding errors so that
+  // 100 becomes 99.99999237060547. So instead we convert to something
+  // independent of dpi)
+  animLength.baseVal.newValueSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_PERCENTAGE, 40);
+  is(animLength.animVal.value, origValue,
+    "animated animVal.value changed after setting "
+    + "baseValue.newValueSpecifiedUnits");
+
+  // convertToSpecifiedUnits
+  animLength.baseVal.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
+  is(animLength.animVal.value, origValue,
+    "animated animVal.value changed after calling "
+    + "baseValue.convertToSpecifiedUnits");
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

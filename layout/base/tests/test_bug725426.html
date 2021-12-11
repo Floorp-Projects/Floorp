@@ -1,0 +1,23 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=725426
+-->
+<title>Test for bug 725426</title>
+<script src=/tests/SimpleTest/SimpleTest.js></script>
+<link rel=stylesheet href=/tests/SimpleTest/test.css>
+<body style=margin:0>
+<div style="-moz-transform: perspective(200px)">
+<div style="-moz-transform: translatez(-100px);
+width:100px;height:100px;background:blue">
+</div></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=725426">
+Mozilla Bug 725426</a>
+<pre id=test>
+<script class=testbody>
+var rect = document.querySelector("div>div").getBoundingClientRect();
+is(rect.top, 0, "Incorrect bounding rect top");
+is(rect.right, 100, "Incorrect bounding rect top");
+is(rect.bottom, 100, "Incorrect bounding rect top");
+is(rect.left, 0, "Incorrect bounding rect top");
+</script>
+</pre>

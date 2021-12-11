@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test tabs.sendMessage</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+"use strict";
+
+add_task(async function test_tabs_sendMessage_to_extension_page_frame() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        matches: ["http://mochi.test/*/file_sample.html?tabs.sendMessage"],
+        js: ["cs.js"],
+      }],
+      web_accessible_resources: ["page.html", "page.js"],
+    },
+
+    async background() {
+      let tab;
+
+      browser.runtime.onMessage.addListener(async (msg, sender) => {
+        browser.test.assertEq(msg, "page-script-ready");
+        browser.test.assertEq(sender.url, browser.runtime.getURL("page.html"));
+
+        let tabId = sender.tab.id;
+        let response = await browser.tabs.sendMessage(tabId, "tab-sendMessage");
+
+        switch (response) {
+          case "extension-tab":
+            browser.test.assertEq(tab.id, tabId, "Extension tab responded");
+            browser.test.assertEq(sender.frameId, 0, "Response from top level");
+            await browser.tabs.remove(tab.id);
+            browser.test.sendMessage("extension-tab-responded");
+            break;
+
+          case "extension-frame":
+            browser.test.assertTrue(sender.frameId > 0, "Response from iframe");
+            browser.test.sendMessage("extension-frame-responded");
+            break;
+
+          default:
+            browser.test.fail("Unexpected response: " + response);
+        }
+      });
+
+      tab = await browser.tabs.create({ url: "page.html" });
+    },
+
+    files: {
+      "cs.js"() {
+        let iframe = document.createElement("iframe");
+        iframe.src = browser.runtime.getURL("page.html");
+        document.body.append(iframe);
+        browser.test.sendMessage("content-script-done");
+      },
+
+      "page.html": `<!DOCTYPE html>
+        <meta charset=utf-8>
+        <script src=page.js><\/script>
+        Extension page`,
+
+      "page.js"() {
+        browser.runtime.onMessage.addListener(async msg => {
+          browser.test.assertEq(msg, "tab-sendMessage");
+          return window.parent === window ? "extension-tab" : "extension-frame";
+        });
+        browser.runtime.sendMessage("page-script-ready");
+      },
+    }
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("extension-tab-responded");
+
+  let win = window.open("file_sample.html?tabs.sendMessage");
+  await extension.awaitMessage("content-script-done");
+  await extension.awaitMessage("extension-frame-responded");
+  win.close();
+
+  await extension.unload();
+});
+
+add_task(async function test_tabs_sendMessage_using_frameId() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["http://mochi.test/*/file_contains_iframe.html"],
+          run_at: "document_start",
+          js: ["cs_top.js"],
+        },
+        {
+          matches: ["http://example.org/*/file_contains_img.html"],
+          js: ["cs_iframe.js"],
+          all_frames: true,
+        },
+      ],
+    },
+
+    background() {
+      browser.runtime.onMessage.addListener(async (msg, sender) => {
+        let { tab, frameId } = sender;
+        browser.test.assertEq(msg, "cs_iframe_ready", "Iframe cs ready.");
+        browser.test.assertTrue(frameId > 0, "Not from the top frame.");
+
+        let response = await browser.tabs.sendMessage(tab.id, "msg");
+        browser.test.assertEq(response, "cs_top", "Top cs responded first.");
+
+        response = await browser.tabs.sendMessage(tab.id, "msg", { frameId });
+        browser.test.assertEq(response, "cs_iframe", "Iframe cs reponded.");
+
+        browser.test.sendMessage("done");
+      });
+      browser.test.sendMessage("ready");
+    },
+
+    files: {
+      "cs_top.js"() {
+        browser.test.log("Top content script loaded.")
+        browser.runtime.onMessage.addListener(async () => "cs_top");
+      },
+      "cs_iframe.js"() {
+        browser.test.log("Iframe content script loaded.")
+        browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+          browser.test.log("Iframe content script received message.")
+          setTimeout(() => sendResponse("cs_iframe"), 100);
+          return true;
+        });
+        browser.runtime.sendMessage("cs_iframe_ready");
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  let win = window.open("file_contains_iframe.html");
+  await extension.awaitMessage("done");
+  win.close();
+
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

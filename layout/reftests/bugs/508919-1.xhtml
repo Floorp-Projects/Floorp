@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <style>
+      html { color: black; border-color: inherit; border-width: 10px;
+             border-style: solid; }
+    </style>
+    <script>
+      window.addEventListener("MozReftestInvalidate",
+        function() {
+          document.getElementById("x").removeAttribute("style");
+          document.documentElement.className = "";
+        },
+        false);
+    </script>
+  </head>
+  <body style="border-color: green;">
+    <html id="x" style="display:none">Test</html>
+  </body>
+</html>

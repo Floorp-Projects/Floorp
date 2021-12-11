@@ -1,0 +1,73 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "cbindgen toolchain build"
+    attributes:
+        local-toolchain: true
+    worker-type: b-linux
+    worker:
+        max-run-time: 3600
+    run:
+        script: build-cbindgen.sh
+        toolchain-artifact: public/build/cbindgen.tar.zst
+    run-on-projects: [trunk]
+    fetches:
+        fetch:
+            # If you update this, make sure to update the minimum version in
+            # build/moz.configure/bindgen.configure as well.
+            - cbindgen-0.19.0
+
+linux64-cbindgen:
+    treeherder:
+        symbol: TL(cbindgen)
+    worker:
+        max-run-time: 1800
+    run:
+        arguments: ['x86_64-unknown-linux-gnu']
+    fetches:
+        toolchain:
+            - linux64-clang-13
+            - linux64-rust-1.47
+            - sysroot-x86_64-linux-gnu
+
+macosx64-cbindgen:
+    treeherder:
+        symbol: TM(cbindgen)
+    run:
+        arguments: ['x86_64-apple-darwin']
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
+            - linux64-rust-macos-1.47
+            - macosx64-sdk-11.0
+
+macosx64-aarch64-cbindgen:
+    treeherder:
+        symbol: TM(cbindgen-arm64)
+    run:
+        arguments: ['aarch64-apple-darwin']
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
+            - linux64-rust-macos-1.49
+            - macosx64-sdk-11.0
+
+win64-cbindgen:
+    treeherder:
+        symbol: TW64(cbindgen)
+    worker-type: b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - win64-rust-1.47

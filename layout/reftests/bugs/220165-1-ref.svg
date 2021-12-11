@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:html="http://www.w3.org/1999/xhtml" height="500"
+     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+     shape-rendering="crispEdges">
+
+  <foreignObject x="200" y="180" width="100" height="50" >
+    <html:button id="x">New text</html:button>
+  </foreignObject>
+
+  <g transform="rotate(10) translate(-100) scale(0.8)">
+    <polygon style="fill:red; fill-opacity:0.5;"
+	  points="350, 75 379,161 469,161 397,215
+	  423,301 350,250 277,301 303,215
+                     231,161 321,161" />
+	
+  </g>
+
+</svg>

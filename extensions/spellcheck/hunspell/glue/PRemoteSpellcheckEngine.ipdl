@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+namespace mozilla {
+
+sync protocol PRemoteSpellcheckEngine {
+  manager PContent;
+
+parent:
+  async __delete__();
+
+  async CheckAsync(nsString[] aWord) returns (bool[] aIsMisspelled);
+
+  sync SetDictionary(nsCString aDictionary) returns (bool success);
+
+  async Suggest(nsString aWord, uint32_t aCount) returns (nsString[] aSuggestions);
+
+  /*
+   * Set current dictionary from list of dictionary name.
+   *
+   * @aList         A list of dictionary name.  If a string into this list is
+   *                empty string, dictionary selection is reset
+   * @aSuccess      true if setting dictionary is successful
+   * @aDictionary   Return current dictionary name that set by this method.
+   */
+  async SetDictionaryFromList(nsCString[] aList)
+           returns (bool aSuccess, nsCString aDictionary);
+};
+
+} // namespace mozilla

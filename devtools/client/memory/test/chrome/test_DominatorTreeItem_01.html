@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that we don't display `JS::ubi::RootList` for the root, and instead show "GC Roots".
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <!-- Give the container height so that the whole tree is rendered. -->
+    <div id="container" style="height: 900px;"></div>
+
+    <pre id="test">
+        <script src="head.js" type="application/javascript"></script>
+        <script type="application/javascript">
+         "use strict";
+         window.onload = async function() {
+           try {
+             const container = document.getElementById("container");
+
+             await renderComponent(DominatorTreeItem({
+               item: makeTestDominatorTreeNode({ label: ["other", "JS::ubi::RootList"] }),
+               depth: 0,
+               arrow: dom.div(),
+               focused: true,
+               getPercentSize: _ => 50,
+               onViewSourceInDebugger: _ => { },
+             }), container);
+
+             ok(!container.textContent.includes("JS::ubi::RootList"),
+                "Should not display `JS::ubi::RootList`");
+             ok(container.textContent.includes("GC Roots"),
+                "Should display `GC Roots` instead");
+           } catch (e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         };
+        </script>
+    </pre>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- The "L" glyph in Fira Sans has been hacked to have an advance of
+       exactly 500/1000 em, or 100px at a font size of 200px. -->
+  <!-- L -->
+  <rect x="20" y="20" width="160" height="160" stroke-width="10"
+    stroke="black" fill="red" />
+  <rect x="20" y="0" width="20" height="20" stroke="none"
+    fill="turquoise" />
+
+  <!-- L -->
+  <rect x="120" y="20" width="160" height="160" stroke-width="10"
+    stroke="black" fill="red" />
+  <rect x="120" y="0" width="20" height="20" stroke="none"
+    fill="turquoise" />
+
+  <!-- L -->
+  <rect x="220" y="20" width="160" height="160" stroke-width="10"
+    stroke="black" fill="red" />
+  <rect x="220" y="0" width="20" height="20" stroke="none"
+    fill="turquoise" />
+</svg>

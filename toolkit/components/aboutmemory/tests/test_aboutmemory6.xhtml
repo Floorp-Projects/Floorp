@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- This file tests the saving of GC and CC logs in both concise and
+       verbose formats. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <iframe id="amFrame"  height="400" src="about:memory"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  "use strict";
+
+  function onFocus() {
+    let frame = document.getElementById("amFrame");
+    frame.focus();
+
+    // Checks that a file exists on the local file system and removes it if it
+    // is present.
+    function checkForFileAndRemove(aFilename) {
+      let localFile = Cc["@mozilla.org/file/local;1"]
+                        .createInstance(Ci.nsIFile);
+      localFile.initWithPath(aFilename);
+
+      let exists = localFile.exists();
+      if (exists) {
+        localFile.remove(/* recursive = */ false);
+      }
+
+      return exists;
+    }
+
+    // Given a save log button, triggers the action and checks if both CC & GC
+    // logs were written to disk.
+    function saveLogs(aLogButton, aCCLogType)
+    {
+      // trigger the log saving
+      aLogButton.click();
+
+      // mainDiv
+      // |-> section
+      //        | -> div gc log path
+      //        | -> div cc log path
+      let mainDiv = frame.contentWindow.document.getElementById("mainDiv");
+      let logNodes = mainDiv.childNodes[0];
+
+      // we expect 2 logs listed
+      let numOfLogs = logNodes.childNodes.length;
+      ok(numOfLogs == 2, "two log entries generated")
+
+      // grab the path portion of the text
+      let gcLogPath = logNodes.childNodes[0].textContent
+                        .replace("Saved GC log to ", "");
+      let ccLogPath = logNodes.childNodes[1].textContent
+                        .replace("Saved " + aCCLogType + " CC log to ", "");
+
+      // check that the files actually exist
+      ok(checkForFileAndRemove(gcLogPath), "GC log file exists");
+      ok(checkForFileAndRemove(ccLogPath), "CC log file exists");
+    }
+
+    // get the log buttons to test
+    let saveConcise = frame.contentWindow.document
+                        .getElementById("saveLogsConcise");
+    let saveVerbose = frame.contentWindow.document
+                        .getElementById("saveLogsVerbose");
+
+    saveLogs(saveConcise, "concise");
+    saveLogs(saveVerbose, "verbose");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForFocus(onFocus);
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

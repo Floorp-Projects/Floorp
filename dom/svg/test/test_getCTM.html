@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=366697
+-->
+<head>
+  <title>Test for Bug 366697</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    #padsvg1 { padding-left: 27px; padding-top: 43px; }
+    #transrect1 { transform: scale(2,3); }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366697">Mozilla Bug 366697</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="getCTM-helper.svg"></iframe>
+
+<svg id="padsvg1" width="100" height="100">
+  <rect id="transrect1" width="10" height="10" />
+</svg>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var doc = $("svg").contentWindow.document;
+
+  /* Minimal */
+  var buggy = doc.getElementById("buggy");
+  is(buggy.getCTM().e, 30, "buggy.getCTM().e");
+  is(buggy.getCTM().f, 40, "buggy.getCTM().f");
+
+  var transrect1 = document.getElementById("transrect1");
+  is(transrect1.getCTM().a, 2, "transrect1.getCTM().a");
+  is(transrect1.getCTM().d, 3, "transrect1.getCTM().d");
+
+  var padsvg1 = document.getElementById("padsvg1");
+  is(padsvg1.getScreenCTM().e - padsvg1.getBoundingClientRect().x, 27, "padsvg1.getScreenCTM().e");
+  is(padsvg1.getScreenCTM().f - padsvg1.getBoundingClientRect().y, 43, "padsvg1.getScreenCTM().f");
+
+  var root = doc.documentElement;
+  var inner = doc.getElementById("inner");
+  var g1 = doc.getElementById("g1");
+  var outer = doc.getElementById("outer");
+  var outer2 = doc.getElementById("outer2");
+  var g2 = doc.getElementById("g2");
+  var g3 = doc.getElementById("g3");
+  var g4 = doc.getElementById("g4");
+  var g5 = doc.getElementById("g5");
+  var symbolRect = doc.getElementById("symbolRect");
+  var fO = doc.getElementById("fO");
+  /* Tests the consistency with nearestViewportElement
+     (code is from test_viewport.html) */
+  // root.nearestViewportElement == null
+  is((function() { try { return root.getCTM(); } catch (e) { return e; } })(), null, "root.getCTM()");
+  // inner.nearestViewportElement == root
+  is((function() { try { return inner.getCTM().e; } catch (e) { return e; } })(), 1, "inner.getCTM().e");
+  is((function() { try { return inner.getCTM().f; } catch (e) { return e; } })(), 2, "inner.getCTM().f");
+  // g1.nearestViewportElement == inner
+  is((function() { try { return g1.getCTM().e; } catch (e) { return e; } })(), 30, "g1.getCTM().e");
+  is((function() { try { return g1.getCTM().f; } catch (e) { return e; } })(), 40, "g1.getCTM().f");
+  // outer.nearestViewportElement == null
+  is((function() { try { return outer.getCTM(); } catch (e) { return e; } })(), null, "outer.getCTM()");
+  // g2.nearestViewportElement == outer
+  is((function() { try { return g2.getCTM().e; } catch (e) { return e; } })(), 600, "g2.getCTM().e");
+  is((function() { try { return g2.getCTM().f; } catch (e) { return e; } })(), 700, "g2.getCTM().f");
+  // g3.nearestViewportElement == null
+  is((function() { try { return g3.getCTM(); } catch (e) { return e; } })(), null, "g3.getCTM()");
+  // g4.nearestViewportElement == null
+  is((function() { try { return g4.getCTM().e; } catch (e) { return e; } })(), 1, "g4.getCTM().e");
+  is((function() { try { return g4.getCTM().f; } catch (e) { return e; } })(), 2, "g4.getCTM().f");
+  // symbolRect.nearestViewportElement == sym
+  is((function() { try { return symbolRect.getCTM().e; } catch (e) { return e; } })(), 70, "symbolRect.getCTM().e");
+  is((function() { try { return symbolRect.getCTM().f; } catch (e) { return e; } })(), 80, "symbolRect.getCTM().f");
+  // fO.nearestViewportElement == <svg> with no 'id'
+  is((function() { try { return fO.getCTM().e; } catch (e) { return e; } })(), 2, "fO.getCTM().e");
+  is((function() { try { return fO.getCTM().f; } catch (e) { return e; } })(), 3, "fO.getCTM().f");
+  // g5.nearestViewportElement == inner-2
+  is((function() { try { return g5.getCTM(); } catch (e) { return e; } })(), null, "g5.getCTM()");
+
+  /* Tests the consistency with farthestViewportElement
+     (code is from test_viewport.html) */
+  // root.farthestViewportElement == null (but actually == root)
+  is((function() { try { return root.getScreenCTM().e; } catch (e) { return e; } })(), 11, "root.getScreenCTM().e");
+  is((function() { try { return root.getScreenCTM().f; } catch (e) { return e; } })(), 22, "root.getScreenCTM().f");
+  // inner.farthestViewportElement == root
+  is((function() { try { return inner.getScreenCTM().e; } catch (e) { return e; } })(), 15, "inner.getScreenCTM().e");
+  is((function() { try { return inner.getScreenCTM().f; } catch (e) { return e; } })(), 28, "inner.getScreenCTM().f");
+  // g1.farthestViewportElement == root
+  is((function() { try { return g1.getScreenCTM().e; } catch (e) { return e; } })(), 45, "g1.getScreenCTM().e");
+  is((function() { try { return g1.getScreenCTM().f; } catch (e) { return e; } })(), 68, "g1.getScreenCTM().f");
+  // outer.farthestViewportElement == null (but actually == root)
+  is((function() { try { return outer.getScreenCTM().e; } catch (e) { return e; } })(), 46, "outer.getScreenCTM().e");
+  is((function() { try { return outer.getScreenCTM().f; } catch (e) { return e; } })(), 69, "outer.getScreenCTM().f");
+  // outer.farthestViewportElement == null (but actually == root)
+  is((function() { try { return outer2.getScreenCTM().e; } catch (e) { return e; } })(), -19, "outer2.getScreenCTM().e");
+  is((function() { try { return outer2.getScreenCTM().f; } catch (e) { return e; } })(), -8, "outer2.getScreenCTM().f");
+  // g2.farthestViewportElement == outer (but actually == root)
+  is((function() { try { return g2.getScreenCTM().e; } catch (e) { return e; } })(), 646, "g2.getScreenCTM().e");
+  is((function() { try { return g2.getScreenCTM().f; } catch (e) { return e; } })(), 769, "g2.getScreenCTM().f");
+  // g3.farthestViewportElement == null (but actually == null)
+  is((function() { try { return g3.getScreenCTM(); } catch (e) { return e; } })(), null, "g3.getScreenCTM()");
+  // symbolRect.farthestViewportElement == root
+  is((function() { try { return symbolRect.getScreenCTM().e; } catch (e) { return e; } })(), 85, "symbolRect.getScreenCTM().e");
+  is((function() { try { return symbolRect.getScreenCTM().f; } catch (e) { return e; } })(), 108, "symbolRect.getScreenCTM().f");
+  // fO.farthestViewportElement == root
+  is((function() { try { return fO.getScreenCTM().e; } catch (e) { return e; } })(), 16, "symbolRect.getScreenCTM().e");
+  is((function() { try { return fO.getScreenCTM().f; } catch (e) { return e; } })(), 29, "symbolRect.getScreenCTM().f");
+  // g5.farthestViewportElement == root
+  is((function() { try { return g5.getScreenCTM(); } catch (e) { return e; } })(), null, "g5.getScreenCTM()");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTest);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage basic test</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+var expectedEvents = [
+  "empty,null,",
+  "empty,,null",
+  "key1,null,value1",
+  "key1,value1,null",
+  "key1,null,value1",
+  "key2,null,value2",
+  "key2,value2,value2-2",
+  "key1,value1,value1-2",
+  "key2,value2-2,null",
+  "testA,null,valueA",
+  "testA,valueA,valueA2",
+  "testB,null,valueB",
+  "testB,valueB,valueB2",
+  "testC,null,valueC",
+  "testC,valueC,valueC2",
+  "testC,valueC2,null",
+  "testC,null,null",
+  "testC,null,null",
+  "null,null,test",
+  "null,test,null",
+  "null,null,test",
+  "null,test,null",
+  "null,null,null"
+];
+
+function startTest()
+{
+  // Initially check the localStorage is empty
+  is(localStorage.length, 0, "The storage is empty [1]");
+  is(localStorage.key(0), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.getItem("nonexisting"), null, "Nonexisting item is null (getItem())");
+  is(localStorage.nonexisting, undefined, "Nonexisting item is undefined (array access)");
+  is(localStorage.nonexisting, undefined, "Nonexisting item is undefined (property access)");
+  localStorage.removeItem("nonexisting"); // Just check there is no exception
+
+  is(typeof localStorage.getItem("nonexisting"), "object", "getItem('nonexisting') is object");
+  is(typeof localStorage.nonexisting, "undefined", "['nonexisting'] is undefined");
+  is(typeof localStorage.nonexisting, "undefined", "nonexisting is undefined");
+  is(typeof localStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
+  is(typeof localStorage.nonexisting2, "undefined", "['nonexisting2'] is undefined");
+  is(typeof localStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
+
+  var localStorageCopy = localStorage;
+
+  function onStorageChanged(e) {
+    if (e.storageArea == localStorageCopy) {
+      ok(expectedEvents.length > 0, "Not more then expected events encountered");
+      var receivedEvent = e.key + "," + e.oldValue + "," + e.newValue;
+      is(receivedEvent, expectedEvents.shift(), "Expected event data: " + receivedEvent);
+    }
+  }
+
+  // Listen for MozLocalStorageChanged
+  SpecialPowers.addChromeEventListener("MozLocalStorageChanged", onStorageChanged, true);
+
+  // add an empty-value key
+  localStorage.setItem("empty", "");
+  is(localStorage.getItem("empty"), "", "Empty value (getItem())");
+  is(localStorage.empty, "", "Empty value (array access)");
+  is(localStorage.empty, "", "Empty value (property access)");
+  is(typeof localStorage.getItem("empty"), "string", "getItem('empty') is string");
+  is(typeof localStorage.empty, "string", "['empty'] is string");
+  is(typeof localStorage.empty, "string", "empty is string");
+  localStorage.removeItem("empty");
+  is(localStorage.length, 0, "The storage has no keys");
+  is(localStorage.getItem("empty"), null, "empty item is null (getItem())");
+  is(localStorage.empty, undefined, "empty item is undefined (array access)");
+  is(localStorage.empty, undefined, "empty item is undefined (property access)");
+  is(typeof localStorage.getItem("empty"), "object", "getItem('empty') is object");
+  is(typeof localStorage.empty, "undefined", "['empty'] is undefined");
+  is(typeof localStorage.empty, "undefined", "empty is undefined");
+
+  // add one key, check it is there
+  localStorage.setItem("key1", "value1");
+  is(localStorage.length, 1, "The storage has one key-value pair");
+  is(localStorage.key(0), "key1");
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
+
+  // check all access method give the correct result
+  // and are of the correct type
+  is(localStorage.getItem("key1"), "value1", "getItem('key1') == value1");
+  is(localStorage.key1, "value1", "['key1'] == value1");
+  is(localStorage.key1, "value1", "key1 == value1");
+
+  is(typeof localStorage.getItem("key1"), "string", "getItem('key1') is string");
+  is(typeof localStorage.key1, "string", "['key1'] is string");
+  is(typeof localStorage.key1, "string", "key1 is string");
+
+  // remove the previously added key and check the storage is empty
+  localStorage.removeItem("key1");
+  is(localStorage.length, 0, "The storage is empty [2]");
+  is(localStorage.key(0), null, "key() should return null for out-of-bounds access");
+  is(localStorage.getItem("key1"), null, "\'key1\' removed");
+
+  is(typeof localStorage.getItem("key1"), "object", "getItem('key1') is object");
+  is(typeof localStorage.key1, "undefined", "['key1'] is object");
+  is(typeof localStorage.key1, "undefined", "key1 is object");
+
+  // add one key, check it is there
+  localStorage.setItem("key1", "value1");
+  is(localStorage.length, 1, "The storage has one key-value pair");
+  is(localStorage.key(0), "key1");
+  is(localStorage.getItem("key1"), "value1");
+
+  // add a second key
+  localStorage.setItem("key2", "value2");
+  is(localStorage.length, 2, "The storage has two key-value pairs");
+  is(localStorage.getItem("key1"), "value1");
+  is(localStorage.getItem("key2"), "value2");
+  var firstKey = localStorage.key(0);
+  var secondKey = localStorage.key(1);
+  ok((firstKey == 'key1' && secondKey == 'key2') ||
+     (firstKey == 'key2' && secondKey == 'key1'),
+     'key() API works.');
+
+  // change the second key
+  localStorage.setItem("key2", "value2-2");
+  is(localStorage.length, 2, "The storage has two key-value pairs");
+  is(localStorage.key(0), firstKey); // After key value changes the order must be preserved
+  is(localStorage.key(1), secondKey);
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(2), null, "key() should return null for out-of-bounds access");
+  is(localStorage.getItem("key1"), "value1");
+  is(localStorage.getItem("key2"), "value2-2");
+
+  // change the first key
+  localStorage.setItem("key1", "value1-2");
+  is(localStorage.length, 2, "The storage has two key-value pairs");
+  is(localStorage.key(0), firstKey); // After key value changes the order must be preserved
+  is(localStorage.key(1), secondKey);
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(2), null, "key() should return null for out-of-bounds access");
+  is(localStorage.getItem("key1"), "value1-2");
+  is(localStorage.getItem("key2"), "value2-2");
+
+  // remove the second key
+  localStorage.removeItem("key2");
+  is(localStorage.length, 1, "The storage has one key-value pair");
+  is(localStorage.key(0), "key1");
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.getItem("key1"), "value1-2");
+
+  // JS property test
+  localStorage.testA = "valueA";
+  is(localStorage.testA, "valueA");
+  is(localStorage.testA, "valueA");
+  is(localStorage.getItem("testA"), "valueA");
+
+  localStorage.testA = "valueA2";
+  is(localStorage.testA, "valueA2");
+  is(localStorage.testA, "valueA2");
+  is(localStorage.getItem("testA"), "valueA2");
+
+  localStorage.testB = "valueB";
+  is(localStorage.testB, "valueB");
+  is(localStorage.testB, "valueB");
+  is(localStorage.getItem("testB"), "valueB");
+
+  localStorage.testB = "valueB2";
+  is(localStorage.testB, "valueB2");
+  is(localStorage.testB, "valueB2");
+  is(localStorage.getItem("testB"), "valueB2");
+
+  localStorage.setItem("testC", "valueC");
+  is(localStorage.testC, "valueC");
+  is(localStorage.testC, "valueC");
+  is(localStorage.getItem("testC"), "valueC");
+
+  localStorage.setItem("testC", "valueC2");
+  is(localStorage.testC, "valueC2");
+  is(localStorage.testC, "valueC2");
+  is(localStorage.getItem("testC"), "valueC2");
+
+  localStorage.setItem("testC", null);
+  is("testC" in localStorage, true);
+  is(localStorage.getItem("testC"), "null");
+  is(localStorage.testC, "null");
+  is(localStorage.testC, "null");
+
+  localStorage.removeItem("testC");
+  localStorage.testC = null;
+  is("testC" in localStorage, true);
+  is(localStorage.getItem("testC"), "null");
+  is(localStorage.testC, "null");
+  is(localStorage.testC, "null");
+
+  localStorage.setItem(null, "test");
+  is("null" in localStorage, true);
+  is(localStorage.getItem("null"), "test");
+  is(localStorage.getItem(null), "test");
+  is(localStorage.null, "test");
+  localStorage.removeItem(null, "test");
+  is("null" in localStorage, false);
+
+  localStorage.setItem(null, "test");
+  is("null" in localStorage, true);
+  localStorage.removeItem("null", "test");
+  is("null" in localStorage, false);
+
+  // Clear the storage
+  localStorage.clear();
+  is("testB" in localStorage, false, "Keys are not in the JS scope of the storage");
+  is("testC" in localStorage, false, "Keys are not in the JS scope of the storage");
+  is(localStorage.length, 0, "The storage is empty [3]");
+  is(localStorage.key(0), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
+  is(localStorage.getItem("nonexisting"), null, "Nonexisting item is null");
+  is(localStorage.getItem("key1"), null, "key1 removed");
+  is(localStorage.getItem("key2"), null, "key2 removed");
+  localStorage.removeItem("nonexisting"); // Just check there is no exception
+  localStorage.removeItem("key1"); // Just check there is no exception
+  localStorage.removeItem("key2"); // Just check there is no exception
+
+  SimpleTest.executeSoon(function () {
+    SpecialPowers.removeChromeEventListener("MozLocalStorageChanged", onStorageChanged, true);
+    is(expectedEvents.length, 0, "received the correct number of events");
+
+    localStorage.clear();
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

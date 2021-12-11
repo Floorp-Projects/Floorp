@@ -1,0 +1,74 @@
+<html>
+
+<head>
+  <title>Accessible mutation events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function changeMultipleElements() {
+      this.node1 = getNode("div1");
+      this.node2 = getNode("div2");
+
+      this.eventSeq = [
+        new textChangeChecker("div1", 0, 5, "hello", false, undefined, true),
+        new textChangeChecker("div2", 0, 5, "world", false, undefined, true),
+        new orderChecker(),
+        new textChangeChecker("div1", 0, 1, "a", true, undefined, true),
+        new textChangeChecker("div2", 0, 1, "b", true, undefined, true),
+      ];
+
+      this.invoke = function changeMultipleElements_invoke() {
+        this.node1.textContent = "a";
+        this.node2.textContent = "b";
+      };
+
+      this.getID = function changeMultipleElements_invoke_getID() {
+        return "Change the text content of multiple sibling divs";
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+//    gA11yEventDumpToConsole = true; // debugging
+
+    var gQueue = null;
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new changeMultipleElements());
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1322593"
+     title="missing text change events when multiple elements updated at once">
+    Mozilla Bug 1322593
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="div1">hello</div>
+  <div id="div2">world</div>
+</body>
+</html>

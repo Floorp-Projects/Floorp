@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for bug 1313753</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div id="log"></div>
+<script>
+function runTest() {
+  // Change visible region of |closure| element.
+  document.getElementById("target").classList.add("rotate");
+  window.setTimeout(function() {
+    var target = document.getElementById("target");
+    var bounds = target.getBoundingClientRect();
+    var x = bounds.x + bounds.width / 2;
+    var y = bounds.y + bounds.height / 2;
+    is(document.elementFromPoint(x, y).id, target.id,
+       "it should be |target| element if visible regions of closure is correct");
+    SimpleTest.finish();
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+</script>
+
+<style>
+.panel {
+    transform: rotateX(-150deg);
+    backface-visibility: hidden;
+    transform-origin: 0px 0px;
+    position: absolute;
+    display: block;
+    width: 100px;
+    height: 100px;
+    background-color: green;
+}
+#closure .rotate {
+    transform: rotateX(0deg);
+}
+#closure {
+    perspective: 100px;
+    width: 200px;
+    z-index: 1;
+}
+#outer {
+    height: 400px;
+    width: 200px;
+}
+</style>
+<div id="outer">
+  <div id="closure">
+    <div style="transform-style: preserve-3d;">
+      <div style="transform-style: preserve-3d; background-color: blue;">
+        <ul style="transform-style: preserve-3d;">
+          <li style="transform-style:preserve-3d;">
+            <div style="display: contents">
+              <div id="target" class="panel"></div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

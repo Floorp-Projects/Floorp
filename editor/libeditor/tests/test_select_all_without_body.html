@@ -1,0 +1,26 @@
+<html>
+<head>
+  <title>Test select all in HTML editor without body element</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+window.open("file_select_all_without_body.html", "_blank",
+            "width=600,height=600");
+
+</script>
+</body>
+
+</html>

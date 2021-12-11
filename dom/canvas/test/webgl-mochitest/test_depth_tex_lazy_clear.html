@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'/>
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  <script src='webgl-util.js'></script>
+</head>
+<body>
+<script id='vs' type='x-shader/x-vertex'>
+
+attribute vec2 aVertCoord;
+
+void main(void) {
+  gl_Position = vec4(aVertCoord, 0.0, 1.0);
+}
+
+</script>
+<script id='fs' type='x-shader/x-fragment'>
+
+precision mediump float;
+uniform sampler2D uTexUnit;
+
+void main(void) {
+  vec4 tex = texture2D(uTexUnit, vec2(0));
+  gl_FragColor = vec4(tex.r, 1.0, 0.0, 1.0);
+}
+
+</script>
+<script>
+'use strict';
+
+var gl = null;
+
+do {
+  var c = document.createElement('canvas');
+  gl = c.getContext('webgl');
+  if (!gl) {
+    todo(false, 'Get GL working here first.');
+    break;
+  }
+
+  var ext = gl.getExtension('WEBGL_depth_texture');
+  if (!ext) {
+    todo(false, 'WEBGL_depth_texture not supported, which is fine.');
+    break;
+  }
+
+  var prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+  if (!prog) {
+    ok(false, 'Program linking should succeed.');
+    break;
+  }
+
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 1, 1, 0, gl.DEPTH_COMPONENT,
+                gl.UNSIGNED_INT, null);
+
+  var uTexUnit = gl.getUniformLocation(prog, 'uTexUnit');
+  gl.useProgram(prog);
+  gl.uniform1i(uTexUnit, 0);
+
+  gl.drawArrays(gl.POINTS, 0, 1);
+
+  ok(!gl.getError(), 'Should have no errors.');
+} while (false);
+
+ok(true, 'Test complete.');
+
+</script>
+</body>
+</html>

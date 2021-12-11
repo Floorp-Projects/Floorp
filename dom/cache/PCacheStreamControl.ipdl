@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PFileDescriptorSet;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include IPCStream;
+
+using struct nsID from "nsID.h";
+
+namespace mozilla {
+namespace dom {
+namespace cache {
+
+[RefCounted] protocol PCacheStreamControl
+{
+  manager PBackground;
+
+parent:
+  async OpenStream(nsID aStreamId) returns(IPCStream? aStream);
+  async NoteClosed(nsID aStreamId);
+
+child:
+  async CloseAll();
+  async __delete__();
+};
+
+} // namespace cache
+} // namespace dom
+} // namespace mozilla

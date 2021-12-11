@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <script>
+      function fun_0() {
+        document.implementation.createDocument('', '', null).adoptNode(o2);
+      }
+
+      o1 = document.createElement('map');
+      o2 = document.createElement('iframe');
+      document.documentElement.appendChild(o1);
+      document.documentElement.appendChild(o2);
+      o1.textContent = 'x';
+      document.addEventListener('DOMNodeRemoved', fun_0, false);
+      o1.innerText = 'x';
+    </script>
+  </head>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Downloads Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+async function background() {
+  const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
+
+  browser.test.assertThrows(
+    () => browser.downloads.download(),
+    /Incorrect argument types for downloads.download/,
+    "Should fail without options"
+  );
+
+  browser.test.assertThrows(
+    () => browser.downloads.download({url: "invalid url"}),
+    /invalid url is not a valid URL/,
+    "Should fail on invalid URL"
+  );
+
+  browser.test.assertThrows(
+    () => browser.downloads.download({}),
+    /Property "url" is required/,
+    "Should fail with no URL"
+  );
+
+  browser.test.assertThrows(
+    () => browser.downloads.download({url, method: "DELETE"}),
+    /Invalid enumeration value "DELETE"/,
+    "Should fail with invalid method"
+  );
+
+  await browser.test.assertRejects(
+    browser.downloads.download({url, headers: [{name: "Host", value: "Banana"}]}),
+    /Forbidden request header name/,
+    "Should fail with a forbidden header"
+  );
+
+  await browser.test.assertRejects(
+    browser.downloads.download({url, filename: "/tmp/file.gif"}),
+    /filename must not be an absolute path/,
+    "Should fail with an absolute file path"
+  );
+
+  await browser.test.assertRejects(
+    browser.downloads.download({url, filename: ""}),
+    /filename must not be empty/,
+    "Should fail with an empty file path"
+  );
+
+  await browser.test.assertRejects(
+    browser.downloads.download({url, filename: "file."}),
+    /filename must not contain illegal characters/,
+    "Should fail with a dot in the filename"
+  );
+
+  await browser.test.assertRejects(
+    browser.downloads.download({url, filename: "../file.gif"}),
+    /filename must not contain back-references/,
+    "Should fail with a file path that contains back-references"
+  );
+
+  browser.test.notifyPass("download.done");
+}
+
+add_task(async function test_invalid_download_parameters() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {permissions: ["downloads"]},
+    background,
+  });
+  await extension.startup();
+
+  await extension.awaitFinish("download.done");
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

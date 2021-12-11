@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1055665 - Test for ruby-position</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    html {
+      writing-mode: vertical-rl;
+    }
+    body {
+      font-family: monospace;
+      /* use a large line-height here to avoid additional leadings */
+      line-height: 8em;
+    }
+    rtc, rt {
+      font-size: 100% !important;
+      line-height: normal !important;
+    }
+  </style>
+</head>
+<body>
+  <ruby>
+    <rb>base##</rb>
+    <rtc style="ruby-position: under"><rt>left##</rt></rtc>
+    <rtc style="ruby-position: over"><rt>right#</rt></rtc>
+    <rtc style="ruby-position: under"><rt>left2#</rt></rtc>
+    <rtc style="ruby-position: over"><rt>right2</rt></rtc>
+  </ruby>
+</body>
+</html>

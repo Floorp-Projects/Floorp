@@ -1,0 +1,10 @@
+<!--
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<script>
+// Using a DOM bindings object as a weak map key should not crash when attempting to
+// call the preserve wrapper callback.
+new Worker("data:text/javascript;charset=UTF-8,(new WeakMap()).set(self, 0);")
+</script>

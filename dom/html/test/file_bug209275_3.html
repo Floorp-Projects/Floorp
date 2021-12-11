@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <base href="http://example.org" />
+</head>
+<body onload="load();">
+Initial state
+
+<script>
+function load() {
+  // Nuke and rebuild the page.  If document.open() clears the <base> properly,
+  // our new <base> will take precedence and the test will pass.
+  document.open();
+  document.write("<html><base href='http://mochi.test:8888' /><body>" + 
+                 "<a id='link' href='/'>A</a></body></html>");
+
+  // Tell our parent to have a look at us.
+  parent.gGen.next();
+}
+</script>
+
+</body>
+</html>

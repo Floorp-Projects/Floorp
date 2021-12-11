@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <div id="content" style="display: none">
+      <script type="text/javascript">
+        is(SpecialPowers.sanityCheck(), "foo", "Check Special Powers in iframe");
+      </script>
+    </div>
+  </body>
+</html>

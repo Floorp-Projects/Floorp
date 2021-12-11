@@ -1,0 +1,63 @@
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsITaskbarPreview.idl"
+interface imgIContainer;
+
+/*
+ * nsITaskbarTabPreview
+ *
+ * This interface controls tab preview-specific behavior. Creating an
+ * nsITaskbarTabPreview for a window will hide that window's
+ * nsITaskbarWindowPreview in the taskbar - the native API performs this
+ * unconditionally. When there are no more tab previews for a window, the
+ * nsITaskbarWindowPreview will automatically become visible again.
+ *
+ * An application may have as many tab previews per window as memory allows.
+ *
+ */
+[scriptable, builtinclass, uuid(11E4C8BD-5C2D-4E1A-A9A1-79DD5B0FE544)]
+interface nsITaskbarTabPreview : nsITaskbarPreview
+{
+  /**
+   * The title displayed above the thumbnail
+   *
+   * Default: an empty string
+   */
+  attribute AString title;
+
+  /**
+   * The icon displayed next to the title in the preview
+   *
+   * Default: null
+   */
+  attribute imgIContainer icon;
+
+  /**
+   * Rearranges the preview relative to another tab preview from the same window
+   * @param aNext The preview to the right of this one. A value of null
+   *              indicates that the preview is the rightmost one.
+   */
+  void move(in nsITaskbarTabPreview aNext);
+
+  /**
+   * Used internally to grab the handle to the proxy window.
+   */
+  [notxpcom]
+  nativeWindow GetHWND();
+
+  /**
+   * Used internally to ensure that the taskbar knows about this preview. If a
+   * preview is not registered, then the API call to set its sibling (via move)
+   * will silently fail.
+   *
+   * This method is only invoked when it is safe to make taskbar API calls.
+   */
+  [notxpcom]
+  void EnsureRegistration();
+};
+

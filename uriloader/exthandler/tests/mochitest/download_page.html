@@ -1,0 +1,22 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=UTF-8>
+  <title>Test page for link clicking</title>
+  <script type="text/javascript">
+    function launch_download(extra) {
+      window.open("download.sjs", "_blank", "height=100,width=100" + extra);
+    }
+  </script>
+</head>
+<body>
+  <a href="download.bin" id="regular_load">regular load</a>
+  <a href="download.bin" id="target_blank" target="_blank" rel="opener">target blank</a>
+  <a href="#" onclick="launch_download(''); return false" id="new_window">new window</a>
+  <a href="#" onclick="window.open('download_page.html?newwin'); return false" id="open_in_new_tab">click to reopen</a>
+  <a href="download.bin" id="target_blank_no_opener" rel="noopener" target="_blank">target blank (noopener)</a>
+  <a href="#" onclick="window.open('download.bin', '_blank', 'noopener'); return false" id="open_in_new_tab_no_opener">click to reopen (noopener)</a>
+  <a href="#" onclick="launch_download(',noopener'); return false" id="new_window_no_opener">new window (noopener)</a>
+</body>

@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html>
+ <!--
+ https://bugzilla.mozilla.org/show_bug.cgi?id=1292781
+ -->
+ <head>
+  <title>Test for bug 1292781</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .outer {
+        height: 400px;
+        width: 415px;
+        overflow: hidden;
+        position: relative;
+    }
+    .inner {
+        height: 100%;
+        outline: none;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        position: relative;
+    }
+    .inner div:nth-child(even) {
+        background-color: lightblue;
+    }
+    .inner div:nth-child(odd) {
+        background-color: lightgreen;
+    }
+    .outer.contentBefore::before {
+        top: 0;
+        content: '';
+        display: block;
+        height: 2px;
+        position: absolute;
+        width: 100%;
+        z-index: 99;
+    }
+  </style>
+ </head>
+ <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1292781">Mozilla Bug 1292781</a>
+<p id="display"></p>
+<div id="content">
+ <p>The frame reconstruction should not leave this scrollframe in a bad state</p>
+ <div class="outer">
+  <div class="inner">
+    this is the top of the scrollframe.
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    this is near the top of the scrollframe.
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    this is near the bottom of the scrollframe.
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    <div>this is a box</div>
+    this is the bottom of the scrollframe.
+  </div>
+ </div>
+</div>
+
+<pre id="test">
+<script type="text/javascript">
+
+const is = window.opener.is;
+const ok = window.opener.ok;
+const SimpleTest = window.opener.SimpleTest;
+
+// Returns a list of async scroll offsets that the |inner| element had, one for
+// each paint.
+function getAsyncScrollOffsets(aPaintsToIgnore) {
+  var offsets = [];
+  var compositorTestData = SpecialPowers.getDOMWindowUtils(window).getCompositorAPZTestData();
+  var buckets = compositorTestData.paints.slice(aPaintsToIgnore);
+  ok(buckets.length >= 3, "Expected at least three paints in the compositor test data");
+  var childIsLayerized = false;
+  for (var i = 0; i < buckets.length; ++i) {
+    var apzcTree = buildApzcTree(convertScrollFrameData(buckets[i].scrollFrames));
+    var rcd = findRcdNode(apzcTree);
+    if (rcd == null) {
+      continue;
+    }
+    if (rcd.children.length > 0) {
+      // The child may not be layerized in the first few paints, but once it is
+      // layerized, it should stay layerized.
+      childIsLayerized = true;
+    }
+    if (!childIsLayerized) {
+      continue;
+    }
+
+    ok(rcd.children.length == 1, "Root content APZC has exactly one child");
+    offsets.push(parsePoint(rcd.children[0].asyncScrollOffset));
+  }
+  return offsets;
+}
+
+async function test() {
+  var utils = SpecialPowers.DOMWindowUtils;
+
+  // The APZ test data accumulates whenever a test turns it on. We just want
+  // the data for this test, so we check how many frames are already recorded
+  // and discard those later.
+  var framesToSkip = SpecialPowers.getDOMWindowUtils(window).getCompositorAPZTestData().paints.length;
+
+  var elm = document.getElementsByClassName("inner")[0];
+  // Set a zero-margin displayport to ensure that the element is async-scrollable
+  // otherwise on Fennec it is not
+  utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, 0);
+
+  var maxScroll = elm.scrollTopMax;
+  elm.scrollTop = maxScroll;
+  await promiseAllPaintsDone();
+  await promiseOnlyApzControllerFlushed();
+
+  // Take control of the refresh driver
+  utils.advanceTimeAndRefresh(0);
+
+  // Force the next reflow to get interrupted
+  utils.forceReflowInterrupt();
+
+  // Make a change that triggers frame reconstruction, and then tick the refresh
+  // driver so that layout processes the pending restyles and then runs an
+  // interruptible reflow. That reflow *will* be interrupted (because of the flag
+  // we set above), and we should end up with a transient 0,0 scroll offset
+  // being sent to the compositor.
+  elm.parentNode.classList.add("contentBefore");
+  utils.advanceTimeAndRefresh(0);
+  // On android, and maybe non-e10s platforms generally, we need to manually
+  // kick the paint to send the layer transaction to the compositor.
+  await promiseAllPaintsDone();
+
+  // Read the main-thread scroll offset; although this is temporarily 0,0 that
+  // temporary value is never exposed to content - instead reading this value
+  // will finish doing the interrupted reflow from above and then report the
+  // correct scroll offset.
+  is(elm.scrollTop, maxScroll, "Main-thread scroll position was restored");
+
+  // .. and now flush everything to make sure the state gets pushed over to the
+  // compositor and APZ as well.
+  utils.restoreNormalRefresh();
+  await promiseApzFlushedRepaints();
+
+  // Now we pull the compositor data and check it. What we expect to see is that
+  // the scroll position goes to maxScroll, then drops to 0 and then goes back
+  // to maxScroll. This test is specifically testing that last bit - that it
+  // properly gets restored from 0 to maxScroll.
+  // The one hitch is that on Android this page is loaded with some amount of
+  // zoom, and the async scroll is in ParentLayerPixel coordinates, so it will
+  // not match maxScroll exactly. Since we can't reliably compute what that
+  // ParentLayer scroll will be, we just make sure the async scroll is nonzero
+  // and use the first value we encounter to verify that it got restored properly.
+  // The other alternative is to spawn this test into a new window with 1.0 zoom
+  // but I'm tired of doing that for pretty much every test.
+  var state = 0;
+  var asyncScrollOffsets = getAsyncScrollOffsets(framesToSkip);
+  dump("Got scroll offsets: " + JSON.stringify(asyncScrollOffsets) + "\n");
+  var maxScrollParentLayerPixels = maxScroll;
+  while (asyncScrollOffsets.length > 0) {
+    let offset = asyncScrollOffsets.shift();
+    switch (state) {
+      // 0 is the initial state, the scroll offset might be zero but should
+      // become non-zero from when we set scrollTop to scrollTopMax
+      case 0:
+        if (offset.y == 0) {
+          break;
+        }
+        if (getPlatform() == "android") {
+          ok(offset.y > 0, "Async scroll y of scrollframe is " + offset.y);
+          maxScrollParentLayerPixels = offset.y;
+        } else {
+          is(offset.y, maxScrollParentLayerPixels, "Async scroll y of scrollframe is " + offset.y);
+        }
+        state = 1;
+        break;
+
+      // state 1 starts out at maxScrollParentLayerPixels, should drop to 0
+      // because of the interrupted reflow putting the scroll into a transient
+      // zero state
+      case 1:
+        if (offset.y == maxScrollParentLayerPixels) {
+          break;
+        }
+        is(offset.y, 0, "Async scroll position was temporarily 0");
+        state = 2;
+        break;
+
+      // state 2 starts out the transient 0 scroll offset, and we expect the
+      // scroll position to get restored back to maxScrollParentLayerPixels
+      case 2:
+        if (offset.y == 0) {
+          break;
+        }
+        is(offset.y, maxScrollParentLayerPixels, "Async scroll y of scrollframe restored to " + offset.y);
+        state = 3;
+        break;
+
+      // Terminal state. The scroll position should stay at maxScrollParentLayerPixels
+      case 3:
+        is(offset.y, maxScrollParentLayerPixels, "Scroll position maintained");
+        break;
+    }
+  }
+  is(state, 3, "The scroll position did drop to 0 and then get restored properly");
+
+  window.opener.finishTest();
+}
+
+waitUntilApzStable()
+.then(async () => test());
+
+</script>
+</body>
+</html>

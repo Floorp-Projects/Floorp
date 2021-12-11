@@ -1,0 +1,29 @@
+diff --git a/gfx/cairo/libpixman/src/pixman-cpu.c b/gfx/cairo/libpixman/src/pixman-cpu.c
+--- a/gfx/cairo/libpixman/src/pixman-cpu.c
++++ b/gfx/cairo/libpixman/src/pixman-cpu.c
+@@ -257,19 +257,22 @@ pixman_arm_read_auxv()
+ 	arm_tests_initialized = TRUE;
+ 	return;
+     }
+ 
+     fread(buf, sizeof(char), 1024, f);
+     fclose(f);
+     pos = strstr(buf, ver_token);
+     if (pos) {
+-	int ver = *(pos + strlen(ver_token)) - '0';
+-	arm_has_v7 = ver >= 7;
+-	arm_has_v6 = ver >= 6;
++	char vchar = *(pos + strlen(ver_token));
++	if (vchar >= '0' && vchar <= '9') {
++	    int ver = vchar - '0';
++	    arm_has_v7 = ver >= 7;
++	    arm_has_v6 = ver >= 6;
++	}
+     }
+     arm_has_neon = strstr(buf, "neon") != NULL;
+     arm_has_vfp = strstr(buf, "vfp") != NULL;
+     arm_has_iwmmxt = strstr(buf, "iwmmxt") != NULL;
+     arm_tests_initialized = TRUE;
+ }
+ 
+ #else

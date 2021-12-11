@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector test for Cache</title>
+</head>
+<body>
+  <h1>Cache (iframe)</h1>
+<script>
+  "use strict";
+  async function setup() { // eslint-disable-line no-unused-vars
+    caches.open("foo").then(cache => {
+      cache.add("storage-blank.html");
+    });
+  }
+  function clear() { // eslint-disable-line no-unused-vars
+    caches.delete("foo");
+  }
+</script>
+
+</body>
+</html>

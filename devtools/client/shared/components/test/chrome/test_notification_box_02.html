@@ -1,0 +1,73 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for Notification Box. The test is checking:
+* Using custom callback in a notification
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Notification Box</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
+
+    // Test rendering
+    const boxElement = React.createElement(NotificationBox);
+    const notificationBox = TestUtils.renderIntoDocument(boxElement);
+    const notificationNode = ReactDOM.findDOMNode(notificationBox);
+
+    let callbackExecuted = false;
+
+    // Append a notification.
+    notificationBox.appendNotification(
+      "Info message",
+      "id1",
+      null,
+      PriorityLevels.PRIORITY_INFO_LOW,
+      undefined,
+      (reason) => {
+        callbackExecuted = true;
+        is(reason, "removed", "The reason must be expected string");
+      }
+    );
+
+    is(TestUtils.scryRenderedDOMComponentsWithClass(
+      notificationBox, "notification").length, 1,
+      "There must be one notification");
+
+    const closeButton = notificationNode.querySelector(
+      ".messageCloseButton");
+
+    // Click the close button to close the notification.
+    TestUtils.Simulate.click(closeButton);
+
+    is(TestUtils.scryRenderedDOMComponentsWithClass(
+      notificationBox, "notification").length, 0,
+      "The notification box must be empty now");
+
+    ok(callbackExecuted, "Event callback must be executed.");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

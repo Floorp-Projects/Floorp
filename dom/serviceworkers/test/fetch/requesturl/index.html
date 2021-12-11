@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<script>
+  navigator.serviceWorker.onmessage = window.onmessage = e => {
+    window.parent.postMessage(e.data, "*");
+  };
+</script>
+<iframe src="redirector.html"></iframe>

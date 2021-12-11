@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=115199 -->
+<head>
+  <meta charset="UTF-8">
+  <title>Test of @page parser</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<p>@page parsing (<a
+  target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=115199"
+>bug 115199</a>)</p>
+<pre id="display"></pre>
+<style type="text/css" id="testbox"></style>
+<script class="testbody" type="text/javascript">
+  function _(b) { return "@page { " + b + " }"; };
+
+  var testset = [
+    // CSS 2.1 only allows margin properties in the page rule.
+
+    // Check a bad property.
+    { rule: _("position: absolute;") },
+
+    // Check good properties with invalid units.
+    { rule: _("margin: 2in; margin: 2vw;"), expected: {
+      "margin-top": "2in",
+      "margin-right": "2in",
+      "margin-bottom": "2in",
+      "margin-left": "2in"
+    }},
+    { rule: _("margin-top: 2in; margin-top: 2vw;"), expected: {"margin-top": "2in"}},
+    { rule: _("margin-top: 2in; margin-top: 2vh;"), expected: {"margin-top": "2in"}},
+    { rule: _("margin-top: 2in; margin-top: 2vmax;"), expected: {"margin-top": "2in"}},
+    { rule: _("margin-top: 2in; margin-top: 2vmin;"), expected: {"margin-top": "2in"}},
+
+    // Check good properties.
+    { rule: _("margin: 2in;"), expected: {
+      "margin-top": "2in",
+      "margin-right": "2in",
+      "margin-bottom": "2in",
+      "margin-left": "2in"
+    }},
+    { rule: _("margin-top: 2in;"), expected: {"margin-top": "2in"}},
+    { rule: _("margin-left: 2in;"), expected: {"margin-left": "2in"}},
+    { rule: _("margin-bottom: 2in;"), expected: {"margin-bottom": "2in"}},
+    { rule: _("margin-right: 2in;"), expected: {"margin-right": "2in"}}
+  ];
+
+  var display = document.getElementById("display");
+  var sheet = document.styleSheets[1];
+
+  for (var curTest = 0; curTest < testset.length; curTest++) {
+    while(sheet.cssRules.length > 0) {
+      sheet.deleteRule(0);
+    }
+    sheet.insertRule(testset[curTest].rule, 0);
+
+    try {
+      is(sheet.cssRules.length, 1,
+          testset[curTest].rule + " rule count");
+      is(sheet.cssRules[0].type, CSSRule.PAGE_RULE,
+          testset[curTest].rule + " rule type");
+
+      if (testset[curTest].expected) {
+        var expected = testset[curTest].expected;
+        var s = sheet.cssRules[0].style;
+        var n = 0;
+
+        // everything is set that should be
+        for (var name in expected) {
+          is(s.getPropertyValue(name), expected[name],
+             testset[curTest].rule + " (prop " + name + ")");
+          n++;
+        }
+        // nothing else is set
+        is(s.length, n, testset[curTest].rule + " prop count");
+        for (var i = 0; i < s.length; i++) {
+          ok(s[i] in expected, testset[curTest].rule +
+             " - Unexpected item #" + i + ": " + s[i]);
+        }
+      } else {
+        is(Object.keys(sheet.cssRules[0].style).length, 0,
+            testset[curTest].rule + " rule has no properties");
+      }
+    } catch (e) {
+      ok(false, testset[curTest].rule + " - During test: " + e);
+    }
+  }
+</script>
+</body>
+</html>

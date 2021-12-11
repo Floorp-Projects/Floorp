@@ -1,0 +1,10 @@
+[
+    {
+    "size": 76345093,
+    "visibility": "public",
+    "digest": "4d653c0c74a8677e8e78cd72d109b1b54c75ef57b2e2ce980c5cfd602966c310065cf0e95c35f4fbfb1fe817f062ac6cf9cc129d72d42184b0237fb9b0bde081",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-5.0.1-linux.tar.gz",
+    "unpack": true
+    }
+]

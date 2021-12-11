@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script>
+      function start() {
+        var length = history.length;
+        document.open();
+        document.write("<h5 id='dynamic'>document.written content</h5>");
+        document.close();
+        opener.is(history.length, length,
+                  "document.open/close should not change history");
+        opener.finishTest();
+      }
+    </script>
+  </head>
+  <body onload="start();">
+    <h5>static content</h5>
+  </body>
+</html>

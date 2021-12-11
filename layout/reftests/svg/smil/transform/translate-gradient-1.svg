@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    function doTest() {
+      setTimeAndSnapshot(101, false);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
+  <defs>
+    <linearGradient id="grad" width="200%">
+      <stop offset="0" stop-color="red"/>
+      <stop offset="1" stop-color="lime"/>
+      <stop offset="2" stop-color="lime"/>
+      <animateTransform attributeName="gradientTransform" type="translate" begin="100s" dur="1s"
+		        from="0 0" to="-1 0" fill="freeze"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Test 1: Lime background covered by left hand side of gradient.
+       After the animation, the right hand lime side of the gradient
+       is visible, so no red is shown. -->
+  <rect x="0" width="50" height="100%" fill="lime" />
+  <rect x="0" width="50" height="100%" fill="url(#grad)"/>
+
+  <!-- Not a test: Paint the rest of the viewport, to match lime.svg -->
+  <rect x="50" height="100%" width="100%" fill="lime"/>
+</svg>

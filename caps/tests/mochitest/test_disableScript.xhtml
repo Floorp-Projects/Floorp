@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=840488
+-->
+<window title="Mozilla Bug 840488"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=840488"
+     target="_blank">Mozilla Bug 840488</a>
+  </body>
+
+  <iframe id="root" name="root" type="content"/>
+  <iframe id="chromeFrame" name="chromeFrame" type="content"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  /* eslint-disable mozilla/no-useless-parameters, no-redeclare, no-undef */
+  <![CDATA[
+
+  /** Test for all the different ways that script can be disabled for a given global. **/
+
+  SimpleTest.waitForExplicitFinish();
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const ssm = Services.scriptSecurityManager;
+  function makeURI(uri) { return Services.io.newURI(uri); }
+  const path = "/tests/caps/tests/mochitest/file_disableScript.html";
+  const uri = "http://www.example.com" + path;
+  var rootFrame = document.getElementById('root');
+  var chromeFrame = document.getElementById('chromeFrame');
+  navigateFrame(rootFrame, uri + "?name=rootframe").then(function() {
+    navigateFrame(chromeFrame, "file_disableScript.html").then(go);
+  });
+
+  function navigateFrame(ifr, src) {
+    return new Promise(resolve => {
+      function onload() {
+        ifr.removeEventListener('load', onload);
+        resolve();
+      }
+      ifr.addEventListener('load', onload, false);
+      ifr.setAttribute('src', src);
+    });
+  }
+
+  function navigateBack(ifr) {
+    return new Promise(resolve => {
+
+      // pageshow events don't fire on the iframe element, so we need to use the
+      // chrome event handler for the docshell.
+      var browser = ifr.contentWindow.docShell.chromeEventHandler;
+      function onpageshow(evt) {
+        info("Navigated back. Persisted: " + evt.persisted);
+        browser.removeEventListener('pageshow', onpageshow);
+        resolve();
+      }
+      browser.addEventListener('pageshow', onpageshow, false);
+      ifr.contentWindow.history.back();
+    });
+  }
+
+  function addFrame(parentWin, name, expectOnload) {
+    let ifr = parentWin.document.createElement('iframe');
+    parentWin.document.body.appendChild(ifr);
+    ifr.setAttribute('name', name);
+    return new Promise(resolve => {
+      // We need to append 'name' to avoid running afoul of recursive frame detection.
+      let frameURI = uri + "?name=" + name;
+      navigateFrame(ifr, frameURI).then(function() {
+        is(String(ifr.contentWindow.location), frameURI, "Successful load");
+        is(!!ifr.contentWindow.wrappedJSObject.gFiredOnload, expectOnload,
+           "onload should only fire when scripts are enabled");
+        resolve();
+      });
+    });
+  }
+
+  function checkScriptEnabled(win, expectEnabled) {
+    win.wrappedJSObject.gFiredOnclick = false;
+    win.document.body.dispatchEvent(new win.Event('click'));
+    is(win.wrappedJSObject.gFiredOnclick, expectEnabled, "Checking script-enabled for " + win.name + " (" + win.location + ")");
+  }
+
+  function setScriptEnabled(win, enabled) {
+    win.browsingContext.allowJavascript = enabled;
+  }
+
+  function testList(expectEnabled, win, list, idx) {
+    idx = idx || 0;
+    return new Promise(resolve => {
+      let target = list[idx] + path;
+      info("Testing scriptability for: " + target + ". expecting " + expectEnabled);
+      navigateFrame(win.frameElement, target).then(function() {
+        checkScriptEnabled(win, expectEnabled);
+        if (idx == list.length - 1)
+          resolve();
+        else
+        testList(expectEnabled, win, list, idx + 1).then(function() { resolve(); });
+      });
+    });
+  }
+
+  function testDomainPolicy(defaultScriptability, exceptions, superExceptions,
+                            exempt, notExempt, set, superSet, win) {
+    // Populate our sets.
+    for (var e of exceptions)
+      set.add(makeURI(e));
+    for (var e of superExceptions)
+      superSet.add(makeURI(e));
+
+    return testList(defaultScriptability, win, notExempt).then(function() {
+      return testList(!defaultScriptability, win, exempt);
+    });
+  }
+
+  function setScriptEnabledForBrowser(enabled) {
+    var prefname = "javascript.enabled";
+    Services.prefs.setBoolPref(prefname, enabled);
+  }
+
+  function reloadFrame(frame) {
+    return new Promise(resolve => {
+      frame.addEventListener('load', function onload() {
+        resolve();
+        frame.removeEventListener('load', onload);
+      }, false);
+      frame.contentWindow.location.reload(true);
+    });
+  }
+
+  function go() {
+    var rootWin = rootFrame.contentWindow;
+    var chromeWin = chromeFrame.contentWindow;
+
+    // Test simple docshell enable/disable.
+    checkScriptEnabled(rootWin, true);
+    setScriptEnabled(rootWin, false);
+    checkScriptEnabled(rootWin, false);
+    setScriptEnabled(rootWin, true);
+    checkScriptEnabled(rootWin, true);
+
+    // Privileged frames are immune to docshell flags.
+    ok(chromeWin.document.nodePrincipal.isSystemPrincipal, "Sanity check for System Principal");
+    setScriptEnabled(chromeWin, false);
+    checkScriptEnabled(chromeWin, true);
+    setScriptEnabled(chromeWin, true);
+
+    // Play around with the docshell tree and make sure everything works as
+    // we expect.
+    addFrame(rootWin, 'parent', true).then(function() {
+      checkScriptEnabled(rootWin[0], true);
+      return addFrame(rootWin[0], 'childA', true);
+    }).then(function() {
+      checkScriptEnabled(rootWin[0][0], true);
+      setScriptEnabled(rootWin[0], false);
+      checkScriptEnabled(rootWin, true);
+      checkScriptEnabled(rootWin[0], false);
+      checkScriptEnabled(rootWin[0][0], false);
+      return addFrame(rootWin[0], 'childB', false);
+    }).then(function() {
+      checkScriptEnabled(rootWin[0][1], false);
+      setScriptEnabled(rootWin[0][0], false);
+      setScriptEnabled(rootWin[0], true);
+      checkScriptEnabled(rootWin[0], true);
+      checkScriptEnabled(rootWin[0][0], false);
+      setScriptEnabled(rootWin[0][0], true);
+
+      // Flags are inherited from the parent docshell at attach time. Note that
+      // the flag itself is inherited, regardless of whether or not scripts are
+      // currently allowed on the parent (which could depend on the parent's
+      // parent). Check that.
+      checkScriptEnabled(rootWin[0][1], false);
+      setScriptEnabled(rootWin[0], false);
+      setScriptEnabled(rootWin[0][1], true);
+      return addFrame(rootWin[0][1], 'grandchild', false);
+    }).then(function() {
+      checkScriptEnabled(rootWin[0], false);
+      checkScriptEnabled(rootWin[0][1], false);
+      checkScriptEnabled(rootWin[0][1][0], false);
+      setScriptEnabled(rootWin[0], true);
+      checkScriptEnabled(rootWin[0], true);
+      checkScriptEnabled(rootWin[0][1], true);
+      checkScriptEnabled(rootWin[0][1][0], true);
+
+    // Try navigating two frames, then munging docshell scriptability, then
+    // pulling the frames out of the bfcache to make sure that flags are
+    // properly propagated to inactive inner windows. We do this both for an
+    // 'own' docshell, as well as for an ancestor docshell.
+      return navigateFrame(rootWin[0][0].frameElement, rootWin[0][0].location + '-navigated');
+    }).then(function() { return navigateFrame(rootWin[0][1][0].frameElement, rootWin[0][1][0].location + '-navigated'); })
+      .then(function() {
+      checkScriptEnabled(rootWin[0][0], true);
+      checkScriptEnabled(rootWin[0][1][0], true);
+      setScriptEnabled(rootWin[0][0], false);
+      setScriptEnabled(rootWin[0][1], false);
+      checkScriptEnabled(rootWin[0][0], false);
+      checkScriptEnabled(rootWin[0][1][0], false);
+      return navigateBack(rootWin[0][0].frameElement);
+    }).then(function() { return navigateBack(rootWin[0][1][0].frameElement); })
+      .then(function() {
+      checkScriptEnabled(rootWin[0][0], false);
+      checkScriptEnabled(rootWin[0][1][0], false);
+
+    // Disable JS via the global pref pref. This is only guaranteed to have an effect
+    // for subsequent loads.
+      setScriptEnabledForBrowser(false);
+      return reloadFrame(rootFrame);
+    }).then(function() {
+      checkScriptEnabled(rootWin, false);
+      checkScriptEnabled(chromeWin, true);
+      setScriptEnabledForBrowser(true);
+      return reloadFrame(rootFrame);
+    }).then(function() {
+      checkScriptEnabled(rootWin, true);
+
+    // Play around with dynamically blocking script for a given global.
+    // This takes effect immediately.
+      Cu.blockScriptForGlobal(rootWin);
+      Cu.blockScriptForGlobal(rootWin);
+      Cu.unblockScriptForGlobal(rootWin);
+      checkScriptEnabled(rootWin, false);
+      Cu.unblockScriptForGlobal(rootWin);
+      checkScriptEnabled(rootWin, true);
+      Cu.blockScriptForGlobal(rootWin);
+      try {
+        Cu.blockScriptForGlobal(chromeWin);
+        ok(false, "Should have thrown");
+      } catch (e) {
+        ok(/may not be disabled/.test(e),
+           "Shouldn't be able to programmatically block script for system globals");
+      }
+      return reloadFrame(rootFrame);
+    }).then(function() {
+      checkScriptEnabled(rootWin, true);
+
+    // Test system-wide domain policy. This only takes effect for subsequently-
+    // loaded globals.
+
+    // Check the basic semantics of the sets.
+    is(ssm.domainPolicyActive, false, "not enabled");
+    window.policy = ssm.activateDomainPolicy();
+    ok(policy instanceof Ci.nsIDomainPolicy, "Got a policy");
+    try {
+      ssm.activateDomainPolicy();
+      ok(false, "Should have thrown");
+    } catch (e) {
+      ok(true, "can't have two live domain policies");
+    }
+    var sbRef = policy.superBlocklist;
+    isnot(sbRef, null, "superBlocklist non-null");
+    ok(!sbRef.contains(makeURI('http://www.example.com')));
+    sbRef.add(makeURI('http://www.example.com/foopy'));
+    ok(sbRef.contains(makeURI('http://www.example.com')));
+    sbRef.remove(makeURI('http://www.example.com'));
+    ok(!sbRef.contains(makeURI('http://www.example.com')));
+    sbRef.add(makeURI('http://www.example.com/foopy/this.that/'));
+    ok(sbRef.contains(makeURI('http://www.example.com/baz')));
+    ok(!sbRef.contains(makeURI('https://www.example.com')));
+    ok(!sbRef.contains(makeURI('https://www.example.com:88')));
+    ok(!sbRef.contains(makeURI('http://foo.www.example.com')));
+    ok(sbRef.containsSuperDomain(makeURI('http://foo.www.example.com')));
+    ok(sbRef.containsSuperDomain(makeURI('http://foo.bar.www.example.com')));
+    ok(!sbRef.containsSuperDomain(makeURI('http://foo.bar.www.exxample.com')));
+    ok(!sbRef.containsSuperDomain(makeURI('http://example.com')));
+    ok(!sbRef.containsSuperDomain(makeURI('http://com/this.that/')));
+    ok(!sbRef.containsSuperDomain(makeURI('https://foo.www.example.com')));
+    ok(sbRef.contains(makeURI('http://www.example.com')));
+    policy.deactivate();
+    is(ssm.domainPolicyActive, false, "back to inactive");
+    ok(!sbRef.contains(makeURI('http://www.example.com')),
+       "Disabling domain policy clears the set");
+    policy = ssm.activateDomainPolicy();
+    ok(policy.superBlocklist);
+    isnot(sbRef, policy.superBlocklist, "Mint new sets each time!");
+    policy.deactivate();
+    is(policy.blocklist, null, "blocklist nulled out");
+    policy = ssm.activateDomainPolicy();
+    isnot(policy.blocklist, null, "non-null again");
+    isnot(policy.blocklist, sbRef, "freshly minted");
+    policy.deactivate();
+
+    //
+    // Now, create and apply a mock-policy. We check the same policy both as
+    // a blocklist and as a allowlist.
+    //
+
+    window.testPolicy = {
+      // The policy.
+      exceptions: ['http://test1.example.com', 'http://example.com'],
+      superExceptions: ['http://test2.example.org', 'https://test1.example.com'],
+
+      // The testcases.
+      exempt: ['http://test1.example.com', 'http://example.com',
+               'http://test2.example.org', 'http://sub1.test2.example.org',
+               'https://sub1.test1.example.com'],
+
+      notExempt: ['http://test2.example.com', 'http://sub1.test1.example.com',
+                  'http://www.example.com', 'https://test2.example.com',
+                  'https://example.com', 'http://test1.example.org'],
+    };
+
+    policy = ssm.activateDomainPolicy();
+    info("Testing Blocklist-style Domain Policy");
+    return testDomainPolicy(true, testPolicy.exceptions,
+                            testPolicy.superExceptions, testPolicy.exempt,
+                            testPolicy.notExempt, policy.blocklist,
+                            policy.superBlocklist, rootWin);
+  }).then(function() {
+    policy.deactivate();
+    policy = ssm.activateDomainPolicy();
+    info("Testing Allowlist-style Domain Policy");
+    setScriptEnabledForBrowser(false);
+    return testDomainPolicy(false, testPolicy.exceptions,
+                            testPolicy.superExceptions, testPolicy.exempt,
+                            testPolicy.notExempt, policy.allowlist,
+                            policy.superAllowlist, rootWin);
+  }).then(function() {
+    setScriptEnabledForBrowser(true);
+    policy.deactivate();
+
+    SimpleTest.finish();
+    });
+  }
+
+  ]]>
+  </script>
+</window>

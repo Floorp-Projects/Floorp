@@ -1,0 +1,31 @@
+<html class="reftest-wait">
+
+<head>
+
+
+
+<script>
+
+function foo()
+{
+  setTimeout(bar, 30);
+}
+
+function bar()
+{
+  document.getElementById("TT").style.position = "absolute";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="foo();">
+
+
+<div id="TT"><div style="position: fixed;"><div style="display: -moz-box;"><div style="float: left;"></div></div></div></div>
+
+</body>
+
+</html>

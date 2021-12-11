@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_unlimitedStorage.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+async function test_background_storagePersist(EXTENSION_ID) {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.storageManager.enabled", true],
+      ["dom.storageManager.prompt.testing", false],
+      ["dom.storageManager.prompt.testing.allow", false],
+    ],
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+
+    manifest: {
+      permissions: ["storage", "unlimitedStorage"],
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+    },
+
+    background: async function() {
+      const PROMISE_RACE_TIMEOUT = 8000;
+
+      browser.test.sendMessage("extension-uuid", window.location.host);
+
+      await browser.storage.local.set({testkey: "testvalue"});
+      await browser.test.sendMessage("storage-local-called");
+
+      const requestStoragePersist = async () => {
+        const persistAllowed = await navigator.storage.persist();
+        if (!persistAllowed) {
+          throw new Error("navigator.storage.persist() has been denied");
+        }
+      };
+
+      await Promise.race([
+        requestStoragePersist(),
+        new Promise((resolve, reject) => {
+          setTimeout(() => {
+            reject(new Error("Timeout opening persistent db from background page"));
+          }, PROMISE_RACE_TIMEOUT);
+        }),
+      ]).then(
+        () => {
+          browser.test.notifyPass("indexeddb-storagePersistent-unlimitedStorage-done");
+        },
+        (error) => {
+          browser.test.fail(`error while testing persistent IndexedDB storage: ${error}`);
+          browser.test.notifyFail("indexeddb-storagePersistent-unlimitedStorage-done");
+        }
+      );
+    },
+  });
+
+  await extension.startup();
+
+  const uuid = await extension.awaitMessage("extension-uuid");
+
+  await extension.awaitMessage("storage-local-called");
+
+  let chromeScript = SpecialPowers.loadChromeScript(function test_country_data() {
+    const {addMessageListener, sendAsyncMessage} = this;
+
+    addMessageListener("getPersistedStatus", (uuid) => {
+      const {
+        ExtensionStorageIDB,
+      } = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+
+      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+      const {WebExtensionPolicy} = Cu.getGlobalForObject(ExtensionStorageIDB);
+      const policy = WebExtensionPolicy.getByHostname(uuid);
+      const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(policy.extension);
+      const request = Services.qms.persisted(storagePrincipal);
+      request.callback = () => {
+        // request.result will be undeinfed if the request failed (request.resultCode !== Cr.NS_OK).
+        sendAsyncMessage("gotPersistedStatus", request.result);
+      };
+    });
+  });
+
+  const persistedPromise = chromeScript.promiseOneMessage("gotPersistedStatus");
+  chromeScript.sendAsyncMessage("getPersistedStatus", uuid);
+  is(await persistedPromise, true, "Got the expected persist status for the storagePrincipal");
+
+  await extension.awaitFinish("indexeddb-storagePersistent-unlimitedStorage-done");
+  await extension.unload();
+
+  checkSitePermissions(uuid, Services.perms.UNKNOWN_ACTION, "has been cleared");
+}
+
+add_task(async function test_unlimitedStorage() {
+  const EXTENSION_ID = "test-storagePersist@mozilla";
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["extensions.webextensions.ExtensionStorageIDB.enabled", true],
+    ],
+  });
+
+  // Verify persist mode enabled when the storage.local IDB database is opened from
+  // the main process (from parent/ext-storage.js).
+  info("Test unlimitedStorage on an extension migrating to the IndexedDB storage.local backend)");
+  await test_background_storagePersist(EXTENSION_ID);
+
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      [`extensions.webextensions.ExtensionStorageIDB.migrated.` + EXTENSION_ID, true],
+    ],
+  });
+
+  // Verify persist mode enabled when the storage.local IDB database is opened from
+  // the child process (from child/ext-storage.js).
+  info("Test unlimitedStorage on an extension migrated to the IndexedDB storage.local backend");
+  await test_background_storagePersist(EXTENSION_ID);
+});
+
+</script>
+
+</body>
+</html>

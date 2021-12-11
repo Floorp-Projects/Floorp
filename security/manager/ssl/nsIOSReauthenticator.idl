@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindow;
+
+[scriptable, uuid(4fe082ae-6ff0-4b41-b24f-eaa664f6e46a)]
+interface nsIOSReauthenticator: nsISupports {
+  /**
+   * This interface provides an abstract way to request that the user
+   * reauthenticate themselves to the operating system. It may be useful in
+   * conjunction with nsIOSKeyStore, whereby consumers of these APIs may
+   * consider some secrets too sensitive to access without first
+   * reauthenticating the user.
+   *
+   * Usage:
+   *
+   * // obtain the singleton nsIOSReauthenticator instance
+   * const reauthenticator = Cc["@mozilla.org/security/osreauthenticator;1"]
+   *                           .getService(Ci.nsIOSReauthenticator);
+   * if (await reauthenticator.asyncReauthenticate()) {
+   *   // do something only authenticated users are allowed to do...
+   * } else {
+   *   // show a "sorry, this isn't allowed" error
+   * }
+   */
+
+  /**
+   * Asynchronously cause the operating system to request that the user
+   * reauthenticate. This is typically in the form of a dialog box asking the
+   * user for their login password. The actual behaviour of this depends on the
+   * OS.
+   *
+   * @param prompt A short string that may be incorporated in the dialog
+   * @param caption A short string that may be shown as the dialog caption (usually Product Name)
+   * @param parentWindow Used to associate the OS dialog with the calling window.
+   * @return Promise resolving to true if the user successfully authenticated
+   *         and false otherwise.
+   */
+  [implicit_jscontext, must_use]
+  Promise asyncReauthenticateUser(in AString prompt, in AString caption, in mozIDOMWindow parentWindow);
+};

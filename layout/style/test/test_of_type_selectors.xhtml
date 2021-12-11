@@ -1,0 +1,97 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=75375
+-->
+<head>
+  <title>Test for *-of-type selectors in Bug 75375</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=75375">Mozilla Bug 75375</a>
+<div id="content" style="display: none"
+     xmlns:html="http://www.w3.org/1999/xhtml">
+
+<p>This is a <code>p</code> element in the HTML namespace.</p>
+<p>This is a second <code>p</code> element in the HTML namespace.</p>
+<html:p>This is an <code>html:p</code> element in the HTML namespace.</html:p>
+<p xmlns="http://www.example.com/ns">This is a <code>p</code> element in the <code>http://www.example.com/ns</code> namespace.</p>
+<html:address>This is an <code>html:address</code> element in the HTML namespace.</html:address>
+<address xmlns="">This is a <code>address</code> element in no namespace.</address>
+<address xmlns="">This is a <code>address</code> element in no namespace.</address>
+<p xmlns="">This is a <code>p</code> element in no namespace.</p>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for *-of-type selectors in Bug 75375 **/
+
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+
+function setup_style_text() {
+    var result = document.createCDATASection("");
+    var style = document.createElementNS(HTML_NS, "style");
+    style.appendChild(result);
+    document.getElementsByTagName("head")[0].appendChild(style);
+    return result;
+}
+
+function run() {
+    var styleText = setup_style_text();
+
+    var elements = [];
+
+    var div = document.getElementById("content");
+    for (let i = 0; i < div.childNodes.length; ++i) {
+        var child = div.childNodes[i];
+        if (child.nodeType == Node.ELEMENT_NODE)
+            elements.push(child);
+    }
+
+    var counter = 0;
+
+    function test_selector(selector, match_indices, notmatch_indices)
+    {
+        var zi = ++counter;
+        styleText.data = selector + " { z-index: " + zi + " }";
+        let i;
+        for (i in match_indices) {
+            var e = elements[match_indices[i]];
+            is(getComputedStyle(e, "").zIndex, String(zi),
+               "element " + match_indices[i] + " matched " + selector);
+        }
+        for (i in notmatch_indices) {
+            var e = elements[notmatch_indices[i]];
+            is(getComputedStyle(e, "").zIndex, "auto",
+               "element " + notmatch_indices[i] + " did not match " + selector);
+        }
+    }
+
+    // 0 - html:p
+    // 1 - html:p
+    // 2 - html:p
+    // 3 - example:p
+    // 4 - html:address
+    // 5 - :address
+    // 6 - :address
+    // 7 - :p
+    test_selector(":nth-of-type(1)", [0, 3, 4, 5, 7], [1, 2, 6]);
+    test_selector(":nth-last-of-type(1)", [2, 3, 4, 6, 7], [0, 1, 5]);
+    test_selector(":nth-last-of-type(-n+1)", [2, 3, 4, 6, 7], [0, 1, 5]);
+    test_selector(":nth-of-type(even)", [1, 6], [0, 2, 3, 4, 5, 7]);
+    test_selector(":nth-last-of-type(odd)", [0, 2, 3, 4, 6, 7], [1, 5]);
+    test_selector(":nth-last-of-type(n+2)", [0, 1, 5], [2, 3, 4, 6, 7]);
+    test_selector(":first-of-type", [0, 3, 4, 5, 7], [1, 2, 6]);
+    test_selector(":last-of-type", [2, 3, 4, 6, 7], [0, 1, 5]);
+    test_selector(":only-of-type", [3, 4, 7], [0, 1, 2, 5, 6]);
+}
+
+run();
+
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title> Test fetch.integrity on console report for serviceWorker and sharedWorker </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+<div id="content" style="display: none"></div>
+<script src="utils.js"></script>
+<script type="text/javascript">
+"use strict";
+
+let security_localizer =
+  stringBundleService.createBundle("chrome://global/locale/security/security.properties");
+
+let consoleScript;
+let monitorCallbacks = [];
+
+function registerConsoleMonitor() {
+  return new Promise(resolve => {
+    var url = SimpleTest.getTestFileURL("console_monitor.js");
+    consoleScript = SpecialPowers.loadChromeScript(url);
+
+    consoleScript.addMessageListener("ready", resolve);
+    consoleScript.addMessageListener("monitor", function(msg) {
+      for (let i = 0; i < monitorCallbacks.length;) {
+         if (monitorCallbacks[i](msg)) {
+           ++i;
+         } else {
+           monitorCallbacks.splice(i, 1);
+         }
+      }
+    });
+    consoleScript.sendAsyncMessage("load", {});
+  });
+}
+
+function unregisterConsoleMonitor() {
+  return new Promise(resolve => {
+    consoleScript.addMessageListener("unloaded", () => {
+      consoleScript.destroy();
+      resolve();
+    });
+    consoleScript.sendAsyncMessage("unload", {});
+  });
+}
+
+function registerConsoleMonitorCallback(callback) {
+  monitorCallbacks.push(callback);
+}
+
+function waitForMessages() {
+  let messages = [];
+
+  // process repeated paired arguments of: msgId, args
+  for (let i = 0; i < arguments.length; i += 3) {
+    let msgId = arguments[i];
+    let args = arguments[i + 1];
+    messages.push(security_localizer.formatStringFromName(msgId, args));
+  }
+
+  return new Promise(resolve => {
+    registerConsoleMonitorCallback(msg => {
+      for (let i = 0; i < messages.length; ++i) {
+        if (messages[i] == msg.errorMessage) {
+          messages.splice(i, 1);
+          break;
+        }
+      }
+
+      if (messages.length == 0) {
+        resolve();
+        return false;
+      }
+
+      return true;
+    });
+  });
+}
+
+function expect_security_console_message(/* msgId, args, ... */) {
+  let expectations = [];
+  // process repeated paired arguments of: msgId, args
+  for (let i = 0; i < arguments.length; i += 3) {
+    let msgId = arguments[i];
+    let args = arguments[i + 1];
+    let filename = arguments[i + 2];
+    expectations.push({
+      errorMessage: security_localizer.formatStringFromName(msgId, args),
+      sourceName: filename,
+    });
+  }
+  return new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, expectations);
+  });
+}
+
+// (This doesn't really need to be its own task, but it allows the actual test
+// case to be self-contained.)
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["browser.newtab.preload", false],
+  ]});
+});
+
+add_task(async function test_integrity_serviceWorker() {
+  var filename = make_absolute_url("fetch.js");
+  var filename2 = make_absolute_url("fake.html");
+
+  let registration = await navigator.serviceWorker.register("fetch.js",
+                                                            { scope: "./" });
+  await waitForState(registration.installing, "activated");
+
+  info("Test for mNavigationInterceptions.")
+  // The client_win will reload to another URL after opening filename2.
+  let client_win = window.open(filename2);
+
+  let expectedMessage = expect_security_console_message(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    "NoValidMetadata",
+    [""],
+    filename,
+  );
+  let expectedMessage2 = expect_security_console_message(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    "NoValidMetadata",
+    [""],
+    filename,
+  );
+
+  info("Test for mControlledDocuments and report error message to console.");
+  // The fetch will succeed because the integrity value is invalid and we are
+  // looking for the console message regarding the bad integrity value.
+  await fetch("fail.html");
+
+  await wait_for_expected_message(expectedMessage);
+
+  await wait_for_expected_message(expectedMessage2);
+
+  await registration.unregister();
+  client_win.close();
+});
+
+add_task(async function test_integrity_sharedWorker() {
+  var filename = make_absolute_url("sharedWorker_fetch.js");
+
+  await registerConsoleMonitor();
+
+  info("Attach main window to a SharedWorker.");
+  let sharedWorker = new SharedWorker(filename);
+  let waitForConnected = new Promise((resolve) => {
+    sharedWorker.port.onmessage = function (e) {
+      if (e.data == "Connected") {
+        resolve();
+      } else {
+        reject();
+      }
+    }
+  });
+  await waitForConnected;
+
+  info("Attch another window to the same SharedWorker.");
+  // Open another window and its also managed by the shared worker.
+  let client_win = window.open("create_another_sharedWorker.html");
+  let waitForBothConnected = new Promise((resolve) => {
+    sharedWorker.port.onmessage = function (e) {
+      if (e.data == "BothConnected") {
+        resolve();
+      } else {
+        reject();
+      }
+    }
+  });
+  await waitForBothConnected;
+
+  let expectedMessage = waitForMessages(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    "NoValidMetadata",
+    [""],
+    filename,
+  );
+
+  let expectedMessage2 = waitForMessages(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    "NoValidMetadata",
+    [""],
+    filename,
+  );
+
+  info("Start to fetch a URL with wrong integrity.")
+  sharedWorker.port.start();
+  sharedWorker.port.postMessage("StartFetchWithWrongIntegrity");
+
+  let waitForSRIFailed = new Promise((resolve) => {
+    sharedWorker.port.onmessage = function (e) {
+      if (e.data == "SRI_failed") {
+        resolve();
+      } else {
+        reject();
+      }
+    }
+  });
+  await waitForSRIFailed;
+
+  await expectedMessage;
+  await expectedMessage2;
+
+  client_win.close();
+
+  await unregisterConsoleMonitor();
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Cloud Services", "Firefox: Common")
+
+TEST_DIRS += ["tests"]
+
+EXPORTS.mozilla.appservices += [
+    "app_services_logger/AppServicesLoggerComponents.h",
+]
+
+EXTRA_COMPONENTS += [
+    "servicesComponents.manifest",
+]
+
+EXTRA_JS_MODULES["services-common"] += [
+    "async.js",
+    "kinto-http-client.js",
+    "kinto-offline-client.js",
+    "kinto-storage-adapter.js",
+    "logmanager.js",
+    "observers.js",
+    "rest.js",
+    "uptake-telemetry.js",
+    "utils.js",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
+    EXTRA_JS_MODULES["services-common"] += [
+        "hawkclient.js",
+        "hawkrequest.js",
+        "tokenserverclient.js",
+    ]
+
+TESTING_JS_MODULES.services.common += [
+    "modules-testing/logging.js",
+]
+
+SPHINX_TREES["/services/common"] = "docs"
+
+XPCOM_MANIFESTS += [
+    "app_services_logger/components.conf",
+]

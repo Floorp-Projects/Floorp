@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=628069
+-->
+<head>
+  <title>Test for Bug 628069</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=628069">Mozilla Bug 628069</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="frame" style="height:100px; width:100px; border:0"></iframe>
+  <div id="status" style="display: none"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 628069 **/
+
+SimpleTest.waitForExplicitFinish();
+
+popup = window.open('file_bug628069.html');
+
+// Control flows into childLoad, once the popup loads.
+
+gOrigURL = null;
+function childLoad() {
+  gOrigURL = popup.location + '';
+
+  popup.location.hash = '#hash';
+
+  // This should trigger a hashchange, so control should flow down to
+  // childHashchange.
+}
+
+function childHashchange(e) {
+  is(e.oldURL, gOrigURL, 'event.oldURL');
+  is(e.newURL, gOrigURL + '#hash', 'event.newURL');
+  is(e.isTrusted, true, 'Hashchange event should be trusted.');
+  popup.close();
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

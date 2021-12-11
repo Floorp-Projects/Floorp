@@ -1,0 +1,29 @@
+<html>
+
+<head>
+ <title>testcase for bug #382721</title>
+<style>
+ div {
+	background: beige;
+	margin: 1ex;
+	padding: 1ex;
+	border-radius: 3ex;
+	}
+</style>
+<script>
+ function ini() {
+  var s,i,d;
+  s=['none','hidden','dotted','dashed','solid',
+     'double','groove','ridge','inset','outset'];
+  for (i=0; i<s.length; i++) {
+   d=document.createElement('div');
+   d.style.border=d.innerHTML=s[i];
+   document.body.appendChild(d);
+ }}
+</script>
+</head>
+
+<body onload="ini()"></body>
+
+</html>
+

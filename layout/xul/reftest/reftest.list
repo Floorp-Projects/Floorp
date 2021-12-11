@@ -1,0 +1,14 @@
+== chrome://reftest/content/xul/reftest/popup-explicit-size.xhtml chrome://reftest/content/xul/reftest/popup-explicit-size-ref.xhtml
+fuzzy(0-16,0-128) random-if(Android) == chrome://reftest/content/xul/reftest/image-size.xhtml chrome://reftest/content/xul/reftest/image-size-ref.xhtml
+== chrome://reftest/content/xul/reftest/image-scaling-min-height-1.xhtml chrome://reftest/content/xul/reftest/image-scaling-min-height-1-ref.xhtml
+== chrome://reftest/content/xul/reftest/textbox-text-transform.xhtml chrome://reftest/content/xul/reftest/textbox-text-transform-ref.xhtml
+
+== chrome://reftest/content/xul/reftest/checkbox-dynamic-change.xhtml chrome://reftest/content/xul/reftest/checkbox-dynamic-change-ref.xhtml
+== chrome://reftest/content/xul/reftest/radio-dynamic-change.xhtml chrome://reftest/content/xul/reftest/radio-dynamic-change-ref.xhtml
+
+# These test find marks appearing on the scrollbar
+fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks.html chrome://reftest/content/xul/reftest/scrollbar-marks-ref.html
+fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks-ref.html
+fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks.html
+# This test is fuzzy as the marks cannot be positioned exactly as the real ones are measured in dev pixels.
+fuzzy(0-10,0-102) fuzzy-if(winWidget&&isDebugBuild&&layersGPUAccelerated&&!is64Bit,1-1,102-102) == chrome://reftest/content/xul/reftest/scrollbar-marks-overlay.html chrome://reftest/content/xul/reftest/scrollbar-marks-overlay-ref.html

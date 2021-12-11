@@ -1,0 +1,36 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1509027043 -3600
+#      Thu Oct 26 15:10:43 2017 +0100
+# Node ID cbe274e5b95c1c207597a0fbb4a80905d6d4dacc
+# Parent  bbbba04e693f3819bcb6dd70ea27d3cab194e4cb
+This removes sequence checking on RefCountedBase in DEBUG builds. r=aklotz
+
+We don't currently make use of it and it brings in many dependencies.
+
+diff --git a/security/sandbox/chromium/base/memory/ref_counted.cc b/security/sandbox/chromium/base/memory/ref_counted.cc
+--- a/security/sandbox/chromium/base/memory/ref_counted.cc
++++ b/security/sandbox/chromium/base/memory/ref_counted.cc
+@@ -53,18 +53,22 @@ bool RefCountedThreadSafeBase::Release()
+ }
+ void RefCountedThreadSafeBase::AddRefWithCheck() const {
+   AddRefWithCheckImpl();
+ }
+ #endif
+ 
+ #if DCHECK_IS_ON()
+ bool RefCountedBase::CalledOnValidSequence() const {
++#if defined(MOZ_SANDBOX)
++  return true;
++#else
+   return sequence_checker_.CalledOnValidSequence() ||
+          g_cross_thread_ref_count_access_allow_count.load() != 0;
++#endif
+ }
+ #endif
+ 
+ }  // namespace subtle
+ 
+ #if DCHECK_IS_ON()
+ ScopedAllowCrossThreadRefCountAccess::ScopedAllowCrossThreadRefCountAccess() {
+   ++g_cross_thread_ref_count_access_allow_count;

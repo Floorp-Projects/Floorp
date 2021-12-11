@@ -1,0 +1,5 @@
+This library [1] has been stripped down to only the CBOR encoding parts, as there are outstanding issues [2]
+related to memory safety for the decoder.
+
+[1] https://github.com/naphaso/cbor-cpp/
+[2] https://github.com/naphaso/cbor-cpp/issues/8

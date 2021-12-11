@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+
+[scriptable, uuid(09a0502b-cedc-4cae-bf7c-35662dbd1249)]
+interface nsISystemInfo : nsISupports
+{
+  /**
+   * Asynchronously get info about what types of disks we're using for the
+   * profile and binary.
+   * Note: only implemented on Windows, will return null elsewhere.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise diskInfo;
+
+  /**
+   * Asynchronously get CountryCode info.
+   * Note: only implemented on macOS and Windows, will return null elsewhere.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise countryCode;
+
+  /**
+   * Asynchronously gets OS info on the system's install year.
+   * Note: only implemented on Windows, will return null elsewhere.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise osInfo;
+
+  /**
+   * Asynchronously gets process info that indicates if the process is running
+   * under Wow64 and WowARM64.
+   * Note: only implemented on Windows, will return null elsewhere.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise processInfo;
+};

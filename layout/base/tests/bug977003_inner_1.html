@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=977003
+https://bugzilla.mozilla.org/show_bug.cgi?id=1094913
+https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bugs 977003, 1094913, 1098139</title>
+  <meta name="author" content="Maksim Lebedev" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #target{ background: yellow; }
+  </style>
+  <script type="application/javascript">
+    var target = undefined;
+    var test_send_got = 0;
+    var test_got_async = 0;
+    var test_got_type = "";
+    var test_got_primary = false;
+    var test_send_lost = 0;
+    var test_lost_async = 0;
+    var test_lost_type = "";
+    var test_lost_primary = false;
+
+    function DownHandler(event) {
+      logger("Receive event: " + event.type);
+      logger("Send setPointerCapture to target");
+      target.setPointerCapture(event.pointerId);
+      logger("setPointerCapture was executed");
+      test_send_got++;
+    }
+    function GotPCHandler(event) {
+      logger("Receive event: " + event.type + "(" + event.pointerType + ")");
+      if(test_send_got)
+        test_got_async++;
+      test_got_type = event.pointerType;
+      test_got_primary = event.isPrimary;
+      logger("Send releasePointerCapture from target");
+      target.releasePointerCapture(event.pointerId);
+      logger("releasePointerCapture was executed");
+      test_send_lost++;
+    }
+    function LostPCHandler(event) {
+      logger("Received event: " + event.type + "(" + event.pointerType + ")");
+      if(test_send_lost)
+        test_lost_async++;
+      test_lost_type = event.pointerType;
+      test_lost_primary = event.isPrimary;
+    }
+    function logger(message) {
+      console.log(message);
+      var log = document.getElementById('log');
+      log.innerHTML = message + "<br>" + log.innerHTML;
+    }
+
+    function prepareTest() {
+      SimpleTest.executeSoon(executeTest);
+    }
+    function executeTest()
+    {
+      logger("executeTest");
+      target = document.getElementById("target");
+      target.addEventListener("pointerdown",        DownHandler);
+      target.addEventListener("gotpointercapture",  GotPCHandler);
+      target.addEventListener("lostpointercapture", LostPCHandler);
+      var rect = target.getBoundingClientRect();
+      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mousedown"});
+      synthesizeMouse(target, rect.width/2, rect.height/2, {type: "mouseup"});
+      finishTest();
+    }
+    function finishTest() {
+      parent.is(test_send_got,        1, "Part 1: gotpointercapture event should be sent once");
+      parent.is(test_got_async,       1, "Part 1: gotpointercapture event should be asynchronous");
+      parent.is(test_got_type,  "mouse", "Part 1: gotpointercapture event should have pointerType mouse");
+      parent.is(test_got_primary,  true, "Part 1: gotpointercapture event should have isPrimary as true");
+      parent.is(test_send_lost,       1, "Part 1: lostpointercapture event should be sent once");
+      parent.is(test_lost_async,      1, "Part 1: lostpointercapture event should be asynchronous");
+      parent.is(test_lost_type, "mouse", "Part 1: lostpointercapture event should have pointerType mouse");
+      parent.is(test_lost_primary, true, "Part 1: lostpointercapture event should have isPrimary as true");
+      logger("finishTest");
+      parent.finishTest();
+    }
+  </script>
+</head>
+<body onload="prepareTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=977003">Mozilla Bug 977003 Test 1</a>
+  <br><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1094913">Mozilla Bug 1094913</a>
+  <br><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1098139">Mozilla Bug 1098139</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <div id="target">div id=target</div>
+  <pre id="log">
+  </pre>
+</body>
+</html>

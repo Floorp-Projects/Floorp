@@ -1,0 +1,733 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+%define urlbarMarginInline 5px
+%define urlbarSearchButtonWidth calc(16px + 2 * var(--urlbar-icon-padding))
+
+:root {
+  --toolbar-field-border-color: hsla(240,5%,5%,.25);
+  --toolbar-field-focus-border-color: var(--focus-outline-color);
+  --urlbar-container-padding: 1px;
+}
+
+@media not (prefers-contrast) {
+  :root {
+    --toolbar-field-border-color: transparent;
+    --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
+  }
+}
+
+#urlbar-container,
+#search-container {
+  padding-block: 4px;
+  margin-inline: @urlbarMarginInline@;
+}
+
+#search-container[cui-areatype="menu-panel"] {
+  margin: var(--arrowpanel-menuitem-margin);
+}
+
+:root[uidensity=touch] #urlbar-container,
+:root[uidensity=touch] #search-container {
+  padding-block: 5px;
+}
+
+#urlbar,
+#searchbar {
+  min-height: var(--urlbar-min-height);
+  text-shadow: none;
+  color: var(--toolbar-field-color);
+}
+
+/**
+ * System colors and widgets are set based on toolbar color. Since toolbar
+ * fields can be styled differently from the toolbar, we need to use the
+ * correct color scheme in toolbar fields.
+ */
+#urlbar:-moz-lwtheme,
+#searchbar:-moz-lwtheme {
+  color-scheme: light;
+}
+
+:root[lwt-toolbar-field-brighttext] #urlbar:not([focused="true"]),
+:root[lwt-toolbar-field-brighttext] #searchbar:not(:focus-within),
+:root[lwt-toolbar-field-focus-brighttext] #urlbar[focused="true"],
+:root[lwt-toolbar-field-focus-brighttext] #searchbar:focus-within {
+  color-scheme: dark;
+}
+
+#urlbar-background,
+#searchbar {
+  background-color: var(--toolbar-field-background-color);
+  background-clip: border-box;
+  border: 1px solid var(--toolbar-field-border-color);
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+#urlbar-input-container,
+#searchbar {
+  border-radius: var(--toolbarbutton-border-radius);
+  overflow: clip;
+}
+
+#urlbar-input,
+#urlbar-scheme,
+.searchbar-textbox {
+  -moz-box-flex: 1;
+  background-color: transparent;
+  color: inherit;
+  border: none;
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+#urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background,
+#searchbar:focus-within {
+  outline: var(--focus-outline);
+  outline-offset: calc(var(--focus-outline-width) * -1);
+  /* We used --focus-outline above to inherit its width and style properties,
+     but we still want to use the theme's border-color.
+     --toolbar-field-focus-border-color is set equal to --focus-outline-color
+     on :root, but LWT themes can override this value. */
+  outline-color: var(--toolbar-field-focus-border-color);
+  border-color: transparent;
+}
+
+#urlbar[focused="true"] > #urlbar-background,
+#searchbar:focus-within {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
+}
+
+#urlbar[open] > #urlbar-background {
+  border-color: var(--arrowpanel-border-color);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.13);
+}
+
+#urlbar:is([focused="true"], [open]),
+#searchbar:focus-within {
+  color: var(--toolbar-field-focus-color);
+}
+
+#urlbar:is([focused="true"], [open]) > #urlbar-background,
+#searchbar:focus-within {
+  background-color: var(--toolbar-field-focus-background-color);
+}
+
+#urlbar-input::placeholder,
+.searchbar-textbox::placeholder {
+  opacity: 0.69;
+}
+
+#TabsToolbar #searchbar:not(:focus-within) {
+  /* The tabs toolbar is usually a different color than the other toolbars, and
+     we can't predict it, to avoid a transparent field we enforce a border. */
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+#urlbar-input:-moz-lwtheme::selection,
+.searchbar-textbox:-moz-lwtheme::selection {
+  background-color: var(--lwt-toolbar-field-highlight, Highlight);
+  color: var(--lwt-toolbar-field-highlight-text, HighlightText);
+}
+
+#urlbar-input:not(:focus):-moz-lwtheme::selection,
+.searchbar-textbox:not(:focus-within):-moz-lwtheme::selection {
+  background-color: var(--lwt-toolbar-field-highlight, text-select-background-disabled);
+}
+
+#urlbar:not([focused="true"]) {
+  caret-color: transparent;
+}
+
+#urlbar.searchButton > #urlbar-input-container > #urlbar-search-button {
+  width: @urlbarSearchButtonWidth@;
+  background-image: url(chrome://global/skin/icons/search-glass.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--toolbarbutton-icon-fill);
+}
+
+#urlbar.searchButton > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-button {
+  margin-inline-end: 6px;
+}
+
+/**
+ * The urlbar background is a separate element so we can animate it
+ * independently from the content. It's positioned absolutely and stretched to
+ * the bounds of the urlbar.
+ */
+
+#urlbar,
+#urlbar-input-container,
+.urlbarView {
+  position: relative;
+}
+
+#urlbar-background {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+:root:not([chromehidden~="toolbar"]) #urlbar.searchButton:not([breakout]) > #urlbar-background,
+:root:not([chromehidden~="toolbar"]) #urlbar.searchButton:not([breakout-extend]) > #urlbar-background {
+  inset-inline-start: @urlbarSearchButtonWidth@;
+}
+
+#urlbar-input-container {
+  /* Match urlbar-background's border. */
+  border: 1px solid transparent;
+  padding: var(--urlbar-container-padding);
+}
+
+#urlbar-container[breakout] {
+  position: relative;
+  min-height: var(--urlbar-container-height);
+}
+
+#urlbar[breakout] {
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: var(--urlbar-height);
+  top: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
+  left: 0;
+}
+
+#urlbar[breakout] > #urlbar-input-container {
+  width: 100%;
+  height: 100%;
+}
+
+#urlbar:not([open]) > .urlbarView,
+#urlbar:not([breakout]) > .urlbarView {
+  display: none;
+}
+
+#urlbar[breakout][breakout-extend],
+#urlbar[breakout][breakout-extend-disabled][open] {
+  /* The z-index needs to be big enough to trump other positioned UI pieces
+     that we want to overlay. 3 is used in the tab bar. */
+  z-index: 3;
+  height: auto;
+}
+
+#urlbar[breakout][breakout-extend] {
+  top: 0;
+  left: -@urlbarMarginInline@;
+  width: calc(100% + 2 * @urlbarMarginInline@);
+}
+
+#urlbar[breakout][breakout-extend] > #urlbar-input-container {
+  height: var(--urlbar-toolbar-height);
+  padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
+  padding-inline: calc(@urlbarMarginInline@ + var(--urlbar-container-padding));
+}
+
+#urlbar.searchButton[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-button {
+  fill: currentColor;
+  fill-opacity: .6;
+}
+
+@keyframes urlbar-grow {
+  0% {
+    transform: scaleX(.99) scaleY(.95);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+#urlbar[breakout][breakout-extend] > #urlbar-background {
+  animation-name: urlbar-grow;
+  animation-duration: 0s;
+  animation-timing-function: var(--animation-easing-function);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #urlbar[breakout][breakout-extend][breakout-extend-animate] > #urlbar-background {
+    animation-duration: 150ms;
+  }
+}
+
+:root[chromehidden~="toolbar"] #urlbar-container {
+  /* Remove excess space between the address bar and the menu button in popups. */
+  padding-inline-end: 0;
+}
+
+:root[customizing] .urlbar-input-box {
+  visibility: hidden;
+}
+
+#urlbar-container {
+  -moz-box-align: center;
+}
+
+#urlbar-search-splitter {
+  /* The splitter width should equal the location and search bars' combined
+     neighboring margin and border width. */
+  min-width: 12px;
+  margin: 0 -6px;
+  position: relative;
+  border: none;
+  background: transparent;
+  appearance: none;
+}
+
+/* Urlbar search mode indicator */
+#urlbar-search-mode-indicator {
+  display: none;
+  background-color: var(--urlbar-box-bgcolor);
+  color: var(--urlbar-box-text-color);
+  margin-inline-end: 8px;
+  align-items: center;
+  border-radius: var(--urlbar-icon-border-radius);
+  padding-inline: 8px 6px;
+}
+
+#urlbar[focused="true"] #urlbar-search-mode-indicator {
+  background-color: var(--urlbar-box-focus-bgcolor);
+}
+
+#urlbar[searchmode] > #urlbar-input-container > #urlbar-search-mode-indicator {
+  display: inline-flex;
+}
+
+#urlbar[searchmode] > #urlbar-input-container > #urlbar-label-box {
+  display: none;
+}
+
+#urlbar-search-mode-indicator-close {
+  background: url(chrome://global/skin/icons/close.svg) no-repeat center;
+  background-size: 10px 10px;
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0.6;
+  fill: currentColor;
+  border-radius: var(--urlbar-icon-border-radius);
+}
+
+#urlbar-search-mode-indicator-close:hover {
+  background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
+}
+#urlbar-search-mode-indicator-close:hover:active {
+  background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
+}
+
+@media (prefers-contrast) {
+  #urlbar-search-mode-indicator-close {
+    fill-opacity: 1.0;
+  }
+}
+
+#urlbar-search-mode-indicator-title {
+  padding-inline: 0 3px;
+}
+
+/* Page action panel */
+.pageAction-panel-button > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#pageAction-panel-bookmark,
+#star-button {
+  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+#pageAction-panel-bookmark[starred],
+#star-button[starred] {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+#star-button[starred] {
+  fill-opacity: 1;
+  fill: var(--toolbar-field-icon-fill-attention);
+}
+
+/* URL bar and page action buttons */
+
+/* The background can be very dark and if the add-on uses a black-ish svg it
+   will be barely visible. In the future we should have a standardized SVG
+   solution we can apply to add-on icons, for now we can only try to make them
+   visible through some filtering tricks */
+:root[lwt-toolbar-field-brighttext] #urlbar:not([focused="true"]) .urlbar-addon-page-action[style*=".svg"] > .urlbar-icon,
+:root[lwt-toolbar-field-focus-brighttext] #urlbar[focused="true"] .urlbar-addon-page-action[style*=".svg"] > .urlbar-icon {
+  filter: grayscale(100%) brightness(20%) invert();
+}
+
+@media (prefers-color-scheme: dark) {
+  /* As above, but for the default theme in dark mode, which suffers from the same issue */
+  :root:not(:-moz-lwtheme) .urlbar-addon-page-action[style*=".svg"] > .urlbar-icon {
+    filter: grayscale(100%) brightness(20%) invert();
+  }
+}
+
+#userContext-icons,
+#urlbar-zoom-button {
+  margin-inline: 6px;
+}
+
+.urlbar-icon {
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
+}
+
+.urlbar-page-action,
+#urlbar-go-button,
+.search-go-button {
+  width: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
+  height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
+  border-radius: var(--urlbar-icon-border-radius);
+  padding: var(--urlbar-icon-padding);
+  color: inherit;
+}
+
+:root[uidensity=compact] .urlbar-page-action,
+:root[uidensity=compact] #urlbar-go-button,
+:root[uidensity=compact] .search-go-button {
+  margin-inline: 1px;
+}
+
+.urlbar-page-action:not([disabled]):hover,
+#urlbar-go-button:hover,
+.search-go-button:hover {
+  background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
+}
+
+.urlbar-page-action:not([disabled])[open],
+.urlbar-page-action:not([disabled]):hover:active,
+#urlbar-go-button:hover:active,
+.search-go-button:hover:active {
+  background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
+}
+
+.urlbar-page-action:-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline);
+  outline-offset: -2px;
+}
+
+#urlbar-go-button,
+.search-go-button {
+  list-style-image: url("chrome://browser/skin/forward.svg");
+}
+
+#urlbar-go-button:-moz-locale-dir(rtl),
+.search-go-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+#pageActionButton,
+.share-more-button {
+  list-style-image: url("chrome://global/skin/icons/more.svg");
+}
+
+/**
+ * Contextual Feature Recommendation
+ *
+ * Animate the recommendation icon to expand outwards and display a text label.
+ * Fake the effect of a smoothly expanding width without animating any widths
+ * by (continuously) animating only `mask-position-x` and `transform`.
+ *
+ * In a few places, transition a property using the timing-function `step-start`
+ * while collapsed and `step-end` while expanded in order to (discretely) modify
+ * the value while expanded and while transitioning in either direction.
+ *
+ * This UI is part of an experiment launching in LTR locales only. Fixing the
+ * RTL issues is tracked by Bug 1485725.
+ */
+
+:root {
+  --cfr-animation-duration: 0.35s;
+  --cfr-button-addons-icon: url(chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg);
+  --cfr-button-features-icon: url(chrome://activity-stream/content/data/content/assets/glyph-cfr-feature-16.svg);
+  --cfr-button-highlights-icon: url(chrome://global/skin/icons/highlights.svg);
+  --cfr-active-color: #0060df;
+}
+
+#contextual-feature-recommendation {
+  width: 28px;
+  margin-inline-start: 0;
+  transition: margin-inline-start step-end var(--cfr-animation-duration);
+}
+#urlbar[cfr-recommendation-state="expanded"] #contextual-feature-recommendation {
+  margin-inline-start: calc(var(--cfr-label-width) * -1);
+  transition: margin-inline-start step-start var(--cfr-animation-duration);
+}
+
+#cfr-button {
+  margin: -2px 0;
+  transition-property: fill, fill-opacity, transform;
+  transition-timing-function: ease-in-out;
+  transition-duration: var(--cfr-animation-duration);
+}
+#contextual-feature-recommendation[data-cfr-icon="webextensions-icon"] #cfr-button {
+  list-style-image: var(--cfr-button-addons-icon);
+}
+#contextual-feature-recommendation[data-cfr-icon="recommendations-icon"] #cfr-button {
+  list-style-image: var(--cfr-button-features-icon);
+}
+#contextual-feature-recommendation[data-cfr-icon="highlights-icon"] #cfr-button {
+  list-style-image: var(--cfr-button-highlights-icon);
+}
+#urlbar[cfr-recommendation-state="expanded"] #cfr-button {
+  fill: white;
+  fill-opacity: 1;
+  background-color: transparent; /* Override hover background-color */
+  transform: translateX(calc(var(--cfr-label-width) * -1));
+}
+#urlbar[cfr-recommendation-state="expanded"] #cfr-button:-moz-locale-dir(rtl) {
+  transform: translateX(calc(var(--cfr-label-width)));
+}
+@keyframes cfr-button-fade-through-active-color {
+  33% {
+    fill-opacity: 1;
+    fill: var(--cfr-active-color);
+  }
+  67% {
+    fill-opacity: 1;
+    fill: var(--cfr-active-color);
+  }
+}
+#urlbar[cfr-recommendation-state="collapsed"] #cfr-button {
+  animation: cfr-button-fade-through-active-color calc(3 * var(--cfr-animation-duration));
+}
+
+#cfr-label-container {
+  width: 0;
+  overflow: hidden;
+  border-radius: 5px;
+  padding-inline-start: 28px;
+  mask-image: linear-gradient(to right, transparent 0, black 0);
+  mask-position-x: var(--cfr-label-width);
+  mask-repeat: no-repeat;
+  transition-property: background-color, mask-position-x, width, margin-inline-end;
+  transition-timing-function: ease-in-out, ease-in-out, step-end, step-end;
+  transition-duration: var(--cfr-animation-duration);
+  -moz-box-align: center;
+  margin-block: calc((var(--urlbar-min-height) - var(--urlbar-container-padding) - 2px /* border */ - 24px) / 2);
+}
+#cfr-label-container:-moz-locale-dir(rtl) {
+  mask-position-x: calc(var(--cfr-label-width) * -1);
+}
+
+#urlbar[cfr-recommendation-state="expanded"] #cfr-label-container {
+  width: calc(var(--cfr-label-width) + 28px);
+  background-color: var(--cfr-active-color);
+  margin-inline-end: -28px;
+  mask-position-x: 0;
+  transition-timing-function: ease-in-out, ease-in-out, step-start, step-start;
+}
+
+#cfr-label {
+  margin: 0;
+  padding: 3px 5px;
+  padding-inline-start: 0;
+  color: white;
+  mask-image: linear-gradient(to right, transparent 0, black 0);
+  mask-position-x: var(--cfr-label-width);
+  mask-repeat: no-repeat;
+  transition: mask-position-x ease-in-out var(--cfr-animation-duration);
+}
+#cfr-label:-moz-locale-dir(rtl) {
+  mask-position-x: calc(var(--cfr-label-width) * -1);
+}
+#urlbar[cfr-recommendation-state="expanded"] #cfr-label {
+  mask-position-x: 0;
+}
+
+/* Shift the url-bar text fading to stop the recommendation overlapping */
+#urlbar[cfr-recommendation-state] #urlbar-input {
+  /* A mask-image is usually only defined for the url bar when text overflows.
+     We need to re-define the mask image here so that it shows up correctly when
+     we transition to or from an `expanded` state (in which the right end of the
+     url bar may be obscured without overflow). */
+  mask-image: linear-gradient(to left, transparent, black 3ch);
+  transition: mask-position-x ease-in-out var(--cfr-animation-duration);
+}
+#urlbar[cfr-recommendation-state] #urlbar-input:-moz-locale-dir(rtl) {
+  mask-image: linear-gradient(to right, transparent, black 3ch);
+}
+#urlbar[cfr-recommendation-state="expanded"] #urlbar-input {
+  mask-position-x: calc(var(--cfr-label-width) * -1);
+}
+#urlbar[cfr-recommendation-state="expanded"] #urlbar-input:-moz-locale-dir(rtl) {
+  mask-position-x: calc(var(--cfr-label-width));
+}
+
+/* Reader mode icon */
+
+#reader-mode-button > .urlbar-icon {
+  list-style-image: url(chrome://browser/skin/reader-mode.svg);
+}
+
+#reader-mode-button[readeractive] > .urlbar-icon {
+  fill: var(--toolbar-field-icon-fill-attention);
+  fill-opacity: 1;
+}
+
+/* Zoom button */
+
+#urlbar-zoom-button {
+  appearance: none;
+  color: inherit;
+  font-size: .8em;
+  padding: 3px 7px;
+  border-radius: var(--urlbar-icon-border-radius);
+  background-color: var(--urlbar-box-bgcolor);
+  color: var(--urlbar-box-text-color);
+  margin-block: calc((var(--urlbar-min-height) - 20px) / 2 - 1px /* border */ - var(--urlbar-container-padding));
+  overflow: hidden;
+}
+
+#urlbar[focused="true"] #urlbar-zoom-button:not(:hover) {
+  background-color: var(--urlbar-box-focus-bgcolor);
+}
+
+#urlbar-zoom-button:hover {
+  background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
+}
+
+#urlbar-zoom-button:hover:active {
+  background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
+}
+
+@keyframes urlbar-zoom-reset-pulse {
+  0% {
+    transform: scale(0);
+  }
+  75% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+#urlbar-zoom-button[animate="true"] {
+  animation-name: urlbar-zoom-reset-pulse;
+  animation-duration: 250ms;
+}
+
+#urlbar-zoom-button:-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline);
+  outline-offset: calc(var(--focus-outline-width) * -1);
+}
+
+#urlbar-zoom-button > .toolbarbutton-text {
+  display: -moz-box;
+}
+
+#urlbar-zoom-button > .toolbarbutton-icon {
+  display: none;
+}
+
+/* Search bar */
+
+#search-container {
+  min-width: 125px;
+}
+
+#search-container[cui-areatype="menu-panel"] > #searchbar:-moz-lwtheme {
+  /* Theme authors usually only consider contrast against the toolbar when
+     picking a border color for the search bar. Since the search bar can be
+     dragged into the overflow panel, we need to show a high-contrast border
+     around the searchbar in case the searchbar and panel background are the
+     same color. */
+  border-color: var(--panel-separator-color);
+}
+
+.searchbar-search-button {
+  -moz-box-align: center;
+  fill: currentColor;
+}
+
+.searchbar-search-icon {
+  list-style-image: url(chrome://global/skin/icons/search-glass.svg);
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
+  pointer-events: none;
+  margin-inline: 8px 6px;
+  width: 16px;
+}
+
+.searchbar-search-icon-overlay {
+  pointer-events: none;
+}
+
+.searchbar-search-button[addengines=true] > .searchbar-search-icon-overlay {
+  list-style-image: url(chrome://browser/skin/search-indicator-badge-add.svg);
+  margin-inline: -15px 4px;
+  margin-top: -10px;
+  width: 11px;
+  height: 11px;
+}
+
+.searchbar-search-button[addengines=true] > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
+  margin-inline: -25px 14px;
+}
+
+.searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay {
+  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  -moz-context-properties: fill;
+  margin-inline: -8px 2px;
+  width: 6px;
+  height: 6px;
+}
+
+.searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
+  margin-inline: -26px 20px;
+}
+
+.searchbar-engine-one-off-add-engine:not([image]),
+moz-input-box > menupopup .context-menu-add-engine:not([image]) {
+  list-style-image: url("chrome://browser/skin/search-engine-placeholder.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .searchbar-engine-one-off-add-engine:not([image]),
+  moz-input-box > menupopup .context-menu-add-engine:not([image]) {
+    list-style-image: url("chrome://browser/skin/search-engine-placeholder@2x.png");
+  }
+}
+
+.searchbar-engine-one-off-add-engine > .button-box::after,
+moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
+  content: "";
+  position: relative;
+  display: -moz-box;
+  background: url(chrome://browser/skin/search-indicator-badge-add.svg) no-repeat center;
+  height: 11px;
+  width: 11px;
+  margin-inline: -4px -7px;
+  margin-top: -13px;
+}
+
+moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
+  /* These differ from the urlbar and searchbar because the context menu
+     may not have enough space */
+  margin-inline: -7px -4px;
+  margin-top: -8px;
+}
+
+/* Fade a little the icon so that the + badge is more evident and the button
+   is less likely to be visually confused with a normal search shortcut */
+.searchbar-engine-one-off-add-engine[image]:not(:hover) > .button-box > .button-icon {
+  opacity: 0.7;
+}
+.searchbar-engine-one-off-add-engine[image]:hover > .button-box > .button-icon {
+  opacity: 1;
+}

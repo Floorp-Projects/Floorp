@@ -1,0 +1,233 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "d801dc23873ef5fac668aa58fa948f5de0d9f3ccc53d6773fb5a137515bd04e72cc8c0c7975c6e1fc19c72b3d721effb5432fce78b0ca6f3a90f2d6467ee5b68",
+    "filename": "mitm5-linux-firefox-amazon.zip",
+    "size": 6588776,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "5ab1a9e1c7c4d5925bdac9e87123ec0aaeee477d0b2e910d37ba0df70f6c8278688910584b2874d19d8f360af14b6b37ac707012d6b8969a1877c64fed233489",
+    "filename": "mitm5-linux-firefox-bing-search.zip",
+    "size": 2413805,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "f73b07ae7df78a54cb660ea6e1e6375ee49c24bcef687b90d5356cf3bd6e74635bfb8a26160459ac326466443a62b41daecf5edb31dfefff2f0adc7b9fe0768f",
+    "filename": "mitm5-linux-firefox-buzzfeed.zip",
+    "size": 9558243,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "033d5b87d18a299dacc441f007febb5d104f5da39a8004a116904dea309a8351efedf604014196839107ad93abd264b02a70b8bea06a46ff9ae467d312b2efb2",
+    "filename": "mitm5-linux-firefox-cnn.zip",
+    "size": 39806225,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "f41a3be375159e94933d958abea4154db9586325d72b10cea3d0aec17a7e934c73c64a4fd3f5ff4d322489cea094e2f6ae4c88f88cbe0cefbdc88c9451c3de11",
+    "filename": "mitm5-linux-firefox-ebay.zip",
+    "size": 3351856,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "ca0a6d9561bbac193162f797ac3e6226446408ca0d8268313956414db9170be6d7c0d7dc316df4de15a3ed4e0e8c948b60472511339313e58cfc331b556db522",
+    "filename": "mitm5-linux-firefox-espn.zip",
+    "size": 7665306,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "55c8d2d1e1c4a7417e80cd9f3ae250fd871b1ba583feca0a2bb29861bba4d39b9d75c2ca5b1d32c133a64b528cd8787c1af37c6308df8941b12494ddc63bcd17",
+    "filename": "mitm5-linux-firefox-expedia.zip",
+    "size": 9707769,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "398e9f8cedb2887da29f5a7bc761330c21635bd484e4fa17178a9f53eb3de2ab7a167bb9c11f888c0799f8993fce44471c1947111fa24890289333579c6bd194",
+    "filename": "mitm5-linux-firefox-facebook-redesign.zip",
+    "size": 14553670,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "3faf88b190c58b5988d1b7ecbfd7cac7d9cabbed7b07badb732e88d320ac8b9262a1aec67022cc0c5dd8ccfbb6a3f8d0e208a1e5d4426ec143b2dafc0b616346",
+    "filename": "mitm5-linux-firefox-fandom.zip",
+    "size": 2875881,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "996586f9e20cface8337be4b8c6d4fdd6515c25efb58b5dfeb52c73d4d748b4580de58d8119f60fde393c59a53b6e8dded024d67e4b73f60aa71937a6b12aafb",
+    "filename": "mitm5-linux-firefox-google-docs.zip",
+    "size": 51574956,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "22b289c5a054413baa8fe5df047abd430b82a4275882c6247822fa437d3c59516e66dea1deaa01f2568adccf83b3975d75f34a3081dfc92a3d9a4ab54530f1c9",
+    "filename": "mitm5-linux-firefox-google-mail.zip",
+    "size": 15505653,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "ad5e9b0a201eded3fa06ce2d646e9cbb774fbe29c236766aaad6d60fe588cade6a02a393493fd9c953910da4a511dd992d18f432ccba55a89f1a5f2d3b10cb3a",
+    "filename": "mitm5-linux-firefox-google-search.zip",
+    "size": 8938916,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "f6b099a40b6db5a3fb44c468ce763b294920c6e72473b1c566290bee204c3cc4ffdd8a1ba7f4f2119acef27e406f316c121ffbc33012645b1e47e51d933d1760",
+    "filename": "mitm5-linux-firefox-google-slides.zip",
+    "size": 15782166,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "2ea8757271b162713fdd400f68858dc4e9c03a6572edda591af6dbc2927a8efa47c0b9a86de51dd4d19b0bc0d3b7c14ddbe55e37a9e6cdc45b12b3f6479f43bb",
+    "filename": "mitm5-linux-firefox-imdb.zip",
+    "size": 2904905,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "58e44e939734bb987fc222431021084b6f65887c46b32b668342acdb0b7ceec9f3f64411c529b89c7c27dcc5fbfa27ee37ef2726994ec05f922310f341c54a6c",
+    "filename": "mitm5-linux-firefox-imgur.zip",
+    "size": 8018854,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "2be95e5707cba6c40c46546a4d3dadaf3d69780d5aa1c457948d85973a65da729b4aceb6bfcce26e74ba7a513e00404b345375889cc21a0f89d42a47ad977c1b",
+    "filename": "mitm5-linux-firefox-instagram.zip",
+    "size": 6135175,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "f007a12f22b2927c9d5a2a4820cbd37ac62c36a6225d11297b4078265d43ed4c2ca8318a3ae8b40452be6c713f6afb0cdadae522723289d4e88d8c51170cdaa6",
+    "filename": "mitm5-linux-firefox-linkedin.zip",
+    "size": 5058731,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "36cd7c235b116a39a11082fe14b89434aace368cc7304654852e2f077ac9b024f7c663ff6f81c5012aca4fcf04d4b0f96e5abd1d5bb3f3a1f7ae0113ddf75c01",
+    "filename": "mitm5-linux-firefox-live-office.zip",
+    "size": 11077445,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "5c892f7b1630a9d34a682ebee3d7564bbf9ce2295a290af8e423187b0f0e2c52dabf9b640114f7920367fbab9ed0bb92fc30f3c2b43df63ce08e63dae9b23a63",
+    "filename": "mitm5-linux-firefox-live.zip",
+    "size": 12907525,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "235d264832d0ad181a59b6c39db8dc401fd1d287fcc0cd677f38a9e404da3d4ecbe1bfea8a01c6bf653402976b86037a04514e2a5a5b11e4370feecd147994f2",
+    "filename": "mitm5-linux-firefox-microsoft.zip",
+    "size": 1181178,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "0c28c65094e784840ca258e07a49001370fcf5cb1fad65e054e9e795ad852648379d5a73a7a0142f1a9e10c30b615fed788dea411bf79c4926dd039dade33212",
+    "filename": "mitm5-linux-firefox-netflix.zip",
+    "size": 122430671,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "037dafd334046bdf9837ad5a321eb03e7c043f0c9f145c2086d88ca345d9385ea2239109e0a3119976fe8cf44bdbf8ac2ade2411d0ff92ded8dba300ce2f9e81",
+    "filename": "mitm5-linux-firefox-nytimes.zip",
+    "size": 6117949,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "531f4ec6c3c475c4d14d198abc3bd8a02181a4759477714b3f30d4b97cf25065ccb6e373d78ec7b9549d1cdd410a94af7112701c2a6cdcb53bf8a24be2996144",
+    "filename": "mitm5-linux-firefox-paypal.zip",
+    "size": 3606449,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "3b4bf399eca881bd586e1d8ce49758f1b8033d0fdbcb360663c0855ed9b2926020cecb9cb53ad2f141022dbbd73be4a229e2a3048461aefaca9d9be117b1705a",
+    "filename": "mitm5-linux-firefox-pettay.zip",
+    "size": 162774,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "b63c6a28c715599630bc8786a382837c88b20621cc86a31cb8d28b1ef414f7d3492ae291b0b45165febfee43f487e9ef0be39d5cd24ab91f153839a065c0ba43",
+    "filename": "mitm5-linux-firefox-pinterest.zip",
+    "size": 20950617,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "05056a163e3d4d444e398d817de4d722e0c01b7e7da41ab73d6079bfddef5b000613c7e95af737286f20df63eb38f3a94ed6ff171e288cdaf5d156955eeb57cb",
+    "filename": "mitm5-linux-firefox-reddit.zip",
+    "size": 5162729,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "56f094f91bf239ed1555b9c7aafcbe553ea524fa8c6eef5ee3030cf77949c13bab19e9cc002621c50a10d5405c2340eb9f37309ff7f1599da6bc15114d526808",
+    "filename": "mitm5-linux-firefox-tumblr.zip",
+    "size": 17684438,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "aae14f5e85217e14dd407cb93ab1eee160d67d406895edd639c6a9be860789f8d141408305456409dcadf7b927cb5b133e70504294f0a6cd90a6984e19c79be1",
+    "filename": "mitm5-linux-firefox-twitch.zip",
+    "size": 30949276,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "af6ad361d2c027b48d72048d43b8fe7bed1efc307c9fdbb596b4e8e4f4c3247c1161bb21e888d2a4ca75f1a3ee47219c8289070f96ea7ab6e626d1d31f39bc75",
+    "filename": "mitm5-linux-firefox-twitter.zip",
+    "size": 7176713,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "c53c45c374cd924d03972f56b6a7416451861147f0a14b8c51c2c722a82582ae7ce8927a500981152aa6f4d3617b5ce455b85910981a9aabbd672e1ea47c0ff7",
+    "filename": "mitm5-linux-firefox-wikia.zip",
+    "size": 4847101,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "f9cbdb3b217556ab1ef5ad44fc0d7f8b3239a15b79ad42dc3756603465bcc4d0e7390b16159246554c8c552b52fa4b94a23d2b127d692b66aa885c2328e25803",
+    "filename": "mitm5-linux-firefox-wikipedia.zip",
+    "size": 3876066,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "e690faac0d78b330b8c2f22fe23920fcf101c2775beae9575c191477023b2cb4f8c12b4948ece4e04ccbc65b20f68aa6c8acedfb2e5144089e192a7047de76b9",
+    "filename": "mitm5-linux-firefox-yahoo-mail.zip",
+    "size": 11922543,
+    "visibility": "public"
+  },
+  {
+    "algorithm": "sha512",
+    "digest": "bbbf25606130d97a61aad5e48e80ee0f9743cfb8481cd6ece7fcadc370b1f9737ba1dc37dc8d889efdc0128a3ee9bbc8a061bc4ad5a65b8efcccaf6c3b1f223e",
+    "filename": "mitm5-linux-firefox-youtube.zip",
+    "size": 7078105,
+    "visibility": "public"
+  }
+]

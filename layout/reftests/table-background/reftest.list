@@ -1,0 +1,69 @@
+# these could be moved to crashtests
+!= backgr_border-table-cell.html empty.html
+!= backgr_border-table-column-group.html empty.html
+# This seems to be caused by bug 527825
+asserts-if(gtkWidget,0-12) != backgr_border-table-column.html empty.html
+asserts-if(gtkWidget,0-6) != backgr_border-table-quirks.html empty.html
+!= backgr_border-table-row-group.html empty.html
+!= backgr_border-table-row.html empty.html
+!= backgr_border-table.html empty.html
+!= backgr_fixed-bg.html empty.html
+!= backgr_index.html empty.html
+!= backgr_layers-hide.html empty.html
+!= backgr_layers-opacity.html empty.html
+!= backgr_layers-show.html empty.html
+!= backgr_position-table-cell.html empty.html
+!= backgr_position-table-column-group.html empty.html
+!= backgr_position-table-column.html empty.html
+!= backgr_position-table-row-group.html empty.html
+!= backgr_position-table-row.html empty.html
+!= backgr_position-table.html empty.html
+!= backgr_simple-table-cell.html empty.html
+!= backgr_simple-table-column-group.html empty.html
+!= backgr_simple-table-column.html empty.html
+!= backgr_simple-table-row-group.html empty.html
+!= backgr_simple-table-row.html empty.html
+!= backgr_simple-table.html empty.html
+
+# would also be good to test table-header-group and table-footer-group
+# (and rows and row groups in the presence of their reordering)
+# Also need to test different values of background-origin and background-clip.
+random-if(useDrawSnapshot) == border-separate-table-cell.html border-separate-table-cell-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-separate-table-column-group.html border-separate-table-column-group-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-separate-table-column.html border-separate-table-column-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-separate-table-row-group.html border-separate-table-row-group-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-separate-table-row.html border-separate-table-row-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-separate-table.html border-separate-table-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-collapse-table-cell.html border-collapse-table-cell-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-collapse-table-column-group.html border-collapse-table-column-group-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-collapse-table-column.html border-collapse-table-column-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-collapse-table-row-group.html border-collapse-table-row-group-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-collapse-table-row.html border-collapse-table-row-ref.html # Bug 1715400
+random-if(useDrawSnapshot) == border-collapse-table.html border-collapse-table-ref.html # Bug 1715400
+fuzzy(0-1,0-2200) random-if(useDrawSnapshot) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html
+fuzzy(0-1,0-16863) random-if(useDrawSnapshot) == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html
+fuzzy(0-1,0-5625) random-if(useDrawSnapshot) == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html
+fuzzy(0-1,0-32718) random-if(useDrawSnapshot) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html
+fuzzy(0-1,0-11000) random-if(useDrawSnapshot) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html
+fuzzy(0-1,0-60000) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html
+fuzzy(0-1,0-2500) random-if(useDrawSnapshot) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html
+fuzzy(0-1,0-4078) random-if(useDrawSnapshot) == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html
+fuzzy(0-1,0-1329) random-if(useDrawSnapshot) == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html
+fuzzy(0-1,0-38000) random-if(useDrawSnapshot) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
+fuzzy(0-1,0-13000) random-if(useDrawSnapshot) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html
+fuzzy(0-1,0-95000) random-if(useDrawSnapshot) == border-separate-opacity-table.html border-separate-opacity-table-ref.html
+!= scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-notref.html
+!= scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html
+!= scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-notref.html
+== scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-notref.html # scrolling rowgroups were removed in bug 28800
+== empty-cells-default-1.html empty-cells-default-1-ref.html
+== empty-cells-default-2.html empty-cells-default-2-ref.html
+fuzzy(0-84,0-5500) fuzzy-if(Android,0-2,0-5957) == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1-ref.html
+== table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2-ref.html
+
+== hidden-cells-1.html about:blank
+== hidden-cells-2.html about:blank
+== hidden-cells-3.html hidden-cells-3-ref.html
+
+== table-col-overlapping.html table-col-overlapping-ref.html
+== table-col-span-1.html table-col-span-1-ref.html

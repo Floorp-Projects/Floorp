@@ -1,0 +1,14 @@
+<html><head>
+<style>
+p { width: 13em; border: 1px solid black; }
+p span { white-space: nowrap; }
+a { color:pink; }
+</style>
+</head>
+<body>
+<!-- A prewrap text frame should be able to record a break opportunity -->
+<p><a style="white-space:pre-wrap;">mmmmmmmmmm m</a>mmmmmmmmm</p>
+<!-- A 'pre' text frame should be able to record a break opportunity at its start -->
+<p>m <a style="white-space:pre;">mmmmmmmmmm</a>mmmmmmmmm</p>
+</body>
+</html>

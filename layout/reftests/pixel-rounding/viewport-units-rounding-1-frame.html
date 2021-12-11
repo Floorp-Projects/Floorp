@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<title>subframe for test of viewport units rounding</title>
+<meta charset="UTF-8">
+<style>
+
+html, body { margin: 0; padding: 0; border: none }
+
+body > div {
+  background: red; /* should never show */
+  overflow: hidden; /* block formatting context */
+}
+
+body > div > div {
+  float: left;
+  height: 10px;
+}
+
+body > div.w25 > div { width: 25vw; }
+
+</style>
+
+<div class="w25">
+  <div style="background: fuchsia"></div>
+  <div style="background: aqua"></div>
+  <div style="background: silver"></div>
+  <div style="background: yellow"></div>
+</div>
+
+<!--
+  Really, though, anything that is a multiple of 5vw will always
+  produce a round number of appunits when starting from an integer
+  number of pixels, since 5vw is 1/20 of the viewport.
+
+  So, more interesting:
+-->
+
+<div>
+  <div style="width: 24vw; background: fuchsia"></div>
+  <div style="width: 24vw; background: aqua"></div>
+  <div style="width: 24vw; background: silver"></div>
+  <div style="width: 24vw; background: yellow"></div>
+  <div style="width: 4vw; background: gray"></div>
+</div>
+
+<div>
+  <div style="width: 21vw; background: fuchsia"></div>
+  <div style="width: 21vw; background: aqua"></div>
+  <div style="width: 21vw; background: silver"></div>
+  <div style="width: 21vw; background: yellow"></div>
+  <div style="width: 16vw; background: gray"></div>
+</div>

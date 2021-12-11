@@ -1,0 +1,300 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=433533
+-->
+<head>
+  <title>Test for Bug 433533</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=433533">Mozilla Bug 433533</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 433533 **/
+
+var input = document.createElement("input");
+input.setAttribute("type", "hidden");
+is(input.getAttribute("type"), "hidden", "Setting type attribute didn't work!");
+input.setAttribute("type", "hiDDen");
+is(input.getAttribute("type"), "hiDDen", "Type attribute didn't store the original value");
+is(input.type, "hidden", "Wrong input.type!");
+input.setAttribute("type", "HIDDEN");
+is(input.getAttribute("type"), "HIDDEN", "Type attribute didn't store the original value");
+is(input.type, "hidden", "Wrong input.type!");
+
+var td = document.createElement("td");
+td.setAttribute("scope", "rOW");
+is(td.getAttribute("scope"), "rOW", "Scope attribute didn't store the original value");
+td.setAttribute("scope", "row");
+is(td.getAttribute("scope"), "row", "Scope attribute didn't store the original value");
+td.setAttribute("colspan", "100k");
+is(td.getAttribute("colspan"), "100k", "Colspan attribute didn't store the original value");
+td.setAttribute("colspan", " 100 ");
+is(td.getAttribute("colspan"), " 100 ", "Colspan attribute didn't store the original value");
+td.setAttribute("colspan", "100");
+is(td.getAttribute("colspan"), "100", "Colspan attribute didn't store the original value");
+
+// Note, if colspan is negative, it is set to 1, because of backwards compatibility.
+// @see nsHTMLTableCellElement::ParseAttribute
+td.setAttribute("colspan", "-100k");
+is(td.getAttribute("colspan"), "-100k", "Colspan attribute didn't store the original value");
+td.setAttribute("colspan", " -100 ");
+is(td.getAttribute("colspan"), " -100 ", "Colspan attribute didn't store the original value");
+is(td.colSpan, 1, "Colspan reflection should be correct for ' -100 '");
+td.setAttribute("colspan", "-100");
+is(td.getAttribute("colspan"), "-100", "Colspan attribute didn't store the original value");
+is(td.colSpan, 1, "Colspan reflection should be correct for '-100'");
+
+
+td.setAttribute("colspan", "foobar");
+is(td.getAttribute("colspan"), "foobar", "Colspan attribute didn't store the original value");
+
+var iframe = document.createElement("iframe");
+iframe.setAttribute("marginwidth", "50%");
+is(iframe.getAttribute("marginwidth"), "50%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "50");
+is(iframe.getAttribute("marginwidth"), "50",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "0");
+is(iframe.getAttribute("marginwidth"), "0",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "0%");
+is(iframe.getAttribute("marginwidth"), "0%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "9999999999999999999999");
+is(iframe.getAttribute("marginwidth"), "9999999999999999999999",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "9999999999999999999999%");
+is(iframe.getAttribute("marginwidth"), "9999999999999999999999%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "-9999999999999999999999");
+is(iframe.getAttribute("marginwidth"), "-9999999999999999999999",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-9999999999999999999999%");
+is(iframe.getAttribute("marginwidth"), "-9999999999999999999999%",
+   "Marginwidth attribute didn't store the original value");
+
+   
+// Test PRInt32 min/max value
+iframe.setAttribute("marginwidth", "2147483647");
+is(iframe.getAttribute("marginwidth"), "2147483647",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "2147483647%");
+is(iframe.getAttribute("marginwidth"), "2147483647%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "-2147483648");
+is(iframe.getAttribute("marginwidth"), "-2147483648",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-2147483648%");
+is(iframe.getAttribute("marginwidth"), "-2147483648%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "2147483646");
+is(iframe.getAttribute("marginwidth"), "2147483646",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "2147483647%");
+is(iframe.getAttribute("marginwidth"), "2147483647%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "-2147483647");
+is(iframe.getAttribute("marginwidth"), "-2147483647",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-2147483647%");
+is(iframe.getAttribute("marginwidth"), "-2147483647%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "2147483648");
+is(iframe.getAttribute("marginwidth"), "2147483648",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "2147483648%");
+is(iframe.getAttribute("marginwidth"), "2147483648%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "-2147483649");
+is(iframe.getAttribute("marginwidth"), "-2147483649",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-2147483649%");
+is(iframe.getAttribute("marginwidth"), "-2147483649%",
+   "Marginwidth attribute didn't store the original value");
+
+// some values 0 > x > NS_ATTRVALUE_INTEGERTYPE_MAXVALUE
+iframe.setAttribute("marginwidth", "134217726");
+is(iframe.getAttribute("marginwidth"), "134217726",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "134217727");
+is(iframe.getAttribute("marginwidth"), "134217727",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "134217728");
+is(iframe.getAttribute("marginwidth"), "134217728",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "134217729");
+is(iframe.getAttribute("marginwidth"), "134217729",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "134217726%");
+is(iframe.getAttribute("marginwidth"), "134217726%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "134217727%");
+is(iframe.getAttribute("marginwidth"), "134217727%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "134217728%");
+is(iframe.getAttribute("marginwidth"), "134217728%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "134217729%");
+is(iframe.getAttribute("marginwidth"), "134217729%",
+   "Marginwidth attribute didn't store the original value");
+
+// some values 0 < x < NS_ATTRVALUE_INTEGERTYPE_MINVALUE
+iframe.setAttribute("marginwidth", "-134217727");
+is(iframe.getAttribute("marginwidth"), "-134217727",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-134217728");
+is(iframe.getAttribute("marginwidth"), "-134217728",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-134217729");
+is(iframe.getAttribute("marginwidth"), "-134217729",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-134217730");
+is(iframe.getAttribute("marginwidth"), "-134217730",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-134217727%");
+is(iframe.getAttribute("marginwidth"), "-134217727%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-134217728%");
+is(iframe.getAttribute("marginwidth"), "-134217728%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-134217729%");
+is(iframe.getAttribute("marginwidth"), "-134217729%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-134217730%");
+is(iframe.getAttribute("marginwidth"), "-134217730%",
+   "Marginwidth attribute didn't store the original value");
+
+iframe.setAttribute("marginwidth", "-0");
+is(iframe.getAttribute("marginwidth"), "-0",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-0%");
+is(iframe.getAttribute("marginwidth"), "-0%",
+   "Marginwidth attribute didn't store the original value");   
+iframe.setAttribute("marginwidth", " 0 ");
+is(iframe.getAttribute("marginwidth"), " 0 ",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", " 0% ");
+is(iframe.getAttribute("marginwidth"), " 0% ",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-50%");
+is(iframe.getAttribute("marginwidth"), "-50%",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "-50");
+is(iframe.getAttribute("marginwidth"), "-50",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", " -50% ");
+is(iframe.getAttribute("marginwidth"), " -50% ",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", " -50 ");
+is(iframe.getAttribute("marginwidth"), " -50 ",
+   "Marginwidth attribute didn't store the original value");
+iframe.setAttribute("marginwidth", "foobar");
+is(iframe.getAttribute("marginwidth"), "foobar",
+   "Marginwidth attribute didn't store the original value");
+
+var bd = document.createElement("body");
+bd.setAttribute("bgcolor", "red");
+is(bd.getAttribute("bgcolor"), "red", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "red", ".bgColor didn't return the right value!");
+
+bd.setAttribute("bgcolor", "  red  ");
+is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
+
+bd.setAttribute("bgcolor", "#ff0000");
+is(bd.getAttribute("bgcolor"), "#ff0000", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
+
+bd.setAttribute("bgcolor", "#f00");
+is(bd.getAttribute("bgcolor"), "#f00", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "#f00", ".bgColor didn't return the right value!");
+
+bd.setAttribute("bgcolor", "  #ff0000  ");
+is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
+
+bd.setAttribute("bgcolor", "nonsense(complete)");
+is(bd.getAttribute("bgcolor"), "nonsense(complete)", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "nonsense(complete)", ".bgColor didn't return the right value!");
+
+// same test again setting the prop
+bd.bgColor = "red";
+is(bd.getAttribute("bgcolor"), "red", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "red", ".bgColor didn't return the right value!");
+
+bd.bgColor = "  red  ";
+is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
+
+bd.bgColor = "#ff0000";
+is(bd.getAttribute("bgcolor"), "#ff0000", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
+
+bd.bgColor = "#f00";
+is(bd.getAttribute("bgcolor"), "#f00", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "#f00", ".bgColor didn't return the right value!");
+
+bd.bgColor = "  #ff0000  ";
+is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
+
+bd.bgColor = "nonsense(complete)";
+is(bd.getAttribute("bgcolor"), "nonsense(complete)", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "nonsense(complete)", ".bgColor didn't return the right value!");
+
+// equal color, unequal string
+var f1 = document.createElement("font");
+var f2 = document.createElement("font");
+var f3 = document.createElement("font");
+f1.color = "#f00";
+f2.color = "#ff0000";
+f3.color = "red";
+isnot(f1.color, f2.color, "#f00 and #ff0000 should not compare equal");
+isnot(f1.color, f3.color, "#f00 and red should not compare equal");
+isnot(f2.color, f3.color, "#ff0000 and red should not compare equal");
+
+isnot(f1.getAttribute("color"), f2.getAttribute("color"),
+      "#f00 and #ff0000 should not compare equal [attr]");
+isnot(f1.getAttribute("color"), f3.getAttribute("color"),
+      "#f00 and red should not compare equal [attr]");
+isnot(f2.getAttribute("color"), f3.getAttribute("color"),
+      "#ff0000 and red should not compare equal [attr]");
+
+var video = document.createElement("video");
+video.setAttribute("playbackrate", "1");
+is(video.getAttribute('playbackrate'), "1",
+   "Playbackrate attribute didn't store the original value");
+video.setAttribute("playbackrate", "1.5");
+is(video.getAttribute('playbackrate'), "1.5",
+   "Playbackrate attribute didn't store the original value");
+video.setAttribute("playbackrate", "999999999999999999");
+is(video.getAttribute('playbackrate'), "999999999999999999",
+   "Playbackrate attribute didn't store the original value");
+video.setAttribute("playbackrate", "-999999999999999999");
+is(video.getAttribute('playbackrate'), "-999999999999999999",
+   "Playbackrate attribute didn't store the original value");
+video.setAttribute("playbackrate", "foo");
+is(video.getAttribute('playbackrate'), "foo",
+   "Playbackrate attribute didn't store the original value");
+</script>
+</pre>
+</body>
+</html>
+

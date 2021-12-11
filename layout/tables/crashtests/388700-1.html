@@ -1,0 +1,34 @@
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  document.body.style.direction = "rtl";
+  tbody = document.getElementById("tbody");
+  tbody.contentEditable = "true";
+  tbody.focus();
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<table border="1">
+  <tbody>
+    <tr>
+      <td>
+        <table border="1" style="border-collapse: collapse;"><tbody id="tbody"><tr></tr>
+          <tr>
+            <td></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

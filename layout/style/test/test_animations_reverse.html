@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test for Animation.reverse() on compositor animations</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translate(0px) }
+      100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(SimpleTest.finish);
+}, SimpleTest.finish, SpecialPowers);
+
+addAsyncAnimTest(async function() {
+  var [ div, cs ] = new_div("animation: anim 10s linear");
+  const animation = div.getAnimations()[0];
+
+  // Animation is initially running on compositor
+  await waitForPaintsFlushed();
+  advance_clock(5000);
+  omta_is(div, 'transform', { tx: 50 }, RunningOn.Compositor,
+          'Animation is initally animating on compositor');
+
+  // Reverse animation
+  animation.reverse();
+
+  // At this point the playbackRate has changed but the transform will
+  // not have changed.
+  await waitForPaints();
+  omta_is(div, 'transform', { tx: 50 }, RunningOn.Compositor,
+          'Animation value does not change after being reversed');
+
+  // However, we should still have sent a layer transaction to update the
+  // playbackRate on the compositor so that on the next tick we advance
+  // in the right direction.
+  advance_clock(1000);
+  omta_is(div, 'transform', { tx: 40 }, RunningOn.Compositor,
+          'Animation proceeds in reverse direction');
+
+  done_div();
+});
+</script>
+</body>
+</html>

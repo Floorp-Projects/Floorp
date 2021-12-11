@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629200
+-->
+<head>
+  <title>Test for Bug 629200</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="MutationEventChecker.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=629200">Mozilla
+  Bug 629200</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="dataTypes-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var doc = $("svg").contentWindow.document;
+  var filter = doc.getElementById("filter");
+  var convolve = doc.getElementById("convolve");
+  var blur = doc.getElementById("blur");
+  var marker = doc.getElementById("marker");
+  var eventChecker = new MutationEventChecker;
+
+  // class attribute
+
+  eventChecker.watchAttr(filter, "class");
+  eventChecker.expect("add modify remove add");
+  filter.setAttribute("class", "foo");
+  filter.className.baseVal = "bar";
+  filter.removeAttribute("class");
+  filter.removeAttributeNS(null, "class");
+  filter.className.baseVal = "foo";
+
+  eventChecker.expect("");
+  filter.className.baseVal = "foo";
+  filter.setAttribute("class", "foo");
+
+  // length attribute
+
+  eventChecker.watchAttr(marker, "markerWidth");
+  eventChecker.expect("add modify modify modify modify modify remove add");
+  marker.setAttribute("markerWidth", "12.5");
+  marker.markerWidth.baseVal.value = 8;
+  marker.markerWidth.baseVal.valueInSpecifiedUnits = 9;
+  marker.markerWidth.baseVal.valueAsString = "10";
+  marker.markerWidth.baseVal.convertToSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_CM);
+  marker.markerWidth.baseVal.newValueSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_MM, 11);
+  marker.removeAttribute("markerWidth");
+  marker.removeAttributeNS(null, "markerWidth");
+  marker.markerWidth.baseVal.value = 8;
+
+  eventChecker.expect("remove add modify");
+  marker.removeAttribute("markerWidth");
+  console.log(marker.getAttribute("markerWidth"));
+  marker.markerWidth.baseVal.convertToSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_NUMBER);
+  console.log(marker.getAttribute("markerWidth"));
+  marker.markerWidth.baseVal.value = 8;
+
+  eventChecker.expect("");
+  marker.markerWidth.baseVal.value = 8;
+  marker.setAttribute("markerWidth", "8");
+  marker.markerWidth.baseVal.value = 8;
+  marker.markerWidth.baseVal.valueAsString = "8";
+  marker.markerWidth.baseVal.convertToSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_NUMBER);
+  marker.markerWidth.baseVal.newValueSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_NUMBER, 8);
+
+  // number attribute
+
+  eventChecker.watchAttr(convolve, "divisor");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("divisor", "12.5");
+  convolve.divisor.baseVal = 6;
+  convolve.removeAttribute("divisor");
+  convolve.removeAttributeNS(null, "divisor");
+  convolve.divisor.baseVal = 8;
+
+  eventChecker.expect("");
+  convolve.divisor.baseVal = 8;
+  convolve.setAttribute("divisor", "8");
+
+  // number-optional-number attribute
+
+  eventChecker.watchAttr(blur, "stdDeviation");
+  eventChecker.expect("add modify remove add");
+  blur.setAttribute("stdDeviation", "5, 6");
+  blur.stdDeviationX.baseVal = 8;
+  blur.removeAttribute("stdDeviation");
+  blur.removeAttributeNS(null, "stdDeviation");
+  blur.setAttribute("stdDeviation", "2, 3");
+
+  eventChecker.expect("");
+  blur.stdDeviationX.baseVal = 2;
+  blur.stdDeviationY.baseVal = 3;
+  blur.setAttribute("stdDeviation", "2, 3");
+
+  // integer attribute
+
+  eventChecker.watchAttr(convolve, "targetX");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("targetX", "12");
+  convolve.targetX.baseVal = 6;
+  convolve.removeAttribute("targetX");
+  convolve.removeAttributeNS(null, "targetX");
+  convolve.targetX.baseVal = 8;
+
+  // Check redundant change when comparing typed value to attribute value
+  eventChecker.expect("");
+  convolve.setAttribute("targetX", "8");
+  // Check redundant change when comparing attribute value to typed value
+  eventChecker.expect("remove add");
+  convolve.removeAttribute("targetX");
+  convolve.setAttribute("targetX", "8");
+  convolve.targetX.baseVal = 8;
+
+  // integer-optional-integer attribute
+
+  eventChecker.watchAttr(convolve, "order");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("order", "5, 7");
+  convolve.orderX.baseVal = 9;
+  convolve.removeAttribute("order");
+  convolve.removeAttributeNS(null, "order");
+  convolve.setAttribute("order", "9, 5");
+
+  eventChecker.expect("");
+  convolve.orderX.baseVal = 9;
+  convolve.setAttribute("order", "9, 5");
+  convolve.orderY.baseVal = 5;
+
+  // angle attribute
+
+  eventChecker.watchAttr(marker, "orient");
+  eventChecker.expect("add modify modify modify modify modify remove add");
+  marker.setAttribute("orient", "90deg");
+  marker.orientAngle.baseVal.value = 12;
+  marker.orientAngle.baseVal.valueInSpecifiedUnits = 23;
+  marker.orientAngle.baseVal.valueAsString = "34";
+  marker.orientAngle.baseVal.newValueSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_GRAD, 34);
+  marker.orientAngle.baseVal.newValueSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_GRAD, 45);
+  marker.removeAttribute("orient");
+  marker.removeAttributeNS(null, "orient");
+  marker.orientAngle.baseVal.value = 40;
+
+  eventChecker.expect("");
+  marker.orientAngle.baseVal.value = 40;
+  marker.orientAngle.baseVal.valueInSpecifiedUnits = 40;
+  marker.orientAngle.baseVal.valueAsString = "40";
+  marker.orientAngle.baseVal.convertToSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_UNSPECIFIED);
+  marker.orientAngle.baseVal.newValueSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_UNSPECIFIED, 40);
+
+  // boolean attribute
+
+  eventChecker.watchAttr(convolve, "preserveAlpha");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("preserveAlpha", "true");
+  convolve.preserveAlpha.baseVal = false;
+  convolve.removeAttribute("preserveAlpha");
+  convolve.removeAttributeNS(null, "preserveAlpha");
+  convolve.preserveAlpha.baseVal = true;
+
+  eventChecker.expect("");
+  convolve.preserveAlpha.baseVal = true;
+  convolve.setAttribute("preserveAlpha", "true");
+
+  // enum attribute
+
+  eventChecker.watchAttr(convolve, "edgeMode");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("edgeMode", "none");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_WRAP;
+  convolve.removeAttribute("edgeMode");
+  convolve.removeAttributeNS(null, "edgeMode");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
+
+  eventChecker.expect("");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
+  convolve.setAttribute("edgeMode", "none");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
+
+  // string attribute
+
+  eventChecker.watchAttr(convolve, "result");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("result", "bar");
+  convolve.result.baseVal = "foo";
+  convolve.removeAttribute("result");
+  convolve.removeAttributeNS(null, "result");
+  convolve.result.baseVal = "bar";
+
+  eventChecker.expect("");
+  convolve.result.baseVal = "bar";
+  convolve.setAttribute("result", "bar");
+  convolve.result.baseVal = "bar";
+
+  // preserveAspectRatio attribute
+
+  eventChecker.watchAttr(marker, "preserveAspectRatio");
+  eventChecker.expect("add modify remove add");
+  marker.setAttribute("preserveAspectRatio", "xMaxYMid slice");
+  marker.preserveAspectRatio.baseVal.align =
+    SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMAX;
+  marker.removeAttribute("preserveAspectRatio");
+  marker.removeAttributeNS(null, "preserveAspectRatio");
+  marker.preserveAspectRatio.baseVal.align =
+    SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN;
+
+  eventChecker.expect("");
+  marker.preserveAspectRatio.baseVal.meetOrSlice =
+    SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET;
+  marker.setAttribute("preserveAspectRatio", "xMidYMin meet");
+
+  // viewBox attribute
+
+  eventChecker.watchAttr(marker, "viewBox");
+  eventChecker.expect("add modify remove add");
+  marker.setAttribute("viewBox", "1 2 3 4");
+  marker.viewBox.baseVal.height = 5;
+  marker.removeAttribute("viewBox");
+  marker.removeAttributeNS(null, "viewBox");
+  marker.setAttribute("viewBox", "none");
+  marker.setAttribute("viewBox", "none");
+
+  eventChecker.ignoreEvents();
+  marker.setAttribute("viewBox", "1 2 3 4");
+  eventChecker.expect("");
+  marker.viewBox.baseVal.height = 4;
+  marker.viewBox.baseVal.x = 1;
+  marker.setAttribute("viewBox", "1 2 3 4");
+
+  eventChecker.finish();
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTests);
+</script>
+</pre>
+</body>
+</html>

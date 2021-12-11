@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's attr sanitization functionality</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+key1 = Value for Key 1
+
+key2 = Value for <a>Key 2<a/>.
+` },
+  ];
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(async () => {
+    const domLoc = new DOMLocalization(
+      ["/mock.ftl"],
+      false,
+      l10nReg,
+      ["en-US"],
+    );
+
+    await domLoc.translateFragment(document.body);
+
+    const elem1 = document.querySelector("#elem1");
+    const elem2 = document.querySelector("#elem2");
+
+    ok(elem1.textContent.includes("Value for"));
+    ok(!elem1.hasAttribute("title"));
+
+    ok(elem2.textContent.includes("Value for"));
+    ok(!elem2.hasAttribute("title"));
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+  <p id="elem1" title="Old Translation" data-l10n-id="key1"></p>
+  <p id="elem2" title="Old Translation" data-l10n-id="key2"></p>
+</body>
+</html>

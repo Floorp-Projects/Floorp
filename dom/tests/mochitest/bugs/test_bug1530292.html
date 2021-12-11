@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1530292
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1530292</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1530292 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(() => {
+    // This is really a crashtest, but we need some cross-origin (and hence
+    // cross-compartment) windows to test it, so can't use the crashtest
+    // harness.
+    try {
+      ({} instanceof frames[0]);
+      ok(false, "Should have thrown for same-process window");
+    } catch (e) {
+      is(e.message, "frames[0] is not a function", "frames[0] is not a function");
+    }
+    try {
+      ({} instanceof frames[1]);
+      ok(false, "Should have thrown for maybe other-process window");
+    } catch (e) {
+      is(e.message, "frames[1] is not a function", "frames[1] is not a function");
+    }
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1530292">Mozilla Bug 1530292</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <!-- Cross-origin but same-site; must be same-process -->
+  <iframe src="//test1.mochi.test:8888/tests/dom/tests/mochitest/bugs/file_empty.html"></iframe>
+  <!-- Completely cross-origin; might be cross-process -->
+  <iframe src="//example.org/tests/dom/tests/mochitest/bugs/file_empty.html"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

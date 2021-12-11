@@ -1,0 +1,11 @@
+/**
+ * apply.lloydsbank.co.uk - radio buttons are misplaced
+ * Bug #1575000 - https://bugzilla.mozilla.org/show_bug.cgi?id=1575000
+ * WebCompat issue #34969 - https://webcompat.com/issues/34969
+ *
+ * Radio buttons are displaced to the left due to positioning issue of ::before
+ * pseudo element, adding position relative to it's parent fixes the issue.
+ */
+.radio-content-field .radio.inline label span.text {
+  position: relative;
+}

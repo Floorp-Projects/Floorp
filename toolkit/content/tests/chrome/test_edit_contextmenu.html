@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1513343</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    SimpleTest.waitForExplicitFinish();
+
+    async function runTest() {
+      let win = window.browsingContext.topChromeWindow.open("file_edit_contextmenu.xhtml", "context-menu", "chrome,width=600,height=600");
+      await new Promise(r => win.addEventListener("load", r, { once: true}));
+      await SimpleTest.promiseFocus(win);
+
+      const elements = [
+        win.document.querySelector("textarea"),
+        win.document.querySelector("input"),
+        win.document.querySelector("search-textbox"),
+        win.document.querySelector("shadow-input").shadowRoot.querySelector("input"),
+      ];
+      for (const element of elements) {
+        await testElement(element, win);
+      }
+      SimpleTest.finish();
+    }
+
+    async function testElement(element, win) {
+      ok(element, "element exists");
+
+      info("Synthesizing a key so 'Undo' will be enabled");
+      element.focus();
+      synthesizeKey("x", {}, win);
+      is(element.value, "x", "initial value");
+
+      element.select();
+      synthesizeKey("c", { accelKey: true }, win); // copy to clipboard
+      synthesizeKey("KEY_ArrowRight", {}, win); // drop selection to disable cut and copy context menu items
+
+      win.document.addEventListener("contextmenu", (e) => {
+        info("Calling prevent default on the first contextmenu event");
+        e.preventDefault();
+      }, { once: true });
+      synthesizeMouseAtCenter(element, {type: "contextmenu"}, win);
+      ok(!win.document.getElementById("textbox-contextmenu"), "contextmenu with preventDefault() doesn't run");
+
+      let popupshown = new Promise(r => win.addEventListener("popupshown", r, { once: true }));
+      synthesizeMouseAtCenter(element, {type: "contextmenu"}, win);
+      let contextmenu = win.document.getElementById("textbox-contextmenu");
+      ok(contextmenu, "context menu exists after right click");
+      await popupshown;
+
+      // Check that we only got the one context menu, and not two.
+      let outerContextmenu = win.document.getElementById("outer-context-menu");
+      ok(outerContextmenu.state == "closed", "the outer context menu state is is not closed, it's: " + outerContextmenu.state);
+
+      ok(!contextmenu.querySelector("[command=cmd_undo]").hasAttribute("disabled"), "undo enabled");
+      ok(contextmenu.querySelector("[command=cmd_cut]").hasAttribute("disabled"), "cut disabled");
+      ok(contextmenu.querySelector("[command=cmd_copy]").hasAttribute("disabled"), "copy disabled");
+      ok(!contextmenu.querySelector("[command=cmd_paste]").hasAttribute("disabled"), "paste enabled");
+      ok(contextmenu.querySelector("[command=cmd_delete]").hasAttribute("disabled"), "delete disabled");
+      ok(!contextmenu.querySelector("[command=cmd_selectAll]").hasAttribute("disabled"), "select all enabled");
+
+      contextmenu.querySelector("[command=cmd_undo]").click();
+      is(element.value, "", "undo worked");
+
+      // Close the context menu to avoid affecting next test
+      let popuphidden = new Promise(r => win.addEventListener("popuphidden", r, { once: true }));
+      contextmenu.hidePopup();
+      await popuphidden;
+      contextmenu.remove();
+    }
+  </script>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1513343">Mozilla Bug 1513343</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

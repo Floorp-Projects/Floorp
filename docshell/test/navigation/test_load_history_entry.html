@@ -1,0 +1,196 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
+    <script type="application/javascript">
+    /*
+     * Perform the following steps.
+     * 1) Go to file_load_history_entry_page_with_two_links.html, which contains two links, 'link1' and 'link2'
+     * 2) Click on 'link1' to be taken to file_load_history_entry_page_with_two_links.html#1
+     * 3) Click on 'link2' to be taken to file_load_history_entry_page_with_two_links.html#2
+     * 4) Go to file_load_history_entry_page_with_one_link.html
+     * 5) Push state to go to file_load_history_entry_page_with_one_link.html#1
+     *
+     * After each step
+     * - Check the number of session history entries
+     * - Reload the document and do the above again
+     * - Navigate back and check the correct history index
+     * - Navigate forward and check the correct history index and location
+     */
+    async function test() {
+        let testWin;
+        var promise;
+        var previousLocation;
+        var numSHEntries = 0;
+
+        // Step 1. Open a new tab and load a document with two links inside
+        // Now we are at file_load_history_entry_page_with_two_links.html
+        numSHEntries++;
+        promise = waitForLoad();
+        testWin = window.open("file_load_history_entry_page_with_two_links.html");
+        await promise;
+
+        let shistory = SpecialPowers.wrap(testWin)
+                       .docShell
+                       .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
+                       .sessionHistory;
+
+        // Step 2. Navigate the document by clicking on the 1st link
+        // Now we are at file_load_history_entry_page_with_two_links.html#1
+        numSHEntries++;
+        previousLocation = testWin.location.href;
+        await clickLink(testWin, "link1");
+        await doAfterEachTest(testWin, shistory, numSHEntries, previousLocation);
+
+        // Step 3. Navigate the document by clicking the 2nd link
+        // Now we are file_load_history_entry_page_with_two_links.html#2
+        numSHEntries++;
+        previousLocation = testWin.location.href;
+        await clickLink(testWin, "link2");
+        await doAfterEachTest(testWin, shistory, numSHEntries, previousLocation);
+
+        // Step 4. Navigate the document to a different page
+        // Now we are at file_load_history_entry_page_with_one_link.html
+        numSHEntries++;
+        previousLocation = testWin.location.href;
+        promise = waitForLoad();
+        testWin.location = "file_load_history_entry_page_with_one_link.html";
+        await promise;
+        await doAfterEachTest(testWin, shistory, numSHEntries, previousLocation,
+                true /* isCrossDocumentLoad */, false /* hashChangeExpected */);
+
+        // Step 5. Push some state
+        // Now we are at file_load_history_entry_page_with_one_link.html#1
+        numSHEntries++;
+        previousLocation = testWin.location.href;
+        testWin.history.pushState({foo: "bar"}, "", "#1");
+        is(testWin.history.length, numSHEntries, "Session history's length is correct after pushing state");
+        is(shistory.index, numSHEntries - 1 /* we haven't switched to new history entry yet*/,
+                            "Session history's index is correct after pushing state");
+        await doAfterEachTest(testWin, shistory, numSHEntries, previousLocation);
+
+        // We are done with the test
+        testWin.close();
+        SimpleTest.finish();
+    }
+
+    /*
+     * @prevLocation
+     *       if undefined, it is because there is no page to go back to
+     *
+     * @isCrossDocumentLoad
+     *       did we just open a different document
+     * @hashChangeExpected
+     *       Would we get a hash change event if we navigated backwards and forwards in history?
+     *       This is framed with respect to the previous step, e.g. in the previous step was the
+     *       hash different from the location we have navigated to just before calling this function?
+     *       When we navigate forwards or backwards, we need to wait for this event
+     *       because clickLink() also waits for hashchange event and
+     *       if this function gets called before clickLink(), sometimes hashchange
+     *       events from this function will leak to clickLink.
+     */
+    async function doAfterEachTest(testWin, shistory, expectedNumSHEntries, prevLocation,
+                                   isCrossDocumentLoad = false, hashChangeExpected = true) {
+        var initialLocation = testWin.location.href;
+        var initialSHIndex = shistory.index;
+        var promise;
+        is(testWin.history.length, expectedNumSHEntries, "Session history's length is correct");
+
+        // Reload the document
+        promise = waitForLoad();
+        testWin.location.reload(true);
+        await promise;
+        is(testWin.history.length, expectedNumSHEntries, "Session history's length is correct after reloading");
+
+        if (prevLocation == undefined) {
+            return;
+        }
+
+        var hashChangePromise;
+        if (hashChangeExpected) {
+            hashChangePromise = new Promise(resolve => {
+                testWin.addEventListener("hashchange", resolve, {once: true});
+            });
+        }
+        // Navigate backwards
+        if (isCrossDocumentLoad) {
+            // Current page must have been a cross document load, so we just need to wait for
+            // document load to complete after we navigate the history back
+            // because popstate event will not be fired in this case
+            promise = waitForLoad();
+        } else {
+            promise = waitForPopstate(testWin);
+        }
+        testWin.history.back();
+        await promise;
+        if (hashChangeExpected) {
+            await hashChangePromise;
+        }
+        is(testWin.location.href, prevLocation, "Window location is correct after navigating back in history");
+        is(shistory.index, initialSHIndex - 1, "Session history's index is correct after navigating back in history");
+
+        // Navigate forwards
+        if (isCrossDocumentLoad) {
+            promise = waitForLoad();
+        } else {
+            promise = waitForPopstate(testWin);
+        }
+        if (hashChangeExpected) {
+            hashChangePromise = new Promise(resolve => {
+                testWin.addEventListener("hashchange", resolve, {once: true});
+            });
+        }
+        testWin.history.forward();
+        await promise;
+        if (hashChangeExpected) {
+            await hashChangePromise;
+        }
+        is(testWin.location.href, initialLocation, "Window location is correct after navigating forward in history");
+        is(shistory.index, initialSHIndex, "Session history's index is correct after navigating forward in history");
+    }
+
+    async function waitForLoad() {
+        return new Promise(resolve => {
+            window.bodyOnLoad = function() {
+                setTimeout(resolve, 0);
+                window.bodyOnLoad = undefined;
+            };
+        });
+    }
+
+    async function waitForPopstate(win) {
+        return new Promise(resolve => {
+            win.addEventListener("popstate", (e) => {
+                setTimeout(resolve, 0);
+            }, {once: true});
+        });
+    }
+
+    async function clickLink(win, id) {
+        var link = win.document.getElementById(id);
+        let clickPromise = new Promise(resolve => {
+            win.addEventListener("hashchange", resolve, {once: true});
+        });
+        link.click();
+        await clickPromise;
+    }
+
+    </script>
+</head>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1539482">Bug 1539482</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<body onload="test()">
+</body>
+</html>
+

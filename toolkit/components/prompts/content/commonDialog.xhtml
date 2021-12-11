@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/content/commonDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/commonDialog.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
+
+<window id="commonDialogWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        aria-describedby="infoBody"
+        headerparent="dialogGrid"
+        onunload="commonDialogOnUnload();">
+<dialog id="commonDialog"
+        buttonpack="end">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="toolkit/global/commonDialog.ftl"/>
+  </linkset>
+  <script src="chrome://global/content/adjustableTitle.js"/>
+  <script src="chrome://global/content/commonDialog.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://global/content/customElements.js"/>
+  <script>
+    /* eslint-disable no-undef */
+    document.addEventListener("DOMContentLoaded", function() {
+      commonDialogOnLoad();
+    });
+  </script>
+
+  <commandset id="selectEditMenuItems">
+    <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
+    <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+  </commandset>
+
+  <popupset id="contentAreaContextSet">
+    <menupopup id="contentAreaContextMenu"
+               onpopupshowing="goUpdateCommand('cmd_copy')">
+      <menuitem id="context-copy"
+                label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"
+                disabled="true"/>
+      <menuitem id="context-selectall"
+                label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
+    </menupopup>
+  </popupset>
+
+  <!-- The <div> was added in bug 1606617 to workaround bug 1614447 -->
+  <div xmlns="http://www.w3.org/1999/xhtml">
+    <div id="dialogGrid">
+      <div class="dialogRow" id="infoRow" hidden="hidden">
+        <div id="iconContainer">
+          <xul:image id="infoIcon"/>
+        </div>
+        <div id="infoContainer">
+          <xul:description id="infoTitle"/>
+          <xul:description id="infoBody" context="contentAreaContextMenu" noinitialfocus="true"/>
+        </div>
+      </div>
+      <div id="loginContainer" class="dialogRow" hidden="hidden">
+        <xul:label id="loginLabel" data-l10n-id="common-dialog-username" control="loginTextbox"/>
+        <input type="text" id="loginTextbox" dir="ltr"/>
+      </div>
+      <div id="password1Container" class="dialogRow" hidden="hidden">
+        <xul:label id="password1Label" data-l10n-id="common-dialog-password" control="password1Textbox"/>
+        <input type="password" id="password1Textbox" dir="ltr"/>
+      </div>
+      <div id="checkboxContainer" class="dialogRow" hidden="hidden">
+        <div/> <!-- spacer -->
+        <xul:checkbox id="checkbox" oncommand="Dialog.onCheckbox()"/>
+      </div>
+    </div>
+  </div>
+</dialog>
+</window>

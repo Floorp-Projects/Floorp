@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=674861
+-->
+<head>
+  <title>Test for Bug 674861</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=674861">Mozilla Bug 674861</a>
+<p id="display"></p>
+<div id="content">
+  <section id="test1">
+    <h2> Editable Bullet List </h2>
+    <ul contenteditable>
+      <li> item A </li>
+      <li> item B </li>
+      <li> item C </li>
+    </ul>
+
+    <h2> Editable Ordered List </h2>
+    <ol contenteditable>
+      <li> item A </li>
+      <li> item B </li>
+      <li> item C </li>
+    </ol>
+
+    <h2> Editable Definition List </h2>
+    <dl contenteditable>
+      <dt> term A </dt>
+      <dd> definition A </dd>
+      <dt> term B </dt>
+      <dd> definition B </dd>
+      <dt> term C </dt>
+      <dd> definition C </dd>
+    </dl>
+  </section>
+
+  <section id="test2" contenteditable>
+    <h2> Bullet List In Editable Section </h2>
+    <ul>
+      <li> item A </li>
+      <li> item B </li>
+      <li> item C </li>
+    </ul>
+
+    <h2> Ordered List In Editable Section </h2>
+    <ol>
+      <li> item A </li>
+      <li> item B </li>
+      <li> item C </li>
+    </ol>
+
+    <h2> Definition List In Editable Section </h2>
+    <dl>
+      <dt> term A </dt>
+      <dd> definition A </dd>
+      <dt> term B </dt>
+      <dd> definition B </dd>
+      <dt> term C </dt>
+      <dd> definition C </dd>
+    </dl>
+  </section>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 674861 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+const CARET_BEGIN  = 0;
+const CARET_MIDDLE = 1;
+const CARET_END    = 2;
+
+function try2split(element, caretPos) {
+  // compute the requested position
+  var len = element.textContent.length;
+  var pos = -1;
+  switch (caretPos) {
+    case CARET_BEGIN:
+      pos = 0;
+      break;
+    case CARET_MIDDLE:
+      pos = Math.floor(len / 2);
+      break;
+    case CARET_END:
+      pos = len;
+      break;
+  }
+
+  // put the caret on the requested position
+  var sel = window.getSelection();
+  for (var i = 0; i < sel.rangeCount; i++) {
+    var range = sel.getRangeAt(i);
+    sel.removeRange(range);
+  }
+  range = document.createRange();
+  range.setStart(element.firstChild, pos);
+  range.setEnd(element.firstChild, pos);
+  sel.addRange(range);
+
+  // simulates two [Return] keypresses
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Enter");
+}
+
+function runTests() {
+  const test1 = document.getElementById("test1");
+  const test2 = document.getElementById("test2");
+
+  // -----------------------------------------------------------------------
+  // #test1: editable lists should NOT be splittable
+  // -----------------------------------------------------------------------
+  const ul = test1.querySelector("ul");
+  const ol = test1.querySelector("ol");
+  const dl = test1.querySelector("dl");
+
+  // bullet list
+  ul.focus();
+  try2split(ul.querySelector("li"), CARET_END);
+  is(test1.querySelectorAll("ul").length, 1,
+    "The <ul contenteditable> list should not be splittable.");
+  is(ul.querySelectorAll("li").length, 5,
+    "Two new <li> elements should have been created.");
+
+  // ordered list
+  ol.focus();
+  try2split(ol.querySelector("li"), CARET_END);
+  is(test1.querySelectorAll("ol").length, 1,
+    "The <ol contenteditable> list should not be splittable.");
+  is(ol.querySelectorAll("li").length, 5,
+    "Two new <li> elements should have been created.");
+
+  // definition list
+  dl.focus();
+  try2split(dl.querySelector("dd"), CARET_END);
+  is(test1.querySelectorAll("dl").length, 1,
+    "The <dl contenteditable> list should not be splittable.");
+  is(dl.querySelectorAll("dt").length, 5,
+    "Two new <dt> elements should have been created.");
+
+  // -----------------------------------------------------------------------
+  // #test2: lists in editable blocks should be splittable
+  // -----------------------------------------------------------------------
+  test2.focus();
+
+  function testNewParagraph(expected) {
+    // bullet list
+    try2split(test2.querySelector("ul li"), CARET_END);
+    is(test2.querySelectorAll("ul").length, 2,
+      "The <ul> list should have been splitted.");
+    is(test2.querySelectorAll("ul li").length, 3,
+      "No new <li> element should have been created.");
+    is(test2.querySelectorAll("ul+" + expected).length, 1,
+      "A new " + expected + " should have been created in the <ul>.");
+
+    // ordered list
+    try2split(test2.querySelector("ol li"), CARET_END);
+    is(test2.querySelectorAll("ol").length, 2,
+      "The <ol> list should have been splitted.");
+    is(test2.querySelectorAll("ol li").length, 3,
+      "No new <li> element should have been created.");
+    is(test2.querySelectorAll("ol+" + expected).length, 1,
+      "A new " + expected + " should have been created in the <ol>.");
+
+    // definition list
+    try2split(test2.querySelector("dl dd"), CARET_END);
+    is(test2.querySelectorAll("dl").length, 2,
+      "The <dl> list should have been splitted.");
+    is(test2.querySelectorAll("dt").length, 3,
+      "No new <dt> element should have been created.");
+    is(test2.querySelectorAll("dl+" + expected).length, 1,
+      "A new " + expected + " should have been created in the <dl>.");
+  }
+
+  document.execCommand("defaultParagraphSeparator", false, "div");
+  testNewParagraph("div");
+  document.execCommand("defaultParagraphSeparator", false, "p");
+  testNewParagraph("p");
+  document.execCommand("defaultParagraphSeparator", false, "br");
+  testNewParagraph("p");
+
+  // done
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(101, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <defs>
+    <g id="smiley">
+      <circle fill="yellow" stroke="black" stroke-width="2" cx="0" cy="0"
+        r="40"/>
+      <circle fill="white" stroke="black" stroke-width="1" cx="-14" cy="-14"
+        r="14"/>
+      <circle fill="white" stroke="black" stroke-width="1" cx="14" cy="-14"
+        r="14"/>
+      <circle cx="-10" cy="-14" r="4"/>
+      <circle cx="10" cy="-14" r="4"/>
+      <path d="m-11 14a13,13 0 0,0 22,0" fill="none" stroke="black"/>
+    </g>
+  </defs>
+  <!-- translation -->
+  <g transform="translate(0 50)">
+    <use xlink:href="#smiley">
+      <animateTransform attributeName="transform" attributeType="XML"
+        type="translate" fill="freeze" begin="100s" dur="2s" calcMode="paced"
+        values="-5 -10; 35 20; 95 -60"/>
+    </use>
+  </g>
+  <!-- rotation -->
+  <g transform="translate(150 50) rotate(-90)">
+    <use xlink:href="#smiley">
+      <animateTransform attributeName="transform" attributeType="XML"
+        type="rotate" fill="freeze" begin="100s" dur="2s" calcMode="paced"
+        values="20 10 10; 40 -15 25; 160 21 -35"/>
+    </use>
+  </g>
+  <!-- skewY -->
+  <g transform="translate(250 50) skewY(-30)">
+    <use xlink:href="#smiley">
+      <animateTransform attributeName="transform" attributeType="XML"
+        type="skewY" fill="freeze" begin="100s" dur="2s" calcMode="paced"
+        values="10; 40; 50"/>
+    </use>
+  </g>
+  <!-- scale -->
+  <g transform="translate(50 150) scale(0.5)">
+    <use xlink:href="#smiley">
+      <animateTransform attributeName="transform" attributeType="XML"
+        type="scale" fill="freeze" begin="100s" dur="2s" calcMode="paced"
+        values="-4 -2.5; 4 3.5; 8 0.5"/>
+    </use>
+  </g>
+  <!-- to-animation
+
+       You can't have to-animation with a paced calcMode. This test should just
+       produce regular to-animation without any assertions. This is a white-box
+       test.
+   -->
+  <g transform="translate(100 150)">
+    <use xlink:href="#smiley">
+      <animateTransform attributeName="transform" attributeType="XML"
+        type="translate" fill="freeze" begin="100s" dur="2s" calcMode="paced"
+        to="100"/>
+    </use>
+  </g>
+</svg>

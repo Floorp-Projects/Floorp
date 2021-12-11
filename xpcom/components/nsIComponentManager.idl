@@ -1,0 +1,113 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * The nsIComponentManager interface.
+ */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIFactory;
+interface nsIArray;
+interface nsIUTF8StringEnumerator;
+
+[scriptable, uuid(d604ffc3-1ba3-4f6c-b65f-1ed4199364c3)]
+interface nsIComponentManager : nsISupports
+{
+    /**
+     * getClassObject
+     *
+     * Returns the factory object that can be used to create instances of
+     * CID aClass
+     *
+     * @param aClass The classid of the factory that is being requested
+     */
+    void getClassObject(in nsCIDRef aClass,
+                        in nsIIDRef aIID,
+                        [iid_is(aIID),retval] out nsQIResult result);
+
+    /**
+     * getClassObjectByContractID
+     *
+     * Returns the factory object that can be used to create instances of
+     * CID aClass
+     *
+     * @param aClass The classid of the factory that is being requested
+     */
+    void getClassObjectByContractID(in string aContractID,
+                                    in nsIIDRef aIID,
+                                    [iid_is(aIID),retval] out nsQIResult result);
+
+
+   /**
+     * createInstance
+     *
+     * Create an instance of the CID aClass and return the interface aIID.
+     *
+     * @param aClass : ClassID of object instance requested
+     * @param aDelegate : Used for aggregation
+     * @param aIID : IID of interface requested
+     */
+    void createInstance(in nsCIDRef aClass,
+                        in nsISupports aDelegate,
+                        in nsIIDRef aIID,
+                        [iid_is(aIID),retval] out nsQIResult result);
+
+    /**
+     * createInstanceByContractID
+     *
+     * Create an instance of the CID that implements aContractID and return the
+     * interface aIID.
+     *
+     * @param aContractID : aContractID of object instance requested
+     * @param aDelegate : Used for aggregation
+     * @param aIID : IID of interface requested
+     */
+    void createInstanceByContractID(in string aContractID,
+                                    in nsISupports aDelegate,
+                                    in nsIIDRef aIID,
+                                    [iid_is(aIID),retval] out nsQIResult result);
+
+    /**
+     * addBootstrappedManifestLocation
+     *
+     * Adds a bootstrapped manifest location on runtime.
+     *
+     * @param aLocation : A directory where chrome.manifest resides,
+     *                    or an XPI with it on the root.
+     */
+    void addBootstrappedManifestLocation(in nsIFile aLocation);
+
+    /**
+     * removeBootstrappedManifestLocation
+     *
+     * Removes a bootstrapped manifest location on runtime.
+     *
+     * @param aLocation : A directory where chrome.manifest resides,
+     *                    or an XPI with it on the root.
+     */
+    void removeBootstrappedManifestLocation(in nsIFile aLocation);
+
+    /**
+     * getManifestLocations
+     *
+     * Get an array of nsIURIs of all registered and builtin manifest locations.
+     */
+    nsIArray getManifestLocations();
+
+    /**
+     * Returns a list of JSM URLs which are used to create components. This
+     * should only be used in automation.
+     */
+    nsIUTF8StringEnumerator getComponentJSMs();
+};
+
+
+%{ C++
+#ifdef MOZILLA_INTERNAL_API
+#include "nsComponentManagerUtils.h"
+#endif
+%} C++

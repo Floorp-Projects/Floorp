@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for same-origin and cross-origin wrapping of frameElement</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+ 
+</div>
+<iframe id="ifr" src="file_frameElementWrapping.html"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+//
+// This test has sort of morphed over time to become less and less useful.
+// In the past, we had special security policy for frameElement, but that's
+// more or less gone away with compartment/proxy wrapping. So we just go
+// through the motions to make sure that, indeed, frameElement is subject
+// to the same-origin policy.
+//
+
+SimpleTest.waitForExplicitFinish();
+
+var count = 0;
+
+function runTest(result, message) {
+    ok(result === 'PASS', message);
+
+    if (++count === 2)
+        SimpleTest.finish();
+    else
+        $('ifr').contentWindow.location = 'http://example.org/tests/dom/tests/mochitest/general/file_frameElementWrapping.html';
+}
+
+window.addEventListener("message",
+                        function(event) { runTest.apply(null, event.data.split(',')) });
+
+</script>
+</pre>
+</body>
+</html>

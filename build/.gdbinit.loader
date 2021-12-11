@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# loader for .gdbinit file
+
+# This file provides a guard against multiple inclusion. GDB command syntax is
+# rather limited in that you cannot have a `documentation` command inside of an
+# `if`. So we use a separate loader file that sources `.gdbinit` within the
+# `if`.
+
+# You may need to put an 'add-auto-load-safe-path' command in your
+# $HOME/.gdbinit file to get GDB to trust this file. If your builds are
+# generally in $HOME/moz, then you can say:
+#
+#  add-auto-load-safe-path ~/moz
+
+# Multiple include guard
+if $_moz_gdbinit_loaded
+  # already loaded
+else
+  set $_moz_gdbinit_loaded=1
+
+  source -s build/.gdbinit
+
+  # This requires $objdir to have been added to gdb's source directory search
+  # path. Normally this will be done by libxul.so-gdb.py or js-gdb.py.
+  source -s build/.gdbinit.py
+end

@@ -1,0 +1,29 @@
+# HG changeset patch
+# User Robert O'Callahan <robert@ocallahan.org>
+# Date 1294019288 -46800
+# Node ID e427b4ea7e2ff980769e1acd92f4730c5ed3654f
+# Parent  bacc54d452a9fddb5a0d6a1442ec7be4de81ffa7
+Bug 593604. Part 2.5: cairo_pattern_get_surface should not call cairo_error. r=jrmuizel,a=blocking
+
+diff --git a/gfx/cairo/cairo/src/cairo-pattern.c b/gfx/cairo/cairo/src/cairo-pattern.c
+--- a/gfx/cairo/cairo/src/cairo-pattern.c
++++ b/gfx/cairo/cairo/src/cairo-pattern.c
+@@ -2940,17 +2940,17 @@ cairo_pattern_get_surface (cairo_pattern
+ 			   cairo_surface_t **surface)
+ {
+     cairo_surface_pattern_t *spat = (cairo_surface_pattern_t*) pattern;
+ 
+     if (pattern->status)
+ 	return pattern->status;
+ 
+     if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
+-	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
++	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+ 
+     if (surface)
+ 	*surface = spat->surface;
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+ /**

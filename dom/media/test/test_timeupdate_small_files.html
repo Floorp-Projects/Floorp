@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495319
+-->
+
+<head>
+  <title>Bug 495319 - playing back small audio files should fire timeupdate</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495319">Mozilla Bug 495319</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function ended(e) {
+  var v = e.target;
+  ++v.counter.ended;
+  is(v.counter.ended, 1, v._name + " should see ended only once");
+  ok(v.counter.timeupdate > 0, v._name + " should see at least one timeupdate: " + v.currentTime);
+
+  // Rest event counters for we don't allow events after ended.
+  eventsToLog.forEach(function(event) {
+    v.counter[event] = 0;
+  });
+
+  // Finish the test after 500ms. We shouldn't receive any timeupdate events
+  // after the ended event, so this gives time for any pending timeupdate events
+  // to fire so we can ensure we don't regress behaviour.
+  setTimeout(
+    function() {
+      // Remove the event listeners before removing the video from the document.
+      // We should receive a timeupdate and pause event when we remove the element
+      // from the document (as the element is specified to behave as if pause() was
+      // invoked when it's removed from a document), and we don't want those
+      // confusing the test results.
+      v.removeEventListener("ended", ended);
+      eventsToLog.forEach(function(event) {
+        v.removeEventListener(event, logEvent);
+      });
+      removeNodeAndSource(v);
+      manager.finished(v.token);
+    },
+    500);
+}
+
+var eventsToLog = ["play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+  "loadeddata", "playing", "timeupdate", "error", "stalled", "emptied", "abort",
+  "waiting", "pause"];
+
+function logEvent(event) {
+  var v = event.target;
+  ++v.counter[event.type];
+  if (v.counter.ended > 0) {
+    is(v.counter[event.type], 0, v._name + " got unexpected " + event.type + " after ended");
+  }
+}
+
+function startTest(test, token) {
+  var type = getMajorMimeType(test.type);
+  var v = document.createElement(type);
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v._name = test.name;
+
+  // Keep how many events received for each event type.
+  v.counter = {};
+  eventsToLog.forEach(function(e) {
+    v.addEventListener(e, logEvent);
+    v.counter[e] = 0;
+  });
+  v.addEventListener("ended", ended);
+  v.counter.ended = 0;
+  document.body.appendChild(v);
+  v.play();
+}
+
+manager.runTests(gSmallTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

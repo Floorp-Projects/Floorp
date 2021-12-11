@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 6;
+
+function test_seek6(v, seekTime, is, ok, finish) {
+
+// Test for bug identified by Chris Pearce in comment 40 on
+// bug 449159.
+var seekCount = 0;
+var completed = false;
+var interval;
+
+function poll() {
+  v.currentTime;
+}
+
+function startTest() {
+  if (completed)
+    return;
+  interval = setInterval(poll, 10);
+  v.currentTime = Math.random() * v.duration;
+}
+
+function seekEnded() {
+  if (completed)
+    return;
+
+  seekCount++;
+  ok(true, "Seek " + seekCount);
+  if (seekCount == 3) {
+    clearInterval(interval);
+    completed = true;
+    finish();
+  } else {
+    v.currentTime = Math.random() * v.duration;
+  }
+}
+
+v.addEventListener("loadedmetadata", startTest);
+v.addEventListener("seeked", seekEnded);
+
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

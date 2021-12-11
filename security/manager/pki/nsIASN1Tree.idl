@@ -1,0 +1,24 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsITreeView.idl"
+#include "nsIX509Cert.idl"
+
+[scriptable, uuid(de142307-7b88-4e0a-b232-250f310e25d8)]
+interface nsIASN1Tree : nsITreeView {
+  [must_use]
+  void loadASN1Structure(in nsIASN1Object asn1Object);
+
+  [must_use]
+  AString getDisplayData(in unsigned long index);
+};
+
+%{C++
+
+#define NS_ASN1TREE_CONTRACTID "@mozilla.org/security/nsASN1Tree;1"
+
+%}

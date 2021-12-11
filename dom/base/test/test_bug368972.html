@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=368972
+-->
+<head>
+  <title>Test for Bug 368972</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style type="text/css">
+#embed11, #object11 {
+  width: 400px;
+  height: 400px;
+}
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=368972">Mozilla Bug 368972</a>
+<p id="display"></p>
+<div id="content">
+Embed without defined width/height:
+<embed id="embed1" type="bogus"><br>
+Embed width=0 height=0
+<embed id="embed2" type="bogus" width="0" height="0"><br>
+Embed width=100 height=100
+<embed id="embed3" type="bogus" width="100" height="100"><br>
+Embed height=100
+<embed id="embed4" type="bogus" height="100"><br>
+Embed width=100
+<embed id="embed5" type="bogus" width="100"><br>
+Embed width=100xxx height=100
+<embed id="embed6" type="bogus" width="100xxx" height="100"><br>
+Embed width=0100 height=100
+<embed id="embed7" type="bogus" width="0100" height="100"><br>
+Embed width= height=100
+<embed id="embed8" type="bogus" width="" height="100"><br>
+Embed width=100 height=100 style="width:400px"
+<embed id="embed9" type="bogus" width="100" height="100" style="width:400px;"><br>
+Embed height=100 style="width:400px"
+<embed id="embed10" type="bogus" height="100" style="width:400px;"><br>
+Embed height=100 (stylesheet width:400px height:400px)
+<embed id="embed11" type="bogus" height="100"><br>
+
+Object without defined width/height:
+<object id="object1" type="bogus">
+</object><br>
+Object width=0 height=0
+<object id="object2" type="bogus" width="0" height="0">
+</object><br>
+Object width=100 height=100
+<object id="object3" type="bogus" width="100" height="100">
+</object><br>
+Object height=100
+<object id="object4" type="bogus" height="100">
+</object><br>
+Object width=100
+<object id="object5" type="bogus" width="100">
+</object><br>
+Object width=100xxx height=100
+<object id="object6" type="bogus" width="100xxx" height="100">
+</object><br>
+Object width=0100 height=100
+<object id="object7" type="bogus" width="0100" height="100">
+</object><br>
+Object width= height=100
+<object id="object8" type="bogus" width="" height="100">
+</object><br>
+Object width=100 height=100 style="width:400px"
+<object id="object9" type="bogus" width="100" height="100" style="width:400px;">
+</object><br>
+Object height=100 style="width:400px"
+<object id="object10" type="bogus" height="100" style="width:400px;">
+</object><br>
+Object height=100 (stylesheet width:400px height:400px)
+<object id="object11" type="bogus" height="100">
+</object><br>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function check_size(id, width, height) {
+  var element = document.getElementById(id);
+  ok(element, "Plugin element " + id + " did not exist");
+  if (width != "auto") {
+    width = width + "px";
+  }
+  if (height != "auto") {
+    height = height + "px";
+  }
+  var style = window.getComputedStyle(element);
+  is(style.width, width, "Plugin element " + id + " had an incorrect width");
+  is(style.height, height, "Plugin element " + id + " had an incorrect height");
+}
+
+check_size("embed1", "auto", "auto");
+check_size("embed2", 0, 0);
+check_size("embed3", 100, 100);
+check_size("embed4", "auto", 100);
+check_size("embed5", 100, "auto");
+check_size("embed6", 100, 100);
+check_size("embed7", 100, 100);
+check_size("embed8", "auto", 100);
+check_size("embed9", 400, 100);
+check_size("embed10", 400, 100);
+check_size("embed11", 400, 400);
+
+check_size("object1", "auto", "auto");
+check_size("object2", 0, 0);
+check_size("object3", 100, 100);
+check_size("object4", "auto", 100);
+check_size("object5", 100, "auto");
+check_size("object6", 100, 100);
+check_size("object7", 100, 100);
+check_size("object8", "auto", 100);
+check_size("object9", 400, 100);
+check_size("object10", 400, 100);
+check_size("object11", 400, 400);
+</script>
+</pre>
+</body>
+</html>

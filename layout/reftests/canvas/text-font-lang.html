@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for language-sensitive font prefs on canvas</title>
+<script type="text/javascript">
+function test(canvasID) {
+  var canvas = document.getElementById(canvasID);
+  var ctx = canvas.getContext('2d');
+
+  var str = 'Hello world! \u4F60\u597D\u5417\uFF1F';
+  ctx.font = '2em sans-serif';
+  ctx.fillStyle = 'black';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(str, 10, 10);
+};
+</script>
+</head>
+<body>
+
+<!--
+  In the reference, all divs are tagged with lang="en".
+  The expectation is that at least some of them will resolve
+  "sans-serif" to different fonts according to language.
+-->
+
+<div lang="ar" style="margin:20px; height:100px;">
+<canvas id="c1" width="400" height="50"></canvas>
+<script type="text/javascript">
+  test("c1");
+</script>
+</div>
+
+<div lang="ja" style="margin:20px; height:100px;">
+<canvas id="c2" width="400" height="50"></canvas>
+<script type="text/javascript">
+  test("c2");
+</script>
+</div>
+
+<div lang="zh-TW" style="margin:20px; height:100px;">
+<canvas id="c3" width="400" height="50"></canvas>
+<script type="text/javascript">
+  test("c3");
+</script>
+</div>
+
+<div lang="en" style="margin:20px; height:100px;">
+<canvas id="c4" width="400" height="50"></canvas>
+<script type="text/javascript">
+  test("c4");
+</script>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!--Test must be in quirks mode for document.all to work-->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=481440
+-->
+<head>
+  <title>Test for Bug 481440</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481440">Mozilla Bug 481440</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input name="x" id="y">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 481440 **/
+// Do a bunch of getElementById calls to catch hashtables auto-going live
+for (var i = 0; i < 500; ++i) {
+  document.getElementById(i);
+}
+is(document.all.x, document.getElementById("y"),
+   "Unexpected node");
+</script>
+</pre>
+</body>
+</html>

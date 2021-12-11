@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1318988
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1318988</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  function testRequestInSameOrigin() {
+    return new Promise((resolve, reject) => {
+      var ifr = document.createElement('iframe');
+
+      let listener = function(event) {
+        is(event.data, "successful",
+          "Expected 'successful', but got '" + event.data + "'");
+        resolve();
+      };
+
+      window.addEventListener("message", listener);
+
+      ifr.src = "simple_payment_request.html";
+      document.body.appendChild(ifr);
+
+      ifr.addEventListener('load', function() {
+        window.removeEventListener("message", listener);
+      });
+    });
+  }
+
+  function testRequestInIFrame() {
+    return new Promise((resolve, reject) => {
+      var ifr = document.createElement('iframe');
+
+      let listener = function(event) {
+        is(event.data, "SecurityError",
+           "Expected 'SecurityError', but got '" + event.data + "'");
+        resolve();
+      };
+
+      window.addEventListener("message", listener);
+
+      ifr.src = "https://test1.example.com:443/tests/dom/payments/test/simple_payment_request.html";
+      document.body.appendChild(ifr);
+
+      ifr.addEventListener('load', function() {
+        window.removeEventListener("message", listener);
+      });
+    });
+  }
+
+  function testRequestInIFrameWithAttribute() {
+    return new Promise((resolve, reject) => {
+      var ifrr = document.createElement('iframe');
+
+      let listener = function(event) {
+        is(event.data, "successful",
+          "Expected 'successful', but got '" + event.data + "'");
+        resolve();
+      };
+
+      window.addEventListener("message", listener);
+
+      ifrr.setAttribute('allow', 'payment');
+      ifrr.src = "https://test1.example.com:443/tests/dom/payments/test/simple_payment_request.html";
+      document.body.appendChild(ifrr);
+
+      ifrr.addEventListener('load', function() {
+        window.removeEventListener("message", listener);
+      });
+    });
+  }
+
+  function testRequestWithAttributeChanged() {
+    return new Promise((resolve, reject) => {
+      var ifrr = document.createElement('iframe');
+
+      let i = 0;
+
+      ifrr.addEventListener('load', function() {
+        if (i === 0) {
+          ifrr.removeAttribute("allow");
+        }
+        ifrr.contentWindow.postMessage('new PaymentRequest', '*');
+      });
+
+      let listener = function(event) {
+        i++;
+        if (i === 1) {
+          is(event.data, "successful",
+             "Expected successful when running with allow=payment attribute.");
+          ifrr.contentWindow.location.href = ifrr.src;
+        } else {
+          is(event.data, "SecurityError",
+             "Expected SecurityError when running without allow=payment attribute.");
+          window.removeEventListener("message", listener);
+          resolve();
+        }
+      }
+      window.addEventListener("message", listener);
+
+      ifrr.setAttribute("allow", "payment");
+      ifrr.src = "https://test1.example.com:443/tests/dom/payments/test/echo_payment_request.html";
+
+      document.body.appendChild(ifrr);
+    });
+  }
+
+  function testRequestInCrossOriginNestedIFrame() {
+    return new Promise((resolve, reject) => {
+      var ifrr = document.createElement('iframe');
+
+      let listener = function(event) {
+        if (ifrr.allow =! 'payment') {
+          is(event.data, "SecurityError",
+            "Expected 'SecurityError' without allow=payment in nested iframe");
+          ifrr.setAttribute('allow', "payment");
+          ifrr.contentWindow.location.href = ifrr.src;
+        } else {
+          is(event.data, "successful",
+             "Expected 'successful' with allow='payment' in nested iframe");
+          window.removeEventListener("message", listener);
+          resolve();
+        }
+      };
+      window.addEventListener("message", listener);
+
+      ifrr.addEventListener("load", function() {
+        ifrr.contentWindow.postMessage('new PaymentRequest in a new iframe', '*');
+      })
+
+      ifrr.src = "https://test1.example.com:443/tests/dom/payments/test/echo_payment_request.html";
+      document.body.appendChild(ifrr);
+    });
+  }
+
+  function runTests() {
+    testRequestInSameOrigin()
+    .then(testRequestInIFrame)
+    .then(testRequestInIFrameWithAttribute)
+    .then(testRequestWithAttributeChanged)
+    .then(testRequestInCrossOriginNestedIFrame)
+    .then(SimpleTest.finish)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1318988">Mozilla Bug 1318988</a>
+</body>
+</html>

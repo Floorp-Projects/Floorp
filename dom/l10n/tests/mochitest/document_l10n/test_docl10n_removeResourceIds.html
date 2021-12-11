@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DocumentL10n::RemoveResourceIds</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
+  <link rel="localization" href="toolkit/about/aboutSupport.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  /* eslint-disable mozilla/prefer-formatValues */
+
+  SimpleTest.waitForExplicitFinish();
+
+  window.onload = async function() {
+    {
+      // 1. An example message from aboutAddons should be available.
+      let value = await document.l10n.formatValue("shortcuts-browserAction2");
+      is(value.length > 0, true, "localized value retrieved");
+    }
+
+    {
+      // 2. Remove aboutAddons.ftl
+      let link = document.head.querySelector("link[href*=aboutAddons]");
+      document.head.removeChild(link);
+    }
+
+    {
+      // 3. An example message from aboutSupport should still be available.
+      let value = await document.l10n.formatValue("features-version");
+      is(value.length > 0, true, "localized value retrieved");
+
+      // 4. An example message from aboutAddons should not be available.
+      await document.l10n.formatValue("shortcuts-browserAction").then(
+      () => {
+        ok(false, "localization should not be available");
+      },
+      () => {
+        ok(true, "localization should not be available");
+      });
+    }
+
+    {
+      // 5. Remove aboutSupport.ftl
+      let link = document.head.querySelector("link[href*=aboutSupport]");
+      document.head.removeChild(link);
+
+      // 6. document.l10n should be null.
+      is(document.l10n, null, "document.l10n should be null");
+
+      SimpleTest.finish();
+    }
+  };
+  </script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=790732
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 790732</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+async function doTest() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.use_components_shim", true]]})
+
+  // Basic stuff
+  ok(Components, "Components shim exists!");
+  var Ci = Components.interfaces;
+  ok(Ci, "interfaces shim exists!");
+  is(typeof Components.classes, 'undefined', "Shouldn't have a Cc");
+
+  // Check each interface that we shim. We start by checking specific
+  // constants for a couple of interfaces, and then once it's pretty clear that
+  // it's working as intended we just check that the objects themselves are the
+  // same.
+  is(Ci.nsIXMLHttpRequest.HEADERS_RECEIVED, XMLHttpRequest.HEADERS_RECEIVED);
+  is(Ci.nsIDOMNode.DOCUMENT_NODE, Node.DOCUMENT_NODE);
+  is(Ci.nsIDOMKeyEvent, KeyEvent);
+  is(Ci.nsIDOMMouseEvent, MouseEvent);
+  is(Ci.nsIDOMMouseScrollEvent, MouseScrollEvent);
+  is(Ci.nsIDOMMutationEvent, MutationEvent);
+  is(Ci.nsIDOMUIEvent, UIEvent);
+  is(Ci.nsIDOMHTMLMediaElement, HTMLMediaElement);
+  is(Ci.nsIDOMRange, Range);
+  is(Ci.nsIDOMNodeFilter, NodeFilter);
+  is(Ci.nsIDOMXPathResult, XPathResult);
+
+  SimpleTest.finish();
+}
+
+doTest();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=790732">Mozilla Bug 790732</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe id="ifr"></iframe>
+</body>
+</html>

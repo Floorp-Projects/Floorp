@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=608030
+-->
+<head>
+  <title>Test for MozAfterPaint pref Bug 608030</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=608030">Mozilla Bug 608030</a>
+<div id="display" style="width: 10em; height: 5em; background-color: red"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 608030 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+window.addEventListener("load", step0);
+
+is(SpecialPowers.getBoolPref("dom.send_after_paint_to_content"), true, "pref defaults to true in mochitest harness");
+
+function print_rect(rect) {
+  if (!rect) {
+    rect = { top: 0, left: 0, width: 0, right: 0 };
+  }
+  return "(top=" + rect.top + ",left=" + rect.left + ",width=" + rect.width + ",height=" + rect.height + ")";
+}
+
+function print_event(event) {
+  var res = "boundingClientRect=" + print_rect(event.boundingClientRect);
+  var rects = event.clientRects;
+  if (rects) {
+    for (var i = 0; i < rects.length; ++i) {
+      res += " clientRects[" + i + "]=" + print_rect(rects[i]);
+    }
+  }
+  return res;
+}
+
+function step0(event) {
+  // Wait until we get the MozAfterPaint following the load event
+  // before starting.
+  ok(true, "loaded");
+  window.addEventListener("MozAfterPaint", step1);
+
+  // Ensure a MozAfterPaint event is fired
+  div.style.backgroundColor = "yellow";
+}
+
+var start;
+var div = document.getElementById("display");
+
+function step1(event)
+{
+  ok(true, "step1 reached: " + print_event(event));
+  window.removeEventListener("MozAfterPaint", step1);
+
+  start = Date.now();
+
+  window.addEventListener("MozAfterPaint", step2);
+
+  div.style.backgroundColor = "blue";
+}
+
+async function step2(event)
+{
+  ok(true, "step2 reached: " + print_event(event));
+  window.removeEventListener("MozAfterPaint", step2);
+
+  var end = Date.now();
+  var timeout = 3 * Math.max(end - start, 300);
+
+  ok(true, "got MozAfterPaint (timeout for next step is " + timeout + "ms)");
+
+  // Set the pref for our second test
+
+  // When there was previously another page in our window, we seem to
+  // get duplicate events, simultaneously, so we need to register our
+  // next listener after a zero timeout.
+  await SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', false]]});
+
+  // Wait for a double-rAF, to ensure we get a refresh driver tick (which, for
+  // this pref, is what actually makes the pref-adjustment take effect).
+  await new Promise(resolve  => requestAnimationFrame(resolve));
+  await new Promise(resolve  => requestAnimationFrame(resolve));
+
+  setTimeout(step3, 0, timeout);
+}
+function step3(timeout)
+{
+  ok(true, "step3 reached");
+  window.addEventListener("MozAfterPaint", failstep);
+
+  div.style.backgroundColor = "fuchsia";
+
+  setTimeout(step4, timeout);
+}
+
+function failstep(event)
+{
+  ok(true, "failstep reached: " + print_event(event));
+  ok(false, "got MozAfterPaint when we should not have");
+}
+
+function step4()
+{
+  ok(true, "step4 reached"); // If we didn't get the failure in failstep,
+                             // then we passed.
+
+  window.removeEventListener("MozAfterPaint", failstep);
+
+  // Set the pref back in its initial state.
+  SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', true]]}, SimpleTest.finish);
+}
+
+</script>
+</pre>
+</body>
+</html>

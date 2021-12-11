@@ -1,0 +1,129 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SharedLibrary("AccessibleHandler")
+
+EXPORTS.mozilla.a11y += [
+    "AccessibleHandler.h",
+    "HandlerDataCleanup.h",
+]
+
+LOCAL_INCLUDES += [
+    "/accessible/interfaces/ia2",
+    "/ipc/mscom/oop",
+]
+
+# We want to generate distinct UUIDs on a per-channel basis, so we need
+# finer granularity than the standard preprocessor definitions offer.
+# This generated include allow us to separate local builds from automated
+# builds, separate beta from release, and use different UUIDs in downstream
+# projects such as Thunderbird.
+CONFIGURE_SUBST_FILES += ["HandlerDataUUID.h"]
+flags = []
+
+GeneratedFile(
+    "HandlerData.h",
+    "HandlerData_p.c",
+    "HandlerData_i.c",
+    "HandlerData_c.c",
+    "HandlerData_dlldata.c",
+    "HandlerData.tlb",
+    inputs=["HandlerData.idl"],
+    script="/build/midl.py",
+    entry_point="midl",
+    flags=flags
+    + [
+        "-I",
+        TOPOBJDIR,
+        "-I",
+        TOPOBJDIR + "/dist/include",
+        "-I",
+        TOPSRCDIR + "/other-licenses/ia2",
+        "-I",
+        SRCDIR,
+        "-I",
+        OBJDIR,
+        "-acf",
+        SRCDIR + "/HandlerData.acf",
+        "-dlldata",
+        OBJDIR + "/HandlerData_dlldata.c",
+    ],
+)
+
+SOURCES += [
+    "!HandlerData_c.c",
+    "!HandlerData_dlldata.c",
+    "!HandlerData_i.c",
+    "!HandlerData_p.c",
+    "AccessibleHandler.cpp",
+    "AccessibleHandlerControl.cpp",
+    "HandlerChildEnumerator.cpp",
+    "HandlerRelation.cpp",
+    "HandlerTextLeaf.cpp",
+]
+
+EXPORTS += [
+    "!HandlerData.h",
+    "!HandlerData_i.c",
+    "!HandlerDataUUID.h",
+]
+
+# Give some symbols a unique name in each translation unit, to avoid
+# collisions caused by https://llvm.org/pr41817.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    SOURCES["!HandlerData_p.c"].flags += [
+        "-DHandlerData__MIDL_ProcFormatString=HandlerData__MIDL_ProcFormatString__HandlerData_p"
+    ]
+    SOURCES["!HandlerData_p.c"].flags += [
+        "-DHandlerData__MIDL_TypeFormatString=HandlerData__MIDL_TypeFormatString__HandlerData_p"
+    ]
+    for p in ("dlldata", "c", "i", "p"):
+        SOURCES["!HandlerData_%s.c" % p].flags += [
+            "-DUserMarshalRoutines=UserMarshalRoutines__HandlerData_%s" % p
+        ]
+
+DEFFILE = "AccessibleHandler.def"
+
+USE_LIBS += [
+    "mscom_oop",
+]
+
+OS_LIBS += [
+    "rpcrt4",
+    "oleacc",
+]
+
+RCINCLUDE = "AccessibleHandler.rc"
+
+# Suppress warnings from the MIDL generated code.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CFLAGS += [
+        "-Wno-extern-initializer",
+        "-Wno-incompatible-pointer-types",
+        "-Wno-missing-braces",
+        "-Wno-unused-const-variable",
+    ]
+
+# Since we are defining our own COM entry points (DllRegisterServer et al),
+# but we still want to be able to delegate some work to the generated code,
+# we add the prefix "Proxy" to all of the generated counterparts.
+DEFINES["ENTRY_PREFIX"] = "Proxy"
+DEFINES["REGISTER_PROXY_DLL"] = True
+LIBRARY_DEFINES["MOZ_MSCOM_REMARSHAL_NO_HANDLER"] = True
+
+# This DLL may be loaded into other processes, so we need static libs for
+# Windows 7 and Windows 8.
+USE_STATIC_LIBS = True
+
+LIBRARY_DEFINES["UNICODE"] = True
+LIBRARY_DEFINES["_UNICODE"] = True
+LIBRARY_DEFINES["MOZ_NO_MOZALLOC"] = True
+DisableStlWrapping()
+
+DELAYLOAD_DLLS += [
+    "advapi32.dll",
+    "ktmw32.dll",
+]

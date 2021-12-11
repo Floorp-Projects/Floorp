@@ -1,0 +1,102 @@
+{
+  "title": "InfoBar",
+  "description": "A template with an image, test and buttons.",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "linkUrl": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "Should the message be global (persisted across tabs) or local (disappear when switching to a different tab).",
+      "enum": ["global", "tab"]
+    },
+    "text": {
+      "description": "The text show in the notification box.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Message shown in the location bar notification."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string",
+              "description": "Id of localized string for the location bar notification."
+            }
+          },
+          "required": ["string_id"]
+        }
+      ]
+    },
+    "priority": {
+      "description": "Infobar priority level https://searchfox.org/mozilla-central/rev/3aef835f6cb12e607154d56d68726767172571e4/toolkit/content/widgets/notificationbox.js#387",
+      "type": "number",
+      "minumum": 0,
+      "exclusiveMaximum": 10
+    },
+    "buttons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "description": "The text label of the button.",
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "Message content for the button."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "string_id": {
+                    "type": "string",
+                    "description": "Id of localized string for the button."
+                  }
+                },
+                "required": ["string_id"]
+              }
+            ]
+          },
+          "primary": {
+            "type": "boolean",
+            "description": "Is this the primary button?"
+          },
+          "accessKey": {
+            "type": "string",
+            "description": "Keyboard shortcut letter."
+          },
+          "action": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Action dispatched by the button."
+              },
+              "data": {
+                "type": "object"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["label", "action", "accessKey"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["text", "buttons"]
+}

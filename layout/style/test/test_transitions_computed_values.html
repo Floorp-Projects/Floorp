@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435441
+-->
+<head>
+  <title>Test for Bug 435441</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435441">Mozilla Bug 435441</a>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 435441 **/
+
+
+/*
+ * test that when transition properties are inherited, the length of the
+ * computed value stays the same
+ */
+
+var p = document.getElementById("content");
+var c = document.createElement("div");
+p.appendChild(c);
+var cs = getComputedStyle(c, "");
+
+p.style.transitionProperty = "margin-left, margin-right";
+c.style.transitionProperty = "inherit";
+is(cs.transitionProperty, "margin-left, margin-right",
+   "computed style match with no other properties");
+c.style.transitionDuration = "5s";
+is(cs.transitionProperty, "margin-left, margin-right",
+   "computed style match with shorter property");
+is(cs.transitionDuration, "5s",
+   "shorter property not extended");
+c.style.transitionDuration = "5s, 4s, 3s, 2000ms";
+is(cs.transitionProperty, "margin-left, margin-right",
+   "computed style match with longer property");
+is(cs.transitionDuration, "5s, 4s, 3s, 2s",
+   "longer property computed correctly");
+p.style.transitionProperty = "";
+c.style.transitionProperty = "";
+c.style.transitionDuration = "";
+
+// and repeat the above set of tests with property and duration swapped
+p.style.transitionDuration = "5s, 4s";
+c.style.transitionDuration = "inherit";
+is(cs.transitionDuration, "5s, 4s",
+   "computed style match with no other properties");
+c.style.transitionProperty = "margin-left";
+is(cs.transitionDuration, "5s, 4s",
+   "computed style match with shorter property");
+is(cs.transitionProperty, "margin-left",
+   "shorter property not extended");
+c.style.transitionProperty =
+  "margin-left, margin-right, margin-top, margin-bottom";
+is(cs.transitionDuration, "5s, 4s",
+   "computed style match with longer property");
+is(cs.transitionProperty,
+   "margin-left, margin-right, margin-top, margin-bottom",
+   "longer property computed correctly");
+p.style.transitionDuration = "";
+c.style.transitionDuration = "";
+c.style.transitionProperty = "";
+
+// And do the same pair of tests for animations:
+
+p.style.animationName = "bounce, roll";
+c.style.animationName = "inherit";
+is(cs.animationName, "bounce, roll",
+   "computed style match with no other properties");
+c.style.animationDuration = "5s";
+is(cs.animationName, "bounce, roll",
+   "computed style match with shorter property");
+is(cs.animationDuration, "5s",
+   "shorter property not extended");
+c.style.animationDuration = "5s, 4s, 3s, 2000ms";
+is(cs.animationName, "bounce, roll",
+   "computed style match with longer property");
+is(cs.animationDuration, "5s, 4s, 3s, 2s",
+   "longer property computed correctly");
+p.style.animationName = "";
+c.style.animationName = "";
+c.style.animationDuration = "";
+
+// and repeat the above set of tests with name and duration swapped
+p.style.animationDuration = "5s, 4s";
+c.style.animationDuration = "inherit";
+is(cs.animationDuration, "5s, 4s",
+   "computed style match with no other properties");
+c.style.animationName = "bounce";
+is(cs.animationDuration, "5s, 4s",
+   "computed style match with shorter property");
+is(cs.animationName, "bounce",
+   "shorter property not extended");
+c.style.animationName =
+  "bounce, roll, wiggle, spin";
+is(cs.animationDuration, "5s, 4s",
+   "computed style match with longer property");
+is(cs.animationName,
+   "bounce, roll, wiggle, spin",
+   "longer property computed correctly");
+p.style.animationDuration = "";
+c.style.animationDuration = "";
+c.style.animationName = "";
+
+</script>
+</pre>
+</body>
+</html>

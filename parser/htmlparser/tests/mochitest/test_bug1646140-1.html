@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div id="div">
+<script>
+/* globals div svgRanScript */
+SimpleTest.waitForExplicitFinish();
+
+window.svgRanScript = false;
+const o = new MutationObserver(mutations => {
+  o.disconnect();
+  setTimeout(() => {
+    ok(!svgRanScript, "svg onload must not fire");
+    SimpleTest.finish();
+  });
+});
+o.observe(div, {childList: true});
+const p = (new DOMParser()).parseFromString("<svg onload=\"window.svgRanScript=true\"></svg>", "text/html");
+div.appendChild(p.body);
+</script>

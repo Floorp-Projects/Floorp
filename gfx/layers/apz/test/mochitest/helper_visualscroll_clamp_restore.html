@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1.0">
+<title>Tests scroll position is properly synchronized when visual position is temporarily clamped on the main thread</title>
+<script src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+.hoverthingy, button {
+    width: 100%;
+    height: 200px;
+    text-align: center;
+    border: solid 1px black;
+    background-color: white;
+}
+
+.hoverthingy:hover {
+    background-color: lightgray;
+}
+</style>
+<div id="filler" style="height: 5000px">This test runs automatically in automation. To run manually, follow the steps: 1. scroll all the way down</div>
+<div class="hoverthingy">3. move the mouse. this div should have a hover effect exactly when the mouse is on top of it</div>
+<button onclick="clampRestore()">2. click this button</div>
+<script>
+/* eslint-disable no-unused-vars */
+function clampRestore() {
+  // Shorten doc to clamp scroll position
+  let filler = document.getElementById('filler');
+  filler.style.height = '4800px';
+  // Force scroll position update
+  let scrollPos = document.scrollingElement.scrollTop;
+  // Restore height
+  filler.style.height = '5000px';
+}
+
+function getAsyncScrollOffset() {
+  let apzcTree = getLastApzcTree();
+  let rcd = findRcdNode(apzcTree);
+  if (rcd == null) {
+    return {x: -1, y: -1};
+  }
+  return parsePoint(rcd.asyncScrollOffset);
+}
+
+async function test() {
+  document.scrollingElement.scrollTop = document.scrollingElement.scrollTopMax;
+  await promiseApzFlushedRepaints();
+  clampRestore();
+  await promiseApzFlushedRepaints();
+  let apzScrollOffset = getAsyncScrollOffset();
+  dump(`Got apzScrollOffset ${JSON.stringify(apzScrollOffset)}\n`);
+  // The bug this test is exercising resulted in a situation where the
+  // main-thread scroll offset and the APZ scroll offset remained out of sync
+  // while in the steady state. This resulted mouse hover effects and clicks
+  // being offset from where the user visually saw the content/mouse. We
+  // check to make sure the scroll offset is in sync to ensure the bug is fixed.
+  is(apzScrollOffset.y, document.scrollingElement.scrollTop,
+     "RCD y-scroll should match between APZ and main thread");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>

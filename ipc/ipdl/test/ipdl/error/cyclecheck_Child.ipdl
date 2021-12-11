@@ -1,0 +1,15 @@
+//error: cycle(s) detected in manager/manages hierarchy: `cyclecheck_Parent -> cyclecheck_Child -> cyclecheck_Grandchild -> cyclecheck_Parent'
+//error: |manages| declaration in protocol `cyclecheck_Grandchild' does not match any |manager| declaration in protocol `cyclecheck_Parent'
+
+include protocol cyclecheck_Parent;
+include protocol cyclecheck_Grandchild;
+
+protocol cyclecheck_Child {
+    manager cyclecheck_Parent;
+    manages cyclecheck_Grandchild;
+
+child:
+    async cyclecheck_Grandchild();
+    async __delete__();
+};
+

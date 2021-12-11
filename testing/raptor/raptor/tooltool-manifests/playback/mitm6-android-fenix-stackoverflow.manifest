@@ -1,0 +1,9 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "9f80131d6654656b82a560885b5b88b1767dfe47b65a32b2c4dba091a86ba38dfc4d7060a930c78eb51dcb589440ed779d91b7cd69b7b01d5ae54ae17bd9bc85",
+    "filename": "mitm6-android-fenix-stackoverflow.zip",
+    "size": 1026600,
+    "visibility": "public"
+  }
+]

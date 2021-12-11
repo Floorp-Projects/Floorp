@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for parsing, storage, and serialization of CSS @font-face descriptor values</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="descriptor_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for parsing, storage, and serialization of CSS @font-face descriptor values **/
+
+/*
+ * For explanation of some of the more interesting tests here, see the comment
+ * in test_value_storage.html .
+ */
+
+var gStyleElement = document.createElement("style");
+gStyleElement.setAttribute("type", "text/css");
+document.getElementsByTagName("head")[0].appendChild(gStyleElement);
+var gSheet = gStyleElement.sheet;
+gSheet.insertRule("@font-face { }", 0);
+var gRule = gSheet.cssRules[0];
+var gDeclaration = gRule.style;
+
+function fake_set_property(descriptor, value) {
+  gSheet.deleteRule(0);
+  gSheet.insertRule("@font-face { " + descriptor + ": " + value + "}", 0);
+  gRule = gSheet.cssRules[0];
+  gDeclaration = gRule.style;
+}
+
+function xfail_parse(descriptor, value) {
+  switch (descriptor) {
+    case "src":
+      // not clear whether this is an error or not, so mark todo for now
+      return value == "local(serif)";
+  }
+  return false;
+}
+
+function test_descriptor(descriptor)
+{
+  var info = gCSSFontFaceDescriptors[descriptor];
+
+  function test_value(value) {
+//    // We don't implement SetProperty yet (bug 443978).
+//    gDeclaration.setProperty(descriptor, value, "");
+    fake_set_property(descriptor, value);
+
+    var idx;
+
+    var step1val = gDeclaration.getPropertyValue(descriptor);
+    var step1ser = gDeclaration.cssText;
+
+    var func = xfail_parse(descriptor, value) ? todo_isnot : isnot;
+    func(step1val, "", "setting '" + value + "' on '" + descriptor + "'");
+
+    // We don't care particularly about the whitespace or the placement of
+    // semicolons, but for simplicity we'll test the current behavior.
+    var expected_serialization = "";
+    if (step1val != "")
+      expected_serialization = descriptor + ": " + step1val + "; ";
+    is(step1ser, expected_serialization,
+       "serialization should match descriptor value");
+
+    gDeclaration.removeProperty(descriptor);
+//    // We don't implement SetProperty yet (bug 443978).
+//    gDeclaration.setProperty(descriptor, step1val, "");
+    fake_set_property(descriptor, step1val);
+
+    is(gDeclaration.getPropertyValue(descriptor), step1val,
+       "parse+serialize should be idempotent for '" +
+         descriptor + ": " + value + "'");
+
+    gDeclaration.removeProperty(descriptor);
+  }
+
+  var idx;
+  for (idx in info.values)
+    test_value(info.values[idx]);
+}
+
+// To avoid triggering the slow script dialog, we have to test one
+// descriptor at a time.
+SimpleTest.waitForExplicitFinish();
+function runTest() {
+  var descs = [];
+  for (var desc in gCSSFontFaceDescriptors)
+    descs.push(desc);
+  descs = descs.reverse();
+  function do_one() {
+    if (descs.length == 0) {
+      SimpleTest.finish();
+      return;
+    }
+    test_descriptor(descs.pop());
+    SimpleTest.executeSoon(do_one);
+  }
+  SimpleTest.executeSoon(do_one);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(5);
+
+SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
+                          runTest);
+
+</script>
+</pre>
+</body>
+</html>

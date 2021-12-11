@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the URI Classifier</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+// Add some URLs to the malware database.
+var testData = [
+  { url: "example.com/tests/toolkit/components/url-classifier/tests/mochitest/evilWorker.js",
+    db: "test-malware-simple",
+  },
+  { url: "example.com/tests/toolkit/components/url-classifier/tests/mochitest/unwantedWorker.js",
+    db: "test-unwanted-simple",
+  },
+];
+
+function loadTestFrame() {
+  document.getElementById("testFrame").src =
+    "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/workerFrame.html";
+}
+
+function onmessage(event) {
+  var pieces = event.data.split(":");
+  if (pieces[0] == "finish") {
+    SimpleTest.finish();
+    return;
+  }
+
+  is(pieces[0], "success", pieces[1]);
+}
+
+function updateSuccess() {
+  SpecialPowers.pushPrefEnv(
+    {"set": [["browser.safebrowsing.malware.enabled", true]]},
+    loadTestFrame);
+}
+
+function updateError(errorCode) {
+  ok(false, "Couldn't update classifier. Error code: " + errorCode);
+  // Abort test.
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"]]},
+  function() {
+    classifierHelper.waitForInit()
+      .then(() => classifierHelper.addUrlToDB(testData))
+      .then(updateSuccess)
+      .catch(err => {
+        updateError(err);
+      });
+  });
+
+window.addEventListener("message", onmessage);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" onload=""></iframe>
+</body>
+</html>

@@ -1,0 +1,244 @@
+% This Source Code Form is subject to the terms of the Mozilla Public
+% License, v. 2.0. If a copy of the MPL was not distributed with this
+% file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/* ===== global.css =====================================================
+  == Styles that apply everywhere.
+  ======================================================================= */
+
+%include ../../shared/global.inc.css
+
+:root {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  font: message-box;
+}
+
+@media (-moz-windows-non-native-menus) {
+  :host,
+  :root {
+    /* Override some menu color variables for light browser themes. */
+    --menuitem-hover-background-color: #e0e0e6;
+    --menu-background-color: #f9f9fb;
+    --menu-color: #15141a;
+    --menuitem-disabled-hover-background-color: rgba(224, 224, 230, 0.4);
+    --menu-disabled-color: rgba(21, 20, 26, 0.4);
+    --menu-border-color: #cfcfd8;
+    --menu-icon-opacity: 0.7;
+
+    /* Declare menu colors for dark themes, but don't override anything yet. */
+    --dark-menuitem-hover-background-color: #52525e;
+    --dark-menu-background-color: #2b2a33;
+    --dark-menu-color: #fbfbfe;
+    --dark-menuitem-disabled-hover-background-color: rgba(82, 82, 94, 0.4);
+    --dark-menu-disabled-color: rgba(251, 251, 254, 0.4);
+    --dark-menu-border-color: #5b5b66;
+    --dark-menu-icon-opacity: 1;
+  }
+
+  /* Override the menu color variables for dark browser themes. */
+  :host(:-moz-lwtheme-brighttext),
+  :root:-moz-lwtheme-brighttext {
+    --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
+    --menu-background-color: var(--dark-menu-background-color);
+    --menu-color: var(--dark-menu-color);
+    --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
+    --menu-disabled-color: var(--dark-menu-disabled-color);
+    --menu-border-color: var(--dark-menu-border-color);
+    --menu-icon-opacity: var(--dark-menu-icon-opacity);
+  }
+
+  /* We also need to override these color variables in situations where
+     -moz-lwtheme isn't used and the colors are selected based only on the
+     system color scheme. Some of these occur in-content (for example
+     about:preferences), but some do not (like the library/places window). */
+  @media (prefers-color-scheme: dark) {
+    :host(:not(:-moz-lwtheme)),
+    :root:not(:-moz-lwtheme) {
+      --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
+      --menu-background-color: var(--dark-menu-background-color);
+      --menu-color: var(--dark-menu-color);
+      --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
+      --menu-disabled-color: var(--dark-menu-disabled-color);
+      --menu-border-color: var(--dark-menu-border-color);
+      --menu-icon-opacity: var(--dark-menu-icon-opacity);
+    }
+  }
+}
+
+@media (prefers-contrast) {
+  :root {
+    /* In high-contrast mode on Windows, ThreeDLightShadow provides more
+       contrast than ThreeDShadow. See bug 1022564. */
+    --arrowpanel-border-color: ThreeDLightShadow;
+  }
+}
+
+/* ::::: Alert icons :::::*/
+
+.message-icon,
+.alert-dialog #infoIcon,
+.alert-icon,
+.error-icon,
+.question-icon {
+  width: 32px;
+  height: 32px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.message-icon {
+  list-style-image: url("chrome://global/skin/icons/info.svg");
+}
+
+.alert-dialog #infoIcon,
+.alert-icon {
+  list-style-image: url("chrome://global/skin/icons/warning.svg");
+  fill: #ffa436;
+}
+
+.error-icon {
+  list-style-image: url("chrome://global/skin/icons/error.svg");
+  fill: #e22850;
+}
+
+.question-icon {
+  list-style-image: url("chrome://global/skin/icons/help.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0.8;
+}
+
+/* XXX(ntim): [mode="text"] is only used by comm-central */
+
+xul|toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0 !important;
+  margin: 3px 5px !important;
+}
+
+/* ::::: Print preview ::::: */
+
+.print-preview-navigate-button {
+  min-width: 1.9em;
+}
+
+.print-preview-navigate-button > .toolbarbutton-icon {
+  display: none;
+}
+
+#print-preview-portrait-button {
+  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+#print-preview-landscape-button {
+  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+#print-preview-portrait-button > .toolbarbutton-icon,
+#print-preview-landscape-button > .toolbarbutton-icon {
+  margin-inline-end: 2px;
+}
+
+html|*#print-preview-pageNumber {
+  /* 3 chars + (3px border + 1px padding) on both sides */
+  width: calc(8px + 3ch);
+  margin: 0 4px;
+}
+
+/* Separators */
+
+xul|separator:not([orient="vertical"]) {
+  height: 1.5em;
+}
+xul|separator[orient="vertical"] {
+  width: 1.5em;
+}
+
+xul|separator.thin:not([orient="vertical"]) {
+  height: 0.5em;
+}
+xul|separator.thin[orient="vertical"] {
+  width: 0.5em;
+}
+
+xul|separator.groove:not([orient="vertical"]) {
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+  height: 0;
+  margin-block: 0.4em;
+}
+xul|separator.groove[orient="vertical"] {
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  width: 0;
+  margin-inline: 0.4em;
+}
+
+/* Windows classic disabled labels */
+
+@media (-moz-windows-classic) {
+  xul|label[disabled="true"] {
+    color: ThreeDShadow;
+    text-shadow: 1px 1px ThreeDHighlight;
+  }
+}
+
+/* Link focus outline */
+
+.text-link:-moz-focusring {
+  outline: 1px dotted;
+}
+
+/* Input margins */
+
+html|input {
+  margin: 2px 4px;
+}
+
+/* Notification popups */
+
+%include ../../shared/notification-popup.inc.css
+
+/* Content select */
+
+.contentSelectDropdown-ingroup > .menu-iconic-text {
+  padding-inline-start: 20px;
+}
+
+#ContentSelectDropdown > menupopup > menucaption,
+#ContentSelectDropdown > menupopup > menuitem {
+  padding: 0 6px;
+  border-width: 0;
+}
+
+#ContentSelectDropdown > menupopup {
+  font: -moz-list;
+}
+
+#ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text,
+#ContentSelectDropdown > menupopup > menuitem > .menu-iconic-text {
+  /* Padding should follow the 4/12 ratio, where 12px is the default font-size
+     with 4px being the preferred padding size. */
+  padding-block: .3333em;
+}
+
+#ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text {
+  font-weight: bold;
+}
+
+#ContentSelectDropdown > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
+  color: GrayText;
+  background-color: unset;
+}
+
+#ContentSelectDropdown > menupopup > menucaption[disabled="true"] {
+  color: GrayText;
+}
+
+#ContentSelectDropdown > .isOpenedViaTouch > menucaption > .menu-iconic-text,
+#ContentSelectDropdown > .isOpenedViaTouch > menuitem > .menu-iconic-text {
+  /* Touch padding should follow the 11/12 ratio, where 12px is the default
+     font-size with 11px being the preferred padding size. */
+  padding-block: .9167em;
+}

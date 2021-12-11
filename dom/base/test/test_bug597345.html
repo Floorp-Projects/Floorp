@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=597345
+-->
+<head>
+  <title>Test for Bug 597345</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=597345">Mozilla Bug 597345</a>
+<pre id="test">
+  <!-- We want no spaces inside span id="target".  The 'stray' close comment at
+       the end of that span needs to be there! -->
+  <span id="target"><script
+    src="script-1_bug597345.sjs"></script><script
+    charset="ISO-5559-1" src="script-2_bug597345.js"></script>--></span>
+<script type="application/javascript">
+
+/** Test for Bug 597345 **/
+is($("target").textContent, "R\u00e4ksm\u00f6rg\u00e5s",
+   "script-2 should be decoded as UTF-8");
+</script>
+</pre>
+</body>
+</html>

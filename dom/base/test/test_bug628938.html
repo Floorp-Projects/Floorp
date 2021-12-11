@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=628938
+-->
+<head>
+  <title>Test for Bug 628938</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=628938">Mozilla Bug 628938</a>
+<p id="display"></p>
+<foo id="content" style="display: none">
+  <div><div>foo</div></div>
+  <span> bar </span>
+  <div>tulip<span>bar</span></div>
+  <span></span>
+  <div>foo</div>
+  <span></span>
+  <div>bar</div>
+  <span></span>
+  <div>foobar</div>
+</foo>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 628938 **/
+
+var gResults = [];
+var gIdx = 0;
+
+function walkTree(walker)
+{
+  if(walker.firstChild()) {
+    do {
+      if (walker.currentNode.nodeType == Node.ELEMENT_NODE) {
+        ok(gResults[gIdx][0], "current node should be an element");
+        is(walker.currentNode.nodeName, gResults[gIdx][1],
+           "current node name should be " + gResults[gIdx][1]);
+      } else {
+        ok(!gResults[gIdx][0], "current node shouldn't be an element");
+        is(walker.currentNode.nodeValue, gResults[gIdx][1],
+           "current node value should be " + gResults[gIdx][1]);
+      }
+      gIdx++;
+      // Recursively walk the rest of the sub-tree.
+      walkTree(walker);
+    } while(walker.nextSibling());
+
+    // don't forget to return the treewalker to it's previous state
+    // before exiting the function
+    walker.parentNode();
+  }
+}
+
+function regularWalk()
+{
+  gResults = [
+    [ false, "\n  " ],
+    [ true, "DIV" ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ false, "\n  " ],
+    [ true, "SPAN" ],
+    [ false, " bar " ],
+    [ false, "\n  " ],
+    [ true, "DIV" ],
+    [ false, "tulip" ],
+    [ true, "SPAN" ],
+    [ false, "bar" ],
+    [ false, "\n  " ],
+    [ true, "SPAN" ],
+    [ false, "\n  " ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ false, "\n  " ],
+    [ true, "SPAN" ],
+    [ false, "\n  " ],
+    [ true, "DIV" ],
+    [ false, "bar" ],
+    [ false, "\n  " ],
+    [ true, "SPAN" ],
+    [ false, "\n  " ],
+    [ true, "DIV" ],
+    [ false, "foobar" ],
+    [ false, "\n" ],
+  ];
+  var walker = document.createTreeWalker(document.getElementById('content'),
+                                         NodeFilter.SHOW_ALL, null);
+
+  walkTree(walker);
+
+  gIdx = 0;
+}
+
+function noWhiteSpaceWalk()
+{
+  gResults = [
+    [ true, "DIV" ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ true, "SPAN" ],
+    [ false, " bar " ],
+    [ true, "DIV" ],
+    [ false, "tulip" ],
+    [ true, "SPAN" ],
+    [ false, "bar" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+    [ false, "bar" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+    [ false, "foobar" ],
+  ];
+  var walker = document.createTreeWalker(document.getElementById('content'),
+                                         NodeFilter.SHOW_ALL,
+                                         {
+                                           acceptNode(node) {
+                                             if (node.nodeType == Node.TEXT_NODE &&
+                                                 !(/[^\t\n\r ]/.test(node.nodeValue)))
+                                               return NodeFilter.FILTER_REJECT;
+                                             return NodeFilter.FILTER_ACCEPT;
+                                           }
+                                         });
+
+  walkTree(walker);
+
+  gIdx = 0;
+}
+
+function onlyElementsWalk()
+{
+  gResults = [
+    [ true, "DIV" ],
+    [ true, "DIV" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+    [ true, "SPAN" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+  ];
+  var walker = document.createTreeWalker(document.getElementById('content'),
+                                         NodeFilter.SHOW_ELEMENT, null);
+
+  walkTree(walker);
+
+  gIdx = 0;
+}
+
+function onlyDivSubTreeWalk()
+{
+  gResults = [
+    [ true, "DIV" ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ true, "DIV" ],
+    [ false, "tulip" ],
+    [ true, "SPAN" ],
+    [ false, "bar" ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ true, "DIV" ],
+    [ false, "bar" ],
+    [ true, "DIV" ],
+    [ false, "foobar" ],
+  ];
+  var walker = document.createTreeWalker(document.getElementById('content'),
+                                         NodeFilter.SHOW_ALL,
+                                         {
+                                           acceptNode(node) {
+                                             if (node.nodeType == Node.TEXT_NODE &&
+                                                 !(/[^\t\n\r ]/.test(node.nodeValue)))
+                                               return NodeFilter.FILTER_REJECT;
+
+                                             while (node) {
+                                               if (node.nodeName == "DIV")
+                                                 return NodeFilter.FILTER_ACCEPT;
+                                               node = node.parentNode;
+                                             }
+                                             return NodeFilter.FILTER_SKIP;
+                                           }
+                                         });
+
+  walkTree(walker);
+
+  gIdx = 0;
+}
+
+function onlyDivDataWalk()
+{
+  gResults = [
+    [ true, "DIV" ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ true, "DIV" ],
+    [ false, "tulip" ],
+    [ true, "SPAN" ],
+    [ true, "DIV" ],
+    [ false, "foo" ],
+    [ true, "DIV" ],
+    [ false, "bar" ],
+    [ true, "DIV" ],
+    [ false, "foobar" ],
+  ];
+  var walker = document.createTreeWalker(document.getElementById('content'),
+                                         NodeFilter.SHOW_ALL,
+                                         {
+                                           acceptNode(node) {
+                                             if (node.nodeName == "DIV" ||
+                                                 (node.parentNode &&
+                                                  node.parentNode.nodeName == "DIV"))
+                                               return NodeFilter.FILTER_ACCEPT;
+                                             return NodeFilter.FILTER_SKIP;
+                                           }
+                                         });
+
+  walkTree(walker);
+
+  gIdx = 0;
+}
+
+regularWalk();
+noWhiteSpaceWalk();
+onlyElementsWalk();
+onlyDivSubTreeWalk();
+onlyDivDataWalk();
+
+</script>
+</pre>
+</body>
+</html>

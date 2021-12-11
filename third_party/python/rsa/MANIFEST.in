@@ -1,0 +1,5 @@
+include README
+include LICENSE
+include *.py
+recursive-include rsa *.py
+recursive-include tests *.py

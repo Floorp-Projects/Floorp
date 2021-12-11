@@ -1,0 +1,16 @@
+<html>
+<body onhashchange='hashchange(event)' onload='load()'>
+
+<script>
+function hashchange(e) {
+  (opener || parent).childHashchange(e);
+}
+
+function load() {
+  (opener || parent).childLoad();
+}
+</script>
+
+Just a shell of a page.
+</body>
+</html>

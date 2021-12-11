@@ -1,0 +1,51 @@
+<!DOCTYPE>
+<html>
+  <head>
+  <title>Checking zoomToFocusedInput scrolls that focused input element is visible position</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  </head>
+<body>
+<div style="height: 8000px;">ABC</div>
+<input id="input1">
+<!-- Leave additional room below the element so it can be scrolled to the center -->
+<div style="height: 1000px;">ABC</div>
+<script type="application/javascript">
+async function test() {
+  is(0, window.scrollY, "scroll position starts at zero");
+  input1.focus();
+  await waitToClearOutAnyPotentialScrolls(window);
+  isnot(0, window.scrollY, "scroll position isn't top");
+  window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(window);
+  is(0, window.scrollY, "scroll position is top");
+
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  let transformEndPromise = promiseTransformEnd();
+  utils.zoomToFocusedInput();
+  isnot(0, window.scrollY, "scroll position isn't top");
+
+  // Test for bug 1669588: check that the zoom animation did not get
+  // cancelled by a main thread scroll position update triggered by
+  // the ScrollContentIntoView() operation performed by zoomToFocusedInput().
+
+  await transformEndPromise;
+  await promiseApzFlushedRepaints();
+
+  // Check that the zoom animation performed additional scrolling
+  // beyond the ScrollContentIntoView(). The ScrollContentIntoView()
+  // just scrolls enough to bring `input1` into the viewport, while
+  // the zoom animation will scroll further to center it. To
+  // distinguish the two cases, check that we scrolled enough that
+  // the element's top is above the middle of the visual viewport.
+  let inputTop = input1.getBoundingClientRect().top;
+  inputTop -= window.visualViewport.offsetTop;
+  ok(inputTop < (window.visualViewport.height / 2),
+     "input was scrolled at least as far as the middle of the viewport");
+}
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+</script>
+</body>
+</html>

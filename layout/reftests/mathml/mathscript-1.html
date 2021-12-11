@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<head>
+  <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "mathssty";
+      src: url("mathssty.woff");
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Demonstrate that it has no effect outside MathML -->
+  <div style="font-family: 'mathssty'; 
+              font-feature-settings: 'ssty' 1">A</div>
+  <div style="font-family: 'mathssty'; 
+              font-feature-settings: 'ssty' 2">A</div>
+
+  <!-- Demonstrate that it works within MathML -->
+  <math>
+    <mstyle style="font-family: 'mathssty';">
+    <mrow>
+      <mo style="font-feature-settings: 'ssty' 0">A</mo>
+      <mo style="font-feature-settings: 'ssty' 1">A</mo>
+      <mo style="font-feature-settings: 'ssty' 2">A</mo>
+    </mrow>
+    </mstyle>
+  </math>
+  <p>
+  <!-- verify it works for the other elements except mtext -->
+  <math>
+    <mstyle style="font-family: 'mathssty'; font-feature-settings: 'ssty' 2">
+      <mi mathvariant="normal">A</mi>
+      <mn>A</mn>
+      <mtext>A</mtext>
+    </mstyle>
+  </math>
+</body>

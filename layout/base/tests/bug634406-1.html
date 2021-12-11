@@ -1,0 +1,16 @@
+<!DOCTYPE HTML><html><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<textarea spellcheck="false" style="-moz-appearance: none"></textarea>
+<script>
+  var t = document.querySelector("textarea");
+  t.focus();
+
+  sendString("a");
+  synthesizeKey("A", {accelKey: true});
+  synthesizeKey("KEY_ArrowRight");
+  sendString("b");
+</script>
+</body>
+</html>

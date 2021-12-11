@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>Testcase, bug 1122526</title>
+<style>
+
+#outer, #inner {
+  display: inline-block;
+  background: white;
+  color: black;
+}
+/*
+ * We use step-end with reverse direction to paint the initial state
+ * on the first frame, and step to the last state on the next frame.
+ */
+#inner { animation: HoldTransform step-end 100s reverse }
+#inner {
+  vertical-align: top;
+  height: 100px;
+  width: 100px;
+  background: repeating-linear-gradient(to top left, yellow, blue 10px);
+}
+@keyframes HoldTransform {
+  /* need to initially rasterize at non-identity transform to hit the
+   * bug at all
+   * NOTE: These keyframes will be used reverse direction.
+   */
+  0% { transform: none }
+  100% { transform: scale(0.2) }
+}
+
+</style>
+
+<div id="outer">
+  <div id="inner">
+  </div>
+</div>
+
+<script>
+
+document.getElementById("inner").addEventListener("animationstart", StartListener);
+
+function StartListener(event) {
+  // Animation should be zoomed to transform:none after the first frame.
+  requestAnimationFrame(RemoveReftestWait);
+}
+
+function RemoveReftestWait() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>

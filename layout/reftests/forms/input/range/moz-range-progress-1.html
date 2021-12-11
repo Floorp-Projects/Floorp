@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test ::-moz-range-progress</title>
+    <style>
+
+input[type=range] {
+  width: 200px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  background-color: blue;
+}
+
+input[type=range]::-moz-range-progress {
+  height: 10px;
+  background-color: lime;
+}
+
+input[type=range]::-moz-range-track,
+input[type=range]::-moz-range-thumb {
+  visibility: hidden;
+}
+
+    </style>
+  </head>
+  <body>
+    <input type=range value=25>
+  </body>
+</html>

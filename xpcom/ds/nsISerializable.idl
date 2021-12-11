@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIObjectInputStream;
+interface nsIObjectOutputStream;
+
+[scriptable, uuid(91cca981-c26d-44a8-bebe-d9ed4891503a)]
+interface nsISerializable : nsISupports
+{
+    /**
+     * Initialize the object implementing nsISerializable, which must have
+     * been freshly constructed via CreateInstance.  All data members that
+     * can't be set to default values must have been serialized by write,
+     * and should be read from aInputStream in the same order by this method.
+     */
+    [must_use] void read(in nsIObjectInputStream aInputStream);
+
+    /**
+     * Serialize the object implementing nsISerializable to aOutputStream, by
+     * writing each data member that must be recovered later to reconstitute
+     * a working replica of this object, in a canonical member and byte order,
+     * to aOutputStream.
+     *
+     * NB: a class that implements nsISerializable *must* also implement
+     * nsIClassInfo, in particular nsIClassInfo::GetClassID.
+     */
+    void write(in nsIObjectOutputStream aOutputStream);
+};

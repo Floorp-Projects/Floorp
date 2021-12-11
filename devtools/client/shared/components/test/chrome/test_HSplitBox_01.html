@@ -1,0 +1,140 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Basic tests for the HSplitBox component.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/splitters.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/components-h-split-box.css" type="text/css"/>
+  <style>
+    html {
+      --theme-splitter-color: black;
+    }
+  </style>
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+const FUDGE_FACTOR = .1;
+function aboutEq(a, b) {
+  dumpn(`Checking ${a} ~= ${b}`);
+  return Math.abs(a - b) < FUDGE_FACTOR;
+}
+
+window.onload = async function () {
+  try {
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+
+    const HSplitBox = React.createFactory(browserRequire("devtools/client/shared/components/HSplitBox"));
+    ok(HSplitBox, "Should get HSplitBox");
+
+    const newSizes = [];
+
+    async function renderBox(props) {
+      const boxProps = Object.assign({
+        start: "hello!",
+        end: "world!",
+        startWidth: .5,
+        onResize(newSize) {
+          newSizes.push(newSize);
+        }
+      }, props);
+      const el = ReactDOM.render(HSplitBox(boxProps), window.document.body);
+      // wait until the element is rendered.
+      await SimpleTest.promiseWaitForCondition(
+        () => document.querySelector(".devtools-side-splitter")
+      );
+      return el;
+    }
+
+    await renderBox();
+
+    // Test that we properly rendered our two panes.
+
+    let panes = document.querySelectorAll(".h-split-box-pane");
+    is(panes.length, 2, "Should get two panes");
+    is(panes[0].style.flexGrow, "0.5", "Each pane should have .5 width");
+    is(panes[1].style.flexGrow, "0.5", "Each pane should have .5 width");
+    is(panes[0].textContent.trim(), "hello!", "First pane should be hello");
+    is(panes[1].textContent.trim(), "world!", "Second pane should be world");
+
+    // Now change the left width and assert that the changes are reflected.
+
+    await renderBox({ startWidth: .25 });
+    panes = document.querySelectorAll(".h-split-box-pane");
+    is(panes.length, 2, "Should still have two panes");
+    is(panes[0].style.flexGrow, "0.25", "First pane's width should be .25");
+    is(panes[1].style.flexGrow, "0.75", "Second pane's width should be .75");
+
+    // Mouse moves without having grabbed the splitter should have no effect.
+
+    const container = document.querySelector(".h-split-box");
+    ok(container, "Should get our container .h-split-box");
+
+    const { left, top, width } = container.getBoundingClientRect();
+    const middle = left + width / 2;
+    const oneQuarter = left + width / 4;
+    const threeQuarters = left + 3 * width / 4;
+
+    synthesizeMouse(container, middle, top, { type: "mousemove" }, window);
+    is(newSizes.length, 0, "Mouse moves without dragging the splitter should have no effect");
+
+    // Send a mouse down on the splitter, and then move the mouse a couple
+    // times. Now we should get resizes.
+
+    const splitter = document.querySelector(".devtools-side-splitter");
+    ok(splitter, "Should get our splitter");
+
+    synthesizeMouseAtCenter(splitter, { button: 0, type: "mousedown" }, window);
+
+    function mouseMove(clientX) {
+      const event = new MouseEvent("mousemove", { clientX });
+      document.defaultView.top.dispatchEvent(event);
+    }
+
+    mouseMove(middle);
+    is(newSizes.length, 1, "Should get 1 resize");
+    ok(aboutEq(newSizes[0], .5), "New size should be ~.5");
+
+    mouseMove(left);
+    is(newSizes.length, 2, "Should get 2 resizes");
+    ok(aboutEq(newSizes[1], 0), "New size should be ~0");
+
+    mouseMove(oneQuarter);
+    is(newSizes.length, 3, "Sould get 3 resizes");
+    ok(aboutEq(newSizes[2], .25), "New size should be ~.25");
+
+    mouseMove(threeQuarters);
+    is(newSizes.length, 4, "Should get 4 resizes");
+    ok(aboutEq(newSizes[3], .75), "New size should be ~.75");
+
+    synthesizeMouseAtCenter(splitter, { button: 0, type: "mouseup" }, window);
+
+    // Now that we have let go of the splitter, mouse moves should not result in resizes.
+
+    synthesizeMouse(container, middle, top, { type: "mousemove" }, window);
+    is(newSizes.length, 4, "Should still have 4 resizes");
+
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<form id="form1">
+   <input id="input1" type="input" name="input" value="1"/>
+   <input id="input" type="input" name="input_other" value="2"/>
+   <input id="input3" type="input" name="input" value="3"/>
+</form>
+<script>
+	var input1 = document.getElementById("input1");
+      var input2 = document.getElementById("input");
+      var form1 = document.getElementById("form1");
+      form1.insertBefore(input2, input1);
+
+	is(form1.elements.input.length, 3, "Form 1 'input' has the correct length");
+	is(form1.elements.input[0].value, "2", "Form 1 element 1 is correct");
+	is(form1.elements.input[1].value, "1", "Form 1 element 2 is correct");
+
+	is(form1.elements.input[0].id, "input", "Form 1 element 1 id is correct");
+	is(form1.elements.input[1].id, "input1", "Form 1 element 2 id is correct");
+</script>
+</body>
+</html>

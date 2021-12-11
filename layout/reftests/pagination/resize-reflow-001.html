@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>Resize Reflow Harness</title>
+  <style>
+    html,body { height: 100%; overflow:hidden; }
+  </style>
+<body onload="
+var iframe = document.getElementById('outer')
+iframe.style.width = '50em';
+iframe.contentDocument.body.offsetWidth;
+iframe.style.width = '28em';
+document.documentElement.className = '';
+">
+
+<iframe id="outer" src="resize-reflow-001.inner.html" height="90%" frameborder=0></iframe>
+
+<script>
+
+</script>

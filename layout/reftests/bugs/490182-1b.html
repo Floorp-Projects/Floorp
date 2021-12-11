@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+function boom()
+{
+  var col1 = document.createElement("col");
+  col1.setAttribute("width", "100");
+  var next = document.getElementById("col2");
+  
+  next.parentNode.insertBefore(col1, next);
+  reflow();
+  col1.removeAttribute("width");
+}
+
+function reflow() { document.documentElement.offsetHeight; }
+
+</script>
+</head>
+<body onload="boom();">
+<table border="2" id="table">
+<col width=200 id="col2">
+<tr>
+<td>100?</td><td>200</td>
+</tr>
+</table>
+</BODY>
+</HTML>

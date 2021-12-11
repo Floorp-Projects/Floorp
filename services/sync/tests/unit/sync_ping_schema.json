@@ -1,0 +1,263 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "schema for Sync pings, documentation avaliable in toolkit/components/telemetry/docs/sync-ping.rst",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "syncs", "why", "uid"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 0 },
+    "os": { "type": "object" },
+    "discarded": { "type": "integer", "minimum": 1 },
+    "why": { "enum": ["shutdown", "schedule", "idchange"] },
+    "uid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "deviceID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "devices": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/device" }
+    },
+    "sessionStartDate": { "type": "string" },
+    "syncs": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/definitions/payload" }
+    },
+    "syncNodeType": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/event" }
+    },
+    "migrations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/migration" }
+    },
+    "histograms": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "min": { "type": "integer" },
+          "max": { "type": "integer" },
+          "histogram_type": { "type": "integer" },
+          "sum": { "type": "integer" },
+          "ranges": { "type": "array" },
+          "counts": { "type": "array" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["when", "took"],
+      "properties": {
+        "didLogin": { "type": "boolean" },
+        "when": { "type": "integer" },
+        "status": {
+          "type": "object",
+          "anyOf": [
+            { "required": ["sync"] },
+            { "required": ["service"] }
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "sync": { "type": "string" },
+            "service": { "type": "string" }
+          }
+        },
+        "why": { "type": "string" },
+        "took": { "type": "integer", "minimum": -1 },
+        "failureReason": { "$ref": "#/definitions/error" },
+        "engines": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/engine" }
+        }
+      }
+    },
+    "device": {
+      "required": ["id"],
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "os": { "type": "string" },
+        "version": { "type": "string" },
+        "type": {"type": "string" },
+        "syncID": {"type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "engine": {
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "failureReason": { "$ref": "#/definitions/error" },
+        "name": { "type": "string" },
+        "took": { "type": "integer", "minimum": 1 },
+        "status": { "type": "string" },
+        "incoming": {
+          "type": "object",
+          "additionalProperties": false,
+          "anyOf": [
+            {"required": ["applied"]},
+            {"required": ["failed"]}
+          ],
+          "properties": {
+            "applied": { "type": "integer", "minimum": 1 },
+            "failed": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "outgoing": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/outgoingBatch" }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "$ref": "#/definitions/step"
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "anyOf": [
+            { "required": ["checked"] },
+            { "required": ["failureReason"] }
+          ],
+          "properties": {
+            "checked": { "type": "integer", "minimum": 0 },
+            "failureReason": { "$ref": "#/definitions/error" },
+            "took": { "type": "integer" },
+            "version": { "type": "integer" },
+            "problems": {
+              "type": "array",
+              "minItems": 1,
+              "$ref": "#/definitions/namedCount"
+            }
+          }
+        }
+      }
+    },
+    "outgoingBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "anyOf": [
+        {"required": ["sent"]},
+        {"required": ["failed"]}
+      ],
+      "properties": {
+        "sent": { "type": "integer", "minimum": 1 },
+        "failed": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "event": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 6
+    },
+    "migration": {
+      "oneOf": [
+        { "$ref": "#/definitions/webextMigration" }
+      ]
+    },
+    "webextMigration": {
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["webext-storage"] },
+        "entries": { "type": "integer" },
+        "entriesSuccessful": { "type": "integer" },
+        "extensions": { "type": "integer" },
+        "extensionsSuccessful": { "type": "integer" },
+        "openFailure": { "type": "boolean" }
+      }
+    },
+    "error": {
+      "oneOf": [
+        { "$ref": "#/definitions/httpError" },
+        { "$ref": "#/definitions/nsError" },
+        { "$ref": "#/definitions/shutdownError" },
+        { "$ref": "#/definitions/authError" },
+        { "$ref": "#/definitions/otherError" },
+        { "$ref": "#/definitions/unexpectedError" },
+        { "$ref": "#/definitions/sqlError" }
+      ]
+    },
+    "httpError": {
+      "required": ["name", "code"],
+      "properties": {
+        "name": { "enum": ["httperror"] },
+        "code": { "type": "integer" }
+      }
+    },
+    "nsError": {
+      "required": ["name", "code"],
+      "properties": {
+        "name": { "enum": ["nserror"] },
+        "code": { "type": "integer" }
+      }
+    },
+    "shutdownError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["shutdownerror"] }
+      }
+    },
+    "authError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["autherror"] },
+        "from": { "enum": ["tokenserver", "fxaccounts", "hawkclient"] }
+      }
+    },
+    "otherError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["othererror"] },
+        "error": { "type": "string" }
+      }
+    },
+    "unexpectedError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["unexpectederror"] },
+        "error": { "type": "string" }
+      }
+    },
+    "sqlError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["sqlerror"] },
+        "code": { "type": "integer" }
+      }
+    },
+    "step": {
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "took": { "type": "integer", "minimum": 1 },
+        "counts": {
+          "type": "array",
+          "minItems": 1,
+          "$ref": "#/definitions/namedCount"
+        }
+      }
+    },
+    "namedCount": {
+      "required": ["name", "count"],
+      "properties": {
+        "name": { "type": "string" },
+        "count": { "type": "integer" }
+      }
+    }
+  }
+}

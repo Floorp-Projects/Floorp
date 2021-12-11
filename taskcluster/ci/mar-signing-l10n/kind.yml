@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+transforms:
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.mar_signing:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - repackage-l10n
+
+only-for-build-platforms:
+    - linux-shippable/opt
+    - linux64-shippable/opt
+    - macosx64-shippable/opt
+    - win32-shippable/opt
+    - win64-shippable/opt
+    - win64-aarch64-shippable/opt
+    - linux64-asan-reporter-shippable/opt
+    - linux-devedition/opt
+    - linux64-devedition/opt
+    - macosx64-devedition/opt
+    - win32-devedition/opt
+    - win64-devedition/opt
+    - win64-aarch64-devedition/opt
+
+job-template:
+    shipping-phase: promote
+    treeherder-group: ms
+    description-suffix: 'mar signing'
+    required_signoffs:
+        - mar-signing

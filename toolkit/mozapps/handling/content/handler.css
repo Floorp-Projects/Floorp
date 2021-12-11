@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace html "http://www.w3.org/1999/xhtml";
+
+#description {
+  font-weight: bold;
+}
+
+#remember-text:not([visible]) {
+  visibility: hidden;
+}
+
+dialog {
+  padding: 16px calc(16px - 4px);
+}
+
+#items,
+label, description {
+  margin: 0;
+}
+
+#items label {
+  margin-inline: 4px;
+}
+
+#description,
+#description-box,
+#rememberContainer,
+#chooser {
+  margin: 0 4px 16px;
+}
+
+/* avoid double inline margins when #description is nested: */
+#description-box > #description {
+  margin-inline: 0;
+}
+
+/* Parent selector to win on specificity against common.css */
+#rememberContainer > .toggle-container-with-text {
+  align-items: baseline;
+  color: var(--in-content-deemphasized-text);
+}
+
+.toggle-container-with-text > html|input[type="checkbox"] {
+  margin-inline-end: 8px;
+  /* Ensure the checkbox is properly aligned with the text: */
+  translate: 0 calc(1px + max(60% - .6em, 0px));
+}
+
+#rememberContainer:not([hidden]) {
+  /* Ensure we don't get sized to the smallest child when the checkbox text wraps. */
+  display: block;
+}

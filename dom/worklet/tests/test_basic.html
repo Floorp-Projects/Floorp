@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Worklet</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  var audioContext = new AudioContext();
+  ok(!!audioContext.audioWorklet, "audioContext.audioWorklet exists");
+
+  // First loading
+  audioContext.audioWorklet.addModule("common.js")
+  .then(() => {
+    ok(true, "Import should load a resource.");
+  })
+
+  // Second loading - same file
+  .then(() => {
+    return audioContext.audioWorklet.addModule("common.js")
+  })
+  .then(() => {
+    ok(true, "Import should load a resource.");
+  })
+
+  // 3rd loading - a network error
+  .then(() => {
+    return audioContext.audioWorklet.addModule("404.js");
+  })
+  .then(() => {
+    ok(false, "The loading should fail.");
+  }, () => {
+    ok(true, "The loading should fail.");
+  })
+
+  // 4th loading - a network error
+  .then(() => {
+    return audioContext.audioWorklet.addModule("404.js");
+  })
+  .then(() => {
+    ok(false, "The loading should fail.");
+  }, () => {
+    ok(true, "The loading should fail.");
+  })
+
+  // done
+  .then(() => {
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<html>
+<head>
+  <title>Test setting parent location to javascript:</title>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'nonce-bug1550414'">
+  <script nonce="bug1550414">
+    document.addEventListener("securitypolicyviolation", (e) => {
+      window.parent.postMessage({
+        blockedURI: e.blockedURI,
+        violatedDirective: e.violatedDirective,
+        originalPolicy: e.originalPolicy,
+      }, '*');
+    });
+  </script>
+</head>
+<body>
+  <iframe src="file_iframe_parent_location_js.html"></iframe>
+</body>
+</html>

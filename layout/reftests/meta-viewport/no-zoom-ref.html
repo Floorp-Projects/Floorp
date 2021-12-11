@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html reftest-async-zoom="1">
+<meta name="viewport" content="initial-scale=1,width=device-width,minimum-scale=1">
+<style>
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+#container {
+  min-width: 1600px; /* this value should be greater than viewport width */
+  position: relative;
+}
+#inner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: green;
+}
+</style>
+<div id="container">
+  <div id="inner"></div>
+</div>
+</html>

@@ -1,0 +1,59 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
+
+EXPORTS.mozilla.dom += [
+    "LocalStorage.h",
+    "LocalStorageManager.h",
+    "PartitionedLocalStorage.h",
+    "SessionStorageManager.h",
+    "Storage.h",
+    "StorageActivityService.h",
+    "StorageDBUpdater.h",
+    "StorageIPC.h",
+    "StorageNotifierService.h",
+    "StorageObserver.h",
+    "StorageUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "LocalStorage.cpp",
+    "LocalStorageCache.cpp",
+    "LocalStorageManager.cpp",
+    "PartitionedLocalStorage.cpp",
+    "SessionStorage.cpp",
+    "SessionStorageCache.cpp",
+    "SessionStorageManager.cpp",
+    "SessionStorageObserver.cpp",
+    "Storage.cpp",
+    "StorageActivityService.cpp",
+    "StorageDBThread.cpp",
+    "StorageDBUpdater.cpp",
+    "StorageIPC.cpp",
+    "StorageNotifierService.cpp",
+    "StorageObserver.cpp",
+    "StorageUtils.cpp",
+]
+
+IPDL_SOURCES += [
+    "PBackgroundLocalStorageCache.ipdl",
+    "PBackgroundSessionStorageCache.ipdl",
+    "PBackgroundSessionStorageManager.ipdl",
+    "PBackgroundStorage.ipdl",
+    "PSessionStorageObserver.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    "/dom/base",
+]
+
+if CONFIG["ENABLE_TESTS"]:
+    DEFINES["DOM_STORAGE_TESTS"] = True

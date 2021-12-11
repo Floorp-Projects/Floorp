@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test basic functionality of VideoPlaybackQuality</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  var video = document.createElement("video");
+  ok(video.getVideoPlaybackQuality, "getVideoPlaybackQuality should be exposed with pref set");
+
+  var vpq = video.getVideoPlaybackQuality();
+  ok(vpq, "getVideoPlaybackQuality should return an object");
+  ok(vpq.creationTime <= performance.now(), "creationTime should be in the past");
+  is(vpq.totalVideoFrames, 0, "totalVideoFrames should be 0");
+  is(vpq.droppedVideoFrames, 0, "droppedVideoFrames should be 0");
+
+  var vpq2 = video.getVideoPlaybackQuality();
+  ok(vpq !== vpq2, "getVideoPlaybackQuality should return a new object");
+  ok(vpq.creationTime <= vpq2.creationTime, "VideoPlaybackQuality objects should have increasing creationTime");
+
+  var audio = document.createElement("audio");
+  ok(!audio.getVideoPlaybackQuality, "getVideoPlaybackQuality should not be available on Audio elements");
+
+  video.src = "seek.webm";
+  video.play();
+  video.addEventListener("ended", function () {
+    vpq = video.getVideoPlaybackQuality();
+    ok(vpq.creationTime <= performance.now(), "creationTime should be in the past");
+    ok(vpq.totalVideoFrames > 0, "totalVideoFrames should be > 0");
+    ok(vpq.droppedVideoFrames >= 0, "droppedVideoFrames should be >= 0");
+    ok(vpq.droppedVideoFrames <= vpq.totalVideoFrames, "droppedVideoFrames should be <= totalVideoFrames");
+
+    SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", false]]}, function () {
+      vpq = video.getVideoPlaybackQuality();
+      is(vpq.creationTime, 0, "creationTime should be 0");
+      is(vpq.totalVideoFrames, 0, "totalVideoFrames should be 0");
+      is(vpq.droppedVideoFrames, 0, "droppedVideoFrames should be 0");
+
+      SimpleTest.finish();
+    });
+  });
+}
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set":
+    [
+      ["media.mediasource.enabled", true],
+    ]
+  }, test);
+});
+</script>
+</pre>
+</body>
+</html>

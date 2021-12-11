@@ -1,0 +1,258 @@
+<!DOCTYPE html [
+<!ATTLIST foo:base
+   id     ID       #IMPLIED
+>
+]>
+<html xmlns:foo="http://foo.com" xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=209275
+-->
+<head>
+  <title>Test for Bug 209275</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <style>
+    @namespace svg url("http://www.w3.org/2000/svg");
+    svg|a           { fill:blue; }
+    svg|a:visited   { fill:purple; }
+  </style>
+
+  <!--
+    base0 should be ignored because it's not in the XHTML namespace
+  -->
+  <foo:base id="base0" href="http://www.foo.com" />
+
+  <!--
+    baseEmpty should be ignored because it has no href and never gets one.
+  -->
+  <base id="baseEmpty" />
+
+  <!--
+    baseWrongAttrNS should be ignored because its href attribute isn't in the empty
+    namespace.
+  -->
+  <base id="baseWrongAttrNS" foo:href="http://foo.com" />
+
+  <base id="base1" />
+  <base id="base2" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=209275">Mozilla Bug 209275</a>
+<p id="display">
+</p>
+<div id="content">
+  <a href="/" id="link1">link1</a>
+  <div style="display:none">
+    <a href="/" id="link2">link2</a>
+  </div>
+  <a href="/" id="link3" style="display:none">link3</a>
+  <a href="#" id="link4">link4</a>
+  <a href=""  id="colorlink">colorlink</a>
+  <a href="#" id="link5">link5</a>
+  <iframe id="iframe"></iframe>
+
+  <svg width="5cm" height="3cm" viewBox="0 0 5 3" version="1.1"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <a xlink:href="" id="ellipselink">
+    <ellipse cx="2.5" cy="1.5" rx="2" ry="1" id="ellipse" />
+  </a>
+  </svg>
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 209275 **/
+SimpleTest.waitForExplicitFinish();
+
+function link123HrefIs(href, testNum) {
+  is($('link1').href, href, "link1 test " + testNum);
+  is($('link2').href, href, "link2 test " + testNum);
+  is($('link3').href, href, "link3 test " + testNum);
+}
+
+var gGen;
+
+function visitedDependentComputedStyle(win, elem, property) {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  return utils.getVisitedDependentComputedStyle(elem, "", property);
+}
+
+function getColor(elem) {
+  return visitedDependentComputedStyle(document.defaultView, elem, "color");
+}
+
+function getFill(elem) {
+  return visitedDependentComputedStyle(document.defaultView, elem, "fill");
+}
+
+function setXlinkHref(elem, href) {
+  elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+}
+
+function continueTest() {
+  gGen.next();
+}
+
+function* run() {
+  var iframe = document.getElementById("iframe");
+  var iframeCw = iframe.contentWindow;
+
+  // First, set the visited/unvisited link/ellipse colors.
+  const unvisitedColor = "rgb(0, 0, 238)";
+  const visitedColor = "rgb(85, 26, 139)";
+  const unvisitedFill = "rgb(0, 0, 255)";
+  const visitedFill = "rgb(128, 0, 128)";
+
+  const rand = Date.now() + "-" + Math.random();
+
+  // Now we can start the tests in earnest.
+
+  var loc = location;
+  // everything from the location up to and including the final forward slash
+  var path = /(.*\/)[^\/]*/.exec(location)[1];
+
+  // Set colorlink's href so we can check that it changes colors after we
+  // change the base href.
+  $('colorlink').href = "http://example.com/" + rand;
+  setXlinkHref($("ellipselink"), "http://example.com/" + rand);
+
+  // Load http://example.com/${rand} into a new window so we can test that
+  // changing the document's base changes the visitedness of our links.
+  //
+  // cross-origin window.open'd windows don't fire load / error events, so we
+  // wait to close it until we observed the visited color.
+  let win = window.open("http://example.com/" + rand, "_blank");
+
+  // Make sure things are what as we expect them at the beginning.
+  link123HrefIs(`${location.origin}/`, 1);
+  is($('link4').href, loc + "#", "link 4 test 1");
+  is($('link5').href, loc + "#", "link 5 test 1");
+
+  // Remove link5 from the document.  We're going to test that its href changes
+  // properly when we change our base.
+  var link5 = $('link5');
+  link5.remove();
+
+  $('base1').href = "http://example.com";
+
+  // Were the links' hrefs updated after the base change?
+  link123HrefIs("http://example.com/", 2);
+  is($('link4').href, "http://example.com/#", "link 4 test 2");
+  is(link5.href, "http://example.com/#", "link 5 test 2");
+
+  // Were colorlink's color and ellipse's fill updated appropriately?
+  // Because link coloring is asynchronous, we wait until it is updated (or we
+  // timeout and fail anyway).
+  while (getColor($('colorlink')) != visitedColor) {
+    requestIdleCallback(continueTest);
+    yield undefined;
+  }
+  is(getColor($('colorlink')), visitedColor,
+     "Wrong link color after base change.");
+  while (getFill($('ellipselink')) != visitedFill) {
+    requestIdleCallback(continueTest);
+    yield undefined;
+  }
+  is(getFill($('ellipselink')), visitedFill,
+          "Wrong ellipse fill after base change.");
+
+  win.close();
+
+  $('base1').href = "foo/";
+  // Should be interpreted relative to current URI (not the current base), so
+  // base should now be http://mochi.test:8888/foo/
+
+  link123HrefIs(`${location.origin}/`, 3);
+  is($('link4').href, path + "foo/#", "link 4 test 3");
+
+  // Changing base2 shouldn't affect anything, because it's not the first base
+  // tag.
+  $('base2').href = "http://example.org/bar/";
+  link123HrefIs(`${location.origin}/`, 4);
+  is($('link4').href, path + "foo/#", "link 4 test 4");
+
+  // If we unset base1's href attribute, the document's base should come from
+  // base2, whose href is http://example.org/bar/.
+  $('base1').removeAttribute("href");
+  link123HrefIs("http://example.org/", 5);
+  is($('link4').href, "http://example.org/bar/#", "link 4 test 5");
+
+  // If we remove base1, base2 should become the first base tag, and the hrefs
+  // of all the links should change accordingly.
+  $('base1').remove();
+  link123HrefIs("http://example.org/", 6);
+  is($('link4').href, "http://example.org/bar/#", "link 4 test 6");
+
+  // If we add a new base after base2, nothing should change.
+  var base3 = document.createElement("base");
+  base3.href = "http://base3.example.org/";
+  $('base2').parentNode.insertBefore(base3, $('base2').nextSibling);
+  link123HrefIs("http://example.org/", 7);
+  is($('link4').href, "http://example.org/bar/#", "link 4 test 7");
+
+  // But now if we add a new base before base 2, it should become the primary
+  // base.
+  var base4 = document.createElement("base");
+  base4.href = "http://base4.example.org/";
+  $('base2').parentNode.insertBefore(base4, $('base2'));
+  link123HrefIs("http://base4.example.org/", 8);
+  is($('link4').href, "http://base4.example.org/#", "link 4 test 8");
+
+  // Now if we remove all the base tags, the base should become the page's URI
+  // again.
+  $('base2').remove();
+  base3.remove();
+  base4.remove();
+
+  link123HrefIs(`${location.origin}/`, 9);
+  is($('link4').href, loc + "#", "link 4 test 9");
+
+  // Setting the href of base0 shouldn't do anything because it's not in the
+  // XHTML namespace.
+  $('base0').href = "http://bar.com";
+  link123HrefIs(`${location.origin}/`, 10);
+  is($('link4').href, loc + "#", "link 4 test 10");
+
+  // We load into an iframe a document with a <base href="...">, then remove
+  // the document element.  Then we add an <html>, <body>, and <a>, and make
+  // sure that the <a> is resolved relative to the page's location, not its
+  // original base.  We do this twice, rebuilding the document in a different
+  // way each time.
+
+  iframeCw.location = "file_bug209275_1.html";
+  yield undefined; // wait for our child to call us back.
+  is(iframeCw.document.getElementById("link").href,
+     path + "file_bug209275_1.html#",
+     "Wrong href after nuking document.");
+
+  iframeCw.location = "file_bug209275_2.html";
+  yield undefined; // wait for callback from child
+  is(iframeCw.document.getElementById("link").href,
+     `${location.origin}/`,
+     "Wrong href after nuking document second time.");
+
+  // Make sure that document.open() makes the document forget about any <base>
+  // tags it has.
+  iframeCw.location = "file_bug209275_3.html";
+  yield undefined; // wait for callback from child
+  is(iframeCw.document.getElementById("link").href,
+     "http://mochi.test:8888/",
+     "Wrong href after document.open().");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", function() {
+  gGen = run();
+  gGen.next();
+});
+
+]]>
+</script>
+</pre>
+</body>
+</html>

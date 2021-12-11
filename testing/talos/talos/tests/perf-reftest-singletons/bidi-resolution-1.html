@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html style="overflow-y: scroll">
+<head>
+<meta charset="UTF-8">
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  const TEST_WORD = "iqwdzx zzaعظأkvcg rvde";
+  let div = document.getElementById("test");
+
+  div.textContent = TEST_WORD;
+  flush_layout();
+
+  perf_start();
+  div.textContent = build_text(TEST_WORD, 30, 800);
+  flush_layout(div);
+  perf_finish();
+};
+</script>
+</head>
+<body>
+  <div id="test" style="white-space: normal"></div>
+</body>
+</html>

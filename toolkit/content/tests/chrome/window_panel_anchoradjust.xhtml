@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window width="200" height="200"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<deck id="deck">
+  <hbox id="container">
+    <button id="anchor" label="Anchor"/>
+  </hbox>
+  <button id="anchor3" label="Anchor3"/>
+</deck>
+
+<hbox id="container2">
+  <button id="anchor2" label="Anchor2"/>
+</hbox>
+
+<button id="anchor4" label="Anchor4"/>
+
+<panel id="panel" type="arrow">
+  <button label="OK"/>
+</panel>
+
+<menupopup id="menupopup">
+  <menuitem label="One"/>
+  <menuitem id="menuanchor" label="Two"/>
+  <menuitem label="Three"/>
+</menupopup>
+
+<script type="application/javascript"><![CDATA[
+
+
+SimpleTest.waitForExplicitFinish();
+
+function next()
+{
+  return new Promise(r => {
+    requestAnimationFrame(() => requestAnimationFrame(r));
+  })
+}
+
+function waitForPanel(panel, event)
+{
+  return new Promise(resolve => {
+    panel.addEventListener(event, () => { resolve(); }, { once: true });
+  });
+}
+
+function isWithinHalfPixel(a, b, message)
+{
+  ok(Math.abs(a - b) <= 0.5, `${message}: ${a}, ${b}`);
+}
+
+function getPanelPos(panel) {
+  let {left, top, bottom, right} = panel.getBoundingClientRect();
+  left -= parseFloat(getComputedStyle(panel).marginLeft);
+  top -= parseFloat(getComputedStyle(panel).marginTop);
+  bottom += parseFloat(getComputedStyle(panel).marginBottom);
+  right += parseFloat(getComputedStyle(panel).marginRight);
+  return {left, top, bottom, right};
+}
+
+async function runTests() {
+  let panel = document.getElementById("panel");
+  let anchor = document.getElementById("anchor");
+
+  let popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor, "after_start");
+  info("popupshown");
+  await popupshown;
+
+  let anchorrect = anchor.getBoundingClientRect();
+  let panelpos = getPanelPos(panel);
+  let xarrowdiff = panelpos.left - anchorrect.left;
+
+  // When the anchor is moved in some manner, the panel should be adjusted
+  let popuppositioned = waitForPanel(panel, "popuppositioned");
+  document.getElementById("anchor").style.marginLeft = "50px"
+  info("before popuppositioned");
+  await popuppositioned;
+  info("after popuppositioned");
+
+  anchorrect = anchor.getBoundingClientRect();
+  panelpos = getPanelPos(panel);
+  isWithinHalfPixel(anchorrect.left, panelpos.left - xarrowdiff, "anchor moved x");
+  isWithinHalfPixel(anchorrect.bottom, panelpos.top, "anchor moved y");
+
+  // moveToAnchor is used to change the anchor
+  let anchor2 = document.getElementById("anchor2");
+  popuppositioned = waitForPanel(panel, "popuppositioned");
+  panel.moveToAnchor(anchor2, "after_end");
+  info("before popuppositioned 2");
+  await popuppositioned;
+  info("after popuppositioned 2");
+
+  let anchor2rect = anchor2.getBoundingClientRect();
+  panelpos = getPanelPos(panel);
+  isWithinHalfPixel(anchor2rect.right, panelpos.right + xarrowdiff, "new anchor x");
+  isWithinHalfPixel(anchor2rect.bottom, panelpos.top, "new anchor y");
+
+  // moveToAnchor is used to change the anchor with an x and y offset
+  popuppositioned = waitForPanel(panel, "popuppositioned");
+  panel.moveToAnchor(anchor2, "after_end", 7, 9);
+  await popuppositioned;
+
+  anchor2rect = anchor2.getBoundingClientRect();
+  panelpos = getPanelPos(panel);
+  isWithinHalfPixel(anchor2rect.right + 7, panelpos.right + xarrowdiff, "new anchor with offset x");
+  isWithinHalfPixel(anchor2rect.bottom + 9, panelpos.top, "new anchor with offset y");
+
+  // When the container of the anchor is collapsed, the panel should be hidden.
+  let popuphidden = waitForPanel(panel, "popuphidden");
+  anchor2.parentNode.collapsed = true;
+  await popuphidden;
+
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor, "after_start");
+  await popupshown;
+
+  // When the deck containing the anchor changes to a different page, the panel should be hidden.
+  popuphidden = waitForPanel(panel, "popuphidden");
+  document.getElementById("deck").selectedIndex = 1;
+  await popuphidden;
+
+  let anchor3 = document.getElementById("anchor3");
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor3, "after_start");
+  await popupshown;
+
+  // When the anchor is hidden; the panel should be hidden.
+  popuphidden = waitForPanel(panel, "popuphidden");
+  anchor3.parentNode.hidden = true;
+  await popuphidden;
+
+  // When the panel is anchored to an element in a popup, the panel should
+  // also be hidden when that popup is hidden.
+  let menupopup = document.getElementById("menupopup");
+  popupshown = waitForPanel(menupopup, "popupshown");
+  menupopup.openPopupAtScreen(200, 200);
+  await popupshown;
+
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(document.getElementById("menuanchor"), "after_start");
+  await popupshown;
+
+  popuphidden = waitForPanel(panel, "popuphidden");
+  let menupopuphidden = waitForPanel(menupopup, "popuphidden");
+  menupopup.hidePopup();
+  await popuphidden;
+  await menupopuphidden;
+
+  // The panel should no longer follow anchors.
+  panel.setAttribute("followanchor", "false");
+
+  let anchor4 = document.getElementById("anchor4");
+  popupshown = waitForPanel(panel, "popupshown");
+  panel.openPopup(anchor4, "after_start");
+  await popupshown;
+
+  let anchor4rect = anchor4.getBoundingClientRect();
+
+  anchor4.style.marginLeft = "50px"
+  await next();
+
+  panelpos = getPanelPos(panel);
+  isWithinHalfPixel(anchor4rect.left, panelpos.left - xarrowdiff, "no follow anchor x");
+  isWithinHalfPixel(anchor4rect.bottom, panelpos.top, "no follow anchor y");
+
+  popuphidden = waitForPanel(panel, "popuphidden");
+  panel.hidePopup();
+  await popuphidden;
+
+  window.close();
+  window.arguments[0].SimpleTest.finish();
+}
+
+function ok(condition, message) {
+  window.arguments[0].SimpleTest.ok(condition, message);
+}
+
+function is(left, right, message) {
+  window.arguments[0].SimpleTest.is(left, right, message);
+}
+
+window.arguments[0].SimpleTest.waitForFocus(runTests, window);
+
+]]>
+</script>
+
+</window>

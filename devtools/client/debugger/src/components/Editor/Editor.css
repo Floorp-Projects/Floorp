@@ -1,0 +1,228 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.editor-wrapper {
+  --debug-line-border: rgb(145, 188, 219);
+  --debug-expression-background: rgba(202, 227, 255, 0.5);
+  --debug-line-error-border: rgb(255, 0, 0);
+  --debug-expression-error-background: rgba(231, 116, 113, 0.3);
+  --line-exception-background: hsl(344, 73%, 97%);
+  --highlight-line-duration: 5000ms;
+}
+
+.theme-dark .editor-wrapper {
+  --debug-expression-background: rgba(202, 227, 255, 0.3);
+  --debug-line-border: #7786a2;
+  --line-exception-background: hsl(345, 23%, 24%);
+}
+
+.editor-wrapper .CodeMirror-linewidget {
+  margin-right: -7px;
+}
+
+.editor-wrapper {
+  min-width: 0 !important;
+}
+
+.CodeMirror.cm-s-mozilla,
+.CodeMirror-scroll,
+.CodeMirror-sizer {
+  overflow-anchor: none;
+}
+
+/* Prevents inline preview from shifting source height (#1576163) */
+.CodeMirror-linewidget {
+  padding: 0;
+  display: flow-root;
+}
+
+/**
+ * There's a known codemirror flex issue with chrome that this addresses.
+ * BUG https://github.com/firefox-devtools/debugger/issues/63
+ */
+.editor-wrapper {
+  position: absolute;
+  width: calc(100% - 1px);
+  top: var(--editor-header-height);
+  bottom: var(--editor-footer-height);
+  left: 0px;
+}
+
+html[dir="rtl"] .editor-mount {
+  direction: ltr;
+}
+
+.theme-light .cm-s-mozilla .empty-line .CodeMirror-linenumber {
+  color: var(--grey-40);
+}
+
+.theme-dark .cm-s-mozilla .empty-line .CodeMirror-linenumber {
+  color: var(--grey-50);
+}
+
+.function-search {
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.function-search .results {
+  height: auto;
+}
+
+.editor.hit-marker {
+  height: 15px;
+}
+
+.editor-wrapper .highlight-lines {
+  background: var(--theme-selection-background-hover);
+}
+
+.CodeMirror {
+  width: 100%;
+  height: 100%;
+}
+
+.editor-wrapper .editor-mount {
+  width: 100%;
+  background-color: var(--theme-body-background);
+  font-size: var(--theme-code-font-size);
+  line-height: var(--theme-code-line-height);
+}
+
+/* set the linenumber white when there is a breakpoint */
+.editor-wrapper:not(.skip-pausing)
+  .new-breakpoint
+  .CodeMirror-gutter-wrapper
+  .CodeMirror-linenumber {
+  color: white;
+}
+
+/* move the breakpoint below the other gutter elements */
+.new-breakpoint .CodeMirror-gutter-elt:nth-child(2) {
+  z-index: 0;
+}
+
+.theme-dark .editor-wrapper .CodeMirror-line .cm-comment {
+  color: var(--theme-comment);
+}
+
+.debug-expression {
+  background-color: var(--debug-expression-background);
+  border-style: solid;
+  border-color: var(--debug-expression-background);
+  border-width: 1px 0px 1px 0px;
+  position: relative;
+}
+
+.debug-expression::before {
+  content: "";
+  line-height: 1px;
+  border-top: 1px solid var(--blue-50);
+  background: transparent;
+  position: absolute;
+  top: -2px;
+  left: 0px;
+  width: 100%;
+ }
+
+.debug-expression::after {
+  content: "";
+  line-height: 1px;
+  border-bottom: 1px solid var(--blue-50);
+  position: absolute;
+  bottom: -2px;
+  left: 0px;
+  width: 100%;
+ }
+
+.to-line-end ~ .CodeMirror-widget {
+  background-color: var(--debug-expression-background);
+}
+
+.debug-expression-error {
+  background-color: var(--debug-expression-error-background);
+}
+
+.new-debug-line > .CodeMirror-line {
+  background-color: transparent !important;
+  outline: var(--debug-line-border) solid 1px;
+}
+
+/* Don't display the highlight color since the debug line
+   is already highlighted */
+.new-debug-line .CodeMirror-activeline-background {
+  display: none;
+}
+
+.new-debug-line-error > .CodeMirror-line {
+  background-color: var(--debug-expression-error-background) !important;
+  outline: var(--debug-line-error-border) solid 1px;
+}
+
+/* Don't display the highlight color since the debug line
+  is already highlighted */
+.new-debug-line-error .CodeMirror-activeline-background {
+  display: none;
+}
+.highlight-line .CodeMirror-line {
+  animation-name: fade-highlight-out;
+  animation-duration: var(--highlight-line-duration);
+  animation-timing-function: ease-out;
+  animation-direction: forwards;
+}
+
+@keyframes fade-highlight-out {
+  0% {
+    background-color: var(--theme-contrast-background);
+  }
+  30% {
+    background-color: var(--theme-contrast-background);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.visible {
+  visibility: visible;
+}
+
+/* Code folding */
+.editor-wrapper .CodeMirror-foldgutter-open {
+  color: var(--grey-40);
+}
+
+.editor-wrapper .CodeMirror-foldgutter-open,
+.editor-wrapper .CodeMirror-foldgutter-folded {
+  fill: var(--grey-40);
+}
+
+.editor-wrapper .CodeMirror-foldgutter-open::before,
+.editor-wrapper .CodeMirror-foldgutter-open::after {
+  border-top: none;
+}
+
+.editor-wrapper .CodeMirror-foldgutter-folded::before,
+.editor-wrapper .CodeMirror-foldgutter-folded::after {
+  border-left: none;
+}
+
+.editor-wrapper .CodeMirror-foldgutter .CodeMirror-guttermarker-subtle {
+  visibility: visible;
+}
+
+.editor-wrapper .CodeMirror-foldgutter .CodeMirror-linenumber {
+  text-align: left;
+  padding: 0 0 0 2px;
+}
+
+/* Exception line */
+.line-exception {
+  background-color: var(--line-exception-background);
+}
+
+.mark-text-exception {
+  text-decoration: var(--red-50) wavy underline;
+  text-decoration-skip-ink: none;
+}

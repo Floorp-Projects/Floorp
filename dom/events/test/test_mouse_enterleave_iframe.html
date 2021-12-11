@@ -1,0 +1,305 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test mouseenter and mouseleave for iframe.</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<style>
+#start {
+  width: 300px;
+  height: 30px;
+}
+
+#target, #target2 {
+  width: 150px;
+  height: 150px;
+  background-color: #fcc;
+  display: inline-block;
+}
+
+#frame, #frame2 {
+  height: 100%;
+  width: 100%;
+}
+
+#reflow, #div {
+  width: 300px;
+  height: 10px;
+  background-color: lightgreen;
+}
+</style>
+<div id="start">Start from here!!</div>
+<div id="div"></div>
+<div id="target">
+  <iframe id="frame" frameborder="0" scrolling="no" src="http://example.com/tests/dom/events/test/file_mouse_enterleave.html"></iframe>
+</div>
+<div id="target2">
+  <iframe id="frame2" frameborder="0" scrolling="no" src="http://example.com/tests/dom/events/test/file_mouse_enterleave.html"></iframe>
+</div>
+<div id="reflow"></div>
+<script>
+
+function reflow() {
+  let div = document.getElementById("reflow");
+  div.style.display = "none";
+  div.getBoundingClientRect();
+  div.style.display = "block";
+  div.getBoundingClientRect();
+}
+
+function waitForMessage(aRemoteTarget, aEventType, aTargetName) {
+  return new Promise(function(aResolve, aReject) {
+    window.addEventListener("message", function listener(aEvent) {
+      if (aEvent.source != aRemoteTarget.contentWindow) {
+        return;
+      }
+
+      if (aEvent.data.eventType !== aEventType) {
+        window.removeEventListener("message", listener);
+        ok(false, `receive unexpected message ${JSON.stringify(aEvent.data)}`);
+        aReject(new Error(`receive unexpected message ${JSON.stringify(aEvent.data)}`));
+        return;
+      }
+
+      if (aEvent.data.targetName !== aTargetName) {
+        return;
+      }
+
+      ok(true, `receive message ${JSON.stringify(aEvent.data)}`);
+      // Trigger a reflow which will generate synthesized mouse move event.
+      aRemoteTarget.contentWindow.postMessage("reflow", "*");
+      // Now wait a bit to see if there is any unexpected message fired.
+      setTimeout(function() {
+        window.removeEventListener("message", listener);
+        aResolve();
+      }, 0);
+    });
+  });
+}
+
+function waitForLeaveEvent(aTarget) {
+  return new Promise(function(aResolve) {
+    aTarget.addEventListener("mouseleave", function(aEvent) {
+      ok(true, `receive ${aEvent.type}`);
+      aResolve();
+    }, { once: true });
+  });
+}
+
+function waitForEnterLeaveEvents(aEnterTarget, aLeaveTarget) {
+  let expectedEvents = [{target: aEnterTarget, eventName: "mouseenter"}];
+  if (aLeaveTarget) {
+    expectedEvents.push({target: aLeaveTarget, eventName: "mouseleave"})
+  }
+
+  return new Promise(function(aResolve, aReject) {
+    function cleanup() {
+      aEnterTarget.removeEventListener("mouseenter", listener);
+      aEnterTarget.removeEventListener("mouseleave", unexpectedEvent);
+      if (aLeaveTarget) {
+        aLeaveTarget.removeEventListener("mouseenter", unexpectedEvent);
+        aLeaveTarget.removeEventListener("mouseleave", listener);
+      }
+    }
+
+    function unexpectedEvent(aEvent) {
+      cleanup();
+      ok(false, `receive unexpected ${aEvent.type}`);
+      aReject(new Error(`receive unexpected ${aEvent.type}`));
+    }
+
+    async function listener(aEvent) {
+      if (expectedEvents.length <= 0) {
+        unexpectedEvent(aEvent);
+        return;
+      }
+
+      let expectedEvent = expectedEvents.pop();
+      if (expectedEvent.target == aEvent.target &&
+          expectedEvent.eventName == aEvent.type) {
+        ok(true, `receive ${aEvent.type}`);
+      } else {
+        unexpectedEvent(aEvent);
+        return;
+      }
+
+      if (expectedEvents.length == 0) {
+        // Trigger a reflow which will generate synthesized mouse move event.
+        reflow();
+        // Now wait a bit to see if there is any unexpected event fired.
+        setTimeout(function() {
+          cleanup();
+          aResolve();
+        }, 0);
+      }
+    }
+
+    aEnterTarget.addEventListener("mouseenter", listener);
+    aEnterTarget.addEventListener("mouseleave", unexpectedEvent);
+    if (aLeaveTarget) {
+      aLeaveTarget.addEventListener("mouseenter", unexpectedEvent);
+      aLeaveTarget.addEventListener("mouseleave", listener);
+    }
+  });
+}
+
+function moveMouseToInitialPosition() {
+  info("Mouse moves to initial position");
+  return promiseNativeMouseEvent({
+    type: "mousemove",
+    target: document.getElementById("start"),
+    atCenter: true,
+  });
+}
+
+add_task(async function init() {
+  // Wait for focus before starting tests.
+  await SimpleTest.promiseFocus();
+
+  // Wait for apz getting stable.
+  await waitUntilApzStable();
+
+  // Move mouse to initial position.
+  await moveMouseToInitialPosition();
+});
+
+add_task(async function testMouseEnterLeave() {
+  let div = document.getElementById("div");
+  let target = document.getElementById("target");
+  let iframe = document.getElementById("frame");
+
+  info("Mouse moves to the div above iframe");
+  let promise = waitForEnterLeaveEvents(div);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: div,
+    atCenter: true,
+  });
+  await promise;
+
+  info("Mouse moves into iframe");
+  promise = Promise.all([waitForEnterLeaveEvents(target, div),
+                         waitForMessage(iframe, "mouseenter", "div"),
+                         waitForMessage(iframe, "mouseenter", "html")]);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
+  await promise;
+
+  info("Mouse moves out from iframe to the div above iframe");
+  promise = Promise.all([waitForEnterLeaveEvents(div, target),
+                         waitForMessage(iframe, "mouseleave", "div"),
+                         waitForMessage(iframe, "mouseleave", "html")]);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: div,
+    atCenter: true,
+  });
+  await promise;
+
+  // Move mouse back to initial position. This is to prevent unexpected
+  // mouseleave event in initial steps for test-verify which runs same test
+  // multiple times. 
+  await moveMouseToInitialPosition();
+});
+
+add_task(async function testMouseEnterLeaveBetweenIframe() {
+  let target = document.getElementById("target");
+  let iframe = document.getElementById("frame");
+
+  info("Mouse moves into the first iframe");
+  let promise = Promise.all([waitForEnterLeaveEvents(target),
+                             waitForMessage(iframe, "mouseenter", "div"),
+                             waitForMessage(iframe, "mouseenter", "html")]);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
+  await promise;
+
+  let target2 = document.getElementById("target2");
+  let iframe2 = document.getElementById("frame2");
+
+  info("Mouse moves out from the first iframe to the second iframe");
+  promise = Promise.all([waitForEnterLeaveEvents(target2, target),
+                         waitForMessage(iframe, "mouseleave", "div"),
+                         waitForMessage(iframe, "mouseleave", "html"),
+                         waitForMessage(iframe2, "mouseenter", "div"),
+                         waitForMessage(iframe2, "mouseenter", "html")]);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: target2,
+    atCenter: true,
+  })
+  await promise;
+
+  info("Mouse moves out from the second iframe to the first iframe");
+  promise = Promise.all([waitForEnterLeaveEvents(target, target2),
+                         waitForMessage(iframe2, "mouseleave", "div"),
+                         waitForMessage(iframe2, "mouseleave", "html"),
+                         waitForMessage(iframe, "mouseenter", "div"),
+                         waitForMessage(iframe, "mouseenter", "html")]);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
+  await promise;
+
+  // Move mouse back to initial position.
+  await Promise.all([waitForLeaveEvent(target),
+                     waitForMessage(iframe, "mouseleave", "div"),
+                     waitForMessage(iframe, "mouseleave", "html"),
+                     moveMouseToInitialPosition()]);
+});
+
+add_task(async function testMouseEnterLeaveSwitchWindow() {
+  let target = document.getElementById("target");
+  let iframe = document.getElementById("frame");
+
+  info("Mouse moves into iframe");
+  let promise = Promise.all([waitForEnterLeaveEvents(target),
+                             waitForMessage(iframe, "mouseenter", "div"),
+                             waitForMessage(iframe, "mouseenter", "html")]);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
+  await promise;
+
+  info("Open and switch to new window");
+  promise = Promise.all([waitForLeaveEvent(target),
+                         waitForMessage(iframe, "mouseleave", "div"),
+                         waitForMessage(iframe, "mouseleave", "html")]);
+  let win = window.open("http://example.com/tests/dom/events/test/file_mouse_enterleave.html");
+  // Trigger a reflow which will generate synthesized mouse move event.
+  win.postMessage("reflow", "*");
+  await promise;
+
+  info("Switch back to test window");
+  promise = Promise.all([waitForEnterLeaveEvents(target),
+                         waitForMessage(iframe, "mouseenter", "div"),
+                         waitForMessage(iframe, "mouseenter", "html")]);
+  win.close();
+  // Trigger a reflow which will generate synthesized mouse move event.
+  reflow();
+  // Wait for apz getting stable.
+  await waitUntilApzStable();
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
+  await promise;
+
+  // Move mouse back to initial position.
+  await Promise.all([waitForLeaveEvent(target),
+                     moveMouseToInitialPosition()]);
+});
+</script>

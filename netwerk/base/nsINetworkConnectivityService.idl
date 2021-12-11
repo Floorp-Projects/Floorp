@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(2693457e-3ba5-4455-991f-5350946adb12)]
+interface nsINetworkConnectivityService : nsISupports
+{
+  /**
+   * Each tested feature may be in one of 3 states:
+   *   UNKNOWN, if a check hasn't been performed.
+   *   OK, if the feature was successfully tested
+   *   NOT_AVAILABLE, if the feature is blocked by the network.
+   *                  Note that the endpoints are guaranteed to support the features.
+   */
+  cenum ConnectivityState: 32 {
+    UNKNOWN             = 0,
+    OK                  = 1,
+    NOT_AVAILABLE       = 2
+  };
+
+  /* If DNS v4/v6 queries actually work on the current network */
+  [infallible]
+  readonly attribute nsINetworkConnectivityService_ConnectivityState DNSv4;
+  [infallible]
+  readonly attribute nsINetworkConnectivityService_ConnectivityState DNSv6;
+
+  /* If connecting to IPv4/v6 works on the current network */
+  [infallible]
+  readonly attribute nsINetworkConnectivityService_ConnectivityState IPv4;
+  [infallible]
+  readonly attribute nsINetworkConnectivityService_ConnectivityState IPv6;
+
+  /* If a NAT64 gateway was detected on the current network */
+  [infallible]
+  readonly attribute nsINetworkConnectivityService_ConnectivityState NAT64;
+
+  /* Starts the DNS request to check for DNS v4/v6 availability */
+  void recheckDNS();
+
+  /* Starts HTTP requests over IPv4 and IPv6, and checks if they work */
+  void recheckIPConnectivity();
+};

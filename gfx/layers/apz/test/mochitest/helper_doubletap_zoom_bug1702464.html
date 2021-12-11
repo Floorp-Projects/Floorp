@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping internal calculations correctly convert the tap point</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+  const deviceScale = utils.screenPixelsPerCSSPixel;
+  let target2 = document.getElementById("target2")
+
+  info("deviceScale " + deviceScale);
+  info("window.innerwh " + window.innerWidth + " " + window.innerHeight);
+  info("vv " + visualViewport.offsetLeft + " " + visualViewport.offsetTop + " " + visualViewport.width + " " + visualViewport.height);
+
+  let resolution = await getResolution();
+  let vvHeightAtUnitZoom = visualViewport.height * resolution;
+
+  // The max amount of zoom is 10 (as defined in dom/base/nsViewportInfo.h),
+  // but that includes the deviceScale (bug 1700865 is filed about this), so
+  // this is the max amount of zoom that double tap can increase by.
+  let maxPinchZoom = 10/deviceScale;
+
+  // Compute the visual viewport size at that max zoom.
+  let minVVHeight = vvHeightAtUnitZoom / maxPinchZoom;
+
+  // Make the element height to just fit inside the minimum visual viewport
+  // height, minus the margins that get added for the zoom target rect (15 on
+  // each side) and a little wiggle room just in case (rounding, etc).
+  let elementHeight = Math.floor(minVVHeight) - 2*15 - 4;
+
+  ok(elementHeight > 10, "tall enough element");
+
+  // And then make the element skinnier than the window size so it triggers
+  // the bug. (half the aspect ratio minus 5 just to be sure)
+  let elementWidth = Math.max(12, Math.floor(elementHeight * window.innerWidth / (2 * window.innerHeight)) - 5);
+
+  // These numbers carefully crafted to test the bug (ie fail without the fix).
+  if (getPlatform() == "mac") {
+    if (deviceScale >= 2) {
+      elementWidth = 50;
+      elementHeight = 135;
+    } else {
+      elementWidth = 25;
+      elementHeight = 56;
+    }
+  }
+
+  info("element size " + elementWidth + " " + elementHeight);
+
+  target2.style.width = elementWidth + "px";
+  target2.style.height = elementHeight + "px";
+
+  await promiseApzFlushedRepaints();
+
+  resolution = await getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping once zooms in
+  await doubleTapOn(document.getElementById("target1"), 10, 10, useTouchpad);
+  var prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  // Check that double-tapping the smaller element zooms in more
+  await doubleTapOn(target2, 8, elementHeight-8, useTouchpad);
+  prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution > prev_resolution, "The second double-tap has increased the resolution to " + resolution);
+
+  let rect = target2.getBoundingClientRect();
+  info("rect " + rect.x + " " + rect.y + " " + rect.width + " " + rect.height);
+  info("vv " + visualViewport.offsetLeft + " " + visualViewport.offsetTop + " " + visualViewport.width + " " + visualViewport.height);
+
+  ok(visualViewport.offsetLeft < rect.x, "visual viewport contains zoom element left");
+  ok(visualViewport.offsetTop < rect.y, "visual viewport contains zoom element top");
+  ok(visualViewport.offsetLeft + visualViewport.width > rect.x + rect.width, "visual viewport contains zoom element right");
+  ok(visualViewport.offsetTop + visualViewport.height > rect.y + rect.height, "visual viewport contains zoom element bottom");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+
+<div id="target1" style="background: blue; width: 50vw; height: 200px; position: absolute; top: 50vh;">
+  <div id="target2" style="background: green; width: 50px; height: 135px; position: absolute; right: 0;"></div>
+</div>
+
+</body>
+</html>

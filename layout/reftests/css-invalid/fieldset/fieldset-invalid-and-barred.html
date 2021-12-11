@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- fieldset with one invalid element and a barred for constraint validation element -->
+<html>
+  <head>
+    <style>
+      fieldset:invalid { display: none; }
+    </style>
+  </head>
+ <body>
+   <fieldset id="fieldset">
+    <input required>
+    <input id='i' value='foo' readonly required>
+   </fieldset>
+ </body>
+</html>

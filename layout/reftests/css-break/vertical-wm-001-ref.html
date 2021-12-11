@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: splitting vertical writing-mode blocks</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1328095">
+<style type="text/css">
+body,html { padding:30px; margin:0; }
+.col {
+  columns: 2;
+  column-gap: 0;
+  column-fill: auto;
+
+  block-size: 90px;
+  inline-size: 140px;
+  border:1px solid;
+}
+.vl { writing-mode: vertical-lr; }
+
+x {
+  display:block;
+  break-inside:avoid;
+  page-break-inside:avoid;
+  vertical-align: top;
+  inline-size: 20px;
+  block-size: 20px;
+  background:silver;
+}
+x:nth-of-type(2n) {background:purple;}
+
+blue { display:block; inline-size: 70px; border-block-start: 25px solid blue; }
+grey { display:block; inline-size: 70px; border-block-start: 17px solid grey; }
+</style>
+</head>
+<body>
+
+<div class="col vl">
+<div class="inner" style="margin-left:40px"></div>
+<blue></blue>
+<x></x><x></x>
+<grey></grey>
+</div>
+
+<div class="col">
+<div class="inner" style="margin-top:40px"></div>
+<blue></blue>
+<x></x><x></x>
+<grey></grey>
+</div>
+
+<div class="col vl">
+<div class="inner" style="margin-left:40px"></div>
+<blue></blue>
+<x></x><x></x>
+<div style="width:45px"></div>
+<grey></grey>
+</div>
+
+<div class="col vl">
+<div class="inner" style="margin-left:40px"></div>
+<blue></blue>
+<x></x><x></x>
+<div style="width:60px"></div>
+<grey></grey>
+</div>
+
+</body>
+</html>

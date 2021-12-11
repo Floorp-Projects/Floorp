@@ -1,0 +1,267 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+interface nsICookieJarSettings;
+interface nsIURI;
+interface nsIInterfaceRequestor;
+interface nsILoadGroup;
+interface nsIWebSocketListener;
+interface nsIInputStream;
+interface nsILoadInfo;
+interface nsIPrincipal;
+interface nsITransportProvider;
+
+webidl Node;
+
+#include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
+
+
+
+[ref] native OriginAttributes(const mozilla::OriginAttributes);
+
+/**
+ * Low-level websocket API: handles network protocol.
+ *
+ * This is primarly intended for use by the higher-level nsIWebSocket.idl.
+ * We are also making it scriptable for now, but this may change once we have
+ * WebSockets for Workers.
+ */
+[scriptable, builtinclass, uuid(ce71d028-322a-4105-a947-a894689b52bf)]
+interface nsIWebSocketChannel : nsISupports
+{
+    /**
+     * The original URI used to construct the protocol connection. This is used
+     * in the case of a redirect or URI "resolution" (e.g. resolving a
+     * resource: URI to a file: URI) so that the original pre-redirect
+     * URI can still be obtained.  This is never null.
+     */
+    [must_use] readonly attribute nsIURI originalURI;
+
+    /**
+     * The readonly URI corresponding to the protocol connection after any
+     * redirections are completed.
+     */
+    [must_use] readonly attribute nsIURI URI;
+
+    /**
+     * The notification callbacks for authorization, etc..
+     */
+    [must_use] attribute nsIInterfaceRequestor notificationCallbacks;
+
+    /**
+     * Transport-level security information (if any)
+     */
+    [must_use] readonly attribute nsISupports securityInfo;
+
+    /**
+     * The load group of of the websocket
+     */
+    [must_use] attribute nsILoadGroup loadGroup;
+
+    /**
+     * The load info of the websocket
+     */
+    [must_use] attribute nsILoadInfo loadInfo;
+
+    /**
+     * Sec-Websocket-Protocol value
+     */
+    [must_use] attribute ACString protocol;
+
+    /**
+     * Sec-Websocket-Extensions response header value
+     */
+    [must_use] readonly attribute ACString extensions;
+
+    /**
+     * The channelId of the underlying http channel.
+     * It's available only after nsIWebSocketListener::onStart
+     */
+    [must_use] readonly attribute uint64_t httpChannelId;
+
+    /**
+     * Init the WebSocketChannel with LoadInfo arguments.
+     * @param aLoadingNode
+     * @param aLoadingPrincipal
+     * @param aTriggeringPrincipal
+     * @param aCookieJarSettings
+     * @param aSecurityFlags
+     * @param aContentPolicyType
+     *        These will be used as values for the nsILoadInfo object on the
+     *        created channel. For details, see nsILoadInfo in nsILoadInfo.idl
+     * @return reference to the new nsIChannel object
+     *
+     * Keep in mind that URIs coming from a webpage should *never* use the
+     * systemPrincipal as the loadingPrincipal.
+     *
+     * Please note, if you provide both a loadingNode and a loadingPrincipal,
+     * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
+     * But less error prone is to just supply a loadingNode.
+     */
+     [notxpcom] nsresult initLoadInfoNative(in Node aLoadingNode,
+                                            in nsIPrincipal aLoadingPrincipal,
+                                            in nsIPrincipal aTriggeringPrincipal,
+                                            in nsICookieJarSettings aCookieJarSettings,
+                                            in unsigned long aSecurityFlags,
+                                            in nsContentPolicyType aContentPolicyType,
+                                            in unsigned long aSandboxFlags);
+
+     /**
+      * Similar to the previous one but without nsICookieJarSettings.
+      * This method is used by JS code where nsICookieJarSettings is not exposed.
+      */
+     [must_use] void initLoadInfo(in Node aLoadingNode,
+                                  in nsIPrincipal aLoadingPrincipal,
+                                  in nsIPrincipal aTriggeringPrincipal,
+                                  in unsigned long aSecurityFlags,
+                                  in nsContentPolicyType aContentPolicyType);
+
+    /**
+     * Asynchronously open the websocket connection.  Received messages are fed
+     * to the socket listener as they arrive.  The socket listener's methods
+     * are called on the thread that calls asyncOpen and are not called until
+     * after asyncOpen returns.  If asyncOpen returns successfully, the
+     * protocol implementation promises to call at least onStop on the listener.
+     *
+     * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
+     * websocket connection is reopened.
+     *
+     * @param aURI the uri of the websocket protocol - may be redirected
+     * @param aOrigin the uri of the originating resource
+     * @param aOriginAttributes attributes of the originating resource.
+     * @param aInnerWindowID the inner window ID
+     * @param aListener the nsIWebSocketListener implementation
+     * @param aContext an opaque parameter forwarded to aListener's methods
+     */
+    [implicit_jscontext]
+    void asyncOpen(in nsIURI aURI,
+                   in ACString aOrigin,
+                   in jsval aOriginAttributes,
+                   in unsigned long long aInnerWindowID,
+                   in nsIWebSocketListener aListener,
+                   in nsISupports aContext);
+
+    [must_use]
+    void asyncOpenNative(in nsIURI aURI,
+                         in ACString aOrigin,
+                         in OriginAttributes aOriginAttributes,
+                         in unsigned long long aInnerWindowID,
+                         in nsIWebSocketListener aListener,
+                         in nsISupports aContext);
+
+    /*
+     * Close the websocket connection for writing - no more calls to sendMsg
+     * or sendBinaryMsg should be made after calling this. The listener object
+     * may receive more messages if a server close has not yet been received.
+     *
+     * @param aCode the websocket closing handshake close code. Set to 0 if
+     *        you are not providing a code.
+     * @param aReason the websocket closing handshake close reason
+     */
+    [must_use] void close(in unsigned short aCode, in AUTF8String aReason);
+
+    // section 7.4.1 defines these close codes
+    const unsigned short CLOSE_NORMAL               = 1000;
+    const unsigned short CLOSE_GOING_AWAY           = 1001;
+    const unsigned short CLOSE_PROTOCOL_ERROR       = 1002;
+    const unsigned short CLOSE_UNSUPPORTED_DATATYPE = 1003;
+    //  code 1004 is reserved
+    const unsigned short CLOSE_NO_STATUS            = 1005;
+    const unsigned short CLOSE_ABNORMAL             = 1006;
+    const unsigned short CLOSE_INVALID_PAYLOAD      = 1007;
+    const unsigned short CLOSE_POLICY_VIOLATION     = 1008;
+    const unsigned short CLOSE_TOO_LARGE            = 1009;
+    const unsigned short CLOSE_EXTENSION_MISSING    = 1010;
+    // Initially used just for server-side internal errors: adopted later for
+    // client-side errors too (not clear if will make into spec: see
+    // http://www.ietf.org/mail-archive/web/hybi/current/msg09372.html
+    const unsigned short CLOSE_INTERNAL_ERROR       = 1011;
+    // MUST NOT be set as a status code in Close control frame by an endpoint:
+    // To be used if TLS handshake failed (ex: server certificate unverifiable)
+    const unsigned short CLOSE_TLS_FAILED           = 1015;
+
+    /**
+     * Use to send text message down the connection to WebSocket peer.
+     *
+     * @param aMsg the utf8 string to send
+     */
+    [must_use] void sendMsg(in AUTF8String aMsg);
+
+    /**
+     * Use to send binary message down the connection to WebSocket peer.
+     *
+     * @param aMsg the data to send
+     */
+    [must_use] void sendBinaryMsg(in ACString aMsg);
+
+    /**
+     * Use to send a binary stream (Blob) to Websocket peer.
+     *
+     * @param aStream The input stream to be sent.
+     */
+    [must_use] void sendBinaryStream(in nsIInputStream aStream,
+                                     in unsigned long length);
+
+    /**
+     * This value determines how often (in seconds) websocket keepalive
+     * pings are sent.  If set to 0 (the default), no pings are ever sent.
+     *
+     * This value can currently only be set before asyncOpen is called, else
+     * NS_ERROR_IN_PROGRESS is thrown.
+     *
+     * Be careful using this setting: ping traffic can consume lots of power and
+     * bandwidth over time.
+     */
+    [must_use] attribute unsigned long pingInterval;
+
+    /**
+     * This value determines how long (in seconds) the websocket waits for
+     * the server to reply to a ping that has been sent before considering the
+     * connection broken.
+     *
+     * This value can currently only be set before asyncOpen is called, else
+     * NS_ERROR_IN_PROGRESS is thrown.
+     */
+    [must_use] attribute unsigned long pingTimeout;
+
+    /**
+     * Unique ID for this channel. It's not readonly because when the channel is
+     * created via IPC, the serial number is received from the child process.
+     */
+    [must_use] attribute unsigned long serial;
+
+    /**
+     * Set a nsITransportProvider and negotated extensions to be used by this
+     * channel. Calling this function also means that this channel will
+     * implement the server-side part of a websocket connection rather than the
+     * client-side part.
+     */
+    [must_use] void setServerParameters(in nsITransportProvider aProvider,
+                                        in ACString aNegotiatedExtensions);
+
+%{C++
+    inline uint32_t Serial()
+    {
+      uint32_t serial;
+      nsresult rv = GetSerial(&serial);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return 0;
+      }
+      return serial;
+    }
+
+    inline uint64_t HttpChannelId()
+    {
+      uint64_t httpChannelId;
+      nsresult rv = GetHttpChannelId(&httpChannelId);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return 0;
+      }
+      return httpChannelId;
+    }
+%}
+};

@@ -1,0 +1,74 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test service worker - script cache policy</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content"></div>
+<script src="utils.js"></script>
+<script class="testbody" type="text/javascript">
+  function start() {
+    return navigator.serviceWorker.register("importscript_worker.js",
+                                            { scope: "./sw_clients/" })
+      .then(swr => waitForState(swr.installing, 'activated', swr))
+      .then(swr => registration = swr);
+  }
+
+  function unregister() {
+    return fetch("importscript.sjs?clearcounter").then(function() {
+      return registration.unregister();
+    }).then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+  function testPostMessage(swr) {
+    var p = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          swr.active.postMessage("do magic");
+          return;
+        }
+
+        ok(e.data === "OK", "Worker posted the correct value: " + e.data);
+        res();
+      }
+    });
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/service_worker_controlled.html");
+    content.appendChild(iframe);
+
+    return p.then(() => content.removeChild(iframe));
+  }
+
+  function runTest() {
+    start()
+      .then(testPostMessage)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

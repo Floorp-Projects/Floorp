@@ -1,0 +1,20 @@
+#parent {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  background: red;
+  border: 0 solid black;
+}
+#child {
+  position: absolute;
+  height: 100px;
+  top: 100px;
+  background: blue;
+  border: 0 solid black;
+}
+.floatLeft {
+  width: 50px;
+  height: 10px;
+  background: green;
+  float: left;
+}

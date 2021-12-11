@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <text transform="translate(20, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex 1">ABCDEFGH
+  </text>
+
+  <text transform="translate(120, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex">IJKLMNOP
+  </text>
+
+  <text transform="translate(220, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex 1">QRSTUVWX
+  </text>
+
+  <text transform="translate(320, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex">YZ123456
+  </text>
+
+  <text transform="translate(420, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex">7890abcd
+  </text>
+
+  <text transform="translate(520, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex">efghijkl
+  </text>
+</svg>

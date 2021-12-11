@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=482976
+-->
+<window title="Mozilla Bug 482976" onload="run1()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<iframe src="about:blank" type="content"></iframe>
+<iframe src="about:blank" type="content"></iframe>
+<script type="application/javascript">
+<![CDATA[
+// Note: We can't use window.frames directly here because the type="content"
+// attributes isolate the frames into their own BrowsingContext hierarchies.
+let frameElts = document.getElementsByTagName("iframe");
+
+var is = window.arguments[0].is;
+var ok = window.arguments[0].ok;
+var todo = window.arguments[0].todo;
+var SimpleTest = window.arguments[0].SimpleTest;
+var gWbp;
+var gPrintPreviewWin;
+function printpreview() {
+  var listener = {
+    onLocationChange: function(webProgress, request, location, flags) { },
+    onProgressChange: function(webProgress, request, curSelfProgress,
+                               maxSelfProgress, curTotalProgress,
+                               maxTotalProgress) { },
+    onSecurityChange: function(webProgress, request, state) { },
+    onStateChange: function(webProgress, request, stateFlags, status) { },
+    onStatusChange: function(webProgress, request, status, message) { },
+    onContentBlockingEvent: function(webProgress, request, event) { },
+    QueryInterface: function(iid) {
+      if (iid.equals(Ci.nsIWebProgessListener) ||
+          iid.equals(Ci.nsISupportsWeakReference))
+            return this;
+      throw Components.Exception("", Cr.NS_NOINTERFACE);
+    }
+  }
+
+  let settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                       .getService(Ci.nsIPrintSettingsService).newPrintSettings;
+  settings.showPrintProgress = false;
+
+  gPrintPreviewWin = frameElts[0].contentWindow.printPreview(settings, listener);
+  gWbp = gPrintPreviewWin.docShell.contentViewer;
+  gWbp.QueryInterface(Ci.nsIWebBrowserPrint);
+}
+
+function exitprintpreview() {
+  gPrintPreviewWin.docShell.exitPrintPreview();
+  gPrintPreviewWin.close();
+}
+
+function finish() {
+  SimpleTest.finish();
+  window.close();
+}
+
+async function run1() {
+  printpreview();
+  ok(gWbp.doingPrintPreview, "Should be doing print preview");
+  exitprintpreview();
+  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore");
+  finish();
+}
+]]></script>
+</window>

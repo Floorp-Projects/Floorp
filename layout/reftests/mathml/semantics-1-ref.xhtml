@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type"
+  content="application/xhtml+xml; charset=utf-8" />
+  <title>Various tests for semantics</title>
+  <style>
+    @font-face
+    {
+        font-family: Ahem;
+        src: url(../fonts/Ahem.ttf);
+    }
+    math, p {
+        font: 25px Ahem;
+    }
+  </style>
+</head>
+
+<body>
+<!-- displaystyle (bug 468059) -->
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <semantics>
+    <mstyle displaystyle="true">
+      <munderover>
+        <mo movablelimits="true">pXp</mo>
+        <mtext>XpXpXp</mtext>
+        <mtext>XpXpXp</mtext>
+      </munderover>
+    </mstyle>
+  </semantics>
+</math></p>
+
+<!-- embellished operator (bug 21479) -->
+<p><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mover>
+    <mspace width="300px" height="10px" mathbackground="black"></mspace>
+    <mo>&#xaf;</mo>
+  </mover>
+</math></p>
+
+<!-- unwanted whitespace (bug 512418) -->
+<p>XpXpXp<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+      <mrow>
+        <mo>lcm</mo>
+        <mo>(</mo>
+        <mn>a</mn>
+        <mo>,</mo>
+        <mn>b</mn>
+        <mo>)</mo>
+      </mrow>
+      <mo>=</mo>
+      <mfrac>
+        <mrow>
+          <mo>(</mo>
+          <mn>a</mn>
+          <mo>&#x2062;</mo>
+          <mn>b</mn>
+          <mo>)</mo>
+        </mrow>
+        <mrow>
+          <mo>gcd</mo>
+          <mo>(</mo>
+          <mn>a</mn>
+          <mo>,</mo>
+          <mn>b</mn>
+          <mo>)</mo>
+        </mrow>
+      </mfrac>
+    </mrow>
+</math>XpXpXp</p>
+
+<!-- maction and semantics (bug 523037) -->
+<p>XpXpXp<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <maction actiontype="toggle" selection="3">
+    <mn>1</mn>
+    <mn>2</mn>
+    <mn>3</mn>
+    <mn>4</mn>
+    <mn>5</mn>
+  </maction>
+</math>XpXpXp</p>
+
+<!-- maction and semantics (bug 523045) -->
+<p>XpXpXp<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <maction actiontype="toggle" selection="4">
+    <mn>1</mn>
+    <mn>2</mn>
+    <mn>3</mn>
+    <mn>4</mn>
+    <mn>5</mn>
+  </maction>
+</math>XpXpXp</p>
+</body>
+</html>

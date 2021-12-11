@@ -1,0 +1,13 @@
+<html><head>
+<title>Crash [@ _moz_cairo_win32_scaled_font_select_font] with negative font-size in canvas</title>
+<script>
+  var ctx = document.createElement('canvas').getContext('2d');
+  ctx.translate(100, 100);
+  ctx.mozTextStyle = "-14pt sans serif";
+  ctx.mozDrawText('text');
+</script>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+</body>
+</html>

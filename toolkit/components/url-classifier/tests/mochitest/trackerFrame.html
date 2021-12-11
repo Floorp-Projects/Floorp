@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+<title></title>
+</head>
+<body>
+<div id="content" style="display: none">
+
+<img src="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=img-src">
+
+<!--nsObjectLoadingContent::OpenChannel-->
+<object data="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=object-data"></object>
+
+<!--ScriptLoader::StartLoad-->
+<script src="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=script-src"></script>
+
+<!--nsDocShell::DoURILoad-->
+<iframe src="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=iframe-src"></iframe>
+
+<!--Loader::LoadSheet-->
+<link rel="stylesheet" href="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=link-rel-stylesheet" />
+
+<!--nsPrefetchNode::OpenChannel-->
+<!-- Temporarily disable this because it doesn't work in fission when the scheme is https -->
+<!--<link rel="prefetch" href="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=link-rel-prefetch" />-->
+
+<!--HTMLMediaElement::ChannelLoader::LoadInternal-->
+<video src="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=video-src">
+</video>
+
+<video src="https://mochi.test:8888/basic.vtt", crossorigin=use-credentials>
+  <track default src="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=track-src" ></track>
+</video>
+
+<!--SendPing-->
+<a ping="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=ping" id="a-ping" href="#"></a>
+<script>
+  (function() {
+    document.getElementById("a-ping").click();
+  })();
+</script>
+
+<script>
+
+// FetchDriver::HttpFetch
+(function() {
+  try {
+    fetch(new Request("https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=fetch"), {
+      credentials: "include",
+    });
+  } catch (err) {
+    console.log(err);
+  }
+})();
+
+// XMLHttpRequestMainThread::CreateChannel
+(function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=xmlhttprequest");
+    xhr.withCredentials = true;
+    xhr.send();
+})();
+
+// Navigator::SendBeaconInternal
+(function() {
+    navigator.sendBeacon("https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=send-beacon");
+})();
+
+</script>
+
+// Fetch inside service worker's script
+<iframe id="sw" src="https://example.com/tests/toolkit/components/url-classifier/tests/mochitest/sw_register.html"></iframe>
+<script>
+    let iframe = document.getElementById("sw");
+    window.onmessage = function(e) {
+      if (e.data.status == "registrationdone") {
+        iframe.remove();
+        iframe = document.createElement("iframe");
+        document.getElementById("content").appendChild(iframe);
+        iframe.src = "https://example.com/tests/toolkit/components/url-classifier/tests/mochitest/synth.html?" +
+          "https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackerFrame.sjs?id=fetch-in-sw";
+      }
+    };
+</script>
+
+</div>
+</body>
+</html>

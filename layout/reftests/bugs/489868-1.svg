@@ -1,0 +1,34 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" 
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     xmlns="http://www.w3.org/2000/svg" 
+     class="reftest-wait">
+
+<html:style>
+  .gencon:after { content: counter(chicken); }
+</html:style>
+
+<script type="text/javascript">
+
+var dc;
+var defs;
+
+function boom()
+{
+  var define = document.getElementById("define");
+  define.setAttribute("class", "gencon");
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+
+<defs id="defs">
+  <g id="define">
+    <rect x="0" y="0" width="75" height="75" fill="green"/>
+  </g>
+</defs>
+
+<use xlink:href="#define" x="20" y="20" id="use" />
+
+</svg>

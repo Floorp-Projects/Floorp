@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>user activated iframe</title>
+</head>
+<body>
+<script>
+onload = function() {
+  parent.postMessage("loaded", "*");
+};
+onmessage = function(e) {
+  if (e.data === "get") {
+    parent.postMessage({
+      isActivated: SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+      hasBeenActivated: SpecialPowers.wrap(document).hasBeenUserGestureActivated
+    }, "*");
+  }
+};
+</script>
+</body>
+</html>

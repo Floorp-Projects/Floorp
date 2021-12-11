@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+<![CDATA[
+
+function boom()
+{
+    var svgText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    document.documentElement.appendChild(svgText);
+    var text1 = document.createTextNode("A");
+    svgText.appendChild(text1);
+    var text2 = document.createTextNode("");
+    svgText.appendChild(text2);
+    document.caretPositionFromPoint(0, 0);
+    setTimeout(function() {
+        text2.data = "B";
+        document.caretPositionFromPoint(0, 0);
+    }, 0);
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+</svg>

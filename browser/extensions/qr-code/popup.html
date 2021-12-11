@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+	<head>
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+		<style>
+			h3{
+				position: relative;
+				left: 15px;
+				font-family: メイリオ/Meiryo;
+				text-align: left;
+				color: white;
+			}
+			body { 
+				padding: 3px;
+				margin: 0;
+				width: 300px;
+				height: 350px;
+				overflow: hidden;
+				background: rgb(63, 63, 63);
+			}
+			#qrimg {
+				margin:  0 auto !important;
+				text-align:  center;  
+				padding: 25px;
+				padding-top: 25px;
+				width: 250px;
+				height: 250px;
+				background-color: white;
+			}
+			#qractions {
+				position: relative;
+				text-align:right;
+			}
+			#qractions {
+                 position: absolute;
+                 right: 0;
+                 bottom: 0;
+            }
+			#qractions {
+				right: 10px;
+				bottom: 10px;
+			}
+            .btn-flat-dashed-filled {
+                display: inline-block;
+                padding: 0.5em 1em;
+                text-decoration: none;
+                color: #ffffff;
+                background: #2196F3;
+                border-radius: 3px;
+                transition: .4s;
+            }
+
+            .btn-flat-dashed-filled:hover {
+                background: #2196F3;
+                color: #FFF;
+            }
+
+		</style>
+	</head>
+	<body>
+	<h3>QR コードをスキャンしてください</h3>
+		<div id="qractions">
+			<a id="qrsave" title="Save as file" class="btn-flat-dashed-filled">画像で保存</a>
+		</div>
+		<img id="qrimg" />
+		<script src="qrious.js"></script>
+		<script src="popup.js"></script>
+	</body>
+</html>
+
+

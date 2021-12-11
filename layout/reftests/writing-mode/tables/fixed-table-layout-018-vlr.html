@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+ <head>
+  <title>CSS Test: table-layout fixed - columns with percentage height</title>
+  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout" title="17.5.2.1 Fixed table layout">
+  <link rel="match" href="fixed-table-layout-017-ref.htm">
+  <meta content="" name="flags">
+  <meta content="A column with a percentage height in a 'table-layout: fixed' table can be calculated and predicted when in 'border-collapse: separate' model." name="assert">
+  <style type="text/css">
+  div.test { writing-mode: vertical-lr; }
+  table
+  {
+   border: solid white;
+   border-width: 6px 0px;
+   border-collapse: separate;
+   border-spacing: 2px 4px;
+   table-layout: fixed;
+   height: 422px;
+  }
+  col#test
+  {
+   background-color: orange;
+   height: 40%;
+  }
+  td#third-cell {color: orange;}
+  td {padding: 0px; width: 24px;}
+  div#reference
+  {
+  background-color: blue;
+  color: blue;
+  top: 172px;
+  width: 24px;
+  /*
+  3 vertical border-spacing and the table
+  border-left separate the start
+  of table box and the start of 3rd column.
+  The first 2 columns should each be 80px exactly
+  since "Any remaining columns equally divide the
+  remaining vertical table space (minus [table] borders or
+  cell spacing)." So:
+     6px : table border-left
+  +
+     2px : 1st border-spacing
+  +
+    80px : 1st column : (422 - 10 - 12) mult by (60% divided by 3)
+  +
+     2px : 2nd border-spacing
+  +
+    80px : 2nd column : (422 - 10 - 12) mult by (60% divided by 3)
+  +
+     2px : 3rd border-spacing
+  =========
+   172px
+  */
+  position: relative;
+  height: 160px;
+  /*
+    422px : total height of table
+  -
+     12px : total height of vertical borders of table
+  -
+     10px : 5 times vertical border-spacing
+   ========
+    400px
+   mult by
+     40%
+   ========
+    160px
+  */
+  }
+  </style>
+ </head>
+ <body>
+   <p>Test passes if the orange stripe is exactly as high as the blue stripe and is vertically positioned the same.</p>
+   <div class="test">
+     <table>
+       <col>
+       <col>
+       <col id="test">
+       <col>
+       <tr>
+	 <td></td>
+	 <td></td>
+	 <td id="third-cell">col</td>
+	 <td></td>
+       </tr>
+     </table>
+     <div id="reference">ref</div>
+   </div>
+ </body>
+</html>

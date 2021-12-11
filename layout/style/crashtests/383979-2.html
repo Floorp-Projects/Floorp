@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function run()
+{
+  var a = getComputedStyle(document.getElementById("s1"), "").listStyleType;
+  var b = getComputedStyle(document.getElementById("s3"), "").listStyleType;
+}
+
+</script>
+
+<style type="text/css">
+
+body { display: none } /* so we control the order of the ComputeListData calls */
+
+#s1, #s2, #s3 { 
+  -moz-image-region: auto;
+  list-style-image: none;
+  list-style-position: outside;
+  list-style-type: disc;
+}
+
+#s2, #s3 {
+  list-style-type: disc;
+}
+
+</style>
+</head>
+
+<body onload="run();">
+
+<div id="s1"><div id="s2"><div id="s3"></div></div></div>
+
+</body>
+</html>

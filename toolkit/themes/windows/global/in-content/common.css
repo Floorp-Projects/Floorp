@@ -1,0 +1,28 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/in-content/common.inc.css
+
+xul|menulist::part(dropmarker) {
+  margin-block: 1px;
+}
+
+xul|checkbox,
+xul|radio {
+  padding-inline-start: 0;
+}
+
+/* Override menulist.css */
+xul|menulist[disabled="true"] {
+  background-color: var(--in-content-button-background);
+}
+
+xul|menulist:-moz-focusring > xul|*.menulist-label-box {
+  outline: none !important;
+}
+
+html|button {
+  /* XUL button min-width */
+  min-width: 6.3em;
+}

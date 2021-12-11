@@ -1,0 +1,13 @@
+- type: vs_4_0_level_9_3
+  file: CompositorD3D11.hlsl
+  shaders:
+   - LayerQuadVS
+
+- type: ps_4_0_level_9_3
+  file: CompositorD3D11.hlsl
+  shaders:
+   - SolidColorShader
+   - RGBShader
+   - RGBAShader
+   - YCbCrShader
+   - NV12Shader

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: basic functionality</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, el) => {
+  el.controls = true;
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(6, 12), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 6), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(7, 14), ".m4s");
+  let p = once(el, "seeking");
+  el.play();
+  el.currentTime = 4.5; // Seek to a gap in the video
+  await p;
+  ok(true, "Got seeking event");
+  p = once(el, "seeked");
+  el.currentTime = 6; // Seek past the gap.
+  await p;
+  ok(true, "Got seeked event");
+  ok(el.currentTime >= 6, "Time >= 6");
+  ms.endOfStream();
+  await once(el, "ended");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

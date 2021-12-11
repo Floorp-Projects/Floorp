@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Badge component: basic render 1`] = `"<span class=\\"audit-badge badge\\" title=\\"Does not meet WCAG standards for accessible text.\\" aria-label=\\"Contrast\\">Contrast</span>"`;

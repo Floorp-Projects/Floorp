@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests that the Notification.requestPermission and navigator.permissions.query
+return values are consistent with the stored permission.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1589754
+-->
+<head>
+  <title>Notification permissions and permissions API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+<script class="testbody">
+
+add_task(async function test_notifications_permission() {
+  await SpecialPowers.clearUserPref("notification.prompt.testing");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Set pref to exercise relevant code path for regression test.
+      ["permissions.delegation.enabled", true],
+      // Automatically dismiss the permission request when it appears.
+      ["dom.webnotifications.requireuserinteraction", true],
+    ],
+  });
+
+  async function testPermissionInWindow(win) {
+    async function checkPermission(perm, expectedResult, expectedPermission) {
+      await SpecialPowers.pushPermissions([
+        {
+          type: "desktop-notification",
+          allow: SpecialPowers.Ci.nsIPermissionManager[perm],
+          context: document,
+        },
+      ]);
+      is(
+        await win.Notification.requestPermission(),
+        expectedResult,
+        `expected requestPermission() result for permission ${perm}`
+      );
+
+      let result =
+        await win.navigator.permissions.query({ name: "notifications" });
+      is(
+        result.state,
+        expectedPermission,
+        `expected permissions API result for permission ${perm}`
+      );
+    }
+
+    await checkPermission("UNKNOWN_ACTION", "default", "prompt");
+    await checkPermission("ALLOW_ACTION", "granted", "granted");
+    await checkPermission("DENY_ACTION", "denied", "denied");
+    await checkPermission("PROMPT_ACTION", "default", "prompt");
+  }
+
+  var win = window.open("blank.html");
+  await new Promise(resolve => { win.onload = resolve; });
+  await testPermissionInWindow(win);
+  win.close();
+});
+
+</script>
+  </pre>
+</body>
+</html>

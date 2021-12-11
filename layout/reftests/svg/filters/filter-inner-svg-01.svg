@@ -1,0 +1,16 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0">
+  <desc>
+    The 'x' attribute on the inner 'svg' should not result in any of the lime 'circle'
+    it contains from being clipped when the inner 'svg' is filtered.
+  </desc>
+  <filter id="filter"><feGaussianBlur stdDeviation="0.001"/></filter>
+  <rect width="100%" height="100%" fill="lime"/>
+  <circle fill="red" cx="200" cy="100" r="98"/>
+  <svg x="100" width="200" height="200" filter="url(#filter)">
+    <circle fill="lime" r="100" cx="100" cy="100"/>
+  </svg>
+</svg>

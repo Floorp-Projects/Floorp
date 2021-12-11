@@ -1,0 +1,60 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage basic test</title>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+async function startTest()
+{
+  await SpecialPowers.pushPrefEnv({"set": [["dom.storage.client_validation", false]]});
+
+  var url = "http://example.com/tests/dom/tests/mochitest/localstorage/frameChromeSlave.html";
+  var ios = Components.classes["@mozilla.org/network/io-service;1"]
+    .getService(Components.interfaces.nsIIOService);
+  var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+    .getService(Components.interfaces.nsIScriptSecurityManager);
+  var dsm = Components.classes["@mozilla.org/dom/localStorage-manager;1"]
+    .getService(Components.interfaces.nsIDOMStorageManager);
+
+  var uri = ios.newURI(url);
+  var principal = ssm.createContentPrincipal(uri, {});
+  var storage = dsm.createStorage(window, principal, principal, "");
+
+  storage.setItem("chromekey", "chromevalue");
+
+  var aframe = document.getElementById("aframe");
+  aframe.onload = function()
+  {
+    is(storage.getItem("chromekey"), "chromevalue");
+    is(aframe.contentDocument.getElementById("data").innerHTML, "chromevalue");
+    SimpleTest.finish();
+  }
+  aframe.src = "http://example.com/tests/dom/tests/mochitest/localstorage/frameChromeSlave.html";  
+
+  // Additionally check that we do not crash when we access the localStorage
+  // object in the owning chrome window (but we should throw).  See bug 485396.
+  var exceptionCaught = false;
+  try {
+    localStorage;
+  }
+  catch (e) {
+    is(e.result, Components.results.NS_ERROR_NOT_AVAILABLE,
+       "Testing that we get the expected exception.");
+    exceptionCaught = true;
+  }
+  is(exceptionCaught, true, "Testing that an exception was thrown.");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" id="aframe"></iframe>
+</body>
+</html>

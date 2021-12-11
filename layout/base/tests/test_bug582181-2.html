@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=582181
+-->
+<head>
+  <title>Test for Bug 582181</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=582181">Mozilla Bug 582181</a>
+<p id="display"></p>
+<div id="content" dir="rtl">
+<textarea rows="5" id="testInput" style="resize:none">Blah blah
+فلان فلان
+&lt;ref&gt;ooo&lt;/ref&gt;
+&lt;references /&gt;</textarea>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 582181 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  var textInput = $("testInput");
+  var s1, s2, s3, equal, str1, str2;
+
+  s1 = snapshotWindow(window);
+
+  textInput.focus();
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Backspace");
+  textInput.blur();
+  s2 = snapshotWindow(window);
+
+  [unequal, str1, str2] = compareSnapshots(s1, s2, false);
+  ok(unequal, "backspace after text should change rendering: got " + str2);
+
+  textInput.focus();
+  sendString(">");
+  textInput.blur();
+  s3 = snapshotWindow(window);
+
+  [equal, str1, str2] = compareSnapshots(s1, s3, true);
+  ok(equal, "entering '>' should restore original rendering: expected " + str1 + 
+     " but got " + str2);
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

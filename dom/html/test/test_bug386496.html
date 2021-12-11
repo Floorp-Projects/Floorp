@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=386496
+-->
+<head>
+  <title>Test for Bug 386496</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <SCRIPT Type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=386496">Mozilla Bug 386496</a>
+<p id="display"></p>
+<div id="content">
+  <iframe style='display: block;' id="testIframe"
+    srcdoc="<div><a id='a' href='http://a.invalid/'>Link</a></div>">
+  </iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 386496 **/
+
+var frame = document.getElementById("testIframe");
+
+function testDesignMode() {
+  var unloadRequested = false;
+
+  frame.contentDocument.designMode = "on";
+
+  frame.contentWindow.addEventListener("beforeunload", function() {
+    unloadRequested = true;
+  });
+
+  synthesizeMouseAtCenter(frame.contentDocument.getElementById("a"), {},
+                          frame.contentWindow);
+
+  // The click has been sent. If 'beforeunload' event has been caught when we go
+  // back from the event loop that means the link has been activated.
+  setTimeout(function() {
+    ok(!unloadRequested, "The link should not be activated in designMode");
+    SimpleTest.finish();
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(testDesignMode);
+
+</script>
+</pre>
+</body>
+</html>

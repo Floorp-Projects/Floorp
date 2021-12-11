@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIURI;
+
+/**
+ * nsIInputStreamChannel
+ *
+ * This interface provides methods to initialize an input stream channel.
+ * The input stream channel serves as a data pump for an input stream.
+ */
+[scriptable, uuid(ea730238-4bfd-4015-8489-8f264d05b343)]
+interface nsIInputStreamChannel : nsISupports
+{
+    /**
+     * Sets the URI for this channel.  This must be called before the
+     * channel is opened, and it may only be called once.
+     */
+    void setURI(in nsIURI aURI);
+
+    /**
+     * Get/set the content stream
+     *
+     * This stream contains the data that will be pushed to the channel's
+     * stream listener.  If the stream is non-blocking and supports the
+     * nsIAsyncInputStream interface, then the stream will be read directly.
+     * Otherwise, the stream will be read on a background thread.
+     *
+     * This attribute must be set before the channel is opened, and it may
+     * only be set once.
+     *
+     * @throws NS_ERROR_IN_PROGRESS if the setter is called after the channel
+     * has been opened.
+     */
+    attribute nsIInputStream contentStream;
+
+    /**
+     * Get/set the srcdoc data string.  When the input stream channel is
+     * created to load a srcdoc iframe, this is set to hold the value of the
+     * srcdoc attribute.
+     *
+     * This should be the same value used to create contentStream, but this is
+     * not checked.
+     *
+     * Changing the value of this attribute will not otherwise affect the
+     * functionality of the channel or input stream.
+     */
+    attribute AString srcdocData;
+
+    /**
+     * Returns true if srcdocData has been set within the channel.
+     */
+    readonly attribute boolean isSrcdocChannel;
+
+    /**
+     * The base URI to be used for the channel.  Used when the base URI cannot
+     * be inferred by other means, for example when this is a srcdoc channel.
+     */
+    attribute nsIURI baseURI;
+};

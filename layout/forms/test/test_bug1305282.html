@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=615697
+-->
+<head>
+  <title>Test for Bug 1305282</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1305282">Mozilla Bug 1305282</a>
+<p id="display"></p>
+<div id="content">
+  <select>
+    <option>f o o</option>
+    <option>b a r</option>
+    <option>b o o</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1305282 **/
+
+var select = document.getElementsByTagName('select')[0];
+
+select.addEventListener("change", function(aEvent) {
+  is(select.selectedIndex, 1, "'b a r' option is selected");
+  SimpleTest.finish();
+}, {once: true});
+
+select.addEventListener("focus", function() {
+  SimpleTest.executeSoon(function () {
+    synthesizeKey("KEY_ArrowDown");
+    SimpleTest.executeSoon(function () {
+      sendString("b");
+      SimpleTest.executeSoon(function () {
+        sendString(" ");
+        SimpleTest.executeSoon(function () {
+          synthesizeKey("KEY_Enter");
+        });
+      });
+    });
+  });
+}, {once: true});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  select.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

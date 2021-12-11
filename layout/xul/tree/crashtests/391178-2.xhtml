@@ -1,0 +1,20 @@
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<tree id="a" style="display: block; position: fixed;">
+  <box style=" display: block; position: fixed;">
+    <treecol style=" display: -moz-box;"/>
+  </box>
+  <box style="display: block; position: fixed;">
+    <treechildren style="display: block; position: absolute;"/>
+  </box>
+</tree>
+
+<script xmlns="http://www.w3.org/1999/xhtml">
+function removestyles(){
+  document.getElementById('a').removeAttribute('style');
+  document.documentElement.removeAttribute("class");
+}
+setTimeout(removestyles, 100);
+</script>
+</window>

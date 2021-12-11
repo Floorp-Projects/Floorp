@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript">
+    window.doThrow = function(other) {
+      if (other)
+        throwAsOuter(other);
+      else
+        throwAsInner();
+    }
+
+    function throwAsInner() {
+      throw Error('look at me go!');
+    }
+
+    function throwAsOuter(other) {
+      other.doThrow(null);
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>

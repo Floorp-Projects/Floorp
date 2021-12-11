@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<!-- A second page to test that RemotePages works with multiple urls -->
+<html>
+<head>
+<script type="text/javascript">
+/* global RPMAddMessageListener, RPMSendAsyncMessage */
+
+RPMAddMessageListener("Ping", function(message) {
+  RPMSendAsyncMessage("Pong", {
+    str: message.data.str,
+    counter: message.data.counter + 1,
+  });
+});
+
+</script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,85 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIURIMutator;
+
+/**
+ * nsIStandardURL defines the interface to an URL with the standard
+ * file path format common to protocols like http, ftp, and file.
+ * It supports initialization from a relative path and provides
+ * some customization on how URLs are normalized.
+ */
+[scriptable, builtinclass, uuid(babd6cca-ebe7-4329-967c-d6b9e33caa81)]
+interface nsIStandardURL : nsISupports
+{
+    /**
+     * blah:foo/bar    => blah://foo/bar
+     * blah:/foo/bar   => blah:///foo/bar
+     * blah://foo/bar  => blah://foo/bar
+     * blah:///foo/bar => blah:///foo/bar
+     */
+    const unsigned long URLTYPE_STANDARD        = 1;
+
+    /**
+     * blah:foo/bar    => blah://foo/bar
+     * blah:/foo/bar   => blah://foo/bar
+     * blah://foo/bar  => blah://foo/bar
+     * blah:///foo/bar => blah://foo/bar
+     */
+    const unsigned long URLTYPE_AUTHORITY       = 2;
+
+    /**
+     * blah:foo/bar    => blah:///foo/bar
+     * blah:/foo/bar   => blah:///foo/bar
+     * blah://foo/bar  => blah://foo/bar
+     * blah:///foo/bar => blah:///foo/bar
+     */
+    const unsigned long URLTYPE_NO_AUTHORITY    = 3;
+};
+
+[scriptable, builtinclass, uuid(fc894e98-23a1-43cd-a7fe-72876f8ea2ee)]
+interface nsIStandardURLMutator : nsISupports
+{
+    /**
+     * Initialize a standard URL.
+     *
+     * @param aUrlType       - one of the URLTYPE_ flags listed above.
+     * @param aDefaultPort   - if the port parsed from the URL string matches
+     *                         this port, then the port will be removed from the
+     *                         canonical form of the URL.
+     * @param aSpec          - URL string.
+     * @param aOriginCharset - the charset from which this URI string
+     *                         originated.  this corresponds to the charset
+     *                         that should be used when communicating this
+     *                         URI to an origin server, for example.  if
+     *                         null, then provide aBaseURI implements this
+     *                         interface, the origin charset of aBaseURI will
+     *                         be assumed, otherwise defaulting to UTF-8 (i.e.,
+     *                         no charset transformation from aSpec).
+     * @param aBaseURI       - if null, aSpec must specify an absolute URI.
+     *                         otherwise, aSpec will be resolved relative
+     *                         to aBaseURI.
+     */
+    nsIURIMutator init(in unsigned long aUrlType,
+                       in long aDefaultPort,
+                       in AUTF8String aSpec,
+                       in string aOriginCharset,
+                       in nsIURI aBaseURI);
+
+    /**
+     * Set the default port.
+     *
+     * Note: If this object is already using its default port (i.e. if it has
+     * mPort == -1), then it will now implicitly be using the new default port.
+     *
+     * @param aNewDefaultPort - if the URI has (or is later given) a port that
+     *                          matches this default, then we won't include a
+     *                          port number in the canonical form of the URL.
+     */
+    nsIURIMutator setDefaultPort(in long aNewDefaultPort);
+};

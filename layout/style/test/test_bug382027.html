@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=382027
+-->
+<head>
+  <title>Test for Bug 382027</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=382027">Mozilla Bug 382027</a>
+<div id="content" style="display: none;"
+  ><div style="border-style: groove none none;"
+    ><div style="border-style: none none double"
+    ></div
+  ></div
+></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/* 
+ * Test that the regression in the original patch checked in by bug
+ * 382027 is caught by something other than an unexpected pass.
+ */
+
+var e = document.createElement("div");
+e.style.setProperty("border-style", "groove none none none", "");
+is(e.getAttribute("style"), "border-style: groove none none;");
+e.style.setProperty("border-style", "none none double none", "");
+is(e.getAttribute("style"), "border-style: none none double;");
+
+</script>
+</pre>
+</body>
+</html>
+

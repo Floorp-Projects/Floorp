@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=528566
+-->
+<head>
+  <title>Test for Bug 528566</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=528566">Mozilla Bug 528566</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 528566 **/
+
+var manager = new MediaTestManager;
+
+var player = new Audio();
+
+function startTest(test, token) {
+  if (!player.canPlayType(test.type)) {
+    return;
+  }
+  manager.started(token);
+  var a = new Audio(test.name);
+  a.autoplay = true;
+  document.body.appendChild(a);
+  a.addEventListener("ended",
+                     function(e){
+                        ok(true, "[" + a.src + "]We should get to the end. Oh look we did.");
+                        a.remove();
+                        manager.finished(token);
+                     });
+}
+
+manager.runTests(gAudioTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

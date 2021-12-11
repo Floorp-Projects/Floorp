@@ -1,0 +1,77 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsISpeechService;
+
+[scriptable, builtinclass, uuid(5d7a0b38-77e5-4ee5-897c-ce5db9b85d44)]
+interface nsISynthVoiceRegistry : nsISupports
+{
+  /**
+   * Register a speech synthesis voice.
+   *
+   * @param aService          the service that provides this voice.
+   * @param aUri              a unique identifier for this voice.
+   * @param aName             human-readable name for this voice.
+   * @param aLang             a BCP 47 language tag.
+   * @param aLocalService     true if service does not require network.
+   * @param aQueuesUtterances true if voice only speaks one utterance at a time
+   */
+  void addVoice(in nsISpeechService aService, in AString aUri,
+                in AString aName, in AString aLang,
+                in boolean aLocalService, in boolean aQueuesUtterances);
+
+  /**
+   * Remove a speech synthesis voice.
+   *
+   * @param aService the service that was used to add the voice.
+   * @param aUri     a unique identifier of an existing voice.
+   */
+  void removeVoice(in nsISpeechService aService, in AString aUri);
+
+  /**
+   * Notify content of voice availability changes. This allows content
+   * to be notified of voice catalog changes in real time.
+   */
+  void notifyVoicesChanged();
+
+  /**
+   * Set a voice as default.
+   *
+   * @param aUri       a unique identifier of an existing voice.
+   * @param aIsDefault true if this voice should be toggled as default.
+   */
+  void setDefaultVoice(in AString aUri, in boolean aIsDefault);
+
+  readonly attribute uint32_t voiceCount;
+
+  AString getVoice(in uint32_t aIndex);
+
+  bool isDefaultVoice(in AString aUri);
+
+  bool isLocalVoice(in AString aUri);
+
+  AString getVoiceLang(in AString aUri);
+
+  AString getVoiceName(in AString aUri);
+};
+
+%{C++
+#define NS_SYNTHVOICEREGISTRY_CID                   \
+  { /* {7090524d-5574-4492-a77f-d8d558ced59d} */       \
+    0x7090524d,                                        \
+    0x5574,                                            \
+    0x4492,                                            \
+    { 0xa7, 0x7f, 0xd8, 0xd5, 0x58, 0xce, 0xd5, 0x9d } \
+  }
+
+#define NS_SYNTHVOICEREGISTRY_CONTRACTID \
+    "@mozilla.org/synth-voice-registry;1"
+
+#define NS_SYNTHVOICEREGISTRY_CLASSNAME \
+    "Speech Synthesis Voice Registry"
+
+%}

@@ -1,0 +1,6 @@
+<script>
+  function f() {}
+  var p = new Proxy(f, {});
+  SpecialPowers.Cu.exportFunction(f, window).name;
+  SpecialPowers.Cu.exportFunction(p, window).name;
+</script>

@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Site Data - Settings dialog
+ */
+#sitesList {
+  min-height: 20em;
+}
+
+/* Show selected items in high contrast mode. */
+#sitesList > richlistitem[selected] {
+  outline: 1px solid transparent;
+}
+
+#sitesList > richlistitem > hbox,
+.item-box > label {
+  -moz-box-flex: 1;
+}
+
+.item-box {
+  padding: 5px 8px;
+  -moz-box-align: center;
+  width: 50px;
+}
+
+/**
+ * Confirmation dialog of removing sites selected
+ */
+#SiteDataRemoveSelectedDialog {
+  padding: 16px;
+  width: 50px;
+}
+
+#SiteDataRemoveSelectedDialog.single-entry {
+  min-height: 8em;
+}
+
+#SiteDataRemoveSelectedDialog.single-entry .multi-site {
+  display: none;
+}
+
+#SiteDataRemoveSelectedDialog.multi-entry {
+  min-height: 36em;
+}
+
+#SiteDataRemoveSelectedDialog > dialog {
+  padding: 0; /* override dialog.css */
+}
+
+#contentContainer {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.question-icon {
+  margin: 6px;
+}
+
+#removing-label {
+  font-weight: bold;
+}

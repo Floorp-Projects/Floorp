@@ -1,0 +1,18 @@
+<script>
+'use strict';
+
+document.documentElement.onclick = (e) => {
+  window.top.postMessage({ x: e.clientX, y: e.clientY, screenX: e.screenX, screenY: e.screenY }, "*");
+};
+
+window.onload = () => {	
+  window.top.postMessage({ ready: true }, "*");
+}
+</script>
+<style>
+body {
+	margin: 0;
+  background: green;
+}
+</style>
+<body></body>

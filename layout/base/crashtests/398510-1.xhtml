@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+mtd:first-letter { }
+</style>
+<script>
+function boom()
+{
+  var b = document.body;
+  document.documentElement.removeChild(b);
+  document.documentElement.offsetHeight;
+  document.documentElement.appendChild(b);
+  
+  var t = document.getElementById('t'); 
+  t.removeChild(t.firstChild);
+}
+</script>
+</head>
+<body onload="boom();">
+<mtd xmlns="http://www.w3.org/1998/Math/MathML" id="t">s</mtd>
+</body>
+</html>

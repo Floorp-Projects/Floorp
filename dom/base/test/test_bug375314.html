@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375314
+-->
+<head>
+  <title>Test for Bug 375314</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375314">Mozilla Bug 375314</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 375314 **/
+
+var lastContentType = -1;
+const testURL = window.location.href + "/this/is/the/test/url";
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+
+// Content policy / factory implementation for the test
+var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
+var policyName = "@mozilla.org/testpolicy;1";
+var policy = {
+  // nsISupports implementation
+  QueryInterface(iid) {
+
+    iid = SpecialPowers.wrap(iid);
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIContentPolicy))
+      return this;
+
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation
+  createInstance(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIContentPolicy implementation
+  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+    let contentType = loadInfo.externalContentPolicyType;
+    // Remember last content type seen for the test url
+    if (SpecialPowers.wrap(contentLocation).spec == testURL) {
+      lastContentType = contentType;
+      return Ci.nsIContentPolicy.REJECT_REQUEST;
+    }
+
+    return Ci.nsIContentPolicy.ACCEPT;
+  },
+
+  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+    return Ci.nsIContentPolicy.ACCEPT;
+  }
+}
+policy = SpecialPowers.wrapCallbackObject(policy);
+
+// Register content policy
+var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
+                                                     .QueryInterface(Ci.nsIComponentRegistrar);
+
+componentManager.registerFactory(policyID, "Test content policy", policyName, policy);
+
+var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
+
+// Try creating different request types
+var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "XMLHTTPREQUEST"];
+var curTest = -1;
+var div;
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(runNextTest, 0);
+
+function runNextTest() {
+
+  if (curTest >= 0) {
+    var type = "TYPE_" + tests[curTest];
+    is(lastContentType, Ci.nsIContentPolicy[type], "Content policies triggered for " + type);
+  }
+
+  curTest++;
+  if (curTest < tests.length) {
+    var method = "request_" + tests[curTest].toLowerCase();
+    try {
+      window[method]();
+    } catch(e) {}
+    setTimeout(runNextTest, 0);
+  }
+  else {
+    // Unregister content policy
+    categoryManager.deleteCategoryEntry("content-policy", policyName, false);
+
+    setTimeout(function() {
+      // Component must be unregistered delayed, otherwise other content
+      // policy will not be removed from the category correctly
+      componentManager.unregisterFactory(policyID, policy);
+    }, 0);
+
+    SimpleTest.finish();
+  }
+}
+
+// Request creating functions
+
+function request_script() {
+  var content = $("content");
+
+  var script = document.createElement("script");
+  script.setAttribute("type", "text/javascript")
+  script.setAttribute("src", testURL)
+  content.appendChild(script);
+}
+
+function request_image() {
+  var content = $("content");
+
+  var image = new Image();
+  image.src = testURL;
+}
+
+function request_stylesheet() {
+  var content = $("content");
+
+  var stylesheet = document.createElement("link");
+  stylesheet.setAttribute("rel", "stylesheet");
+  stylesheet.setAttribute("type", "text/css");
+  stylesheet.setAttribute("href", testURL);
+  content.appendChild(stylesheet);
+}
+
+function request_object() {
+  var content = $("content");
+
+  var object = document.createElement("embed");
+  object.setAttribute("src", testURL);
+  content.appendChild(object);
+}
+
+function request_xmlhttprequest() {
+  var request = new XMLHttpRequest();
+  request.open("GET", testURL, false);
+  request.send(null);
+}
+
+</script>
+</pre>
+</body>
+</html>

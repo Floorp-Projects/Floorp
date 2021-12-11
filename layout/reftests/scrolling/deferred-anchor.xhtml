@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%; overflow: hidden;">
+<head>
+<script>
+var xhr = new XMLHttpRequest();
+xhr.onprogress = function() {
+};
+xhr.onload = function() {
+  document.documentElement.innerHTML = this.responseXML.documentElement.innerHTML;
+};
+xhr.open("get", "deferred-anchor-ref.xhtml");
+xhr.send();
+</script>
+</head>
+</html>

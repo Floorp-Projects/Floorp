@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="sidebar.css" />
+  <link rel="stylesheet" href="sidebar-dark.css" media="(prefers-color-scheme: dark)">
+  <style id="customCSS">
+  </style>
+</head>
+<body>
+  <div id="topmenu">
+    <div id="newtab" class="topmenu-button topmenu-item"> <span id="newtab-icon" class="topmenu-item">
+
+            </span> </div> <label id="filterbox-icon" for="filterbox-input">
+
+        </label> <input type="text" id="filterbox-input" size="1" />
+    <a href="options/options.html"><div id="settings" class="topmenu-button"></span> </div></a>
+  </div>
+  <div id="tablist-wrapper">
+    <div id="pinnedtablist"> </div>
+    <div id="topshadow"> </div>
+    <div id="tablist"> <span id="top-visibility-checker"></span> 
+        <span id="bottom-visibility-checker"></span>
+    </div>
+    <div id="bottomshadow"> </div>
+    <div id="moretabs"> </div>
+    <div id="spacer"> </div>
+  </div> <template id="tab-template">
+        <div class="tab" draggable="true">
+            <div class="tab-drag-overlay">
+
+            </div>
+            <div class="tab-loading-burst">
+
+            </div>
+            <div class="tab-context">
+
+            </div>
+            <div class="tab-icon-overlay tab-icon-overlay-audible clickable">
+
+            </div>
+            <div class="tab-icon-overlay tab-icon-overlay-muted clickable"></div>
+            <div class="tab-meta-image">
+                <div class="tab-icon-wrapper">
+                    <div class="tab-icon"></div>
+                </div>
+            </div>
+            <div class="tab-title-wrapper">
+                <div class="tab-title">
+
+                </div>
+                <div class="tab-url">
+
+                </div>
+            </div>
+            <div class="tab-pin">
+
+            </div>
+            <!-- .clickable makes the close button an event target for dragstart, which allows us to cancel the drag if the user initiated the drag from here! -->
+            <div class="tab-close clickable" draggable="true">
+
+            </div>
+            <canvas>
+
+            </canvas>
+        </div>
+    </template>
+  <script src="./sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Mozilla Bug 478536"
+  onload="start();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+<body xmlns="http://www.w3.org/1999/xhtml" id="body">
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function ok(aCondition, aMessage)
+{
+  window.browsingContext.topChromeWindow.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+function start() {
+  var oldWidth = window.outerWidth, oldHeight = window.outerHeight;
+  window.maximize();
+  window.restore();
+  is(window.outerWidth, oldWidth, "wrong window width after maximize+restore");
+  is(window.outerHeight, oldHeight, "wrong window height after maximize+restore");
+  window.arguments[0].SimpleTest.finish();
+  window.close();
+}
+
+
+]]>
+</script>
+
+</window>

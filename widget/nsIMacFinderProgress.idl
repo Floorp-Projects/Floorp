@@ -1,0 +1,43 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+
+[scriptable, function, uuid(6BAE6D1C-7FFD-4354-8D7B-64697E98A801)]
+interface nsIMacFinderProgressCanceledCallback : nsISupports
+{
+  void canceled();
+};
+
+
+[scriptable, uuid(25A0B01F-54D4-4AEF-B2BF-C5764CDC68A8)]
+interface nsIMacFinderProgress : nsISupports
+{
+  /**
+  * Initialize and display a new Finder progressbar on the given file
+  *
+  * @param      path              The path of the file
+  *
+  * @param      canceledCallback  Callback which is called when cancelation is requested
+  */
+  void init(in AString path, in nsIMacFinderProgressCanceledCallback canceledCallback);
+
+  /**
+  * Update the current and total progess. If currentProgress and totalProgress are both 0,
+  * the progress is indetermined
+  *
+  * @param      currentProgress  The current progress
+  *
+  * @param      totalProgress    The total progress
+  */
+  void updateProgress(in unsigned long long currentProgress, in unsigned long long totalProgress);
+
+  /**
+  * End displaying the progressbar on the file
+  */
+  void end();
+};

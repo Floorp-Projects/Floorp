@@ -1,0 +1,13 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+# Global options
+ac_add_options --enable-debug
+
+# Android
+ac_add_options --target=i686-linux-android
+
+export MOZILLA_OFFICIAL=1
+
+ac_add_options --with-branding=mobile/android/branding/beta
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

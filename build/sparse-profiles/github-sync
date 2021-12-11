@@ -1,0 +1,7 @@
+%include build/sparse-profiles/mach
+%include build/sparse-profiles/taskgraph
+
+[include]
+path:gfx/wr/
+path:taskcluster/scripts/misc/
+path:tools/github-sync/

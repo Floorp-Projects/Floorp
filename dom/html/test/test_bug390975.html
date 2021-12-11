@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=390975
+-->
+<head>
+  <title>Test for Bug 390975</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=390975">Mozilla Bug 390975</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <table id="table1">
+    <form id="form1">
+      <input>
+      <input>
+     <tr><td>
+       <input>
+       <input>
+       <input>
+     </td></tr>
+    </form>
+  </table>
+
+  <table id="table2">
+    <form id="form2">
+      <input>
+      <input>
+     <tr id="row2"><td>
+       <input>
+       <input>
+       <input>
+     </td></tr>
+    </form>
+  </table>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 390975 **/
+var form = $("form1");
+is(form.elements.length, 5, "Unexpected elements length");
+
+$("table1").remove();
+is(form.elements.length, 3, "Should have lost control outside table");
+
+form.remove();
+is(form.elements.length, 0, "Should have lost control outside form");
+
+form = $("form2");
+is(form.elements.length, 5, "Unexpected elements length");
+
+$("row2").remove();
+is(form.elements.length, 2, "Should have lost controls inside table row");
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html id="root">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=514487
+-->
+<head id="child">
+  <title>Test for Bug 514487</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTests()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=514487">Mozilla Bug 514487</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 514487 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTests() {
+    // Test XML document cloning.
+    var d = (new DOMParser()).parseFromString(
+      "<html xmlns='http://www.w3.org/1999/xhtml' id='root'><foo id='child'/></html>",
+      "text/xml");
+    var cloneDoc = d.cloneNode(true);
+    ok(cloneDoc.getElementById("root"),
+       "XML document should have an element with ID 'root'");
+    ok(cloneDoc.getElementById("child"),
+       "XML document should have an element with ID 'child'");
+
+     // Test HTML cloning.
+     cloneDoc = document.cloneNode(true);
+     ok(cloneDoc.getElementById("root"),
+       "HTML document should have an element with ID 'root'");
+     ok(cloneDoc.getElementById("child"),
+       "HTML document should have an element with ID 'child'");
+     SimpleTest.finish();
+  }
+
+
+
+</script>
+</pre>
+</body>
+</html>

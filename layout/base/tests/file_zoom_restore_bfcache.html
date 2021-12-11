@@ -1,0 +1,84 @@
+<!doctype html>
+<script>
+  var bcName = "zoomRestoreBfcache" + window.location.search;
+  var bc = new BroadcastChannel(bcName);
+  if (window.location.search == "?2") {
+    bc.onmessage = (msgEvent) => {
+      var msg = msgEvent.data;
+      var command = msg.command;
+      dump(`Subpage ?2 received command=${command}\n`);
+      switch (command) {
+        case "case2sendData": {
+          bc.postMessage({command: "case2data", devicePixelRatio: window.devicePixelRatio,
+            frameDevicePixelRatio: document.querySelector("iframe").contentWindow.devicePixelRatio});
+          break;
+        }
+        case "case2action": {
+          SpecialPowers.spawnChrome([], () => {
+            const FullZoom = this.browsingContext.embedderElement.ownerGlobal.FullZoom;
+            FullZoom.setZoom(2.0);
+          });
+          SpecialPowers.setFullZoom(window, 2);
+          window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+            bc.postMessage({command: "case2dataAnimationFrame", devicePixelRatio: window.devicePixelRatio,
+            frameDevicePixelRatio: document.querySelector("iframe").contentWindow.devicePixelRatio });
+          }));
+          break;
+        }
+        case "case2back": {
+          bc.close();
+          window.history.back();
+          break;
+        }
+      }
+    }
+  } else {
+    bc.onmessage = (msgEvent) => {
+      var msg = msgEvent.data;
+      var command = msg.command;
+      dump(`Subpage received command=${command}\n`);
+      switch (command) {
+        case "case1sendData": {
+          bc.postMessage({command: "case1data", devicePixelRatio: window.devicePixelRatio});
+          break;
+        }
+        case "case1click": {
+          document.querySelector("a").click();
+          // We are opening file_zoom_restore_bfcache.html?2, so the current
+          // page is going into bfcache
+          break;
+        }
+        case "case3sendData": {
+          // We came back from bfcache
+          function waitUntilZoomLevelRestored() {
+            // Zoom level is updated asynchronously when bfcache lives in the
+            // parent process.
+            if (window.devicePixelRatio == 2) {
+              bc.postMessage({command: "case3data", devicePixelRatio: window.devicePixelRatio,
+              frameDevicePixelRatio: document.querySelector("iframe").contentWindow.devicePixelRatio});
+              return;
+            }
+            window.requestAnimationFrame(waitUntilZoomLevelRestored);
+          }
+          window.requestAnimationFrame(waitUntilZoomLevelRestored);
+          break;
+        }
+        case "close": {
+          SpecialPowers.spawnChrome([], () => {
+            const FullZoom = this.browsingContext.embedderElement.ownerGlobal.FullZoom;
+            FullZoom.setZoom(1.0);
+          });
+          bc.postMessage({command: "closed"});
+          bc.close();
+          window.close();
+          break;
+        }
+      }
+    }
+  }
+  window.addEventListener("pageshow", function(e) {
+    bc.postMessage({command: "handlePageShow", eventPersisted: e.persisted});
+  });
+</script>
+<a href="?2">This is a very interesting page</a>
+<iframe srcdoc="And this is a nested frame"></iframe>

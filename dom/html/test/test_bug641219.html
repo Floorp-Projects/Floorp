@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=641219
+-->
+<head>
+  <title>Test for Bug 641219</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=641219">Mozilla Bug 641219</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<div id="div">
+<font></font>
+<svg><font/></svg>
+</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 641219 **/
+var HTML = "http://www.w3.org/1999/xhtml",
+    SVG = "http://www.w3.org/2000/svg";
+var wrapper = document.getElementById("div");
+is(wrapper.getElementsByTagName("FONT").length, 1);
+is(wrapper.getElementsByTagName("FONT")[0].namespaceURI, HTML);
+is(wrapper.getElementsByTagName("font").length, 2);
+is(wrapper.getElementsByTagName("font")[0].namespaceURI, HTML);
+is(wrapper.getElementsByTagName("font")[1].namespaceURI, SVG);
+</script>
+</pre>
+</body>
+</html>

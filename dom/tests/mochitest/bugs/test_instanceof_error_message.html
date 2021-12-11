@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1530413
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1530413</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  add_task(() => {
+    var Cu = SpecialPowers.Cu;
+    try {
+      // Test case 1
+      ({} instanceof {});
+      ok(false, "Should throw a type error");
+    } catch (e) {
+      is(e.message, "({}) is not a function", "We should get a correct error message when calling instanceof");
+    }
+    // Test case 2
+    try {
+      ({} instanceof document);
+      ok(false, "Should throw a type error");
+    } catch (e) {
+      is(e.message, "document is not a function", "We should get a correct error message when calling instanceof");
+    }
+    // Test case 3
+    try {
+      ({} instanceof new Proxy(document, {}));
+      ok(false, "Should throw a type error");
+    } catch (e) {
+      is(e.message, "(new Proxy(...)) is not a function", "We should get a correct error message when calling instanceof");
+    }
+    // Test case 4 - Verify invoking instanceof on an object from a different compartment yields the same error
+    var sandbox = SpecialPowers.unwrap(Cu.Sandbox(this, { sameZoneAs: this, freshCompartment: true, wantXrays: false }));
+    sandbox.window = window;
+    sandbox.crossCompartmentObject = {}; // object created in the test compartment
+    try {
+      Cu.evalInSandbox("({} instanceof window);", sandbox);
+      ok(false, "Should throw a type error");
+    } catch (e) {
+      is(e.message, "window is not a function", "We should get a correct error message when calling instanceof");
+    }
+
+    // Test case 5 - Verify we get the same error when the LHS is an object created in a different compartment
+    try {
+      Cu.evalInSandbox("(crossCompartmentObject instanceof window);", sandbox);
+      ok(false, "Should throw a type error");
+    } catch (e) {
+      is(e.message, "window is not a function", "We should get a correct error message when calling instanceof");
+    }
+
+    // Test case 6 - Test that we are correctly wrapping the window into sandbox's compartment
+    window[Symbol.hasInstance] = function(instance) {
+      instance.window = this;
+      return true;
+    }
+    var x = Cu.evalInSandbox("(crossCompartmentObject instanceof window);", sandbox);
+    ok(x, "Symbol.hasInstance for window should return true");
+    is(sandbox.crossCompartmentObject.window, window, "We shouldn't leak the window");
+    delete window[Symbol.hasInstance];
+    Cu.nukeSandbox(sandbox);
+
+    // Test case 7 - Test instanceof with RHS being a same-origin Xray to a Window
+    sandbox = SpecialPowers.unwrap(Cu.Sandbox(this, { sameZoneAs: this, freshCompartment: true}));
+    sandbox.window = window;
+    sandbox.crossCompartmentObject = {};
+
+    window[Symbol.hasInstance] = function(instance) {
+      instance.window = this;
+      return true;
+    }
+    try {
+      Cu.evalInSandbox("(crossCompartmentObject instanceof window);", sandbox);
+      ok(false, "Should throw a type error");
+    } catch (e) {
+      is(e.message, "window is not a function",
+        "We should get a correct error thrown when the RHS of instanceof is an Xray to a Window.");
+    }
+    delete window[Symbol.hasInstance];
+    Cu.nukeSandbox(sandbox);
+
+    // Test case 8 - Test instanceof with RHS being a same-origin Xray waiver
+    sandbox = SpecialPowers.unwrap(Cu.Sandbox(this, { sameZoneAs: this, freshCompartment: true}));
+    sandbox.window = window;
+    sandbox.crossCompartmentObject = {};
+    sandbox.waiveXrays = SpecialPowers.wrapFor(Cu.waiveXrays, sandbox);
+
+    window[Symbol.hasInstance] = function(instance) {
+      instance.window = this;
+      return true;
+    }
+    Cu.evalInSandbox("(crossCompartmentObject instanceof waiveXrays(window));", sandbox);
+    ok(x, "Symbol.hasInstance for window should return true");
+    is(sandbox.crossCompartmentObject.window, window,
+      "The window pointed to by the crossCompartmentObject should be the same as the window in our compartment");
+    delete window[Symbol.hasInstance];
+    Cu.nukeSandbox(sandbox);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1530413">Mozilla Bug 1530413</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

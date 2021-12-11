@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+browser.link:
+  open_newwindow_restriction:
+    type: quantity
+    description: >
+      browser.link.open_newwindow.restriction preference value, that is one of
+      0, 1, or 2, where 2 is desktop default
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1740063
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1740063#c6
+    notification_emails:
+      - tfujisawa.birchill@mozilla.com
+    expires: "97"
+    unit: "-"

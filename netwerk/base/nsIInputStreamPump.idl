@@ -1,0 +1,66 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRequest.idl"
+
+interface nsIEventTarget;
+interface nsIInputStream;
+interface nsIStreamListener;
+
+/**
+ * nsIInputStreamPump
+ *
+ * This interface provides a means to configure and use a input stream pump
+ * instance.  The input stream pump will asynchronously read from an input
+ * stream, and push data to an nsIStreamListener instance.  It utilizes the
+ * current thread's nsIEventTarget in order to make reading from the stream
+ * asynchronous. A different thread can be used if the pump also implements
+ * nsIThreadRetargetableRequest.
+ *
+ * If the given stream supports nsIAsyncInputStream, then the stream pump will
+ * call the stream's AsyncWait method to drive the stream listener.  Otherwise,
+ * the stream will be read on a background thread utilizing the stream
+ * transport service.  More details are provided below.
+ */
+[scriptable, uuid(400F5468-97E7-4d2b-9C65-A82AECC7AE82)]
+interface nsIInputStreamPump : nsIRequest
+{
+    /**
+     * Initialize the input stream pump.
+     *
+     * @param aStream
+     *        contains the data to be read.  if the input stream is non-blocking,
+     *        then it will be QI'd to nsIAsyncInputStream.  if the QI succeeds
+     *        then the stream will be read directly.  otherwise, it will be read
+     *        on a background thread using the stream transport service.
+     * @param aSegmentSize
+     *        if the stream transport service is used, then this parameter
+     *        specifies the segment size for the stream transport's buffer.
+     *        pass 0 to specify the default value.
+     * @param aSegmentCount
+     *        if the stream transport service is used, then this parameter
+     *        specifies the segment count for the stream transport's buffer.
+     *        pass 0 to specify the default value.
+     * @param aCloseWhenDone
+     *        if true, the input stream will be closed after it has been read.
+     * @param aMainThreadTarget
+     *        a labeled main therad event target.
+     */
+    void init(in nsIInputStream aStream,
+              in unsigned long  aSegmentSize,
+              in unsigned long  aSegmentCount,
+              in boolean        aCloseWhenDone,
+              [optional] in nsIEventTarget aMainThreadTarget);
+
+    /**
+     * asyncRead causes the input stream to be read in chunks and delivered
+     * asynchronously to the listener via OnDataAvailable.
+     *
+     * @param aListener
+     *        receives notifications.
+     * @param aListenerContext
+     *        passed to listener methods.
+     */
+    void asyncRead(in nsIStreamListener aListener);
+};

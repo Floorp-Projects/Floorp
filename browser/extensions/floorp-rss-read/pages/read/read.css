@@ -1,0 +1,158 @@
+/**
+ * Styles for the feed reader iframe.
+ */
+
+ :root {
+   --card-background: white;
+   --text-color: black;
+   --media-background: #f9f9fa;
+   --blockquote-background: #fafafa;
+   --deemphasized-text-color: #4a4a4f;
+   --link-color: #0060df;
+   --visited-link-color: #8000d7;
+ }
+
+ @media (prefers-color-scheme: dark) {
+   :root {
+     --card-background: #38383d;
+     --text-color: #f9f9fa;
+     --media-background: #2a2a2e;
+     --blockquote-background: #2a2a2e;
+     --deemphasized-text-color: #b1b1b3;
+     --link-color: #45a1ff;
+     --visited-link-color: #c069ff;
+   }
+ }
+
+html {
+  font: message-box;
+  height: 100%;
+}
+
+body {
+  font-size: 1.25em;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  color: var(--text-color);
+}
+
+a {
+  color: var(--link-color);
+}
+
+a:visited {
+  color: var(--visited-link-color);
+}
+
+a:active {
+  filter: brightness(0.7);
+}
+
+main {
+  max-width: 800px;
+  width: 100%;
+  margin: auto;
+}
+
+#error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+}
+
+#error::before {
+  content: "";
+  display: block;
+  margin-bottom: 1em;
+  /* Directly embed "face-sad.svg" because otherwise the sandbox would block it */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%2300d3e7' d='M9.94.8a9.01 9.01 0 00-9 9.42 1.07 1.07 0 00.13 2.12h.21A9.01 9.01 0 109.94.8'/%3E%3Cpath fill='%2300a1c1' d='M18.93 10.21v-.4c0-2.4-.93-4.6-2.47-6.2A9.26 9.26 0 013.72 16.34a9 9 0 0014.85-4l.21-.01c.6 0 1.07-.48 1.07-1.07.01-.54-.4-.99-.92-1.06'/%3E%3Cpath fill='%23323b59' d='M5.47 6.55a.99.99 0 00-.99.99v2.22a.99.99 0 101.98 0V7.54a.99.99 0 00-1-.99m8.98 0a.99.99 0 00-1 .99v2.22a.99.99 0 101.98 0V7.54a.99.99 0 00-.98-.99m-4.5 5.47a2.27 2.27 0 00-2.34 2.13c-.02.23.09.45.27.58.19.14.43.17.64.09 0 0 .47-.17 1.34-.17.91 0 1.55.19 1.56.19a.69.69 0 00.61-.11.67.67 0 00.26-.58 2.27 2.27 0 00-2.34-2.13'/%3E%3Cpath fill='%2300a1c1' d='M4.59 7.02c-.36 0-.72-.11-1.03-.32a.318.318 0 11.35-.53 1.25 1.25 0 001.8-.47.313.313 0 11.56.28 1.88 1.88 0 01-1.68 1.04m10.47 0a1.88 1.88 0 01-1.68-1.04.313.313 0 11.56-.28 1.24 1.24 0 001.8.48.32.32 0 01.35.53c-.3.2-.66.3-1.03.3'/%3E%3C/svg%3E");
+  background-position: center;
+  background-size: cover;
+  width: 40px;
+  height: 40px;
+}
+
+.item {
+  background: var(--card-background);
+  color: inherit;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.12);
+  padding: 15px;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.item:hover {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.item h1 {
+  font-size: 1.4em;
+  font-weight: normal;
+}
+
+.item h2 {
+  font-size: 1.25em;
+}
+
+.item img {
+  max-width: 50%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.item .emoji {
+  width: 1em;
+  height: 1em;
+}
+
+.item li {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.item a:not(:hover) {
+  text-decoration: none;
+}
+
+.item pre,
+.item code {
+  font-family: Menlo, Consolas, monospace;
+  overflow: auto;
+  text-overflow: ellipsis;
+}
+
+.item blockquote {
+  border-left: solid .25em;
+  background: var(--blockquote-background);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.item_title {
+  font-size: 1.3em;
+  text-decoration: none;
+}
+
+.item_date {
+  display: block;
+  font-size: 0.9em;
+  color: var(--deemphasized-text-color);
+}
+
+.item_desc {
+  margin-top: 0.5em;
+  display: block;
+}
+
+.item_media {
+  margin-top: 1em;
+  padding: 0.5em;
+  background-color: var(--media-background);
+}
+
+.item_media ul {
+  padding-inline-start: 1em;
+}

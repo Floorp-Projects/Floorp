@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <!-- This is a test with a named color (DarkSlateGray == rgb(47, 79, 79)) -->
+  <!-- being added to another color (DarkOliveGreen == rbg(85, 107, 47)).   -->
+  <style>
+    rect { fill: DarkOliveGreen; stroke: Black; }
+  </style>
+  <script xlink:href="../smil-grid.js" type="text/javascript"/>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    function go() {
+      var animAttrHash = { "attributeName" : "fill",
+                           "from"          : "DarkOliveGreen",
+                           "by"            : "DarkSlateGray" };
+      testAnimatedRectGrid("animate", [animAttrHash]);
+    }
+  </script>
+</svg>

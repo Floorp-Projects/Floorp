@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=293347
+-->
+<head>
+  <title>Test for Bug 293347</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=293347">Mozilla Bug 293347</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function done(iframe) {
+  win = iframe.contentWindow;
+  is(win.document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "div")
+     .length, 2, "doc still intact");
+  is(win.document.body.namespaceURI, "http://www.w3.org/1999/xhtml",
+     "doc body still intact");
+  is(win.didThrow, true, "doc.write throwing");
+  SimpleTest.finish();
+}
+
+</script>
+<iframe src="file_bug293347.xml" onload="done(this)"></iframe>
+</pre>
+</body>
+</html>

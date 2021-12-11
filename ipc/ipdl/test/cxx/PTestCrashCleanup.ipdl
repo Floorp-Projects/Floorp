@@ -1,0 +1,17 @@
+// See bug 538586: if the top-level protocol's actor is deleted before
+// the "connection error" notification comes in from the IO thread,
+// IPDL teardown never occurs, even if Channel::Close() is called
+// after the error.
+
+namespace mozilla {
+namespace _ipdltest {
+
+// NB: needs to be RPC so that the parent blocks on the child's crash.
+intr protocol PTestCrashCleanup {
+child:
+    intr DIEDIEDIE();
+    async __delete__();
+};
+
+}
+}

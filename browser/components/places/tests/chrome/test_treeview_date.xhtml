@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="435322: Places tree view's formatting"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <tree id="tree"
+        is="places-tree"
+        flatList="true"
+        flex="1">
+    <treecols>
+      <treecol label="Title" id="title" anonid="title" primary="true" style="-moz-box-ordinal-group: 1;" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol label="Tags" id="tags" anonid="tags" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol label="Url" id="url" anonid="url" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol label="Visit Date" id="date" anonid="date" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol label="Visit Count" id="visitCount" anonid="visitCount" flex="1"/>
+    </treecols>
+    <treechildren flex="1"/>
+  </tree>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    /**
+     * Bug 435322
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=435322
+     *
+     * Ensures that date in places treeviews is correctly formatted.
+     */
+
+    function runTest() {
+      SimpleTest.waitForExplicitFinish();
+
+      function uri(spec) {
+        return Services.io.newURI(spec);
+      }
+
+      (async function() {
+        await PlacesUtils.history.clear();
+
+        let midnight = new Date();
+        midnight.setHours(0);
+        midnight.setMinutes(0);
+        midnight.setSeconds(0);
+        midnight.setMilliseconds(0);
+
+        // Add a visit 1ms before midnight, a visit at midnight, and
+        // a visit 1ms after midnight.
+        await PlacesTestUtils.addVisits([
+          {uri: uri("http://before.midnight.com/"),
+           visitDate: (midnight.getTime() - 1) * 1000,
+           transition: PlacesUtils.history.TRANSITION_TYPED},
+          {uri: uri("http://at.midnight.com/"),
+           visitDate: (midnight.getTime()) * 1000,
+           transition: PlacesUtils.history.TRANSITION_TYPED},
+          {uri: uri("http://after.midnight.com/"),
+           visitDate: (midnight.getTime() + 1) * 1000,
+           transition: PlacesUtils.history.TRANSITION_TYPED}
+        ]);
+
+        // add a bookmark to the midnight visit
+        let bm = await PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          url: "http://at.midnight.com/",
+          title: "A bookmark at midnight",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK
+        });
+
+        // Make a history query.
+        let query = PlacesUtils.history.getNewQuery();
+        let opts = PlacesUtils.history.getNewQueryOptions();
+        let queryURI = PlacesUtils.history.queryToQueryString(query, opts);
+
+        // Setup the places tree contents.
+        let tree = document.getElementById("tree");
+        tree.place = queryURI;
+
+        // loop through the rows and check formatting
+        let treeView = tree.view;
+        let rc = treeView.rowCount;
+        ok(rc >= 3, "Rows found");
+        let columns = tree.columns;
+        ok(columns.count > 0, "Columns found");
+        for (let r = 0; r < rc; r++) {
+          let node = treeView.nodeForTreeIndex(r);
+          ok(node, "Places node found");
+          for (let ci = 0; ci < columns.count; ci++) {
+            let c = columns.getColumnAt(ci);
+            let text = treeView.getCellText(r, c);
+            switch (c.element.getAttribute("anonid")) {
+              case "title":
+                // The title can differ, we did not set any title so we would
+                // expect null, but in such a case the view will generate a title
+                // through PlacesUIUtils.getBestTitle.
+                if (node.title)
+                  is(text, node.title, "Title is correct");
+                break;
+              case "url":
+                is(text, node.uri, "Uri is correct");
+                break;
+              case "date":
+                let timeObj = new Date(node.time / 1000);
+                // Default is short date format.
+                let dtOptions = {
+                  dateStyle: "short",
+                  timeStyle: "short"
+                };
+
+                // For today's visits we don't show date portion.
+                if (node.uri == "http://at.midnight.com/" ||
+                    node.uri == "http://after.midnight.com/") {
+                  dtOptions.dateStyle = undefined;
+                } else if (node.uri != "http://before.midnight.com/") {
+                  // Avoid to test spurious uris, due to how the test works
+                  // a redirecting uri could be put in the tree while we test.
+                  break;
+                }
+                let timeStr = new Services.intl.DateTimeFormat(undefined, dtOptions).format(timeObj);
+
+                is(text, timeStr, "Date format is correct");
+                break;
+              case "visitCount":
+                is(text, 1, "Visit count is correct");
+                break;
+            }
+          }
+        }
+
+        // Cleanup.
+        await PlacesUtils.bookmarks.remove(bm.guid);
+        await PlacesUtils.history.clear();
+      })().then(SimpleTest.finish);
+    }
+  ]]>
+  </script>
+</window>

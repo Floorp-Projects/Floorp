@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=596333
+-->
+<head>
+  <title>Test for Bug 596333</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="spellcheck.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=596333">Mozilla Bug 596333</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 596333 **/
+const Ci = SpecialPowers.Ci;
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+var gMisspeltWords;
+var onSpellCheck;
+
+function getEditor() {
+  return SpecialPowers.wrap(document.getElementById("edit")).editor;
+}
+
+function append(str) {
+  var edit = document.getElementById("edit");
+  edit.focus();
+  edit.selectionStart = edit.selectionEnd = edit.value.length;
+  sendString(str);
+}
+
+function getLoadContext() {
+  return SpecialPowers.wrap(window).docShell.QueryInterface(Ci.nsILoadContext);
+}
+
+function paste(str) {
+  var Cc = SpecialPowers.Cc;
+  var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
+  var s = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+  s.data = str;
+  trans.setTransferData("text/unicode", s);
+
+  let beforeInputEvent = null;
+  let inputEvent = null;
+  window.addEventListener("beforeinput", aEvent => { beforeInputEvent = aEvent; }, {once: true});
+  window.addEventListener("input", aEvent => { inputEvent = aEvent; }, {once: true});
+  getEditor().pasteTransferable(trans);
+  isnot(beforeInputEvent, null, '"beforeinput" event should be fired');
+  if (beforeInputEvent) {
+    is(beforeInputEvent.cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
+    is(beforeInputEvent.inputType, "insertFromPaste", 'inputType of "beforeinput" event should be "insertFromPaste"');
+    is(beforeInputEvent.data, str, `data of "beforeinput" event should be "${str}"`);
+    is(beforeInputEvent.dataTransfer, null, 'dataTransfer of "beforeinput" event should be null on <textarea>');
+    is(beforeInputEvent.getTargetRanges().length, 0, 'getTargetRanges() of "beforeinput" event should return empty array on <textarea>');
+  }
+  is(inputEvent.type, "input", '"input" event should be fired');
+  is(inputEvent.inputType, "insertFromPaste", '"inputType of "input" event should be "insertFromPaste"');
+  is(inputEvent.data, str, `data of "input" event should be "${str}"`);
+  is(inputEvent.dataTransfer, null, 'dataTransfer of "input" event should be null on <textarea>');
+  is(inputEvent.getTargetRanges().length, 0, 'getTargetRanges() of "input" event should return empty array on <textarea>');
+}
+
+function runOnFocus() {
+  var edit = document.getElementById("edit");
+
+  gMisspeltWords = ["haz", "cheezburger"];
+  ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+     "All misspellings before editing are accounted for.");
+  append(" becaz I'm a lulcat!");
+  onSpellCheck(edit, function() {
+    gMisspeltWords.push("becaz");
+    gMisspeltWords.push("lulcat");
+    ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+       "All misspellings after typing are accounted for.");
+
+    // Now, type an invalid word, and instead of hitting "space" at the end, just blur
+    // the textarea and see if the spell check after the blur event catches it.
+    append(" workd");
+    edit.blur();
+    onSpellCheck(edit, function() {
+      gMisspeltWords.push("workd");
+      ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+         "All misspellings after blur are accounted for.");
+
+      // Also, test the case when we're entering the first word in a textarea
+      gMisspeltWords = ["workd"];
+      edit.value = "";
+      append("workd ");
+      onSpellCheck(edit, function() {
+        ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+           "Misspelling in the first entered word is accounted for.");
+
+        // Make sure that pasting would also trigger spell checking for the previous word
+        gMisspeltWords = ["workd"];
+        edit.value = "";
+        append("workd");
+        paste("           x");
+        onSpellCheck(edit, function() {
+          ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+             "Misspelling is accounted for after pasting.");
+
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+}
+
+function runTest() {
+  var edit = document.getElementById("edit");
+  edit.focus();
+
+  onSpellCheck = SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null).onSpellCheck;
+  onSpellCheck(edit, runOnFocus);
+}
+</script>
+</pre>
+
+<textarea id="edit">I can haz cheezburger</textarea>
+
+</body>
+</html>

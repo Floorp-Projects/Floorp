@@ -1,0 +1,14 @@
+<!--
+    This test case was found by fuzzing. It creates a radial gradient which ends up empty when its rendered size is rounded to integer values.
+-->
+<script>
+window.onload = () => {
+  document.getElementById('a').style.cssText += "background-size:1%"
+}
+</script>
+<style>
+#a {
+  background-image: radial-gradient(ellipse 10% 4%, transparent 285.23vmin, #cc9, rgba(9, 237, 237, 0.07), white);
+</style>
+<i id='a'>
+&#x08F;&#x29;&#xAE;&#xFF;&#xE9;&#xB43;

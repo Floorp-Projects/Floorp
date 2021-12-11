@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 917945 - VTTRegion</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id="v" src="seek.webm" preload="auto">
+  <track src="region.vtt" kind="subtitles" id="default" default>
+</video>
+<script type="text/javascript">
+/**
+ * This test is used to ensure that we can parse VTT region attributes correctly
+ * from vtt file.
+ */
+var trackElement = document.getElementById("default");
+
+async function runTest() {
+  await waitUntiTrackLoaded();
+  checkRegionAttributes();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
+                            runTest);
+/**
+ * The following are test helper functions.
+ */
+async function waitUntiTrackLoaded() {
+  if (trackElement.readyState != 2) {
+    info(`wait until the track finishes loading`);
+    await once(trackElement, "load");
+  }
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+}
+
+function checkRegionAttributes() {
+  let cues = trackElement.track.cues;
+  is(cues.length, 1, "Cue list length should be 1.");
+
+  let region = cues[0].region;
+  isnot(region, null, "Region should not be null.");
+  is(region.width, 62, "Region width should be 50.");
+  is(region.lines, 5, "Region lines should be 5.");
+  is(region.regionAnchorX, 4, "Region regionAnchorX should be 4.");
+  is(region.regionAnchorY, 78, "Region regionAnchorY should be 78.");
+  is(region.viewportAnchorX, 10, "Region viewportAnchorX should be 10.");
+  is(region.viewportAnchorY, 90, "Region viewportAnchorY should be 90.");
+  is(region.scroll, "up", "Region scroll should be 'up'");
+}
+
+</script>
+</body>
+</html>

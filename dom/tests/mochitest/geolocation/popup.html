@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>Simple access of geolocation</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="geolocation_common.js"></script>
+    <meta charset="utf-8">
+  <head>
+    <script>
+      async function loadedWindow() {
+        await new Promise(r => force_prompt(true, r));
+        opener.postMessage("initialized", "*");
+      }
+      navigator.geolocation.getCurrentPosition(loadedWindow, loadedWindow, {timeout:30000});
+    </script>
+  </head>
+  <body>
+    <h1>Just a support file</h1>
+  </body>
+</html>

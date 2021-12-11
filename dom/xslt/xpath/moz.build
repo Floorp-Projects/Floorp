@@ -1,0 +1,61 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.dom += [
+    "txIXPathContext.h",
+    "XPathEvaluator.h",
+    "XPathExpression.h",
+    "XPathResult.h",
+]
+
+UNIFIED_SOURCES += [
+    "txBooleanExpr.cpp",
+    "txBooleanResult.cpp",
+    "txCoreFunctionCall.cpp",
+    "txErrorExpr.cpp",
+    "txExpr.cpp",
+    "txExprLexer.cpp",
+    "txExprParser.cpp",
+    "txFilterExpr.cpp",
+    "txForwardContext.cpp",
+    "txFunctionCall.cpp",
+    "txLiteralExpr.cpp",
+    "txLocationStep.cpp",
+    "txMozillaXPathTreeWalker.cpp",
+    "txNamedAttributeStep.cpp",
+    "txNameTest.cpp",
+    "txNodeSet.cpp",
+    "txNodeSetContext.cpp",
+    "txNodeTypeTest.cpp",
+    "txNumberExpr.cpp",
+    "txNumberResult.cpp",
+    "txPathExpr.cpp",
+    "txPredicatedNodeTest.cpp",
+    "txPredicateList.cpp",
+    "txRelationalExpr.cpp",
+    "txResultRecycler.cpp",
+    "txRootExpr.cpp",
+    "txStringResult.cpp",
+    "txUnaryExpr.cpp",
+    "txUnionExpr.cpp",
+    "txUnionNodeTest.cpp",
+    "txVariableRefExpr.cpp",
+    "txXPathOptimizer.cpp",
+    "XPathEvaluator.cpp",
+    "XPathExpression.cpp",
+    "XPathResult.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "../base",
+    "../xml",
+    "../xslt",
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -1,0 +1,27 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* nsIVariant based writable Property Bag support. */
+
+#include "nsIPropertyBag.idl"
+
+[scriptable, uuid(96fc4671-eeb4-4823-9421-e50fb70ad353)]
+interface nsIWritablePropertyBag : nsIPropertyBag
+{
+    /**
+     * Set a property with the given name to the given value.  If
+     * a property already exists with the given name, it is
+     * overwritten.
+     */
+    void setProperty(in AString name, in nsIVariant value);
+
+    /**
+     * Delete a property with the given name.
+     * @throws NS_ERROR_FAILURE if a property with that name doesn't
+     * exist.
+     */
+    void deleteProperty(in AString name);
+};

@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=812415
+-->
+<window title="Mozilla Bug 812415"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=812415"
+     target="_blank">Mozilla Bug 812415</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 812415 and Bug 823348 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testWaiving(iwin, sb) {
+    sb.win = iwin;
+    is(Cu.evalInSandbox('win', sb), iwin, "Basic identity works");
+    is(Cu.evalInSandbox('win.wrappedJSObject.expando', sb), 42, "Waivers work via .wrappedJSObject");
+    is(Cu.evalInSandbox('XPCNativeWrapper.unwrap(win).expando', sb), 42, "Waivers work via XPCNativeWrapper.unwrap");
+    is(Cu.evalInSandbox('win.wrappedJSObject.document.defaultView.expando', sb), 42, "Waivers are deep");
+  }
+
+  function checkThrows(expression, sb, msg) {
+    var result = Cu.evalInSandbox('(function() { try { ' + expression + '; return "allowed"; } catch (e) { return e.toString(); }})();', sb);
+    ok(!!/denied/.exec(result), msg);
+  }
+
+  function testAsymmetric(regular, expanded) {
+
+    // Set up objects.
+    expanded.regFun = Cu.evalInSandbox('function reg() { return 42; }; reg', regular);
+    expanded.regObj = Cu.evalInSandbox('new Object({foo: 2})', regular);
+    regular.expFun = Cu.evalInSandbox('function exp() { return 41; }; exp', expanded);
+    regular.expObj = Cu.evalInSandbox('new Object({bar: 3})', expanded);
+
+    // Check objects.
+    is(Cu.evalInSandbox('regObj.foo', expanded), 2, "Expanded can see regular object prop");
+    checkThrows('expObj.bar', regular, "Regular shouldn't read properties");
+    Cu.evalInSandbox('regObj.foo = 20', expanded);
+    is(expanded.regObj.foo, 20, "Expanded can set properties");
+    checkThrows('expFun.bar = 0', regular, "Regular shouldn't write properties");
+
+    // Check functions.
+    is(Cu.evalInSandbox('regFun()', expanded), 42, "Expanded can call regular function");
+    checkThrows('expFun()', regular, "Regular cannot call expanded function");
+    is(Cu.evalInSandbox('regFun.name', expanded), 'reg', "Expanded can see regular function's name");
+    checkThrows('expFun.name', regular, "Regular can't see expanded function's name");
+    Cu.evalInSandbox('regFun.expando = 30', expanded);
+    is(Cu.evalInSandbox('regFun.expando', expanded), 30, "Expanded can set expandos");
+    checkThrows('expFun.expando = 29', regular, "Regular can't set expandos");
+
+    // Check __proto__ stuff.
+    is(Cu.evalInSandbox('regFun.__proto__', expanded), regular.Function.prototype, "expanded can get __proto__");
+    checkThrows('expFun.__proto__', regular, "regular can't use __proto__");
+    checkThrows('expFun.__proto__ = {}', regular, "regular can't mutate __proto__");
+  }
+
+  function go() {
+    var iwin = document.getElementById('ifr').contentWindow;
+    iwin.wrappedJSObject.expando = 42;
+
+    // Make our sandboxes. We pass wantXrays=false for the nsEP to ensure that
+    // the Xrays we get are the result of being an nsEP, not from the wantXrays
+    // flag.
+    var regular = new Cu.Sandbox(iwin);
+    var expanded = new Cu.Sandbox([iwin], {wantXrays: false});
+
+    // Because of the crazy secret life of wantXrays, passing wantXrays=false
+    // has the side effect of waiving Xrays on the returned sandbox. Undo that.
+    expanded = XPCNativeWrapper(expanded);
+
+    testWaiving(iwin, regular);
+    testWaiving(iwin, expanded);
+    testAsymmetric(regular, expanded);
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

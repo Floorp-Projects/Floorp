@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<window data-l10n-id="certmgr-delete-cert"
+  data-l10n-attrs="style"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload="onLoad();">
+<dialog id="deleteCertificate"
+  buttons="accept,cancel">
+
+  <linkset>
+    <html:link rel="localization" href="security/certificates/certManager.ftl"/>
+  </linkset>
+
+  <script src="pippki.js" />
+  <script src="chrome://pippki/content/deletecert.js"/>
+
+  <description id="confirm" style="width: 400px;"/>
+  <richlistbox id="certlist" class="box-padded" flex="1"
+               style="min-height: 8em; height: 8em; min-width: 35em;"/>
+  <description id="impact" style="width: 400px;"/>
+
+</dialog>
+</window>

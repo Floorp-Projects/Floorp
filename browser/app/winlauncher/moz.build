@@ -1,0 +1,54 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("winlauncher")
+
+FORCE_STATIC_LIB = True
+
+UNIFIED_SOURCES += [
+    "/ipc/mscom/COMWrappers.cpp",
+    "/ipc/mscom/ProcessRuntime.cpp",
+    "/toolkit/xre/WinTokenUtils.cpp",
+    "/widget/windows/WindowsConsole.cpp",
+    "DllBlocklistInit.cpp",
+    "ErrorHandler.cpp",
+    "LauncherProcessWin.cpp",
+    "LaunchUnelevated.cpp",
+    "NtLoaderAPI.cpp",
+]
+
+OS_LIBS += [
+    "oleaut32",
+    "ole32",
+    "rpcrt4",
+    "version",
+]
+
+DIRS += [
+    "freestanding",
+]
+
+USE_LIBS += [
+    "winlauncher-freestanding",
+]
+
+TEST_DIRS += [
+    "test",
+]
+
+if CONFIG["MOZ_LAUNCHER_PROCESS"]:
+    UNIFIED_SOURCES += [
+        "/toolkit/xre/LauncherRegistryInfo.cpp",
+    ]
+    for var in ("MOZ_APP_BASENAME", "MOZ_APP_VENDOR"):
+        DEFINES[var] = '"%s"' % CONFIG[var]
+
+DisableStlWrapping()
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Launcher Process")
+
+REQUIRES_UNIFIED_BUILD = True

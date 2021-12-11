@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+<body onload="doTest()">
+<iframe id="f" src="1242172-1-subdoc.html" style="width:800px; height:100px; border:1px solid black"></iframe>
+<script>
+function doTest() {
+  f.contentDocument.body.offsetTop;
+  f.style.height = "200px";
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1395022 - MediaRecorder fires start event when erroring.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1395022">Mozilla Bug 1395022</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function startTest() {
+  let audioContext = new AudioContext();
+  let destination1 = audioContext.createMediaStreamDestination();
+  let oscilator = audioContext.createOscillator();
+  oscilator.connect(destination1);
+  oscilator.start();
+
+  let destination2 = audioContext.createMediaStreamDestination();
+
+  let rec = new MediaRecorder(destination1.stream);
+
+  let numStartEvents = 0;
+
+  rec.onstart = () => {
+    numStartEvents += 1;
+    is(numStartEvents, 1, "One start event should be fired by the recorder");
+    // Trigger an error in the recorder
+    destination1.stream.addTrack(destination2.stream.getTracks()[0]);
+  };
+
+  rec.onerror = () => {
+    is(numStartEvents, 1, "One start event should have been fired by the recorder");
+    SimpleTest.finish();
+  };
+
+  rec.start();
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</head>
+</html>

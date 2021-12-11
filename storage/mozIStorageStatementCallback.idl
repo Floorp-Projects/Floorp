@@ -1,0 +1,48 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIStorageResultSet;
+interface mozIStorageError;
+
+[scriptable, uuid(29383d00-d8c4-4ddd-9f8b-c2feb0f2fcfa)]
+interface mozIStorageStatementCallback : nsISupports {
+
+  /**
+   * Called when some result is obtained from the database.  This function can
+   * be called more than once with a different storageIResultSet each time for
+   * any given asynchronous statement.
+   *
+   * @param aResultSet
+   *        The result set containing the data from the database.
+   */
+  void handleResult(in mozIStorageResultSet aResultSet);
+
+  /**
+   * Called when some error occurs while executing the statement.  This function
+   * may be called more than once with a different storageIError each time for
+   * any given asynchronous statement.
+   *
+   * @param aError
+   *        An object containing information about the error.
+   */
+  void handleError(in mozIStorageError aError);
+
+  /**
+   * Called when the statement has finished executing.  This function will only
+   * be called once for any given asynchronous statement.
+   *
+   * @param aReason
+   *        Indicates if the statement is no longer executing because it either
+   *        finished (REASON_FINISHED), was canceled (REASON_CANCELED), or
+   *        a fatal error occurred (REASON_ERROR).
+   */
+  const unsigned short REASON_FINISHED = 0;
+  const unsigned short REASON_CANCELED = 1;
+  const unsigned short REASON_ERROR = 2;
+  void handleCompletion(in unsigned short aReason);
+};

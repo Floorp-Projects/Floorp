@@ -1,0 +1,17 @@
+defaults pref(image.avif.enabled,true) pref(image.avif.apply_transforms,true)
+
+== img_irot0_imir1.avif 2-flipped-horizontally.avif
+== img_irot0_imir0.avif 4-flipped-vertically.avif
+== img_irot0_imirN.avif 1-normal.avif
+== img_irot1_imir1.avif 7-rotated-90deg-CW-and-flipped-vertically.avif
+== img_irot1_imir0.avif 5-rotated-90deg-CCW-and-flipped-vertically.avif
+== img_irot1_imirN.avif 6-rotated-90deg-CCW.avif
+== img_irot2_imir1.avif 4-flipped-vertically.avif
+== img_irot2_imir0.avif 2-flipped-horizontally.avif
+== img_irot2_imirN.avif 3-rotated-180deg.avif
+== img_irot3_imir1.avif 5-rotated-90deg-CCW-and-flipped-vertically.avif
+== img_irot3_imir0.avif 7-rotated-90deg-CW-and-flipped-vertically.avif
+== img_irot3_imirN.avif 8-rotated-90deg-CW.avif
+== img_irotN_imir1.avif 2-flipped-horizontally.avif
+== img_irotN_imir0.avif 4-flipped-vertically.avif
+== img_irotN_imirN.avif 1-normal.avif

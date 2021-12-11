@@ -1,0 +1,54 @@
+#!/bin/bash
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Unpack a disk image to a specified target folder
+#
+# Usage: unpack-diskimage <image_file>
+#                         <mountpoint>
+#                         <target_path>
+
+DMG_PATH=$1
+MOUNTPOINT=$2
+TARGETPATH=$3
+
+# How long to wait before giving up waiting for the mount to finish (seconds)
+TIMEOUT=90
+
+# If mnt already exists, then the previous run may not have cleaned up
+# properly.  We should try to umount and remove the mnt directory.
+if [ -d $MOUNTPOINT ]; then
+    echo "mnt already exists, trying to clean up"
+    hdiutil detach $MOUNTPOINT -force
+    rm -rdfv $MOUNTPOINT
+fi
+
+# Install an on-exit handler that will unmount and remove the '$MOUNTPOINT' directory
+trap "{ if [ -d $MOUNTPOINT ]; then hdiutil detach $MOUNTPOINT -force; rm -rdfv $MOUNTPOINT; fi; }" EXIT
+
+mkdir -p $MOUNTPOINT
+
+hdiutil attach -verbose -noautoopen -mountpoint $MOUNTPOINT "$DMG_PATH"
+# Wait for files to show up
+# hdiutil uses a helper process, diskimages-helper, which isn't always done its
+# work by the time hdiutil exits. So we wait until something shows up in the
+# mnt directory. Due to the async nature of diskimages-helper, the best thing
+# we can do is to make sure the glob() rsync is making can find files.
+i=0
+while [ "$(echo $MOUNTPOINT/*)" == "$MOUNTPOINT/*" ]; do
+    if [ $i -gt $TIMEOUT ]; then
+        echo "No files found, exiting"
+        exit 1
+    fi
+    sleep 1
+    i=$(expr $i + 1)
+done
+# Now we can copy everything out of the $MOUNTPOINT directory into the target directory
+rsync -av $MOUNTPOINT/* $MOUNTPOINT/.DS_Store $MOUNTPOINT/.background $MOUNTPOINT/.VolumeIcon.icns $TARGETPATH/.
+hdiutil detach $MOUNTPOINT
+rm -rdf $MOUNTPOINT
+# diskimage-helper prints messages to stdout asynchronously as well, sleep
+# for a bit to ensure they don't disturb following commands in a script that
+# might parse stdout messages
+sleep 5

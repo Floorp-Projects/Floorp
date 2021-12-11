@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Testing grid minmax(min-content,max-content) column/rows</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1227285">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:8px; line-height:10px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  border: 2px solid green;
+  grid-template-columns: minmax(min-content,max-content);
+  grid-template-rows: minmax(min-content,max-content);
+  clear: both;
+  line-height: 0;
+}
+
+.grid > div {
+  border: 1px solid black;
+  min-height:0;
+  min-width:0;
+}
+
+img.t1 { }
+img.t2 { }
+
+x {
+  display: block;
+  border: 1px solid blue;
+  width: 2px;
+}
+
+.v {
+  writing-mode:vertical-lr;
+  -webkit-writing-mode:vertical-lr;
+}
+    </style>
+</head>
+<body>
+
+<div class="grid">
+  <div>
+    <img class="t1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAKJJREFUeNrt0QENAAAIw7CDf89gg5BOwlqZTHSmtgCIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAgIEAERECACAkRAvrfrTQLGaH3qbAAAAABJRU5ErkJggg%3D%3D">
+  </div>
+</div>
+
+<div class="grid">
+  <div>
+    <img class="t2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAKJJREFUeNrt0QENAAAIw7CDf89gg5BOwlqZTHSmtgCIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAgIEAERECACAkRAvrfrTQLGaH3qbAAAAABJRU5ErkJggg%3D%3D">
+  </div>
+</div>
+
+<div class="grid">
+  <div style="width:2px; height:2px">
+    <x style="width:2px; height:2px"></x>
+  </div>
+</div>
+
+<div class="grid">
+  <div>
+    <img class="t1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAKJJREFUeNrt0QENAAAIw7CDf89gg5BOwlqZTHSmtgCIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAgIEAERECACAkRAvrfrTQLGaH3qbAAAAABJRU5ErkJggg%3D%3D">
+  </div>
+</div>
+
+<div class="grid">
+  <div>
+    <img class="t2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAKJJREFUeNrt0QENAAAIw7CDf89gg5BOwlqZTHSmtgCIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAiIgAARECACAkRAgAgIEAERECACAkRAvrfrTQLGaH3qbAAAAABJRU5ErkJggg%3D%3D">
+  </div>
+</div>
+
+<div class="grid">
+  <div style="width:2px; height:2px">
+    <x style="width:2px; height:2px"></x>
+  </div>
+</div>
+
+</body>
+</html>

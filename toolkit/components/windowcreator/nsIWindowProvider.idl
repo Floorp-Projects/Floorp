@@ -1,0 +1,108 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * nsIWindowProvider is a callback interface used by Gecko when it needs to
+ * open a new window.  This interface can be implemented by Gecko consumers who
+ * wish to provide a custom "new window" of their own (for example by returning
+ * a new tab, an existing window, etc) instead of just having a real new
+ * toplevel window open.
+ */
+
+#include "nsISupports.idl"
+
+%{ C++
+class nsDocShellLoadState;
+%}
+
+webidl BrowsingContext;
+interface mozIDOMWindowProxy;
+interface nsIURI;
+interface nsIOpenWindowInfo;
+native nsDocShellLoadStatePtr(nsDocShellLoadState*);
+
+/**
+ * The nsIWindowProvider interface exists so that the window watcher's default
+ * behavior of opening a new window can be easly modified.  When the window
+ * watcher needs to open a new window, it will first check with the
+ * nsIWindowProvider it gets from the parent window.  If there is no provider
+ * or the provider does not provide a window, the window watcher will proceed
+ * to actually open a new window.
+ */
+[scriptable, uuid(e97a3830-15ef-499b-8372-c22d128091c1)]
+interface nsIWindowProvider : nsISupports
+{
+  /**
+   * A method to request that this provider provide a window.  The window
+   * returned need not to have the right name or parent set on it; setting
+   * those is the caller's responsibility.  The provider can always return null
+   * to have the caller create a brand-new window.
+   *
+   * @param aOpenWindowInfo  Must not be null.  This is the information the
+   *                         caller wants to be used to construct the new window.
+   *
+   * @param aChromeFlags The chrome flags the caller will use to create a new
+   *        window if this provider returns null.  See nsIWebBrowserChrome for
+   *        the possible values of this field.
+   *
+   * @param aWidthSpecified Whether the attempt to create a window is trying
+   *        to specify the width for the new window.
+   *
+   * @param aURI The URI to be loaded in the new window (may be NULL).  The
+   *        nsIWindowProvider implementation must not load this URI into the
+   *        window it returns.  This URI is provided solely to help the
+   *        nsIWindowProvider implementation make decisions; the caller will
+   *        handle loading the URI in the window returned if provideWindow
+   *        returns a window.
+   *
+   *        When making decisions based on aURI, note that even when it's not
+   *        null, aURI may not represent all relevant information about the
+   *        load.  For example, the load may have extra load flags, POST data,
+   *        etc.
+   *
+   * @param aName The name of the window being opened.  Setting the name on the
+   *        return value of provideWindow will be handled by the caller; aName
+   *        is provided solely to help the nsIWindowProvider implementation
+   *        make decisions.
+   *
+   * @param aFeatures The feature string for the window being opened.  This may
+   *        be empty.  The nsIWindowProvider implementation is allowed to apply
+   *        the feature string to the window it returns in any way it sees fit.
+   *        See the nsIWindowWatcher interface for details on feature strings.
+   *
+   * @param aLoadState Specify setup information of the load in the new window
+   *
+   * @param aWindowIsNew [out] Whether the window being returned was just
+   *        created by the window provider implementation.  This can be used by
+   *        callers to keep track of which windows were opened by the user as
+   *        opposed to being opened programmatically.  This should be set to
+   *        false if the window being returned existed before the
+   *        provideWindow() call.  The value of this out parameter is
+   *        meaningless if provideWindow() returns null.
+   *
+   * @return A window the caller should use or null if the caller should just
+   *         create a new window.  The returned window may be newly opened by
+   *         the nsIWindowProvider implementation or may be a window that
+   *         already existed.
+   *
+   * @throw NS_ERROR_ABORT if the caller should cease its attempt to open a new
+   *                       window.
+   *
+   * @see nsIWindowWatcher for more information on aFeatures.
+   * @see nsIWebBrowserChrome for more information on aChromeFlags.
+   */
+  [noscript]
+  BrowsingContext provideWindow(in nsIOpenWindowInfo aOpenWindowInfo,
+                                in unsigned long aChromeFlags,
+                                in boolean aCalledFromJS,
+                                in boolean aWidthSpecified,
+                                in nsIURI aURI,
+                                in AString aName,
+                                in AUTF8String aFeatures,
+                                in boolean aForceNoOpener,
+                                in boolean aForceNoReferrer,
+                                in nsDocShellLoadStatePtr aLoadState,
+                                out boolean aWindowIsNew);
+};

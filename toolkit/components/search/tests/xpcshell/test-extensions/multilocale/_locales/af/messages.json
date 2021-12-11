@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Multilocale AF"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, die vrye ensiklopedie"
+  },
+  "url_lang": {
+    "message": "af"
+  },
+  "searchUrl": {
+    "message": "https://af.wikipedia.org/wiki/Spesiaal:Soek"
+  },
+  "suggestUrl": {
+    "message": "https://af.wikipedia.org/w/api.php"
+  },
+  "extensionIcon": {
+    "message": "favicon-af.ico"
+  }
+}

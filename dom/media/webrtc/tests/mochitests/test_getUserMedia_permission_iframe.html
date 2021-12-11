@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<pre id="test">
+<script type="application/javascript">
+/**
+  Runs inside iframe in test_getUserMedia_permission.html.
+*/
+
+const gUM = c => navigator.mediaDevices.getUserMedia(c);
+
+(async () => {
+  let message;
+  let stream;
+  try {
+    stream = await gUM({ video: true });
+    message = "success";
+  } catch(e) {
+    message = e.name;
+  }
+  parent.postMessage(message, "https://example.com:443");
+
+  if (message == "success") {
+    stream.getTracks().forEach(track => track.stop());
+  }
+})().catch(e => setTimeout(() => { throw e; }));
+</script>
+</pre>
+</body>
+</html>

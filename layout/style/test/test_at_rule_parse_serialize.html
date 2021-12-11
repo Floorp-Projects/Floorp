@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=478160
+-->
+<head>
+  <title>Test for Bug 478160</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style" type="text/css"></style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478160">Mozilla Bug 478160</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 478160 **/
+
+var style_element = document.getElementById("style");
+var style_text = document.createTextNode("");
+style_element.appendChild(style_text);
+
+function test_at_rule(str) {
+    style_text.data = str;
+    is(style_element.sheet.cssRules.length, 1,
+       "should have one rule from " + str);
+    var ser1 = style_element.sheet.cssRules[0].cssText;
+    isnot(ser1, "", "should have non-empty rule from " + str);
+    style_text.data = ser1;
+    var ser2 = style_element.sheet.cssRules[0].cssText;
+    is(ser2, ser1, "parse+serialize should be idempotent for " + str);
+}
+
+test_at_rule("@namespace 'a b'");
+
+</script>
+</pre>
+</body>
+</html>

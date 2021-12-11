@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: definite min/max-width/height values on the grid container</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1229165">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: block;
+  float: left;
+  border: 1px solid black;
+  background: grey;
+  margin-right:50px;
+}
+
+x { position:absolute; top:0; left:0; right:0; bottom:0; background:blue; }
+x:nth-child(1) { right:14px; bottom:14px; }
+x:nth-child(2) { left:14px; bottom:14px; }
+x:nth-child(3) { top:14px; right:14px; }
+x:nth-child(4) { top:14px; left:14px; }
+w { display:block; position:relative; width:24px; height:24px; }
+
+  </style>
+</head>
+<body>
+
+<div class="grid" style="min-width:50px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="max-width:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="min-width:50px; max-width:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="width:50px; max-width:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="width:50px; min-width:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="min-width:50px; width:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="min-width:50px; max-width:20px; width:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="max-width:10px; width:20px"><w><x></x><x></x><x></x><x></x></w></div>
+
+<br clear="all">
+<br clear="all">
+
+<div class="grid" style="min-height:50px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="max-height:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="min-height:50px; max-height:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="height:50px; max-height:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="height:50px; min-height:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="min-height:50px; height:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="min-height:50px; max-height:20px; height:10px"><w><x></x><x></x><x></x><x></x></w></div>
+<div class="grid" style="max-height:10px; height:20px"><w><x></x><x></x><x></x><x></x></w></div>
+
+</body>
+</html>

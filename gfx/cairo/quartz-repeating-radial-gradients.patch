@@ -1,0 +1,305 @@
+# HG changeset patch
+# User Robert O'Callahan <robert@ocallahan.org>
+# Date 1249558156 -43200
+# Node ID e564f3ab4ea6e3b5dd9c4e9e6042d3a84c229dde
+# Parent  6ef9993a30bf2f983c9d64d7441d2e3b6b935de1
+Bug 508227. Don't fallback to Quartz for repeating radial gradients. r=jmuizelaar
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -708,20 +708,20 @@ CreateGradientFunction (const cairo_grad
+ 			     1,
+ 			     input_value_range,
+ 			     4,
+ 			     output_value_ranges,
+ 			     &callbacks);
+ }
+ 
+ static CGFunctionRef
+-CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
+-				 const cairo_gradient_pattern_t *gpat,
+-				 CGPoint *start, CGPoint *end,
+-				 CGAffineTransform matrix)
++CreateRepeatingLinearGradientFunction (cairo_quartz_surface_t *surface,
++				       const cairo_gradient_pattern_t *gpat,
++				       CGPoint *start, CGPoint *end,
++				       CGAffineTransform matrix)
+ {
+     cairo_pattern_t *pat;
+     float input_value_range[2];
+     float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
+     CGFunctionCallbacks callbacks = {
+ 	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
+     };
+ 
+@@ -791,16 +791,156 @@ CreateRepeatingGradientFunction (cairo_q
+     return CGFunctionCreate (pat,
+ 			     1,
+ 			     input_value_range,
+ 			     4,
+ 			     output_value_ranges,
+ 			     &callbacks);
+ }
+ 
++static void
++UpdateRadialParameterToIncludePoint(double *max_t, CGPoint *center,
++                                    double dr, double dx, double dy,
++                                    double x, double y)
++{
++    /* Compute a parameter t such that a circle centered at
++       (center->x + dx*t, center->y + dy*t) with radius dr*t contains the
++       point (x,y).
++
++       Let px = x - center->x, py = y - center->y.
++       Parameter values for which t is on the circle are given by
++         (px - dx*t)^2 + (py - dy*t)^2 = (t*dr)^2
++
++       Solving for t using the quadratic formula, and simplifying, we get
++         numerator = dx*px + dy*py +-
++                     sqrt( dr^2*(px^2 + py^2) - (dx*py - dy*px)^2 )
++         denominator = dx^2 + dy^2 - dr^2
++         t = numerator/denominator
++
++       In CreateRepeatingRadialGradientFunction we know the outer circle
++       contains the inner circle. Therefore the distance between the circle
++       centers plus the radius of the inner circle is less than the radius of
++       the outer circle. (This is checked in _cairo_quartz_setup_radial_source.)
++       Therefore
++         dx^2 + dy^2 < dr^2
++       So the denominator is negative and the larger solution for t is given by
++         numerator = dx*px + dy*py -
++                     sqrt( dr^2*(px^2 + py^2) - (dx*py - dy*px)^2 )
++         denominator = dx^2 + dy^2 - dr^2
++         t = numerator/denominator
++       dx^2 + dy^2 < dr^2 also ensures that the operand of sqrt is positive.
++    */
++    double px = x - center->x;
++    double py = y - center->y;
++    double dx_py_minus_dy_px = dx*py - dy*px;
++    double numerator = dx*px + dy*py -
++        sqrt (dr*dr*(px*px + py*py) - dx_py_minus_dy_px*dx_py_minus_dy_px);
++    double denominator = dx*dx + dy*dy - dr*dr;
++    double t = numerator/denominator;
++
++    if (*max_t < t) {
++        *max_t = t;
++    }
++}
++
++/* This must only be called when one of the circles properly contains the other */
++static CGFunctionRef
++CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
++                                       const cairo_gradient_pattern_t *gpat,
++                                       CGPoint *start, double *start_radius,
++                                       CGPoint *end, double *end_radius)
++{
++    CGRect clip = CGContextGetClipBoundingBox (surface->cgContext);
++    CGAffineTransform transform;
++    cairo_pattern_t *pat;
++    float input_value_range[2];
++    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
++    CGFunctionCallbacks callbacks = {
++        0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
++    };
++    CGPoint *inner;
++    double *inner_radius;
++    CGPoint *outer;
++    double *outer_radius;
++    /* minimum and maximum t-parameter values that will make our gradient
++       cover the clipBox */
++    double t_min, t_max, t_temp;
++    /* outer minus inner */
++    double dr, dx, dy;
++
++    _cairo_quartz_cairo_matrix_to_quartz (&gpat->base.matrix, &transform);
++    /* clip is in cairo device coordinates; get it into cairo user space */
++    clip = CGRectApplyAffineTransform (clip, transform);
++
++    if (*start_radius < *end_radius) {
++        /* end circle contains start circle */
++        inner = start;
++        outer = end;
++        inner_radius = start_radius;
++        outer_radius = end_radius;
++    } else {
++        /* start circle contains end circle */
++        inner = end;
++        outer = start;
++        inner_radius = end_radius;
++        outer_radius = start_radius;
++    }
++
++    dr = *outer_radius - *inner_radius;
++    dx = outer->x - inner->x;
++    dy = outer->y - inner->y;
++
++    t_min = -(*inner_radius/dr);
++    inner->x += t_min*dx;
++    inner->y += t_min*dy;
++    *inner_radius = 0.;
++
++    t_temp = 0.;
++    UpdateRadialParameterToIncludePoint(&t_temp, inner, dr, dx, dy,
++                                        clip.origin.x, clip.origin.y);
++    UpdateRadialParameterToIncludePoint(&t_temp, inner, dr, dx, dy,
++                                        clip.origin.x + clip.size.width, clip.origin.y);
++    UpdateRadialParameterToIncludePoint(&t_temp, inner, dr, dx, dy,
++                                        clip.origin.x + clip.size.width, clip.origin.y + clip.size.height);
++    UpdateRadialParameterToIncludePoint(&t_temp, inner, dr, dx, dy,
++                                        clip.origin.x, clip.origin.y + clip.size.height);
++    /* UpdateRadialParameterToIncludePoint assumes t=0 means radius 0.
++       But for the parameter values we use with Quartz, t_min means radius 0.
++       Also, add a small fudge factor to avoid rounding issues. Since the
++       circles are alway expanding and containing the earlier circles, this is
++       OK. */
++    t_temp += 1e-6;
++    t_max = t_min + t_temp;
++    outer->x = inner->x + t_temp*dx;
++    outer->y = inner->y + t_temp*dy;
++    *outer_radius = t_temp*dr;
++
++    /* set the input range for the function -- the function knows how to
++       map values outside of 0.0 .. 1.0 to that range for REPEAT/REFLECT. */
++    if (*start_radius < *end_radius) {
++        input_value_range[0] = t_min;
++        input_value_range[1] = t_max;
++    } else {
++        input_value_range[0] = -t_max;
++        input_value_range[1] = -t_min;
++    }
++
++    if (_cairo_pattern_create_copy (&pat, &gpat->base))
++  /* quartz doesn't deal very well with malloc failing, so there's
++   * not much point in us trying either */
++  return NULL;
++
++    return CGFunctionCreate (pat,
++           1,
++           input_value_range,
++           4,
++           output_value_ranges,
++           &callbacks);
++}
++
+ /* Obtain a CGImageRef from a #cairo_surface_t * */
+ 
+ static void
+ DataProviderReleaseCallback (void *info, const void *data, size_t size)
+ {
+     cairo_surface_t *surface = (cairo_surface_t *) info;
+     cairo_surface_destroy (surface);
+ }
+@@ -1112,23 +1252,24 @@ _cairo_quartz_setup_linear_source (cairo
+     rgb = CGColorSpaceCreateDeviceRGB();
+ 
+     start = CGPointMake (_cairo_fixed_to_double (lpat->p1.x),
+ 			 _cairo_fixed_to_double (lpat->p1.y));
+     end = CGPointMake (_cairo_fixed_to_double (lpat->p2.x),
+ 		       _cairo_fixed_to_double (lpat->p2.y));
+ 
+     if (abspat->extend == CAIRO_EXTEND_NONE ||
+-	abspat->extend == CAIRO_EXTEND_PAD)
++        abspat->extend == CAIRO_EXTEND_PAD) 
+     {
+ 	gradFunc = CreateGradientFunction (&lpat->base);
+     } else {
+-	gradFunc = CreateRepeatingGradientFunction (surface,
+-						    &lpat->base,
+-						    &start, &end, surface->sourceTransform);
++	gradFunc = CreateRepeatingLinearGradientFunction (surface,
++						          &lpat->base,
++						          &start, &end,
++						          surface->sourceTransform);
+     }
+ 
+     surface->sourceShading = CGShadingCreateAxial (rgb,
+ 						   start, end,
+ 						   gradFunc,
+ 						   extend, extend);
+ 
+     CGColorSpaceRelease(rgb);
+@@ -1142,52 +1283,68 @@ _cairo_quartz_setup_radial_source (cairo
+ 				   const cairo_radial_pattern_t *rpat)
+ {
+     const cairo_pattern_t *abspat = &rpat->base.base;
+     cairo_matrix_t mat;
+     CGPoint start, end;
+     CGFunctionRef gradFunc;
+     CGColorSpaceRef rgb;
+     bool extend = abspat->extend == CAIRO_EXTEND_PAD;
++    double c1x = _cairo_fixed_to_double (rpat->c1.x);
++    double c1y = _cairo_fixed_to_double (rpat->c1.y);
++    double c2x = _cairo_fixed_to_double (rpat->c2.x);
++    double c2y = _cairo_fixed_to_double (rpat->c2.y);
++    double r1 = _cairo_fixed_to_double (rpat->r1);
++    double r2 = _cairo_fixed_to_double (rpat->r2);
++    double dx = c1x - c2x;
++    double dy = c1y - c2y;
++    double centerDistance = sqrt (dx*dx + dy*dy);
+ 
+     if (rpat->base.n_stops == 0) {
+ 	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
+ 	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
+ 	return DO_SOLID;
+     }
+ 
+-    if (abspat->extend == CAIRO_EXTEND_REPEAT ||
+-	abspat->extend == CAIRO_EXTEND_REFLECT)
+-    {
+-	/* I started trying to map these to Quartz, but it's much harder
+-	 * then the linear case (I think it would involve doing multiple
+-	 * Radial shadings).  So, instead, let's just render an image
+-	 * for pixman to draw the shading into, and use that.
++    if (r2 <= centerDistance + r1 + 1e-6 && /* circle 2 doesn't contain circle 1 */
++        r1 <= centerDistance + r2 + 1e-6) { /* circle 1 doesn't contain circle 2 */
++	/* Quartz handles cases where neither circle contains the other very
++	 * differently from pixman.
++	 * Whatever the correct behaviour is, let's at least have only pixman's
++	 * implementation to worry about.
++	 * Note that this also catches the cases where r1 == r2.
+ 	 */
+-	return _cairo_quartz_setup_fallback_source (surface, &rpat->base.base);
++	return _cairo_quartz_setup_fallback_source (surface, abspat);
+     }
+ 
+     mat = abspat->matrix;
+     cairo_matrix_invert (&mat);
+     _cairo_quartz_cairo_matrix_to_quartz (&mat, &surface->sourceTransform);
+ 
+     rgb = CGColorSpaceCreateDeviceRGB();
+ 
+-    start = CGPointMake (_cairo_fixed_to_double (rpat->c1.x),
+-			 _cairo_fixed_to_double (rpat->c1.y));
+-    end = CGPointMake (_cairo_fixed_to_double (rpat->c2.x),
+-		       _cairo_fixed_to_double (rpat->c2.y));
++    start = CGPointMake (c1x, c1y);
++    end = CGPointMake (c2x, c2y);
+ 
+-    gradFunc = CreateGradientFunction (&rpat->base);
++    if (abspat->extend == CAIRO_EXTEND_NONE ||
++        abspat->extend == CAIRO_EXTEND_PAD)
++    {
++	gradFunc = CreateGradientFunction (&rpat->base);
++    } else {
++	gradFunc = CreateRepeatingRadialGradientFunction (surface,
++						          &rpat->base,
++						          &start, &r1,
++						          &end, &r2);
++    }
+ 
+     surface->sourceShading = CGShadingCreateRadial (rgb,
+ 						    start,
+-						    _cairo_fixed_to_double (rpat->r1),
++						    r1,
+ 						    end,
+-						    _cairo_fixed_to_double (rpat->r2),
++						    r2,
+ 						    gradFunc,
+ 						    extend, extend);
+ 
+     CGColorSpaceRelease(rgb);
+     CGFunctionRelease(gradFunc);
+ 
+     return DO_SHADING;
+ }

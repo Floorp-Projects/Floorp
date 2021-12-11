@@ -1,0 +1,170 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* General popup rules */
+
+#PopupAutoComplete > richlistbox > richlistitem {
+  min-height: 20px;
+  border: 0;
+  border-radius: 0;
+  padding: 0 1px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem > .ac-site-icon {
+  margin-inline: 4px 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem > .ac-title {
+  font: icon;
+  margin-inline-start: 4px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLearnMore"] {
+  padding-bottom: 2px;
+  padding-inline-start: 21px;
+}
+
+#PopupAutoComplete > richlistbox {
+  padding: 0;
+}
+
+/* Popup states */
+
+.autocomplete-richlistitem:hover {
+  background-color: var(--arrowpanel-dimmed);
+}
+
+.autocomplete-richlistitem[selected] {
+  background-color: SelectedItem;
+  color: SelectedItemText;
+}
+
+/* Autocomplete richlistitem support for a two-line label display */
+
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  margin: 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="possible-username"] > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .ac-site-icon {
+  display: block;
+  margin-inline: 4px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="possible-username"] > .ac-site-icon {
+  visibility: hidden;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper {
+  /* The text should flex while the icon should not */
+  flex: 1;
+  /* width/min-width are needed to get the text-overflow: ellipsis to work for the children */
+  min-width: 0;
+  width: 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper > .label-row {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .generated-password-autosave,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLearnMore"] > .ac-title,
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper > .line2-label {
+  padding-top: 2px !important;
+  opacity: .6;
+}
+
+/* Login form autocompletion (with and without origin showing) and generated passwords */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
+  fill: GrayText;
+  list-style-image: url(chrome://browser/skin/login.svg);
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper > .ac-site-icon {
+  fill: GrayText;
+  list-style-image: url(chrome://browser/skin/import.svg);
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"][selected] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"][selected] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"][selected] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
+  fill: SelectedItemText;
+}
+
+/* Login form autocompletion with origin showing and generated passwords */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .two-line-wrapper {
+  padding: 4px;
+  padding-inline-start: 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"]:not([collapsed="true"]) {
+  /* Workaround bug 451997 and/or bug 492645 */
+  display: block;
+}
+
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .line2-label > span {
+  /* The font-family is only adjusted on the inner span so that the
+     line-height of .line2-label matches that of .line1-label */
+  font-family: monospace;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .generated-password-autosave > span {
+  /* The font-* properties are only adjusted on the inner span so that the
+     line-height of .generated-password-autosave matches that of .line1-label */
+  font-style: italic;
+  font-size: 0.85em;
+  white-space: normal;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] + richlistitem[originaltype="generatedPassword"],
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] + richlistitem[originaltype="generatedPassword"] {
+  /* Separator between logins and generated passwords. This uses --panel-separator-color from default
+   * themes since autocomplete doesn't yet switch to dark. */
+  border-top: 1px solid hsla(210,4%,10%,.14);
+}
+
+/* Insecure field warning */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
+  background-color: var(--arrowpanel-dimmed);
+  border-bottom: 1px solid var(--panel-separator-color);
+  padding-block: 4px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"][selected] {
+  background-color: var(--arrowpanel-dimmed-further);
+  color: -moz-DialogText;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title {
+  color: var(--grey-60);
+  font-size: 1em;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title .ac-emphasize-text-title {
+  font-weight: 600;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"][selected] > .ac-title {
+  color: inherit;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
+  list-style-image: url(chrome://global/skin/icons/security-broken.svg);
+  -moz-context-properties: fill;
+  fill: var(--grey-60);
+}

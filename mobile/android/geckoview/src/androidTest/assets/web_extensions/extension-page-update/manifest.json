@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "Mozilla Android Components - Tabs Update Test",
+  "version": "1.0",
+  "background": {
+    "scripts": ["background-script.js"]
+  },
+  "applications": {
+    "gecko": {
+      "id": "extension-page-update@tests.mozilla.org"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.example.com/*"],
+      "js": ["tabs.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging",
+    "tabs",
+    "<all_urls>"
+  ]
+}

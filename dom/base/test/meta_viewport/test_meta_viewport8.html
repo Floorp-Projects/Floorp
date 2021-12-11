@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>meta viewport test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="initial-scale=0.01">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>minimum-scale=0.01</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      is(info.minZoom,     0.25,    "minimum scale defaults to the absolute minimum");
+      is(info.defaultZoom, 0.25,    "initial scale is bounded by the minimum scale");
+      is(info.width,       3200,    "width is scaled correctly by zoom level");
+      is(info.height,      1920,    "height is scaled correctly by zoom level");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Settings component renders default browsers with a selected browsers 1`] = `
+<section
+  className="compatibility-settings"
+>
+  <header
+    className="compatibility-settings__header"
+  >
+    <Localized
+      id="compatibility-settings-header"
+    >
+      <label
+        className="compatibility-settings__header-label"
+      >
+        compatibility-settings-header
+      </label>
+    </Localized>
+    <Localized
+      attrs={
+        Object {
+          "title": true,
+        }
+      }
+      id="compatibility-close-settings-button"
+    >
+      <button
+        className="compatibility-settings__header-button"
+        onClick={[Function]}
+        title="compatibility-close-settings-button"
+      >
+        <img
+          className="compatibility-settings__header-icon"
+          src="chrome://devtools/skin/images/close.svg"
+        />
+      </button>
+    </Localized>
+  </header>
+  <section
+    className="compatibility-settings__target-browsers"
+  >
+    <Localized
+      id="compatibility-target-browsers-header"
+    >
+      <header
+        className="compatibility-settings__target-browsers-header"
+      >
+        compatibility-target-browsers-header
+      </header>
+    </Localized>
+    <ul
+      className="compatibility-settings__target-browsers-list"
+    >
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={false}
+          data-id="firefox"
+          data-status="nightly"
+          id="firefox-nightly"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-nightly"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox nightly"
+          />
+          Firefox nightly (78)
+        </label>
+      </li>
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={true}
+          data-id="firefox"
+          data-status="beta"
+          id="firefox-beta"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-beta"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox beta"
+          />
+          Firefox beta (77)
+        </label>
+      </li>
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={false}
+          data-id="firefox"
+          data-status="current"
+          id="firefox-current"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-current"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox current"
+          />
+          Firefox current (76)
+        </label>
+      </li>
+    </ul>
+  </section>
+</section>
+`;
+
+exports[`Settings component renders default browsers with full selected browsers 1`] = `
+<section
+  className="compatibility-settings"
+>
+  <header
+    className="compatibility-settings__header"
+  >
+    <Localized
+      id="compatibility-settings-header"
+    >
+      <label
+        className="compatibility-settings__header-label"
+      >
+        compatibility-settings-header
+      </label>
+    </Localized>
+    <Localized
+      attrs={
+        Object {
+          "title": true,
+        }
+      }
+      id="compatibility-close-settings-button"
+    >
+      <button
+        className="compatibility-settings__header-button"
+        onClick={[Function]}
+        title="compatibility-close-settings-button"
+      >
+        <img
+          className="compatibility-settings__header-icon"
+          src="chrome://devtools/skin/images/close.svg"
+        />
+      </button>
+    </Localized>
+  </header>
+  <section
+    className="compatibility-settings__target-browsers"
+  >
+    <Localized
+      id="compatibility-target-browsers-header"
+    >
+      <header
+        className="compatibility-settings__target-browsers-header"
+      >
+        compatibility-target-browsers-header
+      </header>
+    </Localized>
+    <ul
+      className="compatibility-settings__target-browsers-list"
+    >
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={true}
+          data-id="firefox"
+          data-status="nightly"
+          id="firefox-nightly"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-nightly"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox nightly"
+          />
+          Firefox nightly (78)
+        </label>
+      </li>
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={true}
+          data-id="firefox"
+          data-status="beta"
+          id="firefox-beta"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-beta"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox beta"
+          />
+          Firefox beta (77)
+        </label>
+      </li>
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={true}
+          data-id="firefox"
+          data-status="current"
+          id="firefox-current"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-current"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox current"
+          />
+          Firefox current (76)
+        </label>
+      </li>
+    </ul>
+  </section>
+</section>
+`;
+
+exports[`Settings component renders default browsers with no selected browsers 1`] = `
+<section
+  className="compatibility-settings"
+>
+  <header
+    className="compatibility-settings__header"
+  >
+    <Localized
+      id="compatibility-settings-header"
+    >
+      <label
+        className="compatibility-settings__header-label"
+      >
+        compatibility-settings-header
+      </label>
+    </Localized>
+    <Localized
+      attrs={
+        Object {
+          "title": true,
+        }
+      }
+      id="compatibility-close-settings-button"
+    >
+      <button
+        className="compatibility-settings__header-button"
+        onClick={[Function]}
+        title="compatibility-close-settings-button"
+      >
+        <img
+          className="compatibility-settings__header-icon"
+          src="chrome://devtools/skin/images/close.svg"
+        />
+      </button>
+    </Localized>
+  </header>
+  <section
+    className="compatibility-settings__target-browsers"
+  >
+    <Localized
+      id="compatibility-target-browsers-header"
+    >
+      <header
+        className="compatibility-settings__target-browsers-header"
+      >
+        compatibility-target-browsers-header
+      </header>
+    </Localized>
+    <ul
+      className="compatibility-settings__target-browsers-list"
+    >
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={false}
+          data-id="firefox"
+          data-status="nightly"
+          id="firefox-nightly"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-nightly"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox nightly"
+          />
+          Firefox nightly (78)
+        </label>
+      </li>
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={false}
+          data-id="firefox"
+          data-status="beta"
+          id="firefox-beta"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-beta"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox beta"
+          />
+          Firefox beta (77)
+        </label>
+      </li>
+      <li
+        className="compatibility-settings__target-browsers-item"
+      >
+        <input
+          checked={false}
+          data-id="firefox"
+          data-status="current"
+          id="firefox-current"
+          onChange={[Function]}
+          type="checkbox"
+        />
+        <label
+          className="compatibility-settings__target-browsers-item-label"
+          htmlFor="firefox-current"
+        >
+          <BrowserIcon
+            id="firefox"
+            title="Firefox current"
+          />
+          Firefox current (76)
+        </label>
+      </li>
+    </ul>
+  </section>
+</section>
+`;

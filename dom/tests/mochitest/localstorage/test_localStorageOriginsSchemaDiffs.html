@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage different domains</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="interOriginTest2.js"></script>
+
+<!--
+  This test loads two frames from different
+  origins and checks that entries of localStorage
+  objects don't leak each between other.
+
+  The subsystem is based on postMessage and addEventListener
+  to send messages among different origins. The subsystem waits
+  for both frames be loaded and then alternately calls each frames'
+  doStep() function that on each call proceeds with a single step
+  of the test on its side. This way the subsystem alternate between
+  both frames until both sequences completely finish.
+-->
+
+<script type="text/javascript">
+
+function startTest()
+{
+  masterFrameOrigin = "http://example.com";
+  slaveFrameOrigin = "https://example.com";
+
+  masterFrame.location = masterFrameOrigin + framePath + "frameMasterNotEqual.html";
+  slaveFrame.location = slaveFrameOrigin + framePath + "frameSlaveNotEqual.html";
+}
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" name="masterFrame"></iframe>
+  <iframe src="" name="slaveFrame"></iframe>
+</body>
+</html>

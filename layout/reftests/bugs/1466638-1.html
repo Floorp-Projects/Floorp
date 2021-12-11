@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<style>
+@keyframes holdBackgroundPosition {
+  from,to { background-position-x: 50%; }
+}
+#test {
+  height: 100px;
+  width: 100px;
+  background-repeat: no-repeat;
+  background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF/wAAAAAAQaMSAwAAABJJREFUeNpiYBgFo2AwAIAAAwACigABtnCV2AAAAABJRU5ErkJggg==); /* a 25x25 px red box */
+  animation: holdBackgroundPosition 100s infinite;
+}
+#wrapper {
+  filter: opacity(0.5);
+}
+</style>
+<div id="wrapper">
+<div id="test"></div>
+</div>

@@ -1,0 +1,37 @@
+[package]
+name = "baldrdash"
+version = "0.1.0"
+authors = ["The Spidermonkey and Cranelift developers"]
+edition = "2018"
+
+[lib]
+crate-type = ["rlib"]
+name = "baldrdash"
+
+[dependencies]
+# The build system redirects the versions of cranelift-codegen and
+# cranelift-wasm to pinned commits. If you want to update Cranelift in Gecko,
+# you should update the following $TOP_LEVEL/Cargo.toml file: look for the
+# revision (rev) hashes of both cranelift dependencies (codegen and wasm).
+cranelift-codegen = { version = "0.74.0", default-features = false }
+cranelift-wasm = { version = "0.74.0" }
+log = { version = "0.4.6", default-features = false, features = ["release_max_level_info"] }
+env_logger = "0.8"
+smallvec = "1.0"
+
+[build-dependencies]
+bindgen = {version = "0.56", default-features = false} # disable `logging` to reduce code size
+
+[features]
+default = ['cranelift-codegen/std']
+cranelift_x86 = ['cranelift-codegen/x86']
+cranelift_arm32 = ['cranelift-codegen/arm32']
+cranelift_arm64 = ['cranelift-codegen/arm64']
+
+# The "none" support is a lie (so far): Cranelift has to include support for
+# one ISA at the moment, so request to include support for a small one: riscv.
+cranelift_none = ['cranelift-codegen/riscv']
+
+# Uncomment this to enable perf support in release mode.
+#[profile.release]
+#debug = true

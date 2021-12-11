@@ -1,0 +1,30 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+PRIVATE_EXPORTS = \
+	nssrenam.h \
+	nssoptions.h \
+	$(NULL)
+
+EXPORTS = \
+	nss.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	nssinit.c \
+	nssoptions.c \
+	nssver.c \
+	utilwrap.c \
+	$(NULL)
+
+LIBRARY_NAME = nss
+LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

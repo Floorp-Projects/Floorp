@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=410052
+-->
+<head>
+  <title>Table indexes chrome tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // table
+      var idxes = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 7],
+        [6, 8, 9],
+      ];
+
+      testTableIndexes("table", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableborder
+      idxes = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 7],
+        [6, 8, 9],
+      ];
+
+      testTableIndexes("tableborder", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // table
+      idxes = [
+        [ 0,  1,  2,  2,  3,  4,  5,  6],
+        [ 7,  8,  9, 10, 11, 12, 13,  6],
+        [14, 15, 15, 16, 17, 18, 19,  6],
+        [20, 15, 15, 21, 22, 18, 23,  6],
+      ];
+
+      testTableIndexes("table2", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableinsane1 (empty row groups)
+      idxes = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 7],
+        [6, 8, 9],
+      ];
+
+      testTableIndexes("tableinsane1", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableinsane2 (empry rows)
+      idxes = [
+        [-1, -1, -1],
+        [-1, -1, -1],
+        [ 0,  1,  2],
+      ];
+
+      testTableIndexes("tableinsane2", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableinsane3 (cell holes)
+      idxes = [
+        [0, 1, -1],
+        [2, 3,  4],
+      ];
+
+      testTableIndexes("tableinsane3", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableinsane3.2 (cell holes, row spans, fixed in bug 417912)
+      idxes = [
+        [0,  1, 2],
+        [3, -1, 2],
+        [4,  5, 2],
+      ];
+
+      testTableIndexes("tableinsane3.2", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableinsane4 (empty row groups/rows and cell holes)
+      idxes = [
+        [ 0,  1,  2],
+        [-1, -1, -1],
+        [ 3,  4,  5],
+        [ 6,  6,  7],
+        [ 8, -1,  7],
+        [ 9,  9,  9],
+      ];
+      testTableIndexes("tableinsane4", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableinsane5 (just a strange table)
+      idxes = [
+        [ 0,  1,  2, -1, -1],
+        [-1, -1, -1, -1, -1],
+        [ 3,  4,  5, -1, -1],
+        [ 6,  7,  -1,  -1,  -1],
+        [ 6,  8,  9, -1, -1],
+        [ 6, 10,  9, 11, 12],
+      ];
+      testTableIndexes("tableinsane5", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tableinsane6 (overlapping cells, mad table)
+      idxes = [
+        [ 0,  1,  2, -1, -1],
+        [-1, -1, -1, -1, -1],
+        [ 3,  4,  5, -1, -1],
+        [ 6,  6,  7, -1, -1],
+        [ 8,  9,  7, -1, -1],
+        [ 10, 9,  7, 11, 12],
+      ];
+      testTableIndexes("tableinsane6", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Table with a cell that has display: block; style
+      idxes = [
+        [0, 1],
+      ];
+      testTableIndexes("tablewithcelldisplayblock", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // A table with a cell that has display: block; and a cell with colspan.
+      // This makes us fall back to the ARIAGridCellAccessible implementation.
+      idxes = [
+        [0, 0, 1],
+      ];
+      testTableIndexes("tablewithcolspanandcelldisplayblock", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // A table with all elements being display:block, including a row group.
+      // This makes us fall back to the ARIAGridRowAccessible, and we must
+      // make sure the index is 0. Strange example from Gmail.
+      idxes = [
+        [0],
+      ];
+      testTableIndexes("tablealldisplayblock", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Table that has display: block; style
+      idxes = [
+        [0, 1],
+      ];
+      testTableIndexes("tablewithdisplayblock", idxes);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // tbody that has display: block; style
+      idxes = [
+        [0, 1],
+      ];
+      testTableIndexes("tbodywithdisplayblock", idxes);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="GetIndexAt and GetRowAtIndex and GetColumnAtIndex on HTML tables are inconsistent"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">
+   Bug 410052
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!--
+    If you change the structure of the table please make sure to change
+    the indexes count in 'for' statement in the script above.
+  -->
+  <table border="1" id="table">
+    <caption><strong><b><font size="29">this is a caption for this table</font></b></strong></caption>
+    <thead>
+      <tr>
+        <th>col1</th>
+        <th>col2</th>
+        <th>col3</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td rowspan="0">4</td>
+        <td colspan="2">5</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>7</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table border="1" id="tableborder" style="border-collapse:collapse">
+    <caption><strong><b><font size="29">this is a caption for this bc table</font></b></strong></caption>
+    <thead>
+      <tr>
+        <th>col1</th>
+        <th>col2</th>
+        <th>col3</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td rowspan="2">4</td>
+        <td colspan="2">5</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>7</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table cellpadding="2" cellspacing="2" border="1" width="50%" id="table2">
+    <caption>column and row spans</caption>
+    <tbody>
+      <tr>
+        <td>0</td>
+        <td>1</td>
+        <td rowspan="1" colspan="2">2</td>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+        <td rowspan="4" colspan="1">6</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>8</td>
+        <td>8</td>
+        <td>10</td>
+        <td>11</td>
+        <td>12</td>
+        <td>13</td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td rowspan="2" colspan="2">15</td>
+        <td>16</td>
+        <td>17</td>
+        <td rowspan="2" colspan="1">18</td>
+        <td>19</td>
+      </tr>
+      <tr>
+        <td>20</td>
+        <td>21</td>
+        <td>22</td>
+        <td>23</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table border="1" id="tableinsane1">
+    <caption>test empty row groups</caption>
+    <thead>
+      <tr>
+        <th>col1</th>
+        <th>col2</th>
+        <th>col3</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tbody></tbody>
+    <tbody></tbody>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td rowspan="2">4</td>
+        <td colspan="2">5</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>7</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table border="1" id="tableinsane2">
+    <caption>empty rows</caption>
+    <tbody><tr></tr><tr></tr></tbody>
+    <tbody></tbody>
+    <tbody>
+      <tr>
+        <td>0</td>
+        <td>1</td>
+        <td>2</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table border="1" id="tableinsane3">
+    <caption>missed cell</caption>
+    <tbody>
+      <tr>
+        <td>0</td>
+        <td>1</td>
+      </tr>
+    </tbody>
+    <tbody>
+      <tr>
+        <td>2</td>
+        <td>3</td>
+        <td>4</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table cellpadding="2" cellspacing="2" border="1" id="tableinsane3.2">
+    <tr><td>1</td><td>2</td><td rowspan=3>3</td>
+    <tr><td>4</td>
+    <tr><td>5</td><td>6</td>
+  </table>
+
+  <table border="1" id="tableinsane4">
+    <caption>test empty rows + cellmap holes</caption>
+    <thead>
+      <tr>
+        <th>col1</th>
+        <th>col2</th>
+        <th>col3</th>
+      </tr>
+    </thead>
+    <tbody><tr></tr></tbody>
+    <tbody></tbody>
+    <tbody></tbody>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+         <td colspan="2">4</td>
+        <td rowspan="2">5</td>
+        </tr>
+      <tr>
+        <td>6</td>
+      </tr>
+      <tr>
+        <td colspan="3">7</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <table border="1" id="tableinsane5">
+    <caption>just a strange table</caption>
+    <thead>
+      <tr>
+        <th>col1</th>
+        <th>col2</th>
+        <th>col3</th>
+      </tr>
+    </thead>
+    <tbody><tr></tr></tbody>
+    <tbody></tbody>
+    <tbody></tbody>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td rowspan="0">4</td>
+        <td colspan="0">5</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td  rowspan="0">7</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>9</td>
+        <td>10</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <table border="1" id="tableinsane6" >
+    <caption>overlapping cells</caption>
+    <thead>
+      <tr>
+        <th>header cell 0</th>
+        <th>header cell 1</th>
+        <th>header cell 2</th>
+      </tr>
+    </thead>
+    <tbody><tr></tr></tbody>
+    <tbody></tbody>
+    <tbody></tbody>
+    <tbody>
+      <tr>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <td colspan="2">6</td>
+        <td rowspan="0">7</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td rowspan="0">9</td>
+      </tr>
+      <tr>
+        <td colspan="3">10</td>
+        <td>11</td>
+        <td>12</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="tablewithcelldisplayblock">
+    <tr>
+      <th>a</th>
+      <td style="display: block;">b</td>
+    </tr>
+  </table>
+
+  <table id="tablewithcolspanandcelldisplayblock">
+    <tr>
+      <th colspan="2">a</th>
+      <td style="display: block;" >b</td>
+    </tr>
+  </table>
+
+  <table id="tablealldisplayblock" style="display:block;">
+    <tbody style="display:block;">
+      <tr style="display:block;">
+        <td style="display:block;">text</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="tablewithdisplayblock" style="display: block;">
+    <tr><th>a</th><td>b</td></tr>
+  </table>  
+
+  <table id="tbodywithdisplayblock">
+    <tbody style="display: block;">
+      <tr>
+        <th>a</th>
+        <td>b</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE HTML><html><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript">
+    function loaded() {
+      var t = document.querySelector("textarea");
+      t.focus();
+      t.selectionStart = t.selectionEnd = 4;
+    }
+  </script>
+</head>
+<body onload="loaded()">
+  <textarea style="height: 200px; display: block; -moz-appearance: none" spellcheck="false"
+    >foo
+</textarea>
+  4 - 4
+</body>
+</html>

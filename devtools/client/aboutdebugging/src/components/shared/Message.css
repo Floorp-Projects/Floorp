@@ -1,0 +1,79 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.message--level-error {
+  --message-background-color: var(--error-background);
+  --message-border-color: var(--error-border);
+  --message-color: var(--error-text);
+  --message-icon-color: var(--error-icon);
+}
+
+.message--level-info {
+  --message-background-color: var(--grey-20);
+  --message-border-color: transparent;
+  --message-color: var(--grey-90);
+  --message-icon-color: var(--grey-90);
+}
+
+.message--level-warning {
+  --message-background-color: var(--warning-background);
+  --message-border-color: var(--warning-border);
+  --message-color: var(--warning-text);
+  --message-icon-color: var(--warning-icon);
+}
+
+/*
+ * Layout of the message
+ *
+ *  +--------+-----------------+----------+
+ *  | Icon   | Message content | closing  |
+ *  |        | (several lines) | button   |
+ *  |        | (     ...     ) |(optional)|
+ *  +--------+-----------------+----------+
+ */
+.message {
+  background-color: var(--message-background-color);
+  border: 1px solid var(--message-border-color);
+  border-radius: var(--base-unit);
+  color: var(--message-color);
+  display: grid;
+  grid-column-gap: var(--base-unit);
+  grid-template-columns: calc(var(--base-unit) * 6) 1fr auto;
+  grid-template-areas:
+    "icon body button";
+  margin: calc(var(--base-unit) * 2) 0;
+  padding: var(--base-unit);
+  -moz-context-properties: fill;
+}
+
+.message__icon {
+  margin: var(--base-unit);
+  fill: var(--message-icon-color);
+  grid-area: icon;
+}
+
+.message__body {
+  align-self: center;
+  font-size: var(--message-font-size);
+  font-weight: 400;
+  grid-area: body;
+  line-height: 1.6;
+}
+
+.message__button {
+  grid-area: button;
+  fill: var(--message-icon-color);
+}
+
+.message__button:hover {
+  /* reverse colors with icon when hover state */
+  background-color: var(--message-icon-color);
+  fill: var(--message-background-color);
+}
+
+.message__button:active {
+  /* reverse colors with text when active state */
+  background-color: var(--message-color);
+  fill: var(--message-background-color);
+}

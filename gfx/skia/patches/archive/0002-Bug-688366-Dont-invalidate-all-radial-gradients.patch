@@ -1,0 +1,30 @@
+From f310d7e8b8d9cf6870c739650324bb585b591c0c Mon Sep 17 00:00:00 2001
+From: George Wright <gwright@mozilla.com>
+Date: Fri, 18 May 2012 14:11:32 -0400
+Subject: [PATCH 02/10]     Bug 755869 - [5] Re-apply bug 688366 - Fix Skia
+ marking radial gradients with the same radius as
+ invalid. r=mattwoodrow
+
+---
+ gfx/skia/src/effects/SkGradientShader.cpp |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/SkGradientShader.cpp
+index 6de820b..59ba48c 100644
+--- a/gfx/skia/src/effects/SkGradientShader.cpp
++++ b/gfx/skia/src/effects/SkGradientShader.cpp
+@@ -1911,7 +1911,10 @@ public:
+         SkPMColor* SK_RESTRICT dstC = dstCParam;
+ 
+         // Zero difference between radii:  fill with transparent black.
+-        if (fDiffRadius == 0) {
++        // TODO: Is removing this actually correct? Two circles with the 
++        // same radius, but different centers doesn't sound like it
++        // should be cleared
++        if (fDiffRadius == 0 && fCenter1 == fCenter2) {
+           sk_bzero(dstC, count * sizeof(*dstC));
+           return;
+         }
+-- 
+1.7.5.4
+

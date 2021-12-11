@@ -1,0 +1,45 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    "nsIBFCacheEntry.idl",
+    "nsISHEntry.idl",
+    "nsISHistory.idl",
+    "nsISHistoryListener.idl",
+]
+
+XPIDL_MODULE = "shistory"
+
+EXPORTS += [
+    "nsSHEntry.h",
+    "nsSHEntryShared.h",
+    "nsSHistory.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "ChildSHistory.h",
+    "SessionHistoryEntry.h",
+]
+
+UNIFIED_SOURCES += [
+    "ChildSHistory.cpp",
+    "nsSHEntry.cpp",
+    "nsSHEntryShared.cpp",
+    "nsSHistory.cpp",
+    "SessionHistoryEntry.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/docshell/base",
+    "/dom/base",
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+include("/ipc/chromium/chromium-config.mozbuild")

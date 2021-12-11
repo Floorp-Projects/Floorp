@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=611189
+-->
+<head>
+  <title>Test for Bug 611189</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=611189">Mozilla Bug 611189</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 611189 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(async function() {
+  var i = document.createElement("input");
+  var b = document.getElementById("content");
+  b.appendChild(i);
+  b.clientWidth; // bind to frame
+  i.focus(); // initialize editor
+  var before = await snapshotWindow(window, true);
+  i.value = "L"; // set the value
+  i.style.display = "none";
+  b.clientWidth; // unbind from frame
+  i.value = ""; // set the value without a frame
+  i.style.display = "";
+  b.clientWidth; // rebind to frame
+  is(i.value, "", "Input's value should be correctly updated");
+  var after = await snapshotWindow(window, true);
+  ok(compareSnapshots(before, after, true), "The correct value should be rendered inside the control");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/* <![CDATA[*/
+"use strict";
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = new TextEncoder("utf-8").encode("password");
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"]).then(
+      complete(that, hasKeyFields),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Unwrapping a PBKDF2 key in PKCS8 format should fail",
+  function() {
+    var that = this;
+    var pbkdf2Key = new TextEncoder("utf-8").encode("password");
+    var alg = {name: "AES-GCM", length: 256, iv: new Uint8Array(16)};
+    var wrappingKey;
+
+    function wrap(x) {
+      wrappingKey = x;
+      return crypto.subtle.encrypt(alg, wrappingKey, pbkdf2Key);
+    }
+
+    function unwrap(x) {
+      return crypto.subtle.unwrapKey(
+        "pkcs8", x, wrappingKey, alg, "PBKDF2", false, ["deriveBits"]);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["encrypt", "unwrapKey"])
+      .then(wrap, error(that))
+      .then(unwrap, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive bits using HMAC-SHA-1",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha1.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations,
+      };
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha1.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha1.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import a PBKDF2 key in JWK format and derive bits using HMAC-SHA-1",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations,
+      };
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha1.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("jwk", tv.pbkdf2_sha1.jwk, alg, false, ["deriveBits"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha1.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive a new key using HMAC-SHA-1",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha1.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations,
+      };
+
+      var algDerived = {
+        name: "HMAC",
+        hash: {name: "SHA-1"},
+      };
+
+      return crypto.subtle.deriveKey(algo, x, algDerived, false, ["sign", "verify"])
+        .then(function(y) {
+          if (!hasKeyFields(y)) {
+            throw new Error("Invalid key; missing field(s)");
+          }
+
+          if (y.algorithm.length != 512) {
+            throw new Error("Invalid key; incorrect length");
+          }
+
+          return y;
+        });
+    }
+
+    function doSignAndVerify(x) {
+      var data = new Uint8Array(1024);
+
+      return crypto.subtle.sign("HMAC", x, data)
+        .then(function(sig) {
+          return crypto.subtle.verify("HMAC", x, sig, data);
+        });
+    }
+
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"])
+      .then( doDerive, fail )
+      .then( doSignAndVerify, fail )
+      .then( complete(that, x => x), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive a new key using HMAC-SHA-1 with custom length",
+  function() {
+    var that = this;
+
+    function doDerive(x) {
+      var alg = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations,
+      };
+
+      var algDerived = {name: "HMAC", hash: "SHA-1", length: 128};
+      return crypto.subtle.deriveKey(alg, x, algDerived, false, ["sign"]);
+    }
+
+    var password = crypto.getRandomValues(new Uint8Array(8));
+    crypto.subtle.importKey("raw", password, "PBKDF2", false, ["deriveKey"])
+      .then(doDerive)
+      .then(complete(that, function(x) {
+        return hasKeyFields(x) && x.algorithm.length == 128;
+      }), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive bits using HMAC-SHA-256",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: tv.pbkdf2_sha256.salt,
+        iterations: tv.pbkdf2_sha256.iterations,
+      };
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha256.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha256.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 zero-length key and derive bits using HMAC-SHA-256",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256_no_pwd.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: tv.pbkdf2_sha256_no_pwd.salt,
+        iterations: tv.pbkdf2_sha256_no_pwd.iterations,
+      };
+      return crypto.subtle.deriveBits(algo, x, tv.pbkdf2_sha256_no_pwd.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha256_no_pwd.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive bits using HMAC-SHA-256 with zero-length salt",
+  function() {
+    var that = this;
+    var importAlg = { name: "PBKDF2", hash: "SHA-256" };
+    var key = tv.pbkdf2_sha256_no_salt.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var deriveAlg = {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: new Uint8Array(0),
+        iterations: tv.pbkdf2_sha256_no_salt.iterations,
+      };
+      return crypto.subtle.deriveBits(deriveAlg, x, tv.pbkdf2_sha256_no_salt.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, importAlg, false, ["deriveBits"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha256_no_salt.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Fail while deriving key with bad hash name",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA256",
+        salt: tv.pbkdf2_sha256.salt,
+        iterations: tv.pbkdf2_sha256.iterations,
+      };
+      return crypto.subtle.deriveBits(algo, x, 32).then(
+        error(that),
+        complete(that, function(e) {
+          return e.name == "NotSupportedError";
+        })
+      );
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey", "deriveBits"])
+      .then( doDerive, fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Fail while deriving bits given null length",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: tv.pbkdf2_sha256.salt,
+        iterations: tv.pbkdf2_sha256.iterations,
+      };
+      return crypto.subtle.deriveBits(algo, x, null).then(
+        error(that),
+        complete(that, function(e) {
+          return e.name == "OperationError";
+        })
+      );
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
+      .then( doDerive, fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Fail while deriving key of null length",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw new Error("Invalid key; missing field(s)");
+      }
+
+      var algo = {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: tv.pbkdf2_sha256.salt,
+        iterations: tv.pbkdf2_sha256.iterations,
+      };
+      return crypto.subtle.deriveKey(algo, x, {name: "AES-GCM", length: null}, true, ["encrypt"]).then(
+        error(that),
+        complete(that, function(e) {
+          return e.name == "OperationError";
+        })
+      );
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey", "deriveBits"])
+      .then( doDerive, fail );
+  }
+);
+/* ]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>

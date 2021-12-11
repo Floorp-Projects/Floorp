@@ -1,0 +1,48 @@
+<!doctype html>
+<script>
+  dump("Content running top level script " + window.location.href + "\n");
+
+  var winID = SpecialPowers.wrap(this).windowGlobalChild.innerWindowId;
+
+  var observer = {
+    observe(subject, topic) {
+      var currID = SpecialPowers.wrap(subject).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+      if (currID != winID) {
+        return;
+      }
+      // We should be able to wrap the inner window when the outer
+      // window has navigated out of process.
+      SpecialPowers.Cu.getGlobalForObject({});
+
+      SpecialPowers.removeObserver(observer, "inner-window-nuked");
+    }
+  };
+  SpecialPowers.addObserver(observer, "inner-window-nuked");
+
+  // Unfortunately, we don't currently fire the onload event on a remote iframe,
+  // so we can't listen for the load event directly on the iframe. Instead, we
+  // postMessage from the iframe when the load event would be fired.
+  window.addEventListener("load", function onload() {
+    dump("Content got load of " + window.location.href + "\n");
+    if (window.parent) {
+      window.parent.postMessage({
+        event: "load",
+        location: window.location.href,
+      }, "*");
+    }
+
+    let h1 = document.createElement("h1");
+    h1.textContent = window.location.href;
+    document.body.appendChild(h1);
+  }, { once: true });
+
+  // In addition, we listen to the message event to trigger navigations of
+  // ourself when requested, as we don't fully support our embedder triggering
+  // us being navigated yet for Totally Not Buggy Reasons.
+  window.addEventListener("message", function onmessage(event) {
+    dump("Content got event " + window.location.href + " " + JSON.stringify(event.data) + "\n");
+    if (event.data.action === "navigate") {
+      window.location = event.data.location;
+    }
+  });
+</script>

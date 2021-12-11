@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 482935</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="  /tests/SimpleTest/test.css" />
+</head>
+<body onload="onWindowLoad()">
+<script class="testbody" type="text/javascript">"use strict";
+SimpleTest.waitForExplicitFinish();
+
+var url = "file_XHR_pass1.xml";
+
+function onWindowLoad() {
+  runTest();
+}
+
+function runTest() {
+  var testFunctions = [
+    function() { testOverMimeTypeThrowsDuringReadyState(3, "text/plain"); },
+    function() { testOverMimeTypeThrowsDuringReadyState(3, "text/plain;charset=Shift-JIS"); },
+    function() { testOverMimeTypeThrowsDuringReadyState(4, "text/plain"); },
+    function() { testOverMimeTypeThrowsDuringReadyState(4, "text/plain;charset=Shift-JIS"); },
+  ];
+
+  function nextTest() {
+    if (testFunctions.length == 0) {
+      SimpleTest.finish();
+      return;
+    }
+    (testFunctions.shift())();
+  }
+
+  nextTest();
+
+  function testOverMimeTypeThrowsDuringReadyState(readyState, mimeType) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === readyState) {
+        try {
+          xhr.overrideMimeType(mimeType);
+          ok(false, "No exception thrown, but expected InvalidStateError" +
+                    " for readyState=" + readyState + ", mimeType=" + mimeType);
+        } catch(exc) {
+          is(exc.name, "InvalidStateError", "Expected InvalidStateError, got " + exc.name +
+                       " for readyState=" + readyState + ", mimeType=" + mimeType);
+        }
+      }
+      if (xhr.readyState === 4) {
+        isnot(xhr.responseXML, null, "responseXML was null" +
+                                     " for readyState=" + readyState +
+                                     ", mimeType=" + mimeType);
+        nextTest();
+      }
+    }
+    xhr.open("GET", url);
+    xhr.send();
+  }
+}
+</script>
+</body>
+</html>

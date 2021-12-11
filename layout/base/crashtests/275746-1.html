@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html><head><title>Testcase bug 275746 - Crash when clicking in drop down list, when changing from display:table-cell to display:inline</title>
+<style>
+span,select{display:table-cell;}
+</style>
+</head>
+<body onload="document.getElementById('x').style.display = 'inline'; document.documentElement.className = '';">
+<span>This is needed</span><select id='x'><option>option 1</option><option>option 2</option></select>
+</body></html>

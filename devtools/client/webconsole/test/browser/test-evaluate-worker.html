@@ -1,0 +1,9 @@
+<script>
+"use strict";
+var w = new Worker("test-evaluate-worker.js");
+
+// eslint-disable-next-line no-unused-vars
+function pauseInWorker(value) {
+  w.postMessage(value);
+}
+</script>

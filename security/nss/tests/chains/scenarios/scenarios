@@ -1,0 +1,25 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+bridge.cfg
+megabridge_3_2.cfg
+extension.cfg
+extension2.cfg
+anypolicy.cfg
+anypolicywithlevel.cfg
+explicitPolicy.cfg
+mapping.cfg
+mapping2.cfg
+aia.cfg
+bridgewithaia.cfg
+bridgewithhalfaia.cfg
+bridgewithpolicyextensionandmapping.cfg
+realcerts.cfg
+dsa.cfg
+revoc.cfg
+ocsp.cfg
+crldp.cfg
+trustanchors.cfg
+nameconstraints.cfg
+ipsec.cfg

@@ -1,0 +1,12 @@
+[package]
+name = "profiler-macros"
+version = "0.1.0"
+authors = ["The Mozilla Project Developers"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "1"
+quote = "1.0"

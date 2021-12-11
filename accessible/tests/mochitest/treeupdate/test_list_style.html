@@ -1,0 +1,181 @@
+<html>
+
+<head>
+  <title>Test hide/show events for HTMLListBulletAccessibles on list restyle</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Change list style type to none.
+     */
+    async function hideBullet() {
+      info("Hide bullet by setting style to none");
+
+      let liAcc = getAccessible("list_element");
+      let bullet = liAcc.firstChild;
+
+      let events = waitForEvents([
+        [EVENT_HIDE, bullet],
+        [EVENT_REORDER, liAcc]
+      ]);
+
+      getNode("list").style.setProperty("list-style-type", "none");
+
+      await events;
+
+      is(liAcc.name, "list element",
+          "Check that first child of LI is not a bullet.");
+
+      dumpTree("list");
+    }
+
+    /**
+     * Change list style type to circles.
+     */
+    async function showBullet() {
+      info("Show bullet by setting style to circle");
+      let liAcc = getAccessible("list_element");
+
+      let events = waitForEvents([
+        [EVENT_SHOW, evt => evt.accessible.parent == liAcc],
+        [EVENT_REORDER, liAcc]
+      ]);
+
+      getNode("list").style.setProperty("list-style-type", "circle");
+
+      await events;
+
+      is(liAcc.name, "◦ list element",
+          "Check that first child of LI is a circle bullet.");
+
+      dumpTree("list");
+    }
+
+    /**
+     * Change list style position.
+     */
+     async function changeBulletPosition() {
+      info("Change list style position");
+      let liAcc = getAccessible("list_element");
+
+      let events = waitForEvents([
+        [EVENT_HIDE, evt => evt.accessible.role == ROLE_LISTITEM_MARKER],
+        [EVENT_SHOW, evt => evt.accessible.role == ROLE_LISTITEM_MARKER],
+        [EVENT_REORDER, liAcc]
+      ]);
+
+      getNode("list").style.setProperty("list-style-position", "inside");
+
+      await events;
+
+      is(liAcc.name, "◦ list element",
+          "Check that first child of LI is a circle bullet.");
+    }
+
+    async function changeBulletPositionAndType() {
+      let events = waitForEvents([
+        [EVENT_HIDE, evt => evt.accessible.role == ROLE_LISTITEM_MARKER],
+        [EVENT_REORDER, evt => evt.accessible.role == ROLE_LISTITEM]
+      ]);
+
+      let list = getNode("inside-marker-list");
+
+      // Bug 1513447 - This changes the list type to "none" and the
+      // position implicitly to "outside".
+      list.style.setProperty("list-style", "none");
+      list.offsetLeft
+      list.style.setProperty("list-style-type", "telugu");
+
+      await events;
+    }
+
+    async function doTest() {
+
+      testAccessibleTree("list", { LIST: [ // ol
+        { LISTITEM: [ // li
+          { LISTITEM_MARKER: [ ] },
+          { TEXT_LEAF: [] },
+          ] },
+      ] } );
+
+      await hideBullet();
+
+      testAccessibleTree("list", { LIST: [ // ol
+        { LISTITEM: [ // li
+          { TEXT_LEAF: [] },
+          ] },
+      ] } );
+
+      await showBullet();
+
+      testAccessibleTree("list", { LIST: [ // ol
+        { LISTITEM: [ // li
+          { LISTITEM_MARKER: [ ] },
+          { TEXT_LEAF: [] },
+          ] },
+      ] } );
+
+      await changeBulletPosition();
+
+      testAccessibleTree("list", { LIST: [ // ol
+        { LISTITEM: [ // li
+          { LISTITEM_MARKER: [ ] },
+          { TEXT_LEAF: [] },
+          ] },
+      ] } );
+
+      testAccessibleTree("unmarked-list", { LIST: [ // ol
+        { LISTITEM: [ // li
+          { TEXT_LEAF: [] },
+          ] },
+      ] } );
+
+      await changeBulletPositionAndType();
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1100602"
+     title="[e10s] crash in mozilla::a11y::ProxyAccessible::Shutdown()">
+    Mozilla Bug 1100602
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ol id="list" style="list-style-type: circle;">
+    <li id="list_element">list element</li>
+  </ol>
+
+  <ol id="unmarked-list" style="list-style: none;">
+    <li>list element</li>
+  </ol>
+
+  <ol id="inside-marker-list" style="list-style-position: inside;">
+    <li>list element</li>
+  </ol>
+
+</body>
+</html>

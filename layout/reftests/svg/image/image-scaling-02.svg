@@ -1,0 +1,26 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=421780
+
+     Test related to bug 421780; make sure that 1-pixel, single-colour images
+     are correctly scaled to the right size.
+
+     This test makes sure that images aren't sized too small; it takes a 100%
+     width lime rect, overlaid with a 183x183 width red rect, overlaid with a
+     183x183 stretched lime image.
+
+     183 in particular is used because 183*183 > 2^16, and we can easily run
+     into double-scaling bugs that will overflow in pixman.
+-->
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <title> Ensure images aren't scaled too small </title>
+
+  <rect width="100%" height="100%" fill="lime"/>
+  <rect width="183" height="183" fill="red"/>
+  <image style="image-rendering: -moz-crisp-edges" width="183" height="183" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAABGdBTUEAALGPC%2FxhBQAAAAxJREFUGFdjYPjPAAACAgEA0dNGRAAAAABJRU5ErkJggg%3D%3D"/>
+
+</svg>

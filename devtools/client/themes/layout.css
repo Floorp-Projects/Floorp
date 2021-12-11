@@ -1,0 +1,736 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ :root {
+  --flex-basis-outline-border-color: var(--blue-40);
+  --flex-basis-outline-background-color: rgba(69, 161, 255, 0.25);
+  --flex-growing-delta-outline-background-color: rgba(221, 0, 169, 0.13);
+  --flex-shrinking-delta-outline-background-color: #E9E3FF;
+  --flex-min-max-properties-color: var(--purple-60);
+}
+
+:root.theme-dark {
+  --flex-basis-outline-border-color: rgba(10, 132, 255, 0.85);
+  --flex-basis-outline-background-color: rgba(10, 132, 255, 0.3);
+  --flex-growing-delta-outline-background-color: rgba(255, 26, 217, 0.25);
+  --flex-shrinking-delta-outline-background-color: #322952;
+  --flex-min-max-properties-color: var(--theme-highlight-purple);
+}
+
+.layout-container {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+  min-width: 200px;
+}
+
+.layout-container .accordion ._content {
+  padding: 0;
+}
+
+#layout-container .accordion ._header {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/**
+ * Common styles for the layout container
+ */
+
+.layout-content ul {
+  list-style: none;
+}
+
+.layout-content li {
+  padding: 3px 0;
+  user-select: none;
+}
+
+.layout-content input {
+  margin-inline-end: 7px;
+  vertical-align: middle;
+}
+
+.layout-content label {
+  margin-inline-start: -3px;
+}
+
+.layout-content .open-inspector {
+  vertical-align: middle;
+}
+
+.layout-color-swatch {
+  width: 12px;
+  height: 12px;
+  margin-inline-start: -1px;
+  border: 1px solid var(--theme-highlight-gray);
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.layout-color-value {
+  display: none;
+}
+
+/* Layout Properties: Common styles used for the Box Model and Flexbox Properties */
+
+.layout-properties-header {
+  font-size: 12px;
+  padding: 2px 3px;
+  user-select: none;
+}
+
+.layout-properties-expander {
+  vertical-align: middle;
+  display: inline-block;
+  margin-inline: 2px 1px;
+}
+
+.layout-properties-wrapper {
+  column-width: 250px;
+  column-gap: 20px;
+  column-rule: 1px solid var(--theme-splitter-color);
+}
+
+.layout-properties-wrapper .computed-property-view {
+  padding-inline-start: 20px;
+}
+
+.layout-properties-wrapper .computed-property-name-container {
+  flex: 1;
+}
+
+.layout-properties-wrapper .computed-property-value-container {
+  flex: 1;
+  display: block;
+}
+
+/**
+ * Flex Container
+ */
+
+#layout-flexbox-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * Header
+ */
+
+.flex-header {
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border-block-end: 1px solid var(--theme-splitter-color);
+}
+
+.flex-header-button-prev {
+  cursor: pointer;
+}
+
+.flex-header-button-prev::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-left.svg");
+  background-size: 16px;
+}
+
+html[dir="rtl"] .flex-header-button-prev::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-right.svg");
+}
+
+.flex-header-content {
+  display: flex;
+  flex: 1;
+  padding: 2px 0;
+  padding-inline-start: 20px;
+  user-select: none;
+}
+
+.flex-header-content:not(.flex-item-shown) {
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.flex-header-content:not(.flex-item-shown) .objectBox {
+  max-width: calc(100% - 20px);
+  margin-inline-end: 5px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.flex-header-content.flex-item-shown {
+  justify-content: center;
+  padding: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.flex-header-container-properties {
+  display: flex;
+}
+
+.flex-header-container-properties .inspector-badge:first-child {
+  margin-inline-start: 0;
+}
+
+.flex-header-container-label,
+.flex-header-container-properties {
+  display: flex;
+  padding: 3px 0;
+}
+
+/**
+ * Flex Item List
+ */
+
+.flex-item-list {
+  font-size: 12px;
+  margin: 0;
+  padding-block: 5px;
+  overflow: hidden;
+}
+
+.flex-item-list .flex-item-list-header {
+  color: var(--theme-comment);
+  padding-inline-start: 23px;
+  margin-bottom: 4px;
+  user-select: none;
+}
+
+.flex-item-list .devtools-button {
+  background-color: transparent;
+  cursor: pointer;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  inline-size: 100%;
+  text-align: start;
+  height: 24px;
+  margin: 0;
+  padding-inline: 28px 16px;
+  position: relative;
+}
+
+.flex-item-list .devtools-button::after {
+  content: "";
+  background-image: url(chrome://devtools/skin/images/arrowhead-right.svg);
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center -1px;
+  fill: var(--theme-comment);
+  -moz-context-properties: fill;
+  position: absolute;
+  right: 7px;
+  width: 16px;
+  height: 16px;
+}
+
+html[dir="rtl"] .flex-item-list .devtools-button::after {
+  background-image: url(chrome://devtools/skin/images/arrowhead-left.svg);
+  right: unset;
+  left: 7px;
+}
+
+.flex-item-list .flex-item-index {
+  font-size: 12px;
+  font-weight: bold;
+  float: inline-start;
+}
+
+.flex-item-list .objectBox-node {
+  padding-inline-start: 8px;
+  vertical-align: middle;
+}
+
+/**
+ * Flex Item Selector
+ */
+
+#flex-item-selector {
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/**
+ * Flex Item Sizing Outline
+ */
+
+.flex-outline-container {
+  display: flex;
+  justify-content: center;
+  /* The flex outline is always drawn in ltr. Whether the UI of DevTools is in RTL or some
+     other writing mode doesn't have an impact on whether the outline should face left,
+     right, top or bottom. This should only be dictated by which direction does the flex
+     item currently face in the page. */
+  direction: ltr;
+}
+
+.flex-outline {
+  display: grid;
+  margin: 2em 0;
+  grid-auto-rows: 35px;
+  flex-basis: 80%;
+  max-width: 450px;
+}
+
+.flex-outline > * {
+  /* To make sure very small distances on the outline still have enough room to be
+     represented and to avoid overlapping labels, we make sure each grid item is at least
+     10px wide. This might sometimes render the outline in a different way than the item
+     but the information shown will still be correct, and will be more easily visible */
+  min-width: 10px;
+}
+
+.flex-outline.vertical-tb {
+  transform: translate(50%, -2em) rotate(.25turn);
+}
+
+.flex-outline.vertical-bt {
+  transform:translate(50%, 12em) rotate(0.75turn);
+}
+
+.flex-outline.vertical-tb,
+.flex-outline.vertical-bt {
+  transform-origin: center left;
+  flex-basis: 150px;
+  margin-bottom: 120px;
+}
+
+.flex-outline-final,
+.flex-outline-basis,
+.flex-outline-delta {
+  grid-row: 1;
+}
+
+.flex-outline-final {
+  border: 2px solid currentColor;
+  position: relative;
+  grid-column: final-start / final-end;
+}
+
+.flex-outline-final.clamped::after {
+  content: "";
+  background-image: url(chrome://devtools/skin/images/lock.svg);
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center 1px;
+  fill: var(--flex-min-max-properties-color);
+  -moz-context-properties: fill;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: -10px;
+  top: 6px;
+  /* Making sure the icon is visible against any background by creating a plain background
+     around its shape, using a drop-shadow filter. */
+  filter:
+    drop-shadow(1px 0px 0px var(--theme-body-background))
+    drop-shadow(0px 1px 0px var(--theme-body-background))
+    drop-shadow(-1px 0px 0px var(--theme-body-background))
+    drop-shadow(0px -1px 0px var(--theme-body-background));
+}
+
+.flex-outline.vertical-tb .flex-outline-final.clamped::after {
+  transform: rotate(-.25turn);
+}
+
+.flex-outline.vertical-bt .flex-outline-final.clamped::after {
+  transform: rotate(-.75turn);
+}
+
+.flex-outline-basis {
+  position: relative;
+  border: 3px dotted var(--flex-basis-outline-border-color);
+  margin: 2px;
+  grid-column: basis-start / basis-end;
+}
+
+/* Fills the basis outline with a blue background color that is contained inside the
+   dotted border. This gives the impression the dotted border alternates between
+   white and blue. */
+.flex-outline-basis::before {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background-color: var(--flex-basis-outline-background-color);
+}
+
+.flex-outline-basis.zero-basis {
+  border-width: 0 0 0 3px;
+}
+
+.flex-outline-delta {
+  grid-column: delta-start / delta-end;
+  position: relative;
+}
+
+.flex-outline.growing .flex-outline-delta {
+  background-color: var(--flex-growing-delta-outline-background-color);
+  right: 2px;
+}
+
+.flex-outline.shrinking .flex-outline-delta {
+  background-color: var(--flex-shrinking-delta-outline-background-color);
+  margin: 5px 5px 5px 0;
+}
+
+.flex-outline-delta::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: calc(50% - .5px);
+  height: 1px;
+  background: var(--theme-highlight-red);
+}
+
+.flex-outline-delta::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  top: 50%;
+  border: 1px solid var(--theme-highlight-red);
+}
+
+.flex-outline.growing .flex-outline-delta:after {
+  right: 2px;
+  border-width: 1px 1px 0 0;
+  transform-origin: top right;
+  transform: rotate(.125turn);
+}
+
+.flex-outline.shrinking .flex-outline-delta:after {
+  left: 2px;
+  border-width: 1px 0 0 1px;
+  transform-origin: top left;
+  transform: rotate(-.125turn);
+}
+
+.flex-outline-point {
+  position: relative;
+  user-select: none;
+  grid-row: 1;
+  display: grid;
+}
+
+.flex-outline.horizontal-rl .flex-outline-point {
+  justify-self: start;
+}
+
+.flex-outline.vertical-bt .flex-outline-point {
+  transform: rotate(180deg);
+  justify-content: end;
+}
+
+.flex-outline-point.basis,
+.flex-outline-point.basisfinal,
+.flex-outline.horizontal-rl .flex-outline-point.basis,
+.flex-outline.horizontal-rl .flex-outline-point.basisfinal {
+  grid-column-end: basis-end;
+  justify-self: end;
+  color: var(--theme-highlight-blue);
+}
+
+.flex-outline.shrinking .flex-outline-point.basis {
+  grid-column-start: basis-end;
+  justify-self: start;
+}
+
+.flex-outline.horizontal-rl.shrinking .flex-outline-point.basis {
+  grid-column-start: basis-start;
+  justify-self: unset;
+}
+
+.flex-outline-point.final {
+  grid-column-start: final-end;
+  left: -1px;
+}
+
+.flex-outline.shrinking .flex-outline-point.final {
+  grid-column-end: final-end;
+  grid-column-start: unset;
+  justify-self: end;
+}
+
+.flex-outline-point.min,
+.flex-outline-point.max {
+  color: var(--flex-min-max-properties-color);
+}
+
+.flex-outline-point.min {
+  grid-column: min;
+  place-self: end;
+  left: -4px;
+}
+
+.flex-outline.shrinking .flex-outline-point.min {
+  place-self: end start;
+  left: -1px;
+}
+
+.flex-outline-point.max {
+  grid-column: max;
+  align-self: end;
+  left: -1px;
+}
+
+.flex-outline-point::before {
+  content: attr(data-label);
+  display: block;
+  position: relative;
+  padding: 0 3px;
+  height: 10px;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 0;
+  line-height: 1;
+}
+
+.flex-outline.vertical-tb .flex-outline-point::before,
+.flex-outline.vertical-bt .flex-outline-point::before {
+  padding: 0;
+  writing-mode: sideways-lr;
+}
+
+.flex-outline-point.basis::before,
+.flex-outline-point.final::before,
+.flex-outline-point.basisfinal::before {
+  top: -12px;
+}
+
+.flex-outline-point.min::before,
+.flex-outline-point.max::before {
+  bottom: -12px;
+}
+
+.flex-outline.horizontal-rl .flex-outline-point.min::before,
+.flex-outline.horizontal-rl .flex-outline-point.max::before,
+.flex-outline.vertical-bt .flex-outline-point.min::before,
+.flex-outline.vertical-bt .flex-outline-point.max::before {
+  bottom: -37px;
+}
+
+.flex-outline.vertical-tb .flex-outline-point.max::before,
+.flex-outline.vertical-tb .flex-outline-point.min::before,
+.flex-outline.vertical-bt .flex-outline-point.max::before,
+.flex-outline.vertical-bt .flex-outline-point.min::before {
+  text-indent: -12px;
+}
+
+.flex-outline-point.final::before,
+.flex-outline-point.min::before,
+.flex-outline-point.max::before,
+.flex-outline.shrinking .flex-outline-point.basis::before,
+.flex-outline.horizontal-rl .flex-outline-point.basis::before,
+.flex-outline.horizontal-rl .flex-outline-point.basisfinal::before,
+.flex-outline.horizontal-rl.shrinking .flex-outline-point.final::before,
+.flex-outline.vertical-bt .flex-outline-point.basis::before,
+.flex-outline.vertical-bt .flex-outline-point.basisfinal::before,
+.flex-outline.vertical-bt.shrinking .flex-outline-point.final::before {
+  border-left-width: 1px;
+  border-right-width: 0;
+}
+
+.flex-outline-point.basis::before,
+.flex-outline.shrinking .flex-outline-point.final::before,
+.flex-outline-point.basisfinal::before,
+.flex-outline.horizontal-rl .flex-outline-point.final::before,
+.flex-outline.horizontal-rl .flex-outline-point.min::before,
+.flex-outline.horizontal-rl .flex-outline-point.max::before,
+.flex-outline.vertical-bt.shrinking .flex-outline-point.basis::before,
+.flex-outline.vertical-bt .flex-outline-point.final::before,
+.flex-outline.vertical-bt .flex-outline-point.min::before,
+.flex-outline.vertical-bt .flex-outline-point.max::before {
+  border-right-width: 1px;
+  border-left-width: 0;
+}
+
+.flex-outline.horizontal-rl,
+.flex-outline.horizontal-rl .flex-outline-point,
+.flex-outline.horizontal-rl .flex-outline-final.clamped::after {
+  transform: rotate(.5turn);
+}
+
+/**
+ * Flex Item Sizing Properties
+ */
+
+.flex-item-sizing {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flex-item-sizing .section {
+  --padding: 10px;
+  padding: var(--padding);
+  border-block-start: 1px solid var(--theme-splitter-color);
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  grid-column-gap: var(--padding);
+}
+
+.flex-item-sizing .section:first-child {
+  border: 0;
+}
+
+.flex-item-sizing .name {
+  font-weight: 600;
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: .5em;
+}
+
+.flex-item-sizing .flexibility .name {
+  color: var(--theme-highlight-red);
+}
+
+.flex-item-sizing .base .name {
+  color: var(--theme-highlight-blue);
+}
+
+.flex-item-sizing .min .name,
+.flex-item-sizing .max .name {
+  color: var(--flex-min-max-properties-color);
+}
+
+.flex-item-sizing .value {
+  text-align: end;
+  font-weight: 600;
+  direction: ltr;
+}
+
+.flex-item-sizing .value .unit {
+  color: var(--theme-comment);
+  font-weight: normal;
+}
+
+.flex-item-sizing .css-property-link {
+  font-weight: normal;
+  margin-inline-start: .5em;
+}
+
+.flex-item-sizing .reasons,
+.flex-item-sizing .reasons li {
+  grid-column: 1 / 3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/**
+ * Grid Container
+ */
+
+#layout-grid-container {
+  display: flex;
+  flex-direction: column;
+  padding: 5px;
+}
+
+.grid-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 auto;
+  min-width: 140px;
+  margin-inline-start: 16px;
+}
+
+.grid-container:first-child {
+  margin-bottom: 10px;
+}
+
+.grid-container > span {
+  font-weight: 600;
+  margin-bottom: 5px;
+  pointer-events: none;
+}
+
+.grid-container > ul {
+  margin: 0;
+  padding: 0;
+}
+
+#grid-list ul {
+  padding-inline-start: 20px;
+}
+
+/**
+ * Grid Content
+ */
+
+.grid-content {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  padding: 5px 0;
+}
+
+/**
+ * Grid Outline
+ */
+
+.grid-outline-container {
+  margin: 5px;
+}
+
+.grid-outline-container svg {
+  overflow: visible;
+}
+
+.grid-outline-border {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+
+.grid-outline-cell {
+  pointer-events: all;
+  stroke: currentColor;
+  stroke-dasharray: 0.5, 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.grid-outline-cell:hover {
+  opacity: 0.45;
+  fill: currentColor;
+}
+
+.grid-outline-line {
+  opacity: 0;
+  stroke-width: 10;
+}
+
+.grid-outline-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-graphs-full-red);
+}
+
+.grid-outline-text-icon {
+  background: url("chrome://devtools/skin/images/sad-face.svg");
+  margin-inline-end: 5px;
+  width: 16px;
+  height: 16px;
+}
+
+/**
+ * Settings Item
+ */
+
+.grid-settings-item label {
+  line-height: 16px;
+}

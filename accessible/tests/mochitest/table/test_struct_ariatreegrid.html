@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Table accessible tree and table interface tests for ARIA tree grid</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // HTML based ARIA tree grid
+
+      var cellsArray = [
+        [kColHeaderCell, kColHeaderCell, kColHeaderCell],
+        [kDataCell,      kDataCell,      kDataCell],
+        [kDataCell,      kDataCell,      kDataCell],
+      ];
+
+      testTableStruct("treegrid", cellsArray, kNoColumnHeader, "", "",
+                      kTreeTable);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     title="ARIA treegrid role on HTML:table makes thead/tbody accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=491683">Mozilla Bug 516133</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table role="treegrid" id="treegrid"
+         border="1" cellpadding="10" cellspacing="0">
+    <thead>
+      <tr role="row">
+        <th role="columnheader">subject</td>
+        <th role="columnheader">sender</th>
+        <th role="columnheader">date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr role="row">
+        <td role="gridcell">about everything</td>
+        <td role="gridcell">president</td>
+        <td role="gridcell">today</td>
+      </tr>
+      <tr role="row">
+        <td role="gridcell">new bugs</td>
+        <td role="gridcell">mozilla team</td>
+        <td role="gridcell">today</td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>

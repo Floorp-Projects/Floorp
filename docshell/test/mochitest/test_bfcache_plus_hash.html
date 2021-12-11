@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=646641
+-->
+<head>
+  <title>Test for Bug 646641</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=646641">Mozilla Bug 646641</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 646641 **/
+
+/**
+ * Steps:
+ * - Main page (this one) opens file_bfcache_plus_hash_1.html (subpage 1)
+ * - subpage 1 sends msg { "childLoad", 1 }
+ * - subpage 1 sends msg { "childPageshow", 1 }
+ * - main page sends message "pushState"
+ * - subpage 1 does pushState()
+ * - subpage 1 navigates to file_bfcache_plus_hash_2.html (subpage 2)
+ * - subpage 2 sends msg { "childLoad", 2 }
+ * - subpage 2 sends msg { "childPageshow", 2 }
+ * - main page sends msg "go-2"
+ * - subpage 2 goes back two history entries
+ * - subpage 1 sends msg  { "childPageshow", 1 }
+ *  - Receiving only this msg shows we have retrieved the document from bfcache
+ * - main page sends msg "close"
+ * - subpage 1 sends msg "closed"
+ */
+SimpleTest.waitForExplicitFinish();
+
+function debug(msg) {
+  // Wrap dump so we can turn debug messages on and off easily.
+  dump(msg + "\n");
+}
+
+var expectedLoadNum = -1;
+var expectedPageshowNum = -1;
+
+function waitForLoad(n) {
+  debug("Waiting for load " + n);
+  expectedLoadNum = n;
+}
+
+function waitForShow(n) {
+  debug("Waiting for show " + n);
+  expectedPageshowNum = n;
+}
+
+function* test() {
+  window.open("file_bfcache_plus_hash_1.html", "", "noopener");
+  waitForLoad(1);
+  waitForShow(1);
+  yield undefined;
+  yield undefined;
+
+  bc1.postMessage("pushState");
+
+  waitForLoad(2);
+  waitForShow(2);
+  yield undefined;
+  yield undefined;
+
+  // Now go back 2.  The first page should be retrieved from bfcache.
+  bc2.postMessage("go-2");
+  waitForShow(1);
+  yield undefined;
+
+  bc1.postMessage("close");
+}
+
+var bc1 = new BroadcastChannel("bug646641_1");
+var bc2 = new BroadcastChannel("bug646641_2");
+bc1.onmessage = (msgEvent) => {
+  var msg = msgEvent.data.message;
+  var n = msgEvent.data.num;
+  if (msg == "childLoad") {
+    if (n == expectedLoadNum) {
+      debug("Got load " + n);
+      expectedLoadNum = -1;
+
+      // Spin the event loop before calling gGen.next() so the generator runs
+      // outside the onload handler.  This prevents us from encountering all
+      // sorts of docshell quirks.
+      setTimeout(function() { gGen.next(); }, 0);
+    } else {
+      debug("Got unexpected load " + n);
+      ok(false, "Got unexpected load " + n);
+    }
+  } else if (msg == "childPageshow") {
+    if (n == expectedPageshowNum) {
+      debug("Got expected pageshow " + n);
+      expectedPageshowNum = -1;
+      ok(true, "Got expected pageshow " + n);
+      setTimeout(function() { gGen.next(); }, 0);
+    } else {
+      debug("Got unexpected pageshow " + n);
+      ok(false, "Got unexpected pageshow " + n);
+    }
+  } else if (msg == "closed") {
+    bc1.close();
+    bc2.close();
+    SimpleTest.finish();
+  }
+}
+
+bc2.onmessage = bc1.onmessage;
+
+var gGen = test();
+
+// If Fission is disabled, the pref is no-op.
+SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+  gGen.next();
+});
+
+</script>
+</pre>
+</body>
+</html>

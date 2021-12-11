@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<title>Delayed image reftest wrapper</title>
+</head>
+<body>
+<!-- non-empty alt to avoid the broken image icon -->
+<img id="image1" alt=" ">
+<script>
+
+window.addEventListener("MozReftestInvalidate", reftestInvalidateListener);
+
+// This loads a externally specified image, forces a draw (in case of
+// decode-on-draw), waits 350ms, and then triggers the reftest snapshot.
+// This allows the animation on the page to complete.
+//
+// Use as "delaytest.html?animation.png"
+//
+
+// Get the image URL from our URL
+var imgURL = document.location.search.substr(1);
+
+// Load the image
+var img = document.images[0];
+img.src = imgURL;
+img.onload = forceDecode;
+img.onerror = forceDecode;
+
+let decodeComplete = false;
+let gotReftestInvalidate = false;
+
+function forceDecode() {
+  img.decode().then(function() {
+    decodeComplete = true;
+    maybeStartTimer();
+  }, function() {
+    decodeComplete = true;
+    maybeStartTimer();
+  });
+}
+
+function reftestInvalidateListener() {
+  gotReftestInvalidate = true;
+  maybeStartTimer();
+}
+
+function maybeStartTimer() {
+  if (decodeComplete && gotReftestInvalidate) {
+    startTimer();
+  }
+}
+
+function startTimer() {
+  const delay = 350;
+  setTimeout("document.documentElement.className = '';", delay);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!-- Mixed chartype reftest 02: English - Arabic -->
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <style type="text/css">
+body { /* for Mac OS X with Core Text, we need to ensure an AAT (not OpenType)
+          font is used for the Arabic, as CT doesn't shape LTR-override Arabic
+          correctly (rdar://7231250 */
+  font-family: Geeza Pro, serif;
+  font-size: 24px;
+}
+  </style>
+ </head>
+ <body>
+  <p><span>Hello &#x62F;&#x648;&#x646;&#x64A;&#x629;</span></p>
+ </body>
+</html>

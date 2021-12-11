@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1404385
+-->
+<head>
+  <title>Test for Bug 1404385</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1404385">Mozilla Bug 1404385</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1404385 **/
+is(atob("T0s="), "OK", "atob");
+is(atob(" T0s="), "OK", "atob initial space removal");
+is(atob("T0s= "), "OK", "atob final space removal");
+is(atob("T 0s="), "OK", "atob middle space removal");
+is(atob("dGV zdA=="), "test", "atob middle space removal 2");
+is(atob(""), "", "atob empty string");
+is(atob(" "), "", "atob all whitespace");
+
+</script>
+</pre>
+</body>
+</html>

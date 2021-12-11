@@ -1,0 +1,128 @@
+{
+  "operators": [
+  {
+    "name": "Google",
+    "id": 0
+  },
+  {
+    "name": "DigiCert",
+    "id": 1
+  },
+  {
+    "name": "Certly",
+    "id": 2
+  },
+  {
+    "name": "Izenpe",
+    "id": 3
+  },
+  {
+    "name": "Symantec",
+    "id": 4
+  },
+  {
+    "name": "Venafi",
+    "id": 5
+  },
+  {
+    "name": "CNNIC",
+    "id": 7
+  },
+  {
+    "name": "WoSign",
+    "id": 8
+  },
+  {
+    "name": "StartCom",
+    "id": 9
+  }
+  ],
+  "logs": [
+    {
+      "description": "Google 'Pilot' log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfahLEimAoz2t01p3uMziiLOl/fHTDM0YDOhBRuiBARsV4UvxG2LdNgoIGLrtCzWE0J5APC2em4JlvR8EEEFMoA==",
+      "url": "ct.googleapis.com/pilot",
+      "maximum_merge_delay": 86400,
+      "operated_by": [0]
+    },
+    {
+      "description": "Google 'Aviator' log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1/TMabLkDpCjiupacAlP7xNi0I1JYP8bQFAHDG1xhtolSY1l4QgNRzRrvSe8liE+NPWHdjGxfx3JhTsN9x8/6Q==",
+      "url": "ct.googleapis.com/aviator",
+      "maximum_merge_delay": 86400,
+      "operated_by": [0]
+    },
+    {
+      "description": "DigiCert Log Server",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEAkbFvhu7gkAW6MHSrBlpE1n4+HCFRkC5OLAjgqhkTH+/uzSfSl8ois8ZxAD2NgaTZe1M9akhYlrYkes4JECs6A==",
+      "url": "ct1.digicert-ct.com/log",
+      "maximum_merge_delay": 86400,
+      "operated_by": [1]
+    },
+    {
+      "description": "Google 'Rocketeer' log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIFsYyDzBi7MxCAC/oJBXK7dHjG+1aLCOkHjpoHPqTyghLpzA9BYbqvnV16mAw04vUjyYASVGJCUoI3ctBcJAeg==",
+      "url": "ct.googleapis.com/rocketeer",
+      "maximum_merge_delay": 86400,
+      "operated_by": [0]
+    },
+    {
+      "description": "Certly.IO log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECyPLhWKYYUgEc+tUXfPQB4wtGS2MNvXrjwFCCnyYJifBtd2Sk7Cu+Js9DNhMTh35FftHaHu6ZrclnNBKwmbbSA==",
+      "url": "log.certly.io",
+      "maximum_merge_delay": 86400,
+      "operated_by": [2],
+      "disqualification_time": "2016-04-15T00:00:00Z"
+    },
+    {
+      "description": "Izenpe log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEJ2Q5DC3cUBj4IQCiDu0s6j51up+TZAkAEcQRF6tczw90rLWXkJMAW7jr9yc92bIKgV8vDXU4lDeZHvYHduDuvg==",
+      "url": "ct.izenpe.com",
+      "maximum_merge_delay": 86400,
+      "operated_by": [3],
+      "disqualification_time": "2016-05-30T00:00:00Z"
+    },
+    {
+      "description": "Symantec log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEluqsHEYMG1XcDfy1lCdGV0JwOmkY4r87xNuroPS2bMBTP01CEDPwWJePa75y9CrsHEKqAy8afig1dpkIPSEUhg==",
+      "url": "ct.ws.symantec.com",
+      "maximum_merge_delay": 86400,
+      "operated_by": [4]
+    },
+    {
+      "description": "Venafi log",
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAolpIHxdSlTXLo1s6H1OCdpSj/4DyHDc8wLG9wVmLqy1lk9fz4ATVmm+/1iN2Nk8jmctUKK2MFUtlWXZBSpym97M7frGlSaQXUWyA3CqQUEuIJOmlEjKTBEiQAvpfDjCHjlV2Be4qTM6jamkJbiWtgnYPhJL6ONaGTiSPm7Byy57iaz/hbckldSOIoRhYBiMzeNoA0DiRZ9KmfSeXZ1rB8y8X5urSW+iBzf2SaOfzBvDpcoTuAaWx2DPazoOl28fP1hZ+kHUYvxbcMjttjauCFx+JII0dmuZNIwjfeG/GBb9frpSX219k1O4Wi6OEbHEr8at/XQ0y7gTikOxBn/s5wQIDAQAB",
+      "url": "ctlog.api.venafi.com",
+      "maximum_merge_delay": 86400,
+      "operated_by": [5]
+    },
+    {
+      "description": "Symantec 'Vega' log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6pWeAv/u8TNtS4e8zf0ZF2L/lNPQWQc/Ai0ckP7IRzA78d0NuBEMXR2G3avTK0Zm+25ltzv9WWis36b4ztIYTQ==",
+      "url": "vega.ws.symantec.com",
+      "maximum_merge_delay": 86400,
+      "operated_by": [4]
+    },
+    {
+      "description": "CNNIC CT log",
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv7UIYZopMgTTJWPp2IXhhuAf1l6a9zM7gBvntj5fLaFm9pVKhKYhVnno94XuXeN8EsDgiSIJIj66FpUGvai5samyetZhLocRuXhAiXXbDNyQ4KR51tVebtEq2zT0mT9liTtGwiksFQccyUsaVPhsHq9gJ2IKZdWauVA2Fm5x9h8B9xKn/L/2IaMpkIYtd967TNTP/dLPgixN1PLCLaypvurDGSVDsuWabA3FHKWL9z8wr7kBkbdpEhLlg2H+NAC+9nGKx+tQkuhZ/hWR65aX+CNUPy2OB9/u2rNPyDydb988LENXoUcMkQT0dU3aiYGkFAY0uZjD2vH97TM20xYtNQIDAQAB",
+      "url": "ctserver.cnnic.cn",
+      "maximum_merge_delay": 86400,
+      "operated_by": [7]
+    },
+    {
+      "description": "WoSign log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzBGIey1my66PTTBmJxklIpMhRrQvAdPG+SvVyLpzmwai8IoCnNBrRhgwhbrpJIsO0VtwKAx+8TpFf1rzgkJgMQ==",
+      "url": "ctlog.wosign.com",
+      "maximum_merge_delay": 86400,
+      "operated_by": [8]
+    },
+    {
+      "description": "StartCom log",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESPNZ8/YFGNPbsu1Gfs/IEbVXsajWTOaft0oaFIZDqUiwy1o/PErK38SCFFWa+PeOQFXc9NKv6nV0+05/YIYuUQ==",
+      "url": "ct.startssl.com",
+      "maximum_merge_delay": 86400,
+      "operated_by": [9]
+    }
+  ]
+}

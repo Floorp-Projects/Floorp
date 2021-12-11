@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+  <title>Testcase for bug 552651</title>
+  <script class="testbody" type="text/javascript">
+
+function testCancel() {
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener("readystatechange", function(e) {
+    if (xhr.readyState == 3) // NOTE : only leaks for state == 3
+      xhr.abort();
+    else if (xhr.readyState == 4)
+      document.documentElement.className = "";
+  });
+
+  xhr.open("GET", "552651.xml", true);
+  xhr.send();
+}
+</script>
+</head>
+<body onload="testCancel()">
+This test should not leak...
+</body>
+</html>
+

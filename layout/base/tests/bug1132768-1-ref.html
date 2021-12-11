@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <script>
+    function test() {
+      focus();
+      getSelection().selectAllChildren(document.querySelector("span"));
+    }
+  </script>
+  <body onload="test()">
+    <div>foo<span>bar</span>baz</div>
+  </body>
+</html>

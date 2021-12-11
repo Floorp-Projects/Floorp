@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-size: contain; background-clip: padding-box reference, background-origin: border-box</title>
+  <style type="text/css">
+#outer
+{
+  border: 1px solid black;
+  width: 64px;
+  height: 128px;
+}
+#inner
+{
+  border: 20px solid white;
+  width: 24px;
+  height: 88px;
+}
+#innermost1
+{
+  width: 24px;
+  height: 44px;
+  background-image: url(aqua-32x32.png);
+}
+#innermost2
+{
+  width: 24px;
+  height: 44px;
+  background-color: lime;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div
+  id="inner"><div
+    id="innermost1"></div><div
+    id="innermost2"></div
+    ></div
+  ></div>
+</body>
+</html>

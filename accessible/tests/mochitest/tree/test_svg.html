@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SVG Tree Tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // svgText
+      var accTree = {
+        role: ROLE_DIAGRAM,
+        children: [
+          {
+            role: ROLE_TEXT_CONTAINER,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF,
+              },
+            ],
+          },
+        ],
+      };
+      testAccessibleTree("svgText", accTree);
+
+      // svg1
+      accTree = {
+        role: ROLE_DIAGRAM,
+        children: []
+      };
+      testAccessibleTree("svg1", accTree);
+
+      // svg2
+      accTree = {
+        role: ROLE_DIAGRAM,
+        children: [
+          {
+            role: ROLE_GROUPING,
+            children: []
+          }
+        ]
+      };
+      testAccessibleTree("svg2", accTree);
+
+      // svg3
+      accTree = {
+        role: ROLE_DIAGRAM,
+        children: [
+          {
+            role: ROLE_GRAPHIC,
+            children: []
+          }
+        ]
+      };
+      testAccessibleTree("svg3", accTree);
+
+      // svg4
+      accTree = {
+        role: ROLE_DIAGRAM,
+        children: [
+          {
+            role: ROLE_GROUPING,
+            children: [
+              {
+                role: ROLE_GRAPHIC,
+                children: []
+              }
+            ]
+          }
+        ]
+      };
+      testAccessibleTree("svg4", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <svg id="svgText">
+    <text>This is some text</text>
+  </svg>
+
+  <!-- no accessible objects -->
+  <svg id="svg1">
+    <g id="g1">
+      <rect width="300" height="100" id="rect1" style="fill:#00f" />
+    </g>
+  </svg>
+
+  <svg id="svg2">
+    <g id="g2">
+      <title>g</title>
+      <rect width="300" height="100" id="rect2" style="fill:#00f" />
+    </g>
+  </svg>
+
+  <svg id="svg3">
+    <g id="g3">
+      <rect width="300" height="100" id="rect3" style="fill:#00f">
+        <title>rect</title>
+      </rect>
+    </g>
+  </svg>
+
+  <svg id="svg4">
+    <g id="g4">
+      <title>g</title>
+      <rect width="300" height="100" id="rect4" style="fill:#00f">
+        <title>rect</title>
+      </rect>
+    </g>
+  </svg>
+</body>
+</html>

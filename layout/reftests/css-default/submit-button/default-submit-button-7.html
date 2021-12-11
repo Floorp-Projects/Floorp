@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when there is no submit button and one is added,
+    there is a default submit button -->
+  <link rel='stylesheet' type='text/css' href='default-submit-button-style.css'>
+  <script type="text/javascript">
+    function onLoadHandler()
+    {
+      document.getElementById('b1').removeAttribute('type');
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="onLoadHandler();">
+    <form>
+      <button type='submit' id='b1'>submit</button>
+      <button type='reset'>text</button>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1202933</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* eslint-env mozilla/frame-script */
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const Services = SpecialPowers.Services;
+
+const notifier = Cc["@mozilla.org/alerts-service;1"]
+                   .getService(Ci.nsIAlertsService);
+
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  // eslint-disable-next-line no-shadow
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  addMessageListener("anyXULAlertsVisible", function() {
+    var windows = Services.wm.getEnumerator("alert:alert");
+    return windows.hasMoreElements();
+  });
+
+  addMessageListener("getAlertSource", function() {
+    var alertWindows = Services.wm.getEnumerator("alert:alert");
+    if (!alertWindows) {
+      return null;
+    }
+    var alertWindow = alertWindows.getNext();
+    return alertWindow.document.getElementById("alertSourceLabel").getAttribute("value");
+  });
+});
+
+function notify(alertName, principal) {
+  return new Promise((resolve, reject) => {
+    var source;
+    async function observe(subject, topic, data) {
+      if (topic == "alertclickcallback") {
+        reject(new Error("Alerts should not be clicked during test"));
+      } else if (topic == "alertshow") {
+        source = await chromeScript.sendQuery("getAlertSource");
+        notifier.closeAlert(alertName);
+      } else {
+        is(topic, "alertfinished", "Should hide alert");
+        resolve(source);
+      }
+    }
+    notifier.showAlertNotification(null, "Notification test",
+                                   "Surprise! I'm here to test notifications!",
+                                   false, alertName, observe, alertName,
+                                   null, null, null, principal);
+    if (SpecialPowers.Services.appinfo.OS == "Darwin") {
+      notifier.closeAlert(alertName);
+    }
+  });
+}
+
+async function testNoPrincipal() {
+  var source = await notify("noPrincipal", null);
+  ok(!source, "Should omit source without principal");
+}
+
+async function testSystemPrincipal() {
+  var principal = Services.scriptSecurityManager.getSystemPrincipal();
+  var source = await notify("systemPrincipal", principal);
+  ok(!source, "Should omit source for system principal");
+}
+
+async function testNullPrincipal() {
+  var principal = Services.scriptSecurityManager.createNullPrincipal({});
+  var source = await notify("nullPrincipal", principal);
+  ok(!source, "Should omit source for null principal");
+}
+
+async function testNodePrincipal() {
+  var principal = SpecialPowers.wrap(document).nodePrincipal;
+  var source = await notify("nodePrincipal", principal);
+
+  var stringBundle = Services.strings.createBundle(
+    "chrome://alerts/locale/alert.properties"
+  );
+  var localizedSource = stringBundle.formatStringFromName(
+    "source.label", [principal.hostPort]);
+  is(source, localizedSource, "Should include source for node principal");
+}
+
+function runTest() {
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application");
+    return;
+  }
+
+  if ("@mozilla.org/system-alerts-service;1" in Cc) {
+    todo(false, "Native alerts service exists in this application");
+    return;
+  }
+
+  ok(true, "Alerts service exists in this application");
+
+  // sendSyncMessage returns an array of arrays. See the comments in
+  // test_alerts_noobserve.html and test_SpecialPowersLoadChromeScript.html.
+  add_task(async () => {
+    var alertsVisible = await chromeScript.sendQuery("anyXULAlertsVisible");
+    ok(!alertsVisible, "Alerts should not be present at the start of the test.");
+  });
+
+  add_task(testNoPrincipal);
+  add_task(testSystemPrincipal);
+  add_task(testNullPrincipal);
+  add_task(testNodePrincipal);
+}
+
+runTest();
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+
+  Test DOM tree in full screen
+  -->
+<head>
+<title>Bug 633602 - file_DOMtree.html</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="pointerlock_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+  Mozilla Bug 633602
+</a>
+<div id="div"></div>
+<div id="outer"><div id="inner"></div></div>
+<pre id="test">
+<script type="text/javascript">
+/*
+  * Test for Bug 633602
+  * Checks if pointer is unlocked when element is removed from
+  * the DOM Tree
+  */
+
+SimpleTest.waitForExplicitFinish();
+
+var div = document.getElementById("div");
+var outer = document.getElementById("outer");
+var inner = document.getElementById("inner");
+
+function listenOneDocEvent(type, handler) {
+  function callback(event) {
+    document.removeEventListener(type, callback);
+    SimpleTest.executeSoon(() => handler(event));
+  }
+  document.addEventListener(type, callback);
+}
+
+function checkPointerLockElement(elem) {
+  if (elem) {
+    is(document.pointerLockElement, elem,
+       `#${elem.id} should have locked the pointer`);
+  } else {
+    ok(!document.pointerLockElement, "Pointer should have been unlocked");
+  }
+}
+
+function start() {
+  addFullscreenChangeContinuation("enter", enteredFullscreen);
+  document.documentElement.requestFullscreen();
+}
+
+function enteredFullscreen() {
+  is(document.fullscreenElement, document.documentElement,
+     "Root element should have entered fullscreen");
+  listenOneDocEvent("pointerlockchange", lockedPointerOnDiv);
+  div.requestPointerLock();
+}
+
+function lockedPointerOnDiv() {
+  checkPointerLockElement(div);
+  listenOneDocEvent("pointerlockchange", unlockedPointerFromDiv);
+  document.body.removeChild(div);
+}
+
+function unlockedPointerFromDiv() {
+  checkPointerLockElement(null);
+  listenOneDocEvent("pointerlockchange", lockedPointerOnInner);
+  inner.requestPointerLock();
+}
+
+function lockedPointerOnInner() {
+  checkPointerLockElement(inner);
+  listenOneDocEvent("pointerlockchange", unlockedPointerFromInner);
+  document.body.removeChild(outer);
+}
+
+function unlockedPointerFromInner() {
+  checkPointerLockElement(null);
+  addFullscreenChangeContinuation("exit", exitedFullscreen);
+  document.exitFullscreen();
+}
+
+function exitedFullscreen() {
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=478251
+-->
+<head>
+  <title>Test for Bug 478251</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478251">Mozilla Bug 478251</a>
+<p id="display"><iframe id="t"></iframe></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 478251 **/
+var doc = $("t").contentDocument;
+doc.open();
+doc.write();
+doc.close();
+is(doc.documentElement.textContent, "", "Writing || failed");
+
+doc.open();
+doc.write(null);
+doc.close();
+is(doc.documentElement.textContent, "null", "Writing |null| failed");
+
+doc.open();
+doc.write(null, null);
+doc.close();
+is(doc.documentElement.textContent, "nullnull", "Writing |null, null| failed");
+
+doc.open();
+doc.write(undefined);
+doc.close();
+is(doc.documentElement.textContent, "undefined", "Writing |undefined| failed");
+
+doc.open();
+doc.write(undefined, undefined);
+doc.close();
+is(doc.documentElement.textContent, "undefinedundefined", "Writing |undefined, undefined| failed");
+
+doc.open();
+doc.writeln();
+doc.close();
+ok(doc.documentElement.textContent == "\n" || doc.documentElement.textContent == "", "Writing |\\n| failed");
+
+doc.open();
+doc.writeln(null);
+doc.close();
+is(doc.documentElement.textContent, "null\n", "Writing |null\\n| failed");
+
+doc.open();
+doc.writeln(null, null);
+doc.close();
+is(doc.documentElement.textContent, "nullnull\n", "Writing |null, null\\n| failed");
+
+doc.open();
+doc.writeln(undefined);
+doc.close();
+is(doc.documentElement.textContent, "undefined\n", "Writing |undefined\\n| failed");
+
+doc.open();
+doc.writeln(undefined, undefined);
+doc.close();
+is(doc.documentElement.textContent, "undefinedundefined\n", "Writing |undefined, undefined\\n| failed");
+</script>
+</pre>
+</body>
+</html>

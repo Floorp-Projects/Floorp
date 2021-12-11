@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CloseButton renders with tooltip 1`] = `
+<button
+  className="close-btn"
+  onClick={[Function]}
+  title="testTooltip"
+>
+  <AccessibleImage
+    className="close"
+  />
+</button>
+`;

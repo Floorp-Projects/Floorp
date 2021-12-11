@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=457672
+-->
+<head>
+  <title>Test for Bug 457672</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=457672">Mozilla Bug 457672</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 457672 **/
+
+var windowBlurCount = 0;
+
+function listener(evt) {
+  if (evt.type == "focus") {
+    is(windowBlurCount, 1,
+       "Window should have got blur event when opening a new tab!");
+    document.getElementsByTagName("a")[0].focus();
+    SimpleTest.finish();
+  } else if (evt.type == "blur") {
+    ++windowBlurCount;
+  }
+  document.getElementById('log').textContent += evt.target + ":" + evt.type + "\n";
+}
+
+function startTest() {
+  SpecialPowers.pushPrefEnv({"set": [["browser.link.open_newwindow", 3]]}, function() {
+    document.getElementsByTagName("a")[0].focus();
+    // Note, focus/blur don't bubble
+    window.addEventListener("focus", listener);
+    window.addEventListener("blur", listener);
+    var subwin = window.open("about:blank", "", "");
+    subwin.addEventListener("focus", function(e) { subwin.close(); });
+  });
+}
+
+addLoadEvent(startTest);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<pre id="log">
+</pre>
+</body>
+</html>

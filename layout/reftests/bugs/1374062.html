@@ -1,0 +1,16 @@
+<!doctype html>
+<title>
+  Test for bug 1374062: We don't update the root font-size just because the
+  element has no parent element.
+</title>
+<style>
+  :root { font-size: 5px; }
+  [restyled] { color: green; font-size: 2rem; }
+</style>
+<div>
+  Should be green, and have a 10px font-size.
+</div>
+<script>
+  getComputedStyle(document.createElement('div')).color;
+  document.querySelector('div').setAttribute("restyled", "");
+</script>

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that a image decoding error producs a net:failed-to-process-uri-content
+observer event with the nsIURI of the failed image as the subject
+-->
+<head>
+  <title>Test for image net:failed-to-process-uri-content</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+var obs = Cc["@mozilla.org/observer-service;1"].getService();
+obs = obs.QueryInterface(Ci.nsIObserverService);
+
+var observer = {
+  /* eslint-disable-next-line mozilla/use-chromeutils-generateqi */
+  QueryInterface (aIID) {
+    if (aIID.equals(Ci.nsISupports) ||
+        aIID.equals(Ci.nsIObserver))
+      return this;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+  },
+
+  observe(subject, topic, data) {
+    ok(topic == "net:failed-to-process-uri-content", "wrong topic");
+    subject = subject.QueryInterface(Ci.nsIURI);
+    is(subject.asciiSpec, `${location.origin}/tests/image/test/mochitest/invalid.jpg`, "wrong subject");
+
+    obs.removeObserver(this, "net:failed-to-process-uri-content");
+
+    SimpleTest.finish();
+  }
+};
+
+obs.addObserver(SpecialPowers.wrapCallbackObject(observer), "net:failed-to-process-uri-content");
+
+document.write('<img src="damon.jpg">');
+document.write('<img src="invalid.jpg">');
+
+</script>
+</body>
+</html>

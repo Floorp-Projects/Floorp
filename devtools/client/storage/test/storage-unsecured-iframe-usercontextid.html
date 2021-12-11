@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Iframe for testing multiple host detetion in storage actor
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<script>
+"use strict";
+document.cookie = "uc1uc1=foobar; domain=.example.org; path=/";
+localStorage.setItem("iframe-u-ls1uc1", "foobar");
+sessionStorage.setItem("iframe-u-ss1uc1", "foobar1");
+sessionStorage.setItem("iframe-u-ss2uc1", "foobar2");
+dump("added cookies and storage from unsecured iframe\n");
+</script>
+</body>
+</html>

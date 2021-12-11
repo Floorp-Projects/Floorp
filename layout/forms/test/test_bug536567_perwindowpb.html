@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=536567
+-->
+<head>
+  <title>Test for Bug 536567</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=536567">Mozilla Bug 536567</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 536567 **/
+
+const Cm = Components.manager;
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.init(window);
+
+var tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+var homeDir = Services.dirsvc.get("Desk", Ci.nsIFile);
+
+function newDir() {
+  var dir = tmpDir.clone();
+  dir.append("testdir" + Math.floor(Math.random() * 10000));
+  dir.QueryInterface(Ci.nsIFile);
+  dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
+  return dir;
+}
+
+var dirs = [];
+for(let i = 0; i < 6; i++) {
+  dirs.push(newDir());
+}
+dirs.push(homeDir);
+var domains = ['http://mochi.test:8888', 'http://example.org:80', 'http://example.com:80'];
+/*
+ * These tests take 3 args each:
+ * - which domain to load
+ * - the filePicker displayDirectory we expect to be set
+ * - the file to pick (in most cases this will show up in the next test,
+ *   as indicated by the comments)
+ */
+var tests = [
+  "clear history",
+  [0, 6, 0], // 0 -> 3
+  [1, 6, 1], // 1 -> 4
+  [2, 6, 2], // 2 -> 5
+  [0, 0, 3], // 3 -> 6
+  [1, 1, 1], // 4 -> 8
+  [2, 2, 2], // 5 -> 9
+  [0, 3, 1], // 6 -> 7
+  [0, 1, 0], // 7 -> x
+  [1, 1, 1], // 8 -> x
+  [2, 2, 2], // 9 -> x
+  "clear history",
+  [0, 6, 0], // 11 -> 15
+  [1, 6, 1], // 12 -> 16
+  [2, 6, 2], // 13 -> 17
+  "pb on",
+  [0, 0, 3], // 15 -> 18
+  [1, 1, 4], // 16 -> 19
+  [2, 2, 5], // 17 -> 20
+  [0, 3, 3], // 18 -> x
+  [1, 4, 4], // 19 -> x
+  [2, 5, 5], // 20 -> x
+  "pb off",
+  [0, 0, 5], // 22 -> 26
+  [1, 1, 4], // 23 -> 27
+  [2, 2, 3], // 24 -> 28
+  "pb on",
+  [0, 3, 5], // 26 -> x
+  [1, 4, 4], // 27 -> x
+  [2, 5, 3], // 28 -> x
+  "clear history",
+  // Not checking after clear history because browser.download.lastDir content
+  // pref is not being clear properly in private windows.
+  //[0, 6, 0], // 30 -> x
+  //[1, 6, 1], // 31 -> x
+  //[2, 6, 2], // 32 -> x
+  "pb off"
+];
+
+var testIndex = 0;
+var content;
+var normalWindow;
+var privateWindow;
+var normalWindowIframe;
+var privateWindowIframe;
+
+function runTest() {
+  var test = tests[testIndex];
+  if (test == undefined) {
+    endTest();
+  } else if (test == "pb on") {
+    content = privateWindowIframe;
+    testIndex++;
+    runTest();
+  } else if (test == "pb off") {
+    content = normalWindowIframe;
+    testIndex++;
+    runTest();
+  } else if (test == "clear history") {
+    Services.obs.notifyObservers(null, "browser:purge-session-history");
+    testIndex++;
+    runTest();
+  } else {
+    var file = dirs[test[2]].clone();
+    file.append("file.file");
+    MockFilePicker.setFiles([file]);
+    content.setAttribute('src', domains[test[0]] + '/chrome/layout/forms/test/bug536567_subframe.html');
+  }
+}
+
+function endTest() {
+  for(let i = 0; i < dirs.length - 1; i++) {
+    dirs[i].remove(true);
+  }
+
+  normalWindow.close();
+  privateWindow.close();
+  MockFilePicker.cleanup();
+  SimpleTest.finish();
+}
+
+var mainWindow = window.browsingContext.topChromeWindow;
+var contentPage = "http://mochi.test:8888/chrome/layout/forms/test/bug536567_iframe.html";
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished");
+}
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  whenDelayedStartupFinished(win, function() {
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      if (win.content.location.href != contentPage) {
+        win.gBrowser.loadURI(contentPage, {
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+        });
+        return;
+      }
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      win.gBrowser.selectedBrowser.focus();
+      SimpleTest.info("DOMContentLoaded's window: " + win.location + " vs. " + window.location);
+      win.setTimeout(function() { aCallback(win); }, 0);
+    }, true);
+    SimpleTest.info("load's window: " + win.location + " vs. " + window.location);
+    win.setTimeout(function() {
+      win.gBrowser.loadURI(contentPage, {
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+      });
+    }, 0);
+  });
+}
+
+MockFilePicker.showCallback = function(filepicker) {
+  var test = tests[testIndex];
+  var returned = -1;
+  for (let i = 0; i < dirs.length; i++) {
+     var dir = MockFilePicker.displayDirectory
+                 ? MockFilePicker.displayDirectory
+                 : Services.dirsvc.get(MockFilePicker.displaySpecialDirectory, Ci.nsIFile);
+    if (dirs[i].path == dir.path) {
+      returned = i;
+      break;
+    }
+  }
+  if (test[1] == -1) {
+    ok(false, "We should never get an unknown directory back");
+  } else {
+    is(returned, test[1], 'test ' + testIndex);
+  }
+
+  filepicker.window.setTimeout(function() {
+    testIndex++;
+    runTest();
+  }, 0);
+};
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  testOnWindow(false, function(aWin) {
+    var selectedBrowser = aWin.gBrowser.selectedBrowser;
+
+    normalWindow = aWin;
+    normalWindowIframe =
+      selectedBrowser.contentDocument.getElementById("content");
+
+    testOnWindow(true, function(aPrivateWin) {
+      selectedBrowser = aPrivateWin.gBrowser.selectedBrowser;
+
+      privateWindow = aPrivateWin;
+      privateWindowIframe =
+        selectedBrowser.contentDocument.getElementById("content");
+
+      content = normalWindowIframe;
+      selectedBrowser.contentWindow.setTimeout(runTest, 0);
+    });
+  });
+};
+
+</script>
+</pre>
+</body>
+</html>

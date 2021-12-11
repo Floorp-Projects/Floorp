@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="../treeview.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL tree selectable tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../selectable.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "debug";
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // single selectable listbox, the first item is selected by default
+
+      var id = "listbox";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for list of " + id);
+
+      var select = getAccessible(id, [nsIAccessibleSelectable]);
+      select.removeItemFromSelection(0);
+      testSelectableSelection(select, [ ]);
+
+      select.addItemToSelection(1);
+      testSelectableSelection(select, [ "lb1_item2" ], "addItemToSelect(1): ");
+
+      select.removeItemFromSelection(1);
+      testSelectableSelection(select, [ ],
+                              "removeItemFromSelection(1): ");
+
+      todo(!select.selectAll(),
+           "No way to select all items in listbox '" + id + "'");
+      testSelectableSelection(select, [ "lb1_item1" ], "selectAll: ");
+
+      select.addItemToSelection(1);
+      select.unselectAll();
+      testSelectableSelection(select, [ ], "unselectAll: ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // multiple selectable listbox
+
+      id = "listbox2";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for list of " + id);
+
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ ]);
+
+      select.addItemToSelection(1);
+      testSelectableSelection(select, [ "lb2_item2" ], "addItemToSelect(1): ");
+
+      select.removeItemFromSelection(1);
+      testSelectableSelection(select, [ ],
+                              "removeItemFromSelection(1): ");
+
+      is(select.selectAll(), true,
+         "All items should be selected in listbox '" + id + "'");
+      testSelectableSelection(select, [ "lb2_item1", "lb2_item2" ],
+                              "selectAll: ");
+
+      select.unselectAll();
+      testSelectableSelection(select, [ ], "unselectAll: ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // listbox with headers
+
+      // XXX: addItemToSelection/removeItemFromSelection don't work correctly
+      // on listboxes with headers because header is inserted into hierarchy
+      // and child indexes that are used in these methods are shifted (see bug
+      // 591939).
+      todo(false,
+           "Fix addItemToSelection/removeItemFromSelection on listboxes with headers.");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+        href="https://bugzilla.mozilla.org/show_bug.cgi?id=590176"
+        title="add pseudo SelectAccessible interface">
+       Mozilla Bug 590176
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <richlistbox id="listbox">
+        <richlistitem id="lb1_item1">
+          <label value="cell0"/>
+          <label value="cell1"/>
+        </richlistitem>
+        <richlistitem id="lb1_item2">
+          <label value="cell3"/>
+          <label value="cell4"/>
+        </richlistitem>
+      </richlistbox>
+
+      <richlistbox id="listbox2" seltype="multiple">
+        <richlistitem id="lb2_item1">
+          <label value="cell0"/>
+          <label value="cell1"/>
+        </richlistitem>
+        <richlistitem id="lb2_item2">
+          <label value="cell3"/>
+          <label value="cell4"/>
+        </richlistitem>
+      </richlistbox>
+
+      <vbox id="debug"/>
+    </vbox>
+  </hbox>
+
+</window>
+

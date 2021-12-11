@@ -1,0 +1,337 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "OptionalPermission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "history"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "history",
+    "description": "Use the <code>browser.history</code> API to interact with the browser's record of visited pages. You can add, remove, and query for URLs in the browser's history. To override the history page with your own version, see $(topic:override)[Override Pages].",
+    "permissions": ["history"],
+    "types": [
+      {
+        "id": "TransitionType",
+        "type": "string",
+        "enum": ["link", "typed", "auto_bookmark", "auto_subframe", "manual_subframe", "generated", "auto_toplevel", "form_submit", "reload", "keyword", "keyword_generated"],
+        "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
+      },
+      {
+        "id": "HistoryItem",
+        "type": "object",
+        "description": "An object encapsulating one result of a history query.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the item."
+          },
+          "url": {
+            "type": "string",
+            "optional": true,
+            "description": "The URL navigated to by a user."
+          },
+          "title": {
+            "type": "string",
+            "optional": true,
+            "description": "The title of the page when it was last loaded."
+          },
+          "lastVisitTime": {
+            "type": "number",
+            "optional": true,
+            "description": "When this page was last loaded, represented in milliseconds since the epoch."
+          },
+          "visitCount": {
+            "type": "integer",
+            "optional": true,
+            "description": "The number of times the user has navigated to this page."
+          },
+          "typedCount": {
+            "type": "integer",
+            "optional": true,
+            "description": "The number of times the user has navigated to this page by typing in the address."
+          }
+        }
+      },
+      {
+        "id": "VisitItem",
+        "type": "object",
+        "description": "An object encapsulating one visit to a URL.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the item."
+          },
+          "visitId": {
+            "type": "string",
+            "description": "The unique identifier for this visit."
+          },
+          "visitTime": {
+            "type": "number",
+            "optional": true,
+            "description": "When this visit occurred, represented in milliseconds since the epoch."
+          },
+          "referringVisitId": {
+            "type": "string",
+            "description": "The visit ID of the referrer."
+          },
+          "transition": {
+            "$ref": "TransitionType",
+            "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "search",
+        "type": "function",
+        "description": "Searches the history for the last visit time of each page matching the query.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "query",
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "A free-text query to the history service.  Leave empty to retrieve all pages."
+              },
+              "startTime": {
+                "$ref": "extensionTypes.Date",
+                "optional": true,
+                "description": "Limit results to those visited after this date. If not specified, this defaults to 24 hours in the past."
+              },
+              "endTime": {
+                "$ref": "extensionTypes.Date",
+                "optional": true,
+                "description": "Limit results to those visited before this date."
+              },
+              "maxResults": {
+                "type": "integer",
+                "optional": true,
+                "minimum": 1,
+                "description": "The maximum number of results to retrieve.  Defaults to 100."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "results",
+                "type": "array",
+                "items": {
+                  "$ref": "HistoryItem"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getVisits",
+        "type": "function",
+        "description": "Retrieves information about visits to a URL.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL for which to retrieve visit information.  It must be in the format as returned from a call to history.search."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "results",
+                "type": "array",
+                "items": {
+                  "$ref": "VisitItem"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "addUrl",
+        "type": "function",
+        "description": "Adds a URL to the history with a default visitTime of the current time and a default $(topic:transition-types)[transition type] of \"link\".",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL to add. Must be a valid URL that can be added to history."
+              },
+              "title": {
+                "type": "string",
+                "optional": true,
+                "description": "The title of the page."
+              },
+              "transition": {
+                "$ref": "TransitionType",
+                "optional": true,
+                "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
+              },
+              "visitTime": {
+                "$ref": "extensionTypes.Date",
+                "optional": true,
+                "description": "The date when this visit occurred."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "deleteUrl",
+        "type": "function",
+        "description": "Removes all occurrences of the given URL from the history.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL to remove."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "deleteRange",
+        "type": "function",
+        "description": "Removes all items within the specified date range from the history.  Pages will not be removed from the history unless all visits fall within the range.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "range",
+            "type": "object",
+            "properties": {
+              "startTime": {
+                "$ref": "extensionTypes.Date",
+                "description": "Items added to history after this date."
+              },
+              "endTime": {
+                "$ref": "extensionTypes.Date",
+                "description": "Items added to history before this date."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "deleteAll",
+        "type": "function",
+        "description": "Deletes all items from the history.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": []
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onVisited",
+        "type": "function",
+        "description": "Fired when a URL is visited, providing the HistoryItem data for that URL.  This event fires before the page has loaded.",
+        "parameters": [
+          {
+            "name": "result",
+            "$ref": "HistoryItem"
+          }
+        ]
+      },
+      {
+        "name": "onVisitRemoved",
+        "type": "function",
+        "description": "Fired when one or more URLs are removed from the history service.  When all visits have been removed the URL is purged from history.",
+        "parameters": [
+          {
+            "name": "removed",
+            "type": "object",
+            "properties": {
+              "allHistory": {
+                "type": "boolean",
+                "description": "True if all history was removed.  If true, then urls will be empty."
+              },
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "onTitleChanged",
+        "type": "function",
+        "description": "Fired when the title of a URL is changed in the browser history.",
+        "parameters": [
+          {
+            "name": "changed",
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL for which the title has changed"
+              },
+              "title": {
+                "type": "string",
+                "description": "The new title for the URL."
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

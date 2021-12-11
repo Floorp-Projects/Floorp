@@ -1,0 +1,692 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Profiling test suite for EventUtils</title>
+  <script type="text/javascript">
+  var start = new Date();
+  </script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript">
+  var loadTime = new Date();
+  </script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest()">
+<input type="radio" id="radioTarget1" name="group">Radio Target 1</input>
+<input id="textBoxA">
+<input id="textBoxB">
+<input id="testMouseEvent" type="button" value="click">
+<input id="testKeyEvent" >
+<input id="testStrEvent" >
+<div id="scrollB" style="width: 190px;height: 250px;overflow:auto">
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+</div>
+<script class="testbody" type="text/javascript">
+info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
+function starttest() {
+  SimpleTest.waitForFocus(
+    async function () {
+      SimpleTest.waitForExplicitFinish();
+      var startTime = new Date();
+      var check = false;
+      function doCheck() {
+        check = true;
+      }
+
+      const kIsHeadless = await SpecialPowers.spawnChrome([], () => {
+        return Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless;
+      });
+
+      if (navigator.appVersion.includes("Android")) {
+        // This is the workaround for test failure on debug build.
+        await SpecialPowers.pushPrefEnv({set: [["apz.zoom-to-focused-input.enabled", false]]});
+      }
+
+      /* test send* functions */
+      $("testMouseEvent").addEventListener("click", doCheck, {once: true});
+      sendMouseEvent({type:'click'}, "testMouseEvent");
+      is(check, true, 'sendMouseEvent should dispatch click event');
+
+      await (async function testSynthesizeNativeMouseEvent() {
+        let events = [];
+        let listener = event => events.push(event);
+        let preventDefault = event => event.preventDefault();
+        $("testMouseEvent").addEventListener("mousedown", listener);
+        $("testMouseEvent").addEventListener("mouseup", listener);
+        // Clicking with modifiers may open context menu so that we should prevent to open it.
+        window.addEventListener("contextmenu", preventDefault, { capture: true });
+        for (const test of [
+            {
+              description: "ShiftLeft",
+              modifiers: { shiftKey: true },
+            },
+            {
+              description: "ShiftRight",
+              modifiers: { shiftRightKey: true },
+            },
+            {
+              description: "CtrlLeft",
+              modifiers: { ctrlKey: true },
+            },
+            {
+              description: "CtrlRight",
+              modifiers: { ctrlRightKey: true },
+            },
+            {
+              description: "AltLeft",
+              modifiers: { altKey: true },
+            },
+            {
+              description: "AltRight",
+              modifiers: { altRightKey: true },
+            },
+            {
+              description: "MetaLeft",
+              modifiers: { metaKey: true },
+              skip: () => {
+                // We've not supported "Meta" as Windows logo key or Super/Hyper keys.
+                return navigator.platform.includes("Win") || navigator.platform.includes("Linux");
+              },
+            },
+            {
+              description: "MetaRight",
+              modifiers: { metaRightKey: true },
+              skip: () => {
+                // We've not supported "Meta" as Windows logo key or Super/Hyper keys.
+                return navigator.platform.includes("Win") || navigator.platform.includes("Linux");
+              },
+            },
+            {
+              description: "CapsLock",
+              modifiers: { capsLockKey: true },
+            },
+            {
+              description: "NumLock",
+              modifiers: { numLockKey: true },
+              skip: () => {
+                // macOS does not have `NumLock` key nor state.
+                return navigator.platform.includes("Mac");
+              },
+            },
+            {
+              description: "Ctrl+Shift",
+              modifiers: { ctrlKey: true, shiftKey: true },
+              skip: () => {
+                // We forcibly open context menu on macOS so the following test
+                // will fail to receive mouse events.
+                return navigator.platform.includes("Mac");
+              },
+            },
+            {
+              description: "Alt+Shift",
+              modifiers: { altKey: true, shiftKey: true },
+            },
+            {
+              description: "Meta+Shift",
+              modifiers: { metaKey: true, shiftKey: true },
+              skip: () => {
+                // We've not supported "Meta" as Windows logo key or Super/Hyper keys.
+                return navigator.platform.includes("Win") || navigator.platform.includes("Linux");
+              },
+            },
+          ]) {
+          if (test.skip && test.skip()) {
+            continue;
+          }
+          events = [];
+          info(`testSynthesizeNativeMouseEvent: sending native mouse click (${test.description})`);
+          await promiseNativeMouseEventAndWaitForEvent({
+            type: "click",
+            target: $("testMouseEvent"),
+            atCenter: true,
+            modifiers: test.modifiers,
+            eventTypeToWait: "mouseup",
+          });
+          is(events.length, 2,
+            `testSynthesizeNativeMouseEvent: a pair of "mousedown" and "mouseup" events should be fired (${test.description})`);
+          is(events[0]?.type, "mousedown",
+            `testSynthesizeNativeMouseEvent: "mousedown" should be fired (${test.description})`);
+          is(events[1]?.type, "mouseup",
+            `testSynthesizeNativeMouseEvent: "mouseup" should be fired (${test.description})`);
+          if (events.length !== 2) {
+            continue;
+          }
+          for (const mod of [{ keyName: "Alt",      propNames: [ "altKey", "altRightKey" ]},
+                             { keyName: "Control",  propNames: [ "ctrlKey", "ctrlRightKey" ]},
+                             { keyName: "Shift",    propNames: [ "shiftKey", "shiftRightKey" ]},
+                             { keyName: "Meta",     propNames: [ "metaKey", "metaRightKey" ]},
+                             { keyName: "CapsLock", propNames: [ "capsLockKey" ]},
+                             { keyName: "NumLock",  propNames: [ "numLockKey" ]},
+                            ]) {
+            const activeExpected =
+              (test.modifiers.hasOwnProperty(mod.propNames[0]) &&
+               test.modifiers[mod.propNames[0]]) ||
+                (mod.propNames.length !== 1 &&
+                 test.modifiers.hasOwnProperty(mod.propNames[1]) &&
+                 test.modifiers[mod.propNames[1]]);
+            const checkFn = activeExpected && (
+              // Bug 1693240: We don't support setting modifiers while posting a mouse event on Windows.
+              navigator.platform.includes("Win") ||
+              // Bug 1693237: We don't support setting modifiers on Android.
+              navigator.appVersion.includes("Android") ||
+              // In Headless mode, modifiers are not supported by this kind of APIs.
+              kIsHeadless) ? todo_is : is;
+            checkFn(events[0]?.getModifierState(mod.keyName), activeExpected,
+              `testSynthesizeNativeMouseEvent: "mousedown".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
+            checkFn(events[1]?.getModifierState(mod.keyName), activeExpected,
+              `testSynthesizeNativeMouseEvent: "mouseup".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
+          }
+        }
+        const supportsX1AndX2Buttons =
+          // On Windows, it triggers APP_COMMAND.  Therefore, this test is unloaded.
+          !navigator.platform.includes("Win") &&
+          // On macOS, it seems that no API to specify X1 and X2 button at creating an NSEvent.
+          !navigator.platform.includes("Mac") &&
+          // On Linux, it seems that X1 button and X2 button events are not synthesized correctly.
+          !navigator.platform.includes("Linux");
+        for (let i = 0; i < (supportsX1AndX2Buttons ? 5 : 3); i++) {
+          events = [];
+          info(`testSynthesizeNativeMouseEvent: sending native mouse click (button=${i})`);
+          await promiseNativeMouseEventAndWaitForEvent({
+            type: "click",
+            target: $("testMouseEvent"),
+            atCenter: true,
+            button: i,
+            eventTypeToWait: "mouseup",
+          });
+          is(events.length, 2,
+            `testSynthesizeNativeMouseEvent: a pair of "mousedown" and "mouseup" events should be fired (button=${i})`);
+          is(events[0]?.type, "mousedown",
+            `testSynthesizeNativeMouseEvent: "mousedown" should be fired (button=${i})`);
+          is(events[1]?.type, "mouseup",
+            `testSynthesizeNativeMouseEvent: "mouseup" should be fired (button=${i})`);
+          if (events.length !== 2) {
+            continue;
+          }
+          is(events[0].button, i,
+            `testSynthesizeNativeMouseEvent: button of "mousedown" event should be ${i}`);
+          is(events[1].button, i,
+            `testSynthesizeNativeMouseEvent: button of "mouseup" event should be ${i}`);
+        }
+        $("testMouseEvent").removeEventListener("mousedown", listener);
+        $("testMouseEvent").removeEventListener("mouseup", listener);
+        window.removeEventListener("contextmenu", preventDefault, { capture: true });
+      })();
+
+      check = false;
+      $("testKeyEvent").addEventListener("keypress", doCheck, {once: true});
+      $("testKeyEvent").focus();
+      sendChar("x");
+      is($("testKeyEvent").value, "x", "sendChar should work");
+      is(check, true, "sendChar should dispatch keyPress");
+      $("testKeyEvent").value = "";
+
+      $("testStrEvent").focus();
+      sendString("string");
+      is($("testStrEvent").value, "string", "sendString should work");
+      $("testStrEvent").value = "";
+
+      var keydown = false;
+      var keypress = false;
+      $("testKeyEvent").focus();
+      $("testKeyEvent").addEventListener("keydown", function() { keydown = true; }, {once: true});
+      $("testKeyEvent").addEventListener("keypress", function() { keypress = true; }, {once: true});
+      sendKey("DOWN");
+      ok(keydown, "sendKey should dispatch keyDown");
+      ok(!keypress, "sendKey shouldn't dispatch keyPress for non-printable key");
+
+      /* test synthesizeMouse* */
+      //focus trick enables us to run this in iframes
+      $("radioTarget1").addEventListener('focus', function (aEvent) {
+        synthesizeMouse($("radioTarget1"), 1, 1, {});
+        is($("radioTarget1").checked, true, "synthesizeMouse should work")
+        $("radioTarget1").checked = false;
+        disableNonTestMouseEvents(true);
+        synthesizeMouse($("radioTarget1"), 1, 1, {});
+        is($("radioTarget1").checked, true, "synthesizeMouse should still work with non-test mouse events disabled");
+        $("radioTarget1").checked = false;
+        disableNonTestMouseEvents(false);
+      }, {once: true});
+      $("radioTarget1").focus();
+
+      //focus trick enables us to run this in iframes
+      $("textBoxA").addEventListener("focus", function (aEvent) {
+        check = false;
+        $("textBoxA").addEventListener("click", function() { check = true; }, { once: true });
+        synthesizeMouseAtCenter($("textBoxA"), {});
+        is(check, true, 'synthesizeMouse should dispatch mouse event');
+
+        check = false;
+        $("scrollB").addEventListener("click", function() { check = true; }, { once: true });
+        synthesizeMouseExpectEvent($("scrollB"), 1, 1, {}, $("scrollB"), "click", "synthesizeMouseExpectEvent should fire click event");
+        is(check, true, 'synthesizeMouse should dispatch mouse event');
+      }, {once: true});
+      $("textBoxA").focus();
+
+      /**
+       * TODO: testing synthesizeWheel requires a setTimeout
+       * since there is delay between the scroll event and a check, so for now just test
+       * that we can successfully call it to avoid having setTimeout vary the runtime metric.
+       * Testing of this method is currently done here:
+       * toolkit/content/tests/chrome/test_mousescroll.xul
+       */
+      synthesizeWheel($("scrollB"), 5, 5, {'deltaY': 10.0, deltaMode: WheelEvent.DOM_DELTA_LINE});
+
+      /* test synthesizeKey* */
+      check = false;
+      $("testKeyEvent").addEventListener("keypress", doCheck, {once:true});
+      $("testKeyEvent").focus();
+      sendString("a");
+      is($("testKeyEvent").value, "a", "synthesizeKey should work");
+      is(check, true, "synthesizeKey should dispatch keyPress");
+      $("testKeyEvent").value = "";
+
+      // If |.code| value is not specified explicitly, it should be computed
+      // from the |.key| value or |.keyCode| value.  If a printable key is
+      // specified, the |.code| value should be guessed with US-English
+      // keyboard layout.
+      for (let test of [{ arg: "KEY_Enter", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN },
+                        { arg: "VK_RETURN", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN },
+                        { arg: "KEY_Backspace", code: "Backspace", keyCode: KeyboardEvent.DOM_VK_BACK_SPACE },
+                        { arg: "KEY_Delete", code: "Delete", keyCode: KeyboardEvent.DOM_VK_DELETE },
+                        { arg: "KEY_Home", code: "Home", keyCode: KeyboardEvent.DOM_VK_HOME },
+                        { arg: "KEY_End", code: "End", keyCode: KeyboardEvent.DOM_VK_END },
+                        { arg: "KEY_ArrowDown", code: "ArrowDown", keyCode: KeyboardEvent.DOM_VK_DOWN },
+                        { arg: "KEY_ArrowUp", code: "ArrowUp", keyCode: KeyboardEvent.DOM_VK_UP },
+                        { arg: "KEY_ArrowLeft", code: "ArrowLeft", keyCode: KeyboardEvent.DOM_VK_LEFT },
+                        { arg: "KEY_ArrowRight", code: "ArrowRight", keyCode: KeyboardEvent.DOM_VK_RIGHT },
+                        { arg: "KEY_Shift", code: "ShiftLeft", keyCode: KeyboardEvent.DOM_VK_SHIFT },
+                        { arg: "KEY_Control", code: "ControlLeft", keyCode: KeyboardEvent.DOM_VK_CONTROL },
+                        { arg: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A },
+                        { arg: "B", code: "KeyB", keyCode: KeyboardEvent.DOM_VK_B },
+                        { arg: " ", code: "Space", keyCode: KeyboardEvent.DOM_VK_SPACE },
+                        { arg: "0", code: "Digit0", keyCode: KeyboardEvent.DOM_VK_0 },
+                        { arg: "(", code: "Digit9", keyCode: KeyboardEvent.DOM_VK_9 },
+                        { arg: "!", code: "Digit1", keyCode: KeyboardEvent.DOM_VK_1 },
+                        { arg: "[", code: "BracketLeft", keyCode: KeyboardEvent.DOM_VK_OPEN_BRACKET },
+                        { arg: ";", code: "Semicolon", keyCode: KeyboardEvent.DOM_VK_SEMICOLON },
+                        { arg: "\"", code: "Quote", keyCode: KeyboardEvent.DOM_VK_QUOTE },
+                        { arg: "~", code: "Backquote", keyCode: KeyboardEvent.DOM_VK_BACK_QUOTE },
+                        { arg: "<", code: "Comma", keyCode: KeyboardEvent.DOM_VK_COMMA },
+                        { arg: ".", code: "Period", keyCode: KeyboardEvent.DOM_VK_PERIOD }]) {
+        let testKeydown, keyup;
+        $("testKeyEvent").focus();
+        $("testKeyEvent").addEventListener("keydown", (e) => { testKeydown = e; }, {once: true});
+        $("testKeyEvent").addEventListener("keyup", (e) => { keyup = e; }, {once: true});
+        synthesizeKey(test.arg);
+        is(testKeydown.code, test.code, `Synthesizing "${test.arg}" should set code value of "keydown" to "${test.code}"`);
+        is(testKeydown.keyCode, test.keyCode, `Synthesizing "${test.arg}" should set keyCode value of "keydown" to "${test.keyCode}"`);
+        is(keyup.code, test.code, `Synthesizing "${test.arg}" key should set code value of "keyup" to "${test.code}"`);
+        is(keyup.keyCode, test.keyCode, `Synthesizing "${test.arg}" key should set keyCode value of "keyup" to "${test.keyCode}"`);
+        $("testKeyEvent").value = "";
+      }
+
+      /* test synthesizeComposition */
+      var description = "";
+      var keydownEvent = null;
+      var keyupEvent = null;
+      function onKeyDown(aEvent) {
+        ok(!keydownEvent, description + "keydown should be fired only once" + (keydownEvent ? keydownEvent.key : "") + ", " + (keyupEvent ? keyupEvent.key : ""));
+        keydownEvent = aEvent;
+      }
+      function onKeyUp(aEvent) {
+        ok(!keyupEvent, description + "keyup should be fired only once");
+        keyupEvent = aEvent;
+      }
+      function resetKeyDownAndKeyUp(aDescription) {
+        description = aDescription + ": ";
+        keydownEvent = null;
+        keyupEvent = null;
+        check = false;
+      }
+      function checkKeyDownAndKeyUp(aKeyDown, aKeyUp) {
+        if (aKeyDown) {
+          is(keydownEvent.keyCode, aKeyDown.keyCode,
+             description + "keydown event should be dispatched (checking keyCode)");
+          is(keydownEvent.key, aKeyDown.key,
+             description + "keydown event should be dispatched (checking key)");
+        } else {
+          is(keydownEvent, null,
+             description + "keydown event shouldn't be fired");
+        }
+        if (aKeyUp) {
+          is(keyupEvent.keyCode, aKeyUp.keyCode,
+             description + "keyup event should be dispatched (checking keyCode)");
+          is(keyupEvent.key, aKeyUp.key,
+             description + "keyup event should be dispatched (checking key)");
+        } else {
+          is(keyupEvent, null,
+             description + "keyup event shouldn't be fired");
+        }
+      }
+      $("textBoxB").addEventListener("keydown", onKeyDown);
+      $("textBoxB").addEventListener("keyup", onKeyUp);
+
+      $("textBoxB").focus();
+
+      // If key event is not specified, fake keydown and keyup events which are
+      // marked as "processed by IME" should be fired.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart without specifying keyboard event");
+      window.addEventListener("compositionstart", doCheck, {once: true});
+      synthesizeComposition({type: "compositionstart"});
+      ok(check, description + "synthesizeComposition() should dispatch compositionstart");
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("trying to synthesize eCompositionUpdate directly without specifying keyboard event");
+      window.addEventListener("compositionupdate", doCheck, {once: true});
+      synthesizeComposition({type: "compositionupdate", data: "a"});
+      ok(!check, description + "synthesizeComposition() should not dispatch compositionupdate without error");
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange without specifying keyboard event");
+      window.addEventListener("text", doCheck, {once: true});
+      synthesizeCompositionChange(
+        { "composition":
+          { "string": "a",
+            "clauses":
+            [
+              { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 }
+        }
+      );
+      ok(check, description + "synthesizeCompositionChange should cause dispatching a DOM text event");
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange for removing clauses without specifying keyboard event");
+      synthesizeCompositionChange(
+        { "composition":
+          { "string": "a",
+            "clauses":
+            [
+              { "length": 0, "attr": 0 }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 }
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("trying to synthesize eCompositionEnd directly without specifying keyboard event");
+      window.addEventListener("compositionend", doCheck, {once: true});
+      synthesizeComposition({type: "compositionend", data: "a"});
+      ok(!check, description + "synthesizeComposition() should not dispatch compositionend");
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit without specifying keyboard event");
+      synthesizeComposition({type: "compositioncommit", data: "a"});
+      ok(check, description + "synthesizeComposition() should dispatch compositionend");
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      var querySelectedText = synthesizeQuerySelectedText();
+      ok(querySelectedText, "query selected text event result is null");
+      ok(querySelectedText.succeeded, "query selected text event failed");
+      is(querySelectedText.offset, 1,
+         "query selected text event returns wrong offset");
+      is(querySelectedText.text, "",
+         "query selected text event returns wrong selected text");
+      $("textBoxB").value = "";
+
+      querySelectedText = synthesizeQuerySelectedText();
+      ok(querySelectedText, "query selected text event result is null");
+      ok(querySelectedText.succeeded, "query selected text event failed");
+      is(querySelectedText.offset, 0,
+         "query selected text event returns wrong offset");
+      is(querySelectedText.text, "",
+         "query selected text event returns wrong selected text");
+      var endTime = new Date();
+      info("\nProfile::EventUtilsRunTime: " + (endTime-startTime) + "\n");
+
+      // In most cases, automated tests shouldn't try to synthesize
+      // compositionstart manually.  Let's check if synthesizeCompositionChange()
+      // dispatches compositionstart automatically.
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange without specifying keyboard event when there is no composition");
+      window.addEventListener("compositionstart", doCheck, {once: true});
+      synthesizeCompositionChange(
+        { "composition":
+          { "string": "a",
+            "clauses":
+            [
+              { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 }
+        }
+      );
+      ok(check, description + "synthesizeCompositionChange should dispatch \"compositionstart\" automatically if there is no composition");
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommitAsIs without specifying keyboard event");
+      synthesizeComposition({type: "compositioncommitasis"});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      // If key event is specified, keydown event which is marked as "processed
+      // by IME" should be fired and keyup event which is NOT marked as so
+      // should be fired too.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event");
+      synthesizeComposition({type: "compositionstart", key: {key: "a"}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_A, key: "a"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b"},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter"}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"});
+
+      // keyup shouldn't be dispatched automatically if type is specified as keydown
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose type is keydown");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", type: "keydown"}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose type is keydown");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", type: "keydown"},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose type is keydown");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", type: "keydown"}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           null);
+
+      // keydown shouldn't be dispatched automatically if type is specified as keyup
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose type is keyup");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", type: "keyup"}});
+      checkKeyDownAndKeyUp(null,
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_A, key: "a"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose type is keyup");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", type: "keyup"},
+        }
+      );
+      checkKeyDownAndKeyUp(null,
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose type is keyup");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", type: "keyup"}});
+      checkKeyDownAndKeyUp(null,
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"});
+
+      // keydown event shouldn't be marked as "processed by IME" if doNotMarkKeydownAsProcessed is true
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose doNotMarkKeydownAsProcessed is true");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", doNotMarkKeydownAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_A, key: "a"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_A, key: "a"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose doNotMarkKeydownAsProcessed is true");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", doNotMarkKeydownAsProcessed: true},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose doNotMarkKeydownAsProcessed is true");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", doNotMarkKeydownAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"});
+
+      // keyup event should be marked as "processed by IME" if markKeyupAsProcessed is true
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose markKeyupAsProcessed is true");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", markKeyupAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose markKeyupAsProcessed is true");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", markKeyupAsProcessed: true},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose markKeyupAsProcessed is true");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", markKeyupAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      // If key event is explicitly declared with null, keyboard events shouldn't
+      // be fired for emulating text inputs without keyboard such as voice input or something.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event as null");
+      synthesizeComposition({type: "compositionstart", key: null});
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event as null");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": null,
+        }
+      );
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event as null");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: null});
+      checkKeyDownAndKeyUp(null, null);
+
+      // If key event is explicitly declared with empty object, keyboard events
+      // shouldn't be fired for emulating text inputs without keyboard such as
+      // voice input or something.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event as empty");
+      synthesizeComposition({type: "compositionstart", key: {}});
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event as empty");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {},
+        }
+      );
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event as empty");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {}});
+      checkKeyDownAndKeyUp(null, null);
+
+      $("textBoxB").removeEventListener("keydown", onKeyDown);
+      $("textBoxB").removeEventListener("keyup", onKeyUp);
+
+
+      // Async event synthesizing.
+      // On Android this does not work.
+      if (navigator.userAgent.includes("Android")) {
+        SimpleTest.finish();
+        return;
+      }
+
+      await (async function () {
+        await SpecialPowers.pushPrefEnv({set: [["test.events.async.enabled", true]]});
+        try {
+          disableNonTestMouseEvents(true);
+          let mouseMoveCount = 0;
+          let waitForAllSynthesizedMouseMove =
+            new Promise(resolve => {
+              window.addEventListener("mousemove", function onMouseMove(aEvent) {
+                mouseMoveCount++;
+                is(aEvent.target, $("testMouseEvent"),
+                  `The mousemove event target of ${
+                    mouseMoveCount
+                  } should be the input#testMouseEvent, but ${
+                    aEvent.target.nodeName
+                  }`);
+                if (mouseMoveCount === 30) {
+                  window.removeEventListener("mousemove", onMouseMove, { capture: true });
+                  resolve();
+                }
+              }, { capture: true });
+            });
+          for (let i = 0; i < 30; i++) {
+            synthesizeMouse($("testMouseEvent"), 3 + i % 2, 3 + i % 2, { type: "mousemove" });
+          }
+          await waitForAllSynthesizedMouseMove;
+        } finally {
+          disableNonTestMouseEvents(false);
+        }
+      })();
+
+      SimpleTest.finish();
+    }
+  );
+};
+</script>
+</body>
+</html>

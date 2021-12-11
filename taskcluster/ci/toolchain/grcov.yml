@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "grcov toolchain build"
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-grcov.sh
+        toolchain-artifact: public/build/grcov.tar.zst
+    fetches:
+        fetch:
+            - grcov
+
+linux64-grcov:
+    treeherder:
+        symbol: TL(grcov)
+    fetches:
+        toolchain:
+            - linux64-rust-1.47
+            - linux64-clang
+            - linux64-binutils
+            - sysroot-x86_64-linux-gnu
+
+win64-grcov:
+    treeherder:
+        symbol: TW64(grcov)
+    worker-type: b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - win64-rust-1.47

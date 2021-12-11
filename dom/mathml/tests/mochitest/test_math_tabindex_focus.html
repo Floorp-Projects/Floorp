@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1128054
+-->
+<head>
+  <title>Test for Bug 1128054</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1128054">Mozilla Bug 1128054</a>
+<p id="display"></p>
+<!-- Test default focusability -->
+<math></math>
+<math href="#" data-focusable=true></math>
+<!-- Test tabindex=0 focusability -->
+<math tabindex="0" data-focusable=true></math>
+<!-- Test tabindex=-1 focusability -->
+<math tabindex="-1" data-focusable=true></math>
+<!-- Test tabindex=invalid focusability -->
+<math tabindex="invalid"></math>
+<math href="#" tabindex="invalid" data-focusable=true></math>
+<!-- Tests code -->
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1128054 **/
+
+add_task(function test_math_tabindex_focus() {
+  for (let element of document.querySelectorAll("math")) {
+    let focusable = element.dataset && element.dataset.focusable;
+    let desc = "<math";
+    for (let attr of ["href", "tabindex"]) {
+      if (element.hasAttribute(attr)) {
+        desc += ` ${attr}=${element.getAttribute(attr)}`;
+      }
+    }
+    desc += ">";
+    element.focus();
+    focusable ? is(document.activeElement, element, desc + " should focusable")
+              : isnot(document.activeElement, element, desc + " should not focusable");
+  }
+});
+
+</script>
+</body>
+</html>

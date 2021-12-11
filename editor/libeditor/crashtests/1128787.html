@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bug 1128787</title>
+</head>
+<body>
+  <input type="button"/>
+  <script>
+    window.onload = function () {
+        document.designMode = "on";
+    }
+    var input = document.getElementsByTagName("input")[0];
+    input.focus();
+    input.type = "text";
+  </script>
+</body>
+</html>

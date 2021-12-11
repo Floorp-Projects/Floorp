@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for DOMWindowUtils.paintCount</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="doBackgroundFlicker()">
+<p id="display">
+<div width="100" height="100" id="p" style="background-color: rgb(0,0,0)"/>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var startPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
+ok(true, "Got to initial paint count: " + startPaintCount);
+var color = 0;
+
+function doElementFlicker() {
+  ok(true, "Plugin color iteration " + color + ", paint count: " + SpecialPowers.DOMWindowUtils.paintCount);
+  if (SpecialPowers.DOMWindowUtils.paintCount - startPaintCount > 20) {
+    ok(true, "Got enough paints from plugin color changes");
+    SimpleTest.finish();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  document.getElementById("p").style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
+  setTimeout(doElementFlicker, 0);
+}
+
+function doBackgroundFlicker() {
+  ok(true, "Background color iteration " + color + ", paint count: " + SpecialPowers.DOMWindowUtils.paintCount);
+  if (SpecialPowers.DOMWindowUtils.paintCount - startPaintCount > 20) {
+    ok(true, "Got enough paints from background color changes");
+    startPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
+    doElementFlicker();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  document.body.style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
+  setTimeout(doBackgroundFlicker, 0);
+}
+
+</script>
+</pre>
+
+<div style="height:4000px"></div>
+<a id="first"  href="http://www.mozilla.org/">first<br>link</a>
+<a id="second" href="http://www.mozilla.org/">second link</a>
+<a id="third"  href="http://www.mozilla.org/">third<br>link</a>
+<div style="height:4000px"></div>
+
+</body>
+</html>
+

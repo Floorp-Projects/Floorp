@@ -1,0 +1,30 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+
+[scriptable, uuid(16d5b0ed-e756-4f1b-a8ce-9132e869acd8)]
+interface nsIGSettingsCollection : nsISupports
+{
+  void          setString(in AUTF8String key, in AUTF8String value);
+  void          setBoolean(in AUTF8String key, in boolean value);
+  void          setInt(in AUTF8String key, in long value);
+  AUTF8String   getString(in AUTF8String key);
+  boolean       getBoolean(in AUTF8String key);
+  long          getInt(in AUTF8String key);
+  nsIArray      getStringList(in AUTF8String key);
+};
+
+[scriptable, uuid(849c088b-57d1-4f24-b7b2-3dc4acb04c0a)]
+interface nsIGSettingsService : nsISupports
+{
+  nsIGSettingsCollection    getCollectionForSchema(in AUTF8String schema);
+};
+
+%{C++
+#define NS_GSETTINGSSERVICE_CONTRACTID "@mozilla.org/gsettings-service;1"
+%}

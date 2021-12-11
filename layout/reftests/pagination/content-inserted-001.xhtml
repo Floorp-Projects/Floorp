@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Content Appended in Paginated Element</title>
+
+  <style type="text/css">
+    body {
+      font-size: 16px;
+    }
+
+    #colset {
+      height: 200px;
+      width: 450px;
+      column-width: 150px;
+      column-gap: 0;
+      border: 3px solid silver;
+    }
+
+    #x {
+      height: 500px;
+    }
+</style>
+</head>
+
+<body onload="document.getElementById('x').appendChild(document.createTextNode('This must be in the first column.'))">
+
+<div id="colset">
+  <div id="x"></div>
+</div>
+
+</body>
+
+</html>

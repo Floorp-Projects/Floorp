@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical properties of input type=color in the UA stylesheet</title>
+<style>
+:root { color-scheme: light }
+
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+.a { appearance: none; }
+
+input[type=color] {
+  padding: 4px;
+}
+
+.ltr input[type="color"],
+.rtl input[type="color"] {
+  width: 64px;
+  height: 23px;
+}
+
+.v-rl input[type="color"] {
+  height: 64px;
+  width: 23px;
+}
+</style>
+<div class=ltr>
+  <input type=color><br>
+  <input type=color class=a><br>
+</div>
+
+<div class=rtl dir=rtl>
+  <input type=color><br>
+  <input type=color class=a><br>
+</div>
+
+<div class=v-rl>
+  <input type=color><br>
+  <input type=color class=a><br>
+</div>

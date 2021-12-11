@@ -1,0 +1,354 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test HTTP auth prompts by loading authenticate.sjs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="../../../prompts/test/prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var iframe = document.getElementById("iframe");
+
+// Let prompt_common know what kind of modal type is enabled for auth prompts.
+modalType = authPromptModalType;
+
+const AUTHENTICATE_PATH = new URL("authenticate.sjs", window.location.href).pathname;
+
+runInParent(() => {
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  let login3A, login3B, login4;
+  login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login3B = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  let httpUpgradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                         createInstance(Ci.nsILoginInfo);
+  let httpsDowngradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                            createInstance(Ci.nsILoginInfo);
+  let dedupeHttpUpgradeLogin  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                                createInstance(Ci.nsILoginInfo);
+  let dedupeHttpsUpgradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                                createInstance(Ci.nsILoginInfo);
+
+
+  login3A.init("http://mochi.test:8888", null, "mochitest",
+               "mochiuser1", "mochipass1", "", "");
+  login3B.init("http://mochi.test:8888", null, "mochitest2",
+               "mochiuser2", "mochipass2", "", "");
+  login4.init("http://mochi.test:8888", null, "mochitest3",
+              "mochiuser3", "mochipass3-old", "", "");
+  // Logins to test scheme upgrades (allowed) and downgrades (disallowed)
+  httpUpgradeLogin.init("http://example.com", null, "schemeUpgrade",
+                        "httpUser", "httpPass", "", "");
+  httpsDowngradeLogin.init("https://example.com", null, "schemeDowngrade",
+                           "httpsUser", "httpsPass", "", "");
+  // HTTP and HTTPS version of the same domain and realm but with different passwords.
+  dedupeHttpUpgradeLogin.init("http://example.org", null, "schemeUpgradeDedupe",
+                              "dedupeUser", "httpPass", "", "");
+  dedupeHttpsUpgradeLogin.init("https://example.org", null, "schemeUpgradeDedupe",
+                               "dedupeUser", "httpsPass", "", "");
+
+
+  Services.logins.addLogin(login3A);
+  Services.logins.addLogin(login3B);
+  Services.logins.addLogin(login4);
+  Services.logins.addLogin(httpUpgradeLogin);
+  Services.logins.addLogin(httpsDowngradeLogin);
+  Services.logins.addLogin(dedupeHttpUpgradeLogin);
+  Services.logins.addLogin(dedupeHttpsUpgradeLogin);
+});
+
+add_task(async function test_iframe() {
+  let state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "mochiuser1",
+    passValue: "mochipass1",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  let action = {
+    buttonClick: "ok",
+  };
+  promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  var iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  await promptDone;
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                            iframe);
+
+  state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "mochiuser2",
+    passValue: "mochipass2",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+  promptDone = handlePrompt(state, action);
+  // We've already authenticated to this host:port. For this next
+  // request, the existing auth should be sent, we'll get a 401 reply,
+  // and we should prompt for new auth.
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
+  await promptDone;
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
+                            iframe);
+
+  // Now make a load that requests the realm from test 1000. It was
+  // already provided there, so auth will *not* be prompted for -- the
+  // networking layer already knows it!
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                            iframe);
+
+  // Same realm we've already authenticated to, but with a different
+  // expected password (to trigger an auth prompt, and change-password
+  // popup notification).
+  state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "mochiuser1",
+    passValue: "mochipass1",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    passField: "mochipass1-new",
+  };
+  promptDone = handlePrompt(state, action);
+  iframeLoaded = onloadPromiseFor("iframe");
+  let promptShownPromise = promisePromptShown("passwordmgr-prompt-change");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
+  await promptDone;
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
+                            iframe);
+  await promptShownPromise;
+
+  // Same as last test, but for a realm we haven't already authenticated
+  // to (but have an existing saved login for, so that we'll trigger
+  // a change-password popup notification.
+  state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "mochiuser3",
+    passValue: "mochipass3-old",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    passField: "mochipass3-new",
+  };
+  promptDone = handlePrompt(state, action);
+  iframeLoaded = onloadPromiseFor("iframe");
+  promptShownPromise = promisePromptShown("passwordmgr-prompt-change");
+  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
+  await promptDone;
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
+                            iframe);
+  await promptShownPromise;
+
+  // Housekeeping: Delete login4 to test the save prompt in the next test.
+  runInParent(() => {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    var tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                   createInstance(Ci.nsILoginInfo);
+    tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                  "mochiuser3", "mochipass3-old", "", "");
+    Services.logins.removeLogin(tmpLogin);
+
+    // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
+    var authMgr = Cc["@mozilla.org/network/http-auth-manager;1"].
+                  getService(Ci.nsIHttpAuthManager);
+    authMgr.clearAll();
+  });
+
+  state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "mochiuser3",
+    passField: "mochipass3-old",
+  };
+  // Trigger a new prompt, so we can test adding a new login.
+  promptDone = handlePrompt(state, action);
+
+  iframeLoaded = onloadPromiseFor("iframe");
+  promptShownPromise = promisePromptShown("passwordmgr-prompt-save");
+  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+  await promptDone;
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
+                            iframe);
+  await promptShownPromise;
+});
+
+add_task(async function test_schemeUpgrade() {
+  let state = {
+    msg: "This site is asking you to sign in. Warning: Your login information " +
+      "will be shared with example.com, not the website you are currently visiting.",
+    title: "Authentication Required",
+    textValue: "httpUser",
+    passValue: "httpPass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  let action = {
+    buttonClick: "ok",
+  };
+  let promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  let iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "https://example.com" + AUTHENTICATE_PATH +
+               "?user=httpUser&pass=httpPass&realm=schemeUpgrade";
+  await promptDone;
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "httpUser", pass: "httpPass"},
+                            iframe);
+});
+
+add_task(async function test_schemeDowngrade() {
+  let state = {
+    msg: "This site is asking you to sign in. Warning: Your login information " +
+      "will be shared with example.com, not the website you are currently visiting.",
+    title: "Authentication Required",
+    textValue: "", // empty because we shouldn't downgrade
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  let action = {
+    buttonClick: "cancel",
+  };
+  let promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  let iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "http://example.com" + AUTHENTICATE_PATH +
+               "?user=unused&pass=unused&realm=schemeDowngrade";
+  await promptDone;
+  await iframeLoaded;
+});
+
+add_task(async function test_schemeUpgrade_dedupe() {
+  let state = {
+    msg: "This site is asking you to sign in. Warning: Your login information " +
+      "will be shared with example.org, not the website you are currently visiting.",
+    title: "Authentication Required",
+    textValue: "dedupeUser",
+    passValue: "httpsPass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  let action = {
+    buttonClick: "ok",
+  };
+  let promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  let iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "https://example.org" + AUTHENTICATE_PATH +
+               "?user=dedupeUser&pass=httpsPass&realm=schemeUpgradeDedupe";
+  await promptDone;
+  await iframeLoaded;
+  await checkEchoedAuthInfo({user: "dedupeUser", pass: "httpsPass"},
+                            iframe);
+});
+</script>
+</pre>
+</body>
+</html>

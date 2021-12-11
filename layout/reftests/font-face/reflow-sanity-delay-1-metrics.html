@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>test @font-face reflow sanity</title>
+<meta charset="utf-8">
+<style>
+body { margin: 20px }
+
+@font-face {
+  font-family: reflow1metrics;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=2500&test=delay-1-metrics);
+}
+
+@font-face {
+  font-family: reflow1metrics;
+  src: url(../fonts/markfonts-delay.sjs?font=markB&delay=2200&test=delay-1-metrics);
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: reflow1metrics;
+  src: url(../fonts/markfonts-delay.sjs?font=markC&delay=200&test=delay-1-metrics);
+  font-style: italic;
+}
+
+@font-face {
+  font-family: reflow1metrics;
+  src: url(../fonts/markfonts-delay.sjs?font=markD&delay=900&test=delay-1-metrics);
+  font-weight: bold;
+  font-style: italic;
+}
+
+div#test {
+  font-family: reflow1metrics;
+  font-size: 400%;
+  line-height: 1em;
+}
+
+div#test p {
+  margin: 0;
+  display: inline-block;
+}
+</style>
+</head>
+
+<body>
+<div id=test>
+<p style="font-family: reflow1metrics, cursive;">A</p>
+<p style="font-family: reflow1metrics, fantasy; font-weight: bold">B</p>
+<p style="font-family: reflow1metrics, monospace; font-style: italic">C</p>
+<p style="font-family: reflow1metrics, sans-serif; font-style: italic; font-weight: bold">D</p>
+</div>
+</body>
+</html>

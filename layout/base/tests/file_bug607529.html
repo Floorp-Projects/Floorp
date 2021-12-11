@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<script>
+  var bc = new BroadcastChannel("bug607529");
+  var closed = false;
+  window.onerror = function(msg, url, line) {
+    var myMsg = JSON.stringify({msg: msg, url: url, line: line, error: true});
+    bc.postMessage(myMsg);
+  }
+  
+  var report = false;
+  
+  function g() {
+    if (report && !closed) {
+      bc.postMessage("callbackHappened");
+    }
+    window.requestAnimationFrame(g);
+  }
+  g();
+
+  bc.onmessage = function (e) {
+    var msg = e.data;
+    if (msg == "report") {
+      report = true;
+    } else if (msg == "navigateToPage") {
+      window.location = "file_bug607529-1.html";
+    } else if (msg == "close") {
+      bc.postMessage("closed");
+      bc.close();
+      closed = true;
+      window.close();
+    }
+  };
+
+  window.onload = function() {
+    bc.postMessage("loaded");
+  }
+
+  addEventListener("pagehide", function f(e) {
+    if (!e.persisted && !report) {
+      bc.postMessage("notcached");
+    }
+  }, false);
+
+  addEventListener("pageshow", function f(e) {
+    if (e.persisted) {
+      bc.postMessage("revived");
+    }
+  }, false);
+
+
+</script>

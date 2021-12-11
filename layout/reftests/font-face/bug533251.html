@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html lang="ru">
+<head>
+<title>Bug 533251 crashtest</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/markA.ttf);
+}
+
+body {
+  background-color: white;
+}
+
+div { 
+  font-family: Bongo2020; /* nonexistent font */ 
+  color: white;
+}
+
+p { font-family: test; }
+
+</style>
+</head>
+<body>
+<p>A</p>
+<div>This shouldn't crash...</div>
+</body>
+</html>

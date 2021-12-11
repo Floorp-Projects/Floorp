@@ -1,0 +1,47 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+MODULE = nss
+
+EXPORTS = \
+	crmf.h	\
+	crmft.h	\
+	cmmf.h  \
+	cmmft.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	crmfi.h   \
+	crmfit.h  \
+	cmmfi.h   \
+	cmmfit.h  \
+	$(NULL)
+
+CSRCS = crmfenc.c	\
+	crmftmpl.c	\
+	crmfreq.c	\
+	crmfpop.c	\
+	crmfdec.c	\
+	crmfget.c	\
+	crmfcont.c	\
+	cmmfasn1.c	\
+	cmmfresp.c	\
+	cmmfrec.c	\
+	cmmfchal.c	\
+	servget.c	\
+	encutil.c	\
+	respcli.c	\
+	respcmn.c	\
+	challcli.c	\
+	asn1cmn.c	\
+	$(NULL)
+
+LIBRARY_NAME = crmf
+SHARED_LIBRARY = $(NULL)
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

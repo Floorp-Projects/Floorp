@@ -1,0 +1,221 @@
+<html>
+
+<head>
+  <title>Text selection testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Helper function to test selection bounds.
+     * @param {string} aID  The ID to test.
+     * @param {nsIAccessibleText} acc  The accessible to test.
+     * @param {int} index  The selection's index to test.
+     * @param {array} offsets  The start and end offset to test against.
+     * @param {string} msgStart  The start of the message to return in test
+     *                           messages.
+     */
+    function testSelectionBounds(aID, acc, index, offsets, msgStart) {
+      const [expectedStart, expectedEnd] = offsets;
+      const startOffset = {}, endOffset = {};
+      acc.getSelectionBounds(index, startOffset, endOffset);
+
+      is(startOffset.value, Math.min(expectedStart, expectedEnd),
+         msgStart + ": Wrong start offset for " + aID);
+      is(endOffset.value, Math.max(expectedStart, expectedEnd),
+         msgStart + ": Wrong end offset for " + aID);
+    }
+
+    /**
+     * Test adding selections to accessibles.
+     * @param {string} aID  The ID of the element to test.
+     * @param {array} aSelections  Array of selection start and end indices.
+     */
+    async function addSelections(aID, aSelections) {
+      info("Test adding selections to " + aID);
+      const hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+      const initialSelectionCount = hyperText.selectionCount;
+
+      // Multiple selection changes will be coalesced, so just listen for one.
+      const selectionChange = waitForEvent(EVENT_TEXT_SELECTION_CHANGED, aID);
+      for (let [startOffset, endOffset] of aSelections) {
+        hyperText.addSelection(startOffset, endOffset);
+      }
+      await selectionChange;
+
+      is(hyperText.selectionCount,
+         aSelections.length + initialSelectionCount,
+         "addSelection: Wrong selection count for " + aID);
+
+      for (let i in aSelections) {
+        testSelectionBounds(aID, hyperText, initialSelectionCount + i,
+                            aSelections[i], "addSelection");
+      }
+
+      is(hyperText.caretOffset, aSelections[hyperText.selectionCount -1][1],
+         "addSelection: caretOffset not at selection end for " + aID);
+    }
+
+    /**
+     * Test changing selections in accessibles.
+     * @param {string} aID  The ID of the element to test.
+     * @param {int} aIndex  The index of the selection to change.
+     * @param {array} aSelection  Array of the selection's new start and end
+     *                            indices.
+     */
+    async function changeSelection(aID, aIndex, aSelection) {
+      info("Test changing the selection of " + aID + " at index " + aIndex);
+      const [startOffset, endOffset] = aSelection;
+      const hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+
+      const selectionChanged = waitForEvent(EVENT_TEXT_SELECTION_CHANGED, aID);
+      hyperText.setSelectionBounds(aIndex, startOffset, endOffset);
+      await selectionChanged;
+
+      testSelectionBounds(aID, hyperText, aIndex,
+                          aSelection, "setSelectionBounds");
+
+      is(hyperText.caretOffset, endOffset,
+         "setSelectionBounds: caretOffset not at selection end for " + aID);
+    }
+
+    /**
+     * Test removing all selections from accessibles.
+     * @param {string} aID  The ID of the element to test.
+     */
+    async function removeSelections(aID) {
+      info("Testing removal of all selections from " + aID);
+      const hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+
+      let selectionsRemoved = waitForEvent(EVENT_TEXT_SELECTION_CHANGED, document);
+      const selectionCount = hyperText.selectionCount;
+      for (let i = 0; i < selectionCount; i++) {
+        hyperText.removeSelection(0);
+      }
+      await selectionsRemoved;
+
+      is(hyperText.selectionCount, 0,
+         "removeSelection: Wrong selection count for " + aID);
+    }
+
+    /**
+     * Test that changing the DOM selection is reflected in the accessibles.
+     * @param {string} aID  The container ID to test in
+     * @param {string} aNodeID1  The start node of the selection
+     * @param  {int} aNodeOffset1  The offset where the selection should start
+     * @param {string} aNodeID2  The node in which the selection should end
+     * @param {int} aNodeOffset2  The index at which the selection should end
+     * @param {array} aTests  An array of accessibles and their start and end
+     *                        offsets to test.
+     */
+    async function changeDOMSelection(aID, aNodeID1, aNodeOffset1,
+                                      aNodeID2, aNodeOffset2,
+                                      aTests) {
+      info("Test that DOM selection changes are reflected in the accessibles");
+
+      let selectionChanged = waitForEvent(EVENT_TEXT_SELECTION_CHANGED, aID);
+      // HyperTextAccessible::GetSelectionDOMRanges ignores hidden selections.
+      // Here we may be focusing an editable element (and thus hiding the
+      // main document selection), so blur it so that we test what we want to
+      // test.
+      document.activeElement.blur();
+
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.setStart(getNode(aNodeID1), aNodeOffset1);
+      range.setEnd(getNode(aNodeID2), aNodeOffset2);
+      sel.addRange(range);
+      await selectionChanged;
+
+      for (let i = 0; i < aTests.length; i++) {
+        const text = getAccessible(aTests[i][0], nsIAccessibleText);
+        is(text.selectionCount, 1,
+           "setSelectionBounds: Wrong selection count for " + aID);
+        testSelectionBounds(aID, text, 0, [aTests[i][1], aTests[i][2]],
+                            "setSelectionBounds");
+      }
+    }
+
+    /**
+     * Test  expected and unexpected events for selecting
+     * all text and focusing both an input and text area. We expect a caret
+     * move, but not a text selection change.
+     * @param {string} aID  The ID of the element to test.
+     */
+    async function eventsForSelectingAllTextAndFocus(aID) {
+      info("Test expected caretMove and unexpected textSelection events for " +aID);
+      let events = waitForEvents({
+        expected: [[EVENT_TEXT_CARET_MOVED, aID]],
+        unexpected: [[EVENT_TEXT_SELECTION_CHANGED, aID]]}, aID);
+      selectAllTextAndFocus(aID);
+      await events;
+    }
+
+    /**
+     * Do tests
+     */
+
+    async function doTests() {
+      await addSelections("paragraph", [[1, 3], [6, 10]]);
+      await changeSelection("paragraph", 0, [2, 4]);
+      await removeSelections("paragraph");
+
+      // reverse selection
+      await addSelections("paragraph", [[1, 3], [10, 6]]);
+      await removeSelections("paragraph");
+
+      await eventsForSelectingAllTextAndFocus("textbox");
+      await changeSelection("textbox", 0, [1, 3]);
+
+      // reverse selection
+      await changeSelection("textbox", 0, [3, 1]);
+
+      await eventsForSelectingAllTextAndFocus("textarea");
+      await changeSelection("textarea", 0, [1, 3]);
+
+      await changeDOMSelection("c1", "c1_span1", 0, "c1_span2", 0,
+                               [["c1", 2, 2]]);
+      await changeDOMSelection("c2", "c2", 0, "c2_div2", 1,
+                               [["c2", 0, 3], ["c2_div2", 0, 2]]);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=688126"
+     title="nsIAccessibleText::setSelectionBounds doesn't fire text selection changed events in some cases">
+    Bug 688126
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=688124"
+     title="no text selection changed event when selection is removed">
+    Bug 688124
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="paragraph">hello world</p>
+  <input id="textbox" value="hello"/>
+  <textarea id="textarea">hello</textarea>
+  <div id="c1">hi<span id="c1_span1"></span><span id="c1_span2"></span>hi</div>
+  <div id="c2">hi<div id="c2_div2">hi</div></div>
+
+</body>
+</html>

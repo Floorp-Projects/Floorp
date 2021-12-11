@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  /* globals SpecialPowers, SimpleTest */
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  const originalAvailable = Services.locale.availableLocales;
+  const originalRequested = Services.locale.requestedLocales;
+  Services.locale.availableLocales = ["ko-KR"];
+  Services.locale.requestedLocales = ["ko-KR"];
+
+  // First be sure we have a non-UTC timezone and a non en-US locale.
+  var setTimeZone = SpecialPowers.Cu.getJSTestingFunctions().setTimeZone;
+  setTimeZone("EST5EDT");
+  // Now sanity check the defaults
+  let date = new Date(2003, 4, 6, 2, 30, 15);
+  // These tests should pass, but we don't enable them because every time CLDR data changed,
+  // the test would start failing. We leave them here for future debugging.
+  // SimpleTest.is(date.toLocaleString(), "2003. 5. 6. 오전 2:30:15", "Sanity Check of toLocaleString");
+  // SimpleTest.is(date.toString(), "Tue May 06 2003 02:30:15 GMT-0400 (EDT)", "Sanity check of control timezone failed.");
+
+  let defaultOptions = new Intl.DateTimeFormat(undefined, {
+    month: "numeric", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric", second: "numeric",
+    timeZoneName: "long",
+  }).resolvedOptions();
+  SimpleTest.is(defaultOptions.locale, "ko-KR", "defaultOptions Intl.DateTimeFormat.format.locale");
+  SimpleTest.is(defaultOptions.timeZone, "EST5EDT", "defaultOptions Intl.DateTimeFormat.format.timeZone");
+  SimpleTest.is(defaultOptions.timeZoneName, "long", "defaultOptions Intl.DateTimeFormat.format.timeZoneName");
+
+  // Then create output it as UTC en-US date string; which should be constant
+  const referenceLocaleString = date.toLocaleString("en-US", {timeZone: "UTC", timeZoneName: "long"});
+  let sanityCheck = new Intl.DateTimeFormat("en-us", {timeZone: "UTC", timeZoneName: "long"}).resolvedOptions();
+  SimpleTest.is(sanityCheck.locale, "en-US", "Sanity Check of Intl.DateTimeFormat.format.locale");
+  SimpleTest.is(sanityCheck.timeZone, "UTC", "Sanity Check of Intl.DateTimeFormat.format.timeZone");
+  SimpleTest.is(sanityCheck.timeZoneName, "long", "Sanity Check of Intl.DateTimeFormat.format.timeZoneName");
+
+  // Set preferences.
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      // In real world, this will be set if the user decides to spoof preferred languages by en-US.
+      ["javascript.use_us_english_locale", true],
+    ],
+  }, function() {
+    // Now confirm that calling toLocaleString with no arguements gives us UTC
+    SimpleTest.is(date.toLocaleString(undefined, {timeZoneName: "long"}), referenceLocaleString, "Date.toLocaleString");
+    // And that a no-options Intl.DateTimeFormat formatter looks correct too
+    let options = new Intl.DateTimeFormat(undefined, {
+      month: "numeric", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric", second: "numeric",
+      timeZoneName: "long",
+    }).resolvedOptions();
+    SimpleTest.is(options.locale, "en-US", "Resist Fingerprinting Intl.DateTimeFormat.format.locale");
+    SimpleTest.is(options.timeZone, "UTC", "Resist Fingerprinting Intl.DateTimeFormat.format.timeZone");
+    SimpleTest.is(options.timeZoneName, "long", "Resist Fingerprinting Intl.DateTimeFormat.format.timeZoneName");
+
+    // Cleanup
+    Services.locale.requestedLocales = originalRequested;
+    Services.locale.availableLocales = originalAvailable;
+    SimpleTest.finish();
+  });
+</script>

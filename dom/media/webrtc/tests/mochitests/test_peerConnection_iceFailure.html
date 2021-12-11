@@ -1,0 +1,84 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1087629",
+    title: "Wait for ICE failure"
+  });
+
+// Test iceFailure
+
+function PC_LOCAL_SETUP_NULL_ICE_HANDLER(test) {
+  test.pcLocal.setupIceCandidateHandler(test, function() {}, function () {});
+}
+function PC_REMOTE_SETUP_NULL_ICE_HANDLER(test) {
+  test.pcRemote.setupIceCandidateHandler(test, function() {}, function () {});
+}
+function PC_REMOTE_ADD_FAKE_ICE_CANDIDATE(test) {
+  var cand = {"candidate":"candidate:0 1 UDP 2130379007 192.0.2.1 12345 typ host","sdpMid":"","sdpMLineIndex":0};
+  test.pcRemote.storeOrAddIceCandidate(cand);
+  info(test.pcRemote + " Stored fake candidate: " + JSON.stringify(cand));
+}
+function PC_LOCAL_ADD_FAKE_ICE_CANDIDATE(test) {
+  var cand = {"candidate":"candidate:0 1 UDP 2130379007 192.0.2.2 56789 typ host","sdpMid":"","sdpMLineIndex":0};
+    test.pcLocal.storeOrAddIceCandidate(cand);
+  info(test.pcLocal + " Stored fake candidate: " + JSON.stringify(cand));
+}
+function PC_LOCAL_WAIT_FOR_ICE_FAILURE(test) {
+  return test.pcLocal.iceFailed.then(() => {
+    ok(true, this.pcLocal + " Ice Failure Reached.");
+	});
+}
+function PC_REMOTE_WAIT_FOR_ICE_FAILURE(test) {
+  return test.pcRemote.iceFailed.then(() => {
+    ok(true, this.pcRemote + " Ice Failure Reached.");
+    });
+}
+function PC_LOCAL_WAIT_FOR_ICE_FAILED(test) {
+  var resolveIceFailed;
+  test.pcLocal.iceFailed = new Promise(r => resolveIceFailed = r);
+  test.pcLocal.ice_connection_callbacks.checkIceStatus = () => {
+	if (test.pcLocal._pc.iceConnectionState === "failed") {
+	  resolveIceFailed();
+	}
+  }
+}
+function PC_REMOTE_WAIT_FOR_ICE_FAILED(test) {
+  var resolveIceFailed;
+  test.pcRemote.iceFailed = new Promise(r => resolveIceFailed = r);
+  test.pcRemote.ice_connection_callbacks.checkIceStatus = () => {
+	if (test.pcRemote._pc.iceConnectionState === "failed") {
+	  resolveIceFailed();
+	}
+  }
+}
+
+runNetworkTest(async () => {
+  await pushPrefs(
+    ['media.peerconnection.ice.stun_client_maximum_transmits', 3],
+    ['media.peerconnection.ice.trickle_grace_period', 3000],
+  );
+  var test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.replace("PC_LOCAL_SETUP_ICE_HANDLER", PC_LOCAL_SETUP_NULL_ICE_HANDLER);
+  test.chain.replace("PC_REMOTE_SETUP_ICE_HANDLER", PC_REMOTE_SETUP_NULL_ICE_HANDLER);
+  test.chain.insertAfter("PC_REMOTE_SETUP_NULL_ICE_HANDLER", PC_LOCAL_WAIT_FOR_ICE_FAILED);
+  test.chain.insertAfter("PC_LOCAL_WAIT_FOR_ICE_FAILED", PC_REMOTE_WAIT_FOR_ICE_FAILED);
+  test.chain.removeAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION");
+  test.chain.append([
+    PC_REMOTE_ADD_FAKE_ICE_CANDIDATE,
+    PC_LOCAL_ADD_FAKE_ICE_CANDIDATE,
+    PC_LOCAL_WAIT_FOR_ICE_FAILURE,
+    PC_REMOTE_WAIT_FOR_ICE_FAILURE
+  ]);
+  await test.run();
+});
+</script>
+</pre>
+</body>
+</html>

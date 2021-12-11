@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1004703 - ignore 'unsafe-inline' if nonce- or hash-source specified</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load a page that contains three scripts using different policies
+ * and make sure 'unsafe-inline' is ignored within script-src if hash-source
+ * or nonce-source is specified.
+ *
+ * The expected output of each test is a sequence of chars.
+ * E.g. the default char we expect is 'a', depending on what inline scripts
+ * are allowed to run we also expect 'b', 'c', 'd'.
+ *
+ * The test also covers the handling of multiple policies where the second
+ * policy makes use of a directive that should *not* fallback to
+ * default-src, see Bug 1198422.
+ */
+
+const POLICY_PREFIX = "default-src 'none'; script-src ";
+
+var tests = [
+  {
+    policy1: POLICY_PREFIX + "'unsafe-inline'",
+    policy2: "frame-ancestors 'self'",
+    description: "'unsafe-inline' allows all scripts to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "abcd",
+  },
+  {
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI='",
+    policy2: "base-uri http://mochi.test",
+    description: "defining a hash should only allow one script to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "ac",
+  },
+  {
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'nonce-FooNonce'",
+    policy2: "form-action 'none'",
+    description: "defining a nonce should only allow one script to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "ad",
+  },
+  {
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce'",
+    policy2: "upgrade-insecure-requests",
+    description: "defining hash and nonce should allow two scripts to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "acd",
+  },
+  {
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' 'unsafe-inline'",
+    policy2: "referrer origin",
+    description: "defining hash, nonce and 'unsafe-inline' twice should still only allow two scripts to execute",
+    file: "file_ignore_unsafe_inline.html",
+    result: "acd",
+  },
+  {
+    policy1: "default-src 'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' ",
+    policy2: "sandbox allow-scripts allow-same-origin",
+    description: "unsafe-inline should *not* be ignored within default-src even if hash or nonce is specified",
+    file: "file_ignore_unsafe_inline.html",
+    result: "abcd",
+  },
+];
+
+var counter = 0;
+var curTest;
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    document.getElementById("testframe").removeEventListener("load", test);
+    SimpleTest.finish();
+    return;
+  }
+
+  curTest = tests[counter++];
+  var src = "file_ignore_unsafe_inline_multiple_policies_server.sjs?file=";
+  // append the file that should be served
+  src += escape("tests/dom/security/test/csp/" + curTest.file);
+
+  // append the first CSP that should be used to serve the file
+  src += "&csp1=" + escape(curTest.policy1);
+  // append the second CSP that should be used to serve the file
+  src += "&csp2=" + escape(curTest.policy2);
+
+  document.getElementById("testframe").addEventListener("load", test);
+  document.getElementById("testframe").src = src;
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    // sort the characters to make sure the result is in ascending order
+    // in case handlers run out of order
+    divcontent = divcontent.split('').sort().join('');
+
+    is(divcontent, curTest.result, curTest.description);
+  }
+  catch (e) {
+    ok(false, "error: could not access content for test " + curTest.description + "!");
+  }
+  loadNextTest();
+}
+
+loadNextTest();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="{BUGNUMBER}Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug {BUGNUMBER} test">
+
+  <script type="application/javascript"
+  src="docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug {BUGNUMBER}:  
+    // Description goes here.
+    //
+    function testIterator()
+    {
+      // Test steps go here.  See bug303267_window.xhtml for an example.
+
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield undefined;
+    }
+    
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+</window>

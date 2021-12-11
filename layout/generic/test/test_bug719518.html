@@ -1,0 +1,26 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=719518
+-->
+<title>Test for Bug 719518</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=719518">Mozilla Bug 719518</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script>
+var thrown = false;
+try {
+  getSelection().extend(document.body, 0);
+} catch(e) {
+  thrown = true;
+  is(e.name, "InvalidStateError",
+     "Need to throw InvalidStateError for extend() with no ranges");
+  ok(e instanceof DOMException,
+     "Need to throw DOMException for extend() with no ranges");
+  is(e.code, DOMException.INVALID_STATE_ERR,
+     "Need to throw INVALID_STATE_ERR for extend() with no ranges");
+}
+ok(thrown, "Need to throw exception for extend() with no ranges");
+</script>

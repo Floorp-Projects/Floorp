@@ -1,0 +1,23 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <script type="text/javascript">
+    function show() {
+      var results = /\?topic=(.+)$/.exec(window.document.location);
+      var topic = decodeURIComponent(results[1].replace(/\+/g, " "));
+      var node = document.getElementById("topic");
+
+      node.textContent = topic;
+    }
+  </script>
+</head>
+
+<body onload="show()">
+  <div id="topic"></div>
+</body>
+</html>

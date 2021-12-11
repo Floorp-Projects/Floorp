@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test window.postMessages from system principal to window with non-default originAttributes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<iframe id="target-iframe"></iframe>
+<script type="application/javascript">
+
+add_task(async function() {
+  let iframe = document.querySelector("#target-iframe");
+
+  let win = SpecialPowers.wrap(iframe).contentWindow;
+  let docShell = win.docShell;
+
+  // Add private browsing ID to docShell origin and load document.
+  docShell.setOriginAttributes({privateBrowsingId: 1});
+
+  await new Promise(resolve => {
+    iframe.addEventListener("load", resolve, true);
+
+    iframe.src = SimpleTest.getTestFileURL("file_receiveMessage.html");
+  });
+
+  // Set up console monitor to wait for warning.
+  const expectedMessage = (
+    'Attempting to post a message to window with url ' +
+    '"http://mochi.test:8888/tests/dom/base/test/file_receiveMessage.html" ' +
+    'and origin "http://mochi.test:8888^privateBrowsingId=1" from a system ' +
+    'principal scope with mismatched origin "[System Principal]".');
+
+  let consolePromise = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [e => e.message == expectedMessage]);
+  });
+
+  // Post to the content window via SpecialPowers' system principal scope.
+  win.postMessage("Hello. o/", "http://mochi.test:8888");
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  SimpleTest.endMonitorConsole();
+  await consolePromise;
+
+  // Check that the window received and handled the message.
+  is(win.document.body.textContent, "|Hello. o/",
+     "Content window received the expected message");
+});
+</script>
+</body>
+</html>
+

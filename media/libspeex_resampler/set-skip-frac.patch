@@ -1,0 +1,93 @@
+# HG changeset patch
+# User Karl Tomlinson <karlt+@karlt.net>
+b=913854 add speex_resampler_set_skip_frac_num r=jmspeex
+
+This allows a client to align output samples consistently for independent
+resampling of contiguous input buffers.
+
+diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
+--- a/media/libspeex_resampler/src/resample.c
++++ b/media/libspeex_resampler/src/resample.c
+@@ -1128,16 +1128,28 @@ EXPORT int speex_resampler_get_output_la
+ EXPORT int speex_resampler_skip_zeros(SpeexResamplerState *st)
+ {
+    spx_uint32_t i;
+    for (i=0;i<st->nb_channels;i++)
+       st->last_sample[i] = st->filt_len/2;
+    return RESAMPLER_ERR_SUCCESS;
+ }
+ 
++EXPORT int speex_resampler_set_skip_frac_num(SpeexResamplerState *st, spx_uint32_t skip_frac_num)
++{
++   spx_uint32_t i;
++   spx_uint32_t last_sample = skip_frac_num / st->den_rate;
++   spx_uint32_t samp_frac_num = skip_frac_num % st->den_rate;
++   for (i=0;i<st->nb_channels;i++) {
++      st->last_sample[i] = last_sample;
++      st->samp_frac_num[i] = samp_frac_num;
++   }
++   return RESAMPLER_ERR_SUCCESS;
++}
++
+ EXPORT int speex_resampler_reset_mem(SpeexResamplerState *st)
+ {
+    spx_uint32_t i;
+    for (i=0;i<st->nb_channels;i++)
+    {
+       st->last_sample[i] = 0;
+       st->magic_samples[i] = 0;
+       st->samp_frac_num[i] = 0;
+diff --git a/media/libspeex_resampler/src/speex_resampler.h b/media/libspeex_resampler/src/speex_resampler.h
+--- a/media/libspeex_resampler/src/speex_resampler.h
++++ b/media/libspeex_resampler/src/speex_resampler.h
+@@ -69,16 +69,17 @@
+ #define speex_resampler_get_quality CAT_PREFIX(RANDOM_PREFIX,_resampler_get_quality)
+ #define speex_resampler_set_input_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_set_input_stride)
+ #define speex_resampler_get_input_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_get_input_stride)
+ #define speex_resampler_set_output_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_set_output_stride)
+ #define speex_resampler_get_output_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_get_output_stride)
+ #define speex_resampler_get_input_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_input_latency)
+ #define speex_resampler_get_output_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_output_latency)
+ #define speex_resampler_skip_zeros CAT_PREFIX(RANDOM_PREFIX,_resampler_skip_zeros)
++#define speex_resampler_set_skip_frac_num CAT_PREFIX(RANDOM_PREFIX,_resampler_set_skip_frac_num)
+ #define speex_resampler_reset_mem CAT_PREFIX(RANDOM_PREFIX,_resampler_reset_mem)
+ #define speex_resampler_strerror CAT_PREFIX(RANDOM_PREFIX,_resampler_strerror)
+ 
+ #define spx_int16_t short
+ #define spx_int32_t int
+ #define spx_uint16_t unsigned short
+ #define spx_uint32_t unsigned int
+       
+@@ -317,16 +318,32 @@ int speex_resampler_get_output_latency(S
+  * resampler. It is recommended to use that when resampling an audio file, as
+  * it will generate a file with the same length. For real-time processing,
+  * it is probably easier not to use this call (so that the output duration
+  * is the same for the first frame).
+  * @param st Resampler state
+  */
+ int speex_resampler_skip_zeros(SpeexResamplerState *st);
+ 
++/** Set the numerator in a fraction determining the advance through input
++ * samples before writing any output samples. The denominator of the fraction
++ * is the value returned from speex_resampler_get_ratio() in ratio_den. This
++ * is only useful before starting to use a newly created or reset resampler.
++ * If the first input sample is interpreted as the signal at time
++ * input_latency*in_rate, then the first output sample represents the signal
++ * at the time frac_num/ratio_num*out_rate.
++ * This is intended for careful alignment of output sample points wrt input
++ * sample points. Large values are not an efficient offset into the in buffer.
++ * @param st Resampler state
++ * @param skip_frac_num Numerator of the offset fraction,
++ *                      between 0 and ratio_den-1.
++ */
++int speex_resampler_set_skip_frac_num(SpeexResamplerState *st,
++                                      spx_uint32_t skip_frac_num);
++
+ /** Reset a resampler so a new (unrelated) stream can be processed.
+  * @param st Resampler state
+  */
+ int speex_resampler_reset_mem(SpeexResamplerState *st);
+ 
+ /** Returns the English meaning for an error code
+  * @param err Error code
+  * @return English string

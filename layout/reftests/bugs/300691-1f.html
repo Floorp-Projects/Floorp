@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <textarea id="t"></textarea>
+    <script>
+      document.getElementById("t").
+        appendChild(document.createTextNode("abcdefgh"));
+      document.getElementById("t").appendChild(document.createTextNode("ijkl"));
+      // Flush reflow
+      document.body.offsetWidth;
+      document.getElementById("t").
+        removeChild(document.getElementById("t").lastChild);
+    </script>
+  </body>
+</html>

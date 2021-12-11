@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Testing the worker loader"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="utils_mainthread.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+let worker;
+let main = this;
+
+function test() {
+  info("Starting test " + document.uri);
+
+  worker = new ChromeWorker("worker_test_loading.js");
+  SimpleTest.waitForExplicitFinish();
+  info("Chrome worker created");
+  worker_handler(worker);
+  worker.postMessage(document.uri);
+  ok(true, "Test in progress");
+};
+]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

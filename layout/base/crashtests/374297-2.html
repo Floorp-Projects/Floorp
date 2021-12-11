@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom() {
+  var $table2 = document.getElementById('table2');
+  $table2.setAttribute('width', '30%'); 
+  var $th273 = document.getElementById('th273'); 
+  $th273.style.position = "relative";
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+
+<body onload="setTimeout(boom,30)">
+
+<table id="table2"><tr><div><th id="th273"></th></div></table>
+
+</body>
+</html>

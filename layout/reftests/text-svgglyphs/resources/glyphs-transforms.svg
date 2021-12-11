@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!--
+    SVG test glyphs for transforms within SVG glyphs
+    'g': simple red square used as a reference
+    'h': a smaller square, with a transform that should make it match the 'g'
+    'i': similar, applying a transform to the referenced element
+    'j': has a large blue square that should be transformed such that it is
+         completely hidden by the red
+    'k': tests the accumulation of several transforms
+    'l': checks that a transform from outside the glyph element is NOT applied
+    'm', 'n', 'o', 'p': all render the same <rect> but only 'm' and 'n' should be
+         transformed; 'o' and 'p' should match 'q'
+    'q': the unscaled small square, reference for 'o' and 'p' above
+-->
+
+  <defs>
+    <!-- this rect will need to be scaled 5x to match the reference glyph 'g' -->
+    <rect id="small" x="50" y="-150" width="100" height="100" fill="red" />
+  </defs>
+
+  <!-- char 'g' -->
+  <rect id="glyph74" x="250" y="-750" width="500" height="500" fill="red" />
+
+  <!-- char 'h' -->
+  <rect id="glyph75" x="25" y="-75" width="50" height="50" transform="scale(10)" fill="red" />
+
+  <!-- char 'i' -->
+  <g id="glyph76">
+    <use xlink:href="#small" transform="scale(5)" />
+  </g>
+
+  <!-- char 'j' -->
+  <g id="glyph77">
+    <g transform="translate(300,-300) scale(0.4)">
+      <rect x="0" y="-1000" width="1000" height="1000" fill="blue" />
+    </g>
+    <g transform="scale(5)">
+      <use xlink:href="#small" />
+    </g>
+  </g>
+
+  <!-- char 'k' -->
+  <g id="glyph78" transform="scale(0.5)">
+    <g transform="scale(0.5)">
+      <use xlink:href="#small" transform="scale(20)" />
+    </g>
+  </g>
+
+  <!-- char 'l' -->
+  <g transform="scale(2)">
+    <g id="glyph79">
+      <use xlink:href="#small" transform="scale(5)" />
+    </g>
+  </g>
+
+  <g id="glyph80"> <!-- char 'm' -->
+    <g id="glyph81" transform="scale(5)"> <!-- char 'n' -->
+      <g id="glyph82"> <!-- char 'o' -->
+        <use id="glyph83" xlink:href="#small" /> <!-- char 'p' -->
+      </g>
+    </g>
+  </g>
+
+  <!-- char 'q' -->
+  <use id="glyph84" xlink:href="#small" />
+
+</svg>

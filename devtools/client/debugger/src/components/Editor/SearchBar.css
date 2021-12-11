@@ -1,0 +1,113 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.search-bar {
+  position: relative;
+  display: flex;
+  border-top: 1px solid var(--theme-splitter-color);
+  height: var(--editor-searchbar-height);
+}
+
+/* display a fake outline above the search bar's top border, and above
+   the source footer's top border */
+.search-bar::before {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  top: -1px;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  border: solid 1px var(--blue-50);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.search-bar:focus-within::before {
+  opacity: 1;
+}
+
+.search-bar .search-outline {
+  flex-grow: 1;
+  border-width: 0;
+}
+
+.search-bottom-bar * {
+  user-select: none;
+}
+
+.search-bottom-bar {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: var(--theme-toolbar-background);
+  padding: 0;
+}
+
+.search-bottom-bar .search-modifiers {
+  display: flex;
+  align-items: center;
+}
+
+.search-bottom-bar .search-modifiers button {
+  padding: 2px;
+  margin: 0 3px;
+  border: none;
+  background: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+}
+
+.search-bottom-bar .pipe-divider {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
+  vertical-align: middle;
+  margin: 4px;
+  background-color: var(--theme-splitter-color);
+}
+
+.search-bottom-bar .search-modifiers .img {
+  display: block;
+}
+
+.search-bottom-bar .search-modifiers button:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.search-bottom-bar .search-modifiers button.active .img {
+  background-color: var(--theme-icon-checked-color);
+}
+
+.search-bottom-bar .search-type-toggles {
+  display: flex;
+  align-items: center;
+  max-width: 68%;
+}
+
+.search-bottom-bar .search-type-name {
+  margin: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--theme-comment);
+}
+
+.search-bottom-bar .search-type-toggles .search-type-btn.active {
+  color: var(--theme-selection-background);
+}
+
+.theme-dark .search-bottom-bar .search-type-toggles .search-type-btn.active {
+  color: white;
+}
+
+.search-bottom-bar .close-btn {
+  margin-inline-end: 3px;
+}
+
+.search-bar .result-list {
+  max-height: 230px;
+}

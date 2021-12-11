@@ -1,0 +1,261 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tabbrowser hierarchy tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
+          src="../browser.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // invoker
+    function testTabHierarchy()
+    {
+      this.eventSeq = [
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 0),
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
+      ];
+
+      this.invoke = function testTabHierarchy_invoke()
+      {
+        var docURIs = ["about:license", "about:mozilla"];
+        tabBrowser().loadTabs(docURIs, {
+          inBackground: false,
+          replace: true,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
+        // Flush layout, so as to guarantee that the a11y tree is constructed.
+        browserDocument().documentElement.getBoundingClientRect();
+      }
+
+      this.finalCheck = function testTabHierarchy_finalCheck(aEvent)
+      {
+        ////////////////////
+        // Tab bar
+        ////////////////////
+        var tabsAccTree = {
+          // xul:tabs
+          role: ROLE_PAGETABLIST,
+          children: [
+            // Children depend on application (UI): see below.
+          ]
+        };
+
+        // SeaMonkey and Firefox tabbrowser UIs differ.
+        if (SEAMONKEY) {
+          SimpleTest.ok(true, "Testing SeaMonkey tabbrowser UI.");
+
+          tabsAccTree.children.splice(0, 0,
+            {
+              // xul:toolbarbutton ("Open a new tab")
+              role: ROLE_PUSHBUTTON,
+              children: []
+            },
+            {
+              // xul:tab ("about:license")
+              role: ROLE_PAGETAB,
+              children: []
+            },
+            {
+              // tab ("about:mozilla")
+              role: ROLE_PAGETAB,
+              children: []
+            },
+            {
+              // xul:toolbarbutton ("List all tabs")
+              role: ROLE_PUSHBUTTON,
+              children: [
+                {
+                  // xul:menupopup
+                  role: ROLE_MENUPOPUP,
+                  children: []
+                }
+              ]
+            },
+            {
+              // xul:toolbarbutton ("Close current tab")
+              role: ROLE_PUSHBUTTON,
+              children: []
+            }
+            );
+        } else {
+          SimpleTest.ok(true, "Testing Firefox tabbrowser UI.");
+          let newTabChildren = [];
+          if (SpecialPowers.getBoolPref("privacy.userContext.enabled")) {
+            newTabChildren = [
+              {
+                role: ROLE_MENUPOPUP,
+                children: []
+              }
+            ];
+          }
+
+          // NB: The (3) buttons are not visible, unless manually hovered,
+          //     probably due to size reduction in this test.
+          tabsAccTree.children.splice(0, 0,
+            {
+              // xul:tab ("about:license")
+              role: ROLE_PAGETAB,
+              children: [
+                {
+                  // xul:text, i.e. the tab label text
+                  role: ROLE_TEXT_LEAF,
+                  children: []
+                }
+              ]
+            },
+            {
+              // tab ("about:mozilla")
+              role: ROLE_PAGETAB,
+              children: [
+                {
+                  // xul:text, i.e. the tab label text
+                  role: ROLE_TEXT_LEAF,
+                  children: []
+                }
+              ]
+            },
+            {
+              // xul:toolbarbutton ("Open a new tab")
+              role: ROLE_PUSHBUTTON,
+              children: newTabChildren
+            }
+            // "List all tabs" dropdown
+            // XXX: This child(?) is not present in this test.
+            //      I'm not sure why (though probably expected).
+            );
+        }
+
+        testAccessibleTree(tabBrowser().tabContainer, tabsAccTree);
+
+        ////////////////////
+        // Tab contents
+        ////////////////////
+        var tabboxAccTree = {
+          // xul:tabpanels
+          role: ROLE_PANE,
+          children: [
+            {
+              // xul:notificationbox
+              role: ROLE_PROPERTYPAGE,
+              children: [
+                {
+                  // xul:browser
+                  role: ROLE_INTERNAL_FRAME,
+                  children: [
+                    {
+                      // #document ("about:license")
+                      role: ROLE_DOCUMENT
+                      // children: [ ... ] // Ignore document content.
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              // notificationbox
+              role: ROLE_PROPERTYPAGE,
+              children: [
+                {
+                  // browser
+                  role: ROLE_INTERNAL_FRAME,
+                  children: [
+                    {
+                      // #document ("about:mozilla")
+                      role: ROLE_DOCUMENT
+                      // children: [ ... ] // Ignore document content.
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              // notificationbox
+              role: ROLE_PROPERTYPAGE,
+              children: [
+                {
+                  // browser
+                  role: ROLE_INTERNAL_FRAME,
+                  children: [
+                    {
+                      // #document ("about:newtab" preloaded)
+                      role: ROLE_DOCUMENT
+                      // children: [ ... ] // Ignore document content.
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        };
+
+        testAccessibleTree(tabBrowser().tabbox.tabpanels, tabboxAccTree);
+      }
+
+      this.getID = function testTabHierarchy_getID()
+      {
+        return "hierarchy of tabs";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+    gA11yEventDumpToConsole = true;
+    //enableLogging("tree,verbose,stack");
+
+    var gQueue = null;
+    function doTest()
+    {
+      SimpleTest.requestCompleteLog();
+
+      // Load documents into tabs and wait for docLoadComplete events caused by these
+      // documents load before we start the test.
+      gQueue = new eventQueue();
+
+      gQueue.push(new testTabHierarchy());
+      gQueue.onFinish = function() { closeBrowserWindow(); }
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest);
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=540389"
+         title=" WARNING: Bad accessible tree!: [tabbrowser tab] ">
+        Mozilla Bug 540389
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552944"
+         title="No relationship between tabs and associated property page in new tabbrowser construct">
+        Mozilla Bug 552944
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox id="eventdump"></vbox>
+  </vbox>
+
+</window>

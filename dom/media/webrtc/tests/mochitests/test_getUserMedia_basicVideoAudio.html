@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getUserMedia Basic Video & Audio Test",
+    bug: "781534"
+  });
+  /**
+   * Run a test to verify that we can complete a start and stop media playback
+   * cycle for a video and audio MediaStream on a video HTMLMediaElement.
+   */
+  runTest(function () {
+    var testVideoAudio = createMediaElement('video', 'testVideoAudio');
+    var constraints = {video: true, audio: true};
+
+    return getUserMedia(constraints).then(stream => {
+      var playback = new MediaStreamPlayback(testVideoAudio, stream);
+      return playback.playMedia(false);
+    });
+  });
+
+</script>
+</pre>
+</body>
+</html>

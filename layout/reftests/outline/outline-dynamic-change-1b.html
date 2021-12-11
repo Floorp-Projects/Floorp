@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>
+    Test that dynamic tweaks to 'outline-width' are reflected in the rendering.
+  </title>
+  <style>
+    #tweakMe {
+      height: 100px;
+      width: 100px;
+      background: gray;
+      outline: solid 2px black;
+      outline-offset: -16px;
+    }
+  </style>
+  <script>
+window.addEventListener("MozReftestInvalidate", function() {
+  tweakMe.style.outlineWidth = "6px";
+  document.documentElement.removeAttribute("class");
+});
+  </script>
+</head>
+<body>
+  <div id="tweakMe"></div>
+</body>
+</html>

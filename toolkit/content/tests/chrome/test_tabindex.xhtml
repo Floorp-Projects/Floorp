@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for tabindex
+  -->
+<window title="tabindex" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<!--
+  Elements are navigated in the following order:
+    1. tabindex > 0 in tree order
+    2. tabindex = 0 in tree order
+  Elements with tabindex = -1 are focusable, but not in the tab order
+ -->
+<hbox>
+  <button id="t7" label="One"/>
+  <checkbox id="f1" label="Two" tabindex="-1"/>
+  <button id="t8" label="Three" tabindex="0"/>
+  <checkbox id="t1" label="Four" tabindex="1"/>
+</hbox>
+<hbox>
+  <html:input id="t9" idmod="t5" size="3"/>
+  <html:input id="f2" size="3" tabindex="-1"/>
+  <html:input id="t10" idmod="t6" size="3" tabindex="0"/>
+  <html:input id="t2" idmod="t1" size="3" tabindex="1"/>
+</hbox>
+<hbox>
+  <button id="n1" style="-moz-user-focus: ignore;" label="One"/>
+  <checkbox id="f3" style="-moz-user-focus: ignore;" label="Two" tabindex="-1"/>
+  <button id="t11" style="-moz-user-focus: ignore;" label="Three" tabindex="0"/>
+  <checkbox id="t3" style="-moz-user-focus: ignore;" label="Four" tabindex="1"/>
+</hbox>
+<hbox>
+  <html:input id="t12" idmod="t7" style="-moz-user-focus: ignore;" size="3"/>
+  <html:input id="f4" style="-moz-user-focus: ignore;" size="3" tabindex="-1"/>
+  <html:input id="t13" idmod="t8" style="-moz-user-focus: ignore;" size="3" tabindex="0"/>
+  <html:input id="t4" idmod="t2" style="-moz-user-focus: ignore;" size="3" tabindex="1"/>
+</hbox>
+<richlistbox id="t14" idmod="t9">
+  <richlistitem><label value="Item One"/></richlistitem>
+</richlistbox>
+
+<hbox>
+  <!-- the tabindex attribute applies to non-controls as well. They are not
+       focusable unless tabindex is explicitly specified.
+    -->
+  <dropmarker id="n2"/>
+  <dropmarker id="f5" tabindex="-1"/>
+  <dropmarker id="t15" tabindex="0"/>
+  <dropmarker id="t5" idmod="t3" tabindex="1"/>
+  <dropmarker id="t16" style="-moz-user-focus: normal;"/>
+  <dropmarker id="f6" style="-moz-user-focus: normal;" tabindex="-1"/>
+  <dropmarker id="t17" style="-moz-user-focus: normal;" tabindex="0"/>
+  <dropmarker id="t6" idmod="t4" style="-moz-user-focus: normal;" tabindex="1"/>
+</hbox>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function checkFocusability(aId, aFocusable)
+{
+  document.activeElement.blur();
+  let testNode = document.getElementById(aId);
+  testNode.focus();
+  let newFocus = document.activeElement;
+  let check = aFocusable ? is : isnot;
+  let focusableText = aFocusable ? "focusable " : "unfocusable ";
+  check(newFocus, testNode,
+    ".focus() call on " + focusableText + aId);
+}
+
+var gAdjustedTabFocusModel = false;
+var gTestCount = 17;
+var gTestsOccurred = 0;
+let gFocusableNotTabbableCount = 6;
+let gNotFocusableCount = 2;
+
+function runTests()
+{
+  var t;
+  function onFocus(event) {
+    if (t == 1 && event.target.id == "t2") {
+      // looks to be using the MacOSX Full Keyboard Access set to Textboxes
+      // and lists only so use the idmod attribute instead
+      gAdjustedTabFocusModel = true;
+      gTestCount = 9;
+    }
+
+    var attrcompare = gAdjustedTabFocusModel ? "idmod" : "id";
+
+    // check for the last test which should wrap aorund to the first item
+    // consider the focus event on the inner input of textboxes instead
+    is(event.target.getAttribute(attrcompare), "t" + t,
+       "tab " + t + " to " + event.target.localName);
+    gTestsOccurred++;
+  }
+  window.addEventListener("focus", onFocus, true);
+
+  for (t = 1; t <= gTestCount; t++)
+    synthesizeKey("KEY_Tab");
+
+  is(gTestsOccurred, gTestCount, "test count");
+  window.removeEventListener("focus", onFocus, true);
+
+  for (let i = 1; i <= gFocusableNotTabbableCount; ++i) {
+    checkFocusability("f" + i, true);
+  }
+
+  for (let i = 1; i <= gNotFocusableCount; ++i) {
+    checkFocusability("n" + i, false);
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+]]>
+
+</script>
+
+</window>

@@ -1,0 +1,103 @@
+<html>
+
+<head>
+  <title>nsIAccessible::name calculation for HTML li</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Alter list item numbering and change list style type.
+     */
+    function bulletUpdate() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, getNode("list")),
+      ];
+
+      this.invoke = function bulletUpdate_invoke() {
+        testName("li_end", "1. list end");
+
+        var li = document.createElement("li");
+        li.setAttribute("id", "li_start");
+        li.textContent = "list start";
+        getNode("list").insertBefore(li, getNode("li_end"));
+      };
+
+      this.finalCheck = function bulletUpdate_finalCheck() {
+        testName("li_start", "1. list start");
+        testName("li_end", "2. list end");
+      };
+
+      this.getID = function bulletUpdate_getID() {
+        return "insertBefore new list item";
+      };
+    }
+    function bulletUpdate2() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, getNode("li_end")),
+      ];
+
+      this.invoke = function bulletUpdate2_invoke() {
+        // change list style type
+        var list = getNode("list");
+        list.setAttribute("style", "list-style-type: disc;");
+
+        // Flush both the style change and the resulting layout change.
+        // Flushing style on its own is not sufficient, because that can
+        // leave frames marked with NS_FRAME_IS_DIRTY, which will cause
+        // nsTextFrame::GetRenderedText to report the text of a text
+        // frame is empty.
+        list.offsetWidth; // flush layout (which also flushes style)
+      };
+
+      this.finalCheck = function bulletUpdate2_finalCheck() {
+        testName("li_start", kDiscBulletText + "list start");
+        testName("li_end", kDiscBulletText + "list end");
+      };
+
+      this.getID = function bulletUpdate2_getID() {
+        return "Update list item style";
+      };
+    }
+
+    var gQueue = null;
+    function doTest() {
+      gQueue = new eventQueue();
+      gQueue.push(new bulletUpdate());
+      gQueue.push(new bulletUpdate2());
+      gQueue.invoke(); // SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=634200"
+     title="crash [@ nsIFrame::StyleVisibility() ]">
+    Mozilla Bug 634200
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ol id="list">
+    <li id="li_end">list end</li>
+  </ol>
+
+</body>
+</html>

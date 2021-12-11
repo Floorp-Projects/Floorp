@@ -1,0 +1,351 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1341994
+-->
+<head>
+  <title>Test for Bug 1341994 </title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1341994 ">Mozilla Bug 1341994</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<script>
+
+var testData = [
+  {
+    locales: ["en-US"],
+    options: {
+      type: "language",
+    },
+    expected: {
+      locale: "en-US",
+      type: "language",
+      style: "long",
+      calendar: "gregory",
+      values: [],
+    }
+  },
+  {
+    locales: ["en-US"],
+    options: {
+      type: "weekday",
+      style: "narrow",
+      calendar: "gregory",
+      keys: [3],
+    },
+    expected: {
+      locale: "en-US",
+      type: "weekday",
+      style: "narrow",
+      calendar: "gregory",
+      values: ["W"]
+    }
+  },
+
+  {
+    locales: ["fr"],
+    options: {
+      type: "dateTimeField",
+      keys: ["year", "day"],
+    },
+    expected: {
+      locale: "fr",
+      type: "dateTimeField",
+      style: "long",
+      calendar: "gregory",
+      values: ["année", "jour"],
+    }
+  },
+  {
+    locales: ["fr"],
+    options: {
+      type: "month",
+      keys: [10],
+    },
+    expected: {
+      locale: "fr",
+      type: "month",
+      style: "long",
+      calendar: "gregory",
+      values: ["octobre"],
+    }
+  },
+  {
+    locales: ["fr"],
+    options: {
+      type: "weekday",
+      keys: [6],
+    },
+    expected: {
+      locale: "fr",
+      type: "weekday",
+      style: "long",
+      calendar: "gregory",
+      values: ["samedi"],
+    }
+  },
+  {
+    locales: ["fr"],
+    options: {
+      type: "dayPeriod",
+      keys: ["pm"],
+    },
+    expected: {
+      locale: "fr",
+      type: "dayPeriod",
+      style: "long",
+      calendar: "gregory",
+      values: ["PM"],
+    }
+  },
+
+  {
+    locales: ["it"],
+    options: {
+      type: "weekday",
+      style: "short",
+      keys: [4],
+    },
+    expected: {
+      locale: "it",
+      type: "weekday",
+      style: "short",
+      calendar: "gregory",
+      values: ["gio"],
+    }
+  },
+  {
+    locales: ["it"],
+    options: {
+      type: "month",
+      style: "short",
+      keys: [8],
+    },
+    expected: {
+      locale: "it",
+      type: "month",
+      style: "short",
+      calendar: "gregory",
+      values: ["ago"],
+    }
+  },
+  {
+    locales: ["it"],
+    options: {
+      type: "dayPeriod",
+      style: "short",
+      keys: ["am"],
+    },
+    expected: {
+      locale: "it",
+      type: "dayPeriod",
+      style: "short",
+      calendar: "gregory",
+      values: ["AM"],
+    }
+  },
+  {
+    locales: ["it"],
+    options: {
+      type: "dateTimeField",
+      style: "short",
+      keys: ["month"],
+    },
+    expected: {
+      locale: "it",
+      type: "dateTimeField",
+      style: "short",
+      calendar: "gregory",
+      values: ["mese"],
+    }
+  },
+
+  {
+    locales: ["ar"],
+    options: {
+      type: "weekday",
+      style: "long",
+      keys: [4],
+    },
+    expected: {
+      locale: "ar",
+      type: "weekday",
+      style: "long",
+      calendar: "gregory",
+      values: ["الخميس"],
+    }
+  },
+  {
+    locales: ["ar"],
+    options: {
+      type: "month",
+      style: "long",
+      keys: [8],
+    },
+    expected: {
+      locale: "ar",
+      type: "month",
+      style: "long",
+      calendar: "gregory",
+      values: ["أغسطس"],
+    }
+  },
+  {
+    locales: ["ar"],
+    options: {
+      type: "dayPeriod",
+      style: "long",
+      keys: ["am"],
+    },
+    expected: {
+      locale: "ar",
+      type: "dayPeriod",
+      style: "long",
+      calendar: "gregory",
+      values: ["ص"],
+    }
+  },
+  {
+    locales: ["ar"],
+    options: {
+      type: "dateTimeField",
+      style: "long",
+      keys: ["month"],
+    },
+    expected: {
+      locale: "ar",
+      type: "dateTimeField",
+      style: "long",
+      calendar: "gregory",
+      values: ["الشهر"],
+    }
+  },
+
+  {
+    locales: ["zh-TW"],
+    options: {
+      type: "weekday",
+      style: "abbreviated",
+      keys: [4],
+    },
+    expected: {
+      locale: "zh-TW",
+      type: "weekday",
+      style: "abbreviated",
+      calendar: "gregory",
+      values: ["週四"],
+    }
+  },
+  {
+    locales: ["zh-TW"],
+    options: {
+      type: "month",
+      style: "short",
+      keys: [8],
+    },
+    expected: {
+      locale: "zh-TW",
+      type: "month",
+      style: "short",
+      calendar: "gregory",
+      values: ["8月"],
+    }
+  },
+  {
+    locales: ["zh-TW"],
+    options: {
+      type: "dayPeriod",
+      style: "short",
+      keys: ["am"],
+    },
+    expected: {
+      locale: "zh-TW",
+      type: "dayPeriod",
+      style: "short",
+      calendar: "gregory",
+      values: ["上午"],
+    }
+  },
+  {
+    locales: ["zh-TW"],
+    options: {
+      type: "dateTimeField",
+      style: "short",
+      keys: ["month"],
+    },
+    expected: {
+      locale: "zh-TW",
+      type: "dateTimeField",
+      style: "short",
+      calendar: "gregory",
+      values: ["月"],
+    }
+  },
+
+  /* Invalid input */
+
+  {
+    locales: ["en-US"],
+    options: {
+      type: "weekday",
+      style: "",
+      keys: [4]
+    },
+    expected: {
+      exception: true
+    }
+  },
+  {
+    locales: ["foo-X"],
+    options: {
+      type: "weekday",
+      keys: [4]
+    },
+    expected: {
+      exception: true
+    }
+  },
+  {
+    locales: ["en-US"],
+    options: {
+      keys: [
+        ""
+      ],
+    },
+    expected: {
+      exception: true
+    }
+  },
+]
+
+let intlUtils = window.intlUtils;
+ok(intlUtils, "window.intlUtils should exist");
+
+for (let { locales, options, expected } of testData) {
+  try {
+    let result = intlUtils.getDisplayNames(locales, options);
+
+    is(result.locale, expected.locale, "locale is " + expected.locale);
+    is(result.type, expected.type, "type is " + expected.type);
+    is(result.style, expected.style, "style is " + expected.style);
+    is(result.calendar, expected.calendar, "calendar is " + expected.calendar);
+
+    let values = result.values;
+    let expectedValues = expected.values;
+
+    is(values.length, expectedValues.length, "values' length is " + expectedValues.length);
+
+    for (let i = 0; i < expectedValues.length; ++i) {
+      is(values[i], expectedValues[i], "value is " + expectedValues[i]);
+    }
+  } catch (e) {
+    ok(expected.exception, "Exception expected : " + e);
+  }
+}
+
+</script>
+</body>
+</html>

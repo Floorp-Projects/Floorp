@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the web_accessible_resources incognito</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
+                 "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
+const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
+
+async function testImageLoading(src, expectedAction) {
+  let imageLoadingPromise = new Promise((resolve, reject) => {
+    let cleanupListeners;
+    let testImage = new window.Image();
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testImage.wrappedJSObject.setAttribute("src", src);
+
+    let loadListener = () => {
+      cleanupListeners();
+      resolve(expectedAction === "loaded");
+    };
+
+    let errorListener = (event) => {
+      cleanupListeners();
+      resolve(expectedAction === "blocked");
+      browser.test.log(`+++ image loading ${event.error}`);
+    };
+
+    cleanupListeners = () => {
+      testImage.removeEventListener("load", loadListener);
+      testImage.removeEventListener("error", errorListener);
+    };
+
+    testImage.addEventListener("load", loadListener);
+    testImage.addEventListener("error", errorListener);
+  });
+
+  let success = await imageLoadingPromise;
+  browser.runtime.sendMessage({name: "image-loading", expectedAction, success});
+}
+
+function testScript() {
+  window.postMessage("test-script-loaded", "*");
+}
+
+add_task(async function test_web_accessible_resources_incognito() {
+  // This extension will not have access to private browsing so its
+  // accessible resources should not be able to load in them.
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "web_accessible_resources": [
+        "image.png",
+        "test_script.js",
+        "accessible.html",
+      ],
+    },
+    background() {
+      browser.test.sendMessage("url", browser.runtime.getURL(""));
+    },
+    files: {
+      "image.png": IMAGE_ARRAYBUFFER,
+      "test_script.js": testScript,
+      "accessible.html": `<html><head>
+        <meta charset="utf-8">
+      </head></html>`,
+    },
+  });
+
+  await extension.startup();
+  let baseUrl = await extension.awaitMessage("url");
+
+  async function content() {
+    let baseUrl = await browser.runtime.sendMessage({name: "get-url"});
+    testImageLoading(`${baseUrl}image.png`, "loaded");
+
+    let testScriptElement = document.createElement("script");
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testScriptElement.wrappedJSObject.setAttribute("src", `${baseUrl}test_script.js`);
+    document.head.appendChild(testScriptElement);
+
+    let iframe = document.createElement("iframe");
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    iframe.wrappedJSObject.setAttribute("src", `${baseUrl}accessible.html`);
+    document.body.appendChild(iframe);
+
+    // eslint-disable-next-line mozilla/balanced-listeners
+    window.addEventListener("message", event => {
+      browser.runtime.sendMessage({"name": event.data});
+    });
+  }
+
+  let pb_extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
+    manifest: {
+      permissions: ["tabs"],
+      content_scripts: [{
+        "matches": ["*://example.com/*/file_sample.html"],
+        "run_at": "document_end",
+        "js": ["content_script_helper.js", "content_script.js"],
+      }],
+    },
+    files: {
+      "content_script_helper.js": `${testImageLoading}`,
+      "content_script.js": content,
+    },
+    background() {
+      let url = "http://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+      let baseUrl;
+      let window;
+
+      browser.runtime.onMessage.addListener(async msg => {
+        switch (msg.name) {
+          case "image-loading":
+            browser.test.assertFalse(msg.success, `Image was ${msg.expectedAction}`);
+            browser.test.sendMessage(`image-${msg.expectedAction}`);
+            break;
+          case "get-url":
+            return baseUrl;
+          default:
+            browser.test.fail(`unexepected message ${msg.name}`);
+        }
+      });
+
+      browser.test.onMessage.addListener(async (msg, data) => {
+        if (msg == "start") {
+          baseUrl = data;
+          window = await browser.windows.create({url, incognito: true});
+        }
+        if (msg == "close") {
+          browser.windows.remove(window.id);
+        }
+      });
+    },
+  });
+  await pb_extension.startup();
+
+  consoleMonitor.start([
+    {message: /may not load or link to.*image.png/},
+    {message: /may not load or link to.*test_script.js/},
+    {message: /\<script\> source URI is not allowed in this document/},
+    {message: /may not load or link to.*accessible.html/},
+  ]);
+
+  pb_extension.sendMessage("start", baseUrl);
+
+  await pb_extension.awaitMessage("image-loaded");
+
+  pb_extension.sendMessage("close");
+
+  await extension.unload();
+  await pb_extension.unload();
+
+  await consoleMonitor.finished();
+});
+
+</script>
+
+</body>
+</html>

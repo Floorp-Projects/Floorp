@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test mpadded</title>
+    <style type="text/css">
+      div#square1 {
+        position:absolute;
+        width: 20px;
+        height: 20px;
+        left: -25px;
+        top: 25px; 	
+        background: red;
+      }
+      div#square2 {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        left: 40px;
+        top:30px;
+        background: blue; 	
+      }
+      
+      div#square3 {
+        position:absolute;
+        width: 200px;
+        height: 200px; 	
+        background: green;
+      }
+      /* left = lspace = -25; 
+         top = HeightBig - HeightSmall - voffsetSmall
+             =  50 - 10 - 15 = 25px */
+      /* left = lsapce = 40px;
+         top = HeightVeryBig - HeightBig - voffsetBig
+             = 100 - 50 - 20 = 30px */
+      </style>
+  </head>
+  <body>
+    <div id="square3">
+      <div id="square2">
+	<div id="square1">
+	</div>
+      </div>
+    </div>
+  </body> 
+<html>

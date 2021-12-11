@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=469304
+-->
+<head>
+  <title>Test for Bug 469304</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469304">Mozilla Bug 469304</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 469304 **/
+function testGetAttribute() {
+  var a1 = document.createAttributeNS("", "aa");
+  a1.nodeValue = "lowercase";
+  var a2 = document.createAttributeNS("", "AA");
+  a2.nodeValue = "UPPERCASE";
+  document.body.setAttributeNode(a1);
+  document.body.setAttributeNode(a2);
+  var log = document.getElementById("log");
+  is(document.body.getAttribute('aa'), "lowercase", "First attribute should have localname aa (1).");
+  is(document.body.getAttribute('AA'), "lowercase", "First attribute should have localname aa (2).");
+  is(document.body.getAttributeNS("", "aa"), "lowercase", "First attribute should have localName aa (3).");
+  is(document.body.getAttributeNS("", "AA"), "UPPERCASE", "Second attribute should have value UPPERCASE!");
+
+  var s = "";
+  for (var i = 0; i < document.body.attributes.length; ++i) {
+    s += document.body.attributes[i].nodeName + "=" +
+         document.body.attributes[i].nodeValue;
+  }
+  is(s, "aa=lowercaseAA=UPPERCASE", "Wrong attribute!");
+
+  is(document.body.getAttributeNode("aa"), document.body.getAttributeNode("AA"),
+     "Wrong node!");
+
+  document.body.getAttributeNodeNS("", "AA").nodeValue = "FOO";
+  is(document.body.getAttributeNS("", "AA"), "FOO", "Wrong value!");
+
+  document.body.removeAttributeNode(document.body.getAttributeNodeNS("", "aa"));
+  ok(!document.body.getAttributeNode("AA"), "Should not have attribute node! (1)");
+  ok(!document.body.getAttributeNode("aa"), "Should not have attribute node! (2)");
+
+  is(a2.nodeValue, "FOO", "Wrong value!");
+  a2.nodeValue = "UPPERCASE";
+  is(a2.nodeValue, "UPPERCASE", "Wrong value!");
+
+  document.body.setAttributeNode(a2);
+  is(document.body.getAttributeNS("", "AA"), "UPPERCASE", "Wrong value!");
+  ok(document.body.getAttributeNodeNS("", "AA"), "Should have attribute node!");
+  is(document.body.getAttributeNS("", "aa"), null, "No attribute has the localName aa.");
+  ok(!document.body.getAttributeNodeNS("", "aa"), "Should not have attribute node!");
+}
+testGetAttribute();
+
+// A bit modified testcases from WebKit.
+function testGetAttributeCaseInsensitive() {
+  var div = document.createElement('div');
+  div.setAttribute("mixedCaseAttrib", "x");
+  // Do original case lookup, and lowercase lookup.
+  return div.getAttribute("mixedcaseattrib");
+}
+is(testGetAttributeCaseInsensitive(), "x", "(1)");
+
+function testGetAttributeNodeMixedCase() {
+  var div = document.createElement('div');
+  var a = div.ownerDocument.createAttributeNS("", "mixedCaseAttrib");
+  a.nodeValue = "x";
+  div.setAttributeNode(a);
+  return div.getAttributeNS("", "mixedCaseAttrib");
+}
+is(testGetAttributeNodeMixedCase(), "x", "(2)");
+
+function testGetAttributeNodeLowerCase(div) {
+  var div = document.createElement('div');
+  var a = div.ownerDocument.createAttribute("lowercaseattrib");
+  a.nodeValue = "x";
+  div.setAttributeNode(a);
+  return div.getAttribute("lowerCaseAttrib");
+}
+is(testGetAttributeNodeLowerCase(), "x", "(3)");
+
+function testSetAttributeNodeKeepsRef(div) {
+  var div = document.createElement('div');
+  var a = div.ownerDocument.createAttribute("attrib_name");
+  a.nodeValue = "0";
+  div.setAttributeNode(a);
+  // Mutate the attribute node.
+  a.nodeValue = "1";
+  return div.getAttribute("attrib_name");
+}
+is(testSetAttributeNodeKeepsRef(), "1", "(4)");
+
+function testAttribNodeNameFoldsCase() {
+  var div = document.createElement('div');
+  var a = div.ownerDocument.createAttribute("A");
+  a.nodeValue = "x";
+  div.setAttributeNode(a);
+  var result = [ a.name, a.nodeName ];
+  return result.join(",");
+}
+is(testAttribNodeNameFoldsCase(), "a,a", "(5)");
+
+function testAttribNodeNameFoldsCaseGetNode() {
+  var body = document.body;
+  var a = body.ownerDocument.createAttribute("A");
+  a.nodeValue = "x";
+  body.setAttributeNode(a);
+  a = document.body.getAttributeNodeNS("", "a");
+  if (!a)
+      return "FAIL";
+  var result = [ a.name, a.nodeName ];
+  return result.join(",");
+}
+is(testAttribNodeNameFoldsCaseGetNode(), "a,a", "(6)");
+
+function testAttribNodeNameFoldsCaseGetNode2() {
+  var body = document.body;
+  var a = body.ownerDocument.createAttribute("B");
+  a.nodeValue = "x";
+  body.setAttributeNode(a);
+  a = document.body.getAttributeNodeNS("", "b");
+  if (!a)
+      return "FAIL";
+  // Now create node second time
+  a = body.ownerDocument.createAttribute("B");
+  a.nodeValue = "x";
+  body.setAttributeNode(a);
+  a = document.body.getAttributeNodeNS("", "b");
+  var result = [ a.name, a.nodeName ];
+  return result.join(",");
+}
+is(testAttribNodeNameFoldsCaseGetNode2(), "b,b", "(7)");
+
+function testAttribNodeNameGetMutate() {
+  var body = document.body;
+  var a = body.ownerDocument.createAttribute("c");
+  a.nodeValue = "0";
+  body.setAttributeNode(a);
+  a = document.body.getAttributeNode("c");
+  a.value = "1";
+  a = document.body.getAttributeNode("c");
+  return a.nodeValue;
+}
+is(testAttribNodeNameGetMutate(), "1", "(8)");
+
+var node = document.createElement("div");
+var attrib = document.createAttribute("myAttrib");
+attrib.nodeValue = "XXX";
+node.setAttributeNode(attrib);
+// Note, this is different to what WebKit does
+is((new XMLSerializer).serializeToString(node),
+   "<div xmlns=\"http://www.w3.org/1999/xhtml\" myattrib=\"XXX\"></div>", "(9)");
+is(node.getAttributeNode('myAttrib').name, "myattrib", "(10)");
+is(node.getAttributeNode('myattrib').name, "myattrib", "(11)");
+is(attrib.name, "myattrib", "(12)");
+
+var o = document.createElement("div");
+o.setAttribute("myAttrib","htmlattr");
+o.setAttributeNS("","myAttrib","123");
+is(o.getAttributeNodeNS("","myAttrib").nodeName, "myAttrib", "nodeName should be case-sensitive.");
+is(o.getAttributeNode("myAttrib").nodeName, "myattrib", "nodeName shouldn't be case-sensitive.");
+is(o.getAttributeNodeNS("","myAttrib").value, "123", "Should have got the case-sensitive attribute.");
+is(o.attributes.length, 2, "Should have two attributes.");
+o.setAttribute("myAttrib2", "htmlattr");
+o.setAttributeNS("", "myAttrib2", "123");
+is(o.attributes.length, 4, "Should have four attributes.");
+var an = o.attributes.removeNamedItem("myAttrib2");
+is(o.attributes.length, 3, "An attribute should have been removed.");
+is(an.value, "htmlattr", "The removed attribute should have been the case-insensitive attribute.");
+is(o.getAttribute("myAttrib2"), null, "Element shouldn't have case-insensitive attribute anymore.");
+var an2 = o.attributes.removeNamedItemNS("", "myAttrib2");
+is(an2.localName, "myAttrib2", "The removed attribute should be case-sensitive.");
+is(o.attributes.length, 2, "Element should have two attributes.");
+
+</script>
+</pre>
+</body>
+</html>

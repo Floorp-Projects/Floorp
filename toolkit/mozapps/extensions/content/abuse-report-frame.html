@@ -1,0 +1,144 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
+    <link rel="stylesheet" href="chrome://mozapps/content/extensions/abuse-report-panel.css">
+
+    <link rel="localization" href="branding/brand.ftl">
+    <link rel="localization" href="toolkit/about/aboutAddons.ftl">
+    <link rel="localization" href="toolkit/about/abuseReports.ftl">
+
+    <script defer src="chrome://mozapps/content/extensions/abuse-report-panel.js"></script>
+  </head>
+
+  <body>
+    <addon-abuse-report></addon-abuse-report>
+
+    <!-- WebComponents Templates -->
+    <template id="tmpl-modal">
+      <div class="modal-overlay-outer"></div>
+      <div class="modal-panel-container"></div>
+    </template>
+
+    <template id="tmpl-abuse-report">
+      <form class="addon-abuse-report" onsubmit="return false;">
+        <div class="abuse-report-header">
+          <img class="card-heading-icon addon-icon"/>
+          <div class="card-contents">
+            <span class="addon-name"></span>
+            <span class="addon-author-box"
+                  data-l10n-args='{"author-name": "author placeholder"}'
+                  data-l10n-id="abuse-report-addon-authored-by">
+              <a data-l10n-name="author-name"
+                 class="author" href="#" target="_blank"></a>
+            </span>
+          </div>
+        </div>
+        <button class="abuse-report-close-icon" type="button"></button>
+        <div class="abuse-report-contents">
+          <abuse-report-reasons-panel></abuse-report-reasons-panel>
+          <abuse-report-submit-panel hidden></abuse-report-submit-panel>
+        </div>
+        <div class="abuse-report-buttons">
+          <div class="abuse-report-reasons-buttons">
+            <button class="abuse-report-cancel" type="button"
+                    data-l10n-id="abuse-report-cancel-button">
+            </button>
+            <button class="primary abuse-report-next" type="button"
+                    data-l10n-id="abuse-report-next-button">
+            </button>
+          </div>
+          <div class="abuse-report-submit-buttons" hidden>
+            <button class="abuse-report-goback" type="button"
+                    data-l10n-id="abuse-report-goback-button">
+            </button>
+            <button class="primary abuse-report-submit" type="button"
+                    data-l10n-id="abuse-report-submit-button">
+            </button>
+          </div>
+        </div>
+      </form>
+    </template>
+
+    <template id="tmpl-reasons-panel">
+      <h2 class="abuse-report-title"></h2>
+      <hr>
+      <p class="abuse-report-subtitle"
+         data-l10n-id="abuse-report-subtitle">
+      </p>
+      <ul class="abuse-report-reasons">
+        <li is="abuse-report-reason-listitem" report-reason="other"></li>
+      </ul>
+      <p data-l10n-id="abuse-report-learnmore">
+        <a class="abuse-report-learnmore" target="_blank"
+           data-l10n-name="learnmore-link">
+        </a>
+      </p>
+    </template>
+
+    <template id="tmpl-submit-panel">
+      <h2 class="abuse-reason-title"></h2>
+      <abuse-report-reason-suggestions></abuse-report-reason-suggestions>
+      <hr>
+      <p class="abuse-report-subtitle" data-l10n-id="abuse-report-submit-description">
+      </p>
+      <textarea name="message" data-l10n-id="abuse-report-textarea"></textarea>
+      <p class="abuse-report-note" data-l10n-id="abuse-report-submit-note">
+      </p>
+    </template>
+
+    <template id="tmpl-reason-listitem">
+      <label>
+        <input type="radio" name="reason" class="radio">
+        <span class="reason-description"></span>
+        <span hidden class="abuse-report-note reason-example"></span>
+      </label>
+    </template>
+
+    <template id="tmpl-suggestions-settings">
+      <p data-l10n-id="abuse-report-settings-suggestions"><p>
+      <ul>
+        <li>
+          <a class="abuse-settings-search-learnmore" target="_blank"
+             data-l10n-id="abuse-report-settings-suggestions-search">
+          </a>
+        </li>
+        <li>
+          <a class="abuse-settings-homepage-learnmore" target="_blank"
+             data-l10n-id="abuse-report-settings-suggestions-homepage">
+          </a>
+        </li>
+      </ul>
+    </template>
+
+    <template id="tmpl-suggestions-policy">
+      <p data-l10n-id="abuse-report-policy-suggestions">
+        <a class="abuse-policy-learnmore" target="_blank"
+           data-l10n-name="report-infringement-link">
+        </a>
+      </p>
+    </template>
+
+    <template id="tmpl-suggestions-broken-extension">
+      <p data-l10n-id="abuse-report-broken-suggestions-extension">
+        <a class="extension-support-link" target="_blank"
+           data-l10n-name="support-link">
+        </a>
+      <p>
+    </template>
+
+    <template id="tmpl-suggestions-broken-theme">
+      <p data-l10n-id="abuse-report-broken-suggestions-theme">
+        <a class="extension-support-link" target="_blank"
+           data-l10n-name="support-link">
+        </a>
+      <p>
+    </template>
+  </body>
+</html>

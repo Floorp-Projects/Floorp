@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=399925
+-->
+<head>
+  <title>Test for Bug 399925</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=399925">Mozilla Bug 399925</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<canvas id="canvas" width="100" height="100"> </canvas>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 399925. **/
+var triggerDiscardingManually = false;
+var pngResults = [];
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+window.onload = function() {
+  // It'd be nice to reduce the discard timer here, but unfortunately we only
+  // read that pref on startup. We instead manually trigger discarding on
+  // platforms where the discard timer is too long (which we'll somewhat
+  // arbitrarily define as 'longer than 60 seconds').
+  var expirationMs =
+    SpecialPowers.getIntPref('image.mem.surfacecache.min_expiration_ms');
+  if (expirationMs > 60000) {
+    ok(true, 'Triggering discarding manually because SurfaceCache expiration ' +
+             'is ' + expirationMs + ' ms');
+    triggerDiscardingManually = true;
+  } else {
+    ok(true, 'Using normal discarding because SurfaceCache expiration ' +
+             'is ' + expirationMs + ' ms');
+  }
+
+  // Enable discarding for the test.
+  SpecialPowers.pushPrefEnv({
+    'set':[['image.mem.discardable',true]]
+  }, runTest);
+}
+
+function runTest() {
+  var image = new Image();
+  image.setAttribute("id", "gif");
+
+  // 1. Draw the canvas once on loadComplete
+  // 2. Redraw the canvas and compare the results right on discard
+  addCallbacks(image, drawCanvas, function() {
+    drawCanvas();
+    is(pngResults[0], pngResults[1], "got different rendered results");
+    SimpleTest.finish();
+  });
+
+  image.src = "bug399925.gif";
+  document.getElementById("content").appendChild(image);
+
+  if (triggerDiscardingManually) {
+    var request = SpecialPowers.wrap(image)
+        .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+    setTimeout(() => request.requestDiscard(), 1000);
+  }
+}
+
+function addCallbacks(anImage, loadCompleteCallback, discardCallback) {
+  var observer = new ImageDecoderObserverStub();
+  observer.discard = function () {
+    imgLoadingContent.removeObserver(scriptedObserver);
+    discardCallback();
+  }
+  observer.loadComplete = loadCompleteCallback;
+  observer = SpecialPowers.wrapCallbackObject(observer);
+
+  var scriptedObserver = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
+                           .getService(SpecialPowers.Ci.imgITools)
+                           .createScriptedObserver(observer);
+
+  var imgLoadingContent = SpecialPowers.wrap(anImage);
+  imgLoadingContent.addObserver(scriptedObserver);
+}
+
+function drawCanvas() {
+  var canvas = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
+  var gif = document.getElementById('gif');
+
+  context.drawImage(gif, 0, 0);
+  ok(true, "we got through the drawImage call without an exception being thrown");
+  pngResults.push(canvas.toDataURL());
+}
+
+</script>
+</pre>
+</body>
+</html>
+

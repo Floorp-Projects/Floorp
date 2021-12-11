@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIInputStream.idl"
+
+/**
+ * The multiplex stream concatenates a list of input streams into a single
+ * stream.
+ */
+
+[scriptable, uuid(a076fd12-1dd1-11b2-b19a-d53b5dffaade)]
+interface nsIMultiplexInputStream : nsISupports
+{
+    /**
+     * Number of streams in this multiplex-stream
+     */
+    readonly attribute unsigned long count;
+
+    /**
+     * Appends a stream to the end of the streams. The cursor of the stream
+     * should be located at the beginning of the stream if the implementation
+     * of this nsIMultiplexInputStream also is used as an nsISeekableStream.
+     * @param stream  stream to append
+     */
+    void appendStream(in nsIInputStream stream);
+
+    /**
+     * Get stream at specified index.
+     * @param index   return stream at this index, must be < count
+     * @return        stream at specified index
+     */
+    nsIInputStream getStream(in unsigned long index);
+};

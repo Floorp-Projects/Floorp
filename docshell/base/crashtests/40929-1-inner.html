@@ -1,0 +1,14 @@
+<html><head><title>Infinite Loop</title></head>
+<body onLoad="initNav(); initNav();">
+
+<script language="JavaScript">
+
+function initNav() {
+  ++parent.i;
+  if (parent.i < 10)
+  	window.location.href=window.location.href;
+}
+
+</script>
+
+</body></html>

@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1647128 - Fetch Metadata Headers contain invalid value for Sec-Fetch-Site for meta redirects</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+<script class="testbody" type="text/javascript">
+/*
+ * Description of the test:
+ * We load site A that redirects to site B using a meta refresh,
+ * finally site B redirects to site C via a 302 redirect.
+ * The first load of site A is made by an iframe: frame.srcdoc = "<meta ...".
+ * We check that all requests have the Sec-Fetch-* headers set appropriately.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const REQUEST_URL = "https://example.com/tests/dom/security/test/sec-fetch/file_redirect.sjs";
+let testPassCounter = 0;
+
+/* eslint-env mozilla/frame-script */
+var script = SpecialPowers.loadChromeScript(() => {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  Services.obs.addObserver(function onExamResp(subject, topic, data) {
+    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    if (!channel.URI.spec.startsWith("https://example.com/tests/dom/security/test/sec-fetch/file_redirect.sjs")) {
+      return;
+    }
+
+    // The redirection flow is the following:
+    // http://mochi.test:8888 -> https://example.com?meta -> https://example.com?redirect302 -> https://example.com?pageC
+    // So the Sec-Fetch-* headers for each request should be:
+    const expectedHeaders = {
+        "?meta": {
+          "Sec-Fetch-Site": "cross-site",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Dest": "iframe",
+          "Sec-Fetch-User": null,
+        },
+        "?redirect302": {
+          "Sec-Fetch-Site": "same-origin",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Dest": "iframe",
+          "Sec-Fetch-User": null,
+        },
+        "?pageC": {
+          "Sec-Fetch-Site": "same-origin",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Dest": "iframe",
+          "Sec-Fetch-User": null,
+        },
+    };
+
+    let matchedOne = false;
+    for (const [query, headers] of Object.entries(expectedHeaders)) {
+      if (!channel.URI.spec.endsWith(query)) {
+        continue;
+      }
+      matchedOne = true;
+
+      for (const [header, value] of Object.entries(headers)) {
+        try {
+          is(channel.getRequestHeader(header), value, `testing ${header} for the ${query} query`);
+        } catch (e) {
+          is(header, "Sec-Fetch-User", "testing Sec-Fetch-User");
+        }
+      }
+    }
+    ok(matchedOne, "testing expectedHeaders");
+
+    sendAsyncMessage("test-pass");
+  }, "http-on-stop-request");
+});
+
+script.addMessageListener("test-pass", async () => {
+  testPassCounter++;
+  if (testPassCounter < 3) {
+    return;
+  }
+
+  // If we received "test-pass" 3 times we know that all loads had Sec-Fetch-* headers set appropriately.
+  SimpleTest.finish();
+});
+
+SpecialPowers.pushPrefEnv({set: [["dom.security.secFetch.enabled", true]]}, async () => {
+  let frame = document.createElement("iframe");
+  frame.srcdoc = `<meta http-equiv="refresh" content="0; url='${REQUEST_URL}?meta'">`;
+  document.body.appendChild(frame);
+});
+
+</script>
+</body>
+</html>

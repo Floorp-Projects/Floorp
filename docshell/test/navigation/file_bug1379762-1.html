@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bug 1379762</title>
+  </head>
+  <img srcset> <!-- This tries to add load blockers during bfcache restoration -->
+  <script>
+    onunload = null; // enable bfcache
+    var bc = new BroadcastChannel('bug1379762');
+    bc.postMessage("init"); 
+    onpageshow = function() {
+      bc.onmessage = (messageEvent) => {
+        let message = messageEvent.data;
+        if (message == "forward_back") {
+          // Navigate forward and then back.
+          // eslint-disable-next-line no-global-assign
+          setTimeout(function() { location = "goback.html"; }, 0);
+        } else if (message == "finish_test") {
+          // Do this async so our load event gets a chance to fire if it plans to
+          // do it.
+          setTimeout(function() {
+            bc.postMessage("finished");
+            bc.close();
+            window.close();
+          });
+        }
+      }
+      bc.postMessage("increment_testCount");
+    };
+    onload = function() {
+      bc.postMessage("increment_loadCount");
+    };
+  </script>
+</html>

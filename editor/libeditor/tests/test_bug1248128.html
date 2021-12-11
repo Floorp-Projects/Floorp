@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248128
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1248128</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  SimpleTest.waitForFocus(function() {
+    var outer = document.querySelector("html");
+    ok(outer.scrollTop == 0, "scrollTop is zero: got " + outer.scrollTop);
+
+    var input = document.getElementById("testInput");
+    input.focus();
+
+    var scroll = outer.scrollTop;
+    ok(scroll > 0, "element has scrolled: new value " + scroll);
+
+    try {
+      SpecialPowers.doCommand(window, "cmd_moveLeft");
+      ok(false, "should not be able to do kMoveLeft");
+    } catch (e) {
+      ok(true, "unable to perform kMoveLeft");
+    }
+
+    ok(outer.scrollTop == scroll,
+       "scroll is unchanged: got " + outer.scrollTop + ", expected " + scroll);
+
+    // Make sure cmd_moveLeft isn't failing for some unrelated reason
+    sendString("a");
+    is(input.selectionStart, 1, "selectionStart after typing");
+    SpecialPowers.doCommand(window, "cmd_moveLeft");
+    is(input.selectionStart, 0, "selectionStart after move left");
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1248128">Mozilla Bug 1248128</a>
+<div style="height: 2000px;"></div>
+<input type="text" id="testInput"></input>
+<div style="height: 200px;"></div>
+</body>
+</html>

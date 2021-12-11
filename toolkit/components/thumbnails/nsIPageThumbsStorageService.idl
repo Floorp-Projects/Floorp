@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A service which returns information about file paths where the
+ * screenshots for URLs are stored. These screenshots are used by the
+ * moz-page-thumb protocol
+ */
+
+[scriptable, uuid(97943eec-0e48-49ef-b7b7-cf4aa0109bb6)]
+interface nsIPageThumbsStorageService : nsISupports
+{
+  /**
+   * Returns the leaf name of the file containing the screenshot for a given URL
+   */
+  AString getLeafNameForURL(in AString aURL);
+
+  /**
+   * Returns the path where the thumbnails are stored
+   */
+  readonly attribute AString path;
+
+  /**
+   * Returns the full file path containing the screenshot for a given URL
+   */
+  AString getFilePathForURL(in AString aURL);
+};

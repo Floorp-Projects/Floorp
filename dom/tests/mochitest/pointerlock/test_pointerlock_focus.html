@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1646493 - test_pointerlock_focus.html</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <style>
+    #target {
+      width: 50px;
+      height: 50px;
+      background-color: green;
+    }
+
+    iframe {
+      width: 250px;
+      height: 50px;
+    }
+  </style>
+</head>
+<body style="width: 100vw; height: 100vh; margin: 0;">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1646493">Mozilla Bug 1646493</a><br>
+<div id="target"></div>
+<input id="input"><br>
+<iframe id="iframe" src="https://example.com/tests/dom/tests/mochitest/pointerlock/iframe_differentDOM.html"></iframe>
+<script>
+
+function waitForEventOnce(aTarget, aEvent) {
+  return new Promise(aResolve => {
+    aTarget.addEventListener(aEvent, aResolve, { once: true });
+  });
+}
+
+function unexpectedEvent(aEvent) {
+  ok(false, `Unexpected ${aEvent.type} event`);
+}
+
+async function requestPointerLock(aElement) {
+  let doc = aElement.ownerDocument;
+  doc.addEventListener("pointerlockerror", unexpectedEvent);
+
+  SpecialPowers.wrap(doc).notifyUserGestureActivation();
+  aElement.requestPointerLock();
+  await waitForEventOnce(doc, "pointerlockchange");
+
+  is(doc.pointerLockElement, aElement, "target pointer locked");
+  doc.removeEventListener("pointerlockerror", unexpectedEvent);
+}
+
+async function exitPointerLock(aDocument) {
+  if (aDocument.pointerLockElement) {
+    aDocument.exitPointerLock();
+    await waitForEventOnce(aDocument, "pointerlockchange");
+  }
+  is(aDocument.pointerLockElement, null, "pointer unlocked");
+}
+
+let target = document.getElementById("target");
+let input = document.getElementById("input");
+
+add_task(async function init() {
+  await SimpleTest.promiseFocus();
+});
+
+add_task(async function focusMovesIntoXoriginIframe() {
+  let iframe = document.getElementById("iframe");
+
+  input.focus();
+  is(document.activeElement, input, "focus input");
+
+  // Request pointer lock on parent window
+  await requestPointerLock(target);
+
+  // Move focus into child window with different origin
+  let win = iframe.contentWindow;
+  document.addEventListener("pointerlockchange", unexpectedEvent);
+  synthesizeKey("KEY_Tab");
+  await SpecialPowers.spawn(win, [], async () => {
+    if (!content.document.hasFocus()) {
+      await new Promise((resolve) => {
+        content.document.addEventListener('focus', resolve, { once: true });
+      });
+    }
+  });
+  is(document.pointerLockElement, target, "target pointer locked");
+  document.removeEventListener("pointerlockchange", unexpectedEvent);
+
+  // Exit pointer lock
+  await exitPointerLock(document);
+});
+
+add_task(async function focusMovesToAnotherTab() {
+  input.focus();
+  is(document.activeElement, input, "focus input");
+
+  // Request pointer lock on parent window
+  await requestPointerLock(target);
+
+  // Move focus to another tab
+  let promise = waitForEventOnce(document, "pointerlockchange");
+  let win = window.open('iframe_differentDOM.html');
+  await promise;
+  is(document.pointerLockElement, null, "pointer unlocked");
+
+  win.close();
+  await exitPointerLock(document);
+});
+</script>
+</body>
+</html>

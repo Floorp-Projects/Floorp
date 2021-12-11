@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=571390
+-->
+<window title="Mozilla Bug 571390"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="foo bar">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=571390"
+     target="_blank">Mozilla Bug 571390</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 571390 **/
+
+  is(document.documentElement.classList.length, 2, "Should have 2 classes.");
+  ok(document.documentElement.classList.contains("foo"), "Should contain 'foo' class.");
+  ok(document.documentElement.classList.contains("bar"), "Should contain 'bar' class.");
+  ok(!document.documentElement.classList.contains("foobar"), "Shouldn't contain 'foobar' class.");
+
+  document.documentElement.classList.add("foobar");
+  is(document.documentElement.classList.length, 3, "Should have 3 classes.");
+  ok(document.documentElement.classList.contains("foo"), "Should contain 'foo' class.");
+  ok(document.documentElement.classList.contains("bar"), "Should contain 'bar' class.");
+  ok(document.documentElement.classList.contains("foobar"), "Should contain 'foobar' class.");
+
+  document.documentElement.classList.remove("foobar");
+  is(document.documentElement.classList.length, 2, "Should have 2 classes.");
+  ok(document.documentElement.classList.contains("foo"), "Should contain 'foo' class.");
+  ok(document.documentElement.classList.contains("bar"), "Should contain 'bar' class.");
+  ok(!document.documentElement.classList.contains("foobar"), "Shouldn't contain 'foobar' class.");
+  ]]>
+  </script>
+</window>

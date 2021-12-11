@@ -1,0 +1,165 @@
+#filter substitution
+<?xml version="1.0"?>
+# -*- Mode: HTML -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- The "global.css" stylesheet is imported first to allow other stylesheets to
+     override rules using selectors with the same specificity. This applies to
+     both "content" and "skin" packages, which bug 1385444 will unify later. -->
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<!-- While these stylesheets are defined in Toolkit, they are only used in the
+     main browser window, so we can load them here. Bug 1474241 is on file to
+     consider moving these widgets to the "browser" folder. -->
+<?xml-stylesheet href="chrome://global/content/tabprompts.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/tabprompts.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/tabbrowser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/usercontext/usercontext.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/controlcenter/panel.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/customizableui/panelUI.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/searchbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css" type="text/css"?>
+
+<html id="main-window"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.w3.org/1999/xhtml"
+#ifdef XP_MACOSX
+        data-l10n-id="browser-main-window-mac"
+#else
+        data-l10n-id="browser-main-window"
+#endif
+        data-l10n-args="{&quot;content-title&quot;:&quot;CONTENTTITLE&quot;}"
+        data-l10n-attrs="data-content-title-default, data-content-title-private, data-title-default, data-title-private"
+#ifdef XP_WIN
+        chromemargin="0,2,2,2"
+#else
+        chromemargin="0,-1,-1,-1"
+#endif
+        tabsintitlebar="true"
+        windowtype="navigator:browser"
+        macanimationtype="document"
+        macnativefullscreen="true"
+        screenX="4" screenY="4"
+        sizemode="normal"
+        retargetdocumentfocus="urlbar-input"
+        scrolling="false"
+        persist="screenX screenY width height sizemode"
+        data-l10n-sync="true">
+<head>
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <link rel="localization" href="browser/branding/brandings.ftl"/>
+  <link rel="localization" href="toolkit/global/textActions.ftl"/>
+  <link rel="localization" href="browser/browser.ftl"/>
+  <link rel="localization" href="browser/browserContext.ftl"/>
+  <link rel="localization" href="browser/browserSets.ftl"/>
+  <link rel="localization" href="browser/menubar.ftl"/>
+  <link rel="localization" href="browser/protectionsPanel.ftl"/>
+  <link rel="localization" href="browser/appmenu.ftl"/>
+  <link rel="localization" href="browser/panelUI.ftl"/>
+  <link rel="localization" href="preview/interventions.ftl"/>
+  <link rel="localization" href="browser/sidebarMenu.ftl"/>
+  <link rel="localization" href="browser/allTabsMenu.ftl"/>
+  <link rel="localization" href="browser/places.ftl"/>
+  <link rel="localization" href="toolkit/printing/printUI.ftl"/>
+  <link rel="localization" href="browser/tabbrowser.ftl"/>
+  <link rel="localization" href="preview/firefoxSuggest.ftl"/>
+  <link rel="localization" href="browser/toolbarContextMenu.ftl"/>
+  <link rel="localization" href="browser/screenshots.ftl"/>
+
+  <title data-l10n-id="browser-main-window-title"></title>
+
+# All JS files which are needed by browser.xhtml and other top level windows to
+# support MacOS specific features *must* go into the global-scripts.inc file so
+# that they can be shared with macWindow.inc.xhtml.
+#include global-scripts.inc
+
+<script>
+  /* eslint-env mozilla/browser-window */
+  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-captivePortal.js", this);
+  if (AppConstants.MOZ_DATA_REPORTING) {
+    Services.scriptloader.loadSubScript("chrome://browser/content/browser-data-submission-info-bar.js", this);
+  }
+  if (!AppConstants.MOZILLA_OFFICIAL) {
+    Services.scriptloader.loadSubScript("chrome://browser/content/browser-development-helpers.js", this);
+  }
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-pageActions.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-sidebar.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabsintitlebar.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser-tab.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser-tabs.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/places/places-menupopup.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/search/autocomplete-popup.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/search/searchbar.js", this);
+
+  window.onload = gBrowserInit.onLoad.bind(gBrowserInit);
+  window.onunload = gBrowserInit.onUnload.bind(gBrowserInit);
+  window.onclose = WindowIsClosing;
+
+  window.addEventListener("MozBeforeInitialXULLayout",
+    gBrowserInit.onBeforeInitialXULLayout.bind(gBrowserInit), { once: true });
+
+  // The listener of DOMContentLoaded must be set on window, rather than
+  // document, because the window can go away before the event is fired.
+  // In that case, we don't want to initialize anything, otherwise we
+  // may be leaking things because they will never be destroyed after.
+  window.addEventListener("DOMContentLoaded",
+    gBrowserInit.onDOMContentLoaded.bind(gBrowserInit), { once: true });
+</script>
+</head>
+<html:body xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+# All sets except for popupsets (commands, keys, and stringbundles)
+# *must* go into the browser-sets.inc file so that they can be shared with other
+# top level windows in macWindow.inc.xhtml.
+#include browser-sets.inc
+
+#include main-popupset.inc.xhtml
+
+#include appmenu-viewcache.inc.xhtml
+
+  <html:dialog id="window-modal-dialog" style="visibility: hidden; height: 0; width: 0"/>
+  <html:template id="window-modal-dialog-template">
+    <vbox class="dialogTemplate dialogOverlay" align="center" topmost="true">
+      <hbox class="dialogBox">
+        <browser class="dialogFrame"
+                 autoscroll="false"
+                 disablehistory="true"/>
+      </hbox>
+    </vbox>
+  </html:template>
+
+#include navigator-toolbox.inc.xhtml
+
+#include browser-box.inc.xhtml
+
+  <html:template id="customizationPanel">
+    <box id="customization-container" flex="1" hidden="true"><![CDATA[
+#include ../../components/customizableui/content/customizeMode.inc.xhtml
+    ]]></box>
+  </html:template>
+
+#include fullscreen-and-pointerlock.inc.xhtml
+
+  <vbox id="browser-bottombox" layer="true">
+    <!-- gNotificationBox will be added here lazily. -->
+  </vbox>
+
+  <html:div id="a11y-announcement" role="alert"/>
+
+  <!-- Put it at the very end to make sure it's not covered by anything. -->
+  <html:div id="fullscr-toggler" hidden="hidden"/>
+</html:body>
+</html>

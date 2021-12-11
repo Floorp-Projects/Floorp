@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: placeholder has to be used if set via javascript -->
+  <link rel='stylesheet' type='text/css' href='placeholder-style.css'>
+  <script type="text/javascript">
+    function setPlaceholder()
+    {
+      document.getElementById('p1').placeholder = "my placeholder";
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setPlaceholder(); disableReftestWait();">
+    <input type="text" id="p1" value="" placeholder="">
+  </body>
+</html>

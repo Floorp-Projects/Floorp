@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+namespace mozilla {
+class HangDetails;
+}
+%}
+
+[ref] native HangDetailsRef(mozilla::HangDetails);
+
+/**
+ * A scriptable interface for getting information about a BHR detected hang.
+ * This is the type of the subject of the "bhr-thread-hang" observer topic.
+ */
+[scriptable, uuid(23d63fff-38d6-4003-9c57-2c90aca1180a)]
+interface nsIHangDetails : nsISupports
+{
+  /**
+   * The hang was persisted to disk as a permahang, so we can clear the
+   * permahang file once we submit this.
+   */
+  readonly attribute bool wasPersisted;
+
+  /**
+   * The detected duration of the hang in milliseconds.
+   */
+  readonly attribute double duration;
+
+  /**
+   * The name of the thread which hung.
+   */
+  readonly attribute ACString thread;
+
+  /**
+   * The name of the runnable which hung if it hung on the main thread.
+   */
+  readonly attribute ACString runnableName;
+
+  /**
+   * The type of process which produced the hang. This should be either:
+   * "default", "content", or "gpu".
+   */
+  readonly attribute ACString process;
+
+  /**
+   * The remote type of the content process which produced the hang.
+   */
+  readonly attribute AUTF8String remoteType;
+
+  /**
+   * Returns the stack which was captured by BHR. The offset is encoded as a hex
+   * string, as it can contain numbers larger than JS can hold losslessly.
+   *
+   * This value takes the following form:
+   * [ [moduleIndex, offset], ... ]
+   */
+  [implicit_jscontext] readonly attribute jsval stack;
+
+  /**
+   * Returns the modules which were captured by BHR.
+   *
+   * This value takes the following form:
+   * [ ["fileName", "BreakpadId"], ... ]
+   */
+  [implicit_jscontext] readonly attribute jsval modules;
+
+  /**
+   * The hang annotations which were captured when the hang occured. This
+   * attribute is a JS object of key-value pairs.
+   */
+  [implicit_jscontext] readonly attribute jsval annotations;
+};

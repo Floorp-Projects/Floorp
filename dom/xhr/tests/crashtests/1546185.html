@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+  a = new AudioContext();
+  b = new XMLHttpRequest({});
+  c = new ArrayBuffer(34464);
+  d = new XMLHttpRequest();
+  try {
+    d.open('G', '', false);
+  } catch (e) {}
+  try {
+    x = new ArrayBuffer(1);
+    a.decodeAudioData(x, function() {}, function() {
+      try {
+        b.open('G', '', false);
+      } catch (e) {}
+      try {
+        b.send();
+      } catch (e) {}
+      try {
+        d.open('P', '', false);
+      } catch (e) {}
+      try {
+        d.send();
+      } catch (e) {}
+    })
+  } catch (e) {}
+  try {
+    d.send();
+  } catch (e) {}
+}
+
+boom();
+
+</script>
+</head>
+<body></body>
+</html>

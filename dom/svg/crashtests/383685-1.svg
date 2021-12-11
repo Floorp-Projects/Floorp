@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" onload="setTimeout(boom, 100);">
+
+<script>
+
+function boom()
+{
+  var gradient = document.getElementById("gradient");
+  gradient.spreadMethod.baseVal = undefined;
+  uneval({p: gradient.attributes});
+}
+
+</script>
+
+<linearGradient id="gradient" />
+
+</svg>

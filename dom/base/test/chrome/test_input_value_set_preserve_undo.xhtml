@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Bug 1676785"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<html:body>
+  <xul:hbox>
+    <html:input id="xul" />
+  </xul:hbox>
+  <html:div>
+    <html:input id="non-xul" />
+  </html:div>
+</html:body>
+<script class="testbody">
+SimpleTest.waitForExplicitFinish();
+
+function shouldPreserveHistory(input, preserve) {
+  input.focus();
+  input.value = "abc";
+  input.value = "def";
+  let ctrl = navigator.platform.indexOf("Mac") == 0 ? { metaKey: true } : { ctrlKey: true };
+  synthesizeKey("z", ctrl);
+  (preserve ? is : isnot)(input.value, "abc", `Expected ${input.id} to ${preserve ? "" : "not "}preserve undo history when setting .value`);
+}
+
+window.onload = function() {
+  shouldPreserveHistory(document.getElementById("xul"), true);
+  shouldPreserveHistory(document.getElementById("non-xul"), false);
+
+  SimpleTest.finish();
+}
+</script>
+</window>

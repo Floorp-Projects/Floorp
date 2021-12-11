@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=620295
+-->
+<head>
+  <title>Test that the href property reflects xlink:href="" on 'a' elements</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620295">Mozilla Bug 620295</a>
+<p id="display"></p>
+<div id="content">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <a id="a" xlink:href="a"/>
+</svg>
+</div>
+<pre id="test">
+<script><![CDATA[
+
+var a = document.getElementById("a");
+
+// Initial attribute value should be reflected in the href property
+is(a.href.baseVal, "a", "Initial property value");
+
+// Updated attribute value should be reflected in the href property
+a.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "b");
+is(a.href.baseVal, "b", "Updated property value");
+
+// Modifying the href property should cause the attribute to be updated
+a.href.baseVal = "c";
+is(a.getAttributeNS("http://www.w3.org/1999/xlink", "href"), "c", "Updated attribute value");
+
+]]></script>
+</pre>
+</body>
+</html>

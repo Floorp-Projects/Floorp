@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html id="root-element">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1151663, helper page</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+    // -------------------------------------------------------------------
+    // Infrastructure to get the test assertions to run at the right time.
+    // -------------------------------------------------------------------
+    var SimpleTest = window.opener.SimpleTest;
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+
+    // --------------------------------------------------------------------
+    // The actual logic for testing bug 1151663.
+    //
+    // In this test we have a simple page which is scrollable, with a
+    // scrollable <div> which is also scrollable. We test that the
+    // <div> does not get an initial APZC, since primary scrollable
+    // frame is the page's root scroll frame.
+    // --------------------------------------------------------------------
+
+    function test() {
+      // Reconstruct the APZC tree structure in the last paint.
+      var apzcTree = getLastApzcTree();
+
+      // The apzc tree for this page should consist of a single root APZC,
+      // which either is the RCD with no child APZCs (e10s/B2G case) or has a
+      // single child APZC which is for the RCD (fennec case). If we activate
+      // all scrollframes then we expect there to be a child.
+      var rcd = findRcdNode(apzcTree);
+      ok(rcd != null, "found the RCD node");
+
+      // For reference when I run this test locally when I modified it to
+      // handle activateAllScrollFrames I got the following values:
+      // rootElement.clientWidth 1280
+      // rootElement.clientHeight 863
+      // rootDisplayPort: {"x":0,"y":0,"w":1280,"h":3200} non wr
+      // rootDisplayPort: {"x":0,"y":0,"w":1280,"h":1792} wr
+      // At this time activateAllScrollFrames is only active with wr fission:
+      // div displayPort: {"x":0,"y":0,"w":50,"h":50} wr fission
+      // theDiv.clientWidth: 50 wr fission
+      // theDiv.clientHeight: 50 wr fission
+
+      let config = getHitTestConfig();
+
+      let heightMultiplier = SpecialPowers.getCharPref("apz.y_stationary_size_multiplier");
+      // With WebRender, the effective height multiplier can be reduced
+      // for alignment reasons. The reduction should be no more than a
+      // factor of two.
+      heightMultiplier /= 2;
+      info("effective displayport height multipler is " + heightMultiplier);
+
+      let rootDisplayPort = getLastContentDisplayportFor('root-element');
+      let rootElement = document.getElementById('root-element');
+      info("rootDisplayPort is " + JSON.stringify(rootDisplayPort));
+      info("rootElement.clientWidth " + rootElement.clientWidth +
+           " rootElement.clientHeight " + rootElement.clientHeight);
+      ok(rootDisplayPort.w >= rootElement.clientWidth, "rootDisplayPort should be at least as wide as page");
+      ok(rootDisplayPort.h >= heightMultiplier * rootElement.clientHeight,
+        "rootDisplayPort should be at least as tall as page times heightMultiplier");
+
+      let displayPort = getLastContentDisplayportFor('thediv');
+      if (config.activateAllScrollFrames) {
+        is(rcd.children.length, 1, "expected one child on the RCD");
+        let theDiv = document.getElementById("thediv");
+        ok(displayPort != null, "should have displayPort");
+        info("div displayPort: " + JSON.stringify(displayPort));
+        info("div width: " + theDiv.clientWidth);
+        info("div height: " + theDiv.clientHeight);
+        ok(displayPort.w <= theDiv.clientWidth + 1, "displayPort w should have empty margins");
+        ok(displayPort.h <= theDiv.clientHeight + 1, "displayPort h should have empty margins");
+      } else {
+        is(rcd.children.length, 0, "expected no children on the RCD");
+        ok(displayPort == null, "should not have displayPort");
+      }
+    }
+    waitUntilApzStable()
+    .then(forceLayerTreeToCompositor)
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151663">Mozilla Bug 1151663</a>
+  <div id="thediv" style="height: 50px; width: 50px; overflow: scroll">
+    <!-- Put enough content into the subframe to make it have a nonzero scroll range -->
+    <div style="height: 100px; width: 50px"></div>
+  </div>
+  <!-- Put enough content into the page to make it have a nonzero scroll range -->
+  <div style="height: 5000px"></div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include LayersMessages;
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
+
+include WebRenderMessages;
+include protocol PCompositorBridge;
+include protocol PTexture;
+
+using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
+using mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
+using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
+using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::RenderReasons from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::MaybeIdNamespace from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h";
+[MoveOnly] using mozilla::layers::DisplayListData from "mozilla/layers/RenderRootTypes.h";
+[MoveOnly] using mozilla::layers::MaybeTransactionData from "mozilla/layers/RenderRootTypes.h";
+using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
+using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
+using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
+
+namespace mozilla {
+namespace layers {
+
+sync protocol PWebRenderBridge
+{
+  manager PCompositorBridge;
+
+parent:
+  sync EnsureConnected()
+    returns (TextureFactoryIdentifier textureFactoryIdentifier, MaybeIdNamespace maybeIdNamespace, nsCString error);
+
+  async NewCompositable(CompositableHandle handle, TextureInfo info);
+  async ReleaseCompositable(CompositableHandle compositable);
+
+  async DeleteCompositorAnimations(uint64_t[] aIds);
+  async SetDisplayList(DisplayListData displayList,
+                       OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
+                       bool containsSVGGroup,
+                       VsyncId vsyncId, TimeStamp vsyncStartTime,
+                       TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime,
+                       CompositionPayload[] payloads);
+  async EmptyTransaction(FocusTarget focusTarget,
+                         MaybeTransactionData transationData,
+                         OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
+                         VsyncId vsyncId, TimeStamp vsyncStartTime,
+                         TimeStamp refreshStartTime, TimeStamp txnStartTime,
+                         nsCString txnURL, TimeStamp fwdTime,
+                         CompositionPayload[] payloads);
+  async SetFocusTarget(FocusTarget focusTarget);
+  async UpdateResources(IdNamespace aIdNamespace, OpUpdateResource[] aResourceUpdates,
+                        RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
+  async ParentCommands(WebRenderParentCommand[] commands);
+  sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);
+  async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
+  async ClearCachedResources();
+  // Invalidate rendered frame
+  async InvalidateRenderedFrame();
+  // Schedule a composite if one isn't already scheduled.
+  async ScheduleComposite(RenderReasons aReasons);
+  // Save the frame capture to disk
+  async Capture();
+
+  // Start capturing each frame to disk. See
+  // nsIDOMWindowUtils::wrStartCaptureSequence for documentation.
+  async StartCaptureSequence(nsCString aPath, uint32_t aFlags);
+
+  // Stop the captures started by StartCaptureSequence. See
+  // nsIDOMWindowUtils::wrStopCaptureSequence for documentation.
+  async StopCaptureSequence();
+
+  // Replacement for PCompositorBridge::SyncWithCompositor, but for WR. We need
+  // it on PWebRenderBridge because it associated with a particular top-level
+  // window, and PCompositorBridge doesn't allow doing that in a secure manner.
+  sync SyncWithCompositor();
+
+  // These correspond exactly to the equivalent APIs in PLayerTransaction -
+  // see those for documentation.
+  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+  // More copied from PLayerTransaction, but these are only used for testing.
+  sync SetTestSampleTime(TimeStamp sampleTime);
+  sync LeaveTestMode();
+  sync GetAnimationValue(uint64_t aCompositorAnimationsId) returns (OMTAValue value);
+  sync SetAsyncScrollOffset(ViewID scrollId, float x, float y);
+  sync SetAsyncZoom(ViewID scrollId, float zoom);
+  async FlushApzRepaints();
+  sync GetAPZTestData() returns (APZTestData data);
+  sync GetFrameUniformity() returns (FrameUniformityData data);
+
+  async Shutdown();
+  sync ShutdownSync();
+child:
+  async WrUpdated(IdNamespace aNewIdNamespace, TextureFactoryIdentifier textureFactoryIdentifier);
+  async WrReleasedImages(ExternalImageKeyPair[] pairs);
+  async __delete__();
+};
+
+} // layers
+} // mozilla

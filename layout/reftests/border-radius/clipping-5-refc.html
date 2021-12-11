@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<title>Test for clipping of border-radius</title>
+<style>
+canvas {
+  margin: 18px 19px 21px 25px;
+  /* border + padding: 1px 2px 4px 8px */
+
+  /* Horizontal: TL TR BR BL / Vertical: TL TR BR BL */
+  /* border-radius: 25px 17px 14px 18px / 12px 15px 18px 17px; */
+  border-radius: 17px 15px 12px 10px / 11px 14px 14px 13px;
+}
+</style>
+<canvas id="canvas" height="100" width="200"></canvas>
+<script>
+var canvas = document.getElementById("canvas");
+var cx = canvas.getContext("2d");
+cx.fillStyle="lime";
+cx.fillRect(0, 0, 200, 100);
+</script>

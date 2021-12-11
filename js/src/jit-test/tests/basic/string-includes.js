@@ -1,0 +1,46 @@
+assertEq("abc".includes("a"), true);
+assertEq("abc".includes("b"), true);
+assertEq("abc".includes("abc"), true);
+assertEq("abc".includes("bc"), true);
+assertEq("abc".includes("d"), false);
+assertEq("abc".includes("abcd"), false);
+assertEq("abc".includes("ac"), false);
+assertEq("abc".includes("abc", 0), true);
+assertEq("abc".includes("bc", 0), true);
+assertEq("abc".includes("de", 0), false);
+assertEq("abc".includes("bc", 1), true);
+assertEq("abc".includes("c", 1), true);
+assertEq("abc".includes("a", 1), false);
+assertEq("abc".includes("abc", 1), false);
+assertEq("abc".includes("c", 2), true);
+assertEq("abc".includes("d", 2), false);
+assertEq("abc".includes("dcd", 2), false);
+assertEq("abc".includes("a", 42), false);
+assertEq("abc".includes("a", Infinity), false);
+assertEq("abc".includes("ab", -43), true);
+assertEq("abc".includes("cd", -42), false);
+assertEq("abc".includes("ab", -Infinity), true);
+assertEq("abc".includes("cd", -Infinity), false);
+assertEq("abc".includes("ab", NaN), true);
+assertEq("abc".includes("cd", NaN), false);
+var myobj = {toString : () => "abc", includes : String.prototype.includes};
+assertEq(myobj.includes("abc"), true);
+assertEq(myobj.includes("cd"), false);
+var gotStr = false, gotPos = false;
+myobj = {toString : (function () {
+    assertEq(gotPos, false);
+    gotStr = true;
+    return "xyz";
+}),
+includes : String.prototype.includes};
+var idx = {valueOf : (function () {
+    assertEq(gotStr, true);
+    gotPos = true;
+    return 42;
+})};
+myobj.includes("elephant", idx);
+assertEq(gotPos, true);
+assertEq("xyzzy".includes("zy\0", 2), false);
+var dots = Array(10000).join('.');
+assertEq(dots.includes("\x01", 10000), false);
+assertEq(dots.includes("\0", 10000), false);

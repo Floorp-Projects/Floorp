@@ -1,0 +1,43 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.sidebar {
+  display: grid;
+  grid-template-rows: auto auto;
+}
+
+.sidebar__label {
+  color: var(--secondary-text-color);
+  display: block;
+  padding: 12px 0;
+  text-align: center;
+  font-size: var(--message-font-size);
+}
+
+.sidebar__adb-status {
+  margin-block-end: calc(var(--base-unit) * 2);
+}
+
+.sidebar__refresh-usb {
+  text-align: center;
+}
+
+.sidebar__footer {
+  align-self: flex-end;
+}
+
+.sidebar__footer__support-help {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  column-gap: calc(var(--base-unit) * 4);
+  height: 100%;
+}
+
+.sidebar__footer__icon {
+  width: calc(var(--base-unit) * 4);
+  height: calc(var(--base-unit) * 4);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}

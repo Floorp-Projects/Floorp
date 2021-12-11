@@ -1,0 +1,21 @@
+# This must be the first Python variable set in this file
+script ignore__see_bug_1605268 = True
+
+#filter substitution
+script topsrcdir = "@topsrcdir@"; lldb.debugger.HandleCommand("command source -s true '%s'" % os.path.join(topsrcdir, ".lldbinit"))
+
+#ifdef MOZ_WIDGET_ANDROID
+settings set symbols.enable-external-lookup true
+
+# This is where libxul.so and libmozglue.so are produced in full builds.
+settings append target.exec-search-paths @topobjdir@/toolkit/library/build
+settings append target.exec-search-paths @topobjdir@/mozglue/build
+settings append target.exec-search-paths @topobjdir@/security
+
+# This is where artifact builds unpacks "crashreporter-symbols-full" uncompressed ELF debug symbols.
+settings append target.debug-file-search-paths @topobjdir@/dist/crashreporter-symbols
+
+# These are specific paths encoded into Mozilla's automation outputs.
+settings append target.source-map /builds/worker/workspace/build/src/obj-firefox @topobjdir@
+settings append target.source-map /builds/worker/workspace/build/src @topsrcdir@
+#endif

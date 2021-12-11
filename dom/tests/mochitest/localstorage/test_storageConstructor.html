@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Storage interface</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function startTest()
+{
+  var functionCalled = false;
+  is(localStorage instanceof Storage, true, "localStorage is instance of Storage");
+  Storage.prototype.exists = function(key) {
+    functionCalled = true;
+    return this.getItem(key) != null;
+  }
+  localStorage.setItem("test_prototype", "value");
+  is(functionCalled, false, "Overridden function not called");
+  is(localStorage.exists("test_prototype"), true, "Prototype overridden");
+  is(functionCalled, true, "Overridden function called");
+  localStorage.clear();
+  
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+</body>
+</html>

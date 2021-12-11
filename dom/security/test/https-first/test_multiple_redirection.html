@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1721410
+Test multiple redirects using https-first and ensure the entire redirect chain is using https
+-->
+
+<head>
+  <title>HTTPS-First-Mode - Test for multiple redirections</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  SimpleTest.waitForExplicitFinish();
+
+  const testCase = [
+    // test 1: https-first upgrades http://example.com/test1 -> https://example.com/test1
+    //         that's redirect to https://example.com/.../redirect which then redirects
+    //         to http://example.com/../verify. Since the last redirect is http, and the
+    //         the redirection chain contains already example.com we expect https-first
+    //         to downgrade the request.
+    {name: "test last redirect HTTP", result: "scheme-http", query: "test1" },
+    // test 2: https-first upgrades http://example.com/test2 -> https://example.com/test2
+    //         that's redirect to https://example.com/.../redirect which then redirects
+    //         to https://example.com/../verify. Since the last redirect is https, we
+    //         expect to reach an https website.
+    {name: "test last redirect HTTPS", result: "scheme-https", query: "test2"},
+    // test 3: https-first upgrades http://example.com/test3 -> https://example.com/test3
+    //         that's redirect to https://example.com/.../hsts which then sets an hsts header
+    //         and redirects to http://example.com/../verify. Since an hsts header was set
+    //         we expect that to reach an https site
+    {name: "test last redirect HSTS", result: "scheme-https", query: "test3"},
+    // reset: reset hsts header for example.com
+    {name: "reset HSTS header", result: "scheme-https", query: "reset"},
+  ]
+  let currentTest = 0;
+  let testWin;
+  window.addEventListener("message", receiveMessage);
+
+  // receive message from loaded site verifying the scheme of
+  // the loaded document.
+  async function receiveMessage(event) {
+    let test = testCase[currentTest];
+      is(event.data.result,
+       test.result,
+       "same-origin redirect results in " + test.name
+    );
+    testWin.close();
+    if (++currentTest < testCase.length) {
+      startTest();
+      return;
+    }
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+  }
+
+  async function startTest() {
+    const test = testCase[currentTest];
+    // Load an http:// window which gets upgraded to https://
+    let uri =
+      `http://example.com/tests/dom/security/test/https-first/file_multiple_redirection.sjs?${test.query}`;
+    testWin = window.open(uri);
+  }
+
+  // Set preference and start test
+  SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true],
+  ]}, startTest);
+  </script>
+</body>
+</html>

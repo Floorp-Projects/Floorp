@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<title>Test setValueAtTime with startTime in the past</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+function do_test(t, context) {
+  var source = context.createConstantSource();
+  source.start();
+
+  // Use a ramp of slope 1/sample to measure time.
+  // The end value is the extent of exact precision in single precision float.
+  const rampEnd = Math.pow(2, 24);
+  const rampEndSeconds = rampEnd / context.sampleRate;
+  var test = context.createGain();
+  test.gain.setValueAtTime(0.0, 0.5*context.currentTime);
+  test.gain.linearRampToValueAtTime(rampEnd, rampEndSeconds);
+
+  var reference = context.createGain();
+  reference.gain.setValueAtTime(0.0, context.currentTime);
+  reference.gain.linearRampToValueAtTime(rampEnd, rampEndSeconds);
+
+  source.connect(test);
+  source.connect(reference);
+
+  var merger = context.createChannelMerger();
+  test.connect(merger, 0, 0);
+  reference.connect(merger, 0, 1);
+
+  var processor = context.createScriptProcessor(0, 2, 0);
+  merger.connect(processor);
+  processor.onaudioprocess =
+    t.step_func_done((e) => {
+      source.stop();
+      processor.onaudioprocess = null;
+
+      var testValue = e.inputBuffer.getChannelData(0)[0];
+      var referenceValue = e.inputBuffer.getChannelData(1)[0];
+
+      assert_equals(testValue, referenceValue,
+                        "ramp value matches expected");
+    });
+}
+
+async_test(function(t) {
+  var context = new AudioContext;
+  (function waitForTimeAdvance() {
+    if (context.currentTime == 0) {
+      t.step_timeout(waitForTimeAdvance, 0);
+    } else {
+      do_test(t, context);
+    }
+  })();
+});
+</script>

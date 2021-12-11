@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <filter id="f" height="-1"/>
+
+  <rect filter="url(#f)" />
+
+</svg>

@@ -1,0 +1,390 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension activityLog test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_api() {
+  let URL =
+    "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+
+  // Test that an unspecified extension is not logged by the watcher extension.
+  let unlogged = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
+    manifest: {
+      applications: { gecko: { id: "unlogged@tests.mozilla.org" } },
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+    background() {
+      // This privileged test extension should not affect the webRequest
+      // data received by non-privileged extensions (See Bug 1576272).
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          return { cancel: false };
+        },
+        { urls: ["http://mochi.test/*/file_sample.html"] },
+        ["blocking"]
+      );
+    },
+  });
+  await unlogged.startup();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id: "watched@tests.mozilla.org" } },
+      permissions: [
+        "tabs",
+        "tabHide",
+        "storage",
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
+      ],
+      content_scripts: [
+        {
+          matches: ["http://mochi.test/*/file_sample.html"],
+          js: ["content_script.js"],
+          run_at: "document_idle",
+        },
+      ],
+    },
+    files: {
+      "content_script.js": () => {
+        browser.test.sendMessage("content_script");
+      },
+      "registered_script.js": () => {
+        browser.test.sendMessage("registered_script");
+      },
+    },
+    async background() {
+      let listen = () => {};
+      async function runTest() {
+        // Test activity for a child function call.
+        browser.test.assertEq(
+          undefined,
+          browser.activityLog,
+          "activityLog requires permission"
+        );
+
+        // Test a child event manager.
+        browser.storage.onChanged.addListener(listen);
+        browser.storage.onChanged.removeListener(listen);
+
+        // Test a parent event manager.
+        let webRequestListener = details => {
+          browser.webRequest.onBeforeRequest.removeListener(webRequestListener);
+          return { cancel: false };
+        };
+        browser.webRequest.onBeforeRequest.addListener(
+          webRequestListener,
+          { urls: ["http://mochi.test/*/file_sample.html"] },
+          ["blocking"]
+        );
+
+        // A manifest based content script is already
+        // registered, we do a dynamic registration here.
+        await browser.contentScripts.register({
+          js: [{ file: "registered_script.js" }],
+          matches: ["http://mochi.test/*/file_sample.html"],
+          runAt: "document_start",
+        });
+        browser.test.sendMessage("ready");
+      }
+      browser.test.onMessage.addListener((msg, data) => {
+        // Logging has started here so this listener is logged, but the
+        // call adding it was not.  We do an additional onMessage.addListener
+        // call in the test function to validate child based event managers.
+        if (msg == "runtest") {
+          browser.test.assertTrue(true, msg);
+          runTest();
+        }
+        if (msg == "hideTab") {
+          browser.tabs.hide(data);
+        }
+      });
+      browser.test.sendMessage("url", browser.runtime.getURL(""));
+    },
+  });
+
+  async function backgroundScript(expectedUrl, extensionUrl) {
+    let expecting = [
+      // Test child-only api_call.
+      {
+        type: "api_call",
+        name: "test.assertTrue",
+        data: { args: [true, "runtest"] },
+      },
+
+      // Test child-only api_call.
+      {
+        type: "api_call",
+        name: "test.assertEq",
+        data: {
+          args: [undefined, undefined, "activityLog requires permission"],
+        },
+      },
+      // Test child addListener calls.
+      {
+        type: "api_call",
+        name: "storage.onChanged.addListener",
+        data: {
+          args: [],
+        },
+      },
+      {
+        type: "api_call",
+        name: "storage.onChanged.removeListener",
+        data: {
+          args: [],
+        },
+      },
+      // Test parent addListener calls.
+      {
+        type: "api_call",
+        name: "webRequest.onBeforeRequest.addListener",
+        data: {
+          args: [
+            {
+              incognito: null,
+              tabId: null,
+              types: null,
+              urls: ["http://mochi.test/*/file_sample.html"],
+              windowId: null,
+            },
+            ["blocking"],
+          ],
+        },
+      },
+      // Test an api that makes use of callParentAsyncFunction.
+      {
+        type: "api_call",
+        name: "contentScripts.register",
+        data: {
+          args: [
+            {
+              allFrames: null,
+              css: null,
+              excludeGlobs: null,
+              excludeMatches: null,
+              includeGlobs: null,
+              js: [
+                {
+                  file: `${extensionUrl}registered_script.js`,
+                },
+              ],
+              matchAboutBlank: null,
+              matches: ["http://mochi.test/*/file_sample.html"],
+              runAt: "document_start",
+            },
+          ],
+        },
+      },
+      // Test child api_event calls.
+      {
+        type: "api_event",
+        name: "test.onMessage",
+        data: { args: ["runtest"] },
+      },
+      {
+        type: "api_call",
+        name: "test.sendMessage",
+        data: { args: ["ready"] },
+      },
+      // Test parent api_event calls.
+      {
+        type: "api_call",
+        name: "webRequest.onBeforeRequest.removeListener",
+        data: {
+          args: [],
+        },
+      },
+      {
+        type: "api_event",
+        name: "webRequest.onBeforeRequest",
+        data: {
+          args: [
+            {
+              url: expectedUrl,
+              method: "GET",
+              type: "main_frame",
+              frameId: 0,
+              parentFrameId: -1,
+              incognito: false,
+              thirdParty: false,
+              ip: null,
+              frameAncestors: [],
+              urlClassification: { firstParty: [], thirdParty: [] },
+              requestSize: 0,
+              responseSize: 0,
+            },
+          ],
+          result: {
+            cancel: false,
+          },
+        },
+      },
+      // Test manifest based content script.
+      {
+        type: "content_script",
+        name: "content_script.js",
+        data: { url: expectedUrl, tabId: 1 },
+      },
+      // registered script test
+      {
+        type: "content_script",
+        name: `${extensionUrl}registered_script.js`,
+        data: { url: expectedUrl, tabId: 1 },
+      },
+      {
+        type: "api_call",
+        name: "test.sendMessage",
+        data: { args: ["registered_script"], tabId: 1 },
+      },
+      {
+        type: "api_call",
+        name: "test.sendMessage",
+        data: { args: ["content_script"], tabId: 1 },
+      },
+      // Child api call
+      {
+        type: "api_call",
+        name: "tabs.hide",
+        data: { args: ["__TAB_ID"] },
+      },
+      {
+        type: "api_event",
+        name: "test.onMessage",
+        data: { args: ["hideTab", "__TAB_ID"] },
+      },
+    ];
+    browser.test.assertTrue(browser.activityLog, "activityLog is privileged");
+
+    // Slightly less than a normal deep equal, we want to know that the values
+    // in our expected data are the same in the actual data, but we don't care
+    // if actual data has additional data or if data is in the same order in objects.
+    // This allows us to ignore keys that may be variable, or that are set in
+    // the api with an undefined value.
+    function deepEquivalent(a, b) {
+      if (a === b) {
+        return true;
+      }
+      if (
+        typeof a != "object" ||
+        typeof b != "object" ||
+        a === null ||
+        b === null
+      ) {
+        return false;
+      }
+      for (let k in a) {
+        if (!deepEquivalent(a[k], b[k])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    let tab;
+    let handler = async details => {
+      browser.test.log(`onExtensionActivity ${JSON.stringify(details)}`);
+      let test = expecting.shift();
+      if (!test) {
+        browser.test.notifyFail(`no test for ${details.name}`);
+      }
+
+      // On multiple runs, tabId will be different.  Set the current
+      // tabId where we need it.
+      if (test.data.tabId !== undefined) {
+        test.data.tabId = tab.id;
+      }
+      if (test.data.args !== undefined) {
+        test.data.args = test.data.args.map(value =>
+          value === "__TAB_ID" ? tab.id : value
+        );
+      }
+
+      browser.test.assertEq(test.type, details.type, "type matches");
+      if (test.type == "content_script") {
+        browser.test.assertTrue(
+          details.name.includes(test.name),
+          "content script name matches"
+        );
+      } else {
+        browser.test.assertEq(test.name, details.name, "name matches");
+      }
+
+      browser.test.assertTrue(
+        deepEquivalent(test.data, details.data),
+        `expected ${JSON.stringify(
+          test.data
+        )} included in actual ${JSON.stringify(details.data)}`
+      );
+      if (!expecting.length) {
+        await browser.tabs.remove(tab.id);
+        browser.test.notifyPass("activity");
+      }
+    };
+    browser.activityLog.onExtensionActivity.addListener(
+      handler,
+      "watched@tests.mozilla.org"
+    );
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg === "opentab") {
+        tab = await browser.tabs.create({ url: expectedUrl });
+        browser.test.sendMessage("tabid", tab.id);
+      }
+      if (msg === "done") {
+        browser.activityLog.onExtensionActivity.removeListener(
+          handler,
+          "watched@tests.mozilla.org"
+        );
+      }
+    });
+  }
+
+  await extension.startup();
+  let extensionUrl = await extension.awaitMessage("url");
+
+  let logger = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
+    manifest: {
+      applications: { gecko: { id: "watcher@tests.mozilla.org" } },
+      permissions: ["activityLog"],
+    },
+    background: `(${backgroundScript})("${URL}", "${extensionUrl}")`,
+  });
+  await logger.startup();
+  extension.sendMessage("runtest");
+  await extension.awaitMessage("ready");
+  logger.sendMessage("opentab");
+  let id = await logger.awaitMessage("tabid");
+
+  await Promise.all([
+    extension.awaitMessage("content_script"),
+    extension.awaitMessage("registered_script"),
+  ]);
+
+  extension.sendMessage("hideTab", id);
+  await logger.awaitFinish("activity");
+
+  // Stop watching because we get extra calls on extension shutdown
+  // such as listener removal.
+  logger.sendMessage("done");
+
+  await extension.unload();
+  await unlogged.unload();
+  await logger.unload();
+});
+</script>
+
+</body>
+</html>

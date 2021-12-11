@@ -1,0 +1,8 @@
+<!doctype html>
+<canvas></canvas>
+<script>
+var canvas = document.body.firstChild,
+    gl = canvas.getContext("experimental-webgl");
+gl.texImage2D(0, 0, 0, 0, 0, { get width() { throw 7 }, get height() { throw 7 }, data: new Uint8ClampedArray(10) });
+gl.texSubImage2D(0, 0, 0, 0, 0, 0, { get width() { throw 7 }, get height() { throw 7 }, data: new Uint8ClampedArray(10) });
+</script>

@@ -1,0 +1,197 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Templates implementing some generic checks.
+# ==============================================================
+
+# Declare some exceptions. This is cumbersome, but since we shouldn't need a
+# lot of them, let's stack them all here. When adding a new one, put it in the
+# _declare_exceptions template, and add it to the return statement. Then
+# destructure in the assignment below the function declaration.
+
+
+@template
+@imports(_from="__builtin__", _import="Exception")
+def _declare_exceptions():
+    class FatalCheckError(Exception):
+        """An exception to throw from a function decorated with @checking.
+        It will result in calling die() with the given message.
+        Debugging messages emitted from the decorated function will also be
+        printed out."""
+
+    return (FatalCheckError,)
+
+
+(FatalCheckError,) = _declare_exceptions()
+
+del _declare_exceptions
+
+# Helper to display "checking" messages
+#   @checking('for foo')
+#   def foo():
+#       return 'foo'
+# is equivalent to:
+#   def foo():
+#       log.info('checking for foo... ')
+#       ret = foo
+#       log.info(ret)
+#       return ret
+# This can be combined with e.g. @depends:
+#   @depends(some_option)
+#   @checking('for something')
+#   def check(value):
+#       ...
+# An optional callback can be given, that will be used to format the returned
+# value when displaying it.
+
+
+@template
+def checking(what, callback=None):
+    def decorator(func):
+        def wrapped(*args, **kwargs):
+            log.info("checking %s... ", what)
+            with log.queue_debug():
+                error, ret = None, None
+                try:
+                    ret = func(*args, **kwargs)
+                except FatalCheckError as e:
+                    error = str(e)
+                display_ret = callback(ret) if callback else ret
+                if display_ret is True:
+                    log.info("yes")
+                elif display_ret is False or display_ret is None:
+                    log.info("no")
+                else:
+                    log.info(display_ret)
+                if error is not None:
+                    die(error)
+            return ret
+
+        return wrapped
+
+    return decorator
+
+
+# Template to check for programs in $PATH.
+# - `var` is the name of the variable that will be set with `set_config` when
+#   the program is found.
+# - `progs` is a list (or tuple) of program names that will be searched for.
+#   It can also be a reference to a @depends function that returns such a
+#   list. If the list is empty and there is no input, the check is skipped.
+# - `what` is a human readable description of what is being looked for. It
+#   defaults to the lowercase version of `var`.
+# - `input` is a string reference to an existing option or a reference to a
+#   @depends function resolving to explicit input for the program check.
+#   The default is to create an option for the environment variable `var`.
+#   This argument allows to use a different kind of option (possibly using a
+#   configure flag), or doing some pre-processing with a @depends function.
+# - `allow_missing` indicates whether not finding the program is an error.
+# - `paths` is a list of paths or @depends function returning a list of paths
+#   that will cause the given path(s) to be searched rather than $PATH. Input
+#   paths may either be individual paths or delimited by os.pathsep, to allow
+#   passing $PATH (for example) as an element.
+# - `bootstrap` is a path relative to the bootstrap root path (e.g ~/.mozbuild)
+#   where to find the program if it's bootstrapped.
+#
+# - `bootstrap_search_path` is not an argument that users of the template are
+#   supposed to pass. See the override of check_prog in top-level moz.configure.
+#
+# The simplest form is:
+#   check_prog('PROG', ('a', 'b'))
+# This will look for 'a' or 'b' in $PATH, and set_config PROG to the one
+# it can find. If PROG is already set from the environment or command line,
+# use that value instead.
+@template
+@imports(_from="mozbuild.shellutil", _import="quote")
+def check_prog(
+    var,
+    progs,
+    what=None,
+    input=None,
+    allow_missing=False,
+    paths=None,
+    bootstrap=None,
+    when=None,
+    bootstrap_search_path=None,
+):
+    if input is not None:
+        # Wrap input with type checking and normalization.
+        @depends(input, when=when)
+        def input(value):
+            if not value:
+                return
+            if isinstance(value, str):
+                return (value,)
+            if isinstance(value, (tuple, list)) and len(value) == 1:
+                return value
+            configure_error(
+                "input must resolve to a tuple or a list with a "
+                "single element, or a string"
+            )
+
+    else:
+        option(
+            env=var,
+            nargs=1,
+            when=when,
+            help="Path to %s" % (what or "the %s program" % var.lower()),
+        )
+        input = var
+    what = what or var.lower()
+
+    # Trick to make a @depends function out of an immediate value.
+    progs = dependable(progs)
+    paths = dependable(paths)
+    allow_missing = dependable(allow_missing)
+
+    if bootstrap:
+        if input is var:
+            # A when is needed when depending on an option, so normalize
+            # to a function that can used without.
+            has_input = depends(input, when=when)(lambda x: x)
+        else:
+            has_input = input
+        # We don't want to bootstrap when an explicit value was given as input.
+        if when:
+            bootstrap_when = depends(when, has_input)(lambda w, i: w and not i)
+        else:
+            bootstrap_when = depends(has_input)(lambda i: not i)
+        paths = bootstrap_search_path(bootstrap, paths, when=bootstrap_when)
+
+    # Avoid displaying the "Checking for" message when the inputs are such
+    # that we don't actually want anything to be checked. It is a bit
+    # convoluted because of how `when` works.
+    # We first wrap all the inputs except allow_missing (which doesn't count
+    # for whether to display the "Checking for" message).
+    @depends_if(input, progs, paths, when=when)
+    def inputs(input, progs, paths):
+        if progs is None:
+            progs = ()
+
+        if not isinstance(progs, (tuple, list)):
+            configure_error("progs must resolve to a list or tuple!")
+
+        return namespace(value=input, progs=progs, paths=paths)
+
+    @depends(inputs, allow_missing, when=inputs)
+    @checking("for %s" % what, lambda x: quote(x) if x else "not found")
+    def check(inputs, allow_missing):
+        value = inputs.value
+        progs = inputs.progs
+        paths = inputs.paths
+
+        for prog in value or progs:
+            log.debug("%s: Looking for %s", var.lower(), quote(prog))
+            result = find_program(prog, paths)
+            if result:
+                return result
+
+        if not allow_missing or value:
+            raise FatalCheckError("Cannot find %s" % what)
+
+    set_config(var, check)
+
+    return check

@@ -1,0 +1,23 @@
+<html><head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src='/tests/SimpleTest/paint_listener.js'></script>
+<script src='apz_test_utils.js'></script>
+<script src='apz_test_native_event_utils.js'></script>
+<script>
+async function doZoomIn() {
+    await waitUntilApzStable();
+    await pinchZoomInWithTouch(100, 100);
+    await promiseOnlyApzControllerFlushed();
+}
+
+// Silence SimpleTest warning about missing assertions by having it wait
+// indefinitely. We don't need to give it an explicit finish because the
+// entire window this test runs in will be closed after subtestDone is called.
+SimpleTest.waitForExplicitFinish();
+</script>
+</head>
+<body>
+Here is some text to stare at as the test runs. It serves no functional
+purpose, but gives you an idea of the zoom level. It's harder to tell what
+the zoom level is when the page is just solid white.
+</body></html>

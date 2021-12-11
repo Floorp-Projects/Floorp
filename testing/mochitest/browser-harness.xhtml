@@ -1,0 +1,364 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<window id="browserTestHarness"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="TestStart();"
+        title="Browser chrome tests"
+        width="1024">
+  <script src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
+  <script src="chrome://mochikit/content/chrome-harness.js"/>
+  <script src="chrome://mochikit/content/manifestLibrary.js" />
+  <script src="chrome://mochikit/content/chunkifyTests.js"/>
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+    #results {
+      margin: 5px;
+      background-color: window;
+      user-select: text;
+    }
+
+    #summary {
+      color: white;
+      border: 2px solid black;
+    }
+
+    #summary.success {
+      background-color: #0d0;
+    }
+
+    #summary.failure {
+      background-color: red;
+    }
+
+    #summary.todo {
+      background-color: orange;
+    }
+
+    .info {
+      color: grey;
+    }
+
+    .failed {
+      color: red;
+      font-weight: bold;
+    }
+
+    .testHeader {
+      margin-top: 1em;
+    }
+
+    p {
+      margin: 0.1em;
+    }
+
+    a {
+      color: blue;
+      text-decoration: underline;
+    }
+  ]]></style>
+  <script type="application/javascript"><![CDATA[
+    var gConfig;
+
+    var gDumper = {
+      get fileLogger() {
+        let logger = null;
+        if (gConfig.logFile) {
+          try {
+            logger = new MozillaFileLogger(gConfig.logFile)
+          } catch (ex) {
+            dump("TEST-UNEXPECTED-FAIL | (browser-harness.xhtml) | " +
+                 "Error trying to log to " + gConfig.logFile + ": " + ex + "\n");
+          }
+        }
+        delete this.fileLogger;
+        return this.fileLogger = logger;
+      },
+      structuredLogger: TestRunner.structuredLogger,
+      dump: function (str) {
+        this.structuredLogger.info(str);
+
+        if (this.fileLogger)
+          this.fileLogger.log(str);
+      },
+
+      done: function () {
+        if (this.fileLogger)
+          this.fileLogger.close();
+      }
+    }
+
+    function TestStart() {
+      gConfig = readConfig();
+
+      // Update the title for --start-at and --end-at.
+      if (gConfig.startAt || gConfig.endAt)
+        document.getElementById("runTestsButton").label =
+          "Run subset of tests";
+
+      if (gConfig.autorun)
+        setTimeout(runTests, 0);
+    }
+
+    var gErrorCount = 0;
+
+    function browserTest(aTestFile) {
+      this.path = aTestFile['url'];
+      this.expected = aTestFile['expected'];
+      this.https_first_disabled = aTestFile['https_first_disabled'] || false,
+      this.dumper = gDumper;
+      this.results = [];
+      this.scope = null;
+      this.duration = 0;
+      this.unexpectedTimeouts = 0;
+      this.lastOutputTime = 0;
+    }
+    browserTest.prototype = {
+      get passCount() {
+        return this.results.filter(t => !t.info && !t.todo && t.pass).length;
+      },
+      get todoCount() {
+        return this.results.filter(t => !t.info && t.todo && t.pass).length;
+      },
+      get failCount() {
+        return this.results.filter(t => !t.info && !t.pass).length;
+      },
+      get allowedFailureCount() {
+        return this.results.filter(t => t.allowedFailure).length;
+      },
+
+      addResult: function addResult(result) {
+        this.lastOutputTime = Date.now();
+        this.results.push(result);
+
+        if (result.info) {
+          if (result.msg) {
+            ChromeUtils.addProfilerMarker("TEST-INFO", {category: "Test"},
+                                          result.msg);
+            this.dumper.structuredLogger.info(result.msg);
+          }
+          return;
+        }
+
+        this.dumper.structuredLogger.testStatus(this.path,
+                                                result.name,
+                                                result.status,
+                                                result.expected,
+                                                result.msg);
+        let markerName = "TEST-";
+        if (result.pass) {
+          markerName += result.todo ? "KNOWN-FAIL" : "PASS";
+        }
+        else {
+          markerName += "UNEXPECTED-" + result.status;
+        }
+        let markerText = result.name;
+        if (result.msg) {
+          markerText += " - " + result.msg;
+        }
+        ChromeUtils.addProfilerMarker(markerName, {category: "Test"}, markerText);
+      },
+
+      setDuration: function setDuration(duration) {
+        this.duration = duration;
+      },
+
+      get htmlLog() {
+        let txtToHTML = Cc["@mozilla.org/txttohtmlconv;1"].
+                        getService(Ci.mozITXTToHTMLConv);
+        function _entityEncode(str) {
+          return txtToHTML.scanTXT(str, Ci.mozITXTToHTMLConv.kEntities);
+        }
+        var path = _entityEncode(this.path);
+        var html = this.results.map(function (t) {
+          var classname = "result ";
+          var result = "TEST-";
+          if (t.info) {
+            classname = "info";
+            result += "INFO";
+          }
+          else if (t.pass) {
+            classname += "passed";
+            if (t.todo)
+              result += "KNOWN-FAIL";
+            else
+              result += "PASS";
+          }
+          else {
+            classname += "failed";
+            result += "UNEXPECTED-" + t.status;
+          }
+          var message = t.name + (t.msg ? " - " + t.msg : "");
+          var text = result + " | " + path + " | " + _entityEncode(message);
+          if (!t.info && !t.pass) {
+            return '<p class="' + classname + '" id=\"ERROR' + (gErrorCount++) + '">' +
+                   text + " <a href=\"javascript:scrollTo('ERROR" + gErrorCount + "')\">NEXT ERROR</a></p>";
+          }
+          return '<p class="' + classname + '">' + text + "</p>";
+        }).join("\n");
+        if (this.duration) {
+          html += "<p class=\"info\">TEST-END | " + path + " | finished in " +
+                  this.duration + " ms</p>";
+        }
+        return html;
+      }
+    };
+
+    // Returns an array of browserTest objects for all the selected tests
+    function runTests() {
+      gConfig.baseurl = "chrome://mochitests/content";
+      getTestList(gConfig, loadTestList);
+    }
+
+    function loadTestList(links) {
+      if (!links) {
+        createTester({});
+        return;
+      }
+
+      // load server.js in so we can share template functions
+      var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                           getService(Ci.mozIJSSubScriptLoader);
+      var srvScope = {};
+      scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
+                                 srvScope);
+
+      var fileNames = [];
+      var fileNameRegexp = /browser_.+\.js$/;
+      srvScope.arrayOfTestFiles(links, fileNames, fileNameRegexp);
+
+      if (gConfig.startAt || gConfig.endAt) {
+        fileNames = skipTests(fileNames, gConfig.startAt, gConfig.endAt);
+      }
+
+      createTester(fileNames.map(function (f) { return new browserTest(f); }));
+    }
+
+    function setStatus(aStatusString) {
+      document.getElementById("status").value = aStatusString;
+    }
+
+    function createTester(links) {
+      var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
+                             getService(Ci.nsIWindowMediator);
+      var winType = null;
+      if (gConfig.testRoot == "browser") {
+        const IS_THUNDERBIRD = Services.appinfo.ID == "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
+        winType = IS_THUNDERBIRD ? "mail:3pane" : "navigator:browser";
+      }
+      if (!winType) {
+        throw new Error("Unrecognized gConfig.testRoot: " + gConfig.testRoot);
+      }
+      var testWin = windowMediator.getMostRecentWindow(winType);
+
+      setStatus("Running...");
+
+      // It's possible that the test harness window is not yet focused when this
+      // function runs (in which case testWin is already focused, and focusing it
+      // will be a no-op, and then the test harness window will steal focus later,
+      // which will mess up tests). So wait for the test harness window to be
+      // focused before trying to focus testWin.
+      waitForFocus(() => {
+        // Focus the test window and start tests.
+        waitForFocus(() => {
+          var Tester = new testWin.Tester(links, gDumper.structuredLogger, testsFinished);
+          Tester.start();
+        }, testWin);
+      }, window);
+    }
+
+    function executeSoon(callback) {
+      let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+      tm.dispatchToMainThread(callback);
+    }
+
+    function waitForFocus(callback, win) {
+      // If "win" is already focused, just call the callback.
+      let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+      if (fm.focusedWindow == win) {
+        executeSoon(callback);
+        return;
+      }
+
+      // Otherwise focus it, and wait for the focus event.
+      win.addEventListener("focus", function listener() {
+        win.removeEventListener("focus", listener, true);
+        executeSoon(callback);
+      }, true);
+      win.focus();
+    }
+
+    function sum(a, b) {
+      return a + b;
+    }
+
+    function getHTMLLogFromTests(aTests) {
+      if (!aTests.length)
+        return "<div id=\"summary\" class=\"failure\">No tests to run." +
+                 " Did you pass an invalid --test-path?</div>";
+
+      var log = "";
+
+      var passCount = aTests.map(f => f.passCount).reduce(sum);
+      var failCount = aTests.map(f => f.failCount).reduce(sum);
+      var todoCount = aTests.map(f => f.todoCount).reduce(sum);
+      log += "<div id=\"summary\" class=\"";
+      log += failCount != 0 ? "failure" :
+               passCount == 0 ? "todo" : "success";
+      log += "\">\n<p>Passed: " + passCount + "</p>\n" +
+             "<p>Failed: " + failCount;
+      if (failCount > 0)
+        log += " <a href=\"javascript:scrollTo('ERROR0')\">NEXT ERROR</a>";
+      log += "</p>\n" +
+             "<p>Todo: " + todoCount + "</p>\n</div>\n<div id=\"log\">\n";
+
+      return log + aTests.map(function (f) {
+                                return "<p class=\"testHeader\">Running " + f.path + "...</p>\n" + f.htmlLog;
+                              }).join("\n") + "</div>";
+    }
+
+    function testsFinished(aTests) {
+      if (gConfig.closeWhenDone) {
+        const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+        if (
+          !AppConstants.RELEASE_OR_BETA &&
+          !AppConstants.DEBUG &&
+          !AppConstants.MOZ_CODE_COVERAGE &&
+          !AppConstants.ASAN &&
+          !AppConstants.TSAN
+        ) {
+          Cu.exitIfInAutomation();
+        } else {
+          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+          appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+        }
+        return;
+      }
+
+      // Focus our window, to display the results
+      window.focus();
+
+      // UI
+      document.getElementById("results").innerHTML = getHTMLLogFromTests(aTests);
+      setStatus("Done.");
+    }
+
+    function scrollTo(id) {
+      var line = document.getElementById(id);
+      if (!line)
+        return;
+
+      line.scrollIntoView();
+    }
+  ]]></script>
+  <button id="runTestsButton" oncommand="runTests();" label="Run All Tests"/>
+  <label id="status"/>
+  <scrollbox flex="1" style="overflow: auto" align="stretch">
+    <div id="results" xmlns="http://www.w3.org/1999/xhtml" flex="1"/>
+  </scrollbox>
+</window>

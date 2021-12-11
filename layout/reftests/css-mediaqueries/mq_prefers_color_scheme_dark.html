@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<html>
+<title>prefers-color-scheme: dark</title>
+<style>
+div {
+  width: 100px;
+  height: 100px;
+}
+
+@media (prefers-color-scheme: dark) {
+  div { background-color: green; }
+}
+@media (prefers-color-scheme: light) {
+  div { background-color: red; }
+}
+</style>
+<div></div>
+</html>

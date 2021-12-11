@@ -1,0 +1,83 @@
+@function textbox-shadow($color) {
+  @return 0 0 0 1px $color, 0 0 0 $textbox-shadow-size rgba($color, 0.3);
+}
+
+@mixin textbox-focus($color) {
+  --newtab-textbox-focus-color: #{$color};
+  --newtab-textbox-focus-boxshadow: #{textbox-shadow($color)};
+}
+
+// scss variables related to the theme.
+$border-primary: 1px solid var(--newtab-border-color);
+$border-secondary: 1px solid var(--newtab-border-color);
+$inner-box-shadow: 0 0 0 1px var(--newtab-inner-box-shadow-color);
+$input-border: 1px solid var(--newtab-border-color);
+$input-border-active: 1px solid var(--newtab-textbox-focus-color);
+$input-error-border: 1px solid var(--newtab-status-error);
+$input-error-boxshadow: textbox-shadow(var(--newtab-status-error));
+$shadow-primary: 0 0 0 5px var(--newtab-element-secondary-color);
+$shadow-secondary: 0 1px 4px 0 $grey-90-20;
+$shadow-large: 0 2px 14px 0 $black-20;
+$shadow-focus: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
+$shadow-card: 0 2px 6px rgba(0, 0, 0, 0.15);
+$shadow-image-inset: inset 0 0 0 0.5px $black-15;
+
+// Default theme
+body {
+  // General styles
+  --newtab-background-color: #{$in-content-page-background};
+  --newtab-background-color-secondary: #{$newtab-background-secondary};
+  --newtab-text-primary-color: #{$in-content-page-color};
+  --newtab-primary-action-background: #{$primary-blue};
+  --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
+
+  // --newtab-element-*-color is used when an element needs to be set off from
+  // the primary background color.
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #{$black});
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #{$black});
+
+  // --newtab-element-secondary*-color is used when an element needs to be set
+  // off from the secondary background color.
+  --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
+  --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
+  --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
+
+  --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 90%, #{$black});
+  --newtab-primary-element-active-color: color-mix(in srgb, var(--newtab-primary-action-background) 80%, #{$black});
+  --newtab-primary-element-text-color: #{$white};
+  // --newtab-primary-action-background-dimmed is used for soft focus borders.
+  --newtab-primary-action-background-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+  --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #{$black});
+  --newtab-wordmark-color: #{$newtab-wordmark-default-color};
+  --newtab-status-success: #{$status-green};
+  --newtab-status-error: #{$red-60};
+  --newtab-inner-box-shadow-color: #{$black-10};
+  --newtab-overlay-color: color-mix(in srgb, var(--newtab-background-color) 85%, transparent);
+  --newtab-text-emphasis-background: #{$yellow-50};
+  --newtab-text-emphasis-text-color: #{$grey-90};
+
+  @include textbox-focus(var(--newtab-primary-action-background)); // sass-lint:disable-line mixins-before-declarations
+
+  // Buttons
+  --newtab-button-secondary-color: inherit;
+
+  &[lwt-newtab-brighttext] {
+    // General styles
+    --newtab-background-color: #{$in-content-page-background-dark};
+    --newtab-background-color-secondary: #{$newtab-background-secondary-dark};
+    --newtab-text-primary-color: #{$in-content-page-color-dark};
+    --newtab-primary-action-background: #{$primary-blue-dark};
+
+    --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #{$white});
+    --newtab-element-active-color:  color-mix(in srgb, var(--newtab-background-color) 90%, #{$white});
+
+    --newtab-element-secondary-color: color-mix(in srgb, currentColor 10%, transparent);
+    --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 17%, transparent);
+    --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 30%, transparent);
+
+    --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #{$white});
+    --newtab-primary-element-text-color: #{$primary-text-color-dark};
+    --newtab-wordmark-color: #{$newtab-wordmark-darktheme-color};
+    --newtab-status-success: #{$status-dark-green};
+  }
+}

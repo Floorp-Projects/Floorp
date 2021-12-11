@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<title>Canvas Tests</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+</script>
+
+<p>Canvas test: drawFocusIfNeeded</p>
+<canvas id="c689" class="output" width="50" height="25">
+    <input id="button3" type="range" min="1" max="12"></input>
+    <input id="button4" type="range" min="1" max="12"></input>
+</canvas>
+<script type="text/javascript">
+function isEmptyCanvas(ctx, w, h) {
+  var imgdata = ctx.getImageData(0, 0, w, h);
+  for(var x = 0; x < w*h*4; x++)
+    if(imgdata.data[x] != 0)
+      return false;
+  return true;
+}
+
+var b1 = document.getElementById('button3');
+var b2 = document.getElementById('button4');
+
+function test_drawFocusIfNeeded_canvas() {
+  var c = document.getElementById("c689");
+  var ctx = c.getContext("2d");
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.beginPath();
+  ctx.rect(10, 10, 30, 30);
+  ctx.drawFocusIfNeeded(b1);
+  ok(isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height), "focus of button 1 is drawn");
+
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.beginPath();
+  ctx.rect(50, 10, 30, 30);
+  ctx.drawFocusIfNeeded(b2);
+  ctx.rect(50, 10, 30, 30);
+  ctx.drawFocusIfNeeded(b2);
+  ok(isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height), "focus of button 2 is drawn");
+
+  b1.focus();
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.beginPath();
+  ctx.rect(10, 10, 30, 30);
+  ctx.drawFocusIfNeeded(b1);
+  ok(!isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height) , "focus of button 1 is not drawn");
+}
+</script>
+
+
+<script>
+
+async function runTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["canvas.focusring.enabled", true],
+      ["browser.display.always_show_rings_after_key_focus", true],
+    ]
+  });
+  await SimpleTest.promiseFocus();
+  synthesizeKey("KEY_Tab"); // Trigger keyboard navigation so outlines are shown.
+  synthesizeKey("KEY_Tab", { shiftKey: true }); // And now undo the focus move.
+  try {
+    test_drawFocusIfNeeded_canvas();
+  } catch(e) {
+    ok(false, "unexpected exception thrown in: test_drawFocusIfNeeded_canvas");
+    throw e;
+  }
+
+ SimpleTest.finish();
+}
+
+addLoadEvent(runTests);
+
+</script>

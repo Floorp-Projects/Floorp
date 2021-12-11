@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script>
+    function focused() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <body>
+    <div contenteditable spellcheck="false" onfocus="focused()"
+      style="outline: none">foo<span contenteditable=false
+      style="-moz-user-select: none">bar</span>baz</div>
+    <script>
+      SimpleTest.waitForFocus(() => {
+        SimpleTest.executeSoon(() => {
+          synthesizeMouseAtCenter(document.querySelector("span"), {});
+        });
+      });
+    </script>
+  </body>
+</html>

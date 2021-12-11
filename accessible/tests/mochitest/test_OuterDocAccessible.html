@@ -1,0 +1,87 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=441519
+-->
+<head>
+  <title>nsOuterDocAccessible chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="common.js"></script>
+  <script type="application/javascript"
+          src="states.js"></script>
+  <script type="application/javascript"
+          src="role.js"></script>
+
+  <script type="application/javascript">
+    // needed error return value
+    const ns_error_invalid_arg = Cr.NS_ERROR_INVALID_ARG;
+
+    function doTest() {
+      // Get accessible for body tag.
+      var docAcc = getAccessible(document);
+
+      if (docAcc) {
+        var outerDocAcc = getAccessible(docAcc.parent);
+
+        if (outerDocAcc) {
+          testRole(outerDocAcc, ROLE_INTERNAL_FRAME);
+
+          // check if it is focusable.
+          testStates(outerDocAcc, STATE_FOCUSABLE, 0);
+
+          // see bug 428954: No name wanted for internal frame
+          is(outerDocAcc.name, null, "Wrong name for internal frame!");
+
+          // see bug 440770, no actions wanted on outer doc
+          is(outerDocAcc.actionCount, 0,
+             "Wrong number of actions for internal frame!");
+
+          try {
+            outerDocAcc.getActionName(0);
+            throw new Error("No exception thrown for actionName!");
+          } catch (e) {
+            is(e.result, ns_error_invalid_arg,
+               "Wrong return value for actionName call!");
+          }
+
+          try {
+            outerDocAcc.getActionDescription(0);
+            throw new Error("No exception thrown for actionDescription!");
+          } catch (e) {
+            is(e.result, ns_error_invalid_arg,
+               "Wrong return value for actionDescription call!");
+          }
+
+          try {
+            outerDocAcc.doAction(0);
+            throw new Error("No exception thrown for doAction!");
+          } catch (e) {
+            is(e.result, ns_error_invalid_arg,
+               "Wrong return value for doAction call!");
+          }
+        }
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=441519"
+     title="nsOuterDocAccessible chrome tests">
+    Mozilla Bug 441519
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

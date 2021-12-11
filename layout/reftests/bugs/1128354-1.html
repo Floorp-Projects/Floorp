@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      .flexVert {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .flexIntermediateHoriz {
+        display: flex;
+      }
+
+      .flexInnerHoriz {
+        display: flex;
+        /* This percent should not be resolvable, because our parent's
+         * height is indefinite (because our parent is a flex item with an
+         * indefinite flex basis, in an indefinite-main-sized flex container).
+         * So we just end up with our content height.
+         */
+        height: 100%;
+        background: pink;
+      }
+      .height50pct {
+        /* This percent should not be resolvable, for the same reason as above.
+         */
+        height: 50%;
+        background: brown;
+      }
+      .height0pct {
+        /* This percent should not be resolvable, for the same reason as above.
+         */
+        height: 0%;
+        background: yellow;
+      }
+      .spacer {
+        background: lightblue;
+        height: 200px;
+        width: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flexVert">
+      <div class="flexIntermediateHoriz">
+        <div class="flexInnerHoriz">text</div>
+        <div class="height50pct">fifty</div>
+        <div class="height0pct">zero</div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+  </body>
+</html>

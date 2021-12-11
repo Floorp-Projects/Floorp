@@ -1,0 +1,61 @@
+<html>
+
+<head>
+  <title>Announcement event and method testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    async function doTests() {
+      let acc = getAccessible("display");
+
+      let onAnnounce = waitForEvent(EVENT_ANNOUNCEMENT, acc);
+      acc.announce("please", nsIAccessibleAnnouncementEvent.POLITE);
+      let evt = await onAnnounce;
+      evt.QueryInterface(nsIAccessibleAnnouncementEvent);
+      is(evt.announcement, "please", "announcement matches.");
+      is(evt.priority, nsIAccessibleAnnouncementEvent.POLITE, "priority matches");
+
+      onAnnounce = waitForEvent(EVENT_ANNOUNCEMENT, acc);
+      acc.announce("do it", nsIAccessibleAnnouncementEvent.ASSERTIVE);
+      evt = await onAnnounce;
+      evt.QueryInterface(nsIAccessibleAnnouncementEvent);
+      is(evt.announcement, "do it", "announcement matches.");
+      is(evt.priority, nsIAccessibleAnnouncementEvent.ASSERTIVE,
+        "priority matches");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1525980"
+     title="Introduce announcement event and method">
+    Mozilla Bug 1525980
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+</body>
+</html>

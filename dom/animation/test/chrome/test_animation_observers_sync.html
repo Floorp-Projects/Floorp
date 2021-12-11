@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>
+Test chrome-only MutationObserver animation notifications (sync tests)
+</title>
+<!--
+
+  This file contains synchronous tests for animation mutation observers.
+
+  In general we prefer to write synchronous tests since they are less likely to
+  timeout when run on automation. Tests that require asynchronous steps (e.g.
+  waiting on events) should be added to test_animations_observers_async.html
+  instead.
+
+-->
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+<div id="log"></div>
+<style>
+@keyframes anim {
+  to { transform: translate(100px); }
+}
+@keyframes anotherAnim {
+  to { transform: translate(0px); }
+}
+</style>
+<script>
+
+/**
+ * Return a new MutationObserver which observing |target| element
+ * with { animations: true, subtree: |subtree| } option.
+ *
+ * NOTE: This observer should be used only with takeRecords(). If any of
+ * MutationRecords are observed in the callback of the MutationObserver,
+ * it will raise an assertion.
+ */
+function setupSynchronousObserver(t, target, subtree) {
+  var observer = new MutationObserver(records => {
+    assert_unreached("Any MutationRecords should not be observed in this " +
+                     "callback");
+  });
+  t.add_cleanup(() => {
+    observer.disconnect();
+  });
+  observer.observe(target, { animations: true, subtree });
+  return observer;
+}
+
+function assert_record_list(actual, expected, desc, index, listName) {
+  assert_equals(actual.length, expected.length,
+                `${desc} - record[${index}].${listName} length`);
+  if (actual.length != expected.length) {
+    return;
+  }
+  for (var i = 0; i < actual.length; i++) {
+    assert_not_equals(actual.indexOf(expected[i]), -1,
+       `${desc} - record[${index}].${listName} contains expected Animation`);
+  }
+}
+
+function assert_equals_records(actual, expected, desc) {
+  assert_equals(actual.length, expected.length, `${desc} - number of records`);
+  if (actual.length != expected.length) {
+    return;
+  }
+  for (var i = 0; i < actual.length; i++) {
+    assert_record_list(actual[i].addedAnimations,
+                       expected[i].added, desc, i, "addedAnimations");
+    assert_record_list(actual[i].changedAnimations,
+                       expected[i].changed, desc, i, "changedAnimations");
+    assert_record_list(actual[i].removedAnimations,
+                       expected[i].removed, desc, i, "removedAnimations");
+  }
+}
+
+function runTest() {
+  [ { subtree: false },
+    { subtree: true }
+  ].forEach(aOptions => {
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after duration is changed");
+
+      anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning same value");
+
+      anim.currentTime = anim.effect.getComputedTiming().duration * 2;
+      anim.finish();
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after animation end");
+
+      anim.effect.updateTiming({
+        duration: anim.effect.getComputedTiming().duration * 3
+      });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation restarted");
+
+      anim.effect.updateTiming({ duration: 'auto' });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after duration set \"auto\"");
+
+      anim.effect.updateTiming({ duration: 'auto' });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning same value \"auto\"");
+    }, "change_duration_and_currenttime");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.updateTiming({ endDelay: 10 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after endDelay is changed");
+
+      anim.effect.updateTiming({ endDelay: 10 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning same value");
+
+      anim.currentTime = 109 * MS_PER_SEC;
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after currentTime during endDelay");
+
+      anim.effect.updateTiming({ endDelay: -110 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning negative value");
+    }, "change_enddelay_and_currenttime");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] },
+                             { duration: 100 * MS_PER_SEC,
+                               endDelay: -100 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after animation is added");
+    }, "zero_end_time");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.updateTiming({ iterations: 2 });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after iterations is changed");
+
+      anim.effect.updateTiming({ iterations: 2 });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning same value");
+
+      anim.effect.updateTiming({ iterations: 0 });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after animation end");
+
+      anim.effect.updateTiming({ iterations: Infinity });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation restarted");
+    }, "change_iterations");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.updateTiming({ delay: 100 });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after delay is changed");
+
+      anim.effect.updateTiming({ delay: 100 });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning same value");
+
+      anim.effect.updateTiming({ delay: -100 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after animation end");
+
+      anim.effect.updateTiming({ delay: 0 });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation restarted");
+    }, "change_delay");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] },
+                             { duration: 100 * MS_PER_SEC,
+                               easing: "steps(2, start)" });
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.updateTiming({ easing: "steps(2, end)" });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after easing is changed");
+
+      anim.effect.updateTiming({ easing: "steps(2, end)" });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning same value");
+    }, "change_easing");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] },
+                             { duration: 100, delay: -100 });
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning negative value");
+    }, "negative_delay_in_constructor");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var effect = new KeyframeEffect(null,
+                                      { opacity: [ 0, 1 ] },
+                                      { duration: 100 * MS_PER_SEC });
+      var anim = new Animation(effect, document.timeline);
+      anim.play();
+      assert_equals_records(observer.takeRecords(),
+        [], "no records after animation is added");
+    }, "create_animation_without_target");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] },
+                             { duration: 100 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.target = div;
+      assert_equals_records(observer.takeRecords(),
+        [], "no records after setting the same target");
+
+      anim.effect.target = null;
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after setting null");
+
+      anim.effect.target = null;
+      assert_equals_records(observer.takeRecords(),
+        [], "records after setting redundant null");
+    }, "set_redundant_animation_target");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] },
+                             { duration: 100 * MS_PER_SEC });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect = null;
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after animation is removed");
+    }, "set_null_animation_effect");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = new Animation();
+      anim.play();
+      anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
+                                       100 * MS_PER_SEC);
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+    }, "set_effect_on_null_effect_animation");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ marginLeft: [ "0px", "100px" ] },
+                             100 * MS_PER_SEC);
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
+                                       100 * MS_PER_SEC);
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after replace effects");
+    }, "replace_effect_targeting_on_the_same_element");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ marginLeft: [ "0px", "100px" ] },
+                             100 * MS_PER_SEC);
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.currentTime = 60 * MS_PER_SEC;
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after animation is changed");
+
+      anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
+                                       50 * MS_PER_SEC);
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [anim] }],
+        "records after replacing effects");
+    }, "replace_effect_targeting_on_the_same_element_not_in_effect");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ }, 100 * MS_PER_SEC);
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.composite = "add";
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after composite is changed");
+
+      anim.effect.composite = "add";
+      assert_equals_records(observer.takeRecords(),
+        [], "no record after setting the same composite");
+
+    }, "set_composite");
+
+    // Test that starting a single animation that is cancelled by calling
+    // cancel() dispatches an added notification and then a removed
+    // notification.
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s forwards" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      animations[0].cancel();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+
+      // Re-trigger the animation.
+      animations[0].play();
+
+      // Single MutationRecord for the Animation (re-)addition.
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+    }, "single_animation_cancelled_api");
+
+    // Test that updating a property on the Animation object dispatches a changed
+    // notification.
+    [
+      { prop: "playbackRate", val: 0.5 },
+      { prop: "startTime",    val: 50 * MS_PER_SEC },
+      { prop: "currentTime",  val: 50 * MS_PER_SEC },
+    ].forEach(aChangeTest => {
+      test(t => {
+        // We use a forwards fill mode so that even if the change we make causes
+        // the animation to become finished, it will still be "relevant" so we
+        // won't mark it as removed.
+        var div = addDiv(t, { style: "animation: anim 100s forwards" });
+        var observer =
+          setupSynchronousObserver(t,
+                                   aOptions.subtree ? div.parentNode : div,
+                                   aOptions.subtree);
+
+        var animations = div.getAnimations();
+        assert_equals(animations.length, 1,
+          "getAnimations().length after animation start");
+
+        assert_equals_records(observer.takeRecords(),
+          [{ added: animations, changed: [], removed: [] }],
+          "records after animation start");
+
+        // Update the property.
+        animations[0][aChangeTest.prop] = aChangeTest.val;
+
+        // Make a redundant change.
+        animations[0][aChangeTest.prop] = animations[0][aChangeTest.prop];
+
+        assert_equals_records(observer.takeRecords(),
+          [{ added: [], changed: animations, removed: [] }],
+          "records after animation property change");
+      }, `single_animation_api_change_${aChangeTest.prop}`);
+    });
+
+    // Test that making a redundant change to currentTime while an Animation
+    // is pause-pending still generates a change MutationRecord since setting
+    // the currentTime to any value in this state aborts the pending pause.
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      animations[0].pause();
+
+      // We are now pause-pending. Even if we make a redundant change to the
+      // currentTime, we should still get a change record because setting the
+      // currentTime while pause-pending has the effect of cancelling a pause.
+      animations[0].currentTime = animations[0].currentTime;
+
+      // Two MutationRecords for the Animation changes: one for pausing, one
+      // for aborting the pause.
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] },
+         { added: [], changed: animations, removed: [] }],
+        "records after pausing then seeking");
+    }, "change_currentTime_while_pause_pending");
+
+    // Test that calling finish() on a forwards-filling Animation dispatches
+    // a changed notification.
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s forwards" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      animations[0].finish();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after finish()");
+
+      // Redundant finish.
+      animations[0].finish();
+
+      // Ensure no change records.
+      assert_equals_records(observer.takeRecords(),
+        [], "records after redundant finish()");
+    }, "finish_with_forwards_fill");
+
+    // Test that calling finish() on an Animation that does not fill forwards,
+    // dispatches a removal notification.
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      animations[0].finish();
+
+      // Single MutationRecord for the Animation removal.
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after finishing");
+    }, "finish_without_fill");
+
+    // Test that calling finish() on a forwards-filling Animation dispatches
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animation = div.getAnimations()[0];
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [animation], changed: [], removed: []}],
+        "records after creation");
+      animation.id = "new id";
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [animation], removed: []}],
+        "records after id is changed");
+
+      animation.id = "new id";
+      assert_equals_records(observer.takeRecords(),
+        [], "records after assigning same value with id");
+    }, "change_id");
+
+    // Test that calling reverse() dispatches a changed notification.
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s both" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      animations[0].reverse();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after calling reverse()");
+    }, "reverse");
+
+    // Test that calling reverse() does *not* dispatch a changed notification
+    // when playbackRate == 0.
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s both" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Seek to the middle and set playbackRate to zero.
+      animations[0].currentTime = 50 * MS_PER_SEC;
+      animations[0].playbackRate = 0;
+
+      // Two MutationRecords, one for each change.
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] },
+         { added: [], changed: animations, removed: [] }],
+        "records after seeking and setting playbackRate");
+
+      animations[0].reverse();
+
+      // We should get no notifications.
+      assert_equals_records(observer.takeRecords(),
+        [], "records after calling reverse()");
+    }, "reverse_with_zero_playbackRate");
+
+    // Test that reverse() on an Animation does *not* dispatch a changed
+    // notification when it throws an exception.
+    test(t => {
+      // Start an infinite animation
+      var div = addDiv(t, { style: "animation: anim 10s infinite" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Shift the animation into the future such that when we call reverse
+      // it will try to seek to the (infinite) end.
+      animations[0].startTime = 100 * MS_PER_SEC;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after adjusting startTime");
+
+      // Reverse: should throw
+      assert_throws('InvalidStateError', () => {
+        animations[0].reverse();
+      }, 'reverse() on future infinite animation throws an exception');
+
+      // We should get no notifications.
+      assert_equals_records(observer.takeRecords(),
+        [], "records after calling reverse()");
+    }, "reverse_with_exception");
+
+    // Test that attempting to start an animation that should already be finished
+    // does not send any notifications.
+    test(t => {
+      // Start an animation that should already be finished.
+      var div = addDiv(t, { style: "animation: anim 1s -2s;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause no Animations to be created.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 0,
+        "getAnimations().length after animation start");
+
+      // And we should get no notifications.
+      assert_equals_records(observer.takeRecords(),
+        [], "records after attempted animation start");
+    }, "already_finished");
+
+    test(t => {
+      var div = addDiv(t, { style: "animation: anim 100s, anotherAnim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var animations = div.getAnimations();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: []}],
+        "records after creation");
+
+      div.style.animation = "anotherAnim 100s, anim 100s";
+      animations = div.getAnimations();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: []}],
+        "records after the order is changed");
+
+      div.style.animation = "anotherAnim 100s, anim 100s";
+
+      assert_equals_records(observer.takeRecords(),
+        [], "no records after applying the same order");
+    }, "animtion_order_change");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] },
+                             { duration: 100 * MS_PER_SEC,
+                               iterationComposite: 'replace' });
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.iterationComposite = 'accumulate';
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after iterationComposite is changed");
+
+      anim.effect.iterationComposite = 'accumulate';
+      assert_equals_records(observer.takeRecords(),
+        [], "no record after setting the same iterationComposite");
+
+    }, "set_iterationComposite");
+
+    test(t => {
+      var div = addDiv(t);
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      var anim = div.animate({ opacity: [ 0, 1 ] },
+                             { duration: 100 * MS_PER_SEC });
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [anim], changed: [], removed: [] }],
+        "records after animation is added");
+
+      anim.effect.setKeyframes({ opacity: 0.1 });
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after keyframes are changed");
+
+      anim.effect.setKeyframes({ opacity: 0.1 });
+      assert_equals_records(observer.takeRecords(),
+        [], "no record after setting the same keyframes");
+
+      anim.effect.setKeyframes(null);
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [anim], removed: [] }],
+        "records after keyframes are set to empty");
+
+    }, "set_keyframes");
+
+    // Test that starting a single transition that is cancelled by resetting
+    // the transition-property property dispatches an added notification and
+    // then a removed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition: background-color 100s; " +
+                           "background-color: yellow;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      getComputedStyle(div).transitionProperty;
+      div.style.backgroundColor = "lime";
+
+      // The transition should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition start");
+
+      // Cancel the transition by setting transition-property.
+      div.style.transitionProperty = "none";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after transition end");
+    }, "single_transition_cancelled_property");
+
+    // Test that starting a single transition that is cancelled by setting
+    // style to the currently animated value dispatches an added
+    // notification and then a removed notification.
+    test(t => {
+      // A long transition with a predictable value.
+      var div =
+        addDiv(t, { style: "transition: background-color 100s steps(2, end) -51s; " +
+                           "background-color: yellow;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+      getComputedStyle(div).transitionProperty;
+      div.style.backgroundColor = "lime";
+
+      // The transition should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition start");
+
+      // Cancel the transition by setting the current animation value.
+      var value = "rgb(128, 255, 0)";
+      assert_equals(getComputedStyle(div).backgroundColor, value,
+        "half-way transition value");
+      div.style.backgroundColor = value;
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after transition end");
+    }, "single_transition_cancelled_value");
+
+    // Test that starting a single transition that is cancelled by setting
+    // style to a non-interpolable value dispatches an added notification
+    // and then a removed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition: line-height 100s; " +
+                           "line-height: 16px;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      getComputedStyle(div).transitionProperty;
+      div.style.lineHeight = "100px";
+
+      // The transition should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition start");
+
+      // Cancel the transition by setting line-height to a non-interpolable value.
+      div.style.lineHeight = "normal";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after transition end");
+    }, "single_transition_cancelled_noninterpolable");
+
+    // Test that starting a single transition and then reversing it
+    // dispatches an added notification, then a simultaneous removed and
+    // added notification, then a removed notification once finished.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition: background-color 100s step-start; " +
+                           "background-color: yellow;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      getComputedStyle(div).transitionProperty;
+      div.style.backgroundColor = "lime";
+
+      var animations = div.getAnimations();
+
+      // The transition should cause the creation of a single Animation.
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition start");
+
+      var firstAnimation = animations[0];
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [firstAnimation], changed: [], removed: [] }],
+        "records after transition start");
+
+      firstAnimation.currentTime = 50 * MS_PER_SEC;
+
+      // Reverse the transition by setting the background-color back to its
+      // original value.
+      div.style.backgroundColor = "yellow";
+
+      // The reversal should cause the creation of a new Animation.
+      animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after transition reversal");
+
+      var secondAnimation = animations[0];
+
+      assert_true(firstAnimation != secondAnimation,
+        "second Animation should be different from the first");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [firstAnimation], removed: [] },
+         { added: [secondAnimation], changed: [], removed: [firstAnimation] }],
+        "records after transition reversal");
+
+      // Cancel the transition.
+      div.style.transitionProperty = "none";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: [secondAnimation] }],
+        "records after transition end");
+    }, "single_transition_reversed");
+
+    // Test that multiple transitions starting and ending on an element
+    // at the same time get batched up into a single MutationRecord.
+    test(t => {
+      var div =
+        addDiv(t, { style: "transition-duration: 100s; " +
+                           "transition-property: color, background-color, line-height" +
+                           "background-color: yellow; line-height: 16px" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+      getComputedStyle(div).transitionProperty;
+
+      div.style.backgroundColor = "lime";
+      div.style.color = "blue";
+      div.style.lineHeight = "24px";
+
+      // The transitions should cause the creation of three Animations.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 3,
+        "getAnimations().length after transition starts");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after transition starts");
+
+      assert_equals(animations.filter(p => p.playState == "running").length, 3,
+         "number of running Animations");
+
+      // Seek well into each animation.
+      animations.forEach(p => p.currentTime = 50 * MS_PER_SEC);
+
+      // Prepare the set of expected change MutationRecords, one for each
+      // animation that was seeked.
+      var seekRecords = animations.map(
+        p => ({ added: [], changed: [p], removed: [] })
+      );
+
+      // Cancel one of the transitions by setting transition-property.
+      div.style.transitionProperty = "background-color, line-height";
+
+      var colorAnimation  = animations.filter(p => p.playState != "running");
+      var otherAnimations = animations.filter(p => p.playState == "running");
+
+      assert_equals(colorAnimation.length, 1,
+        "number of non-running Animations after cancelling one");
+      assert_equals(otherAnimations.length, 2,
+        "number of running Animations after cancelling one");
+
+      assert_equals_records(observer.takeRecords(),
+        seekRecords.concat({ added: [], changed: [], removed: colorAnimation }),
+        "records after color transition end");
+
+      // Cancel the remaining transitions.
+      div.style.transitionProperty = "none";
+      getComputedStyle(div).transitionProperty;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: otherAnimations }],
+        "records after other transition ends");
+    }, "multiple_transitions");
+
+    // Test that starting a single animation that is cancelled by resetting
+    // the animation-name property dispatches an added notification and
+    // then a removed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Cancel the animation by setting animation-name.
+      div.style.animationName = "none";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "single_animation_cancelled_name");
+
+    // Test that starting a single animation that is cancelled by updating
+    // the animation-duration property dispatches an added notification and
+    // then a removed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Advance the animation by a second.
+      animations[0].currentTime += 1 * MS_PER_SEC;
+
+      // Cancel the animation by setting animation-duration to a value less
+      // than a second.
+      div.style.animationDuration = "0.1s";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] },
+         { added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "single_animation_cancelled_duration");
+
+    // Test that starting a single animation that is cancelled by updating
+    // the animation-delay property dispatches an added notification and
+    // then a removed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Cancel the animation by setting animation-delay.
+      div.style.animationDelay = "-200s";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "single_animation_cancelled_delay");
+
+    // Test that starting a single animation that is cancelled by updating
+    // the animation-iteration-count property dispatches an added notification
+    // and then a removed notification.
+    test(t => {
+      // A short, repeated animation.
+      var div =
+        addDiv(t, { style: "animation: anim 0.5s infinite;" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Advance the animation until we are past the first iteration.
+      animations[0].currentTime += 1 * MS_PER_SEC;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after seeking animations");
+
+      // Cancel the animation by setting animation-iteration-count.
+      div.style.animationIterationCount = "1";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "single_animation_cancelled_iteration_count");
+
+    // Test that updating an animation property dispatches a changed notification.
+    [
+      { name: "duration",  prop: "animationDuration",       val: "200s"    },
+      { name: "timing",    prop: "animationTimingFunction", val: "linear"  },
+      { name: "iteration", prop: "animationIterationCount", val: "2"       },
+      { name: "direction", prop: "animationDirection",      val: "reverse" },
+      { name: "state",     prop: "animationPlayState",      val: "paused"  },
+      { name: "delay",     prop: "animationDelay",          val: "-1s"     },
+      { name: "fill",      prop: "animationFillMode",       val: "both"    },
+    ].forEach(aChangeTest => {
+      test(t => {
+        // Start a long animation.
+        var div = addDiv(t, { style: "animation: anim 100s;" });
+        var observer =
+          setupSynchronousObserver(t,
+                                   aOptions.subtree ? div.parentNode : div,
+                                   aOptions.subtree);
+
+        // The animation should cause the creation of a single Animation.
+        var animations = div.getAnimations();
+        assert_equals(animations.length, 1,
+          "getAnimations().length after animation start");
+
+        assert_equals_records(observer.takeRecords(),
+          [{ added: animations, changed: [], removed: [] }],
+          "records after animation start");
+
+        // Change a property of the animation such that it keeps running.
+        div.style[aChangeTest.prop] = aChangeTest.val;
+        getComputedStyle(div).animationName;
+
+        assert_equals_records(observer.takeRecords(),
+          [{ added: [], changed: animations, removed: [] }],
+          "records after animation change");
+
+        // Cancel the animation.
+        div.style.animationName = "none";
+        getComputedStyle(div).animationName;
+
+        assert_equals_records(observer.takeRecords(),
+          [{ added: [], changed: [], removed: animations }],
+          "records after animation end");
+      }, `single_animation_change_${aChangeTest.name}`);
+    });
+
+    // Test that calling finish() on a pause-pending (but otherwise finished)
+    // animation dispatches a changed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s forwards" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Finish and pause.
+      animations[0].finish();
+      animations[0].pause();
+      assert_true(animations[0].pending && animations[0].playState === "paused",
+        "playState after finishing and calling pause()");
+
+      // Call finish() again to abort the pause
+      animations[0].finish();
+      assert_equals(animations[0].playState, "finished",
+        "playState after finishing again");
+
+      // Wait for three MutationRecords for the Animation changes to
+      // be delivered: one for each finish(), pause(), finish() operation.
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] },
+         { added: [], changed: animations, removed: [] },
+         { added: [], changed: animations, removed: [] }],
+        "records after finish(), pause(), finish()");
+
+      // Cancel the animation.
+      div.style = "";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "finish_from_pause_pending");
+
+    // Test that calling play() on a finished Animation that fills forwards
+    // dispatches a changed notification.
+    test(t => {
+      // Animation with a forwards fill
+      var div =
+        addDiv(t, { style: "animation: anim 100s forwards" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Seek to the end
+      animations[0].finish();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after finish()");
+
+      // Since we are filling forwards, calling play() should produce a
+      // change record since the animation remains relevant.
+      animations[0].play();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after play()");
+
+      // Cancel the animation.
+      div.style = "";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "play_filling_forwards");
+
+    // Test that calling pause() on an Animation dispatches a changed
+    // notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Pause
+      animations[0].pause();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after pause()");
+
+      // Redundant pause
+      animations[0].pause();
+
+      assert_equals_records(observer.takeRecords(),
+        [], "records after redundant pause()");
+
+      // Cancel the animation.
+      div.style = "";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "pause");
+
+    // Test that calling pause() on an Animation that is pause-pending
+    // does not dispatch an additional changed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Pause
+      animations[0].pause();
+
+      // We are now pause-pending, but pause again
+      animations[0].pause();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] }],
+        "records after pause()");
+
+      // Cancel the animation.
+      div.style = "";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "pause_while_pause_pending");
+
+    // Test that calling play() on an Animation that is pause-pending
+    // dispatches a changed notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Pause
+      animations[0].pause();
+
+      // We are now pause-pending. If we play() now, we will abort the pause
+      animations[0].play();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: animations, removed: [] },
+        { added: [], changed: animations, removed: [] }],
+                      "records after aborting a pause()");
+
+      // Cancel the animation.
+      div.style = "";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "aborted_pause");
+
+    // Test that calling play() on a finished Animation that does *not* fill
+    // forwards dispatches an addition notification.
+    test(t => {
+      var div =
+        addDiv(t, { style: "animation: anim 100s" });
+      var observer =
+        setupSynchronousObserver(t,
+                                 aOptions.subtree ? div.parentNode : div,
+                                 aOptions.subtree);
+
+      // The animation should cause the creation of a single Animation.
+      var animations = div.getAnimations();
+      assert_equals(animations.length, 1,
+        "getAnimations().length after animation start");
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after animation start");
+
+      // Seek to the end
+      animations[0].finish();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after finish()");
+
+      // Since we are *not* filling forwards, calling play() is equivalent
+      // to creating a new animation since it becomes relevant again.
+      animations[0].play();
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: animations, changed: [], removed: [] }],
+        "records after play()");
+
+      // Cancel the animation.
+      div.style = "";
+      getComputedStyle(div).animationName;
+
+      assert_equals_records(observer.takeRecords(),
+        [{ added: [], changed: [], removed: animations }],
+        "records after animation end");
+    }, "play_after_finish");
+
+  });
+
+  test(t => {
+    var div = addDiv(t);
+    var observer = setupSynchronousObserver(t, div, true);
+
+    var child = document.createElement("div");
+    div.appendChild(child);
+
+    var anim1 = div.animate({ marginLeft: [ "0px", "50px" ] },
+                            100 * MS_PER_SEC);
+    var anim2 = child.animate({ marginLeft: [ "0px", "100px" ] },
+                              50 * MS_PER_SEC);
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim1], changed: [], removed: [] },
+       { added: [anim2], changed: [], removed: [] }],
+      "records after animation is added");
+
+    // After setting a new effect, we remove the current animation, anim1,
+    // because it is no longer attached to |div|, and then remove the previous
+    // animation, anim2. Finally, add back the anim1 which is in effect on
+    // |child| now. In addition, we sort them by tree order and they are
+    // batched.
+    anim1.effect = anim2.effect;
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [], removed: [anim1] },       // div
+       { added: [anim1], changed: [], removed: [anim2] }], // child
+      "records after animation effects are changed");
+  }, "set_effect_with_previous_animation");
+
+  test(t => {
+    var div = addDiv(t);
+    var observer = setupSynchronousObserver(t, document, true);
+
+    var anim = div.animate({ opacity: [ 0, 1 ] },
+                           { duration: 100 * MS_PER_SEC });
+
+    var newTarget = document.createElement("div");
+
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim], changed: [], removed: [] }],
+      "records after animation is added");
+
+    anim.effect.target = null;
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [], removed: [anim] }],
+      "records after setting null");
+
+    anim.effect.target = div;
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim], changed: [], removed: [] }],
+      "records after setting a target");
+
+    anim.effect.target = addDiv(t);
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [], removed: [anim] },
+       { added: [anim], changed: [], removed: [] }],
+      "records after setting a different target");
+  }, "set_animation_target");
+
+  test(t => {
+    var div = addDiv(t);
+    var observer = setupSynchronousObserver(t, div, true);
+
+    var anim = div.animate({ opacity: [ 0, 1 ] },
+                           { duration: 200 * MS_PER_SEC,
+                             pseudoElement: '::before' });
+
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim], changed: [], removed: [] }],
+      "records after animation is added");
+
+    anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [anim], removed: [] }],
+      "records after duration is changed");
+
+    anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
+    assert_equals_records(observer.takeRecords(),
+      [], "records after assigning same value");
+
+    anim.currentTime = anim.effect.getComputedTiming().duration * 2;
+    anim.finish();
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [], removed: [anim] }],
+      "records after animation end");
+
+    anim.effect.updateTiming({
+      duration: anim.effect.getComputedTiming().duration * 3
+    });
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim], changed: [], removed: [] }],
+      "records after animation restarted");
+
+    anim.effect.updateTiming({ duration: "auto" });
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [], removed: [anim] }],
+      "records after duration set \"auto\"");
+
+    anim.effect.updateTiming({ duration: "auto" });
+    assert_equals_records(observer.takeRecords(),
+      [], "records after assigning same value \"auto\"");
+  }, "change_duration_and_currenttime_on_pseudo_elements");
+
+  test(t => {
+    var div = addDiv(t);
+    var observer = setupSynchronousObserver(t, div, false);
+
+    var anim = div.animate({ opacity: [ 0, 1 ] },
+                           { duration: 100 * MS_PER_SEC });
+    var pAnim = div.animate({ opacity: [ 0, 1 ] },
+                            { duration: 100 * MS_PER_SEC,
+                              pseudoElement: "::before" });
+
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim], changed: [], removed: [] }],
+      "records after animation is added");
+
+    anim.finish();
+    pAnim.finish();
+
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [], removed: [anim] }],
+      "records after animation is finished");
+  }, "exclude_animations_targeting_pseudo_elements");
+}
+
+setup({explicit_done: true});
+SpecialPowers.pushPrefEnv(
+  {
+    set: [
+      ["dom.animations-api.core.enabled", true],
+      ["dom.animations-api.implicit-keyframes.enabled", true],
+      ["dom.animations-api.timelines.enabled", true],
+    ],
+  },
+  function() {
+    runTest();
+    done();
+  }
+);
+
+</script>

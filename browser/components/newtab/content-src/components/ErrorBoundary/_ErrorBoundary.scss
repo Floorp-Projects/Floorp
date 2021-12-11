@@ -1,0 +1,21 @@
+.as-error-fallback {
+  align-items: center;
+  border-radius: $border-radius;
+  box-shadow: inset $inner-box-shadow;
+  color: var(--newtab-text-secondary-color);
+  display: flex;
+  flex-direction: column;
+  font-size: $error-fallback-font-size;
+  justify-content: center;
+  justify-items: center;
+  line-height: $error-fallback-line-height;
+
+  &.borderless-error {
+    box-shadow: none;
+  }
+
+  a {
+    color: var(--newtab-text-secondary-color);
+    text-decoration: underline;
+  }
+}

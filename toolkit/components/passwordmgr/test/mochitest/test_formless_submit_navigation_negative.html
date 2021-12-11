@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test no capturing of fields outside of a form due to navigation</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript">
+SimpleTest.requestFlakyTimeout("Testing that a message doesn't arrive");
+
+let loadPromise = new Promise(resolve => {
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loginFrame").addEventListener("load", (evt) => {
+      resolve();
+    });
+  });
+});
+
+function submissionProcessed(...args) {
+  ok(false, "No formSubmissionProcessed should occur in this test");
+  info("got: " + JSON.stringify(args));
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["signon.formlessCapture.enabled", true],
+    ],
+  });
+
+  info("Waiting for page and frame loads");
+  await loadPromise;
+
+  PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", submissionProcessed);
+
+  SimpleTest.registerCleanupFunction(() => {
+    PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", submissionProcessed);
+  });
+});
+
+const DEFAULT_ORIGIN = "http://test1.mochi.test:8888";
+const SCRIPTS = {
+  PUSHSTATE: `history.pushState({}, "Pushed state", "?pushed");`,
+  WINDOW_LOCATION: `window.location = "data:text/html;charset=utf-8,window.location";`,
+  WINDOW_LOCATION_RELOAD: `window.location.reload();`,
+  HISTORY_BACK: `history.back();`,
+  HISTORY_GO_MINUS1: `history.go(-1);`,
+};
+const TESTCASES = [
+  // Begin test cases that shouldn't trigger capture.
+  {
+    // Empty password field in a form
+    document: `<form><input type=password value="xxx"></form>`,
+    selectorValues: {
+      "[type=password]": "",
+    },
+  },
+  {
+    // Empty password field
+    document: `<input type=password value="">`,
+    selectorValues: {
+      "[type=password]": "",
+    },
+  },
+  {
+    // Test with an input that would normally be captured but with SCRIPTS that
+    // shouldn't trigger capture.
+    document: `<input type=password value="">`,
+    selectorValues: {
+      "[type=password]": "pass2",
+    },
+    wouldCapture: true,
+  },
+  {
+    // Test with an input that would normally be captured but with SCRIPTS that
+    // shouldn't trigger capture.
+    document: `<form><input type=password value=""></form>`,
+    selectorValues: {
+      "[type=password]": "pass2",
+    },
+    wouldCapture: true,
+  },
+];
+
+async function testFormlesSubmitNavigationNegative(tc, scriptName) {
+  let loginFrame = document.getElementById("loginFrame");
+  let waitTime;
+  let android = navigator.appVersion.includes("Android");
+  if (android) {
+    // intermittent failures on Android Debug at 5 seconds
+    waitTime = 10000;
+  } else {
+    waitTime = 5000;
+  }
+
+  let loadedPromise = new Promise((resolve) => {
+    loginFrame.addEventListener("load", function() {
+      resolve();
+    }, {once: true});
+  });
+  loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
+  await loadedPromise;
+
+  let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
+  // eslint-disable-next-line no-unsanitized/property
+  frameDoc.documentElement.innerHTML = tc.document;
+  // We eliminate no user input as a reason for not capturing by modifying the value
+  setUserInputValues(frameDoc.documentElement, tc.selectorValues);
+
+  info("Running " + scriptName + " script to check for a submission");
+  frameDoc.defaultView.eval(SCRIPTS[scriptName]);
+
+  // Wait to see if the promise above resolves.
+  await new Promise(resolve => setTimeout(resolve, waitTime));
+  ok(true, "Done waiting for captures");
+}
+
+let count = 0;
+for (let tc of TESTCASES) {
+  for (let scriptName of Object.keys(SCRIPTS)) {
+    if (tc.wouldCapture && ["PUSHSTATE", "WINDOW_LOCATION"].includes(scriptName)) {
+      // Don't run scripts that should actually capture for this testcase.
+      continue;
+    }
+    let taskName = `testcase-${count}-${scriptName}`;
+    let tmp = {
+      async [taskName]() {
+        info("Starting testcase with script " + scriptName + ": " + JSON.stringify(tc));
+        await testFormlesSubmitNavigationNegative(tc, scriptName);
+      },
+    };
+    add_task(tmp[taskName]);
+  }
+}
+
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="loginFrame" src="http://test1.mochi.test:8888/tests/toolkit/components/passwordmgr/test/mochitest/blank.html"></iframe>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

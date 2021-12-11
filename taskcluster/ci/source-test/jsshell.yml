@@ -1,0 +1,87 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    platform: linux64-shippable/opt
+    require-build:
+        linux64.*: build-linux64-shippable/opt
+    worker-type:
+        by-platform:
+            linux64.*: t-linux-talos-1804
+    worker:
+        by-platform:
+            linux64.*:
+                env:
+                    by-shell:
+                        sm:
+                            SHELL: /bin/bash
+                            JSSHELL: js
+                        v8:
+                            SHELL: /bin/bash
+                            JSSHELL: d8/release/d8
+                max-run-time: 3600
+    treeherder:
+        kind: test
+        tier: 2
+    run:
+        using: mach
+        mach: jsshell-bench --perfherder={shell} --binary=$MOZ_FETCHES_DIR/$JSSHELL {test}
+    run-on-projects:
+        by-shell:
+            sm:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    default: ['mozilla-central', 'integration']
+            default:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    default: ['mozilla-central']
+    fetches:
+        build:
+            - target.jsshell.zip
+        toolchain:
+            - linux64-custom-v8
+    optimization:
+        skip-unless-expanded: null
+
+bench-ares6:
+    description: Ares6 JavaScript shell benchmark suite
+    shell: ['sm', 'v8']
+    test: ares6
+    treeherder:
+        symbol: ares6
+
+bench-sixspeed:
+    description: Six-Speed JavaScript shell benchmark suite
+    shell: ['sm', 'v8']
+    test: six-speed
+    treeherder:
+        symbol: 6speed
+
+bench-sunspider:
+    description: SunSpider JavaScript shell benchmark suite
+    shell: ['sm']
+    test: sunspider
+    treeherder:
+        symbol: sunspider
+
+bench-web-tooling:
+    description: Web Tooling shell benchmark suite
+    shell: ['sm', 'v8']
+    test: web-tooling-benchmark
+    treeherder:
+        symbol: webtool
+    fetches:
+        fetch:
+            - web-tooling-benchmark
+
+bench-octane:
+    description: Octane shell benchmark suite
+    shell: ['sm', 'v8']
+    test: octane
+    treeherder:
+        symbol: octane
+    fetches:
+        fetch:
+            - octane

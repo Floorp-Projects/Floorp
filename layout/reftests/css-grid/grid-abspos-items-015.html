@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: abs pos static position (ancestor of grid container as abs.pos. CB)</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151243">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#static-position">
+  <link rel="match" href="grid-abspos-items-015-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+separator { clear:both; display:block; height:6px; }
+
+.grid {
+  display: grid;
+  padding: 1px 3px 5px 7px;
+  grid-template: 25px 33px 7px / 30px 51px 5px;
+  margin-right: 4px;
+  height: 100px;
+  width: 100px;
+}
+.wrap {
+  position: relative;
+  float: left;
+  padding: 3px 5px 7px 9px;
+  border-style: solid;
+  border-width: 1px 3px 5px 7px;
+  border-block-start-color: blue;
+  border-inline-start-color: lime;
+  writing-mode: vertical-lr; direction:rtl;
+}
+
+abs1,abs2,abs3,abs4 {
+  grid-area: 2 / 2 / 3 / 3;
+  position: absolute;
+}
+abs1 { top:17px; bottom:2px; background:lime; }
+abs2 { right:13px; left:3px; background:pink; }
+abs3 { right:5px; left:11px; top:9px; background:cyan; }
+abs4 { top:23px; bottom:1px; background:silver; }
+abs1::before { content:"1";}
+abs2::before { content:"2";}
+abs3::before { content:"3";}
+abs4::before { content:"4";}
+
+x {
+  grid-area: 2 / 2 / 3 / 3;
+}
+y {
+  grid-area: 3 / 3;
+  display: block;
+}
+z {
+  grid-area: 1 / 3;
+  display: block;
+}
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+</style>
+</head>
+<body>
+
+<script>
+document.body.style.display="none";
+var wm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
+for (var i = 0; i < wm.length; ++i) {
+  for (var j = 0; j < wm.length; ++j) {
+    var div = document.createElement("div");
+    div.className = "grid " + wm[i];
+    div.appendChild(document.createTextNode("A"));
+    div.appendChild(document.createElement("abs1"));
+    div.appendChild(document.createTextNode("BC"));
+    div.appendChild(y = document.createElement("y"));
+    y.appendChild(document.createElement("abs3"));
+    div.appendChild(z = document.createElement("z"));
+    z.appendChild(document.createElement("abs4"));
+    var wrap = document.createElement("div");
+    wrap.className = "wrap ";
+    wrap.appendChild(div);
+    document.body.appendChild(wrap)
+  }
+  document.body.appendChild(document.createElement("separator"));
+}
+document.body.style.display="";
+</script>
+
+
+</body>
+</html>

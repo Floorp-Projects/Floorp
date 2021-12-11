@@ -1,0 +1,49 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_DIRS += ["crashinjectdll"]
+
+if CONFIG["ENABLE_TESTS"]:
+    Program("crashinject")
+    SOURCES += [
+        "crashinject.cpp",
+    ]
+    USE_STATIC_LIBS = True
+
+NO_PGO = True
+
+# See comment about *-windows-gnu targets in config/makefiles/rust.mk
+if CONFIG["CC_TYPE"] == "clang":
+    GeneratedFile(
+        "libgcc.a",
+        "libgcc_eh.a",
+        "libpthread.a",
+        script="dummy_libs.py",
+        flags=["libgcc_eh.a", "libpthread.a"],
+    )
+
+
+if CONFIG["WIN32_REDIST_DIR"] and CONFIG["COMPILE_ENVIRONMENT"]:
+    for f in ["MSVC_C_RUNTIME_DLL", "MSVC_CXX_RUNTIME_DLL"]:
+        FINAL_TARGET_FILES += ["%%%s/%s" % (CONFIG["WIN32_REDIST_DIR"], CONFIG[f])]
+
+if CONFIG["WIN_UCRT_REDIST_DIR"] and CONFIG["COMPILE_ENVIRONMENT"]:
+    win7_ucrt_redists = [
+        "api-ms-win-core-file-l1-2-0.dll",
+        "api-ms-win-core-file-l2-1-0.dll",
+        "api-ms-win-core-localization-l1-2-0.dll",
+        "api-ms-win-core-processthreads-l1-1-1.dll",
+        "api-ms-win-core-synch-l1-2-0.dll",
+        "api-ms-win-core-timezone-l1-1-0.dll",
+        "api-ms-win-crt-*.dll",
+        "ucrtbase.dll",
+    ]
+    for f in win7_ucrt_redists:
+        FINAL_TARGET_FILES += ["%%%s/%s" % (CONFIG["WIN_UCRT_REDIST_DIR"], f)]
+
+if CONFIG["LLVM_SYMBOLIZER"] and CONFIG["WIN_DIA_SDK_BIN_DIR"]:
+    # On Windows, llvm-symbolizer depends on the MS DIA library.
+    FINAL_TARGET_FILES += ["%%%s/msdia140.dll" % CONFIG["WIN_DIA_SDK_BIN_DIR"]]

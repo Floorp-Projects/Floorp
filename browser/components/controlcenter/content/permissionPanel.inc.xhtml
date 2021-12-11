@@ -1,0 +1,50 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html:template id="template-permission-popup">
+<panel id="permission-popup"
+       class="panel-no-padding"
+       type="arrow"
+       role="alertdialog"
+       noautofocus="true"
+       aria-labelledby="permission-popup-mainView-panel-header-span"
+       onpopupshown="gPermissionPanel.onPopupShown(event);"
+       onpopuphidden="gPermissionPanel.onPopupHidden(event);"
+       orient="vertical">
+  <panelmultiview id="permission-popup-multiView"
+                  mainViewId="permission-popup-mainView">
+    <panelview id="permission-popup-mainView"
+               role="document"
+               descriptionheightworkaround="true">
+      <vbox id="permission-popup-mainView-panel-header">
+        <label>
+          <html:span id="permission-popup-mainView-panel-header-span" role="heading" aria-level="1"/>
+        </label>
+      </vbox>
+      <toolbarseparator></toolbarseparator>
+      <hbox class="permission-popup-section">
+        <vbox id="permission-popup-permissions-content" flex="1" role="group">
+          <vbox id="permission-popup-permission-list">
+            <vbox id="permission-popup-permission-list-default-anchor" class="permission-popup-permission-list-anchor"/>
+            <vbox class="permission-popup-permission-list-anchor" anchorfor="3rdPartyStorage">
+              <vbox id="permission-popup-storage-access-permission-list-header">
+                <hbox align="center" role="group">
+                  <image class="permission-popup-permission-icon storage-access-icon"/>
+                  <label data-l10n-id="identity-permissions-storage-access-header" class="permission-popup-permission-header-label"/>
+                </hbox>
+                <description id="permission-popup-storage-access-permission-list-hint" data-l10n-id="identity-permissions-storage-access-hint"></description>
+                <label id="permission-popup-storage-access-permission-learn-more"
+                     is="text-link"
+                     data-l10n-id="identity-permissions-storage-access-learn-more">
+                </label>
+              </vbox>
+            </vbox>
+          </vbox>
+          <description id="permission-popup-permission-reload-hint" data-l10n-id="identity-permissions-reload-hint"></description>
+        </vbox>
+      </hbox>
+    </panelview>
+  </panelmultiview>
+</panel>
+</html:template>

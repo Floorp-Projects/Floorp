@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Autoplay policy test : do not resume AudioContext which is suspended by page</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<script>
+/* import-globals-from ../../../test/manifest.js */
+/**
+ * This test is used to ensure we won't resume AudioContext which is suspended
+ * by page (it means calling suspend() explicitly) when calling
+ * `AudioScheduledSourceNode.start()`.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+(async function testNotResumeUserInvokedSuspendedAudioContext() {
+  await setupTestPreferences();
+
+  const nodeTypes = ["AudioBufferSourceNode", "ConstantSourceNode", "OscillatorNode"];
+  for (let nodeType of nodeTypes) {
+    info(`- create an audio context which should not be allowed to start, it's allowed to be created, but it's forbidden to start -`);
+    await createAudioContext();
+
+    info(`- explicitly suspend the AudioContext in the page -`);
+    suspendAudioContext();
+
+    info(`- start an 'AudioScheduledSourceNode', and check that the AudioContext does not start, because it has been explicitly suspended -`);
+    await createAndStartAudioScheduledSourceNode(nodeType);
+  }
+
+  SimpleTest.finish();
+})();
+
+/**
+ * Test utility functions
+ */
+
+function setupTestPreferences() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+    ["media.autoplay.blocking_policy", 0],
+    ["media.autoplay.block-webaudio", true],
+    ["media.autoplay.block-event.enabled", true],
+  ]});
+}
+
+async function createAudioContext() {
+  /* global ac */
+  window.ac = new AudioContext();
+  await once(ac, "blocked");
+  is(ac.state, "suspended", `AudioContext is blocked.`);
+}
+
+function suspendAudioContext() {
+  try {
+    ac.suspend();
+  } catch(e) {
+    ok(false, `AudioContext suspend failed!`);
+  }
+}
+
+async function createAndStartAudioScheduledSourceNode(nodeType) {
+  let node;
+  info(`- create ${nodeType} -`);
+  switch (nodeType) {
+    case "AudioBufferSourceNode":
+      node = ac.createBufferSource();
+      break;
+    case "ConstantSourceNode":
+      node = ac.createConstantSource();
+      break;
+    case "OscillatorNode":
+      node = ac.createOscillator();
+      break;
+    default:
+      ok(false, "undefined AudioScheduledSourceNode type");
+      return;
+  }
+  node.connect(ac.destination);
+
+  // activate the document in order to allow autoplay.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  node.start();
+
+  await once(ac, "blocked");
+  is(ac.state, "suspended", `AudioContext should not be resumed.`);
+
+  // reset the activation flag of the document in order not to interfere next test.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+}
+
+</script>

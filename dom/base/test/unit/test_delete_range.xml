@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file holds serialized tests for DOM Range tests on extractContents.
+The <test/> elements designate individual tests.  Each one has the following:
+
+* A <source/> element, designating the start conditions of the test,
+* A <result/> element, designating what the source element should look like
+  after the extraction,
+* An <extract/> element, designating what the extracted content should look like.
+
+The <split/> element designates a split between two DOM nodes. This element will
+be removed before the actual test, and the two nodes on either side will not be
+merged.
+
+The <empty-cdata/> element designates an empty character data section.  Before
+the test executes, this element is replaced with an actual CDATASection node.
+
+For the <source/> element, there are four attributes:
+
+* startContainer:  A XPath to the startContainer of the range.
+* endContainer:  A XPath to the endContainer of the range.
+* startOffset:  The startOffset of the range.
+* endOffset:  The endOffset of the range.
+
+Note this test may need updating with a fix for bug 401276.  The spec states
+adjacent nodes after an extraction should be merged if possible, but using the
+normalize() method, which could have unintended side effects... For now, we're
+not permitting that, pending clarification.
+
+Please make sure the first test in this document always tests a range where the
+start container and end container are the same text node, and where the start
+offset and end offsets are valid and inequal.  Some of the additional range
+tests (after the bulk of the delete/extract tests) depend on it.
+  -->
+<root>
+  <!-- Extracting from a text node. -->
+  <test>
+    <source startContainer="text()[1]"
+            endContainer="text()[1]"
+            startOffset="4"
+            endOffset="10">The quick fox</source>
+    <result>The fox</result>
+    <extract>quick </extract>
+  </test>
+
+  <!-- Extracting from a CDATA section. -->
+  <test>
+    <source startContainer="text()[1]"
+            endContainer="text()[1]"
+            startOffset="4"
+            endOffset="10"><![CDATA[The quick fox]]></source>
+    <result><![CDATA[The fox]]></result>
+    <extract><![CDATA[quick ]]></extract>
+  </test>
+
+  <!-- Snipping the start of a text node. -->
+  <test>
+    <source startContainer="text()[1]"
+            endContainer="text()[1]"
+            startOffset="0"
+            endOffset="4"><![CDATA[The quick fox]]></source>
+    <result><![CDATA[quick fox]]></result>
+    <extract><![CDATA[The ]]></extract>
+  </test>
+
+  <!-- Extracting from a comment. -->
+  <test>
+    <source startContainer="comment()[1]"
+            endContainer="comment()[1]"
+            startOffset="4"
+            endOffset="10"><!--The quick fox--></source>
+    <result><!--The fox--></result>
+    <extract><!--quick --></extract>
+  </test>
+
+  <!-- Snipping whole nodes -->
+  <test>
+    <source startContainer="."
+            endContainer="."
+            startOffset="0"
+            endOffset="2">Fox<fox/>Fox<bear/><!--comment--></source>
+    <result>Fox<bear/><!--comment--></result>
+    <extract>Fox<fox/></extract>
+  </test>
+
+  <!-- Snipping whole nodes -->
+  <test>
+    <source startContainer="."
+            endContainer="."
+            startOffset="1"
+            endOffset="3">Fox<fox/>Fox<bear/><!--comment--></source>
+    <result>Fox<bear/><!--comment--></result>
+    <extract><fox/>Fox</extract>
+  </test>
+
+  <!-- Snipping a mixture of nodes and portions of text -->
+  <test>
+    <source startContainer="text()[2]"
+            startOffset="1"
+            endContainer="comment()[1]"
+            endOffset="3">Fox<fox/>Fox<bear><?cow ?></bear><!--comment--></source>
+    <result>Fox<fox/>F<!--ment--></result>
+    <extract>ox<bear><?cow ?></bear><!--com--></extract>
+  </test>
+
+  <!-- Extracting with a collapsed range from a text node. -->
+  <test>
+    <source startContainer="text()[1]"
+            endContainer="text()[1]"
+            startOffset="4"
+            endOffset="4">The quick fox</source>
+    <result>The quick fox</result>
+    <extract/>
+  </test>
+
+  <!-- Extracting with a collapsed range from a non-text node. -->
+  <test>
+    <source startContainer="."
+            endContainer="."
+            startOffset="0"
+            endOffset="0">Fox<fox/>Fox<bear/><!--comment--></source>
+    <result>Fox<fox/>Fox<bear/><!--comment--></result>
+    <extract/>
+  </test>
+</root>

@@ -1,0 +1,255 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+
+include "mozilla/dom/PermissionMessageUtils.h";
+
+[RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
+
+namespace mozilla {
+namespace dom {
+
+struct IPCPaymentMethodData
+{
+  nsString supportedMethods;
+  nsString data;
+};
+
+struct IPCPaymentCurrencyAmount
+{
+  nsString currency;
+  nsString value;
+};
+
+struct IPCPaymentItem
+{
+  nsString label;
+  IPCPaymentCurrencyAmount amount;
+  bool pending;
+};
+
+struct IPCPaymentDetailsModifier
+{
+  nsString supportedMethods;
+  IPCPaymentItem total;
+  IPCPaymentItem[] additionalDisplayItems;
+  nsString data;
+  bool additionalDisplayItemsPassed;
+};
+
+struct IPCPaymentShippingOption
+{
+  nsString id;
+  nsString label;
+  IPCPaymentCurrencyAmount amount;
+  bool selected;
+};
+
+struct IPCPaymentDetails
+{
+  nsString id;
+  IPCPaymentItem total;
+  IPCPaymentItem[] displayItems;
+  IPCPaymentShippingOption[] shippingOptions;
+  IPCPaymentDetailsModifier[] modifiers;
+  nsString error;
+  nsString shippingAddressErrors;
+  nsString payerErrors;
+  nsString paymentMethodErrors;
+};
+
+struct IPCPaymentOptions
+{
+  bool requestPayerName;
+  bool requestPayerEmail;
+  bool requestPayerPhone;
+  bool requestShipping;
+  bool requestBillingAddress;
+  nsString shippingType;
+};
+
+struct IPCPaymentCreateActionRequest
+{
+  uint64_t topOuterWindowId;
+  nsString requestId;
+  nsIPrincipal topLevelPrincipal;
+  IPCPaymentMethodData[] methodData;
+  IPCPaymentDetails details;
+  IPCPaymentOptions options;
+  nsString shippingOption;
+};
+
+struct IPCPaymentCanMakeActionRequest
+{
+  nsString requestId;
+};
+
+struct IPCPaymentShowActionRequest
+{
+  nsString requestId;
+  bool isUpdating;
+};
+
+struct IPCPaymentAbortActionRequest
+{
+  nsString requestId;
+};
+
+struct IPCPaymentCompleteActionRequest
+{
+  nsString requestId;
+  nsString completeStatus;
+};
+
+struct IPCPaymentUpdateActionRequest
+{
+  nsString requestId;
+  IPCPaymentDetails details;
+  nsString shippingOption;
+};
+
+struct IPCPaymentCloseActionRequest
+{
+  nsString requestId;
+};
+
+struct IPCPaymentRetryActionRequest
+{
+  nsString requestId;
+  nsString error;
+  nsString payerErrors;
+  nsString paymentMethodErrors;
+  nsString shippingAddressErrors;
+};
+
+union IPCPaymentActionRequest
+{
+  IPCPaymentCreateActionRequest;
+  IPCPaymentCanMakeActionRequest;
+  IPCPaymentShowActionRequest;
+  IPCPaymentAbortActionRequest;
+  IPCPaymentCompleteActionRequest;
+  IPCPaymentUpdateActionRequest;
+  IPCPaymentCloseActionRequest;
+  IPCPaymentRetryActionRequest;
+};
+
+struct IPCPaymentCanMakeActionResponse
+{
+  nsString requestId;
+  bool result;
+};
+
+struct IPCPaymentAddress
+{
+  nsString country;
+  nsString[] addressLine;
+  nsString region;
+  nsString regionCode;
+  nsString city;
+  nsString dependentLocality;
+  nsString postalCode;
+  nsString sortingCode;
+  nsString organization;
+  nsString recipient;
+  nsString phone;
+};
+
+struct IPCGeneralResponse
+{
+  nsString data;
+};
+
+struct IPCBasicCardResponse
+{
+  nsString cardholderName;
+  nsString cardNumber;
+  nsString expiryMonth;
+  nsString expiryYear;
+  nsString cardSecurityCode;
+  IPCPaymentAddress billingAddress;
+};
+
+union IPCPaymentResponseData
+{
+  IPCGeneralResponse;
+  IPCBasicCardResponse;
+};
+
+struct IPCPaymentShowActionResponse
+{
+  nsString requestId;
+  uint32_t status;
+  nsString methodName;
+  IPCPaymentResponseData data;
+  nsString payerName;
+  nsString payerEmail;
+  nsString payerPhone;
+};
+
+struct IPCPaymentAbortActionResponse
+{
+  nsString requestId;
+  bool isSucceeded;
+};
+
+struct IPCPaymentCompleteActionResponse
+{
+  nsString requestId;
+  bool isCompleted;
+};
+
+union IPCPaymentActionResponse
+{
+  IPCPaymentCanMakeActionResponse;
+  IPCPaymentShowActionResponse;
+  IPCPaymentAbortActionResponse;
+  IPCPaymentCompleteActionResponse;
+};
+
+struct IPCGeneralChangeDetails
+{
+  nsString details;
+};
+
+struct IPCBasicCardChangeDetails
+{
+  IPCPaymentAddress billingAddress;
+};
+
+union IPCMethodChangeDetails
+{
+  IPCGeneralChangeDetails;
+  IPCBasicCardChangeDetails;
+};
+
+sync protocol PPaymentRequest
+{
+  manager PBrowser;
+
+parent:
+  async __delete__();
+
+  async RequestPayment(IPCPaymentActionRequest aAction);
+
+child:
+  async RespondPayment(IPCPaymentActionResponse aResponse);
+  async ChangeShippingAddress(nsString aRequestId,
+                              IPCPaymentAddress aAddress);
+  async ChangeShippingOption(nsString aRequestId,
+                             nsString aOption);
+  async ChangePayerDetail(nsString aRequestId,
+                          nsString aPayerName,
+                          nsString aPayerEmail,
+                          nsString aPayerPhone);
+  async ChangePaymentMethod(nsString aRequestId,
+                            nsString aMethodName,
+                            IPCMethodChangeDetails aMethodDetails);
+};
+
+} // end of namespace dom
+} // end of namespace mozilla

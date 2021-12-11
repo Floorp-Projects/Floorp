@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include protocol PCompositorBridge;
+include protocol PImageBridge;
+include protocol PVideoBridge;
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+
+using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * PTexture is the IPDL glue between a TextureClient and a TextureHost.
+ */
+sync protocol PTexture {
+    manager PImageBridge or PCompositorBridge or PVideoBridge;
+
+child:
+    async __delete__();
+
+parent:
+    /**
+     * Asynchronously tell the compositor side to remove the texture.
+     */
+    async Destroy();
+
+    async RecycleTexture(TextureFlags aTextureFlags);
+};
+
+} // layers
+} // mozilla

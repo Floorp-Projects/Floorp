@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define NS_POWERMANAGERSERVICE_CID { 0x18c2e238, 0x3a0a, 0x4153, {0x89, 0xfc, 0x16, 0x6b, 0x3b, 0x14, 0x65, 0xa1 } }
+#define POWERMANAGERSERVICE_CONTRACTID "@mozilla.org/power/powermanagerservice;1"
+%}
+
+interface nsIDOMMozWakeLockListener;
+interface mozIDOMWindow;
+interface nsIWakeLock;
+
+/**
+ * For use with non-content code.
+ */
+[scriptable, builtinclass, uuid(ba7ca4c1-9d92-4425-a83b-85dd7fa953f7)]
+interface nsIPowerManagerService : nsISupports
+{
+  void              addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+  void              removeWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+  AString           getWakeLockState(in AString aTopic);
+
+  /**
+   * Return a wake lock (MozWakeLock) object of aTopic associated with aWindow.
+   * A wake lock without associated window, e.g. used in chrome, is
+   * always considered invisible.
+   */
+  nsIWakeLock newWakeLock(in AString aTopic, [optional] in mozIDOMWindow aWindow);
+};

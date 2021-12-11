@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback of media files that should have errors</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function checkDuration(name, e, test) {
+  if (test.duration) {
+    ok(Math.abs(e.duration - test.duration) < 0.1,
+       name + " duration (" + e.duration + ") should be around " + test.duration);
+  } else {
+    ok(false, "Test doesn't include the duration field!")
+  }
+}
+
+function startTest(test, token) {
+  manager.started(token);
+
+  let v = document.createElement('video');
+  v._loadedMetadata = false;
+  let name = test.name;
+
+  v.onloadedmetadata = function() {
+    v.onloadedmetadata = null;
+    v._loadedMetadata = true;
+    ok(v._loadedMetadata , name + " has loaded metadata.");
+  }
+
+  v.onerror = function() {
+    v.onerror = null;
+    ok(v._loadedMetadata , name + " should load metadata before getting error.");
+    checkDuration(name, v, test);
+    manager.finished(token);
+  }
+
+  v.src = name;
+  document.body.appendChild(v);
+  v.play();
+}
+
+manager.runTests(gDurationTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

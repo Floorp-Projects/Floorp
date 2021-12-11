@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug 1379762</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1379762">Mozilla Bug 1379762</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+    /**
+     * - This page opens new window
+     * - new window sends 'init' msg
+     * - onload() in new window sends 'increment_loadCount' msg
+     * - onpageshow() in new window sends 'increment_testCount' msg
+     * - This page sends 'forward_back' msg
+     * - onpageshow() in new window 'increment_testCount'
+     * - This page sends 'finish_test' msg
+     * - onpageshow() in new window sends 'finished' msg
+     */
+    var testCount = 0; // Used by the test files.
+    var loadCount = 0;
+    var goneBack = false;
+    var bc = new BroadcastChannel("bug1379762");
+    bc.onmessage = (messageEvent) => {
+      let message = messageEvent.data;
+      if (message == "init") {
+        is(testCount, 0, "new window should only be loaded once; otherwise the loadCount variable makes no sense");
+      } else if (message == "increment_loadCount") {
+        loadCount++;
+        is(loadCount, 1, "Should only get one load")
+      } else if (message == 'increment_testCount') {
+        testCount++;
+        if (testCount == 1) {
+          bc.postMessage("forward_back");
+          goneBack = true;
+        } else if (testCount == 2) {
+          ok(goneBack, "We had a chance to navigate backwards and forwards in the new window to test BFCache");
+          bc.postMessage("finish_test");
+        }
+      } else if (message == "finished") {
+        bc.close();
+        SimpleTest.finish();
+      }
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      // If Fission is disabled, the pref is no-op.
+      SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+        window.open("file_bug1379762-1.html", "", "width=360,height=480,noopener");
+      });
+    }
+
+  </script>
+</pre>
+</body>
+</html>

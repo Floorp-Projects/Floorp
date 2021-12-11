@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1087460
+-->
+<head>
+  <title>Test for custom element callbacks in shadow DOM.</title>
+  <script type="text/javascript" src="head.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1087460">Bug 1087460</a>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var content = '<div id="container"></div>';
+createIframe(content)
+  .then((aDocument) => {
+
+    // Test callback for custom element when used after registration.
+
+    var iframeWin = aDocument.defaultView;
+    var connectedCallbackCount = 0;
+    var disconnectedCallbackCount = 0;
+    var attributeChangedCallbackCount = 0;
+
+    class Foo extends iframeWin.HTMLElement
+    {
+      connectedCallback() {
+        connectedCallbackCount++;
+      }
+
+      disconnectedCallback() {
+        disconnectedCallbackCount++;
+      }
+
+      attributeChangedCallback(aName, aOldValue, aNewValue) {
+        attributeChangedCallbackCount++;
+      }
+
+      static get observedAttributes() {
+        return ["data-foo"];
+      }
+    }
+
+    iframeWin.customElements.define("x-foo", Foo);
+
+    var container = aDocument.getElementById("container");
+    var shadow = container.attachShadow({mode: "open"});
+    var customElem = aDocument.createElement("x-foo");
+
+    is(attributeChangedCallbackCount, 0, "attributeChangedCallback should not be called after just creating an element.");
+    customElem.setAttribute("data-foo", "bar");
+    is(attributeChangedCallbackCount, 1, "attributeChangedCallback should be called after setting an attribute.");
+
+    is(connectedCallbackCount, 0, "connectedCallback should not be called on an element that is not in a document/composed document.");
+    shadow.appendChild(customElem);
+    is(connectedCallbackCount, 1, "connectedCallback should be called after attaching custom element to the composed document.");
+
+    is(disconnectedCallbackCount, 0, "disconnectedCallback should not be called without detaching custom element.");
+    shadow.removeChild(customElem);
+    is(disconnectedCallbackCount, 1, "disconnectedCallback should be called after detaching custom element from the composed document.");
+
+    // Test callback for custom element already in the composed doc when created.
+
+    connectedCallbackCount = 0;
+    disconnectedCallbackCount = 0;
+    attributeChangedCallbackCount = 0;
+
+    shadow.innerHTML = "<x-foo></x-foo>";
+    is(connectedCallbackCount, 1, "connectedCallback should be called after creating an element in the composed document.");
+
+    shadow.innerHTML = "";
+    is(disconnectedCallbackCount, 1, "disconnectedCallback should be called after detaching custom element from the composed document.");
+
+    // Test callback for custom element in shadow DOM when host attached/detached to/from document.
+
+    connectedCallbackCount = 0;
+    disconnectedCallbackCount = 0;
+    attributeChangedCallbackCount = 0;
+
+    var host = aDocument.createElement("div");
+    shadow = host.attachShadow({mode: "open"});
+    customElem = aDocument.createElement("x-foo");
+
+    is(connectedCallbackCount, 0, "connectedCallback should not be called on newly created element.");
+    shadow.appendChild(customElem);
+    is(connectedCallbackCount, 0, "connectedCallback should not be called on attaching to a tree that is not in the composed document.");
+
+    is(disconnectedCallbackCount, 0, "disconnectedCallback should not be called.");
+    shadow.removeChild(customElem);
+    is(disconnectedCallbackCount, 0, "disconnectedCallback should not be called when detaching from a tree that is not in the composed document.");
+
+    shadow.appendChild(customElem);
+    is(connectedCallbackCount, 0, "connectedCallback should still not be called after reattaching to a shadow tree that is not in the composed document.");
+
+    container.appendChild(host);
+    is(connectedCallbackCount, 1, "connectedCallback should be called after host is inserted into document.");
+
+    container.removeChild(host);
+    is(disconnectedCallbackCount, 1, "disconnectedCallback should be called after host is removed from document.");
+
+    // Test callback for custom element for upgraded element.
+
+    connectedCallbackCount = 0;
+    disconnectedCallbackCount = 0;
+    attributeChangedCallbackCount = 0;
+
+    shadow = container.shadowRoot;
+    shadow.innerHTML = "<x-bar></x-bar>";
+
+    class Bar extends iframeWin.HTMLElement {
+      connectedCallback() {
+        connectedCallbackCount++;
+      }
+    };
+
+    iframeWin.customElements.define("x-bar", Bar);
+    is(connectedCallbackCount, 1, "connectedCallback should be called after upgrading element in composed document.");
+
+    SimpleTest.finish();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+
+  <script type="application/javascript">
+
+function doTest() {
+  var accTable = getAccessible("table", [nsIAccessibleTable]);
+
+  var s = window.getSelection();
+  if (s.rangeCount > 0)
+    s.removeAllRanges();
+
+  var cell = getNode("col2b");
+  var range = document.createRange();
+  range.selectNode(cell);
+  s.addRange(range);
+
+  is(accTable.selectedCellCount, 1, "only one cell selected");
+  cell = getNode("col2a");
+  range = document.createRange();
+  range.selectNode(cell);
+  s.addRange(range);
+  cell = getNode("col2c");
+  range = document.createRange();
+  range.selectNode(cell);
+  s.addRange(range);
+  is(accTable.selectedColumnCount, 1, "only one column selected");
+
+  cell = getNode("row2a");
+  range = document.createRange();
+  range.selectNode(cell);
+  s.addRange(range);
+  cell = getNode("row2b");
+  range = document.createRange();
+  range.selectNode(cell);
+  s.addRange(range);
+  range = document.createRange();
+  cell = getNode("row2c");
+  range.selectNode(cell);
+  s.addRange(range);
+
+  is(accTable.selectedRowCount, 1, "no cells selected");
+
+  // These shouldn't throw.
+  try {
+    accTable.getColumnDescription(1);
+    accTable.getRowDescription(1);
+  } catch (ex) {
+    ok(false, "getColumnDescription/getRowDescription shouldn't throw.");
+  }
+  SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+addA11yLoadEvent(doTest);
+  </script>
+ </head>
+ <body >
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Mozilla Bug 410052</a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=760878"
+     title="decomtaminate Get Row / Column Description() on accessible tables">
+    Mozilla Bug 760878
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Test Table -->
+  <br><br><b> Testing Table:</b><br><br>
+  <center>
+   <table id="table" border="1"
+          summary="this is a test table for nsIAccessibleTable" >
+    <caption>Test Table</caption>
+    <thead>
+     <tr>
+      <th></th>
+      <th>columnHeader_1</th>
+      <th id ="col2a">columnHeader_2</th>
+      <th>columnHeader_3</th>
+     </tr>
+    </thead>
+    <tr>
+     <th id="row2a">rowHeader_1</th>
+     <td id="row2b">row1_column1</td>
+     <td id ="col2b">row1_column2</td>
+     <td id="row2c">row1_column3</td>
+    </tr>
+    <tr>
+     <th>rowHeader_2</th>
+     <td>row2_column1</td>
+     <td id ="col2c">row2_column2</td>
+     <td>row2_column3</td>
+    </tr>
+   </table>
+  </center>
+ </body>
+</html>

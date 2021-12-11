@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<dialog buttonlabelaccept="OK"
+        buttonlabelcancel="Cancel">
+
+  <script>
+    document.addEventListener("dialogaccept", function() { alert('OK') });
+    document.addEventListener("dialogcancel", function() { alert('Cancel') });
+  </script>
+
+  <tabbox id="test" flex="1" persist="selectedIndex">
+
+    <tabs>
+      <tab label="One"/>
+      <tab label="Two"/>
+    </tabs>
+
+    <tabpanels flex="1">
+
+      <vbox flex="1">
+        <description>Text for tab ONE</description>
+        <description class="text-link"
+                     onclick="window.open('https://bugzilla.mozilla.org/show_bug.cgi?id=398289');">(test case for bug 398289)</description>
+        <tree>
+          <treecols>
+            <treecol label="Header" flex="1"/>
+          </treecols>
+        </tree>
+      </vbox>
+
+      <vbox flex="1">
+        <description>Text for tab TWO</description>
+        <description>(When the document is reloaded, this content gets replaced by the one from the first tab.)</description>
+      </vbox>
+
+    </tabpanels>
+
+  </tabbox>
+
+  <box height="1000"/> <!-- Push dialog buttons out of sight so that the animated default button isn't part of the snapshot -->
+
+</dialog>
+</window>

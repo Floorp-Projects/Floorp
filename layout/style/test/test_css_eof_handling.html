@@ -1,0 +1,283 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CSS EOF handling</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p><a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=311616">bug 311616</a>,
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=325064">bug 325064</a></p>
+<iframe id="display"></iframe>
+<p id="log"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const tests = [
+  {
+      name: "basic rule",
+      ref: "#r {background-color : orange}",
+      tst: "#t {background-color : orange",
+      prop: "background-color", pseudo: ""
+  },
+  {
+      name: "function",
+      ref: "#r {background-color: rgb(0,255,0)}",
+      tst: "#t {background-color: rgb(0,255,0",
+      prop: "background-color", pseudo: ""
+  },
+  {
+      name: "comment",
+      ref: "#r {background-color: aqua/*marine*/}",
+      tst: "#t {background-color: aqua/*marine",
+      prop: "background-color", pseudo: ""
+  },
+  {
+      name: "@media 1",
+      ref: "@media all { #r { background-color: yellow } }",
+      tst: "@media all { #t { background-color: yellow }",
+      prop: "background-color", pseudo: ""
+  },
+  {
+      name: "@media 2",
+      ref: "@media all { #r { background-color: magenta } }",
+      tst: "@media all { #t { background-color: magenta",
+      prop: "background-color", pseudo: ""
+  },
+  {
+      name: "@import 1",
+      ref: "@import 'data:text/css,%23r%7Bbackground-color%3Agray%7D';",
+      tst: "@import 'data:text/css,%23t%7Bbackground-color%3Agray%7D",
+      prop: "background-color", pseudo: ""
+  },
+  {
+      name: "@import 2",
+      ref: "@import 'data:text/css,%23r%7Bbackground-color%3Ablack%7D' all;",
+      tst: "@import 'data:text/css,%23t%7Bbackground-color%3Ablack%7D' all",
+      prop: "background-color", pseudo: ""
+  },
+  {
+      name: "url-token 1",
+      ref: "#r { background-image: url(data:image/png;base64," +
+           "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEAQAAAACBiqPTAAAADklEQVQI12NI" +
+           "YJgAhAkAB4gB4Ry+pcoAAAAASUVORK5CYII=) }",
+      tst: "#t { background-image: url(data:image/png;base64," +
+           "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEAQAAAACBiqPTAAAADklEQVQI12NI" +
+           "YJgAhAkAB4gB4Ry+pcoAAAAASUVORK5CYII=",
+      prop: "background-image", pseudo: ""
+  },
+  {
+      name: "url-token 2",
+      ref: "#r { background-image: url('data:image/png;base64," +
+           "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEAQAAAACBiqPTAAAAEElEQVQI12Mo" +
+           "YNjAcIHhAQAJ2ALR4kRk1gAAAABJRU5ErkJggg==') }",
+      tst: "#t { background-image: url('data:image/png;base64," +
+           "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEAQAAAACBiqPTAAAAEElEQVQI12Mo" +
+           "YNjAcIHhAQAJ2ALR4kRk1gAAAABJRU5ErkJggg==",
+      prop: "background-image", pseudo: ""
+  },
+  {
+      name: "url-token 3",
+      ref: "#r { background-image: url('data:image/png;base64," +
+           "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEAQAAAACBiqPTAAAAEElEQVQI12N4" +
+           "wHCBYQNDAQAMuALRrGb97AAAAABJRU5ErkJggg==') }",
+      tst: "#t { background-image: url('data:image/png;base64," +
+           "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEAQAAAACBiqPTAAAAEElEQVQI12N4" +
+           "wHCBYQNDAQAMuALRrGb97AAAAABJRU5ErkJggg=='",
+      prop: "background-image", pseudo: ""
+  },
+  {
+      name: "url-token 4",  /*Bug 751939*/
+      ref: "#r { background-image: url( )}",
+      tst: "#t { background-image: url(" ,
+      prop: "background-image", pseudo: ""
+  },
+  {
+      name: "counter",
+      ref: "#r::before { content: counter(tr, upper-alpha) }",
+      tst: "#t::before { content: counter(tr, upper-alpha",
+      prop: "content", pseudo: "::before"
+  },
+  {
+      name: "string",
+      ref: "#r::before { content: 'B' }",
+      tst: "#t::before { content: 'B",
+      prop: "content", pseudo: "::before"
+  },
+
+  /* For these tests, there is no visible effect on computed style;
+     instead we have to audit the DOM stylesheet object.  */
+
+  {
+      todo: 1, /* bug 446226 */
+      name: "selector 1",
+      ref: "td[colspan='3'] {}",
+      tst: "td[colspan='3"
+  },
+  {
+      todo: 1, /* bug 446226 */
+      name: "selector 2",
+      ref: "td[colspan='3'] {}",
+      tst: "td[colspan='3'"
+  },
+  {
+      todo: 1,  /* bug 446226 */
+      name: "selector 3",
+      ref: "td:lang(en) {}",
+      tst: "td:lang(en"
+  },
+  
+  {
+      name: "@media 3",
+      ref: "@media all {}",
+      tst: "@media all {",
+  },
+  {
+      name: "@namespace 1a",
+      ref: "@namespace foo url('http://foo.example.com/');",
+      tst: "@namespace foo url('http://foo.example.com/')"
+  },
+  {
+      name: "@namespace 1b",
+      ref: "@namespace foo url(http://foo.example.com/);",
+      tst: "@namespace foo url(http://foo.example.com/"
+  },
+  {
+      name: "@namespace 1c",
+      ref: "@namespace foo url('http://foo.example.com/');",
+      tst: "@namespace foo url('http://foo.example.com/"
+  },
+  {
+      name: "@namespace 1d",
+      ref: "@namespace foo 'http://foo.example.com/';",
+      tst: "@namespace foo 'http://foo.example.com/'"
+  },
+  {
+      name: "@namespace 1e",
+      ref: "@namespace foo 'http://foo.example.com/';",
+      tst: "@namespace foo 'http://foo.example.com/"
+  },
+  {
+      name: "@namespace 2a",
+      ref: "@namespace url('http://foo.example.com/');",
+      tst: "@namespace url('http://foo.example.com/')"
+  },
+  {
+      name: "@namespace 2b",
+      ref: "@namespace url('http://foo.example.com/');",
+      tst: "@namespace url('http://foo.example.com/'"
+  },
+  {
+      name: "@namespace 2c",
+      ref: "@namespace url('http://foo.example.com/');",
+      tst: "@namespace url('http://foo.example.com/"
+  },
+  {
+      name: "@namespace 2d",
+      ref: "@namespace 'http://foo.example.com/';",
+      tst: "@namespace 'http://foo.example.com/'"
+  },
+  {
+      name: "@namespace 2e",
+      ref: "@namespace 'http://foo.example.com/';",
+      tst: "@namespace 'http://foo.example.com/"
+  },
+  {
+      name: "@-moz-document 1",
+      ref: "@-moz-document domain('example.com') {}",
+      tst: "@-moz-document domain('example.com') {"
+  },
+  {
+      name: "@-moz-document 2",
+      ref: "@-moz-document domain('example.com') { p {} }",
+      tst: "@-moz-document domain('example.com') { p {"
+  }
+];
+
+const basestyle = ("table {\n"+
+       "    border-collapse: collapse;\n"+
+       "}\n"+
+       "td {\n"+
+       "    width: 1.5em;\n"+
+       "    height: 1.5em;\n"+
+       "    border: 1px solid black;\n"+
+       "    text-align: center;\n"+
+       "    margin: 0;\n"+
+       "}\n"+
+       "tr { counter-increment: tr }\n");
+
+/* This is more complicated than it might look like it needs to be,
+   because for each subtest we have to splat stuff into the iframe,
+   allow the renderer to run, and only then interrogate the computed
+   styles.  */
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  SpecialPowers.pushPrefEnv(
+    { "set": [["layout.css.moz-document.content.enabled", true]]},
+    function() {
+      const frame = document.getElementById("display");
+      var curTest = 0;
+
+      const prepareTest = function() {
+        var cd = frame.contentDocument;
+        cd.open();
+        cd.write('<!DOCTYPE HTML><html><head>' +
+          '<style>\n' + basestyle + '</style>\n' +
+          '<style>\n' + tests[curTest].ref + '</style>\n' +
+          '<style>\n' + tests[curTest].tst + '</style>\n' +
+          '</head><body>\n' +
+          '<table><tr><td id="r"><td id="t"></table>' +
+          '</body></html>');
+        cd.close();
+      };
+
+      const checkTest = function() {
+        var cd = frame.contentDocument;
+        var _is = tests[curTest].todo ? todo_is : is;
+        var _ok = tests[curTest].todo ? todo : ok;
+
+        if (cd.styleSheets[1].cssRules.length == 1 &&
+          cd.styleSheets[2].cssRules.length == 1) {
+          // If we have a .prop for this test, the .cssText of the reference
+          // and test rules will differ in the selector.  Change #t to #r
+          // in the test rule.
+          var ref_canon = cd.styleSheets[1].cssRules[0].cssText;
+          var tst_canon = cd.styleSheets[2].cssRules[0].cssText;
+          tst_canon = tst_canon.replace(/(#|%23)t\b/, "$1r");
+          _is(tst_canon, ref_canon,
+              tests[curTest].name + " (canonicalized rule)");
+        } else {
+          _ok(false, tests[curTest].name + " (rule missing)");
+        }
+        if (tests[curTest].prop) {
+          var prop = tests[curTest].prop;
+          var pseudo = tests[curTest].pseudo;
+
+          var refElt = cd.getElementById("r");
+          var tstElt = cd.getElementById("t");
+          var refStyle = cd.defaultView.getComputedStyle(refElt, pseudo);
+          var tstStyle = cd.defaultView.getComputedStyle(tstElt, pseudo);
+          _is(tstStyle.getPropertyValue(prop),
+              refStyle.getPropertyValue(prop),
+              tests[curTest].name + " (computed style)");
+        }
+        curTest++;
+        if (curTest < tests.length) {
+          prepareTest();
+        } else {
+          SimpleTest.finish();
+        }
+      };
+
+      frame.onload = function(){setTimeout(checkTest, 0);};
+      prepareTest();
+    }
+  )
+};
+</script>
+</pre>
+</body>
+</html>

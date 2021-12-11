@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for triggering popup by mouse events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="target" style="width: 50px; height: 50px; background: green"></div>
+<script>
+
+SimpleTest.requestFlakyTimeout("Need to test setTimeout");
+
+function startTest(aTestAsyncFun, aAllowPopup = true) {
+  return new Promise(aResolve => {
+    let target = document.getElementById("target");
+    target.addEventListener("click", (e) => {
+      aTestAsyncFun(() => {
+        let w = window.open("about:blank");
+        is(!!w, aAllowPopup, `Should ${aAllowPopup ? "allow" : "block"} popup`);
+        if (w) {
+          w.close();
+        }
+        aResolve();
+      });
+    }, {once: true});
+    synthesizeMouseAtCenter(target, {type: "mousedown"});
+    synthesizeMouseAtCenter(target, {type: "mouseup"});
+  });
+}
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.disable_open_during_load", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+});
+
+[
+  // setTimeout
+  function testSetTimout(aCallback) {
+    setTimeout(aCallback, 500);
+  },
+  // fetch
+  function testFetch(aCallback) {
+    fetch("../dummy.html").then(aCallback);
+  },
+  // requestStorageAccess
+  function testRequestStorageAccess(aCallback) {
+    document.requestStorageAccess().then(aCallback);
+  },
+  // serviceWorker.getRegistration
+  function testGetServiceWorkerRegistration(aCallback) {
+    navigator.serviceWorker.getRegistration("/app").then(aCallback);
+  },
+].forEach(testAsyncFun => {
+  add_task(async function() {
+    info(`start ${testAsyncFun.name}`);
+    SpecialPowers.wrap(document).clearUserGestureActivation();
+    await startTest(testAsyncFun);
+    await new Promise(aResolve => SimpleTest.executeSoon(aResolve));
+  });
+});
+
+// Test popup should be blocked if user transient is timeout
+add_task(async function timeout() {
+  info(`start user transient timeout`);
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.user_activation.transient.timeout", 1000],
+  ]});
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+  await startTest((aCallback) => {
+    setTimeout(aCallback, 2000);
+  }, false);
+  await new Promise(aResolve => SimpleTest.executeSoon(aResolve));
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=496292
+-->
+<head>
+  <title>Test for Bug 496292</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=496292">Mozilla Bug 496292</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<canvas id="canvas" width="100" height="100"> </canvas>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var canvas = document.getElementById('canvas');
+var first, second, third, ref;
+
+var RemoteCanvas = function(url) {
+    this.url = url;
+};
+
+RemoteCanvas.CANVAS_WIDTH = 100;
+RemoteCanvas.CANVAS_HEIGHT = 100;
+
+RemoteCanvas.prototype.load = function(cb) {
+    this.cb = cb;
+
+    var windowWidth = window.innerWidth - 25;
+    var iframe;
+    iframe = document.createElement("iframe");
+    iframe.id = "test-iframe-" + this.url;
+    iframe.height = "10px";
+    iframe.width = windowWidth + "px";
+    iframe.style.visibility = "hidden";
+    iframe.src = this.url;
+    // Here is where the magic happens... add a listener to the
+    // frame's onload event - it will call handleEvent
+    iframe.addEventListener("load", this, true);
+    // append to the end of the page
+    window.document.body.appendChild(iframe);
+};
+
+RemoteCanvas.prototype.reload = function(cb, force) {
+    this.cb = cb;
+    window.frames[0].location.reload(force);
+}
+
+RemoteCanvas.prototype.handleEvent = function() {
+    // Look back up the iframe by id
+    var ldrFrame = document.getElementById("test-iframe-" + this.url);
+    // Get a reference to the window object you need for the canvas
+    // SpecialPowers.snapshotRect method
+    var remoteWindow = ldrFrame.contentWindow;
+
+    // Draw canvas
+    canvas.style.width = RemoteCanvas.CANVAS_WIDTH + "px";
+    canvas.style.height = RemoteCanvas.CANVAS_HEIGHT + "px";
+    canvas.width = RemoteCanvas.CANVAS_WIDTH;
+    canvas.height = RemoteCanvas.CANVAS_HEIGHT;
+    var windowWidth = window.innerWidth - 25;
+    var windowHeight = window.innerHeight;
+
+    var rect = { left: 0, top: 0, width: windowWidth, height: windowHeight };
+    var snapshot = SpecialPowers.snapshotRect(remoteWindow, rect, "rgb(0,0,0)");
+
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0,
+                  RemoteCanvas.CANVAS_WIDTH,
+                  RemoteCanvas.CANVAS_HEIGHT);
+    ctx.save();
+    ctx.scale(RemoteCanvas.CANVAS_WIDTH / windowWidth,
+              RemoteCanvas.CANVAS_HEIGHT / windowHeight);
+    ctx.drawImage(snapshot, 0, 0);
+    ctx.restore();
+    this.cb();
+};
+
+function loadFirst()
+{
+  ref = canvas.toDataURL();
+
+  var remoteCanvas = new RemoteCanvas("bug496292-iframe-1.html");
+  remoteCanvas.load(checkFirst);
+}
+
+function checkFirst()
+{
+  first = canvas.toDataURL();
+  is(first, ref, "The default Accept header used by image loader is correct");
+
+  SpecialPowers.setCharPref("image.http.accept", "image/png");
+  SpecialPowers.pushPrefEnv({"set": [["image.http.accept", "image/png"]]}, function() {
+    var remoteCanvas = new RemoteCanvas("bug496292-iframe-2.html");
+    remoteCanvas.load(checkSecond);
+  });
+}
+
+function checkSecond()
+{
+  second = canvas.toDataURL();
+  is(second, ref, "The modified Accept header used by image loader is correct");
+
+  SpecialPowers.pushPrefEnv({"clear": [["image.http.accept"]]}, function() {
+    var remoteCanvas = new RemoteCanvas("bug496292-iframe-1.html");
+    remoteCanvas.load(checkThird);
+  });
+}
+
+function checkThird() {
+  third = canvas.toDataURL();
+  is(third, ref, "The Accept header used by image loader should be correctly reset");
+
+  SimpleTest.finish();
+}
+
+var refCanvas = new RemoteCanvas("bug496292-iframe-ref.html");
+refCanvas.load(loadFirst);
+
+</script>
+</pre>
+</body>
+</html>

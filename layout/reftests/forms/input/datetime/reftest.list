@@ -1,0 +1,25 @@
+!= time-simple-unthemed.html time-simple-unthemed-ref.html
+!= time-large-font.html time-basic.html
+!= time-width-height.html time-basic.html
+!= time-border.html time-basic.html
+
+# type change
+== to-time-from-other-type-unthemed.html time-simple-unthemed.html
+== from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed-ref.html
+
+# content should not overflow on small width/height
+== time-small-width.html time-small-width-ref.html
+fuzzy-if(!nativeThemePref,0-25,0-2) == time-small-height.html time-small-height-ref.html # Minor outline 1px shift
+== time-small-width-height.html time-small-width-height-ref.html
+
+# content (text) should be left aligned
+fuzzy-if(Android,0-4,0-8) fuzzy-if(cocoaWidget&&nativeThemePref,6-6,48-48) == time-content-left-aligned.html time-content-left-aligned-ref.html
+
+# reset button should be right aligned
+skip-if(Android) fuzzy-if(!nativeThemePref,0-24,0-4) == time-reset-button-right-aligned.html time-reset-button-right-aligned-ref.html # bug 1372062 for Android, antialiasing with WR disabled for the fuzz
+== reset-button-visibility-hidden.html reset-button-visibility-hidden-ref.html
+
+!= text-align.html text-align-notref.html
+
+== line-height-01.html line-height-01-ref.html
+== line-height-02.html line-height-02-ref.html

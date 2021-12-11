@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div {
+    border: 1px solid black;
+    width: 30px;
+    height: 30px;
+    margin: 1px;
+}
+.grad-5 {
+    background: linear-gradient(to right, blue -5%, yellow -5%);
+}
+.grad0 {
+    background: linear-gradient(to right, blue 0%, yellow 0%);
+}
+.grad30 {
+    background: linear-gradient(to right, blue 30%, yellow 30%);
+}
+.grad100 {
+    background: linear-gradient(to right, blue 100%, yellow 100%);
+}
+.grad150 {
+    background: linear-gradient(to right, blue 150%, yellow 150%);
+}
+</style>
+</head>
+<body>
+  You shouldn't see a gradual gradient in any of the divs below.
+  <div class="grad-5"></div>
+  <div class="grad0"></div>
+  <div class="grad30"></div>
+  <div class="grad100"></div>
+  <div class="grad150"></div>
+</body>
+</html>

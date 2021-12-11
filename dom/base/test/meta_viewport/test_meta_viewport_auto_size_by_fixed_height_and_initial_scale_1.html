@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>initial-scale=1 with fixed height enable autoSize</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="height=400, initial-scale=1">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>height=400, initial-scale=1</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function fixed_height_and_initial_scale_1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      ok(info.autoSize,
+         "initial-scale=1 with fixed height should enable autoSize");
+    });
+  </script>
+</body>
+</html>

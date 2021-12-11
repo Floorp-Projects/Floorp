@@ -1,0 +1,168 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/aboutDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://branding/content/aboutDialog.css" type="text/css"?>
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="aboutDialog"
+        windowtype="Browser:About"
+        onload="init(event);"
+#ifdef MOZ_UPDATER
+        onunload="onUnload(event);"
+#endif
+#ifdef XP_MACOSX
+        inwindowmenu="false"
+#else
+        data-l10n-id="aboutDialog-title"
+#endif
+        role="dialog"
+        aria-describedby="version distribution distributionId communityDesc contributeDesc trademark"
+        >
+#ifdef XP_MACOSX
+#include macWindow.inc.xhtml
+#else
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+#endif
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/aboutDialog.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/aboutDialog.js"/>
+
+  <vbox id="aboutDialogContainer">
+    <hbox id="clientBox">
+      <vbox id="leftBox" flex="1"/>
+      <vbox id="rightBox" flex="1">
+        <label id="release" hidden="true">
+        <!-- This string is explicitly not translated -->
+          Extended Support Release
+        </label>
+#ifndef MOZ_UPDATER
+        <!-- This HBOX is duplicated below with class="update" -->
+        <hbox align="baseline">
+          <label id="version"/>
+          <label id="releasenotes" is="text-link" hidden="true" data-l10n-id="releaseNotes-link"/>
+        </hbox>
+#endif
+
+        <label id="distribution" class="text-blurb"/>
+        <label id="distributionId" class="text-blurb"/>
+
+        <vbox id="detailsBox">
+          <hbox id="updateBox">
+#ifdef MOZ_UPDATER
+            <html:div id="icons">
+              <html:img class="icon update-throbber" src="chrome://global/skin/icons/loading.png" role="presentation"/>
+              <html:img class="icon noUpdatesFound" src="chrome://global/skin/icons/check.svg" role="presentation"/>
+              <html:img class="icon apply" src="chrome://global/skin/icons/reload.svg" role="presentation"/>
+            </html:div>
+            <vbox>
+              <stack id="updateDeck" orient="vertical">
+                <hbox id="checkForUpdates" align="center">
+                  <button id="checkForUpdatesButton" align="start"
+                          data-l10n-id="update-checkForUpdatesButton"
+                          oncommand="gAppUpdater.checkForUpdates();"/>
+                  <spacer flex="1"/>
+                </hbox>
+                <hbox id="downloadAndInstall" align="center">
+                  <button id="downloadAndInstallButton" align="start"
+                          oncommand="gAppUpdater.startDownload();"/>
+                          <!-- label and accesskey will be filled by JS -->
+                  <spacer flex="1"/>
+                </hbox>
+                <hbox id="apply" align="center">
+                  <button id="updateButton" align="start"
+                          data-l10n-id="update-updateButton"
+                          oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
+                  <spacer flex="1"/>
+                </hbox>
+                <hbox id="checkingForUpdates" align="center">
+                  <label data-l10n-id="update-checkingForUpdates"/>
+                </hbox>
+                <hbox id="downloading" data-l10n-id="update-downloading-message" align="center">
+                  <label id="downloadStatus" data-l10n-name="download-status"/>
+                </hbox>
+                <hbox id="applying" align="center">
+                  <label data-l10n-id="update-applying"/>
+                </hbox>
+                <hbox id="downloadFailed" align="center" data-l10n-id="update-failed">
+                  <label id="failedLink" is="text-link" data-l10n-name="failed-link"/>
+                </hbox>
+                <hbox id="policyDisabled" align="center">
+                  <label data-l10n-id="update-adminDisabled"/>
+                </hbox>
+                <hbox id="noUpdatesFound" align="center">
+                  <label data-l10n-id="update-noUpdatesFound"/>
+                </hbox>
+                <hbox id="otherInstanceHandlingUpdates" align="center">
+                  <label data-l10n-id="update-otherInstanceHandlingUpdates"/>
+                </hbox>
+                <hbox id="manualUpdate" align="center" data-l10n-id="update-manual">
+                  <label id="manualLink" is="text-link" data-l10n-name="manual-link"/>
+                </hbox>
+                <hbox id="unsupportedSystem" align="center" data-l10n-id="update-unsupported">
+                  <label id="unsupportedLink" is="text-link" data-l10n-name="unsupported-link"/>
+                </hbox>
+                <hbox id="restarting" align="center">
+                  <label data-l10n-id="update-restarting"/>
+                </hbox>
+              </stack>
+              <!-- This HBOX is duplicated above without class="update" -->
+              <hbox align="baseline">
+                <label id="version" class="update"/>
+                <label id="releasenotes" is="text-link" hidden="true" data-l10n-id="releaseNotes-link"/>
+              </hbox>
+              <description class="text-blurb">
+                <label is="text-link" onclick="openHelpLink('firefox-help')" data-l10n-id="aboutdialog-help-user"/>
+                <label id="submit-feedback" is="text-link" onclick="openFeedbackPage()" data-l10n-id="aboutdialog-submit-feedback"/>
+              </description>
+            </vbox>
+#endif
+          </hbox>
+
+#ifdef MOZ_UPDATER
+          <description class="text-blurb" id="currentChannelText" data-l10n-id="channel-description">
+            <label id="currentChannel" data-l10n-name="current-channel"/>
+          </description>
+#endif
+          <vbox id="experimental" hidden="true">
+            <description class="text-blurb" id="warningDesc" data-l10n-id="warningDesc-version"></description>
+            <description class="text-blurb" id="communityExperimentalDesc" data-l10n-id="community-exp">
+              <label is="text-link" href="https://www.mozilla.org/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-name="community-exp-mozillaLink"/>
+              <label is="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-exp-creditsLink"/>
+            </description>
+          </vbox>
+          <description class="text-blurb" id="communityDesc" data-l10n-id="community-2">
+            <label is="text-link" href="https://www.mozilla.org/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-name="community-mozillaLink"/>
+            <label is="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-creditsLink"/>
+          </description>
+          <description class="text-blurb" id="contributeDesc" data-l10n-id="helpus">
+            <label is="text-link" href="https://donate.mozilla.org/?utm_source=firefox&#38;utm_medium=referral&#38;utm_campaign=firefox_about&#38;utm_content=firefox_about" data-l10n-name="helpus-donateLink"/>
+            <label is="text-link" href="https://www.mozilla.org/contribute/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-name="helpus-getInvolvedLink"/>
+          </description>
+        </vbox>
+      </vbox>
+    </hbox>
+    <vbox id="bottomBox">
+      <hbox pack="center">
+        <label is="text-link" class="bottom-link" useoriginprincipal="true" href="about:license" data-l10n-id="bottomLinks-license"/>
+        <label is="text-link" class="bottom-link" useoriginprincipal="true" href="about:rights" data-l10n-id="bottomLinks-rights"/>
+        <label is="text-link" class="bottom-link" href="https://www.mozilla.org/privacy/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-id="bottomLinks-privacy"/>
+      </hbox>
+      <description id="trademark" data-l10n-id="trademarkInfo"></description>
+    </vbox>
+  </vbox>
+
+  <keyset>
+    <key keycode="VK_ESCAPE" oncommand="window.close();"/>
+  </keyset>
+
+</window>

@@ -1,0 +1,111 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+  function* testSteps()
+  {
+    const READ_WRITE = "readwrite";
+
+    const name = window.location.pathname;
+
+    const objectStoreName = "Blobs";
+
+    getCurrentUsage(grabFileUsageAndContinueHandler);
+    let startUsage = yield undefined;
+
+    const fileData1 = {
+      key: 1,
+      obj: { id: 1, file: getRandomFile("random.bin", 100000) },
+    };
+    const fileData2 = {
+      key: 2,
+      obj: { id: 1, file: getRandomFile("random.bin", 100000) },
+    };
+
+    SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },
+                              continueToNextStep);
+    yield undefined;
+
+    {
+      let request = indexedDB.open(name, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      is(event.type, "upgradeneeded", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      let objectStore = db.createObjectStore(objectStoreName, { });
+
+      objectStore.createIndex("index", "id", { unique: true });
+
+      objectStore.add(fileData1.obj, fileData1.key);
+
+      request = objectStore.add(fileData2.obj, fileData2.key);
+      request.addEventListener("error", new ExpectError("ConstraintError", true));
+      request.onsuccess = unexpectedSuccessHandler;
+      yield undefined;
+
+      event = yield undefined;
+
+      is(event.type, "success", "Got correct event type");
+
+      getCurrentUsage(grabFileUsageAndContinueHandler);
+      let originalUsage = yield undefined;
+
+      // FIXME This might not work in private browsing mode because of the
+      // encryption overhead. We need to decide how to handle that. We might
+      // change the usage reporting to remove the overhead.
+
+      is(originalUsage, startUsage + fileData1.obj.file.size + fileData2.obj.file.size,
+         "Correct file usage");
+
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      trans.objectStore(objectStoreName).delete(fileData1.key);
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      is(event.type, "complete", "Got correct event type");
+
+      getCurrentUsage(grabFileUsageAndContinueHandler);
+      let usage = yield undefined;
+
+      is(usage, originalUsage, "OS files exists");
+
+      fileData1.obj.file = null;
+      fileData2.obj.file = null;
+    }
+
+    scheduleGC();
+    yield undefined;
+
+    // Flush pending file deletions before checking usage.
+    flushPendingFileDeletions();
+
+    getCurrentUsage(grabFileUsageAndContinueHandler);
+    let endUsage = yield undefined;
+
+    is(endUsage, startUsage, "OS files deleted");
+
+    finishTest();
+  }
+  </script>
+  <script type="text/javascript" src="file.js"></script>
+  <script type="text/javascript" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

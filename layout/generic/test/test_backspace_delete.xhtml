@@ -1,0 +1,325 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Test BackSpace/Delete Keys">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function execTests() {
+  var e = document.getElementById("edit");
+  var doc = e.contentDocument;
+  var win = e.contentWindow;
+  var root = doc.documentElement;
+  var editor = doc.body;
+  var sel = win.getSelection();
+  win.focus();
+
+  function setupTest(html, firstChildOffsetForCaret, node) {
+    // Work around bug 474255 --- we need to have nonempty content before we turn on
+    // editing, or the tests below break because the editor doesn't notice when we
+    // insert non-empty content using innerHTML.
+    doc.designMode = 'off';
+    editor.innerHTML = html;
+    doc.designMode = 'on';
+    var n = editor.firstChild;
+    if (node) {
+      n = node();
+    }
+    sel.collapse(n, firstChildOffsetForCaret);
+  }
+
+  var eatSpace;
+  var deleteImmediately;
+
+  function getPrefs(branch) {
+    const prefSvcContractID = "@mozilla.org/preferences-service;1";
+    const prefSvcIID = Ci.nsIPrefService;
+    return Cc[prefSvcContractID].getService(prefSvcIID)
+             .getBranch(branch);
+  }
+
+  function setPref(branch, pref, newValue) {
+    getPrefs(branch).setBoolPref(pref, newValue);
+    return newValue;
+  }
+
+  function restorePref(branch, pref, newValue) {
+    try {
+      getPrefs(branch).clearUserPref(pref);
+    } catch(ex) {}
+  }
+
+  function setEatSpace(newValue) {
+    eatSpace = setPref("layout.word_select.", "eat_space_to_next_word", newValue);
+  }
+
+  function restoreEatSpace() {
+    restorePref("layout.word_select.", "eat_space_to_next_word");
+  }
+
+  function setDeleteImmediately(newValue) {
+    deleteImmediately = setPref("bidi.edit.", "delete_immediately", newValue);
+  }
+
+  function restoreDeleteImmediately() {
+    restorePref("bidi.edit.", "delete_immediately");
+  }
+
+  function doCommand(cmd) {
+    var controller = document.commandDispatcher.getControllerForCommand(cmd);
+    if (controller) {
+      try {
+        controller.doCommand(cmd);
+        ok(true, 'doCommand(' + cmd + ') succeeded');
+      } catch(ex) {
+        ok(false, 'exception in doCommand(' + cmd + '): ', ex.message);
+      }
+    }
+  }
+
+  function testRight(node, offset) {
+    doCommand("cmd_charNext");
+    var msg = "Right movement broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+  }
+
+  function selErrString(dir) {
+    return dir + " selection broken with eatSpace=" + eatSpace + " in \"" + editor.innerHTML + "\"";
+  }
+
+  function testWordSelRight(startNode, startOffset, endNode, endOffset) {
+    doCommand("cmd_selectWordNext");
+    var selRange = sel.getRangeAt(0);
+    is(selRange.startContainer, startNode, selErrString("Word right"));
+    is(selRange.startOffset, startOffset, selErrString("Word right"));
+    is(selRange.endContainer, endNode, selErrString("Word right"));
+    is(selRange.endOffset, endOffset, selErrString("Word right"));
+  }
+
+  function testDelete(node, offset, text, richtext) {
+    doCommand("cmd_deleteCharForward");
+    var msg = "Delete broken in \"" + editor.innerHTML + "\", offset " + offset + " with deleteImmediately=" + deleteImmediately;
+    if(typeof node == 'function'){
+      node = node();
+    }
+    is(sel.anchorNode, node, msg);
+
+    is(sel.anchorOffset, offset, msg);
+    let text_result = richtext ? editor.innerHTML : editor.textContent;
+    is(text_result, text, msg);
+  }
+
+  function testBackspace(node, offset, text) {
+    doCommand("cmd_deleteCharBackward");
+    var msg = "Backspace broken in \"" + editor.innerHTML + "\", offset " + offset + " with deleteImmediately=" + deleteImmediately;
+    is(sel.anchorNode, node, msg);
+
+    is(sel.anchorOffset, offset, msg);
+    is(editor.textContent, text, msg);
+  }
+
+  function testDeletePrevWord(node, offset, text) {
+    doCommand("cmd_deleteWordBackward");
+    var msg = "Delete previous word broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+    is(editor.textContent, text, msg);
+  }
+
+  function testDeleteNextWord(node, offset, text) {
+    doCommand("cmd_deleteWordForward");
+    var msg = "Delete next word broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+    todo_is(editor.textContent, text, msg);
+  }
+
+  // Test cell-wise deletion of Delete
+  setupTest("สวัสดีพ่อแม่พี่น้อง", 0);
+  testRight(editor.firstChild, 1);
+  testDelete(editor.firstChild, 1, "สสดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 2);
+  testDelete(editor.firstChild, 2, "สสพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testDelete(editor.firstChild, 4, "สสพ่แม่พี่น้อง");
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "สสพ่แพี่น้อง", false);
+  testRight(editor.firstChild, 8);
+  testDelete(editor.firstChild, 8, "สสพ่แพี่อง", false);
+  testRight(editor.firstChild, 9);
+  testDelete(editor.firstChild, 9, "สสพ่แพี่อ", false);
+
+  // Test character-wise deletion of Backspace
+  setupTest("สวัสดีพ่อแม่พี่น้อง", 0);
+  testRight(editor.firstChild, 1);
+  testBackspace(editor.firstChild, 0, "วัสดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 2);
+  testBackspace(editor.firstChild, 1, "วสดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 2);
+  testBackspace(editor.firstChild, 1, "วดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 3);
+  testBackspace(editor.firstChild, 2, "วดพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testBackspace(editor.firstChild, 3, "วดพอแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testBackspace(editor.firstChild, 3, "วดพแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testBackspace(editor.firstChild, 3, "วดพม่พี่น้อง");
+  testRight(editor.firstChild, 5);
+  testBackspace(editor.firstChild, 4, "วดพมพี่น้อง");
+  testRight(editor.firstChild, 7);
+  testBackspace(editor.firstChild, 6, "วดพมพีน้อง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีนอง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีนง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีน");
+
+  // Tests for Bug 417745
+
+  setEatSpace(true);
+
+  setupTest("Quick yellow fox", 0);
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 6);
+  testDelete(editor.firstChild, 0, "yellow fox");
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 7);
+  testDelete(editor.firstChild, 0, "fox");
+
+  setEatSpace(false);
+
+  setupTest("Quick yellow fox", 0);
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 5);
+  // editor converts the leading space to an &nbsp;, otherwise it
+  // wouldn't show up which would confuse users
+  testDelete(editor.firstChild, 0, "\u00A0yellow fox");
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 7);
+  testDelete(editor.firstChild, 0, "\u00A0fox");
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 4);
+  testDelete(editor, 0, "");
+
+  restoreEatSpace();
+
+  // Tests for Bug 419217
+
+  setupTest("foo<div>bar</div>", 3);
+  testDelete(function(){return editor.firstChild;}, 3, "foobar", true);
+
+  // Tests for Bug 419406
+  var s = "helloשלום";
+
+  setDeleteImmediately(true);
+
+  setupTest(s, 4);
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "helloלום");
+
+  setDeleteImmediately(false);
+
+  setupTest(s, 4);
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "helloשלום");
+
+  // Tests for bug 1034337
+  s = "اهلاhello";
+
+  setDeleteImmediately(true);
+
+  setupTest(s, 4);
+  // first delete an ltr character to make sure that the caret is ltr
+  testDelete(editor.firstChild, 4, "اهلاello");
+  testBackspace(editor.firstChild, 3, "اهلello");
+
+  setDeleteImmediately(false);
+
+  setupTest(s, 4);
+  // first delete an ltr character to make sure that the caret is ltr
+  testDelete(editor.firstChild, 4, "اهلاello");
+  testBackspace(editor.firstChild, 4, "اهلاello");
+
+  restoreDeleteImmediately();
+
+  // Tests for Bug 462188
+  setupTest("You should not see this text.", 29);
+  testDeletePrevWord(editor.firstChild, 24, "You should not see this ");
+  testDeletePrevWord(editor.firstChild, 19, "You should not see ");
+  testDeletePrevWord(editor.firstChild, 15, "You should not ");
+  testDeletePrevWord(editor.firstChild, 11, "You should ");
+  testDeletePrevWord(editor.firstChild,  4, "You ");
+  testDeletePrevWord(editor,  0, "");
+
+  setupTest("You should not see this text.", 0);
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0should not see this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0not see this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0see this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0text.");
+  // testDeleteNextWord(editor, 0, "");
+
+  // Tests for Bug 502259
+  setupTest("<p>Bug</p>\n<p>502259</p>", 1);
+  testDelete(function(){return editor.firstChild.firstChild;}, 3, "<p>Bug502259</p>", true);
+
+  // Tests for Bug 507936
+  var nodecallback = function(){return editor.firstChild.firstChild.lastChild.firstChild.lastChild;};
+  setupTest("<ol><li>one<ol><li>two</li></ol></li></ol>\n<p>three</p>", 3, nodecallback);
+  testDelete(nodecallback, 0, "<ol><li>one<ol><li>twothree</li></ol></li></ol>", true);
+
+  setupTest("<ol><li>one<ol><li>two</li></ol></li></ol>\n<hr>\n<p>three</p>", 3, nodecallback);
+  testDelete(nodecallback, 3, 
+    "<ol><li>one<ol><li>two</li></ol></li></ol><p>three</p>", true);
+
+  // Tests for Bug 519751
+  var nodecallback = function(){return editor.firstChild.lastChild;};
+  setupTest("<p>one</p><ol><li>two</li><li>three</li></ol>", 3, nodecallback);
+  testDelete(nodecallback, 0, "<p>onetwo</p><ol><li>three</li></ol>", true);
+
+  nodecallback = function(){return editor.firstChild.childNodes[1].firstChild;};
+  setupTest("<ol><li>one</li><li>two</li></ol><ol><li>three</li><li>four</li></ol>", 3, nodecallback);
+  testDelete(function(){return editor.firstChild.childNodes[2].firstChild;}, 
+    0, "<ol><li>one</li><li>two</li><li>three</li><li>four</li></ol>", true);
+  /*todo_is(false, true, 'The above testDelete should use the same nodecallback' +
+    'as in the proceeding setupTest: the cursor should stay at the end of "two", while currently it is at the beginning of "three" after delete');*/
+
+  // More Tests for Bug 507936
+  nodecallback = function(){return editor.firstChild.firstChild.firstChild;}
+  setupTest("<div><div>abcdef</div><div>bar</div><div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  testDelete(editor.lastChild.lastChild.lastChild, 5, "<div><div>abcdehi</div></div>", true);
+
+  setupTest("<div><div>abcdef</div><div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  testDelete(editor.lastChild.lastChild.lastChild, 5, "<div><div>abcdehi</div></div>", true);
+
+  nodecallback = function(){return editor.firstChild.firstChild;}
+  setupTest("<div>abcdef<div><div>bar</div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  expectednodecallback = function(){return editor.lastChild.lastChild;}
+  testDelete(expectednodecallback, 0, "<div>abcdehi</div>", true);
+
+  setupTest("<div>abcdef<div>ghi</div></div>", 5, nodecallback);
+  sel.extend(editor.lastChild.lastChild.lastChild, 1);
+  testDelete(expectednodecallback, 0, "<div>abcdehi</div>", true);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(execTests);
+]]>
+</script>
+
+<body  id="html_body" xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462188">Mozilla Bug 462188</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+<iframe id="edit" width="200" height="100" src="about:blank"/>
+</body>
+</window>

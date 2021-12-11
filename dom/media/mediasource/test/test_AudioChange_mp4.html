@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: basic functionality</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This test checks loading a stereo segment, followed by a 5.1 segment plays without error.
+
+runWithMSE(async (ms, el) => {
+  el.controls = true;
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  logEvents(el);
+
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  el.addEventListener("error", e => {
+    ok(false, `should not fire ${e.type} event`);
+    SimpleTest.finish();
+  });
+  is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  let p = once(el, "loadedmetadata");
+  await fetchAndLoad(audiosb, "aac20-48000-64000-", ["init"], ".mp4");
+  await p;
+  ok(true, "got loadedmetadata event");
+  p = Promise.all([once(el, "loadeddata"), once(el, "canplay")]);
+  await fetchAndLoad(audiosb, "aac20-48000-64000-", ["1"], ".m4s");
+  await p;
+  ok(true, "got canplay event");
+  el.play();
+  await fetchAndLoad(audiosb, "aac51-48000-128000-", ["init"], ".mp4");
+  await fetchAndLoad(audiosb, "aac51-48000-128000-", ["2"], ".m4s");
+  ms.endOfStream();
+  await once(el, "ended");
+  ok(el.currentTime >= 6, "played to the end");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

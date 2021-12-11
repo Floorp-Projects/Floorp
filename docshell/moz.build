@@ -1,0 +1,56 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+
+DIRS += [
+    "base",
+    "shistory",
+    "build",
+    "resources/content",
+]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "test/unit/xpcshell.ini",
+    "test/unit_ipc/xpcshell.ini",
+]
+
+MOCHITEST_MANIFESTS += [
+    "test/iframesandbox/mochitest.ini",
+    "test/mochitest/mochitest.ini",
+    "test/navigation/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "test/chrome/chrome.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+    "test/navigation/browser.ini",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.docshell.test.chrome += [
+    "test/chrome/112564_nocache.html",
+    "test/chrome/112564_nocache.html^headers^",
+    "test/chrome/215405_nocache.html",
+    "test/chrome/215405_nocache.html^headers^",
+    "test/chrome/215405_nostore.html",
+    "test/chrome/215405_nostore.html^headers^",
+    "test/chrome/582176_dummy.html",
+    "test/chrome/582176_xml.xml",
+    "test/chrome/582176_xslt.xsl",
+    "test/chrome/92598_nostore.html",
+    "test/chrome/92598_nostore.html^headers^",
+    "test/chrome/allowContentRetargeting.sjs",
+    "test/chrome/blue.png",
+    "test/chrome/bug89419.sjs",
+    "test/chrome/red.png",
+]

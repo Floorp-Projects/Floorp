@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=549262
+-->
+<head>
+  <title>Test for Bug 549262</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=549262">Mozilla Bug 549262</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 549262 **/
+
+var smoothScrollPref = "general.smoothScroll";
+SimpleTest.waitForExplicitFinish();
+var win = window.open("file_bug549262.html", "_blank",
+                      "width=600,height=600,scrollbars=yes");
+
+function waitForScrollEvent(aWindow) {
+  return new Promise(resolve => {
+    aWindow.addEventListener("scroll", () => { SimpleTest.executeSoon(resolve); }, {once: true, capture: true});
+  });
+}
+
+function waitAndCheckNoScrollEvent(aWindow) {
+  let gotScroll = false;
+  function recordScroll() {
+    gotScroll = true;
+  }
+  aWindow.addEventListener("scroll", recordScroll, {capture: true});
+  return waitToClearOutAnyPotentialScrolls(aWindow).then(function() {
+        aWindow.removeEventListener("scroll", recordScroll, {capture: true});
+        is(gotScroll, false, "check that we didn't get a scroll");
+      });
+}
+
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set": [[smoothScrollPref, false]]}, startTest);
+}, win);
+async function startTest() {
+  // Make sure that pressing Space when a contenteditable element is not focused
+  // will scroll the page.
+  var ed = win.document.getElementById("editor");
+  var sc = win.document.querySelector("a");
+  sc.focus();
+  await waitToClearOutAnyPotentialScrolls(win);
+  is(win.scrollY, 0, "Sanity check");
+  let waitForScrolling = waitForScrollEvent(win);
+  synthesizeKey(" ", {}, win);
+
+  await waitForScrolling;
+
+  isnot(win.scrollY, 0, "Page is scrolled down");
+  is(ed.textContent, "abc", "The content of the editable element has not changed");
+  var oldY = win.scrollY;
+  waitForScrolling = waitForScrollEvent(win);
+  synthesizeKey(" ", {shiftKey: true}, win);
+
+  await waitForScrolling;
+
+  ok(win.scrollY < oldY, "Page is scrolled up");
+  is(ed.textContent, "abc", "The content of the editable element has not changed");
+
+  // Make sure that pressing Space when a contenteditable element is focused
+  // will not scroll the page, and will edit the element.
+  ed.focus();
+  win.getSelection().collapse(ed.firstChild, 1);
+  await waitToClearOutAnyPotentialScrolls(win);
+  oldY = win.scrollY;
+  let waitForNoScroll = waitAndCheckNoScrollEvent(win);
+  synthesizeKey(" ", {}, win);
+
+  await waitForNoScroll;
+
+  ok(win.scrollY <= oldY, "Page is not scrolled down");
+  is(ed.textContent, "a bc", "The content of the editable element has changed");
+  sc.focus();
+  await waitToClearOutAnyPotentialScrolls(win);
+  waitForScrolling = waitForScrollEvent(win);
+  synthesizeKey(" ", {}, win);
+
+  await waitForScrolling;
+
+  isnot(win.scrollY, 0, "Page is scrolled down");
+  is(ed.textContent, "a bc", "The content of the editable element has not changed");
+  ed.focus();
+  win.getSelection().collapse(ed.firstChild, 3);
+  await waitToClearOutAnyPotentialScrolls(win);
+  waitForNoScroll = waitAndCheckNoScrollEvent(win);
+  synthesizeKey(" ", {shiftKey: true}, win);
+
+  await waitForNoScroll;
+
+  isnot(win.scrollY, 0, "Page is not scrolled up");
+  is(ed.textContent, "a b c", "The content of the editable element has changed");
+
+  // Now let's test the down/up keys
+  sc = document.body;
+
+  ed.blur();
+  sc.focus();
+  await waitToClearOutAnyPotentialScrolls(win);
+  oldY = win.scrollY;
+  waitForScrolling = waitForScrollEvent(win);
+  synthesizeKey("VK_UP", {}, win);
+
+  await waitForScrolling;
+
+  ok(win.scrollY < oldY, "Page is scrolled up");
+  oldY = win.scrollY;
+  ed.focus();
+  win.getSelection().collapse(ed.firstChild, 3);
+  await waitToClearOutAnyPotentialScrolls(win);
+  waitForNoScroll = waitAndCheckNoScrollEvent(win);
+  synthesizeKey("VK_UP", {}, win);
+
+  await waitForNoScroll;
+
+  is(win.scrollY, oldY, "Page is not scrolled up");
+  is(win.getSelection().focusNode, ed.firstChild, "Correct element selected");
+  is(win.getSelection().focusOffset, 0, "Selection should be moved to the beginning");
+  win.getSelection().removeAllRanges();
+  await waitToClearOutAnyPotentialScrolls(win);
+  waitForScrolling = waitForScrollEvent(win);
+  synthesizeMouse(sc, 300, 300, {}, win);
+  synthesizeKey("VK_DOWN", {}, win);
+
+  await waitForScrolling;
+
+  ok(win.scrollY > oldY, "Page is scrolled down");
+  ed.focus();
+  win.getSelection().collapse(ed.firstChild, 3);
+  await waitToClearOutAnyPotentialScrolls(win);
+  oldY = win.scrollY;
+  waitForNoScroll = waitAndCheckNoScrollEvent(win);
+  synthesizeKey("VK_DOWN", {}, win);
+
+  await waitForNoScroll;
+
+  is(win.scrollY, oldY, "Page is not scrolled down");
+  is(win.getSelection().focusNode, ed.firstChild, "Correct element selected");
+  is(win.getSelection().focusOffset, ed.textContent.length, "Selection should be moved to the end");
+
+  win.close();
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

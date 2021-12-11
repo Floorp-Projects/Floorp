@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<script type="text/javascript">
+  // The idea with this file is to convert responses into requests. 
+  // This is needed because we don't have 
+  // specialpowers-http-notify-response
+
+  // Response from this file => request to www.example.com => Allowed
+  // CSP error               => Blocked
+  fetch('http://www.example.com/');
+</script>
+<body>
+</body>
+</html>

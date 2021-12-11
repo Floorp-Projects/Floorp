@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include IPCNavigationPreloadState;
+include IPCServiceWorkerRegistrationDescriptor;
+
+include "ipc/ErrorIPCUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+[RefCounted] protocol PServiceWorkerRegistration
+{
+  manager PBackground;
+
+parent:
+  async Teardown();
+
+  async Unregister() returns (bool aSuccess, CopyableErrorResult aRv);
+  async Update(nsCString aNewestWorkerScriptUrl) returns (
+    IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
+
+  // For NavigationPreload interface
+  async SetNavigationPreloadEnabled(bool aEnabled) returns (bool aSuccess);
+  async SetNavigationPreloadHeader(nsCString aHeader) returns (bool aSuccess);
+  async GetNavigationPreloadState() returns (IPCNavigationPreloadState? aState);
+
+child:
+  async __delete__();
+
+  async UpdateState(IPCServiceWorkerRegistrationDescriptor aDescriptor);
+  async FireUpdateFound();
+};
+
+} // namespace dom
+} // namespace mozilla

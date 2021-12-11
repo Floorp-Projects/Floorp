@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Do some work for 500ms</title>
+  <script>
+    const milliseconds = 500;
+    const millisecondsPerBatch = 10;
+    const end = Date.now() + milliseconds;
+    window.total = 0;
+    let i = 0;
+
+    /**
+     * Do work for a set number of milliseconds, but only do the work in batches
+     * so the browser does not get unresponsive.
+     */
+    function doWork() {
+      const batchEnd = Date.now() + millisecondsPerBatch;
+      // Do some work for a set amount of time.
+      while (Date.now() < end) {
+        // Do some kind of work that is non-deterministic to guard against optimizations.
+        window.total += Math.random();
+        i++;
+
+        // Check if a batch is done yet.
+        if (Date.now() > batchEnd) {
+          // Defer the rest of the work into a micro task. Keep on doing this until
+          // the total milliseconds have elapsed.
+          setTimeout(doWork, 0);
+          return;
+        }
+      }
+    }
+
+    doWork();
+  </script>
+</head>
+<body>
+  Do some work for 500ms.
+</body>
+</html>

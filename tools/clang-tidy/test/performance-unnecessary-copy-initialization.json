@@ -1,0 +1,1 @@
+[["warning", "the const qualified variable 'UnnecessaryCopy' is copy-constructed from a const reference but is never used; consider removing the statement", "performance-unnecessary-copy-initialization"], {"reliability": "high"}]

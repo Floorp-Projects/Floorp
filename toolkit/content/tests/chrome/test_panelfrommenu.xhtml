@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Open panel from menuitem"
+  onload="setTimeout(runTests, 0);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<!--
+  This test does the following:
+   1. Opens the menu, causing the popupshown event to fire, which will call menuOpened.
+   2. Keyboard events are fired to cause the first item on the menu to be executed.
+   3. The command event handler for the first menuitem opens the panel.
+   4. As a menuitem was executed, the menu will roll up, hiding it.
+   5. The popuphidden event for the menu calls menuClosed which tests the popup states.
+   6. The panelOpened function tests the popup states again and hides the popup.
+   7. Once the panel's popuphidden event fires, tests are performed to see if
+      panels inside buttons and toolbarbuttons work. Each is opened and the closed.
+  -->
+
+<menu id="menu" onpopupshown="menuOpened()" onpopuphidden="menuClosed();">
+  <menupopup>
+    <menuitem id="i1" label="One" oncommand="$('panel').openPopup($('menu'), 'after_start');"/>
+    <menuitem id="i2" label="Two"/>
+  </menupopup>
+</menu>
+
+<panel id="hiddenpanel" hidden="true"/>
+
+<panel id="panel" onpopupshown="panelOpened()"
+                  onpopuphidden="$('button').focus(); $('button').open = true">
+  <html:input/>
+</panel>
+
+<button id="button" type="menu" label="Button">
+  <panel onpopupshown="panelOnButtonOpened(this)"
+         onpopuphidden="$('tbutton').open = true;">
+    <button label="OK" oncommand="this.parentNode.parentNode.open = false"/>
+  </panel>
+</button>
+
+<toolbarbutton id="tbutton" type="menu" label="Toolbarbutton">
+  <panel onpopupshown="panelOnToolbarbuttonOpened(this)"
+         onpopuphidden="SimpleTest.finish()">
+    <html:input/>
+  </panel>
+</toolbarbutton>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  is($("hiddenpanel").state, "closed", "hidden popup is closed");
+
+  var menu = $("menu");
+  menu.open = true;
+}
+
+function menuOpened()
+{
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
+}
+
+function menuClosed()
+{
+  // the panel will be open at this point, but the popupshown event
+  // still needs to fire
+  is($("panel").state, "showing", "panel is open after menu hide");
+  is($("menu").menupopup.state, "closed", "menu is closed after menu hide");
+}
+
+function panelOpened()
+{
+  is($("panel").state, "open", "panel is open");
+  is($("menu").menupopup.state, "closed", "menu is closed");
+  $("panel").hidePopup();
+}
+
+function panelOnButtonOpened(panel)
+{
+  is(panel.state, 'open', 'button panel is open');
+  is(document.activeElement, document.documentElement, "focus blurred on panel from button open");
+  synthesizeKey("KEY_ArrowDown");
+  is(document.activeElement, document.documentElement, "focus not modified on cursor down from button");
+  panel.firstChild.doCommand()
+}
+
+function panelOnToolbarbuttonOpened(panel)
+{
+  is(panel.state, 'open', 'toolbarbutton panel is open');
+  is(document.activeElement, document.documentElement, "focus blurred on panel from toolbarbutton open");
+  panel.firstChild.focus();
+  synthesizeKey("KEY_ArrowDown");
+  is(document.activeElement, panel.firstChild, "focus not modified on cursor down from toolbarbutton");
+  panel.parentNode.open = false;
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

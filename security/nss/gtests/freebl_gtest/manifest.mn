@@ -1,0 +1,38 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+# we'll need to figure out how to get these symbols linked
+# in before we include these tests:
+#     mpi_unittest.cc 
+#     ghash_unittest.cc
+CPPSRCS = \
+        dh_unittest.cc \
+        ecl_unittest.cc \
+        rsa_unittest.cc \
+        cmac_unittests.cc \
+      $(NULL)
+
+DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
+
+INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
+            -I$(CORE_DEPTH)/lib/freebl/ecl \
+            -I$(CORE_DEPTH)/lib/freebl/mpi \
+            -I$(CORE_DEPTH)/lib/freebl \
+            -I$(CORE_DEPTH)/gtests/common \
+            -I$(CORE_DEPTH)/cpputil
+
+REQUIRES = nspr nss libdbm gtest cpputil
+
+PROGRAM = freebl_gtest
+
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
+             $(NULL)
+
+USE_STATIC_LIBS=1

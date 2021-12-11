@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/usercontext/usercontext.css" type="text/css"?>
+
+<window id="webextpanels-window"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://browser/content/browser.js"/>
+  <script src="chrome://browser/content/browser-places.js"/>
+  <script src="chrome://browser/content/webext-panels.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+  <linkset>
+    <html:link rel="localization" href="browser/branding/brandings.ftl"/>
+    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/browserContext.ftl"/>
+  </linkset>
+
+  <commandset id="mainCommandset">
+    <command id="Browser:Back"
+             oncommand="getPanelBrowser().webNavigation.goBack();"
+             disabled="true"/>
+    <command id="Browser:Forward"
+             oncommand="getPanelBrowser().webNavigation.goForward();"
+             disabled="true"/>
+    <command id="Browser:Stop" oncommand="PanelBrowserStop();"/>
+    <command id="Browser:Reload" oncommand="PanelBrowserReload();"/>
+  </commandset>
+
+  <popupset id="mainPopupSet">
+    <tooltip id="aHTMLTooltip" page="true"/>
+
+    <panel is="autocomplete-richlistbox-popup"
+           type="autocomplete-richlistbox"
+           id="PopupAutoComplete"
+           noautofocus="true"
+           hidden="true"
+           overflowpadding="4"
+           norolluponanchor="true" />
+
+    <menupopup id="contentAreaContextMenu" pagemenu="start"
+               onpopupshowing="if (event.target != this)
+                                 return true;
+                               gContextMenu = new nsContextMenu(this, event.shiftKey);
+                               return gContextMenu.shouldDisplay;"
+               onpopuphiding="if (event.target != this)
+                                return;
+                              gContextMenu.hiding(this);
+                              gContextMenu = null;">
+#include browser-context.inc
+    </menupopup>
+
+    <!-- for select dropdowns. The menupopup is what shows the list of options,
+         and the popuponly menulist makes things like the menuactive attributes
+         work correctly on the menupopup. ContentSelectDropdown expects the
+         popuponly menulist to be its immediate parent. -->
+    <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
+      <menupopup rolluponmousewheel="true"
+                 id="ContentSelectDropdownPopup"
+                 activateontab="true" position="after_start"
+                 level="parent"
+#ifdef XP_WIN
+                 consumeoutsideclicks="false" ignorekeys="shortcuts"
+#endif
+        />
+    </menulist>
+  </popupset>
+</window>

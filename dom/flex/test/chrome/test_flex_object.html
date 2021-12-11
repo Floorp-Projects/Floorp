@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+body {
+  margin: 40px;
+}
+.flexWrapper {
+  display: flex;
+  width: 400px;
+}
+.nonFlexWrapper {
+  display: block;
+  width: 400px;
+}
+.oh {
+  overflow: hidden;
+}
+.box {
+  background-color: #444;
+  color: #fff;
+}
+</style>
+
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  // Test 1: elements styled with display:flex
+  let idsWithFlex = [
+    "flexDiv",
+    "flexDivOh",
+
+    "flexFieldset",
+    "flexFieldsetEmpty",
+    "flexFieldsetOh",
+
+    "flexButton",
+    "flexButtonOh",
+  ];
+
+  for (let id of idsWithFlex) {
+    let wrapper = document.getElementById(id);
+
+    // Test that we got a flex info object from the element.
+    let flex = wrapper.getAsFlexContainer();
+    ok(flex, `Expected that element id ${id} would have flex info.`);
+  }
+
+  // Test 2: elements styled without display:flex
+  let idsWithoutFlex = [
+    "boxA",
+
+    "nonFlexFieldset",
+    "nonFlexFieldsetOh",
+
+    "nonFlexButton",
+    "nonFlexButtonOh",
+  ];
+
+  for (let id of idsWithoutFlex) {
+    let wrapper = document.getElementById(id);
+
+    // Test that we didn't get a flex info object from the element.
+    let flex = wrapper.getAsFlexContainer();
+    ok(!flex, `Expected that element id ${id} would not have flex info.`);
+  }
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+  <div id="flexDiv" class="flexWrapper">
+    <div id="boxA" class="box">A</div>
+  </div>
+
+  <div id="flexDivOh" class="flexWrapper oh">
+    <div id="boxAOh" class="box">A</div>
+  </div>
+
+  <fieldset id="flexFieldset" class="flexWrapper">
+    <legend>a fieldset</legend>
+    <label for="name">name</label>
+    <input id="name">
+  </fieldset>
+
+  <fieldset id="flexFieldsetEmpty" class="flexWrapper">
+  </fieldset>
+
+  <fieldset id="flexFieldsetOh" class="flexWrapper oh">
+    <legend>a fieldset</legend>
+    <label for="nameOh">name</label>
+    <input id="nameOh">
+  </fieldset>
+
+  <button id="flexButton" class="flexWrapper">
+    <span>test</span>
+  </button>
+
+  <button id="flexButtonOh" class="flexWrapper oh">
+    <span>test</span>
+  </button>
+
+  <fieldset id="nonFlexFieldset" class="nonFlexWrapper">
+    <legend>a fieldset</legend>
+    <label for="name">name</label>
+    <input id="name">
+  </fieldset>
+
+  <fieldset id="nonFlexFieldsetOh" class="nonFlexWrapper oh">
+    <legend>a fieldset</legend>
+    <label for="name">name</label>
+    <input id="name">
+  </fieldset>
+
+  <button id="nonFlexButton" class="nonFlexWrapper">
+    <span>test</span>
+  </button>
+
+  <button id="nonFlexButtonOh" class="nonFlexWrapper oh">
+    <span>test</span>
+  </button>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* Toolbar */
+
+.toolbar {
+  display: flex;
+  height: 22px;
+  padding: 1px;
+  padding-inline-start: 2px;
+  background: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.toolbar .btn {
+  margin-inline-start: 5px;
+  color: var(--theme-body-color);
+  background: var(--toolbarbutton-background);
+  border: none;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+.toolbar .btn:hover {
+  background: var(--toolbarbutton-hover-background);
+}
+
+.toolbar .btn:not([disabled]):hover:active {
+  background-color: var(--theme-selection-background-hover);
+}

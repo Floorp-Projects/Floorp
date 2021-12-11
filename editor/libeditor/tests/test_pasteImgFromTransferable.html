@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<div id="edit" contenteditable></div>
+
+<script>
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+function getHTMLEditor(aWindow) {
+  let editingSession = SpecialPowers.wrap(aWindow).docShell.editingSession;
+  if (!editingSession) {
+    return null;
+  }
+  let editor = editingSession.getEditorForWindow(aWindow);
+  if (!editor) {
+    return null;
+  }
+  return editor.QueryInterface(Ci.nsIHTMLEditor);
+}
+
+const TESTS = [
+  {
+    mimeType: "image/gif",
+    base64: "R0lGODdhAQACAPABAAD/AP///ywAAAAAAQACAAACAkQKADs="
+  },
+  {
+    mimeType: "image/jpeg",
+    base64: "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+  },
+  {
+    mimeType: "image/png",
+    base64: "iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAIAAABvrngfAAAAFklEQVQImWMwjWhCQwxECoW3oCHihAB0LyYv5/oAHwAAAABJRU5ErkJggg=="
+  },
+];
+
+add_task(async function() {
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
+
+  let edit = document.getElementById("edit");
+  edit.focus();
+
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+
+  for (const test of TESTS) {
+    let bin = window.atob(test.base64);
+    let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+      Ci.nsIStringInputStream
+    );
+    stringStream.setData(bin, bin.length);
+
+    let trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(
+      Ci.nsITransferable
+    );
+    trans.init(null);
+    trans.setTransferData(test.mimeType, stringStream);
+
+    getHTMLEditor(window).pasteTransferable(trans);
+
+    is(edit.innerHTML,
+       "<img src=\"data:" + test.mimeType + ";base64," + test.base64 + "\" alt=\"\">",
+       "pastedTransferable pastes image as data URL");
+    edit.innerHTML = "";
+  }
+});
+</script>
+</body>
+</html>

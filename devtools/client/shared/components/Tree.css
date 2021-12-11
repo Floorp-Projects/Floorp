@@ -1,0 +1,91 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* We can remove the outline since we do add our own focus style on nodes */
+.tree:focus {
+  outline: none;
+}
+
+.tree.inline {
+  display: inline-block;
+}
+
+.tree.nowrap {
+  white-space: nowrap;
+}
+
+.tree.noselect {
+  user-select: none;
+}
+
+.tree .tree-node {
+  display: flex;
+}
+
+.tree .tree-node:not(.focused):hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.tree-indent {
+  display: inline-block;
+  width: 12px;
+  margin-inline-start: 3px;
+  border-inline-start: 1px solid #a2d1ff;
+  flex-shrink: 0;
+}
+
+.tree-node[data-expandable="false"] .tree-last-indent {
+  /* The 13px value is taken from the total width and margins of the arrow
+  element of expandables nodes (10px width + 3px margins). That way the
+  node's text are indented the same for both expandable and non-expandable
+  nodes */
+  margin-inline-end: 13px;
+}
+
+/* For non expandable root nodes, we don't have .tree-indent elements, so we declare
+   the margin on the start of the node */
+.tree-node[data-expandable="false"][aria-level="1"] {
+  padding-inline-start: 15px;
+}
+
+.tree .tree-node[data-expandable="true"] {
+  cursor: default;
+}
+
+.tree-node button.arrow {
+  mask: url("chrome://devtools/content/debugger/images/arrow.svg") no-repeat center;
+  mask-size: 10px;
+  vertical-align: -1px;
+  width: 10px;
+  height: 10px;
+  border: 0;
+  padding: 0;
+  margin-inline-end: 4px;
+  transform-origin: center center;
+  transition: transform 125ms var(--animation-curve);
+  background-color: var(--theme-icon-dimmed-color);
+}
+
+.tree-node button.arrow:not(.expanded) {
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .tree-node button.arrow:not(.expanded) {
+  transform: rotate(90deg);
+}
+
+.tree .tree-node.focused {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+/* Invert text selection color in selected rows */
+.tree .tree-node.focused ::selection {
+  color: var(--theme-selection-background);
+  background-color: var(--theme-selection-color);
+}
+
+.tree-node.focused button.arrow {
+  background-color: currentColor;
+}

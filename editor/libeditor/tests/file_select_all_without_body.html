@@ -1,0 +1,38 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function is(aLeft, aRight, aMessage) {
+  window.opener.SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function unload() {
+  window.opener.SimpleTest.finish();
+}
+
+function boom() {
+  var root = document.documentElement;
+  while (root.firstChild) {
+    root.firstChild.remove();
+  }
+  root.appendChild(document.createTextNode("Mozilla"));
+  root.focus();
+  let cespan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  cespan.setAttributeNS(null, "contenteditable", "true");
+  root.appendChild(cespan);
+  try {
+    document.execCommand("selectAll", false, null);
+  } catch (e) { }
+
+  is(window.getSelection().toString(), "Mozilla",
+     "The nodes are not selected");
+
+  window.close();
+}
+
+window.opener.SimpleTest.waitForFocus(boom, window);
+
+</script></head>
+
+<body onunload="unload();"></body>
+</html>

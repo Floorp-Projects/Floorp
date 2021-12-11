@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=369370
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test for Bug 369370</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <script type="text/javascript">
+    /*
+     * Test strategy:
+     */
+    function makeClickFor(x, y) {
+        var event = kidDoc.createEvent("mouseevent");
+        event.initMouseEvent("click",
+            true, true, kidWin, 1,      // bubbles, cancelable, view, single-click
+            x, y, x, y,                 // screen X/Y, client X/Y
+            false, false, false, false, // no key modifiers
+            0, null);                   // left click, not relatedTarget
+        return event;
+    }
+
+    function childLoaded() {
+        kidDoc = kidWin.document;
+        ok(true, "Child window loaded");
+
+        var elements = kidDoc.getElementsByTagName("img");
+        is(elements.length, 1, "looking for imagedoc img");
+        var img = elements[0];
+
+        // Need to use innerWidth/innerHeight of the window
+        // since the containing image is absolutely positioned,
+        // causing clientHeight to be zero.
+        is(kidWin.innerWidth, 400, "Checking doc width");
+        is(kidWin.innerHeight, 300, "Checking doc height");
+
+        // Image just loaded and is scaled to window size.
+        is(img.width,  400, "image width");
+        is(img.height, 300, "image height");
+        is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
+
+        // ========== test 1 ==========
+        // Click in the upper left to zoom in
+        var event = makeClickFor(25,25);
+        img.dispatchEvent(event);
+        ok(true, "----- click 1 -----");
+
+        is(img.width,  800, "image width");
+        is(img.height, 600, "image height");
+        is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
+
+        // ========== test 2 ==========
+        // Click there again to zoom out
+        event = makeClickFor(25,25);
+        img.dispatchEvent(event);
+        ok(true, "----- click 2 -----");
+
+        is(img.width,  400, "image width");
+        is(img.height, 300, "image height");
+        is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
+
+        // ========== test 3 ==========
+        // Click in the lower right to zoom in
+        event = makeClickFor(350, 250);
+        img.dispatchEvent(event);
+        ok(true, "----- click 3 -----");
+
+        is(img.width,  800, "image width");
+        is(img.height, 600, "image height");
+        is(kidDoc.body.scrollLeft,
+           kidDoc.body.scrollLeftMax, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,
+           kidDoc.body.scrollTopMax, "Checking scrollTop");
+
+        // ========== test 4 ==========
+        // Click there again to zoom out
+        event = makeClickFor(350, 250);
+        img.dispatchEvent(event);
+        ok(true, "----- click 4 -----");
+
+        is(img.width,  400, "image width");
+        is(img.height, 300, "image height");
+        is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
+
+        // ========== test 5 ==========
+        // Click in the upper left to zoom in again
+        event = makeClickFor(25, 25);
+        img.dispatchEvent(event);
+        ok(true, "----- click 5 -----");
+        is(img.width,  800, "image width");
+        is(img.height, 600, "image height");
+        is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
+        is(img.getBoundingClientRect().top, 0, "Image is in view vertically");
+
+        // ========== test 6 ==========
+        // Now try resizing the window so the image fits vertically.
+        function test6() {
+          kidWin.addEventListener("resize", function() {
+            // Give the image document time to respond
+            SimpleTest.executeSoon(function() {
+              is(img.height, 600, "image height");
+              var bodyHeight = kidDoc.documentElement.scrollHeight;
+              var imgRect = img.getBoundingClientRect();
+              is(imgRect.top, bodyHeight - imgRect.bottom, "Image is vertically centered");
+              test7();
+            });
+          }, {once: true});
+
+          var decorationSize = kidWin.outerHeight - kidWin.innerHeight;
+          kidWin.resizeTo(400, 600 + 50 + decorationSize);
+        }
+
+        // ========== test 7 ==========
+        // Now try resizing the window so the image no longer fits vertically.
+        function test7() {
+          kidWin.addEventListener("resize", function() {
+            // Give the image document time to respond
+            SimpleTest.executeSoon(function() {
+              is(img.height, 600, "image height");
+              is(img.getBoundingClientRect().top, 0, "Image is at top again");
+              kidWin.close();
+              SimpleTest.finish();
+            });
+          }, {once: true});
+
+          var decorationSize = kidWin.outerHeight - kidWin.innerHeight;
+          kidWin.resizeTo(400, 300 + decorationSize);
+        }
+
+        test6();
+    }
+    var kidWin;
+    var kidDoc;
+
+    SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}, function() {
+       kidWin = window.open("bug369370-popup.png", "bug369370", "width=400,height=300");
+       // will init onload
+       ok(kidWin, "opened child window");
+       kidWin.onload = childLoaded;
+    });
+  </script>
+</body>
+</html>

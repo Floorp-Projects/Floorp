@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=420243
+-->
+<head>
+  <title>Test for Bug 420243</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=420243">Mozilla Bug 420243</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="getSubStringLength-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTests(text, charWidth) {
+  function chars(n) { return charWidth * n; }
+
+  function expectThrow(charnum, nchars) {
+    try {
+      text.getSubStringLength(charnum, nchars);
+      ok(false,
+         "text.getSubStringLength(" + charnum + "," + nchars + ") " +
+         "should have thrown");
+    } catch (e) {
+      is(e.name, "IndexSizeError",
+         "expected an index error for " +
+         "text.getSubStringLength(" + charnum + "," + nchars + ")");
+      is(e.code, DOMException.INDEX_SIZE_ERR,
+         "expected an index error for " +
+         "text.getSubStringLength(" + charnum + "," + nchars + ")");
+    }
+  }
+
+  function expectValue(charnum, nchars, expected) {
+    try {
+      isfuzzy(text.getSubStringLength(charnum, nchars), expected, 0.01,
+         "text.getSubStringLength(" + charnum + "," + nchars + ") " +
+         "returned wrong value");
+    } catch (e) {
+      ok(false,
+         "unexpected exception for " +
+         "text.getSubStringLength(" + charnum + "," + nchars + ")");
+    }
+  }
+
+  expectThrow(100, 2);
+  expectThrow(100, 0);
+  expectThrow(3, 0);
+  expectThrow(3, 1);
+
+  expectValue(1, 3, chars(2));
+  expectValue(0, 4, chars(3));
+  expectValue(0, 0, chars(0));
+  expectValue(1, 0, chars(0));
+  expectValue(2, 0, chars(0));
+  expectValue(0, 1, chars(1));
+  expectValue(1, 1, chars(1));
+  expectValue(2, 1, chars(1));
+  expectValue(0, 2, chars(2));
+  expectValue(1, 2, chars(2));
+  expectValue(0, 3, chars(3));
+  expectValue(1, 100, chars(2));
+  expectValue(2, 100, chars(1));
+}
+
+
+function run() {
+  try {
+    var document = $("svg").contentWindow.document;
+    var text = document.getElementById("text");
+
+    runTests(text, text.getSubStringLength(0, 1));
+  } catch (e) {
+    ok(false, "threw error: " + e);
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+</script>
+</pre>
+</body>
+</html>

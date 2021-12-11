@@ -1,0 +1,22 @@
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript">
+        function go() {
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext('2d');
+        ctx.globalAlpha = 4
+        ctx.lineCap = "foo"
+        ctx.strokeRect(256,1024,8,4)
+        ctx.shadowColor = "black"
+        ctx.shadowOffsetY = 64
+        ctx.stroke()
+        ctx.moveTo(32,1024)
+        ctx.closePath()
+        }
+    </script>
+</head>
+<body onload="go()">
+<canvas id="canvas"></canvas>
+</body>
+</html>

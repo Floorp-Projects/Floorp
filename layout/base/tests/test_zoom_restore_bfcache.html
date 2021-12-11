@@ -1,0 +1,132 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for zoom restoration when coming from the bfcache</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * - main page (this one) opens file_zoom_restore_bfcache.html
+ * - file_zoom_restore_bfcache.html sends "handlePageShow" to main page
+ * - main page sends file_zoom_restore_bfcache.html "case1sendData"
+ * - file_zoom_restore_bfcache.html sends "case1data" to main page
+ * - main page sends "case1click" to file_zoom_restore_bfcache.html
+ * - file_zoom_restore_bfcache.html clicks on <a> element, navigating to uri
+ *   file_zoom_restore_bfcache.html?2, and gets bfcached
+ * - file_zoom_restore_bfcache.html?2 sends "handlePageShow" to main page
+ * - main page sends "case2sendData" to file_zoom_restore_bfcache.html?2
+ * - file_zoom_restore_bfcache.html?2 sends "case2data" to main page
+ * - main page sends "case2action" to file_zoom_restore_bfcache.html?2
+ * - file_zoom_restore_bfcache.html?2 sends "case2dataAnimationFrame" to main page
+ * - main page sends "case2back" to file_zoom_restore_bfcache.html?2
+ * - file_zoom_restore_bfcache.html?2 navigates back to file_zoom_restore_bfcache.html
+ * - file_zoom_restore_bfcache.html sends "handlePageShow" to main page
+ * - main page sends "case3sendData to file_zoom_restore_bfcache.html
+ * - file_zoom_restore_bfcache.html sends "case3data" to main page
+ * - main page sends "close to file_zoom_restore_bfcache.html
+ * - file_zoom_restore_bfcache.html closes bc and window and sends back "closed"
+ **/
+
+const originalDPR = window.devicePixelRatio;
+let loadCount = 0;
+var bc = new BroadcastChannel("zoomRestoreBfcache");
+var bcPage2 = new BroadcastChannel("zoomRestoreBfcache?2");
+bc.onmessage = (msgEvent) => {
+  var msg = msgEvent.data;
+  var command = msg.command;
+  info(`Main page, received command from normal bc=${command}`);
+  switch (command) {
+    case "handlePageShow": {
+      handlePageShow(msgEvent.data.eventPersisted);
+      break;
+    }
+    case "case1data": {
+      is(loadCount, 1, "Case 1");
+      is(msg.devicePixelRatio, originalDPR, "No zoom");
+      bc.postMessage({command: "case1click"});
+      // The end of case 1
+      break;
+    }
+    case "case3data": {
+      is(loadCount, 2, "Case 3");
+      is(msg.devicePixelRatio, originalDPR * 2, "Should preserve zoom when restored");
+      if (SpecialPowers.Services.appinfo.fissionAutostart) {
+        // When bfcache lives in the parent process, we get a proper zoom level
+        // update on the browsing context.
+        is(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+      } else {
+        todo_is(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+      }
+      bc.postMessage({command: "close"});
+      // Now we wait for "closed"
+      break;
+    }
+    case "closed": {
+      is(loadCount, 2, "Case 3");
+      bc.close();
+      SimpleTest.finish();
+      break;
+    }
+    default:
+      ok(false, "should not receive extra messages via BroadcastChannel");
+  }
+}
+bcPage2.onmessage = (msgEvent) => {
+  var msg = msgEvent.data;
+  var command = msg.command;
+  info(`Main page, received command from bc?2=${command}`);
+  switch (command) {
+    case "handlePageShow": {
+      handlePageShow(msgEvent.data.eventPersisted);
+      break;
+    }
+    case "case2data": {
+      is(loadCount, 2, "Case 2");
+      is(msg.devicePixelRatio, originalDPR, "No zoom (yet)")
+      is(msg.frameDevicePixelRatio, originalDPR, "No zoom on frame either");
+      bcPage2.postMessage({command: "case2action"});
+      // Now we wait for "case2dataAnimationFrame"
+      break;
+    }
+    case "case2dataAnimationFrame": {
+      is(loadCount, 2, "Case 2");
+      is(msg.devicePixelRatio, originalDPR * 2, "Zoomed");
+      is(msg.frameDevicePixelRatio, originalDPR * 2, "Zoomed iframe too");
+      bcPage2.postMessage({command: "case2back"});
+      bcPage2.close();
+      // The end of case 2
+      break;
+    }
+    default:
+      ok(false, "should not receive extra messages via BroadcastChannel");
+  }
+}
+function handlePageShow(persisted) {
+  ok(typeof persisted == "boolean", "Should get the persisted state from the pageshow event");
+  if (loadCount == 2) {
+    ok(persisted,  "Should've gone into the bfcache after the back navigation");
+  } else {
+    ok(!persisted,  "Should NOT be retrieved from bfcache");
+  }
+
+  if (loadCount == 0) {
+    loadCount++;
+    bc.postMessage({command: "case1sendData"});
+    // Now we wait for the "case1data" message
+  } else if (loadCount == 1) {
+    loadCount++;
+    bcPage2.postMessage({command: "case2sendData"});
+    // Now we wait for the "case2data" message
+  } else {
+    bc.postMessage({command: "case3sendData"});
+    // Now we wait for the "case3data" message
+  }
+}
+
+// If Fission is disabled, the pref is no-op.
+SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+  window.open('file_zoom_restore_bfcache.html', '_blank', 'noopener');
+});
+</script>

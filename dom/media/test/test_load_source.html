@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=534571
+-->
+<head>
+  <title>Test for Bug 534571</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=534571">Mozilla Bug 534571</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 534571 **/
+
+// Test that when we load a video from a source child and then change the
+// source's src attribute and load again, that the subsequent loads work.
+
+var v = null;
+var s = null;
+
+function finish(event) {
+  ok(true, "Should have played both videos");
+  SimpleTest.finish();
+}
+
+var first = null;
+var second = null;
+
+function ended(event) {
+  s.type = second.type;
+  s.src = second.name;
+  v.removeEventListener("ended", ended);
+  v.addEventListener("ended", finish);
+  v.load();
+}
+
+// Find 2 videos we can play.
+v = document.createElement('video');
+for (var i=0; i<gPlayTests.length; i++) {
+  if (!v.canPlayType(gPlayTests[i].type))
+    continue;
+  if (!first) {
+    first = gPlayTests[i];
+  } else if (!second) {
+    second = gPlayTests[i];
+    break;
+  }
+}
+
+if (first && second) {
+  s = document.createElement('source');
+  s.type = first.type;
+  s.src = first.name;
+  v.appendChild(s);
+  v.autoplay = true;
+  v.addEventListener("ended", ended);
+  document.body.appendChild(v);
+  SimpleTest.waitForExplicitFinish();
+} else {
+  todo(false, "Need at least two media of supported types for this test!");
+}
+
+
+
+</script>
+</pre>
+</body>
+</html>

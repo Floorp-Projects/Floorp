@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<body style="border:3px solid;" onload="setTimeout(doe, 0)">
+<marquee behavior="alternate" scrollamount="100"><span style="background-color: lime;">marquee</span></marquee>
+  <script>
+    function doe() {
+      document.getElementsByTagName('marquee')[0].stop();
+      document.getElementsByTagName('marquee')[0].start();
+      document.getElementsByTagName('marquee')[0].stop();
+      document.getElementsByTagName('marquee')[0].start();
+      document.getElementsByTagName('marquee')[0].stop();
+      document.getElementsByTagName('marquee')[0].start();
+      document.getElementsByTagName('marquee')[0].stop();
+      document.getElementsByTagName('marquee')[0].start();
+      document.getElementsByTagName('marquee')[0].stop();
+      document.getElementsByTagName('marquee')[0].start();
+      document.getElementsByTagName('marquee')[0].stop();
+      document.getElementsByTagName('marquee')[0].start();
+      document.getElementsByTagName('marquee')[0].stop();
+      document.documentElement.className = "";
+    }
+  </script>
+</body>
+</html>

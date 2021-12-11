@@ -1,0 +1,10 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* There is some code in just-the-docs that completely breaks styling for code
+ * blocks, this is an attempt to fix that. */
+code {
+    font-weight: inherit;
+    font-size: 80%;
+}

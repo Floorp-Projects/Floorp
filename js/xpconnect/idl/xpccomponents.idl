@@ -1,0 +1,732 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "jspubtd.h"
+%}
+
+interface xpcIJSWeakReference;
+interface nsIClassInfo;
+interface nsICommandParams;
+interface nsIComponentManager;
+interface nsICycleCollectorListener;
+interface nsIDocumentEncoder;
+interface nsIEditorSpellCheck;
+interface nsIFile;
+interface nsILoadContext;
+interface nsIPersistentProperties;
+interface nsIURI;
+interface nsIPrincipal;
+interface nsIStackFrame;
+webidl Element;
+
+/**
+* interface of Components.interfaces
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(b8c31bba-79db-4a1d-930d-4cdd68713f9e)]
+interface nsIXPCComponents_Interfaces : nsISupports
+{
+};
+
+/**
+* interface of Components.classes
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(978ff520-d26c-11d2-9842-006008962422)]
+interface nsIXPCComponents_Classes : nsISupports
+{
+};
+
+/**
+* interface of Components.results
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(2fc229a0-5860-11d3-9899-006008962422)]
+interface nsIXPCComponents_Results : nsISupports
+{
+};
+
+/**
+* interface of Components.ID
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(7994a6e0-e028-11d3-8f5d-0010a4e73d9a)]
+interface nsIXPCComponents_ID : nsISupports
+{
+};
+
+/**
+* interface of Components.Exception
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(5bf039c0-e028-11d3-8f5d-0010a4e73d9a)]
+interface nsIXPCComponents_Exception : nsISupports
+{
+};
+
+/**
+* interface of Components.Constructor
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(88655640-e028-11d3-8f5d-0010a4e73d9a)]
+interface nsIXPCComponents_Constructor : nsISupports
+{
+};
+
+/**
+* interface of object returned by Components.utils.Sandbox.
+*/
+[scriptable, builtinclass, uuid(4f8ae0dc-d266-4a32-875b-6a9de71a8ce9)]
+interface nsIXPCComponents_utils_Sandbox : nsISupports
+{
+};
+
+/**
+ * interface for callback to be passed to Cu.schedulePreciseGC
+ */
+[scriptable, function, uuid(71000535-b0fd-44d1-8ce0-909760e3953c)]
+interface nsIScheduledGCCallback : nsISupports
+{
+    void callback();
+};
+
+/**
+* interface of Components.utils
+*/
+[scriptable, builtinclass, uuid(86003fe3-ee9a-4620-91dc-eef8b1e58815)]
+interface nsIXPCComponents_Utils : nsISupports
+{
+    /*
+     * Prints the provided message to stderr.
+     */
+    void printStderr(in AUTF8String message);
+
+    /*
+     * reportError is designed to be called from JavaScript only.
+     *
+     * It will report a JS Error object to the JS console, and return. It
+     * is meant for use in exception handler blocks which want to "eat"
+     * an exception, but still want to report it to the console.
+     *
+     * It must be called with one param, usually an object which was caught by
+     * an exception handler.  If it is not a JS error object, the parameter
+     * is converted to a string and reported as a new error.
+     *
+     * If called with two parameters, and the first parameter is not an
+     * object, the second parameter is used as the stack for the error report.
+     */
+    [implicit_jscontext]
+    void reportError(in jsval error, [optional] in jsval stack);
+
+    readonly attribute nsIXPCComponents_utils_Sandbox Sandbox;
+
+    [implicit_jscontext]
+    jsval createServicesCache();
+
+    /*
+     * evalInSandbox is designed to be called from JavaScript only.
+     *
+     * evalInSandbox evaluates the provided source string in the given sandbox.
+     * It returns the result of the evaluation to the caller.
+     *
+     * var s = new C.u.Sandbox("http://www.mozilla.org");
+     * var res = C.u.evalInSandbox("var five = 5; 2 + five", s);
+     * var outerFive = s.five;
+     * s.seven = res;
+     * var thirtyFive = C.u.evalInSandbox("five * seven", s);
+     */
+    [implicit_jscontext,optional_argc]
+    jsval evalInSandbox(in AString source, in jsval sandbox,
+                        [optional] in jsval version,
+                        [optional] in AUTF8String filename,
+                        [optional] in long lineNo,
+                        [optional] in bool enforceFilenameRestrictions);
+
+    /*
+     * Get the sandbox for running JS-implemented UA widgets (video controls etc.),
+     * hosted inside UA-created Shadow DOM.
+     */
+    [implicit_jscontext]
+    jsval getUAWidgetScope(in nsIPrincipal principal);
+
+    /*
+     * getSandboxMetadata is designed to be called from JavaScript only.
+     *
+     * getSandboxMetadata retrieves the metadata associated with
+     * a sandbox object. It will return undefined if there
+     * is no metadata attached to the sandbox.
+     *
+     * var s = C.u.Sandbox(..., { metadata: "metadata" });
+     * var metadata = C.u.getSandboxMetadata(s);
+     */
+    [implicit_jscontext]
+    jsval getSandboxMetadata(in jsval sandbox);
+
+    /*
+     * setSandboxMetadata is designed to be called from JavaScript only.
+     *
+     * setSandboxMetadata sets the metadata associated with
+     * a sandbox object.
+     *
+     * Note that the metadata object will be copied before being used.
+     * The copy will be performed using the structured clone algorithm.
+     * Note that this algorithm does not support reflectors and
+     * it will throw if it encounters them.
+     */
+    [implicit_jscontext]
+    void setSandboxMetadata(in jsval sandbox, in jsval metadata);
+
+    /*
+     * import is designed to be called from JavaScript only.
+     *
+     * Synchronously loads and evaluates the js file located at
+     * 'registryLocation' with a new, fully privileged global object.
+     *
+     * If 'targetObj' is specified and equal to null, returns the
+     * module's global object. Otherwise (if 'targetObj' is not
+     * specified, or 'targetObj' is != null) looks for a property
+     * 'EXPORTED_SYMBOLS' on the new global object. 'EXPORTED_SYMBOLS'
+     * is expected to be an array of strings identifying properties on
+     * the global object.  These properties will be installed as
+     * properties on 'targetObj', or, if 'targetObj' is not specified,
+     * on the caller's global object. If 'EXPORTED_SYMBOLS' is not
+     * found, an error is thrown.
+     *
+     * @param resourceURI A resource:// URI string to load the module from.
+     * @param targetObj  the object to install the exported properties on.
+     *        If this parameter is a primitive value, this method throws
+     *        an exception.
+     * @returns the module code's global object.
+     *
+     * The implementation maintains a hash of registryLocation->global obj.
+     * Subsequent invocations of importModule with 'registryLocation'
+     * pointing to the same file will not cause the module to be re-evaluated,
+     * but the symbols in EXPORTED_SYMBOLS will be exported into the
+     * specified target object and the global object returned as above.
+     */
+    [implicit_jscontext,optional_argc]
+    jsval import(in AUTF8String aResourceURI, [optional] in jsval targetObj);
+
+    /**
+     * Returns true if the js file located at 'registryLocation' location has
+     * been loaded previously via the import method above. Returns false
+     * otherwise.
+     *
+     * @param resourceURI A resource:// URI string representing the location of
+     *        the js file to be checked if it is already loaded or not.
+     * @returns boolean, true if the js file has been loaded via import. false
+     *          otherwise
+     */
+    boolean isModuleLoaded(in AUTF8String aResourceURI);
+
+    /*
+     * Unloads the JS module at 'registryLocation'. Existing references to the
+     * module will continue to work but any subsequent import of the module will
+     * reload it and give new reference. If the JS module hasn't yet been
+     * imported then this method will do nothing.
+     *
+     * @param resourceURI A resource:// URI string to unload the module from.
+     */
+    void unload(in AUTF8String registryLocation);
+
+    /*
+     * Imports global properties (like DOM constructors) into the scope, defining
+     * them on the caller's global. aPropertyList should be an array of property
+     * names.
+     *
+     * See xpc::GlobalProperties::Parse for the current list of supported
+     * properties.
+     */
+    [implicit_jscontext]
+    void importGlobalProperties(in jsval aPropertyList);
+
+    /*
+     * To be called from JS only.
+     *
+     * Return a weak reference for the given JS object.
+     */
+    [implicit_jscontext]
+    xpcIJSWeakReference getWeakReference(in jsval obj);
+
+    /*
+     * To be called from JS only.
+     *
+     * Force an immediate garbage collection cycle.
+     */
+    [implicit_jscontext]
+    void forceGC();
+
+    /*
+     * To be called from JS only.
+     *
+     * Force an immediate cycle collection cycle.
+     */
+    void forceCC([optional] in nsICycleCollectorListener aListener);
+
+    /*
+     * To be called from JS only.  C++ callers should use the
+     * nsCycleCollector_createLogger() function instead.
+     *
+     * Create an instance of the built-in cycle collector logger object.
+     */
+    nsICycleCollectorListener createCCLogger();
+
+    /*
+     * To be called from JS only.
+     *
+     * If any incremental CC is in progress, finish it. For testing.
+     */
+    void finishCC();
+
+    /*
+     * To be called from JS only.
+     *
+     * Do some cycle collector work, with the given work budget.
+     * The cost of calling Traverse() on a single object is set as 1.
+     * For testing.
+     */
+    void ccSlice(in long long budget);
+
+    /*
+     * To be called from JS only.
+     *
+     * Return the longest cycle collector slice time since the last
+     * time clearMaxCCTime() was called.
+     */
+    long getMaxCCSliceTimeSinceClear();
+
+    /*
+     * To be called from JS only.
+     *
+     * Reset the internal max slice time value used for
+     * getMaxCCSliceTimeSinceClear().
+     */
+    void clearMaxCCTime();
+
+    /*
+     * To be called from JS only.
+     *
+     * Force an immediate shrinking garbage collection cycle.
+     */
+    [implicit_jscontext]
+    void forceShrinkingGC();
+
+    /*
+     * Schedule a garbage collection cycle for a point in the future when no JS
+     * is running. Call the provided function once this has occurred.
+     */
+    void schedulePreciseGC(in nsIScheduledGCCallback callback);
+
+    /*
+     * Schedule a shrinking garbage collection cycle for a point in the future
+     * when no JS is running. Call the provided function once this has occured.
+     */
+    void schedulePreciseShrinkingGC(in nsIScheduledGCCallback callback);
+
+    /*
+     * In a debug build, unlink any ghost windows. This is only for debugging
+     * leaks, and can cause bad things to happen if called.
+     */
+    void unlinkGhostWindows();
+
+    /*
+     * In an NS_FREE_PERMANENT_DATA build, intentionally leak a C++ object. This
+     * is needed to test leak checking.
+     */
+    void intentionallyLeak();
+
+    [implicit_jscontext]
+    jsval getJSTestingFunctions();
+
+    /**
+     * Returns an object containing `filename` and `lineNumber` properties
+     * describing the source location of the given function.
+     */
+    [implicit_jscontext]
+    jsval getFunctionSourceLocation(in jsval func);
+
+    /*
+     * To be called from JS only.
+     *
+     * Call 'function', using the provided stack as the async stack responsible
+     * for the call, and propagate its return value or the exception it throws.
+     * The function is called with no arguments, and 'this' is 'undefined'.
+     *
+     * The code in the function will see the given stack frame as the
+     * asyncCaller of its own stack frame, instead of the current caller.
+     */
+    [implicit_jscontext]
+    jsval callFunctionWithAsyncStack(in jsval function, in nsIStackFrame stack,
+                                     in AString asyncCause);
+
+    /*
+     * To be called from JS only.
+     *
+     * Returns the global object with which the given object is associated.
+     *
+     * @param obj The JavaScript object whose global is to be gotten.
+     * @return the corresponding global.
+     */
+    [implicit_jscontext]
+    jsval getGlobalForObject(in jsval obj);
+
+    /*
+     * To be called from JS only.
+     *
+     * Returns the true if the object is a (scripted) proxy.
+     * NOTE: Security wrappers are unwrapped first before the check.
+     */
+    [implicit_jscontext]
+    boolean isProxy(in jsval vobject);
+
+    /*
+     * To be called from JS only.
+     *
+     * Instead of simply wrapping a function into another compartment,
+     * this helper function creates a native function in the target
+     * compartment and forwards the call to the original function.
+     * That call will be different than a regular JS function call in
+     * that, the |this| is left unbound, and all the non-native JS
+     * object arguments will be cloned using the structured clone
+     * algorithm.
+     * The return value is the new forwarder function, wrapped into
+     * the caller's compartment.
+     * The 3rd argument is an optional options object:
+     * - defineAs: the name of the property that will
+     *             be set on the target scope, with
+     *             the forwarder function as the value.
+     */
+    [implicit_jscontext]
+    jsval exportFunction(in jsval vfunction, in jsval vscope, [optional] in jsval voptions);
+
+    /*
+     * To be called from JS only.
+     *
+     * Returns an object created in |vobj|'s compartment.
+     * If defineAs property on the options object is a non-null ID,
+     * the new object will be added to vobj as a property. Also, the
+     * returned new object is always automatically waived (see waiveXrays).
+     */
+    [implicit_jscontext]
+    jsval createObjectIn(in jsval vobj, [optional] in jsval voptions);
+
+    /*
+     * To be called from JS only.
+     *
+     * Ensures that all functions come from vobj's scope (and aren't cross
+     * compartment wrappers).
+     */
+    [implicit_jscontext]
+    void makeObjectPropsNormal(in jsval vobj);
+
+    /**
+     * Determines whether this object is backed by a DeadObjectProxy.
+     *
+     * Dead-wrapper objects hold no other objects alive (they have no outgoing
+     * reference edges) and will throw if you touch them (e.g. by
+     * reading/writing a property).
+     */
+    bool isDeadWrapper(in jsval obj);
+
+    /**
+     * Determines whether this value is a remote object proxy, such as
+     * RemoteWindowProxy or RemoteLocationProxy, for an out-of-process frame.
+     *
+     * Remote object proxies do not grant chrome callers the same exemptions
+     * to the same-origin-policy that in-process wrappers typically do, so
+     * this can be used to determine whether access to cross-origin proxies is
+     * safe:
+     *
+     *   if (!Cu.isRemoteProxy(frame.contentWindow)) {
+     *     frame.contentWindow.doCrossOriginThing();
+     *   }
+     */
+    bool isRemoteProxy(in jsval val);
+
+    /*
+     * To be called from JS only. This is for Gecko internal use only, and may
+     * disappear at any moment.
+     *
+     * Forces a recomputation of all wrappers in and out of the compartment
+     * containing |vobj|. If |vobj| is not an object, all wrappers system-wide
+     * are recomputed.
+     */
+    [implicit_jscontext]
+    void recomputeWrappers([optional] in jsval vobj);
+
+    /*
+     * To be called from JS only. This is for Gecko internal use only, and may
+     * disappear at any moment.
+     *
+     * Enables Xray vision for same-compartment access for the compartment
+     * indicated by |vscope|. All outgoing wrappers are recomputed.
+     *
+     * This must not be called on chrome (system-principal) scopes.
+     */
+    [implicit_jscontext]
+    void setWantXrays(in jsval vscope);
+
+    /*
+     * Dispatches a runnable to the current/main thread. If |scope| is passed,
+     * the runnable will be dispatch in the compartment of |scope|, which
+     * affects which error reporter gets called.
+     */
+    [implicit_jscontext]
+    void dispatch(in jsval runnable, [optional] in jsval scope);
+
+    /*
+     * Bug 1621603 - Remove strict_mode.
+     *
+     * Do not use this API! Instead use "use strict"; at the top of your JS
+     * file.
+     */
+    [implicit_jscontext]
+    attribute boolean strict_mode;
+
+    // Returns true if we're running in automation and certain security
+    // restrictions can be eased.
+    readonly attribute boolean isInAutomation;
+
+    // Called by automated tests to exit immediately after we are done getting
+    // test results.
+    void exitIfInAutomation();
+
+    void crashIfNotInAutomation();
+
+    [implicit_jscontext]
+    void setGCZeal(in long zeal);
+
+    [implicit_jscontext]
+    void nukeSandbox(in jsval obj);
+
+    /*
+     * API to dynamically block script for a given global. This takes effect
+     * immediately, unlike other APIs that only affect newly-created globals.
+     *
+     * The machinery here maintains a counter, and allows script only if each
+     * call to blockScriptForGlobal() has been matched with a call to
+     * unblockScriptForGlobal(). The caller _must_ make sure never to call
+     * unblock() more times than it calls block(), since that could potentially
+     * interfere with another consumer's script blocking.
+     */
+
+    [implicit_jscontext]
+    void blockScriptForGlobal(in jsval global);
+
+    [implicit_jscontext]
+    void unblockScriptForGlobal(in jsval global);
+
+    /**
+     * Check whether the given object is an opaque wrapper (PermissiveXrayOpaque).
+     */
+    bool isOpaqueWrapper(in jsval obj);
+
+    /**
+     * Check whether the given object is an XrayWrapper.
+     */
+    bool isXrayWrapper(in jsval obj);
+
+    /**
+     * Waive Xray on a given value. Identity op for primitives.
+     */
+    [implicit_jscontext]
+    jsval waiveXrays(in jsval aVal);
+
+    /**
+     * Strip off Xray waivers on a given value. Identity op for primitives.
+     */
+    [implicit_jscontext]
+    jsval unwaiveXrays(in jsval aVal);
+
+    /**
+     * Gets the name of the JSClass of the object.
+     *
+     * if |aUnwrap| is true, all wrappers are unwrapped first. Unless you're
+     * specifically trying to detect whether the object is a proxy, this is
+     * probably what you want.
+     */
+    [implicit_jscontext]
+    string getClassName(in jsval aObj, in bool aUnwrap);
+
+    /**
+     * Get a DOM classinfo for the given classname.  Only some class
+     * names are supported.
+     */
+    nsIClassInfo getDOMClassInfo(in AString aClassName);
+
+    /**
+     * Gets the incument global for the execution of this function. For internal
+     * and testing use only.
+     *
+     * If |callback| is passed, it is invoked with the incumbent global as its
+     * sole argument. This allows the incumbent global to be measured in callback
+     * environments with no scripted frames on the stack.
+     */
+    [implicit_jscontext]
+    jsval getIncumbentGlobal([optional] in jsval callback);
+
+    /**
+     * Forces the generation of an XPCWrappedJS for a given object. For internal
+     * and testing use only. This is only useful to set up wrapper map conditions
+     * for a testcase. The return value is not an XPCWrappedJS itself, but an
+     * opaque nsISupports holder that keeps the underlying XPCWrappedJS alive.
+     *
+     * if |scope| is passed, the XPCWrappedJS is generated in the scope of that object.
+     */
+    [implicit_jscontext]
+    nsISupports generateXPCWrappedJS(in jsval obj, [optional] in jsval scope);
+
+    /**
+      * Retrieve the last time, in microseconds since epoch, that a given
+      * watchdog-related event occured.
+      *
+      * Valid categories:
+      *   "ContextStateChange"      - Context switching between active and inactive states
+      *   "WatchdogWakeup"          - Watchdog waking up from sleeping
+      *   "WatchdogHibernateStart"  - Watchdog begins hibernating
+      *   "WatchdogHibernateStop"   - Watchdog stops hibernating
+      */
+    PRTime getWatchdogTimestamp(in AString aCategory);
+
+    [implicit_jscontext]
+    jsval getJSEngineTelemetryValue();
+
+    /*
+     * Clone an object into a scope.
+     * The 3rd argument is an optional options object:
+     * - cloneFunctions: boolean. If true, functions in the value are
+     *   wrapped in a function forwarder that appears to be a native function in
+     *   the content scope. Defaults to false.
+     * - wrapReflectors: boolean. If true, DOM objects are passed through the
+     *   clone directly with cross-compartment wrappers. Otherwise, the clone
+     *   fails when such an object is encountered. Defaults to false.
+     */
+    [implicit_jscontext]
+    jsval cloneInto(in jsval value, in jsval scope, [optional] in jsval options);
+
+    /*
+     * When C++-Implemented code does security checks, it can generally query
+     * the subject principal (i.e. the principal of the most-recently-executed
+     * script) in order to determine the responsible party. However, when an API
+     * is implemented in JS, this doesn't work - the most-recently-executed
+     * script is always the System-Principaled API implementation. So we need
+     * another mechanism.
+     *
+     * Hence the notion of the "WebIDL Caller". If the current Entry Script on
+     * the Script Settings Stack represents the invocation of JS-implemented
+     * WebIDL, this API returns the principal of the caller at the time
+     * of invocation. Otherwise (i.e. outside of JS-implemented WebIDL), this
+     * function throws. If it throws, you probably shouldn't be using it.
+     */
+    nsIPrincipal getWebIDLCallerPrincipal();
+
+    /*
+     * Gets the principal of a script object, after unwrapping any cross-
+     * compartment wrappers.
+     */
+    [implicit_jscontext]
+    nsIPrincipal getObjectPrincipal(in jsval obj);
+
+    /*
+     * Gets the URI or identifier string associated with an object's
+     * realm (the same one used by the memory reporter machinery).
+     *
+     * Unwraps cross-compartment wrappers first.
+     *
+     * The string formats and values may change at any time. Do not depend on
+     * this from addon code.
+     */
+    [implicit_jscontext]
+    ACString getRealmLocation(in jsval obj);
+
+    /*
+     * Return a fractional number of milliseconds from process
+     * startup, measured with a monotonic clock.
+     */
+    double now();
+
+    /*
+     * Reads the given file and returns its contents. If called during early
+     * startup, the file will be pre-read on a background thread during profile
+     * startup so its contents will be available the next time they're read.
+     *
+     * The file must be a text file encoded in UTF-8. Otherwise the result is
+     * undefined.
+     */
+    AUTF8String readUTF8File(in nsIFile file);
+
+    /*
+     * Reads the given local file URL and returns its contents. This has the
+     * same semantics of readUTF8File.
+     * Only supports file URLs or URLs that point into one of the omnijars.
+     */
+    AUTF8String readUTF8URI(in nsIURI url);
+
+    /* Create a spellchecker object. */
+    nsIEditorSpellCheck createSpellChecker();
+
+    /* Create a commandline object. */
+    nsISupports createCommandLine([optional] in nsIFile aWorkingDir);
+
+    /* Create a command params object. */
+    nsICommandParams createCommandParams();
+
+    /* Create a loadcontext object. */
+    nsILoadContext createLoadContext();
+
+    /* Create a private loadcontext object. */
+    nsILoadContext createPrivateLoadContext();
+
+    /* Create a persistent property object. */
+    nsIPersistentProperties createPersistentProperties();
+
+    /* Create a document encoder object. */
+    nsIDocumentEncoder createDocumentEncoder(in string contentType);
+
+    /* Create an HTML copy encoder object. */
+    nsIDocumentEncoder createHTMLCopyEncoder();
+
+    // These attributes are for startup testing purposes. They are not expected
+    // to be used for production code.
+    readonly attribute Array<ACString> loadedModules;
+    readonly attribute Array<ACString> loadedComponents;
+
+    // These 2 functions will only return useful values if the
+    // "browser.startup.record" preference was true at the time the JS file
+    // was loaded.
+    ACString getModuleImportStack(in AUTF8String aLocation);
+    ACString getComponentLoadStack(in AUTF8String aLocation);
+};
+
+/**
+* Interface for the 'Components' object.
+*/
+
+[scriptable, builtinclass, uuid(aa28aaf6-70ce-4b03-9514-afe43c7dfda8)]
+interface nsIXPCComponents : nsISupports
+{
+    readonly attribute nsIXPCComponents_Interfaces      interfaces;
+    readonly attribute nsIXPCComponents_Results         results;
+
+    boolean isSuccessCode(in nsresult result);
+
+    readonly attribute nsIXPCComponents_Classes         classes;
+    // Will return null if there is no JS stack right now.
+    readonly attribute nsIStackFrame                    stack;
+    readonly attribute nsIComponentManager              manager;
+    readonly attribute nsIXPCComponents_Utils           utils;
+
+    readonly attribute nsIXPCComponents_ID              ID;
+    readonly attribute nsIXPCComponents_Exception       Exception;
+    readonly attribute nsIXPCComponents_Constructor     Constructor;
+
+    [implicit_jscontext]
+    // A javascript component can set |returnCode| to specify an nsresult to
+    // be returned without throwing an exception.
+    attribute jsval                                     returnCode;
+};

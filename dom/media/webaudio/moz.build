@@ -1,0 +1,147 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("*"):
+    BUG_COMPONENT = ("Core", "Web Audio")
+
+DIRS += ["blink"]
+
+MOCHITEST_MANIFESTS += [
+    "test/blink/mochitest.ini",
+    "test/mochitest.ini",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.media.webaudio.test.blink += [
+    "test/blink/audio-testing.js",
+    "test/blink/convolution-testing.js",
+    "test/blink/panner-model-testing.js",
+]
+
+EXPORTS += [
+    "AlignedTArray.h",
+    "AudioBlock.h",
+    "AudioEventTimeline.h",
+    "AudioNodeEngine.h",
+    "AudioNodeExternalInputTrack.h",
+    "AudioNodeTrack.h",
+    "AudioParamTimeline.h",
+    "MediaBufferDecoder.h",
+    "ThreeDPoint.h",
+    "WebAudioUtils.h",
+]
+
+EXPORTS.mozilla += [
+    "FFTBlock.h",
+    "MediaStreamAudioDestinationNode.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "AnalyserNode.h",
+    "AudioBuffer.h",
+    "AudioBufferSourceNode.h",
+    "AudioContext.h",
+    "AudioDestinationNode.h",
+    "AudioListener.h",
+    "AudioNode.h",
+    "AudioParam.h",
+    "AudioParamDescriptorMap.h",
+    "AudioParamMap.h",
+    "AudioProcessingEvent.h",
+    "AudioScheduledSourceNode.h",
+    "AudioWorkletGlobalScope.h",
+    "AudioWorkletNode.h",
+    "AudioWorkletProcessor.h",
+    "BiquadFilterNode.h",
+    "ChannelMergerNode.h",
+    "ChannelSplitterNode.h",
+    "ConstantSourceNode.h",
+    "ConvolverNode.h",
+    "DelayNode.h",
+    "DynamicsCompressorNode.h",
+    "GainNode.h",
+    "IIRFilterNode.h",
+    "MediaElementAudioSourceNode.h",
+    "MediaStreamAudioDestinationNode.h",
+    "MediaStreamAudioSourceNode.h",
+    "MediaStreamTrackAudioSourceNode.h",
+    "OscillatorNode.h",
+    "PannerNode.h",
+    "PeriodicWave.h",
+    "ScriptProcessorNode.h",
+    "StereoPannerNode.h",
+    "WaveShaperNode.h",
+]
+
+UNIFIED_SOURCES += [
+    "AnalyserNode.cpp",
+    "AudioBlock.cpp",
+    "AudioBuffer.cpp",
+    "AudioBufferSourceNode.cpp",
+    "AudioContext.cpp",
+    "AudioDestinationNode.cpp",
+    "AudioEventTimeline.cpp",
+    "AudioListener.cpp",
+    "AudioNode.cpp",
+    "AudioNodeEngine.cpp",
+    "AudioNodeExternalInputTrack.cpp",
+    "AudioNodeTrack.cpp",
+    "AudioParam.cpp",
+    "AudioParamMap.cpp",
+    "AudioProcessingEvent.cpp",
+    "AudioScheduledSourceNode.cpp",
+    "AudioWorkletGlobalScope.cpp",
+    "AudioWorkletImpl.cpp",
+    "AudioWorkletNode.cpp",
+    "AudioWorkletProcessor.cpp",
+    "BiquadFilterNode.cpp",
+    "ChannelMergerNode.cpp",
+    "ChannelSplitterNode.cpp",
+    "ConstantSourceNode.cpp",
+    "ConvolverNode.cpp",
+    "DelayBuffer.cpp",
+    "DelayNode.cpp",
+    "DynamicsCompressorNode.cpp",
+    "FFTBlock.cpp",
+    "GainNode.cpp",
+    "IIRFilterNode.cpp",
+    "MediaBufferDecoder.cpp",
+    "MediaElementAudioSourceNode.cpp",
+    "MediaStreamAudioDestinationNode.cpp",
+    "MediaStreamAudioSourceNode.cpp",
+    "MediaStreamTrackAudioSourceNode.cpp",
+    "OscillatorNode.cpp",
+    "PannerNode.cpp",
+    "PeriodicWave.cpp",
+    "ScriptProcessorNode.cpp",
+    "StereoPannerNode.cpp",
+    "ThreeDPoint.cpp",
+    "WaveShaperNode.cpp",
+    "WebAudioUtils.cpp",
+]
+
+if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
+    DEFINES["USE_NEON"] = True
+    SOURCES += ["AudioNodeEngineNEON.cpp"]
+    SOURCES["AudioNodeEngineNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
+    if CONFIG["BUILD_ARM_NEON"]:
+        LOCAL_INCLUDES += ["/media/openmax_dl/dl/api/"]
+
+# Are we targeting x86 or x64?  If so, build SSE2 files.
+if CONFIG["INTEL_ARCHITECTURE"]:
+    SOURCES += ["AudioNodeEngineSSE2.cpp"]
+    DEFINES["USE_SSE2"] = True
+    SOURCES["AudioNodeEngineSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
+
+# Allow outputing trace points from Web Audio API code
+DEFINES["TRACING"] = True
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [".."]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

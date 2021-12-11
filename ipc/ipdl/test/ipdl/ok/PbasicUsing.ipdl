@@ -1,0 +1,36 @@
+using SomeType from "SomeFile.h";
+using class SomeClass from "SomeFile.h";
+using struct SomeStruct from "SomeFile.h";
+
+[RefCounted] using SomeRefcountedType from "SomeFile.h";
+[RefCounted] using class SomeRefcountedClass from "SomeFile.h";
+[RefCounted] using struct SomeRefcountedStruct from "SomeFile.h";
+
+[MoveOnly] using SomeMoveonlyType from "SomeFile.h";
+[MoveOnly] using class SomeMoveonlyClass from "SomeFile.h";
+[MoveOnly] using struct SomeMoveonlyStruct from "SomeFile.h";
+
+[RefCounted, MoveOnly] using SomeRefcountedMoveonlyType from "SomeFile.h";
+[RefCounted, MoveOnly] using class SomeRefcountedMoveonlyClass from "SomeFile.h";
+[RefCounted, MoveOnly] using struct SomeRefcountedMoveonlyStruct from "SomeFile.h";
+
+union SomeUnion
+{
+  SomeType;
+  SomeClass;
+  SomeStruct;
+  SomeRefcountedType;
+  SomeRefcountedClass;
+  SomeRefcountedStruct;
+  SomeMoveonlyType;
+  SomeMoveonlyClass;
+  SomeMoveonlyStruct;
+  SomeRefcountedMoveonlyType;
+  SomeRefcountedMoveonlyClass;
+  SomeRefcountedMoveonlyStruct;
+};
+
+protocol PbasicUsing {
+child:
+    async Msg(SomeUnion foo);
+};

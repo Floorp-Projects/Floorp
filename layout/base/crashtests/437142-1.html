@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var m = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mrow");
+  document.body.appendChild(m);
+  document.getElementById("a").style.display = "inline";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 0);">
+
+<img usemap="#Map" src="data:image/gif,GIF87a%02%00%02%00%B3%00%00%00%00%00%FF%FF%FF%00%00%00%00%00%00%FF%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%2C%00%00%00%00%02%00%02%00%00%04%03%90H%12%00%3B">
+
+<map name="Map"><area id="a"></map>
+
+</body>
+
+</html>

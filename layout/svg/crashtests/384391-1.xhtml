@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg" >
+<head>
+<script>
+
+function boom()
+{
+  var circle = document.getElementById("circle");
+  document.removeChild(document.documentElement);
+  document.appendChild(circle);
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+
+<svg:circle id="circle" />
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Wheel-scrolling over scrollbar</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var subframe = document.getElementById("scroll");
+
+  // scroll over the scrollbar, and make sure the subframe scrolls
+  var scrollPos = subframe.scrollTop;
+  if (subframe.clientWidth == 200) {
+    // No scrollbar, abort the test. This can happen e.g. on local macOS runs
+    // with OS settings to only show scrollbars on trackpad/mouse activity.
+    ok(false, "No scrollbars found, cannot run this test!");
+    return;
+  }
+  var scrollbarX = (200 + subframe.clientWidth) / 2;
+  await promiseNativeWheelAndWaitForScrollEvent(subframe, scrollbarX, 100,
+      0, -10);
+  ok(subframe.scrollTop > scrollPos, "subframe scrolled after wheeling over scrollbar");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    #scroll {
+      width: 200px;
+      height: 200px;
+      overflow: scroll;
+    }
+    #scrolled {
+      width: 200px;
+      height: 1000px; /* so the subframe has room to scroll */
+      will-change: transform; /* to force active layers */
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll">
+    <div id="scrolled"></div>
+  </div>
+</body>

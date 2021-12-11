@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 383369 test, step 2</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/does_not_exist.css">
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  window.onload = function runTest() {
+    window.setTimeout(function () {
+      window.location =
+        "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/bug383369step3.html?runtest";
+    }, 0);
+  };
+
+  async function afterNavigationTest()
+  {
+  }
+
+  </script>
+</head>
+
+<body>
+</body>
+</html>

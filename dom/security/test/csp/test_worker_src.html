@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1302667 - Test worker-src</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(3);
+
+/* Description of the test:
+ * We load a page inlcuding a worker, a shared worker as well as a
+ * service worker with a CSP of:
+ *   >> worker-src https://example.com; child-src 'none'; script-src 'nonce-foo'
+ * and make sure that worker-src governs these three kinds of workers correctly.
+ * In addition, we make sure that child-src as well as script-src is discarded
+ * in case worker-src is specified. Ideally we would use "script-src 'none'" but
+ * we have to allowlist the actual script that spawns the workers, hence the nonce.
+ */
+
+let ALLOWED_HOST = "https://example.com/tests/dom/security/test/csp/";
+let BLOCKED_HOST = "https://test1.example.com/tests/dom/security/test/csp/";
+
+let TESTS = [
+  // allowed
+  ALLOWED_HOST + "file_worker_src_worker_governs.html",
+  ALLOWED_HOST + "file_worker_src_child_governs.html",
+  ALLOWED_HOST + "file_worker_src_script_governs.html",
+  // blocked
+  BLOCKED_HOST + "file_worker_src_worker_governs.html",
+  BLOCKED_HOST + "file_worker_src_child_governs.html",
+  BLOCKED_HOST + "file_worker_src_script_governs.html",
+];
+
+let numberSubTests = 3; // 1 web worker, 1 shared worker, 1 service worker
+let subTestCounter = 0; // keeps track of how many 
+let testIndex = 0;
+
+function checkFinish() {
+  subTestCounter = 0;
+  testIndex++;
+  if (testIndex < TESTS.length) {
+    runNextTest();
+    return;
+  }
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  let href = event.data.href;
+  let result = event.data.result;
+
+  if (href.startsWith("https://example.com")) {
+    if (result == "worker-allowed" ||
+        result == "shared-worker-allowed" ||
+        result == "service-worker-allowed") {
+     ok(true, "allowing worker from https://example.com (" + result + ")");
+    }
+    else {
+     ok(false, "blocking worker from https://example.com (" + result + ")");
+    }
+  }
+  else if (href.startsWith("https://test1.example.com")) {
+    if (result == "worker-blocked" ||
+        result == "shared-worker-blocked" ||
+        result == "service-worker-blocked") {
+      ok(true, "blocking worker from https://test1.example.com (" + result + ")");
+    }
+    else {
+      ok(false, "allowing worker from https://test1.example.com (" + result + ")");
+    }
+  }
+  else {
+    // sanity check, we should never enter that branch, bust just in case...
+    ok(false, "unexpected result: " + result);
+  }
+  subTestCounter++;
+  if (subTestCounter < numberSubTests) {
+    return;
+  }
+  checkFinish();
+}
+
+function runNextTest() {
+  document.getElementById("testframe").src = TESTS[testIndex];
+}
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
+]}, function() {
+  runNextTest();
+});
+
+</script>
+</body>
+</html>

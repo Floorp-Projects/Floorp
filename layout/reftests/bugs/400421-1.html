@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<head>
+<script>
+function go()
+{
+  var myMap  = document.getElementById('myMap');
+  var myArea = document.getElementById('myArea');
+  myMap.removeChild(myArea);
+
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="setTimeout('go()', 0);">
+  <img src="solidblue.png" usemap="#myMap" style="border: 0"/>
+  <map id="myMap" name="myMap">
+    <area id="myArea" shape="rect" coords="0,0,1,1"/>
+  </map>
+</body>
+</html>

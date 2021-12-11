@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=317422
+-->
+<window title="Mozilla Bug 317422"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <style xmlns="http://www.w3.org/1999/xhtml">
+    /* This makes the richlistbox about 4.5 rows high */
+    richlistitem {
+      height: 30px;
+    }
+    richlistbox {
+      height: 135px;
+    }
+  </style>
+  
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=317422"
+     target="_blank">Mozilla Bug 317422</a>
+  </body>
+
+  <richlistbox id="richlistbox" seltype="multiple">
+    <richlistitem id="richlistbox_item1"><label value="Item 1"/></richlistitem>
+    <richlistitem id="richlistbox_item2"><label value="Item 2"/></richlistitem>
+    <richlistitem id="richlistbox_item3" hidden="true"><label value="Item 3"/></richlistitem>
+    <richlistitem id="richlistbox_item4"><label value="Item 4"/></richlistitem>
+    <richlistitem id="richlistbox_item5" collapsed="true"><label value="Item 5"/></richlistitem>
+    <richlistitem id="richlistbox_item6"><label value="Item 6"/></richlistitem>
+    <richlistitem id="richlistbox_item7"><label value="Item 7"/></richlistitem>
+    <richlistitem id="richlistbox_item8"><label value="Item 8"/></richlistitem>
+    <richlistitem id="richlistbox_item9"><label value="Item 9"/></richlistitem>
+    <richlistitem id="richlistbox_item10"><label value="Item 10"/></richlistitem>
+    <richlistitem id="richlistbox_item11"><label value="Item 11"/></richlistitem>
+    <richlistitem id="richlistbox_item12"><label value="Item 12"/></richlistitem>
+    <richlistitem id="richlistbox_item13"><label value="Item 13"/></richlistitem>
+    <richlistitem id="richlistbox_item14"><label value="Item 14"/></richlistitem>
+    <richlistitem id="richlistbox_item15" hidden="true"><label value="Item 15"/></richlistitem>
+  </richlistbox>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+/** Test for Bug 317422 **/
+SimpleTest.waitForExplicitFinish();
+
+function testRichlistbox()
+{
+  var id = "richlistbox";
+  var listbox = document.getElementById(id);
+  listbox.focus();
+  listbox.selectedIndex = 0;
+  sendKey("PAGE_DOWN");
+  is(listbox.selectedItem.id, id + "_item7", id + ": Page down should go to the item one visible page away");
+  is(listbox.getIndexOfFirstVisibleRow(), 6, id + ": Page down should have scrolled down a visible page");
+  sendKey("PAGE_DOWN");
+  is(listbox.selectedItem.id, id + "_item11", id + ": Second page down should go to the item two visible pages away");
+  is(listbox.getIndexOfFirstVisibleRow(), 9, id + ": Second page down should not scroll beyond the end");
+  sendKey("PAGE_DOWN");
+  is(listbox.selectedItem.id, id + "_item14", id + ": Third page down should go to the last visible item");
+  is(listbox.getIndexOfFirstVisibleRow(), 9, id + ": Third page down should not have scrolled at all");
+  sendKey("PAGE_UP");
+  is(listbox.selectedItem.id, id + "_item10", id + ": Page up should go to the item one visible page away");
+  is(listbox.getIndexOfFirstVisibleRow(), 5, id + ": Page up should scroll up a visible page");
+  sendKey("PAGE_UP");
+  is(listbox.selectedItem.id, id + "_item6", id + ": Second page up should go to the item two visible pages away");
+  is(listbox.getIndexOfFirstVisibleRow(), 0, id + ": Second page up should not scroll beyond the start");
+  sendKey("PAGE_UP");
+  is(listbox.selectedItem.id, id + "_item1", id + ": Third page up should return to the first visible item");
+  is(listbox.getIndexOfFirstVisibleRow(), 0, id + ": Third page up should not have scrolled at all");
+}
+
+window.onload = function runTests() {
+  testRichlistbox();
+  SimpleTest.finish();
+};
+  ]]></script>
+</window>

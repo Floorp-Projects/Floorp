@@ -1,0 +1,29 @@
+These certificates are imported from mozilla-central (https://hg.mozilla.org/mozilla-central/file/tip/toolkit/mozapps/update/updater)
+and used to support staging update verify jobs. These jobs end up replacing the certificates within the binaries
+(through a binary search and replace), and must all be the same length for this to work correctly. If we recreate
+these certificates, and the resulting public certificates are not the same length anymore, the commonName may be
+changed to line them up again. https://github.com/google/der-ascii is a useful tool for doing this. For example:
+
+To convert the certificate to ascii:
+der2ascii -i dep1.der -o dep1.ascii
+
+Then use your favourite editor to change the commonName field. That block will look something like:
+    SEQUENCE {
+      SET {
+        SEQUENCE {
+          # commonName
+          OBJECT_IDENTIFIER { 2.5.4.3 }
+          PrintableString { "CI MAR signing key 1" }
+        }
+      }
+    }
+
+You can pad the PrintableString with spaces to increase the length of the cert (1 space = 1 byte).
+
+Then, convert back to der:
+ascii2der -i dep1.ascii -o newdep1.der
+
+The certificats in the sha1 subdirectory are from
+https://hg.mozilla.org/mozilla-central/file/0fcbe72581bc/toolkit/mozapps/update/updater
+which are the SHA-1 certs from before they where updated in Bug 1105689. They only include the release 
+certs, since the nightly certs are different length, and we only care about updates from old ESRs.

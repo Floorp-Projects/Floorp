@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <script>
+    function test() {
+      var ifr = document.createElement("iframe");
+      ifr.src = "frame0.html";
+      document.getElementById("dynamic").appendChild(ifr);
+      var staticFrame = document.getElementById("staticframe");
+      staticFrame.onload = window.location = "goback.html";
+      staticFrame.contentWindow.location = "frame1.html";
+    }
+
+    function start() {
+      if (++opener.testCount == 1) {
+        test();
+      } else {
+        var staticFrame = document.getElementById("staticframe");
+        opener.ok(String(staticFrame.contentWindow.location).includes(staticFrame.src),
+                  "Wrong document loaded!");
+        opener.finishTest();
+      }
+    }
+    </script>
+  </head>
+  <body onload="setTimeout('start()', 0)">
+    <h5>Dynamic</h5>
+    <div id="dynamic"></div>
+    <h5>Static</h5>
+    <div id="static"><iframe id="staticframe" src="frame0.html"></iframe></div>
+  </body>
+</html>

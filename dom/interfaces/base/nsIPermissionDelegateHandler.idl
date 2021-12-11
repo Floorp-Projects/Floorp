@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This file contains an interface to the Permission Delegate Handler,
+ */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+
+[scriptable, builtinclass, uuid(07611dc6-bf4d-4d8a-a64b-f3a5904dddc7)]
+interface nsIPermissionDelegateHandler : nsISupports
+{
+  /*
+   * Return true if we are delegating permission to a third party which is not
+   * explicitly trusted. An orgin is not explicitly trusted means it is not
+   * presented in the Feature Policy ancestor chain, via src, explicitly listed
+   * in allow, and it is not the top-level origin.
+   *
+   * @param aTypes the permission types to check
+   */
+  boolean maybeUnsafePermissionDelegate(in Array<ACString> aTypes);
+
+  /*
+   * Return true if permissions.delegation.enabled is true.
+   */
+  readonly attribute boolean permissionDelegateFPEnabled;
+};
+

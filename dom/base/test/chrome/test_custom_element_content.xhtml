@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
+-->
+<window title="Mozilla Bug 1130028"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1130028"
+     target="_blank">Mozilla Bug 1130028</a>
+  <iframe onload="startTests()" id="frame" src="http://example.com/chrome/dom/base/test/chrome/frame_custom_element_content.html"></iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  /** Test for Bug 1130028 **/
+  var connectedCallbackCount = 0;
+
+  function startTests() {
+    var frame = $("frame");
+
+    class XFoo extends frame.contentWindow.HTMLElement {};
+    frame.contentWindow.customElements.define("x-foo", XFoo);
+    var elem = new XFoo();
+    is(elem.tagName, "X-FOO", "Constructor should create an x-foo element.");
+
+    class XBar extends frame.contentWindow.HTMLElement {
+      constructor() {
+        super();
+        this.magicNumber = 42;
+      }
+
+      connectedCallback() {
+        connectedCallbackCount++;
+        // Callback should be called only once by element created in content.
+        is(connectedCallbackCount, 1, "Connected callback called, should be called once in test.");
+        is(this.magicNumber, 42, "Callback should be able to see the custom prototype.");
+      }
+    };
+
+    frame.contentWindow.customElements.define("x-bar", XBar);
+    is(connectedCallbackCount, 1, "Connected callback should be called by element created in content.");
+
+    var element = frame.contentDocument.createElement("x-bar");
+    is(element.magicNumber, 42, "Should be able to see the custom prototype on created element.");
+  }
+
+  ]]></script>
+</window>

@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 518172</title>
+<style type="text/css">
+
+@font-face {
+  font-family: "MarkA";
+  src: url(../fonts/markA.ttf);
+}
+
+html, body { margin: 0; padding: 0; }
+body { font: 200px/200px MarkA; }
+div#one { width: 200px; height:200px; padding: 100px;
+          -moz-transform: rotate(90deg); }
+
+</style>
+<div id="one">A</div>
+

@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html><head>
+  <title>Test window.crypto.getRandomValues</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="onWindowLoad()">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var testData = [ { len: 32, type: "Int8", pass: true },
+                 { len: 32, type: "Int16", pass: true },
+                 { len: 32, type: "Int32", pass: true },
+                 { len: 32, type: "Uint8", pass: true },
+                 { len: 32, type: "Uint16", pass: true },
+                 { len: 32, type: "Uint32", pass: true },
+                 { len: 65536, type: "Uint8", pass: true },
+                 { len: 32, type: "Uint8Clamped", pass: true },
+                 { len: 65537, type: "Uint8", pass: false },
+                 { len: 32, type: "Float32", pass: false },
+                 { len: 32, type: "Float64", pass: false } ];
+
+
+var testCount = 0;
+
+function testNsCryptoGetRandomValues(aLength, aType)
+{
+  var arrayTypes = {
+    Int8:         Int8Array,
+    Int16:        Int16Array,
+    Int32:        Int32Array,
+    Uint8:        Uint8Array,
+    Uint16:       Uint16Array,
+    Uint32:       Uint32Array,
+    Float32:      Float32Array,
+    Float64:      Float64Array,
+    Uint8Clamped: Uint8ClampedArray,
+  };
+
+  testCount++;
+
+  var buf = new ArrayBuffer(aLength);
+  var arBuf = new arrayTypes[aType](buf);
+
+  var pass = false;
+  var b = window.crypto.getRandomValues(arBuf);
+  ok(b === arBuf, "ArrayBuffer result is argument buffer");
+
+  for (var i = 0; i < arBuf.length; i++) {
+    if (arBuf.length > 6) {
+      // XXXddahl: THIS MIGHT FAIL EVERY FULL MOON, SORRY QA!!!
+      if (arBuf[i] != 0) {
+        pass = true;
+        break;
+      }
+    }
+    else {
+      pass = true;
+    }
+  }
+  is(pass, true,  "Non-zero result: " + i  +  " found in the  " + aType + ": " + aLength + " ArrayBufferView");
+}
+
+function onWindowLoad()
+{
+  window.removeEventListener("load", onWindowLoad);
+  var failedWithCorrectError = false;
+  try {
+    for (var i = 0; i < testData.length; i++) {
+      if (testData[i].pass) {
+        try {
+          testNsCryptoGetRandomValues(testData[i].len, testData[i].type, testData[i].pass);
+        }
+        catch (ex) {
+          ok(false, "testNsCryptoGetRandomValues failed, test should have passed: " + testData[i].type);
+        }
+      }
+      else {
+        // failing tests are dealt with here
+        if (i == 8) {
+          try {
+            testNsCryptoGetRandomValues(testData[i].len, testData[i].type, testData[i].pass);
+          }
+          catch (ex) {
+            todo("QuotaExceededError" in window && ex instanceof QuotaExceededError,
+                 "Exception was the correct type");
+            failedWithCorrectError = ex.toString().search(/QUOTA_EXCEEDED_ERR/);
+            ok(failedWithCorrectError, "Extended length array buffer fails, NS_ERROR_DOM_QUOTA_EXCEEDED_ERR thrown");
+          }
+        } // 8
+
+        if (i == 9) {
+          try {
+            testNsCryptoGetRandomValues(testData[i].len, testData[i].type, testData[i].pass);
+          }
+          catch (ex) {
+            failedWithCorrectError = ex.toString().search(/TYPE_MISMATCH_ERR/);
+            ok(failedWithCorrectError,
+               "Expected TYPE_MISMATCH_ERR: Float32Array is not valid, got " + ex + ".");
+          }
+        } // 9
+
+        if (i == 10) {
+          try {
+            testNsCryptoGetRandomValues(testData[i].len, testData[i].type, testData[i].pass);
+          }
+          catch (ex) {
+            failedWithCorrectError = ex.toString().search(/TYPE_MISMATCH_ERR/);
+            ok(failedWithCorrectError,
+               "Expected TYPE_MISMATCH_ERR: Float64Array is not valid, got " + ex + ".");
+          }
+        }
+      }
+    } // end main for loop
+  }
+  catch (ex) {
+    ok(false, "Unexpected Error: " + ex);
+  }
+  // Count the tests in the testData array
+  ok(testCount == 11, "11 tests run via testData");
+
+  // Test a null argument
+  try {
+    window.crypto.getRandomValues(null);
+  }
+  catch (ex) {
+    var test = ex.toString().search(/1003|TypeError/);
+    ok((test > -1), "Expected TYPE_ERR, got " + ex + ".");
+  }
+
+  // Test a zero-length buffer view
+  try {
+    var a = new Int8Array(0);
+    window.crypto.getRandomValues(a);
+    ok(a[0] === undefined, "The array buffer is unchanged, still 0 length");
+  }
+  catch (ex) {
+    ok(false, "A zero-length array buffer view should not fail");
+  }
+
+  // Test a one-length buffer view
+  var randomVal = 0;
+  // The probability of getRandomValues generating a zero value is 1/256 so we
+  // run this in a loop until it returns a non-zero value to guard against
+  // false failures
+  do {
+    try {
+      var a = new Uint8Array(1);
+      var b = window.crypto.getRandomValues(a);
+      randomVal = a[0];
+      ok(a === b, "ArrayBuffer result is argument buffer");
+    }
+    catch (ex) {
+      ok(false, "A one-length array buffer view should not fail");
+    }
+  }
+  while (randomVal == 0);
+  ok(randomVal !== 0, "The array buffer eventually had one random value");
+
+  // Test a 16 byte length buffer
+  var testConfig = { len: 16, type: "Int8", pass: true };
+  testNsCryptoGetRandomValues(testConfig.len,
+                              testConfig.type,
+                              testConfig.pass);
+
+  // Test a 31 byte length buffer
+  testConfig = { len: 31, type: "Int8", pass: true };
+  testNsCryptoGetRandomValues(testConfig.len,
+                              testConfig.type,
+                              testConfig.pass);
+
+  // Test a 33 byte length buffer
+  testConfig = { len: 33, type: "Int8", pass: true };
+  testNsCryptoGetRandomValues(testConfig.len,
+                              testConfig.type,
+                              testConfig.pass);
+
+  // Test a range of an array buffer view
+  var buffer = new ArrayBuffer(32);
+  var view = new Int8Array(buffer, 0, 16);
+  var view2 = new Int8Array(buffer, 16, 16);
+  for (var i = 0; i < view2.byteLength; i++) {
+    view2[i] = 1;
+  }
+  var b = window.crypto.getRandomValues(view);
+  ok(b === view, "ArrayBuffer result is argument buffer");
+  for (var i = 0; i < view.byteLength; i++) {
+    is(view2[i], 1, "view2 is unchanged");
+  }
+
+  // test an offset view
+  var result = false;
+  var b = window.crypto.getRandomValues(view2);
+  for (var i = 0; i < view2.length; i++) {
+    if (view2[i] != 1) {
+      result = true;
+      break;
+    }
+  }
+  ok(result, "view2 has been updated correctly");
+  ok(b === view2, "ArrayBuffer result is argument buffer");
+  // test the return value
+  buffer = new ArrayBuffer(32);
+  view = new Int8Array(buffer, 0, 16);
+  var retval = window.crypto.getRandomValues(view);
+  ok(view === retval, "The view and return value are the same");
+
+  SimpleTest.finish();
+}
+</script>
+</body></html>

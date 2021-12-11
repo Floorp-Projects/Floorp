@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<head>
+  <title>CSS Test: overflow:hidden block fragmentation</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1572573">
+  <meta name="flags" content="paged">
+  <style>
+@page { size:5in 3in; margin:0.5in; }
+html,body {
+    color:black; background-color:white; font:1px/1 monospace; padding:0; margin:0;
+}
+.before, .after {
+  height: 0.5in;
+  content: "x";
+  background: black;
+}
+</style>
+</head>
+<body>
+  <div class="before"></div>
+  <div style="overflow:hidden; height:1in">
+    <div style="overflow:hidden">
+      <div style="float: left">
+        <div style="height:3in; width:1in; background:black"></div>
+      </div>
+    </div>
+  </div>
+  <div class="after"></div>
+</body>
+</html>

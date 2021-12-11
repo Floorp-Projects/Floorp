@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for bug 1382568: calling innerText on an uninitialized presshell doesn't crash</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  window.onmessage = function(e) {
+    is(e.data.result, "ok", "Child frame should load properly");
+    SimpleTest.finish();
+  };
+</script>
+<iframe src="https://example.com/tests/layout/style/test/bug1382568-iframe.html"></iframe>
+<script>
+  SimpleTest.waitForExplicitFinish();
+</script>

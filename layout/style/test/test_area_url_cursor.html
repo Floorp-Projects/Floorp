@@ -1,0 +1,34 @@
+<!doctype html>
+<title>cursor: url() doesn't assert for area elements</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+area {
+  /* Doesn't matter to trigger the assert */
+  cursor: url(invalid.cur), auto;
+}
+</style>
+<img width="300" height="98" usemap="#map">
+<map name="map" id="map">
+  <area class="url" shape="rect" coords="0,0,300,98" href="https://mozilla.org"></area>
+</map>
+<div></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+
+  let checked = false;
+  document.querySelector("area").addEventListener("mousemove", function() {
+    setTimeout(() => {
+      if (checked) {
+        return;
+      }
+      checked = true;
+      ok(true, "Didn't assert");
+      SimpleTest.finish()
+    }, 0);
+  });
+
+  synthesizeMouseAtCenter(document.querySelector("img"), { type: "mousemove" });
+});
+</script>

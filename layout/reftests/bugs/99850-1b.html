@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function change_colors()
+{
+  document.linkColor = "#FF0000";
+  setTimeout(change_colors_2, 30);
+}
+
+function change_colors_2()
+{
+  document.linkColor = "#009933";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="change_colors()">
+
+<a href="http://mozilla.org/do_not_visit">unvisited link</a>
+
+</body>
+
+</html> 

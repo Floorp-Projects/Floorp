@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--form with one valid element and another valid one is added dynamically -->
+<html class='reftest-wait'>
+  <head>
+    <style>
+      form:invalid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.forms[0].appendChild(document.getElementById('i'));
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <input id='i' type='text' value='bar'>
+    <form>
+      <input id='j' type='text' value='foo'>
+    </form>
+  </body>
+</html>

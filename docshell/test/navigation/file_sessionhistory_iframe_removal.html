@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <script>
+      async function wait() {
+        return opener.SpecialPowers.spawnChrome([], function() { /*dummy */ });
+      }
+      async function run() {
+        var counter = 0;
+        while(true) {
+          // Push new history entries until we hit the limit and start removing
+          // entries from the front.
+          var len = history.length;
+          document.getElementById("ifr1").contentWindow.history.pushState(++counter, null, null);
+          await wait();
+          if (len == history.length) {
+            opener.ok(true, "Found max length " + len);
+            document.getElementById("ifr2").contentWindow.history.pushState(++counter, null, null);
+            await wait();
+            document.getElementById("ifr1").contentWindow.history.pushState(++counter, null, null);
+            await wait();
+            opener.is(len, history.length, "Adding session history entries in different iframe should behave the same way");
+            // This should remove all the history entries for ifr1, leaving just
+            // the ones for ifr2.
+            document.getElementById("ifr1").remove();
+            opener.is(history.length, 2, "Should have entries for the initial load and the pushState for ifr2");
+            opener.finishTest();
+            break;
+          }
+        }
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(run)">
+    <iframe src="blank.html" id="ifr1"></iframe>
+    <iframe src="blank.html" id="ifr2"></iframe>
+  </body>
+</html>

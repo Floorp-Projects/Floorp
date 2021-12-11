@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test FinalizationRegistry works in workers</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        let worker = new Worker('finalizationRegistry_worker.js');
+
+        worker.onevent = (event) => {
+          console.log(event.message);
+          throw event.error;
+        };
+
+        worker.onmessage = (event) => {
+          switch (event.data) {
+          case 'started':
+            worker.postMessage('checkResults');
+            break;
+
+          case 'passed':
+            ok(true, "Tests passed");
+            SimpleTest.finish();
+            break;
+
+          default:
+            console.log(event.data);
+            break;
+          }
+        };
+
+        worker.postMessage('startTest');
+      }
+    </script>
+  </head>
+  <body onload="go()"></body>
+</html>

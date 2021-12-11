@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# If this file is changed, update the generated docs:
+# https://firefox-source-docs.mozilla.org/mach/telemetry.html#updating-generated-metrics-docs
+---
+$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
+
+usage:
+  description: >
+    Sent when the mach invocation is completed (regardless of result).
+    Contains information about the mach invocation that was made, its result,
+    and some details about the current environment and hardware.
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
+  include_client_id: true
+  notification_emails:
+    - build-telemetry@mozilla.com
+    - mhentges@mozilla.com

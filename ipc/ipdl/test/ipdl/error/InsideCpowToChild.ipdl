@@ -1,0 +1,9 @@
+// inside_cpow nested parent-to-child messages are verboten
+
+//error: inside_cpow nested parent-to-child messages are verboten (here, message `Msg' in protocol `InsideCpowToChild')
+//error: message `Msg' requires more powerful send semantics than its protocol `InsideCpowToChild' provides
+
+protocol InsideCpowToChild {
+child:
+    [Nested=inside_cpow] sync Msg();
+};

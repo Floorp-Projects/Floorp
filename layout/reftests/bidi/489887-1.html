@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+function boom()
+{
+  document.getElementById("w").firstChild.data = "";
+  document.documentElement.appendChild(document.body);
+}
+</script>
+</head>
+<body onload="boom();">
+<div><span>&#x06cd;</span><span id="w"> </span><span>&#x06cb;</span></div>
+</body>
+</html>

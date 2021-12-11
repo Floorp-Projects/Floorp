@@ -1,0 +1,23 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Can edit input type=number with a user-select: none ancestor</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div style="user-select: none">
+  <input type="number" value="322223">
+</div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('input').focus();
+  requestAnimationFrame(function() {
+    // Move after the 3
+    synthesizeKey("KEY_ArrowRight");
+    // Select "2222"
+    for (let i = 0; i < 4; ++i)
+      synthesizeKey("KEY_ArrowRight", { shiftKey: true });
+    // Rip it off.
+    synthesizeKey("KEY_Delete");
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>

@@ -1,0 +1,447 @@
+<!DOCTYPE HTML>
+<title>Canvas Tests</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
+
+function isPixel(ctx, x,y, c, d) {
+  var pos = x + "," + y;
+  var color = c[0] + "," + c[1] + "," + c[2] + "," + c[3];
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(c[0]-d <= pr && pr <= c[0]+d &&
+       c[1]-d <= pg && pg <= c[1]+d &&
+       c[2]-d <= pb && pb <= c[2]+d &&
+       c[3]-d <= pa && pa <= c[3]+d,
+       "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+color+" +/- "+d);
+}
+</script>
+
+<p>Canvas test: test_drawClipPath_canvas</p>
+<canvas id="c1" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_drawClipPath_canvas() {
+  var c = document.getElementById("c1");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.beginPath();
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.save();
+  ctx.clip(path);
+
+  ctx.fillRect(0, 0, 100, 100);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+  ctx.restore();
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.beginPath();
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.save();
+  ctx.clip(path, 'nonzero');
+
+  ctx.fillRect(0, 0, 100, 100);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+  ctx.restore();
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.beginPath();
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.save();
+  ctx.clip(path, 'evenodd');
+
+  ctx.fillRect(0, 0, 100, 100);
+  isPixel(ctx, 50, 50, [255, 0, 0, 255], 5);
+  ctx.restore();
+}
+</script>
+
+<p>Canvas test: test_drawFillPath_canvas</p>
+<canvas id="c2" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_drawFillPath_canvas() {
+  var c = document.getElementById("c2");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'nonzero');
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'evenodd');
+  isPixel(ctx, 50, 50, [255, 0, 0, 255], 5);
+}
+</script>
+
+<p>Canvas test: test_drawStrokePath_canvas</p>
+<canvas id="c3" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_drawStrokePath_canvas() {
+  var c = document.getElementById("c3");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.strokeStyle = 'rgb(0,255,0)';
+  ctx.lineWidth = 5;
+  ctx.stroke(path);
+  isPixel(ctx, 0, 0, [0, 255, 0, 255], 5);
+  isPixel(ctx, 25, 25, [0, 255, 0, 255], 5);
+  isPixel(ctx, 10, 10, [255, 0, 0, 255], 5);
+}
+</script>
+
+<p>Canvas test: test_large_canvas</p>
+<canvas id="c4" class="output" width="10000" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_large_canvas() {
+  // test paths on large canvases. On certain platforms this will
+  // trigger retargeting of the backend
+  var c = document.getElementById("c4");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'nonzero');
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'evenodd');
+  isPixel(ctx, 50, 50, [255, 0, 0, 255], 5);
+}
+</script>
+
+<p>Canvas test: test_isPointInPath_canvas</p>
+<canvas id="c5" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+
+function shouldThrow(ctx, s) {
+  var _ok = false;
+  try {
+    eval(s);
+  } catch(e) {
+    _ok = true;
+  }
+  ok(_ok, s);
+}
+
+function shouldBeTrue(ctx, path, s) {
+  var _ok = eval(s);
+  ok(_ok, s);
+}
+function shouldBeFalse(ctx, path, s) {
+  var _ok = !eval(s);
+  ok(_ok, s);
+}
+
+function test_isPointInPath_canvas() {
+  var c = document.getElementById("c5");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+  shouldBeTrue(ctx, path, "ctx.isPointInPath(path, 50, 50)");
+  shouldBeFalse(ctx, path, "ctx.isPointInPath(path, NaN, 50)");
+  shouldBeFalse(ctx, path, "ctx.isPointInPath(path, 50, NaN)");
+
+  path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+  shouldBeTrue(ctx, path, "ctx.isPointInPath(path, 50, 50, 'nonzero')");
+
+  path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+  shouldBeFalse(ctx, path, "ctx.isPointInPath(path, 50, 50, 'evenodd')");
+
+  shouldThrow(ctx, "ctx.isPointInPath(null, 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath(null, 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath(null, 50, 50, 'evenodd')");
+  shouldThrow(ctx, "ctx.isPointInPath(path, 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath(path, 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath(path, 50, 50, 'evenodd')");
+
+  shouldThrow(ctx, "ctx.isPointInPath([], 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath([], 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath([], 50, 50, 'evenodd')");
+  shouldThrow(ctx, "ctx.isPointInPath({}, 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath({}, 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath({}, 50, 50, 'evenodd')");
+}
+</script>
+
+<p>Canvas test: test_isPointInStroke_canvas</p>
+<canvas id="c6" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+
+function test_isPointInStroke_canvas() {
+  var c = document.getElementById("c6");
+  var ctx = c.getContext("2d");
+
+  ctx.strokeStyle = '#0ff';
+
+  var path = new Path2D();
+  path.rect(20,20,100,100);
+
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,20,20)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,120,20)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,20,120)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,120,120)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,20)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,20,70)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,120,70)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,120)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,22,22)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,118,22)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,22,118)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,118,118)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,18)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,122,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,122)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,18,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,NaN,122)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,18,NaN)");
+
+  shouldThrow(ctx, "ctx.isPointInStroke(null,70,20)");
+  shouldThrow(ctx, "ctx.isPointInStroke([],20,70)");
+  shouldThrow(ctx, "ctx.isPointInStroke({},120,70)");
+
+  ctx.lineWidth = 10;
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,22,22)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,118,22)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,22,118)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,118,118)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,18)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,122,70)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,122)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,18,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,26,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,26)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,114)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,114,70)");
+
+  path = new Path2D();
+  path.moveTo(10,10);
+  path.lineTo(110,20);
+  path.lineTo(10,30);
+  ctx.lineJoin = "bevel";
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,113,20)");
+
+  ctx.miterLimit = 40.0;
+  ctx.lineJoin = "miter";
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,113,20)");
+
+  ctx.miterLimit = 2.0;
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,113,20)");
+
+  path = new Path2D();
+  path.moveTo(10,10);
+  path.lineTo(110,10);
+  ctx.lineCap = "butt";
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,112,10)");
+
+  ctx.lineCap = "round";
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,112,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,117,10)");
+
+  ctx.lineCap = "square";
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,112,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,117,10)");
+
+  ctx.lineCap = "butt";
+  ctx.setLineDash([10,10]);
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,15,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,25,10)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,35,10)");
+
+  ctx.lineDashOffset = 10;
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,15,10)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,25,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,35,10)");
+}
+</script>
+
+<p>Canvas test: test_pathconstructor_canvas</p>
+<canvas id="c7" class="output" width="200" height="100">+
+</canvas>
+<script type="text/javascript">
+
+function test_pathconstructor_canvas() {
+  var c = document.getElementById("c7");
+  var ctx = c.getContext("2d");
+
+  var p = new Path2D("M100,0L200,0L200,100L100,100z");
+  ctx.fillStyle = 'blue';
+  ctx.fill(p);
+  isPixel(ctx, 105, 5, [0, 0, 255, 255], 0);
+  isPixel(ctx, 5, 5, [0, 0, 0, 0], 0);
+
+  // copy constructor. This should not crash.
+  var p1 = new Path2D();
+  var _p2 = new Path2D(p1);
+  p1.arcTo(0, 0, 1, 1, 2);
+}
+</script>
+
+<p>Canvas test: test_addpath_canvas</p>
+<canvas id="c8" class="output" width="200" height="200">+
+</canvas>
+<script type="text/javascript">
+
+function test_addpath_canvas() {
+  var c = document.getElementById("c8");
+  var ctx = c.getContext("2d");
+  ctx.beginPath();
+  var p1 = new Path2D();
+  p1.rect(0,0,100,100);
+  var p2 = new Path2D();
+  p2.rect(0,100,100,100);
+  var m = ctx.currentTransform;
+  p1.addPath(p2, m);
+  ctx.fillStyle = 'yellow';
+  ctx.fill(p1);
+  isPixel(ctx, 0, 100, [255, 255, 0, 255], 0);
+
+  ctx.clearRect(0,0,200,200);
+
+  ctx.beginPath();
+  var p3 = new Path2D();
+  p3.rect(0,0,100,100);
+  var p4 = new Path2D();
+  p4.rect(0,100,100,100);
+  var m = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGMatrix();
+  m.a = 1; m.b = 0;
+  m.c = 0; m.d = 1;
+  m.e = 100; m.f = -100;
+  p3.addPath(p4, m);
+  ctx.fillStyle = 'yellow';
+  ctx.fill(p3);
+  isPixel(ctx, 50, 50, [255, 255, 0, 255], 0);
+  isPixel(ctx, 150, 150, [0, 0, 0, 0], 0);
+
+  var p5 = new Path2D();
+  p5.rect(0,0,100,100);
+  shouldThrow(ctx, "p5.addPath(null, m)");
+  shouldThrow(ctx, "p5.addPath([], m)");
+  shouldThrow(ctx, "p5.addPath({}, m)");
+
+  p5 = p5.addPath(p5);
+}
+</script>
+
+<script>
+
+function runTests() {
+ try {
+  test_drawClipPath_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_drawClipPath_canvas");
+  throw e;
+ }
+ try {
+  test_drawFillPath_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_drawFillPath_canvas");
+  throw e;
+ }
+ try {
+  test_drawStrokePath_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_drawStrokePath_canvas");
+  throw e;
+ }
+ try {
+  test_large_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_large_canvas");
+  throw e;
+ }
+ try {
+  test_isPointInPath_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_isPointInPath_canvas");
+  throw e;
+ }
+ try {
+  test_isPointInStroke_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_isPointInStroke_canvas");
+  throw e;
+ }
+ try {
+  test_pathconstructor_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_pathconstructor_canvas");
+  throw e;
+ }
+ try {
+  test_addpath_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_addpath_canvas");
+  throw e;
+ }
+ SimpleTest.finish();
+}
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set":[["canvas.path.enabled", true]]}, runTests);
+});
+
+// Don't leak the world via the Path2D reference to its window.
+document.all;
+window.p = new Path2D();
+
+</script>

@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1131392 - Test that EME does not work for non-MSE media</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* import-globals-from eme.js */
+var manager = new MediaTestManager;
+
+function DoSetMediaKeys(v, test, token)
+{
+  var options = [{
+    initDataTypes: ["cenc"],
+    audioCapabilities: [{contentType: test.audioType}],
+    videoCapabilities: [{contentType: test.videoType}],
+  }];
+
+  return navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, options)
+
+  .then(function(keySystemAccess) {
+    return keySystemAccess.createMediaKeys();
+  })
+
+  .catch(function() {
+    ok(false, token + " was not expecting failure (yet)");
+  })
+
+  .then(function(mediaKeys) {
+    return v.setMediaKeys(mediaKeys);
+  });
+}
+
+function TestSetMediaKeys(test, token)
+{
+  manager.started(token);
+
+  var v = document.createElement("video");
+
+  v.addEventListener("encrypted", function() {
+    ok(false, token + " should not fire encrypted event");
+  });
+
+  var loadedMetadata = false;
+  v.addEventListener("loadedmetadata", function() {
+    loadedMetadata = true;
+  });
+
+  v.addEventListener("error", function() {
+    ok(true, token + " expected error event");
+    ok(loadedMetadata, token + " expected loadedmetadata to have fired");
+    manager.finished(token);
+  });
+
+  v.src = test.name;
+}
+
+function TestSetSrc(test, token)
+{
+  manager.started(token);
+
+  var v = document.createElement("video");
+  v.addEventListener("error", function(err) {
+    ok(true, token + " got error setting src on video element, as expected");
+    manager.finished(token);
+  });
+
+  DoSetMediaKeys(v, test, token)
+
+  .then(function() {
+    v.src = test.name;
+  })
+
+  .catch(function() {
+    ok(false, token + " got error setting media keys");
+  });
+}
+
+function startTest(test, token)
+{
+  TestSetMediaKeys(test, token + "_setMediaKeys");
+  TestSetSrc(test, token + "_setSrc");
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(gEMENonMSEFailTests, startTest);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,269 @@
+{
+  "addons": {
+    "updatecheck1@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        },
+        {
+          "_comment_": "This update is incompatible and so should not be considered a valid update",
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "strict_max_version": "2"
+            }
+          }
+        },
+        {
+          "version": "3.0",
+          "update_link": "https://example.com/addons/test3.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        },
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "2"
+            }
+          }
+        },
+        {
+          "_comment_": "This update is incompatible and so should not be considered a valid update",
+          "version": "4.0",
+          "update_link": "https://example.com/addons/test4.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "strict_max_version": "2"
+            }
+          }
+        }
+      ]
+    },
+
+    "test_bug378216_8@tests.mozilla.org": {
+      "_comment_": "The updateLink will be ignored since it is not secure and there is no updateHash.",
+
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "test_bug378216_9@tests.mozilla.org": {
+      "_comment_": "The updateLink will used since there is an updateHash to verify it.",
+
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi",
+          "update_hash": "sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "test_bug378216_10@tests.mozilla.org": {
+      "_comment_": "The updateLink will used since it is a secure URL.",
+
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/broken.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "test_bug378216_11@tests.mozilla.org": {
+      "_comment_": "The updateLink will used since it is a secure URL.",
+
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/broken.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "test_bug378216_12@tests.mozilla.org": {
+      "_comment_": "The updateLink will not be used since the updateHash verifying it is not strong enough.",
+
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi",
+          "update_hash": "sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "test_bug378216_13@tests.mozilla.org": {
+      "_comment_": "An update with a weak hash. The updateLink will used since it is a secure URL.",
+
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/broken.xpi",
+          "update_hash": "sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "_comment_": "There should be no information present for test_bug378216_14",
+
+    "test_bug378216_15@tests.mozilla.org": {
+      "_comment_": "Invalid update JSON",
+
+      "updates": "foo"
+    },
+
+    "ignore-compat@tests.mozilla.org": {
+      "_comment_": "Various updates available - one is not compatible, but compatibility checking is disabled",
+
+      "updates": [
+        {
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.1",
+              "advisory_max_version": "0.2"
+            }
+          }
+        },
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.5",
+              "advisory_max_version": "0.6"
+            }
+          }
+        },
+        {
+          "_comment_": "Update for future app versions - should never be compatible",
+          "version": "3.0",
+          "update_link": "https://example.com/addons/test3.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "advisory_max_version": "3"
+            }
+          }
+        }
+      ]
+    },
+
+    "compat-override@tests.mozilla.org": {
+      "_comment_": "Various updates available - one is not compatible, but compatibility checking is disabled",
+
+      "updates": [
+        {
+          "_comment_": "Has compatibility override, but it doesn't match this app version",
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.1",
+              "advisory_max_version": "0.2"
+            }
+          }
+        },
+        {
+          "_comment_": "Has compatibility override, so is incompaible",
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.5",
+              "advisory_max_version": "0.6"
+            }
+          }
+        },
+        {
+          "_comment_": "Update for future app versions - should never be compatible",
+          "version": "3.0",
+          "update_link": "https://example.com/addons/test3.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "advisory_max_version": "3"
+            }
+          }
+        }
+      ]
+    },
+
+    "compat-strict-optin@tests.mozilla.org": {
+      "_comment_": "Opt-in to strict compatibility checking",
+
+      "updates": [
+        {
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi",
+          "_comment_": "strictCompatibility: true",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.1",
+              "strict_max_version": "0.2"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

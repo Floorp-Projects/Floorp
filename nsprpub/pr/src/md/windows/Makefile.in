@@ -1,0 +1,72 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#! gmake
+
+MOD_DEPTH	= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+ifeq (,$(filter-out WIN95 WINCE WINMO, $(OS_TARGET)))
+CSRCS =          \
+    ntmisc.c \
+    ntsec.c   \
+    ntsem.c   \
+    ntinrval.c \
+    ntgc.c \
+	w95thred.c \
+	w95io.c \
+	w95cv.c \
+	w32rng.c \
+	w95sock.c \
+	win32_errors.c \
+    w32ipcsem.c \
+    w32poll.c \
+    w32shm.c \
+    w95dllmain.c \
+    $(NULL)
+else
+CSRCS =          \
+    ntdllmn.c \
+    ntmisc.c \
+    ntsec.c   \
+    ntsem.c   \
+    ntinrval.c \
+    ntgc.c \
+    ntthread.c \
+    ntio.c    \
+	win32_errors.c \
+    w32ipcsem.c \
+    w32poll.c \
+    w32rng.c \
+    w32shm.c \
+    $(NULL)
+endif
+
+TARGETS	= $(OBJS)
+
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+DEFINES += -D_NSPR_BUILD_
+
+include $(topsrcdir)/config/rules.mk
+
+export:: $(TARGETS)
+
+# Bug 122433 workaround: disable global optimization (-Og-) on ntio.c.
+ifdef MOZ_OPTIMIZE
+ifeq ($(OS_TARGET), WINNT)
+ifndef NS_USE_GCC
+$(OBJDIR)/ntio.$(OBJ_SUFFIX): ntio.c
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$@ -c $(CFLAGS) -Og- $<
+endif
+endif
+endif

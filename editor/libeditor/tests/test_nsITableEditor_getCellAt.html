@@ -1,0 +1,139 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.getCellAt()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  try {
+    SpecialPowers.unwrap(getTableEditor().getCellAt(undefined, 0, 0));
+    ok(false, "nsITableEditor.getCellAt(undefined) should cause throwing an exception when editor does not have Selection");
+  } catch (e) {
+    ok(true, "nsITableEditor.getCellAt(undefined) should cause throwing an exception when editor does not have Selection");
+  }
+
+  try {
+    SpecialPowers.unwrap(getTableEditor().getTableSize(null, 0, 0));
+    ok(false, "nsITableEditor.getCellAt(null) should cause throwing an exception when editor does not have Selection");
+  } catch (e) {
+    ok(true, "nsITableEditor.getCellAt(null) should cause throwing an exception when editor does not have Selection");
+  }
+
+  // XXX This is inconsistent behavior with other APIs.
+  try {
+    let cell = SpecialPowers.unwrap(getTableEditor().getCellAt(editor, 0, 0));
+    ok(true, "nsITableEditor.getCellAt() should not cause throwing exception even if given node is not a <table>");
+    is(cell, null, "nsITableEditor.getCellAt() should return null if given node is not a <table>");
+  } catch (e) {
+    ok(false, "nsITableEditor.getCellAt() should not cause throwing exception even if given node is not a <table>");
+  }
+
+  editor.innerHTML =
+    '<table id="table">' +
+      '<tr><td id="c1-1">cell1-1</td><td id="c1-2">cell1-2</td><td id="c1-3">cell1-3</td><td id="c1-4" colspan="2" rowspan="2">cell1-4</td></tr>' +
+      '<tr><td id="c2-1" rowspan="2">cell2-1</td><td id="c2-2">cell2-2<td id="c2-3">cell2-3</td></tr>' +
+      '<tr><td id="c3-2">cell3-2</td><td id="c3-3">cell3-3</td><td id="c3-4" colspan="2">cell3-4</td></tr>' +
+      '<tr><td id="c4-1" rowspan="4">cell4-1</td><td id="c4-2">' +
+        '<table id="inner-table"><tr><td id="c2-1-1">cell2-1-1</td><td id="c2-1-2">cell2-1-2</td></tr>' +
+          '<tr><td id="c2-2-1">cell2-2-1</td><td id="c2-2-2">cell2-2-2</td></table>' +
+        '</td><td id="c4-3">cell4-3</td><td id="c4-4">cell4-4</td><td id="c4-5">cell4-5</td></tr>' +
+      '<tr><td id="c5-2">cell5-2</td><td id="c5-3" colspan="2">cell5-3</td><td id="c5-5">cell5-5</td></tr>' +
+      '<tr><td id="c6-2">cell6-2</td><td id="c6-3">cell6-3</td><td id="c6-4"><p>cell6-4</p></td><td id="c6-5">cell6-5</td></tr>' +
+      '<tr><td id="c7-2" colspan="4">cell7-2</td></tr>' +
+    "</table>";
+  editor.scrollTop; // compute layout now.
+
+  const kTestsInParent = [
+    { row: 0, column: 0, expected: "c1-1" },
+    { row: 0, column: 3, expected: "c1-4" },
+    { row: 0, column: 4, expected: "c1-4" },
+    { row: 1, column: 3, expected: "c1-4" },
+    { row: 1, column: 4, expected: "c1-4" },
+    { row: 1, column: 0, expected: "c2-1" },
+    { row: 2, column: 0, expected: "c2-1" },
+    { row: 3, column: 0, expected: "c4-1" },
+    { row: 4, column: 0, expected: "c4-1" },
+    { row: 5, column: 0, expected: "c4-1" },
+    { row: 6, column: 0, expected: "c4-1" },
+    { row: 4, column: 2, expected: "c5-3" },
+    { row: 4, column: 3, expected: "c5-3" },
+    { row: 4, column: 4, expected: "c5-5" },
+    { row: 6, column: 1, expected: "c7-2" },
+    { row: 6, column: 2, expected: "c7-2" },
+    { row: 6, column: 3, expected: "c7-2" },
+    { row: 6, column: 4, expected: "c7-2" },
+    { row: 6, column: 5, expected: null },
+  ];
+
+  let table = document.getElementById("table");
+  for (const kTest of kTestsInParent) {
+    let cell = SpecialPowers.unwrap(getTableEditor().getCellAt(table, kTest.row, kTest.column));
+    if (kTest.expected === null) {
+      is(cell, null,
+         `Specified the parent <table> element directly (${kTest.row} - ${kTest.column})`);
+    } else {
+      is(cell.getAttribute("id"), kTest.expected,
+         `Specified the parent <table> element directly (${kTest.row} - ${kTest.column})`);
+    }
+    if (cell && cell.firstChild && cell.firstChild.nodeType == Node.TEXT_NODE) {
+      selection.collapse(cell.firstChild, 0);
+      cell = getTableEditor().getCellAt(null, kTest.row, kTest.column);
+      is(cell.getAttribute("id"), kTest.expected,
+         `Selection is collapsed in a cell element in the parent <table> (${kTest.row} - ${kTest.column})`);
+    }
+  }
+
+  const kTestsInChild = [
+    { row: 0, column: 0, expected: "c2-1-1" },
+    { row: 0, column: 1, expected: "c2-1-2" },
+    { row: 0, column: 2, expected: null },
+    { row: 1, column: 0, expected: "c2-2-1" },
+    { row: 1, column: 1, expected: "c2-2-2" },
+    { row: 2, column: 0, expected: null },
+  ];
+
+  let innerTable = document.getElementById("inner-table");
+  for (const kTest of kTestsInChild) {
+    let cell = SpecialPowers.unwrap(getTableEditor().getCellAt(innerTable, kTest.row, kTest.column));
+    if (kTest.expected === null) {
+      is(cell, null,
+         `Specified the inner <table> element directly (${kTest.row} - ${kTest.column})`);
+    } else {
+      is(cell.getAttribute("id"), kTest.expected,
+         `Specified the inner <table> element directly (${kTest.row} - ${kTest.column})`);
+    }
+    if (cell && cell.firstChild && cell.firstChild.nodeType == Node.TEXT_NODE) {
+      selection.collapse(cell.firstChild, 0);
+      cell = getTableEditor().getCellAt(null, kTest.row, kTest.column);
+      is(cell.getAttribute("id"), kTest.expected,
+         `Selection is collapsed in a cell element in the inner <table> (${kTest.row} - ${kTest.column})`);
+    }
+  }
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>

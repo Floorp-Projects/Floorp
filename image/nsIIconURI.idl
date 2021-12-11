@@ -1,0 +1,92 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIURL.idl"
+
+  /**
+   * nsIIconURI
+   *
+   * This interface derives from nsIURI, to provide additional information
+   * about moz-icon URIs.
+   *
+   * What *is* a moz-icon URI you ask?  Well, it has the following syntax:
+   *
+   * moz-icon:[<valid-url> | //<file-with-extension> | //stock/<stock-icon>]?
+   *            ['?'[<parameter-value-pairs>]]
+   *
+   * <valid-url> is a valid URL spec.
+   *
+   * <file-with-extension> is any filename with an extension, e.g. "dummy.html".
+   * If the file you want an icon for isn't known to exist, you can use this
+   * instead of a URL and just place a dummy file name with the extension or
+   * content type you want.
+   *
+   * <stock-icon> is the name of a platform-dependant stock icon.
+   *
+   * Legal parameter value pairs are listed below:
+   *
+   *   Parameter:   size
+   *   Values:      [<integer> | button | toolbar | toolbarsmall | menu |
+   *                 dialog]
+   *   Description: If integer, this is the desired size in square pixels of
+   *                the icon
+   *                Else, use the OS default for the specified keyword context.
+   *
+   *   Parameter:   state
+   *   Values:      [normal | disabled]
+   *   Description: The state of the icon.
+   *
+   *   Parameter:   contentType
+   *   Values:      <mime-type>
+   *   Description: The mime type we want an icon for. This is ignored by
+   *                stock images.
+   */
+
+[scriptable, builtinclass, uuid(f8fe5ef2-5f2b-43f3-857d-5b64d192c427)]
+interface nsIMozIconURI : nsIURI
+{
+  /// iconFile: the file URL contained within this moz-icon url, or null.
+  readonly attribute nsIURL iconURL;
+
+  /// imageSize: The image area in square pixels, defaults to 16 if unspecified.
+  readonly attribute unsigned long imageSize;
+
+  /// stockIcon: The stock icon name requested from the OS.
+   readonly attribute ACString stockIcon;
+
+  /// iconSize: The stock icon size requested from the OS.
+   readonly attribute ACString iconSize;
+
+  /// iconState: The stock icon state requested from the OS.
+   readonly attribute ACString iconState;
+
+  /// contentType: A valid mime type, or the empty string.
+  readonly attribute ACString contentType;
+
+  /// fileExtension: The file extension of the file which we are looking up.
+  readonly attribute ACString fileExtension;
+};
+
+%{C++
+
+// CID for nsMozIconURI, if implemented on this platform.
+#define NS_MOZICONURI_CID                            \
+{                                                    \
+    0x43a88e0e,                                      \
+    0x2d37,                                          \
+    0x11d5,                                          \
+    { 0x99, 0x7, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b }   \
+}
+
+#define NS_MOZICONURIMUTATOR_CID                     \
+{                                                    \
+    0x1460df3b,                                      \
+    0x774c,                                          \
+    0x4205,                                          \
+    {0x83, 0x49, 0x83, 0x8e, 0x50, 0x7c, 0x3e, 0xf9} \
+}
+
+%}

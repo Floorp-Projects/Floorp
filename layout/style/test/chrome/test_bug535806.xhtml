@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=535806
+-->
+<window title="Mozilla Bug 535806"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=535806"
+     target="_blank">Mozilla Bug 535806</a>
+  </body>
+
+  <iframe id="f"/>
+  
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 535806 **/
+  SimpleTest.waitForExplicitFinish();
+
+  window.addEventListener("load", function() {
+      $("f").setAttribute("src", "bug535806-html.html");
+    });
+
+  function htmlLoaded() {
+    $("f").setAttribute("src", "bug535806-xul.xhtml");
+  }
+
+  function xulLoaded() {
+    var doc = $("f").contentDocument;
+    is(doc.defaultView.getComputedStyle(doc.getElementById("s")).color,
+       "rgb(0, 128, 0)");
+    SimpleTest.finish();
+  }
+
+
+  ]]>
+  </script>
+</window>

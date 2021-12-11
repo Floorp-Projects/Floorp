@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test anchor and area policy attribute for Bug 1184781</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing referrer headers after redirects.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1184781
+  -->
+
+  <script type="application/javascript">
+
+  const SJS = "://example.com/tests/dom/security/test/referrer-policy/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "RP_HEADER"];
+
+  const testCases = [
+    {ACTION: ["generate-img-redirect-policy-test", "generate-iframe-redirect-policy-test"],
+      TESTS: [
+        {
+          ATTRIBUTE_POLICY: "no-referrer",
+          NAME: "no-referrer-with-no-meta",
+          DESC: "no-referrer (img/iframe) with no meta",
+          RESULT: "none"
+        },
+        {
+          ATTRIBUTE_POLICY: "origin",
+          NAME: "origin-with-no-meta",
+          DESC: "origin (img/iframe) with no meta",
+          RESULT: "origin"
+        },
+        {
+          ATTRIBUTE_POLICY: "unsafe-url",
+          NAME: "unsafe-url-with-no-meta",
+          DESC: "unsafe-url (img/iframe) with no meta",
+          RESULT: "full"
+        },
+        {
+          META_POLICY: "unsafe-url",
+          NAME: "unsafe-url-in-meta",
+          DESC: "unsafe-url in meta",
+          RESULT: "full"
+        },
+        {
+          META_POLICY: "origin",
+          NAME: "origin-in-meta",
+          DESC: "origin in meta",
+          RESULT: "origin"
+        },
+        {
+          META_POLICY: "no-referrer",
+          NAME: "no-referrer-in-meta",
+          DESC: "no-referrer in meta",
+          RESULT: "none"
+        },
+        {
+          META_POLICY: "origin-when-cross-origin",
+          NAME: "origin-when-cross-origin-in-meta",
+          DESC: "origin-when-cross-origin in meta",
+          RESULT: "origin"
+        },
+        {
+          ATTRIBUTE_POLICY: "no-referrer",
+          RP_HEADER: "origin",
+          NAME: "no-referrer-with-no-meta-origin-RP-header",
+          DESC: "no-referrer (img/iframe) with no meta, origin Referrer-Policy redirect header",
+          RESULT: "none"
+        },
+        {
+          ATTRIBUTE_POLICY: "origin",
+          RP_HEADER: "no-referrer",
+          NAME: "origin-with-no-meta-no-referrer-RP-header",
+          DESC: "origin (img/iframe) with no meta, no-referrer Referrer-Policy redirect header",
+          RESULT: "none"
+        },
+        {
+          ATTRIBUTE_POLICY: "unsafe-url",
+          RP_HEADER: "origin",
+          NAME: "unsafe-url-with-no-meta-origin-RP-header",
+          DESC: "unsafe-url (img/iframe) with no meta, origin Referrer-Policy redirect header",
+          RESULT: "origin"
+        },
+        {
+          META_POLICY: "unsafe-url",
+          RP_HEADER: "origin",
+          NAME: "unsafe-url-in-meta-origin-RP-header",
+          DESC: "unsafe-url in meta, origin Referrer-Policy redirect header",
+          RESULT: "origin"
+        },
+        {
+          META_POLICY: "origin",
+          RP_HEADER: "no-referrer",
+          NAME: "origin-in-meta-no-referrer-RP-header",
+          DESC: "origin in meta, no-referrer Referrer-Policy redirect header",
+          RESULT: "none"
+        },
+        {
+          META_POLICY: "no-referrer",
+          RP_HEADER: "origin",
+          NAME: "no-referrer-in-meta-origin-RP-header",
+          DESC: "no-referrer in meta, origin Referrer-Policy redirect header",
+          RESULT: "none"
+        },
+        {
+          META_POLICY: "origin-when-cross-origin",
+          RP_HEADER: "unsafe-url",
+          NAME: "origin-when-cross-origin-in-meta-unsafe-url-RP-header",
+          DESC: "origin-when-cross-origin in meta, unsafe-url Referrer-Policy redirect header",
+          RESULT: "origin"
+        }
+      ]
+    }
+  ];
+  </script>
+  <script type="application/javascript" src="/tests/dom/security/test/referrer-policy/referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>
+

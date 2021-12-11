@@ -1,0 +1,34 @@
+[package]
+name = "osclientcerts-static"
+version = "0.1.4"
+authors = ["Dana Keeler <dkeeler@mozilla.com>"]
+edition = "2018"
+description = "Platform-specific support for client authentication certificates in Firefox"
+repository = "https://github.com/mozkeeler/osclientcerts"
+license = "MPL-2.0"
+
+[dependencies]
+byteorder = "1.3"
+env_logger = {version = "0.8", default-features = false } # disable `regex` to reduce code size
+lazy_static = "1"
+log = "0.4"
+mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
+pkcs11 = "0.4"
+rsclientcerts = { path = "../rsclientcerts" }
+sha2 = "0.8"
+
+[target."cfg(target_os = \"macos\")".dependencies.core-foundation]
+version = "0.9"
+
+[target."cfg(target_os = \"macos\")".dependencies.libloading]
+version = "0.5"
+
+[target."cfg(target_os = \"macos\")".dependencies.rental]
+version = "0.5"
+
+[target."cfg(target_os = \"windows\")".dependencies.winapi]
+version = "0.3"
+features = ["wincrypt"]
+
+[lib]
+crate-type = ["staticlib"]

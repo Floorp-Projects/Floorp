@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=529328
+-->
+<head>
+  <title>Test for Bug 529328</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529328">Mozilla Bug 529328</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 529328 **/
+function testDOMTokenList() {
+  is(document.body.classList[-1], undefined, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList[0], undefined, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList[1], undefined, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList[2], undefined, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList.item(-1), null, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList.item(0), null, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList.item(1), null, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList.item(2), null, "Wrong value for out of bounds access (DOMTokenList)");
+
+  document.body.className = "a b";
+  is(document.body.classList[-1], undefined, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList[0], "a", "Wrong value for in bounds access (DOMTokenList)");
+  is(document.body.classList[1], "b", "Wrong value for in bounds access (DOMTokenList)");
+  is(document.body.classList[2], undefined, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList.item(-1), null, "Wrong value for out of bounds access (DOMTokenList)");
+  is(document.body.classList.item(0), "a", "Wrong value for in bounds access (DOMTokenList)");
+  is(document.body.classList.item(1), "b", "Wrong value for in bounds access (DOMTokenList)");
+  is(document.body.classList.item(2), null, "Wrong value for out of bounds access (DOMTokenList)");
+}
+
+function testDOMStringList() {
+  is(document.styleSheetSets[-1], undefined, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets[0], undefined, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets[1], undefined, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets[2], undefined, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(-1), null, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(0), null, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(1), null, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(2), null, "Wrong value for out of bounds access (DOMStringList)");
+
+  var s = document.createElement("style");
+  s.title = "a";
+  document.head.appendChild(s);
+  s = document.createElement("style");
+  s.title = "b";
+  document.head.appendChild(s);
+
+  is(document.styleSheetSets[-1], undefined, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets[0], "a", "Wrong value for in bounds access (DOMStringList)");
+  is(document.styleSheetSets[1], "b", "Wrong value for in bounds access (DOMStringList)");
+  is(document.styleSheetSets[2], undefined, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(-1), null, "Wrong value for out of bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(0), "a", "Wrong value for in bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(1), "b", "Wrong value for in bounds access (DOMStringList)");
+  is(document.styleSheetSets.item(2), null, "Wrong value for out of bounds access (DOMStringList)");
+}
+
+function testMediaList() {
+  var s = document.createElement("style");
+  document.head.appendChild(s);
+  is(s.sheet.media[-1], undefined, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media[0], undefined, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media[1], undefined, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media[2], undefined, "Wrong value for out of bounds access (MediaList) (MediaList)");
+  is(s.sheet.media.item(-1), null, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media.item(0), null, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media.item(1), null, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media.item(2), null, "Wrong value for out of bounds access (MediaList) (MediaList)");
+
+  s.setAttribute("media", "a, b");
+
+  is(s.sheet.media[-1], undefined, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media[0], "a", "Wrong value for in bounds access (MediaList)");
+  is(s.sheet.media[1], "b", "Wrong value for in bounds access (MediaList)");
+  is(s.sheet.media[2], undefined, "Wrong value for out of bounds access (MediaList) (MediaList)");
+  is(s.sheet.media.item(-1), null, "Wrong value for out of bounds access (MediaList)");
+  is(s.sheet.media.item(0), "a", "Wrong value for in bounds access (MediaList)");
+  is(s.sheet.media.item(1), "b", "Wrong value for in bounds access (MediaList)");
+  is(s.sheet.media.item(2), null, "Wrong value for out of bounds access (MediaList) (MediaList)");
+}
+
+function testCSSStyleDeclaration() {
+  var s = document.createElement("span");
+
+  is(s.style[-1], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[0], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[1], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[2], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style.item(-1), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style.item(0), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style.item(1), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style.item(2), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+
+  s.setAttribute("style", "color: blue; z-index: 42;");
+
+  is(s.style[-1], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[0], "color", "Wrong value for in bounds access (CSSStyleDeclaration)");
+  is(s.style[1], "z-index", "Wrong value for in bounds access (CSSStyleDeclaration)");
+  is(s.style[2], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style.item(-1), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style.item(0), "color", "Wrong value for in bounds access (CSSStyleDeclaration)");
+  is(s.style.item(1), "z-index", "Wrong value for in bounds access (CSSStyleDeclaration)");
+  is(s.style.item(2), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+}
+
+testDOMTokenList();
+testDOMStringList();
+testMediaList();
+testCSSStyleDeclaration();
+</script>
+</pre>
+</body>
+</html>

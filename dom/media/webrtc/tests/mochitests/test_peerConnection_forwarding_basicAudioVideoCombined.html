@@ -1,0 +1,41 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "931903",
+    title: "Forwarding a stream from a combined audio/video peerconnection to another"
+  });
+
+runNetworkTest(function() {
+  var gumTest = new PeerConnectionTest();
+
+  var forwardingOptions = { config_local: { label_suffix: "forwarded" },
+                            config_remote: { label_suffix: "forwarded" } };
+  var forwardingTest = new PeerConnectionTest(forwardingOptions);
+
+  gumTest.setMediaConstraints([{audio: true, video: true}], []);
+  forwardingTest.setMediaConstraints([{audio: true, video: true}], []);
+  forwardingTest.chain.replace("PC_LOCAL_GUM", [
+    function PC_FORWARDING_CAPTUREVIDEO(test) {
+      var streams = gumTest.pcRemote._pc.getRemoteStreams();
+      is(streams.length, 1, "One stream to forward");
+      is(streams[0].getTracks().length, 2, "Forwarded stream has 2 tracks");
+      forwardingTest.pcLocal.attachLocalStream(streams[0]);
+      return Promise.resolve();
+    }
+  ]);
+  gumTest.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
+  return gumTest.chain.execute()
+    .then(() => forwardingTest.chain.execute())
+    .then(() => gumTest.close())
+    .then(() => forwardingTest.close());
+});
+</script>
+</pre>
+</body>
+</html>

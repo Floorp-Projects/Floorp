@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=644542
+-->
+<head>
+  <title>Test for Bug 644542</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    select:after {
+	    content: ' appended string';
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=644542">Mozilla Bug 644542</a>
+<p id="display">
+  <form method="post" action="">
+    <select id="select">
+      <option value="1">1</option>
+      <option value="2">2</option>
+    </select>
+  </form>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 644542 **/
+
+var select = document.getElementById("select");
+
+var clicks = 0;
+
+function click() {
+    synthesizeMouseAtCenter(select, { });
+    ++clicks;
+
+    // At least two clicks were required for bug 644542, sometimes more;
+    // delay is long enough that this doesn't look like a double
+    // click, and also allows time for popup to show and for painting.
+    setTimeout(clicks < 4 ? click : done, 500);
+}
+
+function done() {
+    ok(true, "No crash on opening dropdown");
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+// waitForFocus is most likely not the right thing to wait for, but
+// without this the first click is ineffective (even with a reflow forced
+// before synthesizeMouse).
+SimpleTest.waitForFocus(click);
+</script>
+</pre>
+</body>
+</html>

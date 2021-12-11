@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing with floated subframe</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    #div1 {
+      position: relative;
+    }
+    #div2 {
+      width: 300px;
+      float: left;
+    }
+    #subframe {
+      overflow: auto;
+    }
+    #make-root-scrollable {
+      height: 5000px;
+    }
+  </style>
+</head>
+<body>
+  <div id="div1">
+    <div id="div2">
+      <div id="subframe">
+        <pre>A line of text that overflows because it's sufficiently long</pre>
+      </div>
+    </div>
+  </div>
+  <div id="make-root-scrollable"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var utils = getHitTestConfig().utils;
+
+  hitTestScrollbar({
+    element: document.getElementById("subframe"),
+    directions: { horizontal: true },
+    expectedScrollId: utils.getViewId(document.scrollingElement),
+    expectedLayersId: utils.getLayersId(),
+    trackLocation: ScrollbarTrackLocation.START,
+    expectThumb: true,
+    layerState: LayerState.INACTIVE,
+  });
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

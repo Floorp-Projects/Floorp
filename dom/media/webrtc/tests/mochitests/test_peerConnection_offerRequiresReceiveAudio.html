@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "850275",
+    title: "Simple offer media constraint test with audio"
+  });
+
+  runNetworkTest(function() {
+    var test = new PeerConnectionTest();
+    test.setMediaConstraints([], [{audio: true}]);
+    test.setOfferOptions({ offerToReceiveAudio: true });
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

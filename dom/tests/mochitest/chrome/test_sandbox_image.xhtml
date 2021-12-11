@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=616397
+-->
+<window title="Mozilla Bug 616397"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <iframe id="t"></iframe>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=616397"
+     target="_blank">Mozilla Bug 616397</a>
+  </body>
+
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 616397 **/
+    function doTest() {
+      var win = $("t").contentWindow;
+      var sandbox = Cu.Sandbox(win, { sandboxPrototype: win });
+      var result = Cu.evalInSandbox("new Image()", sandbox);
+      isnot(result, null, "Should have an image");
+      is(result.tagName, "IMG", "Should have the right tag name");
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+</window>

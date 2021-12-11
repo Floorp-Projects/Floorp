@@ -1,0 +1,548 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Form History Autocomplete</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form History test: form field autocomplete
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+
+  <!-- normal, basic form -->
+  <form id="form1" onsubmit="return false;">
+    <input list="suggest" type="text" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with autocomplete=off on input -->
+  <form id="form3" onsubmit="return false;">
+    <input list="suggest" type="text" name="field2" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with autocomplete=off on form -->
+  <form id="form4" autocomplete="off" onsubmit="return false;">
+    <input list="suggest" type="text" name="field2">
+    <button type="submit">Submit</button>
+  </form>
+
+  <datalist id="suggest">
+    <option value="Google" label="PASS1">FAIL</option>
+    <option value="Reddit">PASS2</option>
+    <option value="final"></option>
+  </datalist>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* eslint-disable complexity */
+
+/** Test for Form History autocomplete **/
+
+var input = $_(1, "field1");
+
+function setupFormHistory(aCallback) {
+  updateFormHistory([
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "historyvalue" },
+    { op: "add", fieldname: "field2", value: "othervalue" },
+  ], aCallback);
+}
+
+function setForm(value) {
+  input.value = value;
+  input.focus();
+}
+
+// Restore the form to the default state.
+function restoreForm() {
+  setForm("");
+}
+
+// Check for expected form data.
+function checkForm(expectedValue) {
+  let formID = input.parentNode.id;
+  is(input.value, expectedValue, "Checking " + formID + " input");
+}
+
+var testNum = 0;
+var prevValue;
+var expectingPopup = false;
+var kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
+
+function expectPopup() {
+  info("expecting popup for test " + testNum);
+  expectingPopup = true;
+}
+
+function popupShownListener() {
+  info("popup shown for test " + testNum);
+  if (expectingPopup) {
+    expectingPopup = false;
+    SimpleTest.executeSoon(runTest);
+  } else {
+    ok(false, "Autocomplete popup not expected during test " + testNum);
+  }
+}
+
+registerPopupShownListener(popupShownListener);
+
+/*
+* Main section of test...
+*
+* This is a bit hacky, as many operations happen asynchronously.
+* Various mechanisms call runTests as a result of operations:
+*   - set expectingPopup to true, and the next test will occur when the autocomplete popup is shown
+*   - call waitForMenuChange(x) to run the next test when the autocomplete popup
+*     to have x items in it
+*/
+async function runTest() {
+  testNum++;
+  let datalist;
+
+  info("Starting test #" + testNum);
+
+  switch (testNum) {
+    case 1:
+      // Make sure initial form is empty.
+      checkForm("");
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+    case 2:
+      checkMenuEntries(["historyvalue", "PASS1", "PASS2", "final"], testNum);
+      // Check first entry
+      synthesizeKey("KEY_ArrowDown");
+      checkForm(""); // value shouldn't update
+      synthesizeKey("KEY_Enter");
+      checkForm("historyvalue");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 3:
+      // Check second entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 4:
+      // Check third entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Reddit");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 5:
+      // Check fourth entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("final");
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 6:
+      // Delete the first entry (of 3)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+      waitForMenuChange(3);
+      break;
+
+    case 7:
+      checkForm("");
+      countEntries("field1", "historyvalue",
+                   function(num) {
+                     ok(!num, testNum + " checking that form history value was deleted");
+                     runTest();
+                   });
+      break;
+
+    case 8:
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 9:
+      // Test deletion
+      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
+      // Check the new first entry (of 3)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 10:
+      // Test autocompletion of datalists with cached results.
+      sendString("PAS");
+      waitForMenuChange(2);
+      break;
+
+    case 11:
+      // Continuation of test 10
+      sendString("S1");
+      waitForMenuChange(1);
+      break;
+
+    case 12:
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+
+      // Trigger autocomplete popup
+      // Look at form 3, try to trigger autocomplete popup
+      input.value = "";
+      input = $_(3, "field2");
+      testNum = 99;
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 100:
+      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
+      // Check first entry
+      synthesizeKey("KEY_ArrowDown");
+      checkForm(""); // value shouldn't update
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 101:
+      // Check second entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Reddit");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 102:
+      // Check third entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("final");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 103:
+      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
+      // Check first entry
+      synthesizeKey("KEY_ArrowDown");
+      checkForm(""); // value shouldn't update
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 104:
+      // Check second entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Reddit");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 105:
+      // Check third entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("final");
+
+      testNum = 199;
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    // Test dynamic updates.
+    // For some reasons, when there is an update of the list, the selection is
+    // lost so we need to go down like if we were at the beginning of the list
+    // again.
+    case 200:
+      // Removing the second element while on the first then going down and
+      // push enter. Value should be one from the third suggesion.
+      synthesizeKey("KEY_ArrowDown");
+      datalist = document.getElementById("suggest");
+      let toRemove = datalist.children[1];
+      datalist.removeChild(toRemove);
+
+      SimpleTest.executeSoon(function() {
+        synthesizeKey("KEY_ArrowDown");
+        synthesizeKey("KEY_ArrowDown");
+        synthesizeKey("KEY_Enter");
+        checkForm("final");
+
+        // Restore the element.
+        datalist.insertBefore(toRemove, datalist.children[1]);
+        expectPopup();
+        restoreForm();
+        synthesizeKey("KEY_ArrowDown");
+      });
+      break;
+
+    case 201:
+      // Adding an attribute after the first one while on the first then going
+      // down and push enter. Value should be the on from the new suggestion.
+      synthesizeKey("KEY_ArrowDown");
+      datalist = document.getElementById("suggest");
+      let added = new Option("Foo");
+      datalist.insertBefore(added, datalist.children[1]);
+      waitForMenuChange(4);
+      break;
+
+    case 202:
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Foo");
+
+      // Remove the element.
+      datalist = document.getElementById("suggest");
+      datalist.removeChild(datalist.children[1]);
+      waitForMenuChange(0);
+      break;
+
+    case 203:
+      // Change the first element value attribute.
+      restoreForm();
+      datalist = document.getElementById("suggest");
+      prevValue = datalist.children[0].value;
+      datalist.children[0].value = "foo";
+      expectPopup();
+      break;
+
+    case 204:
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("foo");
+
+      datalist = document.getElementById("suggest");
+      datalist.children[0].value = prevValue;
+      waitForMenuChange(0);
+      break;
+
+    case 205:
+      // Change the textContent to update the value attribute.
+      restoreForm();
+      datalist = document.getElementById("suggest");
+      prevValue = datalist.children[0].getAttribute("value");
+      datalist.children[0].removeAttribute("value");
+      datalist.children[0].textContent = "foobar";
+      expectPopup();
+      break;
+
+    case 206:
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("foobar");
+
+      datalist = document.getElementById("suggest");
+      datalist.children[0].setAttribute("value", prevValue);
+      testNum = 299;
+      waitForMenuChange(0);
+      break;
+
+    // Tests for filtering (or not).
+    case 300:
+      // Filters with first letter of the word.
+      restoreForm();
+      sendString("f");
+      expectPopup();
+      break;
+
+    case 301:
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("final");
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 302:
+      // Filter with a letter in the middle of the word.
+      sendString("in");
+      waitForMenuChange(1);
+      break;
+
+    case 303:
+      // Continuation of test 302.
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("final");
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 304:
+      // Filter is disabled with mozNoFilter.
+      input.setAttribute("mozNoFilter", "true");
+      sendString("f");
+      waitForMenuChange(3); // no change
+      break;
+
+    case 305:
+      // Continuation of test 304.
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+      input.removeAttribute("mozNoFilter");
+      testNum = 399;
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 400: {
+      let beforeInputFired = false;
+      input.addEventListener("beforeinput", (event) => {
+        beforeInputFired = true;
+        ok(event instanceof InputEvent,
+           `${testNum} "beforeinput" event should be dispatched with InputEvent interface`);
+        ok(event.bubbles, `${testNum} "beforeinput" event should bubble`);
+        is(event.cancelable, kSetUserInputCancelable, `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed`);
+        is(event.inputType, "insertReplacementText", `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
+        is(event.data, "Google", `${testNum} data of "beforeinput" event should be "Google"`);
+        is(event.dataTransfer, null, `${testNum} dataTransfer of "beforeinput" event should be null`);
+        is(event.getTargetRanges().length, 0, `${testNum} getTargetRanges() of "beforeinput" event should be empty array`);
+      }, {once: true});
+      let inputFired = false;
+      input.addEventListener("input", function(event) {
+        inputFired = true;
+        ok(event instanceof InputEvent,
+           `${testNum} "input" event should be dispatched with InputEvent interface`);
+        ok(event.bubbles, `${testNum} "input" event should bubble`);
+        ok(!event.cancelable, `${testNum} "input" event should be cancelable`);
+        is(event.inputType, "insertReplacementText", `${testNum} inputType of "input" event should be "insertReplacementText"`);
+        is(event.data, "Google", `${testNum} data of "input" event should be "Google"`);
+        is(event.dataTransfer, null, `${testNum} dataTransfer of "input" event should be null`);
+        is(event.getTargetRanges().length, 0, `${testNum} getTargetRanges() of "input" event should be empty array`);
+        checkForm("Google");
+      }, {once: true});
+
+      synthesizeKey("KEY_ArrowDown");
+      checkForm("");
+      synthesizeKey("KEY_Enter");
+      ok(beforeInputFired, `${testNum} "beforeinput" event should've been fired`);
+      ok(inputFired, `${testNum} "input" event should've been fired`);
+
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+    }
+
+    case 401: {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.input_event.allow_to_cancel_set_user_input", true]],
+      });
+      input.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
+      let inputFired = false;
+      input.addEventListener("input", () => { inputFired = true; }, {once: true});
+
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      checkForm("");
+      synthesizeKey("KEY_Enter");
+      ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
+      checkForm("");
+
+      input.blur();
+      await SpecialPowers.pushPrefEnv({
+        clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
+      });
+      SimpleTest.finish();
+      break;
+    }
+
+    default:
+      ok(false, "Unexpected invocation of test #" + testNum);
+      SimpleTest.finish();
+  }
+}
+
+function waitForMenuChange(expectedCount) {
+  notifyMenuChanged(expectedCount, null, runTest);
+}
+
+function checkMenuEntries(expectedValues, testNumber) {
+  let actualValues = getMenuEntries();
+  is(actualValues.length, expectedValues.length, testNumber + " Checking length of expected menu");
+  for (let i = 0; i < expectedValues.length; i++) {
+    is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #" + i);
+  }
+}
+
+window.onload = () => setupFormHistory(runTest);
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

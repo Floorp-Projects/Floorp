@@ -1,0 +1,17 @@
+<script>
+function go() {
+  a.setAttribute("contenteditable", "true");
+  b.addEventListener("DOMNodeRemoved", eh);
+  b.appendChild(c);
+}
+function eh() {
+  document.body.appendChild(b);
+  document.execCommand("justifyFull", false);
+  document.execCommand("delete", false);
+}
+</script>
+<body onload=go()>
+<li id="a">
+A
+<pre id="b" contenteditable="true">
+<input autofocus="autofocus" id="c">

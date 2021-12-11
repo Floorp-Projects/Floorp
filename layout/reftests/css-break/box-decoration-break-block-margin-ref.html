@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Testcase for box-decoration-break:clone, block margin</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1025669">
+  <meta charset="utf-8">
+  <style type="text/css">
+    html,body {
+      color:black; background-color:white; font-size:16px; padding:10px; margin:0;
+    }
+
+    .inner {
+      border: 5px dashed blue;
+      width: 40px;
+      background: lime;
+      background-clip: padding-box;
+      margin: 0px 3px 15px 1px;
+      position: relative;
+    }
+
+    .inner.first {
+      top: 7px;
+    }
+
+    .columns {
+      columns: 3;
+      width: 250px;
+      height: 50px;
+      background: grey;
+    }
+
+    .outer {
+      margin-top: 2px;
+      height: 50px;
+      width: 250px;
+      background: grey;
+    }
+
+    .unbalanced {
+      column-fill: auto;
+    }
+
+    #t2 .inner { border-style:none; height: 38px; }
+  </style>
+</head>
+<body>
+
+<div class="outer"><div class="columns"><div class="inner first" style="height:22px;" ></div><div class="inner" style="height:29px;"></div><div class="inner" style="height:28px;"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div class="inner first" style="height:33px;"></div><div class="inner" style="height:40px;"></div><div class="inner" style="height:6px"></div></div></div>
+<div class="outer"><div class="columns"><div class="inner first" style="height:25px;"></div><div class="inner" style="height:32px"></div><div class="inner" style="height:30px"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div class="inner first" style="height:33px;"></div><div class="inner" style="height:40px;"></div><div class="inner" style="height:11px"></div></div></div>
+
+<div id="t2">
+<div class="outer"><div class="columns unbalanced"><div class="inner first" style="height:43px"></div><div class="inner" style="height:36px"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div style="height:4px"></div><div class="inner first" style="height:39px"></div><div class="inner" style="height:40px"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div class="inner first" style="height:43px"></div><div class="inner" style="height:36px"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div style="height:4px"></div><div class="inner first" style="height:39px"></div><div class="inner" style="height:40px"></div></div></div>
+</div>
+
+</body>
+</html>

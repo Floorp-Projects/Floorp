@@ -1,0 +1,66 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * Tests for timings columns. Note that the column
+ * header is visible only if there are requests in the list.
+ */
+add_task(async function() {
+  // Using https-first for this test is blocked on Bug 1733420.
+  // We expect a > 0 latency, but we always get -1 for HTTPS requests using
+  // httpd.js.
+  await pushPref("dom.security.https_first", false);
+
+  const { monitor } = await initNetMonitor(SIMPLE_URL, {
+    requestCount: 1,
+  });
+  info("Starting test... ");
+
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  store.dispatch(Actions.batchEnable(false));
+
+  const visibleColumns = store.getState().ui.columns;
+
+  const wait = waitForNetworkEvents(monitor, 1);
+  await reloadBrowser();
+  await wait;
+
+  // Hide the waterfall column to make sure timing data are fetched
+  // by the other timing columns ("endTime", "responseTime", "duration",
+  // "latency").
+  // Note that all these timing columns are based on the same
+  // `RequestListColumnTime` component.
+  if (visibleColumns.waterfall) {
+    await hideColumn(monitor, "waterfall");
+  }
+
+  ["endTime", "responseTime", "duration", "latency"].forEach(async column => {
+    if (!visibleColumns[column]) {
+      await showColumn(monitor, column);
+    }
+  });
+
+  const onNetworkEvents = waitForNetworkEvents(monitor, 1);
+  await reloadBrowser();
+  await onNetworkEvents;
+
+  // There should be one request in the list.
+  const requestItems = document.querySelectorAll(".request-list-item");
+  is(requestItems.length, 1, "There must be one visible item");
+
+  const item = requestItems[0];
+  const types = ["end", "response", "duration", "latency"];
+
+  for (const t of types) {
+    await waitUntil(() => {
+      const node = item.querySelector(".requests-list-" + t + "-time");
+      const value = parseInt(node.textContent, 10);
+      return value > 0;
+    });
+  }
+
+  await teardown(monitor);
+});

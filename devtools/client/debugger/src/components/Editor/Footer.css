@@ -1,0 +1,81 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.source-footer {
+  background: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  position: absolute;
+  display: flex;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 1;
+  z-index: 1;
+  width: calc(100% - 1px);
+  user-select: none;
+  height: var(--editor-footer-height);
+  box-sizing: border-box;
+}
+
+.source-footer-start {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+}
+
+.source-footer-end {
+  display: flex;
+  margin-left: auto;
+}
+
+.source-footer .commands * {
+  user-select: none;
+}
+
+.source-footer .commands {
+  display: flex;
+}
+
+.source-footer .commands .action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 200ms;
+  border: none;
+  background: transparent;
+  padding: 4px 6px;
+}
+
+.source-footer .commands button.action:hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+:root.theme-dark .source-footer .commands .action {
+  fill: var(--theme-body-color);
+}
+
+:root.theme-dark .source-footer .commands .action:hover {
+  fill: var(--theme-selection-color);
+}
+
+.source-footer .blackboxed .img.blackBox {
+  background-color: var(--theme-icon-checked-color);
+}
+
+.source-footer .mapped-source,
+.source-footer .cursor-position {
+  color: var(--theme-body-color);
+  padding-right: 2.5px;
+}
+
+.source-footer .mapped-source {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-footer .cursor-position {
+  padding: 5px;
+  white-space: nowrap;
+}

@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2 sts=2 cin
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsISerializable.idl"
+
+interface nsIPrincipal;
+interface nsIURI;
+
+/**
+ * Cookie jar settings for top-level documents. Please see CookieJarSettings.h
+ * for more details.
+ */
+[scriptable, builtinclass, uuid(3ec40331-7cf0-4b71-ba2a-2265aab8f6bc)]
+interface nsICookieJarSettings : nsISerializable
+{
+  /**
+   * CookieBehavior at the loading of the document. Any other loadInfo
+   * inherits it from its document's loadInfo. If there is not a document
+   * involved, cookieBehavior is reject.
+   */
+  [infallible] readonly attribute unsigned long cookieBehavior;
+
+  /**
+   * First-Party Isolation state at the loading of the document.
+   */
+  [infallible] readonly attribute boolean isFirstPartyIsolated;
+
+  /**
+   * Whether our cookie behavior mandates rejecting third-party contexts.
+   */
+  [infallible] readonly attribute boolean rejectThirdPartyContexts;
+
+  [infallible] readonly attribute boolean limitForeignContexts;
+
+  [infallible] readonly attribute boolean blockingAllThirdPartyContexts;
+  
+  [infallible] readonly attribute boolean blockingAllContexts;
+  /**
+   * Whether our cookie behavior mandates partitioning third-party content.
+   */
+  [infallible] attribute boolean partitionForeign;
+
+  /**
+   * Whether the top-level document is on the content blocking allow list.
+   */
+  [infallible] readonly attribute boolean isOnContentBlockingAllowList;
+
+  /**
+   * The key used for partitioning.
+   */
+  readonly attribute AString partitionKey;
+
+  /**
+   * CookiePermission at the loading of the document for a particular
+   * principal. It returns the same cookiePermission also in case it changes
+   * during the life-time of the top document.
+   */
+  unsigned long cookiePermission(in nsIPrincipal aPrincipal);
+
+  /**
+   * Initiate the cookieJarSettings with a URI. The aURI will be used to build
+   * the partition key for this cookieJarSettings. This function is added for
+   * js code to be able to set the partitionKey from a first-party URI.
+   *
+   * The aIsPrivate indicates if this cookieJarSettings is initiated for the
+   * private browsing mode or not. If aIsPrivate was true, it will get
+   * cookieBehavior from the pref "network.cookie.cookieBehavior" which is for
+   * the regular browsing mode. Otherwise, it will get from the pref
+   * "network.cookie.cookieBehavior.pbmode" for the private browsing mode.
+   */
+  void initWithURI(in nsIURI aURI, in boolean aIsPrivate);
+};

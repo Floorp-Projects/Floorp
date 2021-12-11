@@ -1,0 +1,43 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIChannel.idl"
+
+[uuid(3e9800f8-edb7-4c9a-9285-09b4f045b019)]
+interface nsIViewSourceChannel : nsIChannel
+{
+    /**
+     * The actual (MIME) content type of the data.
+     *
+     * nsIViewSourceChannel returns a content type of
+     * "application/x-view-source" if you ask it for the contentType
+     * attribute.
+     *
+     * However, callers interested in finding out or setting the
+     * actual content type can utilize this attribute.
+     */
+    [must_use] attribute ACString originalContentType;
+
+    /**
+     * Whether the channel was created to view the source of a srcdoc document.
+     */
+    [must_use] readonly attribute boolean isSrcdocChannel;
+
+    /**
+     * Set to indicate the base URI.  If this channel is a srcdoc channel, it
+     * returns the base URI provided by the embedded channel.  It is used to
+     * provide an indication of the base URI in circumstances where it isn't
+     * otherwise recoverable.  Returns null when it isn't set and isn't a
+     * srcdoc channel.
+     */
+    [must_use] attribute nsIURI baseURI;
+
+    /**
+     * Get the inner channel wrapped by this nsIViewSourceChannel.
+     */
+    [notxpcom, nostdcall] nsIChannel getInnerChannel();
+};
+
+

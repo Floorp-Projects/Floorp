@@ -1,0 +1,1016 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Webconsole specific theme variables */
+:root {
+  /* Minimum height of a message (excluding borders) */
+  --console-row-height: 20px;
+  /* We need a unitless line-height to render formatted messages correctly.
+   * Target line-height computed value is 14px, for a 11px font-size. */
+  --console-output-line-height: calc(14 / 11);
+  --console-output-vertical-padding: 3px;
+  /* Additional vertical padding used on the JSTerm and EagerEvaluation
+   * containers. Set to 0 to make the messages and input seamless. */
+  --console-input-extra-padding: 2px;
+  /* Width of the left gutter where icons appear */
+  --console-inline-start-gutter: 32px;
+  /* Icons perfectly centered in the left gutter "feel" closer to the window
+   * edge than to message text. This value pushes them slightly to the right. */
+  --console-icon-horizontal-offset: 1px;
+  --console-warning-background: var(--theme-warning-background);
+  --console-warning-border: var(--theme-warning-border);
+  --console-warning-color: var(--theme-warning-color);
+}
+
+.theme-dark {
+  --console-input-background: var(--theme-tab-toolbar-background);
+  --console-message-background: var(--theme-body-background);
+  --console-message-border: var(--theme-splitter-color);
+  --console-message-color: var(--theme-text-color-strong);
+  --console-error-background: hsl(345, 23%, 24%);
+  --console-error-border: hsl(345, 30%, 35%);
+  --console-error-color: var(--red-20);
+  --console-navigation-color: var(--theme-highlight-blue);
+  --console-navigation-border: var(--blue-60);
+  --console-indent-border-color: var(--theme-highlight-blue);
+  --console-repeat-bubble-background: var(--blue-60);
+
+  /* TODO in bug 1549195: colors used in shared components (e.g. Reps) should
+     be renamed and/or moved to variables.css so they work everywhere */
+  --error-color: var(--red-20);
+  --console-output-color: white;
+}
+
+.theme-light {
+  --console-input-background: var(--theme-body-background);
+  --console-message-background: var(--theme-body-background);
+  --console-message-border: #f2f2f4; /* between Grey 10 and Grey 20 */
+  --console-message-color: var(--theme-text-color-strong);
+  --console-error-background: hsl(344, 73%, 97%);
+  --console-error-border: rgba(215, 0, 34, 0.12); /* Red 60 + opacity */
+  --console-error-color: var(--red-70);
+  --console-navigation-color: var(--theme-highlight-blue);
+  --console-navigation-border: var(--blue-30);
+  --console-indent-border-color: var(--theme-highlight-blue);
+  --console-repeat-bubble-background: var(--theme-highlight-blue);
+
+  /* TODO in bug 1549195: colors used in shared components (e.g. Reps) should
+     be renamed and/or moved to variables.css so they work everywhere */
+  --error-color: var(--red-70);
+  --console-output-color: var(--grey-90);
+}
+
+/* General output styles */
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * Stack messages on the z axis so that we can make their borders overlap
+ * and show color borders on top:
+ *
+ *   -----------------  <-- Red
+ *   Error message
+ *   -----------------  <-- Red
+ *   Normal message
+ *   -----------------  <-- Grey
+ *
+ * and:
+ *
+ *   -----------------  <-- Grey
+ *   Normal message
+ *   -----------------  <-- Red
+ *   Error message
+ *   -----------------  <-- Red
+ *
+ * The exact stacking order is:
+ *
+ *   - z-index: 3 = Navigation
+ *   - z-index: 2 = Errors and warnings
+ *   - z-index: 1 = Other (console.log, console.info, requests, etc.)
+ */
+.message {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  /* Make the top border cover the previous message's bottom border */
+  margin-top: -1px;
+  /* Min height is the target row height plus borders */
+  min-height: calc(var(--console-row-height) + 2px);
+  border-top: 1px solid var(--console-message-border);
+  border-bottom: 1px solid var(--console-message-border);
+  /* Avoid vertical padding, so that we can draw full-height items (e.g. indent guides).
+   * Use vertical margins of --console-output-vertical-padding on children instead. */
+  padding-block: 0;
+  /* Layout of the 32px-wide left gutter:
+   * | 4px message padding | 24px icon container | 4px icon margin |
+   * Note: on hover we show a 3px pseudo-border on top of the left padding. */
+  padding-inline-start: 4px;
+  padding-inline-end: 8px;
+  font-size: var(--theme-code-font-size);
+  line-height: var(--console-output-line-height);
+  color: var(--console-message-color);
+  background-color: var(--console-message-background);
+}
+
+@media (min-width: 1000px) {
+  .message {
+    padding-inline-end: 12px;
+  }
+}
+
+/* Always hide the border of the first message, but keep its spacing */
+.message:first-child {
+  border-top-color: transparent !important;
+}
+
+/* We already paint a top border on jsterm-input-container (and we need to keep
+ * it when scrolling console content), so remove the last item's border. */
+ .webconsole-app:not(.jsterm-editor) .message:last-child {
+  border-bottom-width: 0;
+  /* Adjust the min-height since we now only have a single border. */
+  min-height: calc(var(--console-row-height) + 1px);
+}
+
+/*
+ * By default, prevent any element in message to overflow.
+ * We exclude network messages as it may cause issues in the network detail panel.
+ * This makes console reflows faster (See Bug 1487457).
+ */
+.message:not(.network) * {
+  overflow: hidden;
+}
+
+.message.error {
+  z-index: 2;
+  color: var(--console-error-color);
+  border-color: var(--console-error-border);
+  background-color: var(--console-error-background);
+}
+
+.message.warn {
+  z-index: 2;
+  color: var(--console-warning-color);
+  border-color: var(--console-warning-border);
+  background-color: var(--console-warning-background);
+}
+
+.message.navigationMarker {
+  z-index: 3;
+  color: var(--console-navigation-color);
+  border-color: var(--console-navigation-border);
+}
+
+.message.startGroup,
+.message.startGroupCollapsed {
+  --console-indent-border-color: transparent;
+}
+
+/* Hide border between a command and its result */
+.message.command + .result.log {
+  border-top-width: 0;
+}
+
+.message > .prefix,
+.message > .timestamp {
+  flex: none;
+  color: var(--theme-comment);
+  margin: var(--console-output-vertical-padding) 4px;
+}
+
+@media (max-width: 500px) {
+  .message > .timestamp {
+    display: none;
+  }
+}
+
+.message > .indent {
+  flex: none;
+  display: inline-block;
+  /* Display indent borders above the message's top and bottom border.
+   * This avoids interrupted indent lines (looking like dashes). */
+  margin-block: -1px;
+  margin-inline-start: 12px;
+  border-inline-end: solid 1px var(--console-indent-border-color);
+}
+
+.message > .indent.warning-indent {
+  border-inline-end-color: var(--console-warning-color);
+}
+
+.message > .indent[data-indent="0"] {
+  display: none;
+}
+
+/* Center first level indent within the left gutter */
+.message:not(.startGroup, .startGroupCollapsed) > .indent[data-indent="1"] {
+  margin-inline-start: calc(1px + var(--console-icon-horizontal-offset));
+  margin-inline-end: calc(11px - var(--console-icon-horizontal-offset));
+}
+
+.message > .icon {
+  flex: none;
+  align-self: flex-start;
+  /* Width and height must be a multiples of 2px to avoid blurry images.
+   * Height should match the text's line-height for optimal vertical alignment */
+  width: 14px;
+  height: 14px;
+  margin: var(--console-output-vertical-padding) 4px;
+  background-image: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 12px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* Icon on unindented row should be centered within the left gutter */
+.message > .indent[data-indent="0"] + .icon {
+  width: 24px;
+  margin-inline-start: var(--console-icon-horizontal-offset);
+  margin-inline-end: calc(4px - var(--console-icon-horizontal-offset));
+}
+
+.message.command > .icon {
+  color: var(--theme-icon-color);
+  background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
+}
+
+.message.result > .icon {
+  color: var(--theme-icon-dimmed-color);
+  background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
+}
+
+.message.info > .icon {
+  color: var(--theme-icon-color);
+  background-image: url(chrome://devtools/skin/images/info-small.svg);
+}
+
+.message.error > .icon {
+  color: var(--theme-icon-error-color);
+  background-image: url(chrome://devtools/skin/images/error-small.svg);
+}
+
+.message.warn > .icon {
+  color: var(--theme-icon-warning-color);
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+}
+
+.message.navigationMarker > .icon {
+  color: var(--console-navigation-color);
+  background-image: url(chrome://devtools/skin/images/webconsole/navigation.svg);
+}
+
+.message > .icon.logpoint {
+  background-image: url(chrome://devtools/content/debugger/images/webconsole-logpoint.svg);
+  color: var(--theme-graphs-purple);
+}
+
+.message.network-message-blocked > .icon {
+  color: var(--theme-icon-error-color);
+  background-image: url(chrome://devtools/skin/images/blocked.svg);
+}
+
+.message > .message-body-wrapper {
+  flex: auto;
+  min-width: 0px;
+  margin: var(--console-output-vertical-padding) 0;
+}
+
+.message-body-wrapper .table-widget-body {
+  overflow: visible;
+}
+
+.message-body-wrapper .elements-label {
+  color: var(--location-color);
+  margin: calc(var(--console-output-vertical-padding) * 2) 0;
+}
+
+/* The bubble that shows the number of times a message is repeated */
+.message-repeats,
+.warning-group-badge {
+  flex-shrink: 0;
+  margin: 2px 5px 0 5px;
+  padding: 0 6px;
+  height: 1.25em;
+  border-radius: 40px;
+  font: message-box;
+  font-size: 0.8em;
+  font-weight: normal;
+}
+
+.message-repeats {
+  display: inline-block;
+  color: white;
+  background-color: var(--console-repeat-bubble-background);
+}
+
+.message-repeats[value="1"] {
+  display: none;
+}
+
+.warning-group-badge {
+  display: inline-block;
+  color: var(--console-warning-background);
+  background-color: var(--console-warning-color);
+}
+
+.message-location {
+  max-width: 40vw;
+  flex-shrink: 0;
+  color: var(--frame-link-source);
+  margin-left: 1ch;
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: end;
+}
+
+.message-location:empty {
+  display: none;
+}
+
+.message-location .frame-link-source-inner {
+  /* Enforce LTR direction for the file name - fixes bug 1290056 */
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.message-flex-body {
+  display: flex;
+}
+
+.message-body {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message-flex-body > .message-body {
+  display: block;
+  flex: 1;
+}
+
+/* Network styles */
+
+.console-string {
+  color: var(--theme-highlight-lightorange);
+}
+
+.theme-selected .console-string,
+.theme-selected .cm-number,
+.theme-selected .cm-variable,
+.theme-selected .kind-ArrayLike {
+  color: #f5f7fa !important; /* Selection Text Color */
+}
+
+.message.network > .message-body {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.message.network .method {
+  flex: none;
+}
+
+.message.network .url {
+  flex: 1 1 auto;
+  /* Make sure the URL is very small initially, let flex change width as needed. */
+  width: 100px;
+  min-width: 5em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.message.network .message-body .status {
+  flex: none;
+  cursor: default;
+  margin-left: 1ch;
+  cursor: default;
+}
+
+.message.network.mixed-content .url {
+  color: var(--theme-highlight-red);
+  cursor: default;
+}
+
+.message .learn-more-link {
+  user-select: none;
+  color: var(--theme-highlight-blue);
+  margin: 0 1ch;
+}
+
+.message.network .xhr {
+  background-color: var(--theme-text-color-alt);
+  color: var(--theme-body-background);
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 1px 2px;
+  line-height: 10px;
+  margin-inline-start: 0;
+  margin-inline-end: 1ex;
+}
+
+/* Hide the headers panel toolbar buttons in the console */
+.message.network .headers-panel-container #block-button,
+.message.network .headers-panel-container #edit-resend-button,
+.message.network .headers-panel-container .devtools-separator {
+  display: none;
+}
+
+/* Override the `postion:absolute` set on the `.panel-container`, this is only needed in the
+netmonitor to enable the use of top, right, bottom etc to support content scrolling.
+See https://searchfox.org/mozilla-central/rev/7bafa9b9c2156018ec1d410194f9bf4b5b23e77f
+/devtools/client/netmonitor/src/assets/styles/HeadersPanel.css#17-24.
+The webconsole does not need that as the `.webconsole-output` is already scrollable */
+.message.network .headers-panel-container .panel-container {
+  position: static;
+}
+
+/* JSTerm Styles */
+html #webconsole-notificationbox {
+  flex: 0;
+  width: 100%;
+}
+
+.webconsole-output:empty ~ .notificationbox .notification {
+  border-top-width: 0;
+  border-bottom-width: 1px;
+}
+
+.jsterm-input-container {
+  position: relative;
+  max-width: 100%;
+  background-color: var(--console-input-background);
+  font-family: var(--monospace-font-family);
+  font-size: var(--theme-code-font-size);
+  line-height: var(--console-output-line-height);
+}
+
+/* CodeMirror-powered JsTerm */
+.jsterm-input-container > .CodeMirror {
+  /* aim for a 32px left space (a descendent has 4px padding) */
+  padding-inline-start: calc(var(--console-inline-start-gutter) - 4px);
+  /* Create a new stacking context */
+  position: relative;
+  z-index: 0; /* Keep below column resizers */
+  /* input icon */
+  background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
+  background-position-x: calc(10px + var(--console-icon-horizontal-offset));
+  background-position-y: 4px;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.jsterm-input-container > .CodeMirror-focused {
+  fill: var(--theme-icon-checked-color);
+}
+
+.jsterm-input-container .CodeMirror-lines {
+  padding-block: var(--console-output-vertical-padding);
+}
+
+.webconsole-app .cm-auto-complete-shadow-text::after {
+  content: attr(data-completion);
+  color: var(--theme-comment);
+  /* This is important for the completion text not to move while the user is typing */
+  /* See Bugs 1491776 & 1558248 */
+  position: absolute;
+}
+
+.jsterm-input-container .CodeMirror-hscrollbar {
+  /* We never want to see the horizontal scrollbar */
+  display: none !important;
+}
+
+/* Security styles */
+
+.stacktrace {
+  display: none;
+  overflow-y: auto;
+  margin-block-start: 5px;
+  margin-block-end: var(--attachment-margin-block-end);
+  padding-inline-start: 16px;
+}
+
+.message.open .stacktrace:not(:empty) {
+  display: block;
+}
+
+.objectBox-stackTrace .frames {
+  padding-inline-start: 16px;
+}
+
+.consoletable {
+  margin: 5px 0 0 0;
+}
+
+/* Force cells to only show one row of contents.  Getting normal ellipses
+   behavior has proven impossible so far, so this is better than letting
+   rows get out of vertical alignment when one cell has a lot of content. */
+.consoletable .table-widget-cell > span {
+  overflow: hidden;
+  display: flex;
+  height: 1.25em;
+  line-height: 1.25em;
+}
+
+.cm-s-mozilla a[class] {
+  font-style: italic;
+  text-decoration: none;
+}
+
+.cm-s-mozilla a[class]:hover,
+.cm-s-mozilla a[class]:focus {
+  text-decoration: underline;
+}
+
+a.learn-more-link.webconsole-learn-more-link {
+  font-style: normal;
+}
+
+/*
+  This element contains the different toolbars in the console
+    - primary, containing the clear messages button and the text search input, and a
+      checkbox (Persist logs or Show Content Messages).
+      It can expand as much as it needs.
+    - close button, close the split console panel. This button will always be displayed on
+      righ-top of the toolbar.
+    - secondary, containing the filter buttons (Error, Warning, …). It's placed inside the
+      primary toolbar if there's enought space.
+
+  We have 2 different layout:
+
+  Narrow:
+
+  --------------------------------------------------------------
+  | 🗑 - Filter Input                                      | ✕ |
+  --------------------------------------------------------------
+  | Error - Warning - Log - Info - Debug - CSS - Network - XHR |
+  --------------------------------------------------------------
+
+  And wide:
+
+  --------------------------------------------------------------------------------------
+  | 🗑 - Filter Input | Error - Warning - Log - Info - Debug - CSS - Network - XHR | ✕ |
+  --------------------------------------------------------------------------------------
+*/
+.webconsole-filteringbar-wrapper {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  --primary-toolbar-height: 29px;
+}
+
+.webconsole-filteringbar-wrapper .devtools-toolbar {
+  background-color: var(--theme-body-background);
+}
+
+.webconsole-filterbar-primary {
+  display: flex;
+  /* We want the toolbar (which contain the text search input) to fit
+  the content, we don't allow to shrink/overlap it */
+  flex: 100 0 -moz-fit-content;
+  align-items: center;
+  min-height: var(--primary-toolbar-height);
+}
+
+.devtools-toolbar.webconsole-filterbar-secondary {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  user-select: none;
+  grid-column: 1 / -1;
+  min-height: var(--primary-toolbar-height);
+}
+
+.devtools-toolbar.webconsole-filterbar-secondary .devtools-separator {
+  margin-inline: 5px;
+}
+
+.split-console-close-button-wrapper {
+  min-height: var(--primary-toolbar-height);
+  /* We will need to display the close button in the right-top always. */
+  grid-column: -1 / -2;
+  grid-row: 1 / 2;
+  padding-inline-end: 0;
+}
+
+/* On OSX the cursor turns into a window-resizing cursor at the edges of the
+ * window, so bring the end of the close button in. */
+:root[platform="mac"] .split-console-close-button-wrapper,
+:root[platform="mac"] .webconsole-sidebar-toolbar {
+  padding-inline-end: 2px;
+}
+
+#split-console-close-button {
+  height: 100%;
+  margin: 0;
+}
+
+#split-console-close-button::before {
+  background-image: url(chrome://devtools/skin/images/close.svg);
+}
+
+.webconsole-filterbar-primary .devtools-searchbox {
+  align-self: stretch;
+  /* Prevent the filter height from devtools-searchbox */
+  height: unset;
+  flex: 1 1 100%;
+  margin-inline-start: 1px;
+  /* It's important to keep this in px as it's used in JS to control the display mode
+   * of the filter toolbar. */
+  min-width: 150px;
+}
+
+.webconsole-filterbar-primary .filter-checkbox {
+  flex-shrink: 0;
+  margin: 0 3px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.webconsole-filterbar-filtered-messages {
+  /* Needed so the bar takes the whole horizontal space when it is wrapped */
+  flex-grow: 1;
+  justify-content: flex-end;
+  color: var(--theme-comment);
+  text-align: end;
+  align-items: center;
+  min-height: var(--primary-toolbar-height);
+  line-height: var(--primary-toolbar-height);
+}
+
+@media (max-width: 965px) {
+  /* This media query will make filtered message element to be displayed in new
+    line. This width is based on greek localized size since it is longer than
+    other localized strings. */
+  .webconsole-filterbar-filtered-messages {
+    grid-row: 2 / 3;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+}
+
+.webconsole-filterbar-filtered-messages .filter-message-text {
+  font-style: italic;
+  user-select: none;
+}
+
+.webconsole-filterbar-filtered-messages .reset-filters-button {
+  margin-inline-start: 0.5em;
+}
+
+/* Special casing String reps, and warning/error string colors
+ * so they are legible */
+.message .message-body > .objectBox-string,
+.message.error .objectBox-string,
+.message.warn .objectBox-string {
+  color: inherit;
+}
+
+/* Special casing dark-theme error and warning ObjectInspector colors */
+.theme-dark .message.error .tree.object-inspector .object-label,
+.theme-dark .message.error .tree.object-inspector .object-label *,
+.theme-dark .message.warn .tree.object-inspector .object-label,
+.theme-dark .message.warn .tree.object-inspector .object-label *,
+.theme-dark .message.error .objectLeftBrace,
+.theme-dark .message.error .objectRightBrace,
+.theme-dark .message.error .arrayLeftBracket,
+.theme-dark .message.error .arrayRightBracket,
+.theme-dark .message.warn .objectLeftBrace,
+.theme-dark .message.warn .objectRightBrace,
+.theme-dark .message.warn .arrayLeftBracket,
+.theme-dark .message.warn .arrayRightBracket {
+  color: var(--theme-body-color);
+}
+.theme-dark .message.error .tree.object-inspector,
+.theme-dark .message.warn .tree.object-inspector {
+  --console-indent-border-color: var(--theme-body-color);
+}
+
+.webconsole-app .message-flex-body > .message-body {
+  overflow: hidden;
+}
+
+.webconsole-app .message-body > * {
+  flex-shrink: 0;
+  vertical-align: top;
+}
+
+.message.startGroup .message-body > .objectBox-string,
+.message.startGroupCollapsed .message-body > .objectBox-string {
+  color: var(--theme-body-color);
+  font-weight: bold;
+}
+
+/* Prefix text that can be set by ConsoleAPI option */
+.webconsole-app .console-message-prefix {
+  color: var(--theme-comment);
+}
+
+/* Network Messages */
+
+.webconsole-app .message.network.network-message-blocked .method,
+.webconsole-app .message.network.network-message-blocked .message-flex-body .message-body .url,
+.webconsole-app .message.network.network-message-blocked .status {
+  color: var(--timing-blocked-color);
+}
+
+.webconsole-app .message.network .method {
+  margin-inline-end: 1ch;
+}
+
+.webconsole-app .message.network .xhr {
+  background-color: var(--theme-comment);
+  color: white;
+  border-radius: 2px;
+  font-weight: normal;
+  line-height: inherit;
+}
+
+.webconsole-app .message.network .message-flex-body .message-body .url {
+  color: var(--theme-comment);
+  font-style: inherit;
+}
+
+.webconsole-app .message.network .status {
+  color: var(--theme-highlight-blue);
+  font-style: inherit;
+}
+
+.webconsole-app .message.network .network-monitor .empty-notice {
+  font-size: 16px;
+}
+
+/* For 4XX and 5XX requests, display the text in the "error" color */
+.webconsole-app .message.network.error .message-flex-body .message-body .url,
+.webconsole-app .message.network.error .message-flex-body .message-body .status {
+  color: currentColor;
+}
+
+.network.message .network-info {
+  display: none;
+  margin-block: 6px 2px;
+  border: solid 1px var(--theme-splitter-color);
+}
+
+.network.message.open .network-info {
+  display: block;
+}
+
+:root:dir(rtl) .network.message.open .network-info {
+  direction: rtl;
+}
+
+.network.message .network-info .panels {
+  min-height: 250px;
+}
+/* Response panel needs an absolute height size as the
+ * sizing of its content depends on it, it also needs override
+ * the inline height set on the panels */
+.network.message .network-info #response-panel {
+  height: 250px !important;
+}
+
+.network.message .network-info .accordion-item:last-child .accordion-content {
+  position: static;
+}
+
+/* Hide 'Edit And Resend' button since the feature isn't
+   supported in the Console panel. */
+.network.message #headers-panel .edit-and-resend-button {
+  display: none;
+}
+
+.network .message-flex-body > .message-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+/*
+ * Open DOMNode in inspector button. Style need to be reset in the new
+ * console since its style is already defined in reps.css .
+ */
+.webconsole-app .open-inspector {
+  background-image: unset;
+}
+
+/* console.table() */
+.message .new-consoletable {
+  width: 100%;
+  --consoletable-border: var(--theme-splitter-color);
+  margin-block-end: var(--attachment-margin-block-end);
+  color: var(--theme-body-color);
+  display: grid;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--consoletable-border);
+  /* border at the left side will be added by the inner divs [role=gridcell] */
+  border-left: none;
+}
+
+.new-consoletable > div {
+  border-left: 1px solid var(--consoletable-border);
+}
+
+.new-consoletable-header {
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid var(--consoletable-border);
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color);
+  margin: 0;
+  padding: 5px 4px;
+  font-weight: inherit;
+  z-index: 1;
+  text-overflow: ellipsis;
+}
+
+.new-consoletable > [role="gridcell"] {
+  background-color: var(--theme-body-background);
+  color: var(--theme-body-color);
+  padding: 3px 4px;
+  text-overflow: ellipsis;
+}
+
+.new-consoletable > [role="gridcell"].even {
+  background-color: var(--table-zebra-background);
+}
+
+/* Simple Table */
+.message .simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  --simpletable-border: var(--theme-splitter-color);
+  margin-block-end: var(--attachment-margin-block-end);
+  color: var(--theme-body-color);
+  text-align: left;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--simpletable-border);
+  table-layout: fixed;
+  margin-top: 3px;
+}
+
+.simple-table-header {
+  background-color: var(--theme-toolbar-background);
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--simpletable-border);
+}
+
+.simple-table-header > th {
+  padding: 5px 4px;
+  font-weight: inherit;
+}
+
+.simple-table-header > th:nth-child(odd) {
+  width: 10%;
+}
+
+.simple-table td {
+  padding: 3px 4px;
+  text-overflow: ellipsis;
+  border-left: 1px solid var(--simpletable-border);
+}
+
+.simple-table td:nth-child(2n) span {
+  color: var(--theme-body-color);
+}
+
+.simple-table tr:nth-child(even) {
+  background-color: var(--table-zebra-background);
+}
+
+/* Object Inspector */
+.webconsole-app .object-inspector.tree {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.webconsole-app .object-inspector.tree .tree-indent {
+  border-inline-start-color: var(--console-indent-border-color);
+}
+
+.webconsole-app .object-inspector.tree .tree-node:hover:not(.focused) {
+  background-color: var(--object-inspector-hover-background);
+}
+
+/*
+ * Make console.group, exception and XHR message's arrow look the same as the arrow
+ * used in the ObjectInspector (same background-image, width, transition).
+ * Properties were copied from devtools/client/shared/components/reps/reps.css.
+ */
+.collapse-button {
+  flex: none;
+  align-self: flex-start;
+  margin-block-start: calc(var(--console-output-vertical-padding) - 1px);
+  margin-inline-start: -4px;
+  padding: 3px;
+  border: none;
+  color: var(--theme-icon-dimmed-color);
+  background: transparent;
+}
+
+.collapse-button::before {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: url("chrome://devtools/skin/images/arrow.svg") no-repeat center;
+  background-size: 10px;
+  transform: rotate(-90deg);
+  transition: transform 125ms ease;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* Align console.group messages with the border they create for their "children" messages */
+.indent[data-indent]:not([data-indent="0"]) ~ .collapse-button {
+  margin-inline-start: 3px;
+}
+
+.collapse-button[aria-expanded="true"]::before {
+  transform: rotate(0);
+}
+
+.collapse-button::-moz-focus-inner {
+  border: none;
+}
+
+/* Hide the icon, so that we can use the collapse-button in its place */
+.message.network:not(.network-message-blocked) > .icon,
+.message.startGroup > .icon,
+.message.startGroupCollapsed > .icon {
+  display: none;
+}
+
+/* Center the collapse button in the left gutter (first-level only) */
+.message.network > .collapse-button,
+.message.startGroup > .indent[data-indent="0"] ~ .collapse-button,
+.message.startGroupCollapsed > .indent[data-indent="0"] ~ .collapse-button {
+  width: 24px;
+  margin-inline-start: var(--console-icon-horizontal-offset);
+  margin-inline-end: calc(4px - var(--console-icon-horizontal-offset));
+}
+
+/* Use a bigger arrow that is visually similar to other icons (10px) */
+.message.network > .collapse-button::before,
+.message.startGroup > .indent[data-indent="0"] ~ .collapse-button::before,
+.message.startGroupCollapsed
+  > .indent[data-indent="0"]
+  ~ .collapse-button::before {
+  width: 100%;
+  background-image: url("chrome://devtools/skin/images/arrow-big.svg");
+  fill: var(--theme-icon-dimmed-color);
+}
+
+/* Apply a style similar to collapse-button for the object tree arrows */
+.webconsole-app .tree .arrow,
+.webconsole-app .object-inspector .tree-node .arrow {
+  width: 10px;
+  height: 10px;
+  background: url("chrome://devtools/skin/images/arrow.svg") no-repeat center;
+  background-size: 10px;
+  transform: rotate(-90deg);
+  /* Needed for alignment */
+  margin-top: -1px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+/* In RTL the tree arrows should usually point to the left, but in
+   this context it should point to the right.
+   This overrides the rule from other stylesheets that does the opposite. */
+.webconsole-app .tree .arrow:dir(rtl),
+.webconsole-app .object-inspector .tree-node .arrow:dir(rtl) {
+  transform: rotate(-90deg);
+}
+
+.webconsole-app .tree .arrow.expanded,
+.webconsole-app .object-inspector .tree-node .arrow.expanded {
+  transform: rotate(0deg);
+}
+
+.webconsole-app .tree.focused .arrow,
+.webconsole-app .object-inspector .tree-node.focused .arrow {
+  fill: currentColor;
+}
+
+/** Utils **/
+.clipboard-only {
+  position: absolute;
+  left: -9999px;
+  width: 0;
+  height: 0;
+}

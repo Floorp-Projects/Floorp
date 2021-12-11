@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "952145",
+    title: "Rollback local offer"
+  });
+
+  runNetworkTest(function (options) {
+    const test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.chain.insertBefore('PC_LOCAL_CREATE_OFFER', [
+        function PC_REMOTE_CREATE_AND_SET_OFFER(test) {
+          return test.createOffer(test.pcRemote).then(offer => {
+            return test.setLocalDescription(test.pcRemote, offer, HAVE_LOCAL_OFFER);
+          });
+        },
+
+        function PC_REMOTE_ROLLBACK(test) {
+          // the negotiationNeeded slot should have been true both before and
+          // after this SLD, so the event should fire again.
+          test.pcRemote.expectNegotiationNeeded();
+          return test.setLocalDescription(test.pcRemote,
+                                          { type: "rollback", sdp: "" },
+                                          STABLE);
+        },
+
+        // Rolling back should shut down gathering
+        function PC_REMOTE_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcRemote.endOfTrickleIce;
+        },
+
+        function PC_REMOTE_SETUP_ICE_HANDLER(test) {
+          test.pcRemote.setupIceCandidateHandler(test);
+        },
+    ]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,5 @@
+This directory contains CA and server certificates for testing.
+
+You can find instructions on how to add or modify certificates at:
+
+https://firefox-source-docs.mozilla.org/build/buildsystem/test_certificates.html

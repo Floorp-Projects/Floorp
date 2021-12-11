@@ -1,0 +1,9 @@
+<!DOCTYPE HTML>
+<title>Testcase for hypothetical box calculation for position:fixed inside -moz-transform</title>
+<style type="text/css">
+html, body { margin: 0; padding: 0; }
+</style>
+<div style="-moz-transform: translate(10px,10px); width:0">
+  <div style="height: 20px"></div>
+  <div style="position: fixed; height: 10px; width: 10px; background: blue"></div>
+</div>

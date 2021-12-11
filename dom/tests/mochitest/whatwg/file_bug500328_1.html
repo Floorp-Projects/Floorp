@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Inner frame for testing bug 500328.
+https://bugzilla.mozilla.org/show_bug.cgi?id=500328
+-->
+<head>
+<title>test 1</title>
+  <style>
+    a           { fill:blue; }
+    a:visited   { fill:purple; }
+  </style>
+</head>
+<body onload="load(event);" onpopstate="popstate(event);" onpageshow="pageshow(event);">
+<script type="application/javascript">
+  if (parent && parent.onChildScript)
+    parent.onChildScript(history.state);
+  if (opener && opener.onChildScript)
+    opener.onChildScript(history.state);
+
+  function load(e) {
+    if(parent && parent.onChildLoad)
+      parent.onChildLoad(e);
+    if(opener && opener.onChildLoad)
+      opener.onChildLoad(e);
+  }
+
+  function pageshow(e) {
+    if(parent && parent.onChildPageShow)
+      parent.onChildPageShow(e);
+    if(opener && opener.onChildPageShow)
+      opener.onChildPageShow(e);
+  }
+
+  function popstate(e) {
+    if(parent && parent.onChildLoad)
+      parent.onChildPopState(e);
+    if(opener && opener.onChildLoad)
+      opener.onChildPopState(e);
+  }
+
+  function navigateTo(loc) {
+    location = loc;
+  }
+
+</script>
+
+<a id="link-anchor1", href="#1">Link Anchor1</a>
+<a id="link-self" href="file_bug500328_1.html">Self</a>
+</body>
+</html>

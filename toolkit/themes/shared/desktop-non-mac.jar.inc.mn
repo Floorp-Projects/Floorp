@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This is not a complete / proper jar manifest. It is conditionally included
+# by the shared jar manifest, which in turn is included by the os-specific
+# manifests.
+# As a result, the source file paths are relative to the location of the
+# actual manifests.
+
+#include desktop-jar.inc.mn
+
+  skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
+  skin/classic/global/tabprompts.css                       (../../windows/global/tabprompts.css)
+  skin/classic/global/wizard.css                           (../../windows/global/wizard.css)
+
+  skin/classic/global/arrow/panelarrow-horizontal.svg      (../../windows/global/arrow/panelarrow-horizontal.svg)
+  skin/classic/global/arrow/panelarrow-vertical.svg        (../../windows/global/arrow/panelarrow-vertical.svg)
+
+* skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
+  skin/classic/global/icons/search-textbox.svg             (../../windows/global/icons/search-textbox.svg)
+
+  skin/classic/mozapps/downloads/unknownContentType.css      (../../windows/mozapps/downloads/unknownContentType.css)
+  skin/classic/mozapps/handling/handling.css                 (../../windows/mozapps/handling/handling.css)
+  skin/classic/mozapps/profile/profileSelection.css          (../../windows/mozapps/profile/profileSelection.css)
+
+% override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.svg

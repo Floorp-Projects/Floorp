@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="1000"
+      reftest-async-zoom="2.0">
+<head>
+  <style>
+    html {
+      scrollbar-width: none;
+    }
+    body {
+      height: 3000px;
+      margin: 0;
+    }
+    div {
+      position: fixed;
+      height: 100px;
+      width: 100px;
+    }
+    div.top-left {
+      top: 20px;
+      left: 20px;
+      background: red;
+    }
+    div.top-right {
+      top: 20px;
+      right: 20px;
+      background: blue;
+    }
+    div.bottom-left {
+      bottom: 20px;
+      left: 20px;
+      background: green;
+    }
+    div.bottom-right {
+      bottom: 20px;
+      right: 20px;
+      background: purple;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-left"></div>
+  <div class="top-right"></div>
+  <div class="bottom-left"></div>
+  <div class="bottom-right"></div>
+</body>
+</html>

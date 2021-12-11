@@ -1,0 +1,26 @@
+<!DOCTYPE HTML><html><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+x<br>
+<textarea id="t" rows="4" spellcheck="false" style="-moz-appearance: none">
+A
+
+
+</textarea><br>
+y
+<script>
+  // Position the caret at the last line
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+
+  var area = document.getElementById('t');
+  area.focus();
+
+  sendKey('DOWN');  // now after "A"
+  sendKey('DOWN');  // 
+  sendKey('DOWN');  // 
+  sendKey('DOWN');  // now at the last line
+</script>
+</body>
+</html>

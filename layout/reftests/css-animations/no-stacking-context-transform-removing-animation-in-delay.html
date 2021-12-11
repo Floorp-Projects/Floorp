@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>
+Removing CSS animation in delay phase destroys stacking context
+</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  position: fixed;
+  background: green;
+  top: 50px;
+}
+@keyframes TransformNone {
+  from, to { transform: none }
+}
+#test {
+  width: 100px; height: 100px;
+  background: blue;
+  transform: none ! important;
+}
+</style>
+<span></span>
+<div id="test"></div>
+<script>
+window.addEventListener("load", () => {
+  var target = document.getElementById("test");
+  target.style.animation = "TransformNone 100s 100s";
+
+  // We need to wait for MozAfterPaint instead of requestAnimationFrame to
+  // ensure the stacking context has been updated on the compositor.
+  window.addEventListener("MozAfterPaint", function() {
+    // Here we have CSS animation on transform:none style element, so
+    // there should be a stacking context.
+
+    target.style.animation = "";
+    // This time we don't need to wait for MozAfterPaint because reftest tool
+    // will be received MozAferPaint event.
+    requestAnimationFrame(() => {
+      // Now we have only transform:none style, so we should not create any
+      // stacking context.
+      document.documentElement.classList.remove("reftest-wait");
+    });
+  }, {once: true});
+});
+</script>

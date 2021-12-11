@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DOMNode Object actor test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="webconsole-helpers.js"></script>
+  <script>
+"use strict";
+
+const TEST_URL = "data:text/html,<html><body>Hello</body></html>";
+
+window.onload = async function() {
+  SimpleTest.waitForExplicitFinish();
+
+  try {
+    const commands = await addTabAndCreateCommands(TEST_URL);
+    await testNotInTreeElementNode(commands);
+    await testInTreeElementNode(commands);
+    await testNotInTreeTextNode(commands);
+    await testInTreeTextNode(commands);
+  } catch (e) {
+    ok(false, `Error thrown: ${e.message}`);
+  }
+  SimpleTest.finish();
+};
+
+async function testNotInTreeElementNode(commands) {
+  info("Testing isConnected property on a ElementNode not in the DOM tree");
+  const {result} = await commands.scriptCommand.execute("document.createElement(\"div\")");
+  is(result.getGrip().preview.isConnected, false,
+    "isConnected is false since we only created the element");
+}
+
+async function testInTreeElementNode(commands) {
+  info("Testing isConnected property on a ElementNode in the DOM tree");
+  const {result} = await commands.scriptCommand.execute("document.body");
+  is(result.getGrip().preview.isConnected, true,
+    "isConnected is true as expected, since the element was retrieved from the DOM tree");
+}
+
+async function testNotInTreeTextNode(commands) {
+  info("Testing isConnected property on a TextNode not in the DOM tree");
+  const {result} = await commands.scriptCommand.execute("document.createTextNode(\"Hello\")");
+  is(result.getGrip().preview.isConnected, false,
+    "isConnected is false since we only created the element");
+}
+
+async function testInTreeTextNode(commands) {
+  info("Testing isConnected property on a TextNode in the DOM tree");
+  const {result} = await commands.scriptCommand.execute("document.body.firstChild");
+  is(result.getGrip().preview.isConnected, true,
+    "isConnected is true as expected, since the element was retrieved from the DOM tree");
+}
+
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

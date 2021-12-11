@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Implement this interface to visit http headers.
+ */
+[scriptable, function, uuid(35412859-b9d9-423c-8866-2d4559fdd2be)]
+interface nsIHttpHeaderVisitor : nsISupports
+{
+    /**
+     * Called by the nsIHttpChannel implementation when visiting request and
+     * response headers.
+     *
+     * @param aHeader
+     *        the header being visited.
+     * @param aValue
+     *        the header value (possibly a comma delimited list).
+     *
+     * @throw any exception to terminate enumeration
+     */
+    [must_use] void visitHeader(in ACString aHeader, in ACString aValue);
+};

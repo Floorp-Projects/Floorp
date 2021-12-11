@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>test rendering with decomposition (bug 772640)</title>
+<style type="text/css">
+@font-face {
+  font-family: test;
+  src: url("../fonts/sil/Scheherazade-R 2012-07-03c.ttf");
+}
+body {
+  font-family: test;
+  font-size: 40px;
+  text-align: left;
+}  
+</style>
+</head>
+<body>
+<div>
+<!-- with graphite enabled, this will display ThisIsGraphite to confirm it's working -->
+ThisIsNotGraphite:<br>
+<!-- U+0622 should render identically to U+0627,U+0653 -->
+RTL: <span dir="rtl">a&#x0627;&#x0653;z</span><br>
+LTR: <span dir="ltr" style="unicode-bidi: bidi-override">a&#x0627;&#x0653;z</span>
+</div>
+</body>
+</html>

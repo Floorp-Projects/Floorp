@@ -1,0 +1,350 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Was for: https://bugzilla.mozilla.org/show_bug.cgi?id=365932
+  Updated for: https://bugzilla.mozilla.org/show_bug.cgi?id=1292447
+-->
+<head>
+  <title>Test for Bug 1292447</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    #content {
+      width: 800px;
+      height: 800px;
+      padding: 0 200px;
+      border-width: 0 200px;
+      border-style: solid;
+      border-color: transparent
+    }
+    #content2 {
+      display: none;
+    }
+    #content > div, #content2 > div {
+      width: 400px;
+      height: 400px;
+      padding: 0 100px;
+      border-width: 0 100px;
+      border-style: solid;
+      border-color: transparent
+    }
+    #content > div.auto, #content2 > div.auto {
+      width: auto; height: auto;
+      padding: 0 100px;
+      border-width: 0 80px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1292447">Mozilla Bug 1292447</a>
+<p id="display"></p>
+<div id="content">
+  <div id="indent1" style="text-indent: 400px"></div>
+  <div id="indent2" style="text-indent: 50%"></div>
+
+  <div id="widthheight-1" class="auto"></div>
+
+  <div id="minwidth1-1" style="min-width: 200px"></div>
+  <div id="minwidth1-2" style="min-width: 25%"></div>
+  <div id="minwidth2-1" style="min-width: 600px"></div>
+  <div id="minwidth2-2" style="min-width: 75%"></div>
+  <div id="minwidth3-1" class="auto" style="min-width: 200px"></div>
+  <div id="minwidth3-2" class="auto" style="min-width: 25%"></div>
+  <div id="minwidth4-1" class="auto" style="min-width: 600px"></div>
+  <div id="minwidth4-2" class="auto" style="min-width: 75%"></div>
+
+  <div id="maxwidth1-1" style="max-width: 320px"></div>
+  <div id="maxwidth1-2" style="max-width: 40%"></div>
+  <div id="maxwidth2-1" style="max-width: 480px"></div>
+  <div id="maxwidth2-2" style="max-width: 60%"></div>
+  <div id="maxwidth3-1" class="auto" style="max-width: 320px"></div>
+  <div id="maxwidth3-2" class="auto" style="max-width: 40%"></div>
+  <div id="maxwidth4-1" class="auto" style="max-width: 480px"></div>
+  <div id="maxwidth4-2" class="auto" style="max-width: 60%"></div>
+
+  <div id="minmaxwidth1-1" style="min-width: 200px; max-width: 320px"></div>
+  <div id="minmaxwidth1-2" style="min-width: 200px; max-width: 40%"></div>
+  <div id="minmaxwidth2-1" style="min-width: 25%; max-width: 320px"></div>
+  <div id="minmaxwidth2-2" style="min-width: 25%; max-width: 40%"></div>
+  <div id="minmaxwidth3-1" style="min-width: 600px; max-width: 320px"></div>
+  <div id="minmaxwidth3-2" style="min-width: 600px; max-width: 40%"></div>
+  <div id="minmaxwidth4-1" style="min-width: 75%; max-width: 320px"></div>
+  <div id="minmaxwidth4-2" style="min-width: 75%; max-width: 40%"></div>
+  <div id="minmaxwidth5-1"
+       style="display:none; min-width: 200px; max-width: 320px"></div>
+  <div id="minmaxwidth6-1"
+       style="display: none; min-width: 25%; max-width: 320px"></div>
+  <div id="minmaxwidth7-1"
+       style="display: none; min-width: 600px; max-width: 320px"></div>
+  <div id="minmaxwidth7-2"
+       style="display: none; min-width: 600px; max-width: 40%"></div>
+  <div id="minmaxwidth8-1" class="auto"
+       style="min-width: 200px; max-width: 320px"></div>
+  <div id="minmaxwidth8-2" class="auto"
+       style="min-width: 200px; max-width: 40%"></div>
+  <div id="minmaxwidth9-1" class="auto"
+       style="min-width: 25%; max-width: 320px"></div>
+  <div id="minmaxwidth9-2" class="auto"
+       style="min-width: 25%; max-width: 40%"></div>
+  <div id="minmaxwidth10-1" class="auto"
+       style="min-width: 600px; max-width: 320px"></div>
+  <div id="minmaxwidth10-2" class="auto"
+       style="min-width: 600px; max-width: 40%"></div>
+  <div id="minmaxwidth11-1" class="auto"
+       style="min-width: 75%; max-width: 320px"></div>
+  <div id="minmaxwidth11-2" class="auto"
+       style="min-width: 75%; max-width: 40%"></div>
+
+  <div id="minheight1-1" style="min-height: 200px"></div>
+  <div id="minheight1-2" style="min-height: 25%"></div>
+  <div id="minheight2-1" style="min-height: 600px"></div>
+  <div id="minheight2-2" style="min-height: 75%"></div>
+  <div id="minheight3-1" class="auto" style="min-height: 200px"></div>
+  <div id="minheight3-2" class="auto" style="min-height: 25%"></div>
+  <div id="minheight4-1" class="auto" style="min-height: 600px"></div>
+  <div id="minheight4-2" class="auto" style="min-height: 75%"></div>
+
+  <div id="maxheight1-1" style="max-height: 320px"></div>
+  <div id="maxheight1-2" style="max-height: 40%"></div>
+  <div id="maxheight2-1" style="max-height: 480px"></div>
+  <div id="maxheight2-2" style="max-height: 60%"></div>
+  <div id="maxheight3-1" class="auto" style="max-height: 320px"></div>
+  <div id="maxheight3-2" class="auto" style="max-height: 40%"></div>
+  <div id="maxheight4-1" class="auto" style="max-height: 480px"></div>
+  <div id="maxheight4-2" class="auto" style="max-height: 60%"></div>
+
+  <div id="minmaxheight1-1" style="min-height: 200px; max-height: 320px"></div>
+  <div id="minmaxheight1-2" style="min-height: 200px; max-height: 40%"></div>
+  <div id="minmaxheight2-1" style="min-height: 25%; max-height: 320px"></div>
+  <div id="minmaxheight2-2" style="min-height: 25%; max-height: 40%"></div>
+  <div id="minmaxheight3-1" style="min-height: 600px; max-height: 320px"></div>
+  <div id="minmaxheight3-2" style="min-height: 600px; max-height: 40%"></div>
+  <div id="minmaxheight4-1" style="min-height: 75%; max-height: 320px"></div>
+  <div id="minmaxheight4-2" style="min-height: 75%; max-height: 40%"></div>
+  <div id="minmaxheight5-1"
+       style="display:none; min-height: 200px; max-height: 320px"></div>
+  <div id="minmaxheight6-1"
+       style="display: none; min-height: 25%; max-height: 320px"></div>
+  <div id="minmaxheight7-1"
+       style="display: none; min-height: 600px; max-height: 320px"></div>
+  <div id="minmaxheight7-2"
+       style="display: none; min-height: 600px; max-height: 40%"></div>
+  <div id="minmaxheight8-1" class="auto"
+       style="min-height: 200px; max-height: 320px"></div>
+  <div id="minmaxheight8-2" class="auto"
+       style="min-height: 200px; max-height: 40%"></div>
+  <div id="minmaxheight9-1" class="auto"
+       style="min-height: 25%; max-height: 320px"></div>
+  <div id="minmaxheight9-2" class="auto"
+       style="min-height: 25%; max-height: 40%"></div>
+  <div id="minmaxheight10-1" class="auto"
+       style="min-height: 600px; max-height: 320px"></div>
+  <div id="minmaxheight10-2" class="auto"
+       style="min-height: 600px; max-height: 40%"></div>
+  <div id="minmaxheight11-1" class="auto"
+       style="min-height: 75%; max-height: 320px"></div>
+  <div id="minmaxheight11-2" class="auto"
+       style="min-height: 75%; max-height: 40%"></div>
+
+  <div id="radius1" style="border-radius: 80px"></div>
+  <div id="radius2" style="border-radius: 20% / 20%"></div>
+</div>
+<div id="content2" style="display: none">
+  <div id="indent3" style="text-indent: 400px"></div>
+  <div id="indent4" style="text-indent: 50%"></div>
+
+  <div id="minwidth1-3" style="min-width: 200px"></div>
+  <div id="minwidth1-4" style="min-width: 25%"></div>
+  <div id="minwidth2-3" style="min-width: 600px"></div>
+  <div id="minwidth2-4" style="min-width: 75%"></div>
+
+  <div id="maxwidth1-3" style="max-width: 320px"></div>
+  <div id="maxwidth1-4" style="max-width: 40%"></div>
+  <div id="maxwidth2-3" style="max-width: 480px"></div>
+  <div id="maxwidth2-4" style="max-width: 60%"></div>
+
+  <div id="minmaxwidth1-3" style="min-width: 200px; max-width: 320px"></div>
+  <div id="minmaxwidth1-4" style="min-width: 200px; max-width: 40%"></div>
+  <div id="minmaxwidth2-3" style="min-width: 25%; max-width: 320px"></div>
+  <div id="minmaxwidth2-4" style="min-width: 25%; max-width: 40%"></div>
+  <div id="minmaxwidth3-3" style="min-width: 600px; max-width: 320px"></div>
+  <div id="minmaxwidth3-4" style="min-width: 600px; max-width: 40%"></div>
+  <div id="minmaxwidth4-3" style="min-width: 75%; max-width: 320px"></div>
+  <div id="minmaxwidth4-4" style="min-width: 75%; max-width: 40%"></div>
+
+  <div id="minheight1-3" style="min-height: 200px"></div>
+  <div id="minheight1-4" style="min-height: 25%"></div>
+  <div id="minheight2-3" style="min-height: 600px"></div>
+  <div id="minheight2-4" style="min-height: 75%"></div>
+
+  <div id="maxheight1-3" style="max-height: 320px"></div>
+  <div id="maxheight1-4" style="max-height: 40%"></div>
+  <div id="maxheight2-3" style="max-height: 480px"></div>
+  <div id="maxheight2-4" style="max-height: 60%"></div>
+
+  <div id="minmaxheight1-3" style="min-height: 200px; max-height: 320px"></div>
+  <div id="minmaxheight1-4" style="min-height: 200px; max-height: 40%"></div>
+  <div id="minmaxheight2-3" style="min-height: 25%; max-height: 320px"></div>
+  <div id="minmaxheight2-4" style="min-height: 25%; max-height: 40%"></div>
+  <div id="minmaxheight3-3" style="min-height: 600px; max-height: 320px"></div>
+  <div id="minmaxheight3-4" style="min-height: 600px; max-height: 40%"></div>
+  <div id="minmaxheight4-3" style="min-height: 75%; max-height: 320px"></div>
+  <div id="minmaxheight4-4" style="min-height: 75%; max-height: 40%"></div>
+
+  <div id="radius3" style="border-radius: 80px"></div>
+  <div id="radius4" style="border-radius: 20%"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1292447 **/
+
+document.body.offsetWidth;
+
+doATest("text-indent", "indent", 400, 50);
+doATest("border-top-left-radius", "radius", 80, 20);
+
+doATest("width", "widthheight-", 440, 0, true);
+doATest("height", "widthheight-", 0, 0, true);
+
+doATest("min-width", "minwidth1-", 200, 25);
+doATest("min-width", "minwidth2-", 600, 75);
+doATest("max-width", "maxwidth1-", 320, 40);
+doATest("max-width", "maxwidth2-", 480, 60);
+
+// Test that min-width doesn't affect computed max-width
+doATest("max-width", "minmaxwidth1-", 320, 40);
+doATest("max-width", "minmaxwidth2-", 320, 40);
+doATest("max-width", "minmaxwidth3-", 320, 40);
+doATest("max-width", "minmaxwidth4-", 320, 40);
+
+// Test that max and min-width affect computed width correctly
+doATest("width", "minwidth1-", 400, 0, true);
+doATest("width", "minwidth2-", 600, 0, true);
+doATest("width", "minwidth3-", 440, 0, true);
+doATest("width", "minwidth4-", 600, 0, true);
+doATest("width", "maxwidth1-", 320, 0, true);
+doATest("width", "maxwidth2-", 400, 0, true);
+doATest("width", "maxwidth3-", 320, 0, true);
+doATest("width", "maxwidth4-", 440, 0, true);
+doATest("width", "minmaxwidth1-", 320, 0, true);
+doATest("width", "minmaxwidth2-", 320, 0, true);
+doATest("width", "minmaxwidth3-", 600, 0, true);
+doATest("width", "minmaxwidth4-", 600, 0, true);
+doATest("width", "minmaxwidth5-", 400, 0, true);
+doATest("width", "minmaxwidth6-", 400, 0, true);
+doATest("width", "minmaxwidth7-", 400, 0, true);
+doATest("width", "minmaxwidth8-", 320, 0, true);
+doATest("width", "minmaxwidth9-", 320, 0, true);
+doATest("width", "minmaxwidth10-", 600, 0, true);
+doATest("width", "minmaxwidth11-", 600, 0, true);
+
+doATest("min-height", "minheight1-", 200, 25);
+doATest("min-height", "minheight2-", 600, 75);
+doATest("max-height", "maxheight1-", 320, 40);
+doATest("max-height", "maxheight2-", 480, 60);
+
+// Test that min-height doesn't affect computed max-height
+doATest("max-height", "minmaxheight1-", 320, 40);
+doATest("max-height", "minmaxheight2-", 320, 40);
+doATest("max-height", "minmaxheight3-", 320, 40);
+doATest("max-height", "minmaxheight4-", 320, 40);
+
+// Test that max and min-height affect computed height correctly
+doATest("height", "minheight1-", 400, 0, true);
+doATest("height", "minheight2-", 600, 0, true);
+doATest("height", "minheight3-", 200, 0, true);
+doATest("height", "minheight4-", 600, 0, true);
+doATest("height", "maxheight1-", 320, 0, true);
+doATest("height", "maxheight2-", 400, 0, true);
+doATest("height", "maxheight3-", 0, 0, true);
+doATest("height", "maxheight4-", 0, 0, true);
+doATest("height", "minmaxheight1-", 320, 0, true);
+doATest("height", "minmaxheight2-", 320, 0, true);
+doATest("height", "minmaxheight3-", 600, 0, true);
+doATest("height", "minmaxheight4-", 600, 0, true);
+doATest("height", "minmaxheight5-", 400, 0, true);
+doATest("height", "minmaxheight6-", 400, 0, true);
+doATest("height", "minmaxheight7-", 400, 0, true);
+doATest("height", "minmaxheight8-", 200, 0, true);
+doATest("height", "minmaxheight9-", 200, 0, true);
+doATest("height", "minmaxheight10-", 600, 0, true);
+doATest("height", "minmaxheight11-", 600, 0, true);
+
+function style(id) {
+  return document.defaultView.getComputedStyle($(id));
+}
+
+function round(num, decimals) {
+  return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+function coordValueTest(camelProp, decl, coordVal, prettyName) {
+  is(decl[camelProp], coordVal + "px", prettyName);
+}
+
+function percentValueTest(camelProp, decl, percentVal, prettyName) {
+  is(decl[camelProp], percentVal + "%", prettyName);
+}
+
+function doATest(propName, idBase, coordVal, percentVal, resolveToUsedVal = false) {
+  var cssCamelPropName = "";
+  var parts = propName.split("-");
+  ok(parts.length > 0, "CSS prop name should not be empty");
+  var i;
+  if (parts[0]) {
+    i = 0;
+  } else {
+    is(parts[1], "moz", "Testing an extension property that's not -moz");
+    ok(parts.length > 2, "-moz prop name should not have more than 2 parts");
+    cssCamelPropName = "Moz";
+    i = 2;
+  }
+  for (; i < parts.length; ++i) {
+    var part = parts[i];
+    isnot(part, "", "Must have a nonempty part");
+    if (cssCamelPropName) {
+      cssCamelPropName += part.charAt(0).toUpperCase() +
+                          part.substring(1, part.length);
+    } else {
+      cssCamelPropName += part;
+    }
+  }
+
+  /* Test $(id)-1 */
+  coordValueTest(cssCamelPropName,
+                 style(idBase + "1"), coordVal,
+                 propName + " of " + idBase + "1");
+
+  if (!$(idBase + "2")) {
+    // Nothing else to do here
+    return
+  }
+
+  /* Test $(id)-2 */
+  if (resolveToUsedVal) {
+    coordValueTest(cssCamelPropName,
+                   style(idBase + "2"), coordVal,
+                   propName + " of " + idBase + "2");
+  } else {
+    percentValueTest(cssCamelPropName,
+                     style(idBase + "2"), percentVal,
+                     propName + " of " + idBase + "2");
+  }
+
+  if (percentVal) {
+    /* Test $(id)-3 */
+    coordValueTest(cssCamelPropName,
+                   style(idBase + "3"), coordVal,
+                   propName + " of " + idBase + "3");
+
+    /* Test $(id)-4 */
+    percentValueTest(cssCamelPropName,
+                     style(idBase + "4"), percentVal,
+                     propName + " of " + idBase + "4");
+  }
+}
+</script>
+</pre>
+</body>
+</html>

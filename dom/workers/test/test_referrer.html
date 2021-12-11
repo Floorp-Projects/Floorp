@@ -1,0 +1,58 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the referrer of workers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function test_mainScript() {
+    var worker = new Worker("referrer.sjs?worker");
+    worker.onmessage = function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'referrer.sjs?result', true);
+      xhr.onload = function() {
+        is(xhr.responseText, location.href, "The referrer has been sent.");
+        next();
+      }
+      xhr.send();
+    }
+    worker.postMessage(42);
+  }
+
+  function test_importScript() {
+    var worker = new Worker("worker_referrer.js");
+    worker.onmessage = function(e) {
+      is(e.data, location.href.replace("test_referrer.html", "worker_referrer.js").split("?")[0], "The referrer has been sent.");
+      next();
+    }
+    worker.postMessage(42);
+  }
+
+  var tests = [ test_mainScript, test_importScript ];
+  function next() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  next();
+
+</script>
+</pre>
+</body>
+</html>

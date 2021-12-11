@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>HE-AAC decoding test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+
+SimpleTest.waitForExplicitFinish();
+
+const SOURCE_FILE = "whitenoise-he-aac-5s.mp4";
+
+// This test checks when decoding HE-AAC using MediaSource or HTTP playback, the
+// audio is decoded correctly (in particular with the SBR part). This means
+// that the extradata describing the encoded AAC stream have been communicated
+// correctly to the audio decoder. For this, we check that there is energy
+// above 10kHz using the Web Audio API when playing white noise, which has
+// maximum energy accross the audible spectrum.
+
+// Return the index corresponding for a particular frequency in an array
+// containing frequency data from a FFT.
+function binIndexForFrequency(frequency, fftSize, sampleRate) {
+  return (1 + Math.round((frequency * fftSize) / sampleRate));
+}
+
+async function checkHighFrequencyContent(element) {
+  const ac = new AudioContext();
+  await ac.resume();
+  const mediaElementSource = ac.createMediaElementSource(element);
+  const analyser = new AnalyserNode(ac);
+
+  // Undo the volume scaling applied globally during test. This is fine because
+  // the audio isn't routed to an actual audio output device in this test, it's
+  // just analyzed with the Web Audio API.
+  const gain = new GainNode(ac);
+  const testVolumeScaling =
+    parseFloat(SpecialPowers.getCharPref("media.volume_scale"));
+  gain.gain.value = 1 / parseFloat(testVolumeScaling);
+  mediaElementSource.connect(gain).connect(analyser)
+
+  const spectrum = new Float32Array(analyser.frequencyBinCount);
+  const indexFor15kHz =
+    binIndexForFrequency(15000, analyser.fftSize, ac.sampleRate);
+  // Wait a few hundreds of milliseconds
+  while (!element.ended) {
+    await once(element, "timeupdate");
+    analyser.getFloatFrequencyData(spectrum);
+    if (spectrum[indexFor15kHz] > -50) {
+      ok(spectrum[indexFor15kHz] > -50,
+          `Energy present at 15kHz (bin index: ${indexFor15kHz}) when playing white noise encoded in HE-AAC ${spectrum[indexFor15kHz]}`);
+      return;
+    }
+  }
+  ok(false,
+      `No energy present at 15kHz (bin index: ${indexFor15kHz}) when playing white noise encoded in HE-AAC (last value ${spectrum[indexFor15kHz]})`);
+}
+
+runWithMSE(async (ms, el) => {
+  // First check with MSE playback
+  el.controls = true;
+  await once(ms, "sourceopen");
+
+  const audiosb = ms.addSourceBuffer('audio/mp4; codecs="mp4a.40.5"');
+  await fetchAndLoad(audiosb, SOURCE_FILE, [""], "");
+  ms.endOfStream();
+  el.play();
+  once(el, "playing");
+
+  await checkHighFrequencyContent(el);
+
+  // Redo the same test, with HTTP playback
+  el.src = SOURCE_FILE;
+  el.play();
+  once(el, "playing");
+
+  await checkHighFrequencyContent(el);
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

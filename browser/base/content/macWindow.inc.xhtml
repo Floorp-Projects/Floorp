@@ -1,0 +1,35 @@
+# -*- Mode: HTML -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This include file should only contain things that are needed to support MacOS
+# specific features that are needed for all top level windows. If the feature is
+# also needed in browser.xhtml, it should go in one of the various include files
+# below that are shared with browser.xhtml.
+
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+  <html:link rel="localization" href="browser/browserSets.ftl"/>
+  <html:link rel="localization" href="browser/menubar.ftl"/>
+  <html:link rel="localization" href="browser/screenshots.ftl"/>
+</linkset>
+
+# All JS files which are needed by browser.xhtml and other top level windows to
+# support MacOS specific features *must* go into the global-scripts.inc file so
+# that they can be shared with browser.xhtml.
+#include global-scripts.inc
+
+<script src="chrome://browser/content/nonbrowser-mac.js"></script>
+
+# All sets except for popupsets (commands, keys, and stringbundles)
+# *must* go into the browser-sets.inc file so that they can be shared with
+# browser.xhtml
+#include browser-sets.inc
+
+# The entire main menubar is placed into browser-menubar.inc, so that it can be
+# shared with browser.xhtml.
+#include browser-menubar.inc

@@ -1,0 +1,139 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+
+    add_task(async function test_make_directory() {
+      info("Test creating a new directory");
+      const tmpDir = await PathUtils.getTempDir();
+      const newDirectoryName = PathUtils.join(tmpDir, "test_ioutils_new_dir.tmp.d");
+      await IOUtils.makeDirectory(newDirectoryName);
+      ok(
+        await IOUtils.exists(newDirectoryName),
+        "IOUtils::makeDirectory can create a new directory"
+      );
+
+      info("Test creating an existing directory");
+      await IOUtils.makeDirectory(newDirectoryName, { ignoreExisting: true });
+      ok(
+        await IOUtils.exists(newDirectoryName),
+        "IOUtils::makeDirectory can ignore existing directories"
+      );
+      await Assert.rejects(
+        IOUtils.makeDirectory(newDirectoryName, { ignoreExisting: false }),
+        /Could not create directory because it already exists at .*/,
+        "IOUtils::makeDirectory can throw if the target dir exists"
+      )
+
+      info("Test creating a nested directory");
+      const parentDirName = PathUtils.join(tmpDir, "test_ioutils_mkdir_parent.tmp.d");
+      const nestedDirName = PathUtils.join(
+        parentDirName,
+        "test_ioutils_mkdir_child.tmp.d"
+      );
+      await Assert.rejects(
+        IOUtils.makeDirectory(nestedDirName, { createAncestors: false }),
+        /Could not create directory at .*/,
+        "IOUtils::makeDirectory can fail if the target is missing parents"
+      );
+      ok(!await IOUtils.exists(nestedDirName), `Expected ${nestedDirName} not to exist`);
+      await IOUtils.makeDirectory(nestedDirName, { createAncestors: true });
+      ok(
+        await IOUtils.exists(nestedDirName),
+        "IOUtils::makeDirectory can create ancestors of the target directory"
+      );
+
+      await cleanup(newDirectoryName, parentDirName);
+    });
+
+    add_task(async function test_make_directory_failure() {
+      info("Try to create a directory where a file already exists");
+      const tmpDir = await PathUtils.getTempDir();
+      const notADirFileName = PathUtils.join(tmpDir, "test_ioutils_not_a_dir.tmp");
+      await createFile(notADirFileName);
+
+      await Assert.rejects(
+        IOUtils.makeDirectory(notADirFileName, { ignoreExisting: false }),
+        /Could not create directory because the target file\(.*\) exists and is not a directory/,
+        "IOUtils::makeDirectory [ignoreExisting: false] throws when the target is an existing file"
+      );
+      ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);
+
+      await Assert.rejects(
+        IOUtils.makeDirectory(notADirFileName, { ignoreExisting: true }),
+        /Could not create directory because the target file\(.*\) exists and is not a directory/,
+        "IOUtils::makeDirectory [ignoreExisting: true] throws when the target is an existing file"
+      );
+      ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);
+
+      await cleanup(notADirFileName);
+    });
+
+    add_task(async function test_make_directory_permissions() {
+      if (Services.appinfo.OS === "WINNT") {
+        ok(true, "Skipping test on unsupported platform (Windows)");
+        return;
+      }
+
+      const tmpDir = await PathUtils.getTempDir();
+      const newDir = PathUtils.join(tmpDir, "test_ioutils_mkdir_perms.tmp.d");
+
+      ok(!await IOUtils.exists(newDir), "Directory does not exist before creation");
+      await IOUtils.makeDirectory(newDir, { permissions: 0o751 });
+      ok(await IOUtils.exists(newDir), "Directory created");
+
+      const stat = await IOUtils.stat(newDir);
+      is(stat.type, "directory", "Directory stat() as directory");
+      is(stat.permissions, 0o751, "Directory created with expected permissions");
+
+      await cleanup(newDir);
+    });
+
+    add_task(async function test_make_directory_root() {
+      if (Services.appinfo.OS === "WINNT") {
+        // We don't actually know the root drive, but we can find the root drive
+        // of the profile directory.
+        const profileDir = await PathUtils.getProfileDir();
+        let current = profileDir;
+        let parent = PathUtils.parent(current);
+        while (parent !== null) {
+          current = parent;
+          parent = PathUtils.parent(current);
+        }
+        // `current` will now be a valid root directory.
+        ok(await IOUtils.exists(current), "Root directory should exist");
+
+        const DRIVE_RE = /^[A-Za-z]:$/;
+        ok(
+          current.startsWith("\\\\") || DRIVE_RE.test(current),
+          `Root directory (${current}) should be a UNC path or drive`,
+        );
+        await IOUtils.makeDirectory(current, {createAncestors: false});
+      } else {
+        ok(await IOUtils.exists("/"), "Root directory should exist");
+        await IOUtils.makeDirectory("/", {createAncestors: false});
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>replace meta viewport content</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function replace_content() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      info = getViewportInfo(800, 480);
+      is(info.defaultZoom, 1, "initial zoom is 1");
+      is(info.width, 800, "width should be 800");
+      is(info.height, 480, "height should be 480");
+
+      // Now the content has only 'width=1080'.
+      // eslint-disable-next-line no-undef
+      viewport.setAttribute("content", "width=1080");
+      info = getViewportInfo(800, 480);
+
+      fuzzeq(info.defaultZoom, 800/1080, "initial scale is calculated by the given width");
+      is(info.minZoom, 0.25, "minimum scale defaults to the absolute minimum");
+      is(info.maxZoom, 10, "maximum scale defaults to the absolute maximum");
+      is(info.width, 1080, "width is the given width");
+      is(info.height, 480*1080/800, "height is proportional to displayHeight");
+      is(info.autoSize, false, "autoSize is disabled by default");
+      is(info.allowZoom, true, "zooming is enabled by default");
+    });
+  </script>
+</body>
+</html>

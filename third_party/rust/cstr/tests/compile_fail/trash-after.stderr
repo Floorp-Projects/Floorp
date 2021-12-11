@@ -1,0 +1,5 @@
+error: unexpected token
+ --> $DIR/trash-after.rs:4:28
+  |
+4 |     let _foo = cstr!("foo" + "bar");
+  |                            ^

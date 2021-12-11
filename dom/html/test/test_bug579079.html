@@ -1,0 +1,40 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=579079
+-->
+<head>
+  <title>Test for Bug 579079</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=579079">Mozilla Bug 579079</a>
+
+<div id="foo">
+  <img name="img1">
+  <form name="form1"></form>
+  <applet name="applet1"></applet>
+  <embed name="embed1"></embed>
+  <object name="object1"></object>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var img = document.img1;
+var form = document.form1;
+var embed = document.embed1;
+var object = document.object1;
+$("foo").innerHTML = $("foo").innerHTML;
+isnot(document.img1, img);
+ok(document.img1 instanceof HTMLImageElement);
+isnot(document.form1, form);
+ok(document.form1 instanceof HTMLFormElement);
+isnot(document.embed1, embed);
+ok(document.embed1 instanceof HTMLEmbedElement);
+isnot(document.object1, object);
+ok(document.object1 instanceof HTMLObjectElement);
+</script>
+</pre>
+</body>
+</html>
+

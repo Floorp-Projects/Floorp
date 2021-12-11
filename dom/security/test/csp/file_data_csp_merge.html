@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1386183 - Meta CSP on data: URI iframe should be merged with toplevel CSP</title>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content= "img-src https:"/>
+</head>
+<body>
+<iframe id="dataFrame" onload="doCSPMergeCheck()"
+        src="data:text/html,<html><head><meta http-equiv='Content-Security-Policy' content='script-src https:'/></head><body>merge csp</body></html>">
+</iframe>
+
+<script type="application/javascript">
+  function doCSPMergeCheck() {
+    // get the csp in JSON notation from the principal
+    var frame = document.getElementById("dataFrame");
+    var contentDoc = SpecialPowers.wrap(frame).contentDocument;
+    var cspOBJ = JSON.parse(contentDoc.cspJSON);
+    // make sure we got >>two<< policies
+    var policies = cspOBJ["csp-policies"];
+    window.parent.postMessage({result: policies.length}, "*");
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Picture-in-Picture test - transparent overlays - 1</title>
+  <script type="text/javascript" src="click-event-helper.js"></script>
+</head>
+<style>
+  video {
+    display: block;
+  }
+
+  .container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    color: white;
+  }
+
+  .toggle-overlay {
+    position: absolute;
+    min-width: 50px;
+    right: 0px;
+    height: 100%;
+    top: calc(50% - 25px);
+  }
+
+  .full-opacity {
+    opacity: 1.0;
+    background-color: green;
+  }
+</style>
+<body>
+  <div class="container">
+    <div class="overlay full-opacity">This is a fully opaque overlay using opacity: 1.0</div>
+    <video id="video-full-opacity" src="test-video.mp4" loop="true"></video>
+  </div>
+
+  <div class="container">
+    <div class="toggle-overlay full-opacity">This is a fully opaque overlay over a region covering the toggle at opacity: 1.0</div>
+    <video id="video-full-opacity-over-toggle" src="test-video.mp4" loop="true"></video>
+  </div>
+</body>
+</html>

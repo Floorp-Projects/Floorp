@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=569988
+-->
+<head>
+  <title>Test for Bug 569988</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=569988">Mozilla Bug 569988</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 569988 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+
+function runTest() {
+  /* eslint-env mozilla/frame-script */
+  var script = SpecialPowers.loadChromeScript(function() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    var gPromptInput = null;
+    var os = Services.obs;
+
+    os.addObserver(onPromptLoad, "common-dialog-loaded");
+    os.addObserver(onPromptLoad, "tabmodal-dialog-loaded");
+
+    function onPromptLoad(subject, topic, data) {
+      let ui = subject.Dialog ? subject.Dialog.ui : undefined;
+      if (!ui) {
+        // subject is an tab prompt, find the elements ourselves
+        ui = {
+          loginTextbox: subject.querySelector(".tabmodalprompt-loginTextbox"),
+          button0: subject.querySelector(".tabmodalprompt-button0"),
+        };
+      }
+      sendAsyncMessage("ok", [true, "onPromptLoad is called"]);
+      gPromptInput = ui.loginTextbox;
+      gPromptInput.addEventListener("focus", onPromptFocus);
+      // shift focus to ensure it fires.
+      ui.button0.focus();
+      gPromptInput.focus();
+    }
+
+    function onPromptFocus() {
+      sendAsyncMessage("ok", [true, "onPromptFocus is called"]);
+      gPromptInput.removeEventListener("focus", onPromptFocus);
+
+      var listenerService = Services.els;
+
+      var listener = {
+        handleEvent: function _hv(aEvent) {
+          var isPrevented = aEvent.defaultPrevented;
+          sendAsyncMessage("ok", [!isPrevented,
+                           "ESC key event is prevented by editor"]);
+          listenerService.removeSystemEventListener(gPromptInput, "keypress",
+                                                    listener, false);
+        },
+      };
+      listenerService.addSystemEventListener(gPromptInput, "keypress",
+                                             listener, false);
+
+      sendAsyncMessage("info", "sending key");
+      var EventUtils = {};
+      EventUtils.window = {};
+      EventUtils._EU_Ci = Ci;
+      EventUtils._EU_Cc = Cc;
+      Services.scriptloader
+        .loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+                       EventUtils);
+      EventUtils.synthesizeKey("VK_ESCAPE", {},
+                               gPromptInput.ownerGlobal);
+    }
+
+    addMessageListener("destroy", function() {
+      os.removeObserver(onPromptLoad, "tabmodal-dialog-loaded");
+      os.removeObserver(onPromptLoad, "common-dialog-loaded");
+    });
+  });
+  script.addMessageListener("ok", ([val, msg]) => ok(val, msg));
+  script.addMessageListener("info", msg => info(msg));
+
+  info("opening prompt...");
+  prompt("summary", "text");
+  info("prompt is closed");
+
+  script.sendAsyncMessage("destroy");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

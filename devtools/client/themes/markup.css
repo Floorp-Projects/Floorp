@@ -1,0 +1,439 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --markup-hidden-attr-name-color: var(--grey-43);
+  --markup-hidden-attr-value-color: var(--grey-55);
+  --markup-hidden-punctuation-color: var(--grey-43);
+  --markup-pseudoclass-disk-color: #e9c600;
+  --markup-hidden-tag-color: var(--grey-50);
+  --markup-outline: var(--theme-splitter-color);
+  --markup-drag-line: var(--grey-40);
+  --markup-drop-line: var(--blue-55);
+  --markup-overflow-causing-background-color: rgba(128, 0, 215, 0.15);
+}
+
+.theme-dark:root {
+  --markup-hidden-attr-name-color: #787878;
+  --markup-hidden-attr-value-color: #a4a4a4;
+  --markup-hidden-punctuation-color: #787878;
+  --markup-hidden-tag-color: var(--grey-45);
+  --markup-outline: var(--theme-selection-background);
+  --markup-drag-line: var(--grey-55);
+  --markup-drop-line: var(--blue-50);
+  --markup-overflow-causing-background-color: rgba(148, 0, 255, 0.38);
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+:root {
+  -moz-control-character-visibility: visible;
+}
+
+body {
+  user-select: none;
+}
+
+/* Force height and width (possibly overflowing) from inline elements.
+ * This allows long overflows of text or input fields to still be styled with
+ * the container, rather than the background disappearing when scrolling */
+#root {
+  float: left; /* The markup view should always be LTR */
+  min-width: 100%;
+  /* Reserve extra space (in addition to the indent size) for DOM mutation
+   * breakpoint and pseudo icons. */
+  padding-left: 6px;
+  box-sizing: border-box;
+}
+
+/* Reset the global rotation of the icon done for RTL layout.
+   Markup view is always LTR */
+#root .theme-twisty:not(.open):dir(rtl),
+#root .theme-twisty:not([open]):-moz-locale-dir(rtl) {
+  transform: rotate(-90deg);
+}
+
+/* Don't display a parent-child outline for the root elements */
+#root > ul > li > .children {
+  background: none;
+}
+
+html.dragging {
+  overflow-x: hidden;
+}
+
+body.dragging .tag-line {
+  cursor: grabbing;
+}
+
+#root-wrapper:after {
+   content: "";
+   display: block;
+   clear: both;
+   position:relative;
+}
+
+.html-editor {
+  display: none;
+  position: absolute;
+  z-index: 2;
+
+  /* Use the same margin/padding trick used by .child tags to ensure that
+   * the editor covers up any content to the left (including expander arrows
+   * and hover effects). */
+  margin-left: -1000em;
+  padding-left: 1000em;
+}
+
+.html-editor-inner {
+  border: solid .1px;
+  flex: 1 1 auto;
+
+  /* Keep the editor away from the markup view floating scrollbars */
+  margin-inline-end: 12px;
+}
+
+.html-editor iframe {
+  height: 100%;
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.children {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Tags are organized in a UL/LI tree and indented thanks to a left padding.
+ * A very large padding is used in combination with a slightly smaller margin
+ * to make sure childs actually span from edge-to-edge. */
+.child {
+  margin-left: -10000px;
+  padding-left: 10011px;
+}
+
+/* Normally this element takes space in the layout even if it's position: relative
+ * by adding height: 0 we let surrounding elements to fill the blank space */
+.child.dragging {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+  z-index: 1;
+  height: 0;
+}
+
+/* Indicates a tag-line in the markup-view as being an active drop target by
+ * drawing a horizontal line where the dragged element would be inserted if
+ * dropped here */
+.tag-line.drop-target::before,
+.tag-line.drag-target::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  height: 2px;
+  /* Offset these by 1000px to make sure they cover the full width of the view */
+  width: calc(100% + 1000px);
+  left: -1000px;
+  background-color: var(--markup-drag-line);
+}
+
+.tag-line.drop-target::before {
+  background-color: var(--markup-drop-line);
+}
+
+/* In case the indicator is put on the closing .tag-line, the indentation level
+ * will become misleading, so we push it forward to match the indentation level */
+ul.children + .tag-line::before {
+  margin-left: 14px;
+}
+
+/* A tag line should have a height of 16px, with a line-height of 14px,
+ * (assuming a font-size of 11px). */
+.tag-line {
+  font-size: var(--theme-code-font-size);
+  min-height: 1.2727em;
+  line-height: 1.2727em;
+  padding-block: 1px;
+  position: relative;
+  cursor: default;
+}
+
+.tag-line[selected] + .children,
+.tag-line[selected] ~ .tag-line {
+  background-image: linear-gradient(to top, var(--markup-outline), var(--markup-outline));
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 1.5px 100%;
+  padding-left: 8px;
+  margin-left: -8px;
+}
+
+.tag-line[selected] + .children {
+  background-position-y: 2px;
+}
+
+.tag-line[selected] ~ .tag-line {
+  background-position-y: -2px;
+  /* Unset transition-property to prevent the markup outline from horizontal shifting */
+  transition-property: none;
+}
+
+/**
+ * Positioning the mutation marker on the viewport's left edge:
+ * - left: walk back the indentation level up
+ * - margin-left: walk back the #root's 6px padding-left
+ *   (plus hide the leftmost 2px of the icon outside the viewport)
+ */
+.markup-tag-mutation-marker {
+  display: none;
+  position: absolute;
+  top: 2px;
+  left: calc(var(--markup-level, 1) * -11px);
+  margin-left: -8px;
+  height: 12px;
+  width: 12px;
+  background-image: url(chrome://devtools/content/debugger/images/markup-breakpoint.svg);
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  background-position: right center;
+  -moz-context-properties: fill, stroke;
+  fill: var(--blue-50);
+  fill-opacity: 1;
+  stroke: none;
+  z-index: 2;
+}
+
+.markup-tag-mutation-marker.has-mutations {
+  display: block;
+}
+
+.tag-line[selected] .markup-tag-mutation-marker {
+  stroke: #fff;
+}
+
+.html-editor-container {
+  position: relative;
+  min-height: 200px;
+}
+
+/* This extra element placed in each tag is positioned absolutely to cover the
+ * whole tag line and is used for background styling (when a selection is made
+ * or when the tag is flashing) */
+.tag-line .tag-state {
+  position: absolute;
+  left: -1000em;
+  right: 0;
+  top: 0;
+  height: 100%;
+  z-index: 0;
+}
+
+.tag-line .tag-hover:not(.theme-selected) {
+  background: var(--theme-selection-background-hover);
+  z-index: -1;
+}
+
+.expander {
+  display: inline-block;
+  vertical-align: top;
+  width: 14px;
+  height: 16px;
+  margin: -1px 0 -1px -14px;
+  /* Make sure the expander still appears above the tag-state */
+  position: relative;
+  z-index: 1;
+}
+
+.child.collapsed .child, .child.collapsed .children {
+  display: none;
+}
+
+.child > .tag-line:first-child .close {
+  display: none;
+}
+
+.child.collapsed > .tag-line:first-child .close {
+  display: inline;
+}
+
+.child.collapsed > .tag-line ~ .tag-line {
+  display: none;
+}
+
+.child.collapsed .close {
+  display: inline;
+}
+
+.expandable.collapsed .markup-expand-badge {
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: top;
+  box-sizing: border-box;
+  height: 16px;
+  margin: -1px 0;
+  padding: 3px 2px;
+}
+
+.expandable.collapsed .markup-expand-badge::before {
+  /* Display an ellipsis character in collapsed nodes that can be expanded. */
+  content: "";
+  background-color: var(--badge-interactive-background-color);
+  background-image: url(chrome://devtools/skin/images/more.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+  border: 1px solid var(--badge-border-color);
+  color: var(--badge-color);
+  fill: var(--badge-interactive-color);
+  display: block;
+  width: 12px;
+  height: 8px;
+  line-height: 8px;
+  border-radius: 3px;
+  -moz-context-properties: fill;
+}
+
+.expandable.collapsed .markup-expand-badge:focus::before,
+.expandable.collapsed .markup-expand-badge:hover::before {
+  background-color: var(--badge-hover-background-color);
+}
+
+/* Hide HTML void elements (img, hr, br, …) closing tag when the element is not
+ * expanded (it can be if it has pseudo-elements attached) */
+.child.collapsed > .tag-line .void-element .close {
+  display: none;
+}
+
+.tag-line .tag-state.overflow-causing-highlighted:not(.theme-selected) {
+  background-color: var(--markup-overflow-causing-background-color);
+}
+
+.closing-bracket {
+  pointer-events: none;
+}
+
+.newattr {
+  margin-right: -13px;
+}
+
+.newattr:before {
+  content: "\00a0\00a0";
+}
+
+.attr-value .link {
+  text-decoration: underline;
+}
+
+.newattr:focus {
+  margin-right: 0;
+}
+
+.flash-out {
+  transition: background,color .5s;
+}
+
+.editor {
+  /* Make sure the editor still appears above the tag-state */
+  position: relative;
+  z-index: 1;
+}
+
+.editor.comment:not(.doctype) {
+  color: var(--theme-highlight-green);
+}
+
+.editor.text {
+  display: inline-block;
+}
+
+.editor.text pre,
+.editor.comment pre {
+  font: inherit;
+}
+
+.theme-dark .editor.text pre {
+  color: var(--theme-text-color-strong);
+}
+
+.more-nodes {
+  padding-left: 16px;
+}
+
+.styleinspector-propertyeditor {
+  vertical-align: top;
+  margin: -1px 0;
+  border: 1px solid #CCC;
+}
+
+.reveal-link {
+  cursor: pointer;
+  background: url("chrome://devtools/skin/images/reveal.svg") no-repeat;
+  display: inline-block;
+  width: 16px;
+  height: 8px;
+
+  -moz-context-properties: stroke;
+  stroke: currentColor;
+}
+
+/* Draw a circle next to nodes that have a pseudo class lock.
+   Center vertically with the 1.4em line height on .tag-line */
+.child.pseudoclass-locked::before {
+  content: "";
+  background: var(--markup-pseudoclass-disk-color);
+  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  left: 8px;
+  position: absolute;
+  z-index: 1;
+}
+
+.not-displayed {
+  color: var(--markup-hidden-punctuation-color);
+}
+
+.not-displayed .attr-name {
+  color: var(--markup-hidden-attr-name-color);
+}
+
+.not-displayed .attr-value {
+  color: var(--markup-hidden-attr-value-color);
+}
+
+.not-displayed .tag {
+  color: var(--markup-hidden-tag-color);
+}
+
+/* Selected nodes in the tree should have light selected text.
+   theme-selected doesn't work in this case since the text is a
+   sibling of the class, not a child. */
+.theme-selected ~ .editor,
+.theme-selected ~ .editor.comment,
+.theme-selected ~ .editor .tag,
+.theme-selected ~ .editor .theme-fg-color1,
+.theme-selected ~ .editor .theme-fg-color2,
+.theme-selected ~ .editor .theme-fg-color3 {
+  color: var(--theme-selection-color);
+}
+
+/* Selected nodes being flashed in the tree should have dark selected text. Here we target
+   nodes with theme-selected text colors and apply a dark, accessible text color for when
+   the yellow flashing background is applied. */
+.theme-selected.theme-bg-contrast ~ .editor,
+.theme-selected ~ .editor .theme-fg-contrast {
+  color: var(--theme-contrast-color);
+}
+
+/* Applicable to the DOCTYPE */
+.doctype {
+  font-style: italic;
+}

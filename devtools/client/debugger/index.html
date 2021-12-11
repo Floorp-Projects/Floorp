@@ -1,0 +1,73 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html dir="">
+  <head>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/shared/sourceeditor/codemirror/lib/codemirror.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/shared/sourceeditor/codemirror/addon/dialog/dialog.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/shared/sourceeditor/codemirror/mozilla.css"
+    />
+    <!-- Needed for the ObjectInspector -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/shared/components/reps/reps.css"
+    />
+    <!-- Needed for the ObjectInspector and the Source Tree -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/shared/components/Tree.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/shared/components/object-inspector/components/ObjectInspector.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/debugger/dist/vendors.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://devtools/content/debugger/src/debugger.css"
+    />
+  </head>
+
+  <body>
+    <main id="mount" class="theme-body"></main>
+    <script
+      src="chrome://devtools/content/shared/theme-switching.js"
+    ></script>
+    <script>
+      try {
+        const { BrowserLoader } = ChromeUtils.import(
+          "resource://devtools/client/shared/browser-loader.js"
+        );
+        const { require } = BrowserLoader({
+          baseURI: "resource://devtools/client/debugger",
+          window
+        });
+        Debugger = require("devtools/client/debugger/src/main");
+      } catch (e) {
+        dump("Exception happened while loading the debugger:\n");
+        dump(e + "\n");
+        dump(e.stack + "\n");
+      }
+    </script>
+  </body>
+</html>

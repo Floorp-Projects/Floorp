@@ -1,0 +1,11 @@
+---
+rst:
+    description: RST linter
+    include: [.]
+    extensions:
+        - rst
+    support-files:
+        - 'tools/lint/rst/**'
+    type: external
+    payload: rst:lint
+    setup: rst:setup

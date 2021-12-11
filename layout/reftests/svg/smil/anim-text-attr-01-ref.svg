@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     style="font: 16px sans-serif">
+
+  <title>Reference for animating attributes on child text content elements</title>
+
+  <text x="200" y="20">Test 1</text>
+  <text x="20" y="60">Test 2</text>
+  <text x="20" y="80" rotate="10">Test 3</text>
+  <text>
+    <tspan x="200" y="100">Test 4</tspan>
+  </text>
+  <text>
+    <tspan x="20" y="140">Test 5</tspan>
+  </text>
+  <text>
+    <tspan x="20" y="160" rotate="30">Test 6</tspan>
+  </text>
+  <path id="p" d="M 20,180 h 400"/>
+  <text>
+    <textPath xlink:href="#p" startOffset="180">Test 7</textPath>
+  </text>
+  <text x="20" y="200" textLength="100" lengthAdjust="spacingAndGlyphs">Test 8</text>
+  <text>
+    <tspan x="20" y="220" textLength="100" lengthAdjust="spacingAndGlyphs">Test 9</tspan>
+  </text>
+</svg>

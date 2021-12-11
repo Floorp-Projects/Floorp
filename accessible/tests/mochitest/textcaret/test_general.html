@@ -1,0 +1,174 @@
+<html>
+
+<head>
+  <title>Text accessible caret testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Turn on/off the caret browsing mode.
+     */
+    function turnCaretBrowsing(aIsOn) {
+      Services.prefs.setBoolPref("accessibility.browsewithcaret", aIsOn);
+    }
+
+    /**
+     * Test caret offset for the given accessible.
+     */
+    function testCaretOffset(aID, aCaretOffset) {
+      var acc = getAccessible(aID, [nsIAccessibleText]);
+      is(acc.caretOffset, aCaretOffset,
+         "Wrong caret offset for " + aID);
+    }
+
+    function testCaretOffsets(aList) {
+      for (var i = 0; i < aList.length; i++)
+        testCaretOffset(aList[0][0], aList[0][1]);
+    }
+
+    function queueTraversalList(aList, aFocusNode) {
+      for (var i = 0 ; i < aList.length; i++) {
+        var node = aList[i].DOMPoint[0];
+        var nodeOffset = aList[i].DOMPoint[1];
+
+        var textAcc = aList[i].point[0];
+        var textOffset = aList[i].point[1];
+        var textList = aList[i].pointList;
+        var invoker =
+          new moveCaretToDOMPoint(textAcc, node, nodeOffset, textOffset,
+                                  ((i == 0) ? aFocusNode : null),
+                                  testCaretOffsets.bind(null, textList));
+        gQueue.push(invoker);
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    function doTests() {
+      turnCaretBrowsing(true);
+
+      // test caret offsets
+      testCaretOffset(document, 15);
+      testCaretOffset("textbox", -1);
+      testCaretOffset("textarea", -1);
+      testCaretOffset("p", -1);
+
+      // test caret move events and caret offsets
+      gQueue = new eventQueue();
+
+      gQueue.push(new setCaretOffset("textbox", 1, "textbox"));
+      gQueue.push(new setCaretOffset("link", 1, "link"));
+      gQueue.push(new setCaretOffset("heading", 1, document));
+
+      // a*b*c
+      var p2Doc = getNode("p2_container").contentDocument;
+      var traversalList = [
+        { // before 'a'
+          DOMPoint: [ getNode("p2", p2Doc).firstChild, 0 ],
+          point: [ getNode("p2", p2Doc), 0 ],
+          pointList: [ [ p2Doc, 0 ] ],
+        },
+        { // after 'a' (before anchor)
+          DOMPoint: [ getNode("p2", p2Doc).firstChild, 1 ],
+          point: [ getNode("p2", p2Doc), 1 ],
+          pointList: [ [ p2Doc, 0 ] ],
+        },
+        { // before 'b' (inside anchor)
+          DOMPoint: [ getNode("p2_a", p2Doc).firstChild, 0 ],
+          point: [ getNode("p2_a", p2Doc), 0 ],
+          pointList: [
+            [ getNode("p2", p2Doc), 1 ],
+            [ p2Doc, 0 ],
+          ],
+        },
+        { // after 'b' (inside anchor)
+          DOMPoint: [ getNode("p2_a", p2Doc).firstChild, 1 ],
+          point: [ getNode("p2_a", p2Doc), 1 ],
+          pointList: [
+            [ getNode("p2", p2Doc), 1 ],
+            [ p2Doc, 0 ],
+          ],
+        },
+        { // before 'c' (after anchor)
+          DOMPoint: [ getNode("p2", p2Doc).lastChild, 0 ],
+          point: [ getNode("p2", p2Doc), 2 ],
+          pointList: [ [ p2Doc, 0 ] ],
+        },
+        { // after 'c'
+          DOMPoint: [ getNode("p2", p2Doc).lastChild, 1 ],
+          point: [ getNode("p2", p2Doc), 3 ],
+          pointList: [ [ p2Doc, 0 ] ],
+        },
+      ];
+      queueTraversalList(traversalList, getNode("p2", p2Doc));
+
+      gQueue.onFinish = function() {
+        turnCaretBrowsing(false);
+      };
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=448744"
+     title="caretOffset should return -1 if the system caret is not currently with in that particular object">
+    Bug 448744
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=524115"
+     title="HyperText accessible should get focus when the caret is positioned inside of it, text is changed or copied into clipboard by ATs">
+    Bug 524115
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=546068"
+     title="Position is not being updated when atk_text_set_caret_offset is used">
+    Bug 546068
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=672717"
+     title="Broken caret when moving into/out of embedded objects with right arrow">
+    Bug 672717
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=725581"
+     title="caretOffset for textarea should be -1 when textarea doesn't have a focus">
+    Bug 725581
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="textbox" value="hello"/>
+  <textarea id="textarea">text<br>text</textarea>
+  <p id="p" contentEditable="true"><span>text</span><br/>text</p>
+  <a id="link" href="about:mozilla">about mozilla</a>
+  <h5 id="heading">heading</h5>
+  <iframe id="p2_container"
+          src="data:text/html,<p id='p2' contentEditable='true'>a<a id='p2_a' href='mozilla.org'>b</a>c</p>"></iframe>
+
+  <div id="eventdump"></div>
+</body>
+</html>

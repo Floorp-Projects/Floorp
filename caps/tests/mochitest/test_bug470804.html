@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=470804
+-->
+<head>
+  <title>Test for Bug 470804</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=470804">Mozilla Bug 470804</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 470804
+    Passing a null targetURL to checkLoadURIWithPrincipal shouldn't crash
+ **/
+
+const nsIScriptSecurityManager = SpecialPowers.Ci.nsIScriptSecurityManager;
+var secMan = SpecialPowers.Services.scriptSecurityManager;
+var principal = SpecialPowers.wrap(document).nodePrincipal;
+isnot(principal, undefined, "Should have a principal");
+isnot(principal, null, "Should have a non-null principal");
+is(principal.isSystemPrincipal, false,
+   "Shouldn't have system principal here");
+try {
+  secMan.checkLoadURIWithPrincipal(principal, null,
+                                   nsIScriptSecurityManager.STANDARD);
+} catch (e) {
+  // throwing is fine, it's just crashing that's bad
+}
+ok(true, "Survival: we should get here without crashing");
+</script>
+</pre>
+</body>
+</html>

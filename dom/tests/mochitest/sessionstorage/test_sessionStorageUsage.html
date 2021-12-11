@@ -1,0 +1,53 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>sessionStorage basic test</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function setup() {
+  sessionStorage.clear();
+  SimpleTest.executeSoon(startTest);
+}
+
+function startTest()
+{
+  var util = SpecialPowers.getDOMWindowUtils(window);
+
+  // Check initial state.
+  is(sessionStorage.length, 0, "storage is empty");
+  is(util.getStorageUsage(sessionStorage), 0, "usage is zero");
+
+  // Add some data.
+  sessionStorage.setItem("one", "data");
+  var usage = util.getStorageUsage(sessionStorage);
+  ok(usage > 0, "storage contains data");
+
+  // Add some more data.
+  sessionStorage.setItem("two", "data");
+  ok(usage < util.getStorageUsage(sessionStorage), "storage size grew");
+
+  // Remove data.
+  sessionStorage.removeItem("two");
+  is(util.getStorageUsage(sessionStorage), usage, "storage size shrunk");
+
+  // Cleanup.
+  sessionStorage.clear();
+  is(sessionStorage.length, 0, "storage is empty");
+  is(util.getStorageUsage(sessionStorage), 0, "usage is zero");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="setup();">
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body>
+    <iframe srcdoc="<body spellcheck=false></body>"></iframe>
+    <script>
+      onload = function() {
+        var i = document.querySelector("iframe");
+        var d = i.contentDocument;
+        var w = i.contentWindow;
+        var s = w.getSelection();
+        i.focus();
+        d.body.contentEditable = true;
+        d.body.contentEditable = false;
+        d.designMode = "off";
+        d.designMode = "on";
+        d.body.focus();
+        sendString("x");
+        s.collapse(d.body.firstChild, 1);
+        sendString("x");
+        setTimeout(function() {
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      };
+    </script>
+  </body>
+</html>

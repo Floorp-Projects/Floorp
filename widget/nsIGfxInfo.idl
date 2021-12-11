@@ -1,0 +1,319 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/* NOTE: this interface is completely undesigned, not stable and likely to change */
+[scriptable, builtinclass, uuid(1accd618-4c80-4703-9d29-ecf257d397c8)]
+interface nsIGfxInfo : nsISupports
+{
+  /*
+   * These are win32-specific
+   */
+  readonly attribute boolean D2DEnabled;
+  readonly attribute boolean DWriteEnabled;
+  readonly attribute boolean EmbeddedInFirefoxReality;
+  readonly attribute AString AzureCanvasBackend;
+  readonly attribute AString AzureContentBackend;
+  readonly attribute boolean usingGPUProcess;
+  readonly attribute boolean hasBattery;
+  readonly attribute AString DWriteVersion;
+  readonly attribute AString cleartypeParameters;
+
+  /*
+   * These are non-Android linux-specific
+   */
+  readonly attribute AString windowProtocol;
+  readonly attribute AString desktopEnvironment;
+  readonly attribute AString testType;
+
+  /*
+   * These are valid across all platforms.
+   */
+  readonly attribute AString ContentBackend;
+  readonly attribute boolean WebRenderEnabled;
+  readonly attribute boolean isHeadless;
+  readonly attribute unsigned long TargetFrameRate;
+
+  // XXX: Switch to a list of devices, rather than explicitly numbering them.
+
+  /**
+   * The name of the display adapter.
+   */
+  readonly attribute AString adapterDescription;
+  readonly attribute AString adapterDescription2;
+
+  readonly attribute AString adapterDriver;
+  readonly attribute AString adapterDriver2;
+
+  /* These types are inspired by DXGI_ADAPTER_DESC */
+  readonly attribute AString adapterVendorID;
+  readonly attribute AString adapterVendorID2;
+
+  readonly attribute AString adapterDeviceID;
+  readonly attribute AString adapterDeviceID2;
+
+  readonly attribute AString adapterSubsysID;
+  readonly attribute AString adapterSubsysID2;
+
+  /**
+   * The amount of RAM in MB in the display adapter.
+   */
+  readonly attribute unsigned long adapterRAM;
+  readonly attribute unsigned long adapterRAM2;
+
+  readonly attribute AString adapterDriverVendor;
+  readonly attribute AString adapterDriverVendor2;
+
+  readonly attribute AString adapterDriverVersion;
+  readonly attribute AString adapterDriverVersion2;
+
+  readonly attribute AString adapterDriverDate;
+  readonly attribute AString adapterDriverDate2;
+
+  readonly attribute boolean isGPU2Active;
+
+  readonly attribute ACString drmRenderDevice;
+
+  /**
+   * Information about display devices
+   */
+  readonly attribute Array<AString> displayInfo;
+  readonly attribute Array<unsigned long> displayWidth;
+  readonly attribute Array<unsigned long> displayHeight;
+
+  /**
+   * Returns an array of objects describing each monitor. Guaranteed properties
+   * are "screenWidth" and "screenHeight". This is only implemented on Desktop.
+   *
+   * Windows additionally supplies "refreshRate" and "pseudoDisplay".
+   *
+   * OS X additionally supplies "scale".
+   */
+  [implicit_jscontext]
+  jsval getMonitors();
+
+  void refreshMonitors();
+
+  Array<ACString> getFailures(out Array<long> indices);
+
+  [noscript, notxpcom] void logFailure(in ACString failure);
+  /*
+   * A set of constants for features that we can ask this GfxInfo object
+   * about via GetFeatureStatus
+   */
+  /* Don't assign any value <= 0 */
+  /* Values must be contiguous */
+  /* Whether Direct2D is supported for content rendering. */
+  const long FEATURE_DIRECT2D = 1;
+  /* Whether Direct3D 9 is supported for layers. */
+  const long FEATURE_DIRECT3D_9_LAYERS = 2;
+  /* Whether Direct3D 10.0 is supported for layers. */
+  const long FEATURE_DIRECT3D_10_LAYERS = 3;
+  /* Whether Direct3D 10.1 is supported for layers. */
+  const long FEATURE_DIRECT3D_10_1_LAYERS = 4;
+  /* Whether OpenGL is supported for layers */
+  const long FEATURE_OPENGL_LAYERS = 5;
+  /* Whether WebGL is supported via OpenGL. */
+  const long FEATURE_WEBGL_OPENGL = 6;
+  /* Whether WebGL is supported via ANGLE (D3D9 -- does not check for the presence of ANGLE libs). */
+  const long FEATURE_WEBGL_ANGLE = 7;
+  /* (Unused) Whether WebGL antialiasing is supported. */
+  const long UNUSED_FEATURE_WEBGL_MSAA = 8;
+  /* Whether Stagefright is supported, starting in 17. */
+  const long FEATURE_STAGEFRIGHT = 9;
+  /* Whether Webrtc Hardware H.264 acceleration is supported, starting in 71. */
+  const long FEATURE_WEBRTC_HW_ACCELERATION_H264 = 10;
+  /* Whether Direct3D 11 is supported for layers, starting in 32. */
+  const long FEATURE_DIRECT3D_11_LAYERS = 11;
+  /* Whether hardware accelerated video decoding is supported, starting in 36. */
+  const long FEATURE_HARDWARE_VIDEO_DECODING = 12;
+  /* Whether Direct3D 11 is supported for ANGLE, starting in 38. */
+  const long FEATURE_DIRECT3D_11_ANGLE = 13;
+  /* Whether Webrtc Hardware acceleration is supported, starting in 42. */
+  const long FEATURE_WEBRTC_HW_ACCELERATION_ENCODE = 14;
+  /* Whether Webrtc Hardware acceleration is supported, starting in 42. */
+  const long FEATURE_WEBRTC_HW_ACCELERATION_DECODE = 15;
+  /* Whether Canvas acceleration is supported, starting in 45 */
+  const long FEATURE_CANVAS2D_ACCELERATION = 16;
+  /* Whether hardware VP8 decoding is supported, starting in 48; not for downloadable blocking. */
+  const long FEATURE_VP8_HW_DECODE = 17;
+  /* Whether hardware VP9 decoding is supported, starting in 48; not for downloadable blocking. */
+  const long FEATURE_VP9_HW_DECODE = 18;
+  /* Whether NV_dx_interop2 is supported, starting in 50; downloadable blocking in 58. */
+  const long FEATURE_DX_INTEROP2 = 19;
+  /* Whether the GPU process is supported, starting in 52; downloadable blocking in 58. */
+  const long FEATURE_GPU_PROCESS = 20;
+  /* Whether the WebGL2 is supported, starting in 54 */
+  const long FEATURE_WEBGL2 = 21;
+  /* Whether D3D11 keyed mutex is supported, starting in 56 */
+  const long FEATURE_D3D11_KEYED_MUTEX = 22;
+  /* Whether WebRender is supported, starting in 62 */
+  const long FEATURE_WEBRENDER = 23;
+  /* Whether WebRender is supported, starting in 62 */
+  const long FEATURE_DX_NV12 = 24;
+  const long FEATURE_DX_P010 = 25;
+  const long FEATURE_DX_P016 = 26;
+  /* Whether OpenGL swizzle configuration of texture units is supported, starting in 70 */
+  const long FEATURE_GL_SWIZZLE = 27;
+  /* Whether WebRender native compositor is supported, starting in 73 */
+  const long FEATURE_WEBRENDER_COMPOSITOR = 28;
+  /* Whether WebRender can use scissored clears for cached surfaces, staring in 79 */
+  const long FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS = 29;
+  /* Support webgl.out-of-process: true (starting in 83) */
+  const long FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS = 30;
+  /* Is OpenGL threadsafe (starting in 83) */
+  const long FEATURE_THREADSAFE_GL = 31;
+  /* Whether webrender uses pre-optimized shaders, starting in 87. */
+  const long FEATURE_WEBRENDER_OPTIMIZED_SHADERS = 32;
+  /* Whether we prefer EGL over GLX with X11, starting in 88. */
+  const long FEATURE_X11_EGL = 33;
+  /* Whether DMABUF is supported, starting in 88. */
+  const long FEATURE_DMABUF = 34;
+  /* Whether webrender caches shader program binaries to disk, starting in 89. */
+  const long FEATURE_WEBRENDER_SHADER_CACHE = 35;
+  /* the maximum feature value. */
+  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_SHADER_CACHE;
+
+  /*
+   * A set of return values from GetFeatureStatus
+   */
+
+  /* The driver is safe to the best of our knowledge */
+  const long FEATURE_STATUS_OK = 1;
+  /* We don't know the status of the feature yet. The analysis probably hasn't finished yet. */
+  const long FEATURE_STATUS_UNKNOWN = 2;
+  /* This feature is blocked on this driver version. Updating driver will typically unblock it. */
+  const long FEATURE_BLOCKED_DRIVER_VERSION = 3;
+  /* This feature is blocked on this device, regardless of driver version.
+   * Typically means we hit too many driver crashes without a good reason to hope for them to
+   * get fixed soon. */
+  const long FEATURE_BLOCKED_DEVICE = 4;
+  /* This feature is available and can be used, but is not suggested (e.g. shouldn't be used by default */
+  const long FEATURE_DISCOURAGED = 5;
+  /* This feature is blocked on this OS version. */
+  const long FEATURE_BLOCKED_OS_VERSION = 6;
+  /* This feature is blocked because of mismatched driver versions. */
+  const long FEATURE_BLOCKED_MISMATCHED_VERSION = 7;
+  /* This feature is blocked due to not being on the allowlist. */
+  const long FEATURE_DENIED = 8;
+  /* This feature is safe to be on this device due to the allowlist. */
+  const long FEATURE_ALLOW_ALWAYS = 9;
+  /* This feature is safe to be on this device due to the allowlist, depending on qualified/experiment status. */
+  const long FEATURE_ALLOW_QUALIFIED = 10;
+
+  /**
+   * Ask about a feature, and return the status of that feature.
+   * If the feature is not ok then aFailureId will give a unique failure Id
+   * otherwise it will be empty.
+   */
+  long getFeatureStatus(in long aFeature, [optional] out ACString aFailureId);
+
+  /*
+   * Ask about a feature, return the minimum driver version required for it if its status is
+   * FEATURE_BLOCKED_DRIVER_VERSION, otherwise return an empty string.
+   */
+  AString getFeatureSuggestedDriverVersion(in long aFeature);
+
+  // only useful on X11
+  [noscript, notxpcom] void GetData();
+
+  /**
+   * Maximum refresh rate among detected monitors. -1 if unknown. aMixed is set
+   * to true if we know there are multiple displays and they have different
+   * refresh rates, else false.
+   */
+  [noscript, notxpcom] long GetMaxRefreshRate(out boolean aMixed);
+
+  [implicit_jscontext]
+  jsval getInfo();
+
+  // Return an object describing all features that have been configured:
+  //
+  //   "features": [
+  //     // For each feature:
+  //     {
+  //       "name": <string>,
+  //       "description": <string>,
+  //       "status": <string>,
+  //       "log": [
+  //          // One or more log entries, the first denotes the default value.
+  //          {
+  //            "type": <string>,    // "base", "user", "env", or "runtime"
+  //            "status": <string>,
+  //            "message": <string>  // Set unless type is "base" and status is "available".
+  //          }
+  //       ]
+  //     }
+  //   ]
+  //   "fallbacks": [
+  //     // For each workaround:
+  //     {
+  //       "name:" <string>,
+  //       "description": <string>,
+  //       "message": <string>
+  //     ]
+  //   }
+  //
+  // When a message is prefixed with a '#', it is a special status code. Status
+  // codes are unique identifiers that can be searched in the codebase to find
+  // which line of code caused the message. Some codes are standardized to
+  // improve about:support messaging:
+  //
+  //   "[CONTEXT_]FEATURE_FAILURE_BUG_<number>"
+  //     CONTEXT is optional and can currently only be "BLOCKLIST".
+  //     <number> refers to a bug number in Bugzilla.
+  //
+  [implicit_jscontext]
+  jsval getFeatureLog();
+
+  // Returns an object containing information about graphics features. It is
+  // intended to be directly included into the Telemetry environment.
+  //
+  //   "layers":
+  //   {
+  //     "compositor": "d3d9", "d3d11", "opengl", "basic", or "none"
+  //                   // ("none" indicates no compositors have been created)
+  //     // Feature is one of "d3d9", "d3d11", "opengl", "basic", or "d2d".
+  //     "<feature>": {
+  //       // Each backend can have one of the following statuses:
+  //       //   "unused"      - This feature has not been requested.
+  //       //   "unavailable" - OS version or restriction prevents use.
+  //       //   "blocked"     - An internal condition (such as safe mode) prevents use.
+  //       //   "blocklisted" - Blocked due to a blocklist restriction.
+  //       //   "denied"      - Blocked due to allowlist restrictions.
+  //       //   "disabled"    - User explicitly disabled this default feature.
+  //       //   "failed"      - Feature failed to initialize.
+  //       //   "available"   - User has this feature available by default.
+  //       "status": "<status>",
+  //       "version": "<version>",
+  //       "warp": true|false,           // D3D11 only.
+  //       "textureSharing": true|false, // D3D11 only.
+  //     }
+  //   }
+  [implicit_jscontext]
+  jsval getFeatures();
+
+  // Returns an array listing any active crash guards.
+  //
+  //   [
+  //     {
+  //       // Type is one of "d3d11layers", or "glcontext".
+  //       "type":        "<identifier>",
+  //
+  //       // Preference that must be deleted/reset to retrigger the guard.
+  //       "prefName":    "<preference>",
+  //     }
+  //   ]
+  [implicit_jscontext]
+  jsval getActiveCrashGuards();
+
+  // Forces the GPU process to start or shutdown. This is intended only for
+  // xpcshell-tests.
+  boolean controlGPUProcessForXPCShell(in boolean aEnable);
+};
+
+

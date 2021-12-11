@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1107592</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  /* global TestInterfaceJS */
+  /** Test for Bug 1107592 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function doTest() {
+    var file = location.href;
+
+    var asyncFrame;
+    /* Async parent frames from pushPrefEnv don't show up in e10s.  */
+    if (!SpecialPowers.getBoolPref("javascript.options.asyncstack_capture_debuggee_only")) {
+      asyncFrame = `Async*@${file}:153:17
+`;
+    } else {
+      asyncFrame = "";
+    }
+
+    var t = new TestInterfaceJS();
+    try {
+      t.testThrowError();
+    } catch (e) {
+      ok(e instanceof Error, "Should have an Error here");
+      ok(!(e instanceof DOMException), "Should not have DOMException here");
+      ok(!("code" in e), "Should not have a 'code' property");
+      is(e.name, "Error", "Should not have an interesting name here");
+      is(e.message, "We are an Error", "Should have the right message");
+      is(e.stack,
+         `doTest@${file}:31:9
+${asyncFrame}`,
+         "Exception stack should still only show our code");
+      is(e.fileName,
+         file,
+         "Should have the right file name");
+      is(e.lineNumber, 31, "Should have the right line number");
+      is(e.columnNumber, 9, "Should have the right column number");
+    }
+
+    try {
+      t.testThrowDOMException();
+    } catch (e) {
+      ok(e instanceof Error, "Should also have an Error here");
+      ok(e instanceof DOMException, "Should have DOMException here");
+      is(e.name, "NotSupportedError", "Should have the right name here");
+      is(e.message, "We are a DOMException",
+         "Should also have the right message");
+      is(e.code, DOMException.NOT_SUPPORTED_ERR,
+         "Should have the right 'code'");
+      is(e.stack,
+         `doTest@${file}:50:9
+${asyncFrame}`,
+         "Exception stack should still only show our code");
+      is(e.filename,
+         file,
+         "Should still have the right file name");
+      is(e.lineNumber, 50, "Should still have the right line number");
+      todo_isnot(e.columnNumber, 0,
+                 "No column number support for DOMException yet");
+    }
+
+    try {
+      t.testThrowTypeError();
+    } catch (e) {
+      ok(e instanceof TypeError, "Should have a TypeError here");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (2)");
+      ok(!("code" in e), "Should not have a 'code' property (2)");
+      is(e.name, "TypeError", "Should be named TypeError");
+      is(e.message, "We are a TypeError",
+         "Should also have the right message (2)");
+      is(e.stack,
+         `doTest@${file}:72:9
+${asyncFrame}`,
+         "Exception stack for TypeError should only show our code");
+      is(e.fileName,
+         file,
+         "Should still have the right file name for TypeError");
+      is(e.lineNumber, 72, "Should still have the right line number for TypeError");
+      is(e.columnNumber, 9, "Should have the right column number for TypeError");
+    }
+
+    try {
+      t.testThrowCallbackError(function() { Array.prototype.forEach(); });
+    } catch (e) {
+      ok(e instanceof TypeError, "Should have a TypeError here (3)");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (3)");
+      ok(!("code" in e), "Should not have a 'code' property (3)");
+      is(e.name, "TypeError", "Should be named TypeError (3)");
+      is(e.message, "missing argument 0 when calling function Array.prototype.forEach",
+         "Should also have the right message (3)");
+      is(e.stack,
+         `doTest/<@${file}:92:61
+doTest@${file}:92:9
+${asyncFrame}`,
+         "Exception stack for TypeError should only show our code (3)");
+      is(e.fileName,
+         file,
+         "Should still have the right file name for TypeError (3)");
+      is(e.lineNumber, 92, "Should still have the right line number for TypeError (3)");
+      is(e.columnNumber, 61, "Should have the right column number for TypeError (3)");
+    }
+
+    try {
+      t.testThrowXraySelfHosted();
+    } catch (e) {
+      ok(!(e instanceof Error), "Should have an Exception here (4)");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (4)");
+      ok(!("code" in e), "Should not have a 'code' property (4)");
+      is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (4)");
+      is(e.message, "", "Message should be sanitized (5)");
+      is(e.stack,
+         `doTest@${file}:113:9
+${asyncFrame}`,
+         "Exception stack for sanitized exception should only show our code (4)");
+      is(e.filename,
+         file,
+         "Should still have the right file name for sanitized exception (4)");
+      is(e.lineNumber, 113, "Should still have the right line number for sanitized exception (4)");
+      todo_isnot(e.columnNumber, 0, "Should have the right column number for sanitized exception (4)");
+    }
+
+    try {
+      t.testThrowSelfHosted();
+    } catch (e) {
+      ok(!(e instanceof Error), "Should have an Exception here (5)");
+      ok(!(e instanceof DOMException), "Should not have DOMException here (5)");
+      ok(!("code" in e), "Should not have a 'code' property (5)");
+      is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (5)");
+      is(e.message, "", "Message should be sanitized (5)");
+      is(e.stack,
+         `doTest@${file}:132:9
+${asyncFrame}`,
+         "Exception stack for sanitized exception should only show our code (5)");
+      is(e.filename,
+         file,
+         "Should still have the right file name for sanitized exception (5)");
+      is(e.lineNumber, 132, "Should still have the right line number for sanitized exception (5)");
+      todo_isnot(e.columnNumber, 0, "Should have the right column number for sanitized exception (5)");
+    }
+
+    SimpleTest.finish();
+  }
+
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
+                            doTest);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107592">Mozilla Bug 1107592</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

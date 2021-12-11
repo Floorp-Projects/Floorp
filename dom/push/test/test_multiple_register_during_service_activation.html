@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1150812: If service is in activating or no connection state it can not send
+request immediately, but the requests are queued. This test test the case of
+multiple subscription for the same scope during activation.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1150812</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1150812">Mozilla Bug 1150812</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+  function debug(str) {
+  //  console.log(str + "\n");
+  }
+
+  function registerServiceWorker() {
+    return navigator.serviceWorker.register("worker.js?" + (Math.random()), {scope: "."});
+  }
+
+  function unregister(swr) {
+    return swr.unregister()
+      .then(result => {
+        ok(result, "Unregister should return true.");
+      }, err => {
+        dump("Unregistering the SW failed with " + err + "\n");
+        throw err;
+      });
+  }
+
+  function subscribe(swr) {
+    return swr.pushManager.subscribe()
+      .then(sub => {
+        ok(true, "successful registered for push notification");
+        return sub;
+      }, err => {
+        ok(false, "could not register for push notification");
+        throw err;
+      });
+  }
+
+  function setupMultipleSubscriptions(swr) {
+    // We need to do this to restart service so that a queue will be formed.
+    let promiseTeardown = teardownMockPushSocket();
+    setupMockPushSocket(new MockWebSocket());
+
+    var pushSubscription;
+    return Promise.all([
+      subscribe(swr),
+      subscribe(swr),
+    ]).then(a => {
+      ok(a[0].endpoint == a[1].endpoint, "setupMultipleSubscriptions - Got the same endpoint back.");
+      pushSubscription = a[0];
+      return promiseTeardown;
+    }).then(_ => {
+      return pushSubscription;
+    }, err => {
+      ok(false, "could not register for push notification");
+      throw err;
+    });
+  }
+
+  function getEndpointExpectNull(swr) {
+    return swr.pushManager.getSubscription()
+      .then(pushSubscription => {
+        ok(pushSubscription == null, "getEndpoint should return null when app not subscribed.");
+      }, err => {
+        ok(false, "could not register for push notification");
+        throw err;
+      });
+  }
+
+  function unsubscribe(sub) {
+    return sub.unsubscribe();
+  }
+
+  function runTest() {
+    registerServiceWorker()
+    .then(swr =>
+      getEndpointExpectNull(swr)
+        .then(_ => setupMultipleSubscriptions(swr))
+        .then(sub => unsubscribe(sub))
+        .then(_ => unregister(swr))
+    )
+    .catch(err => {
+      ok(false, "Some test failed with error " + err);
+    }).then(SimpleTest.finish);
+  }
+
+  setupPrefsAndMockSocket(new MockWebSocket()).then(_ => runTest());
+  SpecialPowers.addPermission("desktop-notification", true, document);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

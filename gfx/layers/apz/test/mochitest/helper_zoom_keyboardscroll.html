@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+  <title>Tests that keyboard arrow keys scroll after zooming in when there was no scrollable overflow before zooming</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <div style="height: 20000px; background-color: green"></div>
+  <script type="application/javascript">
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+
+    async function test() {
+      is(await getResolution(), 1.0, "should not be zoomed (1)");
+
+      is(window.scrollX, 0, "shouldn't have scrolled (2)");
+      is(window.scrollY, 0, "shouldn't have scrolled (3)");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled (4)");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled (5)");
+
+      // Zoom in
+      SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+      await promiseApzFlushedRepaints();
+
+      is(await getResolution(), 2.0, "should have zoomed (6)");
+
+      is(window.scrollX, 0, "shouldn't have scrolled (7)");
+      is(window.scrollY, 0, "shouldn't have scrolled (8)");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled (9)");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled (10)");
+
+      window.synthesizeKey("KEY_ArrowRight");
+
+      await promiseApzFlushedRepaints();
+
+      is(await getResolution(), 2.0, "should be zoomed (11)");
+
+      is(window.scrollX, 0, "shouldn't have scrolled (12)");
+      is(window.scrollY, 0, "shouldn't have scrolled (13)");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled (14)");
+      isnot(visualViewport.pageLeft, 0, "should have scrolled (15)");
+
+      window.synthesizeKey("KEY_ArrowDown");
+
+      await promiseApzFlushedRepaints();
+
+      is(await getResolution(), 2.0, "should be zoomed (16)");
+
+      is(window.scrollX, 0, "shouldn't have scrolled (17)");
+      is(window.scrollY, 0, "shouldn't have scrolled (18)");
+      isnot(visualViewport.pageTop, 0, "should have scrolled (19)");
+      isnot(visualViewport.pageLeft, 0, "should have scrolled (20)");
+
+      // Zoom back out
+      SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1.0);
+      await promiseApzFlushedRepaints();
+
+      is(await getResolution(), 1.0, "should not be zoomed (21)");
+    }
+
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+
+    </style>
+
+<script>
+function insertTable() {
+  var table = document.createElement('table');
+  var tbody = document.createElement('tbody');
+  var tbody2 = document.createElement('tbody');
+  var text = document.createTextNode('1');
+  var text2 = document.createTextNode('2');
+  tbody.appendChild(text);
+  tbody2.appendChild(text2);
+  table.appendChild(tbody);
+  table.appendChild(tbody2);
+
+  table.setAttribute('height','82');
+  table.setAttribute('style','border:6px solid lime');
+
+  tbody2.setAttribute('height','30');
+
+  document.body.appendChild(table);
+
+  setTimeout(function() { document.documentElement.className = ""; }, 0);
+}
+</script>
+</head>
+
+<body onload="insertTable()"></body>
+
+</html>

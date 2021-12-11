@@ -1,0 +1,653 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* CSS Variables specific to this panel that aren't defined by the themes */
+.theme-dark {
+  --cell-border-color: rgba(255,255,255,0.15);
+  --cell-border-color-light: rgba(255,255,255,0.1);
+  --focus-cell-border-color: rgba(255,255,255,0.5);
+  --row-alt-background-color: rgba(86, 117, 185, 0.15);
+  --row-hover-background-color: rgba(86, 117, 185, 0.25);
+  --link-color: var(--blue-40);
+  --link-color-active: var(--blue-30);
+}
+
+.theme-light {
+  --cell-border-color: rgba(0,0,0,0.15);
+  --cell-border-color-light: rgba(0,0,0,0.1);
+  --focus-cell-border-color: rgba(0,0,0,0.3);
+  --row-alt-background-color: rgba(76,158,217,0.1);
+  --row-hover-background-color: rgba(76,158,217,0.2);
+  --link-color: var(--blue-60);
+  --link-color-active: var(--blue-70);
+}
+
+html, body, #app, #memory-tool {
+  height: 100%;
+}
+
+#memory-tool {
+  /**
+   * Flex: contains two children: .devtools-toolbar and #memory-tool-container,
+   * which need to be laid out vertically. The toolbar has a fixed height and
+   * the container needs to flex to fill out all remaining vertical space.
+   */
+  display: flex;
+  flex-direction: column;
+  --sidebar-width: 185px;
+  /**
+   * If --heap-tree-row-height changes, be sure to change HEAP_TREE_ROW_HEIGHT
+   * in `devtools/client/memory/components/Heap.js`.
+   */
+  --heap-tree-row-height: 18px;
+  --heap-tree-header-height: 18px;
+}
+
+/**
+ * Toolbar
+ */
+
+.devtools-toolbar {
+  /**
+   * Flex: contains several children, which need to be laid out horizontally,
+   * and aligned vertically in the middle of the container.
+   */
+  display: flex;
+  line-height: initial;
+  align-items: stretch;
+}
+
+.devtools-toolbar > .toolbar-group:nth-of-type(1) {
+  /**
+   * We want this to be exactly at a `--sidebar-width` distance from the
+   * toolbar's start boundary. A `.devtools-toolbar` has a 3px start padding.
+   */
+  flex: 0 0 calc(var(--sidebar-width) - 4px);
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  margin-inline-end: 5px;
+  padding-right: 1px;
+}
+
+.devtools-toolbar > .toolbar-group {
+  /**
+   * Flex: contains several children, which need to be laid out horizontally,
+   * and aligned vertically in the middle of the container.
+   */
+  display: flex;
+  align-items: center;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.devtools-toolbar > .toolbar-group > label {
+  /**
+   * Flex: contains form controls and text, which need to be laid out
+   * horizontally, vertically aligned in the middle of the container.
+   */
+  display: flex;
+  align-items: center;
+  margin-inline-end: 5px;
+}
+
+.devtools-toolbar > label {
+  margin-inline-end: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.devtools-toolbar > .toolbar-text {
+  display: flex;
+  align-items: center;
+}
+
+.devtools-toolbar-select {
+  margin-inline-start: 5px;
+}
+
+#take-snapshot::before {
+  background-image: url(images/command-screenshot.svg);
+}
+
+#clear-snapshots::before {
+  background-image: url(chrome://devtools/skin/images/clear.svg);
+}
+
+#diff-snapshots::before {
+  background-image: url(chrome://devtools/skin/images/diff.svg);
+}
+
+#import-snapshot::before {
+  background-image: url(chrome://devtools/skin/images/import.svg);
+}
+
+#record-allocation-stacks-label,
+#pop-view-button-label {
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  padding-inline-end: 5px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+#filter {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+/**
+ * Container (sidebar + main panel)
+ */
+
+#memory-tool-container {
+  /**
+   * Flex: contains two children: .list (sidebar) and #heap-view (main panel),
+   * which need to be laid out horizontally. The sidebar has a fixed width and
+   * the main panel needs to flex to fill out all remaining horizontal space.
+   */
+  display: flex;
+  /**
+   * Flexing to fill out remaining vertical space. The preceeding sibling is
+   * the toolbar. @see #memory-tool.
+   */
+  flex: 1;
+  overflow: hidden;
+}
+
+/**
+ * Sidebar
+ */
+
+.list {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  background-color: var(--theme-sidebar-background);
+  border-inline-end: 1px solid var(--theme-splitter-color);
+}
+
+.snapshot-list-item {
+  /**
+   * Flex: contains several children, which need to be laid out vertically.
+   */
+  display: flex;
+  flex-direction: column;
+  color: var(--theme-body-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 8px;
+  cursor: default;
+}
+
+.snapshot-list-item.selected {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.snapshot-list-item.selected ::-moz-selection {
+  background-color: var(--theme-selection-color);
+  color: var(--theme-selection-background);
+}
+
+.snapshot-list-item .snapshot-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 90%;
+}
+
+.snapshot-list-item .snapshot-title {
+  display: flex;
+  justify-content: space-between;
+}
+
+.snapshot-list-item .save {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.snapshot-list-item .delete {
+  cursor: pointer;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  position: relative;
+  min-height: 1em;
+  min-width: 1.3em;
+  color: currentColor;
+}
+
+.snapshot-list-item .delete::before {
+  display: block;
+  width: 16px;
+  height: 16px;
+  content: "";
+  background-image: url("chrome://devtools/skin/images/close.svg");
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.snapshot-list-item > .snapshot-title {
+  margin-bottom: 14px;
+}
+
+.snapshot-list-item > .snapshot-title > input[type=checkbox] {
+  margin: 0;
+  margin-inline-end: 5px;
+}
+
+.snapshot-list-item > .snapshot-state,
+.snapshot-list-item > .snapshot-totals {
+  font-size: 90%;
+  color: var(--theme-text-color-alt);
+}
+
+.snapshot-list-item.selected > .snapshot-state,
+.snapshot-list-item.selected > .snapshot-totals {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
+}
+
+/**
+ * Main panel
+ */
+
+.vbox {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.vbox > * {
+  flex: 1;
+
+  /**
+   * By default, flex items have min-width: auto;
+   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
+   */
+  min-width: 0;
+}
+
+#heap-view {
+  /**
+   * Flex: contains a .heap-view-panel which needs to fill out all the
+   * available space, horizontally and vertically.
+   */
+  display: flex;
+  /**
+   * Flexing to fill out remaining horizontal space. The preceeding sibling
+   * is the sidebar. @see #memory-tool-container.
+   */
+  flex: 1;
+  background-color: var(--theme-body-background);
+
+  /**
+   * By default, flex items have min-width: auto;
+   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
+   */
+  min-width: 0;
+  font-size: 90%;
+}
+
+#heap-view > .heap-view-panel {
+  /**
+   * Flex: can contain several children, including a tree with a header and
+   * multiple rows, all of which need to be laid out vertically. When the
+   * tree is visible, the header has a fixed height and tree body needs to flex
+   * to fill out all remaining vertical space.
+   */
+  display: flex;
+  flex-direction: column;
+  /**
+   * Flexing to fill out remaining horizontal space. @see #heap-view.
+   */
+  flex: 1;
+
+  /**
+   * By default, flex items have min-width: auto;
+   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
+   */
+  min-width: 0;
+}
+
+#heap-view > .heap-view-panel > .snapshot-status,
+#heap-view > .heap-view-panel > .take-snapshot,
+#heap-view .empty,
+#shortest-paths-select-node-msg {
+  margin: auto;
+  margin-top: 65px;
+  font-size: 120%;
+}
+
+#heap-view > .heap-view-panel[data-state="snapshot-state-error"] pre {
+  background-color: var(--theme-body-background);
+  margin: 20px;
+  padding: 20px;
+}
+
+/**
+ * Heap tree view header
+ */
+
+.header {
+  /**
+   * Flex: contains several span columns, all of which need to be laid out
+   * horizontally. All columns except the last one have percentage widths, and
+   * the last one needs to flex to fill out all remaining horizontal space.
+   */
+  display: flex;
+  color: var(--theme-body-color);
+  background-color: var(--theme-tab-toolbar-background);
+  border-bottom: 1px solid var(--cell-border-color);
+  flex: 0;
+}
+
+.header > span,
+#shortest-paths-header {
+  text-overflow: ellipsis;
+  line-height: var(--heap-tree-header-height);
+  justify-content: center;
+  justify-self: center;
+  white-space: nowrap;
+}
+
+.header > span {
+  overflow: hidden;
+}
+
+.header > .heap-tree-item-name {
+  justify-content: flex-start;
+}
+
+#shortest-paths {
+  background-color: var(--theme-body-background);
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+#shortest-paths-select-node-msg {
+  justify-self: center;
+}
+
+/**
+ * Heap tree view body
+ */
+
+.tree {
+  /**
+   * Flexing to fill out remaining vertical space. @see .heap-view-panel
+   */
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--theme-body-background);
+}
+
+.tree-node {
+  height: var(--heap-tree-row-height);
+  line-height: var(--heap-tree-row-height);
+  cursor: default;
+}
+
+.children-pointer {
+  display: inline-block;
+  /* We use transform to reverse the icon in RTL,
+   * so `padding-right` will get reversed as well. */
+  padding-right: 5px;
+}
+
+.children-pointer:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+/**
+ * Heap tree view columns
+ */
+
+.heap-tree-item {
+  /**
+   * Flex: contains several span columns, all of which need to be laid out
+   * horizontally. All columns except the last one have percentage widths, and
+   * the last one needs to flex to fill out all remaining horizontal space.
+   */
+  display: flex;
+}
+
+.tree-node-odd {
+  background-color: var(--row-alt-background-color);
+}
+
+.tree-node:hover {
+  background-color: var(--row-hover-background-color);
+}
+
+.heap-tree-item.focused {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.heap-tree-item.focused ::-moz-selection {
+  background-color: var(--theme-selection-color);
+  color: var(--theme-selection-background);
+}
+
+.heap-tree-item-individuals,
+.heap-tree-item-bytes,
+.heap-tree-item-count,
+.heap-tree-item-total-bytes,
+.heap-tree-item-total-count {
+  /**
+   * Flex: contains several subcolumns, which need to be laid out horizontally.
+   * These subcolumns may have specific widths or need to flex.
+   */
+  display: flex;
+  /* Make sure units/decimals/... are always vertically aligned to right in both LTR and RTL locales */
+  text-align: right;
+  border-inline-end: var(--cell-border-color) 1px solid;
+}
+
+.heap-tree-item-count,
+.heap-tree-item-total-count,
+.heap-tree-item-bytes,
+.heap-tree-item-total-bytes {
+  width: 10%;
+  /*
+   * Provision for up to 19 characters:
+   *
+   *     GG_MMM_KKK_BBB_100%
+   *     |            |||  |
+   *     '------------'|'--'
+   *     14 ch for 10s | 4 ch for the largest % we will
+   *     of GB and     | normally see: "100%"
+   *     spaces every  |
+   *     3 digits      |
+   *                   |
+   *             A space between the number and percent
+   */
+  min-width: 19ch;
+}
+
+.heap-tree-item-name {
+  /**
+   * Flexing to fill out remaining vertical space.
+   * @see .header and .heap-tree-item */
+  flex: 1;
+  padding-inline-start: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heap-tree-item-name .arrow {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/**
+ * Heap tree view subcolumns
+ */
+
+.heap-tree-number,
+.heap-tree-percent,
+.heap-tree-item-name {
+  white-space: nowrap;
+}
+
+.heap-tree-number {
+  padding: 0 3px;
+  flex: 1;
+  color: var(--theme-text-color-alt);
+  /* Make sure number doesn't appear backwards on RTL locales */
+  direction: ltr;
+}
+
+.heap-tree-percent {
+  padding-inline-start: 3px;
+  padding-inline-end: 3px;
+}
+
+.heap-tree-number,
+.heap-tree-percent {
+  font-family: var(--monospace-font-family);
+}
+
+.heap-tree-percent {
+  width: 4ch;
+}
+
+.heap-tree-item.focused .heap-tree-number,
+.heap-tree-item.focused .heap-tree-percent {
+  color: inherit;
+}
+
+.heap-tree-item-individuals {
+  min-width: 38px;
+  overflow: hidden;
+  margin: 0;
+}
+
+.heap-tree-item-individuals > button {
+  width: 32px;
+  /* Override default styles for toolbar buttons to fix entire row height. */
+  margin: 0 auto !important;
+  color: inherit;
+}
+
+/**
+ * Tree map
+ */
+
+.tree-map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.load-more-link {
+  cursor: pointer;
+  color: var(--link-color);
+}
+
+.load-more-link:hover {
+  text-decoration: underline;
+}
+
+.load-more-link:active {
+  color: var(--link-color-active);
+}
+
+/**
+ * Heap tree errors.
+ */
+
+.error::before {
+  content: "";
+  display: inline-block;
+  vertical-align: -2px;
+  width: 12px;
+  height: 12px;
+  max-height: 12px;
+  margin-inline-end: 5px;
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: var(--yellow-60);
+}
+
+/**
+ * Frame View components
+ */
+
+.separator,
+.not-available,
+.heap-tree-item-address {
+  opacity: .5;
+  margin-left: .5em;
+  margin-right: .5em;
+}
+
+.heap-tree-item-address {
+  font-family: monospace;
+}
+
+.no-allocation-stacks {
+  border-color: var(--theme-splitter-color);
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+  text-align: center;
+  padding: 5px;
+}
+
+/**
+ * Dagre-D3 graphs
+ */
+
+svg {
+  --arrow-color: var(--theme-splitter-color);
+  --text-color: var(--theme-body-color);
+}
+
+.theme-dark svg {
+  --arrow-color: var(--theme-text-color-alt);
+}
+
+svg #arrowhead {
+  /* !important is needed to override inline style */
+  fill: var(--arrow-color) !important;
+}
+
+.edgePath path {
+  stroke-width: 1px;
+  fill: none;
+  stroke: var(--arrow-color);
+}
+
+g.edgeLabel rect {
+  fill: var(--theme-body-background);
+}
+
+g.edgeLabel tspan {
+  fill: var(--text-color);
+}
+
+.nodes rect {
+  stroke-width: 1px;
+  stroke: var(--theme-splitter-color);
+  fill: var(--theme-toolbar-background);
+}
+
+text {
+  font-size: 1.25em;
+  fill: var(--text-color);
+  /* Make sure text stays inside its container in RTL locales */
+  direction: ltr;
+}

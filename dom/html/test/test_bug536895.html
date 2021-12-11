@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=536895
+-->
+<head>
+  <title>Test for Bug 536895</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=536895">Mozilla Bug 536895</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<textarea id="t"></textarea>
+<input id="i" type="text">
+<input id="p" type="password">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 536895 **/
+
+function checkNegativeMaxLengthException(element)
+{
+  caught = false;
+  try {
+    element.setAttribute('maxLength', -10);
+  } catch(e) {
+    caught = true;
+  }
+  ok(!caught, "Setting maxLength attribute to a negative value shouldn't throw an exception");
+
+  caught = false;
+  try {
+    element.maxLength = -20;
+  } catch(e) {
+    is(e.name, "IndexSizeError", "Should be an IndexSizeError exception");
+    caught = true;
+  }
+  ok(caught, "Setting negative maxLength from the DOM should throw an exception");
+
+  is(element.getAttribute('maxLength'), "-10", "When the exception is raised, the maxLength attribute shouldn't change");
+}
+
+/* TODO: correct behavior may be checked for email, telephone, url and search input types */
+checkNegativeMaxLengthException(document.getElementById('t'));
+checkNegativeMaxLengthException(document.getElementById('i'));
+checkNegativeMaxLengthException(document.getElementById('p'));
+
+</script>
+</pre>
+</body>
+</html>

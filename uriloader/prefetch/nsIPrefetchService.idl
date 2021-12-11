@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
+
+interface nsIURI;
+interface nsISimpleEnumerator;
+interface nsIReferrerInfo;
+
+webidl Node;
+
+[scriptable, uuid(422a1807-4e7f-463d-b8d7-ca2ceb9b5d53)]
+interface nsIPrefetchService : nsISupports
+{
+    /**
+     * Enqueue a request to prefetch the specified URI.
+     *
+     * @param aURI the URI of the document to prefetch
+     * @param aReferrerInfo the referrerInfo of the request
+     * @param aSource the DOM node (such as a <link> tag) that requested this
+     *        fetch, or null if the prefetch was not requested by a DOM node.
+     * @param aExplicit the link element has an explicit prefetch link type
+     */
+    void prefetchURI(in nsIURI aURI,
+                     in nsIReferrerInfo aReferrerInfo,
+                     in Node aSource,
+                     in boolean aExplicit);
+
+    /**
+     * Start a preload of the specified URI.
+     *
+     * @param aURI the URI of the document to preload
+     * @param aReferrerInfo the referrerInfo of the request
+     * @param aSource the DOM node (such as a <link> tag) that requested this
+     *        fetch, or null if the prefetch was not requested by a DOM node.
+     * @param aPolicyType content policy to be used for this load.
+     */
+    void preloadURI(in nsIURI aURI,
+                    in nsIReferrerInfo aReferrerInfo,
+                    in Node aSource,
+                    in nsContentPolicyType aPolicyType);
+
+    /**
+     * Find out if there are any prefetches running or queued
+     */
+    boolean hasMoreElements();
+
+    /**
+     * Cancel prefetch or preload for a Node.
+     */
+    void cancelPrefetchPreloadURI(in nsIURI aURI, in Node aSource);
+};

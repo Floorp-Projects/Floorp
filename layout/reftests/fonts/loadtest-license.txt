@@ -1,0 +1,7 @@
+loadtest is based on League Gothic, from League of Moveable Type.  All fonts
+from The League of Moveable Type are subject to the Open Font License.
+
+http://www.theleagueofmoveabletype.com/league-gothic
+
+http://scripts.sil.org/OFL
+

@@ -1,0 +1,17 @@
+namespace mozilla {
+namespace _ipdltest {
+
+intr protocol PTestRacyInterruptReplies {
+child:
+    intr R_() returns (int replyNum);
+    async _A();
+    async ChildTest();
+    async __delete__();
+
+parent:
+    intr _R() returns (int replyNum);
+    async A_();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

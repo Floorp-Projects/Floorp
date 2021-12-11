@@ -1,0 +1,42 @@
+<!DOCTYPE>
+<html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checking zoomToFocusedInput scrolls on position: fixed</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  </head>
+<body>
+<div>
+  <div style="z-index: 100; position: fixed; width: 300px; height: 300px; overflow-y: scroll;" id="container">
+    <div style="height: 1000px;">ABC</div>
+    <input type="text">
+  </div>
+  <!-- Leave additional room below the element so it can be scrolled to the center -->
+  <div style="height: 3000px;">ABC</div>
+</div>
+<script type="application/javascript">
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  let input = document.querySelector("input");
+  let container = document.querySelector("#container");
+  let originalScrollTop = container.scrollTop;
+
+  input.focus({ preventScroll: true });
+  await waitToClearOutAnyPotentialScrolls(window);
+  ok(container.scrollTop == originalScrollTop, "scroll position keeps top");
+
+  let waitForScroll = waitForScrollEvent(container);
+  utils.zoomToFocusedInput();
+  await waitForScroll;
+  await promiseApzFlushedRepaints();
+
+  ok(container.scrollTop > originalScrollTop, "scroll position isn't top");
+}
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+</script>
+</body>
+</html>

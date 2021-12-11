@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test that WebIDL attributes with the LenientThis extended attribute
+         do not appear in the wrong objects</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the native getters in object actors</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+async function startTest() {
+  removeEventListener("load", startTest);
+  const {state} = await attachConsoleToTab(["ConsoleAPI"]);
+
+  const onConsoleApiCall = state.webConsoleFront.once("consoleAPICall");
+  const docAsProto = Object.create(document);
+  top.console.log("hello", docAsProto);
+  const {message} = await onConsoleApiCall;
+
+  info("checking the console API call packet");
+  checkConsoleAPICall(message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "startTest",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+    }],
+  });
+
+  info("inspecting object properties");
+  const args = message.arguments;
+
+  const {ownProperties, safeGetterValues} = await args[1].getPrototypeAndProperties();
+
+  is(Object.keys(ownProperties).length, 0, "number of properties");
+  is(Object.keys(safeGetterValues).length, 0, "number of safe getters");
+
+  await closeDebugger(state);
+  SimpleTest.finish();
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

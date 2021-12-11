@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=477754
+-->
+<window title="Mozilla Bug 477754"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=477754"
+     target="_blank">Mozilla Bug 477754</a>
+  </body>
+
+  <hbox pack="center">
+    <label id="anchor" style="direction: rtl;" value="Anchor"/>
+  </hbox>
+  <panel id="testPopup" onpopupshown="doTest();">
+    <label value="I am a popup"/>
+  </panel>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    /** Test for Bug 477754 **/
+    SimpleTest.waitForExplicitFinish();
+
+    let testPopup, testAnchor;
+
+    addEventListener("load", function () {
+      removeEventListener("load", arguments.callee, false);
+
+      testPopup = document.getElementById("testPopup");
+      testAnchor = document.getElementById("anchor");
+
+      testPopup.openPopup(testAnchor, "after_start", 10, 0, false, false);
+    }, false);
+
+    function doTest() {
+      let anchorRect = testAnchor.getBoundingClientRect();
+      let popupRect = testPopup.getBoundingClientRect();
+      let marginRight = parseFloat(getComputedStyle(testPopup).marginRight)
+      is(Math.round(anchorRect.right - popupRect.right - marginRight), 10,
+         "RTL popup's right offset should be equal to the x offset passed to openPopup");
+      testPopup.hidePopup();
+      SimpleTest.finish();
+    }
+
+   ]]></script>
+</window>

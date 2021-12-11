@@ -1,0 +1,56 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Program("maintenanceservice")
+
+SOURCES += [
+    "maintenanceservice.cpp",
+    "servicebase.cpp",
+    "serviceinstall.cpp",
+    "workmonitor.cpp",
+]
+
+USE_LIBS += [
+    "updatecommon",
+]
+
+# For debugging purposes only
+# DEFINES['DISABLE_UPDATER_AUTHENTICODE_CHECK'] = True
+
+DEFINES["UNICODE"] = True
+DEFINES["_UNICODE"] = True
+DEFINES["NS_NO_XPCOM"] = True
+
+# Pick up nsWindowsRestart.cpp
+LOCAL_INCLUDES += [
+    "/toolkit/mozapps/update/common",
+    "/toolkit/xre",
+]
+
+USE_STATIC_LIBS = True
+
+if CONFIG["CC_TYPE"] == "clang-cl":
+    WIN32_EXE_LDFLAGS += ["-ENTRY:wmainCRTStartup"]
+
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
+    # This allows us to use wmain as the entry point on mingw
+    LDFLAGS += [
+        "-municode",
+    ]
+
+RCINCLUDE = "maintenanceservice.rc"
+
+DisableStlWrapping()
+
+OS_LIBS += [
+    "comctl32",
+    "ws2_32",
+    "shell32",
+    "shlwapi",
+]
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Application Update")

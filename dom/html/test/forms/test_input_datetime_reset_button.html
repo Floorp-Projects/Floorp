@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1479708
+-->
+<head>
+<title>Test required date/time input can't be reset</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1479708">Mozilla Bug 1479708</a>
+<p id="display"></p>
+<div id="content">
+<input type="date" id="id_date" value="2017-06-08">
+<input type="time" id="id_time" value="10:30">
+<input type="datetime-local" id="id_datetime-local" value="2017-06-08T10:30">
+<input type="date" id="id_date_required" value="2017-06-08" required>
+<input type="time" id="id_time_required" value="10:30" required>
+<input type="datetime-local" id="id_datetime-local_required" value="2017-06-08T10:30" required>
+<input type="date" id="id_date_readonly" value="2017-06-08" readonly>
+<input type="time" id="id_time_readonly" value="10:30" readonly>
+<input type="datetime-local" id="id_datetime-local_readonly" value="2017-06-08T10:30" readonly>
+<input type="date" id="id_date_disabled" value="2017-06-08" disabled>
+<input type="time" id="id_time_disabled" value="10:30" disabled>
+<input type="datetime-local" id="id_datetime-local_disabled" value="2017-06-08T10:30" disabled>
+</div>
+<pre id="test">
+<script class="testbody">
+
+const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+const kTypes = ["date", "time", "datetime-local"];
+
+function id_for_type(type, kind) {
+  return "id_" + type + (kind ? "_" + kind : "");
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  if (!isDesktop) {
+    ok(true, "Mobile and tablet don’t show reset button");
+    return SimpleTest.finish();
+  }
+
+  // Initial load.
+  assert_reset_visible_all("");
+  assert_reset_hidden_all("required");
+
+  // Dynamic toggling.
+  test_make_required("");
+  test_make_optional("required");
+
+  test_readonly_field_disabled();
+  test_disabled_field_disabled();
+
+  // Now toggle the inputs to the initial state, but while being
+  // display: none. This tests for bug 1567191.
+  for (const input of document.querySelectorAll("input")) {
+    input.style.display = "none";
+    is(input.getBoundingClientRect().width, 0, "Should be undisplayed");
+  }
+
+  test_make_required("required");
+  test_make_optional("");
+
+  // And test other toggling as well.
+  test_readonly_field_disabled();
+  test_disabled_field_disabled();
+
+  SimpleTest.finish();
+});
+
+function test_disabled_field_disabled() {
+  for (let type of kTypes) {
+    const id = id_for_type(type, "disabled");
+    const input = document.getElementById(id);
+
+    ok(input.disabled, "Should be disabled");
+    ok(get_reset_button(id).disabled, `disabled's reset button is disabled (${id})`);
+
+    input.disabled = false;
+    ok(!input.disabled, "Should not be disabled anymore");
+    ok(!get_reset_button(id).disabled, `enabled field's reset button is not disabled (${id})`);
+
+    input.disabled = true; // reset to the original state.
+  }
+}
+
+function test_readonly_field_disabled() {
+  for (let type of kTypes) {
+    const id = id_for_type(type, "readonly");
+    const input = document.getElementById(id);
+
+    ok(input.readOnly, "Should be read-only");
+    ok(get_reset_button(id).disabled, `readonly field's reset button is disabled (${id})`);
+
+    input.readOnly = false;
+    ok(!input.readOnly, "Should not be read-only anymore");
+    ok(!get_reset_button(id).disabled, `non-readonly field's reset button is not disabled (${id})`);
+
+    input.readOnly = true; // reset to the original state.
+  }
+}
+
+function test_make_required(kind) {
+  for (let type of kTypes) {
+    const id = id_for_type(type, kind);
+    const input = document.getElementById(id);
+    is(input.required, false, `Precondition: input #${id} is optional`);
+
+    input.required = true;
+    assert_reset_hidden(id);
+  }
+}
+
+function test_make_optional(kind) {
+  for (let type of kTypes) {
+    const id = id_for_type(type, kind);
+    const input = document.getElementById(id);
+    is(input.required, true, `Precondition: input #${id} is required`);
+
+    input.required = false;
+    assert_reset_visible(id);
+  }
+}
+
+function assert_reset_visible_all(kind) {
+  for (let type of kTypes) {
+    assert_reset_visible(id_for_type(type, kind));
+  }
+}
+function assert_reset_visible(id) {
+  const resetButton = get_reset_button(id);
+  is(resetButton.style.visibility, "", `Reset button is visible on #${id}`);
+}
+
+function assert_reset_hidden_all(kind) {
+  for (let type of kTypes) {
+    assert_reset_hidden(id_for_type(type, kind));
+  }
+}
+
+function assert_reset_hidden(id) {
+  const resetButton = get_reset_button(id);
+  is(resetButton.style.visibility, "hidden", `Reset button is hidden on #${id}`);
+}
+
+function get_reset_button(id) {
+  const input = document.getElementById(id);
+  const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+  return shadowRoot.getElementById("reset-button");
+}
+
+</script>
+</pre>
+</body>
+</html>

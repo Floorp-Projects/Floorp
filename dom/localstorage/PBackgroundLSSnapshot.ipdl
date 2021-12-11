@@ -1,0 +1,145 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBackgroundLSDatabase;
+
+include PBackgroundLSSharedTypes;
+
+include "mozilla/dom/localstorage/SerializationHelpers.h";
+
+using mozilla::dom::LSValue
+  from "mozilla/dom/LSValue.h";
+
+namespace mozilla {
+namespace dom {
+
+struct LSSetItemInfo
+{
+  nsString key;
+  LSValue value;
+};
+
+struct LSRemoveItemInfo
+{
+  nsString key;
+};
+
+struct LSClearInfo
+{
+};
+
+/**
+ * Union of LocalStorage mutation types.
+ */
+union LSWriteInfo
+{
+  LSSetItemInfo;
+  LSRemoveItemInfo;
+  LSClearInfo;
+};
+
+struct LSSetItemAndNotifyInfo
+{
+  nsString key;
+  LSValue oldValue;
+  LSValue value;
+};
+
+struct LSRemoveItemAndNotifyInfo
+{
+  nsString key;
+  LSValue oldValue;
+};
+
+/**
+ * Union of LocalStorage mutation types.
+ */
+union LSWriteAndNotifyInfo
+{
+  LSSetItemAndNotifyInfo;
+  LSRemoveItemAndNotifyInfo;
+  LSClearInfo;
+};
+
+sync protocol PBackgroundLSSnapshot
+{
+  manager PBackgroundLSDatabase;
+
+parent:
+  async DeleteMe();
+
+  async Checkpoint(LSWriteInfo[] writeInfos);
+
+  async CheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
+
+  async Finish();
+
+  async Loaded();
+
+  /**
+   * Invoked on demand to load an item that didn't fit into the initial
+   * snapshot prefill and also some additional key/value pairs to lower down
+   * the need to use this synchronous message again.
+   *
+   * This needs to be synchronous because LocalStorage's semantics are
+   * synchronous.  Note that the Snapshot in the PBackground parent already
+   * has the answers to this request immediately available without needing to
+   * consult any other threads or perform any I/O.
+   */
+  sync LoadValueAndMoreItems(nsString key)
+    returns (LSValue value, LSItemInfo[] itemInfos);
+
+  /**
+   * Invoked on demand to load all keys in in their canonical order if they
+   * didn't fit into the initial snapshot prefill.
+   *
+   * This needs to be synchronous because LocalStorage's semantics are
+   * synchronous.  Note that the Snapshot in the PBackground parent already
+   * has the answers to this request immediately available without needing to
+   * consult any other threads or perform any I/O.
+   */
+  sync LoadKeys()
+    returns (nsString[] keys);
+
+  /**
+   * This needs to be synchronous because LocalStorage's semantics are
+   * synchronous.  Note that the Snapshot in the PBackground parent typically
+   * doesn't need to consult any other threads or perform any I/O to handle
+   * this request.  However, it has to call a quota manager method that can
+   * potentially do I/O directly on the PBackground thread.  It can only happen
+   * rarely in a storage pressure (low storage space) situation.  Specifically,
+   * after we get a list of origin directories for eviction, we will delete
+   * them directly on the PBackground thread.  This doesn't cause any
+   * performance problems, but avoiding I/O completely might need to be done as
+   * a futher optimization.
+   */
+  sync IncreasePeakUsage(int64_t requestedSize, int64_t minSize)
+    returns (int64_t size);
+
+  // A synchronous ping to the parent actor to confirm that the parent actor
+  // has received previous async message. This should only be used by the
+  // snapshotting code to end an explicit snapshot.
+  sync Ping();
+
+child:
+  /**
+   * Compels the child LSSnapshot to Checkpoint() and Finish(), effectively
+   * compelling the snapshot to flush any issued mutations and close itself.
+   * The child LSSnapshot does that either immediately if it's just waiting
+   * to be reused or when it gets into a stable state.
+   *
+   * This message is expected to be sent in the following two cases only:
+   *   1. The state of the underlying Datastore starts to differ from the state
+   *      captured at the time of snapshot creation.
+   *   2. The last private browsing context exits.  And in that case we expect
+   *      all private browsing globals to already have been destroyed.
+   */
+  async MarkDirty();
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

@@ -1,0 +1,130 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>sessionStorage basic test</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="application/javascript">
+
+var expectedTypes = [
+  "localStorage",
+  "localStorage",
+  "sessionStorage",
+  "localStorage",
+  "sessionStorage",
+  "sessionStorage",
+  "localStorage",
+  "sessionStorage",
+  "localStorage",
+  "sessionStorage",
+  "localStorage",
+  "sessionStorage",
+  "sessionStorage",
+  "localStorage",
+  "sessionStorage",
+  "localStorage",
+];
+
+var tests = Tests();
+function setup() {
+  sessionStorage.clear();
+  SimpleTest.executeSoon(function() {
+    tests.next();
+  });
+}
+
+function* Tests()
+{
+  // Initially check the both storages are empty
+  is(sessionStorage.length, 0, "Session storage is empty [1]");
+  is(localStorage.length, 0, "Local storage is empty [1]");
+
+  function onSessionStorageChanged(e) {
+    ok(expectedTypes.length > 0, "Not more then expected events encountered");
+    is("sessionStorage", expectedTypes.shift(), "Expected session type of the storage notification");
+    tests.next();
+  }
+
+  function onLocalStorageChanged(e) {
+    ok(expectedTypes.length > 0, "Not more then expected events encountered");
+    is("localStorage", expectedTypes.shift(), "Expected session type of the storage notification");
+    tests.next();
+  }
+
+  // Listen for storage notifications
+  SpecialPowers.addChromeEventListener("MozSessionStorageChanged", onSessionStorageChanged, true);
+  SpecialPowers.addChromeEventListener("MozLocalStorageChanged", onLocalStorageChanged, true);
+
+  // add an empty-value key
+  localStorage.setItem("empty", "");
+  yield undefined;
+
+  localStorage.setItem("empty", "value-1");
+  yield undefined;
+
+  sessionStorage.setItem("empty", "");
+  yield undefined;
+
+  localStorage.removeItem("empty");
+  yield undefined;
+
+  sessionStorage.setItem("empty", "value-1");
+  yield undefined;
+
+  sessionStorage.removeItem("empty");
+  yield undefined;
+
+  localStorage.setItem("key1", "value-1");
+  yield undefined;
+
+  sessionStorage.setItem("key2", "value-2");
+  yield undefined;
+
+  localStorage.setItem("key1", "value-1-2");
+  yield undefined;
+
+  sessionStorage.setItem("key2", "value-2-2");
+  yield undefined;
+
+  localStorage.setItem("key3", "value-3");
+  yield undefined;
+
+  sessionStorage.setItem("key4", "value-4");
+  yield undefined;
+
+  sessionStorage.removeItem("key4");
+  yield undefined;
+
+  localStorage.setItem("key4", "value-4");
+  yield undefined;
+
+  sessionStorage.clear();
+  yield undefined;
+
+  localStorage.clear();
+  yield undefined;
+
+  SimpleTest.executeSoon(function () {
+    SpecialPowers.removeChromeEventListener("MozSessionStorageChanged", onSessionStorageChanged, true);
+    SpecialPowers.removeChromeEventListener("MozLocalStorageChanged", onLocalStorageChanged, true);
+
+    is(expectedTypes.length, 0, "received the correct number of events");
+
+    sessionStorage.clear();
+    localStorage.clear();
+    tests = null;
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="setup();">
+
+</body>
+</html>

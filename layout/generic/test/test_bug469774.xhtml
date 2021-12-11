@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=469774
+-->
+<window title="Mozilla Bug 469774"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+<vbox height="50"/>
+
+<menupopup id="popup">
+  <input xmlns="http://www.w3.org/1999/xhtml"  id="textbox"/>
+</menupopup>
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469774">Mozilla Bug 469774</a>
+
+  <p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+
+<script class="testbody" type="application/javascript"><![CDATA[
+
+/** Test for Bug 469774 **/
+
+// Test whether menu popups are blocked from being painted in their parent window.
+
+// Like snapshotWindow, but with DRAWWINDOW_DRAW_CARET
+function snapShot() {
+  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  canvas.setAttribute("width", 200);
+  canvas.setAttribute("height", 50);
+  var ctx = canvas.getContext("2d");
+  ctx.drawWindow(window, 0, 0, 200, 50, "transparent", ctx.DRAWWINDOW_DRAW_CARET);
+  return canvas;
+}
+
+function doTest() {
+  window.removeEventListener("focus", doTest);
+
+  var before = snapShot();
+
+  var popup = document.getElementById("popup");
+  popup.openPopup(null, "after_start", 0, 0, false, false);
+
+  popup.addEventListener("popupshown", function() {
+    var textbox = document.getElementById("textbox");
+    textbox.focus(); // show caret
+
+    var after = snapShot();
+
+    var equal, str1, str2;
+    [equal, str1, str2] = compareSnapshots(after, before, true);
+    ok(equal, "Showing a popup shouldn't affect drawing in its parent window" +
+       "got " + str1 + ", expected " + str2);
+
+    popup.hidePopup();
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("focus", doTest);
+
+]]></script>
+
+</window>

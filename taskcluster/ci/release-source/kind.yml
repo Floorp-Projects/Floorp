@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - gecko_taskgraph.transforms.build:transforms
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_lints:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+
+job-defaults:
+    shipping-phase: promote
+    treeherder:
+        symbol: Src
+    worker-type: b-linux
+    worker:
+        max-run-time: 3600
+        env:
+            PKG_SRCPACK_BASENAME: source
+    attributes:
+        shippable: true
+    run:
+        using: mozharness
+        actions: [package-source]
+        script: "mozharness/scripts/fx_desktop_build.py"
+        config:
+            - builds/releng_sub_linux_configs/64_source.py
+        options: []
+        tooltool-downloads: public
+        need-xvfb: false
+    run-on-projects: []
+    # The build_attrs transform defaults to setting a `skip-unlles-schedules'
+    # optimization based on the task label. The tasks here don't have corresponding
+    # schedules defined in mozbuild.
+    optimization: null
+
+jobs:
+    firefox-source/opt:
+        description: "Firefox source builder"
+        treeherder:
+            platform: firefox-release/opt
+        shipping-product: firefox
+
+    devedition-source/opt:
+        description: "Devedition source builder"
+        treeherder:
+            platform: devedition-release/opt
+        shipping-product: devedition

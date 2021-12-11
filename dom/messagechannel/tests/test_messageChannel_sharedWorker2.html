@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 677638 - sharedWorker</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+  <div id="content"></div>
+
+  <script type="application/javascript">
+
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('src', "iframe_messageChannel_sharedWorker2.html");
+  document.getElementById('content').appendChild(iframe);
+
+  var a = new SharedWorker('sharedWorker2_messageChannel.js');
+  a.port.onmessage = function(evt) {
+    is(evt.ports.length, 1, "We received a port.");
+    evt.ports[0].onmessage = function(e) {
+      is(e.data, "Hello from the iframe!", "Message reiceved from the iframe!");
+      SimpleTest.finish();
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</body>
+</html>

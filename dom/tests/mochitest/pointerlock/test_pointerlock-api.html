@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+  <head>
+    <title>Test for Bug 633602</title>
+    <script type="application/javascript"  src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"  src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <div id="content">
+    </div>
+    <pre id="test">
+      <script type="application/javascript">
+        const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+
+        /**
+         * Pointer Lock tests for bug 633602.  These depend on the fullscreen api
+         * which doesn't work when run in the mochitests' iframe, since the
+         * mochitests' iframe doesn't have an allowfullscreen attribute.  To get
+         * around this, all tests are run in a child window, which can go fullscreen.
+         * This method is borrowed from dom/html/test/test_fullscreen-api.html.
+         **/
+
+        SimpleTest.waitForExplicitFinish();
+
+        SpecialPowers.pushPrefEnv({"set": [
+          ["full-screen-api.enabled", true],
+          ["full-screen-api.allow-trusted-requests-only", false],
+          ["full-screen-api.transition-duration.enter", "0 0"],
+          ["full-screen-api.transition-duration.leave", "0 0"]
+        ]}, nextTest);
+
+        // Run the tests which go full-screen in new window, as Mochitests
+        // normally run in an iframe, which by default will not have the
+        // allowfullscreen attribute set, so full-screen won't work.
+        var gTestFiles = [
+          "file_screenClientXYConst.html",
+          "file_childIframe.html",
+          "file_doubleLock.html",
+          "file_escapeKey.html",
+          "file_infiniteMovement.html",
+          "file_locksvgelement.html",
+          "file_movementXY.html",
+          "file_nestedFullScreen.html",
+          "file_pointerlock-api.html",
+          "file_pointerlock-api-with-shadow.html",
+          "file_pointerlockerror.html",
+          "file_pointerLockPref.html",
+          "file_removedFromDOM.html",
+          "file_retargetMouseEvents.html",
+          "file_suppressSomeMouseEvents.html",
+          "file_targetOutOfFocus.html",
+          "file_withoutDOM.html",
+          "file_allowPointerLockSandboxFlag.html",
+          "file_changeLockElement.html",
+        ];
+
+        var gDisableList = [ 
+          // Bug 1615802
+          { file: "file_screenClientXYConst.html", platform: "macosx" },
+          // Bug 1357082
+          { file: "file_retargetMouseEvents.html", platform: "all" },
+        ];
+
+        var gTestWindow = null;
+        var gTestIndex = 0;
+
+        function nextTest() {
+          if (gTestWindow) {
+            gTestWindow.close();
+          }
+          SimpleTest.waitForFocus(runNextTest);
+        }
+
+        function runNextTest() {
+          if (gTestIndex < gTestFiles.length) {
+            var file = gTestFiles[gTestIndex];
+            gTestIndex++;
+
+            var skipTest = false;
+            for (var item of gDisableList) {
+              if (item.file == file &&
+                  ("all" == item.platform || AppConstants.platform == item.platform)) {
+                skipTest = true;
+                break;
+              }
+            }
+            if (!skipTest) {
+              info(`Testing ${file}`);
+              gTestWindow = window.open(file, "", "width=500,height=500");
+            } else {
+              info(`Skip ${file}`);
+              nextTest();
+            }
+          } else {
+            SimpleTest.finish();
+          }
+        }
+      </script>
+    </pre>
+  </body>
+</html>

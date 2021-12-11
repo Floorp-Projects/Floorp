@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(42a1e1dc-58cf-419d-bff0-ed3314c70016)]
+interface nsIAccessibleValue : nsISupports
+{
+  readonly attribute double maximumValue;
+  readonly attribute double minimumValue;
+  attribute double currentValue;
+  readonly attribute double minimumIncrement;
+};
+
+/*
+ Assumptions:
+
+ The attribute currentValue will throw an exception
+ if it cannot be set i.e. if the value is not a
+ member of the interval.
+ This may not be the 'desired' behaviour given gObject
+ equivalent. Thus it could be changed to be:
+
+ readonly attribute double currentValue;
+ boolean setCurrentValue (double long value);
+
+ GValue can represent many basic types.
+ Since this interface is designed to represent
+ an interval and a member of double should
+ cover the cases of char int and float.
+
+*/

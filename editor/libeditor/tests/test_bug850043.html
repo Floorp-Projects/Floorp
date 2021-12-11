@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=850043
+-->
+<head>
+  <title>Test for Bug 850043</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=850043">Mozilla Bug 850043</a>
+<div id="display">
+<textarea id="textarea">b&#x9080;&#xe010f;&#x8fba;&#xe0101;</textarea>
+<div contenteditable id="edit">b&#x9080;&#xe010f;&#x8fba;&#xe0101;</div>
+</div>
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+</pre>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let fm = SpecialPowers.Services.focus;
+
+  let element = document.getElementById("textarea");
+  element.setSelectionRange(element.value.length, element.value.length);
+  element.focus();
+  is(SpecialPowers.unwrap(fm.focusedElement), element, "failed to move focus");
+
+  synthesizeKey("KEY_End");
+  sendString("a");
+  is(element.value, "b\u{9080}\u{e010f}\u{8fba}\u{e0101}a", "a isn't last character");
+
+  synthesizeKey("KEY_Backspace", {repeat: 3});
+  is(element.value, "b", "cannot remove all IVS characters");
+
+  element = document.getElementById("edit");
+  element.focus();
+  is(SpecialPowers.unwrap(fm.focusedElement), element, "failed to move focus");
+
+  let sel = window.getSelection();
+  sel.collapse(element.childNodes[0], element.textContent.length);
+
+  sendString("a");
+  is(element.textContent, "b\u{9080}\u{e010f}\u{8fba}\u{e0101}a", "a isn't last character");
+
+  synthesizeKey("KEY_Backspace", {repeat: 3});
+  is(element.textContent, "b", "cannot remove all IVS characters");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

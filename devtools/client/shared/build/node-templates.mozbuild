@@ -1,0 +1,34 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+def CompiledModules(*modules):
+  compiled_directory_whitelist = (
+    "devtools/client/debugger/src",
+  )
+
+  if not RELATIVEDIR.startswith(compiled_directory_whitelist):
+    error("File in directory provided to CompiledModules not allowed: " + RELATIVEDIR)
+
+  # HACK. Template export() propagation is janky so we have to re-implement the
+  # logic for computing FINAL_TARGET from scratch. Here we emulate the
+  # DIST_SUBDIR export in devtools/moz.build.
+  if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    final_target = 'dist/bin/browser'
+  else:
+    final_target = 'dist/bin'
+
+  final = '/'.join([TOPOBJDIR, final_target, 'chrome/devtools/modules',
+                    RELATIVEDIR])
+  # For the same reason as https://searchfox.org/mozilla-central/source/mobile/android/base/moz.build#180-184
+  # we have to insert a first entry as recursivemake overrides the first entry and we end up with empty files
+  # for the first file only.
+  GeneratedFile(
+      "node.stub", *[final + '/' + module for module in modules],
+      script='/python/mozbuild/mozbuild/action/node.py',
+      entry_point='generate',
+      inputs=['/devtools/client/shared/build/build.js'] +
+             [module for module in modules],
+      flags=[final])

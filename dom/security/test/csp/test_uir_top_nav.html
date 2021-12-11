@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1391011: Test uir for toplevel navigations</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load an https page which defines upgrade-insecure-requests into an iframe
+ * and perform a same origin and a cross origin toplevel load and make sure that
+ * upgrade-insecure-requests applies to the same origin load.
+ */
+
+let totalTests = 2;
+let testCounter = 0;
+
+function checkResults(aResult) {
+  ok(aResult == "https://example.com/tests/dom/security/test/csp/file_uir_top_nav_dummy.html" ||
+     aResult == "http://test1.example.com/tests/dom/security/test/csp/file_uir_top_nav_dummy.html",
+     "same origin should be upgraded to https, cross origin should remain http");
+  if (++testCounter < totalTests) {
+    return;
+  }
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  checkResults(event.data.result);
+}
+
+function startTest() {
+  document.getElementById("testframe").src =
+  "https://example.com/tests/dom/security/test/csp/file_uir_top_nav.html";
+}
+
+// Don't upgrade to https to test that upgrade-insecure-requests acts correctly and
+// start test
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", false]
+  ]}, startTest);
+
+</script>
+</body>
+</html>

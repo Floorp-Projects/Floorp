@@ -1,0 +1,329 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --learn-more-underline: var(--grey-30);
+}
+
+.theme-dark:root {
+  --learn-more-underline: var(--grey-50);
+}
+
+#eyedropper-button {
+  margin-inline-end: 5px;
+  display: block;
+}
+
+#eyedropper-button::before {
+  background-image: url(chrome://devtools/skin/images/command-eyedropper.svg);
+}
+
+/* Mix-in classes */
+
+.spectrum-checker {
+  background-color: #eee;
+  background-image: linear-gradient(
+      45deg,
+      #ccc 25%,
+      transparent 25%,
+      transparent 75%,
+      #ccc 75%,
+      #ccc
+    ),
+    linear-gradient(
+      45deg,
+      #ccc 25%,
+      transparent 25%,
+      transparent 75%,
+      #ccc 75%,
+      #ccc
+    );
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+}
+
+.spectrum-box {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  background-clip: content-box;
+}
+
+/* Elements */
+
+#spectrum-tooltip {
+  padding: 5px;
+}
+
+/**
+ * Spectrum controls set the layout for the controls section of the color picker.
+ */
+.spectrum-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: 10px;
+  margin-inline-end: 5px;
+}
+
+.spectrum-controls {
+  width: 200px;
+}
+
+.spectrum-container {
+  display: flex;
+  flex-direction: column;
+  margin: -1px;
+  padding-block-end: 6px;
+}
+
+/**
+ * This styles the color preview and adds a checkered background overlay inside of it. The overlay
+ * can be manipulated using the --overlay-color variable.
+ */
+.spectrum-color-preview {
+  --overlay-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 27px;
+  height: 27px;
+  background-color: #fff;
+  background-image: linear-gradient(var(--overlay-color), var(--overlay-color)),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+}
+
+.spectrum-color-preview.high-luminance {
+  border-color: #ccc;
+}
+
+.spectrum-slider-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 130px;
+  margin-inline-start: 10px;
+  height: 30px;
+}
+
+/* Keep aspect ratio:
+http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
+.spectrum-color-picker {
+  position: relative;
+  width: 205px;
+  height: 120px;
+}
+
+.spectrum-color {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.spectrum-sat,
+.spectrum-val {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.spectrum-alpha {
+  margin-block-start: 3px;
+}
+
+.spectrum-alpha,
+.spectrum-hue {
+  position: relative;
+  height: 8px;
+}
+
+.spectrum-alpha-input,
+.spectrum-hue-input {
+  width: 100%;
+  margin: 0;
+  position: absolute;
+  height: 8px;
+  border-radius: 2px;
+  direction: initial;
+}
+
+/* Focus style already exists on input[type="range"]. Remove overlap */
+.spectrum-hue-input:focus,
+.spectrum-alpha-input:focus {
+  outline: none;
+}
+
+.spectrum-hue-input::-moz-range-thumb,
+.spectrum-alpha-input::-moz-range-thumb {
+  cursor: pointer;
+  height: 12px;
+  width: 12px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.9;
+  border: none;
+}
+
+.spectrum-hue-input::-moz-range-track {
+  border-radius: 2px;
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    #ff0000 0%,
+    #ffff00 17%,
+    #00ff00 33%,
+    #00ffff 50%,
+    #0000ff 67%,
+    #ff00ff 83%,
+    #ff0000 100%
+  );
+}
+
+.spectrum-sat {
+  background-image: linear-gradient(to right, #fff, rgba(204, 154, 129, 0));
+}
+
+.spectrum-val {
+  background-image: linear-gradient(to top, #000000, rgba(204, 154, 129, 0));
+}
+
+.spectrum-dragger {
+  user-select: none;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  cursor: pointer;
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+  border: 1px solid white;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+}
+
+.spectrum-color-contrast {
+  padding-block-start: 8px;
+  padding-inline-start: 4px;
+  padding-inline-end: 4px;
+  line-height: 1.2em;
+}
+
+.contrast-ratio-header-and-single-ratio,
+.contrast-ratio-range {
+  display: flex;
+  align-items: stretch;
+}
+
+.contrast-ratio-range {
+  margin-block-start: 4px;
+  margin-inline-start: 1px;
+  margin-block-end: 2px;
+}
+
+.spectrum-color-contrast.visible {
+  display: block;
+}
+
+.spectrum-color-contrast.visible:not(.range) .contrast-ratio-single,
+.spectrum-color-contrast.visible.range .contrast-ratio-range {
+  display: flex;
+}
+
+.spectrum-color-contrast,
+.spectrum-color-contrast .contrast-ratio-range,
+.spectrum-color-contrast.range .contrast-ratio-single,
+.spectrum-color-contrast.error .accessibility-color-contrast-separator,
+.spectrum-color-contrast.error .contrast-ratio-max {
+  display: none;
+}
+
+.contrast-ratio-label {
+  font-size: 10px;
+  padding-inline-end: 4px;
+  color: var(--theme-toolbar-color);
+}
+
+.spectrum-color-contrast .accessibility-contrast-value {
+  font-size: 10px;
+  color: var(--theme-body-color);
+  border-bottom: 1px solid var(--learn-more-underline);
+}
+
+.spectrum-color-contrast.visible:not(.error) .contrast-ratio-single .accessibility-contrast-value {
+  margin-inline-start: 10px;
+}
+
+.spectrum-color-contrast.visible:not(.error) .contrast-ratio-min .accessibility-contrast-value,
+.spectrum-color-contrast.visible:not(.error) .contrast-ratio-max .accessibility-contrast-value{
+  margin-inline-start: 7px;
+}
+
+.spectrum-color-contrast .accessibility-contrast-value:not(:empty)::before {
+  width: auto;
+  content: none;
+  padding-inline-start: 2px;
+}
+
+.spectrum-color-contrast.visible:not(.error) .contrast-value-and-swatch:before {
+  display: inline-flex;
+  content: "";
+  height: 9px;
+  width: 9px;
+  background-color: var(--accessibility-contrast-color);
+}
+
+.spectrum-color-contrast.visible:not(.error):-moz-locale-dir(ltr) .contrast-value-and-swatch:before {
+  box-shadow: 0 0 0 1px var(--grey-40), 6px 5px var(--accessibility-contrast-bg),
+    6px 5px 0 1px var(--grey-40);
+}
+
+.spectrum-color-contrast.visible:not(.error):-moz-locale-dir(rtl) .contrast-value-and-swatch:before {
+  box-shadow: 0 0 0 1px var(--grey-40), -6px 5px var(--accessibility-contrast-bg),
+    -6px 5px 0 1px var(--grey-40);
+}
+
+.spectrum-color-contrast .accessibility-color-contrast-separator:before {
+  margin-inline-end: 4px;
+  color: var(--theme-body-color);
+}
+
+.spectrum-color-contrast .accessibility-color-contrast-large-text {
+  margin-inline-start: 1px;
+  margin-inline-end: 1px;
+  unicode-bidi: isolate;
+}
+
+.learn-more {
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  background-image: url(chrome://devtools/skin/images/info-small.svg);
+  background-color: transparent;
+  fill: var(--theme-icon-dimmed-color);
+  border: none;
+  margin-inline-start: auto;
+  margin-block-start: 1px;
+}
+
+.learn-more:-moz-locale-dir(ltr) {
+  margin-inline-end: -5px;
+}
+
+.learn-more:-moz-locale-dir(rtl) {
+  margin-inline-end: -2px;
+}
+
+.learn-more:hover,
+.learn-more:focus {
+  fill: var(--theme-icon-color);
+  cursor: pointer;
+  outline: none;
+}
+
+.learn-more::-moz-focus-inner {
+  border: none;
+}

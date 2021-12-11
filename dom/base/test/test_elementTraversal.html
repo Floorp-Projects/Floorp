@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=444722
+-->
+<head>
+  <title>Test for the ElementTraversal spec</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="http://dev.w3.org/2006/webapi/ElementTraversal/publish/ElementTraversal.html">ElementTraversal</a>
+<div id="content" style="display: none">
+<span>span</span><div>div</div>
+<!--comment goes here-->
+<p id="p1">p1</p>
+text here
+<p id="p2">p2</p>
+<span>a<span>b</span>c<span>d</span>e</span>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var c = document.getElementById('content');
+var cc = c.children;
+
+var contents = ["span", "div", "p1", "p2", "abcde"];
+function testContent() {
+  for(i = 0, e = c.firstElementChild; e; e = e.nextElementSibling, i++) {
+    is(e.textContent, contents[i], "wrong element contents");
+    is(e, c.children[i], "wrong element");
+    is(e, c.children.item(i), "wrong element");
+  }
+  is(i, contents.length, "wrong number of element siblings");
+  is(i, c.childElementCount, "wrong number of child elements");
+  is(i, c.children.length, "wrong number of child elements");
+
+  // Nuke all elements to retest the child list.
+  c.innerHTML = c.innerHTML;
+
+  for(i--, e = c.lastElementChild; e; e = e.previousElementSibling, i--) {
+    is(e.textContent, contents[i], "g element contents");
+    is(e, c.children[i], "wrong element");
+    is(e, c.children.item(i), "wrong element");
+  }
+  is(i, -1, "wrong number of element siblings");
+}
+
+testContent();
+
+is(cc.length, 5, "wrong number of child elements");
+is(c.childElementCount, 5, "wrong number of child elements");
+
+var p1 = document.getElementById('p1');
+var p2 = document.getElementById('p2');
+is(p1.nextElementSibling, p2, "wrong sibling");
+is(p2.previousElementSibling, p1, "wrong sibling");
+
+u = document.createElement('u');
+u.textContent = 'u';
+c.insertBefore(u, p2);
+is(cc.length, 6, "wrong number of child elements");
+is(c.childElementCount, 6, "wrong number of child elements");
+is(p1.nextElementSibling, u, "wrong sibling");
+is(p2.previousElementSibling, u, "wrong sibling");
+
+contents.splice(3, 0, "u");
+testContent();
+
+var p1 = document.getElementById('p1');
+var p2 = document.getElementById('p2');
+c.removeChild(p1);
+c.removeChild(p2);
+is(cc.length, 4, "wrong number of child elements");
+is(c.childElementCount, 4, "wrong number of child elements");
+
+contents.splice(2, 1);
+contents.splice(3, 1);
+testContent();
+
+tw = document.createTreeWalker(document.documentElement,
+                               NodeFilter.SHOW_ELEMENT,
+                               null);
+e = document.documentElement;
+
+elemsTested = 0;
+done = false;
+while(!done) {
+  is(tw.currentNode, e, "wrong element:" + tw.currentNode + " != " + e);
+  elemsTested++;
+  
+  if(tw.firstChild()) {
+    e = e.firstElementChild;
+  }
+  else {
+    while (!tw.nextSibling()) {
+      if (!tw.parentNode()) {
+        done = true;
+        break;
+      }
+      e = e.parentNode;
+    }
+    e = e.nextElementSibling;
+  }
+}
+is(elemsTested, document.getElementsByTagName("*").length,
+   "wrong number of elements");
+</script>
+</pre>
+</body>
+</html>

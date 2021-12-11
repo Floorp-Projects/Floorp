@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    treeherder:
+        tier: 2
+    worker-type: b-linux
+    worker:
+        max-run-time: 3600
+
+linux64-mingw32-nsis:
+    description: "NSIS build for MinGW32 Cross Compile"
+    treeherder:
+        symbol: TMW(mingw32-nsis)
+    run:
+        script: build-mingw32-nsis.sh
+        toolchain-artifact: public/build/nsis.tar.zst
+    fetches:
+        fetch:
+            - nsis-3.07
+            - zlib-1.2.11
+        toolchain:
+            - linux64-binutils
+            - linux64-clang-mingw-x86
+            - sysroot-x86_64-linux-gnu
+
+linux64-mingw-fxc2-x86:
+    description: "fxc2.exe x86 build for MinGW Cross Compile"
+    treeherder:
+        symbol: TMW(mingw-fxc2-x86)
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-mingw-fxc2-x86.sh
+        toolchain-artifact: public/build/fxc2.tar.zst
+    fetches:
+        fetch:
+            - fxc2
+        toolchain:
+            - linux64-clang-mingw-x86

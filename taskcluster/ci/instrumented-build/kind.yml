@@ -1,0 +1,316 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+    - fetch
+
+transforms:
+    - gecko_taskgraph.transforms.build:transforms
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_lints:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    shipping-phase: build
+    treeherder:
+        symbol: Bpgo(instr)
+        tier: 1
+    worker:
+        max-run-time: 7200
+        env:
+            PERFHERDER_EXTRA_OPTIONS: instrumented
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+    use-sccache:
+        by-release-level:
+            production: false
+            staging: true
+    fetches:
+        toolchain:
+            - linux64-sccache
+    run-on-projects: ['release']
+
+jobs:
+    linux-shippable/opt:
+        description: "Linux Instrumented"
+        index:
+            product: firefox
+            job-name: instrumented-linux
+        shipping-product: firefox
+        treeherder:
+            platform: linux32-shippable/opt
+        worker-type: b-linux
+        run:
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_32_builds.py
+            mozconfig-variant: profile-generate
+            tooltool-downloads: public
+        run-on-projects: ['release']
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-rust
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - sysroot-i686-linux-gnu
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    linux64-shippable/opt:
+        description: "Linux64 Instrumented"
+        index:
+            product: firefox
+            job-name: instrumented-linux64
+        shipping-product: firefox
+        treeherder:
+            platform: linux64-shippable/opt
+        worker-type: b-linux
+        run:
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+            mozconfig-variant: profile-generate
+            tooltool-downloads: public
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-rust
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    macosx64-shippable/opt:
+        description: "MacOS X x64 Cross-compile Instrumented"
+        shipping-phase: build
+        shipping-product: firefox
+        treeherder:
+            platform: osx-shippable/opt
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: debian11-amd64-build}
+            max-run-time: 7200
+            env:
+                PERFHERDER_EXTRA_OPTIONS: instrumented
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_mac_64_cross_builds.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            mozconfig-variant: profile-generate
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-cctools-port
+                - linux64-clang-macosx-cross
+                - linux64-hfsplus
+                - linux64-libdmg
+                - linux64-rust-macos
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - macosx64-sdk-10.12
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    android-x86-shippable/opt:
+        description: "Android 5.0 x86 PGO instrumented"
+        index:
+            product: mobile
+            job-name: instrumented-android-x86
+        shipping-product: fennec
+        treeherder:
+            platform: android-5-0-x86/pgo
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: android-build}
+            env:
+                GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            artifacts:
+                - name: public/build
+                  path: /builds/worker/artifacts/
+                  type: directory
+                - name: public/build/geckoview-androidTest.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+                  type: file
+                - name: public/build/geckoview_example.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+                  type: file
+        run:
+            config:
+                - builds/releng_base_android_64_builds.py
+            custom-build-variant-cfg: x86-profile-generate
+            tooltool-downloads: internal
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+                - android-ndk-linux
+                - android-sdk-linux
+                # Workaround issues in binutils from the ndk with the compiler-rt from clang-13
+                - linux64-binutils
+                - linux64-clang-android-cross
+                - linux64-rust-android
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    android-x86_64-shippable/opt:
+        description: "Android 5.0 x86_64 PGO instrumented"
+        index:
+            product: mobile
+            job-name: instrumented-android-x86_64
+        shipping-product: fennec
+        treeherder:
+            platform: android-5-0-x86_64/pgo
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: android-build}
+            env:
+                GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            artifacts:
+                - name: public/build
+                  path: /builds/worker/artifacts/
+                  type: directory
+                - name: public/build/geckoview-androidTest.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+                  type: file
+                - name: public/build/geckoview_example.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+                  type: file
+        run:
+            config:
+                - builds/releng_base_android_64_builds.py
+            custom-build-variant-cfg: x86_64-profile-generate
+            tooltool-downloads: internal
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang-android-cross
+                - linux64-rust-android
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    win32-shippable/opt:
+        description: "Win32 Shippable PGO Instrumented"
+        index:
+            product: firefox
+            job-name: instrumented-win32
+        shipping-product: firefox
+        treeherder:
+            platform: windows2012-32-shippable/opt
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: debian11-amd64-build}
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+        run:
+            options: [append-env-variables-from-configs]
+            mozconfig-variant: profile-generate
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+            tooltool-downloads: internal
+            extra-config:
+                stage_platform: win32
+                mozconfig_platform: win32
+                env:
+                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang-win-cross
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-wine
+                - linux64-liblowercase
+                - linux64-winchecksec
+                - nsis
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+            fetch:
+                - upx-3.95-win
+
+    win64-shippable/opt:
+        description: "Win64 Shippable PGO Instrumented"
+        index:
+            product: firefox
+            job-name: instrumented-win64
+        shipping-product: firefox
+        treeherder:
+            platform: windows2012-64-shippable/opt
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: debian11-amd64-build}
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+        run:
+            options: [append-env-variables-from-configs]
+            mozconfig-variant: profile-generate
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+            tooltool-downloads: internal
+            extra-config:
+                stage_platform: win64
+                mozconfig_platform: win64
+                env:
+                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang-win-cross
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-wine
+                - linux64-liblowercase
+                - linux64-winchecksec
+                - nsis
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+            fetch:
+                - upx-3.95-win

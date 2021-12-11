@@ -1,0 +1,105 @@
+<html>
+
+<head>
+  <title>nsIAccessible actions testing on HTML elements</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../actions.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      var actionsArray = [
+        {
+          ID: "li_clickable1",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "li_clickable2",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "li_clickable3",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "onclick_img",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: "label1",
+          actionName: "click",
+          events: CLICK_EVENTS,
+        },
+
+      ];
+
+      testActions(actionsArray);
+
+      is(getAccessible("label1").firstChild.actionCount, 1, "label text should have 1 action");
+
+      getAccessible("onclick_img").takeFocus();
+      is(getAccessible("link1").actionCount, 1, "links should have one action");
+      is(getAccessible("link2").actionCount, 1, "link with onclick handler should have 1 action");
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=523789"
+     title="nsHTMLLiAccessible shouldn't be inherited from linkable accessible">
+    Mozilla Bug 523789
+  </a><br>
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=423409"
+     title="Expose click action if mouseup and mousedown are registered">
+    Mozilla Bug 423409
+  </a>
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=659620"
+     title="hang when trying to edit a page on wikimo with NVDA running">
+    Mozilla Bug 659620
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ul>
+    <li id="li_clickable1" onclick="">Clickable list item</li>
+    <li id="li_clickable2" onmousedown="">Clickable list item</li>
+    <li id="li_clickable3" onmouseup="">Clickable list item</li>
+  </ul>
+
+  <!-- linkable accessibles -->
+  <img id="onclick_img" onclick="" src="../moz.png">
+
+  <a id="link1" href="www">linkable textleaf accessible</a>
+  <div id="link2" onclick="">linkable textleaf accessible</div>
+
+  <div>
+    <label for="TextBox_t2" id="label1">
+      <span>Explicit</span>
+    </label>
+    <input name="in2" id="TextBox_t2" type="text" maxlength="17">
+  </div>
+
+</body>
+</html>

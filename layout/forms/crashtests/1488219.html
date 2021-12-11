@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<script>
+function doTest(){
+  document.getElementById('c').appendChild(document.getElementById('b').cloneNode(true));
+  window.frames[0].document.body.appendChild(document.getElementById('a'));
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+
+<iframe hidden></iframe>
+<style>
+:last-of-type {
+  column-count:71;
+  float:left;
+}
+</style>
+<bdo id='a'>A</bdo>
+<address>
+<blockquote>
+</address>
+<footer id='b'>
+</footer>
+<input id='c' type='time'>
+</html>

@@ -1,0 +1,8 @@
+<html>
+<head>
+<title>Crash [@ nsHTMLEditor::GetPositionAndDimensions] when window gets removed during click on contenteditable absolute positioned element</title>
+</head>
+<body>
+<iframe id="content" src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%0A%3Cscript%3E%0Awindow.addEventListener%28%27DOMAttrModified%27%2C%20function%28e%29%20%7Bdump%28%27DOMAttrModified\n%27%29%3Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%7D%2C%20true%29%3B%0A%3C/script%3E%0A%3C/head%3E%0A%3Cbody%3E%0A%3Cdiv%20style%3D%22position%3A%20absolute%3B%22%20contenteditable%3D%22true%22%3EClicking%20on%20this%20should%20not%20crash%20Mozilla%0A%3C/body%3E%0A%3C/html%3E" style="width:1000px;height: 300px;"></iframe>
+</body>
+</html>

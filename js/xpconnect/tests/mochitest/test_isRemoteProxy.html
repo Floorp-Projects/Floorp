@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Cu.isRemoteProxy</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+/* eslint-disable prettier/prettier */
+
+async function addFrame(url) {
+  let frame = document.createElement("iframe");
+  frame.src = url;
+  document.body.appendChild(frame);
+
+  await new Promise(resolve => {
+    frame.addEventListener("load", resolve, { once: true });
+  });
+
+  return frame;
+}
+
+add_task(async function() {
+  const { Cu } = SpecialPowers;
+
+  let localFrame = await addFrame("file_empty.html");
+  let remoteFrame = await addFrame(
+    SimpleTest.getTestFileURL("file_empty.html")
+              .replace("mochi.test:8888", "example.com"));
+
+  ok(frames[0] === localFrame.contentWindow, "frames[0] is localFrame");
+  ok(frames[1] === remoteFrame.contentWindow, "frames[1] is remoteFrame");
+
+  ok(!Cu.isRemoteProxy(window), "window is not a remote proxy");
+  ok(!Cu.isRemoteProxy(location), "location is not a remote proxy");
+
+  ok(!Cu.isRemoteProxy(frames[0]), "frames[0] is not a remote proxy");
+  ok(
+    !Cu.isRemoteProxy(frames[0].location),
+    "frames[0].location is not a remote proxy"
+  );
+
+  const { useRemoteSubframes } = SpecialPowers;
+  is(Cu.isRemoteProxy(frames[1]), useRemoteSubframes,
+     "frames[1] is a remote proxy if Fission is enabled");
+  is(Cu.isRemoteProxy(frames[1].location), useRemoteSubframes,
+    "frames[1].location is a remote proxy if Fission is enabled");
+});
+
+</script>
+</body>
+</html>

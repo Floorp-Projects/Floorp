@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Subtest for Login Manager notifications - autocomplete=off on the username field</title>
+</head>
+<body>
+<h2>Subtest 2</h2>
+(username autocomplete=off)
+<form id="form" action="formsubmit.sjs">
+  <input id="user" name="user" autocomplete="off">
+  <input id="pass" name="pass" type="password">
+  <button type='submit'>Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  SpecialPowers.wrap(userField).setUserInput("notifyu1");
+  SpecialPowers.wrap(passField).setUserInput("notifyp1");
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+var userField = document.getElementById("user");
+var passField = document.getElementById("pass");
+
+</script>
+</body>
+</html>

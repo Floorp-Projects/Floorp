@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248897
+The intent of this file is to test the speech recognition service behavior
+whenever the server hangups the connection without sending any response
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1248897 -- Online speech service</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1248897">Mozilla Bug 1248897</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  performTest({
+    eventsToRequest: [],
+    expectedEvents: {
+      "start": null,
+      "audiostart": null,
+      "audioend": null,
+      "end": null,
+      'error': buildErrorCallback(errorCodes.NETWORK),
+      "speechstart": null,
+      "speechend": null
+    },
+    doneFunc: SimpleTest.finish,
+    prefs: [["media.webspeech.recognition.enable", true],
+            ["media.webspeech.recognition.force_enable", true],
+            ["media.webspeech.service.endpoint",
+              "http://mochi.test:8888/tests/dom/media/webspeech/recognition/test/http_requesthandler.sjs?hangup=1"],
+            ["media.webspeech.recognition.timeout", 100000]]
+  });
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<script type="text/javascript">
+var testFont = '40px sans-serif';
+
+function test(x, y, text, style, rotation) {
+  var canvas = document.createElement("canvas");
+  canvas.width = 400;
+  canvas.height = 400;
+  canvas.style.cssText = 'position:absolute;' + style;
+  document.getElementsByTagName('body')[0].appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(x - 20, y); ctx.lineTo(x + 20, y);
+  ctx.moveTo(x, y - 20); ctx.lineTo(x, y + 20);
+  ctx.stroke();
+  ctx.globalAlpha = 1.0;
+  ctx.font = testFont;
+  if (rotation != 0) {
+    ctx.translate(x,y);
+    ctx.rotate(rotation);
+    ctx.translate(-x,-y);
+  }
+  ctx.fillText(text, x, y);
+}
+
+// Testcase: vertical text with orientation:sideways-right
+test(100,  50, 'Hello', 'writing-mode:vertical-lr;text-orientation:sideways-right', 0);
+
+// Reference: horizontal text with 90° rotation
+// test(100,  50, 'Hello', 'writing-mode:horizontal-tb', Math.PI/2);
+
+// Non-reference: vertical text with orientation:mixed
+// test(100,  50, 'Hello', 'writing-mode:vertical-lr;text-orientation:mixed', 0);
+
+</script>

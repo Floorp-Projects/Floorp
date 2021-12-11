@@ -1,0 +1,184 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.request-blocking-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Override the devtools-checkbox style to improve hit area and alignment */
+.request-blocking-panel .devtools-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 2px 4px;
+  /* checkbox can be 13px, 14px or 16px depending on the platform */
+  line-height: 16px;
+  user-select: none;
+  cursor: default;
+}
+
+.request-blocking-panel .devtools-checkbox-label > input {
+  flex: none;
+  margin: 0;
+}
+
+.request-blocking-label {
+  flex: 1 1 auto;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.request-blocking-editable-label {
+  cursor: text
+}
+
+/* The "Enable Blocking Requests" bar */
+.request-blocking-enable-bar {
+  flex: none;
+  background: var(--theme-tab-toolbar-background);
+  height: calc(var(--theme-toolbar-height) + 1px);
+  padding-block: 2px;
+  padding-inline: 16px 4px;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.request-blocking-enable-form {
+  flex-grow: 1;
+}
+
+.request-blocking-contents {
+  flex: 0 1 auto;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+/* Blocked request list */
+.request-blocking-list {
+  margin: 0;
+  padding: 4px 0;
+}
+
+.request-blocking-list.disabled {
+  background-color: var(--theme-toolbar-hover);
+  opacity: 0.6;
+}
+
+.request-blocking-list li {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  padding-inline: 16px 8px;
+}
+
+.request-blocking-list li.request-blocking-edit-item {
+  padding: 0;
+  /* Text input is 24px but we want it to occupy the same space as our 20px rows */
+  margin-block: -2px;
+}
+
+.request-blocking-list li.request-blocking-edit-item form {
+  width: 100%;
+}
+
+.request-blocking-list .devtools-checkbox-label {
+  flex: 1 1 auto;
+  /* Can't seem to make the flex-shrink reduce the element's width when the
+     content is a long URL, even if the URL container has text-overflow: ellipsis.
+     DevTools shows that "the item was clamped to its minimum size" and the shrink
+     part is thus ignored. So we're reserving 20px for the delete button. */
+  max-width: calc(100% - 20px);
+}
+
+.request-blocking-remove-button {
+  /* Visually hide but stay focusable in keyboard navigation */
+  opacity: 0;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 2px;
+  border: none;
+  outline: none;
+  background-color: transparent;
+}
+
+.request-blocking-remove-button::-moz-focus-inner {
+  border: none;
+}
+
+.request-blocking-list li:hover .request-blocking-remove-button {
+  opacity: 1;
+}
+
+.request-blocking-remove-button::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background: url("chrome://devtools/skin/images/close.svg") no-repeat center;
+  background-size: 12px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
+}
+
+.request-blocking-remove-button:hover::before {
+  fill: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+/* Footer content, progressively pushed by pattern rows in the main list and
+ * remaining "fixed" at the bottom when there is enough content to scroll,
+ * thanks to the magic of flexbox */
+.request-blocking-footer {
+  position: relative;
+  flex: none;
+}
+
+/* Draw a border 1px below the form, so that it disappears out of view when
+ * there are many pattern rows in the main container and the footer is pushed
+ * to the bottom */
+.request-blocking-footer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+/* Text input for the addition and edition forms */
+.request-blocking-add-form input,
+.request-blocking-edit-item input {
+  width: calc(100% - 1px);
+  height: 24px;
+  padding-block: 4px;
+  padding-inline: 20px 8px;
+  background: none;
+}
+
+.request-blocking-list-empty-notice {
+  margin: 0;
+  flex: 1;
+  overflow-x: hidden;
+}
+
+.request-blocking-notice-element {
+  padding-top: 12px;
+  padding-inline: 12px;
+}
+
+.request-blocking-notice-element::before {
+  content:"• ";
+}

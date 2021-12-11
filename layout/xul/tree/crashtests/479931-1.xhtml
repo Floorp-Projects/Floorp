@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var o = document.createElementNS("http://www.w3.org/1999/xhtml", "option");
+  var q = document.getElementById("q");
+  q.appendChild(o);
+}
+
+</script>
+</head>
+<body onload="boom();">
+
+<xul:tree><xul:treechildren id="q"><div/></xul:treechildren></xul:tree>
+
+</body>
+</html>

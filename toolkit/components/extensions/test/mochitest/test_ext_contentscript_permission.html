@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_contentscript() {
+  function background() {
+    browser.test.onMessage.addListener(async url => {
+      let tab = await browser.tabs.create({url});
+
+      let executed = true;
+      try {
+        await browser.tabs.executeScript(tab.id, {code: "true;"});
+      } catch (e) {
+        executed = false;
+      }
+
+      await browser.tabs.remove([tab.id]);
+      browser.test.sendMessage("executed", executed);
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["<all_urls>"],
+    },
+    background,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  extension.sendMessage("https://example.com");
+  let result = await extension.awaitMessage("executed");
+  is(result, true, "Content script can be run in a page without mozAddonManager");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.webapi.testing", true]],
+  });
+
+  extension.sendMessage("https://example.com");
+  result = await extension.awaitMessage("executed");
+  is(result, false, "Content script cannot be run in a page with mozAddonManager");
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,119 @@
+                                                        Darin Fisher
+                                                        darin@netscape.com
+                                                        8/8/2001
+
+                            HTTP DESIGN NOTES
+
+
+CLASS BREAKDOWN
+
+  nsHttpHandler
+    - implements nsIProtocolHandler
+    - manages preferences
+    - owns the authentication cache
+    - holds references to frequently used services
+
+  nsHttpChannel
+    - implements nsIHttpChannel
+    - talks to the cache
+    - initiates http transactions
+    - processes http response codes
+    - intercepts progress notifications
+
+  nsHttpConnection
+    - implements nsIStreamListener & nsIStreamProvider
+    - talks to the socket transport service
+    - feeds data to its transaction object
+    - routes progress notifications
+
+  nsHttpConnectionInfo
+    - identifies a connection
+
+  nsHttpTransaction
+    - implements nsIRequest
+    - encapsulates a http request and response
+    - parses incoming data
+
+  nsHttpChunkedDecoder
+    - owned by a transaction
+    - removes chunked decoding
+
+  nsHttpRequestHead
+    - owns a nsHttpHeaderArray
+    - knows how to fill a request buffer
+
+  nsHttpResponseHead
+    - owns a nsHttpHeaderArray
+    - knows how to parse response lines
+    - performs common header manipulations/calculations
+
+  nsHttpHeaderArray
+    - stores http "<header>:<value>" pairs
+
+  nsHttpAuthCache
+    - stores authentication credentials for http auth domains
+
+  nsHttpBasicAuth
+    - implements nsIHttpAuthenticator
+    - generates BASIC auth credentials from user:pass
+
+
+ATOMS
+
+  nsHttp:: (header namespace)
+
+  eg. nsHttp::Content_Length
+
+
+TRANSACTION MODEL
+
+  InitiateTransaction -> ActivateConnection -> AsyncWrite, AsyncRead
+
+  The channel creates transactions, and passes them to the handler via
+  InitiateTransaction along with a nsHttpConnectionInfo object
+  identifying the requested connection.  The handler either dispatches
+  the transaction immediately or queues it up to be dispatched later,
+  depending on whether or not the limit on the number of connections
+  to the requested server has been reached.  Once the transaction can
+  be run, the handler looks for an idle connection or creates a new
+  connection, and then (re)activates the connection, assigning it the
+  new transaction.
+
+  Once activated the connection ensures that it has a socket transport,
+  and then calls AsyncWrite and AsyncRead on the socket transport.  This
+  begins the process of talking to the server.  To minimize buffering,
+  socket transport thread-proxying is completely disabled (using the flags
+  DONT_PROXY_LISTENER | DONT_PROXY_PROVIDER | DONT_PROXY_OBSERVER with
+  both AsyncWrite and AsyncRead).  This means that the nsHttpConnection's
+  OnStartRequest, OnDataAvailable, OnDataWritable, and OnStopRequest
+  methods will execute on the socket transport thread.
+
+  The transaction defines (non-virtual) OnDataReadable, OnDataWritable, and
+  OnStopTransaction methods, which the connection calls in response to
+  its OnDataAvailable, OnDataWritable, and OnStopRequest methods, respectively.
+  The transaction owns a nsStreamListenerProxy created by the channel, which
+  it uses to transfer data from the socket thread over to the client's thread.
+  To mimize buffering, the transaction implements nsIInputStream, and passes
+  itself to the stream listener proxy's OnDataAvailable.  In this way, we
+  have effectively wedged the response parsing between the socket and the
+  thread proxy's buffer.  When read, the transaction turns around and reads
+  from the socket using the buffer passed to it.  The transaction scans the
+  buffer for headers, removes them as they are detected, and copies the headers
+  into its nsHttpResponseHead object.  The rest of the data remains in the
+  buffer, and is proxied over to the client's thread to be handled first by the
+  http channel and eventually by the client.
+
+  There are several other major design factors, including:
+
+    - transaction cancelation
+    - progress notification
+    - SSL tunneling
+    - chunked decoding
+    - thread safety
+    - premature EOF detection and transaction restarting
+    - pipelining (not yet implemented)
+
+
+CACHING
+
+<EOF>

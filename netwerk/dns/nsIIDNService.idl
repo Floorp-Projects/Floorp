@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIIDNService interface.
+ *
+ * IDN (Internationalized Domain Name) support. Provides facilities
+ * for manipulating IDN hostnames according to the specification set
+ * forth by the IETF.
+ *
+ * IDN effort:
+ * http://www.ietf.org/html.characters/idn-charter.html
+ * http://www.i-dns.net
+ *
+ * IDNA specification:
+ * http://search.ietf.org/internet-drafts/draft-ietf-idn-idna-06.txt
+ */
+
+[scriptable, uuid(a592a60e-3621-4f19-a318-2bf233cfad3e)]
+interface nsIIDNService : nsISupports
+{
+    /**
+     * Prepares the input hostname according to IDNA ToASCII operation,
+     * the input hostname is assumed to be UTF8-encoded.
+     */
+    ACString convertUTF8toACE(in AUTF8String input);
+
+
+    /**
+     * This is the ToUnicode operation as specified in the IDNA proposal,
+     * with an additional step to encode the result in UTF-8.
+     * It takes an ACE-encoded hostname and performs ToUnicode to it, then
+     * encodes the resulting string into UTF8.
+     */
+    AUTF8String convertACEtoUTF8(in ACString input);
+
+    /**
+     * Checks if the input string is ACE encoded or not.
+     */
+    boolean isACE(in ACString input);
+
+    /**
+     * Performs the unicode normalization needed for hostnames in IDN,
+     * for callers that want early normalization.
+     */
+    AUTF8String normalize(in AUTF8String input);
+
+    /**
+     * Normalizes and converts a host to UTF-8 if the host is in the IDN
+     * whitelist, otherwise converts it to ACE. This is useful for display
+     * purposes and to ensure an encoding consistent with nsIURI::GetHost().
+     * If the result is ASCII or ACE encoded, |isASCII| will be true.
+     */
+    AUTF8String convertToDisplayIDN(in AUTF8String input, out boolean isASCII);
+};

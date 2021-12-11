@@ -1,0 +1,149 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#ifdef ERROR
+#undef ERROR
+#endif
+%}
+
+[scriptable, uuid(1f350f96-7023-434a-8864-40a1c493aac1)]
+interface mozIStorageError : nsISupports {
+
+  /**
+   * General SQL error or missing database.
+   */
+  const long ERROR = 1;
+
+  /**
+   * Internal logic error.
+   */
+  const long INTERNAL = 2;
+
+  /**
+   * Access permission denied.
+   */
+  const long PERM = 3;
+
+  /**
+   * A callback routine requested an abort.
+   */
+  const long ABORT = 4;
+
+  /**
+   * The database file is locked.
+   */
+  const long BUSY = 5;
+
+  /**
+   * A table in the database is locked.
+   */
+  const long LOCKED = 6;
+
+  /**
+   * An allocation failed.
+   */
+  const long NOMEM = 7;
+
+  /**
+   * Attempt to write to a readonly database.
+   */
+  const long READONLY = 8;
+
+  /**
+   * Operation was terminated by an interrupt.
+   */
+  const long INTERRUPT = 9;
+
+  /**
+   * Some kind of disk I/O error occurred.
+   */
+  const long IOERR = 10;
+
+  /**
+   * The database disk image is malformed.
+   */
+  const long CORRUPT = 11;
+
+  /**
+   * An insertion failed because the database is full.
+   */
+  const long FULL = 13;
+
+  /**
+   * Unable to open the database file.
+   */
+  const long CANTOPEN = 14;
+
+  /**
+   * The database is empty.
+   */
+  const long EMPTY = 16;
+
+  /**
+   * The database scheme changed.
+   */
+  const long SCHEMA = 17;
+
+  /**
+   * A string or blob exceeds the size limit.
+   */
+  const long TOOBIG = 18;
+
+  /**
+   * Abort due to a constraint violation.
+   */
+  const long CONSTRAINT = 19;
+
+  /**
+   * Data type mismatch.
+   */
+  const long MISMATCH = 20;
+
+  /**
+   * Library used incorrectly.
+   */
+  const long MISUSE = 21;
+
+  /**
+   * Uses OS features not supported on the host system.
+   */
+  const long NOLFS = 22;
+
+  /**
+   * Authorization denied.
+   */
+  const long AUTH = 23;
+
+  /**
+   * Auxiliary database format error.
+   */
+  const long FORMAT = 24;
+
+  /**
+   * Attempt to bind a parameter using an out-of-range index or nonexistent
+   * named parameter name.
+   */
+  const long RANGE = 25;
+
+  /**
+   * File opened that is not a database file.
+   */
+  const long NOTADB = 26;
+
+
+  /**
+   * Indicates what type of error occurred.
+   */
+  readonly attribute long result;
+
+  /**
+   * An error string the gives more details, if available.
+   */
+  readonly attribute AUTF8String message;
+};

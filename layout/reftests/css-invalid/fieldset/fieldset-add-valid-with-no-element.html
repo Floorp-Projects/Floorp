@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--fieldset with no valid element and another valid one is added dynamically -->
+<html class='reftest-wait'>
+  <head>
+    <style>
+      fieldset:valid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById("fieldset").appendChild(document.getElementById('i'));
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <input id='i' type='text' value='foo'>
+    <fieldset id="fieldset">
+    </fieldset>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=533596
+-->
+<window title="Mozilla Bug 533596"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+      function checkWrapped(obj) {
+          var utils = window.windowUtils;
+          is(utils.getClassName(obj), "Proxy", "right type of wrapper");
+      }
+
+      var sandbox = new Cu.Sandbox("about:blank");
+      sandbox.importFunction(function() { return "PASS"; }, "foo");
+      sandbox.importFunction(function bar() { return "PASS"; });
+      sandbox.importFunction(checkWrapped);
+      is(Cu.evalInSandbox("foo()", sandbox), "PASS", "importFunction works");
+      is(Cu.evalInSandbox("bar()", sandbox), "PASS", "importFunction works");
+      Cu.evalInSandbox("checkWrapped({})", sandbox);
+
+      var importer = sandbox.importFunction;
+      importer(function() { return "PASS"; }, "bar");
+      is(Cu.evalInSandbox("bar()", sandbox), "PASS", "unbound importFunction works");
+      is(typeof this.bar, "undefined", "didn't import into our global");
+  ]]></script>
+</window>

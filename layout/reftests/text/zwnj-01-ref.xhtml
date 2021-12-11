@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1">
+
+  <!-- use an empty g to force filters.svg to load before onload -->
+  <use xlink:href="../filters.svg#empty" />
+
+  <foreignObject filter="url(../filters.svg#NonWhiteToBlack)"
+                 x="0" y="0" height="100%" width="100%">
+<!-- Reference rendering for zwnj-01.html. This uses spans with
+  display:inline-block to prevent the letters from connecting -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>ZWNJ test</title>
+  <style type="text/css">
+  body {   
+    font-size: 36px;
+    background: white;
+    color: black;
+  }
+  span {
+    display: inline-block;
+  }
+  </style>
+ </head>
+ <body lang="ar">
+  <p><span>&#x647;&#x627;</span><span>&#x647;&#x641;&#x62A;&#x647;</span></p>
+  <p><span>&#x647;&#x627;</span><span>&#x645;&#x648;&#x632;&#x647;</span></p>
+  <p><span>&#x634;&#x646;&#x628;&#x647;</span><span>&#x633;&#x647;</span></p>
+  <p><span>&#x622;&#x647;&#x646;</span><span>&#x631;&#x627;&#x647;</span></p>
+  <p><span>&#x627;&#x641;&#x632;&#x627;&#x631;</span><span>&#x646;&#x631;&#x645;</span></p>
+ </body>
+</html>
+</foreignObject>
+</svg>

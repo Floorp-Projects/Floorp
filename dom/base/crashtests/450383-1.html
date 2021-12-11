@@ -1,0 +1,9 @@
+<html>
+<BODY></BODY>
+<SCRIPT>
+    document.addEventListener("DOMCharacterDataModified",function(){
+        document.body.innerHTML=""; // change this to see memory corruption
+    },true);
+    document.body.innerHTML="<optGroup</form<textArea";
+</SCRIPT>
+</html>

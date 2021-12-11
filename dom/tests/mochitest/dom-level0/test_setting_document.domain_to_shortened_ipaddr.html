@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>document.domain can't be meaningfully set on pages at IP address hosts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<iframe id="childframe" name="child"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.origin, "http://127.0.0.1:8888", "wrong sender");
+  ok(evt.source === window.frames.child, "wrong sender");
+
+  is(evt.data, "child-response", "got wrong response");
+
+  SimpleTest.finish();
+}
+window.addEventListener("message", receiveMessage);
+
+// By default, proxies don't apply to 127.0.0.1.
+// We need them to for this test (at least on android), though:
+SpecialPowers.pushPrefEnv({set: [
+  ["network.proxy.allow_hijacking_localhost", true]
+]}).then(function() {
+  var iframe = document.getElementById("childframe");
+  iframe.src = "http://127.0.0.1:8888/tests/dom/tests/mochitest/dom-level0/child_ip_address.html";
+});
+</script>
+</pre>
+</body>
+</html>

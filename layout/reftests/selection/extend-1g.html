@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<body style="white-space:pre">0123456789
+<script>
+document.body.offsetTop;
+// Test newfocus = focus < anchor
+var t = document.body.firstChild;
+var sel = window.getSelection();
+sel.collapse(t, 8); // anchor
+sel.extend(t, 2);   // focus
+
+function doTest() {
+  sel.extend(t, 2); // newfocus
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

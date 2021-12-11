@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIStandaloneNativeMenu;
+
+/**
+ * Allow applications to interface with the Mac OS X Dock.
+ *
+ * Applications may indicate progress on their Dock icon. Only one such
+ * progress indicator is available to the entire application.
+ */
+
+[scriptable, uuid(8BE66B0C-5F71-4B74-98CF-6C2551B999B1)]
+interface nsIMacDockSupport : nsISupports
+{
+  /**
+   * Menu to use for application-specific dock menu items.
+   */
+  attribute nsIStandaloneNativeMenu dockMenu;
+
+  /**
+   * Activate the application. This should be used by an application to
+   * activate itself when a dock menu is selected as selection of a dock menu
+   * item does not automatically activate the application.
+   *
+   * @param aIgnoreOtherApplications If false, the application is activated
+   *        only if no other application is currently active. If true, the
+   *        application activates regardless.
+   */
+  void activateApplication(in boolean aIgnoreOtherApplications);
+
+  /**
+   * Text used to badge the dock tile.
+   */
+  attribute AString badgeText;
+
+  /**
+   * True if this app is in the list of apps that are persisted to the macOS
+   * Dock (as if the user selected "Keep in Dock").
+   */
+  readonly attribute bool isAppInDock;
+
+  /**
+   * Ensure that there is a tile for this app in the list of apps that are
+   * persisted to the macOS Dock (equivalent to the user selected "Keep in
+   * Dock").
+   *
+   * The position for the [new] app tile is:
+   *
+   * - its current position if it already exists, else
+   * - the position of `aAppToReplacePath` if it exists, else
+   * - directly after the last app with the same .app name, else
+   * - directly after the last known browser app (see `browserAppNames` in
+   *   nsMacDockSupport.mm), else
+   * - at the end of the persisted app list.
+   *
+   * @param aAppPath [optional] The path of the .app to persist to the Dock
+   *   (defaults to the path of the current app).
+   * @param aAppToReplacePath [optional] The path of a .app that should be
+   *   replaced if it is in the list of persisted apps.  This is useful when we
+   *   prompt the user to install the app when the app is being run directly
+   *   from a .dmg and the user may have dragged that .app file to the dock.
+   * @return true if the app was already in the list of persisted apps or if it
+   *   was successfully added, else returns false.
+   */
+  bool ensureAppIsPinnedToDock([optional] in AString aAppPath,
+                               [optional] in AString aAppToReplacePath);
+};

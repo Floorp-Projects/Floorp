@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: abs pos static position (ancestor of grid container as abs.pos. CB)</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151243">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+separator { clear:both; display:block; height:6px; }
+
+.grid {
+  position: relative;
+  display: grid;
+  padding: 1px 3px 5px 7px;
+  grid-template: 25px 33px 7px / 30px 51px 5px;
+  margin-right: 4px;
+  height: 100px;
+  width: 100px;
+}
+.wrap {
+  position: relative;
+  float: left;
+  padding: 3px 5px 7px 9px;
+  border-style: solid;
+  border-width: 1px 3px 5px 7px;
+  border-block-start-color: blue;
+  border-inline-start-color: lime;
+  writing-mode: vertical-lr; direction:rtl;
+  z-index:1;
+}
+
+abs1,abs2,abs3,abs4 {
+  grid-area: 2 / 2 / 3 / 3;
+  position: absolute;
+}
+abs1 { height:97px; top:-12px; left:-30px; background:lime; }
+abs2 { right:-18px; left:3px; background:pink; }
+abs3 { top: -20px; left:-35px; right:-26px; background:cyan; }
+abs4 { top:-6px; bottom:-53px; background:silver; }
+abs1::before { content:"1";}
+abs2::before { content:"2";}
+abs3::before { content:"3";}
+abs4::before { content:"4";}
+
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+.hr abs3 { left:-24px; right:-37px;  }
+.vl abs3, .vr abs3, .vrl abs3, .vlr abs3 { left:-30px; top:-14px; right:-49px; }
+.vr abs3, .vrl abs3 { left:-47px; right:-32px; }
+.vrl abs3 { top:-25px; }
+
+.hl abs2, .hr abs2 { top:-25px; }
+.hl abs2 { left:-43px; }
+.hr abs2 { left:-32px; right:-29px; }
+.vl abs2, .vr abs2, .vrl abs2, .vlr abs2 { left:-38px; right:-41px; }
+.vr abs2, .vrl abs2 { left:-55px; right:-24px; }
+.vrl abs2 { top:-16px; }
+
+.hr abs1 { left: 91px; }
+.vl abs1, .vr abs1, .vrl abs1, .vlr abs1 { top:-6px; left:-25px; }
+.vr abs1, .vrl abs1 { left:68px; }
+.vrl abs1 { top:-17px; }
+
+.hl abs4 { left:51px; }
+.hr abs4 { left:10px; }
+.vl abs4, .vr abs4, .vrl abs4, .vlr abs4 { top:0px; bottom:-41px; left:-25px; }
+.vr abs4, .vrl abs4 { left:68px; }
+.vrl abs4 { top:-11px; bottom:-29px; }
+
+
+</style>
+</head>
+<body>
+
+<script>
+document.body.style.display="none";
+var wm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
+for (var i = 0; i < wm.length; ++i) {
+  for (var j = 0; j < wm.length; ++j) {
+    var div = document.createElement("div");
+    div.className = "grid " + wm[i];
+
+    div.appendChild(span = document.createElement("span"));
+    span.appendChild(document.createTextNode("A"));
+    div.appendChild(document.createElement("abs1"));
+    div.appendChild(span = document.createElement("span"));
+    span.appendChild(document.createTextNode("BC"));
+
+    div.appendChild(document.createElement("abs3"));
+    div.appendChild(document.createElement("abs4"));
+    var wrap = document.createElement("div");
+    wrap.className = "wrap ";
+    wrap.appendChild(div);
+    document.body.appendChild(wrap)
+  }
+  document.body.appendChild(document.createElement("separator"));
+}
+document.body.style.display="";
+</script>
+
+
+</body>
+</html>

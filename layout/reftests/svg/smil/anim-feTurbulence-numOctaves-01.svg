@@ -1,0 +1,217 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(5, true)">
+  <title>Test animation of the "numOctaves" &lt;integer&gt; attribute on the "feTurbulence" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+
+  <!-- Our implementation strategy for animating integers with
+       calcMode="linear" is to use round(), with the slight twist that we
+       round "to the NEXT value" when the current time puts us exactly midway
+       between two integer values. (This is so that the result of midpoint
+       rounding does not depend on whether we're animating up to a higher
+       value or animating down to a lower value.) Note that one of the quirks
+       of using round() is that the start and end values of any integer
+       range only receive half as much time as any intermediary values. This
+       is as you would expect mathematically, but it's probably unexpected
+       for most users!
+
+       We could try to avoid this round() quirk by coming up with a better
+       implementation strategy for calcMode="linear", but animation of the
+       few integer attributes in SVG 1.1 is extremely unlikely (so this
+       issue is very low priority), and it's actually difficult to find a
+       better strategy that doesn't have its own undesirable quirks.
+
+       One alternative could be to divide the time evenly amoungst each
+       integer. (I.e. it would be similar to calcMode="discrete", except it
+       would also visit all the intermediary values, not just the start and
+       end values). The issue with this approach is that for a simple "to"
+       animation the animation wouldn't actually seem to change anything until
+       interpolation reaches the second integer value. This could be avoided
+       by skipping the initial value and distributing the time between the
+       other values, but then in the case of a "from-to" animation where the
+       from value is different to the underlying attribute value, the
+       animation would seem to skip the first value. Not that the same sort of
+       problem exists at the other end of the simple duration, where it will
+       reach the final integer value before the end of the simple duration.
+       This could be avoided by only setting the final value right at the end
+       of the simple duration and distributing the time between evenly
+       between the other values, but then the final value will only be seen if
+       fill="freeze".
+
+       There are many other problems with other implementation strategies. The
+       more you think about them, add the complexity of 'values', 'by' etc,
+       and think of cases where they behave strangely (e.g. animating between
+       just two adjacent integers, up or down, etc.), the more ugly it gets.
+       It's really not worth it for SVG 1.1. Maybe if you could use SMIL for
+       'font-size' or something even more likely to be animated it would be.
+  -->
+
+
+  <!-- Some calcMode="linear" tests animating *up* to higher values. -->
+
+  <!-- At 5s the animated value should be 3. -->
+  <filter id="filter_1" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="6.1s"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="0" width="20" height="20" filter="url(#filter_1)"/>
+
+  <!-- At exactly 5s the animated value should change to 4. -->
+  <filter id="filter_2" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="6s"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" width="20" height="20" filter="url(#filter_2)"/>
+
+
+  <!-- Some calcMode="linear" tests animating *down* to lower values. -->
+
+  <!-- At 5s the animated value should be 2. -->
+  <filter id="filter_3" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="6.1s"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="0" y="20" width="20" height="20" filter="url(#filter_3)"/>
+
+  <!-- At exactly 5s the animated value should change to 1. -->
+  <filter id="filter_4" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="6s"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="20" width="20" height="20" filter="url(#filter_4)"/>
+
+
+  <!-- Some 'by' animation tests -->
+
+  <!-- At 5s the animated value should be 3. -->
+  <filter id="filter_5" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="6.1s"
+               by="3"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect y="40" width="20" height="20" filter="url(#filter_5)"/>
+
+  <!-- At exactly 5s the animated value should change to 4. -->
+  <filter id="filter_6" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="6s"
+               by="3"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="40" width="20" height="20" filter="url(#filter_6)"/>
+
+
+  <!-- calcMode="paced" tests -->
+
+  <!-- At 5s the animated value should be 2. -->
+  <filter id="filter_7" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="paced"
+               begin="0s" dur="6.1s"
+               values="4; 3; 1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect y="60" width="20" height="20" filter="url(#filter_7)"/>
+
+  <!-- At exactly 5s the animated value should change to 1. -->
+  <filter id="filter_8" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="paced"
+               begin="0s" dur="6s"
+               values="4; 3; 1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="60" width="20" height="20" filter="url(#filter_8)"/>
+
+
+  <!-- Some calcMode="discrete" tests animating *up* to higher values. -->
+
+  <!-- At 5s the animated value should be 1. -->
+  <filter id="filter_9" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="discrete"
+               begin="0s" dur="10.1s"
+               from="1"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="0" y="80" width="20" height="20" filter="url(#filter_9)"/>
+
+  <!-- At exactly 5s the animated value should change to 4. -->
+  <filter id="filter_10" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="discrete"
+               begin="0s" dur="10s"
+               from="1"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="80" width="20" height="20" filter="url(#filter_10)"/>
+
+
+  <!-- Some calcMode="discrete" tests animating *down* to lower values. -->
+
+  <!-- At 5s the animated value should be 4. -->
+  <filter id="filter_11" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="discrete"
+               begin="0s" dur="10.1s"
+               from="4"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="0" y="100" width="20" height="20" filter="url(#filter_11)"/>
+
+  <!-- At exactly 5s the animated value should change to 1. -->
+  <filter id="filter_12" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="discrete"
+               begin="0s" dur="10s"
+               from="4"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="100" width="20" height="20" filter="url(#filter_12)"/>
+
+</svg>

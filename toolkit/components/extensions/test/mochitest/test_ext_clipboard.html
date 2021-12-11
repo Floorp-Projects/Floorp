@@ -1,0 +1,210 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Clipboard permissions tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+/* globals doCopy, doPaste */
+function shared() {
+  let field = document.createElement("textarea");
+  document.body.appendChild(field);
+  field.contentEditable = true;
+
+  this.doCopy = function(txt) {
+    field.value = txt;
+    field.select();
+    return document.execCommand("copy");
+  };
+
+  this.doPaste = function() {
+    field.select();
+    return document.execCommand("paste") && field.value;
+  };
+}
+
+add_task(async function test_background_clipboard_permissions() {
+  function backgroundScript() {
+    browser.test.assertEq(false, doCopy("whatever"),
+                          "copy should be denied without permission");
+    browser.test.assertEq(false, doPaste(),
+                          "paste should be denied without permission");
+    browser.test.sendMessage("ready");
+  }
+  let extensionData = {
+    background: [shared, backgroundScript],
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  await extension.awaitMessage("ready");
+
+  await extension.unload();
+});
+
+add_task(async function test_background_clipboard_copy() {
+  function backgroundScript() {
+    browser.test.onMessage.addListener(txt => {
+      browser.test.assertEq(true, doCopy(txt),
+        "copy should be allowed with permission");
+    });
+    browser.test.sendMessage("ready");
+  }
+  let extensionData = {
+    background: `(${shared})();(${backgroundScript})();`,
+    manifest: {
+      permissions: [
+        "clipboardWrite",
+      ],
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  const DUMMY_STR = "dummy string to copy";
+  await new Promise(resolve => {
+    SimpleTest.waitForClipboard(DUMMY_STR, () => {
+      extension.sendMessage(DUMMY_STR);
+    }, resolve, resolve);
+  });
+
+  await extension.unload();
+});
+
+add_task(async function test_contentscript_clipboard_permissions() {
+  function contentScript() {
+    browser.test.assertEq(false, doCopy("whatever"),
+                          "copy should be denied without permission");
+    browser.test.assertEq(false, doPaste(),
+                          "paste should be denied without permission");
+    browser.test.sendMessage("ready");
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["http://mochi.test/*/file_sample.html"],
+      }],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let win = window.open("file_sample.html");
+  await extension.awaitMessage("ready");
+  win.close();
+
+  await extension.unload();
+});
+
+add_task(async function test_contentscript_clipboard_copy() {
+  function contentScript() {
+    browser.test.onMessage.addListener(txt => {
+      browser.test.assertEq(true, doCopy(txt),
+                            "copy should be allowed with permission");
+    });
+    browser.test.sendMessage("ready");
+  }
+  let extensionData = {
+    manifest: {
+      content_scripts: [{
+        js: ["shared.js", "contentscript.js"],
+        matches: ["http://mochi.test/*/file_sample.html"],
+      }],
+      permissions: [
+        "clipboardWrite",
+      ],
+    },
+    files: {
+      "shared.js": shared,
+      "contentscript.js": contentScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let win = window.open("file_sample.html");
+  await extension.awaitMessage("ready");
+
+  const DUMMY_STR = "dummy string to copy in content script";
+  await new Promise(resolve => {
+    SimpleTest.waitForClipboard(DUMMY_STR, () => {
+      extension.sendMessage(DUMMY_STR);
+    }, resolve, resolve);
+  });
+
+  win.close();
+
+  await extension.unload();
+});
+
+add_task(async function test_contentscript_clipboard_paste() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "clipboardRead",
+      ],
+      content_scripts: [{
+        matches: ["http://mochi.test/*/file_sample.html"],
+        js: ["shared.js", "content_script.js"],
+      }],
+    },
+    files: {
+      "shared.js": shared,
+      "content_script.js": () => {
+        browser.test.sendMessage("paste", doPaste());
+      },
+    },
+  });
+
+  const STRANGE = "A Strange Thing";
+  SpecialPowers.clipboardCopyString(STRANGE);
+
+  await extension.startup();
+  const win = window.open("file_sample.html");
+
+  const paste = await extension.awaitMessage("paste");
+  is(paste, STRANGE, "the correct string was pasted");
+
+  win.close();
+  await extension.unload();
+});
+
+add_task(async function test_background_clipboard_paste() {
+  function background() {
+    browser.test.sendMessage("paste", doPaste());
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["clipboardRead"],
+    },
+    background: [shared, background],
+  });
+
+  const STRANGE = "Stranger Things";
+  SpecialPowers.clipboardCopyString(STRANGE);
+
+  await extension.startup();
+
+  const paste = await extension.awaitMessage("paste");
+  is(paste, STRANGE, "the correct string was pasted");
+
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

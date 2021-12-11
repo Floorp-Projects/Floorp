@@ -1,0 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "domstubs.idl"
+#include "nsIDOMGeoPositionCoords.idl"
+
+[scriptable, uuid(dd9f7e81-0f74-4fb5-b361-37019bf60c3f)]
+interface nsIDOMGeoPosition : nsISupports
+{
+  readonly attribute DOMTimeStamp timestamp;
+  readonly attribute nsIDOMGeoPositionCoords coords;
+};

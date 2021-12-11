@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBackgroundSessionStorageCache;
+include PBackgroundSharedTypes;
+
+using mozilla::OriginAttributesPattern
+  from "mozilla/OriginAttributes.h";
+
+namespace mozilla {
+namespace dom {
+
+[RefCounted] sync protocol PBackgroundSessionStorageManager
+{
+ manager PBackground;
+ manages PBackgroundSessionStorageCache;
+
+ parent:
+  async PBackgroundSessionStorageCache(PrincipalInfo aPrincipalInfo, nsCString aOriginKey);
+
+  async ClearStorages(OriginAttributesPattern aPattern, nsCString aOriginScope);
+
+  async DeleteMe();
+
+ child:
+   async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

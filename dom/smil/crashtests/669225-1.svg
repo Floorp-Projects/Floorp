@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  document.documentElement.appendChild(document.getElementById("a"));
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+<animate end="a.begin" id="a"/>
+<animate end="a.begin" id="a"/>
+
+</svg>

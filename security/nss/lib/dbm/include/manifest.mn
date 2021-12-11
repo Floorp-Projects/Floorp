@@ -1,0 +1,23 @@
+#! gmake
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../../..
+
+MODULE = dbm
+
+EXPORTS =	mcom_db.h \
+		ncompat.h \
+		winfile.h \
+		$(NULL)
+
+PRIVATE_EXPORTS =	hsearch.h \
+			page.h    \
+			extern.h  \
+			queue.h   \
+			hash.h    \
+			search.h  \
+			$(NULL)
+

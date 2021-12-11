@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tests for autocapitalize that is used by software keyboard</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpecialPowers.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<div>
+<input type="text" id="a1"><br>
+<input type="text" id="a2" autocapitalize="characters"><br>
+<input type="text" id="a3" autocapitalize="sentences"><br>
+<input type="text" id="a4" autocapitalize="words"><br>
+<input type="text" id="a5" autocapitalize="off"><br>
+<input type="text" id="a6" autocapitalize="on"><br>
+<input type="url" id="a7" autocapitalize="on"><br>
+<input type="email" id="a8" autocapitalize="on"><br>
+<input type="password" id="a9" autocapitalize="on"><br>
+<textarea id="b1" autocapitalize="characters"></textarea><br>
+<div contenteditable id="c1" autocapitalize="sentences"></div><br>
+<form><input type="text" id="d1" autocapitalize="words"></form><br>
+<form autocapitalize="on"><input type="text" id="d2"></form><br>
+<form autocapitalize="off"><input type="text" id="d3" autocapitalize="on"></form><br>
+</div>
+
+<pre id="test">
+<script class=testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(async () => {
+  const tests = [
+    { id: "a1", autocapitalize: "", desc: "input without autocapitalize" },
+    { id: "a2", autocapitalize: "characters", desc: "input with autocapitalize=characters" },
+    { id: "a3", autocapitalize: "sentences", desc: "input with autocapitalize=sentences" },
+    { id: "a4", autocapitalize: "words", desc: "input with autocapitalize=words" },
+    { id: "a5", autocapitalize: "none", desc: "input with autocapitalize=off" },
+    { id: "a6", autocapitalize: "sentences", desc: "input with autocapitalize=on" },
+    { id: "a7", autocapitalize: "", desc: "input with type=url and autocapitalize=on" },
+    { id: "a8", autocapitalize: "", desc: "input with type=email and autocapitalize=on" },
+    { id: "a9", autocapitalize: "", desc: "input with type=password and autocapitalize=on" },
+    { id: "b1", autocapitalize: "characters", desc: "textarea with autocapitalize=characters" },
+    { id: "c1", autocapitalize: "sentences", desc: "contenteditable with autocapitalize=sentences" },
+    { id: "d1", autocapitalize: "words", desc: "input with autocapitalize=words in form" },
+    { id: "d2", autocapitalize: "sentences", desc: "input in form with autocapitalize=on" },
+    { id: "d3", autocapitalize: "sentences", desc: "input with autocapitalize=on in form" },
+  ];
+
+  await SpecialPowers.setBoolPref("dom.forms.autocapitalize", true);
+
+  for (let test of tests) {
+    document.getElementById(test.id).focus();
+    is(SpecialPowers.DOMWindowUtils.focusedAutocapitalize, test.autocapitalize, test.desc);
+  }
+
+  SpecialPowers.clearUserPref("dom.forms.autocapitalize");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

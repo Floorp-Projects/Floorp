@@ -1,0 +1,49 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+
+    <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=294086 -->
+
+    <title>Test: change CSS 'width' property on inline SVG</title>
+
+    <!--
+    This testcase checks that when the value of the CSS 'width' property on
+    inline SVG is changed, the SVG resizes as expected.
+    -->
+
+    <style type="text/css">
+
+html, body {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: red;
+}
+
+    </style>
+    <script type="text/javascript">
+
+function resize_svg()
+{
+  document.getElementById('svg').style.width = '100%';
+  document.documentElement.removeAttribute('class');
+}
+
+document.addEventListener("MozReftestInvalidate", resize_svg, false);
+
+    </script>
+  </head>
+  <body>
+
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg"
+         style="display:block; width:0; height:100%;" width="0" height="0">
+      <rect width="100%" height="100%" fill="lime"/>
+    </svg>
+
+  </body>
+</html>

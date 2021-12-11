@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test Tracking Protection with and without Safe Browsing (Bug #1157081)</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var mainWindow = window.browsingContext.topChromeWindow;
+var contentPage = "http://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+function testOnWindow(aCallback) {
+  var win = mainWindow.OpenBrowserWindow();
+  win.addEventListener("load", function() {
+    TestUtils.topicObserved("browser-delayed-startup-finished",
+                            subject => subject == win).then(() => {
+      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        if (win.content.location.href != contentPage) {
+          win.gBrowser.loadURI(contentPage, {
+            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          });
+          return;
+        }
+        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
+          SimpleTest.executeSoon(function() { aCallback(win); });
+        }, false, true);
+      }, true);
+      SimpleTest.executeSoon(function() {
+        win.gBrowser.loadURI(contentPage, {
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+        });
+      });
+    });
+  }, {capture: true, once: true});
+}
+
+var badids = [
+  "badscript",
+];
+
+function checkLoads(aWindow, aBlocked) {
+  var win = aWindow.content;
+  is(win.document.getElementById("badscript").dataset.touched, aBlocked ? "no" : "yes", "Should not load tracking javascript");
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set": [["urlclassifier.trackingTable", "moztest-track-simple"],
+           ["privacy.trackingprotection.enabled", true],
+           ["browser.safebrowsing.malware.enabled", false],
+           ["browser.safebrowsing.phishing.enabled", false],
+           ["channelclassifier.allowlist_example", true]]},
+  test);
+
+function test() {
+  SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
+  UrlClassifierTestUtils.addTestTrackers().then(() => {
+    // Safe Browsing turned OFF, tracking protection should work nevertheless
+    testOnWindow(function(aWindow) {
+      checkLoads(aWindow, true);
+      aWindow.close();
+
+      // Safe Browsing turned ON, tracking protection should still work
+      SpecialPowers.setBoolPref("browser.safebrowsing.phishing.enabled", true);
+      testOnWindow(function(aWindow1) {
+        checkLoads(aWindow1, true);
+        aWindow1.close();
+        SimpleTest.finish();
+      });
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>

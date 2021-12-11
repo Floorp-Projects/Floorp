@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SFXSetup", "SFXSetup.vcxproj", "{B348342A-1787-4311-B120-EDAE3018868F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x86 = Debug|x86
+		ReleaseD|ARM64 = ReleaseD|ARM64
+		ReleaseD|x86 = ReleaseD|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B348342A-1787-4311-B120-EDAE3018868F}.Debug|ARM64.ActiveCfg = ReleaseD|ARM64
+		{B348342A-1787-4311-B120-EDAE3018868F}.Debug|ARM64.Build.0 = ReleaseD|ARM64
+		{B348342A-1787-4311-B120-EDAE3018868F}.Debug|x86.ActiveCfg = Debug|Win32
+		{B348342A-1787-4311-B120-EDAE3018868F}.Debug|x86.Build.0 = Debug|Win32
+		{B348342A-1787-4311-B120-EDAE3018868F}.ReleaseD|ARM64.ActiveCfg = ReleaseD|ARM64
+		{B348342A-1787-4311-B120-EDAE3018868F}.ReleaseD|ARM64.Build.0 = ReleaseD|ARM64
+		{B348342A-1787-4311-B120-EDAE3018868F}.ReleaseD|x86.ActiveCfg = ReleaseD|Win32
+		{B348342A-1787-4311-B120-EDAE3018868F}.ReleaseD|x86.Build.0 = ReleaseD|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A02A956C-0F11-454A-A695-43570C60D700}
+	EndGlobalSection
+EndGlobal

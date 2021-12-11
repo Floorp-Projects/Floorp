@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=453650
+-->
+<window title="Mozilla Bug 453650"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 453650 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var iter = runTests();
+  nextTest();
+
+  function* runTests() {
+    var iframe = document.createXULElement("iframe");
+    iframe.style.width = "300px";
+    iframe.style.height = "300px";
+    iframe.setAttribute("src", "data:text/html,<h1 id='h'>hello</h1>");
+
+    document.documentElement.appendChild(iframe);
+    yield whenLoaded(iframe);
+    info("iframe loaded");
+
+    var h1 = iframe.contentDocument.getElementById("h");
+    let myCallback = function() { h1.style.width = "400px"; };
+    info("Calling waitForInterruptibleReflow");
+    yield waitForInterruptibleReflow(iframe.docShell, myCallback);
+    info("got past top-level waitForInterruptibleReflow");
+
+    myCallback = function() { h1.style.width = "300px"; };
+    info("Calling waitForReflow");
+    waitForReflow(iframe.docShell, myCallback);
+    info("got past top-level waitForReflow");
+    yield is(300, h1.offsetWidth, "h1 has correct width");
+
+    SimpleTest.finish();
+  }
+
+  function waitForInterruptibleReflow(docShell,
+                                      callbackThatShouldTriggerReflow) {
+    waitForReflow(docShell, callbackThatShouldTriggerReflow, true);
+  }
+
+  function waitForReflow(docShell, callbackThatShouldTriggerReflow,
+                         interruptible = false) {
+    info("Entering waitForReflow");
+    function done() {
+      info("Entering done (inside of waitForReflow)");
+
+      docShell.removeWeakReflowObserver(observer);
+      SimpleTest.executeSoon(nextTest);
+    }
+
+    var observer = {
+      reflow (start, end) {
+        info("Entering observer.reflow");
+        if (interruptible) {
+          ok(false, "expected interruptible reflow");
+        } else {
+          ok(true, "observed uninterruptible reflow");
+        }
+
+        info("times: " + start + ", " + end);
+        ok(start <= end, "reflow start time lower than end time");
+        done();
+      },
+
+      reflowInterruptible (start, end) {
+        info("Entering observer.reflowInterruptible");
+        if (!interruptible) {
+          ok(false, "expected uninterruptible reflow");
+        } else {
+          ok(true, "observed interruptible reflow");
+        }
+
+        info("times: " + start + ", " + end);
+        ok(start <= end, "reflow start time lower than end time");
+        done();
+      },
+
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIReflowObserver",
+        "nsISupportsWeakReference",
+      ]),
+    };
+
+    info("waitForReflow is adding a reflow observer");
+    docShell.addWeakReflowObserver(observer);
+    callbackThatShouldTriggerReflow();
+  }
+
+  function whenLoaded(iframe) {
+    info("entering whenLoaded");
+    iframe.addEventListener("load", function() {
+      SimpleTest.executeSoon(nextTest);
+    }, { once: true });
+  }
+
+  function nextTest() {
+    info("entering nextTest");
+    iter.next();
+  }
+
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=453650"
+     target="_blank">Mozilla Bug 453650</a>
+  </body>
+</window>

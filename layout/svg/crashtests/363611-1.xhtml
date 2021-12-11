@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script style="display: none" type="text/javascript">
+
+function boom()
+{
+  var fo = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject');
+  document.getElementById("innerSVG").appendChild(fo);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();">
+
+<svg xmlns="http://www.w3.org/2000/svg" ><linearGradient><svg id="innerSVG"></svg></linearGradient></svg>
+
+</body>
+</html>

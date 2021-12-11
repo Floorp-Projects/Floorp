@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="510634: Wrong icons on bookmarks sidebar"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <tree id="tree"
+        is="places-tree"
+        flex="1">
+    <treecols>
+      <treecol label="Title" id="title" anonid="title" primary="true" style="-moz-box-ordinal-group: 1;" flex="1"/>
+    </treecols>
+    <treechildren flex="1"/>
+  </tree>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    /**
+     * Bug 510634 -  Wrong icons on bookmarks sidebar
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=510634
+     *
+     * Ensures that properties for special queries are set on their tree nodes.
+     */
+
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      // Setup the places tree contents.
+      let tree = document.getElementById("tree");
+      tree.place = `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_LEFT_PANE_QUERY}&excludeItems=1&expandQueries=0`;
+
+      // The query-property is set on the title column for each row.
+      let titleColumn = tree.columns.getColumnAt(0);
+
+      // Open All Bookmarks
+      tree.selectItems([PlacesUtils.virtualAllBookmarksGuid]);
+      PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
+      is(tree.selectedNode.uri,
+         "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY,
+         "Opened All Bookmarks");
+
+      const topLevelGuids = [
+        PlacesUtils.virtualHistoryGuid,
+        PlacesUtils.virtualDownloadsGuid,
+        PlacesUtils.virtualTagsGuid,
+        PlacesUtils.virtualAllBookmarksGuid
+      ];
+
+      for (let queryName of topLevelGuids) {
+        let found = false;
+        for (let i = 0; i < tree.view.rowCount && !found; i++) {
+          let rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
+          found = rowProperties.includes("OrganizerQuery_" + queryName);
+        }
+        ok(found, `OrganizerQuery_${queryName} is set`);
+      }
+
+      const folderGuids = [
+        PlacesUtils.bookmarks.toolbarGuid,
+        PlacesUtils.bookmarks.menuGuid,
+        PlacesUtils.bookmarks.unfiledGuid,
+      ];
+
+      for (let guid of folderGuids) {
+        let found = false;
+        for (let i = 0; i < tree.view.rowCount && !found; i++) {
+          let rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
+          found = rowProperties.includes("queryFolder_" + guid);
+        }
+        ok(found, `queryFolder_${guid} is set`);
+      }
+
+      // Close the root node
+      tree.result.root.containerOpen = false;
+
+      SimpleTest.finish();
+    }
+
+  ]]>
+  </script>
+</window>

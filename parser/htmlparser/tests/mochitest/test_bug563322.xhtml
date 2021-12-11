@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=563322
+-->
+<head>
+  <title>Test for Bug 563322</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=563322">Mozilla Bug 563322</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 563322 **/
+
+var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+div.innerHTML = "<script>ok(false, 'Script ran but should not have')</script><script>ok(false, 'Script ran but should not have')</script>";
+
+document.getElementById("content").appendChild(div);
+
+ok(true, "Keep the harness happy");
+
+]]>
+</script>
+</pre>
+</body>
+</html>

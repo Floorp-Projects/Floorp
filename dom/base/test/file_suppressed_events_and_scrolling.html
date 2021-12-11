@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+  <body><iframe srcdoc="
+    <html>
+      <head>
+        <script>
+          onload = function() {
+            // Ensure the layout is up-to-date and painted.
+            requestAnimationFrame(function() {
+              setTimeout(run);
+            })
+          }
+
+          function run() {
+            parent.opener.postMessage('doscroll', '*');
+            window.onscroll = function() {
+              parent.opener.postMessage('didscroll', '*');
+            }
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET', 'slow.sjs', false);
+            xhr.send();
+            parent.opener.postMessage('xhr_done', '*');
+          }
+        </script>
+      </head>
+      <body style='height: 3000px; border: 1px solid black;'>
+      </body>
+    </html>
+    "></iframe></body>
+</html>

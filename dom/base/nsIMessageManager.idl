@@ -1,0 +1,20 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIContent;
+
+// NOTE: Only scriptable for Ci.nsIMessageSender
+[scriptable, builtinclass, uuid(bb5d79e4-e73c-45e7-9651-4d718f4b994c)]
+interface nsIMessageSender : nsISupports
+{
+};
+
+[uuid(b39a3324-b574-4f85-8cdb-274d04f807ef)]
+interface nsIInProcessContentFrameMessageManager : nsIMessageSender
+{
+  [notxpcom] nsIContent getOwnerContent();
+};

@@ -1,0 +1,82 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+IPDL_SOURCES += [
+    "ipc/GamepadEventTypes.ipdlh",
+    "ipc/PGamepadEventChannel.ipdl",
+    "ipc/PGamepadTestChannel.ipdl",
+]
+
+EXPORTS.mozilla.dom += [
+    "Gamepad.h",
+    "GamepadButton.h",
+    "GamepadHandle.h",
+    "GamepadHapticActuator.h",
+    "GamepadLightIndicator.h",
+    "GamepadManager.h",
+    "GamepadMonitoring.h",
+    "GamepadPlatformService.h",
+    "GamepadPose.h",
+    "GamepadPoseState.h",
+    "GamepadRemapping.h",
+    "GamepadServiceTest.h",
+    "GamepadTouch.h",
+    "GamepadTouchState.h",
+    "ipc/GamepadEventChannelChild.h",
+    "ipc/GamepadEventChannelParent.h",
+    "ipc/GamepadMessageUtils.h",
+    "ipc/GamepadTestChannelChild.h",
+    "ipc/GamepadTestChannelParent.h",
+]
+
+UNIFIED_SOURCES = [
+    "Gamepad.cpp",
+    "GamepadButton.cpp",
+    "GamepadHandle.cpp",
+    "GamepadHapticActuator.cpp",
+    "GamepadLightIndicator.cpp",
+    "GamepadManager.cpp",
+    "GamepadPlatformService.cpp",
+    "GamepadPose.cpp",
+    "GamepadRemapping.cpp",
+    "GamepadServiceTest.cpp",
+    "GamepadTouch.cpp",
+    "ipc/GamepadEventChannelChild.cpp",
+    "ipc/GamepadEventChannelParent.cpp",
+    "ipc/GamepadTestChannelChild.cpp",
+    "ipc/GamepadTestChannelParent.cpp",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    UNIFIED_SOURCES += ["cocoa/CocoaGamepad.cpp"]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    REQUIRES_UNIFIED_BUILD = True
+    UNIFIED_SOURCES += ["windows/WindowsGamepad.cpp"]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    UNIFIED_SOURCES += ["android/AndroidGamepad.cpp"]
+elif CONFIG["OS_ARCH"] == "Linux":
+    UNIFIED_SOURCES += ["linux/LinuxGamepad.cpp"]
+else:
+    UNIFIED_SOURCES += ["fallback/FallbackGamepad.cpp"]
+
+LOCAL_INCLUDES += [
+    "ipc",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    "/dom/base",
+]
+
+CFLAGS += CONFIG["GLIB_CFLAGS"]
+CFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+CXXFLAGS += CONFIG["GLIB_CFLAGS"]
+CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]

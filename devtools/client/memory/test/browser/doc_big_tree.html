@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+    <script>
+      "use strict";
+
+      window.big = (function makeBig(depth = 0) {
+        let big = Array(5);
+        big.fill(undefined);
+        if (depth < 5) {
+          big = big.map(_ => makeBig(depth + 1));
+        }
+        return big;
+      }());
+    </script>
+  </body>
+</html>

@@ -1,0 +1,102 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface mozIDOMWindow;
+interface nsIArray;
+
+webidl Element;
+
+/**
+ *  Interface provides the request type and its access.
+ */
+[scriptable, uuid(ef4db3b8-ca9c-4b1d-8f81-fd88ec32af13)]
+interface nsIContentPermissionType : nsISupports {
+  /**
+   *  The type of the permission request, such as
+   *  "geolocation".
+   */
+  readonly attribute ACString type;
+
+  /**
+   * The array of available options.
+   */
+  readonly attribute nsIArray options; // ["choice1", "choice2"]
+};
+
+/**
+ * Interface allows access to a content to request
+ * permission to perform a privileged operation such as
+ * geolocation.
+ */
+[scriptable, uuid(875733da-0ac0-4a26-8c76-70a30876be46)]
+interface nsIContentPermissionRequest : nsISupports {
+  /**
+   *  The array will include the request types. Elements of this array are
+   *  nsIContentPermissionType object.
+   */
+  readonly attribute nsIArray types;
+
+  /*
+   *  The principal of the permission request.
+   */
+  readonly attribute nsIPrincipal principal;
+
+  /*
+   *  The principal of the top-level page the permission request comes from.
+   */
+  readonly attribute nsIPrincipal topLevelPrincipal;
+
+  /**
+   *  The window or element that the permission request was
+   *  originated in.  Typically the element will be non-null
+   *  in when using out of process content.  window or
+   *  element can be null but not both.
+   */
+  readonly attribute mozIDOMWindow window;
+  readonly attribute Element element;
+
+  readonly attribute boolean hasValidTransientUserGestureActivation;
+
+  /**
+   * See nsIPermissionDelegateHandler.maybeUnsafePermissionDelegate.
+   */
+  readonly attribute boolean isRequestDelegatedToUnsafeThirdParty;
+
+  /*
+   * Get delegate principal of the permission request. This will return nullptr,
+   * or request's principal or top level principal based on the delegate policy
+   * will be applied for a given type.
+   *
+   * @param aType the permission type to get
+   */
+  nsIPrincipal getDelegatePrincipal(in ACString aType);
+
+  /**
+   * allow or cancel the request
+   */
+  [can_run_script]
+  void cancel();
+  [can_run_script]
+  void allow([optional] in jsval choices); // {"type1": "choice1", "type2": "choiceA"}
+};
+
+/**
+ * Allows to show permission prompts via the UI for different types of requests,
+ * e.g. geolocation.
+ */
+[scriptable, function, uuid(F72DE90D-E954-4E69-9A61-917303029301)]
+interface nsIContentPermissionPrompt : nsISupports {
+  /**
+   * Called when a request has been made to access
+   * privileged content apis
+   */
+  void prompt(in nsIContentPermissionRequest request);
+};
+
+%{C++
+#define NS_CONTENT_PERMISSION_PROMPT_CONTRACTID   "@mozilla.org/content-permission/prompt;1"
+%}

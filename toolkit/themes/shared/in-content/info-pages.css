@@ -1,0 +1,189 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+:root {
+  --in-content-container-min-width: 13em;
+  --in-content-container-max-width: 52em;
+}
+
+/* Body and container */
+body {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 40px 48px;
+  align-items: center;
+  justify-content: center;
+}
+
+body.wide-container {
+  display: block;
+}
+
+.container {
+  min-width: var(--in-content-container-min-width);
+  max-width: var(--in-content-container-max-width);
+}
+
+.container.restore-chosen {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin: 10vh 0;
+}
+
+/* Typography */
+.title {
+  background-position: left 0;
+  background-repeat: no-repeat;
+  background-size: 1.6em;
+  margin-inline-start: -2.3em;
+  padding-inline-start: 2.3em;
+  font-size: 2.2em;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.container.restore-chosen {
+  margin: 25vh 0;
+}
+
+.title:-moz-locale-dir(rtl),
+.title:dir(rtl) {
+  background-position: right 0;
+}
+
+.title-text {
+  font-size: inherit;
+  padding-bottom: 0.4em;
+}
+
+@media (max-width: 970px) {
+  .title {
+    padding-inline-start: 0;
+    margin-inline-start: 0;
+    padding-top: 2.3em;
+  }
+
+  .title-text {
+    padding-top: 0;
+  }
+}
+
+.page-subtitle {
+  margin-bottom: 2em;
+}
+
+ul, ol {
+  margin: 1em 0;
+  padding: 0;
+  margin-inline-start: 2em;
+}
+
+ul > li, ol > li {
+  margin-bottom: .5em;
+}
+
+ul {
+  list-style: disc;
+}
+
+dt {
+  font-weight: bold;
+}
+
+ul.columns {
+  column-count: 2;
+  column-gap: 5em;
+}
+
+@media (max-width: 35em) {
+  ul.columns {
+    column-count: 1;
+  }
+}
+
+/* Buttons */
+.button-container {
+  margin-top: 1.2em;
+}
+
+button {
+  padding: 0 1.5em;
+}
+
+.button-container > button:first-child {
+  margin-inline-start: 0;
+}
+
+/* Trees */
+.tree-container {
+  margin-top: 1.2em;
+  flex: 1 0px;
+  min-height: 12em;
+}
+
+.tree-container > tree {
+  height: 100%;
+}
+
+tree {
+  width: 100%;
+}
+
+/* Tables */
+table {
+  background-color: var(--in-content-table-background);
+  color: var(--in-content-text-color);
+  font: message-box;
+  text-align: start;
+  width: 100%;
+  border: 1px solid var(--in-content-table-border-color);
+  border-radius: 4px;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+table button {
+  padding-inline: 3px;
+}
+
+th, td {
+  padding: 4px;
+  text-align: match-parent;
+}
+
+thead th {
+  text-align: center;
+}
+
+th {
+  background-color: var(--in-content-table-header-background);
+  color: var(--in-content-table-header-color);
+  border: 1px solid var(--in-content-table-border-color);
+}
+
+th.column {
+  white-space: nowrap;
+  width: 0;
+}
+
+td {
+  border: 1px solid var(--in-content-border-color);
+  unicode-bidi: plaintext; /* Make sure file paths will be LTR */
+}
+
+.action-box {
+  float: inline-end;
+  background-color: var(--in-content-table-background);
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 4px;
+  padding: 16px;
+  margin-top: 2em;
+  margin-inline-start: 20px;
+  width: 30%;
+}

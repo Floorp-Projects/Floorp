@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test Bug 1312515</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+
+<p><b>To see more of what is happening: <code>export MOZ_LOG=nsChannelClassifier:3</code></b></p>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var mainWindow = window.browsingContext.topChromeWindow;
+var contentPage = "http://www.itisatrap.org/chrome/toolkit/components/url-classifier/tests/mochitest/trackingRequest.html";
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+function testOnWindow(aPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aPrivate});
+  win.addEventListener("load", function() {
+    TestUtils.topicObserved("browser-delayed-startup-finished",
+                            subject => subject == win).then(() => {
+      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        if (win.content.location.href != contentPage) {
+          BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+          return;
+        }
+        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
+          SimpleTest.executeSoon(function() { aCallback(win); });
+        }, false, true);
+      }, true);
+      SimpleTest.executeSoon(function() { BrowserTestUtils.loadURI(win.gBrowser, contentPage); });
+    });
+  }, {capture: true, once: true});
+}
+
+const topic = "http-on-before-connect";
+var testUrl;
+var testWindow;
+var resolve;
+
+function checkLowestPriority(aSubject) {
+  checkPriority(aSubject, checkLowestPriority, Ci.nsISupportsPriority.PRIORITY_LOWEST, "Priority should be lowest.");
+}
+
+function checkNormalPriority(aSubject) {
+  checkPriority(aSubject, checkNormalPriority, Ci.nsISupportsPriority.PRIORITY_NORMAL, "Priority should be normal.");
+}
+
+function checkPriority(aSubject, aCallback, aPriority, aMessage) {
+  var channel = aSubject.QueryInterface(Ci.nsIChannel);
+  info("Channel classified: " + channel.name);
+  if (channel.name !== testUrl) {
+    return;
+  }
+
+  SpecialPowers.removeObserver(aCallback, topic);
+
+  var p = aSubject.QueryInterface(Ci.nsISupportsPriority);
+  is(p.priority, aPriority, aMessage);
+
+  info("Resolving promise for " + channel.name);
+  resolve();
+}
+
+function testXHR1() {
+  return new Promise(function(aResolve, aReject) {
+    testUrl = "http://tracking.example.com/";
+    info("Not blocklisted: " + testUrl);
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkNormalPriority, topic);
+    testWindow.content.postMessage({type: "doXHR", url: testUrl}, "*");
+  });
+}
+
+function testXHR2() {
+  return new Promise(function(aResolve, aReject) {
+    testUrl = "http://trackertest.org/";
+    info("Blocklisted and not entitylisted: " + testUrl);
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkLowestPriority, topic);
+    testWindow.content.postMessage({type: "doXHR", url: testUrl}, "*");
+  });
+}
+
+function testFetch1() {
+  return new Promise(function(aResolve, aReject) {
+    testUrl = "http://itisatracker.org/"; // only entitylisted in TP, not for annotations
+    info("Blocklisted and not entitylisted: " + testUrl);
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkLowestPriority, topic);
+    testWindow.content.postMessage({type: "doFetch", url: testUrl}, "*");
+  });
+}
+
+function testFetch2() {
+  return new Promise(function(aResolve, aReject) {
+    testUrl = "http://tracking.example.org/"; // only entitylisted for annotations, not in TP
+    info("Blocklisted but also entitylisted: " + testUrl);
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkNormalPriority, topic);
+    testWindow.content.postMessage({type: "doFetch", url: testUrl}, "*");
+  });
+}
+
+function endTest() {
+  info("Finishing up...");
+  testWindow.close();
+  testWindow = null;
+  SimpleTest.finish();
+}
+
+async function test() {
+  await SpecialPowers.pushPrefEnv(
+    {"set": [["network.http.tailing.enabled", false],
+             ["privacy.trackingprotection.enabled", false],
+             ["privacy.trackingprotection.annotate_channels", true],
+             ["privacy.trackingprotection.lower_network_priority", true],
+             ["dom.security.https_first", false]]});
+  await UrlClassifierTestUtils.addTestTrackers();
+  testOnWindow(false, async function(aWindow) {
+    testWindow = aWindow;
+    await testXHR1();
+    await testXHR2();
+    await testFetch1();
+    await testFetch2();
+    await endTest();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.registerCleanupFunction(function() {
+  info("Cleaning up prefs...");
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
+test();
+
+</script>
+
+</pre>
+</body>
+</html>

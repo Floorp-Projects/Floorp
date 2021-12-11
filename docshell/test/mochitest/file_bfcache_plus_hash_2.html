@@ -1,0 +1,17 @@
+<html><body>
+  Popup 2
+  <script type="application/javascript">
+    var bc = new BroadcastChannel("bug646641_2");
+    window.onload = () => {
+      bc.postMessage({ message: "childLoad", num: 2 })
+      requestAnimationFrame(() => bc.postMessage({message: "childPageshow", num: 2}));
+    }
+    bc.onmessage = (msgEvent) => {
+      var msg = msgEvent.data;
+      if (msg == "go-2") {
+        history.go(-2);
+        bc.close();
+      }
+    }
+  </script>
+</body></html>

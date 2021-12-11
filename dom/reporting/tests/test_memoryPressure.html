@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for ReportingObserver + memory-pressure</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript">
+
+info("Testing TakeRecords() without memory-pressure");
+let o = new ReportingObserver(() => {});
+o.observe();
+
+new TestingDeprecatedInterface();
+let r = o.takeRecords();
+is(r.length, 1, "We have 1 report");
+
+r = o.takeRecords();
+is(r.length, 0, "We have 0 reports after a takeRecords()");
+
+info("Testing DeprecatedTestingMethod report");
+
+new TestingDeprecatedInterface();
+SpecialPowers.Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
+
+r = o.takeRecords();
+is(r.length, 0, "We have 0 reports after a memory-pressure");
+
+</script>
+</body>
+</html>

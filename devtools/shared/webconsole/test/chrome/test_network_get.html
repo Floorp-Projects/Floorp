@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the network actor (GET request)</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the network actor (GET request)</p>
+
+<iframe src="http://example.com/chrome/devtools/shared/webconsole/test/chrome/network_requests_iframe.html"></iframe>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+async function startTest()
+{
+  const commands = await createCommandsForTab();
+  const target = commands.targetCommand.targetFront;
+  const resourceCommand = commands.resourceCommand;
+
+  info("test network GET request");
+  const resource = await new Promise(resolve => {
+    resourceCommand
+      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
+        onAvailable: () => {},
+        onUpdated: resourceUpdate => {
+          resolve(resourceUpdate[0].resource);
+        },
+      })
+      .then(() => {
+        // Spawn the network request after we started watching
+          const iframe = document.querySelector("iframe").contentWindow;
+          iframe.wrappedJSObject.testXhrGet(null, "data.json?" + Date.now());
+      });
+  });
+
+  const webConsoleFront = await target.getFront("console");
+  const netActor = resource.actor;
+
+  info("checking request headers");
+  const requestHeadersPacket = await webConsoleFront.getRequestHeaders(netActor);
+  ok(requestHeadersPacket.headers.length > 0, `request headers > 0 (${requestHeadersPacket.headers.length})`);
+  ok(requestHeadersPacket.headersSize > 0, `request headersSize > 0 (${requestHeadersPacket.headersSize})`);
+  ok(!!requestHeadersPacket.rawHeaders, "request rawHeaders available");
+
+  checkHeadersOrCookies(requestHeadersPacket.headers, {
+    Referer: /network_requests_iframe\.html/,
+    Cookie: /bug768096/,
+  });
+
+  checkRawHeaders(requestHeadersPacket.rawHeaders, {
+    Referer: /network_requests_iframe\.html/,
+    Cookie: /bug768096/,
+  });
+
+  info("checking request cookies");
+  const requestCookiesPacket = await webConsoleFront.getRequestCookies(netActor);
+  is(requestCookiesPacket.cookies.length, 3, "request cookies length");
+
+  checkHeadersOrCookies(requestCookiesPacket.cookies, {
+    foobar: "fooval",
+    omgfoo: "bug768096",
+    badcookie: "bug826798=st3fan",
+  });
+
+  info("checking request POST data");
+  const postDataPacket = await webConsoleFront.getRequestPostData(netActor);
+  ok(!postDataPacket.postData.text, "no request POST data");
+  ok(!postDataPacket.postDataDiscarded, "request POST data was not discarded");
+
+  info("checking response headers");
+  const responseHeaderPacket = await webConsoleFront.getResponseHeaders(netActor);
+
+  ok(responseHeaderPacket.headers.length > 0, "response headers > 0");
+  ok(responseHeaderPacket.headersSize > 0, "response headersSize > 0");
+  ok(!!responseHeaderPacket.rawHeaders, "response rawHeaders available");
+
+  checkHeadersOrCookies(responseHeaderPacket.headers, {
+    "content-type": /^application\/(json|octet-stream)$/,
+    "content-length": /^\d+$/,
+  });
+
+  checkRawHeaders(responseHeaderPacket.rawHeaders, {
+    "content-type": /^application\/(json|octet-stream)$/,
+    "content-length": /^\d+$/,
+  });
+
+  info("checking response cookies");
+  const responseCookiesPacket = await webConsoleFront.getResponseCookies(netActor);
+  is(responseCookiesPacket.cookies.length, 0, "response cookies length");
+
+  info("checking response content");
+  const responseContentPacket = await webConsoleFront.getResponseContent(netActor);
+  ok(responseContentPacket.content.text, "response content text");
+  ok(!responseContentPacket.contentDiscarded, "response content was not discarded");
+
+  info("checking event timings");
+  const eventTimingPacket = await webConsoleFront.getEventTimings(netActor);
+  checkObject(eventTimingPacket, {
+    timings: {
+      blocked: /^-1|\d+$/,
+      dns: /^-1|\d+$/,
+      connect: /^-1|\d+$/,
+      send: /^-1|\d+$/,
+      wait: /^-1|\d+$/,
+      receive: /^-1|\d+$/,
+    },
+    totalTime: /^\d+$/,
+  });
+
+  await commands.destroy();
+  SimpleTest.finish();
+}
+
+addEventListener("load", startTest, { once: true});
+</script>
+</body>
+</html>

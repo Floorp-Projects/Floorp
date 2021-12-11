@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=835044
+-->
+<window title="Mozilla Bug 835044"
+        onload="startTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<panel id="thepanel" level="parent"
+       onpopupshown="sendMouseEvent();"
+       onmousemove="checkCoords(event);"
+       width="80" height="80">
+</panel>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=835044"
+     id="anchor"
+     target="_blank">Mozilla Bug 835044</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+let utils = window.windowUtils;
+let panel = document.getElementById('thepanel');
+let rect;
+
+function startTest() {
+  // This first event is to ensure that the next event will have different
+  // coordinates to the previous mouse position, and so actually generates
+  // mouse events.  The mouse is not moved off the window, as that might
+  // move focus to another application.
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    screenX: window.mozInnerScreenX,
+    screenY: window.mozInnerScreenY,
+    scale: "screenPixelsPerCSSPixelNoOverride",
+    elementOnWidget: window.documentElement,
+  });
+
+  panel.openPopup(document.getElementById("anchor"), "after_start");
+}
+
+function sendMouseEvent() {
+  rect = panel.getBoundingClientRect();
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: panel,
+    offsetX: 1,
+    offsetY: 2,
+  });
+}
+
+function checkCoords(event) {
+  isfuzzy(event.clientX, rect.left + 1, window.windowUtils.screenPixelsPerCSSPixel, "Motion x coordinate");
+  isfuzzy(event.clientY, rect.top + 2, window.windowUtils.screenPixelsPerCSSPixel, "Motion y coordinate");
+  done();
+}
+
+function done() {
+  SimpleTest.finish();
+}
+  ]]>
+  </script>
+</window>

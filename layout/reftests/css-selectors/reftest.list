@@ -1,0 +1,6 @@
+== state-dependent-in-any.html state-dependent-in-any-ref.html
+== attr-case-insensitive-1.html attr-case-insensitive-1-ref.html
+== sibling-combinators-on-anon-content-1-shadow.xhtml sibling-combinators-on-anon-content-ref.xhtml
+skip == sibling-combinators-on-anon-content-2-shadow.xhtml sibling-combinators-on-anon-content-ref.xhtml # Enable in bug 1587216.
+== nth-child-1.html nth-child-ref.html
+== nth-child-2.html nth-child-ref.html

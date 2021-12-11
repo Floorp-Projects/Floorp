@@ -1,0 +1,9 @@
+//error: can't locate include file `IDONTEXIST.ipdl'
+
+include protocol IDONTEXIST;
+
+// error: nonexistent protocol ^^^
+
+protocol badProtocolInclude {
+child: Msg();
+};

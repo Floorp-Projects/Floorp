@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body >
+<input />
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function triggerKey() {
+    SpecialPowers.loadChromeScript(() => {
+      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      const { EventUtils } = ChromeUtils.import(
+        "resource://specialpowers/SpecialPowersEventUtils.jsm"
+      );
+      var win = Services.wm.getMostRecentBrowserWindow();
+      for (let i = 0; i < 200; ++i) {
+        EventUtils.synthesizeKey("a", {}, win);
+      }
+    });
+  }
+
+  function runTest() {
+    const input = document.querySelector("input");
+    input.focus();
+
+    let didInputRun = false;
+
+    input.addEventListener("input", function() {
+      if (!didInputRun) {
+        didInputRun = true;
+        window.requestAnimationFrame(() => {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "slow.sjs", false);
+          xhr.send();
+          ok(true, "Didn't crash!");
+          SimpleTest.finish();
+        });
+      }
+    });
+
+    triggerKey();
+  }
+  runTest();
+</script>
+</body>
+</html>

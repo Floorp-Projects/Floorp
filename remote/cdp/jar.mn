@@ -1,0 +1,54 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+remote.jar:
+% content remote %content/
+  content/cdp/CDP.jsm (CDP.jsm)
+  content/cdp/CDPConnection.jsm (CDPConnection.jsm)
+  content/cdp/Error.jsm (Error.jsm)
+  content/cdp/JSONHandler.jsm (JSONHandler.jsm)
+  content/cdp/Protocol.jsm (Protocol.jsm)
+  content/cdp/StreamRegistry.jsm (StreamRegistry.jsm)
+  # domains
+  content/cdp/domains/ContentProcessDomain.jsm (domains/ContentProcessDomain.jsm)
+  content/cdp/domains/ContentProcessDomains.jsm (domains/ContentProcessDomains.jsm)
+  content/cdp/domains/Domain.jsm (domains/Domain.jsm)
+  content/cdp/domains/DomainCache.jsm (domains/DomainCache.jsm)
+  content/cdp/domains/ParentProcessDomains.jsm (domains/ParentProcessDomains.jsm)
+  content/cdp/domains/content/DOM.jsm (domains/content/DOM.jsm)
+  content/cdp/domains/content/Emulation.jsm (domains/content/Emulation.jsm)
+  content/cdp/domains/content/Input.jsm (domains/content/Input.jsm)
+  content/cdp/domains/content/Log.jsm (domains/content/Log.jsm)
+  content/cdp/domains/content/Network.jsm (domains/content/Network.jsm)
+  content/cdp/domains/content/Page.jsm (domains/content/Page.jsm)
+  content/cdp/domains/content/Performance.jsm (domains/content/Performance.jsm)
+  content/cdp/domains/content/Runtime.jsm (domains/content/Runtime.jsm)
+  content/cdp/domains/content/runtime/ExecutionContext.jsm (domains/content/runtime/ExecutionContext.jsm)
+  content/cdp/domains/content/Security.jsm (domains/content/Security.jsm)
+  content/cdp/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
+  content/cdp/domains/parent/Emulation.jsm (domains/parent/Emulation.jsm)
+  content/cdp/domains/parent/Fetch.jsm (domains/parent/Fetch.jsm)
+  content/cdp/domains/parent/Input.jsm (domains/parent/Input.jsm)
+  content/cdp/domains/parent/IO.jsm (domains/parent/IO.jsm)
+  content/cdp/domains/parent/Network.jsm (domains/parent/Network.jsm)
+  content/cdp/domains/parent/Page.jsm (domains/parent/Page.jsm)
+  content/cdp/domains/parent/page/DialogHandler.jsm (domains/parent/page/DialogHandler.jsm)
+  content/cdp/domains/parent/Security.jsm (domains/parent/Security.jsm)
+  content/cdp/domains/parent/Target.jsm (domains/parent/Target.jsm)
+  # observers
+  content/cdp/observers/ChannelEventSink.jsm (observers/ChannelEventSink.jsm)
+  content/cdp/observers/ContextObserver.jsm (observers/ContextObserver.jsm)
+  content/cdp/observers/NetworkObserver.jsm (observers/NetworkObserver.jsm)
+  content/cdp/observers/TargetObserver.jsm (observers/TargetObserver.jsm)
+  # sessions
+  content/cdp/sessions/frame-script.js (sessions/frame-script.js)
+  content/cdp/sessions/ContentProcessSession.jsm (sessions/ContentProcessSession.jsm)
+  content/cdp/sessions/MainProcessSession.jsm (sessions/MainProcessSession.jsm)
+  content/cdp/sessions/Session.jsm (sessions/Session.jsm)
+  content/cdp/sessions/TabSession.jsm (sessions/TabSession.jsm)
+  # targets
+  content/cdp/targets/MainProcessTarget.jsm (targets/MainProcessTarget.jsm)
+  content/cdp/targets/TabTarget.jsm (targets/TabTarget.jsm)
+  content/cdp/targets/Target.jsm (targets/Target.jsm)
+  content/cdp/targets/TargetList.jsm (targets/TargetList.jsm)

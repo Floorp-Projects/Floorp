@@ -1,0 +1,41 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+EXPORTS = \
+	cert.h \
+	certt.h \
+	certdb.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	genname.h \
+	xconst.h \
+	certxutl.h \
+	certi.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	alg1485.c \
+	certdb.c \
+	certv3.c \
+	certxutl.c \
+	crl.c \
+	genname.c \
+	stanpcertdb.c \
+	polcyxtn.c \
+	secname.c \
+	xauthkid.c \
+	xbsconst.c \
+	xconst.c \
+	$(NULL)
+
+LIBRARY_NAME = certdb
+SHARED_LIBRARY = $(NULL)
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

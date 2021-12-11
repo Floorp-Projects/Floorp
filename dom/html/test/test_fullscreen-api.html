@@ -1,0 +1,147 @@
+ <!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 545812</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+  <style>
+  body {
+    background-color: black;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=545812">Mozilla Bug 545812</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Tests for Bug 545812 **/
+SimpleTest.requestFlakyTimeout("untriaged");
+
+// Run the tests which go full-screen in new windows, as mochitests normally
+// run in an iframe, which by default will not have the allowfullscreen
+// attribute set, so full-screen won't work.
+var gTestWindows = [
+  { test: "file_fullscreen-multiple.html",
+    prefs: [["full-screen-api.exit-on.windowRaise", false],
+            ["full-screen-api.exit-on.windowOpen", false]] },
+  { test: "file_fullscreen-rollback.html" },
+  { test: "file_fullscreen-esc-exit.html" },
+  { test: "file_fullscreen-denied.html" },
+  { test: "file_fullscreen-api.html" },
+  { test: "file_fullscreen-hidden.html" },
+  { test: "file_fullscreen-focus.html" },
+  { test: "file_fullscreen-svg-element.html" },
+  { test: "file_fullscreen-navigation.html" },
+  { test: "file_fullscreen-scrollbar.html" },
+  { test: "file_fullscreen-selector.html" },
+  { test: "file_fullscreen-shadowdom.html" },
+  { test: "file_fullscreen-top-layer.html" },
+  { test: "file_fullscreen-backdrop.html" },
+  { test: "file_fullscreen-nested.html" },
+  { test: "file_fullscreen-prefixed.html" },
+  { test: "file_fullscreen-lenient-setters.html" },
+  { test: "file_fullscreen-table.html" },
+  { test: "file_fullscreen-event-order.html" },
+  { test: "file_fullscreen-featurePolicy.html",
+    prefs: [["dom.security.featurePolicy.header.enabled", true],
+            ["dom.security.featurePolicy.webidl.enabled", true]] },
+  { test: "file_fullscreen-async.html" },
+  { test: "file_fullscreen-sub-iframe.html" },
+  { test: "file_fullscreen-with-full-zoom.html" },
+];
+
+var testWindow = null;
+var gTestIndex = 0;
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function nextTest() {
+  if (testWindow) {
+    info("Waiting for focus to return to main window");
+    window.addEventListener("focus", function() {
+      info("main window focused, starting next test");
+      SimpleTest.executeSoon(runNextTest);
+    }, {once: true});
+    testWindow.close();
+  } else {
+    SimpleTest.executeSoon(runNextTest);
+  }
+}
+
+function waitForEvent(eventTarget, eventName, checkFn, callback) {
+  eventTarget.addEventListener(eventName, function listener(event) {
+    if (checkFn && !checkFn(event)) {
+      return;
+    }
+    eventTarget.removeEventListener(eventName, listener);
+    callback();
+  });
+}
+
+function runNextTest() {
+  if (gTestIndex < gTestWindows.length) {
+    let test = gTestWindows[gTestIndex];
+    let promise = ("prefs" in test)
+                    ? SpecialPowers.pushPrefEnv({"set": test.prefs})
+                    : Promise.resolve();
+    promise.then(function() {
+      info(`Run test ${test.test}`);
+      testWindow = window.open(test.test, "", "width=500,height=500,scrollbars=yes");
+      // We'll wait for the window to load, then make sure our window is refocused
+      // before starting the test, which will get kicked off on "focus".
+      // This ensures that we're essentially back on the primary "desktop" on
+      // OS X Lion before we run the test.
+      waitForLoadAndPaint(testWindow, function() {
+        SimpleTest.waitForFocus(function() {
+          info("Were focused");
+          // For the platforms that support reporting occlusion state (e.g. Mac),
+          // we should wait until the docshell has been activated again,
+          // otherwise, the fullscreen request might be denied.
+          if (testWindow.document.hidden) {
+            info("Waiting for document to unhide");
+            waitForEvent(testWindow.document, "visibilitychange", (event) => {
+              return !testWindow.document.hidden;
+            }, testWindow.begin);
+            return;
+          }
+          testWindow.begin();
+        }, testWindow);
+      });
+    });
+    gTestIndex++;
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+try {
+  window.fullScreen = true;
+} catch (e) {
+}
+is(window.fullScreen, false, "Shouldn't be able to set window fullscreen from content");
+// Ensure the full-screen api is enabled, and will be disabled on test exit.
+// Disable the requirement for trusted contexts only, so the tests are easier
+// to write
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({
+      "set": [
+        ["full-screen-api.enabled", true],
+        ["full-screen-api.allow-trusted-requests-only", false],
+        ["full-screen-api.transition-duration.enter", "0 0"],
+        ["full-screen-api.transition-duration.leave", "0 0"]
+      ]}, nextTest);
+});
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

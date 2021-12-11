@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Minimum intrinsic widths combined with negative margins</title>
+<style type="text/css">
+
+td { height: 2.5em; }
+
+span {
+  display: inline-block;
+  height: 0.5em;
+  width: 1em;
+}
+
+</style>
+</head>
+<body>
+
+<table border width="1"><tr><td>
+  <span style="margin-right: -1em"></span>
+</td></tr></table>
+<table border width="1"><tr><td>
+  <span style="margin-left: -1em"></span>
+</td></tr></table>
+<table border width="1"><tr><td>
+  <span style="margin: 0 -0.5em"></span>
+</td></tr></table>
+
+<table border width="1"><tr><td>
+  <span style="margin-right: -2em"></span>
+</td></tr></table>
+<table border width="1"><tr><td>
+  <span style="margin-left: -2em"></span>
+</td></tr></table>
+<table border width="1"><tr><td>
+  <span style="margin: 0 -1em"></span>
+</td></tr></table>
+
+<table border width="1"><tr><td>
+  <span style="margin-right: -2em"></span>&#x200b;<span style="width: 3em"></span>
+</td></tr></table>
+
+<table border width="1"><tr><td>
+  <span style="width: 3em"></span>&#x200b;<span style="margin-right: -2em"></span>
+</td></tr></table>
+
+<table border width="1"><tr><td>
+  <span style="width: 3em;"></span>&#x200b;<span style="margin-left: -2em"></span>
+</td></tr></table>
+
+<table border width="1"><tr><td style="text-indent: -.75em">
+  <span style="margin-right: -.75em"></span>&#x200b;<span></span>
+</td></tr></table>
+
+</body>
+</html>

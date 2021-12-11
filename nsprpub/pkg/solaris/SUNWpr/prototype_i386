@@ -1,0 +1,45 @@
+# 
+# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#ident	"$Id$"
+#
+# This required package information file contains a list of package contents.
+# The 'pkgmk' command uses this file to identify the contents of a package
+# and their location on the development machine when building the package.
+# Can be created via a text editor or through use of the 'pkgproto' command.
+
+#!search <pathname pathname ...>	# where to find pkg objects
+#!include <filename>			# include another 'prototype' file
+#!default <mode> <owner> <group>	# default used if not specified on entry
+#!<param>=<value>			# puts parameter in pkg environment
+
+#
+# Include ISA independent files (prototype_com)
+#
+!include prototype_com
+#
+#
+#
+# List files which are i386 specific here
+#
+# source locations relative to the prototype file
+#
+#
+# SUNWpr
+#
+#64#s none usr/lib/mps/64=amd64
+#64#s none usr/lib/mps/secv1/64=amd64
+#64#d none usr/lib/mps/amd64 755 root bin
+#64#d none usr/lib/mps/secv1/amd64 755 root bin
+#64#f none usr/lib/mps/amd64/libnspr4.so 755 root bin
+#64#f none usr/lib/mps/amd64/libplc4.so 755 root bin
+#64#f none usr/lib/mps/amd64/libplds4.so 755 root bin
+#64#s none usr/lib/mps/secv1/amd64/libnspr4.so=../../amd64/libnspr4.so
+#64#s none usr/lib/mps/secv1/amd64/libplc4.so=../../amd64/libplc4.so
+#64#s none usr/lib/mps/secv1/amd64/libplds4.so=../../amd64/libplds4.so
+

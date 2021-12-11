@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1026397
+-->
+<head>
+  <title>Test for Bug 1026397</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1026397">Mozilla Bug 1026397</a>
+<p id="display"></p>
+<div id="content">
+<input id="input">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1026397 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var input = document.getElementById("input");
+  input.focus();
+
+  function doTest(aMaxLength, aInitialValue, aCaretOffset,
+                  aInsertString, aExpectedValueDuringComposition,
+                  aExpectedValueAfterCompositionEnd, aAdditionalExplanation) {
+    input.value = aInitialValue;
+    var maxLengthStr = "";
+    if (aMaxLength >= 0) {
+      input.maxLength = aMaxLength;
+      maxLengthStr = aMaxLength.toString();
+    } else {
+      input.removeAttribute("maxlength");
+      maxLengthStr = "not specified";
+    }
+    input.selectionStart = input.selectionEnd = aCaretOffset;
+    if (aAdditionalExplanation) {
+      aAdditionalExplanation = " " + aAdditionalExplanation;
+    } else {
+      aAdditionalExplanation = "";
+    }
+
+    synthesizeCompositionChange(
+      { "composition":
+        { "string": aInsertString,
+          "clauses":
+          [
+            { "length": aInsertString.length, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
+        },
+        "caret": { "start": aInsertString.length, "length": 0 },
+      });
+    is(input.value, aExpectedValueDuringComposition,
+       "The value of input whose maxlength is " + maxLengthStr + " should be "
+         + aExpectedValueDuringComposition + " during composition" + aAdditionalExplanation);
+    synthesizeComposition({ type: "compositioncommitasis" });
+    is(input.value, aExpectedValueAfterCompositionEnd,
+       "The value of input whose maxlength is " + maxLengthStr + " should be "
+         + aExpectedValueAfterCompositionEnd + " after compositionend" + aAdditionalExplanation);
+  }
+
+  // maxlength hasn't been specified yet.
+  doTest(-1, "", 0, "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE\u5BB6");
+
+  // maxlength="1"
+  doTest(1, "", 0, "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE\u5BB6", "");
+
+  // maxlength="2"
+  doTest(2, "", 0, "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7");
+  doTest(2, "X", 1, "\uD842\uDFB7\u91CE\u5BB6", "X\uD842\uDFB7\u91CE\u5BB6", "X");
+  doTest(2, "Y", 0, "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE\u5BB6Y", "Y");
+
+  // maxlength="3"
+  doTest(3, "", 0, "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE");
+  doTest(3, "A", 1, "\uD842\uDFB7\u91CE\u5BB6", "A\uD842\uDFB7\u91CE\u5BB6", "A\uD842\uDFB7");
+  doTest(3, "B", 0, "\uD842\uDFB7\u91CE\u5BB6", "\uD842\uDFB7\u91CE\u5BB6B", "\uD842\uDFB7B");
+  doTest(3, "CD", 1, "\uD842\uDFB7\u91CE\u5BB6", "C\uD842\uDFB7\u91CE\u5BB6D", "CD");
+
+  // maxlength="4"
+  doTest(4, "EF", 1, "\uD842\uDFB7\u91CE\u5BB6", "E\uD842\uDFB7\u91CE\u5BB6F", "E\uD842\uDFB7F");
+  doTest(4, "GHI", 1, "\uD842\uDFB7\u91CE\u5BB6", "G\uD842\uDFB7\u91CE\u5BB6HI", "GHI");
+
+  // maxlength="1", inputting only high surrogate
+  doTest(1, "", 0, "\uD842", "\uD842", "\uD842", "even if input string is only a high surrogate");
+
+  // maxlength="1", inputting only low surrogate
+  doTest(1, "", 0, "\uDFB7", "\uDFB7", "\uDFB7", "even if input string is only a low surrogate");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for XHR prompts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="../../../prompts/test/prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: XHR prompt
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: XHR prompts. **/
+function makeRequest(uri) {
+  return new Promise((resolve, reject) => {
+    let request = new XMLHttpRequest();
+    request.open("GET", uri, true);
+    request.addEventListener("loadend", function onLoadEnd() {
+      let result = xhrLoad(request.responseXML);
+      resolve(result);
+    });
+    request.send(null);
+  });
+}
+
+function xhrLoad(xmlDoc) {
+  // The server echos back the user/pass it received.
+  var username = xmlDoc.getElementById("user").textContent;
+  var password = xmlDoc.getElementById("pass").textContent;
+  var authok = xmlDoc.getElementById("ok").textContent;
+  return {username, password, authok};
+}
+
+// Let prompt_common know what kind of modal type is enabled for auth prompts.
+modalType = authPromptModalType;
+
+let prompterParent = runInParent(() => {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
+                    getService(Ci.nsIPromptFactory);
+
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let prompt = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt);
+
+  addMessageListener("proxyPrompter", function onMessage(msg) {
+    let rv = prompt[msg.methodName](...msg.args);
+    return {
+      rv,
+      // Send the args back to content so out/inout args can be checked.
+      args: msg.args,
+    };
+  });
+});
+
+let prompter1 = new PrompterProxy(prompterParent);
+
+add_task(function setup() {
+  runInParent(function initLogins() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                             Ci.nsILoginInfo, "init");
+    let login1 = new nsLoginInfo("http://mochi.test:8888", null, "xhr",
+                                 "xhruser1", "xhrpass1");
+    let login2 = new nsLoginInfo("http://mochi.test:8888", null, "xhr2",
+                                 "xhruser2", "xhrpass2");
+
+    try {
+      Services.logins.addLogin(login1);
+      Services.logins.addLogin(login2);
+    } catch (e) {
+      assert.ok(false, "addLogin threw: " + e);
+    }
+  });
+});
+
+add_task(async function test1() {
+  let state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "xhruser1",
+    passValue: "xhrpass1",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  let action = {
+    buttonClick: "ok",
+  };
+  let promptDone = handlePrompt(state, action);
+  let requestPromise = makeRequest("authenticate.sjs?user=xhruser1&pass=xhrpass1&realm=xhr");
+  await promptDone;
+  let result = await requestPromise;
+
+  is(result.authok, "PASS", "Checking for successful authentication");
+  is(result.username, "xhruser1", "Checking for username");
+  is(result.password, "xhrpass1", "Checking for password");
+});
+
+add_task(async function test2() {
+  // Test correct parenting, by opening another tab in the foreground,
+  // and making sure the prompt re-focuses the original tab when shown:
+  let newWin = window.open();
+  newWin.focus();
+
+  let state = {
+    msg: "This site is asking you to sign in.",
+    title: "Authentication Required",
+    textValue: "xhruser2",
+    passValue: "xhrpass2",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+
+  // For window prompts check that the dialog is modal, chrome and dependent;
+  // We can't just check window.opener because that'll be
+  // a content window, which therefore isn't exposed (it'll lie and
+  // be null).
+  if (authPromptModalType === SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW) {
+    state.chrome = true;
+    state.dialog = true;
+    state.chromeDependent = true;
+    state.isWindowModal = true;
+  }
+
+  let action = {
+    buttonClick: "ok",
+  };
+  let promptDone = handlePrompt(state, action);
+  let requestPromise = makeRequest("authenticate.sjs?user=xhruser2&pass=xhrpass2&realm=xhr2");
+  await promptDone;
+  let result = await requestPromise;
+
+  runInParent(() => {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    // Check that the right tab is focused:
+    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let spec = browserWin.gBrowser.selectedBrowser.currentURI.spec;
+    assert.ok(spec.startsWith(window.location.origin),
+              `Tab with remote URI (rather than about:blank)
+               should be focused (${spec})`);
+  });
+
+  is(result.authok, "PASS", "Checking for successful authentication");
+  is(result.username, "xhruser2", "Checking for username");
+  is(result.password, "xhrpass2", "Checking for password");
+
+  // Wait for the assert from the parent script to run and send back its reply,
+  // so it's processed before the test ends.
+  await SpecialPowers.executeAfterFlushingMessageQueue();
+
+  newWin.close();
+});
+</script>
+</pre>
+</body>
+</html>

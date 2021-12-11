@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=613019
+-->
+<head>
+  <title>Test for Bug 613019</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613019">Mozilla Bug 613019</a>
+<div id="content">
+  <input type="text" maxlength="2" style="width:200px" value="Test">
+  <textarea maxlength="2" style="width:200px">Test</textarea>
+  <input type="text" minlength="6" style="width:200px" value="Test">
+  <textarea minlength="6" style="width:200px">Test</textarea>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 613019 **/
+
+function testInteractivityOfMaxLength(elem) {
+  // verify that user interactivity is necessary for validity state to apply.
+  is(elem.value, "Test", "Element has incorrect starting value.");
+  is(elem.validity.tooLong, false, "Element should not be tooLong.");
+
+  elem.setSelectionRange(elem.value.length, elem.value.length)
+  elem.focus();
+
+  synthesizeKey("KEY_Backspace");
+  is(elem.value, "Tes", "Element value was not changed correctly.");
+  is(elem.validity.tooLong, true, "Element should still be tooLong.");
+
+  synthesizeKey("KEY_Backspace");
+  is(elem.value, "Te", "Element value was not changed correctly.");
+  is(elem.validity.tooLong, false, "Element should no longer be tooLong.");
+
+  elem.value = "Test";
+  is(elem.validity.tooLong, false,
+     "Element should not be tooLong after non-interactive value change.");
+}
+
+function testInteractivityOfMinLength(elem) {
+  // verify that user interactivity is necessary for validity state to apply.
+  is(elem.value, "Test", "Element has incorrect starting value.");
+  is(elem.validity.tooLong, false, "Element should not be tooShort.");
+
+  elem.setSelectionRange(elem.value.length, elem.value.length)
+  elem.focus();
+
+  sendString("e");
+  is(elem.value, "Teste", "Element value was not changed correctly.");
+  is(elem.validity.tooShort, true, "Element should still be tooShort.");
+
+  sendString("d");
+  is(elem.value, "Tested", "Element value was not changed correctly.");
+  is(elem.validity.tooShort, false, "Element should no longer be tooShort.");
+
+  elem.value = "Test";
+  is(elem.validity.tooShort, false,
+     "Element should not be tooShort after non-interactive value change.");
+}
+
+function test() {
+  window.getSelection().removeAllRanges();
+  testInteractivityOfMaxLength(document.querySelector("input[type=text][maxlength]"));
+  testInteractivityOfMaxLength(document.querySelector("textarea[maxlength]"));
+  testInteractivityOfMinLength(document.querySelector("input[type=text][minlength]"));
+  testInteractivityOfMinLength(document.querySelector("textarea[minlength]"));
+  SimpleTest.finish();
+}
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  setTimeout(test, 0);
+};
+
+</script>
+</pre>
+</body>
+</html>

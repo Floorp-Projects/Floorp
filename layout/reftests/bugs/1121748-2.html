@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  border: 1px solid gray;
+}
+.statusbar {
+  height: 26px;
+  background: #eef;
+  display: flex;
+  justify-content: flex-end;
+}
+#test1 {
+  border: 1px solid red;
+}
+#test2 {
+  border: 1px solid green;
+}
+</style>
+<script>
+function test1() {
+  document.querySelector('#test1').hidden = false;
+  document.querySelector('#test2').hidden = false;
+}
+</script>
+</head>
+<body onload="test1()">
+<div dir="rtl">
+ <div class="statusbar">
+  <img src="foo" id="test1" hidden>
+  <img src="bar" id="test2" hidden>
+ </div>
+</div>

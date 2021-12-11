@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1272239 - Test gethash.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<iframe id="testFrame1" onload=""></iframe>
+<iframe id="testFrame2" onload=""></iframe>
+
+<script src="head.js"></script>
+<script class="testbody" type="text/javascript">
+const MALWARE_LIST = "test-malware-simple";
+const MALWARE_HOST = "malware.example.com/";
+
+const UNWANTED_LIST = "test-unwanted-simple";
+const UNWANTED_HOST = "unwanted.example.com/";
+
+const GETHASH_URL = "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/gethash.sjs";
+const NOTEXIST_URL = "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/nonexistserver.sjs";
+
+var shouldLoad = false;
+
+// In this testcase we store prefixes to localdb and send the fullhash to gethash server.
+// When access the test page gecko should trigger gethash request to server and
+// get the completion response.
+function loadTestFrame(id) {
+  return new Promise(function(resolve, reject) {
+    var iframe = document.getElementById(id);
+    iframe.setAttribute("src", "gethashFrame.html");
+
+    iframe.onload = function() {
+      resolve();
+    };
+  });
+}
+
+// add 4-bytes prefixes to local database, so when we access the url,
+// it will trigger gethash request.
+function addPrefixToDB(list, url) {
+  var testData = [{ db: list, url, len: 4 }];
+
+  return classifierHelper.addUrlToDB(testData)
+    .catch(function(err) {
+      ok(false, "Couldn't update classifier. Error code: " + err);
+      // Abort test.
+      SimpleTest.finish();
+    });
+}
+
+function setup404() {
+  shouldLoad = true;
+
+  classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], NOTEXIST_URL);
+
+  return Promise.all([
+    addPrefixToDB(MALWARE_LIST, MALWARE_HOST),
+    addPrefixToDB(UNWANTED_LIST, UNWANTED_HOST),
+  ]);
+}
+
+function setup() {
+  classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
+
+  return Promise.all([
+    addPrefixToDB(MALWARE_LIST, MALWARE_HOST),
+    addPrefixToDB(UNWANTED_LIST, UNWANTED_HOST),
+    addCompletionToServer(MALWARE_LIST, MALWARE_HOST, GETHASH_URL),
+    addCompletionToServer(UNWANTED_LIST, UNWANTED_HOST, GETHASH_URL),
+  ]);
+}
+
+// manually reset DB to make sure next test won't be affected by cache.
+function reset() {
+  return classifierHelper.resetDatabase();
+}
+
+function runTest() {
+  Promise.resolve()
+    // This test resources get blocked when gethash returns successfully
+    .then(classifierHelper.waitForInit)
+    .then(setup)
+    .then(() => loadTestFrame("testFrame1"))
+    .then(reset)
+    // This test resources are not blocked when gethash returns an error
+    .then(setup404)
+    .then(() => loadTestFrame("testFrame2"))
+    .then(function() {
+      SimpleTest.finish();
+    }).catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+      SimpleTest.finish();
+    });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// 'network.predictor.enabled' is disabled because if other testcase load
+// evil.js, evil.css ...etc resources, it may cause we load them from cache
+// directly and bypass classifier check
+SpecialPowers.pushPrefEnv({"set": [
+  ["browser.safebrowsing.malware.enabled", true],
+  ["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
+  ["network.predictor.enabled", false],
+  ["urlclassifier.gethash.timeout_ms", 30000],
+]}, runTest);
+
+</script>
+</pre>
+</body>
+</html>

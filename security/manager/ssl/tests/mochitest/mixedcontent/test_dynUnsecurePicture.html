@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>img.src changes to unsecure test</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+  SimpleTest.requestFlakyTimeout("Timeout in mixedContentTest");
+
+  // This test, as is, equals to https://kuix.de/misc/test17/358438.php
+
+  async function runTest()
+  {
+    await isSecurityState("secure");
+    document.getElementById("image1").src =
+      "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
+
+    window.setTimeout(async () => {
+      await isSecurityState("broken", "src='http://...' changed to broken");
+      finish();
+    }, 500);
+  }
+
+  async function afterNavigationTest()
+  {
+    is(document.getElementById("image1").src,
+      "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg",
+      "img.src secure again");
+    await isSecurityState("secure", "security full after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img id="image1" src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg" />
+</body>
+</html>

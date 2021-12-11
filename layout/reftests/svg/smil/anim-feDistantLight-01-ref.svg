@@ -1,0 +1,17 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Reference for animation of the "elevation" attribute of the "feDistantLight" element</title>
+  <defs>
+    <filter id="f" x="0" y="0" width="0.5" height="0.5">
+      <feDiffuseLighting kernelUnitLength="1" lighting-color="lime">
+        <feDistantLight elevation="100">
+        </feDistantLight>
+      </feDiffuseLighting>
+    </filter>
+  </defs>
+  <path d="M0,0 h100 v100 h-100 z" filter="url(#f)"/>
+</svg>

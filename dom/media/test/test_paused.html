@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: paused</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<video id='v1'></video><audio id='a1'></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+ok(v1.paused, "v1.paused must initially be true");
+ok(a1.paused, "a1.paused must initially be true");
+mediaTestCleanup();
+</script>
+</pre>
+</body>
+</html>

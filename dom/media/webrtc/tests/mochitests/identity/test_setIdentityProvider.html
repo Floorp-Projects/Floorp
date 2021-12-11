@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
+  <script type="application/javascript" src="../pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "setIdentityProvider leads to peerIdentity and assertions in SDP",
+    bug: "942367"
+  });
+
+function checkIdentity(peer, prefix, idp, name) {
+  prefix = prefix + ": ";
+  return peer._pc.peerIdentity.then(peerIdentity => {
+    ok(peerIdentity, prefix + "peerIdentity is set");
+    is(peerIdentity.idp, idp, prefix + "IdP is correct");
+    is(peerIdentity.name, name + "@" + idp, prefix + "identity is correct");
+  });
+}
+
+function theTest() {
+  var test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.pcLocal.setIdentityProvider("test1.example.com",
+                                   { protocol: "idp.js",
+                                     usernameHint: "someone" });
+  test.pcRemote.setIdentityProvider("test2.example.com",
+                                    { protocol: "idp.js",
+                                      usernameHinte: "someone"});
+
+  test.chain.append([
+    function PC_LOCAL_PEER_IDENTITY_IS_SET_CORRECTLY(test) {
+      return checkIdentity(test.pcLocal, "local", "test2.example.com", "someone");
+    },
+    function PC_REMOTE_PEER_IDENTITY_IS_SET_CORRECTLY(test) {
+      return checkIdentity(test.pcRemote, "remote", "test1.example.com", "someone");
+    },
+
+    function OFFER_AND_ANSWER_INCLUDES_IDENTITY(test) {
+      ok(test.originalOffer.sdp.includes("a=identity"), "a=identity is in the offer SDP");
+      ok(test.originalAnswer.sdp.includes("a=identity"), "a=identity is in the answer SDP");
+    },
+
+    function PC_LOCAL_DESCRIPTIONS_CONTAIN_IDENTITY(test) {
+      ok(test.pcLocal.localDescription.sdp.includes("a=identity"),
+         "a=identity is in the local copy of the offer");
+      ok(test.pcLocal.remoteDescription.sdp.includes("a=identity"),
+         "a=identity is in the local copy of the answer");
+    },
+    function PC_REMOTE_DESCRIPTIONS_CONTAIN_IDENTITY(test) {
+      ok(test.pcRemote.localDescription.sdp.includes("a=identity"),
+                         "a=identity is in the remote copy of the offer");
+      ok(test.pcRemote.remoteDescription.sdp.includes("a=identity"),
+                         "a=identity is in the remote copy of the answer");
+    }
+  ]);
+  return test.run();
+}
+runNetworkTest(theTest);
+
+</script>
+</pre>
+</body>
+</html>

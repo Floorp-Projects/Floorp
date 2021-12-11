@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>frame for localStorage test</title>
+
+<script type="text/javascript" src="interOriginFrame.js"></script>
+<script type="text/javascript">
+
+var currentStep = 1;
+
+function doStep()
+{
+  switch (currentStep)
+  {
+    case 1:
+      localStorage.setItem("X", "1");
+      is(localStorage.getItem("X"), "1", "X is 1 in the master");
+      break;
+
+    case 3:
+      is(localStorage.getItem("X"), "1", "X remains 1 in the master");
+      localStorage.removeItem("X");
+      is(localStorage.getItem("X"), null, "X was removed from the master");
+      break;
+
+    case 5:
+      is(localStorage.getItem("Y"), null, "Y null in the master");
+      break;
+
+    case 7:
+      return finishTest();
+  }
+
+  // Increase by two to distinguish each test step order
+  // in both master doStep and slave doStep functions.
+  ++currentStep;
+  ++currentStep;
+
+  return true;
+}
+
+</script>
+
+</head>
+
+<body onload="postMsg('frame loaded');">
+</body>
+</html>

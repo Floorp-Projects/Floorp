@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=450191
+-->
+<head>
+  <title>Test for Bug 450191</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450191">Mozilla Bug 450191</a>
+<iframe id="display" src="about:blank"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 450191 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var iframe = document.getElementById("display");
+  var subdoc = iframe.contentDocument;
+  var subwin = iframe.contentWindow;
+
+  var doctext = "<div style='font-size: 2em'>div text <table><tr><td id='t'>table text</td></tr></table></div>";
+
+  function subdoc_body_font() {
+    return subwin.getComputedStyle(subdoc.body).fontSize;
+  }
+
+  function subdoc_cell_font() {
+    return subwin.getComputedStyle(subdoc.getElementById("t")).fontSize;
+  }
+
+  subdoc.open();
+  subdoc.write(doctext);
+  subdoc.close();
+
+  is(subdoc_cell_font(), subdoc_body_font(),
+        "Quirks style sheet should be applied.");
+  
+  subdoc.open();
+  subdoc.write("<!DOCTYPE HTML>" + doctext);
+  subdoc.close();
+
+  isnot(subdoc_cell_font(), subdoc_body_font(),
+        "Quirks style sheet should NOT be applied.");
+  
+  subdoc.open();
+  subdoc.write(doctext);
+  subdoc.close();
+
+  is(subdoc_cell_font(), subdoc_body_font(),
+     "Quirks style sheet should be applied.");
+
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>

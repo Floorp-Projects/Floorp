@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=619278
+-->
+<head>
+  <title>Test for Bug 619278</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=619278">Mozilla Bug 619278</a>
+<p id="display"></p>
+<div id="content">
+  <form>
+    <input required><button>submit</button>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 619278 **/
+
+function doElementMatchesSelector(aElement, aSelector)
+{
+  ok(aElement.matches(aSelector),
+     aSelector + " should match for " + aElement);
+}
+
+var e = document.forms[0].elements[0];
+
+e.addEventListener("invalid", function(event) {
+  e.addEventListener("invalid", arguments.callee);
+
+  SimpleTest.executeSoon(function() {
+    doElementMatchesSelector(e, ":-moz-ui-invalid");
+    SimpleTest.finish();
+  });
+});
+
+e.addEventListener("focus", function() {
+  SimpleTest.executeSoon(function() {
+    synthesizeKey("KEY_Enter");
+  });
+}, {once: true});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  e.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

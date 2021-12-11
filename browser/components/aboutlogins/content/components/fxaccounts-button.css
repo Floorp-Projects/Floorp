@@ -1,0 +1,80 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.logged-out-view,
+.logged-in-view {
+  display: flex;
+  align-items: center;
+}
+
+.fxaccounts-extra-text {
+  /* Only show at most 3 lines of text to limit the
+     text from overflowing the header. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+
+  color: var(--in-content-deemphasized-text);
+  text-align: end;
+}
+
+.fxaccounts-extra-text,
+.fxaccount-email,
+.fxaccounts-enable-button {
+  font-size: 13px;
+}
+
+@media (max-width: 830px) {
+  .fxaccounts-extra-text,
+  .fxaccount-email {
+    display: none;
+  }
+}
+
+.fxaccount-avatar,
+.fxaccounts-enable-button {
+  margin-inline-start: 9px;
+}
+
+.fxaccounts-enable-button {
+  min-width: 120px;
+  padding-inline: 16px;
+  /* See bug 1626764: The width of button could go lesser than 120px in small window size which could wrap the texts into two lines in systems with different default fonts */
+  flex-shrink: 0;
+}
+
+.fxaccounts-avatar-button {
+  cursor: pointer;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.fxaccount-email {
+  vertical-align: middle;
+}
+
+.fxaccount-avatar {
+  display: inline-block;
+  vertical-align: middle;
+  background-image: var(--avatar-url),
+    url(chrome://browser/skin/fxa/avatar-color.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 1000px;
+  width: 32px;
+  height: 32px;
+}
+
+@media not (prefers-contrast) {
+  .fxaccounts-avatar-button:hover {
+    background-color: transparent !important;
+  }
+
+  .fxaccounts-avatar-button:hover > .fxaccount-email {
+    text-decoration: underline;
+  }
+}

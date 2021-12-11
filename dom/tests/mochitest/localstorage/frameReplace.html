@@ -1,0 +1,72 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage replace frame</title>
+
+<script type="text/javascript">
+
+var shell;
+
+function ok(a, message)
+{
+  if (!a)
+    shell.postMessage("FAILURE: " + message, "http://mochi.test:8888");
+  else
+    shell.postMessage(message, "http://mochi.test:8888");
+}
+
+function is(a, b, message)
+{
+  if (a != b)
+    shell.postMessage("FAILURE: " + message + ", expected "+b+" got "+a, "http://mochi.test:8888");
+  else
+    shell.postMessage(message + ", expected "+b+" got "+a, "http://mochi.test:8888");
+}
+
+function doTest()
+{
+  var query = location.search.substring(1);
+  var queries = query.split("&");
+
+  var action = queries[0];
+  shell = queries[1];
+  switch (shell)
+  {
+    case "frame":
+      shell = parent;
+      break;
+    case "window":
+      shell = opener;
+      break;
+  }
+
+  switch (action)
+  {
+    case "init":
+      localStorage.setItem("A", "1");
+      localStorage.setItem("B", "2");
+      localStorage.setItem("C", "3");
+      is(localStorage.getItem("A"), "1", "'A' is '1'");
+      is(localStorage.getItem("B"), "2", "'A' is '2'");
+      is(localStorage.getItem("C"), "3", "'A' is '3'");
+      break;
+
+    case "check":
+      is(localStorage.getItem("A"), null, "'A' is null");
+      is(localStorage.getItem("B"), null, "'A' is null");
+      is(localStorage.getItem("C"), null, "'A' is null");
+      break;
+
+    case "clean":
+      localStorage.clear();
+      break;
+  }
+
+  shell.postMessage(action + "_done", "http://mochi.test:8888");
+}
+
+</script>
+
+</head>
+<body onload="doTest();">
+</body>
+</html>

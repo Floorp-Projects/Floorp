@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i1').checked = true;
+                document.getElementById('i1').required = false;
+                if (!document.getElementById('i1').matches(':-moz-ui-valid') ||
+                    !document.getElementById('i2').matches(':-moz-ui-valid')) {
+                  document.body.textContent='FAIL';
+                } else {
+                  document.body.textContent='SUCCESS';
+                }
+                document.documentElement.className='';">
+    <input id='i1' name='foo' type='radio' required>
+    <input id='i2' name='foo' type='radio'>
+  </body>
+</html>

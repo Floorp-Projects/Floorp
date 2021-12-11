@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1215072
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1215072</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1215072 **/
+  try {
+    var gl = document.createElement("canvas")
+                     .getContext("webgl", { get stencil() { throw "bah (webgl)"; } });
+    ok(!gl, "Either should have thrown or not create a webgl context!");
+  } catch(ex) {
+    is(ex, "bah (webgl)", "Should have thrown an exception.");
+  }
+
+  try {
+    var c = document.createElement("canvas")
+                    .getContext("2d", { get alpha() {throw "bah (2d)"; } });
+    ok(!c, "Either should have thrown or not create a 2d context!");
+  } catch(ex) {
+    is(ex, "bah (2d)", "Should have thrown an exception.");
+  }
+
+  var gl2;
+  try {
+    gl2 = document.createElement("canvas").getContext("webgl", false);
+    gl2 = document.createElement("canvas").getContext("webgl", 123);
+    gl2 = document.createElement("canvas").getContext("webgl", "");
+    gl2 = document.createElement("canvas").getContext("webgl", undefined);
+    gl2 = document.createElement("canvas").getContext("webgl", null);
+    ok(true, "Shouldn't have thrown an exception!");
+  } catch(ex) {
+    ok(false, "Shouldn't have thrown an exception " + ex);
+  }
+
+  var c2;
+  try {
+    c2 = document.createElement("canvas").getContext("2d", false);
+    is(c2.getImageData(1, 1, 1, 1).data[0], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[1], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[2], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[3], 0);
+
+    c2 = document.createElement("canvas").getContext("2d", 123);
+    c2 = document.createElement("canvas").getContext("2d", "");
+    c2 = document.createElement("canvas").getContext("2d", undefined);
+    c2 = document.createElement("canvas").getContext("2d", null);
+    ok(true, "Shouldn't have thrown an exception!");
+
+    c2 = document.createElement("canvas").getContext("2d", { alpha: false });
+    is(c2.getImageData(1, 1, 1, 1).data[0], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[1], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[2], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[3], 255);
+  } catch(ex) {
+    ok(false, "Shouldn't have thrown an exception " + ex);
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1215072">Mozilla Bug 1215072</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

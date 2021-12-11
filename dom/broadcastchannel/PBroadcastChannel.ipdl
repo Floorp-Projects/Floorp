@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
+include protocol PRemoteLazyInputStream; // FIXME: bug 792908
+
+include DOMTypes;
+
+using struct nsID from "nsID.h";
+
+namespace mozilla {
+namespace dom {
+
+// This protocol is used for the BroadcastChannel API
+protocol PBroadcastChannel
+{
+  manager PBackground;
+
+parent:
+  async PostMessage(MessageData message);
+  async Close();
+
+child:
+  // A message must be delivered.
+  async Notify(MessageData message);
+
+  // A message has been delivered to other channels. It can be removed after
+  // all the actorsOnSamePid have retrieved it.
+  async RefMessageDelivered(nsID messageID, uint32_t actorsOnSamePid);
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

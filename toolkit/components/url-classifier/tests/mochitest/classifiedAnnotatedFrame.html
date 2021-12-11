@@ -1,0 +1,154 @@
+<html>
+<head>
+<title></title>
+
+<script type="text/javascript">
+"use strict";
+
+var scriptItem = "untouched";
+var scriptItem1 = "untouched";
+var scriptItem2 = "untouched";
+var imageItem1 = "untouched";
+var imageItem2 = "untouched";
+var frameItem1 = "untouched";
+var frameItem2 = "untouched";
+var xhrItem = "untouched";
+var fetchItem = "untouched";
+var mediaItem1 = "untouched";
+
+var badids = [
+  "badscript1",
+  "badscript2",
+  "badimage1",
+  "badimage2",
+  "badframe1",
+  "badframe2",
+  "badmedia1",
+  "badcss",
+];
+
+var onloadCalled = false;
+var xhrFinished = false;
+var fetchFinished = false;
+var videoLoaded = false;
+function loaded(type) {
+  if (type === "onload") {
+      onloadCalled = true;
+  } else if (type === "xhr") {
+      xhrFinished = true;
+  } else if (type === "fetch") {
+      fetchFinished = true;
+  } else if (type === "video") {
+      videoLoaded = true;
+  }
+  if (onloadCalled && xhrFinished && fetchFinished && videoLoaded) {
+    var msg = new window.CustomEvent("OnLoadComplete", {
+      detail: JSON.stringify({
+        scriptItem,
+        scriptItem1,
+        scriptItem2,
+        imageItem1,
+        imageItem2,
+        frameItem1,
+        frameItem2,
+        xhrItem,
+        fetchItem,
+        mediaItem1,
+      }),
+    });
+    window.dispatchEvent(msg);
+  }
+}
+</script>
+
+<!-- Try loading from a tracking CSS URI -->
+<link id="badcss" rel="stylesheet" type="text/css" href="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+
+</head>
+
+<body onload="loaded('onload')">
+
+<!-- Try loading from a tracking script URI (1): evil.js onload will have updated the scriptItem variable -->
+<script id="badscript1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="scriptItem1 = scriptItem;"></script>
+
+<!-- Try loading from a tracking image URI (1) -->
+<img id="badimage1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?reload=true" onload="imageItem1 = 'spoiled';"/>
+
+<!-- Try loading from a tracking frame URI (1) -->
+<iframe id="badframe1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html" onload="frameItem1 = 'spoiled';"></iframe>
+
+<!-- Try loading from a tracking video URI -->
+<video id="badmedia1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/vp9.webm?reload=true"></video>
+
+<script>
+var v = document.getElementById("badmedia1");
+v.addEventListener("loadedmetadata", function() {
+    mediaItem1 = "loaded";
+    loaded("video");
+}, true);
+v.addEventListener("error", function() {
+    mediaItem1 = "error";
+    loaded("video");
+}, true);
+
+// Try loading from a tracking script URI (2) - The loader may follow a different path depending on whether the resource is loaded from JS or HTML.
+var newScript = document.createElement("script");
+newScript.id = "badscript2";
+newScript.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js";
+newScript.addEventListener("load", function() { scriptItem2 = scriptItem; });
+document.body.appendChild(newScript);
+
+// Try loading from a tracking image URI (2)
+var newImage = document.createElement("img");
+newImage.id = "badimage2";
+newImage.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?reload=true";
+newImage.addEventListener("load", function() { imageItem2 = "spoiled"; });
+document.body.appendChild(newImage);
+
+// Try loading from a tracking iframe URI (2)
+var newFrame = document.createElement("iframe");
+newFrame.id = "badframe2";
+newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html";
+newFrame.addEventListener("load", function() { frameItem2 = "spoiled"; });
+document.body.appendChild(newFrame);
+
+// Try doing an XHR against a tracking domain (bug 1216793)
+function reqListener() {
+    xhrItem = "loaded";
+    loaded("xhr");
+}
+function transferFailed() {
+    xhrItem = "failed";
+    loaded("xhr");
+}
+function transferCanceled() {
+    xhrItem = "canceled";
+    loaded("xhr");
+}
+var oReq = new XMLHttpRequest();
+oReq.addEventListener("load", reqListener);
+oReq.addEventListener("error", transferFailed);
+oReq.addEventListener("abort", transferCanceled);
+oReq.open("GET", "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js");
+oReq.send();
+
+// Fetch from a tracking domain
+fetch("http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js").then(function(response) {
+    if (response.ok) {
+        fetchItem = "loaded";
+        loaded("fetch");
+    } else {
+        fetchItem = "badresponse";
+        loaded("fetch");
+    }
+ }).catch(function(error) {
+     fetchItem = "error";
+     loaded("fetch");
+});
+</script>
+
+The following should not be hidden:
+<div id="styleCheck">STYLE TEST</div>
+
+</body>
+</html>

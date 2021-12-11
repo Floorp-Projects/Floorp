@@ -1,0 +1,19 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_CHECK=0
+
+. "$topsrcdir/build/mozconfig.win-common"
+. "$topsrcdir/browser/config/mozconfigs/common"
+. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
+
+ac_add_options --enable-optimize
+ac_add_options --enable-debug
+
+# Save rust analysis (this requires unlocking the unstable features,
+# which is done in the taskcluster task definition via RUSTC_BOOTSTRAP)
+export RUSTFLAGS="-Zsave-analysis"
+
+ac_add_options --enable-clang-plugin
+ac_add_options --enable-mozsearch-plugin
+
+. "$topsrcdir/build/mozconfig.clang-cl"
+. "$topsrcdir/build/mozconfig.common.override"

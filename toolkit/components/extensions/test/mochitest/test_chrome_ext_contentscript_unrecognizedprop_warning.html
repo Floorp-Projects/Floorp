@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script unrecognized property on manifest</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest";
+
+add_task(async function test_contentscript() {
+  function background() {
+    browser.runtime.onMessage.addListener(async (msg) => {
+      if (msg == "loaded") {
+        // NOTE: we're removing the tab from here because doing a win.close()
+        // from the chrome test code is raising a "TypeError: can't access
+        // dead object" exception.
+        let tabs = await browser.tabs.query({active: true, currentWindow: true});
+        await browser.tabs.remove(tabs[0].id);
+
+        browser.test.notifyPass("content-script-loaded");
+      }
+    });
+  }
+
+  function contentScript() {
+    chrome.runtime.sendMessage("loaded");
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script.js"],
+          "run_at": "document_idle",
+          "unrecognized_property": "with-a-random-value",
+        },
+      ],
+    },
+    background,
+
+    files: {
+      "content_script.js": contentScript,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  SimpleTest.waitForExplicitFinish();
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{
+      message: /Reading manifest: Warning processing content_scripts.*.unrecognized_property: An unexpected property was found/,
+    }]);
+  });
+
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+
+  window.open(`${BASE}/file_sample.html`);
+
+  await Promise.all([extension.awaitFinish("content-script-loaded")]);
+  info("test page loaded");
+
+  await extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  await waitForConsole;
+});
+</script>
+
+</body>
+</html>

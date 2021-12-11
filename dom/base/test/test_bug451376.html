@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=451376
+-->
+<head>
+  <title>Test for Bug 451376</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body onload="doTest()">
+  <a target="_blank"
+     title="IAccessibleText::attributes provides incorrect info after a mis-spelled word"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=451376">Mozilla Bug 451376</a>
+  <p id="display"></p>
+  <div id="content" style="display:none">
+  </div>
+  <pre id="test">
+
+  <div id="area"><button>btn1</button>text <button>btn2</button></div>
+
+  <script class="testbody" type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    function testRange(aRangeID,
+                       aStartNode, aStartOffset,
+                       aEndNode, aEndOffset,
+                       aBeforeRangeNode, aBeforeRangeOffset,
+                       aInRangeNode, aInRangeOffset,
+                       aAfterRangeNode, aAfterRangeOffset)
+    {
+      var range = document.createRange();
+
+      range.setStart(aStartNode, aStartOffset);
+      range.setEnd(aEndNode, aEndOffset);
+
+      if (aBeforeRangeNode)
+        is(range.comparePoint(aBeforeRangeNode, aBeforeRangeOffset), -1,
+           "Wrong result for the point before the range '" + aRangeID + "'");
+      if (aInRangeNode)
+        is(range.comparePoint(aInRangeNode, aInRangeOffset), 0,
+           "Wrong result for the point inside the range '" + aRangeID + "'");
+      if (aAfterRangeNode)
+        is(range.comparePoint(aAfterRangeNode, aAfterRangeOffset), 1,
+           "Wrong result for the point after the range '" + aRangeID + "'");
+       // Comparare also start and end point
+       is(range.comparePoint(aStartNode, aStartOffset), 0,
+          "Wrong result for the start point '" + aRangeID + "'");
+       is(range.comparePoint(aEndNode, aEndOffset), 0,
+          "Wrong result for the end point '" + aRangeID + "'");
+       ok(range.isPointInRange(aStartNode, aStartOffset),
+          "Wrong result for the start point '" + aRangeID + "'");
+       ok(range.isPointInRange(aEndNode, aEndOffset),
+          "Wrong result for the end point '" + aRangeID + "'");
+    }
+
+    function doTest()
+    {
+      var area = document.getElementById("area");
+      var btn1 = area.firstChild;
+      var text = btn1.nextSibling;
+      var btn2 = area.lastChild;
+
+      testRange("range1", area, 0, area, 1,
+                null, 0,
+                area, 0,
+                area, 2);
+
+      testRange("range2", text, 2, text, 4,
+                text, 0,
+                text, 3,
+                text, 5);
+
+      testRange("range3", text, 4, area, 2,
+                text, 0,
+                text, 4,
+                area, 3);
+
+      SimpleTest.finish();
+    }
+  </script>
+</pre>
+</body>
+</html>
+

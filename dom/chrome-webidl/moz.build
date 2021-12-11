@@ -1,0 +1,99 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("ChannelWrapper.webidl"):
+    BUG_COMPONENT = ("WebExtensions", "Request Handling")
+
+with Files("Flex.webidl"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("HeapSnapshot.webidl"):
+    BUG_COMPONENT = ("DevTools", "Memory")
+
+with Files("InspectorUtils.webidl"):
+    BUG_COMPONENT = ("DevTools", "Inspector")
+
+with Files("MatchGlob.webidl"):
+    BUG_COMPONENT = ("WebExtensions", "General")
+
+with Files("MatchPattern.webidl"):
+    BUG_COMPONENT = ("WebExtensions", "General")
+
+with Files("WebExtension*.webidl"):
+    BUG_COMPONENT = ("WebExtensions", "General")
+
+with Files("Glean*.webidl"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+PREPROCESSED_WEBIDL_FILES = [
+    "ChromeUtils.webidl",
+]
+
+WEBIDL_FILES = [
+    "BrowsingContext.webidl",
+    "ChannelWrapper.webidl",
+    "ClonedErrorHolder.webidl",
+    "DebuggerNotification.webidl",
+    "DebuggerNotificationObserver.webidl",
+    "DebuggerUtils.webidl",
+    "DocumentL10n.webidl",
+    "DOMCollectedFrames.webidl",
+    "DominatorTree.webidl",
+    "Flex.webidl",
+    "Fluent.webidl",
+    "FrameLoader.webidl",
+    "HeapSnapshot.webidl",
+    "InspectorUtils.webidl",
+    "IOUtils.webidl",
+    "IteratorResult.webidl",
+    "JSActor.webidl",
+    "JSProcessActor.webidl",
+    "JSWindowActor.webidl",
+    "L10nOverlays.webidl",
+    "L10nRegistry.webidl",
+    "MatchGlob.webidl",
+    "MatchPattern.webidl",
+    "MediaController.webidl",
+    "MessageManager.webidl",
+    "MozDocumentObserver.webidl",
+    "MozSharedMap.webidl",
+    "MozStorageAsyncStatementParams.webidl",
+    "MozStorageStatementParams.webidl",
+    "MozStorageStatementRow.webidl",
+    "NetDashboard.webidl",
+    "PathUtils.webidl",
+    "PrecompiledScript.webidl",
+    "PromiseDebugging.webidl",
+    "SessionStoreUtils.webidl",
+    "StructuredCloneHolder.webidl",
+    "TelemetryStopwatch.webidl",
+    "UserInteraction.webidl",
+    "WebExtensionContentScript.webidl",
+    "WebExtensionPolicy.webidl",
+    "WindowGlobalActors.webidl",
+    "XULFrameElement.webidl",
+    "XULMenuElement.webidl",
+    "XULTextElement.webidl",
+    "XULTreeElement.webidl",
+]
+
+if CONFIG["MOZ_PLACES"]:
+    WEBIDL_FILES += [
+        "PlacesEvent.webidl",
+        "PlacesObservers.webidl",
+    ]
+
+WEBIDL_FILES += [
+    "Glean.webidl",
+    "GleanPings.webidl",
+]
+
+WEBIDL_FILES += [
+    "PrioEncoder.webidl",
+]

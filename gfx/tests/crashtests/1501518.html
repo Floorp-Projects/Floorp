@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!-- Add a few levels of blur to put as at an earlier render pass than the rest of the browser UI.
+     We then trigger a render pass with a larger border and a small rectangle. The border gets drawn
+     in this pass because it goes into the texture cache, and the rectangle gets drawn in this pass
+     because it gets an additional blur. A large item drawn to the texture cache in a pass where
+     the other objects are small will trigger the allocation of a render target that's smaller than
+     the large item, which is fine but triggered a panic before this bug was fixed.
+-->
+<div style="filter: blur(1px);">
+  <div style="filter: blur(1px);">
+    <div style="filter: blur(1px);">
+      <div style="background: green; height: 50px; width: 1000px; border: 10px dotted black;"></div>
+      <div style="background: blue; height: 50px; width: 50px; filter: blur(1px);"</div>
+    </div>
+  </div>
+</div>

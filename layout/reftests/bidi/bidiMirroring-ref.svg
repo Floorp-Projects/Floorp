@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="800" height="800" class="reftest-wait" onload="reference()">
+  <style>
+    @font-face { font-family: BitPattern; src: url(../fonts/BitPattern.woff); }
+  </style>
+  <script xlink:href="bidiMirroring.js"/>
+</svg>

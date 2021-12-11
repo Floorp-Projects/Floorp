@@ -1,0 +1,146 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test keyboard navigation/activation with the VirtualizedTree component.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree =
+      createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    function renderTree(props) {
+      const treeProps = {
+        ...TEST_TREE_INTERFACE,
+        onFocus: x => renderTree({ focused: x }),
+        ...props
+      };
+
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
+
+    const tree = renderTree();
+
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+
+    // Test Home key -----------------------------------------------------------
+
+    info("Press Home to move to the first node.");
+    renderTree({ focused: "L" });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "Home" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the Home key, A should be focused.");
+
+    info("Press Home again when already on first node.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "Home" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the Home key again, A should still be focused.");
+
+    // Test End key ------------------------------------------------------------
+
+    info("Press End to move to the last node.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "End" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:true",
+    ], "After the End key, O should be focused.");
+
+    info("Press End again when already on last node.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "End" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:true",
+    ], "After the End key again, O should still be focused.");
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

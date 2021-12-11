@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function jsfuzzer() {
+  document.execCommand("outdent", false);
+}
+function eventhandler2() {
+  document.execCommand("styleWithCSS", false, true);
+}
+function eventhandler3() {
+  document.execCommand("delete", false);
+  var element1 = document.getElementById("element1");
+  document.getSelection().setPosition(element1, 0);
+  var element1 = document.getElementById("element2");
+  element2.ownerDocument.execCommand("insertOrderedList", false);
+  var element1 = document.getElementById("element3");
+  element3.addEventListener("DOMSubtreeModified", eventhandler3);
+  document.activeElement.setAttribute("contenteditable", "true");
+}
+</script>
+</head>
+<body onload=jsfuzzer()>
+<i id="element1">
+<audio i src="x"></audio>
+<da id="element2">
+<br id="element3" style="">
+<svg onload="eventhandler3()">
+<animate onbegin="eventhandler2()">
+<body>
+</html>

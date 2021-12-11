@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Test for delaying window.print() before load</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<body>
+<script>
+let t = async_test("Delayed print before load");
+let beforePrintCalled = false;
+window.addEventListener("beforeprint", t.step_func(function() {
+  assert_false(beforePrintCalled, "Should only call beforeprint once");
+  beforePrintCalled = true;
+  assert_true(
+    !!document.getElementById("before-load"),
+    "Should show contents that get added before load"
+  );
+  assert_true(
+    !!document.getElementById("during-load"),
+    "Should show contents that get added during load"
+  );
+  setTimeout(function() { t.done(); }, 0);
+}));
+
+t.step(function() {
+  window.print();
+
+  let div = document.createElement("div");
+  div.id = "before-load";
+  document.body.appendChild(div);
+});
+
+window.addEventListener("load", t.step_func(function() {
+  window.print();
+
+  let div = document.createElement("div");
+  div.id = "during-load";
+  document.body.appendChild(div);
+}));
+</script>

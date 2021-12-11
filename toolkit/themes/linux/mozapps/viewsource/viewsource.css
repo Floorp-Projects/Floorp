@@ -1,0 +1,117 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#menu_savePage {
+  list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
+}
+
+#menu_printPreview {
+  list-style-image: url("moz-icon://stock/gtk-print-preview?size=menu");
+}
+
+#menu_print {
+  list-style-image: url("moz-icon://stock/gtk-print?size=menu");
+}
+
+#menu_close {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
+#menu_undo {
+  list-style-image: url("moz-icon://stock/gtk-undo?size=menu");
+}
+
+#menu_undo[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-undo?size=menu&state=disabled");
+}
+
+#menu_redo {
+  list-style-image: url("moz-icon://stock/gtk-redo?size=menu");
+}
+
+#menu_redo[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-redo?size=menu&state=disabled");
+}
+
+#menu_cut {
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
+}
+
+#menu_cut[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu&state=disabled");
+}
+
+#cMenu_copy,
+#menu_copy {
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
+}
+
+#menu_copy[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu&state=disabled");
+}
+
+#menu_paste {
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu");
+}
+
+#menu_paste[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu&state=disabled");
+}
+
+#menu_delete {
+  list-style-image: url("moz-icon://stock/gtk-delete?size=menu");
+}
+
+#menu_delete[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-delete?size=menu&state=disabled");
+}
+
+#cMenu_selectAll,
+#menu_selectAll {
+  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
+}
+
+#menu_find {
+  list-style-image: url("moz-icon://stock/gtk-find?size=menu");
+}
+
+#menu_find[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-find?size=menu&state=disabled");
+}
+
+#menu_goToLine {
+  list-style-image: url("moz-icon://stock/gtk-jump-to?size=menu");
+}
+
+#menu_goToLine[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-jump-to?size=menu&state=disabled");
+}
+
+#menu_reload {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
+}
+
+#menu_reload[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
+}
+
+#menu_textEnlarge {
+  list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
+}
+
+#menu_textReduce {
+  list-style-image: url("moz-icon://stock/gtk-zoom-out?size=menu");
+}
+
+#menu_textReset {
+  list-style-image: url("moz-icon://stock/gtk-zoom-100?size=menu");
+}
+
+#menu_openHelp {
+  list-style-image: url("moz-icon://stock/gtk-help?size=menu");
+}
+
+#aboutName {
+  list-style-image: url("moz-icon://stock/gtk-about?size=menu");
+}

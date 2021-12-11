@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+<title>WebGL2 test: Framebuffers</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<script>
+
+WebGLUtil.withWebGL2('c', function (gl) {
+  gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.COLOR]);
+  ok(gl.getError() == 0, 'invalidateFramebuffer');
+  gl.invalidateSubFramebuffer(gl.FRAMEBUFFER, [gl.COLOR], 0, 0, 64, 64);
+  ok(gl.getError() == 0, 'invalidateSubFramebuffer');
+  gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.GL_COLOR_ATTACHMENT0]);
+  ok(gl.getError() == gl.INVALID_ENUM, 'invalidateFrameBuffer should fail with GL_COLOR_ATTACHMENT on the default framebuffer');
+}, function () {
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>

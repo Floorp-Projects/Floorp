@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if textarea has a disabled fieldset ancestor, it is barred from
+             constraint validation and should not be affected by :invalid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function onloadHandler()
+    {
+      var fieldsets = document.getElementsByTagName("fieldset");
+      fieldsets[1].disabled = true;
+      fieldsets[0].disabled = false;
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onloadHandler();">
+    <fieldset disabled>
+      <fieldset>
+        <textarea class='notinvalid' required></textarea>
+      </fieldset>
+    </fieldset>
+  </body>
+</html>

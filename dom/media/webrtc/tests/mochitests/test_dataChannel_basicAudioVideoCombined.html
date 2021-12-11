@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "796891",
+    title: "Basic data channel audio/video connection"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addInitialDataChannel(test.chain);
+    test.setMediaConstraints([{audio: true, video: true}],
+                             [{audio: true, video: true}]);
+    return test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

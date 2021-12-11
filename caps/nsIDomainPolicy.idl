@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIDomainSet;
+
+%{ C++
+namespace mozilla {
+namespace dom {
+class DomainPolicyClone;
+}
+}
+%}
+
+[ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
+[ptr] native DomainPolicyCloneConstPtr(const mozilla::dom::DomainPolicyClone);
+
+/*
+ * When a domain policy is instantiated by invoking activateDomainPolicy() on
+ * nsIScriptSecurityManager, these domain sets are consulted when each new
+ * global is created (they have no effect on already-created globals).
+ * If javascript is globally enabled with |javascript.enabled|, the blocklists
+ * are consulted. If globally disabled, the allowlists are consulted. Lookups
+ * on blocklist and allowlist happen with contains(), and lookups on
+ * superBlocklist and superAllowlist happen with containsSuperDomain().
+ *
+ * When deactivate() is invoked, the domain sets are emptied, and the
+ * nsIDomainPolicy ceases to have any effect on the system.
+ */
+[scriptable, builtinclass, uuid(82b24a20-6701-4d40-a0f9-f5dc7321b555)]
+interface nsIDomainPolicy : nsISupports
+{
+    readonly attribute nsIDomainSet blocklist;
+    readonly attribute nsIDomainSet superBlocklist;
+    readonly attribute nsIDomainSet allowlist;
+    readonly attribute nsIDomainSet superAllowlist;
+
+    void deactivate();
+
+    [noscript, notxpcom] void cloneDomainPolicy(in DomainPolicyClonePtr aClone);
+    [noscript, notxpcom] void applyClone(in DomainPolicyCloneConstPtr aClone);
+};
+
+[scriptable, builtinclass, uuid(665c981b-0a0f-4229-ac06-a826e02d4f69)]
+interface nsIDomainSet : nsISupports
+{
+    /*
+     * Add a domain to the set. No-op if it already exists.
+     */
+    void add(in nsIURI aDomain);
+
+    /*
+     * Remove a domain from the set. No-op if it doesn't exist.
+     */
+    void remove(in nsIURI aDomain);
+
+    /*
+     * Remove all entries from the set.
+     */
+    void clear();
+
+    /*
+     * Returns true if a given domain is in the set.
+     */
+    bool contains(in nsIURI aDomain);
+
+    /*
+     * Returns true if a given domain is a subdomain of one of the entries in
+     * the set.
+     */
+    bool containsSuperDomain(in nsIURI aDomain);
+};

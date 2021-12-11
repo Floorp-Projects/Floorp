@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Percent track sizes</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1264607">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#valdef-grid-template-columns-percentage">
+  <link rel="match" href="grid-track-percent-sizing-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-family:monospace; font:1px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  border: 3px solid;
+  grid-template-columns: 60%;
+  grid-template-rows: 40%;
+  margin-right: 20px;
+  grid-auto-rows: 10px;
+  align-content: start;
+  justify-content: start;
+}
+.sz {
+  width: 100px;
+  height: 100px;
+}
+
+.t1 {
+  grid-template-columns: calc(10px + 60%);
+  grid-template-rows: calc(10px + 40%);
+}
+.t2 {
+  grid-template-columns: calc(60%);
+  grid-template-rows: calc(40%);
+}
+.t3 {
+  grid-template-columns: calc(0%);
+  grid-template-rows: calc(0%);
+}
+.t4 {
+  grid-template-columns: 0%;
+  grid-template-rows: 0%;
+}
+.t5 {
+  grid-template-columns: calc(10px + 0%);
+  grid-template-rows: calc(10px + 0%);
+}
+.t6 {
+  grid-template-columns: calc(0px + 60%);
+  grid-template-rows: calc(0px + 40%);
+}
+.t7 {
+  grid-template-columns: calc(0% + 60%);
+  grid-template-rows: calc(0% + 40%);
+}
+.t8 {
+  grid-template-columns: calc(0% + 0%);
+  grid-template-rows: calc(0% + 0%);
+}
+.t9 {
+  grid-template-columns: minmax(0, 60%);
+  grid-template-rows: minmax(0, 40%);
+}
+.tA {
+  grid-template-columns: calc(10px - 200%);
+  grid-template-rows: calc(10px - 99%);
+}
+.tB {
+  grid-template-columns: minmax(60%, 0);
+  grid-template-rows: minmax(40%, 0);
+}
+.tC {
+  grid-template-columns: calc(10px - 5%);
+  grid-template-rows: calc(10px - 5%);
+}
+.tD {
+  grid-template-columns: calc(10px - 40%);
+  grid-template-rows: calc(10px - 40%);
+}
+
+span {
+  background: grey;
+  min-width: 0;
+  min-height: 0;
+  line-height: 0;
+  align-self: start;
+  justify-self: start;
+}
+t {
+  display: inline-block;
+  width: 30px;
+  height: 5px;
+}
+x {
+  background: lime;
+  min-width: 0;
+  min-height: 0;
+}
+
+  </style>
+</head>
+<body>
+
+<div class="grid"   ><span><t></t></span><x></x></div>
+<div class="grid t1"><span><t></t></span><x></x></div>
+<div class="grid t2"><span><t></t></span><x></x></div>
+<div class="grid t3"><span><t></t></span><x></x></div>
+<div class="grid t4"><span><t></t></span><x></x></div>
+<div class="grid t5"><span><t></t></span><x></x></div>
+<div class="grid t6"><span><t></t></span><x></x></div>
+<div class="grid t7"><span><t></t></span><x></x></div>
+<div class="grid t8"><span><t></t></span><x></x></div>
+<div class="grid t9"><span><t></t></span><x></x></div>
+<div class="grid tA"><span><t></t></span><x></x></div>
+<div class="grid tB"><span><t></t></span><x></x></div>
+
+<br clear="all">
+
+<div class="grid sz"   ><span><t></t></span><x></x></div>
+<div class="grid sz t1"><span><t></t></span><x></x></div>
+<div class="grid sz t2"><span><t></t></span><x></x></div>
+<div class="grid sz t3"><span><t></t></span><x></x></div>
+<div class="grid sz t4"><span><t></t></span><x></x></div>
+<div class="grid sz t5"><span><t></t></span><x></x></div>
+<div class="grid sz t6"><span><t></t></span><x></x></div>
+<div class="grid sz t7"><span><t></t></span><x></x></div>
+<div class="grid sz t8"><span><t></t></span><x></x></div>
+<div class="grid sz t9"><span><t></t></span><x></x></div>
+<div class="grid sz tA"><span><t></t></span><x></x></div>
+<div class="grid sz tB"><span><t></t></span><x></x></div>
+<div class="grid sz tC"><span><t></t></span><x></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="grid-area:1/2;height:10px"></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="grid-area:2/2;height:10px"></x></div>
+
+
+</body>
+</html>

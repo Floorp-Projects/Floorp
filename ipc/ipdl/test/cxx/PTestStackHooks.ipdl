@@ -1,0 +1,26 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+intr protocol PTestStackHooks {
+child:
+    async Start();
+
+    // These tests are more fruitful running child->parent, because
+    // children can send |sync| messages
+parent:
+    async Async();
+    sync Sync();
+    intr Rpc();
+
+both:
+    intr StackFrame();
+
+parent:
+    async __delete__();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

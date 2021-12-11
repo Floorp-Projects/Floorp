@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <style>
+      #scroll {
+        height: 100px;
+      }
+      #contain {
+        height: 100px;
+        background-color: gray;
+      }
+      #sticky {
+        position: relative;
+        top: 10px;
+        height: 10px;
+        background-color: black;
+        z-index: 1;
+      }
+      #static {
+        position: relative;
+        bottom: 1px;
+        height: 10px;
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div id="contain">
+        <div id="sticky"></div>
+        <div id="static"></div>
+      </div>
+    </div>
+  </body>
+</html>

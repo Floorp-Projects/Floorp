@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=562433
+-->
+<head>
+  <title>Test for Bug 562433</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=562433">Mozilla Bug 562433</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 562433 **/
+
+var w = window.open("");
+
+// The new window's location.host and location.hostname must be the empty
+// string (instead of throwing an exception)
+
+is(w.location.host, "", 'w.location.host should be ""');
+is(w.location.hostname, "", 'w.location.hostname should be ""');
+
+w.close();
+
+</script>
+</pre>
+</body>
+</html>

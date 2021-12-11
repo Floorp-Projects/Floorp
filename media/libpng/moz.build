@@ -1,0 +1,78 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "ImageLib")
+
+EXPORTS += [
+    'png.h',
+    'pngconf.h',
+    'pnglibconf.h'
+]
+
+UNIFIED_SOURCES += [
+    'png.c',
+    'pngerror.c',
+    'pngget.c',
+    'pngmem.c',
+    'pngpread.c',
+    'pngread.c',
+    'pngrio.c',
+    'pngrtran.c',
+    'pngrutil.c',
+    'pngset.c',
+    'pngtrans.c',
+    'pngwio.c',
+    'pngwrite.c',
+    'pngwutil.c'
+]
+
+if CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
+    DEFINES['MOZ_PNG_USE_ARM_NEON'] = True
+    UNIFIED_SOURCES += [
+        'arm/arm_init.c',
+        'arm/filter_neon_intrinsics.c',
+        'arm/palette_neon_intrinsics.c'
+    ]
+
+    if CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += [
+            'arm/filter_neon.S'
+        ]
+
+if CONFIG['INTEL_ARCHITECTURE']:
+    DEFINES['MOZ_PNG_USE_INTEL_SSE'] = True
+    UNIFIED_SOURCES += [
+        'intel/filter_sse2_intrinsics.c',
+        'intel/intel_init.c'
+    ]
+
+if CONFIG['CPU_ARCH'] == 'mips':
+    DEFINES['MOZ_PNG_USE_MIPS_MSA'] = True
+    UNIFIED_SOURCES += [
+        'mips/filter_msa_intrinsics.c',
+        'mips/mips_init.c'
+    ]
+
+if CONFIG['HAVE_ALTIVEC']:
+    DEFINES['MOZ_PNG_USE_POWERPC'] = True
+    UNIFIED_SOURCES += [
+        'powerpc/filter_vsx_intrinsics.c',
+        'powerpc/powerpc_init.c'
+    ]
+
+if CONFIG['MOZ_TREE_FREETYPE']:
+    DEFINES['FT_CONFIG_OPTION_USE_PNG'] = True
+
+Library('mozpng')
+
+FINAL_LIBRARY = 'gkmedias'
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CFLAGS += ['-std=gnu89']

@@ -1,0 +1,64 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=259332
+-->
+<head>
+  <title>Test for Bug 259332</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=259332">Mozilla Bug 259332</a>
+<p id="display"></p>
+<div id="content">
+  <div id="a">a
+    <div id="a">a</div>
+    <input name="a" value="a">
+    <div id="b">b</div>
+    <input name="b" value="b">
+    <div id="c">c</div>
+  </div>
+  <input name="write">
+  <input name="write">
+  <input id="write">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 259332 **/
+
+list = document.all.a;
+ok(list.length == 3, "initial a length");
+
+blist = document.all.b;
+ok(document.all.b.length == 2, "initial b length");
+document.getElementById('b').id = 'a';
+ok(document.all.b.nodeName == "INPUT", "just one b");
+
+ok(blist.length == 1, "just one b");
+ok(list.length == 4, "one more a");
+
+newDiv = document.createElement('div');
+newDiv.id = 'a';
+newDiv.innerHTML = 'a';
+list[0].appendChild(newDiv);
+ok(list.length == 5, "two more a");
+
+ok(document.all.c.textContent == 'c', "one c");
+document.all.c.id = 'a';
+ok(!document.all.c, "no c");
+ok(list.length == 6, "three more a");
+
+ok(document.all.write.length == 3, "name is write");
+
+newDiv = document.createElement('div');
+newDiv.id = 'd';
+newDiv.innerHTML = 'd';
+list[0].appendChild(newDiv);
+ok(document.all.d.textContent == 'd', "new d");
+
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,1 @@
+|jit-test| --fast-warmup; --ion-warmup-threshold=0; --wasm-compiler=optimizing; include:wasm.js

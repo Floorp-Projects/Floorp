@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=642908
+-->
+<head>
+  <title>Test for Bug 642908</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="loaded();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=642908">Mozilla Bug 642908</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+document.write("\u003Cscript src='data:text/javascript,1;'>\u003C/script>");
+document.write("<noscript><img src='file_bug642908.sjs'></noscript>");
+
+function loaded() {
+  var s = document.createElement("script");
+  s.src = "file_bug642908.sjs?report=1";
+  document.body.appendChild(s);
+}
+
+</script>
+</pre>
+</body>
+</html>

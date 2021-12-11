@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>semitransparent-decoration-line</title>
+    <style>
+      * {
+         text-decoration-skip-ink: none;
+      }
+      .underline {
+        text-decoration: underline rgba(0,0,0,0.3);
+        font-size: 2em;
+      }
+      .overline {
+        text-decoration: overline rgba(0,0,0,0.3);
+        font-size: 2em;
+      }
+      .line-through {
+        text-decoration: line-through rgba(0,0,0,0.3);
+        font-size: 2em;
+      }
+      ::-moz-selection {
+        background-color: white;
+        color: black;
+      }
+    </style>
+    <script type="text/javascript" charset="utf-8">
+      function select() {
+        window.getSelection().removeAllRanges();
+        var elems = document.getElementsByTagName('p');
+        for (var i = 0; i < elems.length; ++i) {
+          var range = document.createRange();
+          range.setStart(elems[i].firstChild, 2);
+          range.setEnd(elems[i].firstChild, 9);
+          window.getSelection().addRange(range);
+        }
+      }
+    </script>
+  </head>
+  <body onload="select()">
+    <p class="underline">Lorem ipsum dolor sit amet</p>
+    <p class="overline">Lorem ipsum dolor sit amet</p>
+    <p class="line-through">Lorem ipsum dolor sit amet</p>
+  </body>
+</html>

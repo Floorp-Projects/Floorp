@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test referrer header not affecting document.referrer for current document for Bug 1601743</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!--
+  Testing that navigating to a document with Referrer-Policy:same-origin doesn't affect
+  the value of document.referrer for that document.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1601743
+  -->
+
+  <script type="application/javascript">
+    function getExpectedReferrer(referrer) {
+      let defaultPolicy = SpecialPowers.getIntPref("network.http.referer.defaultPolicy");
+      SimpleTest.ok([2, 3].indexOf(defaultPolicy) > -1, "default referrer policy should be either strict-origin-when-cross-origin(2) or no-referrer-when-downgrade(3)");
+      if (defaultPolicy == 2) {
+        return referrer.match(/https?:\/\/[^\/]+\/?/i)[0];
+      }
+      return referrer;
+    }
+    const IFRAME_URL = `${location.origin}/tests/dom/security/test/referrer-policy/referrer_header_current_document_iframe.html`;
+
+    SimpleTest.waitForExplicitFinish();
+    window.addEventListener("message", (event) => {
+      SimpleTest.is(event.data, getExpectedReferrer(IFRAME_URL), "Must have the original iframe as the referrer!");
+      SimpleTest.finish();
+    }, { once: true });
+  </script>
+</head>
+
+<body>
+<iframe src="referrer_header_current_document_iframe.html"></iframe>
+</body>

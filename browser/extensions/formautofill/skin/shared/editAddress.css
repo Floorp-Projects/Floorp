@@ -1,0 +1,122 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.editAddressForm {
+  display: flex;
+  flex-wrap: wrap;
+  /* Use space-between so --grid-column-row-gap is in between the elements on a row */
+  justify-content: space-between;
+}
+
+dialog:not([subdialog]) .editAddressForm {
+  margin-inline: calc(var(--grid-column-row-gap) / -2);
+}
+
+.editAddressForm .container {
+  /* !important is needed to override preferences.css's generic label rule. */
+  margin-top: var(--grid-column-row-gap) !important;
+  margin-inline: calc(var(--grid-column-row-gap) / 2);
+  flex-grow: 1;
+}
+
+#country-container {
+  /* The country dropdown has a different intrinsic (content) width than the
+     other fields which are <input>. */
+  flex-basis: calc(50% - var(--grid-column-row-gap));
+  flex-grow: 0;
+  /* Country names can be longer than 50% which ruins the symmetry in the grid. */
+  max-width: calc(50% - var(--grid-column-row-gap));
+}
+
+
+/* Begin name field rules */
+
+#name-container input {
+  /* Override the default @size="20" on <input>, which acts like a min-width, not
+   * allowing the fields to shrink with flexbox as small as they need to to match
+   * the other rows. This is noticeable on narrow viewports e.g. in the
+   * PaymentRequest dialog on Linux due to the larger font-size. */
+  width: 0;
+}
+
+/* When there is focus within any of the name fields, the border of the inputs
+ * should be the focused color, except for inner ones which get overriden below. */
+#name-container:focus-within input {
+  border-color: var(--in-content-focus-outline-color);
+}
+
+/* Invalid name fields should show the error outline instead of the focus border */
+#name-container:focus-within input:-moz-ui-invalid {
+  border-color: transparent;
+}
+
+#given-name-container,
+#additional-name-container,
+#family-name-container {
+  display: flex;
+  /* The 3 pieces inside the name container don't have the .container class so
+     need to set flex-grow themselves. See `.editAddressForm .container` */
+  flex-grow: 1;
+  /* Remove the bottom margin from the name containers so that the outer
+     #name-container provides the margin on the outside */
+  margin-bottom: 0 !important;
+  margin-inline: 0;
+}
+
+/* The name fields are placed adjacent to each other.
+   Remove the border-radius on adjacent fields. */
+#given-name:dir(ltr),
+#family-name:dir(rtl) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right-width: 0;
+}
+
+#given-name:dir(rtl),
+#family-name:dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-width: 0;
+}
+
+#additional-name {
+  border-radius: 0;
+  /* This provides the inner separators between the fields and should never
+   * change to the focused color. */
+  border-inline-color: var(--in-content-box-border-color) !important;
+}
+
+/* Since the name fields are adjacent, there isn't room for the -moz-ui-invalid
+   box-shadow so raise invalid name fields and their labels above the siblings
+   so the shadow is shown around all 4 sides. */
+#name-container input:-moz-ui-invalid,
+#name-container input:-moz-ui-invalid ~ .label-text {
+  z-index: 1;
+}
+
+/* End name field rules */
+
+#name-container,
+#street-address-container {
+  /* Name and street address are always full-width */
+  flex: 0 1 100%;
+}
+
+#street-address {
+  resize: vertical;
+}
+
+#country-warning-message {
+  box-sizing: border-box;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  opacity: .5;
+  padding-inline-start: 1em;
+}
+
+dialog:not([subdialog]) #country-warning-message {
+  display: none;
+}

@@ -1,0 +1,28 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXTRA_JS_MODULES += [
+    "BrowserSearchTelemetry.jsm",
+    "SearchOneOffs.jsm",
+    "SearchSERPTelemetry.jsm",
+    "SearchUIUtils.jsm",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+    "test/browser/google_codes/browser.ini",
+]
+
+MARIONETTE_LAYOUT_MANIFESTS += ["test/marionette/manifest.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+
+JAR_MANIFESTS += ["jar.mn"]
+
+SPHINX_TREES["/browser/search"] = "docs"
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Search")

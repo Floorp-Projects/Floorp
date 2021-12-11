@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="200px" height="200px"
+     class="reftest-wait"
+     onload="go()">
+  <style>
+    rect { stroke: blue; stroke-width: 5%; shape-rendering: crispEdges; }
+  </style>
+  <script xlink:href="../smil-grid.js" type="text/javascript"/>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    function go() {
+      var animAttrHash = { "attributeName" : "stroke-width",
+                           "from"          : "5%",
+                           "by"            : "10%" };
+      testAnimatedRectGrid("animate", [animAttrHash]);
+    }
+  </script>
+</svg>

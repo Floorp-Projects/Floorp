@@ -1,0 +1,206 @@
+.icon {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: $icon-size;
+  -moz-context-properties: fill;
+  display: inline-block;
+  color: var(--newtab-text-primary-color);
+  fill: currentColor;
+  height: $icon-size;
+  vertical-align: middle;
+  width: $icon-size;
+
+  // helper classes
+  &.icon-spacer {
+    margin-inline-end: 8px;
+  }
+
+  &.icon-small-spacer {
+    margin-inline-end: 6px;
+  }
+
+  &.icon-button-style {
+    fill: var(--newtab-text-secondary-color);
+    border: 0;
+
+    &:focus,
+    &:hover {
+      fill: var(--newtab-text-primary-color);
+    }
+  }
+
+  // icon images
+  &.icon-bookmark-added {
+    background-image: url('chrome://browser/skin/bookmark.svg');
+  }
+
+  &.icon-bookmark-hollow {
+    background-image: url('chrome://browser/skin/bookmark-hollow.svg');
+  }
+
+  &.icon-clear-input {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-cancel-16.svg');
+  }
+
+  &.icon-delete {
+    background-image: url('chrome://global/skin/icons/delete.svg');
+  }
+
+  &.icon-search {
+    background-image: url('chrome://global/skin/icons/search-glass.svg');
+  }
+
+  &.icon-modal-delete {
+    flex-shrink: 0;
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-modal-delete-32.svg');
+    background-size: $larger-icon-size;
+    height: $larger-icon-size;
+    width: $larger-icon-size;
+  }
+
+  &.icon-mail {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-mail-16.svg');
+  }
+
+  &.icon-dismiss {
+    background-image: url('chrome://global/skin/icons/close.svg');
+  }
+
+  &.icon-info {
+    background-image: url('chrome://global/skin/icons/info.svg');
+  }
+
+  &.icon-new-window {
+    @include flip-icon;
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-newWindow-16.svg');
+  }
+
+  &.icon-new-window-private {
+    background-image: url('chrome://browser/skin/privateBrowsing.svg');
+  }
+
+  &.icon-settings {
+    background-image: url('chrome://global/skin/icons/settings.svg');
+  }
+
+  &.icon-pin {
+    @include flip-icon;
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-pin-16.svg');
+  }
+
+  &.icon-unpin {
+    @include flip-icon;
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-unpin-16.svg');
+  }
+
+  &.icon-edit {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg');
+  }
+
+  &.icon-pocket {
+    background-image: url('chrome://global/skin/icons/pocket.svg');
+  }
+
+  &.icon-pocket-save {
+    background-image: url('chrome://global/skin/icons/pocket-outline.svg');
+  }
+
+  &.icon-pocket-delete {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-pocket-delete-16.svg');
+  }
+
+  &.icon-pocket-archive {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-pocket-archive-16.svg');
+  }
+
+  &.icon-history-item {
+    background-image: url('chrome://browser/skin/history.svg');
+  }
+
+  &.icon-trending {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-trending-16.svg');
+    transform: translateY(2px); // trending bolt is visually top heavy
+  }
+
+  &.icon-now {
+    background-image: url('chrome://browser/skin/history.svg');
+  }
+
+  &.icon-topsites {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-topsites-16.svg');
+  }
+
+  &.icon-pin-small {
+    @include flip-icon;
+    background-image: url('chrome://browser/skin/pin-12.svg');
+    background-size: $smaller-icon-size;
+    height: $smaller-icon-size;
+    width: $smaller-icon-size;
+  }
+
+  &.icon-check {
+    background-image: url('chrome://global/skin/icons/check.svg');
+  }
+
+  &.icon-download {
+    background-image: url('chrome://browser/skin/downloads/downloads.svg');
+  }
+
+  &.icon-copy {
+    background-image: url('chrome://global/skin/icons/edit-copy.svg');
+  }
+
+  &.icon-open-file {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-open-file-16.svg');
+  }
+
+  &.icon-webextension {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg');
+  }
+
+  &.icon-highlights {
+    background-image: url('chrome://global/skin/icons/highlights.svg');
+  }
+
+  &.icon-arrowhead-down {
+    background-image: url('chrome://global/skin/icons/arrow-down.svg');
+  }
+
+  &.icon-arrowhead-down-small {
+    background-image: url('chrome://global/skin/icons/arrow-down-12.svg');
+    background-size: $smaller-icon-size;
+    height: $smaller-icon-size;
+    width: $smaller-icon-size;
+  }
+
+  &.icon-arrowhead-forward-small {
+    background-image: url('chrome://global/skin/icons/arrow-right-12.svg');
+    background-size: $smaller-icon-size;
+    height: $smaller-icon-size;
+    width: $smaller-icon-size;
+
+    &:dir(rtl) {
+      background-image: url('chrome://global/skin/icons/arrow-left-12.svg');
+    }
+  }
+
+  &.icon-arrowhead-up {
+    background-image: url('chrome://global/skin/icons/arrow-up.svg');
+  }
+
+  &.icon-add {
+    background-image: url('chrome://global/skin/icons/plus.svg');
+  }
+
+  &.icon-minimize {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-minimize-16.svg');
+  }
+
+  &.icon-maximize {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-maximize-16.svg');
+  }
+
+  &.icon-arrow {
+    background-image: url('chrome://global/skin/icons/arrow-right-12.svg');
+  }
+}

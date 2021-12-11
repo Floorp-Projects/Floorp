@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=771429
+-->
+<window title="Mozilla Bug 771429"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=771429"
+     target="_blank">Mozilla Bug 771429</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+      /** Test for Bug 771429 **/
+      function f() {}
+      function g() { return this; }
+      function h() { "use strict"; return this; }
+      function ctor() { this.x = 1; }
+      f.x = 2;
+      f.g = g;
+      function test(freshCompartment) {
+        var s = new Cu.Sandbox(window, {
+          sandboxPrototype: window,
+          freshCompartment: freshCompartment,
+        });
+        try {
+          is(Cu.evalInSandbox('g()', s), window,
+             "Should get window as this object of non-strict global function");
+          is(Cu.evalInSandbox('h()', s), undefined,
+             "Should get undefined as this object of strict global function");
+          is(Cu.evalInSandbox('f.x', s), 2,
+             "Should have gotten the right thing back");
+          if (freshCompartment) {
+            is(Cu.evalInSandbox('f.g()', s), f,
+               "Should have the right function object");
+          } else {
+            // In the same-compartment case we don't go through a compartment
+            // boundary so when we call f.g() we don't unwrap the "callable
+            // proxy" around f and the test above fails. We accept this slight
+            // difference in behavior and assert a weaker invariant.
+            is(Cu.evalInSandbox('f.g()', s).toString(), f.toString(),
+               "Should have the right function object");
+          }
+          is(Cu.evalInSandbox('var x = { z: 7 }; g.call(x).z', s), 7,
+             "Should not rebind calls that are already bound");
+          // And test what happens when we use the normal Function.prototype.call
+          // on g instead of whatever our proxies happen to return.
+          is(Cu.evalInSandbox('var x = { z: 7 }; Function.prototype.call.call(g, x).z', s), 7,
+             "Should not rebind calls that are already bound");
+          is(Cu.evalInSandbox('new ctor();', s).x, 1,
+             "Should get a properly constructed object out of the sandbox");
+        } catch (e) {
+          ok(false, "Should not get an exception: " + e);
+        }
+      }
+      test(false);
+      test(true);
+  ]]>
+  </script>
+</window>

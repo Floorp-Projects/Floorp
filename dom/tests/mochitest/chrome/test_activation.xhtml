@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="data:text/css,
+
+%23box {
+  background: blue;
+}
+
+%23box:-moz-window-inactive {
+  background: cyan;
+}
+
+" type="text/css"?>
+<!--
+  Test for the :-moz-window-inactive pseudoclass
+  -->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        sizemode="fullscreen">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<box id="box" height="100"/>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+newwindow = window.browsingContext.topChromeWindow.openDialog("window_activation.xhtml", "_blank","chrome,width=300,height=200", window);
+
+function complete()
+{
+  newwindow.close();
+  SimpleTest.finish();
+}
+
+</script>
+
+
+<body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+</window>

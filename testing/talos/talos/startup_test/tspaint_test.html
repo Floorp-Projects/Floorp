@@ -1,0 +1,62 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<meta charset="utf-8">
+<!-- Pick off begin time as a cgi argument and print it out -->
+<!-- call this with an arg, e.g. file://foo/startup-test.html?begin=12345678 -->
+<!-- In-line this to avoid compilation. -->
+<script>
+window.onerror = (message, source, lineno) => {
+  dump(`TEST-UNEXPECTED-FAIL | tspaint_test | ${source}, line ${lineno}: ${message}\n`);
+};
+</script>
+<script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosPowersContent.js"></script>
+<script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosContentProfiler.js"></script>
+<script language="javascript" type="text/javascript">
+
+async function painted() {
+  window.removeEventListener("MozAfterPaint", painted, true);
+
+  await TalosPowers.loadPromise;
+
+  await TalosContentProfiler.pause();
+  await TalosContentProfiler.initFromURLQueryParams(location.search);
+  await TalosContentProfiler.finishStartupProfiling();
+
+  let startupInfo = await TalosPowersContent.getStartupInfo();
+
+  let startupTime = startupInfo.firstPaint - startupInfo.process;
+
+  document.body.textContent = "Startup time = " + startupTime + " ms";
+  if (window.dump) {
+    dump("__start_report" + startupTime + "__end_report\n\n");
+  }
+  dumpConsoleAndQuit();
+}
+
+function failed() {
+  if (window.dump) {
+    dump("BROWSER FAILED TO GENERATE MOZAFTERPAINT IN 5 SECONDS\n");
+  }
+  dumpConsoleAndQuit();
+}
+
+function dumpConsoleAndQuit() {
+  TalosPowersContent.dumpConsole();
+
+  // Close window asynchronously, there might still be startup operations that still need to run
+  window.setTimeout(function() {
+    if (window.dump) {
+      dump("__startTimestamp" + window.performance.now() + "__endTimestamp\n");
+    }
+    TalosPowersContent.goQuitApplication();
+  }, 0);
+}
+
+window.addEventListener("MozAfterPaint", painted, true);
+setTimeout(failed, 5000);
+
+</script>
+<body></body>
+</html>

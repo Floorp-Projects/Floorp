@@ -1,0 +1,51 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+=head1 NAME
+
+ mpi-test - automated test program for MPI library
+
+=head1 SYNOPSIS
+
+ mpi-test <suite-name> [quiet]
+ mpi-test list
+ mpi-test help
+
+=head1 DESCRIPTION
+
+The B<mpi-test> program is a general unit test driver for the MPI
+library.  It is used to verify that the library works as it is
+supposed to on your architecture.  As with most such things, passing
+all the tests in B<mpi-test> does not guarantee the code is correct,
+but if any of them fail, there are certainly problems.
+
+Each major function of the library can be tested individually.  For a
+list of the test suites understood by B<mpi-test>, run it with the
+I<list> command line option:
+
+ mpi-test list
+
+This will display a list of the available test suites and a brief
+synopsis of what each one does.  For a brief overview of this
+document, run B<mpi-test> I<help>.
+
+B<mpi-test> exits with a zero status if the selected test succeeds, or
+a nonzero status if it fails.  If a I<suite-name> which is not
+understood by B<mpi-test> is given, a diagnostic is printed to the
+standard error, and the program exits with a result code of 2.  If a
+test fails, the result code will be 1, and a diagnostic is ordinarily
+printed to the standard error.  However, if the I<quiet> option is
+provided, these diagnostics will be suppressed.
+
+=head1 RESTRICTIONS
+
+Only a few canned test cases are provided.  The solutions have been
+verified using the GNU bc(1) program, so bugs there may cause problems
+here; however, this is very unlikely, so if a test fails, it is almost
+certainly my fault, not bc(1)'s.
+
+=head1 AUTHOR
+
+ Michael J. Fromberger <sting@linguist.dartmouth.edu>
+ Thayer School of Engineering, Hanover, New Hampshire, USA

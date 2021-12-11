@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test that setTextContents only sends one DOM input event</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript">
+    async function doTest() {
+      let input = getAccessible("input", [nsIAccessibleEditableText]);
+      let eventPromise = new Promise(resolve =>
+        document.getElementById("input").addEventListener(
+          "input", resolve, { once: true }));
+
+      input.setTextContents("goodbye");
+      let inputEvent = await eventPromise;
+      is(inputEvent.target.value, "goodbye", "input set to new value.");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="HyperTextAccessible::ReplaceText causes two distinct DOM 'input' events"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1490840">Mozilla Bug 1490840</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <input id="input" value="hello">
+</body>
+</html>

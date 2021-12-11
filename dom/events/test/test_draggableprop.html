@@ -1,0 +1,89 @@
+<html>
+<head>
+  <title>Tests for the draggable property on HTML elements</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <script type="application/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>      
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<span id="elem1">One</span>
+<span id="elem2" draggable="true">Two</span>
+<span id="elem3" draggable="">Three</span>
+<span id="elem4" draggable="false">Four</span>
+<span id="elem5" draggable="other">Five</span>
+
+<img id="img1" src="../happy.png">
+<img id="img2" src="../happy.png" draggable="true">
+<img id="img3" src="../happy.png" draggable="">
+<img id="img4" src="../happy.png" draggable="false">
+<img id="img5" src="../happy.png" draggable="other">
+
+<a id="a1">One</a>
+<a id="a2" draggable="true">Two</a>
+<a id="a3" draggable="">Three</a>
+<a id="a4" draggable="false">Four</a>
+<a id="a5" draggable="other">Five</a>
+
+<a id="ahref1" href="http://www.mozilla.org">One</a>
+<a id="ahref2" href="http://www.mozilla.org" draggable="true">Two</a>
+<a id="ahref3" href="http://www.mozilla.org" draggable="">Three</a>
+<a id="ahref4" href="http://www.mozilla.org" draggable="false">Four</a>
+<a id="ahref5" href="http://www.mozilla.org" draggable="other">Five</a>
+
+<script>
+function check()
+{
+  try {
+    checkElements(1, false, true, false, true);
+    checkElements(2, true, true, true, true);
+    checkElements(3, false, true, false, true);
+    checkElements(4, false, false, false, false);
+    checkElements(5, false, true, false, true);
+  }
+  catch (ex) {
+    is("script error", ex, "fail");
+  }
+}
+
+function checkElements(idx, estate, istate, astate, ahrefstate)
+{
+  checkElement("elem" + idx, estate, false);
+  checkElement("img" + idx, istate, true);
+  checkElement("a" + idx, astate, false);
+  checkElement("ahref" + idx, ahrefstate, true);
+}
+
+function checkElement(elemid, state, statedef)
+{
+  var elem = document.getElementById(elemid);
+
+  is(elem.draggable, state, elemid + "-initial");
+  elem.draggable = true;
+  is(elem.draggable, true, elemid + "-true");
+  elem.draggable = false;
+  is(elem.draggable, false, elemid + "-false");
+
+  elem.setAttribute("draggable", "true");
+  is(elem.draggable, true, elemid + "-attr-true");
+  elem.setAttribute("draggable", "false");
+  is(elem.draggable, false, elemid + "-attr-false");
+  elem.setAttribute("draggable", "other");
+  is(elem.draggable, statedef, elemid + "-attr-other");
+  elem.setAttribute("draggable", "");
+  is(elem.draggable, statedef, elemid + "-attr-empty");
+  elem.removeAttribute("draggable");
+  is(elem.draggable, statedef, elemid + "-attr-removed");
+}
+
+check();
+
+</script>
+
+</body>
+</html>
+
+

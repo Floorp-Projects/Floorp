@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 965872 - Storage inspector actor with cookies, local storage and session storage.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector blank html for tests</title>
+</head>
+<body>
+<script type="application/javascript">
+"use strict";
+window.addCookie = function(name, value, path, domain, expires, secure) {
+  let cookieString = name + "=" + value + ";";
+  if (path) {
+    cookieString += "path=" + path + ";";
+  }
+  if (domain) {
+    cookieString += "domain=" + domain + ";";
+  }
+  if (expires) {
+    cookieString += "expires=" + expires + ";";
+  }
+  if (secure) {
+    cookieString += "secure=true;";
+  }
+  document.cookie = cookieString;
+};
+
+window.removeCookie = function(name) {
+  document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+};
+
+window.clearLocalAndSessionStores = function() {
+  localStorage.clear();
+  sessionStorage.clear();
+};
+
+window.clearCookies = function() {
+  const cookies = document.cookie;
+  for (const cookie of cookies.split(";")) {
+    window.removeCookie(cookie.split("=")[0]);
+  }
+};
+</script>
+</body>
+</html>

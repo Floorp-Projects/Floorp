@@ -1,0 +1,34 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../../../..
+
+PRIVATE_EXPORTS = \
+	pkix_pl_aiamgr.h \
+	pkix_pl_colcertstore.h \
+	pkix_pl_httpcertstore.h \
+	pkix_pl_httpdefaultclient.h \
+	$(LDAP_HEADERS) \
+	pkix_pl_nsscontext.h \
+	pkix_pl_pk11certstore.h \
+	pkix_pl_socket.h \
+	$(NULL)
+
+MODULE = nss
+
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" -DSHLIB_VERSION=\"$(LIBRARY_VERSION)\"
+
+CSRCS = \
+	pkix_pl_aiamgr.c \
+	pkix_pl_colcertstore.c \
+	pkix_pl_httpcertstore.c \
+	pkix_pl_httpdefaultclient.c \
+	$(LDAP_CSRCS) \
+	pkix_pl_nsscontext.c \
+	pkix_pl_pk11certstore.c \
+	pkix_pl_socket.c \
+	$(NULL)
+
+LIBRARY_NAME = pkixmodule
+SHARED_LIBRARY = $(NULL)

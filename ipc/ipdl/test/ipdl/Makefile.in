@@ -1,0 +1,17 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/rules.mk
+
+OKTESTS := $(wildcard $(srcdir)/ok/*.ipdl) $(wildcard $(srcdir)/ok/*.ipdlh)
+ERRORTESTS := $(wildcard $(srcdir)/error/*.ipdl) $(wildcard $(srcdir)/error/*.ipdlh)
+
+check::
+	@$(PYTHON3) $(srcdir)/runtests.py  \
+		$(srcdir)/ok $(srcdir)/error  \
+		$(PYTHON3) $(topsrcdir)/ipc/ipdl/ipdl.py  \
+		--sync-msg-list=$(srcdir)/sync-messages.ini \
+		--msg-metadata=$(srcdir)/message-metadata.ini \
+		OKTESTS $(OKTESTS)  \
+		ERRORTESTS $(ERRORTESTS)

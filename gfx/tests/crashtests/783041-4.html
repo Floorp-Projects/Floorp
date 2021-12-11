@@ -1,0 +1,82 @@
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+  <head>
+    <style>
+      #el0 { 
+        height: 200px ! important; 
+        padding: 4px; 
+        white-space: pre-wrap; 
+        margin-top: 0px; 
+        display: table;
+        font-size:.92em 
+      }
+
+      #el0:before { 
+        content: counter(c, hiragana-iroha); 
+      } 
+
+      #el3 { 
+        line-height: 3px; 
+        text-shadow: 0px 5px 5px, 0px -20px 10px;
+        display: table-row-group; 
+        transform: translate3d(-30px, -300px, 0px); 
+      }
+
+      #el3:before { 
+        display: inline-block;
+      }
+
+      #el5 { 
+        height:1em;
+        display:block; 
+      } 
+
+      #el5:before {
+        display: list-item;
+      }
+
+      #el7 {
+        font-size:.92em 
+      } 
+      .c4 { 
+        margin: 1em;
+        padding:0.4em 0.5em 0.4em 2.5em; 
+        counter-increment: c; 
+      } 
+
+      .c4:after {
+        margin: 2px; 
+        display: inline-block; 
+      } 
+    </style>
+    <script>
+      onload = function() {
+        el7=document.createElement('iframe')
+        el7.setAttribute('id', 'el7')
+        document.body.appendChild(el7)
+
+        el0=document.createElement('ul')
+        el0.setAttribute('id','el0')
+        document.body.appendChild(el0)
+
+
+        el3=document.createElement('q')
+        el3.setAttribute('id','el3')
+        el0.appendChild(el3)
+
+        el5=document.createElement('q')
+        el5.setAttribute('id','el5')
+        el3.appendChild(el5)
+
+        el0.appendChild(document.createTextNode('A'))
+
+        el0.setAttribute('class', 'c4'); 
+        el7.setAttribute('class', 'c4'); 
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

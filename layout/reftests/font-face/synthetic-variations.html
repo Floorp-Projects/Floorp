@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html><head>
+
+
+<title>@font-face and synthetic rendering</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+<style type="text/css">
+
+@font-face {
+  font-family: test1;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: test2;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: test3;
+  src: url(../fonts/mplus/mplus-1p-thin.ttf);
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: test3;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+  font-weight: 300;
+}
+
+body {
+  margin: 50px;
+  font-family: sans-serif;
+  font-size: 18pt;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+.w1 { font-weight: 100; }
+.w2 { font-weight: 200; }
+.w3 { font-weight: 300; }
+.w4 { font-weight: 400; }
+.w5 { font-weight: 500; }
+.w6 { font-weight: 600; }
+.w7 { font-weight: 700; }
+.w8 { font-weight: 800; }
+.w9 { font-weight: 900; }
+
+#test1 { font-family: test1, Times New Roman, Times, Bitstream Vera, serif; }
+#test2 { font-family: test2, Times New Roman, Times, Bitstream Vera, serif; }
+#test3 { font-family: test3, Times New Roman, Times, Bitstream Vera, serif; }
+
+th, td {
+  font-weight: inherit;
+  padding-left: 1em;
+  padding-right: 1em;
+  text-align: left;
+}
+
+em { font-style: italic; }
+
+#test1 .w1 td, #test1 .w1 td span { font-weight: bolder; }
+#test1 .w2 td, #test1 .w2 td span { font-weight: bolder; }
+#test1 .w3 td, #test1 .w3 td span { font-weight: bolder; }
+#test1 .w4 td { font-weight: bolder; }
+#test1 .w5 td { font-weight: bolder; }
+#test1 .w6 th { font-weight: lighter; }
+#test1 .w7 th { font-weight: lighter; }
+#test1 .w8 th, #test1 .w8 th span { font-weight: lighter; }
+#test1 .w9 th, #test1 .w9 th span { font-weight: lighter; }
+
+#test2 .w1 td, #test2 .w1 td span { font-weight: bolder; }
+#test2 .w2 td, #test2 .w2 td span { font-weight: bolder; }
+#test2 .w3 td, #test2 .w3 td span { font-weight: bolder; }
+#test2 .w4 td { font-weight: bolder; }
+#test2 .w5 td { font-weight: bolder; }
+#test2 .w6 th { font-weight: lighter; }
+#test2 .w7 th { font-weight: lighter; }
+#test2 .w8 th, #test2 .w8 th span { font-weight: lighter; }
+#test2 .w9 th, #test2 .w9 th span { font-weight: lighter; }
+
+#test3 .w1 th, #test3 .w1 td, #test3 .w1 td span { font-weight: bolder; }
+#test3 .w2 th, #test3 .w2 td, #test3 .w2 td span { font-weight: bolder; }
+#test3 .w3 th, #test3 .w3 td, #test3 .w3 td span { font-weight: bolder; }
+#test3 .w4 td { font-weight: bolder; }
+#test3 .w5 td { font-weight: bolder; }
+#test3 .w6 th { font-weight: lighter; }
+#test3 .w7 th { font-weight: lighter; }
+#test3 .w8 td, #test3 .w8 th, #test3 .w8 th span { font-weight: lighter; }
+#test3 .w9 td, #test3 .w9 th, #test3 .w9 th span { font-weight: lighter; }
+
+</style>
+
+   
+</head><body>
+
+<p>All lines should appear in a sans-serif face with proper bolding</p>
+
+<table id="test1">
+<tr class="w1"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w2"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w3"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w4"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w5"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w6"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w7"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w8"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w9"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+</table>
+
+<table id="test2">
+<tr class="w9"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w8"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w7"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w6"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w5"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w4"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w3"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w2"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w1"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+</table>
+
+<table id="test3">
+<tr class="w1"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w2"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w3"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w4"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w5"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w6"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w7"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w8"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w9"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+</table>
+
+</body></html>

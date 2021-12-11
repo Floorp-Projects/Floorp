@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <title>Testing for x-y |points| attribute</title>
+  
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=619630 -->
+  
+  <rect fill="lime" height="100%" width="100%"/>
+  <rect width="100" height="100" fill="red"/>
+
+  <!-- this should render -->
+  <polygon points="-10-110 -10-10 -110-10 -110-110" fill="lime"
+    transform="translate(110,110)"/>
+
+  <!-- this should not -->
+  <polygon fill="red" transform="translate(110,110)"
+    points="-110-10-110-110-10-110-10-10"/>
+</svg>

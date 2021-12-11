@@ -1,0 +1,27 @@
+<!doctype HTML>
+<html>
+  <head>
+    <title>background-clip: text</title>
+    <style>
+      div.out {
+        width: 500px;
+        height: 300px;
+        margin: 0px;
+        background-image: linear-gradient(green, green);
+        background-clip: text;
+        color: transparent;
+        font-size: 100px;
+        font-family: serif;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
+  </head>
+  <body style="margin: 0px;">
+    <div class="out">
+      <div style="display:inline-block;">
+        <p style="display:inline-block;">TEXT clip</p>
+      </div>
+      <div style="display:inline-block; width:0px; height:200px;"/>
+    </div>
+  </body>
+</html>

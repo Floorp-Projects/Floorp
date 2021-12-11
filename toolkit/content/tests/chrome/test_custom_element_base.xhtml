@@ -1,0 +1,363 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Custom Element Base Class Tests"
+  onload="runTests();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <button id="one"/>
+  <simpleelement id="two" style="-moz-user-focus: normal;"/>
+  <simpleelement id="three" disabled="true" style="-moz-user-focus: normal;"/>
+  <button id="four"/>
+  <inherited-element-declarative foo="fuagra" empty-string=""></inherited-element-declarative>
+  <inherited-element-derived foo="fuagra"></inherited-element-derived>
+  <inherited-element-shadowdom-declarative foo="fuagra" empty-string=""></inherited-element-shadowdom-declarative>
+  <inherited-element-imperative foo="fuagra" empty-string=""></inherited-element-imperative>
+  <inherited-element-beforedomloaded foo="fuagra" empty-string=""></inherited-element-beforedomloaded>
+
+  <!-- test code running before page load goes here -->
+  <script type="application/javascript"><![CDATA[
+    class InheritAttrsChangeBeforDOMLoaded extends MozXULElement {
+      static get inheritedAttributes() {
+        return {
+          "label": "foo",
+        };
+      }
+      connectedCallback() {
+        this.append(MozXULElement.parseXULToFragment(`<label />`));
+        this.label = this.querySelector("label");
+
+        this.initializeAttributeInheritance();
+        is(this.label.getAttribute("foo"), "fuagra",
+           "InheritAttrsChangeBeforDOMLoaded: attribute should be propagated #1");
+
+        this.setAttribute("foo", "chuk&gek");
+        is(this.label.getAttribute("foo"), "chuk&gek",
+           "InheritAttrsChangeBeforDOMLoaded: attribute should be propagated #2");
+      }
+    }
+    customElements.define("inherited-element-beforedomloaded",
+                          InheritAttrsChangeBeforDOMLoaded);
+  ]]>
+  </script>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  async function runTests() {
+    ok(MozXULElement, "MozXULElement defined on the window");
+    testMixin();
+    testBaseControl();
+    testBaseControlMixin();
+    testBaseText();
+    testParseXULToFragment();
+    testInheritAttributes();
+    await testCustomInterface();
+
+    let htmlWin = await new Promise(resolve => {
+      let htmlIframe = document.createXULElement("iframe");
+      htmlIframe.src = "file_empty.xhtml";
+      htmlIframe.onload = () => resolve(htmlIframe.contentWindow);
+      document.documentElement.appendChild(htmlIframe);
+    });
+
+    ok(htmlWin.MozXULElement, "MozXULElement defined on a chrome HTML window");
+    SimpleTest.finish();
+  }
+
+  function testMixin() {
+    ok(MozElements.MozElementMixin, "Mixin exists");
+    let MixedHTMLElement = MozElements.MozElementMixin(HTMLElement);
+    ok(MixedHTMLElement.insertFTLIfNeeded, "Mixed in class contains helper functions");
+  }
+
+  function testBaseControl() {
+    ok(MozElements.BaseControl, "BaseControl exists");
+    ok("disabled" in MozElements.BaseControl.prototype,
+      "BaseControl prototype contains base control attributes");
+  }
+
+  function testBaseControlMixin() {
+    ok(MozElements.BaseControlMixin, "Mixin exists");
+    let MixedHTMLSpanElement = MozElements.MozElementMixin(HTMLSpanElement);
+    let HTMLSpanBaseControl = MozElements.BaseControlMixin(MixedHTMLSpanElement);
+    ok("disabled" in HTMLSpanBaseControl.prototype, "Mixed in class prototype contains base control attributes");
+  }
+
+  function testBaseText() {
+    ok(MozElements.BaseText, "BaseText exists");
+    ok("label" in MozElements.BaseText.prototype,
+      "BaseText prototype inherits BaseText attributes");
+    ok("disabled" in MozElements.BaseText.prototype,
+      "BaseText prototype inherits BaseControl attributes");
+  }
+
+  function testParseXULToFragment() {
+    ok(MozXULElement.parseXULToFragment, "parseXULToFragment helper exists");
+
+    let frag = MozXULElement.parseXULToFragment(`<deck id='foo' />`);
+    ok(frag instanceof DocumentFragment);
+
+    document.documentElement.appendChild(frag);
+
+    let deck = document.documentElement.lastChild;
+    ok(deck instanceof MozXULElement, "instance of MozXULElement");
+    ok(deck instanceof XULElement, "instance of XULElement");
+    is(deck.id, "foo", "attribute set");
+    is(deck.selectedIndex, "0", "Custom Element is property attached");
+    deck.remove();
+
+    info("Checking that whitespace text is removed but non-whitespace text isn't");
+    let boxWithWhitespaceText = MozXULElement.parseXULToFragment(`<box> </box>`).querySelector("box");
+    is(boxWithWhitespaceText.textContent, "", "Whitespace removed");
+    let boxWithNonWhitespaceText = MozXULElement.parseXULToFragment(`<box>foo</box>`).querySelector("box");
+    is(boxWithNonWhitespaceText.textContent, "foo", "Non-whitespace not removed");
+
+    try {
+      // we didn't encode the & as &amp;
+      MozXULElement.parseXULToFragment(`<box id="foo=1&bar=2"/>`);
+      ok(false, "parseXULToFragment should've thrown an exception for not-well-formed XML");
+    }
+    catch (ex) {
+      is(ex.message, "not well-formed XML", "parseXULToFragment threw the wrong message");
+    }
+  }
+
+  function testInheritAttributes() {
+    class InheritsElementDeclarative extends MozXULElement {
+      static get inheritedAttributes() {
+        return {
+          "label": "text=label,foo,empty-string,bardo=bar",
+          "unmatched": "foo", // Make sure we don't throw on unmatched selectors
+        };
+      }
+
+      connectedCallback() {
+        this.textContent = "";
+        this.append(MozXULElement.parseXULToFragment(`<label />`));
+        this.label = this.querySelector("label");
+        this.initializeAttributeInheritance();
+      }
+    }
+    customElements.define("inherited-element-declarative", InheritsElementDeclarative);
+    let declarativeEl = document.querySelector("inherited-element-declarative");
+    ok(declarativeEl, "declarative inheritance element exists");
+
+    class InheritsElementDerived extends InheritsElementDeclarative {
+      static get inheritedAttributes() {
+        return { label: "renamedfoo=foo" };
+      }
+    }
+    customElements.define("inherited-element-derived", InheritsElementDerived);
+
+    class InheritsElementShadowDOMDeclarative extends MozXULElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+      }
+      static get inheritedAttributes() {
+        return {
+          "label": "text=label,foo,empty-string,bardo=bar",
+          "unmatched": "foo", // Make sure we don't throw on unmatched selectors
+        };
+      }
+
+      connectedCallback() {
+        this.shadowRoot.textContent = "";
+        this.shadowRoot.append(MozXULElement.parseXULToFragment(`<label />`));
+        this.label = this.shadowRoot.querySelector("label");
+        this.initializeAttributeInheritance();
+      }
+    }
+    customElements.define("inherited-element-shadowdom-declarative", InheritsElementShadowDOMDeclarative);
+    let shadowDOMDeclarativeEl = document.querySelector("inherited-element-shadowdom-declarative");
+    ok(shadowDOMDeclarativeEl, "declarative inheritance element with shadow DOM exists");
+
+    class InheritsElementImperative extends MozXULElement {
+      static get observedAttributes() {
+        return [ "label", "foo", "empty-string", "bar" ];
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        if (this.label && oldValue != newValue) {
+          this.inherit();
+        }
+      }
+
+      inherit() {
+        let map = {
+          "label": [[ "label", "text" ]],
+          "foo": [[ "label", "foo" ]],
+          "empty-string": [[ "label", "empty-string" ]],
+          "bar": [[ "label", "bardo" ]],
+        };
+        for (let attr of InheritsElementImperative.observedAttributes) {
+          this.inheritAttribute(map[attr], attr);
+        }
+      }
+
+      connectedCallback() {
+        // Typically `initializeAttributeInheritance` handles this for us:
+        this._inheritedElements = null;
+
+        this.textContent = "";
+        this.append(MozXULElement.parseXULToFragment(`<label />`));
+        this.label = this.querySelector("label");
+        this.inherit();
+      }
+    }
+
+    customElements.define("inherited-element-imperative", InheritsElementImperative);
+    let imperativeEl = document.querySelector("inherited-element-imperative");
+    ok(imperativeEl, "imperative inheritance element exists");
+
+    function checkElement(el) {
+      is(el.label.getAttribute("foo"), "fuagra", "predefined attribute @foo");
+      ok(el.label.hasAttribute("empty-string"), "predefined attribute @empty-string");
+      ok(!el.label.hasAttribute("bardo"), "predefined attribute @bardo");
+      ok(!el.label.textContent, "predefined attribute @label");
+
+      el.setAttribute("empty-string", "not-empty-anymore");
+      is(el.label.getAttribute("empty-string"), "not-empty-anymore",
+        "attribute inheritance: empty-string");
+
+      el.setAttribute("label", "label-test");
+      is(el.label.textContent, "label-test",
+        "attribute inheritance: text=label attribute change");
+
+      el.setAttribute("bar", "bar-test");
+      is(el.label.getAttribute("bardo"), "bar-test",
+        "attribute inheritance: `=` mapping");
+
+      el.label.setAttribute("bardo", "changed-from-child");
+      is(el.label.getAttribute("bardo"), "changed-from-child",
+        "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was changed");
+
+      el.label.removeAttribute("bardo");
+      ok(!el.label.hasAttribute("bardo"),
+        "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was removed");
+
+      el.setAttribute("bar", "changed-from-host");
+      is(el.label.getAttribute("bardo"), "changed-from-host",
+        "attribute inheritance: does apply when host attr has changed and child attr was changed");
+
+      el.removeAttribute("bar");
+      ok(!el.label.hasAttribute("bardo"),
+        "attribute inheritance: does apply when host attr has been removed");
+
+      el.setAttribute("bar", "changed-from-host-2");
+      is(el.label.getAttribute("bardo"), "changed-from-host-2",
+        "attribute inheritance: does apply when host attr has changed after being removed");
+
+      // Restore to the original state so this can be ran again with the same element:
+      el.removeAttribute("label");
+      el.removeAttribute("bar");
+    }
+
+    for (let el of [declarativeEl, shadowDOMDeclarativeEl, imperativeEl]) {
+      info(`Running checks for ${el.tagName}`);
+      checkElement(el);
+      info(`Remove and re-add ${el.tagName} to make sure attribute inheritance still works`);
+      el.replaceWith(el);
+      checkElement(el);
+    }
+
+    let derivedEl = document.querySelector("inherited-element-derived");
+    ok(derivedEl, "derived inheritance element exists");
+    ok(!derivedEl.label.hasAttribute("foo"),
+       "attribute inheritance: base class attribute is not applied in derived class that overrides it");
+    ok(derivedEl.label.hasAttribute("renamedfoo"),
+       "attribute inheritance: attribute defined in derived class is present");
+  }
+
+  async function testCustomInterface() {
+    class SimpleElement extends MozXULElement {
+      get disabled() {
+        return this.getAttribute("disabled") == "true";
+      }
+
+      set disabled(val) {
+        if (val) this.setAttribute("disabled", "true");
+        else this.removeAttribute("disabled");
+      }
+
+      get tabIndex() {
+        return parseInt(this.getAttribute("tabIndex")) || 0;
+      }
+
+      set tabIndex(val) {
+        if (val) this.setAttribute("tabIndex", val);
+        else this.removeAttribute("tabIndex");
+      }
+    }
+
+    MozXULElement.implementCustomInterface(SimpleElement, [Ci.nsIDOMXULControlElement]);
+    customElements.define("simpleelement", SimpleElement);
+
+    let twoElement = document.getElementById("two");
+
+    is(document.documentElement.getCustomInterfaceCallback, undefined,
+       "No getCustomInterfaceCallback on non-custom element");
+    is(typeof twoElement.getCustomInterfaceCallback, "function",
+       "getCustomInterfaceCallback available on custom element when set");
+    is(document.documentElement.QueryInterface, undefined,
+       "Non-custom element should not have a QueryInterface implementation");
+
+    // Try various ways to get the custom interface.
+
+    let asControl = twoElement.getCustomInterfaceCallback(Ci.nsIDOMXULControlElement);
+
+    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500967
+    // Not sure if this was suppose to simply check for existence or equality?
+    todo_is(asControl, twoElement, "getCustomInterface returns interface implementation ");
+
+    asControl = twoElement.QueryInterface(Ci.nsIDOMXULControlElement);
+    ok(asControl, "QueryInterface to nsIDOMXULControlElement");
+    ok(asControl instanceof Node, "Control is a Node");
+
+    // Now make sure that the custom element handles focus/tabIndex as needed by shitfing
+    // focus around and enabling/disabling the simple elements.
+
+    // Enable Full Keyboard Access emulation on Mac
+    await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+
+    ok(!twoElement.disabled, "two is enabled");
+    ok(document.getElementById("three").disabled, "three is disabled");
+
+    await SimpleTest.promiseFocus();
+    ok(document.hasFocus(), "has focus");
+
+    // This should skip the disabled simpleelement.
+    synthesizeKey("VK_TAB");
+    is(document.activeElement.id, "one", "Tab 1");
+    synthesizeKey("VK_TAB");
+    is(document.activeElement.id, "two", "Tab 2");
+    synthesizeKey("VK_TAB");
+    is(document.activeElement.id, "four", "Tab 3");
+
+    twoElement.disabled = true;
+    is(twoElement.getAttribute("disabled"), "true", "two disabled after change");
+
+    synthesizeKey("VK_TAB", { shiftKey: true });
+    is(document.activeElement.id, "one", "Tab 1");
+
+    info("Checking that interfaces get inherited automatically with implementCustomInterface");
+    class ExtendedElement extends SimpleElement { }
+    MozXULElement.implementCustomInterface(ExtendedElement, [Ci.nsIDOMXULSelectControlElement]);
+    customElements.define("extendedelement", ExtendedElement);
+    const extendedInstance = document.createXULElement("extendedelement");
+    ok(extendedInstance.QueryInterface(Ci.nsIDOMXULSelectControlElement), "interface applied");
+    ok(extendedInstance.QueryInterface(Ci.nsIDOMXULControlElement), "inherited interface applied");
+  }
+  ]]>
+  </script>
+</window>

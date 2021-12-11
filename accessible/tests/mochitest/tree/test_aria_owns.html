@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>@aria-owns attribute testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Tests
+    // //////////////////////////////////////////////////////////////////////////
+
+    // enableLogging("tree,verbose"); // debug stuff
+
+    var gQueue = null;
+
+    function doTest() {
+      var tree =
+        { SECTION: [ // t1_1
+          { HEADING: [ // t1_2
+            // no kids, no loop
+          ] },
+        ] };
+      testAccessibleTree("t1_1", tree);
+
+      tree =
+        { SECTION: [ // t2_1
+          { GROUPING: [ // t2_2
+            { HEADING: [ // t2_3
+              // no kids, no loop
+            ] },
+          ] },
+        ] };
+      testAccessibleTree("t2_1", tree);
+
+      tree =
+        { SECTION: [ // t3_3
+          { GROUPING: [ // t3_1
+            { NOTE: [ // t3_2
+              { HEADING: [ // DOM child of t3_2
+                // no kids, no loop
+              ] },
+            ] },
+          ] },
+        ] };
+      testAccessibleTree("t3_3", tree);
+
+      tree =
+        { SECTION: [ // t4_1
+          { GROUPING: [ // DOM child of t4_1, aria-owns ignored
+            // no kids, no loop
+          ] },
+        ] };
+      testAccessibleTree("t4_1", tree);
+
+      tree =
+        { SECTION: [ // t5_1
+          { GROUPING: [ // DOM child of t5_1
+            { NOTE: [ // t5_2
+              { HEADING: [ // DOM child of t5_2
+                { FORM: [ // t5_3
+                  { TOOLTIP: [ // DOM child of t5_3
+                    // no kids, no loop
+                  ]},
+                ]},
+              ]},
+            ] },
+          ] },
+        ] };
+      testAccessibleTree("t5_1", tree);
+
+      tree =
+        { SECTION: [ // t6_1
+          { RADIOBUTTON: [ ] },
+          { CHECKBUTTON: [ ] }, // t6_3, rearranged by aria-owns
+          { PUSHBUTTON: [ ] }, // t6_2, rearranged by aria-owns
+        ] };
+      testAccessibleTree("t6_1", tree);
+
+      tree =
+        { SECTION: [ // ariaowns_container
+          { SECTION: [ // ariaowns_self
+            { SECTION: [ // ariaowns_uncle
+            ] },
+          ] },
+        ] };
+      testAccessibleTree("ariaowns_container", tree);
+
+      tree =
+        { TABLE: [
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [] },
+            ] },
+          ] },
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [] },
+            ] },
+          ] },
+        ] };
+      testAccessibleTree("grid", tree);
+
+      tree =
+        { SECTION: [ // presentation_owner
+          // Can't own ancestor, so no children.
+        ] };
+      testAccessibleTree("presentation_owner", tree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+
+  </script>
+</head>
+
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- simple loop -->
+  <div id="t1_1" aria-owns="t1_2"></div>
+  <div id="t1_2" aria-owns="t1_1" role="heading"></div>
+
+  <!-- loop -->
+  <div id="t2_2" aria-owns="t2_3" role="group"></div>
+  <div id="t2_1" aria-owns="t2_2"></div>
+  <div id="t2_3" aria-owns="t2_1" role="heading"></div>
+
+  <!-- loop #2 -->
+  <div id="t3_1" aria-owns="t3_2" role="group"></div>
+  <div id="t3_2" role="note">
+    <div aria-owns="t3_3" role="heading"></div>
+  </div>
+  <div id="t3_3" aria-owns="t3_1"></div>
+
+  <!-- self loop -->
+  <div id="t4_1"><div aria-owns="t4_1" role="group"></div></div>
+
+  <!-- natural and aria-owns hierarchy -->
+  <div id="t5_2" role="note"><div aria-owns="t5_3" role="heading"></div></div>
+  <div id="t5_1"><div aria-owns="t5_2" role="group"></div></div>
+  <div id="t5_3" role="form"><div aria-owns="t5_1" role="tooltip"></div></div>
+
+  <!-- rearrange children -->
+  <div id="t6_1" aria-owns="t6_3 t6_2">
+    <div id="t6_2" role="button"></div>
+    <div id="t6_3" role="checkbox"></div>
+    <div role="radio"></div>
+  </div>
+
+  <div id="ariaowns_container">
+    <div id="ariaowns_self"
+         aria-owns="aria_ownscontainer ariaowns_self ariaowns_uncle"></div>
+  </div>
+  <div id="ariaowns_uncle"></div>
+
+  <!-- grid -->
+  <div aria-owns="grid-row2" role="grid" id="grid">
+    <div role="row">
+      <div role="gridcell">cell 1,1</div>
+      <div role="gridcell">cell 1,2</div>
+    </div>
+  </div>
+  <div role="row" id="grid-row2">
+    <div role="gridcell">cell 2,1</div>
+    <div role="gridcell">cell 2,2</div>
+  </div>
+
+  <!-- Owned child which is an ancestor of its owner but didn't yet exist when
+       aria-owns relocation was processed (bug 1485097). -->
+  <div id="presentation" role="presentation">
+    <div id="presentation_owner" aria-owns="presentation"></div>
+  </div>
+</body>
+
+</html>

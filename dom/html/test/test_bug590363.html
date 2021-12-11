@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=590363
+-->
+<head>
+  <title>Test for Bug 590363</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590363">Mozilla Bug 590363</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 590363 **/
+
+var testData = [
+  /* type to test | is the value reset when changing to file then reverting */
+  [ "button",   false ],
+  [ "checkbox", false ],
+  [ "hidden",   false ],
+  [ "reset",    false ],
+  [ "image",    false ],
+  [ "radio",    false ],
+  [ "submit",   false ],
+  [ "tel",      true ],
+  [ "text",     true ],
+  [ "url",      true ],
+  [ "email",    true ],
+  [ "search",   true ],
+  [ "password", true ],
+  [ "number",   true ],
+  [ "date",     true ],
+  [ "time",     true ],
+  [ "range",    true ],
+  [ "color",    true ],
+  [ 'month',    true ],
+  [ 'week',     true ],
+  [ 'datetime-local', true ]
+  // 'file' is treated separatly.
+];
+
+var nonTrivialSanitizing = [ 'number', 'date', 'time', 'color', 'month', 'week',
+                             'datetime-local' ];
+
+var length = testData.length;
+for (var i=0; i<length; ++i) {
+  for (var j=0; j<length; ++j) {
+    var e = document.createElement('input');
+    e.type = testData[i][0];
+
+    var expectedValue;
+
+    // range will sanitize its value to 50 (the default) if it isn't a valid
+    // number. We need to handle that specially.
+    if (testData[j][0] == 'range' || testData[i][0] == 'range') {
+      if (testData[j][0] == 'date' || testData[j][0] == 'time' ||
+          testData[j][0] == 'month' || testData[j][0] == 'week' ||
+          testData[j][0] == 'datetime-local') {
+        expectedValue = '';
+      } else if (testData[j][0] == 'color') {
+        expectedValue = '#000000';
+      } else {
+        expectedValue = '50';
+      }
+    } else if (testData[i][0] == 'color' || testData[j][0] == 'color') {
+        if (testData[j][0] == 'number' || testData[j][0] == 'date' ||
+            testData[j][0] == 'time' || testData[j][0] == 'month' ||
+            testData[j][0] == 'week' || testData[j][0] == 'datetime-local') {
+          expectedValue = ''
+        } else {
+          expectedValue = '#000000';
+        }
+    } else if (nonTrivialSanitizing.includes(testData[i][0]) &&
+               nonTrivialSanitizing.includes(testData[j][0])) {
+      expectedValue = '';
+    } else if (testData[i][0] == 'number' || testData[j][0] == 'number') {
+      expectedValue = '42';
+    } else if (testData[i][0] == 'date' || testData[j][0] == 'date') {
+      expectedValue = '2012-12-21';
+    } else if (testData[i][0] == 'time' || testData[j][0] == 'time') {
+      expectedValue = '21:21';
+    } else if (testData[i][0] == 'month' || testData[j][0] == 'month') {
+      expectedValue = '2013-03';
+    } else if (testData[i][0] == 'week' || testData[j][0] == 'week') {
+      expectedValue = '2016-W35';
+    } else if (testData[i][0] == 'datetime-local' ||
+               testData[j][0] == 'datetime-local') {
+      expectedValue = '2016-11-07T16:40';
+    } else {
+      expectedValue = "foo";
+    }
+    e.value = expectedValue;
+
+    e.type = testData[j][0];
+    is(e.value, expectedValue, ".value should still return the same value after " +
+       "changing type from " + testData[i][0] + " to " + testData[j][0]);
+  }
+}
+
+// For type='file' .value doesn't behave the same way.
+// We are just going to check that we do not loose the value.
+for (var data of testData) {
+  var e = document.createElement('input');
+  e.type = data[0];
+  e.value = 'foo';
+  e.type = 'file';
+  e.type = data[0];
+
+  if (data[0] == 'range') {
+    is(e.value, '50', ".value should still return the same value after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  } else if (data[0] == 'color') {
+    is(e.value, '#000000', ".value should have been reset to the default color after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  } else if (data[1]) {
+    is(e.value, '', ".value should have been reset to the empty string after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  } else {
+    is(e.value, 'foo', ".value should still return the same value after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

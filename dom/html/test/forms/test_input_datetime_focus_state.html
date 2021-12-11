@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1346085
+-->
+<head>
+  <title>Test moving focus in onfocus/onblur handler</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1346085">Mozilla Bug 1346085</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input_time" type="time">
+  <input id="input_date" type="date">
+  <input id="input_dummy" type="text">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1346085.
+ * This test checks whether date/time input types' focus state are set
+ * correctly, event when moving focus in onfocus/onblur handler.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function testFocusState(type) {
+  let input = document.getElementById("input_" + type);
+
+  input.focus();
+  let focus = document.querySelector(":focus");
+  let focusRing = document.querySelector(":-moz-focusring");
+  is(focus, input, "input should have :focus state after focus");
+  is(focusRing, input, "input should have :-moz-focusring state after focus");
+
+  input.blur();
+  focus = document.querySelector(":focus");
+  focusRing = document.querySelector(":-moz-focusring");
+  isnot(focus, input, "input should not have :focus state after blur");
+  isnot(focusRing, input, "input should not have :-moz-focusring state after blur");
+
+  input.addEventListener("focus", function() {
+    document.getElementById("input_dummy").focus();
+  }, { once: true });
+
+  input.focus();
+  focus = document.querySelector(":focus");
+  focusRing = document.querySelector(":-moz-focusring");
+  isnot(focus, input, "input should not have :focus state when moving focus in onfocus handler");
+  isnot(focusRing, input, "input should not have :-moz-focusring state when moving focus in onfocus handler");
+
+  input.addEventListener("blur", function() {
+    document.getElementById("input_dummy").focus();
+  }, { once: true });
+
+  input.blur();
+  focus = document.querySelector(":focus");
+  focusRing = document.querySelector(":-moz-focusring");
+  isnot(focus, input, "input should not have :focus state when moving focus in onblur handler");
+  isnot(focusRing, input, "input should not have :-moz-focusring state when moving focus in onblur handler");
+}
+
+function test() {
+  let inputTypes = ["time", "date"];
+
+  for (let i = 0; i < inputTypes.length; i++) {
+    testFocusState(inputTypes[i]);
+  }
+}
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIUTF8StringEnumerator;
+interface nsIStreamListener;
+interface nsISupports;
+
+/**
+ * A channel interface which allows special handling of encoded content
+ */
+
+[scriptable, uuid(29c29ce6-8ce4-45e6-8d60-36c8fa3e255b)]
+interface nsIEncodedChannel : nsISupports
+{
+    /**
+     * This attribute holds the MIME types corresponding to the content
+     * encodings on the channel.  The enumerator returns nsISupportsCString
+     * objects.  The first one corresponds to the outermost encoding on the
+     * channel and then we work our way inward.  "identity" is skipped and not
+     * represented on the list.  Unknown encodings make the enumeration stop.
+     * If you want the actual Content-Encoding value, use
+     * getResponseHeader("Content-Encoding").
+     *
+     * When there is no Content-Encoding header, this property is null.
+     *
+     * Modifying the Content-Encoding header on the channel will cause
+     * this enumerator to have undefined behavior.  Don't do it.
+     *
+     * Also note that contentEncodings only exist during or after OnStartRequest.
+     * Calling contentEncodings before OnStartRequest is an error.
+     */
+    readonly attribute nsIUTF8StringEnumerator contentEncodings;
+
+    /**
+     * This attribute controls whether or not content conversion should be
+     * done per the Content-Encoding response header.  applyConversion can only
+     * be set before or during OnStartRequest.  Calling this during
+     * OnDataAvailable is an error.
+     *
+     * TRUE by default.
+     */
+    attribute boolean applyConversion;
+
+    /**
+     * This function will start converters if they are available.
+     * aNewNextListener will be nullptr if no converter is available.
+     */
+    void doApplyContentConversions(in nsIStreamListener aNextListener,
+                                   out nsIStreamListener aNewNextListener,
+                                   in nsISupports aCtxt);
+};

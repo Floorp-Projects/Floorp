@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <div style="overflow: hidden;">
+    Some text.
+  </div>
+
+  <script>
+    onload = function() {
+      var div = document.querySelector("div");
+      // Make sure layout has happened.
+      window.width = div.offsetWidth;
+      div.style.textIndent = "50px";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

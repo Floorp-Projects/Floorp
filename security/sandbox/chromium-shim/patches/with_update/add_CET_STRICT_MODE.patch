@@ -1,0 +1,94 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1611849321 0
+#      Thu Jan 28 15:55:21 2021 +0000
+# Node ID c9195d88e6c67ef2c23c12e307bc16b94d696f50
+# Parent  37557864a6845bb8068904e44e8a7dd16746d211
+Bug 1716024 p1: Add MITIGATION_CET_COMPAT_MODE to chromium sandbox code. r=handyman!
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+--- a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
++++ b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+@@ -80,16 +80,37 @@ bool IsRunning32bitEmulatedOnArm64() {
+   if (!retval)
+     return false;
+   if (native_machine == IMAGE_FILE_MACHINE_ARM64)
+     return true;
+ #endif  // defined(ARCH_CPU_X86)
+   return false;
+ }
+ 
++// Returns true if user-mode Hardware-enforced Stack Protection is available for
++// the Win32 environment.
++bool IsUserCetWin32Available() {
++  static bool cetAvailable = []() -> bool {
++    using IsUserCetAvailableInEnvironmentFunction =
++      decltype(&IsUserCetAvailableInEnvironment);
++
++    IsUserCetAvailableInEnvironmentFunction is_user_cet_available =
++        reinterpret_cast<IsUserCetAvailableInEnvironmentFunction>(
++            ::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"),
++                             "IsUserCetAvailableInEnvironment"));
++    if (!is_user_cet_available) {
++      return false;
++    }
++
++    return is_user_cet_available(USER_CET_ENVIRONMENT_WIN32_PROCESS);
++  }();
++
++  return cetAvailable;
++}
++
+ }  // namespace
+ 
+ namespace sandbox {
+ 
+ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
+   if (!CanSetProcessMitigationsPostStartup(flags))
+     return false;
+ 
+@@ -487,16 +508,25 @@ void ConvertProcessMitigationsToPolicy(M
+     //       the underlying hardware does not support the implementation.
+     //       Windows just does its best under the hood for the given hardware.
+     if (flags & MITIGATION_RESTRICT_INDIRECT_BRANCH_PREDICTION) {
+       *policy_value_2 |=
+           PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_ALWAYS_ON;
+     }
+   }
+ 
++  // Mitigations >= Win10 20H1
++  //----------------------------------------------------------------------------
++  if (version >= base::win::Version::WIN10_20H1) {
++    if (flags & MITIGATION_CET_COMPAT_MODE && IsUserCetWin32Available()) {
++      *policy_value_2 |=
++          PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_ALWAYS_ON;
++    }
++  }
++
+   // When done setting policy flags, sanity check supported policies on this
+   // machine, and then update |size|.
+ 
+   const ULONG64* supported = GetSupportedMitigations();
+ 
+   *policy_value_1 = *policy_value_1 & supported[0];
+   *policy_value_2 = *policy_value_2 & supported[1];
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/security_level.h b/security/sandbox/chromium/sandbox/win/src/security_level.h
+--- a/security/sandbox/chromium/sandbox/win/src/security_level.h
++++ b/security/sandbox/chromium/sandbox/win/src/security_level.h
+@@ -286,11 +286,15 @@ const MitigationFlags MITIGATION_RESTRIC
+ // Working down from the high bit to avoid conflict with new upstream flags.
+ 
+ // Disable Control Flow Guard. This may seem more like an anti-mitigation, but
+ // this flag allows code to make targeted changes to CFG to avoid bugs, while
+ // leaving it enabled in the common case. Corresponds to
+ // PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON.
+ const MitigationFlags MITIGATION_CONTROL_FLOW_GUARD_DISABLE = 0x80000000;
+ 
++// This enables CET User Shadow Stack for compatible modules and corresponds to
++// PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_ALWAYS_ON.
++const MitigationFlags MITIGATION_CET_COMPAT_MODE = 0x40000000;
++
+ }  // namespace sandbox
+ 
+ #endif  // SANDBOX_SRC_SECURITY_LEVEL_H_

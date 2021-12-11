@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+remote.jar:
+% content remote %content/
+  content/marionette/accessibility.js (accessibility.js)
+  content/marionette/action.js (action.js)
+  content/marionette/actors/MarionetteCommandsChild.jsm (actors/MarionetteCommandsChild.jsm)
+  content/marionette/actors/MarionetteCommandsParent.jsm (actors/MarionetteCommandsParent.jsm)
+  content/marionette/actors/MarionetteEventsChild.jsm (actors/MarionetteEventsChild.jsm)
+  content/marionette/actors/MarionetteEventsParent.jsm (actors/MarionetteEventsParent.jsm)
+  content/marionette/actors/MarionetteReftestChild.jsm (actors/MarionetteReftestChild.jsm)
+  content/marionette/actors/MarionetteReftestParent.jsm (actors/MarionetteReftestParent.jsm)
+  content/marionette/addon.js (addon.js)
+  content/marionette/appinfo.js (appinfo.js)
+  content/marionette/atom.js (atom.js)
+  content/marionette/browser.js (browser.js)
+  content/marionette/capture.js (capture.js)
+  content/marionette/cert.js (cert.js)
+  content/marionette/cookie.js (cookie.js)
+  content/marionette/dom.js (dom.js)
+  content/marionette/driver.js (driver.js)
+  content/marionette/element.js (element.js)
+  content/marionette/evaluate.js (evaluate.js)
+  content/marionette/event.js  (event.js)
+  content/marionette/interaction.js (interaction.js)
+  content/marionette/l10n.js (l10n.js)
+  content/marionette/legacyaction.js (legacyaction.js)
+  content/marionette/message.js (message.js)
+  content/marionette/modal.js (modal.js)
+  content/marionette/navigate.js (navigate.js)
+  content/marionette/packets.js (packets.js)
+  content/marionette/permissions.js (permissions.js)
+  content/marionette/prefs.js (prefs.js)
+  content/marionette/print.js (print.js)
+  content/marionette/reftest.js (reftest.js)
+  content/marionette/reftest.xhtml (chrome/reftest.xhtml)
+  content/marionette/reftest-content.js (reftest-content.js)
+  content/marionette/server.js (server.js)
+  content/marionette/stream-utils.js (stream-utils.js)
+  content/marionette/sync.js (sync.js)
+  content/marionette/transport.js (transport.js)
+#ifdef ENABLE_TESTS
+  content/marionette/test.xhtml (chrome/test.xhtml)
+  content/marionette/test2.xhtml (chrome/test2.xhtml)
+  content/marionette/test_dialog.dtd (chrome/test_dialog.dtd)
+  content/marionette/test_dialog.properties (chrome/test_dialog.properties)
+  content/marionette/test_dialog.xhtml (chrome/test_dialog.xhtml)
+  content/marionette/test_menupopup.xhtml (chrome/test_menupopup.xhtml)
+  content/marionette/test_nested_iframe.xhtml (chrome/test_nested_iframe.xhtml)
+#ifdef MOZ_CODE_COVERAGE
+  content/marionette/PerTestCoverageUtils.jsm (../../tools/code-coverage/PerTestCoverageUtils.jsm)
+#endif
+#endif

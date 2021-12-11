@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=98997
+-->
+<head>
+  <title>Test for Bug 98997</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  /*
+   * This test does NOT test any of the cases where :empty and
+   * :-moz-only-whitespace differ.  We should probably have some tests
+   * for that as well.
+   */
+  div.test { width: 200px; height: 30px; margin: 5px 0; }
+  div.test.to, div.test.from:empty { background: orange; }
+  div.test.to:empty, div.test.from { background: green; }
+  div.test.to, div.test.from:-moz-only-whitespace { color: maroon; }
+  div.test.to:-moz-only-whitespace, div.test.from { color: navy; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=98997">Mozilla Bug 98997</a>
+<div id="display">
+<div class="test to" onclick="testReplaceChild(this, '')">x</div>
+<div class="test to" onclick="testReplaceChild(this, '')"><span>x</span></div>
+<div class="test to" onclick="testReplaceChild(this, '')">x<!-- comment --></div>
+<div class="test to" onclick="testRemoveChild(this)">x</div>
+<div class="test to" onclick="testRemoveChild(this)"><span>x</span></div>
+<div class="test to" onclick="testRemoveChild(this)">x<!-- comment --></div>
+<div class="test to" onclick="testChangeData(this, '')">x</div>
+<div class="test to" onclick="testChangeData(this, '')">x<!-- comment --></div>
+<div class="test to" onclick="testDeleteData(this)">x</div>
+<div class="test to" onclick="testDeleteData(this)">x<!-- comment --></div>
+<div class="test to" onclick="testReplaceData(this, '')">x</div>
+<div class="test to" onclick="testReplaceData(this, '')">x<!-- comment --></div>
+
+<div class="test from makeemptytext" onclick="testReplaceChild(this, 'x')"></div>
+<div class="test from makeemptytext" onclick="testReplaceChild(this, 'x')"><!-- comment --></div>
+<div class="test from" onclick="testReplaceChild(this, 'x')"><!-- comment --></div>
+<div class="test from" onclick="testInsertBefore(this, 'x')"></div>
+<div class="test from" onclick="testInsertBefore(this, 'x')"><!-- comment --></div>
+<div class="test from" onclick="testAppendChild(this, 'x')"></div>
+<div class="test from" onclick="testAppendChild(this, 'x')"><!-- comment --></div>
+<div class="test from makeemptytext" onclick="testChangeData(this, 'x')"></div>
+<div class="test from makeemptytext" onclick="testChangeData(this, 'x')"><!-- comment --></div>
+<div class="test from makeemptytext" onclick="testAppendData(this, 'x')"></div>
+<div class="test from makeemptytext" onclick="testAppendData(this, 'x')"><!-- comment --></div>
+<div class="test from makeemptytext" onclick="testReplaceData(this, 'x')"></div>
+<div class="test from makeemptytext" onclick="testReplaceData(this, 'x')"><!-- comment --></div>
+</div>
+
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 98997 **/
+
+function testInsertBefore(elt, text) {
+  elt.insertBefore(document.createTextNode(text), elt.firstChild);
+}
+
+function testAppendChild(elt, text) {
+  elt.appendChild(document.createTextNode(text));
+}
+
+function testReplaceChild(elt, text) {
+  elt.replaceChild(document.createTextNode(text), elt.firstChild);
+}
+
+function testRemoveChild(elt) {
+  elt.firstChild.remove();
+}
+
+function testChangeData(elt, text) {
+  elt.firstChild.data = text;
+}
+
+function testAppendData(elt, text) {
+  elt.firstChild.appendData(text);
+}
+
+function testDeleteData(elt) {
+  elt.firstChild.deleteData(0, elt.firstChild.length);
+}
+
+function testReplaceData(elt, text) {
+  elt.firstChild.replaceData(0, elt.firstChild.length, text);
+}
+
+var cnodes = document.getElementById("display").childNodes;
+var divs = [];
+var i;
+for (i = 0; i < cnodes.length; ++i) {
+  if (cnodes[i].nodeName == "DIV")
+    divs.push(cnodes[i]);
+}
+
+for (i in divs) {
+  let div = divs[i];
+  if (div.className.match(/makeemptytext/))
+    div.insertBefore(document.createTextNode(""), div.firstChild);
+}
+
+const ORANGE = "rgb(255, 165, 0)";
+const MAROON = "rgb(128, 0, 0)";
+const GREEN = "rgb(0, 128, 0)";
+const NAVY = "rgb(0, 0, 128)";
+
+function color(div) {
+  return getComputedStyle(div, "").color;
+}
+function bg(div) {
+  return getComputedStyle(div, "").backgroundColor;
+}
+
+for (i in divs) {
+  let div = divs[i];
+  is(bg(div), ORANGE, "should be orange");
+  is(color(div), MAROON, "should be maroon");
+}
+
+for (i in divs) {
+  let div = divs[i];
+  var e = document.createEvent("MouseEvents");
+  e.initEvent("click", true, true);
+  div.dispatchEvent(e);
+}
+
+for (i in divs) {
+  let div = divs[i];
+  is(bg(div), GREEN, "should be green");
+  is(color(div), NAVY, "should be navy");
+}
+
+</script>
+</pre>
+</body>
+</html>

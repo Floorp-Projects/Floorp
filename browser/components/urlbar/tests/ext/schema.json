@@ -1,0 +1,113 @@
+[
+  {
+    "namespace": "experiments.urlbar",
+    "description": "APIs supporting urlbar experiments",
+    "types": [
+      {
+        "id": "DynamicResultType",
+        "type": "object",
+        "description": "Describes a dynamic result type.",
+        "properties": {
+          "viewTemplate": {
+            "type": "object",
+            "description": "An object describing the type's view.",
+            "additionalProperties": true
+          }
+        }
+      }
+    ],
+    "properties": {
+      "attributionURL": {
+        "$ref": "types.Setting",
+        "description": "Gets or sets the attribution URL for the current browser session."
+      },
+      "engagementTelemetry": {
+        "$ref": "types.Setting",
+        "description": "Enables or disables the engagement telemetry for the current browser session."
+      },
+      "extensionTimeout": {
+        "$ref": "types.Setting",
+        "description": "Sets the amount of time in ms that extensions have to return results to the browser.urlbar API."
+      }
+    },
+    "events": [
+      {
+        "name": "onViewUpdateRequested",
+        "type": "function",
+        "description": "Fired when the urlbar view updates the view of one of the results of the provider.",
+        "parameters": [
+          {
+            "name": "payload",
+            "type": "object",
+            "description": "The result's payload."
+          },
+          {
+            "name": "idsByName",
+            "type": "object",
+            "description": "A Map from an element's name, as defined by the provider; to its ID in the DOM, as defined by the browser."
+          }
+        ],
+        "extraParameters": [
+          {
+            "name": "providerName",
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "The name of the provider you want to provide updates for."
+          }
+        ],
+        "returns": {
+          "type": "object",
+          "description": "An object describing the view update."
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "addDynamicResultType",
+        "type": "function",
+        "async": true,
+        "description": "Adds a dynamic result type. See UrlbarResult.addDynamicResultType().",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The name of the result type."
+          },
+          {
+            "name": "type",
+            "type": "object",
+            "default": {},
+            "optional": true,
+            "description": "The result type. Currently this should be an empty object (which is the default value)."
+          }
+        ]
+      },
+      {
+        "name": "addDynamicViewTemplate",
+        "type": "function",
+        "async": true,
+        "description": "Adds a view template for a dynamic result type. See UrlbarView.addDynamicViewTemplate().",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The view template will be registered for the dynamic result type with this name."
+          },
+          {
+            "name": "viewTemplate",
+            "type": "object",
+            "additionalProperties":  true,
+            "description": "The view template."
+          }
+        ]
+      },
+      {
+        "name": "clearInput",
+        "type": "function",
+        "async": true,
+        "description": "Sets urlbar.value to the empty string and the pageproxystate to invalid.",
+        "parameters": []
+      }
+    ]
+  }
+]

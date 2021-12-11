@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=777385
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for WebIDL objects as weak map keys</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 777385 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  // We wait to run this until the load event because it needs to access an element.
+  function go() {
+
+  let live_map = new WeakMap;
+
+  let get_div_style = function () {
+    return document.getElementById("mydivname").style;
+  }
+
+  let make_live_map = function () {
+    let my_div_style = get_div_style();
+    let div_fail = false;
+    try {
+      live_map.set(my_div_style, 12345);
+    } catch (e) {
+      div_fail = true;
+    }
+    ok(!div_fail, "Using elem.style as a weak map key should not produce an exception.");
+
+    is(live_map.get(get_div_style()), 12345, "Live map should have live style with right value before GC.");
+
+  }
+
+  make_live_map();
+
+  let tf = new TestFunctions;
+
+  let add_non_isupports2 = function () {
+    let testKey = tf.wrapperCachedNonISupportsObject;
+
+    let testFail = false;
+    try {
+      live_map.set(testKey, 23456);
+    } catch (e) {
+      testFail = true;
+    }
+
+    ok(!testFail, "Using a wrapper cached non-nsISupports class as a weak map key should not produce an exception.");
+
+    is(live_map.get(testKey), 23456, "Live map should have wrapper cached non-nsISupports class right value before GC.");
+  }
+
+  add_non_isupports2();
+
+
+  /* Set up for running precise GC/CC then check the results. */
+
+  SpecialPowers.exactGC(function () {
+    SpecialPowers.forceCC();
+    SpecialPowers.forceGC();
+    SpecialPowers.forceGC();
+
+    is(SpecialPowers.nondeterministicGetWeakMapKeys(live_map).length, 2,
+       "Live WebIDL bindings keys should not be removed from a weak map.");
+
+    is(live_map.get(get_div_style()), 12345, "Live weak map should have live style with right value after GC.");
+    is(live_map.get(tf.wrapperCachedNonISupportsObject), 23456,
+       "Live weak map should have live wrapper cached non-nsISupports class with right value after GC.");
+
+    SimpleTest.finish();
+  });
+
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  addLoadEvent(function() {
+    SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+                              go);
+  });
+  </script>
+</head>
+<div></div>
+<div id="mydivname"></div>
+<body>
+<p id="display"></p>
+</body>
+</html>

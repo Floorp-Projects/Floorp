@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=653364
+-->
+<head>
+  <title>Test for Bug 653364</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=653364">Mozilla Bug 653364</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="frame" style="height:100px; width:100px; border:0"></iframe>
+  <div id="status" style="display: none"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 653364 **/
+
+gotPopState = 0;
+document.addEventListener("popState", function(e) {
+  gotPopState = 1;
+  is(e.state.foo, 'bar', "PopState event should have state we set.");
+  is(e.isTrusted, false, "PopState event shouldn't be trusted.");
+}, true);
+
+let ps = new PopStateEvent("popState", { bubbles: true,
+                                         cancelable: false,
+                                         state: {'foo': 'bar'} });
+document.documentElement.dispatchEvent(ps);
+is(gotPopState, 1, 'Document received PopState event.');
+
+</script>
+</body>
+</html>

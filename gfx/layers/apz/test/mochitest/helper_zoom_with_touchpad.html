@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Sanity check for Touchpad pinch zooming</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  // Scenario 1: zoom in
+  var initial_resolution = await getResolution();
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+  await pinchZoomInWithTouchpad(641, 465);
+  // Flush state and get the resolution we're at now
+  await promiseApzFlushedRepaints();
+  let final_resolution = await getResolution();
+  ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
+
+  // Scenario 2: zoom out
+  initial_resolution = final_resolution;
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+  await pinchZoomOutWithTouchpad(641, 465);
+  await promiseApzFlushedRepaints();
+  final_resolution = await getResolution();
+  ok(final_resolution < initial_resolution, "The final resolution (" + final_resolution + ") is smaller after zooming Out");
+
+  // Scenario 3: zoom in and out in the same gesture
+  initial_resolution = final_resolution;
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+  await pinchZoomInOutWithTouchpad (641, 465);
+  await promiseApzFlushedRepaints();
+  final_resolution = await getResolution();
+  isfuzzy(initial_resolution, final_resolution, 0.0001, "The final resolution approximatly the same after zooming In and Out");
+
+  // Scenario 4: zoom in, with the page using preventDefault()
+  var resolveWheelPromise;
+  var wheelPromise = new Promise(resolve => { resolveWheelPromise = resolve; });
+  var deltaSum = 0;
+  initial_resolution = final_resolution;
+  var onWheel = function(e) {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      deltaSum += e.deltaY;
+      // We observed that deltaSum will be around -42 by the time all wheel events have arrived.
+      if (deltaSum < -40) {
+        ok(true, "Accumulated a deltaY of -40");
+        resolveWheelPromise();
+      }
+    }
+  };
+
+  document.addEventListener("wheel", onWheel, { passive: false });
+  // Give APZ a chance to become aware of the listener, so it knows
+  // to queue events while it waits for a content response.
+  await promiseApzFlushedRepaints();
+  // Calling preventDefault() means the APZ:TransformEnd notification will never be sent.
+  await pinchZoomInWithTouchpad(641, 465, { waitForTransformEnd: false });
+  await wheelPromise;
+  document.removeEventListener("wheel", onWheel, { passive: false });
+  final_resolution = await getResolution();
+  is(final_resolution, initial_resolution,
+     "Calling preventDefault() on wheel event successfully prevents zooming");
+
+  // Scenario 5: check that page receives DOMMouseScroll event
+  var resolveDOMMouseScrollPromise;
+  var DOMMouseScrollPromise = new Promise(resolve => { resolveDOMMouseScrollPromise = resolve; });
+  deltaSum = 0;
+  initial_resolution = final_resolution;
+  var onDOMMouseScroll = function(e) {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      deltaSum += e.detail;
+      if (deltaSum < -40) {
+        ok(true, "Accumulated a deltaSum of -40");
+        resolveDOMMouseScrollPromise();
+      }
+    }
+  };
+  document.addEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
+  await promiseApzFlushedRepaints();
+  await pinchZoomInWithTouchpad(641, 465, {
+    waitForTransformEnd: false,
+    waitForFrames: true
+  });
+  await DOMMouseScrollPromise;
+  document.removeEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
+  final_resolution = await getResolution();
+  is(final_resolution, initial_resolution,
+     "Calling preventDefault() on DOMMouseScroll event successfully prevents zooming");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  Here is some text to stare at as the test runs. It serves no functional
+  purpose, but gives you an idea of the zoom level. It's harder to tell what
+  the zoom level is when the page is just solid white.
+</body>
+</html>

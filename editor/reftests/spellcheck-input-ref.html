@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <input type="text" value="blahblahblah" spellcheck="true">
+    <script>
+      var i = document.getElementsByTagName("input")[0];
+      i.focus(); // init the editor
+      i.blur();  // we actually don't need the focus
+    </script>
+</body>
+</html>

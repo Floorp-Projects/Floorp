@@ -1,0 +1,25 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <textarea dir="rtl" onfocus="typeIntoMe()" spellcheck="false" style="-moz-appearance: none"></textarea>
+    <script>
+      function start() {
+        document.querySelector("textarea").focus();
+      }
+      function typeIntoMe() {
+        setTimeout(function() {
+          sendString("a");
+          synthesizeKey("KEY_Enter");
+          sendString("c");
+          synthesizeKey("KEY_ArrowUp");
+          synthesizeKey("KEY_End");
+          sendString("b");
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }
+    </script>
+  </body>
+</html>

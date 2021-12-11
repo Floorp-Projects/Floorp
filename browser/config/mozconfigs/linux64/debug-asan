@@ -1,0 +1,30 @@
+# Use at least -O1 for optimization to avoid stack space
+# exhaustions caused by Clang function inlining.
+ac_add_options --enable-debug
+ac_add_options --enable-optimize="-O1"
+
+# ASan specific options on Linux
+ac_add_options --enable-valgrind
+
+. $topsrcdir/build/unix/mozconfig.asan
+ac_add_options --disable-elf-hack
+
+# Build with fuzzing support, so this build can also be used
+# to analyze fuzzing bugs with rr.
+ac_add_options --enable-fuzzing
+
+# Enable ASan for rust code. This is done for specific build tasks rather than
+# globally in mozconfig.asan because it requires an unstable -Z flag.
+export RUSTFLAGS="$RUSTFLAGS -Zsanitizer=address"
+
+# Include 'SourceRepository' in application.ini which
+# is used by Pernosco to locate source
+export MOZ_INCLUDE_SOURCE_INFO=1
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=asan
+
+. "$topsrcdir/build/mozconfig.common.override"

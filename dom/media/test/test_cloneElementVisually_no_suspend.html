@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test cloneElementVisually</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="https://example.com:443/tests/dom/media/test/cloneElementVisually_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="content">
+  <h1>Original</h1>
+  <video id="original"></video>
+  <h1>MediaStream</h1>
+  <video id="streamTarget"></video>
+  <h1>Clone</h1>
+</div>
+<div id="results">
+  <h1>Results</h1>
+  <canvas id="left"></canvas>
+  <canvas id="right"></canvas>
+</div>
+
+<script type="application/javascript">
+
+/* import-globals-from cloneElementVisually_helpers.js */
+
+/**
+ * Tests that cloning a video prevents the decoder from being suspended
+ * if the original video stops being visible.
+ */
+add_task(async () => {
+  await setup();
+
+  let originalVideo = document.getElementById("original");
+  await setVideoSrc(originalVideo, LONG_VIDEO);
+
+  await originalVideo.play();
+
+  // Ensure that hiding and pausing this video will cause us to
+  // try suspending it.
+  await ensureVideoSuspendable(originalVideo);
+
+  await withNewClone(originalVideo, async clone => {
+    SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
+
+    // Go back to the beginning of the video to give us enough time to
+    // fail to suspend the video when it's being cloned before the
+    // video ends.
+    originalVideo.removeAttribute("loop");
+    originalVideo.currentTime = 0;
+    await waitForEventOnce(originalVideo, "seeked");
+
+    let suspendTimerFired = false;
+
+    let listener = () => {
+      suspendTimerFired = true;
+    }
+    originalVideo.addEventListener("mozstartvideosuspendtimer", listener);
+
+    // Have to do this to access normally-preffed off binding methods for some
+    // reason.
+    // See bug 1544257.
+    SpecialPowers.wrap(originalVideo).setVisible(false);
+
+    await waitForEventOnce(originalVideo, "ended");
+
+    originalVideo.removeEventListener("mozstartvideosuspendtimer", listener);
+
+    ok(!suspendTimerFired,
+       "mozstartvideosuspendtimer should not have fired.");
+
+    // Have to do this to access normally-preffed off binding methods for some
+    // reason.
+    // See bug 1544257.
+    SpecialPowers.wrap(originalVideo).setVisible(true);
+  });
+
+  await originalVideo.play();
+
+  // With the clone gone, the original video should be able to suspend now.
+  await ensureVideoSuspendable(originalVideo);
+
+  await setVideoSrc(originalVideo, TEST_VIDEO_1);
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US" class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Test: CSS display:contents; generated content</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+  <link rel="help" href="http://dev.w3.org/csswg/css-display">
+<style type="text/css">
+body,html { color:black; background-color:white; }
+div { display:inline; }
+
+.test {
+  display: contents;
+  content: "content";
+  color: lime;
+}
+.contents {
+  display: contents;
+  color: green;
+}
+.s1 {display: none;}
+.s2 {display: none;}
+.s3 {display: contents;}
+.s5 {display: contents;}
+.s7 {display: none;}
+.s8 {display: none;}
+.s9 {display: contents;}
+.s11 {display: contents;}
+.before::before {
+  display: contents;
+  content:"before";
+}
+.after::after {
+  display: contents;
+  content:"after";
+}
+</style>
+<script>
+
+function runTest() {
+  document.body.offsetHeight;
+  document.querySelector('.t1').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.t2').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.t3').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.t4').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.t5').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.t6').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.t7').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.t8').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.t9').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.t10').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.t11').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.t12').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.t13').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.s1').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.s2').style.display = 'inline';
+  document.body.offsetHeight;
+  document.querySelector('.s3').style.display = 'normal';
+  document.body.offsetHeight;
+  document.querySelector('.s4').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.s5').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.s6').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.s7').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.s8').style.display = 'inline';
+  document.body.offsetHeight;
+  document.querySelector('.s9').style.display = 'normal';
+  document.body.offsetHeight;
+  document.querySelector('.s10').className = 'contents';
+  document.body.offsetHeight;
+  document.querySelector('.s11').style.display = 'none';
+  document.body.offsetHeight;
+  document.querySelector('.s12').style.display = 'none';
+  document.body.offsetHeight;
+
+  document.documentElement.className = '';
+}
+
+</script>
+</head>
+<body onload="runTest()">
+
+<div class="test"><span>A a</span></div>
+<div class="test"><span class="t1">t1</span></div>
+<div class="test"><span class="t2">t2</span></div>
+<div class="contents before">1<span>B b</span>2</div>
+<div class="contents after">1<span>C c</span>2</div>
+<div class="contents before after">1<span>D d</span>2</div>
+<div class="contents before">1<span class="t5">B b</span>2</div>
+<div class="contents after">1<span class="t6">C c</span>2</div>
+<div class="contents before after">1<span class="t7">D d</span>2</div>
+
+<div class="contents">
+  <div class="test"><span>span</span></div>
+  <div class="test"><span class="t3">t3</span></div>
+  <div class="test"><span class="t4">t4</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+  <div class="contents before">1<span class="t8">span</span>2</div>
+  <div class="contents after">1<span class="t9">span</span>2</div>
+  <div class="contents before after">1<span class="t10">span</span>2</div>
+  <div class="contents before">1<span class="t11">span</span>2</div>
+  <div class="contents after">1<span class="t12">span</span>2</div>
+  <div class="contents before after">1<span class="t13">span</span>2</div>
+</div>
+
+<div class="contents"><span class="s1">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s2">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s3">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s4">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s5">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s6">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents before"><span class="s7">
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents after"><span class="s8">
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s9">
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents before after"><span class="s10">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents before"><span class="s11">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents after"><span class="s12">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+</body>
+</html>

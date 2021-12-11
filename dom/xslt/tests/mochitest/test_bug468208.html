@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=468208
+-->
+<head>
+  <title>Test for Bug 468208</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=468208">Mozilla Bug 468208</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 468208 **/
+var xslt =
+    '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
+        <xsl:strip-space elements="color"/>\n\
+    </xsl:stylesheet>'
+;
+var xsltdoc = new DOMParser().parseFromString(xslt, "text/xml"); 
+
+var processor = new XSLTProcessor;
+processor.importStylesheet(xsltdoc);
+ok(true, "XSLT shouldn't leak");
+</script>
+</pre>
+</body>
+</html>

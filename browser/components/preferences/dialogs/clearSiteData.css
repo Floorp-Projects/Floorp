@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.options-container {
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
+  color: var(--in-content-text-color);
+  padding: 0.5em;
+}
+
+.option {
+  padding-bottom: 8px;
+}
+
+.option-description {
+  color: var(--in-content-deemphasized-text);
+  margin-top: -0.5em !important;
+}

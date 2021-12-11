@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Non-stretchy msup</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  </head>
+  <body>
+    <!-- See bug 687807 -->
+    <math >
+      <mrow>
+        <mrow>
+          <msup>
+            <mo stretchy="true">&#x2192;</mo>
+            <mtext>AAAAAA</mtext>
+          </msup>
+        </mrow>
+      </mrow>
+    </math>
+  </body>
+</html>

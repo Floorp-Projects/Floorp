@@ -1,0 +1,64 @@
+.. _mozilla_projects_nss_nss_3_69_release_notes:
+
+NSS 3.69 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.69 was released on **5 August 2021**.
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_69_RTM. NSS 3.69 requires NSPR 4.32 or newer.
+
+   NSS 3.69 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_69_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _bugs_fixed_in_nss_3.69:
+
+`Bugs fixed in NSS 3.69 <#bugs_fixed_in_nss_3.69>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1722613 - Disable DTLS 1.0 and 1.1 by default
+   - Bug 1720226 - integrity checks in key4.db not happening on private components with AES_CBC
+   - Bug 1720235 - SSL handling of signature algorithms ignores environmental invalid algorithms.
+   - Bug 1721476 - sqlite 3.34 changed it's open semantics, causing nss failures.
+   - Bug 1720230 - Gtest update changed the gtest reports, losing gtest details in all.sh reports.
+   - Bug 1720228 - NSS incorrectly accepting 1536 bit DH primes in FIPS mode
+   - Bug 1720232 - SQLite calls could timeout in starvation situations.
+   - Bug 1720225 - Coverity/cpp scanner errors found in nss 3.67
+   - Bug 1709817 - Import the NSS documentation from MDN in nss/doc.
+   - Bug 1720227 - NSS using a tempdir to measure sql performance not active
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.69 shared libraries are backwards-compatible with all older NSS 3.x shared libraries. A
+   program linked with older NSS 3.x shared libraries will work with NSS 3.69 shared libraries
+   without recompiling or relinking. Furthermore, applications that restrict their use of NSS APIs
+   to the functions listed in NSS Public Functions will remain compatible with future versions of
+   the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).

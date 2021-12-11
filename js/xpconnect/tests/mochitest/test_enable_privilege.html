@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <title>Test page for enablePrivilege</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script>
+      function init() {
+        var result = document.getElementById("result");
+        try {
+          /* globals netscape */
+          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+          result.textContent = "FAIL";
+        } catch (ex) {
+          result.textContent = "PASS";
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <p id="result"></p>
+    <script>
+      init();
+      is(result.textContent, "PASS", "enablePrivilege should be unavaillable");
+    </script>
+  </body>
+</html>

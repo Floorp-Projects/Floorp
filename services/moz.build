@@ -1,0 +1,29 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("moz.build"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
+DIRS += [
+    "common",
+    "crypto",
+    "interfaces",
+    "settings",
+]
+
+# The automation dir is only included in nightlies and debug
+if not CONFIG["RELEASE_OR_BETA"] or CONFIG["MOZ_DEBUG"]:
+    DIRS += ["automation"]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
+    DIRS += [
+        "fxaccounts",
+    ]
+
+if CONFIG["MOZ_SERVICES_SYNC"]:
+    DIRS += ["sync"]
+
+SPHINX_TREES["/services"] = "docs"

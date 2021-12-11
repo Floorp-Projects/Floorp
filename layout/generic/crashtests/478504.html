@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+var t;
+
+function a()
+{
+  if (t) document.body.removeChild(t);
+
+  t = document.createTextNode("");
+  document.body.appendChild(t);
+  t.data += "ab\u06CD";
+
+  setTimeout(b, 1);
+}
+
+function b()
+{
+  document.documentElement.offsetHeight;
+  t.data = "d";
+  t.data += " ";
+
+  setTimeout(a, 1);
+}
+
+
+</script>
+</head>
+<body onload="a();">
+</body>
+</html>

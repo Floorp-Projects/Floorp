@@ -1,0 +1,23 @@
+<!doctype html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Test reference for bug 1423331: Contenteditable insertion with pseudo-elements</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+#editable {
+  outline: 1px solid black;
+  width: 300px;
+  height: 100px;
+}
+</style>
+<div id="editable" contenteditable></div>
+<script>
+SimpleTest.waitForFocus(function() {
+  let div = document.getElementById("editable");
+  div.focus();
+  sendString("xxx");
+  document.documentElement.className = "";
+});
+</script>
+</html>

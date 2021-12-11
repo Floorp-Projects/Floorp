@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=508115
+-->
+<window title="Mozilla Bug 508115"
+  onload="setTimeout(doTest, 0)"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=508115">Mozilla Bug 508115</a>
+
+  <p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+<script class="testbody" type="application/javascript"><![CDATA[
+function doTest() {
+  document.getElementById("panel").style.display = '';
+  document.getElementById("deck").selectedIndex = 1;
+  document.getElementById("anchor").open = true;
+  document.getElementById("container").style.width = "0";
+  document.getElementById("anchor2").open = true;
+}
+var count = 0;
+function shown(id) {
+  ok(true, "Shown popup " + id);
+  ++count;
+  if (count >= 2) {
+    SimpleTest.finish();
+  }
+}
+SimpleTest.waitForExplicitFinish();
+]]></script>
+<deck id="deck" style="margin:50px;">
+  <vbox></vbox>
+  <vbox id="panel" style="display:none">
+    <vbox>
+    <menulist id="anchor">
+      <menupopup id="popup" onpopupshown="shown('anchor')">
+        <menuitem label="One"/>
+        <menuitem label="Two"/>
+        <menuitem label="Three"/>
+      </menupopup>
+    </menulist>
+    </vbox>
+  </vbox>
+</deck>
+<description>
+<html:div id="container">
+  <html:span id="span" style="-moz-transform: translate(0,0)">Hello Kitty
+    <menulist id="anchor2" style="display:-moz-inline-box;">
+      <menupopup id="popup" onpopupshown="shown('anchor2')">
+        <menuitem label="One"/>
+        <menuitem label="Two"/>
+        <menuitem label="Three"/>
+      </menupopup>
+    </menulist>
+  </html:span>
+</html:div>
+</description>
+</window>

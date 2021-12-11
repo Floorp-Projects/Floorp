@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    body {
+      background-color: white;
+      margin: 0;
+    }
+    table {
+      border-collapse: collapse;
+      position: absolute;
+    }
+    #first-table {
+      left: 0px;
+    }
+    #second-table {
+      left: 100px;
+    }
+    #third-table {
+      left: 200px;
+    }
+    #fourth-table {
+      left: 300px;
+    }
+    td {
+      border-style: solid;
+      border-width: 5px;
+      border-color: transparent;
+      color: rgba(0,0,0,0);
+    }
+    #first-table td {
+      border-color: gold;
+    }
+    .bg-blue {
+      background-color: blue;
+    }
+    .bg-cyan {
+      background-color: cyan;
+    }
+    .bg-grey {
+      background-color: grey;
+    }
+    .bg-green {
+      background-color: green;
+    }
+    .bg-khaki {
+      background-color: khaki;
+    }
+    .bg-purple {
+      background-color: purple;
+    }
+    .bg-white {
+      background-color: white;
+    }
+    .show-text {
+      color: rgba(0,0,0,1);
+    }
+  </style>
+</head>
+<body>
+  <table id="first-table">
+    <thead>
+      <tr>
+        <td class="bg-khaki">XXX</td>
+        <td class="bg-purple">YYY</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bg-khaki">XXX</td>
+        <td class="bg-purple">YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-khaki">XXX</td>
+        <td rowspan=2 class="bg-purple">YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-khaki">XXX</td>
+      </tr>
+      <tr>
+        <td colspan=2 class="bg-khaki">XXX</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="bg-green">XXX</td>
+        <td class="bg-blue show-text">YYY</td>
+      </tr>
+    </tfoot>
+  </table>
+  <table id="second-table">
+    <thead>
+      <tr>
+        <td class="bg-green">XXX</td>
+        <td class="bg-green">YYY</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bg-green">XXX</td>
+        <td class="bg-blue show-text">YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-cyan show-text">XXX</td>
+        <td rowspan=2 class="bg-green">YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-grey show-text">&nbsp;</td>
+      </tr>
+      <tr>
+        <td colspan=2 class="bg-green">XXX</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="bg-cyan show-text">XXX</td>
+        <td class="bg-white show-text">&nbsp;</td>
+      </tr>
+    </tfoot>
+  </table>
+  <table id="third-table">
+    <thead>
+      <tr>
+        <td class="bg-cyan show-text">XXX</td>
+        <td class="bg-blue show-text">YYY</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bg-cyan show-text">XXX</td>
+        <td class="bg-white">YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-white">XXX</td>
+        <td rowspan=2 class="bg-blue show-text">YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-green">XXX</td>
+      </tr>
+      <tr>
+        <td colspan=2 class="bg-cyan show-text">XXX</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="bg-white">XXX</td>
+        <td class="bg-white">YYY</td>
+      </tr>
+    </tfoot>
+  </table>
+  <table id="fourth-table">
+    <thead>
+      <tr>
+        <td class="bg-white">XXX</td>
+        <td class="bg-white">YYY</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bg-white">XXX</td>
+        <td class="bg-white">YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-white">XXX</td>
+        <td class="bg-white" rowspan=2>YYY</td>
+      </tr>
+      <tr>
+        <td class="bg-cyan show-text">XXX</td>
+      </tr>
+      <tr>
+        <td class="bg-white" colspan=2>XXX</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="bg-white">XXX</td>
+        <td class="bg-white">YYY</td>
+      </tr>
+    </tfoot>
+  </table>
+</body>

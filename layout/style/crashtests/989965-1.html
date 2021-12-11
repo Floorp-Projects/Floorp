@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<body>
+<style>
+::placeholder { color: red; }
+::placeholder:focus { color: green; }
+</style>
+<script>
+window.getComputedStyle(document.body, "::placeholder").color;
+</script>

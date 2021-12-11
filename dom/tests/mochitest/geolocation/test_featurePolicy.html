@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for geolocation + featurePolicy</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  [ "geolocation 'none'", "denied"],
+  [ "geolocation", "allowed"],
+  [ "geolocation 'src'", "allowed"],
+  [ "geolocation 'self'", "allowed"],
+  [ "geolocation *", "allowed"],
+  [ "geolocation http://random.net", "denied"],
+  [ null, "allowed" ],
+];
+
+function nextTest() {
+  if (tests.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let test = tests.shift();
+
+  var iframe = document.createElement("iframe");
+  if (test[0]) {
+    iframe.setAttribute("allow", test[0]);
+  }
+
+  window.continueTest = msg => {
+    delete window.continueTest;
+
+    is(msg, test[1], "Expected " + test[1] + " for " + test[0]);
+    document.body.removeChild(iframe);
+    SimpleTest.executeSoon(nextTest);
+  };
+
+  iframe.src = "file_featurePolicy.html";
+  document.body.appendChild(iframe);
+}
+
+nextTest();
+</script>
+</body>
+</html>

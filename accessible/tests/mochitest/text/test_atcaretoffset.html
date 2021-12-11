@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test: nsIAccessibleText getText* functions at caret offset</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    // gA11yEventDumpToConsole = true; // debugging
+
+    function traverseTextByLines(aQueue, aID, aLines) {
+      var wholeText = "";
+      for (var i = 0; i < aLines.length ; i++)
+        wholeText += aLines[i][0] + aLines[i][1];
+
+      var baseInvokerFunc = synthClick;
+      var charIter = new charIterator(wholeText, aLines);
+      // charIter.debugOffset = 10; // enable to run tests at given offset only
+
+      while (charIter.next()) {
+        aQueue.push(new tmpl_moveTo(aID, baseInvokerFunc, wholeText, charIter));
+        baseInvokerFunc = synthRightKey;
+      }
+    }
+
+    /**
+     * Used to get test list for each traversed character.
+     */
+    function charIterator(aWholeText, aLines) {
+      this.next = function charIterator_next() {
+        // Don't increment offset if we are at end of the wrapped line
+        // (offset is shared between end of this line and start of next line).
+        if (this.mAtWrappedLineEnd) {
+          this.mAtWrappedLineEnd = false;
+          this.mLine = this.mLine.nextLine;
+          return true;
+        }
+
+        this.mOffset++;
+        if (this.mOffset > aWholeText.length)
+          return false;
+
+        var nextLine = this.mLine.nextLine;
+        if (!nextLine.isFakeLine() && this.mOffset == nextLine.start) {
+          if (nextLine.start == this.mLine.end)
+            this.mAtWrappedLineEnd = true;
+          else
+            this.mLine = nextLine;
+        }
+
+        return true;
+      };
+
+      Object.defineProperty(this, "offset", { get() { return this.mOffset; },
+      });
+
+      Object.defineProperty(this, "offsetDescr", { get() {
+          return this.mOffset + " offset (" + this.mLine.number + " line, " +
+            (this.mOffset - this.mLine.start) + " offset on the line)";
+        },
+      });
+
+      Object.defineProperty(this, "tests", { get() {
+          // Line boundary tests.
+          var cLine = this.mLine;
+          var pLine = cLine.prevLine;
+          var ppLine = pLine.prevLine;
+          var nLine = cLine.nextLine;
+          var nnLine = nLine.nextLine;
+
+          var lineTests = [
+            [ testTextBeforeOffset, BOUNDARY_LINE_START, pLine.start, cLine.start],
+            [ testTextBeforeOffset, BOUNDARY_LINE_END, ppLine.end, pLine.end],
+            [ testTextAtOffset, BOUNDARY_LINE_START, cLine.start, nLine.start],
+            [ testTextAtOffset, BOUNDARY_LINE_END, pLine.end, cLine.end],
+            [ testTextAfterOffset, BOUNDARY_LINE_START, nLine.start, nnLine.start],
+            [ testTextAfterOffset, BOUNDARY_LINE_END, cLine.end, nLine.end],
+          ];
+
+          // Word boundary tests.
+          var cWord = this.mLine.firstWord;
+          var nWord = cWord.nextWord, pWord = cWord.prevWord;
+
+          // The current word is a farthest word starting at or after the offset.
+          if (this.mOffset >= nWord.start) {
+            while (this.mOffset >= nWord.start && !this.mLine.isLastWord(cWord)) {
+              cWord = nWord;
+              nWord = nWord.nextWord;
+            }
+            pWord = cWord.prevWord;
+          } else if (this.mOffset < cWord.start) {
+            while (this.mOffset < cWord.start) {
+              cWord = pWord;
+              pWord = pWord.prevWord;
+            }
+            nWord = cWord.nextWord;
+          }
+
+          var nnWord = nWord.nextWord, ppWord = pWord.prevWord;
+
+          var isAfterWordEnd =
+            this.mOffset > cWord.end || cWord.line != this.mLine;
+          var isAtOrAfterWordEnd = (this.mOffset >= cWord.end);
+          var useNextWordForAtWordEnd =
+            isAtOrAfterWordEnd && this.mOffset != aWholeText.length;
+
+          var wordTests = [
+            [ testTextBeforeOffset, BOUNDARY_WORD_START,
+              pWord.start, cWord.start ],
+            [ testTextBeforeOffset, BOUNDARY_WORD_END,
+              (isAfterWordEnd ? pWord : ppWord).end,
+              (isAfterWordEnd ? cWord : pWord).end ],
+            [ testTextAtOffset, BOUNDARY_WORD_START,
+              cWord.start, nWord.start ],
+            [ testTextAtOffset, BOUNDARY_WORD_END,
+              (useNextWordForAtWordEnd ? cWord : pWord).end,
+              (useNextWordForAtWordEnd ? nWord : cWord).end ],
+            [ testTextAfterOffset, BOUNDARY_WORD_START,
+              nWord.start, nnWord.start ],
+            [ testTextAfterOffset, BOUNDARY_WORD_END,
+              (isAfterWordEnd ? nWord : cWord).end,
+              (isAfterWordEnd ? nnWord : nWord).end ],
+          ];
+
+          // Character boundary tests.
+          var prevOffset = this.offset > 1 ? this.offset - 1 : 0;
+          var nextOffset = this.offset >= aWholeText.length ?
+            this.offset : this.offset + 1;
+          var nextAfterNextOffset = nextOffset >= aWholeText.length ?
+            nextOffset : nextOffset + 1;
+
+          var charTests = [
+            [ testTextBeforeOffset, BOUNDARY_CHAR,
+              prevOffset, this.offset ],
+            [ testTextAtOffset, BOUNDARY_CHAR,
+              this.offset,
+              this.mAtWrappedLineEnd ? this.offset : nextOffset ],
+            [ testTextAfterOffset, BOUNDARY_CHAR,
+              this.mAtWrappedLineEnd ? this.offset : nextOffset,
+              this.mAtWrappedLineEnd ? nextOffset : nextAfterNextOffset ],
+          ];
+
+          return lineTests.concat(wordTests.concat(charTests));
+        },
+      });
+
+      Object.defineProperty(this, "failures", { get() {
+          if (this.mOffset == this.mLine.start)
+            return this.mLine.lineStartFailures;
+          if (this.mOffset == this.mLine.end)
+            return this.mLine.lineEndFailures;
+          return [];
+        },
+      });
+
+      this.mOffset = -1;
+      this.mLine = new line(aWholeText, aLines, 0);
+      this.mAtWrappedLineEnd = false;
+      this.mWord = this.mLine.firstWord;
+    }
+
+    /**
+     * A line object. Allows to navigate by lines and by words.
+     */
+    function line(aWholeText, aLines, aIndex) {
+      Object.defineProperty(this, "prevLine", { get() {
+          return new line(aWholeText, aLines, aIndex - 1);
+        },
+      });
+      Object.defineProperty(this, "nextLine", { get() {
+          return new line(aWholeText, aLines, aIndex + 1);
+        },
+      });
+
+      Object.defineProperty(this, "start", { get() {
+          if (aIndex < 0)
+            return 0;
+
+          if (aIndex >= aLines.length)
+            return aWholeText.length;
+
+          return aLines[aIndex][2];
+        },
+      });
+      Object.defineProperty(this, "end", { get() {
+          if (aIndex < 0)
+            return 0;
+
+          if (aIndex >= aLines.length)
+            return aWholeText.length;
+
+          return aLines[aIndex][3];
+        },
+      });
+
+      Object.defineProperty(this, "number", { get() { return aIndex; },
+      });
+      Object.defineProperty(this, "wholeText", { get() { return aWholeText; },
+      });
+      this.isFakeLine = function line_isFakeLine() {
+        return aIndex < 0 || aIndex >= aLines.length;
+      };
+
+      Object.defineProperty(this, "lastWord", { get() {
+          if (aIndex < 0)
+            return new word(this, [], -1);
+          if (aIndex >= aLines.length)
+            return new word(this, [], 0);
+
+          var words = aLines[aIndex][4].words;
+          return new word(this, words, words.length - 2);
+        },
+      });
+      Object.defineProperty(this, "firstWord", { get() {
+          if (aIndex < 0)
+            return new word(this, [], -1);
+          if (aIndex >= aLines.length)
+            return new word(this, [], 0);
+
+          var words = aLines[aIndex][4].words;
+          return new word(this, words, 0);
+        },
+      });
+
+      this.isLastWord = function line_isLastWord(aWord) {
+        var lastWord = this.lastWord;
+        return lastWord.start == aWord.start && lastWord.end == aWord.end;
+      };
+
+      Object.defineProperty(this, "lineStartFailures", { get() {
+          if (aIndex < 0 || aIndex >= aLines.length)
+            return [];
+
+          return aLines[aIndex][4].lsf || [];
+        },
+      });
+      Object.defineProperty(this, "lineEndFailures", { get() {
+          if (aIndex < 0 || aIndex >= aLines.length)
+            return [];
+
+          return aLines[aIndex][4].lef || [];
+        },
+      });
+    }
+
+    /**
+     * A word object. Allows to navigate by words.
+     */
+    function word(aLine, aWords, aIndex) {
+      Object.defineProperty(this, "prevWord", { get() {
+          if (aIndex >= 2)
+            return new word(aLine, aWords, aIndex - 2);
+
+          var prevLineLastWord = aLine.prevLine.lastWord;
+          if (this.start == prevLineLastWord.start && !this.isFakeStartWord())
+            return prevLineLastWord.prevWord;
+          return prevLineLastWord;
+        },
+      });
+      Object.defineProperty(this, "nextWord", { get() {
+          if (aIndex + 2 < aWords.length)
+            return new word(aLine, aWords, aIndex + 2);
+
+          var nextLineFirstWord = aLine.nextLine.firstWord;
+          if (this.end == nextLineFirstWord.end && !this.isFakeEndWord())
+            return nextLineFirstWord.nextWord;
+          return nextLineFirstWord;
+        },
+      });
+
+      Object.defineProperty(this, "line", { get() { return aLine; } });
+
+      Object.defineProperty(this, "start", { get() {
+          if (this.isFakeStartWord())
+            return 0;
+
+          if (this.isFakeEndWord())
+            return aLine.end;
+           return aWords[aIndex];
+        },
+      });
+      Object.defineProperty(this, "end", { get() {
+          if (this.isFakeStartWord())
+            return 0;
+
+          return this.isFakeEndWord() ? aLine.end : aWords[aIndex + 1];
+        },
+      });
+
+      this.toString = function word_toString() {
+        var start = this.start, end = this.end;
+        return "'" + aLine.wholeText.substring(start, end) +
+          "' at [" + start + ", " + end + "]";
+      };
+
+      this.isFakeStartWord = function() { return aIndex < 0; };
+      this.isFakeEndWord = function() { return aIndex >= aWords.length; };
+    }
+
+    /**
+     * A template invoker to move through the text.
+     */
+    function tmpl_moveTo(aID, aInvokerFunc, aWholeText, aCharIter) {
+      this.offset = aCharIter.offset;
+
+      var checker = new caretMoveChecker(this.offset, true, aID);
+      this.__proto__ = new (aInvokerFunc)(aID, checker);
+
+      this.finalCheck = function genericMoveTo_finalCheck() {
+        if (this.noTests())
+          return;
+
+        for (var i = 0; i < this.tests.length; i++) {
+          var func = this.tests[i][0];
+          var boundary = this.tests[i][1];
+          var startOffset = this.tests[i][2];
+          var endOffset = this.tests[i][3];
+          var text = aWholeText.substring(startOffset, endOffset);
+
+          var isOk1 = kOk, isOk2 = kOk, isOk3 = kOk;
+          for (var fIdx = 0; fIdx < this.failures.length; fIdx++) {
+            var failure = this.failures[fIdx];
+            if (func.name.includes(failure[0]) && boundary == failure[1]) {
+              isOk1 = failure[2];
+              isOk2 = failure[3];
+              isOk3 = failure[4];
+            }
+          }
+
+          func(kCaretOffset, boundary, text, startOffset, endOffset,
+               aID, isOk1, isOk2, isOk3);
+        }
+      };
+
+      this.getID = function genericMoveTo_getID() {
+        return "move to " + this.offsetDescr;
+      };
+
+      this.noTests = function tmpl_moveTo_noTests() {
+        return ("debugOffset" in aCharIter) &&
+          (aCharIter.debugOffset != this.offset);
+      };
+
+      this.offsetDescr = aCharIter.offsetDescr;
+      this.tests = this.noTests() ? null : aCharIter.tests;
+      this.failures = aCharIter.failures;
+    }
+
+    var gQueue = null;
+    function doTest() {
+      gQueue = new eventQueue();
+
+      // __a__w__o__r__d__\n
+      //  0  1  2  3  4  5
+      // __t__w__o__ (soft line break)
+      //  6  7  8  9
+      // __w__o__r__d__s
+      // 10 11 12 13 14 15
+
+      traverseTextByLines(gQueue, "textarea",
+                          [ [ "aword", "\n", 0, 5, { words: [ 0, 5 ] } ],
+                            [ "two ", "", 6, 10, { words: [ 6, 9 ] } ],
+                            [ "words", "", 10, 15, { words: [ 10, 15 ] } ],
+                          ] );
+
+      var line4 = [ // "riend "
+        [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+      ];
+      traverseTextByLines(gQueue, "ta_wrapped",
+                          [ [ "hi ", "", 0, 3, { words: [ 0, 2 ] } ],
+                            [ "hello ", "", 3, 9, { words: [ 3, 8 ] } ],
+                            [ "my ", "", 9, 12, { words: [ 9, 11 ] } ],
+                            [ "longf", "", 12, 17, { words: [ 12, 17 ] } ],
+                            [ "riend ", "", 17, 23, { words: [ 17, 22 ], lsf: line4 } ],
+                            [ "t sq ", "", 23, 28, { words: [ 23, 24, 25, 27 ] } ],
+                            [ "t", "", 28, 29, { words: [ 28, 29 ] } ],
+                          ] );
+
+      gQueue.invoke(); // will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="nsIAccessibleText getText related functions tests at caret offset"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=852021">
+   Bug 852021
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+
+  <textarea id="textarea" cols="5">aword
+two words</textarea>
+
+  <!-- scrollbar-width: none is needed so that the width of the scrollbar
+    doesn't incorrectly affect the width of the textarea on some systems.
+    See bug 1600170 and bug 33654.
+    -->
+  <textarea id="ta_wrapped" cols="5" style="scrollbar-width: none;">hi hello my longfriend t sq t</textarea>
+  </pre>
+</body>
+</html>

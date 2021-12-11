@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+var i = 0;
+function next(w)
+{
+  ++i;
+  if (i == 1)
+    w.location.reload();
+  if (i == 2)
+    document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body>
+<iframe src="457050-1-inner.html"></iframe>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-size: contain; background-clip: padding-box, background-origin: border-box</title>
+  <style type="text/css">
+#outer
+{
+  border: 1px solid black;
+  width: 64px;
+  height: 128px;
+}
+#inner
+{
+  border: 20px solid transparent;
+  width: 24px;
+  height: 88px;
+  background-image: url(aqua-32x32.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-clip: padding-box;
+  background-origin: border-box;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"></div></div>
+</body>
+</html>

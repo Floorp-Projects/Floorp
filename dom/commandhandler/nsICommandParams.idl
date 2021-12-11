@@ -1,0 +1,93 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/*
+ * nsICommandParams is used to pass parameters to commands executed
+ * via nsICommandManager, and to get command state.
+ *
+ */
+
+
+%{C++
+class nsCommandParams;
+%}
+
+[scriptable, builtinclass, uuid(b1fdf3c4-74e3-4f7d-a14d-2b76bcf53482)]
+interface nsICommandParams : nsISupports
+{
+  /*
+   * List of primitive types for parameter values.
+   */
+  const short eNoType                     = 0;      /* Only used for sanity checking */
+  const short eBooleanType                = 1;
+  const short eLongType                   = 2;
+  const short eDoubleType                 = 3;
+  const short eWStringType                = 4;
+  const short eISupportsType              = 5;
+  const short eStringType                 = 6;
+
+  /*
+   * getValueType
+   *
+   * Get the type of a specified parameter
+   */
+  short       getValueType(in string name);
+
+  /*
+   * get_Value
+   *
+   * Get the value of a specified parameter. Will return
+   * an error if the parameter does not exist, or if the value
+   * is of the wrong type (no coercion is performed for you).
+   *
+   * nsISupports values can contain any XPCOM interface,
+   * as documented for the command. It is permissible
+   * for it to contain nsICommandParams, but not *this*
+   * one (i.e. self-containing is not allowed).
+   */
+  boolean     getBooleanValue(in string name);
+  long        getLongValue(in string name);
+  double      getDoubleValue(in string name);
+  AString     getStringValue(in string name);
+  ACString    getCStringValue(in string name);
+  nsISupports getISupportsValue(in string name);
+
+  /*
+   * set_Value
+   *
+   * Set the value of a specified parameter (thus creating
+   * an entry for it).
+   *
+   * nsISupports values can contain any XPCOM interface,
+   * as documented for the command. It is permissible
+   * for it to contain nsICommandParams, but not *this*
+   * one (i.e. self-containing is not allowed).
+   */
+  void        setBooleanValue(in string name, in boolean value);
+  void        setLongValue(in string name, in long value);
+  void        setDoubleValue(in string name, in double value);
+  void        setStringValue(in string name, in AString value);
+  void        setCStringValue(in string name, in ACString value);
+  void        setISupportsValue(in string name, in nsISupports value);
+
+  /*
+   * removeValue
+   *
+   * Remove the specified parameter from the list.
+   */
+  void        removeValue(in string name);
+
+%{C++
+  /**
+   * In order to avoid circular dependency issues, these methods are defined
+   * in nsCommandParams.h.  Consumers need to #include that header.
+   */
+  inline nsCommandParams* AsCommandParams();
+  inline const nsCommandParams* AsCommandParams() const;
+%}
+};
+

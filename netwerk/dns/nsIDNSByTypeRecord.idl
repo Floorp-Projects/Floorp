@@ -1,0 +1,133 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDNSRecord.idl"
+
+%{ C++
+
+#include "mozilla/Maybe.h"
+#include "mozilla/Tuple.h"
+#include "nsTArrayForwardDeclare.h"
+#include "nsHttp.h"
+#include "nsStringFwd.h"
+
+namespace mozilla {
+
+template <typename... Ts> class Variant;
+struct Nothing;
+
+namespace net {
+  struct SVCB;
+  using TypeRecordResultType =
+    Variant<Nothing, CopyableTArray<nsCString>, CopyableTArray<SVCB>>;
+}
+}
+
+%}
+
+[ref] native CStringArrayRef(CopyableTArray<nsCString>);
+native TypeResult(mozilla::net::TypeRecordResultType);
+
+native MaybePort(mozilla::Maybe<uint16_t>);
+native MaybeAlpnTuple(mozilla::Maybe<mozilla::Tuple<nsCString, mozilla::net::SupportedAlpnType>>);
+
+[scriptable, uuid(5d13241b-9d46-448a-90d8-77c418491026)]
+interface nsIDNSByTypeRecord : nsIDNSRecord
+{
+  /**
+   * Returns DNS request type that was made for this request.
+   */
+  readonly attribute unsigned long type;
+
+  [noscript] readonly attribute TypeResult results;
+};
+
+[scriptable, uuid(2a71750d-cb21-45f1-9e1c-666d18dd7645)]
+interface nsIDNSTXTRecord : nsISupports
+{
+  CStringArrayRef getRecords();
+
+  /*
+   * Return concatenated strings.
+   */
+  ACString getRecordsAsOneString();
+};
+
+[scriptable, uuid(2979ceaa-9c7e-49de-84b8-ea81c16aebf1)]
+interface nsISVCParam : nsISupports {
+  readonly attribute uint16_t type;
+};
+
+[scriptable, uuid(0dc58309-4d67-4fc4-a4e3-38dbde9d9f4c)]
+interface nsISVCParamAlpn : nsISupports {
+  readonly attribute Array<ACString> alpn;
+};
+
+[scriptable, uuid(b3ed89c3-2ae6-4c92-8176-b76bc2437fcb)]
+interface nsISVCParamNoDefaultAlpn : nsISupports {
+};
+
+[scriptable, uuid(a37c7bcb-bfcd-4ab4-b826-cc583859ba73)]
+interface nsISVCParamPort : nsISupports {
+  readonly attribute uint16_t port;
+};
+
+[scriptable, uuid(d3163d2f-0bbe-47d4-bcac-db3fb1433b39)]
+interface nsISVCParamIPv4Hint : nsISupports {
+  readonly attribute Array<nsINetAddr> ipv4Hint;
+};
+
+[scriptable, uuid(1f31e41d-b6d8-4796-b12a-82ef8d2b0e43)]
+interface nsISVCParamEchConfig : nsISupports {
+  readonly attribute ACString echconfig;
+};
+
+[scriptable, uuid(5100bce4-9d3b-42e1-a3c9-0f386bbc9dad)]
+interface nsISVCParamIPv6Hint : nsISupports {
+  readonly attribute Array<nsINetAddr> ipv6Hint;
+};
+
+[scriptable, uuid(bdcef040-452e-11eb-b378-0242ac130002)]
+interface nsISVCParamODoHConfig : nsISupports {
+  readonly attribute ACString ODoHConfig;
+};
+
+[scriptable, builtinclass, uuid(a4da5645-2160-4439-bd11-540a2d26c989)]
+interface nsISVCBRecord : nsISupports {
+  readonly attribute uint16_t priority;
+  readonly attribute ACString name;
+  [noscript, nostdcall, notxpcom] readonly attribute MaybePort port;
+  [noscript, nostdcall, notxpcom] readonly attribute MaybeAlpnTuple alpn;
+  readonly attribute ACString selectedAlpn;
+  readonly attribute ACString echConfig;
+  readonly attribute ACString ODoHConfig;
+  readonly attribute bool hasIPHintAddress;
+  readonly attribute Array<nsISVCParam> values;
+};
+
+[scriptable, uuid(5b649e95-e0d3-422b-99a6-79d70a041387)]
+interface nsIDNSHTTPSSVCRecord : nsISupports
+{
+  readonly attribute Array<nsISVCBRecord> records;
+  nsISVCBRecord GetServiceModeRecord(in boolean aNoHttp2, in boolean aNoHttp3);
+  /**
+   * Returns true if one of SVCB records has IPv4 or IPv6 hint addresses.
+   */
+  readonly attribute boolean hasIPAddresses;
+
+  /**
+   * Returns true when all names of SVCB records are in exclusion list.
+   */
+  readonly attribute boolean allRecordsExcluded;
+
+  /**
+   * Returns the ttl of this record.
+   */
+  readonly attribute uint32_t ttl;
+
+  Array<nsISVCBRecord> GetAllRecordsWithEchConfig(in boolean aNoHttp2,
+                                                  in boolean aNoHttp3,
+                                                  out boolean aAllRecordsHaveEchConfig,
+                                                  out boolean aAllRecordsInH3ExcludedList);
+};

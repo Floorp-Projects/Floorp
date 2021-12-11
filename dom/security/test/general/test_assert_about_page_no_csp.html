@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1490977: Test Assertion if content privileged about: page has no CSP</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="testframe"></iframe>
+<script class="testbody" type="text/javascript">
+
+  // Test Setup: The test overrules the allowlist of about: pages that are allowed to load
+  // without a CSP and makes sure to hit the assertion within AssertAboutPageHasCSP().
+
+  SpecialPowers.setBoolPref("dom.security.skip_about_page_csp_allowlist_and_assert", true);
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectAssertions(0, 1);
+
+  ok(true, "sanity: prefs flipped and test runs");
+  let myFrame = document.getElementById("testframe");
+  myFrame.src = "about:blank";
+  // booom :-)
+
+  SpecialPowers.setBoolPref("dom.security.skip_about_page_csp_allowlist_and_assert", false);
+  SimpleTest.finish();
+</script>
+</pre>
+</body>
+</html>

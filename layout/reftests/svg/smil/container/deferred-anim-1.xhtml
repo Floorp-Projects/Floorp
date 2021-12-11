@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Deferred animation</title>
+    <!--
+    PURPOSE: Although we'd like to disable animation components for those
+    documents that don't use animation, there's always the possibility that an
+    animation element will be added via the DOM after the document is loaded.
+    This test case checks that this case is not neglected.
+
+    OPERATION: There is an un-animated document. Then an <animate> element is
+    attached to the rectangle by script causing it to move to the right.
+    
+    EXPECTED RESULTS: The box begins moving from the center.
+    -->
+    <script>
+        var timeoutID;
+
+        function animate()
+        {
+          addAnimation();
+          var svg = document.getElementsByTagName('svg')[0];
+          var anim = svg.getElementsByTagName('animate')[0];
+          // We should pass quickly and fail slowly.
+          // In the pass case, we'll get an end event almost immediately.
+          // In the failure case, wait 30s before giving up.
+          timeoutID = window.setTimeout(giveUp, 30000);
+          anim.addEventListener('end', finish, true);
+        }
+
+        function giveUp() {
+          var svg = document.getElementsByTagName('svg')[0];
+          var rect = svg.getElementsByTagName('rect')[0];
+          rect.setAttribute("fill", "red");
+          var anim = svg.getElementsByTagName('animate')[0];
+          anim.parentNode.removeChild(anim);
+          timeoutID = null;
+          finish();
+        }
+
+        function finish() {
+          if (timeoutID) {
+            window.clearTimeout(timeoutID);
+            timeoutID = null;
+          }
+          document.documentElement.removeAttribute('class');
+        }
+
+        function addAnimation()
+        {
+          const svgns="http://www.w3.org/2000/svg";
+          var anim = document.createElementNS(svgns,'animate');
+          anim.setAttribute('attributeName','fill');
+          anim.setAttribute('from', 'red');
+          anim.setAttribute('to','green');
+          anim.setAttribute('begin','0s');
+          anim.setAttribute('dur','0.001s');
+          anim.setAttribute('fill','freeze');
+          var target = document.getElementById('target');
+          target.appendChild(anim);
+        }
+    </script>
+  </head>
+
+  <body onload="animate()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="200px" height="200px">
+      <rect width="199" height="199" fill="red" id="target"/>
+    </svg>
+  </body>
+</html>

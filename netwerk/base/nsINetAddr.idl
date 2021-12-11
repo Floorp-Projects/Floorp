@@ -1,0 +1,88 @@
+/* vim: et ts=4 sw=4 tw=80
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
+%}
+native NetAddr(mozilla::net::NetAddr);
+
+/**
+ * nsINetAddr
+ *
+ * This interface represents a native NetAddr struct in a readonly
+ * interface.
+ */
+[scriptable, uuid(652B9EC5-D159-45D7-9127-50BB559486CD)]
+interface nsINetAddr : nsISupports
+{
+    /**
+     * @return the address family of the network address, which corresponds to
+     * one of the FAMILY_ constants.
+     */
+    readonly attribute unsigned short family;
+
+    /**
+     * @return Either the IP address (FAMILY_INET, FAMILY_INET6) or the path
+     * (FAMILY_LOCAL) in string form. IP addresses are in the format produced by
+     * mozilla::net::NetAddr::ToStringBuffer.
+     *
+     * Note: Paths for FAMILY_LOCAL may have length limitations which are
+     * implementation dependent and not documented as part of this interface.
+     */
+    readonly attribute AUTF8String address;
+
+    /**
+     * @return the port number for a FAMILY_INET or FAMILY_INET6 address.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if the address family is not FAMILY_INET or
+     * FAMILY_INET6.
+     */
+    readonly attribute unsigned short port;
+
+    /**
+     * @return the flow label for a FAMILY_INET6 address.
+     *
+     * @see http://www.ietf.org/rfc/rfc3697.txt
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if the address family is not FAMILY_INET6
+     */
+    readonly attribute unsigned long flow;
+
+    /**
+     * @return the address scope of a FAMILY_INET6 address.
+     *
+     * @see http://tools.ietf.org/html/rfc4007
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if the address family is not FAMILY_INET6
+     */
+    readonly attribute unsigned long scope;
+
+    /**
+     * @return whether a FAMILY_INET6 address is mapped from FAMILY_INET.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if the address family is not FAMILY_INET6
+     */
+    readonly attribute boolean isV4Mapped;
+
+    /**
+     * Network address families. These correspond to all the network address
+     * families supported by the NetAddr struct.
+     */
+    const unsigned long FAMILY_INET = 1;
+    const unsigned long FAMILY_INET6 = 2;
+    const unsigned long FAMILY_LOCAL = 3;
+
+    /**
+     * @return the underlying NetAddr struct.
+     */
+    [noscript] NetAddr getNetAddr();
+};

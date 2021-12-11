@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+    <feColorMatrix type="matrix" values="0 0 0 0  0
+                                         0 0 0 0  1
+                                         0 0 0 0  0
+                                         0 0 0 0  1"/>
+  </filter>
+  <rect width="100" height="100" filter="url(#f)"/>
+</svg>

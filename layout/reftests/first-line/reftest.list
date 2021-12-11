@@ -1,0 +1,56 @@
+# basic functionality
+== basic-1.html basic-ref.html
+
+# handling of out-of-flows when ::first-line happens
+== out-of-flow-1a.html out-of-flow-1-ref.html
+== out-of-flow-1b.html out-of-flow-1-ref.html
+== out-of-flow-1c.html out-of-flow-1-ref.html
+== out-of-flow-1d.html out-of-flow-1-ref.html
+
+# parent computed style correct
+== parent-style-1.html parent-style-1-ref.html
+== parent-style-2.html parent-style-2-ref.html
+== parent-style-3.html parent-style-3-ref.html
+
+# stress-tests
+load stress-1.html # assertion test
+== stress-2.html stress-2-ref.html # assertion + rendering test
+load stress-3.html # assertion test
+load stress-4.html # assertion/crash test.
+load stress-5.html # assertion/crash test
+load stress-6.html # assertion/crash test
+load stress-7.html # assertion/crash test
+== stress-8.html stress-8-ref.html # assertion/crash test
+== stress-9.html stress-9-ref.html # assertion/crash test
+load stress-10.html # crash test
+== stress-11.xhtml stress-11-ref.xhtml
+
+== border-not-apply.html border-not-apply-ref.html
+== 287088-1.html 287088-1-ref.html
+== 287088-2.html 287088-2-ref.html
+== 403177-1.html 403177-1-ref.html
+== 469227-2.html 469227-2-ref.html
+== 469227-3.html 469227-3-ref.html
+
+random == restyle-inside-first-line.html restyle-inside-first-line-ref.html # bug 1523134
+== font-styles.html font-styles-ref.html
+fuzzy-if(OSX==1010,0-1,0-2) == font-styles-nooverflow.html font-styles-ref.html
+
+== ib-split-1.html ib-split-1-ref.html
+
+== first-line-in-columnset-1.html first-line-in-columnset-1-ref.html
+
+== insertion-in-first-line-1.html insertion-in-first-line-ref.html
+== insertion-in-first-line-2.html insertion-in-first-line-ref.html
+== insertion-in-first-line-3.html insertion-in-first-line-ref.html
+== insertion-in-first-line-4.html insertion-in-first-line-ref.html
+== insertion-in-first-line-5.html insertion-in-first-line-ref.html
+== insertion-in-first-line-6.html insertion-in-first-line-ref.html
+== insertion-in-first-line-7.html insertion-in-first-line-ref.html
+== insertion-in-first-line-8.html insertion-in-first-line-ref.html
+== insertion-in-first-line-9.html insertion-in-first-line-ref.html
+== insertion-in-first-line-10.html insertion-in-first-line-ref.html
+== insertion-in-first-line-11.html insertion-in-first-line-ref.html
+== insertion-in-first-line-12.html insertion-in-first-line-ref.html
+== caption-insert-in-first-line-1.html caption-insert-in-first-line-ref.html
+== caption-insert-in-first-line-2.html caption-insert-in-first-line-ref.html

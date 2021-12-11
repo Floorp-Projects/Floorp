@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1574596
+-->
+<head>
+  <title>Test for Bug 1574596</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script>
+add_task(async function() {
+  let iframe = document.getElementById("iframe1");
+  iframe.focus();
+  let edit = iframe.contentDocument.getElementById("edit");
+  edit.focus();
+
+  iframe.contentDocument.execCommand("enableObjectResizing", false, true);
+
+  async function waitForSelectionChange() {
+    return new Promise(resolve => {
+      iframe.contentDocument.addEventListener("selectionchange", () => {
+        resolve();
+      }, {once: true});
+    });
+  }
+
+  let target = iframe.contentDocument.getElementById("target");
+  let promiseSelectionChangeEvent = waitForSelectionChange();
+  synthesizeMouseAtCenter(target, {}, iframe.contentWindow);
+  await promiseSelectionChangeEvent;
+
+  ok(target.hasAttribute("_moz_resizing"),
+     "resizers of the <img> should be visible");
+
+  iframe.style.display = "none";
+  iframe.offsetHeight; // reflow
+
+  await new Promise(SimpleTest.executeSoon);
+  ok(!target.hasAttribute("_moz_resizing"),
+     "resizers of the <img> should be hidden");
+
+  iframe.style.display = "";
+  iframe.offsetHeight; // reflow
+
+  promiseSelectionChangeEvent = waitForSelectionChange();
+  synthesizeMouseAtCenter(target, {}, iframe.contentWindow);
+  await promiseSelectionChangeEvent;
+
+  ok(target.hasAttribute("_moz_resizing"),
+     "resizers of the <img> should be visible again");
+});
+</script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1574596">Mozilla Bug 1574596</a>
+  <p id="display"></p>
+
+  <div>
+    <iframe id="iframe1" srcdoc="<div id=edit contenteditable><img id='target' src='green.png'></div>"></iframe>
+  </div>
+</body>
+</html>

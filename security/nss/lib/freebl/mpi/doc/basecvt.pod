@@ -1,0 +1,65 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+=head1 NAME
+
+ basecvt - radix conversion for arbitrary precision integers
+
+=head1 SYNOPSIS
+
+ basecvt <ibase> <obase> [values]
+
+=head1 DESCRIPTION
+
+The B<basecvt> program is a command-line tool for converting integers
+of arbitrary precision from one radix to another.  The current version
+supports radix values from 2 (binary) to 64, inclusive.  The first two
+command line arguments specify the input and output radix, in base 10.
+Any further arguments are taken to be integers notated in the input
+radix, and these are converted to the output radix.  The output is
+written, one integer per line, to standard output.
+
+When reading integers, only digits considered "valid" for the input
+radix are considered.  Processing of an integer terminates when an
+invalid input digit is encountered.  So, for example, if you set the
+input radix to 10 and enter '10ACF', B<basecvt> would assume that you
+had entered '10' and ignore the rest of the string.
+
+If no values are provided, no output is written, but the program
+simply terminates with a zero exit status.  Error diagnostics are
+written to standard error in the event of out-of-range radix
+specifications.  Regardless of the actual values of the input and
+output radix, the radix arguments are taken to be in base 10 (decimal)
+notation.
+
+=head1 DIGITS
+
+For radices from 2-10, standard ASCII decimal digits 0-9 are used for
+both input and output.  For radices from 11-36, the ASCII letters A-Z
+are also included, following the convention used in hexadecimal.  In
+this range, input is accepted in either upper or lower case, although
+on output only lower-case letters are used.
+
+For radices from 37-62, the output includes both upper- and lower-case
+ASCII letters, and case matters.  In this range, case is distinguished
+both for input and for output values.
+
+For radices 63 and 64, the characters '+' (plus) and '/' (forward
+solidus) are also used.  These are derived from the MIME base64
+encoding scheme.  The overall encoding is not the same as base64,
+because the ASCII digits are used for the bottom of the range, and the
+letters are shifted upward; however, the output will consist of the
+same character set.
+
+This input and output behaviour is inherited from the MPI library used
+by B<basecvt>, and so is not configurable at runtime.
+
+=head1 SEE ALSO
+
+ dec2hex(1), hex2dec(1)
+
+=head1 AUTHOR
+
+ Michael J. Fromberger <sting@linguist.dartmouth.edu>
+ Thayer School of Engineering, Hanover, New Hampshire, USA

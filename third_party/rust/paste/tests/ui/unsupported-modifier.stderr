@@ -1,0 +1,5 @@
+error: unsupported modifier
+ --> $DIR/unsupported-modifier.rs:2:11
+  |
+2 |     fn [<a:pillow>]() {}
+  |           ^^^^^^^

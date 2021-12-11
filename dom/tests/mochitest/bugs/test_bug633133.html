@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633133
+-->
+<head>
+  <title>Test for Bug 633133</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633133">Mozilla Bug 633133</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id='foo'></div>
+  <div name='bar'></div>
+  <select id="select" onchange="var foo = 'bar';">
+    <option>option1</option>
+    <option>option2</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 633133 **/
+
+var divCollection = document.getElementsByTagName('div');
+
+ok("foo" in divCollection, "'foo' should be in the div collection");
+ok("bar" in divCollection, "'bar' should be in the div collection");
+ok(!("" in divCollection), "empty string shouldn't be in the div collection");
+ok(!("foobar" in divCollection), "'foobar' shouldn't be in the div collection");
+
+var select = $('select');
+is(select[0].text, "option1", "select elements work");
+Math.sin();
+ok(1 in select, "in works");
+is(select[1].text, "option2", "can get it too");
+ok(!(2 in select), "in works for elements out of range");
+is(select[2], undefined, "can get them too and they're undefined");
+isnot(select.onchange, undefined, "select.onchange shouldn't be undefined");
+is(typeof(select.onchange), 'function', "select.onchange should be a function");
+
+</script>
+</pre>
+</body>
+</html>

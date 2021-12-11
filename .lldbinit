@@ -1,0 +1,31 @@
+# .lldbinit file for debugging Mozilla
+
+# -----------------------------------------------------------------------------
+# For documentation on all of the commands and type summaries defined here and
+# in the accompanying Python scripts, see third_party/python/lldbutils/README.txt.
+# -----------------------------------------------------------------------------
+
+# Import the module that defines complex Gecko debugging commands.  This assumes
+# you are either running lldb from the top level source directory, the objdir,
+# or the dist/bin directory.  (.lldbinit files in the objdir and dist/bin set
+# topsrcdir appropriately.)
+script topsrcdir = topsrcdir if "topsrcdir" in locals() else os.getcwd()
+script sys.path.append(os.path.join(topsrcdir, "python/lldbutils"))
+script import lldbutils
+script lldbutils.init()
+
+# Mozilla's use of UNIFIED_SOURCES to include multiple source files into a
+# single compiled file breaks lldb breakpoint setting. This works around that.
+# See http://lldb.llvm.org/troubleshooting.html for more info.
+settings set target.inline-breakpoint-strategy always
+
+# Show the dynamic type of an object when using "expr".  This, for example,
+# will show a variable declared as "nsIFrame *" that points to an nsBlockFrame
+# object as being of type "nsBlockFrame *" rather than "nsIFrame *".
+settings set target.prefer-dynamic-value run-target
+
+# Show the value of text nodes.
+type summary add nsTextNode --summary-string "${var.mText}"
+
+# Dump the current JS stack.
+command alias js expr DumpJSStack()

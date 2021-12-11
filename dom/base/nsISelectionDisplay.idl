@@ -1,0 +1,37 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(0DDF9E1C-1DD2-11B2-A183-908A08AA75AE)]
+interface nsISelectionDisplay : nsISupports
+{
+   const short DISPLAY_TEXT = 1;   //display text selected.
+   const short DISPLAY_IMAGES = 2; //show images selected
+   const short DISPLAY_FRAMES = 4; //display hrules ect.
+   const short DISPLAY_ALL = 7; //display all. used for isEditor as well
+
+   /*
+   SetSelectionFlags used to set whether you want to see HRULES/IMAGES with border.
+    also used to tell if the presshell is an editor right now. this should change
+
+    @param aToggle -either DISPLAY_(TEXT,IMAGES,FRAMES,ALL)
+                    This will tell the rendering engine to draw the different
+                    selection types.
+
+   */
+    void setSelectionFlags(in short toggle);
+
+   /*
+   GetSelectionFlags used to get whether you want to see HRULES/IMAGES with border.
+    also used to tell if the presshell is an editor right now. this should change
+
+    @param short *aReturn - This will be filled with DISPLAY_(TEXT,IMAGE,FRAMES,ALL)
+                            bit flags.
+   */
+    short getSelectionFlags();
+
+};

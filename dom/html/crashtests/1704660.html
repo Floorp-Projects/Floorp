@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <script>
+      function test() {
+        var ifr = document.getElementsByTagName("iframe")[0];
+        var form = ifr.contentDocument.getElementsByTagName("form")[0];
+        form.onsubmit = function() {
+          ifr.remove()
+        }
+        form.lastChild.click();
+      }
+    </script>
+  </head>
+  <body onload="test()">
+    <iframe srcdoc="<form><input name=f type=file><button></button></form>"></iframe>
+  </body>
+</html>

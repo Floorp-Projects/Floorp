@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+ <head>
+  <title>CSS Reftest Reference</title>
+  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+  <style type="text/css">
+  div.wrapper {
+    writing-mode: vertical-lr;
+    margin-top: 34px;
+  }
+  div.stripe
+  {
+    display: inline-block;
+    margin-left: 4px;
+    margin-top: 11px;
+    margin-bottom: 7px;
+    width: 24px;
+  }
+  div.fuchsia
+  {
+    height: 52px;
+    background-color: fuchsia;
+  }
+  div.olive
+  {
+    height: 100px;
+    background-color: olive;
+  }
+  div.orange
+  {
+    height: 124px;
+    background-color: orange;
+  }
+  div.lime
+  {
+    height: 124px;
+    background-color: lime;
+  }
+  </style>
+ </head>
+ <body>
+   <p>Test passes if the colored (fuchsia, olive, orange and lime) stripes have respectively the same heights and the same vertical positions.</p>
+   <div class="wrapper">
+     <div><div class="fuchsia stripe"></div><div class="olive stripe"></div><div class="orange stripe"></div><div class="lime stripe"></div></div>
+     <div><div class="fuchsia stripe"></div><div class="olive stripe"></div><div class="orange stripe"></div><div class="lime stripe"></div></div>
+   </div>
+ </body>
+</html>

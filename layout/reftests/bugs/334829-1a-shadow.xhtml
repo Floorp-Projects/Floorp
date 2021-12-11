@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <script type="application/x-javascript">
+    customElements.define("custom-element", class extends HTMLElement {
+      constructor() {
+        super();
+        const template = document.getElementById("template");
+        const shadowRoot = this.attachShadow({mode: "open"})
+          .appendChild(template.content.cloneNode(true));
+      }
+    });
+    function runTest() {
+      var div = document.getElementById("testDiv");
+
+      // First we have to make sure that we've looked up the primary frame for
+      // the textnode.  Appending a space should do the trick.
+      div.firstChild.data += " ";
+
+      // Now flush our reflow
+      document.body.offsetWidth;
+
+      var node = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                          "span");
+      div.appendChild(node);
+      node.appendChild(document.createTextNode("This text should appear"));
+    }
+  </script>
+</head>
+
+<body onload="runTest()">
+<template id="template"><span><slot/></span></template>
+<custom-element id="testDiv" style="width: 0; display: block;">This is text in a div</custom-element>
+</body>
+</html>

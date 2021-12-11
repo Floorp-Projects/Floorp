@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>GV autoplay play request test</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+  </head>
+<body>
+<script>
+/**
+ * The test info sent from the parent window will determine what kinds of media
+ * should start, where it should start, the result of the play request and
+ * whether the document is activated by user gesture.
+ */
+nextWindowMessage().then(
+  async (event) => {
+    let testInfo = event.data;
+    testInfo.parentWindow = event.source;
+    await setupTestEnvironment(testInfo);
+    await startPlaybackAndReturnMessage(testInfo);
+  });
+
+/**
+ * The following are helper functions.
+ */
+async function setupTestEnvironment(testInfo) {
+  if (testInfo.activatedDocument != undefined) {
+    info(`activate document`);
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+  }
+  if (testInfo.iframe != undefined) {
+    info(`create child frame`);
+    testInfo.childFrame = await createChildFrame(testInfo);
+  }
+}
+
+async function createChildFrame(testInfo) {
+  let frame = document.createElement("iframe");
+  let origin = testInfo.iframe == "same-orgin"
+    ? "http://mochi.test:8888" : "http://example.org";
+  frame.src = origin + "/tests/dom/media/autoplay/test/mochitest/file_autoplay_gv_play_request_frame.html";
+  document.body.appendChild(frame);
+  info(`waiting for iframe loading`);
+  is((await nextWindowMessage()).data, "ready", "iframe has finished loading");
+  return frame;
+}
+
+async function startPlaybackAndReturnMessage({muted, iframe, parentWindow, childFrame}) {
+  if (iframe == undefined) {
+    info(`start playback`);
+    playAndPostResult(muted, parentWindow);
+  } else {
+    info("start autoplay from " +  (iframe == "same-origin" ? "same" : "cross")  + " origin child frame");
+    childFrame.contentWindow.postMessage("play", "*");
+    info(`waiting for media calling play from child frame`);
+    let result = await nextWindowMessage();
+    parentWindow.postMessage(result.data, "*");
+  }
+}
+
+</script>
+</body>
+</html>

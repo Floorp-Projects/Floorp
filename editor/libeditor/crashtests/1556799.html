@@ -1,0 +1,11 @@
+<script>
+function go() {
+  document.getSelection().selectAllChildren(a)
+  document.execCommand("insertUnorderedList", false)
+  document.execCommand("enableObjectResizing", false)
+}
+</script>
+<dd contenteditable="true">
+<audio src="data:text/html,foo" onerror="go()">
+<img id="a"></img>
+<dl>

@@ -1,0 +1,43 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+EXPORTS.mozilla.dom += [
+    "Promise-inl.h",
+    "Promise.h",
+    "PromiseDebugging.h",
+    "PromiseNativeHandler.h",
+    "PromiseWorkerProxy.h",
+]
+
+UNIFIED_SOURCES += [
+    "Promise.cpp",
+    "PromiseDebugging.cpp",
+    "PromiseNativeHandler.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "../base",
+    "../ipc",
+    "/js/xpconnect/src",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+REQUIRES_UNIFIED_BUILD = True

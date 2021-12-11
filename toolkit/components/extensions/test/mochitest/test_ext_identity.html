@@ -1,0 +1,390 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebExtension Identity</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.webextensions.identity.redirectDomain", "example.com"],
+      // Disable the network cache first-party partition during this
+      // test (TODO: look more closely to how that is affecting the intermittency
+      // of this test on MacOS, see Bug 1626482).
+      ["privacy.partition.network_state", false],
+    ],
+  });
+});
+
+add_task(async function test_noPermission() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.assertEq(
+        undefined,
+        browser.identity,
+        "No identity api without permission"
+      );
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_getRedirectURL() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["identity", "https://example.com/"],
+    },
+    async background() {
+      let redirect_base =
+        "https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/";
+      await browser.test.assertEq(
+        redirect_base,
+        browser.identity.getRedirectURL(),
+        "redirect url ok"
+      );
+      await browser.test.assertEq(
+        redirect_base,
+        browser.identity.getRedirectURL(""),
+        "redirect url ok"
+      );
+      await browser.test.assertEq(
+        redirect_base + "foobar",
+        browser.identity.getRedirectURL("foobar"),
+        "redirect url ok"
+      );
+      await browser.test.assertEq(
+        redirect_base + "callback",
+        browser.identity.getRedirectURL("/callback"),
+        "redirect url ok"
+      );
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_badAuthURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["identity", "https://example.com/"],
+    },
+    async background() {
+      for (let url of [
+        "foobar",
+        "about:addons",
+        "about:blank",
+        "ftp://example.com/test",
+      ]) {
+        await browser.test.assertThrows(
+          () => {
+            browser.identity.launchWebAuthFlow({ interactive: true, url });
+          },
+          /Type error for parameter details/,
+          "details.url is invalid"
+        );
+      }
+
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_badRequestURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["identity", "https://example.com/"],
+    },
+    async background() {
+      let base_uri =
+        "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
+      let url = `${base_uri}?redirect_uri=badrobot}`;
+      await browser.test.assertRejects(
+        browser.identity.launchWebAuthFlow({ interactive: true, url }),
+        "redirect_uri is invalid",
+        "invalid redirect url"
+      );
+      url = `${base_uri}?redirect_uri=https://somesite.com`;
+      await browser.test.assertRejects(
+        browser.identity.launchWebAuthFlow({ interactive: true, url }),
+        "redirect_uri not allowed",
+        "invalid redirect url"
+      );
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function background_launchWebAuthFlow_requires_interaction() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["identity", "https://example.com/"],
+    },
+    async background() {
+      let base_uri =
+        "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
+      let url = `${base_uri}?redirect_uri=${browser.identity.getRedirectURL(
+        "redirect"
+      )}`;
+      await browser.test.assertRejects(
+        browser.identity.launchWebAuthFlow({ interactive: false, url }),
+        "Requires user interaction",
+        "Rejects on required user interaction"
+      );
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+function background_launchWebAuthFlow({
+  interactive = false,
+  path = "redirect_auto.sjs",
+  params = {},
+  redirect = true,
+  useRedirectUri = true,
+} = {}) {
+  let uri_path = useRedirectUri ? "identity_cb" : "";
+  let expected_redirect = `https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/${uri_path}`;
+  let base_uri =
+    "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
+  let redirect_uri = browser.identity.getRedirectURL(
+    useRedirectUri ? uri_path : undefined
+  );
+  browser.test.assertEq(
+    expected_redirect,
+    redirect_uri,
+    "expected redirect uri matches hash"
+  );
+  let url = `${base_uri}${path}`;
+  if (useRedirectUri) {
+    params.redirect_uri = redirect_uri;
+  } else {
+    // We kind of fake it with the redirect url that would normally be configured
+    // in the oauth service.  This does still test that the identity service falls back
+    // to the extensions redirect url.
+    params.default_redirect = expected_redirect;
+  }
+  if (!redirect) {
+    params.no_redirect = 1;
+  }
+  let query = [];
+  for (let [param, value] of Object.entries(params)) {
+    query.push(`${param}=${encodeURIComponent(value)}`);
+  }
+  url = `${url}?${query.join("&")}`;
+
+  // Ensure we do not start the actual request for the redirect url.  In the case
+  // of a 303 POST redirect we are getting a request started.
+  let watchRedirectRequest = () => {};
+  if (params.post !== 303) {
+    watchRedirectRequest = details => {
+      if (details.url.startsWith(expected_redirect)) {
+        browser.test.fail(`onBeforeRequest called for redirect url: ${JSON.stringify(details)}`);
+      }
+    };
+
+    browser.webRequest.onBeforeRequest.addListener(
+      watchRedirectRequest,
+      {
+        urls: [
+          "https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/*",
+        ],
+      }
+    );
+  }
+
+  browser.identity
+    .launchWebAuthFlow({ interactive, url })
+    .then(redirectURL => {
+      browser.test.assertTrue(
+        redirectURL.startsWith(redirect_uri),
+        `correct redirect url ${redirectURL}`
+      );
+      if (redirect) {
+        let url = new URL(redirectURL);
+        browser.test.assertEq(
+          "here ya go",
+          url.searchParams.get("access_token"),
+          "Handled auto redirection"
+        );
+      }
+    })
+    .catch(error => {
+      if (redirect) {
+        browser.test.fail(error.message);
+      } else {
+        browser.test.assertEq(
+          "Requires user interaction",
+          error.message,
+          "Auth page loaded, interaction required."
+        );
+      }
+    }).then(() => {
+      browser.webRequest.onBeforeRequest.removeListener(watchRedirectRequest);
+      browser.test.sendMessage("done");
+    });
+}
+
+// Tests the situation where the oauth provider has already granted access and
+// simply redirects the oauth client to provide the access key or code.
+add_task(async function test_autoRedirect() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["webRequest", "identity", "https://*.example.com/*"],
+    },
+    background: `(${background_launchWebAuthFlow})()`,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_autoRedirect_noRedirectURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["webRequest", "identity", "https://*.example.com/*"],
+    },
+    background: `(${background_launchWebAuthFlow})({useRedirectUri: false})`,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+// Tests the situation where the oauth provider has not granted access and interactive=false
+add_task(async function test_noRedirect() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["webRequest", "identity", "https://*.example.com/*"],
+    },
+    background: `(${background_launchWebAuthFlow})({redirect: false})`,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+// Tests the situation where the oauth provider must show a window where
+// presumably the user interacts, then the redirect occurs and access key or
+// code is provided.  We bypass any real interaction, but want the window to
+// open and result in a redirect.
+add_task(async function test_interaction() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["webRequest", "identity", "https://*.example.com/*"],
+    },
+    background: `(${background_launchWebAuthFlow})({interactive: true, path: "oauth.html"})`,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+// Tests the situation where the oauth provider redirects with a 303.
+add_task(async function test_auto303Redirect() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["webRequest", "identity", "https://*.example.com/*"],
+    },
+    background: `(${background_launchWebAuthFlow})({interactive: true, path: "oauth.html", params: {post: 303, server_uri: "redirect_auto.sjs"}})`,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_loopbackRedirectURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["identity"],
+    },
+    async background() {
+      let redirectURL = "http://127.0.0.1/mozoauth2/35b64b676900f491c00e7f618d43f7040e88422e";
+      let actualRedirect = await browser.identity.launchWebAuthFlow({
+        interactive: true,
+        url: `https://example.com/tests/toolkit/components/extensions/test/mochitest/oauth.html?redirect_uri=${encodeURIComponent(redirectURL)}`
+      }).catch(error => {
+        browser.test.fail(error.message)
+      });
+      browser.test.assertTrue(
+        actualRedirect.startsWith(redirectURL),
+        "Expected redirect url to be loopback address"
+      )
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+<html>
+
+<head>
+  <title>Accessible name and description for SVG elements</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest() {
+      testName("svg1", "A name");
+      testDescr("svg1", "A description");
+      testName("svg2", "A tooltip");
+      testDescr("svg2", "");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=459357"
+     title="Support accessible name computation for SVG">
+    Mozilla Bug 459357
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg1">
+    <title>A name</title>
+    <desc>A description</title>
+  </svg>
+
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg2">
+    <desc>A tooltip</desc>
+  </svg>
+</body>
+</html>

@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Layout of a network location form
+ *
+ *  +-------------+--------------------+------------+
+ *  | "Host:port" | Input              | Add button |
+ *  +-------------+--------------------+------------+
+ */
+.connect-page__network-form {
+  display: grid;
+  grid-column-gap: calc(var(--base-unit) * 2);
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding-block-start: calc(var(--base-unit) * 4);
+  padding-inline: calc(var(--base-unit) * 6);
+}
+
+.connect-page__network-form__error-message {
+  grid-column: 1 / -1;
+}

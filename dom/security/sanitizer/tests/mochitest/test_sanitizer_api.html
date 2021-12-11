@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<title>Test sanitizer api</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript">
+"use strict";
+/* global Sanitizer */
+// we're not done after "onload"
+SimpleTest.waitForExplicitFinish();
+(async function() {
+  // Ensure Sanitizer is not exposed when the pref is false
+  const isEnabled = SpecialPowers.getBoolPref("dom.security.sanitizer.enabled");
+  if (!isEnabled) {
+    ok(false, "This test should only be run with dom.security.sanitizer.enabled set to true");
+    SimpleTest.finish();
+  }
+
+  function* possibleInputTypes(inputStr) {
+    /* This generator function, given a string, yields all possible input objects
+    for our sanitizer API (string, docfragment, document).
+    */
+
+    // 1) as string
+    yield ({testInput: inputStr, testType: "String" });
+    // 2) as DocumentFragment
+    let temp = document.createElement('template');
+    // asking eslint to skip this: innerHTML is safe for template elements.
+    // eslint-disable-next-line no-unsanitized/property
+    temp.innerHTML = inputStr;
+    yield ({testInput: temp.content, testType: "DocumentFragment" });
+    // 3) as HTMLDocument
+    const parser = new DOMParser;
+    yield ({testInput: parser.parseFromString(inputStr, "text/html"), testType: "Document" });
+  }
+  // basic interface smoke test
+  ok(typeof Sanitizer === "function", "Sanitizer constructor exposed when preffed on");
+  const mySanitizer = new Sanitizer();
+  ok(mySanitizer, "Sanitizer constructor works");
+  ok(mySanitizer.sanitize, "sanitize function exists");
+  ok("setHTML" in Element.prototype, "Element.setHTML exists");
+
+  // testing sanitizer results
+  const testCases = [
+    {
+      testString: "<p>hello</p>",
+      testExpected: "<p>hello</p>",
+      sanitizerOptions: {}
+    },
+    {
+      // script element encoded to not confuse the HTML parser and end execution here
+      testString: "<p>second test</p><script>alert(1)\x3C/script>",
+      testExpected: "<p>second test</p>",
+      sanitizerOptions: {},
+    },
+    {
+      // test for the allowElements option
+      testString: "<p>hello <i>folks</i></p>",
+      testExpected: "<p>hello folks</p>",
+      sanitizerOptions: { allowElements: ["p"] },
+    },
+    {
+      // test for the blockElements option
+      testString: "<p>hello <i>folks</i></p>",
+      testExpected: "<p>hello folks</p>",
+      sanitizerOptions: { blockElements: ["i"] },
+    },
+    {
+      // test for the allowAttributes option
+      testString: `<p haha="lol">hello</p>`,
+      testExpected: `<p haha="lol">hello</p>`,
+      sanitizerOptions: { allowAttributes: { 'haha': ['p'] } },
+    },
+    {
+      // confirming the inverse
+      testString: `<p haha="lol">hello</p>`,
+      testExpected: `<p>hello</p>`,
+      sanitizerOptions: {},
+    },
+    {
+      // test for the dropAttributes option
+      testString: `<p title="dropme">hello</p>`,
+      testExpected: `<p>hello</p>`,
+      sanitizerOptions: { dropAttributes: { 'title': ['p'] } },
+    },
+    {
+      // confirming the inverse
+      testString: `<p title="dontdropme">hello</p>`,
+      testExpected: `<p title="dontdropme">hello</p>`,
+      sanitizerOptions: {},
+    },
+    {
+      // if an attribute is allowed and dropped, the drop will take preference
+      testString: `<p title="lol">hello</p>`,
+      testExpected: `<p>hello</p>`,
+      sanitizerOptions: {
+        allowAttributes: { 'title': ['p'] },
+        dropAttributes: { 'title': ['p'] },
+      },
+    },
+  ];
+
+
+  const div = document.createElement("div");
+  for (let test of testCases) {
+    const {testString, testExpected, sanitizerOptions} = test;
+    const testSanitizer = new Sanitizer(sanitizerOptions);
+
+    for (let testInputAndType of possibleInputTypes(testString)) {
+      const {testInput, testType} = testInputAndType;
+
+      if (testType != "String") {
+        // test sanitize(document/fragment)
+        try {
+          div.innerHTML = "";
+          const docFragment = testSanitizer.sanitize(testInput);
+          div.append(docFragment);
+          is(div.innerHTML, testExpected, `Sanitizer.sanitize() should turn (${testType}) '${testInput}' into '${testExpected}'`);
+        }
+        catch (e) {
+          ok(false, 'Error in sanitize() test: ' + e)
+        }
+      }
+      else {
+        // test setHTML:
+        try {
+          div.setHTML(testString, { sanitizer: testSanitizer });
+          is(div.innerHTML, testExpected, `div.setHTML() should turn(${testType}) '${testInput}' into '${testExpected}'`);
+        }
+        catch (e) {
+          ok(false, 'Error in setHTML() test: ' + e)
+        }
+
+        // test sanitizeFor:
+        try {
+          const newDiv = testSanitizer.sanitizeFor('div', testString);
+          is(newDiv.innerHTML, testExpected, `Sanitizer.sanitizeFor('div', input) should turn(${testType}) '${testInput}' into '${testExpected}'`);
+        }
+        catch (e) {
+          ok(false, 'Error in sanitizeFor() test: ' + e)
+        }
+      }
+    }
+  }
+
+  SimpleTest.finish();
+})();
+</script>

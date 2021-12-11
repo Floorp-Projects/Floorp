@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+<title>Mask layer on canvas layer needs to update even if canvas wasn't dirtied</title>
+</style>
+<canvas id="canvas" height="100" width="200" style="border-radius: 40px;"></canvas>
+<script>
+var canvas = document.getElementById("canvas");
+var cx = canvas.getContext("2d");
+cx.fillStyle="lime";
+cx.fillRect(0, 0, 200, 100);
+</script>

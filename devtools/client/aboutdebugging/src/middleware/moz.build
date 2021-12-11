@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    "debug-target-listener.js",
+    "error-logging.js",
+    "event-recording.js",
+    "extension-component-data.js",
+    "process-component-data.js",
+    "tab-component-data.js",
+    "worker-component-data.js",
+)

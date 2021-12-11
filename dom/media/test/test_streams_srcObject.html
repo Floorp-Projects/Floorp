@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test interactions of src and srcObject</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body onload="doTests()">
+<audio id="a1"></audio>
+<audio id="a2"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var doTest = srcObject => new Promise(resolve => {
+  var a = document.getElementById('a1');
+  a.src = getPlayableAudio(gSmallTests).name;
+  var b = new Audio();
+
+  var newSrc = a.src + "?2";
+  b.src = newSrc;
+  is(b[srcObject], null, "Initial srcObject is null");
+  var stream = a.mozCaptureStream();
+  b[srcObject] = stream;
+  is(b[srcObject], stream, "Stream set correctly");
+  try {
+    b[srcObject] = "invalid";
+    ok(false, "Setting srcObject to an invalid value should throw.");
+  } catch (e) {
+    ok(e instanceof TypeError, "Exception should be a TypeError");
+  }
+  is(b[srcObject], stream, "Stream not set to invalid value");
+  is(b.src, newSrc, "src attribute not affected by setting srcObject");
+  var step = 0;
+  b.addEventListener("loadedmetadata", function() {
+    if (step == 0) {
+      is(b.currentSrc, "", "currentSrc set to empty string while playing srcObject");
+      b[srcObject] = null;
+      is(b[srcObject], null, "Stream set to null");
+      // The resource selection algorithm will run again and choose b.src
+    } else if (step == 1) {
+      is(b.currentSrc, b.src, "currentSrc set to src now that srcObject is null");
+      resolve();
+    }
+    ++step;
+  });
+  a.play();
+  b.play();
+});
+
+var doTests = () => doTest("srcObject")
+  .catch(e => ok(false, "Unexpected error: " + e))
+  .then(() => SimpleTest.finish())
+  .catch(e => ok(false, "Coding error: " + e));
+
+</script>
+</pre>
+</body>
+</html>

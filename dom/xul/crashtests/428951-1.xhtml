@@ -1,0 +1,21 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:mathml="http://www.w3.org/1998/Math/MathML">
+<box>
+  <box style="background: initial;" id="f">
+    <box style="margin-top: -9999999px;"/>
+  </box>
+  <mathml:divergence>
+    <box/>
+  </mathml:divergence>
+  <mathml:moment command="f"/>
+</box>
+
+<script id="script" xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+function init() {
+    var f = document.getElementsByTagName('mathml:divergence')[0];
+    window.addEventListener('DOMAttrModified',function() { f.remove();}, true);
+    var x=document.getElementsByTagName('mathml:moment')[0];
+    x.remove();
+}
+window.addEventListener("load", init, false);
+]]></script>
+</window>

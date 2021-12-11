@@ -1,0 +1,80 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Interfaces for representing cross-language exceptions and stack traces.
+ */
+#include "nsISupports.idl"
+
+[ptr] native JSContext(JSContext);
+native StackFrameRef(already_AddRefed<nsIStackFrame>);
+
+[scriptable, builtinclass, uuid(28bfb2a2-5ea6-4738-918b-049dc4d51f0b)]
+interface nsIStackFrame : nsISupports
+{
+    [implicit_jscontext, binaryname(FilenameXPCOM)]
+    readonly attribute AString                 filename;
+    [implicit_jscontext, binaryname(NameXPCOM)]
+    readonly attribute AString                 name;
+    // Unique identifier of the script source for the frame, or zero.
+    [implicit_jscontext, binaryname(SourceIdXPCOM)]
+    readonly attribute int32_t                 sourceId;
+    // Valid line numbers begin at '1'. '0' indicates unknown.
+    [implicit_jscontext, binaryname(LineNumberXPCOM)]
+    readonly attribute int32_t                 lineNumber;
+    [implicit_jscontext, binaryname(ColumnNumberXPCOM)]
+    readonly attribute int32_t                 columnNumber;
+    readonly attribute AUTF8String             sourceLine;
+    [implicit_jscontext, binaryname(AsyncCauseXPCOM)]
+    readonly attribute AString                 asyncCause;
+    [implicit_jscontext, binaryname(AsyncCallerXPCOM)]
+    readonly attribute nsIStackFrame           asyncCaller;
+    [implicit_jscontext, binaryname(CallerXPCOM)]
+    readonly attribute nsIStackFrame           caller;
+
+    // Returns a formatted stack string that looks like the sort of
+    // string that would be returned by .stack on JS Error objects.
+    // Only works on JS-language stack frames.
+    [implicit_jscontext, binaryname(FormattedStackXPCOM)]
+    readonly attribute AString                 formattedStack;
+
+    // Returns the underlying SavedFrame object for native JavaScript stacks,
+    // or null if this is not a native JavaScript stack frame.
+    readonly attribute jsval                   nativeSavedFrame;
+
+    [implicit_jscontext, binaryname(ToStringXPCOM)]
+    AUTF8String toString();
+
+    // Infallible things to be called from C++.
+    [notxpcom, nostdcall]
+    void getFilename(in JSContext aCx, out AString aFilename);
+    [notxpcom, nostdcall]
+    void getName(in JSContext aCx, out AString aName);
+    [notxpcom, nostdcall]
+    int32_t getSourceId(in JSContext aCx);
+    [notxpcom, nostdcall]
+    int32_t getLineNumber(in JSContext aCx);
+    [notxpcom, nostdcall]
+    int32_t getColumnNumber(in JSContext aCx);
+    [notxpcom, nostdcall]
+    void getAsyncCause(in JSContext aCx, out AString aAsyncCause);
+    [notxpcom, nostdcall]
+    StackFrameRef getAsyncCaller(in JSContext aCx);
+    [notxpcom, nostdcall]
+    StackFrameRef getCaller(in JSContext aCx);
+    [notxpcom, nostdcall]
+    void getFormattedStack(in JSContext aCx, out AString aFormattedStack);
+    [notxpcom, nostdcall, binaryname(ToString)]
+    void toStringInfallible(in JSContext aCx, out AUTF8String aString);
+};
+
+// This interface only exists because of all the JS consumers doing
+// "instanceof Ci.nsIException".  We should switch them to something else and
+// get rid of it; bug 1435856 tracks that.  C++ code should NOT use this; use
+// mozilla::dom::Exception instead.
+[scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
+interface nsIException : nsISupports
+{
+};

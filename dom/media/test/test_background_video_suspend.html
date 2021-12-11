@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Video Suspends</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript">
+  "use strict";
+
+  var manager = new MediaTestManager;
+
+  var MIN_DELAY = 100;
+
+  function testDelay(v, start, min) {
+    let end = performance.now();
+    let delay = end - start;
+    ok(delay > min, `${v.token} suspended with a delay of ${delay} ms`);
+  }
+
+  async function runTest(test, token) {
+    let video = appendVideoToDocWithoutLoad(token);
+    manager.started(token);
+
+    let visible = waitUntilVisible(video);
+    let ended = nextVideoEnded(video);
+    let playing = nextVideoPlaying(video);
+    let resumes = nextVideoResumes(video);
+    let suspends = nextVideoSuspends(video);
+
+    Log(token, "Waiting until video becomes visible");
+    await visible;
+
+    Log(token, "Waiting for metadata loaded");
+    await loadAndWaitUntilLoadedmetadata(video, test.name);
+
+    Log(token, "Start playing");
+    video.play();
+
+    Log(token, "Waiting for video playing");
+    await playing;
+
+    let start = performance.now();
+
+    Log(token, "Set hidden");
+    video.setVisible(false);
+
+    Log(token, "Waiting for video suspend");
+    await suspends;
+
+    testDelay(video, start, MIN_DELAY);
+
+    Log(token, "Set visible");
+    video.setVisible(true);
+
+    Log(token, "Waiting for video resume");
+    await resumes;
+
+    Log(token, "Waiting for ended");
+    await ended;
+
+    ok(video.currentTime >= video.duration, 'current time approximates duration.');
+
+    removeNodeAndSource(video);
+    manager.finished(token);
+  }
+
+  startTest({
+    desc: 'Test Background Video Suspends',
+    prefs: [
+      ["media.test.video-suspend", true],
+      ["media.suspend-bkgnd-video.enabled", true],
+      // Use a short delay to ensure video decode suspend happens before end
+      // of video.
+      ["media.suspend-bkgnd-video.delay-ms", MIN_DELAY],
+      ["privacy.reduceTimerPrecision", false]
+    ],
+    tests: gDecodeSuspendTests,
+    runTest
+  });
+</script>

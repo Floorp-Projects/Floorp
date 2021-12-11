@@ -1,0 +1,53 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser-enable-popup-devtools-user.ini",
+    "test/browser-enable-popup-new-user.ini",
+    "test/browser-telemetry-startup.ini",
+    "test/browser.ini",
+    "test/metrics/browser_metrics.ini",
+    "test/metrics/browser_metrics_debugger.ini",
+    "test/metrics/browser_metrics_inspector.ini",
+    "test/metrics/browser_metrics_netmonitor.ini",
+    "test/metrics/browser_metrics_webconsole.ini",
+]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+
+DIRS += [
+    "actions",
+    "browser-toolbox",
+    "components",
+    "reducers",
+    "test/allocations",
+]
+
+DevToolsModules(
+    "browser-menus.js",
+    "descriptor-from-url.js",
+    "devtools-browser.js",
+    "devtools.js",
+    "enable-devtools-popup.js",
+    "menu-item.js",
+    "menu.js",
+    "selection.js",
+    "source-map-url-service.js",
+    "store-provider.js",
+    "store.js",
+    "tab-descriptor-factory.js",
+    "toolbox-context-menu.js",
+    "toolbox-host-manager.js",
+    "toolbox-hosts.js",
+    "toolbox-options.js",
+    "toolbox-tabs-order-manager.js",
+    "toolbox-window.js",
+    "toolbox.js",
+)
+
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Framework")
+
+SPHINX_TREES["/devtools/tests/memory"] = "test/allocations/docs"

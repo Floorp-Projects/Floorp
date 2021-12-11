@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset=utf-8>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<p id=display></p>
+<div id=content>
+<svg id=svg>
+<!-- These two animations will have a default duration of indefinite which means
+     they will keep producing their first value forever -->
+<animate calcMode="discrete" attributeName="height" by="10" dur="1s"
+  fill="freeze"/>
+<animate calcMode="discrete" attributeName="height" by="10" dur="1s"
+  fill="freeze"/>
+</svg>
+</div>
+<pre id="test">
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener('load', () => {
+  const svg = document.getElementById('svg');
+  is(getComputedStyle(svg).height, '0px', 'Computed height should be zero');
+  SimpleTest.finish();
+});
+</script>
+</pre>

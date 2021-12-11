@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(3, true)">
+  <title>Test animation of the "numOctaves" &lt;integer&gt; attribute on the "feTurbulence" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <!-- This is an unfinished and unused testcase that would not pass given the
+       current implementation strategy. This testcase assumes that the
+       strategy should be to give each value an equal slice of the simple
+       duration. In other words if animating from 1 to 4 in 4 seconds, then
+       each of the values 1, 2, 3 and 4 would get 1 second each.
+
+       See the comment in anim-feTurbulence-numOctaves-01.svg for more on
+       implementation strategy.
+  -->
+
+
+
+  <!-- Animation of integers is actually more complicated than lengths. It's
+       necessary to "jump" from value to value since you're dealing with
+       discrete integers rather than continuous real numbers.
+
+       The spec doesn't say exactly how to behave, but we assume that the each
+       of the values in a from-to animation gets an equal slice of the simple
+       duration. We also assume that at times that are exactly midway between
+       two integers, we should jump to the "next" integer. In other words, when
+       animating from 0 to 1 in 1 second, at 0.5 seconds the value changes to
+       1; but when animating from 1 to 0 in 1 second, at 0.5 seconds the value
+       changes to 0. This is different from floor(), round() or ceil()
+       behavior, and we test that by animating both "up" and "down" below.
+  -->
+
+
+  <!-- Some tests animating *up* to higher values. -->
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 3.25s - so at 3s the animated value should still be 1. -->
+  <filter id="filter_1" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="13s"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect width="20" height="20" filter="url(#filter_1)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 3s - so at exactly 3s the animated value should become 2. -->
+  <filter id="filter_2" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="12s"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" width="20" height="20" filter="url(#filter_2)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 1.25s - so at 3s the animated value should still be 3. -->
+  <filter id="filter_3" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="5s"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="40" width="20" height="20" filter="url(#filter_3)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 1s - so at exactly 3s the animated value should become 4. -->
+  <filter id="filter_4" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="4s"
+               to="4"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="60" width="20" height="20" filter="url(#filter_4)"/>
+
+
+  <!-- Some tests animating *down* to lower values. -->
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 3.25s - so at 3s the animated value should still be 4. -->
+  <filter id="filter_5" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="13s"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect y="20" width="20" height="20" filter="url(#filter_5)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 3s - so at exactly 3s the animated value should become 3. -->
+  <filter id="filter_6" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="12s"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="20" width="20" height="20" filter="url(#filter_6)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 1.25s - so at 3s the animated value should still be 2. -->
+  <filter id="filter_7" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="5s"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="40" y="20" width="20" height="20" filter="url(#filter_7)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+	   that is 1s - so at exactly 3s the animated value should become 1. -->
+  <filter id="filter_8" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="4s"
+               to="1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="60" y="20" width="20" height="20" filter="url(#filter_8)"/>
+
+
+  <!-- Some 'by' animation tests -->
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 1.25s - so at 3s the animated value should still be 3. -->
+  <filter id="filter_9" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="5s"
+               by="3"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect y="40" width="20" height="20" filter="url(#filter_9)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 1s - so at exactly 3s the animated value should become 4. -->
+  <filter id="filter_10" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="1">
+      <animate attributeName="numOctaves"
+               calcMode="linear"
+               begin="0s" dur="4s"
+               by="3"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="40" width="20" height="20" filter="url(#filter_10)"/>
+
+
+  <!-- calcMode="paced" tests -->
+
+  <!-- Each of the four values should get an equal slice of the duration -
+       that is 1.25s - so at 3s the animated value should still be 2. -->
+  <filter id="filter_11" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="paced"
+               begin="0s" dur="5s"
+               values="4; 3; 1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect y="60" width="20" height="20" filter="url(#filter_11)"/>
+
+  <!-- Each of the four values should get an equal slice of the duration -
+	   that is 1s - so at exactly 3s the animated value should become 1. -->
+  <filter id="filter_12" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4">
+      <animate attributeName="numOctaves"
+               calcMode="paced"
+               begin="0s" dur="4s"
+               values="4; 3; 1"
+               fill="freeze"/>
+    </feTurbulence>
+  </filter>
+  <rect x="20" y="60" width="20" height="20" filter="url(#filter_12)"/>
+
+</svg>

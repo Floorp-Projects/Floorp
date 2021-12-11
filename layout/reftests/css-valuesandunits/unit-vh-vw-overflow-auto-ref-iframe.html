@@ -1,0 +1,37 @@
+<style>
+  body { overflow: hidden }
+  div {
+    width: 10px;
+    height: 10px;
+    background-color: #d64203;
+  }
+</style>
+
+<body>
+  <div id="a"></div>
+  <div id="b"></div>
+  <div id="c"></div>
+  <div id="d"></div>
+
+  <!--
+  Deliberately make the scrollbars appear to ensure that with 'overflow: auto'
+  viewport units are calculated as if the scrollbars are _not_ there.
+  -->
+  <div style="width: 500px; height: 500px; background-color: black">
+</body>
+
+<script>
+  // client{Width, Height} consist of the area _inside_ the scrollbars, so we need
+  // to calculate these units with 'overflow: hidden' set to ensure that there are
+  // no scrollbars. This reflects the fact that with 'overflow: auto' set, viewport
+  // units are sized without taking the scrollbars into account.
+  var vw = 0.01 * document.body.clientWidth;
+  var vh = 0.01 * document.body.clientHeight;
+  var vmin = Math.min(vw, vh);
+  var vmax = Math.max(vw, vh);
+  document.body.style.overflow = "auto";
+  document.getElementById('a').style.width = (50 * vw) + "px";
+  document.getElementById('b').style.height = (25 * vh) + "px";
+  document.getElementById('c').style.width = (35 * vmin) + "px";
+  document.getElementById('d').style.height = (25 * vmax) + "px";
+</script>

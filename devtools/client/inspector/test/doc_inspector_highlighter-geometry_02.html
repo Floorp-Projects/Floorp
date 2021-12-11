@@ -1,0 +1,120 @@
+<!doctype html><html><head><meta charset="UTF-8"></head><body class="header">
+
+<style>
+.fixed { position: fixed; top: 40px; right: 20px; margin-top: 20px; background: #ccf; }
+.fixed-bottom-right { position: fixed; bottom: 4em; right: 25%; margin: 20px; background: #ccf; }
+
+#absolute-container { position: relative; height: 150px; margin: 20px; }
+.absolute { position: absolute; top: 20px; left: 400px; background: #fcc; }
+.absolute-bottom-right { position: absolute; bottom: 20px; right: 50px; background: #fcc; }
+.absolute-all-4 { position: absolute; top: 100px; bottom: 10px; left: 20px; right: 700px; background: #fcc; }
+.absolute-negative { position: absolute; bottom: -25px; background: #fcc; }
+.absolute-width-margin { position: absolute; top: 20px; right: 20px; width: 450px; margin: .3em; padding: 10px; border: 2px solid red; box-sizing: border-box; background: #fcc; }
+
+.relative { position: relative; top: 10px; left: 10px; background: #cfc;}
+.relative-inline { position: relative; top: 10px; left: 10px; display: inline; background: #cfc;}
+
+.static { position: static; top: 10px; left: 10px; background: #fcf; }
+.static-size { position: static; top: 10px; left: 10px; width: 300px; height: 100px; background: #fcf; }
+
+#sticky-container {
+  margin: 50px;
+  height: 400px;
+  width: 400px;
+  padding: 40px;
+  overflow: scroll;
+}
+#sticky-container dl {
+    margin: 0;
+    padding: 24px 0 0 0;
+}
+
+#sticky-container dt {
+    background: #ffc;
+    border-bottom: 1px solid #989EA4;
+    border-top: 1px solid #717D85;
+    color: #FFF;
+    font: bold 18px/21px Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 2px 0 0 12px;
+    position: sticky;
+    width: 99%;
+    top: 0px;
+}
+
+#sticky-container dd {
+    font: bold 20px/45px Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0 0 0 12px;
+    white-space: nowrap;
+}
+
+#sticky-container dd + dd {
+    border-top: 1px solid #CCC
+}
+</style>
+
+<h1>Positioning playground</h1>
+<p>A demo of various positioning schemes: <a href="http://dev.w3.org/csswg/css-position/#pos-sch">http://dev.w3.org/csswg/css-position/#pos-sch</a>.</p>
+<p>absolute, static, fixed, relative, sticky</p>
+
+<h2>Absolute positioning</h2>
+<div class="absolute">
+  Absolute child with no relative parent
+</div>
+<div id="absolute-container">
+  <div class="absolute">
+    Absolute child with a relative parent
+  </div>
+  <div class="absolute-bottom-right">
+    Absolute child with a relative parent, positioned from the bottom right
+  </div>
+  <div class="absolute-all-4">
+    Absolute child with a relative parent, with all 4 positions
+  </div>
+  <div class="absolute-negative">
+    Absolute child with a relative parent, with negative positions
+  </div>
+  <div class="absolute-width-margin">
+    Absolute child with a relative parent, size, margin
+  </div>
+</div>
+
+<h2>Relative positioning</h2>
+<div id="relative-container">
+  <div class="relative">
+    Relative child
+  </div>
+  <div style="width: 100px;">
+  <div class="relative-inline">
+    Relative inline child, across multiple lines
+  </div>
+  </div>
+  <div style="position:relative;">
+    <div class="relative">
+      Relative child, in a positioned parent
+    </div>
+  </div>
+</div>
+
+<h2>Fixed positioning</h2>
+<div id="fixed-container">
+  <div class="fixed">
+    Fixed child
+  </div>
+  <div class="fixed-bottom-right">
+    Fixed child, bottom right
+  </div>
+</div>
+
+<h2>Static positioning</h2>
+<div id="static-container">
+  <div class="static">
+    Static child with no width/height
+  </div>
+  <div class="static-size">
+    Static child with width/height
+  </div>
+</div>
+
+</body></html>

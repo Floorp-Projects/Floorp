@@ -1,0 +1,26 @@
+<html class="reftest-wait">
+<head>
+<title>Testcase bug - Crash [@ PresShell::FlushPendingNotifications] when removing window on focus and then reappearing again</title>
+<script>
+setTimeout('document.documentElement.className = ""', 500);
+</script>
+</head>
+<body>
+<iframe src="data:text/html;charset=utf-8,%3Chtml%3E%3Cbody%20tabindex%3D%221%22%20onfocus%3D%22top.doe2%28%29%3Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%22%3E%0A%3Cscript%3E%0AsetTimeout%28function%28%29%7Bdocument.body.focus%28%29%7D%2C%20200%29%3B%0A%3C/script%3E%3C/body%3E%3C/html%3E" id="content"></iframe>
+
+<script>
+function doe() {
+  if (!document.getElementById('content')) {
+  var y = document.createElement('iframe');
+  y.id = 'content';
+  y.src = 'data:text/html;charset=utf-8,%3Chtml%3E%3Cbody%20tabindex%3D%221%22%20onfocus%3D%22top.doe2%28%29%3Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%22%3E%0A%3Cscript%3E%0AsetTimeout%28function%28%29%7Bdocument.body.focus%28%29%7D%2C%20200%29%3B%0A%3C/script%3E%3C/body%3E%3C/html%3E';
+  document.body.appendChild(y);
+  }
+}
+ 
+ function doe2() {
+ setInterval(doe, 200); 
+ }
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<!-- Quirks on purpose -->
+<head>
+  <style>
+    body { color: green; }
+    .Foo { color: red; }
+  </style>
+  <body onload="document.body.className = 'abc bar'" class="Foo">
+    This should be green
+  </body>
+</head>

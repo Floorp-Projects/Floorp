@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>web_channel_test (iframe)</title>
+</head>
+<body>
+<script>
+  var REDIRECTED_IFRAME_SRC_ROOT = "http://example.org/" + location.pathname;
+
+  window.onload = function() {
+    var testName = window.location.search.replace(/^\?/, "");
+    switch (testName) {
+      case "iframe":
+        test_iframe();
+        break;
+      case "iframe_pre_redirect":
+        test_iframe_pre_redirect();
+        break;
+      case "iframe_post_redirect":
+        test_iframe_post_redirect();
+        break;
+      default:
+        throw new Error(`INVALID TEST NAME ${testName}`);
+    }
+  };
+
+  function test_iframe() {
+    var firstMessage = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: JSON.stringify({
+        id: "twoway",
+        message: {
+          command: "one",
+        },
+      }),
+    });
+
+    window.addEventListener("WebChannelMessageToContent", function(e) {
+      var secondMessage = new window.CustomEvent("WebChannelMessageToChrome", {
+        detail: JSON.stringify({
+          id: "twoway",
+          message: {
+            command: "two",
+            detail: e.detail.message,
+          },
+        }),
+      });
+
+      if (!e.detail.message.error) {
+        window.dispatchEvent(secondMessage);
+      }
+    }, true);
+
+    window.dispatchEvent(firstMessage);
+  }
+
+
+  function test_iframe_pre_redirect() {
+    var firstMessage = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: JSON.stringify({
+        id: "pre_redirect",
+        message: {
+          command: "redirecting",
+        },
+      }),
+    });
+    window.dispatchEvent(firstMessage);
+    document.location = REDIRECTED_IFRAME_SRC_ROOT + "?iframe_post_redirect";
+  }
+
+  function test_iframe_post_redirect() {
+    window.addEventListener("WebChannelMessageToContent", function(e) {
+      var echoMessage = new window.CustomEvent("WebChannelMessageToChrome", {
+        detail: JSON.stringify({
+          id: "post_redirect",
+          message: e.detail.message,
+        }),
+      });
+
+      window.dispatchEvent(echoMessage);
+    }, true);
+
+    // Let the test parent know the page has loaded and is ready to echo events
+    var loadedMessage = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: JSON.stringify({
+        id: "post_redirect",
+        message: {
+          command: "loaded",
+        },
+      }),
+    });
+    window.dispatchEvent(loadedMessage);
+  }
+</script>
+</body>
+</html>

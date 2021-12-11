@@ -1,0 +1,19 @@
+<html>
+<head>
+<title> Bug 456041 -  Crash [@ nsCellMapColumnIterator::GetNextFrame] with contenteditable, generated content on table and double tbody</title>
+<script>
+//setTimeout(function() {window.location.reload();}, 500);
+</script>
+</head>
+<body>
+<span contenteditable="true"></span>
+
+<style id="e">body table::after { content:"b";}</style>
+
+<table>
+<script>document.body.offsetHeight;</script>
+<tbody></tbody>
+<tbody></tbody>
+</table>
+</body>
+</html>

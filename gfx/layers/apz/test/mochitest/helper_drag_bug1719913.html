@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for bug 1719913</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript">
+
+async function test() {
+  var subframe = document.getElementById("scroller");
+  let scrollPromise = new Promise(resolve => {
+    subframe.addEventListener("scroll", resolve, {once: true});
+  });
+
+  // Scroll down a small amount (5px). The bug in this case is that the
+  // scrollthumb "jumps" further down the scroll track because with the bug,
+  // incorrect location of a transform in the WebRender scroll nodes results
+  // in a miscalculation of the scroll position corresponding to a mouse event
+  // position during dragging.
+  var dragFinisher = await promiseVerticalScrollbarDrag(subframe, 5, 5);
+  if (!dragFinisher) {
+    ok(true, "No scrollbar, can't do this test");
+    return;
+  }
+
+  // the events above might be stuck in APZ input queue for a bit until the
+  // layer is activated, so we wait here until the scroll event listener is
+  // triggered.
+  await scrollPromise;
+
+  await dragFinisher();
+
+  // Flush everything just to be safe
+  await promiseOnlyApzControllerFlushed();
+
+  // The expected scroll position from the 5px of dragging, based on local
+  // testing, is 49px. With the bug, it's 1038px. We check that it's < 100
+  // which should rule out the bug while allowing for minor variations in
+  // scrollbar sizing etc.
+  ok(subframe.scrollTop < 100, "Scrollbar drag resulted in a scroll position of " + subframe.scrollTop);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+      .columns {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        overflow: auto;
+      }
+      .column {
+        position: relative;
+        width: 50%;
+        height: 500px;
+      }
+      .header {
+        height: 100px;
+      }
+      .scroller {
+        overflow: auto;
+        will-change: transform;
+        height: 100%;
+      }
+      .content {
+        height: 5000px;
+        width: 100%;
+        background: linear-gradient(green, blue);
+      }
+  </style>
+</head>
+<body>
+  <div class="columns">
+    <div class="column">
+      <div class="header"></div>
+      <div class="scroller" id="scroller">
+        <div class="content"></div>
+      </div>
+    </div>
+    <div class="column"></div>
+  </div>
+</body>
+</html>

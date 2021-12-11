@@ -1,0 +1,204 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- NodeIterator mutation tests.
+     Originally written by Ian Hickson, Mochi-ified by Zack Weinberg.
+     This file based on 00[3-9].xml from
+       http://hixie.ch/tests/adhoc/dom/traversal/node-iterator/
+  -->
+<head>
+  <title>DOM Traversal: NodeIterator: Mutations (1/x)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<span id="X"></span><span id="Y"><span id="root1"><span id="A"><span id="B"><span id="C"><span id="D"><span id="E"></span></span></span></span></span></span></span>
+<span id="root2"><span id="F"><span id="FF"></span></span><span id="G"></span><span id="H"><span id="HH"></span></span></span>
+<span id="root3"><span id="I"><span id="II"></span></span><span id="J"></span><span id="K"><span id="KK"></span></span></span>
+<span id="root4"><span id="L"></span><span id="M"><span id="MM"></span></span><span id="N"></span></span>
+<span id="root5"><span id="O"></span><span id="P"><span id="PP"></span></span><span id="Q"></span></span>
+<span id="root6"><span id="R"></span><span id="S"><span id="SS"></span></span><span id="T"></span></span>
+<span id="root7"><span id="U"></span><span id="V"><span id="VV"></span></span><span id="W"></span></span>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript"><![CDATA[
+  /** Originally written by Ian Hickson. **/
+
+  function check(f, e, label) {
+    var eid = e.id;
+    var fid = f ? f.id : 'null';
+    is(f, e, label + ': expected ' + eid + ' have ' + fid);
+  }
+
+  var childid = 0;
+  function addChildTo(a) {
+    var x = document.createElementNS('http://www.w3.org/1999/xhtml', 'span');
+    x.id = 'X' + childid;
+    childid++;
+    ok(a, 'parent ' + (a?a.id:'undefined') + ' for child ' + x.id);
+    if (a)
+      a.appendChild(x);
+    return x;
+  }
+  function remove(a) {
+    var p = a.parentNode;
+    ok(a && p,
+       'removing ' + ( a?(a.id?a.id:'(no id)'):'undefined' )
+       + ' with parent ' + ( p?(p.id?p.id:'(no id)'):'undefined' ));
+    if (a && p)
+      p.removeChild(a);
+  }
+
+  /** Removal of nodes that should have no effect **/
+  (function () {
+    var root = $('root1');
+    var A = $('A');
+    var B = $('B');
+    var C = $('C');
+    var D = $('D');
+    var E = $('E');
+
+    var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL,
+					       null);
+    check(iterator.nextNode(), root, '1.0');
+
+    // 1. Remove a node unrelated to the reference node
+    remove($('X'));
+    check(iterator.nextNode(), A, '1.1');
+
+    // 2. Remove an ancestor of the root node
+    remove($('Y'));
+    check(iterator.nextNode(), B, '1.2');
+
+    // 3. Remove the root node itself
+    remove(root);
+    check(iterator.nextNode(), C, '1.3');
+
+    // 4. Remove a descendant of the reference node
+    remove(E);
+    check(iterator.nextNode(), D, '1.4');
+  })();
+
+  /** Removal of the reference node **/
+  (function () {
+    var root = $('root2');
+    var F = $('F');
+    var FF = $('FF');
+    var G = $('G');
+    var H = $('H');
+    var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL,
+					       null);
+
+    check(iterator.nextNode(), root, '2.0');
+    check(iterator.nextNode(), F,    '2.1');
+    check(iterator.nextNode(), FF,   '2.2');
+    check(iterator.nextNode(), G,    '2.3');
+    remove(G);
+    check(iterator.previousNode(), FF, '2.4');
+    remove(FF);
+    check(iterator.nextNode(), H, '2.5');
+  })();
+
+  /** Removal of the reference node (deep check) **/
+  (function () {
+    var root = $('root3');
+    var I = $('I');
+    var II = $('II');
+    var J = $('J');
+    var K = $('K');
+    var KK = $('KK');
+
+    var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL,
+					       null);
+    check(iterator.nextNode(), root, '3.0');
+    check(iterator.nextNode(), I, '3.1');
+    check(iterator.nextNode(), II, '3.2');
+    check(iterator.nextNode(), J, '3.3');
+    remove(J);
+    var X = addChildTo(II);
+    check(iterator.nextNode(), X, '3.4');
+    check(iterator.previousNode(), X, '3.5');
+    remove(X);
+    var Y = addChildTo(II);
+    check(iterator.previousNode(), Y, '3.6');
+    check(iterator.nextNode(), Y, '3.7');
+    check(iterator.nextNode(), K, '3.8');
+    check(iterator.nextNode(), KK, '3.9');
+  })();
+
+  /** Removal of an ancestor of the Reference Node (forwards) **/
+  (function () {
+    var root = $('root4');
+    var L = $('L');
+    var M = $('M');
+    var MM = $('MM');
+    var N = $('N');
+
+    var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL,
+					       null);
+    check(iterator.nextNode(), root, '4.1');
+    check(iterator.nextNode(), L, '4.2');
+    check(iterator.nextNode(), M, '4.3');
+    check(iterator.nextNode(), MM, '4.4');
+    remove(M);
+    check(iterator.previousNode(), L, '4.5');
+  })();
+
+  /** Removal of an ancestor of the Reference Node (forwards) (deep check) **/
+  (function () {
+    var root = $('root5');
+    var O = $('O');
+    var P = $('P');
+    var PP = $('PP');
+    var Q = $('Q');
+
+    var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL,
+					       null);
+    check(iterator.nextNode(), root, '5.1');
+    check(iterator.nextNode(), O, '5.2');
+    check(iterator.nextNode(), P, '5.3');
+    check(iterator.nextNode(), PP, '5.4');
+    remove(P);
+    var X = addChildTo(O);
+    check(iterator.nextNode(), X, '5.5');
+  })();
+
+  /** Removal of an ancestor of the Reference Node (backwards) **/
+  (function () {
+    var root = $('root6');
+    var R = $('R');
+    var S = $('S');
+    var SS = $('SS');
+    var T = $('T');
+
+    var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL,
+					       null);
+    check(iterator.nextNode(), root, '6.1');
+    check(iterator.nextNode(), R, '6.2');
+    check(iterator.nextNode(), S, '6.3');
+    check(iterator.nextNode(), SS, '6.4');
+    check(iterator.previousNode(), SS, '6.5');
+    remove(S);
+    check(iterator.nextNode(), T, '6.6');
+  })();
+
+  /** Removal of an ancestor of the Reference Node (backwards) (deep check) **/
+  (function () {
+    var root = $('root7');
+    var U = $('U');
+    var V = $('V');
+    var VV = $('VV');
+    var W = $('W');
+
+    var iterator = document.createNodeIterator(root, NodeFilter.SHOW_ALL,
+					       null);
+    check(iterator.nextNode(), root, '7.1');
+    check(iterator.nextNode(), U, '7.2');
+    check(iterator.nextNode(), V, '7.3');
+    check(iterator.nextNode(), VV, '7.4');
+    check(iterator.previousNode(), VV, '7.5');
+    remove(V);
+    var X = addChildTo(U);
+    check(iterator.previousNode(), X, '7.6');
+  })();
+]]></script></pre></body></html>

@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=468167
+-->
+<head>
+  <title>Test for Bug 468167</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=468167">Mozilla Bug 468167</a>
+<p id="display">
+<textarea id="ta" rows="10" cols="80"></textarea>
+</p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 468167 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests()
+{
+  var ta = document.getElementById("ta");
+  ta.focus();
+  is(ta.scrollTop, 0, "initially scrolled to top");
+  var s = "";
+  for (var i = 0; i < 40; ++i) {
+    // three characters per line
+    if (i < 10)
+      s += "0";
+    s += i + "\n";
+  }
+  ta.value = s;
+  is(ta.scrollTop, 0, "scrolled to top after adding content");
+  ta.scrollTop = 9999; // scroll down as far as we can
+  isnot(ta.scrollTop, 0, "scrolled down after scrolling down");
+
+  ta.setSelectionRange(0, 99); // 33 lines out of 40
+
+  // Send a backspace key event to delete the selection
+  synthesizeKey("KEY_Backspace");
+
+  is(ta.scrollTop, 0, "scrolled to top after deleting selection");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=649134
+-->
+<head>
+  <title>Test for Bug 649134</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=649134">Mozilla Bug 649134</a>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 649134 **/
+SimpleTest.waitForExplicitFinish();
+
+var calls = 0;
+function finish() {
+  if (++calls == 4)
+    SimpleTest.finish();
+}
+function verifyNoLoad(iframe) {
+  ok(iframe.contentDocument.body.offsetHeight > 0,
+     "HTTP Link stylesheet was ignored " + iframe.src);
+  finish();
+}
+var verifyLoadCalls = 0;
+function verifyLoad(iframe) {
+  if (++verifyLoadCalls == 2) {
+    ok(indexContent == iframe.contentDocument.body.innerHTML,
+       "bug649134/ loads bug649134/index.html " + iframe.src);
+  }
+  finish();
+}
+function indexLoad(iframe) {
+  indexContent = iframe.contentDocument.body.innerHTML;
+  verifyLoad(iframe);
+}
+
+</script>
+</pre>
+<p id="display">
+<!-- Note: the extra sub-directory is needed for the test, see bug 649134 comment 14 -->
+<iframe onload="verifyNoLoad(this);" src="bug649134/file_bug649134-1.sjs"></iframe>
+<iframe onload="verifyNoLoad(this);" src="bug649134/file_bug649134-2.sjs"></iframe>
+<iframe onload="verifyLoad(this);" src="bug649134/"></iframe> <!-- verify that mochitest server loads index.html -->
+<iframe onload="indexLoad(this);" src="bug649134/index.html"></iframe>
+</p>
+</body>
+</html>

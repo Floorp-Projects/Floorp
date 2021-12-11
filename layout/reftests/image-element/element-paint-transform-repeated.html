@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test a repeated background with some transform.
+     The transform scales up which causes blurring, so
+     we use an SVG filter to get rid of it.
+-->
+<html>
+<body style="filter:url(#thresholdAt128)">
+  <div style="width:80px; height:80px; border: 1px solid black;
+              background: 7px 7px -moz-element(#d);
+              -moz-transform:matrix(2,0,0,2,50,50);">
+  </div>
+  <div style="overflow:hidden; height:0;">
+    <div id="d" style="border:10px solid white; width:20px; height:20px;
+                       background:black;"></div>
+  </div>
+
+  <svg>
+    <filter id="thresholdAt128" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="255" intercept="-128"/>
+        <feFuncG type="linear" slope="255" intercept="-128"/>
+        <feFuncB type="linear" slope="255" intercept="-128"/>
+      </feComponentTransfer>
+    </filter>
+  </svg>
+</body>
+</html>

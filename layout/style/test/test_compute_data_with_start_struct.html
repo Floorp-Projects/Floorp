@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for correct handling of aStartStruct parameter to nsRuleNode::Compute*Data</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <style type="text/css" id="stylesheet"></style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=216456">Mozilla Bug 216456</a>
+<p id="display">
+  <span id="base"></span>
+  <span id="test"></span>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ * The purpose of this test was to test that in the old style system
+ * the nsRuleNode::Compute*Data functions were written correctly.
+ * In particular, in these functions, when the specified value of a
+ * property had unit eCSSUnit_Null, touching the computed data is
+ * forbidden. This is because we sometimes would stop walking up the
+ * rule tree when we find computed data for an initial subsequence of
+ * our rules (i.e., an ancestor rule node) that we can use as a starting
+ * point (aStartStruct) for the computation for the current rule node.
+ *
+ * However, we don't cache style structs in the rule tree in the current
+ * style system code, and property cascading no longer relies on hand
+ * written functions, so this particular failure mode isn't as likely to
+ * happen.
+ */
+
+var gStyleSheet = document.getElementById("stylesheet").sheet;
+var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#base, #test {}", gStyleSheet.cssRules.length)];
+var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#test {}", gStyleSheet.cssRules.length)];
+
+var gBase = getComputedStyle(document.getElementById("base"), "");
+var gTest = getComputedStyle(document.getElementById("test"), "");
+
+function test_property(prop, lower_set, higher_set) {
+  var info = gCSSProperties[prop];
+  if (info.subproperties || info.logical)
+    return;
+
+  gRule1.style.setProperty(prop, info[lower_set][0]);
+  gRule2.style.setProperty(prop, info[higher_set][0]);
+
+  if ("prerequisites" in info) {
+    for (var prereq in info.prerequisites) {
+      gRule2.style.setProperty(prereq, info.prerequisites[prereq], "");
+    }
+  }
+
+  gBase.getPropertyValue(prop);
+  var higher_set_val = gTest.getPropertyValue(prop);
+  gRule2.style.setProperty(prop, info[lower_set][0], "");
+  var lower_set_val = gTest.getPropertyValue(prop);
+  isnot(higher_set_val, lower_set_val, "initial and other values of " + prop + " are different");
+
+  gRule2.style.removeProperty(prop);
+  is(gTest.getPropertyValue(prop), lower_set_val, prop + " is not touched when its value comes from aStartStruct");
+
+  gRule1.style.removeProperty(prop);
+  if ("prerequisites" in info) {
+    for (var prereq in info.prerequisites) {
+      gRule2.style.removeProperty(prereq);
+    }
+  }
+}
+
+function round(lower_set, higher_set) {
+  for (var prop in gCSSProperties)
+    test_property(prop, lower_set, higher_set);
+}
+
+round("other_values", "initial_values");
+round("initial_values", "other_values");
+
+</script>
+</pre>
+</body>
+</html>

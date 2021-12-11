@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test bug 627616 related to proxy authentication</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var Ci = SpecialPowers.Ci;
+
+    function makeXHR(expectedStatus, expectedText, extra) {
+      var xhr =  new XMLHttpRequest();
+      xhr.open("GET", "authenticate.sjs?" +
+                      "proxy_user=proxy_user&" +
+                      "proxy_pass=proxy_pass&" +
+                      "proxy_realm=proxy_realm&" +
+                      "user=user1name&" +
+                      "pass=user1pass&" +
+                      "realm=mochirealm&" +
+                      extra || "");
+      xhr.onloadend = function() {
+        is(xhr.status, expectedStatus, "xhr.status");
+        is(xhr.statusText, expectedText, "xhr.statusText");
+        runNextTest();
+      };
+      return xhr;
+    }
+
+    function testNonAnonymousCredentials() {
+      var xhr = makeXHR(200, "OK");
+      xhr.send();
+    }
+
+    function testAnonymousCredentials() {
+      // Test that an anonymous request correctly performs proxy authentication
+      var xhr = makeXHR(401, "Authentication required");
+      SpecialPowers.wrap(xhr).channel.loadFlags |= Ci.nsIChannel.LOAD_ANONYMOUS;
+      xhr.send();
+    }
+
+    function testAnonymousNoAuth() {
+      // Next, test that an anonymous request still does not include any non-proxy
+      // authentication headers.
+      var xhr = makeXHR(200, "Authorization header not found", "anonymous=1");
+      SpecialPowers.wrap(xhr).channel.loadFlags |= Ci.nsIChannel.LOAD_ANONYMOUS;
+      xhr.send();
+    }
+
+    var gExpectedDialogs = 0;
+    var gCurrentTest;
+    function runNextTest() {
+      is(gExpectedDialogs, 0, "received expected number of auth dialogs");
+      mm.sendAsyncMessage("prepareForNextTest");
+      mm.addMessageListener("prepareForNextTestDone", function prepared(msg) {
+        mm.removeMessageListener("prepareForNextTestDone", prepared);
+        if (pendingTests.length) {
+          ({expectedDialogs: gExpectedDialogs,
+            test: gCurrentTest} = pendingTests.shift());
+          gCurrentTest.call(this);
+        } else {
+          mm.sendAsyncMessage("cleanup");
+          mm.addMessageListener("cleanupDone", () => {
+            // mm.destroy() is called as a cleanup function by runInParent(), no
+            // need to do it here.
+            SimpleTest.finish();
+          });
+        }
+      });
+    }
+
+    var pendingTests = [{expectedDialogs: 2, test: testNonAnonymousCredentials},
+                        {expectedDialogs: 1, test: testAnonymousCredentials},
+                        {expectedDialogs: 0, test: testAnonymousNoAuth}];
+
+    let mm = runInParent(() => {
+      const { classes: parentCc, interfaces: parentCi, utils: parentCu } = Components;
+
+      let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      let {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+      parentCu.import("resource://gre/modules/Timer.jsm");
+      parentCu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+      let channel = NetUtil.newChannel({
+        uri: "http://example.com",
+        loadUsingSystemPrincipal: true,
+      });
+
+      let pps = parentCc["@mozilla.org/network/protocol-proxy-service;1"].
+                getService(parentCi.nsIProtocolProxyService);
+      pps.asyncResolve(channel, 0, {
+        onProxyAvailable(req, uri, pi, status) {
+          let mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
+          let login = parentCc["@mozilla.org/login-manager/loginInfo;1"].
+                      createInstance(parentCi.nsILoginInfo);
+          login.init(mozproxy, null, "proxy_realm", "proxy_user", "proxy_pass",
+                     "", "");
+          Services.logins.addLogin(login);
+
+          let login2 = parentCc["@mozilla.org/login-manager/loginInfo;1"].
+                       createInstance(parentCi.nsILoginInfo);
+          login2.init("http://mochi.test:8888", null, "mochirealm", "user1name",
+                      "user1pass", "", "");
+          Services.logins.addLogin(login2);
+
+          sendAsyncMessage("setupDone");
+        },
+        QueryInterface: ChromeUtils.generateQI([parentCi.nsIProtocolProxyCallback]),
+      });
+
+      addMessageListener("prepareForNextTest", message => {
+        parentCc["@mozilla.org/network/http-auth-manager;1"].
+          getService(parentCi.nsIHttpAuthManager).
+          clearAll();
+        sendAsyncMessage("prepareForNextTestDone");
+      });
+
+      let modalType = Services.prefs.getIntPref(
+        "prompts.modalType.httpAuth"
+      );
+      let authPromptIsCommonDialog =
+        modalType === Services.prompt.MODAL_TYPE_WINDOW
+          || (modalType === Services.prompt.MODAL_TYPE_TAB
+            && Services.prefs.getBoolPref(
+        "prompts.tabChromePromptSubDialog",
+        false
+      ));
+
+      let dialogObserverTopic = authPromptIsCommonDialog
+        ? "common-dialog-loaded" : "tabmodal-dialog-loaded";
+
+      function dialogObserver(subj, topic, data) {
+        if (authPromptIsCommonDialog) {
+          subj.Dialog.ui.prompt.document
+          .getElementById("commonDialog")
+          .acceptDialog();
+        } else {
+          let prompt = subj.ownerGlobal.gBrowser.selectedBrowser
+            .tabModalPromptBox.getPrompt(subj);
+          prompt.Dialog.ui.button0.click(); // Accept button
+        }
+        sendAsyncMessage("promptAccepted");
+      }
+
+      Services.obs.addObserver(dialogObserver, dialogObserverTopic);
+
+      addMessageListener("cleanup", message => {
+        Services.obs.removeObserver(dialogObserver, dialogObserverTopic);
+        sendAsyncMessage("cleanupDone");
+      });
+    });
+
+    mm.addMessageListener("promptAccepted", msg => {
+      gExpectedDialogs--;
+    });
+    mm.addMessageListener("setupDone", msg => {
+      runNextTest();
+    });
+</script>
+</body>
+</html>

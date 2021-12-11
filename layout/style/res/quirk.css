@@ -1,0 +1,105 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+
+
+/* Quirk: make orphaned LIs have inside bullet (b=1049) */
+
+/* force inside position for orphaned lis */
+li {
+  list-style-position: inside;
+}
+
+/* restore outside position for lists inside LIs */
+li :is(ul, ol, dir, menu) {
+  list-style-position: outside;
+}
+
+/* undo previous two rules for properly nested lists */
+:is(ul, ol, dir, menu) :is(ul, ol, dir, menu, li) {
+  list-style-position: unset;
+}
+
+
+/* Quirk: ensure that we get proper padding if the very first
+ * node in an LI is another UL or OL. This is an ugly way to
+ * fix the problem, because it extends the LI up into what
+ * would otherwise appear to be the ULs space. (b=38832) */
+
+/* Note: this fix will fail once we implement marker box
+ * alignment correctly. */
+li > ul:-moz-first-node,
+li > ol:-moz-first-node {
+  padding-block-start: 1em;
+}
+
+
+table {
+  text-align: start;
+  white-space: normal; /* compatible with IE & spec */
+  line-height: normal;
+
+  /* Quirk: cut off all font inheritance in tables except for family. */
+  font-size: initial;
+  font-weight: initial;
+  font-style: initial;
+  font-variant: initial;
+}
+
+
+/* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
+
+/*
+ * While it may seem simpler to use :-moz-first-node and :-moz-last-node without
+ * tags, it's slower, since we have to do the :-moz-first-node or :-moz-last-node
+ * check on every single element in the document.  If we list all the
+ * element names for which the UA stylesheet specifies a margin, the
+ * selectors will be hashed in the selector maps and things will be much more
+ * efficient.
+ */
+:is(body, td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-first-node {
+  margin-block-start: 0;
+}
+
+td > p:-moz-last-node, th > p:-moz-last-node {
+  margin-block-end: 0;
+}
+
+/* Similar as above, but for empty elements
+ *  collapse the bottom or top margins of empty elements
+ *  - see bug 97361
+ */
+:is(body, td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-first-node {
+  margin-block-end: 0;
+}
+
+:is(td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-last-node {
+  margin-block-start: 0;
+}
+
+/* Quirk: Make floated images have a margin  (b=58899) */
+img[align=left] {
+  margin-right: 3px;
+}
+
+img[align=right] {
+  margin-left: 3px;
+}
+
+/*
+ * Quirk: Use border-box box sizing for text inputs, password inputs, and
+ * textareas.  (b=184478 on why we use content-box sizing in standards mode)
+ */
+
+/* Note that all other <input>s already use border-box
+   sizing, so we're ok with this selector */
+input:not([type=image]), textarea {
+  box-sizing: border-box;
+}
+
+/* Quirk: give form margin for compat (b=41806) */
+form {
+  margin-block-end: 1em;
+}

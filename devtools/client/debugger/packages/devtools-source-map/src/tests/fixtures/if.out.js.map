@@ -1,0 +1,7 @@
+{
+    "version":3,
+    "sources":["if.js"],
+    "names":[],
+    "mappings":";;AAAA,SAAS,yBAAT,CAAmC,SAAnC,EAA8C;AAC7C,UAAQ,GAAR,CAAY,OAAZ;AAD6C,MAElC,cAFkC,GAEf,SAFe,CAElC,cAFkC;;;AAI1C,MACE,UAAU,cAAV,KAA6B,KAAK,KAAL,CAAW,cAAxC,IACA,UAAU,YAAV,KAA2B,KAAK,KAAL,CAAW,YAFxC,EAGE;AACA,SAAK,KAAL,CAAW,MAAX,CAAkB,UAAlB,CAA6B,OAA7B;AACD;AACJ,UAAQ,GAAR,CAAY,MAAZ;AACA","file":"if.out.js",
+    "sourcesContent":["function componentWillReceiveProps(nextProps) {\n\tconsole.log('start');\n    const { selectedSource } = nextProps;\n\n    if (\n      nextProps.startPanelSize !== this.props.startPanelSize ||\n      nextProps.endPanelSize !== this.props.endPanelSize\n    ) {\n      this.state.editor.codeMirror.setSize();\n    }\n\tconsole.log('done');\n}\n"]
+}

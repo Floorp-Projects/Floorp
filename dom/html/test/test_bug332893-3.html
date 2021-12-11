@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<form id="form1">
+	<table>
+		<tbody>
+			<tr>
+				<td>
+					<table>
+						<tbody id="table1">
+							<tr id="F1I0"><td><input form='form1' type="input" value="10"/></td></tr>
+							<tr id="F1I1"><td><input type="input" value="11"/></td></tr>
+   							<tr id="F1I2"><td><input type="input" value="12"/></td></tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		</tbody>
+   </table>
+</form>
+<form id="form2">
+	<table>
+		<tbody id="table2">
+			<tr id="F2I1"><td><input type="input" value="21"/></td></tr>
+			<tr id="F2I2"><td><input type="input" value="22"/></td></tr>
+		</tbody>
+	</table>
+</form> 
+
+<script>
+	var table1 = document.getElementById("table1");
+	var F1I0 = table1.getElementsByTagName("tr")[0];
+	var F1I1 = table1.getElementsByTagName("tr")[1];
+	table1.removeChild(F1I0);
+	table1.removeChild(F1I1);
+			  
+	var table2 = document.getElementById("table2");
+	table2.insertBefore(F1I0, table2.firstChild);
+	table2.insertBefore(F1I1, table2.firstChild);
+              
+	var form1 = document.getElementById("form1");
+	var form2 = document.getElementById("form2");
+
+	is(form1.elements.length, 2, "Form 1 has the correct length");
+	is(form1.elements[0].value, "12", "Form 1 element 1 is correct");
+	is(form1.elements[1].value, "10", "Form 1 element 2 is correct");
+
+	is(form2.elements.length, 3, "Form 2 has the correct length");
+	is(form2.elements[0].value, "11", "Form 2 element 1 is correct");
+	is(form2.elements[1].value, "21", "Form 2 element 2 is correct");
+	is(form2.elements[2].value, "22", "Form 2 element 2 is correct");
+</script>
+</body>
+</html>

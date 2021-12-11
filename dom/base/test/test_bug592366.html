@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=592366
+-->
+<head>
+  <title>Test for Bug 592366</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=592366">Mozilla Bug 592366</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+<iframe></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 592366 **/
+
+var gExecuted = false;
+
+function hitEventLoop(times, next)
+{
+  if (times == 0) {
+    next();
+    return;
+  }
+
+  SimpleTest.executeSoon(function() {
+    hitEventLoop(times - 1, next);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var s = document.createElement("script");
+  s.src = "data:text/javascript,parent.gExecuted=true;";
+
+  var iframes = document.getElementsByTagName("iframe");
+
+  iframes[0].contentDocument.body.appendChild(s);
+  iframes[1].contentDocument.body.appendChild(s);
+
+  // It seems to work with 1 event loop hit locally but using 2 given that it
+  // was hsivonen advice.
+  hitEventLoop(2, function() {
+    ok(!gExecuted, "The scripts should not have been executed");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

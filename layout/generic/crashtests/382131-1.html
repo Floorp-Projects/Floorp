@@ -1,0 +1,25 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function crash()
+{
+  try {
+    window.getSelection().containsNode([], false);
+  } catch(e) { }
+
+  try {
+    window.getSelection().containsNode(null, false);
+  } catch(e) { }
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(crash, 10);">
+Foo
+</body>
+
+</html>

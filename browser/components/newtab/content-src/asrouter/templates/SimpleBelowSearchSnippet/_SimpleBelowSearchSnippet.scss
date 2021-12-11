@@ -1,0 +1,198 @@
+
+.below-search-snippet {
+  margin: 0 auto 16px;
+
+  &.withButton {
+    margin: auto;
+    min-height: 60px;
+    background-color: transparent;
+
+    .snippet-hover-wrapper {
+      min-height: 60px;
+      border-radius: 4px;
+
+      &:hover {
+        background-color: var(--newtab-element-hover-color);
+
+        .blockButton {
+          display: block;
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+.SimpleBelowSearchSnippet {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  position: relative;
+  margin: auto;
+  z-index: auto;
+
+  @media (min-width: $break-point-large) {
+    width: 736px;
+  }
+
+  &.active {
+    background-color: var(--newtab-element-hover-color);
+    border-radius: 4px;
+  }
+
+  .innerWrapper {
+    align-items: center;
+    background-color: transparent;
+    border-radius: 4px;
+    box-shadow: $shadow-card;
+    flex-direction: column;
+    padding: 16px;
+    text-align: center;
+    width: 100%;
+
+    @mixin full-width-styles {
+      align-items: flex-start;
+      background-color: transparent;
+      border-radius: 4px;
+      box-shadow: none;
+      flex-direction: row;
+      padding: 0;
+      text-align: inherit;
+      width: 696px;
+    }
+
+    @media (min-width: $break-point-medium) {
+      @include full-width-styles;
+    }
+
+    @media (max-width: 865px) {
+      margin-inline-start: 0;
+    }
+
+    // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 610px.
+    @media (max-width: $break-point-medium - 1px) {
+      margin: auto;
+    }
+  }
+
+  .blockButton {
+    display: block;
+    inset-inline-end: 10px;
+    opacity: 1;
+    top: 50%;
+
+    &:focus {
+      box-shadow: $shadow-primary;
+      border-radius: 2px;
+    }
+  }
+
+  .title {
+    font-size: inherit;
+    margin: 0;
+  }
+
+  .title-inline {
+    display: inline;
+  }
+
+  .textContainer {
+    margin: 10px;
+    margin-inline-start: 0;
+    padding-inline-end: 20px;
+  }
+
+  .icon {
+    margin-top: 8px;
+    margin-inline-start: 12px;
+    height: 32px;
+    width: 32px;
+
+    @mixin full-width-styles {
+      height: 24px;
+      width: 24px;
+    }
+
+    @media (min-width: $break-point-medium) {
+      @include full-width-styles;
+    }
+
+    @media (max-width: $break-point-medium) {
+      margin: auto;
+    }
+  }
+
+  &.withButton {
+    line-height: 20px;
+    margin-bottom: 10px;
+    min-height: 60px;
+    background-color: transparent;
+
+    .innerWrapper {
+      // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 1121px.
+      @media (max-width: $break-point-widest + 1px) {
+        margin: 0 40px;
+      }
+    }
+
+    .blockButton {
+      display: block;
+      inset-inline-end: -10%;
+      opacity: 0;
+      margin: auto;
+      top: unset;
+
+      &:focus {
+        opacity: 1;
+        box-shadow: none;
+      }
+
+      // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 1121px.
+      @media (max-width: $break-point-widest + 1px) {
+        inset-inline-end: 2%;
+      }
+    }
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      margin: auto 0;
+      margin-inline-end: 10px;
+
+      @media (max-width: $break-point-medium) {
+        margin: auto;
+      }
+    }
+
+    .buttonContainer {
+      margin: auto;
+      margin-inline-end: 0;
+
+      @media (max-width: $break-point-medium) {
+        margin: auto;
+      }
+    }
+  }
+
+  button {
+    @media (max-width: $break-point-medium) {
+      margin: auto;
+    }
+  }
+
+  .body {
+    display: inline;
+    position: sticky;
+    transform: translateY(-50%);
+    margin: 8px 0 0;
+
+    @media (min-width: $break-point-medium) {
+      margin: 12px 0;
+    }
+
+    a {
+      font-weight: 600;
+    }
+  }
+}

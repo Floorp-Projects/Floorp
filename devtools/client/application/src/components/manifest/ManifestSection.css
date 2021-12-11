@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.manifest-section {
+  padding-block: calc(var(--base-unit) * 2);
+  width: 100%;
+  border-spacing: calc(var(--base-unit) * 2) 0;
+  font-size: var(--body-10-font-size);
+  font-weight: var(--body-10-font-weight);
+}
+
+.manifest-section--empty {
+  padding-block-end: 0;
+}
+
+.manifest-section:not(:last-child) {
+  border-bottom: 1px solid var(--separator-color);
+}
+
+.manifest-section__title {
+  font-size: var(--title-10-font-size);
+  font-weight: var(--title-10-font-weight);
+  margin: 0;
+}

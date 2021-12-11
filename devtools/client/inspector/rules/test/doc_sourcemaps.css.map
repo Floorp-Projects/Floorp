@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": "AAGA,GAAI;EACF,KAAK,EAHU,OAAI;;AAMrB,IAAK;EACH,gBAAgB,EAAE,IAAI",
+"sources": ["doc_sourcemaps.scss"],
+"names": [],
+"file": "doc_sourcemaps.css"
+}

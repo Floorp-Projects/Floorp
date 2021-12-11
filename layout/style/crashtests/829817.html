@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+@page {}
+
+</style>
+<script>
+
+function boom()
+{
+    // This shouldn't cause a shutdown leak.
+    document.styleSheets[0].cssRules[0].style.someExpando = "set an expando to preserve the wrapper";
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

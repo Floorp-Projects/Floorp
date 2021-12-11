@@ -1,0 +1,128 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAppWindow;
+interface nsIWindowlessBrowser;
+interface nsIURI;
+interface mozIDOMWindowProxy;
+interface nsIAppShell;
+interface nsIRemoteTab;
+
+[ptr] native JSContext(JSContext);
+
+%{C++
+#include "js/TypeDecls.h"
+%}
+
+[scriptable, uuid(19266025-354c-4bb9-986b-3483b2b1cdef)]
+interface nsIAppShellService : nsISupports
+{
+  /**
+   * Create a window, which will be initially invisible.
+   * @param aParent the parent window.  Can be null.
+   * @param aUrl the contents of the new window.
+   * @param aChromeMask chrome flags affecting the kind of OS border
+   *                    given to the window. see nsIWebBrowserChrome for
+   *                    bit/flag definitions.
+   * @param aCallbacks interface providing C++ hooks for window initialization
+   *                   before the window is made visible.  Can be null.
+   *                   Deprecated.
+   * @param aInitialWidth width, in pixels, of the window.  Width of window
+   *                      at creation.  Can be overridden by the "width"
+   *                      tag in the XUL.  Set to NS_SIZETOCONTENT to force
+   *                      the window to wrap to its contents.
+   * @param aInitialHeight like aInitialWidth, but subtly different.
+   */
+  const long SIZE_TO_CONTENT = -1;
+  nsIAppWindow createTopLevelWindow(in nsIAppWindow aParent,
+                                    in nsIURI aUrl,
+                                    in uint32_t aChromeMask,
+                                    in long aInitialWidth,
+                                    in long aInitialHeight);
+
+  /**
+   * This is the constructor for creating an invisible DocShell.
+   * It is used to simulate DOM windows without an actual physical
+   * representation.
+   * @param aIsChrome Set true if you want to use it for chrome content.
+   * @param aChromeMask Used to specify chrome flags that should be set on the
+   *                    window. See nsIWebBrowserChrome for flag definitions.
+   */
+  nsIWindowlessBrowser createWindowlessBrowser([optional] in bool aIsChrome,
+                                               [optional] in uint32_t aChromeMask);
+
+  [noscript]
+  void createHiddenWindow();
+
+  void destroyHiddenWindow();
+
+  /**
+   * B2G multi-screen support. When open another top-level window on b2g,
+   * a screen ID is needed for identifying which screen this window is
+   * opened to.
+   * @param aScreenId Differentiate screens of windows. It is platform-
+   *                  specific due to the hardware limitation for now.
+   */
+  [noscript]
+  void setScreenId(in uint32_t aScreenId);
+
+  /**
+   * Return the (singleton) application hidden window, automatically created
+   * and maintained by this AppShellService.
+   * @param aResult the hidden window.  Do not unhide hidden window.
+   *                Do not taunt hidden window.
+   */
+  readonly attribute nsIAppWindow hiddenWindow;
+
+  /**
+   * Return the (singleton) application hidden window, automatically created
+   * and maintained by this AppShellService.
+   * @param aResult the hidden window.  Do not unhide hidden window.
+   *                Do not taunt hidden window.
+   */
+  readonly attribute mozIDOMWindowProxy hiddenDOMWindow;
+
+  /**
+   * Return true if the application hidden window was provided by the
+   * application. If it wasn't, the default hidden window was used. This will
+   * usually be false on all non-mac platforms.
+   */
+  readonly attribute boolean applicationProvidedHiddenWindow;
+
+  /**
+   * Add a window to the application's registry of windows.  These windows
+   * are generally shown in the Windows taskbar, and the application
+   * knows it can't quit until it's out of registered windows.
+   * @param aWindow the window to register
+   * @note When this method is successful, it fires the global notification
+   *       "xul-window-registered"
+   */
+  void registerTopLevelWindow(in nsIAppWindow aWindow);
+
+  /**
+   * Remove a window from the application's window registry. Note that
+   * this method won't automatically attempt to quit the app when
+   * the last window is unregistered. For that, see Quit().
+   * @param aWindow you see the pattern
+   */
+  void unregisterTopLevelWindow(in nsIAppWindow aWindow);
+
+  /**
+   * Whether the hidden window has been lazily created.
+   */
+  readonly attribute boolean hasHiddenWindow;
+
+  /**
+   * Start/stop tracking lags in the event loop.
+   * If the event loop gets unresponsive, a "event-loop-lag" notification
+   * is sent. Note that calling `startEventLoopLagTracking` when tracking
+   * is already enabled has no effect.
+   * @return true if tracking succeeded.
+   */
+  bool startEventLoopLagTracking();
+  void stopEventLoopLagTracking();
+};

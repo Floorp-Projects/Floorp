@@ -1,0 +1,27 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g id="g3">
+    <rect width="11%" height="100%" fill="lime" id="r1"/>
+  </g>
+  <g id="g4">
+    <rect width="11%" height="100%" fill="lime"/>
+    <use x="10%" xlink:href="#r1"/>
+    <use x="20%" xlink:href="use-01-extref.svg#r2"/>
+    <use x="10%" xlink:href="use-01-extref.svg#g1"/>
+  </g>
+  <g id="g5">
+    <use xlink:href="#r1"/>
+    <use x="-60%" xlink:href="use-01-extref.svg#g2"/>
+  </g>
+  <g id="g6">
+    <use xlink:href="#r1"/>
+    <use x="10%" xlink:href="#g7"/>
+  </g>
+  <g id="g7">
+    <use xlink:href="#g6"/>
+  </g>
+</svg>

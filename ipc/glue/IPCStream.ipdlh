@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+
+include BlobTypes;
+include InputStreamParams;
+include ProtocolTypes;
+
+namespace mozilla {
+namespace ipc {
+
+// Use IPCStream in your ipdl to represent serialized nsIInputStreams. Then use
+// AutoIPCStream from IPCStreamUtils.h to perform the serialization.
+struct IPCStream
+{
+  InputStreamParams stream;
+  OptionalFileDescriptorSet optionalFds;
+};
+
+} // namespace ipc
+} // namespace mozilla

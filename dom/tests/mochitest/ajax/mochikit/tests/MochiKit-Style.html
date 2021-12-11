@@ -1,0 +1,141 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/MockDOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Logging.js"></script>
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+</head>
+<body style="border: 0; margin: 0; padding: 0;">
+
+<div id="styleTest" style="position: absolute; left: 400px; top: 100px; width: 100px; height: 100px; background: rgb(255, 0, 0); opacity: 0.5; filter: alpha(opacity=50); font-size: 10px">TEST<span id="styleSubTest">SUB</span></div>
+
+<pre id="test">
+<script type="text/javascript">
+
+try {
+
+    // initial
+    var pos = getElementPosition('styleTest');
+    is(pos.x, 400, 'initial x position');
+    is(pos.y, 100, 'initial y position');
+    
+    // moved
+    var newPos = new MochiKit.Style.Coordinates(500, 200);
+    setElementPosition('styleTest', newPos);
+    pos = getElementPosition('styleTest');
+    is(pos.x, 500, 'updated x position');
+    is(pos.y, 200, 'updated y position');
+
+    // moved with relativeTo
+    anotherPos = new MochiKit.Style.Coordinates(100, 100);
+    pos = getElementPosition('styleTest', anotherPos);
+    is(pos.x, 400, 'updated x position (using relativeTo parameter)');
+    is(pos.y, 100, 'updated y position (using relativeTo parameter)');
+    
+    // Coordinates object
+    pos = getElementPosition({x: 123, y: 321});
+    is(pos.x, 123, 'passthrough x position');
+    is(pos.y, 321, 'passthrough y position');
+    
+    // Coordinates object with relativeTo
+    pos = getElementPosition({x: 123, y: 321}, {x: 100, y: 50});
+    is(pos.x, 23, 'passthrough x position (using relativeTo parameter)');
+    is(pos.y, 271, 'passthrough y position (using relativeTo parameter)');
+    
+    pos = getElementPosition('garbage'); 
+    is(typeof(pos), 'undefined', 
+        'invalid element should return an undefined position');
+    
+    // Only set one coordinate
+    setElementPosition('styleTest', {'x': 300});
+    pos = getElementPosition('styleTest');
+    is(pos.x, 300, 'updated only x position');
+    is(pos.y, 200, 'not updated y position');
+    
+    var mc = MochiKit.Color.Color;
+    var red = mc.fromString('rgb(255,0,0)');
+    var color = null;
+    
+    color = mc.fromString(getStyle('styleTest', 'background-color'));
+    is(color.toHexString(), red.toHexString(), 
+        'test getStyle selector case');
+       
+    color = mc.fromString(getStyle('styleTest', 'backgroundColor'));
+    is(color.toHexString(), red.toHexString(), 
+        'test getStyle camel case');
+
+    is(getStyle('styleSubTest', 'font-size'), '10px', 
+        'test computed getStyle selector case');
+       
+    is(getStyle('styleSubTest', 'fontSize'), '10px', 
+        'test computed getStyle camel case');
+
+    is(eval(getStyle('styleTest', 'opacity')), 0.5, 
+        'test getStyle opacity');
+
+    is(getStyle('styleTest', 'opacity'), 0.5, 'test getOpacity');
+    
+    setStyle('styleTest', {'opacity': 0.2});
+    is(getStyle('styleTest', 'opacity'), 0.2, 'test setOpacity');
+
+    setStyle('styleTest', {'opacity': 0});
+    is(getStyle('styleTest', 'opacity'), 0, 'test setOpacity');
+
+    setStyle('styleTest', {'opacity': 1});
+    var t = getStyle('styleTest', 'opacity');
+    ok(t > 0.999 && t <= 1, 'test setOpacity');
+
+    var dims = getElementDimensions('styleTest');
+    is(dims.w, 100, 'getElementDimensions w ok');
+    is(dims.h, 100, 'getElementDimensions h ok');
+
+    setElementDimensions('styleTest', {'w': 200, 'h': 150});
+    dims = getElementDimensions('styleTest');
+    is(dims.w, 200, 'setElementDimensions w ok');
+    is(dims.h, 150, 'setElementDimensions h ok');
+
+    setElementDimensions('styleTest', {'w': 150});
+    dims = getElementDimensions('styleTest');
+    is(dims.w, 150, 'setElementDimensions only w ok');
+    is(dims.h, 150, 'setElementDimensions h not updated ok');
+
+    hideElement('styleTest');
+    dims = getElementDimensions('styleTest');
+    is(dims.w, 150, 'getElementDimensions w ok when display none');
+    is(dims.h, 150, 'getElementDimensions h ok when display none');
+
+    dims = getViewportDimensions();
+    is(dims.w > 0, true, 'test getViewportDimensions w');
+    is(dims.h > 0, true, 'test getViewportDimensions h');
+
+    pos = getViewportPosition();
+    is(pos.x, 0, 'test getViewportPosition x');
+    is(pos.y, 0, 'test getViewportPosition y');
+
+    ok( true, "test suite finished!");
+    
+    
+} catch (err) {
+    
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+
+}
+</script>
+</pre>
+</body>
+</html>

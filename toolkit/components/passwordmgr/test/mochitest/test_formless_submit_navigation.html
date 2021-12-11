@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test capturing of fields outside of a form due to navigation</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript">
+const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerChild.jsm");
+const { LoginManagerChild } = LMCBackstagePass;
+
+let loadPromise = new Promise(resolve => {
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loginFrame").addEventListener("load", (evt) => {
+      resolve();
+    });
+  });
+});
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["signon.formlessCapture.enabled", true],
+    ],
+  });
+
+  info("Waiting for page and frame loads");
+  await loadPromise;
+
+  await loadRecipes({
+    siteRecipes: [{
+      hosts: ["test1.mochi.test:8888"],
+      usernameSelector: "input[name='recipeuname']",
+      passwordSelector: "input[name='recipepword']",
+    }],
+  });
+});
+
+const DEFAULT_ORIGIN = "http://test1.mochi.test:8888";
+const SCRIPTS = {
+  PUSHSTATE: `history.pushState({}, "Pushed state", "?pushed");`,
+  WINDOW_LOCATION: `window.location = "data:text/html;charset=utf-8,window.location";`,
+};
+const TESTCASES = [
+  {
+    // Inputs
+    document: `<input type=password value="">`,
+    selectorValues: {
+      "[type=password]": "pass1",
+    },
+    expectedFormsCount: 1,
+
+    // Expected outputs similar to PasswordManager:onFormSubmit
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
+    usernameFieldValue: null,
+    newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<input id="u1" value="">
+      <input type=password value="">`,
+    selectorValues: {
+      "#u1": "user1",
+      "[type=password]": "pass1",
+    },
+
+    expectedFormsCount: 1,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<input id="u1" value="">
+      <input id="p1" type=password value="">
+      <input id="p2" type=password value="">`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "pass1",
+      "#p2": "pass2",
+    },
+
+    expectedFormsCount: 1,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass2",
+    oldPasswordFieldValue: "pass1",
+  },
+  {
+    document: `<input id="u1" value="">
+      <input id="p1" type=password value="">
+      <input id="p2" type=password value="">
+      <input id="p3" type=password value="">`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "pass1",
+      "#p2": "pass2",
+      "#p3": "pass2",
+    },
+
+    expectedFormsCount: 1,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass2",
+    oldPasswordFieldValue: "pass1",
+  },
+  {
+    // Since there are two FormLikes to auto-submit in this case we mark
+    // one FormLike's password fields with a magic "ignore-form-submission"
+    // value so we can just focus on the other form. We then repeat the testcase
+    // below with the other FormLike ignored.
+    document: `<input id="u1" value="">
+      <input type=password id="p1" value="" form="form1">
+      <input type=password id="p2" value="">
+      <form id="form1">
+        <input id="u2" value="">
+        <input id="p3" type=password value="">
+      </form>`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "ignore-form-submission",
+      "#p2": "pass1",
+      "#u2": "user3",
+      "#p3": "ignore-form-submission",
+    },
+    expectedFormsCount: 2,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass1",
+    oldPasswordFieldValue: null,
+  },
+  { // Same as above but with the other form ignored.
+    document: `<input id="u1" value="">
+      <input id="p1" type=password value="" form="form1">
+      <input id="p2" type=password value="">
+      <form id="form1">
+        <input id="u2" value="">
+        <input id="p3" type=password value="">
+      </form>`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "pass2",
+      "#p2": "ignore-form-submission",
+      "#u2": "user3",
+      "#p3": "pass2",
+    },
+
+    expectedFormsCount: 2,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
+    usernameFieldValue: null,
+    newPasswordFieldValue: "pass2",
+    oldPasswordFieldValue: null,
+  },
+  {
+    document: `<!-- recipe field override -->
+      <input name="recipeuname" value="">
+      <input id="u1" value="">
+      <input id="p1" type=password value="">
+      <input name="recipepword" type=password value="">`,
+    selectorValues: {
+      "[name='recipeuname']": "username from recipe",
+      "#u1": "default field username",
+      "#p1": "pass1",
+      "[name='recipepword']": "pass2",
+    },
+
+    expectedFormsCount: 1,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
+    usernameFieldValue: "username from recipe",
+    newPasswordFieldValue: "pass2",
+    oldPasswordFieldValue: null,
+  },
+];
+
+function filterFormSubmissions({ origin, data }) {
+  return data.newPasswordField.value != "ignore-form-submission";
+}
+
+async function testFormlesSubmitNavigation(tc, testDoc, scriptName) {
+
+  let loginFrame = document.getElementById("loginFrame");
+  let loadedPromise = new Promise((resolve) => {
+    loginFrame.addEventListener("load", function() {
+      resolve();
+    }, {once: true});
+  });
+  loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
+  await loadedPromise;
+
+  let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
+
+  let formsProcessed = promiseFormsProcessed(tc.expectedFormsCount);
+  // eslint-disable-next-line no-unsanitized/property
+  frameDoc.documentElement.innerHTML = testDoc;
+  await formsProcessed;
+  // We eliminate no user input as a reason for not capturing by modifying the value
+  setUserInputValues(frameDoc.documentElement, tc.selectorValues)
+
+  let submitProcessed = getSubmitMessage(filterFormSubmissions);
+  info("Running " + scriptName + " script to cause a submission");
+  frameDoc.defaultView.eval(SCRIPTS[scriptName]);
+
+  info("Waiting for formSubmissionProcsssed message");
+  let { origin, data } = await submitProcessed;
+  info("Got for formSubmissionProcsssed message");
+
+  // Check data sent via PasswordManager:onFormSubmit
+  is(origin, tc.origin, "Check origin");
+  is(data.formActionOrigin, tc.formActionOrigin, "Check formActionOrigin");
+
+  if (tc.usernameFieldValue === null) {
+    is(data.usernameField, tc.usernameFieldValue, "Check usernameField");
+  } else {
+    is(data.usernameField.value, tc.usernameFieldValue, "Check usernameField");
+  }
+
+  is(data.newPasswordField.value, tc.newPasswordFieldValue, "Check newPasswordFieldValue");
+
+  if (tc.oldPasswordFieldValue === null) {
+    is(data.oldPasswordField, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
+  } else {
+    is(data.oldPasswordField.value, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
+  }
+};
+
+let count = 0;
+for (let tc of TESTCASES) {
+  for (let scriptName of Object.keys(SCRIPTS)) {
+    for (let surroundDocumentWithForm of [false, true]) {
+      let testDoc = tc.document;
+      if (surroundDocumentWithForm) {
+        if (testDoc.includes("<form")) {
+          info("Skipping surroundDocumentWithForm case since document already contains a <form>");
+          continue;
+        }
+        testDoc = "<form>" + testDoc + "</form>";
+      }
+      let taskName = `testcase-${count}-${scriptName}${surroundDocumentWithForm ? '-formWrapped' : ''}`;
+      let tmp = {
+        async [taskName]() {
+          info("Starting testcase with script " + scriptName + " and " +
+               (surroundDocumentWithForm ? "a" : "no") + " form wrapper: " + JSON.stringify(tc));
+          await testFormlesSubmitNavigation(tc, testDoc, scriptName);
+        },
+      };
+      add_task(tmp[taskName]);
+    }
+  }
+  count++;
+}
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="loginFrame" src="http://test1.mochi.test:8888/tests/toolkit/components/passwordmgr/test/mochitest/blank.html"></iframe>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

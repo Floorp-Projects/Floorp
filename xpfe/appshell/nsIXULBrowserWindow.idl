@@ -1,0 +1,57 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+interface nsIBrowser;
+interface nsIRequest;
+interface nsIInputStream;
+interface nsIDocShell;
+interface nsIRemoteTab;
+interface nsIPrincipal;
+interface mozIDOMWindowProxy;
+interface nsIContentSecurityPolicy;
+interface nsIReferrerInfo;
+
+webidl Element;
+webidl Node;
+
+/**
+ * The nsIXULBrowserWindow supplies the methods that may be called from the
+ * internals of the browser area to tell the containing xul window to update
+ * its ui.
+ */
+[scriptable, uuid(a8675fa9-c8b4-4350-9803-c38f344a9e38)]
+interface nsIXULBrowserWindow : nsISupports
+{
+  /**
+   * Tells the object implementing this function what link we are currently
+   * over.
+   */
+  void setOverLink(in AString link);
+
+  /**
+   * Determines the appropriate target for a link.
+   */
+  AString onBeforeLinkTraversal(in AString originalTarget,
+                                in nsIURI linkURI,
+                                in Node linkNode,
+                                in boolean isAppTab);
+
+  /**
+   * Show/hide a tooltip (when the user mouses over a link, say).
+   */
+  void showTooltip(in long x, in long y, in AString tooltip, in AString direction,
+                   in Element browser);
+  void hideTooltip();
+
+  /**
+   * Return the number of tabs in this window.
+   */
+  uint32_t getTabCount();
+};
+

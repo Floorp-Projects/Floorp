@@ -1,0 +1,427 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRequest.idl"
+
+interface nsIRequest;
+interface nsIRequestObserver;
+
+interface nsIBitsRequest;
+
+interface nsIBitsNewRequestCallback;
+interface nsIBitsCallback;
+
+typedef long nsProxyUsage;
+typedef long nsBitsErrorType;
+typedef long nsBitsErrorAction;
+typedef long nsBitsErrorStage;
+
+/**
+ * An interface for interacting with Windows Background Intelligent Transfer
+ * Service. This should only be used on Windows.
+ *
+ * It would be preferable for the functions in this interface to return
+ * Promises, but this interface is implemented in Rust, which does not yet have
+ * support for Promises. There is a JS wrapper around this class that should be
+ * preferred over using this interface directly, located in Bits.jsm.
+ *
+ * Methods of this class that take a nsIBitsNewRequestCallback do not return or
+ * throw errors. All errors will be reported through the callback. The only
+ * things that should cause methods to directly throw errors are null arguments.
+ */
+[scriptable, uuid(495d6f3d-9748-4d30-8ce5-0290c0001edf)]
+interface nsIBits : nsISupports
+{
+  /**
+   * nsBitsErrorType values
+   * The BITS interface returns many error codes. These are intended to help
+   * determine appropriate fallback actions and to report to telemetry.
+   */
+  const long ERROR_TYPE_SUCCESS                                           = 0;
+  const long ERROR_TYPE_UNKNOWN                                           = 1;
+  const long ERROR_TYPE_METHOD_THREW                                      = 2;
+  const long ERROR_TYPE_METHOD_TIMEOUT                                    = 3;
+  const long ERROR_TYPE_NULL_ARGUMENT                                     = 4;
+  const long ERROR_TYPE_INVALID_ARGUMENT                                  = 5;
+  const long ERROR_TYPE_NOT_INITIALIZED                                   = 6;
+  const long ERROR_TYPE_NO_UTF8_CONVERSION                                = 7;
+  const long ERROR_TYPE_INVALID_GUID                                      = 8;
+  const long ERROR_TYPE_PIPE_NOT_CONNECTED                                = 9;
+  const long ERROR_TYPE_PIPE_TIMEOUT                                      = 10;
+  const long ERROR_TYPE_PIPE_BAD_WRITE_COUNT                              = 11;
+  const long ERROR_TYPE_PIPE_API_ERROR                                    = 12;
+  const long ERROR_TYPE_FAILED_TO_CREATE_BITS_JOB                         = 13;
+  const long ERROR_TYPE_FAILED_TO_ADD_FILE_TO_JOB                         = 14;
+  const long ERROR_TYPE_FAILED_TO_APPLY_BITS_JOB_SETTINGS                 = 15;
+  const long ERROR_TYPE_FAILED_TO_RESUME_BITS_JOB                         = 16;
+  const long ERROR_TYPE_OTHER_BITS_ERROR                                  = 17;
+  const long ERROR_TYPE_OTHER_BITS_CLIENT_ERROR                           = 18;
+  const long ERROR_TYPE_BITS_JOB_NOT_FOUND                                = 19;
+  const long ERROR_TYPE_FAILED_TO_GET_BITS_JOB                            = 20;
+  const long ERROR_TYPE_FAILED_TO_SUSPEND_BITS_JOB                        = 21;
+  const long ERROR_TYPE_FAILED_TO_COMPLETE_BITS_JOB                       = 22;
+  const long ERROR_TYPE_PARTIALLY_COMPLETED_BITS_JOB                      = 23;
+  const long ERROR_TYPE_FAILED_TO_CANCEL_BITS_JOB                         = 24;
+  const long ERROR_TYPE_MISSING_RESULT_DATA                               = 25;
+  const long ERROR_TYPE_MISSING_CALLBACK                                  = 26;
+  const long ERROR_TYPE_CALLBACK_ON_WRONG_THREAD                          = 27;
+  const long ERROR_TYPE_MISSING_BITS_SERVICE                              = 28;
+  const long ERROR_TYPE_BITS_SERVICE_ON_WRONG_THREAD                      = 29;
+  const long ERROR_TYPE_MISSING_BITS_REQUEST                              = 30;
+  const long ERROR_TYPE_BITS_REQUEST_ON_WRONG_THREAD                      = 31;
+  const long ERROR_TYPE_MISSING_OBSERVER                                  = 32;
+  const long ERROR_TYPE_OBSERVER_ON_WRONG_THREAD                          = 33;
+  const long ERROR_TYPE_MISSING_CONTEXT                                   = 34;
+  const long ERROR_TYPE_CONTEXT_ON_WRONG_THREAD                           = 35;
+  const long ERROR_TYPE_FAILED_TO_START_THREAD                            = 36;
+  const long ERROR_TYPE_FAILED_TO_CONSTRUCT_TASK_RUNNABLE                 = 37;
+  const long ERROR_TYPE_FAILED_TO_DISPATCH_RUNNABLE                       = 38;
+  const long ERROR_TYPE_TRANSFER_ALREADY_COMPLETE                         = 39;
+  const long ERROR_TYPE_OPERATION_ALREADY_IN_PROGRESS                     = 40;
+  const long ERROR_TYPE_MISSING_BITS_CLIENT                               = 41;
+  const long ERROR_TYPE_FAILED_TO_GET_JOB_STATUS                          = 42;
+  const long ERROR_TYPE_BITS_STATE_ERROR                                  = 43;
+  const long ERROR_TYPE_BITS_STATE_TRANSIENT_ERROR                        = 44;
+  const long ERROR_TYPE_BITS_STATE_CANCELLED                              = 45;
+  const long ERROR_TYPE_BITS_STATE_UNEXPECTED                             = 46;
+  const long ERROR_TYPE_VERIFICATION_FAILURE                              = 47;
+  const long ERROR_TYPE_ACCESS_DENIED_EXPECTED                            = 48;
+  const long ERROR_TYPE_FAILED_TO_CONNECT_TO_BCM                          = 49;
+  const long ERROR_TYPE_USE_AFTER_REQUEST_SHUTDOWN                        = 50;
+
+  /**
+   * nsBitsErrorAction values
+   * These values indicate where the error occurred.
+   */
+  const long ERROR_ACTION_UNKNOWN                                         = 1;
+  const long ERROR_ACTION_NONE                                            = 2;
+  const long ERROR_ACTION_START_DOWNLOAD                                  = 3;
+  const long ERROR_ACTION_MONITOR_DOWNLOAD                                = 4;
+  const long ERROR_ACTION_CHANGE_MONITOR_INTERVAL                         = 5;
+  const long ERROR_ACTION_CANCEL                                          = 6;
+  const long ERROR_ACTION_SET_PRIORITY                                    = 7;
+  const long ERROR_ACTION_COMPLETE                                        = 8;
+  const long ERROR_ACTION_SUSPEND                                         = 9;
+  const long ERROR_ACTION_RESUME                                          = 10;
+  const long ERROR_ACTION_SET_NO_PROGRESS_TIMEOUT                         = 11;
+
+  /**
+   * nsBitsErrorStage values
+   * These values allow the caller to determine at what point in the download
+   * mechanism a failure occurred.
+   */
+  const long ERROR_STAGE_UNKNOWN                                          = 1;
+  const long ERROR_STAGE_PRETASK                                          = 2;
+  const long ERROR_STAGE_COMMAND_THREAD                                   = 3;
+  const long ERROR_STAGE_AGENT_COMMUNICATION                              = 4;
+  const long ERROR_STAGE_BITS_CLIENT                                      = 5;
+  const long ERROR_STAGE_MAIN_THREAD                                      = 6;
+  const long ERROR_STAGE_MONITOR                                          = 7;
+  const long ERROR_STAGE_VERIFICATION                                     = 8;
+
+  /**
+   * These values indicate what type of error code was returned. These are used
+   * to allow the different types taken by the different callback failure
+   * functions to be made into one generic error type in Javascript.
+   */
+  const long ERROR_CODE_TYPE_NONE                                         = 1;
+  const long ERROR_CODE_TYPE_NSRESULT                                     = 2;
+  const long ERROR_CODE_TYPE_HRESULT                                      = 3;
+  const long ERROR_CODE_TYPE_STRING                                       = 4;
+  const long ERROR_CODE_TYPE_EXCEPTION                                    = 5;
+
+  /**
+   * Indicates whether init() has been called.
+   */
+  readonly attribute boolean initialized;
+
+  /**
+   * Initializes the BITS interface. Unlike other functions here, this happens
+   * synchronously.
+   * init() should only be called only once.
+   *
+   * @param jobName
+   *        The name of the BITS job. This is used both to set the name during
+   *        job creation and to verify that a job is ours.
+   * @param savePathPrefix
+   *        The directory that downloads will be saved to. Providing a safe
+   *        directory here ensures that the download path cannot be manipulated
+   *        to save files to a malicious location. Downloads are guaranteed to
+   *        be saved to this directory or a subdirectory.
+   * @param monitorTimeoutMs
+   *        The amount of time to wait between download monitor notifications.
+   *        This should be larger than the largest monitorIntervalMs that will
+   *        be passed to startDownload(), monitorDownload(), or
+   *        changeMonitorInterval(). This value may not be 0.
+   */
+  void init(in AUTF8String jobName,
+            in AUTF8String savePathPrefix,
+            in unsigned long monitorTimeoutMs);
+
+  /**
+   * Downloads the specified URL to the specified location within the
+   * savePathPrefix passed to init().
+   *
+   * @param downloadURL
+   *        The URL to be downloaded.
+   * @param saveRelativePath
+   *        The location to download to. The path given should be a path
+   *        relative to the savePathPrefix passed to init(). If this attempts to
+   *        escape the directory specified by savePathPrefix, this call will
+   *        fail (ex: Don't pass "../filename").
+   * @param proxy
+   *        Specifies what proxy to use when downloading. Valid values are
+   *        listed below.
+   * @param noProgressTimeoutSecs
+   *        The number of seconds for the "no progress" timeout. After there has
+   *        been no download progress for this long, BITS will not retry the job
+   *        following a transient error, producing instead a permanent error.
+   * @param monitorIntervalMs
+   *        The number of milliseconds between download status notifications.
+   * @param observer
+   *        An observer to be notified of various events. OnStartRequest is
+   *        called once the BITS job has been created. OnStopRequest is called
+   *        when the file transfer has completed or when an error occurs. If
+   *        this object implements nsIProgressEventSink, then its OnProgress
+   *        method will be called as data is transferred.
+   *        IMPORTANT NOTE: When OnStopRequest is called, the download has
+   *                        completed, but nsIBitsRequest::complete() still
+   *                        needs to be called to save the file to the
+   *                        filesystem.
+   * @param context
+   *        User defined object forwarded to the observer's onProgress method.
+   *        This parameter, unlike others for this interface, can be passed a
+   *        null pointer.
+   * @param callback
+   *        The callback used to relay the response from BITS.
+   */
+  void startDownload(in AUTF8String downloadURL,
+                     in AUTF8String saveRelativePath,
+                     in nsProxyUsage proxy,
+                     in unsigned long noProgressTimeoutSecs,
+                     in unsigned long monitorIntervalMs,
+                     in nsIRequestObserver observer,
+                     in nsISupports context,
+                     in nsIBitsNewRequestCallback callback);
+
+  // nsProxyUsage values
+  const long PROXY_NONE = 1;
+  const long PROXY_PRECONFIG = 2;
+  const long PROXY_AUTODETECT = 3;
+
+  /**
+   * Similar to startDownload, but connects to a BITS transfer that has already
+   * been started.
+   *
+   * @param id
+   *        The GUID of the download to monitor.
+   * @param monitorIntervalMs
+   *        The number of milliseconds between download status notifications.
+   * @param observer
+   *        An observer to be notified of various events. OnStartRequest is
+   *        called once the BITS job has been created. OnStopRequest is called
+   *        when the file transfer has completed or when an error occurs. If
+   *        this object implements nsIProgressEventSink, then its OnProgress
+   *        method will be called as data is transferred.
+   *        IMPORTANT NOTE: When OnStopRequest is called, the download has
+   *                        completed, but nsIBitsRequest::complete() still
+   *                        needs to be called to save the file to the
+   *                        filesystem.
+   * @param context
+   *        User defined object forwarded to the observer's onProgress method.
+   *        This parameter, unlike others for this interface, can be passed a
+   *        null pointer.
+   * @param callback
+   *        The callback used to relay the response from BITS.
+   */
+  void monitorDownload(in AUTF8String id,
+                       in unsigned long monitorIntervalMs,
+                       in nsIRequestObserver observer,
+                       in nsISupports context,
+                       in nsIBitsNewRequestCallback callback);
+};
+
+/**
+ * This callback interface is for use by the nsIBits interface for returning
+ * results asynchronously to the caller.
+ */
+[scriptable, uuid(aa12e433-5b9f-452d-b5c9-840a9541328b)]
+interface nsIBitsNewRequestCallback : nsISupports
+{
+  void success(in nsIBitsRequest request);
+  void failure(in nsBitsErrorType errorType,
+               in nsBitsErrorAction errorAction,
+               in nsBitsErrorStage errorStage);
+  void failureNsresult(in nsBitsErrorType errorType,
+                       in nsBitsErrorAction errorAction,
+                       in nsBitsErrorStage errorStage,
+                       in nsresult errorCode);
+  void failureHresult(in nsBitsErrorType errorType,
+                      in nsBitsErrorAction errorAction,
+                      in nsBitsErrorStage errorStage,
+                      in long errorCode);
+  void failureString(in nsBitsErrorType errorType,
+                     in nsBitsErrorAction errorAction,
+                     in nsBitsErrorStage errorStage,
+                     in AUTF8String errorMessage);
+};
+
+/*
+ * An interface for managing a running BITS download.
+ *
+ * It would be preferable for the functions in this interface to return
+ * Promises, but this interface is implemented in Rust, which does not yet have
+ * support for Promises. There is a JS wrapper around this class that should be
+ * preferred over using this interface directly, located in Bits.jsm.
+ *
+ * Methods of this class that take a nsIBitsCallback do not return or throw
+ * errors. All errors will be reported through the callback. The only
+ * things that should cause methods to directly throw errors are null arguments.
+ *
+ * Note: Although the nsIBits interface derives from nsIRequest, implementations
+ *       may not implement the loadGroup or loadFlags attributes.
+ *
+ * Note: Once the file transfer has stopped (due to completion or error),
+ *       calling any method besides complete() or cancel() will result in an
+ *       error with type nsIBits::ERROR_TYPE_TRANSFER_ALREADY_COMPLETE.
+ *       Calling complete() or cancel() again after either has already been
+ *       called will also result in an ERROR_TYPE_TRANSFER_ALREADY_COMPLETE
+ *       error.
+ *       Attributes and nsIRequest::isPending() can still be accessed at any
+ *       time.
+ */
+[scriptable, uuid(ab9da0e9-06bf-4e73-bb1b-c0f2ea9ecc3e)]
+interface nsIBitsRequest : nsIRequest
+{
+  /**
+   * The BITS id of the download. This will be a string representing a UUID.
+   */
+  readonly attribute AUTF8String bitsId;
+
+  /**
+   * The transfer result of the download, meant to be accessed after the
+   * transfer has stopped (i.e. after the observer's onStopRequest method has
+   * been called). Will be nsIBits::ERROR_TYPE_SUCCESS if the transfer is
+   * successful (and before transfer completion). If the transfer failed, this
+   * will be a different nsBitsErrorType value indicating the cause of the
+   * failure.
+   */
+  readonly attribute nsBitsErrorType transferError;
+
+  /**
+   * Requests a change to the frequency that Firefox is receiving download
+   * status notifications.
+   *
+   * @param monitorIntervalMs
+   *        The new number of milliseconds between download status
+   *        notifications.
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void changeMonitorInterval(in unsigned long monitorIntervalMs,
+                             in nsIBitsCallback callback);
+
+  /**
+   * Cancels the download. This function is named this way to avoid conflict
+   * with nsIRequest::cancel.
+   *
+   * @param status
+   *        The reason for cancelling the request. This must be a failure code
+   *        rather than a success code like NS_OK.
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void cancelAsync(in nsresult status,
+                   in nsIBitsCallback callback);
+
+  /**
+   * Sets the priority of the BITS job to high (i.e. foreground download).
+   *
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void setPriorityHigh(in nsIBitsCallback callback);
+
+  /**
+   * Sets the priority of the BITS job to low (i.e. background download).
+   *
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void setPriorityLow(in nsIBitsCallback callback);
+
+  /**
+   * Sets the BITS "no progress" timeout for the job.
+   *
+   * @param timeoutSecs
+   *        The new number of seconds for the timeout. After there has been
+   *        no progress for this long, BITS will not retry the job following
+   *        a transient error, producing instead a permanent error.
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void setNoProgressTimeout(in unsigned long timeoutSecs,
+                             in nsIBitsCallback callback);
+
+  /*
+   * Completes the download, moving it out of the BITS system and onto the
+   * disk location specified when startDownload was called.
+   *
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void complete(in nsIBitsCallback callback);
+
+  /*
+   * Suspends the download, preventing more data from being transferred until
+   * the download is resumed. This function is named this way to avoid conflict
+   * with nsIRequest::suspend.
+   *
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void suspendAsync(in nsIBitsCallback callback);
+
+  /*
+   * Resumes a previously suspended download. This function is named this way
+   * to avoid conflict with nsIRequest::resume.
+   *
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void resumeAsync(in nsIBitsCallback callback);
+};
+
+/**
+ * This callback interface is for use by the nsIBitsRequest interface for
+ * returning results asynchronously to the caller.
+ */
+[scriptable, uuid(ea657e66-6bad-4e41-84d9-c6d107e9799d)]
+interface nsIBitsCallback : nsISupports
+{
+  void success();
+  void failure(in nsBitsErrorType errorType,
+               in nsBitsErrorAction errorAction,
+               in nsBitsErrorStage errorStage);
+  void failureNsresult(in nsBitsErrorType errorType,
+                       in nsBitsErrorAction errorAction,
+                       in nsBitsErrorStage errorStage,
+                       in nsresult errorCode);
+  void failureHresult(in nsBitsErrorType errorType,
+                      in nsBitsErrorAction errorAction,
+                      in nsBitsErrorStage errorStage,
+                      in long errorCode);
+  void failureString(in nsBitsErrorType errorType,
+                     in nsBitsErrorAction errorAction,
+                     in nsBitsErrorStage errorStage,
+                     in AUTF8String errorMessage);
+};
+
+%{C++
+#define NS_BITS_CID \
+  { 0xa334de05, 0xb9de, 0x46a1, \
+    { 0x98, 0xa9, 0x3f, 0x5c, 0xed, 0x82, 0x1e, 0x68 } }
+#define NS_BITS_CONTRACTID "@mozilla.org/bits;1"
+%}

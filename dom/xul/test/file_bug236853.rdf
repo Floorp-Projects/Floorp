@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:ex="http://www.ex.org/ex-rdf#">
+
+	<rdf:Description about="urn:root">
+		<ex:nodes>
+			<rdf:Bag about="http://www.ex.org/nodes">
+				<rdf:li>
+					<rdf:Description about="http://www.ex.org/nodes/A"/>
+				</rdf:li>
+			</rdf:Bag>
+		</ex:nodes>
+	</rdf:Description>		
+</rdf:RDF>

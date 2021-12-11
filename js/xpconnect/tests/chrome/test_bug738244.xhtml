@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=533596
+-->
+<window title="Mozilla Bug 533596"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+
+  <iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/file_bug738244.html"
+          onload="xrayTest(this)">
+  </iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+      SimpleTest.waitForExplicitFinish();
+
+      function xrayTest(ifr) {
+        var win = ifr.contentWindow;
+        var doc = ifr.contentDocument;
+
+        doc.getElementById = 42;
+        is(doc.getElementById, 42,
+           "Native property cannot be shadowed on the xray");
+
+        is(doc.form1.name, "form1",
+           "Form elements cannot be found by name on the document through xray");
+
+        is(doc.form1.input1.name, "input1",
+           "Input element cannot be found by name on a form element through xray");
+
+        is(typeof doc.form1.appendChild, "function",
+           "Input element shadows native property with its name through xray");
+
+        is(win.frame1, undefined,
+           "IFrames should not be found by name on the window through xray");
+
+        is(win[0].name, "frame1",
+           "IFrames should be found by index on the window through xray");
+
+        win["1000"] = "foopy";
+        ok(!("1000" in win), "Shouldn't be able to add indexed expandos to xray");
+        
+        win["1000a"] = "foopy";
+        ok("1000a" in win, "Should be able to add named expandos to xray");
+
+        SimpleTest.finish();
+      }
+
+  ]]></script>
+</window>

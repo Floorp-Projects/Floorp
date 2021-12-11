@@ -1,0 +1,32 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.dom += [
+    "MediaCapabilities.h",
+]
+
+EXPORTS.mozilla += [
+    "BenchmarkStorageChild.h",
+    "BenchmarkStorageParent.h",
+    "KeyValueStorage.h",
+]
+
+EXPORTS += [
+    "DecoderBenchmark.h",
+]
+
+UNIFIED_SOURCES += [
+    "BenchmarkStorageChild.cpp",
+    "BenchmarkStorageParent.cpp",
+    "DecoderBenchmark.cpp",
+    "KeyValueStorage.cpp",
+    "MediaCapabilities.cpp",
+]
+
+IPDL_SOURCES += ["PBenchmarkStorage.ipdl"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"

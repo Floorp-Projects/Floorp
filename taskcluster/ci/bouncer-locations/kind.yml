@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - post-beetmover-dummy
+
+transforms:
+    - gecko_taskgraph.transforms.bouncer_locations:transforms
+    - gecko_taskgraph.transforms.release:run_on_releases
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: nightly bouncer locations job
+    attributes:
+        shippable: true
+    worker-type: bouncer
+    worker:
+        implementation: bouncer-locations
+    scopes:
+        by-project:
+            mozilla-central:
+                - project:releng:bouncer:action:locations
+                - project:releng:bouncer:server:production
+            default:
+                - project:releng:bouncer:action:locations
+                - project:releng:bouncer:server:staging
+    shipping-phase: ship
+    treeherder:
+        symbol: BncLoc
+        kind: other
+        tier: 1
+
+jobs:
+    firefox:
+        run-on-releases: ['nightly']
+        run-on-projects: ['mozilla-central']
+        shipping-product: firefox
+        bouncer-products:
+            - firefox-nightly-latest
+            - firefox-nightly-latest-ssl
+            - firefox-nightly-latest-l10n
+            - firefox-nightly-latest-l10n-ssl
+            - firefox-nightly-msi-latest-ssl
+            - firefox-nightly-msi-latest-l10n-ssl
+            - firefox-nightly-pkg-latest-ssl
+            - firefox-nightly-pkg-latest-l10n-ssl
+        treeherder:
+            platform: firefox-release/opt

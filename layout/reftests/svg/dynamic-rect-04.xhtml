@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Testcase reference file dynamic svg creation</title>
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=438867 -->
+<script>
+function m() {
+    var SVG_NS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.style.position = 'absolute';
+    svg.style.left = '0px';
+    svg.style.top = '0px';
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    document.body.appendChild(svg);
+    
+    var rect = document.createElementNS(SVG_NS, "rect");
+    rect.setAttribute('width', '100%');
+    rect.setAttribute('height', '100%');
+    rect.setAttribute('fill', 'lime');
+    svg.appendChild(rect);
+}
+</script>
+</head>
+<body onload="m();">
+<hr style="clear: both;"/>
+</body>
+</html>

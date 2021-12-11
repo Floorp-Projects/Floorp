@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.body.appendChild(document.createTextNode(String.fromCharCode(0x202E)));
+  document.body.appendChild(document.createTextNode(String.fromCharCode(0x000D)));
+  document.body.appendChild(document.createTextNode(String.fromCharCode(0x200D)));
+  document.body.appendChild(document.createTextNode(String.fromCharCode(0xD75A)));
+  document.body.appendChild(document.createTextNode(String.fromCharCode(0xD63F)));
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+</body>
+</html>

@@ -1,0 +1,31 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Theme Selection
+#
+# Shared (toolkit/themes/shared/) is always included.
+#
+# MacOS X                 osx (toolkit/themes/osx)
+# Windows                 windows (toolkit/themes/windows) +
+#                         non-mac (toolkit/themes/shared/non-mac)
+# GNOME/Linux             linux (toolkit/themes/linux)
+#                         non-mac (toolkit/themes/shared/non-mac)
+# mobile                  native UIs that do not use XUL for UI
+
+toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
+app = CONFIG["MOZ_BUILD_APP"]
+
+if toolkit == "cocoa":
+    DIRS += ["osx"]
+elif toolkit == "gtk":
+    DIRS += ["linux"]
+elif app == "mobile/android":
+    DIRS += ["mobile"]
+else:
+    DIRS += ["windows"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Themes")

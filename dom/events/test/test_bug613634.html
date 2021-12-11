@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=613634
+-->
+<head>
+  <title>Test for Bug 613634</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613634">Mozilla Bug 613634</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 613634 **/
+
+var eventCount = 0;
+function l(e) {
+  if (e.eventPhase != Event.CAPTURING_PHASE) {
+    ++eventCount;
+  } else {
+    ok(false, "Listener shouldn't be called!");
+  }
+}
+
+var d1 = document.createElement("div");
+var d2 = document.createElement("div");
+
+d1.appendChild(d2);
+
+var x = new XMLHttpRequest();
+
+try {
+d1.addEventListener("foo", l);
+document.addEventListener("foo", l);
+window.addEventListener("foo", l);
+x.addEventListener("foo", l);
+} catch(ex) {
+  ok(false, "Shouldn't throw " + ex);
+}
+
+var ev = document.createEvent("Event");
+ev.initEvent("foo", true, true);
+d2.dispatchEvent(ev);
+is(eventCount, 1, "Event listener should have been called!");
+
+ev = document.createEvent("Event");
+ev.initEvent("foo", false, false);
+d2.dispatchEvent(ev);
+is(eventCount, 1, "Event listener shouldn't have been called!");
+
+d1.removeEventListener("foo", l);
+ev = document.createEvent("Event");
+ev.initEvent("foo", true, true);
+d2.dispatchEvent(ev);
+is(eventCount, 1, "Event listener shouldn't have been called!");
+
+
+ev = document.createEvent("Event");
+ev.initEvent("foo", true, true);
+document.body.dispatchEvent(ev);
+is(eventCount, 3, "Event listener should have been called on document and window!");
+
+document.removeEventListener("foo", l);
+window.removeEventListener("foo", l);
+ev = document.createEvent("Event");
+ev.initEvent("foo", true, true);
+document.body.dispatchEvent(ev);
+is(eventCount, 3, "Event listener shouldn't have been called on document and window!");
+
+ev = document.createEvent("Event");
+ev.initEvent("foo", true, true);
+x.dispatchEvent(ev);
+is(eventCount, 4, "Event listener should have been called on XMLHttpRequest!");
+
+x.removeEventListener("foo", l);
+ev = document.createEvent("Event");
+ev.initEvent("foo", true, true);
+x.dispatchEvent(ev);
+is(eventCount, 4, "Event listener shouldn't have been called on XMLHttpRequest!");
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<window title="Content/chrome integration subwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTests()"
+        style="background:black; -moz-appearance:none;">
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+  <stack style="align-items: center; height: 300px; width: 200px;">
+    <!-- the bottom 100px is a strip of black that should be vixible through the content iframe -->
+    <vbox style="background:pink; border-bottom:100px solid black"/>
+    <!-- the middle 100px is a strip of black in the content iframe -->
+    <!-- the bottom 100px of the iframe is transparent, the top 100px is yellow -->
+    <iframe type="content" style="border:none;"
+            transparent="transparent"
+            src="data:text/html,&lt;div style='position:absolute;left:0;top:0;width:100%;height:100px;background:yellow;border-bottom:100px solid black'&gt;"/>
+    <!-- the top 100px is a strip of black above the content iframe -->
+    <vbox style="border-top:100px solid black;"/>
+  </stack>
+
+  <script type="application/javascript">
+    <![CDATA[
+    var imports = [ "SimpleTest", "is", "isnot", "ok", "SpecialPowers" ];
+    for (var name of imports) {
+      window[name] = window.arguments[0][name];
+    }
+
+    function runTests() {
+      var testCanvas = snapshotWindow(window);
+
+      var refCanvas = snapshotWindow(window);
+      var ctx = refCanvas.getContext('2d');
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, refCanvas.width, refCanvas.height);
+
+      var comparison = compareSnapshots(testCanvas, refCanvas, true);
+      ok(comparison[0], "Rendering OK, got " + comparison[1] + ", expected " + comparison[2]);
+
+      var tester = window.SimpleTest;
+      window.close();
+      tester.finish();
+    }
+    ]]>
+  </script>
+</window>

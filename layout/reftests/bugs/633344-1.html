@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<style>
+.outer {
+  background:yellow;
+  position:absolute;
+  left:100px;
+  top:100px;
+  width:300px;
+  height:100px;
+  -moz-transform:scale(1.4);
+  -moz-transform-origin:top left;
+  transform:scale(1.4);
+  transform-origin:top left;
+}
+.inner {
+  float:left;
+  width:100px;
+  height:11px;
+  background:black;
+}
+canvas {
+  display:block;
+  float:left;
+}
+</style>
+</head>
+<body>
+<div class="outer"><div class="inner"></div><canvas id="c" width="10" height="10"></canvas></div>
+<script>
+var ctx = document.getElementById("c").getContext("2d");
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, 10, 10);
+</script>
+</body>
+</html>

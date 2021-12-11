@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1414077
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 1414077</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+
+/** Test for Bug 1414077 **/
+
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["browser.enable_automatic_image_resizing", true]]});
+
+  return new Promise(resolve => {
+    var testWin = document.querySelector("iframe");
+    testWin.src = "image.png";
+    testWin.onload = function() {
+      var testDoc = testWin.contentDocument;
+
+      // testDoc should be a image document.
+      ok(testDoc.imageIsOverflowing, "image is overflowing");
+      ok(testDoc.imageIsResized, "image is resized to fit visible area by default");
+
+      // Restore image to original size.
+      testDoc.restoreImage();
+      ok(testDoc.imageIsOverflowing, "image is overflowing");
+      ok(!testDoc.imageIsResized, "image is restored to original size");
+
+      // Resize the image to fit visible area
+      testDoc.shrinkToFit();
+      ok(testDoc.imageIsOverflowing, "image is overflowing");
+      ok(testDoc.imageIsResized, "image is resized to fit visible area");
+
+      resolve();
+    };
+  })
+});
+
+</script>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1414077">Mozilla Bug 1414077</a>
+<iframe width="0" height="0"></iframe>
+</body>
+</html>

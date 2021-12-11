@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+
+include "mozilla/net/NeckoMessageUtils.h";
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+struct TCPError {
+  nsString name;
+  nsString message;
+  nsresult errorCode;
+};
+
+union SendableData {
+  uint8_t[];
+  nsCString;
+};
+
+union CallbackData {
+  void_t;
+  SendableData;
+  TCPError;
+};
+
+namespace mozilla {
+namespace net {
+
+//-------------------------------------------------------------------
+protocol PTCPSocket
+{
+  manager PNecko;
+
+parent:
+  // Forward calling to child's open() method to parent, expect TCPOptions
+  // is expanded to |useSSL| (from TCPOptions.useSecureTransport) and
+  // |binaryType| (from TCPOption.binaryType).
+  async Open(nsString host, uint16_t port, bool useSSL, bool useArrayBuffers);
+
+  async Data(SendableData data);
+
+  // Forward calling to child's upgradeToSecure() method to parent.
+  async StartTLS();
+
+  // Forward calling to child's send() method to parent.
+  async Suspend();
+
+  // Forward calling to child's resume() method to parent.
+  async Resume();
+
+  // Forward calling to child's close() method to parent.
+  async Close();
+
+child:
+  // Forward events that are dispatched by parent.
+  async Callback(nsString type, CallbackData data, uint32_t readyState);
+
+  // Update child's bufferedAmount when parent's bufferedAmount is updated.
+  // trackingNumber is also passed back to child to ensure the bufferedAmount
+  // is corresponding the last call to send().
+  async UpdateBufferedAmount(uint32_t bufferedAmount, uint32_t trackingNumber);
+
+both:
+  async RequestDelete();
+  async __delete__();
+};
+
+
+} // namespace net
+} // namespace mozilla
+

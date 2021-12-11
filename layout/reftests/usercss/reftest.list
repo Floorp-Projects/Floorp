@@ -1,0 +1,3 @@
+== usercss.html usercss-ref.html
+== usercss-uppercase.html usercss-ref.html
+fails-if(geckoview&&device) == usercss-moz-document.html usercss-moz-document-ref.html

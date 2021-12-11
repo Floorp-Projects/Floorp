@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/* A JavaScript callback function that takes a JSON as its parameter.
+ * The returned JSON contains arrays with data
+ */
+[scriptable, function, uuid(19d7f24f-a95a-4fd9-87e2-d96e9e4b1f6d)]
+interface nsINetDashboardCallback : nsISupports
+{
+    void onDashboardDataAvailable(in jsval data);
+};
+
+/* The dashboard service.
+ * The async API returns JSONs, which hold arrays with the required info.
+ * Only one request of each type may be pending at any time.
+ */
+[scriptable, uuid(c79eb3c6-091a-45a6-8544-5a8d1ab79537)]
+interface nsIDashboard : nsISupports
+{
+    /* Arrays: host, port, tcp, active, socksent, sockreceived
+     * Values: sent, received  */
+    void requestSockets(in nsINetDashboardCallback cb);
+
+    /* Arrays: host, port, spdy, ssl
+     * Array of arrays: active, idle */
+    void requestHttpConnections(in nsINetDashboardCallback cb);
+
+    /* Arrays: hostport, encrypted, msgsent, msgreceived, sentsize, receivedsize */
+    void requestWebsocketConnections(in nsINetDashboardCallback cb);
+
+    /* Arrays: hostname, family, hostaddr, expiration */
+    void requestDNSInfo(in nsINetDashboardCallback cb);
+
+    /* aProtocol: a transport layer protocol:
+     *      ex: "ssl", "tcp", default is "tcp".
+     * aHost: the host's name
+     * aPort: the port which the connection will open on
+     * aTimeout: the timespan before the connection will be timed out */
+    void requestConnection(in ACString aHost, in unsigned long aPort,
+                           in string aProtocol, in unsigned long aTimeout,
+                           in nsINetDashboardCallback cb);
+
+    /* When true, the service will log websocket events */
+    attribute boolean enableLogging;
+
+    /* DNS resolver for host name
+     * aHost: host name */
+    void requestDNSLookup(in ACString aHost, in nsINetDashboardCallback cb);
+
+    /* Resolve HTTPS RRs for host name
+     * aHost: host name */
+    void requestDNSHTTPSRRLookup(in ACString aHost,
+                                 in nsINetDashboardCallback cb);
+
+    /**
+     * Asyncly returns stats regarding the "Race Cache With Network" feature.
+     */
+    void requestRcwnStats(in nsINetDashboardCallback cb);
+
+    AUTF8String getLogPath();
+};

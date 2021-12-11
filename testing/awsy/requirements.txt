@@ -1,0 +1,2 @@
+marionette-harness >= 4.0.0
+PyYaml >= 5.1

@@ -1,0 +1,43 @@
+<!doctype html>
+<html class="reftest-wait reftest-no-flush">
+<head>
+<meta charset=utf-8>
+<title>Check for animation restyling on an element's initial restyling after leaving a display:none subtree</title>
+<style>
+#target {
+  width: 0px;
+  height: 100px;
+  background: green;
+  display: none;
+}
+</style>
+</head>
+<body>
+<div id="target"></div>
+<script>
+// Wait for a steady state before beginning so that style flushes from the
+// initial restyling don't interfere with the results.
+document.addEventListener('MozReftestInvalidate', () => {
+  requestAnimationFrame(() => {
+    // Get target element -- computed style should be display: none by now.
+    const target = document.getElementById('target');
+
+    // Update specified style but don't flush
+    target.style.display = 'block';
+
+    // Trigger an animation on the element.
+    //
+    // animate() won't flush styles so we are testing that it still correctly
+    // marks the element as needing an animation restyle even when it doesn't have
+    // style data.
+    target.animate(
+      { width: ['0px', '100px'] },
+      { duration: 100 * 1000, easing: 'step-start' }
+    );
+
+    document.documentElement.classList.remove('reftest-wait');
+  });
+});
+</script>
+</body>
+</html>

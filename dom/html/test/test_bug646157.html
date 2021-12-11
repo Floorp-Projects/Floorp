@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=646157
+-->
+<head>
+  <title>Test for Bug 646157</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=646157">Mozilla Bug 646157</a>
+<p id="display"></p>
+<div id="content">
+  <label id="l1"/><input id="c1" type='checkbox'>
+  <label id="l2"/><input id="c2" type='checkbox'>
+  <label id="l3"/><input id="c3" type='checkbox'>
+  <label id="l4"/><input id="c4" type='checkbox'>
+  <label id="l5"/><input id="c5" type='checkbox'>
+  <label id="l6"/><input id="c6" type='checkbox'>
+  <label id="l7"/><input id="c7" type='checkbox'>
+  <label id="l8"/><input id="c8" type='checkbox'>
+  <label id="l9"/><input id="c9" type='checkbox'>
+  <label id="l10"/><input id="c10" type='checkbox'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 646157 **/
+
+var expectedClicks = {
+  //  [ Direct clicks, bubbled clicks, synthetic clicks]
+  l1: [0, 2, 1],
+  l2: [0, 2, 1],
+  l3: [0, 2, 1],
+  l4: [0, 2, 1],
+  l5: [0, 2, 1],
+  l6: [0, 2, 1],
+  l7: [0, 2, 1],
+  l8: [0, 2, 1],
+  l9: [0, 2, 1],
+  l10:[1, 2, 1],
+  c1: [0, 0, 0],
+  c2: [0, 0, 0],
+  c3: [0, 0, 0],
+  c4: [0, 0, 0],
+  c5: [0, 0, 0],
+  c6: [0, 0, 0],
+  c7: [0, 0, 0],
+  c8: [0, 0, 0],
+  c9: [0, 0, 0],
+  c10:[1, 1, 1]
+};
+
+function clickhandler(e) {
+  if (!e.currentTarget.clickCount)
+    e.currentTarget.clickCount = 1;
+  else
+    e.currentTarget.clickCount++;
+
+  if (e.currentTarget === e.target)
+    e.currentTarget.directClickCount = 1;
+
+  if (e.target != document.getElementById("l10")) {
+    if (!e.currentTarget.synthClickCount)
+      e.currentTarget.synthClickCount = 1;
+    else
+      e.currentTarget.synthClickCount++;
+  }
+}
+
+for (var i = 1; i <= 10; i++) {
+  document.getElementById("l" + i).addEventListener('click', clickhandler);
+  document.getElementById("c" + i).addEventListener('click', clickhandler);
+}
+
+document.getElementById("l10").click();
+
+function check(thing) {
+  var expected = expectedClicks[thing.id];
+  is(thing.directClickCount || 0, expected[0], "Wrong number of direct clicks");
+  is(thing.clickCount || 0, expected[1], "Wrong number of clicks");
+  is(thing.synthClickCount || 0, expected[2], "Wrong number of synthetic clicks");
+}
+
+// Compare them all
+for (var i = 1; i <= 10; i++) {
+  check(document.getElementById("l" + i));
+  check(document.getElementById("c" + i));
+}
+
+</script>
+</pre>
+</body>
+</html>

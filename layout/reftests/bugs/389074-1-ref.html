@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<!-- check that U+FEFF doesn't disrupt glyph rendering, see bug 389074 comments 26, 30 -->
+<html>
+  <div style="font-size: large; font-family: sans-serif;">
+    <!-- leave one FEFF in the text to maintain same line height -->
+    <p>&#xfeff;ABC</p>
+  </div>
+</html>

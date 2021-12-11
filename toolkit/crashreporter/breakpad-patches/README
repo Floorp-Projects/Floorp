@@ -1,0 +1,4 @@
+Do not land local patches to Breakpad without the approval of
+Ted Mielczarek <ted@mielczarek.org>
+
+All local patches must be in the process of being upstreamed.

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="doTest()">
+    <input type=text style="-moz-appearance: none">
+    <script>
+      function doTest() {
+        function enableCaret(aEnable) {
+          var selCon = editor.selectionController;
+          selCon.setCaretEnabled(aEnable);
+        }
+
+        var d = document.querySelector("input");
+        d.value = "a";
+        d.focus();
+        var editor = SpecialPowers.wrap(d).editor;
+        var sel = editor.selection;
+        var t = editor.rootElement.firstChild;
+        sel.collapse(t, 1); // put the caret at the end of the div
+        setTimeout(function() {
+          enableCaret(false);enableCaret(true);// force a caret display
+          enableCaret(false); // hide the caret
+          t.replaceData(0, 1, "b"); // replace the text node data
+          // at this point, the selection is collapsed to offset 0
+          synthesizeQuerySelectedText(); // call nsCaret::GetGeometry
+          sel.collapse(t, 1); // put the caret at the end again
+          enableCaret(true); // show the caret again
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }
+    </script>
+  </body>
+</html>

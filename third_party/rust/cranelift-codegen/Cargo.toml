@@ -1,0 +1,112 @@
+[package]
+authors = ["The Cranelift Project Developers"]
+name = "cranelift-codegen"
+version = "0.74.0"
+description = "Low-level code generator library"
+license = "Apache-2.0 WITH LLVM-exception"
+documentation = "https://docs.rs/cranelift-codegen"
+repository = "https://github.com/bytecodealliance/wasmtime"
+categories = ["no-std"]
+readme = "README.md"
+keywords = ["compile", "compiler", "jit"]
+build = "build.rs"
+edition = "2018"
+
+[dependencies]
+cranelift-codegen-shared = { path = "./shared", version = "0.74.0" }
+cranelift-entity = { path = "../entity", version = "0.74.0" }
+cranelift-bforest = { path = "../bforest", version = "0.74.0" }
+hashbrown = { version = "0.9.1", optional = true }
+target-lexicon = "0.12"
+log = { version = "0.4.6", default-features = false }
+serde = { version = "1.0.94", features = ["derive"], optional = true }
+bincode = { version = "1.2.1", optional = true }
+gimli = { version = "0.24.0", default-features = false, features = ["write"], optional = true }
+smallvec = { version = "1.6.1" }
+peepmatic = { path = "../peepmatic", optional = true, version = "0.74.0" }
+peepmatic-traits = { path = "../peepmatic/crates/traits", optional = true, version = "0.74.0" }
+peepmatic-runtime = { path = "../peepmatic/crates/runtime", optional = true, version = "0.74.0" }
+regalloc = { version = "0.0.31" }
+souper-ir = { version = "2.1.0", optional = true }
+wast = { version = "35.0.0", optional = true }
+# It is a goal of the cranelift-codegen crate to have minimal external dependencies.
+# Please don't add any unless they are essential to the task of creating binary
+# machine code. Integration tests that need external dependencies can be
+# accomodated in `tests`.
+
+[dev-dependencies]
+criterion = "0.3"
+
+[build-dependencies]
+cranelift-codegen-meta = { path = "meta", version = "0.74.0" }
+
+[features]
+default = ["std", "unwind"]
+
+# The "std" feature enables use of libstd. The "core" feature enables use
+# of some minimal std-like replacement libraries. At least one of these two
+# features need to be enabled.
+std = []
+
+# The "core" features enables use of "hashbrown" since core doesn't have
+# a HashMap implementation, and a workaround for Cargo #4866.
+core = ["hashbrown"]
+
+# This enables some additional functions useful for writing tests, but which
+# can significantly increase the size of the library.
+testing_hooks = []
+
+# This enables unwind info generation functionality.
+unwind = ["gimli"]
+
+# ISA targets for which we should build.
+# If no ISA targets are explicitly enabled, the ISA target for the host machine is enabled.
+x86 = []
+arm64 = []
+riscv = []
+s390x = []
+arm32 = [] # Work-in-progress codegen backend for ARM.
+
+# Stub feature that does nothing, for Cargo-features compatibility: the new
+# backend is the default now.
+experimental_x64 = []
+
+# Make the old x86 backend the default.
+old-x86-backend = []
+
+# Option to enable all architectures.
+all-arch = [
+    "x86",
+    "arm64",
+    "riscv",
+    "s390x"
+]
+
+# For dependent crates that want to serialize some parts of cranelift
+enable-serde = [
+    "serde",
+    "regalloc/enable-serde",
+    "cranelift-entity/enable-serde",
+    "cranelift-codegen-shared/enable-serde"
+]
+
+# Allow snapshotting regalloc test cases. Useful only to report bad register
+# allocation failures, or for regalloc.rs developers.
+regalloc-snapshot = ["bincode", "regalloc/enable-serde"]
+
+# Recompile our optimizations that are written in the `peepmatic` DSL into a
+# compact finite-state transducer automaton.
+rebuild-peephole-optimizers = ["peepmatic", "peepmatic-traits", "wast"]
+
+# Enable the use of `peepmatic`-generated peephole optimizers.
+enable-peepmatic = ["peepmatic-runtime", "peepmatic-traits", "serde"]
+
+# Enable support for the Souper harvester.
+souper-harvest = ["souper-ir", "souper-ir/stringify"]
+
+[badges]
+maintenance = { status = "experimental" }
+
+[[bench]]
+name = "x64-evex-encoding"
+harness = false

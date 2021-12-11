@@ -1,0 +1,88 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * nsISHistoryListener defines the interface one can implement to receive
+ * notifications about activities in session history and (for reloads) to be
+ * able to cancel them.
+ *
+ * A session history listener will be notified when pages are added, removed
+ * and loaded from session history. In the case of reloads, it can prevent them
+ * from happening by returning false from the corresponding callback method.
+ *
+ * A session history listener can be registered on a particular nsISHistory
+ * instance via the nsISHistory::addSHistoryListener() method.
+ *
+ * Listener methods should not alter the session history. Things are likely to
+ * go haywire if they do.
+ */
+[scriptable, uuid(125c0833-746a-400e-9b89-d2d18545c08a)]
+interface nsISHistoryListener : nsISupports
+{
+  /**
+   * Called when a new document is added to session history. New documents are
+   * added to session history by docshell when new pages are loaded in a frame
+   * or content area, for example via nsIWebNavigation::loadURI()
+   *
+   * @param aNewURI     The URI of the document to be added to session history.
+   * @param aOldIndex   The index of the current history item before the
+   *                    operation.
+   */
+  void OnHistoryNewEntry(in nsIURI aNewURI, in long aOldIndex);
+
+  /**
+   * Called before the current document is reloaded, for example due to a
+   * nsIWebNavigation::reload() call.
+   */
+  boolean OnHistoryReload();
+
+  /**
+   * Called before navigating to a session history entry by index, for example,
+   * when nsIWebNavigation::gotoIndex() is called.
+   */
+  void OnHistoryGotoIndex();
+
+  /**
+   * Called before entries are removed from the start of session history.
+   * Entries can be removed from session history for various reasons, for
+   * example to control the memory usage of the browser, to prevent users from
+   * loading documents from history, to erase evidence of prior page loads, etc.
+   *
+   * To purge documents from session history call nsISHistory::PurgeHistory().
+   *
+   * @param aNumEntries  The number of entries being removed.
+   */
+  void OnHistoryPurge(in long aNumEntries);
+
+  /**
+   * Called before entries are removed from the end of session history. This
+   * occurs when navigating to a new page while on a previous session entry.
+   *
+   * @param aNumEntries  The number of entries being removed.
+   */
+  void OnHistoryTruncate(in long aNumEntries);
+
+  /**
+   * Called before an entry is replaced in the session history. Entries are
+   * replaced when navigating away from non-persistent history entries (such as
+   * about pages) and when history.replaceState is called.
+   */
+  void OnHistoryReplaceEntry();
+
+
+  /**
+   * Called whenever a content viewer is evicted. A content viewer is evicted
+   * whenever a bfcache entry has timed out or the number of total content
+   * viewers has exceeded the global max. This is used for testing only.
+   *
+   * @param aNumEvicted - number of content viewers evicted
+   */
+  void OnContentViewerEvicted(in unsigned long aNumEvicted);
+};

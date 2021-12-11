@@ -1,0 +1,37 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<head>
+    <title>Reference for gradient</title>
+    <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=441780 -->
+</head>
+<body onload="go()">
+<canvas width="400" height="400"></canvas>
+<style>
+* { margin: 0; }
+</style>
+<script>
+function go() {
+  let canvas = document.querySelector('canvas');
+  let ctx = canvas.getContext('2d');
+
+  function createCircleWithGradient(x, y, r, fx, fy) {
+    let gradient = ctx.createRadialGradient(fx, y, 0, x, y, r);
+    gradient.addColorStop(0, 'lime');
+    gradient.addColorStop(1, 'red');
+
+    ctx.beginPath();
+    ctx.arc(x, y, 50, 0, 2 * Math.PI);
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+  }
+
+  createCircleWithGradient(100, 100, 50, 50);
+  createCircleWithGradient(100, 200, 40, 60);
+  createCircleWithGradient(200, 100, 50, 250);
+  createCircleWithGradient(200, 200, 70, 280);
+}
+</script>
+</body>

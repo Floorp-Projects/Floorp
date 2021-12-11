@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>test of border-image</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+  /**
+   * This is a copy of multicolor-image-2.html with a few changes:
+   *   (1) the whole thing is inside a -moz-transform
+   *   (2) different border-images have different values for
+   *       repeat/stretch/round
+   */
+
+  body {
+    width: 100px;
+    -moz-transform: translate(100px, 100px) scale(2,3);
+    -moz-transform-origin: 0 0;
+    -khtml-transform: translate(100px, 100px) scale(2,3);
+    -khtml-transform-origin: 0 0;
+    transform: translate(100px, 100px) scale(2,3);
+    transform-origin: 0 0;
+  }
+
+  div {
+    background: red; /* fail if this shows through */
+    background-image: url('3x3multicolor.png'); /* fail if this shows through */
+    margin-bottom: 2px;
+  }
+
+  div.one {
+    border-image: url(10x5multicolor.png) 2 2 1 3 fill stretch;
+    -khtml-border-image: url(10x5multicolor.png) 2 2 1 3 fill stretch;
+    border-image: url(10x5multicolor.png) 2 2 1 3 fill stretch;
+    border-width: 4px 6px 8px 11px;
+    border-style: solid;
+    width: 9px;
+    height: 1px;
+  }
+
+  div.two {
+    border-image: url(10x5multicolor.png) 40% 20% 20% 30% fill repeat;
+    -khtml-border-image: url(10x5multicolor.png) 40% 20% 20% 30% fill repeat;
+    border-image: url(10x5multicolor.png) 40% 20% 20% 30% fill repeat;
+    border-width: 3px 1px 0px 4px;
+    border-style: solid;
+    width: 2px;
+    height: 17px;
+  }
+
+  div.three {
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill round;
+    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% fill round;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill round;
+    border-width: 10px 2px 5px 3px;
+    border-style: solid;
+    width: 17px;
+    height: 8px;
+  }
+
+  div.four {
+    border-image: url(10x5multicolor.png) 2 2 20% 30% fill stretch round;
+    -khtml-border-image: url(10x5multicolor.png) 2 2 20% 30% fill stretch round;
+    border-image: url(10x5multicolor.png) 2 2 20% 30% fill stretch round;
+    border-width: 5px 7px 1px 0;
+    border-style: solid;
+    width: 8px;
+    height: 5px;
+  }
+
+  div.five {
+    border-width: 4px 8px 10px 2px;
+    border-style: solid;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill repeat stretch;
+    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% fill repeat stretch;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill repeat stretch;
+    width: 0;
+    height: 8px;
+  }
+
+  div.six {
+    border-width: 4px 0 10px 2px;
+    border-style: solid;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill round repeat;
+    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% fill round repeat;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill round repeat;
+    width: 17px;
+    height: 0;
+  }
+
+  div.seven {
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill stretch repeat;
+    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% fill stretch repeat;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill stretch repeat;
+    border-width: 1px 3px 0 0;
+    border-style: solid;
+    width: 17px;
+    height: 0;
+  }
+
+  </style>
+</head>
+<body>
+<div class="one"></div>
+<div class="two"></div>
+<div class="three"></div>
+<div class="four"></div>
+<div class="five"></div>
+<div class="six"></div>
+<div class="seven"></div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=316447
+-->
+<title>Test for Bug 316447</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=316447">Mozilla Bug 316447</a>
+<div contenteditable><br></div>
+<script>
+/** Test for Bug 316447 **/
+
+getSelection().selectAllChildren(document.querySelector("div"));
+document.execCommand("inserthorizontalrule");
+is(document.querySelector("div").innerHTML, "<hr>", "Wrong innerHTML");
+</script>

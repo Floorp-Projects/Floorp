@@ -1,0 +1,131 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.xhr-breakpoints-pane ._content {
+  overflow-x: auto;
+}
+
+.xhr-input-container {
+  display: flex;
+  border: 1px solid transparent;
+}
+
+.xhr-input-container.focused {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+:root.theme-dark .xhr-input-container.focused {
+  border: 1px solid var(--blue-50);
+}
+
+.xhr-input-container.error {
+  border: 1px solid red;
+}
+
+.xhr-input-form {
+  display: inline-flex;
+  width: 100%;
+  padding-inline-start: 20px;
+  padding-inline-end: 12px;
+  /* Stop select height from increasing as input height increases */
+  align-items: center;
+}
+
+.xhr-checkbox {
+  margin-inline-start: 0;
+  margin-inline-end: 4px;
+}
+
+.xhr-input-url {
+  border: 1px;
+  flex-grow: 1;
+  background-color: var(--theme-sidebar-background);
+  font-size: inherit;
+  height: 24px;
+  color: var(--theme-body-color);
+}
+
+.xhr-input-url::placeholder {
+  color: var(--theme-text-color-alt);
+  opacity: 1;
+}
+
+.xhr-input-url:focus {
+  cursor: text;
+  outline: none;
+}
+
+.expressions-list .xhr-input-container {
+  height: var(--expression-item-height);
+}
+
+.expressions-list .xhr-input-url {
+  /* Prevent vertical bounce when editing an existing XHR Breakpoint */
+  height: 100%;
+}
+
+.xhr-container {
+  border-left: 4px solid transparent;
+  width: 100%;
+  color: var(--theme-body-color);
+  padding-inline-start: 16px;
+  padding-inline-end: 12px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: var(--expression-item-height);
+}
+
+:root.theme-light .xhr-container:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+:root.theme-dark .xhr-container:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.xhr-label-method {
+  line-height: 14px;
+  display: inline-block;
+  margin-inline-end: 2px;
+}
+
+.xhr-input-method {
+  display: none;
+  /* Vertically center select in form */
+  margin-top: 2px;
+}
+
+.expressions-list .xhr-input-method {
+  margin-top: 0px;
+}
+
+.xhr-input-container.focused .xhr-input-method {
+  display: block;
+}
+
+.xhr-label-url {
+  max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
+  color: var(--theme-comment);
+  display: inline-block;
+  cursor: text;
+  flex-grow: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding: 0px 2px 0px 2px;
+  line-height: 14px;
+}
+
+.xhr-container label {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+.xhr-container__close-btn {
+  display: flex;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}

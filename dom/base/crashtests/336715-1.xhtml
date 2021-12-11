@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+<![CDATA[
+
+function funn()
+{
+  var q = document.getElementById("q");
+
+  var start1 = document.getElementById("start1");
+  var end1 = document.getElementById("end1");
+
+  var start2 = q; // div
+  var end2 = q.previousSibling; // text node
+
+  var r = document.createRange();
+  r.setStart(start1, 0);
+  r.setEnd(end1, 0);
+  r.deleteContents();
+  
+  // the offsets for start2 and end2 must be the same to trigger the assertion
+  var s = document.createRange();
+  s.setStart(start2, 0);
+  s.setEnd(end2, 0);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+
+</head>
+
+<body onload="setTimeout(funn, 30)">
+  <div id="start1"></div>
+  <div id="t">X<div id="q">Y</div></div>
+  <div id="end1"></div>
+</body>
+
+</html>

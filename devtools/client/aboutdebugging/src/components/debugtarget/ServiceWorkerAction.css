@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.service-worker-action {
+  display: flex;
+  column-gap: calc(var(--base-unit) * 2);
+}
+
+.service-worker-action__status {
+  display: flex;
+  align-items: center;
+}
+
+.service-worker-action__status::before {
+  background-color: var(--grey-50);
+  border-radius: 100%;
+  content: "";
+  height: calc(var(--base-unit) * 2);
+  margin-inline-end: var(--base-unit);
+  width: calc(var(--base-unit) * 2);
+}
+
+.service-worker-action__status--running::before {
+  background-color: var(--success-background);
+}

@@ -1,0 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+[scriptable, uuid(6a568972-cc91-4bf5-963e-3768f3319b8a)]
+interface nsIEnterprisePolicies : nsISupports
+{
+  const short UNINITIALIZED = -1;
+  const short INACTIVE      = 0;
+  const short ACTIVE        = 1;
+  const short FAILED        = 2;
+
+  readonly attribute short status;
+
+  bool isAllowed(in ACString feature);
+
+  /**
+   * Get the active policies that have been successfully parsed.
+   *
+   * @returns A JS object that contains the policies names and
+   *          their corresponding parameters.
+   */
+  jsval getActivePolicies();
+
+  /**
+   * Get the contents of the support menu (if applicable)
+   *
+   * @returns A JS object that contains the url and label or null.
+   */
+  jsval getSupportMenu();
+
+  /**
+   * Get the policy for a given extensionID (if available)
+   *
+   * @returns A JS object that contains the storage or null if unavailable.
+   */
+  jsval getExtensionPolicy(in ACString extensionID);
+
+  /**
+   * Retrieves the ExtensionSettings policy for the given extensionID.
+   *
+   * If there is no policy for the extension, it returns the global policy.
+   *
+   * If there is no global policy, it returns null.
+   *
+   * @returns A JS object that settings or null if unavailable.
+   */
+  jsval getExtensionSettings(in ACString extensionID);
+
+  /**
+   * Uses the whitelist, blacklist and settings to determine if an extension
+   * may be installed.
+   *
+   * @returns A boolean - true of the extension may be installed.
+   */
+  bool mayInstallAddon(in jsval addon);
+
+  /**
+   * Uses install_sources to determine if an extension can be installed
+   * from the given URI.
+   *
+   * @returns A boolean - true of the extension may be installed.
+   */
+  bool allowedInstallSource(in nsIURI uri);
+};

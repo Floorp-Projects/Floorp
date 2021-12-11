@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>DOM mutations test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="../role.js"></script>
+</head>
+<body>
+  <div id="c1">
+    <div id="c1_t" style="display: table" role="presentation">
+    Some text
+    <span style="display: table-cell">something with accessibles goes here</span>
+    More text
+    </div>
+  </div>
+
+  <template id="tmpl">
+    <div style="display: table" role="presentation">
+    Some text
+    <span style="display: table-cell">something with accessibles goes here</span>
+    More text
+    </div>
+  </template>
+
+  <div id="c2"><div id="c2_c" role="presentation"></div></div>
+
+  <script>
+    var gShadowRoot = document.getElementById("c2_c").attachShadow({mode: "open"});
+    var tmpl = document.getElementById("tmpl");
+    gShadowRoot.appendChild(document.importNode(tmpl.content, true));
+  </script>
+</body>
+</html>

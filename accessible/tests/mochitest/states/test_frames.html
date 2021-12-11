@@ -1,0 +1,93 @@
+<html>
+
+<head>
+  <title>frame based document testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    if (navigator.platform.startsWith("Win")) {
+      SimpleTest.expectAssertions(0, 2);
+    }
+
+    function doTest() {
+      const frameDoc = document.getElementById("frame_doc").contentDocument;
+      const frameDocArticle = document.getElementById("frame_doc_article").contentDocument;
+      const frameDocCheckbox = document.getElementById("frame_doc_checkbox").contentDocument;
+      const frameDocTextbox = document.getElementById("frame_doc_textbox").contentDocument;
+
+      testStates(frameDoc, STATE_READONLY, 0, 0, 0,
+                 "test1: frameDoc");
+      testStates(frameDocArticle, STATE_READONLY, 0, 0, 0,
+                 "test1: frameDocArticle");
+      testStates(frameDocCheckbox, STATE_READONLY, 0, 0, 0,
+                 "test1: frameDocCheckbox");
+      testStates(frameDocTextbox, STATE_READONLY, 0, 0, 0,
+                 "test1: frameDocTextbox");
+      frameDoc.designMode = "on";
+      testStates(frameDoc, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+                 "test2: frameDoc");
+      testStates(frameDocArticle, STATE_READONLY, 0, 0, 0,
+                 "test2: frameDocArticle");
+      testStates(frameDocCheckbox, STATE_READONLY, 0, 0, 0,
+                 "test2: frameDocCheckbox");
+      testStates(frameDocTextbox, STATE_READONLY, 0, 0, 0,
+                 "test2: frameDocTextbox");
+
+      frameDocArticle.designMode = "on";
+      testStates(frameDocArticle, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+                 "test3: frameDocArticle");
+
+      frameDocCheckbox.designMode = "on";
+      testStates(frameDocCheckbox, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+                 "test4: frameDocCheckbox");
+
+      // Replace iframe document body before the document accessible tree is
+      // created. Check the states are updated for new body.
+      var frameUpdateDoc =
+        document.getElementById("frame_updatedoc").contentDocument;
+      testStates(frameUpdateDoc, 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, EXT_STATE_STALE, "test5: frameUpdateDoc");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=467387"
+     title="Expose non-editable documents as readonly, regardless of role">
+    Mozilla Bug 467387
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=638106"
+     title="CKEditor document should be editable">
+    Mozilla Bug 638106
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <iframe id="frame_doc" src="z_frames.html"></iframe>
+  <iframe id="frame_doc_article" src="z_frames_article.html"></iframe>
+  <iframe id="frame_doc_checkbox" src="z_frames_checkbox.html"></iframe>
+  <iframe id="frame_doc_textbox" src="z_frames_textbox.html"></iframe>
+  <iframe id="frame_updatedoc" src="z_frames_update.html"></iframe>
+</body>
+</html>

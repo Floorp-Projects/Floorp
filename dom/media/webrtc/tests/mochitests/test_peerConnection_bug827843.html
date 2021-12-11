@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "827843",
+    title: "Ensure that localDescription and remoteDescription are null after close"
+  });
+
+var steps = [
+  function CHECK_SDP_ON_CLOSED_PC(test) {
+    var description;
+    var exception = null;
+
+    test.pcLocal.close();
+
+    try { description = test.pcLocal.localDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access localDescription of pcLocal after close throws exception");
+    exception = null;
+
+    try { description = test.pcLocal.remoteDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access remoteDescription of pcLocal after close throws exception");
+    exception = null;
+
+    test.pcRemote.close();
+
+    try  { description = test.pcRemote.localDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access localDescription of pcRemote after close throws exception");
+    exception = null;
+
+    try  { description = test.pcRemote.remoteDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access remoteDescription of pcRemote after close throws exception");
+  }
+];
+
+var test;
+runNetworkTest(() => {
+  test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.append(steps);
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

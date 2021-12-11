@@ -1,0 +1,8 @@
+//error: sync parent-to-child messages are verboten (here, message `Msg' in protocol `syncParentToChild')
+
+intr protocol syncParentToChild {
+
+    // can't declare sync parent-to-child messages
+child: sync Msg();
+
+};

@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Recording creates videos that can playback more than once</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content">
+  <canvas id="video-src-canvas"></canvas>
+  <video id="recorded-video" loop></video>
+</div>
+<script class="testbody" type="text/javascript">
+
+(async function() {
+  try {
+    SimpleTest.waitForExplicitFinish();
+    await startTest();
+  } catch(e) {
+    ok(false, `Got error msg '${e}'`);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+
+async function startTest() {
+  let canvas = document.getElementById("video-src-canvas");
+
+  let canvas_size = 100;
+  canvas.width = canvas.height = canvas_size;
+  let helper = new CaptureStreamTestHelper2D(canvas_size, canvas_size);
+  helper.drawColor(canvas, helper.red);
+
+  let stream = canvas.captureStream();
+  let mediaRecorder = new MediaRecorder(stream);
+  is(mediaRecorder.stream, stream,
+     "Media recorder stream = canvas stream at the beginning of recording");
+  new Promise(r => mediaRecorder.onerror = err => r(err)).then(
+    err => Promise.reject(`MediaRecorder: error unexpectedly fired. Code ${err.name}`));
+
+  mediaRecorder.start();
+  await new Promise(r => mediaRecorder.onstart = r);
+  info("Media recorder started");
+  // Feed some more data into the recorder so the output has a non trivial duration.
+  // This avoids the case where we have only 1 frame in the output, which breaks
+  // looping (this is expected as a WebM with 1 video frame has no duration).
+  let counter = 0;
+  let draw = () => {
+    counter++;
+    helper.drawColor(canvas, helper.blue);
+    if(counter > 2) {
+      mediaRecorder.stop();
+      return;
+    }
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+
+  // When recorder is stopped get recorded data.
+  const data = await new Promise(r => mediaRecorder.ondataavailable = ev => r(ev));
+  info(`Media recorder get availiable data`);
+  const blob = data.data;
+
+  await new Promise(r => mediaRecorder.onstop = r);
+  info("Media recorder stopped");
+  ok(blob, "Should have gotten a data blob");
+  const video = document.getElementById("recorded-video");
+  new Promise(r => video.onerror = err => r(err)).then(
+    err => Promise.reject(`Video: error unexpectedly fired. Code ${err.code}`));
+  video.src = URL.createObjectURL(blob);
+  video.play();
+  await new Promise(r => video.onplaying = r);
+  for (let idx = 0; idx < 2; idx++) {
+    await new Promise(r => video.onseeking = r);
+    ok(true, `waiting until video finishes seeking`);
+    await new Promise(r => video.onseeked = r);
+    ok(true, "video finished seeked");
+  }
+  video.pause();
+}
+
+</script>
+</pre>
+</body>
+</html>

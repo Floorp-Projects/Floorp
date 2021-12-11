@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <style>
+  body {
+    width: 400px;
+  }
+  div#float {
+    float: right;
+    width: 200px;
+    height: 400px;
+    background-color: lightgreen;
+  }
+  details {
+    float: right;
+    background-color: orange;
+  }
+  summary {
+    background-color: green;
+    /* Hide the triangle for comparing with div in reftest. */
+    list-style-type: none;
+  }
+  </style>
+  <body>
+    <details open>
+      <summary>Summary</summary>
+      <div id="float"></div>
+    </details>
+  </body>
+</html>

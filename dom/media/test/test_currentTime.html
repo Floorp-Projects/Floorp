@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: currentTime</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v1'></video><audio id='a1'></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+is(v1.currentTime, 0.0);
+is(a1.currentTime, 0.0);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<html class="reftest-wait">
+<head>
+<title>Bug 446328 – Crash [@ nsImageLoader::RedrawDirtyFrame] with document that has border-image and gets display: none</title>
+</head>
+<body>
+<iframe src="446328-top.html" id="a"></iframe>
+<script>
+function doe(){
+    document.documentElement.removeAttribute("class");
+}
+setTimeout(doe,700)
+</script>

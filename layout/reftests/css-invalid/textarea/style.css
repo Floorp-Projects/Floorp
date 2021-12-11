@@ -1,0 +1,26 @@
+/* Override default style */
+textarea {
+  border: 0px;
+}
+
+textarea.ref {
+  background-color: green;
+}
+
+textarea:invalid {
+  box-shadow: none;
+}
+
+textarea.notinvalid {
+  background-color: green;
+}
+textarea.notinvalid:invalid {
+  background-color: red;
+}
+
+textarea.invalid {
+  background-color: red;
+}
+textarea.invalid:invalid {
+  background-color: green;
+}

@@ -1,0 +1,13 @@
+<script>
+window.onload = () => {
+  document.execCommand("insertHorizontalRule", false)
+  window.getSelection().collapse(b)
+  document.execCommand("forwardDelete", false)
+}
+function go() {
+  document.getSelection().setPosition(a)
+}
+</script>
+<pre id="a">
+<time contenteditable>a|</t>
+<input id="b" onfocus="go()" autofocus onblur="go()">

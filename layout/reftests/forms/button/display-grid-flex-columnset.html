@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 984869</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+
+.grid, .igrid {
+  display: grid;
+  grid: 20px / 20px 20px;
+}
+.igrid { display:inline-grid; }
+
+.flex, .iflex {
+  display: flex;
+}
+.iflex { display:inline-flex; }
+
+.columnset {
+      -ms-columns: 2;
+  -webkit-columns: 2;
+          columns: 2;
+}
+
+.b { display: block; }
+
+a {
+  position: absolute;
+  right:0; bottom:0;
+  width:5px; height:5px;
+  background: lime;
+}
+.rel { position:relative; }
+
+button { vertical-align: bottom; }
+    </style>
+</head>
+<body>
+
+<button class="igrid">x<span>y</span>z</button>
+<button class="iflex">x<span>y</span>z</button>
+<button class="columnset">x<br><span>y</span>z</button>
+
+<button class="rel igrid">x<span>y</span>z<a></a></button>
+<button class="rel iflex">x<span>y</span>z<a></a></button>
+<button class="rel columnset">x<br><span>y</span>z<a></a></button>
+
+<button class="grid">x<span>y</span>z</button>
+<button class="flex">x<span>y</span>z</button>
+<button class="b columnset">x<br><span>y</span>z</button>
+
+<button class="rel grid">x<span>y</span>z<a></a></button>
+<button class="rel flex">x<span>y</span>z<a></a></button>
+<button class="rel b columnset">x<br><span>y</span>z<a></a></button>
+
+</body>
+</html>

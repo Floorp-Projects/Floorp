@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: text-overflow:<string>
+-->
+<html><head>
+<title>text-overflow: text-overflow:&lt;string&gt;</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:hidden;
+  width:20ch;
+  height:3em;
+  white-space:nowrap;
+  margin-left:2em;
+  position:relative;
+}
+span {
+  margin: 0 -0.5ch;
+}
+s {
+  margin: 0 -0.5ch;
+  padding: 0 11ch;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction:rtl;
+}
+.lro {
+  unicode-bidi: bidi-override;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+
+.t1 { text-overflow:"" ""; }
+.t2 { text-overflow:"Hello World" "Hello World"; }
+.t3 { text-overflow:"X" "X"; }
+
+</style>
+
+</head><body>
+
+
+<!-- Empty marker clips text -->
+<div class="test t1"><span>xx</span></div>
+<div class="test rtl t1"><span>xx</span></div>
+<!-- big marker clips all text -->
+<div class="test t2"><span>xx</span></div>
+<div class="test rtl t2"><span>xx</span></div>
+
+<!-- start marker that doesn't fit -->
+<div class="test t2" style="width:3ch"><span>xx</span></div>
+<div class="test rtl t2" style="width:3ch"><span>xx</span></div>
+
+<!-- start + end marker, nothing to align to -->
+<div class="test t3"><s></s></div>
+<div class="test rtl t3"><s></s></div>
+
+
+</body>
+</html>

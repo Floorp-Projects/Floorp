@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<!--
+  Check that calls to beginElement cause the pause time to be updated.
+
+  This is an area that's underspecified so we're just going with what's
+  intuitive. A is supposed to start at the same time as B. However, whilst B is
+  paused, a script calls 'beginElement'. Yet A is not paused. Intuitively,
+  A should start at the time beginElement is called. However, unless we handle
+  this situation specifically, what happens instead is that A is considered to
+  begin at the time when B was paused as follows:
+
+
+    Document time:
+    0       1       2       3       4     ...
+  A:
+  B:        |.......*..........
+            ^ Pause starts here
+                    ^ beginElement called here
+
+  Intuitively, A should start at t=2s, not t=1s. To provide this behaviour we
+  must specifically handle it.
+
+  Perhaps a more fundamental question is whether a call to beginElement should
+  take effect whilst the document is paused. Currently it does. This is
+  consistent with Opera but not Safari.
+ -->
+<head>
+<script>
+function snapshot() {
+  var svgb = document.getElementById("svg-b");
+  svgb.pauseAnimations();
+  setTimeout('snapshotB()', 100);
+}
+
+function snapshotB() {
+  var svga = document.getElementById("svg-a");
+  svga.pauseAnimations();
+  var b = document.getElementById("b");
+  b.beginElement();
+  // Force a sample on the first document fragment before taking a snapshot
+  svga.setCurrentTime(svga.getCurrentTime());
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", snapshot, false);
+setTimeout(snapshot, 4000); // fallback for running outside reftest
+
+</script>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="120px" height="120px" id="svg-a">
+  <rect width="100" height="100" fill="orange">
+    <animate attributeName="fill" attributeType="CSS" id="a"
+      values="green; red"
+      begin="b.begin" dur="0.5s"/>
+  </rect>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="120px" height="120px" id="svg-b">
+  <set attributeName="y" to="0" begin="indefinite" id="b"/>
+</svg>
+</body>
+</html>

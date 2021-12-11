@@ -1,0 +1,57 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/dom/IPCBlobUtils.h";
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+using struct nsPoint from "nsPoint.h";
+[RefCounted] using class mozilla::dom::BlobImpl from "mozilla/dom/BlobImpl.h";
+
+namespace mozilla {
+
+struct SelectContentData {
+  uint32_t[] indices;
+  nsString[] values;
+};
+
+struct CheckedContentData {
+  bool checked;
+};
+
+union FileContentData {
+  BlobImpl;
+  nsString;
+};
+
+struct TextContentData {
+  nsString value;
+  bool lastValueChangeWasInteractive;
+};
+
+union PresContentData {
+  void_t;
+  TextContentData;
+  SelectContentData;
+  CheckedContentData;
+  // We can need to serialize blobs in order to transmit this type, so we need
+  // to handle that in a custom handler.
+  FileContentData[];
+};
+
+struct PresState {
+  PresContentData contentData;
+  // For frames where layout and visual viewport aren't one and the same thing,
+  // scrollState will store the position of the *visual* viewport.
+  nsPoint scrollState;
+  bool allowScrollOriginDowngrade;
+  float resolution;
+  bool disabledSet;
+  bool disabled;
+  bool droppedDown;
+};
+
+}  // namespace mozilla

@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
+-->
+<head>
+  <title>Test key events for time control</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288591">Mozilla Bug 1288591</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="time">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
+    test();
+    SimpleTest.finish();
+  });
+});
+
+var testData = [
+  /**
+   * keys: keys to send to the input element.
+   * initialVal: initial value set to the input element.
+   * expectedVal: expected value of the input element after sending the keys.
+   */
+  {
+    // Type 1030 and select AM.
+    keys: ["1030", "KEY_ArrowDown"],
+    initialVal: "",
+    expectedVal: "10:30"
+  },
+  {
+    // Type 3 in the hour field will automatically advance to the minute field.
+    keys: ["330", "KEY_ArrowDown"],
+    initialVal: "",
+    expectedVal: "03:30"
+  },
+  {
+    // Type 5 in the hour field will automatically advance to the minute field.
+    // Type 7 in the minute field will automatically advance to the AM/PM field.
+    keys: ["57", "KEY_ArrowDown"],
+    initialVal: "",
+    expectedVal: "05:07"
+  },
+  {
+    // Advance to AM/PM field and change to PM.
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_ArrowDown"],
+    initialVal: "10:30",
+    expectedVal: "22:30"
+  },
+  {
+    // Right key should do the same thing as TAB key.
+    keys: ["KEY_ArrowRight", "KEY_ArrowRight", "KEY_ArrowDown"],
+    initialVal: "10:30",
+    expectedVal: "22:30"
+  },
+  {
+    // Advance to minute field then back to hour field and decrement.
+    keys: ["KEY_ArrowRight", "KEY_ArrowLeft", "KEY_ArrowDown"],
+    initialVal: "10:30",
+    expectedVal: "09:30"
+  },
+  {
+    // Focus starts on the first field, hour in this case, and increment.
+    keys: ["KEY_ArrowUp"],
+    initialVal: "16:00",
+    expectedVal: "17:00"
+  },
+  {
+    // Advance to minute field and decrement.
+    keys: ["KEY_Tab", "KEY_ArrowDown"],
+    initialVal: "16:00",
+    expectedVal: "16:59"
+  },
+  {
+    // Advance to minute field and increment.
+    keys: ["KEY_Tab", "KEY_ArrowUp"],
+    initialVal: "16:59",
+    expectedVal: "16:00"
+  },
+  {
+    // PageUp on hour field increments hour by 3.
+    keys: ["KEY_PageUp"],
+    initialVal: "05:00",
+    expectedVal: "08:00"
+  },
+  {
+    // PageDown on hour field decrements hour by 3.
+    keys: ["KEY_PageDown"],
+    initialVal: "05:00",
+    expectedVal: "02:00"
+  },
+  {
+    // PageUp on minute field increments minute by 10.
+    keys: ["KEY_Tab", "KEY_PageUp"],
+    initialVal: "14:00",
+    expectedVal: "14:10"
+  },
+  {
+    // PageDown on minute field decrements minute by 10.
+    keys: ["KEY_Tab", "KEY_PageDown"],
+    initialVal: "14:00",
+    expectedVal: "14:50"
+  },
+  {
+    // Home key on hour field sets it to the minimum hour, which is 1 in 12-hour
+    // clock.
+    keys: ["KEY_Home"],
+    initialVal: "03:10",
+    expectedVal: "01:10"
+  },
+  {
+    // End key on hour field sets it to the maximum hour, which is 12 in 12-hour
+    // clock.
+    keys: ["KEY_End"],
+    initialVal: "03:10",
+    expectedVal: "00:10"
+  },
+  {
+    // Home key on minute field sets it to the minimum minute, which is 0.
+    keys: ["KEY_Tab", "KEY_Home"],
+    initialVal: "19:30",
+    expectedVal: "19:00"
+  },
+  {
+    // End key on minute field sets it to the minimum minute, which is 59.
+    keys: ["KEY_Tab", "KEY_End"],
+    initialVal: "19:30",
+    expectedVal: "19:59"
+  },
+  // Second field will show up when needed.
+  {
+    // PageUp on second field increments second by 10.
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_PageUp"],
+    initialVal: "08:10:10",
+    expectedVal: "08:10:20"
+  },
+  {
+    // PageDown on second field increments second by 10.
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_PageDown"],
+    initialVal: "08:10:10",
+    expectedVal: "08:10:00"
+  },
+  {
+    // Home key on second field sets it to the minimum second, which is 0.
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_Home"],
+    initialVal: "16:00:30",
+    expectedVal: "16:00:00"
+  },
+  {
+    // End key on second field sets it to the minimum second, which is 59.
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_End"],
+    initialVal: "16:00:30",
+    expectedVal: "16:00:59"
+  },
+  {
+    // Incomplete value maps to empty .value.
+    keys: ["1"],
+    initialVal: "",
+    expectedVal: ""
+  },
+];
+
+function sendKeys(aKeys, aElem) {
+  for (let i = 0; i < aKeys.length; i++) {
+    // Force layout flush between keys to ensure focus is correct.
+    // This shouldn't be necessary; bug 1450219 tracks this.
+    aElem.clientTop;
+    let key = aKeys[i];
+    if (key.startsWith("KEY_")) {
+      synthesizeKey(key);
+    } else {
+      sendString(key);
+    }
+  }
+}
+
+function test() {
+  var elem = document.getElementById("input");
+
+  for (let { keys, initialVal, expectedVal } of testData) {
+    elem.focus();
+    elem.value = initialVal;
+    sendKeys(keys, elem);
+    is(elem.value, expectedVal,
+       "Test with " + keys + ", result should be " + expectedVal);
+    elem.value = "";
+    elem.blur();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

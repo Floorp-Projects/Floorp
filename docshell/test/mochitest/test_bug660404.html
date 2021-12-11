@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=660404
+-->
+<head>
+  <title>Test for Bug 660404</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=660404">Mozilla Bug 660404</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 660404 **/
+SimpleTest.waitForExplicitFinish();
+
+var textContent =
+`
+  var bc = new BroadcastChannel("bug660404_multipart");
+  bc.postMessage({command: "finishTest",
+    textContent: window.document.documentElement.textContent,
+    innerHTML: window.document.documentElement.innerHTML
+  });
+  bc.close();
+  window.close();
+`;
+var innerHTML =
+`<head><script>
+  var bc = new BroadcastChannel("bug660404_multipart");
+  bc.postMessage({command: "finishTest",
+    textContent: window.document.documentElement.textContent,
+    innerHTML: window.document.documentElement.innerHTML
+  });
+  bc.close();
+  window.close();
+</`
+// eslint-disable-next-line no-useless-concat
++ `script></head>`
+;
+var bc_multipart = new BroadcastChannel("bug660404_multipart");
+bc_multipart.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "finishTest") {
+      is(msg.textContent, textContent);
+      is(msg.innerHTML, innerHTML);
+      bc_multipart.close();
+      SimpleTest.finish();
+    }
+}
+var bc = new BroadcastChannel("bug660404");
+bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "pagehide") {
+      is(msg.persisted, true, "Should be bfcached when navigating to multipart");
+      bc.close();
+    }
+}
+
+// If Fission is disabled, the pref is no-op.
+SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+  // Have to open a new window, since there's no bfcache in subframes
+  window.open("file_bug660404-1.html", "", "noopener");
+});
+
+</script>
+</pre>
+</body>
+</html>

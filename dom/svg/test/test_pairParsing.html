@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1512745
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test pair parsing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1512745">Mozilla Bug 1512745</a>
+
+<svg width="230" height="120"
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <filter><feGaussianBlur id="x1" stdDeviation=" 5 " /></filter>
+  <filter><feGaussianBlur id="x2" stdDeviation=" 5 10 " /></filter>
+  <filter><feGaussianBlur id="x3" stdDeviation="5 10 " /></filter>
+  <filter><feGaussianBlur id="x4" stdDeviation=" 5,10 " /></filter>
+</svg>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  function checkValue(id, x, y) {
+    if (y === undefined) {
+      y = x;
+    }
+    let e = document.getElementById(id);
+    is(e.stdDeviationX.baseVal, x, "Wrong stdDeviationX");
+    is(e.stdDeviationY.baseVal, y, "Wrong stdDeviationY");
+  }
+
+  checkValue("x1", 5);
+  checkValue("x2", 5, 10);
+  checkValue("x3", 5, 10);
+  checkValue("x4", 5, 10);
+</script>
+</pre>
+</body>
+</html>

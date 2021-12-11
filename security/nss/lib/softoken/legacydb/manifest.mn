@@ -1,0 +1,32 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../../..
+
+MODULE = nss
+
+REQUIRES = dbm
+
+LIBRARY_NAME = nssdbm
+LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" -DLG_LIB_NAME=\"$(notdir $(SHARED_LIBRARY))\"
+
+CSRCS = \
+	dbmshim.c \
+	keydb.c \
+	lgattr.c \
+	lgcreate.c \
+	lgdestroy.c \
+	lgfind.c \
+	lgfips.c \
+	lginit.c \
+	lgutil.c \
+	lowcert.c \
+	lowkey.c \
+	pcertdb.c \
+	pk11db.c \
+	$(NULL)
+

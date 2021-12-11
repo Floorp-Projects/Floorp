@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>Reference for 'overflow-clip-box: content-box' (Bug 1226305)</title>
+  <style>
+  .test {
+    padding: 20px;
+    background: green content-box;
+    width: 300px;
+    height: 20px;
+    border: 1px solid;
+  }
+  </style>
+
+  <body>
+    <p>There should be no red areas.</p>
+    <div class="test"></div>
+    <div class="test"></div>
+    <div class="test"></div>
+    <div class="test"></div>
+    <div class="test"></div>
+  </body>
+</html>

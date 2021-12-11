@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Character Movement (including nsTextFrame::PeekOffsetCharacter)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div>content before the editor</div>
+<div contentEditable="true" id="editor" style="width:200px;height:150px;overflow-y:auto;overflow-x:hidden;"><p>paragraph1</p>
+<p>paragraph2</p>
+<p>paragraph3</p>
+<p>paragraph4</p>
+<p>paragraph5</p>
+<p>paragraph6</p>
+</div>
+<div>content after the editor</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function test() {
+  var sel = window.getSelection();
+  var editor = document.getElementById("editor");
+
+  var keymodifier={};
+  //in windows/linux, pageup/pagedown will trigger movement of caret
+  //while in Mac, pageup/pagedown will just scroll. We need to press
+  //alt-pageup/pagedown in Mac to actually move caret
+  if(navigator.platform.includes("Mac")){
+    keymodifier.altKey=true;
+  }
+
+  sel.collapse(editor.firstChild.firstChild, 1);
+  synthesizeKey("VK_PAGE_UP", keymodifier);
+  is(sel.anchorNode, editor.firstChild.firstChild, 'after pageup caret should still be in the first paragraph');
+
+  synthesizeKey("VK_PAGE_DOWN", keymodifier);
+  is(sel.anchorNode.parentNode.parentNode, editor, 'pagedown should not move caret outside the editor');
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(test);
+
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <style>
+  /* eliminate the blue glow when focusing the element. */
+  input {
+    background: none;
+    border: none;
+    outline: none;
+  }
+  </style>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script>
+    async function test() {
+      let input = document.querySelector("input");
+      let waitForFocus = new Promise(resolve => {
+        input.addEventListener("focus", resolve, {once: true});
+      });
+      window.focus();
+      input.focus();
+      await waitForFocus;
+      input.select();
+      await new Promise(resolve => { SimpleTest.executeSoon(resolve); });
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <body onload="SimpleTest.executeSoon(test);">
+    <input value="text text text text text">
+  </body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=523771
+-->
+<head>
+  <title>Test for Bug 523771</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=523771">Mozilla Bug 523771</a>
+<p id="display"></p>
+<iframe name="target_iframe" id="target_iframe"></iframe>
+<form action="form_submit_server.sjs" target="target_iframe" id="form"
+method="POST" enctype="multipart/form-data">
+  <input id=singleFile name=singleFile type=file>
+  <input id=multiFile name=multiFile type=file multiple>
+</form>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+singleFileInput = document.getElementById('singleFile');
+multiFileInput = document.getElementById('multiFile');
+var input1File = { name: "523771_file1", type: "", body: "file1 contents"};
+var input2Files =
+  [{ name: "523771_file2", type: "", body: "second file contents" },
+   { name: "523771_file3.txt", type: "text/plain", body: "123456" },
+   { name: "523771_file4.html", type: "text/html", body: "<html>content</html>" }
+  ];
+
+SimpleTest.waitForExplicitFinish();
+
+function setFileInputs () {
+  var f = createFileWithData(input1File.name, input1File.body, input1File.type);
+  SpecialPowers.wrap(singleFileInput).mozSetFileArray([f]);
+
+  var input2FileNames = [];
+  for (file of input2Files) {
+    f = createFileWithData(file.name, file.body, file.type);
+    input2FileNames.push(f);
+  }
+  SpecialPowers.wrap(multiFileInput).mozSetFileArray(input2FileNames);
+}
+
+function createFileWithData(fileName, fileData, fileType) {
+  return new File([fileData], fileName, { type: fileType });
+}
+
+function cleanupFiles() {
+  singleFileInput.value = "";
+  multiFileInput.value = "";
+}
+
+is(singleFileInput.files.length, 0, "single-file .files.length"); // bug 524421
+is(multiFileInput.files.length, 0, "multi-file .files.length"); // bug 524421
+
+setFileInputs();
+
+is(singleFileInput.multiple, false, "single-file input .multiple");
+is(multiFileInput.multiple, true, "multi-file input .multiple");
+is(singleFileInput.value, 'C:\\fakepath\\' + input1File.name, "single-file input .value");
+is(multiFileInput.value, 'C:\\fakepath\\' + input2Files[0].name, "multi-file input .value");
+is(singleFileInput.files[0].name, input1File.name, "single-file input .files[n].name");
+is(singleFileInput.files[0].size, input1File.body.length, "single-file input .files[n].size");
+is(singleFileInput.files[0].type, input1File.type, "single-file input .files[n].type");
+for(i = 0; i < input2Files.length; ++i) {
+  is(multiFileInput.files[i].name, input2Files[i].name, "multi-file input .files[n].name");
+  is(multiFileInput.files[i].size, input2Files[i].body.length, "multi-file input .files[n].size");
+  is(multiFileInput.files[i].type, input2Files[i].type, "multi-file input .files[n].type");
+}
+
+document.getElementById('form').submit();
+iframe = document.getElementById('target_iframe');
+iframe.onload = function() {
+  response = JSON.parse(iframe.contentDocument.documentElement.textContent);
+ is(response[0].headers["Content-Disposition"],
+     "form-data; name=\"singleFile\"; filename=\"" + input1File.name +
+     "\"",
+     "singleFile Content-Disposition");
+  is(response[0].headers["Content-Type"], input1File.type || "application/octet-stream",
+     "singleFile Content-Type");
+  is(response[0].body, input1File.body, "singleFile body");
+
+  for(i = 0; i < input2Files.length; ++i) {
+   is(response[i + 1].headers["Content-Disposition"],
+       "form-data; name=\"multiFile\"; filename=\"" + input2Files[i].name +
+       "\"",
+       "multiFile Content-Disposition");
+    is(response[i + 1].headers["Content-Type"], input2Files[i].type || "application/octet-stream",
+       "multiFile Content-Type");
+    is(response[i + 1].body, input2Files[i].body, "multiFile body");
+  }
+
+  cleanupFiles();
+
+  is(singleFileInput.files.length, 0, "single-file .files.length"); // bug 524421
+  is(multiFileInput.files.length, 0, "multi-file .files.length"); // bug 524421
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

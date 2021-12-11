@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=479859
+-->
+<head>
+  <title>Test for Bug 479859</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479859">Mozilla Bug 479859</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="text/javascript">
+
+function log(msg) {
+  //document.getElementById('log').innerHTML += "<p>" + msg + "</p>";
+}
+
+// We don't track: progress, canplay, canplaythrough and stalled events,
+// as these can be delivered out of order, and/or multiple times.
+var gEventTypes = [ 'loadstart', 'abort', 'error', 'emptied', 'play',
+  'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'seeking',
+  'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
+
+var gEventNum = 0;
+var gTestNum = 0;
+var gTestFileNum = 0;
+var gExpectedEvents = null;
+var gTest = null;
+var gTestName = "?";
+
+function listener(evt) {
+  log('event ' + evt.type);
+  ok(gEventNum < gExpectedEvents.length, gTestName+" - corrent number of events received");
+  var expected = (gEventNum < gExpectedEvents.length) ? gExpectedEvents[gEventNum] : "NoEvent";
+  is(evt.type, expected, gTestName+" - events received in order");
+  gEventNum++;
+  if (gEventNum == gExpectedEvents.length) {
+    setTimeout(nextTest, 0); 
+  }
+}
+
+function source_error(evt) {
+  log('event source_error');
+  ok(evt.type == "error", "Should only get error events here");
+  ok(gEventNum < gExpectedEvents.length, gTestName+" - corrent number of events received");
+  var expected = (gEventNum < gExpectedEvents.length) ? gExpectedEvents[gEventNum] : "NoEvent";
+  is("source_error", expected, gTestName+" - events received in order");
+  gEventNum++;
+  if (gEventNum == gExpectedEvents.length) {
+    setTimeout(nextTest, 0); 
+  }
+}
+
+var gMedia = null;
+
+function createMedia(tag) {
+  gMedia = document.createElement(tag);
+  gMedia.preload = "metadata";
+  for (var i=0; i<gEventTypes.length; i++) {
+    gMedia.addEventListener(gEventTypes[i], listener);
+  }
+}
+
+function addSource(src, type) {
+  var s = document.createElement("source");
+  s.addEventListener("error", source_error);
+  s.src = src;
+  s.type = type;
+  gMedia.appendChild(s);
+  return s;
+}
+
+function prependSource(src, type) {
+  var s = document.createElement("source");
+  s.addEventListener("error", source_error);
+  s.src = src;
+  s.type = type;
+  gMedia.insertBefore(s, gMedia.firstChild);
+  return s;
+}
+
+var gTests = [
+  {
+    // Test 0: adding video to doc, then setting src should load implicitly.
+    create(src, type) {
+        document.body.appendChild(gMedia);
+        gMedia.src = src;
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
+  }, {
+    // Test 1: adding video to doc, then adding source.
+    create(src, type) {
+        document.body.appendChild(gMedia);
+        addSource(src, type);
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
+  },{
+    // Test 2: video with multiple source, the first of which are bad, we should load the last,
+    // and receive error events for failed loads on the source children.
+    create(src, type) {
+        document.body.appendChild(gMedia);
+        addSource("404a", type);
+        addSource("404b", type);
+        addSource(src, type);
+      },
+    expectedEvents: ['loadstart', 'source_error', 'source_error', 'durationchange', 'loadedmetadata', 'loadeddata']
+  }, {
+    // Test 3:  video with bad src, good <source>, ensure that <source> aren't used.
+    create(src, type) {
+        gMedia.src = "404a";
+        addSource(src, type);
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'error']
+  }, {
+    // Test 4:  video with only bad source, loading, then adding a good source
+    // -  should resume load.
+    create(src, type) {
+        addSource("404a", type);
+        var s2 = addSource("404b", type);
+        s2.addEventListener("error",
+          function(e) {
+            // Should awaken waiting load, causing successful load.
+            addSource(src, type);
+          });
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'source_error', 'source_error', 'durationchange', 'loadedmetadata', 'loadeddata']
+  }, {
+    // Test 5: video with only 1 bad source, let it fail to load, then prepend
+    // a good <source> to the video, it shouldn't be selected, because the
+    // "pointer" should be after the last child - the bad source.
+    prepended: false,
+    create(src, type) {
+        var prepended = false;
+        addSource("404a", type);
+        var s2 = addSource("404b", type);
+        s2.addEventListener("error",
+          function(e) {
+            // Should awaken waiting load, causing successful load.
+            if (!prepended) {
+              prependSource(src, type);
+              prepended = true;
+            }
+          });
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'source_error', 'source_error']
+  }, {
+    // Test 6: (Bug 1165203) preload="none" then followed by an explicit
+    // call to load() should load metadata
+    create(src, type) {
+        gMedia.preload = "none";
+        gMedia.src = src;
+        document.body.appendChild(gMedia);
+        addSource(src, type);
+        gMedia.load();
+      },
+    expectedEvents: ['emptied',  'loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
+  }
+];
+
+function nextTest() {
+  if (gMedia) {
+    for (var i=0; i<gEventTypes.length; i++) {
+      gMedia.removeEventListener(gEventTypes[i], listener);
+    }
+    removeNodeAndSource(gMedia);
+    gMedia = null;
+  }
+  gEventNum = 0;
+
+  if (gTestNum == gTests.length) {
+    gTestNum = 0;
+    ++gTestFileNum;
+    if (gTestFileNum == gSmallTests.length) {
+      SimpleTest.finish();
+      return;
+    }
+  }
+
+  var src = gSmallTests[gTestFileNum].name;
+  var type = gSmallTests[gTestFileNum].type;
+
+  var t = gTests[gTestNum];
+  gTestNum++;
+  
+  createMedia(type.match(/^audio\//) ? "audio" : "video");
+  if (!gMedia.canPlayType(type)) {
+    // Unsupported type, skip to next test
+    nextTest();
+    return;
+  }
+
+  gTestName = "Test " + src + " " + (gTestNum - 1);
+  log("Starting " + gTestName);
+  gExpectedEvents = t.expectedEvents;
+
+  t.create(src, type);
+}
+
+addLoadEvent(nextTest);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+<div id="log" style="font-size: small"></div>
+</body>
+</html>

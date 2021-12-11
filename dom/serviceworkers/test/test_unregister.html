@@ -1,0 +1,137 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 984048 - Test unregister</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function simpleRegister() {
+    return navigator.serviceWorker.register("worker.js", { scope: "unregister/" }).then(function(swr) {
+      if (swr.installing) {
+        return new Promise(function(resolve, reject) {
+          swr.installing.onstatechange = function(e) {
+            if (swr.waiting) {
+              swr.waiting.onstatechange = function(event) {
+                if (swr.active) {
+                  resolve();
+                } else if (swr.waiting && swr.waiting.state == "redundant") {
+                  reject("Should not go into redundant");
+                }
+              }
+            } else {
+              if (swr.active) {
+                resolve();
+              } else {
+                reject("No waiting and no active!");
+              }
+            }
+          }
+        });
+      } else {
+        return Promise.reject("Installing should be non-null");
+      }
+    });
+  }
+
+  function testControlled() {
+    var testPromise = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (!("controlled" in e.data)) {
+          ok(false, "Something went wrong.");
+          rej();
+          return;
+        }
+
+        ok(e.data.controlled, "New window should be controlled.");
+        res();
+      }
+    })
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.setAttribute('src', "unregister/index.html");
+    div.appendChild(ifr);
+
+    return testPromise.then(function() {
+      div.removeChild(ifr);
+    });
+  }
+
+  function unregister() {
+    return navigator.serviceWorker.getRegistration("unregister/")
+           .then(function(reg) {
+             if (!reg) {
+               info("Registration already removed");
+               return;
+             }
+
+             info("getRegistration() succeeded " + reg.scope);
+             return reg.unregister().then(function(v) {
+               ok(v, "Unregister should resolve to true");
+             }, function(e) {
+               ok(false, "Unregister failed with " + e.name);
+             });
+           });
+  }
+
+  function testUncontrolled() {
+    var testPromise = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (!("controlled" in e.data)) {
+          ok(false, "Something went wrong.");
+          rej();
+          return;
+        }
+
+        ok(!e.data.controlled, "New window should not be controlled.");
+        res();
+      }
+    });
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.setAttribute('src', "unregister/index.html");
+    div.appendChild(ifr);
+
+    return testPromise.then(function() {
+      div.removeChild(ifr);
+    });
+  }
+
+  function runTest() {
+    simpleRegister()
+      .then(testControlled)
+      .then(unregister)
+      .then(testUncontrolled)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

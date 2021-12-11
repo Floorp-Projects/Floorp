@@ -1,0 +1,44 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <script type="text/javascript">
+      const filename = "http://mochi.test:8888/tests/dom/workers/test/" +
+                       "recursiveOnerror_worker.js";
+      const errors = [
+        { message: "Error: 2", lineno: 6 },
+        { message: "Error: 1", lineno: 10 }
+      ]
+
+      var errorCount = 0;
+
+      var worker = new Worker("recursiveOnerror_worker.js");
+      worker.postMessage("go");
+
+      worker.onerror = function(event) {
+        event.preventDefault();
+
+        ok(errorCount < errors.length, "Correct number of error events");
+        const error = errors[errorCount++];
+
+        is(event.message, error.message, "Correct message");
+        is(event.filename, filename, "Correct filename");
+        is(event.lineno, error.lineno, "Correct lineno");
+
+        if (errorCount == errors.length) {
+          SimpleTest.finish();
+        }
+      }
+
+      SimpleTest.waitForExplicitFinish();
+    </script>
+  </body>
+</html>

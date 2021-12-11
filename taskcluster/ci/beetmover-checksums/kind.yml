@@ -1,0 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+transforms:
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.beetmover_checksums:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - beetmover-repackage
+
+only-for-attributes:
+    - nightly
+    - shippable
+
+job-template:
+    shipping-phase: promote
+    attributes:
+        artifact_prefix: public
+        artifact_map:
+            by-release-type:
+                beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates_checksums.yml
+                default: taskcluster/gecko_taskgraph/manifests/firefox_nightly_checksums.yml

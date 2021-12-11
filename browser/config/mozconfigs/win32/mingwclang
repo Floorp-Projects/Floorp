@@ -1,0 +1,53 @@
+# Sets:
+#    MOZ_AUTOMATION flags
+#    SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE - shouldn't be used?
+. "$topsrcdir/build/mozconfig.win-common"
+
+# Sets:
+#  build/mozconfig.common
+#    AUTOCLOBBER=1
+#    --enable-crashreporter
+#    --enable-release
+#    MOZ_ADDON_SIGNING
+#    MOZ_REQUIRE_SIGNING
+#    --enable-js-shell
+#  build/mozconfig.automation
+#    MOZ_AUTOMATION_ flags
+. "$topsrcdir/browser/config/mozconfigs/common"
+
+export MOZ_PACKAGE_JSSHELL=1
+
+# MinGW Stuff
+ac_add_options --target=i686-w64-mingw32
+ac_add_options --with-toolchain-prefix=i686-w64-mingw32-
+
+ac_add_options --disable-warnings-as-errors
+mk_add_options "export WIDL_TIME_OVERRIDE=0"
+
+# This replicates Tor's configuration
+ac_add_options --enable-proxy-bypass-protection
+
+# These aren't supported on mingw at this time
+ac_add_options --disable-webrtc # Bug 1393901
+ac_add_options --disable-geckodriver # Bug 1489320
+ac_add_options --disable-update-agent # Bug 1561797
+ac_add_options --disable-default-browser-agent # WinToast does not build on mingw
+
+# Find our toolchain
+HOST_CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+HOST_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
+CC="$MOZ_FETCHES_DIR/clang/bin/i686-w64-mingw32-clang"
+CXX="$MOZ_FETCHES_DIR/clang/bin/i686-w64-mingw32-clang++"
+CXXFLAGS="-fms-extensions"
+CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+
+# We want to make sure we use binutils and other binaries in the tooltool
+# package.
+mk_add_options "export PATH=$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/upx/bin:$MOZ_FETCHES_DIR/fxc2/bin:$MOZ_FETCHES_DIR/binutils/bin:$PATH"
+
+# Do not include the visual studio related mozconfigs of course
+
+ac_add_options --with-branding=browser/branding/nightly
+
+. "$topsrcdir/build/mozconfig.common.override"

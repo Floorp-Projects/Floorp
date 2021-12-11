@@ -1,0 +1,15 @@
+body {
+  height: 500px;
+}
+
+.inner-frame {
+  margin-top: 50px; /* this should be at least 30px */
+  height: 200%;
+  width: 75%;
+  overflow: scroll;
+}
+.inner-content {
+  height: 200%;
+  width: 200%;
+  background: repeating-linear-gradient(#EEE, #EEE 100px, #DDD 100px, #DDD 200px);
+}

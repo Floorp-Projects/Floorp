@@ -1,0 +1,89 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker JSON messages
+-->
+<head>
+  <title>Test for DOM Worker Navigator</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script src="json_worker.js" language="javascript"></script>
+<script class="testbody" language="javascript">
+
+  ok(messages.length, "No messages to test!");
+
+  var worker = new Worker("json_worker.js");
+
+  var index = 0;
+  worker.onmessage = function(event) {
+    var key = messages[index++];
+
+    // Loop for the ones we shouldn't receive.
+    while (key.exception) {
+      key = messages[index++];
+    }
+
+    is(typeof event.data, key.type, "Bad type! " + messages.indexOf(key));
+
+    if (key.array) {
+      is(event.data instanceof Array, key.array,
+         "Array mismatch! " + messages.indexOf(key));
+    }
+
+    if (key.isNaN) {
+      ok(isNaN(event.data), "Should be NaN!" + messages.indexOf(key));
+    }
+
+    if (key.isInfinity) {
+      is(event.data, Infinity, "Should be Infinity!" + messages.indexOf(key));
+    }
+
+    if (key.isNegativeInfinity) {
+      is(event.data, -Infinity, "Should be -Infinity!" + messages.indexOf(key));
+    }
+
+    if (key.shouldCompare || key.shouldEqual) {
+      ok(event.data == key.compareValue,
+         "Values don't compare! "  + messages.indexOf(key));
+    }
+
+    if (key.shouldEqual) {
+      ok(event.data === key.compareValue,
+         "Values don't equal! " + messages.indexOf(key));
+    }
+
+    if (key.jsonValue) {
+      is(JSON.stringify(event.data), key.jsonValue,
+         "Object stringification inconsistent!" + messages.indexOf(key));
+    }
+
+    if (event.data == "testFinished") {
+      is(index, messages.length, "Didn't see the right number of messages!");
+      SimpleTest.finish();
+    }
+  };
+
+  worker.onerror = function(event) {
+    ok(false, "Worker had an error: " + event.message);
+    SimpleTest.finish();
+  }
+
+  worker.postMessage("start");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

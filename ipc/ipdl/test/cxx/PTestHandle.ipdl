@@ -1,0 +1,14 @@
+include protocol PTestJSON;
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestHandle {
+    manager PTestJSON;
+
+child:
+    async __delete__();
+};
+
+} // namespace mozilla
+} // namespace _ipdltest

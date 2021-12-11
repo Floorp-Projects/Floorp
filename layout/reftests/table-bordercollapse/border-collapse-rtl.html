@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+table {
+  margin: 10px;
+  border: 8px solid silver;
+  border-right-color: gray;
+  border-bottom-color: gray;
+  border-spacing: 5px;
+  border-collapse: collapse;
+}
+td {
+  border: 4px solid black;
+  width: 50px;
+  height: 20px;
+  text-align: center;
+}
+td.w1 {
+  width: 80px;
+}
+td.w2 {
+  width: 120px;
+}
+tr:nth-child(even) {
+  background: #ffc;
+}
+tr:nth-child(odd) {
+  background: #cff;
+}
+tr:nth-child(1) {
+  background: #fcf;
+}
+</style>
+</head>
+<body>
+
+<table dir=rtl>
+<tr><td colspan=3>x</td>                               <td>x</td>           </tr>
+<tr><td rowspan=3>x</td><td class="w1">x</td><td>x</td><td>x</td>           </tr>
+<tr>                    <td>x</td>           <td>x</td><td rowspan=2>x</td> </tr>
+<tr>                    <td>x</td>           <td>x</td>                     </tr>
+<tr><td>x</td>          <td>x</td>           <td>x</td><td class="w2">x</td></tr>
+</table>
+
+</body>
+</html>

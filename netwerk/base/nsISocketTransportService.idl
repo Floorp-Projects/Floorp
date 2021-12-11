@@ -1,0 +1,162 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDNSRecord;
+interface nsIFile;
+interface nsISocketTransport;
+interface nsIProxyInfo;
+interface nsIRunnable;
+
+%{C++
+class nsASocketHandler;
+struct PRFileDesc;
+%}
+
+[ptr] native PRFileDescPtr(PRFileDesc);
+[ptr] native nsASocketHandlerPtr(nsASocketHandler);
+
+[scriptable, function, uuid(338947df-2f3b-4d24-9ce4-ecf161c1b7df)]
+interface nsISTSShutdownObserver : nsISupports {
+
+   /**
+    * Observe will be called when the SocketTransportService is shutting down,
+    * before threads are stopped.
+    */
+    void observe();
+};
+
+[builtinclass, scriptable, uuid(ad56b25f-e6bb-4db3-9f7b-5b7db33fd2b1)]
+interface nsISocketTransportService : nsISupports
+{
+    /**
+     * Creates a transport for a specified host and port.
+     *
+     * @param aSocketTypes
+     *        array of socket type strings.  Empty array if using default
+     *        socket type.
+     * @param aHost
+     *        specifies the target hostname or IP address literal of the peer
+     *        for this socket.
+     * @param aPort
+     *        specifies the target port of the peer for this socket.
+     * @param aProxyInfo
+     *        specifies the transport-layer proxy type to use.  null if no
+     *        proxy.  used for communicating information about proxies like
+     *        SOCKS (which are transparent to upper protocols).
+     * @param aDnsRecord
+     *        the dns record to be used for the connection
+     *
+     * @see nsIProxiedProtocolHandler
+     * @see nsIProtocolProxyService::GetProxyInfo
+     *
+     * NOTE: this function can be called from any thread
+     */
+    nsISocketTransport createTransport(in Array<ACString> aSocketTypes,
+                                       in AUTF8String aHost,
+                                       in long aPort,
+                                       in nsIProxyInfo aProxyInfo,
+                                       in nsIDNSRecord dnsRecord);
+
+    /**
+     * Create a transport built on a Unix domain socket, connecting to the
+     * given filename.
+     *
+     * Since Unix domain sockets are always local to the machine, they are
+     * not affected by the nsIIOService's 'offline' flag.
+     *
+     * On systems that don't support Unix domain sockets at all, this
+     * returns NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED.
+     *
+     * The system-level socket API may impose restrictions on the length of
+     * the filename that are stricter than those of the underlying
+     * filesystem. If the file name is too long, this returns
+     * NS_ERROR_FILE_NAME_TOO_LONG.
+     *
+     * The |aPath| parameter must specify an existing directory entry.
+     * Otherwise, this returns NS_ERROR_FILE_NOT_FOUND.
+     *
+     * The program must have search permission on all components of the
+     * path prefix of |aPath|, and read and write permission on |aPath|
+     * itself. Without such permission, this returns
+     * NS_ERROR_CONNECTION_REFUSED.
+     *
+     * The |aPath| parameter must refer to a unix-domain socket. Otherwise,
+     * this returns NS_ERROR_CONNECTION_REFUSED. (POSIX specifies
+     * ECONNREFUSED when "the target address was not listening for
+     * connections", and this is what Linux returns.)
+     *
+     * @param aPath
+     *        The file name of the Unix domain socket to which we should
+     *        connect.
+     */
+    nsISocketTransport createUnixDomainTransport(in nsIFile aPath);
+
+    /**
+     * Create a transport built on a Unix domain socket that uses abstract
+     * address name.
+     *
+     * If abstract socket address isn't supported on System, this returns
+     * NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED.
+     *
+     * @param aName
+     *        The name of abstract socket adress of the Unix domain socket to
+     *        which we should connect.
+     */
+    nsISocketTransport
+    createUnixDomainAbstractAddressTransport(in ACString aName);
+
+    /**
+     * Adds a new socket to the list of controlled sockets.
+     *
+     * This will fail with the error code NS_ERROR_NOT_AVAILABLE if the maximum
+     * number of sockets is already reached.
+     * In this case, the notifyWhenCanAttachSocket method should be used.
+     *
+     * @param aFd
+     *        Open file descriptor of the socket to control.
+     * @param aHandler
+     *        Socket handler that will receive notifications when the socket is
+     *        ready or detached.
+     *
+     * NOTE: this function may only be called from an event dispatch on the
+     *       socket thread.
+     */
+    [noscript] void attachSocket(in PRFileDescPtr aFd,
+                                 in nsASocketHandlerPtr aHandler);
+
+    /**
+     * if the number of sockets reaches the limit, then consumers can be
+     * notified when the number of sockets becomes less than the limit.  the
+     * notification is asynchronous, delivered via the given nsIRunnable
+     * instance on the socket transport thread.
+     *
+     * @param aEvent
+     *        Event that will receive the notification when a new socket can
+     *        be attached
+     *
+     * NOTE: this function may only be called from an event dispatch on the
+     *       socket thread.
+     */
+    [noscript] void notifyWhenCanAttachSocket(in nsIRunnable aEvent);
+
+    [noscript] void addShutdownObserver(in nsISTSShutdownObserver aObserver);
+    [noscript] void removeShutdownObserver(in nsISTSShutdownObserver aObserver);
+};
+
+[builtinclass, scriptable, uuid(c5204623-5b58-4a16-8b2e-67c34dd02e3f)]
+interface nsIRoutedSocketTransportService : nsISocketTransportService
+{
+    // use this instead of createTransport when you have a transport
+    // that distinguishes between origin and route (aka connection)
+    nsISocketTransport createRoutedTransport(in Array<ACString> aSocketTypes,
+                                             in AUTF8String aHost, // origin
+                                             in long aPort, // origin
+                                             in AUTF8String aHostRoute,
+                                             in long aPortRoute,
+                                             in nsIProxyInfo aProxyInfo,
+                                             in nsIDNSRecord aDnsRecord);
+};

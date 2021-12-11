@@ -1,0 +1,490 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=348681
+-->
+
+<head>
+  <title>Test for Bug 348681</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<body onload="loaded()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=348681">Mozilla Bug 348681</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 348681 **/
+
+      SimpleTest.waitForExplicitFinish();
+
+      function loaded() {
+        SpecialPowers.pushPrefEnv({"set": [["dom.testing.selection.GetRangesForInterval", true]]}, doTest);
+      }
+
+      var rangeChecker = {
+        ranges: [],
+
+        reset: function() {
+          this.ranges = [];
+        },
+
+        check: function(testID, selection) {
+          is(selection.rangeCount, this.ranges.length,
+             "Test "+testID+": correct number of ranges in selection");
+          var rangesMatch = true;
+          var foundMsg = "Found ";
+          var expectedMsg = "Expected ";
+          var maxIndex = Math.max(selection.rangeCount, this.ranges.length);
+          for (var x = 0; x < maxIndex; x++) {
+            var expect = null;
+            if (x < this.ranges.length)
+              expect = this.ranges[x];
+
+            var found = null;
+            if (x < selection.rangeCount)
+              found = selection.getRangeAt(x);
+
+            if (found) {
+              foundMsg +="["+found.startOffset+","+found.endOffset+"] ";
+            }
+            if (expect) {
+              expectedMsg +="["+expect.start+","+expect.end+"] ";
+            }
+
+            if (found && expect) {
+              if (found.startContainer != expect.node ||
+                  found.endContainer != expect.node ||
+                  found.startOffset != expect.start ||
+                  found.endOffset != expect.end)
+                rangesMatch = false;
+            } else {
+              rangesMatch = false;
+            }
+          }
+          var okMsg = "Test "+testID+": correct ranges in selection.";
+          okMsg = okMsg + foundMsg + expectedMsg;
+          ok(rangesMatch, okMsg);
+        },
+
+        addExpected: function(node, start, end) {
+          var expected = {};
+          expected.node = node;
+          expected.start = start;
+          expected.end = end;
+          this.ranges[this.ranges.length] = expected;
+          this.ranges.sort(function(a,b) {return a.start - b.start;});
+        }
+      }
+
+      var intervalChecker = {
+        ranges: [],
+
+        reset: function() {
+          this.ranges = [];
+        },
+
+        check: function(testID, testArr) {
+          is(testArr.length, this.ranges.length,
+             "Test "+testID+": correct number of ranges for interval");
+          var rangesMatch = true;
+          var foundMsg = "Found ";
+          var expectedMsg = "Expected ";
+          var maxIndex = Math.max(testArr.length, this.ranges.length);
+          for (var x = 0; x < maxIndex; x++) {
+            var expect = null;
+            if (x < this.ranges.length)
+              expect = this.ranges[x];
+
+            var found = null;
+            if (x < testArr.length) {
+              // testArr may contain the results coming from
+              // Selection.GetRangesForInterval(), which are
+              // wrappers for the underlying objects, therefore we may
+              // need to unwrap them before comparing them with the
+              // expected objects.
+              found = SpecialPowers.unwrap(testArr[x]);
+            }
+
+            if (found) {
+              foundMsg +="["+found.startOffset+","+found.endOffset+"] ";
+            }
+            if (expect) {
+              expectedMsg +="["+expect.start+","+expect.end+"] ";
+            }
+
+            if (found && expect) {
+              if (found.startContainer != expect.node ||
+                  found.endContainer != expect.node ||
+                  found.startOffset != expect.start ||
+                  found.endOffset != expect.end)
+                rangesMatch = false;
+            } else {
+              rangesMatch = false;
+            }
+          }
+          var okMsg = "Test "+testID+": correct ranges for interval.";
+          okMsg = okMsg + foundMsg + expectedMsg;
+          ok(rangesMatch, okMsg);
+        },
+
+        addExpected: function(node, start, end) {
+          var expected = {};
+          expected.node = node;
+          expected.start = start;
+          expected.end = end;
+          this.ranges[this.ranges.length] = expected;
+          this.ranges.sort(function(a,b) {return a.start - b.start;});
+        }
+      }
+
+      function doTest() {
+       var testNode = document.getElementById("testparagraph").firstChild;
+
+       var selection = window.getSelection();
+       selection.removeAllRanges();
+       ok(selection.rangeCount == 0, "Test 0 - No selections so far");
+       
+       // Test 1. Add a single range, to ensure we've not broken anything.
+       var range1 = document.createRange();
+       range1.setStart(testNode, 0);
+       range1.setEnd(testNode, 5);
+       selection.addRange(range1);
+       rangeChecker.addExpected(testNode, 0, 5);
+       rangeChecker.check(1, selection);
+
+       // Test 2. Add a non-overlapping range, to ensure it gets added too.
+       var range2 = document.createRange();
+       range2.setStart(testNode, 8);
+       range2.setEnd(testNode, 10);
+       selection.addRange(range2);
+       rangeChecker.addExpected(testNode, 8, 10);
+       rangeChecker.check(2, selection);
+
+       // Test 3. Add the same range again. This should silently succeed.
+       selection.addRange(range2);
+       rangeChecker.check(3, selection);
+
+       // Test 4. Add a range that is left-adjacent to an existing range.
+       var range3 = document.createRange();
+       range3.setStart(testNode, 6);
+       range3.setEnd(testNode, 8);
+       selection.addRange(range3);
+       rangeChecker.addExpected(testNode, 6, 8);
+       rangeChecker.check(4, selection);
+
+       // Test 5. Add a range that is right-adjacent to an existing range.
+       selection.removeRange(range2);
+       selection.addRange(range2);
+       rangeChecker.check(5, selection);
+
+       // Test 6. Add a range, add a second range that overlaps it.
+       rangeChecker.reset();
+       selection.removeAllRanges();
+       selection.addRange(range2);
+       var range4 = document.createRange();
+       range4.setStart(testNode, 9);
+       range4.setEnd(testNode, 11);
+       selection.addRange(range4);
+       rangeChecker.addExpected(testNode, 8, 9);
+       rangeChecker.addExpected(testNode, 9, 11);
+       rangeChecker.check(6, selection);
+
+       // Test 7. Add a range, and this time a left-hand overlap.
+       rangeChecker.reset();
+       selection.removeAllRanges();
+       var range5 = document.createRange();
+       range5.setStart(testNode, 5);
+       range5.setEnd(testNode, 7);
+       selection.addRange(range3);
+       selection.addRange(range5);
+       rangeChecker.addExpected(testNode, 5, 7);
+       rangeChecker.addExpected(testNode, 7, 8);
+       rangeChecker.check(7, selection);
+
+       // Test 8. Add a range, and add a second range wholly contained
+       // within it.
+       rangeChecker.reset();
+       selection.removeAllRanges();
+       var range6 = document.createRange();
+       range6.setStart(testNode, 0);
+       range6.setEnd(testNode, 10);
+       selection.addRange(range6);
+       selection.addRange(range5);
+       rangeChecker.addExpected(testNode, 0, 5);
+       rangeChecker.addExpected(testNode, 5, 7);
+       rangeChecker.addExpected(testNode, 7, 10);
+       rangeChecker.check(8, selection);
+
+       // Test 9. Add a range that will wholly contain some existing ranges.
+       rangeChecker.reset();
+       selection.addRange(range6);
+       rangeChecker.addExpected(testNode, 0, 10);
+       rangeChecker.check(9, selection);
+
+       // Test 10. This time with the last range being a partial overlap.
+       selection.removeAllRanges();
+       selection.addRange(range1);
+       selection.addRange(range3);
+       selection.addRange(range4);
+       selection.addRange(range6);
+       rangeChecker.addExpected(testNode, 10, 11);
+       rangeChecker.check(10, selection);
+
+       // Test 11. Check we can add a collapsed range without problem.
+       selection.removeAllRanges();
+       rangeChecker.reset();
+       range1.collapse(true);
+       selection.addRange(range1);
+       rangeChecker.addExpected(testNode, 0, 0);
+       rangeChecker.check(11, selection);
+
+       // Test 12. Check we can add a collapsed range twice without a problem.
+       // Part 1 - No other ranges present.
+       selection.addRange(range1);
+       rangeChecker.check(12, selection);
+
+       // Test 13. Check we can add a collapsed range twice without problem.
+       // Part 2 - Collapsed range is before all existing ranges.
+       selection.removeAllRanges();
+       rangeChecker.reset();
+       selection.addRange(range2);
+       selection.addRange(range1);
+       selection.addRange(range1);
+       rangeChecker.addExpected(testNode, 0, 0);
+       rangeChecker.addExpected(testNode, 8, 10);
+       rangeChecker.check(13, selection);
+
+       // Test 14. Check we can add a collapsed range twice without problem.
+       // Part 3 - Collapsed range is after all existing ranges.
+       selection.removeAllRanges();
+       rangeChecker.reset();
+       selection.addRange(range3);
+       range4.collapse(false);
+       selection.addRange(range3);
+       selection.addRange(range4);
+       rangeChecker.addExpected(testNode, 6, 8);
+       rangeChecker.addExpected(testNode, 11, 11);
+       rangeChecker.check(14, selection);
+
+       // Test 15. Check that when adding a range where after overlap
+       // adjustment an exisiting range would collapse that the collapsed range
+       // is removed - part 1 (LHS).
+       selection.removeAllRanges();
+       rangeChecker.reset();
+       selection.addRange(range2);
+       var range7 = document.createRange();
+       range7.setStart(testNode, 6);
+       range7.setEnd(testNode, 10);
+       selection.addRange(range7);
+       rangeChecker.addExpected(testNode, 6, 10);
+       rangeChecker.check(15, selection);
+
+       // Test 16. Check that when adding a range where after overlap
+       // adjustment an exisiting range would collapse that the collapsed range
+       // is removed - part 2 (RHS).
+       selection.removeAllRanges();
+       selection.addRange(range3);
+       selection.addRange(range7);
+       rangeChecker.check(16, selection);
+
+       // Test 17. Check GetRangesForInterval returns correct results.
+       // Part 1 - Test interval matches a range, adjacency not allowed.
+       selection.removeAllRanges();
+       selection.addRange(range2);
+       selection.addRange(range3);
+       var range8 = document.createRange();
+       range8.setStart(testNode, 10);
+       range8.setEnd(testNode, 12);
+       selection.addRange(range8);
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 8, 10);
+       var privSel = SpecialPowers.wrap(selection);
+       var results = privSel.GetRangesForInterval(testNode, 8, testNode, 10,
+                                                  false);
+       intervalChecker.check(17, results);
+
+       // Test 18. Check GetRangesForInterval returns correct results.
+       // Part 2 - Test interval matches a range, adjacent ranges allowed.
+       intervalChecker.addExpected(testNode, 6, 8);
+       intervalChecker.addExpected(testNode, 10, 12);
+       results = privSel.GetRangesForInterval(testNode, 8, testNode, 10,
+                                              true);
+       intervalChecker.check(18, results);
+
+       // Test 19. Check GetRangesForInterval returns correct results.
+       // Part 3 - Test interval not selected.
+       intervalChecker.reset();
+       results = privSel.GetRangesForInterval(testNode, 14, testNode, 16,
+                                              true);
+       intervalChecker.check(19, results);
+
+       // Test 20. Check GetRangesForInterval returns correct results.
+       // Part 4 - Test interval is not equal to, and entirely contained in
+       //          an existing range.
+       selection.removeAllRanges();
+       selection.addRange(range6);
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 0, 10);
+       results = privSel.GetRangesForInterval(testNode, 5, testNode, 7,
+                                              true);
+       intervalChecker.check(20, results);
+
+       // Test 21. Check GetRangesForInterval returns correct results.
+       // Part 5 - Test interval is not equal to, and entirely contains an
+       //          existing range.
+       selection.removeAllRanges();
+       selection.addRange(range3);
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 6, 8);
+       results = privSel.GetRangesForInterval(testNode, 5, testNode, 9,
+                                              true);
+       intervalChecker.check(21, results);
+
+       // Test 22. Check GetRangesForInterval returns correct results.
+       // Part 6 - Test interval is end-adjacent to range at position 0 in
+       //          the range array, and adjacencies permitted.
+       selection.removeAllRanges();
+       selection.addRange(range2);
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 8, 10);
+       results = privSel.GetRangesForInterval(testNode, 6, testNode, 8,
+                                              true);
+       intervalChecker.check(22, results);
+
+       // Test 23. Check GetRangesForInterval returns correct results.
+       // Part 7 - Test interval is end-adjacent to range at position 0 in
+       //          the range array, and adjacencies not permitted.
+       intervalChecker.reset();
+       results = privSel.GetRangesForInterval(testNode, 6, testNode, 8,
+                                              false);
+       intervalChecker.check(23, results);
+
+       // Test 24. Check GetRangesForInterval returns correct results.
+       // Part 8 - Test interval is start-adjacent to last range in array,
+       //          and adjacencies permitted.
+       intervalChecker.addExpected(testNode, 8, 10);
+       results = privSel.GetRangesForInterval(testNode, 10, testNode, 12,
+                                              true);
+       intervalChecker.check(24, results);
+
+       // Test 25. Check GetRangesForInterval returns correct results.
+       // Part 9 - Test interval is start-adjacent to last range in array,
+       //          and adjacencies not permitted.
+       intervalChecker.reset();
+       results = privSel.GetRangesForInterval(testNode, 10, testNode, 12,
+                                              false);
+       intervalChecker.check(25, results);
+
+       // Test 26.  Check GetRangesForInterval returns correct results.
+       // Part 10 - Test interval is equal to a collapsed range at position 0
+       //           in the range array, and adjacencies permitted.
+       selection.removeAllRanges();
+       selection.addRange(range4);
+       intervalChecker.addExpected(testNode, 11, 11);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              true);
+       intervalChecker.check(26, results);
+
+       // Test 27.  Check GetRangesForInterval returns correct results.
+       // Part 11 - Test interval is equal to a collapsed range at position 0
+       //           in the range array, and adjacencies not permitted.
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              false);
+       intervalChecker.check(27, results);
+
+       // Test 28.  Check GetRangesForInterval returns correct results.
+       // Part 12 - Test interval is equal to a collapsed range at end of the
+       //           range array, and adjacencies permitted.
+       selection.removeAllRanges();
+       selection.addRange(range2);
+       selection.addRange(range4);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              true);
+       intervalChecker.check(28, results);
+
+       // Test 29.  Check GetRangesForInterval returns correct results.
+       // Part 13 - Test interval is equal to a collapsed range at end of the
+       //           range array, and adjacencies not permitted.
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              false);
+       intervalChecker.check(29, results);
+
+       // Test 30.  Check GetRangesForInterval returns correct results.
+       // Part 14 - Test interval is a collapsed range contained in an
+       //           existing range.
+       selection.removeAllRanges();
+       selection.addRange(range3);
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 6, 8);
+       results = privSel.GetRangesForInterval(testNode, 7, testNode, 7,
+                                              true);
+       intervalChecker.check(30, results);
+
+       // Test 31.  Check GetRangesForInterval returns correct results.
+       // Part 15 - Test interval equals a collapsed range which is not stored
+       //           at either endpoint of the selection's range array,
+       //           adjacencies not allowed.
+       selection.removeAllRanges();
+       range3.collapse(false);
+       selection.addRange(range5);
+       selection.addRange(range3);
+       selection.addRange(range8);
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 8, 8);
+       results = privSel.GetRangesForInterval(testNode, 8, testNode, 8,
+                                              false);
+       intervalChecker.check(31, results);
+
+       // Test 32.  Check GetRangesForInterval returns correct results.
+       // Part 16 - Test interval equals a collapsed range which is not stored
+       //           at either endpoint of the selection's range array,
+       //           adjacencies allowed.
+       results = privSel.GetRangesForInterval(testNode, 8, testNode, 8,
+                                              true);
+       intervalChecker.check(32, results);
+
+       // Test 33.  Check GetRangesForInterval returns correct results.
+       // Part 17 - Test interval contains a collapsed range which is not
+       //           stored at either endpoint of the selection's range array.
+       results = privSel.GetRangesForInterval(testNode, 7, testNode, 9,
+                                              false);
+       intervalChecker.check(33, results);
+
+       // Test 34.  Check GetRangesForInterval returns correct results.
+       // Part 18 - Test interval left-ovelaps an existing range.
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 5, 7);
+       results = privSel.GetRangesForInterval(testNode, 2, testNode, 6,
+                                              true);
+       intervalChecker.check(34, results);
+
+       // Test 35.  Check GetRangesForInterval returns correct results.
+       // Part 19 - Test interval right-ovelaps an existing range.
+       selection.removeAllRanges();
+       selection.addRange(range8);
+       intervalChecker.reset();
+       intervalChecker.addExpected(testNode, 10, 12);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 13,
+                                              true);
+       intervalChecker.check(35, results);
+
+       SimpleTest.finish();
+     }
+   </script>
+  </pre>
+
+  <p id="testparagraph">
+This will be the first child of the p node above. The intention is that it is a suitably long text node to which we can add multiple ranges in order to test the various aspects of the bug.
+</p>
+</body>
+</html>

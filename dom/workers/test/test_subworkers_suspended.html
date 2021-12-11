@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for sub workers+bfcache behavior</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+  /**
+   * - main page opens testUrl1
+   * - testUrl1 ---"onpageshow"---> to main page
+   * - main page ---"startWorker"---> testUrl1
+   * - testUrl1 starts workers, also ---"verifyCacheData"---> main page
+   * - main page ---"changeLocation"---> testUrl1
+   * - testUrl1 navigated to testUrl2
+   * - testUrl2 ---"onpageshow"---> to main page
+   * - main page ---"startWorker"---> testUrl2
+   * - testUrl2 starts workers, also ---"verifyCacheData"---> main page
+   * - main page ---"goBack"---> testUrl2
+   * - testUrl2 navigates back to testUrl1
+   * - testUrl1 ---"onpageshow"---> to main page
+   * - main page checks cache data and ---"finish"---> testUrl2
+   * - testUrl1 ---"finished"---> to main page
+   */
+  var testUrl1 = "window_suspended.html?page1Shown";
+  var counter = 0;
+  const SUB_WORKERS = 3;
+
+  function cacheData() {
+    return caches.open("test")
+           .then(function(cache) {
+             return cache.match("http://mochi.test:888/foo");
+           })
+           .then(function(response) {
+             return response.text();
+           });
+  }
+
+  var bc1 = new BroadcastChannel("page1Shown");
+  bc1.onmessage = async (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    info(`Main page, received command=${command}`);
+    if (command == "onpageshow") {
+      info("Page1Shown: " + msg.location);
+      // First time this page is shown.
+      if (counter == 0) {
+        ok(!msg.persisted, "test page should have been persisted initially");
+        var workerMessage = { type: "page1", count: SUB_WORKERS };
+        bc1.postMessage({command: "startWorker", workerMessage});
+      } else {
+        is(msg.persisted, true, "test page should have been persisted in pageshow");
+        var promise = new Promise((resolve, reject) => {
+          info("Waiting a few seconds...");
+          setTimeout(resolve, 10000);
+        });
+
+        promise.then(function() {
+          info("Retrieving data from cache...");
+          return cacheData();
+        })
+
+        .then(function(content) {
+          is(content.indexOf("page1-"), 0, "We have data from the worker");
+        })
+        .then(function() {
+          bc1.postMessage({command: "finish"});
+        });
+      }
+      counter++;
+    } else if (command == "workerMessage") {
+      is(msg.workerMessage, "ready", "We want to receive: -ready-");
+    } else if (command == "verifyCacheData") {
+      var content = await cacheData();
+      is(content.indexOf("page1-"), 0, "We have data from the worker");
+      bc1.postMessage({command: "changeLocation"});
+    } else if (command == "finished") {
+      bc1.close();
+      bc2.close();
+      SimpleTest.finish();
+    }
+  }
+  var bc2 = new BroadcastChannel("page2Shown");
+  bc2.onmessage = async (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "onpageshow") {
+      info("Page1Shown: " + msg.location);
+      var workerMessage = { type: "page2" };
+      bc2.postMessage({command: "startWorker", workerMessage});
+    } else if (command == "workerMessage") {
+      is(msg.workerMessage, "ready", "We want to receive: -ready-");
+    } else if (command == "verifyCacheData") {
+      var content = await cacheData();
+      is(content, "page2-0", "We have data from the second worker");
+      bc2.postMessage({command: "goBack"});
+    }
+  }
+
+  SpecialPowers.pushPrefEnv({ set: [
+    ["dom.caches.enabled", true],
+    ["dom.caches.testing.enabled", true],
+    // If Fission is disabled, the pref is no-op.
+    ["fission.bfcacheInParent", true],
+  ] },
+  function() {
+    window.open(testUrl1, "", "noopener");
+  });
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+
+  </script>
+</body>
+</html>

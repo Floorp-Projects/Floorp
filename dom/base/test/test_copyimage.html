@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=518249
+https://bugzilla.mozilla.org/show_bug.cgi?id=952456
+-->
+<head>
+  <title>Test for copy image</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=518249">Mozilla Bug 518249</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=952456">Mozilla Bug 952456</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testCopyImage () {
+  var Ci = SpecialPowers.Ci;
+  var Cc = SpecialPowers.Cc;
+  var clipboard = SpecialPowers.Services.clipboard;
+
+  function getClipboardData(mime) {
+    var transferable = Cc['@mozilla.org/widget/transferable;1']
+                       .createInstance(Ci.nsITransferable);
+    var loadingContext = SpecialPowers.wrap(window).docShell
+                                      .QueryInterface(Ci.nsILoadContext);
+    transferable.init(loadingContext);
+    transferable.addDataFlavor(mime);
+    clipboard.getData(transferable, 1);
+    var data = SpecialPowers.createBlankObject();
+    transferable.getTransferData(mime, data);
+    return data;
+  }
+
+  function testClipboardValue(mime, expected) {
+    var data = SpecialPowers.wrap(getClipboardData(mime));
+    var str = data.value == null ? data.value :
+              data.value.QueryInterface(Ci.nsISupportsString).data;
+    is(str, expected, "clipboard has correct [" + mime + "] content")
+  }
+
+  //--------- Prepare data and copy it.
+
+  // Select the node.
+  var node = document.getElementById('logo');
+
+  // Set node and copy image.
+  var docShell = SpecialPowers.wrap(window).docShell;
+  var documentViewer = docShell.contentViewer
+                               .QueryInterface(Ci.nsIContentViewerEdit);
+  documentViewer.setCommandNode(node);
+  documentViewer.copyImage(documentViewer.COPY_IMAGE_ALL);
+
+  //--------- Let's check the content of the clipboard now.
+
+  // Does the clipboard contain text/unicode data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard), "clipboard contains unicode text");
+  // Does the clipboard contain text/html data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard), "clipboard contains html text");
+  // Does the clipboard contain image data ?
+  ok(clipboard.hasDataMatchingFlavors(["image/png"], clipboard.kGlobalClipboard), "clipboard contains image");
+
+  // Is the text/uncodie data correct ?
+  testClipboardValue('text/unicode', 'about:logo');
+  // Is the text/html data correct ?
+  var expected = '<img id="logo" src="about:logo">';
+  if (navigator.platform.includes("Win")) {
+    expected = kTextHtmlPrefixClipboardDataWindows + expected + kTextHtmlSuffixClipboardDataWindows;
+  }
+  testClipboardValue('text/html', expected);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["clipboard.plainTextOnly", false]]}, testCopyImage);
+});
+
+</script>
+</pre>
+<div>
+  <img id="logo" src="about:logo">
+</div>
+</body>
+</html>

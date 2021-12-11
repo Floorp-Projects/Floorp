@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/content/downloads/contentAreaDownloadsView.css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/contentAreaDownloadsView.css"?>
+<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/allDownloadsView.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuDTD;
+]>
+
+<!-- @CSP: We have to whitelist the 'oncommand' handler for all the cmd_* fields within
+   - editMenuOverlay.js until Bug 371900 is fixed using
+   -    sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==
+   -->
+<window id="contentAreaDownloadsView"
+        data-l10n-id="downloads-window"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        csp="default-src chrome:; script-src chrome: 'sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA=='; img-src chrome: moz-icon:; object-src 'none'">
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/downloads.ftl" />
+  </linkset>
+
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/downloads/contentAreaDownloadsView.js"/>
+  <script src="chrome://browser/content/downloads/allDownloadsView.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+#include ../../../../toolkit/content/editMenuKeys.inc.xhtml
+#ifdef XP_MACOSX
+  <keyset id="editMenuKeysExtra">
+    <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
+  </keyset>
+#endif
+
+  <richlistbox flex="1"
+               seltype="multiple"
+               id="downloadsRichListBox"
+               context="downloadsContextMenu"/>
+  <description id="downloadsListEmptyDescription"
+               data-l10n-id="downloads-list-empty"/>
+#include downloadsCommands.inc.xhtml
+#include downloadsContextMenu.inc.xhtml
+</window>

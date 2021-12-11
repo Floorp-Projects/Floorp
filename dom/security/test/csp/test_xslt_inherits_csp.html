@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1597645: Make sure XSLT inherits the CSP r=ckerschb</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<body>
+    <iframe src="file_xslt_inherits_csp.xml"></iframe>
+
+<script class="testbody">
+    SimpleTest.requestCompleteLog();
+    SimpleTest.waitForExplicitFinish();
+
+    let frame = document.querySelector("iframe");
+
+    window.addEventListener("load",()=>{
+    let link = frame.contentWindow.document.querySelector("a");
+    link.click(); //
+
+        requestAnimationFrame(()=>{
+            // Wait one Frame to let the browser catch up
+            // before checking the dom.
+            let res = !frame.contentWindow.document.body.innerText.includes("JS DID EXCECUTE");
+            ok(res, "The CSP did block injected JS ");
+            SimpleTest.finish();
+        });
+    })
+</script>
+</html>

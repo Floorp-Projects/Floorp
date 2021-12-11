@@ -1,0 +1,62 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Memory")
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
+EXPORTS.mozilla.devtools += [
+    "AutoMemMap.h",
+    "CoreDump.pb.h",
+    "DeserializedNode.h",
+    "DominatorTree.h",
+    "FileDescriptorOutputStream.h",
+    "HeapSnapshot.h",
+    "HeapSnapshotTempFileHelperChild.h",
+    "HeapSnapshotTempFileHelperParent.h",
+    "ZeroCopyNSIOutputStream.h",
+]
+
+IPDL_SOURCES += [
+    "PHeapSnapshotTempFileHelper.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+SOURCES += [
+    "AutoMemMap.cpp",
+    "CoreDump.pb.cc",
+    "DeserializedNode.cpp",
+    "DominatorTree.cpp",
+    "FileDescriptorOutputStream.cpp",
+    "HeapSnapshot.cpp",
+    "HeapSnapshotTempFileHelperParent.cpp",
+    "ZeroCopyNSIOutputStream.cpp",
+]
+
+# Disable RTTI in google protocol buffer
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+
+FINAL_LIBRARY = "xul"
+
+DevToolsModules(
+    "census-tree-node.js",
+    "CensusUtils.js",
+    "DominatorTreeNode.js",
+    "HeapAnalysesClient.js",
+    "HeapAnalysesWorker.js",
+    "HeapSnapshotFileUtils.js",
+    "shortest-paths.js",
+)
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Element;
+
+/**
+ * Platform-independent interface to platform native menu objects.
+ */
+
+[scriptable, uuid(7F7201EB-510C-4CEF-BDF0-04A15A7A4A8C)]
+interface nsIStandaloneNativeMenu : nsISupports
+{
+  /**
+   * Initialize the native menu using given XUL DOM element.
+   *
+   * @param aDOMElement A XUL DOM element of tag type |menu| or |menupopup|.
+   */
+  void init(in Element aElement);
+
+  /**
+   * This method must be called before the menu is opened and displayed to the
+   * user. It allows the platform code to update the menu and also determine
+   * whether the menu should even be shown.
+   *
+   * @return true if the menu can be shown, false if it should not be shown
+   */
+  boolean menuWillOpen();
+
+  /**
+   * Activate the native menu item specified by |anIndexString|. This method
+   * is intended to be used by the test suite.
+   *
+   * @param anIndexString string containing a list of indices separated by
+   *        pipe ('|') characters
+   */
+  void activateNativeMenuItemAt(in AString anIndexString);
+
+  /**
+   * Force an update of the native menu item specified by |anIndexString|. This
+   * method is intended to be used by the test suite.
+   *
+   * @param anIndexString string containing a list of indices separated by
+   *        pipe ('|') characters
+   */
+  void forceUpdateNativeMenuAt(in AString anIndexString);
+
+  /**
+   * Print information about the menu structure to stdout. Only used for
+   * debugging.
+   */
+  void dump();
+};

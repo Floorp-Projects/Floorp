@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: fallback to three ASCII periods when ellipsis is unavailable in the font
+-->
+<html><head>
+    <title>text-overflow: ellipsis fallback</title>
+    <style type="text/css">
+@font-face {
+  /* This font has glyphs for ASCII period, upper-case X and space. */
+  font-family: TestEllipsisFallback;
+  src: url(TestEllipsisFallback.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family: TestEllipsisFallback;
+}
+
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+
+m {
+  color:blue;
+}
+.o span {
+  color:black;
+}
+
+.s {
+  width:10em;
+}
+.s2 {
+  width:10em;
+}
+.s3 {
+  width:6em;
+}
+.s4 {
+  width:8em;
+}
+.s5 {
+  width:5em;
+}
+.s6 {
+  width:1em;
+}
+.s7 {
+  width:6em;
+}
+.p {
+  overflow: hidden;
+  white-space:nowrap;
+}
+.r {
+  text-align:right;
+}
+
+.c {
+  margin-left:-0.5em;
+  margin-right:-0.5em;
+}
+
+
+#test1a  { top:0em;     left:0; position:absolute; }
+#test1b  { top:2em;     left:0; position:absolute; }
+#test1c  { top:4em;     left:0; position:absolute; }
+#test1d  { top:6em;     left:0; position:absolute; }
+
+#test2a  { top:0em;     left:15em; position:absolute; }
+#test2b  { top:2em;     left:15em; position:absolute; }
+#test2c  { top:4em;     left:15em; position:absolute; }
+#test2d  { top:6em;     left:15em; position:absolute; }
+
+#test3a  { top: 8em;     left:0; position:absolute; }
+#test3b  { top:10em;     left:0; position:absolute; }
+#test3c  { top:12em;     left:0; position:absolute; }
+#test3d  { top:14em;     left:0; position:absolute; }
+
+#test4a  { top: 8em;     left:15em; position:absolute; }
+#test4b  { top:10em;     left:15em; position:absolute; }
+#test4c  { top:12em;     left:15em; position:absolute; }
+#test4d  { top:14em;     left:15em; position:absolute; }
+
+#test5a  { top:16em;     left:0; position:absolute; }
+#test5b  { top:18em;     left:0; position:absolute; }
+#test5c  { top:20em;     left:0; position:absolute; }
+#test5d  { top:22em;     left:0; position:absolute; }
+
+#test6a  { top:16em;     left:15em; position:absolute; }
+#test6b  { top:18em;     left:15em; position:absolute; }
+#test6c  { top:20em;     left:15em; position:absolute; }
+#test6d  { top:22em;     left:15em; position:absolute; }
+
+#test7a  { top:24em;     left:0; position:absolute; }
+#test7b  { top:26em;     left:0; position:absolute; }
+#test7c  { top:28em;     left:0; position:absolute; }
+#test7d  { top:30em;     left:0; position:absolute; }
+
+
+    </style>
+</head>
+<body>
+<div style="position: absolute; top:20px; left:50px;">
+
+<!-- start + end marker -->
+<div id="test1a"><div class="s ltr"><div class="p o"><span class="c lro">&nbsp;<m>...</m>X<m>...</m>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div></div></div>
+<div id="test1b"><div class="s rtl"><div class="p o"><span class="c lro">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<m>...</m>X<m>...</m>&nbsp;</span></div></div></div>
+<div id="test1c"><div class="s ltr"><div class="p o"><span class="c rlo">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<m>...</m>X<m>...</m>&nbsp;</span></div></div></div>
+<div id="test1d"><div class="s rtl"><div class="p o"><span class="c rlo">&nbsp;<m>...</m>X<m>...</m>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div></div></div>
+
+<!-- end marker -->
+<div id="test2a"><div class="s2 ltr"><div class="p o"><span class="lro">XXXXX<m>...</m>&nbsp;</span></div></div></div>
+<div id="test2b"><div class="s2 rtl"><div class="p o"><span class="lro">&nbsp;<m>...</m>XXXXX</span></div></div></div>
+<div id="test2c"><div class="s2 ltr"><div class="p o"><span class="rlo">&nbsp;<m>...</m>XXXXX</span></div></div></div>
+<div id="test2d"><div class="s2 rtl"><div class="p o"><span class="rlo">XXXXX<m>...</m>&nbsp;</span></div></div></div>
+
+<!-- start marker -->
+<div id="test3a"><div class="s3 ltr"><div class="p o"><span class="c lro">&nbsp;X<m>...</m></span></div></div></div>
+<div id="test3b"><div class="s3 rtl"><div class="p o"><span class="c lro"><m>...</m>X&nbsp;</span></div></div></div>
+<div id="test3c"><div class="s3 ltr"><div class="p o"><span class="c rlo"><m>...</m>X&nbsp;</span></div></div></div>
+<div id="test3d"><div class="s3 rtl"><div class="p o"><span class="c rlo">&nbsp;X<m>...</m></span></div></div></div>
+
+<!-- start + end marker, no characters fit, marker is clipped -->
+<div id="test6a"><div class="s6 ltr"><div class="p o"><span class="c lro">XXXXXXXXXXXX</span></div></div></div>
+<div id="test6b"><div class="s6 rtl"><div class="p o"><span class="c lro">XXXXXXXXXXXX</span></div></div></div>
+<div id="test6c"><div class="s6 ltr"><div class="p o"><span class="c rlo">XXXXXXXXXXXX</span></div></div></div>
+<div id="test6d"><div class="s6 rtl"><div class="p o"><span class="c rlo">XXXXXXXXXXXX</span></div></div></div>
+
+<!-- start marker, all characters overlapped by marker -->
+<div id="test7a"><div class="s7 ltr"><div class="p o"><span class="c lro">XXX</span></div></div></div>
+<div id="test7b"><div class="s7 rtl"><div class="p o"><span class="c lro">XXX</span></div></div></div>
+<div id="test7c"><div class="s7 ltr"><div class="p o"><span class="c rlo">XXX</span></div></div></div>
+<div id="test7d"><div class="s7 rtl"><div class="p o"><span class="c rlo">XXX</span></div></div></div>
+
+</div>
+
+</body>
+</html>

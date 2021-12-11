@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=522632
+-->
+<head>
+  <title>Test for Bug 522632</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=522632">Mozilla Bug 522632</a>
+<p id="display"></p>
+<div id="content">
+  <table border="1">
+    <tr>
+      <td style="height: 200px; padding: 0; margin: 0; border: none">
+        <div style="height: 0; min-height: 50%" id="foo"></div>
+      </td>
+    <tr>
+  </table>  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 522632 **/
+is(document.defaultView.getComputedStyle($("foo")).height, "100px",
+   "Unexpected computed height");
+</script>
+</pre>
+</body>
+</html>

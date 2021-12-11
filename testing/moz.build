@@ -1,0 +1,17 @@
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("*cppunittest*"):
+    BUG_COMPONENT = ("Testing", "CPPUnitTest")
+    SCHEDULES.exclusive = ["cppunittest"]
+
+with Files("remote*"):
+    BUG_COMPONENT = ("GeckoView", "General")
+
+SPHINX_TREES["/testing"] = "docs"
+
+DIRS += ["mozbase"]
+
+PERFTESTS_MANIFESTS += [
+    "performance/perftest.ini",
+]

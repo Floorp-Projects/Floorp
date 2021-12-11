@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var x = new XMLHttpRequest();
+  x.open('GET', "data:text/plain,2", false);
+  x.send();
+
+  new Worker("data:text/javascript,3");
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,23 @@
+# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This file lists symbols that should not be stripped by Xcode from the binaries
+# built for Mac OS X using AddressSanitizer
+# (http://dev.chromium.org/developers/testing/addresssanitizer).
+
+___asan_init
+___asan_handle_no_return
+___asan_register_global
+___asan_register_globals
+___asan_unregister_globals
+___asan_report_load1
+___asan_report_load2
+___asan_report_load4
+___asan_report_load8
+___asan_report_load16
+___asan_report_store1
+___asan_report_store2
+___asan_report_store4
+___asan_report_store8
+___asan_report_store16

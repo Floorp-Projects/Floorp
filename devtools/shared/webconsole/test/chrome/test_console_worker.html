@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the Console API and Workers</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the Console API and Workers</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const expectedCachedConsoleCalls = [{
+  message:{
+    level: "log",
+    filename: /console-test-worker/,
+    arguments: ['Log from worker init'],
+  }
+}];
+
+const expectedConsoleAPICalls = [{
+  message: {
+    level: "log",
+    arguments: ['Log was requested from worker'],
+  }
+}];
+
+window.onload = async function () {
+  const {state} = await attachConsoleToWorker(["ConsoleAPI"]);
+
+  await testCachedMessages(state);
+  await testConsoleAPI(state);
+
+  closeDebugger(state, function() {
+    SimpleTest.finish();
+  });
+};
+
+const testCachedMessages = async function (state) {
+  info("testCachedMessages entered");
+  return new Promise(resolve => {
+    const onCachedConsoleAPI = (response) => {
+      const consoleCalls = response.messages;
+
+      info('Received cached response. Checking console calls.');
+      checkConsoleAPICalls(consoleCalls, expectedCachedConsoleCalls);
+      resolve();
+    };
+    state.webConsoleFront.getCachedMessages(["ConsoleAPI"]).then(onCachedConsoleAPI);
+  })
+};
+
+const testConsoleAPI = async function (state) {
+  info("testConsoleAPI: adding listener for consoleAPICall");
+  const onConsoleApiMessage = state.webConsoleFront.once("consoleAPICall");
+  state._worker_ref.postMessage({
+    type: "log",
+    message: "Log was requested from worker"
+  });
+  const packet = await onConsoleApiMessage;
+  info("received message level: " + packet.message.level);
+  checkConsoleAPICalls([packet], expectedConsoleAPICalls);
+};
+
+</script>
+</body>
+</html>

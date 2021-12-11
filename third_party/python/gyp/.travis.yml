@@ -1,0 +1,23 @@
+language: cpp
+matrix:
+  include:
+    - os: linux
+      compiler: clang
+    - os: osx
+      compiler: clang
+    - python: 2.7
+      language: python
+      before_install: pip install flake8
+      script: flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+    - python: 3.7
+      language: python
+      before_install: pip install flake8
+      script: flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+      dist: xenial # required for Python >= 3.7 (travis-ci/travis-ci#9069)
+
+before_install: ./buildbot/travis-checkout.sh
+script: ./buildbot/travis-test.sh
+
+branches:
+  only:
+  - master

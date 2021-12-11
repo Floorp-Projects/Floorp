@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Test that "MozDOMFullscreen:*" events are dispatched to chrome on documents that use DOM fullscreen.
+
+  Test Description:
+  
+  This chrome window has a browser. The browser's contentDocument (the "outer document")
+  in turn has an iframe (the "inner document").
+  
+  We request fullscreen in the outer document, and check that MozDOMFullscreen:Entered and
+  MozDOMFullscreen:NewOrigin are dispatched to chrome, targeted at the outer document.
+  
+  Then we request fullscreen in the inner document, and check that MozDOMFullscreen:NewOrigin
+  is dispatched to chrome, targeted at the inner document.
+  
+  Then we cancel fullscreen in the inner document, and check that MozDOMFullscreen:NewOrigin is
+  dispatched again to chrome, targeted at the outer document.
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="start();">
+
+<script src="chrome://mochikit/content/chrome-harness.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+<script type="application/javascript"><![CDATA[
+
+function ok(condition, msg) {
+  window.arguments[0].ok(condition, msg);
+}
+
+function is(a, b, msg) {
+  window.arguments[0].is(a, b, msg);
+}
+
+var gBrowser = null;
+var gOuterDoc = null;
+var gInnerDoc = null;
+
+var gReceivedFullscreenEnteredEvent = false;
+var gReceivedNewOriginEvent = false;
+function firstEntry(event) {
+  if (event.type == "MozDOMFullscreen:Entered") {
+    window.removeEventListener("MozDOMFullscreen:Entered", firstEntry, false);
+    ok(!gReceivedFullscreenEnteredEvent, "MozDOMFullscreen:Entered shouldn't have been triggered twice");
+    is(event.target, gOuterDoc.body, "First MozDOMFullscreen:Entered should be targeted at outer body");
+    gReceivedFullscreenEnteredEvent = true;
+  } else if (event.type == "MozDOMFullscreen:NewOrigin") {
+    window.removeEventListener("MozDOMFullscreen:NewOrigin", firstEntry, false);
+    ok(!gReceivedNewOriginEvent, "MozDOMFullscreen:NewOrigin shouldn't have been triggered twice");
+    is(event.target, gOuterDoc, "First MozDOMFullscreen:NewOrigin should be targeted at outer doc");
+    gReceivedNewOriginEvent = true;
+  } else {
+    ok(false, "Unknown event received");
+  }
+  if (!gReceivedFullscreenEnteredEvent || !gReceivedNewOriginEvent) {
+    return;
+  }
+
+  ok(gOuterDoc.fullscreenElement != null, "Outer doc should be in fullscreen");
+  gInnerDoc = gOuterDoc.getElementById("innerFrame").contentDocument;
+  window.addEventListener("MozDOMFullscreen:NewOrigin", secondEntry, false);
+  gInnerDoc.defaultView.focus();
+  gInnerDoc.body.requestFullscreen();
+}
+
+function secondEntry(event) {
+  is(event.target, gInnerDoc, "Second MozDOMFullscreen:NewOrigin should be targeted at inner doc");
+  ok(gInnerDoc.fullscreenElement != null, "Inner doc should be in fullscreen");
+  window.removeEventListener("MozDOMFullscreen:NewOrigin", secondEntry, false);
+  window.addEventListener("MozDOMFullscreen:NewOrigin", thirdEntry, false);
+  gInnerDoc.exitFullscreen();
+}
+
+function thirdEntry(event) {
+  is(event.target, gOuterDoc, "Third MozDOMFullscreen:NewOrigin should be targeted at outer doc");
+  ok(gOuterDoc.fullscreenElement != null, "Outer doc return to fullscreen after cancel fullscreen in inner doc");
+  window.removeEventListener("MozDOMFullscreen:NewOrigin", thirdEntry, false);
+  window.removeEventListener("MozDOMFullscreen:Exited", earlyExit, false);
+  window.addEventListener("MozDOMFullscreen:Exited", lastExit, false);
+  gOuterDoc.exitFullscreen();
+}
+
+function earlyExit(event) {
+  ok(false, "MozDOMFullscreen:Exited should only be triggered after cancel all fullscreen");
+}
+
+function lastExit(event) {
+  is(event.target, gOuterDoc, "MozDOMFullscreen:Exited should be targeted at the last exited doc");
+  ok(gOuterDoc.fullscreenElement == null, "Fullscreen should have been fully exited");
+  window.arguments[0].done();
+}
+
+function start() {
+  SimpleTest.waitForFocus(
+    function() {
+      gBrowser = document.getElementById("browser");
+      gOuterDoc = gBrowser.contentDocument;
+      gBrowser.contentWindow.focus();
+      window.addEventListener("MozDOMFullscreen:Entered", firstEntry, false);
+      window.addEventListener("MozDOMFullscreen:NewOrigin", firstEntry, false);
+      gOuterDoc.body.requestFullscreen();
+    });
+}
+
+]]>
+</script>
+<browser type="content" id="browser" width="400" height="400" src="file_MozDomFullscreen.html"/>
+
+</window>

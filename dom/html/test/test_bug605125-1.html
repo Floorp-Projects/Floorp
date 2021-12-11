@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=605125
+-->
+<head>
+  <title>Test for Bug 605125</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=605125">Mozilla Bug 605125</a>
+<p id="display"></p>
+<div id="content">
+  <form id='f1'>
+    <textarea></textarea>
+    <input>
+    <button type='submit'></button>
+    <select></select>
+  </form>
+
+  <table>
+    <form id='f2'>
+    <tr>
+      <textarea></textarea>
+      <input>
+      <button type='submit'></button>
+      <select></select>
+    </tr>
+    </form>
+  </table>
+  <input form='f1' required>
+  <input form='f2' required>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 605125 **/
+
+/**
+ * NOTE: this test is very similar to 605124-1.html.
+ */
+
+function checkPseudoClass(aElement, aExpected)
+{
+  is(aElement.matches(":-moz-ui-valid"), aExpected,
+     "matches(':-moz-ui-valid') should return " + aExpected + " for " + aElement);
+}
+
+var os = SpecialPowers.Cc['@mozilla.org/observer-service;1']
+                      .getService(SpecialPowers.Ci.nsIObserverService);
+var observers = os.enumerateObservers("invalidformsubmit");
+
+if (observers.hasMoreElements()) {
+  var content = document.getElementById('content');
+  var textarea = document.getElementsByTagName('textarea')[0];
+  var input = document.getElementsByTagName('input')[0];
+  var button = document.getElementsByTagName('button')[0];
+  var select = document.getElementsByTagName('select')[0];
+  var form = document.forms[0];
+
+  checkPseudoClass(textarea, false);
+  checkPseudoClass(input, false);
+  checkPseudoClass(select, false);
+
+  // Try to submit.
+  button.click();
+  checkPseudoClass(textarea, true);
+  checkPseudoClass(input, true);
+  checkPseudoClass(select, true);
+
+  // No longer in the form.
+  content.appendChild(textarea);
+  content.appendChild(input);
+  content.appendChild(select);
+  checkPseudoClass(textarea, false);
+  checkPseudoClass(input, false);
+  checkPseudoClass(select, false);
+
+  // Back in the form.
+  form.appendChild(textarea);
+  form.appendChild(input);
+  form.appendChild(select);
+  checkPseudoClass(textarea, true);
+  checkPseudoClass(input, true);
+  checkPseudoClass(select, true);
+
+  /* Case when elements get orphaned. */
+  var textarea = document.getElementsByTagName('textarea')[1];
+  var input = document.getElementsByTagName('input')[1];
+  var button = document.getElementsByTagName('button')[1];
+  var select = document.getElementsByTagName('select')[1];
+  var form = document.forms[1];
+
+  // Try to submit.
+  button.click();
+  checkPseudoClass(textarea, true);
+  checkPseudoClass(input, true);
+  checkPseudoClass(select, true);
+
+  // Remove the form.
+  document.getElementsByTagName('table')[0].removeChild(form);
+  checkPseudoClass(textarea, false);
+  checkPseudoClass(input, false);
+  checkPseudoClass(select, false);
+} else {
+  todo(false, "No 'invalidformsubmit' observers. Skip test.");
+}
+
+</script>
+</pre>
+</body>
+</html>

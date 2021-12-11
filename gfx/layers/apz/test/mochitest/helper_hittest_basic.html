@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Various tests to exercise the APZ hit-testing codepaths</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+</head>
+<body>
+ <div id="scroller" style="width: 300px; height: 300px; overflow:scroll; margin-top: 100px; margin-left: 50px">
+  <div id="contents" style="width: 500px; height: 500px; background-image: linear-gradient(blue,red)">
+   <div id="apzaware" style="position: relative; width: 100px; height: 100px; top: 300px; background-color: red" onwheel="return false;"></div>
+  </div>
+ </div>
+ <div id="make_root_scrollable" style="height: 5000px"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  var scroller = document.getElementById("scroller");
+  var apzaware = document.getElementById("apzaware");
+
+  let expectedHitInfo = APZHitResultFlags.VISIBLE;
+  if (!config.activateAllScrollFrames) {
+    expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
+  }
+  checkHitResult(hitTest(centerOf(scroller)),
+                 expectedHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(scroller)
+                                                 : utils.getViewId(document.scrollingElement)),
+                 utils.getLayersId(),
+                 "inactive scrollframe");
+
+  // The apz-aware div (which has a non-passive wheel listener) is not visible
+  // and so the hit-test should just return the root scrollframe area that's
+  // covering it
+  checkHitResult(hitTest(centerOf(apzaware)),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "inactive scrollframe - apzaware block");
+
+  // Hit test where the scroll thumbs should be.
+  hitTestScrollbar({
+    element: scroller,
+    directions: { vertical: true, horizontal: true },
+    expectedScrollId: utils.getViewId(document.scrollingElement),
+    expectedLayersId: utils.getLayersId(),
+    trackLocation: ScrollbarTrackLocation.START,
+    expectThumb: true,
+    layerState: LayerState.INACTIVE,
+  });
+
+  // activate the scrollframe but keep the main-thread scroll position at 0.
+  // also apply a async scroll offset in the y-direction such that the
+  // scrollframe scrolls to the bottom of its range.
+  utils.setDisplayPortForElement(0, 0, 500, 500, scroller, 1);
+  await promiseApzFlushedRepaints();
+  var scrollY = scroller.scrollTopMax;
+  utils.setAsyncScrollOffset(scroller, 0, scrollY);
+  // Tick the refresh driver once to make sure the compositor has applied the
+  // async scroll offset (for WebRender hit-testing we need to make sure WR has
+  // the latest info).
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+
+  var scrollerViewId = utils.getViewId(scroller);
+
+  // Now we again test the middle of the scrollframe, which is now active
+  checkHitResult(hitTest(centerOf(scroller)),
+                 APZHitResultFlags.VISIBLE,
+                 scrollerViewId,
+                 utils.getLayersId(),
+                 "active scrollframe");
+
+  // Test the apz-aware block
+  var apzawarePosition = centerOf(apzaware); // main thread position
+  apzawarePosition.y -= scrollY; // APZ position
+  checkHitResult(hitTest(apzawarePosition),
+                 APZHitResultFlags.VISIBLE |
+                 APZHitResultFlags.APZ_AWARE_LISTENERS,
+                 scrollerViewId,
+                 utils.getLayersId(),
+                 "active scrollframe - apzaware block");
+
+  // Test the scrollbars. Note that this time the vertical scrollthumb is
+  // going to be at the bottom of the track. We'll test both the top and the
+  // bottom.
+
+  // top of scrollbar track
+  hitTestScrollbar({
+    element: scroller,
+    directions: { vertical: true },
+    expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
+    trackLocation: ScrollbarTrackLocation.START,
+    expectThumb: false,
+    layerState: LayerState.ACTIVE,
+  });
+  // bottom of scrollbar track (scrollthumb)
+  hitTestScrollbar({
+    element: scroller,
+    directions: { vertical: true },
+    expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
+    trackLocation: ScrollbarTrackLocation.END,
+    expectThumb: true,
+    layerState: LayerState.ACTIVE,
+  });
+  // left part of scrollbar track (has scrollthumb)
+  hitTestScrollbar({
+    element: scroller,
+    directions: { horizontal: true },
+    expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
+    trackLocation: ScrollbarTrackLocation.START,
+    expectThumb: true,
+    layerState: LayerState.ACTIVE,
+  });
+  // right part of scrollbar track
+  hitTestScrollbar({
+    element: scroller,
+    directions: { horizontal: true },
+    expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
+    trackLocation: ScrollbarTrackLocation.END,
+    expectThumb: false,
+    layerState: LayerState.ACTIVE,
+  });
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

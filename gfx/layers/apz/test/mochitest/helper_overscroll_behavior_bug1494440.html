@@ -1,0 +1,50 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Inactive iframe with overscroll-behavior</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <iframe id="scroll" srcdoc="<!doctype html><html style='overscroll-behavior:none; overflow: auto;'><div style='width:100px;height:2000px;'>">
+  </iframe>
+  <div style="height: 5000px;"></div><!-- So the page is scrollable as well -->
+
+  <script type="application/javascript">
+
+async function test() {
+  var iframe = document.getElementById("scroll");
+  var iframeWindow = iframe.contentWindow;
+
+  // scroll the iframe to the bottom, such that a subsequent scroll on it
+  // _would_ hand off to the page if overscroll-behavior allowed it
+  iframeWindow.scrollTo(0, iframeWindow.scrollMaxY);
+  await promiseApzFlushedRepaints();
+  is(iframeWindow.scrollY, iframeWindow.scrollMaxY, "iframe has scrolled to the bottom");
+
+  // Scroll over the iframe, and make sure that the page
+  // does not scroll.
+  // We can't wait for a "scroll" event unconditionally, since if the platform
+  // behaviour we are testing is correct (overscroll-behavior is respected),
+  // one will never arrive.
+  var waitForScroll = false;
+  await promiseMoveMouseAndScrollWheelOver(iframeWindow, 100, 100, waitForScroll);
+  // However, we need to give a potential "scroll" event a chance to be dispatched,
+  // so that if the platform behaviour we are testing is incorrect (overscroll-behavior)
+  // is not respected, we catch it.
+  await promiseApzFlushedRepaints();
+  is(window.scrollY, 0, "overscroll-behavior was respected");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    #scroll {
+      width: 200px;
+      height: 500px;
+    }
+  </style>
+</body>

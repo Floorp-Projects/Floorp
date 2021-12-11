@@ -1,0 +1,354 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIOutputStream;
+
+webidl Document;
+webidl Node;
+webidl Range;
+webidl Selection;
+
+%{ C++
+class nsINode;
+
+%}
+[ptr] native nsINodePtr(nsINode);
+
+[scriptable, uuid(3d9371d8-a2ad-403e-8b0e-8885ad3562e3)]
+interface nsIDocumentEncoderNodeFixup : nsISupports
+{
+  /**
+   * Create a fixed up version of a node. This method is called before
+   * each node in a document is about to be persisted. The implementor
+   * may return a new node with fixed up attributes or null. If null is
+   * returned the node should be used as-is.
+   * @param aNode Node to fixup.
+   * @param [OUT] aSerializeCloneKids True if the document encoder should
+   * apply recursive serialization to the children of the fixed up node
+   * instead of the children of the original node.
+   * @return The resulting fixed up node.
+   */
+  Node fixupNode(in Node aNode, out boolean aSerializeCloneKids);
+};
+
+[scriptable, uuid(21f112df-d96f-47da-bfcb-5331273003d1)]
+interface nsIDocumentEncoder : nsISupports
+{
+  // Output methods flag bits. There are a frightening number of these,
+  // because everyone wants something a little bit different
+
+
+  /**
+   * Output only the selection (as opposed to the whole document).
+   */
+  const unsigned long OutputSelectionOnly = (1 << 0);
+
+  /** Plaintext output: Convert html to plaintext that looks like the html.
+    * Can't be used in conjunction with `OutputPreformatted`.
+    * Implies wrap (except inside <pre>), since html wraps.
+    * HTML, XHTML and XML output: do prettyprinting, ignoring existing formatting.
+    * XML output : it doesn't implicitly wrap
+    */
+  const unsigned long OutputFormatted     = (1 << 1);
+
+  /** Don't do prettyprinting. Don't do any wrapping that's not in the existing
+   * HTML/XML source. This option overrides OutputFormatted if both are set.
+   * HTML/XHTML output: If neither are set, there won't be prettyprinting too, but
+   * long lines will be wrapped.
+   * Supported also in XML and Plaintext output.
+   * @note This option does not affect entity conversion.
+   */
+  const unsigned long OutputRaw           = (1 << 2);
+
+  /**
+   * Do not print html head tags.
+   * XHTML/HTML output only.
+   */
+  const unsigned long OutputBodyOnly      = (1 << 3);
+
+  /**
+   * Output as though the content is preformatted
+   * (e.g. maybe it's wrapped in a PRE or PRE_WRAP style tag)
+   * Plaintext output only.
+   * Can't be used together with `OutputFormatted`/`OutputFormatFlowed`.
+   * XXXbz How does this interact with OutputRaw?
+   */
+  const unsigned long OutputPreformatted  = (1 << 4);
+
+  /**
+   * Wrap even if we're not doing formatted output (e.g. for text fields).
+   * Supported in XML, XHTML, HTML and Plaintext output.
+   * Set implicitly in HTML/XHTML output when no OutputRaw.
+   * Ignored when OutputRaw.
+   * XXXLJ: set implicitly in HTML/XHTML output, to keep compatible behaviors
+   *        for old callers of this interface
+   * XXXbz How does this interact with OutputFormatFlowed?
+   */
+  const unsigned long OutputWrap          = (1 << 5);
+
+  /**
+   * Output for format flowed (RFC 2646). This is used when converting
+   * to text for mail sending. This differs just slightly
+   * but in an important way from normal formatted, and that is that
+   * lines are space stuffed. This can't (correctly) be done later.
+   * PlainText output only.
+   * If this flag is set, `OutputFormat` has to be set too.
+   * XXXbz How does this interact with OutputRaw/OutputWrap?
+   */
+  const unsigned long OutputFormatFlowed  = (1 << 6);
+
+  /**
+   * Convert links, image src, and script src to absolute URLs when possible.
+   * XHTML/HTML output only.
+   */
+  const unsigned long OutputAbsoluteLinks = (1 << 7);
+
+  /**
+   * LineBreak processing: if this flag is set than CR line breaks will
+   * be written. If neither this nor OutputLFLineBreak is set, then we
+   * will use platform line breaks. The combination of the two flags will
+   * cause CRLF line breaks to be written.
+   */
+  const unsigned long OutputCRLineBreak = (1 << 9);
+
+  /**
+   * LineBreak processing: if this flag is set than LF line breaks will
+   * be written. If neither this nor OutputCRLineBreak is set, then we
+   * will use platform line breaks. The combination of the two flags will
+   * cause CRLF line breaks to be written.
+   */
+  const unsigned long OutputLFLineBreak = (1 << 10);
+
+  /**
+   * Output the content of noscript elements (only for serializing
+   * to plaintext).
+   */
+  const unsigned long OutputNoScriptContent = (1 << 11);
+
+  /**
+   * Output the content of noframes elements (only for serializing
+   * to plaintext). (Used only internally in the plain text serializer;
+   * ignored if passed by the caller.)
+   */
+  const unsigned long OutputNoFramesContent = (1 << 12);
+
+  /**
+   * Don't allow any formatting nodes (e.g. <br>, <b>) inside a <pre>.
+   * This is used primarily by mail. XHTML/HTML output only.
+   */
+  const unsigned long OutputNoFormattingInPre = (1 << 13);
+
+  /**
+   * Encode entities when outputting to a string.
+   * E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
+   * The basic set is just &nbsp; &amp; &lt; &gt; &quot; for interoperability
+   * with older products that don't support &alpha; and friends.
+   * HTML output only.
+   */
+  const unsigned long OutputEncodeBasicEntities = (1 << 14);
+
+  /**
+   * Normally &nbsp; is replaced with a space character when
+   * encoding data as plain text, set this flag if that's
+   * not desired.
+   * Plaintext output only.
+   */
+  const unsigned long OutputPersistNBSP = (1 << 17);
+
+  /**
+   * Normally when serializing the whole document using the HTML or
+   * XHTML serializer, the encoding declaration is rewritten to match.
+   * This flag suppresses that behavior.
+   */
+  const unsigned long OutputDontRewriteEncodingDeclaration = (1 << 18);
+
+  /**
+   * When using the HTML or XHTML serializer, skip elements that are not
+   * visible when this flag is set.  Elements are not visible when they
+   * have CSS style display:none or visibility:collapse, for example.
+   */
+  const unsigned long SkipInvisibleContent = (1 << 19);
+
+  /**
+   * Output for delsp=yes (RFC 3676). This is used with OutputFormatFlowed
+   * when converting to text for mail sending.
+   * PlainText output only.
+   */
+  const unsigned long OutputFormatDelSp  = (1 << 20);
+
+  /**
+   * Drop <br> elements considered "invisible" by the editor. OutputPreformatted
+   * implies this flag.
+   */
+  const unsigned long OutputDropInvisibleBreak = (1 << 21);
+
+  /**
+   * Don't check for _moz_dirty attributes when deciding whether to
+   * pretty-print if this flag is set (bug 599983).
+   */
+  const unsigned long OutputIgnoreMozDirty = (1 << 22);
+
+  /**
+   * Serialize in a way that is suitable for copying a plaintext version of the
+   * document to the clipboard.  This can for example cause line endings to be
+   * injected at preformatted block element boundaries.
+   */
+  const unsigned long OutputForPlainTextClipboardCopy = (1 << 25);
+
+  /**
+   * Include ruby annotations and ruby parentheses in the output.
+   * PlainText output only.
+   */
+  const unsigned long OutputRubyAnnotation = (1 << 26);
+
+  /**
+   * Disallow breaking of long character strings. This is important
+   * for serializing e-mail which contains CJK strings. These must
+   * not be broken just as "normal" longs strings aren't broken.
+   */
+  const unsigned long OutputDisallowLineBreaking = (1 << 27);
+
+  /**
+   * Release reference of Document after using encodeTo* method to recycle
+   * this encoder without holding Document. To use this encoder again,
+   * we have to call init again.
+   */
+  const unsigned long RequiresReinitAfterOutput = (1 << 28);
+
+  /**
+   * Initialize with a pointer to the document and the mime type.
+   * Resets wrap column to 72 and resets node fixup.
+   * @param aDocument Document to encode.
+   * @param aMimeType MimeType to use. May also be set by SetMimeType.
+   * @param aFlags Flags to use while encoding. May also be set by SetFlags.
+   */
+  void init(in Document aDocument,
+            in AString aMimeType,
+            in unsigned long aFlags);
+  [noscript] void nativeInit(in Document aDocument,
+                             in AString aMimeType,
+                             in unsigned long aFlags);
+
+  /**
+   *  If the selection is set to a non-null value, then the
+   *  selection is used for encoding, otherwise the entire
+   *  document is encoded.
+   * @param aSelection The selection to encode.
+   */
+  void setSelection(in Selection aSelection);
+
+  /**
+   *  If the range is set to a non-null value, then the
+   *  range is used for encoding, otherwise the entire
+   *  document or selection is encoded.
+   * @param aRange The range to encode.
+   */
+  void setRange(in Range aRange);
+
+  /**
+   *  If the node is set to a non-null value, then the
+   *  node is used for encoding, otherwise the entire
+   *  document or range or selection is encoded.
+   * @param aNode The node to encode.
+   */
+  void setNode(in Node aNode);
+
+  /**
+   *  If the container is set to a non-null value, then its
+   *  child nodes are used for encoding, otherwise the entire
+   *  document or range or selection or node is encoded.
+   *  @param aContainer The node which child nodes will be encoded.
+   */
+  void setContainerNode(in Node aContainer);
+
+  /**
+   *  Documents typically have an intrinsic character set,
+   *  but if no intrinsic value is found, the platform character set
+   *  is used. This function overrides both the intrinisc and platform
+   *  charset.
+   *  @param aCharset Overrides the both the intrinsic or platform
+   *  character set when encoding the document.
+   *
+   *  Possible result codes: NS_ERROR_NO_CHARSET_CONVERTER
+   */
+  void setCharset(in ACString aCharset);
+
+  /**
+   *  Set a wrap column.  This may have no effect in some types of encoders.
+   * @param aWrapColumn Column to which to wrap. If 0, wrapping is disabled.
+   */
+  void setWrapColumn(in unsigned long aWrapColumn);
+
+  /**
+   *  The mime type preferred by the encoder.  This piece of api was
+   *  added because the copy encoder may need to switch mime types on you
+   *  if you ask it to copy html that really represents plaintext content.
+   *  Call this AFTER Init() and SetSelection() have both been called.
+   */
+  readonly attribute AString mimeType;
+
+  /**
+   *  Encode the document and send the result to the nsIOutputStream.
+   *
+   *  Possible result codes are the stream errors which might have
+   *  been encountered.
+   * @param aStream Stream into which to encode.
+   */
+  void encodeToStream(in nsIOutputStream aStream);
+
+  /**
+   * Encode the document into a string.
+   *
+   * @return The document encoded into a string.
+   */
+  AString encodeToString();
+
+  /**
+   * Encode the document into a string. Stores the extra context information
+   * into the two arguments.
+   * @param [OUT] aContextString The string where the parent hierarchy
+   *              information will be stored.
+   * @param [OUT] aInfoString The string where extra context info will
+   *              be stored.
+   * @return The document encoded as a string.
+   *
+   */
+  AString encodeToStringWithContext( out AString aContextString,
+                                     out AString aInfoString);
+
+  /**
+   * Encode the document into a string of limited size.
+   * @param aMaxLength After aMaxLength characters, the encoder will stop
+   *                   encoding new data.
+   *                   Only values > 0 will be considered.
+   *                   The returned string may be slightly larger than
+   *                   aMaxLength because some serializers (eg. HTML)
+   *                   may need to close some tags after they stop
+   *                   encoding new data, or finish a line (72 columns
+   *                   by default for the plain text serializer).
+   *
+   * @return The document encoded into a string.
+   */
+  AString encodeToStringWithMaxLength(in unsigned long aMaxLength);
+
+  /**
+   * Set the fixup object associated with node persistence.
+   * @param aFixup The fixup object.
+   */
+  void setNodeFixup(in nsIDocumentEncoderNodeFixup aFixup);
+};
+
+%{ C++
+template<class T> struct already_AddRefed;
+
+bool
+do_getDocumentTypeSupportedForEncoding(const char* aContentType);
+already_AddRefed<nsIDocumentEncoder>
+do_createDocumentEncoder(const char* aContentType);
+already_AddRefed<nsIDocumentEncoder>
+do_createHTMLCopyEncoder();
+%}

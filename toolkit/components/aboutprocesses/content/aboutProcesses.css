@@ -1,0 +1,261 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+html {
+  background-color: var(--in-content-page-background);
+}
+body {
+  overflow-x: hidden;
+}
+
+#process-table {
+  user-select: none;
+  font-size: 1em;
+  border-spacing: 0;
+  background-color: var(--in-content-box-background);
+  margin: 0;
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Avoid scrolling the header */
+#process-tbody {
+  display: block;
+  margin-top: 2em;
+}
+#process-thead {
+  position: fixed;
+  z-index: 1;
+  height: 2em;
+  border-bottom: 1px solid var(--in-content-border-color);
+  width: 100%;
+  background-color: var(--in-content-box-background);
+}
+tr {
+  display: grid;
+  /* Flexible width for the name column, 15% width for the memory and CPU column,
+   * then fixed width (16px icon + 2*10px margin) for the actions column. */
+  grid-template-columns: 1fr 15% 15% 36px;
+  grid-auto-rows: 2em;
+  width: 100%;
+}
+
+.cpu, .memory {
+  text-align: end;
+}
+
+#process-thead > tr {
+  height: inherit;
+}
+
+th {
+  font-weight: normal;
+  text-align: start;
+  background-color: var(--in-content-button-background);
+}
+th:not(:first-child) {
+  border-inline-start: 1px solid;
+  border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
+}
+th, td {
+  padding: 5px 10px;
+  min-height: 16px;
+  max-height: 2em;
+  color: var(--in-content-text-color);
+  overflow: hidden;
+  white-space: nowrap;
+}
+td.type, td.favicon {
+  background-repeat: no-repeat;
+  background-origin: border-box;
+  background-size: 16px 16px;
+  background-position: 11px center;
+  padding-inline-start: 38px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+td.type:dir(rtl), td.favicon:dir(rtl) {
+  background-position-x: right 11px;
+}
+td:first-child {
+  text-overflow: ellipsis;
+}
+
+.profiler-icon {
+  background: url("chrome://devtools/skin/images/tool-profiler.svg") no-repeat center;
+  display: inline-block;
+  height: 100%;
+  width: 16px;
+  padding: 5px 7px;
+  /* The -10px is -5 to undo the td padding and -5 to undo the padding here. */
+  margin: -10px 3px;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0.9;
+  fill: currentColor;
+}
+.profiler-icon:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+
+.profiler-icon:hover:active {
+  background-color: var(--in-content-button-background-active);
+  fill-opacity: 1;
+}
+
+.profiler-icon:not(.profiler-active) {
+  transform: scaleX(-1);
+}
+
+.profiler-active {
+  fill: var(--in-content-accent-color);
+}
+td:not(:hover) > .profiler-icon:not(.profiler-active) {
+  display: none;
+}
+
+.twisty {
+  position: relative;
+}
+/* Putting the background image in a positioned pseudo element lets us
+* use CSS transforms on the background image, which we need for rtl. */
+.twisty::before {
+  content: url("chrome://global/skin/icons/arrow-right-12.svg");
+  position: absolute;
+  display: block;
+  line-height: 50%;
+  top: 4px; /* Half the image's height */
+  inset-inline-start: -16px;
+  width: 100%;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.twisty:dir(rtl)::before {
+  content: url("chrome://global/skin/icons/arrow-left-12.svg");
+}
+.twisty.open::before {
+  content: url("chrome://global/skin/icons/arrow-down-12.svg");
+}
+.indent {
+  padding-inline: 48px 0;
+}
+.double_indent {
+  padding-inline: 58px 0;
+}
+
+tr[selected] > td {
+  background-color: var(--in-content-item-selected);
+  color: var(--in-content-item-selected-text);
+}
+#process-tbody > tr:hover {
+  background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
+}
+
+/* Tab names and thread summary text can extend into memory and CPU columns. */
+.window > :first-child,
+.thread-summary > :first-child {
+  grid-column: 1 / 4;
+}
+
+/* Thread names can extend into the memory column. */
+.thread > :first-child{
+  grid-column: 1 / 3;
+}
+
+.clickable {
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+}
+.clickable:dir(rtl) {
+  background-position-x: left 4px;
+}
+.asc,
+.desc {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+/*
+  Linux has conventions opposite to Windows, macOS on the direction of arrows
+  when sorting.
+*/
+%ifdef XP_LINUX
+.asc {
+  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+}
+.desc {
+  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+}
+%else
+.asc {
+  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+}
+.desc {
+  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+}
+%endif
+
+th.clickable:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+th.clickable:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+tr.process > td.type {
+  font-weight: bold;
+}
+tr.thread {
+  font-size-adjust: 0.5;
+}
+
+.killing {
+  opacity: 0.3;
+  transition-property: opacity;
+  transition-duration: 1s;
+}
+
+.killed {
+  opacity: 0.3;
+}
+
+/* icons */
+.close-icon {
+  background: url("chrome://global/skin/icons/close.svg") no-repeat center;
+  opacity: 0;      /* Start out as transparent */
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+tr:is([selected], :hover):not(.killing) > .close-icon {
+  opacity: 1;
+}
+
+.close-icon:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+
+.close-icon:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+/* column-name */
+
+/* When the process is reported as frozen, we display an hourglass before its name. */
+.process.hung > :first-child > :not(.twisty)::before {
+  content: "⌛️";
+}
+
+/*
+  Show a separation between process groups.
+ */
+
+tr.separate-from-previous-process-group {
+  border-top: dotted 1px var(--in-content-box-border-color);
+  margin-top: -1px;
+}

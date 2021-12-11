@@ -1,0 +1,29 @@
+<script>
+
+var tr;
+
+function init() { 
+
+  tr = one.document.getElementsByTagName("tr")[0];
+  tr = document.adoptNode(tr);
+  document.getElementsByTagName("html")[0].appendChild(tr);
+
+  setTimeout(
+    function(){
+      var frameset = document.getElementsByTagName("frameset")[0];
+      document.getElementsByTagName("td")[0].appendChild(frameset);
+      document.documentElement.removeAttribute("class");
+    }, 
+    100);
+  
+}
+
+window.addEventListener("load", init);
+document.documentElement.setAttribute("class", "reftest-wait");
+
+</script>
+
+<frameset resizable="yes" rows="50%,*">
+ <frame name="one" src="file_324318-1.html">
+ <frame name="two" src="empty.html">
+</frameset>

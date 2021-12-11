@@ -1,0 +1,89 @@
+# 
+# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#ident  "$Id$"
+#
+# This required package information file contains a list of package contents.
+# The 'pkgmk' command uses this file to identify the contents of a package
+# and their location on the development machine when building the package.
+# Can be created via a text editor or through use of the 'pkgproto' command.
+
+#!search <pathname pathname ...>        # where to find pkg objects
+#!include <filename>                    # include another 'prototype' file
+#!default <mode> <owner> <group>        # default used if not specified on entry
+#!<param>=<value>                       # puts parameter in pkg environment
+
+# packaging files
+i copyright
+i pkginfo
+i depend
+#
+# source locations relative to .h 0644 root bine prototype file
+#
+# SUNWprd
+#
+d none usr 0755 root sys
+d none usr/include 0755 root bin
+d none usr/include/mps 0755 root bin
+d none usr/include/mps/obsolete 0755 root bin
+d none usr/include/mps/private 0755 root bin
+f none usr/include/mps/obsolete/pralarm.h 0644 root bin
+f none usr/include/mps/obsolete/probslet.h 0644 root bin
+f none usr/include/mps/obsolete/protypes.h 0644 root bin
+f none usr/include/mps/obsolete/prsem.h 0644 root bin
+f none usr/include/mps/prcpucfg.h 0644 root bin
+f none usr/include/mps/nspr.h 0644 root bin
+f none usr/include/mps/pratom.h 0644 root bin
+f none usr/include/mps/prbit.h 0644 root bin
+f none usr/include/mps/prclist.h 0644 root bin
+f none usr/include/mps/prcmon.h 0644 root bin
+f none usr/include/mps/prcountr.h 0644 root bin
+f none usr/include/mps/prcvar.h 0644 root bin
+f none usr/include/mps/prdtoa.h 0644 root bin
+f none usr/include/mps/prenv.h 0644 root bin
+f none usr/include/mps/prerr.h 0644 root bin
+f none usr/include/mps/prerror.h 0644 root bin
+f none usr/include/mps/prinet.h 0644 root bin
+f none usr/include/mps/prinit.h 0644 root bin
+f none usr/include/mps/prinrval.h 0644 root bin
+f none usr/include/mps/prio.h 0644 root bin
+f none usr/include/mps/pripcsem.h 0644 root bin
+f none usr/include/mps/private/pprio.h 0644 root bin
+f none usr/include/mps/private/pprthred.h 0644 root bin
+f none usr/include/mps/private/prpriv.h 0644 root bin
+f none usr/include/mps/prlink.h 0644 root bin
+f none usr/include/mps/prlock.h 0644 root bin
+f none usr/include/mps/prlog.h 0644 root bin
+f none usr/include/mps/prlong.h 0644 root bin
+f none usr/include/mps/prmem.h 0644 root bin
+f none usr/include/mps/prmon.h 0644 root bin
+f none usr/include/mps/prmwait.h 0644 root bin
+f none usr/include/mps/prnetdb.h 0644 root bin
+f none usr/include/mps/prolock.h 0644 root bin
+f none usr/include/mps/prpdce.h 0644 root bin
+f none usr/include/mps/prprf.h 0644 root bin
+f none usr/include/mps/prproces.h 0644 root bin
+f none usr/include/mps/prrng.h 0644 root bin
+f none usr/include/mps/prrwlock.h 0644 root bin
+f none usr/include/mps/prshm.h 0644 root bin
+f none usr/include/mps/prshma.h 0644 root bin
+f none usr/include/mps/prsystem.h 0644 root bin
+f none usr/include/mps/prthread.h 0644 root bin
+f none usr/include/mps/prtime.h 0644 root bin
+f none usr/include/mps/prtpool.h 0644 root bin
+f none usr/include/mps/prtrace.h 0644 root bin
+f none usr/include/mps/prtypes.h 0644 root bin
+f none usr/include/mps/prvrsion.h 0644 root bin
+f none usr/include/mps/prwin16.h 0644 root bin
+f none usr/include/mps/plarenas.h 0644 root bin
+f none usr/include/mps/plarena.h 0644 root bin
+f none usr/include/mps/plbase64.h 0644 root bin
+f none usr/include/mps/plerror.h 0644 root bin
+f none usr/include/mps/plgetopt.h 0644 root bin
+f none usr/include/mps/plhash.h 0644 root bin
+f none usr/include/mps/plstr.h 0644 root bin

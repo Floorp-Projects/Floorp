@@ -1,0 +1,117 @@
+{
+    "page_size": 25,
+    "page_count": 1,
+    "count": 4,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "name": "PASS",
+            "type": "extension",
+            "guid": "test1@tests.mozilla.org",
+            "current_version": {
+                "version": "1.1",
+                "files": [
+                    {
+                        "platform": "all",
+                        "url": "http://example.com/addons/test_AddonRepository_2.xpi",
+                        "size": 5555
+                    }
+                ]
+            },
+            "authors": [
+                {
+                    "name": "Test Creator 1",
+                    "url": "http://example.com/creator1.html"
+                },
+                {
+                    "name": "Test Developer 1",
+                    "url": "http://example.com/developer1.html"
+                }
+            ],
+            "summary": "Test Summary 1",
+            "description": "Test Description 1",
+            "icons": {
+              "32": "http://example.com/icon1.png"
+            },
+            "previews": [
+                {
+                    "caption": "Caption 1 - 1",
+                    "image_size": [400, 300],
+                    "image_url": "http://example.com/full1-1.png",
+                    "thumbnail_size": [200, 150],
+                    "thumbnail_url": "http://example.com/thumbnail1-1.png"
+                },
+                {
+                    "caption": "Caption 2 - 1",
+                    "image_url": "http://example.com/full2-1.png",
+                    "thumbnail_url": "http://example.com/thumbnail2-1.png"
+                }
+            ],
+            "ratings": {
+                "count": 1234,
+                "text_count": 1111,
+                "average": 4
+            },
+            "ratings_url": "http://example.com/review1.html",
+            "support_url": "http://example.com/support1.html",
+            "contributions_url": "http://example.com/contribution1.html",
+            "weekly_downloads": 3333,
+            "last_updated": "2010-02-01T14:04:05Z"
+        },
+        {
+            "name": "PASS",
+            "type": "extension",
+            "guid": "test2@tests.mozilla.org",
+            "current_version": {
+                "version": "2.0",
+                "files": [
+                    {
+                        "platform": "XPCShell",
+                        "url": "http://example.com/addons/bleah.xpi",
+                        "size": 1000
+                    }
+                ]
+            }
+        },
+        {
+            "name": "FAIL",
+            "type": "extension",
+            "guid": "notRequested@tests.mozilla.org",
+            "current_version": {
+                "version": "1.3",
+                "files": [
+                    {
+                        "platform": "all",
+                        "url": "http://example.com/test3.xpi"
+                    }
+                ]
+            },
+            "authors": [
+                {
+                    "name": "Test Creator 3"
+                }
+            ],
+            "summary": "Add-on with a guid that wasn't requested should be ignored."
+        },
+        {
+            "name": "PASS",
+            "type": "theme",
+            "guid": "test_AddonRepository_1@tests.mozilla.org",
+            "current_version": {
+                "version": "1.4",
+                "files": [
+                    {
+                        "platform": "UNKNOWN1",
+                        "url": "http://example.com/test4.xpi"
+                    },
+                    {
+                        "platform": "UNKNOWN2",
+                        "url": "http://example.com/test4.xpi"
+                    }
+                ]
+            }
+        }
+    ]
+}
+

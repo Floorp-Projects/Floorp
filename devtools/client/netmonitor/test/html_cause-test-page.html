@@ -1,0 +1,98 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor test page</title>
+    <link rel="stylesheet" type="text/css" href="stylesheet_request" />
+  </head>
+
+  <body>
+    <p>Request cause test</p>
+    <img src="img_request" />
+    <img srcset="img_srcset_request" />
+    <!-- ensure that the two next <img> are offscreen
+         so that the error listener is registered before we try loading them -->
+    <div style="height: 2000vh;"></div>
+    <img loading="lazy" src="lazy_img_request" />
+    <img loading="lazy" srcset="lazy_img_srcset_request" />
+    <script type="text/javascript">
+      "use strict";
+
+      function performXhrRequest() {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "xhr_request", true);
+        return new Promise(function performXhrRequestCallback(resolve) {
+          xhr.onload = resolve;
+          xhr.send();
+        });
+      }
+
+      function performFetchRequest() {
+        return fetch("fetch_request");
+      }
+
+      // Perform some requests with async stacks
+      function performPromiseFetchRequest() {
+        return Promise.resolve().then(function performPromiseFetchRequestCallback() {
+          return fetch("promise_fetch_request");
+        });
+      }
+
+      function performTimeoutFetchRequest() {
+        return new Promise(function performTimeoutFetchRequestCallback1(resolve) {
+          setTimeout(function performTimeoutFetchRequestCallback2() {
+            resolve(fetch("timeout_fetch_request"));
+          }, 0);
+        });
+      }
+
+      function performFavicon() {
+        return new Promise(function (resolve) {
+          const link = document.createElement("link");
+          link.rel = "icon";
+          link.href = "favicon_request";
+          document.querySelector("head").appendChild(link);
+          link.addEventListener("devtools:test:favicon", resolve);
+        });
+      }
+
+      function performLazyLoadingImage() {
+        return new Promise(function (resolve) {
+          const lazyImgs = document.querySelectorAll("img[loading='lazy']");
+
+          const promises = [
+            new Promise(r => lazyImgs[0].addEventListener("error", r)),
+            new Promise(r => lazyImgs[1].addEventListener("error", r)),
+          ];
+
+          // Given that the default display style of <img> is `inline` so
+          // it's sufficient to scroll to an <img>.
+          lazyImgs[0].scrollIntoView({ behavior: "instant" });
+          resolve(Promise.all(promises));
+        });
+      }
+
+      function performBeaconRequest() {
+        navigator.sendBeacon("beacon_request");
+      }
+
+      (async function() {
+        await performXhrRequest();
+        await performFetchRequest();
+        await performPromiseFetchRequest();
+        await performTimeoutFetchRequest();
+        await performFavicon();
+        await performLazyLoadingImage();
+
+        // Finally, send a beacon request
+        performBeaconRequest();
+      })();
+    </script>
+  </body>
+</html>

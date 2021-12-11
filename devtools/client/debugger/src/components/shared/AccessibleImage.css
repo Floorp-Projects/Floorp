@@ -1,0 +1,195 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.img {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  /* use background-color for the icon color, and mask-image for its shape */
+  background-color: var(--theme-icon-color);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  /* multicolor icons use background-image */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* do not let images shrink when used as flex children */
+  flex-shrink: 0;
+}
+
+/* Expand arrow icon */
+.img.arrow {
+  width: 10px;
+  height: 10px;
+  mask-image: url(chrome://devtools/content/debugger/images/arrow.svg);
+  /* we may override the width/height in specific contexts to make the
+     clickable area bigger, but we should always keep the mask size 10x10 */
+  mask-size: 10px 10px;
+  background-color: var(--theme-icon-dimmed-color);
+  transform: rotate(-90deg);
+  transition: transform 180ms var(--animation-curve);
+}
+
+.img.arrow:dir(rtl) {
+  transform: rotate(90deg);
+}
+
+.img.arrow.expanded {
+  /* icon should always point to the bottom (default) when expanded,
+  regardless of the text direction */
+  transform: none !important;
+}
+
+.img.arrow-down {
+  mask-image: url(chrome://devtools/content/debugger/images/arrow-down.svg);
+}
+
+.img.arrow-up {
+  mask-image: url(chrome://devtools/content/debugger/images/arrow-up.svg);
+}
+
+.img.blackBox {
+  mask-image: url(chrome://devtools/content/debugger/images/blackBox.svg);
+}
+
+.img.breadcrumb {
+  mask-image: url(chrome://devtools/content/debugger/images/breadcrumbs-divider.svg);
+}
+
+.img.case-match {
+  mask-image: url(chrome://devtools/content/debugger/images/case-match.svg);
+}
+
+.img.close {
+  mask-image: url(chrome://devtools/skin/images/close.svg);
+}
+
+.img.disable-pausing {
+  mask-image: url(chrome://devtools/content/debugger/images/disable-pausing.svg);
+}
+
+.img.enable-pausing {
+  mask-image: url(chrome://devtools/content/debugger/images/enable-pausing.svg);
+  background-color: var(--theme-icon-checked-color);
+}
+
+.img.globe {
+  mask-image: url(chrome://devtools/content/debugger/images/globe.svg);
+}
+
+.img.globe-small {
+  mask-image: url(chrome://devtools/content/debugger/images/globe-small.svg);
+  mask-size: 12px 12px;
+}
+
+.img.window {
+  mask-image: url(chrome://devtools/content/debugger/images/window.svg);
+}
+
+.img.file {
+  mask-image: url(chrome://devtools/content/debugger/images/file-small.svg);
+  mask-size: 12px 12px;
+}
+
+.img.folder {
+  mask-image: url(chrome://devtools/content/debugger/images/folder.svg);
+}
+
+.img.home {
+  mask-image: url(chrome://devtools/content/debugger/images/home.svg);
+}
+
+.img.info {
+  mask-image: url(chrome://devtools/skin/images/info.svg);
+}
+
+.img.loader {
+  mask-image: url(chrome://devtools/content/debugger/images/loader.svg);
+}
+
+.img.more-tabs {
+  mask-image: url(chrome://devtools/content/debugger/images/command-chevron.svg);
+}
+
+html[dir="rtl"] .img.more-tabs {
+  transform: scaleX(-1);
+}
+
+.img.next {
+  mask-image: url(chrome://devtools/content/debugger/images/next.svg);
+}
+
+.img.next-circle {
+  mask-image: url(chrome://devtools/content/debugger/images/next-circle.svg);
+}
+
+.img.pane-collapse {
+  mask-image: url(chrome://devtools/content/debugger/images/pane-collapse.svg);
+}
+
+.img.pane-expand {
+  mask-image: url(chrome://devtools/content/debugger/images/pane-expand.svg);
+}
+
+.img.pause {
+  mask-image: url(chrome://devtools/content/debugger/images/pause.svg);
+}
+
+.img.plus {
+  mask-image: url(chrome://devtools/content/debugger/images/plus.svg);
+}
+
+.img.prettyPrint {
+  mask-image: url(chrome://devtools/content/debugger/images/prettyPrint.svg);
+}
+
+.img.refresh {
+  mask-image: url(chrome://devtools/content/debugger/images/reload.svg);
+}
+
+.img.regex-match {
+  mask-image: url(chrome://devtools/content/debugger/images/regex-match.svg);
+}
+
+.img.resume {
+  mask-image: url(chrome://devtools/content/debugger/images/resume.svg);
+}
+
+.img.search {
+  mask-image: url(chrome://devtools/content/debugger/images/search.svg);
+}
+
+.img.shortcuts {
+  mask-image: url(chrome://devtools/content/debugger/images/help.svg);
+}
+
+.img.spin {
+  animation: spin 0.5s linear infinite;
+}
+
+.img.stepIn {
+  mask-image: url(chrome://devtools/content/debugger/images/stepIn.svg);
+}
+
+.img.stepOut {
+  mask-image: url(chrome://devtools/content/debugger/images/stepOut.svg);
+}
+
+.img.stepOver {
+  mask-image: url(chrome://devtools/content/debugger/images/stepOver.svg);
+}
+
+.img.tab {
+  mask-image: url(chrome://devtools/content/debugger/images/tab.svg);
+}
+
+.img.whole-word-match {
+  mask-image: url(chrome://devtools/content/debugger/images/whole-word-match.svg);
+}
+
+.img.worker {
+  mask-image: url(chrome://devtools/content/debugger/images/worker.svg);
+}

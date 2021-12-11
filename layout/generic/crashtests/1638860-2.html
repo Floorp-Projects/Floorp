@@ -1,0 +1,26 @@
+<html>
+<body>
+    <style>
+        div {
+            position: relative;
+        }
+        span,div {
+            display: inline-grid;
+            grid-template-columns: subgrid;
+        }
+        span {
+            position: absolute;
+        }
+    </style>
+    <script>
+      window.addEventListener('load', () => {
+        const span = document.createElementNS('http://www.w3.org/1999/xhtml', 'span')
+        const text = document.createTextNode('BAR')
+        span.appendChild(text)
+        const div = document.getElementsByTagName('div')[0];
+        div.appendChild(span)
+      })
+    </script>
+<div>FOO</div>
+</body>
+</html>

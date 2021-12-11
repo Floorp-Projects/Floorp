@@ -1,0 +1,51 @@
+html {
+  font-size: 16px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: "AhemTest";
+  src: url(../../../../tests/fonts/Ahem.ttf);
+}
+
+@font-face {
+  font-family: "mplusTest";
+  src: url(../../../../tests/fonts/mplus/mplus-1p-regular.ttf);
+}
+
+/* For aligning the two spacers (see below) to the left most and the right most,
+   the div must create a new blocking format context. */
+div#target {
+  position: absolute;
+}
+
+span#decoration {
+  margin-left: 0.333em;
+}
+
+body.reference div span#decoration {
+  text-decoration: underline;
+}
+
+/* both ends of selection underlines for IME are clipped for making the
+   boundaries of clauses in composition string clear.  These spacers will
+   cover the ends in the reference. */
+span#leftspacer, span#rightspacer {
+  background-color: white;
+  position: absolute;
+  width: 1px;
+  height: 100%;
+  overflow: hidden;
+}
+
+span#leftspacer {
+  left: 0.333em;
+}
+
+span#rightspacer {
+  right: 0;
+}

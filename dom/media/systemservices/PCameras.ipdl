@@ -1,0 +1,93 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PBackground;
+
+include PBackgroundSharedTypes;
+
+using mozilla::camera::CaptureEngine from "mozilla/media/CamerasTypes.h";
+
+namespace mozilla {
+namespace camera {
+
+// IPC analog for webrtc::VideoCaptureCapability
+struct VideoCaptureCapability
+{
+  int width;
+  int height;
+  int maxFPS;
+  int videoType;
+  bool interlaced;
+};
+
+
+// IPC analog for webrtc::VideoFrame
+// the described buffer is transported seperately in a Shmem
+// See VideoFrameUtils.h
+struct VideoFrameProperties
+{
+  // Size of image data within the ShMem,
+  // the ShMem is at least this large
+  uint32_t bufferSize;
+  // From webrtc::VideoFrame
+  uint32_t timeStamp;
+  int64_t ntpTimeMs;
+  int64_t renderTimeMs;
+  // See webrtc/**/rotation.h
+  int rotation;
+  int yAllocatedSize;
+  int uAllocatedSize;
+  int vAllocatedSize;
+  // From webrtc::VideoFrameBuffer
+  int width;
+  int height;
+  int yStride;
+  int uStride;
+  int vStride;
+};
+
+async protocol PCameras
+{
+  manager PBackground;
+
+child:
+  // transfers ownership of |buffer| from parent to child
+  async DeliverFrame(CaptureEngine capEngine, int streamId,
+                     Shmem buffer, VideoFrameProperties props);
+  async DeviceChange();
+  async ReplyNumberOfCaptureDevices(int numdev);
+  async ReplyNumberOfCapabilities(int numdev);
+  async ReplyAllocateCaptureDevice(int numdev);
+  async ReplyGetCaptureCapability(VideoCaptureCapability cap);
+  async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id, bool scary);
+  async ReplyFailure();
+  async ReplySuccess();
+  async __delete__();
+
+parent:
+  async NumberOfCaptureDevices(CaptureEngine engine);
+  async NumberOfCapabilities(CaptureEngine engine, nsCString deviceUniqueIdUTF8);
+
+  async GetCaptureCapability(CaptureEngine engine, nsCString unique_idUTF8,
+                             int capability_number);
+  async GetCaptureDevice(CaptureEngine engine, int num);
+
+  async AllocateCaptureDevice(CaptureEngine engine, nsCString unique_idUTF8,
+                              uint64_t windowID);
+  async ReleaseCaptureDevice(CaptureEngine engine, int numdev);
+  async StartCapture(CaptureEngine engine, int numdev, VideoCaptureCapability capability);
+  async FocusOnSelectedSource(CaptureEngine engine, int numdev);
+  async StopCapture(CaptureEngine engine, int numdev);
+  // transfers frame back
+  async ReleaseFrame(Shmem s);
+
+  // Ask parent to delete us
+  async AllDone();
+  // setup camera engine
+  async EnsureInitialized(CaptureEngine engine);
+};
+
+} // namespace camera
+} // namespace mozilla

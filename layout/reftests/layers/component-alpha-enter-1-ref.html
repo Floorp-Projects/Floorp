@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Test transition from single-alpha layer to component-alpha layer from a display port size change</title>
+<script type="text/javascript">
+  document.addEventListener('MozReftestInvalidate', function() {
+    var scrollbox = document.getElementById('scrollbox');
+    scrollbox.scrollTop = 1000;
+    document.documentElement.className = '';
+  });
+</script>
+<style>
+#scrollbox {
+  margin: 20px;
+  width: 300px;
+  height: 400px;
+  overflow-y: scroll;
+  background: linear-gradient(#FFF, #FFF);
+}
+
+#inner {
+  background-color: #000;
+  margin-top: 10px;
+  height: 5px;
+  line-height: 5px;
+  padding-bottom: 400px;
+}
+</style>
+
+<div id="scrollbox">
+  <div id="inner">
+    Text
+  </div>
+</div>

@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* Search Box */
+
+.devtools-filterinput {
+  margin-inline-start: auto; /* Align to the right */
+}
+
+/* JSONView doesn't load dark-theme.css */
+.theme-dark .devtools-filterinput {
+  background-color: rgba(24, 29, 32, 1);
+  color: rgba(184, 200, 217, 1);
+}

@@ -1,0 +1,19 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Test for linked pattern scaling</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=448906 -->
+  <defs>
+    <pattern id="pattern01" height="20" width="20"
+        patternTransform="scale(0.5)"
+        patternUnits="userSpaceOnUse">
+        <rect height="20" width="20" fill="lime" />
+    </pattern>
+    <pattern id="pattern02" xlink:href="#pattern01"/>
+  </defs>
+  <rect width="100%" height="100%" style="fill:url(#pattern02)" transform="scale(2)"/>
+</svg>
+

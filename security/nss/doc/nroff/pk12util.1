@@ -1,0 +1,872 @@
+'\" t
+.\"     Title: PK12UTIL
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 19 May 2021
+.\"    Manual: NSS Security Tools
+.\"    Source: nss-tools
+.\"  Language: English
+.\"
+.TH "PK12UTIL" "1" "19 May 2021" "nss-tools" "NSS Security Tools"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pk12util \- Export and import keys and certificate to or from a PKCS #12 file and the NSS database
+.SH "SYNOPSIS"
+.HP \w'\fBpk12util\fR\ 'u
+\fBpk12util\fR [\-i\ p12File|\-l\ p12File|\-o\ p12File] [\-c\ keyCipher] [\-C\ certCipher] [\-d\ directory] [\-h\ tokenname] [\-m\ |\ \-\-key\-len\ keyLength] [\-M\ hashAlg] [\-n\ certname] [\-P\ dbprefix] [\-r] [\-v] [\-\-cert\-key\-len\ certKeyLength] [\-k\ slotPasswordFile|\-K\ slotPassword] [\-w\ p12filePasswordFile|\-W\ p12filePassword]
+.SH "STATUS"
+.PP
+This documentation is still work in progress\&. Please contribute to the initial review in
+\m[blue]\fBMozilla NSS bug 836477\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "DESCRIPTION"
+.PP
+The PKCS #12 utility,
+\fBpk12util\fR, enables sharing certificates among any server that supports PKCS #12\&. The tool can import certificates and keys from PKCS #12 files into security databases, export certificates, and list certificates and keys\&.
+.SH "OPTIONS AND ARGUMENTS"
+.PP
+\fBOptions\fR
+.PP
+\-i p12file
+.RS 4
+Import keys and certificates from a PKCS #12 file into a security database\&.
+.RE
+.PP
+\-l p12file
+.RS 4
+List the keys and certificates in PKCS #12 file\&.
+.RE
+.PP
+\-o p12file
+.RS 4
+Export keys and certificates from the security database to a PKCS #12 file\&.
+.RE
+.PP
+\fBArguments\fR
+.PP
+\-c keyCipher
+.RS 4
+Specify the key encryption algorithm\&.
+.RE
+.PP
+\-C certCipher
+.RS 4
+Specify the certiticate encryption algorithm\&.
+.RE
+.PP
+\-d directory
+.RS 4
+Specify the database directory into which to import to or export from certificates and keys\&.
+.sp
+\fBpk12util\fR
+supports two types of databases: the legacy security databases (cert8\&.db,
+key3\&.db, and
+secmod\&.db) and new SQLite databases (cert9\&.db,
+key4\&.db, and
+pkcs11\&.txt)\&. If the prefix
+\fBdbm:\fR
+is not used, then the tool assumes that the given databases are in the SQLite format\&.
+.RE
+.PP
+\-h tokenname
+.RS 4
+Specify the name of the token to import into or export from\&.
+.RE
+.PP
+\-k slotPasswordFile
+.RS 4
+Specify the text file containing the slot\*(Aqs password\&.
+.RE
+.PP
+\-K slotPassword
+.RS 4
+Specify the slot\*(Aqs password\&.
+.RE
+.PP
+\-m | \-\-key\-len keyLength
+.RS 4
+Specify the desired length of the symmetric key to be used to encrypt the private key\&.
+.RE
+.PP
+\-M hashAlg
+.RS 4
+Specify the hash algorithm used in the pkcs #12 mac\&. This algorithm also specifies the HMAC used in the prf when using pkcs #5 v2\&.
+.RE
+.PP
+\-\-cert\-key\-len certKeyLength
+.RS 4
+Specify the desired length of the symmetric key to be used to encrypt the certificates and other meta\-data\&.
+.RE
+.PP
+\-n certname
+.RS 4
+Specify the nickname of the cert and private key to export\&.
+.sp
+The nickname can also be a PKCS #11 URI\&. For example, if you have a certificate named "my\-server\-cert" on the internal certificate store, it can be unambiguously specified as "pkcs11:token=NSS%20Certificate%20DB;object=my\-server\-cert"\&. For details about the format, see RFC 7512\&.
+.RE
+.PP
+\-P prefix
+.RS 4
+Specify the prefix used on the certificate and key databases\&. This option is provided as a special case\&. Changing the names of the certificate and key databases is not recommended\&.
+.RE
+.PP
+\-r
+.RS 4
+Dumps all of the data in raw (binary) form\&. This must be saved as a DER file\&. The default is to return information in a pretty\-print ASCII format, which displays the information about the certificates and public keys in the p12 file\&.
+.RE
+.PP
+\-v
+.RS 4
+Enable debug logging when importing\&.
+.RE
+.PP
+\-w p12filePasswordFile
+.RS 4
+Specify the text file containing the pkcs #12 file password\&.
+.RE
+.PP
+\-W p12filePassword
+.RS 4
+Specify the pkcs #12 file password\&.
+.RE
+.SH "RETURN CODES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+0 \- No error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+1 \- User Cancelled
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+2 \- Usage error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+6 \- NLS init error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+8 \- Certificate DB open error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+9 \- Key DB open error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+10 \- File initialization error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+11 \- Unicode conversion error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+12 \- Temporary file creation error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+13 \- PKCS11 get slot error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+14 \- PKCS12 decoder start error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+15 \- error read from import file
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+16 \- pkcs12 decode error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+17 \- pkcs12 decoder verify error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+18 \- pkcs12 decoder validate bags error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+19 \- pkcs12 decoder import bags error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+20 \- key db conversion version 3 to version 2 error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+21 \- cert db conversion version 7 to version 5 error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+22 \- cert and key dbs patch error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+23 \- get default cert db error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+24 \- find cert by nickname error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+25 \- create export context error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+26 \- PKCS12 add password itegrity error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+27 \- cert and key Safes creation error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+28 \- PKCS12 add cert and key error
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+29 \- PKCS12 encode error
+.RE
+.SH "EXAMPLES"
+.PP
+\fBImporting Keys and Certificates\fR
+.PP
+The most basic usage of
+\fBpk12util\fR
+for importing a certificate or key is the PKCS #12 input file (\fB\-i\fR) and some way to specify the security database being accessed (either
+\fB\-d\fR
+for a directory or
+\fB\-h\fR
+for a token)\&.
+.PP
+pk12util \-i p12File [\-h tokenname] [\-v] [\-d directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
+.PP
+For example:
+.PP
+
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# pk12util \-i /tmp/cert\-files/users\&.p12 \-d /home/my/sharednssdb
+
+Enter a password which will be used to encrypt your keys\&.
+The password should be at least 8 characters long,
+and should contain at least one non\-alphabetic character\&.
+
+Enter new password: 
+Re\-enter password: 
+Enter password for PKCS12 file: 
+pk12util: PKCS12 IMPORT SUCCESSFUL
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExporting Keys and Certificates\fR
+.PP
+Using the
+\fBpk12util\fR
+command to export certificates and keys requires both the name of the certificate to extract from the database (\fB\-n\fR) and the PKCS #12\-formatted output file to write to\&. There are optional parameters that can be used to encrypt the file to protect the certificate material\&.
+.PP
+pk12util \-o p12File \-n certname [\-c keyCipher] [\-C certCipher] [\-m|\-\-key_len keyLen] [\-n|\-\-cert_key_len certKeyLen] [\-d directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# pk12util \-o certs\&.p12 \-n Server\-Cert \-d /home/my/sharednssdb
+Enter password for PKCS12 file: 
+Re\-enter password: 
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBListing Keys and Certificates\fR
+.PP
+The information in a
+\&.p12
+file are not human\-readable\&. The certificates and keys in the file can be printed (listed) in a human\-readable pretty\-print format that shows information for every certificate and any public keys in the
+\&.p12
+file\&.
+.PP
+pk12util \-l p12File [\-h tokenname] [\-r] [\-d directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
+.PP
+For example, this prints the default ASCII output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# pk12util \-l certs\&.p12
+
+Enter password for PKCS12 file: 
+Key(shrouded):
+    Friendly Name: Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
+
+    Encryption algorithm: PKCS #12 V2 PBE With SHA\-1 And 3KEY Triple DES\-CBC
+        Parameters:
+            Salt:
+                45:2e:6a:a0:03:4d:7b:a1:63:3c:15:ea:67:37:62:1f
+            Iteration Count: 1 (0x1)
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 13 (0xd)
+        Signature Algorithm: PKCS #1 SHA\-1 With RSA Encryption
+        Issuer: "E=personal\-freemail@thawte\&.com,CN=Thawte Personal Freemail C
+            A,OU=Certification Services Division,O=Thawte Consulting,L=Cape T
+            own,ST=Western Cape,C=ZA"
+    
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Alternatively, the
+\fB\-r\fR
+prints the certificates and then exports them into separate DER binary files\&. This allows the certificates to be fed to another application that supports
+\&.p12
+files\&. Each certificate is written to a sequentially\-number file, beginning with
+file0001\&.der
+and continuing through
+file000N\&.der, incrementing the number for every certificate:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+pk12util \-l test\&.p12 \-r
+Enter password for PKCS12 file: 
+Key(shrouded):
+    Friendly Name: Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
+
+    Encryption algorithm: PKCS #12 V2 PBE With SHA\-1 And 3KEY Triple DES\-CBC
+        Parameters:
+            Salt:
+                45:2e:6a:a0:03:4d:7b:a1:63:3c:15:ea:67:37:62:1f
+            Iteration Count: 1 (0x1)
+Certificate    Friendly Name: Thawte Personal Freemail Issuing CA \- Thawte Consulting
+
+Certificate    Friendly Name: Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
+    
+.fi
+.if n \{\
+.RE
+.\}
+.SH "PASSWORD ENCRYPTION"
+.PP
+PKCS #12 provides for not only the protection of the private keys but also the certificate and meta\-data associated with the keys\&. Password\-based encryption is used to protect private keys on export to a PKCS #12 file and, optionally, the associated certificates\&. If no algorithm is specified, the tool defaults to using PKCS #12 SHA\-1 and 3\-key triple DES for private key encryption\&. When not in FIPS mode, PKCS #12 SHA\-1 and 40\-bit RC4 is used for certificate encryption\&. When in FIPS mode, there is no certificate encryption\&. If certificate encryption is not wanted, specify
+\fB"NONE"\fR
+as the argument of the
+\fB\-C\fR
+option\&.
+.PP
+The private key is always protected with strong encryption by default\&.
+.PP
+Several types of ciphers are supported\&.
+.PP
+PKCS #5 password\-based encryption
+.RS 4
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+PBES2 with AES\-CBC\-Pad as underlying encryption scheme (\fB"AES\-128\-CBC"\fR,
+\fB"AES\-192\-CBC"\fR, and
+\fB"AES\-256\-CBC"\fR)
+.RE
+.RE
+.PP
+PKCS #12 password\-based encryption
+.RS 4
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+SHA\-1 and 128\-bit RC4 (\fB"PKCS #12 V2 PBE With SHA\-1 And 128 Bit RC4"\fR
+or
+\fB"RC4"\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+SHA\-1 and 40\-bit RC4 (\fB"PKCS #12 V2 PBE With SHA\-1 And 40 Bit RC4"\fR) (used by default for certificate encryption in non\-FIPS mode)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+SHA\-1 and 3\-key triple\-DES (\fB"PKCS #12 V2 PBE With SHA\-1 And 3KEY Triple DES\-CBC"\fR
+or
+\fB"DES\-EDE3\-CBC"\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+SHA\-1 and 128\-bit RC2 (\fB"PKCS #12 V2 PBE With SHA\-1 And 128 Bit RC2 CBC"\fR
+or
+\fB"RC2\-CBC"\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+SHA\-1 and 40\-bit RC2 (\fB"PKCS #12 V2 PBE With SHA\-1 And 40 Bit RC2 CBC"\fR)
+.RE
+.RE
+.PP
+With PKCS #12, the crypto provider may be the soft token module or an external hardware module\&. If the cryptographic module does not support the requested algorithm, then the next best fit will be selected (usually the default)\&. If no suitable replacement for the desired algorithm can be found, the tool returns the error
+\fIno security module can perform the requested operation\fR\&.
+.SH "NSS DATABASE TYPES"
+.PP
+NSS originally used BerkeleyDB databases to store security information\&. The last versions of these
+\fIlegacy\fR
+databases are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cert8\&.db for certificates
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+key3\&.db for keys
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+secmod\&.db for PKCS #11 module information
+.RE
+.PP
+BerkeleyDB has performance limitations, though, which prevent it from being easily used by multiple applications simultaneously\&. NSS has some flexibility that allows applications to use their own, independent database engine while keeping a shared database and working around the access issues\&. Still, NSS requires more flexibility to provide a truly shared security database\&.
+.PP
+In 2009, NSS introduced a new set of databases that are SQLite databases rather than BerkleyDB\&. These new databases provide more accessibility and performance:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cert9\&.db for certificates
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+key4\&.db for keys
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+pkcs11\&.txt, which is listing of all of the PKCS #11 modules contained in a new subdirectory in the security databases directory
+.RE
+.PP
+Because the SQLite databases are designed to be shared, these are the
+\fIshared\fR
+database type\&. The shared database type is preferred; the legacy format is included for backward compatibility\&.
+.PP
+By default, the tools (\fBcertutil\fR,
+\fBpk12util\fR,
+\fBmodutil\fR) assume that the given security databases use the SQLite type Using the legacy databases must be manually specified by using the
+\fBdbm:\fR
+prefix with the given security directory\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# pk12util \-i /tmp/cert\-files/users\&.p12 \-d dbm:/home/my/sharednssdb
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To set the legacy database type as the default type for the tools, set the
+\fBNSS_DEFAULT_DB_TYPE\fR
+environment variable to
+\fBdbm\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+export NSS_DEFAULT_DB_TYPE="dbm"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This line can be set added to the
+~/\&.bashrc
+file to make the change permanent\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB_Howto
+.RE
+.PP
+For an engineering draft on the changes in the shared NSS databases, see the NSS project wiki:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB
+.RE
+.SH "COMPATIBILITY NOTES"
+.PP
+The exporting behavior of
+\fBpk12util\fR
+has changed over time, while importing files exported with older versions of NSS is still supported\&.
+.PP
+Until the 3\&.30 release,
+\fBpk12util\fR
+used the UTF\-16 encoding for the PKCS #5 password\-based encryption schemes, while the recommendation is to encode passwords in UTF\-8 if the used encryption scheme is defined outside of the PKCS #12 standard\&.
+.PP
+Until the 3\&.31 release, even when
+\fB"AES\-128\-CBC"\fR
+or
+\fB"AES\-192\-CBC"\fR
+is given from the command line,
+\fBpk12util\fR
+always used 256\-bit AES as the underlying encryption scheme\&.
+.PP
+For historical reasons,
+\fBpk12util\fR
+accepts password\-based encryption schemes not listed in this document\&. However, those schemes are not officially supported and may have issues in interoperability with other tools\&.
+.SH "SEE ALSO"
+.PP
+certutil (1)
+.PP
+modutil (1)
+.PP
+The NSS wiki has information on the new database design and how to configure applications to use it\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB_Howto
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB
+.RE
+.SH "ADDITIONAL RESOURCES"
+.PP
+For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at
+\m[blue]\fBhttp://www\&.mozilla\&.org/projects/security/pki/nss/\fR\m[]\&. The NSS site relates directly to NSS code changes and releases\&.
+.PP
+Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
+.PP
+IRC: Freenode at #dogtag\-pki
+.SH "AUTHORS"
+.PP
+The NSS tools were written and maintained by developers with Netscape, Red Hat, Sun, Oracle, Mozilla, and Google\&.
+.PP
+Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
+.SH "LICENSE"
+.PP
+Licensed under the Mozilla Public License, v\&. 2\&.0\&. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla\&.org/MPL/2\&.0/\&.
+.SH "NOTES"
+.IP " 1." 4
+Mozilla NSS bug 836477
+.RS 4
+\%https://bugzilla.mozilla.org/show_bug.cgi?id=836477
+.RE

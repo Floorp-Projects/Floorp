@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=382429
+-->
+<head>
+  <title>Test for Bug 382429</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=382429">Mozilla Bug 382429</a>
+<p id="display">&#x05e2; 3/4</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ function do_Replace()
+{
+/** Test for Bug 382429 **/
+  var t = $("display").firstChild;
+
+  t.data = t.data.replace(/3\/4/, "3 \u05d3 4");
+  ok(true, "We should get here without crash or hang");
+  is(t.data, "\u05e2 3 \u05d3 4", "replace succeeded");
+  SimpleTest.finish();
+}
+  SimpleTest.requestFlakyTimeout("untriaged");
+  setTimeout(do_Replace, 500);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

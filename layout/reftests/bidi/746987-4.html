@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <style>
+      body {
+        font-size:2em;
+        text-align:left;
+      }
+      .test {
+        border: medium solid gray;
+        padding: 10px;
+        width: 400px;
+        margin: 20px;
+      }
+      .plaintext {
+        unicode-bidi: plaintext;
+      }
+    </style>
+    <title>unicode-bidi:plaintext does not apply to embedded display:block</title>
+  </head>
+  <body>
+    <div class="test">
+      <div class="plaintext">
+        &#x05D0;->
+        <div>&#x05D0;-></div>
+        a->
+        <div>&#x05D0;-></div>
+        &#x05D0;->
+      </div>
+    </div>
+  </body>
+</html>

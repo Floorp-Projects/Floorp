@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>unsecure XHR test</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  hasMixedActiveContent = true;
+
+  async function runTest()
+  {
+    await isSecurityState("secure");
+    window.setTimeout(async () => {
+      try {
+        let req = new XMLHttpRequest();
+        req.open("GET", "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/alloworigin.sjs", false);
+        req.send(null);
+
+        // Change should be immediate, the request was sent synchronously
+        await isSecurityState("broken", "security broken after insecure XHR");
+      } catch (ex) {
+        ok(false, ex);
+      }
+
+      finish();
+    }, 0);
+  }
+
+  async function afterNavigationTest()
+  {
+    await isSecurityState("secure", "security full after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+</body>
+</html>

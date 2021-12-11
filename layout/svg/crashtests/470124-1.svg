@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<filter id="f7" filterUnits="userSpaceOnUse" primitiveUnits="objectBoundingBox"><feComposite/></filter>
+
+<g filter="url(#f7)"/>
+
+</svg>

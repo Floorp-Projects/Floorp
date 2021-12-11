@@ -1,0 +1,22 @@
+<html class="reftest-wait"><head>
+<title>Testcase bug 341382 - Crash [@ DoDeletingFrameSubtree] with position:fixed and display: table-caption</title>
+<script>
+function removestyles(i){
+document.getElementById('one').removeAttribute('style');
+document.body.offsetHeight;
+document.getElementById('two').removeAttribute('style');
+document.documentElement.removeAttribute("class");
+}
+
+
+</script></head>
+<body onload="setTimeout(removestyles,0);">
+<span></span>
+<table style="display: table-row-group;">
+<table>
+<span id="one" style="display: table-caption;">
+  <span style="position: fixed;"></span>
+  <div id="two" style="display: table-caption;"></div>
+</span>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1538622">Mozilla Bug 1538622</a>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  let o1 = new ImageData(25, 1),
+      o2 = new ImageData(50, 1),
+      o3 = new ImageData(75, 1),
+      o4 = new ImageData(100, 1);
+
+  let data = {
+    img1: o1,
+    img2: o2,
+    img3: o3,
+    img4: o4,
+    img5: o4,
+  };
+
+  window.addEventListener("message", windowMessage);
+
+  window.postMessage(data);
+
+  function windowMessage(e) {
+    let dataCopied = e.data;
+    ok(dataCopied.img5 instanceof ImageData, "backref ImageData should still be an ImageData");
+    is(dataCopied.img5, dataCopied.img4, "backref ImageData should be the referenced one");
+    SimpleTest.finish();
+  }
+</script>

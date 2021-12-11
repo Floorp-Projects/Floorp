@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=384981
+-->
+<head>
+  <title>Test for Bug 384981</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <!-- Make sure we wait for the stylesheet load -->
+  <script>document.documentElement.offsetWidth</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=384981">Mozilla Bug 384981</a>
+<p id="display">
+  <iframe src="javascript:'content'"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 384981 **/
+SimpleTest.waitForExplicitFinish()
+addLoadEvent(function() {
+  is(window.frames[0].document.documentElement.textContent, "content",
+     "Onload should not fire before subframe loads");
+});
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>
+

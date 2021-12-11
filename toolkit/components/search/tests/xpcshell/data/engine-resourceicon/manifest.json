@@ -1,0 +1,21 @@
+{
+  "name": "engine-resourceicon",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-resourceicon@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "default_locale": "en",
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "__MSG_extensionName__",
+      "search_url": "__MSG_searchUrl__"
+    }
+  }
+}

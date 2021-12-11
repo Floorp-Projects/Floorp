@@ -1,0 +1,3 @@
+HTTP 302 Redirect
+Location: //example.org/target_does_not_matter.html
+Cache-Control: max-age=10

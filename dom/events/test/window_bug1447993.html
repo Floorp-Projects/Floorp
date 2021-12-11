@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for Bug 1447993</title>
+    <style>
+      #area {
+        background: green;
+        border: 1px solid black;
+        width: 40px;
+        height: 40px;
+      }
+
+      #target {
+        background: blue;
+        border: 1px solid black;
+        width: 20px;
+        height: 20px;
+        margin: 10px;
+      }
+    </style>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+
+    var tests = [
+      topLevelDocumentEventHandling,
+      topLevelDocumentEventHandlingWithTouch,
+      iframeEventHandling,
+    ];
+
+    function next() {
+      if (!tests.length) {
+        opener.done();
+        window.close();
+      } else {
+        var test = tests.shift();
+        requestAnimationFrame(function() { setTimeout(test); });
+      }
+    }
+
+    function start() {
+      next();
+    }
+
+    function topLevelDocumentEventHandling() {
+      var pid;
+      var area = document.getElementById("area");
+      var target = document.getElementById("target");
+      var body = document.body;
+      var html = document.documentElement;
+      var eventLog = [];
+      function captureEvent(e) {
+        eventLog.push([e.type, e.composedPath()]);
+      }
+      var expectedEvents = [
+        ["pointerdown", [ target, area, body, html, document, window ]],
+        ["mousedown", [ target, area, body, html, document, window ]],
+        ["pointerup", [ area, body, html, document, window ]],
+        ["mouseup", [ area, body, html, document, window ]],
+        ["click", [ target, area, body, html, document, window ]],
+        ];
+
+      window.addEventListener("pointerdown",
+        function(e) {
+          captureEvent(e);
+          pid = e.pointerId;
+          area.setPointerCapture(pid);
+        }, { once: true});
+      window.addEventListener("mousedown",
+        function(e) {
+          captureEvent(e);
+        }, { once: true});
+      window.addEventListener("pointerup",
+        function(e) {
+          captureEvent(e);
+          area.releasePointerCapture(pid);
+        }, { once: true});
+      window.addEventListener("mouseup", function(e) {
+          captureEvent(e);
+        }, { once: true});
+      window.addEventListener("click", function(e) {
+          captureEvent(e);
+        }, { once: true});
+
+      synthesizeMouseAtCenter(target, {}, window);
+
+      opener.is(eventLog.length, expectedEvents.length,
+                "[topLevelDocumentEventHandling] Same number events expected.");
+      for (var i = 0; i < eventLog.length; ++i) {
+        opener.is(eventLog[i][0], expectedEvents[i][0],
+                  `topLevelDocumentEventHandling ${i}`);
+        for (var j = 0; j < eventLog[i][1].length; ++j) {
+          opener.is(eventLog[i][1][j], expectedEvents[i][1][j],
+                    `topLevelDocumentEventHandling ${i} ${j}`);
+        }
+      }
+      next();
+    }
+
+    function topLevelDocumentEventHandlingWithTouch() {
+      var pid;
+      var area = document.getElementById("area");
+      var target = document.getElementById("target");
+      var body = document.body;
+      var html = document.documentElement;
+      var eventLog = [];
+      function captureEvent(e) {
+        eventLog.push([e.type, e.composedPath()]);
+      }
+      var expectedEvents = [
+        ["pointerdown", [ target, area, body, html, document, window ]],
+        ["touchstart", [ target, area, body, html, document, window ]],
+        ["pointerup", [ area, body, html, document, window ]],
+        ["touchend", [ target, area, body, html, document, window ]],
+        /*
+        // Right now touch event initated mousedown/up (and then click) are
+        // dispatched in APZ, and there isn't JS exposed way to test that.
+        ["mousedown", [ target, area, body, html, document, window ]],
+        ["mouseup", [ target, area, body, html, document, window ]],
+        ["click", [ target, area, body, html, document, window ]],*/
+        ];
+
+      window.addEventListener("pointerdown",
+        function(e) {
+          captureEvent(e);
+          pid = e.pointerId;
+          area.setPointerCapture(pid);
+        }, { once: true});
+      window.addEventListener("touchstart", function(e) {
+          captureEvent(e);
+        }, { once: true});
+      window.addEventListener("pointerup",
+        function(e) {
+          captureEvent(e);
+          try {
+            area.releasePointerCapture(pid);
+          } catch(ex) {}
+        }, { once: true});
+      window.addEventListener("touchend", function(e) {
+          captureEvent(e);
+        }, { once: true});
+      /*window.addEventListener("mousedown",
+        function(e) {
+          captureEvent(e);
+        }, { once: true});
+      window.addEventListener("mouseup", function(e) {
+          captureEvent(e);
+        }, { once: true});
+      window.addEventListener("click", function(e) {
+          captureEvent(e);
+        }, { once: true});*/
+
+      synthesizeTouchAtCenter(target, {}, window);
+
+      opener.is(eventLog.length, expectedEvents.length,
+                "[topLevelDocumentEventHandlingWithTouch] Same number events expected.");
+      for (var i = 0; i < eventLog.length; ++i) {
+        opener.is(eventLog[i][0], expectedEvents[i][0],
+                  `topLevelDocumentEventHandlingWithTouch ${i}`);
+        for (var j = 0; j < eventLog[i][1].length; ++j) {
+          opener.is(eventLog[i][1][j], expectedEvents[i][1][j],
+                    `topLevelDocumentEventHandlingWithTouch ${i} ${j}`);
+        }
+      }
+      next();
+    }
+
+    function iframeEventHandling() {
+      var pid;
+      var iframe = document.getElementById("iframe");
+      var doc = iframe.contentDocument;
+      doc.head.innerHTML = "<style>" + document.getElementsByTagName("style")[0].textContent + "</style>";
+      var area = doc.createElement("div");
+      area.id = "area";
+      var target = doc.createElement("div");
+      target.id = "target";
+      area.appendChild(target);
+      doc.body.appendChild(area);
+      var body = doc.body;
+      var html = doc.documentElement;
+      var win = doc.defaultView;
+      var eventLog = [];
+      function captureEvent(e) {
+        eventLog.push([e.type, e.composedPath()]);
+      }
+      var expectedEvents = [
+        ["pointerdown", [ target, area, body, html, doc, win ]],
+        ["mousedown", [ target, area, body, html, doc, win ]],
+        ["pointerup", [ area, body, html, doc, win ]],
+        ["mouseup", [ area, body, html, doc, win ]],
+        ["click", [ target, area, body, html, doc, win ]],
+        ];
+
+      win.addEventListener("pointerdown",
+        function(e) {
+          captureEvent(e);
+          pid = e.pointerId;
+          area.setPointerCapture(pid);
+        }, { once: true});
+      win.addEventListener("mousedown",
+        function(e) {
+          captureEvent(e);
+        }, { once: true});
+      win.addEventListener("pointerup",
+        function(e) {
+          captureEvent(e);
+          area.releasePointerCapture(pid);
+        }, { once: true});
+      win.addEventListener("mouseup", function(e) {
+          captureEvent(e);
+        }, { once: true});
+      win.addEventListener("click", function(e) {
+          captureEvent(e);
+        }, { once: true});
+
+      synthesizeMouseAtCenter(target, {}, win);
+
+      opener.is(eventLog.length, expectedEvents.length,
+                "[iframeEventHandling] Same number events expected.");
+      for (var i = 0; i < eventLog.length; ++i) {
+        opener.is(eventLog[i][0], expectedEvents[i][0],
+                  `iframeEventHandling ${i}`);
+        for (var j = 0; j < eventLog[i][1].length; ++j) {
+          opener.is(eventLog[i][1][j], expectedEvents[i][1][j],
+                    `iframeEventHandling ${i} ${j}`);
+        }
+      }
+      next();
+    }
+
+    </script>
+  </head>
+  <body onload="start();">
+    <div id="area">
+      <div id="target"></div>
+    </div>
+    <iframe id="iframe"></iframe>
+    <h5 id="targetOutsideIframe"></h5>
+  </body>
+</html>

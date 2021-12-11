@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef CrashAnnotations_h
+#define CrashAnnotations_h
+
+#include <cstddef>
+#include <cstdint>
+
+namespace CrashReporter {
+
+// Typed enum representing all crash annotations
+enum class Annotation : uint32_t {
+${enum}
+};
+
+// Stringified crash annotation names
+const char* const kAnnotationStrings[] = {
+${strings}
+};
+
+// Whitelist of crash annotations that can be included in a crash ping
+const Annotation kCrashPingWhitelist[] = {
+${whitelist}
+};
+
+/**
+ * Return the string representation of a crash annotation.
+ *
+ * @param aAnnotation a crash annotation
+ * @returns A constant string holding the annotation name
+ */
+static inline const char* AnnotationToString(Annotation aAnnotation) {
+  return kAnnotationStrings[static_cast<uint32_t>(aAnnotation)];
+}
+
+/**
+ * Converts a string to its corresponding crash annotation.
+ *
+ * @param aResult a reference where the annotation will be stored
+ * @param aValue the string to be converted
+ * @return true if the string was successfully converted, false if it did not
+ *         correspond to any known annotation
+ */
+bool AnnotationFromString(Annotation& aResult, const char* aValue);
+
+/**
+ * Checks if the given crash annotation is whitelisted for inclusion in the
+ * crash ping.
+ *
+ * @param aAnnotation the crash annotation to be checked
+ * @return true if the annotation can be included in the crash ping, false
+ *         otherwise
+ */
+bool IsAnnotationWhitelistedForPing(Annotation aAnnotation);
+
+/**
+ * Abstract annotation writer, this is needed only for code that writes out
+ * annotations in the exception handler.
+ */
+class AnnotationWriter {
+ public:
+  virtual void Write(Annotation aAnnotation, const char* aValue,
+                     size_t aLen = 0) = 0;
+  virtual void Write(Annotation aAnnotation, uint64_t aValue) = 0;
+};
+
+}  // namespace CrashReporter
+
+#endif  // CrashAnnotations_h

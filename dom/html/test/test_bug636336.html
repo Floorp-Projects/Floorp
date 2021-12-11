@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=636336
+-->
+<head>
+  <title>Test for Bug 636336</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=636336">Mozilla Bug 636336</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 636336 **/
+function testIt(tag) {
+  var elem = document.createElement(tag);
+  elem.setAttribute("src", " ");
+  is(elem.getAttribute("src"), " ",
+     tag + " src attribute setter should not strip whitespace");
+  elem.setAttribute("src", " test ");
+  is(elem.getAttribute("src"), " test ",
+     tag + " src attribute setter should not strip whitespace around non-whitespace");
+  is(elem.src, window.location.href.replace(/\?.*/, "")
+                     .replace(/test_bug636336\.html$/, "test"),
+     tag + ".src should strip whitespace as needed");
+}
+
+testIt("img");
+testIt("source");
+testIt("audio");
+testIt("video");
+</script>
+</pre>
+</body>
+</html>

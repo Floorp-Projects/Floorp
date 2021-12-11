@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(29, true)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <title>Test discrete keyTimes are scaled correctly (Bug 681645)</title>
+  <rect x="15" y="15" width="200" height="200" fill="blue">
+    <animate attributeName="fill" begin="0" dur="100s"
+             calcMode="discrete"
+             values="red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;blue;
+                     red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;red;
+                     red;red;red;red;red;red;red;red;red;red"/>
+  </rect>
+</svg>

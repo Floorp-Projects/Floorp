@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#viewGroup > radio > .radio-label-box {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+}
+
+/* Hide the radio button for the section headers */
+#viewGroup > radio > .radio-check {
+  display: none;
+}
+
+#thepreviewimage {
+  display: block;
+/* This following entry can be removed when Bug 522850 is fixed. */
+  min-width: 1px;
+}
+
+table {
+  border-spacing: 0;
+}
+
+.tableSeparator {
+  height: 6px;
+}
+
+th, td {
+  padding: 0;
+}
+
+th {
+  font: inherit;
+  text-align: start;
+  padding-inline-end: .5em;
+}
+
+/*
+  Make the first column shrink to its min-content, except for #securityTable
+  which has full sentences in its first column.
+*/
+table:not(#securityTable) th {
+  width: 0;
+}
+
+th > label,
+td > input,
+.table-split-column {
+  width: 100%;
+  margin-block: 1px 4px;
+}
+
+.table-split-column {
+  display: flex;
+  align-items: center;
+}
+
+.table-split-column > label,
+.table-split-column > input {
+  flex-grow: 1;
+}
+
+.table-split-column > button {
+  flex-shrink: 0;
+}
+
+#hostText {
+  -moz-box-flex: 1;
+  margin-top: 1px; /* same margin as adjacent label */
+}

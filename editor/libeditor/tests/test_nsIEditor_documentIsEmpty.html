@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests of nsIEditor#documentIsEmpty</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(() => {
+      const originalBody = document.body.innerHTML;
+
+      (function test_with_text_editor() {
+        for (const test of [
+            {
+              tag: "input",
+              innerHTML: '<input><input value="abc"><input placeholder="abc">',
+            },
+            {
+              tag: "textarea",
+              innerHTML: '<textarea></textarea><textarea>abc</textarea><textarea placeholder="abc"></textarea>',
+            },
+          ]) {
+            document.body.innerHTML = test.innerHTML;
+            let textControl = document.body.querySelector(test.tag);
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, true,
+              `nsIEditor.documentIsEmpty should be true if value of <${test.tag}> is empty by default`);
+            textControl.focus();
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, true,
+              `nsIEditor.documentIsEmpty should be true if value of <${test.tag}> is empty by default after getting focus`);
+            textControl.value = "abc";
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, false,
+              `nsIEditor.documentIsEmpty should be false if <${test.tag}>.value is set to non-empty string`);
+            textControl.value = "";
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, true,
+              `nsIEditor.documentIsEmpty should be true if <${test.tag}>.value is set to empty string`);
+
+            textControl = textControl.nextSibling;
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, false,
+              `nsIEditor.documentIsEmpty should be false if value of <${test.tag}> is non-empty by default`);
+            textControl.focus();
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, false,
+              `nsIEditor.documentIsEmpty should be false if value of <${test.tag}> is non-empty by default after getting focus`);
+            textControl.value = "def";
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, false,
+              `nsIEditor.documentIsEmpty should be false if <${test.tag}>.value is set to different non-empty string`);
+            textControl.value = "";
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, true,
+              `nsIEditor.documentIsEmpty should be true if <${test.tag}>.value is set to empty string from non-empty string`);
+
+            textControl = textControl.nextSibling;
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, true,
+              `nsIEditor.documentIsEmpty should be true if value of <${test.tag}> is empty by default (placeholder isn't empty)`);
+            textControl.focus();
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, true,
+              `nsIEditor.documentIsEmpty should be true if value of <${test.tag}> is empty by default after getting focus (placeholder isn't empty)`);
+            textControl.value = "abc";
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, false,
+              `nsIEditor.documentIsEmpty should be false if <${test.tag}>.value is set to non-empty string (placeholder isn't empty)`);
+            textControl.value = "";
+            is(SpecialPowers.wrap(textControl).editor.documentIsEmpty, true,
+              `nsIEditor.documentIsEmpty should be true if <${test.tag}>.value is set to empty string (placeholder isn't empty)`);
+          }
+      })();
+
+      function getHTMLEditor() {
+        const editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+        if (!editingSession) {
+          return null;
+        }
+        return editingSession.getEditorForWindow(window);
+      }
+
+      (function test_with_contenteditable() {
+        document.body.innerHTML = "<div contenteditable></div>";
+        try {
+          getHTMLEditor().documentIsEmpty;
+          todo(false, "nsIEditor.documentIsEmpty should throw an exception when no editing host has focus");
+        } catch (e) {
+          ok(true, "nsIEditor.documentIsEmpty should throw an exception when no editing host has focus");
+        }
+        document.querySelector("div[contenteditable]").focus();
+        todo_is(getHTMLEditor().documentIsEmpty, true,
+          "nsIEditor.documentIsEmpty should be true when editing host does not have contents");
+
+        document.body.innerHTML = "<div contenteditable><br></div>";
+        document.querySelector("div[contenteditable]").focus();
+        is(getHTMLEditor().documentIsEmpty, false,
+          "nsIEditor.documentIsEmpty should be false when editing host has only a <br> element");
+
+        document.body.innerHTML = "<div contenteditable><p><br></p></div>";
+        document.querySelector("div[contenteditable]").focus();
+        is(getHTMLEditor().documentIsEmpty, false,
+          "nsIEditor.documentIsEmpty should be false when editing host has only an empty paragraph");
+
+        document.body.innerHTML = "<div contenteditable><p>abc</p></div>";
+        document.querySelector("div[contenteditable]").focus();
+        is(getHTMLEditor().documentIsEmpty, false,
+          "nsIEditor.documentIsEmpty should be false when editing host has text in a paragraph");
+
+        document.body.innerHTML = "<div contenteditable>abc</div>";
+        document.querySelector("div[contenteditable]").focus();
+        is(getHTMLEditor().documentIsEmpty, false,
+          "nsIEditor.documentIsEmpty should be false when editing host has text directly");
+
+        document.execCommand("selectall");
+        document.execCommand("delete");
+        todo_is(getHTMLEditor().documentIsEmpty, true,
+          "nsIEditor.documentIsEmpty should be true when all contents in editing host are deleted");
+      })();
+
+      document.designMode = "on";
+      (function test_with_designMode() {
+        document.body.innerHTML = "";
+        is(getHTMLEditor().documentIsEmpty, true,
+          "nsIEditor.documentIsEmpty should be true when <body> is empty in designMode");
+        document.body.focus();
+        is(getHTMLEditor().documentIsEmpty, true,
+          "nsIEditor.documentIsEmpty should be true when <body> is empty in designMode (after setting focus explicitly)");
+
+        document.body.innerHTML = "<div><br></div>";
+        is(getHTMLEditor().documentIsEmpty, false,
+          "nsIEditor.documentIsEmpty should be false when <body> has only an empty paragraph in designMode");
+
+        document.body.innerHTML = "<div>abc</div>";
+        is(getHTMLEditor().documentIsEmpty, false,
+          "nsIEditor.documentIsEmpty should be false when <body> has text in a paragraph in designMode");
+
+        document.body.innerHTML = "abc";
+        is(getHTMLEditor().documentIsEmpty, false,
+          "nsIEditor.documentIsEmpty should be false when <body> has text directly in designMode");
+
+        document.execCommand("selectall");
+        document.execCommand("delete");
+        todo_is(getHTMLEditor().documentIsEmpty, true,
+          "nsIEditor.documentIsEmpty should be true when all contents in designMode are deleted");
+      })();
+      document.designMode = "off";
+
+      document.body.innerHTML = originalBody;
+      SimpleTest.finish();
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

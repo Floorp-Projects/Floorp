@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test report matched URL info (Bug #1288633)</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+;
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+var mainWindow = window.browsingContext.topChromeWindow;
+const SJS = "mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs";
+const BASE_URL = "http://" + SJS + "?";
+
+var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+
+function addUrlToDB(list, url) {
+  let testData = [{ db: list, url}];
+
+  return classifierHelper.addUrlToDB(testData)
+    .catch(function(err) {
+      ok(false, "Couldn't update classifier. Error code: " + err);
+      // Abort test.
+      SimpleTest.finish();
+    });
+}
+
+function setupTestData(data) {
+  let promises = [];
+  let providerList = "browser.safebrowsing.provider." + data.provider + ".lists";
+  if (!Services.prefs.prefHasUserValue(providerList)) {
+    promises.push(pushPrefs([providerList, data.list]));
+  } else {
+    let pref = SpecialPowers.getCharPref(providerList);
+    pref += "," + data.list;
+    promises.push(pushPrefs([providerList, pref]));
+  }
+
+  let activeTablePref = "urlclassifier.phishTable";
+  let activeTable = SpecialPowers.getCharPref(activeTablePref);
+      activeTable += "," + data.list;
+  promises.push(pushPrefs([activeTablePref, activeTable]));
+
+  promises.push(addUrlToDB(data.list, data.testUrl));
+  return Promise.all(promises);
+}
+
+function testOnWindow(aTestData, aCallback, aTestCreater) {
+  return new Promise(resolve => {
+    let win = mainWindow.OpenBrowserWindow();
+
+    (async function() {
+      await TestUtils.topicObserved("browser-delayed-startup-finished",
+                                    subject => subject == win);
+
+      let browser = win.gBrowser.selectedBrowser;
+      aTestCreater(win, browser, aTestData.topUrl, aTestData.testUrl);
+
+      let notification = await BrowserTestUtils.waitForNotificationBar(win.gBrowser, browser, "blocked-badware-page");
+      ok(notification, "Notification box should be displayed");
+
+      let buttons = notification.buttonContainer.getElementsByTagName("button");
+      let button = buttons[1];
+      if (aTestData.provider != "google" && aTestData.provider != "google4") {
+        is(button, undefined, "Report button should not be showed");
+        win.close();
+        resolve();
+        return;
+      }
+
+      button.click();
+
+      let newTabBrowser = win.gBrowser.selectedTab.linkedBrowser;
+      await BrowserTestUtils.browserLoaded(newTabBrowser);
+
+      aCallback(newTabBrowser);
+      win.close();
+      resolve();
+    })();
+  });
+}
+
+var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
+  (async function() {
+    BrowserTestUtils.loadURI(aBrowser, aTopUrl);
+    await BrowserTestUtils.browserLoaded(aBrowser);
+
+    await SpecialPowers.spawn(aBrowser, [aUrl], async function(url) {
+      return new Promise(resolve => {
+        let listener = e => {
+          docShell.chromeEventHandler.removeEventListener("AboutBlockedLoaded", listener, false, true);
+          resolve();
+        };
+        docShell.chromeEventHandler.addEventListener("AboutBlockedLoaded", listener, false, true);
+        let frame = content.document.getElementById("phishingFrame");
+        frame.setAttribute("src", "http://" + url);
+      });
+    });
+
+    let doc = aWindow.gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument;
+    let ignoreWarningLink = doc.getElementById("ignore_warning_link");
+    ok(ignoreWarningLink, "Ignore warning link should exist");
+    ignoreWarningLink.click();
+  })();
+};
+
+var createBlockedPage = function(aWindow, aBrowser, aTopUrl, aUrl) {
+  (async function() {
+    BrowserTestUtils.loadURI(aBrowser, aTopUrl);
+    await BrowserTestUtils.waitForContentEvent(aBrowser, "DOMContentLoaded");
+
+    let doc = aWindow.gBrowser.contentDocument;
+    let ignoreWarningLink = doc.getElementById("ignore_warning_link");
+    ok(ignoreWarningLink, "Ignore warning link should exist");
+    ignoreWarningLink.click();
+  })();
+};
+
+function checkReportURL(aReportBrowser, aUrl) {
+    let expectedReportUrl = BASE_URL + "action=reporturl&reporturl=" + encodeURIComponent(aUrl);
+    is(aReportBrowser.contentDocument.location.href, expectedReportUrl, "Correct report URL");
+}
+
+var testDatas = [
+  { topUrl: "http://itisaphishingsite.org/phishing.html",
+    testUrl: "itisaphishingsite.org/phishing.html",
+    list: "mochi1-phish-simple",
+    provider: "google",
+    blockCreater: createBlockedPage,
+    expectedReportUri: "http://itisaphishingsite.org/phishing.html",
+  },
+
+  // Non-google provider, no report button is showed.
+  // Test provider needs a valid update URL (mozilla for example) otherwise
+  // the updates inserting the test data will fail.
+  { topUrl: "http://fakeitisaphishingsite.org/phishing.html",
+    testUrl: "fakeitisaphishingsite.org/phishing.html",
+    list: "fake-phish-simple",
+    provider: "mozilla",
+    blockCreater: createBlockedPage,
+  },
+
+  // Iframe case:
+  // A top level page at
+  // http://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs?action=create-blocked-iframe
+  // contains an iframe to http://phishing.example.com/test.html (blocked).
+
+  { topUrl: "http://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs?action=create-blocked-iframe",
+    testUrl: "phishing.example.com/test.html",
+    list: "mochi2-phish-simple",
+    provider: "google4",
+    blockCreater: createBlockedIframe,
+    expectedReportUri: "http://phishing.example.com/test.html",
+  },
+
+  // Redirect case:
+  // A top level page at
+  // http://prefixexample.com/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs?action=create-blocked-redirect (blocked)
+  // will get redirected to
+  // https://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs?action=create-blocked-redirect.
+  { topUrl: "http://prefixexample.com/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs?action=create-blocked-redirect",
+    testUrl: "prefixexample.com/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs?action=create-blocked-redirect",
+    list: "mochi3-phish-simple",
+    provider: "google4",
+    blockCreater: createBlockedPage,
+    expectedReportUri: "http://prefixexample.com/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs",
+  },
+
+];
+
+SpecialPowers.pushPrefEnv(
+  {"set": [["browser.safebrowsing.provider.google.reportPhishMistakeURL", BASE_URL + "action=reporturl&reporturl="],
+           ["browser.safebrowsing.provider.google4.reportPhishMistakeURL", BASE_URL + "action=reporturl&reporturl="],
+           ["browser.safebrowsing.phishing.enabled", true]]},
+  test);
+
+function test() {
+  (async function() {
+    await classifierHelper.waitForInit();
+
+    for (let testData of testDatas) {
+      await setupTestData(testData);
+      await testOnWindow(testData, function(browser) {
+        checkReportURL(browser, testData.expectedReportUri);
+      }, testData.blockCreater);
+
+      await classifierHelper._cleanup();
+    }
+
+    SimpleTest.finish();
+  })();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>

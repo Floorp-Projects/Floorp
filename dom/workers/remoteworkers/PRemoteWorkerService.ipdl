@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include ProtocolTypes;
+include RemoteWorkerTypes;
+
+namespace mozilla {
+namespace dom {
+
+// Simple protocol to register any active RemoteWorkerService running on any
+// process.  Initialization/registration is delayed for preallocated processes
+// until the process takes on its final remoteType.
+protocol PRemoteWorkerService
+{
+  manager PBackground;
+
+parent:
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

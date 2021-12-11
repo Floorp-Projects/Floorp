@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 427370</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color: white; font-size:16px; padding:0; margin:0;
+        }
+        body {
+            margin:10px;
+        }
+        ol,li{margin:0!important;padding:0!important}
+        ol { margin-top:1em!important; }
+        .rtl li {margin-right:40px!important;}
+        .ltr li {margin-left:40px!important;}
+
+        DEBUG_li {
+                outline:1px dashed red;
+                border:3px dashed blue;
+        }
+        .inside li {
+                list-style-position:inside;
+        }
+
+        .rtl label { 
+                float:right;
+        }
+        .ltr label { 
+                float:left;
+        }
+
+        label {
+                width:100px;
+                height:1em;
+                background:pink;
+        }
+
+        .rtl { 
+                direction:rtl;
+        }
+        .ltr { 
+                direction:ltr;
+        }
+
+        .C {
+                padding:0 0.2em 0 0.2em;
+        }
+    </style>
+</head>
+<body>
+<div style="position:absolute;top:0;left: 50px;bottom:0;width:1px;background:lime;opacity:0.5"></div>
+<div style="position:absolute;top:0;right:50px;bottom:0;width:1px;background:lime;opacity:0.5"></div>
+
+<div class="ltr">
+                <ol>
+                        <li>
+                                <label></label>
+                                Outside
+                        </li>
+                        <li>
+                                <div></div><div><span class="C">C</span></div>
+                        </li>
+</ol>
+</div>
+
+<div class="rtl">
+<ol>
+                        <li>
+                                <label></label>
+                                Outside
+                        </li>
+                        <li>
+                                <div></div><div><span class="C">C</span></div>
+                        </li>
+</ol>
+</div>
+
+<br style="clear:both;">
+
+<div style="float:left; width:100px; height:5em; border:1px solid black"></div>
+<div class="ltr">
+                <ol>
+                        <li>
+                                <label></label>
+                                Outside
+                        </li>
+                        <li>
+                                <div></div><div><span class="C">C</span></div>
+                        </li>
+</ol>
+</div>
+
+<br style="clear:both;">
+
+<div style="float:right; width:100px; height:5em; border:1px solid black"></div>
+<div class="rtl">
+<ol>
+                        <li>
+                                <label></label>
+                                Outside
+                        </li>
+                        <li>
+                                <div></div><div><span class="C">C</span></div>
+                        </li>
+</ol>
+</div>
+
+
+<br style="clear:both;">
+
+<div class="ltr">
+                <ol>
+                        <li><div>
+                                <label></label>
+                                Outside
+                        </div></li>
+</ol>
+</div>
+
+<div class="rtl">
+<ol>
+                        <li><div>
+                                <label></label>
+                                Outside
+                        </div></li>
+</ol>
+</div>
+
+<br style="clear:both;">
+
+<div style="float:left; width:100px; height:5em; border:1px solid black"></div>
+<div class="ltr">
+                <ol>
+                        <li><div>
+                                <label></label>
+                                Outside
+                        </div></li>
+</ol>
+</div>
+
+<br style="clear:both;">
+
+<div style="float:right; width:100px; height:5em; border:1px solid black"></div>
+<div class="rtl">
+<ol>
+                        <li><div>
+                                <label></label>
+                                Outside
+                        </div></li>
+</ol>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * General styles
+ */
+
+a.disabled-link,
+a.disabled-link:hover,
+a.disabled-link:visited {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.app {
+  display: grid;
+  min-width: calc(var(--base-unit) * 90);
+}
+
+/* wide layout -> two columns, 1 row */
+@media(min-width: 701px) {
+  .app {
+    grid-template-columns: calc(var(--base-unit) * 50) auto;
+    height: 100vh;
+  }
+}
+
+/* vertical layout -> 1 column, 2 rows */
+@media(max-width: 700px) {
+  .app {
+    grid-template-rows: auto 1fr;
+  }
+}

@@ -1,0 +1,859 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url(chrome://devtools/skin/breadcrumbs.css);
+
+.theme-dark {
+  --table-splitter-color: rgba(255,255,255,0.15);
+  --table-zebra-background: rgba(255,255,255,0.05);
+  --sidemenu-selected-arrow: url(images/item-arrow-dark-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/item-arrow-dark-rtl.svg);
+}
+
+.theme-light {
+  --table-splitter-color: rgba(0,0,0,0.15);
+  --table-zebra-background: rgba(0,0,0,0.05);
+  --sidemenu-selected-arrow: url(images/item-arrow-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/item-arrow-rtl.svg);
+}
+
+/* Generic pane helpers */
+
+.generic-toggled-pane {
+  margin-inline-start: 0 !important;
+  /* Unfortunately, transitions don't work properly with locale-aware properties,
+     so both the left and right margins are set via js, while the start margin
+     is always overridden here. */
+}
+
+.generic-toggled-pane[animated] {
+  transition: margin 0.25s ease-in-out;
+}
+
+/* Responsive container */
+
+.devtools-responsive-container {
+  -moz-box-orient: horizontal;
+}
+
+.devtools-main-content {
+  min-width: 50px;
+}
+
+.devtools-main-content,
+.devtools-sidebar-tabs {
+  /* Prevent some children that should be hidden from remaining visible as this is shrunk (Bug 971959) */
+  position: relative;
+}
+
+@media (min-width: 701px) {
+  .devtools-responsive-container .generic-toggled-pane {
+    /* To hide generic-toggled-pane, negative margins are applied dynamically.
+     * In the default horizontal layout, the pane is on the side and should be
+     * hidden using negative margin-inline-end only.
+     */
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .devtools-responsive-container {
+    -moz-box-orient: vertical;
+  }
+
+  .devtools-responsive-container > .devtools-side-splitter {
+    /* This is a normally vertical splitter, but we have turned it horizontal
+       due to the smaller resolution */
+    min-height: calc(var(--devtools-splitter-top-width) +
+    var(--devtools-splitter-bottom-width) + 1px);
+    border-top-width: var(--devtools-splitter-top-width);
+    border-bottom-width: var(--devtools-splitter-bottom-width);
+    margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+    margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
+
+    /* Reset the vertical splitter styles */
+    min-width: 0;
+    border-inline-end-width: 0;
+    border-inline-start-width: 0;
+    margin-inline-end: 0;
+    margin-inline-start: 0;
+
+    /* In some edge case the cursor is not changed to ns-resize */
+    cursor: ns-resize;
+  }
+
+  .devtools-responsive-container > .devtools-sidebar-tabs:not(.pane-collapsed) {
+    /* When the panel is collapsed min/max height should not be applied because
+       collapsing relies on negative margins, which implies constant height. */
+    min-height: 35vh;
+    max-height: 75vh;
+  }
+
+  .devtools-responsive-container .generic-toggled-pane {
+    /* To hide generic-toggled-pane, negative margins are applied dynamically.
+     * If a vertical layout, the pane is on the bottom and should be hidden
+     * using negative bottom margin only.
+     */
+    margin-inline-end: 0 !important;
+  }
+}
+
+/* VariablesView */
+
+.variables-view-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+}
+
+.variables-view-empty-notice {
+  padding: 2px;
+}
+
+.variables-view-empty-notice {
+  color: var(--theme-text-color-alt);
+}
+
+.variables-view-scope:focus > .title,
+.variable-or-property:focus > .title {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.variables-view-scope > .title {
+  border-top-width: 1px;
+  border-top-style: solid;
+  margin-top: -1px;
+}
+
+.variables-view-scope > .title:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
+/* Custom scope stylings */
+
+.variables-view-watch-expressions .title > .name  {
+  max-width: 14em;
+}
+
+/* Generic variables traits */
+
+.variables-view-variable:not(:last-child) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.variables-view-variable > .title > .name {
+  font-weight: 600;
+}
+
+/* Generic variables *and* properties traits */
+
+.variable-or-property:focus > .title > label {
+  color: inherit !important;
+}
+
+.variables-view-container .theme-twisty {
+  margin: 2px;
+}
+
+.variable-or-property > .title > .theme-twisty {
+  margin-inline-start: 5px;
+}
+
+.variables-view-container .variables-view-element-details .theme-twisty:not([open]):-moz-locale-dir(rtl) {
+  transform: rotate(-90deg);
+}
+
+.variable-or-property:not([untitled]) > .variables-view-element-details {
+  margin-inline-start: 7px;
+}
+
+/* Traits applied when variables or properties are changed or overridden */
+
+.variable-or-property:not([overridden]) {
+  transition: background 1s ease-in-out;
+}
+
+.variable-or-property:not([overridden])[changed] {
+  transition-duration: .4s;
+}
+
+.variable-or-property[overridden] {
+  background: rgba(128,128,128,0.05);
+}
+
+.variable-or-property[overridden] .title > label {
+  /* Cross out the title for this variable and all child properties. */
+  font-style: italic;
+  text-decoration: line-through;
+  border-bottom: none !important;
+  color: rgba(128,128,128,0.9);
+  opacity: 0.7;
+}
+
+/* Traits applied when variables or properties are editable */
+
+.variable-or-property[editable] > .title > .value {
+  cursor: text;
+}
+
+.variable-or-property[overridden] .title > .value {
+  /* Disallow editing this variable and all child properties. */
+  pointer-events: none;
+}
+
+/* Custom configurable/enumerable/writable or frozen/sealed/extensible
+ * variables and properties */
+
+.variable-or-property[non-enumerable]:not([self], [pseudo-item]) > .title > .name {
+  opacity: 0.6;
+}
+
+.variable-or-property-non-writable-icon {
+  background: url("chrome://devtools/skin/images/vview-lock.svg") no-repeat;
+  background-size: cover;
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.variable-or-property-frozen-label,
+.variable-or-property-sealed-label,
+.variable-or-property-non-extensible-label {
+  height: 16px;
+  padding-inline-end: 4px;
+}
+
+.variable-or-property:not(:focus) > .title > .variable-or-property-frozen-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-sealed-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-non-extensible-label {
+  color: #666;
+}
+
+/* Aligned values */
+
+.variables-view-container[aligned-values] .title > .separator {
+  -moz-box-flex: 1;
+}
+
+.variables-view-container[aligned-values] .title > .value {
+  -moz-box-flex: 0;
+  width: 70vw;
+}
+
+.variables-view-container[aligned-values] .title > .element-value-input {
+  width: calc(70vw - 10px);
+}
+
+/* Actions first */
+
+.variables-view-open-inspector {
+  -moz-box-ordinal-group: 1;
+}
+
+.variables-view-edit,
+.variables-view-add-property {
+  -moz-box-ordinal-group: 2;
+}
+
+.variable-or-property-frozen-label,
+.variable-or-property-sealed-label,
+.variable-or-property-non-extensible-label,
+.variable-or-property-non-writable-icon {
+  -moz-box-ordinal-group: 3;
+}
+
+.variables-view-delete {
+  -moz-box-ordinal-group: 4;
+}
+
+.variables-view-container[actions-first] .variables-view-delete,
+.variables-view-container[actions-first] .variables-view-add-property,
+.variables-view-container[actions-first] .variables-view-open-inspector {
+  -moz-box-ordinal-group: 0;
+}
+
+.variables-view-container[actions-first] [invisible] {
+  visibility: hidden;
+}
+
+/* Variables and properties tooltips */
+
+.variable-or-property > tooltip > label {
+  margin: 0 2px 0 2px;
+}
+
+.variable-or-property[non-enumerable] > tooltip > label.enumerable,
+.variable-or-property[non-configurable] > tooltip > label.configurable,
+.variable-or-property[non-writable] > tooltip > label.writable,
+.variable-or-property[non-extensible] > tooltip > label.extensible {
+  color: #800;
+  text-decoration: line-through;
+}
+
+.variable-or-property[overridden] > tooltip > label.overridden {
+  padding-inline-start: 4px;
+  border-inline-start: 1px dotted #000;
+}
+
+.variable-or-property[safe-getter] > tooltip > label.WebIDL {
+  padding-inline-start: 4px;
+  border-inline-start: 1px dotted #000;
+  color: #080;
+}
+
+/* Variables and properties editing */
+.variables-view-delete,
+.variables-view-edit,
+.variables-view-open-inspector {
+  width: 16px;
+  height: 16px;
+  background-size: cover;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.variables-view-open-inspector {
+  background-size: 15px;
+}
+
+.variables-view-delete:hover,
+.variables-view-edit:hover,
+.variables-view-open-inspector:hover {
+  fill: var(--theme-icon-color);
+}
+
+.variables-view-delete:active,
+.variables-view-edit:active,
+.variables-view-open-inspector:active {
+  fill: var(--theme-icon-checked-color);
+}
+
+.variables-view-delete {
+  background-image: url("chrome://devtools/skin/images/vview-delete.svg");
+}
+
+.variables-view-edit {
+  background-image: url("chrome://devtools/skin/images/vview-edit.svg");
+}
+
+.variables-view-open-inspector {
+  background-image: url("chrome://devtools/skin/images/open-inspector.svg");
+}
+
+/* Variables and properties input boxes */
+
+.variable-or-property > .title > .separator + .element-value-input {
+  margin-inline-start: -2px !important;
+  margin-inline-end: 2px !important;
+}
+
+.variable-or-property > .title > .separator[hidden=true] + .element-value-input {
+  margin-inline-start: 4px !important;
+  margin-inline-end: 2px !important;
+}
+
+.element-name-input {
+  margin-inline-start: -2px !important;
+  margin-inline-end: 2px !important;
+  font-weight: 600;
+}
+
+.element-value-input,
+.element-name-input {
+  border: 1px solid rgba(128, 128, 128, .5) !important;
+  border-radius: 0;
+  color: inherit;
+}
+
+/* Variables and properties searching */
+
+.variable-or-property[unmatched] {
+  border: none;
+  margin: 0;
+}
+
+/* Canvas graphs */
+
+.graph-widget-container {
+  position: relative;
+}
+
+.graph-widget-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.graph-widget-canvas[input=hovering-background] {
+  cursor: text;
+}
+
+.graph-widget-canvas[input=hovering-region] {
+  cursor: pointer;
+}
+
+.graph-widget-canvas[input=hovering-selection-start-boundary],
+.graph-widget-canvas[input=hovering-selection-end-boundary],
+.graph-widget-canvas[input=adjusting-selection-boundary] {
+  cursor: col-resize;
+}
+
+.graph-widget-canvas[input=adjusting-view-area] {
+  cursor: grabbing;
+}
+
+.graph-widget-canvas[input=hovering-selection-contents] {
+  cursor: grab;
+}
+
+.graph-widget-canvas[input=dragging-selection-contents] {
+  cursor: grabbing;
+}
+
+/* Line graph widget */
+
+.line-graph-widget-gutter {
+  position: absolute;
+  width: 10px;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  border-inline-end: 1px solid;
+}
+
+.theme-light .line-graph-widget-gutter {
+  background: rgba(255,255,255,0.75);
+  border-inline-end-color: rgba(255,255,255,0.25);
+}
+
+.theme-dark .line-graph-widget-gutter {
+  background: rgba(0,0,0,0.5);
+  border-inline-end-color: rgba(0,0,0,0.25);
+}
+
+.line-graph-widget-gutter-line {
+  position: absolute;
+  width: 100%;
+  border-top: 1px solid;
+}
+
+.line-graph-widget-gutter-line[type=maximum] {
+  border-color: #2cbb0f;
+}
+
+.line-graph-widget-gutter-line[type=minimum] {
+  border-color: #ed2655;
+}
+
+.line-graph-widget-gutter-line[type=average] {
+  border-color: #d97e00;
+}
+
+.line-graph-widget-tooltip {
+  position: absolute;
+  border-radius: 2px;
+  line-height: 15px;
+  padding-inline-start: 6px;
+  padding-inline-end: 6px;
+  transform: translateY(-50%);
+  font-size: 0.8rem !important;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.theme-light .line-graph-widget-tooltip {
+  background: rgba(255,255,255,0.75);
+}
+
+.theme-dark .line-graph-widget-tooltip {
+  background: rgba(0,0,0,0.5);
+}
+
+.line-graph-widget-tooltip[with-arrows=true]::before {
+  content: "";
+  position: absolute;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  top: calc(50% - 3px);
+}
+
+.line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
+  border-inline-end: 3px solid;
+  left: -3px;
+}
+
+.line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
+  border-inline-start: 3px solid;
+  right: -3px;
+}
+
+.theme-light .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
+  border-inline-end-color: rgba(255,255,255,0.75);
+}
+
+.theme-dark .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
+  border-inline-end-color: rgba(0,0,0,0.5);
+}
+
+.theme-light .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
+  border-inline-start-color: rgba(255,255,255,0.75);
+}
+
+.theme-dark .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
+  border-inline-start-color: rgba(0,0,0,0.5);
+}
+
+.line-graph-widget-tooltip[type=maximum] {
+  left: 14px;
+}
+
+.line-graph-widget-tooltip[type=minimum] {
+  left: 14px;
+}
+
+.line-graph-widget-tooltip[type=average] {
+  right: 4px;
+}
+
+.line-graph-widget-tooltip > [text=info] {
+  color: var(--theme-text-color-strong);
+}
+
+.line-graph-widget-tooltip > [text=value] {
+  margin-inline-start: 3px;
+}
+
+.line-graph-widget-tooltip > [text=metric] {
+  margin-inline-start: 1px;
+  color: var(--theme-text-color-alt);
+}
+
+.theme-light .line-graph-widget-tooltip > [text=value],
+.theme-light .line-graph-widget-tooltip > [text=metric] {
+  text-shadow: 1px  0px rgba(255,255,255,0.5),
+              -1px  0px rgba(255,255,255,0.5),
+               0px -1px rgba(255,255,255,0.5),
+               0px  1px rgba(255,255,255,0.5);
+}
+
+.theme-dark .line-graph-widget-tooltip > [text=value],
+.theme-dark .line-graph-widget-tooltip > [text=metric] {
+  text-shadow: 1px  0px rgba(0,0,0,0.5),
+              -1px  0px rgba(0,0,0,0.5),
+               0px -1px rgba(0,0,0,0.5),
+               0px  1px rgba(0,0,0,0.5);
+}
+
+.line-graph-widget-tooltip[type=maximum] > [text=value] {
+  color: var(--theme-highlight-green);
+}
+
+.line-graph-widget-tooltip[type=minimum] > [text=value] {
+  color: var(--theme-highlight-red);
+}
+
+.line-graph-widget-tooltip[type=average] > [text=value] {
+  color: var(--theme-highlight-orange);
+}
+
+/* Table Widget */
+
+/* Table body */
+
+.table-widget-body > .devtools-side-splitter {
+  background-color: transparent;
+}
+
+.table-widget-body {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.table-widget-body[empty="empty"] {
+  display: none;
+}
+
+/* Column Headers */
+
+.table-widget-column-header,
+.table-widget-cell {
+  border-inline-end: 1px solid var(--table-splitter-color) !important;
+}
+
+/* Table widget column header colors are taken from netmonitor.inc.css to match
+   the look of both the tables. */
+
+.table-widget-column-header {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  margin: 0;
+  padding: 5px 4px 0 !important;
+  color: inherit;
+  text-align: start;
+  font-weight: inherit !important;
+  border-image: linear-gradient(transparent 15%,
+                                var(--theme-splitter-color) 15%,
+                                var(--theme-splitter-color) 85%,
+                                transparent 85%,
+                                transparent calc(100% - 1px),
+                                var(--theme-splitter-color) calc(100% - 1px)) 1 1;
+  background-repeat: no-repeat;
+}
+
+.table-widget-column-header:not([sorted]):hover {
+  background-image: linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1));
+}
+
+.table-widget-column-header[sorted] {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+  border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
+  box-shadow: -0.5px -0.5px 0 0.5px var(--theme-splitter-color);
+  background-position: right 6px center;
+}
+
+.table-widget-column-header[sorted]:-moz-locale-dir(rtl) {
+  background-position: 6px center;
+}
+
+.table-widget-column-header[sorted=ascending] {
+  background-image: url("chrome://devtools/skin/images/sort-ascending-arrow.svg");
+}
+
+.table-widget-column-header[sorted=descending] {
+  background-image: url("chrome://devtools/skin/images/sort-descending-arrow.svg");
+}
+
+.theme-dark .table-widget-column[readonly] {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.theme-light .table-widget-column[readonly] {
+  background-color: rgba(0,0,0,0.1);
+}
+
+.table-widget-body .devtools-side-splitter:last-of-type {
+  display: none;
+}
+
+/* Cells */
+
+.table-widget-cell {
+  width: 100%;
+  padding: 3px 4px;
+  min-width: 100px;
+  -moz-user-focus: normal;
+  color: var(--theme-body-color);
+}
+
+.table-widget-cell[hidden] {
+  display: none;
+}
+
+.table-widget-cell.even:not(.theme-selected) {
+  background-color: var(--table-zebra-background);
+}
+
+:root:not(.no-animate) .table-widget-cell.flash-out {
+  animation: flash-out 0.5s ease-in;
+}
+
+@keyframes flash-out {
+  to {
+    background: var(--theme-contrast-background);
+  }
+}
+
+/* Empty text and initial text */
+
+.table-widget-empty-text {
+  display: none;
+  font-size: large;
+}
+
+.table-widget-body:empty + .table-widget-empty-text:not([value=""]),
+.table-widget-body[empty] + .table-widget-empty-text:not([value=""]) {
+  display: block;
+}
+
+/* Tree Widget */
+
+.tree-widget-container {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  list-style: none;
+  overflow: hidden;
+  margin-inline-end: 40px;
+}
+
+.tree-widget-container:-moz-focusring,
+.tree-widget-container *:-moz-focusring {
+  outline-style: none;
+}
+
+.tree-widget-empty-text {
+  padding: 10px 20px;
+  font-size: medium;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Tree Item */
+
+.tree-widget-container .tree-widget-item {
+  padding: 4px 0px;
+  /* OSX has line-height 14px by default, which causes weird alignment issues
+   * because of 20px high icons. thus making line-height consistent with that of
+   * windows.
+   */
+  line-height: 16px;
+  display: inline-block;
+  width: 100%;
+  word-break: keep-all; /* To prevent long urls like http://foo.com/bar from
+                           breaking in multiple lines */
+}
+
+.tree-widget-container .tree-widget-children {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree-widget-item[level="1"] {
+  font-weight: 700;
+}
+
+/* Twisties */
+.tree-widget-item::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  float: inline-start;
+  margin: 0 1px;
+  background-image: url("chrome://devtools/skin/images/arrow.svg");
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: 10px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+  cursor: pointer;
+  transition: transform 125ms ease;
+  transform: rotate(-90deg);
+}
+
+.tree-widget-item:-moz-locale-dir(rtl)::before {
+  transform: rotate(90deg);
+}
+
+.tree-widget-item[empty]::before {
+  background: transparent;
+}
+
+.tree-widget-item[expanded]::before {
+  transform: none;
+}
+
+.tree-widget-item.theme-selected::before {
+  fill: currentColor;
+}
+
+.tree-widget-item + ul {
+  overflow: hidden;
+  animation: collapse-tree-item 0.2s;
+  max-height: 0;
+}
+
+.tree-widget-item[expanded] + ul {
+  animation: expand-tree-item 0.3s;
+  max-height: unset;
+}
+
+@keyframes collapse-tree-item {
+  from {
+    max-height: 300px;
+  }
+  to {
+    max-height: 0;
+  }
+}
+
+@keyframes expand-tree-item {
+  from {
+    max-height: 0;
+  }
+  to {
+    max-height: 500px;
+  }
+}
+
+/* Indentation of child items in the tree */
+
+/* For level > 6 */
+.tree-widget-item[level] + ul > li > .tree-widget-item {
+  padding-inline-start: 98px;
+}
+
+/* First level */
+.tree-widget-item[level="1"] + ul > li > .tree-widget-item {
+  padding-inline-start: 14px;
+}
+
+/* Second level */
+.tree-widget-item[level="2"] + ul > li > .tree-widget-item {
+  padding-inline-start: 28px;
+}
+
+/* Third level */
+.tree-widget-item[level="3"] + ul > li > .tree-widget-item {
+  padding-inline-start: 42px;
+}
+
+/* Fourth level */
+.tree-widget-item[level="4"] + ul > li > .tree-widget-item {
+  padding-inline-start: 56px;
+}
+
+/* Fifth level */
+.tree-widget-item[level="5"] + ul > li > .tree-widget-item {
+  padding-inline-start: 70px;
+}
+
+/* Sixth level */
+.tree-widget-item[level="6"] + ul > li > .tree-widget-item {
+  padding-inline-start: 84px;
+}
+
+/* Custom icons for certain tree items indicating the type of the item */
+
+.tree-widget-item[type]::after {
+  content: "";
+  float: inline-start;
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 4px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.tree-widget-item[type="dir"]::after {
+  background-image: url(chrome://devtools/skin/images/folder.svg);
+}
+
+.tree-widget-item[type="url"]::after {
+  background-image: url(chrome://devtools/skin/images/globe.svg);
+}
+
+.tree-widget-item[type="store"]::after {
+  background-image: url(chrome://devtools/skin/images/datastore.svg);
+}

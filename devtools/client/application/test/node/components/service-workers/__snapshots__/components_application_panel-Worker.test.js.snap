@@ -1,0 +1,132 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Worker Renders the expected snapshot for a non-active worker 1`] = `
+<section
+  className="worker js-sw-worker"
+>
+  <p
+    className="worker__icon"
+  >
+    <img
+      className="worker__icon-image"
+      src="chrome://devtools/skin/images/debugging-workers.svg"
+    />
+  </p>
+  <p
+    className="worker__source"
+  >
+    <span
+      className="js-source-url"
+    >
+      worker.js
+    </span>
+  </p>
+  <p
+    className="worker__misc"
+  >
+    <span
+      className="js-worker-status worker__status worker__status--waiting"
+    >
+      installed
+    </span>
+     
+  </p>
+</section>
+`;
+
+exports[`Worker Renders the expected snapshot for a running worker 1`] = `
+<section
+  className="worker js-sw-worker"
+>
+  <p
+    className="worker__icon"
+  >
+    <img
+      className="worker__icon-image"
+      src="chrome://devtools/skin/images/debugging-workers.svg"
+    />
+  </p>
+  <p
+    className="worker__source"
+  >
+    <a
+      className="js-inspect-link"
+      href="#"
+      onClick={[Function]}
+      title="http://example.com/worker.js"
+    >
+      <span
+        className="js-source-url"
+      >
+        worker.js
+      </span>
+       
+      <Localized
+        attrs={
+          Object {
+            "alt": true,
+          }
+        }
+        id="serviceworker-worker-inspect-icon"
+      >
+        <img
+          src="chrome://devtools/skin/images/application-debug.svg"
+        />
+      </Localized>
+    </a>
+  </p>
+  <p
+    className="worker__misc"
+  >
+    <span
+      className="js-worker-status worker__status worker__status--active"
+    >
+      serviceworker-worker-status-running
+    </span>
+     
+  </p>
+</section>
+`;
+
+exports[`Worker Renders the expected snapshot for a stopped worker 1`] = `
+<section
+  className="worker js-sw-worker"
+>
+  <p
+    className="worker__icon"
+  >
+    <img
+      className="worker__icon-image"
+      src="chrome://devtools/skin/images/debugging-workers.svg"
+    />
+  </p>
+  <p
+    className="worker__source"
+  >
+    <span
+      className="js-source-url"
+    >
+      worker.js
+    </span>
+  </p>
+  <p
+    className="worker__misc"
+  >
+    <span
+      className="js-worker-status worker__status worker__status--active"
+    >
+      serviceworker-worker-status-stopped
+    </span>
+     
+    <Localized
+      id="serviceworker-worker-start3"
+    >
+      <UIButton
+        className="js-start-button"
+        onClick={[Function]}
+        size="micro"
+      />
+    </Localized>
+  </p>
+</section>
+`;

@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for tab switching on link clicks.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for tab switching on link clicks.</title>
+  <style>
+    a {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      overflow: hidden;
+      background-color: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <a id="link-1" target="testTab" href="file_bug1303838_target_foo.html">Link 1</a>,
+  <a id="link-2" target="testTab" href="file_bug1303838_target_bar.html">Link 2</a>,
+  <a id="link-3" target="testTab" href="file_bug1303838_target_baz.html">Link 3</a>,
+  <a id="link-4" href="#" onclick="testTab = window.open('file_bug1303838_target_foo.html', 'testTab'); return false;">Link 4</a>,
+  <a id="link-5" href="#" onclick="testTab.location.href += '?1'; return false;">Link 5</a>,
+  <a id="link-6" href="#" onclick="testTab.location.href += '#1'; return false;">Link 6</a>,
+  <a id="link-7" target="testTab" href="file_bug1303838_target.html">Link 7</a>,
+  <a id="anchor-link-1" target="testTab" href="file_bug1303838_target.html#foo">Anchor Link 1</a>,
+  <a id="anchor-link-2" target="testTab" href="file_bug1303838_target.html#bar">Anchor Link 2</a>,
+  <a id="anchor-link-3" target="testTab" href="file_bug1303838_target.html#baz">Anchor Link 3</a>,
+  <a id="frame-link-1" target="testFrame" href="file_bug1303838_target_ifoo.html">Frame Link 1</a>,
+  <a id="frame-link-2" target="testFrame" href="file_bug1303838_target_ibar.html">Frame Link 2</a>,
+  <a id="frame-link-3" target="testFrame" href="file_bug1303838_target_ibaz.html">Frame Link 3</a>,
+</body>
+</html>

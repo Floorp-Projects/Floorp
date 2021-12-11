@@ -1,0 +1,88 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.title > h2 {
+  padding: 0;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.title {
+  background-image: url("chrome://global/content/httpsonlyerror/secure-broken.svg");
+}
+
+em {
+  font-style: normal;
+  font-weight: 600;
+}
+
+#insecure-explanation-unavailable {
+  margin-bottom: 0.5em;
+}
+#learn-more-container {
+  margin-block: 0 2em;
+}
+#explanation-continue {
+  margin-block: 2em;
+}
+
+.button-container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: end;
+}
+
+@media only screen and (max-width: 480px) {
+  .button-container button {
+    width: 100%;
+    margin: 0.66em 0 0;
+  }
+}
+
+ul > li {
+  line-height: 1.5em;
+}
+
+.container {
+  position: relative;
+}
+
+.suggestion-box {
+  position: absolute;
+  margin-top: 3em;
+  background-image: url("chrome://global/skin/icons/lightbulb.svg");
+  background-size: 64px;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-start: -5.5em;
+  padding-inline-start: 5.5em;
+  padding-bottom: 3em;
+  animation: fade-in 300ms ease-out;
+}
+
+.suggestion-box > h2 {
+  padding: 0;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+@media (max-width: 970px) {
+  .suggestion-box {
+    background-image: none;
+    padding-inline-start: 0;
+    margin-inline-start: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

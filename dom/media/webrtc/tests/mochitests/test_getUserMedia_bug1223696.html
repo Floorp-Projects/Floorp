@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  "use strict";
+
+  createHTML({
+    title: "Testing that removeTrack+addTrack of video tracks still render the correct track in a media element",
+    bug: "1223696",
+    visible: true
+  });
+
+  runTest(async function() {
+    const stream = await getUserMedia({audio:true, video: true});
+    info("Test addTrack()ing a video track to an audio-only gUM stream");
+
+    const video = createMediaElement("video", "test_video_track");
+    video.srcObject = stream;
+    video.play();
+
+    await haveEvent(video, "loadeddata", wait(5000, new Error("Timeout")));
+    info("loadeddata");
+
+    const removedTrack = stream.getVideoTracks()[0];
+    stream.removeTrack(removedTrack);
+
+    const h = new CaptureStreamTestHelper2D();
+    const emitter = new VideoFrameEmitter(h.grey, h.grey);
+    emitter.start();
+
+    stream.addTrack(emitter.stream().getVideoTracks()[0]);
+
+    checkMediaStreamContains(stream, [stream.getAudioTracks()[0],
+                                      emitter.stream().getVideoTracks()[0]]);
+
+    await h.pixelMustBecome(video, h.grey, {
+      threshold: 5,
+      infoString: "The canvas track should be rendered by the media element",
+    });
+
+    emitter.stop();
+    for (const t of [removedTrack, ...stream.getAudioTracks()]) {
+      t.stop();
+    }
+  });
+</script>
+</pre>
+</body>
+</html>

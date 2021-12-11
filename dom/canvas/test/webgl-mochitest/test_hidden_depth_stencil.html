@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<title>WebGL test: Hidden depth/stencil passes without a depth/stencil buffer respectively</title>
+<script src='/tests/SimpleTest/SimpleTest.js'></script>
+<link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+<script src='webgl-util.js'></script>
+<body>
+<script id='vs' type='x-shader/x-vertex'>
+  void main(void) {
+    gl_PointSize = 1.0; // Note that this is undefined if we don't write to it!
+    gl_Position = vec4(vec3(0), 1);
+  }
+</script>
+
+<script id='fs' type='x-shader/x-fragment'>
+  precision mediump float;
+
+  void main(void) {
+    gl_FragColor = vec4(0, 1, 0, 1);
+  }
+</script>
+<script>
+
+function ColorString(arr) {
+  return '[' + arr[0] + ', ' + arr[1] + ', ' + arr[2] + ', ' + arr[3] + ']';
+}
+
+function DrawAndCheck(gl, infoPrefix, refColorStr) {
+  gl.viewport(0, 0, 1, 1);
+
+  gl.clearColor(1, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+  gl.drawArrays(gl.POINTS, 0, 1);
+
+  var pixel = new Uint8Array(4);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  var pixelStr = ColorString(pixel);
+
+  ok(pixelStr == refColorStr, infoPrefix + pixelStr + ' should be ' + refColorStr);
+}
+
+function TestCurrent(gl, attribs, infoPrefix) {
+  infoPrefix = infoPrefix + JSON.stringify(attribs) + ': ';
+
+  var CLEAR_COLOR = ColorString([255, 0, 0, 255]);
+  var DRAW_COLOR = ColorString([0, 255, 0, 255]);
+
+  gl.disable(gl.DEPTH_TEST);
+  gl.disable(gl.STENCIL_TEST);
+
+  DrawAndCheck(gl, infoPrefix + 'initial: ', DRAW_COLOR);
+
+  if (!attribs.depth) {
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.NEVER);
+
+    gl.disable(gl.STENCIL_TEST);
+
+    // Depth test is enabled, and should pass NEVER.
+    // Since there is no depth buffer, the depth test is not run.
+    // Stencil test is disabled.
+    DrawAndCheck(gl, infoPrefix + 'no-depth: ', DRAW_COLOR);
+  }
+
+  if (!attribs.stencil) {
+    gl.disable(gl.DEPTH_TEST);
+
+    gl.enable(gl.STENCIL_TEST);
+    gl.stencilFunc(gl.NEVER, 0, 0);
+
+    // Depth test is disabled.
+    // Stencil test is enabled, and should pass NEVER.
+    // Since there is no stencil buffer, the stencil test is not run.
+    DrawAndCheck(gl, infoPrefix + 'no-stencil: ', DRAW_COLOR);
+  }
+}
+
+function TestBackbuffer(requestedAttribs) {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  var gl = canvas.getContext('experimental-webgl', requestedAttribs);
+  if (!gl) {
+    ok(true, 'WebGL doesn\'t work, skipping test.');
+    return;
+  }
+
+  ok(gl.drawingBufferWidth == 1 && gl.drawingBufferHeight == 1,
+     'backbuffer should be 1x1');
+
+  var prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+  gl.useProgram(prog);
+
+  var attribs = {
+    depth: gl.getContextAttributes().depth,
+    stencil: gl.getContextAttributes().stencil,
+  };
+  TestCurrent(gl, attribs, 'Backbuffer: ');
+}
+
+function TestUserFB() {
+  var canvas = document.createElement('canvas');
+  var gl = canvas.getContext('experimental-webgl');
+  if (!gl) {
+    ok(true, 'WebGL doesn\'t work, skipping test.');
+    return;
+  }
+
+  var prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+  gl.useProgram(prog);
+
+  var rb = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 1, 1);
+
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb);
+
+  var depthRB = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, depthRB);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 1, 1);
+
+  var stencilRB = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, stencilRB);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, 1, 1);
+
+  do {
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthRB);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT, gl.RENDERBUFFER, null);
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status != gl.FRAMEBUFFER_COMPLETE) {
+      ok(true, 'Depth-only user FB is incomplete. This is allowed.');
+      break;
+    }
+
+    TestCurrent(gl, {depth: true, stencil: false}, 'Depth-only user FB');
+  } while (false);
+
+  do {
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT, gl.RENDERBUFFER, stencilRB);
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status != gl.FRAMEBUFFER_COMPLETE) {
+      ok(true, 'Stencil-only user FB is incomplete. This is allowed.');
+      break;
+    }
+
+    TestCurrent(gl, {depth: false, stencil: true}, 'Stencil-only user FB');
+  } while (false);
+}
+
+(function(){
+  TestBackbuffer({depth: true, stencil: false});
+  TestBackbuffer({depth: false, stencil: true});
+  TestUserFB();
+})();
+
+</script>
+</body>

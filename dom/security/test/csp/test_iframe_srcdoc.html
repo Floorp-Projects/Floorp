@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1073952 - Test CSP enforcement within iframe srcdoc</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * (1) We serve a site which makes use of script-allowed sandboxed iframe srcdoc
+ *     and make sure that CSP applies to the nested browsing context
+ *     within the iframe.
+ *     [PAGE WITH CSP [IFRAME SANDBOX SRCDOC [SCRIPT]]]
+ *
+ * (2) We serve a site which nests script within an script-allowed sandboxed
+ *     iframe srcdoc within another script-allowed sandboxed iframe srcdoc and
+ *     make sure that CSP applies to the nested browsing context
+ *     within the iframe*s*.
+ *     [PAGE WITH CSP [IFRAME SANDBOX SRCDOC [IFRAME SANDBOX SRCDOC [SCRIPT]]]]
+ *
+ * Please note that the test relies on the "csp-on-violate-policy" observer.
+ * Whenever the script within the iframe is blocked observers are notified.
+ * In turn, this renders the 'result' within tests[] unused. In case the script
+ * would execute however, the postMessageHandler would bubble up 'allowed' and
+ * the test would fail.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  // [PAGE *WITHOUT* CSP [IFRAME SRCDOC [SCRIPT]]]
+  { csp: "",
+    result: "allowed",
+    query: "simple_iframe_srcdoc",
+    desc: "No CSP should run script within script-allowed sandboxed iframe srcdoc"
+  },
+  { csp: "script-src https://test1.com",
+    result: "blocked",
+    query: "simple_iframe_srcdoc",
+    desc: "CSP should block script within script-allowed sandboxediframe srcdoc"
+  },
+  // [PAGE *WITHOUT* CSP [IFRAME SRCDOC [IFRAME SRCDOC [SCRIPT]]]]
+  { csp: "",
+    result: "allowed",
+    query: "nested_iframe_srcdoc",
+    desc: "No CSP should run script within script-allowed sandboxed iframe srcdoc nested within another script-allowed sandboxed iframe srcdoc"
+  },
+  // [PAGE WITH CSP [IFRAME SRCDOC ]]
+  { csp: "script-src https://test2.com",
+    result: "blocked",
+    query: "nested_iframe_srcdoc",
+    desc: "CSP should block script within script-allowed sandboxed iframe srcdoc nested within another script-allowed sandboxed iframe srcdoc"
+  },
+  { csp: "",
+    result: "allowed",
+    query: "nested_iframe_srcdoc_datauri",
+    desc: "No CSP, should run script within script-allowed sandboxed iframe src with data URL nested within another script-allowed sandboxed iframe srcdoc"
+  },
+  { csp: "script-src https://test3.com",
+    result: "blocked",
+    query: "nested_iframe_srcdoc_datauri",
+    desc: "CSP should block script within script-allowed sandboxed iframe src with data URL nested within another script-allowed sandboxed iframe srcdoc"
+  },
+
+];
+
+// initializing to -1 so we start at index 0 when we start the test
+var counter = -1;
+
+function finishTest() {
+  window.removeEventListener("message", receiveMessage);
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  var result = event.data.result;
+  testComplete(result, tests[counter].result, tests[counter].desc);
+}
+
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+}
+
+examiner.prototype  = {
+  observe(subject, topic, data) {
+    if (topic === "csp-on-violate-policy") {
+      var violationString = SpecialPowers.getPrivilegedProps(SpecialPowers.
+                             do_QueryInterface(subject, "nsISupportsCString"), "data");
+      // the violation subject for inline script violations is unfortunately vague,
+      // all we can do is match the string.
+      if (!violationString.includes("Inline Script")) {
+        return
+      }
+      testComplete("blocked", tests[counter].result, tests[counter].desc);
+    }
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+function testComplete(result, expected, desc) {
+  is(result, expected, desc);
+  // ignore cases when we get csp violations and postMessage from  the same frame.
+  var frameURL = new URL(document.getElementById("testframe").src);
+  var params = new URLSearchParams(frameURL.search);
+  var counterInFrame = params.get("counter");
+  if (counterInFrame == counter) {
+    loadNextTest();
+  }
+}
+
+function loadNextTest() {
+  counter++;
+  if (counter == tests.length) {
+    finishTest();
+    return;
+  }
+  var src = "file_iframe_srcdoc.sjs";
+  src += "?csp=" + escape(tests[counter].csp);
+  src += "&action=" + escape(tests[counter].query);
+  src += "&counter=" + counter;
+  document.getElementById("testframe").src = src;
+}
+
+// start running the tests
+window.examiner = new examiner();
+loadNextTest();
+
+</script>
+</body>
+</html>

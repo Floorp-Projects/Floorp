@@ -1,0 +1,21 @@
+<html>
+<script>
+try{var Context1= new (window.webkitAudioContext || window.AudioContext)()}catch(e){}
+try{var Delay0=Context1.createDelay();}catch(e){}
+try{var ScriptProcessor0=Context1.createScriptProcessor(512,26,7);}catch(e){}
+try{var ChannelSplitter0=Context1.createChannelSplitter(91);}catch(e){}
+try{var Gain1=Context1.createGain();}catch(e){}
+try{var WaveShaper0=Context1.createWaveShaper();}catch(e){}
+try{var Analyser1=Context1.createAnalyser();}catch(e){}
+try{Gain1.connect(Delay0);}catch(e){}
+try{Analyser1.connect(BiquadFilter0);}catch(e){}
+try{Gain1.connect(Context1.destination);}catch(e){}
+try{WaveShaper0.connect(ScriptProcessor0);}catch(e){}
+try{ChannelSplitter0.connect(BiquadFilter1);}catch(e){}
+try{Delay0.connect(Gain1);}catch(e){}
+try{ScriptProcessor0.connect(Context1.destination);}catch(e){}
+try{WaveShaper0.connect(Gain1);}catch(e){}
+try{WaveShaper0.connect(ChannelSplitter0);}catch(e){}
+try{ScriptProcessor0.connect(WaveShaper0);}catch(e){}
+</script>
+</html>

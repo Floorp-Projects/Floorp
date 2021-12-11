@@ -1,0 +1,245 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "Entries.h"
+#include "LookupCache.h"
+#include "mozilla/UniquePtr.h"
+%}
+native ResultArray(mozilla::UniquePtr<mozilla::safebrowsing::LookupResultArray>);
+
+interface nsIUrlClassifierHashCompleter;
+interface nsIPrincipal;
+
+// Interface for JS function callbacks
+[scriptable, function, uuid(4ca27b6b-a674-4b3d-ab30-d21e2da2dffb)]
+interface nsIUrlClassifierCallback : nsISupports {
+  void handleEvent(in ACString value);
+};
+
+/**
+ * The nsIUrlClassifierUpdateObserver interface is implemented by
+ * clients streaming updates to the url-classifier (usually
+ * nsUrlClassifierStreamUpdater.
+ */
+[scriptable, uuid(9fa11561-5816-4e1b-bcc9-b629ca05cce6)]
+interface nsIUrlClassifierUpdateObserver : nsISupports {
+  /**
+   * The update requested a new URL whose contents should be downloaded
+   * and sent to the classifier as a new stream.
+   *
+   * @param url The url that was requested.
+   * @param table The table name that this URL's contents will be associated
+   *              with.  This should be passed back to beginStream().
+   */
+  void updateUrlRequested(in ACString url,
+                          in ACString table);
+
+  /**
+   * A stream update has completed.
+   *
+   * @param status The state of the update process.
+   * @param delay The amount of time the updater should wait to fetch the
+   *              next URL in ms.
+   */
+  void streamFinished(in nsresult status, in unsigned long delay);
+
+  /* The update has encountered an error and should be cancelled */
+  void updateError(in nsresult error);
+
+  /**
+   * The update has completed successfully.
+   *
+   * @param requestedTimeout The number of seconds that the caller should
+   *                         wait before trying to update again.
+   **/
+  void updateSuccess(in unsigned long requestedTimeout);
+};
+
+/**
+ * This is a proxy class that is instantiated and called from the JS thread.
+ * It provides async methods for querying and updating the database.  As the
+ * methods complete, they call the callback function.
+ */
+[scriptable, uuid(7a258022-6765-11e5-b379-b37b1f2354be)]
+interface nsIUrlClassifierDBService : nsISupports
+{
+  /**
+   * Looks up a URI in the specified tables.
+   *
+   * @param principal: The principal containing the URI to search.
+   * @param c: The callback will be called with a comma-separated list
+   *        of tables to which the key belongs.
+   */
+  void lookup(in nsIPrincipal principal,
+              in ACString tables,
+              in nsIUrlClassifierCallback c);
+
+  /**
+   * Lists the tables along with their meta info in the following format:
+   *
+   *   tablename;[metadata]\n
+   *   tablename2;[metadata]\n
+   *
+   * For v2 tables, the metadata is the chunks info such as
+   *
+   *   goog-phish-shavar;a:10,14,30-40s:56,67
+   *   goog-unwanted-shavar;a:1-3,5
+   *
+   * For v4 tables, base64 encoded state is currently the only info in the
+   * metadata (can be extended whenever necessary). For exmaple,
+   *
+   *   goog-phish-proto;Cg0IARAGGAEiAzAwMTABEKqTARoCGAjT1gDD:oCGAjT1gDD\n
+   *   goog-malware-proto;Cg0IAhAGGAEiAzAwMTABENCQARoCGAjx5Yty:BENCQARoCGAj\n
+   *
+   * Note that the metadata is colon-separated.
+   *
+   */
+  void getTables(in nsIUrlClassifierCallback c);
+
+  /**
+   * Set the nsIUrlClassifierCompleter object for a given table.  This
+   * object will be used to request complete versions of partial
+   * hashes.
+   */
+  void setHashCompleter(in ACString tableName,
+                        in nsIUrlClassifierHashCompleter completer);
+
+  /**
+   * Forget the results that were used in the last DB update.
+   */
+  void clearLastResults();
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Incremental update methods.
+  //
+  // An update to the database has the following steps:
+  //
+  // 1) The update process is started with beginUpdate().  The client
+  //    passes an nsIUrlClassifierUpdateObserver object which will be
+  //    notified as the update is processed by the dbservice.
+  // 2) The client sends an initial update stream to the dbservice,
+  //    using beginStream/updateStream/finishStream.
+  // 3) While reading this initial update stream, the dbservice may
+  //    request additional streams from the client as requested by the
+  //    update stream.
+  // 4) For each additional update stream, the client feeds the
+  //    contents to the dbservice using beginStream/updateStream/endStream.
+  // 5) Once all streams have been processed, the client calls
+  //    finishUpdate.  When the dbservice has finished processing
+  //    all streams, it will notify the observer that the update process
+  //    is complete.
+
+  /**
+   * Begin an update process.  Will throw NS_ERROR_NOT_AVAILABLE if there
+   * is already an update in progress.
+   *
+   * @param updater The update observer tied to this update.
+   * @param tables A comma-separated list of tables included in this update.
+   */
+  void beginUpdate(in nsIUrlClassifierUpdateObserver updater,
+                   in ACString tables);
+
+  /**
+   * Begin a stream update.  This should be called once per url being
+   * fetched.
+   *
+   * @param table The table the contents of this stream will be associated
+   *              with, or empty for the initial stream.
+   */
+  void beginStream(in ACString table);
+
+  /**
+   * Update the table incrementally.
+   */
+  void updateStream(in ACString updateChunk);
+
+  // It would be nice to have an updateFromStream method to round out the
+  // interface, but it's tricky because of XPCOM proxies.
+
+  /**
+   * Finish an individual stream update.  Must be called for every
+   * beginStream() call, before the next beginStream() or finishUpdate().
+   *
+   * The update observer's streamFinished will be called once the
+   * stream has been processed.
+   */
+  void finishStream();
+
+  /**
+   * Finish an incremental update.  This will attempt to commit any
+   * pending changes and resets the update interface.
+   *
+   * The update observer's updateSucceeded or updateError methods
+   * will be called when the update has been processed.
+   */
+  void finishUpdate();
+
+  /**
+   * Cancel an incremental update.  This rolls back any pending changes.
+   * and resets the update interface.
+   *
+   * The update observer's updateError method will be called when the
+   * update has been rolled back.
+   */
+  void cancelUpdate();
+
+  /**
+   * Reset the url-classifier database.  This call will delete the existing
+   * database, emptying all tables.  Mostly intended for use in unit tests.
+   */
+  void resetDatabase();
+
+  /**
+   * Reload he url-classifier database. This will empty all cache for
+   * completions from gethash, and reload it from database. Mostly intended
+   * for use in tests.
+   */
+  void reloadDatabase();
+
+  /**
+   * Empty all the caches.
+   */
+  void clearCache();
+};
+
+/**
+ * This is an internal helper interface for communication between the
+ * main thread and the dbservice worker thread.  It is called for each
+ * lookup to provide a set of possible results, which the main thread
+ * may need to expand using an nsIUrlClassifierCompleter.
+ */
+[uuid(b903dc8f-dff1-42fe-894b-36e7a59bb801)]
+interface nsIUrlClassifierLookupCallback : nsISupports
+{
+  /**
+   * The lookup process is complete.
+   *
+   * @param results
+   *        If this parameter is null, there were no results found.
+   *        If not, it contains an array of nsUrlClassifierEntry objects
+   *        with possible matches.  The callee is responsible for freeing
+   *        this array.
+   */
+  void lookupComplete(in ResultArray results);
+};
+
+/**
+ * This is an internal helper interface which is called after each
+ * classify completes to provide and handle a set of possible results,
+ * which the main thread may need to expand using an nsIURIClassifierCallback.
+ */
+[uuid(091adf98-28a5-473d-8dec-5b34b4e62496)]
+interface nsIUrlClassifierClassifyCallback : nsISupports
+{
+  /**
+   * The function is called each time the URL matches a Safe Browsing list
+   * The function could be called multiple times if URL matches multiple lists
+   *
+   */
+  void handleResult(in ACString aList,
+                    in ACString aPrefix);
+};

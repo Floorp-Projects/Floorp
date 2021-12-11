@@ -1,0 +1,24 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=489718 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Test that shape-rendering hint affects clipping</title>
+  <desc>
+    By not setting explict shape-rendering attribute, this test tells browsers to 
+    apply anti-aliasing to all shape's rendering. And this test checks the hint 
+    correctly affects clip-path, too.
+  </desc>
+  <defs>
+    <circle id="circle1" cx="50" cy="50" r="50" fill="lime"/>
+    <circle id="circle2" cx="150" cy="50" r="50" fill="lime"/>
+    <clipPath id="clip">
+      <use xlink:href="#circle1"/>
+      <use xlink:href="#circle2"/>
+    </clipPath>
+  </defs>
+
+  <rect width="200" height="100" fill="lime" clip-path="url(#clip)"/>
+</svg>
+

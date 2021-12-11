@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test media query list serialization</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+  @media PrInT {}
+  @media screen, PrInT, SPEECH {}
+
+  @media GARbAGE7 {}
+  @media AAAAA {}
+  @media ZZZZZ {}
+
+  @media NotAValidMediaType_!000 {}
+  @media NotAValidMediaType_!000, AlsoInvalid!!!! {}
+
+  @media PrInT, GARbAGE7, notAValidMediaType_!000 {}
+</style>
+<script type="application/javascript">
+
+let expectedValues = [
+  // Valid types
+  ["print", "Valid media types are ascii lowercased."],
+  ["screen, print, speech", "Media query lists with only valid types are ascii lowercased."],
+
+  // Invalid types
+  ["garbage7", "Invalid media types are ascii lowercased."],
+  ["aaaaa", "Ascii conversion handles 'A' correctly."],
+  ["zzzzz", "Ascii conversion handles 'Z' correctly."],
+
+  // Malformed types
+  ["not all", "Malformed media types are serialized to 'not all'."],
+  ["not all, not all", "Multiple malformed media types are each serialized to 'not all'."],
+
+  // Mixes
+  ["print, garbage7, not all", "Media query lists with a mix of valid, invalid, and malformed types serialize " +
+                               "as lowercase with malformed types changed to 'not all'."],
+];
+
+let sheet = document.styleSheets[1];
+
+expectedValues.forEach(function (entry, index) {
+  let rule = sheet.cssRules[index];
+  let serializedList = rule.media.mediaText;
+  is(serializedList, entry[0], entry[1]);
+});
+
+</script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,16 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko.process;
+
+public class GeckoChildProcessServices {
+    /* package */ static final int MAX_NUM_ISOLATED_CONTENT_SERVICES = {{MOZ_ANDROID_CONTENT_SERVICE_COUNT}};
+    public static final class gmplugin extends GeckoServiceChildProcess {}
+    public static final class socket extends GeckoServiceChildProcess {}
+
+{% for id in range(0, MOZ_ANDROID_CONTENT_SERVICE_COUNT | int) %}
+    public static final class tab{{ id }} extends GeckoServiceChildProcess {}
+{% endfor %}
+}

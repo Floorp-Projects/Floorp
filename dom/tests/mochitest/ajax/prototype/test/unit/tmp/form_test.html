@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Prototype Unit test file | Form</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script type="text/javascript" charset="utf-8">
+    var eventResults = {};
+    var originalElement = window.Element;
+  </script>
+  <script src="../../../dist/prototype.js" type="text/javascript"></script>
+  <script src="../../lib/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../../test.css" type="text/css" />
+  
+  
+  
+  
+
+  <script src="../form_test.js" type="text/javascript"></script>
+</head>
+<body>
+<h1>Prototype Unit test file</h1>
+<h2>Form</h2>
+
+<!-- This file is programmatically generated. Do not attempt to modify it. Instead, modify  -->
+
+<!-- Log output start -->
+<div id="testlog"></div>
+<!-- Log output end -->
+
+<!-- HTML Fixtures start -->
+<form id="form" method="get" action="fixtures/empty.js">
+  <input type="text" name="val1" id="input_enabled" value="4" />
+  <div>This is not a form element</div>
+  <input type="text" name="val2" id="input_disabled" disabled="disabled" value="5" />
+  <input type="submit" name="first_submit" value="Commit it!" />
+  <input type="submit" name="second_submit" value="Delete it!" />
+  <input type="text" name="action" value="blah" />
+</form>
+
+<form id="bigform" method="get" action="fixtures/empty.js">
+  <div id="inputs">
+    <input type="text"   name="dummy"  id="dummy_disabled" disabled="disabled"/>
+    <input type="submit" name="commit" id="submit" />
+    <input type="button" name="clicky" value="click me" />
+    <input type="reset"  name="revert" />
+    <input type="text"   name="greeting" id="focus_text" value="Hello" />
+  </div>
+
+  <div id="buttons">
+    <button type="button" id="button_type_button" name="button">Click Me</button>
+  </div>div>
+
+  <!-- some edge cases in serialization -->
+  <div id="value_checks">
+    <input name="twin" type="text" value="" /> 
+    <input name="twin" type="text" value="siamese" />
+    <!-- Rails checkbox hack with hidden input: -->
+    <input name="checky" type="checkbox" id="checkbox_hack" value="1" /> 
+    <input name="checky" type="hidden" value="0" />
+  </div>
+
+  <!-- all variations of SELECT controls -->
+  <div id="selects_wrapper">
+    <select name="vu">
+       <option value="1" selected="selected">One</option>
+       <option value="2">Two</option>
+       <option value="3">Three</option>
+    </select>
+    <select id="multiSel1" name="vm[]" multiple="multiple">
+       <option id="multiSel1_opt1" value="1" selected="selected">One</option>
+       <option id="multiSel1_opt2" value="2">Two</option>
+       <option id="multiSel1_opt3" value="3" selected="selected">Three</option>
+    </select>
+    <select name="nvu">
+       <option selected="selected">One</option>
+       <option value="2">Two</option>
+       <option value="3">Three</option>
+    </select>
+
+    <fieldset id="selects_fieldset">
+      <select name="nvm[]" multiple="multiple">
+         <option selected="selected">One</option>
+         <option>Two</option>
+         <option selected="selected">Three</option>
+      </select>
+      <select name="evu">
+         <option value="" selected="selected">One</option>
+         <option value="2">Two</option>
+         <option value="3">Three</option>
+      </select>
+      <select name="evm[]" multiple="multiple">
+         <option value="" selected="selected">One</option>
+         <option>Two</option>
+         <option selected="selected">Three</option>
+      </select>
+    </fieldset>
+  </div>
+
+  <div id="various">
+    <select name="tf_selectOne"><option selected="selected"></option><option>1</option></select>
+    <textarea name="tf_textarea"></textarea>
+    <input type="checkbox" name="tf_checkbox" value="on" />
+    <select name="tf_selectMany" multiple="multiple"></select>
+    <input type="text" name="tf_text" />
+    <div>This is not a form element</div>
+    <input type="radio" name="tf_radio" value="on" />
+    <input type="hidden" name="tf_hidden" />
+    <input type="password" name="tf_password" />
+  </div>
+</form>
+
+<form id="form_focus_hidden" style="display: none">
+  <input type="text" />
+</form>
+
+<form id="form_with_file_input">
+  <input type="file" name="file_name" value="foo" />
+</form>
+
+<!-- tabindexed forms -->
+<div id="tabindex">
+  <form id="ffe">
+    <p><input type="text" disabled="disabled" id="ffe_disabled" /></p>
+    <input type="hidden" id="ffe_hidden" />
+    <input type="checkbox" id="ffe_checkbox" />
+  </form>
+
+  <form id="ffe_ti">
+    <p><input type="text" disabled="disabled" id="ffe_ti_disabled" /></p>
+    <input type="hidden" id="ffe_ti_hidden" />
+    <input type="checkbox" id="ffe_ti_checkbox" />
+    <input type="submit" id="ffe_ti_submit" tabindex="1" />
+  </form>
+
+  <form id="ffe_ti2">
+    <p><input type="text" disabled="disabled" id="ffe_ti2_disabled" /></p>
+    <input type="hidden" id="ffe_ti2_hidden" />
+    <input type="checkbox" id="ffe_ti2_checkbox" tabindex="0" />
+    <input type="submit" id="ffe_ti2_submit" tabindex="1" />
+  </form>
+  
+</div>
+
+<!-- HTML Fixtures end -->
+</body>
+</html>
+<script type="text/javascript" charset="utf-8">
+  eventResults.endOfDocument = true;
+</script>

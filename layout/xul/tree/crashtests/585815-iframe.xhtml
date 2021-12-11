@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="setInterval(run, 25)">
+
+<tree flex="1" rows="2">
+ <treecols>  
+    <treecol id="sender" label="Sender" flex="1"/>  
+    <treecol id="subject" label="Subject" flex="2"/>  
+  </treecols>  
+  <treechildren>
+    <treeitem>
+      <treerow>
+        <treecell label="joe@somewhere.com"/>  
+        <treecell label="Top secret plans"/>  
+      </treerow>
+    </treeitem>  
+    <treeitem>  
+      <treerow>  
+        <treecell label="mel@whereever.com"/>  
+        <treecell label="Let's do lunch"/>  
+      </treerow>  
+    </treeitem> 
+    <treeitem>  
+      <treerow>  
+        <treecell label="mel@whereever.com"/>  
+        <treecell label="Let's do lunch"/>  
+      </treerow>  
+    </treeitem> 
+    <treeitem>  
+      <treerow>  
+        <treecell label="mel@whereever.com"/>  
+        <treecell label="Let's do lunch"/>  
+      </treerow>  
+    </treeitem> 
+    <treeitem>  
+      <treerow>  
+        <treecell label="mel@whereever.com"/>  
+        <treecell label="Let's do lunch"/>  
+      </treerow>  
+    </treeitem> 
+    <treeitem>  
+      <treerow>  
+        <treecell label="mel@whereever.com"/>  
+        <treecell label="Let's do lunch"/>  
+      </treerow>  
+    </treeitem> 
+    <treeitem>  
+      <treerow>  
+        <treecell label="mel@whereever.com"/>  
+        <treecell label="Let's do lunch"/>  
+      </treerow>  
+    </treeitem> 
+    <treeitem>  
+      <treerow>  
+        <treecell label="mel@whereever.com"/>  
+        <treecell label="Let's do lunch"/>  
+      </treerow>  
+    </treeitem> 
+  </treechildren>
+</tree>
+
+<script type="text/javascript"><![CDATA[
+function run() {
+  var tree = document.getElementsByTagName("tree")[0];
+  var sel = tree.view.selection;
+  sel.rangedSelect(0, 0, true);
+  sel.rangedSelect(1000, 1001, true);
+  sel.adjustSelection(1, 0x7fffffff);
+}
+]]></script>
+
+</window>

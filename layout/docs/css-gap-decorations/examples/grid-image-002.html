@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Example of rule image with animated container size</title>
+
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+@keyframes w {
+  0%, 33% { width:200px }
+  33%, 50% { width:400px }
+  50%, 100% { width:200px }
+}
+@keyframes h {
+  0%, 33% { height:200px }
+  33%, 50% { height:300px }
+  50%, 100% { height:200px }
+}
+
+.grid {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 50px);
+  gap: 16px;
+  width: 200px;
+  height: 240px;
+  place-content: space-around;
+
+  animation: w 5s infinite, h 5s infinite;
+
+  column-rule: 16px solid blue;
+  column-rule-image: url(v-diagonal-blue-16.png) 16;
+  column-rule-extent: segment;
+  column-rule-align: rule-center;
+  column-rule-longitudinal-inset: -8px;
+
+  row-rule: 16px solid purple;
+  row-rule-image: url(h-diagonal-blue-16.png) 16;
+  row-rule-extent: segment;
+  row-rule-align: rule-center;
+  row-rule-longitudinal-inset: -8px;
+
+  border: 2px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+
+x {
+  block-size: 48px;
+  background: grey;
+}
+x:nth-child(2), x:nth-child(6) {
+  grid-column: span 2;
+}
+
+</style>
+
+<div class="grid test1"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div>

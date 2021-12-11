@@ -1,0 +1,37 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+
+    <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=294086 -->
+
+    <title>SVG embedded by reference by dynamic--object-svg-unloaded.xhtml</title>
+
+    <style type="text/css">
+
+html {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: lime;
+}
+
+    </style>
+
+    <script type="text/javascript">
+
+var embedding_element;
+
+function handle_load(e)
+{
+  embedding_element = e.originalTarget.defaultView.frameElement;
+  embedding_element.ownerDocument.documentElement.removeAttribute('class');
+}
+
+    </script>
+
+  </head>
+  <body onload="handle_load(event);" style="display:none;"></body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1725416</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+
+<style>
+  #container {
+    height: 100px;
+    touch-action: none;
+  }
+</style>
+
+<div id="container"></div>
+
+<script>
+  add_task(async function testTouch() {
+    await waitUntilApzStable();
+    const container = document.getElementById("container");
+    const pointerDownPromise = promiseOneEvent(container, "pointerdown");
+    const pointerUpPromise = promiseOneEvent(container, "pointerup");
+    synthesizeNativeTapAtCenter(container);
+
+    const pointerDown = await pointerDownPromise;
+    is(pointerDown.pointerType, "touch", ".pointerType");
+    is(pointerDown.button, 0, ".button");
+    is(pointerDown.buttons, 1, ".buttons");
+
+    const pointerUp = await pointerUpPromise;
+    is(pointerUp.pointerType, "touch", ".pointerType");
+    is(pointerUp.button, 0, ".button");
+    is(pointerUp.buttons, 0, ".buttons");
+  });
+</script>

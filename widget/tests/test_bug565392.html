@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=565392
+-->
+<head>
+  <title>Test for Bug 565392</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=565392">Mozilla Bug 565392</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+/** Test for Bug 565392 **/
+
+var dir1 = Services.dirsvc.get("ProfD", Ci.nsIFile);
+var clipboard = Services.clipboard;
+
+  function getLoadContext() {
+    return window.docShell.QueryInterface(Ci.nsILoadContext);
+  }
+
+  function getTransferableFile(file) {
+    var transferable = Cc["@mozilla.org/widget/transferable;1"]
+                         .createInstance(Ci.nsITransferable);
+    transferable.init(getLoadContext());
+    transferable.setTransferData("application/x-moz-file", file);
+    return transferable;
+  }
+
+  function setClipboardData(transferable) {
+    clipboard.setData(transferable, null, 1);
+  }
+
+  function getClipboardData(mime) {
+    var transferable = Cc["@mozilla.org/widget/transferable;1"]
+                         .createInstance(Ci.nsITransferable);
+    transferable.init(getLoadContext());
+    transferable.addDataFlavor(mime);
+    clipboard.getData(transferable, 1);
+    var data = {};
+    transferable.getTransferData(mime, data);
+    return data;
+  }
+
+setClipboardData(getTransferableFile(dir1));
+is(clipboard.hasDataMatchingFlavors(["application/x-moz-file"], 1), true);
+var data = getClipboardData("application/x-moz-file");
+var file = data.value.QueryInterface(Ci.nsIFile);
+ok(file.isDirectory(), true);
+is(file.target, dir1.target, true);
+
+</script>
+</pre>
+</body>
+</html>

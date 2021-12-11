@@ -1,0 +1,19 @@
+[package]
+name = "mozdevice"
+version = "0.4.0"
+authors = ["Mozilla"]
+description = "Client library for the Android Debug Bridge (adb)"
+keywords = ["mozilla", "firefox", "geckoview", "android", "adb"]
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozdevice"
+license = "MPL-2.0"
+edition = "2018"
+
+[dependencies]
+log = { version = "0.4", features = ["std"] }
+once_cell = "1.4.0"
+regex = { version = "1", default-features = false, features = ["perf", "std"] }
+tempfile = "3"
+walkdir = "2"
+unix_path = "1.0"
+uuid = { version = "0.8", features = ["serde", "v4"] }
+

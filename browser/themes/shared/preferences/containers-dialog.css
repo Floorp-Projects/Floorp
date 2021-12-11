@@ -1,0 +1,50 @@
+/* Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../components/contextualidentity/content/usercontext.css
+
+#name {
+  -moz-box-flex: 1;
+}
+
+.radio-buttons {
+  -moz-box-orient: horizontal;
+  margin-inline-start: 0.35rem;
+}
+
+.radio-buttons > radio {
+  user-select: none;
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+  min-block-size: 24px;
+  min-inline-size: 24px;
+  border-radius: 50%;
+  padding: 2px;
+  margin: 9px;
+}
+
+.icon-buttons > radio > .userContext-icon {
+  fill: var(--in-content-text-color);
+}
+
+.radio-buttons > radio {
+  padding-inline-start: 2px;
+}
+
+radio > .userContext-icon {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.radio-buttons > radio[selected=true] {
+  outline-color: var(--in-content-text-color);
+}
+
+.radio-buttons > radio[focused=true] {
+  outline-color: var(--in-content-accent-color);
+}
+
+.radio-buttons > radio:hover:active {
+  outline-color: var(--in-content-accent-color-active);
+}

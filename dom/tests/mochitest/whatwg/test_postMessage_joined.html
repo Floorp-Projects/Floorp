@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage with document.domain setting to join origins</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://sub1.test1.example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper.html"
+        name="container"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveTestResult(evt)
+{
+  ok(evt instanceof MessageEvent, "umm, how did we get this?");
+  is(evt.type, "message", "expected events of type 'message'");
+  ok(evt.isTrusted === true, "should have been a trusted event");
+
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+
+  // Either we passed the test or we failed it.  The message's
+  // contents should help to diagnose the failure.  Either way,
+  // consider this the end of the test.
+  is(evt.data, "test-passed", "unexpected test result");
+  SimpleTest.finish();
+}
+
+function setup()
+{
+  window.addEventListener("message", receiveTestResult);
+  window.frames.container.postMessage("start-test",
+                                      "http://sub1.test1.example.org");
+}
+
+addLoadEvent(setup);
+
+</script>
+</pre>
+</body>
+</html>

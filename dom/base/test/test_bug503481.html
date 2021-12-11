@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=503481
+-->
+<head>
+  <title>Test for Bug 503481</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="done();">
+
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=503481"
+   target="_blank" >Mozilla Bug 503481</a>
+
+<p id="display"></p>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+function done() {
+  is(firstRan, true, "first has run");
+  is(secondRan, true, "second has run");
+  is(thirdRan, true, "third has run");
+  SimpleTest.finish();
+}
+var reqs = [];
+function unblock(s) {
+  xhr = new XMLHttpRequest();
+  xhr.open("GET", "file_bug503481.sjs?unblock=" + s);
+  xhr.send();
+  reqs.push(xhr);
+}
+var firstRan = false, secondRan = false, thirdRan = false;
+function runFirst() { firstRan = true; }
+function runSecond() {
+  is(thirdRan, true, "should have run third already");
+  secondRan = true;
+}
+function runThird() {
+  is(secondRan, false, "shouldn't have unblocked second yet");
+  thirdRan = true;
+  unblock("B");
+}
+</script>
+<script id=firstScript async src="file_bug503481.sjs?blockOn=A&body=runFirst();"></script>
+<script id=firstScriptHelper>
+is(document.getElementById("firstScript").async, true,
+   "async set");
+is(document.getElementById("firstScriptHelper").async, false,
+   "async not set");
+document.getElementById("firstScript").async = false;
+is(document.getElementById("firstScript").async, false,
+   "async no longer set");
+is(document.getElementById("firstScript").hasAttribute("async"), false,
+   "async attribute no longer set");
+is(firstRan, false, "First async script shouldn't have run");
+unblock("A");
+</script>
+
+<script async src="file_bug503481.sjs?blockOn=B&body=runSecond();"></script>
+<script async src="file_bug503481.sjs?blockOn=C&body=runThird();"></script>
+<script>
+is(secondRan, false, "Second async script shouldn't have run");
+is(thirdRan, false, "Third async script shouldn't have run");
+unblock("C");
+</script>
+
+</body>
+</html>

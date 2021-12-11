@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <title>CSS Test: Testing placement of abs.pos. grid items in negative implicit grid</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107783">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#abspos-items">
+  <link rel="match" href="grid-abspos-items-001-ref.html">
+  <meta charset="utf-8">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ position: relative;
+ border: 1px solid;
+ grid-auto-flow: row;
+ grid-auto-columns: 23px;
+ grid-auto-rows: 7px;
+ padding: 1px 7px 3px 13px;
+ width: 200px;
+ height: 60px;
+}
+
+span.negative {
+  grid-column: span A 2 / 1; 
+  grid-row:    A -1;
+  background: none;
+  border: none;
+}
+
+.a {
+  grid-column: 1 / 3; 
+  grid-row:    3 / 5;
+}
+
+.abs {
+  position: absolute;
+  top:3px; left:1px; right:5px; bottom:1px;
+  opacity: 0.7;
+}
+.b {
+  grid-column:  span A 4 / 2;
+  grid-row:     auto / auto; 
+}
+.c {
+  grid-column:  span 5 / 1;  /* outside to the left */
+  grid-row:     A -5 / 1;    /* outside to the top */
+}
+.d {
+  grid-column:  auto / A -3;
+  grid-row:     2 / 1;
+  top: -3px;
+}
+.e {
+  grid-column:  A -3 / auto;
+  grid-row:     A -3 / auto;
+}
+.f {
+  grid-column:  A -3 / auto;
+  grid-row:     auto / A -2;
+}
+span {
+  background: lime;
+  border: 1px solid;
+}
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
+<span class="b abs">b</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
+<span class="c abs">c</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
+<span class="d abs">d</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
+<span class="e abs">e</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="a"></span>
+<span class="f abs">f</span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<div><span class="b abs">b</span></div>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<x><span class="c abs">c</span></x>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="d abs"></span>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<div><span class="e abs">e</span></div>
+</div>
+
+<div class="grid">
+<span class="negative"></span>
+<span class="f abs">f</span>
+</div>
+
+</body>
+</html>

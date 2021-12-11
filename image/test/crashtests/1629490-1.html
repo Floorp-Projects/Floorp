@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+<div id="container">
+  <iframe id='if' src="1629490-1-iframe.html"></iframe>
+</div>
+
+<script>
+let iterationsLeft = 25;
+
+function runTest() {
+  // Make sure the image is decoded and advanced to it's final frame.
+  let img = document.getElementById("if").contentWindow.document.getElementById("image1");
+  img.decode().then(function() {
+    setTimeout(forceDiscard, 2000);
+  });
+}
+
+function showIframe() {
+  document.getElementById("container").style.display = "";
+  document.documentElement.getBoundingClientRect();
+  requestAnimationFrame(forceDecode);
+}
+
+function forceDecode() {
+  let img = document.getElementById("if").contentWindow.document.getElementById("image1");
+  img.decode().then(function() {
+    setTimeout(forceDiscard, 0);
+  });
+}
+
+function forceDiscard() {
+  iterationsLeft--;
+  if (iterationsLeft < 0) {
+    document.documentElement.className = "";
+    return;
+  }
+  document.getElementById("container").style.display = "none";
+  document.documentElement.getBoundingClientRect();
+  requestAnimationFrame(() => { requestAnimationFrame( () => { setTimeout(showIframe, 0); } ) });
+}
+
+//window.addEventListener("load", runTest);
+window.addEventListener("MozReftestInvalidate", runTest);
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<window title="Mozilla Bug "
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id="
+     target="_blank">Mozilla Bug </a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug  **/
+  var obs = Cc["@mozilla.org/observer-service;1"]
+              .getService(Ci.nsIObserverService);
+  var didCall = false;
+  var observer = {
+    QueryInterface: function QueryInterface(aIID) {
+      if (aIID.equals(Ci.nsIObserver) ||
+          aIID.equals(Ci.nsISupports))
+        return this;
+      throw Components.Exception("", Cr.NS_NOINTERFACE);
+    },
+    observe: function(subject, topic, data) {
+      obs.removeObserver(observer, "cycle-collector-begin");
+      observer = null;
+      didCall = true;
+    }
+  };
+
+  // Start an incremental GC, to make sure that calling ccSlice
+  // when an IGC is running finishes the GC.
+  SpecialPowers.Cu.getJSTestingFunctions().gcslice(1);
+
+  // Make sure that we call the observer even if we're in the middle
+  // of an ICC when we add the observer. See bug 981033.
+  SpecialPowers.finishCC();
+  SpecialPowers.ccSlice(1);
+
+  obs.addObserver(observer, "cycle-collector-begin");
+
+  SpecialPowers.DOMWindowUtils.cycleCollect();
+
+  ok(didCall, "Observer should have been called!");
+  ]]>
+  </script>
+</window>

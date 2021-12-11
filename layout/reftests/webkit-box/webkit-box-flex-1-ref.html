@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Reference
+  </title>
+  <style>
+    .box {
+      display: flex;
+      border: 1px solid black;
+      margin: 5px 20px;
+      width: 100px;
+      float: left; /* For testing in "rows" */
+      font: 10px serif;
+    }
+    .box > * {
+      /* Modern flexbox (used in this reference case) allows everything to
+         shrink by default, but -webkit-box does not, so we have to turn that
+         feature off to make an accurate reference case. */
+      flex-shrink: 0;
+    }
+
+    .box > *:nth-child(1) { background: turquoise; }
+    .box > *:nth-child(2) { background: salmon;    }
+    .box > *:nth-child(3) { background: yellow;    }
+
+    .huge { width: 120px }
+    .bf1 { flex: 1 1 auto }
+    .bf3 { flex: 3 3 auto }
+
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW: Default -webkit-box-flex -->
+  <div class="box">
+    <div>a</div>
+  </div>
+
+  <div class="box">
+    <div>a</div><div>b</div>
+  </div>
+
+  <div class="box">
+    <div class="huge">a</div>
+  </div>
+
+  <br>
+
+  <!-- SECOND ROW: One item has nonzero -webkit-box-flex -->
+  <div class="box">
+    <div class="bf1">a</div>
+  </div>
+
+  <div class="box">
+    <div>a</div><div class="bf1">b</div>
+  </div>
+
+  <div class="box">
+    <div class="huge bf1">a</div>
+  </div>
+
+  <br>
+
+  <!-- THIRD ROW: Two items have nonzero (equal) -webkit-box-flex -->
+  <div class="box">
+    <div class="bf1">a</div><div class="bf1">b</div>
+  </div>
+
+  <div class="box">
+    <div class="bf1">a</div><div>b</div><div class="bf1">c</div>
+  </div>
+
+  <div class="box">
+    <div class="huge bf1">a</div>
+    <div>b</div>
+    <div class="huge bf1">c</div>
+  </div>
+
+  <br>
+
+  <!-- FOURTH ROW: Non-equal nonzero -webkit-box-flex values -->
+  <div class="box">
+    <div class="bf1">a</div><div class="bf3">b</div>
+  </div>
+
+  <div class="box">
+    <div class="bf3">a</div><div class="bf1">b</div>
+  </div>
+
+  <div class="box">
+    <div class="huge bf1">a</div>
+    <div class="huge bf3">b</div>
+  </div>
+
+</body>
+</html>

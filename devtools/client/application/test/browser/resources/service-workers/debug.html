@@ -1,0 +1,25 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Service worker test</title>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+window.sw = navigator.serviceWorker.register("debug-sw.js");
+
+/* exported fetchFromWorker */
+async function fetchFromWorker() {
+  const response = await fetch("test");
+  const text = await response.text();
+  console.log(`Response from worker: ${text}`);
+}
+</script>
+
+<p>This page has a <code>fetchFromWorker()</code> function.</p>
+</body>
+</html>

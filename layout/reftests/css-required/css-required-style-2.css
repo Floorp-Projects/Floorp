@@ -1,0 +1,13 @@
+input, textarea, select, button,
+*:optional {
+  visibility: hidden;
+}
+
+input[required]:required {
+  visibility: visible;
+}
+
+/* Override the default style. */
+:invalid {
+  box-shadow: none;
+}

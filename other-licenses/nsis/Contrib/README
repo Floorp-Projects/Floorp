@@ -1,0 +1,34 @@
+These directories contain modified source code to the NSIS Plugins used by the
+Windows installers.
+
+NSIS project page: http://nsis.sourceforge.net/
+NSIS Unicode port project page: http://www.scratchpaper.com/
+
+APPLICABLE LICENSES
+-------------------
+* All NSIS source code, plug-ins, documentation, examples, header files and
+  graphics, with the exception of the compression modules and where otherwise
+  noted, are licensed under the zlib/libpng license.
+
+* The zlib compression module for NSIS is licensed under the zlib/libpng
+  license.
+
+* The bzip2 compression module for NSIS is licensed under the bzip2 license.
+
+* The LZMA compression module for NSIS is licensed under the Common Public
+  License version 1.0.
+
+-------------------------------------------------------------------------------
+
+ExDLL NSIS Unicode source 2.38.1 for plugin projects
+http://www.scratchpaper.com/
+These files are required to compile the nsProcess and ShellLink plugins. No
+changes were made to these files.
+
+-------------------------------------------------------------------------------
+
+ApplicationID v1.0
+http://nsis.sourceforge.net/ApplicationID_plug-in
+Unicode support and taskbar resource deleteion was added for this plugin. A diff
+of the changes to the source is available at:
+https://bugzilla.mozilla.org/show_bug.cgi?id=521141

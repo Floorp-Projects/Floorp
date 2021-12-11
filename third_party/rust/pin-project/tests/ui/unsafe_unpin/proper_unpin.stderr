@@ -1,0 +1,67 @@
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:33:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+33 |     is_unpin::<Blah<PhantomPinned, ()>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Blah<PhantomPinned, ()>`
+   = note: 1 redundant requirements hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, Blah<PhantomPinned, ()>>`
+   = note: required because of the requirements on the impl of `Unpin` for `Blah<PhantomPinned, ()>`
+
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:35:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+35 |     is_unpin::<Blah<PhantomPinned, PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Blah<PhantomPinned, PhantomPinned>`
+   = note: 1 redundant requirements hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, Blah<PhantomPinned, PhantomPinned>>`
+   = note: required because of the requirements on the impl of `Unpin` for `Blah<PhantomPinned, PhantomPinned>`
+
+error[E0277]: the trait bound `TrivialBounds: UnsafeUnpin` is not satisfied
+  --> $DIR/proper_unpin.rs:37:16
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+37 |     is_unpin::<TrivialBounds>(); //~ ERROR E0277
+   |                ^^^^^^^^^^^^^ the trait `UnsafeUnpin` is not implemented for `TrivialBounds`
+   |
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, TrivialBounds>`
+   = note: required because of the requirements on the impl of `Unpin` for `TrivialBounds`
+
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:39:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+39 |     is_unpin::<OverlappingLifetimeNames<'_, PhantomPinned, ()>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `OverlappingLifetimeNames<'_, PhantomPinned, ()>`
+   = note: 1 redundant requirements hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, OverlappingLifetimeNames<'_, PhantomPinned, ()>>`
+   = note: required because of the requirements on the impl of `Unpin` for `OverlappingLifetimeNames<'_, PhantomPinned, ()>`
+
+error[E0277]: `PhantomPinned` cannot be unpinned
+  --> $DIR/proper_unpin.rs:40:5
+   |
+4  | fn is_unpin<T: Unpin>() {}
+   |                ----- required by this bound in `is_unpin`
+...
+40 |     is_unpin::<OverlappingLifetimeNames<'_, (), PhantomPinned>>(); //~ ERROR E0277
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
+   |
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `OverlappingLifetimeNames<'_, (), PhantomPinned>`
+   = note: 1 redundant requirements hidden
+   = note: required because of the requirements on the impl of `UnsafeUnpin` for `Wrapper<'_, OverlappingLifetimeNames<'_, (), PhantomPinned>>`
+   = note: required because of the requirements on the impl of `Unpin` for `OverlappingLifetimeNames<'_, (), PhantomPinned>`

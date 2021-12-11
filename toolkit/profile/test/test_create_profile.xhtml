@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=543854
+-->
+<window title="Mozilla Bug 543854"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+    <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=543854"
+     target="_blank">Mozilla Bug 543854</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 543854 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  const ASCIIName = "myprofile";
+  const UnicodeName = "\u09A0\u09BE\u0995\u09C1\u09B0"; // A Bengali name
+
+  var gDirService = SpecialPowers.Services.dirsvc;
+  var gIOService = SpecialPowers.Services.io;
+  var gProfileService;
+  var gDefaultLocalProfileParent;
+
+  gProfileService = Cc["@mozilla.org/toolkit/profile-service;1"].
+    getService(Ci.nsIToolkitProfileService);
+
+  gDefaultLocalProfileParent = gDirService.get("DefProfLRt", Ci.nsIFile);
+
+  createProfile(ASCIIName);
+  createProfile(UnicodeName);
+  SimpleTest.finish();
+
+/**
+ * Read the contents of an nsIFile. Throws on error.
+
+ * @param file an nsIFile instance.
+ * @return string contents.
+ */
+function readFile(file) {
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+    createInstance(Ci.nsIFileInputStream);
+  let sstream = Cc["@mozilla.org/scriptableinputstream;1"].
+    createInstance(Ci.nsIScriptableInputStream);
+
+  const RO = 0x01;
+  const READ_OTHERS = 4;
+
+  fstream.init(file, RO, READ_OTHERS, 0);
+  sstream.init(fstream);
+  let out = sstream.read(sstream.available());
+  sstream.close();
+  fstream.close();
+  return out;
+}
+
+function checkBounds(lowerBound, value, upperBound) {
+  ok(lowerBound <= value, "value " + value +
+                          " is above lower bound " + lowerBound);
+  ok(upperBound >= value, "value " + value +
+                          " is within upper bound " + upperBound);
+}
+
+function createProfile(profileName) {
+  // Filesystem precision is lower than Date precision.
+  let lowerBound = Date.now() - 1000;
+
+  let profile = gProfileService.createProfile(null, profileName);
+
+  // check that the directory was created
+  isnot(profile, null, "Profile " + profileName + " created");
+
+  let profileDir = profile.rootDir;
+
+  ok(profileDir.exists(), "Profile dir created");
+  ok(profileDir.isDirectory(), "Profile dir is a directory");
+
+  let profileDirPath = profileDir.path;
+
+  is(profileDirPath.substr(profileDirPath.length - profileName.length),
+     profileName, "Profile dir has expected name");
+
+  // Ensure that our timestamp file was created.
+  let jsonFile = profileDir.clone();
+  jsonFile.append("times.json");
+  ok(jsonFile.path, "Path is " + jsonFile.path);
+  ok(jsonFile.exists(), "Times file was created");
+  ok(jsonFile.isFile(), "Times file is a file");
+  let json = JSON.parse(readFile(jsonFile));
+
+  let upperBound = Date.now() + 1000;
+
+  let created = json.created;
+  ok(created, "created is set");
+
+  // Check against real clock time.
+  checkBounds(lowerBound, created, upperBound);
+
+  // Clean up the profile before local profile test.
+  profile.remove(true);
+  ok(!jsonFile.exists(), "Times file was removed");
+  ok(!profileDir.exists(), "Profile dir was removed");
+
+  // Create with non-null aRootDir
+  profile = gProfileService.createProfile(profileDir, profileName);
+
+  let localProfileDir = profile.localDir;
+  ok(gDefaultLocalProfileParent.contains(localProfileDir, false),
+    "Local profile dir created in DefProfLRt");
+
+  // Clean up the profile.
+  profile.remove(true);
+  ok(!profileDir.exists(), "Profile dir was removed");
+}
+
+  ]]>
+  </script>
+</window>

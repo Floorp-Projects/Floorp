@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=598833
+-->
+<head>
+  <title>Test for Bug 598833</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=598833">Mozilla Bug 598833</a>
+<p id="display">
+  <fieldset disabled>
+    <select id="s" multiple required>
+      <option>one</option>
+    </select>
+  </fieldset>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 598833 **/
+var s = $("s");
+is(s.matches(":invalid"), false, "Disabled select should not be invalid");
+is(s.matches(":valid"), false, "Disabled select should not be valid");
+var p = s.parentNode;
+p.removeChild(s);
+is(s.matches(":invalid"), true,
+   "Required valueless select not in tree should be invalid");
+is(s.matches(":valid"), false,
+   "Required valueless select not in tree should not be valid");
+p.appendChild(s);
+p.disabled = false;
+is(s.matches(":invalid"), true,
+   "Required valueless select should be invalid");
+is(s.matches(":valid"), false,
+   "Required valueless select should not be valid");
+</script>
+</pre>
+</body>
+</html>

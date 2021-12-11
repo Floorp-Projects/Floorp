@@ -1,0 +1,7 @@
+# crashtests that are most likely to affect webrender
+# Added as part of Bug 1632822 to reduce load on android phones
+
+include ../../gfx/tests/crashtests/crashtests.list
+include ../../layout/base/crashtests/crashtests.list
+include ../../layout/painting/crashtests/crashtests.list
+include ../../layout/svg/crashtests/crashtests.list

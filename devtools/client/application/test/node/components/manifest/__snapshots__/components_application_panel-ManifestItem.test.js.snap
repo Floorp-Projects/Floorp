@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestItem renders the expected snapshot for a populated item 1`] = `
+<tr
+  className="manifest-item js-manifest-item"
+>
+  <th
+    className="manifest-item__label js-manifest-item-label"
+    scope="row"
+  >
+    foo
+  </th>
+  <td
+    className="manifest-item__value js-manifest-item-content"
+  >
+    bar
+  </td>
+</tr>
+`;
+
+exports[`ManifestItem renders the expected snapshot for an empty item 1`] = `
+<tr
+  className="manifest-item js-manifest-item"
+>
+  <th
+    className="manifest-item__label js-manifest-item-label"
+    scope="row"
+  >
+    foo
+  </th>
+  <td
+    className="manifest-item__value js-manifest-item-content"
+  />
+</tr>
+`;

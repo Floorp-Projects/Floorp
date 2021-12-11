@@ -1,0 +1,143 @@
+.outer-wrapper {
+  color: var(--newtab-text-primary-color);
+  display: flex;
+  flex-grow: 1;
+  min-height: 100vh;
+  padding: ($section-spacing + $section-vertical-padding) $base-gutter $base-gutter;
+
+  &.ds-outer-wrapper-breakpoint-override {
+    padding: 30px 0 32px;
+
+    @media(min-width: $break-point-medium) {
+      padding: 30px 32px 32px;
+    }
+  }
+
+  &.only-search {
+    display: block;
+    padding-top: 134px;
+  }
+
+  a {
+    color: var(--newtab-primary-action-background);
+  }
+}
+
+main {
+  margin: auto;
+  width: $wrapper-default-width;
+  padding: 0;
+
+  section {
+    margin-bottom: $section-spacing;
+    position: relative;
+  }
+
+  .hide-main & {
+    visibility: hidden;
+  }
+
+  @media (min-width: $break-point-medium) {
+    width: $wrapper-max-width-medium;
+  }
+
+  @media (min-width: $break-point-large) {
+    width: $wrapper-max-width-large;
+  }
+
+  @media (min-width: $break-point-widest) {
+    width: $wrapper-max-width-widest;
+  }
+
+  &.has-snippet {
+    // Offset the snippets container so things at the bottom of the page are still
+    // visible when snippets are visible. Adjust for other spacing.
+    padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
+  }
+}
+
+.below-search-snippet.withButton {
+  margin: auto;
+  width: 100%;
+}
+
+.ds-outer-wrapper-search-alignment {
+  main {
+    // This override is to ensure while Discovery Stream loads,
+    // the search bar does not jump around. (it sticks to the top)
+    margin: 0 auto;
+  }
+}
+
+.ds-outer-wrapper-breakpoint-override {
+  main {
+    width: 266px;
+    padding-bottom: 0;
+
+    @media (min-width: $break-point-medium) {
+      width: 510px;
+    }
+
+    @media (min-width: $break-point-large) {
+      width: 746px;
+    }
+
+    @media (min-width: $break-point-widest) {
+      width: 986px;
+    }
+
+    &.has-snippet {
+      // Offset the snippets container so things at the bottom of the page are still
+      // visible when snippets are visible. Adjust for other spacing.
+      padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
+    }
+  }
+}
+
+.base-content-fallback {
+  // Make the error message be centered against the viewport
+  height: 100vh;
+}
+
+.body-wrapper {
+  // Hide certain elements so the page structure is fixed, e.g., placeholders,
+  // while avoiding flashes of changing content, e.g., icons and text
+  $selectors-to-hide: '.section-title, .sections-list .section:last-of-type, .topics';
+
+  #{$selectors-to-hide} {
+    opacity: 0;
+  }
+
+  &.on {
+    #{$selectors-to-hide} {
+      opacity: 1;
+    }
+  }
+}
+
+.non-collapsible-section {
+  padding: 0 $section-horizontal-padding;
+}
+
+.prefs-button {
+  button {
+    background-color: transparent;
+    border: 0;
+    border-radius: 2px;
+    cursor: pointer;
+    inset-inline-end: 15px;
+    padding: 15px;
+    position: fixed;
+    top: 15px;
+    z-index: 1000;
+
+    &:hover,
+    &:focus {
+      background-color: var(--newtab-element-hover-color);
+    }
+
+    &:active {
+      background-color: var(--newtab-element-active-color);
+    }
+  }
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>User activation test: transient flag</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+SimpleTest.requestFlakyTimeout("Timeouts are needed to test transient user_activation");
+let timeout = SpecialPowers.getIntPref("dom.user_activation.transient.timeout") + 1000;
+
+function waitForEvent(aTarget, aEvent, aCallback) {
+  return new Promise((aResolve) => {
+    aTarget.addEventListener(aEvent, function listener(event) {
+      aCallback(event);
+      aResolve();
+    }, { once: true });
+  });
+}
+
+function checkPopupActivated(popup, activated) {
+  let state = activated ? "valid" : "invalid";
+  ok(activated === SpecialPowers.wrap(popup.document).hasValidTransientUserGestureActivation,
+     `check has-${state}-transient-user-activation on top-level document`);
+  ok(activated === SpecialPowers.wrap(popup.frames[0].document).hasValidTransientUserGestureActivation,
+     `check has-${state}-transient-user-activation on iframe`);
+}
+
+add_task(async function triggerUserActivation() {
+  let message = waitForEvent(window, "message", (e) => {
+    if (e.data === "topNavigation") {
+      ok(true, "Top navigation changed");
+    } else {
+      ok(false, "Unexpected message");
+    }
+  });
+  let popup = window.open("./file_useractivation_sandbox_transient_popup.html", "_blank");
+  await new Promise((r) => {
+    popup.addEventListener("load", r);
+  });
+  checkPopupActivated(popup, false);
+  // Create user gesture into iframe within popup just opened
+  SpecialPowers.wrap(popup.frames[0].frameElement.contentDocument).notifyUserGestureActivation();
+  checkPopupActivated(popup, true);
+  // Notify popup to load into the frame
+  popup.postMessage("triggerIframeLoad");
+  await message;
+  popup.close();
+});
+
+add_task(async function triggerUserActivationTimeout() {
+  let message = waitForEvent(window, "message", (e) => {
+    // Top navigation MUST be blocked
+    if (e.data === "topNavigationBlocked") {
+      ok(true, "Top navigation blocked");
+    } else {
+      ok(false, "Unexpected message");
+    }
+  });
+  let popup = window.open("./file_useractivation_sandbox_transient_popup.html", "_blank");
+  await new Promise((r) => {
+    popup.addEventListener("load", r);
+  });
+  checkPopupActivated(popup, false);
+  // Create user gesture into iframe within popup just opened
+  SpecialPowers.wrap(popup.frames[0].frameElement.contentDocument).notifyUserGestureActivation();
+  checkPopupActivated(popup, true);
+  // Ensure we timeout user gesture
+  await new Promise((aResolve) => {
+    setTimeout(() => {
+      checkPopupActivated(popup, false);
+      aResolve();
+    }, timeout);
+  });
+  // Notify popup to load into the frame
+  popup.postMessage("triggerIframeLoad");
+  await message;
+  popup.close();
+});
+
+add_task(async function endTests() {
+  // Reset the activation flag in order not to interfere following test in the
+  // verify mode which would run the test using same document couple times.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+});
+
+</script>
+</body>

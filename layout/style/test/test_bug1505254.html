@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1505254
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1505254</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    /* Note: this CSS/DOM structure is loosely based on WhatsApp Web. */
+    #outerFlex {
+      display: flex;
+      height: 200px;
+      border: 3px solid purple;
+      overflow: hidden;
+      position: relative;
+    }
+    #outerItem {
+      flex: 0 0 60%;
+      overflow: hidden;
+      position: relative;
+    }
+    #abspos {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+    #insideAbspos {
+      position: relative;
+      flex: 1 1 0;
+      width: 100%;
+      height: 100%;
+    }
+    #scroller {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 0;
+      overflow-x: hidden;
+      overflow-y: scroll;
+      height: 100%;
+      width: 100%;
+    }
+    #initiallyHidden {
+      display:none;
+    }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1505254">Mozilla Bug 1505254</a>
+<div id="display">
+  <div id="content">
+    <div id="outerFlex">
+      <div id="outerItem">
+        <div id="abspos">
+          <div id="insideAbspos">
+            <div>
+              <div id="scroller">
+                <div style="min-height: 600px">abc</div>
+                <div id="initiallyHidden">def</div>
+              </div>
+            </div>
+          </div>
+          <div id="testNode"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 1505254 **/
+
+/**
+ * This test checks how many reflows are required when we make a change inside
+ * of an abpsos element, which itself is inside of a flex item with cached
+ * block-size measurements. This test is checking that this sort of change
+ * doesn't invalidate those cached block-size measurements on the flex item
+ * ancestor. (We're testing that indirectly by seeing how many frames are
+ * reflowed.)
+ */
+
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+
+// The elements that we will modify here:
+const gInitiallyHidden = document.getElementById("initiallyHidden");
+const gTestNode = document.getElementById("testNode");
+
+// Helper function to undo our modifications:
+function cleanup()
+{
+  gTestNode.textContent = "";
+  gInitiallyHidden.style = "";
+}
+
+// Helper function to flush layout & return the global frame-reflow-count:
+function getReflowCount()
+{
+  let unusedVal = document.getElementById("scroller").offsetHeight; // flush layout
+  return gUtils.framesReflowed;
+}
+
+// This function adds some text in gTestNode and returns the number of frames
+// that need to be reflowed as a result of that tweak:
+function makeTweakAndCountReflows()
+{
+  let beforeCount = getReflowCount();
+  gTestNode.textContent = "def";
+  let afterCount = getReflowCount();
+
+  let numReflows = afterCount - beforeCount;
+  if (numReflows <= 0) {
+    ok(false, "something's wrong -- we should've reflowed *something*");
+  }
+  return numReflows;
+}
+
+// ACTUAL TEST LOGIC STARTS HERE
+// -----------------------------
+
+// "Reference" measurement: see how many frames need to be reflowed
+// in response to a tweak in gTestNode, before we've shown
+// #initiallyHidden:
+let numReferenceReflows = makeTweakAndCountReflows();
+cleanup();
+
+// "Test" measurement: see how many frames need to be reflowed
+// in response to a tweak in gTestNode, after we've shown #initiallyHidden:
+gInitiallyHidden.style.display = "block";
+let numTestReflows = makeTweakAndCountReflows();
+cleanup();
+
+// Any difference between our measurements is an indication that we're reflowing
+// frames in a non-"dirty" subtree. (The gTestNode tweak has no reason to cause
+// #initiallyHidden to be dirty -- and therefore, the presence/absence of
+// #initiallyHidden shouldn't affect the number of frames that get reflowed in
+// response to the gTestNode tweak).
+is(numTestReflows, numReferenceReflows,
+   "Tweak should trigger the same number of reflows regardless of " +
+   "content in unmodified sibling");
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect fill="blue" height="100" width="100">
+    <animate id="a" attributeName="x"  calcMode="paced" values="50; 50; 50"/>
+  </rect>
+</svg>

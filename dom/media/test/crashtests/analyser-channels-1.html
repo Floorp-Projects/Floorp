@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+  var context = new window.OfflineAudioContext(1, 256, 48000);
+  var analyser = context.createAnalyser();
+  analyser.channelCount = 2;
+  analyser.channelCountMode = "explicit";
+  analyser.fftSize = 32;
+  var source = context.createOscillator();
+  source.connect(analyser);
+  source.start(0);
+  context.startRendering().
+    then(function() {
+      document.documentElement.removeAttribute("class");
+    });
+</script>

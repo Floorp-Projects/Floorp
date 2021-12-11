@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+navigator.mediaDevices.getUserMedia({audio: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false
+  }, fake: true
+}).then((stream) => {
+    document.documentElement.removeAttribute("class");
+})
+</script>
+</html>

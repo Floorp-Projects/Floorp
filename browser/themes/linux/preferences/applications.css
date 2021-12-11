@@ -1,0 +1,43 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+richlistitem[appHandlerIcon="handleInternally"],
+menuitem[appHandlerIcon="handleInternally"] {
+  list-style-image: url("chrome://branding/content/icon32.png");
+}
+
+richlistitem[appHandlerIcon="ask"],
+menuitem[appHandlerIcon="ask"] {
+  list-style-image: url("chrome://browser/skin/preferences/alwaysAsk.png");
+}
+
+richlistitem[appHandlerIcon="save"],
+menuitem[appHandlerIcon="save"] {
+  list-style-image: url("moz-icon://stock/gtk-save?size=menu");
+}
+
+richlistitem[appHandlerIcon="plugin"],
+menuitem[appHandlerIcon="plugin"] {
+  list-style-image: url("chrome://global/skin/icons/plugin.svg");
+}
+
+#appList {
+  min-height: 212px;
+}
+
+#appList > richlistitem {
+  -moz-box-align: center;
+}
+
+#appList > richlistitem > image {
+  margin: 5px;
+  width: 32px;
+  height: 32px;
+}
+
+#appList > richlistitem > label {
+  margin: 0px;
+  padding: 5px;
+  white-space: nowrap;
+}

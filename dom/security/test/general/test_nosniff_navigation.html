@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Bug 1428473 Support X-Content-Type-Options: nosniff when navigating</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+  <!-- add the two script tests -->
+  <script id="scriptCorrectType"></script>
+  <script id="scriptWrongType"></script>
+
+  <script class="testbody" type="text/javascript">
+    /* Description of the test:
+     * We're testing if Firefox respects the nosniff Header for Top-Level 
+     * Navigations.
+     * If Firefox cant Display the Page, it will prompt a download 
+     * and the URL of the Page will be about:blank.
+     * So we will try to open different content send with
+     * no-mime, mismatched-mime and garbage-mime types.
+     * 
+     */
+
+    SimpleTest.waitForExplicitFinish();
+
+    window.addEventListener("load", async () => {
+      window.open("window_nosniff_navigation.html");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("Event*"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser.ini",
+]
+
+MOCHITEST_MANIFESTS += [
+    "test/mochitest.ini",
+    "test/pointerevents/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "test/chrome.ini",
+    "test/pointerevents/chrome.ini",
+]
+
+TEST_DIRS += ["test/gtest"]
+
+XPIDL_SOURCES += [
+    "nsIEventListenerService.idl",
+]
+
+XPIDL_MODULE = "content_events"
+
+EXPORTS.mozilla += [
+    "AsyncEventDispatcher.h",
+    "DOMEventTargetHelper.h",
+    "EventDispatcher.h",
+    "EventListenerManager.h",
+    "EventNameList.h",
+    "EventStateManager.h",
+    "EventStates.h",
+    "GlobalKeyListener.h",
+    "IMEContentObserver.h",
+    "IMEStateManager.h",
+    "InputEventOptions.h",
+    "InputTypeList.h",
+    "InternalMutationEvent.h",
+    "JSEventHandler.h",
+    "KeyEventHandler.h",
+    "KeyNameList.h",
+    "PendingFullscreenEvent.h",
+    "PhysicalKeyCodeNameList.h",
+    "ShortcutKeys.h",
+    "TextComposition.h",
+    "VirtualKeyCodeList.h",
+    "WheelHandlingHelper.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "AnimationEvent.h",
+    "BeforeUnloadEvent.h",
+    "Clipboard.h",
+    "ClipboardEvent.h",
+    "ClipboardItem.h",
+    "CommandEvent.h",
+    "CompositionEvent.h",
+    "ConstructibleEventTarget.h",
+    "CustomEvent.h",
+    "DataTransfer.h",
+    "DataTransferItem.h",
+    "DataTransferItemList.h",
+    "DeviceMotionEvent.h",
+    "DragEvent.h",
+    "Event.h",
+    "EventTarget.h",
+    "FocusEvent.h",
+    "ImageCaptureError.h",
+    "InputEvent.h",
+    "KeyboardEvent.h",
+    "MessageEvent.h",
+    "MouseEvent.h",
+    "MouseScrollEvent.h",
+    "MutationEvent.h",
+    "NotifyPaintEvent.h",
+    "PaintRequest.h",
+    "PointerEvent.h",
+    "PointerEventHandler.h",
+    "RemoteDragStartData.h",
+    "ScrollAreaEvent.h",
+    "SimpleGestureEvent.h",
+    "StorageEvent.h",
+    "TextClause.h",
+    "Touch.h",
+    "TouchEvent.h",
+    "TransitionEvent.h",
+    "UIEvent.h",
+    "WheelEvent.h",
+    "XULCommandEvent.h",
+]
+
+if CONFIG["MOZ_WEBSPEECH"]:
+    EXPORTS.mozilla.dom += ["SpeechRecognitionError.h"]
+
+UNIFIED_SOURCES += [
+    "AnimationEvent.cpp",
+    "AsyncEventDispatcher.cpp",
+    "BeforeUnloadEvent.cpp",
+    "Clipboard.cpp",
+    "ClipboardEvent.cpp",
+    "ClipboardItem.cpp",
+    "CommandEvent.cpp",
+    "CompositionEvent.cpp",
+    "ConstructibleEventTarget.cpp",
+    "ContentEventHandler.cpp",
+    "CustomEvent.cpp",
+    "DataTransfer.cpp",
+    "DataTransferItem.cpp",
+    "DataTransferItemList.cpp",
+    "DeviceMotionEvent.cpp",
+    "DOMEventTargetHelper.cpp",
+    "DragEvent.cpp",
+    "Event.cpp",
+    "EventDispatcher.cpp",
+    "EventListenerManager.cpp",
+    "EventListenerService.cpp",
+    "EventTarget.cpp",
+    "FocusEvent.cpp",
+    "GlobalKeyListener.cpp",
+    "ImageCaptureError.cpp",
+    "IMEContentObserver.cpp",
+    "IMEStateManager.cpp",
+    "InputEvent.cpp",
+    "JSEventHandler.cpp",
+    "KeyboardEvent.cpp",
+    "KeyEventHandler.cpp",
+    "MessageEvent.cpp",
+    "MouseEvent.cpp",
+    "MouseScrollEvent.cpp",
+    "MutationEvent.cpp",
+    "NotifyPaintEvent.cpp",
+    "PaintRequest.cpp",
+    "PointerEvent.cpp",
+    "PointerEventHandler.cpp",
+    "RemoteDragStartData.cpp",
+    "ScrollAreaEvent.cpp",
+    "ShortcutKeyDefinitions.cpp",
+    "ShortcutKeys.cpp",
+    "SimpleGestureEvent.cpp",
+    "StorageEvent.cpp",
+    "TextClause.cpp",
+    "TextComposition.cpp",
+    "Touch.cpp",
+    "TouchEvent.cpp",
+    "TransitionEvent.cpp",
+    "UIEvent.cpp",
+    "WheelEvent.cpp",
+    "WheelHandlingHelper.cpp",
+    "XULCommandEvent.cpp",
+]
+
+# nsEventStateManager.cpp should be built separately because of Mac OS X headers.
+SOURCES += [
+    "EventStateManager.cpp",
+]
+
+if CONFIG["MOZ_WEBSPEECH"]:
+    UNIFIED_SOURCES += ["SpeechRecognitionError.cpp"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    "/docshell/base",
+    "/dom/base",
+    "/dom/html",
+    "/dom/storage",
+    "/dom/xml",
+    "/dom/xul",
+    "/js/xpconnect/wrappers",
+    "/layout/forms",
+    "/layout/generic",
+    "/layout/xul",
+    "/layout/xul/tree/",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

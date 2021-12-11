@@ -1,0 +1,40 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("GeckoView", "General")
+
+for var in ("APP_NAME", "APP_VERSION"):
+    DEFINES[var] = CONFIG["MOZ_%s" % var]
+
+for var in ("MOZ_UPDATER", "MOZ_APP_UA_NAME", "ANDROID_PACKAGE_NAME", "CPU_ARCH"):
+    DEFINES[var] = CONFIG[var]
+
+if CONFIG["MOZ_PKG_SPECIAL"]:
+    DEFINES["MOZ_PKG_SPECIAL"] = CONFIG["MOZ_PKG_SPECIAL"]
+
+JS_PREFERENCE_PP_FILES += [
+    "mobile.js",
+]
+
+if not CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"]:
+    # Equivalent to JS_PREFERENCE_PP_FILES[CONFIG['ANDROID_CPU_ARCH']],
+    # which isn't supported out of the box.
+    FINAL_TARGET_PP_FILES.defaults.pref[CONFIG["ANDROID_CPU_ARCH"]] += [
+        "geckoview-prefs.js",
+    ]
+else:
+    for arch in CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"]:
+        FINAL_TARGET_FILES.defaults.pref[arch] += [
+            "!/dist/fat-aar/output/defaults/pref/{arch}/geckoview-prefs.js".format(
+                arch=arch
+            ),
+        ]
+
+if CONFIG["MOZ_ANDROID_GOOGLE_VR"]:
+    FINAL_TARGET_FILES += [
+        "/" + CONFIG["MOZ_ANDROID_GOOGLE_VR_LIBS"] + "libgvr.so",
+    ]

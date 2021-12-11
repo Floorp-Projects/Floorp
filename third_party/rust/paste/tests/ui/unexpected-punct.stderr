@@ -1,0 +1,5 @@
+error: unexpected punct
+ --> $DIR/unexpected-punct.rs:2:12
+  |
+2 |     fn [<a + b>]() {}
+  |            ^

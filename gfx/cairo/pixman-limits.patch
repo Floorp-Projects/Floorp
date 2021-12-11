@@ -1,0 +1,18 @@
+commit 3c275c75e381184fb3fa0537c4bfce50b44690e7
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Fri Apr 20 00:12:32 2012 -0400
+
+    limits
+
+diff --git a/pixman/pixman-utils.c b/pixman/pixman-utils.c
+index 2ec2594..de05c0e 100644
+--- a/pixman/pixman-utils.c
++++ b/pixman/pixman-utils.c
+@@ -27,6 +27,7 @@
+ #endif
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <limits.h>
+ 
+ #include "pixman-private.h"
+ 

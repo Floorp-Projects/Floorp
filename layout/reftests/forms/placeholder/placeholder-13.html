@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: placeholder shouldn't show new lines (\r version) -->
+  <link rel='stylesheet' type='text/css' href='placeholder-style.css'>
+  <script type="text/javascript">
+    function setPlaceholder()
+    {
+      document.getElementById('p1').placeholder = 'my\r placeholder';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload="setPlaceholder(); disableReftestWait();">
+    <input type="text" id="p1" value="" placeholder="">
+  </body>
+</html>

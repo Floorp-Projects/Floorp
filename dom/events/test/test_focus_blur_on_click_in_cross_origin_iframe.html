@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title></title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+<iframe width=100></iframe>
+<script>
+SimpleTest.requestLongerTimeout(2);
+
+let state = "start";
+
+const utils = SpecialPowers.DOMWindowUtils;
+
+function getScreenPosition(aElement, aOffsetX, aOffsetY) {
+  const rect = aElement.getBoundingClientRect();
+  const x = aOffsetX + window.mozInnerScreenX + rect.left;
+  const y = aOffsetY + window.mozInnerScreenY + rect.top;
+  const scale = utils.screenPixelsPerCSSPixel;
+  return [Math.round(x * scale), Math.round(y * scale)];
+}
+
+add_task(async () => {
+  await SimpleTest.promiseFocus();
+
+  const loadsPromise = new Promise((resolve, reject) => {
+    window.addEventListener("message", function listener(event) {
+      info(`receive ${event.data}`);
+      if (event.data == "ready") {
+        is(state, "start", "check initial state");
+        state = "ready";
+        resolve();
+      } else {
+        reject("Unexpected message");
+      }
+    }, { once: true });
+  });
+
+  const iframe = document.querySelectorAll("iframe")[0];
+  iframe.src = "https://example.com/tests/dom/events/test/file_focus_blur_on_click_in_cross_origin_iframe.html";
+
+  await loadsPromise;
+
+  // Wait for APZ state stable so that mouse event handling APZ works properly
+  // in out-of-process iframes.
+  await waitUntilApzStable();
+
+  // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
+  // so we use promiseNativeMouseEventWithAPZ instead.
+  const [expectedScreenX, expectedScreenY] =
+    getScreenPosition(iframe, 10, 10);
+
+  const firstClickPromise = new Promise((resolve, reject) => {
+    window.addEventListener("message", function listener(event) {
+      info(`receive ${event.data}`);
+      if (state == "ready") {
+        if (event.data == "focus") {
+          state = "focusbeforeclick";
+        } else if (event.data == "click") {
+          ok(false, "Focusing failed to complete before mouseup");
+          state = "clickbeforefocus";
+        } else {
+          ok(false, "Unexpected event");
+        }
+      } else if (state == "focusbeforeclick") {
+        is(event.data, "click", "The second event should be 'click'");
+        state = "firstclick";
+        window.removeEventListener("message", listener);
+        resolve();
+      } else if (state == "clickbeforefocus") {
+        is(event.data, "focus", "The second event should be 'click'");
+        state = "firstclick";
+        window.removeEventListener("message", listener);
+        resolve();
+      } else {
+        reject("Unexpected message");
+      }
+    });
+  });
+
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: iframe,
+    screenX: expectedScreenX,
+    screenY: expectedScreenY,
+  });
+
+  await firstClickPromise;
+
+  SimpleTest.requestFlakyTimeout("Waiting for unwanted events that don't exist on success.");
+
+  const secondClickPromise = new Promise((resolve, reject) => {
+    window.addEventListener("message", function listener(event) {
+      info(`receive ${event.data}`);
+      if (state == "firstclick") {
+        is(event.data, "click", "The third event should be 'click' again, not 'blur' or 'focus'.");
+        state = "secondclick";
+        setTimeout(function() {
+          // Wait for potential other unwanted events
+          window.removeEventListener("message", listener);
+          resolve()
+        }, 200);
+      } else {
+        reject("Unexpected message " + event.data);
+      }
+    });
+  });
+
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: iframe,
+    screenX: expectedScreenX,
+    screenY: expectedScreenY,
+  });
+
+  await secondClickPromise;
+});
+</script>

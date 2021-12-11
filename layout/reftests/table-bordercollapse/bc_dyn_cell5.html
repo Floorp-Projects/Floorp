@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<head><title>CSS 2.1 Test Suite: border collapse dynamic change to rowspan cell style </title>
+    <link rel="author" title="Bernd Mielke" href="mailto:bmlk@gmx.de" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#collapsing-borders" />
+    <meta name="flags" content="dom" />
+<script>
+function doTest(){
+ var t1 =document.getElementById('target');
+ t1.style.borderStyle="solid";
+}
+</script>
+<style>
+td { border: 10px green outset;}
+table {margin: 30px}
+</style>
+</head>
+<body onload="doTest()";>
+<table style="border-collapse:collapse">
+  <tr><td>c11</td><td id="target" rowspan="3" style="border-style:none">c12</td><td>c13</td></tr>
+  <tr><td>c21</td><td>c23</td></tr>
+  <tr><td>c31</td><td>c33</td></tr>
+</table>
+

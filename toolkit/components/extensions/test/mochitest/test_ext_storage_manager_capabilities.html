@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Storage API </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.storageManager.enabled", true],
+      ["dom.storageManager.prompt.testing", true],
+      ["dom.storageManager.prompt.testing.allow", true],
+    ],
+  });
+});
+
+add_task(async function test_backgroundScript() {
+  function background() {
+    browser.test.assertTrue(navigator.storage !== undefined, "Has storage api interface");
+
+    // Test estimate.
+    browser.test.assertTrue("estimate" in navigator.storage, "Has estimate function");
+    browser.test.assertEq("function", typeof navigator.storage.estimate, "estimate is function");
+    browser.test.assertTrue(navigator.storage.estimate() instanceof Promise, "estimate returns a promise");
+
+    return browser.test.notifyPass("navigation_storage_api.done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("navigation_storage_api.done");
+  await extension.unload();
+});
+
+add_task(async function test_contentScript() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
+
+  function contentScript() {
+    // Should not access storage api in non-secure context.
+    browser.test.assertEq(undefined, navigator.storage,
+                          "A page from the unsecure http protocol " +
+                          "doesn't have access to the navigator.storage API");
+
+    return browser.test.notifyPass("navigation_storage_api.done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        "matches": ["http://example.com/*/file_sample.html"],
+        "js": ["content_script.js"],
+      }],
+    },
+
+    files: {
+      "content_script.js":  `(${contentScript})()`,
+    },
+  });
+
+  await extension.startup();
+
+  // Open an explicit URL for testing Storage API in an insecure context.
+  let win = window.open("http://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
+
+  await extension.awaitFinish("navigation_storage_api.done");
+
+  await extension.unload();
+  win.close();
+});
+
+add_task(async function test_contentScriptSecure() {
+  function contentScript() {
+    browser.test.assertTrue(navigator.storage !== undefined, "Has storage api interface");
+
+    // Test estimate.
+    browser.test.assertTrue("estimate" in navigator.storage, "Has estimate function");
+    browser.test.assertEq("function", typeof navigator.storage.estimate, "estimate is function");
+
+    // The promise that estimate function returns belongs to the content page,
+    // but the Promise constructor belongs to the content script sandbox.
+    // Check window.Promise here.
+    browser.test.assertTrue(navigator.storage.estimate() instanceof window.Promise, "estimate returns a promise");
+
+    return browser.test.notifyPass("navigation_storage_api.done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        "matches": ["https://example.com/*/file_sample.html"],
+        "js": ["content_script.js"],
+      }],
+    },
+
+    files: {
+      "content_script.js":  `(${contentScript})()`,
+    },
+  });
+
+  await extension.startup();
+
+  // Open an explicit URL for testing Storage API in a secure context.
+  let win = window.open("file_sample.html");
+
+  await extension.awaitFinish("navigation_storage_api.done");
+
+  await extension.unload();
+  win.close();
+});
+
+add_task(async function cleanup() {
+  await SpecialPowers.popPrefEnv();
+});
+</script>
+
+</body>
+</html>

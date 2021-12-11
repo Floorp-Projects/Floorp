@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=608669
+-->
+<window title="Mozilla Bug 608669"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=608669"
+     target="_blank">Mozilla Bug 608669</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+/** Test for Bug 608669 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(nextTest);
+
+let gen = doTest();
+
+function nextTest() {
+  gen.next();
+}
+
+let chromeWindow = window.browsingContext.topChromeWindow;
+
+function* doTest() {
+  var notificationCount = 0;
+  var observer = {
+    observe(aSubject, aTopic, aData) {
+      is(aTopic, "chrome-document-global-created",
+         "correct topic");
+      is(aData, "null",
+         "correct data");
+      notificationCount++;
+    }
+  };
+
+  var os = SpecialPowers.Services.obs;
+  os.addObserver(observer, "chrome-document-global-created");
+  os.addObserver(observer, "content-document-global-created");
+
+  is(notificationCount, 0, "initial count");
+
+  // create a new window
+  var testWin = chromeWindow.open("", "bug 608669", "chrome,width=600,height=600");
+  testWin.x = "y";
+  is(notificationCount, 1, "after created window");
+
+  // Try loading in the window
+  testWin.location = "bug608669.xhtml";
+  chromeWindow.onmessage = nextTest;
+  yield undefined;
+  is(notificationCount, 1, "after first load");
+  is(testWin.x, "y", "reused window");
+
+  // Try loading again in the window
+  testWin.location = "bug608669.xhtml?x";
+  chromeWindow.onmessage = nextTest;
+  yield undefined;
+  is(notificationCount, 2, "after second load");
+  is("x" in testWin, false, "didn't reuse window");
+
+  chromeWindow.onmessage = null;
+
+  testWin.close();
+
+  os.removeObserver(observer, "chrome-document-global-created");
+  os.removeObserver(observer, "content-document-global-created");
+  SimpleTest.finish();
+}
+
+  ]]></script>
+</window>

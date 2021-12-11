@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1089880
+-->
+<head>
+  <title>Test for Bug 1089880</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1089880">Mozilla Bug 1089880</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 1089880 **/
+
+SimpleTest.requestFlakyTimeout("Early failure timeout");
+SimpleTest.waitForExplicitFinish();
+
+const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const gContent = document.getElementById("content");
+
+var gCanvas;
+var gCanvasCtx;
+var gImg;
+var gMyDecoderObserver;
+var gIsTestFinished = false;
+var gFiles;
+var gCurrentFileIsTransparent = false;
+var gHasTransparencyWasCalled = false;
+
+function* testFiles() {
+  // [A, B] where 'A' is the image and 'B' is whether it's transparent.
+
+  // PNGs and GIFs may be transparent or not.
+  yield ["red.png", false];
+  yield ["transparent.png", true];
+  yield ["red.gif", false];
+  yield ["transparent.gif", true];
+
+  // GIFs with padding on the first frame are always transparent.
+  yield ["first-frame-padding.gif", true];
+
+  // JPEGs are never transparent.
+  yield ["damon.jpg", false];
+
+  // Most BMPs are not transparent. (The TestMetadata GTest, which will
+  // eventually replace this test totally, has coverage for the kinds that can be
+  // transparent.)
+  yield ["opaque.bmp", false];
+
+  // ICO files which contain BMPs have an additional type of transparency - the
+  // AND mask - that warrants separate testing. (Although, after bug 1201796,
+  // all ICOs are considered transparent.)
+  yield ["ico-bmp-opaque.ico", true];
+  yield ["ico-bmp-transparent.ico", true];
+
+  // SVGs are always transparent.
+  yield ["lime100x100.svg", true];
+}
+
+function loadNext() {
+  var currentFile = "";
+  gHasTransparencyWasCalled = false;
+  let {done, value} = gFiles.next();
+  if (done) {
+    // We ran out of test files.
+    cleanUpAndFinish();
+    return;
+  }
+  [currentFile, gCurrentFileIsTransparent] = value;
+  gImg.setAttribute("src", currentFile);
+}
+
+function onHasTransparency(aRequest) {
+  gHasTransparencyWasCalled = true;
+}
+
+function onDecodeComplete(aRequest) {
+  if (!gCurrentFileIsTransparent) {
+    ok(!gHasTransparencyWasCalled,
+       "onHasTransparency was not called for non-transparent file " + gImg.src);
+  } else {
+    ok(gHasTransparencyWasCalled,
+       "onHasTransparency was called for transparent file " + gImg.src);
+  }
+  loadNext();
+}
+
+function onError() {
+  if (gIsTestFinished) {
+    return;
+  }
+  ok(false, "Should successfully load " + gImg.src);
+  loadNext();
+}
+
+function onLoad() {
+  if (gIsTestFinished) {
+    return;
+  }
+  ok(true, "Should successfully load " + gImg.src);
+
+  // Force decoding of the image.
+  SimpleTest.executeSoon(function() {
+    gCanvasCtx.drawImage(gImg, 0, 0);
+  });
+}
+
+function failTest() {
+  ok(false, "timing out after " + FAILURE_TIMEOUT + "ms.  " +
+            "currently displaying " + gImg.src);
+  cleanUpAndFinish();
+}
+
+function cleanUpAndFinish() {
+  if (gIsTestFinished) {
+    return;
+  }
+  gIsTestFinished = true;
+  let imgLoadingContent = SpecialPowers.wrap(gImg);
+  imgLoadingContent.removeObserver(gMyDecoderObserver);
+  SimpleTest.finish();
+}
+
+function main() {
+  gFiles = testFiles();
+  gCanvas = document.createElement('canvas');
+  gCanvasCtx = gCanvas.getContext('2d');
+  gImg = new Image();
+  gImg.onload = onLoad;
+  gImg.onerror = onError;
+
+  // Create, customize & attach decoder observer.
+  var observer = new ImageDecoderObserverStub();
+  observer.hasTransparency = onHasTransparency;
+  observer.decodeComplete = onDecodeComplete;
+  gMyDecoderObserver =
+    Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+      .createScriptedObserver(SpecialPowers.wrapCallbackObject(observer));
+  let imgLoadingContent = SpecialPowers.wrap(gImg);
+  imgLoadingContent.addObserver(gMyDecoderObserver);
+
+  // We want to test the cold loading behavior, so clear cache in case an
+  // earlier test got our image in there already.
+  clearAllImageCaches();
+
+  // Load the first image.
+  loadNext();
+
+  // In case something goes wrong, fail earlier than mochitest timeout,
+  // and with more information.
+  setTimeout(failTest, FAILURE_TIMEOUT);
+}
+
+window.onload = main;
+
+</script>
+</pre>
+</body>
+</html>

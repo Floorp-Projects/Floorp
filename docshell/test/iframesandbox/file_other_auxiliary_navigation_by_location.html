@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test window for other auxiliary navigation by location tests</title>
+<script>
+  function onNav() {
+    opener.postMessage(window.name, "*");
+  }
+
+  window.onload = onNav;
+  window.onhashchange = onNav;
+</script>
+</head>
+</html>

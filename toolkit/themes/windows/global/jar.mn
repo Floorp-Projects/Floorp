@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include ../../shared/desktop-non-mac.jar.inc.mn
+
+toolkit.jar:
+* skin/classic/global/alert.css
+  skin/classic/global/autocomplete.css
+  skin/classic/global/button.css
+* skin/classic/global/checkbox.css
+  skin/classic/global/dropmarker.css
+* skin/classic/global/menu.css
+* skin/classic/global/menulist.css
+  skin/classic/global/radio.css
+  skin/classic/global/tabbox.css
+  skin/classic/global/search-textbox.css
+* skin/classic/global/commonDialog.css
+* skin/classic/global/global.css
+  skin/classic/global/popup.css
+* skin/classic/global/popupnotification.css
+  skin/classic/global/printPageSetup.css
+  skin/classic/global/richlistbox.css
+  skin/classic/global/splitter.css
+  skin/classic/global/toolbar.css
+  skin/classic/global/toolbarbutton.css
+  skin/classic/global/tooltip.css
+* skin/classic/global/tree.css
+  skin/classic/global/dirListing/folder.png                (dirListing/folder.png)
+  skin/classic/global/dirListing/up.png                    (dirListing/up.png)
+  skin/classic/global/icons/Landscape.png                  (icons/Landscape.png)
+  skin/classic/global/icons/menu-check.svg                 (icons/menu-check.svg)
+  skin/classic/global/icons/Portrait.png                   (icons/Portrait.png)
+  skin/classic/global/icons/Print-preview.png              (icons/Print-preview.png)
+  skin/classic/global/icons/warning-large.png              (icons/warning-large.png)
+* skin/classic/global/in-content/common.css                (in-content/common.css)
+  skin/classic/global/tree/sort-asc.svg                    (tree/sort-asc.svg)
+  skin/classic/global/tree/sort-dsc.svg                    (tree/sort-dsc.svg)

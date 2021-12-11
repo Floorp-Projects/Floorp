@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 654002</title>
+<script>
+function boom() {
+  var e = document.getElementById('inner');
+  var s = "<br>"
+  for (k=0;k<=14;k++) {
+    s += s;
+  }
+  e.innerHTML = s;
+  document.body.offsetHeight;
+  e.style.display = 'none'
+  document.body.offsetHeight;
+}
+</script>
+</head>
+<body onload="boom()">
+
+<div style="width:1px;"><span><span id="inner"></span></span></div>
+
+</body>
+</html>

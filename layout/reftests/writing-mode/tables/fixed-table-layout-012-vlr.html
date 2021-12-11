@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Fixed table layout - specified column height overrides first-cell specified height</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="A column element with specified height sets the height of the column, even if the first-row cell has a specified height.">
+        <style type="text/css">
+            div.test
+            {
+                writing-mode: vertical-lr;
+            }
+            table
+            {
+                border-collapse: collapse;
+                table-layout: fixed;
+                height: 200px;
+            }
+            td { padding: 0px; }
+            #col
+            {
+                height: 50px;
+            }
+            #cell
+            {
+                background: black;
+                height: 175px;
+                width: 24px;
+            }
+            #div1
+            {
+                background: blue;
+                width: 24px;
+                height: 50px;
+            }
+        </style>
+    </head>
+    <body>
+     <p>Test passes if the boxes below are the same height.</p>
+     <div class="test">
+        <table>
+            <col id="col">
+            <col>
+            <tr>
+                <td id="cell">X</td>
+                <td></td>
+           </tr>
+        </table>
+        <div id="div1"></div>
+      </div>
+    </body>
+</html>

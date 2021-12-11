@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<!-- Test that non-stretchy largeops do not stretch -->
+
+<html class="reftest-wait">
+  <head>
+    <title>Largeop stretching</title>
+    <meta charset="utf-8" />
+    <script type="text/javascript">
+
+      function almostEqual(aX, aY) {
+        var epsilon = 2;
+        return Math.abs(aX - aY) < epsilon;
+      }
+
+      function verifySize(aElement, aReference) {
+        /* Verify if the size of the element matches the reference, and
+           otherwise paint the element in red. */
+        var element = document.getElementById(aElement);
+        var ref = document.getElementById(aReference);
+        if (!almostEqual(element.getBoundingClientRect().height,
+                         ref.getBoundingClientRect().height) ||
+            !almostEqual(element.getBoundingClientRect().width,
+                         ref.getBoundingClientRect().width)) {
+          element.setAttribute("mathcolor", "red");
+        }
+      }
+
+      function doTest() {
+        /* Ensure that largeops are bigger in displaystyle */
+        var numTests = 10; // zero indexed
+        var opPrefix = "mo";
+        var refPrefix = "moRef";
+        for (var i = 0; i < numTests; i++)
+        {
+          verifySize(opPrefix + i, refPrefix + i);
+        }
+        document.documentElement.removeAttribute("class");
+
+      }
+    </script>
+  </head>
+  <body onload="doTest();">
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo0">&bigodot;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo1">&bigoplus;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo2">&#x2a03;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo3">&#x2a05;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo4">&#x2a07;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo5">&#x2a08;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo6">&#x2a09;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo7">&#x2a0a;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo8">&#x2afc;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mrow>
+          <mspace height="3em" />
+          <mo id="mo9">&#x2aff;</mo>
+        </mrow>
+      </math>
+    </p>
+    <p>
+      <math displaystyle="true">
+        <mo id="moRef0">&bigodot;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef1">&bigoplus;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef2">&#x2a03;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef3">&#x2a05;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef4">&#x2a07;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef5">&#x2a08;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef6">&#x2a09;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef7">&#x2a0a;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef8">&#x2afc;</mo>
+      </math>
+      <math displaystyle="true">
+        <mo id="moRef9">&#x2aff;</mo>
+      </math>
+    </p>
+  </body>
+</html>

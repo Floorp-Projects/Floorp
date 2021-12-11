@@ -1,0 +1,75 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads XHR(Bug 450452 )
+-->
+<body>
+<div id="content" style="display: none"></div>
+<script class="testbody" type="text/javascript">
+
+  function ok(a, msg) {
+    opener.postMessage({type: "test", test: !!a, msg }, "*");
+  }
+
+  function is(a, b, msg) {
+    ok(a === b, msg);
+  }
+
+  function finish() {
+    opener.postMessage({type: "finish" }, "*");
+  }
+
+  var worker = new Worker("xhr_worker.js");
+
+  var gotUploadLoad = false, gotLoadend = false;
+
+  worker.onmessage = function(event) {
+    is(event.target, worker);
+    var args = event.data;
+    switch (args.type) {
+      case "progress": {
+        ok(parseInt(args.current) <= parseInt(args.total));
+        break;
+      }
+      case "error": {
+        ok(false, "XHR error: " + args.error);
+        break;
+      }
+      case "upload.load": {
+        gotUploadLoad = true;
+        break;
+      }
+      case "load": {
+        ok(gotUploadLoad, "Should have gotten upload load event");
+        gotLoadend = true;
+        is(args.data, "a=cookie_is_set", "correct data");
+        document.getElementById("content").textContent = args.data;
+        break;
+      }
+      case "loadend": {
+        ok(gotLoadend, "Should have gotten load.");
+        finish();
+        break;
+      }
+      default: {
+        ok(false, "Unexpected message");
+        finish();
+      }
+    }
+  };
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    ok(false, "Worker had an error:" + event.message);
+    finish();
+  }
+
+  worker.postMessage("worker_file_getcookie.sjs");
+
+</script>
+</body>
+</html>

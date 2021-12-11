@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=599368
+-->
+<head>
+  <title>Test for Bug 599368</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=599368">Mozilla Bug 599368</a>
+<iframe id="display" src="about:blank"></iframe>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 599368 **/
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("load", step1);
+
+var gImage;
+var gIframe;
+var gBlueNotSelected;
+var gBlueSelected;
+var gFuchsiaSelected;
+
+function step1()
+{
+  gIframe = document.getElementById("display");
+  doc = gIframe.contentDocument;
+
+  gImage = doc.createElement('img');
+  var src = String(window.location).split("/");
+  src.pop();
+  src.push("blue-32x32.png");
+  src = src.join("/");
+  gImage.src = src;
+  gImage.addEventListener("load", step2);
+  doc.body.appendChild(gImage);
+
+  doc.designMode = "on";
+}
+
+function step2() {
+  gImage.removeEventListener("load", step2);
+
+  gBlueNotSelected = snapshotWindow(gIframe.contentWindow, false);
+
+  synthesizeMouse(gImage, 5, 5, {}, gIframe.contentWindow);
+  setTimeout(step3, 0);
+}
+
+function step3() {
+  gBlueSelected = snapshotWindow(gIframe.contentWindow, false);
+
+  var src = String(window.location).split("/");
+  src.pop();
+  src.push("fuchsia-32x32.png");
+  src = src.join("/");
+  gImage.addEventListener("load", step4);
+  gImage.src = src;
+}
+
+function step4() {
+  gImage.removeEventListener("load", step4);
+
+  gFuchsiaSelected = snapshotWindow(gIframe.contentWindow, false);
+
+  // FYI: test_image_selection_in_contenteditable.html tests the detail.
+  assertSnapshots(gBlueNotSelected, gBlueSelected, false, null,
+                  "blue image without selection",
+                  "blue image which is selected or added resizers");
+  assertSnapshots(gBlueSelected, gFuchsiaSelected, false, null,
+                  "blue image which is selected",
+                  "fuchsia image which is selected");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

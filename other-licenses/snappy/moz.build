@@ -1,0 +1,33 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.snappy += [
+    'snappy-stubs-public.h',
+    'src/snappy-c.h',
+    'src/snappy.h',
+]
+
+UNIFIED_SOURCES += [
+    'src/snappy-c.cc',
+    'src/snappy-sinksource.cc',
+    'src/snappy-stubs-internal.cc',
+    'src/snappy.cc',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'xul'
+
+# Suppress warnings in third-party code.
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-unused-function'
+    ]
+
+if CONFIG['TARGET_ENDIANNESS'] == 'big':
+    DEFINES['SNAPPY_IS_BIG_ENDIAN'] = 1

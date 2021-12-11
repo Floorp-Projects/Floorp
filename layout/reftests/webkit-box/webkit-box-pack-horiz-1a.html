@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: horizontally-oriented "display: -webkit-box" container,
+    with all the various -webkit-box-pack values.
+  </title>
+  <style>
+    .box {
+      display: -webkit-box;
+      border: 1px solid black;
+      margin: 5px 20px;
+      float: left; /* For testing in "rows" */
+      font: 10px serif;
+    }
+    .box > *:nth-child(1) {
+      background: turquoise;
+      /* auto width */
+      height: 1em;
+    }
+    .box > *:nth-child(2) {
+      background: salmon;
+      font-size: 50%;
+      width: 2em;
+      /* auto height */
+    }
+
+    .bpstart   { -webkit-box-pack: start;   }
+    .bpcenter  { -webkit-box-pack: center;  }
+    .bpend     { -webkit-box-pack: end;     }
+    .bpjustify { -webkit-box-pack: justify; }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW: Default -webkit-box-pack -->
+  <!-- intrinsically sized -->
+  <div class="box">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- SECOND ROW:  -webkit-box-pack: start -->
+  <!-- intrinsically sized -->
+  <div class="box bpstart">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box bpstart" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box bpstart" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box bpstart" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- THIRD ROW:  -webkit-box-pack: center -->
+  <!-- intrinsically sized -->
+  <div class="box bpcenter">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box bpcenter" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box bpcenter" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box bpcenter" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- FOURTH ROW:  -webkit-box-pack: end -->
+  <!-- intrinsically sized -->
+  <div class="box bpend">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box bpend" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box bpend" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box bpend" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- FIFTH ROW:  -webkit-box-pack: justify -->
+  <!-- intrinsically sized -->
+  <div class="box bpjustify">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box bpjustify" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box bpjustify" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box bpjustify" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+</body>
+</html>

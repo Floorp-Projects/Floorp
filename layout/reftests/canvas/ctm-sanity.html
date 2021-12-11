@@ -1,0 +1,83 @@
+<html>
+<head>
+  <script type="text/javascript">
+
+function assert(cond, msg) { if (!cond) { throw msg; } }
+
+function isSameTM(m1, m2) {
+    // XXX this is probably the ugliest possible way to write this function,
+    // but it's intended to be lowest-common-denominator
+    if (!(m1.length === 6 && m1.length === m2.length)) {
+        return false;
+    }
+    for (var i = 0; i < m1.length; ++i) {
+        if (m1[i] !== m2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+window.onload = function() {
+    var IM = [ 1, 0, 0, 1, 0, 0 ];
+
+    try {
+        var ctx = document.getElementById("c1").getContext("2d");
+
+        assert(isSameTM(IM, ctx.mozCurrentTransform),
+               "currentTransform is identity by default");
+        assert(isSameTM(IM, ctx.mozCurrentTransformInverse),
+               "currentTransformInverse is identity by default");
+
+        var m = [ 1, 2, 3, 4, 5, 6 ];
+        ctx.mozCurrentTransform = m;
+        assert(isSameTM(m, ctx.mozCurrentTransform),
+               "currentTransform successfully set");
+        var badVals = [ -1,
+                        "string",
+                        { obj: true },
+                        [ "array of string" ],
+                        [ -1 ],
+                        [ "string", 1, 2, 3, 4, 5 ],
+                        [ { obj: true }, 1, 2, 3, 4, 5 ],
+        ];
+        for (var i = 0; i < badVals.length; ++i) {
+            var error = false;
+            try { ctx.mozCurrentTransform = badVals[i]; }
+            catch(e) { error = true; }
+            assert(error && isSameTM(m, ctx.mozCurrentTransform),
+                   "Expected |currentTransform = "+ badVals[i] +"| to throw exception and not change .currentTransform");
+
+            error = false;
+            try { ctx.mozCurrentTransformInverse = badVals[i]; }
+            catch(e) { error = true; }
+            assert(error && isSameTM(m, ctx.mozCurrentTransform),
+                   "Expected |currentTransformInverse = "+ badVals[i] +"| to throw exception and not change .currentTransform");
+        }
+        ctx.mozCurrentTransform = IM;
+
+        var noopVals = [ [ Number.NaN, 1, 2, 3, 4, 5 ],
+                         [ Infinity, 1, 2, 3, 4, 5 ],
+        ];
+        for (var i = 0; i < noopVals.length; ++i) {
+            ctx.mozCurrentTransform = noopVals[i];
+            assert(isSameTM(ctx.mozCurrentTransform, IM),
+                   "Illegal float values result in no-ops (sigh)");
+        }
+        ctx.mozCurrentTransform = IM;
+
+        ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+        assert(isSameTM(ctx.mozCurrentTransform, m),
+               "setTransform() updates currentTransform");
+     } catch (e) {
+        document.body.innerHTML = "FAIL: "+ e.toString();
+        return;
+    }
+    document.body.innerHTML = "Pass";
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>user activated iframe</title>
+</head>
+<body>
+<script>
+onload = function() {
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  parent.postMessage("done", "*");
+}
+</script>
+</body>
+</html>

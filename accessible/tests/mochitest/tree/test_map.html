@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML map accessible tree tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // map used as imagemap, not accessible
+      var accTree =
+        { SECTION: [ ] };
+
+      testAccessibleTree("imagemapcontainer", accTree);
+
+      // map group.  Imagemaps are inlines by default, so TEXT_CONTAINER.
+      accTree =
+        { TEXT_CONTAINER: [
+          { PARAGRAPH: [
+            { TEXT_LEAF: [ ] },
+            { LINK: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { TEXT_LEAF: [ ] },
+            { LINK: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { TEXT_LEAF: [ ] },
+          ] },
+        ] };
+
+      testAccessibleTree("mapgroup", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Map used for grouping is not accessible under certain circumstances"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=627718">
+    Mozilla Bug 627718
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="imagemapcontainer">
+    <map name="atoz_map">
+      <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+            coords="17,0,30,14" alt="b" shape="rect">
+      <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+            coords="0,0,13,14" alt="a" shape="rect">
+    </map>
+  </div>
+
+  <img id="imgmap" width="447" height="15"
+       usemap="#atoz_map"
+       src="../letters.gif">
+
+  <map id="mapgroup" title="Navigation Bar" name="mapgroup">
+    <p>
+      [<a href="#how">Bypass navigation bar</a>]
+      [<a href="home.html">Home</a>]
+    </p>
+  </map>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+
+/**
+ * Interface for a class that manages updates of the url classifier database.
+ */
+
+[scriptable, uuid(d60a08ee-5c83-4eb6-bdfb-79fd0716501e)]
+interface nsIUrlListManager : nsISupports
+{
+    /**
+     * Get the gethash url for this table
+     */
+    ACString getGethashUrl(in ACString tableName);
+
+    /**
+     * Get the update url for this table
+     */
+    ACString getUpdateUrl(in ACString tableName);
+
+    /**
+     * Add a table to the list of tables we are managing. The name is a
+     * string of the format provider_name-semantic_type-table_type.  For
+     * @param tableName A string of the format
+     *        provider_name-semantic_type-table_type.  For example,
+     *        goog-white-enchash or goog-black-url.
+     * @param providerName The name of the entity providing the list.
+     * @param updateUrl The URL from which to fetch updates.
+     * @param gethashUrl The URL from which to fetch hash completions.
+     */
+    boolean registerTable(in ACString tableName,
+                          in ACString providerName,
+                          in ACString updateUrl,
+                          in ACString gethashUrl);
+
+    /**
+     * Unregister table from the list
+     */
+    void unregisterTable(in ACString tableName);
+
+    /**
+     * Turn on update checking for a table. I.e., during the next server
+     * check, download updates for this table.
+     */
+    void enableUpdate(in ACString tableName);
+
+    /**
+     * Turn off update checking for all tables.
+     */
+    void disableAllUpdates();
+
+    /**
+     * Turn off update checking for a single table. Only used in tests.
+     */
+    void disableUpdate(in ACString tableName);
+
+    /**
+     * Toggle update checking, if necessary.
+     */
+    void maybeToggleUpdateChecking();
+
+    /**
+     * This is currently used by about:url-classifier to force an update
+     * for the update url. Update may still fail because of backoff algorithm.
+     */
+    boolean checkForUpdates(in ACString updateUrl);
+
+    /**
+     * Force updates for the given tables, updates are still restricted to
+     * backoff algorithm.
+     * @param tables  A string lists all the tables that we want to trigger updates.
+     *                table names are separated with ','.
+     */
+    boolean forceUpdates(in ACString tableNames);
+
+    /**
+     * This is currently used by about:url-classifier to get back-off time
+     * (in millisecond since epoch) for the given provider. Return 0 if we
+     * are not in back-off mode.
+     */
+    uint64_t getBackOffTime(in ACString provider);
+
+    /**
+     * Return true if someone registers a table, this is used by testcase
+     * to figure out it SafeBrowsing.jsm is initialized.
+     */
+    boolean isRegistered();
+};

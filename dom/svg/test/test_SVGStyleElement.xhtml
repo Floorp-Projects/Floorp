@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=559024
+-->
+<head>
+  <title>Test SVGStyleElement</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=559024">Mozilla Bug 559024</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg xmlns="http://www.w3.org/2000/svg">
+<style></style>
+</svg> 
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+/** Test for Bug 559024 **/
+var el = document.getElementsByTagNameNS("http://www.w3.org/2000/svg", "style")[0];
+el.media = "ssss";
+is(el.media, "ssss");
+is(el.getAttributeNS("", "media"), "ssss");
+el.title = "tttt";
+is(el.title, "tttt");
+is(el.getAttributeNS("", "title"), "tttt");
+]]>
+</script>
+</pre>
+</body>
+</html>

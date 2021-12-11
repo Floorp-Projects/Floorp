@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Zoom using wheel should work on form controls</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<button id="button" style="width:10px;height:10px;"></button><br>
+<input id="input" style="border: 10px solid green;"><br>
+<textarea id="textarea" style="border: 10px solid green;"></textarea><br>
+<select id="select"><option></option></select>
+<select id="list" size=4>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+</select>
+<script>
+
+  async function testControl(id) {
+    var initialZoom = SpecialPowers.getFullZoom(window);
+    var element = document.getElementById(id);
+
+    const zoomHasHappened = SimpleTest.promiseWaitForCondition(() => {
+      const zoom = SpecialPowers.getFullZoom(window);
+      return (zoom != initialZoom);
+    }, id + ": wheel event changed the zoom.");
+
+    let event = {
+      deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaY: 3,
+      ctrlKey: true
+    };
+    synthesizeWheel(element, 5, 5, event);
+
+    await zoomHasHappened;
+    isnot(SpecialPowers.getFullZoom(window), initialZoom, id + ": should have zoomed");
+    SpecialPowers.setFullZoom(window, initialZoom);
+  }
+
+  async function test() {
+    await testControl("button");
+    await testControl("input");
+    await testControl("textarea");
+    await testControl("select");
+    await testControl("list");
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(test);
+</script>
+</body>
+</html>

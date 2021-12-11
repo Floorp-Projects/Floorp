@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Toolbar */
+
+#placesToolbar {
+  appearance: auto;
+  -moz-default-appearance: menubar;
+  color: -moz-menubartext;
+}
+
+@media (-moz-menubar-drag) {
+  #placesToolbar {
+    -moz-window-dragging: drag;
+  }
+}
+
+#placesToolbar > toolbarbutton {
+  color: -moz-menubartext;
+}
+
+#placesToolbar > toolbarbutton:hover {
+  color: ButtonText;
+}
+
+#placesToolbar > toolbarbutton[disabled] {
+  color: GrayText;
+}
+
+/* Back button */
+
+#back-button {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
+}
+#back-button[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
+}
+
+#back-button:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
+}
+#back-button[disabled]:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
+}
+
+/* Forward button */
+
+#forward-button {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
+}
+#forward-button[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+}
+
+#forward-button:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
+}
+#forward-button[disabled]:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
+}
+
+/* Menus */
+#placesMenu > menu {
+  padding-inline-start: 4px;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton;
+}
+
+#placesMenu > menu:hover {
+  color: ButtonText;
+}
+
+#placesMenu > menu:active,
+#placesMenu > menu[open] {
+  color: -moz-buttonactivetext;
+}
+
+#placesMenu > menu::after {
+  content: "";
+  display: -moz-box;
+  width: 12px;
+  height: 12px;
+  content: url("chrome://global/skin/icons/arrow-down-12.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* Root View */
+#placesView {
+  background-color: Window;
+}
+
+/* Info box */
+#detailsPane {
+  padding: 5px;
+}
+
+/* Expanders */
+
+.expander-up,
+.expander-down {
+  min-width: 0;
+  padding: 2px 0;
+  padding-inline-start: 2px;
+}
+
+.expander-up > .button-box {
+  appearance: auto;
+  -moz-default-appearance: button-arrow-up;
+}
+
+.expander-down > .button-box {
+  appearance: auto;
+  -moz-default-appearance: button-arrow-down;
+}
+
+/* Downloads pane */
+#clearDownloadsButton > .toolbarbutton-icon {
+  display: none;
+}

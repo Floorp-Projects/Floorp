@@ -1,0 +1,51 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("verifymar")
+
+UNIFIED_SOURCES += [
+    "cryptox.c",
+    "mar_verify.c",
+]
+
+FORCE_STATIC_LIB = True
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    USE_STATIC_LIBS = True
+elif CONFIG["OS_ARCH"] == "Darwin":
+    UNIFIED_SOURCES += [
+        "MacVerifyCrypto.cpp",
+    ]
+    OS_LIBS += [
+        "-framework Security",
+    ]
+else:
+    DEFINES["MAR_NSS"] = True
+    LOCAL_INCLUDES += ["../sign"]
+    USE_LIBS += [
+        "nspr",
+        "nss",
+        "signmar",
+    ]
+    # Ideally, this would be '-Wl,-rpath=$ORIGIN', but the build system
+    # doesn't do the right escaping yet. Even more ideally, this would
+    # be LDFLAGS, but the build system doesn't propagate those like USE_LIBS
+    # and OS_LIBS. Bug #1041943.
+    OS_LIBS += [
+        "-Wl,-rpath=\\$$ORIGIN",
+    ]
+
+LOCAL_INCLUDES += [
+    "../src",
+]
+
+# C11 for static_assert
+c11_flags = ["-std=gnu11"]
+if CONFIG["CC_TYPE"] == "clang-cl":
+    c11_flags.insert(0, "-Xclang")
+CFLAGS += c11_flags
+
+REQUIRES_UNIFIED_BUILD = True

@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing with backface-visibility:hidden</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    body,html{
+      height: 100%;
+    }
+    body{
+      margin: 0;
+      transform-style: preserve-3d;
+    }
+    #back, #front{
+      backface-visibility: hidden;
+      position: absolute;
+      width: 100%;
+      height: 100%
+    }
+    #front{
+      overflow-y:auto;
+    }
+    #content{
+      width: 100%;
+      height: 200%;
+      background: linear-gradient(blue, green);
+    }
+    #back{
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body>
+  <div id="front">
+    <div id="content"></div>
+  </div>
+  <div id="back"></div></body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+
+  var subframe = document.getElementById("front");
+
+  // Set a displayport to ensure the subframe is layerized.
+  // This is not required for exercising the behavior we want to test,
+  // but it's needed to be able to assert the results reliably.
+  config.utils.setDisplayPortForElement(0, 0, 1000, 1000, subframe, 1);
+  await promiseApzFlushedRepaints();
+
+  var subframeViewId = config.utils.getViewId(subframe);
+
+  var {scrollId} = hitTest(centerOf(subframe));
+
+  is(scrollId, subframeViewId,
+     "hit the scroll frame behind the backface-visibility:hidden element");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

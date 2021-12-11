@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Content Appended in {ib} Pagination with Overflow Containers</title>
+
+  <style type="text/css">
+    body {
+      font-size: 16px;
+    }
+
+    #colset {
+      height: 400px;
+      width: 450px;
+      column-width: 150px;
+      column-gap: 0;
+      border: 3px solid silver;
+    }
+
+    #x {
+      height: 200px;
+      border-bottom: 3px solid blue;
+    }
+
+    #overflow {
+      height: 1000px;
+      border-bottom: 3px solid orange;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="colset"
+  ><span id="span"
+    ><div id="x"
+      ><div id="overflow"></div
+      >This must be in the last column, below the orange line.
+    </div
+  >This must be in the first column, below the blue line.</span
+></div>
+
+</body>
+
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=675884
+-->
+<head>
+  <title>Test for Bug 675884</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=675884">Mozilla Bug 675884</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["device.sensors.enabled", true],
+  ["device.sensors.orientation.enabled", true],
+  ["device.sensors.motion.enabled", true],
+  ["device.sensors.proximity.enabled", true],
+  ["device.sensors.ambientLight.enabled", true]
+]}, () => {
+  let receivedEvent;
+  document.addEventListener("hello", function(e) { receivedEvent = e; }, true);
+
+  // UserProximityEvent
+  e = new UserProximityEvent("hello", {near: true});
+  is(e.type, "hello", "Wrong event type!");
+  ok(!e.isTrusted, "Event should not be trusted");
+  is(e.near, true, "near should be true");
+  document.dispatchEvent(e);
+  is(receivedEvent, e, "Wrong event!");
+
+  // DeviceLightEvent
+  e = new DeviceLightEvent("hello", {value: 1} );
+  is(e.type, "hello", "Wrong event type!");
+  ok(!e.isTrusted, "Event should not be trusted");
+  is(e.value, 1, "value should be 1");
+  document.dispatchEvent(e);
+  is(receivedEvent, e, "Wrong event!");
+  e = new DeviceLightEvent("hello", {value: Infinity} );
+  is(e.value, Infinity, "value should be positive infinity");
+  e = new DeviceLightEvent("hello", {value: -Infinity} );
+  is(e.value, -Infinity, "value should be negative infinity");
+  e = new DeviceLightEvent("hello");
+  is(e.value, Infinity, "Uninitialized value should be positive infinity");
+
+  // DeviceOrientationEvent
+  e = new DeviceOrientationEvent("hello");
+  is(e.type, "hello", "Wrong event type!");
+  ok(!e.isTrusted, "Event should not be trusted");
+  is(e.alpha, null);
+  is(e.beta, null);
+  is(e.gamma, null);
+  is(e.absolute, false);
+
+  e = new DeviceOrientationEvent("hello", { alpha: 1, beta: 2, gamma: 3, absolute: true } );
+  is(e.type, "hello", "Wrong event type!");
+  ok(!e.isTrusted, "Event should not be trusted");
+  is(e.alpha, 1);
+  is(e.beta, 2);
+  is(e.gamma, 3);
+  is(e.absolute, true);
+  document.dispatchEvent(e);
+  is(receivedEvent, e, "Wrong event!");
+
+  // DeviceMotionEvent
+  e = new DeviceMotionEvent("hello");
+  is(e.type, "hello", "Wrong event type!");
+  ok(!e.isTrusted, "Event should not be trusted");
+  is(typeof e.acceleration, "object");
+  is(e.acceleration.x, null);
+  is(e.acceleration.y, null);
+  is(e.acceleration.z, null);
+  is(typeof e.accelerationIncludingGravity, "object");
+  is(e.accelerationIncludingGravity.x, null);
+  is(e.accelerationIncludingGravity.y, null);
+  is(e.accelerationIncludingGravity.z, null);
+  is(typeof e.rotationRate, "object");
+  is(e.rotationRate.alpha, null);
+  is(e.rotationRate.beta, null);
+  is(e.rotationRate.gamma, null);
+  is(e.interval, null);
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

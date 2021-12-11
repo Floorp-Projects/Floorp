@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      div {
+        border: 1px solid #000;
+      }
+    </style>
+    <script>
+      "use strict";
+
+      /* exported init */
+      function init() {
+        const valid = document.querySelector("#valid-object-listener");
+        const validInvalid = document.querySelector("#valid-invalid-object-listeners");
+
+        // Add a valid event to #valid.
+        valid.addEventListener('click', {
+          handleEvent: () => {
+            console.log("handleEvent");
+          }
+        });
+
+        // Add valid and invalid events to #validInvalid.
+        validInvalid.addEventListener('click', {
+          handleEvent: () => {
+            console.log("handleEvent");
+          }
+        });
+        validInvalid.addEventListener('dblclick', {});
+      }
+    </script>
+  </head>
+  <body onload="init();">
+    <h1>Events test with event object listeners</h1>
+    <div id="valid-object-listener">Valid object listener</div>
+    <div id="valid-invalid-object-listeners">Valid and invalid object listeners</div>
+  </body>
+</html>

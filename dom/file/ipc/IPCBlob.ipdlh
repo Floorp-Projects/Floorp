@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PRemoteLazyInputStream;
+
+include IPCStream;
+include ProtocolTypes;
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+
+union RemoteLazyStream
+{
+  // Parent to Child: The child will receive a RemoteLazyInputStream. Nothing
+  // can be done with it except retrieving the size.
+  PRemoteLazyInputStream;
+
+  // Child to Parent: Normal serialization.
+  IPCStream;
+};
+
+namespace dom {
+
+// This contains any extra bit for making a File out of a Blob.
+// For more information about Blobs and IPC, please read the comments in
+// IPCBlobUtils.h
+
+struct IPCFile
+{
+  nsString name;
+  int64_t lastModified;
+  nsString DOMPath;
+  nsString fullPath;
+
+  // Useful for Entries API.
+  bool isDirectory;
+};
+
+struct IPCBlob
+{
+  nsString type;
+  uint64_t size;
+  nsString blobImplType;
+
+  RemoteLazyStream inputStream;
+
+  // Nothing is for Blob
+  IPCFile? file;
+
+  // This ID is used only by indexedDB tests.
+  int64_t fileId;
+};
+
+} // namespace dom
+} // namespace mozilla

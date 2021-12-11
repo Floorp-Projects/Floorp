@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435296
+-->
+<head>
+  <title>Test for Bug 435296</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435296">Mozilla Bug 435296</a>
+<img id="testimage" style="display: none;">
+<pre id="test">
+<script type="application/javascript">
+
+// Boilerplate
+SimpleTest.waitForExplicitFinish();
+
+// Assert that discarding isn't enabled, which might make this test go orange.
+ok(!getImagePref(DISCARD_ENABLED_PREF), "discarding should NOT be enabled here");
+
+// We want to make sure d-o-d is enabled, since that's what we're testing
+var oldDODPref = getImagePref(DECODEONDRAW_ENABLED_PREF);
+setImagePref(DECODEONDRAW_ENABLED_PREF, true);
+
+// We're relying on very particular behavior for certain images - clear the
+// image cache.
+clearImageCache();
+
+// In order to work around the effects introduced in bug 512435, we only load
+// the image after window onload fires
+function windowLoadHandler()
+{
+  // Set the source and an onload handler
+  var image = document.getElementById("testimage");
+  image.src = "schrep.png";
+  image.onload = imageLoadHandler;
+}
+
+function imageLoadHandler()
+{
+  // The image is hidden, so it should not be decoded
+  ok(!isFrameDecoded("testimage"), "image should not be decoded");
+
+  // Make the image visible
+  var image = document.getElementById("testimage");
+  image.style.display = "inline";
+
+  // Wait for the image to decode
+  setTimeout(function() {
+    tryToFinish();
+  }, 500);
+}
+
+function tryToFinish()
+{
+  // If it hasn't happened yet, wait longer. If it never happens, this test
+  // will timeout after 300 seconds...
+  if (!isFrameDecoded("testimage")) {
+    setTimeout(function() {
+      tryToFinish();
+    }, 500);
+    return;
+  }
+
+  // By definition, the image is decoded here. Give ourselves a pat on the back.
+  ok(isFrameDecoded("testimage"), "image should be decoded");
+
+  // Restore the decode-on-draw pref
+  setImagePref(DECODEONDRAW_ENABLED_PREF, oldDODPref);
+
+  // All done
+  SimpleTest.finish();
+}
+
+// Set our onload handler, making sure we have focus
+window.onload = SimpleTest.waitForFocus(windowLoadHandler);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script>
+    function doStuff() {
+      try {
+        window.parent.parent.ok_wrapper(false, "a frame inside a sandboxed iframe should NOT be same origin with the iframe's parent");
+      }
+      catch (e) {
+        window.parent.parent.postMessage({ok: true, desc: "a frame inside a sandboxed iframe is not same origin with the iframe's parent"}, "*");
+      }
+     }
+  </script>
+</head>
+<frameset>
+  <frame onload='doStuff()' src="file_iframe_sandbox_a_if12.html">
+</frameset>
+I'm a &lt;frame&gt; inside an iframe which is sandboxed with 'allow-scripts allow-forms'
+</html>
+

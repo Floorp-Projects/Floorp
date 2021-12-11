@@ -1,0 +1,29 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Memory")
+
+DIRS += [
+    "actions",
+    "components",
+    "reducers",
+]
+
+DevToolsModules(
+    "app.js",
+    "constants.js",
+    "dominator-tree-lazy-children.js",
+    "initializer.js",
+    "models.js",
+    "panel.js",
+    "reducers.js",
+    "store.js",
+    "utils.js",
+)
+
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.ini"]

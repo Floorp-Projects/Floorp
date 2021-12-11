@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=199959
+-->
+<head>
+  <title>Test for Bug 199959</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=199959">Mozilla Bug 199959</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="attrTest" testAttr="testValue"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 199959 **/
+
+// From ACID3
+var attrTest = document.getElementById("attrTest");
+var attr = attrTest.getAttributeNode("testAttr");
+ok(attr.specified, "Attribute isn't specified!");
+attrTest.removeAttributeNode(attr);
+ok(attr.specified, "Attribute isn't specified after removal!");
+
+// From bug 199959
+attr = document.createAttribute('foo');
+ok(attr.specified, "Attribute isn't specified!");
+
+
+</script>
+</pre>
+</body>
+</html>
+

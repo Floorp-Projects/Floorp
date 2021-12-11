@@ -1,0 +1,305 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=421640
+-->
+<head>
+  <title>Test for Bug 396392</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396392">Mozilla Bug Range getClientRects and getBoundingClientRect</a>
+<div id="content" style="font-family:monospace;font-size:12px;width:100px">
+<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p><div><span>000000000000 00000000000000 000000</span></div><div>000000000000 00000000000003 100305</div>
+</div>
+<div id="mixeddir" style="font-family:monospace;font-size:12px;width:100px"><span>english <bdo id="bdo" dir="rtl">rtl-overide english</bdo> word</span></div>
+<div id="mixeddir2" style="font-family:monospace;font-size:12px"><span>english <bdo id="bdo2" dir="rtl">rtl-override english</bdo> word</span></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var isLTR = true;
+var isTransformed = false;
+
+function annotateName(name) {
+  return (isLTR ? 'isLTR ' : 'isRTL ') +
+    (isTransformed ? 'transformed ' : '') + name;
+}
+
+function isEmptyRect(rect, name) {
+  name = annotateName(name);
+  is(rect.left, 0, name+'empty rect should have left = 0');
+  is(rect.right, 0, name+'empty rect should have right = 0');
+  is(rect.top, 0, name+'empty rect should have top = 0');
+  is(rect.bottom, 0, name+'empty rect should have bottom = 0');
+  is(rect.width, 0, name+'empty rect should have width = 0');
+  is(rect.height, 0, name+'empty rect should have height = 0');
+}
+
+function isEmptyRectList(rectlist, name) {
+  name = annotateName(name);
+  is(rectlist.length, 0, name + 'empty rectlist should have zero rects');
+}
+
+// round coordinates to the nearest 1/256 of a pixel
+function roundCoord(x) {
+  return Math.round(x * 256) / 256;
+}
+
+function _getRect(r) {
+  if (r.length) //array
+    return "{left:"+roundCoord(r[0])+",right:"+roundCoord(r[1])+
+      ",top:"   +roundCoord(r[2])+",bottom:"+roundCoord(r[3])+
+      ",width:"+roundCoord(r[4])+",height:"+roundCoord(r[5])+"}";
+  else
+    return "{left:"+roundCoord(r.left)+",right:"+roundCoord(r.right)+
+      ",top:"+roundCoord(r.top)+",bottom:"+roundCoord(r.bottom)+
+      ",width:"+roundCoord(r.width)+",height:"+roundCoord(r.height)+"}";
+}
+
+function runATest(obj) {
+  var range = document.createRange();
+  try {
+    range.setStart(obj.range[0],obj.range[1]);
+    if (obj.range.length>2) {
+       range.setEnd(obj.range[2]||obj.range[0], obj.range[3]);
+    }
+    //test getBoundingClientRect()
+    var rect = range.getBoundingClientRect();
+    var testname = 'range.getBoundingClientRect for ' + obj.name;
+    if (obj.rect) {
+      is(_getRect(rect),_getRect(obj.rect), annotateName(testname));
+    } else {
+      isEmptyRect(rect,testname+": ");
+    }
+    //test getClientRects()
+    var rectlist = range.getClientRects();
+    testname = 'range.getClientRects for ' + obj.name;
+    if (!obj.rectList) {
+      //rectList is not specified, use obj.rect to figure out rectList
+      obj.rectList = obj.rect?[obj.rect]:[];
+    }
+    if (!obj.rectList.length) {
+      isEmptyRectList(rectlist, testname+": ");
+    } else {
+      is(rectlist.length, obj.rectList.length,
+         annotateName(testname+' should return '+obj.rectList.length+' rects.'));
+      if(!obj.rectList.forEach){
+        //convert RectList to a real array
+        obj.rectList=Array.prototype.slice.call(obj.rectList, 0);
+      }
+      obj.rectList.forEach(function(r,i) {
+        is(_getRect(rectlist[i]),_getRect(r),
+           annotateName(testname+": item at "+i));
+      });
+    }
+  } finally {
+    range.detach();
+  }
+}
+/** Test for Bug 396392 **/
+function doTest(){
+  var root = document.getElementById('content');
+  var firstP = root.firstElementChild, spanInFirstP = firstP.childNodes[1],
+    firstDiv = root.childNodes[2], spanInFirstDiv = firstDiv.childNodes[1],
+    secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1],
+    secondDiv = root.childNodes[4], spanInSecondDiv = secondDiv.firstChild,
+    thirdDiv = root.childNodes[5];
+  var firstPRect = firstP.getBoundingClientRect(),
+    spanInFirstPRect = spanInFirstP.getBoundingClientRect(),
+    firstDivRect = firstDiv.getBoundingClientRect(),
+    spanInFirstDivRect = spanInFirstDiv.getBoundingClientRect(),
+    secondPRect = secondP.getBoundingClientRect(),
+    secondDivRect = secondDiv.getBoundingClientRect(),
+    spanInSecondPRect = spanInSecondP.getBoundingClientRect(),
+    spanInSecondDivRect = spanInSecondDiv.getBoundingClientRect(),
+    spanInSecondDivRectList = spanInSecondDiv.getClientRects();
+  var widthPerchar = spanInSecondPRect.width / spanInSecondP.firstChild.length;
+  var testcases = [
+    {name:'nodesNotInDocument', range:[document.createTextNode('abc'), 1],
+      rect:null},
+    {name:'collapsedInBlockNode', range:[firstP, 2], rect:null},
+    {name:'collapsedAtBeginningOfTextNode', range:[firstP.firstChild, 0],
+      rect:[spanInFirstPRect.left - 6 * widthPerchar,
+      spanInFirstPRect.left - 6 * widthPerchar, spanInFirstPRect.top,
+      spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
+    {name:'collapsedWithinTextNode', range:[firstP.firstChild, 1],
+      rect:[spanInFirstPRect.left  - 5 * widthPerchar,
+        spanInFirstPRect.left  - 5 * widthPerchar,
+        spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
+    {name:'collapsedAtEndOfTextNode', range:[firstP.firstChild, 6],
+      rect:[spanInFirstPRect.left, spanInFirstPRect.left,
+        spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
+    {name:'singleBlockNode', range:[root, 1, root, 2], rect:firstPRect},
+    {name:'twoBlockNodes', range:[root, 1, root, 3],
+      rect:[firstPRect.left, firstPRect.right, firstPRect.top,
+        firstDivRect.bottom, firstPRect.width,
+        firstDivRect.bottom - firstPRect.top],
+      rectList:[firstPRect, firstDivRect]},
+    {name:'endOfTextNodeToEndOfAnotherTextNodeInAnotherBlock',
+      range:[spanInFirstP.firstChild, 1, firstDiv.firstChild, 5],
+      rect:[spanInFirstDivRect.left - 5*widthPerchar, spanInFirstDivRect.left,
+        spanInFirstDivRect.top, spanInFirstDivRect.bottom, 5 * widthPerchar,
+        spanInFirstDivRect.height]},
+    {name:'startOfTextNodeToStartOfAnotherTextNodeInAnotherBlock',
+      range:[spanInFirstP.firstChild, 0, firstDiv.firstChild, 0],
+      rect:[spanInFirstPRect.left, spanInFirstPRect.left + widthPerchar, spanInFirstPRect.top,
+        spanInFirstPRect.bottom, widthPerchar, spanInFirstPRect.height]},
+    {name:'endPortionOfATextNode', range:[firstP.firstChild, 3,
+        firstP.firstChild, 6],
+      rect:[spanInFirstPRect.left - 3*widthPerchar, spanInFirstPRect.left,
+        spanInFirstPRect.top, spanInFirstPRect.bottom, 3*widthPerchar, spanInFirstPRect.height]},
+    {name:'startPortionOfATextNode', range:[firstP.firstChild, 0,
+        firstP.firstChild, 3],
+      rect:[spanInFirstPRect.left - 6*widthPerchar,
+        spanInFirstPRect.left - 3*widthPerchar, spanInFirstPRect.top,
+        spanInFirstPRect.bottom, 3 * widthPerchar, spanInFirstPRect.height]},
+    {name:'spanTextNodes', range:[secondP.firstChild, 1, secondP.lastChild, 1],
+      rect:[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.right +
+        widthPerchar, spanInSecondPRect.top, spanInSecondPRect.bottom,
+        spanInSecondPRect.width + 4*widthPerchar, spanInSecondPRect.height],
+      rectList:[[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.left,
+        spanInSecondPRect.top, spanInSecondPRect.bottom, 3 * widthPerchar,
+        spanInSecondPRect.height],
+	spanInSecondPRect,
+	[spanInSecondPRect.right, spanInSecondPRect.right + widthPerchar,
+          spanInSecondPRect.top, spanInSecondPRect.bottom, widthPerchar,
+          spanInSecondPRect.height]]}
+  ];
+  testcases.forEach(runATest);
+
+  // testcases that have different ranges in LTR and RTL
+  var directionDependentTestcases;
+  if (isLTR) {
+    directionDependentTestcases = [
+      {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
+       rect: spanInSecondDivRect,
+       rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
+        spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
+	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
+	spanInSecondDivRectList[0].height],
+	spanInSecondDivRectList[1],
+	[spanInSecondDivRectList[2].left,
+	spanInSecondDivRectList[2].right - 4 * widthPerchar, spanInSecondDivRectList[2].top,
+	spanInSecondDivRectList[2].bottom,
+	spanInSecondDivRectList[2].width - 4 * widthPerchar,
+	spanInSecondDivRectList[2].height]]},
+      {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
+        rect: [spanInSecondDivRectList[1].left, spanInSecondDivRectList[1].right,
+          spanInSecondDivRectList[1].top + secondDivRect.height,
+          spanInSecondDivRectList[1].bottom + secondDivRect.height,
+          spanInSecondDivRectList[1].width, spanInSecondDivRectList[1].height]}
+    ];
+  } else {
+    directionDependentTestcases = [
+      {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
+       rect: spanInSecondDivRect,
+       rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
+        spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
+	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
+	spanInSecondDivRectList[0].height],
+	spanInSecondDivRectList[1],
+	spanInSecondDivRectList[2],
+	spanInSecondDivRectList[3],
+	[spanInSecondDivRectList[4].left,
+	spanInSecondDivRectList[4].right - 4 * widthPerchar,
+        spanInSecondDivRectList[4].top,
+	spanInSecondDivRectList[4].bottom,
+	spanInSecondDivRectList[4].width - 4 * widthPerchar,
+	spanInSecondDivRectList[4].height]]},
+      {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
+        rect: [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
+          spanInSecondDivRectList[2].top + secondDivRect.height,
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+	       spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
+       rectList:[[spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
+          spanInSecondDivRectList[2].top + secondDivRect.height,
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+          spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
+          [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].left,
+          spanInSecondDivRectList[2].top + secondDivRect.height,
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+          0, spanInSecondDivRectList[2].height]]}
+     ];
+  }
+  directionDependentTestcases.forEach(runATest);
+}
+function testMixedDir(){
+  var root = document.getElementById('mixeddir');
+  var firstSpan = root.firstElementChild, firstSpanRect=firstSpan.getBoundingClientRect(),
+      firstSpanRectList = firstSpan.getClientRects();
+  runATest({name:'mixeddir',range:[firstSpan.firstChild,0,firstSpan.lastChild,firstSpan.lastChild.length],
+             rect: firstSpanRect, rectList:firstSpanRectList});
+
+  root = document.getElementById('mixeddir2');
+  firstSpan = root.firstElementChild;
+  firstSpanRect = firstSpan.getBoundingClientRect();
+  bdo = document.getElementById('bdo2');
+  bdoRect=bdo.getBoundingClientRect();
+  var widthPerChar = bdoRect.width / bdo.firstChild.length;
+  runATest({name:'mixeddirPartial', range:[firstSpan.firstChild, 3,
+					   bdo.firstChild, 7],
+	rect: [firstSpanRect.left + 3*widthPerChar, bdoRect.right,
+	       bdoRect.top, bdoRect.bottom,
+	       (firstSpan.firstChild.length + bdo.firstChild.length - 3) *
+	        widthPerChar,
+	       bdoRect.height],
+	rectList:[[firstSpanRect.left + 3*widthPerChar,
+		   bdoRect.left,
+		   firstSpanRect.top, firstSpanRect.bottom,
+		   (firstSpan.firstChild.length - 3) * widthPerChar,
+		   firstSpanRect.height],
+		  [bdoRect.right - 7 * widthPerChar, bdoRect.right,
+		   bdoRect.top, bdoRect.bottom,
+		   7*widthPerChar, bdoRect.height]]});
+}
+
+function testShadowDOM() {
+  var ifr = document.createElement("iframe");
+  document.body.appendChild(ifr);
+  var doc = ifr.contentDocument;
+  var d = doc.createElement("div");
+  var sr = d.attachShadow({mode: "open"});
+  sr.innerHTML = "<div>inside shadow DOM</div>";
+  doc.body.appendChild(d);
+  var r = new ifr.contentWindow.Range();
+  r.selectNode(sr.firstChild);
+  var rect = r.getBoundingClientRect();
+  isnot(rect.width, 0, "Div element inside shadow shouldn't have zero size.");
+  isnot(rect.height, 0, "Div element inside shadow shouldn't have zero size.");
+}
+
+function test(){
+  //test ltr
+  doTest();
+
+  //test rtl
+  isLTR = false;
+  var root = document.getElementById('content');
+  root.dir = 'rtl';
+  doTest();
+  isLTR = true;
+  root.dir = 'ltr';
+
+  testMixedDir();
+
+  //test transforms
+  isTransformed = true;
+  root.style.transform = "translate(30px,50px)";
+  doTest();
+
+  testShadowDOM();
+  SimpleTest.finish();
+}
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  setTimeout(test, 0);
+};
+
+</script>
+</pre>
+</body>
+</html>

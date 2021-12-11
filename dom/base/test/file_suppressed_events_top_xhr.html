@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test event suppression</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div>Top</div>
+<script type="application/javascript">
+
+function waitForMessage(aMsg, aCallback) {
+  window.addEventListener("message", function handler(e) {
+    if (e.data != aMsg) {
+      return;
+    }
+
+    info(`received: ${e.data}`);
+    window.removeEventListener("message", handler);
+    if (aCallback) {
+      aCallback(e);
+    }
+  });
+}
+
+function waitForClickEvent(aElement, aWindow) {
+  return new Promise((aResolve) => {
+    aElement.addEventListener("click", aResolve, { once: true });
+    synthesizeMouseAtCenter(aElement, { type: "mousedown" }, aWindow);
+    synthesizeMouseAtCenter(aElement, { type: "mouseup" }, aWindow);
+  });
+}
+
+waitForMessage("ready", async function(e) {
+  await waitUntilApzStable();
+
+  let innerWin = e.source;
+  let innerDiv = innerWin.document.querySelector("div");
+
+  let eventCount = 0;
+  innerDiv.addEventListener("mousemove", function() {
+    eventCount++;
+  });
+
+  // Test that event handling is suppressed.
+  let xhr = new XMLHttpRequest();
+  opener.info("xhr open");
+  xhr.open('GET', 'slow.sjs', false);
+
+  const TOTAL = 100;
+  for (let i = 0; i < TOTAL; i++) {
+    synthesizeMouseAtCenter(innerDiv, { type: "mousemove" }, innerWin);
+  }
+  xhr.send();
+  opener.info(`xhr done`);
+
+  // Wait for click event to ensure we have received all mousemove events.
+  await waitForClickEvent(innerDiv, innerWin);
+  opener.info(`eventCount: ${eventCount}`);
+  opener.ok(eventCount < TOTAL, "event should be suspressed");
+
+  // Test that event handling is not suppressed.
+  eventCount = 0;
+  for (let i = 0; i < TOTAL; i++) {
+    synthesizeMouseAtCenter(innerDiv, { type: "mousemove" }, innerWin);
+  }
+
+  // Wait for click event to ensure we have received all mousemove events.
+  await waitForClickEvent(innerDiv, innerWin);
+  opener.info(`eventCount: ${eventCount}`);
+  opener.is(eventCount, TOTAL, "event should not be suspressed");
+
+  opener.postMessage("done", "*");
+});
+
+</script>
+<iframe src="http://example.org/tests/dom/base/test/file_suppressed_events_middle.html"></iframe>
+</body>
+</html>

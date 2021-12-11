@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US" class="reftest-wait">
+<head>
+  <meta charset="utf-8">
+  <title>CSS Test: CSS display:contents; style inheritance, DOM mutations</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+  <link rel="help" href="http://dev.w3.org/csswg/css-display">
+<style type="text/css">
+body,span { color:black; background-color:white; }
+.test { display:contents; }
+.green { color:green; }
+.border { border-left:1px solid green; }
+b { border:inherit; font-weight:normal; }
+</style>
+<script>
+function $(id) { return document.getElementById(id); }
+function text(s) { return document.createTextNode(s); }
+function b(s) { var e = document.createElement('b'); e.appendChild(document.createTextNode(s)); return e; }
+function div(s) { var e = document.createElement('div'); e.setAttribute('class','test'); e.appendChild(document.createTextNode(s)); return e; }
+function runTest() {
+  document.body.offsetHeight;
+
+  var e = $('t1');
+  var c = e.firstChild;
+  e.insertBefore(text('g'), c);
+  e.insertBefore(text('r'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t1b');
+  var c = e.firstChild;
+  e.insertBefore(text('g'), c);
+  e.insertBefore(text('r'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t2');
+  var c = e.firstChild;
+  e.insertBefore(text('gr'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t2b');
+  var c = e.firstChild;
+  e.insertBefore(text('gr'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t3');
+  var c = e.firstChild;
+  e.insertBefore(text('n'), c);
+  e.insertBefore(text('o'), c);
+  e.appendChild(text('er'));
+
+  var e = $('t4');
+  var c = e.firstChild;
+  e.insertBefore(text('n'), c);
+  e.insertBefore(text('o'), c);
+  e.appendChild(text('er'));
+
+  var e = $('t5');
+  var c = e.firstChild;
+  e.insertBefore(b('1px green left '), c);
+  e.appendChild(text('er'));
+
+  var e = $('t6');
+  e.appendChild(b('2px green left border'));
+
+  var e = $('t7');
+  e.appendChild(div('green'));
+
+  var e = $('t8');
+  e.appendChild(div('green'));
+
+  var e = $('t9');
+  var c = b("1px green left border");
+  var d = div('');
+  d.appendChild(c);
+  e.appendChild(d);
+
+  var e = $('t10');
+  var c = b("1px green left border");
+  var d = div('');
+  d.setAttribute('style','border:inherit');
+  d.appendChild(c);
+  e.appendChild(d);
+
+  var e = $('t11');
+  var c = b("2px green left border");
+  var d = div('');
+  d.setAttribute('style','border:inherit');
+  d.appendChild(c);
+  e.appendChild(d);
+
+  document.documentElement.className = '';
+}
+</script>
+</head>
+<body onload="runTest()">
+
+<span class="green"><div class="test" id="t1">ee</div></span>
+<span class="green"><div class="test" id="t1b">ee</div>x</span>
+<span><div class="test green" id="t2">ee</div></span>
+<span><div class="test green" id="t2b">ee</div>x</span>
+<br>
+<span><div class="test border" id="t3"> bord</div></span>
+<span><div class="test border" id="t4"><span> bord</span></div></span>
+<span class="border"><div class="test" id="t5">bord</div></span>
+<span class="border"><div class="test" style="border:inherit" id="t6"></div></span>
+<br>
+
+<span class="green"><div class="test" id="t7"></div></span>
+<span><div class="test green" id="t8"></div></span>
+<br>
+<span class="border"><div class="test" id="t9"></div></span>
+<span class="border"><div class="test" id="t10"></div></span>
+<span class="border"><div class="test" style="border:inherit" id="t11"></div></span>
+</body>
+</html>

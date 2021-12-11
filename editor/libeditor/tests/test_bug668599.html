@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=668599
+-->
+<head>
+  <title>Test for Bug 668599</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=668599">Mozilla Bug 668599</a>
+<p id="display"></p>
+<div id="content">
+  <div id="test1">
+    block <span contenteditable>type here</span> block
+  </div>
+  <div id="test2">
+    <p contenteditable>
+      block <span>type here</span> block
+    </p>
+  </div>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 668599 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function select(element) {
+  // select the element text content
+  var userSelection = window.getSelection();
+  window.getSelection().removeAllRanges();
+  var range = document.createRange();
+  range.setStart(element.firstChild, 0);
+  range.setEnd(element.firstChild, element.textContent.length);
+  userSelection.addRange(range);
+}
+
+function runTests() {
+  var span = document.querySelector("#test1 span");
+
+  // editable <span> => the <span> *content* should be deleted
+  select(span);
+  span.focus();
+  sendString("x");
+  is(span.textContent, "x", "The <span> content should have been replaced by 'x'.");
+
+  // same thing, but using [Del] instead of typing some text
+  document.execCommand("Undo", false, null);
+  select(span);
+  span.focus();
+  synthesizeKey("KEY_Delete");
+  is(span.textContent, "", "The <span> content should have been deleted.");
+
+  // <span> in editable block => the <span> *element* should be deleted
+  select(document.querySelector("#test2 span"));
+  document.querySelector("#test2 [contenteditable]").focus();
+  synthesizeKey("KEY_Delete");
+  is(document.querySelector("#test2 span"), null,
+    "The <span> element should have been deleted.");
+
+  // done
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

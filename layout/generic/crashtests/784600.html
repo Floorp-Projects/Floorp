@@ -1,0 +1,17 @@
+<html class="reftest-wait">><class><address></address><children id=test1>><acronym id=test2></acronym><aside><iframe src=simple_blank.swf></iframe>
+
+
+</aside><script>
+setTimeout("boom()", 2000);
+function boom() {
+document.designMode = "on";
+document.execCommand("InsertHTML", false, "<dl>")
+r = document.createRange(); 
+window.getSelection().removeAllRanges();
+r.setStart(test1, 0);
+r.setEnd(test2, test2.childNodes.length);
+window.getSelection().addRange(r);
+document.execCommand("InsertHTML", false, " ")
+document.documentElement.removeAttribute("class");
+}
+</script>

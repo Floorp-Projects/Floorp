@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+code {
+  display: block;
+  hyphens: manual;
+  border: 1px solid black;
+  /* Prefer Courier New if available, as otherwise Menlo may be used,
+     and its HYPHEN and HYPHEN-MINUS glyphs don't match. */
+  font-family: Courier New, Courier, monospace;
+}
+</style>
+</head>
+<body lang="en-us">
+<!--
+  Hyphenation opportunities of the texts in this test are as follows,
+
+        frag[A]ilis[A]tic[C]ex[A]pi[A]ali
+
+  where [A] is an automatic hyphen, and [C] is a conditional hyphen.
+
+  In this test, we set width to somewhere between every pair of adjacent hyphenations,
+  then we see if lines break correctly.
+-->
+<code style="width:4ch;">
+frag-<br />ilis-<br />tic-<br />ex-<br />pi-<br />ali
+</code>
+<br />
+<code style="width:5ch;">
+frag-<br />ilis-<br />tic-<br />expi-<br />ali
+</code>
+<br />
+<code style="width:9ch;">
+fragilis-<br />tic-<br />expiali
+</code>
+<br />
+<code style="width:12ch;">
+fragilistic-<br />expiali
+</code>
+<br />
+<code style="width:14ch;">
+fragilistic-<br />expiali
+</code>
+<br />
+<code style="width:16ch;">
+fragilistic-<br />expiali
+</code>
+</body>
+</html>

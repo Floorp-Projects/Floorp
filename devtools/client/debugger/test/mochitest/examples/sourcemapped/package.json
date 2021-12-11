@@ -1,0 +1,16 @@
+{
+  "name": "babel-sourcemaps",
+  "version": "1.0.0",
+  "description": "Rebuild assets for babel's test fixtures",
+  "scripts": {
+    "build": "node ./build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "lodash": "^4.17.5",
+    "webpack": "^3.7.1"
+  }
+}

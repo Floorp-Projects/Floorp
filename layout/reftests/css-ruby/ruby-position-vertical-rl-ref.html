@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1055665 - Test for ruby-position</title>
+  <link rel="stylesheet" href="common.css">
+  <script type="text/javascript" src="utils.js"></script>
+  <style>
+    html {
+      writing-mode: vertical-rl;
+    }
+    body {
+      font-family: monospace;
+    }
+    .annotation, .annotation > div {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 8em; line-height: 8em;">
+    <div style="display: inline-block;">
+      <div class="annotation">
+        <div style="right: 100%;"><span>left##</span></div>
+        <div style="right: -100%;"><span>right#</span></div>
+        <div style="right: 200%;"><span>left2#</span></div>
+        <div style="right: -200%;"><span>right2</span></div>
+        <!-- to give container the proper block-axis size -->
+        <span>&nbsp;</span>
+      </div>
+      <span>base##</span>
+    </div>
+  </div>
+  <script type="text/javascript">
+    makeBSizeOfParentMatch(document.getElementsByTagName('span'));
+  </script>
+</body>
+</html>

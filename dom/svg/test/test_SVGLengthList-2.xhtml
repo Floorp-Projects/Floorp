@@ -1,0 +1,64 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=630760
+-->
+<head>
+  <title>Tests specific to SVGLengthList</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=515116">Mozilla Bug 630760</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <text id="text">
+    <set attributeName="x" to="10 20 30 40" begin="0" dur="indefinite"/>
+  </text>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run_tests() {
+  var svg = document.getElementById("svg");
+  svg.pauseAnimations();
+
+  // Check that the animVal list for 'x' on <text> gives the correct number of
+  // items when examined for the FIRST time DURING animation:
+
+  var text = document.getElementById("text");
+  var list = text.x.animVal;
+
+  is(list.numberOfItems, 4, "Checking numberOfItems");
+
+  // Check that items at an index larger than 255 (max value for PRUint8) are
+  // returning the correct values:
+
+  var item;
+  list = text.x.baseVal;
+  for (var i = 0; i < 256; ++i) {
+    item = svg.createSVGLength();
+    item.value = 1;
+    list.appendItem(item);
+  }
+  item = svg.createSVGLength();
+  item.value = 2;
+  list.appendItem(item);
+
+  is(list.getItem(0).value, 1, "Check value of first item");
+  is(list.getItem(256).value, 2, "Check value of item at index > 255");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run_tests);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

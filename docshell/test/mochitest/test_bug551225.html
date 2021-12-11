@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=551225
+-->
+<head>
+  <title>Test for Bug 551225</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=551225">Mozilla Bug 551225</a>
+
+<script type="application/javascript">
+
+/** Test for Bug 551225 **/
+
+var obj = {
+  a: new Date("1/1/2000"),
+  b: /^foo$/,
+  c: "bar",
+};
+
+history.replaceState(obj, "", "");
+is(history.state.a.toString(), new Date("1/1/2000").toString(), "Date object.");
+is(history.state.b.toString(), "/^foo$/", "Regex");
+is(history.state.c, "bar", "Other state");
+
+</script>
+</body>
+</html>

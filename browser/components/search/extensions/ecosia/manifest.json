@@ -1,0 +1,28 @@
+{
+  "name": "Ecosia",
+  "description": "Search Ecosia",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "ecosia@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Ecosia",
+      "search_url": "https://www.ecosia.org/search",
+      "search_form": "https://www.ecosia.org/",
+      "search_url_get_params": "tt=mzl&q={searchTerms}",
+      "suggest_url": "https://ac.ecosia.org/autocomplete",
+      "suggest_url_get_params": "type=list&q={searchTerms}"
+    }
+  }
+}

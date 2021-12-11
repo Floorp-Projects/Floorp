@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+/* each face is loaded as a separate family, so we can address them individually
+   without involving the style-matching algorithm */
+@font-face {
+  font-family: dvs;
+  src: url(../fonts/dejavu-sans/DejaVuSans.ttf);
+}
+@font-face {
+  font-family: dvsb;
+  src: url(../fonts/dejavu-sans/DejaVuSans-Bold.ttf);
+}
+@font-face {
+  font-family: dvsi;
+  src: url(../fonts/dejavu-sans/DejaVuSans-Oblique.ttf);
+}
+@font-face {
+  font-family: dvsbi;
+  src: url(../fonts/dejavu-sans/DejaVuSans-BoldOblique.ttf);
+}
+@font-face { /* note that there is no ExtraLight Condensed or Oblique */
+  font-family: dvsl;
+  src: url(../fonts/dejavu-sans/DejaVuSans-ExtraLight.ttf);
+}
+@font-face {
+  font-family: dvsc;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed.ttf);
+}
+@font-face {
+  font-family: dvscb;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed-Bold.ttf);
+}
+@font-face {
+  font-family: dvsci;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed-Oblique.ttf);
+}
+@font-face {
+  font-family: dvscbi;
+  src: url(../fonts/dejavu-sans/DejaVuSansCondensed-BoldOblique.ttf);
+}
+
+body {
+  font-family: dvs, serif;
+  font-size: 24px;
+}
+
+.b { font-family: dvsb; }
+.i { font-family: dvsi; }
+.bi { font-family: dvsbi; }
+.l { font-family: dvsl; }
+.c { font-family: dvsc; }
+.cb { font-family: dvscb; }
+.ci { font-family: dvsci; }
+.cbi { font-family: dvscbi; }
+</style>
+</head>
+<body>
+<!-- all 4 levels of "condensed" come out the same; "condensed" takes priority over "light" -->
+<div class="c">ultra-condensed <span class="ci">italic</span> <span class="cb">bold <span class="cbi">italic</span></span> <span class="c">light <span class="ci">italic</span></span></div>
+<div class="c">extra-condensed <span class="ci">italic</span> <span class="cb">bold <span class="cbi">italic</span></span> <span class="c">light <span class="ci">italic</span></span></div>
+<div class="c">condensed <span class="ci">italic</span> <span class="cb">bold <span class="cbi">italic</span></span> <span class="c">light <span class="ci">italic</span></span></div>
+<div class="c">semi-condensed <span class="ci">italic</span> <span class="cb">bold <span class="cbi">italic</span></span> <span class="c">light <span class="ci">italic</span></span></div>
+<!-- "normal" and all 4 levels of "expanded" come out the same; "light" is available, but only in upright, not italic -->
+<div>normal <span class="i">italic</span> <span class="b">bold <span class="bi">italic</span></span> <span class="l">light <span class="i">italic</span></span></div>
+<div>semi-expanded <span class="i">italic</span> <span class="b">bold <span class="bi">italic</span></span> <span class="l">light <span class="i">italic</span></span></div>
+<div>expanded <span class="i">italic</span> <span class="b">bold <span class="bi">italic</span></span> <span class="l">light <span class="i">italic</span></span></div>
+<div>extra-expanded <span class="i">italic</span> <span class="b">bold <span class="bi">italic</span></span> <span class="l">light <span class="i">italic</span></span></div>
+<div>ultra-expanded <span class="i">italic</span> <span class="b">bold <span class="bi">italic</span></span> <span class="l">light <span class="i">italic</span></span></div>
+</body>
+</html>
+

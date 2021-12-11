@@ -1,0 +1,33 @@
+<!-- If two conflicting animations start at same time, and if we swap their
+     positions, the one that ends up later in the document should win 
+     (including its freeze effects). -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeout('go()', 0)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+
+  <script><![CDATA[
+    function go() {
+      // Move "a" and "b" to both be their parents' last child
+      var a = document.getElementById("a");
+      a.parentNode.insertBefore(a, null);
+
+      var b = document.getElementById("b");
+      b.parentNode.insertBefore(b, null);
+
+      setTimeAndSnapshot(1.5, true)
+    }
+  ]]></script>     
+
+  <rect x="0" y="0" width="100" height="100" fill="blue">
+    <animate attributeName="x" from="300" to="400" begin="0s" dur="1s" id="a"
+             fill="freeze"/>
+    <animate attributeName="x" from="100" to="200" begin="0s" dur="2s"/>
+  </rect>
+  <rect x="0" y="200" width="100" height="100" fill="blue">
+    <animate attributeName="x" from="100" to="200" begin="0s" dur="2s" id="b"/>
+    <animate attributeName="x" from="300" to="400" begin="0s" dur="1s" 
+             fill="freeze"/>
+  </rect>
+</svg>

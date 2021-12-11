@@ -1,0 +1,104 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBTransaction;
+include protocol PBackgroundIDBVersionChangeTransaction;
+include protocol PBackgroundMutableFile;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
+include protocol PRemoteLazyInputStream; // FIXME: bug 792908
+
+include PBackgroundIDBSharedTypes;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+using class mozilla::dom::indexedDB::Key
+  from "mozilla/dom/indexedDB/Key.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct ContinueParams
+{
+  Key key;
+};
+
+struct ContinuePrimaryKeyParams
+{
+  Key key;
+  Key primaryKey;
+};
+
+struct AdvanceParams
+{
+  uint32_t count;
+};
+
+union CursorRequestParams
+{
+  ContinueParams;
+  ContinuePrimaryKeyParams;
+  AdvanceParams;
+};
+
+struct ObjectStoreCursorResponse
+{
+  Key key;
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct ObjectStoreKeyCursorResponse
+{
+  Key key;
+};
+
+struct IndexCursorResponse
+{
+  Key key;
+  Key sortKey;
+  Key objectKey;
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct IndexKeyCursorResponse
+{
+  Key key;
+  Key sortKey;
+  Key objectKey;
+};
+
+// TODO: All cursor responses must be arrays!
+union CursorResponse
+{
+  void_t;
+  nsresult;
+  ObjectStoreCursorResponse[];
+  ObjectStoreKeyCursorResponse[];
+  IndexCursorResponse[];
+  IndexKeyCursorResponse[];
+};
+
+[RefCounted] protocol PBackgroundIDBCursor
+{
+  manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
+
+parent:
+  async DeleteMe();
+
+  async Continue(CursorRequestParams params, Key currentKey,
+                 Key currentObjectStoreKey);
+
+child:
+  async __delete__();
+
+  async Response(CursorResponse response);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

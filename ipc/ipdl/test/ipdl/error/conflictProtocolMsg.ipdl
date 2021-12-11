@@ -1,0 +1,9 @@
+//error: ctor for protocol `conflictProtocolMsg', which is not managed by protocol `conflictProtocolMsg'
+
+protocol conflictProtocolMsg {
+
+    // it's an error to re-use the protocol name as a message ID; these
+    // are reserved
+child: async conflictProtocolMsg();
+
+};

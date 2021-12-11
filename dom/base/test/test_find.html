@@ -1,0 +1,198 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+<script>
+const t = async_test("Test window.find / nsFind");
+
+function testFindable(findCount, textToFind, buildDoc, description) {
+  if (typeof findCount == "boolean")
+    findCount = findCount ? 1 : 0;
+  try {
+    const iframe = document.querySelector("iframe")
+    iframe.contentDocument.documentElement.innerHTML =
+      (typeof buildDoc == "string") ? buildDoc : "";
+
+    if (typeof buildDoc == "function")
+      buildDoc(iframe.contentDocument);
+
+    iframe.contentWindow.getSelection().removeAllRanges();
+    for (let i = findCount; i >= 0; --i) {
+      const expectFindable = i != 0;
+      assert_equals(
+        iframe.contentWindow.find(textToFind),
+        expectFindable,
+        "Should be " + (expectFindable ? "" : "not ") + "findable: " + description + ", text: " + textToFind + ", iter: " + (findCount - i + 1)
+      );
+    }
+
+  } catch (ex) {
+    assert_unreached(ex);
+  }
+}
+
+const INLINE_LIKE_DISPLAY_VALUES = [
+  "inline",
+  "inline-grid",
+  "inline-block",
+  "inline-flex",
+];
+
+const BLOCK_LIKE_DISPLAY_VALUES = [
+  "block",
+  "table",
+  "list-item",
+  "grid",
+  "flex",
+];
+
+let runTests = t.step_func_done(function() {
+  testFindable(true, "me and me", `
+    me <div style="display: contents">and</div> me
+  `, "display: contents");
+
+  testFindable(true, "me me", `
+    me <div style="display: none">and</div> me
+  `, "display: none");
+
+  testFindable(false, "me and me", `
+    me <div style="display: none">and</div> me
+  `, "display: none");
+
+  for (const display of INLINE_LIKE_DISPLAY_VALUES) {
+    testFindable(true, "me and me", `
+      me <div style="display: ${display}">and</div> me
+    `, "div display: " + display);
+    testFindable(true, "me and me", `
+      me <span style="display: ${display}">and</span> me
+    `, "span display: " + display);
+  }
+
+  for (const display of BLOCK_LIKE_DISPLAY_VALUES) {
+    testFindable(false, "me and me", `
+      me <div style="display: ${display}">and</div> me
+    `, "div display: " + display);
+    testFindable(false, "me and me", `
+      me <span style="display: ${display}">and</span> me
+    `, "span display: " + display);
+  }
+
+  testFindable(false, "me and me", `
+    me <fieldset>and</fieldset> me
+  `);
+
+  testFindable(true, "This text should be visible", `
+    <div style="visibility: hidden">
+      <div style="visibility: visible">
+        This text should be visible
+      </div>
+    </div>
+  `);
+
+  testFindable(true, "This text should be visible", `
+    <style>:root { overflow: hidden }</style>
+    <div style="overflow: auto;">
+      <div style="height: 300vh"></div>
+      This text should be visible
+    </div>
+  `);
+
+  testFindable(true, "foobar", `
+    <body><script style="display: block;">foobar</` + `script></body>
+  `);
+
+
+  testFindable(true, "Shadow text", function(document) {
+    let div = document.createElement("div");
+    div.attachShadow({ mode: "open" }).innerHTML = `
+      Wohoo, this is Shadow text, yay!
+    `;
+    document.documentElement.appendChild(div);
+  }, "In Shadow DOM");
+
+  testFindable(true, "Shadow text", function(document) {
+    let div = document.createElement("div");
+    div.appendChild(document.createTextNode(
+      "Wohoo, this is Shadow text, yay!"
+    ));
+    div.attachShadow({ mode: "open" }).innerHTML = `<slot></slot>`;
+    document.documentElement.appendChild(div);
+  }, "Slotted content in Shadow DOM");
+
+  // TODO(emilio): This should work in an ideal world.
+  testFindable(false, "Shadow text", function(document) {
+    let div = document.createElement("div");
+    div.appendChild(document.createTextNode("text, yay!"));
+    div.attachShadow({ mode: "open" }).innerHTML = `This is Shadow <slot></slot>`;
+    document.documentElement.appendChild(div);
+  }, "Mixed shadow and non-shadow text");
+
+  testFindable(true, "Shadow", function(document) {
+    document.documentElement.innerHTML = `
+      Sources<span id="host"></span>
+      <div>whatever</div>
+    `;
+    document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "Shadow text";
+  }, "Test inside a shadow-root mid-match");
+
+  testFindable(false, "Outside shadow", function(document) {
+    document.documentElement.innerHTML = `
+      Outside <div id="host"></div> shadow
+    `;
+    document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "inside shadow";
+  }, "Block in different subtree");
+
+  // NOTE(emilio): It is probably doable / worth changing this to return true,
+  // maybe, by relaxing the security checks in the ranges nsFind returns or
+  // such.
+  //
+  // See bug 1442466 / bug 1510485 / bug 1505887.
+  testFindable(false, "foo", function(document) {
+    let input = document.createElement("input");
+    input.value = "foo";
+    document.documentElement.appendChild(input);
+  }, "Native anonymous content isn't exposed in window.find");
+
+  // Same as above, but in this case the check is warranted, we shouldn't
+  // expose this range.
+  testFindable(false, "find me", `
+    <style>div::before { content: "Do find me" }</style>
+    <div></div>
+  `, "Pseudo-element");
+
+  // Same as above.
+  testFindable(false, "find me", `
+    <img alt="Do find me">
+  `, "Image alt content");
+
+  // Same as above.
+  testFindable(false, "find me", `
+    <input type="submit" value="Do find me">
+  `, "Submit input value");
+
+  testFindable(false, "\0", `
+    &#0;
+  `);
+
+  testFindable(true, "\0", function(document) {
+    document.documentElement.appendChild(document.createTextNode("\0"));
+  }, "Inserted null characters are findable");
+
+  testFindable(false, "ab", `a<br>b`, "<br> forces a break even if there's no whitespace in between");
+
+  testFindable(true, "history.kafka", `
+    <code>database.history&#8203;.kafka.bootstrap.servers</code>
+  `, "ZWSP should be ignored");
+
+  testFindable(2, " ", "a    b    c", "Collapsed whitespace");
+});
+
+window.onload = function() {
+  let iframe = document.createElement("iframe");
+  iframe.onload = runTests;
+  iframe.srcdoc = "<!doctype html><html></html>";
+  document.body.appendChild(iframe);
+};
+</script>
+</body>

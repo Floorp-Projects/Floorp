@@ -1,0 +1,122 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIArray;
+interface nsIPrincipal;
+%{C++
+namespace mozilla {
+class TimeStamp;
+}
+#include "nsTArrayForwardDeclare.h"
+#include "nsCOMPtr.h"
+%}
+
+native TimeStamp(mozilla::TimeStamp);
+
+[scriptable, uuid(c2d9e95b-9cc9-4f47-9ef6-1de0cf7ebc75)]
+interface nsIServerTiming : nsISupports {
+  [must_use] readonly attribute ACString name;
+  [must_use] readonly attribute double duration;
+  [must_use] readonly attribute ACString description;
+};
+
+[ref] native nsServerTimingArrayRef(nsTArray<nsCOMPtr<nsIServerTiming>>);
+
+// All properties return zero if the value is not available
+[scriptable, uuid(ca63784d-959c-4c3a-9a59-234a2a520de0)]
+interface nsITimedChannel : nsISupports {
+  // Set this attribute to true to enable collection of timing data.
+  // channelCreationTime will be available even with this attribute set to
+  // false.
+  attribute boolean timingEnabled;
+
+  // The number of redirects
+  attribute uint8_t redirectCount;
+  attribute uint8_t internalRedirectCount;
+
+  // These properties should only be written externally when they must be
+  // propagated across an internal redirect.  For example, when a service
+  // worker interception falls back to network we need to copy the original
+  // timing values to the new nsHttpChannel.
+  [noscript] attribute TimeStamp channelCreation;
+  [noscript] attribute TimeStamp asyncOpen;
+
+  // The following are only set when the request is intercepted by a service
+  // worker no matter the response is synthesized.
+  [noscript] attribute TimeStamp launchServiceWorkerStart;
+  [noscript] attribute TimeStamp launchServiceWorkerEnd;
+  [noscript] attribute TimeStamp dispatchFetchEventStart;
+  [noscript] attribute TimeStamp dispatchFetchEventEnd;
+  [noscript] attribute TimeStamp handleFetchEventStart;
+  [noscript] attribute TimeStamp handleFetchEventEnd;
+
+  // The following are only set when the document is not (only) read from the
+  // cache
+  [noscript] readonly attribute TimeStamp domainLookupStart;
+  [noscript] readonly attribute TimeStamp domainLookupEnd;
+  [noscript] readonly attribute TimeStamp connectStart;
+  [noscript] readonly attribute TimeStamp tcpConnectEnd;
+  [noscript] readonly attribute TimeStamp secureConnectionStart;
+  [noscript] readonly attribute TimeStamp connectEnd;
+  [noscript] readonly attribute TimeStamp requestStart;
+  [noscript] readonly attribute TimeStamp responseStart;
+  [noscript] readonly attribute TimeStamp responseEnd;
+
+  // The redirect attributes timings must be writeble, se we can transfer
+  // the data from one channel to the redirected channel.
+  [noscript] attribute TimeStamp redirectStart;
+  [noscript] attribute TimeStamp redirectEnd;
+
+  // The initiator type
+  [noscript] attribute AString initiatorType;
+
+  // This flag should be set to false only if a cross-domain redirect occurred
+  [noscript] attribute boolean allRedirectsSameOrigin;
+  // This flag is set to false if the timing allow check fails
+  [noscript] attribute boolean allRedirectsPassTimingAllowCheck;
+  // Implements the timing-allow-check to determine if we should report
+  // timing info for the resourceTiming object.
+  [noscript] boolean timingAllowCheck(in nsIPrincipal origin);
+  %{C++
+  inline bool TimingAllowCheck(nsIPrincipal* aOrigin) {
+    bool allowed = false;
+    return NS_SUCCEEDED(TimingAllowCheck(aOrigin, &allowed)) && allowed;
+  }
+  %}
+
+  // The following are only set if the document is (partially) read from the
+  // cache
+  [noscript] readonly attribute TimeStamp cacheReadStart;
+  [noscript] readonly attribute TimeStamp cacheReadEnd;
+
+  // All following are PRTime versions of the above.
+  readonly attribute PRTime channelCreationTime;
+  readonly attribute PRTime asyncOpenTime;
+  readonly attribute PRTime launchServiceWorkerStartTime;
+  readonly attribute PRTime launchServiceWorkerEndTime;
+  readonly attribute PRTime dispatchFetchEventStartTime;
+  readonly attribute PRTime dispatchFetchEventEndTime;
+  readonly attribute PRTime handleFetchEventStartTime;
+  readonly attribute PRTime handleFetchEventEndTime;
+  readonly attribute PRTime domainLookupStartTime;
+  readonly attribute PRTime domainLookupEndTime;
+  readonly attribute PRTime connectStartTime;
+  readonly attribute PRTime tcpConnectEndTime;
+  readonly attribute PRTime secureConnectionStartTime;
+  readonly attribute PRTime connectEndTime;
+  readonly attribute PRTime requestStartTime;
+  readonly attribute PRTime responseStartTime;
+  readonly attribute PRTime responseEndTime;
+  readonly attribute PRTime cacheReadStartTime;
+  readonly attribute PRTime cacheReadEndTime;
+  readonly attribute PRTime redirectStartTime;
+  readonly attribute PRTime redirectEndTime;
+
+  // If this attribute is false, this resource MUST NOT be reported in resource timing.
+  [noscript] attribute boolean reportResourceTiming;
+
+  readonly attribute nsIArray serverTiming;
+  nsServerTimingArrayRef getNativeServerTiming();
+};

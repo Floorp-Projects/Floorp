@@ -1,0 +1,68 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Filtering test</p>
+
+    <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
+      function get(address, callback) {
+        const xhr = new XMLHttpRequest();
+        // Use a random parameter to defeat caching.
+        xhr.open("GET", address + "&" + Math.random(), true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            callback();
+          }
+        };
+        xhr.send(null);
+      }
+
+      function performRequests(optionsText) {
+        const options = JSON.parse(optionsText);
+
+        /* eslint-disable max-nested-callbacks */
+        get("sjs_content-type-test-server.sjs?fmt=html&res=" + options.htmlContent,
+            function() {
+              get("sjs_content-type-test-server.sjs?fmt=css", function() {
+                get("sjs_content-type-test-server.sjs?fmt=js", function() {
+                  if (!options.getMedia) {
+                    return;
+                  }
+                  get("sjs_content-type-test-server.sjs?fmt=font", function() {
+                    get("sjs_content-type-test-server.sjs?fmt=image", function() {
+                      get("sjs_content-type-test-server.sjs?fmt=audio", function() {
+                        get("sjs_content-type-test-server.sjs?fmt=video", function() {
+                          if (!options.getFlash) {
+                            return;
+                          }
+                          get("sjs_content-type-test-server.sjs?fmt=flash", function() {
+                            // Done.
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            }
+        );
+        /* eslint-enable max-nested-callbacks */
+      }
+    </script>
+  </body>
+
+</html>

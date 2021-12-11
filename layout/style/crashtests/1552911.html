@@ -1,0 +1,15 @@
+<html>
+<head>
+  <script>
+    function start() {
+      const o1 =
+        document.createElementNS('http://www.w3.org/1999/xhtml', 'slot');
+      const observer = new ResizeObserverEntry(o1);
+      typeof observer.borderBoxSize;
+      typeof observer.contentBoxSize;
+    }
+
+    window.addEventListener('load', start);
+  </script>
+</head>
+</html>

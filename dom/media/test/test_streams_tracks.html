@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaStreamTrack interfaces</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const manager = new MediaTestManager;
+
+function testTracks(tracks, hasTrack, kind, src) {
+  is(tracks.length, hasTrack ? 1 : 0, `Correct ${kind} track count for ${src}`);
+  for (const track of tracks) {
+    is(track.readyState, "live", `Track ${track.id} should still be live`);
+    is(track.kind, kind, `Correct track kind for track ${track.id} of ${src}`);
+    ok(/\{........-....-....-....-............\}/.test(track.id),
+      `id ${track.id} for ${track.kind} track of ${src} has correct form`);
+  }
+}
+
+async function startTest(test, token) {
+  try {
+    info(`Starting test of ${test.name}`);
+    const element = document.createElement("video");
+
+    element.token = token;
+    manager.started(token);
+
+    element.src = test.name;
+    element.test = test;
+    const stream = element.mozCaptureStreamUntilEnded();
+
+    element.play();
+
+    await new Promise(r => element.onloadedmetadata = r);
+
+    testTracks(stream.getAudioTracks(), test.hasAudio, "audio", test.name);
+    testTracks(stream.getVideoTracks(), test.hasVideo, "video", test.name);
+    const tracks = stream.getTracks();
+
+    await new Promise(r => element.onended = r);
+
+    for (let i = 0; i < tracks.length; ++i) {
+      await Promise.race(
+        tracks.map(t => new Promise(r => t.onended = r))
+      );
+      await new Promise(r => stream.onremovetrack = r);
+    }
+
+    testTracks(stream.getAudioTracks(), false, "audio", test.name);
+    testTracks(stream.getVideoTracks(), false, "video", test.name);
+  } catch(e) {
+    ok(false, `Caught error: ${e}`);
+  } finally {
+    manager.finished(token);
+  }
+}
+
+manager.runTests(gTrackTests, startTest);
+</script>
+</pre>
+</body>
+</html>

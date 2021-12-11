@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "dtls-1";
+      src: url(../fonts/math/dtls-1.otf);
+    }
+  </style>
+  </head>
+  <body>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true"  id="mover0">
+        <mo>a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true">
+        <mo>a</mo>
+        <mo id="mo0"></mo>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true">
+        <mo>a</mo>
+        <mo id="mo1">a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';" id="mstyle0">
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle id="mstyle1">
+      <mover accent="true">
+        <mover accent="true">
+          <mn>a</mn>
+          <mn>a</mn>
+        </mover>
+        <mover accent="true">
+          <mn>a</mn>
+          <mn>a</mn>
+        </mover>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true">
+        <mrow>
+          <mrow>
+            <mrow id="mrow0">
+            </mrow>
+          </mrow>
+        </mrow>
+        <mo>a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+ <p>
+
+  <math>
+    <mstyle id="mstyle4" style ="font-family: 'dtls-1'; font-feature-settings: 'dtls' 0">
+      <mover accent="true">
+        <mover accent="true">
+          <mo>a</mo>
+          <mo>a</mo>
+        </mover>
+        <mover accent="true">
+           <mo>a</mo>
+           <mo>a</mo>
+        </mover>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle id="mstyle5" style ="font-family: 'dtls-1';">
+      <mover accent="true">
+        <mover accent="true">
+          <mo>a</mo>
+          <mo>a</mo>
+        </mover>
+        <mover accent="true">
+           <mo>a</mo>
+           <mo>a</mo>
+        </mover>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover id="mover1">
+        <mo>a</mo>
+        <mo>a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true" id="mover2">
+        <mo>a</mo>
+        <mo>a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true" id="mover3">
+        <mo>a</mo>
+        <mo>a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true">
+        <mo id="mo2">a</mo>
+        <mo>a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <mstyle style="font-family: 'dtls-1';">
+      <mover accent="true">
+        <mo id="mo3" movablelimits="true">a</mo>
+        <mo>a</mo>
+      </mover>
+    </mstyle>
+  </math>
+
+    <script>
+      function doTest()
+      {
+        var mo = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mo");
+        mo.innerHTML = "a";
+        // An added child gets dtls font feature
+        document.getElementById("mover0").appendChild(mo);
+        // A child with changed text gets dtls font feature
+        document.getElementById("mo0").innerHTML = "a";
+        // A relocated child loses dtls font feature setting
+        document.getElementById("mstyle0").appendChild(document.getElementById("mo1"));
+        // A change in style
+        document.getElementById("mstyle1").setAttribute("style", "font-family: 'dtls-1';");
+
+        // dtls gets added to descendants as well
+        var mo1 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mo");
+        mo1.innerHTML = "a";
+        document.getElementById("mrow0").appendChild(mo1);
+        // removing explicit dtls setting works
+        document.getElementById("mstyle4").setAttribute(
+          "style", "font-family: 'dtls-1';")
+        // setting an explicit dtls font feature
+        document.getElementById("mstyle5").setAttribute(
+          "style" , "font-family: 'dtls-1'; font-feature-settings: 'dtls' 0");
+
+        // Adding accent="true" applies dtls font feature
+        document.getElementById("mover1").setAttribute("accent", "true");
+        // Changing accent="true" to false removes dtls font feature
+        document.getElementById("mover2").setAttribute("accent", "false");
+        // Removing accent="true" removes dtls font feature
+        document.getElementById("mover3").removeAttribute("accent");
+
+        // Movablelimits disables dtls font feature
+        document.getElementById("mo2").setAttribute("movablelimits", "true");
+        // Removing movablelimits restores dtls font feature
+        document.getElementById("mo3").removeAttribute("movablelimits");
+
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate", doTest);
+    </script>
+  </body>
+</html>

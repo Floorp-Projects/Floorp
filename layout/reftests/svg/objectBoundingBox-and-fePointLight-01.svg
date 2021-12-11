@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for objectBoundingBox with fePointLight</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=544742 -->
+
+  <defs>
+    <filter id="light" primitiveUnits="objectBoundingBox">
+      <feSpecularLighting lighting-color="blue" surfaceScale="5" specularConstant="10" specularExponent="6">
+        <!-- Note: for z  the scalefactor is  31,622776601683793319988935444327
+                     sqrt(bbox.width*bbox.width + bbox.height*bbox.height)/sqrt(2) -->
+        <fePointLight x="0.75" y="1.5" z="-0.15811388300841896659994467722167"/>
+      </feSpecularLighting>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+
+  <rect x="20" y="20" width="40" height="20" filter="url(#light)" fill="black" stroke="none" />
+
+</svg>
+

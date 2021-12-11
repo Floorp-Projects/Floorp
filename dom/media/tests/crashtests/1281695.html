@@ -1,0 +1,24 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function zombieWindow()
+{
+    var frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+    var frameWin = frame.contentWindow;
+    frame.remove();
+    return frameWin;
+}
+
+function boom() {
+    zombieWindow().navigator.mozGetUserMedia({ "fake": true, "audio": true }, function(stream) {}, function(e) {});
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,41 @@
+<html>
+  <body>
+    <img src="file_browser_refresh_image.sjs">
+    <iframe src="file_browser_refresh_iframe.sjs"></iframe>
+    <div id="result"></div>
+
+    <canvas id="canvas" width="100" height="100"> </canvas>
+    <script>
+      const image = document.querySelector("img");
+      const iframe = document.querySelector("iframe");
+      const result = document.getElementById("result");
+
+      iframe.addEventListener("load", function() {
+        result.setAttribute(
+          "iframeContent",
+          iframe.contentDocument.body.textContent
+        );
+      });
+
+      // Ensure images are loaded
+      image.addEventListener("load", function() {
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+
+        result.setAttribute("imageDataURL", canvas.toDataURL());
+      });
+
+      // Ensure expired resources are still loaded
+      fetch('./file_browser_refresh_expired_resource.sjs').then((response) => {
+        let cacheControl = response.headers.get('Cache-Control');
+        result.setAttribute("expiredResourceCacheControl", cacheControl);
+      });
+
+      // Ensure non cacheable resources are still loaded
+      fetch('./file_browser_refresh_non_cacheable.sjs').then(() => {
+        result.setAttribute("nonCacheableResourceCompleted", true);
+      });
+    </script>
+  </body>
+</html>

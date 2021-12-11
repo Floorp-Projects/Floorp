@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: slugid
+Version: 2.0.0
+Summary: Base64 encoded uuid v4 slugs
+Home-page: http://taskcluster.github.io/slugid.py
+Author: Pete Moore
+Author-email: pmoore@mozilla.com
+License: MPL 2.0
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.5
+
+UNKNOWN
+
+

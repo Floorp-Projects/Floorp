@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Don't repeatedly prompt to save the same username and password
+    combination in the same document</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+  let chromeScript = runChecksAfterCommonInit();
+
+  SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popupshown to occur");
+</script>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+   <form id="form1" onsubmit="return false;">
+    <input  type="text"     name="uname" id="ufield">
+    <input  type="password" name="pword" id="pfield">
+    <button type="submit" id="submitBtn">Submit</button>
+   </form>
+</div>
+
+<pre id="test"></pre>
+<script>
+  /** Test for Login Manager: Don't repeatedly prompt to save the
+      same username and password combination in the same document **/
+
+  add_task(async function test_prompt_does_not_reappear() {
+    let username = document.getElementById("ufield");
+    let password = document.getElementById("pfield");
+    let submitButton = document.getElementById("submitBtn");
+
+    SpecialPowers.wrap(username).setUserInput("user");
+    SpecialPowers.wrap(password).setUserInput("pass");
+
+    let processedPromise = getSubmitMessage();
+    let promptShownPromise = promisePromptShown("passwordmgr-prompt-save");
+    submitButton.click();
+    await processedPromise;
+    await promptShownPromise;
+
+    is(username.value, "user", "Checking for filled username");
+    is(password.value, "pass", "Checking for filled password");
+
+    let promptShown = false;
+    promptShownPromise = promisePromptShown("passwordmgr-prompt-save").then(value => {
+      promptShown = true;
+    });
+    submitButton.click();
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    ok(!promptShown, "Prompt is not shown for the same login values a second time");
+  });
+</script>
+</body>
+</html>

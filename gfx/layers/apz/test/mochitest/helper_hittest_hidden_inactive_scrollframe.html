@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing with an inactive scrollframe that is visibility:hidden (bug 1673505)</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+</head>
+<body style="height: 110vh">
+  <div style="position:fixed; top:0px; bottom:0px; left:0px; right:0px; visibility:hidden">
+    <div style="overflow-y: scroll; height: 100vh" id="nested">
+      <div style="height: 200vh; background-color: red">
+        The body of this document is scrollable and is the main scrollable
+        element. On top of that we have a hidden fixed-pos item containing another
+        scrollframe, but this nested scrollframe is inactive.
+        Since the fixed-pos item is hidden, the nested scrollframe is hidden
+        too and shouldn't be the target of hit-testing. However, because it is
+        an inactive scrollframe, code to generate the "this is an inactive
+        scrollframe" area was marking it as hit-testable. This bug led to hit-
+        tests being mis-targeted to the nested scrollframe's layers id instead
+        of whatever was underneath.
+      </div>
+    </div>
+  </div>
+</body>
+<script type="application/javascript">
+
+function test(testDriver) {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  let hasViewId;
+  try {
+    utils.getViewId(document.getElementById("nested"));
+    hasViewId = true;
+  } catch (e) {
+    hasViewId = false;
+  }
+  if (!config.activateAllScrollFrames) {
+    ok(!hasViewId, "The nested scroller should be inactive and not have a view id");
+  }
+
+  checkHitResult(
+    hitTest(centerOf(document.body)),
+    APZHitResultFlags.VISIBLE,
+    utils.getViewId(document.scrollingElement),
+    utils.getLayersId(),
+    "hit went through the hidden scrollframe");
+}
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+
+</script>
+</html>

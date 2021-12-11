@@ -1,0 +1,19 @@
+skip-if(ThreadSanitizer) == unit-rem-div-fontsize.html unit-rem-ref.html
+== unit-rem-div-width-inner.html unit-rem-ref.html
+== unit-rem-div-width-outer.html unit-rem-ref.html
+fuzzy-if(winWidget,0-27,0-4) == unit-rem-iframe.html unit-rem-ref-iframe.html
+== unit-rem-root-fontsize.html unit-rem-ref-root-fontsize.html
+== unit-rem-root-fontsize.html unit-rem-ref2-root-fontsize.html
+== unit-rem-root-width.html unit-rem-ref-root-width.html
+== unit-rem.svg unit-rem-ref.svg
+== unit-vh-vw.html unit-vh-vw-ref.html
+== unit-vh-vw-zoom.html unit-vh-vw-zoom-ref.html
+fuzzy(0-1,0-4) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-51) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-29) fuzzy-if(cocoaWidget,0-1,0-29) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto-ref.html # fuzzy due to anti-aliasing pixels in scrollbar redendering
+
+# These tests should probably be removed, see bug 1393603.
+fails-if(!Android) == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll-ref.html
+fails-if(!Android) == unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x-ref.html
+fails-if(!Android) == unit-vh-vw-overflow-scroll-y.html unit-vh-vw-overflow-scroll-y-ref.html
+fuzzy-if(winWidget&&!nativeThemePref,0-4,0-51) fuzzy-if(gtkWidget,0-1,0-12) fuzzy-if(cocoaWidget,0-1,0-29) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-scroll.html
+
+== ch-width-1.html ch-width-1-ref.html

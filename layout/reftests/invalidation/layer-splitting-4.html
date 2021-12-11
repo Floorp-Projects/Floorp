@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>The two items in the scroll box should share a layer, despite all the other stuff that's going on around them</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid blue;
+  background: white;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+.opacity {
+  opacity: 0.9;
+  width: 200px;
+  height: 200px;
+  background-color: yellow;
+  will-change: opacity;
+}
+
+.overlap {
+  margin-top: -100px;
+}
+
+.scrollable {
+  position: absolute;
+  top: 20px;
+  left: 240px;
+  width: 400px;
+  height: 400px;
+  border: 1px solid black;
+  overflow: auto;
+}
+
+.scrollarea {
+  height: 800px;
+  padding: 40px;
+}
+
+.low-z, .mid-z, .high-z {
+  position: relative;
+}
+
+.low-z  { z-index: 1; }
+.mid-z  { z-index: 2; }
+.high-z { z-index: 3; }
+
+</style>
+
+<div class="content" reftest-assigned-layer="page-background"></div>
+<div class="overlap opacity"></div>
+<div class="overlap mid-z content" reftest-assigned-layer="on-top-of-opacity">
+  <!--
+    This item cannot merge into the page background layer because there's an
+    active container layer for the opacity in between.
+  -->
+</div>
+
+<div class="scrollable">
+  <div class="scrollarea">
+    <div class="low-z content" reftest-assigned-layer="scrolled-content"></div>
+    <div class="high-z overlap content" reftest-assigned-layer="scrolled-content"></div>
+  </div>
+</div>
+<script>
+
+var scrollable = document.querySelector(".scrollable");
+
+// Make .scrollable start out with active scrolling.
+scrollable.scrollTop = 0;
+scrollable.scrollTop = 20;
+
+</script>

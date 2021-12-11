@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <script>
+      function checkHaveLoadedNewDoc() {
+        let l = document.body.firstChild.contentWindow.location.href;
+        if (!l.endsWith("file_fragment_handling_during_load_frame2.sjs")) {
+          opener.ok(true, "Fine. We will check later.");
+          setTimeout(checkHaveLoadedNewDoc, 500);
+          return;
+        }
+        opener.ok(true, "Have loaded a new document.");
+        opener.finishTest();
+      }
+      function test() {
+        // Test that executing back() before load has started doesn't interrupt
+        // the load.
+        var ifr = document.getElementsByTagName("iframe")[0];
+        ifr.onload = checkHaveLoadedNewDoc;
+        ifr.contentWindow.location.hash = "b";
+        ifr.contentWindow.location.href = "file_fragment_handling_during_load_frame2.sjs";
+        history.back();
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(test, 0)"><iframe src="file_fragment_handling_during_load_frame1.html#a"></iframe>
+  </body>
+</html>

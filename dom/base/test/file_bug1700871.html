@@ -1,0 +1,18 @@
+<!doctype html>
+<a id="link-1" href="?1" onclick="window.open(this.href, 'childWin', 'height=300,width=600'); return false;">Open in window.</a>
+<form target="frame" method="get">
+  <input type=hidden name=counter value=0>
+  <iframe name="frame" href="file_bug1700871.html"></iframe>
+</form>
+<script>
+  (function submitForm() {
+    if (location.search) {
+      return; // Don't fork-bomb ourselves.
+    }
+
+    let counter = document.querySelector("input");
+    counter.value = ++counter.value;
+    document.querySelector("form").submit();
+    setTimeout(submitForm, 500);
+  }());
+</script>

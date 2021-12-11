@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+   -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="549491: 'The root node is never visible' exception when details of the root node are modified "
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <tree id="tree"
+        is="places-tree"
+        flatList="true"
+        flex="1">
+    <treecols>
+      <treecol label="Title" id="title" anonid="title" primary="true" style="-moz-box-ordinal-group: 1;" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol label="Date" anonid="date" flex="1"/>
+    </treecols>
+    <treechildren flex="1"/>
+  </tree>
+
+  <script type="application/javascript"><![CDATA[
+    /**
+     * Bug 549491
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=549491
+     *
+     * Ensures that changing the details of places tree's root-node doesn't
+     * throw.
+     */
+
+    function runTest() {
+      SimpleTest.waitForExplicitFinish();
+
+      (async function() {
+        await PlacesUtils.history.clear();
+
+        await PlacesTestUtils.addVisits({
+          uri: Services.io.newURI("http://example.tld/"),
+          transition: PlacesUtils.history.TRANSITION_TYPED
+        });
+
+        // Make a history query.
+        let query = PlacesUtils.history.getNewQuery();
+        let opts = PlacesUtils.history.getNewQueryOptions();
+        let queryURI = PlacesUtils.history.queryToQueryString(query, opts);
+
+        // Setup the places tree contents.
+        let tree = document.getElementById("tree");
+        tree.place = queryURI;
+
+        let rootNode = tree.result.root;
+        let obs = tree.view.QueryInterface(Ci.nsINavHistoryResultObserver);
+        obs.nodeHistoryDetailsChanged(rootNode, rootNode.time, rootNode.accessCount);
+        obs.nodeTitleChanged(rootNode, rootNode.title);
+        ok(true, "No exceptions thrown");
+
+        // Cleanup.
+        await PlacesUtils.history.clear();
+      })().then(SimpleTest.finish);
+    }
+  ]]></script>
+</window>

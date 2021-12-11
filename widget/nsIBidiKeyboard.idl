@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[builtinclass, scriptable, uuid(288dae24-76e2-43a3-befe-9d9fabe8014e)]
+interface nsIBidiKeyboard : nsISupports
+{
+  /**
+   * Inspects the installed keyboards and resets the bidi keyboard state
+   */
+  void reset();
+
+  /**
+   * Determines if the current keyboard language is right-to-left
+   * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
+   */
+  boolean isLangRTL();
+
+  /**
+   * Determines whether the system has at least one keyboard of each direction
+   * installed.
+   *
+   * @throws NS_ERROR_NOT_IMPLEMENTED if the widget layer does not provide this
+   * information.
+   */
+  readonly attribute boolean haveBidiKeyboards;
+};
+

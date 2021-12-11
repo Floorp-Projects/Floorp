@@ -1,0 +1,56 @@
+<html><head>
+<title>Testcase1 bug 309322 - Evil testcase using multiple display:table-caption causes crash</title>
+<style>
+*[toggle_style],*[toggle_style1],*[toggle_style2],*[toggle_style3],*[toggle_style4]{
+display:table-caption;
+}
+</style>
+<script>
+function doe(i){
+var x=document.body.getElementsByTagName('*');
+var xl=x.length;i=i+1;
+x[i-1].removeAttribute('toggle_style');
+if ((i)<xl) x[i].setAttribute('toggle_style','toggle_style');
+if ((i+1)<xl) {x[i+1].setAttribute('toggle_style1','toggle_style');
+x[i].removeAttribute('toggle_style1');
+}
+if ((i+2)<xl) {x[i+2].setAttribute('toggle_style2','toggle_style');
+x[i+1].removeAttribute('toggle_style2');
+}
+if ((i+3)<xl) {x[i+3].setAttribute('toggle_style3','toggle_style');
+x[i+2].removeAttribute('toggle_style3');
+}
+if ((i+4)<xl) {x[i+4].setAttribute('toggle_style4','toggle_style');
+x[i+3].removeAttribute('toggle_style4');
+}
+if ((i+4)==xl) {
+x[i+3].removeAttribute('toggle_style4');
+}
+if ((i+3)==xl) {
+x[i+2].removeAttribute('toggle_style3');
+}
+if ((i+2)==xl) {
+x[i+1].removeAttribute('toggle_style2');
+}
+if ((i+1)==xl) {
+x[i].removeAttribute('toggle_style1');
+}
+setTimeout(doe,20,i);
+}
+
+function doe2(){
+var x=document.links[0].cloneNode(true);
+document.links[0].appendChild(x);
+}
+</script>
+</head>
+<body onload="doe(1)">
+<button onclick="doe(1)">Clicking on this button should not crash Mozilla</button>
+<table><tbody><tr><td> 
+
+<span><br></span>
+<a href="#">Galloway<span>Galloway</span><span>Galloway</span><span>Galloway</span><span>Galloway</span><span>Galloway</span><span>Galloway</span><span>Galloway</span><span>Galloway</span></a>
+
+</td></tr></tbody></table>
+
+</body></html>

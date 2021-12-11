@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 383369 test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  /* sendAsyncMessage isn't actually a global - this just mollifies eslint */
+  /* global sendAsyncMessage */
+  "use strict";
+
+  // We want to start this test from an insecure context
+  loadAsInsecure = true;
+  // We don't want to go through the navigation back/forward test
+  bypassNavigationTest = true;
+
+  async function runTest() {
+    let script = SpecialPowers.loadChromeScript(function() {
+      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      // Force download to be w/o user assistance for our testing mime type
+      const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+      let handlerInfo =
+        mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
+      handlerInfo.preferredAction = Ci.nsIHandlerInfo.saveToDisk;
+      handlerInfo.alwaysAskBeforeHandling = false;
+      handlerInfo.preferredApplicationHandler = null;
+
+      const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
+                           .getService(Ci.nsIHandlerService);
+      handlerSvc.store(handlerInfo);
+
+      let profileDir = Services.dirsvc.get("ProfDS", Ci.nsIFile);
+      profileDir.append("downloads");
+
+      let prefBranch = Services.prefs.getBranch("browser.download.");
+
+      prefBranch.setCharPref("dir", profileDir.path);
+      prefBranch.setBoolPref("useDownloadDir", true);
+      prefBranch.setIntPref("folderList", 2);
+
+      const { Downloads } =
+        ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+      Downloads.getList(Downloads.PUBLIC).then(list => {
+        list.addView({
+          onDownloadAdded(aDownload) {
+            list.removeView(this);
+            aDownload.whenSucceeded().then(() => {
+              list.removeFinished();
+              sendAsyncMessage("navigate", "bug383369step2.html");
+            });
+          },
+        });
+        sendAsyncMessage("navigate", "download.auto");
+      }).catch(Cu.reportError);
+    });
+    script.addMessageListener("navigate", function(url) {
+      window.location = url;
+    });
+  }
+
+  async function afterNavigationTest() {}
+
+  testCleanUp = function cleanup() {
+    SpecialPowers.loadChromeScript(function() {
+      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+      let handlerInfo =
+        mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
+
+      const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
+                           .getService(Ci.nsIHandlerService);
+      handlerSvc.remove(handlerInfo);
+
+      let prefBranch = Services.prefs.getBranch("browser.download.");
+
+      const prefKeys = ["dir", "useDownloadDir", "folderList"];
+      for (let prefKey of prefKeys) {
+        if (prefBranch.prefHasUserValue(prefKey)) {
+          prefBranch.clearUserPref(prefKey);
+        }
+      }
+    });
+  };
+
+  </script>
+</head>
+
+<body>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+% resource autofill %res/autofill/
+  res/autofill/ (./*.jsm)
+  res/autofill/phonenumberutils/ (./phonenumberutils/*.jsm)
+  res/autofill/addressmetadata/ (./addressmetadata/*)
+  res/autofill/content/ (./content/*)
+#ifdef ANDROID
+  res/autofill/FormAutofillPrompter.jsm (./android/FormAutofillPrompter.jsm)
+  res/autofill/FormAutofillStorage.jsm (./android/FormAutofillStorage.jsm)
+#else
+  res/autofill/FormAutofillPrompter.jsm (./default/FormAutofillPrompter.jsm)
+  res/autofill/FormAutofillStorage.jsm (./default/FormAutofillStorage.jsm)
+#endif

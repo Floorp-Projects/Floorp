@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!--
+     This test verifies that we preserve whitespace at the beginning & end of
+     anonymous grid items (using "white-space: pre" so that it actually
+     occupies space and affects the rendering).
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CSS Test: Test that whitespace is preserved at the edges of anonymous grid items if 'white-space: pre' is set</title>
+    <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com"/>
+    <link rel="help" href="http://www.w3.org/TR/css3-grid/#grid-items"/>
+    <link rel="match" href="grid-whitespace-handling-2-ref.xhtml"/>
+    <link rel="stylesheet" type="text/css" href="support/ahem.css" />
+    <style>
+      div { height: 100px; }
+      div.grid {
+        white-space: pre;
+        border: 1px dashed blue;
+        width: 200px;
+        display: grid;
+        justify-content: space-around;
+      }
+      div.a {
+        width: 30px;
+        background: lightgreen;
+      }
+      div.b {
+        width: 20px;
+        background: lightblue;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- spaces around inline content at the beginning of grid -->
+    <div class="grid">  abc<div class="a"/></div>
+    <div class="grid">abc   <div class="a"/></div>
+    <div class="grid">  abc   <div class="a"/></div>
+
+    <!-- spaces around inline content at the end of grid -->
+    <div class="grid"><div class="a"/>  abc</div>
+    <div class="grid"><div class="a"/>abc   </div>
+    <div class="grid"><div class="a"/>  abc   </div>
+
+    <!-- whitespace around inline content in between grid items -->
+    <div class="grid"><div class="a"/>  abc<div class="b"/></div>
+    <div class="grid"><div class="a"/>abc   <div class="b"/></div>
+    <div class="grid"><div class="a"/>  abc   <div class="b"/></div>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=446663
+-->
+<head>
+  <title>Test for Bug 446663</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=446663">Mozilla Bug 446663</a>
+<p id="display">
+<style>#bug446663_a:focus{overflow:hidden}</style>
+<input id="bug446663_a"><input id="bug446663_b"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 446663 **/
+
+function test_edit_cmds(id) {
+
+  var elm = document.getElementById(id);
+  elm.focus();
+  elm.select();
+  SpecialPowers.wrap(elm).controllers.getControllerForCommand('cmd_cut')
+                         .doCommand('cmd_cut');
+  is(elm.value, '', id + " cut");
+
+  SpecialPowers.wrap(elm).controllers.getControllerForCommand('cmd_undo')
+                         .doCommand('cmd_undo');
+  is(elm.value, '123', id + " undo");
+}
+
+var inputHappened = false;
+function inputListener() {
+  inputHappened = true;
+  $(id).removeEventListener("input", inputListener);
+}
+
+var id = 'bug446663_a'
+var elm = document.getElementById(id);
+elm.focus();
+var x = document.body.offsetHeight;
+$(id).addEventListener("input", inputListener);
+sendChar('1');
+is(inputHappened, true, "How come no input?");
+sendChar('3');
+sendKey('LEFT')
+sendChar('2');
+elm.blur();
+x = document.body.offsetHeight;
+is(elm.value, '123', id + " edit");
+test_edit_cmds(id)
+
+id = 'bug446663_b'
+elm = document.getElementById(id);
+elm.focus();
+sendChar('1');
+elm.style.display = 'none'
+var x = document.body.offsetHeight;
+elm.style.display = 'inline'
+x = document.body.offsetHeight;
+sendChar('3');
+sendKey('LEFT')
+sendChar('2');
+elm.blur();
+x = document.body.offsetHeight;
+is(elm.value, '123', id + " edit");
+test_edit_cmds(id)
+
+</script>
+</pre>
+</body>
+</html>
+

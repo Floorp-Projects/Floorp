@@ -1,0 +1,56 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+DIRS = . builtins
+
+builtins: .
+
+PRIVATE_EXPORTS = \
+	ck.h		  \
+	ckfw.h		  \
+	ckfwm.h		  \
+	ckfwtm.h	  \
+	ckmd.h		  \
+	ckt.h		  \
+	$(NULL)
+
+EXPORTS =	   \
+	nssck.api  \
+	nssckepv.h \
+	nssckft.h  \
+	nssckfw.h  \
+	nssckfwc.h \
+	nssckfwt.h \
+	nssckg.h   \
+	nssckmdt.h \
+	nssckt.h   \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS =		   \
+	crypto.c   \
+	find.c	   \
+	hash.c	   \
+	instance.c \
+	mutex.c	   \
+	object.c   \
+	session.c  \
+	sessobj.c  \
+	slot.c	   \
+	token.c	   \
+	wrap.c	   \
+	mechanism.c \
+	$(NULL)
+
+REQUIRES = nspr
+
+LIBRARY_NAME = nssckfw
+SHARED_LIBRARY = $(NULL)
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

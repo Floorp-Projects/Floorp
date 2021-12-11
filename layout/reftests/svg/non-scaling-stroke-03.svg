@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <title>Test non-scaling-stroke repainting when ancestor transforms change</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=875069 -->
+  <script>
+
+function doTest() {
+  document.getElementById("g").setAttribute("transform", "scale(2)");
+  document.documentElement.removeAttribute('class');
+}
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+setTimeout(doTest, 4000); // fallback for running outside reftest
+
+  </script>
+  <g id="g">
+    <line x1="50" y1="50" x2="50" y2="100" stroke="blue" stroke-width="10"
+          style="vector-effect:non-scaling-stroke;"/>
+  </g>
+</svg>

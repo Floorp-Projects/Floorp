@@ -1,0 +1,68 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Reference for Filter Effects Module Level 1 feDropShadow</title>
+
+  <defs>
+    <filter id="dropShadow1">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feFlood flood-color="green"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="dropShadow2">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
+      <feOffset dx="-2" dy="-5" result="offsetblur"/>
+      <feFlood flood-color="green"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="dropShadow3">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2 5"/>
+      <feOffset dx="5" dy="5" result="offsetblur"/>
+      <feFlood flood-color="green" flood-opacity="0.2"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="dropShadow4" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
+      <feOffset dx="5" dy="5" result="offsetblur"/>
+      <feFlood flood-color="green"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="dropShadow5">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feFlood flood-color="green"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceAlpha"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g fill="yellow" transform="translate(10,10)">
+    <circle cx="75" cy="75" r="70" filter="url(#dropShadow1)" />
+    <circle cx="250" cy="75" r="70" filter="url(#dropShadow2)" />
+    <circle cx="425" cy="75" r="70" filter="url(#dropShadow3)" />
+    <circle cx="600" cy="75" r="70" filter="url(#dropShadow4)" />
+    <circle cx="75" cy="250" r="70" filter="url(#dropShadow5)" />
+  </g>
+</svg>

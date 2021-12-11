@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<style>
+#a {
+  background-color: rgb(0,255,0);
+  width: 200px;
+  height: 210px;
+}
+#b {
+  position: absolute;
+  top:80px;
+  filter:url(#f);
+}
+</style>
+  <svg height="0">
+    <filter id="f">
+      <feColorMatrix values="1 1 1 0 0
+                             1 1 1 0 0
+                             1 1 1 0 0
+                             0 0 0 1 0"/>
+
+    </filter>
+   </svg>
+<div id="a">
+<div id="b">.</div>
+</div>
+</html>

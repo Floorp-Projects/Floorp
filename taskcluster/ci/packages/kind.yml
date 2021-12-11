@@ -1,0 +1,25 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.try_job:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.cached_tasks:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    treeherder:
+        kind: build
+        platform: packages/opt
+        tier: 1
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run-on-projects: []
+
+jobs-from:
+    - debian.yml
+    - ubuntu.yml

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>CSS 2.1 Test Suite: anonymous table boxes</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#anonymous-boxes"/>
+    <meta name="flags" content="dom" />
+    <script>
+      function doTest() {
+        try {
+          document.normalize();
+        } catch (e) {}
+        var n = document.getElementById("t").nextSibling;
+        n.data = " ";
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+  <body style="font-family: monospace" onload="doTest()">
+    <span style="display: table-row">
+      <span style="display: table-cell">Row 1, Col 1</span>
+      <span style="display: table-cell">Row 1, Col 2</span>
+      <span style="display: table-cell">Row 1, Col 3</span>
+    </span>
+    <span style="display: table-row" id="t">
+      <span style="display: table-cell">Row 22, Col 1</span>
+      <span style="display: table-cell">Row 22, Col 2</span>
+      <span style="display: table-cell">Row 22, Col 3</span>
+    </span>This is a test<span style="display: table-row">
+      <span style="display: table-cell">Row 333, Col 1</span>
+      <span style="display: table-cell">Row 333, Col 2</span>
+      <span style="display: table-cell">Row 333, Col 3</span>
+    </span>
+  </body>
+</html>

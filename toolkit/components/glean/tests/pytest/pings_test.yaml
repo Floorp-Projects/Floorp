@@ -1,0 +1,116 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the built-in pings that are recorded by the Glean SDK. They
+# are automatically converted to Kotlin code at build time using the
+# `glean_parser` PyPI package.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
+
+not-baseline:
+  description: >
+    This ping is intended to provide metrics that are managed by the library
+    itself, and not explicitly set by the application or included in the
+    application's `metrics.yaml` file.
+    The `baseline` ping is automatically sent when the application is moved to
+    the background.
+  include_client_id: true
+  bugs:
+    - https://bugzilla.mozilla.org/1512938
+    - https://bugzilla.mozilla.org/1599877
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1599877#c25
+  notification_emails:
+    - glean-team@mozilla.com
+  reasons:
+    dirty_startup: |
+      The ping was submitted at startup, because the application process was
+      killed before the Glean SDK had the chance to generate this ping, when
+      going to background, in the last session.
+
+      *Note*: this ping will not contain the `glean.baseline.duration` metric.
+    background: |
+      The ping was submitted before going to background.
+    foreground: |
+      The ping was submitted when the application went to foreground, which
+      includes when the application starts.
+
+      *Note*: this ping will not contain the `glean.baseline.duration` metric.
+
+not-metrics:
+  description: >
+    The `metrics` ping is intended for all of the metrics that are explicitly
+    set by the application or are included in the application's `metrics.yaml`
+    file (except events).
+    The reported data is tied to the ping's *measurement window*, which is the
+    time between the collection of two `metrics` ping. Ideally, this window is
+    expected to be about 24 hours, given that the collection is scheduled daily
+    at 4AM. Data in the `ping_info` section of the ping can be used to infer the
+    length of this window.
+  include_client_id: true
+  bugs:
+    - https://bugzilla.mozilla.org/1512938
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1557048#c13
+  notification_emails:
+    - glean-team@mozilla.com
+  reasons:
+    overdue: |
+      The last ping wasn't submitted on the current calendar day, but it's after
+      4am, so this ping submitted immediately
+    today: |
+      The last ping wasn't submitted on the current calendar day, but it is
+      still before 4am, so schedule to send this ping on the current calendar
+      day at 4am.
+    tomorrow: |
+      The last ping was already submitted on the current calendar day, so
+      schedule this ping for the next calendar day at 4am.
+    upgrade: |
+      This ping was submitted at startup because the application was just
+      upgraded.
+    reschedule: |
+      A ping was just submitted. This ping was rescheduled for the next calendar
+      day at 4am.
+
+not-events:
+  description: >
+    The events ping's purpose is to transport all of the event metric
+    information. The `events` ping is automatically sent when the application is
+    moved to the background.
+  include_client_id: true
+  bugs:
+    - https://bugzilla.mozilla.org/1512938
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+  notification_emails:
+    - glean-team@mozilla.com
+  reasons:
+    startup: |
+      The ping was submitted at startup. The events ping is always sent if there
+      are any pending events at startup, because event timestamps can not be
+      mixed across runs of the application.
+    background: |
+      The ping was submitted before going to background.
+    max_capacity: |
+      The maximum number of events was reached (default 500 events).
+
+not-deletion-request:
+  description: >
+    This ping is submitted when a user opts out of
+    sending technical and interaction data to Mozilla.
+    This ping is intended to communicate to the Data Pipeline
+    that the user wishes to have their reported Telemetry data deleted.
+    As such it attempts to send itself at the moment the user
+    opts out of data collection.
+  include_client_id: true
+  send_if_empty: true
+  bugs:
+    - https://bugzilla.mozilla.org/1587095
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1587095#c6
+  notification_emails:
+    - glean-team@mozilla.com

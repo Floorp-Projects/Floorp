@@ -1,0 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInterfaceRequestor;
+interface nsIX509Cert;
+
+/**
+ * Functions that implement user interface dialogs to manage certificates.
+ */
+[scriptable, uuid(da871dab-f69e-4173-ab26-99fcd47b0e85)]
+interface nsICertificateDialogs : nsISupports
+{
+  /**
+   *  UI shown when a user is asked to download a new CA cert.
+   *  Provides user with ability to choose trust settings for the cert.
+   *  Asks the user to grant permission to import the certificate.
+   *
+   *  @param ctx A user interface context.
+   *  @param cert The certificate that is about to get installed.
+   *  @param trust A bit mask of trust flags.
+   *               See nsIX509CertDB for possible values.
+   *
+   *  @return true if the user allows to import the certificate.
+   */
+  [must_use]
+  boolean confirmDownloadCACert(in nsIInterfaceRequestor ctx,
+                                in nsIX509Cert cert,
+                                out unsigned long trust);
+
+  /**
+   *  UI shown when a user's personal certificate is going to be
+   *  exported to a backup file.
+   *  The implementation of this dialog should make sure to prompt the user to
+   *  type the password twice in order to confirm correct input.
+   *  The wording in the dialog should also motivate the user to enter a strong
+   *  password.
+   *
+   *  @param ctx A user interface context.
+   *  @param password The password provided by the user.
+   *
+   *  @return false if the user requests to cancel.
+   */
+  [must_use]
+  boolean setPKCS12FilePassword(in nsIInterfaceRequestor ctx,
+                                out AString password);
+
+  /**
+   *  UI shown when a user is about to restore a personal
+   *  certificate from a backup file.
+   *  The user is requested to enter the password
+   *  that was used in the past to protect that backup file.
+   *
+   *  @param ctx A user interface context.
+   *  @param password The password provided by the user.
+   *
+   *  @return false if the user requests to cancel.
+   */
+  [must_use]
+  boolean getPKCS12FilePassword(in nsIInterfaceRequestor ctx,
+                                out AString password);
+};
+
+%{C++
+#define NS_CERTIFICATEDIALOGS_CONTRACTID "@mozilla.org/nsCertificateDialogs;1"
+%}

@@ -1,0 +1,46 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/*
+ * Simple mapping service interface.
+ */
+
+[scriptable, uuid(78650582-4e93-4b60-8e85-26ebd3eb14ca)]
+interface nsIProperties : nsISupports
+{
+    /**
+     * Gets a property with a given name.
+     *
+     * @throws NS_ERROR_FAILURE if a property with that name doesn't exist.
+     * @throws NS_ERROR_NO_INTERFACE if the found property fails to QI to the
+     * given iid.
+     */
+    void get(in string prop, in nsIIDRef iid,
+             [iid_is(iid),retval] out nsQIResult result);
+
+    /**
+     * Sets a property with a given name to a given value.
+     */
+    void set(in string prop, in nsISupports value);
+
+    /**
+     * Returns true if the property with the given name exists.
+     */
+    boolean has(in string prop);
+
+    /**
+     * Undefines a property.
+     * @throws NS_ERROR_FAILURE if a property with that name doesn't
+     * already exist.
+     */
+    void undefine(in string prop);
+
+    /**
+     *  Returns an array of the keys.
+     */
+    Array<ACString> getKeys();
+};

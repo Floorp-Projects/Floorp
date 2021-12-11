@@ -1,0 +1,16 @@
+<style>
+#a { max-width: 1 }
+</style>
+<script>
+function go() {
+  a.value = ">"
+  a.selectionDirection = "foo"
+  b.requestFullscreen()
+  document.createElement("body").onresize = () => { a.selectionEnd = 0 }
+  setTimeout(window.close, 100)
+}
+</script>
+<body onload=go()>
+<textarea id="a"></textarea>
+<ol id="b">
+<div>

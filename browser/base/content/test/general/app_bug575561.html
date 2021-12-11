@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=575561
+-->
+  <head>
+    <title>Test for links in app tabs</title>
+  </head>
+  <body>
+    <a href="http://example.com/browser/browser/base/content/test/general/dummy_page.html">same domain</a>
+    <a href="http://test1.example.com/browser/browser/base/content/test/general/dummy_page.html">same domain (different subdomain)</a>
+    <a href="http://example.org/browser/browser/base/content/test/general/dummy_page.html">different domain</a>
+    <a href="http://example.org/browser/browser/base/content/test/general/dummy_page.html" target="foo">different domain (with target)</a>
+    <a href="http://www.example.com/browser/browser/base/content/test/general/dummy_page.html">same domain (www prefix)</a>
+    <a href="data:text/html,<!DOCTYPE html><html><body>Another Page</body></html>">data: URI</a>
+    <iframe src="app_subframe_bug575561.html"></iframe>
+  </body>
+</html>

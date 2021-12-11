@@ -1,0 +1,23 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Core"
+  component: "Graphics"
+
+# The source in this directory was copied from upstream by running the
+# update.py script from media/libyuv. Any changes made relative to upstream
+# should be reflected in that script, e.g. by applying patch files after the
+# copy step.
+
+origin:
+  name: "libyuv"
+  description: "YUV-format image scaling and conversion library"
+
+  url: "https://chromium.googlesource.com/libyuv/libyuv"
+  license: "BSD-3-Clause-Clear"
+
+  # update.sh will update this value
+  release: "98a0a157dcf5dee0882b2dfcc9578ab1f44afb12 (2018-03-02 19:09:38)"
+

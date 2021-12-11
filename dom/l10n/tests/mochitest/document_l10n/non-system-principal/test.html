@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DocumentL10n in HTML environment</title>
+  <link rel="localization" href="test.ftl"/>
+  <script type="text/javascript">
+    document.testsReadyPromise = new Promise((resolve) => {
+      // The test is in this file to ensure that we're testing
+      // the behavior in a non-system principal.
+      document.addEventListener("DOMContentLoaded", async () => {
+        await document.l10n.ready;
+
+        // Assign the localization from JS
+        let label = document.getElementById("label1");
+        document.l10n.setAttributes(
+          label,
+          "subtitle",
+          {
+            name: "Firefox",
+          }
+        );
+
+        const customMsg = await document.l10n.formatValue("custom-message");
+        document.getElementById("customMessage").textContent = customMsg;
+        resolve();
+      }, {once: true});
+    });
+  </script>
+</head>
+<body>
+  <h1 id="main-desc" data-l10n-id="page-title"></h1>
+
+  <p id="label1"></p>
+  <p id="customMessage"></p>
+</body>
+</html>

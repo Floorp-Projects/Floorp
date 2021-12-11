@@ -1,0 +1,63 @@
+<!doctype html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style id="sheet"></style>
+<div></div>
+<script>
+const NON_CONTENT_ACCESSIBLE_PROPERTIES = [
+  "-x-span",
+  "-x-lang",
+  "-x-text-zoom",
+  "-moz-list-reversed",
+  "-moz-window-shadow",
+  "-moz-window-opacity",
+  "-moz-window-transform",
+  "-moz-window-transform-origin",
+  "-moz-top-layer",
+  "-moz-script-size-multiplier",
+  "-moz-script-level",
+  "-moz-math-display",
+  "-moz-math-variant",
+  "-moz-script-min-size",
+  "-moz-font-smoothing-background-color",
+  "-moz-min-font-size-ratio",
+  "-moz-script-size-multiplier",
+  "-moz-default-appearance",
+  "-moz-inert",
+  "-moz-control-character-visibility",
+  "-moz-context-properties",
+];
+
+const sheet = document.getElementById("sheet");
+const div = document.querySelector("div");
+
+test(function() {
+  sheet.textContent = `div { color: initial }`;
+  assert_equals(sheet.sheet.cssRules[0].style.length, 1);
+}, "sanity");
+
+for (const prop of NON_CONTENT_ACCESSIBLE_PROPERTIES) {
+  test(function() {
+    sheet.textContent = `div { ${prop}: initial }`;
+    let block = sheet.sheet.cssRules[0].style;
+    assert_equals(
+      block.length,
+      0,
+      prop + " shouldn't be parsed in content"
+    );
+    block.setProperty(prop, "initial");
+    assert_equals(
+      block.length,
+      0,
+      prop + " shouldn't be settable via CSSOM in content"
+    );
+    assert_equals(
+      getComputedStyle(div).getPropertyValue(prop),
+      "",
+      prop + " shouldn't be accessible via CSSOM in content"
+    );
+    assert_false(CSS.supports(prop + ': initial'), prop + " shouldn't be exposed in CSS.supports");
+    assert_false(CSS.supports(prop, 'initial'), prop + " shouldn't be exposed in CSS.supports (2-value version)");
+  }, prop);
+}
+</script>

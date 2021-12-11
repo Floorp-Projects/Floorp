@@ -1,0 +1,21 @@
+---
+tryselect:
+    description: tools/tryselect integration tests
+    platform: linux1804-64/opt
+    treeherder:
+        symbol: cram(try)
+        kind: test
+        tier: 2
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: cramtest tools/tryselect
+    always-target: true
+    when:
+        files-changed:
+            - testing/mach_commands.py
+            - third_party/python/cram/**
+            - tools/tryselect/**

@@ -1,0 +1,197 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - gecko_taskgraph.transforms.openh264:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: "Build OpenH264 plugin"
+    treeherder:
+        kind: build
+        symbol: h264
+        tier: 2
+    run-on-projects: []
+    repo: 'https://github.com/cisco/openh264.git'
+    revision: '2e1774ab6dc6c43debb0b5b628bdf122a391d521'
+    worker:
+        chain-of-trust: true
+
+jobs:
+    linux32/opt:
+        attributes:
+            build_platform: linux32
+            build_type: opt
+        treeherder:
+            platform: linux32/opt
+        worker-type: b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/linux32.py
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-dump_syms
+                - linux64-nasm
+                - sysroot-i686-linux-gnu
+    linux64/opt:
+        attributes:
+            build_platform: linux64
+            build_type: opt
+        treeherder:
+            platform: linux64/opt
+        worker-type: b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/linux64.py
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-dump_syms
+                - linux64-nasm
+                - sysroot-x86_64-linux-gnu
+    macosx64/opt:
+        attributes:
+            build_platform: macosx64
+            build_type: opt
+        treeherder:
+            platform: macosx64/opt
+        worker-type: b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/macosx64.py
+        fetches:
+            toolchain:
+                - linux64-cctools-port
+                - linux64-clang
+                - linux64-dump_syms
+                - linux64-nasm
+                - macosx64-sdk-10.11
+    macosx64-aarch64/opt:
+        attributes:
+            build_platform: macosx64-aarch64
+            build_type: opt
+        treeherder:
+            platform: macosx64-aarch64/opt
+        worker-type: b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/macosx64-aarch64.py
+        fetches:
+            toolchain:
+                - linux64-cctools-port
+                - linux64-clang
+                - linux64-dump_syms
+                - macosx64-sdk-11.0
+    win32/opt:
+        attributes:
+            build_platform: win32
+            build_type: opt
+        treeherder:
+            platform: win32/opt
+        worker-type: b-win2012
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/win32.py
+            tooltool-downloads: internal
+        fetches:
+            toolchain:
+                - win64-clang
+                - win64-dump_syms
+                - win64-nasm
+    win64/opt:
+        attributes:
+            build_platform: win64
+            build_type: opt
+        treeherder:
+            platform: win64/opt
+        worker-type: b-win2012
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/win64.py
+            tooltool-downloads: internal
+        fetches:
+            toolchain:
+                - win64-clang
+                - win64-dump_syms
+                - win64-nasm
+    win64-aarch64/opt:
+        attributes:
+            build_platform: win64-aarch64
+            build_type: opt
+        treeherder:
+            platform: win64-aarch64/opt
+        worker-type: b-win2012
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/win64-aarch64.py
+            tooltool-downloads: internal
+        fetches:
+            toolchain:
+                - win64-clang
+                - win64-dump_syms

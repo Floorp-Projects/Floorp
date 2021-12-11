@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+]>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+  <title>Time Picker</title>
+  <link rel="stylesheet" href="chrome://global/skin/datetimeinputpickers.css"/>
+  <script src="chrome://global/content/bindings/timekeeper.js"></script>
+  <script src="chrome://global/content/bindings/spinner.js"></script>
+  <script src="chrome://global/content/bindings/timepicker.js"></script>
+</head>
+<body>
+  <div id="time-picker"></div>
+  <template id="spinner-template">
+    <div class="spinner-container">
+      <button class="up"/>
+      <div class="spinner"></div>
+      <button class="down"/>
+    </div>
+  </template>
+  <script>
+  /* import-globals-from widgets/timepicker.js */
+  // Create a TimePicker instance and prepare to be
+  // initialized by the "TimePickerInit" event from timepicker.xml
+  new TimePicker(document.getElementById("time-picker"));
+  </script>
+</body>
+</html>

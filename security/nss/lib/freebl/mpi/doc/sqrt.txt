@@ -1,0 +1,50 @@
+Square Root
+
+A simple iterative algorithm is used to compute the greatest integer
+less than or equal to the square root.  Essentially, this is Newton's
+linear approximation, computed by finding successive values of the
+equation:
+
+		    x[k]^2 - V
+x[k+1]	 =  x[k] - ------------
+	             2 x[k]
+
+...where V is the value for which the square root is being sought.  In
+essence, what is happening here is that we guess a value for the
+square root, then figure out how far off we were by squaring our guess
+and subtracting the target.  Using this value, we compute a linear
+approximation for the error, and adjust the "guess".  We keep doing
+this until the precision gets low enough that the above equation
+yields a quotient of zero.  At this point, our last guess is one
+greater than the square root we're seeking.
+
+The initial guess is computed by dividing V by 4, which is a heuristic
+I have found to be fairly good on average.  This also has the
+advantage of being very easy to compute efficiently, even for large
+values.
+
+So, the resulting algorithm works as follows:
+
+    x = V / 4   /* compute initial guess */
+    
+    loop
+	t = (x * x) - V   /* Compute absolute error  */
+	u = 2 * x         /* Adjust by tangent slope */
+	t = t / u
+
+	/* Loop is done if error is zero */
+	if(t == 0)
+	    break
+
+	/* Adjust guess by error term    */
+	x = x - t
+    end
+
+    x = x - 1
+
+The result of the computation is the value of x.
+
+------------------------------------------------------------------
+ This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.

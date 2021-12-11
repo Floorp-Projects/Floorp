@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the ability of MediaStream with multiple MediaStreamTracks</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="gUM_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+async function startTest() {
+  try {
+    await setupGetUserMediaTestPrefs();
+    let orgStream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+    let a = orgStream.getAudioTracks()[0];
+    let v = orgStream.getVideoTracks()[0];
+    let stream = new MediaStream([a, a, a, a, v, v, v].map(track => track.clone()));
+    let element = document.createElement("video");
+
+    element.onloadedmetadata = function() {
+      is(stream.getAudioTracks().length, 4, 'Length of audio tracks should be 4.');
+      is(stream.getVideoTracks().length, 3, 'Length of vudio tracks should be 3.');
+      SimpleTest.finish();
+    };
+
+    element.srcObject = stream;
+    element.play();
+  } catch (err) {
+    ok(false, 'Unexpected error fired with: ' + err);
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.track.enabled", true]
+    ]
+  }, startTest);
+
+</script>
+</pre>
+</body>
+</html>

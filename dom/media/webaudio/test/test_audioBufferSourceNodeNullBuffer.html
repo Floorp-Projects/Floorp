@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioBufferSourceNode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph(context) {
+    var source = context.createBufferSource();
+
+    source.start(0);
+    source.buffer = null;
+    is(source.buffer, null, "Try playing back a null buffer");
+    return source;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

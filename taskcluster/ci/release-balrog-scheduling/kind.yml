@@ -1,0 +1,88 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release:run_on_releases
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.scriptworker:add_balrog_scopes
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-bouncer-check
+    - release-push-langpacks
+
+job-defaults:
+    run-on-projects: []
+    shipping-phase: ship
+    worker-type: balrog
+    worker:
+        implementation: balrog
+        balrog-action: schedule
+
+jobs:
+    firefox:
+        description: Schedule Firefox publishing in balrog
+        name: release-firefox_schedule_publishing_in_balrog
+        shipping-product: firefox
+        worker:
+            product: firefox
+            publish-rules:
+                by-release-level:
+                    production:
+                        by-release-type:
+                            beta: [32]
+                            release: [145]
+                            esr78: [3820]
+                            esr91: [17638]
+                            default: []
+                    staging:
+                        by-release-type:
+                            beta: [32]
+                            release: [145]
+                            esr78: [887]
+                            esr91: [889]
+                            default: []
+            background-rate:
+                by-release-type:
+                    beta:
+                        by-beta-number:
+                            '1': 25
+                            '2': 50
+                            '3': 100
+                            default: null
+                    default: null
+            force-fallback-mapping-update:
+                by-release-type:
+                    beta:
+                        by-beta-number:
+                            '1': true
+                            default: false
+                    default: false
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(BSFx)
+            tier: 1
+            kind: build
+    devedition:
+        description: Schedule Devedition publishing in balrog
+        name: release-devedition_schedule_publishing_in_balrog
+        shipping-product: devedition
+        worker:
+            product: devedition
+            publish-rules: [10]
+            background-rate:
+                by-release-type:
+                    beta: null
+                    default: null
+            force-fallback-mapping-update:
+                by-release-type:
+                    beta: true
+                    default: false
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(BSDev)
+            tier: 1
+            kind: build

@@ -1,0 +1,160 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBackgroundLSSnapshot;
+
+include PBackgroundLSSharedTypes;
+
+include "mozilla/dom/localstorage/SerializationHelpers.h";
+
+using mozilla::dom::LSSnapshot::LoadState
+  from "mozilla/dom/LSSnapshot.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * Initial LSSnapshot state as produced by Datastore::GetSnapshotLoadInfo.  See
+ * `LSSnapshot::LoadState` for more details about the possible states and a
+ * high level overview.
+ */
+struct LSSnapshotInitInfo
+{
+  /**
+   * Boolean indicating whether the `key` provided as an argument to the
+   * PBackgroundLSSnapshot constructor did not exist in the Datastore and should
+   * be treated as an unknown and therefore undefined value. Note that `key` may
+   * have been provided as a void string, in which case this value is forced to
+   * be false.
+   */
+  bool addKeyToUnknownItems;
+  /**
+   * As many key/value or key/void pairs as the snapshot prefill byte budget
+   * allowed.
+   */
+  LSItemInfo[] itemInfos;
+  /**
+   * The total number of key/value pairs in LocalStorage for this origin at the
+   * time the snapshot was created.  (And the point of the snapshot is to
+   * conceptually freeze the state of the Datastore in time, so this value does
+   * not change despite what other LSDatabase objects get up to in other
+   * processes.)
+   */
+  uint32_t totalLength;
+  /**
+   * The current amount of LocalStorage usage as measured by the summing the
+   * nsString Length() of both the key and the value over all stored pairs.
+   */
+  int64_t initialUsage;
+  /**
+   * The amount of storage allowed to be used by the Snapshot without requesting
+   * more storage space via IncreasePeakUsage.  This is the `initialUsage` plus
+   * 0 or more bytes of space.  If space was available, the increase will be the
+   * `requestedSize` from the PBackgroundLSSnapshot constructor.  If the
+   * LocalStorage usage was already close to the limit, then the fallback is the
+   * `minSize` requested, or 0 if there wasn't space for that.
+   */
+  int64_t peakUsage;
+  // See `LSSnapshot::LoadState` in `LSSnapshot.h`
+  LoadState loadState;
+  /**
+   * Boolean indicating whether there where cross-process observers registered
+   * for this origin at the time the snapshot was created.
+   */
+  bool hasOtherProcessObservers;
+};
+
+/**
+ * This protocol is asynchronously created via constructor on PBackground but
+ * has synchronous semantics from the perspective of content on the main thread.
+ * The construction potentially involves waiting for disk I/O to load the
+ * LocalStorage data from disk as well as related QuotaManager checks, so async
+ * calls to PBackground are the only viable mechanism because blocking
+ * PBackground is not acceptable.  (Note that an attempt is made to minimize any
+ * I/O latency by triggering preloading from
+ * ContentParent::AboutToLoadHttpFtpDocumentForChild, the central place
+ * for pre-loading.)
+ */
+sync protocol PBackgroundLSDatabase
+{
+  manager PBackground;
+  manages PBackgroundLSSnapshot;
+
+parent:
+  // The DeleteMe message is used to avoid a race condition between the parent
+  // actor and the child actor. The PBackgroundLSDatabase protocol could be
+  // simply destroyed by sending the __delete__ message from the child side.
+  // However, that would destroy the child actor immediatelly and the parent
+  // could be sending a message to the child at the same time resulting in a
+  // routing error since the child actor wouldn't exist anymore. A routing
+  // error typically causes a crash. The race can be prevented by doing the
+  // teardown in two steps. First, we send the DeleteMe message to the parent
+  // and the parent then sends the __delete__ message to the child.
+  async DeleteMe();
+
+  /**
+   * Sent in response to a `RequestAllowToClose` message once the snapshot
+   * cleanup has happened OR from LSDatabase's destructor if AllowToClose has
+   * not already been reported.
+   */
+  async AllowToClose();
+
+  /**
+   * Invoked to create an LSSnapshot backed by a Snapshot in PBackground that
+   * presents an atomic and consistent view of the state of the authoritative
+   * Datastore state in the parent.
+   *
+   * This needs to be synchronous because LocalStorage's semantics are
+   * synchronous.  Note that the Datastore in the PBackground parent already
+   * has the answers to this request immediately available without needing to
+   * consult any other threads or perform any I/O.  Additionally, the response
+   * is explicitly bounded in size by the tunable snapshot prefill byte limit.
+   *
+   * @param key
+   *   If key is non-void, then the snapshot is being triggered by a direct
+   *   access to a localStorage key (get, set, or removal, with set/removal
+   *   requiring the old value in order to properly populate the "storage"
+   *   event), the key being requested. It's possible the key is not present in
+   *   localStorage, in which case LSSnapshotInitInfo::addKeyToUnknownItems will
+   *   be true indicating that there is no such key/value pair, otherwise it
+   *   will be false.
+   * @param increasePeakUsage
+   *   Whether the parent should attempt to pre-allocate some amount of quota
+   *   usage to the Snapshot.
+   */
+  sync PBackgroundLSSnapshot(nsString documentURI,
+                             nsString key,
+                             bool increasePeakUsage,
+                             int64_t requestedSize,
+                             int64_t minSize)
+    returns (LSSnapshotInitInfo initInfo);
+
+child:
+  /**
+   * Only sent by the parent in response to the child's DeleteMe request.
+   */
+  async __delete__();
+
+  /**
+   * Request to close the LSDatabase, checkpointing and finishing any
+   * outstanding snapshots so no state is lost.  This request is issued when
+   * QuotaManager is shutting down or is aborting operations for an origin or
+   * process.  Once the snapshot has cleaned up, AllowToClose will be sent to
+   * the parent.
+   *
+   * Note that the QuotaManager shutdown process is more likely to happen in
+   * unit tests where we explicitly reset the QuotaManager.  At runtime, we
+   * expect windows to be closed and content processes terminated well before
+   * QuotaManager shutdown would actually occur.
+   *
+   * Also, Operations are usually aborted for an origin due to privacy API's
+   * clearing data for an origin.  Operations are aborted for a process by
+   * ContentParent::ShutDownProcess.
+   */
+  async RequestAllowToClose();
+};
+
+} // namespace dom
+} // namespace mozilla

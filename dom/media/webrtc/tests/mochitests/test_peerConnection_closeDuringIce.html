@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1087629",
+    title: "Close PCs during ICE connectivity check"
+  });
+
+// Test closeDuringIce to simulate problems during peer connections
+
+
+function PC_LOCAL_SETUP_NULL_ICE_HANDLER(test) {
+  test.pcLocal.setupIceCandidateHandler(test, function() {}, function () {});
+}
+function PC_REMOTE_SETUP_NULL_ICE_HANDLER(test) {
+  test.pcRemote.setupIceCandidateHandler(test, function() {}, function () {});
+}
+function PC_REMOTE_ADD_FAKE_ICE_CANDIDATE(test) {
+  var cand = {"candidate":"candidate:0 1 UDP 2130379007 192.0.2.1 12345 typ host","sdpMid":"","sdpMLineIndex":0};
+  test.pcRemote.storeOrAddIceCandidate(cand);
+  info(test.pcRemote + " Stored fake candidate: " + JSON.stringify(cand));
+}
+function PC_LOCAL_ADD_FAKE_ICE_CANDIDATE(test) {
+  var cand = {"candidate":"candidate:0 1 UDP 2130379007 192.0.2.2 56789 typ host","sdpMid":"","sdpMLineIndex":0};
+    test.pcLocal.storeOrAddIceCandidate(cand);
+  info(test.pcLocal + " Stored fake candidate: " + JSON.stringify(cand));
+}
+function PC_LOCAL_CLOSE_DURING_ICE(test) {
+  return test.pcLocal.iceChecking.then(() => {
+    test.pcLocal.onsignalingstatechange = function () {};
+    test.pcLocal.close();
+    });
+}
+function PC_REMOTE_CLOSE_DURING_ICE(test) {
+  return test.pcRemote.iceChecking.then(() => {
+    test.pcRemote.onsignalingstatechange = function () {};
+    test.pcRemote.close();
+    });
+}
+function PC_LOCAL_WAIT_FOR_ICE_CHECKING(test) {
+  var resolveIceChecking;
+  test.pcLocal.iceChecking = new Promise(r => resolveIceChecking = r);
+  test.pcLocal.ice_connection_callbacks.checkIceStatus = () => {
+	if (test.pcLocal._pc.iceConnectionState === "checking") {
+	  resolveIceChecking();
+	}
+  }
+}
+function PC_REMOTE_WAIT_FOR_ICE_CHECKING(test) {
+  var resolveIceChecking;
+  test.pcRemote.iceChecking = new Promise(r => resolveIceChecking = r);
+  test.pcRemote.ice_connection_callbacks.checkIceStatus = () => {
+	if (test.pcRemote._pc.iceConnectionState === "checking") {
+	  resolveIceChecking();
+	}
+  }
+}
+
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.replace("PC_LOCAL_SETUP_ICE_HANDLER", PC_LOCAL_SETUP_NULL_ICE_HANDLER);
+  test.chain.replace("PC_REMOTE_SETUP_ICE_HANDLER", PC_REMOTE_SETUP_NULL_ICE_HANDLER);
+  test.chain.insertAfter("PC_REMOTE_SETUP_NULL_ICE_HANDLER", PC_LOCAL_WAIT_FOR_ICE_CHECKING);
+  test.chain.insertAfter("PC_LOCAL_WAIT_FOR_ICE_CHECKING", PC_REMOTE_WAIT_FOR_ICE_CHECKING);
+  test.chain.removeAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION");
+  test.chain.append([PC_REMOTE_ADD_FAKE_ICE_CANDIDATE, PC_LOCAL_ADD_FAKE_ICE_CANDIDATE,
+	PC_LOCAL_CLOSE_DURING_ICE, PC_REMOTE_CLOSE_DURING_ICE]);
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

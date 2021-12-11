@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      function doTest() {
+        window.frames[0].location =
+          'javascript:document.write(""); document.close(); ' +
+          'parent.continueTest();'
+      }
+
+      function continueTest() {
+        // Do this part async just in case
+        setTimeout(function() {
+          window.frames[0].document.body.innerHTML =
+            "<img src='passouter.png' " +
+            "onload='window.parent.document.documentElement.className = &quot;&quot;'>";
+                                                                                        }, 0);
+      }
+      document.addEventListener("MozReftestInvalidate", doTest);
+    </script>
+  </head>
+  <body>
+    <iframe src="about:blank"></iframe>
+  </body>
+</html>
+  

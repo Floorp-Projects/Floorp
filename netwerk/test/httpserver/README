@@ -1,0 +1,101 @@
+httpd.js README
+===============
+
+httpd.js is a small cross-platform implementation of an HTTP/1.1 server in
+JavaScript for the Mozilla platform.
+
+httpd.js may be used as an XPCOM component, as an inline script in a document
+with XPCOM privileges, or from the XPCOM shell (xpcshell).  Currently, its most-
+supported method of use is from the XPCOM shell, where you can get all the
+dynamicity of JS in adding request handlers and the like, but component-based
+equivalent functionality is planned.
+
+
+Using httpd.js as an XPCOM Component
+------------------------------------
+
+First, create an XPT file for nsIHttpServer.idl, using the xpidl tool included
+in the Mozilla SDK for the environment in which you wish to run httpd.js.  See
+<http://developer.mozilla.org/en/docs/XPIDL:xpidl> for further details on how to
+do this.
+
+Next, register httpd.js and nsIHttpServer.xpt in your Mozilla application.  In
+Firefox, these simply need to be added to the /components directory of your XPI.
+Other applications may require use of regxpcom or other techniques; consult the
+applicable documentation for further details.
+
+Finally, load httpd.js into the current file, and create an instance of the
+server using the following command:
+
+  var server = new nsHttpServer();
+
+At this point you'll want to initialize the server, since by default it doesn't
+serve many useful paths.  For more information on this, see the IDL docs for the
+nsIHttpServer interface in nsIHttpServer.idl, particularly for
+registerDirectory (useful for mapping the contents of directories onto request
+paths), registerPathHandler (for setting a custom handler for a specific path on
+the server, such as CGI functionality), and registerFile (for mapping a file to
+a specific path).
+
+Finally, you'll want to start (and later stop) the server.  Here's some example
+code which does this:
+
+  server.start(8080);  // port on which server will operate
+
+  // ...server now runs and serves requests...
+
+  server.stop();
+
+This server will only respond to requests on 127.0.0.1:8080 or localhost:8080.
+If you want it to respond to requests at different hosts (say via a proxy
+mechanism), you must use server.identity.add() or server.identity.setPrimary()
+to add it.
+
+
+Using httpd.js as an Inline Script or from xpcshell
+---------------------------------------------------
+
+Using httpd.js as a script or from xpcshell isn't very different from using it
+as a component; the only real difference lies in how you create an instance of
+the server.  To create an instance, do the following:
+
+  var server = new nsHttpServer();
+
+You now can use |server| exactly as you would when |server| was created as an
+XPCOM component.  Note, however, that doing so will trample over the global
+namespace, and global values defined in httpd.js will leak into your script.
+This may typically be benign, but since some of the global values defined are
+constants (specifically, Cc/Ci/Cr as abbreviations for the classes, interfaces,
+and results properties of Components), it's possible this trampling could
+break your script.  In general you should use httpd.js as an XPCOM component
+whenever possible.
+
+
+Known Issues
+------------
+
+httpd.js makes no effort to time out requests, beyond any the socket itself
+might or might not provide.  I don't believe it provides any by default, but
+I haven't verified this.
+
+Every incoming request is processed by the corresponding request handler
+synchronously.  In other words, once the first CRLFCRLF of a request is
+received, the entire response is created before any new incoming requests can be
+served.  I anticipate adding asynchronous handler functionality in bug 396226,
+but it may be some time before that happens.
+
+There is no way to access the body of an incoming request.  This problem is
+merely a symptom of the previous one, and they will probably both be addressed
+at the same time.
+
+
+Other Goodies
+-------------
+
+A special testing function, |server|, is provided for use in xpcshell for quick
+testing of the server; see the source code for details on its use.  You don't
+want to use this in a script, however, because doing so will block until the
+server is shut down.  It's also a good example of how to use the basic
+functionality of httpd.js, if you need one.
+
+Have fun!

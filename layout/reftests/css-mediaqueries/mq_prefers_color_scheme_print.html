@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<html class="reftest-paged">
+<title>prefers-color-scheme: light in print mode</title>
+<style>
+div {
+  width: 100px;
+  height: 100px;
+}
+
+@media (prefers-color-scheme: light) {
+  div { background-color: green; }
+}
+@media (prefers-color-scheme: dark) {
+  div { background-color: red; }
+}
+</style>
+<div></div>
+</html>

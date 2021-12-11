@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;">
+<!-- Test if poster hides after playing with autoplay. -->
+<video src="black140x100.webm"
+       poster="blue250x200.png"
+       preload="auto"
+       autoplay
+       onplaying="setTimeout(function(){document.documentElement.className = '';},0);"></video>
+</body>
+</html>

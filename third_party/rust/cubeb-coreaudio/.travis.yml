@@ -1,0 +1,22 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+os:
+  - osx
+env:
+  - RUST_BACKTRACE=1
+install:
+  - sh install_rustfmt_clippy.sh
+before_script:
+  - rustc --version
+  - cargo --version
+script:
+  - cargo build --verbose
+  - sh run_tests.sh
+  - sh run_sanitizers.sh
+jobs:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true

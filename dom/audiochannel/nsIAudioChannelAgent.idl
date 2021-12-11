@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindow;
+
+typedef uint32_t nsSuspendedTypes;
+
+[scriptable, builtinclass, uuid(2822a840-f009-11e5-a837-0800200c9a66)]
+interface nsISuspendedTypes : nsISupports
+{
+  /**
+   * The suspended enum is used for delaying autoplay video in non-visited tab
+   *
+   * Note: the "remote side" must control the AudioChannelAgent using
+   * nsIAudioChannelAgentCallback.windowSuspendChanged() callback instead using
+   * play/pause methods or any button in the webpage.
+   *
+   * - SUSPENDED_BLOCK
+   * It's used to prevent auto-playing media in inactive page in order to
+   * reduce the power consumption, and the media can't be resumed until the
+   * page becomes active again. It would change the internal state of
+   * MediaElement when it's being blocked/resumed, so it won't trigger the
+   * related JS event. eg. "play" and "pause" event.
+   */
+
+  const uint32_t NONE_SUSPENDED             = 0;
+  const uint32_t SUSPENDED_BLOCK            = 1;
+};
+
+[uuid(15c05894-408e-4798-b527-a8c32d9c5f8c)]
+interface nsIAudioChannelAgentCallback : nsISupports
+{
+  /**
+   * Notified when the window volume/mute is changed
+   */
+  void windowVolumeChanged(in float aVolume, in bool aMuted);
+
+   /**
+   * Notified when the window needs to be suspended or resumed.
+   */
+  void windowSuspendChanged(in uint32_t aSuspend);
+
+  /**
+   * Notified when the capture state is changed.
+   */
+  void windowAudioCaptureChanged(in bool aCapture);
+};
+
+/**
+ * This interface provides an agent for gecko components to participate
+ * in the audio channel service. Gecko components are responsible for
+ *   1. Notifying the agent when they start/stop using this channel.
+ *   2. Notifying the agent when they are audible.
+ *
+ * The agent will invoke a callback to notify Gecko components of
+ *   1. Changes to the playable status of this channel.
+ */
+
+[uuid(4d212770-5d7b-446f-9394-632e351d96ee)]
+interface nsIAudioChannelAgent : nsISupports
+{
+  const long AUDIO_AGENT_STATE_NORMAL               = 0;
+  const long AUDIO_AGENT_STATE_MUTED                = 1;
+  const long AUDIO_AGENT_STATE_FADED                = 2;
+
+  /**
+   * Initialize the agent with a channel type.
+   * Note: This function should only be called once.
+   *
+   * @param window
+   *    The window
+   * @param callback
+   *    1. Once the playable status changes, agent uses this callback function
+   *       to notify Gecko component.
+   *    2. The callback is allowed to be null. Ex: telephony doesn't need to
+   *       listen change of the playable status.
+   *    3. The AudioChannelAgent keeps a strong reference to the callback
+   *       object.
+   */
+  void init(in mozIDOMWindow window, in nsIAudioChannelAgentCallback callback);
+
+  /**
+   * This method is just like init(), except the audio channel agent keeps a
+   * weak reference to the callback object.
+   *
+   * In order for this to work, |callback| must implement
+   * nsISupportsWeakReference.
+   */
+  void initWithWeakCallback(in mozIDOMWindow window,
+                            in nsIAudioChannelAgentCallback callback);
+
+  /**
+   * Notify the agent that we want to start playing.
+   * Note: Gecko component SHOULD call this function first then start to
+   *          play audio stream only when return value is true.
+   */
+  void notifyStartedPlaying(in uint8_t audible);
+
+  /**
+   * Notify the agent we no longer want to play.
+   *
+   * Note : even if notifyStartedPlaying() returned false, the agent would
+   * still be registered with the audio channel service and receive callbacks
+   * for status changes. So notifyStoppedPlaying must still eventually be
+   * called to unregister the agent with the channel service.
+   */
+  void notifyStoppedPlaying();
+
+
+  /**
+   * Notify agent that we already start producing audible data.
+   *
+   * Note : sometime audio might become silent during playing, this method is used to
+   * notify the actually audible state to other services which want to know
+   * about that, ex. tab sound indicator.
+   */
+  void notifyStartedAudible(in uint8_t audible, in uint32_t reason);
+};

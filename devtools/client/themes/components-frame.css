@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Frame Component
+ * Styles for React component at `devtools/client/shared/components/Frame.js`
+ */
+
+.theme-light {
+  --frame-link-line-color: var(--theme-highlight-blue);
+  --frame-link-source: var(--theme-highlight-purple);
+}
+
+.theme-dark {
+  --frame-link-line-color: hsl(210, 40%, 60%);
+  --frame-link-source: var(--blue-40);
+}
+
+.stack-trace {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+}
+
+.stack-trace .frame-link-async-cause {
+  grid-column: 1 / -1;
+}
+
+.stack-trace .frame-link {
+  display: contents;
+}
+
+.frame-link-async-cause {
+  color: var(--theme-comment);
+}
+
+.frame-link .frame-link-source {
+  color: var(--frame-link-source);
+}
+
+.frame-link a.frame-link-source {
+  cursor: pointer;
+  text-decoration: none;
+  font-style: normal;
+}
+
+.frame-link a.frame-link-source:hover {
+  text-decoration: underline;
+}
+
+.frame-link .frame-link-host {
+  margin-inline-start: 5px;
+  font-size: 90%;
+  color: var(--theme-comment);
+}
+
+.frame-link .frame-link-function-display-name {
+  margin-inline-end: 5px;
+  color: var(--console-output-color, currentColor);
+}
+
+.frame-link .frame-link-line {
+  color: var(--frame-link-line-color);
+}
+
+.focused .frame-link .frame-link-source,
+.focused .frame-link .frame-link-line,
+.focused .frame-link .frame-link-host {
+  color: var(--theme-selection-color);
+}

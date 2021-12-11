@@ -1,0 +1,27 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Select non-editable content in an editor</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div:focus {
+    outline: 3px solid blue;
+  }
+</style>
+<div contenteditable="true" spellcheck="false">
+  xx<img contenteditable="false" src="image_rgrg-256x256.png">xxx
+</div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable="true"]').focus();
+  requestAnimationFrame(function() {
+    // Move after the two x
+    for (let i = 0; i < 2; ++i) {
+      synthesizeKey("KEY_ArrowRight");
+    }
+    // Select <img>
+    synthesizeKey("KEY_ArrowRight", { shiftKey: true });
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>

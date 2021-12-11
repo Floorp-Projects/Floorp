@@ -1,0 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file defines the AES GCM tests
+#
+# expected
+#   return	pk11gcmtest		Test Case name
+#    value	input file
+#  -------	----------------------	-----------------------
+	0	gcmDecrypt128.rsp	NIST_AES128_GCM_Decrypt
+	0	gcmDecrypt192.rsp	NIST_AES192_GCM_Decrypt
+	0	gcmDecrypt256.rsp	NIST_AES256_GCM_Decrypt
+	0	gcmEncryptExtIV128.rsp	NIST_AES128_GCM_Encrypt
+	0	gcmEncryptExtIV192.rsp	NIST_AES192_GCM_Encrypt
+	0	gcmEncryptExtIV256.rsp	NIST_AES256_GCM_Encrypt

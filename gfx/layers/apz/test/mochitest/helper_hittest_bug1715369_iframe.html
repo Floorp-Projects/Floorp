@@ -1,0 +1,13 @@
+<style>
+body, html { margin: 0; }
+</style>
+<script>
+  window.addEventListener("message", event => {
+    if (event.data == "gotclick") {
+      // forward to parent
+      parent.postMessage("gotclick", "*");
+    }
+  });
+</script>
+<iframe style="border: 1px;" frameborder="1" src="http://example.org/tests/gfx/layers/apz/test/mochitest/helper_hittest_bug1715369_oopif.html"></iframe>
+<div style="width:10px; height: 500vh;"></div>

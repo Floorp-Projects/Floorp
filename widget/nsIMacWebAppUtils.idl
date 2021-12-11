@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIMacWebAppUtils;
+
+[scriptable, function, uuid(8c899c4f-58c1-4b74-9034-3bb64e484b68)]
+interface nsITrashAppCallback : nsISupports
+{
+  void trashAppFinished(in nsresult rv);
+};
+
+/**
+ * Allow MozApps API to locate and manipulate natively installed apps
+ */
+
+[scriptable, uuid(c69cf343-ea41-428b-b161-4655fd54d8e7)]
+interface nsIMacWebAppUtils : nsISupports {
+  /**
+   * Find the path for an app with the given signature.
+   */
+  AString pathForAppWithIdentifier(in AString bundleIdentifier);
+
+  /**
+   * Launch the app with the given identifier, if it exists.
+   */
+  void launchAppWithIdentifier(in AString bundleIdentifier);
+
+  /**
+   * Move the app from the given directory to the Trash.
+   */
+  void trashApp(in AString path, in nsITrashAppCallback callback);
+};

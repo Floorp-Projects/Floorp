@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test that we reject syntax errors listed in descriptor_database.js</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="descriptor_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var gStyleElement = document.createElement("style");
+gStyleElement.setAttribute("type", "text/css");
+document.getElementsByTagName("head")[0].appendChild(gStyleElement);
+var gSheet = gStyleElement.sheet;
+gSheet.insertRule("@font-face { }", 0);
+var gRule = gSheet.cssRules[0];
+var gDeclaration = gRule.style;
+
+function fake_set_property(descriptor, value) {
+  gSheet.deleteRule(0);
+  gSheet.insertRule("@font-face { " + descriptor + ": " + value + "}", 0);
+  gRule = gSheet.cssRules[0];
+  gDeclaration = gRule.style;
+}
+
+for (var descriptor in gCSSFontFaceDescriptors) {
+  var info = gCSSFontFaceDescriptors[descriptor];
+  for (var idx in info.invalid_values) {
+    var badval = info.invalid_values[idx];
+
+//    // We don't implement SetProperty yet (bug 443978).
+//    gDeclaration.setProperty(descriptor, badval, "");
+    fake_set_property(descriptor, badval);
+
+    is(gDeclaration.getPropertyValue(descriptor), "",
+       "invalid value '" + badval + "' not accepted for '" + descriptor +
+       "' descriptor");
+
+    gDeclaration.removeProperty(descriptor);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

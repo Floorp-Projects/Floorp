@@ -1,0 +1,67 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+"use strict";
+
+function nextTest() {
+  (function(){
+    function workerfunc() {
+      var subworker = new Worker("about:blank");
+      subworker.onerror = function(e) {
+        e.preventDefault();
+        postMessage("ERROR");
+      }
+    }
+    var b = new Blob([workerfunc+'workerfunc();']);
+    var u = URL.createObjectURL(b);
+    function callworker(i) {
+      var w = new Worker(u);
+      URL.revokeObjectURL(u);
+      w.onmessage = function(e) {
+        is(i, 0, 'Message received');
+        is(e.data, "ERROR",
+           "Should catch the error when loading inner script");
+        if (++i < 2) callworker(i);
+        else SimpleTest.finish();
+      };
+      w.onerror = function(e) {
+        is(i, 1, 'OnError received');
+        SimpleTest.finish();
+      }
+    }
+    callworker(0);
+  })();
+}
+
+try {
+  var worker = new Worker("about:blank");
+  worker.onerror = function(e) {
+    e.preventDefault();
+    nextTest();
+  }
+
+  worker.onmessage = function(event) {
+    ok(false, "Shouldn't get a message!");
+    SimpleTest.finish();
+  }
+} catch (e) {
+  ok(false, "This should not happen.");
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

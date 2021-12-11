@@ -1,0 +1,4 @@
+retry:500
+event: message
+
+

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="dk">
+<head>
+    <title>testing lang attribute</title>
+    <style>
+    div[lang="fr"] {
+        color: green;
+    }
+    div[lang="de"] > input {
+        color: blue;
+    }
+    div:not([lang]) {
+        color: yellow;
+    }
+    </style>
+</head>
+<body>
+<div lang="fr">fr language</div>
+<div lang="de">
+    <input value="de language">
+</div>
+<div>
+    dk language
+</div>
+</body>
+</html>

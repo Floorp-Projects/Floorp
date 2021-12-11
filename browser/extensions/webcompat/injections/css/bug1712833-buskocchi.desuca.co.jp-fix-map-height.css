@@ -1,0 +1,9 @@
+/**
+ * buskocchi.desuca.co.jp - Ensure that the map has a height so it is visible.
+ * Bug #1712833 - https://bugzilla.mozilla.org/show_bug.cgi?id=1712833
+ * WebCompat issue #50837 - https://webcompat.com/issues/50837
+ */
+
+form[name="main"] {
+  height: 100%;
+}

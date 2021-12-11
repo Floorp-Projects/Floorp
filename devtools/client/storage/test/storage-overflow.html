@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1171903 - Storage Inspector endless scrolling
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector endless scrolling test</title>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+
+for (let i = 1; i < 151; i++) {
+  localStorage.setItem(`item-${i}`, `value-${i}`);
+}
+</script>
+</body>
+</html>

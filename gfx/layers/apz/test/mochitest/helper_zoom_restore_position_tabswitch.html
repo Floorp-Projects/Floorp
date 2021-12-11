@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Switching tabs back to a zoomed page should restore visual offset</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let visResEvt = new EventCounter(window.visualViewport, "resize");
+
+  // Do a pinch-zoom in, wait for everything to settle on the APZ side.
+  await pinchZoomInWithTouch(400, 300);
+  await promiseApzFlushedRepaints();
+
+  // Force a new layer tree to the compositor, because otherwise tab-switching
+  // away and back can end up reusing the last layer tree sent to the compositor,
+  // and that may not have the latest visual viewport offset sent from APZ
+  // to the main thread. This should be removed once bug 1640730 is fixed.
+  await forceLayerTreeToCompositor();
+
+  // Wait until we get a visual viewport resized event, if we haven't yet gotten
+  // one.
+  if (visResEvt.count == 0) {
+    await promiseOneEvent(window.visualViewport, "resize", null);
+  }
+  let resizeCount = visResEvt.count;
+  ok(resizeCount > 0, `Visual viewport got resized ${resizeCount} times`);
+
+  // Record the current visual viewport and ensure it reflects a zoomed state.
+  let zoomedViewport = visualViewportAsZoomedRect();
+  ok(visualViewport.offsetLeft > 0, "Visual viewport should not be same as layout viewport (left)");
+  ok(visualViewport.offsetTop > 0, "Visual viewport should not be same as layout viewport (top)");
+  ok(zoomedViewport.x > 0, "Sanity check to ensure visual viewport is not at 0,0 (left)");
+  ok(zoomedViewport.y > 0, "Sanity check to ensure visual viewport is not at 0,0 (top)");
+  ok(zoomedViewport.z > 1, "Sanity check to ensure visual viewport scale is > 1");
+
+  // Open a new foreground tab and wait until it closes itself. The tab itself
+  // waits for APZ stability before closing, so we know that the APZ state
+  // was updated to the other document and back to this window.
+  let focusPromise = promiseOneEvent(window, "focus", null);
+  window.open("helper_self_closer.html", "_blank");
+  await focusPromise;
+  ok(true, "Got focus back after self-closer closed");
+
+  // Wait for the dust to settle.
+  await promiseApzFlushedRepaints();
+
+  // Ensure the visual viewport is just as we left it.
+  let restoredViewport = visualViewportAsZoomedRect();
+  for (field in zoomedViewport) {
+    is(restoredViewport[field], zoomedViewport[field], `Field ${field} of the zoomed viewport restored`);
+  }
+
+  // Just for good measure. This might help with debugging unexpected failures.
+  is(visResEvt.count, resizeCount, "No more VV resizes should have occurred");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  Here is some text to stare at as the test runs. It serves no functional
+  purpose, but gives you an idea of the zoom level. It's harder to tell what
+  the zoom level is when the page is just solid white.
+</body>
+</html>

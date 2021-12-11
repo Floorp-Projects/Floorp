@@ -1,0 +1,6 @@
+<script>
+  window.indexedDB.open("bug1507229_1_hello").onsuccess = function(event) {
+    event.target.result.createMutableFile("");
+    window.indexedDB.deleteDatabase("bug1507229_1_hello");
+  }
+</script>

@@ -1,0 +1,12 @@
+//error: redeclaration of symbol `Foo', first declared at
+
+struct Foo {
+  bool b;
+};
+
+struct Bar {
+  // This should produce an error saying that Foo is a redeclaration,
+  // even though the initial declaration was in a different frame of
+  // the symbol table.
+  bool Foo;
+};

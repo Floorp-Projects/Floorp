@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for Bug 1644511</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  [contenteditable] {
+    padding: .5em 40%;
+  }
+</style>
+
+<div id="host" contenteditable="" dir="rtl">مرحبا عالم!<br>Hello World</div>
+
+<button onclick="subtestLTR()"></button>
+
+<script>
+const caretMovementStyleFlag = "bidi.edit.caret_movement_style";
+
+/**
+ * Can't use synthesizeKey("KEY_Arrow*") as it triggers
+ * nsFrameSelection::PhysicalMove() instead of CharacterMove() and thus
+ * suppresses the flag. See also Bug 1644489.
+ */
+function moveCaret(aRight, aSelect) {
+  const select = aSelect ? "selectChar" : "char";
+  const dir = aRight ? "Next" : "Previous";
+  SpecialPowers.doCommand(window, `cmd_${select}${dir}`);
+}
+
+/**
+ * Safer to directly select text node when the paragraph ends with LTR text as
+ * the left edge is the end of the paragraph and then also the start of the LTR
+ * text.
+ */
+function putCaretInLastLine(div) {
+  const { lastChild } = div;
+  getSelection().collapse(lastChild, 1); // Pass 1 because of bug 1645877
+}
+
+// LTR behavior should be always same regardless of the flag
+function subtestLTR() {
+  putCaretInLastLine(host);
+  moveCaret(true, true);
+  is(getSelection().anchorOffset, 1, "Shift+ArrowRight should select from left");
+  is(getSelection().focusOffset, 2, "Shift+ArrowRight should select to right");
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 2, "Collapsing by ArrowRight should put the caret to the right side");
+
+  putCaretInLastLine(host);
+  moveCaret(true, true);
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowLeft should put the caret to the left side");
+}
+
+async function testLogicalMovement() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[caretMovementStyleFlag, 0]]
+  });
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  is(getSelection().anchorOffset, 0, "Shift+ArrowRight should select from right");
+  is(getSelection().focusOffset, 1, "Shift+ArrowRight should select to left");
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowRight should put the caret to the left side");
+
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 0, "Collapsing by ArrowLeft should put the caret to the right side");
+
+  subtestLTR();
+}
+
+async function testVisualMovement() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[caretMovementStyleFlag, 1]]
+  });
+  getSelection().collapse(host);
+  moveCaret(false, true);
+  is(getSelection().anchorOffset, 0, "Shift+ArrowLeft should select from right");
+  is(getSelection().focusOffset, 1, "Shift+ArrowLeft should select to left");
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowLeft should put the caret to the left side");
+
+  getSelection().collapse(host);
+  moveCaret(false, true);
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 0, "Collapsing by ArrowRight should put the caret to the right side");
+
+  subtestLTR();
+}
+
+async function testHybridMovement() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[caretMovementStyleFlag, 2]]
+  });
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  is(getSelection().anchorOffset, 0, "Shift+ArrowRight should select from right");
+  is(getSelection().focusOffset, 1, "Shift+ArrowRight should select to left");
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowLeft should put the caret to the left side");
+
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 0, "Collapsing by ArrowRight should put the caret to the right side");
+
+  subtestLTR();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.promiseFocus().then(async () => {
+  await testLogicalMovement();
+  await testVisualMovement();
+  await testHybridMovement();
+  SimpleTest.finish();
+});
+</script>

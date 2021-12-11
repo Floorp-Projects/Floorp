@@ -1,0 +1,143 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A callback is implemented by the service.
+ */
+[scriptable, uuid(c576de0c-8a3d-4570-be7e-9876d3e5bed2)]
+interface nsISpeechTaskCallback : nsISupports
+{
+  /**
+   * The user or application has paused the speech.
+   */
+  void onPause();
+
+  /**
+   * The user or application has resumed the speech.
+   */
+  void onResume();
+
+  /**
+   * The user or application has canceled the speech.
+   */
+  void onCancel();
+
+  /**
+   * The user or application has changed the volume of this speech.
+   */
+  void onVolumeChanged(in float aVolume);
+};
+
+
+/**
+ * A task is associated with a single utterance. It is provided by the browser
+ * to the service in the speak() method.
+ */
+[scriptable, builtinclass, uuid(ad59949c-2437-4b35-8eeb-d760caab75c5)]
+interface nsISpeechTask : nsISupports
+{
+  /**
+   * Prepare browser for speech.
+   *
+   * @param aCallback callback object for mid-speech operations.
+   */
+  void setup(in nsISpeechTaskCallback aCallback);
+
+  /**
+   * Dispatch start event.
+   */
+  void dispatchStart();
+
+  /**
+   * Dispatch end event.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchEnd(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch pause event.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchPause(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch resume event.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchResume(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch error event.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchError(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch boundary event.
+   *
+   * @param aName        name of boundary, 'word' or 'sentence'
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   * @param aCharLength  length of text in boundary event to be spoken.
+   */
+  [optional_argc] void dispatchBoundary(in AString aName, in float aElapsedTime,
+                                        in unsigned long aCharIndex,
+                                        [optional] in unsigned long aCharLength);
+
+  /**
+   * Dispatch mark event.
+   *
+   * @param aName        mark identifier.
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchMark(in AString aName, in float aElapsedTime, in unsigned long aCharIndex);
+};
+
+/**
+ * The main interface of a speech synthesis service.
+ *
+ * A service is responsible for outputting audio.
+ * The service dispatches events, starting with dispatchStart() and ending with
+ * dispatchEnd or dispatchError().
+ * A service must also respond with the currect actions and events in response
+ * to implemented callback methods.
+ */
+[scriptable, uuid(9b7d59db-88ff-43d0-b6ee-9f63d042d08f)]
+interface nsISpeechService : nsISupports
+{
+  /**
+   * Speak the given text using the voice identified byu the given uri. See
+   * W3C Speech API spec for information about pitch and rate.
+   * https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html#utterance-attributes
+   *
+   * @param aText   text to utter.
+   * @param aUri    unique voice identifier.
+   * @param aVolume volume to speak voice in. Only relevant for indirect audio.
+   * @param aRate   rate to speak voice in.
+   * @param aPitch  pitch to speak voice in.
+   * @param aTask  task instance for utterance, used for sending events or audio
+   *                 data back to browser.
+   */
+  void speak(in AString aText, in AString aUri,
+             in float aVolume, in float aRate, in float aPitch,
+             in nsISpeechTask aTask);
+};
+
+%{C++
+// This is the service category speech services could use to start up as
+// a component.
+#define NS_SPEECH_SYNTH_STARTED "speech-synth-started"
+%}

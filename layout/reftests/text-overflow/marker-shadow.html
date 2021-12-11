@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: Marker should have text-shadow applied to it
+-->
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+
+/* overflow:hidden will clip off some of our text-shadow too.
+   Give us some padding, so we can put the shadow to the left and bottom
+   and beat the overflow clipping. */
+div {
+  font-family: DejaVuSansMono;
+  width: 5em;
+  padding-left: 1em;
+  padding-bottom: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: "...";
+  text-shadow: -0.5em 3px 2px red;
+}
+</style>
+</head>
+<body>
+
+<div>HelloKitty</div>
+
+</body>
+</html>

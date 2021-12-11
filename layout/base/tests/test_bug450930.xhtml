@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=450930
+-->
+<head>
+  <title>Test for Bug 450930 (MozAfterPaint)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript"><![CDATA[
+
+/** Test for Bug 450930 **/
+SimpleTest.waitForExplicitFinish();
+var subwindow = window.open("./bug450930.xhtml", "bug450930", "width=800,height=1000");
+
+function finishTests() {
+  subwindow.close();
+  SimpleTest.finish();
+}
+
+]]></script>
+</pre>
+</body>
+</html>
+

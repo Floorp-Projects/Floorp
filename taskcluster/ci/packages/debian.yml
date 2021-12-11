@@ -1,0 +1,153 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    run:
+        using: debian-package
+        dist: jessie
+
+deb10-mercurial:
+    description: "Modern Mercurial for Debian buster"
+    treeherder:
+        symbol: Deb10(hg)
+    run:
+        dist: buster
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
+            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
+        pre-build-command: >-
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb10moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/buster/" debian/changelog
+
+deb11-mercurial:
+    description: "Modern Mercurial for Debian bullseye"
+    treeherder:
+        symbol: Deb11(hg)
+    run:
+        using: debian-package
+        dist: bullseye
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
+            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
+        pre-build-command: >-
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb11moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/bullseye/" debian/changelog
+
+deb11-valgrind:
+    description: "Valgrind for Debian bullseye"
+    treeherder:
+        symbol: Deb11(valgrind)
+    run:
+        dist: bullseye
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20210904T143545Z/pool/main/v/valgrind/valgrind_3.17.0-1.dsc
+            sha256: e56ee4356fd873b402e0795610d0db7f3d14bedee3c775ded61f82647b841231
+
+deb10-python-zstandard:
+    description: "python-zstandard for Debian buster"
+    treeherder:
+        symbol: Deb10(python-zstandard)
+    run:
+        dist: buster
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.16.0/zstandard-0.16.0.tar.gz
+            sha256: eaae2d3e8fdf8bfe269628385087e4b648beef85bb0c187644e7df4fb0fe9046
+        pre-build-command: debchange -v 0.16.0-1.deb10moz --distribution buster "Mozilla backport for buster"
+        name: python-zstandard
+
+deb11-python-zstandard:
+    description: "python-zstandard for Debian bullseye"
+    treeherder:
+        symbol: Deb11(python-zstandard)
+    run:
+        using: debian-package
+        dist: bullseye
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.16.0/zstandard-0.16.0.tar.gz
+            sha256: eaae2d3e8fdf8bfe269628385087e4b648beef85bb0c187644e7df4fb0fe9046
+        pre-build-command: debchange -v 0.16.0-1.deb11moz --distribution bullseye "Mozilla backport for buster"
+        name: python-zstandard
+
+deb8-gcc-7:
+    description: "gcc 7 for Debian jessie"
+    treeherder:
+        symbol: Deb8(gcc-7)
+    worker:
+        max-run-time: 3600
+        env:
+            DEB_BUILD_OPTIONS: nocheck
+            WITH_BOOTSTRAP: 'off'
+            WITHOUT_LANG: ada brig cilkrts fortran d go objc obj-c++ asan lsan tsan ubsan jit nvptx
+    run:
+        using: debian-package
+        dist: jessie
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
+            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
+        # autoconf2.64 and quilt necessary to run the `debian/rules control` command to
+        # generate an updated debian/control.
+        # uncommenting `with_common_libs` makes the packaging create the libstdc++6 package.
+        # `libstdcxx_abi = new` overrides the default that disables the new ABI on jessie
+        # `BINUTILSBDV=2.25-3~` and `ISL_BUILD_DEP=libisl-dev,` override wrong versions
+        # in build dependencies for jessie.
+        # `OFFLOAD_BUILD_DEP=` overrides the dependency on nvptx, which is not available
+        # in jessie.
+        # `NT=` overrides the use of `:native` which is not supported by dpkg on jessie.
+        pre-build-command: >-
+            apt install autoconf2.64 quilt &&
+            sed -i 's/#with_common_libs/with_common_libs/' debian/rules.defs &&
+            echo libstdcxx_abi = new >> debian/rules.defs &&
+            echo BINUTILSBDV=2.25-3~ >> debian/rules.conf &&
+            echo ISL_BUILD_DEP=libisl-dev, >> debian/rules.conf &&
+            echo OFFLOAD_BUILD_DEP= >> debian/rules.conf &&
+            debian/rules control NT=
+
+deb8-32-gcc-7:
+    description: "gcc 7 for Debian jessie"
+    treeherder:
+        symbol: Deb8-32(gcc-7)
+    worker:
+        max-run-time: 3600
+        env:
+            DEB_BUILD_OPTIONS: nocheck
+            WITH_BOOTSTRAP: 'off'
+            WITHOUT_LANG: ada biarch brig cilkrts fortran d go objc obj-c++ asan lsan tsan ubsan jit nvptx
+    run:
+        using: debian-package
+        dist: jessie
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
+            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
+        pre-build-command: >-
+            apt install autoconf2.64 quilt &&
+            sed -i 's/#with_common_libs/with_common_libs/' debian/rules.defs &&
+            echo libstdcxx_abi = new >> debian/rules.defs &&
+            echo GCC_MULTILIB_BUILD_DEP='$(DPKG_BUILD_DEP)' >> debian/rules.conf &&
+            echo BINUTILSBDV=2.25-3~ >> debian/rules.conf &&
+            echo ISL_BUILD_DEP=libisl-dev, >> debian/rules.conf &&
+            echo OFFLOAD_BUILD_DEP= >> debian/rules.conf &&
+            debian/rules control NT=
+        arch: i386
+
+deb8-gtk3:
+    description: "X11-only gtk+3 for Debian jessie"
+    treeherder:
+        symbol: Deb8(gtk)
+    worker:
+        max-run-time: 3600
+        env:
+            DEB_BUILD_OPTIONS: nocheck
+    run:
+        dist: jessie
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20150819T212910Z/pool/main/g/gtk+3.0/gtk+3.0_3.14.5-1+deb8u1.dsc
+            sha256: b1808b03317b171c813e31185a4520df4dbde54580842a72a4c44540cd6bde17
+        pre-build-command: >-
+            sed -i /linux-any/d debian/control* debian/libgtk-3-0.symbols &&
+            sed -i s/--enable-wayland-backend/--disable-wayland-backend/ debian/rules &&
+            debchange -v 3.14.5-1.deb8moz --distribution jessie-backports "Mozilla rebuild without wayland support"

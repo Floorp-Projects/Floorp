@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=553917
+-->
+<html>
+  <head>
+    <title>Test for Bug 553917</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript">
+      var stringBundleService = 
+        SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
+                    .getService(SpecialPowers.Ci.nsIStringBundleService);
+      var g_bundl =
+        stringBundleService.createBundle("chrome://global/locale/mathml/mathml.properties");
+
+      const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
+      const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
+      const allow_mathspace_names = !SpecialPowers.getBoolPref('mathml.mathspace_names.disabled');
+      const allow_scriptsizemultiplier_attribute = !SpecialPowers.getBoolPref('mathml.scriptsizemultiplier_attribute.disabled');
+      
+      var g_errorInfo = {
+      /*<math><mroot></mroot></math>
+        <math><msub></msub></math>
+        <math><msup></msup></math>
+        <math><mfrac></mfrac></math>
+        <math><msubsup></msubsup></math>
+        <math><munderover></munderover></math>*/
+        ChildCountIncorrect: {
+            status : [false, false, false, false, false, false],
+            args : [["mroot"], ["msub"], ["msup"], ["mfrac"], ["msubsup"], ["munderover"]] },
+      /*<math><mpadded width="BAD!"></mpadded></math>
+        <math><mpadded height="BAD!"></mpadded></math>
+        <math><mpadded voffset="BAD!"></mpadded></math>*/
+        AttributeParsingError: { 
+          status: [false, false, false],
+          args: [["BAD!","width","mpadded"], ["BAD!","height","mpadded"], ["BAD!","voffset","mpadded"]]
+        },
+      /*<math scriptlevel="BAD!"></math>
+        <math scriptsizemultiplier="BAD!"></math>*/
+        AttributeParsingErrorNoTag: {
+          status: [false, !allow_scriptsizemultiplier_attribute],
+          args: [["BAD!","scriptlevel"], ["BAD!","scriptsizemultiplier"]]
+        },
+      /* <math><mo rspace="2..0px">+</mo></math>
+        <math><mo minsize="1.5notaunit">+</mo></math>
+        <math><mspace width="2"/></math>
+        <math><mo lspace="BADlspace">+</mo></math>
+        <math><mspace height="BADheight"/></math>
+        <math><mspace depth="BADdepth"/></math>
+        <math><mfrac linethickness="thin"><mn>1</mn><mn>2</mn></mfrac></math>
+        <math><mfrac linethickness="medium"><mn>1</mn><mn>2</mn></mfrac></math>
+        <math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>
+        <math><mstyle mathsize="small"></mstyle></math>
+        <math><mstyle mathsize="normal"></mstyle></math>
+        <math><mstyle mathsize="big"></mstyle></math>
+        <math><mspace width="veryverythinmathspace"/></math>
+        <math><mspace width="verythinmathspace"/></math>
+        <math><mspace width="thinmathspace"/></math>
+        <math><mspace width="mediummathspace"/></math>
+        <math><mspace width="thickmathspace"/></math>
+        <math><mspace width="verythickmathspace"/></math>
+        <math><mspace width="veryverythickmathspace"/></math>
+        <math><mspace width="12345."/></math>
+        <math><mo minsize="17">+</mo></math>
+      */
+        LengthParsingError : {
+            status: [false,
+                     false,
+                     false,
+                     false,
+                     false,
+                     false,
+                     allow_linethickness_names,
+                     allow_linethickness_names,
+                     allow_linethickness_names,
+                     allow_mathsize_names,
+                     allow_mathsize_names,
+                     allow_mathsize_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     false,
+                     false,
+                    ],
+            args: [["2..0px"],
+                   ["1.5notaunit"],
+                   ["2"],
+                   ["BADlspace"],
+                   ["BADheight"],
+                   ["BADdepth"],
+                   ["thin"],
+                   ["medium"],
+                   ["thick"],
+                   ["small"],
+                   ["normal"],
+                   ["big"],
+                   ["veryverythinmathspace"],
+                   ["verythinmathspace"],
+                   ["thinmathspace"],
+                   ["mediummathspace"],
+                   ["thickmathspace"],
+                   ["verythickmathspace"],
+                   ["veryverythickmathspace"],
+                   ["12345."],
+                   ["17"]
+                  ]
+        },
+      /*<math><mmultiscripts></mmultiscripts></math>
+        <math><mmultiscripts><mprescripts/><mprescripts/></mmultiscripts></math>
+        <math><mmultiscripts><mi>x</mi><mi>y</mi></mmultiscripts></math>*/
+        MMultiscriptsErrors: {
+          status: [false, false, false],
+          args: ["NoBase","DuplicateMprescripts", "SubSupMismatch"]
+        }};
+      
+      var g_errorTypes = ["ChildCountIncorrect","AttributeParsingError",
+                          "AttributeParsingErrorNoTag","LengthParsingError", "MMultiscriptsErrors"];
+      
+      function getErrorMessage(name,idx)
+      {
+        if (name != "MMultiscriptsErrors") {
+          var formatParams = g_errorInfo[name].args[idx];
+          if (formatParams.length > 0) {
+              return g_bundl.formatStringFromName(name,formatParams);
+          } 
+          return g_bundl.GetStringFromName(name);
+        }
+        return g_bundl.GetStringFromName(g_errorInfo[name].args[idx]);
+      }
+    
+    /** Checks the roll call to see if all expected error messages were present. */
+    function processRollCall()
+    {
+      for (var i=0; i<g_errorTypes.length;i++) {
+        for (var j = 0; j < g_errorInfo[g_errorTypes[i]].status.length; j++) {
+          ok(g_errorInfo[g_errorTypes[i]].status[j],
+             "\"" + getErrorMessage(g_errorTypes[i], j)
+                  + "\" was expected to be in the error console.");
+        }
+      }
+    }
+    
+    /** Tests a candidate to see if it is one of the expected messages and updates the 
+        g_errorInfo structure if it is. */
+    function doRollCall(msg)
+    {
+      for (var i = 0; i < g_errorTypes.length; i++) {
+        for (var j = 0; j < g_errorInfo[g_errorTypes[i]].status.length; j++) {
+          if (msg == getErrorMessage(g_errorTypes[i], j))
+          {
+            g_errorInfo[g_errorTypes[i]].status[j] = true;
+          }
+        }
+      }
+    }
+    
+    SpecialPowers.registerConsoleListener(
+      function (msg) {
+        if (msg.message == "SENTINEL") {
+          processRollCall();
+          SimpleTest.finish();
+        } else if (msg.isScriptError) {
+          doRollCall(msg.errorMessage);
+        }
+      });
+      
+    SimpleTest.waitForExplicitFinish();
+  </script>
+  </head>
+  <body onload="SpecialPowers.postConsoleSentinel();">
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=553917">Mozilla Bug 553917</a>
+    <!-- ChildCountIncorrect -->
+    <math><mroot></mroot></math>
+    <math><msub></msub></math>
+    <math><msup></msup></math>
+    <math><mfrac></mfrac></math>
+    <math><msubsup></msubsup></math>
+    <math><munderover></munderover></math>
+    
+    <!-- AttributeParsingError -->
+    <math><mpadded width="BAD!"></mpadded></math>
+    <math><mpadded height="BAD!"></mpadded></math>
+    <math><mpadded voffset="BAD!"></mpadded></math>
+    
+    <!-- AttributeParsingErrorNoTag -->
+    <math scriptlevel="BAD!"></math>
+    <math scriptsizemultiplier="BAD!"></math>
+    
+    <!-- LengthParsingError -->
+    <math><mo rspace="2..0px">+</mo></math>
+    <math><mo minsize="1.5notaunit">+</mo></math>
+    <math><mspace width="2"/></math>
+    <math><mo lspace="BADlspace">+</mo></math>
+    <math><mspace height="BADheight"/></math>
+    <math><mspace depth="BADdepth"/></math>
+    <math><mfrac linethickness="thin"><mn>1</mn><mn>2</mn></mfrac></math>
+    <math><mfrac linethickness="medium"><mn>1</mn><mn>2</mn></mfrac></math>
+    <math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>
+    <math><mstyle mathsize="small"></mstyle></math>
+    <math><mstyle mathsize="normal"></mstyle></math>
+    <math><mstyle mathsize="big"></mstyle></math>
+    <math><mspace width="veryverythinmathspace"/></math>
+    <math><mspace width="verythinmathspace"/></math>
+    <math><mspace width="thinmathspace"/></math>
+    <math><mspace width="mediummathspace"/></math>
+    <math><mspace width="thickmathspace"/></math>
+    <math><mspace width="verythickmathspace"/></math>
+    <math><mspace width="veryverythickmathspace"/></math>
+    <math><mspace width="12345."/></math>
+    <math><mo minsize="17">+</mo></math>
+
+    <!-- MMultiscriptsErrors -->
+    <math><mmultiscripts></mmultiscripts></math>
+    <math><mmultiscripts><mprescripts/><mprescripts/></mmultiscripts></math>
+    <math><mmultiscripts><mi>x</mi><mi>y</mi></mmultiscripts></math>
+  </body>
+</html>

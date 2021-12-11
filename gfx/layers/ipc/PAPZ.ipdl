@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+
+include protocol PCompositorBridge;
+
+using CSSRect from "Units.h";
+using struct mozilla::layers::RepaintRequest from "mozilla/layers/RepaintRequest.h";
+using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
+using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
+using mozilla::layers::GeckoContentController_APZStateChange from "mozilla/layers/GeckoContentControllerTypes.h";
+using mozilla::layers::ScrollDirection from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::MatrixMessage from "mozilla/layers/MatrixMessage.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
+using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
+using class nsRegion from "nsRegion.h";
+
+namespace mozilla {
+namespace layers {
+
+
+/**
+ * PAPZ is a protocol for remoting a GeckoContentController. PAPZ lives on the
+ * PCompositorBridge protocol which either connects to the compositor thread
+ * in the main process, or to the compositor thread in the gpu processs.
+ *
+ * PAPZParent lives in the compositor thread, while PAPZChild lives wherever the remoted
+ * GeckoContentController lives (generally the main thread of the main or content process).
+ * RemoteContentController implements PAPZParent, while APZChild implements PAPZChild.
+ *
+ * PAPZ is always used for ContentProcessController and only used for ChromeProcessController
+ * when there is a gpu process, otherwhise ChromeProcessController is used directly on the
+ * compositor thread. Only the methods that are used by the [Chrome,Content]ProcessController
+ * are implemented. If a new method is needed then PAPZ, APZChild, and RemoteContentController
+ * must be updated to handle it.
+ */
+sync protocol PAPZ
+{
+  manager PCompositorBridge;
+
+parent:
+  async __delete__();
+
+child:
+  async LayerTransforms(MatrixMessage[] aTransforms);
+
+  [Priority=control]
+  async RequestContentRepaint(RepaintRequest request);
+
+  async UpdateOverscrollVelocity(ScrollableLayerGuid aGuid, float aX, float aY, bool aIsRootContent);
+
+  async UpdateOverscrollOffset(ScrollableLayerGuid aGuid, float aX, float aY, bool aIsRootContent);
+
+  async NotifyMozMouseScrollEvent(ViewID aScrollId, nsString aEvent);
+
+  async NotifyAPZStateChange(ScrollableLayerGuid aGuid, GeckoContentController_APZStateChange aChange, int aArg);
+
+  [Priority=control]
+  async NotifyFlushComplete();
+
+  async NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId, ViewID aScrollId, ScrollDirection aDirection);
+
+  async NotifyAsyncScrollbarDragRejected(ViewID aScrollId);
+
+  async NotifyAsyncAutoscrollRejected(ViewID aScrollId);
+
+both:
+  async Destroy();
+};
+
+} // layers
+} // mozilla

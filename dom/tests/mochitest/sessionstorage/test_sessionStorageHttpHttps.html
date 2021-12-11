@@ -1,0 +1,59 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>sessionStorage replace test</title>
+
+<!--
+  This test checks that sessionStorage values set in an https page
+  are not readable from a non-https page from the same domain.
+-->
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+window.addEventListener("message", onMessageReceived);
+
+var messages = [];
+
+function onMessageReceived(event)
+{
+  if (event.data == "the end") {
+    is(messages.length, 4, "Wrong number of messages.");
+    is(messages[0], "insecure", "Wrong message from insecure page");
+    is(messages[1], "secure", "Wrong message from secure page");
+    is(messages[2], "insecure", "Wrong second message from insecure page");
+    is(messages[3], null, "Insecure page got secure message?");
+
+    SimpleTest.finish();
+
+    return;
+  }
+
+  messages.push(event.data);
+
+  if (event.data == "insecure" && messages.length == 1) {
+    window.httpsframe.location = "https://test1.example.com/tests/dom/tests/mochitest/sessionstorage/file_https.html";
+  }
+
+  if (event.data == "secure") {
+    window.httpframe.postMessage("check", "http://test1.example.com");
+  }
+}
+
+function startTest()
+{
+  window.httpframe.location = "http://test1.example.com/tests/dom/tests/mochitest/sessionstorage/file_http.html";
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" name="httpframe"></iframe>
+  <iframe src="" name="httpsframe"></iframe>
+</body>
+</html>

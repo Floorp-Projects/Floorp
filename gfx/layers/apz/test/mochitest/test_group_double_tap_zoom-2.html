@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various zoom-related tests that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+    <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+// Increase the tap timeouts so the double-tap is still detected in case of
+// random delays during testing.
+var doubletap_prefs = [
+  ["ui.click_hold_context_menus.delay", 10000],
+  ["apz.max_tap_time", 10000],
+  ["apz.mac.enable_double_tap_zoom_touchpad_gesture", true],
+];
+
+var visualviewport_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["dom.visualviewport.enabled", true],
+];
+
+var longeranimation_visualviewport_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["dom.visualviewport.enabled", true],
+  ["apz.zoom_animation_duration_ms", 1000],
+];
+
+var logging_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["apz.test.logging_enabled", true],
+];
+
+var disable_default_zoomin_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["apz.doubletapzoom.defaultzoomin", "1.0"],
+];
+
+var meta_viewport_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["dom.meta-viewport.enabled", true],
+];
+
+var subtests = [
+  {"file": "helper_doubletap_zoom_smooth.html", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_fixedpos_overflow.html", "prefs": logging_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_hscrollable.html", "prefs": disable_default_zoomin_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_shadowdom.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_tablecell.html", "prefs": disable_default_zoomin_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_gencon.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_hscrollable2.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_nothing.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_noscroll.html", "prefs": visualviewport_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_square.html", "prefs": visualviewport_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_oopif.html", "prefs": doubletap_prefs},
+  {"file": "helper_disallow_doubletap_zoom_inside_oopif.html", "prefs": meta_viewport_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_nothing_listener.html", "prefs": doubletap_prefs},
+];
+
+if (getPlatform() == "mac") {
+  subtests.push(
+    {"file": "helper_doubletap_zoom_smooth.html?touchpad", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_fixedpos_overflow.html?touchpad", "prefs": logging_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_hscrollable.html?touchpad", "prefs": disable_default_zoomin_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_shadowdom.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_tablecell.html?touchpad", "prefs": disable_default_zoomin_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_gencon.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_hscrollable2.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_nothing.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_noscroll.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_square.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_oopif.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_disallow_doubletap_zoom_inside_oopif.html?touchpad", "prefs": meta_viewport_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_nothing_listener.html?touchpad", "prefs": doubletap_prefs},
+  );
+}
+
+if (isApzEnabled()) {
+  // This has a lot of subtests, and Android emulators are slow.
+  SimpleTest.requestLongerTimeout(2);
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

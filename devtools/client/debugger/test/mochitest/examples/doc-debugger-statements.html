@@ -1,0 +1,31 @@
+ <!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+    <title>Debugger Statements</title>
+  </head>
+
+  <body>
+    <script>
+      debugger;
+      test();
+      console.log('done!');
+
+      function test() {
+        debugger;
+        stepIntoMe();
+      }
+
+      function stepIntoMe() {
+        // step in
+        stepOverMe();
+        // step out
+      }
+
+      function stepOverMe() {
+      }
+    </script>
+  </body>
+
+</html>

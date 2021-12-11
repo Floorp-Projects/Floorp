@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+<form>
+<select size=2 id="test">
+<option>A</option>
+<option>B</option>
+<option>C</option>
+<option>D</option>
+<option>E</option>
+<option>F</option>
+<option>G</option>
+<option>H</option>
+<option selected>I</option>
+<option>J</option>
+<option>K</option>
+<option>L</option>
+<option>M</option>
+<option>N</option>
+</select>
+<script>
+  // flush layout 
+  document.body.offsetWidth
+
+  // Now change the text of the currently selected option
+  var obj = document.getElementById("test");
+  var pos = obj.selectedIndex;
+  obj.options[pos].text = "tag";
+</script>
+</form>
+</body>
+</html>
+

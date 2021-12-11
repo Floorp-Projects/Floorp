@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1403814: Allow toplevel data URI navigation data:application/json</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test_toplevel_data_json() {
+  const DATA_JSON = "data:application/json,{'my_json_key':'my_json_value'}";
+
+  let win = window.open(DATA_JSON);
+  let wrappedWin = SpecialPowers.wrap(win);
+
+  // Unfortunately we can't detect whether the JSON has loaded or not using some
+  // event, hence we are constantly polling location.href till we see that
+  // the data: URI appears. Test times out on failure.
+  var jsonLoaded = setInterval(function() {
+    if (wrappedWin.document.location.href.startsWith("data:application/json")) {
+      clearInterval(jsonLoaded);
+      ok(true, "navigating to data:application/json allowed");
+      wrappedWin.close();
+      SimpleTest.finish();
+    }
+  }, 200);
+}
+
+SpecialPowers.pushPrefEnv({
+  set: [["security.data_uri.block_toplevel_data_uri_navigations", true]]
+}, test_toplevel_data_json);
+
+</script>
+</body>
+</html>

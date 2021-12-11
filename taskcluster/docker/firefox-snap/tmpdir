@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Set TMPDIR to be under the user's default Downloads dir
+export TMPDIR=$(xdg-user-dir DOWNLOAD)/firefox.tmp
+
+exec "$@"

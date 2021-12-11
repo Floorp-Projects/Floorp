@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Hittest position:fixed zoomed scroll</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    html {
+      position: fixed;
+    }
+    body {
+      margin: 0;
+    }
+    #fixed {
+      position: fixed;
+      top: 100px;
+      left: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div id="fixed"><input type="button" value="Button" /></div>
+  <script>
+    async function test() {
+      // Create an offset between the visual and layout viewports.
+      // The offset is 50 CSS pixels = 100 screen pixels at 2x zoom
+      // in either direction.
+      let transformEndPromise = promiseTransformEnd();
+      synthesizeNativeTouchDrag(document.body, 10, 10, -50, -50);
+      await transformEndPromise;
+
+      await promiseApzFlushedRepaints();
+
+      let clickPromise = new Promise(resolve => {
+        window.addEventListener("click", resolve);
+      });
+      let input = document.querySelector("input");
+      // Provide the input in window-relative coordinates,
+      // otherwise coordinatesRelativeToScreen() will run into the
+      // same bug as the hit-test, and the two bugs cancel out.
+      var offsetX = {}, offsetY = {};
+      SpecialPowers.getDOMWindowUtils(window).getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+      synthesizeNativeMouseEventWithAPZ({
+        type: "click",
+        target: window,
+        // The visual viewport is already offset (50, 50) CSS pixels
+        // into the layout viewport. An additional (50, 50) CSS pixels
+        // gives us (100, 100), the offset of #fixed, in total.
+        offsetX: 55,
+        offsetY: 55
+      });
+      let e = await clickPromise;
+      is(e.target, input, "got click");
+    }
+
+    SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A scriptable interface used on Windows only to do some work from
+ * a special process that gets created with elevated privileges.
+ *
+ * @status UNSTABLE - This interface is not frozen and will probably change in
+ *                    future releases.
+ */
+
+[scriptable, uuid(dc263ca8-b257-47eb-b5b7-339d9e0b90f7)]
+interface nsIWinAppHelper : nsISupports
+{
+  readonly attribute boolean userCanElevate;
+};

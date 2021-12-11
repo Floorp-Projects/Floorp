@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+% content mozapps %content/mozapps/
+#ifndef MOZ_FENNEC
+  content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
+  content/mozapps/extensions/aboutaddons.html                   (content/aboutaddons.html)
+  content/mozapps/extensions/aboutaddons.js                     (content/aboutaddons.js)
+  content/mozapps/extensions/aboutaddonsCommon.js               (content/aboutaddonsCommon.js)
+  content/mozapps/extensions/aboutaddons.css                    (content/aboutaddons.css)
+  content/mozapps/extensions/abuse-reports.js                   (content/abuse-reports.js)
+  content/mozapps/extensions/abuse-report-frame.html            (content/abuse-report-frame.html)
+  content/mozapps/extensions/abuse-report-panel.css             (content/abuse-report-panel.css)
+  content/mozapps/extensions/abuse-report-panel.js              (content/abuse-report-panel.js)
+  content/mozapps/extensions/drag-drop-addon-installer.js       (content/drag-drop-addon-installer.js)
+  content/mozapps/extensions/panel-list.css                     (content/panel-list.css)
+  content/mozapps/extensions/panel-item.css                     (content/panel-item.css)
+  content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
+  content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
+  content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)
+  content/mozapps/extensions/view-controller.js                 (content/view-controller.js)
+
+% resource default-theme %content/mozapps/extensions/default-theme/
+  content/mozapps/extensions/default-theme                      (default-theme/*.svg)
+  content/mozapps/extensions/default-theme/manifest.json        (default-theme/manifest.json)
+#endif

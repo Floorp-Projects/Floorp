@@ -1,0 +1,32 @@
+<html>
+    <script>
+        function check(elt, expectAccess, prop) {
+            var access = false;
+            try {
+                elt[prop];
+                access = true;
+            }
+            catch (e) {}
+            return access === expectAccess;
+        }
+
+        function sendMessage(success, sameOrigin, prop) {
+            var result = success ? 'PASS' : 'FAIL';
+            var message;
+            if (sameOrigin)
+                message = 'Can access |' + prop + '| if same origin';
+            else
+                message = 'Cannot access |' + prop + '| if not same origin';
+            parent.postMessage(result + ',' + message, '*');
+        }
+
+        var sameOrigin = location.host !== 'example.org';
+        var pass = check(frameElement, sameOrigin, 'src');
+        if (!pass) {
+            sendMessage(false, sameOrigin, 'src');
+        } else {
+            pass = check(parent.location, sameOrigin, 'href');
+            sendMessage(pass, sameOrigin, 'href');
+        }
+    </script>
+</html>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <emItems>
+    <emItem id="test_bug455906_1@tests.mozilla.org">
+      <versionRange severity="-1"/>
+    </emItem>
+    <emItem id="test_bug455906_2@tests.mozilla.org">
+      <versionRange severity="-1"/>
+    </emItem>
+    <emItem id="test_bug455906_3@tests.mozilla.org">
+      <versionRange severity="-1"/>
+    </emItem>
+    <emItem id="test_bug455906_4@tests.mozilla.org">
+      <versionRange severity="-1"/>
+    </emItem>
+    <emItem id="test_bug455906_5@tests.mozilla.org">
+      <versionRange severity="-1"/>
+    </emItem>
+    <emItem id="test_bug455906_6@tests.mozilla.org">
+      <versionRange severity="-1"/>
+    </emItem>
+    <emItem id="test_bug455906_7@tests.mozilla.org">
+      <versionRange severity="-1"/>
+    </emItem>
+  </emItems>
+  <pluginItems>
+    <pluginItem>
+      <match name="name" exp="^test_bug455906"/>
+      <versionRange severity="-1"/>
+    </pluginItem>
+  </pluginItems>
+</blocklist>

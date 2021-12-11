@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=517224
+-->
+<head>
+  <title>Test for Bug 517224</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/ecmascript" src="bug517224.sjs?reset"></script>
+  <style type="text/css">
+
+  p#display { background: url(bug517224.sjs?image); }
+  p#display { background-image: none; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=517224">Mozilla Bug 517224</a>
+<p id="display">Element with overridden background</p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 517224 **/
+
+// Test that we don't load background images for style rules that are
+// always overridden.
+
+// Make sure the style has been computed
+var bi =
+  getComputedStyle(document.getElementById('display'), "").backgroundImage;
+SimpleTest.waitForExplicitFinish();
+window.onload = run;
+
+function run()
+{
+  var script = document.createElement("script");
+  script.setAttribute("src", "bug517224.sjs?result");
+  document.body.appendChild(script);
+}
+
+</script>
+</pre>
+</body>
+</html>

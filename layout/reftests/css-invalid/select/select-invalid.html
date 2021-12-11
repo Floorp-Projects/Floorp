@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if select has a custom error, it should be affected by :invalid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('s').setCustomValidity('foo'); document.documentElement.className='';">
+    <select class='invalid' id='s'></select>
+  </body>
+</html>

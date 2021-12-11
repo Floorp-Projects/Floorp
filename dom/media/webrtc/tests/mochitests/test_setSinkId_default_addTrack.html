@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+  createHTML({
+    title: "HTMLMediaElement.setSinkId with default device and adding a track",
+    bug: "1661649",
+  });
+
+  /**
+   * Run a test to verify set sink id in audio element.
+   */
+  runTest(async () => {
+    await pushPrefs(["media.setsinkid.enabled", true]);
+
+    // Expose an audio output device.
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    await navigator.mediaDevices.selectAudioOutput();
+
+    const allDevices = await navigator.mediaDevices.enumerateDevices();
+    const audioDevices = allDevices.filter(({kind}) => kind == 'audiooutput');
+    info(`Found  ${audioDevices.length} output devices`);
+    isnot(audioDevices.length, 0, "Found output devices");
+
+    const audio = createMediaElement("audio", "audio");
+    document.body.appendChild(audio);
+
+    audio.srcObject = await navigator.mediaDevices.getUserMedia({audio: true});
+    audio.play();
+
+    await audio.setSinkId(audioDevices[0].deviceId);
+    await audio.setSinkId("");
+    is(audio.sinkId, "", "sinkId restored to default");
+
+    audio.srcObject.addTrack((await navigator.mediaDevices.getUserMedia({audio: true})).getTracks()[0]);
+
+    await wait(0);
+
+    for (let t of audio.srcObject.getTracks()) {
+      t.stop();
+    }
+  });
+
+</script>
+</pre>
+</body>
+</html>

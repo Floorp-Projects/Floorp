@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <div style="column-count: 2; width: 200px;">
+    This is some text that is too long and it will overflow.
+  </div>
+  <script>
+  onload = function() {
+    var d = document.querySelector("div");
+    window.w = d.offsetWidth;
+    d.style.textIndent = "50px";
+    document.documentElement.className = "";
+  }
+  </script>
+</html>

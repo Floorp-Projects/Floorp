@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Common mozconfig for automation builds.
+#
+# We export MOZ_AUTOMATION_* variables here to trigger various steps in
+# automation builds.  For example, if MOZ_AUTOMATION_PACKAGE is set, then the
+# package step will run.  This file contains the default settings, which can be
+# overridden by setting them earlier in the appropriate mozconfig.
+
+mk_add_options "export MOZ_AUTOMATION_BUILD_SYMBOLS=${MOZ_AUTOMATION_BUILD_SYMBOLS-1}"
+mk_add_options "export MOZ_AUTOMATION_PACKAGE=${MOZ_AUTOMATION_PACKAGE-1}"
+mk_add_options "export MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=${MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES-1}"
+mk_add_options "export MOZ_AUTOMATION_UPLOAD=${MOZ_AUTOMATION_UPLOAD-1}"
+mk_add_options "export MOZ_AUTOMATION_CHECK=${MOZ_AUTOMATION_CHECK-1}"
+
+# The following variables are expected to be exported by Taskcluster
+# configuration files rather than mozconfig files
+mk_add_options "export MOZ_AUTOMATION_PACKAGE_TESTS=${MOZ_AUTOMATION_PACKAGE_TESTS-0}"
+
+export MOZ_AUTOMATION_MOZCONFIG=1

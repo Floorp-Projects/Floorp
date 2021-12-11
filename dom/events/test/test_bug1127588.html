@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1127588
+-->
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1127588">Mozilla Bug 1127588</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<script type="application/javascript">
+
+/** Test for Bug 1127588 **/
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function () {
+  let insertedEventCount = 0;
+  let insertedListener = function() {
+    insertedEventCount++;
+  };
+
+  let removedEventCount = 0;
+  let removedListener = function() {
+    removedEventCount++;
+  };
+
+  // Tests for no title element.
+  document.addEventListener('DOMNodeRemoved', removedListener);
+  document.addEventListener('DOMNodeInserted', insertedListener);
+  document.title = "Test for Bug 1127588";
+  document.removeEventListener('DOMNodeInserted', insertedListener);
+  document.removeEventListener('DOMNodeRemoved', removedListener);
+
+  // Check result.
+  is(insertedEventCount, 2, "Should get 'DOMNodeInserted' mutation event");
+  is(removedEventCount, 0, "Should not get 'DOMNodeRemoved' mutation event");
+
+  // Test for updating title element.
+  insertedEventCount = 0;
+  removedEventCount = 0;
+  document.addEventListener('DOMNodeRemoved', removedListener);
+  document.addEventListener('DOMNodeInserted', insertedListener);
+  document.title = document.title;
+  document.removeEventListener('DOMNodeInserted', insertedListener);
+  document.removeEventListener('DOMNodeRemoved', removedListener);
+
+  // Check result.
+  is(insertedEventCount, 1, "Should get 'DOMNodeInserted' mutation event");
+  is(removedEventCount, 1, "Should get 'DOMNodeRemoved' mutation event");
+
+  SimpleTest.finish();
+};
+
+</script>
+</body>
+</html>
+

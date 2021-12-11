@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+octane:
+    description: Octane benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/octane-v1/octane-0f5b8d48d4a9.zip
+        sha256: 38425ee1abfc5feca178b2f60fbd82b5873897c345112a85359be00024402f9f
+        size: 1816138
+
+unity-webgl:
+    description: unity-webgl benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/unity-webgl-v4/unity-webgl-54c3c3d9d3f6.zip
+        sha256: a5777b878c6d91b461ba517b9f3b459c8c4485b53e988aa07f535f5bbf72c3d0
+        size: 27035352
+
+assorted-dom:
+    description: assorted-dom benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/assorted-dom-v2/assorted-dom-54c3c3d9d3f6.zip
+        sha256: d3580b06123212f163eeb355e3e37b8abd998606397b66cbe960646884537c68
+        size: 402074
+
+wasm-misc:
+    description: wasm-misc benchmark
+    fetch:
+        type: static-url
+        artifact-name: wasm-misc.zip
+        url: https://github.com/mozilla/perf-automation/releases/download/wasm-misc-v2/wasm-misc-54c3c3d9d3f6.zip
+        sha256: 9149b31c781fd5ac9a62a7a92d8cd39536f1a6d82e1335966773d412344704b8
+        size: 4425799
+
+web-tooling-benchmark:
+    description: Web Tooling Benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/V1/web-tooling-benchmark-b2ac25c897c9.zip
+        sha256: 93b0b51df0cec3ca9bfa0bdf81d782306dcf18532e39b3ff3180409125daaff1
+        size: 5444135
+
+jetstream2:
+    description: JetStream2 Benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/jetstream2-v1.2/jetstream2-54c3c3d9d3f6.zip
+        sha256: 978f5920f27099d4a6b854c5e4a50d2a706fad8b5082a6fdcab95bb71fb6dc12
+        size: 25481279

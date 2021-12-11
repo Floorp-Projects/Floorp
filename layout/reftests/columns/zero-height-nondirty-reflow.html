@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>CSS Multi-column Layout Test: multi-column element with zero height</title>
+  <!--
+  Based on 
+  https://github.com/web-platform-tests/wpt/blob/1f346b050d87656a040fa4fdf9f99567164e2a2b/css/css-multicol/multicol-zero-height-001.xht
+  by Opera Software ASA.
+  -->
+  <style>
+
+  html { overflow: hidden } /* suppress scrollbar reflows */
+
+  div#multi-column
+  {
+  height: 0;
+  orphans: 1;
+  widows: 1;
+  width: 200px;
+  border-bottom:1px solid red;
+
+  column-count: 10;
+  column-gap: 0;
+  display: inline-block;
+  }
+
+  div#multi-column > div
+  {
+  background: #0c0;
+  float: left;
+  height: 10px;
+  width: 20px;
+  }
+  </style>
+ </head>
+ <body style="height: 300px; width: 400px;">
+  <p>Below should be a 1px tall and 200px wide green line:</p>
+  <div style="display: inline">
+   <div id="multi-column">
+    <div></div>
+   </div>
+  </div>
+  <script>
+
+  /*
+   * Cause the multi-column element to be reflowed without being dirty or any resize bits set.
+   */
+  var e = document.body;
+  e.offsetWidth;
+  e.style.width = "300px";
+
+  </script>
+ </body>
+</html>

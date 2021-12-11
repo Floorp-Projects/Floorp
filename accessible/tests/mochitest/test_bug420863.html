@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=420863
+-->
+<head>
+  <title>Table indexes chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="common.js"></script>
+  <script type="application/javascript"
+          src="events.js"></script>
+  <script type="application/javascript"
+          src="actions.js"></script>
+
+  <script type="application/javascript">
+    var gClickHandler = null;
+
+    function doTest() {
+      // Actions should be exposed on any accessible having related DOM node
+      // with registered 'click' event handler.
+
+      // ////////////////////////////////////////////////////////////////////////
+      // generic td
+      var td1Acc = getAccessible("td1");
+      if (!td1Acc) {
+        SimpleTest.finish();
+        return;
+      }
+
+      is(td1Acc.actionCount, 0,
+           "Simple table cell shouldn't have any actions");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // one td with 'onclick' attribute and one with registered click handler
+      var td3Node = getNode("td3");
+
+      // register 'click' event handler
+      gClickHandler = {
+        handleEvent: function handleEvent(aEvent) {
+        },
+      };
+      td3Node.addEventListener("click", gClickHandler);
+
+      // check actions
+      var actionsArray = [
+        {
+          ID: "td2", // "onclick" attribute
+          actionName: "click",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+        },
+        {
+          ID: td3Node,
+          actionName: "click",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          checkOnClickEvent: function check(aEvent) {
+            // unregister click event handler
+            this.ID.removeEventListener("click", gClickHandler);
+
+            // check actions
+            is(getAccessible(this.ID).actionCount, 0,
+               "td3 shouldn't have actions");
+          },
+        },
+      ];
+
+      testActions(actionsArray); // will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=420863"
+     title="If an HTML element has an onClick attribute, expose its click action on the element rather than its child text leaf node."
+     target="_blank">Mozilla Bug 420863</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table>
+    <tr>
+      <td id="td1">Can't click this cell</td>
+      <td onclick="gTdClickAttr = true;"
+          id="td2">Cell with 'onclick' attribute</td>
+      <td id="td3">Cell with registered 'click' event handler</td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+interface nsIKeyValueDatabaseCallback;
+interface nsIKeyValueEnumeratorCallback;
+interface nsIKeyValuePairCallback;
+interface nsIKeyValueVariantCallback;
+interface nsIKeyValueVoidCallback;
+interface nsIKeyValuePair;
+
+/**
+ * The nsIKeyValue* interfaces provide a simple, asynchronous API to a key/value
+ * storage engine.  Basic put/get/has/delete operations are supported, as is
+ * enumeration of key/value pairs and the use of multiple named databases within
+ * a single storage file.  Operations have ACID semantics.
+ *
+ * This API does not (yet) support transactions, so it will not be appropriate
+ * for all use cases.  Extension of this API to support transactions is tracked
+ * by bug 1499238.
+ *
+ * The kvstore.jsm module wraps this API in a more idiomatic, Promise-based
+ * JS API that supports async/await.  In most cases, you're better off using
+ * that API from JS rather than using this one directly.  Bug 1512319 tracks
+ * native support for Promise in Rust-implemented XPCOM methods.
+ */
+
+/**
+ * The key/value service.  Enables retrieval of handles to key/value databases.
+ */
+[scriptable, uuid(46c893dd-4c14-4de0-b33d-a1be18c6d062)]
+interface nsIKeyValueService : nsISupports {
+    /**
+     * Get a handle to an existing database or a newly-created one
+     * at the specified path and with the given name.
+     *
+     * The service supports multiple named databases at the same path
+     * (i.e. within the same storage file), so you can call this method
+     * multiple times with the same path and different names to retrieve
+     * multiple databases stored in the same location on disk.
+     */
+    void getOrCreate(
+        in nsIKeyValueDatabaseCallback callback,
+        in AUTF8String path,
+        in AUTF8String name);
+};
+
+/**
+ * A key/value database.
+ *
+ * All methods are asynchronous and take a callback as their first argument.
+ * The types of the callbacks vary, but they can all be implemented in JS
+ * via an object literal with the relevant methods.
+ */
+[scriptable, uuid(c449398e-174c-425b-8195-da6aa0ccd9a5)]
+interface nsIKeyValueDatabase : nsISupports {
+    /**
+     * Write the specified key/value pair to the database.
+     */
+    void put(
+        in nsIKeyValueVoidCallback callback,
+        in AUTF8String key,
+        in nsIVariant value);
+
+    /**
+     * Write multiple key/value pairs to the database.
+     *
+     * It supports two types of write:
+     *   * Put a key/value pair into the database. It takes a nsIKeyValuePair
+     *     where its key and value follow the same types as the put() method.
+     *   * Delete a key/value pair from database. It takes a nsIkeyValuePair
+     *     where its value property must be null or undefined.
+     *
+     * This features the "all-or-nothing" semantics, i.e. if any error occurs
+     * during the call, it will rollback the previous writes and terminate the
+     * call. In addition, writeMany should be more efficient than calling "put"
+     * or "delete" for every single key/value pair since it does all the writes
+     * in a single transaction.
+     *
+     * Note:
+     *   * If there are multiple values with the same key in the specified
+     *     pairs, only the last value will be stored in the database.
+     *   * Deleting a key that is not in the database will be silently ignored.
+     *   * If the same key gets put and deleted for multiple times, the final
+     *     state of that key is subject to the ordering of the put(s) and delete(s).
+     */
+    void writeMany(
+        in nsIKeyValueVoidCallback callback,
+        in Array<nsIKeyValuePair> pairs);
+
+    /**
+     * Retrieve the value of the specified key from the database.
+     *
+     * If the key/value pair doesn't exist in the database, and you specify
+     * a default value, then the default value will be returned.  Otherwise,
+     * the callback's resolve() method will be called with a variant
+     * of type VTYPE_EMPTY, which translates to the JS `null` value.
+     */
+    void get(
+        in nsIKeyValueVariantCallback callback,
+        in AUTF8String key,
+        [optional] in nsIVariant defaultValue);
+
+    /**
+     * Determine whether or not the key exists in the database.
+     */
+    void has(
+        in nsIKeyValueVariantCallback callback,
+        in AUTF8String key);
+
+    /**
+     * Remove the key/value pair with the given key from the database.
+     *
+     * If the given key doesn't exist in the database, this operation doesn't
+     * fail; or rather, it fails silently, calling the resolve() method
+     * of its callback rather than reject().  If you want to know whether
+     * or not a key exists when deleting it, call the has() method first.
+     */
+    void delete(
+        in nsIKeyValueVoidCallback callback,
+        in AUTF8String key);
+
+    /**
+     * Clear all the key/value pairs from the database.
+     */
+    void clear(in nsIKeyValueVoidCallback callback);
+
+    /**
+     * Enumerate key/value pairs, starting with the first key equal to
+     * or greater than the "from" key (inclusive) and ending with the last key
+     * less than the "to" key (exclusive) sorted lexicographically.
+     *
+     * If either key is omitted, the range extends to the first and/or last key
+     * in the database.
+     */
+    void enumerate(
+        in nsIKeyValueEnumeratorCallback callback,
+        [optional] in AUTF8String fromKey,
+        [optional] in AUTF8String toKey);
+};
+
+/**
+ * A key/value pair.  Returned by nsIKeyValueEnumerator.getNext().
+ */
+[scriptable, uuid(bc37b06a-23b5-4b32-8281-4b8479601c7e)]
+interface nsIKeyValuePair : nsISupports {
+    readonly attribute AUTF8String key;
+    readonly attribute nsIVariant value;
+};
+
+/**
+ * An enumerator of key/value pairs.  Although its methods are similar
+ * to those of nsISimpleEnumerator, this interface's getNext() method returns
+ * an nsIKeyValuePair rather than an nsISupports, so consumers don't need
+ * to QI it to that interface; but this interface doesn't implement the JS
+ * iteration protocol (because the Rust-XPCOM bindings don't yet support it),
+ * which is another reason why you should use the kvstore.jsm module from JS
+ * instead of accessing this API directly.
+ */
+[scriptable, uuid(b9ba7116-b7ff-4717-9a28-a08e6879b199)]
+interface nsIKeyValueEnumerator : nsISupports {
+    bool hasMoreElements();
+    nsIKeyValuePair getNext();
+};
+
+/**
+ * A callback for the nsIKeyValueService.getOrCreate() method.
+ *
+ * The result is an nsIKeyValueDatabase.
+ */
+[scriptable, uuid(2becc1f8-2d80-4b63-92a8-24ee8f79ee45)]
+interface nsIKeyValueDatabaseCallback : nsISupports {
+    void resolve(in nsIKeyValueDatabase database);
+    void reject(in AUTF8String message);
+};
+
+/**
+ * A callback for the nsIKeyValueDatabase.enumerate() method.
+ *
+ * The result is an nsIKeyValueEnumerator.
+ */
+[scriptable, uuid(b7ea2183-880b-4424-ab24-5aa1555b775d)]
+interface nsIKeyValueEnumeratorCallback : nsISupports {
+    void resolve(in nsIKeyValueEnumerator enumerator);
+    void reject(in AUTF8String message);
+};
+
+/**
+ * A callback for the nsIKeyValueEnumerator.getNext() method.
+ *
+ * The result is the next key/value pair, expressed as separate key and value
+ * parameters.
+ */
+[scriptable, uuid(50f65485-ec1e-4307-812b-b8a15e1f382e)]
+interface nsIKeyValuePairCallback : nsISupports {
+    void resolve(in nsIKeyValuePair pair);
+    void reject(in AUTF8String message);
+};
+
+/**
+ * A callback for the nsIKeyValueDatabase.has() and .get() methods.
+ *
+ * The result is an nsIVariant, which is always a boolean for the has() method
+ * and can be any supported data type for the get() method.
+ */
+[scriptable, uuid(174ebfa1-74ea-42a7-aa90-85bbaf1da4bf)]
+interface nsIKeyValueVariantCallback : nsISupports {
+    void resolve(in nsIVariant result);
+    void reject(in AUTF8String message);
+};
+
+/**
+ * A callback for the nsIKeyValueDatabase.put() and .delete() methods.
+ *
+ * There is no result, but the resolve() method is still called when those
+ * async operations complete, to notify consumers of completion.
+ */
+[scriptable, uuid(0c17497a-ccf8-451a-838d-9dfa7f846379)]
+interface nsIKeyValueVoidCallback : nsISupports {
+    void resolve();
+    void reject(in AUTF8String message);
+};

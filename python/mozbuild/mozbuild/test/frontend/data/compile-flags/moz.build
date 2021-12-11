@@ -1,0 +1,22 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+
+@template
+def Library(name):
+    """Template for libraries."""
+    LIBRARY_NAME = name
+
+
+Library("dummy")
+
+
+@template
+def DisableStlWrapping():
+    COMPILE_FLAGS["STL"] = []
+
+
+UNIFIED_SOURCES += ["test1.c"]
+
+CXXFLAGS += ["-funroll-loops", "-Wall"]
+CFLAGS += ["-Wall", "-funroll-loops"]

@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=940229
+-->
+<head>
+  <title>Test handling extra inherit/initial/unset in CSS declarations (Bug 940229)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=940229">Mozilla Bug 940229</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+/*
+ * Inspired by mistake in quotes noticed while reviewing bug 189519.
+ */
+
+let gPropsNeedComma = {
+  "font": true,
+  "font-family": true,
+  "voice-family": true,
+};
+
+let gElement = document.getElementById("testnode");
+let gDeclaration = gElement.style;
+
+let kValuesToTestThoroughly = 3;
+
+function test_property(property)
+{
+  let info = gCSSProperties[property];
+
+  let delim = (property in gPropsNeedComma) ? ", " : " ";
+
+  function test_value_pair(relation, val1, val2, extraval) {
+    let decl = property + ": " + val1 + delim + val2;
+    gElement.setAttribute("style", decl);
+    if ("subproperties" in info) {
+      // Shorthand property; inspect each subproperty value.
+      for (let subprop of info.subproperties) {
+        is(gDeclaration.getPropertyValue(subprop), "",
+           ["expected", extraval, "ignored", relation, "value in",
+            "'" + decl + "'", "when looking at subproperty",
+            "'" + subprop + "'"].join(" "));
+      }
+    } else {
+      // Longhand property.
+      is(gDeclaration.getPropertyValue(property), "",
+         ["expected", extraval, "ignored", relation, "value in",
+          "'" + decl + "'"].join(" "));
+    }
+  }
+
+  function test_value(value, valueIdx) {
+    let specialKeywords = [ "inherit", "initial", "unset" ];
+
+    if (valueIdx < kValuesToTestThoroughly) {
+      // For the first few values, we test each special-keyword both before
+      // and after the value.
+      for (let keyword of specialKeywords) {
+        test_value_pair("before", keyword, value, keyword);
+        test_value_pair("after", value, keyword, keyword);
+      }
+    } else {
+      // For later values, only test one keyword before & after it.
+      let keywordIdx =
+        (valueIdx - kValuesToTestThoroughly) % specialKeywords.length;
+      keyword = specialKeywords[keywordIdx];
+      test_value_pair("before", keyword, value, keyword);
+      test_value_pair("after", value, keyword, keyword);
+    }
+  }
+
+  for (let idx in info.initial_values) {
+    test_value(info.initial_values[idx], idx);
+  }
+  for (let idx in info.other_values) {
+    test_value(info.initial_values[idx], idx);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(4);
+
+function start_test() {
+  for (let prop in gCSSProperties) {
+    test_property(prop);
+  }
+  SimpleTest.finish();
+}
+
+// Turn off CSS error reporting for this test, since it's a bit expensive,
+// and we're expecting to generate tons and tons of parse errors here.
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.report_errors", false]] },
+                          start_test);
+
+</script>
+</pre>
+</body>
+</html>

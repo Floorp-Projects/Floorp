@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1260704
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1260704</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript">
+    /** Test for Bug 1260704 **/
+
+function runTests() {
+  let testIdx = -1;
+  let testUrls = [
+    "bug1260704_iframe.html?noDefault=true&isMap=true",
+    "bug1260704_iframe.html?noDefault=true&isMap=false",
+    "bug1260704_iframe.html?noDefault=false&isMap=true",
+    "bug1260704_iframe.html?noDefault=false&isMap=false"
+  ];
+
+  let runningTest = false;
+  let iframe = document.getElementById("testFrame");
+  let iframeWin = iframe.contentWindow;
+  let rect;
+  let x;
+  let y;
+
+  window.addEventListener("message", event => {
+    if (event.data == "started") {
+      ok(!runningTest, "Start to test " + testIdx);
+      runningTest = true;
+      rect = iframeWin.document.getElementById("testImage").getBoundingClientRect();
+      x = rect.width / 2;
+      y = rect.height / 2;
+      synthesizeMouseAtPoint(rect.left + x, rect.top + y, { type: 'mousedown' }, iframeWin);
+      synthesizeMouseAtPoint(rect.left + x, rect.top + y, { type: 'mouseup' }, iframeWin);
+    }
+    else if (runningTest && event.data == "empty_frame_loaded") {
+      ok(testUrls[testIdx].includes("noDefault=false"), "Page unload");
+      let search = iframeWin.location.search;
+      if (testUrls[testIdx].includes("isMap=true")) {
+        // url trigger by image with ismap attribute should contains coordinates
+        // try to parse coordinates and check them with small tolerance
+        let coorStr = search.split("?");
+        let coordinates = coorStr[1].split(",");
+        ok(Math.abs(coordinates[0] - x) <= 1, "expect X=" + x + " got " + coordinates[0]);
+        ok(Math.abs(coordinates[1] - y) <= 1, "expect Y=" + y + " got " + coordinates[1]);
+      } else {
+        ok(search == "", "expect empty search string got:" + search);
+      }
+      nextTest();
+    }
+    else if (runningTest && event.data == "finished") {
+      ok(testUrls[testIdx].includes("noDefault=true"), "Page should not leave");
+      nextTest();
+    }
+  });
+
+  function nextTest() {
+    testIdx++;
+    runningTest = false;
+    if (testIdx >= testUrls.length) {
+      SimpleTest.finish();
+    } else {
+      ok(true, "Test " + testIdx + " - Set url to " + testUrls[testIdx]);
+      iframeWin.location.href = testUrls[testIdx];
+    }
+  }
+  nextTest();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+  </script>
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe id="testFrame" src="about:blank" width="400" height="400">
+</iframe>
+<pre id="test">
+</pre>
+</body>
+</html>

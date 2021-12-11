@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+  <title>Test - word-break: break-all with dynamic change</title>
+  <style>
+    div {
+      font-family: monospace;
+      width: 3ch;
+      background: pink;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div>a bcdef<div></div></div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.body.offsetHeight;
+      document.querySelector('div > div').style.display = 'none';
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  </script>
+</body>
+</html>

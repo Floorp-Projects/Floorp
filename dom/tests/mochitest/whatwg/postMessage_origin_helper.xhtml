@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>postMessage origin-testing helper page</title>
+  <script type="application/javascript"><![CDATA[
+function receiveMessage(evt)
+{
+  if (event.data === "PING") {
+    window.parent.postMessage("PONG", "*");
+    return;
+  }
+
+  var response = "PASS";
+
+  if (evt.origin !== "http://mochi.test:8888")
+    response += " wrong-origin(" + evt.origin + ")";
+  if (evt.source !== window.parent)
+    response += " wrong-source";
+  if (evt.data !== "PASS")
+    response += " wrong-data(" + evt.data + ")";
+
+  window.parent.postMessage(response, "http://mochi.test:8888");
+}
+
+window.addEventListener("message", receiveMessage);
+
+
+// Aids for identifying origins
+
+function setup()
+{
+  var target = document.getElementById("location");
+  target.textContent = location.hostname + ":" + (location.port || 80);
+}
+
+window.addEventListener("load", setup);
+  ]]></script>
+</head>
+<body>
+<h1 id="location">No location!</h1>
+</body>
+</html>

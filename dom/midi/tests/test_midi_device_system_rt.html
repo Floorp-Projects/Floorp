@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(true);
+       var checkCount = 0;
+
+       function checkReturn(msg) {
+         checkCount++;
+         if (checkCount == 1) {
+           MIDITestUtils.checkPacket(msg.data, [0xF8]);
+         } else if (checkCount == 2) {
+           MIDITestUtils.checkPacket(msg.data, [0xF9]);
+         } else if (checkCount == 3) {
+           MIDITestUtils.checkPacket(msg.data, [0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0xF7]);
+           SimpleTest.finish();
+         }
+       }
+
+       // Request access without sysex.
+       let access_sysex = await navigator.requestMIDIAccess({ "sysex": true });
+       let input_sysex = access_sysex.inputs.get(MIDITestUtils.inputInfo.id);
+       input_sysex.onmidimessage = checkReturn;
+       let output_sysex = access_sysex.outputs.get(MIDITestUtils.outputInfo.id);
+       output_sysex.send([0xF0, 0x01, 0xF7]);
+     }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<iframe style="display:none" srcdoc="
+
+<html>
+<head>
+<script type='text/javascript'>
+function boom() {
+    var gl = canvas.getContext('experimental-webgl');
+    video.srcObject = canvas.captureStream(0);
+}
+</script>
+</head>
+<body onload='boom();'>
+    <video id='video' width='256' height='256'></video>
+    <canvas id='canvas' width='256' height='256'></canvas>
+</body>
+</html>
+
+"></iframe>

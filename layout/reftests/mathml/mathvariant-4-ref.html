@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>More mathvariant tests</title>
+  </head>
+  <body>
+    <math>
+      <mrow>
+        <!-- mathvariant on characters that are already in the Mathematical
+             AlphanumericSymbols or are exceptions (should not have any
+             effect).-->
+        <mtext>&#x1d49c;</mtext>
+        <mtext>&#x212c;</mtext>
+        <!-- mathvariant on characters for which there is no equivalent mathvariant
+             form in Unicode (should not have any effect) -->
+        <mtext>&#x00e1;</mtext>
+      </mrow>
+    </math>
+
+    <p>
+
+    <math>
+      <mrow>
+        <!-- mathvariant on multi-char token elements (should apply to all the 
+             characters) -->
+        <mtext>&#x1d670;&#x1d670;&#x1d670;</mtext>
+      </mrow>
+    </math>
+
+    <p>
+
+    <math>
+      <mrow>
+        <!-- mathvariant on mstyle (should apply to all token element descendants
+             like single-char mi, mtext etc) -->
+        <mtext mathvariant="sans-serif">cos</mtext>
+        <mo>&#x2061;</mo>
+        <mi mathvariant="sans-serif">x</mi>
+      </mrow>
+    </math>
+
+    <p>
+
+    <math>
+      <mrow>
+        <!-- mathvariant on math (should apply to all token element descendants
+             like single-char mi, mtext etc) -->
+        <mtext mathvariant="sans-serif">cos</mtext>
+        <mo>&#x2061;</mo>
+        <mi mathvariant="sans-serif">x</mi>
+      </mrow>
+    </math>
+
+  </body>
+</html>

@@ -1,0 +1,96 @@
+<html>
+<head>
+  <title>Test for Bug 620145</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620145">Mozilla Bug 620145</a>
+<pre id="test">
+</pre>
+
+<div id="text" style="max-width: 100px" onmouseup="openAlert()">
+  This is a short piece of text used for testing that mouse selecting is
+  stopped when an alert appears.
+</div>
+<div id="text2" style="max-width: 100px">
+  This is another short piece of text used for testing that mouse selecting is
+  stopped when an alert appears.
+</div>
+<button id="button" onmouseup="openAlert()">Button</button>
+
+<script class="testbody" type="text/javascript">
+
+function openAlert() {
+  info("opening alert...");
+  alert("hello!");
+  info("...alert done.");
+}
+
+add_task(async function runTest() {
+  var state, action;
+  // The <button> in this test's HTML opens a prompt when clicked.
+  // Here we send the events to simulate clicking it.
+  modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
+
+  state = {
+    msg: "hello!",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  let promptDone = handlePrompt(state, action);
+
+  var button = $("button");
+  dispatchMouseEvent(button, "mousedown");
+  dispatchMouseEvent(button, "mouseup");
+  // alert appears at this point, to be closed by the chrome script.
+
+  await promptDone;
+  checkSelection();
+
+  // using same state and action.
+  promptDone = handlePrompt(state, action);
+
+  var text = $("text");
+  dispatchMouseEvent(text, "mousedown");
+  dispatchMouseEvent(text, "mouseup");
+  // alert appears at this point, to be closed by the chrome script.
+
+  await promptDone;
+  checkSelection();
+});
+
+function dispatchMouseEvent(target, type) {
+  var win = target.ownerDocument.defaultView;
+  let e = document.createEvent("MouseEvent");
+  e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
+              false, false, false, false, 0, null);
+  var utils = SpecialPowers.getDOMWindowUtils(win);
+  utils.dispatchDOMEventViaPresShellForTesting(target, e);
+  ok(true, type + " sent to " + target.id);
+}
+
+function checkSelection() {
+  synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
+  is(window.getSelection().toString(), "", "selection not made");
+}
+</script>
+
+</body>
+</html>

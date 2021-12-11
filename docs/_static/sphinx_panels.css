@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* For Dropdown Link in panels of sphinx-panels */
+a.dropdown-link {
+    color: #DDD;
+    margin-left: 0.5em;
+    padding: 0.25em;
+    visibility: hidden;
+}
+
+details.dropdown:hover a.dropdown-link {
+    visibility: visible;
+}
+
+a.dropdown-link:hover {
+    background-color: #36557c;
+    color: #ffffff;
+    text-decoration: none;
+}

@@ -1,0 +1,50 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PGMPContent;
+include GMPTypes;
+
+using GMPVideoCodec from "gmp-video-codec.h";
+using GMPErr from "gmp-errors.h";
+
+include "GMPMessageUtils.h";
+
+namespace mozilla {
+namespace gmp {
+
+[RefCounted] intr protocol PGMPVideoDecoder
+{
+  manager PGMPContent;
+child:
+  async InitDecode(GMPVideoCodec aCodecSettings,
+                   uint8_t[] aCodecSpecific,
+                   int32_t aCoreCount);
+  async Decode(GMPVideoEncodedFrameData aInputFrame,
+               bool aMissingFrames,
+               uint8_t[] aCodecSpecificInfo,
+               int64_t aRenderTimeMs);
+  async Reset();
+  async Drain();
+  async DecodingComplete();
+  async ChildShmemForPool(Shmem aFrameBuffer);
+
+parent:
+  async __delete__();
+  async Decoded(GMPVideoi420FrameData aDecodedFrame);
+  async ReceivedDecodedReferenceFrame(uint64_t aPictureId);
+  async ReceivedDecodedFrame(uint64_t aPictureId);
+  async InputDataExhausted();
+  async DrainComplete();
+  async ResetComplete();
+  async Error(GMPErr aErr);
+  async Shutdown();
+  async ParentShmemForPool(Shmem aEncodedBuffer);
+  // MUST be intr - if sync and we create a new Shmem, when the returned
+  // Shmem is received in the Child it will fail to Deserialize
+  intr NeedShmem(uint32_t aFrameBufferSize) returns (Shmem aMem);
+};
+
+} // namespace gmp
+} // namespace mozilla

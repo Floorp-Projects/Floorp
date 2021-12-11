@@ -1,0 +1,857 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+
+.videocontrols {
+  writing-mode: horizontal-tb;
+  width: 100%;
+  height: 100%;
+  display: inline-block;
+  overflow: hidden;
+
+  direction: ltr;
+  /* Prevent unwanted style inheritance. See bug 554717. */
+  text-align: left;
+  list-style-image: none !important;
+  font: normal normal normal 100%/normal sans-serif !important;
+  text-decoration: none !important;
+  white-space: normal !important;
+}
+
+.videocontrols[flipped="true"] {
+  transform: scaleX(-1);
+}
+
+.controlsContainer {
+  --clickToPlay-size: 48px;
+  --button-size: 30px;
+  --timer-size: 40px;
+  --timer-long-size: 60px;
+  --track-size: 5px;
+  --thumb-size: 13px;
+  --label-font-size: 13px;
+  --pip-toggle-padding: 5px;
+  --pip-toggle-icon-width-height: 16px;
+  --pip-toggle-translate-x: calc(100% - var(--pip-toggle-icon-width-height) - 2 * var(--pip-toggle-padding));
+  --control-focus-outline: 2px solid #00DDFF;
+  --control-focus-outline-offset: -2px;
+
+  color: #fff;
+}
+.controlsContainer.touch {
+  --clickToPlay-size: 64px;
+  --button-size: 40px;
+  --timer-size: 52px;
+  --timer-long-size: 78px;
+  --track-size: 7px;
+  --thumb-size: 16px;
+  --label-font-size: 16px;
+}
+
+/* Some CSS custom properties defined here are referenced by videocontrols.js */
+.controlBar {
+  /* Do not delete: these variables are accessed by JavaScript directly.
+     see videocontrols.js and search for |-width|. */
+  --clickToPlay-width: var(--clickToPlay-size);
+  --playButton-width: var(--button-size);
+  --scrubberStack-width: 64px;
+  --muteButton-width: var(--button-size);
+  --volumeStack-width: 48px;
+  --castingButton-width: var(--button-size);
+  --closedCaptionButton-width: var(--button-size);
+  --fullscreenButton-width: var(--button-size);
+  --positionDurationBox-width: var(--timer-size);
+  --durationSpan-width: var(--timer-size);
+  --positionDurationBox-width-long: var(--timer-long-size);
+  --durationSpan-width-long: var(--timer-long-size);
+}
+
+.touch .controlBar {
+  /* Do not delete: these variables are accessed by JavaScript directly.
+     see videocontrols.js and search for |-width|. */
+  --scrubberStack-width: 84px;
+  --volumeStack-width: 64px;
+}
+
+.controlsContainer [hidden],
+.controlBar[hidden] .progressBar,
+.controlBar[hidden] .bufferBar,
+.pictureInPictureToggleButton[hidden],
+.videocontrols[inDOMFullscreen] > .controlsContainer > .controlsOverlay > #pictureInPictureToggle {
+  display: none;
+}
+
+/* We hide the controlBar visually so it doesn't obscure the video. However,
+ * we still want to expose it to a11y so users who don't use a mouse can access
+ * it.
+ */
+.controlBar[hidden] {
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.controlBar[size="hidden"] {
+  display: none;
+}
+
+.controlsSpacer[hideCursor] {
+  cursor: none;
+}
+
+.controlsContainer,
+.progressContainer {
+  position: relative;
+  height: 100%;
+}
+
+.stackItem {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.statusOverlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(80,80,80, .85);
+}
+
+.controlsOverlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.controlsSpacerStack {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.controlBar {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  height: 40px;
+  padding: 0 9px;
+  background-color: rgba(26,26,26,.8);
+}
+
+.touch .controlBar {
+  height: 52px;
+}
+
+.controlBar > .button {
+  height: 100%;
+  min-width: var(--button-size);
+  min-height: var(--button-size);
+  padding: 6px;
+  border: 0;
+  margin: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-origin: content-box;
+  background-clip: content-box;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: inherit;
+  /* We don't suppress ::-moz-focus-inner, so that does for a focus indicator */
+  outline: none;
+}
+
+/* Keyboard focus styling for interactive control elements (includes control
+   bar, click to play and track list) */
+.controlBar > .button:focus-visible,
+.volumeControl:focus-visible,
+.scrubber:focus-visible,
+.clickToPlay:focus-visible,
+.textTrackList > .textTrackItem:focus-visible {
+  outline: var(--control-focus-outline);
+  outline-offset: var(--control-focus-outline-offset);
+}
+
+.touch .controlBar > .button {
+  background-size: 24px 24px;
+}
+
+.controlBar > .button:enabled:hover {
+  fill: #48a0f7;
+}
+
+.controlBar > .button:enabled:hover:active {
+  fill: #2d89e6;
+}
+
+.playButton {
+  background-image: url(chrome://global/skin/media/pause-fill.svg);
+}
+.playButton[paused] {
+  background-image: url(chrome://global/skin/media/play-fill.svg);
+}
+
+.muteButton {
+  background-image: url(chrome://global/skin/media/audio.svg);
+}
+.muteButton[muted] {
+  background-image: url(chrome://global/skin/media/audio-muted.svg);
+}
+.muteButton[noAudio] {
+  background-image: url(chrome://global/skin/media/audioNoAudioButton.svg);
+}
+.muteButton[noAudio] + .volumeStack {
+  display: none;
+}
+
+.castingButton {
+  background-image: url(chrome://global/skin/media/castingButton-ready.svg);
+}
+
+.castingButton[enabled] {
+  background-image: url(chrome://global/skin/media/castingButton-active.svg);
+}
+
+.closedCaptionButton {
+  background-image: url(chrome://global/skin/media/closedCaptionButton-cc-off.svg);
+}
+.closedCaptionButton[enabled] {
+  background-image: url(chrome://global/skin/media/closedCaptionButton-cc-on.svg);
+}
+
+.fullscreenButton {
+  background-image: url(chrome://global/skin/media/fullscreenEnterButton.svg);
+}
+.fullscreenButton[fullscreened] {
+  background-image: url(chrome://global/skin/media/fullscreenExitButton.svg);
+}
+
+.controlBarSpacer {
+  flex-grow: 1;
+}
+
+.volumeControl::-moz-range-thumb,
+.scrubber::-moz-range-thumb {
+  height: var(--thumb-size);
+  width: var(--thumb-size);
+  border: none;
+  border-radius: 50%;
+  /* this is a foreground element even though it is implemented as a background */
+  background-color: currentColor;
+  filter: drop-shadow(0px 0px 2px rgba(0,0,0,0.65));
+}
+
+.volumeControl,
+.scrubber {
+  outline: none;
+}
+
+.progressBackgroundBar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.progressStack {
+  position: relative;
+  width: 100%;
+  height: var(--track-size);
+}
+
+.scrubberStack {
+  /* minus margin to get basis of required width */
+  min-width: calc(var(--scrubberStack-width) - 18px);
+  flex-basis: calc(var(--scrubberStack-width) - 18px);
+  flex-grow: 2;
+  flex-shrink: 0;
+  margin: 0 9px;
+}
+
+.volumeStack {
+  max-width: 60px;
+  min-width: var(--volumeStack-width);
+  flex-grow: 1;
+  flex-shrink: 0;
+  margin-right: 6px;
+  margin-left: 4px;
+}
+
+.bufferBar,
+.progressBar,
+.scrubber,
+.volumeControl {
+  bottom: 0;
+  color: inherit;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--track-size) / 2);
+  margin: 0;
+  background: none;
+  outline: none;
+}
+
+.bufferBar {
+  background-color: rgba(0,0,0,0.7);
+}
+
+.bufferBar::-moz-progress-bar,
+.progressBar::-moz-progress-bar {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: calc(var(--track-size) / 2);
+  background: none;
+}
+
+.scrubber:hover::-moz-range-thumb,
+.volumeControl:hover::-moz-range-thumb {
+  background-color: #48a0f7;
+}
+
+.scrubber:active::-moz-range-thumb,
+.volumeControl:active::-moz-range-thumb {
+  background-color: #2d89e6;
+}
+
+.scrubber::-moz-range-track,
+.scrubber::-moz-range-progress {
+  background-color: transparent;
+}
+
+.volumeControl::-moz-range-progress,
+.volumeControl::-moz-range-track {
+  height: var(--track-size);
+  border-radius: calc(var(--track-size) / 2);
+}
+
+.volumeControl::-moz-range-progress {
+  /* this is a foreground element even though it is implemented as a background */
+  background-color: currentColor;
+}
+
+.volumeControl::-moz-range-track {
+  background-color: rgba(0,0,0,0.7);
+}
+
+
+.bufferBar::-moz-progress-bar {
+  background-color: rgba(255,255,255,0.3);
+  border-radius: calc(var(--track-size) / 2);
+}
+
+.progressBar::-moz-progress-bar {
+  background-color: #00b6f0;
+}
+
+.textTrackListContainer {
+  position: absolute;
+  right: 5px;
+  bottom: 45px;
+  top: 5px;
+  max-width: 80%;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}
+
+.textTrackList {
+  flex: 0 1 auto;
+  border: 1px solid #000;
+  border-radius: 2.5px;
+  padding: 5px 0;
+  vertical-align: middle;
+  background-color: #000;
+  opacity: 0.7;
+  overflow-y: auto;
+}
+
+.touch .textTrackList {
+  bottom: 58px;
+}
+
+.textTrackList > .textTrackItem {
+  display: block;
+  width: 100%;
+  height: var(--button-size);
+  font-size: var(--label-font-size);
+  padding: 2px 10px;
+  border: none;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  background-color: transparent;
+  color: inherit;
+}
+
+.textTrackList > .textTrackItem:hover {
+  background-color: #444;
+}
+
+.textTrackList > .textTrackItem[on] {
+  color: #48a0f7;
+}
+
+.positionLabel,
+.durationLabel {
+  display: none;
+}
+
+.positionDurationBox {
+  text-align: center;
+  padding-inline-start: 1px;
+  padding-inline-end: 9px;
+  white-space: nowrap;
+  font: message-box;
+  font-size: var(--label-font-size);
+  font-size-adjust: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+%ifdef XP_MACOSX
+.positionDurationBox {
+  font-size-adjust: unset;
+  font-family: "Helvetica Neue", "Helvetica", sans-serif;
+}
+%endif
+
+.duration {
+  display: inline-block;
+  white-space: pre;
+  color: #929292;
+}
+
+.statusIcon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 20px;
+}
+
+/* Not showing the throbber on mobile because of conflict with m.youtube.com (see bug 1289412) */
+.controlsContainer:not(.mobile) .statusIcon[type="throbber"] {
+  background: url(chrome://global/skin/media/throbber.png) no-repeat center;
+}
+
+.controlsContainer:not(.mobile) .statusIcon[type="throbber"][stalled] {
+  background: url(chrome://global/skin/media/stalled.png) no-repeat center;
+}
+
+.statusIcon[type="error"],
+.statusIcon[type="pictureInPicture"] {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.statusIcon[type="error"] {
+  min-width: 70px;
+  min-height: 60px;
+  background-image: url(chrome://global/skin/media/error.png);
+}
+
+.statusIcon[type="pictureInPicture"] {
+  min-width: 84px;
+  min-height: 84px;
+  background-image: url(chrome://global/skin/media/picture-in-picture-open.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.pictureInPictureToggleButton {
+  display: flex;
+  appearance: none;
+  position: absolute;
+  background-color: #0060df;
+  color: inherit;
+  border: 0;
+  padding: var(--pip-toggle-padding);
+  right: 0;
+  top: 50%;
+  translate: var(--pip-toggle-translate-x) -50%;
+  transition: opacity 160ms linear, translate 160ms linear;
+  min-width: max-content;
+  pointer-events: auto;
+  opacity: 0;
+}
+
+.pictureInPictureToggleButton[policy="hidden"] {
+  display: none;
+}
+
+.pictureInPictureToggleButton[policy="top"] {
+  top: 0%;
+  translate: var(--pip-toggle-translate-x);
+}
+
+.pictureInPictureToggleButton[policy="one-quarter"] {
+  top: 25%;
+}
+
+.pictureInPictureToggleButton[policy="three-quarters"] {
+  top: 75%;
+}
+
+.pictureInPictureToggleButton[policy="bottom"] {
+  top: 100%;
+  translate: var(--pip-toggle-translate-x) -100%;
+}
+
+.videocontrols[localedir="rtl"] .statusIcon[type="pictureInPicture"] {
+  transform: scaleX(-1);
+}
+
+.pictureInPictureToggleLabel {
+  margin-inline-start: var(--pip-toggle-padding);
+}
+
+@supports -moz-bool-pref("media.videocontrols.picture-in-picture.video-toggle.testing") {
+  /**
+   * To make automated tests faster, we drop the transition duration in
+   * testing mode.
+   */
+  .pictureInPictureToggleButton {
+    transition-duration: 10ms;
+  }
+}
+
+/* Overlay Play button */
+.clickToPlay {
+  appearance: none;
+  border: none;
+  min-width: var(--clickToPlay-size);
+  min-height: var(--clickToPlay-size);
+  border-radius: 50%;
+  background-image: url(chrome://global/skin/media/play-fill.svg);
+  background-repeat: no-repeat;
+  background-position: 54% 50%;
+  background-size: 40% 40%;
+  background-color: #1a1a1a;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: inherit;
+  opacity: 0.8;
+  position: relative;
+  top: 20px;
+}
+
+.controlsSpacerStack:hover > .clickToPlay,
+.clickToPlay:hover {
+  opacity: 0.55;
+}
+
+.controlsSpacerStack:hover > .clickToPlay[fadeout] {
+  opacity: 0;
+}
+
+.controlBar[fullscreen-unavailable] .fullscreenButton {
+  display: none;
+}
+
+.statusOverlay[fadeout],
+.statusOverlay[error] + .controlsOverlay > .controlsSpacerStack {
+  opacity: 0;
+}
+
+.pictureInPictureOverlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  background-color: rgb(12, 12, 13);
+}
+
+/* Status description formatting */
+.statusLabel {
+  padding: 0 10px;
+  text-align: center;
+  font: message-box;
+  font-size: 14px;
+}
+
+.statusLabel {
+  display: none;
+}
+
+[status="errorAborted"]         > #errorAborted,
+[status="errorNetwork"]         > #errorNetwork,
+[status="errorDecode"]          > #errorDecode,
+[status="errorSrcNotSupported"] > #errorSrcNotSupported,
+[status="errorNoSource"]        > #errorNoSource,
+[status="errorGeneric"]         > #errorGeneric,
+[status="pictureInPicture"]     > #pictureInPicture {
+  display: inline;
+}
+
+%ifdef XP_WIN
+@media (-moz-windows-default-theme: 0) {
+  .controlsSpacer,
+  .clickToPlay {
+    background-color: transparent;
+  }
+}
+%endif
+
+.pip-wrapper {
+  position: absolute;
+  cursor: pointer;
+  -moz-appearance: none;
+  background: none;
+  color: inherit;
+  border: none;
+  text-align: unset;
+  top: calc(70% - 40px);
+  opacity: 0;
+  transition: opacity 200ms;
+  --pip-icon-size: 24px;
+  --pip-icon-width-with-margins: calc(2 * var(--pip-toggle-margin) + var(--pip-icon-size));
+  --pip-highlight-width: 2px;
+  --pip-toggle-margin: 8px;
+  --pip-highlight-style: solid rgba(0, 254, 255, 1);
+}
+
+.pip-wrapper[policy="hidden"] {
+  display: none;
+}
+
+.pip-wrapper[medium-video] > .pip-expanded > .pip-icon-label > .pip-label {
+  font-size: 13px;
+}
+
+.pip-wrapper[medium-video] > .pip-expanded {
+  font-size: 11px;
+}
+
+.controlsOverlay.hovering > .pip-wrapper {
+  opacity: 0.8;
+}
+
+.controlsOverlay[hidetoggle="true"].hovering > .pip-wrapper:not(.hovering) {
+  opacity: 0;
+}
+
+.controlsOverlay.hovering > .pip-wrapper.hovering {
+  opacity: 1;
+}
+
+.pip-wrapper[position="right"] {
+  right: 40px;
+}
+
+.pip-wrapper[position="left"] {
+  left: 12px;
+}
+
+.pip-expanded,
+.pip-small,
+.pip-icon,
+.pip-explainer {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.pip-icon {
+  top: 8px;
+  left: 8px;
+  pointer-events: none;
+  background-image: url("chrome://global/skin/media/picture-in-picture-open.svg");
+  background-size: var(--pip-icon-size) var(--pip-icon-size);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  height: var(--pip-icon-size);
+  width: var(--pip-icon-size);
+  background-repeat: no-repeat;
+  background-position: center, center;
+}
+
+.videocontrols[localedir="rtl"] .pip-icon {
+  transform: scaleX(-1);
+}
+
+.pip-wrapper[position="left"] > .pip-expanded > .pip-icon-label > .pip-label {
+  margin-left: var(--pip-icon-width-with-margins);
+  margin-right: var(--pip-toggle-margin);
+}
+
+.pip-expanded,
+.pip-explainer {
+  user-select: none;
+}
+
+.pip-small {
+  background-color: rgba(12,12,13,0.65);
+  box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
+  width: 40px;
+  height: 40px;
+  border-radius: 25px;
+}
+
+.a11y-only {
+  position: absolute;
+  left: -10000px;
+  width: 100px;
+  height: 100px;
+}
+
+.pip-wrapper[position="left"] > .pip-expanded > .pip-icon-label > .pip-icon {
+  display: none;
+}
+
+.pip-expanded,
+.pip-small {
+  border: 1px solid rgba(255,255,255,0.1);
+  box-sizing: border-box;
+}
+
+.pip-wrapper:not([has-used]) > .pip-small {
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
+}
+
+.pip-expanded {
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
+  transition: opacity 250ms, scale 200ms, translate 190ms;
+  justify-content: left;
+  display: flex;
+  height: 40px;
+  background-color: rgba(12,12,13,0.9);
+  box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
+  width: max-content;
+  border-radius: 8px;
+  opacity: 0;
+  align-items: center;
+  scale: 0.33 1;
+  font-size: 14px;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded {
+  translate: calc(-100% + 48px);
+  transform-origin: right;
+  justify-content: right;
+}
+
+.pip-wrapper:is([small-video],[has-used]) > .pip-expanded,
+.pip-wrapper[position="right"]:not([small-video],[has-used]) > .pip-icon {
+  display: none;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-icon {
+  position: relative;
+  top: 0;
+  left: 0;
+  display: inline-block;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-icon,
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-label {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-icon {
+  margin-left: var(--pip-toggle-margin);
+  margin-right: var(--pip-toggle-margin);
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-label {
+  margin-right: var(--pip-toggle-margin);
+}
+
+.pip-wrapper.hovering > .pip-expanded {
+  box-shadow: none;
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
+  /* Remove bottom border but keep text centred with padding. */
+  border-bottom: none;
+  padding-bottom: var(--pip-highlight-width);
+  pointer-events: none;
+}
+
+.pip-wrapper:not([small-video],[has-used]) > .pip-expanded {
+  opacity: 1;
+  scale: 1;
+  pointer-events: auto;
+}
+
+.pip-wrapper:not([small-video],[has-used]).hovering > .pip-expanded {
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+
+.pip-wrapper:not([small-video],[has-used]) > .pip-small {
+  opacity: 0;
+  transition: opacity 200ms;
+}
+
+.pip-explainer {
+  opacity: 0;
+}
+
+.pip-explainer {
+  padding: 6px 16px 8px 8px;
+  translate: 0;
+  transition: opacity 250ms, translate 190ms;
+  transition-timing-function: cubic-bezier(.07,.95,0,1);
+  background: rgba(12,12,13,0.65);
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
+  border-top: 0;
+  box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
+  opacity: 0;
+  margin-left: calc(-1 * var(--pip-highlight-width));
+  margin-right: calc(-1 * var(--pip-highlight-width));
+  width: calc(100% - 24px);
+  word-break: break-word;
+  pointer-events: none;
+}
+
+.videocontrols[localedir="rtl"] .pip-explainer {
+  text-align: right;
+  direction: rtl;
+}
+
+.pip-wrapper.hovering > .pip-expanded > .pip-explainer {
+  pointer-events: auto;
+}
+
+.pip-wrapper.hovering > .pip-expanded > .pip-explainer {
+  opacity: 1;
+}
+
+.pip-wrapper.hovering > .pip-expanded > .pip-explainer {
+  translate: 0 calc(40px - var(--pip-highlight-width));
+}
+
+@media (prefers-reduced-motion) {
+  .pip-wrapper,
+  .pip-expanded,
+  .pip-wrapper:not([small-video],[has-used]) > .pip-small,
+  .pip-explainer {
+    transition: none;
+  }
+}

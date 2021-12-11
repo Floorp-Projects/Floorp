@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== widgets.css =====================================================
+   == Styles ported from XBL <resources>, loaded by "global.css".
+   ======================================================================= */
+
+@import url("chrome://global/content/autocomplete.css");
+@import url("chrome://global/skin/autocomplete.css");
+@import url("chrome://global/skin/button.css");
+@import url("chrome://global/skin/checkbox.css");
+@import url("chrome://global/skin/findbar.css");
+@import url("chrome://global/skin/menu.css");
+@import url("chrome://global/skin/notification.css");
+@import url("chrome://global/skin/numberinput.css");
+@import url("chrome://global/skin/popup.css");
+@import url("chrome://global/skin/popupnotification.css");
+@import url("chrome://global/skin/radio.css");
+@import url("chrome://global/skin/richlistbox.css");
+@import url("chrome://global/skin/splitter.css");
+@import url("chrome://global/skin/tabbox.css");
+@import url("chrome://global/skin/toolbar.css");
+@import url("chrome://global/skin/toolbarbutton.css");
+@import url("chrome://global/skin/tree.css");

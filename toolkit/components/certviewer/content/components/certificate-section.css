@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+h1 {
+  font-size: 1.5em;
+  font-weight: lighter;
+  margin: 3em 0 1em;
+}
+
+.certificate-tabs {
+  display: flex;
+  text-align: center;
+  border-bottom: 1px solid var(--in-content-border-color);
+  box-shadow: var(--card-shadow);
+}
+
+.info-groups {
+  display: none;
+  outline: none;
+  background-color: var(--in-content-box-background);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 2em;
+  border-radius: 0 0 4px 4px;
+}
+
+.info-groups.selected {
+  display: block;
+}
+
+.tab {
+  margin: 0;
+  border-radius: 0;
+  padding: 18px;
+  padding-bottom: 15px; /* compensate for border-bottom below */
+  border: none;
+  border-bottom: 3px solid transparent;
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
+  flex: 1 1 auto;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 1.363rem;
+}
+
+/* .tab can be LTR (by `dir="auto"`) for `about:certificate?cert=`
+   pages, so set the border-radius according to the parent's direction. */
+.certificate-tabs:dir(rtl) > .tab:first-of-type,
+.certificate-tabs:dir(ltr) > .tab:last-of-type {
+  border-top-right-radius: 4px;
+}
+
+.certificate-tabs:dir(ltr) > .tab:first-of-type,
+.certificate-tabs:dir(rtl) > .tab:last-of-type {
+  border-top-left-radius: 4px;
+}
+
+.certificate-tab:focus-visible {
+  z-index: 1;
+  outline: 2px solid var(--in-content-focus-outline-color);
+}
+
+.tab:hover {
+  border-bottom-color: var(--in-content-border-color);
+}
+
+.tab.selected {
+  border-bottom-color: currentColor;
+  color: var(--in-content-accent-color);
+  text-overflow: unset;
+  overflow: visible;
+}

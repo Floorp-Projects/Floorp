@@ -1,0 +1,16 @@
+<html reftest-zoom="0.5">
+  <!-- Test to make sure svg:image is painted correctly when its containing SVG
+       is included inline in a zoomed webpage and it has a transformation
+       applied, as is often used for SVG sprites. -->
+<body style="margin: 0">
+  <svg xmlns="http://www.w3.org/2000/svg"
+       xmlns:xlink="http://www.w3.org/1999/xlink"
+       style="shape-rendering: crispEdges">
+    <clipPath id="clip"><rect x="0" y="0" width="20" height="20"/></clipPath>
+    <!-- Translate and clip-path are used to pull a sprite out of the otherwise red image. -->
+    <g clip-path="url(#clip)">
+      <image xlink:href="sprite.svg" width="200" height="200" transform="translate(0, -100)"/>
+    </g>
+  </svg>
+</body>
+</html>

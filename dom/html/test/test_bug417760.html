@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=417760
+-->
+<head>
+  <title>cannot focus() img with tabindex="-1"</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+    img {
+      border: 5px solid white;
+    }
+    img:focus {
+      border: 5px solid black;
+    }
+  </style>
+
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="text/javascript">
+    function checkFocus(aExpected, aTabIndex)
+    {
+      elemCurr = document.activeElement.getAttribute("id");
+      is(elemCurr, aExpected, "Element with tabIndex " + aTabIndex 
+         + " did not receive focus!");
+    }
+
+    function doTest()
+    {
+      // First, test img with tabindex = 0
+      document.getElementById("img-tabindex-0").focus();
+      checkFocus("img-tabindex-0", 0);
+
+      // now test the img with tabindex = -1
+      document.getElementById("img-tabindex-minus-1").focus();
+      checkFocus("img-tabindex-minus-1", -1);
+
+      // now test the img without tabindex, should NOT receive focus!
+      document.getElementById("img-no-tabindex").focus();
+      checkFocus("img-tabindex-minus-1", null);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417760">Mozilla Bug 417760</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <br>img tabindex="0":
+  <img id="img-tabindex-0"
+    src="file_bug417760.png"
+    alt="MoCo logo" tabindex="0"/>
+  <br>img tabindex="-1":
+  <img id="img-tabindex-minus-1"
+    src="file_bug417760.png"
+    alt="MoCo logo" tabindex="-1"/>
+  <br>img without tabindex:
+  <img id="img-no-tabindex"
+    src="file_bug417760.png"
+    alt="MoCo logo"/>
+</body>
+</html>

@@ -1,0 +1,22 @@
+[include]
+# Various mach commands call config.guess to resolve the default objdir name.
+path:build/autoconf/config.guess
+path:build/autoconf/config.sub
+path:build/moz.configure/checks.configure
+path:build/moz.configure/init.configure
+path:build/moz.configure/util.configure
+# Used for bootstrapping the mach driver.
+path:build/mach_initialize.py
+path:build/build_virtualenv_packages.txt
+path:build/common_virtualenv_packages.txt
+path:build/mach_virtualenv_packages.txt
+path:build/psutil_requirements.txt
+path:build/zstandard_requirements.txt
+path:mach
+# Various dependencies. There is room to trim fat, especially in
+# third_party/python.
+path:python/
+path:testing/mozbase/
+path:third_party/python/
+# certifi is needed for Sentry
+path:testing/web-platform/tests/tools/third_party/certifi

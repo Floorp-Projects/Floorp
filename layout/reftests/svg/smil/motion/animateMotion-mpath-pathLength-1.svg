@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" class="reftest-wait">
+  <title>Test that pathLength of paths has no effect in animation</title>
+  <defs>
+    <path id="path" pathLength="100" d="M0,0 h400" />
+  </defs>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(100.5, true);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- calcMode="linear" -->
+  <rect x="10" y="10" width="100" height="100" fill="red"/>
+  <rect x="-190" y="10" width="100" height="100" fill="lime">
+    <animateMotion begin="100s" dur="1s" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+      <mpath xlink:href="#path" />
+    </animateMotion>
+  </rect>
+
+  <!-- calcMode="paced" -->
+  <rect x="10" y="110" width="100" height="100" fill="red"/>
+  <rect x="-190" y="110" width="100" height="100" fill="lime">
+    <animateMotion begin="100s" dur="1s">
+      <mpath xlink:href="#path" />
+    </animateMotion>
+  </rect>
+</svg>

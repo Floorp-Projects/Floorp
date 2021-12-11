@@ -1,0 +1,411 @@
+<?xml version="1.0"?>
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
+
+<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/allDownloadsView.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuOverlayDTD;
+]>
+
+<window id="places"
+        data-l10n-id="places-library"
+        data-l10n-attrs="style"
+        windowtype="Places:Organizer"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="PlacesOrganizer.init();"
+        onunload="PlacesOrganizer.destroy();"
+        screenX="10" screenY="10"
+        toggletoolbar="true"
+        persist="width height screenX screenY sizemode">
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/browserSets.ftl"/>
+    <html:link rel="localization" href="browser/places.ftl"/>
+    <html:link rel="localization" href="browser/downloads.ftl"/>
+    <html:link rel="localization" href="browser/editBookmarkOverlay.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/places/places.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+#ifndef XP_MACOSX
+  <!-- On Mac, this is included via macWindow.inc.xhtml -> global-scripts.inc -> browser.js -> defineLazyScriptGetter -->
+  <script src="chrome://browser/content/places/editBookmark.js"/>
+  <!-- On Mac, thes are included via macWindow.inc.xhtml -> global-scripts.inc -->
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+#endif
+
+  <stringbundleset id="placesStringSet">
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
+  </stringbundleset>
+
+#ifdef XP_MACOSX
+#include ../../../base/content/macWindow.inc.xhtml
+#else
+#include placesCommands.inc.xhtml
+#endif
+
+  <!-- This must be included after macWindow.inc.xhtml to override DownloadsView -->
+  <script src="chrome://browser/content/downloads/allDownloadsView.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://browser/content/places/places-tree.js"/>
+
+  <commandset id="organizerCommandSet">
+    <command id="OrganizerCommand_find:all"
+             oncommand="PlacesSearchBox.findAll();"/>
+    <command id="OrganizerCommand_export"
+             oncommand="PlacesOrganizer.exportBookmarks();"/>
+    <command id="OrganizerCommand_import"
+             oncommand="PlacesOrganizer.importFromFile();"/>
+    <command id="OrganizerCommand_browserImport"
+             oncommand="PlacesOrganizer.importFromBrowser();"/>
+    <command id="OrganizerCommand_backup"
+             oncommand="PlacesOrganizer.backupBookmarks();"/>
+    <command id="OrganizerCommand_restoreFromFile"
+             oncommand="PlacesOrganizer.onRestoreBookmarksFromFile();"/>
+    <command id="OrganizerCommand_search:save"
+             oncommand="PlacesOrganizer.saveSearch();"/>
+    <command id="OrganizerCommand_search:moreCriteria"
+             oncommand="PlacesQueryBuilder.addRow();"/>
+    <command id="OrganizerCommand:Back"
+             oncommand="PlacesOrganizer.back();"/>
+    <command id="OrganizerCommand:Forward"
+             oncommand="PlacesOrganizer.forward();"/>
+  </commandset>
+#include ../../downloads/content/downloadsCommands.inc.xhtml
+
+  <keyset id="placesOrganizerKeyset">
+    <!-- Instantiation Keys -->
+    <key id="placesKey_close" data-l10n-id="places-cmd-close" modifiers="accel"
+         oncommand="window.close();"/>
+
+    <!-- Command Keys -->
+    <key id="placesKey_find:all"
+         command="OrganizerCommand_find:all"
+         data-l10n-id="places-cmd-find-key"
+         modifiers="accel"/>
+
+    <!-- Back/Forward Keys Support -->
+#ifndef XP_MACOSX
+    <key id="placesKey_goBackKb"
+         keycode="VK_LEFT"
+         command="OrganizerCommand:Back"
+         modifiers="alt"/>
+    <key id="placesKey_goForwardKb"
+         keycode="VK_RIGHT"
+         command="OrganizerCommand:Forward"
+         modifiers="alt"/>
+#else
+    <key id="placesKey_goBackKb"
+         keycode="VK_LEFT"
+         command="OrganizerCommand:Back"
+         modifiers="accel"/>
+    <key id="placesKey_goForwardKb"
+         keycode="VK_RIGHT"
+         command="OrganizerCommand:Forward"
+         modifiers="accel"/>
+#endif
+#ifdef XP_UNIX
+    <key id="placesKey_goBackKb2"
+         data-l10n-id="nav-back-shortcut-alt"
+         command="OrganizerCommand:Back"
+         modifiers="accel"/>
+    <key id="placesKey_goForwardKb2"
+         data-l10n-id="nav-fwd-shortcut-alt"
+         command="OrganizerCommand:Forward"
+         modifiers="accel"/>
+#endif
+  </keyset>
+
+#include ../../../../toolkit/content/editMenuKeys.inc.xhtml
+#ifdef XP_MACOSX
+  <keyset id="editMenuKeysExtra">
+    <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
+  </keyset>
+#endif
+
+  <popupset id="placesPopupset">
+#include placesContextMenu.inc.xhtml
+    <menupopup id="placesColumnsContext"
+               onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+               oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
+#include ../../downloads/content/downloadsContextMenu.inc.xhtml
+  </popupset>
+
+  <toolbox id="placesToolbox">
+    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center">
+      <toolbarbutton id="back-button"
+                     command="OrganizerCommand:Back"
+                     data-l10n-id="places-back-button"
+                     disabled="true"/>
+
+      <toolbarbutton id="forward-button"
+                     command="OrganizerCommand:Forward"
+                     data-l10n-id="places-forward-button"
+                     disabled="true"/>
+
+#ifdef XP_MACOSX
+        <toolbarbutton type="menu" class="tabbable" wantdropmarker="true"
+              onpopupshowing="document.getElementById('placeContent').focus()"
+              data-l10n-id="places-organize-button-mac"
+#else
+      <menubar id="placesMenu">
+        <menu class="menu-iconic" data-l10n-id="places-organize-button"
+#endif
+              id="organizeButton">
+          <menupopup id="organizeButtonPopup">
+            <menuitem id="newbookmark"
+                      command="placesCmd_new:bookmark"
+                      data-l10n-id="places-add-bookmark"/>
+            <menuitem id="newfolder"
+                      command="placesCmd_new:folder"
+                      data-l10n-id="places-add-folder"/>
+            <menuitem id="newseparator"
+                      command="placesCmd_new:separator"
+                      data-l10n-id="places-add-separator"/>
+
+#ifdef XP_MACOSX
+            <menuseparator id="orgDeleteSeparator"/>
+
+            <menuitem id="orgDelete"
+                      command="cmd_delete"
+                      data-l10n-id="text-action-delete"
+                      key="key_delete"/>
+#else
+            <menuseparator id="orgUndoSeparator"/>
+
+            <menuitem id="orgUndo"
+                      command="cmd_undo"
+                      data-l10n-id="text-action-undo"
+                      key="key_undo"/>
+            <menuitem id="orgRedo"
+                      command="cmd_redo"
+                      data-l10n-id="text-action-redo"
+                      key="key_redo"/>
+
+            <menuseparator id="orgCutSeparator"/>
+
+            <menuitem id="orgCut"
+                      command="cmd_cut"
+                      data-l10n-id="text-action-cut"
+                      key="key_cut"
+                      selection="separator|link|folder|mixed"/>
+            <menuitem id="orgCopy"
+                      command="cmd_copy"
+                      data-l10n-id="text-action-copy"
+                      key="key_copy"
+                      selection="separator|link|folder|mixed"/>
+            <menuitem id="orgPaste"
+                      command="cmd_paste"
+                      data-l10n-id="text-action-paste"
+                      key="key_paste"
+                      selection="mutable"/>
+            <menuitem id="orgDelete"
+                      command="cmd_delete"
+                      data-l10n-id="text-action-delete"
+                      key="key_delete"/>
+
+            <menuseparator id="selectAllSeparator"/>
+
+            <menuitem id="orgSelectAll"
+                      command="cmd_selectAll"
+                      data-l10n-id="text-action-select-all"
+                      key="key_selectAll"/>
+
+            <menuseparator id="orgCloseSeparator"/>
+
+            <menuitem id="orgClose"
+                      key="placesKey_close"
+                      data-l10n-id="places-file-close"
+                      oncommand="window.close();"/>
+#endif
+          </menupopup>
+#ifdef XP_MACOSX
+        </toolbarbutton>
+        <toolbarbutton type="menu" class="tabbable" wantdropmarker="true"
+        data-l10n-id="places-view-button-mac"
+#else
+        </menu>
+        <menu class="menu-iconic" data-l10n-id="places-view-button"
+#endif
+              id="viewMenu">
+          <menupopup id="viewMenuPopup">
+
+            <menu id="viewColumns"
+                  data-l10n-id="places-view-menu-columns">
+              <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+                         oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
+            </menu>
+
+            <menu id="viewSort" data-l10n-id="places-view-menu-sort">
+              <menupopup onpopupshowing="ViewMenu.populateSortMenu(event);"
+                         oncommand="ViewMenu.setSortColumn(event.target.column, null);">
+                <menuitem id="viewUnsorted" type="radio" name="columns"
+                          data-l10n-id="places-view-sort-unsorted"
+                          oncommand="ViewMenu.setSortColumn(null, null);"/>
+                <menuseparator id="directionSeparator"/>
+                <menuitem id="viewSortAscending" type="radio" name="direction"
+                          data-l10n-id="places-view-sort-ascending"
+                          oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.stopPropagation();"/>
+                <menuitem id="viewSortDescending" type="radio" name="direction"
+                          data-l10n-id="places-view-sort-descending"
+                          oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
+              </menupopup>
+            </menu>
+          </menupopup>
+#ifdef XP_MACOSX
+        </toolbarbutton>
+        <toolbarbutton type="menu" class="tabbable" wantdropmarker="true"
+        data-l10n-id="places-maintenance-button-mac"
+#else
+        </menu>
+        <menu class="menu-iconic" data-l10n-id="places-maintenance-button"
+#endif
+              id="maintenanceButton">
+          <menupopup id="maintenanceButtonPopup">
+            <menuitem id="backupBookmarks"
+                      command="OrganizerCommand_backup"
+                      data-l10n-id="places-cmd-backup"/>
+            <menu id="fileRestoreMenu" data-l10n-id="places-cmd-restore">
+              <menupopup id="fileRestorePopup" onpopupshowing="PlacesOrganizer.populateRestoreMenu();">
+                <menuitem id="restoreFromFile"
+                          command="OrganizerCommand_restoreFromFile"
+                          data-l10n-id="places-cmd-restore-from-file"/>
+              </menupopup>
+            </menu>
+            <menuseparator/>
+            <menuitem id="fileImport"
+                      command="OrganizerCommand_import"
+                      data-l10n-id="places-import-bookmarks-from-html"/>
+            <menuitem id="fileExport"
+                      command="OrganizerCommand_export"
+                      data-l10n-id="places-export-bookmarks-to-html"/>
+            <menuseparator/>
+            <menuitem id="browserImport"
+                      command="OrganizerCommand_browserImport"
+                      data-l10n-id="places-import-other-browser"/>
+          </menupopup>
+#ifdef XP_MACOSX
+        </toolbarbutton>
+#else
+        </menu>
+      </menubar>
+#endif
+
+      <toolbarbutton id="clearDownloadsButton"
+                          data-l10n-id="downloads-clear-downloads-button"
+                          class="tabbable"
+                          command="downloadsCmd_clearDownloads"/>
+
+      <spacer id="libraryToolbarSpacer" flex="1"/>
+
+      <search-textbox id="searchFilter"
+                      flex="1"
+                      aria-controls="placeContent"
+                      oncommand="PlacesSearchBox.search(this.value);"
+                      collection="bookmarks"/>
+    </toolbar>
+  </toolbox>
+
+  <hbox flex="1" id="placesView">
+    <tree id="placesList"
+          class="plain placesTree"
+          is="places-tree"
+          hidecolumnpicker="true" context="placesContext"
+          onselect="PlacesOrganizer.onPlaceSelected(true);"
+          onclick="PlacesOrganizer.onPlacesListClick(event);"
+          onfocus="PlacesOrganizer.updateDetailsPane(event);"
+          seltype="single"
+          persist="width"
+          width="200"
+          minwidth="100"
+          maxwidth="400">
+      <treecols>
+        <treecol anonid="title" flex="1" primary="true" hideheader="true"/>
+      </treecols>
+      <treechildren flex="1"/>
+    </tree>
+    <splitter collapse="none" persist="state"></splitter>
+    <vbox id="contentView" flex="4">
+      <vbox id="placesViewsBox" flex="1">
+        <tree id="placeContent"
+              class="plain placesTree"
+              context="placesContext"
+              hidecolumnpicker="true"
+              flex="1"
+              is="places-tree"
+              flatList="true"
+              selectfirstnode="true"
+              enableColumnDrag="true"
+              onfocus="PlacesOrganizer.updateDetailsPane(event)"
+              onselect="PlacesOrganizer.updateDetailsPane(event)"
+              onkeypress="ContentTree.onKeyPress(event);">
+          <treecols id="placeContentColumns" context="placesColumnsContext">
+            <!--
+              The below code may suggest that 'ordinal' is still a supported XUL
+              attribute. It is not. This is a crutch so that we can continue
+              persisting the CSS -moz-box-ordinal-group attribute, which is the
+              appropriate replacement for the ordinal attribute but cannot yet
+              be easily persisted. The code that synchronizes the attribute with
+              the CSS lives in toolkit/content/widget/tree.js and is specific to
+              tree elements.
+            -->
+            <treecol data-l10n-id="places-view-sort-col-name" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1"
+                      persist="width hidden ordinal sortActive sortDirection"/>
+            <splitter class="tree-splitter"/>
+            <treecol data-l10n-id="places-view-sort-col-tags" id="placesContentTags" anonid="tags" flex="2"
+                      persist="width hidden ordinal sortActive sortDirection"/>
+            <splitter class="tree-splitter"/>
+            <treecol data-l10n-id="places-view-sort-col-url" id="placesContentUrl" anonid="url" flex="5"
+                      persist="width hidden ordinal sortActive sortDirection"/>
+            <splitter class="tree-splitter"/>
+            <treecol data-l10n-id="places-view-sort-col-most-recent-visit" id="placesContentDate" anonid="date" flex="1" hidden="true"
+                      persist="width hidden ordinal sortActive sortDirection"/>
+            <splitter class="tree-splitter"/>
+            <treecol data-l10n-id="places-view-sort-col-visit-count" id="placesContentVisitCount" anonid="visitCount" flex="1" hidden="true"
+                      persist="width hidden ordinal sortActive sortDirection"/>
+            <splitter class="tree-splitter"/>
+            <treecol data-l10n-id="places-view-sort-col-date-added" id="placesContentDateAdded" anonid="dateAdded" flex="1" hidden="true"
+                      persist="width hidden ordinal sortActive sortDirection"/>
+            <splitter class="tree-splitter"/>
+            <treecol data-l10n-id="places-view-sort-col-last-modified" id="placesContentLastModified" anonid="lastModified" flex="1" hidden="true"
+                      persist="width hidden ordinal sortActive sortDirection"/>
+          </treecols>
+          <treechildren flex="1" onclick="ContentTree.onClick(event);"/>
+        </tree>
+        <richlistbox flex="1"
+                     hidden="true"
+                     seltype="multiple"
+                     id="downloadsRichListBox"
+                     context="downloadsContextMenu"/>
+      </vbox>
+      <vbox id="detailsPane" style="height: 11em;">
+        <vbox id="itemsCountBox" align="center" flex="1" hidden="true">
+          <spacer flex="3"/>
+          <label id="itemsCountText"/>
+          <spacer flex="1"/>
+          <description id="selectItemDescription" data-l10n-id="places-details-pane-select-an-item-description">
+          </description>
+          <spacer flex="3"/>
+        </vbox>
+        <vbox id="infoBox" flex="1">
+#include editBookmarkPanel.inc.xhtml
+        </vbox>
+      </vbox>
+    </vbox>
+  </hbox>
+</window>

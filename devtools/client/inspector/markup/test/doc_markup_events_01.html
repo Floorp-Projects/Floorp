@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+    #container {
+      border: 1px solid #000;
+      width: 200px;
+      height: 85px;
+    }
+
+    #container > div {
+      border: 1px solid #000;
+      display: inline-block;
+      margin: 2px;
+    }
+
+    #output,
+    #noevents,
+    #DOM0,
+    #handleevent,
+    #output,
+    #noevents {
+      cursor: auto;
+    }
+
+    #output {
+      min-height: 1.5em;
+    }
+    </style>
+    <script type="application/javascript">
+      "use strict";
+
+      /* exported init */
+      function init() {
+        const container = document.getElementById("container");
+        const multiple = document.getElementById("multiple");
+
+        container.addEventListener("mouseover", mouseoverHandler, true);
+        multiple.addEventListener("click", clickHandler);
+        multiple.addEventListener("mouseup", mouseupHandler);
+
+        const he = new HandleEventClick();
+        const handleevent = document.getElementById("handleevent");
+        handleevent.addEventListener("click", he);
+      }
+
+      function mouseoverHandler(event) {
+        if (event.target.id !== "container") {
+          const output = document.getElementById("output");
+          output.textContent = event.target.textContent;
+        }
+      }
+
+      function clickHandler(event) {
+        const output = document.getElementById("output");
+        output.textContent = "click";
+      }
+
+      function mouseupHandler(event) {
+        const output = document.getElementById("output");
+        output.textContent = "mouseup";
+      }
+
+      function HandleEventClick(hehe) {
+
+      }
+
+      HandleEventClick.prototype = {
+        handleEvent: function(blah) {
+          alert("handleEvent");
+        }
+      };
+
+      function noeventsClickHandler(event) {
+        alert("noevents has an event listener");
+      }
+
+      /* exported addNoeventsClickHandler, removeNoeventsClickHandler */
+      function addNoeventsClickHandler() {
+        const noevents = document.getElementById("noevents");
+        noevents.addEventListener("click", noeventsClickHandler);
+      }
+
+      function removeNoeventsClickHandler() {
+        const noevents = document.getElementById("noevents");
+        noevents.removeEventListener("click", noeventsClickHandler);
+      }
+    </script>
+  </head>
+  <body onload="init();">
+    <h1>Events test 1</h1>
+    <div id="container">
+      <div>1</div>
+      <div>2</div>
+      <div>3</div>
+      <div>4</div>
+      <div>5</div>
+      <div>6</div>
+      <div>7</div>
+      <div>8</div>
+      <div>9</div>
+      <div>10</div>
+      <div>11</div>
+      <div>12</div>
+      <div>13</div>
+      <div>14</div>
+      <div>15</div>
+      <div>16</div>
+      <div id="multiple">multiple</div>
+    </div>
+    <div id="output"></div>
+    <div id="noevents">noevents</div>
+    <div id="DOM0" onclick="alert('DOM0')">DOM0 event here</div>
+    <div id="handleevent">handleEvent</div>
+  </body>
+</html>

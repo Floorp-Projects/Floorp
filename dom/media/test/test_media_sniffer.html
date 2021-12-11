@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: sniffing</title>
+  <meta charset='utf-8'>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function finish_test(element) {
+  element.removeEventListener("error", onerror);
+  removeNodeAndSource(element);
+  manager.finished(element.token);
+}
+
+function onmetadataloaded(e) {
+  var t = e.target;
+  ++t.srcIndex;
+  ok(true, "The media loads when loaded via " + t.src);
+  if (t.srcIndex < t.srcList.length) {
+    t.src = t.srcList[t.srcIndex];
+  } else {
+    finish_test(t);
+  }
+}
+
+function onerror(e) {
+  var t = e.target;
+  t.removeEventListener('error', onerror);
+  ok(false, "The media could not be loaded." + t.src + "\n");
+  finish_test(t);
+}
+
+function startTest(test, token) {
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var element = document.createElement(elemType);
+  // This .sjs file serve the media file without Content-Type header, or with a
+  // specific Content-Type header.
+  var baseSrc = 'contentType.sjs?file=' + test.name;
+  element.srcList = [
+    baseSrc + "&nomime",
+    baseSrc + "&type=application/octet-stream",
+    baseSrc + "&type=audio/wav",
+    baseSrc + "&type=text/html",
+    baseSrc + "&type=absolute_nonsense"
+  ];
+  element.srcIndex = 0;
+  element.src = element.srcList[element.srcIndex];
+  element.token = token;
+  element.controls = true;
+  element.preload = "metadata";
+  document.body.appendChild(element);
+  manager.started(token);
+  element.addEventListener("loadedmetadata", onmetadataloaded);
+  element.addEventListener("error", onerror);
+}
+
+manager.runTests(gSnifferTests, startTest);
+</script>
+</pre>
+</body>
+</html>

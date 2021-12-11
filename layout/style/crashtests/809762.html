@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var ss = document.getElementsByTagName('style')[0];
+  var styleText = '@font-face { font-family: "MarkA"; src: url(markA.ttf); } :root { font-family: "MarkA"; }';
+
+  ss.firstChild.data = styleText;
+  setTimeout(function() {
+    ss.firstChild.data = styleText + " ";
+  }, 0);
+}
+
+</script>
+<style>
+</style>
+</head>
+<body onload="boom();"></body>
+</html>

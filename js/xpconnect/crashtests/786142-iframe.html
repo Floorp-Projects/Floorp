@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+// Morph a slim wrapper into an XPCWN by generating a cross-compartment wrapper
+// for it (we Morph in WrapperFactory::PrepareForWrapping).
+function makeNonSlim(elem) {
+  window.parent.someCCW = elem;
+  delete window.parent.someCCW;
+}
+
+function doTest() {
+
+  // Get a slim wrapper for |form|. This lives in scope 1.
+  var form = document.getElementById('myform');
+
+  // The gist here is that we want to create an input element that isn't part
+  // of a form, so that its PreCreate hook will cause it to be parented to the
+  // document. However, there are several considerations that make this more
+  // complicted.
+  //
+  // First, the crashtest becomes non-deterministics if we morph |form| before
+  // getting to scope 3 (as explained below). This means that we can't trigger
+  // the PreCreate hook for |input|, because that will call WrapNativeParent
+  // (Well... No, it won't: there is no WrapNativeParent, but there are also no
+  // more pre-create hooks, slimwrappers, parenting to the form, or any of the
+  // stuff this test is trying to test.)
+  // on the form, which will end up making a cross-compartment wrapper, which
+  // will morph form. But this puts us in a pickle, because appendChild returns
+  // the apppended child, which will trigger the PreCreate hook in
+  // NativeInterface2JSObject. So we do this little hack where we append a buch
+  // of dummy <div> children to the form, and use replaceChild (which returns
+  // the replacer, not the replacee) to stick the input elements as children of
+  // the form.
+  //
+  // Second, the crashtest can also be non-deterministics if the final call to
+  // MoveWrappers iterates over the hashtable in such a way that it fixes up
+  // the Document before it fixes up the Input. If so, the Input will become
+  // orphaned, and we'll detect it and fix things up at the top of MoveWrapper.
+  // Since we can't control the hashtable ordering here, we just make 100 input
+  // elements, to make it a near-certainty (statistically) that we'll encounter
+  // one of them during iteration before encountering the Document.
+  //
+  // With all this, this testcase deterministically crashes on my machine. Whew!
+
+  // Create an input element. This isn't part of a form right now, so it gets
+  // parented to the document.
+  var inputs = [];
+  var placeHolders = [];
+  for (var i = 0; i < 100; ++i) {
+    var dummyDiv = form.appendChild(document.createElement('div'));
+    var input = document.createElement('input');
+    makeNonSlim(input);
+    inputs.push(input);
+    placeHolders.push(dummyDiv);
+  }
+
+  // Blow away the document, forcing a transplan of all the XPCWNs in scope. This
+  // will transplant |input|, but |form| stays in the old scope (since it's slim).
+  document.open();
+  document.close();
+
+  // Now we're in scope 2. Associate |input| with |form| so that the next call to
+  // PreCreate will parent |input| to |form| rather than the document. But make
+  // sure to do it with replaceChild, rather than appendChild, so that we don't
+  // end up triggering the PreCreate hook for |form| in scope 2, which would make
+  // make it non-slim. If we didn't, the ensuing call to MoveWrappers might find
+  // |form| before |input| while iterating over the hashtable. If so, |form|
+  // would be rescued as an orphan and everything would be fixed before getting to  // |input|.
+  for (var i = 0; i < inputs.length; ++i)
+    form.replaceChild(inputs[i], placeHolders[i]);
+
+  // Blow away the document a second time. This should cause the crash in
+  // unpatched builds.
+  document.open();
+  document.close();
+}
+</script>
+</head>
+<body>
+<form id="myform"></form>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html class="reftest-wait">
+<div id="frame" style="background-color:lime;">
+<svg style="width: 437px; height: 45px; overflow:visible;" viewBox="0 0 437 45">
+  <g font-size="40">
+    <text x="40" y="40" fill="red">BAD</text>
+    <text fill="lime" stroke="lime" stroke-width="4"><textPath href="#path">BAD</textPath></text>
+  </g>
+  <path id="path" d="M40 40 h 100" fill="transparent"></path>
+</svg>
+<style>
+html, body, div {
+  width: 100%;
+  height: 100%;
+  padding: none;
+  margin: 0;
+}
+</style>
+<script>
+  let container = document.getElementById('frame');
+  container.getBoundingClientRect();
+  setTimeout(function() {
+    container.style.pointerEvents = 'all';
+    document.documentElement.removeAttribute("class");
+  })
+</script>
+</div>
+</html>

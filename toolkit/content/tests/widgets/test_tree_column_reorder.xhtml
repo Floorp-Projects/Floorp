@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+  XUL Widget Test for reordering tree columns
+  -->
+<window title="Tree" width="500" height="600"
+        onload="setTimeout(testtag_tree_column_reorder, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script src="tree_shared.js"/>
+
+<tree id="tree-column-reorder" rows="1" enableColumnDrag="true">
+  <treecols>
+    <treecol id="col_0" label="col_0" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_1" label="col_1" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_2" label="col_2" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_3" label="col_3" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_4" label="col_4" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_5" label="col_5" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_6" label="col_6" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_7" label="col_7" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_8" label="col_8" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_9" label="col_9" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_10" label="col_10" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_11" label="col_11" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="col_12" label="col_12" flex="1"/>
+  </treecols>
+  <treechildren id="treechildren-column-reorder">
+    <treeitem>
+      <treerow>
+        <treecell label="col_0"/>
+        <treecell label="col_1"/>
+        <treecell label="col_2"/>
+        <treecell label="col_3"/>
+        <treecell label="col_4"/>
+        <treecell label="col_5"/>
+        <treecell label="col_6"/>
+        <treecell label="col_7"/>
+        <treecell label="col_8"/>
+        <treecell label="col_9"/>
+        <treecell label="col_10"/>
+        <treecell label="col_11"/>
+        <treecell label="col_12"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+</tree>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+</window>

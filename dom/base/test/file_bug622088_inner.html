@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+function load() {
+  (window.opener || window.parent).innerLoaded(window);
+}
+
+function doXHR(req) {
+  // Do a sync XHR and return the XHR's referrer.
+  if (!req) {
+    req = new XMLHttpRequest();
+  }
+
+  // file_bug622088.sjs echos its referrer back to us.  We need to refer to it
+  // using an absolute URI because we sometimes pass in |req| from a window
+  // which has a data: URI.  In that case, a relative path would not get
+  // resolved properly!
+  //
+  // Resolve our relative URI to an absolute one by creating an anchor element
+  // and reading its href property.
+  var anchor = document.createElement('a');
+  anchor.href = 'file_bug622088.sjs';
+
+  dump('anchor.href=' + anchor.href + '\n');
+
+  req.open('GET', anchor.href, false);
+  req.send(null);
+  return req.responseText;
+}
+</script>
+</head>
+
+<body onload='load()'>
+<!--Inner frame target for test_bug622088_2.html. -->
+</body>
+
+</html>

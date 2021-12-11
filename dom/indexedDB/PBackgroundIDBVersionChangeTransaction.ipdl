@@ -1,0 +1,53 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBCursor;
+include protocol PBackgroundIDBDatabase;
+include protocol PBackgroundIDBDatabaseFile;
+include protocol PBackgroundIDBRequest;
+include protocol PBackgroundMutableFile;
+include protocol PChildToParentStream;  // FIXME: bug 792908
+include protocol PFileDescriptorSet;    // FIXME: bug 792908
+include protocol PParentToChildStream;  // FIXME: bug 792908
+include protocol PRemoteLazyInputStream;   // FIXME: bug 792908
+
+include PBackgroundIDBSharedTypes;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+[RefCounted] protocol PBackgroundIDBVersionChangeTransaction {
+  manager PBackgroundIDBDatabase;
+
+  manages PBackgroundIDBCursor;
+  manages PBackgroundIDBRequest;
+
+parent:
+  async DeleteMe();
+
+  async Commit(int64_t? lastRequest);
+  async Abort(nsresult resultCode);
+
+  async CreateObjectStore(ObjectStoreMetadata metadata);
+  async DeleteObjectStore(int64_t objectStoreId);
+  async RenameObjectStore(int64_t objectStoreId, nsString name);
+
+  async CreateIndex(int64_t objectStoreId, IndexMetadata metadata);
+  async DeleteIndex(int64_t objectStoreId, int64_t indexId);
+  async RenameIndex(int64_t objectStoreId, int64_t indexId, nsString name);
+
+  async PBackgroundIDBCursor(OpenCursorParams params);
+
+  async PBackgroundIDBRequest(RequestParams params);
+
+child:
+  async __delete__();
+
+  async Complete(nsresult result);
+};
+
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

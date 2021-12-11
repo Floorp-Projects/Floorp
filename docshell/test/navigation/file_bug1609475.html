@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <script>
+
+    var loadCount = 0;
+    function loadListener(event) {
+      ++loadCount;
+      if (loadCount == 2) {
+        // Use a timer to ensure we don't get extra load events.
+        setTimeout(function() {
+          var doc1URI = document.getElementById("i1").contentDocument.documentURI;
+          opener.ok(doc1URI.includes("frame1.html"),
+                    "Should have loaded the initial page to the first iframe. Got " + doc1URI);
+          var doc2URI = document.getElementById("i2").contentDocument.documentURI;
+          opener.ok(doc2URI.includes("frame1.html"),
+                    "Should have loaded the initial page to the second iframe. Got " + doc2URI);
+          opener.finishTest();
+        }, 1000);
+      } else if (loadCount > 2) {
+        opener.ok(false, "Too many load events");
+      }
+      // if we don't get enough load events, the test will time out.
+    }
+
+    function setupIframe(id) {
+      var ifr = document.getElementById(id);
+      return new Promise(function(resolve) {
+        ifr.onload = function() {
+          // Replace load listener to catch page loads from the session history.
+          ifr.onload = loadListener;
+          // Need to use setTimeout, because triggering loads inside
+          // load event listener has special behavior since at the moment
+          // the docshell keeps track of whether it is executing a load handler or not.
+          setTimeout(resolve);
+        }
+        ifr.contentWindow.location.href = "frame2.html";
+      });
+    }
+
+    async function test() {
+      await setupIframe("i1");
+      await setupIframe("i2");
+      history.go(-2);
+    }
+    </script>
+  </head>
+  <body onload="setTimeout(test)">
+    <iframe id="i1" src="frame1.html"></iframe>
+    <iframe id="i2" src="frame1.html"></iframe>
+  </body>
+</html>

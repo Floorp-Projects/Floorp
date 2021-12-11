@@ -1,0 +1,31 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace dom {
+
+union PrefValue {
+  nsCString;
+  int32_t;
+  bool;
+};
+
+// This serialization form mirrors that used in mozilla::Pref in
+// Preferences.cpp. The two should be kept in sync, e.g. if something is added
+// to one it should also be added to the other.
+//
+// Note: there is no need to pass the isSticky attribute because that's an
+// immutable attribute obtained from file at startup.
+struct Pref {
+  nsCString name;
+  bool isLocked;
+  PrefValue? defaultValue;
+  PrefValue? userValue;
+};
+
+} // namespace dom
+} // namespace mozilla

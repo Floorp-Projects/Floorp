@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Hittest position:fixed zoomed scroll</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+    #fixed {
+      position: fixed;
+      height: 30px;
+      width: 100%;
+      background: linear-gradient(135deg, white, black);
+    }
+    #fixed > input {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="fixed"><input type="button" value="Button" /></div>
+  <script>
+    async function test() {
+      let transformEndPromise = promiseTransformEnd();
+      synthesizeNativeTouchDrag(document.body, 10, 10, -2000, 0);
+      await transformEndPromise;
+
+      await promiseApzFlushedRepaints();
+
+      let clickPromise = new Promise(resolve => {
+        window.addEventListener("click", resolve);
+      });
+      let input = document.querySelector("input");
+      synthesizeNativeMouseEventWithAPZ({ type: "click", target: input, offsetX: 10, offsetY: 10 });
+      let e = await clickPromise;
+      is(e.target, input, "got click");
+    }
+
+    SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Balancing of tables (growing)</title>
+<style type="text/css">
+
+table, td {
+  border: none;
+  margin: 0;
+  padding: 0;
+  border-spacing: 3px;
+}
+
+tr { height: 1.5em; }
+
+td { background: black; background: currentColor; }
+
+td, span { line-height: 1; }
+
+span {
+  display: inline-block;
+  width: 25px;
+}
+
+</style>
+</head>
+<body>
+
+<!--
+    cell widths in the first table are:
+    min   pref   pct
+     25     75
+     25     25
+      0      0
+     25     50*
+     25     25   50%
+
+    and the table has 18px of horizontal border-spacing
+
+    pref width of columns is 300px
+
+  -->
+
+<table><tr>
+<td style="color:aqua"><span></span>&#x200b;<span></span>&#x200b;<span></span></td>
+<td style="color:yellow"><span></span></td>
+<td style="color:red"></td>
+<td style="color:fuchsia" width="50"><span></span></td>
+<td style="color:blue" width="50%"><span></span></td>
+</tr></table>
+
+<table width="518"><tr>
+<td style="color:aqua"><span></span>&#x200b;<span></span>&#x200b;<span></span></td>
+<td style="color:yellow"><span></span></td>
+<td style="color:red"></td>
+<td style="color:fuchsia" width="50"><span></span></td>
+<td style="color:blue" width="50%"><span></span></td>
+</tr></table>
+
+<!-- XXXdholbert: Change "width: 0px" to width="0px" in next 2 cases -->
+<table width="438"><tr>
+<td style="color:aqua" width="75"><span></span>&#x200b;<span></span>&#x200b;<span></span></td>
+<td style="color:yellow" width="25"><span></span></td>
+<td style="color:red; width: 0px"></td>
+<td style="color:fuchsia" width="50"><span></span></td>
+<td style="color:blue" width="50%"><span></span></td>
+</tr></table>
+
+<table width="418"><tr>
+<td style="color:aqua" width="10%"><span></span></td>
+<td style="color:yellow" width="10%"><span></span></td>
+<td style="color:red; width: 0px"></td>
+<td style="color:fuchsia" width="10%"><span></span></td>
+<td style="color:blue" width="50%"><span></span></td>
+</tr></table>
+
+<table width="435"><tr>
+<td style="color:aqua" width="75"><span></span>&#x200b;<span></span>&#x200b;<span></span></td>
+<td style="color:yellow"></td>
+<td style="color:fuchsia" width="50"><span></span></td>
+<td style="color:blue" width="50%"><span></span></td>
+</tr></table>
+
+<table width="415"><tr>
+<td style="color:aqua" width="15%"><span></span></td>
+<td style="color:yellow"></td>
+<td style="color:fuchsia" width="15%"><span></span></td>
+<td style="color:blue" width="50%"><span></span></td>
+</tr></table>
+
+<table width="415"><tr>
+<td style="color:aqua"></td>
+<td style="color:yellow"></td>
+<td style="color:fuchsia"></td>
+<td style="color:blue"></td>
+</tr></table>
+
+</body>
+</html>

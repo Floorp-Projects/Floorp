@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html style="margin: 5px; border: 0; padding: 1px;">
+<head>
+  <title>HTML Tests for offset/client/scroll properties</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="test_offsets.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+
+<style>
+  input {
+    box-sizing: content-box;
+  }
+</style>
+</head>
+
+<!-- We set a transform on the body element so that it creates a reference frame.
+     This makes sure that snapping of scrolled areas for the contained elements
+     is not influenced by offsets outside of this document. -->
+<body id="body" onload="setTimeout(testElements, 0, 'testelements', SimpleTest.finish);"
+      style="margin: 1px; border: 2px solid black; padding: 4px; transform: translateY(1px);">
+
+<div id="testelements" style="margin: 0; border: 0; padding: 0;">
+  <div id="div1" style="margin: 0; margin-left: 6px; margin-top: 2px; border: 1px solid green; padding: 6px; width: 50px; height: 20px"
+         _offsetLeft="13" _offsetTop="9" _offsetWidth="64" _offsetHeight="34"
+         _scrollWidth="62" _scrollHeight="32"
+         _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32"></div>
+  <div id="noscroll" style="margin: 2px; border: 1px solid blue; padding: 3px;"
+       _offsetLeft="10" _offsetTop="12" _offsetWidth="64" _offsetHeight="34"
+       _scrollWidth="62" _scrollHeight="32"
+       _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32">
+    <div id="inner">Inner Text</div>
+  </div>
+
+  <div id="absolute" style="position: absolute; margin: 5px; border: 2px solid blue; padding: 0;">
+    <div id="absolute-block" _offsetParent="absolute">
+      <div id="absolute-replaced" _offsetParent="absolute" style="margin: 1px; border: 0; padding: 3px;"></div>
+    </div>
+  </div>
+
+  <div id="absolutelr" style="position: absolute; margin: 5px; border: 2px solid blue; padding: 0; left: 90px; top: 130px;">
+    This is some absolute positioned text.
+    <div id="absolutelr-block" _offsetParent="absolutelr">
+      <div id="absolutelr-replaced" _offsetParent="absolutelr" style="margin: 1px; border: 0; padding: 3px;"></div>
+    </div>
+  </div>
+
+  <div id="relative" style="position: relative; margin: 2px; border: 1px solid orange; padding: 7px; left: 10px; top: 5px;">
+    This is some relative positioned text.
+    <div id="relative-block" _offsetParent="relative">
+      <div id="relative-replaced" _offsetParent="relative" style="margin: 1px; border: 0; padding: 3px;"></div>
+    </div>
+  </div>
+
+  <div id="fixed" style="position: fixed; margin: 2px; border: 1px solid orange; padding: 7px; left: 87px; top: 12px;">
+    This is some fixed positioned text.
+    <div id="fixed-block" _offsetParent="fixed">
+      <div id="fixed-replaced" _offsetParent="fixed" style="margin: 1px; border: 0; padding: 3px;"></div>
+    </div>
+  </div>
+
+  <div id="scrollbox"
+       style="overflow: scroll; padding-left: 0px; margin: 3px; border: 4px solid green; max-width: 80px; max-height: 70px"
+       _scrollWidth="62" _scrollHeight="32"
+       _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32"><p id="p1" style="margin: 0; padding: 0;">One</p>
+    <p id="p2">Two</p>
+    <p id="scrollchild">Three</p>
+    <p id="lastlinebox" style="margin: 0; padding: 0;"><input id="lastline" type="button"
+                               style="margin: 0px; border: 2px solid red;"
+                               value="This button is much longer than the others">
+  </p></div>
+
+  <div id="overflow-visible" style="width:100px; height:100px;">
+    <div id="overflow-visible-1" style="width:200px; height:1px; background:yellow;"></div>
+    <div id="overflow-visible-2" style="height:200px; background:lime;"></div>
+  </div>
+
+  <div id="div-displaynone" style="display: none; border: 0; padding: 0;"
+         _offsetParent="null"></div>
+  <p id="p3" style="margin: 2px; border: 0; padding: 1px;"
+         _offsetLeft="9" _offsetTop="9" _offsetWidth="64" _offsetHeight="34"
+         _scrollWidth="62" _scrollHeight="32"
+         _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32">
+    <div id="div-nosize" style="width: 0; height: 0; margin: 0; border: 0; padding: 0;"></div>
+  </p>
+
+</div>
+
+<div id="scrollbox-test" style="float: left; overflow: scroll; margin: 0; border: 0; padding: 0"></div>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+</body>
+</html>

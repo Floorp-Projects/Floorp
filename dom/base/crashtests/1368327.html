@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <title>Test window.location</title>
+    <script type="application/javascript">
+    function test() {
+      content = document.querySelector("#content");
+      testFrame = document.querySelector("#testframe");
+      frameWindow = testFrame.contentWindow;
+      testframe.remove();
+
+      // Shouldn't crash at this line.
+      content.textContent = "location=" + frameWindow.location;
+
+      document.documentElement.className = "";
+    }
+    </script>
+  </head>
+  <body>
+    <p id="content"></p>
+    <iframe id="testframe" src="1368327-iframe.html" onload="setTimeout(test, 0);"></iframe>
+  </body>
+</html>

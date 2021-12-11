@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <meta charset="utf-8">
+  <title>CSS Flexbox Test: Fragmentation of block-size:auto and box-decoration-break:clone single-line column flex container with fixed block-size flex items</title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <link rel="help" href="https://drafts.csswg.org/css-flexbox-1/#pagination">
+  <link rel="match" href="flexbox-single-column-vertical-rl-3-ref.html">
+  <meta name="assert" content="This test verifies fragmentation of fixed block-size flex items in a block-size:auto single-line column flex container, with various combinations of margin/border/padding, alignments, row-gap, and box-decoration-break:clone.">
+
+  <style>
+  html {
+    writing-mode: vertical-rl;
+  }
+  .multicol {
+    block-size: 80px;
+    inline-size: 190px;
+    column-width: 40px;
+    column-fill: auto;
+    column-gap: 10px;
+    border: 5px solid orange;
+    margin-block-end: 5px; /* Just to separate each sub-testcase visually. */
+  }
+  .flexContainer {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    background: gray;
+    border: 0 solid white;
+    border-block-width: 15px;
+    box-decoration-break: clone;
+  }
+
+  /* Note: flex items are in visual order as "CMYK": cyan, magenta, yellow, black. */
+  header {
+    background: cyan;
+    block-size: 50px;
+  }
+  nav, article, footer {
+    inline-size: 30px;
+  }
+  nav {
+    background: magenta;
+    block-size: 25px;
+    align-self: flex-start;
+  }
+  article {
+    background: yellow;
+    block-size: 25px;
+    align-self: center;
+  }
+  footer {
+    background: black;
+    block-size: 50px;
+    align-self: flex-end;
+  }
+  </style>
+
+  <body>
+    <!-- Test a container with margin-block-start. -->
+    <div class="multicol">
+      <div class="flexContainer" style="margin-block-start: 25px">
+        <header></header><nav></nav><article></article><footer></footer>
+      </div>
+    </div>
+
+    <!-- Test a container not at the top of the column/page. -->
+    <div class="multicol">
+      <div style="block-size: 25px"></div>
+      <div class="flexContainer">
+        <header></header><nav></nav><article></article><footer></footer>
+      </div>
+    </div>
+
+    <!-- Test a container with row-gap. -->
+    <div class="multicol">
+      <div class="flexContainer" style="row-gap: 5px">
+        <header></header><nav></nav><article></article><footer></footer>
+      </div>
+    </div>
+  </body>
+</html>

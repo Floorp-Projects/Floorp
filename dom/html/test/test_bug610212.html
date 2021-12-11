@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=610212
+-->
+<head>
+  <title>Test for Bug 610212</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=610212">Mozilla Bug 610212</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 610212 **/
+
+var canvas = document.createElement('canvas');
+
+reflectUnsignedInt({
+  element: canvas,
+  attribute: "width",
+  nonZero: false,
+  defaultValue: 300,
+});
+
+reflectUnsignedInt({
+  element: canvas,
+  attribute: "height",
+  nonZero: false,
+  defaultValue: 150,
+});
+
+</script>
+</pre>
+</body>
+</html>

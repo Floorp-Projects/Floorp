@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1334537
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1334537</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1334537 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function go() {
+    // Need a new global that will pick up our pref.
+    var ifr = document.createElement("iframe");
+    document.body.appendChild(ifr);
+
+    var t = new ifr.contentWindow.TestFunctions();
+    var testString = "abcdefghijklmnopqrstuvwxyz";
+    const substringLength = 10;
+    var shortTestString = testString.substring(0, substringLength);
+
+    t.setStringData(testString);
+    // Note: we want to do all our gets before we start running code we don't
+    // control inside the test harness, if we really want to exercise the string
+    // cache in controlled ways.
+
+    var asShortDOMString = t.getStringDataAsDOMString(substringLength);
+    var asFullDOMString = t.getStringDataAsDOMString();
+    var asShortAString = t.getStringDataAsAString(substringLength);
+    var asAString = t.getStringDataAsAString();
+
+    is(asShortDOMString, shortTestString, "Short DOMString should be short");
+    is(asFullDOMString, testString, "Full DOMString should be test string");
+    is(asShortAString, shortTestString, "Short AString should be short");
+    is(asAString, testString, "Full AString should be test string");
+
+    // These strings should match the strings used in TestFunctions.cpp, but we
+    // want to launder them through something on the JS side that will convert
+    // them into strings stored in the JS heap.
+    function launder(str) {
+      // This should be sufficient, but if the JIT gets too smart we may need
+      // to get more clever.
+      return str.split("").join("");
+    }
+    var shortString = launder(t.getShortLiteralString());
+    var mediumString = launder(t.getMediumLiteralString());
+    var longString = launder(t.getLongLiteralString());
+
+    // A short or medium non-external string will become an inline FakeString.
+    is(t.getStringType(shortString), "inline",
+       "Short string should become inline");
+    is(t.getStringType(mediumString), "inline",
+       "Medium string should become inline");
+    // A long string will become a stringbuffer FakeString on the way in.
+    is(t.getStringType(longString), "stringbuffer",
+       "Long string should become a stringbuffer");
+
+    // A short literal string will become an inline JS string on the way out
+    // and then become an inline FakeString on the way in.
+    is(t.getStringType(t.getShortLiteralString()), "inline",
+       "Short literal string should become inline");
+    // A medium or long literal string will become an external JS string on the
+    // way out and then become a literal FakeString on the way in.
+    is(t.getStringType(t.getMediumLiteralString()), "literal",
+       "Medium literal string should become literal");
+    is(t.getStringType(t.getLongLiteralString()), "literal",
+       "Long literal string should become literal");
+
+    // A short stringbuffer string will become an inline JS string on the way
+    // out and then become an inline FakeString on the way in.
+    is(t.getStringType(t.getStringbufferString(shortString)), "inline",
+       "Short stringbuffer string should become inline");
+    // A medium or long stringbuffer string will become an external JS string
+    // on the way out and then become a stringbuffer FakeString on the way in.
+    is(t.getStringType(t.getStringbufferString(mediumString)), "stringbuffer",
+       "Medium stringbuffer string should become stringbuffer");
+    is(t.getStringType(t.getStringbufferString(longString)), "stringbuffer",
+       "Long stringbuffer string should become stringbuffer");
+
+    // Now test that roundtripping works fine.  We need to make sure the string
+    // we are storing is not equal to any of the ones we have used above, to
+    // avoid the external string cache interfering.
+    t.setStringData(longString + "unique");  // Should store with stringbuffer.
+    ok(t.stringbufferMatchesStored(t.getStringDataAsAString()),
+       "Stringbuffer should have roundtripped");
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(function() {
+    SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
+                              go);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1334537">Mozilla Bug 1334537</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

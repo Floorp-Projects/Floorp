@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Basic context-stroke test (without a fallback color)</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  -moz-context-properties: stroke;
+  stroke: lime;
+  border: 1px solid black;
+}
+
+    </style>
+  </head>
+  <body>
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><line x1='0' y1='50%' x2='100%' y2='50%' stroke-width='120%' stroke='context-stroke'/></svg>">
+  </body>
+</html>

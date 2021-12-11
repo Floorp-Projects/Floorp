@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token)
+{
+  // Case 2. creating a MediaElementSource on a media element should always succeed
+  //         (no matter whether it's restricted content or not), and
+  var p1 = new EMEPromise;
+  var case2token = token + "_case2";
+  let v2 = document.createElement("video");
+
+  v2.addEventListener("loadeddata", function(ev) {
+    ok(true, case2token + " should reach loadeddata");
+    var threw = false;
+    try {
+      var context = new AudioContext();
+      context.createMediaElementSource(v2);
+    } catch (e) {
+      threw = true;
+    }
+    ok(!threw, "Should always work when creating a MediaElementSource.");
+    p1.resolve();
+  });
+
+  manager.started(case2token);
+  let p2 = SetupEME(v2, test, case2token);
+
+  Promise.all([p1.promise, p2])
+  .catch(reason => ok(false, reason))
+  .then(() => {
+    CleanUpMedia(v2);
+    manager.finished(case2token);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(gEMETests, startTest);
+</script>
+</pre>
+</body>
+</html>

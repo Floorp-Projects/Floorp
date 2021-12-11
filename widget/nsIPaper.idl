@@ -1,0 +1,42 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(a4dd9675-6311-45a9-a547-44e0127304a6)]
+interface nsIPaper : nsISupports
+{
+  /**
+   * The internal name of the paper (a fixed, non-localized ID).
+   * (For CUPS, this is the PWG-standardized name as used internally by CUPS;
+   * on Windows, it is the integer paper ID as a string.)
+   */
+  readonly attribute AString id;
+
+  /**
+   * The human-readable (potentially localized) name of the paper.
+   */
+  readonly attribute AString name;
+
+  /**
+   * The width of the paper assuming portrait orientation, in points.
+   * That is, the length of the shorter edges of the paper.
+   */
+  readonly attribute double width;
+
+  /**
+   * The height of the paper assuming portrait orientation, in points.
+   * That is, the length of the longer edges of the paper.
+   */
+  readonly attribute double height;
+
+  /**
+   * The Promise resolves with an nsIPaperMargin object. The margin widths contained
+   * in that object's top/bottom/left/right properties are relative to the paper in
+   * portrait orientation. That is, top and bottom are the margins for the short edges,
+   * and left and right are the margins for the long edges.
+   */
+  [implicit_jscontext] readonly attribute Promise unwriteableMargin;
+};

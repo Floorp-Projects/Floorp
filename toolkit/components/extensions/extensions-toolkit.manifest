@@ -1,0 +1,13 @@
+# scripts
+category webextension-modules toolkit chrome://extensions/content/ext-toolkit.json
+
+category webextension-scripts a-toolkit chrome://extensions/content/parent/ext-toolkit.js
+category webextension-scripts b-tabs-base chrome://extensions/content/parent/ext-tabs-base.js
+
+category webextension-scripts-content toolkit chrome://extensions/content/child/ext-toolkit.js
+category webextension-scripts-devtools toolkit chrome://extensions/content/child/ext-toolkit.js
+category webextension-scripts-addon toolkit chrome://extensions/content/child/ext-toolkit.js
+
+category webextension-schemas events chrome://extensions/content/schemas/events.json
+category webextension-schemas native_manifest chrome://extensions/content/schemas/native_manifest.json
+category webextension-schemas types chrome://extensions/content/schemas/types.json

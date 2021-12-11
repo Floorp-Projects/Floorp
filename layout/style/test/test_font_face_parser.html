@@ -1,0 +1,384 @@
+<!DOCTYPE HTML><html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=441469 -->
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Test of @font-face parser</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<p>@font-face parsing (<a
+  target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=441469"
+>bug 441469</a>)</p>
+<pre id="display"></pre>
+<style type="text/css" id="testbox"></style>
+<script class="testbody" type="text/javascript">
+function runTest() {
+  function _(b) { return "@font-face { " + b + " }"; };
+  var testset = [
+    // Complete nonsense - shouldn't make a font-face rule at all.
+    { rule: "@font-face;" },
+    { rule: "font-face { }" },
+    { rule: "@fontface { }" },
+    { rule: "@namespace foo url(http://example.com/foo);" },
+
+    // Empty rule.
+    { rule: "@font-face { }",   d: {} },
+    { rule: "@font-face {",     d: {} },
+    { rule: "@font-face { ; }", d: {}, noncanonical: true },
+
+    // Correct font-family.
+    { rule: _("font-family: \"Mouse\";"), d: {"font-family" : "\"Mouse\""} },
+    { rule: _("font-family: \"Mouse\""),  d: {"font-family" : "\"Mouse\""},
+      noncanonical: true },
+    { rule: _("font-family: Mouse;"),  d: {"font-family" : "Mouse" },
+      noncanonical: true },
+    { rule: _("font-family: Mouse"),  d: {"font-family" : "Mouse" },
+      noncanonical: true },
+
+    // Correct but unusual font-family.
+    { rule: _("font-family: Hoefler Text;"),
+      d: {"font-family" : "Hoefler Text"},
+      noncanonical: true },
+
+    // Incorrect font-family.
+    { rule: _("font-family:"),        d: {} },
+    { rule: _("font-family \"Mouse\""), d: {} },
+    { rule: _("font-family: *"),      d: {} },
+    { rule: _("font-family: Mouse, Rat"), d: {} },
+    { rule: _("font-family: sans-serif"), d: {} },
+
+    // Correct font-style.
+    { rule: _("font-style: normal;"),  d: {"font-style" : "normal"} },
+    { rule: _("font-style: italic;"),  d: {"font-style" : "italic"} },
+    { rule: _("font-style: oblique;"),  d: {"font-style" : "oblique"} },
+
+    // Correct font-weight.
+    { rule: _("font-weight: 100;"),  d: {"font-weight" : "100"} },
+    { rule: _("font-weight: 200;"),  d: {"font-weight" : "200"} },
+    { rule: _("font-weight: 300;"),  d: {"font-weight" : "300"} },
+    { rule: _("font-weight: 400;"),  d: {"font-weight" : "400"} },
+    { rule: _("font-weight: 500;"),  d: {"font-weight" : "500"} },
+    { rule: _("font-weight: 600;"),  d: {"font-weight" : "600"} },
+    { rule: _("font-weight: 700;"),  d: {"font-weight" : "700"} },
+    { rule: _("font-weight: 800;"),  d: {"font-weight" : "800"} },
+    { rule: _("font-weight: 900;"),  d: {"font-weight" : "900"} },
+    { rule: _("font-weight: normal;"),  d: {"font-weight" : "normal"} },
+    { rule: _("font-weight: bold;"),    d: {"font-weight" : "bold"} },
+
+    // Incorrect font-weight.
+    { rule: _("font-weight: bolder;"),  d: {} },
+    { rule: _("font-weight: lighter;"), d: {} },
+
+    // Correct font-stretch.
+    { rule: _("font-stretch: ultra-condensed;"),
+      d: {"font-stretch" : "ultra-condensed"} },
+    { rule: _("font-stretch: extra-condensed;"),
+      d: {"font-stretch" : "extra-condensed"} },
+    { rule: _("font-stretch: condensed;"),
+      d: {"font-stretch" : "condensed"} },
+    { rule: _("font-stretch: semi-condensed;"),
+      d: {"font-stretch" : "semi-condensed"} },
+    { rule: _("font-stretch: normal;"),
+      d: {"font-stretch" : "normal"} },
+    { rule: _("font-stretch: semi-expanded;"),
+      d: {"font-stretch" : "semi-expanded"} },
+    { rule: _("font-stretch: expanded;"),
+      d: {"font-stretch" : "expanded"} },
+    { rule: _("font-stretch: extra-expanded;"),
+      d: {"font-stretch" : "extra-expanded"} },
+    { rule: _("font-stretch: ultra-expanded;"),
+      d: {"font-stretch" : "ultra-expanded"} },
+
+    // Incorrect font-stretch.
+    { rule: _("font-stretch: wider;"),  d: {} },
+    { rule: _("font-stretch: narrower;"), d: {} },
+
+    // Correct src:
+    { rule: _("src: url(\"/fonts/Mouse\");"),
+      d: { "src" : "url(\"/fonts/Mouse\")" } },
+    { rule: _("src: url(/fonts/Mouse);"),
+      d: { "src" : "url(\"/fonts/Mouse\")" }, noncanonical: true },
+
+    { rule: _("src: url(\"/fonts/Mouse\") format(\"truetype\");"),
+      d: { "src" : "url(\"/fonts/Mouse\") format(\"truetype\")" } },
+    { rule: _("src: url(\"/fonts/Mouse\") format(\"truetype\", \"opentype\");"),
+      d: { "src" : "url(\"/fonts/Mouse\") format(\"truetype\", \"opentype\")" } },
+
+    { rule: _("src: url(\"/fonts/Mouse\"), url(\"/fonts/Rat\");"),
+      d: { "src" : "url(\"/fonts/Mouse\"), url(\"/fonts/Rat\")" } },
+
+    { rule: _("src: local(Mouse), url(\"/fonts/Mouse\");"),
+      d: { "src" : "local(Mouse), url(\"/fonts/Mouse\")" },
+      noncanonical: true },
+
+    { rule: _("src: local(\"老鼠\"), url(\"/fonts/Mouse\");"),
+      d: { "src" : "local(\"老鼠\"), url(\"/fonts/Mouse\")" } },
+
+    { rule: _("src: local(\"老鼠\"), url(\"/fonts/Mouse\") format(\"truetype\");"),
+      d: { "src" : "local(\"老鼠\"), url(\"/fonts/Mouse\") format(\"truetype\")" } },
+
+    // Correct but unusual src:
+    { rule: _("src: local(Hoefler Text);"),
+      d: {"src" : "local(Hoefler Text)"}, noncanonical: true },
+
+    // Incorrect src:
+    { rule: _("src:"), d: {} },
+    { rule: _("src: \"/fonts/Mouse\";"), d: {} },
+    { rule: _("src: /fonts/Mouse;"), d: {} },
+    { rule: _("src: url(\"/fonts/Mouse\") format(truetype);"), d: {} },
+    { rule: _("src: url(\"/fonts/Mouse\") format(\"truetype\",opentype);"), d: {} },
+    { rule: _("src: local(*);"), d: {} },
+    { rule: _("src: format(\"truetype\");"), d: {} },
+    { rule: _("src: local(Mouse) format(\"truetype\");"), d: {} },
+    { rule: _("src: local(Mouse, Rat);"), d: {} },
+    { rule: _("src: local(sans-serif);"), d: {} },
+
+    // Repeated descriptors
+    { rule: _("font-weight: 700; font-weight: 200;"),
+      d: {"font-weight" : "200"},
+      noncanonical: true },
+    { rule: _("src: url(\"/fonts/Cat\"); src: url(\"/fonts/Mouse\");"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
+      noncanonical: true },
+    { rule: _("src: local(Cat); src: local(Mouse)"),
+      d: { "src" : "local(Mouse)" },
+      noncanonical: true },
+
+    // Correct parenthesis matching for local()
+    { rule: _("src: local(Mouse); src: local(Cat(); src: local(Rat); )"),
+      d: { "src" : "local(Mouse)" },
+      noncanonical: true },
+    { rule: _("src: local(Mouse); src: local(\"Cat\"; src: local(Rat); )"),
+      d: { "src" : "local(Mouse)" },
+      noncanonical: true },
+
+    // Correct parenthesis matching for format()
+    { rule: _("src: url(\"/fonts/Mouse\"); " +
+	      "src: url(\"/fonts/Cat\") format(Cat(); src: local(Rat); )"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
+      noncanonical: true },
+    { rule: _("src: url(\"/fonts/Mouse\"); " +
+	      "src: url(\"/fonts/Cat\") format(\"Cat\"; src: local(Rat); )"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
+      noncanonical: true },
+    { rule: _("src: url(\"/fonts/Mouse\"); " +
+	      "src: url(\"/fonts/Cat\") format((); src: local(Rat); )"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
+      noncanonical: true },
+
+    // Correct unicode-range:
+    { rule: _("unicode-range: U+A5;"), d: { "unicode-range" : "U+A5" } },
+    { rule: _("unicode-range: U+00A5;"),
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
+    { rule: _("unicode-range: U+00a5;"),
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
+    { rule: _("unicode-range: u+00a5;"),
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
+    { rule: _("unicode-range: U+0-FF;"),
+      d: { "unicode-range" : "U+0-FF" } },
+    { rule: _("unicode-range: U+00??;"),
+      d: { "unicode-range" : "U+0-FF" }, noncanonical: true },
+    { rule: _("unicode-range: U+?"),
+      d: { "unicode-range" : "U+0-F" }, noncanonical: true },
+    { rule: _("unicode-range: U+590-5ff;"),
+      d: { "unicode-range" : "U+590-5FF" }, noncanonical: true },
+
+    { rule: _("unicode-range: U+A5, U+4E00-9FFF, U+30??, U+FF00-FF9F;"),
+      d: { "unicode-range" : "U+A5, U+4E00-9FFF, U+3000-30FF, U+FF00-FF9F" },
+      noncanonical: true },
+
+    { rule: _("unicode-range: U+104??;"),
+      d: { "unicode-range" : "U+10400-104FF" }, noncanonical: true },
+    { rule: _("unicode-range: U+320??, U+321??, U+322??, U+323??, U+324??, U+325??;"),
+      d: { "unicode-range" : "U+32000-320FF, U+32100-321FF, U+32200-322FF, U+32300-323FF, U+32400-324FF, U+32500-325FF" },
+      noncanonical: true },
+    { rule: _("unicode-range: U+100000-10ABCD;"),
+      d: { "unicode-range" : "U+100000-10ABCD" } },
+    { rule: _("unicode-range: U+0121 , U+1023"),
+      d: { "unicode-range" : "U+121, U+1023" }, noncanonical: true },
+    { rule: _("unicode-range: U+0121/**/, U+1023"),
+      d: { "unicode-range" : "U+121, U+1023" }, noncanonical: true },
+
+    // Incorrect unicode-range:
+    { rule: _("unicode-range:"), d: {} },
+    { rule: _("unicode-range: U+"), d: {} },
+    { rule: _("unicode-range: U+8FFFFFFF"), d: {} },
+    { rule: _("unicode-range: U+8FFF-7000"), d: {} },
+    { rule: _("unicode-range: U+8F??-9000"), d: {} },
+    { rule: _("unicode-range: U+9000-9???"), d: {} },
+    { rule: _("unicode-range: U+??00"), d: {} },
+    { rule: _("unicode-range: U+12345678?"), d: {} },
+    { rule: _("unicode-range: U+1????????"), d: {} },
+    { rule: _("unicode-range: twelve"), d: {} },
+    { rule: _("unicode-range: 1000"), d: {} },
+    { rule: _("unicode-range: 13??"), d: {} },
+    { rule: _("unicode-range: 1300-1377"), d: {} },
+    { rule: _("unicode-range: U-1000"), d: {} },
+    { rule: _("unicode-range: U+nnnn"), d: {} },
+    { rule: _("unicode-range: U+0121 U+1023"), d: {} },
+    { rule: _("unicode-range: U+ 0121"), d: {} },
+    { rule: _("unicode-range: U +0121"), d: {} },
+    { rule: _("unicode-range: U+0121-"), d: {} },
+    { rule: _("unicode-range: U+0121- 1023"), d: {} },
+    { rule: _("unicode-range: U+0121 -1023"), d: {} },
+    { rule: _("unicode-range: U+012 ?"), d: {} },
+    { rule: _("unicode-range: U+01 2?"), d: {} },
+    { rule: _("unicode-range: U+A0000-12FFFF"), d: {} },
+    { rule: _("unicode-range: U+??????"), d: {} },
+
+    // Thorough test of seven-digit rejection: all these are syntax errors
+    { rule: _("unicode-range: U+1034560, U+A5"), d: {} },
+    { rule: _("unicode-range: U+1034569, U+A5"), d: {} },
+    { rule: _("unicode-range: U+103456a, U+A5"), d: {} },
+    { rule: _("unicode-range: U+103456f, U+A5"), d: {} },
+    { rule: _("unicode-range: U+103456?, U+A5"), d: {} },
+    { rule: _("unicode-range: U+103456-1034560, U+A5"), d: {} },
+    { rule: _("unicode-range: U+103456-1034569, U+A5"), d: {} },
+    { rule: _("unicode-range: U+103456-103456a, U+A5"), d: {} },
+    { rule: _("unicode-range: U+103456-103456f, U+A5"), d: {} },
+
+    // Syntactically invalid unicode-range tokens invalidate the
+    // entire descriptor
+    { rule: _("unicode-range: U+1, U+2, U+X"), d: {} },
+    { rule: _("unicode-range: U+A5, U+0?F"), d: {} },
+    { rule: _("unicode-range: U+A5, U+0F?-E00"), d: {} },
+
+    // Descending ranges and ranges outside 0-10FFFF are invalid
+    { rule: _("unicode-range: U+A5, U+90-30"), d: {} },
+    { rule: _("unicode-range: U+A5, U+220043"), d: {} },
+
+    // font-feature-settings
+    { rule: _("font-feature-settings: normal;"),
+      d: { "font-feature-settings" : "normal" } },
+    { rule: _("font-feature-settings: \"dlig\";"),
+      d: { "font-feature-settings" : "\"dlig\"" } },
+    { rule: _("font-feature-settings: \"dlig\" 1;"),
+      d: { "font-feature-settings" : "\"dlig\"" }, noncanonical: true },
+    { rule: _("font-feature-settings: 'dlig' 1"),
+      d: { "font-feature-settings" : "\"dlig\"" }, noncanonical: true },
+
+    // incorrect font-feature-settings
+    { rule: _("font-feature-settings: dlig 1"), d: {} },
+    { rule: _("font-feature-settings: none;"), d: {} },
+    { rule: _("font-feature-settings: 0;"), d: {} },
+    { rule: _("font-feature-settings: 3.14;"), d: {} },
+    { rule: _("font-feature-settings: 'blah' 3.14;"), d: {} },
+    { rule: _("font-feature-settings: 'dlig' 1 'hist' 0;"), d: {} },
+    { rule: _("font-feature-settings: 'dlig=1,hist=1'"), d: {} },
+
+    // font-language-override:
+    { rule: _("font-language-override: normal;"),
+      d: { "font-language-override" : "normal" } },
+    { rule: _("font-language-override: \"TRK\";"),
+      d: { "font-language-override" : "\"TRK\"" } },
+    { rule: _("font-language-override: 'TRK'"),
+      d: { "font-language-override" : "\"TRK\"" }, noncanonical: true },
+
+    // incorrect font-language-override
+    { rule: _("font-language-override: TRK"), d: {} },
+    { rule: _("font-language-override: none;"), d: {} },
+    { rule: _("font-language-override: 0;"), d: {} },
+    { rule: _("font-language-override: #999;"), d: {} },
+    { rule: _("font-language-override: 'TRK' 'SRB'"), d: {} },
+    { rule: _("font-language-override: 'TRK', 'SRB'"), d: {} },
+
+    // font-display:
+    { rule: _("font-display: auto;"),
+      d: { "font-display" : "auto" } },
+    { rule: _("font-display: block;"),
+      d: { "font-display" : "block" } },
+    { rule: _("font-display: swap;"),
+      d: { "font-display" : "swap" } },
+    { rule: _("font-display: fallback;"),
+      d: { "font-display" : "fallback" } },
+    { rule: _("font-display: optional;"),
+      d: { "font-display" : "optional" } },
+
+    // incorrect font-display
+    { rule: _("font-display: hidden"), d: {} },
+    { rule: _("font-display: swap 3"), d: {} },
+    { rule: _("font-display: block 2 swap 0"), d: {} },
+    { rule: _("font-display: all"), d: {} },
+  ];
+
+  var display = document.getElementById("display");
+  var sheet = document.styleSheets[1];
+
+  for (var curTest = 0; curTest < testset.length; curTest++) {
+    try {
+      while(sheet.cssRules.length > 0)
+        sheet.deleteRule(0);
+      sheet.insertRule(testset[curTest].rule, 0);
+    } catch (e) {
+      ok(
+        e.name == "SyntaxError"
+          && e instanceof DOMException
+          && e.code == DOMException.SYNTAX_ERR
+          && !('d' in testset[curTest]),
+        testset[curTest].rule + " syntax error thrown - " + e
+      );
+    }
+
+    try {
+      if (testset[curTest].d) {
+        is(sheet.cssRules.length, 1,
+           testset[curTest].rule + " rule count");
+           is(sheet.cssRules[0].type, 5 /*FONT_FACE_RULE*/,
+           testset[curTest].rule + " rule type");
+
+        var d = testset[curTest].d;
+        var s = sheet.cssRules[0].style;
+        var n = 0;
+
+        is(s.getPropertyValue("pointless"), "", "Unknown descriptors don't assert");
+
+        // everything is set that should be
+        for (var name in d) {
+          is(s.getPropertyValue(name), d[name],
+             testset[curTest].rule + " (prop " + name + ")");
+          n++;
+        }
+        // nothing else is set
+        is(s.length, n, testset[curTest].rule + "prop count");
+        for (var i = 0; i < s.length; i++) {
+          ok(
+            s[i] in d,
+            testset[curTest].rule +
+            " - Unexpected item #" + i + ": " + s[i]
+          );
+        }
+
+        // round-tripping of cssText
+        // this is a strong test; it's okay if the exact serialization
+        // changes in the future
+        if (n && !testset[curTest].noncanonical) {
+          is(sheet.cssRules[0].cssText.replace(/[ \n]+/g, " "),
+             testset[curTest].rule,
+             testset[curTest].rule + " rule text");
+        }
+      } else {
+        if (sheet.cssRules.length == 0) {
+          is(sheet.cssRules.length, 0,
+             testset[curTest].rule + " rule count (0)");
+        } else {
+          is(sheet.cssRules.length, 1,
+             testset[curTest].rule + " rule count (1 non-fontface)");
+          isnot(sheet.cssRules[0].type, 5 /*FONT_FACE_RULE*/,
+                testset[curTest].rule + " rule type (1 non-fontface)");
+        }
+      }
+    } catch (e) {
+      ok(false, testset[curTest].rule + " - During test: " + e);
+    }
+  }
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
+                          runTest);
+</script>
+</body>
+</html>

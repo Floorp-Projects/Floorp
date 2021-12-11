@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script>
+
+function init()
+{
+  var A = document.getElementById("z");
+  var B = A.nextSibling;
+  var C = B.nextSibling;
+  var P = A.parentNode;
+  
+  document.addEventListener("DOMNodeRemoved", fizzy, false);
+  P.removeChild(B);
+  document.removeEventListener("DOMNodeRemoved", fizzy, false);
+  
+  function fizzy()
+  {
+    document.removeEventListener("DOMNodeRemoved", fizzy, false); // avoid recursion
+    P.removeChild(A);
+  }
+    
+  document.documentElement.appendChild(C);
+}
+
+
+window.addEventListener("load", init, false);
+
+</script>
+
+</head>
+
+<body>
+
+<hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<menupopup y="x">  <menuitem id="z"/>  <menuitem/>  <menuitem/></menupopup>
+
+</hbox>
+
+</body>
+</html>

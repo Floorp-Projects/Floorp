@@ -1,0 +1,16 @@
+<html>
+<head>
+<title>Testcase bug - Select drop down button doesn't update its position in this case when document widens</title>
+</head>
+<body onload="test()">
+The dropwdown button should be on the right of the select<br>
+
+<iframe src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%0A%3Cstyle%3E%0Aselect%0A%7B%0A%20%20HEIGHT%3A%20100px%3B%0A%20%20WIDTH%3A%20100%25%3B%20%0A%7D%0A%3C/style%3E%0A%3C/head%3E%0A%3Cbody%3E%0A%3Cselect%3E%3Coption%20value%3D%222%22%3Etext%3C/option%3E%3C/select%3E%20%20%20%20%20%20%20%20%0A%3C/body%3E%0A%3C/html%3E" style="width: 200px;">
+</iframe>
+<script>
+function test() {
+  document.getElementsByTagName('iframe')[0].style.width = '400px';
+}
+</script>
+</body>
+</html>

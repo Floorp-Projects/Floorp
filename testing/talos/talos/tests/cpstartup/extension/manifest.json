@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "cpstartup test",
+  "description": "Measures the performance of starting and initializing new content processes",
+  "version": "1.1",
+
+  "applications": {
+    "gecko": {
+      "id": "cpstartup-test@mozilla.org"
+    }
+  },
+
+  "experiment_apis": {
+    "cpstartup": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

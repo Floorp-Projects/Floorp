@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for scenario in bug 1228407 with two scrollframes</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.advanceTimeAndRefresh(0);
+
+  // Basically the same setup as in helper_smoothscroll_spam.html, but
+  // with two scrollframes that get scrolled in an interleaved manner.
+  // The original fix for bug 1228407 left this scenario unhandled, with
+  // bug 1231177 tracking the problem. This test exercises the scenario.
+  let s1 = document.getElementById('s1');
+  let s2 = document.getElementById('s2');
+  for (let i = 0; i < 100; i++) {
+    s1.scrollBy({top:60, behavior: "smooth"});
+    s2.scrollBy({top:60, behavior: "smooth"});
+    await promiseOnlyApzControllerFlushed();
+    utils.advanceTimeAndRefresh(16);
+  }
+
+  utils.restoreNormalRefresh();
+  await promiseOnlyApzControllerFlushed();
+
+  let s1pos = s1.scrollTop;
+  let s2pos = s2.scrollTop;
+  ok(s1pos > 60, `s1 scrolled ${s1pos}px, should be more than 60`);
+  ok(s2pos > 60, `s2 scrolled ${s2pos}px, should be more than 60`);
+}
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .scrollable {
+      overflow: scroll;
+      height: 300px;
+    }
+
+    .content {
+      height: 1000px;
+      background-image: linear-gradient(green, blue);
+    }
+  </style>
+</head>
+<body>
+ <div id="s1" class="scrollable"><div class="content"></div></div>
+ <div id="s2" class="scrollable"><div class="content"></div></div>
+</body>
+</html>

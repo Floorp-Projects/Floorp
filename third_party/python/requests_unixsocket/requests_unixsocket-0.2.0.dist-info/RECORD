@@ -1,0 +1,11 @@
+requests_unixsocket/__init__.py,sha256=_SzyTnexKzhCfmtiIRbrDpLNpKYJuf01QyyNHw76bF0,2077
+requests_unixsocket/adapters.py,sha256=UhXkEErWss-D90cehJltXqPVxwey4RjVkEj7wq0FFgs,2727
+requests_unixsocket/testutils.py,sha256=knU4P4lvwvogbEqRAJ-X77ojHD2V5rTDcYaLat_JreQ,3093
+requests_unixsocket/tests/test_requests_unixsocket.py,sha256=FIDUuM8ZPhpDpiHxvff8fyqCdbJsCDeUa8mKrtSBcSM,5196
+requests_unixsocket-0.2.0.dist-info/AUTHORS,sha256=CAloaNwgMbpQp1CeYjcT6FeDSqSgUZMppfV8FdeFSmM,420
+requests_unixsocket-0.2.0.dist-info/LICENSE,sha256=y16Ofl9KOYjhBjwULGDcLfdWBfTEZRXnduOspt-XbhQ,11325
+requests_unixsocket-0.2.0.dist-info/METADATA,sha256=wUV1Z9UnYmcs95HR7JMQrvwgxxh4lieBuSmGufX9BU4,3545
+requests_unixsocket-0.2.0.dist-info/WHEEL,sha256=HX-v9-noUkyUoxyZ1PMSuS7auUxDAR4VBdoYLqD0xws,110
+requests_unixsocket-0.2.0.dist-info/pbr.json,sha256=b-kcBU2vW_AOypwYSXDMuitwk2Wo4MC57Y9Pnx5JfZk,47
+requests_unixsocket-0.2.0.dist-info/top_level.txt,sha256=Y1EEbvkeC5k8NXwoNkaqjeDlx2oDGfUJrbEubbBbjcc,20
+requests_unixsocket-0.2.0.dist-info/RECORD,,

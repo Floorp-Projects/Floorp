@@ -1,0 +1,86 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIObserver;
+
+/**
+ * This interface lets you monitor how long the user has been 'idle',
+ * i.e. not used their mouse or keyboard. You can get the idle time directly,
+ * but in most cases you will want to register an observer for a predefined
+ * interval. The observer will get an 'idle' notification when the user is idle
+ * for that interval (or longer), and receive an 'active' notification when the
+ * user starts using their computer again.
+ */
+
+[scriptable, uuid(cc52f19a-63ae-4a1c-9cc3-e79eace0b471)]
+interface nsIUserIdleService : nsISupports
+{
+    /**
+     * The amount of time in milliseconds that has passed
+     * since the last user activity.
+     *
+     * If we do not have a valid idle time to report, 0 is returned
+     * (this can happen if the user never interacted with the browser
+     * at all, and if we are also unable to poll for idle time manually).
+     */
+    readonly attribute unsigned long idleTime;
+
+    /**
+     * Add an observer to be notified when the user idles for some period of
+     * time, and when they get back from that.
+     *
+     * @param observer the observer to be notified
+     * @param time the amount of time in seconds the user should be idle before
+     *             the observer should be notified.
+     *
+     * @note
+     * The subject of the notification the observer will get is always the
+     * nsIUserIdleService itself.
+     * When the user goes idle, the observer topic is "idle" and when he gets
+     * back, the observer topic is "active".
+     * The data param for the notification contains the current user idle time.
+     *
+     * @note
+     * You can add the same observer twice.
+     * @note
+     * Most implementations need to poll the OS for idle info themselves,
+     * meaning your notifications could arrive with a delay up to the length
+     * of the polling interval in that implementation.
+     * Current implementations use a delay of 5 seconds.
+     */
+    void addIdleObserver(in nsIObserver observer, in unsigned long time);
+
+    /**
+     * Remove an observer registered with addIdleObserver.
+     * @param observer the observer that needs to be removed.
+     * @param time the amount of time they were listening for.
+     * @note
+     * Removing an observer will remove it once, for the idle time you specify.
+     * If you have added an observer multiple times, you will need to remove it
+     * just as many times.
+     */
+    void removeIdleObserver(in nsIObserver observer, in unsigned long time);
+
+    /**
+     * If true, the idle service is temporarily disabled, and all idle events
+     * will be ignored.
+     *
+     * This should only be used in automation.
+     */
+    attribute boolean disabled;
+};
+
+%{C++
+    /**
+     * Observer topic notification for idle window: OBSERVER_TOPIC_IDLE.
+     * Observer topic notification for active window: OBSERVER_TOPIC_ACTIVE.
+     */
+
+    #define OBSERVER_TOPIC_IDLE "idle"
+    #define OBSERVER_TOPIC_ACTIVE "active"
+    #define OBSERVER_TOPIC_IDLE_DAILY "idle-daily"
+%}

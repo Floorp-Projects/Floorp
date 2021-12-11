@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of 'column-rule-extent' values in a Masonry grid layout.</title>
+<style>
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid: masonry / 3ch 4ch 5ch;
+  gap: 20px;
+  margin-right: 20px;
+  margin-bottom: 40px;
+  background: lightgrey;
+
+  block-size: 180px;
+  align-tracks: start, center, end;
+
+  column-rule: solid blue;
+  column-rule-align: rule;
+  row-rule: 6px solid purple;
+  row-rule-extent: all-long;
+  row-rule-align: rule;
+  row-rule-longitudinal-inset: 2px;
+}
+
+.all-short { column-rule-extent: all-short; }
+.all-start { column-rule-extent: all-start; }
+.all-end { column-rule-extent: all-end; }
+.all-long { column-rule-extent: all-long; }
+
+x {
+  background: grey;
+  opacity: 0.5;
+}
+x:nth-child(1) { padding-block-start: 30px; }
+x:nth-child(2) { }
+x:nth-child(3) { padding-block-end: 20px;  }
+x:nth-child(7) { }
+x:nth-child(8) { padding-block-end: 20px;  }
+
+.grid::after {
+  position: absolute;
+  bottom: -3em;
+  font-size: 10px;
+  font-style: italic;
+  vertical-align: top;
+  content: attr(test);
+  white-space: pre;
+}
+pre { font-size: 10px; }
+</style>
+
+<pre></pre>
+
+<div class="grid all-short"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div>
+<div class="grid all-long"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div><br>
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('.grid')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    elm.setAttribute("test", 
+      "'column-rule-extent: " + cs.columnRuleExtent + "' \n" +
+      "'column-rule-align: " + cs.columnRuleAlign + "'"
+    );
+  });
+}
+</script>

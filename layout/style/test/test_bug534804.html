@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=534804
+-->
+<head>
+  <title>Test for Bug 534804</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css" id="styleone">  </style>
+  <style type="text/css" id="styletwo">  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=534804">Mozilla Bug 534804</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 534804 **/
+
+var styleone = document.getElementById("styleone");
+var styletwo = document.getElementById("styletwo");
+var display = document.getElementById("display");
+
+run1();
+styletwo.firstChild.data = "#e > span:nth-child(2n+1) { color: green }";
+run1();
+styletwo.firstChild.data = "#e > span:first-child { color: green }";
+run1();
+styletwo.firstChild.data = "#e > span:nth-last-child(2n+1) { color: green }";
+run1();
+styletwo.firstChild.data = "#e > span:last-child { color: green }";
+run1();
+
+function run1()
+{
+  function identity(bool)      { return bool; }
+  function inverse(bool)       { return !bool; }
+  function always_false(bool)  { return false; }
+  run2("#e:empty + span", identity, always_false);
+  run2("#e:empty ~ span", identity, identity);
+  run2("#e:not(:empty) + span", inverse, always_false);
+  run2("#e:not(:empty) ~ span", inverse, inverse);
+}
+
+function run2(sel, next_sibling_rule, later_sibling_rule)
+{
+  styleone.firstChild.data = sel + " { text-decoration: underline }";
+
+  // Rebuild the subtree every time.
+  var span1 = document.createElement("span");
+  span1.id = "e";
+  var span2 = document.createElement("span");
+  var span3 = document.createElement("span");
+  display.appendChild(span1);
+  display.appendChild(span2);
+  display.appendChild(span3);
+
+  function td(e) { return getComputedStyle(e, "").textDecorationLine; }
+
+  function check(desc, isempty) {
+    is(td(span2), next_sibling_rule(isempty) ? "underline" : "none",
+       "match of next sibling in state " + desc);
+    is(td(span3), later_sibling_rule(isempty) ? "underline" : "none",
+       "match of next sibling in state " + desc);
+  }
+
+  check("initially empty", true);
+  var kid = document.createElement("span");
+  span1.appendChild(kid);
+  check("after append", false);
+  span1.removeChild(kid);
+  check("after remove", true);
+  span1.appendChild(document.createTextNode(""));
+  span1.appendChild(document.createComment("a comment"));
+  span1.appendChild(document.createTextNode(""));
+  check("after append of insignificant children", true);
+  span1.insertBefore(kid, span1.childNodes[1]);
+  check("after insert", false);
+
+  display.removeChild(span1);
+  display.removeChild(span2);
+  display.removeChild(span3);
+}
+
+</script>
+</pre>
+</body>
+</html>

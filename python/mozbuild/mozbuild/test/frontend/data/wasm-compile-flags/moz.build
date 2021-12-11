@@ -1,0 +1,14 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+SANDBOXED_WASM_LIBRARY_NAME = "dummy"
+
+WASM_SOURCES += ["test1.c"]
+
+value = "xyz"
+WASM_DEFINES["FOO"] = True
+WASM_DEFINES["BAZ"] = '"abcd"'
+WASM_DEFINES["BAR"] = 7
+WASM_DEFINES["VALUE"] = value
+WASM_DEFINES["QUX"] = False
+WASM_CFLAGS += ["-funroll-loops", "-wasm-arg"]

@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=260264
+-->
+<head>
+  <title>Test for Bug 260264</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="utils_bug260264.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=260264">Mozilla Bug 260264</a>
+<p id="display">
+  <a id="link" href="javascript:(function(){})()">link</a>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 260264 **/
+
+SimpleTest.requestFlakyTimeout("untriaged");
+
+var a = $("link"),
+    checkOpened = function() { ok(window.open("http://example.com"), "not properly opened") },
+    checkBlocked = function() { ok(!window.open("http://example.com"), "not properly blocked") };
+
+add_task(async function check_sanity() {
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'remove': true, 'context': document}]);
+  ok(await SpecialPowers.testPermission('popup', UNKNOWN_ACTION, document), 'popup value should have UNKNOWN permission');
+
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': true, 'context': document}]);
+  ok(await SpecialPowers.testPermission('popup', ALLOW_ACTION, document), 'popup value should have ALLOW permission');
+
+  await SpecialPowers.pushPrefEnv({"set": [["dom.disable_open_during_load", true],
+                                     ["dom.popup_allowed_events", "click mouseup"],
+                                     ["dom.popup_maximum", 3]]});
+
+  // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}]);
+});
+
+add_task(async function run_tests() {
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  await window.open.close();
+
+  await SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]});
+});
+
+add_task(async function run_tests2() {
+  for (var count = 0, n = 0; n < 3; n++) {
+    send(a, "mouseup", function() { if (window.open("http://example.com")) count++ });
+  }
+  send(a, "mouseup", checkBlocked);
+
+  await window.open.close(1);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkBlocked);
+  send(a, "mouseup", checkBlocked);
+
+  await window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0) {
+    send(a, "mouseup", checkOpened);
+  }
+  send(a, "mouseup", checkBlocked);
+
+  await window.open.close();
+  await SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]});
+});
+
+add_task(async function run_tests3() {
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close();
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': ALLOW_ACTION, 'context': document}]);
+  await SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]});
+});
+
+add_task(async function run_tests4() {
+  var count;
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+
+  await window.open.close();
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkOpened);
+
+  await window.open.close();
+  for (count = 0, n = 0; n < 3; n++) {
+    send(a, "mouseover", function() { if (window.open("http://example.com")) count++ });
+  }
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close(1);
+  send(a, "mouseover", checkOpened);
+  send(a, "mouseover", checkBlocked);
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0) {
+    send(a, "mouseover", checkOpened);
+  }
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close();
+  await SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events", "click"]]});
+});
+
+add_task(async function run_tests5() {
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}]);
+});
+
+add_task(async function run_tests6() {
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+
+  await window.open.close();
+  await SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]});
+});
+
+add_task(async function run_tests7() {
+  send(a, "mouseup", checkBlocked);
+
+  await window.open.close();
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close();
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': ALLOW_ACTION, 'context': document}]);
+  await SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]});
+});
+
+add_task(async function run_tests8() {
+  var count;
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+
+  await window.open.close();
+  for (count = 0, n = 0; n < 3; n++) {
+    send(a, "mouseup", function() { if (window.open("http://example.com")) count++ });
+  }
+  send(a, "mouseup", checkBlocked);
+
+  await window.open.close(1);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkBlocked);
+  send(a, "mouseup", checkBlocked);
+
+  await window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0) {
+    send(a, "mouseup", checkOpened);
+  }
+  send(a, "mouseup", checkBlocked);
+
+  await window.open.close();
+  for (count = 0, n = 0; n < 3; n++) {
+    send(a, "mouseover", function() { if (window.open("http://example.com")) count++ });
+  }
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close(1);
+  send(a, "mouseover", checkOpened);
+  send(a, "mouseover", checkBlocked);
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0) {
+    send(a, "mouseover", checkOpened);
+  }
+  send(a, "mouseover", checkBlocked);
+
+  await window.open.close();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: input element changed to time state doesn't look like checkbox state -->
+  <script type="text/javascript">
+    function setToTime()
+    {
+      document.getElementById("i").type = "time";
+      document.documentElement.className = "";
+    }
+    document.addEventListener("MozReftestInvalidate", setToTime);
+  </script>
+  <body>
+    <input type="checkbox" id="i" style="-moz-appearance:none;">
+  </body>
+</html>

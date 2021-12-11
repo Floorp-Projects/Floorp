@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=759124
+-->
+<head>
+  <title>Test for Bug 759124</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=759124">Mozilla Bug 759124</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+var svg = $("svg");
+
+SimpleTest.waitForExplicitFinish();
+
+function Test(svgFragmentIdentifier, valid, viewBoxString,
+              preserveAspectRatioString, zoomAndPanString) {
+    this.svgFragmentIdentifier = svgFragmentIdentifier;
+    this.valid = valid;
+}
+
+function runTests() {
+  var doc = svg.contentWindow.document;
+  var rootElement = doc.documentElement;
+
+  var tests = [
+      new Test("unknown", false),
+      new Test("svgView(viewBox(0,0,200,200))", true),
+      new Test("svgView(preserveAspectRatio(xMaxYMin slice))", true),
+      new Test("svgView(viewBox(1,2,3,4);preserveAspectRatio(xMinYMax))", true),
+      new Test("svgView(viewBox(none))", true),
+      new Test("svgView(zoomAndPan(disable))", true),
+      new Test("svgView(transform(translate(-10,-20) scale(2) rotate(45) translate(5,10)))", true),
+      // No duplicates allowed
+      new Test("svgView(zoomAndPan(disable);zoomAndPan(disable))", false),
+      new Test("svgView(viewBox(0,0,200,200);viewBox(0,0,200,200))", false),
+      new Test("svgView(preserveAspectRatio(xMaxYMin);preserveAspectRatio(xMaxYMin))", false),
+      new Test("svgView(transform(translate(0,200));transform(translate(0,200)))", false),
+      // No invalid values allowed
+      new Test("svgView(viewBox(bad)", false),
+      new Test("svgView(preserveAspectRatio(bad))", false),
+      new Test("svgView(zoomAndPan(bad))", false),
+      new Test("svgView(transform(bad))", false),
+      new Test("svgView", false),
+      new Test("svgView(", false),
+      new Test("svgView()", false),
+      // Be sure we verify that there's a closing paren for svgView()
+      // (and not too many closing parens)
+      new Test("svgView(zoomAndPan(disable)", false),
+      new Test("svgView(zoomAndPan(disable) ", false),
+      new Test("svgView(zoomAndPan(disable)]", false),
+      new Test("svgView(zoomAndPan(disable)))", false),
+  ];
+
+  var src = svg.getAttribute("src");
+
+  is(false, rootElement.hasAttribute("viewBox"),
+     "expecting to start without a viewBox set");
+  is(false, rootElement.hasAttribute("preserveAspectRatio"),
+     "expecting to start without preserveAspectRatio set");
+  is(false, rootElement.hasAttribute("zoomAndPan"),
+     "expecting to start without zoomAndPan set");
+
+  for (var j = 0; j < 2; j++) {
+    var initialViewBox = rootElement.getAttribute("viewBox");
+    var initialPreserveAspectRatio =
+      rootElement.getAttribute("preserveAspectRatio");
+    var initialZoomAndPan = rootElement.getAttribute("zoomAndPan");
+    var initialTransform = rootElement.getAttribute("transform");
+
+    for (var i = 0; i < tests.length; i++) {
+      var test = tests[i];
+      svg.setAttribute("src", src + "#" + test.svgFragmentIdentifier);
+      is(rootElement.useCurrentView, test.valid,
+         "Expected " + test.svgFragmentIdentifier + " to be " +
+         (test.valid ? "valid" : "invalid"));
+
+      // check that assigning a viewSpec does not modify the underlying
+      // attribute values.
+      is(rootElement.getAttribute("viewBox"),
+         initialViewBox, "unexpected viewBox");
+
+      is(rootElement.getAttribute("preserveAspectRatio"),
+         initialPreserveAspectRatio, "unexpected preserveAspectRatio");
+
+      is(rootElement.getAttribute("zoomAndPan"),
+         initialZoomAndPan, "unexpected zoomAndPan");
+
+      is(rootElement.getAttribute("transform"),
+         initialTransform, "unexpected transform");
+    }
+
+    // repeat tests with underlying attributes set to values
+    rootElement.setAttribute("viewBox", "0 0 100 100");
+    rootElement.setAttribute("preserveAspectRatio", "none");
+    rootElement.setAttribute("zoomAndPan", "disable");
+    rootElement.setAttribute("transform", "translate(10,10)");
+  }
+
+  SimpleTest.finish();
+}
+
+svg.addEventListener("load", runTests);
+svg.setAttribute("src", "fragments-helper.svg");
+</script>
+</pre>
+</body>
+</html>

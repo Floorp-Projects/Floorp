@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+html img { color: blue; }
+</style>
+<script>
+
+function boom()
+{
+  var r = document.createRange();
+  r.selectNodeContents(document.documentElement);
+  r.cloneContents();
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<img src="data:image/gif,GIF87a%02%00%02%00%B3%00%00%00%00%00%FF%FF%FF%00%00%00%00%00%00%FF%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%2C%00%00%00%00%02%00%02%00%00%04%03%90H%12%00%3B" onload="window.getComputedStyle(this, null).getPropertyValue('color');">
+
+</body>
+</html>

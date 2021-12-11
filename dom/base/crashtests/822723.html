@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var outer = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  outer.setAttribute("dir", "auto");
+  var inner = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  inner.appendChild(document.createTextNode("A"));
+  inner.appendChild(document.createTextNode("B"));
+  outer.appendChild(inner);
+  inner.setAttribute("dir", "ltr");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for WebIDL attributes on types</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1295322">Mozilla Bug 1295322</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+    /* global TestFunctions */
+
+    add_task(async function push_permission() {
+      await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
+    });
+
+    add_task(function testClampedNullableOctet() {
+      let test = new TestFunctions();
+      test.clampedNullableOctet = null;
+      is(test.clampedNullableOctet, null, "clampedNullableOctet should be null");
+      test.clampedNullableOctet = -1;
+      is(test.clampedNullableOctet, 0, "clampedNullableOctet should be clamped to 0");
+      test.clampedNullableOctet = 256;
+      is(test.clampedNullableOctet, 255, "clampedNullableOctet should be clamped 255");
+      test.clampedNullableOctet = 200;
+      is(test.clampedNullableOctet, 200, "clampedNullableOctet should be 200");
+      test.clampedNullableOctet = null;
+      is(test.clampedNullableOctet, null, "clampedNullableOctet should be null");
+    });
+
+    add_task(function testEnforcedNullableOctet() {
+      let test = new TestFunctions();
+      test.enforcedNullableOctet = null;
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should be null");
+      try {
+        test.enforcedNullableOctet = -1;
+        ok(false, "Setting -1 to enforcedNullableOctet should throw exception");
+      } catch(e) {}
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should still be null");
+      try {
+        test.enforcedNullableOctet = 256;
+        ok(false, "Setting 256 to enforcedNullableOctet should throw exception");
+      } catch(e) {}
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should still be null");
+      test.enforcedNullableOctet = 200;
+      is(test.enforcedNullableOctet, 200, "enforcedNullableOctet should be 200");
+      test.enforcedNullableOctet = null;
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should be null");
+    });
+
+    add_task(function testAllowShared() {
+      let test = new TestFunctions();
+      [{type: "ArrayBuffer", isShared: false},
+       {type: "SharedArrayBuffer", isShared: true}].forEach(arrayBuffer => {
+        if (self[arrayBuffer.type] === undefined) {
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1606624
+          // Once we enable SharedArrayBuffer on all channel, we could remove
+          // this.
+          todo(false, `${arrayBuffer.type} is unavailable.`);
+          return;
+        }
+
+        let buffer = new self[arrayBuffer.type](32);
+        let threw = false;
+        // Test Not Allow Shared
+        try {
+          test.testNotAllowShared(buffer);
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        is(threw, arrayBuffer.isShared, `Call testNotAllowShared with ${arrayBuffer.type}`);
+
+        try {
+          test.testDictWithAllowShared({arrayBuffer: buffer});
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        is(threw, arrayBuffer.isShared, `Call testDictWithAllowShared with {arrayBuffer: ${arrayBuffer.type}}`);
+
+        try {
+          test.testUnionOfBuffferSource(buffer);
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        is(threw, arrayBuffer.isShared, `Call testUnionOfBuffferSource with ${arrayBuffer.type}`);
+
+        try {
+          test.arrayBuffer = buffer;
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        is(threw, arrayBuffer.isShared, `Set arrayBuffer to ${arrayBuffer.type}`);
+
+        try {
+          test.sequenceOfArrayBuffer = [buffer];
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        is(threw, arrayBuffer.isShared, `Set sequenceOfArrayBuffer to [${arrayBuffer.type}]`);
+
+        // Test Allow Shared
+        try {
+          test.testAllowShared(buffer);
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        ok(!threw, `Call testAllowShared with ${arrayBuffer.type}`);
+
+        try {
+          test.testDictWithAllowShared({allowSharedArrayBuffer: buffer});
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        ok(!threw, `Call testDictWithAllowShared with {allowSharedArrayBuffer: ${arrayBuffer.type}}`);
+
+        try {
+          test.testUnionOfAllowSharedBuffferSource(buffer);
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        ok(!threw, `Call testUnionOfAllowSharedBuffferSource with ${arrayBuffer.type}`);
+
+        try {
+          test.allowSharedArrayBuffer = buffer;
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        ok(!threw, `Set allowSharedArrayBuffer to ${arrayBuffer.type}`);
+
+        try {
+          test.sequenceOfAllowSharedArrayBuffer = [buffer];
+          threw = false;
+        } catch(e) {
+          threw = true;
+        }
+        ok(!threw, `Set sequenceOfAllowSharedArrayBuffer to [${arrayBuffer.type}]`);
+
+        ["Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array",
+         "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "DataView"].forEach(arrayType => {
+          let array = new self[arrayType](buffer);
+          // Test Not Allow Shared
+          try {
+            test.testNotAllowShared(array);
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          is(threw, arrayBuffer.isShared, `Call testNotAllowShared with ${arrayType} (${arrayBuffer.type})`);
+
+          try {
+            test.testDictWithAllowShared({arrayBufferView: array});
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          is(threw, arrayBuffer.isShared, `Call testDictWithAllowShared with {arrayBufferView: ${arrayType} (${arrayBuffer.type})}`);
+
+          try {
+            test.testUnionOfBuffferSource(array);
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          is(threw, arrayBuffer.isShared, `Call testUnionOfBuffferSource with ${arrayType} (${arrayBuffer.type})`);
+
+          try {
+            test.arrayBufferView = array;
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          is(threw, arrayBuffer.isShared, `Set arrayBufferView to ${arrayType} (${arrayBuffer.type})`);
+
+          try {
+            test.sequenceOfArrayBufferView = [array];
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          is(threw, arrayBuffer.isShared, `Set sequenceOfArrayBufferView to [${arrayType} (${arrayBuffer.type})]`);
+
+          // Test Allow Shared
+          try {
+            test.testAllowShared(array);
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          ok(!threw, `Call testAllowShared with ${arrayType} (${arrayBuffer.type})`);
+
+          try {
+            test.testDictWithAllowShared({allowSharedArrayBufferView: array});
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          ok(!threw, `Call testDictWithAllowShared with {allowSharedArrayBufferView: ${arrayType} (${arrayBuffer.type})}`);
+
+          try {
+            test.testUnionOfAllowSharedBuffferSource(array);
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          ok(!threw, `Call testUnionOfAllowSharedBuffferSource with ${arrayType} (${arrayBuffer.type})`);
+
+          try {
+            test.allowSharedArrayBufferView = array;
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          ok(!threw, `Set allowSharedArrayBufferView to ${arrayType} (${arrayBuffer.type})`);
+
+          try {
+            test.sequenceOfAllowSharedArrayBufferView = [array];
+            threw = false;
+          } catch(e) {
+            threw = true;
+          }
+          ok(!threw, `Set sequenceOfAllowSharedArrayBufferView to [${arrayType} (${arrayBuffer.type})]`);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

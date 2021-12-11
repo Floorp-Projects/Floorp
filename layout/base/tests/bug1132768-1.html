@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <title>Can drag-select non-editable content inside editable content</title>
+  <script src="selection-utils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <div contenteditable spellcheck="false"
+       style="outline: none">foo<span contenteditable=false>bar</span>baz</div>
+  <script>
+  SimpleTest.waitForFocus(function() {
+    const span = document.querySelector("span");
+    const rect = span.getBoundingClientRect();
+    dragSelectPoints(span, 0, rect.height / 2, rect.width, rect.height / 2);
+    setTimeout(() => document.documentElement.removeAttribute("class"));
+  });
+  </script>
+</html>

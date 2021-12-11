@@ -1,0 +1,1974 @@
+# ca251a28d3ddae784436d28829fb019025f4b127 - Birunthan Mohanathas - Bug 1016240 - Exterminate CR+LF line endings. r=briansmith,cpearce,ehsan,gavin
+741fa39165c4bec22e115d1d501631ae499c4180 # cinnabar
+51ba75d1355026c53c89c0c08bb36cada57d21a5 # gecko-dev
+# a569f5a4bb6a27f25e99b5b45ee241db2660b7e3 - Paolo Amadini - Bug 1128203 - Reduce indentation from 4 to 2 spaces. rs=dolske DONTBUILD CLOSED TREE
+b8ffa2c11b99bd5762b5ed612acd755b29d1eae6 # cinnabar
+174ae94f90f1b5edc83b737b4006c82bb830db7c # gecko-dev
+# fdf90317de6820adc8c2b9b1e70f8d11fa859636 - Jared Wein - Bug 1298559 - Enable eslint for /browser/base/content/test/ r=mattn
+1087f182890c3439da164a95f53d82c6a19443eb # cinnabar
+a182a61bcecdf309b82ea77e2f4e214d6ded8cdb # gecko-dev
+# dcfc73c043c01c3185631262605e3511bebe4cca - Mark Banner - Bug 1309842 - Fix eslint/espree parsing errors for ignored directories in browser/. r=jaws
+90df05a8637c4c82ddea5b1619e7315eed3f13fd # cinnabar
+975effef478b7b8cf08809cd66f8607f3a48b6eb # gecko-dev
+# 82e347fa35820b3bab21c69356d7aa94696a920c - Mark Banner - Bug 1311315 - General small fixes for no-undef eslint issues in browser/. r=jaws
+a370591f89e3800757f5f322184b2bbf955986bb # cinnabar
+b2464f8fa05cb51949b1015bedd2389529fc0fad # gecko-dev
+# 8a39edd6beb73a5047ca318962d7e28badf63b07 - Mark Banner - Bug 1312278 - Turn on no-unused-vars for browser/tools/mozscreenshots. r=MattN
+05e624ddfa5ebfa24f189d7d21266f5d8a82bbe0 # cinnabar
+a27b4789043adf484827707117bf4eb70623d042 # gecko-dev
+# a3937bf608bc8b5479dcfb1a7bc92b5f9037a430 - Mark Banner - Bug 1313626 - Clean up more issues found by eslint no-undef rule. r=mossop
+35fc62d9b13e09291bbdee0ccfee7b5ebdd62f51 # cinnabar
+709dd68567cb07315e3126ba2d5652580b8d1718 # gecko-dev
+# 65d125cdc91a0014cd172857ee8a0a74648d8ff7 - Mark Banner - Bug 1313634 - Fix undefined variables issues in cookies.js that lead to the cookies window not updating properly when open. r=jaws
+e2aaaba6153c4ec8dc03f2c353de8dd9543036c2 # cinnabar
+fbd5ec1798ab7d93c4d4eb77ab54057334dd5a00 # gecko-dev
+# 141c1a49b1b19bac1a23fc24d2843cc218b930a3 - Mark Banner - Bug 1240165 - Expand the eslint rule 'mark-test-function-used' to cover xpcshell tests as well as gecko tests and apply to the whole tree. r=miker
+e1548638b510c8a54f27db8bf814ec01b508f12a # cinnabar
+f7fca8642f6801de2747301fc37a88fd6f3bd839 # gecko-dev
+# 101a5b99a05f48fa9eafb8223a1c5dbc9e26b542 - Mark Banner - Bug 1313998 - Turn on no-unused-vars for local variable scopes in browser/base/content. r=mossop
+8d5d1cf9a060aace2c862e3561ad6a7ff4574d08 # cinnabar
+09ab00a94f970acdbade5aba921573cd434a37a7 # gecko-dev
+# 003e0465a68e07bd3e78f4e4afb88b817e4884cd - Mark Banner - Bug 1314373 - Fix parser issues raised by eslint for nsSearchService.js. r=mak
+9d422ac8cb74984f7e1ce94a4d01eb847ff7e77b # cinnabar
+7e8abd3ad955eef0bf1d2a5b17098fab367c9203 # gecko-dev
+# df0b813ff4febca64a3c460c0c6353bf0d7977be - Mark Banner - Bug 1314373 - Fix general eslint issues in nsSearchService.js. r=mak
+a34516f46e645e84302bc951a14bb5aa97d92e0f # cinnabar
+9fa69d0bdbb036006c0d050b18be1a957b1398be # gecko-dev
+# 9601d282b06bb5f22d855b383a895b51275a3143 - Mark Banner - Bug 1314918 - Fix most of the remaining no-unused-vars issues for local scope in browser/. r=mossop
+5be4f22176f5eec1aecc69253b6b5210f34cdc95 # cinnabar
+a41b5adcb0efec6b8726046973ac9e2cc76fb81b # gecko-dev
+# fd11584b7ab06518a84cffb2724cfba4f764438f - Mark Banner - Bug 1315615 - Fix no-unused-vars issues in the Pocket extension. r=jaws
+3e7c9496dc90eb254c8d002351ec7ab6c00a52e8 # cinnabar
+7b8c358ec778c23aaebf552579dd4dd55acebb1e # gecko-dev
+# 5bc308f6ac4c5f428399d975cfadf4039d44827f - Mark Banner - Bug 1315617 - Fix remaining no-unused-vars for local scope in browser/ and enable the rule for all of browser/ r=mossop
+560f889ee7757fe1f4620d8f9b35a99e94097fd3 # cinnabar
+be75c1f90973eafa42204466a40834e25bea94c8 # gecko-dev
+# 8e9417d751751e136173b092ccf119d08499cdc4 - Mark Banner - Bug 1315951 - Enable no-unused-vars for toolkit/components/places. r=mak
+28c15ac0c451190ec0dbb1bc60ce48be0a17bd45 # cinnabar
+257c1b72dbf80ce5a1159cd8b0e7184640c0b181 # gecko-dev
+# 6868b4b3f1ae395fa6b244d9e9406aab1af00771 - Mark Banner - Bug 1315951 - Fix no-unused-vars issues in toolkit/components (except places). r=mossop
+6783b5fa78858249f5f2e39386c0084c52182729 # cinnabar
+7d81bfea9f22423e3182dc6a137671a98564d05d # gecko-dev
+# 239dd56733c4779d60eaadfcbc6569d7ee4a5330 - Mark Banner - Bug 1322343 - Enable no-unused-vars in the local scope in toolkit/.eslintrc.js. r=mossop
+cb71c644afeee9bdab77f0011bee0b16a4e4b1a6 # cinnabar
+4f94e4bd68e1c9998dcffaf3b827a798d35d9add # gecko-dev
+# 74797a69118deab54627393a19640bd0e35f246c - Mark Banner - Bug 1325374 - Specify more globals in browser.js/nsBrowserGlue.js, and start fixing up some of places. r=mossop
+7c739eed2e97a166767b5f717be7f50d1354fdd3 # cinnabar
+071c48e792e18bea8f43101f046dfe56c786e2d6 # gecko-dev
+# cfe8505e19e762d49a60d4da7f0faf3ea4b87fbd - Mark Banner - Bug 1325623 - Fix most no-undef eslint issues in toolkit/components. r=mossop
+5856abc0ca624416914247195814fe23455ecce9 # cinnabar
+32471628fa0c91b79ebf13dff88c10dc591c7347 # gecko-dev
+# d1078b70896e1c85764b45cc9967a5c0af6f25fa - Mark Banner - Bug 1328338 - Fix more no-undef eslint issues in toolkit/ and browser/. r=mossop
+5551eb2438fe632585801a6ef4bde776c5c80852 # cinnabar
+39df62d9dcef0d36da164fdfd25c3945c559af82 # gecko-dev
+# 7c081650eddf3c9683cc36645e96caae247daf92 - Mark Banner - Bug 1328851 - Enable eslint rule no-undef for storage/. r=mak
+0992c93ab752a0321a9ab4e5ec000d61a27ca4b1 # cinnabar
+80afb72ae63a88118590f183845fc014c39cd391 # gecko-dev
+# 35cb8eb1856d275ca3f2e849974e5b33343ebab2 - Florian Quèze - Bug 1329182 - remove trailing newURI null parameters in XBL bindings, r=jaws.
+24ab7afd0ef8d716b2b1a7a4e09bc73dd5426adc # cinnabar
+e98dedc5c2ad9988b6935bcdad6f77223eb7929d # gecko-dev
+# 3e0d77afb2e04228f6878c228cab954eb793540e - Florian Quèze - Bug 1329182 - remove trailing newURI null parameters in browser/, r=jaws.
+a2e29ca1bc4208b98149031de29c59ecc0e14204 # cinnabar
+028a82f682652202c34caaf1c7a61ee27c72bcfb # gecko-dev
+# ae4a26954062015731b0643f4575935581d9e545 - Florian Quèze - Bug 1329182 - remove trailing newURI null parameters in toolkit/, r=jaws.
+5f229a5115a91f579c8e592123e614d16a3f4183 # cinnabar
+34e970eb9b834b4b430ca71de9ee7f36bdb06cd5 # gecko-dev
+# fca014f3f8aaf1932fa243c0f7f17fe9057f6c12 - Florian Quèze - Bug 1329182 - remove trailing newURI null parameters in devtools/, r=jaws.
+654d13f4ac06bad1b6b3fecbef500aa6a1707776 # cinnabar
+55f78ce0fa40f4b62de2ee64fc7f53491ddd52e9 # gecko-dev
+# d816f539d536fcb917e1ce8ba012e7f2873bc3e6 - Florian Quèze - Bug 1329182 - remove trailing newURI null parameters in the rest of the tree, r=jaws.
+e8de19942c60a65b29b08549c1efa6d527729692 # cinnabar
+fc6379e827eaf396b7a5373c36098818dcb1dafa # gecko-dev
+# 79c7e34346304105ab56ff302a070c4a13329627 - Florian Quèze - Bug 1329182 - remove trailing newURI null parameters in addon-sdk's indexed-db.js, r=jaws.
+e005b414e5463c539b3b27999bf29b413aa5cab5 # cinnabar
+498eeacaaf574462075a9550a550e9bb46f41663 # gecko-dev
+# bd9a337129ad8c50f25a44618e0dd2db9d58c457 - Mark Banner - Bug 1329614 - [eslint] Catch more cases of importing globals from 'var foo = Cu.import('...');'. r=jaws
+aa2896583930021b2a8f90305eb89a30dd633cdb # cinnabar
+582fcb809053585921ec163a4fff977ca622c90d # gecko-dev
+# 8e0b7bc5fd7164d083261a709bdf3dc0266365ca - Florian Quèze - Bug 1330147 - automatic removal of the third boolean parameter in removeObserver calls, r=jaws.
+42c56fe0b7c46a70aa9cee93adae4932bc401218 # cinnabar
+a03918c148d2c6babd3ba992bfd365199a17d6a7 # gecko-dev
+# 9d508a7deecf6b59a7065853838625934a5db051 - Florian Quèze - Bug 1330464 - script-generated removal of additional parameters that don't exist in the interface, r=jaws.
+bf52b3b2ebe392e82c6bcbb2eb8a98566ceae519 # cinnabar
+1e42cad36c4e5fe900321c5909bec9a0347c451a # gecko-dev
+# 7b434711753b98a87603453caaa0945791ffe12b - Florian Quèze - Bug 1331081 - script generated patch to omit addEventListener/removeEventListener's third parameter when it's false, r=jaws.
+a6f7729a6a2d8feadad98dfbfca0896bb1ed24c8 # cinnabar
+85611a7b6dffaca81fbaf61a0e301f071690bf73 # gecko-dev
+# 8cb53491dd1c78d6a6723b9e92919a304122c3f7 - Jared Wein - Bug 1331661 - Enable the 'quotes' rule for eslint and fix most of the errors with --fix. r=Gijs
+9e55a3e56f3962d62bebd1ce18e3ea223139cdd1 # cinnabar
+43bac26d30d80baec427bbbf14d538aa0686bd2d # gecko-dev
+# 06a658a93aab2e0fb015475a3bc22aa8ee792729 - Mark Banner - Bug 1333044 - Fix no-shadow issues in services/. r=markh
+567763ded52b14e3d07b57f17312ad3cbf1cbf20 # cinnabar
+caa2f51ce14dfb8bf029f960eaca19ffdacfb467 # gecko-dev
+# 9c6b98edac72e7cdb53ae100858af4fabcfd14cd - Mark Banner - Bug 1333044 - Enable no-undef eslint rule for services/. r=markh
+d1030e2303e21155af101fa3a2768b43accf2598 # cinnabar
+eb102a103e44ae3960e6a94da7e1f70f1c87e084 # gecko-dev
+# ec0f3678bb31c8e5273d72c27aed48edc899e71c - Florian Quèze - Bug 1331599 - script-generated patch to replace removeEventListener calls with the once option when possible, r=jaws.
+7362b4c72a801c493ecdac0b03f8a437ce1acad6 # cinnabar
+0e0865f4fc6ba6b205488f1125a7b881a503d32e # gecko-dev
+# d1f3d30546a1f0fec3f583dea660b3f8013f3c6a - Mark Banner - Bug 1333044 - "Enable eslint no-undef for services/" a=tomcat
+4f8b03ad0a2e1b2d01f960dea9cc4cb27741e9a2 # cinnabar
+605ae8736fa09918a4d9c08a0cec14e8e2e2916a # gecko-dev
+# 87fde7e63c1a0a7d808e2f178191f3187057c4e7 - Florian Quèze - Bug 1334250 - script-generated patch to avoid removeEventListener calls when a variable is used for the event name, r=jaws.
+1db01b4927f19d8a6742a461fa2ace86f35fa95c # cinnabar
+f187782ccfcf4550e5e210a6982ac0f4bf8188c6 # gecko-dev
+# d02fd33024b876d9a5c7f4afa9bd103ed9d58e74 - Florian Quèze - Bug 1334199 - script-generated patch to omit getComputedStyle's second argument when it's falsy, r=jaws.
+b88dc0cd32c3b09379f053a7054b6e2c662b2f04 # cinnabar
+be4dbae28567529620ceade46fd9d3c6cac5d604 # gecko-dev
+# a58d0d69502bbe43f2d468d08b2adeda458f630f - Florian Quèze - Bug 1334261 - script-generated patch to remove more newURI null parameters, r=jaws.
+1676c733ba76bef6b4c2894e9e8f59778ba07ed7 # cinnabar
+2cf30507bd9b083684681a2dc8407a1438a85b51 # gecko-dev
+# 25c0a38d2d7ed50ed3c1d419f70c01595c481ae7 - Florian Quèze - Bug 1334156 - script-generated patch to replace .ownerDocument.defaultView with .ownerGlobal, r=jaws.
+20c28a63efc3c964611d1d3cf682ced8fe30344e # cinnabar
+b11907c7aa09d44b971313c05dc346cb747b6bae # gecko-dev
+# 964e4881f2fe48da51856c73473fd35d239a907b - Mark Banner - Bug 1333044 - Prepare services/ for enabling no-undef eslint rule. r=jaws
+b3faacfb8b850ace6c92815acbadcc6d55600b99 # cinnabar
+2ecc79b53663946d90288fba713cc02fc0a67bfb # gecko-dev
+# d0ba3b2852851598469c5dc98c334db7c2e132a5 - Mark Banner - Bug 1333044 - Fix no-shadow issues in services/. r=markh
+66c1b824ddeddf89aab5f985aeab835e5363088f # cinnabar
+df3fdf012f4151df0ed61c284c0d57284cf972f7 # gecko-dev
+# f3741ccc800b68b2e67c1a0066a4ee05fd1e6cf6 - Mark Banner - Bug 1333044 - Enable no-undef eslint rule for services/. r=markh
+96cba9b54cab225dc6dc263092be314dd937de6c # cinnabar
+8cf0d4744cb936eb45bfe6972e6cf67e45f3d5f2 # gecko-dev
+# a9d172aa441447396884068a7d01561843cdf596 - Florian Quèze - Bug 1334831 - script-generated patch to use .remove() instead of .parentNode.removeChild, r=jaws.
+6daa50b0e952a1724309f8d5826f876f8f912e57 # cinnabar
+bdc1ffa6084ee1173d10b2e1ffcc3cdea318f315 # gecko-dev
+# 9ce2d81c539d989ec69239e506db6647a0b1f18e - Mark Banner - Bug 1330545 - [eslint] Handle importScripts in workers for determining global variables. r=mossop
+cf509450a82ec93b6dfce34883b333fedc985335 # cinnabar
+72976b4efad39d6543e51d7641337b256f080621 # gecko-dev
+# 0c237089b3179a7a972294adbf72d9b0248bebb2 - Mark Banner - Bug 1335813 - Enable eslint no-undef for toolkit, apart from components/ and content/, and fix various issues. r=jaws
+0c23b7167a7d386b6552924a977a2b347d2b3bac # cinnabar
+74a3b5d2c6367e6ca07960c99d8580d31e0c4991 # gecko-dev
+# c34aa52307299c37a214ae2a03ea8d5ac15abc1f - Mark Banner - Bug 1336070 - Fix no-undef issues in the pocket code. r=mixedpuppy
+f6bd3b8721a4f12daf300d4c24ee338e0c9440f9 # cinnabar
+20ec4fec63653bb420e609d6f43ebae0653b8469 # gecko-dev
+# fc7f502a43a10c0f19f700a33c5d31c6c455bebb - Mark Banner - Bug 1336070 - Enable eslint no-undef for browser/, apart from components/ and base/content/. r=mossop
+21945ff813c0ee29938ce6a8895a18d44ee39308 # cinnabar
+d5d0c83fda11b77bd1a07bd57ae461e3eeb28e13 # gecko-dev
+# 40e4945412fe48df66aa1ae3a10e00976546ed62 - Mark Banner - Bug 1336070 - Fix no-undef issues in the pocket code. r=mixedpuppy
+e3ef7ddc2fa0e17a900bcf228e51824fae99f1e7 # cinnabar
+1034b3750f0b36231bfb52a789c9785871a53581 # gecko-dev
+# bd99ca8c230be4e574644b419b89149200aab219 - Mark Banner - Bug 1336070 - Enable eslint no-undef for browser/, apart from components/ and base/content/. r=mossop
+4a9b920c689952fc980d935315e598cfba82fa61 # cinnabar
+e5c2479848760e99e8cb160dcd2639b438fce34e # gecko-dev
+# 04254c61603c1fe0aa18d27cde9800ce23b2feee - Mark Banner - Bug 1338195 - Define a `frame-script` environment for eslint and use it to clear no-undef issues for known frame script globals. r=mossop
+847e439a5afcfd5e6cd1ce4611be48257611d56b # cinnabar
+733f0b7c972cfe2341275bde783b94fe56509d7a # gecko-dev
+# 6055065a2ed5bbfa0dafb62d13d62e33e2742eab - Mark Banner - Bug 1341029 - Turn on the ESLint no-undef rule for all of toolkit/. r=jaws
+ed7c2d5c436fcc328514e682f7cabc5d978f6526 # cinnabar
+a656cedb1100cb8d2b1138497025a2e6b39af282 # gecko-dev
+# bba5e06342593cb57fb1002bcd050758aed1cf09 - Mark Banner - Bug 1341029 - Turn on the ESLint no-undef rule for all of toolkit/: revert an assert argument back to true. r=intermittent-fix
+7a449719f3cee40aa732f5dd0d8522adf2b9a10e # cinnabar
+13c02e4d32cf52d3e369cb687ddf0d7f6bdf9b97 # gecko-dev
+# a98e615cb53e03ca7d6fbf1cdd6e4278e4f92aa0 - Mark Banner - Bug 1311345 - Enable eslint of browser/components/privatebrowsing/ - Automatically fixed changes by eslint. r=jaws
+4a3b088f9deb9199bfdfcd29acec71feb8fea7b5 # cinnabar
+d74b9431a6dae800ba28e6b636cf080d24d5bcf4 # gecko-dev
+# 90cba103308a1e85f3b9bebaa9f4339b405db856 - Mark Banner - Bug 1311345 - Enable eslint of browser/components/privatebrowsing/ - Final manual fixes. r=jaws
+14b66cf9666c718dbc08b9e7960e141c2728482e # cinnabar
+bb4287f8fbd0a7a3af0ed64b97cd45fade80abdc # gecko-dev
+# 8947d02cec5d0de02f090b70d5352e95c51f1abc - Mark Banner - Bug 1344027 - Fix most of the remaining ESLint no-undef issues in browser/components. r=jaws
+218e82b26154e9834797fa610e438f47a1f999bc # cinnabar
+561b6cfb0c6a91990bc993cfd73db034993ce465 # gecko-dev
+# bff53385b4941566f66332ddb51d339341069f32 - Florian Quèze - Bug 1344711 - script-generated patch to remove try blocks around get*Pref calls, r=jaws.
+054717afc1c82fcded08f5520d37e735461feeae # cinnabar
+cd762cc83cbb9d77cf839bc05fa9bd66f71db9dd # gecko-dev
+# 1a2b467e5660da4ed8dc7a5ef3077b357aba087f - Florian Quèze - Bug 1345253 - Use element.firstChild.remove() instead of element.removeChild(element.firstChild), r=jaws.
+99ae88ddc534cc04f19b7640711e9a8ab0dba151 # cinnabar
+9d62681259177ff3ef0e14547bb15af8f6f71df5 # gecko-dev
+# 4ceb9062ea8f4113bfd1b3536ace4a840a72faa7 - Mark Banner - Bug 1344017 - Turn on ESLint rule no-undef for browser/components. r=jaws
+f5f3c49158f77583ad27c0f3d5f7bd9b4652ad49 # cinnabar
+a826dacecace346ad5a2847489f7f03d61db9e5f # gecko-dev
+# a8d751c288e4e5c916111de407bd342e0fc27a34 - Mark Banner - Bug 1346167 - Make the eslint-plugin-mozilla environments more flexible for when they are used outside of mozilla-central. r=mossop
+9f7c7b796961c216115428d4d76b9a3756a0f91c # cinnabar
+9500176490d734cd6ca158279954d6d81142ed0a # gecko-dev
+# 3947cd1d75d86858194c928b833c22de63a5b30f - Mark Banner - Bug 1311347 - Enable eslint of browser/components/sessionstore/. Autofix changes. r=jaws
+7185427d95b716f58c1958902c3e49732b467ae3 # cinnabar
+4acba139738834eea851496ec9f3a20ac5f747ba # gecko-dev
+# c0a0ddf7cb98603c3525cb4d1dc96db9fe59ad23 - Mark Banner - Bug 1311347 - Enable eslint of browser/components/sessionstore/. Manual fixes. r=jaws
+8c046b2a41ec1df224760ee4592bef6bbfd7f179 # cinnabar
+c26710ebe4f7b38aae69705d5bde298ed9a7ed45 # gecko-dev
+# 5a8192a650e92565aa2e85721569dad58cc1922c - Florian Quèze - Bug 1345294 - script generated patch (+ some hand cleanup) to replace {get,set}ComplexValue for nsISupportsString by {get,set}StringPref, r=Mossop.
+44ef31522dda1d6b4bb92ed6058894228203f4ad # cinnabar
+9c4d40bb5486ae7dd876d249f69e30436dee6bfa # gecko-dev
+# 13e3f762e6820d3981ddb1c68ba53cc9b3a06b6e - Mark Banner - Bug 1350298 - Fix most of the ESLint issues in nsContextMenu.js. r=jaws
+7fddd3e84d891eff53df08766d15bceb129ee771 # cinnabar
+c1099084dfd7fdc501feb3a34db149511179eca8 # gecko-dev
+# b4a3c008b079f71f551a9fd1d84dbab26380b9f9 - Mark Banner - Bug 1350298 - Reduce the complexity of nsContextMenu:setTarget. r=jaws
+0972bcd88e796002cbb7b813d796372152d8c66f # cinnabar
+7f46a2f8e596f9f2234a0992e90d6bd2f5c9355e # gecko-dev
+# 23b17c071b03be263fe9c1dcc66356be6895c089 - Mark Banner - Bug 1352969 - Fix various ESLint no-undef issues in browser/base (no-undef is not enabled yet). r=mossop
+d2cc9cc9eab61d2348a371c5803e519446dcadea # cinnabar
+1087fc18846723504658a574c79f1f5c54697c5a # gecko-dev
+# 28d99fb2332752e1685deed31cd8bc6cfa01eb6b - Mark Banner - Bug 1342459 - Fix various no-undef issues in browser/base. r=mossop
+37aa2a314b508cda5d573ad2eff592c3056a1826 # cinnabar
+427e3b23dc28a87ecfb3198cba04bf07bd9941cd # gecko-dev
+# ca3083864db1402b0129f4248407c5e2a2ca6512 - Mark Banner - Bug 1342459 - Enable no-undef on browser/base, and clean up unnecessary no-undef references. r=mossop
+1fac47d4caba7eb7251ae3c42b260e2169cfe84b # cinnabar
+585bf398eae0dbf787f6a45c67b12b08d8018378 # gecko-dev
+# 18d45aa984d6eb1bc0ce210e1c105a6b9e573b5f - Florian Queze - Bug 1355161 - script-generated patch to replace .{currentThread,mainThread}.dispatch(..., Ci.nsIThread.DISPATCH_NORMAL) with .dispatchToMainThread(...), r=froydnj.
+5498830e62b1c7876398673cda11610a4ec4f135 # cinnabar
+a363fb8c8b572d1389407c27f3a3f613aa4eccdc # gecko-dev
+# 322fde2d53bf49266dbc293321e6b36a4c789c12 - Florian Queze - Bug 1356569 - Remove addObserver's last parameter when it is false, r=jaws.
+d88a5cf4e827a59b2f593cc4e54eb9e840f19b4a # cinnabar
+95d4d20c170d972306bfec2aa4c1e91529f0d90b # gecko-dev
+# e1f191aad863dc81fd83ace1ac9c419ed50cffe5 - Florian Queze - Bug 1356569 - Remove appendElement's last parameter when it is false, r=jaws.
+71b26416f217cfb1bbf30bf74ee4a4bc2a9a18e6 # cinnabar
+93a734a3cefc393a5c712decf0b53e9b305e3f27 # gecko-dev
+# 55f3df15eaa6831b76ffe94b9c82c7bdc40c63c9 - Florian Queze - Bug 1356569 - Remove notifyObservers' last parameter when it is falsy, r=jaws.
+6d1b239665f696977c9e41e9fcac1f3fd5f5041c # cinnabar
+3c564a2b027166a536cd5c7376d195c0334cc642 # gecko-dev
+# f85a9a62c5bb1805f19dd31d6618382b81c5ed41 - Florian Queze - Bug 1356569 - Remove some more newURI null trailing parameters, r=jaws.
+d912de1932f10b62d416eb2affccfd2db85919f7 # cinnabar
+284974064e109373aa3b82eb4c94c20935441502 # gecko-dev
+# 56bf52d4ddeb1dc7019c4f9e23961670d0a31414 - Florian Queze - Bug 1356569 - Remove addObserver's last parameter when it is false, r=jaws.
+8de25ab52182347d13e07aec4aa9589eb27a686a # cinnabar
+37ff4fc7ccab73b2a84f1d45a0ac35027e7cc7e6 # gecko-dev
+# 78a33503027df3917dd42c29627cafc0e9dea4e5 - Florian Queze - Bug 1356569 - Remove appendElement's last parameter when it is false, r=jaws.
+0d51f98ad99de5d81dd45c76e7e0e39de39a4188 # cinnabar
+37f2343b9addcc3c95ede5f5e869f4ac966860b0 # gecko-dev
+# aadfcd0ab3c3a59501c1473b76719dc254f071ae - Florian Queze - Bug 1356569 - Remove notifyObservers' last parameter when it is falsy, r=jaws.
+ab75f621c31c6b1710a0de3113b30da789830ab7 # cinnabar
+f935ddc4b3a24fc874a7858281a4608a34148458 # gecko-dev
+# 912a3bdc240982f8b2e62d62f6c5bda9fdc66a85 - Florian Queze - Bug 1356569 - Remove some more newURI null trailing parameters, r=jaws.
+5d6702b0dcf272c4d6d99cc4c2df31543c7a6b79 # cinnabar
+ea6ac7cbf2d8f4b8490337c7f822a28bb3b8f2c8 # gecko-dev
+# cd981920d0ef8adf66e504b718a4208dc03c7a4c - Florian Queze - Bug 1355161 - script-generated patch to replace .{currentThread,mainThread}.dispatch(..., Ci.nsIThread.DISPATCH_NORMAL) with .dispatchToMainThread(...), r=froydnj.
+5a882bb113c1cf994af3a82361b39f9d77733bab # cinnabar
+4c6a68d1c9417e0e9a830a92b5e85c743d309dde # gecko-dev
+# 5d4ef1185bea555c4ec85b751678ba8cba6c5dee - Mark Banner - Bug 1359140 - Fix various ESLint issues in services/ (mostly automatic). r=markh
+6558ce4530b9eb7c02595205d145b0974cb38c82 # cinnabar
+29c680ad80f39ca89cf8193ec12503ef35e3a3b9 # gecko-dev
+# 76156c1325d9ed940233ce33f73aa6a8d97ddd89 - Mark Banner - Bug 1359604 - Enable the ESLint recommended rules for taskcluster/docker/index-task/. r=dustin
+f8dca8e969bc3a198d7c2fcbacfe33a5da610b88 # cinnabar
+03a364a2855f607bd2f91da4f4839d45e26ae545 # gecko-dev
+# 0f97f76c0b34673f2bf31c96eb1285416836f565 - Florian Queze - Bug 1355056 - replace (function(args) { /* do stuff using this */ }).bind(this) with arrow functions, r=jaws.
+178997dbd6038a0aba0863a2e3fdb36e1d552188 # cinnabar
+4b1556a5f261f740adcaaa6664168a15ebfd5de4 # gecko-dev
+# 7970ea0858614c4de33e32fb59738ddc9c3efc23 - Florian Quèze - Bug 1353542 - massive script-generated patch converting Task.async and Task.spawn calls, and generators clearly identifiable as tasks, rs=Mossop.
+90ec3e4cd01bce984921ae8dc44cd88b3be4e731 # cinnabar
+5e3539e5045968affaf23261e481d6e5e565d2cf # gecko-dev
+# b31650bb06c14be3c39b953e71560357ec1c569e - Florian Quèze - Bug 1353542 - smaller script-generated patch converting remaining generators that are likely tasks (actual generators were identified by hand and whitelisted), r=Mossop.
+fa02bf918d0847ea13a76fec91e6355270cfb1da # cinnabar
+16530fa1e3b18b88302cea1fe5a91baf0154d3c3 # gecko-dev
+# 586c752c204ac58c3155ef438edf559cc3e648c9 - Florian Quèze - Bug 1353542 - script-generated patch to remove .bind(this) calls we no longer need now that generator functions have been replaced with async functions, r=Mossop.
+eddc0f842ddd1cd4d967bd07ac1c53549da29816 # cinnabar
+1d0e28a7916384398e3be841c939bc734d3a6751 # gecko-dev
+# c143205c3f2025e131b8dd4efa64d53fd7e5ac0b - Florian Quèze - Bug 1362882 - script-generated patch to switch from Promise.defer() to new Promise() where it's straightforward, rs=Mossop.
+1ef0c9878fc24a6ce954ab329abaed60b6778465 # cinnabar
+97f401c6442b9a93f923960b19ab7b2fa94879b0 # gecko-dev
+# 261943b7c3644155ac69ed3333d14917e5e037d3 - Mark Banner - Bug 1361760 - Enable some Mozilla ESLint recommended rules for dom/indexedDB/test/unit. r=bevis
+f87bfcaaabd6cebb4cea69d7bfcddfff3f7a4a2d # cinnabar
+2451fe6f0845acec699ec8cf9ff97f02cf77d537 # gecko-dev
+# f261aca8246b967e6114d994665c804fbcdb4403 - Mark Banner - Bug 1361760 - Enable some Mozilla ESLint recommended rules for dom/indexedDB/test/unit - automatic fixes. r=bevis
+82e6164031fd766d705893f75c06463a73934452 # cinnabar
+9dce8bd2098b4c939a45a4b0291d6f80d70c694f # gecko-dev
+# 97a22f66e322f442079bb3fd00fbdcec6f13683d - Mark Banner - Bug 1361760 - Enable some Mozilla ESLint recommended rules for dom/indexedDB/test/unit - manual fixes. r=bevis
+6685af2687e9f2226dd4e6b7b2caae0e69914c81 # cinnabar
+b5cf40721ce5eb053cbcddb53d94bb5d1210e226 # gecko-dev
+# be00938a685295f9bd6bf5e958c0e799e6afad45 - Mark Banner - Bug 1363795 - Enable some Mozilla ESLint recommended rules for dom/indexedDB/test (no-undef). r=bevis
+6dbb96c390eb876543a144b0f349ff7a099e5daa # cinnabar
+e123b6dfb8b36646b51cb09a2cf7c1cc814a9ce3 # gecko-dev
+# ab9b62e22a5d35a99f9f25c9aefaa8e92fb8e1f6 - Mark Banner - Bug 1363795 - Enable some Mozilla ESLint recommended rules for dom/indexedDB/test - automatic fixes. r=bevis
+b099b719218d1f5092ca768c37bfb0dc07aa3d42 # cinnabar
+52a86c565f492bc52f6941b5f5e5d5451a2e5553 # gecko-dev
+# de859ae644212accb6e706c2a8408df04f816573 - Mark Banner - Bug 1363795 - Enable some Mozilla ESLint recommended rules for dom/indexedDB/test - manual fixes. r=bevis
+2ac514ba396c083d55ae8b9fb863f7f9aa852e26 # cinnabar
+3161044b80224f8e50a196d56d450186b7df3457 # gecko-dev
+# 7fbfa19e0d73b7ee86363efd052870ae3c81170d - Mark Banner - Bug 1366829 - Fix various 'undefined property' errors raised in places tests. r=mak
+2eac4e1fac368b32bda70f4ac1b09f6afb3f5278 # cinnabar
+88e3da2709d9d575167d89cd492122296d41c77a # gecko-dev
+# 3676568d6311b37bae297eee8685cd4b463acc89 - Mark Banner - Bug 1367232 - Clean up various ESLint global definitions in toolkit/. r=mossop
+2de05b1e3486adbb7532c69ac05e26179517aa08 # cinnabar
+d1dfdb8a14bb90a99167a3ce2777d97bff7ea34d # gecko-dev
+# 1ca88950d83cf4658236eafc56c7195b3c9bcb85 - Mark Banner - Bug 1356243 - Enable Screenshots by default. r=Mossop
+3da318802e3e181de763d600b3c88f7ad0cbb1dd # cinnabar
+cafeb512f1165316556e7efbcb4c8f1cd4bb763e # gecko-dev
+# f9eddc0d3345f353f4155521ae1234b2df6aa6e8 - Mark Banner - Bug 1370240 - Enable the ESLint no-control-regex rule across mozilla-central. r=mossop
+e45a46f4e490c30e3e990b4bbc05be93c1ceab65 # cinnabar
+c93c2a1504308980f62c02f73483fbabd638bb56 # gecko-dev
+# fd9e6e55b4f488889e836b60b3fa64368edec657 - Emilio Cobos Álvarez - Bug 1370802: Cleanup style and indentation in GenericSpecifiedValues.h and related files. r=heycam
+2483abe817f8bb4c9fed79344ba5f339f3547db8 # cinnabar
+1939327306d3e22d92c09270c63f918d8534540b # gecko-dev
+# bfe1b0bc5aedad91d737103317eb4607915ee5a9 - Sylvestre Ledru - Bug 1374720 - Refresh .clang-format-ignore with the recent update of thirdparty libs r=andi
+cefc4c7a286c76d3eccab57c451260031c68dc3b # cinnabar
+5a097c03b54fc4db0d87e03f844f82f9c68957d0 # gecko-dev
+# 1e4709afb3717683bf9d890c22218202e68adb99 - Mark Banner - Bug 1374674 - Enable more ESLint rules across the tree to help developers where we're already passing them (no-class-assign, no-const-assign, no-dupe-class-members). r=mossop
+92bba6e2ab1e9aac82b287e8513d434e970ae420 # cinnabar
+70710367aad321293a3f5886e03baf4e96cd6c38 # gecko-dev
+# b0dd91a6a1fd347587ecaef9f81c04de937d7f31 - Florian Quèze - Bug 1374282 - script generated patch to remove Task.jsm calls, r=Mossop.
+b434098760fe5c1305d31a5be4d02a53ae49235a # cinnabar
+66f6d259bc9ab9416f2de81fbcafe0b76c97bc5c # gecko-dev
+# 52e7befb507aa23f93b9214c65758d6d65401293 - Florian Quèze - Bug 1374282 - script generated patch to remove Promise.defer calls, r=Mossop.
+6f41bc2aa5868d7dc207c34f61a3e3860818f7bd # cinnabar
+5b8f8b884ce1b1e0fcc56cd2163bb86885dd1bab # gecko-dev
+# a65201e69ebf50ed9a38c04118f19c91a0a099d5 - Florian Quèze - Bug 1374282 - script generated patch to remove useless bind calls, r=Mossop.
+265eb8492e22dbc59d5c881c2df7a2a562fba119 # cinnabar
+1e40201f6d350b633b21981431e31a91fe29ec3c # gecko-dev
+# 05d686d3c53d0ab18cc2911296d380bc20d05300 - Florian Quèze - Bug 1374282 - script generated patch to remove generators from add_task in browser/ and toolkit/, r=Mossop.
+aa691b204a726ad900c8a76d97f3a8d429d759f6 # cinnabar
+7375dcec46533c5d358973aad1e31a7782587a8c # gecko-dev
+# 27aa42ed32351009f5c5f7d3dfb5551c6e5bb41e - Mark Banner - Bug 1376357 - Drop use of non-standard catch-if in dom/media/*.js. r=bwc
+d791512ea91f1e744f98fa418c3a9cf87358a6a0 # cinnabar
+fcf4f2c48b5f64ba3c1a16c4cf5ba9ef20e1adaa # gecko-dev
+# 61a73c8436a7d9f4c22ff0fb0b35624de9f5fb15 - Mark Banner - Bug 1376357 - Automatically fix ESLint issues in dom/media/*.js*. r=bwc
+55ba07e7854dbad196524418cb85b290010e246c # cinnabar
+ed3e830fe1082cd5069ac5b176057cb33603a690 # gecko-dev
+# 5206e8f59b668813934a9ab799f2341f51800e9a - Mark Banner - Bug 1376357 - Fix remaining ESLint issues in dom/media/*.js*. r=bwc
+a79319b4f90ea81b8d8115149ccbba59ac3d1146 # cinnabar
+9125ef0441f6c76d54fd8c00c87a233841474cf4 # gecko-dev
+# b14cbbf5256a9bca341686bd92afc2c55383fc18 - Sylvestre Ledru - Bug 1378250 - clang-format: Align consecutive declarations r=andi
+4415ccdbacafe92f4a9d876cc22dde3b377ed40e # cinnabar
+705e480d84a2fcc6f658f6aee54ac960874a36a5 # gecko-dev
+# 6a629adbb62a299d7208373d1c6f375149d2afdb - Sylvestre Ledru - Bug 1378712 - Remove all trailing whitespaces r=Ehsan
+750c6269ec1dc75b224ba05ebeea6c0f9eea6e33 # cinnabar
+4e9cf83ee8190497736ac31898e63d477c35a651 # gecko-dev
+# 03be1f2d0e456231d802721b1403e5c7459f9b3c - Mark Banner - Bug 1380009 - Enable the ESLint no-return-await call to avoid unnecessary intermediate promise creation. r=mossop
+c775adc573f1d7ee3c772780551b5649ae0c3052 # cinnabar
+35f36669372b4c4c80f56d0b5d81a8d90f347d97 # gecko-dev
+# 7f768b83c9288c751c1e8a90870c51154b8b798b - Tristan Bourvon - Bug 1374024 - clang-format on some files from static analysis directory. r=mystor
+5d582b6debe73f95cd8d0852f691f7b744527f1c # cinnabar
+14eb685f4f3f75339da912e770161c5e92bd677d # gecko-dev
+# b4a4d81440103a22b5cf942329a64206712b1661 - Tristan Bourvon - Bug 1374024 - clang-format on some files from static analysis directory. r=mystor
+cda809147cb3c6cab7e0d00ecadafa1ef9e61eff # cinnabar
+8b77b814304be123a3119c9e5417808c06b0efdb # gecko-dev
+# 003d87d355859d5443daffcb1dfcf41b89b21a46 - Tristan Bourvon - Bug 1374024 - apply clang-format on some files from static analysis. r=mystor
+2b06ac6528479642aa17e2fc1ab37b1f189c9e97 # cinnabar
+cdc988e24a3de769294ba811194b8726c6b83c77 # gecko-dev
+# 2dd4fb2e079a708425cb1b9509660f13fb603a34 - Mark Banner - Bug 1392098 - Enable the new ESLint no-useless-run-test rule across the tree. r=mossop
+b85b226123a75d85408076ddeb83caeeee173464 # cinnabar
+a53020d0228156a957c7482338d2223c735206d8 # gecko-dev
+# a13295273ef70e533334c02f3391c001cd21e1c5 - Sylvestre Ledru - Bug 1399359 - Enable clang-format option SplitEmptyFunction to have empty constructor correctly placed r=andi,jya
+8ce5e302186124753d51b5438d74f3c719543e95 # cinnabar
+227c2090a13e781d31e35c35f716c7c14bb0cc4d # gecko-dev
+# 580a17be2513390db474749a5eab1d25d488558a - Mike Hommey - Bug 1403444 - Apply clang-format to the rb.h macros. r=njn
+b26ed132ca938adefd41102295a8c0a102eda087 # cinnabar
+4b17f4882c2cd8342e2ae3148500346a1f6dbf3f # gecko-dev
+# 21f762390e63416f410c54da438d4b93de355882 - Nicholas Nethercote - Bug 1405598 - Restyle prefread.cpp. r=glandium.
+12a49aa5a5ffeefe7f1e3a290fc823c1f948e6be # cinnabar
+36a1dd448fb099a2943d7df6398ea73e4f7c9e93 # gecko-dev
+# f5d49a80eed8afb3ba93faebe8bbc4e955b2ff73 - Nicholas Nethercote - Bug 1405908 - Restyle prefapi.cpp. r=glandium.
+64307f023a01e20795e4a07effec90006444a3f3 # cinnabar
+7020a5b5b78d4e7cd1cde34db0b65bb27f6c8b11 # gecko-dev
+# c2658a2ad2001806d2fbc15d9203643f5a7926f3 - Nicholas Nethercote - Bug 1405935 - Restyle nsPref*.cpp. r=felipe.
+194e9a173503d9029522f4434df2b557dffeb724 # cinnabar
+3acb3b84ae11949e248baa2cbeab8b8081f6c831 # gecko-dev
+# 638f6196f028bfd16fb3318a2c1fe10f95d848e8 - Nicholas Nethercote - Bug 1406205 - Restyle Preferences.cpp. r=felipe.
+ea604f3103c603c041c3fc63e97051da4e73025c # cinnabar
+b22e211a7f22a678a327a3135ba79791588a3cd0 # gecko-dev
+# 014f84dbd970d28beb9ee89e385a764b814916e4 - Nicholas Nethercote - Bug 1406280 - Restyle modules/libpref/*.h. r=erahm.
+9b1bb3a5ec157df22153ade6da33c64e0f862e0f # cinnabar
+3c3c516563f9f31dc7922b8bb10caaf10b8249b2 # gecko-dev
+# d16958d3126b9dea70ee9849779fd4afc41ff0ac - Nicholas Nethercote - Bug 1406281 - Restyle CallbackAndVarCacheOrder.cpp. r=erahm.
+d68fa40c53177d74956efa1e126f58210f8f84ee # cinnabar
+0e7051b93c3b6819db6d07edf1036387eef53908 # gecko-dev
+# 885aeb78d65267247d3717c8e02e3364eaf3693a - Mark Banner - Bug 1407968 - Add an exception for ESLint no-self-compare in test_complex_keyPaths.js as the comparisons are intentional. r=bevis
+ca01ec84096d0dd8599faed09aee76233163bf04 # cinnabar
+ea0f30f8c8528a2b1c759d666ae95a3cf0534fe4 # gecko-dev
+# 55c5290c0147d4ee22c2e5b964484a06cd740536 - Mark Banner - Bug 1230373 - Add an ESLint rule to prefer using Services.jsm rather than getService. r=mossop
+0a010265319085c1a2e2b9085b6ce64fed71b132 # cinnabar
+8340eb52c8b528f13d7f3fa4bc9ebae677a1e467 # gecko-dev
+# c072884b1b905a6e00f756c7d3697df3447e7b63 - Mark Banner - Bug 1230373 - Enable mozilla/use-services for browser/components/ r=mossop
+ac15436007bfffcd0bb91493afc5a02097340819 # cinnabar
+42cb2dc6a317f526a1d6226cef9874bd0df1ead8 # gecko-dev
+# 39444cb663f7cdd15ef5fc2792d8a75981fd77d7 - Mark Banner - Bug 1410006 - ESLint should automatically ignore all crashtest directories; and clean up .eslintignore a bit. r=mossop
+1c760151d4584a1b1a3ac1feefbbbb53821e7bfe # cinnabar
+894bda671f60f9f97bf0d69e99f890813a9af777 # gecko-dev
+# fbdb84f3a8c4bebf0b179d395c8d400f2358067e - Mantaroh Yoshinaga - Bug 1405210 - Part 3: Apply clang-format to added print dialog widget code. r=jimm
+413b17d8a0db4c4f87ef704ba95321e52205e6a4 # cinnabar
+a2c7cc72d96855226f3d8e401cc3b404af4f6d4a # gecko-dev
+# 37eb7a2fb6ac6c897f8bccbf0e103a3e2b40159c - Nicholas Nethercote - Bug 1410765 (part 2) - Redo clang-format on libpref/. r=glandium.
+7161fd58566a3440473d56313db264a14357fe5c # cinnabar
+c67dabae5c90cb74424b44ea1a0738309eb2b08d # gecko-dev
+# 1b9b85bd44aa1b6c4caeb35d52b654a82f6fef61 - JW Wang - Bug 1411476. P1 - add a space before mAudioCompleted and run clang-format. r=gerald
+2d7f94aa9620081565ea5815bb62cbbaac82fd5e # cinnabar
+65fba1f9d266c148c7dfa93b331e9e88c56cbf3a # gecko-dev
+# 80292729e86a3574b0450755a32555bc347a34c9 - Mike Hommey - Bug 1411786 - clang-format chunk_{recycle,record,alloc,dealloc}. r=njn
+3256db63a28eacd2a2bce9d601a211c69528e390 # cinnabar
+378bd53e94f43575f225dcbded01fd2974d6d267 # gecko-dev
+# 4e5c7316124079799c0aabfc1104f20d8ca96086 - Mike Hommey - Bug 1411786 - Rename chunk_{recycle,record,alloc,dealloc} arguments. r=njn
+fa89f4293604e0ff27c0b1b24aba8edb178d4fe9 # cinnabar
+c27356ae7ac4c8c3446c4d9aed453036841338cf # gecko-dev
+# 1f21099e6fb50057ea6dfaf5b173f092a6a49b96 - Mark Banner - Bug 1411368 - Automatically fix no-multi-spaces issues raised when using ESLint 4. r=mossop
+76643a2f7bd0a59d1b5611d20a789a7d0e9dd41b # cinnabar
+4de6bf22b1f26ece628717ea8c2d2b847d1f24e0 # gecko-dev
+# 2ac26fcd2aa038e45e6f387919a235a1e42cf8e9 - Mark Banner - Bug 1411368 - Automatically fix spaced-comment issues raised when using ESLint 4. r=mossop
+a52a0ddf4e501ab111fccdb9ed4f215bdcf5d621 # cinnabar
+60e4a05b0d517ffd23519e7ef5c5af37cf2f8564 # gecko-dev
+# f3b05acf98e43a5b7f94d3b609e51eb66ed97cc5 - Mark Banner - Bug 1411368 - Automatically fix indent-legacy issues raised when using ESLint 4. r=mossop
+58839e5fe8f4244a6d2977fda18cbfe780c54dc6 # cinnabar
+2f2b926bc0657615b67eee1cb9030602d6b903af # gecko-dev
+# bb1bc004011f171fe1c9763a802cfd735794310d - Mark Banner - Bug 1411368 - Automatically fix padded-blocks issues raised when using ESLint 4. r=mossop
+b84e16a8ba0a13983dafc9c6bde9325939aa673c # cinnabar
+00b488c11877e8287031324cde1328720dcec125 # gecko-dev
+# 22cbc112b6557fa884fc84a117a98ac3c0a47339 - Mark Banner - Bug 1411368 - Automatically fix space-unary-ops issues raised when using ESLint 4. r=mossop
+f6289140641e2ca87df510e4a13896f77505745f # cinnabar
+e5c84c43e20947bbe8a71e1fed5dddc82a2dda6c # gecko-dev
+# 015f31e71d70ff2ffe14b14a0d8c07fc2f13b767 - Mark Banner - Bug 1246896 - Add some basic tests for ESLint rule mozilla/no-cpows-in-tests.js. r=florian
+b1cb14116444a0afeb424905a6196c4ac3327631 # cinnabar
+272b0102c2016ea951c9c66fb47d542494d60715 # gecko-dev
+# 466c9bb6604d9019857a52b9884142fe8af4b08d - Mark Banner - Bug 1246896 - Improve detection for mozilla/no-cpows-in-tests.js 'content' - only notify when content is used as an identifier. r=florian
+03c69a3e8ab0d0f7c2c057cdb91c1f4aa3e3dcca # cinnabar
+0f98aa8a05feab0e28e79146512b19e3af85a1c4 # gecko-dev
+# 6278aa5fec1d0e6b9ffc956e8e689ebb3d01701e - Mike Hommey - Bug 1412221 - Change comments to use C++ style // instead of /* */. r=njn
+6fcb3ea944fde14cc2e2f43dc34ec81656209ef6 # cinnabar
+732a4acab44c9ed4199611c15be0ab63c08e7ca2 # gecko-dev
+# f75f427fde1d559924d531b26ad10ac2b93597a9 - Mike Hommey - Bug 1412221 - Run clang-format on mozjemalloc.cpp. r=njn
+ba0fc3238ea61a6291e6e7f192e02cbcebd74417 # cinnabar
+5acf4b9bbe5c1fd16a45df0c7a40a79421e685f7 # gecko-dev
+# a0b897b714505ad5206ec95545492d9bed6414d6 - Mike Hommey - Bug 1412221 - Change comments to use C++ style // instead of /* */. r=njn
+7bc3e3b51fcf5b3be4ce08b4daab9a6b54442ed5 # cinnabar
+7ac11ce77e10a3bc7eaa65aa3994d6fc0f929a6b # gecko-dev
+# fe6a64b6246b2763ed2313b96234c7f2b0d5bc74 - Mike Hommey - Bug 1412221 - Run clang-format on mozjemalloc.cpp. r=njn
+aea064fe1cfa105c98e01d5e50de1e16064d8162 # cinnabar
+7dcb29d53ff0d8fc3f413500732c9051a03ad6c3 # gecko-dev
+# 2157ae2dad2710918621ffbb6e44b2c0cda046f5 - Mark Banner - Bug 1412778 - Enable ESLint rule no-cpows-in-tests across the whole tree. r=florian
+98b92db1f7cc9ff1d2d0ba23a2f4d173f5db35b1 # cinnabar
+01008c7d573a9a46e11032e5e046561e14e72b19 # gecko-dev
+# cac71ff2481c20c77090cb508650d2b36175f2e8 - Mark Banner - Bug 1412890 - Enable ESLint rule mozilla/use-services for toolkit/components/passwordmgr. r=MattN
+45e3f3efd49cbb82fd0d701525802f4f30c5d00c # cinnabar
+7dcccb8252d673df0bb7c5d93c3f529d5578a025 # gecko-dev
+# da3d20251959d8c60a2c646253d8c32d137623b0 - Mark Banner - Bug 1412890 - Enable ESLint rule mozilla/use-services for toolkit/components/passwordmgr. r=MattN
+d142130ca5c57f967e5cb0e92efa1d513e28ca23 # cinnabar
+d7b2685724afa655ae5d1a4563f3769754cd45d1 # gecko-dev
+# 8f7809346a83cf01ce459dde34630e95a3a108dc - Mike Hommey - Bug 1413475 - Run clang-format on all files in memory/build/. r=njn
+f1b2efac3979f1f0ca03b639c2b502fa8c6d9a37 # cinnabar
+eab43e4a6caf4b8f377e54142a1da8ade861076c # gecko-dev
+# 80fbacdf4ca9488f72dad1bd6883679fb23e7288 - Mark Banner - Bug 1412893 - Change instances of using getService to Services.jsm where possible in toolkit/components - Part 1. r=mossop
+0628f1810f520b0ff6f3cceed1004170353e74cd # cinnabar
+cf372ccd32257ea98b03ec9db6669d736e659803 # gecko-dev
+# ff14bf57613382ff0683b12c7d3eef64cddf968f - Mark Banner - Bug 1412893 - Change instances of using getService to Services.jsm where possible in toolkit/components - Part 2. r=florian
+32b88e2d071fd6daa24c451c868d37b37ca545df # cinnabar
+99e91ded2786f8e949e23ebfab86da4030080e5d # gecko-dev
+# c964c1b562c4cda88e8e3c5e3c9f83acbf9a5378 - Mark Banner - Bug 1412893 - Change instances of using getService to Services.jsm where possible in toolkit/components/places r=mak
+70ef91e31fe52646e9365d27ffaf4fac5dcd9169 # cinnabar
+61fc35ac20ed6f5039f2b20bcb0793429ddfd651 # gecko-dev
+# bd1481d9e7cd45a697523f5d03266b347131a6a3 - Mark Banner - Bug 1412893 - Change instances of using getService to Services.jsm where possible in toolkit/components/printing. r=mossop
+3e752dee9a4a017b9fe6207442f62433069d2f9e # cinnabar
+3f5fe07fd89656836622608521682ec3987cb1ce # gecko-dev
+# 73f8a7bbae047d9af6bf291aa1aaeb5554221d1f - Mark Banner - Bug 1412893 - Change instances of using getService to Services.jsm where possible in toolkit/components/url-classifier r=francois
+f9d3bbf5aa11c9671159ade51255bfbe86b55d6d # cinnabar
+aef9c37979e340f5879f7e33bfe71c4a50c8def1 # gecko-dev
+# 46f5bb50f656fcc1f905ad18ef7e6acabfbaa0a6 - Mark Banner - Bug 1412893 - Enable ESLint rule mozilla/use-services for toolkit/components/ r=mossop
+9ebed0aea7751c862801fb093b87ac3b9b5c62fa # cinnabar
+0937eb5b3be7d44b0d5c70a311d7d248aa91aa91 # gecko-dev
+# 3d465d9677d801a139898e1040498f85fad220c1 - Mantaroh Yoshinaga - Bug 1409972 - Part 1. Apply clang-format to nsPrintingPromptService. r=mconley
+524b8c0095872a41ec5cbdacbca2bcc1c21d7715 # cinnabar
+281a05cc74d1c1d54365371288cbe3bc4b45df0d # gecko-dev
+# 27416456db70d7a7d72e3a6f95ea0dc8ae2decb5 - Mark Banner - Bug 1371293 - Fix remaining instances of no-multi-spaces after upgrading to ESLint 4. r=mossop
+121f7ec033daf2fa4ad7468a7476d6bb3d9f89ea # cinnabar
+3619944268334fdd574be442ae6abbe9e923ddac # gecko-dev
+# 17c9e4be5970e73a62953e97851ec52bec85a71e - Mark Banner - Bug 1371293 - Fix instances of padded-blocks failures after ESLint 4 upgrade. r=miker
+84e6a8dd1a139649e6125d52e35234ac1418a050 # cinnabar
+c32982b1f3fbe54952a40aec5bf8a77d374196f0 # gecko-dev
+# b2b4d1d651c3cb8f7ff799b0b63e9c8636e5a1d4 - Mark Banner - Bug 1371293 - Fix instances of space-before-function-paren failures after ESLint 4 upgrade. r=mossop
+aab46b56032a64ae7d6d77ab3e79752b31dd3ff8 # cinnabar
+ab78a2a54d34dddd5181779c11027d243169775b # gecko-dev
+# a60e6fbce675354cdb75015844f412b39e474cd1 - Mark Banner - Bug 1371293 - Fix various devtools warnings after upgrading to ESLint 4. r=miker
+3115a58de1dc850635e6dfad92bbd8ae535a4181 # cinnabar
+037005709613dfc214867582bfbcb3b6fd403cb5 # gecko-dev
+# 0b135d7d8cef2858767e1384de7df75e0085d7c0 - Mark Banner - Bug 1375689 - Turn on experimentalObjectRestSpread in ESlint options. r=mossop
+66c307b20946afb8621c8801fbc0b0eaefe0888e # cinnabar
+7f5c3c358295c979c2d5850d448c7b21d00cf9b0 # gecko-dev
+# 3f946c460cd14bb1b05fdcac4d1c59c7d41d7d47 - Mark Banner - Bug 1417944 - Enable ESLint rule mozilla/use-services for toolkit/mozapps/extensions. r=aswan
+58d7da6bc8c65022ce2ae21c7937d83e2f99e781 # cinnabar
+1d5ed02880327d7cdc1f59692a4f7fe937a63719 # gecko-dev
+# f7e3a378ee3dfa35a065a30385d66d20746c9fa1 - Mark Banner - Bug 1417944 - Enable ESLint rule mozilla/use-services for toolkit/. r=mossop
+4ae855ddf9a86c69b8d41362db8c215043496bd2 # cinnabar
+e4262540c6b437382d96c14ea433ee2c147fc66c # gecko-dev
+# 3fa95cb5f014828e297f8abaa20971fb4b974750 - Mark Banner - Bug 1420422 - Enable ESLint rule mozilla/use-services for services/. r=markh
+d7cccc17c07f0fccf44be927ee60632c3203c594 # cinnabar
+efaca11893ced3f4f7280b7603fb74b6ca7a115a # gecko-dev
+# d0de68944d4697e0f6153a5e5b15c8759aab2a06 - Mike Hommey - Bug 1423000 - Re-run clang-format on memory/build. r=njn
+5e8536a8e9c4d72ec70754934dad45f85e10dec4 # cinnabar
+3dc24c3f35117f7583874e360158b38e5e974def # gecko-dev
+# 1225ddb1e845bcfad6c14f795b8dfe0296ba2d9d - Mike Hommey - Bug 1423000 - Run clang-format in memory/replace/logalloc. r=njn
+705709a67c723b8b38d464766a737423a4ef6d33 # cinnabar
+b796bc0e6dc7d3222f496effda38b2934afafbdc # gecko-dev
+# b1089f839d33f1c36b18e69d6772658f1b0e61b4 - Mark Banner - Bug 1421968 - Fix more instances of .getService to use Services.jsm where possible. r=mossop
+a50b866a9c6bf2cea22db5c0f7d4374f05599d57 # cinnabar
+41c732206252841a5c59cc3efc09266e1edf8e82 # gecko-dev
+# 3abc6abd34bf81eb3bd29f21630cbefa2f43947b - Mark Banner - Bug 1421968 - Enable ESLint rule mozilla/use-services by default, but whitelist it for various directories still to be fixed. r=mossop
+aebc9ad6f90055d3836e4a20fffb339c0b7f0b48 # cinnabar
+499ca20f316e69960401c679785c80f6e64672ef # gecko-dev
+# fba9ddd36edd767e9fb1a69bfee38821b60bfd4e - Mark Banner - Bug 1424879 - Enable mozilla/use-services for xpcom/. r=froydnj
+78b1c055eebd9aa47ca03dc551f7701bc6385af8 # cinnabar
+2b0445fe18f960f475f92864db8f4c4319f13acb # gecko-dev
+# cc95b6d1680b26b327c7c430082eb6bc45982d18 - Mark Banner - Bug 1424862 - Enable mozilla/use-services from chrome/. r=mossop
+620d29620fc3198df52b66c752634583fb913163 # cinnabar
+7242ebf417f8242e1f282bc1e7da6a0542a82588 # gecko-dev
+# 8f884ff63d0cec6f15752c7cb971804cb7c8fa8b - Mark Banner - Bug 1425244 - Enable ESLint rule object-shorthand for accessible/. r=surkov
+4b017d862ced60fa9327ae412212f8c06b08c634 # cinnabar
+7f569f1c3bc59c6cf93b7506b18d6b7ec23c4a50 # gecko-dev
+# 899e79132bbecc07d33d6ac9487db30c48b66918 - Mark Banner - Bug 1425244 - Enable ESLint rule comma-spacing for accessible/tests/mochitest/. r=surkov
+02ad04bdb6089de4826089052af8ab821e0c7494 # cinnabar
+c375803246cb2cd525181fbd33148dd79bf8c0e1 # gecko-dev
+# 86a980a403db4ac4f3552b02b40d9d15dee34e1f - Mark Banner - Bug 1425244 - Enable ESLint rule no-cond-assign for accessible/tests/mochitest/. r=surkov
+fd608cdd5ae0953676e428631a997c2e7277d458 # cinnabar
+c39a3faacd6e0b726521ce61e97f07e63853e2dc # gecko-dev
+# f0802f46c9d9713f015f3396d78b8fdac18bea9a - Mark Banner - Bug 1425244 - Enable ESLint rule no-lonely-if for accessible/tests/mochitest/. r=surkov
+03346039d29e3af18fd9ea124b2f9ee54de2fa4b # cinnabar
+6ad02b364e41b45f61a2784fd6348804ef4c272a # gecko-dev
+# 096025960071171e9c3c1c3b588bac4d6a9afe59 - Mark Banner - Bug 1425244 - Enable ESLint rule no-new-object for accessible/tests/mochitest/. r=surkov
+cd6764fdc8b5413f11538ca30aebb959a9409da3 # cinnabar
+217fc0f5a29c0b3bcfcaf6391d4a043fe9d8b7e2 # gecko-dev
+# 86ee98b5a58263c8d21111b8ac630939ba8b068d - Mark Banner - Bug 1425244 - Enable ESLint rule space-unary-ops for accessible/tests/mochitest/. r=surkov
+d1f008eee53a7a2c6073e548681930066ed9a793 # cinnabar
+bf483821a7709b258420fefc3fd8adcdf6cacd3f # gecko-dev
+# 39cf2973f9f45bb0717eba4688f1a49e5bb9b424 - Mark Banner - Bug 1425244 - Enable ESLint rule no-shadow for accessible/tests/mochitest/. r=surkov
+9050189444c41b874f0f04e9b49940f1701cce53 # cinnabar
+4330ae79f13023c40fa1ff0b10ac77b62e8132a9 # gecko-dev
+# ab930b218ba8d57826624c8ca7913d7ecb5324db - Mark Banner - Bug 1425244 - Enable ESLint rule no-redeclare for accessible/tests/mochitest/. r=surkov
+b32917c19d78ebe469f040b3e69be3b3eae9b5bf # cinnabar
+d44db2f404768a57420ed56b9bb2e3d719a05b72 # gecko-dev
+# a306e023eb1ca973623d41a1503b16d8d1a09714 - Jean-Yves Avenard - Bug 1404997 - P1. clang-format MediaPipeline.{cpp,h}. r=pehrsons
+f0e0d15ebdb258b5d461069663243a694e32e0a8 # cinnabar
+2fa0e4560918355233763d632c7ac26f6f7d2600 # gecko-dev
+# dcd1da3793f1315e1c55c1123253992dfd957587 - Eric Rahm - Bug 1424120 - Part 8: clang-format ToInteger. r=njn
+4bbcf03d4a3100594ee623e7160646b4016d92a7 # cinnabar
+79a173e55d5670d6949ad60ce37a202ab41a3a88 # gecko-dev
+# abbde724b07a6c52ce84914858505fc6a9e6c135 - Florian Quèze - Bug 592653 - script-generated patch to replace gPrefService with Services.prefs, r=Standard8.
+1e0fadd7236012cb8eacfd75c8a09c3736aa14b7 # cinnabar
+1158645bddf7286e3b00deff143bf9179133acee # gecko-dev
+# 3052b1df15ef7d344107d5cac39c816c5317f331 - Mark Banner - Bug 1369722 - Disable ESLint browser environment for jsm files. r=mossop
+12f6beaccf309edcd6c13e16084f7988bfec3a8d # cinnabar
+30935fa314ff49eda7667d98f338c27571011da8 # gecko-dev
+# eeb99638dc7a5e635aae2c6c83d8b8dd74364b1a - Florian Quèze - Bug 1421992 - script-generated patch to replace do_check_* functions with their Assert.* equivalents, rs=Gijs.
+68dde1a452de69109bad8d64381bed06e2e4ebb1 # cinnabar
+032c961e0a24df42cc51dd996e8d01bf751fe0b8 # gecko-dev
+# f418166c70b806963aa3aacdf17bb35b4a5d8d83 - Florian Quèze - Bug 1421992 - script-generated patch to replace do_execute_soon, do_print and do_register_cleanup with executeSoon, info and registerCleanupFunction, rs=Gijs.
+54ae29f5e9c65d7300b9b8aa347fe5a5212cfd5d # cinnabar
+0f55cd45be828a58f414ef8357cb7b6a927e09e4 # gecko-dev
+# f73324a4d03387924eccf434e56a8844e361823a - Mark Banner - Bug 1425688 - Enable ESLint rule mozilla/use-services for security/. r=gcp,keeler
+7bdf27f8df88eb710eaa7ea94a94a33c1e926191 # cinnabar
+bed9b1d6c8509c986db4624e00025646bb280e27 # gecko-dev
+# 9874df8448d800bfb874741b0c183f45b9dcfca6 - Chris Peterson - Bug 1424548 - Part 9a: clang-format generated HTML parser code. r=hsivonen
+c1090a4f82fec48afdc89d6b01e3a5fd21ada989 # cinnabar
+946cc287a252701feeb55b5a9c6f395cb8b797d3 # gecko-dev
+# d18fcc606dc798240da66644e0420423510138b0 - Mark Banner - Bug 1425052 - Enable ESLint rule no-undef for as much of mobile/android as possible. r=nechen
+ed4275a7cbb2d6913573e18141abb9c1f743e4fe # cinnabar
+e70f340ca0e49eb4ecf9e812cba6f094179321f3 # gecko-dev
+# ed67462e65747f5d393754203a246928d8dd1514 - Mark Banner - Bug 1425688 - Enable ESLint rule mozilla/use-services for security/. r=gcp,keeler
+34150c26a2901c824efa49b60a0626a3249fff56 # cinnabar
+770685e15e5dd3a7168a56f6cb47e61df94bc0fa # gecko-dev
+# e31bd656aded8dae312e891ce9422bff575c76dc - Mark Banner - Bug 1427754 - Enable ESLint rule mozilla/use-services for accessible/ r=surkov
+8e51bbd54f5decd8f10ddd46b463297b2b6cd0a4 # cinnabar
+ec4d7eb2fd80c2e442f9cb03c5da142220c68019 # gecko-dev
+# 7000040f2b07f846c5f8c08eb61ec366e0f38742 - Mark Banner - Bug 1427745 - Enable ESLint rule mozilla/use-services for dom/media. r=jib
+23b34b40512b0546b08ad0a0c45ba6513d8e0f47 # cinnabar
+351ae38da6cdd915c6b5117eaec31b6d5996a705 # gecko-dev
+# d7e963d8e08aa01c4d44f190f45a63ceb3881700 - Mark Banner - Bug 1427754 - Enable ESLint rule mozilla/use-services for accessible/ r=surkov
+3f8770c3dffd24603c65970773f634952872aa18 # cinnabar
+57d6ae57707657b50ad02deda7fe9b7113f7a871 # gecko-dev
+# 76ebca930f8cf60d65e760e246b3c647d15626ae - Mark Banner - Bug 1427745 - Enable ESLint rule mozilla/use-services for dom/media. r=jib
+fd59068c1bae576cbcd513fdfd57b4ae91241499 # cinnabar
+61630d27bc88c65933cb6aeb244a7b3370730631 # gecko-dev
+# b9755c321f888e37910aa1b3d4a84921f5274871 - Mark Banner - Bug 1428305 - When clobbering node_modules for ESLint on Windows, use winrm to better handle symlinks. r=ahal
+26568f06efae681ea6c886f3f71c089850df7201 # cinnabar
+4b9832fad47fd509e8178fe22fb70128b434db0d # gecko-dev
+# a89326c8f25c65566e0d5c54bf86857671a8d97e - Mark Banner - Bug 1429705 - Enable ESLint rule mozilla/use-services for tools/profiler. r=mstange
+4d31071bc4268c6b083eab9ab57dc7a7545b3ac1 # cinnabar
+e11ad103d39d18a7e28e4f8f5311daf69e7a309d # gecko-dev
+# 698ae46fa6340bfc93f5e9f212391bf8bc6feaa5 - Mark Banner - Bug 1429701 - Enable ESLint rule mozilla/use-services for dom/indexedDB. r=bevis
+88086410feb804fd3217c80ad070054bf27932d6 # cinnabar
+d2eba7601513df3ec311655b97bf1c7719e52897 # gecko-dev
+# d5548c012d2b243be36751bcc5f3c7e9f30bb429 - Mark Banner - Bug 1430923 - Change existing instances of 'let EXPORTED_SYMBOLS = ' to use 'var'. r=mossop
+75566f52a7f9303bc79dad17706b19ee5864e5b6 # cinnabar
+db162e24bee9f5cae04e99a6d8dca698e21ff6e7 # gecko-dev
+# c1895745ba101970b61e9c938f8dd7f4ed73420a - Mark Banner - Bug 1430923 - Handle EXPORTED_SYMBOLS in ESLint to help define globals in jsm files, and disallow 'let EXPORTED_SYMBOLS = '. r=mossop
+d27a49477ea26915183965ee3f1318327a1a392a # cinnabar
+bc030d501e133033a09ac97a6aeb8c01439c8d88 # gecko-dev
+# d4a7c018420e408fbe0a13ffddd2861623fda5a7 - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+846655a226651a3dbdb6eb82c7958ecc88b74980 # cinnabar
+30b3a49bfd7652b7816265e756dfa3667b076b57 # gecko-dev
+# 12fc4dee861c812fd2bd032c63ef17af61800c70 - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+892b547f4d3205d0e892fda3ad2ba1307b258be5 # cinnabar
+c276bb9375ad7eefea932aa0dd9566bf96e822da # gecko-dev
+# 34c999fa006bffe8705cf50c54708aa21a962e62 - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+330083dd853c9b4c33f20bb6d8b7f2c850caa007 # cinnabar
+6476f95b13582fabdf458cc64376b37fb399b356 # gecko-dev
+# e6a7b5e11ba856ee3535f76c6bcca17ea29e3d5f - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+5e0d08c727b185b58f44ae5aca47e48f1e335035 # cinnabar
+918ed6c474009d9ea9c49ab8adb52b717c5c8389 # gecko-dev
+# 8552acda5ec771a5c1873ed9222097727ef3cea8 - Mark Banner - Bug 1434449 - Enable no-unused-vars for the global (as well as local) scope on jsm files, whitelist directories still to be fixed. r=florian.
+569abea304a7a405519a39e9376cd1c14be94523 # cinnabar
+9a2172526a3a145b2915f334a4a1385e5e3e34c5 # gecko-dev
+# d5a5ad1dbbf2c53a80386e7397ba6b32153b2b8e - Florian Quèze - Bug 1339461 - script-generated patch to convert foo.indexOf(...) == -1 to foo.includes(), r=Mossop.
+c64b4bfb8f12d0c379b9717aa39d9131062aca5c # cinnabar
+2b1c8dccb624d44c8ff51499a9c0e27aef4818bf # gecko-dev
+# 97ac300c64d0a0b2f0fc298c3d670c87a48c15d1 - Mark Banner - Bug 1421379 - Finish enabling ESLint's mozilla/use-services in browser/. r=mossop
+bea367ee9bd13983c71f3e771c98fa3d4baa08c7 # cinnabar
+3cdde49426e56e0fa50d073835dcb3584e8b4629 # gecko-dev
+# b38d59f71915f78922b46a7c7bc65a48488c45f1 - Andrew McCreight - Bug 1432992, part 1 - Remove definitions of Ci, Cr, Cc, and Cu. r=florian
+a9a499cb3f84e69bbcb1bdbc84ffbfad8807c728 # cinnabar
+5dec0e0beb58f2cd02ea35ce31cce4c851bec963 # gecko-dev
+# 76c1582d760e117d1ce2befbc2af998c24760231 - Mark Banner - Bug 1230369 - Manually fix some remaining instances of Ci/Cc/Cu definitions and switch Components.* to using the shorthand in some places. r=florian
+95fdf904706078d3b1ed0d635a0d6a0aaa5fd082 # cinnabar
+606beee3f2ae396f42bf0dea35bc337519d9d280 # gecko-dev
+# f58c1a70c026749c97d3df1bd9a22d2473c1c056 - Mark Banner - Bug 1230369 - Add ESLint rules to disallow defining Cc/Ci etc and to prefer the use of Cc/Ci rather than the Components.* equivalents. r=florian
+0632ddf4599892e0e331ac6bdc8a65e0582f6fad # cinnabar
+54c4111311a775d1d8a17e2d0d3e7204ca01cf07 # gecko-dev
+# 2ebcb42faee25c8eb2dd34d01c062bebcbc7b1ea - Mark Banner - Bug 1436389 - Fix space-unary-ops issues picked up by the new version of ESLint. r=mossop
+94fc0d4d83f678522e74b081474b83544a422022 # cinnabar
+ff6299c6bec898bb68dda00778c1a10e87f839a5 # gecko-dev
+# bd967c4c3c166053088a0c823935c36d8caf9cf6 - Mark Banner - Bug 1438489 - Enable ESLint rule mozilla/use-services for devtools/. r=jdescottes
+1297773482cd3f908dca7f8a3284221abbc8d846 # cinnabar
+21e6e270a49019cd376204aa17f1bacf1c17f0d9 # gecko-dev
+# a8300f975833c8ddd95cb1537343de8634a42d37 - Mark Banner - Bug 1437584 - Enable ESLint rule mozilla/use-services for testing/. r=jmaher
+49ad7a20ff840002a315b0ad60816ab374fb0c76 # cinnabar
+01319d9d04b36c862bb93bb46f0ccb203383b9d8 # gecko-dev
+# 6f787e71c76f7dbc62b6e0e4a0dbee2759e5bfe0 - Mark Banner - Bug 1439838 - Enable ESLint rule no-unused-vars for the same directories in mobile/android as no-undef. r=JanH
+9c98a4d561b417d763c491c0bad208783c55a353 # cinnabar
+2762cbd5c2db29fd27fce9dddc56823a04347783 # gecko-dev
+# dc2195c2b23914521c48fa21d40fea1a2db0db54 - Mark Banner - Bug 1440711 - Enable no-unused-vars for global scope on jsm files in accessible/. r=surkov
+91cc5c7d2790b7ab10fea9772b228a8087fff2f9 # cinnabar
+3e6b2c9400ffdaa448bed7de5b18e59dc1234da2 # gecko-dev
+# b599a95ce057712c6b7804f7f108c9c4acff7e6d - Florian Quèze - Bug 1440284 - change this.EXPORTED_SYMBOLS back to var EXPORTED_SYMBOLS in JS modules, r=mccr8.
+fbf1202312fa83c0fdb24a93f955c159a5c83ea1 # cinnabar
+682b1ec3b2c92831a0ea97754ce4fdd00b9497ae # gecko-dev
+# 39ab872960ff3e6e7eaabb11d3389cf82b037564 - Mark Banner - Bug 1440718 - Enable no-unused-vars for global scope on jsm files in services/sync/. r=kitcambridge
+7cde08180243c9fa94887367030022062ce1c40e # cinnabar
+4bc9f775822c741fcff0ea7f6f477c92f644fc85 # gecko-dev
+# 0dfc8b69311128b0b4cf356a6b7151daf77fa986 - Mark Banner - Bug 1440379 - Tidy up ESlint no-unused-vars definitions wrt Ci/Cu/Cr/Cc usage for varsIgnorePattern. r=florian
+7059bb050ffab5aba61ff7cb99b1018a07f18730 # cinnabar
+6afe18b30a22a24c8f9eacdd57715a68c5a7e6e7 # gecko-dev
+# 0036a7b80f680df0a56798a602443bad081f4576 - Mark Banner - Bug 1441460 - ESLint's no-define-cc-etc looks at the wrong property item when checking for Cc/Ci/Cu/Cr usage. r=florian
+d977d01b79cbe4316ba4ce9119a6b16bd166a252 # cinnabar
+294979dc321c91096843abbbbadeb6e93bdcad4a # gecko-dev
+# d2192f653b256c97b249764632bbe38ed33d97da - Mark Banner - Bug 1440761 - Enable no-unused-vars for global scope on jsm files in toolkit/. r=mossop
+6fed8b37b3e698c6f20d9589063f11e99c097660 # cinnabar
+2e4db142aa822369a97f719e3c0edb21722e3568 # gecko-dev
+# 7bbd1a09eacb8a31f4caef5c1e526d8d32569ae9 - Florian Quèze - Bug 1433175 - scripted patch to replace Components.classes[, Components.interfaces.nsI, Components.utils. and Components.results. with Cc, Ci, Cu and Cr, r=Mossop.
+9a57cbacf773b8c55c90bf6abefda55a844eb2b9 # cinnabar
+c714053d73ac408ab402bb4d7e906e718f4ecb7e # gecko-dev
+# 3c6de76d185556a74a822e1ee0a59ee4b04e9265 - Florian Quèze - Bug 1433175 - semi-automated indent fix, r=Mossop.
+99f9f4d706df3916dedd707563c7e35d563ed8f1 # cinnabar
+6df7549a3e40fd16fad885cd44d7c40e3533edfa # gecko-dev
+# 3c2b0756aa87aa3a067148609daf834f042b3fd7 - Florian Quèze - Bug 1433175 - more aggressive scripted patch to replace remaining Components.classes, Components.interfaces, Components.utils and Components.results uses with Cc, Ci, Cu and Cr, r=Mossop.
+1006ccf183a434f6064ce1233e4919819b142bf8 # cinnabar
+f3ee8dd20bdb1f5f00268fa020193083cfe4f171 # gecko-dev
+# 0d73894a5fc45ca86b7498a1da0de719516b654e - Mark Banner - Bug 1439831 - Enable ESLint rule mozilla/use-services for mobile/android. r=nechen
+bad685c7daa2f1e571792c01a4c9e1693bec83a6 # cinnabar
+b78260f4b8784b9e1c4844e5396ab57cfbc737f1 # gecko-dev
+# b8e64a94e635899705cea4967914236162077d56 - Mark Banner - Bug 1434446 - Enable no-unused-vars for global scope on jsm files in browser/. r=mossop
+a8e2f8dfc00850dfa888188b0f1123d821804f26 # cinnabar
+a32bc883e7d1ccf5471d6852318dc13907a2561a # gecko-dev
+# 4a6b832ce2521677f35b380245a621c2d46eb03c - Nicholas Nethercote - Bug 1441754 - clang-format some Preferences.cpp code that needs it. r=glandium
+d6966593a9f09d698b656b6ab1b8e81b4dc9cd30 # cinnabar
+96f04124a0f9d1b9e08f9c3f14c06de9d8cb57da # gecko-dev
+# 4bcb64fd8fa1aae1bdb7a2a019a283eacb7af4ca - Sylvestre Ledru - Bug 1513900 - Reformat everything on the ESR branch to the Google coding style r=ehsan a=liz # ignore-this-changeset
+2051a0ba7e43f424cbde04bcdd542e9f5ddc442f # cinnabar
+61f7867cd224579da37595fdac5caeaee9213033 # gecko-dev
+# 64c5f14f196bb4e24c87601886b8fdcbb446fd4b - Mark Banner - Bug 1443093 - Update eslint-plugin-no-unsanitized to 3.0.0 / eslint to 4.18.2. r=mossop
+8435be507f5c587a67ed23dbb55034e2180a1ced # cinnabar
+0f3ec963be2eb74a6b65176da23ce959dabaf5c1 # gecko-dev
+# 4e5fb7ed54de0a1647f9047b4f93bc61cdae5cb5 - Mark Banner - Bug 1443661 - Enable ESLint rule no-undef for test files in devtools/client/webconsole/new-console-output/. r=nchevobbe
+a1386c4762c60807b8e9b2458008acda1e054557 # cinnabar
+1a9370d2e2a5a9406bb4626b266f812a5fcb5685 # gecko-dev
+# 57e2de4f048e63c16279b373a4fd413613a546f8 - Mark Banner - Bug 1443661 - Remove unnecessary ESLint import-globals-from directives from devtools/client/webconsole/new-console-output/test/mochitest. r=nchevobbe
+3ebf4c888126c5ba8417c9880329d37c9ce7b575 # cinnabar
+f1f3e4a1fd1a281c486a7e2fb9f614ac778f07b4 # gecko-dev
+# 6fadc412efcb11ebf9b4c7f3c194dc71f91f88b0 - Mark Banner - Bug 1443661 - Enable ESLint rule no-undef for test files in devtools/client/webconsole/new-console-output/. r=nchevobbe
+a7702844243f28a75dfe9bd1c9700e6b3b574406 # cinnabar
+ca1d1c7f949b5eac8a80b705b7b43bb8f43e9fc3 # gecko-dev
+# c96061263e3a5bff2699dfb863bcf2f5b6c618af - Mark Banner - Bug 1447944 - Enable ESLint rule no-undef for test files in devtools/server/tests/unit/. r=jdescottes
+13be4ed6789bc0d50668577403d8df705f96b851 # cinnabar
+f1ed0a2b70e78fa250149616a6ad5f12c351a20d # gecko-dev
+# 8b603bf3ea53ad3f5a13a4a0e1798eeed4c4984f - Mark Banner - Bug 1451378 - Enable ESLint rule no-undef for more test files in devtools. r=jdescottes
+d78f82ed3cde7dc26af9997a5ed8ded232703521 # cinnabar
+57f0cf24f4681e51e4f96abb6c6d044b480ba1e3 # gecko-dev
+# 09273b8f1e61a9283da9f6d8302c14c1ba7d3f38 - Mark Banner - Bug 1451659 - Automated ESLint fixes for devtools/client/framework/. r=jdescottes
+8435c18a81a49e8438cce1868eb191e177630c07 # cinnabar
+c07518ff8db42a7c93823223b9e26a6de407f243 # gecko-dev
+# 0a70c315cf900922cc4f3fc70bedd754b2966283 - Mark Banner - Bug 1451659 - Automated ESLint fixes for devtools/client/canvasdebugger/. r=jdescottes
+dd52059a156dcb4b5c6f3aadddc80295189c92cc # cinnabar
+d2558cd70ab95a66169ffbddaf778cac2062167e # gecko-dev
+# 2ac7c4d5d184b091ea011e66322d65cb3db004ba - Mark Banner - Bug 1451659 - Automated ESLint fixes for devtools/client/scratchpad/. r=jdescottes
+e81d44f7cd4bc791138fbcff66e24746054277a0 # cinnabar
+34a483b76d37dc790397829e9bb2a444ae27dc3d # gecko-dev
+# 61316c057950e0762d90ec687e045658d41b85b6 - Mark Banner - Bug 1451659 - Automated ESLint fixes for devtools/client/shadereditor/. r=jdescottes
+c5cdbd7a47d1882f23120472c9b5830f1fd703e1 # cinnabar
+72de2a4acf04c820a7f097c0f320e14d7a70cc28 # gecko-dev
+# a45a86e9a6e30917511555c9a2672109e19f5068 - Mark Banner - Bug 1451659 - Enable ESLint for devtools/client/{canvasdebugger,framework,scratchpad,shadereditor}/. r=jdescottes
+26bef69ce19e4e13de2b613eed0a77eb325cda33 # cinnabar
+3e2d95e5c0cf89e97e09b2561328e8e6cf49fc49 # gecko-dev
+# 4ed9006a80a08497b2dbb416b5f2fbdce397fc47 - Mark Banner - Bug 1452575 - Automatically fix ESLint issues in shared jsm files in devtools. r=jryans
+808308b39f32b703ade89d21a12bc69454449505 # cinnabar
+d3608825b8d3b0d0551842174e77bea27e8f7186 # gecko-dev
+# 8ef9106d1ae1941ad83d24bb07226b8534f0cde1 - Mark Banner - Bug 1452575 - Enable ESLint for devtools/client/shared/**/*.jsm. r=jryans
+6f358ab980c4b1557ece8c1bd840ba8f58101097 # cinnabar
+a0fd02b723d92acf7032f1bf285d43b17cb858f7 # gecko-dev
+# 61c06428ee965fd976ecbfa810065019c3076b55 - Mark Banner - Bug 1453383 - Automatically fix ESLint issues in devtools/client/{webaudioeditor,webide}/. r=jdescottes
+4595340992988d16f1764c9cb28d453fe6004c49 # cinnabar
+6a7d7e5b8c26013494dcefaea5a797d4863e613f # gecko-dev
+# 166b59bcb4ce7d8165694eea8456de4da65744b6 - Mark Banner - Bug 1453383 - Enable ESLint for devtools/client/{webaudioeditor,webide}/. r=jdescottes
+4d59f0255afa57553106096078c18ffb3e282165 # cinnabar
+d226fcc86a0395cfec6ccc924c10c975e28cd3cb # gecko-dev
+# e38dafe679416fcf85c2bf6cb19ebc4fe9088547 - Mark Banner - Bug 1455581 - Enable ESLint rules no-undef and no-unused-vars for devtools/client/framework/. r=jdescottes
+23c51cca8d683aecc63cf74544fee1eff431af01 # cinnabar
+6e2b2b6f35261a5af84c6bec6f4d1821ba5b9a46 # gecko-dev
+# c58f0b4dd8494f4a81c69b0315af223576660200 - Kris Maglione - Bug 1456035: Part 4 - Convert callers of XPCOMUtils.generateQI to ChromeUtils.generateQI. r=mccr8
+14fe6cc3a2b2addc443e0ee2579141cac66896dd # cinnabar
+a259026c9d31828ba767ee7abc7ea708b99872af # gecko-dev
+# 4e512b622d80c276bed56fdb45fd573fc7639a92 - Mark Banner - Bug 1456755 - Enable ESLint rule no-undef for devtools/{client/scratchpad/,shared/tests/unit}. r=jdescottes
+1dc5651cbd3eb5cfde1094911db3fa49f43bbfb3 # cinnabar
+f7f93b63da31764c71249f5e99dceee10a885b77 # gecko-dev
+# 53867132bf195f6be61840f0bda1147c73030089 - Mark Banner - Bug 1457835 - Enable ESLint for testing/mochitest (automatic changes). r=jmaher
+c2976c9fcecd5fe41170b2773ab8955156996058 # cinnabar
+7953526ea236a2faa34aa6dad75b302b66e77f77 # gecko-dev
+# 7da7e1e5be4976cd32b3ea79631858e9d8dbd749 - Mark Banner - Bug 1457835 - Enable ESLint for testing/mochitest (manual changes). r=jmaher
+7a67b8188f24385b03357a3d489d0081c37b707b # cinnabar
+d19d88da3059095aae5a6ac70a176b0f090763d6 # gecko-dev
+# 7a2224a146ec8b9f6a6b982be3b241e4b127bf5d - David Keeler - bug 401240 - part 1/2 - run ./mach clang-format on nsPKCS12Blob r=fkiefer
+cd45f3089b49dc558547bd9f2116350ec511b0ac # cinnabar
+18117a994aac690e22b272b5abd16665ba441543 # gecko-dev
+# abc9351a9c159afb31d58fc29beda855ad4f832b - Bryce Van Dyk - Bug 1461785 - Update dom/media/mediasource/test to abide eslint rules, add .eslintrc.js. r=jya,standard8
+254527056d411afb7a47ebe28395b7fa94a6c562 # cinnabar
+d74241d1f7cff8a6ce974609c952f5facf1161d3 # gecko-dev
+# 2f23cf70c1769eef4dbed3ea694e561f6b80aff9 - Mark Banner - Bug 1461997 - Enable ESLint rule mozilla/require-expected-throws-or-rejects for browser/components. r=Gijs
+49ee521888a1296dc1fdad096ed66aabe8d6b422 # cinnabar
+55d1e986ead372d74c71342c70fbcecbeeee4969 # gecko-dev
+# 672e132cb4ad65b06c3c9bf4feabeb0c579e148c - Mark Banner - Bug 1461997 - Add an ESLint rule to ensure that Assert.rejects is preceeded by await. r=mossop
+8c0d0459f8eb95fb262fd8d3d35a3891532ae099 # cinnabar
+f692609ef457270d1d6c9f87184859212c4b7faf # gecko-dev
+# e6d7e41f8f4be0b559cab8553e107db8a245ac4d - Mark Banner - Bug 1463499 - Enable ESLint rule require-expected-throws-or-rejects for services/. r=markh
+bd1078c5ca4f6d53d435b59b9ce66b515dc0b3cc # cinnabar
+127c1ce9e9aabb39731bc9ce44c8220fc22ac30d # gecko-dev
+# b7c3ae209716b3d0798e5333ac2b57ce5846d3a5 - Jean-Yves Avenard - Bug 1451149 - P1. Fix HTMLMediaElement style. r=bryce
+265923d9f1fd2d53c44435c14c8b65b2910c3277 # cinnabar
+0f9cf930b646249e135fe06d2fc41267bb1509f4 # gecko-dev
+# 015e8f74e97397b46437f5d22d88d783013e65bf - Mark Banner - Bug 1463673 - Add the expected argument to Assert.throws/rejects for toolkit/components/telemetry. r=gfritzsche
+b48aa8c82e351e3be7582966119cf3a6640e3582 # cinnabar
+2798fc48ddbb9a5ab6acb9531b85917d0c0c7477 # gecko-dev
+# c9f558e4282c10db369642fbc989e975364797f0 - Mark Banner - Bug 1463673 - Add the expected argument to Assert.throws/rejects for toolkit/components/places. r=mak
+7145ff58186224a37e0d7919b676c08f2659a72b # cinnabar
+102246d4370508358933a6598c28755c1b784116 # gecko-dev
+# 1350bcc2983eed6a9ed95586d9807ef1ec69dd9e - Mark Banner - Bug 1463673 - Add the expected argument to Assert.throws/rejects for various tests in toolkit/. r=mossop
+fd48a0a2e07b1a16f75167c14ed3ab0374b6a127 # cinnabar
+5d838d18c1780483c513fe07f08597793037ea08 # gecko-dev
+# d73afee801c0c857899f86a58f9963234f761208 - Mark Banner - Bug 1463673 - Enable ESLint rule require-expected-throws-or-rejects for toolkit/. r=mossop
+f1a1baaf2fbfc164a890a172939ec30d0be76ac5 # cinnabar
+2faa59b5ca3d42e0951d98024e25d1ea039d767f # gecko-dev
+# 55cb9ce8598a2f07f1857fa3adf07cb13dcf9f6b - Mark Banner - Bug 1465385 - Enable ESLint rule require-expected-throws-or-rejects for browser/. r=MattN
+74b4a48d25c52fcdbaf2a1804b3747fea912a393 # cinnabar
+7b90b63d6918c73bc5b1311b5f251c8ffdf8689e # gecko-dev
+# 3e9d04bbec914807b78f46838d66f748cb1f7ad0 - Mark Banner - Bug 1465530 - Enable ESLint rule require-expected-throws-or-rejects for testing/marionette/. r=ato
+437154e5d489f1fd4e85119c05a4bc0bd5aaefb1 # cinnabar
+dd6cb31203b667cca65d6055f9e5055782fb3f57 # gecko-dev
+# 6630148c9beab7e1f239cc231bddedb142db23d7 - Mark Banner - Bug 1465762 - Enable ESLint rule require-expected-throws-or-rejects for toolkit/**/extensions. r=aswan
+642e828f24de5a5db44a1488fe9db916eaf4e7fd # cinnabar
+ba6c2dc83605c3bed8bb4834b60796d912dac220 # gecko-dev
+# 8518549e6bb6e7e62f6c1e755709eff6ab932903 - Mark Banner - Bug 1465762 - Enable ESLint rule require-expected-throws-or-rejects for toolkit/**/extensions. r=aswan
+9bcc357e929f315391150b0ab5bc46a1f205d87f # cinnabar
+087fb7a351773d95f72df7a99bbb1758392d1bc6 # gecko-dev
+# c9c090ac9e2461e17d0333a7f10ae087c9315c99 - Mark Banner - Bug 1466497 - Enable ESLint rule require-expected-throws-or-rejects for head_devtools_inspector_sidebar.js. r=jdescottes
+8fda571ef75523b7a04729b217c406d2cfc29374 # cinnabar
+7fcdf73fc3aae82cd74d2d2d8f21a562483ab5ca # gecko-dev
+# e83a2d180ff5f128313c53d68af82ba48cea7cbf - Mark Banner - Bug 1466497 - Enable ESLint rule require-expected-throws-or-rejects for storage/test/unit. r=mak
+9c4022f6b5b48a49c0992c563a8337a00d2b742d # cinnabar
+fe1b5d201fc7132b59635453d7f74db9d02d2110 # gecko-dev
+# 2f4558fa5aa20cef718de26bcadca3b080d8bef2 - Mark Banner - Bug 1468938 - Add the 'expected' arguments to throws/rejects for dom/. r=lina
+58107c12f0c23489150782b81f09da6611fcd288 # cinnabar
+5aaf4808e7e3940f1bf86a127f601ac1795d4603 # gecko-dev
+# 4ef2cc1caddbe7193a1e065a88c20a991b90a747 - Mark Banner - Bug 1230193 - Finish enabling ESLint rule no-undef for devtools/. r=jdescottes
+50e7c423c14bc5a52bf0c88618fd741db708ab3a # cinnabar
+5665b1e1bf7a0c3a4ba75bb94af2f9388a8932bb # gecko-dev
+# 2223f56e1188e5b6c057b4e441b0b2759086f129 - Mark Banner - Bug 1470455 - Add the 'expected' arguments to throws/rejects for devtools. r=jdescottes
+4bc1f9b5103b06aed23db9a0355c61eedfba52b4 # cinnabar
+cbfcd78cd503f0c73cbb4123aab57d5b7f9b9dc7 # gecko-dev
+# 0c3cfe04d1ad57ccd5cd60b0040d5a6371138a51 - Mark Banner - Bug 1470455 - Add the 'expected' arguments to throws/rejects for netwerk. r=mcmanus
+201b7542a7ea9ac11601e3fd94167cb8ca692eeb # cinnabar
+82aadc6adaecc60819378f56a8693b96ea4fb3f4 # gecko-dev
+# f4c80c25ab35f3bb6e3322b89b1eaeea0e49b2e8 - Mark Banner - Bug 1470455 - Add the 'expected' arguments to throws/rejects for dom/push/test/xpcshell/test_broadcast_success.js. r=lina
+78eb9d50c57084fbfa93877e8b39f4deb9001941 # cinnabar
+d42be1aa801eccf0bafa6b50c37a517c15d582f8 # gecko-dev
+# 1b2e6b7ea43a6517ffc46cdbe2a746256cce3ed8 - Mark Banner - Bug 1470455 - Add the 'expected' arguments to throws/rejects for security/manager/ssl/tests/unit/test_sts_parser.js. r=keeler
+fd01095cef0662051b69085a6acbb96ef80161e9 # cinnabar
+312a9dd7f50c2e5ed62aaf113ca47a47200fa917 # gecko-dev
+# f37e9ac2078d651c2ef46e7ace1434d0ad78f25e - Mark Banner - Bug 1470455 - Add the 'expected' arguments to throws/rejects for toolkit. r=mossop
+72d883d5fbe3ad5ff8bea8ffc42cc3ca71efc17d # cinnabar
+34178bd8e9d40ddabb567487e45bf9cfadce6b27 # gecko-dev
+# 626c790eb6f341866cf5ed0ae0591e9f3a14809c - Mark Banner - Bug 1452706 - Add the 'expected' arguments to throws/rejects for devtools/shared/sourcemap. r=yulia
+f26c2bffa70f6d8ba8eb47c76756fb5b316ecc42 # cinnabar
+b04a79880431bca7e23d5a72de7c5ea698f47905 # gecko-dev
+# 208e3e0cc4503a87e09f1a0efa52bec04c35b64e - Mark Banner - Bug 1452706 - Add the 'expected' arguments to throws/rejects for devtools/shared/sourcemap. r=yulia
+348c00a4130b87008bf5762abcc8916646b2d9e1 # cinnabar
+2a76b96907a5252e918c92a703ea3df4ecae5902 # gecko-dev
+# 32a27f317a77d8be3eddfe336015ced2d3e72676 - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in browser/ r=mikedeboer
+2ddd78301ae87891edb4417d59fb96d5523c4cbd # cinnabar
+180233c593e672934a5bedecd9924f0b1e6f8183 # gecko-dev
+# 0e4ba7a6dc1a11f2df09d61bcba3d07d9f81b1e5 - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in services/ r=lina
+73f5000326e71129c28b70e12774160bb098070c # cinnabar
+fba7b6390394b6c060eabbc58a08d0545ad2e3ba # gecko-dev
+# c68131530742b84ecd191860d0bb6b2dffbf56ee - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in toolkit/ r=mikedeboer
+f4de6b37b11fdec4c64306df42e4a4d07867ab26 # cinnabar
+d95c1526b8e612bdcedf6e59077da0d3ed21214f # gecko-dev
+# a809b45ff49ba5814795b30b5a460d7d2d1b6a23 - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in accessible/ r=surkov
+4fa3ecafaa5a0f8e4a3afcf2b30233e2bde4ce26 # cinnabar
+58e5c3e98f9848f6ad5002625b296d8b67f07aa0 # gecko-dev
+# ef9af969d02f2d81609f3426491dd3055e50b2b8 - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in browser/ r=mikedeboer
+d1ab2ed86bf2d6bf15763fcc79ee20a67c5de8b0 # cinnabar
+6feaa5a9c38db6d08ca07e0cfe9349d720093617 # gecko-dev
+# 111912a0788633ed2a5399b72161601b2ea83b38 - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in services/ r=lina
+bbff83e9f515d21d28668613b393d292eb2347e4 # cinnabar
+96b3386f5bbdf72664e5efdf28e432162003696f # gecko-dev
+# 1f452c6be0d7017825137a8bd3ec0f1aea3017a9 - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in toolkit/ r=mikedeboer
+55bb17ecc0b6405c53a4f47232319789f6406ffc # cinnabar
+29ebe3f3a8c18ba0d3342b7aafb29f64edb2687c # gecko-dev
+# 2307557b66b17dbc6952cf67995bba138b05443c - Mark Banner - Bug 1478308 - Remove unnecessary ChromeUtils.imports in accessible/ r=surkov
+3c3f31856a006c0ef53c86933b4e52703a80cb59 # cinnabar
+15c57e5bee4978558a19fa2e05018d8f47564e9f # gecko-dev
+# a8d92bdf7d0e0b11fbe341071644a914cd0dc78a - Nicholas Nethercote - Bug 1478896 - Fix HashTable.h style. r=froydnj
+0eb8a9ce65a40413c05b7077132b6e3a31a449ba # cinnabar
+e0dbe1b0522a147789367b39c0a378174b5f8321 # gecko-dev
+# ed8954c61a364e1811b3f3ce7526e95a37ba346d - Mark Banner - Bug 1478305 - Remove unnecessary imports and fix ESLint warnings about unused variables for browser/. r=jaws
+60a579cfb7a016446e2ce4481dda5096e02569c4 # cinnabar
+8d235f8e45b6b09b5e7cbefd5b37417919425c71 # gecko-dev
+# a0a4329018c260617b2d511cf142741078e75ae2 - Mark Banner - Bug 1478305 - Remove unnecessary ChromeUtils.import calls in dom/media. r=bwc
+a45243e814bad8f0b4ad0c3aec3aeea2d3d60d66 # cinnabar
+eb3b37a169cc93d46423be1bb1c8e4ee1d210be3 # gecko-dev
+# 90115883e29226a8f3f1b01d4d32ba862c4b5305 - Mark Banner - Bug 1478305 - Remove unnecessary ChromeUtils.import calls in mobile/. r=snorp
+4358bd738dc99de987087558c4c3deed84ee9f8c # cinnabar
+43685f06cb9dfde693e129560541f789282af643 # gecko-dev
+# d3cca460f38d615b13cee866a159a2cb240c2340 - Mark Banner - Bug 1478305 - Remove unnecessary ChromeUtils.import calls in testing/. r=mossop
+60d17305de01031bc4dd8f2197f335759403ba85 # cinnabar
+e6cf2a84d14c70a4e803f9960c83528978a775ae # gecko-dev
+# d28accbc115dfbc60b7041e1acd0e0fd97f4335c - Mark Banner - Bug 1478305 - Remove unnecessary imports and fix ESLint warnings about unused variables for toolkit/. r=mossop
+242e2d1c586dac7afbf8e18601582428f13c5c9b # cinnabar
+c7192b42dfcf836a7dd242eb3601c7e7dde4b811 # gecko-dev
+# 0639e328afdecd64c1ac3c7f640bbf6dd3b19f8f - Mark Banner - Bug 1475004 - Enable ESLint for dom/presentation - automatic fixes. r=mccr8
+df4b7949ad029430a8c798e7c0fcb09de9bbfc29 # cinnabar
+a0026662dda8725fbd84a357da9d902e489b214a # gecko-dev
+# ee957e55c91e5a68849eef53e9a4bfacdf9d1a12 - Mark Banner - Bug 1475004 - Enable ESLint for dom/presentation - manual fixes. r=mccr8
+51a1fe5fde0167d433dc7edeee0cf5bed6581522 # cinnabar
+d0d3486293ccdf3ac125e836b09b1327c65c9a51 # gecko-dev
+# 8dadac023d15cce16284e5ebb533b5b267cb552e - Mark Banner - Bug 1481932 - Fully enable ESLint rule mozilla/reject-requires-await. r=mossop
+961b69837484e9080d55c9885c84a99c77dc83d9 # cinnabar
+21236ee00fe60be0df699cb3b6c247f297676256 # gecko-dev
+# 15ee3d748ec809e28d05b7a3ccc8e4d023f91f74 - Mark Banner - Bug 1476228 - Enable comma-dangle ESLint rule for Places directories. r=mikedeboer
+e723c393f145e5a431651b0b52bc22aec631652e # cinnabar
+bf2dba5c9f8875511649f320e341672df5e5b21b # gecko-dev
+# d7fcfbc15cfe5e33cce5a12ff009e9b6aec07811 - Mark Banner - Bug 1486739 - Add missing dangling commas in browser/, services/, taskcluster/ and toolkit/. r=mossop
+bb968af79e76979e631c3bc656838991b309288b # cinnabar
+691543ee8963d86cdad662628f4a93f839272db3 # gecko-dev
+# 1bc6d1a2d201a3e8d3d726fc87d7fb5670bbce1c - Mark Banner - Bug 1486739 - Enable ESLint rule comma-dangle for browser/, services/, taskcluster/ and toolkit/ directories. r=mossop
+a48d857e2a8f5dfd644497d0bc070922fa5bc086 # cinnabar
+afb520e82a88987cbb7ba9666cbc24f6473255cc # gecko-dev
+# 10d5143647cfda21649cf254adcb21d116524c5d - Sylvestre Ledru - Bug 1489454 - Remove all trailing whitespaces (again) r=Ehsan
+b8543d174a16b7247f5de49ccfb55bd3b679b0c2 # cinnabar
+aa37bde79bb4cccec902e118ceeae32526bf3c1f # gecko-dev
+# 10d90fa56710390d54d44f25d05054e62e08af03 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin, part 1. r=anba
+c41acde79808f03755336848965131678634dc85 # cinnabar
+87fd9cfafc20cbbfc06548fc24cfec9a1870610c # gecko-dev
+# 422abc78931ce85a2950b6b2e554981f5354d5c1 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin, part 2. r=jorendorff
+1e317d5a90cb57d05364cdf4fcf8bbb23397d348 # cinnabar
+49add130b66b4a23c3608bc8081dff573f03a319 # gecko-dev
+# 506e668e28645f38b226ea203aed38b5b5f0b0e5 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin, part 3. r=evilpie
+263a82e96d545bbbf2757c3d28710d70a474358a # cinnabar
+e4fdfe59485644f16d48f4d51d3da8b0e0c497aa # gecko-dev
+# 3fa402809570cf52220fd946081de01d7d117174 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin/intl. r=jorendorff
+510afab44ff9e644889ef77627cb27055f60dfc5 # cinnabar
+83fddc286519e2b694dfce3d6eda389d2b20cbbb # gecko-dev
+# 6c382d4ab0d0deb714f15300afea2c52dff94e47 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 1. r=Yoric
+f763621f8f75f644f35719085f8de9d5f58f026b # cinnabar
+abfdb3755683ac6872f74180a4d81a0f57a40afc # gecko-dev
+# f758714e4ed9a93b2db83be95fb669f53658a58b - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 2. r=arai
+7b1cfd2f75e21d8895e82f83058ab22c14d35425 # cinnabar
+a1fe41d1fe1b8356e019935433af17c9a351d727 # gecko-dev
+# 719bd7da3367b47f19800b1761ecbd5d97a49fa2 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 3. r=arai
+194d77249d1019a113c8c2d221dfa56f7c3c9227 # cinnabar
+00d085e8e7ed2d4c54369100f219263dd6b5ac84 # gecko-dev
+# 9f7beee7269b10833e0ca8446195cc354dac63c3 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 4. r=jorendorff
+0a12af94e9df7de9b9631cdf532a90c669098ed9 # cinnabar
+30819202972a99ccaa0dac17f9be539d59ffda9a # gecko-dev
+# 3ba56e06507e0c78c679261c3d0424decb3f7b29 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 1. r=sfink
+853dbaf41cec847177067906f7df1b839db0b63c # cinnabar
+c4600c73ca9a904d79b31c10beaf21f53a9c046b # gecko-dev
+# d27cd3305320b12ad93f0837090a0913d0f31e76 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 2. r=jonco
+bd701e90f0665b8a57646028a282b06249a7c602 # cinnabar
+cc2932b2cc876c1177bf0da3eb1af982ad33356d # gecko-dev
+# 68e5c74b6e90baf1212846920435dbe0ae17f346 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 3. r=jorendorff
+9af52fd55db34b2a150b3ae95ac1db3b280bab26 # cinnabar
+f4059955f755f209cab7a482f26d585379ce6109 # gecko-dev
+# 5150b70229209c5d020eef82819f5b8d5aebda0e - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 4. r=sfink
+c3bfbf81e01f505fdc4e2bb8ab757e226d331daf # cinnabar
+75ce27e2a1f2a8b8b2a9166b10c82f8da8e32fdc # gecko-dev
+# bc503aa87b272bdcef98a35c9759e25a15031241 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/proxy. r=evilpie
+5bce1ead253ac0fbce289333515344b9950e8a9a # cinnabar
+a35f4bcc40e6e8972b9ebbf7e54f1f78d3b523ac # gecko-dev
+# 847f8ad07bd59db3f23243baf924dfe8682297d6 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/util. r=anba
+992dd7fe7a9ab9931afb18a6946bfb60620e2d5f # cinnabar
+b5680387949c9b2e2c0b1183e1f66a1c57bb1a62 # gecko-dev
+# 062a7185253dd2c253c5a3a2e9f177be37483252 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/threading. r=khyperia
+a912058789341807eb79b93c9d33209969e2f07f # cinnabar
+ef8a7283769a01a7f0f900a6967140ae419f502a # gecko-dev
+# 48c78757dc15531f94c8fd67dd70bc467e74543e - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 1. r=tcampbell
+44a9a6f702494f9bb09128184af0520b1aa934cd # cinnabar
+567b7fa6464908329b964c7aea808ac5f2378b9b # gecko-dev
+# 9f1df06ee3066e30ca84e270e37087f632969ca6 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 2. r=mgaudet
+8ea64a2037641a746744e19de73e04dcb92115f3 # cinnabar
+9795462b0332a067e95e8279c93b9ae640c5132d # gecko-dev
+# 236cf9e1bd84919f1f7603d579c667a14a1ffd92 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 3. r=nbp
+8019492f133ecb2ce6d31b89168f38377468108c # cinnabar
+c0820042edede6a1b473616eedb9bbfe74c4c6d8 # gecko-dev
+# 78d8957d12e298347c2cebe535ae565763ba361f - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 4. r=luke
+692ed3edf55bdd0feada279dc20244caae7beaf3 # cinnabar
+24c7ee16090183001dc6be9e8282c7028a018b72 # gecko-dev
+# f24489d307bedccd634b994043138d14bfc90d04 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 5. r=bbouvier
+30e7db9d251f78efe55e5cd9e6b24d26781cfccf # cinnabar
+6f9df7f3959c9453ee5d6be984c01befecf78fd8 # gecko-dev
+# b5b33a78679f204f9284dc126ca96c2c619acf71 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 6. r=jorendorff
+8a05d0b4ef511ac7cf2e016f57cce1291e942356 # cinnabar
+143fc0eb5429f8cfd9a006b409e1e3dbc2326484 # gecko-dev
+# 3810b18e5e79dc6a5204a2df01bfaafc40f0573e - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 7. r=jorendorff
+eafc0144130b26077147d3b148f0952840961011 # cinnabar
+8f0240d2d4f77b1260aea53605500b741ecbe06e # gecko-dev
+# bde61aedfb5c51a2a761037be694df136ede49cd - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 8. r=sfink
+3065d22e344fdb0ebc35a33f68ab8b67e81df373 # cinnabar
+673c78483c4b26d3d3eca7c88ff1ae53693a47ac # gecko-dev
+# 045f3d6c75024958390a18753f3698f9d177ec61 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 9. r=khyperia
+bde6f1d7a1bdd140997a0203c2bed845df2084bd # cinnabar
+028b2fe50ec55d5356ed42b605caf00ac796e334 # gecko-dev
+# 6b3a95df3c123910eeab97cb7cd7cbf0884bd413 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 10. r=lth
+9c17bb9e1a54a7d2ccb6fc10417eded49fdd53f7 # cinnabar
+e0f3b60f0ebd12c55c4e8fe498b4d7207fce7a45 # gecko-dev
+# 219721735c51630107ce70c295c26b88bb87ab3a - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 11. r=tcampbell
+a1476db76ec77599b7c05e50c07664df868de966 # cinnabar
+83b65ddc57b0f634121fbeb744616522a6e61a64 # gecko-dev
+# 710ba7b57cd3b7febccd5f390081f614ebe2df3c - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 12. r=bbouvier
+ca8a87bab2ece7e21d4804ef9f912673d73e5864 # cinnabar
+408417dc41534d02d81c5cd01ee10ec5a25f6e6d # gecko-dev
+# 9a67686aabe8131742f00bdcf6919b5a2cc48f9a - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 1. r=bbouvier
+0402619df3dff2d9a1f1042de74de47313f73964 # cinnabar
+454914989e256770dffa85d458c4d4d62ed1e16c # gecko-dev
+# ed9bb62ebea140a50e38c08e663b0550a1c3c5da - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 2. r=lth
+1097cd66f526459baf6ef8b97aa0f64000c4727e # cinnabar
+d8b0f9131315795c86416caa70ef15ebcf181b4a # gecko-dev
+# ab68962c6c3ffb885da31f617301cb63b6fa73af - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 3. r=luke
+141eec133a1f5fb6a5eb29eae0924a147db93070 # cinnabar
+9f36b27569493443d8a9fe2f39893dc77b33c7e9 # gecko-dev
+# 20142eb6afd6c14610943833a5e7bdbceb4dfb8a - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 4. r=luke
+7005d0acdf71a64e47e3ee41c1f7e32876cfdb73 # cinnabar
+880273a48556a60292b1ac86ab54459b4e93ceb8 # gecko-dev
+# e3a9c003c9c5d3d6484fa88ba07bdd7c0ff183d5 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 5. r=bbouvier
+e6eee1f918ef3599e46a00fb2e3768df72f3fae5 # cinnabar
+1f6e5f662c2e25b26bed01e21d270a3837894a25 # gecko-dev
+# 817b7142d4d965f9ab591a33268e2a59d29e4aed - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 1. r=tcampbell
+508299042dad5003f0dffe9d6f116850c9749c61 # cinnabar
+6687723eb70e34868de04d54033af160522969b2 # gecko-dev
+# 6a52f517bdb44b42b677c7c50a67d9306b3ed935 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 2. r=mgaudet
+d1e685d044c8fca37a8d43de5756785b3a656ef4 # cinnabar
+050dae31d56078d1aefb26d46bac745d01e76687 # gecko-dev
+# 19ae9ff093caf9f9071277549c5aac056db90587 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 3. r=nbp
+3cbd3d56eb335503e75aa0b60fdb98d0fc49df04 # cinnabar
+8ea27917d04209baf22ba34424e1a7eb03b555c7 # gecko-dev
+# bc2538bb2e9d925b17f45e1570cb6441ab6f8e3d - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 4. r=bbouvier
+4ece55ae7439abd851cb1bfaed17b1ffd01f9c2a # cinnabar
+b8be6d2660acfc4b9f3876b543cb0d053394a6d9 # gecko-dev
+# 8fd55df51b25f080dcbf749bd9127f7fea3b36f4 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 5. r=tcampbell
+ba023df7fbb92fedc02a25c8533ed3069fc5ebb0 # cinnabar
+6f1da9c980346d15d1f48824291fbe9fade5d523 # gecko-dev
+# a946ea065650ac0422ad82c272496ff6290f5410 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 6. r=evilpie
+70bb821ec3c99cc9d2ba89c477d80b54be408f3a # cinnabar
+08d5c21a3fb65ea70f888d2ae598719579eddd3a # gecko-dev
+# fead9919a173160ff1d66715cd34e17ac0d11bce - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 7. r=jandem
+990bd0b32bfe0af0af336b9f48c2298866387a38 # cinnabar
+3d374e57a9db84da89011c35c5c90589018bafa3 # gecko-dev
+# e620cff42c301ca3ee5e50856c185bad2695c39b - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 8. r=jandem
+5327992dab5ad666442c9d395718a4c1548c589c # cinnabar
+840e24b445ecf65b80a63da3085a57e2cddef550 # gecko-dev
+# c56540cb6e028b2eb724d6316b5b47c9adcee0e1 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/shell. r=jandem
+29b1224fe8ef4253182f3b4ad0496b92d465aaac # cinnabar
+28eb0626a17403b176fa26926098c085eb3f6d0b # gecko-dev
+# a6baf63a4fd58b89dd1aad32a840aeb1288cb5f1 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/js*. r=jandem
+94fa5a0b50427f8781183a16c2fba2687c397ed3 # cinnabar
+670c162df38c900555ac978d0b4fe127a237f94f # gecko-dev
+# f2bedf1fe932f1bb3277a4db1e11fbb02b3242d8 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/public. r=jandem
+9cd3054445b0a33973f96dd7ca9ceee46ead9295 # cinnabar
+ab644b087f3dcb920bef3ef031a9d88d819f453e # gecko-dev
+# cab441a582e82e1875fd9271b78f3b5e8462376d - Jan de Mooij - Bug 1490589 - Add braces for if-statements in make_unicode.py. r=arai
+6405c10911d23d46162756480df72b72dbc8724f # cinnabar
+816b6b6516c3ad86944e24fdd80fb319bdbb9ff3 # gecko-dev
+# 91fc6c048c077c12a9326cb6825ea9e12158764d - Jan de Mooij - Bug 1490594 - Always use braces for if/for/while statements in jsapi-tests. r=luke
+47b588c2e9bdb05f966064b284f2127e55090268 # cinnabar
+eabefc7394c64a6996df8b03815814a2896344bb # gecko-dev
+# ec5fe5d123b1baac235d978858c5226f7c8d9ed0 - Jan de Mooij - Bug 1490594 - Always use braces for if/for/while statements in jsapi-tests. r=luke
+85768612d1bb1629ad44105b136ddc8ceb6b7d19 # cinnabar
+df77c423a5d18e3a997563b47c50a3c0b55f68e9 # gecko-dev
+# ea73513d7c2555142333f4667a37788023f92f2a - Mark Banner - Bug 1489980 - Editor ESLint for editor/ - Initial setup adding configs for tests. r=masayuki
+44a478c9f2df808c2f72f682869aacf562cc62e0 # cinnabar
+3720c020c0c84345fe7d76923bd05fb64eaa1f3a # gecko-dev
+# de36f39840c64a50ccc45f8c0593d8dcd651dfc2 - Mark Banner - Bug 1489980 - Enable ESLint for editor/ - automatic fixes r=masayuki
+a8c93f0f36f1de437531048d926cd6d90a85a3d7 # cinnabar
+d5e3a6a9e5c07a45fde5dc5bae33673615e13455 # gecko-dev
+# 0d8eb8a0c2b4ad081ffad8ecf172b82d16c38d01 - Mark Banner - Bug 1489980 - Enable ESLint for editor/ - Manual fixes. r=masayuki
+475e2a9c818bdbad9946dda3ecc3ffcfc15e560a # cinnabar
+e824d800fb547242e168c8f12be8c5fa5cfc120d # gecko-dev
+# 7bbf9560f451422023e71284069254309eb9ca78 - Jan de Mooij - Bug 1490993 part 1 - Always use braces for if/for/while statements in js/src/jit/x64. r=mgaudet
+7865f48fc78ee80ec4edacbdd213219a83becb25 # cinnabar
+ea80c8629f4b334929d7109a8cdd80daefcb39dd # gecko-dev
+# 3c10148fb9a8056c216f1c3f1fba8d6fec35a9c8 - Jan de Mooij - Bug 1490993 part 2 - Always use braces for if/for/while statements in js/src/jit/x86. r=tcampbell
+44ef4ab655da65b6691278b22f8c4d1182581ba6 # cinnabar
+92beda17be976a7108e62c3324d39c3011479293 # gecko-dev
+# e6cce3b04ab699ce80f5b90321308f66eb43d562 - Jan de Mooij - Bug 1490993 part 3 - Always use braces for if/for/while statements in js/src/jit/x86-shared. r=nbp
+a7e3a882e9f308a01c9fde47a3925b6ebf8b80dd # cinnabar
+7c02dd463269ec8d0958b0ad4a7836c506c1189f # gecko-dev
+# 63a03fced45b169986a591310bd6572594a10fa0 - Jan de Mooij - Bug 1490993 part 4 - Always use braces for if/for/while statements in js/src/jit/arm. r=tcampbell
+c83df309c6f55cf78af30a6b1ec6dee5852238f5 # cinnabar
+dd59f602e2b97bbb0fe73ba95057725d2d5d37ef # gecko-dev
+# 371ea54455859baa1f9a5dd2d70772e04d6829bd - Jan de Mooij - Bug 1490993 part 5 - Always use braces for if/for/while statements in js/src/jit/arm64. r=luke
+e1a46ea06d169f4ecf4b2bb9c792bfa590b1a48b # cinnabar
+f75dda188ab0ab5b689f798653a7a0c0feea5cf7 # gecko-dev
+# 0667570cb938dd973aaef61ccd31f0a74ce57a9b - Jan de Mooij - Bug 1490993 part 6 - Always use braces for if/for/while statements in js/src/jit/{mips32,mips64,mips-shared}. r=tcampbell
+896960aa1c65e74e9e8da244ec98fa66c1d00d3e # cinnabar
+a493a8cfe853d78c3b0c902ab4a69e36848b63f4 # gecko-dev
+# 765542d6237ecf99af924f61485d7fe19f4f722c - Tooru Fujisawa <arai_a@mac.com> - Bug 1490548 - Always use braces for if/for/while statements in BinAST auto-generated code r=Yoric
+5eed8696724393673b7f7d3fc920a6f439de99aa # cinnabar
+9bc0d5d15d945aff731a60942893ed1079b38407 # gecko-dev
+# a2f6f03530301e5fa6357815265f782400c612d9 - Jan de Mooij - Bug 1492416 - Always use braces for if/for/while statements in js/src/ds. r=arai
+d9c9de62d8efc091cb3e3acb61bf627b85637c26 # cinnabar
+0143ee21c0f84a697c0f71ff8cd9799120b58449 # gecko-dev
+# 146575efb1c65085c56ee57d7cdc1de54c0f600b - Jan de Mooij - Bug 1496033 - Add missing {} in js/src. r=bbouvier
+27c6e55f56fe42ae55077eee6147805c8048c547 # cinnabar
+05cdba23d9bf753f243cc8342bc7bfab4880709b # gecko-dev
+# b60cb229416c3a4d2744611cf89051f574ced95e - Jan de Mooij - Bug 1489242 - Add {} to example code in comments. r=jorendorff
+a7ba6fc3c543b1cd42d4006ffed4340a0977496a # cinnabar
+0811112d770e8e12dcb81fc79068c90a16a793e3 # gecko-dev
+# b4d7770b8661338c878166beca941eeb830f6041 - Paul Adenot - Bug 1497254 - clang-format MediaEngineWebRTCAudio.{cpp,h} and MediaEnginePrefs.h. r=pehrsons
+03412b0f475fa8911d0abcf700c820152fb76984 # cinnabar
+3c9ac6a32de8d50b0a15a57d20b8d4889f1a57e6 # gecko-dev
+# edc4ae8f78e2fb02647d7cd85cb19830a17dcd1d - Mark Banner - Bug 1486741 - Enable ESLint rule comma-dangle for all of mozilla-central (automatic fixes). r=mossop
+65db0adebf16b2c3af0932513794f8288369600d # cinnabar
+ceaeb9355094af9bb68cce56902cf39086795fe0 # gecko-dev
+# 988056e6d0543949b91fd7501ab4140f88e087e6 - Mark Banner - Bug 1486741 - Enable ESLint rule comma-dangle for all of mozilla-central (manual fixes). r=mossop
+8da634badb546530db4f76a6072e58acfaf2d10d # cinnabar
+1ffb981b68e781bbc16badcefce96fa60a6c5490 # gecko-dev
+# 1ac84aa579d69572a6569e70b73c1e17d206361e - Mark Banner - Bug 1486741 - Enable ESLint rule comma-dangle for all of mozilla-central (setup ESLint). r=mossop
+6fa66b7dadd8ab9e61490b31435c14cb4ead3a09 # cinnabar
+7d7844c8d580c5fc25b65f22d52db532716e24fe # gecko-dev
+# 507a9e5aaeea48bcf83b11022568a07718ca321a - Tom Schuster - Bug 1497476 - Clang-format nsTransferable.cpp. r=froydnj
+a1cdc4aae3d556eb6b468efc62fd2e9336604832 # cinnabar
+3334b2af14a00f38a62180dd2a1a2d4d3708bdd9 # gecko-dev
+# cea1d44ac77657bcb92172ceab3abaa6bbb7743f - Chris Martin - Bug 1402282 - Clang-format on mozjemalloc r=glandium
+52b82cc286b3999b92542ef3315f54e28cc9f2de # cinnabar
+a1d5bd190924becb2f178f0b57dfdd87c9e2e04c # gecko-dev
+# 8f6702639abc0d48d610facf3002a2a2dc1114f9 - Mark Banner - Bug 1506042 - Enable ESLint for docshell/resources and docshell/test/chrome (automatic fixes). r=smaug
+75d79476db12113a0227e13b981d614518419887 # cinnabar
+ce1e7cce4b41827e0984d1b00cf203e3d740b2b7 # gecko-dev
+# ea9a6719f0c7244a7d63316b1d0cb7dc41f9a0c3 - Mark Banner - Bug 1506042 - Enable ESLint for docshell/resources and docshell/test/chrome (manual fixes). r=smaug
+8a4b7267d30c1be7359a739e3687bfba1d07afd9 # cinnabar
+3a66c24aae1c9fb140c240ff073feb65af04168b # gecko-dev
+# ed063368a801e3bec682e03995ee4c0c0bf57eec - Sylvestre Ledru - Bug 1505949 - layout/style/{BorrowedTypeList.h,ServoArcTypeList.h,ServoBoxedTypeList.h}  content should remain on a single line r=heycam
+ae47b70ef7da55e35a2e5bfb0dab043ccb4199eb # cinnabar
+f406d8ccaf67868be61685a87a53ee3a9327c91f # gecko-dev
+# 0f9d5e93e0ba6fb9bde4dfb9befd6b941d2007f6 - Sylvestre Ledru - Bug 1505943 - Add clang-format off to keep the line the same way r=andi
+92c18991daa067e19b1d0d4e9b3c87f7a2132df0 # cinnabar
+088cb71b59f2f03587bf1bd3889639e573447207 # gecko-dev
+# 92a23275c087fb829e45e766b23afeed7ea0b816 - Mark Banner - Bug 1506559 - Enable ESLint for memory/replace/dmd/test/. r=njn
+d1b117256d24508fc38eeb2a88597f2deac33509 # cinnabar
+50fbf54ef3109a5738a3331e8fa014e7f2f928c9 # gecko-dev
+# 0ceae9db9ec0be18daa1a279511ad305723185d4 - Sylvestre Ledru - Bug 1204606 - Reformat of dom/media r=jya
+abd6d77c618998827e5ffc3dab12f1a34d6ed03d # cinnabar
+804b8b8883ba2a6795b0fcf65ebcb18306b6416b # gecko-dev
+# c8dd8f4166c9287abf6964e55f3b86754d6cf806 - Ted Campbell - Bug 1508180 - Use uppercase names for high-order macros in js/ r=jandem
+dee032acf3ac0fafb858ad28f37de1e03d50ee7e # cinnabar
+49eabf233776b8a283cf5264827c11b52f1019c9 # gecko-dev
+# 1963c82b5abf500d7b8f5d843896028bd2380615 - Ted Campbell - Bug 1508064 - Use clang-format off in parts of js/ r=jandem
+68516f1196ae2bf37943dd3d1743fb744ab6a606 # cinnabar
+5d89dbbb328531ba9c1d15ff7e47b9600821e4ad # gecko-dev
+# b4ac72eabda04e933eea9b0e9a35fa4f8c786c7d - Ted Campbell - Bug 1508180 - Use uppercase macro names in mfbt/RecordReplay.h r=bhackett
+0e30036bd3660addaee0440038fbdddd1444748f # cinnabar
+59d3110a5ae5bf9bc4f9eb34c45a3ff4e0e07a8e # gecko-dev
+# ffed3e5978105c9f71fd4a5579746e2117ebc819 - Ted Campbell - Bug 1508180 - Use uppercase high-order macro names in xptinfo. r=nika
+aed49a18dbf5c67fcd241400e4e16f9c99e84c5b # cinnabar
+a75a26eb42c01795d647c9765eeac4613db7804e # gecko-dev
+# 5bad4fe7108eda1ca69c5f5aac82b4042c874deb - Jan de Mooij - Bug 1508605 - Change some comments from /* */ to // to avoid clang-format issues. r=tcampbell
+8635f6560164da5b90802405bca23eae94193eb4 # cinnabar
+2e8ddc13d24172c9abd53be9cac2919eb12f4ba8 # gecko-dev
+# ba2da67c9e7e7541e4be66e5841c3a115c31ba1e - Ted Campbell - Bug 1508255 - Minor formatting changes in js/src r=jandem
+0a7699b043ee3f2dd52e221f822c3102c57320a2 # cinnabar
+ef11ff97a5ea485db307a69f43bcb3b4fb20453d # gecko-dev
+# 32eadea53faa9aca578c11bf682fcbb9385f9ebf - Ted Campbell - Bug 1508255 - More formatting changes in js/src r=jandem
+4ceba7144c086e49dcdf67fbd267e9426f75a8ca # cinnabar
+adb0d2daf3c1cf1618b6419e131c3ff34b90b3aa # gecko-dev
+# 5219139e6d0f9fb6c9effc4df73244b8f9dd418c - Ted Campbell - Bug 1508255 - Reformat comments in js/src/Stream.cpp r=jorendorff
+39d54d84ae9bcd19292370f15d6dae992178c47e # cinnabar
+4bd38939c85c6a82690d405a00dc6e7fdca40189 # gecko-dev
+# d437391bafa1ec497443aedac9500cbfa172ec26 - Ted Campbell - Bug 1508255 - Allow clang-format to reflow comments in js/src r=jandem,arai
+4ce37841a926d275f09721a933c16b07a04e938b # cinnabar
+ba13e3ab6f34c9837111243e78ea7a0b976b8339 # gecko-dev
+# 2d8d64aff05a9af6af00a99c7922b86ad9d1bb55 - Ted Campbell - Bug 1508255 - Merge js/src/.clang-format into top-level r=sylvestre
+eb0823a3f6f590dd50ccbe5ad7cfbe956c120e80 # cinnabar
+518cff29729e153f621aebd6bb1b5a273a41e664 # gecko-dev
+# 0833d96f563a736de407f4960643c367611f41b8 - Jan de Mooij - Bug 1508106 - Add {} to non-empty CASE/END_CASE blocks in Interpreter.cpp that don't have them yet to make clang-format work better. r=tcampbell
+0d495fa36b1482eb05090d53d4f5416868f80664 # cinnabar
+2e550aef57d004a81aa8a0e639fec409156c72ba # gecko-dev
+# 023c546c01cd2d3c4d382ab5e9245a48f138e934 - Jed Davis - Bug 1508898 - Prepare the Linux sandbox's socketcall/ipc-call dispatch table for reformatting. r=gcp
+c6a2982b26fd246fdfc7306d85c5f38b0cf53c93 # cinnabar
+e9397cfcac14c20d67d33d85d6006837c6c5b04c # gecko-dev
+# ab5ae5f1e381afd603d9b3032c7705a4f620bfdb - Jan de Mooij - Bug 1508176 - Some clang-format fixes for generated unicode files. r=tcampbell,sylvestre
+487ad5c06584522b9d03dc7f9a67d90f1249bfa8 # cinnabar
+dfefd7baddd295111a682e00d8c06eb318a789ea # gecko-dev
+# 834b61114235c7a2f2413d135ad11e5b4148c09b - Jan de Mooij - Bug 1509010 - Fix some clang-format comment issues in js/public. r=tcampbell
+5031e90c55e13587e0b43c1f39c20acc099955b3 # cinnabar
+e39a94637e1a7ed7298180e169e5f400d070f50b # gecko-dev
+# 34e7b9fa3a761d8e761c9aeaa50983d0cb3cc50c - Karl Tomlinson - Bug 1508905 Remove from clang-format-ignore WebAudio files forked from Blink r=Ehsan
+16b71602a3a54dc1b6f917423cbb1542e2273a66 # cinnabar
+237046a29b13f602155ace43bc0d8c7367a1e94d # gecko-dev
+# 2ec7bd511b7f5ab1b6f11beca250dd094a79943b - Karl Tomlinson - Bug 1508909 revert reformat of third-party ffmpeg headers r=jya
+0eb8bf988f4561293ebb06e50cea31aaabdbc441 # cinnabar
+cbf2ec1e6694274680a9a94c14b7dafb8fab4f39 # gecko-dev
+# 5d83d28c9ae59e31271fc400de7a63f0221a0ebe - Jan de Mooij - Bug 1509025 - Remove js/src/jsapi-tests from .clang-format-ignore. r=sylvestre,tcampbell
+46d81aa2336147aebead88b564c6baada40714d7 # cinnabar
+62b1515b581d724e4d31670225ba3c229db575ce # gecko-dev
+# fb09acfff1684500e989acc798e97fa7f9358dc0 - Ehsan Akhgari - Bug 1508472 - Part 1: First batch of comment fix-ups in preparation for the tree reformat r=sylvestre
+218599f9450daaf2f959e106ebd12cffe30a552f # cinnabar
+6099c9f67b6a820c52e823f2043b59dabff5bf4a # gecko-dev
+# 11d6688b953f800e234162bc8ed5842954de087f - Ehsan Akhgari - Bug 1508472 - Part 2: Second batch of comment fix-ups in preparation for the tree reformat r=sylvestre
+9860a48206f3f78318718e70bc5ac6499af44bdd # cinnabar
+d0a3a761063820e386332e81b0bc1e6762c3a503 # gecko-dev
+# 2320933cb7bc8255b7e484df1ef27718154362d5 - Ehsan Akhgari - Bug 1508472 - Part 2: Second batch of comment fix-ups in preparation for the tree reformat r=sylvestre
+b6b0d8be8b5dd9deae9e81b89311504c6d6f5124 # cinnabar
+7c937c2747a948d995d1c85d66ec31ef51dabe72 # gecko-dev
+# 2d8ce84e0107c99974201c1b67864786b22f3ff8 - Ehsan Akhgari - Bug 1508472 - Part 2: Second batch of comment fix-ups in preparation for the tree reformat r=sylvestre
+66f020b3a9c09f470fd56abf9a5b62833941cb37 # cinnabar
+2febd96e7e9b7601c277ffe38273ea766e77cd51 # gecko-dev
+# 2d672bed9a1db1051426642e304e8ec7ee21c8d3 - Jeff Gilbert - Bug 1510467 - Preserve purposely-formatted code from clang-format. (webgl, gfx/gl)
+e509660af89883085a6cc65e6ea181e7d354f2af # cinnabar
+1690a0092c36d4776f2211c5ea3e45ecbc944585 # gecko-dev
+# b4662b6db1b34414494d070e33481193625403d1 - Ehsan Akhgari - Bug 1508472 - Part 4: Fourth batch of comment fix-ups in preparation for the tree reformat r=sylvestre
+0ae4049a3bdfd3e2ce7e8a46f96c2b3337f67af0 # cinnabar
+ca162bee2055514fc610c6e0506d60b4f858214d # gecko-dev
+# 67b1d1e433013e79b67684b48c4c074712e2509e - Andrew McCreight - Bug 1508818, part 3 - Shrink comments so they don't get poorly reflowed by clang-format. r=froydnj
+ea39a208cc5949badc3f7bdf83be143df18a0fec # cinnabar
+68a1d4dad7727033b398ae8a2afb2e53327d91ba # gecko-dev
+# 09c2de91a87f13c8de2da8508bae2bc2daff6b70 - Andrew McCreight - Bug 1508818, part 4 - Rearrange various string literals so they fit in 80 columns. r=froydnj
+83f15cdcaa4172f457343ddd70fb8f1039a5a96d # cinnabar
+ec00ed2fca0436bc42f76d58c9e3b447829e5898 # gecko-dev
+# 04f0bbf40bf36957dc1f72a8aae9916df0e3222f - Ehsan Akhgari - Bug 1508472 - Part 5: Fifth batch of comment fix-ups in preparation for the tree reformat r=sylvestre
+92287bdbfaa2e6d82bec8efa7dbfc3fdd157992b # cinnabar
+490e61180128973d5cb3d4669abc019047579308 # gecko-dev
+# 6f3709b3878117466168c40affa7bca0b60cf75b - Sylvestre Ledru - Bug 1511181 - Reformat everything to the Google coding style r=ehsan a=clang-format # ignore-this-changeset
+0e0308d10a5fd4a8dcf0601978776342a2abf2df # cinnabar
+265e6721798a455604328ed5262f430cfcc37c2f # gecko-dev
+# 9d18f3b4b898108d8ab5c924d366d145e5e62df0 - Cameron McCormack - Bug 1511854 - Part 1: Fix some formatting oddities in layout/ after the clang-format. r=TYLin
+0d0f73a8d8638c86934caaaea4474b6dffd5b222 # cinnabar
+a9c935c3554c3f3f85e6befa94cc5100606cb7fd # gecko-dev
+# 89fd36f5fbe5e90bf16563342819fa6700431ccb - Cameron McCormack - Bug 1511854 - Part 2: Fix some more formatting oddities in layout/ after the clang-format. r=TYLin
+5f1313cc4e067bdba3159507cf4bb47f14e92cdc # cinnabar
+1ea7c3efc93bf07e907e9db8998dc42abef66232 # gecko-dev
+# 8869368a3f30f51879322b4aebd66d03a35ea2ce - Sylvestre Ledru - Bug 1512961 - Reformat recent changes to the Google coding style r=Ehsan
+20061c7bfce850ba0158c7b8a439ac3ecc62a262 # cinnabar
+ad75e912fbc1d64ed63c1d0a51d7157566de1887 # gecko-dev
+# 9a68c5f1ca0d0dc38e70e448aa2043c1569d27c3 - Jan-Ivar Bruaroey - Bug 1512280 - Make LOG macros clang-format friendlier. r=padenot
+3038b6371dfbbbf84176f7af3cbff43b59e13746 # cinnabar
+b43cd8e1dd09317eb38bfd0975650e3eef5f4e3d # gecko-dev
+# 8bf181f9b1c3daa66390ab03b6bc9f27c049f770 - Daniel Holbert - Bug 1513387: Add braces & newlines to re-wrap some return statements that clang-format unwrapped, in layout/svg. r=heycam
+7fa92c600b4dc0d6fd7c82c0cb01c97f04599687 # cinnabar
+fa8083751307e8e5756e4e425b1b63313c6a36f1 # gecko-dev
+# 2f227a365a670735df7bdee68488ea54c5d9f0ae - Jan-Ivar Bruaroey - Bug 1512280 - Make LOG macros clang-format friendlier. r=padenot
+16f49bd79e7b14b59721d1102ef0e35cd9b44029 # cinnabar
+5a89bd8fda4d4ac18c36bc472f5c65eac71f11fb # gecko-dev
+# 09c71a7cf75aeaf2963050e315276fb9a866fd62 - Sylvestre Ledru - Bug 1513205 - Also update the tests to match the Google coding style r=Ehsan
+13452f36fb36ad09d81f6b53eaf7928ee63f05e3 # cinnabar
+6f45c666bc7f98c3e3250a7c2cf8dc3fb95d12d7 # gecko-dev
+# 039a7c0c18fb28371d0ee7b2b673b8dd605f24b7 - Sylvestre Ledru - Bug 1513205 - Ride along, update some code to match the Google coding style r=Ehsan
+1ce955dcb2e09fd9ce19c1ec6c470f75db486bd2 # cinnabar
+7cf43b9bc01d650f87deceb65f336cdac7c0e78f # gecko-dev
+# 1cd2c6c217949d0b1d06f15046eba45ff4517044 - Emilio Cobos Álvarez - Bug 1515707 - Use NS_INTERFACE_MAP_END_INHERITING in some CSSStyleDeclaration implementations. r=Ehsan
+7add48c9c10c5b06d79ef7c2a9ef51f5a5a42f04 # cinnabar
+0447125d681783c9aa6b3c737d62e619897e52f2 # gecko-dev
+# a535962417c0d37bd82387093238f6457109e279 - Mark Banner - Bug 1515605 - Enable ESLint for dom/localstorage (automatic changes). r=janv
+a3d2bb69890dece69814a6786ad389f106d87132 # cinnabar
+e802d90ab3bd2cb459dedcb88931ea1033e36e13 # gecko-dev
+# 4389ed44ce098d81136244e70a941d812ea73221 - Mark Banner - Bug 1515605 - Enable ESLint for dom/localstorage (manual changes). r=janv
+4fa2a58b2787c3145bf5e63003bb1fdd805a3f78 # cinnabar
+925ccf27513953d38555b410ab78e06092314e47 # gecko-dev
+# d57dde190f67e7964bb3a908d33a4d086da696b1 - Sylvestre Ledru - Bug 1516555 - Reformat everything to the Google coding style r=Ehsan
+cf6442a0664caf8eb39eb75b77963f648597cbd8 # cinnabar
+cccdda3c2aec019cc138d410fc0e4aa3e307b6ab # gecko-dev
+# 06cb65fac0f343d8feb6ef780d1e176dad0effae - Matthew Noorenberghe - Bug 1386283 - Enable eslint 'indent' rule on passwordmgr with --fix. r=mconley
+c3c88ff94c5c76ada6f21d172420bd4a1b366cfc # cinnabar
+3f7baf5de6f77f7c4540306f3280d759afdef71d # gecko-dev
+# 16ce9a71ff04850dd34a71759852bca9a62a413d - Matthew Noorenberghe - Bug 1386283 - Enable eslint 'brace-style' and 'curly' rules on passwordmgr with --fix. r=mconley
+bb227d56c0fd4bc9b1476531a52d23662b56554c # cinnabar
+8ac0a7753f95de28416f4b40343bb2f370074024 # gecko-dev
+# d54846d01280026138135bde6e0bb1bcfe58feae - Sylvestre Ledru - Bug 1519636 - Reformat everything to the Google coding style r=Ehsan
+abc28896717209d5f0ed2a6b0a46f8e03880ad19 # cinnabar
+47a5dd1fb80fa5bbe608c32db426f1ed29b7fd79 # gecko-dev
+# 9916e7d6e32720362fd18ed03f1acff4884b86df - Ehsan Akhgari - Bug 1521000 - Part 1: Reformat the tree to ensure everything is formatted correctly with clang-format r=sylvestre
+4205caa5c71ba3b111ac494d32d46ff76882b795 # cinnabar
+06c3d29113e60ab1a316fbd5a16c667202d012fb # gecko-dev
+# 5f4630838d46dd81dadb13220a4af0da9e23a619 - Ehsan Akhgari - Bug 1521000 - Part 2: Adjust our clang-format rules to include spaces after the hash for nested preprocessor directives r=sylvestre
+d25e4032d4d15e732a78082505d62b6d6ffa1445 # cinnabar
+e5e885ae3128a6878d08df4ff6baaf3fc4a4b9e8 # gecko-dev
+# d536f45f5b166c4b9562caf0c41991cb5df831cc - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+cfc0d52d902cd58293f32a97f286a5e2a3683386 # cinnabar
+755a1a7c2f77bf360808d8470d92a8b48dd2469c # gecko-dev
+# 2307fb1cfa80a5d4cf05c404917344510a982194 - Sylvestre Ledru - Bug 1519636 - Ride along: remove unbreakable spaces r=Ehsan
+d9145bdd58d06b0550ff76d6cd449fb0aa065787 # cinnabar
+9c0e9e7467ba1697326a8f056cc11e0153e8217d # gecko-dev
+# 7d46c1872ba7920465cdf33b52672a374a66e360 - Sylvestre Ledru - Bug 1519636 - Ride along: Add more commits to the git ignore list r=ehsan
+140cb38f7666d3d48c527f8ce9ca13f0b060ab03 # cinnabar
+c4a4488fb459de2180f7d39bfc9be97bfa59bbf8 # gecko-dev
+# 0e3b5fe32d113a4a857bf7b948921f531cca8a8e - Sylvestre Ledru - Bug 1521460 - Also reformat objective-c files r=mstange,ehsan,spohl
+2f6ed02b0d1a2d7dda8f349a475667794f372231 # cinnabar
+0b4021fcad9ff6ac474fdd2227969252af188b11 # gecko-dev
+# 08b686c04a013ca91738d80f6f34b92a86c130eb - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+0f53aeedad4bcfe93916273a00b4577747c3914c # cinnabar
+b61d90492bef978d04e9a12e7081837825e55973 # gecko-dev
+# 07f6f62a24f58129ecd3a0463e66b605ae5599e7 - Kartikaya Gupta - Bug 1519636 - Follow-up to properly turn off clang formatting for debug logging code. r=me
+9595b32aaa2c87be8168ad20ba8d277dc5f474c9 # cinnabar
+ee2016670c850d7ec19c6d6c56fca0a38e591d9d # gecko-dev
+# 3924aed041cf7cb12c445e8c76618726f552f706 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+20f6da83f406ebbe5367f6df3b8719428c022d92 # cinnabar
+14486004b69a5342e075d784430b741a259c9ac7 # gecko-dev
+# a031c9dd9dd5d0d90ca56bfbe6c6ded1a2fadf44 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+d2f46ba4a543531b6c87ebf54d57a8be1999038e # cinnabar
+41d1d7909496a3f672eb9aeed1efec042c9568b0 # gecko-dev
+# 9adeff2c423fc4ac047b4ddbdbb9b8e64ce7fdac - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+dafa8b4d1a427e98492d391d8692d555e716711c # cinnabar
+e0c61dafa502cf337a3ace00834c6138a5a8ba11 # gecko-dev
+# c5190e74039c77d7ad229bae61ab01134b33d885 - Syeda Asra Arshia Qadri - Bug 1532941 - Enable ESLint for uriloader (automatic changes). r=Standard8,qdot
+3177d61d491981ebb5dc07fce712c899e30dc5d4 # cinnabar
+f6fb4db71eccb504bbafdcb71cb67f607e33aca3 # gecko-dev
+# d55401632cea92b6b2775ba278274b5490275876 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan # ignore-this-changeset
+4ea8582800a843ae3348a03ca619b0109d1c1537 # cinnabar
+4aa92e3091227fe771d64424fe62d3e133633be2 # gecko-dev
+# 5914426902ac204d49683d56695d1adf45e2c1cd - championshuttler - Bug 1484640 - Enable ESLint for mobile/android/chrome/content/browser.js (Automatic Changes). r=snorp
+514fa9e5a878f7fd53fb4c1383a4a73cc11ef669 # cinnabar
+ff578b9c574422b43dcfc19cfc4fa8c03f3e12a6 # gecko-dev
+# fa3daa92292dde4bf9405c56e43a464e53c349a2 - Sylvestre Ledru - Bug 1519636 - Ride along: Add media/libdav1d/version.h to the ignore list r=andi
+7c9505d11132c1713ae20d3de68086f7dee06454 # cinnabar
+3d0316a9027c4ae6ec84d454a3b4454b7fd84e1f # gecko-dev
+# 7de6e431f1ae32cacc2b5d4aea1c47bf7900c4c4 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+48ca7974405930abc6f87d89704fe111444e6f86 # cinnabar
+ef0bfc3822e1ebcc4af26fa1d604393f504333c0 # gecko-dev
+# 389b6bbd76dbdf3357453f0989bbe9595751b7ae - Sylvestre Ledru - Bug 1519636 - clang-format-8: Reformat recent changes to the Google coding style r=Ehsan
+8780f9e6d11598df632eb1ac1a9fa2cb11a3e76a # cinnabar
+399dbd28fe9d399571a92347957ae4712333441c # gecko-dev
+# 9e48fefcf1aca74fd97036121180907de52756e8 - Narcis Beleuzu - Backed out changeset 389b6bbd76db (bug 1519636) for bustages on MarkupMap.h . CLOSED TREE
+64a824984811080bc44ad5364ff70e652396c29c # cinnabar
+24dbe577a5e1f238defc1cfd800e6258a72632df # gecko-dev
+# 4ad80127f89f58dd562fba3e8cececb66b29e62f - Sylvestre Ledru - Bug 1519636 - clang-format-8: Reformat recent changes to the Google coding style r=Ehsan
+51f8a2a90bddca7d6b72b4170b10caae45dcac7b # cinnabar
+d1c1878603873095a41a7d0f45022d469eb6baa8 # gecko-dev
+# 6d386a2162b90d72529adbc283391fc4732eff32 - Csoregi Natalia - Backed out changeset 4ad80127f89f (bug 1519636) for bustage on MarkupMap.h and nsAccessibilityService.cpp. CLOSED TREE
+5ff1b801dc84e045ebe1c10ffa0008f1551baa07 # cinnabar
+ba58e936bd475793a3c74f9355498554ea02c341 # gecko-dev
+# 662b776a02e6d046b0358cb89b53c19477a4bc67 - Sylvestre Ledru - Bug 1519636 - clang-format-8: Reformat recent changes to the Google coding style r=Ehsan
+a45536a2ffe94764488656e0cff7f792da61d208 # cinnabar
+03c8e8c2ddd618ee28fd1fe42126cc7e7c903871 # gecko-dev
+# 6f723cac81ddf18954af5c5b3d430864e849930b - Sylvestre Ledru - Bug 1542146 - Apply the change with the option StatementMacros from clang-format-8 r=andi
+de92b1670a94895b280df525c38e073e6fb73c5c # cinnabar
+03fc65347c057e4cc147df1fa3395558daa8e5b8 # gecko-dev
+# f95dc32944ac670befcd7a2d1355877db4ed3831 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+e4401f52c313cdbd1f6a21d2d158a39aea08629a # cinnabar
+7f60810d8613c150c5efd762229bbfaea7c95b34 # gecko-dev
+# 44928a7f57454b09e22399f2bb45f715015c267b - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+85e14a8329a4f70eff94454c20fb30d068afdd7e # cinnabar
+a1dce6440a18b10feed1479fd9e1bb76498c5297 # gecko-dev
+# d091a005f031656890dfead0643ce875f997038e - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+a7f51c0bd925f88cd4f7c90e53eee9bc8a699958 # cinnabar
+96da5036adba9b6cf7339388ef20fc81fbc8bf8f # gecko-dev
+# e1993a1f09ac53cd1a04fdf6a87f8cad8e44f73e - Sylvestre Ledru - Bug 1547143 - Format the tree: Be prescriptive with the pointer style (left) r=Ehsan
+f6498eaba8a510ec54047ff32a1dcd140c6b0ef8 # cinnabar
+e226046cb8843580086117bafc060898cdcbee2f # gecko-dev
+# ee05f749bb0b64867dda62bebffa9e080aafb893 - Shashank kaushik - Bug 1532937 - Enable ESLint for dom/flex and dom/grid (automatic changes). r?Standard8
+40b9f9af3f007de6c51610e4327b355bc4df680b # cinnabar
+7206aea889e1affddc857cb66a51a67870b1d788 # gecko-dev
+# fe04a56439e51ba84290344955dade9571ede01b - Alec Gibson - Bug 1532935 - Enable ESLint for dom/promise (automatic changes). r=mccr8
+d90b8b8ec264127be2af35abcd5eebde65b82eac # cinnabar
+c19008bc7efb408820ba38fcf49d840daa0e56f0 # gecko-dev
+# aa54dfd36f2512ca2757de1289802ff51f2e2670 - Victor Porof - Bug 1561435 - Format accessible/, a=automatic-formatting
+bc2c8e3f94b8426463bfd2805a67cb9c684fe2c9 # cinnabar
+c43dd44d44b2158584a64fcbb2cdc230bf891b3a # gecko-dev
+# 3da01ee9e520ac5d6c37f848b70c9a9d29581a96 - Victor Porof - Bug 1561435 - Fix linting errors for accessible/, r=standard8
+f80bbf704662318d253882ba2e01a1931a9e0bd4 # cinnabar
+a997fd97c7be1f0580d73a97d3bd189663338d34 # gecko-dev
+# dfbd8d60fd413cbebe654c00b747ced665669d9e - Victor Porof - Bug 1561435 - Format browser/actors/, a=automatic-formatting
+3491a90bfa10f339bd26a95afcda974f80b7746d # cinnabar
+c69d6831917279241bd36c9a451c6e8a08f58837 # gecko-dev
+# d86ff12f7d079f5c8a66789269ae12cce58171d7 - Victor Porof - Bug 1561435 - Format browser/base/, a=automatic-formatting
+d7007bb9b330b9572d12db38999dc9ef3674187a # cinnabar
+c37d8e1da119f6af59e7df25dead6275e9843448 # gecko-dev
+# 37585614f0ab949b624588c112f1893f3a5eed8c - Victor Porof - Bug 1561435 - Format browser/components/, a=automatic-formatting
+0e08bdcd9a43dc3f1b0d4a1669a0376250c5ee4f # cinnabar
+31a0065e08523991e7e158674a39d7c3b0d18422 # gecko-dev
+# 3a81f32b9c0c500fed5b5a14a34ade05b49c748e - Victor Porof - Bug 1561435 - Format browser/extensions/, a=automatic-formatting
+43e20129725eb7ced413c6fdab46846379bd6693 # cinnabar
+cba64ac76e1a77fd9cd178a4e14fb90f418cff34 # gecko-dev
+# ac54472c163160422547811a8b3cca56ecbfec3c - Victor Porof - Bug 1561435 - Format browser/modules/, a=automatic-formatting
+6f82ddef425e7172519fdcba82eecc5634de7177 # cinnabar
+d4f4d5db38b39c7e2357742e6a805923a6842f34 # gecko-dev
+# c2e8e865143c3c4b4985fd57f0dc54a683917e98 - Victor Porof - Bug 1561435 - Format browser/tools/, a=automatic-formatting
+49bcfb787944dbec51c992f9444f0a762ec6cf1d # cinnabar
+d8bba672ee72c2b5ab447821d64624f640c3f4cb # gecko-dev
+# 520f1f4e1fea506dc156a1976de4c5abc9ceab38 - Victor Porof - Bug 1561435 - Fix linting errors for browser/, r=standard8
+ca40f55157c5f487348a3ec1ddec814f13b69ff3 # cinnabar
+aa4dabb0ff409ad0429a86ccb04c8145501e6eb0 # gecko-dev
+# e9273cc5e5148bd51fbbcd3fe5c6b2ff82ff6e18 - Victor Porof - Bug 1561435 - Format build/, a=automatic-formatting
+a011125b102dc5ae5c005fc7a544a4d1dfe8b547 # cinnabar
+1bdee83ee46c0fa35a51021e4867f0f1c4c1d120 # gecko-dev
+# 1f114bdbea51f9f5e61088803c4261a2ab3c64e1 - Victor Porof - Bug 1561435 - Format caps/, a=automatic-formatting
+1099f6a30223485d8489bbf9e86a16105ff13f10 # cinnabar
+74ddae1a241e52f799c0722b6cc87fa7751b069e # gecko-dev
+# 0f5be1a8f1de3403b6cdd3af950b99bc357446d4 - Victor Porof - Bug 1561435 - Format chrome/, a=automatic-formatting
+4f97d181432f2a9b5e658c7f47e892e6ae23912e # cinnabar
+fd92daf657ff9ce163429744df9859fce93020c8 # gecko-dev
+# 8d3ae687d5d4d09039bc7f2b4dff434f2248e0ba - Victor Porof - Bug 1561435 - Format config/, a=automatic-formatting
+7ec07efeb03f69b2972caed0f94a725c95bf98cc # cinnabar
+4e8fb498041762b156f4282aef0ddb38dd06b13e # gecko-dev
+# 4f1406d17697c31779e715cc9dcf3042f8c0b82b - Victor Porof - Bug 1561435 - Format docshell/, a=automatic-formatting
+d2044581436485bdf25905e6bdea934745256371 # cinnabar
+7acb6aaceed406330b45e2b96d521089558564cb # gecko-dev
+# 2f4b81c8e6643c19fc58993477d5dcc9ea77537d - Victor Porof - Bug 1561435 - Format dom/, a=automatic-formatting
+7b262ee0843181469e9b401ac985169d7890e5e1 # cinnabar
+9ca6ef24cf74369a233c95057541a0d434294e2c # gecko-dev
+# b57a8c36e00209bfe6088fad35bc6bce94859b2e - Victor Porof - Bug 1561435 - Fix linting errors for dom/, r=standard8
+012598a84a16039e873b740a5c566e904620f014 # cinnabar
+b00316f24a0898c584b191bf75a5477f90976b46 # gecko-dev
+# b7c42bcd7fb21c7a52a5bb744c47b943e19025a4 - Victor Porof - Bug 1561435 - Fix test failures for dom/, r=standard8
+4df47e0319c7c1767475fb053142596cfcd187b1 # cinnabar
+f592ad9bea9df4bf01609cd02835622131a230b0 # gecko-dev
+# 7737b94cc4240d48060190c18730e0f91ddb26de - Victor Porof - Bug 1561435 - Avoid formatting sensitive fixtures for dom/, r=standard8
+d010794f197b28b7b6fb203bd4af3c3fa10764dc # cinnabar
+2a2bb3c4d06e4af5ca8ce5dcab50e8dc7bbb759b # gecko-dev
+# 89ac228c140c659af08a874bd2a523859edaf4c8 - Victor Porof - Bug 1561435 - Format editor/, a=automatic-formatting
+d3932fa2206a1f7a1750b2c7fc22f0690bbcb8b2 # cinnabar
+486fc9e8354ce65a9acf698481da81063e10caf6 # gecko-dev
+# 6746e7ec3179e4b84f025a4a127ba137003b2bca - Victor Porof - Bug 1561435 - Format extensions/, a=automatic-formatting
+aadee6a53fb328119ada3c9b33bb73ce962b68b5 # cinnabar
+6a9b16c1ddff4e2011d67fb7ecdecdc31da47908 # gecko-dev
+# 11eae309719ca88dce64343cf3d42c7015a382b3 - Victor Porof - Bug 1561435 - Format gfx/, a=automatic-formatting
+16e64101d2a383718b7a0b97a35185f065f48dfc # cinnabar
+122f3f3d1e1bd0ab688000d181cf71acf9936328 # gecko-dev
+# 28a3af1a49f706ecd81d57a6f085d2049f4b4894 - Victor Porof - Bug 1561435 - Reposition comments in gfx/, r=kats
+38057d18601d38e0e9f8b68c11cb562406b69190 # cinnabar
+78b8abac8b35b39c15f676ec7d50ccf478b763f6 # gecko-dev
+# 7eedad785d4586eafdfd2881dc467392283e131e - Victor Porof - Bug 1561435 - Format gradle/, a=automatic-formatting
+8e9d8eff9f73564ab1c88264770bf2bd019b424b # cinnabar
+09a813e2933c8b90cd22c1489b0ed944c4559394 # gecko-dev
+# 9c3f23c724f7f7fc715171fa4bedcb9474bb5827 - Victor Porof - Bug 1561435 - Format hal/, a=automatic-formatting
+3bb669175b4887149f5588a5b7e3950f213acff1 # cinnabar
+4c29c75f54acded3cade2f193da8d8bfed22fef9 # gecko-dev
+# a736e67dfea5ceee3ea031fc9524a9ed7deec7e9 - Victor Porof - Bug 1561435 - Format image/, a=automatic-formatting
+da65faec334bff7cdb0cafeb96ca784cb12117ca # cinnabar
+ee172e697f863a3a3683620b30aabfaacbc4addd # gecko-dev
+# cf2f19f3b4168870936e9faa946fb57a5b9f9b5c - Victor Porof - Bug 1561435 - Fix linting errors for image/, r=standard8
+37a6417fa74f6875aef190036c5b63bb16bc983f # cinnabar
+7309dc5ef76975817eb3d2d641950ba93ce688ed # gecko-dev
+# ea5480ba92ad37c815445b8a9ac706cca92feb0d - Victor Porof - Bug 1561435 - Format intl/, a=automatic-formatting
+4740729c90566a1f23e28247a466d3880cb1c297 # cinnabar
+b89e67220a9e0df34ce940dbbf3222e375426704 # gecko-dev
+# 1add93bfbebefa0c4de50a234192051032c52883 - Victor Porof - Bug 1561435 - Format ipc/, a=automatic-formatting
+bc86001d7577cc18cab654ec809991fb62197fd7 # cinnabar
+80f671d0e715523a1d7ca94dea7e7a54c38373ea # gecko-dev
+# 7a414b97eefa645d5fd0970c49f8269acaec8c9e - Victor Porof - Bug 1561435 - Format js/, a=automatic-formatting
+fee36c04bf2e292e2bccae98969ea04141bea066 # cinnabar
+86f607aa2b43f326e44652d9f8247458b8d9883f # gecko-dev
+# 821431b2708b8bdcacac8bd865839a4b96925208 - Victor Porof - Bug 1561435 - Format layout/, a=automatic-formatting
+e3e98068dfdd708af2e55873ffd0ef4430db6b59 # cinnabar
+c6b78eb867de33c0b16bd688cc2bccf532d528d4 # gecko-dev
+# 39aa76764fc144b13278bdc1cb1e84ae91487ca4 - Victor Porof - Bug 1561435 - Format media/, a=automatic-formatting
+414ba9c1060a001f282c4bf0a4394f083e7035f5 # cinnabar
+05160bde4d5a700690f8d0636c4789f33773c786 # gecko-dev
+# ac2a537c1e560c44761c67f3faf4856b167394ce - Victor Porof - Bug 1561435 - Format memory/, a=automatic-formatting
+0b9b277e6a563f7e3ff58015a73bedf38681a8b7 # cinnabar
+17b0f742b0b2348f47d8dc877a089d890258de4c # gecko-dev
+# d593ca5dd306de12914372bbebeb845983dee2f1 - Victor Porof - Bug 1561435 - Format mfbt/, a=automatic-formatting
+f7f713db21dc706a9f600bb16db64c59e5f02695 # cinnabar
+087e7d01ee290c00aa9a338e3bd10aae5cb4d445 # gecko-dev
+# 58c7f486a31f0d0a080311e78ceab819e517e40c - Victor Porof - Bug 1561435 - Format mobile/, a=automatic-formatting
+829758fe2c1927ac4d2441ed90babe8de34373c6 # cinnabar
+2a8f9d5149ac9ee5136afe7a7b028c738f75c2cc # gecko-dev
+# 9e34bd5bffa7ddc9e5117a278771126bde85cfb7 - Victor Porof - Bug 1561435 - Fix linting errors for mobile/, r=standard8
+7cf8fd47b31d68c52334343773ab99700bf95884 # cinnabar
+b70960e2ebf55223e5379802b2f99259cb8b2ee3 # gecko-dev
+# 5504c761fbaac51f3ecc645d6100da7bc2530608 - Victor Porof - Bug 1561435 - Format modules/, a=automatic-formatting
+2b9f9198625a9da7217746ae322f394db6953a96 # cinnabar
+7dc8ef1089c09185dfac76edcc4eafd2e388be54 # gecko-dev
+# 03bd702f380015ecd6c96d740d2a27aaf170d6d8 - Victor Porof - Bug 1561435 - Format mozglue/, a=automatic-formatting
+39243581e9ef4b0ae875d17fc721cc7708b14836 # cinnabar
+993eb743c97fa317cb5db5ce043c5122ac97a5a1 # gecko-dev
+# 4bdd1fe6c83de1c774dee901bcaabcb67574ac74 - Victor Porof - Bug 1561435 - Format netwerk/, a=automatic-formatting
+9cd6cdbe9b5e8372b8c7eb528becd64ab4fcecce # cinnabar
+2b4ba2621e8925ea14e2257a5d6fb04b2d06c5ed # gecko-dev
+# 9626e69ed7697b57f266e1cd881d9c1b97e63a60 - Victor Porof - Bug 1561435 - Fix linting errors for netwerk/, r=standard8
+f3c501abf5a32ca600045a8f1794a67e7b456340 # cinnabar
+0da4c5f2ab324ed3a7dca7601c1e3231caefa1a2 # gecko-dev
+# 3c929b876f7bd4f5ecfb714743c1a7392e661224 - Victor Porof - Bug 1561435 - Format nsprpub/, a=automatic-formatting
+013cdef9e7862cf50d0e6226546b4d7c051ad07c # cinnabar
+9f01a63c315f69b65e72aa86ca435fea782d68f0 # gecko-dev
+# 72fb71b9356d5be962a0b5e1a116cffe72ce58f9 - Victor Porof - Bug 1561435 - Format other-licenses/, a=automatic-formatting
+a033caaba1eab54633cbe7aaeb55cae90cc1cc67 # cinnabar
+9434eb5beb8c26a2873240f9467459ca51a577a4 # gecko-dev
+# cf3b801fd86626fe709a8830fb468c9a8c1296d5 - Victor Porof - Bug 1561435 - Format parser/, a=automatic-formatting
+ef155a648aec7b5a72ce2677e2a9adf22ac8a144 # cinnabar
+842ceae6b8b50507dba7af0d9c1799b3c5ccc7c3 # gecko-dev
+# 864b23c4154e4f0e132921a3e3fdf7aca1315261 - Victor Porof - Bug 1561435 - Format python/, a=automatic-formatting
+92ca12db3a996a633ffdd4c73bcf97b92d396f29 # cinnabar
+452981b0732118302055235ccfed693f116f2dd1 # gecko-dev
+# c81833ce407312c30b02f7f347b72558f484e574 - Victor Porof - Bug 1561435 - Format remote/, a=automatic-formatting
+a3139da9f94a8febc32d902b9f032d8e43391d39 # cinnabar
+e4d22dae501d5079e5a0b2660e5d1be21c81a215 # gecko-dev
+# e78164fdab22f042598106d8a999f85a4bad2fb1 - Victor Porof - Bug 1561435 - Fix linting errors for remote/, r=standard8
+2b458c32a8d9aee9ff6962c504112287d1290b46 # cinnabar
+4eb96ef3eadda047326de1dfa6f90fde9054b7b3 # gecko-dev
+# 5f1e8d5bbf8354a7941a503857ff38e85ea5c5bd - Victor Porof - Bug 1561435 - Format security/, a=automatic-formatting
+64f35e66ce6397a433ed5f345d60ef090ca93b72 # cinnabar
+b90f3d039d8fedeef52242798753a3736b6a17e6 # gecko-dev
+# 6cecc080afd485d8fb23521b4e8768d9741a41cd - Victor Porof - Bug 1561435 - Fix linting errors for security/, r=standard8
+7635f39f5b4f13fdadd08ad7a33c11b7a591ba72 # cinnabar
+4003cf042e12140729690dbfc3e6909bfbd1f03d # gecko-dev
+# ac8240f80a5486c98ccf98a344774abc25fb7fd3 - Victor Porof - Bug 1561435 - Format services/, a=automatic-formatting
+6c2a1000d540d870e0dc7a60d194b58a5fc9a23d # cinnabar
+e89951ff7827da123654d22649b51932d0301a72 # gecko-dev
+# c61c73193202b76d6ca615bd1637a6263f19615a - Victor Porof - Bug 1561435 - Fix linting errors for services/, r=standard8
+bdad28a400e212f9f2c5db9da8a2641ea25a2ca3 # cinnabar
+f3f743321f28558310a666a29189c2018cb31df6 # gecko-dev
+# e775b4397e94c8c83fec1a9d3db18257202f181c - Victor Porof - Bug 1561435 - Format servo/, a=automatic-formatting
+595c69bb40251797ae0d3cab3e6d157a527ead52 # cinnabar
+fae2242b7eaf3e978770ee9b7ac1fc24d0ca02be # gecko-dev
+# d674440f9637947153cc7c2934212cb60a241547 - Victor Porof - Bug 1561435 - Format startupcache/, a=automatic-formatting
+f6f9ac636bf2ceb1dc14c46f455de1e2dabb1d1b # cinnabar
+b31f889d480fa327bf21efa3992aedde95279cb9 # gecko-dev
+# 4d505a3d2ab25da1936132b22ec7d31e88744c18 - Victor Porof - Bug 1561435 - Format storage/, a=automatic-formatting
+74db95414b4ea73581dcca1ac0342f2133f064ab # cinnabar
+93d7ab71987ef8fd9d624a2751309e94619d61aa # gecko-dev
+# 18651e319de9797cbae23b75388a257bde2200b1 - Victor Porof - Bug 1561435 - Fix linting errors for storage/, r=standard8
+450b3bc3645b5d2a63efeb23ecc16a9c97a3b52a # cinnabar
+f39111730525f437d2dd552fe64a8e240b8fa608 # gecko-dev
+# 3ba65163d4732e207a559b570666cf875c3a0419 - Victor Porof - Bug 1561435 - Format taskcluster/, a=automatic-formatting
+3b7ab3bc4839f2d080513a2c65c628eeb7051697 # cinnabar
+b77fc3039202f60a6aa18bcc25e7671a2d819872 # gecko-dev
+# c0b2f18685a34580cf917ce49280d6c5e8f820a1 - Victor Porof - Bug 1561435 - Fix linting errors for taskcluster/, r=standard8
+eefcf200c3013913c14c4fe5380f1afb881db64d # cinnabar
+e281752d30075327f09c8ef25591889a71d666e5 # gecko-dev
+# 9634f760f74f547866cee694a2565c6027bbf185 - Victor Porof - Bug 1561435 - Format testing/, a=automatic-formatting
+80df9475d455583a98b87c17c42bc78db14dbf02 # cinnabar
+9db39ae264ee1b9a05cb66c71dfe08ec1a377ae8 # gecko-dev
+# d3934b590219553c7b41bb3f91d8e0890cfb6db6 - Victor Porof - Bug 1561435 - Fix linting errors for testing/, r=standard8
+bfc3bcbafb87fc8902857bcb03bbeed9d762c7f9 # cinnabar
+74a2e6e5c358a1fa41a4a911ea62ea0bf8cbd769 # gecko-dev
+# 6a3f6b30800369dca5616a85a7b5d57c0f9457dc - Victor Porof - Bug 1561435 - Update `pageError stubs file` after formatting testing/ by running `browser_webconsole_update_stubs_page_error.js`, r=standard8
+88d83ab1f09bbaa03bbf9346aeace566eda0793b # cinnabar
+c21951fad6e13877c66c9f18bdbc8b41f481b233 # gecko-dev
+# 495b4d79901056a6cd7a54d3489f36fbe9db57b8 - Victor Porof - Bug 1561435 - Format toolkit/actors, a=automatic-formatting
+f5e073b0da3cc8cceb1427f0387d864cdd0085e1 # cinnabar
+df5028730e35c993f81f607e825cf737ee04c59c # gecko-dev
+# 25f3c9d5c8bf216644e219b39768a8ef3dd16dc7 - Victor Porof - Bug 1561435 - Format toolkit/components/, a=automatic-formatting
+a14b0b05b9557c9708e7b1e1766ce60ceccd2743 # cinnabar
+dd389c5428fcd2cf0d50e93b6c8cfd14ac0ac157 # gecko-dev
+# fa4001c90f211a43921f66bc690ae27cdb522ed7 - Victor Porof - Bug 1561435 - Format toolkit/content/, a=automatic-formatting
+eef750f512428f66c87cb16a032938816edf7be2 # cinnabar
+f70fce2093501ddc0ef2a1647e58745e66ceb041 # gecko-dev
+# a861dcdc089cb297c77788fb14d066ca8c883566 - Victor Porof - Bug 1561435 - Format toolkit/crashreporter/, a=automatic-formatting
+211c2164f49ccb23192ea67955ceb746d21bfd3b # cinnabar
+77a067d96620ad62c8d1e4a6f4a0274e25e8b9dc # gecko-dev
+# 19cb7b9accc13cc638baa235341a3612fe34f12e - Victor Porof - Bug 1561435 - Format toolkit/forgetaboutsite/, a=automatic-formatting
+94fe66a902579c42d7c6d957779bea81ee35b233 # cinnabar
+3bb6092a8d156b38cd886a3c1605b456a8307c28 # gecko-dev
+# 6104a05d477adb7fe11501b8f6a620e780d1a236 - Victor Porof - Bug 1561435 - Format toolkit/modules/, a=automatic-formatting
+31ba5ac12fdec37af4d2cdbcc494ccc0f775d387 # cinnabar
+236587aa469bb0fbf48d987dc0b2dda00478a80c # gecko-dev
+# 6a311181bfa345b0225065d04cb835e077f2b8e9 - Victor Porof - Bug 1561435 - Format toolkit/mozapps/, a=automatic-formatting
+c3826a2eed5a509f76d3ed1278e2afced0aefb9e # cinnabar
+42faad056fb0102820bdf3ef73dfbe2bf63ef1da # gecko-dev
+# 6670f2780ec92b7e8732291f08935f22ace0a344 - Victor Porof - Bug 1561435 - Format toolkit/profile/, a=automatic-formatting
+79132dddfbbf093f16385ebb077abd398f97d037 # cinnabar
+eff084714445918e7ffd7772305f6ea7d8f22754 # gecko-dev
+# a576dc9e6b365800e30d5228cbaebc066568e233 - Victor Porof - Bug 1561435 - Format toolkit/xre/, a=automatic-formatting
+c8c76ff107918a4b138e33fc7f9c6d3b6eea7720 # cinnabar
+551e9888ae8714a0ff400068b85f77753ea939c7 # gecko-dev
+# 6b2a47d65ab0e38173515aece02bf312c22b0917 - Victor Porof - Bug 1561435 - Fix linting errors for toolkit/, r=standard8
+f7e1a606afdc4d6d3a94436445db9f16d25cd397 # cinnabar
+6e38eec4da7921da7ed192472417e8e5c1f9a1a7 # gecko-dev
+# 63d48852e9f3612c1fdf9ac4f019cd4eed420429 - Victor Porof - Bug 1561435 - Fix test failures for toolkit/, r=standard8
+59dbc60992f5df82ee4aa28a89969ee58ce34d8c # cinnabar
+97530a9d703c4fb271f6e422da0e4f2177946656 # gecko-dev
+# 2f79d4652fcbeba24f8b82030e56017a2d1f575b - Victor Porof - Bug 1561435 - Format tools/, a=automatic-formatting
+d2bb57e0f02563461e310a1bde831fd4efe49684 # cinnabar
+6dc56d7426f38ebc1e41cd2cbf17d6a4cb88647b # gecko-dev
+# 3b0d02804b6bbe89bdd04e1d4f55a5a1b8e50c3a - Victor Porof - Bug 1561435 - Fix linting errors for tools/, r=standard8
+f62e04c4e314b26ae9eccf5fb533ffcfc070b49a # cinnabar
+286fc313b65c0f9ac2841e91e55de601bab7b777 # gecko-dev
+# f67a0395776886268a8e583b685d8ccb7c459cf7 - Victor Porof - Bug 1561435 - Format uriloader/, a=automatic-formatting
+e006947d016fabbb92b8d16c6d998d9182c71db4 # cinnabar
+d0221fef4af601d66d22752bcbdde06389a68a82 # gecko-dev
+# 61931c0627cb169577433d90aadde424f57338a9 - Victor Porof - Bug 1561435 - Format view/, a=automatic-formatting
+0dcf5e61055a4a583bf7b6b653c9faa3aabf59dc # cinnabar
+e647dde39bce6dfddacecdc549a5aec71578165f # gecko-dev
+# 9d50f484d45a44ba5374af4ed7e1a9eb269e4a34 - Victor Porof - Bug 1561435 - Format widget/, a=automatic-formatting
+4a5a17de61ee1edcb092b06147db6a97586d6ee4 # cinnabar
+16bc84fa76b93a049951cd69279f63763915d409 # gecko-dev
+# 751be8d0af6ff0703465af54f53bf164bba349a4 - Victor Porof - Bug 1561435 - Format xpcom/, a=automatic-formatting
+e065e4fe8e68562442209152b783790211056e0a # cinnabar
+f0f66bc0a577cb782773284403fcaffb80340c4f # gecko-dev
+# d8825e37f077cbbf2e7f1e07fb5d1540be81aff5 - Victor Porof - Bug 1561435 - Format xpfe/, a=automatic-formatting
+814dceb2db9c55f1c3cac24d7f651dce40ad670a # cinnabar
+b9a59ab8598dec880d491703a43e2d29243f16ba # gecko-dev
+# 1141628b6591e12249f12c275d3cc11ce2175a81 - Victor Porof - Bug 1561435 - Format devtools/client/, a=automatic-formatting
+8193d539b3ce6dd8b0adc970ea8f834e7b88b71a # cinnabar
+2092e7c958e465a58b01631d4a30e19a4b914d08 # gecko-dev
+# f646a2a77ef5eaed68ece0aaa5047f6e89dd7c73 - Victor Porof - Bug 1561435 - Fix linting errors for devtools/client/, r=standard8
+c992398850092ff2f99aa3c53d545f9652888069 # cinnabar
+941dd0d9cebc27b099dbf3a7a405761eff57f8d8 # gecko-dev
+# a9f2c64e5b104655aa96f57abb1328ac0b1ec9d2 - Victor Porof - Bug 1561435 - Fix test failures for devtools/client/, r=standard8
+0806d7b1f9fd239544d3fa779b83b19c539ad6b3 # cinnabar
+7b833ab7f9e722fc4f6011d98f75d8fbf5b6f209 # gecko-dev
+# 098aef6e44b5ebd2a109ae0c429b1624f818c1c0 - Victor Porof - Bug 1561435 - Update `pageError stubs file` after formatting devtools/client/ by running `browser_webconsole_update_stubs_page_error.js`, r=standard8
+73972bc9eed9189f52a12a3fb812f2c8b52f092b # cinnabar
+d51fe843aaea501bdfe6253cab421092675360db # gecko-dev
+# a350f9f9ea0ffd6233f0a3d11bf4ea9d120b3f84 - Victor Porof - Bug 1561435 - Format devtools/server/, a=automatic-formatting
+98b332686eaf4017ed57495d2c0e0ee8f896a5de # cinnabar
+c900758df468741977d94e72099964d7a4e256d8 # gecko-dev
+# 03dfc8d991625f31fe278f6a51063c59ef2b65a5 - Victor Porof - Bug 1561435 - Fix linting errors for devtools/server/, r=standard8
+2f39472e5fb444b537020d1f1ce3de2a8cbdceaf # cinnabar
+43635de1310c5e3c9edc5ed964a5f638ff2a190e # gecko-dev
+# a89854bff6ccc10eb64ab2cdb0f63eeaa8734a6d - Victor Porof - Bug 1561435 - Fix test failures for devtools/server/, r=standard8
+3a765ac9fd88f5841374b98fcf79bac24d615f9c # cinnabar
+5a7cb0ac8afc64215524c49787ebcdb639c8056d # gecko-dev
+# 1424ccf7256fbe2e3310f9bee080d99eb1d958d6 - Victor Porof - Bug 1561435 - Format remaining devtools/, a=automatic-formatting, a=Aryx, CLOSED TREE
+150e4ac8f41e0d691ecb943b5bbcc2a97fcd13dd # cinnabar
+8c67e77e4171c3b501b50b9ff191cb34b216972d # gecko-dev
+# 020c8c871c0d3b3920fe95935cfef06501976c0f - Sylvestre Ledru - Bug 1552795 - Remove all trailing whitespaces in idl files r=Ehsan
+ecb913cade40a3fb70ca9913cfb2157a1654ffe8 # cinnabar
+993c03acb1b976217eba2fa049c68dfc0f68b4c5 # gecko-dev
+# a296439a25ffcafae35dda80b1ecc99e4e88cad3 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+9a6d8f5af031ff7c19826c8fb958e601f8c5e626 # cinnabar
+c82ea97226d9bbe31f282aa8d057313add000232 # gecko-dev
+# 5eb6bcb8b9e484c5a169e9f7f663d1826d828615 - Steve Fink - No bug. Reformat js/** to fix accumulated divergences.
+edecca8d52d08d0e5b95ce36ba508910b377b1bf # cinnabar
+995829d42a3f575d0021e72f8afec6d7986f581e # gecko-dev
+# edbf8267dd4f5a786ae660ff9e2fe890cf74c48e - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+ec2b754f7e7c579973c1ae84e9b02695be8f18c2 # cinnabar
+d57d4905f145ea24a81b65965e0b6d1ff22bb59b # gecko-dev
+# 7d65d293dc730910f71fcae3df120cac20681f79 - Shashank kaushik - Bug 1532937 - Enable ESLint for dom/flex and dom/grid (automatic changes). r=Standard8,smaug
+17694e3ba3c81a7c0a79c3aff0188b1a52655612 # cinnabar
+3ebe62f954e863dbe0c9e78e76e353daba2f7d4c # gecko-dev
+# 1dbf929c30aea53b8035986ebed5ceb2821f10cb - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+7feb25b24df3c1c0e77f9ddc1801011534bd5b73 # cinnabar
+f1fbd2ff009b3ebf874fa62a7503b0ac42d287cd # gecko-dev
+# f0b36a9e6be0076368bff7cfe6af2318ea6d2b13 - Alec Gibson - Bug 1532935 - Enable ESLint for dom/promise (automatic changes). r=mccr8
+bfa9fb32b765521aea80b299ee163baafffb94c8 # cinnabar
+6614404241f84539db1c4298565e4c55f58ec1d0 # gecko-dev
+# 59f51c65dbf0c25ac557546d970c32648ab5d007 - Victor Porof - Bug 1561435 - Format accessible/, a=automatic-formatting
+abbf4e390055b78f4779560a2664e346d7b04ab1 # cinnabar
+058dce8bba0e081c60130f5523c0b9609a6bbf0f # gecko-dev
+# e78cfc62325608065dbb0819d2ceecf38fb0e233 - Victor Porof - Bug 1561435 - Fix linting errors for accessible/, r=standard8
+9761ac3cf6646c9e4ca7439a8c1a93156ed0074f # cinnabar
+6117c06951ec8ab8a52363022667711f8bebba07 # gecko-dev
+# fb99af508d47ca0bfecbe0e6be3fc3f998576d63 - Victor Porof - Bug 1561435 - Format browser/actors/, a=automatic-formatting
+5064976eeb5a6a1aeb84b317911bbd80535b8943 # cinnabar
+55d8d8e0e00ab140088122be39f05e4cd867616a # gecko-dev
+# aa12d9e8a4f1cad6b8057ef69fa4b3273c3c3fab - Victor Porof - Bug 1561435 - Format browser/base/, a=automatic-formatting
+b8a48046b80cd1f40e024f0b1811db1b3b2312e9 # cinnabar
+f9f59140398bc4d04d840e8217c04e0d7eafafb9 # gecko-dev
+# 4381f16ec9948a70802d7cc28cd021b094c7ba74 - Victor Porof - Bug 1561435 - Format browser/components/, a=automatic-formatting
+df2efa5b46793e7aba27e9998468e7c798d97c65 # cinnabar
+1f830c96da027db1df4719eb54d50461fa2c8966 # gecko-dev
+# 39b4804c504ce6b71e92aad9d8e934e1a5577b8d - Victor Porof - Bug 1561435 - Format browser/extensions/, a=automatic-formatting
+bd4cd8fd748713f2923d2df9f2e899e0bc6b3396 # cinnabar
+2995d5960c328801dbeabcb6e9a5032bf29ce75f # gecko-dev
+# e8225f3e114bf1fc01f9e574cc41eb2df4e314c6 - Victor Porof - Bug 1561435 - Format browser/modules/, a=automatic-formatting
+48a332658a1f0e49cafe685b3fd01037725de58a # cinnabar
+af7d1d3b67eb3df4249b92d4678c6170e1baa0ad # gecko-dev
+# c577840a8063252f29870121b2ce8e01240db032 - Victor Porof - Bug 1561435 - Format browser/tools/, a=automatic-formatting
+442048967f9e202cbfc84f0f9e6ca65d6fdb281e # cinnabar
+645607437588ef3d0a27774d203b6adb106e5e49 # gecko-dev
+# feb5267686912acdc1fa83dea843c3878b80fd58 - Victor Porof - Bug 1561435 - Fix linting errors for browser/, r=standard8
+890fdce41a179342652e96adfd9dd2f0226c9fcc # cinnabar
+ad522e3aaee5d8d1dca1b0d280865dfab3e5698b # gecko-dev
+# dfb231a91cc39dc056617bf5c18006bcbb1cd2e8 - Victor Porof - Bug 1561435 - Format build/, a=automatic-formatting
+92258a481ebf232ffaf7221e9f7a5ca854bdd8fe # cinnabar
+0e8a695ad55bd89a7533bb2247d4ac095d94377a # gecko-dev
+# 0513b22f434f7b18b21d73deabfb62fd3cddbb74 - Victor Porof - Bug 1561435 - Format caps/, a=automatic-formatting
+ec2d712e903981e98e89634bd5c78feb36732adf # cinnabar
+c24167d1982d5ebe9743c5a8bf8aba9e06f3fe31 # gecko-dev
+# 0bbd90cb5368ff59418cf16fcdadb2a59d61f18f - Victor Porof - Bug 1561435 - Format chrome/, a=automatic-formatting
+1f53bb9b69fcfb7261995bf5e5b2021c494acbfa # cinnabar
+4688ecdc4a70919a130d607b441e27f68bbcc632 # gecko-dev
+# a26eba0ab47dfb80481ff2e3d58a8e0a0424e642 - Victor Porof - Bug 1561435 - Format config/, a=automatic-formatting
+97d27d11585f6ed2db7dd749f01e824fcc8054b2 # cinnabar
+a6c398f85c2ebb90c2db9322ad3f44581f7764e7 # gecko-dev
+# f63d6dbcb2436de83803c6281fdcaa5608242c15 - Victor Porof - Bug 1561435 - Format docshell/, a=automatic-formatting
+f76f744651530d227f2d33dbd5d27d02f4dbe667 # cinnabar
+bcdc3a9567d90ca352829052be62ffd298926feb # gecko-dev
+# f3b422727b92f4933ca41fa7a4013d829a98240d - Victor Porof - Bug 1561435 - Format dom/, a=automatic-formatting
+c8d4103ffe6f6d63cd764981efb2d02b53aa0cef # cinnabar
+0a8ff0ad85edf5cab74fdf16c75ce2588906177c # gecko-dev
+# 23e4bd9e52e4d74dff7f69ab0435b6770ec63791 - Victor Porof - Bug 1561435 - Fix linting errors for dom/, r=standard8
+9056cf27f957cfb1f391a5048062426adfcc85f8 # cinnabar
+9bb757c75bf9414c2475460ef438889349fbf290 # gecko-dev
+# 4e7dbc3bfab6fd3f1d2f2aae0df37ad1ab0e2292 - Victor Porof - Bug 1561435 - Fix test failures for dom/, r=standard8
+74fb6fc077b863116c7065a897a5ff0227a36fe7 # cinnabar
+64a157bec47b9a41a328b4d5fe5f36b7a4ffca5e # gecko-dev
+# 6fc1f92ea98de3b3d09b783f052f56f638c583cf - Victor Porof - Bug 1561435 - Avoid formatting sensitive fixtures for dom/, r=standard8
+296d806835d76a331a2b16a5750008714a1e1ea3 # cinnabar
+dcd795c16b2c7f3e680b9b83bfc380e56bca4ef1 # gecko-dev
+# 05c53825de05f73ef88c89d7b9696cd69e49b7d5 - Victor Porof - Bug 1561435 - Format editor/, a=automatic-formatting
+8d63265c1507b3798a3e079ee371c1c51a185d77 # cinnabar
+5065489a4e925b5887ee43e7171e08c65e986c88 # gecko-dev
+# 599bcfdc8eee2a5c6df4bfebdf5dd94c31d6b501 - Victor Porof - Bug 1561435 - Format extensions/, a=automatic-formatting
+f37a83b692099f5c40aefc61af36cddc8df8737d # cinnabar
+5af464dcc459d28bdbbbd9753dfa9b7a0bcfe628 # gecko-dev
+# 1982faa9eafa193e25814a6f328386292c8f285c - Victor Porof - Bug 1561435 - Format gfx/, a=automatic-formatting
+1e9a54e0efee6089e0d9c466f2cd32c46781c38b # cinnabar
+85064fe4c35813705c1a641b5fbb6ca1f0e186c8 # gecko-dev
+# 516d28fb9aebe12994d4bf960865ca65370b1ef6 - Victor Porof - Bug 1561435 - Reposition comments in gfx/, r=kats
+691c47a2fbc3858c2ef659a01f62aa33c2235441 # cinnabar
+e974a88416d76e4b5e59503e8af23295f0a40842 # gecko-dev
+# 8075dd0530542c507e570f7f903d23c51e108a11 - Victor Porof - Bug 1561435 - Format gradle/, a=automatic-formatting
+4112cd4749e839152d33fb22c26a524bf317afb7 # cinnabar
+273c6c8f77816016d79ea313b0c5cd5b48b99dce # gecko-dev
+# c822e46e3c168fed3aa8df3b064abedfc22aec2e - Victor Porof - Bug 1561435 - Format hal/, a=automatic-formatting
+cde4f43e7f379db9e21d8c7b6ba15b34da6533c2 # cinnabar
+054a393a76b590a8ace3275971e2d9bbab4ca11d # gecko-dev
+# bcb509a14173f2e859626bc4eeaeb63b13d5dc73 - Victor Porof - Bug 1561435 - Format image/, a=automatic-formatting
+cc8e4bb6eb4dbcbeaad0bfc86c76be544a0699da # cinnabar
+06e7696b74e079cdcfdb39f4e6def0887fb82e90 # gecko-dev
+# 62a5aeaf0dffe36b7157d4efe10afd0ff8369026 - Victor Porof - Bug 1561435 - Fix linting errors for image/, r=standard8
+fc370cecc3d87cd87d336171d0dee07460ebf174 # cinnabar
+2ecd1b8386d150be53f1acd9a267304a3db1c2cc # gecko-dev
+# 928cc5362416f47d61bea6fc55965e5084b8204c - Victor Porof - Bug 1561435 - Format intl/, a=automatic-formatting
+cf55440490a9ee305dc02d651815e668e1bd18b7 # cinnabar
+d7fc67848210194e820557295ab2be1c1a8cb124 # gecko-dev
+# d381ac512d900965a9ffef3740b5a92aed223ee2 - Victor Porof - Bug 1561435 - Format ipc/, a=automatic-formatting
+c2401156e9185511800d6056c6b1b4b042142974 # cinnabar
+251f88082d5c4b543721a8a31508ad164410a245 # gecko-dev
+# 4b8b3495f071a07d9641c39a59edd0b95fb3d1ea - Victor Porof - Bug 1561435 - Format js/, a=automatic-formatting
+93daba8018476f9fff6079186a830873687d95bc # cinnabar
+baef0fa8174b305be79303eba9acbcab850d3b0f # gecko-dev
+# a85aec1aa92d1e067a5813a662175d4a76ce50a8 - Victor Porof - Bug 1561435 - Format layout/, a=automatic-formatting
+0d273a52a44551278adcd230abb4a07362118098 # cinnabar
+6a261b9e7704fa1287248a642744c1d4514fc4ae # gecko-dev
+# b70cef7801ae482fd042a58473fb5254c729c579 - Victor Porof - Bug 1561435 - Format media/, a=automatic-formatting
+f595fd0b0e4077987dff311418546f9623a525be # cinnabar
+379161a602aa945f3ab581ea40cdc9131eb1dd36 # gecko-dev
+# fe31b52c5ca48a4f0109ef8583349e32460330f4 - Victor Porof - Bug 1561435 - Format memory/, a=automatic-formatting
+0fb4eadbb5bc874b54f2aa55442040d155018ad6 # cinnabar
+feaa92296b9496fa802c8c5d1a6eb2a9a27e6c8a # gecko-dev
+# 5f1dccb626a04af3885507f110e446edad9f83a0 - Victor Porof - Bug 1561435 - Format mfbt/, a=automatic-formatting
+504e5142ebc93858ccccfa5828612e39342e8941 # cinnabar
+1db7cbcab0f289daa90fc2a3fc39ff5f67c93b6a # gecko-dev
+# d9ed067030a57dd50198c02044d999a51fe55591 - Victor Porof - Bug 1561435 - Format mobile/, a=automatic-formatting
+279d4e2995af22d5a5781eb37bb67a0da57d10c6 # cinnabar
+e999ae1989ac4156e3f0ae7faccb8d0c57a7ef28 # gecko-dev
+# d2c1fb7f1c917b6715f3bfe98c71a0f75ddebb7d - Victor Porof - Bug 1561435 - Fix linting errors for mobile/, r=standard8
+05456a2c08dbae2bf851663c3d0994dfd32ed674 # cinnabar
+9e9be26a9b7428e5995b50e39114cbb65a7a7575 # gecko-dev
+# 5b0e589285f730c4f2ae3250148d4ada0e72d6b6 - Victor Porof - Bug 1561435 - Format modules/, a=automatic-formatting
+5849edc3ee6a4ab5d2d7011e1c7d6f3cdb6de401 # cinnabar
+8c3cfe4881e7cdb45e231d748ae7b6c56f822125 # gecko-dev
+# b0329baff86060df3bfd0f2aecc8ab5381056036 - Victor Porof - Bug 1561435 - Format mozglue/, a=automatic-formatting
+ae5a34218887d23dc3fc3626cc3ba55407aa5d25 # cinnabar
+ea8b91c51d0bb4d52d54fb2d453f1215bab20a95 # gecko-dev
+# d9a6985d5acd2cdd1c8e582868a5975473a78794 - Victor Porof - Bug 1561435 - Format netwerk/, a=automatic-formatting
+6a18ce6b24d2e015a5bb9717250b1b8e66855227 # cinnabar
+2c53a5dcd94f093ac8c3c2acd77b902307662088 # gecko-dev
+# 9d81554c410bd0b5d0f384fc5ceb3117bc7f5ced - Victor Porof - Bug 1561435 - Fix linting errors for netwerk/, r=standard8
+d4c20194512cd2078047962dbd0ca89cbbb392af # cinnabar
+4bd76df603060181aee88593d7f9580209168356 # gecko-dev
+# 17cf3eb8f0ee8ad657ccc77a34df7877a09ad13b - Victor Porof - Bug 1561435 - Format nsprpub/, a=automatic-formatting
+f2ffcec3ec312b1fc88488d684ffe1b5731b9302 # cinnabar
+9ecb4e2e8282282b76cb537a743532b9439f14be # gecko-dev
+# d020968b38583e0b80c8179bbce86f5b3099525b - Victor Porof - Bug 1561435 - Format other-licenses/, a=automatic-formatting
+edb2564b05cff0e85bad328915b207d57aa74cd7 # cinnabar
+27cc1e60920379a11d2261fd12af9a9b9157f557 # gecko-dev
+# ca57fd3d5fa50aaa7c7f9f77bdfc56b11467166b - Victor Porof - Bug 1561435 - Format parser/, a=automatic-formatting
+9919727a6ef9c9124d35a8b10646b513fa8d8f70 # cinnabar
+572c392d309c854e3291d5d957b71ec63514c3f8 # gecko-dev
+# aa12389b6701bd7a6a08c9134667a25e7749aaa4 - Victor Porof - Bug 1561435 - Format python/, a=automatic-formatting
+6428c78ff6ea4446f90b92667d46934640d142dd # cinnabar
+91f67eb25e3be9fd07bf15330c76e89e91030872 # gecko-dev
+# 07ce31daca134d974d5d1ee2c86f6fdc307d9aa4 - Victor Porof - Bug 1561435 - Format remote/, a=automatic-formatting
+ac188018507a4cfb4df7ce9cb07857119a479e82 # cinnabar
+991b3c93c6c3c2a8764688739ba4fc0469a1b229 # gecko-dev
+# 1b243b4ec0ace507906efdae9ef0725abc581e20 - Victor Porof - Bug 1561435 - Fix linting errors for remote/, r=standard8
+b505eba0648e3717bcff0d6b71492c043c6c095a # cinnabar
+77c95c13f477051c8c2b080f8c04d7448a411cc9 # gecko-dev
+# 8062fdb434272ca7620c9caae8d3b8a5096c9f46 - Victor Porof - Bug 1561435 - Format security/, a=automatic-formatting
+39ac0bd75aab5b3c142063af9673d205b77b56b3 # cinnabar
+858f3b554bd39b1a4f3af978985bdd5a23f25c69 # gecko-dev
+# 6ceb52b9a600947561a2f5495bbac8c262003e81 - Victor Porof - Bug 1561435 - Fix linting errors for security/, r=standard8
+51fa2e8978a13a923592b1aff0ea63be6d79aa9c # cinnabar
+221861fb7c9bd6bbb53099ec2016aa45a53ae288 # gecko-dev
+# 854373e1ab9e7a438d9a666d76d4cfd227a7e0ae - Victor Porof - Bug 1561435 - Format services/, a=automatic-formatting
+701db46cabbd70b6087f4ec2ed0c3254fd47e60c # cinnabar
+9d673f1f0f8e6565db6244e4fd265025de42e75e # gecko-dev
+# dcd5e22d383858713ce4e73bfd66fb277fa87b5b - Victor Porof - Bug 1561435 - Fix linting errors for services/, r=standard8
+28bfee00a5cda2c3b81e75d12d6a01ba02695f0a # cinnabar
+34c33b48c49f10ee76e92ae5d3320bfaeb98ef7d # gecko-dev
+# d40e8f24f114101d93e5ff2ace39b75e9d440382 - Victor Porof - Bug 1561435 - Format servo/, a=automatic-formatting
+ee5fbdf78e8756635e0fe18dd515238afa1ae540 # cinnabar
+9a6450341744b158ef5e38eec6ba916827a722e8 # gecko-dev
+# 168bec380944da26de7ecd53222aaf94a2d2c65b - Victor Porof - Bug 1561435 - Format startupcache/, a=automatic-formatting
+ed4d385f2430830a0afe6b37a179cff6902c3b1b # cinnabar
+942931c838287635f223cbf2977a3849fa843842 # gecko-dev
+# f6fff703eb2618a94afb9018ab902ffbeaf8c199 - Victor Porof - Bug 1561435 - Format storage/, a=automatic-formatting
+67e70d5a4d9d56911b5846f4fa68811faeb4a6e5 # cinnabar
+9eeaa5c80cc5b546c2a42de43c6f2643e78fb080 # gecko-dev
+# 1e3121039456ff51e0cae5ddd297be773f22b6af - Victor Porof - Bug 1561435 - Fix linting errors for storage/, r=standard8
+6056e4956b1eee5b7e85d5767a9b8ed20f6f4559 # cinnabar
+93517ce01402f161c50628aa8fd6ff15b7f4f1e7 # gecko-dev
+# 0df3e32ec2fb26b534c09dfc5a729e13884a2d35 - Victor Porof - Bug 1561435 - Format taskcluster/, a=automatic-formatting
+863cbf884169c8a73bd49d5f8531869fe2481242 # cinnabar
+9b61ac048207b0bd4a5e706b3ddf3f0cc3f76b03 # gecko-dev
+# 1a154e62b8300000eec6e0ad38d251f939279066 - Victor Porof - Bug 1561435 - Fix linting errors for taskcluster/, r=standard8
+94333d3204bd415b98cc2712106ab3ca5aa315cf # cinnabar
+4998c97d04a3ce67df7002df568d4f5d17cdb5c8 # gecko-dev
+# 51c89fcec893529391427e14709a2d1bc9c2a962 - Victor Porof - Bug 1561435 - Format testing/, a=automatic-formatting
+15380aae66a96d1660545d7ff00d08220b418fbf # cinnabar
+2b036e45c518c1c6d9f217d6ad6001e4a40998b1 # gecko-dev
+# b0c9aa13768f2ff899b564a9970bb4bdf4482949 - Victor Porof - Bug 1561435 - Fix linting errors for testing/, r=standard8
+f4a2cb22a7647f1ee42d20e62d64d2270d8a99cf # cinnabar
+97787f6eaba0411c48f02f2992a75bff730df7c6 # gecko-dev
+# 799f4b64f756bd37df5d4581998cf1fd9b305dd9 - Victor Porof - Bug 1561435 - Update `pageError stubs file` after formatting testing/ by running `browser_webconsole_update_stubs_page_error.js`, r=standard8
+e563b87d812af960e1ad6ae871043133648f6ce2 # cinnabar
+57a6febcece83b53db098bf076baee45c5701c25 # gecko-dev
+# a331a8e092dc59bb39f1a682f24e80fbb826e5a9 - Victor Porof - Bug 1561435 - Format toolkit/actors, a=automatic-formatting
+336a0e00b94e230e5575ef190793c94d7547bd52 # cinnabar
+d3a1b5aeaad92f8c3e1fd10305e811161c14b816 # gecko-dev
+# becae3f8f590d3e913f106aea634e86f84c80b3e - Victor Porof - Bug 1561435 - Format toolkit/components/, a=automatic-formatting
+8d8f0d8adc846fb00304b8953a01a21f44374e7e # cinnabar
+4a06c925ac8ae7a96aa2d737ceee0508cf8df994 # gecko-dev
+# e8bd1069715d19b1a80cff5d61fbe804b396de59 - Victor Porof - Bug 1561435 - Format toolkit/content/, a=automatic-formatting
+c639d191ad07b0ecc27892acb82156bd67da9c62 # cinnabar
+0773795931241c0d6cdb9fc8540fae5006b1649a # gecko-dev
+# 7f9969319147bff459f4c97bcb85fc2637189805 - Victor Porof - Bug 1561435 - Format toolkit/crashreporter/, a=automatic-formatting
+ec88a96956ef1af3a91eedcc16839e4313e481e5 # cinnabar
+30de4722a3da8f88d64b9f19d05628577cc87bc0 # gecko-dev
+# b8561ed633b2d32582f0503e60aae8c95bda9ba4 - Victor Porof - Bug 1561435 - Format toolkit/forgetaboutsite/, a=automatic-formatting
+c41270233c0ac9e6c0bd58c79adc263de1f10f4a # cinnabar
+92fd7d7c3676451bf79dfc6df9b2a2726bf59447 # gecko-dev
+# e5be4c59b7f15f98fabb32a68fc64050ddb62bcb - Victor Porof - Bug 1561435 - Format toolkit/modules/, a=automatic-formatting
+f461e7d1bfdbb199f2dd5a2961539e6e98579960 # cinnabar
+b503616295d69fee56300e5e2093599e6fb4f0e2 # gecko-dev
+# 58fd5776802aa7dd7e6d3fddd7d433da5ef30426 - Victor Porof - Bug 1561435 - Format toolkit/mozapps/, a=automatic-formatting
+46c20751c23bb734254a5bef664bc26fa8d691cf # cinnabar
+584e273f90666e9d070f9892ab7151813afff7a5 # gecko-dev
+# 8be6c7ab9d2793c8d085c6868f6bb7591e3cd6bb - Victor Porof - Bug 1561435 - Format toolkit/profile/, a=automatic-formatting
+923a0baffe3c086727e95fa4142764705b07a8a2 # cinnabar
+463c2994cb3cadae5d03f198168671f82fcb9e44 # gecko-dev
+# d8d9a53c4c13fe5cb4c6a865590f40633a12a27d - Victor Porof - Bug 1561435 - Format toolkit/xre/, a=automatic-formatting
+da67912630837251aff03d39c5d3643611aa41b6 # cinnabar
+4b7b29cff0bb8adbd743bccf3c65306c260022a2 # gecko-dev
+# aaadca9b31255590a2df9c0fa01dd2f25ac0f808 - Victor Porof - Bug 1561435 - Fix linting errors for toolkit/, r=standard8
+64afa3f20d7e4f4b6299d3eb48aea4ed3ce32ce4 # cinnabar
+815b9d372b35c82b87ac227265ff5ff902245ee0 # gecko-dev
+# 970453d65b194690181134c0271dfe675f813f81 - Victor Porof - Bug 1561435 - Fix test failures for toolkit/, r=standard8
+39d116d6ea260d66ed0c7a3a2fdd12990af229fc # cinnabar
+336c4fb8a4b4707e7f50705d5776277aa3852499 # gecko-dev
+# 2106cbe66fff3ea3be766493a665cd96c1475e12 - Victor Porof - Bug 1561435 - Format tools/, a=automatic-formatting
+c4fb0684e37647e8f6f9eb97d165ff7378025e94 # cinnabar
+5c7cdbd4ba1d42ccf20c9b0818826b096dc06a8b # gecko-dev
+# c97b04d9be60c34e87a47e591f2830a0d09273e4 - Victor Porof - Bug 1561435 - Fix linting errors for tools/, r=standard8
+0a396385e83ed63d88e7466a2a84b269b6166670 # cinnabar
+472d3c137a21908e3fd4832dafde54dad6b30d3a # gecko-dev
+# 52e9f4dddabf88123eb835da03c74c0db2f90fce - Victor Porof - Bug 1561435 - Format uriloader/, a=automatic-formatting
+883d73c1b48d04ccfac35b4a2544cc2a6f3c8d22 # cinnabar
+afb5dbbfbb1d1f497311cb4aa71e2bfba26f4d05 # gecko-dev
+# 06715c4f165df5f02bd18583a6676eaa034e7265 - Victor Porof - Bug 1561435 - Format view/, a=automatic-formatting
+979fd48b953fd4923a9fc269e69f9961f4c60892 # cinnabar
+664ac086f76bbff6d0e43ae5af27fe4d1e8b9d9a # gecko-dev
+# b53e2f4066e82af48eb86f80840d4afbcb8d1ad1 - Victor Porof - Bug 1561435 - Format widget/, a=automatic-formatting
+3cdbafcd92937861b4999924766d15d64f749a00 # cinnabar
+c03a3e486b93c158654f6072753f47d176db6e6c # gecko-dev
+# 285c79c476cd11b3bcf9f1541d5c8be39b6287fe - Victor Porof - Bug 1561435 - Format xpcom/, a=automatic-formatting
+656b1d7ec1d5a2999a81d6c5accb02913821da20 # cinnabar
+1fcaa7d4459c314ed3f6f9b769f3fbced5110dd4 # gecko-dev
+# 0e52ffb26be74d2bae4cee9600ea6d6dcd44ed97 - Victor Porof - Bug 1561435 - Format xpfe/, a=automatic-formatting
+3f50ce633e16d560d4b094879c767e7e8b8f6792 # cinnabar
+7676fc16e4540c0299bdfc3c2d0a3f1dfa076df2 # gecko-dev
+# c7a227149b8fa85074c9442467c81d77081faa4e - Victor Porof - Bug 1561435 - Format devtools/client/, a=automatic-formatting
+cf7e437f9557f20b2a11e63a5d0e4c349466724d # cinnabar
+f6db0ee55782a171ce893389645b7ec1473bc6a6 # gecko-dev
+# 25b5e323c763aa6d0341bfb92a1d58d1ce6f074e - Victor Porof - Bug 1561435 - Fix linting errors for devtools/client/, r=standard8
+42e02bde6f4b82f25b09337e5fd9765f9ab487bb # cinnabar
+56ef3d567908850d4c72e49fb4956e124fc438fe # gecko-dev
+# 6d3e80bc6e5d7e1785f66bf8b7934190bb25aa84 - Victor Porof - Bug 1561435 - Fix test failures for devtools/client/, r=standard8
+20e4379510beac9cf3a9241a536c6eb16dc0cc75 # cinnabar
+e22aa772cc2fc3aaaf129a9dde2892f62e9bf8e7 # gecko-dev
+# 84db9ca75c299ea78d7f7bc9efdaf03ee83c83a5 - Victor Porof - Bug 1561435 - Update `pageError stubs file` after formatting devtools/client/ by running `browser_webconsole_update_stubs_page_error.js`, r=standard8
+0002861d8a135b3e3f2ef61b5c8449d49f7b7472 # cinnabar
+60b8254b35c210f2a283068ee15caf21750f49a0 # gecko-dev
+# dd987949a7c2bd6fbb801748fd5d74bbf7676ed3 - Victor Porof - Bug 1561435 - Format devtools/server/, a=automatic-formatting
+952fbaa9dbd8c7453c34fbd7a3d79bd89467b913 # cinnabar
+24d2c754702196fe8ec396cdf1844cbbf7398392 # gecko-dev
+# ab820f7fdd388a64a447285fb2b6b1af1fb37bd1 - Victor Porof - Bug 1561435 - Fix linting errors for devtools/server/, r=standard8
+51372c0e78779c93f46f131772798a2ef26fa6f7 # cinnabar
+d8903e9911f2ee27f9f5549772dcdb2f605419ff # gecko-dev
+# 80230ef725c44b076b7394ca7ca36dc817e2e26b - Victor Porof - Bug 1561435 - Fix test failures for devtools/server/, r=standard8
+f1ecf9919b32a493bcdc591088110fd33d983232 # cinnabar
+66e8f7440d0a2813fa88a1e90d4c1b2537dd4393 # gecko-dev
+# 041abaa4aa85f5a776e2a6d6fa3e6874d007faad - Victor Porof - Bug 1561435 - Format remaining devtools/, a=automatic-formatting, CLOSED TREE
+169283f006dac5e5db6067b68fc0876615546881 # cinnabar
+b8157dfaafc42deb3b9824ab6aab1c3e11636d76 # gecko-dev
+# c7e91f614eb78c4447a623f1c88a66421113ab07 - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre, CLOSED TREE
+af1b14d24ac4adec4fe1142f435acf207b67d9b3 # cinnabar
+726678d4e73aaa674984e5e35ee3fc24f8159f23 # gecko-dev
+# 50b6e4480ea0cdc62c9d28d40b277dad6e2878e5 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+a801064e4237a95dfceea0edf6831c21bf869688 # cinnabar
+131d0c6a0217e0fc39406d65c49c2194ab6c0fce # gecko-dev
+# cff2824766d7bf528a663b0dcac146d1dba318cd - soniasingla - Bug 1556849 - Enable ESLint for dom/base/. r=Standard8,mccr8
+cddcb37c582b0948ff22e05f0b38403fc6c56f0c # cinnabar
+f52cea06acb3d22e0d949a792e41450c769a3f78 # gecko-dev
+# 0edb7e82846534f22e0116825e28f8d96e62c20f - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+1e0a10345f0d41cdb3492d02da018f181785bbab # cinnabar
+e77bfc655d69ea29bb45bdf9308cbc0861cce726 # gecko-dev
+# bce47e0ee177dd153b33245a3430a94c981207a9 - Sylvestre Ledru - Bug 1519636 - Ride along: remove trailing whitespaces r=Ehsan
+d10d78c33c0d48ca093ef280c2f6021b381a0d79 # cinnabar
+2ff79fb0d5070ffc419879319819e6bb0d9578c0 # gecko-dev
+# 0a036b8258bf532399c2c6579851d0a1847b7516 - Sylvestre Ledru - Bug 1519636 - Ride along: Move to the unix CR type r=Ehsan
+5bf0028fbe35157be388d21d53dcdc751a05e517 # cinnabar
+ddf2513ea7ec4330db43172c40cc02013634e788 # gecko-dev
+# 3b3a2e363253d5db0f2103064e8f59d8a2ae0543 - Gabriel Luong - Bug 1569574 - Part 2: Format devtools/client/responsive/. a=automatic-formatting r=vporof
+c8a723797239cdb59267257d331f114299aa9c2a # cinnabar
+788820312b71a33a7ec2915935632ca7811a0baf # gecko-dev
+# 7434139de6062722110472a91f6718e7d380fcbe - Paul Bone - Bug 1569924 - Run ./mach clang-format -p js/src r=sfink
+238b658614ae672aa0949a5a102d2437553267b3 # cinnabar
+b7a967139e78058fb5315fc9d92e029b7ff31c9d # gecko-dev
+# 53bd948e892d744cfee7cc7094dabcb8e292ba8a - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+f928f3d301aeec626108cdd30be0dfdc7bd81b8f # cinnabar
+645f2d57736004ed860d6de2b6374fe656b649f6 # gecko-dev
+# 2422a9d771bddef28d977b0013ab344935aa831f - Shashank Kaushik - Bug 1532933 - Enable ESLint for dom/xhr (automatic changes). r=Standard8,baku
+ec3094e1b96c1b2922ed10e539410579463aa955 # cinnabar
+b7630b9df2845e211c90bcbb3f61f6d708cad506 # gecko-dev
+# 7214f827b7fb017fd9ee1a81b9e54f2d97e5f8c1 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+326e412f7a95ba4e33052e84aef73d5dc910dff2 # cinnabar
+f12b9fa5c321bb47b1d106e780fcc45241600b7f # gecko-dev
+# e50facddb3c9758fd9effdccea0d80bd8ce1d264 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+7d3d852108fae33bdd12508dbb26941c2169e7ea # cinnabar
+7c309095ea846c08a2aa4f430f98e14db95639c4 # gecko-dev
+# 8e9c25f6c1ec1ecbae8eb0506696cc9214be9096 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+693b41c0efa1c1ffa4556a9c869a6878b065e84a # cinnabar
+8d2f0d1b1ffe045255bbcb323c01a9d1594f06d2 # gecko-dev
+# 52f5558248143b436fecc2e3755c2757ddbe6a4b - Marco Vega - Bug 1589334 - Enable ESLint for all of devtools/shared/ (automatic changes). r=Standard8,jdescottes
+3dccb6d91ef593f97d435c0256436a4a8b2cce03 # cinnabar
+02f9c81edb2fcf3b5e4688f27b866c66d47906ae # gecko-dev
+# 14698fa06ab89615f12b1bfe3bb305c9610e3f89 - Julian Descottes - Bug 1596686 - Use absolute paths for require calls r=gl
+81657bbe4fe28b0388c00fce03e34f5e1d692597 # cinnabar
+add2223cbaf7d3999376d8f5afbea3179099fbdd # gecko-dev
+# dbf6dc59a2c336ae5b6c739bb1bb1d35e4fc7b54 - Julian Descottes - Bug 1596686 - Use absolute paths for require calls r=gl
+a4aadf83796fa4831ed9706cba125f1f7a926825 # cinnabar
+10185770942f2f4716dadce837d4f4a9f907d4ae # gecko-dev
+# 6ca91a6eaf8d9b51733b9c7f6caa2c3c2c9951a8 - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan
+cc09046c09080298058acc16aa958382d55c368b # cinnabar
+c521758c5e6e7c9346c2f34d3a82a6f95e6b7ab1 # gecko-dev
+# b990267ff717548430ce2debf26f1812e36a38da - Sylvestre Ledru - Bug 1519636 - Automatically reformat recent changes using clang-format r=Ehsan
+a34ec7f5e6c0bfef67d5bf117028303c95595c8b # cinnabar
+187e9bafaf83537e14c43fad82b88bf7d97101a0 # gecko-dev
+# 8e8d0500b303eb6b6328ad00629b2ca0de711a72 - Mark Banner - Bug 1613139 - Enable ESLint for intl/locale and intl/strres (automatic changes). r=zbraniecki
+539d9321b9db5c7fc67f6605e7e8cdf0a4e570d0 # cinnabar
+c4d713de2b11e31ac613035b64345c4d1cb306f8 # gecko-dev
+# 014cf709a8392e05cbdb0dc0304d166d13bfa0b5 - Mark Banner - Bug 1613139 - Enable ESLint for intl/uconv (automatic changes). r=hsivonen
+fd4955294c60575544976754f3b4e0412e3fd88a # cinnabar
+4a5936ae451d9c90389120002b7176488095b236 # gecko-dev
+# 398a0b413ddbc75e4afc73c4a7098c3f0e0ebe6d - Mark Banner - Bug 1613867 - Enable ESLint on testing/xpcshell/moz-http2/ (automatic changes). r=dragana
+c196b891cea31a3f6b170f764fe9945b43fc7917 # cinnabar
+389bc795fe98fd17be04ef0331690e441f4bb040 # gecko-dev
+# f7976cb4881b9333e85056ab6f9af5699dad0a50 - Mark Banner - Bug 1613903 - Enable ESLint for testing/marionette/harness and testing/marionette/legacyaction.js (automatic changes). r=whimboo,marionette-reviewers
+52b258c5ab5172082fcbf7040e8385130373ad65 # cinnabar
+91228894079a124151a83b092e3d9f6d54ab3166 # gecko-dev
+# 06762c633bf6f4609c31add3b3a6df7c2ee5373e - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=Ehsan,kvark
+76824c6fc1b424ac84ed9870e163533c94d95458 # cinnabar
+ca6530131a15b7b68119366441296691a8729a54 # gecko-dev
+# efdbe31f5e2a9ff71f0bbcd207ceaa5b9adef6fe - Mark Banner - Bug 1620542 - Automatically fix ESLint errors in .eslintrc.js files. r=mossop
+f527acfab80d736b0186ac3014a9d10fadf021ef # cinnabar
+15cfe23b8807fb377c1c8201a41d03606d95c0ba # gecko-dev
+# 65fc57fa542cdab20869f8992cdce86f8517f94e - Sylvestre Ledru - Bug 1519636 - Reformat recent changes to the Google coding style r=jgilbert
+258f0d22ba3670d0a91835146b372186aa31b961 # cinnabar
+0aa6f03cf3922a452df9d777916e6c0abc71d5fd # gecko-dev
+# 3b3fd54478388e8b849fd9d7b8cd364cf9eb4c0c - Tim Nguyen - Bug 1201243 - Reformat with prettier.
+07f68671d389338ddc9743089f5d67e63ba36b4c # cinnabar
+89c92a15e985169211b62586846f85868418a6be # gecko-dev
+# ad8bd78754b2f7b7f6a4598a70d00669f0bef62c - Sylvestre Ledru - Bug 1619165 - Reformat recent changes to the Google coding style r=andi
+1bec58ea2ca08bf28f7686cba4d0c0115eb0ce94 # cinnabar
+34acbb653a29f173f8bacab9a468ed210ff3c7b3 # gecko-dev
+# 08a0e1e4864c9dfeff34aa3528a550aa84a8994d - Sylvestre Ledru - Bug 1617369 - Reformat recent rust changes with rustfmt r=emilio
+6b1bce83bc5b896c814d08319fcb99db8aa0d1f1 # cinnabar
+7f26dcf1b6d119a4664c3bff9749523f1e400068 # gecko-dev
+# 7558c8821a074b6f7c1e7d9314976e6b66176e5c - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`. r=remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers,devtools-backward-compat-reviewers,jgilbert,preferences-reviewers,sylvestre,maja_zf,webcompat-reviewers,denschub,ntim,whimboo,sparky
+c51be04f3639e229800c5debe98aac091cd96599 # cinnabar
+50762dacab8f3a0f17509f6faeb799bf1e3a0ed1 # gecko-dev
+# 94ec15429e21553241fb9addd2c15478068e72b6 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml` r=sylvestre,perftest-reviewers,geckoview-reviewers,agi
+a91aa733227898f49edc1378cc2a6d1d8f2e5f37 # cinnabar
+8b352f18432df719402f8d2722db96059cfef929 # gecko-dev
+# 4c9ab7d458520998d627f08ad60ed00dc44ef6e5 - Dorel Luca - Backed out changeset 94ec15429e21 (bug 1672023) for Backout conflicts with Bug 1654103. CLOSED TREE
+26b78260efcfec28e3f2ccd976e757c3f1e234b3 # cinnabar
+26941cf2f5f73874e132ef70b2a9cc4d119d07c3 # gecko-dev
+# 2309e130ea8d75bd6fb4a5fc056e503fae7f886c - Dorel Luca - Backed out changeset 7558c8821a07 (bug 1654103) for multiple failures. CLOSED TREE
+24a72f1077239e6c5545fb6164023d26fdad5564 # cinnabar
+1ff59cb7a3371196038030a5e456979d210f784d # gecko-dev
+# e7834b600201aea4e55b53bb3b2af1f70545779b - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`. r=remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers,devtools-backward-compat-reviewers,jgilbert,preferences-reviewers,sylvestre,maja_zf,webcompat-reviewers,denschub,ntim,whimboo,sparky
+f8d6abe0fee9b7386ff05019b5c5e6d0989e87bb # cinnabar
+c0cea3b0faaaa8d8109576a4e7c7a2c8bf49ef56 # gecko-dev
+# ff3fb0b4a5121abae41a70ef854a9de397c80397 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml` r=sylvestre,perftest-reviewers,geckoview-reviewers,agi
+4e0ddeb12ac0bc70ca3ccd9994dc1789f6cd3033 # cinnabar
+fe80718d675f89a85d7ae905e79b31459ad96aa1 # gecko-dev
+# 9006d6f3cb29754037aa0b5ef4c9b2ae67006459 - Bogdan Tara - Backed out 10 changesets (bug 1654103, bug 1672023, bug 1518999) for PanZoomControllerTest.touchEventForResult gv-junit failures CLOSED TREE
+2cffac047b8251c230ce01836ec389133d7c366d # cinnabar
+da1098d4aada13ba65e312f24561ca5a751947e4 # gecko-dev
+# 994ae8e4833c90447d91f0e26a718573cff5a514 - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`.
+72edd6842030e7c21bd0be5a563864f51e01bdf7 # cinnabar
+02a7b4ebdf98983f97b3a2007798356b0c39c1c4 # gecko-dev
+# e46822faf5d85ea1ca89fc153aaf5a83ce0418b5 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml`
+f1e360978f1a755728ff09137fc1f78297f09d5c # cinnabar
+210585edd26491e28ecbdc383f7232b95af651fc # gecko-dev
+# e52e5ee6f9d6217f3be04a71ff089148116f8fb0 - Simon Giesecke - Bug 1648010 - Remove NS_NAMED_LITERAL_CSTRING and NS_NAMED_LITERAL_STRING macros. r=froydnj
+33b73e74865afd879307cb3bd3f99082e53fb2cd # cinnabar
+9364b353d4f6b940d780f843d8b6c19380c4aef8 # gecko-dev
+# 3d7ffaefcd5a6c10988a1ecc3b75c3d55e1cd9e2 - Simon Giesecke - Bug 1648010 - Fix uses of NS_LITERAL_STRING with C string literals. r=geckoview-reviewers,agi,froydnj
+93915a549a0f426ad10763023c4cbed88a73d4d2 # cinnabar
+e3c223da3e69fdfbfc5bffa1cb6608f9acc256c6 # gecko-dev
+# 3f8100fb74318f9e0b3b6351ade737994d13bcf8 - Simon Giesecke - Bug 1648010 - Replace uses of NS_LITERAL_STRING/NS_LITERAL_CSTRING macros by _ns literals. r=geckoview-reviewers,jgilbert,agi,hsivonen,froydnj
+fbd56b0ecced359f8239f737a6dfad1a72eb6001 # cinnabar
+cd8b8939b911b3c28c13de23fde7201a8452499b # gecko-dev
+# d4a5d856797740630c86cb37dc57d14965b3f0e3 - Alex Lopez - Bug 1696251 - Pass MachCommandBase object as first argument for Mach Commands. r=mhentges,remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers
+75dfe3546879cebe9577f3f42ccd09c1160db7d7 # cinnabar
+d0cfe58fbf7efab6b71962b0d9796cb4c5561aa1 # gecko-dev
+# b85edcc1ce08369f27947268f1ebef5787f8cbae - Cosmin Sabou - Backed out changeset d4a5d8567977 (bug 1696251) for non-unified build bustages. CLOSED TREE
+785f9b8a87fdc3325c7055c0d985319ed4a08c29 # cinnabar
+6992a7ee6619df574d38905b4e3209f8f0c2ba2a # gecko-dev
+# e169193b74235c34691dbbb0f51a804c486533fc - Alex Lopez - Bug 1696251 - Pass MachCommandBase object as first argument for Mach Commands. r=mhentges,remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers
+d1a82b80922ffbbce091f287c7e00bd6a5da8b53 # cinnabar
+6c41083cda4216010f70b0e7b1c3471c58d54685 # gecko-dev
+# 1c84c9a34575f034cad1ed970e0bc6c516d8547c - Alex Lopez - Bug 1696251 - Turn all properties in MachCommandBase subclasses into methods. r=mhentges,perftest-reviewers,sparky
+41687360e8b2f5fe96be0ab853f222b34844e70d # cinnabar
+046df281c7e23895b0d1ff957267aca7e34ecb0b # gecko-dev
+# 31a80696d4d5a3e745be3df2e86df061cf02daf5 - Butkovits Atila - Backed out 2 changesets (bug 1696251) for causing js-bench-sm failures. CLOSED TREE
+2e34e363b9bc93fa83c418013fa3323b92c941ca # cinnabar
+7ee7f795367c79e2c9e53469dfa870846419a35e # gecko-dev
+# 4b889750da57ff0994c7196bc8a0151c17f641b6 - Alex Lopez - Bug 1696251 - Refactor constructors in MachCommandBase subclasses to remove them. r=mhentges,remote-protocol-reviewers
+2e8613720d7073576e1f5d5ade4be1488de4259f # cinnabar
+7501784f472d0c9fe2b815927646b23e43a688fd # gecko-dev
+# ca386bcad42046b17d617e55a92e353ef2dc3061 - Butkovits Atila - Backed out changeset 4b889750da57 (bug 1696251) for causing lint failures. CLOSED TREE
+6bb47ac42474928e4e19fd3a5a0d71c0bc97070f # cinnabar
+b1cddc95abff33c9d7cec35d98c2d5b0c6feebd8 # gecko-dev
+# e1921c5112d83da21aa2fae7a9c5710016d1b371 - Alex Lopez - Bug 1696251 - Replace self with command_context where possible in existing mach commands. r=mhentges,webdriver-reviewers,perftest-reviewers,whimboo
+190e03aaabf194020d595e7b9776a254beb44dc2 # cinnabar
+e560eab933b2be62ad49ad2ae686882a8dd0b82e # gecko-dev
+# abf91c0aeefdee7c7070dd9fb5f8895736d485ce - Butkovits Atila - Backed out changeset e1921c5112d8 (bug 1696251) for causing bustages complaining about 'CommandContext'. CLOSED TREE
+a07f790e420eeb51f5c3fc5af8b655061c2d33fc # cinnabar
+40d4c20d7af5399e17bb2cf619ad58ff88bbfa2c # gecko-dev
+# 5f5b612878f318b3e635faf5cc145155cd454eb0 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+bf860fe7dce01964e6b5b341c4e166ced641f894 # cinnabar
+2d9b6367b3a86d60316edd5e213a5e0f87cbfdc6 # gecko-dev
+# e28c911d36db5524416becf1781c231a058e6c21 - Noemi Erli - Backed out changeset 5f5b612878f3 (bug 1696251) for causing multiple bustages
+91aa2e2b9cac820f191a57c06618bbd69cc3ed3f # cinnabar
+6ff47a6cd1bb3cfb8cd5f64a3001cc26bbf73fdf # gecko-dev
+# 510dd46a9de764e8730e081235a5d4d3aa9507ee - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+fe61e94ec88e76ea9d31cf9c8c267677b09cbc31 # cinnabar
+a7237935e277847ddb4520ab14836f222779a337 # gecko-dev
+# b747274f1da3e93a8bed6b8c8df6299ceb354417 - Butkovits Atila - Backed out changeset 510dd46a9de7 (bug 1696251) for causing Android build bustages.
+c06a3dd9faeee8196dfc3d11d31c50765a160b94 # cinnabar
+ff2f745e2dc1f012b03d85c2af7b82aed4460ba2 # gecko-dev
+# 53b1fa0faa6d78f7cf72f9cbe3dc85221a04eea3 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+a8e7083c849eef5c4c978b537ac555c8000ac9ae # cinnabar
+8745fe84a3204ee8daa3469c155673f53caf8d16 # gecko-dev
+# c38d34be7c3f757510f037fef5a78ea08af32980 - Butkovits Atila - Backed out changeset 53b1fa0faa6d (bug 1696251) for breaking the static-analysis integration. a=backout
+eb735ac57e701c05a1deac60d563150c33a6a0e7 # cinnabar
+547e78004bf51e90cf4efcc6fe2a899f01ffa302 # gecko-dev
+# 1fa64c7fe170ab629768d6ed27c5840555773709 - Agi Sferro - Bug 1571899 - Format Java codebase with google-java-formatter. r=owlish
+2f6419a88cd8f752fa0913d58960b5c10d42bc59 # cinnabar
+e8e0f7e153bd672200afa3c4997869a13cc99ee5 # gecko-dev

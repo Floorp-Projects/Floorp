@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+body {
+ font-family: sans-serif;
+}
+#inline1 {
+ margin-right: 10px;
+}
+#inline2 {
+ display: none;
+ margin-left: 10px;
+ margin-right: 20px;
+}
+#inline3 {
+ margin-left: 40px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('inline2').style.display = 'inline';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test);
+</script>
+</head>
+<body>
+<div><span id="inline1">Hello<span id="inline2">my</span></span><span id="inline3">Kitty</span></div>
+</body>
+</html>

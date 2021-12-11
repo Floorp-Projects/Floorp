@@ -1,0 +1,23 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger event bp fission test page</title>
+    <script>
+      function reloadIframe() {
+        return new Promise(resolve => {
+          const iframe = document.querySelector("iframe");
+          iframe.addEventListener("load", () => resolve(), { once: true });
+          iframe.setAttribute("src", iframe.getAttribute("src"));
+        });
+      }
+        setTimeout(() => console.log("timeout fired"), 0)
+    </script>
+  </head>
+  <body>
+    <iframe src="https://example.org/browser/devtools/client/debugger/test/mochitest/examples/doc-event-breakpoints.html"></iframe>
+  </body>
+</html>

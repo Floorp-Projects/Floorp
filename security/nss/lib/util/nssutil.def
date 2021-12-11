@@ -1,0 +1,343 @@
+;+#
+;+# This Source Code Form is subject to the terms of the Mozilla Public
+;+# License, v. 2.0. If a copy of the MPL was not distributed with this
+;+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+;+#
+;+# OK, this file is meant to support SUN, LINUX, AIX and WINDOWS
+;+#   1. For all unix platforms, the string ";-"  means "remove this line"
+;+#   2. For all unix platforms, the string " DATA " will be removed from any
+;+#	line on which it occurs.
+;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
+;+#      On AIX, lines containing ";+" will be removed.
+;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   5. For all unix platforms, after the above processing has taken place,
+;+#    all characters after the first ";" on the line will be removed.
+;+#    And for AIX, the first ";" will also be removed.
+;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
+;+#   directives are hidden behind ";", ";+", and ";-"
+;+NSSUTIL_3.12 {       # NSS Utilities 3.12 release
+;+    global:
+LIBRARY nssutil3	;-
+EXPORTS		;-
+ATOB_AsciiToData_Util;
+ATOB_ConvertAsciiToItem_Util;
+BTOA_ConvertItemToAscii_Util;
+BTOA_DataToAscii_Util;
+CERT_GenTime2FormattedAscii_Util;
+DER_AsciiToTime_Util;
+DER_DecodeTimeChoice_Util;
+DER_Encode_Util;
+DER_EncodeTimeChoice_Util;
+DER_GeneralizedDayToAscii_Util;
+DER_GeneralizedTimeToTime_Util;
+DER_GetInteger_Util;
+DER_GetUInteger;
+DER_LengthLength;
+DER_Lengths_Util;
+DER_SetUInteger;
+DER_StoreHeader;
+DER_TimeChoiceDayToAscii_Util;
+DER_TimeToGeneralizedTime_Util;
+DER_TimeToGeneralizedTimeArena_Util;
+DER_TimeToUTCTime_Util;
+DER_UTCDayToAscii_Util;
+DER_UTCTimeToAscii_Util;
+DER_UTCTimeToTime_Util;
+NSS_PutEnv_Util;
+NSSBase64_DecodeBuffer_Util;
+NSSBase64_EncodeItem_Util;
+NSSBase64Decoder_Create_Util;
+NSSBase64Decoder_Destroy_Util;
+NSSBase64Decoder_Update_Util;
+NSSBase64Encoder_Create_Util;
+NSSBase64Encoder_Destroy_Util;
+NSSBase64Encoder_Update_Util;
+NSSRWLock_Destroy_Util;
+NSSRWLock_HaveWriteLock_Util;
+NSSRWLock_LockRead_Util;
+NSSRWLock_LockWrite_Util;
+NSSRWLock_New_Util;
+NSSRWLock_UnlockRead_Util;
+NSSRWLock_UnlockWrite_Util;
+PORT_Alloc_Util;
+PORT_ArenaAlloc_Util;
+PORT_ArenaGrow_Util;
+PORT_ArenaMark_Util;
+PORT_ArenaRelease_Util;
+PORT_ArenaStrdup_Util;
+PORT_ArenaUnmark_Util;
+PORT_ArenaZAlloc_Util;
+PORT_Free_Util;
+PORT_FreeArena_Util;
+PORT_GetError_Util;
+PORT_ISO88591_UTF8Conversion;
+PORT_NewArena_Util;
+PORT_Realloc_Util;
+PORT_RegExpCaseSearch;
+PORT_RegExpValid;
+PORT_SetError_Util;
+PORT_SetUCS2_ASCIIConversionFunction_Util;
+PORT_SetUCS2_UTF8ConversionFunction_Util;
+PORT_SetUCS4_UTF8ConversionFunction_Util;
+PORT_Strdup_Util;
+PORT_UCS2_ASCIIConversion_Util;
+PORT_UCS2_UTF8Conversion_Util;
+PORT_UCS4_UTF8Conversion;
+PORT_ZAlloc_Util;
+PORT_ZFree_Util;
+SEC_ASN1Decode_Util;
+SEC_ASN1DecodeInteger_Util;
+SEC_ASN1DecodeItem_Util;
+SEC_ASN1DecoderAbort_Util;
+SEC_ASN1DecoderClearFilterProc_Util;
+SEC_ASN1DecoderClearNotifyProc_Util;
+SEC_ASN1DecoderFinish_Util;
+SEC_ASN1DecoderSetFilterProc_Util;
+SEC_ASN1DecoderSetNotifyProc_Util;
+SEC_ASN1DecoderStart_Util;
+SEC_ASN1DecoderUpdate_Util;
+SEC_ASN1Encode_Util;
+SEC_ASN1EncodeInteger_Util;
+SEC_ASN1EncodeItem_Util;
+SEC_ASN1EncoderAbort_Util;
+SEC_ASN1EncoderClearNotifyProc_Util;
+SEC_ASN1EncoderClearStreaming_Util;
+SEC_ASN1EncoderClearTakeFromBuf_Util;
+SEC_ASN1EncoderFinish_Util;
+SEC_ASN1EncoderSetNotifyProc_Util;
+SEC_ASN1EncoderSetStreaming_Util;
+SEC_ASN1EncoderSetTakeFromBuf_Util;
+SEC_ASN1EncoderStart_Util;
+SEC_ASN1EncoderUpdate_Util;
+SEC_ASN1EncodeUnsignedInteger_Util;
+SEC_ASN1LengthLength_Util;
+SEC_QuickDERDecodeItem_Util;
+SEC_StringToOID;
+SECITEM_AllocItem_Util;
+SECITEM_ArenaDupItem_Util;
+SECITEM_CompareItem_Util;
+SECITEM_CopyItem_Util;
+SECITEM_DupItem_Util;
+SECITEM_FreeItem_Util;
+SECITEM_Hash;
+SECITEM_HashCompare;
+SECITEM_ItemsAreEqual_Util;
+SECITEM_ZfreeItem_Util;
+SECOID_AddEntry_Util;
+SECOID_CompareAlgorithmID_Util;
+SECOID_CopyAlgorithmID_Util;
+SECOID_DestroyAlgorithmID_Util;
+SECOID_FindOID_Util;
+SECOID_FindOIDByMechanism;
+SECOID_FindOIDByTag_Util;
+SECOID_FindOIDTag_Util;
+SECOID_FindOIDTagDescription_Util;
+SECOID_GetAlgorithmTag_Util;
+SECOID_Init;
+SECOID_KnownCertExtenOID;
+SECOID_SetAlgorithmID_Util;
+SECOID_Shutdown;
+SGN_CompareDigestInfo_Util;
+SGN_CopyDigestInfo_Util;
+SGN_CreateDigestInfo_Util;
+SGN_DecodeDigestInfo;
+SGN_DestroyDigestInfo_Util;
+;+#
+;+# Data objects
+;+#
+;+# Don't export these DATA symbols on Windows because they don't work right.
+;+# Use the SEC_ASN1_GET / SEC_ASN1_SUB / SEC_ASN1_XTRN macros to access them.
+;;SEC_AnyTemplate_Util DATA ;
+;;SEC_BitStringTemplate_Util DATA ;
+;;SEC_BMPStringTemplate_Util DATA ;
+;;SEC_BooleanTemplate_Util DATA ;
+;;SEC_EnumeratedTemplate DATA ;
+;;SEC_GeneralizedTimeTemplate_Util DATA ;
+;;SEC_IA5StringTemplate_Util DATA ;
+;;SEC_IntegerTemplate_Util DATA ;
+;;SEC_NullTemplate_Util DATA ;
+;;SEC_ObjectIDTemplate_Util DATA ;
+;;SEC_OctetStringTemplate_Util DATA ;
+;;SEC_PointerToAnyTemplate_Util DATA ;
+;;SEC_PointerToEnumeratedTemplate DATA ;
+;;SEC_PointerToGeneralizedTimeTemplate DATA ;
+;;SEC_PointerToOctetStringTemplate_Util DATA ;
+;;SEC_PrintableStringTemplate DATA ;
+;;SEC_SequenceOfAnyTemplate DATA ;
+;;SEC_SequenceOfObjectIDTemplate DATA ;
+;;SEC_SetOfAnyTemplate_Util DATA ;
+;;SEC_SkipTemplate DATA ;
+;;SEC_T61StringTemplate DATA ;
+;;SEC_UniversalStringTemplate DATA ;
+;;SEC_UTF8StringTemplate_Util DATA ;
+;;SECOID_AlgorithmIDTemplate_Util DATA ;
+;;sgn_DigestInfoTemplate_Util DATA ;
+NSS_Get_SEC_AnyTemplate_Util;
+NSS_Get_SEC_BitStringTemplate_Util;
+NSS_Get_SEC_BMPStringTemplate_Util;
+NSS_Get_SEC_BooleanTemplate_Util;
+NSS_Get_SEC_EnumeratedTemplate;
+NSS_Get_SEC_GeneralizedTimeTemplate_Util;
+NSS_Get_SEC_IA5StringTemplate_Util;
+NSS_Get_SEC_IntegerTemplate_Util;
+NSS_Get_SEC_NullTemplate_Util;
+NSS_Get_SEC_ObjectIDTemplate_Util;
+NSS_Get_SEC_OctetStringTemplate_Util;
+NSS_Get_SEC_PointerToAnyTemplate_Util;
+NSS_Get_SEC_PointerToEnumeratedTemplate;
+NSS_Get_SEC_PointerToGeneralizedTimeTemplate;
+NSS_Get_SEC_PointerToOctetStringTemplate_Util;
+NSS_Get_SEC_PrintableStringTemplate;
+NSS_Get_SEC_SequenceOfAnyTemplate;
+NSS_Get_SEC_SequenceOfObjectIDTemplate;
+NSS_Get_SEC_SetOfAnyTemplate_Util;
+NSS_Get_SEC_SkipTemplate;
+NSS_Get_SEC_T61StringTemplate;
+NSS_Get_SEC_UniversalStringTemplate;
+NSS_Get_SEC_UTF8StringTemplate_Util;
+NSS_Get_SECOID_AlgorithmIDTemplate_Util;
+NSS_Get_sgn_DigestInfoTemplate_Util;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.12.3 {       # NSS Utilities 3.12.3 release
+;+    global:
+NSS_GetAlgorithmPolicy;
+NSS_SetAlgorithmPolicy;
+SECITEM_ReallocItem;
+UTIL_SetForkState;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.12.5 {       # NSS Utilities 3.12.5 release
+;+    global:
+NSS_SecureMemcmp;
+PORT_LoadLibraryFromOrigin;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.12.7 {       # NSS Utilities 3.12.7 release
+;+    global:
+PORT_RegExpSearch;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.13 {         # NSS Utilities 3.13 release
+;+    global:
+NSSUTIL_GetVersion;
+NSS_InitializePRErrorTable;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.14 {         # NSS Utilities 3.14 release
+;+    global:
+;+# private exports for softoken
+_NSSUTIL_GetSecmodName;
+_NSSUTIL_EvaluateConfigDir;
+;+# public exports
+NSSUTIL_ArgDecodeNumber;
+NSSUTIL_ArgFetchValue;
+NSSUTIL_ArgGetParamValue;
+NSSUTIL_ArgGetLabel;
+NSSUTIL_ArgHasFlag;
+NSSUTIL_ArgIsBlank;
+NSSUTIL_ArgParseCipherFlags;
+NSSUTIL_ArgParseModuleSpec;
+NSSUTIL_ArgParseSlotFlags;
+NSSUTIL_ArgParseSlotInfo;
+NSSUTIL_ArgReadLong;
+NSSUTIL_ArgSkipParameter;
+NSSUTIL_ArgStrip;
+NSSUTIL_DoModuleDBFunction;
+NSSUTIL_DoubleEscape;
+NSSUTIL_DoubleEscapeSize;
+NSSUTIL_Escape;
+NSSUTIL_EscapeSize;
+NSSUTIL_MkModuleSpec;
+NSSUTIL_MkNSSString;
+NSSUTIL_MkSlotString;
+NSSUTIL_Quote;
+NSSUTIL_QuoteSize;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.15 {         # NSS Utilities 3.15 release
+;+    global:
+SECITEM_AllocArray;
+SECITEM_DupArray;
+SECITEM_FreeArray;
+SECITEM_ReallocItemV2;
+SECITEM_ZfreeArray;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.17.1 {         # NSS Utilities 3.17.1 release
+;+    global:
+_SGN_VerifyPKCS1DigestInfo;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.21 {         # NSS Utilities 3.21 release
+;+    global:
+NSSUTIL_ArgParseModuleSpecEx;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.24 {       # NSS Utilities 3.24 release
+;+    global:
+PORT_InitCheapArena;
+PORT_DestroyCheapArena;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.25 {         # NSS Utilities 3.25 release
+;+    global:
+SEC_ASN1DecoderSetMaximumElementSize;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.31 {         # NSS Utilities 3.31 release
+;+    global:
+PK11URI_CreateURI;
+PK11URI_ParseURI;
+PK11URI_FormatURI;
+PK11URI_DestroyURI;
+PK11URI_GetPathAttribute;
+PK11URI_GetQueryAttribute;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.33 {         # NSS Utilities 3.33 release
+;+    global:
+PORT_ZAllocAligned_Util;
+PORT_ZAllocAlignedOffset_Util;
+NSS_SecureMemcmpZero;
+;+    local:
+;+       *;
+;+};
+;-NSSUTIL_3.35 {         # NSS Utilities 3.35 release
+;-    global:
+;-# private exports for softoken
+_NSSUTIL_UTF8ToWide;-
+_NSSUTIL_Access;-
+;-    local:
+;-       *;
+;+NSSUTIL_3.38 {         # NSS Utilities 3.38 release
+;+    global:
+SECITEM_MakeItem;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.39 {         # NSS Utilities 3.39 release
+;+    global:
+NSSUTIL_AddNSSFlagToModuleSpec;
+;+    local:
+;+       *;
+;+};
+;+NSSUTIL_3.59 {         # NSS Utilities 3.59 release
+;+    global:
+NSS_IsPolicyLocked;
+NSS_LockPolicy;
+;+    local:
+;+       *;
+;+};

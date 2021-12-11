@@ -1,0 +1,43 @@
+<!doctype html>
+<html class="reftest-wait">
+<meta charset=utf-8>
+<title>Test for applying a scale animation to a block continuation</title>
+<!--
+  Transform animations involve special frame handling since the animations are
+  applied to the primary frame but are stored on the style frame (a distinction
+  that only exists for display:table content).
+
+  This test exists to ensure that in the case of tranform animations on block
+  continuations we don't come unstuck since this is another case where there are
+  multiple frames with transform animations, but only one primary frame.
+
+  We choose to animate scale in this test because there are a number of methods
+  that take special interest in scale animations because of their impact on
+  prerendering. By using a scale animation we check that none of those code
+  paths trip up on block continuations.
+-->
+<style>
+.container {
+  /* This sizing should hopefully mean that the second paragraph is split across
+     two columns. */
+  column-width: 20em;
+  width: 42em;
+}
+#two {
+  animation: scale 1s infinite alternate;
+}
+@keyframes scale {
+  to { transform: scale(1.3); }
+}
+</style>
+<div class=container>
+  <p>Neque et soluta consectetur. Quia quo magnam ipsa modi. Aspernatur necessitatibus consequatur facere voluptates rerum omnis iusto earum. Beatae quisquam odio est. Deleniti distinctio doloribus veniam similique voluptas est aut. Dignissimos dignissimos voluptas illo odit.</p>
+  <p id=two>Laborum quae reprehenderit alias. Incidunt aliquam non sint non eaque et itaque aut. Est quaerat neque explicabo id voluptas reiciendis. Et animi odio eligendi ipsa repudiandae quam iure. Commodi asperiores sapiente dolorem assumenda debitis. Soluta quisquam porro fugiat fugiat sapiente et excepturi rem.</p>
+  <p>Ipsam eligendi neque perspiciatis est aut ea nihil. Eum sit ipsa sunt aut voluptatem optio. Qui quae autem aspernatur. Et perspiciatis alias voluptatem.</p>
+</div>
+<script>
+two.addEventListener('animationstart', () => {
+  document.documentElement.removeAttribute('class');
+});
+</script>
+</html>

@@ -1,0 +1,14 @@
+From the branch smTempBranch in {{folder}} 
+
+Files being copied to the local folder: 
+test/language/export/escaped-foobarbaz.js
+test/temp42/bar.js
+test/temp42/baz.js
+test/temp42/foo.js
+
+Deleted files (use this list to update the skip list): 
+test/language/export/escaped-from.js
+
+Renamed files (already added with the new names): 
+ rename test/language/export/{escaped-default.js => escaped-foobarbaz.js} (100%)
+

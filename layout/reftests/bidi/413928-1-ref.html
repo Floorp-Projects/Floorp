@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+  <title>Bug 413928</title>
+  <style type="text/css">
+.li {
+  line-height: 2em;
+}
+.list-number-he {
+  direction: rtl;
+  unicode-bidi: bidi-override;
+}
+  </style>
+ </head>
+ <body>
+   <div class="li"><span class="list-number">-3.</span></div>
+   <div class="li"><span class="list-number">-2.</span></div>
+   <div class="li"><span class="list-number">-1.</span></div>
+   <div class="li"><span class="list-number">0.</span></div>
+   <div class="li"><span class="list-number-he">.א</span></div>
+   <div class="li"><span class="list-number-he">.ב</span></div>
+   <div class="li"><span class="list-number-he">.ג</span></div>
+   <div class="li"><span class="list-number-he">.ד</span></div>
+   <div class="li"><span class="list-number-he">.ה</span></div>
+   <div class="li"><span class="list-number-he">.יד</span></div>
+   <div class="li"><span class="list-number-he">.טו</span></div>
+   <div class="li"><span class="list-number-he">.טז</span></div>
+   <div class="li"><span class="list-number-he">.יז</span></div>
+   <div class="li"><span class="list-number-he">.צז</span></div>
+   <div class="li"><span class="list-number-he">.צח</span></div>
+   <div class="li"><span class="list-number-he">.צט</span></div>
+   <div class="li"><span class="list-number-he">.ק</span></div>
+   <div class="li"><span class="list-number-he">.קא</span></div>
+   <div class="li"><span class="list-number-he">.תתקמד</span></div>
+   <div class="li"><span class="list-number-he">.תתקמה</span></div>
+   <div class="li"><span class="list-number-he">.תתקמו</span></div>
+   <div class="li"><span class="list-number-he">.תתקצט</span></div>
+   <div class="li"><span class="list-number-he">.א׳</span></div>
+   <div class="li"><span class="list-number-he">.א׳א</span></div>
+   <div class="li"><span class="list-number-he">.א׳תתקצח</span></div>
+   <div class="li"><span class="list-number-he">.א׳תתקצט</span></div>
+   <div class="li"><span class="list-number-he">.ב׳</span></div>
+   <div class="li"><span class="list-number-he">.ב׳א</span></div>
+   <div class="li"><span class="list-number-he">.ב׳ג</span></div>
+   <div class="li"><span class="list-number-he">.ב׳תשמח</span></div>
+   <div class="li"><span class="list-number-he">.ב׳תשנ</span></div>
+   <div class="li"><span class="list-number">1000000.</span></div>
+   <div class="li"><span class="list-number">1500000.</span></div>
+   <div class="li"><span class="list-number">2000000.</span></div>
+   <div class="li"><span class="list-number">9999999.</span></div>
+   <div class="li"><span class="list-number">10000212.</span></div>
+   <div class="li"><span class="list-number">10000425.</span></div>
+   <div class="li"><span class="list-number">10000851.</span></div>
+   <div class="li"><span class="list-number">10001064.</span></div>
+   <div class="li"><span class="list-number">10001277.</span></div>
+ </body>
+</html>

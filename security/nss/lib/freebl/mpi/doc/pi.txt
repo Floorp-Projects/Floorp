@@ -1,0 +1,53 @@
+This file describes how pi is computed by the program in 'pi.c' (see
+the utils subdirectory).
+
+Basically, we use Machin's formula, which is what everyone in the
+world uses as a simple method for computing approximations to pi.
+This works for up to a few thousand digits without too much effort.
+Beyond that, though, it gets too slow.
+
+Machin's formula states:
+
+	 pi := 16 * arctan(1/5) - 4 * arctan(1/239)
+
+We compute this in integer arithmetic by first multiplying everything
+through by 10^d, where 'd' is the number of digits of pi we wanted to
+compute.  It turns out, the last few digits will be wrong, but the
+number that are wrong is usually very small (ordinarly only 2-3).
+Having done this, we compute the arctan() function using the formula:
+
+                       1      1       1       1       1     
+       arctan(1/x) := --- - ----- + ----- - ----- + ----- - ...
+                       x    3 x^3   5 x^5   7 x^7   9 x^9
+
+This is done iteratively by computing the first term manually, and
+then iteratively dividing x^2 and k, where k = 3, 5, 7, ... out of the
+current figure.  This is then added to (or subtracted from) a running
+sum, as appropriate.  The iteration continues until we overflow our
+available precision and the current figure goes to zero under integer
+division.  At that point, we're finished.
+
+Actually, we get a couple extra bits of precision out of the fact that
+we know we're computing y * arctan(1/x), by setting up the multiplier
+as:
+
+      y * 10^d
+
+... instead of just 10^d.  There is also a bit of cleverness in how
+the loop is constructed, to avoid special-casing the first term.
+Check out the code for arctan() in 'pi.c', if you are interested in
+seeing how it is set up.
+
+Thanks to Jason P. for this algorithm, which I assembled from notes
+and programs found on his cool "Pile of Pi Programs" page, at:
+
+      http://www.isr.umd.edu/~jasonp/pipage.html
+
+Thanks also to Henrik Johansson <Henrik.Johansson@Nexus.Comm.SE>, from
+whose pi program I borrowed the clever idea of pre-multiplying by x in
+order to avoid a special case on the loop iteration.
+
+------------------------------------------------------------------
+ This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.

@@ -1,0 +1,83 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- bug 893785 - Test that sending a gamepadconnected event to a new window
+     doesn't result in a gamepadconnected event being sent to existing
+     windows that have already received it. -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test hidden frames</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+let ok = window.parent.ok;
+let is = window.parent.is;
+let SimpleTest = window.parent.SimpleTest;
+let SpecialPowers = window.parent.SpecialPowers;
+
+var gamepad_index;
+
+async function pressButton() {
+  await GamepadService.newButtonEvent(gamepad_index, 0, true, true);
+  await GamepadService.newButtonEvent(gamepad_index, 0, false, false);
+}
+
+ // Add a gamepad
+async function startTests() {
+  window.addEventListener("gamepadbuttondown", function() {
+    // Wait to ensure that all frames received the button press as well.
+    SpecialPowers.executeSoon(tests[testNum++]);
+  });
+
+  gamepad_index = await GamepadService.addGamepad("test gamepad", // id
+                            GamepadService.standardMapping,
+                            GamepadService.noHand,
+                            4, // buttons
+                            2,
+                            0,
+                            0,
+                            0)
+
+  await gamepad_connected();
+}
+
+var f1, f2;
+async function gamepad_connected() {
+  f1 = document.getElementById('f1');
+  await pressButton();
+}
+
+var testNum = 0;
+var tests = [
+  test1,
+  test2,
+];
+
+function test1() {
+  is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
+
+  // Now add another frame.
+  f2 = document.createElement("iframe");
+  f2.addEventListener("load", async () => {
+    // When the frame is loaded, press a button again.
+    await pressButton();
+  });
+  f2.src = "gamepad_frame.html";
+  document.body.appendChild(f2);
+}
+
+async function test2() {
+  is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
+  is(f2.contentWindow.connectedEvents, 1, "right number of connection events in frame 2");
+  is(f1.contentWindow.idlConnected, 1, "right number of IDL connection events in frame 1");
+  is(f2.contentWindow.idlConnected, 1, "right number of IDL connection events in frame 2");
+  await GamepadService.removeGamepad(gamepad_index);
+  SimpleTest.finish();
+}
+
+</script>
+<iframe id="f1" src="gamepad_frame.html" onload="runGamepadTest(startTests)"></iframe>
+</body>
+</html>

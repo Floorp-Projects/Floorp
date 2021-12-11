@@ -1,0 +1,61 @@
+<html>
+<head>
+  <title>MediaRecorder infinite recursion with requestData() calls in "dataavailable" event</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="gUM_support.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=897776">Mozill
+a Bug 897776</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+async function startTest() {
+  try {
+    await setupGetUserMediaTestPrefs();
+    let stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    let mediaRecorder = new MediaRecorder(stream);
+    let count = 0;
+    mediaRecorder.onerror = function () {
+      ok(false, 'Unexpected onerror callback fired');
+      SimpleTest.finish();
+    };
+    mediaRecorder.onwarning = function () {
+      ok(false, 'Unexpected onwarning callback fired');
+    };
+    mediaRecorder.ondataavailable = function (e) {
+      ++count;
+      info("got ondataavailable data size = " + e.data.size);
+      // no more requestData() to prevent busy main thread from starving
+      // the encoding thread
+      if (count == 30) {
+        info("track.stop");
+        stream.getTracks()[0].stop();
+      } else if (count < 30 && mediaRecorder.state == 'recording') {
+        info("requestData again");
+        mediaRecorder.requestData();
+      }
+    };
+    mediaRecorder.onstop = function () {
+      ok(true, "requestData within ondataavailable successfully avoided infinite recursion");
+      SimpleTest.finish();
+    };
+    mediaRecorder.start();
+    info("mediaRecorder start");
+    mediaRecorder.requestData();
+    info("mediaRecorder requestData");
+  } catch (e) {
+    ok(false, 'Unexpected error fired with: ' + e);
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</pre>
+</body>
+</html>
+

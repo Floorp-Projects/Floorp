@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1398692: Allow toplevel navigation to a data:application/pdf</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test_toplevel_data_pdf() {
+  // The PDF contains one page and it is a 3/72" square, the minimum allowed by the spec
+  const DATA_PDF =
+    "data:application/pdf;base64,JVBERi0xLjANCjEgMCBvYmo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PmVuZG9iaiAyIDAgb2JqPDwvVHlwZS9QYWdlcy9LaWRzWzMgMCBSXS9Db3VudCAxPj5lbmRvYmogMyAwIG9iajw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgMyAzXT4+ZW5kb2JqDQp4cmVmDQowIDQNCjAwMDAwMDAwMDAgNjU1MzUgZg0KMDAwMDAwMDAxMCAwMDAwMCBuDQowMDAwMDAwMDUzIDAwMDAwIG4NCjAwMDAwMDAxMDIgMDAwMDAgbg0KdHJhaWxlcjw8L1NpemUgNC9Sb290IDEgMCBSPj4NCnN0YXJ0eHJlZg0KMTQ5DQolRU9G";
+
+  let win = window.open(DATA_PDF);
+  let wrappedWin = SpecialPowers.wrap(win);
+
+  // Unfortunately we can't detect whether the PDF has loaded or not using some
+  // event, hence we are constantly polling location.href till we see that
+  // the data: URI appears. Test times out on failure.
+  var pdfLoaded = setInterval(function() {
+    if (wrappedWin.document.location.href.startsWith("data:application/pdf")) {
+      clearInterval(pdfLoaded);
+      ok(true, "navigating to data:application/pdf allowed");
+      wrappedWin.close();
+      SimpleTest.finish();
+    }
+  }, 200);
+}
+
+SpecialPowers.pushPrefEnv({
+  set: [["security.data_uri.block_toplevel_data_uri_navigations", true]]
+}, test_toplevel_data_pdf);
+
+</script>
+</body>
+</html>

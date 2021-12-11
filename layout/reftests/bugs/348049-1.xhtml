@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      class="reftest-wait">
+  <head>
+    <script><![CDATA[
+      customElements.define("custom-td", class extends HTMLDivElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+          let td = document.createElement('td');
+          td.append(document.createElement('slot'));
+          this.shadowRoot.append(td);
+        }
+      }, {
+        extends: "div",
+      });
+      function f1() {
+        document.getElementById("outer")
+                .appendChild(document.createTextNode("PASS"));
+        document.documentElement.className = "";
+      }
+    ]]></script>
+  </head>
+  <body onload="f1();">
+    <div is="custom-td" id="outer"></div>
+  </body>
+</html>

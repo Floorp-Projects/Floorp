@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test that we reject syntax errors listed in property_database.js</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<p id="display"></p>
+<iframe id="quirks" src="data:text/html,<div id='testnode'></div>"></iframe>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(4);
+
+function check_not_accepted(decl, property, info, badval)
+{
+  decl.setProperty(property, badval, "");
+
+  is(decl.getPropertyValue(property), "",
+     "invalid value '" + badval + "' not accepted for '" + property +
+     "' property");
+
+  if ("subproperties" in info) {
+    for (var sidx in info.subproperties) {
+      var subprop = info.subproperties[sidx];
+      is(decl.getPropertyValue(subprop), "",
+         "invalid value '" + badval + "' not accepted for '" + property +
+         "' property when testing subproperty '" + subprop + "'");
+    }
+  }
+
+  decl.removeProperty(property);
+}
+
+function check_value_balanced(decl, property, badval)
+{
+  var goodProp =
+    (property == "background-color") ? "color" : "background-color";
+  decl.cssText = goodProp + ": red; " + property + ": " + badval + "; " +
+                 goodProp + ": green";
+  is(decl.getPropertyValue(goodProp), "green",
+     "invalid value '" + property + ": " + badval +
+     "' is balanced and does not lead to parsing errors afterwards");
+  decl.cssText = "";
+}
+
+function check_value_unbalanced(decl, property, badval)
+{
+  var goodProp =
+    (property == "background-color") ? "color" : "background-color";
+  decl.cssText = goodProp + ": green; " + property + ": " + badval + "; " +
+                 goodProp + ": red";
+  is(decl.getPropertyValue(goodProp), "green",
+     "invalid value '" + property + ": " + badval +
+     "' is unbalanced and absorbs what follows it");
+  decl.cssText = "";
+}
+
+function check_empty_value_rejected(decl, emptyval, property)
+{
+  var goodProp =
+    (property == "background-color") ? "color" : "background-color";
+  decl.cssText = goodProp + ": red; " + property + ":" + emptyval + "; " +
+                 goodProp + ": green";
+  is(decl.length, 1,
+     "empty value '" + property + ":" + emptyval +
+     "' is not accepted");
+  is(decl.getPropertyValue(goodProp), "green",
+     "empty value '" + property + ":" + emptyval +
+     "' is balanced and does not lead to parsing errors afterwards");
+  decl.cssText = "";
+}
+
+function run()
+{
+  var gDeclaration = document.getElementById("testnode").style;
+  var quirksFrame = document.getElementById("quirks");
+  var wrappedFrame = SpecialPowers.wrap(quirksFrame);
+  var gQuirksDeclaration = wrappedFrame.contentDocument
+                             .getElementById("testnode").style;
+
+  for (var property in gCSSProperties) {
+    var info = gCSSProperties[property];
+
+    check_empty_value_rejected(gDeclaration, "", property);
+    check_empty_value_rejected(gDeclaration, " ", property);
+
+    for (var idx in info.invalid_values) {
+      check_not_accepted(gDeclaration, property, info,
+                         info.invalid_values[idx]);
+      check_not_accepted(gQuirksDeclaration, property, info,
+                         info.invalid_values[idx]);
+      check_value_balanced(gDeclaration, property,
+                           info.invalid_values[idx]);
+    }
+
+    if ("quirks_values" in info) {
+      for (var quirkval in info.quirks_values) {
+        var standardval = info.quirks_values[quirkval];
+        check_not_accepted(gDeclaration, property, info, quirkval);
+        check_value_balanced(gDeclaration, property, quirkval);
+
+        gQuirksDeclaration.setProperty(property, quirkval, "");
+        gDeclaration.setProperty(property, standardval, "");
+        var quirkret = gQuirksDeclaration.getPropertyValue(property);
+        var standardret = gDeclaration.getPropertyValue(property);
+        isnot(quirkret, "", property + ": " + quirkval +
+                            " should be accepted in quirks mode");
+        is(quirkret, standardret, property + ": " + quirkval + " result");
+
+        if ("subproperties" in info) {
+          for (var sidx in info.subproperties) {
+            var subprop = info.subproperties[sidx];
+            var quirksub = gQuirksDeclaration.getPropertyValue(subprop);
+            var standardsub = gDeclaration.getPropertyValue(subprop);
+            isnot(quirksub, "", property + ": " + quirkval +
+                                " should be accepted in quirks mode" +
+                                " when testing subproperty " + subprop);
+            is(quirksub, standardsub, property + ": " + quirkval + " result" +
+                                      " when testing subproperty " + subprop);
+          }
+        }
+
+        gQuirksDeclaration.removeProperty(property);
+        gDeclaration.removeProperty(property);
+      }
+    }
+
+    for (var idx in info.unbalanced_values) {
+      check_not_accepted(gDeclaration, property, info,
+                         info.invalid_values[idx]);
+      check_not_accepted(gQuirksDeclaration, property, info,
+                         info.invalid_values[idx]);
+      check_value_unbalanced(gDeclaration, property,
+                             info.unbalanced_values[idx]);
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

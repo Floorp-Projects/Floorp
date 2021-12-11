@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="ahem.css" />
+    <title>Reference: Text in a non-native select object that overlaps a background image should be backplated.</title>
+    <style>
+    body {
+      font: 20px Ahem;
+    }
+    select {
+      font: 20px Ahem;
+      border: 0px;
+      /* This forces non-native styling */
+    }
+    .std {
+      background-image: url("blue.png");
+      height: 500px;
+    }
+    .fake-backplate {
+      background-color: white;
+      width: max-content;
+    }
+    </style>
+</head>
+<body>
+    <div class="std">
+    <span class="fake-backplate"><!-- no whitespace
+    -->ppppp<!-- no whitespace
+    --><span class="fake-backplate"><!-- no whitespace
+    --><select>
+      <option>ppppp</option>
+    </select><!-- no whitespace
+    --></span><!-- no whitespace
+    -->ppppp<!-- no whitespace
+    --></span>
+    </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<html class="reftest-wait">
+<input id="a" type="file">
+<script>
+function doe() {
+var elem = document.getElementById('a');
+elem.style.display = "none";
+elem.focus();
+document.documentElement.className = "";
+}
+setTimeout(doe, 0);
+</script>
+</html>

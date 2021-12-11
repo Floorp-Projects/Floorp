@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=380418 -->
+<head>
+  <title>Test for Bug 380418</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=380418">Mozilla Bug 380418</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var request = new XMLHttpRequest();
+  request.open("GET", window.location.href, false);
+  request.send(null);
+
+  // Try reading headers in unprivileged context
+  is(request.getResponseHeader("Set-Cookie"), null, "Reading Set-Cookie response header in unprivileged context");
+  is(request.getResponseHeader("Set-Cookie2"), null, "Reading Set-Cookie2 response header in unprivileged context");
+  is(request.getResponseHeader("X-Dummy"), "test", "Reading X-Dummy response header in unprivileged context");
+
+  ok(!/\bSet-Cookie:/i.test(request.getAllResponseHeaders()), "Looking for Set-Cookie in all response headers in unprivileged context");
+  ok(!/\bSet-Cookie2:/i.test(request.getAllResponseHeaders()), "Looking for Set-Cookie2 in all response headers in unprivileged context");
+  ok(/\bX-Dummy:/i.test(request.getAllResponseHeaders()), "Looking for X-Dummy in all response headers in unprivileged context");
+
+</script>
+</pre>
+</body>
+</html>

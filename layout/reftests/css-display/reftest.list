@@ -1,0 +1,25 @@
+# Tests for CSS Display spec features.
+# http://dev.w3.org/csswg/css-display
+
+fuzzy-if(Android,0-8,0-604) == display-contents-acid.html display-contents-acid-ref.html
+fuzzy-if(Android,0-8,0-604) == display-contents-acid-dyn-1.html display-contents-acid-ref.html
+fuzzy-if(Android,0-8,0-604) == display-contents-acid-dyn-2.html display-contents-acid-ref.html
+fuzzy-if(Android,0-8,0-604) == display-contents-acid-dyn-3.html display-contents-acid-ref.html
+== display-contents-generated-content.html display-contents-generated-content-ref.html
+== display-contents-generated-content-2.html display-contents-generated-content-ref.html
+== display-contents-style-inheritance-1.html display-contents-style-inheritance-1-ref.html
+== display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-ref.html
+fuzzy-if(winWidget,0-12,0-100) == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-ref.html
+== display-contents-tables.xhtml display-contents-tables-ref.xhtml
+== display-contents-tables-2.xhtml display-contents-tables-ref.xhtml
+== display-contents-tables-3.xhtml display-contents-tables-3-ref.xhtml
+== display-contents-visibility-hidden.html display-contents-visibility-hidden-ref.html
+== display-contents-visibility-hidden-2.html display-contents-visibility-hidden-ref.html
+== display-contents-495385-2d.html display-contents-495385-2d-ref.html
+== display-contents-list-item-child.html display-contents-list-item-child-ref.html
+== display-contents-dyn-insert-text.html display-contents-dyn-insert-text-ref.html
+== display-contents-writing-mode-1.html display-contents-writing-mode-1-ref.html
+== display-contents-writing-mode-2.html display-contents-writing-mode-2-ref.html
+needs-focus == display-contents-state-change.html display-contents-state-change-ref.html
+== display-flow-root-001.html display-flow-root-001-ref.html
+== display-contents-suppression-dynamic.html display-contents-suppression-dynamic-ref.html

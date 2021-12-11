@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2012 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<project name="chrome_common_defines">
+  <!-- Common build properties for Chrome for android. -->
+
+  <!--
+    Macro for checking that a property is correctly set. Performs checks for:
+    1. Property is set and not null.
+    2. String value of property does not contains any '$' signs.
+  -->
+  <macrodef name="check-property-value">
+    <attribute name="property"/>
+    <sequential>
+      <fail message ="Property @{property} is not set.">
+        <condition>
+          <or>
+            <not><isset property="@{property}"/></not>
+            <length string="${@{property}}" trim="true" when="less" length="1"/>
+          </or>
+        </condition>
+      </fail>
+      <!--
+        Check for $ signs. This catches errors when properties are initialized from environment
+        variables. E.g. if we have <property name="foo" value="${env.bar}" /> but env.bar is
+        not set then foo will have the literal value of '${env.bar}'.
+      -->
+      <fail message="Value checked failed for property: @{property} : ${@{property}}.
+          Property value contains an uninitialized environment variable.">
+        <condition>
+          <contains string="${@{property}}" substring="$"/>
+        </condition>
+      </fail>
+    </sequential>
+  </macrodef>
+
+  <!--
+    A safe setter for location properties. Checks that a location is not
+    empty and actually exists. For specifying output directories, location
+    check can be disabled by specifying check-exists="false".
+  -->
+  <macrodef name="property-location">
+    <attribute name="name"/>
+    <attribute name="location"/>
+    <attribute name="check-exists" default="true"/>
+    <sequential>
+      <property name="@{name}" location="@{location}"/>
+      <check-property-value property="@{name}"/>
+      <fail message="Location specified for @{name} : @{location} does not exist.">
+        <condition>
+          <and>
+            <equals arg1="@{check-exists}" arg2="true"/>
+            <not><available file="@{location}"/></not>
+          </and>
+        </condition>
+      </fail>
+    </sequential>
+  </macrodef>
+
+  <!-- A safe setter for property values -->
+  <macrodef name="property-value">
+    <attribute name="name"/>
+    <attribute name="value"/>
+    <sequential>
+      <property name="@{name}" value="@{value}"/>
+      <check-property-value property="@{name}"/>
+    </sequential>
+  </macrodef>
+
+  <!-- Common environment properties. -->
+  <property-location name="sdk.dir" location="${ANDROID_SDK_ROOT}"/>
+  <property-value name="target" value="android-${ANDROID_SDK_VERSION}"/>
+  <property name="source.dir" location="src"/>
+  <property-location name="android.gdbserver" location="${ANDROID_GDBSERVER}"/>
+  <!--
+       Common directories used by SDK Build, when making changes here
+       make sure to update gyp files and test scripts constants in
+       build/android/pylib/constants.py
+  -->
+  <!-- Common directory for chromium_*.jars. -->
+  <property-location name="lib.java.dir" location="${PRODUCT_DIR}/lib.java"/>
+  <!-- Common directory for test jars. -->
+  <property-location name="test.lib.java.dir"
+    location="${PRODUCT_DIR}/test.lib.java"/>
+  <!-- Common directory for apks. -->
+  <property-location name="apks.dir" location="${PRODUCT_DIR}/apks"/>
+</project>

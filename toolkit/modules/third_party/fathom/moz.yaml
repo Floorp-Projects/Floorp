@@ -1,0 +1,29 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Toolkit
+  component: General
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: Fathom
+
+  description: Machine-learning system for DOM element recognition
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://mozilla.github.io/fathom/
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: version 3.3.0
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: MPL-2.0

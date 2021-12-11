@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1662587
+-->
+<head>
+<title>Test for Bug 1662587</title>
+<script type="application/javascript"  src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript"  src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1662587">Mozilla Bug 1662587</a>
+<div id="content"></div>
+<pre id="test">
+<script type="application/javascript">
+/**
+ * Pointer Lock tests for bug 1662587.
+ **/
+
+SimpleTest.waitForExplicitFinish();
+
+let gTestFiles = [
+  "file_pointerlock_xorigin_iframe.html",
+  "file_pointerlock_xorigin_iframe_no_user_gesture.html",
+  "file_pointerlock_xorigin_iframe_not_focused.html",
+];
+
+let gTestWindow = null;
+let gTestIndex = 0;
+
+SpecialPowers.pushPrefEnv({"set": [
+  // This will make dispatched event going through parent process.
+  ["test.events.async.enabled", true]
+]}, nextTest);
+
+function nextTest() {
+  if (gTestWindow) {
+    gTestWindow.close();
+  }
+  SimpleTest.waitForFocus(runNextTest);
+}
+
+function runNextTest() {
+  if (gTestIndex < gTestFiles.length) {
+    let file = gTestFiles[gTestIndex];
+    gTestIndex++;
+
+    info(`Testing ${file}`);
+    gTestWindow = window.open(file, "", "width=500,height=500");
+    info(`Test finish`);
+  } else {
+    SimpleTest.finish();
+  }
+}
+</script>
+</pre>
+</body>
+</html>

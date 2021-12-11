@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function webnav_test_incognito() {
+  // Monitor will fail if it gets any event.
+  let monitor = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["webNavigation", "*://mochi.test/*"],
+    },
+    background() {
+      const EVENTS = [
+        "onTabReplaced",
+        "onBeforeNavigate",
+        "onCommitted",
+        "onDOMContentLoaded",
+        "onCompleted",
+        "onErrorOccurred",
+        "onReferenceFragmentUpdated",
+        "onHistoryStateUpdated",
+      ];
+
+      function onEvent(event, details) {
+        browser.test.fail(`not_allowed - Got ${event} ${details.url} ${details.frameId} ${details.parentFrameId}`);
+      }
+
+      let listeners = {};
+      for (let event of EVENTS) {
+        listeners[event] = onEvent.bind(null, event);
+        browser.webNavigation[event].addListener(listeners[event]);
+      }
+
+      browser.test.onMessage.addListener(async (message, tabId) => {
+        // try to access the private window
+        await browser.test.assertRejects(browser.webNavigation.getAllFrames({tabId}),
+                                         /Invalid tab ID/,
+                                         "should not be able to get incognito frames");
+        await browser.test.assertRejects(browser.webNavigation.getFrame({tabId, frameId: 0}),
+                                         /Invalid tab ID/,
+                                         "should not be able to get incognito frames");
+        browser.test.notifyPass("completed");
+      });
+    },
+  });
+
+  // extension loads a private window and waits for the onCompleted event.
+  let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
+    manifest: {
+      permissions: ["tabs", "webNavigation", "*://mochi.test/*"],
+    },
+    async background() {
+      const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+      const url = BASE + "/file_WebNavigation_page1.html";
+      let window;
+
+      browser.webNavigation.onCompleted.addListener(async (details) => {
+        if (details.url !== url) {
+          return;
+        }
+        browser.test.log(`spanning - Got onCompleted ${details.url} ${details.frameId} ${details.parentFrameId}`);
+        browser.test.sendMessage("completed");
+      });
+      browser.test.onMessage.addListener(async () => {
+        await browser.windows.remove(window.id);
+        browser.test.notifyPass("done");
+      });
+      window = await browser.windows.create({url, incognito: true});
+      let tabs = await browser.tabs.query({active: true, windowId: window.id});
+      browser.test.sendMessage("tabId", tabs[0].id);
+    },
+  });
+
+  await monitor.startup();
+  await extension.startup();
+
+  await extension.awaitMessage("completed");
+  let tabId = await extension.awaitMessage("tabId");
+
+  await monitor.sendMessage("tab", tabId);
+  await monitor.awaitFinish("completed");
+
+  await extension.sendMessage("close");
+  await extension.awaitFinish("done");
+
+  await extension.unload();
+  await monitor.unload();
+});
+
+</script>
+
+</body>
+</html>

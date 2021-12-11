@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500">
+
+<filter id="f1" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse">
+  <feFlood flood-color="#ff0000" flood-opacity="0.5" result="flood" x="0" y="0" width="100" height="100"/>
+  <feComposite style="color-interpolation-filters:sRGB"
+   in="flood" operator="over" in2="SourceGraphic"/>
+</filter>
+<g filter="url(#f1)">
+  <rect x="0" y="0" width="50" height="100" fill="#00ff00"/>
+  <rect x="50" y="0" width="50" height="100" fill="#00ff00" opacity="0"/>
+</g>
+
+<!-- Test that the arithmetic operator actually clamp the result -->
+<filter id="f2" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" style="color-interpolation-filters:sRGB">
+  <feFlood flood-color="#ffffff" result="flood" x="100" y="0" width="50" height="100"/>
+  <feComposite result="c" in="SourceGraphic" in2="flood" operator="arithmetic" k2="1" k3="1"/>
+  <feComponentTransfer in="c">
+    <feFuncR type="linear" slope="0.5"/>
+    <feFuncG type="linear" slope="0.5"/>
+    <feFuncB type="linear" slope="0.5"/>
+  </feComponentTransfer>
+</filter>
+<g filter="url(#f2)">
+  <rect x="100" y="0" width="50" height="100" fill="#ff0000"/>
+</g>
+
+</svg>

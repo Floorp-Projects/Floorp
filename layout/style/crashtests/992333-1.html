@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<style>
+p { --variable: value; transition: 1s --variable; }
+</style>
+<p>Hello.</p>
+<script>
+window.onload = function() {
+  document.querySelector("p").style.color = "green";
+};
+</script>

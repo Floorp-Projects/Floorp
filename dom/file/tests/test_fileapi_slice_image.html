@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for File API + Slice</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common_blob.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+<p id="display">
+  <canvas id=canvas width=1100 height=1100 hidden moz-opaque></canvas>
+  <canvas id=testcanvas hidden moz-opaque></canvas>
+</p>
+
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(4);
+
+// Create files containing data we'll test with. We'll want long
+// strings to ensure they span multiple buffers while loading
+
+let canvasData;
+let testBinaryData;
+
+function imageLoadHandler(event, resolve) {
+  let origcanvas = $("canvas");
+  let testcanvas = $("testcanvas");
+  let image = event.target;
+  is(image.naturalWidth, origcanvas.width, "width correct");
+  is(image.naturalHeight, origcanvas.height, "height correct");
+
+  testcanvas.width = origcanvas.width;
+  testcanvas.height = origcanvas.height;
+  testcanvas.getContext("2d").drawImage(image, 0, 0);
+  // Do not use |is(testcanvas.toDataURL("image/png"), origcanvas.toDataURL("image/png"), "...");| that results in a _very_ long line.
+  let origDataURL = origcanvas.toDataURL("image/png");
+  let testDataURL = testcanvas.toDataURL("image/png");
+  is(testDataURL.length, origDataURL.length,
+     "Length of correct image data");
+  ok(testDataURL == origDataURL,
+     "Content of correct image data");
+  resolve();
+}
+
+createCanvasURL()
+.then(data => {
+  for (var i = 0; i < 256; i++) {
+    testBinaryData += String.fromCharCode(i);
+  }
+  while (testBinaryData.length < 20000) {
+    testBinaryData += testBinaryData;
+  }
+
+  canvasData = data;
+})
+
+// image in the middle
+.then(() => {
+  return createFile(testBinaryData + canvasData + testBinaryData, "middleTestFile");
+})
+
+// image in the middle - loader
+.then(file => {
+  return new Promise(resolve => {
+    is(file.size, canvasData.length + testBinaryData.length * 2, "correct file size (middle)");
+
+    var img = new Image();
+    img.src = URL.createObjectURL(file.slice(testBinaryData.length,
+                                             testBinaryData.length + canvasData.length));
+    img.onload = event => {
+      imageLoadHandler(event, resolve);
+    }
+  });
+})
+
+// image at start
+.then(() => {
+  return createFile(canvasData + testBinaryData, "startTestFile");
+})
+
+// image at start - loader
+.then(file => {
+  return new Promise(resolve => {
+    is(file.size, canvasData.length + testBinaryData.length, "correct file size (start)");
+
+    var img = new Image();
+    img.src = URL.createObjectURL(file.slice(0, canvasData.length));
+    img.onload = event => {
+      imageLoadHandler(event, resolve);
+    }
+  });
+})
+
+// image at end
+.then(() => {
+  return createFile(testBinaryData + canvasData, "endTestFile");
+})
+
+// image at end - loader
+.then(file => {
+  return new Promise(resolve => {
+    is(file.size, canvasData.length + testBinaryData.length, "correct file size (end)");
+
+    var img = new Image();
+    img.src = URL.createObjectURL(file.slice(testBinaryData.length,
+                                             testBinaryData.length + canvasData.length));
+    img.onload = event => {
+      imageLoadHandler(event, resolve);
+    }
+  });
+})
+
+// image past end
+.then(() => {
+  return createFile(testBinaryData + canvasData, "pastEndTestFile");
+})
+
+// image past end - loader
+.then(file => {
+  return new Promise(resolve => {
+    is(file.size, canvasData.length + testBinaryData.length, "correct file size (end)");
+
+    var img = new Image();
+    img.src = URL.createObjectURL(file.slice(testBinaryData.length,
+                                             testBinaryData.length + canvasData.length + 1000));
+    img.onload = event => {
+      imageLoadHandler(event, resolve);
+    }
+  });
+})
+
+.then(SimpleTest.finish);
+
+</script>
+</body>
+</html>

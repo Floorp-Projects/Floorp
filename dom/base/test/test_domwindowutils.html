@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for DOMWindowUtils</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var utils = SpecialPowers.getDOMWindowUtils(window);
+function test_sendMouseEventDefaults() {
+  var x = 1, y = 2, button = 1, clickCount = 2,
+      modifiers = SpecialPowers.Ci.nsIDOMWindowUtils.MODIFIER_SHIFT;
+
+  window.addEventListener("mousedown", function(evt) {
+    // Mandatory args
+    // coordinates may change slightly due to rounding
+    ok((evt.clientX <= x+2) && (evt.clientX >= x-2), "check x");
+    ok((evt.clientY <= y+2) && (evt.clientY >= y-2), "check y");
+    is(evt.button, button, "check button");
+    is(evt.detail, clickCount, "check click count");
+    is(evt.getModifierState("Shift"), true, "check modifiers");
+
+    // Default value for optionals
+    is(evt.mozPressure, 0, "check pressure");
+    is(evt.mozInputSource, MouseEvent.MOZ_SOURCE_MOUSE, "check input source");
+    is(evt.isSynthesized, undefined, "check isSynthesized is undefined in content");
+    is(SpecialPowers.wrap(evt).isSynthesized, true, "check isSynthesized is true from chrome");
+    SimpleTest.executeSoon(next);
+  }, {once: true});
+
+  // Only pass mandatory arguments and check default values
+  utils.sendMouseEvent("mousedown", x, y, button, clickCount, modifiers);
+}
+
+function test_sendMouseEventOptionals() {
+  var x = 1, y = 2, button = 1, clickCount = 3,
+      modifiers = SpecialPowers.Ci.nsIDOMWindowUtils.MODIFIER_SHIFT,
+      pressure = 0.5,
+      source = MouseEvent.MOZ_SOURCE_KEYBOARD;
+
+  window.addEventListener("mouseup", function(evt) {
+    is(evt.mozInputSource, source, "explicit input source is valid");
+    is(SpecialPowers.wrap(evt).isSynthesized, false, "we can dispatch event that don't look synthesized");
+    SimpleTest.executeSoon(next);
+  }, {once: true});
+
+  // Check explicit value for optional args
+  utils.sendMouseEvent("mouseup", x, y, button, clickCount, modifiers,
+                       false, pressure, source, false);
+}
+
+function test_sendMouseEvent4thButton() {
+  const x = 1, y = 2, button = 3, clickCount = 1, modifiers = 0;
+
+  window.addEventListener("mousedown", evt => {
+    is(evt.buttons, 2 ** button, "check button");
+    SimpleTest.executeSoon(next);
+  }, { once: true });
+
+  utils.sendMouseEvent("mousedown", x, y, button, clickCount, modifiers);
+}
+
+function test_sendMouseEvent5thButton() {
+  const x = 1, y = 2, button = 4, clickCount = 1, modifiers = 0;
+
+  window.addEventListener("mousedown", evt => {
+    is(evt.buttons, 2 ** button, "check button");
+    SimpleTest.executeSoon(next);
+  }, { once: true });
+
+  utils.sendMouseEvent("mousedown", x, y, button, clickCount, modifiers);
+}
+
+function test_getUnanimatedComputedStyle() {
+  SpecialPowers.pushPrefEnv(
+    {
+      set: [
+        ["dom.animations-api.core.enabled", true],
+        ["dom.animations-api.getAnimations.enabled", true],
+        ["dom.animations-api.timelines.enabled", true],
+      ],
+    },
+    () => {
+      window.open("file_domwindowutils_animation.html");
+    }
+  );
+}
+
+function test_setDynamicToolbarMaxHeight() {
+  SpecialPowers.pushPrefEnv({
+    set: [["dom.visualviewport.enabled", true]]
+  }).then(() => window.open("file_domwindowutils_dynamic_toolbar.html"));
+}
+
+var tests = [
+  test_sendMouseEventDefaults,
+  test_sendMouseEventOptionals,
+  test_sendMouseEvent4thButton,
+  test_sendMouseEvent5thButton,
+  test_getUnanimatedComputedStyle,
+  test_setDynamicToolbarMaxHeight
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+function start() {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.executeSoon(next);
+}
+
+window.addEventListener("load", start);
+
+</script>
+</pre>
+</body>
+</html>

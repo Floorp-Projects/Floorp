@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=391002
+-->
+<window title="Mozilla Bug 391002"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=391002"
+     target="_blank">Mozilla Bug 391002</a>
+  </body>
+
+  <button id="btn1" command="cmd1"/>
+
+  <button id="btn2">
+    <observes id="observes" element="cmd1" attribute="label"/>
+  </button>
+
+  <commandset>
+    <command id="cmd1" label="cmd1"/>
+    <command id="cmd2" label="cmd2"/>
+  </commandset>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 391002 **/
+
+    $("btn1").setAttribute("command", "cmd2");
+    is($("btn1").getAttribute("label"), $("cmd2").getAttribute("label"))
+
+    $("observes").setAttribute("element", "cmd2");
+    is($("btn2").getAttribute("label"), $("cmd2").getAttribute("label"))
+
+  ]]></script>
+</window>
+

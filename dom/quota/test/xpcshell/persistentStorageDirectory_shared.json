@@ -1,0 +1,57 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "persistent",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

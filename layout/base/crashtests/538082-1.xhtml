@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:m="http://www.w3.org/1998/Math/MathML">
+
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  var e = document.getElementById("e");
+  var g = document.getElementById("maligngroup");
+
+  var M = "http://www.w3.org/1998/Math/MathML";
+  var a = document.createElementNS(M, "mfrac");
+  var b = document.createElementNS(M, "ms");
+  var c = document.createElementNS(M, "merror");
+
+  g.appendChild(c);
+
+  a.appendChild(b);
+  e.appendChild(a);
+}
+
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+<m:math><box id="e"><m:mo><m:ms/><box style="display: inline;"><box><m:maligngroup id="maligngroup"/></box></box></m:mo></box></m:math>
+
+</window>

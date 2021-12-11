@@ -1,0 +1,20 @@
+[
+  {
+    "namespace": "experiments.languageDetector",
+    "description": "Provides access to the language detector that resides in tree",
+    "functions": [
+      {
+        "name": "detectLanguage",
+        "type": "function",
+        "async": true,
+        "description": "Detect language",
+        "parameters": [
+          {
+            "name": "params",
+            "type": "any"
+          }
+        ]
+      }
+    ]
+  }
+]

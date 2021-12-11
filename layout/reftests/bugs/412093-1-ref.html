@@ -1,0 +1,49 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Bidi text in inline with background image</title>
+  <style type="text/css">
+body {
+  font-size: 0;
+}
+i {
+  background-image: url(mozilla-banner.gif);
+  background-repeat: no-repeat;
+}
+i, b {
+  padding: 29px 30px;
+  line-height: 58px;
+}
+.l0{
+  background-position: 0 0;
+}
+.l60{
+  background-position: -60px 0;
+}
+.l120{
+  background-position: -120px 0;
+}
+.l180{
+  background-position: -180px 0;
+}
+.r0{
+  background-position: -540px 0;
+}
+.r60{
+  background-position: -480px 0;
+}
+.r120{
+  background-position: -420px 0;
+}
+.r180{
+  background-position: -360px 0;
+}
+  </style>
+ </head>
+<body>
+  <p dir="rtl"><i class="l180"></i><br><i class="l120"></i><i class="l60"></i><b></b><i class="l0"></i></p>
+  <p dir="rtl"><i class="r0"></i><br><i class="r60"></i><i class="r120"></i><b></b><i class="r180"></i></p>
+  <p dir="ltr"><i class="l0"></i><br><i class="l60"></i><b></b><i class="l120"></i><i class="l180"></i></p>
+  <p dir="ltr"><i class="r180"></i><br><i class="r120"></i><b></b><i class="r60"></i><i class="r0"></i></p>
+</body>
+</html>

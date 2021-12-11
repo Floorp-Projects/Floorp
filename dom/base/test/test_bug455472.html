@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=455472
+-->
+<head>
+  <title>Test for Bug 455472</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=455472">Mozilla Bug 455472</a>
+<p id="display"></p>
+<script>
+  var ran = [ false, false, false, false, false ];
+</script>
+<div id="content" style="display: none">
+  <iframe srcdoc="<script>parent.ran[0]=true</script>"></iframe>
+  <object id="o1" type="text/html" data="object_bug455472.html"></object>
+  <embed type="image/svg+xml" src="embed_bug455472.html">
+  <object type="text/html" data="data:application/octet-stream,<script>parent.ran[3]=true</script>"></object>
+  <embed type="image/svg+xml" src="data:application/octet-stream,<svg%20xmlns='http://www.w3.org/2000/svg'%20onload='parent.ran[4]=true'/>">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 455472 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var expected = [ true, true, true, false, false ];
+  is (expected.length, ran.length, "Length mismatch");
+  for (var i = 0; i < expected.length; ++i) {
+    is(ran[i], expected[i],
+       "Unexpected behavior in object " + i + " (0-based)");
+  }
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

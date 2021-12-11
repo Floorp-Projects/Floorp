@@ -1,0 +1,623 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+%include ../shared/browser.inc.css
+%include ../shared/browser-custom-colors.inc.css
+%filter substitution
+%define glassShadowColor hsla(240,5%,5%,0.3)
+
+:root {
+  --toolbar-non-lwt-bgcolor: -moz-dialog;
+  --toolbar-non-lwt-textcolor: -moz-dialogtext;
+  --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
+
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
+  --toolbarbutton-border-radius: 4px;
+
+  --panel-separator-color: ThreeDLightShadow;
+
+  --chrome-content-separator-color: ThreeDShadow;
+  --tabs-border-color: threedshadow;
+}
+
+@media (-moz-windows-default-theme) {
+  :root {
+    --toolbar-non-lwt-bgimage: none;
+
+    --panel-separator-color: hsla(210,4%,10%,.14);
+  }
+}
+
+:root:-moz-lwtheme {
+  --chrome-content-separator-color: rgba(0,0,0,.3);
+
+  --panel-separator-color: hsla(210,4%,10%,.14);
+}
+
+:root[lwt-popup-brighttext] {
+  --panel-separator-color: rgba(249,249,250,.1);
+}
+
+#menubar-items {
+  -moz-box-orient: vertical; /* for flex hack */
+}
+
+#main-menubar > menu {
+  appearance: none;
+  color: inherit;
+}
+
+#main-menubar > menu[_moz-menuactive="true"] {
+  background-color: -moz-menuhover;
+  color: -moz-menuhovertext;
+}
+
+/* Use a different color only on Windows 8 and higher in inactive windows.
+ * On Win 7, the menubar fog disappears for inactive windows, and renders gray
+ * illegible.
+ */
+@media (-moz-windows-default-theme) {
+  @media not (-moz-os-version: windows-win7) {
+    #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
+      color: ThreeDShadow;
+    }
+  }
+}
+
+@media not (-moz-os-version: windows-win7) {
+  @media not (-moz-os-version: windows-win8) {
+    /* On Windows 10, when temporarily showing the menu bar, make it at least as
+     * tall as the tab bar such that the window controls don't appear to move up. */
+    :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
+      height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
+    }
+    :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
+      height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
+    }
+  }
+}
+
+/* Add 4px extra margin on top of the tabs toolbar on Windows 7. */
+@media (-moz-os-version: windows-win7) {
+  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
+    padding-top: 4px;
+  }
+}
+
+#navigator-toolbox,
+.browser-toolbar {
+  appearance: none;
+}
+
+.browser-toolbar:not(.titlebar-color) {
+  background-color: var(--toolbar-bgcolor);
+  background-image: var(--toolbar-bgimage);
+  background-clip: padding-box;
+  color: var(--toolbar-color);
+}
+
+/* Add a fog for background tabs to be visible on Windows 7 glass window background */
+@media (-moz-os-version: windows-win7) {
+  @media (-moz-windows-default-theme) {
+    #TabsToolbar:not(:-moz-lwtheme) {
+      background-image: radial-gradient(ellipse at bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5) 80%, transparent);
+    }
+  }
+}
+
+@media (-moz-windows-compositor: 0),
+       (-moz-windows-default-theme: 0),
+       (-moz-os-version: windows-win8) {
+  /* Please keep the menu text colors in this media block in sync with
+   * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
+   */
+  :root[tabsintitlebar]:not(:-moz-lwtheme) {
+    color: CaptionText;
+  }
+
+  :root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
+    color: InactiveCaptionText;
+  }
+}
+
+@media (-moz-windows-classic) {
+  /**
+   * In the classic themes, the titlebar has a horizontal gradient, which is
+   * problematic for reading the text of background tabs when they're in the
+   * titlebar. We side-step this issue by layering our own background underneath
+   * the tabs.
+   */
+  :root[tabsintitlebar]:not([sizemode=fullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
+    background-image: linear-gradient(transparent, ActiveCaption);
+    background-size: auto 200%;
+  }
+
+  :root[tabsintitlebar]:not([sizemode=fullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+    background-image: linear-gradient(transparent, InactiveCaption);
+  }
+
+  /* Add a window top border for webextension themes */
+  :root[tabsintitlebar][sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
+    background-image: linear-gradient(to bottom,
+          ThreeDLightShadow 0, ThreeDLightShadow 1px,
+          ThreeDHighlight 1px, ThreeDHighlight 2px,
+          ActiveBorder 2px, ActiveBorder 4px, transparent 4px);
+  }
+
+  :root[tabsintitlebar] :is(#TabsToolbar, #toolbar-menubar) toolbarbutton:not(:-moz-lwtheme) {
+    color: inherit;
+  }
+}
+
+#nav-bar:not([tabs-hidden="true"]) {
+  /* This is needed for some toolbar button animations. Gross :( */
+  position: relative;
+}
+
+#nav-bar {
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
+}
+@media (-moz-windows-compositor: 0) {
+  #nav-bar[tabs-hidden="true"] {
+    box-shadow: none;
+  }
+}
+
+#print-preview-toolbar:not(:-moz-lwtheme) {
+  appearance: auto;
+  -moz-default-appearance: toolbox;
+}
+
+#browser-bottombox:not(:-moz-lwtheme) {
+  background-color: -moz-dialog;
+}
+
+/* Titlebar */
+
+:root[tabsintitlebar][sizemode="normal"] #titlebar {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-titlebar;
+}
+
+:root[tabsintitlebar][sizemode="maximized"] #titlebar {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-titlebar-maximized;
+}
+
+@media (-moz-windows-compositor: 0) {
+  /**
+   * Anytime we're not using the compositor on Windows, the -moz-window-titlebar
+   * and -moz-window-titlebar-maximized values for -moz-appearance override
+   * backgrounds supplied by lwthemes. We make the #titlebar itself hidden, but
+   * it's children visible in order to hide the background but keep the margin and
+   * padding that comes from those -moz-window-titlebar rules.
+   */
+  :root:not([inDOMFullscreen]) #titlebar:-moz-lwtheme {
+    visibility: hidden;
+  }
+  :root:not([inDOMFullscreen], [chromehidden~="menubar"]) #toolbar-menubar:-moz-lwtheme,
+  :root:not([inDOMFullscreen], [chromehidden~="toolbar"]) #TabsToolbar:-moz-lwtheme {
+    visibility: visible;
+  }
+}
+
+@media (-moz-windows-classic) {
+  :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar {
+    margin-top: 4px;
+  }
+}
+
+.titlebar-buttonbox {
+  /* For all Windows configurations except for Windows Aero and Windows Aero Basic,
+   * the default -moz-default-appearance of -moz-window-button-box and
+   * -moz-window-button-box-maximized adds unwanted margins to the button box. We
+   * special case Windows Aero and Windows Aero Basic in browser-aero.css.
+   */
+  appearance: none;
+  /* The button box must appear on top of the navigator-toolbox in order for
+   * click and hover mouse events to work properly for the button in the restored
+   * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
+   * can swallow those events. It will also place the buttons above the fog on
+   * Windows 7 with Aero Glass.
+   */
+  z-index: 1;
+}
+
+.titlebar-buttonbox-container {
+  -moz-box-align: stretch;
+}
+
+@media (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
+  /* Preserve window control buttons position at the top of the button box. */
+  .titlebar-buttonbox-container {
+    -moz-box-align: start;
+  }
+}
+
+/* Window control buttons */
+
+.titlebar-min {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-minimize;
+}
+
+.titlebar-max {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-maximize;
+}
+
+.titlebar-restore {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-restore;
+}
+
+.titlebar-close {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-close;
+}
+
+@media (-moz-windows-classic: 0) {
+  .titlebar-min {
+    margin-inline-end: 2px;
+  }
+}
+
+:root[tabletmode] .titlebar-min,
+:root[tabletmode] .titlebar-restore,
+:root[tabletmode] .titlebar-max {
+  display: none;
+}
+
+/* Bookmark menus */
+
+menu.bookmark-item,
+menuitem.bookmark-item {
+  min-width: 0;
+  max-width: 32em;
+}
+
+.bookmark-item:not(.subviewbutton) > .menu-iconic-left {
+  margin-block: 0;
+}
+
+.bookmark-item > .menu-iconic-left > .menu-iconic-icon {
+  padding-inline-start: 0;
+}
+
+.bookmark-item[cutting] > .toolbarbutton-icon,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
+  opacity: 0.5;
+}
+
+.bookmark-item[cutting] > .toolbarbutton-text,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
+  opacity: 0.7;
+}
+
+
+%include ../shared/toolbarbuttons.inc.css
+%include ../shared/toolbarbutton-icons.inc.css
+%include ../shared/menupanel.inc.css
+
+/* Address bar */
+
+%include ../shared/urlbar-searchbar.inc.css
+
+@media not (prefers-contrast) {
+  :root:not(:-moz-lwtheme) #urlbar {
+    --urlbar-box-bgcolor: white;
+  }
+  :root[lwt-default-theme-in-dark-mode] #urlbar {
+    --urlbar-box-bgcolor: var(--toolbar-field-focus-background-color);
+  }
+}
+
+#urlbar,
+#searchbar {
+  font-size: 1.15em;
+}
+
+@supports -moz-bool-pref("browser.urlbar.experimental.expandTextOnFocus") {
+  #urlbar[breakout-extend] {
+    font-size: 1.25em;
+  }
+}
+
+@media (-moz-windows-default-theme: 0) {
+  #urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
+  #searchbar:not(:-moz-lwtheme, :focus-within) {
+    border-color: ThreeDShadow;
+  }
+}
+
+%include ../shared/identity-block/identity-block.inc.css
+%include ../shared/notification-icons.inc.css
+%include ../shared/addon-notification.inc.css
+
+/* Address bar results view */
+
+%include ../shared/urlbarView.inc.css
+
+@media (-moz-windows-default-theme: 0) {
+  :root:not(:-moz-lwtheme) {
+    --urlbar-popup-action-color: -moz-nativehyperlinktext;
+  }
+}
+
+/* Autocomplete */
+
+%include ../shared/autocomplete.inc.css
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
+  border-top: 1px solid ThreeDShadow;
+}
+
+/* Bookmarking panel */
+
+%include ../shared/places/editBookmarkPanel.inc.css
+
+/* Content area */
+
+%include ../shared/sidebar.inc.css
+
+#browser {
+  --sidebar-border-color: ThreeDLightShadow;
+}
+
+/* Tabstrip */
+
+#TabsToolbar {
+  min-height: 0;
+  padding: 0;
+}
+
+%include ../shared/tabs.inc.css
+
+@media (-moz-windows-default-theme: 0) {
+  /* For high contrast themes. */
+  #tabbrowser-tabpanels,
+  :root[privatebrowsingmode=temporary] #tabbrowser-tabpanels {
+    background-color: -moz-default-background-color;
+  }
+}
+
+/* All tabs menupopup */
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+
+toolbarbutton.bookmark-item[dragover="true"][open="true"] {
+  appearance: none;
+  background: SelectedItem !important;
+  color: SelectedItemText !important;
+  fill: SelectedItemText;
+}
+
+/* Translation infobar */
+
+%include ../shared/translation/infobar.inc.css
+
+/* Bookmarks roots menu-items */
+
+#bookmarksToolbarFolderMenu,
+#BMB_bookmarksToolbar,
+#panelMenu_bookmarksToolbar {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
+  -moz-image-region: auto;
+}
+
+#PlacesToolbar menu menupopup {
+  margin-top: -12px;
+}
+
+/* Status panel */
+
+#statuspanel-label {
+  margin: 0;
+  padding: 2px 4px;
+  background-color: -moz-dialog;
+  border: 1px none ThreeDLightShadow;
+  border-top-style: solid;
+  color: -moz-dialogText;
+  text-shadow: none;
+}
+
+@media (-moz-windows-default-theme) {
+  #statuspanel-label {
+    background-color: #f9f9fa;
+    color: #444;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  #statuspanel-label {
+    background-color: hsl(240, 1%, 20%);
+    border-color: hsl(240, 1%, 40%);
+    color: rgb(249, 249, 250);
+  }
+}
+
+#statuspanel:not([mirror]) > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(ltr),
+#statuspanel[mirror] > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(rtl) {
+  border-right-style: solid;
+  /* disabled for triggering grayscale AA (bug 659213)
+  border-top-right-radius: .3em;
+  */
+  margin-right: 1em;
+}
+
+#statuspanel:not([mirror]) > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(rtl),
+#statuspanel[mirror] > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(ltr) {
+  border-left-style: solid;
+  /* disabled for triggering grayscale AA (bug 659213)
+  border-top-left-radius: .3em;
+  */
+  margin-left: 1em;
+}
+
+%include ../shared/fullscreen/warning.inc.css
+%include ../shared/ctrlTab.inc.css
+
+/* Customization mode */
+
+%include ../shared/customizableui/customizeMode.inc.css
+
+/* End customization mode */
+
+/* Prevent window controls from overlapping the nav bar's shadow on the tab
+ * bar. */
+#TabsToolbar > .titlebar-buttonbox-container {
+  margin-bottom: var(--tabs-navbar-shadow-size);
+}
+
+:root:not([privatebrowsingmode=temporary]) .accessibility-indicator,
+.private-browsing-indicator {
+  margin-inline-end: 12px;
+}
+
+:root:not([accessibilitymode]) .private-browsing-indicator,
+.accessibility-indicator {
+  margin-inline-start: 12px;
+}
+
+/* End private browsing and accessibility indicators */
+
+%include ../shared/UITour.inc.css
+
+#UITourTooltipButtons {
+  /**
+   * Override the --arrowpanel-padding so the background extends
+   * to the sides and bottom of the panel.
+   */
+  margin-inline: -10px;
+  margin-bottom: -10px;
+}
+
+%include ../shared/contextmenu.inc.css
+
+/* Make menu items larger when opened through touch. */
+#widget-overflow[touchmode] .toolbarbutton-1,
+panel[touchmode] .PanelUI-subView .subviewbutton,
+menupopup[touchmode] menu,
+menupopup[touchmode] menuitem {
+  padding-block: 12px;
+}
+
+#contentAreaContextMenu[touchmode] > #context-navigation > menuitem {
+  padding-block: 7px;
+}
+
+#context-navigation {
+  background-color: menu;
+  padding-bottom: 4px;
+}
+
+#context-sep-navigation {
+  margin-inline-start: -28px;
+  margin-top: -4px;
+}
+
+@media (-moz-windows-non-native-menus) {
+  /* :not([hidden]) to avoid the display: flex unhiding the item. */
+  #context-navigation:not([hidden]) {
+    /* The Windows 10 version of the navigation area needs the scrollbox's
+       background color, not the builtin "menu" color. */
+    background-color: inherit;
+    padding: 0 0 4px;
+    /* Use modern flex box so we can use percentage widths to redistribute
+     * spacing manually. */
+    display: flex;
+    flex-direction: row;
+    /* We want the first and last icons to align with the text items which
+     * have 1em inline padding, and for icons to be centered within their
+     * hover state, so each icon of 16px needs 1em padding on both sides:
+     */
+    --menuitem-min-width: calc(2em + 16px);
+    /* The total width of the container should then be at least 4 times that: */
+    min-width: calc(4 * var(--menuitem-min-width));
+  }
+
+  #context-navigation > .menuitem-iconic {
+    flex: 1 0 auto;
+  }
+
+  #context-navigation > .menuitem-iconic[_moz-menuactive="true"] {
+    /* We only show hover state on the icons. This ensures there is no
+     * dead space between icons, but the visible hover state is only
+     * around the icons, and all the icons' hover states match each other.
+     */
+    background-color: transparent;
+  }
+
+  #context-navigation > .menuitem-iconic > .menu-iconic-left {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* override styles from shared/contextmenu.inc.css */
+  #context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+    width: var(--menuitem-min-width);
+    height: 32px;
+    padding: 8px 1em;
+    margin: 0;
+  }
+  #context-navigation > .menuitem-iconic[_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left > .menu-iconic-icon {
+    background-color: var(--menuitem-hover-background-color);
+  }
+  #context-navigation > .menuitem-iconic[_moz-menuactive="true"][disabled="true"] > .menu-iconic-left > .menu-iconic-icon {
+    background-color: var(--menuitem-disabled-hover-background-color);
+  }
+
+  /* If the menu is wider than the icons strictly need, the <menuitem> elements
+   * will stretch to pick up the extra space. In that case, the outer icons
+   * should align to the start/end of their containing <menuitem>: */
+  #context-navigation > .menuitem-iconic:first-child {
+    -moz-box-pack: start;
+  }
+
+  #context-navigation > .menuitem-iconic:last-child {
+    -moz-box-pack: end;
+  }
+
+  #context-navigation > .menuitem-iconic:last-child,
+  #context-navigation > .menuitem-iconic:first-child {
+    flex-grow: 0;
+    /* The first and last items start off as 16px + 2em, like the other ones.
+     * 100% is the width of the parent, which will be at least 4 * the width of
+     * an individual item (16px + 2em)
+     * So 100% - 4 item widths gets us the remaining available space if
+     * #context-navigation is wider than that.
+     * Then divide by 6 to get the 1/6 of that extra space, and add this space
+     * to the width of the first/last items.
+     * This ensures that the 3 visual gaps between the 4 icons are all the same
+     * size, with each 1/3 of the available space evenly distributed between
+     * the 2 items on either side of the gap.
+     */
+    width: calc(var(--menuitem-min-width) + calc(100% - 4 * var(--menuitem-min-width)) / 6);
+  }
+
+
+  /* Other menu separators don't extend all the way to the menu edges, but the
+     one below the navigation buttons in the content context menu should. */
+  #context-sep-navigation {
+    margin-top: 0;
+    margin-inline: 0;
+  }
+}
+
+%include browser-aero.css
+
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: var(--arrowpanel-border-radius);
+}
+
+.webextension-popup-browser,
+.webextension-popup-stack {
+  border-radius: inherit;
+}

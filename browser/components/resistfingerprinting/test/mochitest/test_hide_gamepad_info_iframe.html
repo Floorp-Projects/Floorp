@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<!--<script src="/tests/SimpleTest/SimpleTest.js"></script>-->
+<script>
+var SimpleTest = window.parent.SimpleTest;
+
+function forceFail() {
+  SimpleTest.ok(
+    false,
+    "privacy.resistFingerprinting is true, should not receive any gamepad events"
+  );
+}
+
+window.addEventListener("gamepadconnected", forceFail);
+window.addEventListener("gamepaddisconnected", forceFail);
+window.addEventListener("gamepadbuttondown", forceFail);
+
+window.addEventListener("load", async () => {
+  const service = navigator.requestGamepadServiceTest();
+  const buttonIndex = await service.addGamepad(
+    "test gamepad", // id
+    service.standardMapping,
+    service.noHand,
+    4, // buttons
+    2,
+    0,
+    0,
+    0
+  );
+
+  // Press a button to make the gamepad visible to the page.
+  await service.newButtonEvent(buttonIndex, 0, true, true);
+
+  const { length } = navigator.getGamepads();
+  SimpleTest.is(
+    length,
+    0,
+    "privacy.resistFingerprinting is true, navigator.getGamepads() should always return an empty array"
+  );
+
+  // Attempt to force gamepad events to be fired, by simulating gamepad disconnect
+  await service.removeGamepad(buttonIndex);
+  SimpleTest.finish();
+});
+</script>

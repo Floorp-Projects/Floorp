@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Mozilla Bug 522217"
+  onload="start();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+<body xmlns="http://www.w3.org/1999/xhtml" id="body">
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function ok(aCondition, aMessage)
+{
+  window.arguments[0].SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+function executeSoon() {
+  return new Promise(resolve => {
+    window.arguments[0].SimpleTest.executeSoon(resolve);
+  });
+}
+
+function waitForEvent(obj, name) {
+  return new Promise(resolve => {
+    obj.addEventListener(name, resolve, { once: true });
+  });
+}
+
+async function start() {
+  await waitForEvent(window, "focus");
+  var oldOuterWidth = window.outerWidth, oldOuterHeight = window.outerHeight;
+  var oldInnerWidth = window.innerWidth, oldInnerHeight = window.innerHeight;
+  document.documentElement.setAttribute("drawintitlebar", "true");
+
+  await executeSoon();
+  is(window.outerWidth, oldOuterWidth, "drawintitlebar shouldn't change the window's outerWidth");
+  is(window.outerHeight, oldOuterHeight, "drawintitlebar shouldn't change the window's outerHeight");
+  is(window.innerWidth, oldOuterWidth, "if drawintitlebar is set, innerWidth and outerWidth should be the same");
+  is(window.innerHeight, oldOuterHeight, "if drawintitlebar is set, innerHeight and outerHeight should be the same");
+
+  // Wait for going full screen and back.
+  let sizemodeChange = waitForEvent(window, "sizemodechange");
+  window.fullScreen = true;
+  await sizemodeChange;
+  sizemodeChange = waitForEvent(window, "sizemodechange");
+  window.fullScreen = false;
+  await sizemodeChange;
+  is(window.outerWidth, oldOuterWidth, "wrong outerWidth after fullscreen mode");
+  is(window.outerHeight, oldOuterHeight, "wrong outerHeight after fullscreen mode");
+  is(window.innerWidth, oldOuterWidth, "wrong innerWidth after fullscreen mode");
+  is(window.innerHeight, oldOuterHeight, "wrong innerHeight after fullscreen mode");
+  document.documentElement.removeAttribute("drawintitlebar");
+
+  await executeSoon();
+  is(window.outerWidth, oldOuterWidth, "wrong outerWidth after removing drawintitlebar");
+  is(window.outerHeight, oldOuterHeight, "wrong outerHeight after removing drawintitlebar");
+  is(window.innerWidth, oldInnerWidth, "wrong innerWidth after removing drawintitlebar");
+  is(window.innerHeight, oldInnerHeight, "wrong innerHeight after removing drawintitlebar");
+  window.arguments[0].SimpleTest.finish();
+  window.close();
+}
+
+
+]]>
+</script>
+
+</window>

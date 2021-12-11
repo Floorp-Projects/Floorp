@@ -1,0 +1,79 @@
+.outer-wrapper {
+  .ds-top-sites {
+    .top-sites {
+      .top-site-outer {
+        .top-site-inner > a:is(.active, :focus) .tile {
+          @include ds-focus;
+        }
+
+        .top-site-inner > a:is(:hover) .top-site-inner {
+          @include ds-fade-in(var(--newtab-background-color-secondary));
+        }
+      }
+
+      .top-sites-list {
+        margin: 0 -12px;
+      }
+    }
+  }
+}
+
+// Size overrides for topsites in the 2/3 view.
+.ds-column-5,
+.ds-column-6,
+.ds-column-7,
+.ds-column-8 {
+  .ds-top-sites {
+
+    .top-site-outer {
+      padding: 0 10px;
+    }
+
+    .top-sites-list {
+      margin: 0 -10px;
+    }
+
+    .top-site-inner {
+      --leftPanelIconWidth: 84.67px;
+
+      .tile {
+        width: var(--leftPanelIconWidth);
+        height: var(--leftPanelIconWidth);
+      }
+
+      .title {
+        width: var(--leftPanelIconWidth);
+      }
+    }
+  }
+}
+
+// Size overrides for topsites in the 1/3 view.
+.ds-column-1,
+.ds-column-2,
+.ds-column-3,
+.ds-column-4 {
+  .ds-top-sites {
+
+    .top-site-outer {
+      padding: 0 8px;
+    }
+
+    .top-sites-list {
+      margin: 0 -8px;
+    }
+
+    .top-site-inner {
+      --rightPanelIconWidth: 82.67px;
+
+      .tile {
+        width: var(--rightPanelIconWidth);
+        height: var(--rightPanelIconWidth);
+      }
+
+      .title {
+        width: var(--rightPanelIconWidth);
+      }
+    }
+  }
+}

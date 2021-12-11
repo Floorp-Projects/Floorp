@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+<!-- The version field only supports MSI version numbers, which cannot include
+     letters, and therefore cannot represent our version numbers. Set it to all
+     zeros to show it isn't valid, and add the real version to the Name. -->
+<Product Name="$(var.BrandFullName) $(var.Version) $(var.Architecture) $(var.AB_CD)"
+         Manufacturer="$(var.Vendor)" Language="0" Codepage="1252"
+         Version="$(var.EmbeddedVersionCode)" Id="1294a4c5-9977-480f-9497-c0ea1e630130"
+         UpgradeCode="3118ab4c-b433-4fbb-b9fa-8f9ca4b5c103" >
+
+  <Package Id="*" InstallerVersion="200" Compressed="yes"
+           Platform="$(var.Architecture)" InstallScope ="perMachine"/>
+
+  <!-- We need a CAB to avoid failing an ICE, even though we have no payload. -->
+  <Media Id="1" Cabinet="setup.cab" EmbedCab="yes" />
+
+  <!-- We need a component and feature, or msiexec will refuse to load us. -->
+  <Directory Id="TARGETDIR" Name="SourceDir">
+    <Directory Id="TempFolder">
+      <Component Id="EmptyComponent" Guid="55a76b76-7496-4b47-a7a6-c5fbdd5e51a4">
+        <CreateFolder />
+      </Component>
+    </Directory>
+  </Directory>
+
+  <!-- Setting the feature to level 0 marks it hidden, so it can't be installed.
+       That prevents getting this MSI registered as an installed product,
+       because it has no features of its own to install. -->
+  <Feature Id="EmptyFeature" Level="0">
+    <ComponentRef Id="EmptyComponent" />
+  </Feature>
+
+  <!-- Embed the installer we want to run directly into the MSI database. -->
+  <Binary Id="WrappedExe" SourceFile="$(var.ExeSourcePath)" />
+
+  <!-- User-configurable properties. One of these corresponds to each documented
+       command-line parameter. Properties cannot be present without a value,
+       so use a conspicuous and difficult to mistake string for the parameters
+       that have no real default values. -->
+  <Property Id="INSTALL_DIRECTORY_PATH" Value="__DEFAULT__" />
+  <Property Id="INSTALL_DIRECTORY_NAME" Value="__DEFAULT__" />
+  <Property Id="TASKBAR_SHORTCUT" Value="true" />
+  <Property Id="DESKTOP_SHORTCUT" Value="true" />
+  <Property Id="START_MENU_SHORTCUT" Value="true" />
+  <Property Id="INSTALL_MAINTENANCE_SERVICE" Value="true" />
+  <Property Id="REMOVE_DISTRIBUTION_DIR" Value="true" />
+  <Property Id="PREVENT_REBOOT_REQUIRED" Value="false" />
+  <Property Id="OPTIONAL_EXTENSIONS" Value="true" />
+  <Property Id="REGISTER_DEFAULT_AGENT" Value="true" />
+  <Property Id="EXTRACT_DIR" Value="__DEFAULT__" />
+
+  <!-- Always include all of the boolean options on the command line, so we don't
+       have to conditionally decide when to include each one of them. For the
+       directory settings though, we can't put them on the command line with the
+       default values those properties have, so we need a separate action for
+       each possible configuration of those settings, and conditions to select
+       the right action to use based on which properties are configured.
+       WiX throws warning LGHT1076 complaining that these command strings are
+       too long, but they actually work just fine, the warning is spurious. -->
+  <CustomAction Id="RunInstallNoDir" Return="check" Execute="deferred"
+                HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
+                ExeCommand="/S /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
+  <CustomAction Id="RunInstallDirPath" Return="check" Execute="deferred"
+                HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
+                ExeCommand="/S /InstallDirectoryPath=[INSTALL_DIRECTORY_PATH] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
+  <CustomAction Id="RunInstallDirName" Return="check" Execute="deferred"
+                HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
+                ExeCommand="/S /InstallDirectoryName=[INSTALL_DIRECTORY_NAME] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
+  <CustomAction Id="RunExtractOnly" Return="check" Execute="deferred"
+                HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
+                ExeCommand="/ExtractDir=[EXTRACT_DIR]" />
+
+  <!-- When we run the custom actions is kind of arbitrary; this sequencing gets
+       us the least confusing message showing in the MSI progress dialog while
+       the installer runs. Our actions don't need to be sequenced relative
+	   to one another because only one will ever run. -->
+  <InstallExecuteSequence>
+    <Custom Action="RunInstallNoDir" After="ProcessComponents">
+    <![CDATA[
+      (INSTALL_DIRECTORY_PATH = "__DEFAULT__") AND
+      (INSTALL_DIRECTORY_NAME = "__DEFAULT__") AND
+      (EXTRACT_DIR = "__DEFAULT__")
+    ]]>
+    </Custom>
+    <Custom Action="RunInstallDirPath" After="ProcessComponents">
+    <![CDATA[
+      (INSTALL_DIRECTORY_PATH <> "__DEFAULT__") AND
+      (INSTALL_DIRECTORY_NAME = "__DEFAULT__") AND
+      (EXTRACT_DIR = "__DEFAULT__")
+    ]]>
+    </Custom>
+    <Custom Action="RunInstallDirName" After="ProcessComponents">
+    <![CDATA[
+      (INSTALL_DIRECTORY_NAME <> "__DEFAULT__") AND
+      (EXTRACT_DIR = "__DEFAULT__")
+    ]]>
+    </Custom>
+    <Custom Action="RunExtractOnly" After="ProcessComponents">
+    <![CDATA[
+      EXTRACT_DIR <> "__DEFAULT__"
+    ]]>
+    </Custom>
+  </InstallExecuteSequence>
+</Product>
+
+</Wix>

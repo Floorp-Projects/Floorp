@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=379120
+-->
+<head>
+  <title>Test for Bug 379120</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=379120">Mozilla Bug 379120</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 379120 **/
+
+    var originalString = "<test></test>";
+
+    // Parse the content into an XMLDocument
+    var parser = new DOMParser();
+    var originalDoc = parser.parseFromString(originalString, "text/xml");
+
+    var stylesheetText =
+        "<xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform' " +
+            "version='1.0' xmlns='http://www.w3.org/1999/xhtml'> " +
+
+          "<xsl:output method='xml' version='1.0' encoding='UTF-8' " +
+              "doctype-system='http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd' " +
+              "doctype-public='-//W3C//DTD XHTML 1.0 Transitional//EN' /> " +
+
+          "<xsl:template match='/'>" +
+            "<div onload='var i = 1'/>" +
+            "<xsl:apply-templates />" +
+          "</xsl:template>" +
+        "</xsl:stylesheet>";
+    var stylesheet = parser.parseFromString(stylesheetText, "text/xml");
+
+    var processor = new XSLTProcessor();
+
+    var targetDocument;
+    processor.importStylesheet (stylesheet);
+    var transformedDocument = processor.transformToDocument (originalDoc);
+    is(transformedDocument.documentElement.getAttribute("onload"),
+       "var i = 1");
+    is(transformedDocument.documentElement.onload, null, "Shouldn't have onload handler");
+</script>
+</pre>
+</body>
+</html>
+

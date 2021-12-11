@@ -1,0 +1,155 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    suite: xpcshell
+    target:
+        by-test-platform:
+            android-em-7.*: geckoview-androidTest.apk
+            default: null
+    python-3: true
+    mozharness:
+        script:
+            by-test-platform:
+                android-em.*: android_emulator_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android-em-7.*:
+                    - android/android_common.py
+                    - android/android-x86_64.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_unittest.py
+        requires-signed-builds:
+            by-test-platform:
+                macosx1100.*: true
+                windows10-64-2004-asan-qr/opt: false    # No XPCShell on ASAN yet
+                windows10-32-mingwclang-qr/opt: false
+                windows10-32-mingwclang-qr/debug: false
+                windows10-64-2004-mingwclang-qr/opt: false
+                windows10-64-2004-mingwclang-qr/debug: false
+                windows.*: true
+                default: false
+
+xpcshell:
+    description: "xpcshell test run"
+    treeherder-symbol: X(X)
+    variants:
+        - fission
+        - socketprocess_networking
+    run-on-projects:
+        by-variant:
+            fission: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    windows10-64-2004-asan-qr/opt: []  # No XPCShell on ASAN yet
+                    default: built-projects
+    chunks:
+        by-test-platform:
+            .*-ccov.*/.*: 6
+            windows10-64-2004-ccov-qr/opt: 6
+            android-em-7.*: 2
+            macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: 2
+            linux1804-64(-qr)?/debug: 6
+            .*-tsan-qr/opt: 8
+            windows.*(-shippable|-devedition|-asan|.*-qr)?/.*: 2
+            default: 5
+    max-run-time:
+        by-test-platform:
+            windows.*(-shippable)/opt: 5400
+            .*64-ccov(-qr)?/.*: 7200
+            .*-tsan-qr/opt: 7200
+            default: 2700
+    allow-software-gl-layers: false
+    tier:
+        by-variant:
+            fission: 2
+            default:
+                by-test-platform:
+                    windows10-64-2004-asan.*: 3
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    default: default
+    fetches:
+        toolchain:
+            by-test-platform:
+                linux.*:
+                    - linux64-node
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                macosx.*:
+                    - macosx64-node
+                    - macosx64-minidump-stackwalk
+                    - macosx64-fix-stacks
+                win.*aarch64.*:
+                    - win32-node
+                    - win32-minidump-stackwalk
+                win.*-64.*:
+                    - win64-node
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                win.*32.*:
+                    - win32-node
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                android-em-7.*:
+                    - android-system-image-x86_64-linux
+                    - android-avd-x86_64-linux
+                    - android-emulator-linux
+                    - linux64-node
+                    - linux64-minidump-stackwalk
+
+xpcshell-failures:
+    description: "xpcshell specific failures test run"
+    treeherder-symbol: X-f(X)
+    run-on-projects:
+        by-variant:
+            fission: []
+            default: ["mozilla-central"]
+    chunks: 2
+    max-run-time: 2700
+    allow-software-gl-layers: false
+    tier: 3
+    mozharness:
+        script:
+            by-test-platform:
+                macos.*: mac_unittest.py
+                windows10.*: desktop_unittest.py
+        config:
+            by-test-platform:
+                macos.*:
+                    - unittests/mac_unittest.py
+                windows10.*:
+                    - unittests/win_unittest.py
+        extra-options:
+            by-test-platform:
+                macosx1100.*:
+                    - --run-failures=apple_silicon
+                    - --timeout-as-pass
+                    - --crash-as-pass
+                windows10-32-2004.*:
+                    - --run-failures=win10_2004
+                    - --timeout-as-pass
+                    - --crash-as-pass
+    fetches:
+        toolchain:
+            by-test-platform:
+                macosx.*:
+                    - macosx64-node
+                    - macosx64-minidump-stackwalk
+                    - macosx64-fix-stacks
+                win.*32.*:
+                    - win32-node
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks

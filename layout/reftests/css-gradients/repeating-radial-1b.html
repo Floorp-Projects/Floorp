@@ -1,0 +1,4 @@
+<!-- Test adjustment of negative stop positions in a repeating radial gradient.
+     We should still get a repeating pattern, i.e., the stops cannot
+     naively be mapped to 0. -->
+<div style="background: repeating-radial-gradient(closest-side, black -100px, black -50px, white -50px, white 0); width: 400px; height: 400px;"></div>

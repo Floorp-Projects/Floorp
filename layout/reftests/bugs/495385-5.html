@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+body > div { border:1px solid black; margin:1em; }
+div:first-line { color:green; }
+div:first-letter { color:lime; }
+.f:first-letter { float:left; }
+</style>
+<script>
+function setH(id) {
+  document.getElementById(id).firstChild.data = "H";
+}
+function insertSpan(id) {
+  var d = document.getElementById(id);
+  var span = document.createElement("span");
+  span.textContent = "Hello";
+  d.insertBefore(span, d.firstChild);
+}
+function loaded() {
+  setH("d1");
+  setH("d2");
+  insertSpan("d3");
+  insertSpan("d4");
+}
+</script>
+</head>
+<body onload="loaded()">
+  <div>  Hello<br>Kitty</div>
+  <div class="f">  <span>Hello</span><br>Kitty</div>
+  <div id="d1">  <span>ello</span><br>Kitty</div>
+  <div id="d2" class="f">  <span>ello</span><br>Kitty</div>
+  <div id="d3">  <span>Hello</span><br>Kitty</div>
+  <div id="d4" class="f">  <span>Hello</span><br>Kitty</div>
+</body>
+</html>

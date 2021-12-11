@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that arguments can be passed to dialogs.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test a modal window</title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+  <script type="application/javascript">
+
+  const TEST_ITEM = Symbol("test-item");
+
+  function done(returnedItem) {
+    is(returnedItem, TEST_ITEM,
+       "Dialog should have received test item");
+    win.close();
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  let win = window.browsingContext.topChromeWindow.openDialog("file_test_dialog.html", "_blank", "width=100,height=100", TEST_ITEM, window);
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

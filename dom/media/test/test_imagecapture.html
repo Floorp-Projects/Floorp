@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1041393
+-->
+<head>
+  <meta charset="utf-8">
+  <title>ImageCapture tests</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="gUM_support.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1041393">ImageCapture tests</a>
+<script type="application/javascript">
+
+// Check if the callback returns even no JS reference on it.
+async function gcTest(track) {
+  const repeat = 100;
+  const promises = [];
+  for (let i = 0; i < repeat; ++i) {
+    const imageCapture = new ImageCapture(track);
+    promises.push(new Promise((resolve, reject) => {
+      imageCapture.onphoto = resolve;
+      imageCapture.onerror = () =>
+        reject(new Error(`takePhoto gcTest failure for capture ${i}`));
+    }));
+    imageCapture.takePhoto();
+  }
+  info("Call gc ");
+  SpecialPowers.gc();
+  await Promise.all(promises);
+}
+
+// Continue calling takePhoto() in rapid succession.
+async function rapidTest(track) {
+  const repeat = 100;
+  const imageCapture = new ImageCapture(track);
+  // "error" can fire synchronously in `takePhoto`
+  const errorPromise = new Promise(r => imageCapture.onerror = r);
+  for (let i = 0; i < repeat; ++i) {
+    imageCapture.takePhoto();
+  }
+  for (let i = 0; i < repeat; ++i) {
+    await Promise.race([
+      new Promise(r => imageCapture.onphoto = r),
+      errorPromise.then(() => Promise.reject(new Error("Capture failed"))),
+    ]);
+  }
+}
+
+// Check if the blob is decodable.
+async function blobTest(track) {
+  const imageCapture = new ImageCapture(track);
+  // "error" can fire synchronously in `takePhoto`
+  const errorPromise = new Promise(r => imageCapture.onerror = r);
+  imageCapture.takePhoto();
+  const blob = await Promise.race([
+    new Promise(r => imageCapture.onphoto = r),
+    errorPromise.then(() => Promise.reject(new Error("Capture failed"))),
+  ]);
+
+  const img = new Image();
+  img.src = URL.createObjectURL(blob.data);
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = () => reject(new Error("Decode failed"));
+  });
+}
+
+// It should return an error event after disabling video track.
+async function trackTest(track) {
+  const imageCapture = new ImageCapture(track);
+  track.enabled = false;
+  try {
+    const errorPromise = new Promise(r => imageCapture.onerror = r);
+    imageCapture.takePhoto();
+    const error = await Promise.race([
+      errorPromise,
+      new Promise(r => imageCapture.onphoto = r).then(
+        () => Promise.reject(new Error("Disabled video track should fail"))),
+    ]);
+    is(error.imageCaptureError.code, error.imageCaptureError.PHOTO_ERROR,
+      "Expected error code")
+  } finally {
+    track.enabled = true;
+  }
+}
+
+async function init() {
+  // Use loopback camera if available, otherwise fake.
+  // MediaTrackGraph will be the backend of ImageCapture.
+  await setupGetUserMediaTestPrefs();
+  let stream = await navigator.mediaDevices.getUserMedia({video: true});
+  return stream.getVideoTracks()[0];
+}
+
+async function start() {
+  try {
+    const track = await init();
+    info("ImageCapture track disable test.");
+    await trackTest(track);
+    info("ImageCapture blob test.");
+    await blobTest(track);
+    info("ImageCapture rapid takePhoto() test.");
+    await rapidTest(track);
+    info("ImageCapture multiple instances test.");
+    await gcTest(track);
+  } catch (e) {
+    ok(false, "Unexpected error during test: " + e);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.requestCompleteLog();
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({
+  "set": [
+    ["dom.imagecapture.enabled", true],
+    ["media.navigator.permission.disabled", true],
+  ],
+}, start);
+</script>
+</pre>
+</body>
+</html>

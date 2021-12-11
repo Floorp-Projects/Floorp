@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        window.addEventListener('load', () => {
+            document.documentElement.contentEditable = true
+            document.execCommand('selectAll', false, null)
+            document.addEventListener('DOMNodeRemoved', async (e) => {
+                e.currentTarget.writeln()
+            }, {})
+            document.execCommand('insertLineBreak', false, null)
+        })
+    </script>
+</head>
+</html>

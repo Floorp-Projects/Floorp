@@ -1,0 +1,32 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <iframe srcdoc="<body contenteditable spellcheck=false>foo bar"></iframe>
+    <script>
+      function start() {
+        var iframe = document.querySelector("iframe");
+        var win = iframe.contentWindow;
+        var doc = iframe.contentDocument;
+
+        // Reframe the iframe
+        iframe.style.display = "none";
+        document.body.clientWidth;
+        iframe.style.display = "";
+        document.body.clientWidth;
+
+        setTimeout(function() {
+          doc.body.focus();
+
+          // Now try to move the caret
+          win.getSelection().collapse(doc.body.firstChild, 0);
+          synthesizeKey("KEY_ArrowRight");
+
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }
+    </script>
+  </body>
+</html>

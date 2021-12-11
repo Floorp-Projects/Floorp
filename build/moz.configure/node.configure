@@ -1,0 +1,90 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option("--disable-nodejs", help="Require Node.js to build")
+option(env="NODEJS", nargs=1, help="Path to nodejs")
+
+
+@depends(
+    "--enable-nodejs",
+    "NODEJS",
+    bootstrap_search_path("node", when=depends("NODEJS")(lambda x: not x)),
+    host,
+)
+@checking(
+    "for nodejs", callback=lambda x: "%s (%s)" % (x.path, x.str_version) if x else "no"
+)
+@imports(_from="mozbuild.nodeutil", _import="find_node_executable")
+@imports(_from="mozbuild.nodeutil", _import="NODE_MIN_VERSION")
+@imports(_from="__builtin__", _import="OSError")
+@imports("errno")
+def nodejs(require, env_node, search_path, host):
+    # We don't use the dependency directly, but having it ensures the
+    # auto-upgrade code in bootstrap_search_path is triggered, while
+    # find_node_executable will use more or less the same search path.
+    # We do however need to use the variable for the configure lint
+    # not to fail.
+    search_path
+
+    node_exe = env_node[0] if env_node else None
+
+    try:
+        nodejs, version = find_node_executable(node_exe)
+    except OSError as e:
+        if host.cpu == "aarch64" and host.os == "OSX" and e.errno == errno.EBADARCH:
+            # Ideally we'd do it when --enable-bootstrap is set, but when we're wrapped in
+            # mach build or mach configure, running the command doesn't print anything and
+            # waits on input (for license agreement) that it can't actually get.
+            # mach bootstrap should have taken care of it anyways, but in case it hasn't,
+            # it's simpler to ask to run the rosetta install than the whole mach bootstrap.
+            die(
+                "Rosetta is needed to run node. Please run `softwareupdate --install-rosetta`"
+            )
+        raise
+
+    MAYBE_FILE_A_BUG = """
+
+    Executing `mach bootstrap --no-system-changes` should
+    install a compatible version in ~/.mozbuild on most platforms.
+    If you believe this is a bug, <https://mzl.la/2vLbXAv> is a good way
+    to file.  More details: <https://bit.ly/2BbyD1E>
+    """
+
+    if not nodejs:
+        msg = (
+            "could not find Node.js executable later than %s; ensure "
+            "`node` or `nodejs` is in PATH or set NODEJS in environment "
+            "to point to an executable.%s" % (NODE_MIN_VERSION, MAYBE_FILE_A_BUG)
+        )
+
+        if require:
+            raise FatalCheckError(msg)
+        else:
+            log.warning(msg)
+            log.warning("(This will become an error in the near future.)")
+            return
+
+    if not version:
+        msg = "NODEJS must point to node %s or newer; found node location: %s. %s" % (
+            NODE_MIN_VERSION,
+            nodejs,
+            MAYBE_FILE_A_BUG,
+        )
+
+        if require:
+            raise FatalCheckError(msg)
+        else:
+            log.warning(msg)
+            return
+
+    return namespace(
+        path=nodejs,
+        version=version,
+        str_version=".".join(str(v) for v in version),
+    )
+
+
+set_config("NODEJS", depends_if(nodejs)(lambda p: p.path))

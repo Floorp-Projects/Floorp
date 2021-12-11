@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait">
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  document.getElementsByTagName("animate")[0].setAttributeNS(null, "attributeName", "font-size");
+  document.getElementsByTagName("text")[0].setAttributeNS(null, "fill", "green");
+  document.documentElement.removeAttributeNS(null, "x");
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+<text>abc<animate/></text>
+
+</svg>

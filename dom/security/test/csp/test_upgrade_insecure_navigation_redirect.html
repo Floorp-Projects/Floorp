@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1422284 - Upgrade insecure requests should only apply to top-level same-origin redirects </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="redirect_same_origin_frame"></iframe>
+<iframe id="redirect_cross_origin_frame"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let testCounter = 0;
+
+function checkFinished() {
+  // hardcoded 2 because we have a same-origin and a cross-origin test
+  if (++testCounter == 2) {
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+    return;
+  }
+}
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  let docURI = event.data.docURI;
+  let url =  docURI.split('?')[0];
+  let query = docURI.split('?')[1];
+
+  if (query === "finaldoc_same_origin_redirect") {
+    // scheme schould be https
+    is (
+      url,
+      "https://example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect.sjs",
+      "upgrade-insecure-requests same origin redirect should upgrade",
+    );
+  }
+  else if (query === "finaldoc_cross_origin_redirect") {
+    // scheme schould be http
+    is (
+      url,
+      "http://test1.example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect.sjs",
+      "upgrade-insecure-requests cross origin redirect should not upgrade",
+    );
+  }
+  else {
+    ok(false, "sanity: how can we ever get here?");
+  }
+  checkFinished();
+}
+
+function startTest() {
+  document.getElementById("redirect_same_origin_frame").src =
+    "http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect_same_origin.html";
+  document.getElementById("redirect_cross_origin_frame").src =
+    "http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect_cross_origin.html";
+}
+
+// do not upgrade tests by https-first, only by UIR for this test
+SpecialPowers.pushPrefEnv({ set: [["dom.security.https_first", false]]}, startTest);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIPrincipal;
+interface nsIObserver;
+
+/**
+ * Interface for synchronous script loads from local file: or jar: sources.
+ * For asynchronous script loads, ChromeUtils.compileScript() should be used
+ * instead.
+ */
+[scriptable, builtinclass, uuid(19533e7b-f321-4ef1-bc59-6e812dc2a733)]
+interface mozIJSSubScriptLoader : nsISupports
+{
+    /**
+     * This method should only be called from JS!
+     * In JS, the signature looks like:
+     * rv loadSubScript (url [, obj] [, charset]);
+     * @param url the url of the UTF-8-encoded sub-script, it MUST be either a
+     *            file:, resource:, blob:, or chrome: url, and MUST be local.
+     * @param obj an optional object to evaluate the script onto, it
+     *            defaults to the global object of the caller.
+     * @retval rv the value returned by the sub-script
+     */
+    [implicit_jscontext]
+    jsval loadSubScript(in AString url, [optional] in jsval obj);
+
+    /**
+     * This method should only be called from JS!
+     * In JS, the signature looks like:
+     * rv = loadSubScript (url, optionsObject)
+     * @param url the url of the UTF-8-encoded sub-script, which MUST be either
+     *            a file:, resource:, blob:, or chrome: url, and MUST be local.
+     * @param optionsObject an object with parameters. Valid parameters are:
+     *                      - target:  an object to evaluate onto (default: global object of the caller)
+     *                      - ignoreCache: if set to true, will bypass the cache for reading the file.
+     *                      - async: if set to true, the script will be loaded
+     *                        asynchronously, and a Promise is returned which
+     *                        resolves to its result when execution is complete.
+     *                      - wantReturnValue: If true, the script will return
+     *                        the value of the last statement that it evaluated.
+     *                        This option disables most optimizations in the
+     *                        top-level scope, and should be avoided if at all
+     *                        possible. Defaults to false.
+     * @retval rv the value returned by the sub-script
+     */
+    [implicit_jscontext]
+    jsval loadSubScriptWithOptions(in AString url, in jsval options);
+};

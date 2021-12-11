@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: controls</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v1'></video><audio id='a1'></audio>
+<video id='v2' controls></video><audio id='a2' controls></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+var v2 = document.getElementById('v2');
+var a2 = document.getElementById('a2');
+ok(!v1.controls, "v1.controls should be false by default");
+ok(!a1.controls, "v1.controls should be false by default");
+ok(v2.controls, "v2.controls should be true");
+ok(a2.controls, "v2.controls should be true");
+v2.controls=false;
+a2.controls=false;
+ok(!v2.controls, "v2.controls should be false");
+ok(!a2.controls, "a2.controls should be false");
+v2.controls=true;
+a2.controls=true;
+ok(v2.controls, "v2.controls should be true");
+ok(a2.controls, "a2.controls should be true");
+
+</script>
+</pre>
+</body>
+</html>

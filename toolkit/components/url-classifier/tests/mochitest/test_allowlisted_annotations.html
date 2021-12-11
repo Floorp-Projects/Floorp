@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the URI Classifier</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+
+// Add https://allowlisted.example.com to the permissions manager
+SpecialPowers.addPermission("trackingprotection",
+                            Ci.nsIPermissionManager.ALLOW_ACTION,
+                            { url: "https://allowlisted.example.com" });
+
+async function clearPermissions() {
+  await SpecialPowers.removePermission("trackingprotection",
+                                       { url: "https://allowlisted.example.com" });
+  ok(!await SpecialPowers.testPermission("trackingprotection",
+                                         Ci.nsIPermissionManager.ALLOW_ACTION,
+                                         { url: "https://allowlisted.example.com" }));
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set": [["urlclassifier.trackingTable", "moztest-track-simple"],
+           ["privacy.trackingprotection.enabled", true],
+           ["privacy.trackingprotection.testing.report_blocked_node", true],
+           ["channelclassifier.allowlist_example", true],
+           ["dom.security.skip_remote_script_assertion_in_system_priv_context", true]]},
+  test);
+
+function test() {
+  SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
+  UrlClassifierTestUtils.addTestTrackers().then(() => {
+    document.getElementById("testFrame").src = "allowlistAnnotatedFrame.html";
+  });
+}
+
+// Expected finish() call is in "allowlistedAnnotatedFrame.html".
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>

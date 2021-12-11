@@ -1,0 +1,137 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The book style must be the first style for our JavaScript to work */
+book {
+  display: block;
+  padding-left: 2em;
+  padding-right: 2em;
+  padding-top: 8px;
+  font-size: 12pt;
+  background-color: lightyellow;
+  font-family: Arial;
+}
+
+book title {
+  font-weight: bold;
+  font-size: 24pt;
+  display: block;
+  text-align: center;
+  margin-top: 12pt;
+  margin-bottom: 3pt;
+}
+
+book subtitle {
+  display: block;
+  font-size:12pt;
+  text-align: center;
+}
+
+book abstract {
+  display: block;
+  margin-top: 3pt;
+}
+
+input {
+   display: block;
+   margin-left: auto;
+   margin-right: auto;
+}
+
+chapter {
+  display: block;
+}
+
+chapter title {
+  font-weight: bold;
+  font-size: 16pt;
+  display: block;
+  text-align: left;
+  margin-top: 12pt;
+  margin-bottom: 3pt;
+}
+
+section {
+  display: block;
+}
+
+section title {
+  display: block;
+  font-size: 10pt;
+  text-align: left;
+  margin-top: 12pt;
+  margin-bottom: 3pt;
+}
+
+contents {
+  display: block;
+}
+
+para {
+  display: block;
+  margin-bottom: auto;
+  margin-top: auto;
+  font-size:11pt;
+}
+
+link {
+  display: inline;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+list {
+  display: block;
+  margin-right: 0;
+  margin-bottom: auto;
+  margin-top: auto;
+  list-style-type: disc;
+  margin-left: 40px;
+}
+
+listitem {
+  display: list-item;
+  list-style-position: inside;
+}
+
+emph {
+  font-style: italic;
+  font-weight: bold;
+}
+
+ref {
+  font-style: italic;
+}
+
+heading {
+  font-weight: bold;
+}
+
+navbar {
+   font-family: Arial;
+   font-size: 10pt;
+   display: block;
+   float: right;
+   background-color: #CCE6F3;
+   color: darkblue;
+   width: 10em;
+   margin-right: 0.5em;
+}
+
+navbar title {
+   font-size: 10pt;
+   display: block;
+   background-color: black;
+   color: white;
+   margin-bottom:0px;
+}
+
+navbar content {
+   display: block;
+   padding: 0.3em;
+   border: 1px solid black;
+   font-size: 9pt;
+}
+

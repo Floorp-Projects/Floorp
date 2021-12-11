@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Test: Testing a vertical flex container with box-sizing:border-box on its flex items</title>
+  <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+  <meta charset="utf-8">
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      width: 30px;
+      height: 100px;
+      border: 1px solid black;
+      float: left;
+      margin: 2px;
+    }
+    .container > * {
+      box-sizing: border-box;
+    }
+    .itemA {
+      flex-basis: 30px;
+      background: purple;
+      border: 4px solid indigo;
+    }
+    .itemB {
+      flex-basis: 50px;
+      background: teal;
+      border: 5px solid lightblue;
+    }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW -->
+  <!-- 1 inflexible item -->
+  <div class="container">
+    <div class="itemA"></div>
+  </div>
+  <!-- 1 flexible item -->
+  <div class="container">
+    <div class="itemA" style="flex-grow: 1"></div>
+  </div>
+
+  <div style="clear: both"></div>
+
+  <!-- SECOND ROW -->
+  <!-- 2 inflexible items -->
+  <div class="container">
+    <div class="itemA"></div>
+    <div class="itemB"></div>
+  </div>
+  <!-- 2 flexible items -->
+  <div class="container">
+    <div class="itemA" style="flex-grow: 1"></div>
+    <div class="itemB" style="flex-grow: 1"></div>
+  </div>
+</body>
+</html>

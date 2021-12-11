@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<title>Canvas test: toDataURL.lowercase.ascii</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext("2d");
+
+var data = canvas.toDataURL('ImAgE/PnG');
+ok(data.match(/^data:image\/png[;,]/), "data =~ /^data:image\\/png[;,]/");
+
+// If JPEG is supported at all, it must be supported case-insensitively
+data = canvas.toDataURL('image/jpeg');
+if (data.match(/^data:image\/jpeg[;,]/)) {
+    data = canvas.toDataURL('ImAgE/JpEg');
+    ok(data.match(/^data:image\/jpeg[;,]/), "data =~ /^data:image\\/jpeg[;,]/");
+}
+</script>

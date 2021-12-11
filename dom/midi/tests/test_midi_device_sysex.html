@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(true);
+       var sysexCheckCount = 0;
+       var checkCount = 0;
+       var input;
+       var output;
+       function checkSysexReceive(event) {
+         checkCount++;
+         sysexCheckCount++;
+         if (sysexCheckCount == 1) {
+           is(event.data[0], 0xF0, "Echoed sysex message via sysex port");
+         } else {
+           is(event.data[0], 0x90, "Echoed regular message via sysex port");
+         }
+         if (checkCount == 5) {
+           SimpleTest.finish();
+         }
+       }
+
+       function checkNoSysexReceive(event) {
+         checkCount++;
+         is(event.data[0], 0x90, "Echoed regular message via non-sysex port");
+         if (checkCount == 5) {
+           SimpleTest.finish()
+         }
+       }
+
+       // Request access without sysex.
+       let access_regular = await navigator.requestMIDIAccess({ "sysex": false });
+       let access_sysex = await navigator.requestMIDIAccess({ "sysex": true });
+       ok(true, "MIDI Access Request successful");
+       ok(true, "Check for sysex message drop");
+       input = access_regular.inputs.get(MIDITestUtils.inputInfo.id);
+       output = access_sysex.outputs.get(MIDITestUtils.outputInfo.id);
+       input_sysex = access_sysex.inputs.get(MIDITestUtils.inputInfo.id);
+       input_sysex.onmidimessage = checkSysexReceive;
+       input.onmidimessage = checkNoSysexReceive;
+       output.send([0xF0, 0x00, 0xF7]);
+       output.send([0x90, 0x00, 0x01]);
+       output.send([0x90, 0x00, 0x01]);
+     }
+    </script>
+  </body>
+</html>

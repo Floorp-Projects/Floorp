@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495145
+-->
+
+<head>
+  <title>Bug 495145 - pausing while ended shouldn't cause problems</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495145">Mozilla Bug 495145</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function start(e) {
+  e.target.play();
+}
+
+function ended1(e) {
+  var v = e.target;
+  if (v._finished)
+    return;
+
+  ++v._endCount;
+  if (v._endCount == 2) {
+    ok(true, "Playing after pause while ended works for " + v._name);
+    v._finished = true;
+    v.removeEventListener("loadedmetadata", start);
+    v.removeEventListener("ended", ended1);
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+    return;
+  }
+
+  v.pause();
+  v.play();
+}
+
+function ended2(e) {
+  var v = e.target;
+  if (v._finished)
+    return;
+
+  v.pause();
+  v.currentTime = 0;
+}
+
+function seeked2(e) {
+  var v = e.target;
+  if (v._finished)
+    return;
+
+  ok(v.paused, "Paused after seek after pause while ended for " + v._name);
+  v._finished = true;
+  v.removeEventListener("loadedmetadata", start);
+  v.removeEventListener("ended", ended2);
+  v.removeEventListener("seeked", seeked2);
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
+function createVideo(test, x, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v._name = test.name + "#" + x;
+  v._endCount = 0;
+  v._finished = false;
+  v.addEventListener("loadedmetadata", start);
+  v.addEventListener("ended", x == 1 ? ended1 : ended2);
+  if (x == 2)
+    v.addEventListener("seeked", seeked2);
+  document.body.appendChild(v);
+}
+
+function startTest(test, token) {
+  createVideo(test, 1, token + "a");
+  createVideo(test, 2, token + "b");
+}
+
+manager.runTests(gSmallTests, startTest);
+
+
+</script>
+</pre>
+</body>
+</html>

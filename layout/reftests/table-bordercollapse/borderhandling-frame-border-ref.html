@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<style>
+div {width: 3px; height: 3px;}
+table.frame {border: outset thin ;}
+table.frameTop {border-top: outset thin ;}
+table.frameBottom {border-bottom: outset thin ;}
+table.frameRight {border-right: outset thin ;}
+table.frameLeft {border-left: outset thin ;}
+
+td.inner {border: inset thin;}
+
+</style>
+</head>
+<body>
+<table cellpadding="5" rules="all">
+<tr><th>frame/border</th><th>empty</th><th>border</th><th>border="0"</th><th>border="1"</th><th>border="3"</th></tr>
+<tr><th>empty</th>
+<td><table><tr><td><div/></td></tr></table></td></td>
+<td><table class="frame"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frame"><tr><td class="inner"><div/></td></tr></table></td>
+<td><table class="frame" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+<tr><th>frame</th>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+<tr><th>frame="void"</th>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="above"</th>
+<td><table class="frameTop"><tr><td><div/></td></tr></table></td>
+<td><table class="frameTop"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frameTop"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frameTop" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="below"</th>
+<td><table class="frameBottom"><tr><td><div/></td></tr></table></td>
+<td><table class="frameBottom"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frameBottom"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frameBottom" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="hsides"</th>
+<td><table class="frameTop frameBottom"><tr><td><div/></td></tr></table></td>
+<td><table class="frameTop frameBottom"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frameTop frameBottom"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frameTop frameBottom" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="lhs"</th>
+<td><table class="frameLeft"><tr><td><div/></td></tr></table></td>
+<td><table class="frameLeft"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frameLeft"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frameLeft" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="rhs"</th>
+<td><table class="frameRight"><tr><td><div/></td></tr></table></td>
+<td><table class="frameRight"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frameRight"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frameRight" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="vsides"</th>
+<td><table class="frameLeft frameRight"><tr><td><div/></td></tr></table></td>
+<td><table class="frameLeft frameRight"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frameLeft frameRight"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frameLeft frameRight" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="box"</th>
+<td><table class="frame"><tr><td><div/></td></tr></table></td>
+<td><table class="frame"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frame"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frame" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+
+<tr><th>frame="border"</th>
+<td><table class="frame"><tr><td><div/></td></tr></table></td>
+<td><table class="frame"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table><tr><td><div/></td></tr></table></td>
+<td><table class="frame"><tr><td class="inner"><div/></td></tr></table></td></td>
+<td><table class="frame" style="border-width: 3px"><tr><td class="inner"><div/></td></tr></table></td>
+</tr>
+</table>
+
+</body>
+</html>

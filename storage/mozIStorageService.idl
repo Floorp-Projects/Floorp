@@ -1,0 +1,212 @@
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+
+#include "nsLiteralString.h"
+
+%}
+
+interface mozIStorageConnection;
+interface nsIFile;
+interface nsIFileURL;
+interface nsIPropertyBag2;
+interface nsIVariant;
+interface mozIStorageCompletionCallback;
+
+/**
+ * The mozIStorageService interface is intended to be implemented by
+ * a service that can create storage connections (mozIStorageConnection)
+ * to either a well-known profile database or to a specific database file.
+ *
+ * This is the only way to open a database connection.
+ *
+ * @note The first reference to mozIStorageService must be made on the main
+ * thread.
+ */
+[scriptable, uuid(07b6b2f5-6d97-47b4-9584-e65bc467fe9e)]
+interface mozIStorageService : nsISupports {
+  /**
+   * Open an asynchronous connection to a database.
+   *
+   * This method MUST be called from the main thread. The connection object
+   * returned by this function is not threadsafe. You MUST use it only from
+   * the main thread.
+   *
+   * If you have more than one connection to a file, you MUST use the EXACT
+   * SAME NAME for the file each time, including case. The sqlite code uses
+   * a simple string compare to see if there is already a connection. Opening
+   * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
+   *
+   * @param aDatabaseStore Either a nsIFile representing the file that contains
+   * the database or a special string to open a special database. The special
+   * string may be:
+   * - "memory" to open an in-memory database.
+   *
+   * @param aOptions A set of options (may be null). Options may contain:
+   * - bool shared (defaults to |false|).
+   *   -- If |true|, opens the database with a shared-cache. The
+   *     shared-cache mode is more memory-efficient when many
+   *     connections to the same database are expected, though, the
+   *     connections will contend the cache resource. In any cases
+   *     where performance matter, working without a shared-cache will
+   *     improve concurrency.  @see openUnsharedDatabase
+   *
+   * - int growthIncrement (defaults to none).
+   *   -- Set the growth increment for the main database.  This hints SQLite to
+   *      grow the database file by a given chunk size and may reduce
+   *      filesystem fragmentation on large databases.
+   *      @see mozIStorageConnection::setGrowthIncrement
+   *
+   * @param aCallback A callback that will receive the result of the operation.
+   *  In case of error, it may receive as status:
+   *  - NS_ERROR_OUT_OF_MEMORY if allocating a new storage object fails.
+   *  - NS_ERROR_FILE_CORRUPTED if the database file is corrupted.
+   *  In case of success, it receives as argument the new database
+   *  connection, as an instance of |mozIStorageAsyncConnection|.
+   *
+   * @throws NS_ERROR_INVALID_ARG if |aDatabaseStore| is neither a file nor
+   *         one of the special strings understood by this method, or if one of
+   *         the options passed through |aOptions| does not have the right type.
+   * @throws NS_ERROR_NOT_SAME_THREAD if called from a thread other than the
+   *         main thread.
+   */
+  void openAsyncDatabase(in nsIVariant aDatabaseStore,
+                         [optional] in nsIPropertyBag2 aOptions,
+                         in mozIStorageCompletionCallback aCallback);
+  /**
+   * Get a connection to a named special database storage.
+   *
+   * @param aStorageKey a string key identifying the type of storage
+   * requested.  Valid values include: "memory".
+   *
+   * @param aName an optional string identifying the name of the database.
+   * If omitted, a filename of ":memory:" will be used which results in a
+   * private in-memory database specific to this connection, making it
+   * impossible to clone the in-memory database. If you want to be able to
+   * clone the connection (or otherwise connect to the in-memory database from
+   * a connection), then you must pick a name that's sufficiently unique within
+   * the process to not collide with other mozStorage users.
+   *
+   * @see openDatabase for restrictions on how database connections may be
+   * used. For the profile database, you should only access it from the main
+   * thread since other callers may also have connections.
+   *
+   * @returns a new mozIStorageConnection for the requested
+   * storage database.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aStorageKey is invalid.
+   */
+  mozIStorageConnection openSpecialDatabase(in ACString aStorageKey,
+                                            [optional] in ACString aName);
+
+  /**
+   * Open a connection to the specified file.
+   *
+   * Consumers should check mozIStorageConnection::connectionReady to ensure
+   * that they can use the database.  If this value is false, it is strongly
+   * recommended that the database be backed up with
+   * mozIStorageConnection::backupDB so user data is not lost.
+   *
+   * ==========
+   *   DANGER
+   * ==========
+   *
+   * If you have more than one connection to a file, you MUST use the EXACT
+   * SAME NAME for the file each time, including case. The sqlite code uses
+   * a simple string compare to see if there is already a connection. Opening
+   * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
+   *
+   * The connection object returned by this function is not threadsafe. You must
+   * use it only from the thread you created it from.
+   *
+   * @param aDatabaseFile
+   *        A nsIFile that represents the database that is to be opened..
+   *
+   * @returns a mozIStorageConnection for the requested database file.
+   *
+   * @throws NS_ERROR_OUT_OF_MEMORY
+   *         If allocating a new storage object fails.
+   * @throws NS_ERROR_FILE_CORRUPTED
+   *         If the database file is corrupted.
+   */
+  mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
+
+  /**
+   * Open a connection to the specified file that doesn't share a sqlite cache.
+   *
+   * Without a shared-cache, each connection uses its own pages cache, which
+   * may be memory inefficient with a large number of connections, in such a
+   * case so you should use openDatabase instead.  On the other side, if cache
+   * contention may be an issue, for instance when concurrency is important to
+   * ensure responsiveness, using unshared connections may be a performance win.
+   *
+   * ==========
+   *   DANGER
+   * ==========
+   *
+   * If you have more than one connection to a file, you MUST use the EXACT
+   * SAME NAME for the file each time, including case. The sqlite code uses
+   * a simple string compare to see if there is already a connection. Opening
+   * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
+   *
+   * The connection object returned by this function is not threadsafe. You must
+   * use it only from the thread you created it from.
+   *
+   * @param aDatabaseFile
+   *        A nsIFile that represents the database that is to be opened.
+   *
+   * @returns a mozIStorageConnection for the requested database file.
+   *
+   * @throws NS_ERROR_OUT_OF_MEMORY
+   *         If allocating a new storage object fails.
+   * @throws NS_ERROR_FILE_CORRUPTED
+   *         If the database file is corrupted.
+   */
+  mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile);
+
+  /**
+   * See openDatabase(). Exactly the same only initialized with a file URL.
+   * Custom parameters can be passed to SQLite and VFS implementations through
+   * the query part of the URL.
+   *
+   * @param aURL
+   *        A nsIFileURL that represents the database that is to be opened.
+   * @param [optional] aTelemetryFilename
+   *        The name to use for the database in telemetry. Only needed if the
+   *        actual filename can contain sensitive information.
+   */
+  mozIStorageConnection openDatabaseWithFileURL(in nsIFileURL aFileURL,
+                                                [optional] in ACString aTelemetryFilename);
+
+  /*
+   * Utilities
+   */
+
+  /**
+   * Copies the specified database file to the specified parent directory with
+   * the specified file name.  If the parent directory is not specified, it
+   * places the backup in the same directory as the current file.  This function
+   * ensures that the file being created is unique.
+   *
+   * @param aDBFile
+   *        The database file that will be backed up.
+   * @param aBackupFileName
+   *        The name of the new backup file to create.
+   * @param [optional] aBackupParentDirectory
+   *        The directory you'd like the backup file to be placed.
+   * @return The nsIFile representing the backup file.
+   */
+  nsIFile backupDatabaseFile(in nsIFile aDBFile, in AString aBackupFileName,
+                             [optional] in nsIFile aBackupParentDirectory);
+};
+
+%{C++
+
+constexpr auto kMozStorageMemoryStorageKey = "memory"_ns;
+
+%}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!--  -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - bottom, stuck</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="bottom-3-ref.html">
+    <meta name="assert" content="Bottom-sticky with content above and a containing block: should stick to the bottom of the scroll container">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+      }
+      #contain {
+        height: 200px;
+        background-color: gray;
+      }
+      #sticky {
+        position: sticky;
+        bottom: 10px;
+        height: 10px;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 20px"></div>
+      <div id="contain">
+        <div style="height: 100px"></div>
+        <div id="sticky"></div>
+      </div>
+    </div>
+  </body>
+</html>

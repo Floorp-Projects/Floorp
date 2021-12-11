@@ -1,0 +1,260 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the menu-button component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the menu-button component</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="chrome://browser/content/aboutlogins/components/menu-button.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="chrome://browser/content/aboutlogins/aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the menu-button component **/
+
+let gMenuButton;
+add_task(async function setup() {
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  await importDependencies(templateFrame, displayEl);
+
+  gMenuButton = document.createElement("menu-button");
+  displayEl.appendChild(gMenuButton);
+  gMenuButton.style.marginInlineStart = "100px";
+
+  isnot(document.activeElement, gMenuButton, "menu-button should not be focused by default");
+  while (document.activeElement != gMenuButton) {
+    sendKey("TAB");
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+});
+
+add_task(async function test_menu_click_button () {
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+  let menuButton = gMenuButton.shadowRoot.querySelector(".menu-button");
+  ok(menu.hidden, "menu should be hidden before being clicked");
+  await synthesizeMouseAtCenter(menuButton, {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should be visible after clicked");
+
+  let menuListSeparators = gMenuButton.shadowRoot.querySelectorAll(".menuitem-separator");
+  await synthesizeMouseAtCenter(menuListSeparators[0], {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should still be visible after menu separator has been clicked");
+
+  let menuListButtons = gMenuButton.shadowRoot.querySelectorAll(".menuitem-button");
+  await synthesizeMouseAtCenter(menuListButtons[0], {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(menu.hidden, "menu should be hidden after a button has been clicked");
+});
+
+add_task(async function test_menu_click_outside () {
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+  let menuButton = gMenuButton.shadowRoot.querySelector(".menu-button");
+  ok(menu.hidden, "menu should be hidden before being clicked");
+  await synthesizeMouseAtCenter(menuButton, {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should be visible after clicked");
+
+  let menuListSeparators = gMenuButton.shadowRoot.querySelectorAll(".menuitem-separator");
+  await synthesizeMouseAtCenter(menuListSeparators[0], {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should still be visible after menu separator has been clicked");
+
+  let outsideEl = document.getElementById("test");
+  await synthesizeMouseAtCenter(outsideEl, {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(menu.hidden, "menu should be hidden after a click outside of the menu has been clicked");
+
+  for (let key of ["KEY_ArrowDown", "KEY_ArrowUp"]) {
+    synthesizeKey(key);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    ok(menu.hidden, `menu should still be hidden when ${key} is entered`);
+  }
+});
+
+add_task(async function test_menu_esc_after_click_disabled_item () {
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+  let menuButton = gMenuButton.shadowRoot.querySelector(".menu-button");
+  ok(menu.hidden, "menu should be hidden before being clicked");
+  await synthesizeMouseAtCenter(menuButton, {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should be visible after clicked");
+
+  let menuListSeparators = gMenuButton.shadowRoot.querySelectorAll(".menuitem-separator");
+  await synthesizeMouseAtCenter(menuListSeparators[0], {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should still be visible after menu separator has been clicked");
+
+  sendKey("ESCAPE");
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(menu.hidden, "menu should be hidden after pressing 'escape'");
+});
+
+add_task(async function test_menu_open_close() {
+  is(document.activeElement, gMenuButton, "menu-button should be focused to start the test");
+
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+  is(true, menu.hidden, "menu should be hidden before pressing 'space'");
+  sendKey("SPACE");
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should be visible after pressing 'space'");
+
+  sendKey("ESCAPE");
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(menu.hidden, "menu should be hidden after pressing 'escape'");
+  is(gMenuButton.shadowRoot.activeElement, gMenuButton.shadowRoot.querySelector(".menu-button"),
+    "the .menu-button should be focused after closing the menu via keyboard");
+
+  sendKey("RETURN");
+  let firstVisibleItem = gMenuButton.shadowRoot.querySelector(".menuitem-button:not([hidden])");
+  await SimpleTest.promiseWaitForCondition(() => firstVisibleItem.matches(":focus"),
+    "waiting for firstVisibleItem to get focus");
+
+  ok(!menu.hidden, "menu should be visible after pressing 'return'");
+  ok(firstVisibleItem.matches(":focus"), "firstVisibleItem should be focused after opening popup");
+
+  synthesizeKey("VK_TAB", { shiftKey: true });
+  await SimpleTest.promiseWaitForCondition(() => !firstVisibleItem.matches(":focus"),
+    "waiting for firstVisibleItem to lose focus");
+  ok(!firstVisibleItem.matches(":focus"), "firstVisibleItem should lose focus after tabbing away from it");
+  sendKey("TAB");
+  await SimpleTest.promiseWaitForCondition(() => firstVisibleItem.matches(":focus"),
+    "waiting for firstVisibleItem to get focus again");
+  ok(firstVisibleItem.matches(":focus"), "firstVisibleItem should be focused after tabbing to it again");
+  if (SpecialPowers.getBoolPref("signon.management.page.fileImport.enabled")) {
+    sendKey("TAB"); // Import from file
+  }
+  sendKey("TAB"); // Export
+  sendKey("TAB"); // Remove All Logins
+
+  if (navigator.platform == "Win32" || navigator.platform == "MacIntel") {
+    // The Import menuitem is only visible on Windows/macOS, where we will need another Tab
+    // press to get to the Preferences item.
+    let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
+    sendKey("DOWN");
+    await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
+      "waiting for preferencesItem to gain focus");
+    ok(preferencesItem.matches(":focus"), `.menuitem-preferences should be now be focused (DOWN)`);
+    sendKey("UP");
+    await SimpleTest.promiseWaitForCondition(() => !preferencesItem.matches(":focus"),
+      `waiting for preferencesItem to lose focus (UP)`);
+    ok(!preferencesItem.matches(":focus"), `.menuitem-preferences should lose focus after pressing up`);
+
+    sendKey("TAB");
+    await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
+      "waiting for preferencesItem to get focus");
+    ok(preferencesItem.matches(":focus"), ".menuitem-preferences should be focused after tabbing to it");
+  }
+
+  let openPreferencesEvent = null;
+  ok(!menu.hidden, "menu should be visible before pressing 'space' on .menuitem-preferences");
+  window.addEventListener(
+    "AboutLoginsOpenPreferences",
+    event => openPreferencesEvent = event,
+    {once: true}
+  );
+  sendKey("SPACE");
+  ok(openPreferencesEvent, "AboutLoginsOpenPreferences event should be dispatched after pressing 'space' on .menuitem-preferences");
+  ok(menu.hidden, "menu should be hidden after pressing 'space' on .menuitem-preferences");
+
+  // Clean up task
+  sendKey("TAB");
+  synthesizeKey("VK_TAB", { shiftKey: true });
+});
+
+add_task(async function test_menu_keyboard_cycling() {
+  function waitForElementFocus(selector) {
+    return SimpleTest.promiseWaitForCondition(
+      () => gMenuButton.shadowRoot.querySelector(selector).matches(":focus"),
+      `waiting for ${selector} to be focused`
+    );
+  }
+
+  function getFocusedMenuItem() {
+    return gMenuButton.shadowRoot.querySelector(".menuitem-button:focus");
+  }
+
+  let allItems = [
+    "menuitem-export",
+    "menuitem-remove-all-logins",
+    "menuitem-preferences",
+    "menuitem-help",
+  ];
+  if (SpecialPowers.getBoolPref("signon.management.page.fileImport.enabled")) {
+    allItems = ["menuitem-import-file", ...allItems];
+  }
+  if (navigator.platform == "Win32" || navigator.platform == "MacIntel") {
+    allItems = ["menuitem-import-browser", ...allItems];
+  }
+
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+
+  is(document.activeElement, gMenuButton, "menu-button should be focused to start the test");
+  is(true, menu.hidden, "menu should be hidden before pressing 'space'");
+
+  sendKey("RETURN");
+
+  await SimpleTest.promiseWaitForCondition(() => !menu.hidden, "waiting for menu to show");
+
+  ok(!menu.hidden, "menu should be visible after pressing 'enter'");
+
+  for (let item of allItems) {
+    await waitForElementFocus("." + item);
+    ok(
+      getFocusedMenuItem().classList.contains(item),
+      `.${item} should be selected after key is pressed`
+    );
+    sendKey("DOWN");
+  }
+
+
+  await waitForElementFocus("." + allItems[0]);
+  ok(
+    getFocusedMenuItem().classList.contains(allItems[0]),
+    "Focused item should not change if left arrow is pressed"
+  )
+  sendKey("LEFT");
+
+  await waitForElementFocus("." + allItems[0]);
+  ok(
+    getFocusedMenuItem().classList.contains(allItems[0]),
+    "Focused item should not change if right arrow is pressed"
+  )
+  sendKey("RIGHT");
+
+  await waitForElementFocus("." + allItems[0]);
+  ok(
+    getFocusedMenuItem().classList.contains(allItems[0]),
+    "Last item should cycle back to first item"
+  );
+
+  sendKey("UP");
+
+  let reversedItems = allItems.reverse();
+  for (let item of reversedItems) {
+    await waitForElementFocus("." + item);
+    ok(
+      getFocusedMenuItem().classList.contains(item),
+      `.${item} should be selected after up key is pressed`
+    );
+    sendKey("UP");
+  }
+});
+</script>
+
+</body>
+</html>

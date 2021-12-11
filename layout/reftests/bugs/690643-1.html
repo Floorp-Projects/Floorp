@@ -1,0 +1,24 @@
+﻿<html>
+ <head>
+ </head>
+<body>
+ <canvas id="canvas" width="300" height="300"></canvas>
+  <script type="application/javascript">
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = '#eeeeee';
+    ctx.strokeStyle = '#000000';
+
+    ctx.beginPath();
+    ctx.moveTo(0, 50);
+    ctx.lineTo(50, 50);
+
+    ctx.translate(100, 100);
+    ctx.lineTo(50, 0);
+
+    ctx.stroke();
+    ctx.fill();
+  </script>
+</body>
+</html>

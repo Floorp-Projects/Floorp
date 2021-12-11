@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include RemoteWorkerTypes;
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * Protocol for SharedWorker bindings to communicate with per-worker
+ * SharedWorkerManager instances in the parent via SharedWorkerChild /
+ * SharedWorkerParent and SharedWorkerService getting/creating the
+ * SharedWorkerManager if it doesn't already exist. Main-thread to PBackground.
+ */
+protocol PSharedWorker
+{
+  manager PBackground;
+
+parent:
+  async Close();
+  async Suspend();
+  async Resume();
+  async Freeze();
+  async Thaw();
+
+child:
+  async Error(ErrorValue value);
+  async Terminate();
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

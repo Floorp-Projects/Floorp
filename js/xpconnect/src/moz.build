@@ -1,0 +1,79 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "BackstagePass.h",
+    "XPCJSMemoryReporter.h",
+    "xpcObjectHelper.h",
+    "xpcpublic.h",
+    "XPCSelfHostedShmem.h",
+]
+
+UNIFIED_SOURCES += [
+    "ExportHelpers.cpp",
+    "JSServices.cpp",
+    "nsXPConnect.cpp",
+    "Sandbox.cpp",
+    "XPCCallContext.cpp",
+    "XPCComponents.cpp",
+    "XPCConvert.cpp",
+    "XPCDebug.cpp",
+    "XPCException.cpp",
+    "XPCJSContext.cpp",
+    "XPCJSID.cpp",
+    "XPCJSRuntime.cpp",
+    "XPCJSWeakReference.cpp",
+    "XPCLocale.cpp",
+    "XPCLog.cpp",
+    "XPCMaps.cpp",
+    "XPCModule.cpp",
+    "XPCRuntimeService.cpp",
+    "XPCSelfHostedShmem.cpp",
+    "XPCShellImpl.cpp",
+    "XPCString.cpp",
+    "XPCThrower.cpp",
+    "XPCVariant.cpp",
+    "XPCWrappedJS.cpp",
+    "XPCWrappedJSClass.cpp",
+    "XPCWrappedJSIterator.cpp",
+    "XPCWrappedNative.cpp",
+    "XPCWrappedNativeInfo.cpp",
+    "XPCWrappedNativeJSOps.cpp",
+    "XPCWrappedNativeProto.cpp",
+    "XPCWrappedNativeScope.cpp",
+    "XPCWrapper.cpp",
+]
+
+
+if CONFIG["LIBFUZZER"]:
+    UNIFIED_SOURCES += ["xpcrtfuzzing/xpcrtfuzzing.cpp"]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "!/xpcom/components",
+    "../loader",
+    "../wrappers",
+    "/caps",
+    "/dom/base",
+    "/dom/bindings",
+    "/dom/html",
+    "/layout/base",
+    "/layout/style",
+    "/netwerk/base",
+    "/xpcom/components",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-shadow", "-Werror=format"]
+
+REQUIRES_UNIFIED_BUILD = True

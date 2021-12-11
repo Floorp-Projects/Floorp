@@ -1,0 +1,458 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * The interface to nsISHentry. Each document or subframe in
+ * Session History will have a nsISHEntry associated with it which will
+ * hold all information required to recreate the document from history
+ */
+
+#include "nsISupports.idl"
+
+interface nsIContentSecurityPolicy;
+interface nsIMutableArray;
+interface nsILayoutHistoryState;
+interface nsIContentViewer;
+interface nsIURI;
+interface nsIInputStream;
+interface nsIDocShellTreeItem;
+interface nsIStructuredCloneContainer;
+interface nsIBFCacheEntry;
+interface nsIPrincipal;
+interface nsISHistory;
+interface nsIReferrerInfo;
+
+%{C++
+#include "nsRect.h"
+class nsDocShellEditorData;
+
+namespace mozilla {
+namespace dom {
+
+class SHEntrySharedParentState;
+
+}
+}
+class nsSHEntryShared;
+class nsDocShellLoadState;
+struct EntriesAndBrowsingContextData;
+%}
+[ref] native nsIntRect(nsIntRect);
+[ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
+[ptr] native nsDocShellLoadStatePtr(nsDocShellLoadState);
+[ptr] native SHEntrySharedParentStatePtr(mozilla::dom::SHEntrySharedParentState);
+webidl BrowsingContext;
+
+[builtinclass, scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
+interface nsISHEntry : nsISupports
+{
+    /**
+     * The URI of the current entry.
+     */
+    [infallible] attribute nsIURI URI;
+
+    /**
+     * The original URI of the current entry. If an entry is the result of a
+     * redirect this attribute holds the original URI.
+     */
+    [infallible] attribute nsIURI originalURI;
+
+    /**
+     * URL as stored from nsILoadInfo.resultPrincipalURI.  See nsILoadInfo
+     * for more details.
+     */
+    [infallible] attribute nsIURI resultPrincipalURI;
+
+    /**
+     *  This flag remembers whether channel has LOAD_REPLACE set.
+     */
+    [infallible] attribute boolean loadReplace;
+
+    /**
+     * The title of the current entry.
+     */
+    // XXX: make it [infallible] when AString supports that (bug 1491187).
+    attribute AString title;
+
+    /**
+     * The name of the browsing context.
+     */
+    attribute AString name;
+
+    /**
+     * Was the entry created as a result of a subframe navigation?
+     * - Will be 'false' when a frameset page is visited for the first time.
+     * - Will be 'true' for all history entries created as a result of a
+     *   subframe navigation.
+     */
+    [infallible] attribute boolean isSubFrame;
+
+    /**
+     * Whether the user interacted with the page while this entry was active.
+     * This includes interactions with subframe documents associated with
+     * child entries that are rooted at this entry.
+     * This field will only be set on top-level entries.
+     */
+    [infallible] attribute boolean hasUserInteraction;
+
+    /**
+     * Whether the load that created this entry was triggered by user activation.
+     * (e.g.: The user clicked a link)
+     * Remembering this flag enables replaying the sec-fetch-* headers.
+     */
+    [infallible] attribute boolean hasUserActivation;
+
+    /** Referrer Info*/
+    [infallible] attribute nsIReferrerInfo referrerInfo;
+
+    /** Content viewer, for fast restoration of presentation */
+    [infallible] attribute nsIContentViewer contentViewer;
+
+    /** Whether the content viewer is marked "sticky" */
+    [infallible] attribute boolean sticky;
+
+    /** Saved state of the global window object */
+    [infallible] attribute nsISupports windowState;
+
+    /** Saved refresh URI list for the content viewer */
+    [infallible] attribute nsIMutableArray refreshURIList;
+
+    /** Post Data for the document */
+    [infallible] attribute nsIInputStream postData;
+
+    /** LayoutHistoryState for scroll position and form values */
+    [infallible] attribute nsILayoutHistoryState layoutHistoryState;
+
+    /** parent of this entry */
+    [infallible] attribute nsISHEntry parent;
+
+    /**
+     * The loadType for this entry. This is typically loadHistory except
+     * when reload is pressed, it has the appropriate reload flag
+     */
+    [infallible] attribute unsigned long loadType;
+
+    /**
+     * An ID to help identify this entry from others during
+     * subframe navigation
+     */
+    [infallible] attribute unsigned long ID;
+
+    /** The cache key for the entry */
+    [infallible] attribute unsigned long cacheKey;
+
+    /** Should the layoutHistoryState be saved? */
+    [infallible] attribute boolean saveLayoutStateFlag;
+
+    /**
+     * attribute to indicate the content-type of the document that this
+     * is a session history entry for
+     */
+    // XXX: make it [infallible] when ACString supports that (bug 1491187).
+    attribute ACString contentType;
+
+    /**
+     * If we created this SHEntry via history.pushState or modified it via
+     * history.replaceState, and if we changed the SHEntry's URI via the
+     * push/replaceState call, and if the SHEntry's new URI differs from its
+     * old URI by more than just the hash, then we set this field to true.
+     *
+     * Additionally, if this SHEntry was created by calling pushState from a
+     * SHEntry whose URI was modified, this SHEntry's URIWasModified field is
+     * true.
+     */
+    [infallible] attribute boolean URIWasModified;
+
+    /**
+     * Get the principal, if any, that was associated with the channel
+     * that the document that was loaded to create this history entry
+     * came from.
+     */
+    [infallible] attribute nsIPrincipal triggeringPrincipal;
+
+    /**
+     * Get the principal, if any, that is used when the inherit flag
+     * is set.
+     */
+    [infallible] attribute nsIPrincipal principalToInherit;
+
+    /**
+     * Get the storage principal, if any, that is used when the inherit flag is
+     * set.
+     */
+    [infallible] attribute nsIPrincipal partitionedPrincipalToInherit;
+
+    /**
+     * Get the csp, if any, that was used for this document load. That
+     * is not the CSP that was applied to subresource loads within the
+     * document, but the CSP that was applied to this document load.
+     */
+    [infallible] attribute nsIContentSecurityPolicy csp;
+
+    /**
+     * Get/set data associated with this history state via a pushState() call,
+     * serialized using structured clone.
+     **/
+    [infallible] attribute nsIStructuredCloneContainer stateData;
+
+    /**
+     * The history ID of the docshell.
+     */
+    // Would be [infallible], but we don't support that property for nsIDPtr.
+    attribute nsIDRef docshellID;
+
+    /**
+     * True if this SHEntry corresponds to a document created by a srcdoc
+     * iframe. Set when a value is assigned to srcdocData.
+     */
+    [infallible] readonly attribute boolean isSrcdocEntry;
+
+    /**
+     * Contents of the srcdoc attribute in a srcdoc iframe to be loaded instead
+     * of the URI.  Similar to a Data URI, this information is needed to
+     * recreate the document at a later stage.
+     * Setting this sets isSrcdocEntry to true
+     */
+    // XXX: make it [infallible] when AString supports that (bug 1491187).
+    attribute AString srcdocData;
+
+    /**
+     * When isSrcdocEntry is true, this contains the baseURI of the srcdoc
+     * document for use in situations where it cannot otherwise be determined,
+     * for example with view-source.
+     */
+    [infallible] attribute nsIURI baseURI;
+
+    /**
+     * Sets/gets the current scroll restoration state,
+     * if true == "manual", false == "auto".
+     */
+    [infallible] attribute boolean scrollRestorationIsManual;
+
+    /**
+     * Flag to indicate that the history entry was originally loaded in the
+     * current process. This flag does not survive a browser process switch.
+     */
+    [infallible] readonly attribute boolean loadedInThisProcess;
+
+    /**
+     * The session history it belongs to. This is set only on the root entries.
+     */
+    [noscript, infallible] attribute nsISHistory shistory;
+
+    /**
+     * A number that is assigned by the sHistory when the entry is activated
+     */
+    [noscript, infallible] attribute unsigned long lastTouched;
+
+    /**
+     * The current number of nsISHEntries which are immediate children of this
+     * SHEntry.
+     */
+    [infallible] readonly attribute long childCount;
+
+    /**
+     * When an entry is serving is within nsISHistory's array of entries, this
+     * property specifies if it should persist. If not it will be replaced by
+     * new additions to the list.
+     */
+    [infallible] attribute boolean persist;
+
+    /**
+     * Set/Get the visual viewport scroll position if session history is
+     * changed through anchor navigation or pushState.
+     */
+    void setScrollPosition(in long x, in long y);
+    void getScrollPosition(out long x, out long y);
+
+    /**
+     * Saved position and dimensions of the content viewer; we must adjust the
+     * root view's widget accordingly if this has changed when the presentation
+     * is restored.
+     */
+    [noscript, notxpcom] void getViewerBounds(in nsIntRect bounds);
+    [noscript, notxpcom] void setViewerBounds([const] in nsIntRect bounds);
+
+    /**
+     * Saved child docshells corresponding to contentViewer.  The child shells
+     * are restored as children of the parent docshell, in this order, when the
+     * parent docshell restores a saved presentation.
+     */
+
+    /** Append a child shell to the end of our list. */
+    [noscript, notxpcom] void addChildShell(in nsIDocShellTreeItem shell);
+
+    /**
+     * Get the child shell at |index|; returns null if |index| is out of bounds.
+     */
+    [noscript] nsIDocShellTreeItem childShellAt(in long index);
+
+    /**
+     * Clear the child shell list.
+     */
+    [noscript, notxpcom] void clearChildShells();
+
+    /**
+     * Ensure that the cached presentation members are self-consistent.
+     * If either |contentViewer| or |windowState| are null, then all of the
+     * following members are cleared/reset:
+     *  contentViewer, sticky, windowState, viewerBounds, childShells,
+     *  refreshURIList.
+     */
+    [noscript, notxpcom] void syncPresentationState();
+
+    /**
+     * Initialises `layoutHistoryState` if it doesn't already exist
+     * and returns a reference to it.
+     */
+    nsILayoutHistoryState initLayoutHistoryState();
+
+    /** Additional ways to create an entry */
+    [noscript] void create(in nsIURI URI, in AString title,
+                           in nsIInputStream inputStream,
+                           in unsigned long cacheKey,
+                           in ACString contentType,
+                           in nsIPrincipal triggeringPrincipal,
+                           in nsIPrincipal principalToInherit,
+                           in nsIPrincipal partitionedPrincipalToInherit,
+                           in nsIContentSecurityPolicy aCsp,
+                           in nsIDRef docshellID,
+                           in boolean dynamicCreation,
+                           in nsIURI originalURI,
+                           in nsIURI resultPrincipalURI,
+                           in bool loadReplace,
+                           in nsIReferrerInfo referrerInfo,
+                           in AString srcdoc,
+                           in bool srcdocEntry,
+                           in nsIURI baseURI,
+                           in bool saveLayoutState,
+                           in bool expired,
+                           in bool userActivation);
+
+    nsISHEntry clone();
+
+    /**
+     * Gets the owning pointer to the editor data assosicated with
+     * this shistory entry. This forgets its pointer, so free it when
+     * you're done.
+     */
+    [noscript, notxpcom] nsDocShellEditorDataPtr forgetEditorData();
+
+    /**
+     * Sets the owning pointer to the editor data assosicated with
+     * this shistory entry. Unless forgetEditorData() is called, this
+     * shentry will destroy the editor data when it's destroyed.
+     */
+    [noscript, notxpcom] void setEditorData(in nsDocShellEditorDataPtr aData);
+
+    /** Returns true if this shistory entry is storing a detached editor. */
+    [noscript, notxpcom] boolean hasDetachedEditor();
+
+    /**
+     * Returns true if the related docshell was added because of
+     * dynamic addition of an iframe/frame.
+     */
+    [noscript, notxpcom] boolean isDynamicallyAdded();
+
+    /**
+     * Returns true if any of the child entries returns true
+     * when isDynamicallyAdded is called on it.
+     */
+    boolean hasDynamicallyAddedChild();
+
+    /**
+     * Does this SHEntry point to the given BFCache entry? If so, evicting
+     * the BFCache entry will evict the SHEntry, since the two entries
+     * correspond to the same document.
+     */
+    [noscript, notxpcom]
+    boolean hasBFCacheEntry(in SHEntrySharedParentStatePtr aEntry);
+
+    /**
+     * Adopt aEntry's BFCacheEntry, so now both this and aEntry point to
+     * aEntry's BFCacheEntry.
+     */
+    void adoptBFCacheEntry(in nsISHEntry aEntry);
+
+    /**
+     * Create a new BFCache entry and drop our reference to our old one. This
+     * call unlinks this SHEntry from any other SHEntries for its document.
+     */
+    void abandonBFCacheEntry();
+
+    /**
+     * Does this SHEntry correspond to the same document as aEntry? This is
+     * true iff the two SHEntries have the same BFCacheEntry. So in particular,
+     * sharesDocumentWith(aEntry) is guaranteed to return true if it's
+     * preceded by a call to adoptBFCacheEntry(aEntry).
+     */
+    boolean sharesDocumentWith(in nsISHEntry aEntry);
+
+    /**
+     * Sets an SHEntry to reflect that it is a history type load. This is the
+     * equivalent to doing
+     *
+     * shEntry.loadType = 4;
+     *
+     * in js, but is easier to maintain and less opaque.
+     */
+    void setLoadTypeAsHistory();
+
+    /**
+     * Add a new child SHEntry. If offset is -1 adds to the end of the list.
+     */
+    void AddChild(in nsISHEntry aChild, in long aOffset,
+                  [optional,default(false)] in bool aUseRemoteSubframes);
+
+    /**
+     * Remove a child SHEntry.
+     */
+    [noscript] void RemoveChild(in nsISHEntry aChild);
+
+    /**
+     * Get child at an index.
+     */
+    nsISHEntry GetChildAt(in long aIndex);
+
+    /**
+     * If this entry has no dynamically added child, get the child SHEntry
+     * at the given offset. The loadtype of the returned entry is set
+     * to its parent's loadtype.
+     */
+    [notxpcom] void GetChildSHEntryIfHasNoDynamicallyAddedChild(in long aChildOffset,
+                                                                out nsISHEntry aChild);
+
+    /**
+     * Replaces a child which is for the same docshell as aNewChild
+     * with aNewChild.
+     * @throw if nothing was replaced.
+     */
+    [noscript] void ReplaceChild(in nsISHEntry aNewChild);
+
+    /**
+    * Remove all children of this entry and call abandonBFCacheEntry.
+    */
+    [notxpcom] void ClearEntry();
+
+    /**
+     * Create nsDocShellLoadState and fill it with information.
+     * Don't set nsSHEntry here to avoid serializing it.
+     */
+    [noscript] nsDocShellLoadStatePtr CreateLoadInfo();
+
+    [infallible] readonly attribute unsigned long long bfcacheID;
+
+    /**
+     * Sync up the docshell and session history trees for subframe navigation.
+     *
+     * @param aEntry                    new entry
+     * @param aTopBC                    top BC corresponding to the root ancestor
+                                        of the docshell that called this method
+     * @param aIgnoreBC                 current BC
+     */
+    [notxpcom] void SyncTreesForSubframeNavigation(in nsISHEntry aEntry,
+                                                   in BrowsingContext aTopBC,
+                                                   in BrowsingContext aIgnoreBC);
+};

@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title></title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+const ACTIONS = [
+  "play",
+  "pause",
+  "seekbackward",
+  "seekforward",
+  "previoustrack",
+  "nexttrack",
+  "skipad",
+  "seekto",
+  "stop",
+];
+
+(async function testSetActionHandler() {
+  await setupPreference();
+
+  for (const action of ACTIONS) {
+    info(`Test setActionHandler for '${action}'`);
+    generateAction(action);
+    ok(true, "it's ok to do " + action + " without any handler");
+
+    let expectedDetails = generateActionDetails(action);
+
+    let fired = false;
+    await setHandlerAndTakeAction(action, details => {
+      ok(hasSameValue(details, expectedDetails), "get expected details for " + action);
+      fired = !fired;
+      clearActionHandler(action);
+    });
+
+    generateAction(action);
+    ok(fired, "handler of " + action + " is cleared");
+  }
+
+  SimpleTest.finish();
+})();
+
+function setupPreference() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.media.mediasession.enabled", true],
+  ]});
+}
+
+function generateAction(action) {
+  let details = generateActionDetails(action);
+  SpecialPowers.wrap(navigator.mediaSession).notifyHandler(details);
+}
+
+function generateActionDetails(action) {
+  let details = { action };
+  if (action == "seekbackward" || action == "seekforward") {
+    details.seekOffset = 3.14159;
+  } else if (action == "seekto") {
+    details.seekTime = 1.618;
+  }
+  return details;
+}
+
+function setHandlerAndTakeAction(action, handler) {
+  let promise = new Promise(resolve => {
+    navigator.mediaSession.setActionHandler(action, details => {
+      handler(details);
+      resolve();
+    });
+  });
+  generateAction(action);
+  return promise;
+}
+
+function hasSameValue(a, b) {
+  // The order of the object matters when stringify the object.
+  return JSON.stringify(a) == JSON.stringify(b);
+}
+
+function clearActionHandler(action) {
+  navigator.mediaSession.setActionHandler(action, null);
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Blur an HTML Element Using a Negative Calc Function Value</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-blur">
+  <link rel="match" href="blur-calc-negative-ref.html">
+  <meta name="assert"
+        content="Given a calc() value that evaluates to a negative result, the
+                 CSS blur filter function should not blur an HTML element.">
+  <style type="text/css">
+    #target {
+      filter: blur(calc(-10px));
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a green square.</p>
+  <div id="target"></div>
+</body>
+</html>

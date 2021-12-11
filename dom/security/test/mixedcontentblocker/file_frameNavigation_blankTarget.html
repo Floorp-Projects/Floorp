@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Mixed Content Blocker - Opening link with _blank target in an https iframe.
+https://bugzilla.mozilla.org/show_bug.cgi?id=841850
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Mixed Content Frame Navigation</title>
+</head>
+<body>
+<a href="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?blankTarget" id="blankTarget" target="_blank" rel="opener">Go to http site</a>
+
+<script>
+  var blankTarget = document.getElementById("blankTarget");
+  blankTarget.click();
+
+  var observer = {
+    observe(subject, topic, data) {
+     if (topic === "specialpowers-http-notify-request" &&
+         data === "http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?blankTarget") {
+        parent.parent.postMessage({"test": "blankTarget", "msg": "opened an http link with target=_blank from a secure page"}, "http://mochi.test:8888");
+        SpecialPowers.removeObserver(observer, "specialpowers-http-notify-request");
+      }
+    }
+  }
+
+  // This is a special observer topic that is proxied from http-on-modify-request
+  // in the parent process to inform us when a URI is loaded
+  SpecialPowers.addObserver(observer, "specialpowers-http-notify-request");
+</script>
+</body>
+</html>

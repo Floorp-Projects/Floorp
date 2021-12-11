@@ -1,0 +1,10 @@
+--- a/toolkit/components/protobuf/src/google/protobuf/io/zero_copy_stream_impl_lite.h
++++ b/toolkit/components/protobuf/src/google/protobuf/io/zero_copy_stream_impl_lite.h
+@@ -48,6 +48,7 @@
+ #include <iosfwd>
+ #include <memory>
+ #include <string>
++#include <vector> /* Needed by GCC 4.9 on Android (see Bug 1186561) */
+
+ #include <google/protobuf/stubs/callback.h>
+ #include <google/protobuf/stubs/common.h>

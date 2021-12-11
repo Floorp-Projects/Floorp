@@ -1,0 +1,57 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.multi_dep:loader
+
+group-by: single-locale
+
+transforms:
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.beetmover_repackage_l10n:transforms
+    - gecko_taskgraph.transforms.beetmover_repackage:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - build
+    - build-signing
+    - repackage
+    - repackage-signing
+    - shippable-l10n
+    - shippable-l10n-signing
+    - repackage-l10n
+    - repackage-signing-l10n
+    - partials
+    - partials-signing
+    - repackage-signing-msi
+    - repackage-signing-shippable-l10n-msix
+    - mar-signing
+    - mar-signing-l10n
+
+primary-dependency:
+    - repackage
+    - repackage-l10n
+
+only-for-build-platforms:
+    - linux-shippable/opt
+    - linux64-shippable/opt
+    - macosx64-shippable/opt
+    - win32-shippable/opt
+    - win64-shippable/opt
+    - win64-aarch64-shippable/opt
+    - linux-devedition/opt
+    - linux64-devedition/opt
+    - macosx64-devedition/opt
+    - win32-devedition/opt
+    - win64-devedition/opt
+    - win64-aarch64-devedition/opt
+    - linux64-asan-reporter-shippable/opt
+    - win64-asan-reporter-shippable/opt
+
+job-template:
+    shipping-phase: promote
+    attributes:
+        artifact_map:
+            by-release-type:
+                beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates.yml
+                default: taskcluster/gecko_taskgraph/manifests/firefox_nightly.yml

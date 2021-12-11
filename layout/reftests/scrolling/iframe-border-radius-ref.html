@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<iframe src="iframe-border-radius-frame.html" id="f" style="width:500px; height:500px; border-radius:100px; border:none;"></iframe>
+<script>
+var f = document.getElementById("f");
+function doTest() {
+  f.contentWindow.scrollTo(0, 80);
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

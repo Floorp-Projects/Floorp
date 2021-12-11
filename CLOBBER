@@ -1,0 +1,25 @@
+# To trigger a clobber replace ALL of the textual description below,
+# giving a bug number and a one line description of why a clobber is
+# required. Modifying this file will make configure check that a
+# clobber has been performed before the build can continue.
+#
+# MERGE NOTE: When merging two branches that require a CLOBBER, you should
+#             merge both CLOBBER descriptions, to ensure that users on
+#             both branches correctly see the clobber warning.
+#
+#                  O   <-- Users coming from both parents need to Clobber
+#               /     \
+#          O               O
+#          |               |
+#          O <-- Clobber   O  <-- Clobber
+#
+# Note: The description below will be part of the error message shown to users.
+#
+# Modifying this file will now automatically clobber the buildbot machines \o/
+#
+
+# Are you updating CLOBBER because you think it's needed for your WebIDL
+# changes to stick? As of bug 928195, this shouldn't be necessary! Please
+# don't change CLOBBER for WebIDL changes any more.
+
+Merge day clobber

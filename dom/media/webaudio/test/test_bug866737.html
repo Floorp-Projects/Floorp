@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 866737</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var context = new AudioContext();
+
+(function() {
+  var d = context.createDelay();
+  var panner = context.createPanner();
+  d.connect(panner);
+  var gain = context.createGain();
+  panner.connect(gain);
+  gain.connect(context.destination);
+  gain.disconnect(0);
+})();
+
+SpecialPowers.forceGC();
+SpecialPowers.forceCC();
+
+var gain = context.createGain();
+gain.connect(context.destination);
+gain.disconnect(0);
+
+ok(true, "No crashes should happen!");
+
+</script>
+</pre>
+</body>
+</html>

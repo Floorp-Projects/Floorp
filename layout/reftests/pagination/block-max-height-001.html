@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<head>
+  <title>CSS Test: max-height block fragmentation</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1602430">
+  <meta name="flags" content="paged">
+  <style>
+@page { size:5in 3in; margin:0.5in; }
+html,body {
+    color:black; background-color:white; font:0.5in/1 monospace; padding:0; margin:0;
+}
+</style>
+</head>
+<body>
+  BEFORE
+  <div style="max-height:2in">
+    <div style="height:3in; width:1in; border:solid"></div>
+  </div>
+  AFTER
+</body>
+</html>

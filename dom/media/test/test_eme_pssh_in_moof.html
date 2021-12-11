@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+
+  <head>
+    <title>Test Encrypted Media Extensions</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="eme.js"></script>
+  </head>
+
+  <body>
+    <script class="testbody" type="text/javascript">
+    let manager = new MediaTestManager;
+
+    let psshTests = [
+      { name: "bear-640x360-cenc-key-rotation",
+        tracks : [
+          {
+            name: "video",
+            type: "video/mp4; codecs=\"avc1.64000d\"",
+            fragments: ["bear-640x360-v_frag-cenc-key_rotation.mp4"],
+            initDatas: 6
+          },
+          {
+            name: "audio",
+            type: "audio/mp4; codecs=\"mp4a.40.2\"",
+            fragments: ["bear-640x360-a_frag-cenc-key_rotation.mp4"],
+            initDatas: 7
+          }
+        ],
+        keys : {
+          "30313233343536373839303132333435" :
+            "ebdd62f16814d27b68ef122afce4ae3c"
+        }
+      },
+      { name: "bipbop-clearkey-keyrotation-clear-lead",
+        tracks : [
+          {
+            name: "video",
+            type: "video/mp4; codecs=\"avc1.4d4015\"",
+            fragments: ["bipbop-clearkey-keyrotation-clear-lead-video.mp4"],
+            initDatas: 3
+          },
+          {
+            name: "audio",
+            type: "audio/mp4; codecs=\"mp4a.40.2\"",
+            fragments: ["bipbop-clearkey-keyrotation-clear-lead-audio.mp4"],
+            initDatas: 3
+          }
+        ],
+        keys : {
+          "00112233445566778899aabbccddeeff" :
+            "00112233445566778899aabbccddeeff",
+          "112233445566778899aabbccddeeff00" :
+            "112233445566778899aabbccddeeff00"
+        }
+      }
+    ];
+
+    // Specialized create media keys function, since the one in eme.js relies
+    // on listening for encrypted events, and we want to manage those
+    // ourselves within this test.
+    async function createAndSetMediaKeys(video, test, token) {
+      function streamType(type) {
+        var x = test.tracks.find(o => o.name == type);
+        return x ? x.type : undefined;
+      }
+
+      var configuration = { initDataTypes: ["cenc"] };
+      if (streamType("video")) {
+        configuration.videoCapabilities = [{contentType: streamType("video")}];
+      }
+      if (streamType("audio")) {
+        configuration.audioCapabilities = [{contentType: streamType("audio")}];
+      }
+      let keySystemAccess = await navigator.requestMediaKeySystemAccess(
+        "org.w3.clearkey", [configuration]);
+      let mediaKeys = await keySystemAccess.createMediaKeys();
+      return video.setMediaKeys(mediaKeys);
+    }
+
+    function startTest(test, token) {
+      manager.started(token);
+      let video = document.createElement("video");
+      document.body.appendChild(video);
+
+      let encryptedEventCount = 0;
+
+      let initDatas = new Map();
+
+      function handleEncrypted(event) {
+        // We get one 'encrypted' event for every run of contiguous PSSH boxes
+        // in each stream. Note that some of the PSSH boxes contained in the
+        // "bear" streams aren't in the Common Open PSSH box format, so our
+        // ClearKey CDM will reject those license requests. Some of the init
+        // data is also repeated.
+        encryptedEventCount++;
+
+        let hexStr = StringToHex(new TextDecoder().decode(event.initData));
+        if (initDatas.has(hexStr)) {
+          // Already have a session for this.
+          return;
+        }
+
+        let initData = new Uint8Array(event.initData);
+        is(event.initDataType, "cenc", "'encrypted' event should have 'cenc' " +
+           "initDataType");
+        Log(token, "encrypted event => len=" + initData.length + " " + hexStr);
+        let session = event.target.mediaKeys.createSession();
+        initDatas.set(hexStr, session);
+        session.addEventListener("message", e => {
+          e.target.update(
+            GenerateClearKeyLicense(e.message, test.keys));
+        });
+
+        session.generateRequest(event.initDataType, event.initData);
+      }
+
+      video.addEventListener("encrypted", handleEncrypted);
+
+      video.addEventListener("ended", () => {
+        let expectedEncryptedEvents =
+          test.tracks.reduce((sum, track) => sum += track.initDatas, 0);
+        is(encryptedEventCount, expectedEncryptedEvents,
+           "Should get one 'encrypted' event per run of contiguous PSSH " +
+           "boxes in media.");
+        manager.finished(token);
+      });
+
+      video.autoplay = true;
+
+      createAndSetMediaKeys(video, test, token)
+        .then(() => LoadTest(test, video, token))
+    }
+
+    manager.runTests(psshTests, startTest);
+
+    </script>
+  </body>
+</html>

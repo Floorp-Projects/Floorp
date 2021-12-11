@@ -1,0 +1,1 @@
+function d([{ [yield]: {} } ]) { f }

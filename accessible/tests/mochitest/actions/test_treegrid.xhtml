@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="../treeview.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tree actions tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../treeview.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
+          src="../actions.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Accessible tree testers
+
+    function focusChecker(aAcc, aStates)
+    {
+      this.type = EVENT_FOCUS;
+      this.target = aAcc;
+      this.getID = function focusChecker_getID()
+      {
+        return "focus handling";
+      }
+      this.check = function focusChecker_check(aEvent)
+      {
+        var states = aStates ? aStates : 0;
+        testStates(this.target, STATE_FOCUSED | STATE_SELECTED | states);
+      }
+    }
+
+    function stateChangeChecker(aAcc, aIsEnabled)
+    {
+      this.type = EVENT_STATE_CHANGE;
+      this.target = aAcc;
+      this.getID = function stateChangeChecker_getID()
+      {
+        return "state change handling";
+      }
+      this.check = function stateChangeChecker_check(aEvent)
+      {
+        if (aIsEnabled)
+          testStates(this.target, STATE_CHECKED);
+        else
+          testStates(this.target, STATE_CHECKABLE, 0, STATE_CHECKED);
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTestActions()
+    {
+      var treeNode = getNode("tabletree");
+
+      var treeBodyNode = treeNode.treeBody;
+      treeNode.focus();
+
+      var tree = getAccessible(treeNode);
+
+      var expandedTreeItem = tree.getChildAt(2);
+      var collapsedTreeItem = tree.getChildAt(5);
+      var cycleCell = expandedTreeItem.getChildAt(0);
+      var checkableCell = expandedTreeItem.getChildAt(3);
+
+      var actions = [
+        {
+          ID: expandedTreeItem,
+          actionName: "activate",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          targetID: treeBodyNode,
+          eventSeq: [
+            new focusChecker(expandedTreeItem, STATE_EXPANDED)
+          ]
+        },
+        {
+          ID: collapsedTreeItem,
+          actionName: "expand",
+          actionIndex: 1,
+          events: CLICK_EVENTS,
+          targetID: treeBodyNode,
+          check: function check(aEvent)
+          {
+            testStates(this.ID, STATE_EXPANDED);
+          }
+        },
+        {
+          ID: collapsedTreeItem,
+          actionName: "collapse",
+          actionIndex: 1,
+          events: CLICK_EVENTS,
+          targetID: treeBodyNode,
+          check: function check(aEvent)
+          {
+            testStates(this.ID, STATE_COLLAPSED);
+          }
+        },
+        {
+          ID: cycleCell,
+          actionName: "cycle",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          targetID: treeBodyNode
+        },
+        {
+          ID: checkableCell,
+          actionName: "uncheck",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          targetID: treeBodyNode,
+          eventSeq: [
+            new stateChangeChecker(checkableCell, false)
+          ]
+        },
+        {
+          ID: checkableCell,
+          actionName: "check",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          targetID: treeBodyNode,
+          eventSeq: [
+            new stateChangeChecker(checkableCell, true)
+          ]
+        }
+      ];
+
+      testActions(actions); // Will call SimpleTest.finish();
+    }
+
+    // gA11yEventDumpID = "debug";
+
+    function doTest()
+    {
+      var treeNode = getNode("tabletree");
+      waitForEvent(EVENT_REORDER, treeNode, doTestActions);
+      treeNode.view = new nsTreeTreeView();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank" rel="opener"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=503727"
+         title="Reorganize implementation of XUL tree accessibility">
+        Mozilla Bug 503727
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tree id="tabletree" flex="1" editable="true">
+        <treecols>
+          <treecol id="tabletree_col1" cycler="true" label="cycler"/>
+          <treecol id="tabletree_col2" flex="1" primary="true" label="column1"/>
+          <treecol id="tabletree_col3" flex="1" label="column2"/>
+          <treecol id="tabletree_col4" flex="1" label="checker"
+                   type="checkbox" editable="true"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <vbox id="debug"/>
+    </vbox>
+  </hbox>
+
+</window>

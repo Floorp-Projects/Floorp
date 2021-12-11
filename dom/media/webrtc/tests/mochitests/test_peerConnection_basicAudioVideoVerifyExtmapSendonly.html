@@ -1,0 +1,97 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1406529",
+    title: "Verify SDP extmap attribute for sendonly connection"
+  });
+
+  var test;
+  runNetworkTest(async function (options) {
+    await pushPrefs(["media.navigator.video.use_transport_cc", true]);
+
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}, {video: true}],
+                             []);
+
+    test.chain.insertAfter('PC_LOCAL_SET_LOCAL_DESCRIPTION', [
+      async function PC_LOCAL_CHECK_SDP_OFFER_EXTMAP() {
+        sdputils.verify_unique_extmap_ids(test.originalOffer.sdp);
+
+        const audio = sdputils.findExtmapIdsUrnsDirections(
+            sdputils.getAudioMSections(test.originalOffer.sdp));
+        const expected_audio = [
+          /* Please modify this list when you add or remove RTP header
+          extensions. */
+          ["1", "urn:ietf:params:rtp-hdrext:ssrc-audio-level", ""],
+          ["2", "urn:ietf:params:rtp-hdrext:csrc-audio-level", "recvonly"],
+          ["3", "urn:ietf:params:rtp-hdrext:sdes:mid", ""],
+        ];
+        // *Ugh* ...
+        ok(JSON.stringify(audio) ===
+           JSON.stringify(expected_audio),
+           "List of offer audio URNs meets expected values");
+
+        const video = sdputils.findExtmapIdsUrnsDirections(
+            sdputils.getVideoMSections(test.originalOffer.sdp));
+        const expected_video = [
+          /* Please modify this list when you add or remove RTP header
+          extensions. */
+          ["3", "urn:ietf:params:rtp-hdrext:sdes:mid", ""],
+          ["4", "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time", ""],
+          ["5", "urn:ietf:params:rtp-hdrext:toffset", ""],
+          ["6", "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay", "recvonly"],
+          ["7", "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01", ""],
+        ];
+        // *Ugh* ...
+        ok(JSON.stringify(video) ===
+           JSON.stringify(expected_video),
+           "List of offer video URNs meets expected values");
+      }
+    ]);
+
+    test.chain.removeAfter('PC_REMOTE_SET_LOCAL_DESCRIPTION');
+    test.chain.append([
+      async function PC_REMOTE_CHECK_SDP_ANSWER_EXTMAP() {
+        sdputils.verify_unique_extmap_ids(test.originalAnswer.sdp);
+
+        const audio = sdputils.findExtmapIdsUrnsDirections(
+            sdputils.getAudioMSections(test.originalAnswer.sdp));
+        const expected_audio = [
+          /* Please modify this list when you add or remove RTP header
+          extensions. */
+          ["1", "urn:ietf:params:rtp-hdrext:ssrc-audio-level",""],
+          ["3", "urn:ietf:params:rtp-hdrext:sdes:mid",""],
+        ];
+        // *Ugh* ...
+        ok(JSON.stringify(audio) ===
+           JSON.stringify(expected_audio),
+           "List of answer audio URNs meets expected values");
+
+        const video = sdputils.findExtmapIdsUrnsDirections(
+            sdputils.getVideoMSections(test.originalAnswer.sdp));
+        const expected_video = [
+          /* Please modify this list when you add or remove RTP header
+          extensions. */
+          ["3", "urn:ietf:params:rtp-hdrext:sdes:mid",""],
+          ["4", "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",""],
+          ["5", "urn:ietf:params:rtp-hdrext:toffset",""],
+          ["7", "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01", ""],
+        ];
+        ok(JSON.stringify(video) ===
+           JSON.stringify(expected_video),
+           "List of answer video URNs meets expected values");
+      }
+    ]);
+
+    await test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,10 @@
+[package]
+name = "jsparagus-ast"
+version = "0.1.0"
+authors = ["khyperia <khyperia@live.com>"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+bumpalo = { version = "3.4.0", features = ["collections"] }
+indexmap = "1.0"

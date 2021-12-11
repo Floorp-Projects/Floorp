@@ -1,0 +1,79 @@
+<!--
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Stresses the camera-to-texture upload path.</title>
+<link rel="stylesheet" href="../resources/js-test-style.css"/>
+<script src="../js/js-test-pre.js"></script>
+<script src="../js/webgl-test-utils.js"> </script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<canvas id="canvas" width="640" height="360">
+</canvas>
+<script>
+"use strict";
+description();
+
+debug("Repeatedly uploads from a camera video element to a texture, many times per frame.")
+
+const wtu = WebGLTestUtils;
+const gl = wtu.create3DContext(document.getElementById('canvas'));
+const video = document.createElement('video');
+video.src = '';
+video.loop = false;
+video.muted = true;
+video.setAttribute('playsinline', '');
+
+const program = wtu.setupTexturedQuad(gl);
+const textureLoc = gl.getUniformLocation(program, "tex");
+gl.uniform1i(textureLoc, 0);
+
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+            facingMode: 'environment',
+            width: 1280,
+            height: 720,
+        }
+    })
+    .then(mediaStream => {
+        video.srcObject = mediaStream;
+        video.onloadedmetadata = () => {
+            wtu.startPlayingAndWaitForVideo(video, startTestLoop);
+        };
+    });
+
+const urlOptions = wtu.getUrlOptions();
+const uploadsPerFrame = urlOptions.uploadsPerFrame ? urlOptions.uploadsPerFrame : 400;
+debug('');
+debug(`Testing with ${uploadsPerFrame} uploads per frame`);
+
+function startTestLoop() {
+    requestAnimationFrame(startTestLoop);
+    for (let i = 0; i < uploadsPerFrame; ++i) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video);
+    }
+    wtu.clearAndDrawUnitQuad(gl);
+}
+
+var successfullyParsed = true;
+</script>
+
+</body>
+</html>

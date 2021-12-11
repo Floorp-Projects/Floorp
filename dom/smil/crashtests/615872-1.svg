@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg"><script>
+<![CDATA[
+
+function boom()
+{
+  var r = document.documentElement;
+  var s = document.createElementNS("http://www.w3.org/2000/svg", "set");
+  s.setAttributeNS(null, "begin", "1s");
+  r.appendChild(s);
+  r.setCurrentTime(2);
+  document.removeChild(r);
+  r.setCurrentTime(0);
+  s.beginElementAt(0);
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></svg>

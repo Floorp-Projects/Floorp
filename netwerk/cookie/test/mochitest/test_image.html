@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for cookies and image loading when the policy changes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="cookiesHelper.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+runTests(async (w, state) => {
+  w.document.cookie = "name=value";
+
+  let image = new w.Image();
+  image.src = "cookie.sjs?image&" + Math.random();
+  w.document.body.appendChild(image);
+  await new w.Promise(resolve => { image.onload = resolve; });
+  await checkLastRequest("image", state);
+});
+
+</script>
+</body>
+</html>

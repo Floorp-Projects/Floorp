@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=804875
+-->
+
+<head>
+  <title>Test for bug 804875</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+href="https://bugzilla.mozilla.org/show_bug.cgi?id=804875">Mozilla Bug 804875</a>
+
+<canvas></canvas>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function finish(v) {
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
+function onLoadedData_Audio(e) {
+  var t = e.target;
+  is(t.videoHeight, 0, t.name + ": videoHeight should be zero when there is no video.");
+  is(t.videoWidth, 0, t.name + ": videoWidth should be zero when there is no video.");
+  is(t.mozPaintedFrames, 0, t.name + ": mozPaintedFrames should be zero when there is no video.");
+  is(t.mozFrameDelay, 0, t.name + ": mozFrameDelay should be zero when there is no video.");
+  var c = document.getElementsByTagName("canvas")[0].getContext("2d");
+  var threw = false;
+  try {
+    c.drawImage(t, 0, 0, t.videoHeight, t.videoWidth);
+  } catch (ex) {
+    threw = true;
+  }
+  ok(!threw, t.name + ": Even though we don't succeed to draw a video frame on the canvas, we shouldn't throw.");
+  finish(t);
+}
+
+function onTimeUpdate_Video(e) {
+  var t = e.target;
+  if (t.currentTime < t.duration / 4) {
+    return;
+  }
+  t.removeEventListener("timeupdate", onTimeUpdate_Video);
+  // There's no guarantee that a video frame composite notification reaches
+  // us before timeupdate fires.
+  ok(t.mozPaintedFrames >= 0, t.name + ": mozPaintedFrames should be positive or zero, is " + t.mozPaintedFrames + ".");
+  ok(t.mozFrameDelay >= 0, t.name + ": mozFrameDelay should be positive or zero, is " + t.mozFrameDelay + ".");
+
+  if (t._firstTime) {
+    // eslint-disable-next-line no-self-assign
+    t.src = t.src;
+    t._firstTime = false;
+  } else {
+    var source = getPlayableAudio(gPlayTests);
+    if (!source) {
+      todo("No audio file available.")
+      finish(t);
+    } else {
+      t.removeEventListener("loadeddata", onLoadedData_Video);
+      t.addEventListener("loadeddata", onLoadedData_Audio);
+      t.src = source.name;
+    }
+  }
+}
+
+function onLoadedData_Video(e) {
+  var t = e.target;
+  isnot(t.videoHeight, 0, t.name + ": We should have a videoHeight.");
+  isnot(t.videoWidth, 0, t.name + ": We should have a videoWidth.");
+  t.addEventListener("timeupdate", onTimeUpdate_Video);
+  t.play();
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  document.body.appendChild(v);
+  v._firstTime = true;
+  v.addEventListener("loadeddata", onLoadedData_Video);
+  v.src = test.name;
+  v.token = token;
+  v.name = test.name;
+  v.play();
+  manager.started(token);
+}
+
+manager.runTests(getPlayableVideos(gSmallTests.concat(gSeekTests)), startTest);
+</script>
+</pre>
+</body>
+</html>

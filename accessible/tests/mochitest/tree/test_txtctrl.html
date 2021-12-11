@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>HTML text controls tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // editable div
+      var accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("txc1", accTree);
+
+      // input@type="text", value
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("txc2", accTree);
+
+      // input@type="text", no value
+      accTree =
+        { ENTRY: [ ] };
+
+      testAccessibleTree("txc3", accTree);
+
+      // textarea
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF, // hello1\nhello2 text
+          },
+        ],
+      };
+
+      testAccessibleTree("txc4", accTree);
+
+      // input@type="password"
+      accTree = {
+        role: ROLE_PASSWORD_TEXT,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("txc5", accTree);
+    
+      // input@type="tel", value
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("txc6", accTree);
+
+      // input@type="email", value
+      accTree = {
+        role: ROLE_EDITCOMBOBOX, // Because of list attribute
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("txc7", accTree);
+
+      // input@type="search", value
+      accTree = {
+        role: ROLE_EDITCOMBOBOX, // Because of list attribute
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: [],
+          },
+        ],
+      };
+
+      testAccessibleTree("txc8", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="overflowed content doesn't expose child text accessibles"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=489306">
+    Mozilla Bug 489306
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=542824"
+     title="Create child accessibles for text controls from native anonymous content">
+    Mozilla Bug 542824
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=625652"
+     title="Make sure accessible tree is correct when rendered text is changed">
+    Mozilla Bug 625652
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="txc1" contentEditable="true">
+    1hellohello
+  </div>
+  <input id="txc2" value="hello">
+  <input id="txc3">
+  <textarea id="txc4">
+    hello1
+    hello2
+  </textarea>
+  <input id="txc5" type="password" value="hello">
+  <input id="txc6" type="tel" value="4167771234">
+
+  Email Address:
+  <input id="txc7" type="email" list="contacts" value="xyzzy">
+  <datalist id="contacts">
+    <option>xyzzy@plughs.com</option>
+    <option>nobody@mozilla.org</option>
+  </datalist>
+
+  </br>Search for:
+  <input id="txc8" type="search" list="searchhisty" value="Gamma">
+  <datalist id="searchhisty">
+    <option>Gamma Rays</option>
+    <option>Gamma Ray Bursts</option>
+  </datalist>
+
+</body>
+</html>

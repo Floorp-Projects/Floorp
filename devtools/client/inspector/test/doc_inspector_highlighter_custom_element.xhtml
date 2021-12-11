@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test that the picker works correctly with custom element anonymous nodes</title>
+</head>
+<body>
+<template id="template"><div class="custom-element-anon">Anonymous</div></template>
+<custom-element id="custom-element" style="background:red; display: block;"/>
+<script>
+  "use strict";
+  customElements.define("custom-element", class extends HTMLElement {
+    constructor() {
+      super();
+      const template = document.getElementById("template");
+      this.attachShadow({mode: "open"})
+        .appendChild(template.content.cloneNode(true));
+    }
+  });
+</script>
+</body>
+</html>

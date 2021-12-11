@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessibility Name Calculating Test.">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    const { BrowserTestUtils } = ChromeUtils.import(
+      "resource://testing-common/BrowserTestUtils.jsm");
+    const ABOUT_MOZILLA_URL = "about:mozilla";
+    const ABOUT_LICENSE_URL = "about:license";
+
+    SimpleTest.waitForExplicitFinish();
+
+    (async () => {
+      info("Opening a new browser window.");
+      const win = await BrowserTestUtils.openNewBrowserWindow({
+        remote: false,
+        fission: false,
+      });
+      const winFocused = SimpleTest.promiseFocus(win);
+      const loaded = BrowserTestUtils.browserLoaded(
+        win.gBrowser.selectedBrowser);
+      let docLoaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event =>
+        event.accessible.QueryInterface(nsIAccessibleDocument).URL === ABOUT_LICENSE_URL,
+        `Loaded tab: ${ABOUT_LICENSE_URL}`);
+      BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser,
+        "about:license");
+      await loaded;
+      await docLoaded;
+      await winFocused;
+
+      info(`Loading a new tab: ${ABOUT_MOZILLA_URL}.`);
+      docLoaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event =>
+        event.accessible.QueryInterface(nsIAccessibleDocument).URL === ABOUT_MOZILLA_URL,
+        `Added tab: ${ABOUT_MOZILLA_URL}`);
+      const tab = win.gBrowser.addTrustedTab(ABOUT_MOZILLA_URL);
+      await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+      await docLoaded;
+
+      info("Focusing on the newly opened tab.");
+      const focused = waitForEvent(EVENT_FOCUS, event =>
+        event.DOMNode === win.gBrowser.getBrowserAtIndex(1).contentDocument);
+      await BrowserTestUtils.synthesizeKey("VK_TAB", { ctrlKey: true },
+        win.gBrowser.selectedBrowser);
+      const focusEvent = await focused;
+
+      const title = getAccessible(win.document).name;
+      const accName = focusEvent.accessible.name;
+      isnot(title.indexOf(accName), -1,
+        `Window title contains the name of active tab document (Is "${accName}" in "${title}"?)`);
+
+      await BrowserTestUtils.closeWindow(win);
+      SimpleTest.finish();
+    })();
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=507382"
+       title="focus is fired earlier than root accessible name is changed when switching between tabs">
+      Mozilla Bug
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox id="eventdump"></vbox>
+  </vbox>
+</window>

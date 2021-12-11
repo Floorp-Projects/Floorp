@@ -1,0 +1,99 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test scroll position when focusing items in traversal but not rendered.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+  <style>
+    .tree {
+      height: 30px;
+      overflow: auto;
+      display: block;
+    }
+
+    .tree-node {
+      font-size: 10px;
+      height: 10px;
+    }
+  </style>
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree =
+      createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        {
+          itemHeight: 10,
+          onFocus: item => renderTree({ focused: item })
+        },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
+
+    info("Test first focused.");
+    const tree = renderTree({ focused: "A" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+    ], "Should render initial correctly");
+
+    info("Test last item focused when it was not yet rendered.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "End" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+    "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:true",
+    ], "Should render last focused item correctly");
+
+    info("Test first item focused when it was not yet rendered.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "Home" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+    ], "Should render first focused item correctly");
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

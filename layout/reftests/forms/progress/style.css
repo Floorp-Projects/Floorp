@@ -1,0 +1,37 @@
+div.progress-element {
+  -moz-appearance: progressbar;
+  display: inline-block;
+  height: 1em;
+  width: 10em;
+  vertical-align: -0.2em;
+
+  /* Default style in case of there is -moz-appearance: none; */
+  border: 1px solid ThreeDShadow;
+  border-right-color: ThreeDHighlight;
+  border-bottom-color: ThreeDHighlight;
+  background-color: #e6e6e6;
+}
+
+div.progress-element.vertical {
+  height: 10em;
+  width: 1em;
+}
+
+div.progress-bar {
+  -moz-appearance: progresschunk;
+  height: 100%;
+  /*
+   * We can't apply the following style to the reference because it will have
+   * underisable effectes:
+   * width: 100%;
+   */
+
+  box-sizing: border-box;
+
+  /* Default style in case of there is -moz-appearance: none; */
+  background-color: #0064b4;
+}
+
+progress, progress::-moz-progress-bar, div.progress-element, div.progress-bar {
+  -moz-appearance: none;
+}

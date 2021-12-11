@@ -1,0 +1,25 @@
+<html id="outer">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+if (opener)
+  SimpleTest.waitForFocus(() => opener.framesetWindowLoaded(window));
+// Don't try to call finish() in this frame, since it will get upset that we
+// ran no tests.
+SimpleTest.waitForExplicitFinish();
+</script>
+
+<frameset rows="30%, 70%">
+  <frame src="data:text/html,&lt;html id='f1' &gt;&lt;body id='framebody1'&gt;&lt;input id='f2'&gt;&lt;body&gt;&lt;/html&gt;">
+  <frameset cols="30%, 33%, 34%">
+    <frame src="data:text/html,&lt;html id='f3'&gt;&lt;body id='framebody2'&gt;&lt;input id='f4'&gt;&lt;body&gt;&lt;/html&gt;">
+    <frame src="data:text/html,&lt;html id='f5'&gt;&lt;body id='framebody3'&gt;&lt;input id='f6' tabindex='2'&gt;&lt;body&gt;&lt;/html&gt;">
+    <frame src="data:text/html,&lt;html id='f7'&gt;&lt;body id='framebody4'&gt;&lt;input id='f8'&gt;&lt;body&gt;&lt;/html&gt;">
+  </frameset>
+  <noframes>
+    <input id="unused1"/>
+    <input id="unused2" tabindex="1"/>
+  </noframes>
+</frameset>
+
+</html>

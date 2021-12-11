@@ -1,0 +1,66 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+/**
+ * The display type of nsIScreen belongs to.
+ */
+enum class DisplayType: int32_t {
+  DISPLAY_PRIMARY,  // primary screen
+  DISPLAY_EXTERNAL, // wired displays, such as HDMI, DisplayPort, etc.
+  DISPLAY_VIRTUAL   // wireless displays, such as Chromecast, WiFi-Display, etc.
+};
+%}
+
+[scriptable, uuid(826e80c8-d70f-42e2-8aa9-82c05f2a370a)]
+interface nsIScreen : nsISupports
+{
+  /**
+   * These report screen dimensions in (screen-specific) device pixels
+   */
+  void GetRect(out long left, out long top, out long width, out long height);
+  void GetAvailRect(out long left, out long top, out long width, out long height);
+
+  /**
+   * And these report in desktop pixels
+   */
+  void GetRectDisplayPix(out long left, out long top, out long width, out long height);
+  void GetAvailRectDisplayPix(out long left, out long top, out long width, out long height);
+
+  readonly attribute long pixelDepth;
+  readonly attribute long colorDepth;
+
+  /**
+   * The number of device pixels per desktop pixel for this screen (for
+   * hidpi configurations where there may be multiple device pixels per
+   * desktop px and/or per CSS px).
+   *
+   * This seems poorly named (something like devicePixelsPerDesktopPixel
+   * would be more accurate/explicit), but given that it is exposed to
+   * front-end code and may also be used by add-ons, it's probably not
+   * worth the disruption of changing it.
+   *
+   * Returns 1.0 if HiDPI mode is disabled or unsupported, or if the
+   * host OS uses device pixels as its desktop pixel units (e.g. Windows 7 or
+   * GTK/X11). Per-monitor DPI is available in Windows 8.1+, GTK/Wayland or
+   * macOS.
+   */
+  readonly attribute double contentsScaleFactor;
+
+  /**
+   * The default number of device pixels per unscaled CSS pixel for this
+   * screen. This is probably what contentsScaleFactor originally meant
+   * to be, prior to confusion between CSS pixels and desktop pixel units.
+   */
+  readonly attribute double defaultCSSScaleFactor;
+
+  /**
+   * The DPI of the screen.
+   */
+  readonly attribute float dpi;
+};

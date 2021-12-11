@@ -1,0 +1,7 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <line stroke="black" stroke-width="3.6" stroke-opacity=".75" x1="0" y1="6" x2="12" y2="6"/>
+  <line stroke="white" stroke-width="1.9" x1="1" y1="6" x2="11" y2="6"/>
+</svg>

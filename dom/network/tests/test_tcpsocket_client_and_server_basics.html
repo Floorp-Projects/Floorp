@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Core tests for TCPSocket and TCPServerSocket that replace their previous
+separate xpcshell incarnations.  This migration and cleanup occurred as part
+of bug 1084245 in order to get coverage of the tests from content.
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=1084245
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1084245</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    function createServer(port, options, backlog) {
+      return new TCPServerSocket(port, options, backlog);
+    }
+
+    function createSocket(host, port, options) {
+      return new TCPSocket(host, port, options);
+    }
+
+    // In the JSM case, ArrayBuffers will be created in the compartment of the
+    // JSM with different globals than the
+    // test_tcpsocket_client_and_server_basics.js test logic sees, so we (and
+    // tcpsocket_test.jsm) need to do something.  To avoid complexity relating
+    // to wrappers and the varying nuances of the module scope and global scope
+    // in JSM's (they differ on B2G), we hardcode ArrayBuffer rather than taking
+    // a string that we look up, etc.
+    function socketCompartmentInstanceOfArrayBuffer(obj) {
+      return obj instanceof ArrayBuffer;
+    }
+  </script>
+  <script type="application/javascript" src="test_tcpsocket_client_and_server_basics.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1084245">Mozilla Bug 1084245</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

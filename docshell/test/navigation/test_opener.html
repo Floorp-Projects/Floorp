@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>
+    <style type="text/css">
+      iframe { width: 90%; height: 50px; }
+    </style>
+<script>
+if (navigator.platform.startsWith("Linux")) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
+window.onload = async function() {
+  navigateByLocation(window0);
+  navigateByOpen("window1");
+  navigateByForm("window2");
+  navigateByHyperlink("window3");
+
+  await waitForFinishedFrames(4);
+  await isNavigated(window0, "Should be able to navigate popup by setting location.");
+  await isNavigated(window1, "Should be able to navigate popup by calling window.open.");
+  await isNavigated(window2, "Should be able to navigate popup by submitting form.");
+  await isNavigated(window3, "Should be able to navigate popup by targeted hyperlink.");
+
+  window0.close();
+  window1.close();
+  window2.close();
+  window3.close();
+
+  await cleanupWindows();
+
+  SimpleTest.finish();
+};
+
+var window0 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/blank.html", "window0", "width=10,height=10");
+var window1 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/blank.html", "window1", "width=10,height=10");
+var window2 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/blank.html", "window2", "width=10,height=10");
+var window3 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/blank.html", "window3", "width=10,height=10");
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408052">Mozilla Bug 408052</a>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

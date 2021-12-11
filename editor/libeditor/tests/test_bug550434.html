@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=550434
+-->
+<head>
+  <title>Test for Bug 550434</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=550434">Mozilla Bug 550434</a>
+<p id="display"></p>
+<div id="content">
+  <div id="editor" contenteditable="true"
+       style="height: 250px; height: 200px; border: 4px solid red; outline: none;"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 550434 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var ed = document.getElementById("editor");
+
+  // Simulate click twice
+  synthesizeMouse(ed, 10, 10, {});
+  synthesizeMouse(ed, 50, 50, {});
+  setTimeout(function() {
+  sendString("x");
+
+  is(ed.innerHTML, "x", "Editor should work after being clicked twice");
+  SimpleTest.finish();
+  }, 0);
+});
+
+</script>
+</pre>
+</body>
+</html>

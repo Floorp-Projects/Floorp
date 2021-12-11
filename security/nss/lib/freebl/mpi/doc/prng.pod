@@ -1,0 +1,38 @@
+=head1 NAME
+
+ prng - pseudo-random number generator
+
+=head1 SYNOPSIS
+
+ prng [count]
+
+=head1 DESCRIPTION
+
+B<Prng> generates 32-bit pseudo-random integers using the
+Blum-Blum-Shub (BBS) quadratic residue generator.  It is seeded using
+the standard C library's rand() function, which itself seeded from the
+system clock and the process ID number.  Thus, the values generated
+are not particularly useful for cryptographic applications, but they
+are in general much better than the typical output of the usual
+multiplicative congruency generator used by most runtime libraries.
+
+You may optionally specify how many random values should be generated
+by giving a I<count> argument on the command line.  If you do not
+specify a count, only one random value will be generated.  The results
+are output to the standard output in decimal notation, one value per
+line.
+
+=head1 RESTRICTIONS
+
+As stated above, B<prng> uses the C library's rand() function to seed
+the generator, so it is not terribly suitable for cryptographic
+applications.  Also note that each time you run the program, a new
+seed is generated, so it is better to run it once with a I<count>
+parameter than it is to run it multiple times to generate several
+values.
+
+=head1 AUTHOR
+
+ Michael J. Fromberger <sting@linguist.dartmouth.edu>
+ Copyright (C) 1998 Michael J. Fromberger, All Rights Reserved
+ Thayer School of Engineering, Dartmouth College, Hanover, NH  USA

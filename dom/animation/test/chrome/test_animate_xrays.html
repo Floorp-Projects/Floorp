@@ -1,0 +1,40 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1414674"
+  target="_blank">Mozilla Bug 1414674</a>
+<div id="log"></div>
+<iframe id="iframe"
+  src="http://example.org/tests/dom/animation/test/chrome/file_animate_xrays.html"></iframe>
+<script>
+'use strict';
+
+var win = document.getElementById('iframe').contentWindow;
+
+async_test(function(t) {
+  window.addEventListener('load', t.step_func(function() {
+    var target = win.document.getElementById('target');
+    var anim = target.animate({opacity: [ 1, 0 ]}, 100 * MS_PER_SEC);
+    // The frames object should be accessible via x-ray.
+    var frames = anim.effect.getKeyframes();
+    assert_equals(frames.length, 2,
+                  "frames for Element.animate should be non-zero");
+    assert_equals(frames[0].opacity, "1",
+                  "first frame opacity for Element.animate should be specified value");
+    assert_equals(frames[0].computedOffset, 0,
+                  "first frame offset for Element.animate should be 0");
+    assert_equals(frames[1].opacity, "0",
+                  "last frame opacity for Element.animate should be specified value");
+    assert_equals(frames[1].computedOffset, 1,
+                  "last frame offset for Element.animate should be 1");
+    t.done();
+  }));
+}, 'Calling animate() across x-rays');
+
+</script>
+</body>

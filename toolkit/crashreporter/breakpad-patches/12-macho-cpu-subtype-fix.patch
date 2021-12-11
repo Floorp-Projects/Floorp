@@ -1,0 +1,22 @@
+commit 65b01bb302ba1eb7b0240753c22dce39c5ed836b
+Author: Nathan Froyd <froydnj@mozilla.com>
+Date:   Tue Jul 14 16:50:20 2020 -0400
+
+    mask off cpusubtype bits before determining Mach-O identifiers; r=gsvelto
+    
+    If we don't do this, we run into problems when walking over the Mach-O load
+    commands, where we *do* mask off cpusubtype bits.
+
+diff --git a/src/common/mac/dump_syms.cc b/src/common/mac/dump_syms.cc
+index 4ad0e2b..1c9a067 100644
+--- a/src/common/mac/dump_syms.cc
++++ b/src/common/mac/dump_syms.cc
+@@ -286,7 +286,7 @@ string DumpSymbols::Identifier() {
+   FileID file_id(object_filename_.c_str());
+   unsigned char identifier_bytes[16];
+   cpu_type_t cpu_type = selected_object_file_->cputype;
+-  cpu_subtype_t cpu_subtype = selected_object_file_->cpusubtype;
++  cpu_subtype_t cpu_subtype = selected_object_file_->cpusubtype & ~CPU_SUBTYPE_MASK;
+   if (!file_id.MachoIdentifier(cpu_type, cpu_subtype, identifier_bytes)) {
+     fprintf(stderr, "Unable to calculate UUID of mach-o binary %s!\n",
+             object_filename_.c_str());

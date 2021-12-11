@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=418368
+-->
+<head>
+  <title>nsIHyperLinkAccessible chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript"
+          src="hyperlink.js"></script>
+
+  <script type="application/javascript">
+    function testThis(aID, aAcc, aRole, aAnchors, aName, aValid, aStartIndex,
+                      aEndIndex) {
+      testRole(aAcc, aRole);
+      is(aAcc.anchorCount, aAnchors, "Wrong number of anchors for ID "
+                                      + aID + "!");
+      is(aAcc.getAnchor(0).name, aName, "Wrong name for ID "
+                                        + aID + "!");
+      is(aAcc.valid, aValid, "No correct valid state for ID "
+                             + aID + "!");
+      is(aAcc.startIndex, aStartIndex, "Wrong startIndex value for ID "
+                                       + aID + "!");
+      is(aAcc.endIndex, aEndIndex, "Wrong endIndex value for ID "
+                                   + aID + "!");
+    }
+
+    function testAction(aId, aAcc, aActionName) {
+      var actionCount = aActionName ? 1 : 0;
+      is(aAcc.actionCount, actionCount,
+         "Wrong actions number for ID " + aId);
+      try {
+        is(aAcc.getActionName(0), aActionName,
+           "Wrong action name for ID " + aId);
+      } catch (e) {
+        if (actionCount)
+          ok(false, "Exception on action name getting for ID " + aId);
+        else
+          ok(true, "Correct action name for ID " + aId);
+      }
+    }
+
+    // gA11yEventDumpToConsole = true; // debug stuff
+    function doPreTest() {
+      waitForImageMap("imgmap", doTest);
+    }
+
+    var gQueue = null;
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // normal hyperlink
+      var normalHyperlinkAcc = getAccessible("NormalHyperlink",
+                                             [nsIAccessibleHyperLink]);
+      testThis("NormalHyperlink", normalHyperlinkAcc, ROLE_LINK, 1,
+               "Mozilla Foundation", true, 17, 18);
+      is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/",
+         "URI wrong for normalHyperlinkElement!");
+      testStates(normalHyperlinkAcc, STATE_LINKED, 0);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA hyperlink
+      var ariaHyperlinkAcc = getAccessible("AriaHyperlink",
+                                           [nsIAccessibleHyperLink]);
+      testThis("AriaHyperlink", ariaHyperlinkAcc, ROLE_LINK, 1,
+               "Mozilla Foundation Home", true, 30, 31);
+      testStates(ariaHyperlinkAcc, STATE_LINKED, 0);
+      testAction("AriaHyperlink", ariaHyperlinkAcc, "click");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA hyperlink with status invalid
+      var invalidAriaHyperlinkAcc = getAccessible("InvalidAriaHyperlink",
+                                                  [nsIAccessibleHyperLink]);
+      is(invalidAriaHyperlinkAcc.valid, false, "Should not be valid!");
+      testStates(invalidAriaHyperlinkAcc, STATE_LINKED, 0);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // image map and its link children
+
+      var imageMapHyperlinkAcc = getAccessible("imgmap",
+                                               [nsIAccessibleHyperLink]);
+      testThis("imgmap", imageMapHyperlinkAcc, ROLE_IMAGE_MAP, 2, "b", true,
+               79, 80);
+      is(imageMapHyperlinkAcc.getURI(0).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
+      is(imageMapHyperlinkAcc.getURI(1).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
+      testStates(imageMapHyperlinkAcc, 0, 0);
+
+      var area1 = getAccessible(imageMapHyperlinkAcc.firstChild,
+                                [nsIAccessibleHyperLink]);
+      testThis("Area1", area1, ROLE_LINK, 1, "b", true, 0, 1);
+      is(area1.getURI(0).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
+      testStates(area1, (STATE_LINKED));
+
+      var area2 = getAccessible(area1.nextSibling,
+                                [nsIAccessibleHyperLink]);
+      testThis("Area2", area2, ROLE_LINK, 1, "a", true, 1, 2);
+      is(area2.getURI(0).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
+      testStates(area2, (STATE_LINKED));
+
+      // ////////////////////////////////////////////////////////////////////////
+      // empty hyperlink
+      var EmptyHLAcc = getAccessible("emptyLink",
+                                     [nsIAccessibleHyperLink]);
+      testThis("emptyLink", EmptyHLAcc, ROLE_LINK, 1, null, true, 93, 94);
+      testStates(EmptyHLAcc, (STATE_FOCUSABLE | STATE_LINKED), 0);
+      testAction("emptyLink", EmptyHLAcc, "jump");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // normal hyperlink with embedded span
+      var hyperlinkWithSpanAcc = getAccessible("LinkWithSpan",
+                                               [nsIAccessibleHyperLink]);
+      testThis("LinkWithSpan", hyperlinkWithSpanAcc, ROLE_LINK, 1,
+               "Heise Online", true, 119, 120);
+      is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/",
+         "URI wrong for hyperlinkElementWithSpan!");
+      testStates(hyperlinkWithSpanAcc, STATE_LINKED, 0);
+      testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Named anchor, should never have state_linked
+      var namedAnchorAcc = getAccessible("namedAnchor",
+                                         [nsIAccessibleHyperLink]);
+      testThis("namedAnchor", namedAnchorAcc, ROLE_LINK, 1,
+               "This should never be of state_linked", true, 196, 197);
+      testStates(namedAnchorAcc, STATE_SELECTABLE,
+                 0, (STATE_FOCUSABLE | STATE_LINKED));
+      testAction("namedAnchor", namedAnchorAcc, "");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // No link (hasn't any attribute), should never have state_linked
+      var noLinkAcc = getAccessible("noLink",
+                                    [nsIAccessibleHyperLink]);
+      testThis("noLink", noLinkAcc, ROLE_LINK, 1,
+               "This should never be of state_linked", true, 254, 255);
+      testStates(noLinkAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED));
+      testAction("noLink", noLinkAcc, "");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Link with registered 'click' event, should have state_linked
+      var linkWithClickAcc = getAccessible("linkWithClick",
+                                           [nsIAccessibleHyperLink]);
+      testThis("linkWithClick", linkWithClickAcc, ROLE_LINK, 1,
+               "This should have state_linked", true, 292, 293);
+      testStates(linkWithClickAcc, STATE_LINKED, 0);
+      testAction("linkWithClick", linkWithClickAcc, "click");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Maps to group links (bug 431615).
+      // var linksMapAcc = getAccessible("linksmap");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, no name from the subtree (bug 438325).
+      var id = "linkWithTitleNoNameFromSubtree";
+      var linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
+      testThis(id, linkAcc, ROLE_LINK, 1, "Link with title", true, 344, 345);
+      testStates(linkAcc, STATE_LINKED, 0);
+      testAction(id, linkAcc, "jump");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, name from the subtree - onscreen name
+      // (bug 438325).
+      id = "linkWithTitleNameFromSubtree";
+      linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
+      testThis(id, linkAcc, ROLE_LINK, 1, "the name from subtree", true, 393,
+               394);
+      testStates(linkAcc, STATE_LINKED, 0);
+      testAction(id, linkAcc, "jump");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, name from the nested html:img (bug 438325).
+      id = "linkWithTitleNameFromImg";
+      linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
+      testThis(id, linkAcc, ROLE_LINK, 1, "The title for link", true, 447,
+               448);
+      testStates(linkAcc, STATE_LINKED, 0);
+      testAction(id, linkAcc, "jump");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Text accessible shouldn't implement nsIAccessibleHyperLink
+      var res = isAccessible(getNode("namedAnchor").firstChild,
+                             [nsIAccessibleHyperLink]);
+      ok(!res, "Text accessible shouldn't implement nsIAccessibleHyperLink");
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Test focus
+      gQueue = new eventQueue();
+
+      gQueue.push(new focusLink("NormalHyperlink", true));
+      gQueue.push(new focusLink("AriaHyperlink", true));
+      gQueue.push(new focusLink("InvalidAriaHyperlink", false));
+      gQueue.push(new focusLink("LinkWithSpan", true));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doPreTest);
+  </script>
+
+</head>
+<body><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418368">Mozilla Bug 418368</a
+  ><p id="display"></p
+  ><div id="content" style="display: none"></div
+  ><pre id="test">
+  </pre
+  ><br
+  >Simple link:<br
+  ><a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a
+  ><br>ARIA link:<br
+  ><span id="AriaHyperlink" role="link"
+         onclick="window.open('http://www.mozilla.org/');"
+         tabindex="0">Mozilla Foundation Home</span
+  ><br
+  >Invalid, non-focusable hyperlink:<br
+  ><span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
+         onclick="window.open('http:/www.mozilla.org/');">Invalid link</span
+  ><br>Image map:<br
+  ><map name="atoz_map"
+    ><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+          coords="17,0,30,14"
+          alt="b"
+          shape="rect"></area
+    ><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+           coords="0,0,13,14"
+           alt="a"
+           shape="rect"></area
+    ></map
+  ><img width="447" id="imgmap"
+        height="15"
+        usemap="#atoz_map"
+        src="../letters.gif"><br>Empty link:<br
+  ><a id="emptyLink" href=""><img src=""></a
+  ><br>Link with embedded span<br
+  ><a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a
+  ><br>Named anchor, must not have "linked" state for it to be exposed correctly:<br
+  ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a
+  ><br>Link having no attributes, must not have "linked" state:<a id="noLink"
+  >This should never be of state_linked</a
+  ><br>Link with registered 'click' event: <a id="linkWithClick" onclick="var clicked = true;"
+  >This should have state_linked</a
+  ><br>Link with title attribute (no name from subtree): <a
+      id="linkWithTitleNoNameFromSubtree" href="http://www.heise.de/"
+      title="Link with title"><img src=""/></a
+  ><br>Link with title attribute (name from subtree): <a
+      id="linkWithTitleNameFromSubtree" href="http://www.heise.de/"
+      title="Link with title">the name from subtree</a
+  ><br>Link with title attribute (name from nested image): <a
+      id="linkWithTitleNameFromImg" href="http://www.heise.de/"
+      title="Link with title"><img src="" alt="The title for link"/></a
+  ><br><br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass), also see the bug 431615:<br
+  ><map id="linksmap" title="Site navigation"><ul
+    ><li><a href="http://mozilla.org">About the project</a></li
+    ><li><a href="http://mozilla.org">Sites and sounds</a></li
+    ></ul
+  ></map
+></body>
+</html>

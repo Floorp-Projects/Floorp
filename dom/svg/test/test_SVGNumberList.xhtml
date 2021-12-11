@@ -1,0 +1,74 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629200
+-->
+<head>
+  <title>Tests specific to SVGNumberList</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="MutationEventChecker.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=629200">Mozilla Bug 629200</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <text id="text" rotate="10 20 30">abc</text>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/*
+This file runs a series of SVGNumberList specific tests. Generic SVGXxxList
+tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
+to other list types belongs there.
+*/
+
+function run_tests() {
+  document.getElementById("svg").pauseAnimations();
+
+  var text = document.getElementById("text");
+  var numbers = text.rotate.baseVal;
+
+  is(numbers.numberOfItems, 3, "Checking numberOfItems");
+
+  // Test mutation events
+  // --- Initialization
+  var eventChecker = new MutationEventChecker;
+  eventChecker.watchAttr(text, "rotate");
+  // -- Actual changes
+  eventChecker.expect("modify modify");
+  numbers[0].value = 15;
+  text.setAttribute("rotate", "17 20 30");
+  // -- Redundant changes
+  eventChecker.expect("");
+  numbers[0].value = 17;
+  numbers[1].value = 20;
+  text.setAttribute("rotate", "17 20 30");
+  // -- Invalid attribute
+  eventChecker.expect("modify");
+  text.setAttribute("rotate", ",20");
+  is(numbers.numberOfItems, 0, "Checking that parsing stops at invalid token");
+  // -- Attribute removal
+  eventChecker.expect("remove");
+  text.removeAttribute("rotate");
+  // -- Non-existent attribute removal
+  eventChecker.expect("");
+  text.removeAttribute("rotate");
+  text.removeAttributeNS(null, "rotate");
+  eventChecker.finish();
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run_tests);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

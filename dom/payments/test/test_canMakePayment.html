@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345365
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for PaymentRequest API canMakePayment()</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('GeneralChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  const defaultMethods = [{
+    supportedMethods: "basic-card",
+  }];
+  const defaultDetails = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+  };
+
+  const nonsupportedMethods = [{
+    supportedMethods: "testing-payment-method",
+  }];
+
+  function testDefaultAction() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(nonsupportedMethods, defaultDetails);
+      payRequest.canMakePayment().then((result) => {
+        ok(!result, "Should be resolved with false, but got " + result + ".");
+        resolve();
+      }).catch((err) => {
+        ok(false, "Expected no error, but got '" + err.name +"'.");
+        resolve();
+      });
+    });
+  }
+
+  function testSimple() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      payRequest.canMakePayment().then((result) => {
+        ok(result, "Should be resolved with true, but got " + result + ".");
+        resolve();
+      }).catch((err) => {
+        ok(false, "Expected no error, but got '" + err.name +"'.");
+        resolve();
+      });
+    });
+  }
+
+  function testAfterShow() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      const acceptPromise = payRequest.show();
+      payRequest.canMakePayment().then((result) => {
+        ok(false, "Should throw 'InvalidStateError', but got resolved.");
+        resolve();
+      }).catch( (err) => {
+        is(err.name, "InvalidStateError",
+        "Expected 'InvalidStateError', but got '" + err.name + "'.");
+        payRequest.abort().then((abortResult) => {
+          is(abortResult, undefined, "abort() should be resolved with undefined.");
+          resolve();
+        }).catch( (error) => {
+          ok(false, "Expected no error, but got '" + error.name + "'.");
+          resolve();
+        }).finally(handler.destruct);
+      });
+    });
+  }
+
+  function testAfterAbort() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      const acceptPromise = payRequest.show();
+      payRequest.abort().then((abortResult) => {
+        payRequest.canMakePayment().then((result) => {
+          ok(false, "Should throw 'InvalidStateError', but got resolved.");
+          resolve();
+        }).catch( (err) => {
+          is(err.name, "InvalidStateError",
+          "Expected 'InvalidStateError', but got '" + err.name + "'.");
+          resolve();
+        });
+      }).catch( (err) => {
+        ok(false, "Expected no error, but got '" + err.name +"'.");
+        resolve();
+      }).finally(handler.destruct);
+    });
+  }
+
+  async function testNotAllowed() {
+    let payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+    for (let i = 0; i < 1000; i++) {
+      try {
+        await payRequest.canMakePayment();
+      } catch(err) {
+        is(err.name, "NotAllowedError",
+          "Expected 'NotAllowError', but got '" + err.name + "'");
+        break;
+      }
+    }
+    for (let i = 0; i < 1000; i++) {
+      try {
+        await new PaymentRequest(defaultMethods, defaultDetails).canMakePayment();
+      } catch(err) {
+        is(err.name, "NotAllowedError",
+          "Expected 'NotAllowError', but got '" + err.name + "'");
+        break;
+      }
+    }
+  }
+
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  function runTests() {
+    testDefaultAction()
+    .then(testSimple)
+    .then(testAfterShow)
+    .then(testAfterAbort)
+    .then(testNotAllowed)
+    .then(teardown)
+    .catch(e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345365">Mozilla Bug 1345365</a>
+</body>
+</html>

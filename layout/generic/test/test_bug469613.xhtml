@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=469613
+-->
+<window title="Mozilla Bug 469613"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469613">Mozilla Bug 469613</a>
+
+  <p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+
+<vbox style="height: 100px; overflow: auto;" id="scrollbox">
+  <hbox style="height: 200px;"/>
+</vbox>
+
+<script class="testbody" type="application/javascript"><![CDATA[
+
+/** Test for Bug 469613 **/
+
+function doTest() {
+  let scrollbox = document.getElementById("scrollbox");
+  scrollbox.scrollTop = 0;
+
+  // Make sure that the "scroll focus" is inside the scrollbox by moving the
+  // mouse in the scrollbox.
+  synthesizeMouse(scrollbox, 6, 6, { type: "mousemove" });
+  synthesizeMouse(scrollbox, 8, 8, { type: "mousemove" });
+
+  // Now scroll 10px down.
+  synthesizeWheel(scrollbox, 10, 10, { deltaY: 10.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
+
+  // Send a 0-delta scroll.
+  synthesizeWheel(scrollbox, 10, 10, { deltaY: 0.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
+
+  setTimeout(function() {
+    // Check if the 10px were scrolled.
+    todo(false, "Starting a 0-delta scroll shouldn't cancel a pending async scroll is disabled, see bug 752786");
+    //is(scrollbox.scrollTop, 10, "Starting a 0-delta scroll shouldn't cancel a pending async scroll.");
+
+    // Second test
+    scrollbox.scrollTop = 20;
+
+    // Start an async scroll to 30.
+    synthesizeWheel(scrollbox, 10, 10, { deltaY: 10.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
+
+    // Start a sync scroll to 30.
+    scrollbox.scrollTop = 30;
+
+    is(scrollbox.scrollTop, 30, "Setting scrollTop should have immediate effect, even if there was a pending async scroll to the same position.");
+
+
+    // Third test
+    scrollbox.scrollTop = 40;
+
+    // Start an async scroll to 50.
+    synthesizeWheel(scrollbox, 10, 10, { deltaY: 10.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
+
+    // Cancel the async scroll.
+    scrollbox.scrollTop = 40;
+
+    // Send a 0-delta scroll.
+    synthesizeWheel(scrollbox, 10, 10, { deltaY: 0.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
+
+    setTimeout(function() {
+      is(scrollbox.scrollTop, 40, "Canceling an async scroll should reset the point of reference for relative scrolls (mDestinationX/Y).");
+
+      SimpleTest.finish();
+    }, 0);
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(() => setTimeout(doTest, 0));
+
+]]></script>
+
+</window>

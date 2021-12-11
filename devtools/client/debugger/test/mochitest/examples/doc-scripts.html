@@ -1,0 +1,35 @@
+ <!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page</title>
+  </head>
+
+  <body>
+    <button onclick="simple()">Click me!</button>
+    <script src="simple1.js"></script>
+    <script src="simple2.js"></script>
+    <script src="simple3.js"></script>
+    <script src="long.js"></script>
+    <script>
+      // This inline script allows this HTML page to show up as a
+      // source. It also needs to introduce a new global variable so
+      // it's not immediately garbage collected.
+      inline_script = function () { var x = 5; };
+      inline_script();
+    </script>
+    <script>
+      // This is a second inline script element whose breakpoints won't be
+      // known until after the script element has been added.
+      var x = 3;
+      // XXX: This second inline script is only here to avoid intermittent
+      // failures on browser_dbg-breakpoints-reloading.js which occur when we
+      // try to set a breakpoint on the line `var x = 3;` above.
+      // See Bug 1592839.
+      inline_script2 = function () { var x = 5; };
+    </script>
+  </body>
+</html>

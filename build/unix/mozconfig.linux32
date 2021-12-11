@@ -1,0 +1,8 @@
+. "$topsrcdir/build/unix/mozconfig.linux"
+
+export MOZ_LINUX_32_SSE2_STARTUP_ERROR=1
+
+CFLAGS="$CFLAGS -march=pentium-m -msse -msse2 -mfpmath=sse"
+CXXFLAGS="$CXXFLAGS -march=pentium-m -msse -msse2 -mfpmath=sse"
+
+ac_add_options --target=i686-pc-linux

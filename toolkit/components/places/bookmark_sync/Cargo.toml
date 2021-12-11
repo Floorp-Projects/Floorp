@@ -1,0 +1,19 @@
+[package]
+name = "bookmark_sync"
+version = "0.1.0"
+authors = ["Lina Cambridge <lina@yakshaving.ninja>"]
+edition = "2018"
+
+[dependencies]
+atomic_refcell = "0.1"
+dogear = "0.4.0"
+libc = "0.2"
+log = "0.4"
+cstr = "0.2"
+moz_task = { path = "../../../../xpcom/rust/moz_task" }
+nserror = { path = "../../../../xpcom/rust/nserror" }
+nsstring = { path = "../../../../xpcom/rust/nsstring" }
+storage = { path = "../../../../storage/rust" }
+storage_variant = { path = "../../../../storage/variant" }
+url = "2.0"
+xpcom = { path = "../../../../xpcom/rust/xpcom" }

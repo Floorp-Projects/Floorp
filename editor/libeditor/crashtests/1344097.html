@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <script></script>
+        <script>
+            document.designMode = 'on';
+            o1 = window.getSelection();
+            o2 = document.createElement('code'); 
+            o3 = document.createElement('style');
+            o4 = document.createElement('style');
+            document.head.appendChild(o3);
+            o1.modify("move", "right", "character");
+            document.styleSheets[0].insertRule("* { position: absolute; }", 0);
+            document.head.appendChild(o4);
+            window.resizeTo(1,1);
+            document.documentElement.appendChild(o2);
+            o1.selectAllChildren(o2);
+        </script>
+    </head>
+    <body></body>
+</html>

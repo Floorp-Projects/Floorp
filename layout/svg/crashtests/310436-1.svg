@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait"><script><![CDATA[
+
+function init() { 
+  var docElt = document.documentElement;
+  var div1 = document.getElementById("div1");
+  var div2 = document.getElementById("div2");
+  var textNode = div2.childNodes[0];
+
+  function first()
+  {
+    docElt.appendChild(div2);
+    div2.appendChild(div1);
+  }
+
+  function second() 
+  {
+    div2.appendChild(div1);
+    div1.appendChild(textNode);
+    document.documentElement.removeAttribute("class");
+  }
+
+  first();
+  setTimeout(second, 30);
+}
+
+window.addEventListener("load", init, false);
+
+]]></script><div xmlns="http://www.w3.org/1999/xhtml" id="div1"><div id="div2">A Z</div></div></svg>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+  <title data-l10n-id="rights-title"></title>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css"/>
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="toolkit/about/aboutRights.ftl"/>
+</head>
+
+<body id="your-rights" class="aboutPageWideContainer">
+<div class="container">
+  <h1 data-l10n-id="rights-title"></h1>
+
+  <p data-l10n-id="rights-intro"></p>
+
+  <ul>
+    <li data-l10n-id="rights-intro-point-1"><a href="http://www.mozilla.org/MPL/" data-l10n-name="mozilla-public-license-link"></a></li>
+  <!-- Point 2 discusses Mozilla trademarks, and isn't needed when the build is unbranded.
+    - Point 4 discusses privacy policy, unbranded builds get a placeholder (for the vendor to replace)
+    - Point 5 discusses web service terms, unbranded builds gets a placeholder (for the vendor to replace) -->
+    <li data-l10n-id="rights-intro-point-4-unbranded"></li>
+    <li data-l10n-id="rights-intro-point-5-unbranded"><a href="about:rights#webservices" id="showWebServices" data-l10n-name="mozilla-website-services-link"></a></li>
+  </ul>
+
+  <div id="webservices-container">
+    <a name="webservices"/>
+    <h3 data-l10n-id="rights-webservices-header"></h3>
+
+    <p data-l10n-id="rights-webservices-unbranded"></p>
+
+    <ol>
+  <!-- Terms only apply to official builds, unbranded builds get a placeholder. -->
+      <li data-l10n-id="rights-webservices-term-unbranded"></li>
+    </ol>
+  </div>
+</div>
+
+</body>
+<script src="chrome://global/content/aboutRights.js"/>
+</html>

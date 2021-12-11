@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1268556
+-->
+<head>
+  <title>Test focus behaviour for &lt;input type='number'&gt;</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #input_test_style_display {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1268556">Mozilla Bug 1268556</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1057858">Mozilla Bug 1057858</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input_test_redirect" type="number">
+  <input id="input_test_style_display" type="number" >
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1268556.
+ * This test checks that when focusing on an input type=number, the focus is
+ * redirected to the anonymous text control, but the document.activeElement
+ * still returns the <input type=number>.
+ *
+ * Tests for bug 1057858.
+ * Checks that adding an element and immediately focusing it triggers exactly
+ * one "focus" event and no "blur" events. The same for switching
+ * `style.display` from `none` to `block`.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test_focus_redirects_to_text_control_but_not_for_activeElement();
+  test_add_element_and_focus_check_one_focus_event();
+  test_style_display_none_change_to_block_check_one_focus_event();
+  SimpleTest.finish();
+});
+
+function test_focus_redirects_to_text_control_but_not_for_activeElement() {
+  document.activeElement.blur();
+  var number = document.getElementById("input_test_redirect");
+  number.focus();
+
+  // The active element returns the input type=number.
+  var activeElement = document.activeElement;
+  is (activeElement, number, "activeElement should be the number element");
+  is (activeElement.localName, "input", "activeElement should be an input element");
+  is (activeElement.getAttribute("type"), "number", "activeElement should of type number");
+
+  // Use FocusManager to check that the actual focus is on the anonymous
+  // text control.
+  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"]
+                        .getService(SpecialPowers.Ci.nsIFocusManager);
+  var focusedElement = fm.focusedElement;
+  is (focusedElement.localName, "input", "focusedElement should be an input element");
+  is (focusedElement.getAttribute("type"), "number", "focusedElement should of type number");
+}
+
+var blurEventCounter = 0;
+var focusEventCounter = 0;
+
+function append_input_element_with_event_listeners_to_dom() {
+  var inputElement = document.createElement("input");
+  inputElement.type = "number";
+  inputElement.addEventListener("blur", function() { ++blurEventCounter; });
+  inputElement.addEventListener("focus", function() { ++focusEventCounter; });
+  var content = document.getElementById("content");
+  content.appendChild(inputElement);
+  return inputElement;
+}
+
+function test_add_element_and_focus_check_one_focus_event() {
+  document.activeElement.blur();
+  var inputElement = append_input_element_with_event_listeners_to_dom();
+
+  blurEventCounter = 0;
+  focusEventCounter = 0;
+  inputElement.focus();
+
+  is(blurEventCounter, 0, "After focus: no blur events observed.");
+  is(focusEventCounter, 1, "After focus: exactly one focus event observed.");
+}
+
+function test_style_display_none_change_to_block_check_one_focus_event() {
+  document.activeElement.blur();
+  var inputElement = document.getElementById("input_test_style_display");
+  inputElement.addEventListener("blur", function() { ++blurEventCounter; });
+  inputElement.addEventListener("focus", function() { ++focusEventCounter; });
+
+  blurEventCounter = 0;
+  focusEventCounter = 0;
+  inputElement.style.display = "block";
+  inputElement.focus();
+
+  is(blurEventCounter, 0, "After focus: no blur events observed.");
+  is(focusEventCounter, 1, "After focus: exactly one focus event observed.");
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=74880
+-->
+<head>
+  <title>Test for Bug 74880</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  /* so that computed values for other border properties work right */
+  #display { border-style: solid; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=74880">Mozilla Bug 74880</a>
+<div style="margin: 1px 2px 3px 4px; border-width: 5px 6px 7px 8px; border-style: dotted dashed solid double; border-color: blue fuchsia green orange; padding: 9px 10px 11px 12px">
+<p id="display"></p>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 74880 **/
+
+var gProps = [
+  [ "margin-left", "margin-right", "margin-inline-start", "margin-inline-end" ],
+  [ "padding-left", "padding-right", "padding-inline-start", "padding-inline-end" ],
+  [ "border-left-color", "border-right-color", "border-inline-start-color", "border-inline-end-color" ],
+  [ "border-left-style", "border-right-style", "border-inline-start-style", "border-inline-end-style" ],
+  [ "border-left-width", "border-right-width", "border-inline-start-width", "border-inline-end-width" ],
+];
+
+var gLengthValues = [ "inherit", "initial", "2px", "1em", "unset" ];
+var gColorValues = [ "inherit", "initial", "currentColor", "green", "unset" ];
+var gStyleValues = [ "inherit", "initial", "double", "dashed", "unset" ];
+
+function values_for(set) {
+  var values;
+  if (set[0].match(/style$/))
+    values = gStyleValues;
+  else if (set[0].match(/color$/))
+    values = gColorValues;
+  else
+    values = gLengthValues;
+  return values;
+}
+
+var e = document.getElementById("display");
+var s = e.style;
+var c = window.getComputedStyle(e);
+
+for (var set of gProps) {
+  var values = values_for(set);
+  for (var val of values) {
+    function check(dir, plogical, pvisual) {
+      var v0 = c.getPropertyValue(pvisual);
+      s.setProperty("direction", dir, "");
+      s.setProperty(pvisual, val, "");
+      var v1 = c.getPropertyValue(pvisual);
+      if (val != "initial" && val != "unset" && val != "currentColor")
+        isnot(v1, v0, "setProperty set the property " + pvisual + ": " + val);
+      s.removeProperty(pvisual);
+      is(c.getPropertyValue(pvisual), v0, "removeProperty worked for " + pvisual);
+      s.setProperty(plogical, val, "")
+      var v2 = c.getPropertyValue(pvisual);
+      is(v2, v1, "the logical property " + plogical + ": " + val + " showed up in the right place");
+      s.removeProperty(plogical);
+      is(c.getPropertyValue(pvisual), v0, "removeProperty worked for " + plogical);
+
+      s.removeProperty("direction");
+    }
+
+    check("ltr", set[2], set[0]);
+    check("ltr", set[3], set[1]);
+    check("rtl", set[2], set[1]);
+    check("rtl", set[3], set[0]);
+  }
+
+  function check_cascading(dir, plogical, pvisual) {
+    var dirstr = "direction: " + dir + ";";
+    e.setAttribute("style", dirstr + pvisual + ":" + values[2]);
+    var v2 = c.getPropertyValue(pvisual);
+    e.setAttribute("style", dirstr + pvisual + ":" + values[3]);
+    var v3 = c.getPropertyValue(pvisual);
+    isnot(v2, v3, "values should produce different computed values");
+
+    var desc = ["cascading for", pvisual, "and", plogical, "with direction", dir].join(" ");
+    e.setAttribute("style", dirstr + pvisual + ":" + values[3] + ";" +
+                            plogical + ":" + values[2]);
+    is(c.getPropertyValue(pvisual), v2, desc);
+    e.setAttribute("style", dirstr + plogical + ":" + values[3] + ";" +
+                            pvisual + ":" + values[2]);
+    is(c.getPropertyValue(pvisual), v2, desc);
+    e.setAttribute("style", dirstr + pvisual + ":" + values[2] + ";" +
+                            plogical + ":" + values[3]);
+    is(c.getPropertyValue(pvisual), v3, desc);
+    e.setAttribute("style", dirstr + plogical + ":" + values[2] + ";" +
+                            pvisual + ":" + values[3]);
+    is(c.getPropertyValue(pvisual), v3, desc);
+    e.removeAttribute("style");
+  }
+
+  check_cascading("ltr", set[2], set[0]);
+  check_cascading("ltr", set[3], set[1]);
+  check_cascading("rtl", set[2], set[1]);
+  check_cascading("rtl", set[3], set[0]);
+}
+
+
+</script>
+</pre>
+</body>
+</html>
+

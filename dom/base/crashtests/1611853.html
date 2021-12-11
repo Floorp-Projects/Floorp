@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+<head>
+    <style>
+        * {
+            user-select: none;
+        }
+    </style>
+    <script>
+      function start () {
+        document.execCommand('selectAll', false);
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+</head>
+<body onload="start()">
+<div contentEditable="true"></div>
+</body>
+</html>
+

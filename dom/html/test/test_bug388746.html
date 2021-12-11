@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=388746
+-->
+<head>
+  <title>Test for Bug 388746</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=388746">Mozilla Bug 388746</a>
+<p id="display"></p>
+<div id="content">
+  <input>
+  <textarea></textarea>
+  <select>
+    <option>option1</option>
+    <optgroup label="optgroup">
+    <option>option2</option>
+    </optgroup>
+  </select>
+  <button>Button</button>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 388746 **/
+
+var previousEventTarget = "";
+
+function handler(evt) {
+  if (evt.eventPhase == 2) {
+    previousEventTarget = evt.target.localName.toLowerCase();
+  }
+}
+
+function testElementType(type) {
+  var el = document.getElementsByTagName(type)[0];
+  el.addEventListener("DOMAttrModified", handler, true);
+  el.setAttribute("foo", "bar");
+  ok(previousEventTarget == type,
+     type + " element should have got DOMAttrModified event.");
+}
+
+function test() {
+  testElementType("input");
+  testElementType("textarea");
+  testElementType("select");
+  testElementType("option");
+  testElementType("optgroup");
+  testElementType("button");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+addLoadEvent(SimpleTest.finish);
+</script>
+</pre>
+</body>
+</html>
+

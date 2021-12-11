@@ -1,0 +1,44 @@
+diff --git a/src/processor/stackwalk_common.cc b/src/processor/stackwalk_common.cc
+--- a/src/processor/stackwalk_common.cc
++++ b/src/processor/stackwalk_common.cc
+@@ -879,18 +879,19 @@ void PrintProcessState(const ProcessStat
+   }
+ 
+   // If the thread that requested the dump is known, print it first.
+   int requesting_thread = process_state.requesting_thread();
+   if (requesting_thread != -1) {
+     const CallStack* requesting_thread_callstack =
+       process_state.threads()->at(requesting_thread);
+     printf("\n"
+-           "Thread %d (%s)",
++           "Thread %d tid %u (%s)",
+            requesting_thread,
++           requesting_thread_callstack->tid(),
+            process_state.crashed() ? "crashed" :
+                                      "requested dump, did not crash");
+     if (!requesting_thread_callstack->name().empty()) {
+       printf(" - %s", requesting_thread_callstack->name().c_str());
+     }
+     PrintStack(requesting_thread_callstack, cpu,
+                output_stack_contents,
+                process_state.thread_memory_regions()->at(requesting_thread),
+@@ -899,17 +900,17 @@ void PrintProcessState(const ProcessStat
+ 
+   // Print all of the threads in the dump.
+   int thread_count = process_state.threads()->size();
+   for (int thread_index = 0; thread_index < thread_count; ++thread_index) {
+     if (thread_index != requesting_thread) {
+       // Don't print the crash thread again, it was already printed.
+       const CallStack* callstack = process_state.threads()->at(thread_index);
+       printf("\n"
+-             "Thread %d", thread_index);
++             "Thread %d tid %u", thread_index, callstack->tid());
+       if (!callstack->name().empty()) {
+         printf(" - %s", callstack->name().c_str());
+       }
+       printf("\n");
+       PrintStack(callstack, cpu,
+                  output_stack_contents,
+                  process_state.thread_memory_regions()->at(thread_index),
+                  process_state.modules(), resolver);
+

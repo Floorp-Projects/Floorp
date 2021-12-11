@@ -1,0 +1,393 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --font-size-default: 1.1rem;
+  --spinner-width: 3rem;
+  --spinner-margin-top-bottom: 0.4rem;
+  --spinner-item-height: 2.4rem;
+  --spinner-item-margin-bottom: 0.1rem;
+  --spinner-button-height: 1.2rem;
+  --colon-width: 2rem;
+  --day-period-spacing-width: 1rem;
+  --calendar-width: 23.1rem;
+  --date-picker-item-height: 2.5rem;
+  --date-picker-item-width: 3.3rem;
+
+  --border-radius: 0.3rem;
+
+  --border: 0.1rem solid FieldText;
+  --border-active-color: FieldText;
+  --fill-color: color-mix(in srgb, FieldText 20%, transparent);
+  --today-fill-color: color-mix(in srgb, FieldText 10%, transparent);
+  --button-fill-color-active: color-mix(in srgb, FieldText 20%, transparent);
+
+  --selected-font-color: SelectedItemText;
+  --selected-fill-color: SelectedItem;
+
+  /* Use -moz-activehyperlinktext to get a system color that
+     by default will be closest to Red */
+  --weekend-font-color: -moz-activehyperlinktext;
+
+  --disabled-fill-color: ButtonShadow;
+
+  --disabled-opacity: 0.2;
+
+  /* We need to hide the scroll bar but maintain its scrolling
+     capability, so using |overflow: hidden| is not an option. */
+  scrollbar-width: none;
+}
+
+@media not (prefers-contrast) {
+  :root {
+    --border: 0.1rem solid color-mix(in srgb, FieldText 65%, transparent);
+    --border-active-color: color-mix(in srgb, FieldText 80%, transparent);
+    --fill-color: color-mix(in srgb, FieldText 20%, transparent);
+    --today-fill-color: color-mix(in srgb, FieldText 30%, transparent);
+    --button-fill-color-active: color-mix(in srgb, FieldText 30%, transparent);
+  }
+}
+
+html {
+  font-size: 10px;
+}
+
+body {
+  margin: 0;
+  font: message-box;
+  font-size: var(--font-size-default);
+  background: Field;
+  color: FieldText;
+}
+
+button {
+  appearance: none;
+  background: none;
+  border: none;
+}
+
+.nav {
+  display: flex;
+  width: var(--calendar-width);
+  height: 2.4rem;
+  margin-bottom: 0.8rem;
+  justify-content: space-between;
+}
+
+.nav > button {
+  width: 3rem;
+  height: var(--date-picker-item-height);
+  -moz-context-properties: fill, fill-opacity;
+  fill: FieldText;
+  fill-opacity: .5;
+}
+
+.nav > button:hover {
+  fill-opacity: .8;
+}
+
+.nav > button.active {
+  fill-opacity: 1;
+}
+
+.nav > button.prev,
+.nav > button.next {
+  background: url("chrome://global/skin/icons/arrow-left.svg") no-repeat center;
+}
+
+.nav > button.prev:dir(rtl),
+.nav > button.next:dir(ltr) {
+  transform: scaleX(-1);
+}
+
+.month-year-container {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  inset-inline: 3rem;
+  width: 17.1rem;
+  height: var(--date-picker-item-height);
+  z-index: 10;
+}
+
+button.month-year {
+  font-size: 1.3rem;
+  border: var(--border);
+  color: inherit;
+  border-radius: 0.3rem;
+  padding-block: 0.2rem;
+  padding-inline: 1.2rem 2.6rem;
+}
+
+button.month-year:hover {
+  background: var(--fill-color);
+}
+
+button.month-year.active {
+  border-color: var(--border-active-color);
+  background: var(--button-fill-color-active);
+}
+
+button.month-year::after {
+  position: absolute;
+  content: "";
+  width: 2.6rem;
+  height: 1.6rem;
+  background: url("chrome://global/skin/icons/arrow-down.svg") no-repeat 50% 50%;
+  -moz-context-properties: fill, fill-opacity;
+  fill: FieldText;
+  fill-opacity: .5;
+}
+
+button.month-year.active::after {
+  background: url("chrome://global/skin/icons/arrow-up.svg") no-repeat 50% 50%;
+}
+
+.month-year-view {
+  position: absolute;
+  z-index: 5;
+  padding-top: 3.2rem;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--calendar-width);
+  background-color: window;
+  color: windowtext;
+  opacity: 1;
+  transition: opacity 0.15s;
+}
+
+.month-year-view.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.month-year-view > .spinner-container {
+  width: 5.5rem;
+  margin: 0 0.5rem;
+}
+
+.month-year-view .spinner {
+  transform: scaleY(1);
+  transform-origin: top;
+  transition: transform 0.15s;
+}
+
+.month-year-view.hidden .spinner {
+  transform: scaleY(0);
+  transition: none;
+}
+
+.month-year-view .spinner > div {
+  transform: scaleY(1);
+  transition: transform 0.15s;
+}
+
+.month-year-view.hidden .spinner > div {
+  transform: scaleY(2.5);
+  transition: none;
+}
+
+.order-month-year > #spinner-month,
+.order-year-month > #spinner-year {
+  order: 1;
+}
+
+.order-month-year > #spinner-year,
+.order-year-month > #spinner-month {
+  order: 2;
+}
+
+.calendar-container {
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  width: var(--calendar-width);
+}
+
+.week-header {
+  display: flex;
+}
+
+.week-header > div {
+  opacity: .5;
+}
+
+.days-viewport {
+  height: 15rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.days-view {
+  position: absolute;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+.week-header > div,
+.days-view > div {
+  align-items: center;
+  display: flex;
+  height: var(--date-picker-item-height);
+  position: relative;
+  justify-content: center;
+  width: var(--date-picker-item-width);
+}
+
+.days-view > .outside {
+  opacity: .5;
+}
+
+.weekend {
+  color: var(--weekend-font-color);
+}
+
+.days-view > .weekend.outside {
+  opacity: .5;
+}
+
+.days-view > .out-of-range,
+.days-view > .off-step {
+  background: var(--disabled-fill-color);
+}
+
+.days-view > .today {
+  font-weight: bold;
+}
+
+.days-view > .out-of-range::before,
+.days-view > .off-step::before {
+  display: none;
+}
+
+.days-view > div:hover::before,
+.days-view > .select::before,
+.days-view > .today::before {
+  inset: 5%;
+}
+
+#time-picker,
+.month-year-view {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  width: var(--spinner-width);
+}
+
+.spinner-container > button {
+  height: var(--spinner-button-height);
+  -moz-context-properties: fill, fill-opacity;
+  fill: FieldText;
+  fill-opacity: .5;
+}
+
+.spinner-container > button:hover {
+  fill-opacity: .8;
+}
+
+.spinner-container > button.active {
+  fill-opacity: 1;
+}
+
+.spinner-container > button.up {
+  background: url("chrome://global/skin/icons/arrow-up.svg") no-repeat 50% 50%;
+}
+
+.spinner-container > button.down {
+  background: url("chrome://global/skin/icons/arrow-down.svg") no-repeat 50% 50%;
+}
+
+.spinner-container.hide-buttons > button {
+  visibility: hidden;
+}
+
+.spinner-container > .spinner {
+  position: relative;
+  width: 100%;
+  margin: var(--spinner-margin-top-bottom) 0;
+  cursor: default;
+  overflow-y: scroll;
+  scroll-snap-type: both mandatory;
+}
+
+.spinner-container > .spinner > div {
+  box-sizing: border-box;
+  position: relative;
+  text-align: center;
+  padding: calc((var(--spinner-item-height) - var(--font-size-default)) / 2) 0;
+  margin-bottom: var(--spinner-item-margin-bottom);
+  height: var(--spinner-item-height);
+  user-select: none;
+  scroll-snap-align: start;
+}
+
+.spinner-container > .spinner > div::before,
+.calendar-container .days-view > div::before {
+  position: absolute;
+  inset: 5%;
+  z-index: -10;
+  border-radius: var(--border-radius);
+}
+
+.spinner-container > .spinner > div:hover::before,
+.calendar-container .days-view > div:hover::before {
+  background: var(--fill-color);
+  border: var(--border);
+  content: "";
+}
+
+.calendar-container .days-view > div.today::before {
+  background: var(--today-fill-color);
+  border: var(--border);
+  content: "";
+}
+
+@media not (prefers-contrast) {
+  .calendar-container .days-view > div.today::before {
+    border-width: 0;
+  }
+}
+
+.spinner-container > .spinner:not(.scrolling) > div.selection,
+.calendar-container .days-view > div.selection {
+  color: var(--selected-font-color);
+}
+
+.spinner-container > .spinner > div.selection::before,
+.calendar-container .days-view > div.selection::before {
+  background: var(--selected-fill-color);
+  border: none;
+  content: "";
+}
+
+.spinner-container > .spinner > div.disabled::before,
+.spinner-container > .spinner.scrolling > div.selection::before,
+.spinner-container > .spinner.scrolling > div:hover::before {
+  display: none;
+}
+
+.spinner-container > .spinner > div.disabled {
+  opacity: var(--disabled-opacity);
+}
+
+.colon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--colon-width);
+  margin-bottom: 0.3rem;
+}
+
+.spacer {
+  width: var(--day-period-spacing-width);
+}

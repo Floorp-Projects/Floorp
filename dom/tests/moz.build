@@ -1,0 +1,233 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("browser/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("browser/*onsole*"):
+    BUG_COMPONENT = ("DevTools", "General")
+
+with Files("browser/*autofocus*"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("browser/*unload*"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("browser/*1238427*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("browser/*Geolocation*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("browser/*geo_*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("browser/browser_cancel_keydown_keypress_event.js"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("browser/*local*"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("browser/browser_test_focus_after_modal_state.js"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("mochitest/ajax/**"):
+    BUG_COMPONENT = ("Testing", "Mochitest")
+
+with Files("mochitest/beacon/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+# big mix of components here
+with Files("mochitest/bugs/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+# TODO: big mix of components here
+with Files("mochitest/chrome/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/crypto/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("mochitest/dom-level0/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/dom-level1-core/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/dom-level2-core/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/dom-level2-html/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/fetch/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("mochitest/fetch/*sw_*"):
+    BUG_COMPONENT = ("Core", "DOM: Service Workers")
+
+with Files("mochitest/gamepad/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+# TODO: big mix of components here
+with Files("mochitest/general/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/geolocation/**"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("mochitest/localstorage/**"):
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
+
+with Files("mochitest/orientation/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("mochitest/orientation/*507902*"):
+    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+
+with Files("mochitest/pointerlock/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/script/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/sessionstorage/**"):
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
+
+with Files("mochitest/storageevent/**"):
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
+
+with Files("mochitest/webcomponents/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/whatwg/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("reftest/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("reftest/*456008*"):
+    BUG_COMPONENT = ("Core", "XML")
+
+with Files("reftest/*439965*"):
+    BUG_COMPONENT = ("Core", "DOM: Editor")
+
+with Files("reftest/*427779*"):
+    BUG_COMPONENT = ("Core", "XML")
+
+with Files("reftest/*559996*"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("reftest/*591981*"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("reftest/*592366*"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("reftest/*798068*"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("reftest/xml-stylesheet/**"):
+    BUG_COMPONENT = ("Core", "XSLT")
+
+with Files("unit/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("unit/*geolocation*"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("unit/test_bug465752.js"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("unit/test_PromiseDebugging.js"):
+    BUG_COMPONENT = ("Core", "XPConnect")
+
+MOCHITEST_MANIFESTS += [
+    "mochitest/ajax/jquery/mochitest.ini",
+    "mochitest/ajax/mochikit/mochitest.ini",
+    "mochitest/ajax/prototype/mochitest.ini",
+    "mochitest/ajax/scriptaculous/mochitest.ini",
+    "mochitest/beacon/mochitest.ini",
+    "mochitest/bugs/mochitest.ini",
+    "mochitest/crypto/mochitest.ini",
+    "mochitest/dom-level0/mochitest.ini",
+    "mochitest/dom-level1-core/mochitest.ini",
+    "mochitest/dom-level2-core/mochitest.ini",
+    "mochitest/dom-level2-html/mochitest.ini",
+    "mochitest/fetch/mochitest.ini",
+    "mochitest/gamepad/mochitest.ini",
+    "mochitest/general/mochitest.ini",
+    "mochitest/geolocation/mochitest.ini",
+    "mochitest/keyhandling/mochitest.ini",
+    "mochitest/localstorage/mochitest.ini",
+    "mochitest/orientation/mochitest.ini",
+    "mochitest/pointerlock/mochitest.ini",
+    "mochitest/script/mochitest.ini",
+    "mochitest/sessionstorage/mochitest.ini",
+    "mochitest/storageevent/mochitest.ini",
+    "mochitest/webcomponents/mochitest.ini",
+    "mochitest/whatwg/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "mochitest/beacon/chrome.ini",
+    "mochitest/chrome/chrome.ini",
+    "mochitest/general/chrome.ini",
+    "mochitest/geolocation/chrome.ini",
+    "mochitest/keyhandling/chrome.ini",
+    "mochitest/localstorage/chrome.ini",
+    "mochitest/sessionstorage/chrome.ini",
+    "mochitest/webcomponents/chrome.ini",
+    "mochitest/whatwg/chrome.ini",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += [
+    "browser/browser.ini",
+    "browser/perfmetrics/browser.ini",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.lib += [
+    "mochitest/ajax/lib/AJAX_setup.js",
+    "mochitest/ajax/lib/test.css",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.mochikit.tests += [
+    "mochitest/ajax/mochikit/tests/cli.js",
+    "mochitest/ajax/mochikit/tests/FakeJSAN.js",
+    "mochitest/ajax/mochikit/tests/index.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Async.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Base.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Color.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-DateTime.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-DOM.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-DragAndDrop.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Format.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Iter.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-JSAN.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Logging.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-MochiKit.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Selector.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Signal.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Style.html",
+    "mochitest/ajax/mochikit/tests/MochiKit-Visual.html",
+    "mochitest/ajax/mochikit/tests/standalone.js",
+    "mochitest/ajax/mochikit/tests/test_Base.js",
+    "mochitest/ajax/mochikit/tests/test_Color.js",
+    "mochitest/ajax/mochikit/tests/test_DateTime.js",
+    "mochitest/ajax/mochikit/tests/test_DragAndDrop.js",
+    "mochitest/ajax/mochikit/tests/test_Format.js",
+    "mochitest/ajax/mochikit/tests/test_Iter.js",
+    "mochitest/ajax/mochikit/tests/test_Logging.js",
+    "mochitest/ajax/mochikit/tests/test_MochiKit-Async.json",
+    "mochitest/ajax/mochikit/tests/test_Signal.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.mochikit.tests.SimpleTest += [
+    "mochitest/ajax/mochikit/tests/SimpleTest/SimpleTest.js",
+    "mochitest/ajax/mochikit/tests/SimpleTest/test.css",
+    "mochitest/ajax/mochikit/tests/SimpleTest/TestRunner.js",
+]

@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* nsIVariant based Property Bag support. */
+
+#include "nsIPropertyBag2.idl"
+
+[scriptable, uuid(9cfd1587-360e-4957-a58f-4c2b1c5e7ed9)]
+interface nsIWritablePropertyBag2 : nsIPropertyBag2
+{
+  void        setPropertyAsInt32       (in AString prop, in int32_t value);
+  void        setPropertyAsUint32      (in AString prop, in uint32_t value);
+  void        setPropertyAsInt64       (in AString prop, in int64_t value);
+  void        setPropertyAsUint64      (in AString prop, in uint64_t value);
+  void        setPropertyAsDouble      (in AString prop, in double value);
+  void        setPropertyAsAString     (in AString prop, in AString value);
+  void        setPropertyAsACString    (in AString prop, in ACString value);
+  void        setPropertyAsAUTF8String (in AString prop, in AUTF8String value);
+  void        setPropertyAsBool        (in AString prop, in boolean value);
+  void        setPropertyAsInterface   (in AString prop, in nsISupports value);
+};

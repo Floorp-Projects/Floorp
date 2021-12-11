@@ -1,0 +1,29 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+var iterations = 0;
+var start = new Date();
+
+function boom()
+{
+  document.getElementById("i").style.overflow = "scroll";
+  document.getElementById("i").src = document.getElementById("i").src;
+  setTimeout(boom2, 10); // must be a short timeout
+}
+
+function boom2()
+{
+  document.getElementById("i").style.overflow = "";
+  var now = new Date();
+  if (++iterations < 20 && now - start < 5000)
+    setTimeout(boom, 10);
+  else
+    document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();"><iframe id="i" src="458637-1-inner.xhtml" style="visibility: collapse;"></iframe></body>
+</html>

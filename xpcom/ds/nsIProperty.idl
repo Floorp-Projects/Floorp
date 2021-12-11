@@ -1,0 +1,25 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* nsIVariant based Property support. */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+
+[scriptable, uuid(6dcf9030-a49f-11d5-910d-0010a4e73d9a)]
+interface nsIProperty : nsISupports
+{
+    /**
+     * Get the name of the property.
+     */
+    readonly attribute AString    name;
+
+    /**
+     * Get the value of the property.
+     */
+    readonly attribute nsIVariant value;
+};

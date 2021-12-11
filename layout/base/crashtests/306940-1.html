@@ -1,0 +1,50 @@
+<html>
+<head>
+
+<script>
+
+function init()
+{
+  var c1 = document.getElementById("c1"); 
+  var f1 = document.getElementById("f1"); 
+  var a1 = document.getElementById("a1"); 
+  
+  function first()
+  {
+    f1.style.display = "-moz-popup";
+    c1.style.height = "2em";
+    window.status = "A";
+  }
+  
+  function second()
+  {
+    c1.style.position = "absolute";
+    c1.style.overflow = "auto";
+    a1.style.position = "absolute";
+    window.status = "B";
+  }
+
+  first();
+  document.documentElement.offsetHeight;
+  second();
+}
+
+</script>
+</head>
+
+<body onload="init();">
+  <div id="c1">
+    <div id="f1">
+      <table>
+        <tr>
+          <td>
+
+            <span id="a1">Foo</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</body>
+
+</html>

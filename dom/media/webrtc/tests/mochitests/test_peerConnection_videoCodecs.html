@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1395853",
+    title: "Verify video content over WebRTC for every video codec",
+  });
+
+  async function testVideoCodec(options = {}, codec) {
+    const test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{video: true}], []);
+
+    test.chain.insertBefore("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
+      function PC_LOCAL_FILTER_OUT_CODECS() {
+        const otherCodec = codecs.find(c => c != codec);
+        const otherId = sdputils.findCodecId(test.originalOffer.sdp, otherCodec.name, otherCodec.offset);
+        const otherRtpmapMatcher = new RegExp(`a=rtpmap:${otherId}.*\\r\\n`, "gi");
+
+        const id = sdputils.findCodecId(test.originalOffer.sdp, codec.name, codec.offset);
+        if (codec.offset) {
+          isnot(id, sdputils.findCodecId(test.originalOffer.sdp, codec.name, 0),
+            "Different offsets should return different payload types");
+        }
+        test.originalOffer.sdp =
+          sdputils.removeAllButPayloadType(test.originalOffer.sdp, id);
+
+        ok(!test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${otherId}[^0-9]`, "gi")),
+          `Other codec ${otherId} should be removed after filtering`);
+        ok(test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${id}[^0-9]`, "gi")),
+          `Tested codec ${id} should remain after filtering`);
+
+        // We only set it now, or the framework would remove non-H264 codecs
+        // for us.
+        options.h264 = codec.name == "H264";
+      },
+    ]);
+
+    test.chain.append([
+      async function CHECK_VIDEO_FLOW() {
+        try {
+          const h = new VideoStreamHelper();
+          await h.checkVideoPlaying(
+              test.pcRemote.remoteMediaElements[0],
+              10, 10, 128);
+          ok(true, `Got video flow for codec ${codec.name}, offset ${codec.offset}`);
+        } catch(e) {
+          ok(false, `No video flow for codec ${codec.name}, offset ${codec.offset}: ${e}`);
+        }
+      },
+    ]);
+
+    await test.run();
+  }
+
+  // We match the name against the sdp to figure out the payload type,
+  // so all other present codecs can be removed.
+  // Use `offset` when there are multiple instances of a codec expected in an sdp.
+  const codecs = [
+    { name: "VP8" },
+    { name: "VP9" },
+    { name: "H264" },
+    { name: "H264", offset: 1 },
+  ];
+
+  runNetworkTest(async (options) => {
+    // This test expects the video being captured will change color. Use fake
+    // video device as loopback does not currently change.
+    await pushPrefs(
+      ['media.video_loopback_dev', ''],
+      ['media.navigator.streams.fake', true]);
+    for (let codec of codecs) {
+      info(`Testing video for codec ${codec.name} offset ${codec.offset}`);
+      try {
+        let enc = SpecialPowers.getBoolPref('media.webrtc.platformencoder');
+        let dec = SpecialPowers.getBoolPref('media.navigator.mediadatadecoder_h264_enabled');
+        if (codec.name == "H264") {
+          await matchPlatformH264CodecPrefs();
+          if (codec.offset == 1) {
+            // Force fake GMP codec for H.264 mode 0 because not all platforms
+            // support slice size control. Re-enable it after
+            // a. SW encoder fallback support (bug 1726617), and
+            // b. returning valid bitstream from fake GMP encoder (bug 1509012).
+            await pushPrefs(
+              ['media.webrtc.platformencoder', false],
+              ['media.navigator.mediadatadecoder_h264_enabled', false],
+            );
+          }
+        }
+        await testVideoCodec(options, codec);
+        await pushPrefs(
+          ['media.webrtc.platformencoder', enc],
+          ['media.navigator.mediadatadecoder_h264_enabled', dec],
+        );
+      } catch(e) {
+        ok(false, `Error in test for codec ${codec.name}: ${e}\n${e.stack}`);
+      }
+      info(`Tested video for codec ${codec.name}`);
+    }
+  });
+</script>
+</pre>
+</body>
+</html>

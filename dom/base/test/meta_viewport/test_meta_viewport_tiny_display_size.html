@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>meta viewport test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=device-width">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>width=device-width</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      // Check that the minimum viewport dimension of (200,40) are not enforced 
+      // in cases where the display size itself has a smaller dimension. 
+      let info = getViewportInfo(192, 32);
+      is(info.defaultZoom, 1,    "initial zoom is 100%");
+      is(info.width,       192,  "width is the same as the displayWidth");
+      is(info.height,      32,   "height is the same as the displayHeight");
+    });
+  </script>
+</body>
+</html>

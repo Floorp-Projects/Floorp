@@ -1,0 +1,80 @@
+<html>
+<head>
+  <title>Interact with me!</title>
+  <script type="text/javascript" src="https://example.com/browser/toolkit/components/antitracking/test/browser/storageAccessAPIHelpers.js"></script>
+</head>
+<body>
+<h1>Interact with me!</h1>
+<script>
+
+function info(msg) {
+  parent.postMessage({ type: "info", msg }, "*");
+}
+
+function ok(what, msg) {
+  parent.postMessage({ type: "ok", what: !!what, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+onmessage = function(e) {
+  let runnableStr = `(() => {return (${e.data.blockingCallback});})();`;
+  let runnable = eval(runnableStr); // eslint-disable-line no-eval
+  runnable.call(this, /* Phase */ 2).then(_ => {
+    info("Let's do a window.open()");
+    return new Promise(resolve => {
+      if (location.search == "?noopener") {
+        let features = "noopener";
+
+        window.open("3rdPartyOpen.html", undefined, features);
+        setTimeout(resolve, 1000);
+      } else {
+        onmessage = resolve;
+
+        window.open("3rdPartyOpen.html");
+      }
+    });
+  }).then(_ => {
+    info("The popup has been dismissed!");
+    // First time storage access should not be granted because the tracker has
+    // not had user interaction yet.
+    let runnableStr = `(() => {return (${e.data.blockingCallback});})();`;
+    let runnable = eval(runnableStr); // eslint-disable-line no-eval
+    return runnable.call(this, /* Phase */ 2);
+  }).then(_ => {
+    info("Let's interact with the tracker");
+    return new Promise(resolve => {
+      onmessage = resolve;
+
+      window.open("3rdPartyOpenUI.html?messageme");
+    });
+  }).then(_ => {
+    info("Let's do another window.open()");
+    return new Promise(resolve => {
+      if (location.search == "?noopener") {
+        let features = "noopener";
+
+        window.open("3rdPartyOpen.html", undefined, features);
+        setTimeout(resolve, 1000);
+      } else {
+        onmessage = resolve;
+
+        window.open("3rdPartyOpen.html");
+      }
+    });
+  }).then(_ => {
+    // This time the tracker must have been able to obtain first-party storage
+    // access because it has had user interaction before.
+    let runnableStr = `(() => {return (${e.data.nonBlockingCallback});})();`;
+    let runnable = eval(runnableStr); // eslint-disable-line no-eval
+    return runnable.call(this, /* Phase */ 2);
+  }).then(_ => {
+    parent.postMessage({ type: "finish" }, "*");
+  });
+};
+
+</script>
+</body>
+</html>

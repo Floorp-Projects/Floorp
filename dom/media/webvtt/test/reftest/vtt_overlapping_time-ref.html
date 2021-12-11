@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+<video id="v1" src="black.mp4" width="320" height="180">
+  <track label="English" src="cues_time_overlapping.webvtt" default>
+</video>
+<script type="text/javascript">
+/**
+ * This test is to ensure that when cues with overlapping times, the one with
+ * earlier end timestamp should disappear when the media time reaches its
+ * end time. This vtt file contains two cues, the first cue is [0,1], the second
+ * cue is [0,4], so if we seek video to 2s, only cue2 should be displayed.
+ */
+async function testTimeOverlappingCues() {
+  const video = document.getElementById("v1");
+  video.currentTime = 2;
+  video.onseeked = () => {
+    video.onseeked = null;
+    document.documentElement.removeAttribute('class');
+  }
+};
+
+window.addEventListener("MozReftestInvalidate",
+                        testTimeOverlappingCues);
+</script>
+</body>
+</html>

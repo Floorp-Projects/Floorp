@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div:not(.foo) { display: none; }
+    </style>
+  </head>
+  <body onload="document.getElementById('x').className = 'foo'">
+    <div id="x">This text should appear</div>
+  </body>
+</html>

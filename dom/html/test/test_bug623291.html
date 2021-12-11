@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=623291
+-->
+<head>
+  <title>Test for Bug 623291</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=623291">Mozilla Bug 623291</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<input id="textField" onfocus="next()" onblur="done();">
+<button id="b">a button</button>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 623291 **/
+
+function runTest() {
+  document.getElementById("textField").focus();
+}
+
+function next() {
+  synthesizeMouseAtCenter(document.getElementById('b'), {}, window);
+}
+
+function done() {
+  isnot(document.activeElement, document.getElementById("textField"),
+        "TextField should not be active anymore!");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+</script>
+</pre>
+</body>
+</html>

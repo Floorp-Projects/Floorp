@@ -1,0 +1,44 @@
+<!--
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Interactions Debug Viewer</title>
+    <script type="module" src="chrome://browser/content/places/interactionsViewer.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" type="text/css" href="chrome://browser/content/places/interactionsViewer.css">
+    <style id="tableStyle" type="text/css"></style>
+  </head>
+  <body>
+    <div id="enabledWarning" class="message-bar message-bar-warning" hidden>
+      <img class="message-bar-icon" src="chrome://global/skin/icons/warning.svg">
+      <descripton class="message-bar-description">
+        You need to have <code>browser.places.interactions.enabled</code>
+        set to true (and restart) for metadata recording to be enabled.
+      </descripton>
+    </div>
+    <div id="categories">
+      <div class="category selected" value="snapshots">
+        <span class="category-name">Snapshots</span>
+      </div>
+      <div class="category" value="metadata">
+        <span class="category-name">Interactions</span>
+      </div>
+      <div class="category" value="places-stats">
+        <span class="category-name">Places Stats</span>
+      </div>
+      <div class="export-button-container">
+        <button id="export">Export History</button>
+      </div>
+    </div>
+    <div id="main" class="main-content">
+      <h1 id="title"></h1>
+      <div id="tableLimit"></div>
+      <div id="tableViewer"></div>
+    </div>
+  </body>
+</html>

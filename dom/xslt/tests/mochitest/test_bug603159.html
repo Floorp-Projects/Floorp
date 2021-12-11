@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=603159
+-->
+<head>
+  <title>Test for Bug 603159</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=603159">Mozilla Bug 603159</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 603159 **/
+
+  var style =
+    '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" ' +
+                    'xmlns:date="http://exslt.org/dates-and-times" '+
+                    'version="1.0">' +
+      '<xsl:output method="html"/>' +
+      '<xsl:template match="/">' +
+        '<xsl:value-of select="date:date-time()" /> ' +
+      '</xsl:template>' +
+    '</xsl:stylesheet>';
+  var styleDoc = new DOMParser().parseFromString (style, "text/xml");
+
+  var data = '<root/>';
+  var originalDoc = new DOMParser().parseFromString(data, "text/xml");
+
+  var processor = new XSLTProcessor();
+  processor.importStylesheet(styleDoc);
+
+  var fragment = processor.transformToFragment(originalDoc, document);
+  var content = document.getElementById("content");
+  content.appendChild(fragment);
+  
+  // use Gecko's Date.parse to parse, then compare the milliseconds since epoch
+  var xslt_ms = Date.parse(content.innerHTML);
+  var now_ms = new Date().getTime();
+  var accepted_diff = 30 * 60 * 1000; // 30 minutes
+  var diff = Math.abs(now_ms - xslt_ms);
+  
+  ok(diff < accepted_diff, "generated timestamp should be not more than "
+    + accepted_diff + " ms before 'now', but the difference was: " + diff);
+  
+  content.innerHTML = '';
+</script>
+</pre>
+</body>
+</html>

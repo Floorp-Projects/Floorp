@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript">
+/* Hanging Scissor Test
+ *
+ * Clear the canvas to green, but create and enable and set scissor values
+ * before returning. This can fail if we blindly blit or read from the screen
+ * without disabling scissor-test.
+ *
+ * Failure should look like only the top-left quadrant is rendered.
+ */
+
+"use strict";
+
+function renderGL(gl) {
+  gl.clearColor(0.0, 1.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(0, 128, 128, 128);
+
+  gl.finish();
+}
+
+function renderFailure(canvas) {
+  // This will also trigger RAF for us.
+  var context = canvas.getContext("2d");
+  context.fillText('WebGL failed.', 64, 64);
+}
+
+function runTest() {
+  var canvas = document.getElementById("canvas");
+  var gl = initGL(canvas);
+
+  if (gl)
+    renderGL(gl);
+  else
+    renderFailure(canvas);
+
+  waitForComposite(testComplete);
+}
+
+function testComplete() {
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="rAF(runTest);">
+  <canvas id="canvas" width="256" height="256"></canvas>
+</body>
+
+</html>

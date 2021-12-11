@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Tests some common usages of -moz-image-rect() with image rect specified by
+    percentage values.
+-->
+<html>
+  <head>
+    <title>Testcases: -moz-image-rect() [bug 113577]</title>
+    <style>
+      div.wrapper {
+        width: 32px;
+        height: 32px;
+        margin: 10px;
+        background-color: red;
+      }
+      div.wrapper div {
+        width: 32px;
+        height: 32px;
+        background: no-repeat;
+      }
+      #test1 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 0%, 100%, 100%, 0%);
+      }
+      #test2 {
+        background-image: -moz-image-rect(url(transparent-16x16-in-blue-32x32.png), 0%, 100%, 50%, 0%);
+      }
+      #test3 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 0%, 50%, 50%, 0%);
+      }
+      #test4 {
+        background-color: yellow;
+        background-image: -moz-image-rect(url(transparent-16x16-in-blue-32x32.png), 50%, 100%, 100%, 50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper"><div id="test1"></div></div>
+    <div class="wrapper"><div id="test2"></div></div>
+    <div class="wrapper"><div id="test3"></div></div>
+    <div class="wrapper"><div id="test4"></div></div>
+  </body>
+</html>

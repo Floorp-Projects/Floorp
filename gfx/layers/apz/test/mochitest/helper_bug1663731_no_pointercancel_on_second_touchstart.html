@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for Bug 1663731</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var body = document.body;
+
+  var cancelledTouchMove = false;
+
+  // Event listeners just for logging/debugging purposes
+  body.addEventListener("pointerdown", function(e) {
+    dump(`Got pointerdown, pointer id ${e.pointerId}\n`);
+  });
+  body.addEventListener("touchstart", function(e) {
+    dump(`Got touchstart with ${e.touches.length} touches\n`);
+  }, {passive: true});
+
+
+  // Event listeners relevant to the test. We want to make sure that even
+  // though APZ can zoom the page, it does NOT dispatch pointercancel events in
+  // the scenario where the page calls preventDefault() on the first touchmove
+  // with two touch points. In other words, if the page chooses to disable
+  // browser pinch-zooming by preventDefault()'ing the first touchmove for
+  // the second touch point, then the browser should not dispatch pointercancel
+  // at all, but keep sending the pointerevents to the content. This is
+  // similar to what the browser does when zooming is disallowed by
+  // touch-action:none, for example.
+  body.addEventListener("pointercancel", function(e) {
+    dump(`Got pointercancel, pointer id ${e.pointerId}\n`);
+    ok(false, "Should not get any pointercancel events");
+  });
+  body.addEventListener("touchmove", function(e) {
+    dump(`Got touchmove with ${e.touches.length} touches\n`);
+    if (e.touches.length > 1) {
+      dump(`Preventing...\n`);
+      e.preventDefault();
+      cancelledTouchMove = true;
+    }
+  }, {passive: false});
+
+  let touchEndPromise = new Promise(resolve => {
+    // This listener is just to catch the end of the touch sequence so we can
+    // end the test at the right time.
+    body.addEventListener("touchend", function(e) {
+      dump(`Got touchend with ${e.touches.length} touches\n`);
+      if (e.touches.length == 0) {
+        resolve();
+      }
+    });
+  });
+
+  // We can't await this call, because this pinch action doesn't generate a
+  // APZ:TransformEnd. Instead we await the touchend.
+  pinchZoomOutWithTouchAtCenter();
+  await touchEndPromise;
+
+  ok(cancelledTouchMove, "Checking that we definitely cancelled the touchmove");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    body {
+        height: 5000px;
+    }
+  </style>
+</head>
+<body>
+  A two-finger pinch action here should send pointer events to content and not do browser zooming.
+</body>
+</html>

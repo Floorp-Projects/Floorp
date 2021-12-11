@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>Drag absolutely positioned element to crash</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<div
+  contenteditable
+  style="
+    border: blue 1px solid;
+    margin: 20px;
+  "
+>
+  <div
+    style="
+      border: red 1px dashed;
+      background-color: rgba(255, 0, 0, 0.3);
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      overflow: auto;
+    "
+  >
+    This is absolutely positioned element.
+  </div>
+  <p>This is static positioned paragraph #1</p>
+  <p>This is static positioned paragraph #2</p>
+  <p>This is static positioned paragraph #3</p>
+  <p>This is static positioned paragraph #4</p>
+  <p>This is static positioned paragraph #5</p>
+  <p>This is static positioned paragraph #6</p>
+  <p>This is static positioned paragraph #7</p>
+</div>
+<script>
+"use strict";
+
+document.execCommand("enableAbsolutePositionEditing", false, true);
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  disableNonTestMouseEvents(true);
+  try {
+    document.querySelector("div[contenteditable").focus();
+
+    function promiseSelectionChange() {
+      return new Promise(resolve => {
+        document.addEventListener("selectionchange", () => {
+          resolve();
+        }, {once: true});
+      });
+    }
+
+    let absContainer = document.querySelector("div > div");
+    let rect = absContainer.getBoundingClientRect();
+    // We still don't have a way to retrieve the grabber.  Therefore, we need
+    // to compute a point in the grabber from the absolutely positioned
+    // element's top-left coordinates.
+    const kOffsetX = 18;
+    const kOffsetY = -7;
+    let waitForSelectionChange = promiseSelectionChange();
+    synthesizeMouseAtCenter(absContainer, {});
+    await waitForSelectionChange;
+    synthesizeMouse(absContainer, kOffsetX, kOffsetY, {type: "mousedown"});
+    ok(absContainer.hasAttribute("_moz_abspos"), "Mousedown on the grabber should make it in drag mode");
+    synthesizeMouseAtPoint(100, 100, {type: "mousemove"});
+    synthesizeMouseAtPoint(100, 100, {type: "mouseup"});
+    isnot(absContainer.getBoundingClientRect().x, rect.x,
+          "The absolutely positioned container should be moved along x-axis");
+    isnot(absContainer.getBoundingClientRect().y, rect.y,
+          "The absolutely positioned container should be moved along y-axis");
+
+    rect = absContainer.getBoundingClientRect();
+    synthesizeMouse(absContainer, kOffsetX, kOffsetY, {type: "mousedown"});
+    ok(absContainer.hasAttribute("_moz_abspos"), "Mousedown on the grabber should make it in drag mode again");
+    document.execCommand("enableAbsolutePositionEditing", false, false);
+    ok(!absContainer.hasAttribute("_moz_abspos"), "Disabling the grabber makes it not in drag mode (before mouse move)");
+    synthesizeMouseAtPoint(50, 50, {type: "mousemove"});
+    synthesizeMouseAtPoint(50, 50, {type: "mouseup"});
+    is(absContainer.getBoundingClientRect().x, rect.x,
+      "The absolutely positioned container shouldn't be moved along x-axis due to the UI is killed by the web app (before mouse move)");
+    is(absContainer.getBoundingClientRect().y, rect.y,
+      "The absolutely positioned container shouldn't be moved along y-axis due to the UI is killed by the web app (before mouse move)");
+    document.execCommand("enableAbsolutePositionEditing", false, true);
+
+    rect = absContainer.getBoundingClientRect();
+    synthesizeMouse(absContainer, kOffsetX, kOffsetY, {type: "mousedown"});
+    ok(absContainer.hasAttribute("_moz_abspos"), "Mousedown on the grabber should make it in drag mode again");
+    document.execCommand("enableAbsolutePositionEditing", false, false);
+    synthesizeMouseAtPoint(50, 50, {type: "mousemove"});
+    ok(!absContainer.hasAttribute("_moz_abspos"), "Disabling the grabber makes it not in drag mode (during mouse move)");
+    synthesizeMouseAtPoint(50, 50, {type: "mousemove"});
+    synthesizeMouseAtPoint(50, 50, {type: "mouseup"});
+    is(absContainer.getBoundingClientRect().x, rect.x,
+      "The absolutely positioned container shouldn't be moved along x-axis due to the UI is killed by the web app (during mouse move)");
+    is(absContainer.getBoundingClientRect().y, rect.y,
+      "The absolutely positioned container shouldn't be moved along y-axis due to the UI is killed by the web app (during mouse move)");
+  } finally {
+    disableNonTestMouseEvents(false);
+    SimpleTest.finish();
+  }
+});
+</script>

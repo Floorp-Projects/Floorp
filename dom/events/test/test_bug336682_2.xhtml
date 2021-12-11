@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+Bug 336682: online/offline events tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+-->
+<window title="Mozilla Bug 336682"
+  onoffline="trace('lt;body onoffline=...'); windowOnoffline(this, event)"
+  ononline="trace('lt;body ononline=...'); windowOnonline(this, event)"
+
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=336682">
+Mozilla Bug 336682 (online/offline events)</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+
+<script type="text/javascript" src="test_bug336682.js"/>
+<script class="testbody" type="text/javascript">
+<![CDATA[
+addLoadEvent(function() {
+  /** @see test_bug336682.js */
+  MAX_STATE = 2;
+
+  function makeWindowHandler(eventName) {
+    return function (aThis, aEvent) {
+      var handler = makeHandler("<body on%1='...'>", eventName, [1]);
+      handler(aEvent);
+    }
+  }
+
+  for (var event of ["online", "offline"]) {
+    window["windowOn" + event] = makeWindowHandler(event);
+
+    window.addEventListener(
+      event,
+      makeHandler("window.addEventListener('%1', ..., false)",
+                  event, [2]),
+      false);
+  }
+
+  doTest();
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+]]>
+</script>  
+
+</window>

@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1396320: Fix CSP sandbox regression for allow-scripts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * Load an iframe using a CSP of 'sandbox allow-scripts' and make sure
+ * the security context of the iframe is sandboxed (cross origin)
+ */
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  is(event.data.result, "",
+  	"document.domain of sandboxed iframe should be opaque");
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+let testframe = document.getElementById("testframe");
+testframe.src = "file_sandbox_allow_scripts.html";
+
+</script>
+</body>
+</html>

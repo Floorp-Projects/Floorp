@@ -1,0 +1,147 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include ChannelInfo;
+include ClientIPCTypes;
+include DOMTypes;
+include FetchTypes;
+
+include "mozilla/dom/ServiceWorkerIPCUtils.h";
+
+using ServiceWorkerState from "mozilla/dom/ServiceWorkerBinding.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * ServiceWorkerOpArgs
+ */
+struct ServiceWorkerCheckScriptEvaluationOpArgs {};
+
+struct ServiceWorkerUpdateStateOpArgs {
+  ServiceWorkerState state;
+};
+
+struct ServiceWorkerTerminateWorkerOpArgs {
+  uint32_t shutdownStateId;
+};
+
+struct ServiceWorkerLifeCycleEventOpArgs {
+  nsString eventName;
+};
+
+// Possibly need to differentiate an empty array from the absence of an array.
+union OptionalPushData {
+  void_t;
+  uint8_t[];
+};
+
+struct ServiceWorkerPushEventOpArgs {
+  nsString messageId;
+  OptionalPushData data;
+};
+
+struct ServiceWorkerPushSubscriptionChangeEventOpArgs {};
+
+struct ServiceWorkerNotificationEventOpArgs {
+  nsString eventName;
+  nsString id;
+  nsString title;
+  nsString dir;
+  nsString lang;
+  nsString body;
+  nsString tag;
+  nsString icon;
+  nsString data;
+  nsString behavior;
+  nsString scope;
+  uint32_t disableOpenClickDelay;
+};
+
+struct ServiceWorkerMessageEventOpArgs {
+  ClientInfoAndState clientInfoAndState;
+  ClonedOrErrorMessageData clonedData;
+};
+
+struct ServiceWorkerFetchEventOpArgs {
+  nsCString workerScriptSpec;
+  IPCInternalRequest internalRequest;
+  nsString clientId;
+  nsString resultingClientId;
+  bool isNonSubresourceRequest;
+  // Failure injection helper; non-NS_OK values indicate that the event, instead
+  // of dispatching should instead return a `CancelInterceptionArgs` response
+  // with this nsresult.  This value originates from
+  // `nsIServiceWorkerInfo::testingInjectCancellation`.
+  nsresult testingInjectCancellation;
+};
+
+union ServiceWorkerOpArgs {
+  ServiceWorkerCheckScriptEvaluationOpArgs;
+  ServiceWorkerUpdateStateOpArgs;
+  ServiceWorkerTerminateWorkerOpArgs;
+  ServiceWorkerLifeCycleEventOpArgs;
+  ServiceWorkerPushEventOpArgs;
+  ServiceWorkerPushSubscriptionChangeEventOpArgs;
+  ServiceWorkerNotificationEventOpArgs;
+  ServiceWorkerMessageEventOpArgs;
+  ServiceWorkerFetchEventOpArgs;
+};
+
+/**
+ * IPCFetchEventRespondWithResult
+ */
+struct FetchEventRespondWithClosure {
+  nsCString respondWithScriptSpec;
+  uint32_t respondWithLineNumber;
+  uint32_t respondWithColumnNumber;
+};
+
+struct FetchEventTimeStamps {
+  TimeStamp fetchHandlerStart;
+  TimeStamp fetchHandlerFinish;
+};
+
+struct IPCSynthesizeResponseArgs {
+  IPCInternalResponse internalResponse;
+  FetchEventRespondWithClosure closure;
+  FetchEventTimeStamps timeStamps;
+};
+
+struct ResetInterceptionArgs {
+  FetchEventTimeStamps timeStamps;
+};
+
+struct CancelInterceptionArgs {
+  nsresult status;
+  FetchEventTimeStamps timeStamps;
+};
+
+union IPCFetchEventRespondWithResult {
+  IPCSynthesizeResponseArgs;
+  ResetInterceptionArgs;
+  CancelInterceptionArgs;
+};
+
+/**
+ * ServiceWorkerOpResult
+ */
+struct ServiceWorkerCheckScriptEvaluationOpResult {
+  bool workerScriptExecutedSuccessfully;
+  bool fetchHandlerWasAdded;
+};
+
+struct ServiceWorkerFetchEventOpResult {
+  nsresult rv;
+};
+
+union ServiceWorkerOpResult {
+  nsresult;
+  ServiceWorkerCheckScriptEvaluationOpResult;
+  ServiceWorkerFetchEventOpResult;
+};
+
+}  // namespace dom
+}  // namespace mozilla

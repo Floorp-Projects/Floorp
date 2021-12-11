@@ -1,0 +1,12 @@
+<script>
+  var bc_1 = new BroadcastChannel("bug607529_1");
+  bc_1.onmessage = (msgEvent) => {
+    if (msgEvent.data == "navigateBack") {
+      bc_1.close();
+      history.back();
+    }
+  }
+  window.onload = function() {
+    bc_1.postMessage('goback');
+  }
+</script>

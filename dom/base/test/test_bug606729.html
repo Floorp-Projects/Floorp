@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=606729
+-->
+<head>
+  <title>Test for Bug 606729</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=606729">Mozilla Bug 606729</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script>
+  SimpleTest.waitForExplicitFinish();
+  var events = 0;
+  var expectedEvents = 2;
+  function eventFired() {
+    ++events;
+    if (events == expectedEvents) {
+      SimpleTest.finish();
+    }
+  }
+</script>
+<script
+  src="data:"
+  onerror="ok(true, 'Script with src=data: should fire onerror.');
+           eventFired();"
+  onload="ok(false, 'Script with src=data: should not fire onload.');
+          eventFired();"
+>
+ok(false, "Script with src=data: should not run textContent.");
+</script>
+<script
+  src="bogus:"
+  onerror="ok(true, 'Script with src=bogus: should fire onerror.');
+           eventFired();"
+  onload="ok(false, 'Script with src=bogus: should not fire onload.');
+          eventFired();"
+>
+ok(false, "Script with src=bogus: should not run textContent.");
+</script>
+</pre>
+</body>
+</html>
+
+

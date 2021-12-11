@@ -1,0 +1,67 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+
+/**
+ * nsIScriptableInputStream provides scriptable access to an nsIInputStream
+ * instance.
+ */
+[scriptable, uuid(3fce9015-472a-4080-ac3e-cd875dbe361e)]
+interface nsIScriptableInputStream : nsISupports
+{
+    /**
+     * Closes the stream.
+     */
+    void close();
+
+    /**
+     * Wrap the given nsIInputStream with this nsIScriptableInputStream.
+     *
+     * @param aInputStream parameter providing the stream to wrap
+     */
+    void init(in nsIInputStream aInputStream);
+
+    /**
+     * Return the number of bytes currently available in the stream
+     *
+     * @return the number of bytes
+     *
+     * @throws NS_BASE_STREAM_CLOSED if called after the stream has been closed
+     */
+    unsigned long long available();
+
+    /**
+     * Read data from the stream.
+     *
+     * WARNING: If the data contains a null byte, then this method will return
+     * a truncated string.
+     *
+     * @param aCount the maximum number of bytes to read
+     *
+     * @return the data, which will be an empty string if the stream is at EOF.
+     *
+     * @throws NS_BASE_STREAM_CLOSED if called after the stream has been closed
+     * @throws NS_ERROR_NOT_INITIALIZED if init was not called
+     */
+    string read(in unsigned long aCount);
+
+    /**
+     * Read data from the stream, including NULL bytes.
+     *
+     * @param aCount the maximum number of bytes to read.
+     *
+     * @return the data from the stream, which will be an empty string if EOF
+     *         has been reached.
+     *
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from the input stream
+     *         would block the calling thread (non-blocking mode only).
+     * @throws NS_ERROR_FAILURE if there are not enough bytes available to read
+     *         aCount amount of data.
+     */
+    ACString readBytes(in unsigned long aCount);
+};

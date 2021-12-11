@@ -1,0 +1,16 @@
+if [ -z "${VSPATH}" ]; then
+    TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
+    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2017_15.9.6"
+fi
+
+if [ -d "${VSPATH}" ]; then
+    VSWINPATH="$(cd ${VSPATH} && (pwd -W 2>/dev/null || pwd))"
+
+    export WINDOWSSDKDIR="${VSWINPATH}/SDK"
+    export WIN32_REDIST_DIR="${VSPATH}/VC/redist/x86/Microsoft.VC141.CRT"
+    export WIN_UCRT_REDIST_DIR="${VSPATH}/SDK/Redist/ucrt/DLLs/x86"
+    export DIA_SDK_PATH="${VSPATH}/DIA SDK"
+    export VC_PATH="${VSPATH}/VC"
+fi
+
+ac_add_options --target=i686-pc-mingw32

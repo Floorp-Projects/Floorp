@@ -1,0 +1,60 @@
+{
+  "manifest_version": 2,
+  "name": "Firefox Screenshots",
+  "version": "39.0.1",
+  "description": "Take clips and screenshots from the Web and save them temporarily or permanently.",
+  "author": "Mozilla <screenshots-feedback@mozilla.com>",
+  "homepage_url": "https://github.com/mozilla-services/screenshots",
+  "incognito": "spanning",
+  "applications": {
+    "gecko": {
+      "id": "screenshots@mozilla.org",
+      "strict_min_version": "57.0a1"
+    }
+  },
+  "l10n_resources": [ "browser/screenshots.ftl" ],
+  "background": {
+    "scripts": [
+      "background/startBackground.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://screenshots.firefox.com/*"],
+      "js": [
+        "log.js",
+        "catcher.js",
+        "selector/callBackground.js",
+        "sitehelper.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    "blank.html"
+  ],
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "tabs",
+    "storage",
+    "notifications",
+    "clipboardWrite",
+    "contextMenus",
+    "mozillaAddons",
+    "telemetry",
+    "<all_urls>",
+    "https://screenshots.firefox.com/",
+    "resource://pdf.js/",
+    "about:reader*"
+  ],
+  "experiment_apis": {
+    "screenshots": {
+      "schema": "experiments/screenshots/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/screenshots/api.js",
+        "paths": [["experiments", "screenshots"]]
+      }
+    }
+  }
+}

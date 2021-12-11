@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Loading a page from BFCache and firing beforeunload on the current page</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  /*
+   * This is a simple test to ensure beforeunload is fired on the current page
+   * when restoring a page from bfcache.
+   * (1) The controller page opens a new window. Another page is loaded there
+   *     and session history is navigated back to check whether bfcache is
+   *     enabled. If not, close message is sent and the opened window closes
+   *     and the test ends.
+   * (2) beforeunload event listener is added to the page and history.forward()
+   *     is called. The event listener should send a message to the controller
+   *     page.
+   * (3) Close message is sent to close the opened window and the test finishes.
+   */
+
+  var pageshowCount = 0;
+  var gotBeforeUnload = false;
+  var bfcacheDisabled = false;
+  var bc = new BroadcastChannel("beforeunload_and_bfcache");
+  bc.onmessage = function(event) {
+    if (event.data.type == "pageshow") {
+      ++pageshowCount;
+      if (pageshowCount == 1) {
+        bc.postMessage("nextpage");
+      } else if (pageshowCount == 2) {
+        bc.postMessage("back");
+      } else if (pageshowCount == 3) {
+        if (!event.data.persisted) {
+          ok(true, "BFCache not enabled");
+          bfcacheDisabled = true;
+          bc.postMessage("close");
+          return;
+        }
+        bc.postMessage("forward");
+      } else if (pageshowCount == 4) {
+        ok(event.data.persisted, "Should have loaded a page from bfcache.");
+        bc.postMessage("close");
+      }
+    } else if (event.data == "beforeunload") {
+      gotBeforeUnload = true;
+    } else if (event.data == "closed") {
+      isnot(bfcacheDisabled, gotBeforeUnload,
+           "Either BFCache shouldn't be enabled or a beforeunload event should have been fired.");
+      bc.close();
+      SimpleTest.finish();
+    }
+  };
+
+  function runTest() {
+   SpecialPowers.pushPrefEnv({"set": [["docshell.shistory.bfcache.allow_unload_listeners", false]]},
+     function() {
+       window.open("file_beforeunload_and_bfcache.html", "", "noopener");
+     }
+   );
+  }
+  </script>
+</head>
+<body onload="runTest()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

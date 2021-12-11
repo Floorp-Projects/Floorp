@@ -1,0 +1,28 @@
+﻿﻿<!DOCTYPE html>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=822197
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Bug 822197 - Many PeerConnections with CreateOffer</title>
+  <script type="application/javascript">
+    var pcArray = [];
+
+    function finish() {
+      document.documentElement.removeAttribute("class");
+    }
+
+    function start() {
+      for(var i = 0; i < 70; i++) {
+        var pc = new RTCPeerConnection();
+        pc.createOffer(function() {}, function() {});
+        pcArray.push(pc);
+      }
+      finish();
+    }
+  </script>
+</head>
+
+<body onload="setTimeout(start, 100)">
+</html>

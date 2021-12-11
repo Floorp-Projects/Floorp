@@ -1,0 +1,203 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArray.idl"
+#include "nsISupports.idl"
+#include "nsIFormatConverter.idl"
+#include "nsIContentPolicy.idl"
+
+interface nsICookieJarSettings;
+interface nsIPrincipal;
+
+%{ C++
+
+// these probably shouldn't live here, but in some central repository shared
+// by the entire app.
+#define kTextMime                   "text/plain"
+#define kRTFMime                    "text/rtf"
+#define kUnicodeMime                "text/unicode"
+#define kMozTextInternal          "text/x-moz-text-internal"  // text data which isn't suppoed to be parsed by other apps.
+#define kHTMLMime                   "text/html"
+#define kAOLMailMime                "AOLMAIL"
+#define kPNGImageMime               "image/png"
+#define kJPEGImageMime              "image/jpeg"
+#define kJPGImageMime               "image/jpg"
+#define kGIFImageMime               "image/gif"
+#define kFileMime                   "application/x-moz-file"
+
+#define kURLMime                    "text/x-moz-url"        // data contains url\ntitle
+#define kURLDataMime                "text/x-moz-url-data"   // data contains url only
+#define kURLDescriptionMime         "text/x-moz-url-desc"   // data contains description
+#define kURLPrivateMime             "text/x-moz-url-priv"   // same as kURLDataMime but for private uses
+#define kNativeImageMime            "application/x-moz-nativeimage"
+#define kNativeHTMLMime             "application/x-moz-nativehtml"
+
+// These are used to indicate the context for a fragment of HTML source, such
+// that some parent structure and style can be preserved. kHTMLContext
+// contains the serialized ancestor elements, whereas kHTMLInfo are numbers
+// identifying where in the context the fragment was from.
+#define kHTMLContext   "text/_moz_htmlcontext"
+#define kHTMLInfo      "text/_moz_htmlinfo"
+
+// Holds the MIME type from the image request. This is used to ensure the
+// local application handler for the request's MIME type accepts images with
+// the given filename extension (from kFilePromiseDestFilename). When the
+// image is dragged out, we replace the extension with a compatible extension.
+#define kImageRequestMime           "text/_moz_requestmime"
+
+// the source URL for a file promise
+#define kFilePromiseURLMime         "application/x-moz-file-promise-url"
+// the destination filename for a file promise
+#define kFilePromiseDestFilename    "application/x-moz-file-promise-dest-filename"
+// a dataless flavor used to interact with the OS during file drags
+#define kFilePromiseMime            "application/x-moz-file-promise"
+// a synthetic flavor, put into the transferable once we know the destination directory of a file drag
+#define kFilePromiseDirectoryMime   "application/x-moz-file-promise-dir"
+
+#define kCustomTypesMime "application/x-moz-custom-clipdata"
+
+%}
+
+
+/**
+  * nsIFlavorDataProvider allows a flavor to 'promise' data later,
+  * supplying the data lazily.
+  *
+  * To use it, call setTransferData, passing the flavor string and
+  * a nsIFlavorDataProvider QI'd to nsISupports.
+  *
+  * When someone calls getTransferData later, if the data size is
+  * stored as 0, the nsISupports will be QI'd to nsIFlavorDataProvider,
+  * and its getFlavorData called.
+  *
+  */
+interface nsITransferable;
+interface nsILoadContext;
+
+[scriptable, uuid(7E225E5F-711C-11D7-9FAE-000393636592)]
+interface nsIFlavorDataProvider : nsISupports
+{
+
+  /**
+    * Retrieve the data from this data provider.
+    *
+    * @param  aTransferable (in parameter) the transferable we're being called for.
+    * @param  aFlavor (in parameter) the flavor of data to retrieve
+    * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
+    */
+  void getFlavorData(in nsITransferable aTransferable, in string aFlavor, out nsISupports aData);
+};
+
+
+[scriptable, builtinclass, uuid(97e0c418-1c1e-4106-bad1-9fcb11dff2fe)]
+interface nsITransferable : nsISupports
+{
+  /**
+   * Initializes a transferable object.  This should be called on all
+   * transferable objects.  Failure to do so will result in fatal assertions in
+   * debug builds.
+   *
+   * The load context is used to track whether the transferable is storing privacy-
+   * sensitive information.
+   *
+   * To get the appropriate load context in Javascript callers, one needs to get
+   * to the document that the transferable corresponds to, and then get the load
+   * context from the document like this:
+   *
+   * var loadContext = doc.defaultView.docShell
+   *                                  .QueryInterface(Ci.nsILoadContext);
+   *
+   * In C++ callers, if you have the corresponding document, you can just call
+   * Document::GetLoadContext to get to the load context object.
+   *
+   * @param aContext the load context associated with the transferable object.
+   *        This can be set to null if a load context is not available.
+   */
+  void init(in nsILoadContext aContext);
+
+  /**
+    * Computes a list of flavors that the transferable can export, either
+    * through intrinsic knowledge or output data converters.
+    */
+  Array<ACString> flavorsTransferableCanExport();
+
+  /**
+    * Given a flavor retrieve the data.
+    *
+    * @param  aFlavor (in parameter) the flavor of data to retrieve
+    * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
+    */
+  [must_use] void getTransferData(in string aFlavor, out nsISupports aData);
+
+  /**
+    * Returns the first flavor which has data.
+    *
+    * @param  aFlavor (out parameter) the flavor of data that was retrieved
+    * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
+    */
+  void getAnyTransferData(out ACString aFlavor, out nsISupports aData);
+
+    ///////////////////////////////
+    // Setter part of interface
+    ///////////////////////////////
+
+  /**
+    * Computes a list of flavors that the transferable can
+    * accept into it, either through intrinsic knowledge or input data converters.
+    *
+    */
+  Array<ACString> flavorsTransferableCanImport();
+
+  /**
+    * Sets the data in the transferable with the specified flavor. The transferable
+    * will maintain its own copy the data, so it is not necessary to do that beforehand.
+    *
+    * @param  aFlavor the flavor of data that is being set
+    * @param  aData the data, either some variant of class in nsISupportsPrimitives.idl,
+    *         an nsIFile, or an nsIFlavorDataProvider (see above)
+    */
+  void setTransferData(in string aFlavor, in nsISupports aData);
+
+  /**
+    * Add the data flavor, indicating that this transferable
+    * can receive this type of flavor
+    *
+    * @param  aDataFlavor a new data flavor to handle
+    */
+  void addDataFlavor ( in string aDataFlavor ) ;
+
+  /**
+    * Removes the data flavor matching the given one (string compare) and the data
+    * that goes along with it.
+    *
+    * @param  aDataFlavor a data flavor to remove
+    */
+  void removeDataFlavor ( in string aDataFlavor ) ;
+
+  attribute nsIFormatConverter converter;
+
+  /**
+   * Use of the SetIsPrivateData() method generated by isPrivateData attribute should
+   * be avoided as much as possible because the value set may not reflect the status
+   * of the context in which the transferable was created.
+   */
+  [notxpcom, nostdcall] attribute boolean isPrivateData;
+
+  /**
+   * The principal of the source dom node this transferable was
+   * created from and the contentPolicyType for the transferable.
+   * Note, currently only used on Windows for network principal and
+   * contentPolicyType information in clipboard and drag operations.
+   */
+  [notxpcom, nostdcall] attribute nsIPrincipal requestingPrincipal;
+  [notxpcom, nostdcall] attribute nsContentPolicyType contentPolicyType;
+
+  /**
+   * The cookieJarSettings of the source dom node this transferable was created
+   * from.
+   */
+  [notxpcom, nostdcall] attribute nsICookieJarSettings cookieJarSettings;
+};

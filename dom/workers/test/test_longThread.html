@@ -1,0 +1,58 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads (Bug 437152)
+-->
+<head>
+  <title>Test for DOM Worker Threads (Bug 437152)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437152">DOM Worker Threads Bug 437152</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  const numThreads = 5;
+  var doneThreads = 0;
+
+  function onmessage(event) {
+    switch (event.data) {
+      case "done":
+        if (++doneThreads == numThreads) {
+          ok(true, "All messages received from workers");
+          SimpleTest.finish();
+        }
+        break;
+      default:
+        ok(false, "Unexpected message");
+        SimpleTest.finish();
+    }
+  }
+
+  function onerror(event) {
+    ok(false, "Worker had an error");
+    SimpleTest.finish();
+  }
+
+  for (var i = 0; i < numThreads; i++) {
+    var worker = new Worker("longThread_worker.js");
+    worker.onmessage = onmessage;
+    worker.onerror = onerror;
+    worker.postMessage("start");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

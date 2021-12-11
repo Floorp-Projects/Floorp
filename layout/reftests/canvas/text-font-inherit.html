@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure font inherits CSS values</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64" style="font:32px sans-serif;"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  var str = 'text';
+  ctx.fillStyle = 'black';
+  ctx.font = 'bold 2em sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(str, 0, 0);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
+
+var channel = SpecialPowers.wrap(window).docShell.currentDocumentChannel;
+var loadInfo = channel.loadInfo;
+
+// 1) perform some sanity checks
+var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.asciiSpec;
+var loadingPrincipal = channel.loadInfo.loadingPrincipal.asciiSpec;
+var principalToInherit = channel.loadInfo.principalToInherit.asciiSpec;
+
+ok(triggeringPrincipal.startsWith("http://mochi.test:8888/")
+    || triggeringPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
+   "initial triggeringPrincipal correct");
+ok(loadingPrincipal.startsWith("http://mochi.test:8888/")
+    || loadingPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
+   "initial loadingPrincipal correct");
+ok(principalToInherit.startsWith("http://mochi.test:8888/")
+    || principalToInherit.startsWith("http://mochi.xorigin-test:8888/"),
+   "initial principalToInherit correct");
+
+// reset principals on the loadinfo
+loadInfo.resetPrincipalToInheritToNullPrincipal();
+
+// 2) verify loadInfo contains the correct principals
+triggeringPrincipal = channel.loadInfo.triggeringPrincipal.asciiSpec;
+loadingPrincipal = channel.loadInfo.loadingPrincipal.asciiSpec;
+principalToInherit = channel.loadInfo.principalToInherit;
+
+ok(triggeringPrincipal.startsWith("http://mochi.test:8888/")
+    || triggeringPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
+   "triggeringPrincipal after resetting correct");
+ok(loadingPrincipal.startsWith("http://mochi.test:8888/")
+    || loadingPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
+   "loadingPrincipal after resetting correct");
+ok(principalToInherit.isNullPrincipal
+    || principalToInherit.startsWith("http://mochi.xorigin-test:8888/"),
+   "principalToInherit after resetting correct");
+
+// 3) verify that getChannelResultPrincipal returns right principal
+var resultPrincipal = SpecialPowers.Services.scriptSecurityManager
+                                   .getChannelResultPrincipal(channel);
+
+ok(resultPrincipal.isNullPrincipal,
+   "resultPrincipal after resetting correct");
+
+</script>
+</pre>
+</body>
+</html>

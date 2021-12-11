@@ -1,0 +1,194 @@
+{
+	"OptionsAnimations": {
+		"message": "Animations"
+	},
+	"sidebar_name": {
+		"message": "Vertical tab"
+	},
+	"allTabsLabel": {
+		"message": "Show all tabs…"
+	},
+	"browserActionTitle": {
+		"message": "Show/hide Tab Center Reborn"
+	},
+	"closeTabButtonTooltip": {
+		"message": "Close Tab"
+	},
+	"contextMenuCloseOtherTabs": {
+		"message": "Close &Other Tabs"
+	},
+	"contextMenuCloseTab": {
+		"message": "&Close Tab"
+	},
+	"contextMenuCloseTabs": {
+		"message": "Close Tab&s"
+	},
+	"contextMenuCloseTabsAfter": {
+		"message": "Close Tabs &After"
+	},
+	"contextMenuCloseTabsBefore": {
+		"message": "Close Tabs &Before"
+	},
+	"contextMenuDuplicateTab": {
+		"message": "&Duplicate Tab"
+	},
+	"contextMenuMoveTab": {
+		"message": "Mo&ve Tab"
+	},
+	"contextMenuMoveTabToEnd": {
+		"message": "Move to &End"
+	},
+	"contextMenuMoveTabToNewWindow": {
+		"message": "Move to New &Window"
+	},
+	"contextMenuMoveTabToStart": {
+		"message": "Move to &Start"
+	},
+	"contextMenuMuteTab": {
+		"message": "&Mute Tab"
+	},
+	"contextMenuNoContainer": {
+		"message": "&No Container"
+	},
+	"contextMenuOpenInContextualTab": {
+		"message": "Reopen in C&ontainer"
+	},
+	"contextMenuPinTab": {
+		"message": "&Pin Tab"
+	},
+	"contextMenuReloadTab": {
+		"message": "&Reload Tab"
+	},
+	"contextMenuUndoCloseTab": {
+		"message": "&Undo Close Tab"
+	},
+	"contextMenuUnloadTab": {
+		"message": "Un&load Tab"
+	},
+	"contextMenuUnmuteTab": {
+		"message": "Un&mute Tab"
+	},
+	"contextMenuUnpinTab": {
+		"message": "Un&pin Tab"
+	},
+	"extensionDescription": {
+		"message": "Simple and powerful vertical tab bar"
+	},
+	"muteTabButtonTooltip": {
+		"message": "Mute tab"
+	},
+	"newTabBtnTooltip": {
+		"message": "Open new tab"
+	},
+	"newTabContextMenuOpenAtEnd": {
+		"message": "At &End"
+	},
+	"newTabContextMenuOpenInPrivateWindow": {
+		"message": "New &Private Window"
+	},
+	"newTabContextMenuOpenInWindow": {
+		"message": "New &Window"
+	},
+	"newTabContextMenuOpneAfterCurrent": {
+		"message": "&Next to Current Tab"
+	},
+	"notificationDeletedMessage": {
+		"message": "Click on the notification to undo."
+	},
+	"notificationDeletedTitle": {
+		"message": "$COUNT$ closed tabs",
+		"placeholders": {
+			"count": {
+				"content": "$1",
+				"example": "5"
+			}
+		}
+	},
+	"optionsAdvancedTitle": {
+		"message": "Advanced"
+	},
+	"optionsAppearanceTitle": {
+		"message": "Appearance"
+	},
+	"optionsBehaviorTitle": {
+		"message": "Behavior"
+	},
+	"optionsCompactMode": {
+		"message": "Compact Mode"
+	},
+	"optionsCompactModeDynamic": {
+		"message": "Dynamic"
+	},
+	"optionsCompactModeExplanation": {
+		"message": "The Compact Mode reduces the height of tabs to show more of them. In the Dynamic setting, it will engage once we have no space left."
+	},
+	"optionsCompactModeOff": {
+		"message": "Disabled"
+	},
+	"optionsCompactModeStrict": {
+		"message": "Enabled"
+	},
+	"optionsCompactPins": {
+		"message": "Favicon-only Pinned Tabs"
+	},
+	"optionsCustomCSS": {
+		"message": "Custom Stylesheet"
+	},
+	"optionsCustomCSSChangelogLink": {
+		"message": "Check the changelog for breaking changes"
+	},
+	"optionsCustomCSSWikiLink": {
+		"message": "Save Settings"
+	},
+	"optionsNotifyClosingManyTabs": {
+		"message": "Notify when closing many tabs"
+	},
+	"optionsNotifyClosingManyTabsExplanation": {
+		"message": "Display a notification to let you undo when closing more than $COUNT$ tabs.",
+		"placeholders": {
+			"count": {
+				"content": "$1",
+				"example": "5"
+			}
+		}
+	},
+	"optionsSaveCustomCSS": {
+		"message": "Save CSS"
+	},
+	"optionsSwitchByScrolling": {
+		"message": "Switch active tab by scrolling"
+	},
+	"optionsSwitchByScrollingAlways": {
+		"message": "Always"
+	},
+	"optionsSwitchByScrollingNever": {
+		"message": "Never"
+	},
+	"optionsSwitchByScrollingWithCtrl": {
+		"message": "With Ctrl"
+	},
+	"optionsSwitchByScrollingWithCtrlExplanation": {
+		"message": "Activate the next or previous tab instead of scrolling under certain circumstances."
+	},
+	"optionsSwitchLastActiveTab": {
+		"message": "Switch to Last Active Tab"
+	},
+	"optionsSwitchLastActiveTabExplanation": {
+		"message": "Click active tab to switch to the last active one."
+	},
+	"optionsThemeIntegration": {
+		"message": "Use current browser theme"
+	},
+	"optionsThemeIntegrationExplanation": {
+		"message": "Use current browser theme instead of default light theme."
+	},
+	"searchPlaceholder": {
+		"message": "Filter tabs"
+	},
+	"settingsBtnTooltip": {
+		"message": "Open settings"
+	},
+	"unmuteTabButtonTooltip": {
+		"message": "Unmute tab"
+	}
+}

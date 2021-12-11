@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<title>Test ImageBitmap : Structured Clone</title>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script src="imagebitmap_structuredclone_utils.js"></script>
+<script type="text/javascript">
+
+var worker = new Worker("imagebitmap_structuredclone.js");
+worker.onmessage = function(event) {
+
+  if (event.data.type == "status") {
+    ok(event.data.status, event.data.msg);
+  } else if (event.data.type == "finish") {
+    SimpleTest.finish();
+  } else if (event.data.type == "bitmap1") {
+    compareImageBitmapWithImageElement(event.data.bitmap, gImage1);
+  } else if (event.data.type == "bitmap2") {
+    compareImageBitmapWithImageElement(event.data.bitmap, gImage2);
+  } else if (event.data.type == "bitmap3") {
+    compareImageBitmapWithImageData(event.data.bitmap, gImageData, "Check preserving alpha");
+  }
+}
+
+function runTests() {
+  ok(worker, "Worker created successfully.");
+
+  prepareImageBitmaps().then(function(){
+    worker.postMessage({"bitmap1":gImageBitmap1, "bitmap2":gImageBitmap2, "bitmap3":gImageBitmap3});
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+</script>
+</body>

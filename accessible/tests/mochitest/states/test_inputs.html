@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML input states</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  function doTest() {
+    // //////////////////////////////////////////////////////////////////////////
+    // 'editable' and 'multiline' states.
+    testStates("input", 0, EXT_STATE_EDITABLE, 0, EXT_STATE_MULTI_LINE);
+    testStates("textarea", 0, EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE);
+
+    testStates("input_readonly", 0, EXT_STATE_EDITABLE);
+    testStates("input_disabled", 0, EXT_STATE_EDITABLE);
+    testStates("textarea_readonly", 0, EXT_STATE_EDITABLE);
+    testStates("textarea_disabled", 0, EXT_STATE_EDITABLE);
+
+    // //////////////////////////////////////////////////////////////////////////
+    // 'required', 'readonly' and 'unavailable' states.
+    var maybe_required = ["input", "search", "radio", "checkbox", "textarea"];
+    var never_required = ["submit", "button", "reset", "image"];
+
+    var i;
+    for (i in maybe_required) {
+      testStates(maybe_required[i],
+                 STATE_FOCUSABLE, 0,
+                 STATE_REQUIRED | STATE_READONLY | STATE_UNAVAILABLE);
+
+      testStates(maybe_required[i] + "_required",
+                 STATE_FOCUSABLE | STATE_REQUIRED, 0,
+                 STATE_UNAVAILABLE | STATE_READONLY);
+
+      var readonlyID = maybe_required[i] + "_readonly";
+      if (document.getElementById(readonlyID)) {
+        testStates(readonlyID,
+                   STATE_FOCUSABLE | STATE_READONLY, 0,
+                   STATE_UNAVAILABLE | STATE_REQUIRED);
+      }
+
+      testStates(maybe_required[i] + "_disabled",
+                 STATE_UNAVAILABLE, 0,
+                 STATE_FOCUSABLE | STATE_READONLY | STATE_REQUIRED);
+    }
+
+    for (i in never_required) {
+      testStates(never_required[i], 0, 0, STATE_REQUIRED | EXT_STATE_EDITABLE);
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // inherited 'unavailable' state
+    testStates("f", STATE_UNAVAILABLE);
+    testStates("f_input", STATE_UNAVAILABLE);
+    testStates("f_input_disabled", STATE_UNAVAILABLE);
+
+    // //////////////////////////////////////////////////////////////////////////
+    // inherited from file control
+    var fileBrowseButton = getAccessible("file").firstChild;
+    testStates(fileBrowseButton, STATE_UNAVAILABLE | STATE_REQUIRED);
+    // No states on the label.
+
+    // //////////////////////////////////////////////////////////////////////////
+    // 'invalid' state
+    var invalid = ["pattern", "email", "url"];
+    for (i in invalid) {
+      testStates(invalid[i], STATE_INVALID);
+      testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // not 'invalid' state
+    // (per spec, min/maxlength are always valid until interactively edited)
+    var validInput = document.createElement("input");
+    validInput.maxLength = "0";
+    validInput.value = "a";
+    ok(validInput.validity.valid,
+       "input should be valid despite maxlength (no interactive edits)");
+
+    var validInput2 = document.createElement("input");
+    validInput2.minLength = "1";
+    validInput2.value = "";
+    ok(validInput2.validity.valid,
+       "input should be valid despite minlength (no interactive edits)");
+
+    var valid = ["minlength", "maxlength"];
+    for (i in valid) {
+      testStates(valid[i], 0, 0, STATE_INVALID);
+      testStates(valid[i] + "2", 0, 0, STATE_INVALID);
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // 'invalid' state
+    // (per spec, min/maxlength validity is affected by interactive edits)
+    var mininp = document.getElementById("minlength");
+    mininp.focus();
+    mininp.setSelectionRange(mininp.value.length, mininp.value.length);
+    synthesizeKey("KEY_Backspace");
+    ok(!mininp.validity.valid,
+       "input should be invalid after interactive edits");
+    testStates(mininp, STATE_INVALID);
+    // inputs currently cannot be made longer than maxlength interactively,
+    // so we're not testing that case.
+
+    // //////////////////////////////////////////////////////////////////////////
+    // autocomplete states
+    testStates("autocomplete-default", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-off", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-formoff", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-list", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-list2", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-tel", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-email", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-search", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
+    // //////////////////////////////////////////////////////////////////////////
+    // haspopup
+    testStates("autocomplete-list", STATE_HASPOPUP);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=559275"
+     title="map attribute required to STATE_REQUIRED">
+    Bug 559275
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=389238"
+     title="Support disabled state on fieldset">
+    Bug 389238
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=599163"
+     title="check disabled state instead of attribute">
+    Bug 599163
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
+     title="Expose intrinsic invalid state to accessibility API">
+    Bug 601205
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
+     title="Expose intrinsic invalid state to accessibility API">
+    Bug 601205
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=559766"
+     title="Add accessibility support for @list on HTML input and for HTML datalist">
+    Bug 559766
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Bug 699017
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=733382"
+     title="Editable state bit should be present on readonly inputs">
+    Bug 733382
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=878590"
+     title="HTML5 datalist is not conveyed by haspopup property">
+    Bug 878590
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+
+  <form>
+    <input id="input" type="input">
+    <input id="input_required" type="input" required>
+    <input id="input_readonly" type="input" readonly>
+    <input id="input_disabled" type="input" disabled>
+    <input id="search" type="search">
+    <input id="search_required" type="search" required>
+    <input id="search_readonly" type="search" readonly>
+    <input id="search_disabled" type="search" disabled>
+    <input id="radio" type="radio">
+    <input id="radio_required" type="radio" required>
+    <input id="radio_disabled" type="radio" disabled>
+    <input id="checkbox" type="checkbox">
+    <input id="checkbox_required" type="checkbox" required>
+    <input id="checkbox_disabled" type="checkbox" disabled>
+    <textarea id="textarea"></textarea>
+    <textarea id="textarea_required" required></textarea>
+    <textarea id="textarea_readonly" readonly></textarea>
+    <textarea id="textarea_disabled" disabled></textarea>
+  </form>
+
+  <!-- bogus required usage -->
+  <input id="submit" type="submit" required>
+  <input id="button" type="button" required>
+  <input id="reset" type="reset" required>
+  <input id="image" type="image" required>
+
+  <!-- inherited disabled -->
+  <fieldset id="f" disabled>
+    <input id="f_input">
+    <input id="f_input_disabled" disabled>
+  </fieldset>
+
+  <!-- inherited from input@type="file" -->
+  <input id="file" type="file" required disabled>
+
+  <!-- invalid/valid -->
+  <input id="maxlength" maxlength="1" value="f">
+  <input id="maxlength2" maxlength="100" value="foo">
+  <input id="minlength" minlength="2" value="fo">
+  <input id="minlength2" minlength="1" value="foo">
+  <input id="pattern" pattern="bar" value="foo">
+  <input id="pattern2" pattern="bar" value="bar">
+  <input id="email" type="email" value="foo">
+  <input id="email2" type="email" value="foo@bar.com">
+  <input id="url" type="url" value="foo">
+  <input id="url2" type="url" value="http://mozilla.org/">
+
+  <!-- autocomplete -->
+  <input id="autocomplete-default">
+  <input id="autocomplete-off" autocomplete="off">
+  <form autocomplete="off">
+    <input id="autocomplete-formoff">
+  </form>
+  <datalist id="cities">
+    <option>Paris</option>
+    <option>San Francisco</option>
+  </datalist>
+  <input id="autocomplete-list" list="cities">
+  <input id="autocomplete-list2" list="cities" autocomplete="off">
+  <input id="autocomplete-tel" type="tel">
+
+  Email Address:
+  <input id="autocomplete-email" type="email" list="contacts" value="xyzzy">
+  <datalist id="contacts">
+    <option>xyzzy@plughs.com</option>
+    <option>nobody@mozilla.org</option>
+  </datalist>
+
+  </br>Search for:
+  <input id="autocomplete-search" type="search" list="searchhisty" value="Gamma">
+  <datalist id="searchhisty">
+    <option>Gamma Rays</option>
+    <option>Gamma Ray Bursts</option>
+  </datalist>
+
+  </body>
+</html>

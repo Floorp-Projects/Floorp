@@ -1,0 +1,11 @@
+[package]
+name = "gecko-fuzz-targets"
+version = "0.1.0"
+authors = ["fuzzing@mozilla.com"]
+
+[dependencies]
+libc = "0.2"
+tempfile = "3"
+lazy_static = "1.4.0"
+rkv = { version = "0.17", features = ["with-fuzzer-no-link"] }
+lmdb-rkv = { version = "0.14", features = ["with-fuzzer-no-link"] }

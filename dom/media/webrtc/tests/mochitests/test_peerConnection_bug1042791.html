@@ -1,0 +1,36 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1040346",
+    title: "Basic H.264 GMP video-only peer connection"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    options = options || { };
+    options.h264 = true;
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{video: true}], [{video: true}]);
+    test.chain.removeAfter("PC_LOCAL_CREATE_OFFER");
+
+    test.chain.append([
+      function PC_LOCAL_VERIFY_H264_OFFER(test) {
+        ok(!test.pcLocal._latest_offer.sdp.toLowerCase().includes("profile-level-id=0x42e0"),
+           "H264 offer does not contain profile-level-id=0x42e0");
+        ok(test.pcLocal._latest_offer.sdp.toLowerCase().includes("profile-level-id=42e0"),
+           "H264 offer contains profile-level-id=42e0");
+      }
+    ]);
+
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

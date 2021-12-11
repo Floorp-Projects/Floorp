@@ -1,0 +1,24 @@
+<!doctype html>
+<title>Test for bug 1619245 - animated image as canvas background</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<script src="imgutils.js"></script>
+<script src="animationPolling.js"></script>
+<!-- Intentionally not including SimpleTest.css as that sets the background of the root -->
+<body id="body" style="background-image: url(animated-gif.gif); display: none; overflow: hidden;">
+  <div id="reference" style="background-image: url(animated-gif-finalframe.gif); display: none; width: 100vw; height: 100vh;"></div>
+  <div id="clean" style="display: none; width: 100vw; height: 100vh;"></div>
+  <div id="debug" style="display: none"></div>
+</body>
+<script>
+const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
+
+window.onload = function() {
+  // first move the reference outside of the <body>, so that the test can properly show it.
+  document.documentElement.appendChild(document.getElementById("reference"));
+  document.documentElement.appendChild(document.getElementById("debug"));
+  document.documentElement.appendChild(document.getElementById("clean"));
+  var animTest = new AnimationTest(20, FAILURE_TIMEOUT, 'reference', 'body', 'debug', 'clean', 'animated-gif.gif');
+  animTest.beginTest();
+}
+</script>

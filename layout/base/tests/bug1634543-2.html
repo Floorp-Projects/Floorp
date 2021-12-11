@@ -1,0 +1,24 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Caret is correctly position for block whose only child is an abspos span</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div:focus {
+    outline: 3px solid blue;
+  }
+  span {
+    /* This is the point of the test */
+    position: absolute;
+  }
+</style>
+<div contenteditable="true" spellcheck="false"><span></span></div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable="true"]').focus();
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      document.documentElement.removeAttribute("class");
+    });
+  });
+});
+</script>

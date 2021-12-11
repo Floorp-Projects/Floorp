@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" 
+"http://www.w3.org/TR/REC-html40/strict.dtd">
+<HEAD>
+
+</HEAD>
+<BODY>
+<table bgcolor=orange border>
+<tr>
+  <td>c11</td><td>c12</td><td>c13</td><td>c14</td>
+</tr>
+ <tr>
+  <td id="c21">c21</td>
+ </tr>
+</table>
+
+<script>
+document.body.offsetWidth;
+
+c21 = document.getElementById("c21");
+
+td = document.createElement("td");
+td.setAttribute("colspan", "0");
+td.appendChild(document.createTextNode("X1"));
+
+c21.parentNode.insertBefore(td, c21.nextSibling);
+</script>
+
+</BODY></HTML>

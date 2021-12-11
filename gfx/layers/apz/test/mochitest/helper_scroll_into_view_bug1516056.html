@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Test for bug 1516056: "scroll into view" respects bounds on layout scroll position</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    #target {
+      width: 100px;
+      height: 100px;
+      margin-left: 50%;
+      margin-right: 50%;
+      background: cyan;
+    }
+  </style>
+</head>
+<body>
+  <div id="target"></div>
+  <script>
+    let vv = window.visualViewport;
+    function getVisualScrollRange() {
+      let rootScroller = document.scrollingElement;
+      return {
+        width: rootScroller.scrollWidth - vv.width,
+        height: rootScroller.scrollHeight - vv.height,
+      };
+    }
+    function getVisualViewportRect() {
+      return {
+        x: vv.pageLeft,
+        y: vv.pageTop,
+        w: vv.width,
+        h: vv.height,
+      };
+    }
+    async function test() {
+      is(window.scrollMaxX, 0, "page should have a zero horizontal layout scroll range");
+      is(window.scrollMaxY, 0, "page should have a zero vertical layout scroll range");
+      let visualScrollRange = getVisualScrollRange();
+      ok(visualScrollRange.width > 0, "page should have a nonzero horizontal visual scroll range");
+      ok(visualScrollRange.height > 0, "page should have a nonzero vertical visual scroll range");
+      let target = document.getElementById("target");
+
+      // Scroll target element into view. Wait until any visual scrolling is done before doing checks.
+      let scrollPromise = new Promise(resolve => {
+        vv.addEventListener("scroll", resolve, { once: true });
+      });
+      target.scrollIntoView();
+      await scrollPromise; // wait for visual viewport "scroll" event
+      await promiseApzFlushedRepaints();
+
+      // Test that scrollIntoView() respected the layout scroll range.
+      is(window.scrollX, 0, "page should not layout-scroll with a zero layout scroll range");
+      is(window.scrollY, 0, "page should not layout-scroll with a zero layout scroll range");
+
+      // Test that scrollIntoView() did perform visual scrolling.
+      let vvRect = getVisualViewportRect();
+      let targetBounds = target.getBoundingClientRect();
+      // set property names expected by rectContains()
+      targetBounds.w = targetBounds.width;
+      targetBounds.h = targetBounds.height;
+      assertRectContainment(vvRect, "visual viewport", targetBounds, "target element bounding rect");
+    }
+    SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

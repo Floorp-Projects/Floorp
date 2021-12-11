@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.webconsole-evaluation-selector-button {
+  padding: 1px 16px 1px 8px !important;
+  margin-top: 2px;
+  background-position-x: right 4px !important;
+  max-width: 150px;
+}
+
+/* This overrides the .devtools-dropdown-button:dir(rtl) rule from toolbars.css */
+html[dir="rtl"] .webconsole-evaluation-selector-button {
+  background-position-x: right 4px !important;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-evaluation-selector-button {
+  height: 20px;
+  margin-inline-start: 5px;
+  margin-top: 1px;
+}
+
+.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button {
+  background-color: var(--blue-60);
+  color: white;
+  fill: currentColor;
+}
+
+.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button:hover,
+.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button[aria-expanded="true"] {
+  background-color: var(--blue-70) !important;
+  color: white !important;
+}

@@ -1,0 +1,64 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Tests updated intervals</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle cx="20" cy="20" r="15" fill="blue" id="circle">
+    <animate attributeName="cx" from="0" to="100" begin="2s" dur="4s"
+             id="anim1" attributeType="XML"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Tests for updated intervals  **/
+
+/* Global Variables */
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  var svg = document.getElementById("svg");
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  var anim = document.getElementById("anim1");
+
+  // Check regular operation
+  svg.setCurrentTime(3);
+  is(anim.getStartTime(), 2, "Unexpected initial start time");
+
+  // Add an instance time before the current interval at t=1s
+  anim.beginElementAt(-2);
+
+  // We shouldn't change the begin time
+  is(anim.getStartTime(), 2, "Start time shouldn't have changed");
+
+  // Or the end--that is, if we go to t=5.5 we should still be running
+  svg.setCurrentTime(5.5);
+  try {
+    is(anim.getSimpleDuration(), 4, "Simple duration shouldn't have changed");
+    is(anim.getStartTime(), 2, "Start time shouldn't have changed after seek");
+  } catch (e) {
+    if (e.name != "InvalidStateError" ||
+        e.code != DOMException.INVALID_STATE_ERR)
+      throw e;
+    ok(false, "Animation ended too early, even though begin time and " +
+      "simple duration didn't change");
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

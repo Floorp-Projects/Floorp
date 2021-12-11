@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1">
+
+  <!-- use an empty g to force filters.svg to load before onload -->
+  <use xlink:href="../filters.svg#empty" />
+
+  <foreignObject filter="url(../filters.svg#NonWhiteToBlack)"
+                 x="0" y="0" height="100%" width="100%">
+    <html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+      <title>Filter sanity-check</title>
+      <style type="text/css">
+      html, body { margin: 0; background: white; color: black; height: 100%; width: 100%; }
+      body { position: relative; }
+      </style>
+    </head>
+    <body>
+
+    <div style="position: absolute; top: 10px; left: 10px; width: 100px; height: 10px; background: green"></div>
+
+    <div style="position: absolute; top: 30px; left: 10px; width: 94px; height: 4px; border: 3px solid #c90;"></div>
+
+    <div style="position: absolute; top: 50px; left: 10px; width: 100px; height: 10px; background: black"></div>
+
+    <div style="position: absolute; top: 70px; left: 10px; width: 94px; height: 4px; border: 3px solid #000;"></div>
+
+    </body>
+    </html>
+  </foreignObject>
+</svg>

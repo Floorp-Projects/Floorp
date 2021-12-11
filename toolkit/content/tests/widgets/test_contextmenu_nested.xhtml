@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Nested Context Menu Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="popup_shared.js"></script>
+
+<menupopup id="outercontext">
+  <menuitem label="Context One"/>
+  <menu id="outercontextmenu" label="Sub">
+    <menupopup id="innercontext">
+      <menuitem id="innercontextmenu" label="Sub Context One"/>
+    </menupopup>
+  </menu>
+</menupopup>
+
+<menupopup id="outermain">
+  <menuitem label="One"/>
+  <menu id="outermenu" label="Sub">
+    <menupopup id="innermain">
+      <menuitem id="innermenu" label="Sub One" context="outercontext"/>
+    </menupopup>
+  </menu>
+</menupopup>
+
+<button label="Check"/>
+
+<vbox id="popuparea" popup="outermain" width="20" height="20"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var popupTests = [
+{
+  testname: "open outer popup",
+  events: [ "popupshowing outermain", "popupshown outermain" ],
+  test: () => synthesizeMouse($("popuparea"), 4, 4, {}),
+  result (testname) {
+    is($("outermain").triggerNode, $("popuparea"), testname);
+  }
+},
+{
+  testname: "open inner popup",
+  events: [ "DOMMenuItemActive outermenu", "popupshowing innermain", "popupshown innermain" ],
+  test () {
+    synthesizeMouse($("outermenu"), 4, 4, { type: "mousemove" });
+    synthesizeMouse($("outermenu"), 2, 2, { type: "mousemove" });
+  },
+  result (testname) {
+    is($("outermain").triggerNode, $("popuparea"), testname + " outer");
+    is($("innermain").triggerNode, $("popuparea"), testname + " inner");
+    is($("outercontext").triggerNode, null, testname + " outer context");
+  }
+},
+{
+  testname: "open outer context",
+  condition() { return (!navigator.platform.includes("Mac")); },
+  events: [ "popupshowing outercontext", "popupshown outercontext" ],
+  test: () => synthesizeMouse($("innermenu"), 4, 4, { type: "contextmenu", button: 2 }),
+  result (testname) {
+    is($("outermain").triggerNode, $("popuparea"), testname + " outer");
+    is($("innermain").triggerNode, $("popuparea"), testname + " inner");
+    is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
+  }
+},
+{
+  testname: "open inner context",
+  condition() { return (!navigator.platform.includes("Mac")); },
+  events: [ "DOMMenuItemActive outercontextmenu", "popupshowing innercontext", "popupshown innercontext" ],
+  test () {
+    synthesizeMouse($("outercontextmenu"), 4, 4, { type: "mousemove" });
+    setTimeout(function() {
+        synthesizeMouse($("outercontextmenu"), 2, 2, { type: "mousemove" });
+      }, 1000);
+  },
+  result (testname) {
+    is($("outermain").triggerNode, $("popuparea"), testname + " outer");
+    is($("innermain").triggerNode, $("popuparea"), testname + " inner");
+    is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
+    is($("innercontext").triggerNode, $("innermenu"), testname + " inner context");
+  }
+},
+{
+  testname: "close context",
+  condition() { return (!navigator.platform.includes("Mac")); },
+  events: [ "popuphiding innercontext", "popuphidden innercontext",
+            "popuphiding outercontext", "popuphidden outercontext",
+            "DOMMenuInactive innercontext",
+            "DOMMenuItemInactive outercontextmenu", "DOMMenuItemInactive outercontextmenu",
+            "DOMMenuInactive outercontext" ],
+  test: () => $("outercontext").hidePopup(),
+  result (testname) {
+    is($("outermain").triggerNode, $("popuparea"), testname + " outer");
+    is($("innermain").triggerNode, $("popuparea"), testname + " inner");
+    is($("outercontext").triggerNode, null, testname + " outer context");
+    is($("innercontext").triggerNode, null, testname + " inner context");
+  }
+},
+{
+  testname: "hide menus",
+  events: [ "popuphiding innermain", "popuphidden innermain",
+            "popuphiding outermain", "popuphidden outermain",
+            "DOMMenuInactive innermain",
+            "DOMMenuItemInactive outermenu", "DOMMenuItemInactive outermenu",
+            "DOMMenuInactive outermain" ],
+
+  test: () => $("outermain").hidePopup(),
+  result (testname) {
+    is($("outermain").triggerNode, null, testname + " outer");
+    is($("innermain").triggerNode, null, testname + " inner");
+    is($("outercontext").triggerNode, null, testname + " outer context");
+    is($("innercontext").triggerNode, null, testname + " inner context");
+  }
+}
+];
+
+SimpleTest.waitForFocus(function runTest() {
+  return startPopupTests(popupTests);
+});
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml"><p id="display"/></body>
+
+</window>

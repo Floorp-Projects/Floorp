@@ -1,0 +1,224 @@
+diff --git a/mozglue/misc/decimal/Decimal.cpp b/mozglue/misc/decimal/Decimal.cpp
+--- a/mozglue/misc/decimal/Decimal.cpp
++++ b/mozglue/misc/decimal/Decimal.cpp
+@@ -23,22 +23,20 @@
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-#include "platform/Decimal.h"
++#include "Decimal.h"
++#include "moz-decimal-utils.h"
+ 
+-#include "wtf/Allocator.h"
+-#include "wtf/MathExtras.h"
+-#include "wtf/Noncopyable.h"
+-#include "wtf/text/StringBuilder.h"
++using namespace moz_decimal_utils;
+ 
+ #include <algorithm>
+ #include <float.h>
+ 
+ namespace blink {
+ 
+ namespace DecimalPrivate {
+ 
+@@ -690,17 +688,17 @@ Decimal Decimal::floor() const
+     if (isNegative() && !isMultiplePowersOfTen(m_data.coefficient(), numberOfDropDigits))
+         ++result;
+     return Decimal(sign(), 0, result);
+ }
+ 
+ Decimal Decimal::fromDouble(double doubleValue)
+ {
+     if (std::isfinite(doubleValue))
+-        return fromString(String::numberToStringECMAScript(doubleValue));
++        return fromString(mozToString(doubleValue));
+ 
+     if (std::isinf(doubleValue))
+         return infinity(doubleValue < 0 ? Negative : Positive);
+ 
+     return nan();
+ }
+ 
+ Decimal Decimal::fromString(const String& str)
+@@ -931,17 +929,17 @@ Decimal Decimal::round() const
+     result /= 10;
+     return Decimal(sign(), 0, result);
+ }
+ 
+ double Decimal::toDouble() const
+ {
+     if (isFinite()) {
+         bool valid;
+-        const double doubleValue = toString().toDouble(&valid);
++        const double doubleValue = mozToDouble(toString(), &valid);
+         return valid ? doubleValue : std::numeric_limits<double>::quiet_NaN();
+     }
+ 
+     if (isInfinity())
+         return isNegative() ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
+ 
+     return std::numeric_limits<double>::quiet_NaN();
+ }
+@@ -984,17 +982,17 @@ String Decimal::toString() const
+             ++coefficient;
+ 
+         while (originalExponent < 0 && coefficient && !(coefficient % 10)) {
+             coefficient /= 10;
+             ++originalExponent;
+         }
+     }
+ 
+-    const String digits = String::number(coefficient);
++    const String digits = mozToString(coefficient);
+     int coefficientLength = static_cast<int>(digits.length());
+     const int adjustedExponent = originalExponent + coefficientLength - 1;
+     if (originalExponent <= 0 && adjustedExponent >= -6) {
+         if (!originalExponent) {
+             builder.append(digits);
+             return builder.toString();
+         }
+ 
+@@ -1026,14 +1024,27 @@ String Decimal::toString() const
+         if (adjustedExponent) {
+             builder.append(adjustedExponent < 0 ? "e" : "e+");
+             builder.appendNumber(adjustedExponent);
+         }
+     }
+     return builder.toString();
+ }
+ 
++bool Decimal::toString(char* strBuf, size_t bufLength) const
++{
++  ASSERT(bufLength > 0);
++  String str = toString();
++  size_t length = str.copy(strBuf, bufLength);
++  if (length < bufLength) {
++    strBuf[length] = '\0';
++    return true;
++  }
++  strBuf[bufLength - 1] = '\0';
++  return false;
++}
++
+ Decimal Decimal::zero(Sign sign)
+ {
+     return Decimal(EncodedData(sign, EncodedData::ClassZero));
+ }
+ 
+ } // namespace blink
+diff --git a/mozglue/misc/decimal/Decimal.h b/mozglue/misc/decimal/Decimal.h
+--- a/mozglue/misc/decimal/Decimal.h
++++ b/mozglue/misc/decimal/Decimal.h
+@@ -23,26 +23,49 @@
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++/**
++ * Imported from:
++ * https://chromium.googlesource.com/chromium/src.git/+/master/third_party/WebKit/Source/platform/Decimal.h
++ * Check UPSTREAM-GIT-SHA for the commit ID of the last update from Blink core.
++ */
++
+ #ifndef Decimal_h
+ #define Decimal_h
+ 
++#include "mozilla/Assertions.h"
++#include <stdint.h>
+ #include "mozilla/Types.h"
+ 
+-#include "platform/PlatformExport.h"
+-#include "wtf/Allocator.h"
+-#include "wtf/Assertions.h"
+-#include "wtf/text/WTFString.h"
+-#include <stdint.h>
++#include <string>
++
++#ifndef ASSERT
++#define DEFINED_ASSERT_FOR_DECIMAL_H 1
++#define ASSERT MOZ_ASSERT
++#endif
++
++#define PLATFORM_EXPORT
++
++// To use USING_FAST_MALLOC we'd need:
++// https://chromium.googlesource.com/chromium/src.git/+/master/third_party/WebKit/Source/wtf/Allocator.h
++// Since we don't allocate Decimal objects, no need.
++#define USING_FAST_MALLOC(type) \
++  void ignore_this_dummy_method() = delete
++
++#define DISALLOW_NEW()                                          \
++    private:                                                    \
++        void* operator new(size_t) = delete;                    \
++        void* operator new(size_t, void*) = delete;             \
++    public:
+ 
+ namespace blink {
+ 
+ namespace DecimalPrivate {
+ class SpecialValueHandler;
+ }
+ 
+ // This class represents decimal base floating point number.
+@@ -139,27 +162,28 @@ public:
+     MFBT_API Decimal abs() const;
+     MFBT_API Decimal ceil() const;
+     MFBT_API Decimal floor() const;
+     MFBT_API Decimal remainder(const Decimal&) const;
+     MFBT_API Decimal round() const;
+ 
+     MFBT_API double toDouble() const;
+     // Note: toString method supports infinity and nan but fromString not.
+-    MFBT_API String toString() const;
++    MFBT_API std::string toString() const;
++    MFBT_API bool toString(char* strBuf, size_t bufLength) const;
+ 
+     static MFBT_API Decimal fromDouble(double);
+     // fromString supports following syntax EBNF:
+     //  number ::= sign? digit+ ('.' digit*) (exponent-marker sign? digit+)?
+     //          | sign? '.' digit+ (exponent-marker sign? digit+)?
+     //  sign ::= '+' | '-'
+     //  exponent-marker ::= 'e' | 'E'
+     //  digit ::= '0' | '1' | ... | '9'
+     // Note: fromString doesn't support "infinity" and "nan".
+-    static MFBT_API Decimal fromString(const String&);
++    static MFBT_API Decimal fromString(const std::string& aValue);
+     static MFBT_API Decimal infinity(Sign);
+     static MFBT_API Decimal nan();
+     static MFBT_API Decimal zero(Sign);
+ 
+     // You should not use below methods. We expose them for unit testing.
+     MFBT_API explicit Decimal(const EncodedData&);
+     const EncodedData& value() const { return m_data; }
+ 
+@@ -178,9 +202,20 @@ private:
+ 
+     Sign sign() const { return m_data.sign(); }
+ 
+     EncodedData m_data;
+ };
+ 
+ } // namespace blink
+ 
++namespace mozilla {
++typedef blink::Decimal Decimal;
++} // namespace mozilla
++
++#undef USING_FAST_MALLOC
++
++#ifdef DEFINED_ASSERT_FOR_DECIMAL_H
++#undef DEFINED_ASSERT_FOR_DECIMAL_H
++#undef ASSERT
++#endif
++
+ #endif // Decimal_h

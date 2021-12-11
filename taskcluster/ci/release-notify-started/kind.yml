@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.release_started:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    name: notify-release-drivers-started
+    description: Sends email to release-drivers telling release was started.
+    run-on-projects: []
+    shipping-phase: promote
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: "debian10-base"}
+        max-run-time: 600
+    emails:
+        by-project:
+            mozilla-(beta|release|esr.*): ["release-signoff@mozilla.org"]
+            try: ["{config[params][owner]}"]
+            default: []
+
+jobs:
+    firefox:
+        shipping-product: firefox
+    devedition:
+        shipping-product: devedition

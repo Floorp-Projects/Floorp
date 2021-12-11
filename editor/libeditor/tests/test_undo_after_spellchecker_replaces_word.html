@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display"></div>
+<textarea id="textarea">abc abx abc</textarea>
+<div id="contenteditable" contenteditable>abc abx abc</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.expectAssertions(0, 1);  // In a11y module
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Even if `beforeinput` events for `setUserInput()` calls are not
+      // allowed to cancel, correcting the spells should be cancelable for
+      // compatibility with the other browsers.
+      ["dom.input_event.allow_to_cancel_set_user_input", false],
+    ],
+  });
+
+  let textarea = document.getElementById("textarea");
+  let textEditor = SpecialPowers.wrap(textarea).editor;
+  let contenteditable = document.getElementById("contenteditable");
+  let htmlEditor = SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+
+  function doTest(aElement, aRootElement, aEditor, aDescription) {
+    return new Promise(resolve => {
+      let inlineSpellChecker = aEditor.getInlineSpellChecker(true);
+
+      aElement.focus();
+
+      function checkInputEvent(aEvent, aInputType, aData, aDataTransfer, aTargetRanges, aDescriptionInner) {
+        ok(aEvent instanceof InputEvent,
+           `${aDescription}"${aEvent.type}" event should be dispatched with InputEvent interface ${aDescriptionInner}`);
+        is(aEvent.cancelable, aEvent.type === "beforeinput" && aInputType !== "",
+           `${aDescription}"${aEvent.type}" event should ${aEvent.type === "beforeinput" ? "be" : "be never"} cancelable ${aDescriptionInner}`);
+        is(aEvent.bubbles, true,
+           `${aDescription}"${aEvent.type}" event should always bubble ${aDescriptionInner}`);
+        is(aEvent.inputType, aInputType,
+           `${aDescription}inputType of "${aEvent.type}" event should be "${aInputType}" ${aDescriptionInner}`);
+        is(aEvent.data, aData,
+           `${aDescription}data of "${aEvent.type}" event should be ${aData} ${aDescriptionInner}`);
+        if (aDataTransfer === null) {
+          is(aEvent.dataTransfer, null,
+             `${aDescription}dataTransfer of "${aEvent.type}" event should be null ${aDescriptionInner}`);
+        } else {
+          for (let item of aDataTransfer) {
+            is(aEvent.dataTransfer.getData(item.type), item.data,
+               `${aDescription}dataTransfer of "${aEvent.type}" event should have ${item.data} as ${item.type} ${aDescriptionInner}`);
+          }
+        }
+        let targetRanges = aEvent.getTargetRanges();
+        if (aTargetRanges.length === 0) {
+          is(targetRanges.length, 0,
+             `${aDescription}getTargetRange() of "${aEvent.type}" event should return empty array ${aDescriptionInner}`);
+        } else {
+          is(targetRanges.length, aTargetRanges.length,
+             `${aDescription}getTargetRange() of "${aEvent.type}" event should return static range array ${aDescriptionInner}`);
+          if (targetRanges.length == aTargetRanges.length) {
+            for (let i = 0; i < targetRanges.length; i++) {
+              is(targetRanges[i].startContainer, aTargetRanges[i].startContainer,
+                 `${aDescription}startContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+              is(targetRanges[i].startOffset, aTargetRanges[i].startOffset,
+                 `${aDescription}startOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+              is(targetRanges[i].endContainer, aTargetRanges[i].endContainer,
+                 `${aDescription}endContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+              is(targetRanges[i].endOffset, aTargetRanges[i].endOffset,
+                 `${aDescription}endOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+            }
+          }
+        }
+      }
+
+      let beforeInputEvents = [];
+      let inputEvents = [];
+      function onBeforeInput(aEvent) {
+        beforeInputEvents.push(aEvent);
+      }
+      function onInput(aEvent) {
+        inputEvents.push(aEvent);
+      }
+
+      function getValue() {
+        return aElement === textarea ? aElement.value : aElement.innerHTML;
+      }
+
+      SpecialPowers.Cu.import(
+        "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+      .onSpellCheck(aElement, () => {
+        SimpleTest.executeSoon(() => {
+          aElement.addEventListener("beforeinput", onBeforeInput);
+          aElement.addEventListener("input", onInput);
+
+          let misspelledWord = inlineSpellChecker.getMisspelledWord(aRootElement.firstChild, 5);
+          is(misspelledWord.startOffset, 4,
+             `${aDescription}Misspelled word should start from 4`);
+          is(misspelledWord.endOffset, 7,
+             `${aDescription}Misspelled word should end at 7`);
+          beforeInputEvents = [];
+          inputEvents = [];
+          inlineSpellChecker.replaceWord(aRootElement.firstChild, 5, "aux");
+          is(getValue(), "abc aux abc",
+             `${aDescription}'abx' should be replaced with 'aux'`);
+          is(beforeInputEvents.length, 1,
+             `${aDescription}Only one "beforeinput" event should be fired when replacing a word with spellchecker`);
+          if (aElement === textarea) {
+            checkInputEvent(beforeInputEvents[0], "insertReplacementText", "aux", null, [],
+                            "when replacing a word with spellchecker");
+          } else {
+            checkInputEvent(beforeInputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}],
+                            [{startContainer: aRootElement.firstChild, startOffset: 4,
+                              endContainer: aRootElement.firstChild, endOffset: 7}],
+                            "when replacing a word with spellchecker");
+          }
+          is(inputEvents.length, 1,
+             `${aDescription}Only one "input" event should be fired when replacing a word with spellchecker`);
+          if (aElement === textarea) {
+            checkInputEvent(inputEvents[0], "insertReplacementText", "aux", null, [],
+                            "when replacing a word with spellchecker");
+          } else {
+            checkInputEvent(inputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}], [],
+                            "when replacing a word with spellchecker");
+          }
+
+          beforeInputEvents = [];
+          inputEvents = [];
+          synthesizeKey("z", { accelKey: true });
+          is(getValue(), "abc abx abc",
+             `${aDescription}'abx' should be restored by undo`);
+          is(beforeInputEvents.length, 1,
+             `${aDescription}Only one "beforeinput" event should be fired when undoing the replacing word`);
+          checkInputEvent(beforeInputEvents[0], "historyUndo", null, null, [],
+                          "when undoing the replacing word");
+          is(inputEvents.length, 1,
+             `${aDescription}Only one "input" event should be fired when undoing the replacing word`);
+          checkInputEvent(inputEvents[0], "historyUndo", null, null, [],
+                          "when undoing the replacing word");
+
+          beforeInputEvents = [];
+          inputEvents = [];
+          synthesizeKey("z", { accelKey: true, shiftKey: true });
+          is(getValue(), "abc aux abc",
+             `${aDescription}'aux' should be restored by redo`);
+          is(beforeInputEvents.length, 1,
+             `${aDescription}Only one "beforeinput" event should be fired when redoing the replacing word`);
+          checkInputEvent(beforeInputEvents[0], "historyRedo", null, null, [],
+                          "when redoing the replacing word");
+          is(inputEvents.length, 1,
+             `${aDescription}Only one "input" event should be fired when redoing the replacing word`);
+          checkInputEvent(inputEvents[0], "historyRedo", null, null, [],
+                          "when redoing the replacing word");
+
+          aElement.removeEventListener("beforeinput", onBeforeInput);
+          aElement.removeEventListener("input", onInput);
+
+          resolve();
+        });
+      });
+    });
+  }
+
+  await doTest(textarea, textEditor.rootElement, textEditor, "<textarea>: ");
+  await doTest(contenteditable, contenteditable, htmlEditor, "<div contenteditable>: ");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

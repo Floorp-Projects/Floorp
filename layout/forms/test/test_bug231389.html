@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=231389
+-->
+<head>
+  <title>Test for Bug 231389</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=231389">Mozilla Bug 231389</a>
+<p id="display">
+  <textarea id="area" rows="5">
+  Here
+  is
+  some
+  very
+  long
+  text
+  that
+  we're
+  using
+  for
+  testing
+  purposes
+  </textarea>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 231389 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var area = document.getElementById("area");
+  var val = area.value;
+  var pos = val.indexOf("purposes");
+
+  is(area.scrollTop, 0, "The textarea should not be scrolled initially");
+  area.selectionStart = pos;
+  area.selectionEnd = pos;
+  requestAnimationFrame(function() {
+    isnot(area.scrollTop, 0, "The textarea's insertion point should be scrolled into view");
+
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

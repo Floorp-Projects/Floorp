@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of rule longitudinal properties</title>
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+@keyframes lat {
+  0%, 33% { column-rule-lateral-inset-start: 0px; row-rule-lateral-inset-end: 0px; }
+  33%, 50% { column-rule-lateral-inset-start: calc(100% - 6px); row-rule-lateral-inset-end: calc(100% - 6px); }
+  50%, 100% { column-rule-lateral-inset-start: 0px; row-rule-lateral-inset-end: 0; }
+}
+
+.grid {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 50px);
+  gap: 10px;
+  width: 250px;
+  height: 200px;
+  place-content: space-around;
+
+  animation: lat 5s infinite;
+
+  column-rule: 6px solid blue;
+  column-rule-align: rule;
+  column-rule-longitudinal-inset: 3px;
+  column-rule-edge-align: gap-over;
+  column-rule-longitudinal-edge-inset: 10px;
+
+  row-rule: 6px solid purple;
+  row-rule-align: rule;
+  row-rule-edge-align: gap-over;
+  row-rule-longitudinal-inset: 1px;
+  row-rule-longitudinal-edge-inset: -2px;
+  row-rule-extent: long;
+
+  border: 2px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+
+x {
+  block-size: 48px;
+  background: grey;
+}
+x:nth-child(2), x:nth-child(6) {
+  grid-column: span 2;
+}
+
+</style>
+
+<div class="grid"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div>

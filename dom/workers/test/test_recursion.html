@@ -1,0 +1,69 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads
+-->
+<head>
+  <title>Test for DOM Worker Threads Recursion</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  // Intermittently triggers one assertion on Mac (bug 848098).
+  if (navigator.platform.indexOf("Mac") == 0) {
+    SimpleTest.expectAssertions(0, 1);
+  }
+
+  const testCount = 2;
+  var errorCount = 0;
+
+  var worker = new Worker("recursion_worker.js");
+
+  function done() {
+    worker.terminate();
+    SimpleTest.finish();
+  }
+
+  worker.onmessage = function(event) {
+    if (event.data == "Done") {
+      ok(true, "correct message");
+    }
+    else {
+      ok(false, "Bad message: " + event.data);
+    }
+    done();
+  }
+
+  worker.onerror = function(event) {
+    event.preventDefault();
+    if (event.message == "too much recursion") {
+      ok(true, "got correct error message");
+      ++errorCount;
+    }
+    else {
+      ok(false, "got bad error message: " + event.message);
+      done();
+    }
+  }
+
+  for (var i = 0; i < testCount; i++) {
+    worker.postMessage("");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

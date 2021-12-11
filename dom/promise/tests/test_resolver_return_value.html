@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1120235
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1120235</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1120235 **/
+  var res, rej;
+  var p = new Promise(function(resolve, reject) { res = resolve; rej = reject; });
+  is(res(1), undefined, "Resolve function should return undefined");
+  is(rej(2), undefined, "Reject function should return undefined");
+
+  var thenable = {
+    then(resolve, reject) {
+      is(resolve(3), undefined, "Thenable resolve argument should return undefined");
+      is(reject(4), undefined, "Thenable reject argument should return undefined");
+      SimpleTest.finish();
+    },
+  };
+
+  SimpleTest.waitForExplicitFinish();
+  p = Promise.resolve(thenable);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1120235">Mozilla Bug 1120235</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1412485
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1412485</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1412485 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function testExistenceOfLegacyTouchAPIs(win, enabled) {
+    try {
+      var event = document.createEvent("TouchEvent");
+      ok(event instanceof TouchEvent, "Should be able to create TouchEvent using createEvent.");
+    } catch(ex) {
+      ok(true, "Shouldn't be able create TouchEvent using createEvent.");
+    }
+
+    var targets = [win, win.document, win.document.body];
+    for (target of targets) {
+      is("ontouchstart" in target, enabled, `ontouchstart on target [${enabled}].`);
+      is("ontouchend" in target, enabled, `ontouchend on target [${enabled}].`);
+      is("ontouchmove" in target, enabled, `ontouchmove on target [${enabled}].`);
+      is("ontouchcancel" in target, enabled, `ontouchcancel on target [${enabled}].`);
+    }
+
+    is("createTouch" in win.document, enabled, `createTouch on Document [${enabled}].`);
+    is("createTouchList" in win.document, enabled, `createTouchList on Document [${enabled}].`);
+  }
+
+  function test() {
+    // Test the defaults.
+    testExistenceOfLegacyTouchAPIs(window,
+                                   navigator.userAgent.includes("Android"));
+
+    // Test explicitly enabling touch APIs.
+    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", 1],
+                                       ["dom.w3c_touch_events.legacy_apis.enabled", true]]},
+      function() {
+        var iframe = document.createElement("iframe");
+        document.body.appendChild(iframe);
+        iframe.onload = function() {
+          testExistenceOfLegacyTouchAPIs(iframe.contentWindow, true);
+          SimpleTest.finish();
+        }
+      });
+  }
+
+  </script>
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1412485">Mozilla Bug 1412485</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

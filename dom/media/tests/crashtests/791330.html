@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=791330
+-->
+<head>
+  <meta charset="utf-8">
+  <title>PeerConnection test - operate on closed connection</title>
+  <script type="application/javascript">
+    function finish() {
+      document.documentElement.removeAttribute("class");
+    }
+
+    function runTest() {
+      var pc = new RTCPeerConnection();
+      pc.close();
+
+      navigator.mozGetUserMedia({audio: true, fake: true}, function (stream) {
+        try {
+          pc.addStream(stream);
+          pc.createOffer(function (offer) {});
+        }
+        finally {
+          stream.getTracks().forEach(t => t.stop());
+
+          finish();
+        }
+      }, function () {});
+    }
+  </script>
+</head>
+
+<body onload="setTimeout(runTest, 100)">
+</body>
+</html>

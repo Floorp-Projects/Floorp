@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include PBackgroundSharedTypes;
+
+include "mozilla/dom/localstorage/SerializationHelpers.h";
+
+using mozilla::dom::LSValue
+  from "mozilla/dom/LSValue.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * The observer protocol sends "storage" event notifications for changes to
+ * LocalStorage that take place in other processes as their Snapshots are
+ * Checkpointed to the canonical Datastore in the parent process.  Same-process
+ * notifications are generated as mutations happen.
+ *
+ * Note that mutations are never generated for redundant mutations.  Setting the
+ * key "foo" to have value "bar" when it already has value "bar" will never
+ * result in a "storage" event.
+ */
+async protocol PBackgroundLSObserver
+{
+  manager PBackground;
+
+parent:
+  /**
+   * Sent by the LSObserver's destructor when it's going away.  Any Observe
+   * messages received after this is sent will be ignored.  Which is fine,
+   * because there should be nothing around left to hear.  In the event a new
+   * page came into existence, its Observer creation will happen (effectively)
+   * synchronously.
+   */
+  async DeleteMe();
+
+child:
+  /**
+   * Only sent by the parent in response to a deletion request.
+   */
+  async __delete__();
+
+  /**
+   * Sent by the parent process as Snapshots from other processes are
+   * Checkpointed, applying their mutations.  The child actor currently directly
+   * shunts these to Storage::NotifyChange to generate "storage" events for
+   * immediate dispatch.
+   */
+  async Observe(PrincipalInfo principalInfo,
+                uint32_t privateBrowsingId,
+                nsString documentURI,
+                nsString key,
+                LSValue oldValue,
+                LSValue newValue);
+};
+
+} // namespace dom
+} // namespace mozilla

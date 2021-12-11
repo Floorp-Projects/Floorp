@@ -1,0 +1,84 @@
+/* ----------------------------------
+ * SWITCHES
+ * ---------------------------------- */
+
+label.pack-switch {
+  display: inline-block;
+  vertical-align: middle;
+  width: 100%;
+  height: 5rem;
+  position: relative;
+  background: none;
+}
+
+label.pack-switch span {
+  float: left;
+  font-size: 1.8rem;
+  color: #333;
+  padding: 1rem 0 0;
+  height: 6rem;
+  line-height: 3rem;
+  box-sizing: border-box;
+  display: block;
+}
+
+label.pack-switch input {
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+label.pack-switch input:checked ~ span:after {
+  background-position: center bottom;
+}
+
+/* ----------------------------------
+ * ON/OFF SWITCHES
+ * ---------------------------------- */
+
+label.pack-switch input ~ span:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 6rem;
+  margin: -1.4rem 0 0;
+  height: 2.7rem;
+  border-radius: 1.35rem;
+  overflow: hidden;
+  background: #e6e6e6 url(images/background_off.png) no-repeat -3.2rem 0 / 9.2rem 2.7rem;
+  transition: background 0.2s ease;
+}
+
+/* switch: 'ON' state */
+label.pack-switch input:checked ~ span:after {
+  background: #e6e6e6 url(images/background.png) no-repeat 0 0 / 9.2rem 2.7rem;
+}
+
+/* switch: disabled state */
+label.pack-switch input:disabled ~ span:after {
+  opacity: 0.4;
+}
+
+label.pack-switch input.uninit ~ span:after {
+  transition: none;
+}
+
+/******************************************************************************
+ * Right-To-Left tweaks
+ */
+html[dir="rtl"] label.pack-switch input {
+  left: auto;
+  right: 0;
+}
+
+html[dir="rtl"] label.pack-switch input ~ span:after {
+  left: 0;
+  right: auto;
+}
+
+html[dir="rtl"] label.pack-switch input ~ span:after {
+  background-position: 0;
+}

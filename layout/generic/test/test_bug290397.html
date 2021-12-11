@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=290397
+-->
+<head>
+  <title>Test for Bug 290397</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=290397">Mozilla Bug 290397</a>
+<p id="display">
+<map name=a>
+  <area coords=0,0,20,20 href=#pass>
+  <area shape=default href=#fail>
+</map>
+<img src=file_Dolske.png usemap=#a id=image>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script>
+/** Test for Bug 290397 **/
+SimpleTest.waitForExplicitFinish();
+onhashchange = function() {
+  is(location.hash, "#pass", "Got the wrong area");
+  SimpleTest.finish();
+};
+function runTest() {
+  var image = document.getElementById("image");
+  SimpleTest.waitForFocus(() => synthesizeMouse(image, 10, 10, {}));
+}
+addLoadEvent(runTest);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,102 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_lints:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        retrigger: true
+    index:
+        product: firefox
+    worker:
+        skip-artifacts: true
+        max-run-time: 3600
+        env:
+            PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
+    run-on-projects: ['mozilla-central']
+    run:
+        using: mozharness
+        actions: [static-analysis-autotest]
+        script: mozharness/scripts/fx_desktop_build.py
+    treeherder:
+        symbol: Sa
+        kind: build
+        tier: 1
+
+jobs:
+    linux64-st-autotest/debug:
+        description: "Linux64 Debug Static Analysis Autotest"
+        index:
+            job-name: linux64-st-autotest-debug
+        treeherder:
+            platform: linux64/debug
+        worker-type: t-linux-large
+        worker:
+            docker-image: {in-tree: static-analysis-build}
+            env:
+                # clang-tidy needs a recent libstdc++, which can be found in the clang
+                # toolchain.
+                LD_LIBRARY_PATH: /builds/worker/checkouts/gecko/clang/lib
+                PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
+        run:
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_sub_linux_configs/64_stat_and_debug.py
+            tooltool-downloads: public
+            keep-artifacts: false
+        use-sccache: true
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-clang-tidy
+                - linux64-rust
+                - linux64-sccache
+                - linux64-cbindgen
+                - linux64-nasm
+                - linux64-node
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
+    win64-st-autotest/debug:
+        description: "Win64 Debug Static Analysis Autotest"
+        index:
+            job-name: win64-st-autotest-debug
+        treeherder:
+            platform: windows2012-64/debug
+            tier: 2
+        worker-type: b-win2012
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+        run:
+            config:
+                - builds/releng_base_firefox.py
+                - builds/taskcluster_base_windows.py
+                - builds/taskcluster_base_win64.py
+                - builds/taskcluster_sub_win64/debug.py
+            tooltool-downloads: internal
+            extra-config:
+                mozconfig_variant: debug
+        use-sccache: true
+        fetches:
+            toolchain:
+                - win64-clang
+                - win64-rust
+                - win64-sccache
+                - win64-cbindgen
+                - win64-clang-tidy
+                - win64-nasm
+                - win64-node
+                - win64-dump_syms
+                - win64-winchecksec
+                - sysroot-wasm32-wasi

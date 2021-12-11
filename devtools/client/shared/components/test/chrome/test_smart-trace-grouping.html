@@ -1,0 +1,141 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the rendering of a stack trace
+-->
+<head>
+  <meta charset="utf-8">
+  <title>StackTrace component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script src="head.js"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const SmartTrace = React.createFactory(
+    browserRequire("devtools/client/shared/components/SmartTrace"));
+  ok(SmartTrace, "Got the SmartTrace factory");
+
+  add_task(async function() {
+    const REACT_FRAMES_COUNT = 10;
+
+    const stacktrace = [
+      {
+        filename: "http://myfile.com/mahscripts.js",
+        lineNumber: 55,
+        columnNumber: 10,
+        functionName: null,
+      },
+      // Simulated Redux frame
+      {
+        functionName: "rootReducer",
+        filename: "http://myfile.com/loader.js -> http://myfile.com/redux.js",
+        lineNumber: 2,
+      },
+      {
+        functionName: "loadFunc",
+        filename: "http://myfile.com/loader.js -> http://myfile.com/loadee.js",
+        lineNumber: 10,
+      },
+      // Simulated react frames
+      ...(Array.from({length: REACT_FRAMES_COUNT}, (_, i) => ({
+        functionName: "internalReact" + (REACT_FRAMES_COUNT - i),
+        filename: "http://myfile.com/loader.js -> http://myfile.com/react.js",
+        lineNumber: Number(i.toString().repeat(2)),
+      }))),
+      {
+        filename: "http://myfile.com/mahscripts.js",
+        lineNumber: 10,
+        columnNumber: 3,
+        functionName: "onClick",
+      },
+    ];
+
+    const props = {
+      stacktrace,
+      onViewSourceInDebugger: () => {},
+    };
+
+    const trace = ReactDOM.render(SmartTrace(props), window.document.body);
+    await forceRender(trace);
+
+    const traceEl = ReactDOM.findDOMNode(trace);
+    ok(traceEl, "Rendered SmartTrace has an element");
+
+    isDeeply(getStacktraceText(traceEl), [
+      `<anonymous> http://myfile.com/mahscripts.js:55`,
+      `rootReducer Redux`,
+      `loadFunc http://myfile.com/loadee.js:10`,
+      `▶︎ React 10`,
+      `onClick http://myfile.com/mahscripts.js:10`,
+    ], "React frames are grouped - Redux frame is not");
+
+    info("Expand React group");
+    let onReactGroupExpanded = waitFor(() =>
+      traceEl.querySelector(".frames-group.expanded"));
+    traceEl.querySelector(".group").click();
+    await onReactGroupExpanded;
+
+    isDeeply(getStacktraceText(traceEl), [
+      `<anonymous> http://myfile.com/mahscripts.js:55`,
+      `rootReducer Redux`,
+      `loadFunc http://myfile.com/loadee.js:10`,
+      `▼ React 10`,
+      `| internalReact10`,
+      `| internalReact9`,
+      `| internalReact8`,
+      `| internalReact7`,
+      `| internalReact6`,
+      `| internalReact5`,
+      `| internalReact4`,
+      `| internalReact3`,
+      `| internalReact2`,
+      `| internalReact1`,
+      `onClick http://myfile.com/mahscripts.js:10`,
+    ], "React frames can be expanded");
+
+    info("Collapse React group");
+    onReactGroupExpanded = waitFor(() =>
+      !traceEl.querySelector(".frames-group.expanded"));
+    traceEl.querySelector(".group").click();
+    await onReactGroupExpanded;
+
+    isDeeply(getStacktraceText(traceEl), [
+      `<anonymous> http://myfile.com/mahscripts.js:55`,
+      `rootReducer Redux`,
+      `loadFunc http://myfile.com/loadee.js:10`,
+      `▶︎ React 10`,
+      `onClick http://myfile.com/mahscripts.js:10`,
+    ], "React frames can be collapsed");
+  });
+
+  function getStacktraceText(traceElement) {
+    return Array.from(traceElement.querySelectorAll(".frame, .frames-group")).map(el => {
+        // If it's a group, we want to append an arrow representing the group state
+        if (el.classList.contains("frames-group")) {
+          const arrow = el.classList.contains("expanded") ? "▼" : "▶︎";
+          const content = el.querySelector(".group").textContent.trim();
+          return `${arrow} ${content}`;
+        }
+
+        const title = el.querySelector(".title");
+        if (el.closest(".frames-group")) {
+          return `| ${title.textContent}`;
+        }
+
+        const location = el.querySelector(".location");
+        return `${title.textContent} ${location.textContent}`;
+      });
+  }
+};
+</script>
+</body>
+</html>

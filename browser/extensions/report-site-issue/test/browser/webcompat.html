@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+ #screenshot-preview {width: 200px; height: 200px;}
+</style>
+<div id="url">$$URL$$</div>
+<div id="details">$$DETAILS$$</div>
+<div id="label">$$LABEL$$</div>
+<div id="screenshot-preview">Fail</div>
+<script>
+"use strict";
+let preview = document.getElementById("screenshot-preview");
+const CONFIG = {
+  url: {
+    element: document.getElementById("url")
+  },
+  details: {
+    element: document.getElementById("details"),
+    toStringify: true
+  },
+  extra_labels: {
+    element: document.getElementById("label"),
+    toStringify: true
+  },
+};
+
+function getBlobAsDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    let reader = new FileReader();
+
+    // eslint-disable-next-line mozilla/balanced-listeners
+    reader.addEventListener("error", (e) => {
+      reject(`There was an error reading the blob: ${e.type}`);
+    });
+
+    // eslint-disable-next-line mozilla/balanced-listeners
+    reader.addEventListener("load", (e) => {
+      resolve(e.target.result);
+    });
+
+    reader.readAsDataURL(blob);
+  });
+}
+
+function setPreviewBG(backgroundData) {
+  return new Promise((resolve) => {
+    preview.style.background = `url(${backgroundData})`;
+    resolve();
+  });
+}
+
+function sendReceivedEvent() {
+  window.dispatchEvent(new CustomEvent("ScreenshotReceived", {bubbles: true}));
+}
+
+function prepareContent(toStringify, content) {
+  if (toStringify) {
+    return JSON.stringify(content)
+  }
+
+  return content;
+}
+
+function appendMessage(message) {
+  for (const key in CONFIG) {
+    if (key in message) {
+      const field = CONFIG[key];
+      field.element.innerText = prepareContent(field.toStringify, message[key]);
+    }
+  }
+}
+
+// eslint-disable-next-line mozilla/balanced-listeners
+window.addEventListener("message", function(event) {
+  if (event.data.screenshot instanceof Blob) {
+    preview.innerText = "Pass";
+  }
+
+  if (event.data.message) {
+    appendMessage(event.data.message);
+  }
+
+  getBlobAsDataURL(event.data.screenshot).then(setPreviewBG).then(sendReceivedEvent);
+});
+</script>

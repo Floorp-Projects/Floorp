@@ -1,0 +1,19 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+with Files("*.win"):
+    SCHEDULES.exclusive = ["windows"]
+
+with Files("*.osx"):
+    SCHEDULES.exclusive = ["macosx"]
+
+with Files("win.and.osx"):
+    # this conflicts with the previous clause and will cause an error
+    # when read
+    SCHEDULES.exclusive = ["macosx", "windows"]
+
+with Files("subd/**.py"):
+    SCHEDULES.inclusive += ["py-lint"]
+
+with Files("**/*.js"):
+    SCHEDULES.inclusive += ["js-lint"]

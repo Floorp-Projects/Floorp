@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="display: table">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var tr = document.getElementById("tr");
+  tr.contentEditable = "true";
+  tr.focus();
+  document.execCommand("selectAll", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><tr id="tr"><td></td></tr></body>
+
+</html>

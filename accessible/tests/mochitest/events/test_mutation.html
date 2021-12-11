@@ -1,0 +1,580 @@
+<html>
+
+<head>
+  <title>Accessible mutation events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    div.displayNone a { display:none; }
+    div.visibilityHidden a { visibility:hidden; }
+</style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Invokers.
+     */
+    var kNoEvents = 0;
+
+    var kShowEvent = 1;
+    var kHideEvent = 2;
+    var kReorderEvent = 4;
+    var kShowEvents = kShowEvent | kReorderEvent;
+    var kHideEvents = kHideEvent | kReorderEvent;
+    var kHideAndShowEvents = kHideEvents | kShowEvent;
+
+    /**
+     * Base class to test mutation a11y events.
+     *
+     * @param aNodeOrID          [in] node invoker's action is executed for
+     * @param aEventTypes        [in] events to register (see constants above)
+     * @param aDoNotExpectEvents [in] boolean indicates if events are expected
+     */
+    function mutateA11yTree(aNodeOrID, aEventTypes, aDoNotExpectEvents) {
+      // Interface
+      this.DOMNode = getNode(aNodeOrID);
+      this.doNotExpectEvents = aDoNotExpectEvents;
+      this.eventSeq = [];
+      this.unexpectedEventSeq = [];
+
+      /**
+       * Change default target (aNodeOrID) registered for the given event type.
+       */
+      this.setTarget = function mutateA11yTree_setTarget(aEventType, aTarget) {
+        var type = this.getA11yEventType(aEventType);
+        for (var idx = 0; idx < this.getEventSeq().length; idx++) {
+          if (this.getEventSeq()[idx].type == type) {
+            this.getEventSeq()[idx].target = aTarget;
+            return idx;
+          }
+        }
+        return -1;
+      };
+
+      /**
+       * Replace the default target currently registered for a given event type
+       * with the nodes in the targets array.
+       */
+      this.setTargets = function mutateA11yTree_setTargets(aEventType, aTargets) {
+        var targetIdx = this.setTarget(aEventType, aTargets[0]);
+
+        var type = this.getA11yEventType(aEventType);
+        for (var i = 1; i < aTargets.length; i++) {
+          let checker = new invokerChecker(type, aTargets[i]);
+          this.getEventSeq().splice(++targetIdx, 0, checker);
+        }
+      };
+
+      // Implementation
+      this.getA11yEventType = function mutateA11yTree_getA11yEventType(aEventType) {
+        if (aEventType == kReorderEvent)
+          return nsIAccessibleEvent.EVENT_REORDER;
+
+        if (aEventType == kHideEvent)
+          return nsIAccessibleEvent.EVENT_HIDE;
+
+        if (aEventType == kShowEvent)
+          return nsIAccessibleEvent.EVENT_SHOW;
+
+        return 0;
+      };
+
+      this.getEventSeq = function mutateA11yTree_getEventSeq() {
+        return this.doNotExpectEvents ? this.unexpectedEventSeq : this.eventSeq;
+      };
+
+      if (aEventTypes & kHideEvent) {
+        let checker = new invokerChecker(this.getA11yEventType(kHideEvent),
+                                         this.DOMNode);
+        this.getEventSeq().push(checker);
+      }
+
+      if (aEventTypes & kShowEvent) {
+        let checker = new invokerChecker(this.getA11yEventType(kShowEvent),
+                                         this.DOMNode);
+        this.getEventSeq().push(checker);
+      }
+
+      if (aEventTypes & kReorderEvent) {
+        let checker = new invokerChecker(this.getA11yEventType(kReorderEvent),
+                                         this.DOMNode.parentNode);
+        this.getEventSeq().push(checker);
+      }
+    }
+
+    /**
+     * Change CSS style for the given node.
+     */
+    function changeStyle(aNodeOrID, aProp, aValue, aEventTypes) {
+      this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false);
+
+      this.invoke = function changeStyle_invoke() {
+        this.DOMNode.style[aProp] = aValue;
+      };
+
+      this.getID = function changeStyle_getID() {
+        return aNodeOrID + " change style " + aProp + " on value " + aValue;
+      };
+    }
+
+    /**
+     * Change class name for the given node.
+     */
+    function changeClass(aParentNodeOrID, aNodeOrID, aClassName, aEventTypes) {
+      this.__proto__ = new mutateA11yTree(aNodeOrID, aEventTypes, false);
+
+      this.invoke = function changeClass_invoke() {
+        this.parentDOMNode.className = aClassName;
+      };
+
+      this.getID = function changeClass_getID() {
+        return aNodeOrID + " change class " + aClassName;
+      };
+
+      this.parentDOMNode = getNode(aParentNodeOrID);
+    }
+
+    /**
+     * Clone the node and append it to its parent.
+     */
+    function cloneAndAppendToDOM(aNodeOrID, aEventTypes,
+                                 aTargetsFunc, aReorderTargetFunc) {
+      var eventTypes = aEventTypes || kShowEvents;
+      var doNotExpectEvents = (aEventTypes == kNoEvents);
+
+      this.__proto__ = new mutateA11yTree(aNodeOrID, eventTypes,
+                                          doNotExpectEvents);
+
+      this.invoke = function cloneAndAppendToDOM_invoke() {
+        var newElm = this.DOMNode.cloneNode(true);
+        newElm.removeAttribute("id");
+
+        var targets = aTargetsFunc ?
+          aTargetsFunc(newElm) : [newElm];
+        this.setTargets(kShowEvent, targets);
+
+        if (aReorderTargetFunc) {
+          var reorderTarget = aReorderTargetFunc(this.DOMNode);
+          this.setTarget(kReorderEvent, reorderTarget);
+        }
+
+        this.DOMNode.parentNode.appendChild(newElm);
+      };
+
+      this.getID = function cloneAndAppendToDOM_getID() {
+        return aNodeOrID + " clone and append to DOM.";
+      };
+    }
+
+    /**
+     * Removes the node from DOM.
+     */
+    function removeFromDOM(aNodeOrID, aEventTypes,
+                           aTargetsFunc, aReorderTargetFunc) {
+      var eventTypes = aEventTypes || kHideEvents;
+      var doNotExpectEvents = (aEventTypes == kNoEvents);
+
+      this.__proto__ = new mutateA11yTree(aNodeOrID, eventTypes,
+                                          doNotExpectEvents);
+
+      this.invoke = function removeFromDOM_invoke() {
+        this.DOMNode.remove();
+      };
+
+      this.getID = function removeFromDOM_getID() {
+        return prettyName(aNodeOrID) + " remove from DOM.";
+      };
+
+      if (aTargetsFunc && (eventTypes & kHideEvent))
+        this.setTargets(kHideEvent, aTargetsFunc(this.DOMNode));
+
+      if (aReorderTargetFunc && (eventTypes & kReorderEvent))
+        this.setTarget(kReorderEvent, aReorderTargetFunc(this.DOMNode));
+    }
+
+    /**
+     * Clone the node and replace the original node by cloned one.
+     */
+    function cloneAndReplaceInDOM(aNodeOrID) {
+      this.__proto__ = new mutateA11yTree(aNodeOrID, kHideAndShowEvents,
+                                          false);
+
+      this.invoke = function cloneAndReplaceInDOM_invoke() {
+        this.DOMNode.parentNode.replaceChild(this.newElm, this.DOMNode);
+      };
+
+      this.getID = function cloneAndReplaceInDOM_getID() {
+        return aNodeOrID + " clone and replace in DOM.";
+      };
+
+      this.newElm = this.DOMNode.cloneNode(true);
+      this.newElm.removeAttribute("id");
+      this.setTarget(kShowEvent, this.newElm);
+    }
+
+    /**
+     * Trigger content insertion (flush layout), removal and insertion of
+     * the same element for the same parent.
+     */
+    function test1(aContainerID) {
+      this.divNode = document.createElement("div");
+      this.divNode.setAttribute("id", "div-test1");
+      this.containerNode = getNode(aContainerID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.divNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+      ];
+
+      this.invoke = function test1_invoke() {
+        this.containerNode.appendChild(this.divNode);
+        getComputedStyle(this.divNode, "").color;
+        this.containerNode.removeChild(this.divNode);
+        this.containerNode.appendChild(this.divNode);
+      };
+
+      this.getID = function test1_getID() {
+        return "fuzzy test #1: content insertion (flush layout), removal and" +
+          "reinsertion";
+      };
+    }
+
+    /**
+     * Trigger content insertion (flush layout), removal and insertion of
+     * the same element for the different parents.
+     */
+    function test2(aContainerID, aTmpContainerID) {
+      this.divNode = document.createElement("div");
+      this.divNode.setAttribute("id", "div-test2");
+      this.containerNode = getNode(aContainerID);
+      this.tmpContainerNode = getNode(aTmpContainerID);
+      this.container = getAccessible(this.containerNode);
+      this.tmpContainer = getAccessible(this.tmpContainerNode);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.divNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_REORDER, this.tmpContainerNode),
+      ];
+
+      this.invoke = function test2_invoke() {
+        this.tmpContainerNode.appendChild(this.divNode);
+        getComputedStyle(this.divNode, "").color;
+        this.tmpContainerNode.removeChild(this.divNode);
+        this.containerNode.appendChild(this.divNode);
+      };
+
+      this.getID = function test2_getID() {
+        return "fuzzy test #2: content insertion (flush layout), removal and" +
+          "reinsertion under another container";
+      };
+    }
+
+    /**
+     * Content insertion (flush layout) and then removal (nothing was changed).
+     */
+    function test3(aContainerID) {
+      this.divNode = document.createElement("div");
+      this.divNode.setAttribute("id", "div-test3");
+      this.containerNode = getNode(aContainerID);
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_SHOW, this.divNode),
+        new invokerChecker(EVENT_HIDE, this.divNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+      ];
+
+      this.invoke = function test3_invoke() {
+        this.containerNode.appendChild(this.divNode);
+        getComputedStyle(this.divNode, "").color;
+        this.containerNode.removeChild(this.divNode);
+      };
+
+      this.getID = function test3_getID() {
+        return "fuzzy test #3: content insertion (flush layout) and removal";
+      };
+    }
+
+    function insertReferredElm(aContainerID) {
+      this.containerNode = getNode(aContainerID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.firstChild; }, this.containerNode),
+        new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.lastChild; }, this.containerNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+      ];
+
+      this.invoke = function insertReferredElm_invoke() {
+        let span = document.createElement("span");
+        span.setAttribute("id", "insertReferredElms_span");
+        let input = document.createElement("input");
+        input.setAttribute("aria-labelledby", "insertReferredElms_span");
+        this.containerNode.appendChild(span);
+        this.containerNode.appendChild(input);
+      };
+
+      this.getID = function insertReferredElm_getID() {
+        return "insert inaccessible element and then insert referring element to make it accessible";
+      };
+    }
+
+    function showHiddenParentOfVisibleChild() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("c4_child")),
+        new invokerChecker(EVENT_SHOW, getNode("c4_middle")),
+        new invokerChecker(EVENT_REORDER, getNode("c4")),
+      ];
+
+      this.invoke = function showHiddenParentOfVisibleChild_invoke() {
+        getNode("c4_middle").style.visibility = "visible";
+      };
+
+      this.getID = function showHiddenParentOfVisibleChild_getID() {
+        return "show hidden parent of visible child";
+      };
+    }
+
+    function hideNDestroyDoc() {
+      this.txt = null;
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, () => { return this.txt; }),
+      ];
+
+      this.invoke = function hideNDestroyDoc_invoke() {
+        this.txt = getAccessible("c5").firstChild.firstChild;
+        this.txt.DOMNode.remove();
+      };
+
+      this.check = function hideNDestroyDoc_check() {
+        getNode("c5").remove();
+      };
+
+      this.getID = function hideNDestroyDoc_getID() {
+        return "remove text node and destroy a document on hide event";
+      };
+    }
+
+    function hideHideNDestroyDoc() {
+      this.target = null;
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, () => { return this.target; }),
+      ];
+
+      this.invoke = function hideHideNDestroyDoc_invoke() {
+        var doc = getAccessible("c6").firstChild;
+        var l1 = doc.firstChild;
+        this.target = l1.firstChild;
+        var l2 = doc.lastChild;
+        l1.DOMNode.firstChild.remove();
+        l2.DOMNode.firstChild.remove();
+      };
+
+      this.check = function hideHideNDestroyDoc_check() {
+        getNode("c6").remove();
+      };
+
+      this.getID = function hideHideNDestroyDoc_getID() {
+        return "remove text nodes (2 events in the queue) and destroy a document on first hide event";
+      };
+    }
+
+    /**
+     * Target getters.
+     */
+    function getFirstChild(aNode) {
+      return [aNode.firstChild];
+    }
+    function getLastChild(aNode) {
+      return [aNode.lastChild];
+    }
+
+    function getNEnsureFirstChild(aNode) {
+      var node = aNode.firstChild;
+      getAccessible(node);
+      return [node];
+    }
+
+    function getNEnsureChildren(aNode) {
+      var children = [];
+      var node = aNode.firstChild;
+      do {
+        children.push(node);
+        getAccessible(node);
+        node = node.nextSibling;
+      } while (node);
+
+      return children;
+    }
+
+    function getParent(aNode) {
+      return aNode.parentNode;
+    }
+
+    // gA11yEventDumpToConsole = true; // debug stuff
+    // enableLogging("events,verbose");
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    function doTests() {
+      gQueue = new eventQueue();
+
+      // Show/hide events by changing of display style of accessible DOM node
+      // from 'inline' to 'none', 'none' to 'inline'.
+      let id = "link1";
+      getAccessible(id); // ensure accessible is created
+      gQueue.push(new changeStyle(id, "display", "none", kHideEvents));
+      gQueue.push(new changeStyle(id, "display", "inline", kShowEvents));
+
+      // Show/hide events by changing of visibility style of accessible DOM node
+      // from 'visible' to 'hidden', 'hidden' to 'visible'.
+      id = "link2";
+      getAccessible(id);
+      gQueue.push(new changeStyle(id, "visibility", "hidden", kHideEvents));
+      gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
+
+      // Show/hide events by changing of visibility style of accessible DOM node
+      // from 'collapse' to 'visible', 'visible' to 'collapse'.
+      id = "link4";
+      gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
+      gQueue.push(new changeStyle(id, "visibility", "collapse", kHideEvents));
+
+      // Show/hide events by adding new accessible DOM node and removing old one.
+      id = "link5";
+      gQueue.push(new cloneAndAppendToDOM(id));
+      gQueue.push(new removeFromDOM(id));
+
+      // No show/hide events by adding new not accessible DOM node and removing
+      // old one, no reorder event for their parent.
+      id = "child1";
+      gQueue.push(new cloneAndAppendToDOM(id, kNoEvents));
+      gQueue.push(new removeFromDOM(id, kNoEvents));
+
+      // Show/hide events by adding new accessible DOM node and removing
+      // old one, there is reorder event for their parent.
+      id = "child2";
+      gQueue.push(new cloneAndAppendToDOM(id));
+      gQueue.push(new removeFromDOM(id));
+
+      // Show/hide events by adding new DOM node containing accessible DOM and
+      // removing old one, there is reorder event for their parent.
+      id = "child3";
+      gQueue.push(new cloneAndAppendToDOM(id, kShowEvents, getFirstChild,
+                                          getParent));
+
+      // Hide event for accessible child of unaccessible removed DOM node and
+      // reorder event for its parent.
+      gQueue.push(new removeFromDOM(id, kHideEvents,
+                                    getNEnsureFirstChild, getParent));
+
+      // Hide events for accessible children of unaccessible removed DOM node
+      // and reorder event for its parent.
+      gQueue.push(new removeFromDOM("child4", kHideEvents,
+                                    getNEnsureChildren, getParent));
+
+      // Show/hide events by creating new accessible DOM node and replacing
+      // old one.
+      getAccessible("link6"); // ensure accessible is created
+      gQueue.push(new cloneAndReplaceInDOM("link6"));
+
+      // Show/hide events by changing class name on the parent node.
+      gQueue.push(new changeClass("container2", "link7", "", kShowEvents));
+      gQueue.push(new changeClass("container2", "link7", "displayNone",
+                                  kHideEvents));
+
+      gQueue.push(new changeClass("container3", "link8", "", kShowEvents));
+      gQueue.push(new changeClass("container3", "link8", "visibilityHidden",
+                                  kHideEvents));
+
+      gQueue.push(new test1("testContainer"));
+      gQueue.push(new test2("testContainer", "testContainer2"));
+      gQueue.push(new test2("testContainer", "testNestedContainer"));
+      gQueue.push(new test3("testContainer"));
+      gQueue.push(new insertReferredElm("testContainer3"));
+      gQueue.push(new showHiddenParentOfVisibleChild());
+
+      gQueue.push(new hideNDestroyDoc());
+      gQueue.push(new hideHideNDestroyDoc());
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=469985"
+     title=" turn the test from bug 354745 into mochitest">
+    Mozilla Bug 469985</a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=472662"
+     title="no reorder event when html:link display property is changed from 'none' to 'inline'">
+    Mozilla Bug 472662</a>
+  <a target="_blank"
+     title="Rework accessible tree update code"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
+    Mozilla Bug 570275</a>
+  <a target="_blank"
+     title="Develop a way to handle visibility style"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606125">
+    Mozilla Bug 606125</a>
+  <a target="_blank"
+     title="Update accessible tree on content insertion after layout"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=498015">
+    Mozilla Bug 498015</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div id="testContainer">
+    <a id="link1" href="http://www.google.com">Link #1</a>
+    <a id="link2" href="http://www.google.com">Link #2</a>
+    <a id="link3" href="http://www.google.com">Link #3</a>
+    <a id="link4" href="http://www.google.com" style="visibility:collapse">Link #4</a>
+    <a id="link5" href="http://www.google.com">Link #5</a>
+
+    <div id="container" role="list">
+      <span id="child1"></span>
+      <span id="child2" role="listitem"></span>
+      <span id="child3"><span role="listitem"></span></span>
+      <span id="child4"><span id="child4_1" role="listitem"></span><span id="child4_2" role="listitem"></span></span>
+    </div>
+
+    <a id="link6" href="http://www.google.com">Link #6</a>
+
+    <div id="container2" class="displayNone"><a id="link7">Link #7</a></div>
+    <div id="container3" class="visibilityHidden"><a id="link8">Link #8</a></div>
+    <div id="testNestedContainer"></div>
+  </div>
+  <div id="testContainer2"></div>
+  <div id="testContainer3"></div>
+
+  <div id="c4">
+    <div style="visibility:hidden" id="c4_middle">
+    <div style="visibility:visible" id="c4_child"></div>
+  </div>
+
+  <iframe id="c5" src="data:text/html,hey"></iframe>
+  <iframe id="c6" src="data:text/html,<label>l</label><label>l</label>"></iframe>
+</body>
+</html>

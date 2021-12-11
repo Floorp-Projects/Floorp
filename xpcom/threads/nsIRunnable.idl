@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Represents a task which can be dispatched to a thread for execution.
+ */
+
+[scriptable, function, uuid(4a2abaf0-6886-11d3-9382-00104ba0fd40)]
+interface nsIRunnable : nsISupports
+{
+    /**
+     * The function implementing the task to be run.
+     */
+    void run();
+};
+
+[scriptable, uuid(e75aa42a-80a9-11e6-afb5-e89d87348e2c)]
+interface nsIRunnablePriority : nsISupports
+{
+    const unsigned short PRIORITY_IDLE = 0;
+    const unsigned short PRIORITY_DEFERRED_TIMERS = 1;
+    // INPUT_LOW isn't supposed to be used directly.
+    // const unsigned short PRIORITY_INPUT_LOW = 2;
+    const unsigned short PRIORITY_NORMAL = 3;
+    const unsigned short PRIORITY_MEDIUMHIGH = 4;
+    const unsigned short PRIORITY_INPUT_HIGH = 5;
+    const unsigned short PRIORITY_VSYNC = 6;
+    // INPUT_HIGHEST is InputTaskManager's internal priority
+    //const unsigned short PRIORITY_INPUT_HIGHEST = 7;
+    const unsigned short PRIORITY_RENDER_BLOCKING = 8;
+    const unsigned short PRIORITY_CONTROL = 9;
+
+    readonly attribute unsigned long priority;
+};
+
+[builtinclass, uuid(3114c36c-a482-4c6e-9523-1dcfc6f605b9)]
+interface nsIRunnableIPCMessageType : nsISupports
+{
+    readonly attribute unsigned long type;
+};

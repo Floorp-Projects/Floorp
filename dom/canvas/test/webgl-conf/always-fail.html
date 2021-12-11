@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <link rel='stylesheet' href='checkout/resources/js-test-style.css'/>
+  <script src='checkout/js/js-test-pre.js'></script>
+</head>
+<body>
+  <div id='description'></div>
+  <div id='console'></div>
+
+  <script>
+    description('Deliberately fail so as to test our harness.');
+
+    testFailed('The harness should expect and handle this failure.');
+
+    finishTest();
+  </script>
+</body>
+</html>

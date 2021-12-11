@@ -1,0 +1,10 @@
+<div style="background: linear-gradient(black, black 50px, white 50px, white 100px, black 100px, black 150px, white 150px, white 200px);
+            background-size: 100px 200px; background-repeat: repeat-x;
+            width: 300px; height: 800px;
+            margin-bottom: -600px;"></div>
+<!-- making the gradient actually be 300px high isn't reliable since
+     the stop positions cannot be exactly represented and rounding errors
+     creep in. So just let the gradient be 200px high and pad out to match
+     the reference. -->
+<div style="background: black; width: 300px; height: 50px;"></div>
+<div style="background: white; width: 300px; height: 50px;"></div>

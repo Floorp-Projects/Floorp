@@ -1,0 +1,80 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AbortController in Fetch API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+function testAbortedFetch() {
+  var ac = new AbortController();
+  ac.abort();
+
+  fetch("slow.sjs", { signal: ac.signal }).then(() => {
+    ok(false, "Fetch should not return a resolved promise");
+  }, e => {
+    is(e.name, "AbortError", "We have an abort error");
+  }).then(next);
+}
+
+function testFetchAndAbort() {
+  var ac = new AbortController();
+
+  var p = fetch("slow.sjs", { signal: ac.signal });
+  ac.abort();
+
+  p.then(() => {
+    ok(false, "Fetch should not return a resolved promise");
+  }, e => {
+    is(e.name, "AbortError", "We have an abort error");
+  }).then(next);
+}
+
+function testWorkerAbortedFetch() {
+  var w = new Worker("worker_abort_controller_fetch.js");
+  w.onmessage = function(e) {
+    ok(e.data, "Abort + Fetch works in workers");
+    next();
+  };
+  w.postMessage("testWorkerAbortedFetch");
+}
+
+function testWorkerFetchAndAbort() {
+  var w = new Worker("worker_abort_controller_fetch.js");
+  w.onmessage = function(e) {
+    ok(e.data, "Abort + Fetch works in workers");
+    next();
+  };
+  w.postMessage("testWorkerFetchAndAbort");
+}
+
+var steps = [
+  // fetch + signaling
+  testAbortedFetch,
+  testFetchAndAbort,
+  testWorkerAbortedFetch,
+  testWorkerFetchAndAbort,
+];
+
+function next() {
+  if (!steps.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+
+</script>
+</body>
+</html>

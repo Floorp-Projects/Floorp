@@ -1,0 +1,87 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Accordion */
+
+.accordion {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  /* Accordion root has tabindex="-1" to get focus programatically.
+   * This can give it a focus outline when clicked, which we don't want.
+   * The container itself is not in the focus order at all. */
+  outline: none;
+  background-color: var(--theme-sidebar-background);
+}
+
+.accordion-header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  /* Reserve 1px for the border */
+  min-height: calc(var(--theme-toolbar-height) + 1px);
+  margin: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 2px 4px;
+  font-size: inherit;
+  font-weight: normal;
+  user-select: none;
+  cursor: default;
+  background-color: var(--theme-accordion-header-background);
+}
+
+.accordion-header:hover {
+  background-color: var(--theme-accordion-header-hover);
+}
+
+/*
+  Arrow should be a bit closer to the text than to the start edge:
+  - total distance between text and start edge = 20px
+  - arrow width = 10px
+  - distance between arrow and start edge = 6px
+  - distance between arrow and text = 4px
+*/
+.accordion-header .theme-twisty {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-inline-start: 2px;
+  margin-inline-end: 4px;
+  pointer-events: none;
+}
+
+.accordion-header-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-toolbar-color);
+}
+
+.accordion-header-buttons {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 50%;
+  margin-inline-start: auto;
+  padding-inline-start: 4px;
+}
+
+.accordion-content {
+  overflow: auto;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.accordion-content[hidden] {
+  display: none;
+}
+
+.accordion-item:last-child > .accordion-content {
+  border-bottom: none;
+}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=410052
+-->
+<head>
+  <title>nsIAccesible selection methods testing for ARIA grid</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA grid
+      var cellsArray =
+      [
+        [ true, true,  false, true],
+        [ true, false, true,  true],
+        [ true, false, false, true],
+        [ true, true,  true,  true],
+        [ true, true,  true,  true],
+      ];
+
+      testTableSelection("table", cellsArray);
+      testUnselectTableColumn("table", 3, cellsArray);
+      testUnselectTableRow("table", 3, cellsArray);
+      testSelectTableColumn("table", 0, cellsArray);
+      testSelectTableRow("table", 0, cellsArray);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // a bit strange ARIA grid
+      cellsArray =
+      [
+        [ false, false],
+        [ false, false],
+      ];
+
+      testTableSelection("grid2", cellsArray);
+      testSelectTableColumn("grid2", 0, cellsArray);
+      testSelectTableRow("grid2", 0, cellsArray);
+      testUnselectTableColumn("grid2", 0, cellsArray);
+      testUnselectTableRow("grid2", 0, cellsArray);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA grid (column and row headers)
+
+      cellsArray =
+      [
+        [ undefined, true, false],
+        [ undefined, true, false],
+      ];
+
+      testTableSelection("grid3", cellsArray);
+      testSelectTableColumn("grid3", 0, cellsArray);
+      testSelectTableRow("grid3", 0, cellsArray);
+      testUnselectTableColumn("grid3", 0, cellsArray);
+      testUnselectTableRow("grid3", 0, cellsArray);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="implement nsIAccessibleTable selection methods for ARIA grids"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Bug 410052</a>
+  <a target="_blank"
+     title="nsHTMLTableCellAccessible is used in dojo's ARIA grid"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Bug 513848</a>
+  <a target="_blank"
+     title="ARIA columnheader/rowheader shouldn't be selectable by default"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=888247">Bug 888247</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="grid" id="table">
+    <div role="row">
+      <span role="gridcell" aria-selected="true">cell1</span>
+      <span role="gridcell" aria-selected="true">cell2</span>
+      <span role="gridcell">cell3</span>
+      <span role="gridcell" aria-selected="true">cell4</span>
+    </div>
+    <div role="row">
+      <span role="gridcell" aria-selected="true">cell5</span>
+      <span role="gridcell">cell6</span>
+      <span role="gridcell" aria-selected="true">cell7</span>
+      <span role="gridcell" aria-selected="true">cell8</span>
+    </div>
+    <div role="row">
+      <span role="gridcell" aria-selected="true">cell9</span>
+      <span role="gridcell">cell10</span>
+      <span role="gridcell">cell11</span>
+      <span role="gridcell" aria-selected="true">cell12</span>
+    </div>
+    <div role="row" aria-selected="true">
+      <span role="gridcell">cell13</span>
+      <span role="gridcell">cell14</span>
+      <span role="gridcell">cell15</span>
+      <span role="gridcell">cell16</span>
+    </div>
+    <div role="row">
+      <span role="gridcell" aria-selected="true">cell17</span>
+      <span role="gridcell" aria-selected="true">cell18</span>
+      <span role="gridcell" aria-selected="true">cell19</span>
+      <span role="gridcell" aria-selected="true">cell20</span>
+    </div>
+  </div>
+
+  <div role="grid" id="grid2">
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="columnheader" aria-selected="false">header1</td>
+          <td role="columnheader" aria-selected="false">header2</td>
+        </tr>
+      </table>
+    </div>
+    <div role="row">
+      <table role="presentation">
+        <tr>
+          <td role="gridcell">cell1</td>
+          <td role="gridcell" tabindex="-1">cell2</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div role="grid" id="grid3">
+    <div role="row">
+      <div role="columnheader" id="colheader_default">col header1</div>
+      <div role="columnheader" id="colheader_selected" aria-selected="true">col header2</div>
+      <div role="columnheader" id="colheader_notselected" aria-selected="false">col header3</div>
+    </div>
+    <div role="row">
+      <div role="rowheader" id="rowheader_default">row header1</div>
+      <div role="rowheader" id="rowheader_selected" aria-selected="true">row header2</div>
+      <div role="rowheader" id="rowheader_notselected" aria-selected="false">row header3</div>
+    </div>
+  </div>
+</body>
+</html>

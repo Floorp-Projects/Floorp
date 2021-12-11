@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL tree focus testing">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../treeview.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function focusTree(aTreeID)
+    {
+      var checker = new focusChecker(getFirstTreeItem, aTreeID);
+      this.__proto__ = new synthFocus(aTreeID, [ checker ]);
+    }
+
+    function moveToNextItem(aTreeID)
+    {
+      var checker = new focusChecker(getSecondTreeItem, aTreeID);
+      this.__proto__ = new synthDownKey(aTreeID, [ checker ]);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Helpers
+
+    function getTreeItemAt(aTreeID, aIdx)
+      { return getAccessible(aTreeID).getChildAt(aIdx + 1); }
+
+    function getFirstTreeItem(aTreeID)
+      { return getTreeItemAt(aTreeID, 0); }
+
+    function getSecondTreeItem(aTreeID)
+      { return getTreeItemAt(aTreeID, 1); }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    var gQueue = null;
+
+    //gA11yEventDumpID = "debug"; // debugging
+    //gA11yEventDumpToConsole = true; // debugging
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new focusTree("tree"));
+      gQueue.push(new moveToNextItem("tree"));
+      gQueue.push(new synthFocus("emptytree"));
+
+      // no focus event for changed current item for unfocused tree
+      gQueue.push(new changeCurrentItem("tree", 0));
+
+      gQueue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yXULTreeLoadEvent(doTest, "tree", new nsTableTreeView(5));
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=386821"
+         title="Need better solution for firing delayed event against xul tree">
+        Mozilla Bug 386821
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=406308"
+         title="Don't fire accessible focus events if widget is not actually in focus, confuses screen readers">
+        Mozilla Bug 406308
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox id="debug"/>
+    <tree id="tree" flex="1">
+      <treecols>
+        <treecol id="col1" flex="1" primary="true" label="column"/>
+        <treecol id="col2" flex="1" label="column 2"/>
+      </treecols>
+      <treechildren id="treechildren"/>
+    </tree>
+    <tree id="emptytree" flex="1">
+      <treecols>
+        <treecol id="emptytree_col1" flex="1" primary="true" label="column"/>
+        <treecol id="emptytree_col2" flex="1" label="column 2"/>
+      </treecols>
+      <treechildren id="emptytree_treechildren"/>
+    </tree>
+  </hbox>
+
+</window>

@@ -1,0 +1,66 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+
+  <foreignObject><canvas xmlns="http://www.w3.org/1999/xhtml" id="canvas"/></foreignObject>
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <g fill="red">
+    <text dominant-baseline="alphabetic" x="10" y="20">Alphabetic</text>
+    <text dominant-baseline="auto" x="80" y="20">Auto</text>
+    <text dominant-baseline="middle" x="150" y="20">Middle</text>
+    <text dominant-baseline="hanging" x="220" y="20">Hanging</text>
+    <text dominant-baseline="central" x="290" y="20">Central</text>
+    <text dominant-baseline="mathematical" x="360" y="20">Mathematical</text>
+  </g>
+
+  <g fill="lime">
+    <text id="alphabetic" dominant-baseline="text-before-edge" x="10" y="20" dx="0">Alphabetic</text>
+    <text id="auto" dominant-baseline="text-before-edge" x="80" y="20" dx="0">Auto</text>
+    <text id="middle" dominant-baseline="text-before-edge" x="150" y="20" dx="0">Middle</text>
+    <text id="hanging" dominant-baseline="text-before-edge" x="220" y="20" dx="0">Hanging</text>
+    <text id="central" dominant-baseline="text-before-edge" x="290" y="20" dx="0">Central</text>
+    <text id="mathematical" dominant-baseline="text-before-edge" x="360" y="20" dx="0">Mathematical</text>
+  </g>
+
+  <style><![CDATA[
+  text {
+    font: bold 30px Verdana, Helvetica, Arial, sans-serif;
+    writing-mode: vertical-rl;
+  }
+  ]]></style>
+  <script>
+  function cover(id, offset) {
+    let element = document.getElementById(id);
+    element.dx.baseVal[0].value = offset;
+    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    let bbox = element.getBBox();
+    rect.x.baseVal.value = bbox.x;
+    rect.y.baseVal.value = bbox.y;
+    rect.width.baseVal.value = bbox.width;
+    rect.height.baseVal.value = bbox.height;
+    element.parentElement.appendChild(rect);
+  }
+  onload = function() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.font = 'bold 30px Verdana, Helvetica, Arial, sans-serif';
+
+    let text = 'h';
+    let textMetrics = ctx.measureText(text);
+
+    cover("alphabetic", textMetrics.actualBoundingBoxAscent);
+
+    cover("auto", textMetrics.actualBoundingBoxAscent * 0.8);
+
+    cover("middle", textMetrics.actualBoundingBoxAscent * 0.6);
+
+    cover("hanging", textMetrics.actualBoundingBoxAscent * 0.1);
+
+    cover("central", textMetrics.actualBoundingBoxAscent * 0.7);
+
+    cover("mathematical", textMetrics.actualBoundingBoxAscent * 0.4);
+
+    document.documentElement.removeAttribute('class');
+  }
+  </script>
+</svg>

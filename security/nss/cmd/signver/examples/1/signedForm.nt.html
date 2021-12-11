@@ -1,0 +1,55 @@
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+<title>Form to sign</title>
+<script language="javascript">
+<!--
+function submitSigned(form){
+  var signature = "";
+  var dataToSign = "";
+  var i;
+
+  form.action='cgi-bin/signedForm.pl';
+  for (i = 0; i < form.length; i++)
+    if (form.elements[i].type == "text")
+      dataToSign += form.elements[i].value;
+
+  // alert("Data to sign:\n" + dataToSign);
+  signature = crypto.signText(dataToSign, "ask");
+  /* alert("You cannot see this alert");
+  alert("Data signature:\n" + signature); */
+
+  if (signature != "error:userCancel") {
+    for (i = 0; i < form.length; i++) {
+      if (form.elements[i].type == "hidden") {
+        if (form.elements[i].name == "dataToSign")
+          form.elements[i].value = dataToSign;
+        if (form.elements[i].name == "dataSignature")
+          form.elements[i].value = signature;
+      }
+    }
+    form.submit();
+  }
+}
+//-->
+</script>
+</head>
+
+<body>
+<form method=post Action="cgi-bin/form.pl">
+<input type=hidden size=30 name=dataSignature>
+<input type=hidden size=30 name=dataToSign>
+<input type=text size=30 name=p>
+<BR>
+<input type=text size=30 name=q>
+<BR>
+<input type=text size=30 name=r>
+<BR>
+<input type=submit value="Submit Data">
+<input type=button value="Sign and Submit Data" onclick=submitSigned(this.form)>
+<input type=reset value=Reset>
+</form>
+</body>
+</html>

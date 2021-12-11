@@ -1,0 +1,7 @@
+//error: argument typename `FARGLEGARGLE' of message `Msg' has not been declared
+
+protocol undeclParamType {
+
+child: async Msg(FARGLEGARGLE p);
+
+};

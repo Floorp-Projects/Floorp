@@ -1,0 +1,1 @@
+function handleRequest(request, response) {}

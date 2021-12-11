@@ -1,0 +1,5 @@
+# pulled when running locally
+../mozbase/mozfile
+../mozbase/mozprofile
+../mozbase/mozdevice
+../mozbase/mozlog

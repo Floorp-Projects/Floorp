@@ -1,0 +1,72 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(12f60021-e14b-4020-99d1-ed2c795be66a)]
+interface nsINSSErrorsService : nsISupports
+{
+    /**
+     *  @param aNSPRCode An error code obtained using PR_GetError()
+     *  @return True if it is error code defined by the NSS library
+     */
+    [must_use]
+    boolean isNSSErrorCode(in int32_t aNSPRCode);
+
+    /**
+     *  Function will fail if aNSPRCode is not an NSS error code.
+     *  @param aNSPRCode An error code obtained using PR_GetError()
+     *  @return The result of the conversion, an XPCOM error code
+     */
+    [must_use]
+    nsresult getXPCOMFromNSSError(in int32_t aNSPRCode);
+
+    /**
+     *  Function will fail if aXPCOMErrorCode is not an NSS error code.
+     *  @param aXPCOMErrorCode An error code obtained using getXPCOMFromNSSError
+     *  return A localized human readable error explanation.
+     */
+    AString getErrorMessage(in nsresult aXPCOMErrorCode);
+
+    /**
+     *  Function will fail if aXPCOMErrorCode is not an NSS error code.
+     *  @param aXPCOMErrorCode An error code obtained using getXPCOMFromNSSError
+     *  return the error class of the code, either ERROR_CLASS_BAD_CERT
+     *         or ERROR_CLASS_SSL_PROTOCOL
+     */
+    [must_use]
+    uint32_t getErrorClass(in nsresult aXPCOMErrorCode);
+
+    const unsigned long ERROR_CLASS_SSL_PROTOCOL = 1;
+    const unsigned long ERROR_CLASS_BAD_CERT     = 2;
+
+    /**
+     *  The following values define the range of NSPR error codes used by NSS.
+     *  NSS remains the authorative source for these numbers, as a result,
+     *  the values might change in the future.
+     *  The security module will perform a runtime check and assertion
+     *  to ensure the values are in synch with NSS.
+     */
+    const long NSS_SEC_ERROR_BASE  = -(0x2000);
+    const long NSS_SEC_ERROR_LIMIT = (NSS_SEC_ERROR_BASE + 1000);
+    const long NSS_SSL_ERROR_BASE  = -(0x3000);
+    const long NSS_SSL_ERROR_LIMIT = (NSS_SSL_ERROR_BASE + 1000);
+
+    /**
+     * The error codes within each module must fit in 16 bits. We want these
+     * errors to fit in the same module as the NSS errors but not overlap with
+     * any of them. Converting an NSS SEC, NSS SSL, or mozilla::pkix error to
+     * an NS error involves negating the value of the error and then
+     * synthesizing an error in the NS_ERROR_MODULE_SECURITY module. Hence,
+     * mozilla::pkix errors will start at a negative value that both doesn't
+     * overlap with the current value ranges for NSS errors and that will fit
+     * in 16 bits when negated.
+     *
+     * Keep these in sync with pkixnss.h.
+     */
+    const long MOZILLA_PKIX_ERROR_BASE  = -(0x4000);
+    const long MOZILLA_PKIX_ERROR_LIMIT = (MOZILLA_PKIX_ERROR_BASE + 1000);
+};

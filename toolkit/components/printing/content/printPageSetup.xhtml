@@ -1,0 +1,212 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/printPageSetup.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload="onLoad();"
+  oncancel="return onCancel();"
+  data-l10n-id="print-setup"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
+<dialog id="printPageSetupDialog">
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/printing/printDialogs.ftl"/>
+  </linkset>
+
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://global/content/printPageSetup.js"/>
+
+  <tabbox flex="1">
+    <tabs>
+      <tab data-l10n-id="basic-tab"/>
+      <tab data-l10n-id="advanced-tab"/>
+    </tabs>
+    <tabpanels flex="1">
+      <vbox>
+        <html:fieldset>
+          <html:legend><label data-l10n-id="format-group-label"/></html:legend>
+          <vbox class="groupbox-body">
+            <hbox align="center">
+              <label control="orientation" data-l10n-id="orientation-label"/>
+              <radiogroup id="orientation" oncommand="setOrientation()">
+                <hbox align="center">
+                  <radio id="portrait"
+                         class="portrait-page"
+                         data-l10n-id="portrait"/>
+                  <radio id="landscape"
+                         class="landscape-page"
+                         data-l10n-id="landscape"/>
+                </hbox>
+              </radiogroup>
+            </hbox>
+            <separator/>
+            <hbox align="center">
+              <label control="scalingInput"
+                     data-l10n-id="scale"/>
+              <html:input id="scalingInput" size="4" oninput="checkDouble(this)"/>
+              <label data-l10n-id="scale-percent"/>
+              <separator/>
+              <checkbox id="shrinkToFit"
+                        data-l10n-id="shrink-to-fit"
+                        oncommand="gDialog.scalingInput.disabled = gDialog.scalingLabel.disabled = this.checked"/>
+            </hbox>
+          </vbox>
+        </html:fieldset>
+        <html:fieldset>
+          <html:legend><label data-l10n-id="options-group-label"/></html:legend>
+          <checkbox id="printBG"
+                    class="groupbox-body"
+                    data-l10n-id="print-bg"/>
+        </html:fieldset>
+      </vbox>
+      <vbox>
+        <html:fieldset>
+          <html:legend><label id="marginGroup" data-l10n-id="margin-group-label"/></html:legend>
+          <vbox class="groupbox-body">
+            <hbox align="center">
+              <spacer flex="1"/>
+              <label control="topInput"
+                     data-l10n-id="margin-top"/>
+              <html:input id="topInput" size="5" oninput="changeMargin(this)"/>
+              <!-- This invisible label (with same content as the visible one!) is used
+                   to ensure that the <input> is centered above the page.  The same
+                   technique is deployed for the bottom/left/right input fields, below. -->
+              <label data-l10n-id="margin-top-invisible" style="visibility: hidden;"/>
+              <spacer flex="1"/>
+            </hbox>
+            <hbox dir="ltr">
+              <spacer flex="1"/>
+              <vbox>
+                <spacer flex="1"/>
+                <label control="leftInput"
+                       data-l10n-id="margin-left"/>
+                <html:input id="leftInput" size="5" oninput="changeMargin(this)"/>
+                <label data-l10n-id="margin-left-invisible" style="visibility: hidden;"/>
+                <spacer flex="1"/>
+              </vbox>
+              <!-- The "margin page" draws a simulated printout page with dashed lines
+                   for the margins.  The height/width style attributes of the marginTop,
+                   marginBottom, marginLeft, and marginRight elements are set by
+                   the JS code dynamically based on the user input. -->
+              <vbox id="marginPage" style="height:29.7mm;">
+                <box id="marginTop" style="height:0.05in;"/>
+                <hbox flex="1" dir="ltr">
+                  <box id="marginLeft" style="width:0.025in;"/>
+                  <box style="border: 1px; border-style: dashed; border-color: gray;" flex="1"/>
+                  <box id="marginRight" style="width:0.025in;"/>
+                </hbox>
+                <box id="marginBottom" style="height:0.05in;"/>
+              </vbox>
+              <vbox>
+                <spacer flex="1"/>
+                <label control="rightInput"
+                       data-l10n-id="margin-right"/>
+                <html:input id="rightInput" size="5" oninput="changeMargin(this)"/>
+                <label data-l10n-id="margin-right-invisible" style="visibility: hidden;"/>
+                <spacer flex="1"/>
+              </vbox>
+              <spacer flex="1"/>
+            </hbox>
+            <hbox align="center">
+              <spacer flex="1"/>
+              <label control="bottomInput"
+                     data-l10n-id="margin-bottom"/>
+              <html:input id="bottomInput" size="5" oninput="changeMargin(this)"/>
+              <label data-l10n-id="margin-bottom-invisible" style="visibility: hidden;"/>
+              <spacer flex="1"/>
+            </hbox>
+          </vbox>
+        </html:fieldset>
+        <html:fieldset>
+          <html:legend><label data-l10n-id="header-footer-label"/></html:legend>
+          <box id="header-footer-grid" class="groupbox-body" dir="ltr">
+            <menulist id="hLeftOption" oncommand="customize(this)" data-l10n-id="header-left-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="hCenterOption" oncommand="customize(this)" data-l10n-id="header-center-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="hRightOption" oncommand="customize(this)" data-l10n-id="header-right-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <vbox align="center">
+              <label data-l10n-id="hf-left-label"/>
+            </vbox>
+            <vbox align="center">
+              <label data-l10n-id="hf-center-label"/>
+            </vbox>
+            <vbox align="center">
+              <label data-l10n-id="hf-right-label"/>
+            </vbox>
+            <menulist id="fLeftOption" oncommand="customize(this)" data-l10n-id="footer-left-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="fCenterOption" oncommand="customize(this)" data-l10n-id="footer-center-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+            <menulist id="fRightOption" oncommand="customize(this)" data-l10n-id="footer-right-tip">
+              <menupopup>
+                <menuitem value="0" data-l10n-id="hf-blank"/>
+                <menuitem value="1" data-l10n-id="hf-title"/>
+                <menuitem value="2" data-l10n-id="hf-url"/>
+                <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                <menuitem value="4" data-l10n-id="hf-page"/>
+                <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                <menuitem value="6" data-l10n-id="hf-custom"/>
+              </menupopup>
+            </menulist>
+          </box>
+        </html:fieldset>
+      </vbox>
+    </tabpanels>
+  </tabbox>
+</dialog>
+</window>

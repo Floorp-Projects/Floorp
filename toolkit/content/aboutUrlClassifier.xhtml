@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> %htmlDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+  <title data-l10n-id="url-classifier-title"></title>
+  <link rel="stylesheet" href="chrome://global/content/aboutUrlClassifier.css" type="text/css"/>
+  <link rel="localization" href="toolkit/about/url-classifier.ftl"/>
+  <script src="chrome://global/content/aboutUrlClassifier.js"></script>
+</head>
+
+<body class="wide-container">
+  <h1 data-l10n-id="url-classifier-title"></h1>
+  <div id="search">
+    <h2 class="major-section" data-l10n-id="url-classifier-search-title"></h2>
+    <div class="options">
+      <table id="search-table">
+        <tbody>
+        <tr>
+          <th class="column" data-l10n-id="url-classifier-search-input"></th>
+          <td>
+            <input id="search-input" type="text" value=""/>
+          </td>
+        </tr>
+        <tr>
+          <th class="column" data-l10n-id="url-classifier-search-listType"></th>
+          <td>
+            <select id="search-listtype">
+              <option value="0">Blocklist</option>
+              <option value="1">Entitylist</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th class="column" data-l10n-id="url-classifier-search-features"></th>
+          <td id="search-features"></td>
+        </tr>
+        <tr>
+          <th></th>
+          <td>
+            <button id="search-button" data-l10n-id="url-classifier-search-btn"></button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <p id="search-error-message"></p>
+      <h2 class="major-section" id="result-title" data-l10n-id="url-classifier-search-result-title"></h2>
+      <table id="result-table">
+        <tr>
+          <td>
+            <input id="search-input" type="text" value=""/>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div id="provider">
+    <h2 class="major-section" data-l10n-id="url-classifier-provider-title"></h2>
+    <table id="provider-table">
+      <thead>
+        <tr id="provider-head-row">
+          <th id="col-provider" data-l10n-id="url-classifier-provider"></th>
+          <th id="col-lastupdatetime" data-l10n-id="url-classifier-provider-last-update-time"></th>
+          <th id="col-nextupdatetime" data-l10n-id="url-classifier-provider-next-update-time"></th>
+          <th id="col-backofftime" data-l10n-id="url-classifier-provider-back-off-time"></th>
+          <th id="col-lastupdateresult" data-l10n-id="url-classifier-provider-last-update-status"></th>
+          <th id="col-update" data-l10n-id="url-classifier-provider-update-btn"></th>
+        </tr>
+      </thead>
+      <tbody id="provider-table-body">
+        <!-- data is generated in javascript -->
+      </tbody>
+    </table>
+  </div>
+  <div id="cache">
+    <h2 class="major-section" data-l10n-id="url-classifier-cache-title"></h2>
+    <div id="cache-modules" class="options">
+      <button id="refresh-cache-btn" data-l10n-id="url-classifier-cache-refresh-btn"></button>
+      <button id="clear-cache-btn" data-l10n-id="url-classifier-cache-clear-btn"></button>
+      <br></br>
+    </div>
+    <table id="cache-table">
+      <thead>
+        <tr id="cache-head-row">
+          <th id="col-tablename" data-l10n-id="url-classifier-cache-table-name"></th>
+          <th id="col-negativeentries" data-l10n-id="url-classifier-cache-ncache-entries"></th>
+          <th id="col-positiveentries" data-l10n-id="url-classifier-cache-pcache-entries"></th>
+          <th id="col-showentries" data-l10n-id="url-classifier-cache-show-entries"></th>
+        </tr>
+      </thead>
+      <tbody id="cache-table-body">
+        <!-- data is generated in javascript -->
+      </tbody>
+    </table>
+    <br></br>
+  </div>
+  <div id="cache-entries">
+    <h2 class="major-section" data-l10n-id="url-classifier-cache-entries"></h2>
+    <table id="cache-entries-table">
+      <thead>
+        <tr id="cache-entries-row">
+          <th id="col-table" data-l10n-id="url-classifier-cache-table-name"></th>
+          <th id="col-prefix" data-l10n-id="url-classifier-cache-prefix"></th>
+          <th id="col-n-expire" data-l10n-id="url-classifier-cache-ncache-expiry"></th>
+          <th id="col-fullhash" data-l10n-id="url-classifier-cache-fullhash"></th>
+          <th id="col-p-expire" data-l10n-id="url-classifier-cache-pcache-expiry"></th>
+        </tr>
+      </thead>
+      <tbody id="cache-entries-table-body">
+        <!-- data is generated in javascript -->
+      </tbody>
+    </table>
+  </div>
+  <div id="debug">
+    <h2 class="major-section" data-l10n-id="url-classifier-debug-title"></h2>
+    <div id="debug-modules" class="options">
+      <input id="log-modules" type="text" value=""/>
+      <button id="set-log-modules" data-l10n-id="url-classifier-debug-module-btn"></button>
+      <br></br>
+      <input id="log-file" type="text" value=""/>
+      <button id="set-log-file" data-l10n-id="url-classifier-debug-file-btn"></button>
+      <br></br>
+      <label class="toggle-container-with-text">
+        <input id="js-log" type="checkbox"/>
+        <span data-l10n-id="url-classifier-debug-js-log-chk"></span>
+      </label>
+    </div>
+    <table id="debug-table">
+    <tbody>
+    <tr>
+      <th class="column" data-l10n-id="url-classifier-debug-sb-modules"></th>
+      <td id="sb-log-modules">
+      </td>
+    </tr>
+    <tr>
+      <th class="column" data-l10n-id="url-classifier-debug-modules"></th>
+      <td id="cur-log-modules">
+      </td>
+    </tr>
+    <tr>
+      <th class="column" data-l10n-id="url-classifier-debug-sbjs-modules"></th>
+      <td id="cur-js-log">
+      </td>
+    </tr>
+    <tr>
+      <th class="column" data-l10n-id="url-classifier-debug-file"></th>
+      <td id="cur-log-file">
+      </td>
+    </tr>
+    </tbody>
+    </table>
+  </div>
+</body>
+</html>

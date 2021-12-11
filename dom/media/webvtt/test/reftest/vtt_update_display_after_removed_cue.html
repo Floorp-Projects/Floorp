@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+<video id="v1" autoplay></video>
+<script type="text/javascript">
+
+/**
+ * This test is used to ensure we would update the cue display after removing
+ * cue from the text track, the removed cue should not display on the video's
+ * rendering area.
+ */
+function testUpdateDisplayAfterRemovedCue() {
+  let video = document.getElementById("v1");
+  video.src = "black.mp4";
+  let cue = new VTTCue(0, 4, "hello testing");
+  let track = video.addTextTrack("captions");
+  track.mode = "showing";
+  track.addCue(cue);
+  cue.onenter = () => {
+    cue.onenter = null;
+    track.removeCue(cue);
+    video.pause();
+    video.onpause = () => {
+      video.onpause = null;
+      document.documentElement.removeAttribute('class');
+    }
+  }
+};
+
+window.addEventListener("MozReftestInvalidate",
+                        testUpdateDisplayAfterRemovedCue);
+</script>
+</body>
+</html>

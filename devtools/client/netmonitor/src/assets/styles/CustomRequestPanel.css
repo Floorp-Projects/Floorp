@@ -1,0 +1,182 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.network-monitor .custom-method-and-url .custom-method-value-label {
+  grid-column: 1 / 1;
+  grid-row: 1 / 1;
+}
+
+.network-monitor .custom-method-and-url .custom-url-value {
+  grid-column: 2 / 2;
+  grid-row: 2 / 2;
+  margin-inline-start: 12px;
+}
+
+.network-monitor .custom-method-and-url .custom-method-value {
+  grid-column: 1 / 1;
+  grid-row: 2 / 2;
+}
+
+.network-monitor .custom-method-and-url .custom-url-value-label {
+  grid-column: 2 / 2;
+  grid-row: 1 / 1 ;
+  margin-inline-start: 12px;
+}
+
+.network-monitor .tabpanel-summary-container.custom-method-and-url {
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+
+.network-monitor .custom-method-and-url input {
+  font-weight: 400;
+  margin-top: 4px;
+  min-width: 9ch;
+  padding: 2px 3px;
+}
+
+.network-monitor .custom-request-panel textarea {
+  font-weight: 400;
+  margin-top: 4px;
+  padding: 8px;
+  direction: ltr;
+}
+
+.network-monitor .custom-request-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.network-monitor .custom-request-panel .custom-request-panel-content {
+  flex: 1 1 auto;
+  height: auto;
+  overflow: auto;
+}
+
+.network-monitor .custom-request-panel-content > div:not(.custom-request) {
+  margin-bottom: 12px;
+  padding-inline: 16px;
+}
+
+.network-monitor .custom-request {
+  display: block;
+  padding: 0;
+}
+
+.network-monitor .custom-request .custom-request-button-container {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  gap: 8px;
+  margin-block: 16px 12px;
+  margin-inline: 16px;
+}
+
+.network-monitor .custom-request-panel .custom-request-label {
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.network-monitor .custom-request button {
+  height: 24px;
+  margin-bottom: 4px;
+  padding-inline: 8px;
+  width: auto;
+}
+
+.network-monitor .custom-request button:focus {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff,
+  0 0 0 4px rgba(10,132,255,0.3)
+}
+
+.network-monitor .custom-request #custom-request-send-button {
+  background-color: var(--blue-60);
+  color: white;
+}
+
+.network-monitor .custom-request #custom-request-send-button:active {
+  background-color: var(--blue-80);
+}
+
+.network-monitor .custom-request #custom-request-send-button:hover {
+  background-color: var(--blue-70);
+}
+
+.network-monitor .custom-request #custom-request-close-button {
+  margin-inline-end: 4px;
+}
+
+.network-monitor .custom-header {
+  border-bottom-width: 1px;
+  border-style: solid;
+  border-width: 0;
+  flex: none;
+  height: calc(var(--theme-toolbar-height) + 1px);
+  padding: 4px 16px;
+}
+
+:root.theme-dark .network-details-bar .custom-request-panel {
+  background-color: var(--grey-85);
+}
+
+:root.theme-dark .network-monitor #custom-request-close-button {
+  background-color: var(--toolbarbutton-background);
+  border: 1px solid var(--theme-splitter-color);
+}
+
+:root.theme-dark .network-monitor #custom-request-close-button:hover:active {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-dark .network-monitor #custom-request-close-button:focus {
+  background-color: var(--theme-selection-focus-background);
+}
+
+:root.theme-dark .network-monitor .custom-request-label.custom-header {
+  background-color: var(--grey-80);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+:root.theme-dark .network-details-bar .custom-request-panel input,
+:root.theme-dark .network-details-bar .custom-request-panel textarea {
+  background-color: var(--grey-70);
+  border: 1px solid var(--grey-85);
+  color: white;
+}
+
+:root.theme-dark .network-monitor .custom-request-label {
+  color: var(--grey-40);
+}
+
+:root.theme-light .network-details-bar .custom-request-label.custom-header {
+  background-color: var(--grey-10);
+  border-bottom: 1px solid var(--grey-25);
+}
+
+:root.theme-light .network-monitor #custom-request-close-button {
+  background-color: var(--grey-20);
+  border: var(--theme-splitter-color);
+}
+
+:root.theme-light .network-monitor #custom-request-close-button:hover:active {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-light .network-monitor #custom-request-close-button:focus {
+  outline: 2px solid var(--blue-50);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+  border-radius: 2px;
+}
+
+:root.theme-light .network-details-bar .custom-request-panel input,
+:root.theme-light .network-details-bar .custom-request-panel textarea {
+  background-color: white;
+  border: 1px solid var(--grey-25);
+  color: var(--grey-90);
+}
+
+:root.theme-light .network-monitor .custom-request-label {
+  color: var(--grey-60);
+}

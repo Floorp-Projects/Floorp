@@ -1,0 +1,31 @@
+<!-- This test must be in quirks mode so it has a document.all -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=620947
+-->
+<head>
+  <title>Test for Bug 620947</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620947">Mozilla Bug 620947</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 620947 **/
+is(-1 in document.all, false, "shouldn't be there");
+is(document.all[-1], undefined, "shouldn't be able to get it");
+
+
+
+
+
+</script>
+</pre>
+</body>
+</html>

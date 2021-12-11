@@ -1,0 +1,70 @@
+.. _mozilla_projects_nss_nss_3_67_release_notes:
+
+NSS 3.67 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.67 was released on **10 June 2021**.
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_67_RTM. NSS 3.67 requires NSPR 4.30 or newer.
+
+   NSS 3.67 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_67_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _bugs_fixed_in_nss_3.67:
+
+`Bugs fixed in NSS 3.67 <#bugs_fixed_in_nss_3.67>`__
+----------------------------------------------------
+
+.. container::
+
+   -  Bug 1683710 - Add a means to disable ALPN.
+   -  Bug 1715720 - Fix nssckbi version number in NSS 3.67 (was supposed to be incremented in 3.66).
+   -  Bug 1714719 - Set NSS_USE_64 on riscv64 target when using GYP/Ninja.
+   -  Bug 1566124 - Fix counter increase in ppc-gcm-wrap.c
+   -  Bug 1566124 - Fix AES_GCM mode on ppc64le for messages of length more than 255-byte.
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.67 shared libraries are backwards-compatible with all older NSS 3.x shared libraries. A
+   program linked with older NSS 3.x shared libraries will work with NSS 3.67 shared libraries
+   without recompiling or relinking. Furthermore, applications that restrict their use of NSS APIs
+   to the functions listed in NSS Public Functions will remain compatible with future versions of
+   the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
+
+`Notes <#notes>`__
+------------------
+
+.. container::
+
+   This version of NSS contains a number of contributions for "unsupported platforms". We would like
+   to thank the authors and the reviewers for their contributions to NSS.
+
+   Discussions about moving the documentation are still ongoing. (See discussion in the 3.62 release
+   notes.)

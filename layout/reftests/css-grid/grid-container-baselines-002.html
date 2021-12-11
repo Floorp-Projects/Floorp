@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Grid container baselines w. spacing before first row</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151204">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#grid-baselines">
+  <link rel="match" href="grid-container-baselines-002-ref.html">
+  <link rel="stylesheet" type="text/css" href="support/ahem.css">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font:16px/1 Ahem; padding:0; margin:0;
+}
+
+.grid {
+  display: inline-grid;
+  grid: 120px / repeat(4, min-content);
+  align-items: start;
+  justify-items: start;
+  border: 2px solid;
+  margin: 1px;
+  align-content: center;
+  height: 140px;
+}
+.r2 { grid-template-rows: 0 120px; }
+.r3 { grid-template-rows: 50px 70px; }
+.r4 { grid-template-rows: 120px 0; }
+.grid .grid {
+  border: 0;
+  margin: 0;
+}
+.vgrid { grid: repeat(4, min-content) / 120px;}
+
+span { 
+  background: lime;
+  display: inline-block;
+  border: 1px solid black;
+}
+span:nth-child(1) {font-size:32px; }
+span:nth-child(2) {font-size:12px; padding-block-end:20px;}
+
+.sfb { align-self:first baseline; }
+.slb { align-self:last baseline; }
+.cfb { align-content:first baseline; align-self:start; }
+.clb { align-content:last baseline; align-self:end; }
+.s { align-self:stretch; }
+
+.jfb { justify-self:first baseline; }
+.jlb { justify-self:last baseline; }
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+</style>
+</head>
+<body>
+
+A<div class="grid"><span>B<br>B</span><span>C<br>C</span></div>
+<div class="grid"><span>B<br>B</span><span class="sfb">C<br>C</span></div>
+
+<!-- <div class="grid"><span>B<br>B</span><span class="sfb">C<br>C</span><span class="sfb">C<br>C</span></div> -->
+<!-- <div class="grid"><span>B<br>B</span><span class="sfb">C<br>C</span><span class="sfb vl" style="padding:20px 0">D<br>D</span></div> -->
+
+<div class="grid"><span class="slb">B<br>B</span><span class="slb">C<br>C</span></div>
+
+<div class="grid"><span style="order:1">B<br>B</span><span>C<br>C</span></div>
+<div class="grid"><span style="order:1">B<br>B</span><span class="sfb">C<br>C</span></div>
+
+<!--
+<div class="grid r2"><span style="grid-row:2">B<br>B</span><span style="grid-row:2">C<br>C</span></div>
+<div class="grid r2"><span style="grid-row:2; order:1">B<br>B</span><span style="grid-row:2">C<br>C</span></div>
+-->
+
+<div class="grid r2"><span style="grid-row:span 2">B<br>B</span><span style="grid-row:span 2">C<br>C</span></div>
+<div class="grid r2"><span style="grid-row:span 2; order:1">B<br>B</span><span style="grid-row:span 2">C<br>C</span></div>
+
+<div class="grid r3"><span style="grid-row:span 2">B<br>B</span><span style="grid-row:span 2">C<br>C</span></div>
+<div class="grid r3"><span style="grid-row:span 2; order:1">B<br>B</span><span style="grid-row:span 2">C<br>C</span></div>
+
+<br>
+
+A<!--<div class="grid r4"><span>B<br>B</span><span>C<br>C</span></div>
+<div class="grid r4"><span style="order:1">B<br>B</span><span>C<br>C</span></div>
+<div class="grid"><div class="grid"><span>B<br>B</span><span>C<br>C</span></div></div>
+<div class="grid"><div class="grid"><div class="grid"><span>B<br>B</span><span>C<br>C</span></div></div></div>
+--><div class="grid"><div class="grid r3"><span style="grid-row:2">B<br>B</span><span style="grid-row:2">C<br>C</span></div></div>
+
+</body>
+</html>

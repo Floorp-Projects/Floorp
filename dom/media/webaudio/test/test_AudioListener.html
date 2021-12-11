@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioContext.listener and the AudioListener interface</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var context = new AudioContext();
+  ok("listener" in context, "AudioContext.listener should exist");
+  // The values set by the following cannot be read from script, but the
+  // implementation is simple enough, so we just make sure that nothing throws.
+  with (context.listener) {
+    setPosition(1.0, 1.0, 1.0);
+    setOrientation(1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+  }
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

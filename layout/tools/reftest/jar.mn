@@ -1,0 +1,70 @@
+reftest.jar:
+# Ref tests
+  content/moz-bool-pref.css (../../../layout/reftests/css-parsing/moz-bool-pref.css)
+  content/editor/reftests/xul (../../../editor/reftests/xul/*)
+  content/bidi (../../reftests/bidi/*)
+  content/box-ordinal (../../reftests/box-ordinal/*)
+  content/box-shadow (../../reftests/box-shadow/*)
+  content/bugs (../../reftests/bugs/*)
+  content/css-display (../../reftests/css-display/*)
+  content/forms/input/file (../../reftests/forms/input/file/*)
+  content/forms/input/text (../../reftests/forms/input/text/*)
+  content/forms/placeholder (../../reftests/forms/placeholder/*)
+  content/forms/textbox (../../reftests/forms/textbox/*)
+  content/image-region (../../reftests/image-region/*)
+  content/invalidation (../../reftests/invalidation/*)
+  content/native-theme (../../reftests/native-theme/*)
+  content/reftest-sanity (../../reftests/reftest-sanity/*)
+  content/text-shadow (../../reftests/text-shadow/*)
+  content/writing-mode (../../reftests/writing-mode/*)
+  content/xul-document-load (../../reftests/xul-document-load/*)
+  content/xul (../../reftests/xul/*)
+  content/xul/reftest (../../xul/reftest/*)
+  content/fonts/fira (../../reftests/fonts/fira/*)
+  content/fonts/sil (../../reftests/fonts/sil/*)
+  content/toolkit/reftests (../../../toolkit/content/tests/reftests/*)
+  content/osx-theme (../../../toolkit/themes/osx/reftests/*)
+  content/reftest.xhtml (reftest.xhtml)
+
+# Crash tests
+  content/crashtests/dom/svg/crashtests (../../../dom/svg/crashtests/*)
+  content/crashtests/dom/html/crashtests (../../../dom/html/crashtests/*)
+  content/crashtests/dom/base/crashtests (../../../dom/base/crashtests/*)
+  content/crashtests/dom/xul/crashtests (../../../dom/xul/crashtests/*)
+  content/crashtests/dom/xml/crashtests (../../../dom/xml/crashtests/*)
+  content/crashtests/layout/forms/crashtests (../../../layout/forms/crashtests/*)
+  content/crashtests/layout/svg/crashtests (../../../layout/svg/crashtests/*)
+  content/crashtests/layout/tables/crashtests (../../../layout/tables/crashtests/*)
+  content/crashtests/layout/base/crashtests (../../../layout/base/crashtests/*)
+  content/crashtests/layout/xul/tree/crashtests (../../../layout/xul/tree/crashtests/*)
+  content/crashtests/layout/xul/crashtests (../../../layout/xul/crashtests/*)
+  content/crashtests/layout/generic/crashtests (../../../layout/generic/crashtests/*)
+  content/crashtests/layout/style/crashtests (../../../layout/style/crashtests/*)
+  content/crashtests/gfx/tests/crashtests (../../../gfx/tests/crashtests/*)
+  content/crashtests/accessible/tests/crashtests (../../../accessible/tests/crashtests/*)
+  content/crashtests/view/crashtests (../../../view/crashtests/*)
+  content/crashtests/widget/cocoa/crashtests (../../../widget/cocoa/crashtests/*)
+
+  res/globals.jsm (globals.jsm)
+  res/reftest-content.js (reftest-content.js)
+  res/ReftestFissionParent.jsm (ReftestFissionParent.jsm)
+  res/ReftestFissionChild.jsm (ReftestFissionChild.jsm)
+  res/AsyncSpellCheckTestHelper.jsm (../../../editor/AsyncSpellCheckTestHelper.jsm)
+  res/httpd.jsm (../../../netwerk/test/httpserver/httpd.js)
+  res/StructuredLog.jsm (../../../testing/modules/StructuredLog.jsm)
+  res/PerTestCoverageUtils.jsm (../../../tools/code-coverage/PerTestCoverageUtils.jsm)
+  res/input.css (../../../editor/reftests/xul/input.css)
+  res/progress.css (../../../layout/reftests/forms/progress/style.css)
+  res/manifest.jsm (manifest.jsm)
+  res/reftest.jsm (reftest.jsm)
+
+# Android doesn't ship global.css
+# Accessing missing non-test chrome:// files crashes, to avoid relying on
+# non-existing files.
+# A bunch of our older crash- and reftests use it, and it's unclear to what
+# extent they rely on it (ie removing the CSS file may stop the tests testing
+# what they are supposed to test on OSes that do ship global.css).
+# We also would like to move towards shipping less and less XUL/ex-XBL files
+# on android, so adding it everywhere doesn't seem like the right direction.
+# Instead, add an empty file only for reftests:
+  content/fake-global.css (fake-global.css)

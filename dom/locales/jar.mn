@@ -1,0 +1,38 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[localization] @AB_CD@.jar:
+  dom                                                          (%dom/**/*.ftl)
+
+@AB_CD@.jar:
+  locale/@AB_CD@/global/css.properties                         (%chrome/layout/css.properties)
+  locale/@AB_CD@/global/xul.properties                         (%chrome/layout/xul.properties)
+  locale/@AB_CD@/global/printing.properties                    (%chrome/layout/printing.properties)
+  locale/@AB_CD@/global/layout_errors.properties               (%chrome/layout/layout_errors.properties)
+  locale/@AB_CD@/global/netError.dtd                           (%chrome/netError.dtd)
+  locale/@AB_CD@/global/netErrorApp.dtd                        (%chrome/netErrorApp.dtd)
+  locale/@AB_CD@/global/global.dtd                             (%chrome/global.dtd)
+  locale/@AB_CD@/global/appstrings.properties                  (%chrome/appstrings.properties)
+  locale/@AB_CD@/global/global-strres.properties               (%chrome/global-strres.properties)
+  locale/@AB_CD@/global/plugins.properties                     (%chrome/plugins.properties)
+  locale/@AB_CD@/global/nsWebBrowserPersist.properties         (%chrome/nsWebBrowserPersist.properties)
+  locale/@AB_CD@/global/xslt/xslt.properties                   (%chrome/xslt/xslt.properties)
+  locale/@AB_CD@/global/dom/dom.properties                     (%chrome/dom/dom.properties)
+  locale/@AB_CD@/global/svg/svg.properties                     (%chrome/svg/svg.properties)
+  locale/@AB_CD@/global/layout/MediaDocument.properties        (%chrome/layout/MediaDocument.properties)
+  locale/@AB_CD@/global/layout/htmlparser.properties           (%chrome/layout/htmlparser.properties)
+  locale/@AB_CD@/global/layout/xmlparser.properties            (%chrome/layout/xmlparser.properties)
+  locale/@AB_CD@/global/layout/HtmlForm.properties             (%chrome/layout/HtmlForm.properties)
+  locale/@AB_CD@/global/security/caps.properties               (%chrome/security/caps.properties)
+  locale/@AB_CD@/global/security/csp.properties                (%chrome/security/csp.properties)
+  locale/@AB_CD@/global/security/security.properties           (%chrome/security/security.properties)
+  locale/@AB_CD@/global/xml/prettyprint.dtd                    (%chrome/xml/prettyprint.dtd)
+  locale/@AB_CD@/global-platform/win/accessible.properties     (%chrome/accessibility/win/accessible.properties)
+  locale/@AB_CD@/global-platform/mac/accessible.properties     (%chrome/accessibility/mac/accessible.properties)
+  locale/@AB_CD@/global-platform/unix/accessible.properties    (%chrome/accessibility/unix/accessible.properties)
+#ifdef ANDROID
+  locale/@AB_CD@/global/AccessFu.properties                    (%chrome/accessibility/AccessFu.properties)
+#endif
+  locale/@AB_CD@/global/mathml/mathml.properties               (%chrome/mathml/mathml.properties)

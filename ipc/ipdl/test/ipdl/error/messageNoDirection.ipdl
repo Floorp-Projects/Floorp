@@ -1,0 +1,5 @@
+//error: missing message direction
+
+protocol messageNoDirection {
+    async NoDirection();
+};

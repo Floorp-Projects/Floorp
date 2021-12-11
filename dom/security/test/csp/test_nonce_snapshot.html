@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1509738 - Snapshot nonce at load start time</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * a) the test starts loading a script using allowlisted nonce
+ * b) the nonce of the script gets modified
+ * c) the script hits a 302 server side redirect
+ * d) we ensure the script still loads and does not use the modified nonce
+ */
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  is(event.data, "script-loaded", "script loaded even though nonce was dynamically modified");
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+let src = "file_nonce_snapshot.sjs?load-frame";
+document.getElementById("testframe").src = src;
+
+</script>
+</body>
+</html>

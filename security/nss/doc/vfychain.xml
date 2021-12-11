@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY date SYSTEM "date.xml">
+<!ENTITY version SYSTEM "version.xml">
+]>
+
+<refentry id="vfychain">
+
+  <refentryinfo>
+    <date>&date;</date>
+    <title>NSS Security Tools</title>
+    <productname>nss-tools</productname>
+    <productnumber>&version;</productnumber>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>VFYCHAIN</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>vfychain </refname>
+    <refpurpose>vfychain [options] [revocation options] certfile [[options] certfile] ...</refpurpose>
+  </refnamediv>
+
+ <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>vfychain</command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsection>
+    <title>STATUS</title>
+    <para>This documentation is still work in progress. Please contribute to the initial review in <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=836477">Mozilla NSS bug 836477</ulink>
+    </para>
+  </refsection>
+
+  <refsection id="description">
+    <title>Description</title>
+    <para>The verification Tool, <command>vfychain</command>, verifies certificate chains. <command>modutil</command> can add and delete PKCS #11 modules, change passwords on security databases, set defaults, list module contents, enable or disable slots, enable or disable FIPS 140-2 compliance, and assign default providers for cryptographic operations. This tool can also create certificate, key, and module security database files.</para>
+
+	<para>The tasks associated with security module database management are part of a process that typically also involves managing key databases and certificate databases.</para>
+  </refsection>
+
+  <refsection id="options">
+    <title>Options</title>
+    
+    <variablelist>
+
+      <varlistentry>
+        <term><option>-a</option></term>
+        <listitem>
+          <simpara>the following certfile is base64 encoded</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+          <term><option>-b </option> <replaceable>YYMMDDHHMMZ</replaceable></term>
+        <listitem>
+          <simpara>Validate date (default: now)</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+          <term><option>-d </option> <replaceable>directory</replaceable></term>        <listitem>
+          <simpara>database directory</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-f </option> </term>
+        <listitem>
+          <simpara>Enable cert fetching from AIA URL</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-o </option> <replaceable>oid</replaceable></term>
+        <listitem>
+          <simpara>Set policy OID for cert validation(Format OID.1.2.3)</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-p </option></term>
+        <listitem>
+          <simpara>Use PKIX Library to validate certificate by calling:</simpara>
+		  <simpara>	   * CERT_VerifyCertificate if specified once,</simpara>
+		  <simpara>	   * CERT_PKIXVerifyCert if specified twice and more.</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+          <term><option>-r </option></term>
+          <listitem>
+            <simpara>Following certfile is raw binary DER (default)</simpara>
+         </listitem>
+       </varlistentry>
+
+       <varlistentry>
+         <term><option>-t</option></term>
+         <listitem>
+	       <simpara>Following cert is explicitly trusted (overrides db trust)</simpara>
+         </listitem>
+       </varlistentry>
+
+       <varlistentry>
+         <term><option>-u </option> <replaceable>usage</replaceable></term>
+         <listitem>
+            <para>
+	 	 0=SSL client, 1=SSL server, 2=SSL StepUp, 3=SSL CA,
+	     4=Email signer, 5=Email recipient, 6=Object signer,
+		 9=ProtectedObjectSigner, 10=OCSP responder, 11=Any CA
+            </para>
+         </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-T </option></term>
+          <listitem>
+	        <simpara>Trust both explicit trust anchors (-t) and the database. (Without this option, the default is to only trust certificates marked -t, if there are any, or to trust the database if there are certificates marked -t.)
+            </simpara>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-v </option></term>
+          <listitem>
+	        <simpara>Verbose mode. Prints root cert subject(double the
+			 argument for whole root cert info)
+            </simpara>
+          </listitem>
+        </varlistentry>
+
+      <varlistentry>
+        <term><option>-w </option> <replaceable>password</replaceable></term>
+        <listitem>
+          <simpara>Database password</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-W </option> <replaceable>pwfile</replaceable></term>
+        <listitem>
+          <simpara>Password file</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option></option></term>
+        <listitem>
+          <simpara>Revocation options for PKIX API (invoked with -pp options) is a
+	collection of the following flags:
+		[-g type [-h flags] [-m type [-s flags]] ...] ...</simpara>
+          <simpara>Where: </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-g </option> <replaceable>test-type</replaceable></term>
+        <listitem>
+          <simpara>Sets status checking test type. Possible values
+			are "leaf" or "chain"
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-g </option> <replaceable>test type</replaceable></term>
+        <listitem>
+          <simpara>Sets status checking test type. Possible values
+			are "leaf" or "chain".
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-h </option> <replaceable>test flags</replaceable></term>
+        <listitem>
+          <simpara>Sets revocation flags for the test type it
+			follows. Possible flags: "testLocalInfoFirst" and
+			"requireFreshInfo".
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-m </option> <replaceable>method type</replaceable></term>
+        <listitem>
+          <simpara>Sets method type for the test type it follows.
+			Possible types are "crl" and "ocsp".
+          </simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-s </option> <replaceable>method flags</replaceable></term>
+        <listitem>
+          <simpara>Sets revocation flags for the method it follows.
+			Possible types are "doNotUse", "forbidFetching",
+			"ignoreDefaultSrc", "requireInfo" and "failIfNoInfo".
+          </simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="resources">
+    <title>Additional Resources</title>
+	<para>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <ulink url="http://www.mozilla.org/projects/security/pki/nss/">http://www.mozilla.org/projects/security/pki/nss/</ulink>. The NSS site relates directly to NSS code changes and releases.</para>
+	<para>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</para>
+	<para>IRC: Freenode at #dogtag-pki</para>
+  </refsection>
+
+<!-- fill in your name first; keep the other names for reference -->
+  <refsection id="authors">
+    <title>Authors</title>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
+    <para>
+	Authors: Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com>.
+    </para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="license">
+    <title>LICENSE</title>
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    </para>
+  </refsection>
+
+</refentry>

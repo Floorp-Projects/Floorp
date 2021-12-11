@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf8">
+  <title>Test sw page</title>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test sw page</p>
+
+<script>
+"use strict";
+
+// Expose a reference to the registration so that tests can unregister it.
+window.registrationPromise = navigator.serviceWorker.register("test_sw_page_worker.js");
+</script>
+</body>
+</html>

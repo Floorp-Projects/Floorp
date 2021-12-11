@@ -1,0 +1,21 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+intr protocol PTestRacyReentry {
+
+parent:
+    intr E();
+    async __delete__();
+
+child:
+    async Start();
+
+    async N();
+    intr H();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

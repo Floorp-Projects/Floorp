@@ -1,0 +1,2 @@
+HTTP 401 Unauthorized
+WWW-Authenticate: Basic realm="Favicon auth"

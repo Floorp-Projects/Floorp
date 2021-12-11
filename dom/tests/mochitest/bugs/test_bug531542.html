@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=531542
+-->
+<head>
+  <title>Test for Bug 531542</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=531542">Mozilla Bug 531542</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 531542 **/
+
+var negativeTimeoutFired = false;
+function negativeTimeout()
+{
+  negativeTimeoutFired = true;
+}
+function testFinished()
+{
+  ok(negativeTimeoutFired, "Timeout with negative delay should fire.");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(negativeTimeout, -1);
+setTimeout(testFinished, 0);
+
+</script>
+</pre>
+</body>
+</html>

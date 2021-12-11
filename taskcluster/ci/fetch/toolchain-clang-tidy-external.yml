@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+civet-source:
+    description: Repository for external static analysis checks
+    artifact-prefix: project/civet
+    fetch:
+        type: git
+        repo: git@github.com:mozilla-services/civet.git
+        revision: fa787d2047a5c3759e67f0df58415a984dcc8777
+        ssh-key: project/civet/github-deploy-key
+        artifact-name: civet-source.tar.zst

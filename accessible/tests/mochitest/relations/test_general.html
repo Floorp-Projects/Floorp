@@ -1,0 +1,408 @@
+<html>
+
+<head>
+  <title>nsIAccessible::getAccessibleRelated() tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // html:label@for
+      testRelation("label1_1", RELATION_LABEL_FOR, "control1_1");
+      testRelation("control1_1", RELATION_LABELLED_BY, "label1_1");
+
+      // html:label@for, multiple
+      testRelation("label1_2", RELATION_LABEL_FOR, "control1_2");
+      testRelation("label1_3", RELATION_LABEL_FOR, "control1_2");
+      testRelation("control1_2", RELATION_LABELLED_BY,
+                   [ "label1_2", "label1_3" ]);
+
+      // ancestor html:label (implicit association)
+      testRelation("label1_4", RELATION_LABEL_FOR, "control1_4");
+      testRelation("control1_4", RELATION_LABELLED_BY, "label1_4");
+      testRelation("control1_4_option1", RELATION_LABELLED_BY, null);
+      testRelation("label1_5", RELATION_LABEL_FOR, "control1_5");
+      testRelation("control1_5", RELATION_LABELLED_BY, "label1_5");
+      testRelation("label1_6", RELATION_LABEL_FOR, "control1_6");
+      testRelation("control1_6", RELATION_LABELLED_BY, "label1_6");
+      testRelation("label1_7", RELATION_LABEL_FOR, "control1_7");
+      testRelation("control1_7", RELATION_LABELLED_BY, "label1_7");
+      testRelation("label1_8", RELATION_LABEL_FOR, "control1_8");
+      testRelation("control1_8", RELATION_LABELLED_BY, "label1_8");
+      testRelation("label1_9", RELATION_LABEL_FOR, "control1_9");
+      testRelation("control1_9", RELATION_LABELLED_BY, "label1_9");
+      testRelation("label1_10", RELATION_LABEL_FOR, "control1_10");
+      testRelation("control1_10", RELATION_LABELLED_BY, "label1_10");
+      testRelation("label1_11", RELATION_LABEL_FOR, "control1_11");
+      testRelation("control1_11", RELATION_LABELLED_BY, "label1_11");
+      testRelation("label1_12", RELATION_LABEL_FOR, "control1_12");
+      testRelation("control1_12", RELATION_LABELLED_BY, "label1_12");
+
+      testRelation("label1_13", RELATION_LABEL_FOR, null);
+      testRelation("control1_13", RELATION_LABELLED_BY, null);
+      testRelation("control1_14", RELATION_LABELLED_BY, "label1_14");
+
+      // aria-labelledby
+      testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
+      testRelation("checkbox2", RELATION_LABELLED_BY, "label2");
+
+      // aria-labelledby, multiple relations
+      testRelation("label3", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("label4", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("checkbox3", RELATION_LABELLED_BY, ["label3", "label4"]);
+
+      // aria-describedby
+      testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox4");
+      testRelation("checkbox4", RELATION_DESCRIBED_BY, "descr1");
+
+      // aria-describedby, multiple relations
+      testRelation("descr2", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("descr3", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("checkbox5", RELATION_DESCRIBED_BY, ["descr2", "descr3"]);
+
+      // aria_owns, multiple relations
+      testRelation("treeitem1", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
+
+      // 'node child of' relation for outlineitem role
+      testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
+      testRelation("treeitem6", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem7", RELATION_NODE_CHILD_OF, "treeitem6");
+      testRelation("tree2_ti1", RELATION_NODE_CHILD_OF, "tree2");
+      testRelation("tree2_ti1a", RELATION_NODE_CHILD_OF, "tree2_ti1");
+      testRelation("tree2_ti1b", RELATION_NODE_CHILD_OF, "tree2_ti1");
+
+      // 'node child of' relation for row role in grid.
+      // Relation for row associated using aria-level should exist.
+      testRelation("simplegrid-row3", RELATION_NODE_CHILD_OF,
+                   "simplegrid-row2");
+      // Relations for hierarchical children elements shouldn't exist.
+      testAbsentRelation("simplegrid-row1", RELATION_NODE_CHILD_OF,
+                         "simplegrid");
+      testAbsentRelation("simplegrid-row2", RELATION_NODE_CHILD_OF,
+                         "simplegrid");
+
+      // 'node child of' relation for row role of treegrid
+      testRelation("treegridrow1", RELATION_NODE_CHILD_OF, "treegrid");
+      testRelation("treegridrow2", RELATION_NODE_CHILD_OF, "treegrid");
+      testRelation("treegridrow3", RELATION_NODE_CHILD_OF, "treegridrow2");
+
+      // 'node child of' relation for lists organized by groups
+      testRelation("listitem1", RELATION_NODE_CHILD_OF, "list");
+      testRelation("listitem1.1", RELATION_NODE_CHILD_OF, "listitem1");
+      testRelation("listitem1.2", RELATION_NODE_CHILD_OF, "listitem1");
+
+      // 'node child of' relation for the document having window, returns
+      // direct accessible parent (fixed in bug 419770).
+      var iframeElmObj = {};
+      var iframeAcc = getAccessible("iframe", null, iframeElmObj);
+      var iframeDoc = iframeElmObj.value.contentDocument;
+      var iframeDocAcc = getAccessible(iframeDoc);
+      testRelation(iframeDocAcc, RELATION_NODE_CHILD_OF, iframeAcc);
+
+      // 'node parent of' relation on ARIA tree and treegrid.
+      testRelation("tree", RELATION_NODE_PARENT_OF,
+                    ["treeitem1", "treeitem2", // aria-owns
+                     "treeitem3", "treeitem4", "treeitem6"]); // children
+      testRelation("treeitem4", RELATION_NODE_PARENT_OF,
+                   "treeitem5"); // aria-level
+      testRelation("treeitem6", RELATION_NODE_PARENT_OF,
+                   "treeitem7"); // // group role
+      testRelation("tree2", RELATION_NODE_PARENT_OF, "tree2_ti1"); // group role
+      testRelation("tree2_ti1", RELATION_NODE_PARENT_OF,
+                   ["tree2_ti1a", "tree2_ti1b"]); // group role
+
+      testRelation("treegridrow2", RELATION_NODE_PARENT_OF, "treegridrow3");
+      testRelation("treegrid", RELATION_NODE_PARENT_OF,
+                   ["treegridrow1", "treegridrow2"]);
+
+      // 'node parent of' relation on ARIA grid.
+      // 'node parent of' relation on ARIA grid's row.
+      // Should only have relation to child through aria-level.
+      testRelation("simplegrid-row2", RELATION_NODE_PARENT_OF,
+                   "simplegrid-row3");
+
+      // 'node parent of' relation on ARIA list structured by groups
+      testRelation("list", RELATION_NODE_PARENT_OF,
+                   "listitem1");
+      testRelation("listitem1", RELATION_NODE_PARENT_OF,
+                   [ "listitem1.1", "listitem1.2" ]);
+
+      // aria-atomic
+      testRelation(getNode("atomic").firstChild, RELATION_MEMBER_OF, "atomic");
+
+      // aria-controls
+      getAccessible("tab");
+      todo(false,
+           "Getting an accessible tab, otherwise relations for tabpanel aren't cached. Bug 606924 will fix that.");
+      testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
+      testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
+
+      // aria-controls, multiple relations
+      testRelation("lr1", RELATION_CONTROLLED_BY, "button");
+      testRelation("lr2", RELATION_CONTROLLED_BY, "button");
+      testRelation("button", RELATION_CONTROLLER_FOR, ["lr1", "lr2"]);
+
+      // aria-flowto
+      testRelation("flowto", RELATION_FLOWS_TO, "flowfrom");
+      testRelation("flowfrom", RELATION_FLOWS_FROM, "flowto");
+
+      // aria-flowto, multiple relations
+      testRelation("flowto1", RELATION_FLOWS_TO, ["flowfrom1", "flowfrom2"]);
+      testRelation("flowfrom1", RELATION_FLOWS_FROM, "flowto1");
+      testRelation("flowfrom2", RELATION_FLOWS_FROM, "flowto1");
+
+      // 'default button' relation
+      testRelation("input", RELATION_DEFAULT_BUTTON, "submit");
+
+      // output 'for' relations
+      testRelation("output", RELATION_CONTROLLED_BY, ["input", "input2"]);
+      testRelation("output2", RELATION_CONTROLLED_BY, ["input", "input2"]);
+      testRelation("input", RELATION_CONTROLLER_FOR, ["output", "output2"]);
+      testRelation("input2", RELATION_CONTROLLER_FOR, ["output", "output2"]);
+
+      // 'described by'/'description for' relation for html:table and
+      // html:caption
+      testRelation("caption", RELATION_LABEL_FOR, "table");
+      testRelation("table", RELATION_LABELLED_BY, "caption");
+
+      // 'labelled by'/'label for' relation for html:fieldset and
+      // html:legend
+      testRelation("legend", RELATION_LABEL_FOR, "fieldset");
+      testRelation("fieldset", RELATION_LABELLED_BY, "legend");
+
+      // containing relations
+      testRelation("control1_1", RELATION_CONTAINING_DOCUMENT, document);
+      testRelation("control1_1", RELATION_CONTAINING_TAB_PANE, getTabDocAccessible("control1_1"));
+      testRelation("control1_1", RELATION_CONTAINING_APPLICATION, getApplicationAccessible());
+
+      // details
+      testRelation("has_details", RELATION_DETAILS, "details");
+      testRelation("details", RELATION_DETAILS_FOR, "has_details");
+      testRelation("has_multiple_details", RELATION_DETAILS, ["details2", "details3"]);
+      testRelation("details2", RELATION_DETAILS_FOR, "has_multiple_details");
+      testRelation("details3", RELATION_DETAILS_FOR, "has_multiple_details");
+
+      // error
+      testRelation("has_error", RELATION_ERRORMSG, "error");
+      testRelation("error", RELATION_ERRORMSG_FOR, "has_error");
+
+      // finish test
+      SimpleTest.finish();
+    }
+
+    disableLogging(); // from test_embeds.xhtml
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=475298"
+     title="mochitests for accessible relations">
+    Bug 475298
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=527461"
+     title="Implement RELATION_NODE_PARENT_OF">
+    Bug 527461
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=558036"
+     title="make HTML <output> accessible">
+    Bug 558036
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=682790"
+     title="Ignore implicit label association when it's associated explicitly">
+    Bug 682790
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=687393"
+     title="HTML select options gets relation from containing label">
+    Bug 687393
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=864224"
+     title="Support nested ARIA listitems structured by role='group'">
+    Bug 864224
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <label id="label1_1" for="control1_1">label</label>
+  <input id="control1_1">
+
+  <label id="label1_2" for="control1_2">label</label>
+  <label id="label1_3" for="control1_2">label</label>
+  <input id="control1_2">
+
+  <label id="label1_4">Label
+    <select id="control1_4">
+      <option id="control1_4_option1">option</option>
+    </select>
+  </label>
+  <label id="label1_5">Label
+    <button id="control1_5">button</button>
+  </label>
+  <label id="label1_6">Label
+    <input id="control1_6">
+  </label>
+  <label id="label1_7">Label
+    <input id="control1_7" type="checkbox">
+  </label>
+  <label id="label1_8">Label
+    <input id="control1_8" type="radio">
+  </label>
+  <label id="label1_9">Label
+    <input id="control1_9" type="button" value="button">
+  </label>
+  <label id="label1_10">Label
+    <input id="control1_10" type="submit">
+  </label>
+  <label id="label1_11">Label
+    <input id="control1_11" type="image">
+  </label>
+  <label id="label1_12">Label
+    <progress id="control1_12"></progress>
+  </label>
+
+  <label id="label1_13" for="">Label
+    <input id="control1_13">
+  </label>
+  <label id="label1_14" for="control1_14">Label
+    <input id="control1_14">
+  </label>
+
+  <span id="label2">label</span>
+  <span role="checkbox" id="checkbox2" aria-labelledby="label2"></span>
+
+  <span id="label3">label1</span>
+  <span id="label4">label2</span>
+  <span role="checkbox" id="checkbox3" aria-labelledby="label3 label4"></span>
+
+  <span id="descr1">description</span>
+  <span role="checkbox" id="checkbox4" aria-describedby="descr1"></span>
+
+  <span id="descr2">description1</span>
+  <span id="descr3">description2</span>
+  <span role="checkbox" id="checkbox5" aria-describedby="descr2 descr3"></span>
+
+  <div role="treeitem" id="treeitem1">Yellow</div>
+  <div role="treeitem" id="treeitem2">Orange</div>
+  <div id="tree" role="tree" aria-owns="treeitem1 treeitem2">
+    <div role="treeitem" id="treeitem3">Blue</div>
+    <div role="treeitem" id="treeitem4" aria-level="1">Green</div>
+    <div role="treeitem" id="treeitem5" aria-level="2">Light green</div>
+    <div role="treeitem" id="treeitem6" aria-level="1">Green2</div>
+    <div role="group">
+      <div role="treeitem" id="treeitem7">Super light green</div>
+    </div>
+  </div>
+
+  <div role="grid" id="simplegrid">
+    <div role="row" id="simplegrid-row1" aria-level="1">
+      <div role="gridcell">cell 1,1</div>
+      <div role="gridcell">cell 1,2</div>
+    </div>
+    <div role="row" id="simplegrid-row2" aria-level="1">
+      <div role="gridcell">cell 2,1</div>
+      <div role="gridcell">cell 2,2</div>
+    </div>
+    <div role="row" id="simplegrid-row3" aria-level="2">
+      <div role="gridcell">cell 3,1</div>
+      <div role="gridcell">cell 3,2</div>
+    </div>
+  </div>
+
+  <ul role="tree" id="tree2">
+    <li role="treeitem" id="tree2_ti1">Item 1
+      <ul role="group">
+        <li role="treeitem" id="tree2_ti1a">Item 1A</li>
+        <li role="treeitem" id="tree2_ti1b">Item 1B</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div role="treegrid" id="treegrid">
+    <div role="row" id="treegridrow1">
+      <span role="gridcell">cell1</span><span role="gridcell">cell2</span>
+    </div>
+    <div role="row" id="treegridrow2" aria-level="1">
+      <span role="gridcell">cell3</span><span role="gridcell">cell4</span>
+    </div>
+    <div role="row" id="treegridrow3" aria-level="2">
+      <span role="gridcell">cell5</span><span role="gridcell">cell6</span>
+    </div>
+  </div>
+
+  <div role="list" id="list">
+    <div role="listitem" id="listitem1">Item 1
+      <div role="group">
+        <div role="listitem" id="listitem1.1">Item 1A</div>
+        <div role="listitem" id="listitem1.2">Item 1B</div>
+      </div>
+    </div>
+  </div>
+
+  <iframe id="iframe"></iframe>
+
+  <div id="tablist" role="tablist">
+    <div id="tab" role="tab" aria-controls="tabpanel">tab</div>
+  </div>
+  <div id="tabpanel" role="tabpanel">tabpanel</div>
+
+  <div id="lr1" aria-live="assertive">1</div>
+  <div id="lr2" aria-live="assertive">a</div>
+  <input type="button" id="button" aria-controls="lr1 lr2"
+         onclick="getNode('lr1').textContent += '1'; getNode('lr2').textContent += 'a';"/>
+
+  <div id="atomic" aria-atomic="true">live region</div>
+
+  <span id="flowto" aria-flowto="flowfrom">flow to</span>
+  <span id="flowfrom">flow from</span>
+
+  <span id="flowto1" aria-flowto="flowfrom1 flowfrom2">flow to</span>
+  <span id="flowfrom1">flow from</span>
+  <span id="flowfrom2">flow from</span>
+
+  <form id="form">
+    <input id="input" />
+    <input id="input2" />
+    <input type="submit" id="submit" />
+    <output id="output" style="display:block" for="input input2"></output>
+    <output id="output2" for="input input2"></output>
+  </form>
+
+  <table id="table">
+    <caption id="caption">tabple caption</caption>
+    <tr>
+      <td>cell1</td><td>cell2</td>
+    </tr>
+  </table>
+
+  <fieldset id="fieldset">
+    <legend id="legend">legend</legend>
+    <input />
+  </fieldset>
+
+  <input id="has_details" aria-details="details"><section id="details"></section>
+  <input id="has_multiple_details" aria-details="details2 details3"><section id="details2"></section><section id="details3"></section>
+  <input id="has_error" aria-errormessage="error"><section id="error"></section>
+</body>
+</html>

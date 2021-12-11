@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1322678
+-->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Test for Bug 1322678</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+
+const CUSTOM_TITLE = "Custom Title";
+
+async function openNewWindowForTest() {
+  let win = window.open("bug369370-popup.png", "bug1322678",
+                    "width=400,height=300,scrollbars=no");
+  ok(win, "opened child window");
+
+  await new Promise(resolve => {
+    win.onload = function() {
+      ok(true, "window loaded");
+      resolve();
+    };
+  });
+
+  return win;
+}
+
+async function testCustomTitle(aWin, aTitle) {
+  let doc = aWin.document;
+  let elements = doc.getElementsByTagName("img");
+  is(elements.length, 1, "looking for img in ImageDocument");
+  let img = elements[0];
+
+  // Click to zoom in
+  synthesizeMouse(img, 25, 25, { }, aWin);
+  is(doc.title, aTitle, "Checking title");
+
+  // Click there again to zoom out
+  synthesizeMouse(img, 25, 25, { }, aWin);
+  is(doc.title, aTitle, "Checking title");
+
+  // Now try resizing the window so the image fits vertically and horizontally.
+  await new Promise(resolve => {
+    aWin.addEventListener("resize", function() {
+      // Give the image document time to respond
+      SimpleTest.executeSoon(function() {
+        is(doc.title, aTitle, "Checking title");
+        resolve();
+      });
+    }, {once: true});
+
+    let decorationSize = aWin.outerHeight - aWin.innerHeight;
+    aWin.resizeTo(800 + 50 + decorationSize, 600 + 50 + decorationSize);
+  });
+
+  // Now try resizing the window so the image no longer fits.
+  await new Promise(resolve => {
+    aWin.addEventListener("resize", function() {
+      // Give the image document time to respond
+      SimpleTest.executeSoon(function() {
+        is(doc.title, aTitle, "Checking title");
+        resolve();
+      });
+    }, {once: true});
+
+    aWin.resizeTo(400, 300);
+  });
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.enable_automatic_image_resizing", true],
+  ]});
+});
+
+add_task(async function testUpdateDocumentTitle() {
+  let win = await openNewWindowForTest();
+  // Set custom title.
+  win.document.title = CUSTOM_TITLE;
+  await testCustomTitle(win, CUSTOM_TITLE);
+  win.close();
+});
+
+add_task(async function testUpdateTitleElement() {
+  let win = await openNewWindowForTest();
+  // Set custom title.
+  let title = win.document.getElementsByTagName("title")[0];
+  title.text = CUSTOM_TITLE;
+  await testCustomTitle(win, CUSTOM_TITLE);
+  win.close();
+});
+
+add_task(async function testAppendNewTitleElement() {
+  let win = await openNewWindowForTest();
+  // Set custom title.
+  let doc = win.document;
+  doc.getElementsByTagName("title")[0].remove();
+  let title = doc.createElement("title");
+  title.text = CUSTOM_TITLE;
+  doc.head.appendChild(title);
+  await testCustomTitle(win, CUSTOM_TITLE);
+  win.close();
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<svg width="200px" height="200px" version="1.1"
+    xmlns="http://www.w3.org/2000/svg">
+  <rect style="fill: black; stroke: none"
+       width="70" height="50"
+  x="50" y="50"
+  rx="10" ry="10"/>
+
+  <rect style="fill: black; stroke: none"
+       width="70" height="40"
+  x="50" y="80"
+  rx="6" ry="6"/>
+</svg>
+

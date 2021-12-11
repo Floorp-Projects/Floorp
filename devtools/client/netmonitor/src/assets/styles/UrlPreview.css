@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Url Preview */
+
+.url-preview {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 6px 3px;
+}
+
+.url-preview .properties-view,
+.url-preview .tree-container,
+.url-preview .treeTable {
+  overflow: hidden;
+  outline: none;
+}
+
+.url-preview .properties-view {
+  margin-right: 10px;
+}
+
+.url-preview tbody:focus {
+  outline: none;
+}
+.url-preview td.splitter {
+  /* This makes sure that the column spans the width of the
+    side bar so the contained horizontal splitter is visible */
+  width: 100vw !important;
+}
+
+.url-preview .horizontal-splitter {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  margin: 6px 0 6px 16px;
+}
+
+.url-preview .treeValueCell .url {
+  display: inline;
+  white-space: normal;
+}
+
+.url-preview .treeTable .treeRow .treeIcon {
+  margin-inline: 0 1px;
+}
+
+.url-preview .tree-container .treeTable tr {
+  margin-bottom: 3px;
+}
+
+.url-preview .treeTable .treeRow:not(.selected):hover {
+  background-color: transparent !important;
+}
+
+.url-preview .treeTable tr.treeRow:first-child .treeLabelCell::after {
+  content: "";
+}
+.url-preview .treeTable .treeLabelCell {
+  --tree-label-cell-indent: 0 !important;
+}
+/* Indent the array params */
+.url-preview .treeTable .treeRow[aria-level="4"] .treeLabelCell {
+  text-indent: 15px;
+}
+
+.url-preview .treeTable .treeLabel[data-level="1"] {
+  text-transform: capitalize;
+}
+
+/* Collapsed url */
+.url-preview tr.treeRow:first-child .treeLabelCell {
+  font-weight: bold;
+  color: var(--theme-icon-dimmed-color);
+}
+
+.url-preview tr.treeRow .treeLabelCell {
+  float: left;
+  margin-right: -15px;
+  padding: 0 2px 0 0;
+
+}
+.url-preview tr.treeRow .treeValueCell {
+  display: inline;
+  word-break: break-all;
+  max-width: none;
+  box-decoration-break: clone;
+  margin-left: 14px;
+}
+
+.url-preview .treeTable .treeValueCell {
+  color: var(--theme-body-color);
+}
+
+.url-preview .url-scheme,
+.url-preview .url-chars {
+  color: var(--theme-icon-dimmed-color);
+}
+
+.url-preview .url-params-name {
+  color: var(--theme-highlight-blue);
+}

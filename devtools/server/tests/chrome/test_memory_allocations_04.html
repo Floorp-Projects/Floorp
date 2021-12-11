@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1068171 - Test controlling the memory actor's allocation sampling probability.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  (async function() {
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
+
+    const allocs = [];
+    function allocator() {
+      for (let i = 0; i < 100; i++) {
+        allocs.push({});
+      }
+    }
+
+    const testProbability = async function(p, expected) {
+      info("probability = " + p);
+      await memory.startRecordingAllocations({
+        probability: p,
+      });
+      allocator();
+      const response = await memory.getAllocations();
+      await memory.stopRecordingAllocations();
+      return response.allocations.length;
+    };
+
+    is((await testProbability(0.0)), 0,
+       "With probability = 0.0, we shouldn't get any allocations.");
+
+    ok((await testProbability(1.0)) >= 100,
+       "With probability = 1.0, we should get all 100 allocations (plus "
+       + "whatever allocations the actor and SpiderMonkey make).");
+
+    // We don't test any other probabilities because the test would be
+    // non-deterministic. We don't have a way to control the PRNG like we do in
+    // jit-tests
+    // (js/src/jit-test/tests/debug/Memory-allocationsSamplingProbability-*.js).
+
+    await memory.detach();
+    destroyServerAndFinish(target);
+  })();
+};
+</script>
+</pre>
+</body>
+</html>

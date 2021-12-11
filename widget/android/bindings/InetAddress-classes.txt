@@ -1,0 +1,6 @@
+# We only want getByAddress(String, byte[])
+[java.net.InetAddress = skip:true]
+getByAddress(Ljava/lang/String;[B)Ljava/net/InetAddress; = skip:false
+
+[java.net.UnknownHostException = skip:true]
+<init>()V =

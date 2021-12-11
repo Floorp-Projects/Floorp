@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Testcase, bug 1395151</title>
+  <style type="text/css">
+@keyframes test-anim {
+  from { opacity : 1 }
+  to   { opacity : 1 }
+}
+
+.ok {
+  background : #0f0;
+  height     : 40px;
+  width      : 40px;
+}
+
+.error {
+  opacity : .001;
+  height     : 100%;
+  width      : 100%;
+}
+
+.error > span {
+  animation  : test-anim 1s linear infinite;
+  background : #f00;
+  content    : "";
+  display    : block;
+  height     : 100%;
+  width      : 100%;
+}
+  </style>
+</head>
+<body>
+<div class="ok">
+  <div class="error"><span></span></div>
+</div>
+</body>
+</html>

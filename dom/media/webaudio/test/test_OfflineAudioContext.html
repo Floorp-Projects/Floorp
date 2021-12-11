@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test OfflineAudioContext</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var renderedBuffer = null;
+var finished = 0;
+
+function finish() {
+  finished++;
+  if (finished == 2) {
+    SimpleTest.finish();
+  }
+}
+
+function setOrCompareRenderedBuffer(aRenderedBuffer) {
+  if (renderedBuffer) {
+    is(renderedBuffer, aRenderedBuffer, "Rendered buffers from the event and the promise should be the same");
+    finish();
+  } else {
+    renderedBuffer = aRenderedBuffer;
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  let ctxs = [
+    new OfflineAudioContext(2, 100, 22050),
+    new OfflineAudioContext({length: 100, sampleRate: 22050}),
+    new OfflineAudioContext({channels: 2, length: 100, sampleRate: 22050}),
+  ];
+
+  for (let ctx of ctxs) {
+    ok(ctx instanceof EventTarget, "OfflineAudioContexts must be EventTargets");
+    is(ctx.length, 100, "OfflineAudioContext.length is equal to the value passed to the ctor.");
+
+    var buf = ctx.createBuffer(2, 100, ctx.sampleRate);
+    for (var i = 0; i < 2; ++i) {
+      for (var j = 0; j < 100; ++j) {
+        buf.getChannelData(i)[j] = Math.sin(2 * Math.PI * 200 * j / ctx.sampleRate);
+      }
+    }
+  }
+
+  is(ctxs[1].destination.channelCount, 1, "OfflineAudioContext defaults to to correct channelCount.");
+
+  let ctx = ctxs[0];
+
+  expectException(function() {
+    new OfflineAudioContext(2, 100, 0);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    new OfflineAudioContext(2, 100, -1);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    new OfflineAudioContext(0, 100, 44100);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  new OfflineAudioContext(32, 100, 44100);
+  expectException(function() {
+    new OfflineAudioContext(33, 100, 44100);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    new OfflineAudioContext(2, 0, 44100);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectTypeError(function() {
+    new OfflineAudioContext({});
+  });
+  expectTypeError(function() {
+    new OfflineAudioContext({sampleRate: 44100});
+  });
+  expectTypeError(function() {
+    new OfflineAudioContext({length: 44100*40});
+  });
+
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.start(0);
+  src.connect(ctx.destination);
+
+  ctx.addEventListener("complete", function(e) {
+    ok(e instanceof OfflineAudioCompletionEvent, "Correct event received");
+    is(e.renderedBuffer.numberOfChannels, 2, "Correct expected number of buffers");
+    ok(renderedBuffer != null, "The event should be fired after the promise callback.");
+    expectNoException(function() {
+      ctx.startRendering().then(function() {
+        ok(false, "Promise should not resolve when startRendering is called a second time on an OfflineAudioContext")
+        finish();
+      }).catch(function(err) {
+        ok(true, "Promise should reject when startRendering is called a second time on an OfflineAudioContext")
+        finish();
+      });
+    });
+    compareBuffers(e.renderedBuffer, buf);
+    setOrCompareRenderedBuffer(e.renderedBuffer);
+
+  });
+
+  expectNoException(function() {
+    ctx.startRendering().then(function(b) {
+      is(renderedBuffer, null, "The promise callback should be called first.");
+      setOrCompareRenderedBuffer(b);
+    }).catch(function (error) {
+       ok(false, "The promise from OfflineAudioContext.startRendering should never be rejected");
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

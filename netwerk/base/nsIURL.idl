@@ -1,0 +1,130 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIURI.idl"
+interface nsIURIMutator;
+
+/**
+ * The nsIURL interface provides convenience methods that further
+ * break down the path portion of nsIURI:
+ *
+ * http://host/directory/fileBaseName.fileExtension?query
+ * http://host/directory/fileBaseName.fileExtension#ref
+ *            \          \                       /
+ *             \          -----------------------
+ *              \                   |          /
+ *               \               fileName     /
+ *                ----------------------------
+ *                            |
+ *                        filePath
+ */
+[scriptable, builtinclass, uuid(86adcd89-0b70-47a2-b0fe-5bb2c5f37e31)]
+interface nsIURL : nsIURI
+{
+    /*************************************************************************
+     * The URL path is broken down into the following principal components:
+     *
+     * attribute AUTF8String filePath;
+     * attribute AUTF8String query;
+     *
+     * These are inherited from nsIURI.
+     */
+
+    /*************************************************************************
+     * The URL filepath is broken down into the following sub-components:
+     */
+
+    /**
+     * Returns the directory portion of a URL.  If the URL denotes a path to a
+     * directory and not a file, e.g. http://host/foo/bar/, then the Directory
+     * attribute accesses the complete /foo/bar/ portion, and the FileName is
+     * the empty string. If the trailing slash is omitted, then the Directory
+     * is /foo/ and the file is bar (i.e. this is a syntactic, not a semantic
+     * breakdown of the Path).  And hence don't rely on this for something to
+     * be a definitely be a file. But you can get just the leading directory
+     * portion for sure.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String directory;
+
+    /**
+     * Returns the file name portion of a URL.  If the URL denotes a path to a
+     * directory and not a file, e.g. http://host/foo/bar/, then the Directory
+     * attribute accesses the complete /foo/bar/ portion, and the FileName is
+     * the empty string. Note that this is purely based on searching for the
+     * last trailing slash. And hence don't rely on this to be a definite file.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String fileName;
+
+    /*************************************************************************
+     * The URL filename is broken down even further:
+     */
+
+    /**
+     * Returns the file basename portion of a filename in a url.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String fileBaseName;
+
+    /**
+     * Returns the file extension portion of a filename in a url.  If a file
+     * extension does not exist, the empty string is returned.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String fileExtension;
+
+    /**
+     * This method takes a uri and compares the two.  The common uri portion
+     * is returned as a string.  The minimum common uri portion is the
+     * protocol, and any of these if present:  login, password, host and port
+     * If no commonality is found, "" is returned.  If they are identical, the
+     * whole path with file/ref/etc. is returned.  For file uris, it is
+     * expected that the common spec would be at least "file:///" since '/' is
+     * a shared common root.
+     *
+     * Examples:
+     *    this.spec               aURIToCompare.spec        result
+     * 1) http://mozilla.org/     http://www.mozilla.org/   ""
+     * 2) http://foo.com/bar/     ftp://foo.com/bar/        ""
+     * 3) http://foo.com:8080/    http://foo.com/bar/       ""
+     * 4) ftp://user@foo.com/     ftp://user:pw@foo.com/    ""
+     * 5) ftp://foo.com/bar/      ftp://foo.com/bar         ftp://foo.com/
+     * 6) ftp://foo.com/bar/      ftp://foo.com/bar/b.html  ftp://foo.com/bar/
+     * 7) http://foo.com/a.htm#i  http://foo.com/b.htm      http://foo.com/
+     * 8) ftp://foo.com/c.htm#i   ftp://foo.com/c.htm       ftp://foo.com/c.htm
+     * 9) file:///a/b/c.html      file:///d/e/c.html        file:///
+     */
+    AUTF8String getCommonBaseSpec(in nsIURI aURIToCompare);
+
+    /**
+     * This method tries to create a string which specifies the location of the
+     * argument relative to |this|.  If the argument and |this| are equal, the
+     * method returns "".  If any of the URIs' scheme, host, userpass, or port
+     * don't match, the method returns the full spec of the argument.
+     *
+     * Examples:
+     *    this.spec               aURIToCompare.spec        result
+     * 1) http://mozilla.org/     http://www.mozilla.org/   http://www.mozilla.org/
+     * 2) http://mozilla.org/     http://www.mozilla.org    http://www.mozilla.org/
+     * 3) http://foo.com/bar/     http://foo.com:80/bar/    ""
+     * 4) http://foo.com/         http://foo.com/a.htm#b    a.html#b
+     * 5) http://foo.com/a/b/     http://foo.com/c          ../../c
+     */
+    AUTF8String getRelativeSpec(in nsIURI aURIToCompare);
+
+};
+
+[scriptable, builtinclass, uuid(25072eb8-f1e6-482f-9ca9-eddd3d65169a)]
+interface nsIURLMutator : nsISupports
+{
+    [must_use] nsIURIMutator setFileName(in AUTF8String aFileName);
+    [must_use] nsIURIMutator setFileBaseName(in AUTF8String aFileBaseName);
+    [must_use] nsIURIMutator setFileExtension(in AUTF8String aFileExtension);
+};

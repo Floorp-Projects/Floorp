@@ -1,0 +1,22 @@
+<!DOCTYPE>
+<head>
+  <style>
+    body {
+      border:  0px;
+      margin:  0px;
+      padding: 0px;
+    }
+    img {
+      image-orientation: from-image;
+    }
+  </style>
+</head>
+<body>
+  <img src="image-orientation-viewbox-no-size.svg">
+  <script>
+    let fromImage = location.search == "from-image";
+    if (fromImage) {
+      document.querySelector("img").style.imageOrientation = "from-image";
+    }
+  </script>
+</body>

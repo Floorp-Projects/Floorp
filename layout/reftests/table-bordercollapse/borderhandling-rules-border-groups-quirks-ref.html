@@ -1,0 +1,59 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<style>
+div {width: 3px; height: 3px;}
+div {width: 3px; height: 3px;}
+table.frame {border-style: outset; border-width: thin ;}
+
+table.bc{ border-collapse:collapse; border-style: hidden}
+.bcborder {border-width: 1px; border-style: solid}
+td.inner {border-style: inset; border-width: thin;}
+table.inner td {border-style: inset; border-width: thin;}
+</style>
+</head>
+<body>
+<table cellpadding="5" rules="all">
+<tr><th>rules/border</th><th>empty</th><th>border</th><th>border="0"</th><th>border="1"</th><th>border="3"</th></tr>
+<tr><th>rules="groups"</th>
+<td>
+<table class="bc">
+   <colgroup class="bcborder"><col><col></colgroup>
+   <colgroup class="bcborder"><col></colgroup>
+   <thead class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></thead>
+   <tfoot class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></tfoot>
+   <tbody class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr><tr><td><div/></td><td><div/></td><td><div/></td></tr></tbody>
+</table></td>
+<td><table class="bc" style="border-width: 1px; border-style: solid">
+   <colgroup class="bcborder"><col><col></colgroup>
+   <colgroup class="bcborder"><col></colgroup>
+   <thead class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></thead>
+   <tfoot class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></tfoot>
+   <tbody class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr><tr><td><div/></td><td><div/></td><td><div/></td></tr></tbody>
+</table></td>
+<td><table class="bc">
+   <colgroup class="bcborder"><col><col></colgroup>
+   <colgroup class="bcborder"><col></colgroup>
+   <thead class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></thead>
+   <tfoot class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></tfoot>
+   <tbody class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr><tr><td><div/></td><td><div/></td><td><div/></td></tr></tbody>
+</table></td>
+<td><table class="bc" style="border-width: 1px; border-style: solid">
+   <colgroup class="bcborder"><col><col></colgroup>
+   <colgroup class="bcborder"><col></colgroup>
+   <thead class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></thead>
+   <tfoot class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></tfoot>
+   <tbody class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr><tr><td><div/></td><td><div/></td><td><div/></td></tr></tbody>
+</table></td>
+<td><table class="bc" style="border-width: 3px; border-style: outset">
+   <colgroup class="bcborder"><col><col></colgroup>
+   <colgroup class="bcborder"><col></colgroup>
+   <thead class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></thead>
+   <tfoot class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr></tfoot>
+   <tbody class="bcborder"><tr><td><div/></td><td><div/></td><td><div/></td></tr><tr><td><div/></td><td><div/></td><td><div/></td></tr></tbody>
+</table></td>
+</tr>
+</table>
+
+</body>
+</html>

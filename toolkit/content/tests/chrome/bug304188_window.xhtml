@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="onLoad();"
+        title="FindbarTest for bug 304188 - 
+find-menu appears in editor element which has had makeEditable() called but designMode not set">
+
+  <script type="application/javascript"><![CDATA[
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    ContentTask.setTestScope(window.arguments[0]);
+
+    var gFindBar = null;
+    var gBrowser;
+
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var info = window.arguments[0].info;
+    var ok = window.arguments[0].ok;
+
+    function onLoad() {
+      (async function() {
+        gFindBar = document.getElementById("FindToolbar");
+        for (let browserId of ["content", "content-remote"]) {
+          await startTestWithBrowser(browserId);
+        }
+      })().then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
+    }
+
+    async function startTestWithBrowser(browserId) {
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+      let promise = ContentTask.spawn(gBrowser, [], async function() {
+        return new Promise(resolve => {
+          addEventListener("DOMContentLoaded", () => resolve(), { once: true });
+        });
+      });
+      BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf-8,some%20random%20text");
+      await promise;
+      await onDocumentLoaded();
+    }
+
+    async function onDocumentLoaded() {
+      await ContentTask.spawn(gBrowser, [], async function() {
+        var edsession = content.docShell.editingSession;
+        edsession.makeWindowEditable(content, "html", false, true, false);
+        content.focus();
+      });
+      
+      await enterStringIntoEditor("'");
+      await enterStringIntoEditor("/");
+
+      ok(gFindBar.hidden,
+         "Findfield should have stayed hidden after entering editor test");
+    }
+
+    async function enterStringIntoEditor(aString) {
+      for (let i = 0; i < aString.length; i++) {
+        await ContentTask.spawn(gBrowser, [{ charCode: aString.charCodeAt(i) }], async function(args) {
+          let event = new content.window.KeyboardEvent("keypress", {
+            bubbles: true,
+            cancelable: true,
+            view: null,
+            keyCode: 0,
+            charCode: args.charCode,
+          });
+          content.document.body.dispatchEvent(event);
+        });
+      }
+    }
+  ]]></script>
+
+  <browser id="content" flex="1" src="about:blank" type="content" primary="true" messagemanagergroup="test"/>
+  <browser id="content-remote" remote="true" flex="1" src="about:blank" type="content" primary="true" messagemanagergroup="test"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>

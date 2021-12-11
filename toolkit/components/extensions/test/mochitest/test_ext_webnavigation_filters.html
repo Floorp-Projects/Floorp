@@ -1,0 +1,309 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_webnav_unresolved_uri_on_expected_URI_scheme() {
+  function background() {
+    let listeners = [];
+
+    function cleanupTestListeners() {
+      browser.test.log(`Cleanup previous test event listeners`);
+      for (let {event, listener} of listeners.splice(0)) {
+        browser.webNavigation[event].removeListener(listener);
+      }
+    }
+
+    function createTestListener(event, fail, urlFilter) {
+      return new Promise(resolve => {
+        function listener(details) {
+          let log = JSON.stringify({url: details.url, urlFilter});
+          if (fail) {
+            browser.test.fail(`Got an unexpected ${event} on the failure listener: ${log}`);
+          } else {
+            browser.test.succeed(`Got the expected ${event} on the success listener: ${log}`);
+          }
+
+          resolve();
+        }
+
+        browser.webNavigation[event].addListener(listener, {url: urlFilter});
+        listeners.push({event, listener});
+      });
+    }
+
+    browser.test.onMessage.addListener((msg, events, data) => {
+      if (msg !== "test-filters") {
+        return;
+      }
+
+      let promises = [];
+
+      for (let {okFilter, failFilter} of data.filters) {
+        for (let event of events) {
+          promises.push(
+            Promise.race([
+              createTestListener(event, false, okFilter),
+              createTestListener(event, true, failFilter),
+            ]));
+        }
+      }
+
+      Promise.all(promises).catch(e => {
+        browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      }).then(() => {
+        cleanupTestListeners();
+        browser.test.sendMessage("test-filter-next");
+      });
+
+      browser.test.sendMessage("test-filter-ready");
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  await extension.startup();
+
+  let win = window.open();
+
+  let testFilterScenarios = [
+    {
+      url: "http://example.net/browser",
+      filters: [
+        // schemes
+        {
+          okFilter: [{schemes: ["http"]}],
+          failFilter: [{schemes: ["https"]}],
+        },
+        // ports
+        {
+          okFilter: [{ports: [80, 22, 443]}],
+          failFilter: [{ports: [81, 82, 83]}],
+        },
+        {
+          okFilter: [{ports: [22, 443, [10, 80]]}],
+          failFilter: [{ports: [22, 23, [81, 100]]}],
+        },
+        // multiple criteria in a single filter:
+        // if one of the criteria is not verified, the event should not be received.
+        {
+          okFilter: [{schemes: ["http"], ports: [80, 22, 443]}],
+          failFilter: [{schemes: ["http"], ports: [81, 82, 83]}],
+        },
+        // multiple urlFilters on the same listener
+        // if at least one of the criteria is verified, the event should be received.
+        {
+          okFilter: [{schemes: ["https"]}, {ports: [80, 22, 443]}],
+          failFilter: [{schemes: ["https"]}, {ports: [81, 82, 83]}],
+        },
+      ],
+    },
+    {
+      url: "http://example.net/browser?param=1#ref",
+      filters: [
+        // host: Equals, Contains, Prefix, Suffix
+        {
+          okFilter: [{hostEquals: "example.net"}],
+          failFilter: [{hostEquals: "example.com"}],
+        },
+        {
+          okFilter: [{hostContains: ".example"}],
+          failFilter: [{hostContains: ".www"}],
+        },
+        {
+          okFilter: [{hostPrefix: "example"}],
+          failFilter: [{hostPrefix: "www"}],
+        },
+        {
+          okFilter: [{hostSuffix: "net"}],
+          failFilter: [{hostSuffix: "com"}],
+        },
+        // path: Equals, Contains, Prefix, Suffix
+        {
+          okFilter: [{pathEquals: "/browser"}],
+          failFilter: [{pathEquals: "/"}],
+        },
+        {
+          okFilter: [{pathContains: "brow"}],
+          failFilter: [{pathContains: "tool"}],
+        },
+        {
+          okFilter: [{pathPrefix: "/bro"}],
+          failFilter: [{pathPrefix: "/tool"}],
+        },
+        {
+          okFilter: [{pathSuffix: "wser"}],
+          failFilter: [{pathSuffix: "kit"}],
+        },
+        // query: Equals, Contains, Prefix, Suffix
+        {
+          okFilter: [{queryEquals: "param=1"}],
+          failFilter: [{queryEquals: "wrongparam=2"}],
+        },
+        {
+          okFilter: [{queryContains: "param"}],
+          failFilter: [{queryContains: "wrongparam"}],
+        },
+        {
+          okFilter: [{queryPrefix: "param="}],
+          failFilter: [{queryPrefix: "wrong"}],
+        },
+        {
+          okFilter: [{querySuffix: "=1"}],
+          failFilter: [{querySuffix: "=2"}],
+        },
+        // urlMatches, originAndPathMatches
+        {
+          okFilter: [{urlMatches: "example.net/.*\?param=1"}],
+          failFilter: [{urlMatches: "example.net/.*\?wrongparam=2"}],
+        },
+        {
+          okFilter: [{originAndPathMatches: "example.net\/browser"}],
+          failFilter: [{originAndPathMatches: "example.net/.*\?param=1"}],
+        },
+      ],
+    },
+  ];
+
+  info("WebNavigation event filters test scenarios starting...");
+
+  const EVENTS = [
+    "onBeforeNavigate",
+    "onCommitted",
+    "onDOMContentLoaded",
+    "onCompleted",
+  ];
+
+  for (let data of testFilterScenarios) {
+    info(`Prepare the new test scenario: ${JSON.stringify(data)}`);
+
+    win.location = "about:blank";
+
+    // Wait for the about:blank load to finish before continuing, in case this
+    // load is causing a process switch back into our process.
+    await SimpleTest.promiseWaitForCondition(() => {
+      try {
+        return win.location.href == "about:blank" &&
+          win.document.readyState == "complete";
+      } catch (e) {
+        return false;
+      }
+    });
+
+    extension.sendMessage("test-filters", EVENTS, data);
+    await extension.awaitMessage("test-filter-ready");
+
+    info(`Loading the test url: ${data.url}`);
+    win.location = data.url;
+
+    await extension.awaitMessage("test-filter-next");
+
+    info("Test scenario completed. Moving to the next test scenario.");
+  }
+
+  info("WebNavigation event filters test onReferenceFragmentUpdated scenario starting...");
+
+  const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+  let url = BASE + "/file_WebNavigation_page3.html";
+
+  let okFilter = [{urlContains: "_page3.html"}];
+  let failFilter = [{ports: [444]}];
+  let data = {filters: [{okFilter, failFilter}]};
+  let event = "onCompleted";
+
+  info(`Loading the initial test url: ${url}`);
+  extension.sendMessage("test-filters", [event], data);
+
+  await extension.awaitMessage("test-filter-ready");
+  win.location = url;
+  await extension.awaitMessage("test-filter-next");
+
+  event = "onReferenceFragmentUpdated";
+  extension.sendMessage("test-filters", [event], data);
+
+  await extension.awaitMessage("test-filter-ready");
+  win.location = url + "#ref1";
+  await extension.awaitMessage("test-filter-next");
+
+  info("WebNavigation event filters test onHistoryStateUpdated scenario starting...");
+
+  event = "onHistoryStateUpdated";
+  extension.sendMessage("test-filters", [event], data);
+  await extension.awaitMessage("test-filter-ready");
+
+  win.history.pushState({}, "", BASE + "/pushState_page3.html");
+  await extension.awaitMessage("test-filter-next");
+
+  // TODO: add additional specific tests for the other webNavigation events:
+  // onErrorOccurred (and onCreatedNavigationTarget on supported)
+
+  info("WebNavigation event filters test scenarios completed.");
+
+  await extension.unload();
+
+  win.close();
+});
+
+add_task(async function test_webnav_empty_filter_validation_error() {
+  function background() {
+    let catchedException;
+
+    try {
+      browser.webNavigation.onCompleted.addListener(
+        // Empty callback (not really used)
+        () => {},
+        // Empty filter (which should raise a validation error exception).
+        {url: []}
+      );
+    } catch (e) {
+      catchedException = e;
+      browser.test.log(`Got an exception`);
+    }
+
+    if (catchedException &&
+        catchedException.message.includes("Type error for parameter filters") &&
+        catchedException.message.includes("Array requires at least 1 items; you have 0")) {
+      browser.test.notifyPass("webNav.emptyFilterValidationError");
+    } else {
+      browser.test.notifyFail("webNav.emptyFilterValidationError");
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background,
+  });
+
+  await extension.startup();
+
+  await extension.awaitFinish("webNav.emptyFilterValidationError");
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

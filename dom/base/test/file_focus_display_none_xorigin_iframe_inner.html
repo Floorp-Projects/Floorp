@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<h2>Inner</h2>
+<input></input><br>
+<script type="text/javascript">
+let input = document.querySelector("input");
+
+window.onmessage = function(e) {
+  info(`inner received message: ${e.data}`);
+  if (e.data === "focus") {
+    input.focus();
+    window.parent.postMessage("done", "*");
+  }
+};
+</script>

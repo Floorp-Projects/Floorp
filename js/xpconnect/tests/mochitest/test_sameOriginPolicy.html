@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=801576
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 801576</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=801576">Mozilla Bug 801576</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for the same-origin policy. **/
+SimpleTest.waitForExplicitFinish();
+
+function check(obj, prop, allowed, write) {
+  var accessed = false;
+  try {
+    if (write) {
+      try {
+        obj[prop] = 2;
+        accessed = true;
+      } catch (e) {}
+      Object.defineProperty(obj, 'prop', {getter: function() {}, setter: null});
+    }
+    else
+      obj[prop];
+    accessed = true;
+  } catch (e) {}
+  is(accessed, allowed, prop + " is correctly (in)accessible for " + (write ? 'write' : 'read'));
+}
+
+var crossOriginReadableWindowProps = ['blur', 'close', 'closed', 'focus',
+                                      'frames', 'location', 'length',
+                                      'opener', 'parent', 'postMessage',
+                                      'self', 'top', 'window',
+                                      /* indexed and named accessors */
+                                      '0', 'subframe'];
+
+function isCrossOriginReadable(obj, prop) {
+  if (obj == "Window")
+    return crossOriginReadableWindowProps.includes(prop);
+  if (obj == "Location")
+    return prop == 'replace';
+  return false;
+}
+
+function isCrossOriginWritable(obj, prop) {
+  if (obj == "Window")
+    return prop == 'location';
+  if (obj == "Location")
+    return prop == 'href';
+}
+
+// NB: we don't want to succeed with writes, so we only check them when it should be denied.
+function testAll(sameOrigin) {
+  var win = document.getElementById('ifr').contentWindow;
+
+  // Build a list of properties to check from the properties available on our
+  // window.
+  var props = [];
+  for (var prop in window) { props.push(prop); }
+
+  // On android, this appears to be on the window but not on the iframe. It's
+  // not really relevant to this test, so just skip it.
+  if (props.includes('crypto'))
+    props.splice(props.indexOf('crypto'), 1);
+
+  // Add the named grand-child, since that won't appear on our window.
+  props.push('subframe');
+
+  for (var prop of props) {
+    check(win, prop, sameOrigin || isCrossOriginReadable('Window', prop), /* write = */ false);
+    if (!sameOrigin && !isCrossOriginWritable('Window', prop))
+      check(win, prop, false, /* write = */ true);
+  }
+  for (var prop in window.location) {
+    check(win.location, prop, sameOrigin || isCrossOriginReadable('Location', prop));
+    if (!sameOrigin && !isCrossOriginWritable('Location', prop))
+      check(win.location, prop, false, /* write = */ true);
+  }
+}
+
+var loadCount = 0;
+function go() {
+  ++loadCount;
+  if (loadCount == 1) {
+    testAll(true);
+    document.getElementById('ifr').contentWindow.location = 'http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html';
+  }
+  else {
+    is(loadCount, 2);
+    testAll(false);
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+<iframe id="ifr" onload="go();" src="file_empty.html"></iframe>
+</body>
+</html>

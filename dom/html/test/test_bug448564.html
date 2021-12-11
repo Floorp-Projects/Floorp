@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448564
+-->
+<head>
+  <title>Test for Bug 448564</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448564">Mozilla Bug 448564</a>
+<p id="display">
+  <iframe src="bug448564-iframe-1.html"></iframe>
+  <iframe src="bug448564-iframe-2.html"></iframe>
+  <iframe src="bug448564-iframe-3.html"></iframe>
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 448564 **/
+
+/**
+ * The three iframes are going to be loaded with some dirty constructed forms.
+ * Each of them will be submitted before the load event and a SJS will replace
+ * the frame content with the query string.
+ * Then, on the load event, our test file will check the content of each iframes
+ * and check if the query string were correctly formatted (implying that all
+ * iframes were correctly submitted.
+ */
+
+function checkQueryString(frame) {
+  var queryString = frame.document.body.textContent;
+  is(queryString.split("&").sort().join("&"),
+     "a=aval&b=bval&c=cval&d=dval",
+     "Not all form fields were properly submitted.");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  checkQueryString(frames[0]);
+  checkQueryString(frames[1]);
+  checkQueryString(frames[2]);
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

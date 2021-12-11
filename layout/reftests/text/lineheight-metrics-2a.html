@@ -1,0 +1,29 @@
+<title>Testcase, bug 947650 and 598900</title>
+<style>
+html { background: white; }
+@font-face {
+   font-family: "MarkA-lineheight6000-typolineheight2700";
+   src: url(../fonts/markA-lineheight6000-typolineheight2700.otf);
+}
+body {
+   padding: 1px;
+   background: blue;
+   width: 100px;
+   height: 27px;
+   font-size: 0px; /* remove the effect of the strut ascent and descent */
+}
+div {
+   background: aqua;
+}
+span {
+  /* Choose 10px so that all the metrics are integers and we avoid rounding
+     issues. See lineheight-metrics-1.html for a test with non-integer values.
+   */
+   color: transparent;
+   font-family: MarkA-lineheight6000-typolineheight2700;
+   font-size: 10px;
+}
+</style>
+<body>
+<div><span>A</span></div>
+</body>

@@ -1,0 +1,340 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test keyboard navigation with the Tree component.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree =
+      createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        { onFocus: x => renderTree({ focused: x }) },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
+
+    const tree = renderTree();
+
+    isAccessibleTree(tree);
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+
+    // UP ----------------------------------------------------------------------
+
+    info("Up to the previous sibling.");
+    renderTree({ focused: "L" });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:true",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the UP, K should be focused.");
+
+    info("Up to the parent.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the UP, E should be focused.");
+
+    info("Try and navigate up, past the first item.");
+    renderTree({ focused: "A" });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the UP, A should be focused and we shouldn't have overflowed past it.");
+
+    // DOWN --------------------------------------------------------------------
+
+    info("Down to next sibling.");
+    renderTree({ focused: "K" });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:true",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the DOWN, L should be focused.");
+
+    info("Down to parent's next sibling.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:true",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the DOWN, F should be focused.");
+
+    info("Try and go down past the last item.");
+    renderTree({ focused: "O" });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:true",
+    ], "After the DOWN, O should still be focused " +
+       "and we shouldn't have overflowed past it.");
+
+    // LEFT --------------------------------------------------------------------
+
+    info("Left to go to parent.");
+    renderTree({ focused: "L" });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the LEFT, E should be focused.");
+
+    info("Left to collapse children.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the LEFT, E's children should be collapsed.");
+
+    // RIGHT -------------------------------------------------------------------
+
+    info("Right to expand children.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the RIGHT, E's children should be expanded again.");
+
+    info("Right on already expanded node.");
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the RIGHT on already expanded node, E should remain focused.");
+
+    info("Right when preventNavigationOnArrowRight is unset to go to next item.");
+    renderTree({ focused: "E", preventNavigationOnArrowRight: false });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
+    await forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:true",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the RIGHT, K should be focused.");
+
+    // Check that keys are ignored if any modifier is present.
+    const keysWithModifier = [
+      { key: "ArrowDown", altKey: true },
+      { key: "ArrowDown", ctrlKey: true },
+      { key: "ArrowDown", metaKey: true },
+      { key: "ArrowDown", shiftKey: true },
+    ];
+    await forceRender(tree);
+
+    for (const key of keysWithModifier) {
+      Simulate.keyDown(document.querySelector(".tree"), key);
+      await forceRender(tree);
+
+      isRenderedTree(document.body.textContent, [
+        "A:false",
+        "-B:false",
+        "--E:false",
+        "---K:true",
+        "---L:false",
+        "--F:false",
+        "--G:false",
+        "-C:false",
+        "--H:false",
+        "--I:false",
+        "-D:false",
+        "--J:false",
+        "M:false",
+        "-N:false",
+        "--O:false",
+      ], "After DOWN + (alt|ctrl|meta|shift), K should remain focused.");
+    }
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

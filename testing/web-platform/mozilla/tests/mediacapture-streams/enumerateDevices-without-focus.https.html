@@ -1,0 +1,58 @@
+<!doctype html>
+<title>enumerateDevices() without focus</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<body></body>
+<script>
+'use strict';
+const blank_url = '/common/blank.html';
+
+function promise_event(target, name) {
+  return new Promise(resolve => target[`on${name}`] = resolve);
+}
+// When testdriver.js supports switch-to-window, it can replace this function
+// and this test can be upstreamed.
+// https://github.com/web-platform-tests/wpt/issues/10666
+function switch_toplevel_focus_for_window(win) {
+  return win.SpecialPowers.spawnChrome([], function activate_browser_window() {
+    this.browsingContext.topChromeWindow.focus();
+  });
+}
+
+promise_test(async t => {
+  await test_driver.bless('window.open()');
+  assert_true(document.hasFocus(), 'This test needs focus on the document.');
+  const promise_blur = promise_event(window, 'blur');
+  // 'resizable' is requested for a separate OS window on relevant platforms
+  // so that this test tests OS focus changes rather than document visibility.
+  const proxy = window.open(blank_url, '', 'resizable');
+  t.add_cleanup(() => proxy.close());
+  await Promise.all([
+    promise_blur,
+    switch_toplevel_focus_for_window(proxy),
+    promise_event(proxy, 'load'),
+  ]);
+  assert_false(document.hasFocus(), 'document.hasFocus() after blur');
+
+  // Enumeration should remain pending without focus.
+  const promise_enumerate = navigator.mediaDevices.enumerateDevices();
+  // Enumerate in the focused window to provide enough time to check that
+  // the Promise from the unfocused window does not settle.
+  await proxy.navigator.mediaDevices.enumerateDevices();
+  // Race a settled Promise to check that the enumeration in the first window
+  // has not settled.
+  const result = await Promise.race([promise_enumerate, 'pending']);
+  assert_equals(result, 'pending', 'pending Promise without focus.');
+
+  // The enumeration Promise should resolve after focus returns to the window.
+  proxy.close();
+  await Promise.all([
+    promise_event(window, 'focus'),
+    switch_toplevel_focus_for_window(window),
+  ]);
+  assert_true(document.hasFocus(), 'document.hasFocus() after focus');
+  await promise_enumerate;
+}, 'enumerateDevices without focus');
+</script>

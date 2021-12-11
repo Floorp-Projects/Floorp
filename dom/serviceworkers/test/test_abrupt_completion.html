@@ -1,0 +1,143 @@
+<!doctype html>
+<meta charset=utf-8>
+<title></title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+
+// Tests a _registered_ ServiceWorker whose script evaluation results in an
+// "abrupt completion", e.g. threw an uncaught exception. Such a ServiceWorker's
+// first script evaluation must result in a "normal completion", however, for
+// the Update algorithm to not abort in its step 18 when registering:
+//
+// 18. If runResult is failure or an abrupt completion, then: [...]
+
+const script = "./abrupt_completion_worker.js";
+const scope = "./empty.html";
+const expectedMessage = "handler-before-throw";
+let registration = null;
+
+// Should only be called once registration.active is non-null. Uses
+// implementation details by zero-ing the "idle timeout"s and then sending  an
+// event to the ServiceWorker, which should immediately cause its termination.
+// The idle timeouts are restored after the ServiceWorker is terminated.
+async function startAndStopServiceWorker() {
+  SpecialPowers.registerObservers("service-worker-shutdown");
+
+  const spTopic = "specialpowers-service-worker-shutdown";
+
+  const origIdleTimeout =
+    SpecialPowers.getIntPref("dom.serviceWorkers.idle_timeout");
+
+  const origIdleExtendedTimeout =
+    SpecialPowers.getIntPref("dom.serviceWorkers.idle_extended_timeout");
+
+  await new Promise(resolve => {
+    const observer = {
+      async observe(subject, topic, data) {
+        if (topic !== spTopic) {
+          return;
+        }
+
+        SpecialPowers.removeObserver(observer, spTopic);
+
+        await SpecialPowers.pushPrefEnv({
+          set: [
+              ["dom.serviceWorkers.idle_timeout", origIdleTimeout],
+              ["dom.serviceWorkers.idle_extended_timeout", origIdleExtendedTimeout]
+            ]
+        });
+
+        resolve();
+      },
+    };
+
+    // Speed things up.
+    SpecialPowers.pushPrefEnv({
+      set: [
+          ["dom.serviceWorkers.idle_timeout", 0],
+          ["dom.serviceWorkers.idle_extended_timeout", 0]
+        ]
+    }).then(() => {
+      SpecialPowers.addObserver(observer, spTopic);
+
+      registration.active.postMessage("");
+    });
+  });
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.testing.enabled", true]
+      ]
+  });
+
+  registration = await navigator.serviceWorker.register(script, { scope });
+  SimpleTest.registerCleanupFunction(async function unregisterRegistration() {
+    await registration.unregister();
+  });
+
+  await new Promise(resolve => {
+    const serviceWorker = registration.installing;
+
+    serviceWorker.onstatechange = () => {
+      if (serviceWorker.state === "activated") {
+        resolve();
+      }
+    };
+  });
+
+  ok(registration.active instanceof ServiceWorker, "ServiceWorker is activated");
+});
+
+// We expect that the restarted SW that experiences an abrupt completion at
+// startup after adding its message handler 1) will be active in order to
+// respond to our postMessage and 2) will respond with the global value set
+// prior to the importScripts call that throws (and not the global value that
+// would have been assigned after the importScripts call if it didn't throw).
+add_task(async function testMessageHandler() {
+  await startAndStopServiceWorker();
+
+  await new Promise(resolve => {
+    navigator.serviceWorker.onmessage = e => {
+      is(e.data, expectedMessage, "Correct message handler");
+      resolve();
+    };
+    registration.active.postMessage("");
+  });
+});
+
+// We expect that the restarted SW that experiences an abrupt completion at
+// startup before adding its "fetch" listener will 1) successfully dispatch the
+// event and 2) it will not be handled (respondWith() will not be called) so
+// interception will be reset and the response will contain the contents of
+// empty.html. Before the fix in bug 1603484 the SW would fail to properly start
+// up and the fetch event would result in a NetworkError, breaking the
+// controlled page.
+add_task(async function testFetchHandler() {
+  await startAndStopServiceWorker();
+
+  const iframe = document.createElement("iframe");
+  SimpleTest.registerCleanupFunction(function removeIframe() {
+    iframe.remove();
+  });
+
+  await new Promise(resolve => {
+    iframe.src = scope;
+    iframe.onload = resolve;
+    document.body.appendChild(iframe);
+  });
+
+  const response = await iframe.contentWindow.fetch(scope);
+
+  // NetworkError will have a status of 0, which is not "ok", and this is
+  // a stronger guarantee that should be true instead of just checking if there
+  // isn't a NetworkError.
+  ok(response.ok, "Fetch succeeded and didn't result in a NetworkError");
+
+  const text = await response.text();
+  is(text, "", "Correct response text");
+});
+
+</script>

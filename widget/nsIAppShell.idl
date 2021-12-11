@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIRunnable;
+%{ C++
+template <class T> struct already_AddRefed;
+%}
+
+/**
+ * Interface for the native event system layer.  This interface is designed
+ * to be used on the main application thread only.
+ */
+[uuid(7cd5c71d-223b-4afe-931d-5eedb1f2b01f)]
+interface nsIAppShell : nsISupports
+{
+  /**
+   * Enter an event loop.  Don't leave until exit() is called.
+   */
+  void run();
+
+  /**
+   * Exit the handle event loop
+   */
+  void exit();
+
+  /**
+   * Give hint to native event queue notification mechanism. If the native
+   * platform needs to tradeoff performance vs. native event starvation this
+   * hint tells the native dispatch code which to favor.  The default is to
+   * prevent native event starvation.
+   *
+   * Calls to this function may be nested. When the number of calls that pass
+   * PR_TRUE is subtracted from the number of calls that pass PR_FALSE is
+   * greater than 0, performance is given precedence over preventing event
+   * starvation.
+   *
+   * The starvationDelay arg is only used when favorPerfOverStarvation is
+   * PR_FALSE. It is the amount of time in milliseconds to wait before the
+   * PR_FALSE actually takes effect.
+   */
+  void favorPerformanceHint(in boolean favorPerfOverStarvation,
+                            in unsigned long starvationDelay);
+
+  /**
+   * Suspends the use of additional platform-specific methods (besides the
+   * nsIAppShell->run() event loop) to run Gecko events on the main
+   * application thread.  Under some circumstances these "additional methods"
+   * can cause Gecko event handlers to be re-entered, sometimes leading to
+   * hangs and crashes.  Calls to suspendNative() and resumeNative() may be
+   * nested.  On some platforms (those that don't use any "additional
+   * methods") this will be a no-op.  Does not (in itself) stop Gecko events
+   * from being processed on the main application thread.  But if the
+   * nsIAppShell->run() event loop is blocked when this call is made, Gecko
+   * events will stop being processed until resumeNative() is called (even
+   * if a plugin or library is temporarily processing events on a nested
+   * event loop).
+   */
+  void suspendNative();
+
+  /**
+   * Resumes the use of additional platform-specific methods to run Gecko
+   * events on the main application thread.  Calls to suspendNative() and
+   * resumeNative() may be nested.  On some platforms this will be a no-op.
+   */
+  void resumeNative();
+
+  /**
+   * The current event loop nesting level.
+   */
+  readonly attribute unsigned long eventloopNestingLevel;
+};

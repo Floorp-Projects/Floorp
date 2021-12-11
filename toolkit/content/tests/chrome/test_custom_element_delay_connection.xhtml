@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Custom Element Base Delayed Connected"
+  onload="runTests();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <script type="application/javascript"><![CDATA[
+  let nativeDOMContentLoadedFired = false;
+  document.addEventListener("DOMContentLoaded", () => {
+    nativeDOMContentLoadedFired = true;
+  }, { once: true });
+
+  // To test `delayConnectedCallback` and `isConnectedAndReady` we have to run this before
+  // DOMContentLoaded, which is why this is done in a separate script that runs
+  // immediately and not in `runTests`.
+  let delayedConnectionPromise = new Promise(resolve => {
+
+    let numSkippedAttributeChanges = 0;
+    let numDelayedConnections = 0;
+    let numDelayedDisconnections = 0;
+    let finishedWaitingForDOMReady = false;
+
+    // Register this custom element before DOMContentLoaded has fired and before it's parsed in
+    // the markup:
+    customElements.define("delayed-connection", class DelayedConnection extends MozXULElement {
+      static get observedAttributes() { return ["foo"]; }
+      attributeChangedCallback() {
+        ok(!this.isConnectedAndReady,
+           "attributeChangedCallback fires before isConnectedAndReady");
+        ok(!nativeDOMContentLoadedFired,
+           "attributeChangedCallback fires before nativeDOMContentLoadedFired");
+        numSkippedAttributeChanges++;
+      }
+      connectedCallback() {
+        if (this.delayConnectedCallback()) {
+          ok(!finishedWaitingForDOMReady,
+             "connectedCallback with delayConnectedCallback fires before finishedWaitingForDOMReady");
+          ok(!this.isConnectedAndReady,
+             "connectedCallback with delayConnectedCallback fires before isConnectedAndReady");
+          ok(!nativeDOMContentLoadedFired,
+             "connectedCallback with delayConnectedCallback fires before nativeDOMContentLoadedFired");
+          numDelayedConnections++;
+          return;
+        }
+
+        ok(!finishedWaitingForDOMReady,
+           "connectedCallback only fires once when DOM is ready");
+        ok(this.isConnectedAndReady,
+           "isConnectedAndReady during connectedCallback");
+        ok(!nativeDOMContentLoadedFired,
+           "delayed connectedCallback fires before nativeDOMContentLoadedFired");
+
+        is(numSkippedAttributeChanges, 2,
+           "Correct number of skipped attribute changes");
+        is(numDelayedConnections, 2,
+           "Correct number of delayed connections");
+        is(numDelayedDisconnections, 1,
+           "Correct number of delated disconnections");
+
+        finishedWaitingForDOMReady = true;
+        resolve();
+      }
+      disconnectedCallback() {
+        ok(this.delayConnectedCallback(),
+           "disconnectedCallback while DOM not ready");
+        is(numDelayedDisconnections, 0,
+           "disconnectedCallback fired only once");
+        numDelayedDisconnections++;
+      }
+    });
+  });
+
+  // This should be called after the element is parsed below this.
+  function mutateDelayedConnection() {
+    // Fire connectedCallback and attributeChangedCallback twice before DOMContentLoaded
+    // fires. The first connectedCallback is due to the parse and the second due to re-appending.
+    let delayedConnection = document.querySelector("delayed-connection");
+    delayedConnection.setAttribute("foo", "bar");
+    delayedConnection.remove();
+    delayedConnection.setAttribute("foo", "bat");
+    document.documentElement.append(delayedConnection);
+  }
+  ]]>
+  </script>
+
+  <delayed-connection></delayed-connection>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+  SimpleTest.waitForExplicitFinish();
+  mutateDelayedConnection();
+
+  async function runTests() {
+    info("Waiting for delayed connection to fire");
+    ok(nativeDOMContentLoadedFired,
+       "nativeDOMContentLoadedFired is true in runTests");
+    await delayedConnectionPromise;
+    SimpleTest.finish();
+  }
+  ]]>
+  </script>
+</window>

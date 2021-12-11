@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+function onLoad() {
+  let input2 = document.getElementById("input2");
+  input2.addEventListener("focus", e => {
+    e.stopImmediatePropagation();
+  });
+  document.getElementById("input1").focus();
+  synthesizeKey("KEY_Tab");
+  synthesizeKey("KEY_Tab", {shiftKey: true});
+  synthesizeKey("KEY_Tab");
+}
+</script>
+<body onload="onLoad()">
+  <input type="text" id="input1"></input>
+  <input type="text" id="input2"></input>
+</body>
+</html>

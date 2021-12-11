@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=654348
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test XHR auth with user and pass arguments</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="startTest()">
+<script class="testbody" type="text/javascript">
+
+/**
+ * This test checks we correctly ignore authentication entry
+ * for a subpath and use creds from the URL when provided when XHR
+ * is used with filled user name and password.
+ *
+ * 1. connect authenticate.sjs that excepts user1:pass1 password
+ * 2. connect authenticate.sjs that this time expects differentuser2:pass2 password
+ *    we must use the creds that are provided to the xhr witch are different and expected
+ */
+
+function doxhr(URL, user, pass, code, next) {
+  var xhr = new XMLHttpRequest();
+  if (user && pass) {
+    xhr.open("POST", URL, true, user, pass);
+  } else {
+    xhr.open("POST", URL, true);
+  }
+  xhr.onload = function() {
+    is(xhr.status, code, "expected response code " + code);
+    next();
+  };
+  xhr.onerror = function() {
+    ok(false, "request passed");
+    finishTest();
+  };
+  xhr.send();
+}
+
+function startTest() {
+  doxhr("authenticate.sjs?user=dummy&pass=pass1&realm=realm1&formauth=1", "dummy", "dummy", 403, function() {
+    doxhr("authenticate.sjs?user=dummy&pass=pass1&realm=realm1&formauth=1", "dummy", "pass1", 200, finishTest);
+  });
+}
+
+function finishTest() {
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

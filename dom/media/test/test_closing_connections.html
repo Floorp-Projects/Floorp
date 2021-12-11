@@ -1,0 +1,58 @@
+hg diff<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=479863
+-->
+<head>
+  <title>Test for Bug 479863 --- loading many connections</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="use_large_cache.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479863">Mozilla Bug 479863</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<script type="application/javascript">
+window.onload = function() {
+  ok(true, "loaded metadata for all videos");
+  mediaTestCleanup();
+  SimpleTest.finish();
+}
+
+/*   With normal per-domain connection limits and a naive implementation, we
+     won't ever be able to load all these videos because the first 15 (or whatever)
+     will each take up one HTTP connection (which will be suspended) and then
+     the others will be blocked by the per-domain HTTP connection limit. We
+     pass this test by closing the connection for non-buffered videos after
+     we've got the first frame.
+*/
+
+var resource = getPlayableVideo(gClosingConnectionsTest);
+
+SimpleTest.waitForExplicitFinish();
+function beginTest() {
+  if (resource != null) {
+    for (var i=0; i<20; ++i) {
+      var v = document.createElement("video");
+      v.src = resource.name;
+      v.preload = "metadata";
+      document.body.appendChild(v);
+    }
+  } else {
+    todo(false, "No types supported");
+  }
+}
+beginTest();
+</script>
+
+<pre id="test">
+<script type="application/javascript">
+</script>
+</pre>
+</body>
+</html>

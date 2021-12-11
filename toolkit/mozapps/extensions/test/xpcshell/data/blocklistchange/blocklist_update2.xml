@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <emItems>
+    <emItem id="softblock1@tests.mozilla.org">
+      <versionRange severity="1"/>
+    </emItem>
+    <emItem id="softblock2@tests.mozilla.org">
+      <versionRange severity="1"/>
+    </emItem>
+    <emItem id="softblock3@tests.mozilla.org">
+      <versionRange severity="1"/>
+    </emItem>
+    <emItem id="softblock4@tests.mozilla.org">
+      <versionRange severity="1"/>
+    </emItem>
+    <emItem id="softblock5@tests.mozilla.org">
+      <versionRange severity="1"/>
+    </emItem>
+    <emItem id="hardblock@tests.mozilla.org"/>
+    <emItem id="/^RegExp/">
+      <versionRange severity="1"/>
+    </emItem>
+    <emItem id="/^RegExp/i"/>
+  </emItems>
+</blocklist>

@@ -1,0 +1,90 @@
+<html>
+<head>
+<meta charset="utf-8" />
+<script type="application/javascript">var scriptRelativePath = "../";</script>
+<script type="application/javascript" src="../pc.js"></script>
+</head>
+<body>
+<script class="testbody" type="application/javascript">
+createHTML({ title: "Test multiple identity fingerprints",  bug: "1005152" });
+
+// here we call the identity provider directly
+async function getIdentityAssertion(fingerprint) {
+  const {Cu} = SpecialPowers;
+  const rtcid = Cu.import('resource://gre/modules/media/IdpSandbox.jsm');
+  const sandbox = new rtcid.IdpSandbox('example.com', 'idp.js', window);
+  const idp = SpecialPowers.wrap(await sandbox.start());
+  const assertion = SpecialPowers.wrap(await
+      idp.generateAssertion(JSON.stringify({ fingerprint }),
+                            'https://example.com',
+                            {}));
+  const assertionString = btoa(JSON.stringify(assertion));
+  sandbox.stop();
+  return assertionString;
+}
+
+// This takes a real fingerprint and makes some extra bad ones.
+function makeFingerprints(algorithm, digest) {
+  const fingerprints = [];
+  fingerprints.push({ algorithm, digest });
+  for (var i = 0; i < 3; ++i) {
+    fingerprints.push({
+      algorithm,
+      digest: digest.replace(/:./g, ':' + i.toString(16))
+    });
+  }
+  return fingerprints;
+}
+
+const fingerprintRegex = /^a=fingerprint:(\S+) (\S+)/m;
+const identityRegex = /^a=identity:(\S+)/m;
+
+function fingerprintSdp(fingerprints) {
+  return fingerprints.map(fp => 'a=fInGeRpRiNt:' + fp.algorithm +
+                                ' ' + fp.digest + '\n').join('');
+}
+
+// Firefox only uses a single fingerprint.
+// That doesn't mean we have it create SDP that describes two.
+// This function synthesizes that SDP and tries to set it.
+
+runNetworkTest(async () => {
+  // this one fails setRemoteDescription if the identity is not good
+  const pcStrict = new RTCPeerConnection({ peerIdentity: 'someone@example.com'});
+  // this one will be manually tweaked to have two fingerprints
+  const pcDouble = new RTCPeerConnection({});
+
+  const stream = await getUserMedia({ video: true });
+  ok(stream, 'Got test stream');
+  const [track] = stream.getTracks();
+  pcDouble.addTrack(track, stream);
+  try {
+    const offer = await pcDouble.createOffer();
+    ok(offer, 'Got offer');
+    const match = offer.sdp.match(fingerprintRegex);
+    if (!match) {
+      throw new Error('No fingerprint in offer SDP');
+    }
+    const fingerprints = makeFingerprints(match[1], match[2]);
+    const assertion = await getIdentityAssertion(fingerprints);
+    ok(assertion, 'Should have assertion');
+
+    const sdp = offer.sdp.slice(0, match.index) +
+        'a=identity:' + assertion + '\n' +
+        fingerprintSdp(fingerprints.slice(1)) +
+        offer.sdp.slice(match.index);
+
+    await pcStrict.setRemoteDescription({ type: 'offer', sdp });
+    ok(true, 'Modified fingerprints were accepted');
+  } catch (error) {
+    const e = SpecialPowers.wrap(error);
+    ok(false, 'error in test: ' +
+       (e.message ? (e.message + '\n' + e.stack) : e));
+  }
+  pcStrict.close();
+  pcDouble.close();
+  track.stop();
+});
+</script>
+</body>
+</html>

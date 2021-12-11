@@ -1,0 +1,53 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["CPU_ARCH"] == "x86_64":
+    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+        SOURCES += [
+            "xptcinvoke_x86_64.cpp",
+            "xptcstubs_x86_64_gnu.cpp",
+        ]
+        SOURCES += ["xptcinvoke_asm_x86_64_gnu.s"]
+    else:
+        SOURCES += ["xptcinvoke_x86_64.cpp", "xptcstubs_x86_64.cpp"]
+        SOURCES += ["xptcinvoke_asm_x86_64.asm", "xptcstubs_asm_x86_64.asm"]
+elif CONFIG["CPU_ARCH"] == "x86":
+    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+        SOURCES += [
+            "xptcinvoke_x86_gnu.cpp",
+            "xptcstubs.cpp",
+        ]
+    else:
+        SOURCES += [
+            "xptcinvoke.cpp",
+            "xptcinvoke_asm_x86_msvc.asm",
+            "xptcstubs.cpp",
+        ]
+        SOURCES["xptcinvoke_asm_x86_msvc.asm"].flags += ["-safeseh"]
+elif CONFIG["CPU_ARCH"] == "aarch64":
+    SOURCES += [
+        "xptcinvoke_aarch64.cpp",
+        "xptcstubs_aarch64.cpp",
+    ]
+    asm_files = [
+        "xptcinvoke_asm_aarch64.asm",
+        "xptcstubs_asm_aarch64.asm",
+    ]
+
+    # make gets confused if the srcdir and objdir files have the same name, so
+    # we generate different names for the objdir files
+    for src in asm_files:
+        obj = src.replace("_asm_aarch64", "")
+        GeneratedFile(
+            obj, script="preprocess.py", entry_point="preprocess", inputs=[src]
+        )
+        SOURCES += ["!%s" % obj]
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "../..",
+]

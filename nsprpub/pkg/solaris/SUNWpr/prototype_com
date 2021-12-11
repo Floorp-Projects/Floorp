@@ -1,0 +1,39 @@
+# 
+# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#ident	"$Id$"
+#
+# This required package information file contains a list of package contents.
+# The 'pkgmk' command uses this file to identify the contents of a package
+# and their location on the development machine when building the package.
+# Can be created via a text editor or through use of the 'pkgproto' command.
+
+#!search <pathname pathname ...>	# where to find pkg objects
+#!include <filename>			# include another 'prototype' file
+#!default <mode> <owner> <group>	# default used if not specified on entry
+#!<param>=<value>			# puts parameter in pkg environment
+
+# packaging files
+i copyright
+i pkginfo
+i depend
+#
+# source locations relative to the prototype file
+#
+# SUNWpr
+#
+d none usr 755 root sys
+d none usr/lib 755 root bin
+d none usr/lib/mps 755 root bin
+d none usr/lib/mps/secv1 755 root bin
+f none usr/lib/mps/libnspr4.so 755 root bin
+f none usr/lib/mps/libplc4.so 755 root bin
+f none usr/lib/mps/libplds4.so 755 root bin
+s none usr/lib/mps/secv1/libnspr4.so=../libnspr4.so
+s none usr/lib/mps/secv1/libplc4.so=../libplc4.so
+s none usr/lib/mps/secv1/libplds4.so=../libplds4.so

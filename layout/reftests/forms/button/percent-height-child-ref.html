@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+<style>
+div.button {
+    display: inline-block;
+    width: 80px;
+    border: 0;
+    padding: 0;
+
+    font: 10px sans-serif;
+    text-align: center;
+    vertical-align: top;
+
+    color: black;
+    background: gray;
+}
+
+div.p80 {
+    background: pink;
+}
+
+div.p100 {
+    background: yellow;
+}
+</style>
+</head>
+<body>
+<!--Button has explicit height for us to resolve against: -->
+<div class="button" style="height: 100px">
+  <div class="p80" style="margin-top: 10px; height: 80px">abc</div>
+</div>
+
+<div class="button" style="height: 100px">
+  <div class="p100" style="height: 100px">abc</div>
+</div>
+
+<!--Button is using intrinsic height: -->
+<div class="button">
+  <div class="p80">abc</div>
+</div>
+
+<div class="button">
+  <div class="p100">abc</div>
+</div>
+
+</body>
+</html>

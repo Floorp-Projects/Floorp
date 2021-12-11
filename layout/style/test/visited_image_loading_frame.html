@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<title>Test for :visited image loading</title>
+<style type="text/css">
+
+:link { background-color: blue }
+:visited { background-color: purple }
+
+#link:link       { background-image: url("visited_image_loading.sjs?1l"); }
+#link:visited    { background-image: url("visited_image_loading.sjs?1v"); }
+#visited:link    { background-image: url("visited_image_loading.sjs?2l"); }
+#visited:visited { background-image: url("visited_image_loading.sjs?2v"); }
+
+</style>
+<a id="link" href="do-not-visit-this-link.html">unvisited link</a>
+<a id="visited" href="visited_image_loading_frame.html">visited link</a>

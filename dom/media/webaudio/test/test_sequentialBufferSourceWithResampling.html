@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<title>Test seamless playback of a series of resampled buffers</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+// Permitting some accumulation of rounding to int16_t.
+// 64/2^15 would be only just small enough to detect off-by-one-subsample
+// scheduling errors with the frequencies here.
+const EPSILON = 4.0 / Math.pow(2, 15);
+// Offsets test for rounding to nearest rather than up or down.
+const OFFSETS = [EPSILON, 1.0 - EPSILON];
+// The ratio of resampling is 147:160, so 256 start points is enough to cover
+// every fractional offset.
+const LENGTH = 256;
+
+function do_test(context_rate, buffer_rate, start_offset) {
+
+  var context =
+    new OfflineAudioContext(2, LENGTH, context_rate);
+
+  var merger = context.createChannelMerger(context.destination.channelCount);
+  merger.connect(context.destination);
+
+  // Create an audio signal that will be repeated
+  var repeating_signal = context.createBuffer(1, 1, buffer_rate);
+  repeating_signal.getChannelData(0)[0] = 0.5;
+
+  // Schedule a series of nodes to repeat the signal.
+  for (var i = 0; i < LENGTH; ++i) {
+    var source = context.createBufferSource();
+    source.buffer = repeating_signal;
+    source.connect(merger, 0, 0);
+    source.start((i + start_offset) / buffer_rate);
+  }
+
+  // A single long signal should produce the same result.
+  var long_signal = context.createBuffer(1, LENGTH, buffer_rate);
+  var c = long_signal.getChannelData(0);
+  for (var i = 0; i < c.length; ++i) {
+    c[i] = 0.5;
+  }
+
+  var source = context.createBufferSource();
+  source.buffer = long_signal;
+  source.connect(merger, 0, 1);
+  source.start(start_offset / buffer_rate);
+
+  return context.startRendering().
+    then((buffer) => {
+      series_output = buffer.getChannelData(0);
+      expected = buffer.getChannelData(1);
+
+      for (var i = 0; i < buffer.length; ++i) {
+        assert_approx_equals(series_output[i], expected[i], EPSILON,
+                             "series output at " + i);
+      }
+    });
+}
+
+function start_tests(context_rate, buffer_rate) {
+  OFFSETS.forEach((start_offset) => {
+    promise_test(() => do_test(context_rate, buffer_rate, start_offset),
+                 "" + context_rate + " context, "
+                 + buffer_rate + " buffer, "
+                 + start_offset + " start");
+  });
+}
+
+start_tests(48000, 44100);
+start_tests(44100, 48000);
+
+</script>

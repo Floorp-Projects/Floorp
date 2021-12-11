@@ -1,0 +1,30 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIDOMXULSelectControlElement;
+
+webidl Element;
+
+[scriptable, uuid(5c6be58f-17df-4750-88a5-4a59ac28adc9)]
+interface nsIDOMXULSelectControlItemElement : nsISupports {
+  attribute boolean disabled;
+  attribute AString crop;
+  attribute AString image;
+  attribute AString label;
+  attribute AString accessKey;
+  attribute AString command;
+
+  attribute AString value;
+
+  readonly attribute boolean selected;
+
+  readonly attribute Element control;
+
+  // XXX defined in XULElement, but should be defined here
+  // void doCommand();
+};
+
+

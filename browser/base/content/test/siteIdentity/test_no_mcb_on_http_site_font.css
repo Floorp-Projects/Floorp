@@ -1,0 +1,10 @@
+@font-face {
+  font-family: testFont;
+  src: url(http://example.com/browser/devtools/client/fontinspector/test/browser_font.woff);
+}
+body {
+  font-family: Arial;
+}
+div {
+  font-family: testFont;
+}

@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Unsecure img load in two windows</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  async function runTest()
+  {
+    await isSecurityState("broken", "insecure <img> load breaks security");
+    finish();
+  }
+
+  async function afterNavigationTest()
+  {
+    await isSecurityState("broken", "security still broken after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img src="http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/hugebmp.sjs" />
+</body>
+</html>

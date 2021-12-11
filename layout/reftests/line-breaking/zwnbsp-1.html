@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style type="text/css">
+p { margin: 5px 1em; line-height: 1.5; width: 0; }
+</style>
+</head>
+<body>
+
+<div style="float:left; width: 15em;">
+<!-- U+FEFF is (deprecated) ZERO-WIDTH NO-BREAK SPACE -->
+<p>abcdef&#xfeff;abcdef</p>
+<p>abcdef)&#xfeff;(abcdef</p>
+<p>abcdef &#xfeff;abcdef</p>
+<p>abcdef&#xfeff; abcdef</p>
+<p>abcdef&#xfeff;&#xfeff;&#xfeff;abcdef</p>
+
+<p>コミュニ</p>
+<p>コ&#xfeff;ミ&#xfeff;ュ&#xfeff;ニ</p>
+
+<p>你好吗？</p>
+<p>你&#xfeff;好吗？</p>
+<p>你&#xfeff;好&#xfeff;吗？</p>
+</div>
+
+<div style="float:left; width: 15em;">
+<!-- U+2060 is WORD JOINER -->
+<p>abcdef&#x2060;abcdef</p>
+<p>abcdef)&#x2060;(abcdef</p>
+<p>abcdef &#x2060;abcdef</p>
+<p>abcdef&#x2060; abcdef</p>
+<p>abcdef&#x2060;&#x2060;&#x2060;abcdef</p>
+
+<p>コミュニ</p>
+<p>コ&#x2060;ミ&#x2060;ュ&#x2060;ニ</p>
+
+<p>你好吗？</p>
+<p>你&#x2060;好吗？</p>
+<p>你&#x2060;好&#x2060;吗？</p>
+</div>
+
+</body>
+</html>

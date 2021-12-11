@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bug 1114329 testcase</title>
+<style>
+ .vlr {
+   writing-mode: vertical-lr;
+   -webkit-writing-mode: vertical-lr;
+   writing-mode: tb-lr;
+}
+</style>
+</head>
+<body>
+ <div style="height:600px;">
+  <div style="height:0px;width:0px;overflow:visible">
+    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);display:inline-block;margin-top:500px;"></div>
+  </div>
+  <div style="height:0px;width:0px;overflow:visible">
+    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);display:inline-block;margin-top:400px;"></div>
+  </div>
+  <div class="vlr" style="background:silver; height: 100%;">
+    <div style="padding-bottom: 200px; direction:rtl">This text should appear ABOVE the red and green blocks.</div>
+  </div>
+ </div>
+</body>
+</html>

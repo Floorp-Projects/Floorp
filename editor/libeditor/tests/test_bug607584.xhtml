@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607584
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 607584" onload="runTest();">
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=607584"
+     target="_blank">Mozilla Bug 607584</a>
+  <p/>
+  <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          id="editor"
+          type="content"
+          primary="true"
+          editortype="html"
+          style="width: 400px; height: 100px; border: thin solid black"/>
+  <p/>
+  <pre id="test">
+  </pre>
+  </body>
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  function EditorContentListener(aEditor)
+  {
+    this.init(aEditor);
+  }
+
+  EditorContentListener.prototype = {
+    init(aEditor)
+      {
+        this.mEditor = aEditor;
+      },
+
+    QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                            "nsISupportsWeakReference"]),
+
+    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
+    {
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
+        {
+          var editor = this.mEditor.getEditor(this.mEditor.contentWindow);
+          if (editor) {
+              this.mEditor.focus();
+              editor instanceof Ci.nsIHTMLEditor;
+              editor.returnInParagraphCreatesNewParagraph = true;
+              editor.insertHTML("<p id='foo'>this is a paragraph carrying id 'foo'</p>");
+              var p = editor.document.getElementById('foo')
+              editor.beginningOfDocument();
+              sendKey("return");
+              var firstP = p.parentNode.firstElementChild;
+              var lastP  = p.parentNode.lastElementChild;
+              var isOk = firstP.nodeName.toLowerCase() == "p" &&
+	                       firstP.id == "foo" &&
+	                       lastP.id == "";
+              ok(isOk, "CR in a paragraph with an ID should not create two paragraphs of same ID");
+              progress.removeProgressListener(this);
+              SimpleTest.finish();
+          }
+        }
+
+    },
+
+
+    onProgressChange(aWebProgress, aRequest,
+                                aCurSelfProgress, aMaxSelfProgress,
+                                aCurTotalProgress, aMaxTotalProgress)
+      {
+      },
+
+    onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
+      {
+      },
+
+    onStatusChange(aWebProgress, aRequest, aStatus, aMessage)
+      {
+      },
+
+    onSecurityChange(aWebProgress, aRequest, aState)
+      {
+      },
+
+    onContentBlockingEvent(aWebProgress, aRequest, aEvent)
+      {
+      },
+
+      mEditor: null
+  };
+
+  var progress, progressListener;
+
+  function runTest() {
+    var newEditorElement = document.getElementById("editor");
+    newEditorElement.makeEditable("html", true);
+    var docShell = newEditorElement.docShell;
+    progress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
+    progressListener = new EditorContentListener(newEditorElement);
+    progress.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);
+    newEditorElement.setAttribute("src", "data:text/html,");
+  }
+]]>
+</script>
+</window>

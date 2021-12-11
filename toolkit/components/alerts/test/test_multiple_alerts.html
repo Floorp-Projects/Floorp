@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for multiple alerts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* eslint-env mozilla/frame-script */
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+  const alertService = Cc["@mozilla.org/alerts-service;1"]
+                         .getService(Ci.nsIAlertsService);
+
+  addMessageListener("waitForPosition", function() {
+    var timer = setTimeout(function() {
+      Services.ww.unregisterNotification(windowObserver);
+      sendAsyncMessage("waitedForPosition", null);
+    }, 2000);
+
+    var windowObserver = function(win, aTopic, aData) {
+      if (aTopic != "domwindowopened") {
+        return;
+      }
+
+      // Alerts are implemented using XUL.
+      clearTimeout(timer);
+
+      Services.ww.unregisterNotification(windowObserver);
+
+      win.addEventListener("pageshow", function() {
+        var x = win.screenX;
+        var y = win.screenY;
+
+        win.addEventListener("pagehide", function() {
+          sendAsyncMessage("waitedForPosition", { x, y });
+        }, {once: true});
+
+        alertService.closeAlert();
+      }, {once: true});
+    };
+
+    Services.ww.registerNotification(windowObserver);
+  });
+});
+
+function promiseAlertPosition(alertService) {
+  return new Promise(resolve => {
+    chromeScript.addMessageListener("waitedForPosition", function waitedForPosition(result) {
+      chromeScript.removeMessageListener("waitedForPosition", waitedForPosition);
+      resolve(result);
+    });
+    chromeScript.sendAsyncMessage("waitForPosition");
+
+    alertService.showAlertNotification(null, "title", "body");
+    ok(true, "Alert shown.");
+  });
+}
+
+add_task(async function test_multiple_alerts() {
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application.");
+    return;
+  }
+
+  ok(true, "Alerts service exists in this application.");
+
+  var alertService;
+  try {
+    alertService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    ok(true, "Alerts service is available.");
+  } catch (ex) {
+    todo(false, "Alerts service is not available.");
+    return;
+  }
+
+  var firstAlertPosition = await promiseAlertPosition(alertService);
+  if (!firstAlertPosition) {
+    ok(true, "Platform does not use XUL alerts.");
+    return;
+  }
+
+  var secondAlertPosition = await promiseAlertPosition(alertService);
+  is(secondAlertPosition.x, firstAlertPosition.x, "Second alert should be opened in the same position.");
+  is(secondAlertPosition.y, firstAlertPosition.y, "Second alert should be opened in the same position.");
+});
+
+</script>
+</pre>
+</body>
+</html>

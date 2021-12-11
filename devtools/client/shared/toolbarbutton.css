@@ -1,0 +1,87 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Legacy `devtools-toolbarbutton` styles, extracted from common.css because
+ * we're only using them in a couple panels (Performance & Style Editor),
+ * and it makes maintaining the newer `devtools-button` styles easier.
+ */
+
+.devtools-toolbarbutton {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  color: var(--theme-body-color);
+  -moz-box-align: center;
+  text-shadow: none;
+  padding: 2px;
+  margin: 1px;
+  white-space: nowrap;
+}
+
+.devtools-toolbarbutton:not([label])[checked=true] > .toolbarbutton-icon,
+.devtools-toolbarbutton:not([label])[open=true] > .toolbarbutton-icon {
+  color: var(--theme-icon-checked-color);
+}
+
+.devtools-toolbarbutton .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: var(--theme-icon-color);
+  direction: ltr;
+  font-size: 11px;
+}
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-icon {
+  margin: 0 3px;
+}
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-toolbarbutton[disabled] {
+  opacity: 0.5 !important;
+}
+
+.devtools-toolbarbutton[label] {
+  padding-inline: 6px;
+  background: var(--toolbarbutton-background);
+}
+
+.devtools-toolbarbutton:not([label]):is([checked],[open],:hover,:hover:active) {
+  background: var(--toolbarbutton-hover-background);
+}
+
+/* Selectable button which is unchecked. */
+
+.devtools-toolbarbutton[label]:not([checked=true],[disabled]):hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+.devtools-toolbarbutton:not([checked=true],[disabled])[label]:focus {
+  background-color: var(--toolbarbutton-focus-background);
+  color: var(--toolbarbutton-focus-color);
+}
+
+/* Selectable button which is checked. */
+
+.devtools-toolbarbutton:not([disabled])[label][checked=true],
+.devtools-toolbarbutton:not([disabled])[label][open] {
+  background: var(--toolbarbutton-checked-background);
+  color: var(--toolbarbutton-checked-color);
+}
+
+.devtools-toolbarbutton:not([disabled])[label][checked=true] .toolbarbutton-icon,
+.devtools-toolbarbutton:not([disabled])[label][open] .toolbarbutton-icon {
+  color: inherit;
+}
+
+.devtools-toolbarbutton:not([disabled])[label][checked=true]:focus,
+.devtools-toolbarbutton:not([disabled])[label][open]:focus {
+  background-color: var(--toolbarbutton-checked-focus-background);
+}

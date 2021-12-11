@@ -1,0 +1,39 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface imgIContainer;
+
+/**
+ * Starting in Windows 7, applications can display an overlay on the icon in
+ * the taskbar. This class wraps around the native functionality to do this.
+ */
+[scriptable, uuid(b1858889-a698-428a-a14b-b5d60cff6de2)]
+interface nsITaskbarOverlayIconController : nsISupports
+{
+  /**
+   * Sets the overlay icon and its corresponding alt text.
+   *
+   * @param statusIcon The handle to the overlay icon. The icon will be scaled
+   *                   to the small icon size (16x16 at 96 dpi). Can be null, in
+   *                   which case if the taskbar button represents a single window
+   *                   the icon is removed.
+   * @param statusDescription The alt text version of the information
+   *                          conveyed by the overlay, for accessibility
+   *                          purposes.
+   *
+   * @note The behavior for window groups is managed by Windows.
+   * - If an overlay icon is set for any window in a window group and another
+   *   overlay icon is already applied to the corresponding taskbar button, that
+   *   existing overlay is replaced.
+   * - If null is passed in to replace the overlay currently being displayed,
+   *   and if a previous overlay set for a different window in the group is
+   *   still available, then that previous overlay is displayed.
+   */
+  void setOverlayIcon(in imgIContainer statusIcon,
+                      in AString statusDescription);
+};

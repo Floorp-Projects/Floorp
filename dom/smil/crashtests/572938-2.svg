@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="reftest-wait">
+
+    <script>
+    function boom()
+    {
+      document.getElementById("circleID").removeChild(
+        document.getElementById("at"));
+      document.documentElement.removeAttribute("class");
+    }
+    window.addEventListener("load", boom, false);
+    </script>
+
+    <circle id="circleID">
+        <animate/>
+        <animateTransform id="at" attributeName="transform"/>
+    </circle>
+    <animate attributeName="stroke-width"/>
+    <use xlink:href="#circleID"/>
+
+</svg>

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<link rel="help" href="https://drafts.csswg.org/web-animations/">
+<link rel="match" href="web-animations-print-ref.html">
+<title>Web animation</title>
+<p id="anim" style="color: olive">blue with animation support; olive without</p>
+<script>
+const animationData = [
+    {"color":"#0000FF"},
+    {"color":"#0000FF"}
+];
+
+const animationTiming = {
+    "duration":1,
+    "iterations":Infinity
+};
+
+let element = document.getElementById("anim");
+element.animate(animationData, animationTiming);
+</script>

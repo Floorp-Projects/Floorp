@@ -1,0 +1,570 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIDirectoryEnumerator.idl"
+
+%{C++
+struct PRFileDesc;
+struct PRLibrary;
+#include <stdio.h>
+#include "mozilla/Path.h"
+#include "nsCOMPtr.h"
+#include "nsStringFwd.h"
+namespace mozilla {
+using PathString = nsTString<filesystem::Path::value_type>;
+using PathSubstring = nsTSubstring<filesystem::Path::value_type>;
+} // namespace mozilla
+%}
+
+[ptr] native PRFileDescStar(PRFileDesc);
+[ptr] native PRLibraryStar(PRLibrary);
+[ptr] native FILE(FILE);
+native PathString(mozilla::PathString);
+
+/**
+ * An nsIFile is an abstract representation of a filename. It manages
+ * filename encoding issues, pathname component separators ('/' vs. '\\'
+ * vs. ':') and weird stuff like differing volumes with identical names, as
+ * on pre-Darwin Macintoshes.
+ *
+ * This file has long introduced itself to new hackers with this opening
+ * paragraph:
+ *
+ *    This is the only correct cross-platform way to specify a file.
+ *    Strings are not such a way. If you grew up on windows or unix, you
+ *    may think they are.  Welcome to reality.
+ *
+ * While taking the pose struck here to heart would be uncalled for, one
+ * may safely conclude that writing cross-platform code is an embittering
+ * experience.
+ *
+ * All methods with string parameters have two forms.  The preferred
+ * form operates on UCS-2 encoded characters strings.  An alternate
+ * form operates on characters strings encoded in the "native" charset.
+ *
+ * A string containing characters encoded in the native charset cannot
+ * be safely passed to javascript via xpconnect.  Therefore, the "native
+ * methods" are not scriptable.
+ */
+[scriptable, main_process_scriptable_only, uuid(2fa6884a-ae65-412a-9d4c-ce6e34544ba1), builtinclass]
+interface nsIFile : nsISupports
+{
+    /**
+     *  Create Types
+     *
+     *  NORMAL_FILE_TYPE - A normal file.
+     *  DIRECTORY_TYPE   - A directory/folder.
+     */
+    const unsigned long NORMAL_FILE_TYPE = 0;
+    const unsigned long DIRECTORY_TYPE   = 1;
+
+    /**
+     *  append[Native]
+     *
+     *  This function is used for constructing a descendent of the
+     *  current nsIFile.
+     *
+     *   @param node
+     *       A string which is intended to be a child node of the nsIFile.
+     *       For the |appendNative| method, the node must be in the native
+     *       filesystem charset.
+     */
+    void append(in AString node);
+    [noscript] void appendNative(in ACString node);
+
+    /**
+     *  Normalize the pathName (e.g. removing .. and . components on Unix).
+     */
+    void normalize();
+
+    /**
+     *  create
+     *
+     *  This function will create a new file or directory in the
+     *  file system. Any nodes that have not been created or
+     *  resolved, will be.  If the file or directory already
+     *  exists create() will return NS_ERROR_FILE_ALREADY_EXISTS.
+     *
+     *   @param type
+     *       This specifies the type of file system object
+     *       to be made.  The only two types at this time
+     *       are file and directory which are defined above.
+     *       If the type is unrecongnized, we will return an
+     *       error (NS_ERROR_FILE_UNKNOWN_TYPE).
+     *
+     *   @param permissions
+     *       The unix style octal permissions.  This may
+     *       be ignored on systems that do not need to do
+     *       permissions.
+     *
+     *   @param skipAncestors
+     *       Optional; if set to true, we'll skip creating
+     *       ancestor directories (and return an error instead).
+     */
+    [must_use] void create(in unsigned long type, in unsigned long permissions,
+                           [optional,default(false)] in bool skipAncestors);
+
+    /**
+     *  Accessor to the leaf name of the file itself.
+     *  For the |nativeLeafName| method, the nativeLeafName must
+     *  be in the native filesystem charset.
+     */
+    attribute AString leafName;
+    [noscript] attribute ACString nativeLeafName;
+
+    /**
+     *  copyTo[Native]
+     *
+     *  This will copy this file to the specified newParentDir.
+     *  If a newName is specified, the file will be renamed.
+     *  If 'this' is not created we will return an error
+     *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
+     *
+     *  copyTo may fail if the file already exists in the destination
+     *  directory.
+     *
+     *  copyTo will NOT resolve aliases/shortcuts during the copy.
+     *
+     *   @param newParentDir
+     *       This param is the destination directory. If the
+     *       newParentDir is null, copyTo() will use the parent
+     *       directory of this file. If the newParentDir is not
+     *       empty and is not a directory, an error will be
+     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR). For the
+     *       |CopyToNative| method, the newName must be in the
+     *       native filesystem charset.
+     *
+     *   @param newName
+     *       This param allows you to specify a new name for
+     *       the file to be copied. This param may be empty, in
+     *       which case the current leaf name will be used.
+     */
+    void copyTo(in nsIFile newParentDir, in AString newName);
+    [noscript] void CopyToNative(in nsIFile newParentDir, in ACString newName);
+
+    /**
+     *  copyToFollowingLinks[Native]
+     *
+     *  This function is identical to copyTo with the exception that,
+     *  as the name implies, it follows symbolic links.  The XP_UNIX
+     *  implementation always follow symbolic links when copying.  For
+     *  the |CopyToFollowingLinks| method, the newName must be in the
+     *  native filesystem charset.
+     */
+    void copyToFollowingLinks(in nsIFile newParentDir, in AString newName);
+    [noscript] void copyToFollowingLinksNative(in nsIFile newParentDir, in ACString newName);
+
+    /**
+     *  moveTo[Native]
+     *
+     *  A method to move this file or directory to newParentDir.
+     *  If a newName is specified, the file or directory will be renamed.
+     *  If 'this' is not created we will return an error
+     *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
+     *  If 'this' is a file, and the destination file already exists, moveTo
+     *  will replace the old file.
+     *  This object is updated to refer to the new file.
+     *
+     *  moveTo will NOT resolve aliases/shortcuts during the copy.
+     *  moveTo will do the right thing and allow copies across volumes.
+     *  moveTo will return an error (NS_ERROR_FILE_DIR_NOT_EMPTY) if 'this' is
+     *  a directory and the destination directory is not empty.
+     *  moveTo will return an error (NS_ERROR_FILE_ACCESS_DENIED) if 'this' is
+     *  a directory and the destination directory is not writable.
+     *
+     *   @param newParentDir
+     *       This param is the destination directory. If the
+     *       newParentDir is empty, moveTo() will rename the file
+     *       within its current directory. If the newParentDir is
+     *       not empty and does not name a directory, an error will
+     *       be returned (NS_ERROR_FILE_DESTINATION_NOT_DIR).  For
+     *       the |moveToNative| method, the newName must be in the
+     *       native filesystem charset.
+     *
+     *   @param newName
+     *       This param allows you to specify a new name for
+     *       the file to be moved. This param may be empty, in
+     *       which case the current leaf name will be used.
+     */
+    void moveTo(in nsIFile newParentDir, in AString newName);
+    [noscript] void moveToNative(in nsIFile newParentDir, in ACString newName);
+
+    /**
+     *  moveToFollowingLinks[Native]
+     *
+     *  This function is identical to moveTo with the exception that,
+     *  as the name implies, it follows symbolic links.  The XP_UNIX
+     *  implementation always follows symbolic links when moving.  For
+     *  the |MoveToFollowingLinks| method, the newName ust be in the native
+     *  filesystem charset.
+     */
+    void moveToFollowingLinks(in nsIFile newParentDir, in AString newName);
+    [noscript] void moveToFollowingLinksNative(in nsIFile newParentDir, in ACString newName);
+
+    /**
+     *  renameTo
+     *
+     *  This method is identical to moveTo except that if this file or directory
+     *  is moved to a a different volume, it fails and returns an error
+     *  (NS_ERROR_FILE_ACCESS_DENIED).
+     *  This object will still point to the old location after renaming.
+     */
+    void renameTo(in nsIFile newParentDir, in AString newName);
+    [noscript] void renameToNative(in nsIFile newParentDir, in ACString newName);
+
+    /**
+     *  This will try to delete this file.  The 'recursive' flag
+     *  must be PR_TRUE to delete directories which are not empty.
+     *
+     *  This will not resolve any symlinks.
+     */
+    void remove(in boolean recursive);
+
+    /**
+     *  Attributes of nsIFile.
+     */
+
+    attribute unsigned long permissions;
+    attribute unsigned long permissionsOfLink;
+
+    /**
+     *  File Times are to be in milliseconds from
+     *  midnight (00:00:00), January 1, 1970 Greenwich Mean
+     *  Time (GMT).
+     */
+    attribute PRTime lastModifiedTime;
+    attribute PRTime lastModifiedTimeOfLink;
+
+    /**
+     * The creation time of file in milliseconds from midnight, January 1, 1970
+     * GMT, if available.
+     *
+     * This attribute is only implemented on Windows and macOS. Accessing this
+     * on another platform will this will throw NS_ERROR_NOT_IMPLEMENTED.
+     */
+    readonly attribute PRTime creationTime;
+    readonly attribute PRTime creationTimeOfLink;
+
+    /**
+     *  WARNING!  On the Mac, getting/setting the file size with nsIFile
+     *  only deals with the size of the data fork.  If you need to
+     *  know the size of the combined data and resource forks use the
+     *  GetFileSizeWithResFork() method defined on nsILocalFileMac.
+     */
+    attribute int64_t fileSize;
+    readonly attribute int64_t fileSizeOfLink;
+
+    /**
+     *  target & path
+     *
+     *  Accessor to the string path.  The native version of these
+     *  strings are not guaranteed to be a usable path to pass to
+     *  NSPR or the C stdlib.  There are problems that affect
+     *  platforms on which a path does not fully specify a file
+     *  because two volumes can have the same name (e.g., mac).
+     *  This is solved by holding "private", native data in the
+     *  nsIFile implementation.  This native data is lost when
+     *  you convert to a string.
+     *
+     *      DO NOT PASS TO USE WITH NSPR OR STDLIB!
+     *
+     *  target
+     *      Find out what the symlink points at.  Will give error
+     *      (NS_ERROR_FILE_INVALID_PATH) if not a symlink.
+     *
+     *  path
+     *      Find out what the nsIFile points at.
+     *
+     *  Note that the ACString attributes are returned in the
+     *  native filesystem charset.
+     *
+     */
+    readonly attribute AString target;
+    [noscript] readonly attribute ACString nativeTarget;
+    readonly attribute AString path;
+    [notxpcom,nostdcall,must_use] PathString nativePath();
+%{C++
+#ifndef XP_WIN
+    nsresult GetNativePath(nsACString& aPath);
+#endif
+    /*
+     * Returns a human-readable path string.
+     */
+    nsCString HumanReadablePath();
+%}
+
+    boolean exists();
+    boolean isWritable();
+    boolean isReadable();
+    boolean isExecutable();
+    boolean isHidden();
+    boolean isDirectory();
+    boolean isFile();
+    boolean isSymlink();
+    /**
+     * Not a regular file, not a directory, not a symlink.
+     */
+    boolean isSpecial();
+
+    /**
+     *  createUnique
+     *
+     *  This function will create a new file or directory in the
+     *  file system. Any nodes that have not been created or
+     *  resolved, will be.  If this file already exists, we try
+     *  variations on the leaf name "suggestedName" until we find
+     *  one that did not already exist.
+     *
+     *  If the search for nonexistent files takes too long
+     *  (thousands of the variants already exist), we give up and
+     *  return NS_ERROR_FILE_TOO_BIG.
+     *
+     *   @param type
+     *       This specifies the type of file system object
+     *       to be made.  The only two types at this time
+     *       are file and directory which are defined above.
+     *       If the type is unrecongnized, we will return an
+     *       error (NS_ERROR_FILE_UNKNOWN_TYPE).
+     *
+     *   @param permissions
+     *       The unix style octal permissions.  This may
+     *       be ignored on systems that do not need to do
+     *       permissions.
+     */
+    [must_use]
+    void createUnique(in unsigned long type, in unsigned long permissions);
+
+    /**
+      * clone()
+      *
+      * This function will allocate and initialize a nsIFile object to the
+      * exact location of the |this| nsIFile.
+      *
+      *   @param file
+      *          A nsIFile which this object will be initialize
+      *          with.
+      *
+      */
+    nsIFile clone();
+
+    /**
+     *  Will determine if the inFile equals this.
+     */
+    boolean equals(in nsIFile inFile);
+
+    /**
+     *  Will determine if inFile is a descendant of this file.
+     *  This routine looks in subdirectories too.
+     */
+    boolean contains(in nsIFile inFile);
+
+    /**
+     *  Parent will be null when this is at the top of the volume.
+     */
+    readonly attribute nsIFile parent;
+
+    /**
+     *  Returns an enumeration of the elements in a directory. Each
+     *  element in the enumeration is an nsIFile.
+     *
+     *   @throws NS_ERROR_FILE_NOT_DIRECTORY if the current nsIFile does
+     *           not specify a directory.
+     */
+    [binaryname(DirectoryEntriesImpl)]
+    readonly attribute nsIDirectoryEnumerator directoryEntries;
+
+    %{C++
+    nsresult GetDirectoryEntries(nsIDirectoryEnumerator** aOut)
+    {
+      return GetDirectoryEntriesImpl(aOut);
+    };
+    %}
+
+    /**
+     *  initWith[Native]Path
+     *
+     *  This function will initialize the nsIFile object.  Any
+     *  internal state information will be reset.
+     *
+     *   @param filePath
+     *       A string which specifies a full file path to a
+     *       location.  Relative paths will be treated as an
+     *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  For
+     *       initWithNativePath, the filePath must be in the native
+     *       filesystem charset.
+     */
+    void initWithPath(in AString filePath);
+    [noscript] void initWithNativePath(in ACString filePath);
+
+    /**
+     *  initWithFile
+     *
+     *  Initialize this object with another file
+     *
+     *   @param aFile
+     *       the file this becomes equivalent to
+     */
+    void initWithFile(in nsIFile aFile);
+
+    /**
+     * Flag for openNSPRFileDesc(), to hint to the OS that the file will be
+     * read sequentially with agressive readahead.
+     */
+    const unsigned long OS_READAHEAD = 0x40000000;
+
+    /**
+     * Flag for openNSPRFileDesc(). Deprecated and unreliable!
+     * Instead use NS_OpenAnonymousTemporaryFile() to create a temporary
+     * file which will be deleted upon close!
+     */
+    const unsigned long DELETE_ON_CLOSE = 0x80000000;
+
+    /**
+     * Return the result of PR_Open on the file.  The caller is
+     * responsible for calling PR_Close on the result.  On success, the
+     * returned PRFileDescr must be non-null.
+     *
+     * @param flags the PR_Open flags from prio.h, plus optionally
+     * OS_READAHEAD or DELETE_ON_CLOSE. OS_READAHEAD is a hint to the
+     * OS that the file will be read sequentially with agressive
+     * readahead. DELETE_ON_CLOSE is unreliable on Windows and is deprecated.
+     * Instead use NS_OpenAnonymousTemporaryFile() to create a temporary
+     * file which will be deleted upon close.
+     */
+    [noscript, must_use] PRFileDescStar openNSPRFileDesc(in long flags,
+                                                         in long mode);
+
+    /**
+     * Return the result of fopen on the file.  The caller is
+     * responsible for calling fclose on the result.  On success, the
+     * returned FILE pointer must be non-null.
+     */
+    [noscript, must_use] FILE openANSIFileDesc(in string mode);
+
+    /**
+     * Return the result of PR_LoadLibrary on the file.  The caller is
+     * responsible for calling PR_UnloadLibrary on the result.
+     */
+    [noscript, must_use] PRLibraryStar  load();
+
+    // number of bytes available on disk to non-superuser
+    [must_use] readonly attribute int64_t diskSpaceAvailable;
+
+    /**
+     *  appendRelative[Native]Path
+     *
+     *  Append a relative path to the current path of the nsIFile object.
+     *
+     *   @param relativeFilePath
+     *       relativeFilePath is a native relative path. For security reasons,
+     *       this cannot contain .. or cannot start with a directory separator.
+     *       For the |appendRelativeNativePath| method, the relativeFilePath
+     *       must be in the native filesystem charset.
+     */
+    void appendRelativePath(in AString relativeFilePath);
+    [noscript] void appendRelativeNativePath(in ACString relativeFilePath);
+
+    /**
+     *  Accessor to a null terminated string which will specify
+     *  the file in a persistent manner for disk storage.
+     *
+     *  The character set of this attribute is undefined.  DO NOT TRY TO
+     *  INTERPRET IT AS HUMAN READABLE TEXT!
+     */
+    [must_use] attribute ACString persistentDescriptor;
+
+    /**
+     *  reveal
+     *
+     *  Ask the operating system to open the folder which contains
+     *  this file or folder. This routine only works on platforms which
+     *  support the ability to open a folder and is run async on Windows.
+     *  This routine must be called on the main.
+     */
+    [must_use] void reveal();
+
+    /**
+     *  launch
+     *
+     *  Ask the operating system to attempt to open the file.
+     *  this really just simulates "double clicking" the file on your platform.
+     *  This routine only works on platforms which support this functionality
+     *  and is run async on Windows.  This routine must be called on the
+     *  main thread.
+     */
+    [must_use] void launch();
+
+    /**
+     *  getRelativeDescriptor
+     *
+     *  Returns a relative file path in an opaque, XP format. It is therefore
+     *  not a native path.
+     *
+     *  The character set of the string returned from this function is
+     *  undefined.  DO NOT TRY TO INTERPRET IT AS HUMAN READABLE TEXT!
+     *
+     *   @param fromFile
+     *       the file from which the descriptor is relative.
+     *       Throws if fromFile is null.
+     */
+    [must_use] ACString getRelativeDescriptor(in nsIFile fromFile);
+
+    /**
+     *  setRelativeDescriptor
+     *
+     *  Initializes the file to the location relative to fromFile using
+     *  a string returned by getRelativeDescriptor.
+     *
+     *   @param fromFile
+     *       the file to which the descriptor is relative
+     *   @param relative
+     *       the relative descriptor obtained from getRelativeDescriptor
+     */
+    [must_use]
+    void setRelativeDescriptor(in nsIFile fromFile, in ACString relativeDesc);
+
+    /**
+     *  getRelativePath
+     *
+     *  Returns a relative file from 'fromFile' to this file as a UTF-8 string.
+     *  Going up the directory tree is represented via "../".  '/' is used as
+     *  the path segment separator.  This is not a native path, since it's UTF-8
+     *  encoded.
+     *
+     *   @param fromFile
+     *       the file from which the path is relative.
+     *       Throws if fromFile is null.
+     */
+    [must_use] AUTF8String getRelativePath(in nsIFile fromFile);
+
+    /**
+     *  setRelativePath
+     *
+     *  Initializes the file to the location relative to fromFile using
+     *  a string returned by getRelativePath.
+     *
+     *   @param fromFile
+     *       the file from which the path is relative
+     *   @param relative
+     *       the relative path obtained from getRelativePath
+     */
+    [must_use]
+    void setRelativePath(in nsIFile fromFile, in AUTF8String relativeDesc);
+};
+
+%{C++
+#ifdef MOZILLA_INTERNAL_API
+#include "nsDirectoryServiceUtils.h"
+#include "nsString.h"
+
+inline std::ostream& operator<<(std::ostream& aOut, const nsIFile& aFile) {
+  nsIFile* file = const_cast<nsIFile*>(&aFile);
+  nsAutoString path;
+  file->GetPath(path);
+  return aOut << "nsIFile { " << path << " }";
+}
+#endif
+%}

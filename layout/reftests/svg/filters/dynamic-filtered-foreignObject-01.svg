@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=769942 -->
+  <script>
+
+function run_test() {
+  var fO = document.getElementById("fO");
+  fO.parentNode.removeChild(fO);
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", run_test);
+setTimeout(run_test, 4000); // fallback for running outside reftest
+
+  </script>
+  <filter id="filter" x="0" y="0" width="150" height="150"
+          filterUnits="userSpaceOnUse"
+          primitiveUnits="userSpaceOnUse">
+    <feOffset dx="-50" dy="-50"/>
+  </filter>
+  <rect width="100%" height="100%" fill="lime"/>
+  <g filter="url(#filter)">
+    <foreignObject id="fO" x="50" y="50" width="100" height="100">
+      <div xmlns="http://www.w3.org/1999/xhtml"
+           style="display:block; width:100%; height:100%; background:red;"/>
+    </foreignObject>
+  </g>
+</svg>

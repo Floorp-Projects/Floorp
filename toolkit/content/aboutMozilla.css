@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  background: maroon radial-gradient( circle, #a01010 0%, #800000 80%) center center / cover no-repeat;
+  color: white;
+  font-style: italic;
+  text-rendering: optimizeLegibility;
+  min-height: 100%;
+}
+
+#moztext {
+  margin-top: 15%;
+  font-size: 1.1em;
+  font-family: serif;
+  text-align: center;
+  line-height: 1.5;
+}
+
+#from {
+  font-size: 1.95em;
+  font-family: serif;
+  text-align: end;
+}
+
+em {
+  font-size: 1.3em;
+  line-height: 0;
+}
+
+a {
+  text-decoration: none;
+  color: white;
+}

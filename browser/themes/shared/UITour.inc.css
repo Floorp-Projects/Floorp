@@ -1,0 +1,154 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* UI Tour */
+
+#UITourHighlightContainer {
+  appearance: none;
+
+  /* Resets the native styles in windows and macOS */
+  border: none;
+  background-color: transparent;
+  -moz-window-shadow: none;
+
+  --panel-border-color: transparent;
+  --panel-background: transparent;
+  /* This is a buffer to compensate for the movement in the "wobble" effect,
+     and for the box-shadow of #UITourHighlight. */
+  --panel-padding: 4px;
+  /* Compensate the displacement caused by padding. */
+  margin: -4px;
+}
+
+#UITourHighlight {
+  background-color: rgba(0, 200, 215, 0.3);
+  min-height: 24px;
+  min-width: 24px;
+}
+
+#UITourHighlight.rounded-highlight {
+  border-radius: 4px;
+}
+
+#UITourTooltipBody {
+  -moz-box-align: start;
+}
+
+#UITourTooltipTitleContainer {
+  -moz-box-align: start;
+  margin-bottom: 10px;
+}
+
+#UITourTooltipIcon {
+  width: 48px;
+  height: 48px;
+  margin-inline-end: 10px;
+}
+
+#UITourTooltipTitle,
+#UITourTooltipDescription {
+  max-width: 20rem;
+}
+
+#UITourTooltipTitle {
+  font-size: 1.45rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+#UITourTooltipDescription {
+  margin-inline: 0;
+  font-size: 1.15rem;
+  line-height: 1.8rem;
+  margin-bottom: 0; /* Override global.css */
+}
+
+#UITourTooltipClose {
+  position: relative;
+  appearance: none;
+  border: none;
+  background-color: transparent;
+  min-width: 0;
+  margin-inline-start: 4px;
+  margin-top: -2px;
+}
+
+#UITourTooltipClose > .toolbarbutton-text {
+  display: none;
+}
+
+#UITourTooltipButtons {
+  -moz-box-pack: end;
+  background-color: var(--arrowpanel-dimmed);
+  border-top: 1px solid var(--panel-separator-color);
+  margin: 10px -16px -16px;
+  padding: 16px;
+}
+
+#UITourTooltipButtons > label,
+#UITourTooltipButtons > button {
+  margin: 0 15px;
+}
+
+#UITourTooltipButtons > label:first-child,
+#UITourTooltipButtons > button:first-child {
+  margin-inline-start: 0;
+}
+
+#UITourTooltipButtons > label:last-child,
+#UITourTooltipButtons > button:last-child {
+  margin-inline-end: 0;
+}
+
+#UITourTooltipButtons > button[image] > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 5px;
+}
+
+#UITourTooltipButtons > label,
+#UITourTooltipButtons > button .button-text {
+  font-size: 1.15rem;
+}
+
+#UITourTooltipButtons > button:not(.button-link) {
+  appearance: none;
+  background-color: rgb(251,251,251);
+  border-radius: 3px;
+  border: 1px solid;
+  border-color: rgb(192,192,192);
+  color: rgb(71,71,71);
+  padding: 4px 30px;
+  transition-property: background-color, border-color;
+  transition-duration: 150ms;
+}
+
+#UITourTooltipButtons > button:not(.button-link, :active):hover {
+  background-color: hsla(210,4%,10%,.15);
+  border-color: hsla(210,4%,10%,.15);
+  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
+}
+
+#UITourTooltipButtons > label,
+#UITourTooltipButtons > button.button-link:not(:hover) {
+  appearance: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--panel-disabled-color);
+  padding-inline: 10px;
+}
+
+/* The primary button gets the same color as the customize button. */
+#UITourTooltipButtons > button.button-primary {
+  background-color: rgb(116,191,67);
+  color: white;
+  padding-inline: 30px;
+}
+
+#UITourTooltipButtons > button.button-primary:not(:active):hover {
+  background-color: rgb(105,173,61);
+}

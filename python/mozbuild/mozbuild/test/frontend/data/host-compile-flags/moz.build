@@ -1,0 +1,22 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+
+@template
+def HostLibrary(name):
+    """Template for libraries."""
+    HOST_LIBRARY_NAME = name
+
+
+HostLibrary("dummy")
+
+HOST_SOURCES += ["test1.c"]
+
+value = "xyz"
+HOST_DEFINES["FOO"] = True
+HOST_DEFINES["BAZ"] = '"abcd"'
+HOST_DEFINES["BAR"] = 7
+HOST_DEFINES["VALUE"] = value
+HOST_DEFINES["QUX"] = False
+
+HOST_CFLAGS += ["-funroll-loops", "-host-arg"]

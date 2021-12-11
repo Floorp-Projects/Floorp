@@ -1,0 +1,359 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+
+namespace mozilla {
+// Simple C++ getter for nsIXULRuntime::browserTabsRemoteAutostart
+// This getter is a temporary function that checks for special
+// conditions in which e10s support is not great yet, and should
+// therefore be disabled. Bug 1065561 tracks its removal.
+bool BrowserTabsRemoteAutostart();
+uint32_t GetMaxWebProcessCount();
+
+// Returns the value of the fission.autostart pref. Since fission can be
+// disabled on a per-window basis, this should only be used when you need the
+// global value of the pref. For other use cases, you should use
+// nsILoadContext::UseRemoteSubframes instead. This will also check for special
+// conditions, like safe mode, which may require fission to be disabled, or
+// environment variable MOZ_FORCE_ENABLE_FISSION, used by mach run to
+// enable fission regardless of pref settings.
+bool FissionAutostart();
+
+// Returns whether or not we are currently enrolled in the fission experiment.
+bool FissionExperimentEnrolled();
+
+// Returns true if fission.sessionHistoryInParent or FissionAutostart() is true.
+bool SessionHistoryInParent();
+
+// Returns true if SessionHistoryInParent() returns true and
+// fission.bfcacheInParent is true.
+bool BFCacheInParent();
+}
+
+%}
+
+/**
+ * Provides information about the XUL runtime.
+ * @status UNSTABLE - This interface is not frozen and will probably change in
+ *                    future releases. If you need this functionality to be
+ *                    stable/frozen, please contact Benjamin Smedberg.
+ */
+
+[scriptable, uuid(03602fac-fa3f-4a50-9baa-b88456fb4a0f)]
+interface nsIXULRuntime : nsISupports
+{
+  /**
+   * Whether the application was launched in safe mode.
+   */
+  readonly attribute boolean inSafeMode;
+
+  /**
+   * The status of a given normandy experiment.
+   */
+  cenum ExperimentStatus : 8 {
+    // The user is not actively enrolled in the experiment.
+    eExperimentStatusUnenrolled = 0,
+    // The user is enrolled in the control group, and should see the default
+    // behavior.
+    eExperimentStatusControl = 1,
+    // The user is enrolled in the treatment group, and should see the
+    // experimental behavior which is being tested.
+    eExperimentStatusTreatment = 2,
+    // The user was enrolled in the experiment, but became ineligible due to
+    // manually modifying a relevant preference.
+    eExperimentStatusDisqualified = 3,
+    // The user was selected for the phased Fission rollout.
+    eExperimentStatusRollout = 4,
+
+    eExperimentStatusCount,
+  };
+
+  // NOTE: Please do not add new values to this enum without also updating the
+  // mapping in aboutSupport.js
+  cenum FissionDecisionStatus : 8 {
+    eFissionStatusUnknown = 0,
+    // Fission is disabled because the user is in the control group of a
+    // Normandy experiment.
+    eFissionExperimentControl = 1,
+    // Fission is enabled because the user is in the treatment group of a
+    // Normandy experiment.
+    eFissionExperimentTreatment = 2,
+    // Fission is disabled because the `MOZ_FORCE_DISABLE_E10S` environment
+    // variable is set.
+    eFissionDisabledByE10sEnv = 3,
+    // Fission is enabled because the `MOZ_FORCE_ENABLE_FISSION` environment
+    // variable is set.
+    eFissionEnabledByEnv = 4,
+    // Fission is disabled because the current session is running in safe
+    // mode.
+    eFissionDisabledBySafeMode = 5,
+    // Fission is enabled because the "fission.autostart" preference is true
+    // by default.
+    eFissionEnabledByDefault = 6,
+    // Fission is disabled because the "fission.autostart" preference is false
+    // by default.
+    eFissionDisabledByDefault = 7,
+    // Fission is enabled because the "fission.autostart" preference was
+    // turned on by the user.
+    eFissionEnabledByUserPref = 8,
+    // Fission is enabled because the "fission.autostart" preference was
+    // turned on by the user.
+    eFissionDisabledByUserPref = 9,
+    // Fission is disabled because e10s is disabled for some other reason.
+    eFissionDisabledByE10sOther = 10,
+    // Fission is enabled by a Normandy phased rollout.
+    eFissionEnabledByRollout = 11,
+  };
+
+  /**
+   * Whether Fission should be automatically enabled for new browser windows.
+   * This may not match the value of the 'fission.autostart' pref.
+   *
+   * This value is guaranteed to remain constant for the length of a browser
+   * session.
+   */
+  readonly attribute boolean fissionAutostart;
+
+  /**
+   * The user's enrollment status in the Fission experiment at process startup.
+   * See `ExperimentStatus` for the potential values.
+   *
+   * Only available in the parent process.
+   *
+   * This value is guaranteed to remain constant for the length of a browser
+   * session.
+   */
+  readonly attribute nsIXULRuntime_ExperimentStatus fissionExperimentStatus;
+
+  /**
+   * The deciding factor which caused Fission to be enabled or disabled in
+   * this session. The string version is the same of the name of the constant,
+   * without the leading `eFission`, and with an initial lower-case letter.
+   */
+  readonly attribute nsIXULRuntime_FissionDecisionStatus fissionDecisionStatus;
+  readonly attribute ACString fissionDecisionStatusString;
+
+  /**
+   * Whether session history is stored in the parent process.
+   */
+  readonly attribute boolean sessionHistoryInParent;
+
+  /**
+   * Whether to write console errors to a log file. If a component
+   * encounters startup errors that might prevent the app from showing
+   * proper UI, it should set this flag to "true".
+   */
+  attribute boolean logConsoleErrors;
+
+  /**
+   * A string tag identifying the current operating system. This is taken
+   * from the OS_TARGET configure variable. It will always be available.
+   */
+  readonly attribute AUTF8String OS;
+
+  /**
+   * A string tag identifying the binary ABI of the current processor and
+   * compiler vtable. This is taken from the TARGET_XPCOM_ABI configure
+   * variable. It may not be available on all platforms, especially
+   * unusual processor or compiler combinations.
+   *
+   * The result takes the form <processor>-<compilerABI>, for example:
+   *   x86-msvc
+   *   ppc-gcc3
+   *
+   * This value should almost always be used in combination with "OS".
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE if not available.
+   */
+  readonly attribute AUTF8String XPCOMABI;
+
+  /**
+   * A string tag identifying the target widget toolkit in use.
+   * This is taken from the MOZ_WIDGET_TOOLKIT configure variable.
+   */
+  readonly attribute AUTF8String widgetToolkit;
+
+  /**
+   * The legal values of processType.
+   */
+  const unsigned long PROCESS_TYPE_DEFAULT = 0;
+  const unsigned long PROCESS_TYPE_CONTENT = 2;
+  const unsigned long PROCESS_TYPE_IPDLUNITTEST = 3;
+  const unsigned long PROCESS_TYPE_GMPLUGIN = 4;
+  const unsigned long PROCESS_TYPE_GPU = 5;
+  const unsigned long PROCESS_TYPE_VR = 6;
+  const unsigned long PROCESS_TYPE_RDD = 7;
+  const unsigned long PROCESS_TYPE_SOCKET = 8;
+  const unsigned long PROCESS_TYPE_SANDBOX_BROKER = 9;
+  const unsigned long PROCESS_TYPE_FORKSERVER = 10;
+
+  /**
+   * The type of the caller's process.  Returns one of the values above.
+   */
+  readonly attribute unsigned long processType;
+
+  /**
+   * The system process ID of the caller's process.
+   */
+  readonly attribute unsigned long processID;
+
+  /**
+   * A globally unique and non-recycled ID of the caller's process.
+   */
+  readonly attribute uint64_t uniqueProcessID;
+
+  /**
+   * The type of remote content process we're running in.
+   * null if we're in the parent/chrome process. This can contain
+   * a URI if Fission is enabled, so don't use it for any kind of
+   * telemetry.
+   */
+  readonly attribute AUTF8String remoteType;
+
+  /**
+   * If true, browser tabs may be opened by default in a different process
+   * from the main browser UI.
+   */
+  readonly attribute boolean browserTabsRemoteAutostart;
+
+  /**
+   * Returns the number of content processes to use for normal web pages. If
+   * this value is > 1, then e10s-multi should be considered to be "on".
+   *
+   * NB: If browserTabsRemoteAutostart is false, then this value has no
+   * meaning and e10s should be considered to be "off"!
+   */
+  readonly attribute uint32_t maxWebProcessCount;
+
+  /**
+   * The current e10s-multi experiment number. Set dom.ipc.multiOptOut to (at
+   * least) this to disable it until the next experiment.
+   */
+  const uint32_t E10S_MULTI_EXPERIMENT = 1;
+
+  /**
+   * If true, the accessibility service is running.
+   */
+  readonly attribute boolean accessibilityEnabled;
+
+  /**
+   * If true, the AccessibleHandler dll is used.
+   */
+  readonly attribute boolean accessibleHandlerUsed;
+
+  /**
+   * Executable of Windows service that activated accessibility.
+   */
+  readonly attribute AString accessibilityInstantiator;
+
+  /**
+   * Temporary, do not use. Indicates if an incompat version of JAWS
+   * screen reader software is loaded in our process space.
+   */
+  readonly attribute boolean shouldBlockIncompatJaws;
+
+  /**
+   * Indicates whether the current Firefox build is 64-bit.
+   */
+  readonly attribute boolean is64Bit;
+
+  /**
+   * Signal the apprunner to invalidate caches on the next restart.
+   * This will cause components to be autoregistered and all
+   * fastload data to be re-created.
+   */
+  void invalidateCachesOnRestart();
+
+  /**
+   * Starts a child process. This method is intented to pre-start a
+   * content child process so that when it is actually needed, it is
+   * ready to go.
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE if not available.
+   */
+  void ensureContentProcess();
+
+  /**
+   * Modification time of the profile lock before the profile was locked on
+   * this startup. Used to know the last time the profile was used and not
+   * closed cleanly. This is set to 0 if there was no existing profile lock.
+   */
+  readonly attribute PRTime replacedLockTime;
+
+  /**
+   * True if this is RELEASE_OR_BETA.
+   */
+  readonly attribute boolean isReleaseOrBeta;
+
+  /**
+   * True if this build uses official branding (MOZ_OFFICIAL_BRANDING).
+   */
+  readonly attribute boolean isOfficialBranding;
+
+  /**
+   * The default update channel (MOZ_UPDATE_CHANNEL).
+   */
+  readonly attribute AUTF8String defaultUpdateChannel;
+
+  /**
+   * The distribution ID for this build (MOZ_DISTRIBUTION_ID).
+   */
+  readonly attribute AUTF8String distributionID;
+
+  /**
+   * True if Windows DLL blocklist initialized correctly. This is
+   * primarily for automated testing purposes.
+   */
+  readonly attribute boolean windowsDLLBlocklistStatus;
+
+  /**
+   * True if this application was started by the OS as part of an automatic
+   * restart mechanism (such as RegisterApplicationRestart on Windows).
+   */
+  readonly attribute boolean restartedByOS;
+
+  /** Whether the chrome color-scheme is dark */
+  readonly attribute boolean chromeColorSchemeIsDark;
+
+  /** Whether we should draw over the titlebar */
+  readonly attribute boolean drawInTitlebar;
+
+  /**
+   * The path of the shortcut used to start the current process, or "" if none.
+   *
+   * Windows Main process only, otherwise throws NS_ERROR_NOT_AVAILABLE
+   *
+   * May be mising in some cases where the user did launch from a shortcut:
+   * - If the updater ran on startup
+   * - If the AUMID was set before the shortcut could be saved
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE if not available.
+   */
+  readonly attribute AString processStartupShortcut;
+
+  /**
+   * Returns a value corresponding to one of the
+   * |mozilla::LauncherRegistryInfo::EnabledState| values.
+   */
+  readonly attribute uint32_t launcherProcessState;
+
+  /**
+   * Returns the last application version that used the current profile or null
+   * if the last version could not be found (compatibility.ini was either
+   * missing or invalid). Throws NS_ERROR_UNAVAILABLE if called from a content
+   * process.
+   */
+  readonly attribute ACString lastAppVersion;
+
+  /**
+   * Returns the last application build ID that used the current profile or null
+   * if the last build ID could not be found (compatibility.ini was either
+   * missing or invalid). Throws NS_ERROR_UNAVAILABLE if called from a content
+   * process.
+   */
+  readonly attribute ACString lastAppBuildID;
+};

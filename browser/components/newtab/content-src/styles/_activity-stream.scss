@@ -1,0 +1,178 @@
+@import './normalize';
+@import './variables';
+@import './theme';
+@import './icons';
+@import './mixins';
+
+html {
+  height: 100%;
+}
+
+body,
+#root { // sass-lint:disable-line no-ids
+  min-height: 100vh;
+}
+
+#root { // sass-lint:disable-line no-ids
+  position: relative;
+}
+
+body {
+  background-color: var(--newtab-background-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
+  font-size: 16px;
+}
+
+.no-scroll {
+  overflow: hidden;
+}
+
+h1,
+h2 {
+  font-weight: normal;
+}
+
+a {
+  text-decoration: none;
+}
+
+.inner-border {
+  border: $border-secondary;
+  border-radius: $border-radius;
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.show-on-init {
+  opacity: 0;
+  transition: opacity 0.2s ease-in;
+
+  &.on {
+    animation: fadeIn 0.2s;
+    opacity: 1;
+  }
+}
+
+.actions {
+  border-top: $border-secondary;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 15px 25px 0;
+}
+
+// Default button (grey)
+.button,
+.actions button {
+  background-color: var(--newtab-button-secondary-color);
+  border: $border-primary;
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  margin-bottom: 15px;
+  padding: 10px 30px;
+  white-space: nowrap;
+
+  &:hover:not(.dismiss),
+  &:focus:not(.dismiss) {
+    box-shadow: $shadow-primary;
+    transition: box-shadow 150ms;
+  }
+
+  &.dismiss {
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  // Blue button
+  &.primary,
+  &.done {
+    background-color: var(--newtab-primary-action-background);
+    border: solid 1px var(--newtab-primary-action-background);
+    color: var(--newtab-primary-element-text-color);
+    margin-inline-start: auto;
+  }
+}
+
+input {
+  &[type='text'],
+  &[type='search'] {
+    border-radius: $border-radius;
+  }
+}
+
+// These styles are needed for -webkit-line-clamp to work correctly, so reuse
+// this class name while separately setting a clamp value via CSS or JS.
+.clamp {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+// Components
+@import '../components/A11yLinkButton/A11yLinkButton';
+@import '../components/Base/Base';
+@import '../components/ErrorBoundary/ErrorBoundary';
+@import '../components/TopSites/TopSites';
+@import '../components/Sections/Sections';
+@import '../components/Topics/Topics';
+@import '../components/Search/Search';
+@import '../components/ContextMenu/ContextMenu';
+@import '../components/ConfirmDialog/ConfirmDialog';
+@import '../components/CustomizeMenu/CustomizeMenu';
+@import '../components/Card/Card';
+@import '../components/CollapsibleSection/CollapsibleSection';
+@import '../components/ASRouterAdmin/ASRouterAdmin';
+@import '../components/PocketLoggedInCta/PocketLoggedInCta';
+@import '../components/MoreRecommendations/MoreRecommendations';
+@import '../components/DiscoveryStreamBase/DiscoveryStreamBase';
+
+// Discovery Stream Components
+@import '../components/DiscoveryStreamComponents/CardGrid/CardGrid';
+@import '../components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid';
+@import '../components/DiscoveryStreamComponents/Highlights/Highlights';
+@import '../components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule';
+@import '../components/DiscoveryStreamComponents/Navigation/Navigation';
+@import '../components/DiscoveryStreamComponents/SectionTitle/SectionTitle';
+@import '../components/DiscoveryStreamComponents/TopSites/TopSites';
+@import '../components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu';
+@import '../components/DiscoveryStreamComponents/DSCard/DSCard';
+@import '../components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter';
+@import '../components/DiscoveryStreamComponents/DSImage/DSImage';
+@import '../components/DiscoveryStreamComponents/DSDismiss/DSDismiss';
+@import '../components/DiscoveryStreamComponents/DSMessage/DSMessage';
+@import '../components/DiscoveryStreamImpressionStats/ImpressionStats';
+@import '../components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState';
+@import '../components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo';
+@import '../components/DiscoveryStreamComponents/DSSignup/DSSignup';
+@import '../components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal';
+@import '../components/DiscoveryStreamComponents/PrivacyLink/PrivacyLink';
+
+// AS Router
+@import '../asrouter/components/Button/Button';
+@import '../asrouter/components/SnippetBase/SnippetBase';
+@import '../asrouter/components/ModalOverlay/ModalOverlay';
+@import '../asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet';
+@import '../asrouter/templates/SimpleSnippet/SimpleSnippet';
+@import '../asrouter/templates/SubmitFormSnippet/SubmitFormSnippet';
+@import '../asrouter/templates/EOYSnippet/EOYSnippet';

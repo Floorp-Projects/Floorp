@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=174351
+-->
+<head>
+  <title>Test for Bug 174351</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=174351">Mozilla Bug 174351</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  var iframe = document.createElement("iframe");
+  iframe.src = "invalidchar.xml";
+  iframe.onload = function() {
+    var doc = document.getElementById("test").childNodes[1].contentDocument;
+    ok(doc.documentElement.tagName != "root", "Since XML has invalid enconding, must throw error");
+  };
+
+  document.getElementById("test").appendChild(iframe);
+</script>
+</pre>
+</body>
+</html>
+

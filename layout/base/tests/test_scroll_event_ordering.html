@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=785588
+-->
+<head>
+  <title>Test for Bug 785588 --- ordering of scroll-related events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=785588">Mozilla Bug 785588</a>
+<div id="content">
+  <div id="d" style="border:2px solid black; width:100px; height:100px; overflow:auto">
+    <div id="inner" style="height:200px;">Hello</div>
+  </div>
+</div>
+<pre id="test">
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var smoothScrollPref = "general.smoothScroll";
+
+var d = document.getElementById("d");
+d.scrollTop = 0;
+var inner = document.getElementById("inner");
+
+var state = "initial";
+
+function onFrame() {
+  is(state, "didOnScroll", "Must have got scroll event already");
+  state = "didOnFrame";
+  SimpleTest.finish();
+}
+
+function onScroll() {
+  is(state, "initial", "Must be in initial state");
+  ok(d.scrollTop > 0, "Must have scrolled by some amount (got " + d.scrollTop + ")");
+  state = "didOnScroll";
+}
+
+function doTest() {
+  window.getSelection().collapse(inner.firstChild, 0);
+  window.requestAnimationFrame(onFrame);
+  d.onscroll = onScroll;
+  d.scroll(0, 100);
+}
+
+function prepareTest() {
+  // Start the test after we've gotten at least one rAF callback, to make sure
+  // that rAF is no longer throttled. (See bug 1145439.)
+  window.requestAnimationFrame(function() {
+    SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, doTest);
+  });
+}
+
+SimpleTest.waitForFocus(prepareTest);
+
+</script>
+</pre>
+</body>
+</html>

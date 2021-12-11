@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" >
+
+  <title>Testcase for defaulting of 'type' attribute on &lt;style&gt;</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=421464 -->
+
+  <style>
+    #r1 { fill: lime; }
+  </style>
+
+  <style type="">
+    #r2 { fill: lime; }
+  </style>
+
+  <rect id="r1"         width="50%" height="100%" fill="red"/>
+  <rect id="r2" x="50%" width="50%" height="100%" fill="red"/>
+
+</svg>

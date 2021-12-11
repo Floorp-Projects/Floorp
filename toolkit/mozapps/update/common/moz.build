@@ -1,0 +1,76 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "commonupdatedir.h",
+    "readstrings.h",
+    "updatecommon.h",
+    "updatedefines.h",
+    "updatererrors.h",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    EXPORTS += [
+        "pathhash.h",
+        "uachelper.h",
+        "updatehelper.cpp",
+        "updatehelper.h",
+        "updateutils_win.h",
+    ]
+
+    if CONFIG["MOZ_MAINTENANCE_SERVICE"]:
+        EXPORTS += [
+            "certificatecheck.h",
+            "registrycertificates.h",
+        ]
+
+Library("updatecommon")
+
+DEFINES["NS_NO_XPCOM"] = True
+USE_STATIC_LIBS = True
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    # This forces the creation of updatecommon.lib, which the update agent needs
+    # in order to link to updatecommon library functions.
+    NO_EXPAND_LIBS = True
+
+DisableStlWrapping()
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    SOURCES += [
+        "pathhash.cpp",
+        "uachelper.cpp",
+        "updatehelper.cpp",
+        "updateutils_win.cpp",
+    ]
+    OS_LIBS += [
+        "advapi32",
+        "ole32",
+        "rpcrt4",
+        "shell32",
+    ]
+    if CONFIG["MOZ_MAINTENANCE_SERVICE"]:
+        SOURCES += [
+            "certificatecheck.cpp",
+            "registrycertificates.cpp",
+        ]
+        OS_LIBS += [
+            "crypt32",
+            "wintrust",
+        ]
+
+SOURCES += [
+    "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
+    "commonupdatedir.cpp",
+    "readstrings.cpp",
+    "updatecommon.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/other-licenses/nsis/Contrib/CityHash/cityhash",
+]
+
+DEFINES["MOZ_APP_BASENAME"] = '"%s"' % CONFIG["MOZ_APP_BASENAME"]

@@ -1,0 +1,174 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+menu,
+menuitem,
+menucaption {
+  appearance: auto;
+  -moz-default-appearance: menuitem;
+  -moz-font-smoothing-background-color: -moz-mac-menuitem;
+  -moz-box-align: center;
+  list-style-image: none;
+  -moz-image-region: auto;
+  padding: 2px 21px;
+}
+
+menu[disabled="true"], menuitem[disabled="true"],
+menu[_moz-menuactive="true"][disabled="true"],
+menuitem[_moz-menuactive="true"][disabled="true"] {
+  color: -moz-mac-menutextdisable;
+  -moz-font-smoothing-background-color: -moz-mac-menuitem;
+}
+
+menuitem[default="true"],
+menuitem.spell-suggestion,
+menucaption {
+  font-weight: bold;
+}
+
+/* Internal content */
+
+.menu-text,
+.menu-iconic-text,
+.menu-accel,
+.menu-iconic-accel {
+  margin: 0 !important;
+}
+
+.menu-iconic-icon {
+  height: 16px;
+  margin-block: -2px;
+  margin-inline-end: 5px;
+  /* Empty icons shouldn't take up room, so we need to compensate
+   * the 5px margin-end with a negative margin-start.
+   */
+  margin-inline-start: -5px;
+}
+
+/* menuitems with icons */
+.menuitem-iconic,
+.menu-iconic,
+menuitem[image] {
+  /* 2px higher than those without icons */
+  padding-block: 1px 3px;
+}
+
+.menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
+.menu-iconic > .menu-iconic-left > .menu-iconic-icon,
+menuitem[image] > .menu-iconic-left > .menu-iconic-icon {
+  margin-inline-start: 0;
+  width: 16px;
+}
+
+/* menu arrow box */
+
+.menu-right,
+.menu-accel-container {
+  margin-inline: 21px -9px;
+  -moz-box-pack: end;
+}
+
+.menu-right {
+  list-style-image: none;
+  appearance: auto;
+  -moz-default-appearance: menuarrow;
+}
+
+/* menu/menuitems in menubar */
+
+menubar > menu {
+  appearance: none;
+  padding-block: 2px;
+  padding-inline: 7px 5px;
+  margin: 1px 0;
+}
+
+menubar > menu[_moz-menuactive="true"] {
+  color: inherit;
+  background-color: transparent;
+}
+
+menubar > menu[_moz-menuactive="true"][open="true"] {
+  appearance: auto;
+  -moz-default-appearance: menuitem;
+  -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
+  color: -moz-mac-menutextselect;
+}
+
+/* Internal content  */
+
+.menubar-left {
+  margin: 0 2px;
+}
+
+.menubar-text {
+  margin: 0 1px !important;
+}
+
+/* menu/menuitems in popups */
+
+menupopup {
+  font: -moz-pull-down-menu;
+}
+
+menupopup > menu,
+menupopup > menuitem,
+menupopup > menucaption {
+  max-width: 42em;
+}
+
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
+  -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
+  color: -moz-mac-menutextselect;
+  background-color: SelectedItem;
+}
+
+menuitem[customoptionstyling="true"] {
+  appearance: none;
+}
+
+/* menu/menuitems in menulist popups */
+
+menulist > menupopup {
+  font: inherit;
+  color: FieldText;
+}
+
+menulist > menupopup > menuitem,
+menulist > menupopup > menucaption,
+menulist > menupopup > menu {
+  max-width: none;
+}
+
+/* checked menuitems */
+
+:not(menulist) > menupopup > menuitem[checked="true"],
+:not(menulist) > menupopup > menuitem[selected="true"] {
+  appearance: auto;
+  -moz-default-appearance: checkmenuitem;
+}
+
+menulist > menupopup > menuitem[checked="true"]::before,
+menulist > menupopup > menuitem[selected="true"]::before {
+  content: '\2713'; /* a checkmark */
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 0;
+  width: 15px;
+  margin-inline-start: -15px;
+}
+
+/* menuseparator */
+
+menuseparator {
+  appearance: auto;
+  -moz-default-appearance: menuseparator;
+  margin: 5px 0;
+  padding: 1px 0;
+}
+
+%include ../../shared/menu-scrolling.inc.css

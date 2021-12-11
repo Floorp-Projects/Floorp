@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>Simple access of geolocation</title>
+  <head>
+    <script>
+      function loadedWindow() {
+        opener.postMessage("loaded", "*");
+      }
+      navigator.geolocation.getCurrentPosition(loadedWindow, loadedWindow, {timeout:30000});
+    </script>
+  </head>
+  <body></body>
+</html>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1128054
+-->
+<window title="Mozilla Bug 1128054"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<body>
+<!-- Test default focusability -->
+<label></label>
+<!-- Test tabindex=0 focusability -->
+<label tabindex="0"></label>
+<!-- Test tabindex=-1 focusability -->
+<label tabindex="-1"></label>
+<!-- Test tabindex=invalid focusability -->
+<label tabindex="invalid"></label>
+<!-- Tests code -->
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1128054 **/
+
+add_task(function test_xul_tabindex_focus() {
+  for (let element of document.querySelectorAll("label")) {
+    let desc = "xul element";
+    let focusable = false;
+    if (element.hasAttribute("tabindex")) {
+      let attr = element.getAttribute("tabindex");
+      focusable = Number.isInteger(Number.parseInt(attr));
+      desc += ` with tabindex=${attr}`;
+    }
+
+    element.focus();
+    focusable ? is(document.activeElement, element, desc + " should focusable")
+              : isnot(document.activeElement, element, desc + " should not focusable");
+  }
+});
+
+]]>
+</script>
+</body>
+</window>

@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that rendering a dominator tree error is handled correctly.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+    <pre id="test">
+        <script src="head.js" type="application/javascript"></script>
+
+        <script type="application/javascript">
+         "use strict";
+         window.onload = async function() {
+           try {
+             ok(React, "Should get React");
+             ok(Heap, "Should get Heap");
+
+             const errorMessage = "Something went wrong!";
+             const container = document.getElementById("container");
+
+             const props = immutableUpdate(TEST_HEAP_PROPS, {
+               view: { state: viewState.DOMINATOR_TREE },
+               snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                 dominatorTree: {
+                   error: new Error(errorMessage),
+                   state: dominatorTreeState.ERROR,
+                 },
+               }),
+             });
+
+             await renderComponent(Heap(props), container);
+
+             ok(container.querySelector(".error"), "Should render an error view");
+             ok(container.textContent.includes(errorMessage),
+                "Should see our error message");
+           } catch (e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         };
+        </script>
+    </pre>
+</body>
+</html>

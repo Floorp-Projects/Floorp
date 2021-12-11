@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for cookies + SharedWorker loading when the policy changes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="cookiesHelper.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+runTests(async (w, state) => {
+  w.document.cookie = "name=value";
+
+  if (state == BLOCKED) {
+    try {
+      new w.SharedWorker("cookie.sjs?sharedworker&" + Math.random());
+      ok(false, "SharedWorker should not be allowed!");
+    } catch (ex) {
+      ok(true, "SharedWorker should not be allowed!");
+    }
+    return;
+  }
+
+  let p = new w.SharedWorker("cookie.sjs?sharedworker&" + Math.random());
+  await new w.Promise(resolve => { p.port.onmessage = resolve; });
+  await checkLastRequest("sharedworker", state);
+
+  await new w.Promise(resolve => {
+    p.port.postMessage("subworker");
+    p.port.onmessage = resolve;
+  });
+  await checkLastRequest("subworker", state);
+
+  await new w.Promise(resolve => {
+    p.port.postMessage("fetch");
+    p.port.onmessage = resolve;
+  });
+  await checkLastRequest("fetch", state);
+
+  await new w.Promise(resolve => {
+    p.port.postMessage("xhr");
+    p.port.onmessage = resolve;
+  });
+  await checkLastRequest("xhr", state);
+});
+
+</script>
+</body>
+</html>

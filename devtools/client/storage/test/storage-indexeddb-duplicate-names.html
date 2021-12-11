@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <title>Storage inspector IndexedDBs with duplicate names</title>
+
+  <script type="application/javascript">
+    "use strict";
+
+    /* exported setup */
+    function setup() {
+      createIndexedDB("idb1", "temporary");
+      createIndexedDB("idb1", "default");
+      createIndexedDB("idb1", "persistent");
+      createIndexedDB("idb2", "temporary");
+      createIndexedDB("idb2", "default");
+      createIndexedDB("idb2", "persistent");
+    }
+
+    function createIndexedDB(name, storage) {
+      const open = indexedDB.open(name, {storage: storage});
+
+      open.onsuccess = function () {
+        const db = open.result;
+        db.close();
+      };
+    }
+
+    function deleteDB(dbName, storage) {
+      return new Promise(resolve => {
+        dump(`removing database ${dbName} (${storage}) from ${document.location}\n`);
+        indexedDB.deleteDatabase(dbName, { storage: storage }).onsuccess = resolve;
+      });
+    }
+
+    window.clear = async function () {
+      await deleteDB("idb1", "temporary");
+      await deleteDB("idb1", "default");
+      await deleteDB("idb1", "persistent");
+      await deleteDB("idb2", "temporary");
+      await deleteDB("idb2", "default");
+      await deleteDB("idb2", "persistent");
+
+      dump(`removed indexedDB data from ${document.location}\n`);
+    };
+  </script>
+</head>
+<body>
+  <h1>storage-indexeddb-duplicate-names.html</h1>
+</body>
+</html>

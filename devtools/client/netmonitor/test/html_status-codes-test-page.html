@@ -1,0 +1,67 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Status codes test</p>
+
+    <script type="text/javascript">
+      /* exported performRequests, performCachedRequests, performOneCachedRequest */
+      "use strict";
+
+      function get(address, callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", address, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            callback();
+          }
+        };
+        xhr.send(null);
+      }
+
+      function performRequests() {
+        /* eslint-disable max-nested-callbacks */
+        get("sjs_status-codes-test-server.sjs?sts=100", function() {
+          get("sjs_status-codes-test-server.sjs?sts=200", function() {
+            get("sjs_status-codes-test-server.sjs?sts=300", function() {
+              get("sjs_status-codes-test-server.sjs?sts=400", function() {
+                get("sjs_status-codes-test-server.sjs?sts=500", function() {
+                  // Done.
+                });
+              });
+            });
+          });
+        });
+        /* eslint-enable max-nested-callbacks */
+      }
+
+      function performCachedRequests() {
+        get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
+          get("sjs_status-codes-test-server.sjs?sts=redirect&cached", function() {
+            // Done.
+          });
+        });
+      }
+
+      function performOneCachedRequest() {
+        get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
+          get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
+            // Done.
+          });
+        });
+      }
+    </script>
+  </body>
+
+</html>

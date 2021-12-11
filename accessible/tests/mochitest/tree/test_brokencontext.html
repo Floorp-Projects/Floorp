@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Broken context hierarchy</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  /**
+   * Return true if TD element has a generic accessible.
+   */
+  function isTDGeneric(aID) {
+    return isAccessible(aID) && !isAccessible(aID, nsIAccessibleTableCell);
+  }
+
+  function checkIfNotAccessible(aID) {
+    ok(!isAccessible(aID), "'" + aID + "' shouldn't be accessible");
+  }
+  function checkIfTDGeneric(aID) {
+    ok(isTDGeneric(aID), "'" + aID + "' shouldn't have cell accessible");
+  }
+
+  function doTest() {
+    // //////////////////////////////////////////////////////////////////////////
+    // HTML table elements outside table context.
+
+    // HTML table role="presentation"
+    checkIfNotAccessible("tr_in_presentation_table");
+    checkIfTDGeneric("th_in_presentation_table");
+    checkIfTDGeneric("td_in_presentation_table");
+
+    // HTML table role="button"
+    var tree =
+      { PUSHBUTTON: [ // table
+          { TEXT_CONTAINER: [ // tr
+            { TEXT_CONTAINER: [ // th
+              { TEXT_LEAF: [ ] },
+            ] },
+            { TEXT_CONTAINER: [ // td
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+      ] };
+    testAccessibleTree("button_table", tree);
+
+    // //////////////////////////////////////////////////////////////////////////
+    // HTML list elements outside list context.
+
+    ok(!isAccessible("presentation_ul"),
+                     "presentational ul shouldn't be accessible");
+    ok(isAccessible("item_in_presentation_ul"),
+                    "li in presentational ul should have generic accessible");
+    ok(isAccessible("styleditem_in_presentation_ul"),
+                    "list styled span in presentational ul should have generic accessible");
+
+    ok(!isAccessible("presentation_ol"),
+                     "presentational ol shouldn't be accessible");
+    ok(isAccessible("item_in_presentation_ol"),
+                    "li in presentational ol should have generic accessible");
+
+    ok(!isAccessible("presentation_dl"),
+                     "presentational dl shouldn't be accessible");
+    ok(!isAccessible("dt_in_presentation_dl"),
+                     "dt in presentational dl shouldn't be accessible");
+    ok(!isAccessible("dd_in_presentation_dl"),
+                     "dd in presentational dl shouldn't be accessible");
+
+    tree =
+      { PUSHBUTTON: [ // ul
+        { TEXT_CONTAINER: [ // li
+          { LISTITEM_MARKER: [ ] },
+          { TEXT_LEAF: [ ] },
+        ] },
+        { TEXT_CONTAINER: [ // span styled as a list
+          { LISTITEM_MARKER: [ ] },
+          { TEXT_LEAF: [ ] },
+        ] },
+      ] };
+    testAccessibleTree("button_ul", tree);
+
+    tree =
+      { PUSHBUTTON: [ // ol
+        { TEXT_CONTAINER: [ // li
+          { LISTITEM_MARKER: [ ] },
+          { TEXT_LEAF: [ ] },
+        ] },
+      ] };
+    testAccessibleTree("button_ol", tree);
+
+    tree =
+      { PUSHBUTTON: [ // dl
+        { TEXT_CONTAINER: [ // dt
+          { TEXT_LEAF: [ ] },
+        ] },
+        { TEXT_CONTAINER: [ // dd
+          { TEXT_LEAF: [ ] },
+        ] },
+      ] };
+    testAccessibleTree("button_dl", tree);
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Styled as HTML table elements, accessible is created by tag name
+
+    tree =
+      { LINK: [ // a
+        { TEXT_LEAF: [ ] },
+      ] };
+    testAccessibleTree("a_as_td", tree);
+
+    tree =
+      { HEADING: [
+        { TEXT_LEAF: [ ] },
+      ] };
+    testAccessibleTree("h1_as_td", tree);
+    testAccessibleTree("h2_as_td", tree);
+    testAccessibleTree("h3_as_td", tree);
+    testAccessibleTree("h4_as_td", tree);
+    testAccessibleTree("h5_as_td", tree);
+    testAccessibleTree("h6_as_td", tree);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=706849"
+     title="Create accessible by tag name as fallback if table descendant style is used out of table context">
+    Bug 706849
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=804461"
+     title="Build the context dependent tree ">
+    Bug 804461
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=945435"
+     title="Create generic accessible for td to not jamm the cell text">
+    Bug 945435
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- HTML table elements out of table -->
+  <table role="presentation">
+    <tr id="tr_in_presentation_table">
+      <th id="th_in_presentation_table">not a header</th>
+      <td id="td_in_presentation_table">not a cell</td>
+    </tr>
+  </table>
+
+  <table role="button" id="button_table">
+    <tr id="tr_in_button_table">
+      <th id="th_in_button_table">not a header</th>
+      <td id="td_in_button_table">not a cell</td>
+    </tr>
+  </table>
+
+  <!-- HTML list elements out of list -->
+  <ul role="presentation" id="presentation_ul">
+    <li id="item_in_presentation_ul">item</li>
+    <span id="styleditem_in_presentation_ul"
+          style="display:list-item">Oranges</span>
+  </ul>
+
+  <ol role="presentation" id="presentation_ol">
+    <li id="item_in_presentation_ol">item</li>
+  </ol>
+
+  <dl role="presentation" id="presentation_dl">
+    <dt id="dt_in_presentation_dl">term</dt>
+    <dd id="dd_in_presentation_dl">definition</dd>
+  </dl>
+
+  <ul role="button" id="button_ul">
+    <li id="item_in_button_ul">item</li>
+    <span id="styleditem_in_button_ul"
+          style="display:list-item">Oranges</span>
+  </ul>
+
+  <ol role="button" id="button_ol">
+    <li id="item_in_button_ul">item</li>
+  </ol>
+
+  <dl role="button" id="button_dl">
+    <dt id="dt_in_button_dl">term</ld>
+    <dd id="dd_in_button_dl">definition</dd>
+  </dl>
+
+  <!-- styled as HTML table elements -->
+  <a id="a_as_td" style="display:table-cell;" href="http://www.google.com">Google</a>
+  <h1 id="h1_as_td" style="display: table-cell;">h1</h1>
+  <h2 id="h2_as_td" style="display: table-cell;">h2</h2>
+  <h3 id="h3_as_td" style="display: table-cell;">h3</h3>
+  <h4 id="h4_as_td" style="display: table-cell;">h4</h4>
+  <h5 id="h5_as_td" style="display: table-cell;">h5</h5>
+  <h6 id="h6_as_td" style="display: table-cell;">h6</h6>
+</body>
+</html>

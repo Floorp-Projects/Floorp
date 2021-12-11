@@ -1,0 +1,167 @@
+/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsICycleCollectorLogSink;
+
+[scriptable, function, uuid(2dea18fc-fbfa-4bf7-ad45-0efaf5495f5e)]
+interface nsIFinishDumpingCallback : nsISupports
+{
+  void callback(in nsISupports data);
+};
+
+/**
+ * Callback interface for |dumpGCAndCCLogsToFile|, below.  Note that
+ * these method calls can occur before |dumpGCAndCCLogsToFile|
+ * returns.
+ */
+[scriptable, uuid(dc1b2b24-65bd-441b-b6bd-cb5825a7ed14)]
+interface nsIDumpGCAndCCLogsCallback : nsISupports
+{
+  /**
+   * Called whenever a process has successfully finished dumping its GC/CC logs.
+   * Incomplete dumps (e.g., if the child crashes or is killed due to memory
+   * exhaustion) are not reported.
+   *
+   * @param aGCLog The file that the GC log was written to.
+   *
+   * @param aCCLog The file that the CC log was written to.
+   *
+   * @param aIsParent indicates whether this log file pair is from the
+   * parent process.
+   */
+  void onDump(in nsIFile aGCLog,
+              in nsIFile aCCLog,
+              in bool aIsParent);
+
+  /**
+   * Called when GC/CC logging has finished, after all calls to |onDump|.
+   */
+  void onFinish();
+};
+
+[scriptable, builtinclass, uuid(48541b74-47ee-4a62-9557-7f4b809bda5c)]
+interface nsIMemoryInfoDumper : nsISupports
+{
+  /**
+   * This dumps gzipped memory reports for this process and its child
+   * processes.  If a file of the given name exists, it will be overwritten.
+   *
+   * @param aFilename The output file.
+   *
+   * @param aFinishDumping The callback called on completion.
+   *
+   * @param aFinishDumpingData The environment for the callback.
+   *
+   * @param aAnonymize Should the reports be anonymized?
+   *
+   * @param aMinimizeMemoryUsage indicates whether we should run a series of
+   *   GC/CC's in an attempt to reduce our memory usage before collecting our
+   *   memory report.
+   *
+   * Sample output, annotated with comments for explanatory purposes.
+   *
+   * {
+   *   // The version number of the format, which will be incremented each time
+   *   // backwards-incompatible changes are made. A mandatory integer.
+   *   "version": 1
+   *
+   *   // Equal to nsIMemoryReporterManager::hasMozMallocUsableSize. A
+   *   // mandatory boolean.
+   *   "hasMozMallocUsableSize": true,
+   *
+   *   // The memory reports. A mandatory array.
+   *   "reports": [
+   *     // The properties correspond to the arguments of
+   *     // nsIHandleReportCallback::callback. Every one is mandatory.
+   *     {"process":"Main Process (pid 12345)", "path":"explicit/foo/bar",
+   *      "kind":1, "units":0, "amount":2000000, "description":"Foo bar."},
+   *     {"process":"Main Process (pid 12345)", "path":"heap-allocated",
+   *      "kind":1, "units":0, "amount":3000000, "description":"Heap allocated."},
+   *     {"process":"Main Process (pid 12345)", "path":"vsize",
+   *      "kind":1, "units":0, "amount":10000000, "description":"Vsize."}
+   *   ]
+   * }
+   */
+  void dumpMemoryReportsToNamedFile(in AString aFilename,
+                                    in nsIFinishDumpingCallback aFinishDumping,
+                                    in nsISupports aFinishDumpingData,
+                                    in boolean aAnonymize,
+                                    in boolean aMinimizeMemoryUsage);
+
+  /**
+   * Similar to dumpMemoryReportsToNamedFile, this method dumps gzipped memory
+   * reports for this process and its child processes to files in the tmp
+   * directory called memory-reports-<identifier>-<pid>.json.gz (or something
+   * similar, such as memory-reports-<identifier>-<pid>-1.json.gz; no existing
+   * file will be overwritten).
+   *
+   * If DMD is enabled, this method also dumps gzipped DMD output for this
+   * process and its child processes to files in the tmp directory called
+   * dmd-<identifier>-<pid>.txt.gz (or something similar; again, no existing
+   * file will be overwritten).
+   *
+   * @param aIdentifier this identifier will appear in the filename of our
+   *   about:memory dump and those of our children.
+   *
+   *   If the identifier is empty, the implementation may set it arbitrarily
+   *   and use that new value for its own dump and the dumps of its child
+   *   processes.  For example, the implementation may set |aIdentifier| to the
+   *   number of seconds since the epoch.
+   *
+   * @param aAnonymize Should the reports be anonymized?
+   *
+   * @param aMinimizeMemoryUsage indicates whether we should run a series of
+   *   GC/CC's in an attempt to reduce our memory usage before collecting our
+   *   memory report.
+   */
+  void dumpMemoryInfoToTempDir(
+    in AString aIdentifier,
+    in boolean aAnonymize,
+    in boolean aMinimizeMemoryUsage);
+
+  /**
+   * Dump GC and CC logs to files in the OS's temp directory (or in
+   * $MOZ_CC_LOG_DIRECTORY, if that environment variable is specified).
+   *
+   * @param aIdentifier If aIdentifier is non-empty, this string will appear in
+   *   the filenames of the logs we create (both for this process and, if
+   *   aDumpChildProcesses is true, for our child processes).
+   *
+   *   If aIdentifier is empty, the implementation may set it to an
+   *   arbitrary value; for example, it may set aIdentifier to the number
+   *   of seconds since the epoch.
+   *
+   * @param aDumpAllTraces indicates whether we should run an all-traces CC
+   *   log.  An all-traces log visits all objects currently eligible for cycle
+   *   collection, while a non-all-traces log avoids visiting some objects
+   *   which we know are reachable.
+   *
+   *   All-traces logs are much bigger than the alternative, but they may be
+   *   helpful when trying to understand why a particular object is alive.  For
+   *   example, a non-traces-log will skip references held by an active
+   *   document; if your object is being held alive by such a document, you
+   *   probably want to see those references.
+   *
+   * @param aDumpChildProcesses indicates whether we should call
+   *   DumpGCAndCCLogsToFile in our child processes.  If so, the child processes
+   *   will dump their children, and so on.
+   *
+   */
+  void dumpGCAndCCLogsToFile(in AString aIdentifier,
+                             in bool aDumpAllTraces,
+                             in bool aDumpChildProcesses,
+                             in nsIDumpGCAndCCLogsCallback aCallback);
+
+  /**
+   * Like |dumpGCAndCCLogsToFile|, but sends the logs to the given log
+   * sink object instead of accessing the filesystem directly, and
+   * dumps the current process only.
+   */
+  void dumpGCAndCCLogsToSink(in bool aDumpAllTraces,
+                             in nsICycleCollectorLogSink aSink);
+};

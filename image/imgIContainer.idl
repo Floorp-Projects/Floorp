@@ -1,0 +1,687 @@
+/** -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Document;
+
+%{C++
+#include "ImgDrawResult.h"
+#include "gfxPoint.h"
+#include "mozilla/gfx/Types.h"
+#include "mozilla/AspectRatio.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
+#include "nsRect.h"
+#include "nsSize.h"
+#include "nsTArray.h"
+#include "limits.h"
+
+class gfxContext;
+
+namespace mozilla {
+struct AspectRatio;
+
+namespace gfx {
+class SourceSurface;
+}
+
+class WindowRenderer;
+namespace layers {
+class ImageContainer;
+}
+}
+
+class nsIFrame;
+
+namespace mozilla {
+class TimeStamp;
+class SVGImageContext;
+struct MediaFeatureChange;
+}
+
+namespace mozilla {
+namespace image {
+
+class ImageRegion;
+class ImageIntRegion;
+struct Orientation;
+struct Resolution;
+
+}
+}
+
+%}
+
+native MaybeAspectRatio(mozilla::Maybe<mozilla::AspectRatio>);
+native ImgDrawResult(mozilla::image::ImgDrawResult);
+[ptr] native gfxContext(gfxContext);
+[ref] native gfxMatrix(gfxMatrix);
+[ref] native gfxRect(gfxRect);
+[ref] native gfxSize(gfxSize);
+native SamplingFilter(mozilla::gfx::SamplingFilter);
+[ref] native nsIntRect(nsIntRect);
+native nsIntRectByVal(nsIntRect);
+[ref] native nsIntSize(nsIntSize);
+native nsSize(nsSize);
+[ptr] native nsIFrame(nsIFrame);
+native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
+[ptr] native ImageContainer(mozilla::layers::ImageContainer);
+[ref] native ImageRegion(mozilla::image::ImageRegion);
+[ptr] native WindowRenderer(mozilla::WindowRenderer);
+native Orientation(mozilla::image::Orientation);
+native ImageResolution(mozilla::image::Resolution);
+[ref] native TimeStamp(mozilla::TimeStamp);
+[ref] native MaybeSVGImageContext(mozilla::Maybe<mozilla::SVGImageContext>);
+[ref] native MaybeImageIntRegion(mozilla::Maybe<mozilla::image::ImageIntRegion>);
+native TempRefSourceSurface(already_AddRefed<mozilla::gfx::SourceSurface>);
+native TempRefImgIContainer(already_AddRefed<imgIContainer>);
+native nsIntSizeByVal(nsIntSize);
+
+
+/**
+ * imgIContainer is the interface that represents an image. It allows
+ * access to frames as Thebes surfaces. It also allows drawing of images
+ * onto Thebes contexts.
+ *
+ * Internally, imgIContainer also manages animation of images.
+ */
+[scriptable, builtinclass, uuid(a8dbee24-ff86-4755-b40e-51175caf31af)]
+interface imgIContainer : nsISupports
+{
+  /**
+   * The width of the container rectangle.  In the case of any error,
+   * zero is returned, and an exception will be thrown.
+   */
+  readonly attribute int32_t width;
+
+  /**
+   * The height of the container rectangle.  In the case of any error,
+   * zero is returned, and an exception will be thrown.
+   */
+  readonly attribute int32_t height;
+
+  /**
+   * The intrinsic size of this image in appunits. If the image has no intrinsic
+   * size in a dimension, -1 will be returned for that dimension. In the case of
+   * any error, an exception will be thrown.
+   */
+  [noscript] readonly attribute nsSize intrinsicSize;
+
+  /**
+   * The (dimensionless) intrinsic ratio of this image. In the case of any
+   * error, Nothing() will be returned.
+   */
+  [notxpcom, nostdcall] readonly attribute MaybeAspectRatio intrinsicRatio;
+
+  /**
+   * The x coordinate of the image's hotspot, or 0 if there is no hotspot.
+   */
+  readonly attribute int32_t hotspotX;
+
+  /**
+   * The y coordinate of the image's hotspot, or 0 if there is no hotspot.
+   */
+  readonly attribute int32_t hotspotY;
+
+  /**
+   * Given a size at which this image will be displayed, and the drawing
+   * parameters affecting how it will be drawn, returns the image size which
+   * should be used to draw to produce the highest quality result. This is the
+   * appropriate size, for example, to use as an input to the pixel snapping
+   * algorithm.
+   *
+   * For best results the size returned by this method should not be cached. It
+   * can change over time due to changes in the internal state of the image.
+   *
+   * @param aDest The size of the destination rect into which this image will be
+   *              drawn, in device pixels.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aSamplingFilter The filter to be used if we're scaling the image.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [notxpcom, nostdcall] nsIntSizeByVal
+  optimalImageSizeForDest([const] in gfxSize aDest, in uint32_t aWhichFrame,
+                          in SamplingFilter aSamplingFilter, in uint32_t aFlags);
+
+  /**
+    * Enumerated values for the 'type' attribute (below).
+    */
+  const unsigned short TYPE_RASTER = 0;
+  const unsigned short TYPE_VECTOR = 1;
+  const unsigned short TYPE_REQUEST = 2;
+
+  /**
+   * The type of this image (one of the TYPE_* values above).
+   */
+  [infallible] readonly attribute unsigned short type;
+
+  /**
+   * Whether this image is animated. You can only be guaranteed that querying
+   * this will not throw if STATUS_DECODE_COMPLETE is set on the imgIRequest.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if the animated state cannot be determined.
+   */
+  readonly attribute boolean animated;
+
+  /**
+   * Producer ID for image containers created by this image.
+   */
+  [infallible] readonly attribute unsigned long producerId;
+
+  /**
+   * Flags for imgIContainer operations.
+   *
+   * Meanings:
+   *
+   * FLAG_NONE: Lack of flags.
+   *
+   * FLAG_SYNC_DECODE: Forces synchronous/non-progressive decode of all
+   * available data before the call returns.
+   *
+   * FLAG_SYNC_DECODE_IF_FAST: Like FLAG_SYNC_DECODE, but requests a sync decode
+   * be performed only if ImageLib estimates it can be completed very quickly.
+   *
+   * FLAG_ASYNC_NOTIFY: Send notifications asynchronously, even if we decode
+   * synchronously because of FLAG_SYNC_DECODE or FLAG_SYNC_DECODE_IF_FAST.
+   *
+   * FLAG_DECODE_NO_PREMULTIPLY_ALPHA: Do not premultiply alpha if
+   * it's not already premultiplied in the image data.
+   *
+   * FLAG_DECODE_NO_COLORSPACE_CONVERSION: Do not do any colorspace conversion;
+   * ignore any embedded profiles, and don't convert to any particular
+   * destination space.
+   *
+   * FLAG_CLAMP: Extend the image to the fill area by clamping image sample
+   * coordinates instead of by tiling. This only affects 'draw'.
+   *
+   * FLAG_HIGH_QUALITY_SCALING: A hint as to whether this image should be
+   * scaled using the high quality scaler. Do not set this if not drawing to
+   * a window or not listening to invalidations. Passing this flag will do two
+   * things: 1) request a decode of the image at the size asked for by the
+   * caller if one isn't already started or complete, and 2) allows a decoded
+   * frame of any size (it could be neither the requested size, nor the
+   * intrinsic size) to be substituted.
+   *
+   * FLAG_BYPASS_SURFACE_CACHE: Forces drawing to happen rather than taking
+   * cached rendering from the surface cache. This is used when we are printing,
+   * for example, where we want the vector commands from VectorImages to end up
+   * in the PDF output rather than a cached rendering at screen resolution.
+   *
+   * FLAG_FORCE_PRESERVEASPECTRATIO_NONE: Force scaling this image
+   * non-uniformly if necessary. This flag is for vector image only. A raster
+   * image should ignore this flag. While drawing a vector image with this
+   * flag, do not force uniform scaling even if its root <svg> node has a
+   * preserveAspectRatio attribute that would otherwise require uniform
+   * scaling , such as xMinYMin/ xMidYMin. Always scale the graphic content of
+   * the given image non-uniformly if necessary such that the image's
+   * viewBox (if specified or implied by height/width attributes) exactly
+   * matches the viewport rectangle.
+   *
+   * FLAG_FORCE_UNIFORM_SCALING: Signal to ClippedImage::OptimalSizeForDest that
+   * its returned size can only scale the image's size *uniformly* (by the same
+   * factor in each dimension). We need this flag when painting border-image
+   * section with SVG image source-data, if the SVG image has no viewBox and no
+   * intrinsic size. In such a case, we synthesize a viewport for the SVG image
+   * (a "window into SVG space") based on the border image area, and we need to
+   * be sure we don't subsequently scale that viewport in a way that distorts
+   * its contents by stretching them more in one dimension than the other.
+   *
+   * FLAG_AVOID_REDECODE_FOR_SIZE: If there is already a raster surface
+   * available for this image, but it is not the same size as requested, skip
+   * starting a new decode for said size.
+   *
+   * FLAG_DECODE_TO_SRGB_COLORSPACE: Instead of converting the colorspace to
+   * the display's colorspace, use sRGB.
+   *
+   * FLAG_RECORD_BLOB: Instead of rasterizing an SVG image on the main thread,
+   * record the drawing commands using blob images.
+   */
+  const unsigned long FLAG_NONE                            = 0x0;
+  const unsigned long FLAG_SYNC_DECODE                     = 0x1;
+  const unsigned long FLAG_SYNC_DECODE_IF_FAST             = 0x2;
+  const unsigned long FLAG_ASYNC_NOTIFY                    = 0x4;
+  const unsigned long FLAG_DECODE_NO_PREMULTIPLY_ALPHA     = 0x8;
+  const unsigned long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x10;
+  const unsigned long FLAG_CLAMP                           = 0x20;
+  const unsigned long FLAG_HIGH_QUALITY_SCALING            = 0x40;
+  const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x80;
+  const unsigned long FLAG_FORCE_PRESERVEASPECTRATIO_NONE  = 0x100;
+  const unsigned long FLAG_FORCE_UNIFORM_SCALING           = 0x200;
+  const unsigned long FLAG_AVOID_REDECODE_FOR_SIZE         = 0x400;
+  const unsigned long FLAG_DECODE_TO_SRGB_COLORSPACE       = 0x800;
+  const unsigned long FLAG_RECORD_BLOB                     = 0x1000;
+
+  /**
+   * A constant specifying the default set of decode flags (i.e., the default
+   * values for FLAG_DECODE_*).
+   */
+  const unsigned long DECODE_FLAGS_DEFAULT = 0;
+
+  /**
+   * A constant specifying the decode flags recommended to be used when
+   * re-encoding an image, or with the clipboard.
+   */
+  const unsigned long DECODE_FLAGS_FOR_REENCODE =
+      FLAG_DECODE_NO_PREMULTIPLY_ALPHA | FLAG_DECODE_TO_SRGB_COLORSPACE;
+
+  /**
+    * Constants for specifying various "special" frames.
+    *
+    * FRAME_FIRST: The first frame
+    * FRAME_CURRENT: The current frame
+    *
+    * FRAME_MAX_VALUE should be set to the value of the maximum constant above,
+    * as it is used for ensuring that a valid value was passed in.
+    */
+  const unsigned long FRAME_FIRST = 0;
+  const unsigned long FRAME_CURRENT = 1;
+  const unsigned long FRAME_MAX_VALUE = 1;
+
+  /**
+   * Get a surface for the given frame. This may be a platform-native,
+   * optimized surface, so you cannot inspect its pixel data. If you
+   * need that, use SourceSurface::GetDataSurface.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript, notxpcom] TempRefSourceSurface getFrame(in uint32_t aWhichFrame,
+                                                     in uint32_t aFlags);
+
+  /**
+   * Get a surface for the given frame at the specified size. Matching the
+   * requested size is best effort; it's not guaranteed that the surface you get
+   * will be a perfect match. (Some reasons you may get a surface of a different
+   * size include: if you requested upscaling, if downscale-during-decode is
+   * disabled, or if you didn't request the first frame.)
+   *
+   * @param aSize The desired size.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript, notxpcom] TempRefSourceSurface getFrameAtSize([const] in nsIntSize aSize,
+                                                           in uint32_t aWhichFrame,
+                                                           in uint32_t aFlags);
+
+  /**
+   * Returns true if this image will draw opaquely right now if asked to draw
+   * with FLAG_HIGH_QUALITY_SCALING and otherwise default flags. If this image
+   * (when decoded) is opaque but no decoded frames are available then
+   * willDrawOpaqueNow will return false.
+   */
+  [noscript, notxpcom] boolean willDrawOpaqueNow();
+
+  /**
+   * @return true if getImageContainer() is expected to return a valid
+   *         ImageContainer when passed the given @Renderer and @Flags
+   *         parameters.
+   */
+  [noscript, notxpcom] boolean isImageContainerAvailable(in WindowRenderer aRenderer,
+                                                         in uint32_t aFlags);
+
+  /**
+   * Attempts to create an ImageContainer (and Image) containing the current
+   * frame at the given size. Match the requested size is best effort; it's
+   * not guaranteed that the surface you get will be a perfect match. (Some
+   * reasons you may get a surface of a different size include: if you
+   * requested upscaling, or if downscale-during-decode is disabled.)
+   *
+   * Avoid calling this unless you're actually going to layerize this image.
+   *
+   * @param aRenderer The WindowRenderer which will be used to render the
+   *                  ImageContainer.
+   * @param aSVGContext If specified, SVG-related rendering context, such as
+   *                    overridden attributes on the image document's root <svg>
+   *                    node, and the size of the viewport that the full image
+   *                    would occupy. Ignored for raster images.
+   * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
+   *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
+   *               are supported.
+   * @param aContainer Return value for ImageContainer for the current frame.
+   *                   May be null depending on the draw result.
+   * @return The draw result for the current frame.
+   */
+  [noscript, notxpcom] ImgDrawResult getImageContainerAtSize(in WindowRenderer aRenderer,
+                                                             [const] in nsIntSize aSize,
+                                                             [const] in MaybeSVGImageContext aSVGContext,
+                                                             [const] in MaybeImageIntRegion aRegion,
+                                                             in uint32_t aFlags,
+                                                             out ImageContainer aOutContainer);
+
+  /**
+   * Draw the requested frame of this image onto the context specified.
+   *
+   * Drawing an image involves scaling it to a certain size (which may be
+   * implemented as a "smart" scale by substituting an HQ-scaled frame or
+   * rendering at a high DPI), and then selecting a region of that image to
+   * draw. That region is drawn onto the graphics context and in the process
+   * transformed by the context matrix, which determines the final area that is
+   * filled. The basic process looks like this:
+   *
+   *                           +------------------+
+   *                           |      Image       |
+   *                           |                  |
+   *                           | intrinsic width  |
+   *                           |        X         |
+   *                           | intrinsic height |
+   *                           +------------------+
+   *                          /                    \
+   *                         /                      \
+   *                        /    (scale to aSize)    \
+   *                       /                          \
+   *                      +----------------------------+
+   *                      |                            |
+   *                      |        Scaled Image        |
+   *                      | aSize.width X aSize.height |
+   *                      |                            |
+   *                      |       +---------+          |
+   *                      |       | aRegion |          |
+   *                      |       +---------+          |
+   *                      +-------(---------(----------+
+   *                              |         |
+   *                             /           \
+   *                            |  (transform |
+   *                           /  by aContext  \
+   *                          |     matrix)     |
+   *                         /                   \
+   *                        +---------------------+
+   *                        |                     |
+   *                        |      Fill Rect      |
+   *                        |                     |
+   *                        +---------------------+
+   *
+   * The region may extend outside of the scaled image's boundaries. It's
+   * actually a region in tiled image space, which is formed by tiling the
+   * scaled image infinitely in every direction. Drawing with a region larger
+   * than the scaled image thus causes the filled area to contain multiple tiled
+   * copies of the image, which looks like this:
+   *
+   *           ....................................................
+   *           :                :                :                :
+   *           :      Tile      :      Tile      :      Tile      :
+   *           :        +------------[aRegion]------------+       :
+   *           :........|.......:................:........|.......:
+   *           :        |       :                :        |       :
+   *           :      Ti|le     :  Scaled Image  :      Ti|le     :
+   *           :        |       :                :        |       :
+   *           :........|.......:................:........|.......:
+   *           :        +---------------------------------+       :
+   *           :      Ti|le     :      Tile      :      Ti|le     :
+   *           :       /        :                :         \      :
+   *           :......(.........:................:..........).....:
+   *                  |                                     |
+   *                 /                                       \
+   *                |      (transform by aContext matrix)     |
+   *               /                                           \
+   *              +---------------------------------------------+
+   *              |     :                                 :     |
+   *              |.....:.................................:.....|
+   *              |     :                                 :     |
+   *              |     :           Tiled Fill            :     |
+   *              |     :                                 :     |
+   *              |.....:.................................:.....|
+   *              |     :                                 :     |
+   *              +---------------------------------------------+
+   *
+   *
+   * @param aContext The Thebes context to draw the image to.
+   * @param aSize The size to which the image should be scaled before drawing.
+   *              This requirement may be satisfied using HQ scaled frames,
+   *              selecting from different resolution layers, drawing at a
+   *              higher DPI, or just performing additional scaling on the
+   *              graphics context. Callers can use optimalImageSizeForDest()
+   *              to determine the best choice for this parameter if they have
+   *              no special size requirements.
+   * @param aRegion The region in tiled image space which will be drawn onto the
+   *                graphics context. aRegion is in the coordinate space of the
+   *                image after it has been scaled to aSize - that is, the image
+   *                is scaled first, and then aRegion is applied. When aFlags
+   *                includes FLAG_CLAMP, the image will be extended to this area
+   *                by clamping image sample coordinates. Otherwise, the image
+   *                will be automatically tiled as necessary. aRegion can also
+   *                optionally contain a second region which restricts the set
+   *                of pixels we're allowed to sample from when drawing; this
+   *                is only of use to callers which need to draw with pixel
+   *                snapping.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aSamplingFilter The filter to be used if we're scaling the image.
+   * @param aSVGContext If specified, SVG-related rendering context, such as
+   *                    overridden attributes on the image document's root <svg>
+   *                    node, and the size of the viewport that the full image
+   *                    would occupy. Ignored for raster images.
+   * @param aFlags Flags of the FLAG_* variety
+   * @return A ImgDrawResult value indicating whether and to what degree the
+   *         drawing operation was successful.
+   */
+  [noscript, notxpcom] ImgDrawResult
+  draw(in gfxContext aContext,
+       [const] in nsIntSize aSize,
+       [const] in ImageRegion aRegion,
+       in uint32_t aWhichFrame,
+       in SamplingFilter aSamplingFilter,
+       [const] in MaybeSVGImageContext aSVGContext,
+       in uint32_t aFlags,
+       in float aOpacity);
+
+  /*
+   * Ensures that an image is decoding. Calling this function guarantees that
+   * the image will at some point fire off decode notifications. Images that
+   * can be decoded "quickly" according to some heuristic will be decoded
+   * synchronously.
+   *
+   * @param aFlags Flags of the FLAG_* variety. Only FLAG_ASYNC_NOTIFY
+   *               is accepted; all others are ignored.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   */
+  [noscript] void startDecoding(in uint32_t aFlags, in uint32_t aWhichFrame);
+
+%{C++
+  nsresult StartDecoding(uint32_t aFlags) {
+    return StartDecoding(aFlags, FRAME_CURRENT);
+  }
+%}
+
+  /*
+   * Exactly like startDecoding above except returns whether the current frame
+   * of the image is complete or not.
+   *
+   * @param aFlags Flags of the FLAG_* variety. Only FLAG_ASYNC_NOTIFY
+   *               is accepted; all others are ignored.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   */
+  [noscript, notxpcom] boolean startDecodingWithResult(in uint32_t aFlags, in uint32_t aWhichFrame);
+
+%{C++
+  bool StartDecodingWithResult(uint32_t aFlags) {
+    return StartDecodingWithResult(aFlags, FRAME_CURRENT);
+  }
+%}
+
+  /*
+   * This method triggers decoding for an image, but unlike startDecoding() it
+   * enables the caller to provide more detailed information about the decode
+   * request.
+   *
+   * @param aFlags Flags of the FLAG_* variety.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @return DECODE_SURFACE_AVAILABLE if is a surface that satisfies the
+   *         request and it is fully decoded.
+   *         DECODE_REQUESTED if we requested a decode.
+   *         DECODE_REQUEST_FAILED if we failed to request a decode. This means
+   *         that either there is an error in the image or we cannot allocate a
+   *         surface that big.
+   */
+   cenum DecodeResult : 8 {
+     DECODE_SURFACE_AVAILABLE = 0,
+     DECODE_REQUESTED = 1,
+     DECODE_REQUEST_FAILED = 2
+   };
+  [noscript, notxpcom] imgIContainer_DecodeResult requestDecodeWithResult(in uint32_t aFlags, in uint32_t aWhichFrame);
+
+%{C++
+  DecodeResult RequestDecodeWithResult(uint32_t aFlags) {
+    return RequestDecodeWithResult(aFlags, FRAME_CURRENT);
+  }
+%}
+
+  /*
+   * This method triggers decoding for an image, but unlike startDecoding() it
+   * enables the caller to provide more detailed information about the decode
+   * request.
+   *
+   * @param aSize The size to which the image should be scaled while decoding,
+   *              if possible. If the image cannot be scaled to this size while
+   *              being decoded, it will be decoded at its intrinsic size.
+   * @param aFlags Flags of the FLAG_* variety.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   */
+  [noscript] void requestDecodeForSize([const] in nsIntSize aSize,
+                                       in uint32_t aFlags,
+                                       in uint32_t aWhichFrame);
+
+%{C++
+  nsresult RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags) {
+    return RequestDecodeForSize(aSize, aFlags, FRAME_CURRENT);
+  }
+%}
+
+  /**
+    * Increments the lock count on the image. An image will not be discarded
+    * as long as the lock count is nonzero. Note that it is still possible for
+    * the image to be undecoded if decode-on-draw is enabled and the image
+    * was never drawn.
+    *
+    * Upon instantiation images have a lock count of zero.
+    */
+  void lockImage();
+
+  /**
+    * Decreases the lock count on the image. If the lock count drops to zero,
+    * the image is allowed to discard its frame data to save memory.
+    *
+    * Upon instantiation images have a lock count of zero. It is an error to
+    * call this method without first having made a matching lockImage() call.
+    * In other words, the lock count is not allowed to be negative.
+    */
+  void unlockImage();
+
+  /**
+   * If this image is unlocked, discard its decoded data.  If the image is
+   * locked or has already been discarded, do nothing.
+   */
+  void requestDiscard();
+
+  /**
+    * Indicates that this imgIContainer has been triggered to update
+    * its internal animation state. Likely this should only be called
+    * from within nsImageFrame or objects of similar type.
+    */
+  [notxpcom] void requestRefresh([const] in TimeStamp aTime);
+
+  /**
+   * Animation mode Constants
+   *   0 = normal
+   *   1 = don't animate
+   *   2 = loop once
+   */
+  const short kNormalAnimMode   = 0;
+  const short kDontAnimMode     = 1;
+  const short kLoopOnceAnimMode = 2;
+
+  attribute unsigned short animationMode;
+
+  /* Methods to control animation */
+  void resetAnimation();
+
+  /*
+   * Returns an index for the requested animation frame (either FRAME_FIRST or
+   * FRAME_CURRENT).
+   *
+   * The units of the index aren't specified, and may vary between different
+   * types of images. What you can rely on is that on all occasions when
+   * getFrameIndex(FRAME_CURRENT) returns a certain value,
+   * draw(..FRAME_CURRENT..) will draw the same frame. The same holds for
+   * FRAME_FIRST as well.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   */
+  [notxpcom] float getFrameIndex(in uint32_t aWhichFrame);
+
+  /*
+   * Returns the inherent orientation of the image, as described in the image's
+   * metadata (e.g. EXIF).
+   */
+  [notxpcom] Orientation getOrientation();
+
+  /*
+   * Returns the intrinsic resolution of the image, or 1.0 if the image doesn't
+   * declare any.
+   */
+  [notxpcom] ImageResolution getResolution();
+
+  /*
+   * Returns the delay, in ms, between the first and second frame. If this
+   * returns 0, there is no delay between first and second frame (i.e., this
+   * image could render differently whenever it draws).
+   *
+   * If this image is not animated, or not known to be animated (see attribute
+   * animated), returns -1.
+   */
+  [notxpcom] int32_t getFirstFrameDelay();
+
+  /*
+   * If this is an animated image that hasn't started animating already, this
+   * sets the animation's start time to the indicated time.
+   *
+   * This has no effect if the image isn't animated or it has started animating
+   * already; it also has no effect if the image format doesn't care about
+   * animation start time.
+   *
+   * In all cases, animation does not actually begin until startAnimation(),
+   * resetAnimation(), or requestRefresh() is called for the first time.
+   */
+  [notxpcom] void setAnimationStartTime([const] in TimeStamp aTime);
+
+  /*
+   * Given an invalidation rect in the coordinate system used by the decoder,
+   * returns an invalidation rect in image space.
+   *
+   * This is the identity transformation in most cases, but the result can
+   * differ if the image is wrapped by an ImageWrapper that changes its size
+   * or orientation.
+   */
+  [notxpcom] nsIntRectByVal
+  getImageSpaceInvalidationRect([const] in nsIntRect aRect);
+
+  /*
+   * Removes any ImageWrappers and returns the unwrapped base image.
+   */
+  [notxpcom, nostdcall] TempRefImgIContainer unwrap();
+
+  /*
+   * Propagate the use counters (if any) from this container to the passed in
+   * document.
+   */
+  [noscript, notxpcom] void propagateUseCounters(in Document aReferencingDocument);
+
+  %{C++
+  /*
+   * Called when media feature values that apply to all documents (such as
+   * those based on system metrics) have changed.  If this image is a type
+   * that can respond to media queries (i.e., an SVG image), this function
+   * is overridden to handle restyling and invalidating the image.
+   */
+  virtual void MediaFeatureValuesChangedAllDocuments(const mozilla::MediaFeatureChange& aChange) {}
+
+  /*
+   * Get the set of sizes the image can decode to natively.
+   */
+  virtual nsresult GetNativeSizes(nsTArray<nsIntSize>& aNativeSizes) const = 0;
+
+  virtual size_t GetNativeSizesLength() const = 0;
+  %}
+};

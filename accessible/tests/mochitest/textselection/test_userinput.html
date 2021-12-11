@@ -1,0 +1,76 @@
+<html>
+
+<head>
+  <title>Text selection by user input</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    async function doTests() {
+      // Tab to 't2' and then tab out of it: it must not have any selection.
+      info("Select all text in t1 and focus it");
+      let focused = waitForEvent(EVENT_FOCUS, "t1");
+      // Simulate tabbing to t1 by selecting all text before focusing it.
+      selectAllTextAndFocus("t1");
+      await focused;
+
+      info("Tab to t2");
+      const t2 = getNode("t2");
+      focused = waitForEvent(EVENT_FOCUS, t2);
+      synthesizeKey("VK_TAB");
+      await focused;
+
+      info("Tab to t3 and make sure there is no selection in t2 afterwards");
+      const t3 = getNode("t3");
+      focused = waitForEvent(EVENT_FOCUS, t3);
+      synthesizeKey("VK_TAB");
+      await focused;
+      const prevFocus = getAccessible(t2, [ nsIAccessibleText ]);
+      is(prevFocus.selectionCount, 0,
+        "Wrong selection count for t2");
+
+      let exceptionCaught = false;
+      try {
+        const startOffsetObj = {}, endOffsetObj = {};
+        prevFocus.getSelectionBounds(0, startOffsetObj, endOffsetObj);
+      } catch (e) {
+        exceptionCaught = true;
+      }
+
+      ok(exceptionCaught, "No selection was expected for t2");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=440590"
+     title="Text selection information is not updated when HTML and XUL entries lose focus">
+    Bug 440590
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input type="text" id="t1" maxlength="3" size="3" value="1">
+  <input type="text" id="t2" maxlength="3" size="3" value="1">
+  <input type="text" id="t3" maxlength="3" size="3" value="1">
+
+</body>
+</html>

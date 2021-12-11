@@ -1,0 +1,29 @@
+ext.machEnv = { topsrcdir ->
+  // Allow to specify mozconfig in `local.properties` via
+  // `mozilla-central.mozconfig=/path/to/mozconfig`.  This can't be an environment
+  // variable because it's not feasible to specify environment variables under
+  // Android Studio on some platforms including macOS.
+  def localProperties = new Properties()
+  def localPropertiesFile = new File(topsrcdir, 'local.properties')
+  if (localPropertiesFile.canRead()) {
+      localPropertiesFile.withInputStream {
+          localProperties.load(it)
+          logger.lifecycle("settings.gradle> Read local.properties: ${localPropertiesFile}")
+      }
+  }
+
+  def localMozconfig = localProperties.getProperty("mozilla-central.mozconfig")
+
+  def env = System.env.collect { k, v -> "${k}=${v}" }
+  if (localMozconfig) {
+      def envMozconfig = System.env.get('FOUND_MOZCONFIG')
+      if (!envMozconfig || localMozconfig == envMozconfig) {
+          logger.lifecycle("settings.gradle> Setting mozconfig from local.properties: ${localMozconfig}")
+          env << "MOZCONFIG=${localMozconfig}"
+      } else {
+          logger.lifecycle("settings.gradle> Preferring mozconfig set in mach environment to mozconfig set in local.properties: ${envMozconfig}")
+      }
+  }
+
+  return env
+}

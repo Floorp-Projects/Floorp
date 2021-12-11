@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>geometry highlighter test page</title>
+  <style type="text/css">
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .relative-sized-parent {
+      position: relative;
+      border: 2px solid black;
+      border-radius: 25px;
+    }
+    .size {
+      width: 300px;
+      height: 300px;
+    }
+
+    .positioned-child {
+      position: absolute;
+      background: #f06;
+    }
+    .pos-top-left {
+      top: 30px;
+      left: 25%;
+    }
+    .pos-bottom-right {
+      bottom: 10em;
+      right: -10px;
+    }
+
+    .inline-positioned {
+      background: yellow;
+    }
+
+    #absolute-container {
+      position: absolute;
+      top: 50px;
+      left: 400px;
+      width: 500px;
+      height: 400px;
+      border: 1px solid black;
+    }
+
+    .absolute-all-4 {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      bottom: 200px;
+      right: 300px;
+      border: 1px solid red;
+    }
+
+    .relative {
+      position: relative;
+      top: 10%;
+      left: 50%;
+      height: 10px;
+      border: 1px solid blue;
+    }
+
+    .fixed {
+      position: fixed;
+      top: 400px;
+      left: 0;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: green;
+    }
+  </style>
+</head>
+<body>
+  <div id="node1" class="relative-sized-parent size">
+    <div id="node2" class="positioned-child pos-top-left pos-bottom-right">
+      <div id="node3" class="inline-positioned positioned-child pos-top-left" style="width:50px;height:50px;"></div>
+    </div>
+  </div>
+
+  <div id="absolute-container">
+    <div class="absolute-all-4"></div>
+    <div class="relative"></div>
+  </div>
+
+  <div class="fixed"></div>
+</body>
+</html>

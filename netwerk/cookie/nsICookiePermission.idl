@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+typedef long nsCookieAccess;
+
+/**
+ * An interface to test for cookie permissions
+ */
+[scriptable, uuid(11ddd4ed-8f5b-40b3-b2a0-27c20ea1c88d)]
+interface nsICookiePermission : nsISupports
+{
+  /**
+   * nsCookieAccess values
+   */
+  const nsCookieAccess ACCESS_DEFAULT = 0;
+  const nsCookieAccess ACCESS_ALLOW   = 1;
+  const nsCookieAccess ACCESS_DENY    = 2;
+
+  /**
+   * additional values for nsCookieAccess which may not match
+   * nsIPermissionManager. Keep 3-7 available to allow nsIPermissionManager to
+   * add values without colliding. ACCESS_SESSION is not directly returned by
+   * any methods on this interface.
+   */
+  const nsCookieAccess ACCESS_SESSION = 8;
+
+  /**
+   * Don't use values 9 and 10! They used to be ACCESS_ALLOW_FIRST_PARTY_ONLY
+   * and ACCESS_LIMIT_THIRD_PARTY, now removed, but maybe still stored in some
+   * ancient user profiles.
+   */
+};

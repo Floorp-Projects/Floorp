@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8" />
+<meta name="viewport" />
+<title>test</title>
+
+
+<style>
+  div {
+    border: 1px solid red;
+    width: 100px; height: 100px;
+  }
+</style>
+
+<div data-is-delay="false"></div>
+
+<script type="text/javascript">
+  "use strict";
+  const div = document.querySelector("div");
+  let initX, initY;
+
+  div.style.transform = "none";
+  div.style.backgroundColor = "";
+
+  div.addEventListener("touchstart", function (evt) {
+    const touch = evt.changedTouches[0];
+    initX = touch.pageX;
+    initY = touch.pageY;
+  }, true);
+
+  div.addEventListener("touchmove", function (evt) {
+    const touch = evt.changedTouches[0];
+    const deltaX = touch.pageX - initX;
+    const deltaY = touch.pageY - initY;
+    div.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
+  }, true);
+
+  div.addEventListener("touchend", function (evt) {
+    if (!evt.touches.length) {
+      div.style.transform = "none";
+    }
+  }, true);
+
+  div.addEventListener("mouseenter", function (evt) {
+    div.style.backgroundColor = "red";
+  }, true);
+  div.addEventListener("mouseover", function(evt) {
+    div.style.backgroundColor = "red";
+  }, true);
+
+  div.addEventListener("mouseout", function (evt) {
+    div.style.backgroundColor = "blue";
+  }, true);
+
+  div.addEventListener("mouseleave", function (evt) {
+    div.style.backgroundColor = "blue";
+  }, true);
+
+  div.addEventListener("mousedown", null, true);
+
+  div.addEventListener("mousemove", null, true);
+
+  div.addEventListener("mouseup", null, true);
+
+  div.addEventListener("click", null, true);
+</script>

@@ -1,0 +1,53 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1063971",
+    title: "Legacy sync setDescription calls",
+    visible: true
+  });
+
+// Test setDescription without callbacks, which many webrtc examples still do
+
+function PC_LOCAL_SET_LOCAL_DESCRIPTION_SYNC(test) {
+  test.pcLocal.onsignalingstatechange = function() {};
+  test.pcLocal._pc.setLocalDescription(test.originalOffer);
+}
+
+function PC_REMOTE_SET_REMOTE_DESCRIPTION_SYNC(test) {
+  test.pcRemote.onsignalingstatechange = function() {};
+  test.pcRemote._pc.setRemoteDescription(test._local_offer,
+    test.pcRemote.releaseIceCandidates,
+    generateErrorCallback("pcRemote._pc.setRemoteDescription() sync failed"));
+}
+function PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC(test) {
+  test.pcRemote.onsignalingstatechange = function() {};
+  test.pcRemote._pc.setLocalDescription(test.originalAnswer);
+}
+function PC_LOCAL_SET_REMOTE_DESCRIPTION_SYNC(test) {
+  test.pcLocal.onsignalingstatechange = function() {};
+  test.pcLocal._pc.setRemoteDescription(test._remote_answer,
+    test.pcLocal.releaseIceCandidates,
+    generateErrorCallback("pcLocal._pc.setRemoteDescription() sync failed"));
+}
+
+runNetworkTest(() => {
+  const test = new PeerConnectionTest();
+  test.setMediaConstraints([{video: true}], [{video: true}]);
+  test.chain.replace("PC_LOCAL_SET_LOCAL_DESCRIPTION", PC_LOCAL_SET_LOCAL_DESCRIPTION_SYNC);
+  test.chain.replace("PC_REMOTE_SET_REMOTE_DESCRIPTION", PC_REMOTE_SET_REMOTE_DESCRIPTION_SYNC);
+  test.chain.remove("PC_REMOTE_CHECK_CAN_TRICKLE_SYNC");
+  test.chain.replace("PC_REMOTE_SET_LOCAL_DESCRIPTION", PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC);
+  test.chain.replace("PC_LOCAL_SET_REMOTE_DESCRIPTION", PC_LOCAL_SET_REMOTE_DESCRIPTION_SYNC);
+  test.chain.remove("PC_LOCAL_CHECK_CAN_TRICKLE_SYNC");
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

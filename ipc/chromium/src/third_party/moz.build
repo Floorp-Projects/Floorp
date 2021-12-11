@@ -1,0 +1,65 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+libevent_path_prefix = '.'
+include(libevent_path_prefix + '/libeventcommon.mozbuild')
+
+if os_win:
+    error('should not reach here on Windows')
+
+if CONFIG['MOZ_SYSTEM_LIBEVENT']:
+    error('should not reach here if we are using a native libevent')
+
+UNIFIED_SOURCES += [
+    'libevent/buffer.c',
+    'libevent/bufferevent.c',
+    'libevent/bufferevent_ratelim.c',
+    'libevent/bufferevent_sock.c',
+    'libevent/evdns.c',
+    'libevent/event.c',
+    'libevent/event_tagging.c',
+    'libevent/evmap.c',
+    'libevent/evrpc.c',
+    'libevent/evthread.c',
+    'libevent/evthread_pthread.c',
+    'libevent/evutil.c',
+    'libevent/evutil_rand.c',
+    'libevent/evutil_time.c',
+    'libevent/http.c',
+    'libevent/listener.c',
+    'libevent/log.c',
+    'libevent/poll.c',
+    'libevent/select.c',
+    'libevent/signal.c',
+    'libevent/strlcpy.c',
+]
+
+if os_macosx or os_bsd:
+    UNIFIED_SOURCES += [
+        'libevent/kqueue.c',
+    ]
+
+if os_linux:
+    UNIFIED_SOURCES += [
+        'libevent/epoll.c',
+    ]
+    if CONFIG['OS_TARGET'] != 'Android':
+        UNIFIED_SOURCES += [
+            'libevent/epoll_sub.c',
+        ]
+
+if os_solaris:
+    SOURCES += [
+        'libevent/devpoll.c',
+        'libevent/evport.c',
+    ]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+Library('libevent')
+
+FINAL_LIBRARY = 'xul'

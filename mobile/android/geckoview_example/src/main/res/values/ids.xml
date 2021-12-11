@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="toolbar_layout" type="id"/>
+    <item name="url_bar" type="id"/>
+    <item name="browser_action" type="id"/>
+    <item name="tabs_button" type="id"/>
+</resources>

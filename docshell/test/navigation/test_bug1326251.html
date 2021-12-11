@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug 1326251</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1326251">Mozilla Bug 1326251</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+
+    var testCount = 0;
+
+    var bc = new BroadcastChannel("file_bug1326251");
+    bc.onmessage = function(event) {
+      if (event.data == "requestNextTest") {
+        bc.postMessage({ nextTest: testCount++ });
+      } else if (event.data.type == "is") {
+        is(event.data.value1, event.data.value2, event.data.message);
+      } else if (event.data.type == "ok") {
+        ok(event.data.value, event.data.message);
+      } else if (event.data == "finishTest") {
+        SimpleTest.finish();
+      }
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      // If Fission is disabled, the pref is no-op.
+      SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+        window.open("file_bug1326251.html", "", "width=360,height=480,noopener");
+      });
+    }
+
+  </script>
+</pre>
+</body>
+</html>

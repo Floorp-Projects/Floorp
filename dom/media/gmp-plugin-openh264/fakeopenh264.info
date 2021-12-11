@@ -1,0 +1,4 @@
+Name: fakeopenh264
+Description: Fake GMP Plugin
+Version: 1.0
+APIs: encode-video[h264:fake], decode-video[h264:fake]

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="byeByeB()">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script type="text/javascript">
+  function byeByeB()
+  {
+    document.documentElement.pauseAnimations();
+    document.documentElement.setCurrentTime(2.5);
+    // Drop b
+    var b = document.getElementById('b');
+    b.parentNode.removeChild(b);
+    b = null;
+    setTimeAndSnapshot(8, false);
+  }
+  </script>
+  <!-- Similar to cycle-self-ref-4.svg but with end times.
+
+       We have an arrangement where a's end time is dependent on b and on
+       itself.
+
+       Initially:
+       - a's end time will be resolved as "b.end", i.e. 3s.
+       - Accordingly, the instance time for "a.end+2s" will be 5s (3s+2s).
+       - i.e. a's list of end instance times will be: [3, 5, 9].
+
+       If b's interval disappears (because we delete b):
+       - The end time "b.end" will become unresolved.
+       - i.e. a's list of end instance times will be: [5, 9, unresolved].
+
+       However, when updating a's end time we should not use the "5s" instance
+       time since it is based on a's end time which is what we are updating.
+
+       Expected behaviour:
+       - The instance time of "5s" will be skipped and the time of "9s" will be
+         used instead.
+       - At t=8s the animation will still be playing and the rectangle will be
+         green.
+
+       Failure behaviour:
+       - The next end instance time in the list will be used, giving a an end
+         time of 5s.
+       - The time "a.end+2s" will then be accordingly updated to 7s since a's
+         end time is now 5s. (Any subsequent attempts to update the time will be
+         ignored according to SMIL's cycle detection rules.)
+       - At t=8s the animation will have stopped and the rectangle will be red.
+   -->
+  <rect width="100" height="100" fill="red">
+    <set id="a" attributeName="fill" attributeType="CSS" to="green"
+      begin="2s" end="b.end; a.end+2s; 9s"/>
+    <set id="b" attributeName="y" attributeType="XML" to="0"
+      begin="1s" end="3s"/>
+  </rect>
+</svg>

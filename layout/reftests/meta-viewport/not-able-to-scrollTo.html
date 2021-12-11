@@ -1,0 +1,39 @@
+<html class="reftest-wait">
+<meta name="viewport" content="width=device-width minimum-scale=0.5 initial-scale=1.0">
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    scrollbar-width: none;
+  }
+  div {
+    position: absolute;
+  }
+  .B {
+    width: 200%;
+    height: 200%;
+    background: green;
+  }
+  .C {
+    width: 100%;
+    height: 100%;
+    background: white;
+  }
+</style>
+<div class="B"></div>
+<div class="C"></div>
+<script>
+document.addEventListener('MozReftestInvalidate', () => {
+  // The page here is twice as large as the ICB.
+  // If the layout viewport is sized to the ICB, we have a layout
+  // scroll range equal to the ICB size, and the scrollTo() call
+  // below will bring a green area into view.
+  // If the layout viewport is expanded to the whole page, we
+  // have an empty layout scroll range, and the scrollTo() call
+  // below will have no effect.
+  window.scrollTo(window.scrollMaxX, window.scrollMaxY);
+  document.documentElement.classList.remove('reftest-wait');
+});
+</script>
+</html>

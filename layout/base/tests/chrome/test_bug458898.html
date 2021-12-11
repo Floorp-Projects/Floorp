@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=458898
+-->
+<head>
+  <title>Test for Bug 458898</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=458898">Mozilla Bug 458898</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+var win = window.browsingContext.topChromeWindow.openDialog("file_bug458898.html");
+
+function loaded() {
+  var disableWindowResizePref = "dom.disable_window_move_resize";
+  SpecialPowers.pushPrefEnv({"set":[[disableWindowResizePref, false]]}, function() {
+    win.sizeToContent();
+    ok(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
+    ok(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
+    win.close();
+    SimpleTest.finish();
+ });
+}
+
+win.addEventListener("load", loaded);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,446 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+#! gmake
+
+MOD_DEPTH	= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+DIRS = dll
+
+CSRCS =             \
+	abstract.c		\
+	accept.c		\
+	acceptread.c	\
+	acceptreademu.c	\
+	addrstr.c		\
+	affinity.c		\
+	alarm.c			\
+	anonfm.c		\
+	append.c		\
+	atomic.c		\
+	attach.c		\
+	bigfile.c		\
+	bigfile2.c		\
+	bigfile3.c		\
+	cleanup.c		\
+	cltsrv.c		\
+	concur.c	    \
+	cvar.c			\
+	cvar2.c			\
+	dceemu.c		\
+	dlltest.c		\
+	dtoa.c			\
+	env.c			\
+	errcodes.c		\
+	errset.c		\
+	exit.c  		\
+	fdcach.c		\
+	fileio.c		\
+	foreign.c	    \
+	forktest.c	    \
+	formattm.c	    \
+	fsync.c	        \
+	getai.c			\
+	gethost.c		\
+	getproto.c		\
+	i2l.c		    \
+	initclk.c		\
+	inrval.c		\
+	instrumt.c      \
+	intrio.c        \
+	intrupt.c       \
+	io_timeout.c    \
+	ioconthr.c      \
+	ipv6.c          \
+	join.c    		\
+	joinkk.c        \
+	joinku.c        \
+	joinuk.c        \
+	joinuu.c        \
+	layer.c		    \
+	lazyinit.c		\
+	libfilename.c	\
+	lltest.c        \
+	lock.c          \
+	lockfile.c      \
+	logfile.c       \
+	logger.c		\
+	makedir.c		\
+	mbcs.c			\
+	multiacc.c		\
+	multiwait.c		\
+	many_cv.c		\
+	monref.c		\
+	nameshm1.c      \
+	nbconn.c		\
+	nblayer.c		\
+	nonblock.c		\
+	ntioto.c        \
+	ntoh.c			\
+	obsints.c		\
+	op_2long.c      \
+	op_excl.c		\
+	op_filnf.c		\
+	op_filok.c		\
+	op_noacc.c		\
+	op_nofil.c		\
+	openfile.c		\
+	parent.c    	\
+	parsetm.c    	\
+	peek.c    		\
+	perf.c    		\
+	pipeping.c		\
+	pipeping2.c		\
+	pipepong.c		\
+	pipepong2.c		\
+	pipeself.c		\
+	poll_er.c		\
+	poll_nm.c		\
+	poll_to.c		\
+	pollable.c		\
+	prfdbl.c		\
+	prftest.c		\
+	prftest1.c		\
+	prftest2.c		\
+	prfz.c   			\
+	primblok.c		\
+	priotest.c		\
+	provider.c		\
+	prpoll.c		\
+	prpollml.c		\
+	pushtop.c		\
+	ranfile.c       \
+	randseed.c      \
+	reinit.c        \
+	rmdir.c			\
+	rwlockrank.c    \
+	rwlocktest.c    \
+	sel_spd.c  		\
+	selct_er.c	    \
+	selct_nm.c	    \
+	selct_to.c	    \
+	select2.c  		\
+	selintr.c  		\
+	sem.c 	  		\
+	sema.c 	  		\
+	semaerr.c 		\
+	semaerr1.c 		\
+	semaping.c 		\
+	semapong.c 		\
+	sendzlf.c 		\
+	server_test.c	\
+	servr_kk.c		\
+	servr_ku.c		\
+	servr_uk.c		\
+	servr_uu.c		\
+	short_thread.c	\
+	sigpipe.c		\
+	socket.c		\
+	sockopt.c		\
+	sockping.c		\
+	sockpong.c		\
+	sprintf.c		\
+	stack.c		    \
+	stdio.c		    \
+	str2addr.c		\
+	strod.c			\
+	suspend.c		\
+	switch.c		\
+	system.c		\
+	testbit.c    	\
+	testfile.c    	\
+	thrpool_server.c \
+	thrpool_client.c \
+	threads.c 	  	\
+	thruput.c 	  	\
+	timemac.c		\
+	timetest.c		\
+	tmoacc.c        \
+	tmocon.c        \
+	tpd.c			\
+	vercheck.c		\
+	version.c	    \
+	udpsrv.c	    \
+	writev.c        \
+	xnotify.c       \
+	y2k.c           \
+	y2ktmo.c        \
+	zerolen.c       \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINCE)
+CFLAGS += -FImozce_shunt.h -Zi -UDEBUG -DNDEBUG
+LDOPTS += -link $(DIST)/lib/mozce_shunt.lib ws2.lib -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO -PDB:$(@:.exe=.pdb)
+endif
+
+ifeq ($(OS_TARGET),OS2)
+CSRCS +=            \
+	sleep.c			\
+	stat.c		    \
+	yield.c         \
+	$(NULL)
+endif
+
+ifeq (,$(filter-out WINCE WINNT OS2,$(OS_ARCH)))
+PROG_SUFFIX = .exe
+DLL_SUFFIX = .dll
+else
+PROG_SUFFIX =
+DLL_SUFFIX = 
+endif
+
+PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
+
+TARGETS = $(PROGS)
+
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+ifeq ($(OS_ARCH), WINNT)
+ifdef NS_USE_GCC
+  EXTRA_LIBS += -lws2_32
+else
+  EXTRA_LIBS += ws2_32.lib
+  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+  CFLAGS += -Fd$(@:.$(OBJ_SUFFIX)=.pdb)
+  ifdef PROFILE
+    LDOPTS += -PROFILE -MAP
+  endif # profile
+endif # NS_USE_GCC
+endif
+
+ifeq ($(OS_ARCH),OS2)
+EXTRA_LIBS = $(OS_LIBS)
+LDOPTS = -Zomf -Zlinker /PM:VIO -Zlinker /ST:0x64000
+endif
+
+ifneq ($(OS_ARCH), WINNT)
+# Use an absolute pathname as the runtime library path (for the -R
+# or -rpath linker option or the LD_RUN_PATH environment variable).
+ifeq (,$(patsubst /%,,$(DIST)))
+# $(DIST) is already an absolute pathname.
+ABSOLUTE_LIB_DIR = $(dist_libdir)
+else
+# $(DIST) is a relative pathname: prepend the current directory.
+PWD = $(shell pwd)
+ABSOLUTE_LIB_DIR = $(PWD)/$(dist_libdir)
+endif
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+    LDOPTS += -z -Wl,+s,+b,$(ABSOLUTE_LIB_DIR)
+    ifeq ($(USE_64),1)
+        LDOPTS += +DD64
+    endif
+    ifeq ($(USE_PTHREADS),1)
+        EXTRA_LIBS = $(LIBPTHREAD)
+    endif
+endif
+
+# AIX
+ifeq ($(OS_ARCH),AIX)
+    LDOPTS += -blibpath:$(ABSOLUTE_LIB_DIR):/usr/lib:/lib
+    ifneq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
+        LDOPTS += -brtl
+        EXTRA_LIBS = -ldl
+    endif
+endif
+
+# Solaris
+ifeq ($(OS_ARCH), SunOS)
+    ifdef NS_USE_GCC
+        LDOPTS += -Xlinker -R -Xlinker $(ABSOLUTE_LIB_DIR)
+    else
+        ifeq ($(USE_CPLUS), 1)
+            CC = CC
+        endif
+        LDOPTS += -R $(ABSOLUTE_LIB_DIR)
+    endif
+
+    ifdef USE_PTHREADS
+        EXTRA_LIBS = -lpthread
+    endif
+endif # SunOS
+
+ifeq (,$(filter-out Linux GNU GNU_%,$(OS_ARCH)))
+    LDOPTS += -Xlinker -rpath $(ABSOLUTE_LIB_DIR)
+    ifeq ($(USE_PTHREADS),1)
+        EXTRA_LIBS = -lpthread
+    endif
+endif
+
+ifeq ($(OS_ARCH), SCOOS)
+# SCO Unix needs to link against -lsocket again even though we
+# already linked with these system libraries when we built libnspr.so.
+EXTRA_LIBS = -lsocket
+# This hardcodes in the executable programs the directory to find
+# libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
+# option for ld on other platforms.
+export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
+endif
+
+ifeq ($(OS_ARCH),OpenUNIX)
+export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
+ifeq ($(USE_PTHREADS),1)
+LDOPTS += -pthread
+endif
+endif
+
+ifeq ($(OS_ARCH), UNIXWARE)
+export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
+endif
+
+ifeq ($(OS_ARCH),FreeBSD)
+ifeq ($(USE_PTHREADS),1)
+LDOPTS += -pthread
+endif
+LDOPTS += -Xlinker -R $(ABSOLUTE_LIB_DIR)
+endif
+
+ifeq ($(OS_ARCH),OpenBSD)
+ifeq ($(USE_PTHREADS),1)
+LDOPTS += -pthread
+endif
+endif
+
+ifeq ($(OS_ARCH),BSD_OS)
+ifneq ($(OS_RELEASE),1.1)
+EXTRA_LIBS = -ldl
+endif
+endif
+
+ifeq ($(OS_ARCH),RISCOS)
+EXTRA_LIBS = -ldl
+endif
+
+ifeq ($(USE_PTHREADS),1)
+LIBPTHREAD = -lpthread
+ifeq ($(OS_ARCH),AIX)
+LIBPTHREAD = -lpthreads
+endif
+ifeq (,$(filter-out FreeBSD OpenBSD BSD_OS QNX Darwin OpenUNIX,$(OS_ARCH)))
+LIBPTHREAD =
+endif
+endif
+
+ifeq ($(OS_TARGET),Android)
+LIBPTHREAD =
+XCFLAGS = $(OS_CFLAGS)
+endif
+
+#####################################################
+#
+# The rules
+#
+#####################################################
+
+include $(topsrcdir)/config/rules.mk
+
+AIX_PRE_4_2 = 0
+ifeq ($(OS_ARCH),AIX)
+ifeq ($(OS_RELEASE),4.1)
+ifneq ($(USE_PTHREADS), 1)
+#AIX_PRE_4_2 = 1
+endif
+endif
+endif
+
+ifeq ($(AIX_PRE_4_2),1)
+
+# AIX releases prior to 4.2 need a special two-step linking hack
+# in order to both override the system select() and be able to 
+# get at the original system select().
+#
+# We use a pattern rule in ns/nspr20/config/rules.mk to generate
+# the .$(OBJ_SUFFIX) file from the .c source file, then do the
+# two-step linking hack below.
+
+$(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+	rm -f $@ $(AIX_TMP)
+	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
+	$(CC) -o $@ $(AIX_TMP) $(AIX_WRAP)
+	rm -f $(AIX_TMP)
+
+else
+
+# All platforms that are not AIX pre-4.2.
+
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
+	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -out:$@
+ifdef MT
+	@if test -f $@.manifest; then \
+		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		rm -f $@.manifest; \
+	fi
+endif
+else
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -o $@
+endif # WINNT
+endif # AIX_PRE_4_2
+
+export:: $(TARGETS)
+clean::
+	rm -f $(TARGETS)
+
+# The following tests call BSD socket functions, so they need to link
+# with -lsocket on some platforms.
+ifeq ($(OS_ARCH),SunOS)
+ifeq ($(USE_IPV6),1)
+$(OBJDIR)/gethost: $(OBJDIR)/gethost.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) -lsocket $(EXTRA_LIBS) -o $@
+endif
+$(OBJDIR)/prpoll: $(OBJDIR)/prpoll.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) -lsocket $(EXTRA_LIBS) -o $@
+endif
+
+ifeq ($(USE_PTHREADS), 1)
+$(OBJDIR)/attach: $(OBJDIR)/attach.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+$(OBJDIR)/foreign: $(OBJDIR)/foreign.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+$(OBJDIR)/provider: $(OBJDIR)/provider.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+$(OBJDIR)/socket: $(OBJDIR)/socket.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+$(OBJDIR)/testfile: $(OBJDIR)/testfile.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+endif
+
+#
+# Run the test programs with no arguments
+#
+# Test output goes to the file pointed to by the environment variable
+# NSPR_TEST_LOGFILE, if set, else to /dev/null
+#
+ECHO = echo
+PROGRAMS = $(notdir $(PROGS))
+ifdef NSPR_TEST_LOGFILE
+LOGFILE = $(NSPR_TEST_LOGFILE)
+else
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+LOGFILE = nul
+else
+LOGFILE = /dev/null
+endif
+endif
+
+ifeq ($(OS_TARGET),Linux)
+ECHO = /bin/echo
+endif
+
+ALWAYS:
+
+runtests:: $(PROGS) ALWAYS
+	$(topsrcdir)/pr/tests/runtests.sh $(DIST)

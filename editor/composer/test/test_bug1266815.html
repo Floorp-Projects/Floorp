@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<script type="text/javascript">
+// XXX(nika): Why are we using SpecialPowers here? If we're a chrome mochitest
+// can't we avoid using the SpecialPowers wrappers?
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const Cu = SpecialPowers.Cu;
+
+const {ComponentUtils} = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
+
+const HELPERAPP_DIALOG_CID =
+        SpecialPowers.wrap(SpecialPowers.Components)
+        .ID(Cc["@mozilla.org/helperapplauncherdialog;1"].number);
+const HELPERAPP_DIALOG_CONTRACT_ID = "@mozilla.org/helperapplauncherdialog;1";
+const MOCK_HELPERAPP_DIALOG_CID =
+        SpecialPowers.wrap(SpecialPowers.Components)
+        .ID("{391832c8-5232-4676-b838-cc8ad373f3d8}");
+
+var registrar = SpecialPowers.wrap(Components).manager
+                .QueryInterface(Ci.nsIComponentRegistrar);
+
+const HandlerService = Cc[
+  "@mozilla.org/uriloader/handler-service;1"
+].getService(Ci.nsIHandlerService);
+
+const MIMEService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+
+var helperAppDlgPromise = new Promise(function(resolve) {
+  var mockHelperAppService;
+
+  function HelperAppLauncherDialog() {
+  }
+
+  HelperAppLauncherDialog.prototype = {
+    show(aLauncher, aWindowContext, aReason) {
+      ok(true, "Whether showing Dialog");
+      resolve();
+      registrar.unregisterFactory(MOCK_HELPERAPP_DIALOG_CID,
+                                  mockHelperAppService);
+    },
+    QueryInterface: ChromeUtils.generateQI(["nsIHelperAppLauncherDialog"]),
+  };
+
+  mockHelperAppService = ComponentUtils._getFactory(HelperAppLauncherDialog);
+  registrar.registerFactory(MOCK_HELPERAPP_DIALOG_CID, "",
+                            HELPERAPP_DIALOG_CONTRACT_ID,
+                            mockHelperAppService);
+});
+
+add_task(async function() {
+  // ensure the download triggers the external app dialog
+  const mimeInfo = MIMEService.getFromTypeAndExtension("application/octet-stream", "");
+  mimeInfo.alwaysAskBeforeHandling = true;
+  HandlerService.store(mimeInfo);
+
+  SimpleTest.registerCleanupFunction(() => {
+    HandlerService.remove(mimeInfo);
+  });
+
+  let promise = new Promise(function(resolve) {
+    let iframe = document.createElement("iframe");
+    iframe.onload = function() {
+      is(iframe.contentDocument.getElementById("edit").innerText, "abc",
+         "load iframe source");
+      resolve();
+    };
+    iframe.id = "testframe";
+    iframe.src = "data:text/html,<div id=edit contenteditable=true>abc</div>";
+    document.body.appendChild(iframe);
+  });
+
+  await promise;
+
+  let iframe = document.getElementById("testframe");
+  let docShell = SpecialPowers.wrap(iframe.contentWindow).docShell;
+
+  ok(docShell.hasEditingSession, "Should have editing session");
+
+  document.getElementById("testframe").src =
+    "data:application/octet-stream,TESTCONTENT";
+
+  await helperAppDlgPromise;
+
+  ok(docShell.hasEditingSession, "Should have editing session");
+});
+</script>
+</body>
+</html>

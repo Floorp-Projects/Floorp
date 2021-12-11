@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<canvas id="canvas" width="300" height="300"/>
+<script>
+var ctx = document.getElementById('canvas').getContext('2d');
+
+var grad = ctx.createLinearGradient(150,0,150,300);
+grad.addColorStop(0, 'white');
+grad.addColorStop(1, 'black');
+
+ctx.fillStyle = grad;
+ctx.fillRect(0,0,300,300);
+</script>
+</body>
+</html>

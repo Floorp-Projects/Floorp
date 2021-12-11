@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: repeat(auto-fill/auto-fit)</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1118820">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#valdef-repeat-auto-fill">
+  <link rel="match" href="grid-repeat-auto-fill-fit-001-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  position: relative;
+  border: 1px solid;
+  grid-auto-rows: 10px;
+  grid-gap: 2px;
+  margin-bottom: 2px;
+  padding-right: 3px;
+}
+.r1 { grid-template-columns: [a] repeat(auto-fill, [b] 20px [c]) [d]; }
+.r2 { grid-template-columns: [a] repeat(auto-fill, [b] minmax(20px,20px) [c]) [d] 30px [e]; }
+.r3 { grid-template-columns: [a] repeat(auto-fill, [b] 20px [c]) [d] 30px [e] 30px [f]; }
+fit .r1 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d]; }
+fit .r2 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d] 30px [e]; }
+fit .r3 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d] 30px [e] 30px [f]; }
+
+.w100 { width: 100px; }
+.w50 { width: 50px; }
+.w80 { width: 80px; }
+.w42 { width: 42px; }
+.xw42 { max-width: 42px; }
+.mw42 { min-width: 42px; }
+.mw100 { min-width: 100px; }
+.mw50 { min-width: 50px; }
+.mw80 { min-width: 80px; }
+.xw100 { max-width: 100px; }
+.xw50 { max-width: 50px; }
+.xw80 { max-width: 80px; }
+.pw10 { width: 10%; }
+.pxw10 { max-width: 10%; }
+.pmw10 { min-width: 10%; }
+.cw10 { width: calc(50px + 10%); }
+.cxw10 { max-width: calc(50px + 10%); }
+.cmw10 { min-width: calc(50px - 10%); }
+.float { float: left; }
+
+x {
+  height: 10px;
+  background: grey;
+}
+a {
+  position: absolute;
+  left:0; right:0; top:0; height: 3px;
+  background: black;
+  grid-column: c / c -1;
+}
+b {
+  position: absolute;
+  left:0; right:0; bottom:0; height: 3px;
+  background: brown;
+  grid-column: auto / c -1;
+}
+
+x:first-child {
+  background: lime;
+}
+x:last-child {
+  background: blue;
+}
+
+fill,fit {
+  float: left;
+  width: 400px;
+}
+
+.zero-progress {
+  grid-column-gap: calc(10px - 1%);
+  grid-template-columns: [a] 10px repeat(auto-fill, [b] calc(1% - 10px) [c]) [d];
+}
+</style>
+</head>
+<body>
+
+<fill>
+
+<div class="grid r1"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw80 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w42 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw42 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw42 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+
+<div class="grid r1 pw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 xw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pw10 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+
+<div class="grid r1 cw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cw10 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+
+<div class="float">
+<div class="grid r1 pw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pmw10 xw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 pmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 pw10 pxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+</div>
+
+<br clear="all">
+
+<div class="float">
+<div class="grid r1 cw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cmw10 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 cmw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 cw10 cxw10 float"><x></x><x></x><a></a><b></b><x></x></div>
+</div>
+
+<br clear="all">
+<br clear="all">
+
+<div class="grid r2"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w100"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+<br clear="all">
+
+<div class="grid r3"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w100"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+</fill>
+
+<fit>
+
+<div class="grid r1"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw80 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+<br clear="all">
+
+<div class="grid r2"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w100"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r2 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+<br clear="all">
+
+<div class="grid r3"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w100"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 xw50"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w100 xw80"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r3 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+
+<br clear="all">
+<br clear="all">
+
+<div style="float:left">
+  <div class="grid xw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid w50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid mw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+</div>
+
+</fit>
+
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+@font-face {
+  font-family: gent;
+  src: url(GentiumPlus-R.woff) format("woff");
+}
+
+.test {
+  font-family: gent, sans-serif;
+}

@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=484176
+-->
+<head>
+  <title>Test SVG Switch</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=484176">Mozilla Bug 484176</a>
+<p id="display"></p>
+<div id="content"></div>
+
+<iframe id="svg" src="switch-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+        <![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var test = 1;
+
+function checkBounds(element, x, y, w, h) {
+  var bbox = element.getBBox();
+  var name = element.nodeName;
+
+  is(bbox.x, x, test + " " + name + ".getBBox().x");
+  is(bbox.y, y, test + " " + name + ".getBBox().y");
+  is(bbox.width, w, test + " " + name + ".getBBox().width");
+  is(bbox.height, h, test + " " + name + ".getBBox().height");
+  ++test;
+}
+
+function checkWidth(element, w) {
+  var bbox = element.getBBox();
+  var name = element.nodeName;
+
+  is(bbox.width, w, test + " " + name + ".getBBox().width");
+  ++test;
+}
+
+function run() {
+  // Set accept_languages to something we know
+  SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", "en-gb,en,it"]]}, run1);
+}
+
+function run1() {
+  try {
+    var doc = $("svg").contentDocument;
+    var s = doc.getElementById("s");
+    var first = doc.getElementById("first");
+    var second = doc.getElementById("second");
+    var third = doc.getElementById("third");
+
+    first.setAttribute("systemLanguage", "fr");
+
+    /* test for an exact match */
+    second.setAttribute("systemLanguage", "en-gb");
+    checkWidth(s, 50);
+
+    /* test for a close match i.e. the same language prefix */
+    second.setAttribute("systemLanguage", "en-us");
+    checkWidth(s, 50);
+
+    /* test that we pick the best match */
+    second.setAttribute("systemLanguage", "it");
+    checkWidth(s, 50);
+
+    /* test that we use the default if nothing matches */
+    second.setAttribute("systemLanguage", "fr");
+    checkWidth(s, 80);
+
+    /* test we still ignore non-matches */
+    second.removeAttribute("systemLanguage");
+    third.setAttribute("systemLanguage", "fr");
+    checkWidth(s, 50);
+
+    /* check what happens if nothing matches */
+    second.setAttribute("systemLanguage", "fr");
+    checkWidth(s, 0);
+
+    /* test that we pick the best match */
+    first.setAttribute("systemLanguage", "en");
+    second.setAttribute("systemLanguage", "en-gb");
+    checkWidth(s, 50);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+window.addEventListener("load", run);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

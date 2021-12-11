@@ -1,0 +1,87 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("ContentSearch*.jsm"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
+with Files("AboutReaderParent.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Reader Mode")
+
+with Files("LightweightThemeChild.jsm"):
+    BUG_COMPONENT = ("WebExtensions", "Themes")
+
+with Files("PageInfoChild.jsm"):
+    BUG_COMPONENT = ("Firefox", "Page Info Window")
+
+with Files("PageStyleChild.jsm"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
+with Files("PluginChild.jsm"):
+    BUG_COMPONENT = ("Core", "Plug-ins")
+
+with Files("WebRTCChild.jsm"):
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
+
+FINAL_TARGET_FILES.actors += [
+    "AboutNewTabChild.jsm",
+    "AboutNewTabParent.jsm",
+    "AboutPluginsChild.jsm",
+    "AboutPluginsParent.jsm",
+    "AboutPocketChild.jsm",
+    "AboutPocketParent.jsm",
+    "AboutPrivateBrowsingChild.jsm",
+    "AboutPrivateBrowsingParent.jsm",
+    "AboutProtectionsChild.jsm",
+    "AboutProtectionsParent.jsm",
+    "AboutReaderChild.jsm",
+    "AboutReaderParent.jsm",
+    "AboutTabCrashedChild.jsm",
+    "AboutTabCrashedParent.jsm",
+    "BlockedSiteChild.jsm",
+    "BlockedSiteParent.jsm",
+    "BrowserProcessChild.jsm",
+    "BrowserTabChild.jsm",
+    "BrowserTabParent.jsm",
+    "ClickHandlerChild.jsm",
+    "ClickHandlerParent.jsm",
+    "ContentSearchChild.jsm",
+    "ContentSearchParent.jsm",
+    "ContextMenuChild.jsm",
+    "ContextMenuParent.jsm",
+    "DecoderDoctorChild.jsm",
+    "DecoderDoctorParent.jsm",
+    "DOMFullscreenChild.jsm",
+    "DOMFullscreenParent.jsm",
+    "EncryptedMediaChild.jsm",
+    "EncryptedMediaParent.jsm",
+    "FormValidationChild.jsm",
+    "FormValidationParent.jsm",
+    "LightweightThemeChild.jsm",
+    "LinkHandlerChild.jsm",
+    "LinkHandlerParent.jsm",
+    "NetErrorChild.jsm",
+    "NetErrorParent.jsm",
+    "PageInfoChild.jsm",
+    "PageStyleChild.jsm",
+    "PageStyleParent.jsm",
+    "PluginChild.jsm",
+    "PluginParent.jsm",
+    "PointerLockChild.jsm",
+    "PointerLockParent.jsm",
+    "PromptParent.jsm",
+    "RefreshBlockerChild.jsm",
+    "RefreshBlockerParent.jsm",
+    "RFPHelperChild.jsm",
+    "RFPHelperParent.jsm",
+    "SearchSERPTelemetryChild.jsm",
+    "SearchSERPTelemetryParent.jsm",
+    "SwitchDocumentDirectionChild.jsm",
+    "WebRTCChild.jsm",
+    "WebRTCParent.jsm",
+]

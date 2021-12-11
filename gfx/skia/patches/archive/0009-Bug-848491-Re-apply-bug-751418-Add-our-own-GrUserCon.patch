@@ -1,0 +1,23 @@
+From: George Wright <gw@gwright.org.uk>
+Date: Thu, 25 Apr 2013 20:52:32 -0400
+Subject: Bug 848491 - Re-apply bug 751418 - Add our own GrUserConfig
+
+
+diff --git a/gfx/skia/include/gpu/GrUserConfig.h b/gfx/skia/include/gpu/GrUserConfig.h
+index 11d4feb..77ab850 100644
+--- a/gfx/skia/include/gpu/GrUserConfig.h
++++ b/gfx/skia/include/gpu/GrUserConfig.h
+@@ -43,6 +43,10 @@
+  */
+ //#define GR_DEFAULT_TEXTURE_CACHE_MB_LIMIT 96
+ 
++/*
++ * This allows us to set a callback to be called before each GL call to ensure
++ * that our context is set correctly
++ */
+ #define GR_GL_PER_GL_FUNC_CALLBACK  1
+ 
+ #endif
+-- 
+1.7.11.7
+

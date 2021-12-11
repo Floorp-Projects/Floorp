@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style>
+
+.unstylink { color: blue }
+.unstyvis { color: purple }
+
+.stylink { color: olive; background: rgba(0, 255, 255, 0.5); }
+.styvis { color: fuchsia; background: rgba(0, 0, 255, 0.5) }
+
+</style>
+</head>
+<body>
+
+<span class="stylink">unvisited (<span class="stylink">unvisited</span>)</span>
+<span class="stylink">unvisited (<span class="styvis">visited</span>)</span>
+<span class="styvis">visited (<span class="stylink">unvisited</span>)</span>
+<span class="styvis">visited (<span class="styvis">visited</span>)</span>
+
+<span class="unstylink">unvisited (<span class="stylink">unvisited</span>)</span>
+<span class="unstylink">unvisited (<span class="styvis">visited</span>)</span>
+<span class="unstyvis">visited (<span class="stylink">unvisited</span>)</span>
+<span class="unstyvis">visited (<span class="styvis">visited</span>)</span>
+
+<span class="stylink">unvisited (<span class="unstylink">unvisited</span>)</span>
+<span class="stylink">unvisited (<span class="unstyvis">visited</span>)</span>
+<span class="styvis">visited (<span class="unstylink">unvisited</span>)</span>
+<span class="styvis">visited (<span class="unstyvis">visited</span>)</span>
+
+</body>
+</html>

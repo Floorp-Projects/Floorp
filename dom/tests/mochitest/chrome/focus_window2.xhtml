@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="other-document"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script>
+<![CDATA[
+
+function focused()
+{
+  if (window.arguments)
+    setTimeout(() => window.arguments[0](window, window.arguments[1]), 0);
+}
+
+SimpleTest.waitForFocus(focused);
+
+]]>
+</script>
+
+<button id="other" label="OK"/>
+<input xmlns="http://www.w3.org/1999/xhtml" id="other-input" value="test"/>
+
+</window>

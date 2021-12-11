@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+const CssLogic = require("devtools/shared/inspector/css-logic");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+let gWalker = null;
+let gStyles = null;
+let gInspectee = null;
+
+addTest(async function setup() {
+  const url = document.getElementById("inspectorContent").href;
+  const { commands, target, doc } = await attachURL(url);
+  gInspectee = doc;
+
+  // We need an active resource command before initializing the inspector front.
+  const resourceCommand = commands.resourceCommand;
+  // We listen to any random resource, we only need to trigger the resource command
+  // onTargetAvailable callback so the `resourceCommand` attribute is set on the target front.
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], { onAvailable: () => {} });
+
+  const inspector = await target.getFront("inspector");
+  gWalker = inspector.walker;
+  gStyles = await inspector.getPageStyle();
+  runNextTest();
+});
+
+addTest(function testMatchedStyles() {
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#matched-test-node").then(node => {
+    return gStyles.getMatchedSelectors(node, "font-size", {});
+  }).then(matched => {
+    is(matched[0].sourceText, "this.style", "First match comes from the element style");
+    is(matched[0].selector, "@element.style", "Element style has a special selector");
+    is(matched[0].value, "10px", "First match has the expected value");
+    is(matched[0].status, CssLogic.STATUS.BEST, "First match is the best match");
+    is(matched[0].rule.type, 100, "First match is an element style");
+    is(matched[0].rule.href, gInspectee.defaultView.location.href,
+       "Node style comes from this document");
+
+    is(matched[1].sourceText, ".column-rule",
+      "Second match comes from a rule");
+    is(matched[1].selector, ".column-rule",
+      "Second match comes from highest line number");
+    is(matched[1].value, "25px", "Second match comes from highest column");
+    is(matched[1].status, CssLogic.STATUS.PARENT_MATCH,
+      "Second match is from the parent");
+    is(matched[1].rule.parentStyleSheet.href, null,
+      "Inline stylesheet shouldn't have an href");
+    is(matched[1].rule.parentStyleSheet.nodeHref, gInspectee.defaultView.location.href,
+      "Inline stylesheet's nodeHref should match the current document");
+    ok(!matched[1].rule.parentStyleSheet.system,
+      "Inline stylesheet shouldn't be a system stylesheet.");
+
+    // matched[2] is only there to test matched[1]; do not need to test
+
+    is(matched[3].value, "15px", "Third match has the expected value");
+  }).then(runNextTest));
+});
+
+addTest(function testSystemStyles() {
+  let testNode = null;
+
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#matched-test-node").then(node => {
+    testNode = node;
+    return gStyles.getMatchedSelectors(testNode, "display", { filter: "user" });
+  }).then(matched => {
+    is(matched.length, 0, "No user selectors apply to this rule.");
+    return gStyles.getMatchedSelectors(testNode, "display", { filter: "ua" });
+  }).then(matched => {
+    is(matched[0].selector, "div", "Should match system div selector");
+    is(matched[0].value, "block");
+  }).then(runNextTest));
+});
+
+addTest(function cleanup() {
+  gStyles = null;
+  gWalker = null;
+  gInspectee = null;
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-styles-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

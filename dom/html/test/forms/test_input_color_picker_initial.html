@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=885996
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1234567</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test that the initial value of the nsIColorPicker is the current value of
+      the <input type='color'> element. **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  var MockColorPicker = SpecialPowers.MockColorPicker;
+
+  var test = runTest();
+
+  SimpleTest.waitForFocus(function() {
+    test.next();
+  });
+
+  function* runTest() {
+    MockColorPicker.init(window);
+    var element = null;
+
+    MockColorPicker.showCallback = function(picker) {
+      is(picker.initialColor, element.value);
+      SimpleTest.executeSoon(function() {
+        test.next();
+      });
+      return "";
+    };
+
+    for (var i = 0; i < document.getElementsByTagName('input').length; ++i) {
+      element = document.getElementsByTagName('input')[i];
+      if (element.parentElement.id === 'dynamic-values') {
+        element.value = '#deadbe';
+      }
+      synthesizeMouseAtCenter(element, {});
+      yield undefined;
+    };
+
+    MockColorPicker.cleanup();
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=885996">Mozilla Bug 885996</a>
+<p id="display"></p>
+<div id="content">
+  <div id='valid-values'>
+    <input type='color' value='#ff00ff'>
+    <input type='color' value='#ab3275'>
+    <input type='color' value='#abcdef'>
+    <input type='color' value='#ABCDEF'>
+  </div>
+  <div id='invalid-values'>
+    <input type='color' value='ffffff'>
+    <input type='color' value='#abcdez'>
+    <input type='color' value='#0123456'>
+  </div>
+  <div id='dynamic-values'>
+    <input type='color' value='#ab4594'>
+    <input type='color' value='#984534'>
+    <input type='color' value='#f8b9a0'>
+  </div>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

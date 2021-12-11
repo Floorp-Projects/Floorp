@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<script type="application/javascript">
+window.addEventListener("message", receiveMessage);
+
+function receiveMessage(event) {
+  // this message is part of if_11's test
+  if (event.data.test == 'if_11') {
+    doIf11TestPart2();
+    return;
+  }
+}
+
+function ok_wrapper(result, msg) {
+  window.opener.postMessage({ok: result, desc: msg}, "*");
+  window.close();
+}
+
+function doIf11TestPart2() {
+  var if_11 = document.getElementById('if_11');
+  if_11.sandbox = 'allow-scripts allow-same-origin';
+  // window.history is no longer cross-origin accessible in gecko.
+  SpecialPowers.wrap(if_11).contentWindow.history.back();
+} 
+</script>
+<body>
+  <iframe sandbox='allow-scripts' id="if_11" src="file_iframe_sandbox_d_if11.html" height="10" width="10"></iframe>
+</body>
+</html>

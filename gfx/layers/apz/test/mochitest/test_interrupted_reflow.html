@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+ <!--
+ https://bugzilla.mozilla.org/show_bug.cgi?id=1292781
+ -->
+ <head>
+  <title>Test for bug 1292781</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+ </head>
+ <body>
+<script type="text/javascript">
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+
+  // Run the actual test in its own window, because it is supposed to be run
+  // in the top level content document to collect APZ test data up to the root
+  // content APZC by using nsIDOMWindowUtils.getCompositorAPZTestData which
+  // is not able to walk up to the root content APZC if the function gets called
+  // from OOP iframes. We could make it work across process boundaries, but so
+  // far running the test in a new top level content document would be fine.
+  var w = null;
+  window.onload = async () => {
+    await pushPrefs([["apz.test.logging_enabled", true],
+                     ["apz.displayport_expiry_ms", 0]]);
+
+    w = window.open("helper_interrupted_reflow.html", "_blank");
+  };
+}
+
+function finishTest() {
+  w.close();
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>

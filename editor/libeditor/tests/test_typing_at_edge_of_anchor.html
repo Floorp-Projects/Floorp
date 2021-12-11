@@ -1,0 +1,476 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for typing after a link</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <div contenteditable style="padding: 5px;"></div>
+  <iframe srcdoc="<!doctype html><html><body style='padding: 5px;'></body></html>"></iframe>
+</div>
+
+<pre id="test">
+<script>
+
+// Currently, `Home` and `End` key press can be tested only on Windows.
+// Therefore, we need to check the running platform.
+const kCanTestHomeEndKeys =
+  navigator.platform.indexOf("Win") == 0 || navigator.appVersion.includes("Android");
+
+SimpleTest.waitForExplicitFinish();
+
+// When some tests newly fail by your change but the new result is expected by
+// testing/web-platform/tests/editing/other/typing-around-link-element-at-(non-)collapsed-selection.tentative.html,
+// it's okay to delete the test from here.
+function doTest(editor, selection, win) {
+  const kDescription =
+    editor.getAttribute("contenteditable") === null ? "designMode" : "contenteditable";
+
+  // At start
+  editor.innerHTML = "<p>abc<a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abc<a href=\"about:blank\">XYdef</a></p>",
+     `${kDescription}: Typing X and YY at start of the <a> element should insert to the start of it when caret is moved from middle of it`);
+
+  editor.innerHTML = "<p>abc<a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").previousSibling, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abcXY<a href=\"about:blank\">def</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element should insert to the end of the preceding text node when caret is moved from middle of the preceding text node`);
+
+  editor.innerHTML = "<p><b>abc</b><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><b>abc</b><a href=\"about:blank\">XYdef</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element should insert to the start of it when caret is moved from middle of it (following <b>)`);
+
+  editor.innerHTML = "<p><b>abc</b><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><b>abcXY</b><a href=\"about:blank\">def</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element should insert to end of the following <b> when caret is moved from middle of the <b>`);
+
+  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abc</p><p><a href=\"about:blank\">XYdef</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element should insert to start of it when caret is moved from middle of it (following <p>)`);
+
+  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abc</p><p>XY<a href=\"about:blank\">def</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element should insert to start of new text node when caret is moved from the previous paragraph`);
+
+  editor.innerHTML = "<p>abc</p><p><b><a href=\"about:blank\">def</a></b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abc</p><p><b><a href=\"about:blank\">XYdef</a></b></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element should insert to start of it when caret is moved from middle of it (following <p> and wrapped by <b>)`);
+
+  editor.innerHTML = "<p>abc</p><p><b><a href=\"about:blank\">def</a></b></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abc</p><p><b>XY<a href=\"about:blank\">def</a></b></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element should insert to start of wrapper <b> when caret is moved from the previous paragraph`);
+
+  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abcXY<a href=\"about:blank\">def</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element after joining paragraphs with Delete should insert to end of the preceding text node`);
+
+  editor.innerHTML = "<p><b>abc</b></p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><b>abcXY</b><a href=\"about:blank\">def</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element after joining paragraphs with Delete should insert to end of the preceding <b>`);
+
+  editor.innerHTML = "<p>abc<br></p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>abcXY<a href=\"about:blank\">def</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element after joining paragraphs with Delete should insert to end of the preceding text node (invisible <br>)`);
+
+  editor.innerHTML = "<p><b>abc</b><br></p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><b>abcXY</b><a href=\"about:blank\">def</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element after joining paragraphs with Delete should insert to start of the preceding <b> (invisible <br>)`);
+
+  if (kCanTestHomeEndKeys) {
+    editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+    synthesizeKey("KEY_Home");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, "<p>XY<a href=\"about:blank\">abc</a></p>",
+      `${kDescription}: Typing X and Y at start of the <a> element after \`Home\` key press should insert it outside the link`);
+
+    editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+    synthesizeKey("KEY_Home");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, "<p><b>XY<a href=\"about:blank\">abc</a></b></p>",
+      `${kDescription}: Typing X and Y at start of the <a> element wrapped by <b> after \`Home\` key press should insert it outside the link but in the <b>`);
+
+    editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, 0);
+    synthesizeKey("KEY_Home");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, "<p>XY<a href=\"about:blank\">abc</a></p>",
+      `${kDescription}: Typing X and Y at start of the <a> element after \`Home\` key press without selection change should insert it outside the link`);
+
+    editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, 0);
+    synthesizeKey("KEY_Home");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, "<p><b>XY<a href=\"about:blank\">abc</a></b></p>",
+      `${kDescription}: Typing X and Y at start of the <a> element wrapped by <b> after \`Home\` key press without selection change should insert it outside the link but in the <b>`);
+  }
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p>XY<a href=\"about:blank\">abc</a></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element after \`ArrowLeft\` key press without selection change should insert it outside the link`);
+
+  editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><b>XY<a href=\"about:blank\">abc</a></b></p>",
+     `${kDescription}: Typing X and Y at start of the <a> element wrapped by <b> after \`ArrowLeft\` key press without selection change should insert it outside the link but in the <b>`);
+
+  for (const startPos of [2, 0]) {
+    editor.innerHTML = '<p><a href="about:blank">abc</a></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), 2, 2, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p><a href="about:blank">XYabc</a></p>',
+      `${kDescription}: Typing X and Y after clicking left half of the first character of the link ${
+        startPos === 0 ? "(without caret move)" : ""
+      } should insert them to start of the link`);
+
+    editor.innerHTML = '<p><a href="about:blank">abc</a></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), -2, 2, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p>XY<a href="about:blank">abc</a></p>',
+      `${kDescription}: Typing X and Y after clicking "before" the first character of the link ${
+        startPos === 0 ? "(without caret move)" : ""
+      } should insert them to before the link`);
+
+    editor.innerHTML = '<p><b><a href="about:blank">abc</a></b></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), 2, 2, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p><b><a href="about:blank">XYabc</a></b></p>',
+      `${kDescription}: Typing X and Y after clicking left half of the first character of the link in <b> ${
+        startPos === 0 ? "(without caret move)" : ""
+      } should insert them to start of the link`);
+
+    editor.innerHTML = '<p><b><a href="about:blank">abc</a></b></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), -2, 2, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p><b>XY<a href="about:blank">abc</a></b></p>',
+      `${kDescription}: Typing X and Y after clicking "before" the first character of the link in <b> ${
+        startPos === 0 ? "(without caret move)" : ""
+      } should insert them to before the link`);
+  }
+
+  // At end
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a>def</p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abcXY</a>def</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to the end of it when caret is moved from middle of it`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a>def</p>";
+  selection.collapse(editor.querySelector("a[href]").nextSibling, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XYdef</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to the start of the following text node when caret is moved from middle of the following text node`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><b>def</b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abcXY</a><b>def</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to the end of it when caret is moved from middle of it (followed by <b>)`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><b>def</b></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>XYdef</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to start of the following <b> when caret is moved from middle of the following <b> element`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abcXY</a></p><p>def</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to end of it when caret is moved from middle of it (followed by <p>)`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XY</p><p>def</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to start of new text node when caret is moved from the following paragraph`);
+
+  editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a>XY</b></p><p>def</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to end of wrapper <b> when caret is moved from the following paragraph`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\"><b>abc</b></a></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\"><b>abc</b></a><b>XY</b></p><p>def</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element should insert to start of new <b> when caret is moved from the following paragraph`);
+
+  // I'm not sure whether this behavior should be changed or not, but inconsistent with the case of Backspace from start of <a href>.
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XYdef</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Delete should insert to end of it`);
+  todo_is(editor.innerHTML, "<p><a href=\"about:blank\">abcXY</a>def</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Delete should insert to end of it`);
+
+  // I'm not sure whether this behavior should be changed or not, but inconsistent with the case of Backspace from start of <a href>.
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p><b>def</b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XY<b>def</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Delete should insert to end of it (following <p> has <b>)`);
+  todo_is(editor.innerHTML, "<p><a href=\"about:blank\">abcXY</a><b>def</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Delete should insert to end of it (following <p> has <b>)`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XYdef</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert to start of next text node`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p><b>def</b></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>XYdef</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert to start of next <b>`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><br></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XYdef</p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert to start of next text node (invisible <br>)`);
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><br></p><p><b>def</b></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>XYdef</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert to start of next <b> (invisible <br>)`);
+
+  if (kCanTestHomeEndKeys) {
+    editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+    synthesizeKey("KEY_End");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XY</p>",
+      `${kDescription}: Typing X and Y at end of the <a> element after \`End\` key press should insert it outside the link`);
+
+    editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b><br></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+    synthesizeKey("KEY_End");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    todo_is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a></b>XY<br></p>",
+            `${kDescription}: Typing X and Y at end of the <a> element wrapped by <b> and followed by an invisible <br> after \`End\` key press should insert it outside the link but in the <b>`);
+
+    editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+    synthesizeKey("KEY_End");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XY</p>",
+      `${kDescription}: Typing X and Y at end of the <a> element after \`End\` key press without selection change should insert it outside the link`);
+
+    editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, editor.querySelector("a[href]").firstChild.length);
+    synthesizeKey("KEY_End");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a>XY</b></p>",
+      `${kDescription}: Typing X and Y at end of the <a> element wrapped by <b> after \`End\` key press without selection change should insert it outside the link but in the <b>`);
+
+    editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b><br></p>";
+    selection.collapse(editor.querySelector("a[href]").firstChild, editor.querySelector("a[href]").firstChild.length);
+    synthesizeKey("KEY_End");
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    todo_is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a></b>XY<br></p>",
+            `${kDescription}: Typing X and Y at end of the <a> element wrapped by <b> and followed by an invisible <br> after \`End\` key press without selection change should insert it outside the link but in the <b>`);
+  }
+
+  editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, editor.querySelector("a[href]").firstChild.length);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a>XY</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element wrapped by <b> after \`ArrowRight\` key press without selection change should insert it outside the link but in the <b>`);
+
+  editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b><br></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, editor.querySelector("a[href]").firstChild.length);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  todo_is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a></b>XY<br></p>",
+          `${kDescription}: Typing X and Y at end of the <a> element wrapped by <b> and followed by an invisible <br> after \`ArrowRight\` key press without selection change should insert it outside the link but in the <b>`);
+
+  for (const startPos of [1, 3]) {
+    editor.innerHTML = '<p><a href="about:blank">abc</a></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), editor.querySelector("a").getBoundingClientRect().width - 1, 1, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p><a href="about:blank">abcXY</a></p>',
+      `${kDescription}: Typing X and Y after clicking right half of the last character of the link ${
+        startPos === 3 ? "(without caret move)" : ""
+      } should insert them to end of the link`);
+
+    editor.innerHTML = '<p><a href="about:blank">abc</a></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), editor.querySelector("a").getBoundingClientRect().width + 1, 1, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p><a href="about:blank">abc</a>XY</p>',
+      `${kDescription}: Typing X and Y after clicking "after" the last character of the link ${
+        startPos === 3 ? "(without caret move)" : ""
+      } should insert them to after the link`);
+
+    editor.innerHTML = '<p><b><a href="about:blank">abc</a></b></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), editor.querySelector("a").getBoundingClientRect().width - 1, 1, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p><b><a href="about:blank">abcXY</a></b></p>',
+      `${kDescription}: Typing X and Y after clicking right half of the last character of the link in <b> ${
+        startPos === 3 ? "(without caret move)" : ""
+      } should insert them to end of the link`);
+
+    editor.innerHTML = '<p><b><a href="about:blank">abc</a></b></p>';
+    selection.collapse(editor.querySelector("a").firstChild, startPos);
+    synthesizeMouse(editor.querySelector("a"), editor.querySelector("a").getBoundingClientRect().width + 1, 1, {}, win);
+    synthesizeKey("X");
+    synthesizeKey("Y");
+    is(editor.innerHTML, '<p><b><a href="about:blank">abc</a>XY</b></p>',
+      `${kDescription}: Typing X and Y after clicking "after" the last character of the link in <b> ${
+        startPos === 3 ? "(without caret move)" : ""
+      } should insert them to after the link`);
+  }
+
+  // at middle of link
+  editor.innerHTML = '<p><a href="about:blank">abcde</a></p>';
+  selection.collapse(editor.querySelector("a").firstChild, 0);
+  synthesizeMouseAtCenter(editor.querySelector("a"), {}, win);
+  synthesizeKey("X");
+  synthesizeKey("Y");
+  if (selection.focusOffset == 4) {
+    is(editor.innerHTML, '<p><a href="about:blank">abXYcde</a></p>',
+      `${kDescription}: Typing X and Y after clicking center of the link should insert them to the link`);
+  } else if (selection.focusOffset == 5) {
+    is(editor.innerHTML, '<p><a href="about:blank">abcXYde</a></p>',
+      `${kDescription}: Typing X and Y after clicking center of the link should insert them to the link`);
+  } else {
+    ok(false, `selection is collapsed at unexpected offset got ${selection.focusOffset} but expected 2 or 3`);
+  }
+}
+
+SimpleTest.waitForFocus(() => {
+  let editor = document.querySelector("[contenteditable]");
+  let selection = getSelection();
+  editor.focus();
+  doTest(editor, selection, window);
+
+  let iframe = document.querySelector("iframe");
+  editor = iframe.contentDocument.body;
+  selection = iframe.contentWindow.getSelection();
+  iframe.contentDocument.designMode = "on";
+  iframe.contentWindow.focus();
+  doTest(editor, selection, iframe.contentWindow);
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

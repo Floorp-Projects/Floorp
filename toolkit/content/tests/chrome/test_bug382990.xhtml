@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=382990
+-->
+<window title="Mozilla Bug 382990"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="startThisTest()">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=382990"
+     target="_blank">Mozilla Bug 382990</a>
+  </body>
+
+    <tree id="testTree" height="200px">
+        <treecols>
+            <treecol flex="1" label="Name" id="name"/>
+        </treecols>
+        <treechildren>
+            <treeitem><treerow><treecell label="a"/></treerow></treeitem>
+            <treeitem><treerow><treecell label="z"/></treerow></treeitem>
+        </treechildren>
+    </tree>
+    
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    /** Test for Bug 382990 **/
+
+    SimpleTest.waitForExplicitFinish();
+    function startThisTest()
+    {
+        var treeElem = document.getElementById("testTree");
+        treeElem.view.selection.select(0);
+        treeElem.focus();
+        synthesizeKey("z", {ctrlKey: true});
+        ok(!treeElem.view.selection.isSelected(1), "Tree selection should not change for key events with ctrl pressed.");
+        SimpleTest.finish();
+    }
+  ]]></script>
+</window>

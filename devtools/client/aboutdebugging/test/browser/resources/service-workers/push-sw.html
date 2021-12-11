@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Service worker push test</title>
+</head>
+<body>
+<script type="text/javascript">
+
+"use strict";
+
+let registration;
+let subscription;
+
+const registerServiceWorker = async function() {
+  const perm = { type: "desktop-notification", allow: true, context: document };
+  await SpecialPowers.pushPermissions([perm]);
+
+  try {
+    registration = await navigator.serviceWorker.register("push-sw.js");
+    dump("Push service worker registered\n");
+  } catch (e) {
+    dump("Push service worker not registered: " + e + "\n");
+  }
+};
+
+// Helper called from helper-serviceworker.js to unregister the service worker.
+window.getRegistration = function() {
+  return registration;
+};
+
+// Helper called from browser_aboutdebugging_serviceworker_pushservice_url.js
+window.subscribeToPush = async function() {
+  try {
+    subscription = await registration.pushManager.subscribe();
+    dump("SW subscribed to push: " + subscription.endpoint + "\n");
+  } catch (e) {
+    dump("SW not subscribed to push: " + e + "\n");
+  }
+};
+
+// Helper called from browser_aboutdebugging_serviceworker_pushservice_url.js
+window.unsubscribeToPush = async function() {
+  subscription.unsubscribe();
+};
+
+// Expose a promise to wait until the service worker is claimed.
+window.onSwClaimed = new Promise(resolve => {
+  navigator.serviceWorker.addEventListener("message", function(event) {
+    if (event.data == "sw-claimed") {
+      resolve();
+    }
+  });
+});
+
+// Register the service worker.
+registerServiceWorker();
+
+</script>
+</body>
+</html>

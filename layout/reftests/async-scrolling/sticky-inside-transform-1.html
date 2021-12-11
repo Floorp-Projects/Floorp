@@ -1,0 +1,35 @@
+<!doctype html>
+<html reftest-async-scroll>
+<meta charset="utf-8" />
+<style>
+html, body { margin: 0 }
+
+#scroll {
+  overflow-y: auto;
+  scrollbar-width: none;
+  height: 100vh;
+  background: green;
+}
+#transform {
+  transform: translateX(100%) rotate(90deg);
+  height: 600px;
+  transform-origin: 0% 0%;
+  background: #ff0;
+}
+#sticky {
+  position: sticky;
+  top: 0;
+  background: #0ff;
+  height: 100px;
+}
+</style>
+<div id="scroll"
+   reftest-displayport-x="0" reftest-displayport-y="0"
+   reftest-displayport-w="800" reftest-displayport-h="2000"
+   reftest-async-scroll-x="0" reftest-async-scroll-y="300">
+  <div id="transform">
+    <div id="sticky"></div>
+  </div>
+  <div id="content" style="height: 2000px"></div>
+</div>
+</html>

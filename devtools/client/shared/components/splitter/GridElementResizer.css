@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.grid-element-width-resizer {
+  /* The space we'll have on each side of the "splitter border" */
+  --inline-inset: 3px;
+  /* We use the --inline-inset value that we multiply by 2 and add 1px to center the splitter */
+  width: calc(1px + (2 * var(--inline-inset)));
+  position: relative;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.grid-element-width-resizer.start {
+  justify-self: start;
+  inset-inline-start: calc(-1 * var(--inline-inset));
+}
+
+.grid-element-width-resizer.end {
+  justify-self: end;
+  inset-inline-start: var(--inline-inset);
+}
+
+.dragging,
+.dragging * {
+  /* When resizing, we keep the "resize" cursor on every element we might hover  */
+  cursor: ew-resize !important;
+  /* This prevents to trigger some :hover style and is better for performance
+   * when resizing */
+  pointer-events: none !important;
+}

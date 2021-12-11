@@ -1,0 +1,58 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+CPPSRCS = \
+      pk11_aes_gcm_unittest.cc \
+      pk11_aeskeywrap_unittest.cc \
+      pk11_aeskeywrapkwp_unittest.cc \
+      pk11_aeskeywrappad_unittest.cc \
+      pk11_cbc_unittest.cc \
+      pk11_chacha20poly1305_unittest.cc \
+      pk11_curve25519_unittest.cc \
+      pk11_der_private_key_import_unittest.cc \
+      pk11_des_unittest.cc \
+      pk11_dsa_unittest.cc \
+      pk11_ecdsa_unittest.cc \
+      pk11_ecdh_unittest.cc \
+      pk11_encrypt_derive_unittest.cc \
+      pk11_export_unittest.cc \
+      pk11_find_certs_unittest.cc \
+      pk11_hkdf_unittest.cc \
+      pk11_hmac_unittest.cc \
+      pk11_hpke_unittest.cc \
+      pk11_ike_unittest.cc \
+      pk11_import_unittest.cc \
+      pk11_kbkdf.cc \
+      pk11_keygen.cc \
+      pk11_key_unittest.cc \
+      pk11_module_unittest.cc \
+      pk11_pbkdf2_unittest.cc \
+      pk11_prf_unittest.cc \
+      pk11_prng_unittest.cc \
+      pk11_rsaencrypt_unittest.cc \
+      pk11_rsaoaep_unittest.cc \
+      pk11_rsapkcs1_unittest.cc \
+      pk11_rsapss_unittest.cc \
+      pk11_signature_test.cc \
+      pk11_seed_cbc_unittest.cc \
+      $(NULL)
+
+DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
+
+INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
+            -I$(CORE_DEPTH)/gtests/common \
+            -I$(CORE_DEPTH)/cpputil
+
+REQUIRES = nspr nss libdbm gtest cpputil
+
+PROGRAM = pk11_gtest
+
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
+             $(NULL)

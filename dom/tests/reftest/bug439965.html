@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+function doe(aEl) {
+aEl.style.display = '';
+var doc = aEl.contentDocument;
+doc.designMode = 'on';
+
+try {
+doc.execCommand("insertHTML",false,'some text');
+} catch(e) {
+  document.getElementById('result').innerHTML = e;
+}
+}
+</script>
+
+<iframe onload="doe(this)" style="display:none"></iframe><br>
+<pre id="result" style="background-color: red; width: 300px; white-space: -moz-pre-wrap;"></pre>
+</body>
+</html>

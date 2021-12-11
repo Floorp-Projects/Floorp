@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=631615
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 631615</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=631615"
+   >Mozilla Bug 631615</a>
+<pre id="monitor"></pre>
+<script>
+function doTest() {
+  var monitor = document.getElementById("monitor");
+  var html = document.documentElement;
+  var results;
+
+  try {
+    results = "return: " + html.matches("[test!='']:sizzle") + "\n";
+  } catch (e) {
+    results = "throws: " + e + "\n";
+  }
+
+  monitor.appendChild(document.createTextNode(results));
+  is(results.slice(0, 6), "throws", "looking for an exception");
+}
+
+SimpleTest.runTestExpectingConsoleMessages(doTest, [{
+  forbid: true,
+  message: /An invalid or illegal string was specified/
+}]);
+</script>
+</body>
+</html>

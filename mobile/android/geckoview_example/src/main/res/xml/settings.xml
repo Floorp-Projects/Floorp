@@ -1,0 +1,57 @@
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        app:key="@string/key_tracking_protection"
+        app:title="Enable Tracking Protection"
+        app:defaultValue="@bool/tracking_protection_default"/>
+    <ListPreference
+        app:key="@string/key_enhanced_tracking_protection"
+        app:title="Enhanced Tracking Protection"
+        app:summary="%s"
+        app:entries="@array/enhanced_tracking_protection_display_names"
+        app:entryValues="@array/enhanced_tracking_protection_values"
+        app:defaultValue="@string/enhanced_tracking_protection_default"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_dfpi"
+        app:title="Enable Dynamic FPI"
+        app:defaultValue="@bool/dfpi_default"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_autoplay"
+        app:title="Allow Autoplay"
+        app:defaultValue="@bool/autoplay_default"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_remote_debugging"
+        app:title="Remote Debugging"
+        app:defaultValue="@bool/remote_debugging_default"/>
+    <ListPreference
+        app:key="@string/key_preferred_color_scheme"
+        app:title="Preferred Color Scheme"
+        app:summary="%s"
+        app:entries="@array/pref_preferred_color_scheme_display_names"
+        app:entryValues="@array/pref_preferred_color_scheme_values"
+        app:defaultValue="@integer/preferred_color_scheme_default"/>
+    <ListPreference
+        app:key="@string/key_user_agent_override"
+        app:title="User Agent String Override"
+        app:summary="%s"
+        app:entries="@array/user_agent_override_display_names"
+        app:entryValues="@array/user_agent_override_values"
+        app:defaultValue="@string/user_agent_override_default"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_allow_extensions_in_private_browsing"
+        app:title="Run extensions in private tabs"
+        app:defaultValue="@bool/allow_extensions_in_private_browsing_default"/>
+    <ListPreference
+        app:key="@string/key_display_mode"
+        app:title="Display Mode"
+        app:summary="%s"
+        app:entries="@array/pref_display_mode_names"
+        app:entryValues="@array/pref_display_mode_values"
+        app:defaultValue="@integer/display_mode_default"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_javascript_enabled"
+        app:title="Javascript Enabled"
+        app:defaultValue="@bool/javascript_enabled_default"/>
+
+</PreferenceScreen>

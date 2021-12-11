@@ -1,0 +1,22 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+
+function boom()
+{
+  (new AudioContext()).createScriptProcessor().hamster = {};
+  SpecialPowers.forceCC();
+  SpecialPowers.forceGC();
+  ok(true, "test finished");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test that cellpadding, cellspacing, border, etc., don't break table sizing.</title>
+<style type="text/css">
+
+html, body { margin: 0 } /* no collapsing */
+
+table, td {
+  border: none;
+  margin: 0;
+  padding: 0;
+  border-spacing: 0;
+}
+
+body > table { margin: 28px 29px 34px 35px; }
+body { background: white; color: black; }
+
+div { background: olive; color: black; }
+
+</style>
+</head>
+<body>
+<table><tr><td>
+  <table><tr><td>
+    <div>This is some text.</div>
+  </td></tr></table>
+</td></tr></table>
+</body>
+</html>

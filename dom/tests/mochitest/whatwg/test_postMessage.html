@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>Basic postMessage tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_helper.html" 
+        name="otherSameDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_helper.html"
+        name="otherCrossDomain"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+/** Variable for receivers to attempt to get. */
+window.privateVariable = 17;
+
+/** For sentinel finish, if necessary in deficient browsers. */
+var finished = false;
+
+/** Ends testing if it isn't already done. */
+function finish()
+{
+  if (!finished)
+  {
+    finished = true;
+    SimpleTest.finish();
+  }
+}
+
+/** Receives MessageEvents. */
+function messageReceiver(evt)
+{
+  try
+  {
+    ok(evt instanceof MessageEvent, "umm, how did we get this?");
+    is(evt.lastEventId, "",
+       "postMessage creates events with empty lastEventId");
+    is(evt.type, "message", "expected events of type 'message'");
+    ok(evt.isTrusted === true, "should have been a trusted event");
+  
+    var data = evt.data;
+  
+    // Check for the message we send to ourselves; it can't be
+    // counted as a test, and it's conceptually distinct from
+    // the other cases, so just return after handling it.
+    if (data === "post-to-self")
+    {
+      respondToSelf(evt);
+      return;
+    }
+
+    switch (evt.data)
+    {
+      case "post-to-self-response":
+        receiveSelf(evt);
+        break;
+  
+      case "post-to-other-same-domain-response":
+        receiveOtherSameDomain(evt);
+        break;
+  
+      case "post-to-other-cross-domain-response":
+        receiveOtherCrossDomain(evt);
+        
+        // All the tests have executed, so we're done.
+        finish();
+        break;
+  
+      default:
+        ok(false, "unexpected message: " + evt.data);
+        finish();
+        break;
+    }
+  }
+  catch (e)
+  {
+    ok(false, "error processing event with data '" + evt.data + "': " + e);
+    finish();
+  }
+}
+
+
+/******************
+ * SELF-RESPONDER *
+ ******************/
+
+function respondToSelf(evt)
+{
+  is(evt.origin, "http://mochi.test:8888", "event has wrong origin");
+  is(evt.source, window, "we posted this message!");
+  
+  evt.source.postMessage("post-to-self-response", evt.origin);
+}
+
+
+/*************
+ * RECEIVERS *
+ *************/
+
+function receiveSelf(evt)
+{
+  is(evt.origin, "http://mochi.test:8888", "event has wrong origin");
+  is(evt.source, window, "we posted this message!");
+
+  window.frames.otherSameDomain.postMessage("post-to-other-same-domain",
+                                            "http://mochi.test:8888");
+}
+
+function receiveOtherSameDomain(evt)
+{
+  is(evt.origin, "http://mochi.test:8888",
+     "same-domain response event has wrong origin");
+  is(evt.source, window.frames.otherSameDomain,
+     "wrong source for same-domain message!");
+
+  window.frames.otherCrossDomain.postMessage("post-to-other-cross-domain",
+                                            "http://example.org:8000");
+}
+
+function receiveOtherCrossDomain(evt)
+{
+  is(evt.origin, "http://example.org:8000",
+     "same-domain response event has wrong origin");
+
+  // can't use |is| here, because ok tries to get properties on its arguments
+  // for creating a formatted logging message
+  ok(evt.source === window.frames.otherCrossDomain,
+     "wrong source for cross-domain message!");
+}
+
+
+/**************
+ * TEST SETUP *
+ **************/
+
+function start()
+{
+  window.postMessage("post-to-self", "http://mochi.test:8888");
+}
+
+window.addEventListener("load", start);
+window.addEventListener("message", messageReceiver);
+
+</script>
+</pre>
+</body>
+</html>

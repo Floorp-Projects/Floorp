@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      function doTest() {
+        var t = document.getElementById("t");
+        for (var i = 0; i < 10; ++i) {
+          document.body.offsetWidth;
+          t.style.display = "table-caption";
+          document.body.offsetWidth;
+          t.style.display = "";
+        }
+        document.documentElement.className = '';
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <table border="5"><tbody><tr><td id="t">Some text</td></tr></tbody></table>
+  </body>
+</html>

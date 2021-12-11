@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector test for correct keys in the sidebar</title>
+</head>
+<body>
+<script type="application/javascript">
+"use strict";
+
+// Some local storage items ...
+localStorage.setItem("", "1");
+localStorage.setItem("键", "2");
+// ... and finally some session storage items too
+sessionStorage.setItem("Key with spaces", "3");
+sessionStorage.setItem("Key#with~special$characters", "4");
+// long string
+const longKey = "a".repeat(1000);
+sessionStorage.setItem(longKey, "5");
+
+const idbGenerator = async function () {
+  const request = indexedDB.open("idb", 1);
+  request.onerror = function() {
+    throw new Error("Error opening database connection");
+  };
+
+  const db = await new Promise(done => {
+    request.onupgradeneeded = event => {
+      const _db = event.target.result;
+      const store = _db.createObjectStore("obj", { keyPath: "id" });
+      store.createIndex("name", "name", { unique: false });
+      store.transaction.oncomplete = () => {
+        done(_db);
+      };
+    };
+  });
+
+  // Prevents AbortError
+  await new Promise(done => {
+    request.onsuccess = done;
+  });
+
+  const transaction = db.transaction("obj", "readwrite");
+  const store = transaction.objectStore("obj");
+
+  store.add({id: "", name: "foo"});
+  store.add({id: "键", name: "foo2"});
+  store.add({id: "Key with spaces", name: "foo3"});
+  store.add({id: "Key#with~special$characters", name: "foo4"});
+  store.add({id: longKey, name: "foo5"});
+
+  db.close();
+
+  console.log("Added local and session storage items and indexedDB");
+};
+
+function deleteDB(dbName) {
+  return new Promise(resolve => {
+    dump("removing database " + dbName + " from " + document.location + "\n");
+    indexedDB.deleteDatabase(dbName).onsuccess = resolve;
+  });
+}
+
+window.setup = async function () {
+  await idbGenerator();
+};
+
+window.clear = async function () {
+  localStorage.clear();
+  sessionStorage.clear();
+
+  await deleteDB("idb");
+
+  dump("Removed data from " + document.location + "\n");
+};
+</script>
+</body>
+</html>

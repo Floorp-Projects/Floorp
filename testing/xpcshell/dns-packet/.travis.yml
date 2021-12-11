@@ -1,0 +1,11 @@
+language: node_js
+node_js:
+  - node
+  - lts/*
+install:
+- npm install
+- npm install coveralls
+script:
+- npm run coverage
+after_success:
+- npx nyc report --reporter=text-lcov | npx coveralls

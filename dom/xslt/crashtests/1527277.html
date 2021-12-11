@@ -1,0 +1,14 @@
+<html>
+<script>
+var xml = "<e/>";
+var xsl = "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:decimal-format grouping-separator=\".\" /><xsl:template match=\"/\"><xsl:value-of select=\"format-number(0.1, '.#')\"/></xsl:template></xsl:stylesheet>";
+
+var parser = new DOMParser();
+var xmlDoc = parser.parseFromString(xml, "text/xml");
+var xslDoc = parser.parseFromString(xsl, "text/xml");
+
+xsltProcessor = new XSLTProcessor();
+xsltProcessor.importStylesheet(xslDoc);
+var result = xsltProcessor.transformToDocument(xmlDoc);
+</script>
+</html>

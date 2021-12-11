@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <title>CSS Test: Testing layout of rel.pos. grid items</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151316">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/">
+  <link rel="match" href="grid-relpos-items-001-ref.html">
+  <meta charset="utf-8">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ grid-template-columns: 20px 20px [A] 20px;
+ grid-template-rows: 30px;
+ grid-auto-columns: 20px;
+ grid-auto-rows: 30px;
+ border: solid;
+}
+
+.c1 { background: grey; }
+.r1 { }
+.r2 { -moz-transform: translate(-201px, -90px); }
+.r3 { grid-column-start: auto; -moz-transform: translate(-30px, -40px); }
+.r4 { grid-area: auto; -moz-transform: translate(30px, 40px); }
+
+span {
+  border: 1px solid;
+  grid-area: 1 / 1;
+}
+.rel {
+  background: lime;
+  position: relative;
+  top: 113px;
+  left: 201px;
+  padding-left: 3px;
+  padding-top: 5px;
+  width: 18px;
+  height: 28px;
+  vertical-align: top;
+}
+.abs1 {
+  position: absolute;
+  top: -5px;
+  left: -11px;
+  right: 0px;
+  bottom: 0px;
+}
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<span class="c1">1</span>
+<span class="rel r1"><iframe width="20" height="20" src="data:text/html,<body>F"></iframe></span>
+<span class="rel r2"><iframe width="20" height="20" src="data:text/html,<body>2"></iframe></span>
+<span class="rel r3"><span class="abs1">r3</span></span>
+<span class="rel r4"><span class="abs1">r4</span></span>
+</div>
+
+</body>
+</html>

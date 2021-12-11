@@ -1,0 +1,222 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=632379
+-->
+<window title="Mozilla Bug 632379"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+    menuitem { height: 19px; box-sizing: border-box }
+  ]]></style>
+
+<toolbox flex="1">
+  <menubar>
+    <menu label="MENU" accesskey="m" id="mainMenu">
+      <menupopup maxheight="100" onpopupshown="openSubmenu()">
+        <menu label="menu1" accesskey="1" id="menu1">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu2" accesskey="2" id="menu2">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu3" accesskey="3" id="menu3">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu4" accesskey="4" id="menu4">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu5" accesskey="5" id="menu5">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu6" accesskey="6" id="menu6">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu7" accesskey="7" id="menu7">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu8" accesskey="8" id="menu8">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+        <menu label="menu9" accesskey="9" id="menu9">
+          <menupopup onpopupshown="snapshot(this)">
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+            <menuitem label="item"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+  </menubar>
+</toolbox>
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=632379">Mozilla Bug 632379</a>
+
+  <p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+
+
+<script class="testbody" type="application/javascript"><![CDATA[
+
+var gFinished = false;
+
+/** Test for Bug 632379 **/
+// Tests whether scrolling a menu affects the position at which popups appear
+var pos = new Array(2);
+var count=0;
+
+function snapshot(elem)
+{
+    info("snapshot() called");
+    pos[count] = elem.getBoundingClientRect().top;
+    info(elem.querySelector("menuitem").getBoundingClientRect().height);
+    ++count;
+    if (count <= 1) {
+        // close the submenu and open the bottom submenu
+        synthesizeKey("KEY_ArrowLeft");
+        sendString("9");
+    } else {
+        if (!navigator.platform.includes("Mac")) {
+            is(pos[1], pos[0], `Popup ${elem.parentNode.id} should open in the same place when the menu is scrolled`);
+        } else {
+            todo(false, "This test fails on Mac since it was ported to chrome: Bug 668716.");
+        }
+        info("Test finished");
+        gFinished = true;
+        SimpleTest.finish();
+    }
+}
+
+function doTest() {
+    info("doTest() called");
+    // open the top-level menu
+    $("mainMenu").open = true;
+}
+
+function openSubmenu()
+{
+    if (!gFinished) {
+        info("openSubmenu() called");
+    }
+    // open a submenu in the middle
+    sendString("5");
+}
+
+SimpleTest.waitForExplicitFinish();
+info("Wait for focus");
+SimpleTest.waitForFocus(doTest);
+
+]]></script>
+</window>
+

@@ -1,0 +1,10 @@
+//error: asynchronous ctor/dtor message `AsyncCtorReturnsManageeConstructor' declares return values
+
+include protocol AsyncCtorReturns;
+
+protocol AsyncCtorReturnsManagee {
+  manager AsyncCtorReturns;
+
+parent:
+  async __delete__();
+};

@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Hidden Popup Test"
+        onload="setTimeout(runTests, 0, $('popup'));"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<menupopup id="popup" hidden="true" onpopupshown="ok(true, 'popupshown'); this.hidePopup()"
+                                    onpopuphidden="$('popup-hideonshow').openPopup(null, 'after_start')">
+  <menuitem id="i1" label="One"/>
+  <menuitem id="i2" label="Two"/>
+</menupopup>
+
+<menupopup id="popup-hideonshow" onpopupshowing="hidePopupWhileShowing(this)"
+                                 onpopupshown="ok(false, 'popupshown when hidden')">
+  <menuitem id="i1" label="One"/>
+  <menuitem id="i2" label="Two"/>
+</menupopup>
+
+<button id="button" type="menu" label="Menu" onDOMAttrModified="checkEndTest(event)">
+  <menupopup id="popupinbutton" hidden="true"
+             onpopupshown="ok(true, 'popupshown'); ok($('button').open, 'open'); this.hidden = true;">
+    <menuitem id="i1" label="One"/>
+    <menuitem id="i2" label="Two"/>
+  </menupopup>
+</button>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests(popup)
+{
+  popup.hidden = false;
+  popup.openPopup(null, "after_start");
+}
+
+function hidePopupWhileShowing(popup)
+{
+  popup.hidden = true;
+  popup.clientWidth; // flush layout
+  is(popup.state, 'closed', 'popupshowing hidden');
+  SimpleTest.executeSoon(() => runTests($('popupinbutton')));
+}
+
+function checkEndTest(event)
+{
+  var button = $("button");
+  if (event.originalTarget != button || event.attrName != 'open' || event.attrChange != event.REMOVAL)
+    return;
+
+  ok($("popupinbutton").hidden, "popup hidden");
+  is($("popupinbutton").state, "closed", "popup state");
+  ok(!button.open, "not open after hidden");
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

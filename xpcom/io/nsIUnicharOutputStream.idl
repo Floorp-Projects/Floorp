@@ -1,0 +1,45 @@
+/* vim:set expandtab ts=4 sw=4 sts=4 cin: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * An interface that allows writing unicode data.
+ */
+[scriptable, uuid(2d00b1bb-8b21-4a63-bcc6-7213f513ac2e)]
+interface nsIUnicharOutputStream : nsISupports
+{
+    /**
+     * Write a single character to the stream. When writing many characters,
+     * prefer the string-taking write method.
+     *
+     * @retval true The character was written successfully
+     * @retval false Not all bytes of the character could be written.
+     */
+    boolean write(in unsigned long aCount,
+                  [const, array, size_is(aCount)] in char16_t c);
+
+    /**
+     * Write a string to the stream.
+     *
+     * @retval true The string was written successfully
+     * @retval false Not all bytes of the string could be written.
+     */
+    boolean writeString(in AString str);
+
+    /**
+     * Flush the stream. This finishes the conversion and writes any bytes that
+     * finish the current byte sequence.
+     *
+     * It does NOT flush the underlying stream.
+     */
+    void flush();
+
+    /**
+     * Close the stream and free associated resources. This also closes the
+     * underlying stream.
+     */
+    void close();
+};

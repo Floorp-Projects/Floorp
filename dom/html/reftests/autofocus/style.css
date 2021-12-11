@@ -1,0 +1,10 @@
+:focus { background-color: green; }
+
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1645773 */
+textarea { -moz-appearance: none; }
+
+/**
+ * autofocus is considered like a keyboard focus and .focus() isn't.
+ * We might change that with bug 620056 but for these tests, we don't really care.
+ */
+::-moz-focus-inner { border: none; }

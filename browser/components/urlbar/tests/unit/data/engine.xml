@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>engine.xml</ShortName>
+<Description>A test search engine</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Url type="text/html" method="GET" template="http://www.example.com/">
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://www.example.com/</SearchForm>
+</SearchPlugin>

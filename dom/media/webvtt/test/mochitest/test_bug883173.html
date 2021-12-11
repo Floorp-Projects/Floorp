@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 883173 - TextTrackCue(List) Sorting</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id="v" src="seek.webm" preload="metadata">
+  <track src="bug883173.vtt" kind="subtitles" id="default" default>
+</video>
+<script type="text/javascript">
+/**
+ * This test is used to ensure that the cues in the cue list should be sorted by
+ * cues' start time and end time, not the present order in the file.
+ */
+function runTest() {
+  let trackElement = document.getElementById("default");
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+
+  let expected = [[1, 3], [1, 2], [2, 4], [2, 3], [3, 4]];
+  let cueList = trackElement.track.cues;
+  is(cueList.length, expected.length, "Cue list length should be 5.");
+
+  for (let i = 0; i < expected.length; i++) {
+    is(cueList[i].startTime, expected[i][0],
+       `Cue's start time should be ${expected[i][0]}`);
+    is(cueList[i].endTime, expected[i][1],
+       `Cue's end time should be ${expected[i][1]}`);
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = runTest;
+</script>
+</body>
+</html>

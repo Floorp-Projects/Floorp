@@ -1,0 +1,21 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH	= ../..
+
+# MODULE public and private header directories are implicitly REQUIRED.
+MODULE = nss 
+
+# This next line is used by .mk files
+# and gets translated into $LINCS in manifest.mnw
+# MODULE is implicitly REQUIRED, doesn't need to be listed below.
+REQUIRES = seccmd dbm 
+
+DEFINES = -DNSPR20
+
+CSRCS = btoa.c
+
+PROGRAM	= btoa
+

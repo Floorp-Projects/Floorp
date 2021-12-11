@@ -1,0 +1,115 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"]:
+    TEST_DIRS += [
+        "gtest",
+    ]
+
+# Important: for these tests to be run, they also need to be added
+# to testing/cppunittest.ini.
+CppUnitTests(
+    [
+        "TestAlgorithm",
+        "TestArray",
+        "TestArrayUtils",
+        "TestAtomicBitfields",
+        "TestAtomics",
+        "TestBinarySearch",
+        "TestBitSet",
+        "TestBloomFilter",
+        "TestBufferList",
+        "TestCasting",
+        "TestCeilingFloor",
+        "TestCheckedInt",
+        "TestCompactPair",
+        "TestCountPopulation",
+        "TestCountZeroes",
+        "TestDefineEnum",
+        "TestDoublyLinkedList",
+        "TestEndian",
+        "TestEnumeratedArray",
+        "TestEnumSet",
+        "TestEnumTypeTraits",
+        "TestFastBernoulliTrial",
+        "TestFloatingPoint",
+        "TestFunctionRef",
+        "TestFunctionTypeTraits",
+        "TestHashTable",
+        "TestIntegerRange",
+        "TestJSONWriter",
+        "TestLinkedList",
+        "TestMacroArgs",
+        "TestMacroForEach",
+        "TestMathAlgorithms",
+        "TestMaybe",
+        "TestNonDereferenceable",
+        "TestNotNull",
+        "TestRandomNum",
+        "TestRange",
+        "TestRefPtr",
+        "TestResult",
+        "TestRollingMean",
+        "TestSaturate",
+        "TestScopeExit",
+        "TestSegmentedVector",
+        "TestSHA1",
+        "TestSmallPointerArray",
+        "TestSplayTree",
+        "TestTemplateLib",
+        "TestTextUtils",
+        "TestTuple",
+        "TestTypedEnum",
+        "TestTypeTraits",
+        "TestUniquePtr",
+        "TestVariant",
+        "TestVector",
+        "TestWeakPtr",
+        "TestWrappingOperations",
+        "TestXorShift128PlusRNG",
+    ]
+)
+
+# We don't support these tests yet because of the lack of thread support for wasi.
+if CONFIG["OS_ARCH"] != "WASI":
+    CppUnitTests(
+        [
+            "TestSPSCQueue",
+            "TestThreadSafeWeakPtr",
+        ]
+    )
+
+# Not to be unified with the rest, because this test
+# sets MOZ_PRETEND_NO_JSRUST, which changes the behavior
+# of the included headers.
+CppUnitTests(
+    [
+        "TestUtf8",
+    ]
+)
+
+# Wasi doesn't support <signal> yet so skip this test.
+if not CONFIG["MOZ_ASAN"] and CONFIG["OS_ARCH"] != "WASI":
+    CppUnitTests(
+        [
+            "TestPoisonArea",
+        ]
+    )
+
+DisableStlWrapping()
+
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += [
+        "-wd4275",  # non dll-interface class used as base for dll-interface class
+        "-wd4530",  # C++ exception handler used, but unwind semantics are not enabled
+    ]
+
+USE_LIBS += [
+    "mozglue",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<colgroup id="a" command="a">
+<box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<box id="a" command="a"/>
+<box id="a" command="a"/>
+</box>
+</colgroup>
+<script><![CDATA[
+function doe(){
+document.getElementsByTagName('*')[1].setAttribute('id','');
+document.getElementsByTagName('*')[1].setAttribute('xmlns', '');
+document.getElementsByTagName('*')[3].setAttribute('id','');
+
+document.getElementsByTagName('*')[4].removeAttribute('xmlns');
+document.getElementsByTagName('*')[4].setAttribute('width', '1px');
+}
+setTimeout(doe,100);
+]]></script>
+</html>

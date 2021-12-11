@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495219
+-->
+<head>
+  <title>Test for Bug 495219</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=495219">Mozilla
+   Bug 495219</a>
+<iframe onload="this.style.display='none'"></iframe>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+window.onload = function () {
+  is(window.frames[0].innerWidth, 0, "width should be zero");
+  is(window.frames[0].innerHeight, 0, "height should be zero");
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

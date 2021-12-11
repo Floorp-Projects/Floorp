@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Layout of a network location item
+ *
+ *  +-------------------------------------+---------------+
+ *  | Location (eg localhost:8080)        | Remove button |
+ *  +-------------------------------------+---------------+
+ */
+.network-location {
+  display: grid;
+  grid-template-columns: auto max-content;
+  align-items: center;
+
+  padding-block: calc(var(--base-unit) * 2);
+  padding-inline: calc(var(--base-unit) * 6);
+  border-bottom: 1px solid var(--card-separator-color);
+}

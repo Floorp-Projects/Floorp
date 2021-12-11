@@ -1,0 +1,4 @@
+// From https://discuss.gradle.org/t/enable-offline-mode-using-gradle-properties/12134/2.
+startParameter.offline = true
+// Sadly, this doesn't work: see http://stackoverflow.com/a/19686585.
+// startParameter.logLevel = org.gradle.api.logging.LogLevel.INFO

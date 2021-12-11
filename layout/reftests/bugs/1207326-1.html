@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testcase for bug 1207326</title>
+  <style>
+    .wrap1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      transform: perspective(500px) rotateY(6deg) scale(0.7, 0.7);
+      overflow: hidden;
+    }
+    .wrap2 {
+      position: relative;
+      margin-top: -300px;
+      margin-left: -300px;
+    }
+    .inner {
+      position: relative;
+      height: 100%;
+      background-color: purple;
+      will-change: transform;
+    }
+    .main {
+      overflow: hidden;
+      height: 100px;
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div class="wrap2">
+      <div class="wrap1">
+        <div class="inner">
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

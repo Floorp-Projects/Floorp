@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1453425
+-->
+<html>
+<head>
+    <title>Test for relative scroll offset updates (Bug 1453425)</title>
+    <meta charset="utf-8">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script src="/tests/SimpleTest/paint_listener.js"></script>
+    <script type="application/javascript" src="apz_test_utils.js"></script>
+    <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+    <style type="text/css">
+        #frame {
+            width: 200px;
+            height: 400px;
+            overflow: scroll;
+            border: 1px solid black;
+        }
+        #first {
+            width: 200px;
+            height: 108px;
+            background-color: red;
+        }
+        #second {
+            width: 200px;
+            height: 692px;
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    <div id="frame">
+        <div id="first"></div>
+        <div id="second"></div>
+    </div>
+<script type="application/javascript">
+async function test() {
+  var utils = SpecialPowers.DOMWindowUtils;
+
+  var elm = document.querySelector("#frame");
+  // Set a zero-margin displayport to ensure that the element is async-scrollable
+  utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, 0);
+  elm.scrollTop = 0;
+
+  // Take over control of the refresh driver and don't allow a layer
+  // transaction until the main thread and APZ have processed two different
+  // scrolls.
+  await promiseApzFlushedRepaints();
+  utils.advanceTimeAndRefresh(0);
+
+  // Scroll instantly on the main thread by (0, 100).
+  elm.scrollBy(0, 100);
+
+  // We are not using `scroll-behavior`
+  is(elm.scrollTop, 100, "the main thread scroll should be instant");
+
+  // Dispatch a wheel event to have APZ scroll by (0, 8). Wait for the wheel
+  // event to ensure that the APZ has processed the scroll.
+  await promiseNativeWheelAndWaitForWheelEvent(elm, 40, 40, 0, -8);
+
+  // APZ should be handling the wheel scroll
+  is(elm.scrollTop, 100, "the wheel scroll should be handled by APZ");
+
+  // Restore control of the refresh driver, allowing the main thread to send a
+  // layer transaction containing the (0, 100) scroll.
+  utils.restoreNormalRefresh();
+
+  // Wait for all paints to finish and for the main thread to receive pending
+  // repaint requests with the scroll offset from the wheel event.
+  await promiseApzFlushedRepaints();
+
+  // The main thread scroll should not have overidden the APZ scroll, and we
+  // should see the effects of both scrolls.
+  ok(elm.scrollTop > 100, `expected element.scrollTop > 100. got element.scrollTop = ${elm.scrollTop}`);
+}
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  // Receiving a relative scroll offset update can cause scroll animations to
+  // be cancelled. This should be fixed, but for now we can still test this
+  // by disabling smooth scrolling.
+  pushPrefs([["general.smoothScroll", false]])
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    Program("org.mozilla.updater")
+else:
+    Program("updater")
+
+updater_rel_path = ""
+include("updater-common.build")
+DIRS += ["updater-dep"]
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["updater-xpcshell"]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    LDFLAGS += [
+        "-sectcreate",
+        "__TEXT",
+        "__info_plist",
+        TOPOBJDIR + "/dist/bin/Info.plist",
+        "-sectcreate",
+        "__TEXT",
+        "__launchd_plist",
+        SRCDIR + "/Launchd.plist",
+    ]
+
+GENERATED_FILES = [
+    "dep1Cert.h",
+    "dep2Cert.h",
+    "primaryCert.h",
+    "secondaryCert.h",
+    "xpcshellCert.h",
+]
+
+primary_cert = GENERATED_FILES["primaryCert.h"]
+secondary_cert = GENERATED_FILES["secondaryCert.h"]
+
+# This is how the xpcshellCertificate.der file is generated, in case we ever
+# have to regenerate it.
+# ./certutil -L -d modules/libmar/tests/unit/data -n mycert -r > xpcshellCertificate.der
+xpcshell_cert = GENERATED_FILES["xpcshellCert.h"]
+dep1_cert = GENERATED_FILES["dep1Cert.h"]
+dep2_cert = GENERATED_FILES["dep2Cert.h"]
+
+primary_cert.script = "gen_cert_header.py:create_header"
+secondary_cert.script = "gen_cert_header.py:create_header"
+xpcshell_cert.script = "gen_cert_header.py:create_header"
+dep1_cert.script = "gen_cert_header.py:create_header"
+dep2_cert.script = "gen_cert_header.py:create_header"
+
+if CONFIG["MOZ_UPDATE_CHANNEL"] in ("beta", "release", "esr"):
+    primary_cert.inputs += ["release_primary.der"]
+    secondary_cert.inputs += ["release_secondary.der"]
+elif CONFIG["MOZ_UPDATE_CHANNEL"] in (
+    "nightly",
+    "aurora",
+    "nightly-elm",
+    "nightly-profiling",
+    "nightly-oak",
+    "nightly-ux",
+):
+    primary_cert.inputs += ["nightly_aurora_level3_primary.der"]
+    secondary_cert.inputs += ["nightly_aurora_level3_secondary.der"]
+else:
+    primary_cert.inputs += ["dep1.der"]
+    secondary_cert.inputs += ["dep2.der"]
+
+dep1_cert.inputs += ["dep1.der"]
+dep2_cert.inputs += ["dep2.der"]
+xpcshell_cert.inputs += ["xpcshellCertificate.der"]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    FINAL_TARGET_FILES.icons += ["updater.png"]

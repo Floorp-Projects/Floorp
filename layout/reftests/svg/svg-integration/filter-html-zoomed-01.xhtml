@@ -1,0 +1,18 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:svg="http://www.w3.org/2000/svg" reftest-zoom="2">
+<body style="margin:0">
+  <div style="background:lime; width:100px; height:100px; margin:25px; filter:url(#f1)"/>
+  <svg:svg height="0">
+    <svg:filter id="f1">
+      <svg:feFlood flood-color="black" result="black"/>
+      <svg:feComposite in="SourceAlpha" operator="in"/>
+      <svg:feOffset dx="5" dy="5"/>
+      <svg:feComposite in="SourceGraphic"/>
+    </svg:filter>
+  </svg:svg>
+</body>
+</html>

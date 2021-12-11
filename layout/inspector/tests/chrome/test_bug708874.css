@@ -1,0 +1,33 @@
+#test-div {
+  color: rgb(0, 0, 0);
+  font-family: serif;
+  font-weight: 400;
+}
+
+#test-div:hover {
+  color: rgb(10, 0, 0);
+}
+
+#test-div:active {
+  font-family: Arial;
+}
+
+#test-div:focus {
+  font-weight: 800;
+}
+
+#test-button {
+  color: rgb(0, 0, 0);
+}
+
+#test-button:disabled {
+  color: rgb(40, 0, 0);
+}
+
+#test-link:visited {
+  color: rgb(20, 0, 0);
+}
+
+#test-link:link {
+  color: rgb(30, 0, 0);
+}

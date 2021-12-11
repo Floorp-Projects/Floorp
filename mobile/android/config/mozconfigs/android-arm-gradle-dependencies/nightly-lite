@@ -1,0 +1,10 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+. "$topsrcdir/build/mozconfig.no-compile"
+
+# Android
+ac_add_options --enable-geckoview-lite
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-arm-gradle-dependencies/base"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="bug586713_window"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="300"
+        height="300"
+        onload="onLoad();"
+        title="Bug 586713 Test">
+
+  <menubar id="nativemenubar">
+    <menu id="foo" label="Foo">
+      <menupopup>
+        <menuitem label="FooItem0"/>
+      </menupopup>
+    </menu>
+  </menubar>
+
+  <script type="application/javascript"><![CDATA[
+    function ok(condition, message) {
+      window.arguments[0].SimpleTest.ok(condition, message);
+    }
+
+    function onTestsFinished() {
+      window.close();
+      window.arguments[0].SimpleTest.finish();
+    }
+
+    var fooCallCount = 0;
+    function foo() {
+      fooCallCount++;
+      let instruction = document.createProcessingInstruction("xml-stylesheet", 'href="chrome://foo.css" type="text/css"');
+      document.insertBefore(instruction, document.documentElement);
+      if (fooCallCount == 2) {
+        ok(true, "If we got here we didn't crash, excellent.");
+        onTestsFinished();
+      }
+    }
+
+    function onLoad() {
+      foo();
+      setTimeout(() => foo(), 0);
+    }
+  ]]></script>
+</window>

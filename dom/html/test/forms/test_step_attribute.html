@@ -1,0 +1,1060 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635553
+-->
+<head>
+  <title>Test for Bug 635553</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635499">Mozilla Bug 635499</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 635553 **/
+
+var data = [
+  { type: 'hidden', apply: false },
+  { type: 'text', apply: false },
+  { type: 'search', apply: false },
+  { type: 'tel', apply: false },
+  { type: 'url', apply: false },
+  { type: 'email', apply: false },
+  { type: 'password', apply: false },
+  { type: 'date', apply: true },
+  { type: 'month', apply: true },
+  { type: 'week', apply: true },
+  { type: 'time', apply: true },
+  { type: 'datetime-local', apply: true },
+  { type: 'number', apply: true },
+  { type: 'range', apply: true },
+  { type: 'color', apply: false },
+  { type: 'checkbox', apply: false },
+  { type: 'radio', apply: false },
+  { type: 'file', apply: false },
+  { type: 'submit', apply: false },
+  { type: 'image', apply: false },
+  { type: 'reset', apply: false },
+  { type: 'button', apply: false },
+];
+
+function getFreshElement(type) {
+  var elmt = document.createElement('input');
+  elmt.type = type;
+  return elmt;
+}
+
+function checkValidity(aElement, aValidity, aApply, aData)
+{
+  aValidity = aApply ? aValidity : true;
+
+  is(aElement.validity.valid, aValidity,
+     "element validity should be " + aValidity);
+  is(aElement.validity.stepMismatch, !aValidity,
+     "element step mismatch status should be " + !aValidity);
+
+  if (aValidity) {
+    is(aElement.validationMessage, "", "There should be no validation message.");
+  } else {
+    if (aElement.validity.rangeUnderflow) {
+      var underflowMsg =
+            (aElement.type == "date" || aElement.type == "time") ?
+            ("Please select a value that is no earlier than " + aElement.min + ".") :
+            ("Please select a value that is no less than " + aElement.min + ".");
+      is(aElement.validationMessage, underflowMsg,
+         "Checking range underflow validation message.");
+    } else if (aData.low == aData.high) {
+      is(aElement.validationMessage, "Please select a valid value. " +
+         "The nearest valid value is " + aData.low + ".",
+         "There should be a validation message.");
+    } else {
+      is(aElement.validationMessage, "Please select a valid value. "  +
+         "The two nearest valid values are " + aData.low + " and " + aData.high + ".",
+         "There should be a validation message.");
+    }
+  }
+
+  is(aElement.matches(":valid"), aElement.willValidate && aValidity,
+     (aElement.willValidate && aValidity) ? ":valid should apply" : "valid shouldn't apply");
+  is(aElement.matches(":invalid"), aElement.willValidate && !aValidity,
+     (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
+}
+
+for (var test of data) {
+  var input = getFreshElement(test.type);
+  var apply = test.apply;
+
+  if (test.todo) {
+    todo_is(input.type, test.type, test.type + " isn't implemented yet");
+    continue;
+  }
+
+  // The element should be valid, there should be no step mismatch.
+  checkValidity(input, true, apply);
+
+  // Checks to do for all types that support step:
+  // - check for @step=0,
+  // - check for @step behind removed,
+  // - check for @step being 'any' with different case variations.
+  switch (input.type) {
+    case 'text':
+    case 'hidden':
+    case 'search':
+    case 'password':
+    case 'tel':
+    case 'radio':
+    case 'checkbox':
+    case 'reset':
+    case 'button':
+    case 'submit':
+    case 'image':
+    case 'color':
+      input.value = '0';
+      checkValidity(input, true, apply);
+      break;
+    case 'url':
+      input.value = 'http://mozilla.org';
+      checkValidity(input, true, apply);
+      break;
+    case 'email':
+      input.value = 'foo@bar.com';
+      checkValidity(input, true, apply);
+      break;
+    case 'file':
+      var file = new File([''], '635499_file');
+
+      SpecialPowers.wrap(input).mozSetFileArray([file]);
+      checkValidity(input, true, apply);
+
+      break;
+    case 'date':
+      // For date, the step is calulated on the timestamp since 1970-01-01
+      // which mean that for all dates prior to the epoch, this timestamp is < 0
+      // and the behavior might differ, therefore we have to test for these cases.
+
+      // When step is invalid, every date is valid
+      input.step = 0;
+      input.value = '2012-07-05';
+      checkValidity(input, true, apply);
+
+      input.step = 'foo';
+      input.value = '1970-01-01';
+      checkValidity(input, true, apply);
+
+      input.step = '-1';
+      input.value = '1969-12-12';
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step');
+      input.value = '1500-01-01';
+      checkValidity(input, true, apply);
+
+      input.step = 'any';
+      input.value = '1966-12-12';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '2013-02-03';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid date, there is a step base.
+      input.min = '2008-02-28';
+      input.step = '2';
+      input.value = '2008-03-01';
+      checkValidity(input, true, apply);
+
+      input.value = '2008-02-29';
+      checkValidity(input, false, apply, { low: "2008-02-28", high: "2008-03-01" });
+
+      input.min = '2008-02-27';
+      input.value = '2008-02-28';
+      checkValidity(input, false, apply, { low: "2008-02-27", high: "2008-02-29" });
+
+      input.min = '2009-02-27';
+      input.value = '2009-02-28';
+      checkValidity(input, false, apply, { low: "2009-02-27", high: "2009-03-01" });
+
+      input.min = '2009-02-01';
+      input.step = '1.1';
+      input.value = '2009-02-02';
+      checkValidity(input, true, apply);
+
+      // Without any step attribute the date is valid
+      input.removeAttribute('step');
+      checkValidity(input, true, apply);
+
+      input.min = '1950-01-01';
+      input.step = '366';
+      input.value = '1951-01-01';
+      checkValidity(input, false, apply, { low: "1950-01-01", high: "1951-01-02" });
+
+      input.min = '1951-01-01';
+      input.step = '365';
+      input.value = '1952-01-01';
+      checkValidity(input, true, apply);
+
+      input.step = '0.9';
+      input.value = '1951-01-02';
+      is(input.step, '0.9', "check that step value is unchanged");
+      checkValidity(input, true, apply);
+
+      input.step = '0.4';
+      input.value = '1951-01-02';
+      is(input.step, '0.4', "check that step value is unchanged");
+      checkValidity(input, true, apply);
+
+      input.step = '1.5';
+      input.value = '1951-01-02';
+      is(input.step, '1.5', "check that step value is unchanged");
+      checkValidity(input, false, apply, { low: "1951-01-01", high: "1951-01-03" });
+
+      input.value = '1951-01-08';
+      checkValidity(input, false, apply, { low: "1951-01-07", high: "1951-01-09" });
+
+      input.step = '3000';
+      input.min= '1968-01-01';
+      input.value = '1968-05-12';
+      checkValidity(input, false, apply, { low: "1968-01-01", high: "1976-03-19" });
+
+      input.value = '1971-01-01';
+      checkValidity(input, false, apply, { low: "1968-01-01", high: "1976-03-19" });
+
+      input.value = '1991-01-01';
+      checkValidity(input, false, apply, { low: "1984-06-05", high: "1992-08-22" });
+
+      input.value = '1984-06-05';
+      checkValidity(input, true, apply);
+
+      input.value = '1992-08-22';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1991-01-01';
+      input.value = '1991-01-01';
+      checkValidity(input, true, apply);
+
+      input.value = '1991-01-02';
+      checkValidity(input, false, apply, { low: "1991-01-01", high: "1991-01-03" });
+
+      input.value = '1991-01-03';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1969-12-20';
+      input.value = '1969-12-20';
+      checkValidity(input, true, apply);
+
+      input.value = '1969-12-21';
+      checkValidity(input, false, apply, { low: "1969-12-20", high: "1969-12-22" });
+
+      input.value = '1969-12-22';
+      checkValidity(input, true, apply);
+
+      break;
+    case 'number':
+      // When step=0, the allowed step is 1.
+      input.step = '0';
+      input.value = '1.2';
+      checkValidity(input, false, apply, { low: 1, high: 2 });
+
+      input.value = '1';
+      checkValidity(input, true, apply);
+
+      input.value = '0';
+      checkValidity(input, true, apply);
+
+      // When step is NaN, the allowed step value is 1.
+      input.step = 'foo';
+      input.value = '1';
+      checkValidity(input, true, apply);
+
+      input.value = '1.5';
+      checkValidity(input, false, apply, { low: 1, high: 2 });
+
+      // When step is negative, the allowed step value is 1.
+      input.step = '-0.1';
+      checkValidity(input, false, apply, { low: 1, high: 2 });
+
+      input.value = '1';
+      checkValidity(input, true, apply);
+
+      // When step is missing, the allowed step value is 1.
+      input.removeAttribute('step');
+      input.value = '1.5';
+      checkValidity(input, false, apply, { low: 1, high: 2 });
+
+      input.value = '1';
+      checkValidity(input, true, apply);
+
+      // When step is 'any', all values are fine wrt to step.
+      input.step = 'any';
+      checkValidity(input, true, apply);
+
+      input.step = 'aNy';
+      input.value = '1337';
+      checkValidity(input, true, apply);
+
+      input.step = 'AnY';
+      input.value = '0.1';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '-13.37';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid float, there is a step base.
+      input.min = '1';
+      input.step = '2';
+      input.value = '3';
+      checkValidity(input, true, apply);
+
+      input.value = '2';
+      checkValidity(input, false, apply, { low: 1, high: 3 });
+
+      input.removeAttribute('step'); // step = 1
+      input.min = '0.5';
+      input.value = '5.5';
+      checkValidity(input, true, apply);
+
+      input.value = '1';
+      checkValidity(input, false, apply, { low: 0.5, high: 1.5 });
+
+      input.min = '-0.1';
+      input.step = '1';
+      input.value = '0.9';
+      checkValidity(input, true, apply);
+
+      input.value = '0.1';
+      checkValidity(input, false, apply, { low: -0.1, high: 0.9 });
+
+      // When min is set to NaN, there is no step base (step base=0 actually).
+      input.min = 'foo';
+      input.step = '1';
+      input.value = '1';
+      checkValidity(input, true, apply);
+
+      input.value = '0.5';
+      checkValidity(input, false, apply, { low: 0, high: 1 });
+
+      input.min = '';
+      input.value = '1';
+      checkValidity(input, true, apply);
+
+      input.value = '0.5';
+      checkValidity(input, false, apply, { low: 0, high: 1 });
+
+      input.removeAttribute('min');
+
+      // If value isn't a number, the element isn't invalid.
+      input.value = '';
+      checkValidity(input, true, apply);
+
+      // Regular situations.
+      input.step = '2';
+      input.value = '1.5';
+      checkValidity(input, false, apply, { low: 0, high: 2 });
+
+      input.value = '42.0';
+      checkValidity(input, true, apply);
+
+      input.step = '0.1';
+      input.value = '-0.1';
+      checkValidity(input, true, apply);
+
+      input.step = '2';
+      input.removeAttribute('min');
+      input.max = '10';
+      input.value = '-9';
+      checkValidity(input, false, apply, {low: -10, high: -8});
+
+      // If there is a value defined but no min, the step base is the value.
+      input = getFreshElement(test.type);
+      input.setAttribute('value', '1');
+      input.step = 2;
+      checkValidity(input, true, apply);
+
+      input.value = 3;
+      checkValidity(input, true, apply);
+
+      input.value = 2;
+      checkValidity(input, false, apply, {low: 1, high: 3});
+
+      // Should also work with defaultValue.
+      input = getFreshElement(test.type);
+      input.defaultValue = 1;
+      input.step = 2;
+      checkValidity(input, true, apply);
+
+      input.value = 3;
+      checkValidity(input, true, apply);
+
+      input.value = 2;
+      checkValidity(input, false, apply, {low: 1, high: 3});
+
+      // Rounding issues.
+      input = getFreshElement(test.type);
+      input.min = 0.1;
+      input.step = 0.2;
+      input.value = 0.3;
+      checkValidity(input, true, apply);
+
+      // Check that when the higher value is higher than max, we don't show it.
+      input = getFreshElement(test.type);
+      input.step = '2';
+      input.min = '1';
+      input.max = '10.9';
+      input.value = '10';
+
+      is(input.validationMessage, "Please select a valid value. " +
+                                  "The nearest valid value is 9.",
+         "The validation message should not include the higher value.");
+      break;
+    case 'range':
+      // Range is special in that it clamps to valid values, so it is much
+      // rarer for it to be invalid.
+
+      // When step=0, the allowed value step is 1.
+      input.step = '0';
+      input.value = '1.2';
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.value = '1';
+      is(input.value, '1', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = '0';
+      is(input.value, '0', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      // When step is NaN, the allowed step value is 1.
+      input.step = 'foo';
+      input.value = '1';
+      is(input.value, '1', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = '1.5';
+      is(input.value, '2', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      // When step is negative, the allowed step value is 1.
+      input.step = '-0.1';
+      is(input.value, '2', "check that the value still coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = '1';
+      is(input.value, '1', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      // When step is missing, the allowed step value is 1.
+      input.removeAttribute('step');
+      input.value = '1.5';
+      is(input.value, '2', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.value = '1';
+      is(input.value, '1', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      // When step is 'any', all values are fine wrt to step.
+      input.step = 'any';
+      checkValidity(input, true, apply);
+
+      input.step = 'aNy';
+      input.value = '97';
+      is(input.value, '97', "check that the value for step=aNy is unchanged");
+      checkValidity(input, true, apply);
+
+      input.step = 'AnY';
+      input.value = '0.1';
+      is(input.value, '0.1', "check that a positive fractional value with step=AnY is unchanged");
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.min = -100;
+      input.value = '-13.37';
+      is(input.value, '-13.37', "check that a negative fractional value with step=ANY is unchanged");
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid float, there is a step base.
+      input.min = '1'; // the step base
+      input.step = '2';
+      input.value = '3';
+      is(input.value, '3', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = '2';
+      is(input.value, '3', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.value = '1.99';
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step'); // step = 1
+      input.min = '0.5'; // step base
+      input.value = '5.5';
+      is(input.value, '5.5', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = '1';
+      is(input.value, '1.5', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.min = '-0.1'; // step base
+      input.step = '1';
+      input.value = '0.9';
+      is(input.value, '0.9', "the value should be a valid step");
+      checkValidity(input, true, apply);
+
+      input.value = '0.1';
+      is(input.value, '-0.1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      // When min is set to NaN, the step base is the value.
+      input.min = 'foo';
+      input.step = '1';
+      input.value = '1';
+      is(input.value, '1', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = '0.5';
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.min = '';
+      input.value = '1';
+      is(input.value, '1', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = '0.5';
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('min');
+
+      // Test when the value isn't a number
+      input.value = '';
+      is(input.value, '50', "value be should default to the value midway between the minimum (0) and the maximum (100)");
+      checkValidity(input, true, apply);
+
+      // Regular situations.
+      input.step = '2';
+      input.value = '1.5';
+      is(input.value, '2', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.value = '42.0';
+      is(input.value, '42.0', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.step = '0.1';
+      input.value = '-0.1';
+      is(input.value, '0', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.step = '2';
+      input.removeAttribute('min');
+      input.max = '10';
+      input.value = '-9';
+      is(input.value, '0', "check the value is clamped to the minimum's default of zero");
+      checkValidity(input, true, apply);
+
+      // If @value is defined but not @min, the step base is @value.
+      input = getFreshElement(test.type);
+      input.setAttribute('value', '1');
+      input.step = 2;
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      input.value = 3;
+      is(input.value, '3', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = 2;
+      is(input.value, '3', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      // Should also work with defaultValue.
+      input = getFreshElement(test.type);
+      input.defaultValue = 1;
+      input.step = 2;
+      is(input.value, '1', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = 3;
+      is(input.value, '3', "check that the value coincides with a step");
+      checkValidity(input, true, apply);
+
+      input.value = 2;
+      is(input.value, '3', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      checkValidity(input, true, apply);
+
+      // Check contrived error case where there are no valid steps in range:
+      // No @min, so the step base is the default minimum, zero, the valid
+      // range is 0-1, -1 gets clamped to zero.
+      input = getFreshElement(test.type);
+      input.step = '3';
+      input.max = '1';
+      input.defaultValue = '-1';
+      is(input.value, '0', "the value should have been clamped to the default minimum, zero");
+      checkValidity(input, false, apply, {low: -1, high: -1});
+
+      // Check that when the closest of the two steps that the value is between
+      // is greater than the maximum we sanitize to the lower step.
+      input = getFreshElement(test.type);
+      input.step = '2';
+      input.min = '1';
+      input.max = '10.9';
+      input.value = '10.8'; // closest step in 11, but 11 > maximum
+      is(input.value, '9', "check that the value coincides with a step");
+
+      // The way that step base is defined, the converse (the value not being
+      // on a step, and the nearest step being a value that would be underflow)
+      // is not possible, so nothing to test there.
+
+      is(input.validationMessage, "",
+         "The validation message should be empty.");
+      break;
+    case 'time':
+      // Tests invalid step values. That defaults to step = 1 minute (60).
+      var values = [ '0', '-1', 'foo', 'any', 'ANY', 'aNy' ];
+      for (var value of values) {
+        input.step = value;
+        input.value = '19:06:00';
+        checkValidity(input, true, apply);
+        input.value = '19:06:51';
+        if (value.toLowerCase() != 'any') {
+          checkValidity(input, false, apply, {low: '19:06', high: '19:07'});
+        } else {
+          checkValidity(input, true, apply);
+        }
+      }
+
+      // No step means that we use the default step value.
+      input.removeAttribute('step');
+      input.value = '19:06:00';
+      checkValidity(input, true, apply);
+      input.value = '19:06:51';
+      checkValidity(input, false, apply, {low: '19:06', high: '19:07'});
+
+      var tests = [
+        // With step=1, we allow values by the second.
+        { step: '1', value: '19:11:01', min: '00:00', result: true },
+        { step: '1', value: '19:11:01.001', min: '00:00', result: false,
+          low: '19:11:01', high: '19:11:02' },
+        { step: '1', value: '19:11:01.1', min: '00:00', result: false,
+          low: '19:11:01', high: '19:11:02' },
+        // When step >= 86400000, only the minimum value is valid.
+        // This is actually @value if there is no @min.
+        { step: '86400000', value: '00:00', result: true },
+        { step: '86400000', value: '00:01', result: true },
+        { step: '86400000', value: '00:00', min: '00:01', result: false },
+        { step: '86400000', value: '00:01', min: '00:00', result: false,
+          low: '00:00', high: '00:00' },
+        // When step < 1, it should just work.
+        { step: '0.1', value: '15:05:05.1', min: '00:00', result: true },
+        { step: '0.1', value: '15:05:05.101', min: '00:00', result: false,
+          low: '15:05:05.100', high: '15:05:05.200' },
+        { step: '0.2', value: '15:05:05.2', min: '00:00', result: true },
+        { step: '0.2', value: '15:05:05.1', min: '00:00', result: false,
+          low: '15:05:05', high: '15:05:05.200' },
+        { step: '0.01', value: '15:05:05.01', min: '00:00', result: true },
+        { step: '0.01', value: '15:05:05.011', min: '00:00', result: false,
+          low: '15:05:05.010', high: '15:05:05.020' },
+        { step: '0.02', value: '15:05:05.02', min: '00:00', result: true },
+        { step: '0.02', value: '15:05:05.01', min: '00:00', result: false,
+          low: '15:05:05', high: '15:05:05.020' },
+        { step: '0.002', value: '15:05:05.002', min: '00:00', result: true },
+        { step: '0.002', value: '15:05:05.001', min: '00:00', result: false,
+          low: '15:05:05', high: '15:05:05.002' },
+        // When step<=0.001, any value is allowed.
+        { step: '0.001', value: '15:05:05.001', min: '00:00', result: true },
+        { step: '0.001', value: '15:05:05', min: '00:00', result: true },
+        { step: '0.000001', value: '15:05:05', min: '00:00', result: true },
+        // This value has conversion to double issues.
+        { step: '0.0000001', value: '15:05:05', min: '00:00', result: true },
+        // Some random values.
+        { step: '100', value: '15:06:40', min: '00:00', result: true },
+        { step: '100', value: '15:05:05.010', min: '00:00', result: false,
+          low: '15:05', high: '15:06:40' },
+        { step: '3600', value: '15:00', min: '00:00', result: true },
+        { step: '3600', value: '15:14', min: '00:00', result: false,
+          low: '15:00', high: '16:00' },
+        { step: '7200', value: '14:00', min: '00:00', result: true },
+        { step: '7200', value: '15:14', min: '00:00', result: false,
+          low: '14:00', high: '16:00' },
+        { step: '7260', value: '14:07', min: '00:00', result: true },
+        { step: '7260', value: '15:14', min: '00:00', result: false,
+          low: '14:07', high: '16:08' },
+      ];
+
+      var type = test.type;
+      for (var test of tests) {
+        var input = getFreshElement(type);
+        input.step = test.step;
+        input.setAttribute('value', test.value);
+        if (test.min !== undefined) {
+          input.min = test.min;
+        }
+
+        if (test.todo) {
+          todo(input.validity.valid, test.result,
+               "This test should fail for the moment because of precission issues");
+          continue;
+        }
+
+        if (test.result) {
+          checkValidity(input, true, apply);
+        } else {
+          checkValidity(input, false, apply,
+                        { low: test.low, high: test.high });
+        }
+      }
+
+      break;
+    case 'month':
+      // When step is invalid, every date is valid
+      input.step = 0;
+      input.value = '2016-07';
+      checkValidity(input, true, apply);
+
+      input.step = 'foo';
+      input.value = '1970-01';
+      checkValidity(input, true, apply);
+
+      input.step = '-1';
+      input.value = '1970-01';
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step');
+      input.value = '1500-01';
+      checkValidity(input, true, apply);
+
+      input.step = 'any';
+      input.value = '1966-12';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '2013-02';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid month, there is a step base.
+      input.min = '2000-01';
+      input.step = '2';
+      input.value = '2000-03';
+      checkValidity(input, true, apply);
+
+      input.value = '2000-02';
+      checkValidity(input, false, apply, { low: "2000-01", high: "2000-03" });
+
+      input.min = '2012-12';
+      input.value = '2013-01';
+      checkValidity(input, false, apply, { low: "2012-12", high: "2013-02" });
+
+      input.min = '2010-10';
+      input.value = '2010-11';
+      checkValidity(input, false, apply, { low: "2010-10", high: "2010-12" });
+
+      input.min = '2010-01';
+      input.step = '1.1';
+      input.value = '2010-02';
+      checkValidity(input, true, apply);
+
+      input.min = '2010-05';
+      input.step = '1.9';
+      input.value = '2010-06';
+      checkValidity(input, false, apply, { low: "2010-05", high: "2010-07" });
+
+      // Without any step attribute the date is valid
+      input.removeAttribute('step');
+      checkValidity(input, true, apply);
+
+      input.min = '1950-01';
+      input.step = '13';
+      input.value = '1951-01';
+      checkValidity(input, false, apply, { low: "1950-01", high: "1951-02" });
+
+      input.min = '1951-01';
+      input.step = '12';
+      input.value = '1952-01';
+      checkValidity(input, true, apply);
+
+      input.step = '0.9';
+      input.value = '1951-02';
+      checkValidity(input, true, apply);
+
+      input.step = '1.5';
+      input.value = '1951-04';
+      checkValidity(input, false, apply, { low: "1951-03", high: "1951-05" });
+
+      input.value = '1951-08';
+      checkValidity(input, false, apply, { low: "1951-07", high: "1951-09" });
+
+      input.step = '300';
+      input.min= '1968-01';
+      input.value = '1968-05';
+      checkValidity(input, false, apply, { low: "1968-01", high: "1993-01" });
+
+      input.value = '1971-01';
+      checkValidity(input, false, apply, { low: "1968-01", high: "1993-01" });
+
+      input.value = '1994-01';
+      checkValidity(input, false, apply, { low: "1993-01", high: "2018-01" });
+
+      input.value = '2018-01';
+      checkValidity(input, true, apply);
+
+      input.value = '2043-01';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1991-01';
+      input.value = '1991-01';
+      checkValidity(input, true, apply);
+
+      input.value = '1991-02';
+      checkValidity(input, false, apply, { low: "1991-01", high: "1991-03" });
+
+      input.value = '1991-03';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1969-12';
+      input.value = '1969-12';
+      checkValidity(input, true, apply);
+
+      input.value = '1970-01';
+      checkValidity(input, false, apply, { low: "1969-12", high: "1970-02" });
+
+      input.value = '1970-02';
+      checkValidity(input, true, apply);
+
+      break;
+    case 'week':
+      // When step is invalid, every week is valid
+      input.step = 0;
+      input.value = '2016-W30';
+      checkValidity(input, true, apply);
+
+      input.step = 'foo';
+      input.value = '1970-W01';
+      checkValidity(input, true, apply);
+
+      input.step = '-1';
+      input.value = '1970-W01';
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step');
+      input.value = '1500-W01';
+      checkValidity(input, true, apply);
+
+      input.step = 'any';
+      input.value = '1966-W52';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '2013-W10';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid week, there is a step base.
+      input.min = '2000-W01';
+      input.step = '2';
+      input.value = '2000-W03';
+      checkValidity(input, true, apply);
+
+      input.value = '2000-W02';
+      checkValidity(input, false, apply, { low: "2000-W01", high: "2000-W03" });
+
+      input.min = '2012-W52';
+      input.value = '2013-W01';
+      checkValidity(input, false, apply, { low: "2012-W52", high: "2013-W02" });
+
+      input.min = '2010-W01';
+      input.step = '1.1';
+      input.value = '2010-W02';
+      checkValidity(input, true, apply);
+
+      input.min = '2010-W05';
+      input.step = '1.9';
+      input.value = '2010-W06';
+      checkValidity(input, false, apply, { low: "2010-W05", high: "2010-W07" });
+
+      // Without any step attribute the week is valid
+      input.removeAttribute('step');
+      checkValidity(input, true, apply);
+
+      input.min = '1950-W01';
+      input.step = '53';
+      input.value = '1951-W01';
+      checkValidity(input, false, apply, { low: "1950-W01", high: "1951-W02" });
+
+      input.min = '1951-W01';
+      input.step = '52';
+      input.value = '1952-W01';
+      checkValidity(input, true, apply);
+
+      input.step = '0.9';
+      input.value = '1951-W02';
+      checkValidity(input, true, apply);
+
+      input.step = '1.5';
+      input.value = '1951-W04';
+      checkValidity(input, false, apply, { low: "1951-W03", high: "1951-W05" });
+
+      input.value = '1951-W20';
+      checkValidity(input, false, apply, { low: "1951-W19", high: "1951-W21" });
+
+      input.step = '300';
+      input.min= '1968-W01';
+      input.value = '1968-W05';
+      checkValidity(input, false, apply, { low: "1968-W01", high: "1973-W40" });
+
+      input.value = '1971-W01';
+      checkValidity(input, false, apply, { low: "1968-W01", high: "1973-W40" });
+
+      input.value = '1975-W01';
+      checkValidity(input, false, apply, { low: "1973-W40", high: "1979-W27" });
+
+      input.value = '1985-W14';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1991-W01';
+      input.value = '1991-W01';
+      checkValidity(input, true, apply);
+
+      input.value = '1991-W02';
+      checkValidity(input, false, apply, { low: "1991-W01", high: "1991-W03" });
+
+      input.value = '1991-W03';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1969-W52';
+      input.value = '1969-W52';
+      checkValidity(input, true, apply);
+
+      input.value = '1970-W01';
+      checkValidity(input, false, apply, { low: "1969-W52", high: "1970-W02" });
+
+      input.value = '1970-W02';
+      checkValidity(input, true, apply);
+
+      break;
+    case 'datetime-local':
+      // When step is invalid, every datetime is valid
+      input.step = 0;
+      input.value = '2017-02-06T12:00';
+      checkValidity(input, true, apply);
+
+      input.step = 'foo';
+      input.value = '1970-01-01T00:00';
+      checkValidity(input, true, apply);
+
+      input.step = '-1';
+      input.value = '1969-12-12 00:10';
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step');
+      input.value = '1500-01-01T12:00';
+      checkValidity(input, true, apply);
+
+      input.step = 'any';
+      input.value = '1966-12-12T12:00';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '2017-01-01 12:00';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid datetime, there is a step base.
+      input.min = '2017-01-01T00:00:00';
+      input.step = '2';
+      input.value = '2017-01-01T00:00:02';
+      checkValidity(input, true, apply);
+
+      input.value = '2017-01-01T00:00:03';
+      checkValidity(input, false, apply,
+        { low: "2017-01-01T00:00:02", high: "2017-01-01T00:00:04" });
+
+      input.min = '2017-01-01T00:00:05';
+      input.value = '2017-01-01T00:00:08';
+      checkValidity(input, false, apply,
+        { low: "2017-01-01T00:00:07", high: "2017-01-01T00:00:09" });
+
+      input.min = '2000-01-01T00:00';
+      input.step = '120';
+      input.value = '2000-01-01T00:02';
+      checkValidity(input, true, apply);
+
+      // Without any step attribute the datetime is valid
+      input.removeAttribute('step');
+      checkValidity(input, true, apply);
+
+      input.min = '1950-01-01T00:00';
+      input.step = '129600'; // 1.5 day
+      input.value = '1950-01-02T00:00';
+      checkValidity(input, false, apply,
+        { low: "1950-01-01T00:00", high: "1950-01-02T12:00" });
+
+      input.step = '259200'; // 3 days
+      input.value = '1950-01-04T12:00';
+      checkValidity(input, false, apply,
+        { low: "1950-01-04T00:00", high: "1950-01-07T00:00" });
+
+      input.value = '1950-01-10T00:00';
+      checkValidity(input, true, apply);
+
+      input.step = '0.5'; // half a second
+      input.value = '1950-01-01T00:00:00.123';
+      checkValidity(input, false, apply,
+        { low: "1950-01-01T00:00", high: "1950-01-01T00:00:00.500" });
+
+      input.value = '2000-01-01T12:30:30.600';
+      checkValidity(input, false, apply,
+        { low: "2000-01-01T12:30:30.500", high: "2000-01-01T12:30:31" });
+
+      input.value = '1950-01-05T00:00:00.500';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1991-01-01T12:00';
+      input.value = '1991-01-01T12:00';
+      checkValidity(input, true, apply);
+
+      input.value = '1991-01-01T12:00:03';
+      checkValidity(input, false, apply,
+        { low: "1991-01-01T12:00:02.100", high: "1991-01-01T12:00:04.200" });
+
+      input.value = '1991-01-01T12:00:06.3';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1969-12-20T10:00:05';
+      input.value = '1969-12-20T10:00:05';
+      checkValidity(input, true, apply);
+
+      input.value = '1969-12-20T10:00:08';
+      checkValidity(input, false, apply,
+        { low: "1969-12-20T10:00:07.100", high: "1969-12-20T10:00:09.200" });
+
+      input.value = '1969-12-20T10:00:09.200';
+      checkValidity(input, true, apply);
+
+      break;
+    default:
+      ok(false, "Implement the tests for <input type='" + test.type + " >");
+      break;
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

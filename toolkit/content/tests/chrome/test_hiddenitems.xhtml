@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=317422
+-->
+<window title="Mozilla Bug 317422"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=317422"
+     target="_blank">Mozilla Bug 317422</a>
+  </body>
+
+  <richlistbox id="richlistbox" seltype="multiple">
+    <richlistitem id="richlistbox_item1"><label value="Item 1"/></richlistitem>
+    <richlistitem id="richlistbox_item2"><label value="Item 2"/></richlistitem>
+    <richlistitem id="richlistbox_item3" hidden="true"><label value="Item 3"/></richlistitem>
+    <richlistitem id="richlistbox_item4"><label value="Item 4"/></richlistitem>
+    <richlistitem id="richlistbox_item5" collapsed="true"><label value="Item 5"/></richlistitem>
+    <richlistitem id="richlistbox_item6"><label value="Item 6"/></richlistitem>
+    <richlistitem id="richlistbox_item7" hidden="true"><label value="Item 7"/></richlistitem>
+  </richlistbox>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+/** Test for Bug 317422 **/
+SimpleTest.waitForExplicitFinish();
+
+function testListbox(id)
+{
+  var listbox = document.getElementById(id);
+  listbox.focus();
+  is(listbox.getRowCount(), 7, id + ": Returned the wrong number of rows");
+  is(listbox.getItemAtIndex(2).id, id + "_item3", id + ": Should still return hidden items");
+  listbox.selectedIndex = 0;
+  is(listbox.selectedItem.id, id + "_item1", id + ": First item was not selected");
+  sendKey("DOWN");
+  is(listbox.selectedItem.id, id + "_item2", id + ": Down didn't move to second item");
+  sendKey("DOWN");
+  is(listbox.selectedItem.id, id + "_item4", id + ": Down didn't skip hidden item");
+  sendKey("DOWN");
+  is(listbox.selectedItem.id, id + "_item6", id + ": Down didn't skip collapsed item");
+  sendKey("UP");
+  is(listbox.selectedItem.id, id + "_item4", id + ": Up didn't skip collapsed item");
+  sendKey("UP");
+  is(listbox.selectedItem.id, id + "_item2", id + ": Up didn't skip hidden item");
+  listbox.selectAll();
+  is(listbox.selectedItems.length, 7, id + ": Should have still selected all items");
+  listbox.selectedIndex = 2;
+  ok(listbox.selectedItem == listbox.getItemAtIndex(2), id + ": Should have selected the hidden item");
+  listbox.selectedIndex = 0;
+  sendKey("END");
+  is(listbox.selectedItem.id, id + "_item6", id + ": Should have moved to the last unhidden item");
+  sendMouseEvent({type: 'click'}, id + "_item1");
+  ok(listbox.selectedItem == listbox.getItemAtIndex(0), id + ": Should have selected the first item");
+  is(listbox.selectedItems.length, 1, id + ": Should only be one selected item");
+  sendMouseEvent({type: 'click', shiftKey: true}, id + "_item6");
+  is(listbox.selectedItems.length, 4, id + ": Should have selected all visible items");
+  listbox.selectedIndex = 0;
+  sendKey("PAGE_DOWN");
+  is(listbox.selectedItem.id, id + "_item6", id + ": Page down should go to the last visible item");
+  sendKey("PAGE_UP");
+  is(listbox.selectedItem.id, id + "_item1", id + ": Page up should go to the first visible item");
+}
+
+window.onload = function runTests() {
+  testListbox("richlistbox");
+  SimpleTest.finish();
+};
+  ]]></script>
+</window>

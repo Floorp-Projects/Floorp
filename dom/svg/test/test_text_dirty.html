@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=886230
+-->
+<head>
+  <title>Test for Bug 886230</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=886230">Mozilla Bug 886230</a>
+<p id="display">
+  <svg>
+    <mask id="m"><text id="t">x</text></mask>
+    <rect width="600" height="400" mask="url(#m)"/>
+  </svg>
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+async function runTest() {
+  var svgText = document.getElementById("t");
+
+  // Dirty the frames.
+  document.getElementById("display").style.width = "700px";
+  svgText.firstChild.remove();
+
+  // Paint without flushing layout.  If the test fails, we'll trigger
+  // an assertion.
+  await SpecialPowers.snapshotWindowWithOptions(window, undefined, undefined, { DRAWWINDOW_DO_NOT_FLUSH: true });
+
+  ok(true);
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTest);
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for webkitdirectory and webkitRelativePath</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="inputFileWebkitDirectory" type="file" webkitdirectory></input>
+<input id="inputFileWebkitDirectoryAndDirectory" type="file" webkitdirectory allowdirs></input>
+<input id="inputFileDirectory" type="file" allowdirs></input>
+<input id="inputFileDirectoryChange" type="file" webkitdirectory></input>
+
+<script type="application/javascript">
+
+const { AppConstants } = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+
+let promptHandler;
+
+function waitForEvent(element, eventName) {
+  return new Promise(function(resolve) {
+    element.addEventListener(eventName, e => resolve(e.detail), { once: true });
+  });
+}
+
+function waitForPromptHandled() {
+  return new Promise(resolve => promptHandler.addMessageListener("promptAccepted", resolve));
+}
+
+function populateInputFile(aInputFile) {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  var MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+
+  async function onOpened(message) {
+    MockFilePicker.useDirectory(message.dir);
+
+    let input = document.getElementById(aInputFile);
+    input.setAttribute("data-name", message.name);
+
+    let promptHandled = waitForPromptHandled();
+    let changeEvent = waitForEvent(input, "change");
+
+    input.click();
+
+    await promptHandled;
+    await changeEvent;
+
+    MockFilePicker.cleanup();
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: "test" });
+}
+
+function checkFile(file, fileList, dirName) {
+  for (var i = 0; i < fileList.length; ++i) {
+    ok(fileList[i] instanceof File, "We want just files.");
+    if (fileList[i].name == file.name) {
+      is(fileList[i].webkitRelativePath, dirName + file.path, "Path matches");
+      return;
+    }
+  }
+
+  ok(false, "File not found.");
+}
+
+function test_fileList(aInputFile, aWhat) {
+  var input = document.getElementById(aInputFile);
+  var fileList = input.files;
+
+  if (aWhat == null) {
+    is(fileList, null, "We want a null fileList for " + aInputFile);
+    next();
+    return;
+  }
+
+  is(fileList.length, aWhat.length, "We want just " + aWhat.length + " elements for " + aInputFile);
+  for (var i = 0; i < aWhat.length; ++i) {
+    checkFile(aWhat[i], fileList, input.dataset.name);
+  }
+
+  next();
+}
+
+function test_webkitdirectory_attribute() {
+  var a = document.createElement("input");
+  a.setAttribute("type", "file");
+
+  ok("webkitdirectory" in a, "HTMLInputElement.webkitdirectory exists");
+
+  ok(!a.hasAttribute("webkitdirectory"), "No webkitdirectory DOM attribute by default");
+  ok(!a.webkitdirectory, "No webkitdirectory attribute by default");
+
+  a.webkitdirectory = true;
+
+  ok(a.hasAttribute("webkitdirectory"), "Webkitdirectory DOM attribute is set");
+  ok(a.webkitdirectory, "Webkitdirectory attribute is set");
+
+  next();
+}
+
+function test_changeDataWhileWorking() {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  var MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+  let promptHandled;
+
+  // Let's start retrieving the root nsIFile object
+  new Promise(function(resolve) {
+    function onOpened(message) {
+      script.removeMessageListener("dir.opened", onOpened);
+      resolve(message.dir);
+    }
+
+    script.addMessageListener("dir.opened", onOpened);
+    script.sendAsyncMessage("dir.open", { path: "root" });
+  })
+
+  // input.click() pointing to the root dir
+  .then(async function(aDir) {
+    MockFilePicker.cleanup();
+    MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+    MockFilePicker.useDirectory(aDir);
+    var input = document.getElementById("inputFileDirectoryChange");
+
+    promptHandled = waitForPromptHandled();
+    input.click();
+  })
+
+  // Before onchange, let's take the 'test' directory
+  .then(function() {
+    return new Promise(function(resolve) {
+      function onOpened(message) {
+        script.removeMessageListener("dir.opened", onOpened);
+        script.destroy();
+        resolve(message.dir);
+      }
+
+      script.addMessageListener("dir.opened", onOpened);
+      script.sendAsyncMessage("dir.open", { path: "test" });
+    });
+  })
+
+  // Now let's click again and wait for onchange.
+  .then(async function(aDir) {
+      MockFilePicker.cleanup();
+      MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+      MockFilePicker.useDirectory(aDir);
+
+      let input = document.getElementById("inputFileDirectoryChange");
+      let changeEvent = waitForEvent(input, "change");
+
+      input.click();
+
+      await promptHandled;
+      await changeEvent;
+
+      MockFilePicker.cleanup();
+  })
+  .then(function() {
+    test_fileList("inputFileWebkitDirectory", testDirData);
+  });
+}
+
+async function test_setup() {
+  let promptHandlerUrl = SimpleTest.getTestFileURL("script_promptHandler.js")
+  promptHandler = SpecialPowers.loadChromeScript(promptHandlerUrl);
+
+  let promptHandlerReady = new Promise(resolve => promptHandler.addMessageListener("initDone", resolve));
+  promptHandler.sendAsyncMessage("init");
+  await promptHandlerReady;
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
+                                     ["dom.filesystem.pathcheck.disabled", true],
+                                     ["dom.webkitBlink.dirPicker.enabled", true]]}, next);
+}
+
+async function test_cleanup() {
+  let promptHandlerDone = new Promise(resolve => promptHandler.addMessageListener("cleanupDone", resolve));
+  promptHandler.sendAsyncMessage("cleanup");
+  await promptHandlerDone;
+  promptHandler.destroy();
+}
+
+var testDirData = [ { name: "foo.txt", path: "/foo.txt" },
+                    { name: "bar.txt", path: "/subdir/bar.txt" }];
+
+var tests = [
+  test_setup,
+
+  function() { populateInputFile("inputFileWebkitDirectory"); },
+  function() { populateInputFile("inputFileWebkitDirectoryAndDirectory"); },
+  function() { populateInputFile("inputFileDirectory"); },
+
+  function() { test_fileList("inputFileWebkitDirectory", testDirData); },
+  function() { test_fileList("inputFileWebkitDirectoryAndDirectory", testDirData); },
+  function() { test_fileList("inputFileDirectory", null); },
+
+  test_webkitdirectory_attribute,
+
+  test_changeDataWhileWorking,
+];
+
+async function next() {
+  if (!tests.length) {
+    await test_cleanup();
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  await test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>

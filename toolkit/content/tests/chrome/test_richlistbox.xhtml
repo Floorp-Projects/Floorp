@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for listbox direction
+  -->
+<window title="Listbox direction test"
+        onload="test_richlistbox()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <richlistbox seltype="multiple" id="richlistbox" flex="1" minheight="80" maxheight="80" height="80" />
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var richListBox = document.getElementById("richlistbox");
+
+function getScrollIndexAmount(aDirection) {
+  return (4 * aDirection + richListBox.currentIndex);
+}
+
+function test_richlistbox()
+{
+  var height = richListBox.clientHeight;
+  var item;
+  do {
+    item = richListBox.appendItem("Test", "");
+    item.height = item.minHeight = item.maxHeight = Math.floor(height / 4);
+  } while (item.getBoundingClientRect().bottom < (height * 2))
+  richListBox.appendItem("Test", "");
+  richListBox.firstChild.nextSibling.id = "list-box-first";
+  richListBox.lastChild.previousSibling.id = "list-box-last";
+
+  var count = richListBox.itemCount;
+  richListBox.focus();
+
+  // Test that dir="reverse" is ignored and behaves the same as dir="normal".
+  for (let dir of ["reverse", "normal"]) {
+    richListBox.style.MozBoxDirection = dir;
+    richListBox.selectedIndex = 0;
+    sendKey("DOWN");
+    is(richListBox.currentIndex, 1, "Selection should move to the next item");
+    sendKey("UP");
+    is(richListBox.currentIndex, 0, "Selection should move to the previous item");
+    sendKey("END");
+    is(richListBox.currentIndex, count - 1, "Selection should move to the last item");
+    sendKey("HOME");
+    is(richListBox.currentIndex, 0, "Selection should move to the first item");
+    var currentIndex = richListBox.currentIndex;
+    var index = richListBox.scrollOnePage(1);
+    sendKey("PAGE_DOWN");
+    is(richListBox.currentIndex, index, "Selection should move to one page down");
+    ok(richListBox.currentIndex > currentIndex, "Selection should move downwards");
+    sendKey("END");
+    currentIndex = richListBox.currentIndex;
+    index = richListBox.scrollOnePage(-1) + richListBox.currentIndex;
+    sendKey("PAGE_UP");
+    is(richListBox.currentIndex, index, "Selection should move to one page up");
+    ok(richListBox.currentIndex < currentIndex, "Selection should move upwards");
+    richListBox.selectedItem = richListBox.firstChild;
+    richListBox.focus();
+    synthesizeKey("KEY_ArrowDown", {shiftKey: true}, window);
+    let items = [richListBox.selectedItems[0],
+             richListBox.selectedItems[1]];
+    is(items[0], richListBox.firstChild, "The last element should still be selected");
+    is(items[1], richListBox.firstChild.nextSibling, "Both elements should now be selected");
+    richListBox.clearSelection();
+    richListBox.selectedItem = richListBox.firstChild;
+    sendMouseEvent({type: "click", shiftKey: true, clickCount: 1},
+                   "list-box-first",
+                   window);
+    items = [richListBox.selectedItems[0],
+             richListBox.selectedItems[1]];
+    is(items[0], richListBox.firstChild, "The last element should still be selected");
+    is(items[1], richListBox.firstChild.nextSibling, "Both elements should now be selected");
+    richListBox.addEventListener("keypress", function(aEvent) {
+      aEvent.preventDefault();
+    }, { useCapture: true, once: true });
+    richListBox.selectedIndex = 1;
+    sendKey("HOME");
+    is(richListBox.selectedIndex, 1, "A stopped event should return indexing to normal");
+  }
+
+  // Test attempting to select a disabled item.
+  richListBox.clearSelection();
+  richListBox.selectedItem = richListBox.firstChild;
+  richListBox.firstChild.nextSibling.setAttribute("disabled", true);
+  richListBox.focus();
+  synthesizeKey("KEY_ArrowDown", {}, window);
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], richListBox.firstChild, "first item selected");
+
+  // Selected item re-insertion should keep the item selected.
+  richListBox.clearSelection();
+  item = richListBox.firstElementChild;
+  richListBox.selectedItem = item;
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], item, "first item selected");
+  item.remove();
+  richListBox.append(item);
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], item, "last (previosly first) item selected");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+</window>

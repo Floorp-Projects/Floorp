@@ -1,0 +1,17 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+certDir=/iopr
+caCertName=TestCA
+caCrlName=TestCA
+userCertNames="TestUser510 TestUser511"
+userRevokedCertNames="TestUser510"
+reverseRunCGIScript="/cgi-bin/client.cgi"
+supportedTests="SslSingleHs"
+# SslSingleHs: ssl single handshake with out client cert auth
+SslSingleHsPort=443
+SslSingleHsUrl=/
+SslSingleHsParam=NOAUTH:NOCOV:NOCRL
+#ParamSslSingleHandshakeWithOutClientCertAuth="443 / NOAUTH:NOCOV:NOCRL"
+#ParamSslSingleHandshakeWithOutClientCertAuth="443 /"

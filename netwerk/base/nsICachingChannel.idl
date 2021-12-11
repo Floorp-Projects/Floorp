@@ -1,0 +1,110 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsICacheInfoChannel.idl"
+
+interface nsIFile;
+
+/**
+ * A channel may optionally implement this interface to allow clients
+ * to affect its behavior with respect to how it uses the cache service.
+ *
+ * This interface provides:
+ *   1) Support for "stream as file" semantics (for JAR and plugins).
+ *   2) Support for "pinning" cached data in the cache (for printing and save-as).
+ *   3) Support for uniquely identifying cached data in cases when the URL
+ *      is insufficient (e.g., HTTP form submission).
+ */
+[scriptable, builtinclass, uuid(dd1d6122-5ecf-4fe4-8f0f-995e7ab3121a)]
+interface nsICachingChannel : nsICacheInfoChannel
+{
+    /**
+     * Set/get the cache token... uniquely identifies the data in the cache.
+     * Holding a reference to this token prevents the cached data from being
+     * removed.
+     *
+     * A cache token retrieved from a particular instance of nsICachingChannel
+     * could be set on another instance of nsICachingChannel provided the
+     * underlying implementations are compatible.  The implementation of
+     * nsICachingChannel would be expected to only read from the cache entry
+     * identified by the cache token and not try to validate it.
+     *
+     * The cache token can be QI'd to a nsICacheEntryInfo if more detail
+     * about the cache entry is needed (e.g., expiration time).
+     */
+    attribute nsISupports cacheToken;
+
+    /**
+     * Instructs the channel to only store the metadata of the entry, and not
+     * the content. When reading an existing entry, this automatically sets
+     * LOAD_ONLY_IF_MODIFIED flag.
+     * Must be called before asyncOpen().
+     */
+    attribute boolean cacheOnlyMetadata;
+
+    /**
+     * Tells the channel to use the pinning storage.
+     */
+    attribute boolean pin;
+
+    /**
+     * Overrides cache validation for a time specified in seconds.
+     *
+     * @param aSecondsToTheFuture
+     *
+     */
+    void forceCacheEntryValidFor(in unsigned long aSecondsToTheFuture);
+
+    /**************************************************************************
+     * Caching channel specific load flags:
+     */
+
+    /**
+     * This load flag inhibits fetching from the net.  An error of
+     * NS_ERROR_DOCUMENT_NOT_CACHED will be sent to the listener's
+     * onStopRequest if network IO is necessary to complete the request.
+     *
+     * This flag can be used to find out whether fetching this URL would
+     * cause validation of the cache entry via the network.
+     *
+     * Combining this flag with LOAD_BYPASS_LOCAL_CACHE will cause all
+     * loads to fail.
+     */
+    const unsigned long LOAD_NO_NETWORK_IO = 1 << 26;
+
+    /**
+     * This load flag causes the local cache to be skipped when fetching a
+     * request.  Unlike LOAD_BYPASS_CACHE, it does not force an end-to-end load
+     * (i.e., it does not affect proxy caches).
+     */
+    const unsigned long LOAD_BYPASS_LOCAL_CACHE = 1 << 28;
+
+    /**
+     * This load flag causes the local cache to be skipped if the request
+     * would otherwise block waiting to access the cache.
+     */
+    const unsigned long LOAD_BYPASS_LOCAL_CACHE_IF_BUSY = 1 << 29;
+
+    /**
+     * This load flag inhibits fetching from the net if the data in the cache
+     * has been evicted.  An error of NS_ERROR_DOCUMENT_NOT_CACHED will be sent
+     * to the listener's onStopRequest in this case.  This flag is set
+     * automatically when the application is offline.
+     */
+    const unsigned long LOAD_ONLY_FROM_CACHE = 1 << 30;
+
+    /**
+     * This load flag controls what happens when a document would be loaded
+     * from the cache to satisfy a call to AsyncOpen.  If this attribute is
+     * set to TRUE, then the document will not be loaded from the cache.  A
+     * stream listener can check nsICachingChannel::isFromCache to determine
+     * if the AsyncOpen will actually result in data being streamed.
+     *
+     * If this flag has been set, and the request can be satisfied via the
+     * cache, then the OnDataAvailable events will be skipped.  The listener
+     * will only see OnStartRequest followed by OnStopRequest.
+     */
+    const unsigned long LOAD_ONLY_IF_MODIFIED = 1 << 31;
+};

@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1534562
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1534562</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1534562 **/
+
+  function runTest() {
+    var host = document.getElementById("host");
+    var shadow = host.attachShadow({mode: 'open'});
+    var shadowDiv = document.createElement('div');
+    shadowDiv.style.cssText = "height: 100%; width: 100%";
+    shadowDiv.onpointerdown = function (e) {
+      shadowDiv.setPointerCapture(e.pointerId);
+    };
+    var shadowDivGotPointerMove = false;
+    shadowDiv.onpointermove = function(e) {
+      shadowDivGotPointerMove = true;
+    }
+    shadow.appendChild(shadowDiv);
+    host.offsetLeft; // Flush layout.
+
+    synthesizeMouseAtCenter(shadowDiv, { type: "mousedown" });
+    synthesizeMouseAtCenter(document.getElementById("lightDOM"),  { type: "mousemove" });
+    ok(shadowDivGotPointerMove, "shadowDiv should have got pointermove event.");
+    synthesizeMouseAtCenter(document.getElementById("lightDOM"),  { type: "mouseup" });
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(runTest);
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1534562">Mozilla Bug 1534562</a>
+<div id="host" style="height: 50px; width: 50px;">
+</div>
+<div id="lightDOM" style="height: 50px; width: 50px;">
+</div>
+</body>
+</html>

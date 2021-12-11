@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=428653
+-->
+<head>
+  <title>View Source Test (bug 428653)</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+  <iframe id="content" src="http://example.org/tests/toolkit/components/viewsource/test/file_empty.html"></iframe>
+
+  <script type="application/javascript">
+  /*
+  Test that we can't call the content browser's document.open() over Xrays.
+  See the security checks in nsHTMLDocument::Open, which make sure that the
+  entry global's principal matches that of the document.
+  */
+  SimpleTest.waitForExplicitFinish();
+
+  addLoadEvent(function testDocumentOpen() {
+    var browser = document.getElementById("content");
+    ok(browser, "got browser");
+    var doc = browser.contentDocument;
+    ok(doc, "got content document");
+
+    var opened = false;
+    try {
+      doc.open("text/html", "replace");
+      opened = true;
+    } catch (e) {
+      is(e.name, "SecurityError", "Unexpected exception");
+    }
+    is(opened, false, "Shouldn't have opened document");
+
+    doc.wrappedJSObject.open("text/html", "replace");
+    ok(true, "Should be able to open document via Xray Waiver");
+
+    SimpleTest.finish();
+  });
+  </script>
+</body>
+</html>

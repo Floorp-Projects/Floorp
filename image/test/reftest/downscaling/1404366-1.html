@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+<!--
+	1404366-1.ico is an ico file that contains a 32x32 0RGB (0 for all alpha values) bmp
+	where the color values are all white. It also contains a mask. The mask alternates
+	one pixel fully transparent, one pixel fully opaque. The result of drawing this on
+	a white background should be white. This is testing that we premultiply the color
+	values by the alpha derived from the mark when downscaling. If we do not skia will
+	get confused and likely draw non white pixels.
+-->
+<img src="1404366-1.ico" style="width: 12px; height: 12px;">
+</body>
+</html>

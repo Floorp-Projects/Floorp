@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30">
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=407959 -->
+
+  <title>Reference for zoomed-svg-with-viewBox-01.svg</title>
+
+  <ellipse cx="20" cy="15" rx="20" ry="15" fill="blue"/>
+
+</svg>

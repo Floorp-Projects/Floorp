@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>postMessage closed page</title>
+  <script type="application/javascript">
+function receiveMessage(evt)
+{
+  evt.source.postMessage("FAIL", "*");
+}
+
+window.addEventListener("message", receiveMessage);
+
+function setup()
+{
+  var query = location.search.substring(1);
+
+  if (query == "opener")
+    window.opener.postMessage("message", "http://mochi.test:8888");
+}
+
+window.addEventListener("load", setup);
+  </script>
+</head>
+<body>
+</body>
+</html>

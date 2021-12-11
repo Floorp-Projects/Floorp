@@ -1,0 +1,62 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: File")
+
+DIRS += ["ipc", "uri"]
+
+EXPORTS.mozilla.dom += [
+    "BaseBlobImpl.h",
+    "Blob.h",
+    "BlobImpl.h",
+    "BlobSet.h",
+    "EmptyBlobImpl.h",
+    "File.h",
+    "FileBlobImpl.h",
+    "FileCreatorHelper.h",
+    "FileList.h",
+    "FileReader.h",
+    "FileReaderSync.h",
+    "MemoryBlobImpl.h",
+    "MultipartBlobImpl.h",
+    "MutableBlobStorage.h",
+    "MutableBlobStreamListener.h",
+    "StreamBlobImpl.h",
+]
+
+UNIFIED_SOURCES += [
+    "BaseBlobImpl.cpp",
+    "Blob.cpp",
+    "BlobImpl.cpp",
+    "BlobSet.cpp",
+    "EmptyBlobImpl.cpp",
+    "File.cpp",
+    "FileBlobImpl.cpp",
+    "FileCreatorHelper.cpp",
+    "FileList.cpp",
+    "FileReader.cpp",
+    "FileReaderSync.cpp",
+    "MemoryBlobImpl.cpp",
+    "MultipartBlobImpl.cpp",
+    "MutableBlobStorage.cpp",
+    "MutableBlobStreamListener.cpp",
+    "StreamBlobImpl.cpp",
+    "StringBlobImpl.cpp",
+    "TemporaryFileBlobImpl.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/file/ipc",
+]
+
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"

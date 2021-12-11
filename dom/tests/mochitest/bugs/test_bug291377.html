@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=291377
+-->
+<head>
+  <title>Test for Bug 291377</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=291377">Mozilla Bug 291377</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 291377 **/
+/* Do something that causes an XPConnect exception */
+var threw = true;
+try {
+  window.location.port = -2;
+  threw = false;
+} catch (e) {
+  /* Check that we can touch various properties */
+  isnot(e.lineNumber, undefined, "Unexpected line number"); //This line number is dependent on the implementation of the SpecialPowers API
+  is(e.name, "NS_ERROR_MALFORMED_URI", "Unexpected exception name");
+  is(e.message, "", "Should not have a message for this case");
+  isnot(e.result, 0, "Should have a result");
+  
+  is(e.result, SpecialPowers.Cr.NS_ERROR_MALFORMED_URI);
+}
+
+is(threw, true, "We need a different testcase for XPConnect exceptions?");
+</script>
+</pre>
+</body>
+</html>
+

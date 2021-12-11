@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@font-face {
+  font-family:test;
+  src:url(../fonts/sil/GenR102.ttf);
+}
+body { width: 500px; height: 300px; writing-mode: vertical-rl;
+       font:16px/24px test; margin: 0; border: 1px solid gray; }
+div { margin: 10px; background: #eee; }
+</style>
+</head>
+
+<body>
+
+<div>
+First single-column division.
+</div>
+
+<div>
+<div style="margin: 0; display: inline-block; height: 145px">
+Two columns<br>
+one<br>two<br>three
+</div><div style="margin: 0; display: inline-block; height: 135px; vertical-align: top">
+four<br>five<br>six
+</div>
+</div>
+
+<div>
+Another single-column division.
+</div>
+
+<div>
+<div style="margin: 0; display: inline-block; height: 95px">
+Three columns<br>
+one
+</div><div style="margin: 0; display: inline-block; height: 95px">two<br>three<br>four
+</div><div style="margin: 0; display: inline-block; height: 85px; vertical-align: top">five<br>six
+</div>
+</div>
+
+<div>
+Final single-column division.
+</div>
+
+</body>
+</html>

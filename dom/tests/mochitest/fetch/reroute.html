@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<script>
+["SimpleTest", "ok", "info", "is", "$"]
+  .forEach((v) => window[v] = window.parent[v]);
+</script>
+<script type="text/javascript" src="utils.js"> </script>
+<script type="text/javascript" src="fetch_test_framework.js"> </script>
+<script>
+// If we are using the empty service worker then requests won't actually
+// get intercepted and response URLs will reflect redirects.  This means
+// all our checks should use the "no sw" logic.  Otherwise we need to
+// note that interceptions are taking place so we can adjust our
+// response URL expectations.
+if (!navigator.serviceWorker.controller.scriptURL.endsWith('empty.js')) {
+  window.isSWPresent = true;
+}
+testScript(location.search.substring(1) + ".js");
+</script>

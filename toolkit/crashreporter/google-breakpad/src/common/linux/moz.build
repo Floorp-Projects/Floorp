@@ -1,0 +1,42 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    'elfutils.cc',
+    'linux_libc_support.cc',
+    'memory_mapped_file.cc',
+    'safe_readlink.cc',
+]
+
+# file_id.cc cannot be built in unified mode because it uses a custom DISABLE_STL_WRAPPING
+SOURCES += [
+    'file_id.cc',
+]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'http_upload.cc',
+    ]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
+    DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
+    COMPILE_FLAGS['OS_INCLUDES'] += [
+        '-I%s/toolkit/crashreporter/google-breakpad/src/common/android/include' % TOPSRCDIR,
+    ]
+
+if not CONFIG['HAVE_GETCONTEXT']:
+    # We don't support unifying assembly files.
+    SOURCES += [
+        'breakpad_getcontext.S',
+    ]
+
+Library('breakpad_linux_common_s')
+
+include('/toolkit/crashreporter/crashreporter.mozbuild')
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-shadow', '-Wno-error=stack-protector']

@@ -1,0 +1,288 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  </head>
+  <body>
+    <script>
+
+var RED   = [1, 0, 0, 1];
+var GREEN = [0, 1, 0, 1];
+var BLUE  = [0, 0, 1, 1];
+var WHITE = [1, 1, 1, 1];
+var ZERO  = [0, 0, 0, 0];
+
+function DrawColors(gl) {
+  var fnClearToColor = function(color) {
+    gl.clearColor(color[0], color[1], color[2], color[3]);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  };
+
+  gl.enable(gl.SCISSOR_TEST);
+
+  // +---+
+  // |G W|
+  // |R B|
+  // +---+
+
+  gl.scissor(0, 0, 1, 1);
+  fnClearToColor(RED);
+
+  gl.scissor(1, 0, 1, 1);
+  fnClearToColor(BLUE);
+
+  gl.scissor(0, 1, 1, 1);
+  fnClearToColor(GREEN);
+
+  gl.scissor(1, 1, 1, 1);
+  fnClearToColor(WHITE);
+}
+
+function ClearBufferPair(gl, byteCount) {
+  // Using `null` here clears to zero according to WebGL.
+  gl.bufferData(gl.PIXEL_PACK_BUFFER, byteCount, gl.STREAM_READ);
+
+  var arr = new Uint8Array(byteCount);
+  return arr;
+}
+
+function ColorToString(color, offset=0) {
+  var arr = [ color[offset+0],
+              color[offset+1],
+              color[offset+2],
+              color[offset+3] ];
+  return '[' + arr.join(', ') + ']';
+}
+
+function TestIsUNormColor(refColor, testData, offset) {
+  if (testData.length < offset + 4) {
+    ok(false, 'testData not long enough.');
+  }
+
+  var refUNormColor = [
+    (refColor[0] * 255) | 0,
+    (refColor[1] * 255) | 0,
+    (refColor[2] * 255) | 0,
+    (refColor[3] * 255) | 0,
+  ];
+
+  var refStr = ColorToString(refUNormColor);
+  var testStr = ColorToString(testData, offset);
+  ok(testStr == refStr, 'Expected ' + refStr + ', was ' + testStr + '.');
+}
+
+function section(text) {
+  ok(true, '');
+  ok(true, 'Section: ' + text);
+}
+
+function EnsureNoError(gl) {
+  var glErr = gl.getError();
+  while (gl.getError()) {}
+
+  if (!glErr)
+    return;
+
+  var extraInfo = '';
+
+  var err = new Error();
+  var stackStr = err.stack;
+  if (stackStr !== undefined) {
+    var stackArr = stackStr.split('\n');
+    stackStr = stackArr[1]; // First one after present scope.
+    extraInfo = ': ' + stackStr;
+  }
+
+  ok(false, 'Unexpected GL error: 0x' + glErr.toString(16) + extraInfo);
+}
+
+function TestError(gl, refErrVal, str='') {
+  if (str == '') {
+    str = 'gl.getError()';
+  } else {
+    str = str + ': gl.getError()';
+  }
+
+  var err = gl.getError();
+  while (gl.getError()) {}
+
+  ShouldBe(err.toString(16), refErrVal.toString(16), str);
+}
+
+function ShouldBe(val, ref, str='') {
+  if (str != '') {
+    str += ': ';
+  }
+
+  ok(val == ref, str + 'Should be `' + ref + '`, was `' + val + '`.');
+}
+
+var gl;
+
+function Test() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 2;
+  canvas.height = 2;
+  canvas.style = 'width: 256px; height: 256px; border: 1px solid black;';
+  document.body.appendChild(canvas);
+
+  var attribs = {
+    antialias: false,
+    alpha: false,
+  };
+  gl = canvas.getContext('webgl2', attribs);
+  if (!gl) {
+    todo(false, 'WebGL 2 not present, skipping.');
+    return;
+  }
+
+  ////////
+
+  TestIsUNormColor(RED, new Uint8Array([255, 0, 0, 255]), 0);
+
+  ////////
+
+  gl.clearColor(RED[0], RED[1], RED[2], RED[3]);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  var data = new Uint8Array(16);
+  gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  console.log(JSON.stringify(data));
+  TestIsUNormColor(RED, data, 0);
+
+  ////////
+
+  DrawColors(gl);
+
+  ////////
+
+  EnsureNoError(gl);
+  gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+  TestError(gl, gl.INVALID_OPERATION);
+
+  var data = new Uint8Array(16);
+  gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  EnsureNoError(gl);
+  TestIsUNormColor(RED, data, 0);
+  TestIsUNormColor(BLUE, data, 4);
+  TestIsUNormColor(GREEN, data, 8);
+  TestIsUNormColor(WHITE, data, 12);
+
+  ////////
+
+  var a = gl.createBuffer();
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, a);
+  EnsureNoError(gl);
+
+  gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  TestError(gl, gl.INVALID_OPERATION);
+
+  ////////
+
+  // Basic
+  section('Basic readback');
+  data = ClearBufferPair(gl, 16);
+  EnsureNoError(gl);
+  gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+  EnsureNoError(gl);
+  gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, data);
+  EnsureNoError(gl);
+  TestIsUNormColor(RED, data, 0);
+  TestIsUNormColor(BLUE, data, 4);
+  TestIsUNormColor(GREEN, data, 8);
+  TestIsUNormColor(WHITE, data, 12);
+
+  section('Subrect readback');
+  data = ClearBufferPair(gl, 8);
+  gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+  gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, data);
+  EnsureNoError(gl);
+  TestIsUNormColor(WHITE, data, 0);
+  TestIsUNormColor(ZERO, data, 4);
+
+  section('ReadPixels offset:4');
+  data = ClearBufferPair(gl, 16);
+  gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 4);
+  gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, data);
+  EnsureNoError(gl);
+  TestIsUNormColor(ZERO, data, 0);
+  TestIsUNormColor(WHITE, data, 4);
+  TestIsUNormColor(ZERO, data, 8);
+  TestIsUNormColor(ZERO, data, 12);
+
+  section('ReadPixels offset:5');
+  gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 5);
+  gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, data);
+  EnsureNoError(gl);
+  TestIsUNormColor(ZERO, data, 0);
+  TestIsUNormColor(WHITE, data, 4); // Should remain from previous read.
+  TestIsUNormColor(WHITE, data, 5);
+  TestIsUNormColor(ZERO, data, 9);
+  TestIsUNormColor(ZERO, data, 12);
+
+  section('GetBufferSubData src too small');
+  data = ClearBufferPair(gl, 16);
+  EnsureNoError(gl);
+  gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 1, data);
+  TestError(gl, gl.INVALID_VALUE);
+  TestIsUNormColor(ZERO, data, 0);
+  TestIsUNormColor(ZERO, data, 4);
+  TestIsUNormColor(ZERO, data, 8);
+  TestIsUNormColor(ZERO, data, 12);
+
+  section('GetBufferSubData offset:1');
+  data = new Uint8Array(15);
+  gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 8);
+  gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 1, data);
+  EnsureNoError(gl);
+  TestIsUNormColor(ZERO, data, 0);
+  TestIsUNormColor(ZERO, data, 3);
+  TestIsUNormColor(WHITE, data, 7);
+  TestIsUNormColor(ZERO, data, 11);
+
+  //////////////////////////////////////
+
+  section('Test packing state');
+  EnsureNoError(gl);
+
+  function TestPackState(enumStr, initialVal, changedVal) {
+    var enumVal = gl[enumStr];
+
+    ShouldBe(gl.getParameter(enumVal), initialVal, 'Initial ' + enumStr);
+    gl.pixelStorei(enumVal, changedVal);
+    ShouldBe(gl.getParameter(enumVal), changedVal, 'Changed ' + enumStr);
+    gl.pixelStorei(enumVal, initialVal);
+    ShouldBe(gl.getParameter(enumVal), initialVal, 'Reverted ' + enumStr);
+    EnsureNoError(gl);
+  }
+
+  TestPackState('PACK_ALIGNMENT', 4, 1);
+  TestPackState('PACK_ROW_LENGTH', 0, 16);
+  TestPackState('PACK_SKIP_PIXELS', 0, 3);
+  TestPackState('PACK_SKIP_ROWS', 0, 3);
+}
+
+function RunTest() {
+  Test();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+try {
+  var prefArrArr = [
+    ['webgl.force-enabled', true],
+    ['webgl.disable-angle', true],
+  ];
+  var prefEnv = {'set': prefArrArr};
+  SpecialPowers.pushPrefEnv(prefEnv, RunTest);
+} catch (e) {
+  todo(false, 'No SpecialPowers, but trying anyway...');
+  RunTest();
+}
+
+    </script>
+  </body>
+</html>

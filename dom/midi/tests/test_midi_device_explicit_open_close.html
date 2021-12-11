@@ -1,0 +1,95 @@
+<html>
+  <head>
+    <title>WebMIDI Device Open/Close Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(true);
+
+       let access;
+       try {
+         access = await navigator.requestMIDIAccess({ "sysex": false })
+       } catch (e) {
+         ok(false, "MIDI Access Request Failed!");
+         SimpleTest.finish();
+       }
+
+       ok(true, "MIDI Access Request successful");
+       let input = access.inputs.get(MIDITestUtils.inputInfo.id);
+       let portEventRes;
+       let accessEventRes;
+       let portEventPromise = new Promise((resolve, reject) => { portEventRes = resolve; });
+       let accessEventPromise = new Promise((resolve, reject) => { accessEventRes = resolve; });
+       let shouldClose = false;
+       let checkPort = (event) => {
+         ok(input === event.port, "input port object and event port object are same object");
+         ok(true, "port connection event fired");
+         ok(event.port.connection === (!shouldClose ? "open" : "closed"), "connection registered correctly");
+       };
+       let inputEventHandler = (event) => {
+         checkPort(event);
+         portEventRes();
+       };
+       let accessEventHandler = (event) => {
+         checkPort(event);
+         accessEventRes();
+       };
+       input.addEventListener("statechange", inputEventHandler);
+       access.addEventListener("statechange", accessEventHandler);
+       await input.open();
+       ok(true, "connection successful");
+       ok(input.connection === "open", "connection registered as open");
+       await Promise.all([portEventPromise, accessEventPromise]);
+       input.removeEventListener("statechange", inputEventHandler);
+       access.removeEventListener("statechange", accessEventHandler);
+       ok(true, "MIDI Port Open Test finished.");
+       ok(true, "Testing open failure");
+       let out_access;
+       try {
+         out_access = await navigator.requestMIDIAccess({ "sysex": false });
+       } catch (e) {
+         ok(false, "MIDI Access Request Failed!");
+         SimpleTest.finish();
+       }
+       let outputEventRes;
+       let outputEventHandler = (event) => {
+         ok(output_opened === event.port, "output port object and event port object are same object");
+         ok(true, "access connection event fired");
+         ok(event.port.connection === "closed", "connection registered as closed");
+       };
+       out_access.addEventListener("statechange", outputEventHandler);
+       let output_opened = out_access.outputs.get(MIDITestUtils.alwaysClosedTestOutputInfo.id);
+       try {
+         await output_opened.open();
+         ok(false, "Should've failed to open port!");
+       } catch(err) {
+         is(err.name, "InvalidAccessError", "error name " + err.name + " should be InvalidAccessError");
+         ok(output_opened.connection == "closed", "connection registered as closed");
+         ok(true, "Port not opened, test succeeded");
+       } finally {
+         out_access.removeEventListener("statechange", outputEventHandler);
+       }
+       ok(true, "Starting MIDI port closing test");
+       portEventPromise = new Promise((resolve, reject) => { portEventRes = resolve; });
+       accessEventPromise = new Promise((resolve, reject) => { accessEventRes = resolve; });
+       input.addEventListener("statechange", inputEventHandler);
+       access.addEventListener("statechange", accessEventHandler);
+       shouldClose = true;
+       await input.close();
+       ok(input.connection === "closed", "connection registered as closed");
+       await Promise.all([portEventPromise, accessEventPromise]);
+       input.removeEventListener("statechange", inputEventHandler);
+       access.removeEventListener("statechange", accessEventHandler);
+       SimpleTest.finish();
+     }
+    </script>
+  </body>
+</html>

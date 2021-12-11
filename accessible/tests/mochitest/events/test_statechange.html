@@ -1,0 +1,587 @@
+<html>
+
+<head>
+  <title>Accessible state change event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function stateChange(aState, aIsExtraState, aIsEnabled, aTarget) {
+      return [EVENT_STATE_CHANGE, evt => {
+        evt.QueryInterface(nsIAccessibleStateChangeEvent);
+        return evt.state == aState && evt.isExtraState == aIsExtraState &&
+          aIsEnabled == evt.isEnabled && getAccessible(aTarget) == evt.accessible;
+      }];
+    }
+
+    async function openNode(aIDDetails, aIDSummary, aIsOpen) {
+      let p = waitForEvent(...stateChange(STATE_EXPANDED, false, aIsOpen, aIDSummary));
+      if (aIsOpen) {
+        getNode(aIDDetails).setAttribute("open", "");
+      } else {
+        getNode(aIDDetails).removeAttribute("open");
+      }
+      await p;
+    }
+
+    async function makeEditableDoc(aDocNode, aIsEnabled) {
+      let p = waitForEvent(...stateChange(EXT_STATE_EDITABLE, true, true, aDocNode));
+      aDocNode.designMode = "on";
+      await p;
+    }
+
+    async function invalidInput(aNodeOrID) {
+      let p = waitForEvent(...stateChange(STATE_INVALID, false, true, aNodeOrID));
+      getNode(aNodeOrID).value = "I am not an email";
+      await p;
+    }
+
+    async function changeCheckInput(aID, aIsChecked) {
+      let p = waitForEvent(...stateChange(STATE_CHECKED, false, aIsChecked, aID));
+      getNode(aID).checked = aIsChecked;
+      await p;
+    }
+
+    async function changeRequiredState(aID, aIsRequired) {
+      let p = waitForEvent(...stateChange(STATE_REQUIRED, false, aIsRequired, aID));
+      getNode(aID).required = aIsRequired;
+      await p;
+    }
+
+    async function stateChangeOnFileInput(aID, aAttr, aValue,
+                                    aState, aIsExtraState, aIsEnabled) {
+      let fileControlNode = getNode(aID);
+      let fileControl = getAccessible(fileControlNode);
+      let browseButton = fileControl.firstChild;
+      let p = waitForEvents([
+        stateChange(aState, aIsExtraState, aIsEnabled, fileControl),
+        stateChange(aState, aIsExtraState, aIsEnabled, browseButton)])
+      fileControlNode.setAttribute(aAttr, aValue);
+      await p;
+    }
+
+    function toggleSentinel() {
+      let sentinel = getNode("sentinel");
+      if (sentinel.hasAttribute("aria-busy"))  {
+        sentinel.removeAttribute("aria-busy");
+      } else {
+        sentinel.setAttribute("aria-busy", "true");
+      }
+    }
+
+    async function toggleStateChange(aID, aAttr, aState, aIsExtraState) {
+      let p = waitForEvents([
+        stateChange(aState, aIsExtraState, true, aID),
+        [EVENT_STATE_CHANGE, "sentinel"]
+        ]);
+      getNode(aID).setAttribute(aAttr, "true");
+      toggleSentinel();
+      await p;
+      p = waitForEvents([
+        stateChange(aState, aIsExtraState, false, aID),
+        [EVENT_STATE_CHANGE, "sentinel"]
+        ]);
+      getNode(aID).setAttribute(aAttr, "false");
+      toggleSentinel();
+      await p;
+    }
+
+    async function dupeStateChange(aID, aAttr, aValue,
+                             aState, aIsExtraState, aIsEnabled) {
+      let p = waitForEvents([
+        stateChange(aState, aIsExtraState, aIsEnabled, aID),
+        [EVENT_STATE_CHANGE, "sentinel"]
+        ]);
+      getNode(aID).setAttribute(aAttr, aValue);
+      getNode(aID).setAttribute(aAttr, aValue);
+      toggleSentinel();
+      await p;
+    }
+
+    async function oppositeStateChange(aID, aAttr, aState, aIsExtraState) {
+      let p = waitForEvents({
+        expected: [[EVENT_STATE_CHANGE, "sentinel"]],
+        unexpected: [
+          stateChange(aState, aIsExtraState, false, aID),
+          stateChange(aState, aIsExtraState, true, aID)
+        ]
+      });
+      getNode(aID).setAttribute(aAttr, "false");
+      getNode(aID).setAttribute(aAttr, "true");
+      toggleSentinel();
+      await p;
+    }
+
+    /**
+     * Change concomitant ARIA and native attribute at once.
+     */
+    async function echoingStateChange(aID, aARIAAttr, aAttr, aValue,
+                                      aState, aIsExtraState, aIsEnabled) {
+      let p = waitForEvent(...stateChange(aState, aIsExtraState, aIsEnabled, aID));
+      if (aValue == null) {
+        getNode(aID).removeAttribute(aARIAAttr);
+        getNode(aID).removeAttribute(aAttr);
+      } else {
+        getNode(aID).setAttribute(aARIAAttr, aValue);
+        getNode(aID).setAttribute(aAttr, aValue);
+      }
+      await p;
+    }
+
+    async function testLinked() {
+      let p = waitForEvent(...stateChange(STATE_LINKED, false, false, "link1"));
+      getNode("link1").removeAttribute("href");
+      await p;
+
+      p = waitForEvent(...stateChange(STATE_LINKED, false, false, "link2"));
+      getNode("link2").removeAttribute("onclick");
+      await p;
+
+      p = waitForEvent(...stateChange(STATE_LINKED, false, true, "link3"));
+      getNode("link3").setAttribute("href", "http://example.com");
+      await p;
+    }
+
+    async function testHasPopup() {
+      let p = waitForEvent(...stateChange(STATE_HASPOPUP, false, true, "popupButton"));
+      getNode("popupButton").setAttribute("aria-haspopup", "true");
+      await p;
+
+      p = waitForEvent(...stateChange(STATE_HASPOPUP, false, false, "popupButton"));
+      getNode("popupButton").setAttribute("aria-haspopup", "false");
+      await p;
+
+      p = waitForEvent(...stateChange(STATE_HASPOPUP, false, true, "popupButton"));
+      getNode("popupButton").setAttribute("aria-haspopup", "true");
+      await p;
+
+      p = waitForEvent(...stateChange(STATE_HASPOPUP, false, false, "popupButton"));
+      getNode("popupButton").removeAttribute("aria-haspopup");
+      await p;
+    }
+
+    async function testDefaultSubmitChange() {
+      testStates("default-button",
+        STATE_DEFAULT, 0,
+        0, 0,
+        "button should have DEFAULT state");
+      let button = document.createElement("button");
+      button.textContent = "new default";
+      let p = waitForEvent(...stateChange(STATE_DEFAULT, false, false, "default-button"));
+      getNode("default-button").before(button);
+      await p;
+      testStates("default-button",
+        0, 0,
+        STATE_DEFAULT, 0,
+        "button should not have DEFAULT state");
+      p = waitForEvent(...stateChange(STATE_DEFAULT, false, true, "default-button"));
+      button.remove();
+      await p;
+      testStates("default-button",
+        STATE_DEFAULT, 0,
+        0, 0,
+        "button should have DEFAULT state");
+    }
+
+    async function testReadOnly() {
+      let p = waitForEvent(...stateChange(STATE_READONLY, false, true, "email"));
+      getNode("email").setAttribute("readonly", "true");
+      await p;
+      p = waitForEvent(...stateChange(STATE_READONLY, false, false, "email"));
+      getNode("email").removeAttribute("readonly");
+      await p;
+    }
+
+    async function testReadonlyUntilEditable() {
+      testStates("article",
+        STATE_READONLY, 0,
+        0, EXT_STATE_EDITABLE,
+        "article is READONLY and not EDITABLE");
+      let p = waitForEvents([
+        stateChange(STATE_READONLY, false, false, "article"),
+        stateChange(EXT_STATE_EDITABLE, true, true, "article")]);
+      getNode("article").contentEditable = "true";
+      await p;
+      testStates("article",
+        0, EXT_STATE_EDITABLE,
+        STATE_READONLY, 0,
+        "article is EDITABLE and not READONLY");
+      p = waitForEvents([
+        stateChange(STATE_READONLY, false, true, "article"),
+        stateChange(EXT_STATE_EDITABLE, true, false, "article")]);
+      getNode("article").contentEditable = "false";
+      await p;
+      testStates("article",
+        STATE_READONLY, 0,
+        0, EXT_STATE_EDITABLE,
+        "article is READONLY and not EDITABLE");
+    }
+
+    async function testAnimatedImage() {
+      testStates("animated-image",
+        STATE_ANIMATED, 0,
+        0, 0,
+        "image should be animated 1");
+      let p = waitForEvent(...stateChange(STATE_ANIMATED, false, false, "animated-image"));
+      getNode("animated-image").src = "../animated-gif-finalframe.gif";
+      await p;
+      testStates("animated-image",
+        0, 0,
+        STATE_ANIMATED, 0,
+        "image should not be animated 2");
+      p = waitForEvent(...stateChange(STATE_ANIMATED, false, true, "animated-image"));
+      getNode("animated-image").src = "../animated-gif.gif";
+      await p;
+      testStates("animated-image",
+        STATE_ANIMATED, 0,
+        0, 0,
+        "image should be animated 3");
+    }
+
+    async function testImageLoad() {
+      let img = document.createElement("img");
+      img.id = "image";
+      img.src = "http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs";
+      let p = waitForEvent(EVENT_SHOW, "image");
+      getNode("eventdump").before(img);
+      await p;
+      testStates("image",
+        STATE_INVISIBLE, 0,
+        0, 0,
+        "image should be invisible");
+      p = waitForEvent(...stateChange(STATE_INVISIBLE, false, false, "image"));
+      await fetch("http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs?complete");
+      await p;
+      testStates("image",
+        0, 0,
+        STATE_INVISIBLE, 0,
+        "image should be invisible");
+    }
+    
+    async function testMultiSelectable(aID, aAttribute) {
+      testStates(aID,
+        0, 0,
+        STATE_MULTISELECTABLE | STATE_EXTSELECTABLE, 0,
+        `${aID} should not be multiselectable`);
+      let p = waitForEvents([
+        stateChange(STATE_MULTISELECTABLE, false, true, aID),
+        stateChange(STATE_EXTSELECTABLE, false, true, aID),
+      ]);
+      getNode(aID).setAttribute(aAttribute, true);
+      await p;
+      testStates(aID,
+        STATE_MULTISELECTABLE | STATE_EXTSELECTABLE, 0,
+        0, 0,
+        `${aID} should not be multiselectable`);
+      p = waitForEvents([
+        stateChange(STATE_MULTISELECTABLE, false, false, aID),
+        stateChange(STATE_EXTSELECTABLE, false, false, aID),
+      ]);
+      getNode(aID).removeAttribute(aAttribute);
+      await p;
+      testStates(aID,
+        0, 0,
+        STATE_MULTISELECTABLE | STATE_EXTSELECTABLE, 0,
+        `${aID} should not be multiselectable`);
+    }
+
+    async function testAutocomplete() {
+      // A text input will have autocomplete via browser's form autofill...
+      testStates("input",
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        0, 0,
+        "input supports autocompletion");
+      // unless it is explicitly turned off.
+      testStates("input-autocomplete-off",
+        0, 0,
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        "input-autocomplete-off does not support autocompletion");
+      // An input with a datalist will always have autocomplete.
+      testStates("input-list",
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        0, 0,
+        "input-list supports autocompletion");
+      // password fields don't get autocomplete.
+      testStates("input-password",
+        0, 0,
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        "input-autocomplete-off does not support autocompletion");
+
+      let p = waitForEvents({
+        expected: [
+          // Setting the form's autocomplete attribute to "off" will cause
+          // "input" to lost its autocomplete state.
+          stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, false, "input")
+        ],
+        unexpected: [
+          // "input-list" should preserve its autocomplete state regardless of
+          // forms "autocomplete" attribute
+          [EVENT_STATE_CHANGE, "input-list"],
+          // "input-autocomplete-off" already has its autocomplte off, so no state
+          // change here.
+          [EVENT_STATE_CHANGE, "input-autocomplete-off"],
+          // passwords never get autocomplete
+          [EVENT_STATE_CHANGE, "input-password"],
+        ]
+      });
+
+      getNode("form").setAttribute("autocomplete", "off");
+
+      await p;
+
+      // Same when we remove the form's autocomplete attribute.
+      p = waitForEvents({
+        expected: [stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, true, "input")],
+        unexpected: [
+          [EVENT_STATE_CHANGE, "input-list"],
+          [EVENT_STATE_CHANGE, "input-autocomplete-off"],
+          [EVENT_STATE_CHANGE, "input-password"],
+        ]
+      });
+
+      getNode("form").removeAttribute("autocomplete");
+
+      await p;
+
+      p = waitForEvents({
+        expected: [
+          // Forcing autocomplete off on an input will cause a state change
+          stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, false, "input"),
+          // Associating a datalist with an autocomplete=off input
+          // will give it an autocomplete state, regardless.
+          stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, true, "input-autocomplete-off"),
+          // XXX: datalist inputs also get a HASPOPUP state, the inconsistent
+          // use of that state is inexplicable, but lets make sure we fire state
+          // change events for it anyway.
+          stateChange(STATE_HASPOPUP, false, true, "input-autocomplete-off"),
+        ],
+        unexpected: [
+          // Forcing autocomplete off with a dataset input does nothing.
+          [EVENT_STATE_CHANGE, "input-list"],
+          // passwords never get autocomplete
+          [EVENT_STATE_CHANGE, "input-password"],
+        ]
+      });
+
+      getNode("input").setAttribute("autocomplete", "off");
+      getNode("input-list").setAttribute("autocomplete", "off");
+      getNode("input-autocomplete-off").setAttribute("list", "browsers");
+      getNode("input-password").setAttribute("autocomplete", "off");
+
+      await p;
+    }
+
+    async function doTests() {
+      // Test opening details objects
+      await openNode("detailsOpen", "summaryOpen", true);
+      await openNode("detailsOpen", "summaryOpen", false);
+      await openNode("detailsOpen1", "summaryOpen1", true);
+      await openNode("detailsOpen2", "summaryOpen2", true);
+      await openNode("detailsOpen3", "summaryOpen3", true);
+      await openNode("detailsOpen4", "summaryOpen4", true);
+      await openNode("detailsOpen5", "summaryOpen5", true);
+      await openNode("detailsOpen6", "summaryOpen6", true);
+
+      // Test delayed editable state change
+      var doc = document.getElementById("iframe").contentDocument;
+      await makeEditableDoc(doc);
+
+      // invalid state change
+      await invalidInput("email");
+
+      // checked state change
+      await changeCheckInput("checkbox", true);
+      await changeCheckInput("checkbox", false);
+      await changeCheckInput("radio", true);
+      await changeCheckInput("radio", false);
+
+      // required state change
+      await changeRequiredState("checkbox", true);
+
+      // file input inherited state changes
+      await stateChangeOnFileInput("file", "aria-busy", "true",
+                                   STATE_BUSY, false, true);
+      await stateChangeOnFileInput("file", "aria-required", "true",
+                                   STATE_REQUIRED, false, true);
+      await stateChangeOnFileInput("file", "aria-invalid", "true",
+                                   STATE_INVALID, false, true);
+
+      await dupeStateChange("div", "aria-busy", "true",
+                            STATE_BUSY, false, true);
+      await oppositeStateChange("div", "aria-busy",
+                                STATE_BUSY, false);
+
+      await echoingStateChange("text1", "aria-disabled", "disabled", "true",
+                               EXT_STATE_ENABLED, true, false);
+      await echoingStateChange("text1", "aria-disabled", "disabled", null,
+                               EXT_STATE_ENABLED, true, true);
+
+      await testReadOnly();
+
+      await testReadonlyUntilEditable();
+
+      await testLinked();
+
+      await testHasPopup();
+
+      await toggleStateChange("textbox", "aria-multiline", EXT_STATE_MULTI_LINE, true);
+
+      await testDefaultSubmitChange();
+
+      await testAnimatedImage();
+
+      await testImageLoad();
+
+      await testMultiSelectable("listbox", "aria-multiselectable");
+
+      await testMultiSelectable("select", "multiple");
+
+      await testAutocomplete();
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+<style>
+  details.openBefore::before{
+    content: "before detail content: ";
+    background: blue;
+  }
+  summary.openBefore::before{
+    content: "before summary content: ";
+    background: green;
+  }
+  details.openAfter::after{
+    content: " :after detail content";
+    background: blue;
+  }
+  summary.openAfter::after{
+    content: " :after summary content";
+    background: green;
+  }
+</style>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=564471"
+     title="Make state change events async">
+    Bug 564471
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=555728"
+     title="Fire a11y event based on HTML5 constraint validation">
+    Bug 555728
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Bug 699017
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=788389"
+     title="Fire statechange event whenever checked state is changed not depending on focused state">
+    Bug 788389
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=926812"
+     title="State change event not fired when both disabled and aria-disabled are toggled">
+    Bug 926812
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- open -->
+  <details id="detailsOpen"><summary id="summaryOpen">open</summary>details can be opened</details>
+  <details id="detailsOpen1">order doesn't matter<summary id="summaryOpen1">open</summary></details>
+  <details id="detailsOpen2"><div>additional elements don't matter</div><summary id="summaryOpen2">open</summary></details>
+  <details id="detailsOpen3" class="openBefore"><summary id="summaryOpen3">summary</summary>content</details>
+  <details id="detailsOpen4" class="openAfter"><summary id="summaryOpen4">summary</summary>content</details>
+  <details id="detailsOpen5"><summary id="summaryOpen5" class="openBefore">summary</summary>content</details>
+  <details id="detailsOpen6"><summary id="summaryOpen6" class="openAfter">summary</summary>content</details>
+
+
+  <div id="testContainer">
+    <iframe id="iframe"></iframe>
+  </div>
+
+  <input id="email" type='email'>
+
+  <input id="checkbox" type="checkbox">
+  <input id="radio" type="radio">
+
+  <input id="file" type="file">
+
+  <div id="div"></div>
+
+  <!-- A sentinal guards from events of interest being fired after it emits a state change -->
+  <div id="sentinel"></div>
+
+  <input id="text1">
+
+  <a id="link1" href="#">I am a link link</a>
+  <a id="link2" onclick="console.log('hi')">I am a link-ish link</a>
+  <a id="link3">I am a non-link link</a>
+
+  <div id="textbox" role="textbox" aria-multiline="false">hello</div>
+
+  <form id="form">
+    <button id="default-button">hello</button>
+    <button>world</button>
+    <input id="input">
+    <input id="input-autocomplete-off" autocomplete="off">
+    <input id="input-list" list="browsers">
+    <input id="input-password" type="password">
+    <datalist id="browsers">
+      <option value="Internet Explorer">
+      <option value="Firefox">
+      <option value="Google Chrome">
+      <option value="Opera">
+      <option value="Safari">
+    </datalist>
+  </form>
+
+  <div id="article" role="article">hello</div>
+
+  <img id="animated-image" src="../animated-gif.gif">
+
+  <ul id="listbox" role="listbox">
+    <li role="option">one</li>
+    <li role="option">two</li>
+    <li role="option">three</li>
+    <li role="option">four</li>
+    <li role="option">five</li>
+  </ul>
+
+  <select id="select" size="2">
+    <option>one</option>
+    <option>two</option>
+    <option>three</option>
+    <option>four</option>
+    <option>five</option>
+    <option>size</option>
+  </select>
+
+  <div id="eventdump"></div>
+
+  <div id="eventdump"></div>
+  <button id="popupButton">action</button>
+</body>
+</html>

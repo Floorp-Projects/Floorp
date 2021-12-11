@@ -1,0 +1,12 @@
+UNIFIED_SOURCES = [
+    "mozwer.cpp",
+]
+
+USE_LIBS += [
+    "mozwer_s",
+]
+
+DEFFILE = "mozwer.def"
+USE_STATIC_LIBS = True
+
+SharedLibrary("mozwer")

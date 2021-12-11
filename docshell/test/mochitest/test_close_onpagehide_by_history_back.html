@@ -1,0 +1,24 @@
+<!doctype html>
+<title>Test for closing window in pagehide event callback caused by history.back()</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1432396">Mozilla Bug 1432396</a>
+<p id="display"></p>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+const w = window.open("file_close_onpagehide1.html");
+window.addEventListener("message", e => {
+  is(e.data, "initial", "The initial page loaded");
+  window.addEventListener("message", evt => {
+    is(evt.data, "second", "The second page loaded");
+    w.onpagehide = () => {
+      w.close();
+      info("try to close the popped up window in onpagehide");
+      SimpleTest.finish();
+    };
+    w.history.back();
+  }, { once: true });
+  w.location = "file_close_onpagehide2.html";
+}, { once: true });
+</script>

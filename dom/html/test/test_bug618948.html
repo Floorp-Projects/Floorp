@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=618948
+-->
+<head>
+  <title>Test for Bug 618948</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=618948">Mozilla Bug 618948</a>
+<p id="display"></p>
+<div id="content">
+  <form>
+    <input type='email' id='i'>
+    <button>submit</button>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 618948 **/
+
+var events = ["focus", "input", "change", "invalid" ];
+
+var handled = ({});
+
+function eventHandler(event)
+{
+ dump("\n" + event.type + "\n");
+  handled[event.type] = true;
+}
+
+function beginTest()
+{
+  for (var e of events) {
+    handled[e] = false;
+  }
+
+  i.focus();
+}
+
+function endTest()
+{
+  for (var e of events) {
+    ok(handled[e], "on" + e + " should have been called");
+  }
+
+  SimpleTest.finish();
+}
+
+var i = document.getElementsByTagName('input')[0];
+var b = document.getElementsByTagName('button')[0];
+
+i.onfocus = function(event) {
+  eventHandler(event);
+  sendString("f");
+  i.onfocus = null;
+};
+
+i.oninput = function(event) {
+  eventHandler(event);
+  b.focus();
+  i.oninput = null;
+};
+
+i.onchange = function(event) {
+  eventHandler(event);
+  i.onchange = null;
+  synthesizeMouseAtCenter(b, {});
+};
+
+i.oninvalid = function(event) {
+  eventHandler(event);
+  i.oninvalid = null;
+  endTest();
+};
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(beginTest);
+
+</script>
+</pre>
+</body>
+</html>

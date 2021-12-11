@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+[scriptable, builtinclass, uuid(ba3b2e08-1c07-4cd3-8822-f4d7e35ff2ae)]
+interface nsIMediaDevice : nsISupports
+{
+  readonly attribute AString type;
+  readonly attribute AString name; // may have personal info filtered out
+  readonly attribute AString id;
+  readonly attribute AString mediaSource;
+  readonly attribute AString rawId;
+  readonly attribute AString groupId;
+  readonly attribute AString rawGroupId;
+  readonly attribute boolean scary;
+  readonly attribute AString rawName; // unfiltered device name, from 1616661
+};

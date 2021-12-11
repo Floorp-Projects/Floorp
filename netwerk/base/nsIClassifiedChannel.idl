@@ -1,0 +1,195 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIClassifiedChannel
+ *
+ * A channel may optionally implement this interface if it carries classified
+ * result information of channel classifier. The information contains, for
+ * example, the name of matched table and the name of matched provider.
+ */
+[builtinclass, scriptable, uuid(70cf6091-a1de-4aa8-8224-058f8964be31)]
+interface nsIClassifiedChannel : nsISupports
+{
+  /**
+   * Sets matched info of the classified channel.
+   *
+   * @param aList
+   *        Name of the Safe Browsing list that matched (e.g. goog-phish-shavar).
+   * @param aProvider
+   *        Name of the Safe Browsing provider that matched (e.g. google)
+   * @param aFullHash
+   *        Full hash of URL that matched Safe Browsing list.
+   */
+  void setMatchedInfo(in ACString aList,
+                      in ACString aProvider,
+                      in ACString aFullHash);
+
+  /**
+   * Name of the list that matched
+   */
+  readonly attribute ACString matchedList;
+
+  /**
+   * Name of provider that matched
+   */
+  readonly attribute ACString matchedProvider;
+
+  /**
+   * Full hash of URL that matched
+   */
+  readonly attribute ACString matchedFullHash;
+
+  /**
+   * Sets matched tracking info of the classified channel.
+   *
+   * @param aLists
+   *        Name of the Tracking Protection list that matched (e.g. content-track-digest256).
+   * @param aFullHash
+   *        Full hash of URLs that matched Tracking Protection list.
+   */
+  void setMatchedTrackingInfo(in Array<ACString> aLists,
+                              in Array<ACString> aFullHashes);
+
+  /**
+   * Name of the lists that matched
+   */
+  readonly attribute Array<ACString> matchedTrackingLists;
+
+  /**
+   * Full hash of URLs that matched
+   */
+  readonly attribute Array<ACString> matchedTrackingFullHashes;
+
+  /**
+   * Returns the classification flags if the channel has been processed by
+   * URL-Classifier features and is considered first-party.
+   */
+  [infallible] readonly attribute unsigned long firstPartyClassificationFlags;
+
+  /**
+   * Returns the classification flags if the channel has been processed by
+   * URL-Classifier features and is considered third-party with the top
+   * window URI.
+   */
+  [infallible] readonly attribute unsigned long thirdPartyClassificationFlags;
+
+  /*
+    * Returns the classification flags if the channel has been processed by
+    * URL-Classifier features. This value is equal to
+    * "firstPartyClassificationFlags || thirdPartyClassificationFlags".
+    *
+    * Note that top-level channels could be classified as well.
+    * In order to identify third-party resources specifically, use
+    * classificationThirdPartyFlags;
+    */
+  [infallible] readonly attribute unsigned long classificationFlags;
+
+  cenum ClassificationFlags : 32 {
+    /**
+     * The resource is on the fingerprinting list.
+     */
+    CLASSIFIED_FINGERPRINTING = 0x0001,
+    CLASSIFIED_FINGERPRINTING_CONTENT = 0x0080,
+
+    /**
+     * The resource is on the cryptomining list.
+     */
+    CLASSIFIED_CRYPTOMINING = 0x0002,
+    CLASSIFIED_CRYPTOMINING_CONTENT = 0x0100,
+
+    /**
+     * The following are about tracking annotation and are available only
+     * if the privacy.trackingprotection.annotate_channels pref.
+     * CLASSIFIED_TRACKING is set if we are not able to identify the
+     * type of classification.
+     */
+    CLASSIFIED_TRACKING = 0x0004,
+    CLASSIFIED_TRACKING_AD = 0x0008,
+    CLASSIFIED_TRACKING_ANALYTICS = 0x0010,
+    CLASSIFIED_TRACKING_SOCIAL = 0x0020,
+    CLASSIFIED_TRACKING_CONTENT = 0x0040,
+
+    /**
+     * The following are about social tracking.
+     */
+    CLASSIFIED_SOCIALTRACKING = 0x0200,
+    CLASSIFIED_SOCIALTRACKING_FACEBOOK = 0x0400,
+    CLASSIFIED_SOCIALTRACKING_LINKEDIN = 0x0800,
+    CLASSIFIED_SOCIALTRACKING_TWITTER = 0x1000,
+
+    /**
+     * This is exposed to help to identify tracking classification using the
+     * basic lists.
+     */
+    CLASSIFIED_ANY_BASIC_TRACKING = CLASSIFIED_TRACKING |
+      CLASSIFIED_TRACKING_AD | CLASSIFIED_TRACKING_ANALYTICS |
+      CLASSIFIED_TRACKING_SOCIAL | CLASSIFIED_FINGERPRINTING,
+
+    /**
+     * This is exposed to help to identify tracking classification using the
+     * strict lists.
+     */
+    CLASSIFIED_ANY_STRICT_TRACKING = CLASSIFIED_ANY_BASIC_TRACKING |
+      CLASSIFIED_TRACKING_CONTENT | CLASSIFIED_FINGERPRINTING_CONTENT,
+
+    /**
+     * This is exposed to help to identify social tracking classification
+     * flags.
+     */
+    CLASSIFIED_ANY_SOCIAL_TRACKING = CLASSIFIED_SOCIALTRACKING |
+      CLASSIFIED_SOCIALTRACKING_FACEBOOK |
+      CLASSIFIED_SOCIALTRACKING_LINKEDIN | CLASSIFIED_SOCIALTRACKING_TWITTER,
+  };
+
+  /**
+   * Returns true  if the channel has been processed by URL-Classifier features
+   * and is considered third-party with the top window URI, and if it has loaded
+   * a resource that is classified as a tracker.
+   *
+   * This is a helper attribute which returns the same value of
+   * (thirdPartyClassificationFlags & CLASSIFIED_ANY_BASIC_TRACKING) or
+   * (thirdPartyClassificationFlags & CLASSIFIED_ANY_STRICT_TRACKING) or
+   * (thirdPartyClassificationFlags & CLASSIFIED_ANY_SOCIAL_TRACKING)
+   */
+  boolean isThirdPartyTrackingResource();
+
+%{ C++
+  inline bool IsThirdPartyTrackingResource()
+  {
+    bool value = false;
+    if (NS_SUCCEEDED(IsThirdPartyTrackingResource(&value)) && value) {
+      return true;
+    }
+    return false;
+  }
+%}
+
+  /**
+   * Returns true if the channel has loaded a 3rd party resource that is
+   * classified as a social tracker.
+   *
+   * This is a helper attribute which returns the same value of
+   * (classificationFlags & CLASSIFIED_ANY_SOCIAL_TRACKING)
+   *
+   * Note that top-level channels could be marked as tracking
+   * resources. In order to identify third-party social tracking resources
+   * specifically, check the flags manually or add a new helper here.
+   */
+  boolean isThirdPartySocialTrackingResource();
+
+%{ C++
+  inline bool IsThirdPartySocialTrackingResource()
+  {
+    bool value = false;
+    if (NS_SUCCEEDED(IsThirdPartySocialTrackingResource(&value)) && value) {
+      return true;
+    }
+    return false;
+  }
+%}
+};

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+    function tweak() {
+      var slot = document.createElement("slot");
+      // The border shouldn't be visible, due to display: contents.
+      slot.style.border = "1px solid red";
+      slot.style.color = "green";
+
+      var shadowRoot =
+        document.getElementById('outer').attachShadow({mode: 'open'});
+      shadowRoot.appendChild(slot);
+    }
+  </script>
+</head>
+<body onload="tweak()">
+<div id="outer">This text should be green</div>
+</body>
+</html>

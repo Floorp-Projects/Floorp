@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="overflow-x: scroll">
+<head>
+<style type="text/css">
+
+body:first-letter { }
+
+</style>
+<script type="text/javascript">
+
+function boom()
+{
+  td = document.createElement("td");
+  td.contentEditable = "true";
+  document.body.appendChild(td);
+  document.execCommand("strikethrough", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

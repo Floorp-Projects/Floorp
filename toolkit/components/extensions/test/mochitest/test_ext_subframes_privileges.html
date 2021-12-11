@@ -1,0 +1,340 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+/* eslint-disable mozilla/balanced-listeners */
+
+add_task(async function test_webext_tab_subframe_privileges() {
+  function background() {
+    browser.runtime.onMessage.addListener(async ({msg, success, tabId, error}) => {
+      if (msg == "webext-tab-subframe-privileges") {
+        if (success) {
+          await browser.tabs.remove(tabId);
+
+          browser.test.notifyPass(msg);
+        } else {
+          browser.test.log(`Got an unexpected error: ${error}`);
+
+          let tabs = await browser.tabs.query({active: true});
+          await browser.tabs.remove(tabs[0].id);
+
+          browser.test.notifyFail(msg);
+        }
+      }
+    });
+    browser.tabs.create({url: browser.runtime.getURL("/tab.html")});
+  }
+
+  async function tabSubframeScript() {
+    browser.test.assertTrue(browser.tabs != undefined,
+                            "Subframe of a privileged page has access to privileged APIs");
+    if (browser.tabs) {
+      try {
+        let tab = await browser.tabs.getCurrent();
+        browser.runtime.sendMessage({
+          msg: "webext-tab-subframe-privileges",
+          success: true,
+          tabId: tab.id,
+        });
+      } catch (e) {
+        browser.runtime.sendMessage({msg: "webext-tab-subframe-privileges", success: false, error: `${e}`});
+      }
+    } else {
+      browser.runtime.sendMessage({
+        msg: "webext-tab-subframe-privileges",
+        success: false,
+        error: `Privileged APIs missing in WebExtension tab sub-frame`,
+      });
+    }
+  }
+
+  let extensionData = {
+    background,
+    files: {
+      "tab.html": `<!DOCTYPE>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <iframe src="tab-subframe.html"></iframe>
+          </body>
+        </html>`,
+      "tab-subframe.html": `<!DOCTYPE>
+          <head>
+            <meta charset="utf-8">
+            <script src="tab-subframe.js"><\/script>
+          </head>
+        </html>`,
+      "tab-subframe.js": tabSubframeScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  await extension.startup();
+
+  await extension.awaitFinish("webext-tab-subframe-privileges");
+  await extension.unload();
+});
+
+add_task(async function test_webext_background_subframe_privileges() {
+  function backgroundSubframeScript() {
+    browser.test.assertTrue(browser.tabs != undefined,
+                            "Subframe of a background page has access to privileged APIs");
+    browser.test.notifyPass("webext-background-subframe-privileges");
+  }
+
+  let extensionData = {
+    manifest: {
+      background: {
+        page: "background.html",
+      },
+    },
+    files: {
+      "background.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+         </head>
+         <body>
+           <iframe src="background-subframe.html"></iframe>
+         </body>
+       </html>`,
+      "background-subframe.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+           <script src="background-subframe.js"><\/script>
+         </head>
+       </html>`,
+      "background-subframe.js": backgroundSubframeScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  await extension.startup();
+
+  await extension.awaitFinish("webext-background-subframe-privileges");
+  await extension.unload();
+});
+
+add_task(async function test_webext_contentscript_iframe_subframe_privileges() {
+  function background() {
+    browser.runtime.onMessage.addListener(({name, hasTabsAPI, hasStorageAPI}) => {
+      if (name == "contentscript-iframe-loaded") {
+        browser.test.assertFalse(hasTabsAPI,
+                                 "Subframe of a content script privileged iframes has no access to privileged APIs");
+        browser.test.assertTrue(hasStorageAPI,
+                                "Subframe of a content script privileged iframes has access to content script APIs");
+
+        browser.test.notifyPass("webext-contentscript-subframe-privileges");
+      }
+    });
+  }
+
+  function subframeScript() {
+    browser.runtime.sendMessage({
+      name: "contentscript-iframe-loaded",
+      hasTabsAPI: browser.tabs != undefined,
+      hasStorageAPI: browser.storage != undefined,
+    });
+  }
+
+  function contentScript() {
+    let iframe = document.createElement("iframe");
+    iframe.setAttribute("src", browser.runtime.getURL("/contentscript-iframe.html"));
+    document.body.appendChild(iframe);
+  }
+
+  let extensionData = {
+    background,
+    manifest: {
+      "permissions": ["storage"],
+      "content_scripts": [{
+        "matches": ["http://example.com/*"],
+        "js": ["contentscript.js"],
+      }],
+      web_accessible_resources: [
+        "contentscript-iframe.html",
+      ],
+    },
+    files: {
+      "contentscript.js": contentScript,
+      "contentscript-iframe.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+         </head>
+         <body>
+           <iframe src="contentscript-iframe-subframe.html"></iframe>
+         </body>
+       </html>`,
+      "contentscript-iframe-subframe.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+           <script src="contentscript-iframe-subframe.js"><\/script>
+         </head>
+       </html>`,
+      "contentscript-iframe-subframe.js": subframeScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  await extension.startup();
+
+  let win = window.open("http://example.com");
+
+  await extension.awaitFinish("webext-contentscript-subframe-privileges");
+
+  win.close();
+
+  await extension.unload();
+});
+
+add_task(async function test_webext_background_remote_subframe_privileges() {
+  function backgroundSubframeScript() {
+    window.addEventListener("message", evt => {
+      browser.test.assertEq("http://mochi.test:8888", evt.origin, "postmessage origin ok");
+      browser.test.assertFalse(evt.data.tabs, "remote frame cannot access webextension APIs");
+      browser.test.assertEq("cookie=monster", evt.data.cookie, "Expected cookie value");
+      browser.test.notifyPass("webext-background-subframe-privileges");
+    }, {once: true});
+    browser.cookies.set({url: "http://mochi.test:8888", name: "cookie", "value": "monster"});
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["cookies", "*://mochi.test/*", "tabs"],
+      background: {
+        page: "background.html",
+      },
+    },
+    files: {
+      "background.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+           <script src="background-subframe.js"><\/script>
+         </head>
+         <body>
+           <iframe src='${SimpleTest.getTestFileURL("file_remote_frame.html")}'></iframe>
+         </body>
+       </html>`,
+      "background-subframe.js": backgroundSubframeScript,
+    },
+  };
+  // Need remote webextensions to be able to load remote content from a background page.
+  if (!SpecialPowers.getBoolPref("extensions.webextensions.remote", true)) {
+    return;
+  }
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  await extension.startup();
+
+  await extension.awaitFinish("webext-background-subframe-privileges");
+  await extension.unload();
+});
+
+// Test a moz-extension:// iframe inside a content iframe in an extension page.
+add_task(async function test_sub_subframe_conduit_verified_env() {
+  let manifest = {
+    content_scripts: [{
+      matches: ["http://mochi.test/*/file_sample.html"],
+      all_frames: true,
+      js: ["cs.js"],
+    }],
+    background: {
+      page: "background.html",
+    },
+    web_accessible_resources: ["iframe.html"],
+  };
+
+  let files = {
+    "iframe.html": `<!DOCTYPE html><meta charset=utf-8> iframe`,
+    "cs.js"() {
+      // A compromised content sandbox shouldn't be able to trick the parent
+      // process into giving it extension privileges by sending false metadata.
+      async function faker(extensionId, envType) {
+        try {
+          let id = envType + "-xyz1234";
+          let wgc = this.content.windowGlobalChild;
+
+          let conduit = wgc.getActor("Conduits").openConduit({}, {
+            id,
+            envType,
+            extensionId,
+            query: ["CreateProxyContext"],
+          });
+
+          return await conduit.queryCreateProxyContext({
+            childId: id,
+            extensionId,
+            envType: "addon_parent",
+            url: this.content.location.href,
+            viewType: "tab",
+          });
+        } catch (e) {
+          return e.message;
+        }
+      }
+
+      let iframe = document.createElement("iframe");
+      iframe.src = browser.runtime.getURL("iframe.html");
+
+      iframe.onload = async () => {
+        for (let envType of ["content_child", "addon_child"]) {
+          let msg = await this.wrappedJSObject.SpecialPowers.spawn(
+              iframe, [browser.runtime.id, envType], faker);
+          browser.test.sendMessage(envType, msg);
+        }
+      };
+      document.body.appendChild(iframe);
+    },
+    "background.html": `<!DOCTYPE html>
+      <meta charset=utf-8>
+      <iframe src="${SimpleTest.getTestFileURL("file_sample.html")}">
+      </iframe>
+      page
+    `,
+  };
+
+  async function expectErrors(ext, log) {
+    let err = await ext.awaitMessage("content_child");
+    is(err, "Bad sender context envType: content_child");
+
+    err = await ext.awaitMessage("addon_child");
+    is(err, "Unknown sender or wrong actor for recvCreateProxyContext");
+  }
+
+  let remote = SpecialPowers.getBoolPref("extensions.webextensions.remote");
+
+  let badProcess = { message: /Bad {[\w-]+} process: web/ };
+  let badPrincipal = { message: /Bad {[\w-]+} principal: http/ };
+  consoleMonitor.start(remote ? [badPrincipal, badProcess] : [badProcess]);
+
+  let extension = ExtensionTestUtils.loadExtension({ manifest, files });
+  await extension.startup();
+
+  if (remote) {
+    info("Need OOP to spoof from a web iframe inside background page.");
+    await expectErrors(extension);
+  }
+
+  info("Try spoofing from the web process.");
+  let win = window.open("./file_sample.html");
+  await expectErrors(extension);
+  win.close();
+
+  await extension.unload();
+  await consoleMonitor.finished();
+  info("Conduit creation logged correct exception(s).");
+});
+
+</script>
+</body>
+</html>

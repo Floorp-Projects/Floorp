@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  </head>
+  <body>
+    <img id='e_blank_15000x10000' src='blank_15000x10000.png'>
+    <script>
+
+function shouldBe(testStr, refStr) {
+  ok(testStr == refStr, 'Expected "' + refStr + '", was "' + testStr + '".');
+}
+
+function getErrorStr(gl, err) {
+  if (!err) return "NO_ERROR";
+  for (const k in gl) {
+    const v = gl[k];
+    if (v == err) {
+      return k;
+    }
+  }
+  return `<${err}>`;
+}
+
+function glErrorShouldBe(gl, expected, opt_info) {
+  if (opt_info) {
+    opt_info = opt_info + ': '
+  } else {
+    opt_info = '';
+  }
+
+  if (!expected.length) {
+    expected = [expected];
+  }
+  expected = expected.map(x => getErrorStr(gl, x));
+  let was = gl.getError();
+  was = getErrorStr(gl, was);
+  ok(expected.includes(was),
+    `${opt_info}Expected gl.getError() in [${expected}], was ${was}.`);
+}
+SimpleTest.waitForExplicitFinish();
+(async () => {
+  const gl = document.createElement('canvas').getContext('webgl2');
+  window.gl = gl;
+  if (!gl) {
+    todo(false, 'No webgl2, skipping...');
+    return;
+  }
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+
+  const TESTS = [
+    //{w: 16000, h: 8000}, // TODO: This asserts.
+    //{w: 8000, h: 16000}, // TODO: This asserts.
+    {w: 8000, h: 4000},
+    {w: 4000, h: 8000},
+    {w: 4000, h: 4000},
+  ];
+  const src = document.createElement('canvas').getContext('webgl',
+    {antialias:false, depth:false});
+  const maxTexSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  for (const t of TESTS) {
+    ok(true, 'canvas: ' + JSON.stringify(t));
+    if (t.w > maxTexSize || t.h > maxTexSize) {
+      ok(true, `Larger than MAX_TEXTURE_SIZE of ${maxTexSize}`);
+      continue;
+    }
+    src.canvas.width = t.w;
+    src.canvas.height = t.h;
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE,
+                  src.canvas);
+
+    glErrorShouldBe(gl, [0, gl.OUT_OF_MEMORY], `after texImage(${JSON.stringify(t)})`);
+
+    src.canvas.width = src.canvas.height = 1;
+  }
+
+  if (15000 > maxTexSize) {
+    ok(true, `e_blank_15000x10000 larger than MAX_TEXTURE_SIZE of ${maxTexSize}, skipping.`);
+  } else {
+    await e_blank_15000x10000.decode(); // Otherwise it will not have loaded yet.
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE,
+                  e_blank_15000x10000);
+    glErrorShouldBe(gl, [0, gl.OUT_OF_MEMORY], `after texImage(e_blank_15000x10000)`);
+    ok(!gl.isContextLost(), '!gl.isContextLost()');
+  }
+
+  SimpleTest.finish();
+})();
+    </script>
+  </body>
+</html>

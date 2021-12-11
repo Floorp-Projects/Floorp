@@ -1,0 +1,249 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test EXSLT extensions
+http://www.exslt.org/
+-->
+<head>
+  <title>Test for EXSLT extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+  let tests = [
+    {
+      descr: "Testing common:node-set",
+      expr: "common:node-set($tree)",
+      useCopyOf: true,
+      expResult: "<abc>def</abc>",
+    },
+    {
+      descr: "Testing common:object-type(string)",
+      expr: "common:object-type($string)",
+      expResult: "string",
+    },
+    {
+      descr: "Testing common:object-type(number)",
+      expr: "common:object-type($number)",
+      expResult: "number",
+    },
+    {
+      descr: "Testing common:object-type(boolean)",
+      expr: "common:object-type($boolean)",
+      expResult: "boolean",
+    },
+    {
+      descr: "Testing common:object-type(node-set)",
+      expr: "common:object-type($node-set)",
+      expResult: "node-set",
+    },
+    {
+      descr: "Testing common:object-type(tree)",
+      expr: "common:object-type($tree)",
+      expResult: "RTF",
+    },
+    {
+      descr: "Testing math:max",
+      expr: "math:max(root/numbers/number)",
+      expResult: "11",
+    },
+    {
+      descr: "Testing math:min",
+      expr: "math:min(root/numbers/number)",
+      expResult: "4",
+    },
+    {
+      descr: "Testing math:highest",
+      expr: "math:highest(root/numbers/number)/@id",
+      expResult: "eleven",
+    },
+    {
+      descr: "Testing math:lowest",
+      expr: "math:lowest(root/numbers/number)/@id",
+      expResult: "four",
+    },
+    {
+      descr: "Testing regexp:test",
+      expr: "regexp:test('XSLT is great', 'XSLT', '')",
+      expResult: "true",
+    },
+    {
+      descr: "Testing regexp:match",
+      expr: "regexp:match('XSLT is great', 'XSL.', '')[1]",
+      expResult: "XSLT",
+    },
+    {
+      descr: "Testing regexp:replace",
+      expr: "regexp:replace('Food is great', 'Fo.d', '', 'XSLT')",
+      expResult: "XSLT is great",
+    },
+    {
+      descr: "Testing sets:difference",
+      expr: "sets:difference($i, $e)",
+      useCopyOf: true,
+      expResult: "<city name=\"Paris\" country=\"France\"></city><city name=\"Madrid\" country=\"Spain\"></city><city name=\"Calais\" country=\"France\"></city>",
+    },
+    {
+      descr: "Testing sets:distinct",
+      expr: "strings:concat(sets:distinct(//@country))",
+      expResult: "FranceSpainAustriaGermany",
+    },
+    {
+      descr: "Testing sets:hasSameNode",
+      expr: "sets:has-same-node($i, $e)",
+      expResult: "true",
+    },
+    {
+      descr: "Testing sets:hasSameNode",
+      expr: "sets:has-same-node($i, $o)",
+      expResult: "false",
+    },
+    {
+      descr: "Testing sets:intersection",
+      expr: "sets:intersection($i, $e)",
+      useCopyOf: true,
+      expResult: "<city name=\"Vienna\" country=\"Austria\"></city><city name=\"Berlin\" country=\"Germany\"></city>",
+    },
+    {
+      descr: "Testing sets:leading",
+      expr: "sets:leading($i, $e)",
+      useCopyOf: true,
+      expResult: "<city name=\"Paris\" country=\"France\"></city><city name=\"Madrid\" country=\"Spain\"></city>",
+    },
+    {
+      descr: "Testing sets:leading",
+      expr: "sets:leading($i, $o)",
+      useCopyOf: true,
+      expResult: "",
+    },
+    {
+      descr: "Testing sets:leading",
+      expr: "sets:leading($i, $empty)",
+      useCopyOf: true,
+      expResult: "<city name=\"Paris\" country=\"France\"></city><city name=\"Madrid\" country=\"Spain\"></city><city name=\"Vienna\" country=\"Austria\"></city><city name=\"Calais\" country=\"France\"></city><city name=\"Berlin\" country=\"Germany\"></city>",
+    },
+    {
+      descr: "Testing sets:trailing",
+      expr: "sets:trailing($i, $e)",
+      useCopyOf: true,
+      expResult: "<city name=\"Calais\" country=\"France\"></city><city name=\"Berlin\" country=\"Germany\"></city>",
+    },
+    {
+      descr: "Testing sets:trailing",
+      expr: "sets:trailing($i, $o)",
+      useCopyOf: true,
+      expResult: "",
+    },
+    {
+      descr: "Testing sets:trailing",
+      expr: "sets:trailing($i, $empty)",
+      useCopyOf: true,
+      expResult: "<city name=\"Paris\" country=\"France\"></city><city name=\"Madrid\" country=\"Spain\"></city><city name=\"Vienna\" country=\"Austria\"></city><city name=\"Calais\" country=\"France\"></city><city name=\"Berlin\" country=\"Germany\"></city>",
+    },
+    {
+      descr: "Testing strings:concat",
+      expr: "strings:concat(root/numbers/number/@id)",
+      expResult: "seveneleveneightfour",
+    },
+    {
+      descr: "Testing strings:split",
+      expr: "strings:split('a, simple, list', ', ')",
+      useCopyOf: true,
+      expResult: "<token>a</token><token>simple</token><token>list</token>",
+    },
+    {
+      descr: "Testing strings:split",
+      expr: "strings:split('date math str')",
+      useCopyOf: true,
+      expResult: "<token>date</token><token>math</token><token>str</token>",
+    },
+    {
+      descr: "Testing strings:split",
+      expr: "strings:split('foo', '')",
+      useCopyOf: true,
+      expResult: "<token>f</token><token>o</token><token>o</token>",
+    },
+    {
+      descr: "Testing strings:tokenize",
+      expr: "strings:tokenize('2001-06-03T11:40:23', '-T:')",
+      useCopyOf: true,
+      expResult: "<token>2001</token><token>06</token><token>03</token><token>11</token><token>40</token><token>23</token>",
+    },
+    {
+      descr: "Testing strings:tokenize",
+      expr: "strings:tokenize('date math str')",
+      useCopyOf: true,
+      expResult: "<token>date</token><token>math</token><token>str</token>",
+    },
+    {
+      descr: "Testing strings:tokenize",
+      expr: "strings:tokenize('foo', '')",
+      useCopyOf: true,
+      expResult: "<token>f</token><token>o</token><token>o</token>",
+    },
+  ];
+
+  let style =
+    `<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+                     xmlns:common="http://exslt.org/common"
+                     xmlns:math="http://exslt.org/math"
+                     xmlns:regexp="http://exslt.org/regular-expressions"
+                     xmlns:sets="http://exslt.org/sets"
+                     xmlns:strings="http://exslt.org/strings">
+       <xsl:output method="html"/>
+       <xsl:variable name="tree"><abc>def</abc></xsl:variable>
+       <xsl:variable name="string" select="'abc'"/>
+       <xsl:variable name="number" select="123"/>
+       <xsl:variable name="boolean" select="true()"/>
+       <xsl:variable name="node-set" select="//*"/>
+       <xsl:variable name="i" select="/root/sets/city[contains(@name, 'i')]" />
+       <xsl:variable name="e" select="/root/sets/city[contains(@name, 'e')]" />
+       <xsl:variable name="o" select="/root/sets/city[contains(@name, 'o')]" />
+       <xsl:variable name="empty" select="/root/sets/city[contains(@name, 'x')]" />
+       <xsl:template match="/">
+         ${tests.map(({expr, useCopyOf}, i) => `<div id="${i}"><xsl:${useCopyOf ? "copy-of" : "value-of"} select="${expr}"/></div>`).join("\n")}
+       </xsl:template>
+     </xsl:stylesheet>`;
+
+  let styleDoc = new DOMParser().parseFromString(style, "text/xml");
+
+  let data = `<root>
+                <numbers>
+                  <number id="seven">7</number>
+                  <number id="eleven">11</number>
+                  <number id="eight">8</number>
+                  <number id="four">4</number>
+                </numbers>
+                <sets>
+                  <city name="Paris" country="France" />
+                  <city name="Madrid" country="Spain" />
+                  <city name="Vienna" country="Austria" />
+                  <city name="Barcelona" country="Spain" />
+                  <city name="Salzburg" country="Austria" />
+                  <city name="Bonn" country="Germany" />
+                  <city name="Lyon" country="France" />
+                  <city name="Hannover" country="Germany" />
+                  <city name="Calais" country="France" />
+                  <city name="Berlin" country="Germany" />
+                </sets>
+              </root>`;
+  let originalDoc = new DOMParser().parseFromString(data, "text/xml");
+
+  let processor = new XSLTProcessor();
+  processor.importStylesheet(styleDoc);
+
+  let fragment = processor.transformToFragment(originalDoc, document);
+
+  tests.forEach(({descr, expResult}, i) => {
+    let result = fragment.getElementById(i);
+    is(result.innerHTML, expResult, descr);
+  });
+
+</script>
+</pre>
+</body>
+</html>

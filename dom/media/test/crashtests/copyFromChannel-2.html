@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Crashtest for bug 1548816</title>
+  <script>
+let cx = new OfflineAudioContext({numberOfChannels: 1,
+                                  length: 1, sampleRate: 44100});
+let buffer = new AudioBuffer({numberOfChannels: 13,
+                              length: 22050, sampleRate: 44100});
+buffer.getChannelData(12)[0] = 1.0;
+let o2248 = new AudioBufferSourceNode(cx, {buffer: buffer});
+let array = new Float32Array(52428);
+buffer.copyFromChannel(array, 12);
+  </script>
+</head>
+</html>

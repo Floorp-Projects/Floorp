@@ -1,0 +1,248 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<script src='../testcommon.js'></script>
+<div id='log'></div>
+<script type='text/javascript'>
+'use strict';
+
+const EPSILON = 1e-6;
+
+// We don't have an official spec to define the distance between two filter
+// lists, but we still need this for DevTools, so Gecko and Servo backends use
+// the similar rules to define the distance. If there is a spec for it, we have
+// to update this test file.
+// See https://github.com/w3c/fxtf-drafts/issues/91.
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'none', 'none');
+  assert_equals(dist, 0, 'none and none');
+}, 'none and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'blur(10px)', 'none');
+  // The default value of blur is 0px.
+  assert_equals(dist, 10, 'blur(10px) and none');
+}, 'blur and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'blur(10px)', 'blur(1px)');
+  assert_equals(dist, 9, 'blur(10px) and blur(1px)');
+}, 'blurs');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'brightness(75%)', 'none');
+  // The default value of brightness is 100%.
+  assert_equals(dist, (1 - 0.75), 'brightness(75%) and none');
+}, 'brightness and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter',
+                         'brightness(50%)', 'brightness(175%)');
+  assert_equals(dist, (1.75 - 0.5), 'brightness(50%) and brightness(175%)');
+}, 'brightnesses');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'contrast(75%)', 'none');
+  // The default value of contrast is 100%.
+  assert_equals(dist, (1 - 0.75), 'contrast(75%) and none');
+}, 'contrast and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'contrast(50%)', 'contrast(175%)');
+  assert_equals(dist, (1.75 - 0.5), 'contrast(50%) and contrast(175%)');
+}, 'contrasts');
+
+test(function(t) {
+  var target = addDiv(t);
+  var filter1 = 'drop-shadow(10px 10px 10px blue)';
+  var filter2 = 'none';
+  var dist = getDistance(target, 'filter', filter1, filter2);
+  // The rgba of Blue is rgba(0, 0, 255, 1.0) = rgba(0%, 0%, 100%, 100%).
+  // So we are try to compute the distance of
+  // 1. drop-shadow(10, 10, 10, rgba(0, 0, 1.0, 1.0)).
+  // 2. drop-shadow( 0,  0,  0, rgba(0, 0, 0, 0)).
+  assert_equals(dist,
+                Math.sqrt(10 * 10 * 3 + (1 * 1 + 1 * 1)),
+                filter1 + ' and ' + filter2);
+}, 'drop-shadow and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var filter1 = 'drop-shadow(10px 10px 10px blue)';
+  var filter2 = 'drop-shadow(5px 5px 1px yellow)';
+  var dist = getDistance(target, 'filter', filter1, filter2);
+  // Blue:   rgba(0, 0, 255, 1.0)   = rgba(  0%,   0%, 100%, 100%).
+  // Yellow: rgba(255, 255, 0, 1.0) = rgba(100%, 100%,   0%, 100%).
+  assert_equals(dist,
+                Math.sqrt(5 * 5 * 2 + 9 * 9 + (1 * 1 * 3)),
+                filter1 + ' and ' + filter2);
+}, 'drop-shadows');
+
+test(function(t) {
+  var target = addDiv(t);
+  var filter1 = 'drop-shadow(10px 10px 10px)';
+  var filter2 = 'drop-shadow(5px 5px 1px yellow)';
+  var dist = getDistance(target, 'filter', filter1, filter2);
+  // Yellow:      rgba(255, 255, 0, 1.0) = rgba(100%, 100%,   0%, 100%)
+  // Transparent: rgba(0, 0, 0, 0)       = rgba(  0%,   0%,   0%,   0%)
+  // Distance involving `currentcolor` is calculated as distance
+  //   from `transparent` + 1
+  assert_equals(dist,
+                Math.sqrt(5 * 5 * 2 + 9 * 9 + (1 * 1 * 3 + 1)),
+                filter1 + ' and ' + filter2);
+}, 'drop-shadows with color and non-color');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'grayscale(25%)', 'none');
+  // The default value of grayscale is 0%.
+  assert_equals(dist, 0.25, 'grayscale(25%) and none');
+}, 'grayscale and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'grayscale(50%)', 'grayscale(75%)');
+  assert_equals(dist, 0.25, 'grayscale(50%) and grayscale(75%)');
+}, 'grayscales');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'grayscale(75%)', 'grayscale(175%)');
+  assert_equals(dist, 0.25, 'distance of grayscale(75%) and grayscale(175%)');
+}, 'grayscales where one has a value larger than 1.0');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'hue-rotate(180deg)', 'none');
+  // The default value of hue-rotate is 0deg.
+  assert_approx_equals(dist, Math.PI, EPSILON, 'hue-rotate(180deg) and none');
+}, 'hue-rotate and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter',
+                         'hue-rotate(720deg)', 'hue-rotate(-180deg)');
+  assert_approx_equals(dist, 5 * Math.PI, EPSILON,
+                       'hue-rotate(720deg) and hue-rotate(-180deg)');
+}, 'hue-rotates');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'invert(25%)', 'none');
+  // The default value of invert is 0%.
+  assert_equals(dist, 0.25, 'invert(25%) and none');
+}, 'invert and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'invert(50%)', 'invert(75%)');
+  assert_equals(dist, 0.25, 'invert(50%) and invert(75%)');
+}, 'inverts');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'invert(75%)', 'invert(175%)');
+  assert_equals(dist, 0.25, 'invert(75%) and invert(175%)');
+}, 'inverts where one has a value larger than 1.0');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'opacity(75%)', 'none');
+  // The default value of opacity is 100%.
+  assert_equals(dist, (1 - 0.75), 'opacity(75%) and none');
+}, 'opacity and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'opacity(50%)', 'opacity(75%)');
+  assert_equals(dist, 0.25, 'opacity(50%) and opacity(75%)');
+}, 'opacities');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'opacity(75%)', 'opacity(175%)');
+  assert_equals(dist, 0.25, 'opacity(75%) and opacity(175%)');
+}, 'opacities where one has a value larger than 1.0');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'saturate(75%)', 'none');
+  // The default value of saturate is 100%.
+  assert_equals(dist, (1 - 0.75), 'saturate(75%) and none');
+}, 'saturate and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'saturate(50%)', 'saturate(175%)');
+  assert_equals(dist, (1.75 - 0.5), 'saturate(50%) and saturate(175%)');
+}, 'saturates');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'sepia(25%)', 'none');
+  // The default value of sepia is 0%.
+  assert_equals(dist, 0.25, 'sepia(25%) and none');
+}, 'sepia and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'sepia(50%)', 'sepia(75%)');
+  assert_equals(dist, 0.25, 'sepia(50%) and sepia(75%)');
+}, 'sepias');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'filter', 'sepia(75%)', 'sepia(175%)');
+  assert_equals(dist, 0.25, 'sepia(75%) and sepia(175%)');
+}, 'sepias where one has a value larger than 1.0');
+
+test(function(t) {
+  var target = addDiv(t);
+  var filter1 = 'grayscale(50%) opacity(100%) blur(5px)';
+  // none filter: 'grayscale(0) opacity(1) blur(0px)'
+  var filter2 = 'none';
+  var dist = getDistance(target, 'filter', filter1, filter2);
+  assert_equals(dist,
+                Math.sqrt(0.5 * 0.5 + 5 * 5),
+                filter1 + ' and ' + filter2);
+}, 'Filter list and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var filter1 = 'grayscale(50%) opacity(100%) blur(5px)';
+  var filter2 = 'grayscale(100%) opacity(50%) blur(1px)';
+  var dist = getDistance(target, 'filter', filter1, filter2);
+  assert_equals(dist,
+                Math.sqrt(0.5 * 0.5 + 0.5 * 0.5 + 4 * 4),
+                filter1 + ' and ' + filter2);
+}, 'Filter lists');
+
+test(function(t) {
+  var target = addDiv(t);
+  var filter1 = 'grayscale(50%) opacity(100%) blur(5px)';
+  var filter2 = 'grayscale(100%) opacity(50%) blur(1px) sepia(50%)';
+  var dist = getDistance(target, 'filter', filter1, filter2);
+  assert_equals(dist,
+                Math.sqrt(0.5 * 0.5 + 0.5 * 0.5 + 4 * 4 + 0.5 * 0.5),
+                filter1 + ' and ' + filter2);
+}, 'Filter lists where one has extra functions');
+
+test(function(t) {
+  var target = addDiv(t);
+  var filter1 = 'grayscale(50%) opacity(100%)';
+  var filter2 = 'opacity(100%) grayscale(50%)';
+  var dist = getDistance(target, 'filter', filter1, filter2);
+  assert_equals(dist, 0, filter1 + ' and ' + filter2);
+}, 'Mismatched filter lists');
+
+</script>
+</html>

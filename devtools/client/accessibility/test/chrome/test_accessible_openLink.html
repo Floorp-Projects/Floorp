@@ -1,0 +1,112 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that openLink function is called if accessible object property is rendered as a link.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Accessible component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const { gDevTools } = require("devtools/client/framework/devtools");
+    const Services = browserRequire("Services");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory, createElement } =
+      browserRequire("devtools/client/shared/vendor/react");
+    const { Provider } = require("devtools/client/shared/vendor/react-redux");
+    const createStore = require("devtools/client/shared/redux/create-store");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Accessible = createFactory(
+      browserRequire("devtools/client/accessibility/components/Accessible"));
+
+    function testLinkClicked(link, event, expectedUrl, expectedWhere) {
+      const browserWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+      const defaultOpenWebLinkIn = browserWindow.openWebLinkIn;
+
+      const checker = Symbol();
+      let onClickArgs = checker;
+      browserWindow.openWebLinkIn = (url, where) => {
+        onClickArgs = { url, where };
+      };
+
+      Simulate.click(link, event);
+
+      ok(onClickArgs !== checker, "Link was clicked");
+      is(onClickArgs.url, expectedUrl, "Correct URL is opened");
+      is(onClickArgs.where, expectedWhere, "URL was opened correctly");
+
+      browserWindow.openWebLinkIn = defaultOpenWebLinkIn;
+    }
+
+    const a = Accessible({ labelledby: "Test Accessible" });
+    ok(a, "Should be able to create Accessible instances");
+
+    let URL = "http://example.com";
+    const mockStore = createStore((state, action) =>
+      action ? { ...state, ...action } : state,
+      {
+        initialState: {
+          details: {
+            DOMNode: {},
+            accessible: {
+              // This accessible mock has no actorID and should be treated as
+              // destroyed.
+              isDestroyed: () => true,
+              value: URL,
+            }
+          },
+          ui: {
+            supports: {}
+          }
+        },
+      }
+    );
+    const provider = createElement(Provider, { store: mockStore }, a);
+    const accessible = ReactDOM.render(provider, window.document.body);
+    ok(accessible, "Should be able to mount Accessible instances");
+
+    let link = document.querySelector(".url");
+    testLinkClicked(link, null, URL, "tab");
+
+    URL = "non-URL";
+    await mockStore.dispatch(
+      {
+        type: "update",
+        details: {
+          DOMNode: {},
+          accessible: {
+            // This accessible mock has no actorID and should be treated as
+            // destroyed.
+            isDestroyed: () => true,
+            value: URL,
+          }
+        }
+      }
+    );
+    link = document.querySelector(".url");
+    ok(!link, "Non URL link should not be rendered as a link.");
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

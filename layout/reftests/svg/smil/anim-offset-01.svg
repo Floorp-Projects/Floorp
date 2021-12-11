@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the "offset" attribute on the "stop" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <linearGradient id="gradient_1">
+    <stop stop-color="lime" offset="0"/>
+    <stop stop-color="lime" offset="0">
+      <animate attributeName="offset" attributeType="XML"
+               calcMode="linear"
+               begin="0s" dur="2s"
+               to="100%"
+               fill="freeze"/>
+    </stop>
+    <stop stop-color="red" offset="0">
+      <animate attributeName="offset" attributeType="XML"
+               calcMode="linear"
+               begin="0s" dur="2s"
+               to="1"
+               fill="freeze"/>
+    </stop>
+    <stop stop-color="red" offset="1"/>
+  </linearGradient>
+  <linearGradient id="gradient_2">
+    <stop stop-color="lime" offset="0"/>
+    <stop stop-color="lime" offset="0">
+      <animate attributeName="offset" attributeType="XML"
+               calcMode="linear"
+               begin="0s" dur="1s"
+               to="100%"
+               fill="freeze"/>
+    </stop>
+    <stop stop-color="red" offset="0">
+      <animate attributeName="offset" attributeType="XML"
+               calcMode="linear"
+               begin="0s" dur="1s"
+               to="1"
+               fill="freeze"/>
+    </stop>
+    <stop stop-color="red" offset="1"/>
+  </linearGradient>
+  <rect width="100%" height="100%" fill="lime"/>
+  <rect width="200" height="200" fill="red"/>
+
+  <!-- test 50% completed animation -->
+  <rect         width="200" height="100" fill="url(#gradient_1)"/>
+  <rect x="100" width="100" height="100" fill="lime"/>
+
+  <!-- test 100% completed animation -->
+  <rect y="100" width="200" height="100" fill="url(#gradient_2)"/>
+</svg>

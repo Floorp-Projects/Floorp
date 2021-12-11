@@ -1,0 +1,329 @@
+@import url(photon-variables.css);
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --page-background: var(--grey-10);
+  --page-text-color: var(--grey-90);
+  --card-background: white;
+  --textbox-background: white;
+  --deemphasized-text-color: var(--grey-60);
+  --button-background: var(--grey-90-a10);
+  --button-background-hover: var(--grey-90-a20);
+  --button-background-active: var(--grey-90-a30);
+  --link-color: var(--blue-60);
+  --visited-link-color: var(--purple-60);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-background: var(--grey-80);
+    --page-text-color: var(--grey-10);
+    --card-background: var(--grey-70);
+    --textbox-background: var(--grey-60);
+    --deemphasized-text-color: var(--grey-40);
+    --button-background: rgba(255,255,255,0.1);
+    --button-background-hover: rgba(255,255,255,0.2);
+    --button-background-active: rgba(255,255,255,0.3);
+    --link-color: var(--blue-40);
+    --visited-link-color: var(--purple-30);
+  }
+  .icon::before {
+    filter: invert(1);
+  }
+}
+
+html {
+  font: message-box;
+  height: 100%;
+}
+
+body {
+  font-size: 1.25em;
+  background: var(--page-background);
+  color: var(--page-text-color);
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+a:not(.button) {
+  color: var(--link-color);
+}
+
+a:not(.button):visited {
+  color: var(--visited-link-color);
+}
+
+a:not(.button):active {
+  filter: brightness(0.7);
+}
+
+h1 {
+  font-weight: normal;
+}
+
+main {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+iframe {
+  border: none;
+}
+
+label {
+  display: inline-block;
+  margin: 5px;
+}
+
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
+}
+
+.flex {
+  display: flex;
+}
+
+.grow {
+  flex: 1;
+}
+
+#dialog-overlay {
+  background: rgba(0,0,0,0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99;
+}
+
+.dialog {
+  background-color: var(--card-background);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  margin: 0 !important;
+}
+
+.dialog-footer {
+  display: block;
+  margin-top: 1em;
+  clear: both;
+  text-align: right;
+}
+
+.dialog-footer > * {
+  margin-left: .5em;
+}
+
+.toolbar {
+  overflow: auto;
+}
+
+.toolbar > * {
+  vertical-align: middle;
+}
+
+.form-row > * {
+  width:100%;
+}
+
+.empty-notice:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.empty-notice:empty::before {
+  content: "";
+  display: block;
+  margin: auto;
+  margin-bottom: 0;
+  background-image: url(../icons/face-sad.svg);
+  background-position: center;
+  background-size: cover;
+  width: 40px;
+  height: 40px;
+}
+
+.empty-notice:empty::after {
+  content: "__MSG_noItemsFound__";
+  text-align: center;
+  margin-top: 1em;
+  margin-bottom: auto;
+}
+
+.icon::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.8;
+  vertical-align: middle;
+}
+
+.icon.delete::before {
+  background-image: url(../icons/delete.svg);
+}
+
+.icon.view-source::before {
+  background-image: url(../icons/view-source.svg);
+}
+
+.icon.new::before {
+  background-image: url(../icons/new.svg);
+}
+
+.icon.more::before {
+  background-image: url(../icons/more.svg);
+}
+
+.icon.settings::before {
+  background-image: url(../icons/settings.svg);
+}
+
+.icon.link::before {
+  background-image: url(../icons/link.svg);
+}
+
+.icon.icon-white::before {
+  filter: invert(1);
+}
+
+.button,
+button,
+select {
+  position: relative;
+  overflow: hidden;
+  -moz-appearance: none;
+  border-radius: 2px;
+  background-color: var(--button-background);
+  box-shadow: 0 0 0 0 transparent;
+  padding: 8px;
+  transition-duration: 250ms;
+  transition-property: box-shadow, border;
+  font: inherit;
+  border: none;
+  color: inherit;
+  text-decoration: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%236A6A6A' d='M8 12L3 7l1-1 4 4 4-4 1 1z'/%3E%3C/svg%3E");
+  background-position: calc(100% - 4px) center;
+  background-repeat: no-repeat;
+  padding-inline-end: 24px;
+  text-overflow: ellipsis;
+}
+
+select > option {
+  color: rgb(245, 245, 245);
+}
+
+.button.icon:empty,
+button.icon:empty {
+  background-color: transparent;
+}
+
+.button.icon:empty:hover,
+button.icon:empty:hover {
+  background-color: var(--button-background);
+}
+
+.button:hover,
+button:hover,
+select:hover,
+.button.icon:empty:hover:active,
+button.icon:empty:hover:active {
+  background-color: var(--button-background-hover);
+}
+
+.button:hover:active,
+button:hover:active,
+select:hover:active {
+  background-color: var(--button-background-active);
+}
+
+.button:disabled,
+button:disabled,
+select:disabled {
+  opacity: .4;
+}
+
+.button:focus,
+button:focus,
+select:focus {
+  box-shadow: 0 0 0 1px var(--blue-50) inset, 0 0 0 1px var(--blue-50), 0 0 0 4px var(--blue-50-a30);
+}
+
+.button.primary,
+button.primary {
+  background-color: var(--blue-60);
+  color: #fff;
+}
+
+.button.primary:hover,
+button.primary:hover {
+  background-color: var(--blue-70);
+}
+
+.button.primary:hover:active,
+button.primary:hover:active {
+  background-color: var(--blue-80);
+}
+
+input.short {
+  max-width: 7ch;
+}
+
+input:not([type="submit"]):not([type="button"]):not([type="hidden"]) {
+  background-color: var(--textbox-background);
+  color: inherit;
+  border: 1px solid var(--grey-90-a30);
+  padding: 8px;
+  border-radius: 2px;
+  font: inherit;
+  transition: box-shadow 0.15s cubic-bezier(.07,.95,0,1);
+}
+
+input:not([type="submit"]):not([type="button"]):not([type="hidden"]):hover {
+  border-color: var(--grey-90-a50);
+}
+
+input:not([type="submit"]):not([type="button"]):not([type="hidden"]):focus {
+  border-color: var(--blue-50);
+  box-shadow: 0 0 0 1px var(--blue-50), 0 0 0 4px var(--blue-50-a30);
+}
+
+input:not([type="submit"]):not([type="button"]):not([type="hidden"]).error,
+input:not([type="submit"]):not([type="button"]):not([type="hidden"]):invalid {
+  border-color: var(--red-50);
+  box-shadow: 0 0 0 1px var(--red-50), 0 0 0 4px var(--red-50-a30);
+}
+
+.card {
+  box-shadow: 0 2px 8px var(--grey-90-a10);
+  background: var(--card-background);
+  border-radius: 2px;
+  padding: 1.5em;
+  margin: 1em 0;
+}

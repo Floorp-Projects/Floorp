@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>default box sizing (border-collapse: separate, standards mode)</title>
+<style type="text/css">
+
+body > div { float: left; clear: left; background: fuchsia; margin: 2px 0; }
+
+div.inner {
+  background: yellow;
+}
+
+</style>
+</head>
+<body>
+
+<div style="width: 200px">
+  <div style="background: blue; padding: 2px 3px 4px 5px">
+    <div style="background: fuchsia; padding: 5px 8px 7px 10px">
+      <div style="background: aqua; padding: 2px 3px 4px 5px">
+        <div style="background: fuchsia; padding: 5px 7px 9px 11px">
+          <div class="inner">x</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div style="background: blue; padding: 2px 3px 4px 5px">
+    <div style="background: fuchsia; padding: 5px 8px 7px 10px">
+      <div style="background: aqua; padding: 2px 3px 4px 5px">
+        <div style="background: fuchsia; padding: 5px 7px 9px 11px">
+          <div class="inner" style="width: 200px">x</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

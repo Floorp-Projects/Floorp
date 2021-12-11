@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      option {color: green}
+      option[selected] {color: red}
+      option:not([selected]):not(:default) + option {color: green}
+    </style>
+  </head>
+  <body onload='document.getElementById("one").removeAttribute("selected");'>
+    <select size="2">
+      <option id="one" selected="selected">Should be no red</option>
+      <option id="two">Should be no red</option>
+    </select>
+  </body>
+</html>

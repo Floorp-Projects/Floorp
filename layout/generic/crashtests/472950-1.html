@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>div::first-letter { color: green; }</style>
+<script>
+
+function boom()
+{
+  var e = document.getElementById("e");
+  document.documentElement.style.direction = "rtl";
+  e.style.whiteSpace = "pre";
+}
+
+</script>
+</head>
+<body onload="boom();">
+
+<div><span style="direction: rtl;" id="e"><span>
+      
+    </span>A B</span></div>
+    
+</body></html></html>

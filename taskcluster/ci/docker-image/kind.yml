@@ -1,0 +1,233 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - packages
+
+transforms:
+    - gecko_taskgraph.transforms.docker_image:transforms
+    - gecko_taskgraph.transforms.cached_tasks:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+# make a task for each docker-image we might want.  For the moment, since we
+# write artifacts for each, these are whitelisted, but ideally that will change
+# (to use subdirectory clones of the proper directory), at which point we can
+# generate tasks for every docker image in the directory, secure in the
+# knowledge that unnecessary images will be omitted from the target task graph
+jobs:
+    image_builder:
+        symbol: I(ib)
+    # Neither the ubuntu1804-*raw nor the ubuntu1804-*packages images can have
+    # packages dependencies.
+    ubuntu1804-raw:
+        symbol: I(ub18-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: ubuntu:bionic
+    ubuntu1804-packages:
+        symbol: I(ub18-pkg)
+        definition: debian-packages
+        parent: ubuntu1804-raw
+    ubuntu1804-i386-raw:
+        symbol: I(ub18-32-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: i386/ubuntu:bionic
+    ubuntu1804-i386-packages:
+        symbol: I(ub18-32-pkg)
+        definition: debian-packages
+        parent: ubuntu1804-i386-raw
+    ubuntu1804-base:
+        symbol: I(ub18-base)
+        definition: debian-base
+        parent: ubuntu1804-raw
+        packages:
+            - ub18-mercurial
+            - ub18-python-zstandard
+    ubuntu1804-test-base:
+        symbol: I(ub18-test-base)
+        parent: ubuntu1804-base
+        packages:
+            - ub18-libc6
+            - ub18-32-libc6
+    ubuntu1804-test:
+        symbol: I(ub18-test)
+        parent: ubuntu1804-test-base
+    # Neither the ubuntu1804-*raw nor the ubuntu1804-*packages images can have
+    # packages dependencies.
+    ubuntu2004-raw:
+        symbol: I(ub20-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: ubuntu:focal
+    ubuntu2004-packages:
+        symbol: I(ub20-pkg)
+        definition: debian-packages
+        parent: ubuntu2004-raw
+    ubuntu2004-base:
+        symbol: I(ub20-base)
+        definition: debian-base
+        parent: ubuntu2004-raw
+        packages:
+            - ub20-mercurial
+            - ub20-python-zstandard
+    # Neither the debian8-*raw nor the debian8-*packages images can have
+    # packages dependencies.
+    debian8-raw:
+        symbol: I(deb8-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:jessie-20210208
+            DIST: jessie
+            SNAPSHOT: '20210208T213147Z'
+    debian8-packages:
+        symbol: I(deb8-pkg)
+        definition: debian-packages
+        parent: debian8-raw
+    debian8-i386-raw:
+        symbol: I(deb8-32-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: i386/debian:jessie-20210208
+            DIST: jessie
+            SNAPSHOT: '20210208T213147Z'
+    debian8-i386-packages:
+        symbol: I(deb8-32-pkg)
+        definition: debian-packages
+        parent: debian8-i386-raw
+    custom-v8:
+        symbol: I(custom-v8)
+        parent: debian11-base
+    valgrind-build:
+        symbol: I(vb)
+        parent: debian11-amd64-build
+        packages:
+            - deb11-valgrind
+    lint:
+        symbol: I(lnt)
+        parent: ubuntu1804-base
+    # Neither the debian10-raw nor the debian10-packages images can have
+    # packages dependencies.
+    debian10-raw:
+        symbol: I(deb10-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:buster-20210816
+            DIST: buster
+            SNAPSHOT: '20210816T214117Z'
+    debian10-packages:
+        symbol: I(deb10-pkg)
+        definition: debian-packages
+        parent: debian10-raw
+    debian10-base:
+        symbol: I(deb10-base)
+        definition: debian-base
+        parent: debian10-raw
+        packages:
+            - deb10-mercurial
+            - deb10-python-zstandard
+    debian10-test:
+        symbol: I(deb10-test)
+        parent: debian10-base
+    debian10-test-iris:
+        symbol: I(deb10-ti)
+        parent: debian10-test
+        packages:
+            - deb10-python-zstandard
+    # Neither the debian11-raw nor the debian11-packages images can have
+    # packages dependencies.
+    debian11-raw:
+        symbol: I(deb11-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:bullseye-20210816
+            DIST: bullseye
+            SNAPSHOT: '20210816T214117Z'
+    debian11-packages:
+        symbol: I(deb11-pkg)
+        definition: debian-packages
+        parent: debian11-raw
+    debian11-base:
+        symbol: I(deb11-base)
+        definition: debian-base
+        parent: debian11-raw
+        packages:
+            - deb11-mercurial
+            - deb11-python-zstandard
+    debian11-amd64-build:
+        symbol: I(deb11)
+        parent: debian11-base
+        definition: debian-build
+    deb11-toolchain-build:
+        symbol: I(deb11-toolchain)
+        parent: debian11-base
+        definition: toolchain-build
+    android-build:
+        symbol: I(agb)
+        parent: debian11-base
+    fetch:
+        symbol: I(fetch)
+        parent: debian11-raw
+        packages:
+            - deb11-python-zstandard
+    static-analysis-build:
+        symbol: I(static-analysis-build)
+        parent: debian11-base
+    gdb-test:
+        symbol: I(gdb)
+        parent: debian11-amd64-build
+        definition: gdb-test
+    index-task:
+        symbol: I(idx)
+    funsize-update-generator:
+        symbol: I(pg)
+    update-verify:
+        symbol: I(uv)
+        parent: ubuntu2004-base
+    diffoscope:
+        symbol: I(diff)
+        parent: debian11-base
+    partner-repack:
+        symbol: I(PR)
+        parent: debian10-base
+        definition: partner-repack
+    updatebot:
+        symbol: I(3rdp)
+        parent: push-to-try
+    periodic-updates:
+        symbol: I(file)
+        parent: ubuntu1804-base
+    firefox-snap:
+        symbol: I(snap)
+    firefox-flatpak:
+        symbol: I(flatpak)
+    webrender:
+        symbol: I(webrender)
+        parent: debian10-base
+    condprof:
+        symbol: I(condprof)
+        parent: ubuntu1804-test
+    visual-metrics:
+        symbol: I(visual-metrics)
+        parent: debian10-base
+    github-sync:
+        symbol: I(github-sync)
+        parent: debian10-base
+    sentry:
+        symbol: I(sentry)
+        parent: debian10-base
+    system-symbols-mac:
+        symbol: I(system-symbols-mac)
+        parent: debian10-base
+    system-symbols-win:
+        symbol: I(system-symbols-win)
+        parent: debian10-base
+    push-to-try:
+        symbol: I(push-to-try)
+        parent: debian10-base
+    decision:
+        symbol: I(decision)
+        parent: ubuntu1804-base

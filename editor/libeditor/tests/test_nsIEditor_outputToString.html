@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests of nsIEditor#outputToString()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(() => {
+      const originalBody = document.body.innerHTML;
+      const Ci = SpecialPowers.Ci;
+
+      /**
+       * TODO: Add "text/html" cases and other `nsIDocumentEncoder.*` options.
+       */
+      (function test_with_text_editor() {
+        for (const test of [
+            {
+              tag: "input",
+              innerHTML: "<input>",
+            },
+            {
+              tag: "textarea",
+              innerHTML: "<textarea></textarea>",
+            },
+          ]) {
+            document.body.innerHTML = test.innerHTML;
+            const textControl = document.body.querySelector(test.tag);
+            const editor = SpecialPowers.wrap(textControl).editor;
+            is(
+              editor.outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw),
+              "",
+              `outputToString("text/plain", OutputRaw) for <${test.tag}> should return empty string (before focused)`
+            );
+            textControl.focus();
+            is(
+              editor.outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw),
+              "",
+              `outputToString("text/plain", OutputRaw) for <${test.tag}> should return empty string (after focused)`
+            );
+            textControl.value = "abc";
+            is(
+              editor.outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw),
+              "abc",
+              `outputToString("text/plain", OutputRaw) for <${test.tag}> whose value is "abc" should return the value as-is`
+            );
+            if (editor.flags & Ci.nsIEditor.eEditorSingleLineMask) {
+              continue;
+            }
+            textControl.value = "abc\ndef";
+            is(
+              editor.outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+              "abc\ndef",
+              `outputToString("text/plain", OutputRaw) for <${test.tag}> whose value is "abc\ndef" should return the value as-is`
+            );
+            textControl.value = "abc\ndef\n";
+            is(
+              editor.outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+              "abc\ndef\n",
+              `outputToString("text/plain", OutputRaw) for <${test.tag}> whose value is "abc\ndef\n" should return the value as-is`
+            );
+            textControl.value = "abc\ndef\n\n";
+            is(
+              editor.outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+              "abc\ndef\n\n",
+              `outputToString("text/plain", OutputRaw) for <${test.tag}> whose value is "abc\ndef\n\n" should return the value as-is`
+            );
+          }
+      })();
+
+      function getHTMLEditor() {
+        const editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+        if (!editingSession) {
+          return null;
+        }
+        return editingSession.getEditorForWindow(window);
+      }
+
+      (function test_with_contenteditable() {
+        document.body.setAttribute("contenteditable", "");
+        document.body.blur();
+        document.body.innerHTML = "";
+        is(
+          getHTMLEditor().outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+          "",
+          `outputToString("text/plain", OutputRaw) for empty <body contenteditable> should return empty string (before focused)`
+        );
+        document.body.focus();
+        is(
+          getHTMLEditor().outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+          "", // Ignore the padding <br> element for empty editor.
+          `outputToString("text/plain", OutputRaw) for empty <body contenteditable> should return empty string (after focused)`
+        );
+        const sourceHasParagraphsAndDivs = "<p>abc</p><p>def<br></p><div>ghi</div><div>jkl<br>mno<br></div>";
+        document.body.innerHTML = sourceHasParagraphsAndDivs;
+        // XXX Oddly, an ASCII white-space is inserted at the head of the result.
+        todo_is(
+          getHTMLEditor().outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+          sourceHasParagraphsAndDivs.replace(/<br>/gi, "\n").replace(/<[^>]+>/g, ""),
+          `outputToString("text/plain", OutputRaw) for <body contenteditable> should return the expected string`
+        );
+
+        document.body.removeAttribute("contenteditable");
+        document.body.innerHTML = "<div contenteditable></div>";
+        is(
+          getHTMLEditor().outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+          "",
+          `outputToString("text/plain", OutputRaw) for empty <div contenteditable> should return empty string (before focused)`
+        );
+        document.body.querySelector("div[contenteditable]").focus();
+        is(
+          getHTMLEditor().outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+          "", // Ignore the padding <br> element for empty editor.
+          `outputToString("text/plain", OutputRaw) for empty <div contenteditable> should return empty string (after focused)`
+        );
+        document.body.querySelector("div[contenteditable]").innerHTML = sourceHasParagraphsAndDivs;
+        is(
+          getHTMLEditor().outputToString("text/plain", Ci.nsIDocumentEncoder.OutputRaw).replace(/\r/g, ""),
+          sourceHasParagraphsAndDivs.replace(/<br>/gi, "\n").replace(/<[^>]+>/g, ""),
+          `outputToString("text/plain", OutputRaw) for <div contenteditable> should return the expected string`
+        );
+      })();
+
+      document.body.innerHTML = originalBody;
+      SimpleTest.finish();
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

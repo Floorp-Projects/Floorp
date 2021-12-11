@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+                      "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Testing controls that should not match :enabled/:disabled</title>
+    <style type="text/css">
+      input, label, object, *.hideme { display: none; }
+      div { margin-bottom: 1em; }
+
+      span, legend { color: lime; background-color: lime; }
+
+      #test + span { color: lime; background-color: lime; }
+    </style>
+  </head>
+  <body>
+    <div>
+      There should be no red in the following (note: form styling should be enabled).
+    </div>
+
+    <form method="get" action=".">
+      <div>
+	Make sure that :default is actually implemented:
+	<input id="test"/> <span>FAIL</span>
+      </div>
+
+      <div>
+	label:
+	<label>bogus</label> <span>FAIL</span>
+	<label disabled="disabled">bogus</label> <span>FAIL</span>
+      </div>      
+
+      <div>
+	legend:
+	<fieldset><legend>FAIL</legend></fieldset>
+	<fieldset><legend disabled="disabled">FAIL</legend></fieldset>
+	<fieldset disabled="disabled"><legend>FAIL</legend></fieldset>
+      </div>
+
+      <div>
+	div (inside form):
+	<div class="hideme">bogus</div> <span>FAIL</span>
+	<div class="hideme" disabled="disabled">bogus</div> <span>FAIL</span>
+      </div>
+
+    </form>
+
+    <div>
+      div (outside form):
+      <div class="hideme">bogus</div> <span>FAIL</span>
+      <div class="hideme" disabled="disabled">bogus</div> <span>FAIL</span>
+    </div>
+
+    <div>
+      object:
+      <object>bogus</object> <span>FAIL</span>
+      <object disabled="disabled">bogus</object> <span>FAIL</span>
+    </div>
+
+    <div>
+      form:
+      <form class="hideme" method="get" action="."><p><input/></p></form> <span>FAIL</span>
+      <form class="hideme" method="get" action="." disabled="disabled"><p><input/></p></form> <span>FAIL</span>
+    </div>
+  </body>
+</html>

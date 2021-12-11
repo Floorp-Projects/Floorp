@@ -1,0 +1,19 @@
+{
+    IBClasses =     (
+        {
+    CLASS = FirstResponder;
+    LANGUAGE = ObjC;
+    SUPERCLASS = NSObject;
+},
+        {
+    CLASS = UpdaterUI;
+    LANGUAGE = ObjC;
+    OUTLETS =     {
+        progressBar = NSProgressIndicator;
+        progressTextField = NSTextField;
+    };
+    SUPERCLASS = NSObject;
+}
+    );
+    IBVersion = 1;
+}

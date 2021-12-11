@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   class="reftest-wait">
+  <script type="text/ecmascript"><![CDATA[
+    function swapAnimations() {
+      var high = document.getElementById("high");
+      high.parentNode.insertBefore(high, null);
+
+      var low = document.getElementById("low");
+      low.parentNode.insertBefore(low, low.parentNode.firstChild);
+
+      setTimeAndSnapshot(103.1, true);
+    }
+    window.addEventListener("MozReftestInvalidate", swapAnimations, false);
+  ]]></script>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!-- start line -->
+  <line x1="5" x2="5" y1="0" y2="330" stroke="grey" stroke-width="2"
+    stroke-dasharray="5,5"/>
+  <!-- non-additive line -->
+  <line x1="105" x2="105" y1="0" y2="330" stroke="grey" stroke-width="2"
+    stroke-dasharray="5,5"/>
+  <!-- additive line -->
+  <line x1="205" x2="205" y1="0" y2="330" stroke="grey" stroke-width="2"
+    stroke-dasharray="5,5"/>
+  <!-- Not additive group -->
+  <!-- additive behaviour defaults to replace so this shouldn't add -->
+  <g transform="translate(5, 5)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+    height="30">
+     <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+     <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+    </rect>
+  </g>
+  <!-- Additive group -->
+  <!-- We only need to specify additive behaviour on the second animation as
+       it will be higher in the animation sandwich -->
+  <g transform="translate(5, 45)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+    height="30">
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
+        additive="sum"/>
+    </rect>
+  </g>
+  <!-- Not additive group -->
+  <!-- Specifying additive behaviour on the first animation has no effect
+       as it is lower in the animation sandwich (begin times are the same
+       so the order in the document takes precedence). -->
+  <g transform="translate(5, 85)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+      height="30">
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
+        additive="sum"/>
+     <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+    </rect>
+  </g>
+  <!-- Additive group -->
+  <!-- The first animation should be composed second as it has a later begin
+       time so its additive attribute should apply even though it appears
+       first in the document -->
+  <g transform="translate(5, 125)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+      height="30">
+      <animate attributeName="x" from="0" to="100" begin="100.001s" dur="3s" fill="freeze"
+        additive="sum"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+    </rect>
+  </g>
+  <!-- Not additive group -->
+  <!-- The first animation overrides the second animation because of its
+       later begin time. -->
+  <g transform="translate(5, 165)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+      height="30">
+      <animate attributeName="x" from="0" to="100" begin="100.001s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
+        additive="sum"/>
+    </rect>
+  </g>
+  <!-- Additive group -->
+  <!-- Even though additive is replace, by animation is always additive -->
+  <g transform="translate(5, 205)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+      height="30">
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" by="100" dur="3s" begin="100s" fill="freeze"
+        additive="replace"/>
+    </rect>
+  </g>
+  <!-- Not additive group -->
+  <!-- This begins as additive, but after the document loads the two animations
+       will be swapped giving them the opposite priority and making this not
+       additive. -->
+  <g transform="translate(5, 245)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+      height="30">
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
+        additive="sum" id="low"/>
+    </rect>
+  </g>
+  <!-- Additive group -->
+  <!-- This is the inverse of the above. The animations will have their
+       positions in the document swapped effectively making this not additive.
+       -->
+  <g transform="translate(5, 285)">
+    <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
+      height="30">
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
+        additive="sum" id="high"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+    </rect>
+  </g>
+</svg>

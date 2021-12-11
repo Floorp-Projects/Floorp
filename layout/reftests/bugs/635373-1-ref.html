@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+body { background:white; }
+#d {
+	position:absolute;
+	top:200px;
+	left:200px;
+    font-size:30px;
+    transform:rotate(30deg);
+    -moz-transform:rotate(30deg);
+    background:url(100x80-white-rect-top-right.png);
+}
+canvas { display:block; }
+span { display:block; background:rgb(200,200,200); height:40px; }
+</style>
+</head>
+<body>
+<div id="d"><span style="width:20px"><canvas id="c" width="20" height="20"></canvas></span>
+<span style="width:100px;"></span>
+</div>
+<script>
+var ctx = document.getElementById("c").getContext("2d");
+ctx.fillStyle = "lime";
+ctx.fillRect(5,5,5,5);
+</script>
+</body>
+</html>

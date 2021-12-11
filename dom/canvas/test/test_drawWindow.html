@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for canvas drawWindow</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="file_drawWindow_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", openSourceWindow);
+
+  var sourceWindow;
+
+  function openSourceWindow(event) {
+    if (event.target != document) {
+      return;
+    }
+
+    sourceWindow = window.open("file_drawWindow_source.html", "",
+                               "width=200,height=100");
+    sourceWindow.addEventListener("load", runTests);
+  }
+    
+  async function runTests(event) {
+    if (event.target != sourceWindow.document) {
+      return;
+    }
+
+    let win = document.getElementById("source").contentWindow;
+    let snapshot = function(context, x, y, width, height, bg) {
+      context.drawWindow(win, x, y, width, height, bg, 0);
+    }
+
+    // Run the tests with the source document in an <iframe> within this
+    // page, which we expect to have transparency.
+    await runDrawWindowTests(snapshot, true);
+
+    // Run the tests on the same source document, but in a window opened
+    // by window.open.  We do not expect this to have transparency.
+    win = sourceWindow;
+    await runDrawWindowTests(snapshot, false);
+
+    sourceWindow.close();
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<iframe id="source" src="file_drawWindow_source.html" width="200" height="100"></iframe>
+</body>
+</html>

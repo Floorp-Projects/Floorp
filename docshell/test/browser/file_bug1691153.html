@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>bug 1691153</title>
+</head>
+<body>
+<h1>bug 1691153</h1>
+<script>
+function toBlobURL(data, mimeType) {
+  return URL.createObjectURL(
+    new Blob([data], {
+      type: mimeType,
+    })
+  );
+}
+// closing script element literal split up to not end the parent script element
+let testurl = toBlobURL("<body></body>", "text/html");
+addEventListener("message", event => {
+  if (event.data == "getblob") {
+    postMessage({ bloburl: testurl }, "*");
+  }
+});
+// the blob URL should have a content principal
+</script>
+</body>
+</html>

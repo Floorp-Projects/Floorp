@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=394057
+-->
+<head>
+  <title>Test for Bug 394057</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  #display { background: yellow; color: black; font-family: serif; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=394057">Mozilla Bug 394057</a>
+<table id="display"><tr><td>MmMmMm...iiiIIIlll---</td></tr></table>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 394057 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var tableElement = document.getElementById("display");
+
+var CC = SpecialPowers.Cc;
+var CI = SpecialPowers.Ci;
+
+var fe =
+  CC["@mozilla.org/gfx/fontenumerator;1"].createInstance(CI.nsIFontEnumerator);
+var serifFonts = fe.EnumerateFonts("x-western", "serif");
+var monospaceFonts = fe.EnumerateFonts("x-western", "monospace");
+
+function table_width_for_font(font) {
+  tableElement.style.fontFamily = '"' + font + '"';
+  var result = tableElement.offsetWidth;
+  tableElement.style.fontFamily = "";
+  return result;
+}
+
+var serifIdx = 0;
+var monospaceIdx = 0;
+var monospaceWidth, serifWidth;
+monospaceWidth = table_width_for_font(monospaceFonts[monospaceIdx]);
+for (serifIdx in serifFonts) {
+  serifWidth = table_width_for_font(serifFonts[serifIdx]);
+  if (serifWidth != monospaceWidth)
+    break;
+}
+if (serifWidth == monospaceWidth) {
+  for (monospaceIdx in monospaceFonts) {
+    monospaceWidth = table_width_for_font(monospaceFonts[monospaceIdx]);
+    if (serifWidth != monospaceWidth)
+      break;
+  }
+}
+
+isnot(serifWidth, monospaceWidth,
+      "can't find serif and monospace fonts of different width");
+
+SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', serifFonts[serifIdx]]]}).then(step2);
+
+var serifWidthFromPref;
+function step2() {
+    serifWidthFromPref = tableElement.offsetWidth;
+    SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', monospaceFonts[monospaceIdx]]]}).then(step3);
+}
+var monospaceWidthFromPref;
+function step3() {
+    monospaceWidthFromPref = tableElement.offsetWidth;
+
+    is(serifWidthFromPref, serifWidth,
+       "changing font pref should change width of table (serif)");
+    is(monospaceWidthFromPref, monospaceWidth,
+       "changing font pref should change width of table (monospace)");
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

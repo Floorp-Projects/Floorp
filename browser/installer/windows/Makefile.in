@@ -1,0 +1,77 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
+CONFIG_DIR = instgen
+ifeq ($(CPU_ARCH), aarch64)
+SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.ARM64.sfx
+else
+SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.Win32.sfx
+endif
+
+INSTALLER_FILES = \
+	app.tag \
+	nsis/content/installing.html \
+	nsis/content/installing.js \
+	nsis/content/profile_cleanup.html \
+	nsis/content/profile_cleanup.js \
+	nsis/content/stub_common.css \
+	nsis/content/stub_common.js \
+	nsis/installer.nsi \
+	nsis/uninstaller.nsi \
+	nsis/stub.nsi \
+	nsis/shared.nsh \
+	stub.tag \
+	$(NULL)
+
+ifdef MOZ_MAINTENANCE_SERVICE
+INSTALLER_FILES += \
+	nsis/maintenanceservice_installer.nsi \
+	$(NULL)
+endif
+
+BRANDING_FILES = \
+	branding.nsi \
+	firefox64.ico \
+	stubinstaller/bgstub.jpg \
+	stubinstaller/installing_page.css \
+	stubinstaller/profile_cleanup_page.css \
+	wizHeader.bmp \
+	wizHeaderRTL.bmp \
+	wizWatermark.bmp \
+	$(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+ifdef IS_LANGUAGE_REPACK
+PPL_LOCALE_ARGS = \
+  --l10n-dir=$(REAL_LOCALE_MERGEDIR)/browser/installer \
+  --l10n-dir=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer \
+  --l10n-dir=$(topsrcdir)/browser/locales/en-US/installer \
+  $(NULL)
+else
+PPL_LOCALE_ARGS=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer
+endif
+
+$(CONFIG_DIR)/setup.exe::
+	$(RM) -r $(CONFIG_DIR)
+	$(MKDIR) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/,$(BRANDING_FILES)) $(CONFIG_DIR)
+	$(call py_action,preprocessor,-Fsubstitution $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/nsis/defines.nsi.in -o $(CONFIG_DIR)/defines.nsi)
+	$(PYTHON3) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --preprocess-locale $(topsrcdir) \
+	  $(PPL_LOCALE_ARGS) $(AB_CD) $(CONFIG_DIR)
+	$(PYTHON3) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --preprocess-single-file $(topsrcdir) \
+	  $(PPL_LOCALE_ARGS) $(CONFIG_DIR) \
+	  nsisstrings.properties nsisstrings.nlf
+	$(PYTHON3) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --convert-utf8-utf16le \
+	  $(srcdir)/nsis/extensionsLocale.nsh $(CONFIG_DIR)/extensionsLocale.nsh
+
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk

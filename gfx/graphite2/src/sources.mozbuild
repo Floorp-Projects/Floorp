@@ -1,0 +1,51 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This should contain all of the _SOURCES from files.mk, except *_machine.cpp
+graphite_sources = [
+    '../geckoextra/src/GraphiteExtra.cpp',
+    'CmapCache.cpp',
+    'Code.cpp',
+    'Collider.cpp',
+    'Decompressor.cpp',
+    'Face.cpp',
+    'FeatureMap.cpp',
+    'FileFace.cpp',
+    'Font.cpp',
+    'GlyphCache.cpp',
+    'GlyphFace.cpp',
+    'gr_char_info.cpp',
+    'gr_face.cpp',
+    'gr_features.cpp',
+    'gr_font.cpp',
+    'gr_logging.cpp',
+    'gr_segment.cpp',
+    'gr_slot.cpp',
+    'Intervals.cpp',
+    'json.cpp',
+    'Justifier.cpp',
+    'NameTable.cpp',
+    'Pass.cpp',
+    'Position.cpp',
+    'Segment.cpp',
+    'Silf.cpp',
+    'Slot.cpp',
+    'Sparse.cpp',
+    'TtfUtil.cpp',
+    'UtfCodec.cpp',
+]
+
+graphite_defines = [
+    ('PACKAGE_VERSION', '"moz"'),
+    ('PACKAGE_BUGREPORT', '"http://bugzilla.mozilla.org/"'),
+    # tell graphite2 not to export symbols, we'll be linking it directly with
+    # thebes
+    ('GRAPHITE2_STATIC', True),
+]
+
+# disable features we don't need in the graphite2 code, to reduce code size
+for var in ('GRAPHITE2_NFILEFACE', 'GRAPHITE2_NTRACING', 'GRAPHITE2_NSEGCACHE'):
+    graphite_defines.append((var, True))

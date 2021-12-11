@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing placement of grid items outside the explicit grid</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1146051">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#auto-placement-algo">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#overlarge-grids">
+  <link rel="match" href="grid-placement-auto-implicit-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ grid-template-columns: 20px 20px 20px 20px;
+ grid-template-rows: 20px;
+ grid-auto-columns: 3px;
+ grid-auto-rows: 20px;
+ border: 1px solid blue;
+ width: 270px;
+}
+
+.a { grid-area: 1 / 2; background:lime; }
+.a2 { grid-column:2; grid-row:span 2 / 1; background:lime; }
+.b { grid-column: span 1 / 2; grid-row: 2; background:pink; }
+.b2 { grid-column: span 1 / 2; background:pink; }
+.c { grid-row: 1; background:yellow; }
+.e { grid-row: 1; background:silver; }
+.f { grid-column: 1; background:cyan; }
+.g { background:tan; }
+
+span {
+  border: 1px solid;
+  line-height: 18px;
+  min-width: 0;
+}
+
+  </style>
+</head>
+<body style="overflow:hidden">
+
+<div style="float:left">
+
+<div class="grid">
+<span class="a">a</span><span class="b">b</span><span class="c">c</span><span class="e">e</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b">b</span><span class="g">g</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="2">b</span><span class="c">c</span><span class="e">e</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="2">b</span><span class="c">c</span><span class="f">f</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="4">b</span><span class="c">c</span><span class="e">e</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="4">b</span><span class="c">c</span><span class="f" style="grid-column:span 2 / 2">f</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="50">b</span><span class="c">c</span><span class="e" style="grid-column-start: span 10;">e</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="50">b</span><span class="c">c</span><span class="f">f</span><span class="f">f</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="50">b</span><span class="c">c</span><span class="f" style="grid-column: span 2 / 1;">f</span><span class="f">f</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="50">b</span><span class="c">c</span><span class="g">g</span>
+</div>
+<div class="grid">
+<span class="a">a</span><span class="b" span="50">b</span><span class="g">g</span><span class="g">g</span>
+</div>
+
+</div><div style="float:left; margin-top:300px;">
+
+<div class="grid" style="height:40px">
+<span style="grid-area: X -10000 / 1 / span 10000 / 5; margin-top:-199980px"></span>
+<span style="grid-area: 1 / 1 / span 10000 / 5; margin-top:-199980px; height:30px; color:black"></span>
+<span span="50" style="margin-top:-399960px">b</span>
+</div>
+<div class="grid" style="height:40px">
+<span style="grid-area: X -10000 / 1 / span 10000 / 5; margin-top:-199980px"></span>
+<span style="grid-area: 1 / 1 / span 10000 / 5; margin-top:-199980px; height:30px; color:black"></span>
+<span style="grid-column: 1 / span 50; margin-top:-399960px">b</span>
+</div>
+<div class="grid" style="height:40px">
+<span style="grid-area: 1 / X -10000 / 5 / span 10000; width: 30px; margin-left:-29980px"></span>
+<span style="grid-area: 1 / 1 / 5 / span 10000; width: 30px; margin-left:-29980px; color:black"></span>
+<span style="grid-row: 1; grid-column:auto / span 1; width: 30px; margin-left:-59980px">b</span>
+</div>
+<div class="grid" style="height:40px">
+<span style="grid-area: X -10000 / 1 / span 10000 / 5; margin-top:-199980px"></span>
+<span style="grid-area: 1 / 1 / span 9998 / 5; margin-top:-199980px; height:30px; color:black"></span>
+<span span="50" style="grid-row:auto / span 5; margin-top:-399960px">b</span>
+</div>
+<div class="grid" style="height:40px">
+<span style="grid-area: 1 / X -10000 / 5 / span 10000; width: 30px; margin-left:-29980px"></span>
+<span style="grid-area: 1 / 1 / 5 / span 9995; width: 30px; margin-left:-29980px; color:silver"></span>
+<span style="grid-row: 1; grid-column:auto / span 10; margin-left:-59910px; margin-right:59800px">b</span>
+</div>
+
+</div><div style="float:left">
+
+<div class="grid">
+<span class="a2">a</span><span class="b2">b</span><span class="c">c</span><span class="e">e</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2">b</span><span class="g">g</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="2">b</span><span class="c">c</span><span class="e">e</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="2">b</span><span class="c">c</span><span class="f">f</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="4">b</span><span class="c">c</span><span class="e">e</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="4">b</span><span class="c">c</span><span class="f" style="grid-column:span 2 / 2">f</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="50">b</span><span class="c">c</span><span class="e" style="grid-column-start: span 10;">e</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="50">b</span><span class="c">c</span><span class="f">f</span><span class="f">f</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="50">b</span><span class="c">c</span><span class="f" style="grid-column: span 2 / 1;">f</span><span class="f">f</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="50">b</span><span class="c">c</span><span class="g">g</span>
+</div>
+<div class="grid">
+<span class="a2">a</span><span class="b2" span="50">b</span><span class="g">g</span><span class="g">g</span>
+</div>
+</div>
+
+<script>
+var elms = document.querySelectorAll("[span]");
+for (i=0; i < elms.length; ++i) {
+  var e = elms[i];
+  e.style.gridColumnStart = "span " + e.getAttribute("span");
+}
+</script>
+
+</body>
+</html>

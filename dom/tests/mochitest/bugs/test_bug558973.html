@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=558973
+-->
+<head>
+  <title>Test for Bug 558973</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=558973">Mozilla Bug 558973</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 558973 **/
+
+var child = document.createTextNode("a");
+
+var text = document.createTextNode("a");
+var exception = "";
+var exceptionCode = 0;
+try {
+    text.appendChild(child);
+}
+catch (e) {
+    exception = e.name;
+    exceptionCode = e.code;
+}
+is(exception, "HierarchyRequestError",
+   "Expected HierarchyRequestError");
+is(exceptionCode, DOMException.HIERARCHY_REQUEST_ERR,
+   "Expected DOMException.HIERARCHY_REQUEST_ERR");
+
+</script>
+</pre>
+</body>
+</html>

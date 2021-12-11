@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html class="reftest-paged">
+<meta charset="utf-8">
+<title>Reftest, bug 1409585</title>
+<style type="text/css">
+    .break-after {
+        page-break-after: always;
+    }
+</style>
+
+<div class="break-after">
+    <div class="break-after">
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Header</th>
+                        <th>Header</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Data</td>
+                        <td>Data</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="break-after">
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Header</th>
+                        <th>Header</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Data</td>
+                        <td>Data</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

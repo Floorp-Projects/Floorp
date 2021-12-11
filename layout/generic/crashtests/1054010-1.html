@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      .flexRow {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .flexColumn {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex-basis: 100%;
+      }
+
+      .flexBlock {
+        flex: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 5px;
+        border: 1px solid blue;
+      }
+
+      .flexColumn > .flexBlock:last-child {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flexRow">
+      <div class="flexColumn">
+        <div class="flexBlock">
+          Nested layout 1
+          <div class="flexRow">
+            <div class="flexColumn">
+              <div class="flexBlock">
+                Nested layout 2
+                <div class="flexRow">
+                  <div class="flexColumn">
+                    <div class="flexBlock">
+                      Nested layout 3
+                      <div class="flexRow">
+                        <div class="flexColumn">
+                          <div class="flexBlock">
+                            Nested layout 4
+                            <div class="flexRow">
+                              <div class="flexColumn">
+                                <div class="flexBlock">
+                                  Nested layout 5
+                                  <div class="flexRow">
+                                    <div class="flexColumn">
+                                      <div class="flexBlock">
+                                        Nested layout 6
+                                        <div class="flexRow">
+                                          <div class="flexColumn">
+                                            <div class="flexBlock">
+                                              Nested layout 7
+                                              <div class="flexRow">
+                                                <div class="flexColumn">
+                                                  <div class="flexBlock">
+                                                    Nested layout 8
+                                                    <div class="flexRow">
+                                                      <div class="flexColumn">
+                                                        <div class="flexBlock">
+                                                          Nested layout 9
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

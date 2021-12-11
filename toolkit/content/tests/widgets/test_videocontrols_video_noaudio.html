@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto"></video>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+  const video = document.getElementById("video");
+  const muteButton = getElementWithinVideo(video, "muteButton");
+  const volumeStack = getElementWithinVideo(video, "volumeStack");
+
+  add_task(async function setup() {
+    await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
+    await new Promise(resolve => {
+      video.src = "video.ogg";
+      video.addEventListener("loadedmetadata", () => SimpleTest.executeSoon(resolve));
+    });
+  });
+
+  add_task(async function mute_button_icon() {
+    is(muteButton.getAttribute("noAudio"), "true");
+    ok(muteButton.hasAttribute("disabled"), "Mute button should be disabled");
+
+    if (volumeStack) {
+      ok(volumeStack.hidden);
+    }
+  });
+</script>
+</pre>
+</body>
+</html>

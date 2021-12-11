@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1431900
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1431900</title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+var gWalker;
+
+addTest(async function setup() {
+  const url = document.getElementById("inspectorContent").href;
+  const { target } = await attachURL(url);
+  const inspector = await target.getFront("inspector");
+  gWalker = inspector.walker;
+  runNextTest();
+});
+
+addAsyncTest(async function testInlineBlockDisplayType() {
+  info("Test getting the display type of an inline block element.");
+  const node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
+  const displayType = node.displayType;
+  is(displayType, "inline-block", "The node has a display type of 'inline-block'.");
+  runNextTest();
+});
+
+addAsyncTest(async function testInlineTextChildDisplayType() {
+  info("Test getting the display type of an inline text child.");
+  const node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
+  const children = await gWalker.children(node);
+  const inlineTextChild = children.nodes[0];
+  const displayType = inlineTextChild.displayType;
+  ok(!displayType, "No display type for inline text child.");
+  runNextTest();
+});
+
+addAsyncTest(async function testGridDisplayType() {
+  info("Test getting the display type of an grid container.");
+  const node = await gWalker.querySelector(gWalker.rootNode, "#grid");
+  const displayType = node.displayType;
+  is(displayType, "grid", "The node has a display type of 'grid'.");
+  runNextTest();
+});
+
+addAsyncTest(async function testBlockDisplayType() {
+  info("Test getting the display type of a block element.");
+  const node = await gWalker.querySelector(gWalker.rootNode, "#block");
+  const displayType = await node.displayType;
+  is(displayType, "block", "The node has a display type of 'block'.");
+  runNextTest();
+});
+
+addTest(function() {
+  gWalker = null;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1431900">Mozilla Bug 1431900</a>
+<a id="inspectorContent" target="_blank" href="inspector_display-type.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

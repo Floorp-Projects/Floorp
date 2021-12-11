@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<style>
+@keyframes anim {
+  from { box-shadow: none; }
+  to { box-shadow: rgba(120, 120, 120, 0.5) 10px 10px 10px 0px; }
+}
+#target {
+  width: 100px; height: 100px;
+  /*
+   * Use negative delay to shift to the point that the cubic-bezier function
+   * produces a value out of range of [0, 1].
+   */
+  animation: anim 1s -0.02s cubic-bezier(0, -0.5, 0, 0) paused;
+}
+</style>
+<div id="target"></div>

@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.release_notifications:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - post-beetmover-dummy
+    - release-generate-checksums-beetmover
+    - release-bouncer-sub
+
+job-defaults:
+    name: notify-release-drivers-promote
+    description: Sends email to release-drivers telling release was promoted.
+    run-on-projects: []
+    shipping-phase: promote
+    worker-type: succeed
+    worker:
+        implementation: succeed
+    notifications:
+        subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
+        message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
+        emails:
+            by-project:
+                mozilla-(beta|release|esr.*): ["release-signoff@mozilla.org"]
+                try: ["{config[params][owner]}"]
+                default: []
+
+jobs:
+    firefox:
+        shipping-product: firefox
+    devedition:
+        shipping-product: devedition

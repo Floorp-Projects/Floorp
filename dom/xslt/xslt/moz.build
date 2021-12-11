@@ -1,0 +1,63 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.dom += ["txMozillaXSLTProcessor.h"]
+
+XPIDL_MODULE = "dom_xslt"
+
+XPIDL_SOURCES += [
+    "txIEXSLTFunctions.idl",
+]
+
+UNIFIED_SOURCES += [
+    "txBufferingHandler.cpp",
+    "txCurrentFunctionCall.cpp",
+    "txDocumentFunctionCall.cpp",
+    "txExecutionState.cpp",
+    "txEXSLTFunctions.cpp",
+    "txFormatNumberFunctionCall.cpp",
+    "txGenerateIdFunctionCall.cpp",
+    "txInstructions.cpp",
+    "txKeyFunctionCall.cpp",
+    "txMozillaStylesheetCompiler.cpp",
+    "txMozillaTextOutput.cpp",
+    "txMozillaXMLOutput.cpp",
+    "txMozillaXSLTProcessor.cpp",
+    "txNodeSorter.cpp",
+    "txOutputFormat.cpp",
+    "txPatternOptimizer.cpp",
+    "txPatternParser.cpp",
+    "txRtfHandler.cpp",
+    "txStylesheet.cpp",
+    "txStylesheetCompileHandlers.cpp",
+    "txStylesheetCompiler.cpp",
+    "txTextHandler.cpp",
+    "txToplevelItems.cpp",
+    "txUnknownHandler.cpp",
+    "txXPathResultComparator.cpp",
+    "txXSLTEnvironmentFunctionCall.cpp",
+    "txXSLTNumber.cpp",
+    "txXSLTNumberCounters.cpp",
+    "txXSLTPatterns.cpp",
+    "txXSLTProcessor.cpp",
+]
+
+EXTRA_JS_MODULES += [
+    "txEXSLTRegExFunctions.jsm",
+]
+
+LOCAL_INCLUDES += [
+    "../base",
+    "../xml",
+    "../xpath",
+    "/dom/base",
+    "/js/xpconnect/src",
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

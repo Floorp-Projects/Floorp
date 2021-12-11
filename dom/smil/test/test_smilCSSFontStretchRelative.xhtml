@@ -1,0 +1,102 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Animation Behavior on CSS Properties</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg">
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/* This testcase verifies that animated values of "wider" and "narrower" for
+   "font-stretch" have the expected effect, across all possible inherited
+   values of the property.
+   XXXdholbert Currently, we don't support animating relative values of
+   font-stretch, so most of the tests here use todo_is() rather than is().
+*/
+
+SimpleTest.waitForExplicitFinish();
+
+const gPropertyName="font-stretch";
+
+// List of non-relative font-stretch values, from smallest to largest
+const gFontStretchValues = [
+  ["ultra-condensed", "50%"],
+  ["extra-condensed", "62.5%"],
+  ["condensed", "75%"],
+  ["semi-condensed", "87.5%"],
+  ["normal", "100%"],
+  ["semi-expanded", "112.5%"],
+  ["expanded", "125%"],
+  ["extra-expanded", "150%"],
+  ["ultra-expanded", "200%"],
+];
+
+function testFontStretchValue([baseValue, computedValue], [narrowerStep, computedNarrowerStep], [widerStep, computedWiderStep])
+{
+  var svg = SMILUtil.getSVGRoot();
+  var gElem = document.createElementNS(SVG_NS, "g");
+  gElem.setAttribute("style", "font-stretch: " + baseValue);
+  svg.appendChild(gElem);
+
+  var textElem = document.createElementNS(SVG_NS, "text");
+  gElem.appendChild(textElem);
+
+  var animElem = document.createElementNS(SVG_NS, "set");
+  animElem.setAttribute("attributeName", gPropertyName);
+  animElem.setAttribute("attributeType", "CSS");
+  animElem.setAttribute("begin", "0s");
+  animElem.setAttribute("dur", "indefinite");
+  textElem.appendChild(animElem);
+
+  // CHECK EFFECT OF 'narrower'
+  // NOTE: Using is() instead of todo_is() for ultra-condensed, since
+  // 'narrower' has no effect on that value.
+  var myIs = (baseValue == "ultra-condensed" ? is : todo_is);
+  animElem.setAttribute("to", "narrower");
+  SMILUtil.getSVGRoot().setCurrentTime(1.0); // Force a resample
+  myIs(SMILUtil.getComputedStyleSimple(textElem, gPropertyName), computedNarrowerStep,
+       "checking effect of 'narrower' on inherited value '" + baseValue + "'");
+
+  // CHECK EFFECT OF 'wider'
+  // NOTE: using is() instead of todo_is() for ultra-expanded, since
+  // 'wider' has no effect on that value.
+  myIs = (baseValue == "ultra-expanded" ? is : todo_is);
+  animElem.setAttribute("to", "wider");
+  SMILUtil.getSVGRoot().setCurrentTime(1.0); // Force a resample
+  myIs(SMILUtil.getComputedStyleSimple(textElem, gPropertyName), computedWiderStep,
+          "checking effect of 'wider' on inherited value '" + baseValue + "'");
+
+  // Removing animation should clear animated effects
+  textElem.removeChild(animElem);
+  svg.removeChild(gElem);
+}
+
+function main()
+{
+  var valuesList = gFontStretchValues;
+  for (var baseIdx in valuesList) {
+    // 'narrower' and 'wider' are expected to shift us by one slot, but not
+    // past the ends of the list of possible values.
+    var narrowerIdx = Math.max(baseIdx - 1, 0);
+    var widerIdx =    Math.min(baseIdx + 1, valuesList.length - 1);
+
+    testFontStretchValue(valuesList[baseIdx],
+                         valuesList[narrowerIdx], valuesList[widerIdx]);
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

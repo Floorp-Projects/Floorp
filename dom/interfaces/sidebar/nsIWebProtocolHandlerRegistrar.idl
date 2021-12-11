@@ -1,0 +1,51 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * nsIWebProtocolHandlerRegistrar
+ *
+ * Applications wishing to use web protocol handlers need to implement this
+ * interface. Typically they will prompt the user to confirm adding an entry
+ * to the local list.
+ *
+ * The component must have the contract id defined below so that the Navigator
+ * implementation can invoke it.
+ */
+
+[scriptable, uuid(1ce9ef8d-f462-49ca-b8e9-c946c4f37d6e)]
+interface nsIWebProtocolHandlerRegistrar : nsISupports
+{
+  /**
+   * See documentation in Navigator.webidl
+   * The additional contentWindow param for this method represents the dom
+   * content window from which the method has been called, or its browser window.
+   */
+   void registerProtocolHandler(in AString protocol,
+                                in nsIURI uri,
+                                in AString title,
+                                in nsIURI documentURI,
+                                in nsISupports windowOrBrowser);
+  /**
+   * Removes a registered protocol handler
+   *
+   * While registerProtocolHandler is exposed on Navigator, unregistering
+   * is exposed through the UI code.
+   * @param   protocol
+   *          The protocol scheme to remove a service handler for
+   * @param   uri
+   *          The uri of the service handler to remove
+   */
+  void removeProtocolHandler(in AString protocol, in AString uri);
+};
+
+%{ C++
+
+#define NS_WEBPROTOCOLHANDLERREGISTRAR_CONTRACTID "@mozilla.org/embeddor.implemented/web-protocol-handler-registrar;1"
+%}

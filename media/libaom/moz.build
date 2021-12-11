@@ -1,0 +1,125 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')
+
+include('sources.mozbuild')
+
+# Linux, Mac and Win share file lists for x86* but not configurations.
+if CONFIG['CPU_ARCH'] == 'x86_64':
+    EXPORTS.aom += files['X64_EXPORTS']
+    SOURCES += files['X64_SOURCES']
+    USE_NASM = True
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
+        EXPORTS.aom += [ 'config/win/x64/config/aom_config.h' ]
+        # This code is not included in our PGO profile, and pointlessly
+        # PGO-optimizing it slows down our builds a lot.
+        NO_PGO = True
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/mac/x64/' ]
+        EXPORTS.aom += [ 'config/mac/x64/config/aom_config.h' ]
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/linux/x64/' ]
+        EXPORTS.aom += [ 'config/linux/x64/config/aom_config.h' ]
+elif CONFIG['CPU_ARCH'] == 'x86':
+    EXPORTS.aom += files['IA32_EXPORTS']
+    SOURCES += files['IA32_SOURCES']
+    USE_NASM = True
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/win/ia32/' ]
+        EXPORTS.aom += [ 'config/win/ia32/config/aom_config.h' ]
+        NO_PGO = True # Compiler OOMs, bug 1445922
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/linux/ia32/' ]
+        EXPORTS.aom += [ 'config/linux/ia32/config/aom_config.h' ]
+elif CONFIG['CPU_ARCH'] == 'arm':
+    EXPORTS.aom += files['ARM_EXPORTS']
+    ASFLAGS += [
+        '-I%s/media/libaom/config/linux/arm/' % TOPSRCDIR,
+        '-I%s/libaom' % OBJDIR,
+    ]
+    LOCAL_INCLUDES += [ '/media/libaom/config/linux/arm/' ]
+    EXPORTS.aom += [ 'config/linux/arm/config/aom_config.h' ]
+
+    SOURCES += files['ARM_SOURCES']
+
+    for f in SOURCES:
+        if f.endswith('neon.c'):
+            SOURCES[f].flags += CONFIG['VPX_ASFLAGS']
+
+    if CONFIG['OS_TARGET'] == 'Android':
+        # For cpu-features.h
+        LOCAL_INCLUDES += [
+            '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
+        ]
+else:
+    # Generic C-only configuration
+    EXPORTS.aom += files['GENERIC_EXPORTS']
+    SOURCES += files['GENERIC_SOURCES']
+    ASFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libaom/config/generic/' ]
+    EXPORTS.aom += [ 'config/generic/config/aom_config.h' ]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # Older versions of the Android NDK don't pre-define anything to indicate
+    # the OS they're on, so do it for them.
+    DEFINES['__linux__'] = True
+
+for f in SOURCES:
+    if f.endswith('sse2.c'):
+        SOURCES[f].flags += CONFIG['SSE2_FLAGS']
+    elif f.endswith('ssse3.c'):
+        SOURCES[f].flags += ['-mssse3']
+    elif f.endswith('sse4.c'):
+        SOURCES[f].flags += ['-msse4.1']
+    elif f.endswith('sse42.c'):
+        SOURCES[f].flags += ['-msse4.2']
+    elif f.endswith('avx.c'):
+        SOURCES[f].flags += ['-mavx']
+    elif f.endswith('avx2.c'):
+        SOURCES[f].flags += ['-mavx2']
+
+# Suppress warnings in third-party code.
+CFLAGS += [
+    '-Wno-sign-compare',
+    '-Wno-unused-function', # so many of these warnings; just ignore them
+]
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CFLAGS += [
+        '-Wno-unreachable-code',
+        '-Wno-unneeded-internal-declaration',
+    ]
+
+ASFLAGS += CONFIG['VPX_ASFLAGS']
+ASFLAGS += [
+    '-I./',
+    '-I%s/third_party/aom/' % TOPSRCDIR,
+]
+
+LOCAL_INCLUDES += [
+    '/media/libaom/config', # aom_version.h
+    '/third_party/aom',
+]
+
+if CONFIG['OS_TARGET'] == 'Linux':
+    # For fuzzing, We only support building on Linux currently.
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'test/fuzztest'
+    ]

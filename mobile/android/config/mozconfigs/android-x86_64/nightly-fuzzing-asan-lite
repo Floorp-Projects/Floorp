@@ -1,0 +1,5 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/nightly-lite"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/nightly-fuzzing-asan"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

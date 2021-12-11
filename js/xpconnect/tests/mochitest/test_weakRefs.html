@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test WeakRef works in the browser</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      let wr1, wr2, wr3, wr4;
+
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        // 1. WeakRef with JS target.
+        wr1 = new WeakRef({});
+
+        // 2. WeakRef with DOM object target (without preserved wrapper).
+        wr2 = new WeakRef(document.createElement("div"));
+
+        // 3. WeakRef with DOM object target (with preserved wrapper).
+        let object = document.createElement("div");
+        object.someProperty = true;
+        wr3 = new WeakRef(object);
+        object = null
+
+        // 4. WeakRef with reachable DOM object target without preserved wrapper.
+        document.body.appendChild(document.createElement("div"));
+        wr4 = new WeakRef(document.body.lastChild);
+
+        // WeakRef should keep the target in the current task.
+        isnot(wr1.deref(), undefined, "deref() should return its target.");
+        isnot(wr2.deref(), undefined, "deref() should return its target.");
+        isnot(wr3.deref(), undefined, "deref() should return its target.");
+        isnot(wr4.deref(), undefined, "deref() should return its target.");
+
+        // WeakRef should keep the target until the end of current task, which
+        // includes promise microtasks.
+        Promise.resolve().then(() => {
+          isnot(wr1.deref(), undefined, "deref() should return its target.");
+          isnot(wr2.deref(), undefined, "deref() should return its target.");
+          isnot(wr3.deref(), undefined, "deref() should return its target.");
+          isnot(wr4.deref(), undefined, "deref() should return its target.");
+        });
+
+        // setTimeout will call its callback in a new task.
+        setTimeout(task2, 0);
+      }
+
+      function task2() {
+        // Trigger a full GC/CC/GC cycle to collect WeakRef targets.
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+        SpecialPowers.DOMWindowUtils.cycleCollect();
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+
+        is(wr1.deref(), undefined, "deref() should return undefined.");
+        is(wr2.deref(), undefined, "deref() should return undefined.");
+        is(wr3.deref(), undefined, "deref() should return undefined.");
+        isnot(wr4.deref(), undefined, "deref() should return its target.");
+
+        // setTimeout will call its callback in a new task.
+        setTimeout(task3, 0);
+      }
+
+      function task3() {
+        document.body.removeChild(document.body.lastChild);
+
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+        SpecialPowers.DOMWindowUtils.cycleCollect();
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+
+        is(wr1.deref(), undefined, "deref() should return undefined.");
+        is(wr2.deref(), undefined, "deref() should return undefined.");
+        is(wr3.deref(), undefined, "deref() should return undefined.");
+        is(wr4.deref(), undefined, "deref() should return undefined.");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="go()"></body>
+</html>

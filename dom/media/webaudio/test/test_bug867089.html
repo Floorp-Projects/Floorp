@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bug 867089</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var ctx = new AudioContext();
+
+  // Test invalid playbackRate values for AudioBufferSourceNode.
+  var source = ctx.createBufferSource();
+  var buffer = ctx.createBuffer(2, 2048, 8000);
+  source.buffer = buffer;
+  source.playbackRate.value = 0.0;
+  source.connect(ctx.destination);
+  source.start(0);
+
+  var source2 = ctx.createBufferSource();
+  source2.buffer = buffer;
+  source2.playbackRate.value = -1.0;
+  source2.connect(ctx.destination);
+  source2.start(0);
+
+  var source3 = ctx.createBufferSource();
+  source3.buffer = buffer;
+  source3.playbackRate.value = 3000000.0;
+  source3.connect(ctx.destination);
+  source3.start(0);
+  ok(true, "We did not crash.");
+  SimpleTest.finish();
+});
+
+
+</script>
+</pre>
+</body>
+</html>

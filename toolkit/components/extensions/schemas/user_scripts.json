@@ -1,0 +1,120 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "user_scripts": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "api_script": {
+                "optional": true,
+                "$ref": "manifest.ExtensionURL"
+              }
+            },
+            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "namespace": "userScripts",
+    "permissions": ["manifest:user_scripts"],
+    "types": [
+      {
+        "id": "UserScriptOptions",
+        "type": "object",
+        "description": "Details of a user script",
+        "properties": {
+          "js": {
+            "type": "array",
+            "optional": false,
+            "description": "The list of JS files to inject",
+            "minItems": 1,
+            "items": { "$ref": "extensionTypes.ExtensionFileOrCode" }
+          },
+          "scriptMetadata": {
+            "description": "An opaque user script metadata value",
+            "$ref": "extensionTypes.PlainJSONValue",
+            "optional": true
+          },
+          "matches": {
+            "type": "array",
+            "optional": false,
+            "minItems": 1,
+            "items": { "$ref": "manifest.MatchPattern" }
+          },
+          "excludeMatches": {
+            "type": "array",
+            "optional": true,
+            "minItems": 1,
+            "items": { "$ref": "manifest.MatchPattern" }
+          },
+          "includeGlobs": {
+            "type": "array",
+            "optional": true,
+            "items": { "type": "string" }
+          },
+          "excludeGlobs": {
+            "type": "array",
+            "optional": true,
+            "items": { "type": "string" }
+          },
+          "allFrames": {
+            "type": "boolean",
+            "default": false,
+            "optional": true,
+            "description": "If allFrames is <code>true</code>, implies that the JavaScript should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."
+          },
+          "matchAboutBlank": {
+            "type": "boolean",
+            "default": false,
+            "optional": true,
+            "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."
+          },
+          "runAt": {
+            "$ref": "extensionTypes.RunAt",
+            "default": "document_idle",
+            "optional": true,
+            "description": "The soonest that the JavaScript will be injected into the tab. Defaults to \"document_idle\"."
+          }
+        }
+      },
+      {
+        "id": "RegisteredUserScript",
+        "type": "object",
+        "description": "An object that represents a user script registered programmatically",
+        "functions": [
+          {
+            "name": "unregister",
+            "type": "function",
+            "description": "Unregister a user script registered programmatically",
+            "async": true,
+            "parameters": []
+          }
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "register",
+        "type": "function",
+        "description": "Register a user script programmatically given its $(ref:userScripts.UserScriptOptions), and resolves to a $(ref:userScripts.RegisteredUserScript) instance",
+        "async": true,
+        "parameters": [
+          {
+            "name": "userScriptOptions",
+            "$ref": "UserScriptOptions"
+          }
+        ]
+      }
+    ]
+  }
+]

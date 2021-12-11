@@ -1,0 +1,31 @@
+<html>
+<head>
+<style type="text/css">
+
+body, p {
+  display: table;
+  position: absolute;
+}
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var n = document.getElementById("n");
+  var b = document.body;
+  var next = n.nextSibling;
+  b.removeChild(n);
+  b.insertBefore(n, next);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<div>A B</div>
+<p id="n">C D</p>
+</body>
+
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_cookies_incognito_not_allowed() {
+  let privateExtension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
+    async background() {
+      let window = await browser.windows.create({incognito: true});
+      browser.test.onMessage.addListener(async () => {
+        await browser.windows.remove(window.id);
+        browser.test.sendMessage("done");
+      });
+      browser.test.sendMessage("ready");
+    },
+    manifest: {
+      permissions: ["cookies", "*://example.org/"],
+    },
+  });
+  await privateExtension.startup();
+  await privateExtension.awaitMessage("ready");
+
+  async function background() {
+    const storeId = "firefox-private";
+    const url = "http://example.org/";
+
+    // Getting the wrong storeId will fail, otherwise we should finish the test fine.
+    browser.cookies.onChanged.addListener(changeInfo => {
+      let {cookie} = changeInfo;
+      browser.test.assertTrue(cookie.storeId != storeId, "cookie store is correct");
+    });
+
+    browser.test.onMessage.addListener(async () => {
+      let stores = await browser.cookies.getAllCookieStores();
+      let store = stores.find(s => s.incognito);
+      browser.test.assertTrue(!store, "incognito cookie store should not be available");
+      browser.test.notifyPass("cookies");
+    });
+
+    await browser.test.assertRejects(
+      browser.cookies.set({url, name: "test", storeId}),
+      /Extension disallowed access/,
+      "API should reject setting cookie");
+    await browser.test.assertRejects(
+      browser.cookies.get({url, name: "test", storeId}),
+      /Extension disallowed access/,
+      "API should reject getting cookie");
+    await browser.test.assertRejects(
+      browser.cookies.getAll({url, storeId}),
+      /Extension disallowed access/,
+      "API should reject getting cookie");
+    await browser.test.assertRejects(
+      browser.cookies.remove({url, name: "test", storeId}),
+      /Extension disallowed access/,
+      "API should reject getting cookie");
+    await browser.test.assertRejects(
+      browser.cookies.getAll({url, storeId}),
+      /Extension disallowed access/,
+      "API should reject getting cookie");
+
+    browser.test.sendMessage("set-cookies");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["cookies", "*://example.org/"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("set-cookies");
+
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    Services.cookies.add("example.org", "/", "public", `foo${Math.random()}`,
+                         false, false, false, Number.MAX_SAFE_INTEGER, {},
+                         Ci.nsICookie.SAMESITE_NONE);
+    Services.cookies.add("example.org", "/", "private", `foo${Math.random()}`,
+                         false, false, false, Number.MAX_SAFE_INTEGER, {privateBrowsingId: 1},
+                         Ci.nsICookie.SAMESITE_NONE);
+  });
+  extension.sendMessage("test-cookie-store");
+  await extension.awaitFinish("cookies");
+
+  await extension.unload();
+  privateExtension.sendMessage("close");
+  await privateExtension.awaitMessage("done");
+  await privateExtension.unload();
+  chromeScript.destroy();
+});
+
+</script>
+
+</body>
+</html>

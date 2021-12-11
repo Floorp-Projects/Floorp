@@ -1,0 +1,31 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+[scriptable, builtinclass, uuid(91375f52-20e6-4757-9835-eb04fabe5498)]
+interface nsIHTMLAbsPosEditor : nsISupports
+{
+  /**
+   * true if Absolute Positioning handling is enabled in the editor
+   */
+  [setter_can_run_script]
+  attribute boolean absolutePositioningEnabled;
+
+
+  /* Utility methods */
+
+  /**
+   * true if Snap To Grid is enabled in the editor.
+   */
+  attribute boolean snapToGridEnabled;
+
+  /**
+   * sets the grid size in pixels.
+   * @param aSizeInPixels [IN] the size of the grid in pixels
+   */
+  attribute unsigned long gridSize;
+};

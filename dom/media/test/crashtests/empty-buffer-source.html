@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1636540: AudioBufferSourceNode with empty buffer</title>
+  <script>
+const offline = new OfflineAudioContext({length: 128, sampleRate: 16384});
+const buffer = new AudioBuffer({length: 1, sampleRate: 21725});
+const node = new AudioBufferSourceNode(offline, {buffer: buffer});
+node.start(5/offline.sampleRate);
+offline.startRendering().then(
+  () => document.documentElement.removeAttribute("class"));
+  </script>
+</head>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autocomplete behavior when tabbing between form fields</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                                                           SpecialPowers.Ci.nsILoginInfo,
+                                                                           "init");
+let readyPromise = registerRunTests();
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+let DEFAULT_ORIGIN = window.location.origin;
+let win;
+let html = `
+  <form id="form1" action="https://autofill" onsubmit="return false;">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>`;
+
+async function prepareLogins(logins = []) {
+  await LoginManager.removeAllUserFacingLogins();
+
+  for (let login of logins) {
+    let storageAddPromise = promiseStorageChanged(["addLogin"]);
+    await LoginManager.addLogin(login);
+    await storageAddPromise;
+  }
+  let count = (await LoginManager.getAllLogins()).length;
+  is(count, logins.length, "All logins were added");
+}
+
+const availableLogins = {
+  "exampleUser1": new nsLoginInfo(DEFAULT_ORIGIN, "https://autofill", null,
+                              "user1", "pass1", "uname", "pword"),
+}
+
+async function recreateTreeInWindow(formNum) {
+  await SpecialPowers.spawn(win, [formNum], (formNumF) => {
+    // eslint-disable-next-line no-unsanitized/property
+    let form = this.content.document.querySelector(`#form${formNumF}`);
+    // eslint-disable-next-line no-unsanitized/property, no-self-assign
+    form.outerHTML = form.outerHTML;
+  });
+}
+
+const tests = [
+  {
+    name: "autofill_disabled_exact_username",
+    autofillEnabled: false,
+    logins: ["exampleUser1"],
+    expectedAutofillUsername: "",
+    expectedAutofillPassword: "",
+    typeUsername: "user1",
+    expectedTabbedUsername: "user1",
+    expectedTabbedPassword: "",
+  },
+  {
+    name: "autofill_enabled_exact_username",
+    autofillEnabled: true,
+    logins: ["exampleUser1"],
+    expectedAutofillUsername: "user1",
+    expectedAutofillPassword: "pass1",
+    typeUsername: "user1",
+    expectedTabbedUsername: "user1",
+    expectedTabbedPassword: "pass1",
+  },
+];
+
+add_task(async function setup() {
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
+  win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
+});
+
+async function testResultOfTabInteractions(testData) {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.autofillForms", testData.autofillEnabled],
+  ]});
+
+  await SimpleTest.promiseFocus(win);
+  let logins = testData.logins.map(name => availableLogins[name]);
+  await prepareLogins(logins);
+
+  info("recreating form");
+  let processed = promiseFormsProcessed();
+  await recreateTreeInWindow(1);
+  info("waiting for form processed");
+  await processed;
+  // check autofill results
+  await checkLoginFormInFrameWithElementValues(win, 1, testData.expectedAutofillUsername, testData.expectedAutofillPassword);
+
+  await SpecialPowers.spawn(win, [testData.typeUsername], async (typeUsername) => {
+    let doc = this.content.document;
+    let pword = doc.querySelector("[name='pword']");
+    let uname = doc.querySelector("[name='uname']");
+
+    pword.setUserInput("");
+    uname.setUserInput("");
+
+    info("Placing focus in the username field");
+    uname.focus();
+
+    if (typeUsername) {
+      info("Filling username field");
+      EventUtils.sendString(typeUsername, this.content);
+    }
+
+    EventUtils.synthesizeKey("KEY_Tab", {}, this.content); // blur un, focus pw
+    await new Promise(resolve => SpecialPowers.executeSoon(resolve));
+
+    ok(pword.matches("input:focus"), "pword field is focused");
+  });
+
+  await checkLoginFormInFrameWithElementValues(win, 1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
+
+  await recreateTreeInWindow(1);
+  await promiseFormsProcessed();
+
+  await SpecialPowers.spawn(win, [], () => {
+    EventUtils.synthesizeKey("KEY_Escape", {}, this.content);
+  });
+}
+
+for (let testData of tests) {
+  let tmp = {
+    async [testData.name]() {
+      await testResultOfTabInteractions(testData);
+    },
+  };
+  add_task(tmp[testData.name]);
+}
+
+</script>
+</pre>
+</body>
+</html>

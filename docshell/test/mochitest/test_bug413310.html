@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=413310
+-->
+<head>
+  <title>Test for Bug 413310</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=413310">Mozilla Bug 413310</a>
+<p id="display">
+<script class="testbody" type="text/javascript">
+
+if (navigator.platform.startsWith("Mac")) {
+  SimpleTest.expectAssertions(0, 2);
+} else {
+  SimpleTest.expectAssertions(0, 1);
+}
+
+/** Test for Bug 413310 **/
+
+// NOTE: If we ever make subframes do bfcache stuff, this test will need to be
+// modified accordingly!  It assumes that subframes do NOT get bfcached.
+var onloadCount = 0;
+
+var step = -1; // One increment will come from the initial subframe onload.
+               // Note that this script should come before the subframe,
+               // so that doNextStep is defined when its onload handler fires.
+
+var textContent;
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(doNextStep);
+
+function doNextStep() {
+  ++step;
+  switch (step) {
+    case 1:
+      is(onloadCount, 1, "Loaded initial page");
+      is($("i").contentWindow.location.href,
+         location.href.replace(/test_bug413310.html/,
+                               "bug413310-subframe.html"),
+         "Unexpected subframe location after initial load");
+      $("i").contentDocument.forms[0].submit();
+      break;
+    case 2:
+      is(onloadCount, 2, "Loaded POST result");
+
+      is($("i").contentWindow.location.href,
+         location.href.replace(/test_bug413310.html/,
+                               "bug413310-post.sjs"),
+         "Unexpected subframe location after POST load");
+
+      textContent = $("i").contentDocument.body.textContent;
+      isDeeply(textContent.match(/^POST /), ["POST "], "Not a POST?");
+
+      $("i").contentWindow.location.hash = "foo";
+      setTimeout(doNextStep, 0);
+      break;
+    case 3:
+      is(onloadCount, 2, "Anchor scroll should not fire onload");
+      is($("i").contentWindow.location.href,
+         location.href.replace(/test_bug413310.html/,
+                               "bug413310-post.sjs#foo"),
+         "Unexpected subframe location after anchor scroll");
+      is(textContent, $("i").contentDocument.body.textContent,
+         "Did a load when scrolling?");
+      $("i").contentWindow.location.href = "bug413310-subframe.html";
+      break;
+    case 4:
+      is(onloadCount, 3, "Done new load");
+      is($("i").contentWindow.location.href,
+         location.href.replace(/test_bug413310.html/,
+                               "bug413310-subframe.html"),
+         "Unexpected subframe location after new load");
+      history.back();
+      break;
+    case 5:
+      is(onloadCount, 4,
+         "History traversal didn't fire onload: bfcache issues!");
+      is($("i").contentWindow.location.href,
+         location.href.replace(/test_bug413310.html/,
+                               "bug413310-post.sjs#foo"),
+         "Unexpected subframe location");
+      is(textContent, $("i").contentDocument.body.textContent,
+         "Did a load when going back?");
+      SimpleTest.finish();
+      break;
+  }
+}
+</script>
+<!-- Use a timeout in onload so that we don't do a load immediately inside onload -->
+<iframe id="i" src="bug413310-subframe.html" onload="setTimeout(doNextStep, 20)">
+</iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
+

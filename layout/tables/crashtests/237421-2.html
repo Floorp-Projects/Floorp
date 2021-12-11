@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en" class="reftest-wait">
+   <head>
+      <title>bug 237421: test2a</title>
+
+     <script type="text/javascript">
+
+
+
+       function remove_second_row() {
+
+         var r2 = document.getElementById("row2");
+
+         r2.style.display ="none";
+
+        setTimeout('remove_first_row()', 10);
+
+       }
+
+
+
+      function remove_first_row() {
+
+         var r1 = document.getElementById("row1");
+
+         r1.style.display ="none";
+         
+         document.documentElement.removeAttribute("class");
+
+       }
+
+
+
+     </script>
+
+  
+   </head>
+   <body onload="setTimeout( 'remove_second_row()', 10)">
+      <table border>
+         <tr id="row1"><td rowspan="3">a</td><td rowspan="3">b</td></tr>
+         <tr id="row2"></tr>
+         <tr></tr>
+         <tr><td>c</td></tr>
+      </table>
+      
+   </body>
+</html>

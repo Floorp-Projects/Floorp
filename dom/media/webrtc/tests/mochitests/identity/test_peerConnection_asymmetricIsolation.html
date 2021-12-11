@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
+  <script type="application/javascript" src="../pc.js"></script>
+  <script type="application/javascript" src="../blacksilence.js"></script>
+  <script type="application/javascript" src="identityPcTest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  title: "Non-isolated media entering an isolated session becomes isolated",
+  bug: "996238"
+});
+
+function theTest() {
+  // Override the remote media capture options to remove isolation for the
+  // remote party; the test verifies that the media it receives on the local
+  // side is isolated anyway.
+  return identityPcTest({
+    audio: true,
+    video: true
+  });
+}
+runNetworkTest(theTest);
+
+</script>
+</pre>
+</body>
+</html>

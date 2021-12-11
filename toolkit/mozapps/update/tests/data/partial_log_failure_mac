@@ -1,0 +1,192 @@
+UPDATE TYPE partial
+PREPARE ADD Contents/Resources/searchplugins/searchpluginstext0
+PREPARE PATCH Contents/Resources/searchplugins/searchpluginspng1.png
+PREPARE PATCH Contents/Resources/searchplugins/searchpluginspng0.png
+PREPARE ADD Contents/Resources/precomplete
+PREPARE ADD Contents/Resources/distribution/extensions/extensions1/extensions1text0
+PREPARE PATCH Contents/Resources/distribution/extensions/extensions1/extensions1png1.png
+PREPARE PATCH Contents/Resources/distribution/extensions/extensions1/extensions1png0.png
+PREPARE ADD Contents/Resources/distribution/extensions/extensions0/extensions0text0
+PREPARE PATCH Contents/Resources/distribution/extensions/extensions0/extensions0png1.png
+PREPARE PATCH Contents/Resources/distribution/extensions/extensions0/extensions0png0.png
+PREPARE PATCH Contents/Resources/0/0exe0.exe
+PREPARE ADD Contents/Resources/0/00/00text0
+PREPARE PATCH Contents/Resources/0/00/00png0.png
+PREPARE PATCH Contents/MacOS/exe0.exe
+PREPARE ADD Contents/Resources/2/20/20text0
+PREPARE ADD Contents/Resources/2/20/20png0.png
+PREPARE ADD Contents/Resources/0/00/00text2
+PREPARE REMOVEFILE Contents/Resources/1/10/10text0
+PREPARE REMOVEFILE Contents/Resources/0/00/00text1
+PREPARE REMOVEDIR Contents/Resources/9/99/
+PREPARE REMOVEDIR Contents/Resources/9/99/
+PREPARE REMOVEDIR Contents/Resources/9/98/
+PREPARE REMOVEFILE Contents/Resources/9/97/970/97xtext0
+PREPARE REMOVEFILE Contents/Resources/9/97/970/97xtext1
+PREPARE REMOVEDIR Contents/Resources/9/97/970/
+PREPARE REMOVEFILE Contents/Resources/9/97/971/97xtext0
+PREPARE REMOVEFILE Contents/Resources/9/97/971/97xtext1
+PREPARE REMOVEDIR Contents/Resources/9/97/971/
+PREPARE REMOVEDIR Contents/Resources/9/97/
+PREPARE REMOVEFILE Contents/Resources/9/96/96text0
+PREPARE REMOVEFILE Contents/Resources/9/96/96text1
+PREPARE REMOVEDIR Contents/Resources/9/96/
+PREPARE REMOVEDIR Contents/Resources/9/95/
+PREPARE REMOVEDIR Contents/Resources/9/95/
+PREPARE REMOVEDIR Contents/Resources/9/94/
+PREPARE REMOVEDIR Contents/Resources/9/94/
+PREPARE REMOVEDIR Contents/Resources/9/93/
+PREPARE REMOVEDIR Contents/Resources/9/92/
+PREPARE REMOVEDIR Contents/Resources/9/91/
+PREPARE REMOVEDIR Contents/Resources/9/90/
+PREPARE REMOVEDIR Contents/Resources/9/90/
+PREPARE REMOVEDIR Contents/Resources/8/89/
+PREPARE REMOVEDIR Contents/Resources/8/89/
+PREPARE REMOVEDIR Contents/Resources/8/88/
+PREPARE REMOVEFILE Contents/Resources/8/87/870/87xtext0
+PREPARE REMOVEFILE Contents/Resources/8/87/870/87xtext1
+PREPARE REMOVEDIR Contents/Resources/8/87/870/
+PREPARE REMOVEFILE Contents/Resources/8/87/871/87xtext0
+PREPARE REMOVEFILE Contents/Resources/8/87/871/87xtext1
+PREPARE REMOVEDIR Contents/Resources/8/87/871/
+PREPARE REMOVEDIR Contents/Resources/8/87/
+PREPARE REMOVEFILE Contents/Resources/8/86/86text0
+PREPARE REMOVEFILE Contents/Resources/8/86/86text1
+PREPARE REMOVEDIR Contents/Resources/8/86/
+PREPARE REMOVEDIR Contents/Resources/8/85/
+PREPARE REMOVEDIR Contents/Resources/8/85/
+PREPARE REMOVEDIR Contents/Resources/8/84/
+PREPARE REMOVEDIR Contents/Resources/8/84/
+PREPARE REMOVEDIR Contents/Resources/8/83/
+PREPARE REMOVEDIR Contents/Resources/8/82/
+PREPARE REMOVEDIR Contents/Resources/8/81/
+PREPARE REMOVEDIR Contents/Resources/8/80/
+PREPARE REMOVEDIR Contents/Resources/8/80/
+PREPARE REMOVEFILE Contents/Resources/7/70/7xtest.exe
+PREPARE REMOVEFILE Contents/Resources/7/70/7xtext0
+PREPARE REMOVEFILE Contents/Resources/7/70/7xtext1
+PREPARE REMOVEDIR Contents/Resources/7/70/
+PREPARE REMOVEFILE Contents/Resources/7/71/7xtest.exe
+PREPARE REMOVEFILE Contents/Resources/7/71/7xtext0
+PREPARE REMOVEFILE Contents/Resources/7/71/7xtext1
+PREPARE REMOVEDIR Contents/Resources/7/71/
+PREPARE REMOVEFILE Contents/Resources/7/7text0
+PREPARE REMOVEFILE Contents/Resources/7/7text1
+PREPARE REMOVEDIR Contents/Resources/7/
+PREPARE REMOVEDIR Contents/Resources/6/
+PREPARE REMOVEFILE Contents/Resources/5/5text1
+PREPARE REMOVEFILE Contents/Resources/5/5text0
+PREPARE REMOVEFILE Contents/Resources/5/5test.exe
+PREPARE REMOVEFILE Contents/Resources/5/5text0
+PREPARE REMOVEFILE Contents/Resources/5/5text1
+PREPARE REMOVEDIR Contents/Resources/5/
+PREPARE REMOVEFILE Contents/Resources/4/4text1
+PREPARE REMOVEFILE Contents/Resources/4/4text0
+PREPARE REMOVEDIR Contents/Resources/4/
+PREPARE REMOVEFILE Contents/Resources/3/3text1
+PREPARE REMOVEFILE Contents/Resources/3/3text0
+PREPARE REMOVEDIR Contents/Resources/1/10/
+PREPARE REMOVEDIR Contents/Resources/1/
+EXECUTE ADD Contents/Resources/searchplugins/searchpluginstext0
+EXECUTE PATCH Contents/Resources/searchplugins/searchpluginspng1.png
+EXECUTE PATCH Contents/Resources/searchplugins/searchpluginspng0.png
+EXECUTE ADD Contents/Resources/precomplete
+EXECUTE ADD Contents/Resources/distribution/extensions/extensions1/extensions1text0
+EXECUTE PATCH Contents/Resources/distribution/extensions/extensions1/extensions1png1.png
+EXECUTE PATCH Contents/Resources/distribution/extensions/extensions1/extensions1png0.png
+EXECUTE ADD Contents/Resources/distribution/extensions/extensions0/extensions0text0
+EXECUTE PATCH Contents/Resources/distribution/extensions/extensions0/extensions0png1.png
+EXECUTE PATCH Contents/Resources/distribution/extensions/extensions0/extensions0png0.png
+EXECUTE PATCH Contents/Resources/0/0exe0.exe
+LoadSourceFile: destination file size 776 does not match expected size 79872
+LoadSourceFile failed
+### execution failed
+FINISH ADD Contents/Resources/searchplugins/searchpluginstext0
+FINISH PATCH Contents/Resources/searchplugins/searchpluginspng1.png
+FINISH PATCH Contents/Resources/searchplugins/searchpluginspng0.png
+FINISH ADD Contents/Resources/precomplete
+FINISH ADD Contents/Resources/distribution/extensions/extensions1/extensions1text0
+backup_restore: backup file doesn't exist: Contents/Resources/distribution/extensions/extensions1/extensions1text0.moz-backup
+FINISH PATCH Contents/Resources/distribution/extensions/extensions1/extensions1png1.png
+FINISH PATCH Contents/Resources/distribution/extensions/extensions1/extensions1png0.png
+FINISH ADD Contents/Resources/distribution/extensions/extensions0/extensions0text0
+FINISH PATCH Contents/Resources/distribution/extensions/extensions0/extensions0png1.png
+FINISH PATCH Contents/Resources/distribution/extensions/extensions0/extensions0png0.png
+FINISH PATCH Contents/Resources/0/0exe0.exe
+backup_restore: backup file doesn't exist: Contents/Resources/0/0exe0.exe.moz-backup
+FINISH ADD Contents/Resources/0/00/00text0
+backup_restore: backup file doesn't exist: Contents/Resources/0/00/00text0.moz-backup
+FINISH PATCH Contents/Resources/0/00/00png0.png
+backup_restore: backup file doesn't exist: Contents/Resources/0/00/00png0.png.moz-backup
+FINISH PATCH Contents/MacOS/exe0.exe
+backup_restore: backup file doesn't exist: Contents/MacOS/exe0.exe.moz-backup
+FINISH ADD Contents/Resources/2/20/20text0
+backup_restore: backup file doesn't exist: Contents/Resources/2/20/20text0.moz-backup
+FINISH ADD Contents/Resources/2/20/20png0.png
+backup_restore: backup file doesn't exist: Contents/Resources/2/20/20png0.png.moz-backup
+FINISH ADD Contents/Resources/0/00/00text2
+backup_restore: backup file doesn't exist: Contents/Resources/0/00/00text2.moz-backup
+FINISH REMOVEFILE Contents/Resources/1/10/10text0
+backup_restore: backup file doesn't exist: Contents/Resources/1/10/10text0.moz-backup
+FINISH REMOVEFILE Contents/Resources/0/00/00text1
+backup_restore: backup file doesn't exist: Contents/Resources/0/00/00text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/9/97/970/97xtext0
+backup_restore: backup file doesn't exist: Contents/Resources/9/97/970/97xtext0.moz-backup
+FINISH REMOVEFILE Contents/Resources/9/97/970/97xtext1
+backup_restore: backup file doesn't exist: Contents/Resources/9/97/970/97xtext1.moz-backup
+FINISH REMOVEFILE Contents/Resources/9/97/971/97xtext0
+backup_restore: backup file doesn't exist: Contents/Resources/9/97/971/97xtext0.moz-backup
+FINISH REMOVEFILE Contents/Resources/9/97/971/97xtext1
+backup_restore: backup file doesn't exist: Contents/Resources/9/97/971/97xtext1.moz-backup
+FINISH REMOVEFILE Contents/Resources/9/96/96text0
+backup_restore: backup file doesn't exist: Contents/Resources/9/96/96text0.moz-backup
+FINISH REMOVEFILE Contents/Resources/9/96/96text1
+backup_restore: backup file doesn't exist: Contents/Resources/9/96/96text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/8/87/870/87xtext0
+backup_restore: backup file doesn't exist: Contents/Resources/8/87/870/87xtext0.moz-backup
+FINISH REMOVEFILE Contents/Resources/8/87/870/87xtext1
+backup_restore: backup file doesn't exist: Contents/Resources/8/87/870/87xtext1.moz-backup
+FINISH REMOVEFILE Contents/Resources/8/87/871/87xtext0
+backup_restore: backup file doesn't exist: Contents/Resources/8/87/871/87xtext0.moz-backup
+FINISH REMOVEFILE Contents/Resources/8/87/871/87xtext1
+backup_restore: backup file doesn't exist: Contents/Resources/8/87/871/87xtext1.moz-backup
+FINISH REMOVEFILE Contents/Resources/8/86/86text0
+backup_restore: backup file doesn't exist: Contents/Resources/8/86/86text0.moz-backup
+FINISH REMOVEFILE Contents/Resources/8/86/86text1
+backup_restore: backup file doesn't exist: Contents/Resources/8/86/86text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/70/7xtest.exe
+backup_restore: backup file doesn't exist: Contents/Resources/7/70/7xtest.exe.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/70/7xtext0
+backup_restore: backup file doesn't exist: Contents/Resources/7/70/7xtext0.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/70/7xtext1
+backup_restore: backup file doesn't exist: Contents/Resources/7/70/7xtext1.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/71/7xtest.exe
+backup_restore: backup file doesn't exist: Contents/Resources/7/71/7xtest.exe.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/71/7xtext0
+backup_restore: backup file doesn't exist: Contents/Resources/7/71/7xtext0.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/71/7xtext1
+backup_restore: backup file doesn't exist: Contents/Resources/7/71/7xtext1.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/7text0
+backup_restore: backup file doesn't exist: Contents/Resources/7/7text0.moz-backup
+FINISH REMOVEFILE Contents/Resources/7/7text1
+backup_restore: backup file doesn't exist: Contents/Resources/7/7text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/5/5text1
+backup_restore: backup file doesn't exist: Contents/Resources/5/5text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/5/5text0
+backup_restore: backup file doesn't exist: Contents/Resources/5/5text0.moz-backup
+FINISH REMOVEFILE Contents/Resources/5/5test.exe
+backup_restore: backup file doesn't exist: Contents/Resources/5/5test.exe.moz-backup
+FINISH REMOVEFILE Contents/Resources/5/5text0
+backup_restore: backup file doesn't exist: Contents/Resources/5/5text0.moz-backup
+FINISH REMOVEFILE Contents/Resources/5/5text1
+backup_restore: backup file doesn't exist: Contents/Resources/5/5text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/4/4text1
+backup_restore: backup file doesn't exist: Contents/Resources/4/4text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/4/4text0
+backup_restore: backup file doesn't exist: Contents/Resources/4/4text0.moz-backup
+FINISH REMOVEFILE Contents/Resources/3/3text1
+backup_restore: backup file doesn't exist: Contents/Resources/3/3text1.moz-backup
+FINISH REMOVEFILE Contents/Resources/3/3text0
+backup_restore: backup file doesn't exist: Contents/Resources/3/3text0.moz-backup
+failed: 2
+calling QuitProgressUI

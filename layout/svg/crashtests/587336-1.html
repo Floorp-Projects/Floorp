@@ -1,0 +1,9 @@
+<html>
+<head><script>
+function boom()
+{
+  var b = document.getElementById("b");
+  b.setAttributeNS(null, "style", "filter: url(#a);");
+}
+</script></head>
+<body onload="boom();" id="a"><span id="b">B</span></body></html>

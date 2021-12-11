@@ -1,0 +1,32 @@
+<html>
+<head>
+  <title>Tracker</title>
+  <script type="text/javascript" src="https://example.com/browser/toolkit/components/antitracking/test/browser/storageAccessAPIHelpers.js"></script>
+</head>
+<body>
+<h1>Tracker</h1>
+<script>
+
+function info(msg) {
+  parent.postMessage({ type: "info", msg }, "*");
+}
+
+function ok(what, msg) {
+  parent.postMessage({ type: "ok", what: !!what, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+onmessage = function(e) {
+  let runnableStr = `(() => {return (${e.data.callback});})();`;
+  let runnable = eval(runnableStr); // eslint-disable-line no-eval
+  runnable.call(this, e.data.arg || /* Phase */ 3).then(_ => {
+    parent.postMessage({ type: "finish" }, "*");
+  });
+};
+
+</script>
+</body>
+</html>

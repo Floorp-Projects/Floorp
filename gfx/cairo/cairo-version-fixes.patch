@@ -1,0 +1,26 @@
+diff --git a/gfx/cairo/cairo/src/cairo-version.c b/gfx/cairo/cairo/src/cairo-version.c
+--- a/gfx/cairo/cairo/src/cairo-version.c
++++ b/gfx/cairo/cairo/src/cairo-version.c
+@@ -42,7 +42,7 @@
+ 
+ /* get the "real" version info instead of dummy cairo-version.h */
+ #undef CAIRO_VERSION_H
+-#include "../cairo-version.h"
++#include "cairo-features.h"
+ 
+ /**
+  * cairo_version:
+diff --git a/gfx/cairo/cairo/src/cairo-version.h b/gfx/cairo/cairo/src/cairo-version.h
+--- a/gfx/cairo/cairo/src/cairo-version.h
++++ b/gfx/cairo/cairo/src/cairo-version.h
+@@ -7,8 +7,10 @@
+ #ifndef CAIRO_VERSION_H
+ #define CAIRO_VERSION_H
+ 
++#if 0
+ #define CAIRO_VERSION_MAJOR USE_cairo_version_OR_cairo_version_string_INSTEAD
+ #define CAIRO_VERSION_MINOR USE_cairo_version_OR_cairo_version_string_INSTEAD
+ #define CAIRO_VERSION_MICRO USE_cairo_version_OR_cairo_version_string_INSTEAD
++#endif
+ 
+ #endif

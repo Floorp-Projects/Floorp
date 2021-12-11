@@ -1,0 +1,549 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Blink FileSystem API - subset</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="entries" type="file"></input>
+<script type="application/javascript">
+var fileEntry;
+var directoryEntry;
+var script;
+
+function setup_tests() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
+                                     ["dom.filesystem.pathcheck.disabled", true],
+                                     ["dom.webkitBlink.filesystem.enabled", true]]}, next);
+}
+
+function populate_entries() {
+  var url = SimpleTest.getTestFileURL("script_entries.js");
+  script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var entries = document.getElementById("entries");
+    SpecialPowers.wrap(entries).mozSetDndFilesAndDirectories(message.data);
+    next();
+  }
+
+  script.addMessageListener("entries.opened", onOpened);
+  script.sendAsyncMessage("entries.open");
+}
+
+function test_entries() {
+  var entries = document.getElementById("entries");
+  ok("webkitEntries" in entries, "HTMLInputElement.webkitEntries");
+  is(entries.webkitEntries.length, 2, "HTMLInputElement.webkitEntries.length == 2");
+  is(entries.files.length, 1, "HTMLInputElement.files is still populated");
+
+  for (var i = 0; i < entries.webkitEntries.length; ++i) {
+    if (entries.webkitEntries[i].isFile) {
+      ok(!fileEntry, "We just want 1 fileEntry");
+      fileEntry = entries.webkitEntries[i];
+    } else {
+      ok(entries.webkitEntries[i].isDirectory, "If not a file, we have a directory.");
+      ok(!directoryEntry, "We just want 1 directoryEntry");
+      directoryEntry = entries.webkitEntries[i];
+    }
+  }
+
+  next();
+}
+
+function test_fileEntry() {
+  ok("name" in fileEntry, "We have a name.");
+  ok("fullPath" in fileEntry, "We have a fullPath.");
+  ok("filesystem" in fileEntry, "We have a filesystem.");
+
+  next();
+}
+
+function test_fileEntry_file() {
+  fileEntry.file(function(file) {
+    ok(file, "We have a file here!");
+    is(file.name, fileEntry.name, "Same file name.");
+    next();
+  }, function() {
+    ok(false, "Something when wrong!");
+  });
+}
+
+function test_fileEntry_getParent() {
+  fileEntry.getParent(function(entry) {
+    is(fileEntry.fullPath, entry.fullPath, "Top level FileEntry should return itself as parent.");
+    next();
+  }, function() {
+    ok(false, "This is wrong.");
+  });
+}
+
+function test_directoryEntry() {
+  ok("name" in directoryEntry, "We have a name.");
+  ok("fullPath" in directoryEntry, "We have a fullPath.");
+  ok("filesystem" in directoryEntry, "We have a filesystem.");
+
+  next();
+}
+
+function test_directoryEntry_createReader() {
+  var reader = directoryEntry.createReader();
+  ok(reader, "We have a DirectoryReader");
+
+  reader.readEntries(function(a) {
+    ok(Array.isArray(a), "We want an array.");
+    is(a.length, 2, "reader.readyEntries returns 2 elements.");
+
+    for (var i = 0; i < 2; ++i) {
+      ok(a[i].name == "subdir" || a[i].name == "foo.txt", "Correct names");
+      is(a[i].fullPath, directoryEntry.fullPath + "/" + a[i].name, "FullPath is correct");
+    }
+
+    // Called twice:
+    reader.readEntries(function(a1) {
+      ok(Array.isArray(a1), "We want an array.");
+      is(a1.length, 0, "reader.readyEntries returns 0 elements.");
+      next();
+    }, function() {
+      ok(false, "Something when wrong!");
+    });
+  }, function() {
+    ok(false, "Something when wrong!");
+  });
+}
+
+function test_directoryEntry_getParent() {
+  directoryEntry.getParent(function(entry) {
+    is(directoryEntry.fullPath, entry.fullPath, "Top level FileEntry should return itself as parent.");
+    next();
+  }, function() {
+    ok(false, "This is wrong.");
+  });
+}
+
+function test_directoryEntry_getFile_securityError() {
+  directoryEntry.getFile("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_typeMismatchError() {
+  directoryEntry.getFile("subdir", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_nonValidPath() {
+  directoryEntry.getFile("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_nonExistingPath() {
+  directoryEntry.getFile("foo_bar.txt", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_simple() {
+  directoryEntry.getFile("foo.txt", {},
+  function(e) {
+    is(e.name, "foo.txt", "We have the right FileEntry.");
+    test_getParent(e, directoryEntry, /* nested */ false);
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getFile_deep() {
+  directoryEntry.getFile("subdir/bar..txt", {},
+  function(e) {
+    is(e.name, "bar..txt", "We have the right FileEntry.");
+    test_getParent(e, directoryEntry, /* nested */ true);
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getDirectory_securityError() {
+  directoryEntry.getDirectory("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_typeMismatchError() {
+  directoryEntry.getDirectory("foo.txt", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_nonValidPath() {
+  directoryEntry.getDirectory("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_nonExistingPath() {
+  directoryEntry.getDirectory("non_existing_dir", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_simple() {
+  directoryEntry.getDirectory("subdir", {},
+  function(e) {
+    is(e.name, "subdir", "We have the right DirectoryEntry.");
+    test_getParent(e, directoryEntry, /* nested */ false);
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getDirectory_deep() {
+  directoryEntry.getDirectory("subdir/subsubdir", {},
+  function(e) {
+    is(e.name, "subsubdir", "We have the right DirectoryEntry.");
+    test_getParent(e, directoryEntry, /* nested */ true);
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_filesystem() {
+  is(fileEntry.filesystem, directoryEntry.filesystem, "FileSystem object is shared.");
+
+  var fs = fileEntry.filesystem;
+  ok(fs.name, "FileSystem.name exists.");
+  ok(fs.root, "FileSystem has a root.");
+
+  is(fs.root.name, "", "FileSystem.root.name must be an empty string.");
+  is(fs.root.fullPath, "/", "FileSystem.root.fullPath must be '/'");
+
+  var reader = fs.root.createReader();
+  reader.readEntries(function(a) {
+    ok(Array.isArray(a), "We want an array.");
+    is(a.length, 2, "reader.readyEntries returns 2 elements.");
+    next();
+  }, function() {
+    ok(false, "Something when wrong!");
+  });
+}
+
+function test_root_getFile_securityError() {
+  fileEntry.filesystem.root.getFile("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_root_getFile_typeMismatchError() {
+  fileEntry.filesystem.root.getFile(directoryEntry.name, {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_root_getFile_nonValidPath() {
+  fileEntry.filesystem.root.getFile("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getFile_nonExistingPath() {
+  fileEntry.filesystem.root.getFile("existing.txt", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getFile_simple() {
+  fileEntry.filesystem.root.getFile(fileEntry.name, {},
+  function(e) {
+    is(e.name, fileEntry.name, "We have the right FileEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_root_getFile_deep() {
+  fileEntry.filesystem.root.getFile(directoryEntry.name + "/subdir/bar..txt", {},
+  function(e) {
+    is(e.name, "bar..txt", "We have the right FileEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_root_getDirectory_securityError() {
+  fileEntry.filesystem.root.getDirectory("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_typeMismatchError() {
+  fileEntry.filesystem.root.getDirectory(fileEntry.name, {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_nonValidPath() {
+  fileEntry.filesystem.root.getDirectory("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_nonExistingPath() {
+  fileEntry.filesystem.root.getDirectory("404", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_simple() {
+  fileEntry.filesystem.root.getDirectory(directoryEntry.name, {},
+  function(e) {
+    is(e.name, directoryEntry.name, "We have the right DirectoryEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_root_getDirectory_deep() {
+  fileEntry.filesystem.root.getDirectory(directoryEntry.name + "/subdir/subsubdir", {},
+  function(e) {
+    is(e.name, "subsubdir", "We have the right DirectoryEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function cleanUpTestingFiles() {
+  script.addMessageListener("entries.deleted", function onDeleted() {
+    script.removeMessageListener("entries.deleted");
+    script.destroy();
+    next();
+  });
+
+  script.sendAsyncMessage("entries.delete");
+}
+
+function test_getParent(entry, parentEntry, nested) {
+  entry.getParent(function(e) {
+    ok(e, "We have a parent Entry.");
+    if (!nested) {
+      is(e, parentEntry, "Parent entry matches");
+      next();
+    } else {
+      test_getParent(e, parentEntry, false);
+    }
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_webkitRelativePath() {
+  fileEntry.file(function(file1) {
+    ok(file1, "We have a file here!");
+    ok(!file1.webkitRelativePath, "webkitRelativePath is an empty string");
+
+    fileEntry.file(function(file2) {
+      ok(file2, "We have a file here!");
+      ok(!file2.webkitRelativePath, "webkitRelativePath is an empty string");
+      isnot(file1, file2, "The 2 files are not the same");
+
+      next();
+    }, function() {
+      ok(false, "Something when wrong!");
+    });
+  }, function() {
+    ok(false, "Something when wrong!");
+  });
+}
+
+function test_deprecatedCallbacks() {
+  try {
+    fileEntry.file({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "fileEntry.file() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "fileEntry.file() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    fileEntry.getParent({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "fileEntry.getParent() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "fileEntry.getParent() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    directoryEntry.getFile("file.txt", {}, { handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "directoryEntry.getFile() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "directoryEntry.getFile() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    directoryEntry.getDirectory("foo", { create: true }, { handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "directoryEntry.getDirectory() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "directoryEntry.getDirectory() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    directoryEntry.getParent({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "directoryEntry.getParent() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "directoryEntry.getParent() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  let reader = directoryEntry.createReader();
+  ok(reader, "We have a DirectoryReader");
+
+  try {
+    reader.readEntries({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "reader.readEntries() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "reader.readEntries() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  next();
+}
+
+var tests = [
+  setup_tests,
+  populate_entries,
+
+  test_entries,
+
+  test_fileEntry,
+  test_fileEntry_file,
+  test_fileEntry_getParent,
+
+  test_directoryEntry,
+  test_directoryEntry_createReader,
+  test_directoryEntry_getParent,
+
+  test_directoryEntry_getFile_securityError,
+  test_directoryEntry_getFile_typeMismatchError,
+  test_directoryEntry_getFile_nonValidPath,
+  test_directoryEntry_getFile_nonExistingPath,
+  test_directoryEntry_getFile_simple,
+  test_directoryEntry_getFile_deep,
+
+  test_directoryEntry_getDirectory_securityError,
+  test_directoryEntry_getDirectory_typeMismatchError,
+  test_directoryEntry_getDirectory_nonValidPath,
+  test_directoryEntry_getDirectory_nonExistingPath,
+  test_directoryEntry_getDirectory_simple,
+  test_directoryEntry_getDirectory_deep,
+
+  test_filesystem,
+
+  test_root_getFile_securityError,
+  test_root_getFile_typeMismatchError,
+  test_root_getFile_nonValidPath,
+  test_root_getFile_nonExistingPath,
+  test_root_getFile_simple,
+  test_root_getFile_deep,
+
+  test_root_getDirectory_securityError,
+  test_root_getDirectory_typeMismatchError,
+  test_root_getDirectory_nonValidPath,
+  test_root_getDirectory_nonExistingPath,
+  test_root_getDirectory_simple,
+  test_root_getDirectory_deep,
+
+  test_webkitRelativePath,
+
+  test_deprecatedCallbacks,
+
+  cleanUpTestingFiles,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>

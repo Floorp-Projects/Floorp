@@ -1,0 +1,29 @@
+<html>
+<head>
+  <title>3rd party content!</title>
+</head>
+<body>
+<h1>Here the 3rd party content!</h1>
+<script>
+
+onmessage = async function(e) {
+  let cb = e.data.cb;
+  let runnableStr = `(() => {return (${cb});})();`;
+  let runnable = eval(runnableStr); // eslint-disable-line no-eval
+  let variant = (new URL(location.href)).searchParams.get("variant");
+  let win = this;
+  if (variant == "initial-aboutblank") {
+    let i = win.document.createElement("iframe");
+    i.src = "about:blank";
+    win.document.body.appendChild(i);
+    // override win to make it point to the initial about:blank window
+    win = i.contentWindow;
+  }
+
+  let result = await runnable.call(this, win, e.data.value);
+  parent.postMessage(result, "*");
+};
+
+</script>
+</body>
+</html>

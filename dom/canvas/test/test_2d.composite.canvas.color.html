@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.composite.canvas.xor</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+function isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+
+var canvas2 = document.createElement('canvas');
+canvas2.width = canvas.width;
+canvas2.height = canvas.height;
+var ctx2 = canvas2.getContext('2d');
+ctx2.drawImage(document.getElementById('yellow75.png'), 0, 0);
+ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+ctx.fillRect(0, 0, 100, 50);
+ctx.globalCompositeOperation = 'xor';
+ctx.drawImage(canvas2, 0, 0);
+isPixel(ctx, 50,25, 191,255,63,127, "50,25", "191,255,63,127", 5);
+
+SimpleTest.finish();
+
+});
+</script>
+<img src="image_yellow75.png" id="yellow75.png" class="resource">
+

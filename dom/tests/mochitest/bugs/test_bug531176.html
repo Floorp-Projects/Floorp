@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=531176
+-->
+<head>
+  <title>Test for Bug 531176</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=531176">Mozilla Bug 531176</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 531176 **/
+
+var errorCount = 0;
+function errorHandler(msg, filename, linenr) {
+  is(msg, "SyntaxError: expected expression, got ';'", "Wrong error!");
+  is(filename, String(window.location), "Wrong filename!");
+  is(linenr, 1, "Wrong linenr!");
+  ++errorCount;
+}
+
+window.onerror = errorHandler;
+document.body.setAttribute("onclick", "var x=;");
+// Force eager compilation
+document.body.onclick;
+is(errorCount, 1, "Error handler should have been called! (1)");
+
+function recursiveHandler(msg, filename, linenr) {
+  is(msg, "SyntaxError: expected expression, got ';'", "Wrong error!");
+  is(filename, String(window.location), "Wrong filename!");
+  is(linenr, 1, "Wrong linenr!");
+  ++errorCount;
+  document.body.setAttribute("onclick", "var z=;");
+}
+
+window.onerror = recursiveHandler;
+document.body.setAttribute("onclick", "var y=;");
+// Force eager compilation
+document.body.onclick;
+is(errorCount, 2, "Error handler should have been called! (2)");
+
+// Check that error handler works even after recursion error.
+document.body.setAttribute("onclick", "var foo=;");
+// Force eager compilation
+document.body.onclick;
+is(errorCount, 3, "Error handler should have been called! (3)");
+
+window.onerror = function() { ++errorCount; };
+</script>
+<script>
+var foo =;
+</script>
+<script>
+is(errorCount, 4, "Error handler should have been called! (4)");
+</script>
+</pre>
+</body>
+</html>

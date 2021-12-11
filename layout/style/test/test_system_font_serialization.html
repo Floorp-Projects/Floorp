@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=475214
+-->
+<head>
+  <title>Test for Bug 475214</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=475214">Mozilla Bug 475214</a>
+<p id="display"></p>
+<div id="content">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/* Helper copied from property_database.js */
+function IsCSSPropertyPrefEnabled(prefName)
+{
+  try {
+    if (SpecialPowers.getBoolPref(prefName)) {
+      return true;
+    }
+  } catch (ex) {
+    ok(false, "Failed to look up property-controlling pref '" +
+       prefName + "' (" + ex + ")");
+  }
+
+  return false;
+}
+
+/** Test for Bug 475214 **/
+
+var e = document.getElementById("content");
+var s = e.style;
+
+e.style.font = "menu";
+is(e.style.cssText, "font: menu;", "serialize system font alone");
+is(e.style.font, "menu", "font getter returns value");
+
+e.style.fontFamily = "inherit";
+is(e.style.font, "", "font getter should be empty");
+
+e.style.font = "message-box";
+is(e.style.cssText, "font: message-box;", "serialize system font alone");
+is(e.style.font, "message-box", "font getter returns value");
+
+e.setAttribute("style", "font-weight:bold;font:caption;line-height:3;");
+is(e.style.font, "", "font getter should be empty");
+
+e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font");
+is(e.style.cssText, "font: menu;", "serialize system font alone");
+is(e.style.font, "menu", "font getter returns value");
+
+e.setAttribute("style", "font: inherit; font-family: Helvetica;");
+EXPECTED_DECLS = [
+  "font-family: Helvetica;",
+  "font-feature-settings: inherit;",
+  "font-kerning: inherit;",
+  "font-language-override: inherit;",
+  "font-size-adjust: inherit;",
+  "font-size: inherit;",
+  "font-stretch: inherit;",
+  "font-style: inherit;",
+  "font-variant: inherit;",
+  "font-weight: inherit;",
+  "line-height: inherit;",
+];
+if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
+  EXPECTED_DECLS.push("font-optical-sizing: inherit;");
+  EXPECTED_DECLS.push("font-variation-settings: inherit;");
+}
+EXPECTED_DECLS = EXPECTED_DECLS.sort().join(" ");
+let sortedDecls = e.style.cssText.split(/ (?=font-|line-)/).sort().join(" ");
+is(sortedDecls, EXPECTED_DECLS, "don't serialize system font for font:inherit");
+is(e.style.font, "", "font getter returns nothing");
+
+</script>
+</pre>
+</body>
+</html>

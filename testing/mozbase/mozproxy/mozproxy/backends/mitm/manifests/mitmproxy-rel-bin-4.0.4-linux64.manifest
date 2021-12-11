@@ -1,0 +1,10 @@
+[
+    {
+    "size": 21805767,
+    "visibility": "public",
+    "digest": "69b314f9189b1c09e5412680869c03d07510b98b34e309f0f1b6961e5d8963f935994fe2f5ca86827f08631cbb271292a72aba2f0973b144832c2e7049a464a8",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-4.0.4-linux.tar.gz",
+    "unpack": true
+    }
+]

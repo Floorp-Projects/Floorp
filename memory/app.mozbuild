@@ -1,0 +1,27 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Indirectly necessary for chromium's lock.h, included from LogAlloc.cpp
+EXPORTS.mozilla += [
+    '/mozglue/misc/Printf.h',
+    '/xpcom/base/Logging.h',
+]
+
+DIRS += [
+    '/memory',
+    '/mfbt',
+]
+
+EXPORTS.mozilla += [
+    "/mozglue/misc/IntegerPrintfMacros.h",
+    "/mozglue/misc/Sprintf.h",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    EXPORTS.mozilla += [
+        "/mozglue/misc/StackWalk_windows.h",
+        "/mozglue/misc/StackWalkThread.h",
+    ]

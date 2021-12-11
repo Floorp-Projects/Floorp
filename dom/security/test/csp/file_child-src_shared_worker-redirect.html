@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1045891</title>
+  </head>
+  <body>
+  <script type="text/javascript">
+    page_id = window.location.hash.substring(1);
+    var redir = 'none';
+
+    page_id.split('_').forEach(function (val) {
+      var [name, value] = val.split('-');
+      if (name  == 'redir') {
+        redir = unescape(value);
+      }
+    });
+
+    try {
+      worker = new SharedWorker('file_redirect_worker.sjs?path='
+          + escape("/tests/dom/security/test/csp/file_child-src_shared_worker.js")
+          + "&redir=" + redir
+          + "&page_id=" + page_id,
+          page_id);
+      worker.port.start();
+
+      worker.onerror = function(evt) {
+        evt.preventDefault();
+        window.parent.postMessage({id:page_id, message:"blocked"},
+                                  'http://mochi.test:8888');
+      }
+
+      worker.port.onmessage = function(ev) {
+        window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
+      };
+
+      worker.onerror = function() {
+        window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');
+      };
+
+      worker.port.postMessage('foo');
+    }
+    catch (e) {
+      window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');
+    }
+  </script>
+  </body>
+</html>

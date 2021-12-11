@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * The current layout of a registration is
+ *
+ *  +------+----------------------+----------------+
+ *  | Header - scope + timestamp  | Unregister_btn |
+ *  +------+----------------------+----------------|
+ *  | worker 1                                     |
+    | worker 2                                     |
+    | ...                                          |
+    +----------------------------------------------+
+    |                              Unregister btn  |
+    +----------------------------------------------+
+ */
+
+.registration {
+  line-height: 1.5;
+  font-size: var(--body-10-font-size);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(calc(var(--base-unit) * 6), auto) 1fr auto;
+  grid-column-gap: calc(4 * var(--base-unit));
+  grid-row-gap: calc(2 * var(--base-unit));
+  grid-template-areas: "header          header-controls"
+                       "workers         workers"
+                       "footer-controls footer-controls";
+}
+
+/* vertical layout */
+@media(max-width: 700px) {
+  .registration__controls {
+    grid-area: footer-controls;
+    justify-self: end;
+  }
+}
+
+/* wide layout */
+@media(min-width: 701px) {
+  .registration__controls {
+    grid-area: header-controls;
+  }
+}
+
+.registration__header {
+  grid-area: header;
+}
+
+.registration__scope {
+  font-size: var(--title-10-font-size);
+  font-weight: var(--title-10-font-weight);
+  user-select: text;
+  margin: 0;
+
+  grid-area: scope;
+}
+
+.registration__updated-time {
+  color: var(--theme-text-color-alt);
+  grid-area: timestamp;
+}
+
+.registration__workers {
+  grid-area: workers;
+  list-style-type: none;
+  padding: 0;
+}
+
+.registration__workers-item:not(:first-child) {
+  margin-block-start: calc(var(--base-unit) * 2);
+}

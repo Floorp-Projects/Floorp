@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+function doTest() {
+  var video = document.getElementById("v1");
+  video.src = "../bipbop_300_215kbps.mp4";
+  video.play();
+  video.addEventListener("ended", function() {
+    document.documentElement.removeAttribute('class');
+  }, {once: true});
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</head>
+<body>
+<video id="v1" style="position:absolute; left:0; top:0"></video>
+</body>
+</html>

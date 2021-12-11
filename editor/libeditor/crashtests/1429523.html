@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+  <head>
+    <script>
+      document.designMode = "on";
+      Promise.all([
+        new Promise(resolve => addEventListener("load", resolve)),
+        new Promise(resolve => addEventListener("focus", resolve)),
+      ]).then(() => {
+        document.body.firstChild.data = "";
+        document.documentElement.removeAttribute("class");
+      });
+      blur();
+      focus();
+      getSelection().collapse(document.body, 0);
+    </script>
+  </head>
+  <body><!-- comment --></body>
+</html>

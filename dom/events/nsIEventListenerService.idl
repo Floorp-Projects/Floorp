@@ -1,0 +1,128 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl EventTarget;
+
+interface nsIArray;
+
+/**
+ * Contains an event target along with a count of event listener changes
+ * affecting accessibility.
+ */
+[scriptable, uuid(07222b02-da12-4cf4-b2f7-761da007a8d8)]
+interface nsIEventListenerChange : nsISupports
+{
+  readonly attribute EventTarget target;
+
+  [noscript]
+  readonly attribute uint32_t countOfEventListenerChangesAffectingAccessibility;
+};
+
+[scriptable, function, uuid(aa7c95f6-d3b5-44b3-9597-1d9f19b9c5f2)]
+interface nsIListenerChangeListener : nsISupports
+{
+  void listenersChanged(in nsIArray aEventListenerChanges);
+};
+
+/**
+ * An instance of this interface describes how an event listener
+ * was added to an event target.
+ */
+[scriptable, uuid(11ba5fd7-8db2-4b1a-9f67-342cfa11afad)]
+interface nsIEventListenerInfo : nsISupports
+{
+  /**
+   * The type of the event for which the listener was added.
+   * Null if the listener is for all the events.
+   */
+  readonly attribute AString type;
+  readonly attribute boolean capturing;
+  readonly attribute boolean allowsUntrusted;
+  readonly attribute boolean inSystemEventGroup;
+
+  /**
+   * Changing the enabled state works only with listeners implemented in
+   * JS. An error is thrown for native listeners.
+   */
+  attribute boolean enabled;
+
+  /**
+   * The underlying JS object of the event listener, if this listener
+   * has one.  Null otherwise.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval listenerObject;
+
+  /**
+   * Tries to serialize event listener to a string.
+   * Returns null if serialization isn't possible
+   * (for example with C++ listeners).
+   */
+  AString toSource();
+};
+
+[scriptable, uuid(77aab5f7-213d-4db4-9f22-e46dfb774f15)]
+interface nsIEventListenerService : nsISupports
+{
+  /**
+   * Returns an array of nsIEventListenerInfo objects.
+   * If aEventTarget doesn't have any listeners, this returns null.
+   */
+  Array<nsIEventListenerInfo> getListenerInfoFor(in EventTarget aEventTarget);
+
+  /**
+   * Returns an array of event targets.
+   * aEventTarget will be at index 0.
+   * The objects are the ones that would be used as DOMEvent.currentTarget while
+   * dispatching an event to aEventTarget
+   * @note Some events, especially 'load', may actually have a shorter
+   *       event target chain than what this methods returns.
+   */
+  Array<EventTarget> getEventTargetChainFor(in EventTarget aEventTarget,
+                                            in boolean composed);
+
+  /**
+   * Returns true if a event target has any listener for the given type.
+   */
+  boolean hasListenersFor(in EventTarget aEventTarget,
+                          in AString aType);
+
+  /**
+   * Add a system-group eventlistener to a event target.
+   */
+  [implicit_jscontext]
+  void addSystemEventListener(in EventTarget target,
+                              in AString type,
+                              in jsval listener,
+                              in boolean useCapture);
+
+  /**
+   * Remove a system-group eventlistener from a event target.
+   */
+  [implicit_jscontext]
+  void removeSystemEventListener(in EventTarget target,
+                                 in AString type,
+                                 in jsval listener,
+                                 in boolean useCapture);
+
+  [implicit_jscontext]
+  void addListenerForAllEvents(in EventTarget target,
+                               in jsval listener,
+                               [optional] in boolean aUseCapture,
+                               [optional] in boolean aWantsUntrusted,
+                               [optional] in boolean aSystemEventGroup);
+
+  [implicit_jscontext]
+  void removeListenerForAllEvents(in EventTarget target,
+                                  in jsval listener,
+                                  [optional] in boolean aUseCapture,
+                                  [optional] in boolean aSystemEventGroup);
+
+  void addListenerChangeListener(in nsIListenerChangeListener aListener);
+  void removeListenerChangeListener(in nsIListenerChangeListener aListener);
+};
+

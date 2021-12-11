@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test window for triggering media session's action handler</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="MediaSessionTestUtils.js"></script>
+  </head>
+<body>
+<video id="testVideo" src="gizmo.mp4" loop></video>
+<iframe id="childFrame"></iframe>
+<script>
+
+var triggeredActionNums = 0;
+
+nextWindowMessage().then(
+  async (event) => {
+    const testInfo = event.data;
+    await createSession(testInfo);
+    // Media session would only become active if there is any media currently
+    // playing. Non-active media session won't receive any actions. Therefore,
+    // we start media playback before testing media session.
+    await startMediaPlayback(testInfo);
+    for (const action of gMediaSessionActions) {
+      await waitUntilActionHandlerTriggered(action, testInfo);
+    }
+    endTestAndReportResult();
+  });
+
+/**
+ * The following are helper functions
+ */
+async function startMediaPlayback({shouldCreateFrom}) {
+  info(`wait until media starts playing`);
+  if (shouldCreateFrom == "main-frame") {
+    const video = document.getElementById("testVideo");
+    await video.play();
+    // As we can't observe `media-displayed-playback-changed` notification,
+    // that can only be observed in the chrome process. Therefore, we use a
+    // workaround instead which is to wait for a while to ensure that the
+    // controller has already been created in the chrome process.
+    let timeupdatecount = 0;
+    await new Promise(r => video.ontimeupdate = () => {
+      if (++timeupdatecount == 3) {
+        video.ontimeupdate = null;
+        r();
+      }
+    });
+  } else {
+    const iframe = document.getElementById("childFrame");
+    iframe.contentWindow.postMessage("play", "*");
+    await new Promise(r => {
+      window.onmessage = event => {
+        is(event.data, "played", `media started playing in child-frame`);
+        r();
+      };
+    });
+  }
+}
+
+async function createSession({shouldCreateFrom, origin}) {
+  info(`create media session in ${shouldCreateFrom}`);
+  if (shouldCreateFrom == "main-frame") {
+    // Simply referencing media session will create media session.
+    navigator.mediaSession;
+    return;
+  };
+  const frame = document.getElementById("childFrame");
+  const originURL = origin == "same-origin"
+    ? "http://mochi.test:8888" : "http://example.org";
+  frame.src = originURL + "/tests/dom/media/mediasession/test/file_trigger_actionhanlder_frame.html";
+  await new Promise(r => frame.onload = r);
+}
+
+async function waitUntilActionHandlerTriggered(action, {shouldCreateFrom}) {
+  info(`wait until '${action}' handler of media session created in ` +
+       `${shouldCreateFrom} is triggered`);
+  if (shouldCreateFrom == "main-frame") {
+    let promise = new Promise(resolve => {
+      navigator.mediaSession.setActionHandler(action, () => {
+        ok(true, `Triggered ${action} handler`);
+        triggeredActionNums++;
+        resolve();
+      });
+    });
+    SpecialPowers.generateMediaControlKeyTestEvent(action);
+    await promise;
+    return;
+  }
+  SpecialPowers.generateMediaControlKeyTestEvent(action);
+  if ((await nextWindowMessage()).data == action) {
+    info(`Triggered ${action} handler in child-frame`);
+    triggeredActionNums++;
+  }
+}
+
+function endTestAndReportResult() {
+  const w = window.opener || window.parent;
+  if (triggeredActionNums == gMediaSessionActions.length) {
+    w.postMessage("success", "*");
+  } else {
+    w.postMessage("fail", "*");
+  }
+}
+
+</script>
+</body>
+</html>

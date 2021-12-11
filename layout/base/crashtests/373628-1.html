@@ -1,0 +1,16 @@
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 373628</title>
+<script>
+function stop() {
+  document.body.removeChild(document.body.children[0]);
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload='setTimeout(stop, 1000)'>
+
+<iframe src="373628.html"></iframe>
+
+</body>
+</html>

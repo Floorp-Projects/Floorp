@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Editor When empty should render 1`] = `
+<div
+  className="editor-wrapper"
+>
+  <div
+    className="editor-mount devtools-monospace"
+    style={
+      Object {
+        "height": "100%",
+      }
+    }
+  />
+</div>
+`;

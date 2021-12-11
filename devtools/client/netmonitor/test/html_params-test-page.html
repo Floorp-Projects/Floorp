@@ -1,0 +1,78 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Request params type test</p>
+
+    <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
+      async function get(address, query) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", address + query, true);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send();
+        });
+      }
+
+      async function request(address, query, contentType, requestBody, method) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open(method, address + query, true);
+          xhr.setRequestHeader("content-type", contentType);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(requestBody);
+        });
+      }
+
+      async function post(address, query, contentType, postBody) {
+        return request(address, query, contentType, postBody, "POST");
+      }
+
+      async function patch(address, query, contentType, patchBody) {
+        return request(address, query, contentType, patchBody, "PATCH");
+      }
+
+      async function put(address, query, contentType, putBody) {
+        return request(address, query, contentType, putBody, "PUT");
+      }
+
+      async function performRequests() {
+        const urlencoded = "application/x-www-form-urlencoded";
+        await post("baz", "?a", urlencoded, '{ "foo": "bar" }');
+        await post("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
+        await post("baz", "?a=b", urlencoded, "?foo=bar");
+        await post("baz", "?a", undefined, '{ "foo": "bar" }');
+        await post("baz", "?a=b", undefined, '{ "foo": "bar" }');
+        await post("baz", "?a=b", undefined, "?foo=bar");
+        await get("baz", "");
+        await patch("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
+        await put("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
+        await get("baz", "?species=in=(52,60)");
+        await get("baz", "?a=&a=b");
+        await get("baz", "?a=b&a=c&d=1");
+      }
+    </script>
+  </body>
+
+</html>

@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tabbrowser relation tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../relations.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
+          src="../browser.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Invoker
+    function testTabRelations()
+    {
+      this.eventSeq = [
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 0),
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
+     ];
+
+      this.invoke = function testTabRelations_invoke()
+      {
+        var docURIs = ["about:license", "about:mozilla"];
+        tabBrowser().loadTabs(docURIs, {
+          inBackground: false,
+          replace: true,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
+        // Flush layout, so as to guarantee that the a11y tree is constructed.
+        browserDocument().documentElement.getBoundingClientRect();
+      }
+
+      this.finalCheck = function testTabRelations_finalCheck(aEvent)
+      {
+        ////////////////////////////////////////////////////////////////////////
+        // 'labelled by'/'label for' relations for xul:tab and xul:tabpanel
+
+        var tabs = Array.from(tabBrowser().tabContainer.allTabs);
+        // For preloaded tabs, there might be items in this array where this relation
+        // doesn't hold, so just deal with that:
+        var panels = tabs.map(t => t.linkedBrowser.closest("tabpanels > *"));
+
+        testRelation(panels[0], RELATION_LABELLED_BY, tabs[0]);
+        testRelation(tabs[0], RELATION_LABEL_FOR, panels[0]);
+        testRelation(panels[1], RELATION_LABELLED_BY, tabs[1]);
+        testRelation(tabs[1], RELATION_LABEL_FOR, panels[1]);
+      }
+
+      this.getID = function testTabRelations_getID()
+      {
+        return "relations of tabs";
+      }
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTest()
+    {
+      // Load documents into tabs and wait for DocLoadComplete events caused by
+      // these documents load before we start the test.
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new testTabRelations());
+      gQueue.onFinish = function() { closeBrowserWindow(); }
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest);
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552944"
+         title="No relationship between tabs and associated property page in new tabbrowser construct">
+        Mozilla Bug 552944
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox id="eventdump"></vbox>
+  </vbox>
+
+</window>
+

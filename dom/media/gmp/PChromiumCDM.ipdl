@@ -1,0 +1,129 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PGMPContent;
+include GMPTypes;
+
+include "GMPMessageUtils.h";
+
+using cdm::HdcpVersion from "GMPSanitizedExports.h";
+
+include "GMPMessageUtils.h";
+
+namespace mozilla {
+namespace gmp {
+
+[RefCounted] async protocol PChromiumCDM
+{
+  manager PGMPContent;
+child:
+
+  // cdm::ContentDecryptionModule_10
+  async Init(bool aAllowDistinctiveIdentifier,
+             bool aAllowPersistentState) returns (bool aSuccess);
+
+  async GetStatusForPolicy(uint32_t aPromiseId,
+                           HdcpVersion aMinHdcpVersion);
+
+  async SetServerCertificate(uint32_t aPromiseId,
+                             uint8_t[] aServerCert);
+
+  async CreateSessionAndGenerateRequest(uint32_t aPromiseId,
+                                        uint32_t aSessionType,
+                                        uint32_t aInitDataType,
+                                        uint8_t[] aInitData);
+
+  async LoadSession(uint32_t aPromiseId,
+                    uint32_t aSessionType,
+                    nsCString aSessionId);
+
+  async UpdateSession(uint32_t aPromiseId,
+                      nsCString aSessionId,
+                      uint8_t[] aResponse);
+
+  async CloseSession(uint32_t aPromiseId,
+                     nsCString aSessionId);
+
+  async RemoveSession(uint32_t aPromiseId,
+                      nsCString aSessionId);
+
+  // This is called after the parent has verified the protection status and
+  // round tripped the call back to the child.
+  async CompleteQueryOutputProtectionStatus(bool aSuccess,
+                                            uint32_t aLinkMask,
+                                            uint32_t aProtectionMask);
+
+  async Decrypt(uint32_t aId, CDMInputBuffer aBuffer);
+
+  async InitializeVideoDecoder(CDMVideoDecoderConfig aConfig);
+
+  async DeinitializeVideoDecoder();
+
+  async ResetVideoDecoder();
+
+  async DecryptAndDecodeFrame(CDMInputBuffer aBuffer);
+
+  async Drain();
+
+  async Destroy();
+
+  async GiveBuffer(Shmem aShmem);
+
+  async PurgeShmems();
+
+
+parent:
+  async __delete__();
+
+  // cdm::Host_10
+  async OnResolvePromiseWithKeyStatus(uint32_t aPromiseId, uint32_t aKeyStatus);
+
+  async OnResolveNewSessionPromise(uint32_t aPromiseId, nsCString aSessionId);
+
+  async OnResolvePromise(uint32_t aPromiseId);
+
+  async OnRejectPromise(uint32_t aPromiseId,
+                        uint32_t aException,
+                        uint32_t aSystemCode,
+                        nsCString aErrorMessage);
+
+  async OnSessionMessage(nsCString aSessionId,
+                         uint32_t aMessageType,
+                         uint8_t[] aMessage);
+
+  async OnSessionKeysChange(nsCString aSessionId,
+                            CDMKeyInformation[] aKeysInfo);
+
+  async OnExpirationChange(nsCString aSessionId,
+                           double aSecondsSinceEpoch);
+
+  async OnSessionClosed(nsCString aSessionId);
+
+  async OnQueryOutputProtectionStatus();
+
+  async ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccessful);
+
+  // Return values of cdm::ContentDecryptionModule_10::Decrypt
+  async Decrypted(uint32_t aId, uint32_t aStatus, Shmem aDecryptedData);
+  async DecryptFailed(uint32_t aId, uint32_t aStatus);
+
+  async OnDecoderInitDone(uint32_t aStatus);
+
+  // Return values of cdm::ContentDecryptionModule_10::DecryptAndDecodeFrame
+  async DecodedShmem(CDMVideoFrame aFrame, Shmem aData);
+  async DecodedData(CDMVideoFrame aFrame, uint8_t[] aData);
+  async DecodeFailed(uint32_t aStatus);
+
+  async ResetVideoDecoderComplete();
+
+  async DrainComplete();
+
+  async Shutdown();
+
+  async IncreaseShmemPoolSize();
+};
+
+} // namespace gmp
+} // namespace mozilla

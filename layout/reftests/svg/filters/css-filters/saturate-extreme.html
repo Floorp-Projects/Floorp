@@ -1,0 +1,29 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Saturate an HTML Element Using a Large Factor</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-saturate">
+  <link rel="match" href="saturate-extreme-ref.html">
+  <meta name="assert"
+        content="Given a large factor, the CSS saturate filter function should
+                 significantly increase any non-zero color channels in an HTML
+                 element.">
+  <style type="text/css">
+    #target {
+      filter: saturate(1000);
+      background-color: rgb(0, 1, 0);
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a bright green square.</p>
+  <div id="target"></div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test BiquadFilterNode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+function near(a, b, msg) {
+  ok(Math.abs(a - b) < 1e-3, msg);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var context = new AudioContext();
+  var buffer = context.createBuffer(1, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+  }
+
+  var destination = context.destination;
+
+  var source = context.createBufferSource();
+
+  var filter = context.createBiquadFilter();
+
+  source.buffer = buffer;
+
+  source.connect(filter);
+  filter.connect(destination);
+
+  // Verify default values
+  is(filter.type, "lowpass", "Correct default value for type");
+  near(filter.frequency.defaultValue, 350, "Correct default value for filter frequency");
+  near(filter.detune.defaultValue, 0, "Correct default value for filter detune");
+  near(filter.Q.defaultValue, 1, "Correct default value for filter Q");
+  near(filter.gain.defaultValue, 0, "Correct default value for filter gain");
+  is(filter.channelCount, 2, "Biquad filter node has 2 input channels by default");
+  is(filter.channelCountMode, "max", "Correct channelCountMode for the biquad filter node");
+  is(filter.channelInterpretation, "speakers", "Correct channelCountInterpretation for the biquad filter node");
+
+  // Make sure that we can set all of the valid type values
+  var types = [
+    "lowpass",
+    "highpass",
+    "bandpass",
+    "lowshelf",
+    "highshelf",
+    "peaking",
+    "notch",
+    "allpass",
+  ];
+  for (var i = 0; i < types.length; ++i) {
+    filter.type = types[i];
+  }
+
+  // Make sure getFrequencyResponse handles invalid frequencies properly
+  var frequencies = new Float32Array([-1.0, context.sampleRate*0.5 - 1.0, context.sampleRate]);
+  var magResults = new Float32Array(3);
+  var phaseResults = new Float32Array(3);
+  filter.getFrequencyResponse(frequencies, magResults, phaseResults);
+  ok(isNaN(magResults[0]), "Invalid input frequency should give NaN magnitude response");
+  ok(!isNaN(magResults[1]), "Valid input frequency should not give NaN magnitude response");
+  ok(isNaN(magResults[2]), "Invalid input frequency should give NaN magnitude response");
+  ok(isNaN(phaseResults[0]), "Invalid input frquency should give NaN phase response");
+  ok(!isNaN(phaseResults[1]), "Valid input frquency should not give NaN phase response");
+  ok(isNaN(phaseResults[2]), "Invalid input frquency should give NaN phase response");
+
+  source.start(0);
+  SimpleTest.executeSoon(function() {
+    source.stop(0);
+    source.disconnect();
+    filter.disconnect();
+
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,39 @@
+[package]
+name = "webrender_bindings"
+version = "0.1.0"
+authors = ["The Mozilla Project Developers"]
+license = "MPL-2.0"
+
+[dependencies]
+dirs = "2"
+rayon = "1"
+num_cpus = "1.7.0"
+tracy-rs = "0.1"
+euclid = { version = "0.22.5", features = ["serde"] }
+app_units = "0.7"
+gleam = "0.13.1"
+log = "0.4"
+nsstring = { path = "../../xpcom/rust/nsstring" }
+bincode = "1.0"
+uuid = { version = "0.8", features = ["v4"] }
+fxhash = "0.2.1"
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
+swgl = { path = "../wr/swgl" }
+wr_malloc_size_of = { path = "../wr/wr_malloc_size_of" }
+gecko-profiler = { path = "../../tools/profiler/rust-api" }
+
+[dependencies.webrender]
+path = "../wr/webrender"
+version = "0.61.0"
+default-features = false
+features = ["capture", "serialize_program", "gecko", "sw_compositor"]
+
+[target.'cfg(target_os = "windows")'.dependencies]
+dwrote = "0.11"
+winapi = "0.3"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.9"
+core-graphics = "0.22"
+foreign-types = "0.3.0"
+objc = "0.2"

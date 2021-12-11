@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getUserMedia Basic Video shall receive 'loadedmetadata' without play()ing",
+    bug: "1149494"
+  });
+  /**
+   * Run a test to verify that we will always get 'loadedmetadata' from a video
+   * HTMLMediaElement playing a gUM MediaStream.
+   */
+  runTest(() => {
+    var testVideo = createMediaElement('video', 'testVideo');
+    var constraints = {video: true};
+
+    return getUserMedia(constraints).then(stream => {
+      var playback = new MediaStreamPlayback(testVideo, stream);
+      var video = playback.mediaElement;
+
+      video.srcObject = stream;
+      return new Promise(resolve => {
+        ok(playback.mediaElement.paused,
+           "Media element should be paused before play()ing");
+        video.addEventListener('loadedmetadata', function() {
+          ok(video.videoWidth > 0, "Expected nonzero video width");
+          ok(video.videoHeight > 0, "Expected nonzero video width");
+          resolve();
+        });
+      })
+      .then(() => stream.getTracks().forEach(t => t.stop()));
+    });
+  });
+
+</script>
+</pre>
+</body>
+</html>

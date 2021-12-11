@@ -1,0 +1,23 @@
+<script>
+  var bc = new BroadcastChannel("file_bug1121701_2");
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "setInnerHTML") {
+      window.document.body.innerHTML = "<img>";
+      window.onmessage = function() {
+        bc.postMessage({command: "onmessage"});
+        window.document.body.firstChild.src = msg.location;
+        bc.close();
+      };
+      window.onbeforeunload = function() {
+        window.postMessage("foo", "*");
+      };
+
+      history.back();
+    }
+  }
+  window.onpageshow = function(e) {
+    bc.postMessage({command: "child2PageShow", persisted: e.persisted});
+  };
+</script>

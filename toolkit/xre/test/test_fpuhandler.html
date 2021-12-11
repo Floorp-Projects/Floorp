@@ -1,0 +1,36 @@
+<head>
+  <title>Floating-point exception handler test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<body onload="runTest()">
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function doDiv(x, y) {
+    var z;
+    z = x / y;
+
+    for (let i = 0 + x; i < 1000; ++i)
+      z = y / x;
+
+    z = x / y;
+    return z;
+  }
+
+  function runTest() {
+    ok(isNaN(doDiv(0.0, 0.0)), "Undefined division-by-zero doesn't crash");
+
+    try {
+      document.getElementById("plugin1").enableFPExceptions();
+    } catch (e) {
+      ok(true, "No special code to set the FPU bit in the testplugin.");
+      SimpleTest.finish();
+      return;
+    }
+
+    ok(isNaN(doDiv(0.0, 0.0)), "Undefined division-by-zero doesn't crash again.");
+    SimpleTest.finish();
+  }
+  </script>

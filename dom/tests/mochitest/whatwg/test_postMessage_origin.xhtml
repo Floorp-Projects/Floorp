@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=417075
+-->
+<head>
+  <title>postMessage from about:blank, data URLs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417075">Mozilla Bug 417075</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="sameDomain"></iframe>
+<iframe src="http://example.com/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="otherDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="otherDomainPort"></iframe>
+<iframe src="ftp://mochi.test:27534/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="localNoExist"></iframe>
+
+<iframe src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="idnKidWhitelist"></iframe>
+
+<iframe src="http://sub1.exaмple.test/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="idnKidNoWhitelist"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript"><![CDATA[
+/** Test for Bug 417075 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function errorCheck(i, called, error, actual) {
+  ok(!called, "receiver should not have been called for test #" + i);
+  is(actual, error, "wrong error thrown in test #" + i);
+}
+
+// Sends a "PING" message to the given child frame content window and returns
+// a promise which resolves when we receive a corresponding "PONG" message back.
+function ping(win) {
+  if (win.parent !== window) {
+    throw new Error("Can only ping windows which are child frames of this window");
+  }
+  return new Promise(resolve => {
+    window.addEventListener("message", function callback(event) {
+      if (event.source === win && event.data === "PONG") {
+        window.removeEventListener("message", callback);
+        resolve();
+      }
+    });
+    win.postMessage("PING", "*");
+  });
+}
+
+var tests =
+  [
+   // 0
+   {
+     args: ["NOT-RECEIVED", ""],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "null"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "a"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http :"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http: //"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR,
+
+     hasThrowsNoExceptionBug: true
+   },
+   // 5
+   {
+     args: ["NOT-RECEIVED", "http ://"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["TODO", " http://localhost:8888"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://mochi.test:8888",
+     hasThrowsNoExceptionBug: true
+   },
+   {
+     args: ["NOT-RECEIVED", "hä"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http://lo\0k.com"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http: //localhost:8888"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR,
+
+     hasThrowsNoExceptionBug: true
+   },
+   // 10
+   {
+     args: ["NOT-RECEIVED", "http://localhost :8888"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http:// localhost:8888"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR,
+
+     hasThrowsNoExceptionBug: true
+   },
+   {
+     args: ["TODO", "http://\nlocalhost:8888"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://mochi.test:8888",
+     hasThrowsNoExceptionBug: true
+   },
+   {
+     args: ["TODO", "http://localhost:8888\0"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://mochi.test:8888",
+     hasThrowsNoExceptionBug: true
+   },
+   {
+     args: ["TODO", "http://localhost:8888\n"],
+     source: "sameDomain",
+     name: "SyntaxError",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://mochi.test:8888",
+     hasThrowsNoExceptionBug: true
+   },
+   // 15
+   {
+     args: ["PASS", "*"],
+     source: "sameDomain",
+     returnOrigin: "http://mochi.test:8888"
+   },
+   {
+     args: ["PASS", "http://mochi.test:8888"],
+     source: "sameDomain",
+     returnOrigin: "http://mochi.test:8888"
+   },
+   {
+     args: ["PASS", "http://example.com"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com/"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com:80"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   // 20
+   {
+     args: ["PASS", "http://example.com:80/"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com:80/foobar"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com/foobar"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com:8000"],
+     source: "otherDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://example.com:8000/"],
+     source: "otherDomain",
+     expectNoCallback: true
+   },
+   // 25
+   {
+     args: ["PASS", "http://example.org:8000"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org:8000/"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org:8000/tests/dom/test/mochitest/whatwg/postMessage_origin_helper.xhtml"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org:8000/tests/dom/test/mochitest/whatwg/this_file_does_not_exist.xhtml"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org"],
+     source: "otherDomainPort",
+     expectNoCallback: true
+   },
+   // 30
+   {
+     args: ["PASS", "http://example.org:80"],
+     source: "otherDomainPort",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://example.org/"],
+     source: "otherDomainPort",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://example.org"],
+     source: "otherDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "ftp://mochi.test:8888"],
+     source: "sameDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://mochi.test:8888"],
+     source: "sameDomain",
+     returnOrigin: "http://mochi.test:8888"
+   },
+   // 35
+   {
+     args: ["PASS", "http://mochi.test:27534"],
+     source: "sameDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80/"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80/foobar"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   // 40
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή/foobar"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80/"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80/foo"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"
+   },
+   // 45
+   {
+     args: ["PASS", "http://sub1.exaмple.test"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.exaмple.test:80"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.exaмple.test:80/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.exaмple.test/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.exaмple.test/foobar"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   // 50
+   {
+     args: ["PASS", "http://sub1.xn--exaple-kqf.test"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exaple-kqf.test:80"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exaple-kqf.test:80/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exaple-kqf.test/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exaple-kqf.test/foobar"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.xn--exaple-kqf.test",
+   },
+  ];
+
+async function allTests() {
+  let target, called, test, i;
+
+  let listener = evt => {
+    // Ignore "PONG" messages, which are used to ensure synchronization
+    // between scripts in parent and child frames.
+    if (evt.data === "PONG") {
+      return;
+    }
+
+    is(test, tests[i],
+       "i and test are out of sync!  async is hard, let's go shopping");
+
+    var originCheck = test.hasWrongReturnOriginBug ? todo_is : is;
+    originCheck(evt.origin, test.returnOrigin, "wrong origin for #" + i);
+    if (test.args[0] == "TODO")
+      todo_is(evt.data, "PASS", "wrong data");
+    else
+      is(evt.data, "PASS", "wrong data");
+    is(evt.lastEventId, "",
+       "postMessage creates events with empty lastEventId");
+    ok(evt.source === target, "wrong source");
+    called = true;
+  };
+  window.addEventListener("message", listener);
+
+  for ([i, test] of tests.entries()) {
+    called = false;
+    target = $(test.source).contentWindow;
+    try {
+      target.postMessage.apply(target, test.args);
+    } catch (e) {
+      // Since an exception was thrown, we know at this point that we're not
+      // waiting on anything else in the queue of script to run, and we can just
+      // continue immediately.
+      errorCheck(i, called, e.name, test.name);
+      errorCheck(i, called, e.code, test.code);
+      continue;
+    }
+
+    // Perform a postMessage round-trip to ensure the target frame has
+    // processed our message and we've had time to receive its reply.
+    await ping(target);
+
+    if (test.hasThrowsNoExceptionBug) {
+      todo(false, `should throw on test #${i}`);
+    } else {
+      is(!test.expectNoCallback, called, `should have been called #${i}`);
+    }
+  }
+
+  window.removeEventListener("message", listener);
+}
+
+async function oddballTests() {
+  for (let i = 0; i < 2; i++) {
+    let evt = await new Promise(resolve => {
+      window.addEventListener("message", function listener(evt) {
+        resolve(evt);
+        window.removeEventListener("message", listener);
+      });
+      window.postMessage("PASS", "http://mochi.test:8888");
+    });
+
+    is(evt.origin, "http://mochi.test:8888", "wrong sender");
+    is(evt.data, "PASS", "wrong data");
+    is(evt.lastEventId, "",
+       "postMessage creates events with empty lastEventId");
+    ok(evt.source === window, "wrong source");
+  }
+}
+
+async function run() {
+  await oddballTests();
+  await allTests();
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+]]></script>
+</pre>
+</body>
+</html>

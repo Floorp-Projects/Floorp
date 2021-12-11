@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill on an HTTPS page using upgraded HTTP logins with different formActionOrigin</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+const MISSING_ACTION_PATH = TESTS_DIR + "mochitest/form_basic.html";
+
+const chromeScript = runChecksAfterCommonInit(false);
+
+let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                                                           SpecialPowers.Ci.nsILoginInfo,
+                                                                           "init");
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+let origin = window.location.origin;
+let suborigin = "http://sub." + window.location.host;
+
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
+
+async function prepareLoginsAndProcessForm(url, logins = []) {
+  await LoginManager.removeAllUserFacingLogins();
+
+  let dates = Date.now();
+  for (let login of logins) {
+    SpecialPowers.do_QueryInterface(login, SpecialPowers.Ci.nsILoginMetaInfo);
+    // Force all dates to be the same so they don't affect things like deduping.
+    login.timeCreated = login.timePasswordChanged = login.timeLastUsed = dates;
+    await LoginManager.addLogin(login);
+  }
+
+  let processedPromise = promiseFormsProcessed();
+  win.location = url;
+  await processedPromise;
+}
+
+add_task(async function test_formActionOrigin_wildcard_should_autofill() {
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(origin, "", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "name2", "form-basic-password", "pass2");
+});
+
+add_task(async function test_formActionOrigin_different_shouldnt_autofill() {
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(origin, "https://example.net", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+
+  await checkLoginFormInFrame(win, "form-basic-username", "", "form-basic-password", "");
+});
+
+add_task(async function test_formActionOrigin_subdomain_should_autofill() {
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(origin, suborigin, null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "name2", "form-basic-password", "pass2");
+});
+
+add_task(async function test_origin_subdomain_should_not_autofill() {
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(suborigin, origin, null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  await checkLoginFormInFrame(win, "form-basic-username", "", "form-basic-password", "");
+});
+
+</script>
+</pre>
+</body>
+</html>

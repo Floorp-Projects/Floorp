@@ -1,0 +1,116 @@
+<html>
+<head>
+  <title>Test control+click on Mac</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpecialPowers.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style>
+    #target {
+      width: 100px;
+      height: 100px;
+      background-color: lightgreen;
+    };
+  </style>
+</head>
+<body>
+<div id="target"></div>
+<script type="application/javascript">
+
+function waitAndCheckMouseEvents(aTarget, aExpectedEvents) {
+  return new Promise((aResolve, aReject) => {
+    let timer;
+    let cleanup = function() {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      aTarget.removeEventListener("mousedown", listener);
+      aTarget.removeEventListener("mouseup", listener);
+      aTarget.removeEventListener("contextmenu", listener);
+      aTarget.removeEventListener("click", listener);
+      aTarget.removeEventListener("auxclick", listener);
+    };
+
+    let listener = function(aEvent) {
+      aEvent.preventDefault();
+      let expectedEvent = aExpectedEvents.shift();
+      if (!expectedEvent) {
+        cleanup();
+        ok(false, `receive unexpected ${aEvent.type} event`);
+        aReject(new Error(`receive unexpected ${aEvent.type} event`));
+        return;
+      }
+
+      isDeeply([aEvent.type, aEvent.button, aEvent.ctrlKey], expectedEvent,
+               `check received ${aEvent.type} event`);
+      if (!aExpectedEvents.length) {
+        // Wait a bit to see if there is any unexpected event.
+        timer = setTimeout(function() {
+          cleanup();
+          aResolve();
+        }, 0);
+      }
+    };
+
+    aTarget.addEventListener("mousedown", listener);
+    aTarget.addEventListener("mouseup", listener);
+    aTarget.addEventListener("contextmenu", listener);
+    aTarget.addEventListener("click", listener);
+    aTarget.addEventListener("auxclick", listener);
+  });
+}
+
+add_task(async function Init() {
+  await SimpleTest.promiseFocus();
+  await waitUntilApzStable();
+
+  let target = document.getElementById("target");
+  target.addEventListener("click", function() {
+    ok(false, `should not receive click event`);
+  });
+});
+
+add_task(async function TestMouseClickWithControl() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.event.treat_ctrl_click_as_right_click.disabled", true]],
+  });
+
+  let target = document.getElementById("target");
+  let promise = waitAndCheckMouseEvents(target, [["mousedown", 0, true],
+                                                 ["contextmenu", 0, true],
+                                                 ["mouseup", 0, true]]);
+  synthesizeNativeMouseEvent({
+    type: "click",
+    target,
+    offsetX: 10,
+    offsetY: 10,
+    modifiers: { ctrlKey: true },
+  });
+  await promise;
+});
+
+add_task(async function TestOldBehavior() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.event.treat_ctrl_click_as_right_click.disabled", false]],
+  });
+
+  let target = document.getElementById("target");
+  let promise = waitAndCheckMouseEvents(target, [["mousedown", 2, true],
+                                                 ["contextmenu", 2, true],
+                                                 ["mouseup", 2, true],
+                                                 ["auxclick", 2, true]]);
+  synthesizeNativeMouseEvent({
+    type: "click",
+    target,
+    offsetX: 10,
+    offsetY: 10,
+    modifiers: { ctrlKey: true },
+  });
+  await promise;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Directory API in workers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="filesystem_commons.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script type="application/javascript">
+
+var fileList;
+
+function create_fileList() {
+  fileList = document.createElement("input");
+  fileList.setAttribute("type", "file");
+  document.body.appendChild(fileList);
+
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: "test" });
+}
+
+function test_worker() {
+  fileList.getFilesAndDirectories().then(function(array) {
+    var worker = new Worker("worker_basic.js");
+    worker.onmessage = function(e) {
+      if (e.data.type == "finish") {
+        next();
+        return;
+      }
+
+      if (e.data.type == "test") {
+        ok(e.data.test, e.data.message);
+      }
+    };
+
+    worker.postMessage(array[0]);
+  });
+}
+
+var tests = [
+  function() { setup_tests(next); },
+
+  create_fileList,
+  test_worker,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>

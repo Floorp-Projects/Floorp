@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<script>
+  var bc = new BroadcastChannel("navigate");
+  bc.onmessage = (event) => {
+    if (event.data.command == "navigate") {
+      window.location = event.data.location;
+      bc.close();
+    }
+  }
+  window.onload = () => {
+    bc.postMessage({command: "loaded"});
+  }
+</script>

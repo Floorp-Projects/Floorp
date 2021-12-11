@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=570341
+-->
+<head>
+  <title>Test for Bug 570341</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+  var start = Date.now();
+  var moments = {};
+
+  var unload = 0;
+  var wasEnabled = true;
+
+  function collectMoments() {
+    var win = frames[0];
+    var timing = (win.performance && win.performance.timing) || {};
+    for (let p in timing) {
+      moments[p] = timing[p];
+    }
+    for (let p in win) {
+      if (p.substring(0, 9) == "_testing_") {
+        moments[p.substring(9)] = win[p];
+      }
+    }
+    moments.evt_unload = unload;
+    return moments;
+  }
+
+  function showSequence(node) {
+    while (node.firstChild) {
+      node.firstChild.remove();
+    }
+    var sequence = [];
+    for (var p in moments) {
+      sequence.push(p);
+    }
+    sequence.sort(function(a, b) {
+      return moments[a] - moments[b];
+    });
+    var table = document.createElement("table");
+    node.appendChild(table);
+    var row = document.createElement("tr");
+    table.appendChild(row);
+    var cell = document.createElement("td");
+    row.appendChild(cell);
+    cell.appendChild(document.createTextNode("start"));
+    cell = document.createElement("td");
+    row.appendChild(cell);
+    cell.appendChild(document.createTextNode(start));
+    for (var i = 0; i < sequence.length; ++i) {
+      var prop = sequence[i];
+      row = document.createElement("tr");
+      table.appendChild(row);
+      cell = document.createElement("td");
+      row.appendChild(cell);
+      cell.appendChild(document.createTextNode(prop));
+      cell = document.createElement("td");
+      row.appendChild(cell);
+      cell.appendChild(document.createTextNode(moments[prop]));
+    }
+  }
+
+  function checkValues() {
+    var win = frames[0];
+    ok(win.performance,
+        "window.performance is missing or not accessible for frame");
+    ok(!win.performance || win.performance.timing,
+        "window.performance.timing is missing or not accessible for frame");
+    collectMoments();
+
+    var sequences = [
+      ["navigationStart", "unloadEventStart", "unloadEventEnd"],
+      ["navigationStart", "fetchStart", "domainLookupStart", "domainLookupEnd",
+       "connectStart", "connectEnd", "requestStart", "responseStart", "responseEnd"],
+      ["responseStart", "domLoading", "domInteractive", "domComplete"],
+      ["domContentLoadedEventStart", "domContentLoadedEventEnd",
+       "loadEventStart", "loadEventEnd"],
+    ];
+
+    for (var i = 0; i < sequences.length; ++i) {
+      var seq = sequences[i];
+      for (var j = 0; j < seq.length; ++j) {
+        var prop = seq[j];
+        if (j > 0) {
+          var prevProp = seq[j - 1];
+          ok(moments[prevProp] <= moments[prop],
+              ["Expected ", prevProp, " to happen before ", prop,
+              ", got ", prevProp, " = ", moments[prevProp],
+              ", ", prop, " = ", moments[prop]].join(""));
+        }
+      }
+    }
+
+    SimpleTest.finish();
+  }
+
+window.onload = function() {
+  var win = frames[0];
+  win.addEventListener("unload", function() {
+    unload = Date.now();
+  }, true);
+  var seenLoad = 0;
+  win.addEventListener("load", function() {
+    seenLoad = Date.now();
+  }, true);
+  frames[0].location = "bug570341_recordevents.html";
+  var interval = setInterval(function() {
+    // time constants here are arbitrary, chosen to allow the test to pass
+    var stopPolling = (win.performance && win.performance.loadEventEnd) ||
+                      (seenLoad && Date.now() >= seenLoad + 3000) ||
+                      Date.now() >= start + 30000;
+    if (stopPolling) {
+      clearInterval(interval);
+      checkValues();
+    } else if (win._testing_evt_load) {
+      seenLoad = Date.now();
+    }
+  }, 100);
+};
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=570341">Mozilla Bug 570341</a>
+<div id="frames">
+<iframe name="child0" src="navigation/blank.html"></iframe>
+</div>
+<button type="button" onclick="showSequence(document.getElementById('display'))">
+    Show Events</button>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

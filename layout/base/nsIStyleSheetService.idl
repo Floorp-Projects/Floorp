@@ -1,0 +1,71 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* interface for managing user and user-agent style sheets */
+
+#include "nsISupports.idl"
+
+interface nsIPreloadedStyleSheet;
+interface nsIURI;
+
+/*
+ * nsIStyleSheetService allows extensions or embeddors to add to the
+ * built-in list of user or agent style sheets.
+ */
+
+[scriptable, uuid(4de68896-e8eb-41de-8237-a797b570ac4a)]
+interface nsIStyleSheetService : nsISupports
+{
+  const unsigned long AGENT_SHEET = 0;
+  const unsigned long USER_SHEET = 1;
+  const unsigned long AUTHOR_SHEET = 2;
+
+  /**
+   * Synchronously loads a style sheet from |sheetURI| and adds it to the list
+   * of user or agent style sheets.
+   *
+   * A user sheet loaded via this API will come before userContent.css and
+   * userChrome.css in the cascade (so the rules in it will have lower
+   * precedence than rules in those sheets).
+   *
+   * An agent sheet loaded via this API will come after ua.css in the cascade
+   * (so the rules in it will have higher precedence than rules in ua.css).
+   *
+   * The relative ordering of two user or two agent sheets loaded via
+   * this API is undefined.
+   *
+   * Sheets added via this API take effect on all documents, including
+   * already-loaded ones, immediately.
+   */
+  void loadAndRegisterSheet(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Returns true if a style sheet at |sheetURI| has previously been
+   * added to the list of style sheets specified by |type|.
+   */
+  boolean sheetRegistered(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Synchronously loads a style sheet from |sheetURI| and returns the
+   * new style sheet object. Can be used with nsIDOMWindowUtils.addSheet.
+   */
+  nsIPreloadedStyleSheet preloadSheet(in nsIURI sheetURI,
+                                      in unsigned long type);
+
+  /**
+   * Asynchronously loads a style sheet from |sheetURI| and returns a Promise
+   * which resolves to the new style sheet object, which can be used with
+   * nsIDOMWindowUtils.addSheet, when it has completed loading.
+   */
+  [implicit_jscontext]
+  jsval preloadSheetAsync(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Remove the style sheet at |sheetURI| from the list of style sheets
+   * specified by |type|.  The removal takes effect immediately, even for
+   * already-loaded documents.
+   */
+  void unregisterSheet(in nsIURI sheetURI, in unsigned long type);
+};

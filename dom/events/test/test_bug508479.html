@@ -1,0 +1,110 @@
+<html>
+<head>
+  <title>Tests for the dragstart event</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<script>
+  
+var gGotHandlingDrop = false;
+var gGotNotHandlingDrop = false;
+
+SimpleTest.waitForExplicitFinish();
+
+function fireEvent(target, event) {
+  SpecialPowers.DOMWindowUtils.dispatchDOMEventViaPresShellForTesting(target, event);
+}
+
+async function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
+  var ds = SpecialPowers.Cc["@mozilla.org/widget/dragservice;1"].
+    getService(SpecialPowers.Ci.nsIDragService);
+
+  var dataTransfer;
+  var trapDrag = function(event) {
+    dataTransfer = event.dataTransfer;
+    dataTransfer.setData("text/plain", "Hello");;
+    dataTransfer.dropEffect = "move";
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // need to use real mouse action
+  window.addEventListener("dragstart", trapDrag, true);
+  await synthesizePlainDragAndDrop({
+    srcElement: element,
+    stepX: 9,
+    stepY: 9,
+    expectCancelDragStart: true,
+  });
+  window.removeEventListener("dragstart", trapDrag, true);
+
+  ds.startDragSessionForTests(
+    SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_COPY |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_LINK
+  ); // Session for emulating dnd coming from another app.
+  try {
+    var event = document.createEvent("DragEvent");
+    event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    fireEvent(element, event);
+
+    is(ds.getCurrentSession().canDrop, shouldAllowDrop, "Unexpected .canDrop");
+    is(ds.getCurrentSession().onlyChromeDrop, shouldAllowOnlyChromeDrop,
+       "Unexpected .onlyChromeDrop");
+
+    event = document.createEvent("DragEvent");
+    event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    fireEvent(element, event);
+  } finally {
+    ds.endDragSession(false);
+    ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
+  }
+}
+
+var chromeGotEvent = false;
+function chromeListener(e) {
+  chromeGotEvent = true;
+}
+
+async function runTests()
+{
+  var targetHandling = document.getElementById("handling_target");
+  await fireDrop(targetHandling, true, false);
+
+  is(gGotHandlingDrop, true, "Got drop on accepting element (1)");
+  is(gGotNotHandlingDrop, false, "Didn't get drop on unaccepting element (1)");
+
+  // reset
+  gGotHandlingDrop = false;
+  gGotNotHandlingDrop = false;
+
+  SpecialPowers.addChromeEventListener("drop", chromeListener, true, false);
+  var targetNotHandling = document.getElementById("nothandling_target");
+  await fireDrop(targetNotHandling, true, true);
+  SpecialPowers.removeChromeEventListener("drop", chromeListener, true);
+  ok(chromeGotEvent, "Chrome should have got drop event!");
+  is(gGotHandlingDrop, false, "Didn't get drop on accepting element (2)");
+  is(gGotNotHandlingDrop, false, "Didn't get drop on unaccepting element (2)");
+
+  SimpleTest.finish();
+}
+
+</script>
+
+<body onload="window.setTimeout(runTests, 0);">
+
+<img style="width: 100px; height: 100px;"
+     src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82"
+     id="handling_target"
+     ondragenter="event.preventDefault()"
+     ondragover="event.preventDefault()"
+     ondrop="gGotHandlingDrop = true;">
+
+<img style="width: 100px; height: 100px;"
+     src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82"
+     id="nothandling_target"
+     ondrop="gGotNotHandlingDrop = true;">
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0.75);
+        document.getElementById('a').setAttribute('restart', 'never');
+        setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Originally we have an interval from -1.5s to 0.5s. We'll ignore 'a's begin
+    time of t=0s because we are restart="whenNotActive".
+    At time t=0.1s, 'a' will create a new interval from 1.0 to 1.1s and we'll
+    add the new instance time of 1.0s.
+    However, at t=0.75s the restart mode of 'a' is changed to restart="never"
+    therefore the second interval is deleted and the change should be propagated
+    to us.
+   -->
+  <rect width="100" height="100" fill="green">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="0s; 1s" dur="0.1s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="red; red"
+      begin="-1.5s; a.begin" dur="2s" restart="whenNotActive"/>
+  </rect>
+</svg>

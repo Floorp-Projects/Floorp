@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=431701
+-->
+<head>
+  <meta charset="windows-1252">
+  <title>Test for Bug 431701</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=431701">Mozilla Bug 431701</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="one"></iframe>
+  <iframe id="two"></iframe>
+  <iframe id="three"></iframe>
+  <iframe id="four"></iframe>
+  <iframe id="five"></iframe>
+  <iframe id="six"></iframe>
+  <iframe id="seven"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 431701 **/
+SimpleTest.waitForExplicitFinish();
+
+var docSources = [
+  "iframe1_bug431701.html",
+  "iframe2_bug431701.html",
+  "iframe3_bug431701.html",
+  "iframe4_bug431701.xml",
+  "iframe5_bug431701.xml",
+  "iframe6_bug431701.xml",
+  "iframe7_bug431701.xml",
+];
+
+for (let i = 0; i < docSources.length; ++i) {
+  document.getElementsByTagName("iframe")[i].src = docSources[i];
+}
+
+function frameDoc(id) {
+  return function() { return $(id).contentDocument; };
+}
+
+function createDoc() {
+  return document.implementation.createDocument('', 'html', null);
+}
+
+function xhrDoc(idx) {
+  return function() {
+    // Defy same-origin restrictions!
+    var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+    xhr.open("GET", docSources[idx], false);
+    xhr.send();
+    return xhr.responseXML;
+  };
+}
+
+// Each row has the document getter function, then the characterSet,
+// inputEncoding expected for that document.
+
+var tests = [
+ [ frameDoc("one"), "windows-1252" ],
+ [ frameDoc("two"), "UTF-8" ],
+ [ frameDoc("three"), "windows-1252" ],
+ [ frameDoc("four"), "UTF-8" ],
+ [ frameDoc("five"), "UTF-8" ],
+ [ frameDoc("six"), "UTF-8" ],
+ [ frameDoc("seven"), "windows-1252" ],
+ [ createDoc, "UTF-8" ],
+ [ xhrDoc(4), "UTF-8" ],
+ [ xhrDoc(5), "UTF-8" ],
+ [ xhrDoc(6), "windows-1252" ],
+];
+
+function doTest(idx) {
+  var [docGetter, expectedCharacterSet] = tests[idx];
+  var doc = docGetter();
+
+  // Have to be careful here to catch null vs ""
+  is(doc.characterSet, expectedCharacterSet, "Test " + idx + " characterSet");
+  is(doc.inputEncoding, expectedCharacterSet,
+     "Test " + idx + " inputEncoding");
+}
+
+addLoadEvent(function() {
+   SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], startTest);
+});
+
+function startTest() {
+  // sanity check
+  isnot("", null, "Shouldn't be equal!");
+
+  for (let i = 0; i < tests.length; ++i) {
+    doTest(i);
+  }
+
+  // Now check what xhr does
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", document.location.href);
+  xhr.send(createDoc());
+  is(SpecialPowers.wrap(xhr).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel)
+                .getRequestHeader("Content-Type"),
+     "application/xml;charset=UTF-8", "Testing correct type on the wire");
+  xhr.abort();
+
+  SimpleTest.finish();
+};
+
+
+
+
+</script>
+</pre>
+</body>
+</html>

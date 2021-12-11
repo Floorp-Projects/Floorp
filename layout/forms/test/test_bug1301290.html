@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test for Bug 1301290</title>
+        <script src="/tests/SimpleTest/SimpleTest.js"></script>
+        <script src="/tests/SimpleTest/EventUtils.js"></script>
+        <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+        <style type="text/css">
+            .blue, .green {
+                border: none;
+                box-sizing: border-box;
+                display: block;
+                width: 200px;
+                height: 100px;
+                overflow: scroll;
+                resize: both;
+            }
+
+            .blue {
+                background: blue;
+            }
+
+            .green {
+                background: green;
+                margin-top: -100px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="blue"></div>
+        <textarea class="green" id="textarea"></textarea>
+        <script type="application/javascript">
+            SimpleTest.waitForExplicitFinish();
+            addLoadEvent(() => SimpleTest.executeSoon(function() {
+                var textarea = $("textarea");
+                var rect = textarea.getBoundingClientRect();
+
+                synthesizeMouse(textarea, rect.width - 9,  rect.height - 9,  { type: "mousedown" });
+                synthesizeMouse(textarea, rect.width + 40, rect.height + 40, { type: "mousemove" });
+                synthesizeMouse(textarea, rect.width + 40, rect.height + 40, { type: "mouseup" });
+
+                var newrect = textarea.getBoundingClientRect();
+                ok(newrect.width > rect.width, "width did not increase");
+                ok(newrect.height > rect.height, "height did not increase");
+                SimpleTest.finish();
+            }));
+        </script>
+    </body>
+</html>

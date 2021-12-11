@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1596040
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1596040 - Link relList support returns false for manifest</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <script>
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  async function run() {
+    const prefSetting = [
+      { manifest: true, preload: true },
+      { manifest: true, preload: false },
+      { manifest: false, preload: true },
+      { manifest: false, preload: false },
+    ];
+    for (const { manifest, preload } of prefSetting) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["dom.manifest.enabled", manifest],
+          ["network.preload", preload],
+        ],
+      });
+      const { relList } = document.createElement("link");
+      is(
+        relList.supports("manifest"),
+        manifest,
+        `Expected manifest to be ${manifest}`
+      );
+      is(
+        relList.supports("preload"),
+        preload,
+        `Expected preload to be ${preload}`
+      );
+    }
+  }
+  run()
+    .catch(console.error)
+    .finally(() => SimpleTest.finish());
+  </script>
+</head>

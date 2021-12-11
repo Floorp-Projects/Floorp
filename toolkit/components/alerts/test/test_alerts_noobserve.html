@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test for Alerts Service</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<p id="display"></p>
+
+<br>Alerts service, without observer "asynchronous" case.
+<br>
+<br>A notification should soon appear somewhere.
+<br>If there has been no crash when the notification (later) disappears, assume all is good.
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* eslint-env mozilla/frame-script */
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+  function anyXULAlertsVisible() {
+    var windows = Services.wm.getEnumerator("alert:alert");
+    return windows.hasMoreElements();
+  }
+
+  addMessageListener("anyXULAlertsVisible", anyXULAlertsVisible);
+
+  addMessageListener("waitForAlerts", function waitForAlerts() {
+    if (anyXULAlertsVisible()) {
+      setTimeout(waitForAlerts, 1000);
+    } else {
+      sendAsyncMessage("waitedForAlerts");
+    }
+  });
+});
+
+function waitForAlertsThenFinish() {
+  chromeScript.addMessageListener("waitedForAlerts", function waitedForAlerts() {
+    chromeScript.removeMessageListener("waitedForAlerts", waitedForAlerts);
+    ok(true, "Alert disappeared.");
+    SimpleTest.finish();
+  });
+  chromeScript.sendAsyncMessage("waitForAlerts");
+}
+
+async function runTest() {
+  var alertsVisible = await chromeScript.sendQuery("anyXULAlertsVisible");
+  ok(!alertsVisible, "Alerts should not be present at the start of the test.");
+
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application");
+  } else {
+    ok(true, "Alerts service exists in this application");
+
+    var notifier;
+    try {
+      notifier = Cc["@mozilla.org/alerts-service;1"].
+                 getService(Ci.nsIAlertsService);
+      ok(true, "Alerts service is available");
+    } catch (ex) {
+      todo(false, "Alerts service is not available.", ex);
+    }
+
+    if (notifier) {
+      try {
+        notifier.showAlertNotification(null, "Notification test",
+                                       "This notification has no observer");
+        ok(true, "showAlertNotification() succeeded");
+      } catch (ex) {
+        todo(false, "showAlertNotification() failed.", ex);
+      }
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+runTest();
+setTimeout(waitForAlertsThenFinish, 1000);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test reactivation of a media element from a dead document</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+
+<iframe id="frame" src="reactivate_helper.html"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var elements;
+
+function playElement(e) {
+  // All elements played out, finish the test case.
+  if (!e) {
+    SimpleTest.finish();
+    return;
+  }
+
+  e.play();
+  info("Element play: " + e._name);
+  var reviveElement = function() {
+    document.body.appendChild(e);
+    e.onended = function() {
+      info("Element ended: " + e._name);
+      removeNodeAndSource(e);
+      // Play next element.
+      playElement(elements.pop());
+    }
+  }
+  setTimeout(reviveElement, 2000);
+}
+
+function loadedAll(elementList) {
+  elements = elementList;
+
+  // Log events for debugging.
+  var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause"];
+  function logEvent(e) {
+    info(e.target._name + ": got " + e.type);
+  }
+  elementList.forEach(function(element) {
+    events.forEach(function(evt) {
+      element.addEventListener(evt, logEvent);
+    });
+  });
+
+  // Blow away the subframe
+  document.body.removeChild(document.getElementById("frame"));
+
+  // Play elements one by one to avoid hitting bug 847903 on MacOSX.
+  playElement(elements.pop());
+}
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,207 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIX509Cert;
+
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
+
+%{C++
+#define NS_CERTOVERRIDE_CONTRACTID "@mozilla.org/security/certoverride;1"
+
+namespace mozilla {
+class OriginAttributes;
+}
+%}
+
+[scriptable, builtinclass, uuid(ed735e24-fa55-4163-906d-17fb78851fe1)]
+interface nsICertOverride : nsISupports {
+
+  /**
+  *   The hostname of the server the override is used for.
+  */
+  readonly attribute ACString asciiHost;
+
+  /**
+  *   The port of the server the override is used for.
+  */
+  readonly attribute int32_t port;
+
+  /**
+  *   Whether or not the override is only used for this
+  *   session (true) or stored persistently (false)
+  */
+  readonly attribute boolean isTemporary;
+
+  /**
+  *   The database key for the associated certificate.
+  */
+  readonly attribute ACString dbKey;
+
+  /**
+  *   A combination of hostname and port in the form host:port.
+  *   Since the port can be -1 which is equivalent to port 433 we use an
+  *   existing function of nsCertOverrideService to create this property.
+  */
+  readonly attribute ACString hostPort;
+
+  /**
+  *   The origin attributes associated with this override.
+  */
+  [implicit_jscontext]
+  readonly attribute jsval originAttributes;
+};
+
+/**
+ * This represents the global list of triples
+ *   {host:port, cert-fingerprint, allowed-overrides}
+ * that the user wants to accept without further warnings.
+ */
+[scriptable, builtinclass, uuid(be019e47-22fc-4355-9f16-9ab047d6742d)]
+interface nsICertOverrideService : nsISupports {
+
+  /**
+   *  Override Untrusted
+   */
+  const short ERROR_UNTRUSTED = 1;
+
+  /**
+   *  Override hostname Mismatch
+   */
+  const short ERROR_MISMATCH = 2;
+
+  /**
+   *  Override Time error
+   */
+  const short ERROR_TIME = 4;
+
+  /**
+   *  The given cert should always be accepted for the given hostname:port,
+   *  regardless of errors verifying the cert.
+   *  Host:Port is a primary key, only one entry per host:port can exist.
+   *  The implementation will store a fingerprint of the cert.
+   *  The implementation will decide which fingerprint alg is used.
+   *
+   *  Each override is specific to exactly the errors overridden, so
+   *  overriding everything won't match certs at the given host:port
+   *  which only exhibit some subset of errors.
+   *
+   *  @param aHostName The host (punycode) this mapping belongs to
+   *  @param aPort The port this mapping belongs to, if it is -1 then it
+   *          is internaly treated as 443
+   *  @param aCert The cert that should always be accepted
+   *  @param aOverrideBits The precise set of errors we want to be overriden
+   */
+  [binaryname(RememberValidityOverride), noscript, must_use]
+  void rememberValidityOverrideNative(in AUTF8String aHostName,
+                                in int32_t aPort,
+                                in const_OriginAttributesRef aOriginAttributes,
+                                in nsIX509Cert aCert,
+                                in uint32_t aOverrideBits,
+                                in boolean aTemporary);
+  [binaryname(RememberValidityOverrideScriptable), implicit_jscontext, must_use]
+  void rememberValidityOverride(in AUTF8String aHostName,
+                                in int32_t aPort,
+                                in jsval aOriginAttributes,
+                                in nsIX509Cert aCert,
+                                in uint32_t aOverrideBits,
+                                in boolean aTemporary);
+
+  /**
+   *  Certs with the given fingerprint should always be accepted for the
+   *  given hostname:port, regardless of errors verifying the cert.
+   *  Host:Port is a primary key, only one entry per host:port can exist.
+   *  The fingerprint should be an SHA-256 hash of the certificate.
+   *
+   *  @param aHostName The host (punycode) this mapping belongs to
+   *  @param aPort The port this mapping belongs to, if it is -1 then it
+   *          is internaly treated as 443
+   *  @param aCertFingerprint The cert fingerprint that should be accepted, in
+   *          the format 'AA:BB:...' (colon-separated upper-case hex bytes).
+   *  @param aOverrideBits The errors we want to be overriden
+   */
+  [binaryname(RememberTemporaryValidityOverrideUsingFingerprint), noscript, must_use]
+  void rememberTemporaryValidityOverrideUsingFingerprintNative(
+      in AUTF8String aHostName,
+      in int32_t aPort,
+      in const_OriginAttributesRef aOriginAttributes,
+      in AUTF8String aCertFingerprint,
+      in uint32_t aOverrideBits);
+  [binaryname(RememberTemporaryValidityOverrideUsingFingerprintScriptable), implicit_jscontext, must_use]
+  void rememberTemporaryValidityOverrideUsingFingerprint(
+      in AUTF8String aHostName,
+      in int32_t aPort,
+      in jsval aOriginAttributes,
+      in AUTF8String aCertFingerprint,
+      in uint32_t aOverrideBits);
+
+  /**
+   *  Return whether this host, port, cert triple has a stored override.
+   *  If so, the outparams will contain the specific errors that were
+   *  overridden, and whether the override is permanent, or only for the current
+   *  session.
+   *
+   *  @param aHostName The host (punycode) this mapping belongs to
+   *  @param aPort The port this mapping belongs to, if it is -1 then it
+   *         is internally treated as 443
+   *  @param aCert The certificate this mapping belongs to
+   *  @param aOverrideBits The errors that are currently overridden
+   *  @param aIsTemporary Whether the stored override is session-only,
+   *         or permanent
+   *  @return Whether an override has been stored for this host+port+cert
+   */
+  [binaryname(HasMatchingOverride), noscript, must_use]
+  boolean hasMatchingOverrideNative(in AUTF8String aHostName,
+                              in int32_t aPort,
+                              in const_OriginAttributesRef aOriginAttributes,
+                              in nsIX509Cert aCert,
+                              out uint32_t aOverrideBits,
+                              out boolean aIsTemporary);
+  [binaryname(HasMatchingOverrideScriptable), implicit_jscontext, must_use]
+  boolean hasMatchingOverride(in AUTF8String aHostName,
+                              in int32_t aPort,
+                              in jsval aOriginAttributes,
+                              in nsIX509Cert aCert,
+                              out uint32_t aOverrideBits,
+                              out boolean aIsTemporary);
+
+  /**
+   *  Remove a override for the given hostname:port.
+   *
+   *  @param aHostName The host (punycode) whose entry should be cleared.
+   *  @param aPort The port whose entry should be cleared.
+   *               If it is -1, then it is internaly treated as 443.
+   *               If it is 0 and aHostName is "all:temporary-certificates",
+   *               then all temporary certificates should be cleared.
+   */
+  [binaryname(ClearValidityOverride), noscript]
+  void clearValidityOverrideNative(in AUTF8String aHostName,
+                             in int32_t aPort,
+                             in const_OriginAttributesRef aOriginAttributes);
+  [binaryname(ClearValidityOverrideScriptable), implicit_jscontext]
+  void clearValidityOverride(in AUTF8String aHostName,
+                             in int32_t aPort,
+                             in jsval aOriginAttributes);
+
+  /**
+   *  Remove all overrides.
+   */
+  void clearAllOverrides();
+
+  Array<nsICertOverride> getOverrides();
+
+  /**
+   *  NOTE: This function is used only for testing!
+   *
+   *  @param aDisable If true, disable all security check and make
+   *                  hasMatchingOverride always return true.
+   */
+  void setDisableAllSecurityChecksAndLetAttackersInterceptMyData(in boolean aDisable);
+
+  readonly attribute boolean securityCheckDisabled;
+};

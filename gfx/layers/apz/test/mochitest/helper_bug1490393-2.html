@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Dragging the mouse on a scrollbar for a scrollframe inside nested transforms</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript">
+
+async function test() {
+  var scrollableDiv = document.getElementById("scrollable");
+  let scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
+
+  // Scroll down a small amount (10px). The bug in this case is that the
+  // scrollthumb "jumps" by an additional 40 pixels (height of the "gap" div)
+  // and the scrollframe scrolls by a corresponding amount. So after doing this
+  // drag we check the scroll position to make sure it hasn't scrolled by
+  // too much.
+  // Given the scrollable height of 2000px and scrollframe height of 400px,
+  // the scrollthumb should be approximately 80px tall, and dragging it 10px
+  // should scroll approximately 50 pixels. If the bug manifests, it will get
+  // dragged 50px and scroll approximately 250px.
+  var dragFinisher = await promiseVerticalScrollbarDrag(scrollableDiv, 10, 10);
+  if (!dragFinisher) {
+    ok(true, "No scrollbar, can't do this test");
+    return;
+  }
+
+  // the events above might be stuck in APZ input queue for a bit until the
+  // layer is activated, so we wait here until the scroll event listener is
+  // triggered.
+  await scrollPromise;
+
+  await dragFinisher();
+
+  // Flush everything just to be safe
+  await promiseOnlyApzControllerFlushed();
+
+  // In this case we just want to make sure the scroll position moved from 0
+  // which indicates the thumb dragging worked properly.
+  ok(scrollableDiv.scrollTop < 100, "Scrollbar drag resulted in a scroll position of " + scrollableDiv.scrollTop);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+    <div id="gap" style="min-height: 40px"></div>
+    <div style="height: 400px; transform: translateZ(0)">
+        <div style="height: 100%; overflow-x: auto; overflow-y: hidden; transform: translateZ(0)">
+            <div id="scrollable" style="display: inline-block; height: 100%; overflow-y: auto; transform: translateZ(0)">
+                <div style="min-height: 2000px">Yay text</div>
+            </div>
+            <div style="display: inline-block; width: 2000px; height: 100%;"></div>
+        </div>
+    </div>
+</body>
+</html>

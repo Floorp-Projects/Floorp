@@ -1,0 +1,275 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_DIRS += ["tests"]
+
+for var in ("CC", "CC_VERSION", "CXX", "RUSTC", "RUSTC_VERSION"):
+    if CONFIG[var]:
+        DEFINES[var] = CONFIG[var]
+
+for var in ("MOZ_CONFIGURE_OPTIONS",):
+    DEFINES[var] = CONFIG[var]
+
+if CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"]:
+    DEFINES["target"] = "</td><td>".join(
+        sorted(CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"])
+    )
+else:
+    DEFINES["target"] = CONFIG["target"]
+
+DEFINES["CFLAGS"] = " ".join(CONFIG["OS_CFLAGS"])
+
+rustflags = CONFIG["RUSTFLAGS"]
+if not rustflags:
+    rustflags = []
+DEFINES["RUSTFLAGS"] = " ".join(rustflags)
+
+cxx_flags = []
+for var in ("OS_CPPFLAGS", "OS_CXXFLAGS", "DEBUG", "OPTIMIZE", "FRAMEPTR"):
+    cxx_flags += COMPILE_FLAGS[var] or []
+
+DEFINES["CXXFLAGS"] = " ".join(cxx_flags)
+
+if CONFIG["OS_TARGET"] == "Android":
+    DEFINES["ANDROID_PACKAGE_NAME"] = CONFIG["ANDROID_PACKAGE_NAME"]
+    DEFINES["MOZ_USE_LIBCXX"] = True
+
+if CONFIG["MOZ_INSTALL_TRACKING"]:
+    DEFINES["MOZ_INSTALL_TRACKING"] = 1
+
+if CONFIG["MOZ_BUILD_APP"] == "mobile/android":
+    DEFINES["MOZ_FENNEC"] = True
+
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
+    DEFINES["MOZ_DEFAULT_BROWSER_AGENT"] = True
+
+JAR_MANIFESTS += ["jar.mn"]
+
+SPHINX_TREES["toolkit_widgets"] = "widgets/docs"
+
+DEFINES["TOPOBJDIR"] = TOPOBJDIR
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("aboutwebrtc/*"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("gmp-sources/*"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("tests/browser/browser_*autoplay*"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/browser/*silent*"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/browser/*1170531*"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
+with Files("tests/browser/*1198465*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/browser/*451286*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/browser/*594509*"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("tests/browser/*982298*"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/browser/browser_content_url_annotation.js"):
+    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
+
+with Files("tests/browser/browser_default_image_filename.js"):
+    BUG_COMPONENT = ("Firefox", "File Handling")
+
+with Files("tests/browser/*caret*"):
+    BUG_COMPONENT = ("Firefox", "Keyboard Navigation")
+
+with Files("tests/browser/*find*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/browser/browser_isSynthetic.js"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("tests/browser/*mediaPlayback*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("tests/browser/*mute*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("tests/browser/*save*"):
+    BUG_COMPONENT = ("Firefox", "File Handling")
+
+with Files("tests/browser/*scroll*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("tests/chrome/**"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("tests/chrome/*networking*"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+with Files("tests/chrome/*autocomplete*"):
+    BUG_COMPONENT = ("Toolkit", "Autocomplete")
+
+with Files("tests/chrome/*drop*"):
+    BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
+
+with Files("tests/chrome/*1048178*"):
+    BUG_COMPONENT = ("Core", "XUL")
+
+with Files("tests/chrome/*263683*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*304188*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*331215*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*360220*"):
+    BUG_COMPONENT = ("Core", "XUL")
+
+with Files("tests/chrome/*360437*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*409624*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*418874*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*429723*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*437844*"):
+    BUG_COMPONENT = ("Toolkit", "General")
+with Files("tests/chrome/rtlchrome/**"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("tests/chrome/*451540*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/*557987*"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+with Files("tests/chrome/*562554*"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
+with Files("tests/chrome/*findbar*"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+
+with Files("tests/chrome/test_preferences*"):
+    BUG_COMPONENT = ("Toolkit", "Preferences")
+
+with Files("tests/mochitest/*autocomplete*"):
+    BUG_COMPONENT = ("Toolkit", "Autocomplete")
+
+with Files("tests/mochitest/*mousecapture*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("tests/reftests/*videocontrols*"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+
+with Files("tests/unit/**"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+
+with Files("tests/widgets/*audiocontrols*"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+with Files("tests/widgets/*898940*"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+
+with Files("tests/widgets/*contextmenu*"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
+with Files("tests/widgets/*editor*"):
+    BUG_COMPONENT = ("Core", "XUL")
+
+with Files("tests/widgets/*menubar*"):
+    BUG_COMPONENT = ("Core", "XUL")
+
+with Files("tests/widgets/*capture*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("tests/widgets/*popup*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+with Files("tests/widgets/*tree*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("tests/widgets/*videocontrols*"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+
+with Files("widgets/*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("TopLevelVideoDocument.js"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+
+with Files("about*"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("aboutGlean.*"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("aboutNetworking*"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+with Files("aboutProfile*"):
+    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
+
+with Files("aboutRights*"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("aboutService*"):
+    BUG_COMPONENT = ("Core", "DOM: Workers")
+
+with Files("aboutSupport*"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("aboutTelemetry*"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("autocomplete.css"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
+with Files("browser-*.js"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("buildconfig.html"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
+with Files("contentAreaUtils.js"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("*picker*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("edit*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("globalOverlay.*"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("minimal-xul.css"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("plugins*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("resetProfile*"):
+    BUG_COMPONENT = ("Firefox", "Migration")
+
+with Files("timepicker*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("treeUtils.js"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
+with Files("viewZoomOverlay.js"):
+    BUG_COMPONENT = ("Toolkit", "General")

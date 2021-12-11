@@ -1,0 +1,221 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIHttpAuthenticableChannel;
+interface nsIHttpAuthenticatorCallback;
+interface nsICancelable;
+
+/**
+ * nsIHttpAuthenticator
+ *
+ * Interface designed to allow for pluggable HTTP authentication modules.
+ * Implementations are registered under the ContractID:
+ *
+ *   "@mozilla.org/network/http-authenticator;1?scheme=<auth-scheme>"
+ *
+ * where <auth-scheme> is the lower-cased value of the authentication scheme
+ * found in the server challenge per the rules of RFC 2617.
+ */
+[builtinclass, uuid(fef7db8a-a4e2-49d1-9685-19ed7e309b7d)]
+interface nsIHttpAuthenticator : nsISupports
+{
+    /**
+     * Upon receipt of a server challenge, this function is called to determine
+     * whether or not the current user identity has been rejected.  If true,
+     * then the user will be prompted by the channel to enter (or revise) their
+     * identity.  Following this, generateCredentials will be called.
+     *
+     * If the IDENTITY_IGNORED auth flag is set, then the aInvalidateIdentity
+     * return value will be ignored, and user prompting will be suppressed.
+     *
+     * @param aChannel
+     *        the http channel that received the challenge.
+     * @param aChallenge
+     *        the challenge from the WWW-Authenticate/Proxy-Authenticate
+     *        server response header.  (possibly from the auth cache.)
+     * @param aProxyAuth
+     *        flag indicating whether or not aChallenge is from a proxy.
+     * @param aSessionState
+     *        see description below for generateCredentials.
+     * @param aContinuationState
+     *        see description below for generateCredentials.
+     * @param aInvalidateIdentity
+     *        return value indicating whether or not to prompt the user for a
+     *        revised identity.
+     */
+    [must_use]
+    void challengeReceived(in    nsIHttpAuthenticableChannel aChannel,
+                           in    ACString     aChallenge,
+                           in    boolean      aProxyAuth,
+                           inout nsISupports  aSessionState,
+                           inout nsISupports  aContinuationState,
+                           out   boolean      aInvalidatesIdentity);
+
+    /**
+     * Called to generate the authentication credentials for a particular
+     * server/proxy challenge asynchronously. Credentials will be sent back
+     * to the server via an Authorization/Proxy-Authorization header.
+     *
+     * @param aChannel
+     *        the http channel requesting credentials
+     * @param aCallback
+     *        callback function to be called when credentials are available
+     * @param aChallenge
+     *        the challenge from the WWW-Authenticate/Proxy-Authenticate
+     *        server response header.  (possibly from the auth cache.)
+     * @param aProxyAuth
+     *        flag indicating whether or not aChallenge is from a proxy.
+     * @param aDomain
+     *        string containing the domain name (if appropriate)
+     * @param aUser
+     *        string containing the user name
+     * @param aPassword
+     *        string containing the password
+     * @param aSessionState
+     *        state stored along side the user's identity in the auth cache
+     *        for the lifetime of the browser session.  if a new auth cache
+     *        entry is created for this challenge, then this parameter will
+     *        be null.  on return, the result will be stored in the new auth
+     *        cache entry.  this parameter is non-null when an auth cache entry
+     *        is being reused. currently modification of session state is not
+     *        communicated to caller, thus caching credentials obtained by
+     *        asynchronous way is not supported.
+     * @param aContinuationState
+     *        state held by the channel between consecutive calls to
+     *        generateCredentials, assuming multiple calls are required
+     *        to authenticate.  this state is held for at most the lifetime of
+     *        the channel.
+     * @pram aCancel
+     *        returns cancellable runnable object which caller can use to cancel
+     *        calling aCallback when finished.
+     */
+    [must_use]
+    void generateCredentialsAsync(in    nsIHttpAuthenticableChannel aChannel,
+                                  in    nsIHttpAuthenticatorCallback aCallback,
+                                  in    ACString       aChallenge,
+                                  in    boolean        aProxyAuth,
+                                  in    AString        aDomain,
+                                  in    AString        aUser,
+                                  in    AString        aPassword,
+                                  in    nsISupports    aSessionState,
+                                  in    nsISupports    aContinuationState,
+                                  out   nsICancelable  aCancel);
+    /**
+     * Called to generate the authentication credentials for a particular
+     * server/proxy challenge.  This is the value that will be sent back
+     * to the server via an Authorization/Proxy-Authorization header.
+     *
+     * This function may be called using a cached challenge provided the
+     * authenticator sets the REUSABLE_CHALLENGE flag.
+     *
+     * @param aChannel
+     *        the http channel requesting credentials
+     * @param aChallenge
+     *        the challenge from the WWW-Authenticate/Proxy-Authenticate
+     *        server response header.  (possibly from the auth cache.)
+     * @param aProxyAuth
+     *        flag indicating whether or not aChallenge is from a proxy.
+     * @param aDomain
+     *        string containing the domain name (if appropriate)
+     * @param aUser
+     *        string containing the user name
+     * @param aPassword
+     *        string containing the password
+     * @param aSessionState
+     *        state stored along side the user's identity in the auth cache
+     *        for the lifetime of the browser session.  if a new auth cache
+     *        entry is created for this challenge, then this parameter will
+     *        be null.  on return, the result will be stored in the new auth
+     *        cache entry.  this parameter is non-null when an auth cache entry
+     *        is being reused.
+     * @param aContinuationState
+     *        state held by the channel between consecutive calls to
+     *        generateCredentials, assuming multiple calls are required
+     *        to authenticate.  this state is held for at most the lifetime of
+     *        the channel.
+     * @param aFlags
+     *        authenticator may return one of the generate flags bellow.
+     */
+    [must_use]
+    ACString generateCredentials(in    nsIHttpAuthenticableChannel aChannel,
+                               in    ACString       aChallenge,
+                               in    boolean        aProxyAuth,
+                               in    AString        aDomain,
+                               in    AString        aUser,
+                               in    AString        aPassword,
+                               inout nsISupports    aSessionState,
+                               inout nsISupports    aContinuationState,
+                               out   unsigned long  aFlags);
+
+    /**
+     * Generate flags
+     */
+
+    /**
+     * Indicates that the authenticator has used an out-of-band or internal
+     * source of identity and tells the consumer that it must not cache
+     * the returned identity because it might not be valid and would overwrite
+     * the cached identity.  See bug 542318 comment 32.
+     */
+    const unsigned long USING_INTERNAL_IDENTITY = (1<<0);
+
+    /**
+     * Flags defining various properties of the authenticator.
+     */
+    [must_use] readonly attribute unsigned long authFlags;
+
+    /**
+     * A request based authentication scheme only authenticates an individual
+     * request (or a set of requests under the same authentication domain as
+     * defined by RFC 2617).  BASIC and DIGEST are request based authentication
+     * schemes.
+     */
+    const unsigned long REQUEST_BASED = (1<<0);
+
+    /**
+     * A connection based authentication scheme authenticates an individual
+     * connection.  Multiple requests may be issued over the connection without
+     * repeating the authentication steps.  Connection based authentication
+     * schemes can associate state with the connection being authenticated via
+     * the aContinuationState parameter (see generateCredentials).
+     */
+    const unsigned long CONNECTION_BASED = (1<<1);
+
+    /**
+     * The credentials returned from generateCredentials may be reused with any
+     * other URLs within "the protection space" as defined by RFC 2617 section
+     * 1.2.  If this flag is not set, then generateCredentials must be called
+     * for each request within the protection space.  REUSABLE_CREDENTIALS
+     * implies REUSABLE_CHALLENGE.
+     */
+    const unsigned long REUSABLE_CREDENTIALS = (1<<2);
+
+    /**
+     * A challenge may be reused to later generate credentials in anticipation
+     * of a duplicate server challenge for URLs within "the protection space"
+     * as defined by RFC 2617 section 1.2.
+     */
+    const unsigned long REUSABLE_CHALLENGE = (1<<3);
+
+    /**
+     * This flag indicates that the identity of the user is not required by
+     * this authentication scheme.
+     */
+    const unsigned long IDENTITY_IGNORED = (1<<10);
+
+    /**
+     * This flag indicates that the identity of the user includes a domain
+     * attribute that the user must supply.
+     */
+    const unsigned long IDENTITY_INCLUDES_DOMAIN = (1<<11);
+
+    /**
+     * This flag indicates that the identity will be sent encrypted. It does
+     * not make sense to combine this flag with IDENTITY_IGNORED.
+     */
+    const unsigned long IDENTITY_ENCRYPTED = (1<<12);
+};

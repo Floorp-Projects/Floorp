@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Autoplay policy window</title>
+    <style>
+      video {
+        width: 50%;
+        height: 50%;
+      }
+    </style>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+  </head>
+  <body>
+    <pre id="test">
+      <script>
+
+        async function createChildFrame(testInfo) {
+          let frame = document.createElement("iframe");
+          let origin = testInfo.same_origin_child
+            ? "http://mochi.test:8888" : "http://example.org";
+          frame.src = origin + "/tests/dom/media/autoplay/test/mochitest/file_autoplay_policy_activation_frame.html";
+          // Wait for it to load...
+          document.body.appendChild(frame);
+          is((await nextWindowMessage()).data, "ready", "Expected a 'ready' message");
+          return frame;
+        }
+
+        async function activateDocument(testInfo) {
+          // Click the window to activate if appropriate.
+          if (testInfo.activated_from == "parent") {
+            info(`activate parent's document`);
+            SpecialPowers.wrap(document).notifyUserGestureActivation();
+          } else if (testInfo.activated_from == "child") {
+            info(`activate child's document`);
+            testInfo.childFrame.contentWindow.postMessage("click", "*");
+            is((await nextWindowMessage()).data, "activated", "has activated child frame.");
+          }
+        }
+
+        function testAutoplayInWindow(testInfo) {
+          info(`start autoplay from parent frame`);
+          playAndPostResult(testInfo.muted, testInfo.parentWindow);
+        }
+
+        async function testAutoplayInChildFrame(testInfo) {
+          info("start autoplay from " +  (testInfo.same_origin_child ? "same" : "cross")  + " origin child frame");
+          // Ask the child iframe to try to play video.
+          let play_message = testInfo.muted ? "play-muted" : "play-audible";
+          testInfo.childFrame.contentWindow.postMessage(play_message, "*");
+          // Wait for the iframe to tell us whether it could play video.
+          let result = await nextWindowMessage();
+          // Report whether the iframe could play to the parent.
+          testInfo.parentWindow.postMessage(result.data, "*");
+        }
+
+        nextWindowMessage().then(
+          async (event) => {
+            let testInfo = event.data;
+            testInfo.parentWindow = event.source;
+            testInfo.childFrame = await createChildFrame(testInfo);
+
+            await activateDocument(testInfo);
+            switch (testInfo.play_from) {
+              case "parent":
+                testAutoplayInWindow(testInfo);
+                break;
+              case "child":
+                testAutoplayInChildFrame(testInfo);
+                break;
+              default:
+                ok(false, "Incorrect 'play_from' value!")
+            }
+          });
+      </script>
+    </pre>
+  </body>
+</html>

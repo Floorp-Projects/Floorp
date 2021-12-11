@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<base href="javascript:5">
+<script>
+
+function boom()
+{
+  var head = document.getElementsByTagName("head")[0];
+  var s = document.createElement("script");
+  s.async = "async";
+  s.src = "useBaseHrefAndFail";
+  s.q = "q";
+  head.appendChild(s);
+  head.removeChild(s);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

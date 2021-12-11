@@ -1,0 +1,12 @@
+// -*- mode:js2 -*-
+
+function f() {
+    var x = 1;                          // line 4
+    return function g() {
+        var y = 2;                      // line 6
+        return function h() {
+            var z = 3;                  // line 8
+            return x+y+z;
+        };
+    };
+}

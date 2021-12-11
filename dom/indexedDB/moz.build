@@ -1,0 +1,128 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Storage: IndexedDB")
+
+MOCHITEST_MANIFESTS += [
+    "test/mochitest-intl-api.ini",
+    "test/mochitest.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "test/unit/xpcshell-child-process.ini",
+    "test/unit/xpcshell-parent-process.ini",
+]
+
+TEST_DIRS += ["test/gtest"]
+
+EXPORTS.mozilla.dom += [
+    "DatabaseFileInfoFwd.h",
+    "FlippedOnce.h",
+    "IDBCursor.h",
+    "IDBCursorType.h",
+    "IDBDatabase.h",
+    "IDBEvents.h",
+    "IDBFactory.h",
+    "IDBFileHandle.h",
+    "IDBFileRequest.h",
+    "IDBIndex.h",
+    "IDBKeyRange.h",
+    "IDBMutableFile.h",
+    "IDBObjectStore.h",
+    "IDBRequest.h",
+    "IDBTransaction.h",
+    "IndexedDatabase.h",
+    "IndexedDatabaseManager.h",
+    "SafeRefPtr.h",
+]
+
+EXPORTS.mozilla.dom.indexedDB += [
+    "ActorsChild.h",
+    "ActorsParent.h",
+    "IDBResult.h",
+    "Key.h",
+    "KeyPath.h",
+    "PermissionRequestBase.h",
+    "SerializationHelpers.h",
+    "ThreadLocal.h",
+]
+
+UNIFIED_SOURCES += [
+    "ActorsChild.cpp",
+    "ActorsParentCommon.cpp",
+    "DatabaseFileInfo.cpp",
+    "DBSchema.cpp",
+    "IDBCursor.cpp",
+    "IDBCursorType.cpp",
+    "IDBDatabase.cpp",
+    "IDBEvents.cpp",
+    "IDBFactory.cpp",
+    "IDBFileHandle.cpp",
+    "IDBFileRequest.cpp",
+    "IDBIndex.cpp",
+    "IDBKeyRange.cpp",
+    "IDBMutableFile.cpp",
+    "IDBObjectStore.cpp",
+    "IDBRequest.cpp",
+    "IDBTransaction.cpp",
+    "IndexedDatabase.cpp",
+    "IndexedDatabaseManager.cpp",
+    "IndexedDBCommon.cpp",
+    "KeyPath.cpp",
+    "PermissionRequestBase.cpp",
+    "ProfilerHelpers.cpp",
+    "ReportInternalError.cpp",
+    "SchemaUpgrades.cpp",
+    "ScriptErrorHelper.cpp",
+]
+
+SOURCES += [
+    "ActorsParent.cpp",  # This file is huge.
+    "Key.cpp",  # We disable a warning on this file only
+]
+
+IPDL_SOURCES += [
+    "PBackgroundIDBCursor.ipdl",
+    "PBackgroundIDBDatabase.ipdl",
+    "PBackgroundIDBDatabaseFile.ipdl",
+    "PBackgroundIDBDatabaseRequest.ipdl",
+    "PBackgroundIDBFactory.ipdl",
+    "PBackgroundIDBFactoryRequest.ipdl",
+    "PBackgroundIDBRequest.ipdl",
+    "PBackgroundIDBSharedTypes.ipdlh",
+    "PBackgroundIDBTransaction.ipdl",
+    "PBackgroundIDBVersionChangeTransaction.ipdl",
+    "PBackgroundIndexedDBUtils.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    # Suppress gcc warning about a comparison being always false due to the
+    # range of the data type
+    SOURCES["Key.cpp"].flags += ["-Wno-error=type-limits"]
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/dom/storage",
+    "/ipc/glue",
+    "/third_party/sqlite3/src",
+    "/xpcom/build",
+]
+
+XPIDL_SOURCES += [
+    "nsIIDBPermissionsRequest.idl",
+]
+
+XPIDL_MODULE = "dom_indexeddb"

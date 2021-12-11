@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLTextAreaElement attributes reflection</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLTextAreaElement attributes reflection **/
+
+// .autofocus
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "autofocus",
+});
+
+//.cols
+reflectUnsignedInt({
+  element: document.createElement("textarea"),
+  attribute: "cols",
+  nonZero: true,
+  defaultValue: 20,
+  fallback: true,
+});
+
+todo("dirName" in document.createElement("textarea"),
+     "dirName isn't implemented yet");
+
+// .disabled
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "disabled",
+});
+
+// TODO: form (HTMLFormElement)
+
+// .maxLength
+reflectInt({
+  element: document.createElement("textarea"),
+  attribute: "maxLength",
+  nonNegative: true,
+});
+
+// .name
+reflectString({
+  element: document.createElement("textarea"),
+  attribute: "name",
+  otherValues: [ "isindex", "_charset_" ],
+});
+
+// .placeholder
+reflectString({
+  element: document.createElement("textarea"),
+  attribute: "placeholder",
+  otherValues: [ "foo\nbar", "foo\rbar", "foo\r\nbar" ],
+});
+
+// .readOnly
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "readOnly",
+});
+
+// .required
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "required",
+});
+
+// .rows
+reflectUnsignedInt({
+  element: document.createElement("textarea"),
+  attribute: "rows",
+  nonZero: true,
+  defaultValue: 2,
+  fallback: true,
+});
+
+// .wrap
+// TODO: make it an enumerated attributes limited to only known values, bug 670869.
+reflectString({
+  element: document.createElement("textarea"),
+  attribute: "wrap",
+  otherValues: [ "soft", "hard" ],
+});
+
+// .type doesn't reflect a content attribute.
+// .defaultValue doesn't reflect a content attribute.
+// .value doesn't reflect a content attribute.
+// .textLength doesn't reflect a content attribute.
+// .willValidate doesn't reflect a content attribute.
+// .validity doesn't reflect a content attribute.
+// .validationMessage doesn't reflect a content attribute.
+// .labels doesn't reflect a content attribute.
+
+</script>
+</pre>
+</body>
+</html>

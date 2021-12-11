@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test creation of MediaKeys in iframes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody">
+// Helper functions.
+
+// We take navigator explicitly as an argument to avoid ambiguity in fetching
+// it. This is to avoid issues with the following
+// ```
+// iframe.contentWindow.createMediaKeys = createMediaKeys;
+// await iframe.contentWindow.createMediaKeys();
+// ```
+// If we don't pass a navigator, and just use `navigator` in the function, this
+// ends up being equivalent to
+// ```
+// iframe.contentWindow.createMediaKeys = createMediaKeys;
+// await iframe.contentWindow.createMediaKeys(window.navigator);
+// ```
+// i.e. the function will use the navigator from the global window for the top
+// browsing context, not the iframe's. This would result in the tests not
+// correctly testing within the iframe.
+async function createMediaKeys(aNavigator) {
+  const clearKeyOptions = [
+    {
+      initDataTypes: ["webm"],
+      videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }],
+    },
+  ];
+
+  let access = await aNavigator.requestMediaKeySystemAccess(
+    "org.w3.clearkey",
+    clearKeyOptions
+  );
+
+  return access.createMediaKeys();
+}
+// End helper functions.
+
+// These tests check that the following work using different iframe combinations
+// - navigator.requestMediaKeySystem(...) successfully grants access.
+// - the resulting MediaKeySystemAccess object's createMediaKeys() creates
+//   MediaKeys as expected.
+
+// Same origin iframe, using src attribute, wait for onload.
+add_task(async () => {
+  info(
+    "Starting same origin iframe, using src attribute, wait for onload test"
+  );
+  let iframe = document.createElement("iframe");
+  let iframeLoadPromise = new Promise(r => {
+    iframe.onload = r;
+  });
+  iframe.src = "file_eme_createMediaKeys.html";
+  document.body.appendChild(iframe);
+  await iframeLoadPromise;
+  info("iframe loaded");
+
+  // Setup our handler for when the iframe messages to tell us if it
+  // created MediaKeys or not.
+  let iframeMessagePromise = new Promise(r => {
+    window.onmessage = message => {
+      is(
+        message.data,
+        "successCreatingMediaKeys",
+        "iframe should have posted us a message saying keys were successfully created"
+      );
+      r();
+    };
+  });
+  // Post a message to the iframe to ask it to try and create media keys.
+  iframe.contentWindow.postMessage("", "*");
+  // Wait until we've got a message back from our iframe.
+  await iframeMessagePromise;
+});
+
+// Same origin iframe, call via JS, wait for onload.
+add_task(async () => {
+  info("Starting same origin iframe, call via JS, wait for onload test");
+  let iframe = document.createElement("iframe");
+  let iframeLoadPromise = new Promise(r => {
+    iframe.onload = r;
+  });
+  iframe.src = ""; // No src iframes are same origin.
+  document.body.appendChild(iframe);
+  await iframeLoadPromise;
+  info("iframe loaded");
+
+  try {
+    iframe.contentWindow.createMediaKeys = createMediaKeys;
+    let mediaKeys = await iframe.contentWindow.createMediaKeys(
+      iframe.contentWindow.navigator
+    );
+    ok(mediaKeys, "Should get media keys");
+  } catch (e) {
+    ok(
+      false,
+      `Should not get any errors while trying to get media keys, got ${e}`
+    );
+  }
+});
+
+// Same origin iframe, call via JS, *do not* wait for onload.
+//
+// Note, sites shouldn't do this, because
+// https://bugzilla.mozilla.org/show_bug.cgi?id=543435
+// means not waiting for onload results in weird behavior, however
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1675360
+// shows sites doing this in the wild because historically this worked in
+// Firefox.
+//
+// Breaking this test case isn't necessarily against any specifications
+// I'm (bryce) aware of, but it will probably break site compat, so be really
+// sure you want to before doing so.
+add_task(async () => {
+  info(
+    "Starting same origin iframe, call via JS, *do not* wait for onload test"
+  );
+  let iframe = document.createElement("iframe");
+  let iframeLoadPromise = new Promise(r => {
+    iframe.onload = r;
+  });
+  iframe.src = ""; // No src iframes are same origin.
+  document.body.appendChild(iframe);
+  info("iframe appended (we're not waiting for load)");
+
+  try {
+    iframe.contentWindow.createMediaKeys = createMediaKeys;
+    let mediaKeys = await iframe.contentWindow.createMediaKeys(
+      iframe.contentWindow.navigator
+    );
+    ok(mediaKeys, "Should get media keys");
+
+    // We await the load to see if they keys persist through the load.
+    // This could fail if gecko internally associates the keys with the
+    // about:blank page that is replaced by the load.
+    await iframeLoadPromise;
+    ok(mediaKeys, "Media keys should still exist after the load");
+  } catch (e) {
+    ok(
+      false,
+      `Should not get any errors while trying to get media keys, got ${e}`
+    );
+  }
+});
+
+// Different origin iframe, using src attribute, wait for onload
+add_task(async () => {
+  info(
+    "Starting different origin iframe, using src attribute, wait for onload test"
+  );
+  let iframe = document.createElement("iframe");
+  let iframeLoadPromise = new Promise(r => {
+    iframe.onload = r;
+  });
+  // Make our iframe cross origin (see build/pgo/server-locations.txt for more
+  // info the url used).
+  iframe.src =
+    "https://w3c-test.org:443/tests/dom/media/test/file_eme_createMediaKeys.html";
+  iframe.allow = "encrypted-media";
+  document.body.appendChild(iframe);
+  await iframeLoadPromise;
+  info("iframe loaded");
+
+  // Setup our handler for when the iframe messages to tell us if it
+  // created MediaKeys or not.
+  let iframeMessagePromise = new Promise(r => {
+    window.onmessage = message => {
+      is(
+        message.data,
+        "successCreatingMediaKeys",
+        "iframe should have posted us a message saying keys were successfully created"
+      );
+      r();
+    };
+  });
+  // Post a message to the iframe to ask it to try and create media keys.
+  iframe.contentWindow.postMessage("", "*");
+  // Wait until we've got a message back from our iframe.
+  await iframeMessagePromise;
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=590554
+-->
+
+<head>
+  <title>Test for Bug 590554</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+
+<body>
+
+  <script type="application/javascript">
+
+    /** Test for Bug 590554 **/
+
+    SimpleTest.waitForExplicitFinish();
+
+    SimpleTest.waitForFocus(function() {
+      var t = document.querySelector("textarea");
+      t.focus();
+      synthesizeKey("KEY_Enter");
+      is(t.value, "\n", "Pressing enter should work the first time");
+      synthesizeKey("KEY_Enter");
+      is(t.value, "\n", "Pressing enter should not work the second time");
+      SimpleTest.finish();
+    });
+
+  </script>
+
+  <textarea maxlength="1"></textarea>
+</body>
+</html>

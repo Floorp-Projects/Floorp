@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=440572
+-->
+<head>
+  <title>Test for Bug 440572</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=440572">Mozilla Bug 440572</a>
+
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 440572 **/
+
+var messages = new Map();
+
+function receiveMessage(e)
+{
+  is(e.origin, "http://example.org", "wrong sender!");
+  messages.set(e.data.from, e.data.result);
+  // Runtests after receiving the right number of messages.
+  if (messages.size == 4) {
+    runtests();
+  }
+}
+
+window.addEventListener("message", receiveMessage);
+
+function runtests()
+{
+  is(messages.get("test"), "success", "test in frame failed.");
+  is(messages.get("dump"), "success", '"dump" in frame failed.');
+  is(messages.get("open"), "success", '"open" in frame failed.');
+  isnot(messages.get("close"), "success", "parent[\"close\"] should be the WebIDL property of Window.");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+<br>
+<iframe name="test" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
+<br>
+<iframe name="dump" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
+<br>
+<iframe name="open" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
+<br>
+<iframe name="close" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
+</body>
+</html>
+

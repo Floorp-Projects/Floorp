@@ -1,0 +1,119 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.source-header {
+  display: flex;
+  width: 100%;
+  height: var(--editor-header-height);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-toolbar-background);
+}
+
+.source-header * {
+  user-select: none;
+}
+
+.source-header .command-bar {
+  flex: initial;
+  flex-shrink: 0;
+  border-bottom: 0;
+  border-inline-start: 1px solid var(--theme-splitter-color);
+}
+
+.source-tabs {
+  flex: auto;
+  align-self: flex-start;
+  align-items: flex-start;
+  /* Reserve space for the overflow button (even if not visible) */
+  padding-inline-end: 28px;
+}
+
+.source-tab {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  min-width: 40px;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 4px 10px;
+  cursor: default;
+  height: calc(var(--editor-header-height) - 1px);
+  font-size: 12px;
+  background-color: transparent;
+  vertical-align: bottom;
+}
+
+.source-tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--tab-line-color, transparent);
+  transition: transform 250ms var(--animation-curve),
+    opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.source-tab.active {
+  --tab-line-color: var(--tab-line-selected-color);
+  color: var(--theme-toolbar-selected-color);
+  border-bottom-color: transparent;
+}
+
+.source-tab:not(.active):hover {
+  --tab-line-color: var(--tab-line-hover-color);
+  background-color: var(--theme-toolbar-hover);
+}
+
+.source-tab:hover::before,
+.source-tab.active::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.source-tab .img.prettyPrint,
+.source-tab .img.blackBox {
+  mask-size: 14px;
+  background-color: currentColor;
+}
+
+.source-tab .filename {
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-inline-end: 4px;
+}
+
+.source-tab .filename span {
+  opacity: 0.7;
+  padding-inline-start: 4px;
+}
+
+.source-tab .close-btn {
+  visibility: hidden;
+  margin-inline-end: -6px;
+}
+
+.source-tab.active .close-btn {
+  color: inherit;
+}
+
+.source-tab.active .close-btn,
+.source-tab:hover .close-btn {
+  visibility: visible;
+}
+
+.source-tab.active .source-icon {
+  background-color: currentColor;
+}
+
+.source-tab .close-btn:hover,
+.source-tab .close-btn:focus {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}

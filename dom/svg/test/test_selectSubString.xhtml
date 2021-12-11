@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=398825
+-->
+<head>
+  <title>Test for Bug 398825</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=398825">Mozilla Bug 398825</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="selectSubString-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var document = $("svg").contentWindow.document;
+  var text = document.getElementById("text");
+
+  function expectThrow(charnum, nchars) {
+    try {
+      text.selectSubString(charnum, nchars);
+      ok(false,
+         "text.selectSubString(" + charnum + "," + nchars + ") " +
+         "should have thrown");
+    } catch (e) {
+      is(e.name, "IndexSizeError",
+         "expected an index error for " +
+         "text.selectSubString(" + charnum + "," + nchars + ")");
+      is(e.code, DOMException.INDEX_SIZE_ERR,
+         "expected an index error for " +
+         "text.selectSubString(" + charnum + "," + nchars + ")");
+    }
+  }
+
+  function expectNoThrow(charnum, nchars, expected) {
+    try {
+      text.selectSubString(charnum, nchars);
+      ok(true,
+         "text.selectSubString(" + charnum + "," + nchars + ") " +
+         "should not have thrown");
+    } catch (e) {
+      ok(false,
+         "unexpected exception for " +
+         "text.selectSubString(" + charnum + "," + nchars + ")");
+    }
+  }
+
+  expectThrow(100, 2);
+  expectThrow(100, 0);
+  expectThrow(3, 0);
+  expectThrow(3, 100);
+  expectThrow(3, 100);
+  expectThrow(100, 100);
+
+  expectNoThrow(1, 100);
+  expectNoThrow(2, 100);
+  expectNoThrow(1, 3);
+  expectNoThrow(0, 4);
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTests);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<script>function init() { 
+  document.getElementById("three").appendChild(document.getElementById("two"))
+
+  setTimeout(function(){
+    document.getElementById("two").appendChild(document.getElementById("one"))
+  }, 200);
+}window.addEventListener("load", init, 0);</script>
+
+<table style="border-collapse: collapse;" border="1"><tr><td id="one">1</td><td id="two">2</td></tr><tr><td id="three">3</td><td>4</td></tr></table>
+

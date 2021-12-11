@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<head>
+  <link rel="stylesheet" type="text/css" href="ahem.css" />
+  <title>Reference: Inline, relatively positioned backplate items should be drawn cooperatively with other backplates on the same line. Inline-block, relatively positioned backplate items should be drawn over other backplates on the same line. Absolutely positioned backplate items should be drawn over other page content.</title>
+  <style>
+  body {
+    font: 20px Ahem;
+  }
+  .fake-backplate {
+    background-color: white;
+    width: max-content;
+  }
+  .std {
+    border: 1px solid black;
+    padding: 15px;
+  }
+  .relpos {
+    position: relative;
+    left: 40px;
+  }
+  .i {
+    display: inline;
+  }
+  .ib {
+    display: inline-block;
+  }
+  .abspos {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 999;
+  }
+  </style>
+</head>
+<body>
+<div><span class="std relpos i">ppppp ppppp</span>ppppp ppppp</div>
+<div><br><br><span class="std relpos ib fake"><span class="fake-backplate">ppppp ppppp</span></span>
+<span>ppppp ppppp</span></div>
+<div class="abspos"><span class="fake-backplate">ppppp ppppp</span></div>
+</body>

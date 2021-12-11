@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<script>
+let count = 0;
+function cb() {
+  count += 1;
+  // Notify our parent that we are ready once the timer flood has
+  // warmed up.
+  if (count === 10000) {
+    window.parent.postMessage('STARTED', '*');
+  }
+  setTimeout(cb, 0);
+  setTimeout(cb, 0);
+}
+addEventListener('load', cb);
+</script>
+</body>
+</html>

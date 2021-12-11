@@ -1,0 +1,15 @@
+<html>
+   <head>
+      <title>bug 185073</title>
+   </head>
+   <body>
+      <font>
+         <div id="updateText">
+            <script language=javascript type=text/javascript>
+               document.write('</div>');
+               document.getElementById("updateText").innerHTML = "foo";
+            </script>
+         </div>
+      </font>
+   </body>
+</html>

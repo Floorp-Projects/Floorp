@@ -1,0 +1,32 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
+
+
+<script>
+
+<![CDATA[
+
+window.addEventListener("load", init, false);
+
+function init()
+{
+  document.getElementById("n1").style.display = "table-caption";
+  setTimeout(init2, 30);
+}
+
+function init2()
+{
+  document.getElementById("n2").style.display = "table-caption";
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+
+</script>
+
+
+  <hbox>
+    <vbox flex="1" id="n1"/>
+    <spacer flex="1" id="n2"/>
+  </hbox>
+
+</window>

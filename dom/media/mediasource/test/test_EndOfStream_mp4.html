@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: endOfStream call after an appendBuffer</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/mp4");
+
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("bipbop/bipbop2s.mp4")));
+  await once(sb, "updateend");
+  await wait(0);
+  must_not_throw(() => ms.endOfStream(), "MediaSource.endOfStream succeeded");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# Simplified commit hook to format the files which were changed in the current commit
+#
+
+printf "[pre-commit] rustfmt"
+
+for file in $(git diff --name-only --cached); do
+  if [ ${file: -3} == ".rs" ];  then
+    rustfmt $file
+  fi
+done
+
+exit 0

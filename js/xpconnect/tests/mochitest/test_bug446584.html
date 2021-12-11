@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=446584
+-->
+<head>
+  <title>Test for Bug 446584</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=446584">Mozilla Bug 446584</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 446584 **/
+
+function test(val) {
+  try {
+    document.createNodeIterator(document.body,
+                                NodeFilter.SHOW_ALL,
+                                function() { throw val }).nextNode();
+    ok(false, "NodeIterator::nextNode() should have thrown an exception.");
+  } catch (ex) {
+    ok(val === ex, "NodeIterator did not properly forward exception " +
+       val + " of type " + typeof val + ".  Thrown value was " + ex + ".");
+  }
+}
+
+test(0);
+test(1);
+test(3.14);
+test('roses');
+test({});
+test(false);
+test(true);
+test([1,2,3]);
+test(function(){});
+
+</script>
+</pre>
+</body>
+</html>

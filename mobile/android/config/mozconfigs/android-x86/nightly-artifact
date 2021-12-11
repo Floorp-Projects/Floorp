@@ -1,0 +1,12 @@
+. "$topsrcdir/build/mozconfig.artifact.automation"
+
+NO_CACHE=1
+NO_NDK=1
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86/nightly"
+
+. "$topsrcdir/build/mozconfig.artifact"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

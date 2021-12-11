@@ -1,0 +1,57 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/TabMessageUtils.h";
+
+include protocol PBrowser;
+
+using UIStateChangeType from "nsPIDOMWindow.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+// An IPCTabContext which corresponds to a PBrowser opened by a child when it
+// receives window.open().
+struct PopupIPCTabContext
+{
+  PBrowser opener;
+  uint64_t chromeOuterWindowID;
+};
+
+// An IPCTabContext which corresponds to an app, browser, or normal frame.
+struct FrameIPCTabContext
+{
+  uint64_t chromeOuterWindowID;
+
+  // Keyboard indicator state inherited from the parent.
+  UIStateChangeType showFocusRings;
+
+  // Maximum number of touch points on the screen.
+  uint32_t maxTouchPoints;
+};
+
+struct JSPluginFrameIPCTabContext
+{
+  uint32_t jsPluginId;
+};
+
+// IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an
+// iframe/PBrowser's own and containing app-ids and tell you whether the
+// iframe/PBrowser is a browser frame.  But only IPCTabContext is allowed to
+// travel over IPC.
+//
+// We need IPCTabContext (specifically, PopupIPCTabContext) to prevent a
+// privilege escalation attack by a compromised child process.
+union IPCTabContext
+{
+  PopupIPCTabContext;
+  FrameIPCTabContext;
+  JSPluginFrameIPCTabContext;
+};
+
+}
+}

@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=523950
+-->
+<head>
+  <title>Test that animated images can discard frames and redecode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=523950">Mozilla Bug 523950</a>
+<p id="display"></p>
+<div id="content">
+  <div id="container">
+    <canvas id="canvas" width="100" height="100"></canvas>
+    <img id="rainbow.gif"/>
+  </div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 523950. **/
+SimpleTest.waitForExplicitFinish();
+
+var gFinished = false;
+
+var gNumOnloads = 0;
+
+var gNumDiscards = 0;
+
+window.onload = function() {
+  // Enable minimal frame discard thresholds for the test.
+  SpecialPowers.pushPrefEnv({
+    'set':[['image.animated.decode-on-demand.threshold-kb',0],
+           ['image.animated.decode-on-demand.batch-size',1],
+           ['image.mem.discardable',true],
+           ['image.mem.animated.discardable',true]]
+  }, runTest);
+}
+
+var gImgs = ['rainbow.gif'];
+// If we are currently counting frame updates.
+var gCountingFrameUpdates = false;
+// The number of frame update notifications for the images in gImgs that happen
+// after discarding. (The last two images are finite looping so we don't expect
+// them to get incremented but it's possible if they don't finish their
+// animation before we discard them.)
+var gNumFrameUpdates = [0];
+// The last snapshot of the image. Used to check that the image actually changes.
+var gLastSnapShot = [null];
+// Number of observed changes in the snapshot.
+var gNumSnapShotChanges = [0];
+// If we've removed the observer.
+var gRemovedObserver = [false];
+
+// rainbow.gif has 9 frames, so we choose arbitrarily 22 to include two loops.
+var kNumFrameUpdatesToExpect = 22;
+
+function runTest() {
+  var thresholdKb =
+    SpecialPowers.getIntPref('image.animated.decode-on-demand.threshold-kb');
+  var batchSize =
+    SpecialPowers.getIntPref('image.animated.decode-on-demand.batch-size');
+  var discardable =
+    SpecialPowers.getBoolPref('image.mem.discardable');
+  var animDiscardable =
+    SpecialPowers.getBoolPref('image.mem.animated.discardable');
+  if (thresholdKb > 0 || batchSize > 1 || !discardable || !animDiscardable) {
+    ok(true, "discarding frames of animated images is disabled, nothing to test");
+    SimpleTest.finish();
+    return;
+  }
+
+  setTimeout(step2, 0);
+}
+
+function step2() {
+  // Only set the src after setting the pref.
+  for (var i = 0; i < gImgs.length; i++) {
+    var elm = document.getElementById(gImgs[i]);
+    elm.src = gImgs[i];
+    elm.onload = checkIfLoaded;
+  }
+}
+
+function step3() {
+  // Draw the images to canvas to force them to be decoded.
+  for (let i = 0; i < gImgs.length; i++) {
+    drawCanvas(document.getElementById(gImgs[i]));
+  }
+
+  for (let i = 0; i < gImgs.length; i++) {
+    addCallbacks(document.getElementById(gImgs[i]), i);
+  }
+
+  setTimeout(step4, 0);
+}
+
+function step4() {
+  ok(true, "now accepting frame updates");
+  gCountingFrameUpdates = true;
+}
+
+function step5() {
+  ok(true, "discarding images");
+
+  document.getElementById("container").style.display = "none";
+  document.documentElement.offsetLeft; // force that style to take effect
+
+  // Reset our state to let us do it all again after discarding.
+  resetState();
+
+  // Draw the images to canvas to force them to be decoded.
+  for (var i = 0; i < gImgs.length; i++) {
+    requestDiscard(document.getElementById(gImgs[i]));
+  }
+
+  // the discard observers will call step6
+}
+
+function step6() {
+  // Repeat the cycle now that we discarded everything.
+  ok(gNumDiscards >= gImgs.length, "discard complete, restarting animations");
+  document.getElementById("container").style.display = "";
+
+  // Draw the images to canvas to force them to be decoded.
+  for (var i = 0; i < gImgs.length; i++) {
+    drawCanvas(document.getElementById(gImgs[i]));
+  }
+
+  setTimeout(step4, 0);
+}
+
+function checkIfLoaded() {
+  ++gNumOnloads;
+  if (gNumOnloads != gImgs.length) {
+    return;
+  }
+
+  ok(true, "got onloads");
+  setTimeout(step3, 0);
+}
+
+function resetState() {
+  gFinished = false;
+  gCountingFrameUpdates = false;
+  for (let i = 0; i < gNumFrameUpdates.length; ++i) {
+    gNumFrameUpdates[i] = 0;
+  }
+  for (let i = 0; i < gNumSnapShotChanges.length; ++i) {
+    gNumSnapShotChanges[i] = 0;
+  }
+  for (let i = 0; i < gLastSnapShot.length; ++i) {
+    gLastSnapShot[i] = null;
+  }
+}
+
+function checkIfFinished() {
+  if (gFinished) {
+    return;
+  }
+
+  for (var i = 0; i < gNumFrameUpdates.length; ++i) {
+    if (gNumFrameUpdates[i] < kNumFrameUpdatesToExpect ||
+        gNumSnapShotChanges[i] < kNumFrameUpdatesToExpect) {
+      return;
+    }
+  }
+
+  ok(true, "got expected frame updates");
+  gFinished = true;
+
+  if (gNumDiscards == 0) {
+    // If we haven't discarded any complete images, we should do so, and
+    // verify the animation again.
+    setTimeout(step5, 0);
+    return;
+  }
+
+  SimpleTest.finish();
+}
+
+// arrayIndex is the index into the arrays gNumFrameUpdates and gNumDecodes
+// to increment when a frame update notification is received.
+function addCallbacks(anImage, arrayIndex) {
+  var observer = new ImageDecoderObserverStub();
+  observer.discard = function () {
+    gNumDiscards++;
+    ok(true, "got image discard");
+    if (gNumDiscards == gImgs.length) {
+      step6();
+    }
+  };
+  observer.frameUpdate = function () {
+    if (!gCountingFrameUpdates) {
+      return;
+    }
+
+    // Do this off a setTimeout since nsImageLoadingContent uses a scriptblocker
+    // when it notifies us and calling drawWindow can call will paint observers
+    // which can dispatch a scrollport event, and events assert if dispatched
+    // when there is a scriptblocker.
+    setTimeout(function () {
+      gNumFrameUpdates[arrayIndex]++;
+
+      var r = document.getElementById(gImgs[arrayIndex]).getBoundingClientRect();
+      var snapshot = snapshotRect(window, r, "rgba(0,0,0,0)");
+      if (gLastSnapShot[arrayIndex] != null) {
+        if (snapshot.toDataURL() != gLastSnapShot[arrayIndex].toDataURL()) {
+          gNumSnapShotChanges[arrayIndex]++;
+        }
+      }
+      gLastSnapShot[arrayIndex] = snapshot;
+
+      if (gNumFrameUpdates[arrayIndex] >= kNumFrameUpdatesToExpect &&
+          gNumSnapShotChanges[arrayIndex] >= kNumFrameUpdatesToExpect &&
+	  gNumDiscards >= gImgs.length) {
+        if (!gRemovedObserver[arrayIndex]) {
+	  ok(true, "removing observer for " + arrayIndex);
+          gRemovedObserver[arrayIndex] = true;
+          imgLoadingContent.removeObserver(scriptedObserver);
+        }
+      }
+      if (!gFinished) {
+        // because we do this in a setTimeout we can have several in flight
+        // so don't call ok if we've already finished.
+        ok(true, "got frame update");
+      }
+      checkIfFinished();
+    }, 0);
+  };
+  observer = SpecialPowers.wrapCallbackObject(observer);
+
+  var scriptedObserver = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
+                           .getService(SpecialPowers.Ci.imgITools)
+                           .createScriptedObserver(observer);
+
+  var imgLoadingContent = SpecialPowers.wrap(anImage);
+  imgLoadingContent.addObserver(scriptedObserver);
+}
+
+function requestDiscard(anImage) {
+  var request = SpecialPowers.wrap(anImage)
+      .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+  setTimeout(() => request.requestDiscard(), 0);
+}
+
+function drawCanvas(anImage) {
+  var canvas = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
+
+  context.clearRect(0,0,100,100);
+  var cleared = canvas.toDataURL();
+
+  context.drawImage(anImage, 0, 0);
+  ok(true, "we got through the drawImage call without an exception being thrown");
+
+  ok(cleared != canvas.toDataURL(), "drawImage drew something");
+}
+
+</script>
+</pre>
+</body>
+</html>
+

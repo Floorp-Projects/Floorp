@@ -1,0 +1,182 @@
+[
+  {
+    "domains": ["adidas.co.uk", "adidas.de", "adidas.fr"],
+    "image_url": "images/adidas@2x.png",
+    "favicon_url": "favicons/adidas.png"
+  },
+  {
+    "domains": ["aliexpress.com"],
+    "image_url": "images/aliexpress-com@2x.png",
+    "favicon_url": "favicons/aliexpress-com.ico"
+  },
+  {
+    "domains": ["allegro.pl"],
+    "image_url": "images/allegro-pl@2x.png",
+    "favicon_url": "favicons/allegro-pl.ico"
+  },
+  {
+    "domains": ["amazon.ae", "amazon.ca", "amazon.cn", "amazon.co.jp", "amazon.co.uk", "amazon.com", "amazon.com.au", "amazon.com.br", "amazon.com.mx", "amazon.de", "amazon.es", "amazon.fr", "amazon.in", "amazon.it", "amazon.nl", "amazon.sa", "amazon.se", "amazon.sg", "amazon.com.tr"],
+    "image_url": "images/amazon@2x.png",
+    "favicon_url": "favicons/amazon.ico"
+  },
+  {
+    "domains": ["avito.ru"],
+    "image_url": "images/avito-ru@2x.png",
+    "favicon_url": "favicons/avito-ru.ico"
+  },
+  {
+    "domains": ["baidu.com"],
+    "image_url": "images/baidu-com@2x.png",
+    "favicon_url": "favicons/baidu-com.png"
+  },
+  {
+    "domains": ["bbc.co.uk"],
+    "image_url": "images/bbc-uk@2x.png",
+    "favicon_url": "favicons/bbc-uk.ico"
+  },
+  {
+    "domains": ["bing.com"],
+    "image_url": "images/bing-com@2x.svg",
+    "favicon_url": "favicons/bing-com.ico"
+  },
+  {
+    "domains": ["ctrip.com"],
+    "image_url": "images/ctrip-com@2x.png",
+    "favicon_url": "favicons/ctrip-com.ico"
+  },
+  {
+    "domains": ["duckduckgo.com"],
+    "image_url": "images/duckduckgo-com@2x.svg",
+    "favicon_url": "favicons/duckduckgo-com.ico"
+  },
+  {
+    "domains": ["mx.ebay.com", "benl.ebay.be", "befr.ebay.be", "ebay.ca", "ebay.ch", "ebay.co.jp", "ebay.co.uk", "ebay.com", "ebay.com.au", "ebay.de", "ebay.es", "ebay.fr", "ebay.ie", "ebay.in", "ebay.it", "ebay.nl"],
+    "image_url": "images/ebay@2x.png",
+    "favicon_url": "favicons/ebay.ico"
+  },
+  {
+    "domains": ["etsy.com"],
+    "image_url": "images/etsy@2x.jpg",
+    "favicon_url": "favicons/etsy.ico"
+  },
+  {
+    "domains": ["facebook.com"],
+    "image_url": "images/facebook-com@2x.png",
+    "favicon_url": "favicons/facebook-com.ico"
+  },
+  {
+    "domains": ["geico.com"],
+    "image_url": "images/geico@2x.jpg",
+    "favicon_url": "favicons/geico.png"
+  },
+  {
+    "domains": ["google.com"],
+    "image_url": "images/google-com@2x.png",
+    "favicon_url": "favicons/google-com.ico"
+  },
+  {
+    "domains": ["hrblock.com"],
+    "image_url": "images/hrblock@2x.png",
+    "favicon_url": "favicons/hrblock.ico"
+  },
+  {
+    "domains": ["ifeng.com"],
+    "image_url": "images/ifeng-com@2x.png",
+    "favicon_url": "favicons/ifeng-com.ico"
+  },
+  {
+    "domains": ["iqiyi.com"],
+    "image_url": "images/iqiyi-com@2x.png",
+    "favicon_url": "favicons/iqiyi-com.ico"
+  },
+  {
+    "domains": ["leboncoin.fr"],
+    "image_url": "images/leboncoin-fr@2x.png",
+    "favicon_url": "favicons/leboncoin-fr.png"
+  },
+  {
+    "domains": ["nike.com"],
+    "image_url": "images/nike@2x.jpg",
+    "favicon_url": "favicons/nike.ico"
+  },
+  {
+    "domains": ["ok.ru"],
+    "image_url": "images/ok-ru@2x.png",
+    "favicon_url": "favicons/ok-ru.ico"
+  },
+  {
+    "domains": ["olx.pl"],
+    "image_url": "images/olx-pl@2x.png",
+    "favicon_url": "favicons/olx-pl.ico"
+  },
+  {
+    "domains": ["reddit.com"],
+    "image_url": "images/reddit-com@2x.png",
+    "favicon_url": "favicons/reddit-com.png"
+  },
+  {
+    "domains": ["samsung.com"],
+    "image_url": "images/samsung@2x.jpg",
+    "favicon_url": "favicons/samsung.ico"
+  },
+  {
+    "domains": ["turbotax.intuit.com"],
+    "image_url": "images/turbotax@2x.jpg",
+    "favicon_url": "favicons/turbotax.png"
+  },
+  {
+    "domains": ["twitter.com"],
+    "image_url": "images/twitter-com@2x.png",
+    "favicon_url": "favicons/twitter-com.ico"
+  },
+  {
+    "domains": ["vk.com"],
+    "image_url": "images/vk-com@2x.png",
+    "favicon_url": "favicons/vk-com.ico"
+  },
+  {
+    "domains": ["vodafone.co.uk"],
+    "image_url": "images/vodafone@2x.jpg",
+    "favicon_url": "favicons/vodafone.png"
+  },
+  {
+    "domains": ["weibo.com"],
+    "image_url": "images/weibo-com@2x.png",
+    "favicon_url": "favicons/weibo-com.ico"
+  },
+  {
+    "domains": ["wikipedia.org"],
+    "image_url": "images/wikipedia-org@2x.png",
+    "favicon_url": "favicons/wikipedia-org.ico"
+  },
+  {
+    "domains": ["wix.com"],
+    "image_url": "images/wix@2x.jpg",
+    "favicon_url": "favicons/wix.ico"
+  },
+  {
+    "domains": ["wykop.pl"],
+    "image_url": "images/wykop-pl@2x.png",
+    "favicon_url": "favicons/wykop-pl.png"
+  },
+  {
+    "domains": ["yandex.com", "yandex.com.tr"],
+    "image_url": "images/yandex-com@2x.png",
+    "favicon_url": "favicons/yandex-com.png"
+  },
+  {
+    "domains": ["yandex.by", "yandex.kz", "yandex.ru", "yandex.ua", "yandex.uz"],
+    "image_url": "images/yandex-ru@2x.png",
+    "favicon_url": "favicons/yandex-ru.png"
+  },
+  {
+    "domains": ["youtube.com"],
+    "image_url": "images/youtube-com@2x.png",
+    "favicon_url": "favicons/youtube-com.png"
+  },
+  {
+    "domains": ["zhihu.com"],
+    "image_url": "images/zhihu-com@2x.png",
+    "favicon_url": "favicons/zhihu-com.ico"
+  }
+]

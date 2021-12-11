@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestColorItem does not strip translucent alpha from the displayed color 1`] = `
+<ManifestItem
+  label="foo"
+>
+  <div
+    className="manifest-item__color"
+    style={
+      Object {
+        "--color-value": "#00FF00FA",
+      }
+    }
+  >
+    #00FF00FA
+  </div>
+</ManifestItem>
+`;
+
+exports[`ManifestColorItem renders the expected snapshot for a populated color item 1`] = `
+<ManifestItem
+  label="foo"
+>
+  <div
+    className="manifest-item__color"
+    style={
+      Object {
+        "--color-value": "#ff0000",
+      }
+    }
+  >
+    #ff0000
+  </div>
+</ManifestItem>
+`;
+
+exports[`ManifestColorItem renders the expected snapshot for an empty color item 1`] = `
+<ManifestItem
+  label="foo"
+/>
+`;
+
+exports[`ManifestColorItem strips opaque alpha from the displayed color 1`] = `
+<ManifestItem
+  label="foo"
+>
+  <div
+    className="manifest-item__color"
+    style={
+      Object {
+        "--color-value": "#00FF00",
+      }
+    }
+  >
+    #00FF00
+  </div>
+</ManifestItem>
+`;

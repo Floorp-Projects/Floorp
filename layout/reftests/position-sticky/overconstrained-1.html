@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - top+bottom, overconstrained</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="overconstrained-1-ref.html">
+    <meta name="assert" content="Top+bottom-sticky with a tall element: should not act as bottom-sticky">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+      }
+      #sticky {
+        position: sticky;
+        top: 10px;
+        bottom: 10px;
+        height: 81px;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 95px"></div>
+      <div id="sticky"></div>
+      <div style="height: 100px"></div>
+    </div>
+  </body>
+</html>

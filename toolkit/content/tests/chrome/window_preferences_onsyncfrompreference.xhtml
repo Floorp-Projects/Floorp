@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<!--
+  XUL Widget Test for preferences window with onsyncfrompreference
+  This test ensures that onsyncfrompreference handlers are called after all the
+  values of the corresponding preference element have been set correctly
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="prefwindow"
+        title="preferences window"
+        width="300" height="300"
+        windowtype="test:preferences"
+        onload="onLoad()">
+<dialog>
+
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+  /* import-globals-from ../../preferencesBindings.js */
+  Preferences.addAll([
+      { id: "tests.onsyncfrompreference.pref1", type: "int" },
+      { id: "tests.onsyncfrompreference.pref2", type: "int" },
+      { id: "tests.onsyncfrompreference.pref3", type: "int" },
+    ]);
+
+    function onLoad() {
+      Preferences.addSyncFromPrefListener(document.getElementById("check1"),
+        () => window.arguments[0]());
+      Preferences.addSyncFromPrefListener(document.getElementById("check2"),
+        () => window.arguments[0]());
+      Preferences.addSyncFromPrefListener(document.getElementById("check3"),
+        () => window.arguments[0]());
+      Preferences.addSyncToPrefListener(document.getElementById("check1"),
+        () => 1);
+      Preferences.addSyncToPrefListener(document.getElementById("check2"),
+        () => 1);
+      Preferences.addSyncToPrefListener(document.getElementById("check3"),
+        () => 1);
+    }
+  ]]>
+  </script>
+  <vbox id="sample_pane" class="prefpane" label="Sample Prefpane">
+  </vbox>
+  <label>Test Prefpane</label>
+        <checkbox id="check1" label="Label1"
+                preference="tests.onsyncfrompreference.pref1"/>
+        <checkbox id="check2" label="Label2"
+                preference="tests.onsyncfrompreference.pref2"/>
+        <checkbox id="check3" label="Label3"
+                preference="tests.onsyncfrompreference.pref3"/>
+</dialog>
+</window>

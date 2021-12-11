@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!--
+        Test that solid colors are inherited when using the objectFill
+      paint server value in SVG glyphs
+  -->
+  
+  <style type="text/css">
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src:url(resources/svg.woff);
+      }
+      text
+      {
+        font-family: Liberation;
+        font-size: 200px;
+      }
+    ]]>
+  </style>
+  
+  <text fill="turquoise" x="0" y="200">
+  N
+  </text>
+  <text fill="thistle" x="0" y="400">
+  O
+  </text>
+</svg>

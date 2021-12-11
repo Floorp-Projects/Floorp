@@ -1,0 +1,39 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1221837",
+    title: "Only offer PCMA and PMCU in mline (no rtpmaps)"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    options = options || { };
+    options.opus = false;
+    test = new PeerConnectionTest(options);
+    test.chain.insertBefore("PC_REMOTE_GET_OFFER", [
+      function PC_LOCAL_REDUCE_MLINE_REMOVE_RTPMAPS(test) {
+        test.originalOffer.sdp =
+          sdputils.reduceAudioMLineToPcmuPcma(test.originalOffer.sdp);
+        test.originalOffer.sdp =
+          sdputils.removeAllRtpMaps(test.originalOffer.sdp);
+        info("SDP without Rtpmaps: " + JSON.stringify(test.originalOffer));
+      }
+    ]);
+    test.chain.insertAfter("PC_REMOTE_SANE_LOCAL_SDP", [
+      function PC_REMOTE_VERIFY_PCMU(test) {
+        ok(test._remote_answer.sdp.includes("a=rtpmap:0 PCMU/8000"), "PCMU codec is present in SDP");
+      }
+    ]);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

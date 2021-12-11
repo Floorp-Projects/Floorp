@@ -1,0 +1,27 @@
+<html>
+<head>
+<style id='style'></style>
+<script>
+function start() {
+  o1 = document.createElement('figcaption')
+  o1.innerText = 'ᾂ﷞󠈂7阘𝅨ᷱ𝉗٩m󠙅,︥𖕬שּׁ︦　n-፝󠿸𫮨𯚪҅҈h"٪۰󠗽錐󠇪҈שּׁ𛜑𝔡L‭\r\n埤സ&\n<<=󠺁킻&︠‬e󠔥\b\r>𯉸󠕯'
+  document.documentElement.appendChild(o1)
+  document.getElementById('style').textContent = `
+  FIGCAPTION::before, FIGCAPTION {
+    content: counters(\\46, \'.\')
+  }
+  HTML {
+    -webkit-transition-delay: 1s, 250ms
+  }
+  FIGCAPTION::first-letter, * {
+    fill: currentColor
+  }
+  FIGCAPTION::first-line {}`
+  document.body.offsetTop;
+  document.replaceChild(document.documentElement, document.documentElement)
+}
+
+document.addEventListener('DOMContentLoaded', start)
+</script>
+<body></body>
+</html>

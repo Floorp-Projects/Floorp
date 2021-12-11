@@ -1,0 +1,11 @@
+<body onload="postBack();">
+  <script>
+    var childWin;
+    function postBack() {
+      childWin = window.frames[0];
+      var s = decodeURIComponent(window.location.search.substring(1));
+      window.opener.postMessage(s, "http://mochi.test:8888");
+    }
+  </script>
+  <iframe></iframe>
+</body>

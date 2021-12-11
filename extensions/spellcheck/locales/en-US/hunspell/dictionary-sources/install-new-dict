@@ -1,0 +1,39 @@
+#!/bin/sh
+
+#
+# This script copies the new dictionary created by make-new-dict in
+# place.
+#
+
+set -e
+
+WKDIR="`pwd`"
+export SCOWL="$WKDIR/scowl/"
+SPELLER="$SCOWL/speller"
+
+set -x
+
+if [ -e orig-bk ]; then echo "$0: directory 'orig-bk' exists." 1>&2 ; exit 0; fi
+mv orig orig-bk
+mkdir orig
+cp $SPELLER/en_US-custom.dic $SPELLER/en_US-custom.aff $SPELLER/README_en_US-custom.txt orig
+
+mkdir mozilla-bk
+mv ../en-US.dic ../en-US.aff ../README_en_US.txt mozilla-bk
+
+# Convert the affix file to ISO8859-1
+sed -i=bak -e '/^ICONV/d' -e 's/^SET UTF-8$/SET ISO8859-1/' en_US-mozilla.aff
+
+# Convert the dictionary to ISO8859-1
+mv en_US-mozilla.dic en_US-mozilla-utf8.dic
+iconv -f utf-8 -t iso-8859-1 < en_US-mozilla-utf8.dic > en_US-mozilla.dic
+
+cp en_US-mozilla.aff ../en-US.aff
+cp en_US-mozilla.dic ../en-US.dic
+cp README_en_US-mozilla.txt ../README_en_US.txt
+
+set +x
+
+echo "New dictionary copied into place.  Please commit the changes."
+
+

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1499139
+  -->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1499169</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/SpecialPowers.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     function test() {
+       const OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
+       let obj = document.getElementById("pdftest");
+
+       obj instanceof OBJLC;
+       obj = SpecialPowers.wrap(obj);
+
+       // Make sure we've set our type correctly even though the mime type isn't quite as expected.
+       ok(obj.displayedType == OBJLC.TYPE_DOCUMENT, "expected document type");
+       SimpleTest.finish();
+     }
+    </script>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1499169">Mozilla Bug 1499169</a>
+    <object id="pdftest" onload="test()" data="file_pdfjs_test.pdf" type="application/pdf;charset=UTF-8" width="90%" height="600"></object>
+  </body>
+</html>

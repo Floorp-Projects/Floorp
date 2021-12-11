@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback with dormant of media files that should play OK</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/* This testcase wants to test a video element's playback is not break
+   by dormant.
+   When the metadata is loaded, we remove the video element to trigger dormant.
+   Then set a timer to append the video element back and play it.
+   Test pass if the video plays to the end.
+*/
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var video = document.createElement('video');
+  video.preload = "metadata";
+  video.token = token;
+
+  var handler = {
+    "ontimeout": function() {
+      Log(token, "timed out: ended=" + video.seenEnded + ", suspend=" + video.seenSuspend);
+    }
+  };
+  manager.started(token, handler);
+
+  video.src = test.name;
+  video.name = test.name;
+
+  var check = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #1");
+    Log(v.token, "removeChild: " + v.name);
+    document.body.removeChild(v);
+    var appendAndPlayElement = function() {
+      Log(v.token, "appendChild: " + v.name);
+      document.body.appendChild(v);
+      Log(v.token, "Element play: " + v.name);
+      v.play();
+    }
+    setTimeout(appendAndPlayElement, 2000);
+  }}(test, video);
+
+  var finish = function() {
+    video.finished = true;
+    removeNodeAndSource(video);
+    manager.finished(video.token);
+  }
+
+  var checkEnded = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #2");
+    checkMetadata(t.name, v, t);
+    is(v.readyState, v.HAVE_CURRENT_DATA, t.name + " checking readyState");
+    ok(v.ended, t.name + " checking playback has ended");
+
+    finish();
+  }}(test, video);
+
+
+  video.addEventListener("loadedmetadata", check);
+  video.addEventListener("ended", checkEnded);
+
+  document.body.appendChild(video);
+}
+
+manager.runTests(gSmallTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

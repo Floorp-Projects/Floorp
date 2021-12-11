@@ -1,0 +1,34 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1482405067 0
+#      Thu Dec 22 11:11:07 2016 +0000
+# Node ID 43d0efc18f586e1ed90b95c4a52235c4648e96a9
+# Parent  266ef86795979f2ef9b6650d1bb35fb27d11ad86
+Add KEY_WOW64_64Key and KEY_WOW64_32KEY to the Chromium sandbox allowed registry read flags. r=aklotz
+
+Originally landed as changeset:
+https://hg.mozilla.org/mozilla-central/rev/d24db55deb85
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/registry_policy.cc b/security/sandbox/chromium/sandbox/win/src/registry_policy.cc
+--- a/security/sandbox/chromium/sandbox/win/src/registry_policy.cc
++++ b/security/sandbox/chromium/sandbox/win/src/registry_policy.cc
+@@ -15,17 +15,18 @@
+ #include "sandbox/win/src/sandbox_types.h"
+ #include "sandbox/win/src/sandbox_utils.h"
+ #include "sandbox/win/src/win_utils.h"
+ 
+ namespace {
+ 
+ static const uint32_t kAllowedRegFlags =
+     KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY | KEY_READ |
+-    GENERIC_READ | GENERIC_EXECUTE | READ_CONTROL;
++    GENERIC_READ | GENERIC_EXECUTE | READ_CONTROL | KEY_WOW64_64KEY |
++    KEY_WOW64_32KEY;
+ 
+ // Opens the key referenced by |obj_attributes| with |access| and
+ // checks what permission was given. Remove the WRITE flags and update
+ // |access| with the new value.
+ NTSTATUS TranslateMaximumAllowed(OBJECT_ATTRIBUTES* obj_attributes,
+                                  DWORD* access) {
+   NtOpenKeyFunction NtOpenKey = nullptr;
+   ResolveNTFunctionPtr("NtOpenKey", &NtOpenKey);

@@ -1,0 +1,203 @@
+{
+  "sidebar": {
+  "message": "구독한 사이트"
+  },
+  "extensionDescription": {
+    "message": "플로어프의 RSS 리다입니다"
+  },
+  "reloadLiveBookmark": {
+    "message": "라이브 북마크 새로고침"
+  },
+  "openAllUnreadPages": {
+    "message": "읽지 않은 페이지 모두 열기"
+  },
+  "openSiteUrl": {
+    "message": "\"$site$\" 열기",
+    "placeholders": {
+      "site" : {
+        "content" : "$1"
+      }
+    }
+  },
+  "subscribe": {
+    "message": "구독"
+  },
+  "subscribe_title": {
+    "message": "피드 미리보기"
+  },
+  "subscribe_addLivemark": {
+    "message": "라이브 북마크 추가"
+  },
+  "subscribe_viewSource": {
+    "message": "소스 보기"
+  },
+  "subscribe_failedToFetchFeed": {
+    "message": "피드 가져오기 실패"
+  },
+  "subscribe_noEntriesFound": {
+    "message": "피드에 항목이 존재하지 않습니다."
+  },
+  "subscribe_subscribed": {
+    "message": "$FOLDER$에 라이브 북마크가 추가되었습니다. 설정 페이지에서 수정할 수 있습니다.",
+    "placeholders": {
+      "folder": {
+        "content": "$1"
+      }
+    }
+  },
+  "noItemsFound": {
+    "message": "항목을 찾지 못했습니다."
+  },
+  "yourLivemarks": {
+    "description": "Title of the 'Your livemarks' page",
+    "message": "라이브 북마크 목록"
+  },
+  "moreOptions": {
+    "message": "설정 더보기"
+  },
+  "newLivemark": {
+    "message": "새 라이브 북마크"
+  },
+  "enterFeedURL": {
+    "message": "피드 URL 입력"
+  },
+  "settings_importExport_heading": {
+    "message": "불러오기/내보내기"
+  },
+  "settings_importExport_description": {
+    "message": "이 기능은 대부분의 RSS 리더에서 사용되는 OPML 포맷을 사용합니다."
+  },
+  "settings_importExport_importFeeds": {
+    "message": "피드 불러오기"
+  },
+  "settings_importExport_exportFeeds": {
+    "message": "피드 내보내기"
+  },
+  "settings_importExport_successImport": {
+    "message": "피드 $COUNT$개를 성공적으로 불러왔습니다.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "settings_importExport_errorImport": {
+    "message": "OPML 파일 불러오기 에러"
+  },
+  "settings_refreshInterval_heading": {
+    "message": "새로고침 간격"
+  },
+  "settings_refreshInterval_description": {
+    "message": "라이브 북마크들이 얼마나 자주 업데이트될지 설정합니다."
+  },
+  "settings_refreshInterval_minutes": {
+    "description": "Shown as 'X minutes' in the settings dialog",
+    "message": "분"
+  },
+  "settings_defaultFolder_heading": {
+    "message": "폴더 기본값"
+  },
+  "settings_defaultFolder_description": {
+    "message": "새로운 라이브 북마크들이 기본적으로 여기에 저장됩니다."
+  },
+  "settings_prefixes_heading": {
+    "message": "북마크 접두사"
+  },
+  "settings_prefixes_description": {
+    "message": "이 문자열들은 상태를 나타내기 위한 북마크 접두사로 사용됩니다."
+  },
+  "settings_prefixes_unread": {
+    "message": "읽지 않음:"
+  },
+  "settings_prefixes_read": {
+    "message": "읽음:"
+  },
+  "settings_prefixes_feed_folder": {
+    "message": "폴더에 모든 항목 읽음/읽지 않음 표시"
+  },
+  "settings_prefixes_parent_folders": {
+    "message": "상위 폴더에 모든 하위 폴더 읽음/읽지 않음 표시"
+  },
+  "settings_feedPreview_heading": {
+    "message": "피드 미리보기"
+  },
+  "settings_feedPreview_description": {
+    "message": "피드 URL로 바로 접속했을 때 피드 미리보기를 활성화합니다"
+  },
+  "settings_extensionIcon_heading": {
+    "message": "부가 기능 아이콘"
+  },
+  "settings_extensionIcon_description": {
+    "message": ""
+  },
+  "settings_extensionIcon_darkIcon": {
+    "message": "어두운 아이콘"
+  },
+  "settings_extensionIcon_lightIcon": {
+    "message": "밝은 아이콘"
+  },
+  "settings_extensionIcon_orangeIcon": {
+    "message": "오렌지색 아이콘"
+  },
+  "settings_about_heading": {
+    "message": "정보"
+  },
+  "settings_about_description_authors": {
+    "message": "이 확장 기능의 개발자:"
+  },
+  "settings_about_description_before_foxish": {
+    "description": "Between _before_foxish and _after_foxish there is a 'Foxish' HTML link",
+    "message": "이 확장 기능은 "
+  },
+  "settings_about_description_after_foxish": {
+    "message": "를 기반으로 하고 있습니다."
+  },
+  "settings_about_description_support": {
+    "message": "다음 방법으로 이 부가 기능을 도울 수 있습니다:"
+  },
+  "settings_about_donating": {
+    "message": "기부"
+  },
+  "settings_about_reviewing": {
+    "message": "좋은 리뷰 남기기"
+  },
+  "settings_about_reporting": {
+    "message": "이슈 리포트"
+  },
+  "settings_about_translating": {
+    "message": "번역에 참여"
+  },
+  "settings_close": {
+    "message": "닫기"
+  },
+  "editLivemark_name": {
+    "message": "이름"
+  },
+  "editLivemark_remove": {
+    "message": "피드 제거"
+  },
+  "editLivemark_feedURL": {
+    "message": "피드 URL"
+  },
+  "editLivemark_siteURL": {
+    "message": "사이트 URL"
+  },
+  "editLivemark_parentFolder": {
+    "message": "상위 폴더"
+  },
+  "editLivemark_maxItems": {
+    "message": "최대 항목 수"
+  },
+  "editLivemark_cancel": {
+    "message": "취소"
+  },
+  "editLivemark_save": {
+    "message": "저장"
+  },
+  "settings_brokenLivemark": {
+    "message": "깨진 라이브 북마크"
+  },
+  "selectFolder_folder": {
+    "message": "깨진 라이브 북마크가 사용하고 있는 폴더 선택"
+  }
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=454325
+-->
+<head>
+  <title>Test for Bug 454325</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=454325">Mozilla Bug 454325</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 454325 **/
+
+function testDocument1() {
+  var doc = document.implementation.createDocument("", "", null);
+  var html = doc.createElement('html');
+  doc.appendChild(html);
+  var body = doc.createElement('body');
+  html.appendChild(body);
+  var h1 = doc.createElement('h1');
+  var t1 = doc.createTextNode('Hello ');
+  h1.appendChild(t1);
+  var em = doc.createElement('em');
+  var t2 = doc.createTextNode('Wonderful');
+  em.appendChild(t2);
+  h1.appendChild(em);
+  var t3 = doc.createTextNode(' Kitty');
+  h1.appendChild(t3);
+  body.appendChild(h1);
+  var p = doc.createElement('p');
+  var t4 = doc.createTextNode(' How are you?');
+  p.appendChild(t4);
+  body.appendChild(p);
+  var r = doc.createRange();
+  r.selectNodeContents(doc);
+  is(r.toString(), "Hello Wonderful Kitty How are you?",
+     "toString() on range selecting Document gave wrong output");
+  r.setStart(h1, 3);
+  r.setEnd(p, 0);
+  // <html><body><h1>Hello <em>Wonder ful<\em> Kitty<\h1><p>How are you?<\p><\body></html>
+  //                                                ^ -----^
+  is(r.toString(), "", "toString() on range crossing text nodes gave wrong output");
+  var c1 = r.cloneContents();
+  is(c1.childNodes.length, 2, "Wrong child nodes");
+  try {
+    is(c1.childNodes[0].localName, "h1", "Wrong child node");
+    is(c1.childNodes[1].localName, "p", "Wrong child node");
+  } catch(ex) {
+    ok(!ex, ex);
+  }
+
+  r.setStart(t2, 6);
+  r.setEnd(p, 0);
+  // <html><body><h1>Hello <em>Wonder ful<\em> Kitty<\h1><p>How are you?<\p><\body></html>
+  //                                 ^----------------------^
+  is(r.toString(), "ful Kitty", "toString() on range crossing text nodes gave wrong output");
+  var c2 = r.cloneContents();
+  is(c2.childNodes.length, 2, "Wrong child nodes");
+  try {
+    is(c1.childNodes[0].localName, "h1", "Wrong child node");
+    is(c1.childNodes[1].localName, "p", "Wrong child node");
+  } catch(ex) {
+    ok(!ex, ex);
+  }
+
+  var e1 = r.extractContents();
+  is(e1.childNodes.length, 2, "Wrong child nodes");
+  try {
+    is(e1.childNodes[0].localName, "h1", "Wrong child node");
+    is(e1.childNodes[1].localName, "p", "Wrong child node");
+  } catch(ex) {
+    ok(!ex, ex);
+  }
+}
+
+function testDocument2() {
+  var doc = document.implementation.createDocument("", "", null);
+  var html = doc.createElement('html');
+  doc.appendChild(html);
+  var head = doc.createElement('head');
+  html.appendChild(head);
+  var foohead = doc.createElement('foohead');
+  html.appendChild(foohead);
+  var body = doc.createElement('body');
+  html.appendChild(body);
+  var d1 = doc.createElement('div');
+  head.appendChild(d1);
+  var t1 = doc.createTextNode("|||");
+  d1.appendChild(t1);
+  var d2 = doc.createElement("div");
+  body.appendChild(d2);
+  var d3 = doc.createElement("div");
+  d2.appendChild(d3);
+  var d4 = doc.createElement("div");
+  d2.appendChild(d4);
+  var r = doc.createRange();
+  r.setStart(t1, 1);
+  r.setEnd(d2, 2);
+  is(r.toString(), "||", "Wrong range");
+  var c1 = r.cloneContents();
+  var e1 = r.extractContents();
+  ok(c1.isEqualNode(e1), "Wrong cloning or extracting!");
+}
+
+function testSurroundContents() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  div.innerHTML = '<div>hello</div>world';
+  var innerDiv = div.firstChild;
+  var hello = innerDiv.firstChild;
+  var range = document.createRange();
+  range.setStart(hello, 0);
+  range.setEnd(hello, 5);
+  range.surroundContents(document.createElement('code'));
+  is(innerDiv.childNodes.length, 3, "Wrong childNodes count");
+  is(innerDiv.childNodes[0].nodeName, "#text", "Wrong node name (1)");
+  is(innerDiv.childNodes[0].textContent, "", "Wrong textContent (1)");
+  is(innerDiv.childNodes[1].nodeName, "CODE", "Wrong node name (2)");
+  is(innerDiv.childNodes[1].textContent, "hello", "Wrong textContent (2)");
+  is(innerDiv.childNodes[2].nodeName, "#text", "Wrong node name (3)");
+  is(innerDiv.childNodes[2].textContent, "", "Wrong textContent (3)");
+}
+
+function runTest() {
+  testDocument1();
+  testDocument2();
+  testSurroundContents();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+
+</script>
+</pre>
+</body>
+</html>
+

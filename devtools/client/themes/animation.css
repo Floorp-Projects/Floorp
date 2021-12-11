@@ -1,0 +1,750 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Animation-inspector specific theme variables */
+
+:root {
+  --animation-item-hover-color: rgba(215, 215, 219, 0.4);
+  --animation-item-selected-color: rgba(215, 215, 219, 0.9);
+  --cssanimation-color: var(--purple-50);
+  --csstransition-color: var(--blue-55);
+  --fast-track-image: url("images/animation-fast-track.svg");
+  --graph-height: 30px;
+  --graph-right-offset: 10px;
+  --keyframe-marker-shadow-color: #c4c4c4;
+  --pause-image: url(chrome://devtools/skin/images/pause.svg);
+  --progress-bar-color: var(--grey-40);
+  --resume-image: url(chrome://devtools/skin/images/play.svg);
+  --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
+  --scriptanimation-color: var(--green-60);
+  --scrubber-color: var(--magenta-65);
+  --sidebar-width: 200px;
+  --tick-line-style: 0.5px solid var(--theme-splitter-color);
+}
+
+:root.theme-dark {
+  --animation-item-hover-color: rgba(74, 74, 79, 0.5);
+  --animation-item-selected-color: var(--grey-60);
+  --csstransition-color: var(--blue-50);
+  --keyframe-marker-shadow-color: #818181;
+  --progress-bar-color: var(--grey-50);
+  --scrubber-color: var(--magenta-50);
+}
+
+#animationinspector-panel {
+  overflow-x: auto;
+}
+
+/* Root element of animation inspector */
+#animation-container {
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  outline: none;
+  min-width: var(--min-container-width);
+}
+
+#animation-container .uncontrolled {
+  overflow: hidden;
+}
+
+#animation-container:not(.animation-detail-visible) .controlled {
+  display: none;
+}
+
+#animation-container .animation-container-splitter {
+  overflow: hidden;
+}
+
+/* Animation Toolbar */
+.animation-toolbar {
+  display: flex;
+}
+
+.pause-resume-button::before {
+  background-image: var(--pause-image);
+}
+
+.pause-resume-button.paused::before {
+  background-image: var(--resume-image);
+}
+
+select.playback-rate-selector.devtools-button {
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-position: calc(100% - 4px) center;
+  background-repeat: no-repeat;
+  padding-inline-end: 1em;
+  text-align: center;
+}
+
+select.playback-rate-selector.devtools-button:not(:empty, :disabled, .checked):hover {
+  background: none;
+  background-color: var(--toolbarbutton-background);
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-position: calc(100% - 4px) center;
+  background-repeat: no-repeat;
+  border-color: var(--toolbarbutton-hover-border-color);
+}
+
+.rewind-button::before {
+  background-image: var(--rewind-image);
+}
+
+/* Animation List Container */
+.animation-list-container {
+  overflow: hidden;
+  width: 100%;
+  user-select: none;
+}
+
+.animation-list-container.active-scrubber,
+.animation-list-container.active-scrubber .animation-summary-graph {
+  cursor: col-resize;
+}
+
+/* Current Time Scrubber */
+.current-time-scrubber-area {
+  grid-column: 2 / 3;
+  position: relative;
+  z-index: 2;
+}
+
+.current-time-scrubber-area::before {
+  content: "";
+  cursor: col-resize;
+  height: var(--theme-toolbar-height);
+  pointer-events: auto;
+  position: absolute;
+  /* In order to click on edge of current-time-scrubber-controller element */
+  width: calc(100% + 1px);
+}
+
+.current-time-scrubber-area:dir(rtl)::before {
+  /* In order to click on the start edge of current-time-scrubber-area element on RTL */
+  margin-inline-start: -1px;
+}
+
+.indication-bar.current-time-scrubber {
+  cursor: col-resize;
+  pointer-events: auto;
+}
+
+.indication-bar.current-time-scrubber:dir(rtl)::before {
+  transform: translateX(6px);
+}
+
+.indication-bar.current-time-scrubber:dir(rtl)::after {
+  transform: translateX(1px);
+}
+
+.indication-bar.current-time-scrubber::before {
+  border-top-color: var(--scrubber-color);
+}
+
+.indication-bar.current-time-scrubber::after {
+  background-color: var(--scrubber-color);
+}
+
+/* Animation Item */
+.animation-item.cssanimation {
+  --graph-color: var(--cssanimation-color);
+  --graph-opacity: 0.7;
+}
+
+.animation-item.csstransition {
+  --graph-color: var(--csstransition-color);
+  --graph-opacity: 0.8;
+}
+
+.animation-item.scriptanimation {
+  --graph-color: var(--scriptanimation-color);
+  --graph-opacity: 0.5;
+}
+
+.animation-item:hover {
+  background-color: var(--animation-item-hover-color);
+}
+
+.animation-item.selected {
+  background-color: var(--animation-item-selected-color);
+}
+
+/* Animation Target */
+.animation-target {
+  align-items: center;
+  display: flex;
+  grid-column: 1 / 2;
+  height: inherit;
+  padding-inline-start: 4px;
+  /* animation-target is tech term, so it should be displayed as ltr. */
+  direction: ltr;
+}
+
+.animation-item:dir(rtl).animation-target {
+  right:0;
+}
+
+/* Reps component */
+.animation-target .objectBox {
+  display: flex;
+  max-width: 100%;
+}
+
+.animation-target .objectBox .attrName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.animation-target .objectBox .open-inspector {
+  flex: none;
+}
+
+.animation-target .objectBox:hover .open-inspector {
+  background-color: var(--comment-node-color);
+}
+
+.animation-target .objectBox .open-inspector:hover,
+.animation-target.highlighting .objectBox .open-inspector {
+  background-color: var(--theme-highlight-blue);
+}
+
+/* Summary Graph */
+.animation-summary-graph {
+  cursor: pointer;
+  grid-column: 2 / 3;
+  height: inherit;
+  padding-bottom: 3px;
+  padding-top: 3px;
+  position: relative;
+}
+
+.animation-summary-graph.compositor::after {
+  background-image: var(--fast-track-image);
+  background-repeat: no-repeat;
+  content: "";
+  display: block;
+  fill: var(--theme-icon-dimmed-color);
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 5px;
+  width: 15px;
+  -moz-context-properties: fill;
+}
+
+.animation-summary-graph.compositor:dir(rtl)::after {
+  right: unset;
+  left: 0;
+}
+
+.animation-summary-graph-path {
+  height: 100%;
+  width: 100%;
+}
+
+.animation-summary-graph:dir(rtl) .animation-summary-graph-path {
+  transform: scaleX(-1.0);
+}
+
+.animation-computed-timing-path path {
+  fill: var(--graph-color);
+  fill-opacity: var(--graph-opacity);
+  stroke: var(--graph-color);
+  vector-effect: non-scaling-stroke;
+  transform: scale(1, -1);
+}
+
+.animation-computed-timing-path path.infinity:nth-child(n+2) {
+  opacity: 0.3;
+}
+
+.animation-effect-timing-path path {
+  fill: none;
+  stroke: var(--graph-color);
+  stroke-dasharray: 2px 2px;
+  transform: scale(1, -1);
+  vector-effect: non-scaling-stroke;
+}
+
+.animation-effect-timing-path path.infinity:nth-child(n+2) {
+  opacity: 0.3;
+}
+
+.animation-computed-timing-path path.infinity-duration,
+.animation-effect-timing-path path.infinity-duration {
+  mask-clip: stroke-box;
+  mask-image: linear-gradient(90deg, black, transparent);
+  mask-origin: stroke-box;
+}
+
+.animation-negative-delay-path path,
+.animation-negative-end-delay-path path {
+  fill: none;
+  stroke: var(--theme-graphs-grey);
+  stroke-dasharray: 2px 2px;
+  transform: scale(1, -1);
+  vector-effect: non-scaling-stroke;
+}
+
+.animation-delay-sign,
+.animation-end-delay-sign {
+  background-color: var(--theme-graphs-grey);
+  height: 3px;
+  position: absolute;
+  bottom: 2px;
+}
+
+.animation-delay-sign::before,
+.animation-end-delay-sign::before {
+  background-color: inherit;
+  border-radius: 50%;
+  content: "";
+  height: 6px;
+  position: absolute;
+  top: -1.5px;
+  width: 6px;
+}
+
+.animation-delay-sign.fill,
+.animation-end-delay-sign.fill {
+  background-color: var(--graph-color);
+}
+
+/* These are delay sign directions. Basically, we can't use
+  the transform due to pseudo element, So we use the left/right align. */
+
+.animation-delay-sign:dir(ltr)::before {
+  left: -3px;
+  right: unset;
+}
+
+.animation-delay-sign:dir(rtl)::before {
+  left: unset;
+  right: -3px;
+}
+
+.animation-delay-sign.negative:dir(ltr)::before {
+  left: unset;
+  right: -3px;
+}
+
+.animation-delay-sign.negative:dir(rtl)::before {
+  left: -3px;
+  right: unset;
+}
+
+.animation-end-delay-sign:dir(ltr)::before {
+  left: unset;
+  right: -3px;
+}
+
+.animation-end-delay-sign:dir(rtl)::before {
+  left: -3px;
+  right: unset;
+}
+
+.animation-end-delay-sign.negative:dir(ltr)::before {
+  left: -3px;
+  right: unset;
+}
+.animation-end-delay-sign.negative:dir(rtl)::before {
+  left: unset;
+  right: -3px;
+}
+
+.animation-name {
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: calc(100% - 20px);
+}
+
+.animation-name text {
+  dominant-baseline: middle;
+  fill: var(--theme-focus-outline-color);
+  paint-order: stroke;
+  stroke: var(--theme-body-background);
+  stroke-linejoin: round;
+  stroke-opacity: .5;
+  stroke-width: 4;
+  text-anchor: end;
+}
+
+.animation-summary-graph:dir(rtl) .animation-name text {
+  transform: translateX(-100%);
+}
+
+.animation-summary-graph:dir(rtl) .animation-name {
+  right:0;
+}
+
+/* Animation Detail */
+.animation-detail-container {
+  background-color: var(--theme-sidebar-background);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+  z-index: 2;
+}
+
+.animation-detail-header {
+  display: flex;
+  padding-inline-end: 0;
+}
+
+/* On OSX the cursor turns into a window-resizing cursor at the edges of the
+ * window, so bring the end of the close button in. */
+:root[platform="mac"] .animation-detail-header {
+  padding-inline-end: 2px;
+}
+
+.animation-detail-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.animation-detail-close-button {
+  margin: 0;
+}
+
+.animation-detail-close-button::before {
+  background-image: url(chrome://devtools/skin/images/close.svg);
+}
+
+/* Animated Property List Container */
+.animated-property-list-container {
+  flex: 1;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Keyframes Progress Bar */
+.keyframes-progress-bar-area {
+  background: none;
+  grid-column: 2 / 3;
+  pointer-events: none;
+  position: relative;
+  z-index: 2;
+}
+
+.indication-bar.keyframes-progress-bar::before {
+  border-top-color: var(--progress-bar-color);
+}
+
+.indication-bar.keyframes-progress-bar::after {
+  background-color: var(--progress-bar-color);
+}
+
+/* Animated Property Item */
+.animated-property-item.unchanged {
+  opacity: 0.6;
+}
+
+/* Animated Property Name */
+.animated-property-name {
+  align-items: center;
+  display: flex;
+  height: inherit;
+  justify-content: flex-end;
+  padding-inline-end: 10px;
+}
+
+.animated-property-name.compositor span {
+  padding-inline-start: 15px;
+  position: relative;
+}
+
+.animated-property-list-container.cssanimation .animated-property-name.compositor {
+  --fast-track-color: var(--cssanimation-color);
+}
+
+.animated-property-list-container.csstransition .animated-property-name.compositor {
+  --fast-track-color: var(--csstransition-color);
+}
+
+.animated-property-list-container.scriptanimation .animated-property-name.compositor {
+  --fast-track-color: var(--scriptanimation-color);
+}
+
+.animated-property-name.compositor span:dir(ltr)::before,
+.animated-property-name.compositor span:dir(rtl)::after {
+  background-image: var(--fast-track-image);
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  fill: var(--fast-track-color);
+  height: 100%;
+  position: absolute;
+  /* In order to support RTL/LTR both of environment, set the left and right to zero */
+  left: 0;
+  right: 0;
+  width: 15px;
+  -moz-context-properties: fill;
+}
+
+.animated-property-name.warning span {
+  text-decoration: underline dotted;
+}
+
+/* Keyframes Graph */
+.keyframes-graph {
+  grid-column: 2 / 3;
+  height: inherit;
+  padding-top: 5px;
+  position: relative;
+}
+
+.keyframes-graph:dir(rtl) .keyframes-graph-path {
+  transform: scaleX(-1.0);
+}
+
+.keyframes-graph-path {
+  height: 100%;
+  width: 100%;
+}
+
+.keyframes-graph-path path {
+  fill: var(--teal-60);
+  fill-opacity: 0.5;
+  stroke: var(--teal-70);
+  vector-effect: non-scaling-stroke;
+  transform: scale(1, -1);
+}
+
+.keyframes-graph.opacity .keyframes-graph-path path {
+  fill: var(--magenta-50);
+  stroke: var(--magenta-70);
+}
+
+.keyframes-graph.transform .keyframes-graph-path path {
+  fill: var(--yellow-50);
+  stroke: var(--yellow-60);
+}
+
+.keyframes-graph-path .color-path path {
+  fill-opacity: 1;
+  stroke: none;
+}
+
+.keyframes-graph .keyframes-graph-path .hint path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-opacity: 0;
+}
+
+.keyframes-graph-path .hint path:hover {
+  stroke-opacity: 1;
+}
+
+.keyframes-graph-path .hint rect {
+  fill-opacity: 0.1;
+}
+
+.keyframes-graph-path .hint line {
+  stroke: #00b0bd;
+  stroke-opacity: 0;
+  vector-effect: non-scaling-stroke;
+}
+
+.keyframes-graph-path .hint:hover line {
+  stroke-opacity: 1;
+}
+
+/* Keyframe Marker List */
+.keyframe-marker-list {
+  pointer-events: none;
+  position: absolute;
+  height: 100%;
+  list-style-type: none;
+  top: 0%;
+  width: 100%;
+  padding-inline-start: 0;
+}
+
+.keyframe-marker-item {
+  box-shadow: 0 0 0 1px var(--keyframe-marker-shadow-color);
+  border-radius: 100%;
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  height: 10px;
+  transform: translate(-5px, -3px);
+  width: 10px;
+}
+
+.keyframe-marker-item:dir(rtl) {
+  transform: translate(5px, -3px);
+}
+
+.animated-property-list-container.cssanimation .keyframe-marker-item {
+  background-color: var(--cssanimation-color);
+}
+
+.animated-property-list-container.csstransition .keyframe-marker-item {
+  background-color: var(--csstransition-color);
+}
+
+.animated-property-list-container.scriptanimation .keyframe-marker-item {
+  background-color: var(--scriptanimation-color);
+}
+
+/* Common Components */
+/* Progress Inspection Panel */
+.progress-inspection-panel {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--graph-right-offset);
+  grid-template-rows: var(--theme-toolbar-height) calc(100% - var(--theme-toolbar-height));
+}
+
+.progress-inspection-panel > .background {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+
+  position: sticky;
+  top: 0;
+
+  /* Correspond to the bug 1462235 */
+  height: calc(100% - 1px);
+
+  pointer-events: none;
+
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+.progress-inspection-panel > .header {
+  grid-column: 1 / -1;
+  grid-row: 1 / 2;
+
+  position: sticky;
+  top: 0;
+
+  padding: 0;
+  z-index: 1;
+
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+.progress-inspection-panel > .indicator {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+
+  position: sticky;
+  top: 0;
+
+  /* Correspond to the bug 1462235 */
+  height: calc(100% - 1px);
+
+  pointer-events: none;
+  z-index: 2;
+
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+.progress-inspection-panel > ul {
+  grid-column: 1 / -1;
+  grid-row: 2 / -1;
+
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-auto-rows: min-content;
+}
+
+.progress-inspection-panel > ul > li {
+  grid-column: 1 / -1;
+  height: var(--graph-height);
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+/* Tick Lines */
+.tick-lines {
+  grid-column: 2 / 3;
+  position: relative;
+}
+
+.tick-line {
+  position: absolute;
+  height: 100%;
+  border-inline-start: var(--tick-line-style);
+}
+
+/* Tick Labels */
+.tick-labels {
+  grid-column: 2 / 3;
+  height: 100%;
+  position: relative;
+}
+
+.tick-label {
+  border-inline-start: var(--tick-line-style);
+  height: 100%;
+  position: absolute;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animated-property-list-container .tick-label:last-child {
+  border-inline-start: unset;
+  border-inline-end: var(--tick-line-style);
+  transform: translateX(calc(-100% + 0.5px));
+}
+
+.animated-property-list-container .tick-label:dir(rtl):last-child {
+  transform: translateX(calc(100% - 0.6px));
+}
+
+/* Indication Bar */
+.indication-bar {
+  position: absolute;
+  height: 100%;
+}
+
+.indication-bar::before {
+  border-inline-start: 5px solid transparent;
+  border-inline-end: 5px solid transparent;
+  border-top: 5px solid;
+  content: "";
+  height: calc(100% - 5px);
+  position: absolute;
+  transform: translateX(-6px);
+  width: 1px;
+}
+
+.indication-bar::after {
+  content: "";
+  height: 100%;
+  position: absolute;
+  transform: translateX(-1px);
+  width: 1px;
+}
+
+/* No Animation Panel */
+.animation-error-message > p {
+  white-space: pre-wrap;
+}
+
+.animation-element-picker::before {
+  background-image: url("chrome://devtools/skin/images/command-pick.svg");
+}

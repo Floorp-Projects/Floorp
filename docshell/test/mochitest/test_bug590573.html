@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=590573
+-->
+<head>
+  <title>Test for Bug 590573</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590573">Mozilla Bug 590573</a>
+
+<script type='application/javascript'>
+SimpleTest.waitForExplicitFinish();
+
+// Listen to the first callback, since this indicates that the page loaded.
+var page1LoadCallbackEnabled = true;
+function page1Load() {
+  if (page1LoadCallbackEnabled) {
+    page1LoadCallbackEnabled = false;
+    dump("Got page1 load.\n");
+    pageLoad();
+  } else {
+    dump("Ignoring page1 load.\n");
+  }
+}
+
+var page1PageShowCallbackEnabled = false;
+function page1PageShow() {
+  if (page1PageShowCallbackEnabled) {
+    page1PageShowCallbackEnabled = false;
+    dump("Got page1 pageshow.\n");
+    pageLoad();
+  } else {
+    dump("Ignoring page1 pageshow.\n");
+  }
+}
+
+var page2LoadCallbackEnabled = false;
+function page2Load() {
+  if (page2LoadCallbackEnabled) {
+    page2LoadCallbackEnabled = false;
+    dump("Got page2 popstate.\n");
+    pageLoad();
+  } else {
+    dump("Ignoring page2 popstate.\n");
+  }
+}
+
+var page2PopstateCallbackEnabled = false;
+function page2Popstate() {
+  if (page2PopstateCallbackEnabled) {
+    page2PopstateCallbackEnabled = false;
+    dump("Got page2 popstate.\n");
+    pageLoad();
+  } else {
+    dump("Ignoring page2 popstate.\n");
+  }
+}
+
+var page2PageShowCallbackEnabled = false;
+function page2PageShow() {
+  if (page2PageShowCallbackEnabled) {
+    page2PageShowCallbackEnabled = false;
+    dump("Got page2 pageshow.\n");
+    pageLoad();
+  } else {
+    dump("Ignoring page2 pageshow.\n");
+  }
+}
+
+var popup = window.open("file_bug590573_1.html");
+
+var gTestContinuation = null;
+var loads = 0;
+function pageLoad() {
+  loads++;
+  dump("pageLoad(loads=" + loads + ", page location=" + popup.location + ")\n");
+
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
+}
+
+function continueAsync() {
+  popup.addEventListener("popstate", function() {
+      popup.requestAnimationFrame(function() { gTestContinuation.next(); });
+    },
+    {once: true});
+}
+
+function* testBody() {
+  is(popup.scrollY, 0, "test 1");
+  popup.scroll(0, 100);
+
+  popup.history.pushState("", "", "?pushed");
+  is(Math.round(popup.scrollY), 100, "test 2");
+  popup.scroll(0, 200); // set state-2's position to 200
+
+  popup.history.back();
+  continueAsync();
+  yield;
+  is(Math.round(popup.scrollY), 100, "test 3");
+  popup.scroll(0, 150); // set original page's position to 150
+
+  popup.history.forward();
+  continueAsync();
+  yield;
+  is(Math.round(popup.scrollY), 200, "test 4");
+
+  popup.history.back();
+  continueAsync();
+  yield;
+  is(Math.round(popup.scrollY), 150, "test 5");
+
+  popup.history.forward();
+  continueAsync();
+  yield;
+  is(Math.round(popup.scrollY), 200, "test 6");
+
+  // At this point, the history looks like:
+  //   PATH                         POSITION
+  //   file_bug590573_1.html        150       <-- oldest
+  //   file_bug590573_1.html?pushed 200       <-- newest, current
+
+  // Now test that the scroll position is persisted when we have real
+  // navigations involved.  First, we need to spin the event loop so that the
+  // navigation doesn't replace our current history entry.
+
+  setTimeout(pageLoad, 0);
+  yield;
+
+  page2LoadCallbackEnabled = true;
+  popup.location = "file_bug590573_2.html";
+  yield;
+
+  ok(popup.location.href.match("file_bug590573_2.html$"),
+     "Location was " + popup.location +
+     " but should end with file_bug590573_2.html");
+
+  is(popup.scrollY, 0, "test 7");
+  popup.scroll(0, 300);
+
+  // We need to spin the event loop again before we go back, otherwise the
+  // scroll positions don't get updated properly.
+  setTimeout(pageLoad, 0);
+  yield;
+
+  page1PageShowCallbackEnabled = true;
+  popup.history.back();
+  yield;
+
+  // Spin the event loop again so that we get the right scroll positions.
+  setTimeout(pageLoad, 0);
+  yield;
+
+  is(popup.location.search, "?pushed");
+  ok(popup.document.getElementById("div1"), "page should have div1.");
+
+  is(Math.round(popup.scrollY), 200, "test 8");
+
+  popup.history.back();
+  continueAsync();
+  yield;
+  is(Math.round(popup.scrollY), 150, "test 9");
+  popup.history.forward();
+  continueAsync();
+  yield;
+
+  is(Math.round(popup.scrollY), 200, "test 10");
+
+  // Spin one last time...
+  setTimeout(pageLoad, 0);
+  yield;
+
+  page2PageShowCallbackEnabled = true;
+  popup.history.forward();
+  yield;
+
+  // Bug 821821, on Android tegras we get 299 instead of 300 sometimes
+  const scrollY = Math.floor(popup.scrollY);
+  if (scrollY >= 299 && scrollY <= 300) {
+    is(1, 1, "test 11");
+  } else {
+    is(1, 0, "test 11, got " + popup.scrollY + " for popup.scrollY instead of 299|300");
+  }
+  popup.close();
+}
+</script>
+
+</body>
+</html>

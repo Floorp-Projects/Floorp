@@ -1,0 +1,11 @@
+<script>
+let msg = "";
+screen.orientation.lock("portrait-primary")
+.then(() => {
+  msg = screen.orientation.type;
+}).catch(error => {
+  msg = error.name;
+}).finally(() => {
+  parent.window.postMessage(msg, "*");
+});
+</script>

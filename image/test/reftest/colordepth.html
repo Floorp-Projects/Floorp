@@ -1,0 +1,16 @@
+<script>
+/*
+ * Almost all of the image decoding reftests require the display to be in
+ * 24-bit color mode, or else the rendered images will have subtle color
+ * variations and will fail.
+ * The Windows test boxes used to have a tendency to flip to 16-bit color mode,
+ * so this test will explicitly check the color depth to make it more obvious
+ * when the requirement is not met. (See bug 414720.)
+ * 24-bit is only a minimum, allow higher values too. (See bug 458847.)
+ */
+
+var colorDepth = window.screen.colorDepth;
+
+if (colorDepth < 24)
+    document.write("ERROR: color depth is only " + colorDepth + ".");
+</script>

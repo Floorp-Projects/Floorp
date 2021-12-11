@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=484396
+-->
+<head>
+  <title>Test for Bug 484396</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=484396">Mozilla Bug 484396</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var msg = 'xhr.open() succeeds with empty url';
+var xhr = new XMLHttpRequest();
+
+try {
+  xhr.open('GET', '');
+  ok(true, msg);
+} catch (e) {
+  ok(false, msg);
+}
+
+xhr.onerror = function () {
+  ok(false, 'xhr.send() succeeds with empty url');
+}
+
+xhr.onreadystatechange = function () {
+  if (4 == xhr.readyState) {
+    is(xhr.status, 200, 'xhr.status is 200 OK');
+    ok(-1 < xhr.responseText.indexOf('Bug 484396'), 'xhr.responseText contains the calling page');
+    
+    SimpleTest.finish();
+  }
+};
+
+xhr.send('');
+</script>
+</pre>
+</body>
+</html>

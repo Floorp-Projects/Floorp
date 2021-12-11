@@ -1,0 +1,34 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>zero height ratio, auto auto</title>
+  <link rel="author" title="Jeff Walden" href="http://whereswalden.com/" />
+  <link rel="help" href="http://www.w3.org/TR/css3-background/#the-background-size" />
+  <link rel="help" href="http://www.w3.org/TR/SVG/coords.html#IntrinsicSizing" />
+  <link rel="help" href="http://www.w3.org/TR/SVG/coords.html#PreserveAspectRatioAttribute" />
+  <meta name="flags" content="svg" />
+  <style type="text/css">
+div
+{
+  width: 256px; height: 768px;
+}
+#outer
+{
+  border: 1px solid black;
+}
+#inner
+{
+  background-image: url(intrinsic-ratio-zero-height.svg);
+  background-repeat: no-repeat;
+  background-size: auto auto;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"></div></div>
+</body>
+</html>

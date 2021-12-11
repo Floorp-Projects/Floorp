@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head>
+<!-- This tests behavior specified in CSS Syntax Level 3,
+     as of the Editor's Draft 19 June 2013:
+     http://dev.w3.org/csswg/css-syntax/ -->
+<title>\0 in CSS</title>
+<style>
+p#a:before { content: "\FFFDx" }
+p#b:before { content: "\FFFDx" }
+p#c:before { content: "\FFFDx" }
+p#d:before { content: "\FFFDx" }
+p#e:before { content: "\FFFDx" }
+p#f:before { content: "\FFFDx" }
+p#g:before { content: "\FFFD x" }
+p#h:before { content: "\FFFD x" }
+p#i:before { content: "\FFFD x" }
+p#j:before { content: "\FFFD x" }
+p#k:before { content: "\FFFD x" }
+p#l:before { content: "\FFFD x" }
+</style>
+</head><body>
+<p id="a">(a)</p>
+<p id="b">(b)</p>
+<p id="c">(c)</p>
+<p id="d">(d)</p>
+<p id="e">(e)</p>
+<p id="f">(f)</p>
+<p id="g">(g)</p>
+<p id="h">(h)</p>
+<p id="i">(i)</p>
+<p id="j">(j)</p>
+<p id="k">(k)</p>
+<p id="l">(l)</p>
+</body></html>

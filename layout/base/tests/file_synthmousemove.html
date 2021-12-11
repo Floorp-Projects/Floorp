@@ -1,0 +1,49 @@
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  .spacer {
+    height: 50px;
+  }
+  .special {
+    height: 200px;
+    background-color: blue;
+  }
+  .special:hover {
+    background-color: red;
+  }
+</style>
+<div id="x" class="spacer"></div>
+<div id="x2" class="special"></div>
+<div style="margin-top: 100vh">
+  <!-- this is here so it wrongly gets sent the events -->
+  <iframe src="https://example.com/tests/layout/base/tests/helper_synthmousemove.html"></iframe>
+</div>
+<div style="height: 300vh"></div>
+<script>
+
+async function runTest() {
+  let thex = document.getElementById("x");
+  let thex2 = document.getElementById("x2")
+  synthesizeMouse(thex, 20, 20, {type: "mousemove"});
+  opener.is(
+    getComputedStyle(thex2).backgroundColor,
+    "rgb(0, 0, 255)",
+    "Part is blue"
+  );
+
+  thex.remove();
+  document.documentElement.getBoundingClientRect();
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+  opener.is(
+    getComputedStyle(thex2).backgroundColor,
+    "rgb(255, 0, 0)",
+    "Part is red"
+  );
+
+  opener.reportSuccess();
+  window.close();
+}
+
+SimpleTest.waitForFocus(runTest);
+</script>

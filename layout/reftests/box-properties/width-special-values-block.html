@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>max-content, min-content, -moz-fit-content, and -moz-available values of CSS width property, on blocks</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+    body { font-size: 10px; line-height: 1; }
+
+    div {
+      margin-left: 1px;
+      border-left: 2px solid;
+      padding-left: 4px;
+      padding-right: 8px;
+      border-right: 16px solid;
+      margin-right: 32px;
+
+      background: yellow;
+      margin-bottom: 1px;
+    }
+
+    div.v1 { width: max-content; }
+    div.v2 { width: min-content; }
+    div.v3 { width: -moz-fit-content; }
+    div.v4 { width: -moz-available; }
+
+    div.s1 { box-sizing: content; }
+    div.s2 { box-sizing: padding; }
+    div.s3 { box-sizing: border; }
+
+  </style>
+</head>
+<body style="width: 100px">
+<div class="v1 s1">A B</div>
+<div class="v1 s2">A B</div>
+<div class="v1 s3">A B</div>
+<div class="v2 s1">A B</div>
+<div class="v2 s2">A B</div>
+<div class="v2 s3">A B</div>
+<div class="v3 s1">A B</div>
+<div class="v3 s2">A B</div>
+<div class="v3 s3">A B</div>
+<div class="v3 s1">A B C D E F G H I J</div>
+<div class="v3 s2">A B C D E F G H I J</div>
+<div class="v3 s3">A B C D E F G H I J</div>
+<div class="v3 s1">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA B</div>
+<div class="v3 s2">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA B</div>
+<div class="v3 s3">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA B</div>
+<div class="v4 s1">A B</div>
+<div class="v4 s2">A B</div>
+<div class="v4 s3">A B</div>
+</body>
+</html>

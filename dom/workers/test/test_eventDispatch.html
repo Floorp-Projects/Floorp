@@ -1,0 +1,32 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <script type="text/javascript">
+      const message = "Hi";
+
+      var messageCount = 0;
+
+      var worker = new Worker("eventDispatch_worker.js");
+      worker.onmessage = function(event) {
+        is(event.data, message, "Got correct data.");
+        if (!messageCount++) {
+          event.target.postMessage(event.data);
+          return;
+        }
+        SimpleTest.finish();
+      }
+      worker.postMessage(message);
+
+      SimpleTest.waitForExplicitFinish();
+    </script>
+  </body>
+</html>

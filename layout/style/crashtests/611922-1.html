@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body onload="setTimeout(boom, 100)">
+    <a id="x" href=""><span>This link starts out visited</span></a>
+    <script>
+      function boom() {
+        document.getElementById("x").removeAttribute("href");
+        document.body.offsetWidth;
+        document.documentElement.className = "";
+      }
+    </script>
+  </body>
+</body>

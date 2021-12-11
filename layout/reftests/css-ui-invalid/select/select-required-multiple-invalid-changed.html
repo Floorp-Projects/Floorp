@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <!-- Test: if select is required, has all selected option value set to the
+             empty string, and the selection did changed,
+             :-moz-ui-invalid should apply. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('s').options[0].selected = true;
+                document.getElementById('s').options[1].selected = true;
+                document.documentElement.className = '';">
+    <select id='s' class='notinvalid' required multiple>
+      <option selected></option>
+      <option selected value="">foo</option>
+    </select>
+  </body>
+</html>

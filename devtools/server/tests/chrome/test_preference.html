@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 943251 - Test preferences actor
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test Preference Actor</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+"use strict";
+
+function runTests() {
+  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const {DevToolsClient} = require("devtools/client/devtools-client");
+  const {DevToolsServer} = require("devtools/server/devtools-server");
+  const Services = require("Services");
+
+  SimpleTest.waitForExplicitFinish();
+
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
+  client.connect().then(function onConnect() {
+    return client.mainRoot.getFront("preference");
+  }).then(function(p) {
+    const prefs = {};
+
+    const localPref = {
+      boolPref: true,
+      intPref: 0x1234,
+      charPref: "Hello World",
+    };
+
+    function checkValues() {
+      is(prefs.boolPref, localPref.boolPref, "read/write bool pref");
+      is(prefs.intPref, localPref.intPref, "read/write int pref");
+      is(prefs.charPref, localPref.charPref, "read/write string pref");
+
+      ["test.all.bool", "test.all.int", "test.all.string"].forEach(function(key) {
+        let expectedValue;
+        switch (Services.prefs.getPrefType(key)) {
+          case Ci.nsIPrefBranch.PREF_STRING:
+            expectedValue = Services.prefs.getCharPref(key);
+            break;
+          case Ci.nsIPrefBranch.PREF_INT:
+            expectedValue = Services.prefs.getIntPref(key);
+            break;
+          case Ci.nsIPrefBranch.PREF_BOOL:
+            expectedValue = Services.prefs.getBoolPref(key);
+            break;
+          default:
+            ok(false, "unexpected pref type (" + key + ")");
+            break;
+        }
+
+        is(prefs.allPrefs[key].value, expectedValue,
+           "valid preference value (" + key + ")");
+        is(prefs.allPrefs[key].hasUserValue, Services.prefs.prefHasUserValue(key),
+           "valid hasUserValue (" + key + ")");
+      });
+
+      ["test.bool", "test.int", "test.string"].forEach(function(key) {
+        ok(!prefs.allPrefs.hasOwnProperty(key), "expect no pref (" + key + ")");
+        is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID,
+           "pref (" + key + ") is clear");
+      });
+
+      client.close().then(() => {
+        DevToolsServer.destroy();
+        SimpleTest.finish();
+      });
+    }
+
+    function checkUndefined() {
+      let next = p.getCharPref("test.undefined");
+      next = next.then(
+        () => ok(false, "getCharPref should've thrown for an undefined preference"),
+        (ex) => {
+          const messageRe = new RegExp(
+            "Protocol error \\(Error\\): preference is not of the right type: " +
+            `test.undefined from: ${p.actorID} ` +
+            "\\(resource://devtools/server/actors/preference.js:\\d+:\\d+\\)"
+          );
+          ok(messageRe.test(ex.message), "Error message matches the expected format");
+        }
+      );
+      return next;
+    }
+
+    function updatePrefsProperty(key) {
+      return function(value) {
+        prefs[key] = value;
+      };
+    }
+
+    p.getAllPrefs().then(updatePrefsProperty("allPrefs"))
+    .then(() => p.setBoolPref("test.bool", localPref.boolPref))
+    .then(() => p.setIntPref("test.int", localPref.intPref))
+    .then(() => p.setCharPref("test.string", localPref.charPref))
+    .then(() => p.getBoolPref("test.bool")).then(updatePrefsProperty("boolPref"))
+    .then(() => p.getIntPref("test.int")).then(updatePrefsProperty("intPref"))
+    .then(() => p.getCharPref("test.string")).then(updatePrefsProperty("charPref"))
+    .then(() => p.clearUserPref("test.bool"))
+    .then(() => p.clearUserPref("test.int"))
+    .then(() => p.clearUserPref("test.string"))
+    .then(() => checkUndefined())
+    .then(checkValues);
+  });
+}
+
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["test.all.bool", true],
+      ["test.all.int", 0x4321],
+      ["test.all.string", "allizom"],
+    ],
+  }, runTests);
+};
+</script>
+</pre>
+</body>
+</html>

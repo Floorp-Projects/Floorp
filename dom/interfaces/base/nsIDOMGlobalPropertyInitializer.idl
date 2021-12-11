@@ -1,0 +1,21 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindow;
+
+[scriptable, uuid(5842e275-797f-4afb-b7e0-e29f0cb312ae)]
+interface nsIDOMGlobalPropertyInitializer : nsISupports
+{
+  /*
+   * Initialize the global property.
+   *
+   * @param window the global object on which the property is being retrieved.
+   *
+   * @returns a JS Object to use use as the property's value.
+   */
+  jsval init(in mozIDOMWindow window);
+};

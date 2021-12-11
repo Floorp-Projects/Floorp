@@ -1,0 +1,19 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+     Test whether SVG gradients as -moz-element render the same as
+     a SVG rect with an SVG gradient.
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+  <svg width="300" height="300">
+    <rect width="300" height="300" fill="url(#g)"></rect>
+    <linearGradient id="g" gradientUnits="objectBoundingBox" x2="0" y2="1">
+      <stop stop-color="lime" offset="0"></stop>
+      <stop stop-color="black" offset="1"></stop>
+    </linearGradient>
+  </svg>
+</body>
+</html>
+

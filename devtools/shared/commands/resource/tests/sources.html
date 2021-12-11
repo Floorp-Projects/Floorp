@@ -1,0 +1,22 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype HTML>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+    <script type="text/javascript">
+      "use strict";
+      /* eslint-disable */
+      function inlineSource() {}
+      // Assign it to a global in order to avoid it being GCed
+      eval("this.global = function evalFunction() {}");
+      // Assign the worker to a global variable in order to avoid
+      // having it be GCed.
+      this.worker = new Worker("worker-sources.js");
+      window.registrationPromise = navigator.serviceWorker.register("service-worker-sources.js");
+    </script>
+     <script src="sources.js"></script>
+  </body>
+</html>

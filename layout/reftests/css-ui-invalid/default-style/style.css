@@ -1,0 +1,11 @@
+:not(output).invalid-ref {
+}
+
+:not(output):-moz-focusring.invalid-ref {
+}
+
+output.invalid-ref {
+}
+
+.barred-ref {
+}

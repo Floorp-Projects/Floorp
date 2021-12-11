@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+<head>
+  <title>Bug 633602 - file_doubleLockCallBack.html</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+      #test-element { background-color: #94E01B; width:100px; height:100px; }
+  </style>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+    Mozilla Bug 633602</a>
+  <div id="div"></div>
+  <pre id="test">
+    <script type="text/javascript">
+      /*
+       * Test for Bug 633602
+       * If element requests pointerlock on itself while in pointerlock state
+       * pointerlockchange event should be dispatched
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var div = document.getElementById("div")
+        , numberOfLocks = 0;
+
+      function runTests () {
+        is(numberOfLocks, 2, "Requesting pointer lock on a locked element " +
+          "should dispatch pointerlockchange event");
+      }
+
+      document.addEventListener("pointerlockchange", function (e) {
+        if (document.pointerLockElement === div) {
+          if (numberOfLocks === 2) {
+            addFullscreenChangeContinuation("exit", function() {
+              runTests();
+              SimpleTest.finish();
+            });
+            document.exitFullscreen();
+          }
+          else {
+            numberOfLocks++;
+            div.requestPointerLock();
+          }
+        }
+      });
+
+      function start() {
+        console.log('started');
+        addFullscreenChangeContinuation("enter", function() {
+          div.requestPointerLock();
+        });
+        div.requestFullscreen();
+      }
+    </script>
+  </pre>
+</body>
+</html>

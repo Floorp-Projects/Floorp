@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=982141
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=980, user-scalable=no">
+  <title>Test for Bug 982141, helper page</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+    // -------------------------------------------------------------------
+    // Infrastructure to get the test assertions to run at the right time.
+    // -------------------------------------------------------------------
+    var SimpleTest = window.opener.SimpleTest;
+
+    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug982141);
+
+    // --------------------------------------------------------------------
+    // The actual logic for testing bug 982141.
+    //
+    // In this test we have a simple page with a scrollable <div> which has
+    // enough content to make it scrollable. We test that this <div> got
+    // a displayport.
+    // --------------------------------------------------------------------
+
+    function testBug982141() {
+      // Get the content- and compositor-side test data from nsIDOMWindowUtils.
+      var utils = SpecialPowers.getDOMWindowUtils(window);
+      var contentTestData = utils.getContentAPZTestData();
+      var compositorTestData = utils.getCompositorAPZTestData();
+
+      // Get the sequence number of the last paint on the compositor side.
+      // We do this before converting the APZ test data because the conversion
+      // loses the order of the paints.
+      SimpleTest.ok(compositorTestData.paints.length > 0,
+                    "expected at least one paint in compositor test data");
+      var lastCompositorPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
+      var lastCompositorPaintSeqNo = lastCompositorPaint.sequenceNumber;
+
+      // Convert the test data into a representation that's easier to navigate.
+      contentTestData = convertTestData(contentTestData);
+      compositorTestData = convertTestData(compositorTestData);
+
+      // Reconstruct the APZC tree structure in the last paint.
+      var apzcTree = buildApzcTree(compositorTestData.paints[lastCompositorPaintSeqNo]);
+
+      // The apzc tree for this page should consist of a single child APZC on
+      // the RCD node (the child is for scrollable <div>). Note that in e10s/B2G
+      // cases the RCD will be the root of the tree but on Fennec it will not.
+      var rcd = findRcdNode(apzcTree);
+      SimpleTest.ok(rcd != null, "found the RCD node");
+      SimpleTest.is(rcd.children.length, 1, "expected a single child APZC");
+      var childScrollId = rcd.children[0].scrollId;
+
+      // We should have content-side data for the same paint.
+      SimpleTest.ok(lastCompositorPaintSeqNo in contentTestData.paints,
+                    "expected a content paint with sequence number" + lastCompositorPaintSeqNo);
+      var correspondingContentPaint = contentTestData.paints[lastCompositorPaintSeqNo];
+
+      var dp = getPropertyAsRect(correspondingContentPaint, childScrollId, "displayport");
+      var subframe = document.getElementById("subframe");
+      // The clientWidth and clientHeight may be less than 50 if there are scrollbars showing.
+      // In general they will be (50 - <scrollbarwidth>, 50 - <scrollbarheight>).
+      SimpleTest.ok(subframe.clientWidth > 0, "Expected a non-zero clientWidth, got: " + subframe.clientWidth);
+      SimpleTest.ok(subframe.clientHeight > 0, "Expected a non-zero clientHeight, got: " + subframe.clientHeight);
+      SimpleTest.ok(dp.w >= subframe.clientWidth && dp.h >= subframe.clientHeight,
+                    "expected a displayport at least as large as the scrollable element, got " + JSON.stringify(dp));
+
+      window.opener.finishTest();
+    }
+  </script>
+</head>
+<body style="overflow: hidden;"><!-- This combined with the user-scalable=no ensures the root frame is not scrollable -->
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=982141">Mozilla Bug 982141</a>
+  <!-- A scrollable subframe, with enough content to make it have a nonzero scroll range -->
+  <div id="subframe" style="height: 50px; width: 50px; overflow: scroll">
+    <div style="width: 100px">
+      Wide content so that the vertical scrollbar for the parent div
+      doesn't eat into the 50px width and reduce the width of the
+      displayport.
+    </div>
+    Line 1<br>
+    Line 2<br>
+    Line 3<br>
+    Line 4<br>
+    Line 5<br>
+    Line 6<br>
+    Line 7<br>
+    Line 8<br>
+    Line 9<br>
+    Line 10<br>
+    Line 11<br>
+    Line 12<br>
+    Line 13<br>
+    Line 14<br>
+    Line 15<br>
+    Line 16<br>
+    Line 17<br>
+    Line 18<br>
+    Line 19<br>
+    Line 20<br>
+    Line 21<br>
+    Line 22<br>
+    Line 23<br>
+    Line 24<br>
+    Line 25<br>
+    Line 26<br>
+    Line 27<br>
+    Line 28<br>
+    Line 29<br>
+    Line 30<br>
+    Line 31<br>
+    Line 32<br>
+    Line 33<br>
+    Line 34<br>
+    Line 35<br>
+    Line 36<br>
+    Line 37<br>
+    Line 38<br>
+    Line 39<br>
+    Line 40<br>
+    Line 41<br>
+    Line 42<br>
+    Line 43<br>
+    Line 44<br>
+    Line 45<br>
+    Line 46<br>
+    Line 40<br>
+    Line 48<br>
+    Line 49<br>
+    Line 50<br>
+  </div>
+</body>
+</html>

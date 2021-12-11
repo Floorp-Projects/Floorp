@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=605125
+-->
+<head>
+  <title>Test for Bug 605125</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=605125">Mozilla Bug 605125</a>
+<p id="display"></p>
+<div id="content">
+  <input>
+  <textarea></textarea>
+  <select>
+    <option value="">foo</option>
+    <option>bar</option>
+  </select>
+  <select multiple>
+    <option value="">foo</option>
+    <option>bar</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 605125 **/
+
+function checkPseudoClass(aElement, aExpected)
+{
+  is(aElement.matches(":-moz-ui-valid"), aExpected,
+     "matches(':-moz-ui-valid') should return " + aExpected + " for " + aElement);
+}
+
+function checkElement(aElement)
+{
+  checkPseudoClass(aElement, false);
+
+  // Focusing while :-moz-ui-valid doesn't apply,
+  // the pseudo-class should not apply while typing.
+  aElement.focus();
+  checkPseudoClass(aElement, false);
+  // with keys
+  sendString("f");
+  checkPseudoClass(aElement, false);
+  synthesizeKey("KEY_Backspace");
+  checkPseudoClass(aElement, false);
+  // with .value
+  aElement.value = 'f';
+  checkPseudoClass(aElement, false);
+  aElement.value = '';
+  checkPseudoClass(aElement, false);
+
+  aElement.blur();
+  checkPseudoClass(aElement, true);
+
+  // Focusing while :-moz-ui-valid applies,
+  // the pseudo-class should apply while typing if appropriate.
+  aElement.focus();
+  checkPseudoClass(aElement, true);
+  // with keys
+  sendString("f");
+  checkPseudoClass(aElement, true);
+  synthesizeKey("KEY_Backspace");
+  checkPseudoClass(aElement, true);
+  // with .value
+  aElement.value = 'f';
+  checkPseudoClass(aElement, true);
+  aElement.value = '';
+  checkPseudoClass(aElement, true);
+
+  aElement.blur();
+  aElement.required = true;
+  checkPseudoClass(aElement, false);
+
+  // Focusing while :-moz-ui-invalid applies,
+  // the pseudo-class should apply while typing if appropriate.
+  aElement.focus();
+  checkPseudoClass(aElement, false);
+  // with keys
+  sendString("f");
+  checkPseudoClass(aElement, true);
+  synthesizeKey("KEY_Backspace");
+  checkPseudoClass(aElement, false);
+  // with .value
+  aElement.value = 'f';
+  checkPseudoClass(aElement, true);
+  aElement.value = '';
+  checkPseudoClass(aElement, false);
+}
+
+function checkSelectElement(aElement)
+{
+  checkPseudoClass(aElement, false);
+
+  // Focusing while :-moz-ui-valid doesn't apply,
+  // the pseudo-class should not apply while changing selection.
+  aElement.focus();
+  checkPseudoClass(aElement, false);
+
+  aElement.selectedIndex = 1;
+  checkPseudoClass(aElement, false);
+  aElement.selectedIndex = 0;
+  checkPseudoClass(aElement, false);
+
+  aElement.blur();
+  checkPseudoClass(aElement, true);
+
+  // Focusing while :-moz-ui-valid applies,
+  // the pseudo-class should apply while changing selection if appropriate.
+  aElement.focus();
+  checkPseudoClass(aElement, true);
+
+  aElement.selectedIndex = 1;
+  checkPseudoClass(aElement, true);
+  aElement.selectedIndex = 0;
+  checkPseudoClass(aElement, true);
+
+  aElement.blur();
+  aElement.required = true;
+  // select set with multiple is only invalid if no option is selected
+  if (aElement.multiple) {
+    aElement.selectedIndex = -1;
+  }
+  checkPseudoClass(aElement, false);
+
+  // Focusing while :-moz-ui-invalid applies,
+  // the pseudo-class should apply while changing selection if appropriate.
+  aElement.focus();
+  checkPseudoClass(aElement, false);
+
+  aElement.selectedIndex = 1;
+  checkPseudoClass(aElement, true);
+  aElement.selectedIndex = 0;
+  checkPseudoClass(aElement, aElement.multiple);
+}
+
+checkElement(document.getElementsByTagName('input')[0]);
+checkElement(document.getElementsByTagName('textarea')[0]);
+checkSelectElement(document.getElementsByTagName('select')[0]);
+checkSelectElement(document.getElementsByTagName('select')[1]);
+
+</script>
+</pre>
+</body>
+</html>

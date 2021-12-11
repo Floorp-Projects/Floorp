@@ -1,0 +1,87 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "contentScripts",
+    "types": [
+      {
+        "id": "RegisteredContentScriptOptions",
+        "type": "object",
+        "description": "Details of a content script registered programmatically",
+        "properties": {
+          "matches": {
+            "type": "array",
+            "optional": false,
+            "minItems": 1,
+            "items": { "$ref": "manifest.MatchPattern" }
+          },
+          "excludeMatches": {
+            "type": "array",
+            "optional": true,
+            "minItems": 1,
+            "items": { "$ref": "manifest.MatchPattern" }
+          },
+          "includeGlobs": {
+            "type": "array",
+            "optional": true,
+            "items": { "type": "string" }
+          },
+          "excludeGlobs": {
+            "type": "array",
+            "optional": true,
+            "items": { "type": "string" }
+          },
+          "css": {
+            "type": "array",
+            "optional": true,
+            "description": "The list of CSS files to inject",
+            "items": { "$ref": "extensionTypes.ExtensionFileOrCode" }
+          },
+          "js": {
+            "type": "array",
+            "optional": true,
+            "description": "The list of JS files to inject",
+            "items": { "$ref": "extensionTypes.ExtensionFileOrCode" }
+          },
+          "allFrames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},
+          "matchAboutBlank": {"type": "boolean", "optional": true, "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."},
+          "runAt": {
+            "$ref": "extensionTypes.RunAt",
+            "optional": true,
+            "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
+          }
+        }
+      },
+      {
+        "id": "RegisteredContentScript",
+        "type": "object",
+        "description": "An object that represents a content script registered programmatically",
+        "functions": [
+          {
+            "name": "unregister",
+            "type": "function",
+            "description": "Unregister a content script registered programmatically",
+            "async": true,
+            "parameters": []
+          }
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "register",
+        "type": "function",
+        "description": "Register a content script programmatically",
+        "async": true,
+        "parameters": [
+          {
+            "name": "contentScriptOptions",
+            "$ref": "RegisteredContentScriptOptions"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,27 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = nss
+
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\"
+
+CSRCS = \
+	shlibsign.c \
+	$(NULL)
+
+# WINNT uses EXTRA_LIBS as the list of libs to link in.
+# Unix uses     OS_LIBS for that purpose.
+# We can solve this via conditional makefile code, but 
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+# So, look in the local Makefile for the defines for the list of libs.
+
+PROGRAM = shlibsign
+
+DIRS = mangle
+
+#USE_STATIC_LIBS = 1

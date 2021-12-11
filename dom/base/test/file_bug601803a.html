@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 601803</title>
+<script type="application/javascript">
+function runTest() {
+    document.domain = "example.org";
+    var thrown = false;
+    try {
+        document.getElementById("frame").contentDocument.adoptNode(document.createTextNode("foo"));
+    }
+    catch (e) {
+        thrown = true;
+    }
+    parent.postMessage(thrown, "*");
+}
+</script>
+</head>
+<body>
+<iframe id="frame" src="http://test1.example.org/tests/dom/base/test/file_bug601803b.html" onload="runTest();"></iframe>
+</body>
+</html>

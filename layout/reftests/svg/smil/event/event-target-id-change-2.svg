@@ -1,0 +1,16 @@
+<!-- Test that changes to ID assignments are reflected in event registration.
+     Test for when the animation target becomes invalid. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.getElementById('rect').setAttribute('id', 'square');
+        click('square');
+        delayedSnapshot(2)">
+  <script xlink:href="event-util.js" type="text/javascript"/>
+  <rect width="100" height="100" fill="green" id="rect"/>
+  <set xlink:href="#rect" attributeName="fill" attributeType="CSS" to="red"
+    begin="click" dur="4s"/>
+</svg>

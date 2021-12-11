@@ -1,0 +1,354 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist Tests"
+        onload="setTimeout(testtag_menulists, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="xul_selectcontrol.js"></script>      
+
+<vbox id="scroller" style="overflow: auto" height="60">
+  <menulist id="menulist" onpopupshown="test_menulist_open(this, this.parentNode)"
+            onpopuphidden="$('menulist-in-listbox').open = true;">
+    <menupopup id="menulist-popup"/>
+  </menulist>
+  <button label="Two"/>
+  <button label="Three"/>
+</vbox>
+<richlistbox id="scroller-in-listbox" style="overflow: auto" height="60">
+  <richlistitem allowevents="true">
+    <menulist id="menulist-in-listbox" onpopupshown="test_menulist_open(this, this.parentNode.parentNode)"
+              onpopuphidden="SimpleTest.executeSoon(() => checkScrollAndFinish().catch(ex => ok(false, ex)));">
+      <menupopup id="menulist-in-listbox-popup">
+        <menuitem label="One" value="one"/>
+        <menuitem label="Two" value="two"/>
+      </menupopup>
+    </menulist>
+  </richlistitem>
+  <richlistitem><label value="Two"/></richlistitem>
+  <richlistitem><label value="Three"/></richlistitem>
+  <richlistitem><label value="Four"/></richlistitem>
+  <richlistitem><label value="Five"/></richlistitem>
+  <richlistitem><label value="Six"/></richlistitem>
+</richlistbox>
+
+<hbox>
+  <menulist id="menulist-size">
+    <menupopup>
+      <menuitem label="Menuitem Label" width="200"/>
+    </menupopup>
+  </menulist>
+</hbox>
+
+<menulist id="menulist-initwithvalue" value="two">
+  <menupopup>
+    <menuitem label="One" value="one"/>
+    <menuitem label="Two" value="two"/>
+    <menuitem label="Three" value="three"/>
+  </menupopup>
+</menulist>
+<menulist id="menulist-initwithselected" value="two">
+  <menupopup>
+    <menuitem label="One" value="one"/>
+    <menuitem label="Two" value="two"/>
+    <menuitem label="Three" value="three" selected="true"/>
+  </menupopup>
+</menulist>
+
+<menulist id="menulist-clipped">
+  <menupopup height="65">
+    <menuitem label="One" value="one"/>
+    <menuitem label="Two" value="two"/>
+    <menuitem label="Three" value="three"/>
+    <menuitem label="Four" value="four"/>
+    <menuitem label="Five" value="five" selected="true"/>
+    <menuitem label="Six" value="six"/>
+    <menuitem label="Seven" value="seven"/>
+    <menuitem label="Eight" value="eight"/>
+  </menupopup>
+</menulist>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function waitForEvent(subject, eventName, checkFn) {
+  return new Promise(resolve => {
+    subject.addEventListener(eventName, function listener(event) {
+      if (checkFn && !checkFn(event)) {
+        return;
+      }
+      subject.removeEventListener(eventName, listener);
+      SimpleTest.executeSoon(() => resolve(event));
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function testtag_menulists()
+{
+  testtag_menulist_UI_start($("menulist"), false);
+}
+
+function testtag_menulist_UI_start(element)
+{
+  // check the menupopup property
+  var popup = element.menupopup;
+  ok(popup && popup.localName == "menupopup" &&
+              popup.parentNode == element, "menupopup");
+
+  // test the interfaces that menulist implements
+  test_nsIDOMXULMenuListElement(element);
+}
+
+function testtag_menulist_UI_finish(element)
+{
+  element.value = "";
+
+  test_nsIDOMXULSelectControlElement(element, "menuitem", null);
+
+  // bug 566154, the menulist width should account for vertical scrollbar
+  ok(document.getElementById("menulist-size").getBoundingClientRect().width >= 210,
+     "menulist popup width includes scrollbar width");
+
+  $("menulist").open = true;
+}
+
+function test_nsIDOMXULMenuListElement(element)
+{
+  is(element.open, false, "open");
+
+  element.appendItem("Item One", "one");
+  var seconditem = element.appendItem("Item Two", "two");
+  var thirditem = element.appendItem("Item Three", "three");
+  element.appendItem("Item Four", "four");
+
+  seconditem.image = "happy.png";
+  seconditem.setAttribute("description", "This is the second description");
+  thirditem.image = "happy.png";
+  thirditem.setAttribute("description", "This is the third description");
+
+  // check the image and description properties
+  element.selectedIndex = 1;
+  is(element.image, "happy.png", "image set to selected");
+  is(element.description, "This is the second description", "description set to selected");
+  element.selectedIndex = -1;
+  is(element.image, "", "image set when none selected");
+  is(element.description, "", "description set when none selected");
+  element.selectedIndex = 2;
+  is(element.image, "happy.png", "image set to selected again");
+  is(element.description, "This is the third description", "description set to selected again");
+
+  // check that changing the properties of the selected item changes the menulist's properties
+  let properties = [{attr: "label", value: "Item Number Three"},
+                    {attr: "value", value: "item-three"},
+                    {attr: "image", value: "smile.png"},
+                    {attr: "description", value: "Changed description"}];
+  test_nsIDOMXULMenuListElement_properties(element, thirditem, properties);
+}
+
+function test_nsIDOMXULMenuListElement_properties(element, thirditem, properties)
+{
+  let {attr, value} = properties.shift();
+  let last = !properties.length;
+
+  let mutObserver = new MutationObserver(() => {
+    is(element.getAttribute(attr), value, `${attr} modified`);
+    done();
+  });
+  mutObserver.observe(element, { attributeFilter: [attr] });
+
+  let failureTimeout = setTimeout(() => {
+    ok(false, `${attr} should have updated`);
+    done();
+  }, 2000);
+
+  function done()
+  {
+    clearTimeout(failureTimeout);
+    mutObserver.disconnect();
+    if (!last) {
+      test_nsIDOMXULMenuListElement_properties(element, thirditem, properties);
+    }
+    else {
+      test_nsIDOMXULMenuListElement_unselected(element, thirditem);
+    }
+  }
+
+  thirditem.setAttribute(attr, value)
+}
+
+function test_nsIDOMXULMenuListElement_unselected(element, thirditem)
+{
+  let seconditem = thirditem.previousElementSibling;
+  seconditem.label = "Changed Label 2";
+  is(element.label, "Item Number Three", "label of another item modified");
+
+  element.selectedIndex = 0;
+  is(element.image, "", "image set to selected with no image");
+  is(element.description, "", "description set to selected with no description");
+  test_nsIDOMXULMenuListElement_finish(element);
+}
+
+function test_nsIDOMXULMenuListElement_finish(element)
+{
+  // check the removeAllItems method
+  element.appendItem("An Item", "anitem");
+  element.appendItem("Another Item", "anotheritem");
+  element.removeAllItems();
+  is(element.itemCount, 0, "removeAllItems");
+
+  testtag_menulist_UI_finish(element);
+}
+
+function test_menulist_open(element, scroller)
+{
+  element.appendItem("Scroll Item 1", "scrollitem1");
+  element.appendItem("Scroll Item 2", "scrollitem2");
+  element.focus();
+  element.selectedIndex = 0;
+
+/*
+  // bug 530504, mousewheel while menulist is open should not scroll menulist
+  // items or parent
+  var scrolled = false;
+  var mouseScrolled = function (event) { scrolled = true; }
+  window.addEventListener("DOMMouseScroll", mouseScrolled, false);
+  synthesizeWheel(element, 2, 2, { deltaY: 10,
+                                   deltaMode: WheelEvent.DOM_DELTA_LINE });
+  is(scrolled, true, "mousescroll " + element.id);
+  is(scroller.scrollTop, 0, "scroll position on mousescroll " + element.id);
+  window.removeEventListener("DOMMouseScroll", mouseScrolled, false);
+*/
+
+  // bug 543065, hovering the mouse over an item should highlight it, not
+  // scroll the parent, and not change the selected index.
+  var item = element.menupopup.childNodes[1];
+
+  synthesizeMouse(element.menupopup.childNodes[1], 2, 2, { type: "mousemove" });
+  synthesizeMouse(element.menupopup.childNodes[1], 6, 6, { type: "mousemove" });
+  is(element.activeChild, item, "activeChild after menu highlight " + element.id);
+  is(element.selectedIndex, 0, "selectedIndex after menu highlight " + element.id);
+  is(scroller.scrollTop, 0, "scroll position after menu highlight " + element.id);
+
+  element.open = false;
+}
+
+async function checkScrollAndFinish()
+{
+  is($("scroller").scrollTop, 0, "mousewheel on menulist does not scroll vbox parent");
+  is($("scroller-in-listbox").scrollTop, 0, "mousewheel on menulist does not scroll listbox parent");
+
+  let menulist = $("menulist-size");
+  let shownPromise = waitForEvent(menulist, "popupshown");
+  menulist.open = true;
+  await shownPromise;
+
+  sendKey("ALT");
+  is(menulist.menupopup.state, "open", "alt doesn't close menulist");
+  menulist.open = false;
+
+  await dragScroll();
+}
+
+async function dragScroll()
+{
+  let menulist = $("menulist-clipped");
+
+  let shownPromise = waitForEvent(menulist, "popupshown");
+  menulist.open = true;
+  await shownPromise;
+
+  let popup = menulist.menupopup;
+  let getScrollPos = () => popup.scrollBox.scrollbox.scrollTop;
+  let scrollPos = getScrollPos();
+  let popupRect = popup.getBoundingClientRect();
+
+  // First, check that scrolling does not occur when the mouse is moved over the
+  // anchor button but not the popup yet.
+  synthesizeMouseAtPoint(popupRect.left + 5, popupRect.top - 10, { type: "mousemove" });
+  is(getScrollPos(), scrollPos, "scroll position after mousemove over button should not change");
+
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top + 10, { type: "mousemove" });
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top + 10, { type: "mousedown", buttons: 1 });
+
+  // Dragging above the popup scrolls it up.
+  let scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() < scrollPos - 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove", buttons: 1 });
+  await scrolledPromise;
+  ok(true, "scroll position at drag up");
+
+  // Dragging below the popup scrolls it down.
+  scrollPos = getScrollPos();
+  scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() > scrollPos + 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove", buttons: 1 });
+  await scrolledPromise;
+  ok(true, "scroll position at drag down");
+
+  // Releasing the mouse button and moving the mouse does not change the scroll position.
+  scrollPos = getScrollPos();
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 25, { type: "mouseup" });
+  is(getScrollPos(), scrollPos, "scroll position at mouseup should not change");
+
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  is(getScrollPos(), scrollPos, "scroll position at mousemove after mouseup should not change");
+
+  // Now check dragging with a mousedown on an item. Make sure the element is
+  // visible, as the asynchronous scrolling may have moved it out of view.
+  popup.childNodes[4].scrollIntoView({ block: "nearest", behavior: "instant" });
+  let menuRect = popup.childNodes[4].getBoundingClientRect();
+  synthesizeMouseAtPoint(menuRect.left + 5, menuRect.top + 5, { type: "mousedown", buttons: 1 });
+
+  // Dragging below the popup scrolls it down.
+  scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() > scrollPos + 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove", buttons: 1 });
+  await scrolledPromise;
+  ok(true, "scroll position at drag down from item");
+
+  // Dragging above the popup scrolls it up.
+  scrollPos = getScrollPos();
+  scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() < scrollPos - 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove", buttons: 1 });
+  await scrolledPromise;
+  ok(true, "scroll position at drag up from item");
+
+  scrollPos = getScrollPos();
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 25, { type: "mouseup" });
+  is(getScrollPos(), scrollPos, "scroll position at mouseup should not change");
+
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  is(getScrollPos(), scrollPos, "scroll position at mousemove after mouseup should not change");
+
+  menulist.open = false;
+
+  let mouseMoveTarget = null;
+  popup.childNodes[4].click();
+  addEventListener("mousemove", function checkMouseMove(event) {
+    mouseMoveTarget = event.target;
+  }, {once: true});
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  isnot(mouseMoveTarget, popup, "clicking on item when popup closed doesn't start dragging");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

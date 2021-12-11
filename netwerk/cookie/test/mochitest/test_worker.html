@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for cookies + worker loading when the policy changes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="cookiesHelper.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+runTests(async (w, state) => {
+  w.document.cookie = "name=value";
+
+  let p = new w.Worker("cookie.sjs?worker&" + Math.random());
+  await new w.Promise(resolve => { p.onmessage = resolve; });
+  await checkLastRequest("worker", state);
+
+  await new w.Promise(resolve => { p.postMessage("subworker"); p.onmessage = resolve; });
+  await checkLastRequest("subworker", state);
+
+  await new w.Promise(resolve => { p.postMessage("fetch"); p.onmessage = resolve; });
+  await checkLastRequest("fetch", state);
+
+  await new w.Promise(resolve => { p.postMessage("xhr"); p.onmessage = resolve; });
+  await checkLastRequest("xhr", state);
+});
+
+</script>
+</body>
+</html>

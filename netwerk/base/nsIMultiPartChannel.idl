@@ -1,0 +1,49 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+
+/**
+ * An interface to access the the base channel
+ * associated with a MultiPartChannel.
+ */
+
+[scriptable, uuid(4fefb490-5567-11e5-a837-0800200c9a66)]
+interface nsIMultiPartChannel : nsISupports
+{
+    /**
+     * readonly attribute to access the underlying channel
+     */
+    readonly attribute nsIChannel baseChannel;
+
+    /**
+     * Attribute guaranteed to be different for different parts of
+     * the same multipart document.
+     */
+    readonly attribute uint32_t partID;
+
+    /**
+     * Set to true when onStopRequest is received from the base channel.
+     * The listener can check this from its onStopRequest to determine
+     * whether more data can be expected.
+     */
+    readonly attribute boolean isLastPart;
+};
+
+/**
+ * An interface that listeners can implement to receive a notification
+ * when the last part of the multi-part channel has finished, and the
+ * final OnStopRequest has been sent.
+  */
+[scriptable, uuid(b084959a-4fb9-41a5-88a0-d0f045ce75cf)]
+interface nsIMultiPartChannelListener : nsISupports
+{
+    /**
+     * Sent when all parts have finished and sent OnStopRequest.
+     */
+    void onAfterLastPart(in nsresult status);
+};

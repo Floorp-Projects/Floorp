@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <button onclick="openPopups();" id="openPopups">open popups</button>
+  <button onclick="openNestedPopups();" id="openNestedPopups">open tested popups</button>
+  <button onclick="openPopupAndClick();" id="openPopupAndClick">open popups and click</button>
+  <button onclick="closeAllWindows();" id="closeAllWindows">close all windows</button>
+  <button onclick="openPopupInFrame();" id="openPopupInFrame">open popup in frame</button>
+  <input type="text" id="input" />
+  <script>
+let windows = [];
+
+function openPopups() {
+  windows.push(window.open('empty.html', '_blank', 'width=100,height=100'));
+  windows.push(window.open('empty.html', '_blank', 'width=100,height=100'));
+}
+
+function openNestedPopups() {
+  var w = window.open('empty.html', '_blank', 'width=100,height=100');
+  windows.push(w);
+  windows.push(w.open('empty.html', '_blank', 'width=100,height=100'));
+}
+
+var recursion = false;
+function openPopupAndClick() {
+  windows.push(window.open('empty.html', '_blank', 'width=100,height=100'));
+  if (!recursion) {
+    recursion = true;
+    document.getElementById("openPopupAndClick").click();
+  }
+}
+
+function openPopupInFrame() {
+  let iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+  windows.push(iframe.contentWindow.open('empty.html', '_blank', 'width=100,height=100'));
+  iframe.remove();
+}
+
+function closeAllWindows() {
+  windows.forEach(w => {
+    try {
+      w.close();
+    } catch(e) {}
+  });
+}
+
+if (location.search.includes("openPopups")) {
+  let id = setInterval(() => {
+    if (document.getElementById('start')) {
+      clearInterval(id);
+      openPopups();
+    }
+  }, 500);
+}
+
+document.getElementById("input").onmouseup = _ => {
+  openPopups();
+}
+  </script>
+</body>
+</html>

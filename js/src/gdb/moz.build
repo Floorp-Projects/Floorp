@@ -1,0 +1,59 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+GeckoProgram("gdb-tests", linkage=None)
+
+include("../js-cxxflags.mozbuild")
+include("../js-standalone.mozbuild")
+
+SOURCES += [
+    # This file must not be unified with any of the test files, or the use()
+    # and breakpoint() functions might get optimized out.
+    "gdb-tests.cpp"
+]
+
+UNIFIED_SOURCES += [
+    "tests/enum-printers.cpp",
+    "tests/test-asmjs.cpp",
+    "tests/test-ExecutableAllocator.cpp",
+    "tests/test-GCCellPtr.cpp",
+    "tests/test-Interpreter.cpp",
+    "tests/test-jsbytecode.cpp",
+    "tests/test-jsid.cpp",
+    "tests/test-JSObject.cpp",
+    "tests/test-jsop.cpp",
+    "tests/test-JSString.cpp",
+    "tests/test-JSSymbol.cpp",
+    "tests/test-jsval.cpp",
+    "tests/test-Root.cpp",
+    "tests/test-unwind.cpp",
+    "tests/typedef-printers.cpp",
+]
+
+SOURCES += ["tests/test-prettyprinters.cpp"]
+
+if CONFIG["CC_TYPE"] != "clang-cl":
+    # Test expects to see pre-typedef names of base classes, but the compiler will
+    # normally omit those from the debuginfo. The current clang-cl does not support
+    # this option.
+    SOURCES["tests/test-prettyprinters.cpp"].flags += [
+        "-fno-eliminate-unused-debug-types"
+    ]
+
+DEFINES["EXPORT_JS_API"] = True
+
+LOCAL_INCLUDES += [
+    "!..",
+    "..",
+]
+
+USE_LIBS += [
+    "static:js",
+]
+
+DEFINES["topsrcdir"] = "%s/js/src" % TOPSRCDIR
+FINAL_TARGET_PP_FILES += ["gdb-tests-gdb.py.in"]
+OBJDIR_FILES.js.src.gdb += ["!/dist/bin/gdb-tests-gdb.py"]

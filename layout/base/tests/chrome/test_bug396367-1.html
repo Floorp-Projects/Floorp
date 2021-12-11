@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=396367
+-->
+<head>
+  <title>Test for Bug 396367</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function finish() {
+      ok(true, "didn't crash");
+      top.docShell.browsingContext.textZoom = 1;
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396367">Mozilla Bug 396367</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+
+<input>
+<script>document.body.setAttribute('style', 'display: -moz-box; overflow: scroll;');</script>
+<script>
+top.docShell.browsingContext.textZoom = Math.floor(10 * Math.random()) / 4 + 0.2;
+document.documentElement.offsetHeight;
+setTimeout(finish, 0);
+</script>
+
+
+</pre>
+</body>
+</html>

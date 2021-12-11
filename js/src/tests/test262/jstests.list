@@ -1,0 +1,26 @@
+# GENERATED, DO NOT EDIT
+
+error:SyntaxError script language/comments/hashbang/escaped-bang-041.js
+error:SyntaxError script language/comments/hashbang/escaped-bang-u0021.js
+error:SyntaxError script language/comments/hashbang/escaped-bang-u21.js
+error:SyntaxError script language/comments/hashbang/escaped-bang-x21.js
+error:SyntaxError script language/comments/hashbang/escaped-hash-043.js
+error:SyntaxError script language/comments/hashbang/escaped-hash-u0023.js
+error:SyntaxError script language/comments/hashbang/escaped-hash-u23.js
+error:SyntaxError script language/comments/hashbang/escaped-hash-x23.js
+error:SyntaxError script language/comments/hashbang/escaped-hashbang.js
+module script language/comments/hashbang/module.js
+error:SyntaxError script language/comments/hashbang/multi-line-comment.js
+error:SyntaxError script language/comments/hashbang/preceding-directive-prologue-sc.js
+error:SyntaxError script language/comments/hashbang/preceding-directive-prologue.js
+error:SyntaxError script language/comments/hashbang/preceding-empty-statement.js
+error:SyntaxError script language/comments/hashbang/preceding-hashbang.js
+error:SyntaxError script language/comments/hashbang/preceding-line-comment.js
+error:SyntaxError script language/comments/hashbang/preceding-multi-line-comment.js
+error:SyntaxError script language/comments/hashbang/preceding-whitespace.js
+error:SyntaxError script language/directive-prologue/10.1.1-2gs.js
+error:SyntaxError script language/directive-prologue/10.1.1-5gs.js
+error:SyntaxError script language/directive-prologue/10.1.1-8gs.js
+error:SyntaxError script language/directive-prologue/14.1-4gs.js
+error:SyntaxError script language/directive-prologue/14.1-5gs.js
+skip module script language/module-code/eval-gtbndng-indirect-faux-assertion.js # import-assertions is not supported

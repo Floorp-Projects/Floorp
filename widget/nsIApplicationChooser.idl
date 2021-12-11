@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIMIMEInfo.idl"
+
+interface mozIDOMWindowProxy;
+
+[scriptable, function, uuid(8144404d-e6c7-4861-bcca-47de912ee811)]
+interface nsIApplicationChooserFinishedCallback : nsISupports
+{
+  void done(in nsIHandlerApp handlerApp);
+};
+
+[scriptable, uuid(f7a149da-612a-46ba-8a2f-54786fc28791)]
+interface nsIApplicationChooser : nsISupports
+{
+ /**
+  * Initialize the application chooser picker widget.  The application chooser
+  * is not valid until this method is called.
+  *
+  * @param      parent   nsIDOMWindow parent.  This dialog will be dependent
+  *                      on this parent. parent must be non-null.
+  * @param      title    The title for the file widget
+  *
+  */
+  void init(in mozIDOMWindowProxy parent, in ACString title);
+
+  /**
+   * Open application chooser dialog.
+   *
+   * @param    contentType   content type of file to open
+   * @param    applicationChooserFinishedCallback  callback fuction to run when dialog is closed
+   */
+  void open(in ACString contentType, in nsIApplicationChooserFinishedCallback applicationChooserFinishedCallback);
+};
+

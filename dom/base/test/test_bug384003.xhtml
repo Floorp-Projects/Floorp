@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml" attr="value">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=384003
+-->
+<head>
+  <title>Test for Bug 384003</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=384003">Mozilla Bug 384003</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test" xmlns:foo="http://www.foo.org"><foo:foo/>
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 384003 **/
+
+
+function resolverTest(expr, resolver, result, extype) {
+  if (!extype) {
+    extype = 0;
+  }
+  try {
+    is(document.evaluate(expr, document, resolver,
+                         XPathResult.FIRST_ORDERED_NODE_TYPE, null).
+                           singleNodeValue,
+                         result,
+                         "Wrong XPathResult");
+    if (extype) {
+      ok(false, "Should have got an exception!");
+    }
+  } catch(ex) {
+    is(ex.name, extype, "Wrong exception");
+  }
+}
+
+// Expression should return document element.
+// Document resolver
+resolverTest("*", document, document.documentElement);
+// Element resolver
+resolverTest("*", document.documentElement, document.documentElement);
+// Attribute resolver
+resolverTest("*", document.documentElement.getAttributeNode("attr"),
+             document.documentElement);
+// Text node resolver
+resolverTest("*", document.documentElement.firstChild,
+             document.documentElement);
+// Comment node resolver
+resolverTest("*", document.documentElement.firstChild.nextSibling,
+             document.documentElement);
+
+// Expression should return foo element, but because of the
+// resolver it may throw an exception.
+var foo = document.getElementById("test").firstChild;
+// Document resolver
+resolverTest("//foo:foo", document, foo, "NamespaceError");
+// Element resolver
+resolverTest("//foo:foo", document.documentElement, foo, "NamespaceError");
+// Attribute resolver
+resolverTest("//foo:foo", document.documentElement.getAttributeNode("attr"),
+             foo, "NamespaceError");
+// Text node resolver
+resolverTest("//foo:foo", document.documentElement.firstChild,
+             foo, "NamespaceError");
+// Comment node resolver
+resolverTest("//foo:foo", document.documentElement.firstChild.nextSibling,
+             foo, "NamespaceError");
+// Function resolver
+resolverTest("//foo:foo",
+             function(p) { return (p == "foo") ? "http://www.foo.org" : ""; },
+             foo);
+// Element resolver, which has definition for foo namespace
+resolverTest("//foo:foo", foo.parentNode, foo);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

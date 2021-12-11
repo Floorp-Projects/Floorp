@@ -1,0 +1,18 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test document.mozSetImageElement() with a DOM element not in a document.
+-->
+<html>
+<body style="margin:0">
+  <div style="width:100px; height:100px;
+              background:-moz-element(#d);"></div>
+
+  <script src="canvas-drawing.js"></script>
+  <script>
+    var canvas = createCanvas();
+    document.mozSetImageElement("d", canvas);
+  </script>
+</body>
+</html>

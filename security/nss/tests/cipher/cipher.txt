@@ -1,0 +1,57 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file defines the cipher tests
+#
+# expected
+#   return	bltest		Test Case name
+#    value	params
+#  -------	----------	---------------
+	0	des_ecb_-E	DES_ECB_Encrypt
+	0	des_ecb_-D	DES_ECB_Decrypt
+	0	des_cbc_-E	DES_CBC_Encrypt
+	0	des_cbc_-D	DES_CBC_Decrypt
+	0	des3_ecb_-E	DES3_ECB_Encrypt
+	0	des3_ecb_-D	DES3_ECB_Decrypt
+	0	des3_cbc_-E	DES3_CBC_Encrypt
+	0	des3_cbc_-D	DES3_CBC_Decrypt
+	0	aes_ecb_-E	AES_ECB_Encrypt
+	0	aes_ecb_-D	AES_ECB_Decrypt
+	0	aes_cbc_-E	AES_CBC_Encrypt
+	0	aes_cbc_-D	AES_CBC_Decrypt
+	0	aes_ctr		AES_CTR
+	0	aes_cts		AES_CTS
+	0	aes_gcm		AES_GCM
+	0	camellia_ecb_-E	Camellia_ECB_Encrypt
+	0	camellia_ecb_-D	Camellia_ECB_Decrypt
+	0	camellia_cbc_-E	Camellia_CBC_Encrypt
+	0	camellia_cbc_-D	Camellia_CBC_Decrypt
+	0	seed_ecb_-E	SEED_ECB_Encrypt
+	0	seed_ecb_-D	SEED_ECB_Decrypt
+	0	seed_cbc_-E	SEED_CBC_Encrypt
+	0	seed_cbc_-D	SEED_CBC_Decrypt
+	0	chacha20_poly1305_-E ChaCha20_Poly1305_Encrypt
+	0	chacha20_poly1305_-D ChaCha20_Poly1305_Decrypt
+	0	rc2_ecb_-E	RC2_ECB_Encrypt
+	0	rc2_ecb_-D	RC2_ECB_Decrypt
+	0	rc2_cbc_-E	RC2_CBC_Encrypt
+	0	rc2_cbc_-D	RC2_CBC_Decrypt
+	0	rc4_-E		RC4_Encrypt
+	0	rc4_-D		RC4_Decrypt
+	0	rsa_-E		RSA_Encrypt
+	0	rsa_-D		RSA_Decrypt
+	0	rsa_oaep_-E	RSA_EncryptOAEP
+	0	rsa_oaep_-D	RSA_DecryptOAEP
+	0	rsa_pss_-S	RSA_SignPSS
+	0	rsa_pss_-V	RSA_CheckSignPSS
+	0	rsa_-K		RSA_Populate
+	0	dsa_-S		DSA_Sign
+	0	dsa_-V		DSA_Verify
+	0	md2_-H		MD2_Hash
+	0	md5_-H		MD5_Hash
+	0	sha1_-H		SHA1_Hash
+	0	sha224_-H	SHA224_Hash
+	0	sha256_-H	SHA256_Hash
+	0	sha384_-H	SHA384_Hash
+	0	sha512_-H	SHA512_Hash

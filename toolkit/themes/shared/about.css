@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  background: -moz-Dialog;
+  color: -moz-DialogText;
+  padding: 0 1em;
+  font: message-box;
+  line-height: 1.6em;
+}
+
+body {
+  position: relative;
+  min-width: 330px;
+  max-width: 50em;
+  margin: 4em auto;
+  padding-inline-start: 30px;
+}
+
+.aboutPageWideContainer {
+  max-width: 80%;
+}
+
+h1 {
+  font-weight: lighter;
+  font-size: 2.4em;
+}
+
+img {
+  border: 0;
+}
+
+ul {
+  margin: 0;
+  margin-inline-start: 1.5em;
+  padding: 0;
+}
+
+ul > li {
+  margin-top: .5em;
+}
+
+th, td {
+  padding: 0 5px;
+}

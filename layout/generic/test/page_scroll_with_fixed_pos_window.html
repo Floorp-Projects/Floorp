@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no" />
+  <title>Scrolling by pages with fixed-pos headers and footers</title>
+  <style>
+  .fp { position:fixed; left:0; width:100%; }
+  .fp2 { position:fixed; left:0; width:100%; }
+  </style>
+</head>
+<body onscroll="didScroll()" onload="test()">
+<div class="fp" id="top" style="top:0; height:10px; background:yellow;"></div>
+<div class="fp2" id="top2" style="top:10px; height:11px; background:blue;"></div>
+<div class="fp" style="top:50%; height:7px; background:cyan;"></div>
+<div class="fp2" id="bottom2" style="bottom:9px; height:12px; background:red;"></div>
+<div class="fp" id="bottom" style="bottom:0; height:13px; background:yellow;"></div>
+<p id="target">Something to click on to get focus
+<div style="height:3000px;"></div>
+<pre id="test">
+<script class="testbody">
+var SimpleTest = window.opener.SimpleTest;
+var SpecialPowers = window.opener.SpecialPowers;
+var is = window.opener.is;
+
+function showElements(show, classname) {
+  var elements = document.getElementsByClassName(classname);
+  for (var i = 0; i < elements.length; ++i) {
+    elements[i].style.display = show ? '' : 'none';
+  }
+  document.documentElement.getBoundingClientRect();
+}
+function showFixedPosElements(show) {
+  showElements(show, "fp");
+}
+function showFixedPosElements2(show) {
+  showElements(show, "fp2");
+}
+
+var nextCont;
+function didScroll() {
+  var c = nextCont;
+  nextCont = null;
+  if (c) {
+    c();
+  }
+}
+
+function resetScrollAndScrollDownOnePageWithContinuation(cont) {
+  if (document.documentElement.scrollTop != 0) {
+    document.documentElement.scrollTop = 0;
+    nextCont = function() {
+      setTimeout(function() { scrollDownOnePageWithContinuation(cont) }, 0);
+    };
+  } else {
+    scrollDownOnePageWithContinuation(cont);
+  }
+}
+
+function scrollDownOnePageWithContinuation(cont) {
+  nextCont = cont;
+  window.scrollByPages(1);
+}
+
+function test() {
+  var smoothScrollPref = "general.smoothScroll";
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
+}
+
+function runTest() {
+  showFixedPosElements(false);
+  showFixedPosElements2(false);
+  resetScrollAndScrollDownOnePageWithContinuation(function() {
+    var fullPageScrollDown = document.documentElement.scrollTop;
+
+    showFixedPosElements(true);
+    resetScrollAndScrollDownOnePageWithContinuation(function() {
+      var fullPageScrollDownWithHeaderAndFooter = document.documentElement.scrollTop;
+      is(fullPageScrollDownWithHeaderAndFooter, fullPageScrollDown - (10 + 13),
+         "Reduce scroll distance by size of small header and footer");
+
+      document.getElementById("bottom").style.height = (window.innerHeight - 20) + "px";
+      resetScrollAndScrollDownOnePageWithContinuation(function() {
+        is(document.documentElement.scrollTop, fullPageScrollDown - 10,
+           "Ignore really big elements when reducing scroll size");   
+        document.getElementById("bottom").style.height = "13px";
+
+        document.getElementById("top").style.width = "100px";
+        resetScrollAndScrollDownOnePageWithContinuation(function() {
+          is(document.documentElement.scrollTop, fullPageScrollDown - 13,
+             "Ignore elements that don't span the entire viewport side");
+          document.getElementById("top").style.width = "100%";
+
+          showFixedPosElements2(true);
+          resetScrollAndScrollDownOnePageWithContinuation(function() {
+            is(document.documentElement.scrollTop, fullPageScrollDown - (10 + 11 + 9 + 12),
+               "Combine multiple overlapping elements");
+            showFixedPosElements2(false);
+
+            document.getElementById("top").style.width = "400px";
+            resetScrollAndScrollDownOnePageWithContinuation(function() {
+              is(document.documentElement.scrollTop, fullPageScrollDown - (10 + 13),
+                 "Don't ignore elements that span more than half the viewport side");
+              document.getElementById("top").style.width = "100%";
+
+              document.getElementById("top").style.top = "-40px";
+              document.getElementById("top").style.transform = "translateY(38px)";
+              resetScrollAndScrollDownOnePageWithContinuation(function() {
+                is(document.documentElement.scrollTop,
+                   fullPageScrollDown - (10 + 13 - 40 + 38),
+                   "Account for offset and transform");
+                document.getElementById("top").style.width = "100%";
+
+                // Scroll back up so test results are visible
+                document.documentElement.scrollTop = 0;
+                SimpleTest.finish();
+                window.close();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>

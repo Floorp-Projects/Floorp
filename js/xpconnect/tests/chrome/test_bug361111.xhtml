@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=361111
+-->
+<window title="Mozilla Bug 361111"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=361111"
+     target="_blank">Mozilla Bug 361111</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 361111 **/
+    window.onerror = null;
+    SimpleTest.waitForExplicitFinish();
+    document.documentElement.setAttribute("onclick", "%");
+    is(1, 1, "Good, setting a bogus onclick did not throw.");
+
+    // Bonus test - make sure that flushPrefEnv is appropriately
+    // called at the end of the test. It would be nice if there were
+    // somewhere in the harness that this could live, but there isn't.
+    SpecialPowers.pushPrefEnv({set: [['testing.some_arbitrary_pref', true]]},
+                              function() { SimpleTest.finish(); });
+
+  ]]></script>
+</window>

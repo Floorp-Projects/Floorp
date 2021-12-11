@@ -1,0 +1,80 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 672944</title>
+    <style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+	
+  .bacon {
+    white-space:    nowrap;
+    text-overflow:  clip;
+    overflow:       hidden;
+    width:          30ch;
+    display:        -moz-box;
+    background:     lime;
+    margin-bottom:  1em;
+  }
+
+  .auto {
+    overflow-x:       auto;
+    width:          29.5ch;
+    padding-bottom: 2ch;
+  }
+  .scroll {
+    overflow:       auto;
+    padding:        2ch;
+    border:         3px solid black;
+  }
+  .scroll2 {
+    overflow:       auto;
+    padding:        3ch;
+  }
+  .scroll3 {
+    overflow:       auto;
+    padding:        2ch;
+    text-indent:    -3ch;
+  }
+  .scroll4 {
+    overflow:       auto;
+    padding:        2ch 0.2ch;
+  }
+span { background-color:white; position: relative; }
+ml3 {position: absolute; left:29ch; }
+
+#block-hover {
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+}
+    </style>
+</head>
+<body>
+
+<div style="float:right;" dir="rtl">
+  <div class="bacon"><span>1Beef hamburger bacon tri-tip&#x2026; jowl biltong tail ribeye ham</span></div><br>
+  <div class="bacon auto"><span>2Beef hamburger bacon tri-&nbsp;ipJOWLBILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll"><span>3Beef hamburger bacon tri&nbsp;&nbsp;&nbsp;pJOWLBILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll2"><span>4Beef hamburger bacon tr&nbsp;&nbsp;&nbsp;&nbsp;pJOWLBILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll3"><span>5Beef hamburger bacon&nbsp;&nbsp;&nbsp;&nbsp;-tipJOWLBILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll4"><span>6Beef hamburger bacon tri-&nbsp;&nbsp;pJOWLBILTONG tail ribeye ham</span></div><br>
+</div>
+
+<div>
+  <div class="bacon"><span>1Beef hamburger bacon tri-tip&#x2026; jowl biltong tail ribeye ham</span></div><br>
+  <div class="bacon auto"><span>2Beef hamburger bacon tri-tip&nbsp;OWLBILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll"><span>3Beef hamburger bacon tri-tipJ WLBILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll2"><span>4Beef hamburger bacon tri-tipJO LBILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll3"><span>5Beef hamburger bacon tri-tipJOWL ILTONG tail ribeye ham</span></div><br>
+  <div class="bacon scroll4"><span>6Beef hamburger bacon tri-ti JOWLBILTONG tail ribeye ham</span></div><br>
+</div>
+
+<div id="block-hover"></div>
+</body>
+</html>

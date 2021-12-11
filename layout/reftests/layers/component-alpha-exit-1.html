@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Test transition from component-alpha layer to single-alpha layer</title>
+<script type="text/javascript">
+document.addEventListener("MozReftestInvalidate", function scrollOnePixelDown () {
+  var scrollbox = document.getElementById("scrollbox");
+  window.addEventListener("MozAfterPaint", function() {
+    scrollbox.scrollTop = 1000;
+    document.documentElement.className = "";
+  }, {once: true});
+  scrollbox.scrollTop = 1; // activate scroll layer
+});
+</script>
+<style>
+#scrollbox {
+  margin: 20px;
+  width: 300px;
+  height: 400px;
+  overflow-y: hidden;
+  background: linear-gradient(#FFF, #FFF);
+}
+
+#inner {
+  background-color: #000;
+  margin-top: 10px;
+  height: 5px;
+  line-height: 5px;
+  padding-bottom: 400px;
+}
+</style>
+
+<div id="scrollbox">
+  <div id="inner">
+    Text
+  </div>
+</div>

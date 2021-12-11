@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Test for panel 'open' state on the anchor.
+  -->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<label id="outerlabel" value="Label"/>
+<panel id="panel" type="arrow">
+  <label id="innerlabel" value="Inner" context="menupopup"/>
+  <menupopup id="menupopup">
+    <menuitem label="One"/>
+  </menupopup>
+</panel>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+add_task(async () => {
+  // Open a panel and check the open state. The open state should only be assigned
+  // for arrow panels and not the context menu.
+
+  let panel = document.getElementById("panel");
+  let menupopup = document.getElementById("menupopup");
+  let innerlabel = document.getElementById("innerlabel");
+  let outerlabel = document.getElementById("outerlabel");
+
+  // Two iterations are used, one with type="arrow" and the second without.
+  for (let iter = 0; iter < 2; iter++) {
+    await new Promise(resolve => {
+      panel.addEventListener("popupshown", resolve, { once: true });
+      panel.openPopup(outerlabel, "after_start");
+    });
+
+    // The open state should only be set for arrow panels.
+    if (panel.getAttribute("type") == "arrow") {
+      is(outerlabel.getAttribute("open"), "true", "outer label open state when panel opened");
+    } else {
+      ok(!outerlabel.hasAttribute("open"), "outer label open state when panel opened");
+    }
+    ok(!innerlabel.hasAttribute("open"), "inner label open state when panel opened");
+
+    await new Promise(resolve => {
+      menupopup.addEventListener("popupshown", resolve, { once: true });
+      synthesizeMouse(innerlabel, 4, 4, { type: "contextmenu", button: 2 });
+    });
+
+    // The open state should only be set for arrow panels.
+    if (panel.getAttribute("type") == "arrow") {
+      is(outerlabel.getAttribute("open"), "true", "outer label open state when context menu opened");
+    } else {
+      ok(!outerlabel.hasAttribute("open"), "outer label open state when context menu opened");
+    }
+    ok(!innerlabel.hasAttribute("open"), "inner label open state when context menu opened");
+
+    await new Promise(resolve => {
+      menupopup.addEventListener("popuphidden", resolve, { once: true });
+      menupopup.hidePopup();
+    });
+
+    await new Promise(resolve => {
+      panel.addEventListener("popuphidden", resolve, { once: true });
+      panel.hidePopup();
+    });
+
+    ok(!outerlabel.hasAttribute("open"), "outer label open state when panel closed");
+    ok(!innerlabel.hasAttribute("open"), "inner label open state when panel closed");
+
+    // Clear the type attribute for the second iteration.
+    panel.removeAttribute("type");
+  }
+});
+
+]]>
+</script>
+
+</window>

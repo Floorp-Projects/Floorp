@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: disabling via pref</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  ok(!window.MediaSource && !window.SourceBuffer && !window.SourceBufferList,
+     "MediaSource should be hidden behind a pref");
+  SimpleTest.doesThrow(() => new MediaSource,
+                       "MediaSource should be hidden behind a pref");
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv({"set":
+    [
+      ["media.mediasource.enabled", false],
+    ],
+}, test);
+
+</script>
+</pre>
+</body>
+</html>

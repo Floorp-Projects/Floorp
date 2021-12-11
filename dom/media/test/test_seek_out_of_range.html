@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seeking off the end of a file</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+// Test if the ended event works correctly.
+
+async function initTest(test, token) {
+  var type = getMajorMimeType(test.type);
+  var v = document.createElement(type);
+  v.preload = "auto";
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v._name = test.name;
+  document.body.appendChild(v);
+
+  await once(v, "loadedmetadata");
+  info(`${v._name}: seeking to the end of the media.`);
+  v.currentTime = 3.0 * v.duration;
+  // Wait for 'seeked' and 'ended' to be fired.
+  await Promise.all([once(v, "seeked"), once(v, "ended")]);
+  // Check currentTime is near the end of the media.
+  ok(Math.abs(v.duration - v.currentTime) < 0.1,
+     "Should be at end of media for " + v._name + " t=" + v.currentTime + " d=" + v.duration);
+  // Call play() to start playback from the beginning.
+  v.play();
+  await once(v, "ended");
+  ok(v.ended, "Checking ended set after seeking to EOF and playing for " + v._name);
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>
+</pre>
+</body>
+</html>

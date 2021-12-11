@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=562447
+-->
+<head>
+  <title>Test for Bug 562447</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body>
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug?id=562447">Mozilla Bug 562447</a>
+
+<input id="WhyDoYouFocusMe"
+       style="position: absolute; left: -50px; top: 10000px;">
+
+<pre id="test">
+<script>
+addLoadEvent(function() {
+  // Scroll down a bit
+  window.scrollTo(0, 5000);
+
+  setTimeout(function() {
+    // Make sure that we're scrolled by 5000px
+    is(Math.round(window.pageYOffset), 5000, "Make sure we're scrolled correctly");
+
+    // Scroll back up, and mess with the input box along the way
+    var input = document.getElementById("WhyDoYouFocusMe");
+    input.focus();
+    input.blur();
+    window.scrollTo(0, 0);
+
+    setTimeout(function() {
+      is(window.pageYOffset, 0, "Make sure we're scrolled back up correctly");
+
+      // Scroll back up
+      window.scrollTo(0, 5000);
+
+      setTimeout(function() {
+        is(Math.round(window.pageYOffset), 5000, "Sanity check");
+
+        window.scrollTo(0, 0);
+        input.focus();
+        input.blur();
+
+        setTimeout(function() {
+          isnot(Math.round(window.pageYOffset), 0, "This time we shouldn't be scrolled up");
+
+          SimpleTest.finish();
+        }, 0);
+      }, 0);
+    }, 0);
+  }, 0);
+});
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+
+</body>
+</html>

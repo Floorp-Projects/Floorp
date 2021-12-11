@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Record AudioContext Node</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=968109">Mozilla Bug 968109</a>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function setUpSource(contextType, nodeType) {
+  // Use contextType to choose offline or real-time context.
+  const context = contextType == "offline"?
+    new OfflineAudioContext(2 , 80920, 44100) : new AudioContext();
+  const buffer = context.createBuffer(2, 80920, context.sampleRate);
+  for (let i = 0; i < 80920; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(1000 * 2 * Math.PI * i / context.sampleRate);
+    buffer.getChannelData(1)[i] = Math.sin(1000 * 2 * Math.PI * i / context.sampleRate);
+  }
+
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  source.start(0);
+
+  // nodeType decides which node in graph should be the source of recording.
+  let node;
+  if (nodeType == "source") {
+    node = source;
+  } else if (nodeType == "splitter") {
+    const splitter = context.createChannelSplitter();
+    source.connect(splitter);
+    node = splitter;
+  } else if (nodeType == "destination") {
+    source.connect(context.destination);
+    node = context.destination;
+  }
+  // Explicitly start offline context.
+  if (contextType == "offline") {
+    context.startRendering();
+  }
+
+  return node;
+}
+
+async function testRecord(source, mimeType) {
+  const isOffline = source.context instanceof OfflineAudioContext;
+  const recorder = new MediaRecorder(source, 0, {mimeType});
+  is(recorder.mimeType, mimeType, "Mime type is set");
+  const extendedMimeType = `${mimeType || "audio/ogg"}; codecs=opus`;
+
+  recorder.onwarning = () => ok(false, "should not fire onwarning");
+  recorder.onerror = () => ok(false, "should not fire onerror");
+  if (!isOffline) {
+    recorder.onstop = () => ok(false, "should not fire stop yet");
+  }
+
+  recorder.start(1000);
+  is("recording", recorder.state, "state should become recording after calling start()");
+  is(recorder.mimeType, mimeType, "Mime type is not changed by start()");
+
+  await new Promise(r => recorder.onstart = r);
+  is(recorder.mimeType, extendedMimeType, "Mime type is fully defined");
+
+  const chunks = [];
+  let {data} = await new Promise(r => recorder.ondataavailable = r);
+  if (!isOffline) {
+    is(recorder.state, "recording", "Expected to still be recording");
+  }
+  is(data.type, extendedMimeType, "Blob has fully defined mimetype");
+  isnot(data.size, 0, "should get data and its length should be > 0");
+  chunks.push(data);
+
+  if (isOffline) {
+    await new Promise(r => recorder.onstop = r);
+    is(recorder.state, "inactive", "Offline context should end by itself");
+  } else {
+    is(recorder.state, "recording", "Expected to still be recording");
+    recorder.stop();
+    ({data} = await new Promise(r => recorder.ondataavailable = r));
+    is(recorder.state, "inactive", "Expected to be inactive after last blob");
+    isnot(data.size, 0, "should get data and its length should be > 0");
+    chunks.push(data);
+
+    await new Promise(r => recorder.onstop = r);
+    is(recorder.state, "inactive", "state should remain inactive after stop event");
+  }
+  return new Blob(chunks, {type: chunks[0].type});
+}
+
+addLoadEvent(async () => {
+  const src = setUpSource();
+  let didThrow = false;
+  try {
+    new MediaRecorder(src);
+  } catch (e) {
+    didThrow = true;
+  }
+  ok(didThrow, "MediaRecorder(AudioNode) should be hidden behind a pref");
+
+  await SpecialPowers.pushPrefEnv({set: [
+      ["media.recorder.audio_node.enabled", true],
+    ]});
+
+  // Test with various context and source node types.
+  for (const mimeType of [
+    "audio/ogg",
+    "audio/webm",
+    "video/webm",
+    "",
+  ]) {
+    for (const {context, node} of [
+      {context: "", node: "source"},
+      {context: "", node: "splitter"},
+      {context: "offline", node: "destination"},
+    ]) {
+      info(`Testing recording ${context || "regular"} context and ${node} ` +
+           `node with mimeType '${mimeType}'`);
+      await testRecord(setUpSource(context, node), mimeType);
+    }
+  }
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

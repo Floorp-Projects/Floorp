@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+
+function loadContentScriptExtension(contentScript) {
+  let extensionData = {
+    manifest: {
+      "content_scripts": [{
+        "js": ["contentscript.js"],
+        "matches": ["http://mochi.test/*/file_sample.html"],
+      }],
+    },
+    files: {
+      "contentscript.js": contentScript,
+    },
+  };
+  return ExtensionTestUtils.loadExtension(extensionData);
+}
+
+add_task(async function test_content_script_sendMessage_without_listener() {
+  async function contentScript() {
+    await browser.test.assertRejects(
+      browser.runtime.sendMessage("msg"),
+      "Could not establish connection. Receiving end does not exist.");
+
+    browser.test.notifyPass("sendMessage callback was invoked");
+  }
+
+  let extension = loadContentScriptExtension(contentScript);
+  await extension.startup();
+
+  let win = window.open("file_sample.html");
+  await extension.awaitFinish("sendMessage callback was invoked");
+  win.close();
+
+  await extension.unload();
+});
+
+add_task(async function test_content_script_chrome_sendMessage_without_listener() {
+  function contentScript() {
+    /* globals chrome */
+    browser.test.assertEq(null, chrome.runtime.lastError, "no lastError before call");
+    let retval = chrome.runtime.sendMessage("msg");
+    browser.test.assertEq(null, chrome.runtime.lastError, "no lastError after call");
+    // TODO(robwu): Fix the implementation and uncomment the next expectation.
+    // When content script APIs are schema-based (bugzil.la/1287007) this bug will be fixed for free.
+    // browser.test.assertEq(undefined, retval, "return value of chrome.runtime.sendMessage without callback");
+    browser.test.assertTrue(retval instanceof Promise, "TODO: chrome.runtime.sendMessage should return undefined, not a promise");
+
+    let isAsyncCall = false;
+    retval = chrome.runtime.sendMessage("msg", reply => {
+      browser.test.assertEq(undefined, reply, "no reply");
+      browser.test.assertTrue(isAsyncCall, "chrome.runtime.sendMessage's callback must be called asynchronously");
+      browser.test.assertEq(undefined, retval, "return value of chrome.runtime.sendMessage with callback");
+      browser.test.assertEq("Could not establish connection. Receiving end does not exist.", chrome.runtime.lastError.message);
+      browser.test.notifyPass("finished chrome.runtime.sendMessage");
+    });
+    isAsyncCall = true;
+  }
+
+  let extension = loadContentScriptExtension(contentScript);
+  await extension.startup();
+
+  let win = window.open("file_sample.html");
+  await extension.awaitFinish("finished chrome.runtime.sendMessage");
+  win.close();
+
+  await extension.unload();
+});
+</script>
+</body>
+</html>

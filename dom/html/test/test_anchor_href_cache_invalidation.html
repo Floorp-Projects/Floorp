@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for anchor cache invalidation</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <a id="x" href="http://example.com"></a>  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+is($("x").href, "http://example.com/");
+is($("x").host, "example.com");
+
+$("x").href = "http://www.example.com";
+
+is($("x").href, "http://www.example.com/");
+is($("x").host, "www.example.com");
+
+$("x").setAttribute("href", "http://www.example.net/");
+is($("x").host, "www.example.net");
+
+</script>
+</pre>
+</body>
+</html>

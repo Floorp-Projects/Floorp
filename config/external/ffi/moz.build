@@ -1,0 +1,149 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+FINAL_LIBRARY = "js"
+
+if CONFIG["MOZ_SYSTEM_FFI"]:
+    OS_LIBS += CONFIG["MOZ_FFI_LIBS"]
+else:
+    AllowCompilerWarnings()
+    NoVisibilityFlags()
+
+    CONFIGURE_DEFINE_FILES += [
+        "/js/src/ctypes/libffi/fficonfig.h",
+    ]
+    LOCAL_INCLUDES += [
+        "!/js/src/ctypes/libffi",
+        "!/js/src/ctypes/libffi/include",
+        "/js/src/ctypes/libffi/include",
+        "/js/src/ctypes/libffi/src/%s" % CONFIG["FFI_TARGET_DIR"],
+    ]
+
+    DEFINES["TARGET"] = CONFIG["FFI_TARGET"]
+    DEFINES[CONFIG["FFI_TARGET"]] = True
+    DEFINES["FFI_NO_RAW_API"] = True
+    DEFINES["FFI_BUILDING"] = True
+    DEFINES["HAVE_AS_ASCII_PSEUDO_OP"] = True
+    DEFINES["HAVE_AS_STRING_PSEUDO_OP"] = True
+
+    if CONFIG["MOZ_DEBUG"]:
+        DEFINES["FFI_DEBUG"] = True
+        if not CONFIG["MOZ_NO_DEBUG_RTL"]:
+            DEFINES["USE_DEBUG_RTL"] = True
+        SOURCES += [
+            "/js/src/ctypes/libffi/src/debug.c",
+        ]
+
+    if CONFIG["OS_TARGET"] != "WINNT":
+        DEFINES["HAVE_HIDDEN_VISIBILITY_ATTRIBUTE"] = True
+
+    if CONFIG["INTEL_ARCHITECTURE"]:
+        DEFINES["HAVE_AS_X86_PCREL"] = True
+
+    # Don't bother setting EH_FRAME_FLAGS on Windows.
+    # Quoted defines confuse msvcc.sh, and the value isn't used there.
+    if CONFIG["OS_TARGET"] != "WINNT":
+        if CONFIG["FFI_TARGET"] == "ARM":
+            DEFINES["EH_FRAME_FLAGS"] = '"aw"'
+        else:
+            DEFINES["EH_FRAME_FLAGS"] = '"a"'
+
+    # Common source files.
+    SOURCES += [
+        "/js/src/ctypes/libffi/src/closures.c",
+        "/js/src/ctypes/libffi/src/java_raw_api.c",
+        "/js/src/ctypes/libffi/src/prep_cif.c",
+        "/js/src/ctypes/libffi/src/raw_api.c",
+        "/js/src/ctypes/libffi/src/types.c",
+    ]
+
+    # Per-platform sources and flags.
+    ffi_srcs = ()
+    ffi_h_defines = []
+    if CONFIG["FFI_TARGET"] == "X86_WIN64":
+        if CONFIG["CC_TYPE"] == "clang-cl":
+            ffi_srcs = ("ffiw64.c",)
+            # libffi asm needs to be preprocessed for MSVC's assembler
+            GeneratedFile(
+                "win64_intel.asm",
+                inputs=[
+                    "/js/src/ctypes/libffi/src/x86/win64_intel.S",
+                    "!/js/src/ctypes/libffi/fficonfig.h",
+                    "!/js/src/ctypes/libffi/include/ffi.h",
+                ],
+                script="preprocess_libffi_asm.py",
+                flags=["$(DEFINES)", "$(LOCAL_INCLUDES)"],
+            )
+            SOURCES += ["!win64_intel.asm"]
+        else:
+            ffi_srcs = ("ffiw64.c", "win64.S")
+
+    elif CONFIG["FFI_TARGET"] == "X86_64":
+        DEFINES["HAVE_AS_X86_64_UNWIND_SECTION_TYPE"] = True
+        ffi_srcs = ("ffi64.c", "unix64.S", "ffiw64.c", "win64.S")
+
+    elif CONFIG["FFI_TARGET"] == "X86_WIN32" and CONFIG["CC_TYPE"] == "clang-cl":
+        ffi_srcs = ("ffi.c",)
+        # libffi asm needs to be preprocessed for MSVC's assembler
+        GeneratedFile(
+            "sysv_intel.asm",
+            inputs=[
+                "/js/src/ctypes/libffi/src/x86/sysv_intel.S",
+                "!/js/src/ctypes/libffi/fficonfig.h",
+                "!/js/src/ctypes/libffi/include/ffi.h",
+            ],
+            script="preprocess_libffi_asm.py",
+            flags=["$(DEFINES)", "$(LOCAL_INCLUDES)"],
+        )
+        SOURCES += ["!sysv_intel.asm"]
+        ASFLAGS += ["-safeseh"]
+
+    elif CONFIG["FFI_TARGET"] == "ARM_WIN64":
+        ffi_srcs = ("ffi.c",)
+
+        # libffi asm needs to be preprocessed for MSVC's assembler
+        GeneratedFile(
+            "win64_armasm.asm",
+            inputs=[
+                "/js/src/ctypes/libffi/src/aarch64/win64_armasm.S",
+                "!/js/src/ctypes/libffi/fficonfig.h",
+                "!/js/src/ctypes/libffi/include/ffi.h",
+            ],
+            script="preprocess_libffi_asm.py",
+            flags=["$(DEFINES)", "$(LOCAL_INCLUDES)"],
+        )
+        SOURCES += ["!win64_armasm.asm"]
+
+    else:
+        ffi_srcs = ("ffi.c", "sysv.S")
+
+    if CONFIG["FFI_TARGET"] in ("X86_WIN32", "X86_DARWIN") and CONFIG["CC_TYPE"] in (
+        "gcc",
+        "clang",
+    ):
+        DEFINES["SYMBOL_UNDERSCORE"] = True
+
+    if CONFIG["OS_ARCH"] == "Darwin" and CONFIG["CPU_ARCH"] in ("arm", "aarch64"):
+        DEFINES["FFI_EXEC_TRAMPOLINE_TABLE"] = True
+        ffi_h_defines.append("FFI_EXEC_TRAMPOLINE_TABLE")
+
+    elif (
+        CONFIG["OS_ARCH"] in ("Darwin", "FreeBSD", "GNU_kFreeBSD", "OpenBSD", "SunOS")
+        or CONFIG["OS_TARGET"] == "Android"
+    ):
+        DEFINES["FFI_MMAP_EXEC_WRIT"] = True
+
+    SOURCES += [
+        "/js/src/ctypes/libffi/src/%s/%s" % (CONFIG["FFI_TARGET_DIR"], s)
+        for s in sorted(ffi_srcs)
+    ]
+
+    GeneratedFile(
+        "/js/src/ctypes/libffi/include/ffi.h",
+        script="subst_header.py",
+        inputs=["/js/src/ctypes/libffi/include/ffi.h.in"],
+        flags=ffi_h_defines,
+    )

@@ -1,0 +1,18 @@
+/* Override default style */
+button:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+button.notinvalid {
+  background-color: green;
+}
+button.notinvalid:-moz-ui-invalid {
+  background-color: red;
+}
+
+button.invalid {
+  background-color: red;
+}
+button.invalid:-moz-ui-invalid {
+  background-color: green;
+}

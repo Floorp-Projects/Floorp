@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=884921
+-->
+<head>
+  <title>Test for getCurrentPosition </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+href="https://bugzilla.mozilla.org/show_bug.cgi?id=884921">Mozilla Bug 884921</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// This test loads in an iframe, to ensure that the navigator instance is
+// loaded with the correct value of the preference.
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({set: [["geo.enabled", false]]}, function() {
+  let iframe = document.createElement("iframe");
+  iframe.id = "f1";
+  iframe.src = "test_geolocation_is_undefined_when_pref_is_off_iframe.html";
+  document.body.appendChild(iframe);
+});
+
+</script>
+</pre>
+</body>
+</html>

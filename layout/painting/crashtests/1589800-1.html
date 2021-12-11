@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <style>
+        #parent {
+        transform: rotateZ(1deg);
+        position: absolute;
+        opacity: 0.5;
+        overflow-x: hidden;
+    }
+
+    #child {
+        width: 10px;
+        height: 10px;
+    }
+
+    .blend {
+        mix-blend-mode: color-burn;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="parent">
+        <div id="child">a</div>
+    </div>
+    <div>
+        <div id="blend">a</div>
+    </div>
+    <script type="text/javascript">
+    function modify() {
+        var e = document.getElementById("child");
+        e.style.backgroundColor = "red";
+        setTimeout(addBlend, 0);
+    }
+
+    function addBlend() {
+        var e = document.getElementById("blend");
+        e.classList.add("blend");
+    }
+
+    // setTimeout(modify, 3000);
+    window.addEventListener("MozAfterPaint", modify);
+    </script>
+</body>
+</html>

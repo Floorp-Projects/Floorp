@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the object actor</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the object actor</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({
+  "set":  [["security.allow_eval_with_system_principal", true]]
+});
+
+async function startTest() {
+  removeEventListener("load", startTest);
+
+  const longString = (new Array(DevToolsServer.LONG_STRING_LENGTH + 3)).join("\u0629");
+  createTestGlobalVariable(longString);
+
+  const {state} = await attachConsoleToTab(["ConsoleAPI"]);
+  const onConsoleApiCall = state.webConsoleFront.once("consoleAPICall");
+  top.console.log("hello", top.wrappedJSObject.foobarObject);
+  const {message} = await onConsoleApiCall;
+
+  info("checking the console API call packet");
+  checkConsoleAPICall(message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "startTest",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+    }],
+  });
+
+  info("inspecting object properties");
+  const {ownProperties} = await message.arguments[1].getPrototypeAndProperties();
+
+  const expectedProps = {
+    "abArray": {
+      value: {
+        type: "object",
+        class: "Array",
+        actor: /[a-z]/,
+      },
+    },
+    "foo": {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: 1,
+    },
+    "foobar": {
+      value: "hello",
+    },
+    "foobaz": {
+      value: {
+        type: "object",
+        class: "HTMLDocument",
+        actor: /[a-z]/,
+      },
+    },
+    "getterAndSetter": {
+      get: {
+        type: "object",
+        class: "Function",
+        actor: /[a-z]/,
+      },
+      set: {
+        type: "object",
+        class: "Function",
+        actor: /[a-z]/,
+      },
+    },
+    "longStringObj": {
+      value: {
+        type: "object",
+        class: "Object",
+        actor: /[a-z]/,
+      },
+    },
+    "notInspectable": {
+      value: {
+        type: "object",
+        class: "Object",
+        actor: /[a-z]/,
+      },
+    },
+    "omg": {
+      value: { type: "null" },
+    },
+    "omgfn": {
+      value: {
+        type: "object",
+        class: "Function",
+        actor: /[a-z]/,
+      },
+    },
+    "tamarbuta": {
+      value: {
+        type: "longString",
+        initial: longString.substring(0,
+          DevToolsServer.LONG_STRING_INITIAL_LENGTH),
+        length: longString.length,
+      },
+    },
+    "testfoo": {
+      value: false,
+    },
+  };
+  is(Object.keys(ownProperties).length, Object.keys(expectedProps).length,
+     "number of enumerable properties");
+  checkObject(ownProperties, expectedProps);
+
+  await closeDebugger(state);
+  SimpleTest.finish();
+}
+
+
+function createTestGlobalVariable(longString) {
+  // Here we put the objects in the correct window, to avoid having them all
+  // wrapped by proxies for cross-compartment access.
+  const foobarObject = top.Object.create(null);
+  foobarObject.tamarbuta = longString;
+  foobarObject.foo = 1;
+  foobarObject.foobar = "hello";
+  foobarObject.omg = null;
+  foobarObject.testfoo = false;
+  foobarObject.notInspectable = top.Object.create(null);
+  foobarObject.omgfn = new top.Function("return 'myResult'");
+  foobarObject.abArray = new top.Array("a", "b");
+  foobarObject.foobaz = top.document;
+
+  top.Object.defineProperty(foobarObject, "getterAndSetter", {
+    enumerable: true,
+    get: new top.Function("return 'foo';"),
+    set: new top.Function("1+2"),
+  });
+
+  foobarObject.longStringObj = top.Object.create(null);
+  foobarObject.longStringObj.toSource = new top.Function("'" + longString + "'");
+  foobarObject.longStringObj.toString = new top.Function("'" + longString + "'");
+  foobarObject.longStringObj.boom = "explode";
+  top.wrappedJSObject.foobarObject = foobarObject;
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

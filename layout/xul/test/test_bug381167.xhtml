@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=381167
+-->
+<head>
+  <title>Test for Bug 381167</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=381167">Mozilla Bug 381167</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<xul:tree>
+  <xul:tree>
+    <xul:treechildren/>
+    <xul:treecol/>
+  </xul:tree>
+</xul:tree>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 381167 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function closeit() {
+  var evt = new KeyboardEvent("keypress", {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    ctrlKey: true,
+    keyCode: 'W'.charCodeAt(0),
+    charCode: 0,
+  });
+  window.dispatchEvent(evt);
+
+  setTimeout(finish, 200);
+}
+window.addEventListener('load', closeit);
+
+function finish()
+{
+  ok(true, "This is a mochikit version of a crash test. To complete is to pass.");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

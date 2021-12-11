@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<style>
+@page {
+    size: 20in 5in;
+    margin: 0;
+}
+div {
+    position: absolute;
+    background: blue;
+    width: 20px;
+    height: 20px;
+}
+.upper {
+    top: 0;
+}
+.lower{
+    /* This accounts for the difference in @page{ size: ... }, as long as the
+     * page is placed aligned to the upper left corner of the paper.
+     */
+    bottom: 2in;
+}
+.left{
+    left: 0;
+}
+.right{
+    right: 0;
+}
+</style>
+<body>
+<div class="upper left"></div>
+<div class="upper right"></div>
+<div class="lower left"></div>
+<div class="lower right"></div>
+</body>

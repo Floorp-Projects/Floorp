@@ -1,0 +1,100 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOCHITEST_MANIFESTS += [
+    "tests/browserscope/mochitest.ini",
+    "tests/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
+
+BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+
+EXPORTS.mozilla += [
+    "ChangeStyleTransaction.h",
+    "CSSEditUtils.h",
+    "EditAction.h",
+    "EditorBase.h",
+    "EditorCommands.h",
+    "EditorController.h",
+    "EditorDOMPoint.h",
+    "EditorUtils.h",
+    "EditTransactionBase.h",
+    "HTMLEditor.h",
+    "HTMLEditorController.h",
+    "HTMLEditUtils.h",
+    "ManualNAC.h",
+    "SelectionState.h",
+    "TextEditor.h",
+    "TypeInState.h",
+]
+
+UNIFIED_SOURCES += [
+    "ChangeAttributeTransaction.cpp",
+    "ChangeStyleTransaction.cpp",
+    "CompositionTransaction.cpp",
+    "CreateElementTransaction.cpp",
+    "CSSEditUtils.cpp",
+    "DeleteNodeTransaction.cpp",
+    "DeleteRangeTransaction.cpp",
+    "DeleteTextTransaction.cpp",
+    "EditAggregateTransaction.cpp",
+    "EditorBase.cpp",
+    "EditorCommands.cpp",
+    "EditorController.cpp",
+    "EditorEventListener.cpp",
+    "EditorUtils.cpp",
+    "EditTransactionBase.cpp",
+    "HTMLAbsPositionEditor.cpp",
+    "HTMLAnonymousNodeEditor.cpp",
+    "HTMLEditor.cpp",
+    "HTMLEditorCommands.cpp",
+    "HTMLEditorController.cpp",
+    "HTMLEditorDataTransfer.cpp",
+    "HTMLEditorDeleteHandler.cpp",
+    "HTMLEditorDocumentCommands.cpp",
+    "HTMLEditorEventListener.cpp",
+    "HTMLEditorObjectResizer.cpp",
+    "HTMLEditorState.cpp",
+    "HTMLEditSubActionHandler.cpp",
+    "HTMLEditUtils.cpp",
+    "HTMLInlineTableEditor.cpp",
+    "HTMLStyleEditor.cpp",
+    "HTMLTableEditor.cpp",
+    "InsertNodeTransaction.cpp",
+    "InsertTextTransaction.cpp",
+    "InternetCiter.cpp",
+    "JoinNodeTransaction.cpp",
+    "PlaceholderTransaction.cpp",
+    "ReplaceTextTransaction.cpp",
+    "SelectionState.cpp",
+    "SplitNodeTransaction.cpp",
+    "TextEditor.cpp",
+    "TextEditorDataTransfer.cpp",
+    "TextEditSubActionHandler.cpp",
+    "TypeInState.cpp",
+    "WSRunObject.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/dom/html",
+    "/extensions/spellcheck/src",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/tables",
+    "/layout/xul",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+with Files("tests/*1151186*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")

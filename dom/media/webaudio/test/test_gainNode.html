@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test GainNode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph(context) {
+
+    var gain = new GainNode(context);
+    ok(gain.gain, "The audioparam member must exist");
+    is(gain.gain.value, 1.0, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    gain.gain.value = 0.5;
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+
+    gain = new GainNode(context, { gain: 0.5 });
+    ok(gain.gain, "The audioparam member must exist");
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    gain.gain.value = 0.5;
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+
+    var buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    }
+
+    var source = context.createBufferSource();
+    source.buffer = buffer;
+
+    gain = context.createGain();
+    source.connect(gain);
+
+    ok(gain.gain, "The audioparam member must exist");
+    is(gain.gain.value, 1.0, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    gain.gain.value = 0.5;
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    is(gain.channelCount, 2, "gain node has 2 input channels by default");
+    is(gain.channelCountMode, "max", "Correct channelCountMode for the gain node");
+    is(gain.channelInterpretation, "speakers", "Correct channelCountInterpretation for the gain node");
+
+    source.start(0);
+    return gain;
+  },
+  createExpectedBuffers(context) {
+    var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      expectedBuffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate) / 2;
+    }
+    return expectedBuffer;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

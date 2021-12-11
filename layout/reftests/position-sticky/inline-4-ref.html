@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <link rel="author" title="Corey Ford" href="mailto:corey@coreyford.name">
+    <link rel="stylesheet" type="text/css" href="ahem.css">
+    <style>
+      #scroller {
+        margin-top: 100px;
+        height: 200px;
+        width: 500px;
+        overflow: hidden;
+      }
+      #container {
+        background: pink;
+        position: relative;
+        margin: 50px;
+        height: 400px;
+        margin-bottom: 1000px;
+      }
+      #sticky {
+        position: sticky;
+        left: 0px;
+        top: 75px;
+        outline: 1px dotted purple;
+        font: 10px/1 Ahem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroller">
+      <div id="container">
+        <span id="sticky">
+          First line<br>
+          Second line<br>
+          Third line<br>
+        </span>
+      </div>
+    </div>
+    <script>
+      document.getElementById("scroller").scrollTop = 30;
+    </script>
+  </body>
+</html>

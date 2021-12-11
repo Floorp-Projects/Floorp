@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
+
+<window windowtype="Update:History"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        style="width: 35em;"
+        data-l10n-id="close-button-label"
+        data-l10n-attrs="title"
+        onload="gUpdateHistory.onLoad();">
+<dialog id="history"
+        buttons="cancel"
+        defaultButton="cancel"
+        data-l10n-id="close-button-label"
+        data-l10n-attrs="buttonlabelcancel">
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/updates/history.ftl"/>
+  </linkset>
+
+  <script src="chrome://mozapps/content/update/history.js"/>
+
+  <label data-l10n-id="history-intro"></label>
+  <separator class="thin"/>
+  <richlistbox id="historyItems" flex="1">
+    <label data-l10n-id="no-updates-label"></label>
+  </richlistbox>
+  <separator class="thin"/>
+</dialog>
+</window>

@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <script>
+            function check_wrapper(ok, wrapper, expected, note) {
+                let { getClassName } = SpecialPowers.unwrap(
+                  SpecialPowers.wrap(window).ChromeUtils
+                );
+                ok(getClassName(wrapper, false) === expected, note);
+            }
+            function run_test(ok, xpcnw, sjow) {
+                // both wrappers should point to our window: XOW
+                check_wrapper(ok, ok, "Proxy", "functions are wrapped properly");
+                check_wrapper(ok, xpcnw, "Proxy", "XPCNWs are transformed correctly");
+                check_wrapper(ok, sjow, "Proxy", "SJOWs are transformed correctly");
+
+                check_wrapper(ok, window.location, "Location",
+                              "same-compartment security wrappers are gone");
+
+                ok(defprop1 === 1, "defprop1 exists");
+                window.defprop1 = 2;
+                ok(defprop1 === 2, "defprop1 is properly writable");
+
+                // defprop2 = {}; disabled because the test doesn't work
+            }
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

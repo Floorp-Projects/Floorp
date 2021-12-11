@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1086997
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1086997</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+"use strict";
+const options = {...data, checkConformance: true } ;
+[
+  {
+    func: () => options.jsonText = JSON.stringify(1),
+    warn: "Manifest should be an object.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify("a string"),
+    warn: "Manifest should be an object.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify({
+      scope: "https://www.mozilla.org",
+    }),
+    warn: "The scope URL must be same origin as document.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify({
+      scope: "foo",
+      start_url: "bar",
+    }),
+    warn: "The start URL is outside the scope, so the scope is invalid.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify({
+      start_url: "https://www.mozilla.org",
+    }),
+    warn: "The start URL must be same origin as document.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify({
+      start_url: 42,
+    }),
+    warn: "Expected the manifest\u2019s start_url member to be a string.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify({
+      theme_color: "42",
+    }),
+    warn: "theme_color: 42 is not a valid CSS color.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify({
+      background_color: "42",
+    }),
+    warn: "background_color: 42 is not a valid CSS color.",
+  },
+  {
+    func: () => options.jsonText = JSON.stringify({
+      icons: [
+        { "src": "http://example.com", "sizes": "48x48"},
+        { "src": "http://:Invalid", "sizes": "48x48"},
+      ],
+    }),
+    warn: "icons item at index 1 is invalid. The src member is an invalid URL http://:Invalid",
+  },
+  // testing dom.properties: ManifestImageUnusable
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        icons: [
+          { src: "http://example.com", purpose: "any" }, // valid
+          { src: "http://example.com", purpose: "banana" }, // generates error
+        ],
+      }));
+    },
+    get warn() {
+      // Returns 2 warnings... array here is just to keep them organized
+      return [
+        "icons item at index 1 includes unsupported purpose(s): banana.",
+        "icons item at index 1 lacks a usable purpose. It will be ignored.",
+      ].join(" ");
+    },
+  },
+  // testing dom.properties: ManifestImageUnsupportedPurposes
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        icons: [
+          { src: "http://example.com", purpose: "any" }, // valid
+          { src: "http://example.com", purpose: "any foo bar baz bar bar baz" }, // generates error
+        ],
+      }));
+    },
+    warn: "icons item at index 1 includes unsupported purpose(s): foo bar baz.",
+  },
+  // testing dom.properties: ManifestImageRepeatedPurposes
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        icons: [
+          { src: "http://example.com", purpose: "any" }, // valid
+          {
+            src: "http://example.com",
+            purpose: "any maskable any maskable maskable", // generates error
+          },
+        ],
+      }));
+    },
+    warn: "icons item at index 1 includes repeated purpose(s): any maskable.",
+  },
+  // testing dom.properties: ManifestIdIsInvalid
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        id: "http://test:65536/foo",
+      }));
+    },
+    warn: "The id member did not resolve to a valid URL.",
+  },
+  // testing dom.properties ManifestIdNotSameOrigin
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        id: "https://other.com",
+        start_url: "/this/place"
+      }));
+    },
+    warn: "The id member must have the same origin as the start_url member.",
+  }
+].forEach((test, index) => {
+  test.func();
+  const result = processor.process(options);
+  let messages = [];
+  // Poking directly at "warn" triggers xray security wrapper.
+  for (const validationError of result.moz_validation) {
+    const { warn } = validationError;
+    messages.push(warn);
+  }
+  is(messages.join(" "), test.warn, "Check warning.");
+    options.manifestURL = manifestURL;
+  options.docURL = docURL;
+});
+
+  </script>
+</head>

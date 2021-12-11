@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Response ready to be used by wasm</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+const isCachingEnabled = SpecialPowers.getBoolPref("javascript.options.wasm_caching");
+
+async function runTests() {
+  let response = await fetch("/tests/dom/promise/tests/test_webassembly_compile_sample.wasm");
+  ok(!!response, "Fetch a wasm module produces a Response object");
+  is(response.headers.get("content-type"), "application/wasm", "Correct content-type");
+  if (!isCachingEnabled) {
+    ok(!SpecialPowers.wrap(response).hasCacheInfoChannel, "nsICacheInfoChannel not available");
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(SpecialPowers.wrap(response).hasCacheInfoChannel, "nsICacheInfoChannel available");
+
+  let clonedResponse = response.clone();
+  ok(!!clonedResponse, "Cloned response");
+  is(clonedResponse.headers.get("content-type"), "application/wasm", "Correct content-type");
+  ok(SpecialPowers.wrap(clonedResponse).hasCacheInfoChannel, "nsICacheInfoChannel available");
+
+  response = await fetch(location.href);
+  ok(!!response, "Fetch another resource");
+  ok(response.headers.get("content-type") != "application/wasm", "Correct content-type");
+  ok(!SpecialPowers.wrap(response).hasCacheInfoChannel, "nsICacheInfoChannel available");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTests();
+
+  </script>
+</body>
+</html>

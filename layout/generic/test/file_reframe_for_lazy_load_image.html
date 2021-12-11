@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1612649: We don't reframe for lazy load image state changes.
+</title>
+<div id="spacer" style="height: calc(100vh + 100px);"></div>
+<img id="image" loading="lazy" width="20" height="20" alt="this is an image"
+     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC">
+<script>
+const is = opener.is.bind(opener);
+const add_task = opener.add_task;
+const original_finish = opener.SimpleTest.finish;
+const SimpleTest = opener.SimpleTest;
+SimpleTest.finish = function finish() {
+  self.close();
+  original_finish();
+}
+
+const utils = SpecialPowers.DOMWindowUtils;
+
+add_task(async () => {
+  await SimpleTest.promiseFocus();
+
+  const previousConstructCount = utils.framesConstructed;
+
+  const loadPromise =
+      new Promise(resolve => image.addEventListener("load", resolve));
+
+  image.scrollIntoView();
+
+  await loadPromise;
+
+  image.getBoundingClientRect();
+
+  is(previousConstructCount, utils.framesConstructed,
+     "We should not have reframed");
+});
+</script>

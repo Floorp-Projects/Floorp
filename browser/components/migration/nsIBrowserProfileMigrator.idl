@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIProfileStartup;
+
+[scriptable, uuid(22b56ffc-3149-43c5-b5a9-b3a6b678de93)]
+interface nsIBrowserProfileMigrator : nsISupports
+{
+  /**
+   * profile items to migrate. use with migrate().
+   */
+  const unsigned short ALL         = 0x0000;
+  /* 0x01 used to be used for settings, but was removed. */
+  const unsigned short COOKIES     = 0x0002;
+  const unsigned short HISTORY     = 0x0004;
+  const unsigned short FORMDATA    = 0x0008;
+  const unsigned short PASSWORDS   = 0x0010;
+  const unsigned short BOOKMARKS   = 0x0020;
+  const unsigned short OTHERDATA   = 0x0040;
+  const unsigned short SESSION     = 0x0080;
+
+  /**
+   * Copy user profile information to the current active profile.
+   * @param aItems   list of data items to migrate. see above for values.
+   * @param aStartup helper interface which is non-null if called during startup.
+   * @param aProfile profile to migrate from, if there is more than one.
+   */
+  void migrate(in unsigned short aItems, in nsIProfileStartup aStartup, in jsval aProfile);
+
+  /**
+   * A bit field containing profile items that this migrator
+   * offers for import.
+   * @param   aProfile the profile that we are looking for available data
+   *          to import
+   * @return  Promise containing a bit field containing profile items (see above)
+   * @note    a return value of 0 represents no items rather than ALL.
+   */
+  jsval getMigrateData(in jsval aProfile);
+
+  /**
+   * Get the last time data from this browser was modified
+   * @return a promise that resolves to a JS Date object
+   */
+  jsval getLastUsedDate();
+
+  /**
+   * Get whether or not there is any data that can be imported from this
+   * browser (i.e. whether or not it is installed, and there exists
+   * a user profile)
+   * @return a promise that resolves with a boolean.
+   */
+  jsval isSourceAvailable();
+
+
+  /**
+   * An enumeration of available profiles. If the import source does
+   * not support profiles, this attribute is null.
+   * @return a promise that resolves with an array of profiles or null.
+   */
+  jsval getSourceProfiles();
+
+
+  /**
+   * Whether the source browser data is locked/in-use meaning migration likely
+   * won't succeed and the user should be warned.
+   */
+  readonly attribute boolean          sourceLocked;
+};

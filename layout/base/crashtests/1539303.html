@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function run() {
+  let iframe = document.querySelector("iframe");
+  iframe.contentDocument.body.offsetHeight;
+  document.documentElement.removeAttribute("class");
+}
+</script>
+<body>
+  <iframe src="1539303-iframe.html" onload="run()">
+  </iframe>
+</body>

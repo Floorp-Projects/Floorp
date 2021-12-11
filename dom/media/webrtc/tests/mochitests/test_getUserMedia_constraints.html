@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="mediaStreamPlayback.js"></script>
+  <script src="constraints.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({ title: "Test getUserMedia constraints", bug: "882145" });
+/**
+  Tests covering gUM constraints API for audio, video and fake video. Exercise
+  successful parsing code and ensure that unknown required constraints and
+  overconstraining cases produce appropriate errors.
+*/
+var tests = [
+  // Each test here tests a different constraint or codepath.
+  { message: "unknown required constraint on video ignored",
+    constraints: { video: { somethingUnknown: { exact: 0 } } },
+    error: null },
+  { message: "unknown required constraint on audio ignored",
+    constraints: { audio: { somethingUnknown: { exact: 0 } } },
+    error: null },
+  { message: "audio overconstrained by facingMode ignored",
+    constraints: { audio: { facingMode: { exact: 'left' } } },
+    error: null },
+  { message: "full screensharing requires permission",
+    constraints: { video: { mediaSource: 'screen' } },
+    error: "NotAllowedError" },
+  { message: "application screensharing no longer exists",
+    constraints: { video: { mediaSource: 'application' } },
+    error: "OverconstrainedError" },
+  { message: "window screensharing requires permission",
+    constraints: { video: { mediaSource: 'window' } },
+    error: "NotAllowedError" },
+  { message: "browser screensharing requires permission",
+    constraints: { video: { mediaSource: 'browser' } },
+    error: "NotAllowedError" },
+  { message: "unknown mediaSource in video fails",
+    constraints: { video: { mediaSource: 'uncle' } },
+    error: "OverconstrainedError",
+    constraint: "mediaSource" },
+  { message: "unknown mediaSource in audio fails",
+    constraints: { audio: { mediaSource: 'uncle' } },
+    error: "OverconstrainedError",
+    constraint: "mediaSource" },
+  { message: "emtpy constraint fails",
+    constraints: { },
+    error: "TypeError" },
+  { message: "Triggering mock failure in default video device fails",
+    constraints: { video: { deviceId: 'bad device' } },
+    error: "NotReadableError" },
+  { message: "Triggering mock failure in default audio device fails",
+    constraints: { audio: { deviceId: 'bad device' } },
+    error: "NotReadableError" },
+  { message: "Success-path: optional video facingMode + audio ignoring facingMode",
+    constraints: { audio: { mediaSource: 'microphone',
+                            facingMode: 'left',
+                            foo: 0,
+                            advanced: [{ facingMode: 'environment' },
+                                       { facingMode: 'user' },
+                                       { bar: 0 }] },
+                   video: { mediaSource: 'camera',
+                            foo: 0,
+                            advanced: [{ facingMode: 'environment' },
+                                       { facingMode: ['user'] },
+                                       { facingMode: ['left', 'right', 'user'] },
+                                       { bar: 0 }] } },
+    error: null },
+  { message: "legacy facingMode ignored",
+    constraints: { video: { mandatory: { facingMode: 'left' } } },
+    error: null },
+];
+
+var mustSupport = [
+  'width', 'height', 'frameRate', 'facingMode', 'deviceId', 'groupId',
+  'echoCancellation', 'noiseSuppression', 'autoGainControl', 'channelCount',
+
+  // Yet to add:
+  //  'aspectRatio', 'volume', 'sampleRate', 'sampleSize', 'latency'
+
+  // http://fluffy.github.io/w3c-screen-share/#screen-based-video-constraints
+  // OBE by http://w3c.github.io/mediacapture-screen-share
+  'mediaSource',
+
+  // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
+  'browserWindow', 'scrollWithPage',
+  'viewportOffsetX', 'viewportOffsetY', 'viewportWidth', 'viewportHeight',
+];
+
+var mustFailWith = (msg, reason, constraint, f) =>
+  f().then(() => ok(false, msg + " must fail"), e => {
+    is(e.name, reason, msg + " must fail: " + e.message);
+    if (constraint !== undefined) {
+      is(e.constraint, constraint, msg + " must fail w/correct constraint.");
+    }
+  });
+
+/**
+ * Starts the test run by running through each constraint
+ * test by verifying that the right resolution and rejection is fired.
+ */
+
+runTest(() => pushPrefs(
+    // This test expects fake devices, particularly for the 'triggering mock
+    // failure *' steps. So explicitly disable loopback and setup fakes
+    ['media.audio_loopback_dev', ''],
+    ['media.video_loopback_dev', ''],
+    ['media.navigator.streams.fake', true]
+  )
+  .then(() => {
+    // Check supported constraints first.
+    var dict = navigator.mediaDevices.getSupportedConstraints();
+    var supported = Object.keys(dict);
+
+    mustSupport.forEach(key => ok(supported.includes(key) && dict[key],
+                                  "Supports " + key));
+
+    var unexpected = supported.filter(key => !mustSupport.includes(key));
+    is(unexpected.length, 0,
+       "Unanticipated support (please update test): " + unexpected);
+  })
+  .then(() => pushPrefs(["media.getusermedia.browser.enabled", false],
+                        ["media.getusermedia.screensharing.enabled", false]))
+  .then(() => tests.reduce((p, test) => p.then(
+    () => {
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
+      return getUserMedia(test.constraints);
+    })
+    .then(stream => {
+      is(null, test.error, test.message);
+      stream.getTracks().forEach(t => t.stop());
+    }, e => {
+      is(e.name, test.error, test.message + ": " + e.message);
+      if (test.constraint) {
+        is(e.constraint, test.constraint,
+           test.message + " w/correct constraint.");
+      }
+    }), Promise.resolve()))
+  .then(() => getUserMedia({video: true, audio: true}))
+  .then(stream => stream.getVideoTracks()[0].applyConstraints({ width: 320 })
+    .then(() => stream.getAudioTracks()[0].applyConstraints({ }))
+    .then(() => {
+      stream.getTracks().forEach(track => track.stop());
+      ok(true, "applyConstraints code exercised");
+    }))
+  // TODO: Test outcome once fake devices support constraints (Bug 1088621)
+  .then(() => mustFailWith("applyConstraints fails on non-Gum tracks",
+                           "OverconstrainedError", "",
+                           () => (new AudioContext())
+                               .createMediaStreamDestination().stream
+                               .getAudioTracks()[0].applyConstraints()))
+  .then(() => mustFailWith(
+      "getUserMedia with unsatisfied required constraint",
+      "OverconstrainedError", "deviceId",
+      () => getUserMedia({ audio: true,
+                           video: { deviceId: { exact: "unheardof" } } })))
+  .then(() => mustFailWith(
+      "getUserMedia with unsatisfied required constraint array",
+      "OverconstrainedError", "deviceId",
+      () => getUserMedia({ audio: true,
+                           video: { deviceId: { exact: ["a", "b"] } } }))));
+</script>
+</pre>
+</body>
+</html>

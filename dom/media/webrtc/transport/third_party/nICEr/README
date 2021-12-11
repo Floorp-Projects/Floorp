@@ -1,0 +1,74 @@
+                             nICEr 1.0
+
+PREREQUISITES:
+-------------
+You must first obtain and build the following packages:
+
+* nrappkit
+  - http://nrappkit.sourceforge.net/
+
+* OpenSSL-0.9.8g
+  - http://www.openssl.org/source/openssl-0.9.8g.tar.gz
+
+
+For best results, the "ice-<version>" directory should be at
+the same level as the "nrappkit" and "openssl-0.9.8g"
+directories.  I.e., the directory structure should look like:
+
+   nrappkit/
+   ice-<version>/
+   openssl/
+          include/
+          lib/VC/
+
+
+BUILDING ON UNIX:
+----------------
+Once the prerequisite packages are built, 'cd' to the
+relevant build directory, one of:
+
+   ice-<version>/make/darwin
+   ice-<version>/make/linux-fedora
+   ice-<version>/make/ubuntu
+
+and simply do a "make".
+
+
+BUILDING ON WINDOWS:
+-------------------
+The Visual C++ project files are configured to expect the
+directory structure described above.
+ 
+Note: Binary Windows builds of OpenSSL can be found at:
+   http://www.slproweb.com/products/Win32OpenSSL.html
+
+Once the prerequisite packages are built, open the VC++ 9.0
+solution file: ICE/make/win32/ice.sln and build the solution.
+Note: Since the VC++ project/solution files are version 9.0,
+Visual Studio 2008 is required.
+
+
+STATUS:
+------
+The ICE code has been tested on the following platforms:
+-- Fedora Core 4 (Intel 32-bit)
+-- Fedora Core 6 (Intel 32-bit)
+-- Ubuntu 6.10 
+-- MacOSX 10.4.9
+-- Windows Vista (Home Premium)
+-- Windows XP Pro
+-- Windows 2000 SP4
+
+
+KNOWN ISSUES:
+------------
+-- TURN SET-ACTIVE-DESTINATION mode not yet supported.
+
+-- Problems may exist with the TURN client implementation; the TURN code
+   has received minimal testing due to the unavailability of a real
+   TURN server to test against.
+
+-- The ICE-Lite implementation is not complete.
+
+-- The new "impatient" timeout has not yet been thoroughly tested.
+

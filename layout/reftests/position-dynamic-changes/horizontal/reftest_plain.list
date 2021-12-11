@@ -1,0 +1,26 @@
+# Please see the comment at the beginning of reftest.list
+
+fuzzy-if(geckoview,0-2,0-1382) == leftN-widthA-rightA.html leftN-widthA-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == leftN-widthA-rightA-2.html leftN-widthA-rightA-2-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == leftN-widthA-rightN.html leftN-widthA-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == leftN-widthA-rightN-2.html leftN-widthA-rightN-2-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == leftA-widthN-rightA.html leftA-widthN-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == leftN-widthN-rightA.html leftN-widthN-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == leftA-widthN-rightN.html leftA-widthN-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == leftA-widthA-rightN.html leftA-widthA-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftN-widthA-rightA.html toauto-leftN-widthA-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftN-widthA-rightA-2.html toauto-leftN-widthA-rightA-2-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftN-widthA-rightN.html toauto-leftN-widthA-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftN-widthA-rightN-2.html toauto-leftN-widthA-rightN-2-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftA-widthN-rightA.html toauto-leftA-widthN-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftN-widthN-rightA.html toauto-leftN-widthN-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftA-widthN-rightN.html toauto-leftA-widthN-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == toauto-leftA-widthA-rightN.html toauto-leftA-widthA-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftN-widthA-rightA.html leftN-widthA-rightA-ref.html
+random-if(cocoaWidget) fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftN-widthA-rightA-2.html leftN-widthA-rightA-2-ref.html # Bug 688545
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftN-widthA-rightN.html leftN-widthA-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftN-widthA-rightN-2.html leftN-widthA-rightN-2-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftA-widthN-rightA.html leftA-widthN-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftN-widthN-rightA.html leftN-widthN-rightA-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftA-widthN-rightN.html leftA-widthN-rightN-ref.html
+fuzzy-if(geckoview,0-2,0-1382) == fromauto-leftA-widthA-rightN.html leftA-widthA-rightN-ref.html

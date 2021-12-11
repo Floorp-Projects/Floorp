@@ -1,0 +1,101 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1058311 - Test matchAll clients properties </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script src="utils.js"></script>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var clientURL = "match_all_clients/match_all_controlled.html";
+  function start() {
+    return navigator.serviceWorker.register("match_all_properties_worker.js",
+                                            { scope: "./match_all_clients/" })
+      .then((swr) => {
+        registration = swr;
+        return waitForState(swr.installing, 'activated', swr);
+      });
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+  function getMessageListener() {
+    return new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (e.data.message === undefined) {
+          info("rejecting promise");
+          rej();
+          return;
+        }
+
+        ok(e.data.result, e.data.message);
+
+        if (!e.data.result) {
+          rej();
+        }
+        if (e.data.message == "DONE") {
+          info("DONE from: " + e.source);
+          res();
+        }
+      }
+    });
+  }
+
+  function testNestedWindow() {
+    var p = getMessageListener();
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+
+    content.appendChild(iframe);
+    iframe.setAttribute('src', clientURL);
+
+    return p.then(() => content.removeChild(iframe));
+  }
+
+  function testAuxiliaryWindow() {
+    var p = getMessageListener();
+    var w = window.open(clientURL);
+
+    return p.then(() => w.close());
+  }
+
+  function runTest() {
+    info("catalin");
+    info(window.opener == undefined);
+    start()
+      .then(testAuxiliaryWindow)
+      .then(testNestedWindow)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

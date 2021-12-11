@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="vrl">
+<head>
+<title>Bug 1114329 testcase</title>
+<style>
+ .vrl {
+   writing-mode: vertical-rl;
+   -webkit-writing-mode: vertical-rl;
+   writing-mode: tb-rl;
+   direction: ltr;
+}
+</style>
+</head>
+<body>
+  <div dir="rtl" style="height:300px">
+    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);float:left;"></div>
+  </div>
+  <div dir="rtl" style="height:200px">
+    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);float:left;"></div>
+  </div>
+  <div style="background:silver">
+This text should appear BELOW the green and red blocks.
+  </div>
+</body>
+</html>

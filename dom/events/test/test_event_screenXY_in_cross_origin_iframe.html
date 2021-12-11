@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title></title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+<iframe width=100></iframe>
+<iframe width=100></iframe>
+<script>
+const utils = SpecialPowers.DOMWindowUtils;
+
+function getScreenPosition(aElement, aOffsetX, aOffsetY) {
+  const rect = aElement.getBoundingClientRect();
+  const x = aOffsetX + window.mozInnerScreenX + rect.left;
+  const y = aOffsetY + window.mozInnerScreenY + rect.top;
+  const scale = utils.screenPixelsPerCSSPixel;
+  return [Math.round(x * scale), Math.round(y * scale)];
+}
+
+function waitForMessage(aMsg, aOrigin) {
+  return new Promise(resolve => {
+    window.addEventListener("message", function listener(event) {
+      if (event.data == "ready" && event.origin == aOrigin) {
+        window.removeEventListener("message", listener);
+        resolve();
+      }
+    });
+  });
+}
+
+add_task(async () => {
+  await SimpleTest.promiseFocus();
+
+  const iframes = document.querySelectorAll("iframe");
+  iframes[0].src = "file_event_screenXY.html";
+  await waitForMessage("ready", location.origin);
+
+  iframes[1].src = "https://example.com/tests/dom/events/test/file_event_screenXY.html";
+  await waitForMessage("ready", "https://example.com");
+
+  // Wait for APZ state stable so that mouse event handling APZ works properly
+  // in out-of-process iframes.
+  await promiseApzFlushedRepaints();
+
+  const promiseForSameOrigin = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      is(event.origin, location.origin, "origin should be the same as parent");
+      resolve(event.data);
+    }, { once: true });
+  });
+
+  // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
+  // so we use promiseNativeMouseEvent instead.
+  const [expectedScreenXInSameOrigin, expectedScreenYInSameOrigin] =
+    getScreenPosition(iframes[0], 10, 10);
+  await promiseNativeMouseEvent({
+    type: "click",
+    target: iframes[0],
+    screenX: expectedScreenXInSameOrigin,
+    screenY: expectedScreenYInSameOrigin,
+    scale: "inScreenPixels",
+  });
+
+  const eventInSameOrigin = await promiseForSameOrigin;
+  is(eventInSameOrigin.screenX, expectedScreenXInSameOrigin,
+     "event.screenX should be the same");
+  is(eventInSameOrigin.screenY, expectedScreenYInSameOrigin,
+     "event.screenY should be the same");
+
+  const [expectedScreenXInCrossOrigin, expectedScreenYInCrossOrigin] =
+    getScreenPosition(iframes[1], 10, 10);
+  await promiseNativeMouseEvent({
+    type: "click",
+    target: iframes[0],
+    screenX: expectedScreenXInCrossOrigin,
+    screenY: expectedScreenYInCrossOrigin,
+    scale: "inScreenPixels",
+  });
+
+  const promiseForCrossOrigin = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      is(event.origin, "https://example.com", "origin should be example.com");
+      resolve(event.data);
+    }, { once: true });
+  });
+
+  const eventInCrossOrigin = await promiseForCrossOrigin;
+  is(eventInCrossOrigin.screenX, expectedScreenXInCrossOrigin,
+     "even.screenX should be the same");
+  is(eventInCrossOrigin.screenY, expectedScreenYInCrossOrigin,
+     "even.screenY should be the same");
+
+  is(eventInSameOrigin.screenY, eventInCrossOrigin.screenY,
+     "event.screenY in both iframes should be the same");
+  // Sanity checks to make sure client{X,Y} are the same.
+  is(eventInSameOrigin.clientX, eventInCrossOrigin.clientX,
+     "event.clientX in both iframes should be the same");
+  is(eventInSameOrigin.clientY, eventInCrossOrigin.clientY,
+     "event.clientY in both iframes should be the same");
+});
+</script>

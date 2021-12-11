@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tabbox hierarchy tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // tabbox
+
+      var accTree = {
+        role: ROLE_PAGETABLIST,
+        children: [
+          {
+            role: ROLE_PAGETAB,
+            children: []
+          },
+          {
+            role: ROLE_PAGETAB,
+            children: []
+          }
+        ]
+      };
+      testAccessibleTree("tabs", accTree);
+
+      accTree = {
+        role: ROLE_PANE,
+        children: [
+          {
+            role: ROLE_PROPERTYPAGE,
+            children: []
+          },
+          {
+            role: ROLE_PROPERTYPAGE,
+            children: []
+          }
+        ]
+      };
+      testAccessibleTree("tabpanels", accTree);
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=540389"
+         title=" WARNING: Bad accessible tree!: [tabbrowser tab] ">
+        Mozilla Bug 540389
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552944"
+         title="No relationship between tabs and associated property page in new tabbrowser construct">
+        Mozilla Bug 552944
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tabbox>
+        <tabs id="tabs">
+          <tab label="tab1"/>
+          <tab label="tab2"/>
+        </tabs>
+        <tabpanels id="tabpanels">
+          <tabpanel/>
+          <tabpanel/>
+        </tabpanels>
+      </tabbox>
+    </vbox>
+  </hbox>
+
+</window>
+

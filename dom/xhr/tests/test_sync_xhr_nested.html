@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<!-- vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: -->
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body >
+  <script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var childXHRFinished = false;
+  var xhrFinished = false;
+  var subTab = null;
+
+  function receivedInput() {
+    ok(xhrFinished, "Input event should be handled after the sync xhr");
+    SimpleTest.finish();
+  }
+
+  function startSlowXHR() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "slow.sjs", false);
+    subTab.startSlowXHR();
+    xhr.send(null);
+
+    // Above xhr.send(null) should spin up an event loop to process the inner XHR first
+    ok(childXHRFinished, "Child's XHR should be finished first");
+    xhrFinished = true;
+  }
+
+  async function runTest() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.input_events.canSuspendInBCG.enabled", true]]
+    });
+    subTab = window.open("file_sync_xhr_nested_helper.html");
+    await new Promise((r) => {
+      subTab.addEventListener("load", r);
+    });
+    startSlowXHR();
+  }
+
+  runTest();
+  </script>
+</body>
+</html>

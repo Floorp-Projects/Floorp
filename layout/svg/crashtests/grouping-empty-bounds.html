@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" class='reftest-wait'>
+<meta charset="utf-8">
+<title>This testcase might create a non-empty display list with an empty set of drawing commands / items in the EventRecorder</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+.animated-opacity {
+  animation: opacity-animation 1s linear alternate infinite;
+}
+
+@keyframes opacity-animation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+</style>
+
+<svg style="width: 100px; height: 100px;">
+  <rect class="animated-opacity" x="0" y="0" width="100" height="100"/>
+  <rect x="0" y="0" width="10" height="10" id="toremove"/>
+  <g transform="translate(10 10)"><rect x="120" y="0" width="1" height="1"/></g>
+</svg>
+
+<script>
+
+window.addEventListener("MozReftestInvalidate", () => {
+  var elem = document.getElementById("toremove");
+  elem.parentNode.removeChild(elem);
+  document.documentElement.removeAttribute('class');
+});
+
+</script>

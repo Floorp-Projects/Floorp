@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<iframe id="testframe"></iframe>
+<script>
+"use strict";
+
+createHTML({
+  title: "gUM shutdown race",
+  bug: "1488832"
+});
+
+runTest(async () => {
+  testframe.srcdoc = `
+  <html>
+  <head>
+  <script>
+  function start() {
+    for (let i = 0; i < 16; i++) {
+      window.navigator.mediaDevices.getUserMedia({video: true})
+      setTimeout('location.reload()', 100)
+    }
+  }
+  document.addEventListener('DOMContentLoaded', start)
+  </` + `script>
+  </head>
+  </html>`;
+
+  await wait(10000);
+  testframe.srcdoc = "";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "animation",
+    "boxmodel",
+    "changes",
+    "compatibility",
+    "components",
+    "computed",
+    "extensions",
+    "flexbox",
+    "fonts",
+    "grids",
+    "layout",
+    "markup",
+    "rules",
+    "shared",
+]
+
+DevToolsModules(
+    "breadcrumbs.js",
+    "inspector-search.js",
+    "inspector.js",
+    "node-picker.js",
+    "panel.js",
+    "store.js",
+    "toolsidebar.js",
+)
+
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Inspector")

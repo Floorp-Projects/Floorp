@@ -1,0 +1,167 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include GraphicsMessages;
+include MemoryReportTypes;
+include HangTypes;
+include PrefsTypes;
+include protocol PAPZInputBridge;
+include protocol PCompositorManager;
+include protocol PImageBridge;
+include protocol PProfiler;
+include protocol PVRGPU;
+include protocol PVRManager;
+include protocol PVideoBridge;
+include protocol PVsyncBridge;
+include protocol PUiCompositorController;
+include protocol PRemoteDecoderManager;
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+include protocol PSandboxTesting;
+#endif
+
+include "mozilla/layers/LayersMessageUtils.h";
+
+using base::ProcessId from "base/process.h";
+using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
+using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedHistogramAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
+using mozilla::gfx::Feature from "gfxFeature.h";
+using mozilla::gfx::Fallback from "gfxFallback.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
+
+namespace mozilla {
+namespace gfx {
+
+struct LayerTreeIdMapping {
+  LayersId layersId;
+  ProcessId ownerId;
+};
+
+// This protocol allows the UI process to talk to the GPU process. There is one
+// instance of this protocol, with the GPUParent living on the main thread of
+// the GPU process and the GPUChild living on the main thread of the UI process.
+sync protocol PGPU
+{
+  manages PAPZInputBridge;
+
+parent:
+  // Sent from the UI process to initialize a new APZ input bridge when a new
+  // top-level compositor is created.
+  async PAPZInputBridge(LayersId aLayersId);
+
+  // Sent by the UI process to initiate core settings.
+  async Init(GfxVarUpdate[] vars,
+             DevicePrefs devicePrefs,
+             LayerTreeIdMapping[] mapping,
+             GfxInfoFeatureStatus[] features);
+
+  async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
+  async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
+  async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
+  async InitVideoBridge(Endpoint<PVideoBridgeParent> endpoint);
+  async InitVRManager(Endpoint<PVRManagerParent> endpoint);
+  async InitUiCompositorController(LayersId rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
+  async InitProfiler(Endpoint<PProfilerChild> endpoint);
+  // Forward GPU process its endpoints to the VR process.
+  async InitVR(Endpoint<PVRGPUChild> endpoint);
+  // Called to update a gfx variable.
+  async UpdateVar(GfxVarUpdate var);
+
+  async PreferenceUpdate(Pref pref);
+
+  // Create a new content-process compositor bridge.
+  async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
+  async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint);
+  async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
+  async NewContentRemoteDecoderManager(Endpoint<PRemoteDecoderManagerParent> endpoint);
+
+  // Called to notify the GPU process of who owns a layersId.
+  sync AddLayerTreeIdMapping(LayerTreeIdMapping mapping);
+  async RemoveLayerTreeIdMapping(LayerTreeIdMapping mapping);
+
+  // Request the current DeviceStatus from the GPU process. This blocks until
+  // one is available (i.e., Init has completed).
+  sync GetDeviceStatus() returns (GPUDeviceData status);
+
+  // Request to simulate device reset and to get the updated DeviceStatus from
+  // the GPU process. This blocks until one is available (i.e., Init has completed).
+  sync SimulateDeviceReset() returns (GPUDeviceData status);
+
+  // Have a message be broadcasted to the GPU process by the GPU process
+  // observer service.
+  async NotifyGpuObservers(nsCString aTopic);
+
+  async RequestMemoryReport(uint32_t generation,
+                            bool anonymize,
+                            bool minimizeMemoryUsage,
+                            FileDescriptor? DMDFile)
+      returns (uint32_t aGeneration);
+
+  async ShutdownVR();
+
+  // Functions supporting PerfStats data collection.
+  async UpdatePerfStatsCollectionMask(uint64_t aMask);
+  async CollectPerfStatsJSON() returns (nsCString aStats);
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
+#endif
+
+child:
+  // Sent when the GPU process has initialized devices. This occurs once, after
+  // Init().
+  async InitComplete(GPUDeviceData data);
+
+  // Sent when APZ detects checkerboarding and apz checkerboard reporting is enabled.
+  async ReportCheckerboard(uint32_t severity, nsCString log);
+
+  // Graphics errors, analogous to PContent::GraphicsError
+  async GraphicsError(nsCString aError);
+
+  async InitCrashReporter(NativeThreadId threadId);
+
+  async CreateVRProcess();
+  async ShutdownVRProcess();
+
+  // Have a message be broadcasted to the UI process by the UI process
+  // observer service.
+  async NotifyUiObservers(nsCString aTopic);
+
+  // Messages for reporting telemetry to the UI process.
+  async AccumulateChildHistograms(HistogramAccumulation[] accumulations);
+  async AccumulateChildKeyedHistograms(KeyedHistogramAccumulation[] accumulations);
+  async UpdateChildScalars(ScalarAction[] actions);
+  async UpdateChildKeyedScalars(KeyedScalarAction[] actions);
+  async RecordChildEvents(ChildEventData[] events);
+  async RecordDiscardedData(DiscardedData data);
+
+  async DeclareStable();
+  async NotifyDeviceReset(GPUDeviceData status);
+  async FlushMemory(nsString reason);
+
+  async AddMemoryReport(MemoryReport aReport);
+
+  // Update the UI process after a feature's status has changed. This is used
+  // outside of the normal startup flow.
+  async UpdateFeature(Feature aFeature, FeatureFailure aChange);
+
+  // Notify about:support/Telemetry that a fallback occurred.
+  async UsedFallback(Fallback aFallback, nsCString message);
+
+  async BHRThreadHang(HangDetails aDetails);
+
+  // Update the cached list of codec supported following a check in the
+  // GPU parent.
+  async UpdateMediaCodecsSupported(MediaCodecsSupported aSupported);
+};
+
+} // namespace gfx
+} // namespace mozilla

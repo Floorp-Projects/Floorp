@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.profiler-dialog__frame {
+  border: none;
+  height: 100%;
+  width: 100%;
+}
+
+/*
+ * The current layout of the dialog header is
+ *
+ *  +-----------------------------+---+
+ *  | dialog title (auto)         | X |
+ *  +-----------------------------+---+
+ */
+.profiler-dialog__header {
+  align-items: center;
+  background-color: var(--grey-20);
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  padding: var(--base-unit);
+}
+
+.profiler-dialog__header__title {
+  margin-inline-start: calc(var(--base-unit) * 2);
+
+  /* Reset <h1> styles */
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.profiler-dialog__inner {
+  background-color: var(--white-100);
+  display: grid;
+  grid-template-rows: max-content auto;
+  max-height: calc(100% - calc(var(--base-unit) * 25)); /* 100% - 100px */
+  position: fixed;
+}
+
+.profiler-dialog__inner--medium {
+  width: calc(var(--base-unit) * 150); /* 600px */
+  height: calc(var(--base-unit) * 150); /* 600px */
+}
+
+.profiler-dialog__inner--large {
+  width: calc(var(--base-unit) * 200); /* 800px */
+  height: calc(var(--base-unit) * 175); /* 700px */
+}
+
+.profiler-dialog__mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--grey-90-a60);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "application-panel-tests",
+  "license": "MPL-2.0",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=8.9.4"
+  },
+  "scripts": {
+    "test": "jest",
+    "test-ci": "jest --json"
+  },
+  "dependencies": {
+    "@babel/plugin-proposal-async-generator-functions": "^7.2.0",
+    "enzyme": "^3.9.0",
+    "enzyme-adapter-react-16": "^1.13.2",
+    "enzyme-to-json": "^3.3.5",
+    "jest": "^24.6",
+    "react": "16.4.1",
+    "react-dom": "16",
+    "react-test-renderer": "16.4.1",
+    "redux": "^4.0.4",
+    "redux-mock-store": "^1.5.3"
+  },
+  "devDependencies": {}
+}

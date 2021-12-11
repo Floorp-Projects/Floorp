@@ -1,0 +1,21 @@
+# BMP 1BPP tests
+
+# Images of various sizes
+== bmp-size-1x1-1bpp.bmp   bmp-size-1x1-1bpp.png
+== bmp-size-2x2-1bpp.bmp   bmp-size-2x2-1bpp.png
+== bmp-size-3x3-1bpp.bmp   bmp-size-3x3-1bpp.png
+== bmp-size-4x4-1bpp.bmp   bmp-size-4x4-1bpp.png
+== bmp-size-5x5-1bpp.bmp   bmp-size-5x5-1bpp.png
+== bmp-size-6x6-1bpp.bmp   bmp-size-6x6-1bpp.png
+== bmp-size-7x7-1bpp.bmp   bmp-size-7x7-1bpp.png
+== bmp-size-8x8-1bpp.bmp   bmp-size-8x8-1bpp.png
+== bmp-size-9x9-1bpp.bmp   bmp-size-9x9-1bpp.png
+== bmp-size-15x15-1bpp.bmp bmp-size-15x15-1bpp.png
+== bmp-size-16x16-1bpp.bmp bmp-size-16x16-1bpp.png
+== bmp-size-17x17-1bpp.bmp bmp-size-17x17-1bpp.png
+== bmp-size-31x31-1bpp.bmp bmp-size-31x31-1bpp.png
+== bmp-size-32x32-1bpp.bmp bmp-size-32x32-1bpp.png
+== bmp-size-33x33-1bpp.bmp bmp-size-33x33-1bpp.png
+== bmp-not-square-1bpp.bmp bmp-not-square-1bpp.png
+== os2bmp-size-32x32-1bpp.bmp bmp-size-32x32-1bpp.png
+== top-to-bottom-16x16-1bpp.bmp bmp-size-16x16-1bpp.png

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- Reftest for bug 376532: should show single missing glyph box for non-BMP
+     characters (not surrogates)
+     Test 2 is a non-equality test to catch the case where a single missing
+     glyph box is shown with the high surrogate code point. The test page
+     contains U+0DDBAD (DB36 DF0D) and the reference page U+0DDB0D (DB36 DFAD)
+-->
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+ </head>
+  <style type="text/css">
+p {   
+  font-size: 36pt;
+}
+  </style>
+ <body>
+  <p>&#x0ddb0d;</p>
+ </body>
+</html>

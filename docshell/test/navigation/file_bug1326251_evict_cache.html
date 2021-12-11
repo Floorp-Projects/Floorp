@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bug 1326251</title>
+    <script>
+      // Evict bfcache and then go back.
+      async function evictCache() {
+        await SpecialPowers.evictAllContentViewers();
+
+        history.back();
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(evictCache, 0);">
+  </body>
+</html>

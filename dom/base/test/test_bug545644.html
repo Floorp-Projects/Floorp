@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for HTML serializer + innerHtml, bug 545644</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=545644">Mozilla Bug </a>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testInner () {
+  var div = document.getElementById("test_inner");
+
+    try {
+      div.innerHTML = "some \u00A0 &nbsp; text";
+      div.innerHTML += "!";
+      ok(true, "innerHTML in html test ok");
+    } catch (e) {
+      ok(false, "innerHTML in html test failed, unwanted exception " + e);
+    }
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testInner);
+
+</script>
+</pre>
+<div id="test_inner"></div>
+</body>
+</html>
+
+

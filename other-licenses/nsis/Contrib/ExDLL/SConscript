@@ -1,0 +1,25 @@
+# FIXME: install assembly and pascal includes into the correct locations
+
+c_devel = Split("""
+	exdll.h
+""")
+
+example = Split("""
+	exdll.c
+	exdll.dpr
+	exdll.dsp
+	exdll.dsw
+	exdll_with_unit.dpr
+	nsis.pas
+	extdll.inc
+""")
+
+Import('defenv')
+
+if defenv['PLATFORM'] == 'win32':
+	example += c_devel
+else:
+	defenv.DistributeIncC(c_devel)
+
+defenv.DistributeExamples(example, path='Plugin')
+

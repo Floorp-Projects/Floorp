@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=601470
+-->
+<head>
+  <title>Test for Bug 601470</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=601470">Mozilla Bug 601470</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <img src="lime100x100.svg" style="width: 100px; height: 100px;">
+  <img src="damon.jpg"       style="width: 100px; height: 100px;">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 601470 **/
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  var mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
+    .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
+
+  var amount = 0;
+  var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+    amount += aAmount;
+  }
+
+  var finished = function() {
+        ok(amount > 0, "we should be using a nonzero amount of memory");
+        ok(true, "yay, didn't crash!");
+        SimpleTest.finish();
+  }
+
+  mgr.getReports(handleReport, null, finished, null, /* anonymize = */ false);
+}
+
+</script>
+</pre>
+</body>
+</html>

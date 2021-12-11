@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Media Session and non-autoplay media</title>
+</head>
+<body>
+<video id="testVideo" src="gizmo.mp4" loop></video>
+<h1 id="result"></h1>
+<script type="text/javascript">
+
+const MediaSessionActions = [
+  "play",
+  "pause",
+  "seekbackward",
+  "seekforward",
+  "previoustrack",
+  "nexttrack",
+  "stop",
+];
+
+for (const action of MediaSessionActions) {
+  navigator.mediaSession.setActionHandler(action, () => {
+  	// eslint-disable-next-line no-unsanitized/property
+    document.getElementById("result").innerHTML = action;
+    document.getElementById("result").dispatchEvent(new CustomEvent("actionChanged"));
+  });
+}
+
+</script>
+</body>
+</html>

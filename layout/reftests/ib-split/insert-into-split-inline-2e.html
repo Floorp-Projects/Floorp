@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+ <head>
+    <title>CSS 2.1 Test Suite: handling of blocks inside inlines</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/visuren.html#anonymous-block-level"/>
+    <meta name="flags" content="dom" />
+  <script>
+   function doit() {
+     var newNode = document.createElement("div");
+     newNode.appendChild(document.createTextNode("Five"));
+     document.getElementById("target")
+             .insertBefore(newNode, document.getElementById("insertion"));
+   }
+  </script>
+  <style>
+   body > span { border: 3px solid blue }
+  </style>
+ </head>
+ <body onload='doit()'>
+  <span id="target"
+  ><span>One</span
+  ><span>Two</span
+  ><span>Three</span
+  ><div>Four</div
+  ><span id="insertion">Six</span
+  ><div>Seven</div
+  ><div>Eight</div
+ ></span>
+ </body>
+</html>

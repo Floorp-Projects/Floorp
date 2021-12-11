@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(true);
+       let access = await navigator.requestMIDIAccess({ "sysex": false });
+       ok(true, "MIDI Access Request successful");
+       is(access.sysexEnabled, false, "Sysex should be false");
+
+       var checkCount = 0;
+       var reopened = false;
+       var input;
+       var output;
+       function checkCallbacks(port) {
+         ok(true, "Got port " + port.connection + " for " + port.name);
+         if (port.connection == "open") {
+           checkCount++;
+         } else {
+           if (!reopened) {
+             reopened = true;
+             // Ports are closed. Fire rest of tests.
+             input.onmidimessage = checkReturn;
+             output.send([0x90, 0x00, 0x7F]);
+           }
+         }
+         if (checkCount == 3) {
+           input.onstatechange = undefined;
+           output.onstatechange = undefined;
+           input.close();
+           output.close();
+           SimpleTest.finish();
+         }
+       }
+       function checkReturn(event) {
+         checkCount++;
+         ok(true, "Got echo message back");
+         MIDITestUtils.checkPacket(event.data, [0x90, 0x00, 0x7f]);
+         if (checkCount == 3) {
+           input.onstatechange = undefined;
+           output.onstatechange = undefined;
+           input.close();
+           output.close();
+           SimpleTest.finish();
+         }
+       }
+
+       input = access.inputs.get(MIDITestUtils.inputInfo.id);
+       output = access.outputs.get(MIDITestUtils.outputInfo.id);
+       // We automatically open ports, so close them first.
+       input.onstatechange = (event) => { checkCallbacks(event.port); };
+       output.onstatechange = (event) => { checkCallbacks(event.port); };
+       input.close();
+       output.close();
+     }
+    </script>
+  </body>
+</html>

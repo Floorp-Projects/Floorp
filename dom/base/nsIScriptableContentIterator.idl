@@ -1,0 +1,74 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Node;
+webidl Range;
+
+/**
+ * nsIScriptableContentIterator is designed to testing concrete classes of
+ * ContentIteratorBase.
+ */
+[scriptable, builtinclass, uuid(9f25fb2a-265f-44f9-a122-62bbf443239e)]
+interface nsIScriptableContentIterator : nsISupports
+{
+  cenum IteratorType : 8 {
+    NOT_INITIALIZED,
+    POST_ORDER_ITERATOR,
+    PRE_ORDER_ITERATOR,
+    SUBTREE_ITERATOR
+  };
+
+  /**
+   * You need to call initWith*() first.  Then, the instance of this interface
+   * decides the type of iterator with its aType argument.  You can call
+   * initWith*() multiple times, but you need to keep setting same type as
+   * previous call.  If you set different type, these method with throw an
+   * exception.
+   */
+
+  // See ContentIteratorBase::Init(nsINode*)
+  void initWithRootNode(in nsIScriptableContentIterator_IteratorType aType,
+                        in Node aRoot);
+
+  // See ContentIteratorBase::Init(nsRange*)
+  void initWithRange(in nsIScriptableContentIterator_IteratorType aType,
+                     in Range aRange);
+
+  // See ContentIteratorBase::Init(nsINode*, uint32_t, nsINode*, uint32_t)
+  void initWithPositions(in nsIScriptableContentIterator_IteratorType aType,
+                         in Node aStartContainer, in unsigned long aStartOffset,
+                         in Node aEndContainer, in unsigned long aEndOffset);
+
+  // See ContentIteratorBase::First()
+  void first();
+
+  // See ContentIteratorBase::Last()
+  void last();
+
+  // See ContentIteratorBase::Next()
+  void next();
+
+  // See ContentIteratorBase::Prev()
+  void prev();
+
+  // See ContentIteratorBase::GetCurrentNode()
+  readonly attribute Node currentNode;
+
+  // See ContentIteratorBase::IsDone()
+  readonly attribute bool isDone;
+
+  // See ContentIteratorBase::PositionAt(nsINode*)
+  void positionAt(in Node aNode);
+};
+
+%{C++
+#define SCRIPTABLE_CONTENT_ITERATOR_CID \
+  { 0xf68037ec, 0x2790, 0x44c5, \
+    { 0x8e, 0x5f, 0xdf, 0x5d, 0xa5, 0x8b, 0x93, 0xa7 } }
+#define SCRIPTABLE_CONTENT_ITERATOR_CONTRACTID \
+  "@mozilla.org/scriptable-content-iterator;1"
+%}

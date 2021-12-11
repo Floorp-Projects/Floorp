@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
+Check that XUL windows don't make insertAnonymousContent crash.
+-->
+<window title="Anonymous content in a XUL window"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+  <box>This is a test box</box>
+
+  <script type="application/javascript">
+    // Insert content
+    let testElement = document.querySelector("box");
+    document.insertAnonymousContent(testElement);
+    ok(true,
+      "Inserting anonymous content in a XUL document did not crash")
+  </script>
+</window>

@@ -1,0 +1,111 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.net += [
+    "ChannelEventQueue.h",
+    "DocumentChannel.h",
+    "DocumentChannelChild.h",
+    "DocumentChannelParent.h",
+    "DocumentLoadListener.h",
+    "InputChannelThrottleQueueChild.h",
+    "InputChannelThrottleQueueParent.h",
+    "NeckoChild.h",
+    "NeckoCommon.h",
+    "NeckoMessageUtils.h",
+    "NeckoParent.h",
+    "NeckoTargetHolder.h",
+    "ParentChannelWrapper.h",
+    "ParentProcessDocumentChannel.h",
+    "ProxyAutoConfigChild.h",
+    "ProxyAutoConfigParent.h",
+    "ProxyConfigLookup.h",
+    "ProxyConfigLookupChild.h",
+    "ProxyConfigLookupParent.h",
+    "SocketProcessBridgeChild.h",
+    "SocketProcessBridgeParent.h",
+    "SocketProcessChild.h",
+    "SocketProcessHost.h",
+    "SocketProcessImpl.h",
+    "SocketProcessParent.h",
+]
+
+UNIFIED_SOURCES += [
+    "ChannelEventQueue.cpp",
+    "DocumentChannel.cpp",
+    "DocumentChannelChild.cpp",
+    "DocumentChannelParent.cpp",
+    "DocumentLoadListener.cpp",
+    "InputChannelThrottleQueueChild.cpp",
+    "InputChannelThrottleQueueParent.cpp",
+    "NeckoChild.cpp",
+    "NeckoParent.cpp",
+    "NeckoTargetHolder.cpp",
+    "ParentChannelWrapper.cpp",
+    "ParentProcessDocumentChannel.cpp",
+    "ProxyConfigLookup.cpp",
+    "ProxyConfigLookupChild.cpp",
+    "ProxyConfigLookupParent.cpp",
+    "SocketProcessBridgeChild.cpp",
+    "SocketProcessBridgeParent.cpp",
+    "SocketProcessChild.cpp",
+    "SocketProcessHost.cpp",
+    "SocketProcessImpl.cpp",
+    "SocketProcessParent.cpp",
+]
+
+SOURCES += [
+    "ProxyAutoConfigChild.cpp",
+    "ProxyAutoConfigParent.cpp",
+]
+
+
+PREPROCESSED_IPDL_SOURCES += [
+    "PNecko.ipdl",
+    "PSocketProcess.ipdl",
+]
+
+IPDL_SOURCES = [
+    "NeckoChannelParams.ipdlh",
+    "PDataChannel.ipdl",
+    "PDocumentChannel.ipdl",
+    "PFileChannel.ipdl",
+    "PInputChannelThrottleQueue.ipdl",
+    "PProxyAutoConfig.ipdl",
+    "PProxyConfigLookup.ipdl",
+    "PSimpleChannel.ipdl",
+    "PSocketProcessBridge.ipdl",
+]
+
+# needed so --disable-webrtc builds work (yes, a bit messy)
+if not CONFIG["MOZ_WEBRTC"]:
+    IPDL_SOURCES += [
+        "../../dom/media/webrtc/transport/ipc/PStunAddrsRequest.ipdl",
+        "../../dom/media/webrtc/transport/ipc/PWebrtcTCPSocket.ipdl",
+        "../../dom/media/webrtc/transport/ipc/WebrtcProxyConfig.ipdlh",
+    ]
+    EXPORTS.mozilla.net += [
+        "../../dom/media/webrtc/transport/ipc/NrIceStunAddrMessageUtils.h",
+        "../../dom/media/webrtc/transport/ipc/PStunAddrsParams.h",
+    ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/caps",
+    "/dom/base",
+    "/dom/media/webrtc/transport",
+    "/media/webrtc",
+    "/modules/libjar",
+    "/netwerk/base",
+    "/netwerk/protocol/http",
+    "/security/manager/ssl",
+    "/xpcom/threads",
+]
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

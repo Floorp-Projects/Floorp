@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+#target5 {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 20px;
+        height: 20px;
+        background: #f00;
+}
+</style>
+<body>
+<div id="target"></div>
+<script>
+        var io = new IntersectionObserver(function(records) {
+          var viewportWidth =
+              document.documentElement.clientWidth || document.body.clientWidth;
+          var viewportHeight =
+              document.documentElement.clientHeight || document.body.clientHeight;
+          var result = records.length === 1 &&
+                       records[0].rootBounds.top === 0 &&
+                       records[0].rootBounds.left === 0 &&
+                       records[0].rootBounds.right === viewportWidth &&
+                       records[0].rootBounds.width === viewportWidth &&
+                       records[0].rootBounds.bottom === viewportHeight &&
+                       records[0].rootBounds.height === viewportHeight;
+          if (!result) {
+              result = [records.length,
+                        records[0].isIntersecting,
+                        records[0].rootBounds.top,
+                        records[0].rootBounds.left,
+                        records[0].rootBounds.right,
+                        records[0].rootBounds.width,
+                        records[0].rootBounds.bottom,
+                        records[0].rootBounds.height,
+                        viewportWidth,
+                        viewportHeight].join(',');
+          }
+          window.opener.postMessage(result, '*');
+        });
+        io.observe(document.getElementById("target"));
+</script>
+</body>
+</html>

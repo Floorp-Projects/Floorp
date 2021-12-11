@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=537151
+-->
+<head>
+  <title>Test for Bug 537151</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  #display {
+    transition: margin-left 200ms;
+  }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=537151">Mozilla Bug 537151</a>
+<p id="display">Paragraph</p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 537151 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+var p = document.getElementById("display");
+p.addEventListener("transitionend", listener);
+var ignored = getComputedStyle(p, "").marginLeft;
+p.style.marginLeft = "150px";
+
+var event_count = 0;
+function listener(event)
+{
+  ++event_count;
+  setTimeout(finish, 400);
+  p.style.color = "blue";
+}
+
+function finish()
+{
+  is(event_count, 1, "should have gotten only 1 transitionend event");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

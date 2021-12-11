@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Example of rules between table-rows and table-cells</title>
+<style>
+table {
+  display: inline-table;
+  border-spacing: 10px 20px;
+  background-color: lightgrey;
+  caption-side: bottom;
+}
+
+thead, tfoot, tbody {
+  column-rule: solid magenta;
+  column-rule-extent: long;
+
+  row-rule: solid orange;
+  row-rule-extent: long;
+  row-rule-align: rule;
+}
+
+thead {
+  column-rule-color: brown;
+}
+
+table > .all-long {
+  column-rule-extent: all-long;
+  row-rule-extent: all-long;
+  row-rule-align: rule-over;
+}
+
+table.rules {
+  column-rule: 6px solid blue;
+  column-rule-extent: long;
+  column-rule-align: rule;
+
+  row-rule: 3px solid green;
+  row-rule-longitudinal-inset: 1px;
+  row-rule-align: rule;
+}
+table.rules.all-long {
+  column-rule-extent: all-long;
+  column-rule-edge-align: gap-over;
+}
+
+pre,caption { font-size: 10px; text-align: start; }
+</style>
+
+<table>
+  <caption>*-rule-extent: long</caption>
+  <colgroup><col><col></colgroup>
+  <colgroup><col width=100><col></colgroup>
+  <thead>
+    <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>2</td><td>3</td><td>4</td><td rowspan=2>5</td>
+    <tr><td colspan=2>1,2</td><td>3</td><td>4</td>
+  </tbody>
+</table>
+
+<table>
+  <caption>*-rule-extent: all-long;<br>row-rule-align: rule-over<br></caption>
+  <colgroup><col><col></colgroup>
+  <colgroup><col width=100><col></colgroup>
+  <thead class="all-long">
+    <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+  </thead>
+  <tbody class="all-long">
+    <tr><td>1</td><td>2</td><td>3</td><td>4</td><td rowspan=2>5</td>
+    <tr><td colspan=2>1,2</td><td>3</td><td>4</td>
+  </tbody>
+</table>
+
+<br>
+<br>
+<pre>Same thing, now with table rules from the last example also applied:</pre>
+
+<table class="rules">
+  <caption>*-rule-extent: long</caption>
+  <colgroup><col><col></colgroup>
+  <colgroup><col width=100><col></colgroup>
+  <thead>
+    <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>2</td><td>3</td><td>4</td><td rowspan=2>5</td>
+    <tr><td colspan=2>1,2</td><td>3</td><td>4</td>
+  </tbody>
+</table>
+
+<table class="rules all-long">
+  <caption>*-rule-extent: all-long;<br>row-rule-align: rule-over<br></caption>
+  <colgroup><col><col></colgroup>
+  <colgroup><col width=100><col></colgroup>
+  <thead class="all-long">
+    <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+  </thead>
+  <tbody class="all-long">
+    <tr><td>1</td><td>2</td><td>3</td><td>4</td><td rowspan=2>5</td>
+    <tr><td colspan=2>1,2</td><td>3</td><td>4</td>
+  </tbody>
+</table>

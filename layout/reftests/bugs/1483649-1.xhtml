@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<style type="text/css" xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+#container {
+  position: relative;
+  left: 500px;
+  display: inline;
+}
+
+#first {
+  position: relative;
+  top: 0px;
+  left: 0px;
+  width: 100px;
+  height: 100px;
+  transform: scaleX(-1);
+  background: red;
+}
+
+#second {
+  position: relative;
+  top: 50px;
+  left: -100px;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+}
+
+@keyframes transform-animation {
+  from {
+    transform: scaleX(-1);
+  }
+  to {
+    transform: scaleX(-1);
+  }
+}
+
+#transformed {
+  width: 50px;
+  height: 50px;
+  animation-name: transform-animation;
+  animation-fill-mode: forwards;
+}
+
+]]></style>
+
+<box id="container">
+  <box id="first"></box>
+  <box id="second">
+    <image id="transformed"/>
+  </box>
+</box>
+</window>

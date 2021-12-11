@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="window" title="Subframe Origin Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+chrome margins rock!
+<script>
+
+// Tests parsing of the chrome margin attrib on a window.
+
+function ok(condition, message) {
+  window.arguments[0].SimpleTest.ok(condition, message);
+}
+
+function doSingleTest(param, shouldSucceed)
+{
+  var exception = null;
+  try {
+    document.documentElement.removeAttribute("chromemargin");
+    document.documentElement.setAttribute("chromemargin", param);
+    ok(document.
+       documentElement.
+       getAttribute("chromemargin") == param, "couldn't set/get chromemargin?");
+  } catch (ex) {
+    exception = ex;
+  }
+  if (shouldSucceed)
+    ok(!exception, "failed for param:'" + param + "'");
+  else
+    ok(exception, "did not fail for invalid param:'" + param + "'");
+  return true;
+}
+
+function runTests()
+{
+  var doc = document.documentElement;
+
+  // make sure we can set and get
+  doc.setAttribute("chromemargin", "0,0,0,0");
+  ok(doc.getAttribute("chromemargin") == "0,0,0,0", "couldn't set/get chromemargin?");
+  doc.setAttribute("chromemargin", "-1,-1,-1,-1");
+  ok(doc.getAttribute("chromemargin") == "-1,-1,-1,-1", "couldn't set/get chromemargin?");
+
+  // test remove
+  doc.removeAttribute("chromemargin");
+  ok(doc.getAttribute("chromemargin") == "", "couldn't remove chromemargin?");
+
+  // we already test these really well in a c++ test in widget
+  doSingleTest("1,2,3,4", true);
+  doSingleTest("-2,-2,-2,-2", true);
+  doSingleTest("1,1,1,1", true);
+  doSingleTest("", false);
+  doSingleTest("12123123", false);
+  doSingleTest("0,-1,-1,-1", true);
+  doSingleTest("-1,0,-1,-1", true);
+  doSingleTest("-1,-1,0,-1", true);
+  doSingleTest("-1,-1,-1,0", true);
+  doSingleTest("1234567890,1234567890,1234567890,1234567890", true);
+  doSingleTest("-1,-1,-1,-1", true);
+
+  window.arguments[0].SimpleTest.finish();
+  window.close();
+}
+
+window.arguments[0].SimpleTest.waitForFocus(runTests, window);
+
+</script>
+</window>

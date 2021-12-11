@@ -1,0 +1,74 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+
+EXPORTS.mozilla += [
+    "SMILAnimationController.h",
+    "SMILAnimationFunction.h",
+    "SMILAttr.h",
+    "SMILCompositorTable.h",
+    "SMILCSSValueType.h",
+    "SMILInstanceTime.h",
+    "SMILInterval.h",
+    "SMILKeySpline.h",
+    "SMILMilestone.h",
+    "SMILNullType.h",
+    "SMILParserUtils.h",
+    "SMILRepeatCount.h",
+    "SMILSetAnimationFunction.h",
+    "SMILTargetIdentifier.h",
+    "SMILTimeContainer.h",
+    "SMILTimedElement.h",
+    "SMILTimeValue.h",
+    "SMILTimeValueSpec.h",
+    "SMILTimeValueSpecParams.h",
+    "SMILType.h",
+    "SMILTypes.h",
+    "SMILValue.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "TimeEvent.h",
+]
+
+UNIFIED_SOURCES += [
+    "SMILAnimationController.cpp",
+    "SMILAnimationFunction.cpp",
+    "SMILBoolType.cpp",
+    "SMILCompositor.cpp",
+    "SMILCSSProperty.cpp",
+    "SMILCSSValueType.cpp",
+    "SMILEnumType.cpp",
+    "SMILFloatType.cpp",
+    "SMILInstanceTime.cpp",
+    "SMILIntegerType.cpp",
+    "SMILInterval.cpp",
+    "SMILKeySpline.cpp",
+    "SMILNullType.cpp",
+    "SMILParserUtils.cpp",
+    "SMILRepeatCount.cpp",
+    "SMILSetAnimationFunction.cpp",
+    "SMILStringType.cpp",
+    "SMILTimeContainer.cpp",
+    "SMILTimedElement.cpp",
+    "SMILTimeValue.cpp",
+    "SMILTimeValueSpec.cpp",
+    "SMILValue.cpp",
+    "TimeEvent.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/dom/svg",
+    "/layout/base",
+    "/layout/style",
+]
+
+FINAL_LIBRARY = "xul"

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-size: 100% 100%; on body</title>
+  <style type="text/css">
+body
+{
+  background-image: url(green-8x20-blue-8x20-vertical.png);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  overflow: hidden;
+
+  /*
+   * This should not affect how the background paints, that is, how the
+   * background image is sized:
+   *
+   *   If the ‘background-attachment’ value for this image is ‘fixed’ [...] the
+   *   background positioning area is the initial containing block [CSS21].
+   *
+   * Thus '100% 100%' below is relative to the viewport size, so we expect to
+   * see a background which, modulo aliasing, is half green and half blue.
+   */
+  height: 10000px;
+
+  background-size: 100% 100%;
+}
+  </style>
+</head>
+<body>
+</body>
+</html>

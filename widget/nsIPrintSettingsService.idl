@@ -1,0 +1,148 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Interface to the Service for gwetting the Global PrintSettings object
+   or a unique PrintSettings object
+*/
+
+#include "nsISupports.idl"
+
+interface nsIPrintSettings;
+interface nsIWebBrowserPrint;
+
+%{ C++
+namespace mozilla {
+namespace embedding {
+  class PrintData;
+}
+}
+%}
+
+/**
+ * Native types
+ */
+[ref] native PrintDataRef(const mozilla::embedding::PrintData);
+[ptr] native PrintDataPtr(mozilla::embedding::PrintData);
+
+[scriptable, uuid(841387C8-72E6-484b-9296-BF6EEA80D58A)]
+interface nsIPrintSettingsService : nsISupports
+{
+  /**
+   * Returns the default print settings as used for printing.
+   */
+  [noscript] readonly attribute nsIPrintSettings defaultPrintSettingsForPrinting;
+
+  /**
+   * Returns a new, unique PrintSettings object each time.
+   *
+   * Initializes the newPrintSettings from the unprefixed printer
+   * (Note: this may not happen if there is an OS specific implementation.)
+   *
+   * XXX This should really be a function called `createPrintSettings()`.
+   */
+  readonly attribute nsIPrintSettings newPrintSettings;
+
+  /**
+   * The name of the last printer used. Note that this may not be set, or may
+   * no longer be a valid printer. The caller is responsible for checking and
+   * falling back to some other printer (such as the system default printer).
+   *
+   * XXX: make it [infallible] when AString supports that (bug 1491187).
+   */
+  readonly attribute AString lastUsedPrinterName;
+
+  /**
+   * Initializes certain settings from the native printer into the PrintSettings
+   * if aPrinterName is null then it uses the default printer name if it can
+   * These settings include, but are not limited to:
+   *   Page Orientation
+   *   Page Size
+   *   Number of Copies
+   */
+  void initPrintSettingsFromPrinter(in AString aPrinterName,
+                                    in nsIPrintSettings aPrintSettings);
+
+  /**
+   * Reads PrintSettings values from Prefs,
+   * the values to be read are indicated by the "flags" arg.
+   *
+   * aPrintSettings should be initialized with the name of a printer. First
+   * it reads in the PrintSettings from the last print job. Then it uses the
+   * PrinterName in the PrinterSettings to read any settings that were saved
+   * just for that printer.
+   *
+   * aPS - PrintSettings to have its settings read
+   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
+   * aFlags - indicates which prefs to read, see nsIPrintSettings.idl for the
+   *          const values.
+   *
+   * Items not read:
+   *   startPageRange, endPageRange, scaling, printRange, title
+   *   docURL, isCancelled,
+   *   printSilent, shrinkToFit, numCopies,
+   *   printerName
+   *
+   */
+  void initPrintSettingsFromPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+
+  /**
+   * Writes PrintSettings values to Prefs,
+   * the values to be written are indicated by the "flags" arg.
+   *
+   * If there is no PrinterName in the PrinterSettings
+   * the values are saved as the "generic" values not associated with any printer.
+   * If a PrinterName is there, then it saves the items qualified for that Printer
+   *
+   * aPS - PrintSettings to have its settings saved
+   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
+   * aFlags - indicates which prefs to save, see nsIPrintSettings.idl for the const values.
+   *
+   * Items not written:
+   *   startPageRange, endPageRange, scaling, printRange, title
+   *   docURL, isCancelled,
+   *   printSilent, shrinkToFit, numCopies
+   *
+   */
+  void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+
+  /**
+   * Given some nsIPrintSettings,
+   * populates a PrintData representing them which can be sent over IPC. Values
+   * are only ever read from aSettings and aWBP.
+   *
+   * @param aSettings
+   *        An nsIPrintSettings for a print job.
+   * @param data
+   *        Pointer to a pre-existing PrintData to populate.
+   *
+   * @return nsresult
+   */
+  [noscript]
+  void SerializeToPrintData(in nsIPrintSettings aPrintSettings,
+                            in PrintDataPtr data);
+
+  /**
+   * This function is the opposite of SerializeToPrintData, in that it takes
+   * a PrintData, and populates a pre-existing nsIPrintSettings with the data
+   * from PrintData.
+   *
+   * @param PrintData
+   *        Printing information sent through IPC.
+   * @param settings
+   *        A pre-existing nsIPrintSettings to populate with the PrintData.
+   *
+   * @return nsresult
+   */
+  [noscript]
+  void DeserializeToPrintSettings(in PrintDataRef data,
+                                  in nsIPrintSettings aPrintSettings);
+
+};
+
+%{C++
+// {841387C8-72E6-484b-9296-BF6EEA80D58A}
+#define NS_PRINTSETTINGSSERVICE_IID \
+ {0x841387c8, 0x72e6, 0x484b, { 0x92, 0x96, 0xbf, 0x6e, 0xea, 0x80, 0xd5, 0x8a}}
+%}

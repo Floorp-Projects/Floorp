@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+    var a = new AudioContext();
+    var b = new BroadcastChannel("x");
+    a.addEventListener("statechange", bye, false);
+}
+
+function bye()
+{
+    document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,29 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o complete-empty-dark-matter-actual.txt complete-empty-dark-matter.json
+
+Invocation {
+  $DMD = '--mode=dark-matter --stacks=full'
+  Mode = 'dark-matter'
+}
+
+#-----------------------------------------------------------------
+
+# no twice-reported heap blocks
+
+#-----------------------------------------------------------------
+
+# no unreported heap blocks
+
+#-----------------------------------------------------------------
+
+# no once-reported heap blocks
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total:                     0 bytes (100.00%) in       0 blocks (100.00%)
+  Unreported:                0 bytes (  0.00%) in       0 blocks (  0.00%)
+  Once-reported:             0 bytes (  0.00%) in       0 blocks (  0.00%)
+  Twice-reported:            0 bytes (  0.00%) in       0 blocks (  0.00%)
+}
+

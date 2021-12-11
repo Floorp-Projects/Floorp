@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<head>
+<script>
+async function start () {
+  const peer = new RTCPeerConnection()
+  await peer.createOffer({'offerToReceiveVideo': true})
+  const receiver = peer.getReceivers()[0]
+  peer.close()
+  receiver.track.clone()
+  document.documentElement.removeAttribute("class")
+}
+
+document.addEventListener('DOMContentLoaded', start)
+</script>
+</head>
+</html>

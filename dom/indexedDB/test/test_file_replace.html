@@ -1,0 +1,69 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+  function* testSteps()
+  {
+    const name = window.location.pathname;
+
+    const objectStoreName = "Blobs";
+
+    const blobData = { key: 42, blobs: [] };
+
+    for (let i = 0; i < 100; i++) {
+      blobData.blobs[i] = getRandomBlob(i);
+    }
+
+    SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },
+                              continueToNextStep);
+    yield undefined;
+
+    let request = indexedDB.open(name, 1);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield undefined;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    let objectStore = db.createObjectStore(objectStoreName, { });
+
+    for (let i = 0; i < blobData.blobs.length; i++) {
+      objectStore.put(blobData.blobs[i], blobData.key);
+    }
+
+    event = yield undefined;
+
+    is(event.type, "success", "Got correct event type");
+
+    for (let id = 1; id <= 100; id++) {
+      let refs = {};
+      let dbRefs = {};
+      let hasFileInfo = utils.getFileReferences(name, id, null, refs, dbRefs);
+      ok(hasFileInfo, `Expect existing DatabaseFileInfo for ${name}/${id}`);
+      is(refs.value, 1, "Correct ref count");
+      is(dbRefs.value, id / 100 >> 0, "Correct db ref count");
+    }
+
+    finishTest();
+  }
+  </script>
+  <script type="text/javascript" src="file.js"></script>
+  <script type="text/javascript" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

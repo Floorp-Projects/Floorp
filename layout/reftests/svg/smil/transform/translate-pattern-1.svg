@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    function doTest() {
+      setTimeAndSnapshot(101, false);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
+  <defs>
+    <pattern id="pat" width="200%" height="100%">
+      <rect x="0" y="0" width="50" height="100%" fill="red"/>
+      <rect x="50" y="0" width="50" height="100%" fill="lime"/>
+      <animateTransform attributeName="patternTransform" type="translate" begin="100s" dur="1s"
+		        from="0 0" to="-50 0" fill="freeze"/>
+    </pattern>
+  </defs>
+
+  <!-- Test 1: Lime background covered by left hand side of pattern.
+       After the animation, the right hand lime side of the pattern
+       is visible, so no red is shown. -->
+  <rect x="0" width="50" height="100%" fill="lime" />
+  <rect x="0" width="50" height="100%" fill="url(#pat)" />
+
+  <!-- Not a test: Paint the rest of the viewport, to match lime.svg -->
+  <rect x="50" height="100%" width="100%" fill="lime"/>
+</svg>

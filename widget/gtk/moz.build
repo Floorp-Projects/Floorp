@@ -1,0 +1,170 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Widget: Gtk")
+
+with Files("*CompositorWidget*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
+with Files("*WindowSurface*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
+with Files("*IMContextWrapper*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*nsGtkKeyUtils*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+DIRS += ["mozgtk"]
+
+if CONFIG["MOZ_WAYLAND"]:
+    DIRS += ["wayland", "mozwayland"]
+
+EXPORTS += [
+    "MozContainer.h",
+    "nsGTKToolkit.h",
+    "nsImageToPixbuf.h",
+]
+
+EXPORTS.mozilla += ["WidgetUtilsGtk.h"]
+
+EXPORTS.mozilla.widget += [
+    "WindowSurface.h",
+    "WindowSurfaceProvider.h",
+]
+
+UNIFIED_SOURCES += [
+    "GfxInfo.cpp",
+    "gtk3drawing.cpp",
+    "GtkCompositorWidget.cpp",
+    "IMContextWrapper.cpp",
+    "MozContainer.cpp",
+    "MPRISServiceHandler.cpp",
+    "NativeKeyBindings.cpp",
+    "nsApplicationChooser.cpp",
+    "nsAppShell.cpp",
+    "nsBidiKeyboard.cpp",
+    "nsClipboard.cpp",
+    "nsColorPicker.cpp",
+    "nsDragService.cpp",
+    "nsFilePicker.cpp",
+    "nsGtkKeyUtils.cpp",
+    "nsImageToPixbuf.cpp",
+    "nsLookAndFeel.cpp",
+    "nsNativeBasicThemeGTK.cpp",
+    "nsSound.cpp",
+    "nsToolkit.cpp",
+    "nsWidgetFactory.cpp",
+    "ScreenHelperGTK.cpp",
+    "TaskbarProgress.cpp",
+    "WakeLockListener.cpp",
+    "WidgetStyleCache.cpp",
+    "WidgetTraceEvent.cpp",
+    "WidgetUtilsGtk.cpp",
+    "WindowSurfaceProvider.cpp",
+]
+
+SOURCES += [
+    "MediaKeysEventSourceFactory.cpp",
+    "nsNativeThemeGTK.cpp",  # conflicts with X11 headers
+    "nsWindow.cpp",  # conflicts with X11 headers
+    "WaylandVsyncSource.cpp",  # conflicts with X11 headers
+]
+
+if CONFIG["ACCESSIBILITY"]:
+    UNIFIED_SOURCES += [
+        "maiRedundantObjectFactory.c",
+    ]
+
+if CONFIG["MOZ_WAYLAND"]:
+    UNIFIED_SOURCES += [
+        "DMABufLibWrapper.cpp",
+        "DMABufSurface.cpp",
+        "MozContainerWayland.cpp",
+        "nsClipboardWayland.cpp",
+        "nsClipboardWaylandAsync.cpp",
+        "nsWaylandDisplay.cpp",
+        "WaylandBuffer.cpp",
+        "WindowSurfaceWaylandMultiBuffer.cpp",
+    ]
+    EXPORTS.mozilla.widget += [
+        "DMABufLibWrapper.h",
+        "DMABufSurface.h",
+        "MozContainerWayland.h",
+        "nsWaylandDisplay.h",
+        "WaylandBuffer.h",
+    ]
+
+if CONFIG["MOZ_X11"]:
+    UNIFIED_SOURCES += [
+        "CompositorWidgetChild.cpp",
+        "CompositorWidgetParent.cpp",
+        "InProcessGtkCompositorWidget.cpp",
+        "nsClipboardX11.cpp",
+        "nsShmImage.cpp",
+        "nsUserIdleServiceGTK.cpp",
+        "WindowSurfaceX11.cpp",
+        "WindowSurfaceX11Image.cpp",
+        "WindowSurfaceX11SHM.cpp",
+    ]
+    EXPORTS.mozilla.widget += [
+        "CompositorWidgetChild.h",
+        "CompositorWidgetParent.h",
+        "GtkCompositorWidget.h",
+        "InProcessGtkCompositorWidget.h",
+    ]
+
+if CONFIG["NS_PRINTING"]:
+    UNIFIED_SOURCES += [
+        "nsDeviceContextSpecG.cpp",
+        "nsPrintDialogGTK.cpp",
+        "nsPrintSettingsGTK.cpp",
+        "nsPrintSettingsServiceGTK.cpp",
+    ]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/layout/base",
+    "/layout/forms",
+    "/layout/generic",
+    "/layout/xul",
+    "/other-licenses/atk-1.0",
+    "/third_party/cups/include",
+    "/widget",
+    "/widget/headless",
+]
+
+if CONFIG["MOZ_X11"]:
+    LOCAL_INCLUDES += [
+        "/widget/x11",
+    ]
+
+DEFINES["CAIRO_GFX"] = True
+
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+
+CFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+
+if CONFIG["MOZ_WAYLAND"]:
+    CFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
+    CXXFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
+
+if CONFIG["MOZ_ENABLE_DBUS"]:
+    CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+
+CXXFLAGS += ["-Wno-error=shadow"]
+CXXFLAGS += ["-Werror=switch"]
+
+REQUIRES_UNIFIED_BUILD = True

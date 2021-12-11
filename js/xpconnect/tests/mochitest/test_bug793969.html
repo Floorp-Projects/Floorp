@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=793969
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 793969</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=793969">Mozilla Bug 793969</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 793969 **/
+function checkThrows(f, desc, skipMessageCheck) {
+  try {
+    f();
+    ok(false, "Should have thrown for " + desc);
+  } catch (e) {
+    ok(true, "threw correctly");
+    if (!skipMessageCheck)
+      ok(/denied/.exec(e) ||
+         /can't redefine non-configurable property/.exec(e),
+         "Correctly threw a security exception: " + e);
+  }
+}
+
+// NB: These sets will be no-ops (throw in strict mode) because setting an inherited readonly value prop has those semantics.
+checkThrows(function() { "use strict"; location.valueOf = 'hah'; }, 'Shadow with string', /* skipMessageCheck = */ true);
+checkThrows(function() { "use strict"; location.valueOf = function() { return {a: 'hah'};} }, 'Shadow with function', /* skipMessageCheck = */ true);
+checkThrows(function() { Object.defineProperty(location, 'valueOf', { value: function() { return 'hah'; } }); }, 'defineProperty with value');
+checkThrows(function() { delete location.valueOf; Object.defineProperty(location, 'valueOf', { value: function() { return 'hah'; } }); }, 'delete + defineProperty with value');
+checkThrows(function() { Object.defineProperty(location, 'valueOf', { get: function() { return 'hah'; } }); }, 'defineProperty with getter');
+checkThrows(function() { delete location.valueOf; Object.defineProperty(location, 'valueOf', { get: function() { return 'hah'; } }); }, 'delete + defineProperty with getter');
+
+Object.prototype.valueOf = function() { return 'hah'; };
+is(({}).valueOf(), 'hah', "Shadowing on Object.prototype works for vanilla objects");
+is(location.valueOf(), location, "Shadowing on Object.prototype and Location.prototype doesn't for location objects");
+
+location[Symbol.toPrimitive] = function() { return 'hah'; }
+is(location + "", location.toString(), "Should't be able to shadow with toPrimitive");
+
+</script>
+</pre>
+</body>
+</html>

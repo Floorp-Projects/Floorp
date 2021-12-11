@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+include protocol PSocketProcess;
+
+include PDNSRequestParams;
+
+include "mozilla/net/NeckoMessageUtils.h";
+
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+
+namespace mozilla {
+namespace net {
+
+[RefCounted] async protocol PDNSRequest
+{
+  manager PNecko or PSocketProcess;
+
+both:
+  // constructor in PNecko takes AsyncResolve args that initialize request
+
+  // Pass args here rather than storing them in the parent; they are only
+  // needed if the request is to be canceled.
+  async CancelDNSRequest(nsCString hostName, nsCString trrServer,
+                         uint16_t type, OriginAttributes originAttributes,
+                         uint32_t flags, nsresult reason);
+  async __delete__();
+
+  async LookupCompleted(DNSRequestResponse reply);
+
+};
+
+} //namespace net
+} //namespace mozilla

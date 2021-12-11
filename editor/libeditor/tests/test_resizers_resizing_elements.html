@@ -1,0 +1,308 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for resizers of some elements</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #target {
+    background-color: green;
+  }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" contenteditable style="width: 200px; height: 200px;"></div>
+<div id="clickaway" style="width: 10px; height: 10px"></div>
+<img src="green.png"><!-- for ensuring to load the image at first test of <img> case -->
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  document.execCommand("enableObjectResizing", false, true);
+  ok(document.queryCommandState("enableObjectResizing"),
+     "Object resizer should be enabled by the call of execCommand");
+  // Disable inline-table-editing UI for this test.
+  document.execCommand("enableInlineTableEditing", false, false);
+
+  let outOfEditor = document.getElementById("clickaway");
+
+  function cancel(e) { e.stopPropagation(); }
+  let content = document.getElementById("content");
+  content.addEventListener("mousedown", cancel);
+  content.addEventListener("mousemove", cancel);
+  content.addEventListener("mouseup", cancel);
+
+  async function waitForSelectionChange() {
+    return new Promise(resolve => {
+      document.addEventListener("selectionchange", () => {
+        resolve();
+      }, {once: true});
+    });
+  }
+
+  async function doTest(aDescription, aPreserveRatio, aInnerHTML) {
+    let description = aDescription;
+    if (SpecialPowers.getBoolPref("editor.resizing.preserve_ratio")) {
+      description += " (preserve ratio pref is true)";
+    }
+    if (document.queryCommandState("enableAbsolutePositionEditing")) {
+      description += " (absolute position editor is enabled)";
+    }
+    description += ": ";
+    content.innerHTML = aInnerHTML;
+    let target = document.getElementById("target");
+
+    /**
+     * This function is a generic resizer test.
+     * We have 8 resizers that we'd like to test, and each can be moved in 8 different directions.
+     * In specifying baseX, W can be considered to be the width of the image, and for baseY, H
+     * can be considered to be the height of the image. deltaX and deltaY are regular pixel values
+     * which can be positive or negative.
+     * TODO: Should test canceling "beforeinput" events case.
+     */
+    const W = 1;
+    const H = 1;
+    async function testResizer(baseX, baseY, deltaX, deltaY, expectedDeltaX, expectedDeltaY) {
+      ok(true, description + "testResizer(" + [baseX, baseY, deltaX, deltaY, expectedDeltaX, expectedDeltaY].join(", ") + ")");
+
+      // Reset the dimensions of the target.
+      target.style.width = "150px";
+      target.style.height = "150px";
+      let rect = target.getBoundingClientRect();
+      is(rect.width, 150, description + "Sanity check the width");
+      is(rect.height, 150, description + "Sanity check the height");
+
+      // Click on the target to show the resizers
+      ok(true, "waiting selectionchange to select the target element");
+      let promiseSelectionChangeEvent = waitForSelectionChange();
+      synthesizeMouseAtCenter(target, {});
+      await promiseSelectionChangeEvent;
+
+      // Determine which resizer we're dealing with.
+      let basePosX = rect.width * baseX;
+      let basePosY = rect.height * baseY;
+
+      let inputEventExpected = true;
+      function onInput(aEvent) {
+        if (!inputEventExpected) {
+          ok(false, `"${aEvent.type}" event shouldn't be fired after stopping resizing`);
+          return;
+        }
+        ok(aEvent instanceof InputEvent,
+           `"${aEvent.type}" event should be dispatched with InputEvent interface`);
+        is(aEvent.cancelable, false,
+           `"${aEvent.type}" event should be never cancelable`);
+        is(aEvent.bubbles, true,
+           `"${aEvent.type}" event should always bubble`);
+        is(aEvent.inputType, "",
+           `inputType of "${aEvent.type}" event should be empty string when an element is resized`);
+        is(aEvent.data, null,
+           `data of "${aEvent.type}" event should be null ${aDescription}`);
+        is(aEvent.dataTransfer, null,
+           `data of "${aEvent.type}" event should be null ${aDescription}`);
+        let targetRanges = aEvent.getTargetRanges();
+        if (aEvent.type === "beforeinput") {
+          let selection = document.getSelection();
+          is(targetRanges.length, selection.rangeCount,
+             `getTargetRanges() of "beforeinput" event for position changing of absolute position should return selection ranges ${aDescription}`);
+          if (targetRanges.length === selection.rangeCount) {
+            for (let i = 0; i < selection.rangeCount; i++) {
+              let range = selection.getRangeAt(i);
+              is(targetRanges[i].startContainer, range.startContainer,
+                 `startContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+              is(targetRanges[i].startOffset, range.startOffset,
+                 `startOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+              is(targetRanges[i].endContainer, range.endContainer,
+                 `endContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+              is(targetRanges[i].endOffset, range.endOffset,
+                 `endOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+            }
+          }
+        } else {
+          is(targetRanges.length, 0,
+             `getTargetRanges() of "${aEvent.type}" event for position changing of absolute position should return empty array ${aDescription}`);
+        }
+      }
+
+      content.addEventListener("beforeinput", onInput);
+      content.addEventListener("input", onInput);
+
+      // Click on the correct resizer
+      synthesizeMouse(target, basePosX, basePosY, {type: "mousedown"});
+      // Drag it delta pixels to the right and bottom (or maybe left and top!)
+      synthesizeMouse(target, basePosX + deltaX, basePosY + deltaY, {type: "mousemove"});
+      // Release the mouse button
+      synthesizeMouse(target, basePosX + deltaX, basePosY + deltaY, {type: "mouseup"});
+
+      inputEventExpected = false;
+
+      // Move the mouse delta more pixels to the same direction to make sure that the
+      // resize operation has stopped.
+      synthesizeMouse(target, basePosX + deltaX * 2, basePosY + deltaY * 2, {type: "mousemove"});
+
+      // Click outside of the editor to hide the resizers
+      ok(true, "waiting selectionchange to select outside the target element");
+      let promiseSelectionExitEvent = waitForSelectionChange();
+      synthesizeMouseAtCenter(outOfEditor, {});
+      await promiseSelectionExitEvent;
+
+      // Get the new dimensions for the target
+      // XXX I don't know why we need 2px margin to check this on Android.
+      //     Fortunately, this test checks whether objects are resizable
+      //     actually.  So, bigger difference is okay.
+      let newRect = target.getBoundingClientRect();
+      isfuzzy(newRect.width, rect.width + expectedDeltaX, 2, description + "The width should be increased by " + expectedDeltaX + " pixels");
+      isfuzzy(newRect.height, rect.height + expectedDeltaY, 2, description + "The height should be increased by " + expectedDeltaY + "pixels");
+
+      content.removeEventListener("beforeinput", onInput);
+      content.removeEventListener("input", onInput);
+    }
+
+    // Account for changes in the resizing behavior when we're trying to preserve
+    // the aspect ration of image.
+    // ignoredGrowth means we don't change the size of a dimension because otherwise
+    // the aspect ratio would change undesirably.
+    // needlessGrowth means that we change the size of a dimension perpendecular to
+    // the mouse movement axis in order to preserve the aspect ratio.
+    // reversedGrowth means that we change the size of a dimension in the opposite
+    // direction to the mouse movement in order to maintain the aspect ratio.
+    const ignoredGrowth = aPreserveRatio ? 0 : 1;
+    const needlessGrowth = aPreserveRatio ? 1 : 0;
+    const reversedGrowth = aPreserveRatio ? -1 : 1;
+
+    /* eslint-disable no-multi-spaces */
+
+    // top resizer
+    await testResizer(W / 2,   0, -10, -10,   0,  10);
+    await testResizer(W / 2,   0, -10,   0,   0,   0);
+    await testResizer(W / 2,   0, -10,  10,   0, -10);
+    await testResizer(W / 2,   0,   0, -10,   0,  10);
+    await testResizer(W / 2,   0,   0,   0,   0,   0);
+    await testResizer(W / 2,   0,   0,  10,   0, -10);
+    await testResizer(W / 2,   0,  10, -10,   0,  10);
+    await testResizer(W / 2,   0,  10,   0,   0,   0);
+    await testResizer(W / 2,   0,  10,  10,   0, -10);
+
+    // top right resizer
+    await testResizer(  W,   0, -10, -10, -10 * reversedGrowth, 10);
+    await testResizer(  W,   0, -10,   0, -10 * ignoredGrowth,   0);
+    await testResizer(  W,   0, -10,  10, -10, -10);
+    await testResizer(  W,   0,   0, -10,  10 * needlessGrowth,  10);
+    await testResizer(  W,   0,   0,   0,   0,   0);
+    await testResizer(  W,   0,   0,  10,   0, -10 * ignoredGrowth);
+    await testResizer(  W,   0,  10, -10,  10,  10);
+    await testResizer(  W,   0,  10,   0,  10,  10 * needlessGrowth);
+    await testResizer(  W,   0,  10,  10,  10, -10 * reversedGrowth);
+
+    // right resizer
+    await testResizer(  W, H / 2, -10, -10, -10,   0);
+    await testResizer(  W, H / 2, -10,   0, -10,   0);
+    await testResizer(  W, H / 2, -10,  10, -10,   0);
+    await testResizer(  W, H / 2,   0, -10,   0,   0);
+    await testResizer(  W, H / 2,   0,   0,   0,   0);
+    await testResizer(  W, H / 2,   0,  10,   0,   0);
+    await testResizer(  W, H / 2,  10, -10,  10,   0);
+    await testResizer(  W, H / 2,  10,   0,  10,   0);
+    await testResizer(  W, H / 2,  10,  10,  10,   0);
+
+    // bottom right resizer
+    await testResizer(  W,   H, -10, -10, -10, -10);
+    await testResizer(  W,   H, -10,   0, -10 * ignoredGrowth,   0);
+    await testResizer(  W,   H, -10,  10, -10 * reversedGrowth,  10);
+    await testResizer(  W,   H,   0, -10,   0, -10 * ignoredGrowth);
+    await testResizer(  W,   H,   0,   0,   0,   0);
+    await testResizer(  W,   H,   0,  10,  10 * needlessGrowth,  10);
+    await testResizer(  W,   H,  10, -10,  10, -10 * reversedGrowth);
+    await testResizer(  W,   H,  10,   0,  10,  10 * needlessGrowth);
+    await testResizer(  W,   H,  10,  10,  10,  10);
+
+    // bottom resizer
+    await testResizer(W / 2,   H, -10, -10,   0, -10);
+    await testResizer(W / 2,   H, -10,   0,   0,   0);
+    await testResizer(W / 2,   H, -10,  10,   0,  10);
+    await testResizer(W / 2,   H,   0, -10,   0, -10);
+    await testResizer(W / 2,   H,   0,   0,   0,   0);
+    await testResizer(W / 2,   H,   0,  10,   0,  10);
+    await testResizer(W / 2,   H,  10, -10,   0, -10);
+    await testResizer(W / 2,   H,  10,   0,   0,   0);
+    await testResizer(W / 2,   H,  10,  10,   0,  10);
+
+    // bottom left resizer
+    await testResizer(  0,   H, -10, -10,  10, -10 * reversedGrowth);
+    await testResizer(  0,   H, -10,   0,  10,  10 * needlessGrowth);
+    await testResizer(  0,   H, -10,  10,  10,  10);
+    await testResizer(  0,   H,   0, -10,   0, -10 * ignoredGrowth);
+    await testResizer(  0,   H,   0,   0,   0,   0);
+    await testResizer(  0,   H,   0,  10,  10 * needlessGrowth,  10);
+    await testResizer(  0,   H,  10, -10, -10, -10);
+    await testResizer(  0,   H,  10,   0, -10 * ignoredGrowth,   0);
+    await testResizer(  0,   H,  10,  10, -10 * reversedGrowth,  10);
+
+    // left resizer
+    await testResizer(  0, H / 2, -10, -10,  10,   0);
+    await testResizer(  0, H / 2, -10,   0,  10,   0);
+    await testResizer(  0, H / 2, -10,  10,  10,   0);
+    await testResizer(  0, H / 2,   0, -10,   0,   0);
+    await testResizer(  0, H / 2,   0,   0,   0,   0);
+    await testResizer(  0, H / 2,   0,  10,   0,   0);
+    await testResizer(  0, H / 2,  10, -10, -10,   0);
+    await testResizer(  0, H / 2,  10,   0, -10,   0);
+    await testResizer(  0, H / 2,  10,  10, -10,   0);
+
+    // top left resizer
+    await testResizer(  0,   0, -10, -10,  10,  10);
+    await testResizer(  0,   0, -10,   0,  10,  10 * needlessGrowth);
+    await testResizer(  0,   0, -10,  10,  10, -10 * reversedGrowth);
+    await testResizer(  0,   0,   0, -10,  10 * needlessGrowth,  10);
+    await testResizer(  0,   0,   0,   0,   0,   0);
+    await testResizer(  0,   0,   0,  10,   0, -10 * ignoredGrowth);
+    await testResizer(  0,   0,  10, -10, -10 * reversedGrowth,  10);
+    await testResizer(  0,   0,  10,   0, -10 * ignoredGrowth,   0);
+    await testResizer(  0,   0,  10,  10, -10, -10);
+
+    /* eslint-enable no-multi-spaces */
+  }
+
+  const kTests = [
+    { description: "Resizers for <img>",
+      innerHTML: "<img id=\"target\" src=\"green.png\">",
+      mayPreserveRatio: true,
+      isAbsolutePosition: false,
+    },
+    { description: "Resizers for <table>",
+      innerHTML: "<table id=\"target\" border><tr><td>cell</td><td>cell</td></tr></table>",
+      mayPreserveRatio: false,
+      isAbsolutePosition: false,
+    },
+    { description: "Resizers for absolute positioned <div>",
+      innerHTML: "<div id=\"target\" style=\"position: absolute; top: 50px; left: 50px;\">positioned</div>",
+      mayPreserveRatio: false,
+      isAbsolutePosition: true,
+    },
+  ];
+
+  // Resizers for absolute positioned element and table element are available
+  // only when enableAbsolutePositionEditing or enableInlineTableEditing is
+  // enabled for each.  So, let's enable them during testing resizers for
+  // absolute positioned elements or table elements.
+  await SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", false]]});
+  for (const kTest of kTests) {
+    document.execCommand("enableAbsolutePositionEditing", false, kTest.isAbsolutePosition);
+    await doTest(kTest.description, false, kTest.innerHTML);
+  }
+  await SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", true]]});
+  for (const kTest of kTests) {
+    document.execCommand("enableAbsolutePositionEditing", false, kTest.isAbsolutePosition);
+    await doTest(kTest.description, kTest.mayPreserveRatio, kTest.innerHTML);
+  }
+  content.innerHTML = "";
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

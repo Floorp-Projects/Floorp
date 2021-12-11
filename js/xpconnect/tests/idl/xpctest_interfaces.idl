@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Very simple test interfaces.
+ *
+ * This is used by the other test functionality when it needs to play around with
+ * interface pointers.
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(3c8fd2f5-970c-42c6-b5dd-cda1c16dcfd8)]
+interface nsIXPCTestInterfaceA : nsISupports {
+  attribute string name;
+};
+
+[scriptable, uuid(ff528c3a-2410-46de-acaa-449aa6403a33)]
+interface nsIXPCTestInterfaceB : nsISupports {
+  attribute string name;
+};
+
+[scriptable, uuid(401cf1b4-355b-4cee-b7b3-c7973aee49bd)]
+interface nsIXPCTestInterfaceC : nsISupports {
+  attribute long someInteger;
+};

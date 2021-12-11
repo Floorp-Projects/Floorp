@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=456229
+-->
+<head>
+  <title>Test for Bug 456229</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=456229">Mozilla Bug 456229</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input id='i' type="search">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 456229 **/
+
+// More checks are done in test_bug551670.html.
+
+var i = document.getElementById('i');
+is(i.type, 'search', "Search state should be recognized");
+
+</script>
+</pre>
+</body>
+</html>

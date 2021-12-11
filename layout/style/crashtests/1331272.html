@@ -1,0 +1,16 @@
+<!doctype html>
+<style>
+  div::before {
+    content: "PASS";
+    display: none;
+  }
+  .foo::before {
+    display: none;
+  }
+</style>
+<div></div>
+<script>
+window.onload = function() {
+  document.querySelector('div').className = "foo";
+}
+</script>

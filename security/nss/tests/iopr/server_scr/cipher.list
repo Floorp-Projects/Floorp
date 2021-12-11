@@ -1,0 +1,98 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+nss                                      openssl                    iis 
+
+#
+# SSL v3.0 cipher suites.
+#
+SSL3_RSA_WITH_NULL_MD5                   NULL-MD5                   i
+SSL3_RSA_WITH_NULL_SHA                   NULL-SHA                   z
+SSL3_RSA_WITH_RC4_128_MD5                RC4-MD5                    c
+SSL3_RSA_WITH_RC4_128_SHA                RC4-SHA                    n
+SSL3_RSA_WITH_IDEA_CBC_SHA               IDEA-CBC-SHA
+SSL3_RSA_WITH_DES_CBC_SHA                DES-CBC-SHA                e
+SSL3_RSA_WITH_3DES_EDE_CBC_SHA           DES-CBC3-SHA               d
+
+SSL3_DH_DSS_WITH_DES_CBC_SHA             Not_implemented.
+SSL3_DH_DSS_WITH_3DES_EDE_CBC_SHA        Not_implemented.
+SSL3_DH_RSA_WITH_DES_CBC_SHA             Not_implemented.
+SSL3_DH_RSA_WITH_3DES_EDE_CBC_SHA        Not_implemented.
+SSL3_DHE_DSS_WITH_DES_CBC_SHA            EDH-DSS-CBC-SHA            s
+SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA       EDH-DSS-DES-CBC3-SHA       q
+SSL3_DHE_RSA_WITH_DES_CBC_SHA            EDH-RSA-DES-CBC-SHA
+SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA       EDH-RSA-DES-CBC3-SHA
+
+SSL3_DH_anon_WITH_RC4_128_MD5            ADH-RC4-MD5
+SSL3_DH_anon_WITH_DES_CBC_SHA            ADH-DES-CBC-SHA
+SSL3_DH_anon_WITH_3DES_EDE_CBC_SHA       ADH-DES-CBC3-SHA
+
+SSL3_FORTEZZA_KEA_WITH_NULL_SHA          Not_implemented.
+SSL3_FORTEZZA_KEA_WITH_FORTEZZA_CBC_SHA  Not_implemented.
+SSL3_FORTEZZA_KEA_WITH_RC4_128_SHA       Not_implemented.
+
+#
+# Next four added to have ciphers below for SSL3 protocol
+#
+SSL3_RSA_WITH_AES_128_CBC_SHA            AES128-SHA
+SSL3_RSA_WITH_AES_256_CBC_SHA            AES256-SHA
+
+#
+#TLS v1.0 cipher suites.
+#
+TLS_RSA_WITH_NULL_MD5                   NULL-MD5
+TLS_RSA_WITH_NULL_SHA                   NULL-SHA
+TLS_RSA_WITH_RC4_128_MD5                RC4-MD5
+TLS_RSA_WITH_RC4_128_SHA                RC4-SHA
+TLS_RSA_WITH_IDEA_CBC_SHA               IDEA-CBC-SHA
+TLS_RSA_WITH_DES_CBC_SHA                DES-CBC-SHA
+TLS_RSA_WITH_3DES_EDE_CBC_SHA           DES-CBC3-SHA
+
+TLS_DH_DSS_WITH_DES_CBC_SHA             Not_implemented.
+TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA        Not_implemented.
+TLS_DH_RSA_WITH_DES_CBC_SHA             Not_implemented.
+TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA        Not_implemented.
+TLS_DHE_DSS_WITH_DES_CBC_SHA            EDH-DSS-CBC-SHA
+TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA       EDH-DSS-DES-CBC3-SHA
+TLS_DHE_RSA_WITH_DES_CBC_SHA            EDH-RSA-DES-CBC-SHA
+TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA       EDH-RSA-DES-CBC3-SHA
+
+TLS_DH_anon_WITH_RC4_128_MD5            ADH-RC4-MD5
+TLS_DH_anon_WITH_DES_CBC_SHA            ADH-DES-CBC-SHA
+TLS_DH_anon_WITH_3DES_EDE_CBC_SHA       ADH-DES-CBC3-SHA
+
+#
+#AES ciphersuites from RFC3268, extending TLS v1.0
+#
+
+TLS_RSA_WITH_AES_128_CBC_SHA            AES128-SHA
+TLS_RSA_WITH_AES_256_CBC_SHA            AES256-SHA
+
+TLS_DH_DSS_WITH_AES_128_CBC_SHA         DH-DSS-AES128-SHA
+TLS_DH_DSS_WITH_AES_256_CBC_SHA         DH-DSS-AES256-SHA
+TLS_DH_RSA_WITH_AES_128_CBC_SHA         DH-RSA-AES128-SHA
+TLS_DH_RSA_WITH_AES_256_CBC_SHA         DH-RSA-AES256-SHA
+
+TLS_DHE_DSS_WITH_AES_128_CBC_SHA        DHE-DSS-AES128-SHA
+TLS_DHE_DSS_WITH_AES_256_CBC_SHA        DHE-DSS-AES256-SHA
+TLS_DHE_RSA_WITH_AES_128_CBC_SHA        DHE-RSA-AES128-SHA
+TLS_DHE_RSA_WITH_AES_256_CBC_SHA        DHE-RSA-AES256-SHA
+
+TLS_DH_anon_WITH_AES_128_CBC_SHA        ADH-AES128-SHA
+TLS_DH_anon_WITH_AES_256_CBC_SHA        ADH-AES256-SHA
+
+#
+#Additional cipher suites
+#
+#Note: these ciphers can also be used in SSL v3.
+#
+TLS_DHE_DSS_WITH_RC4_128_SHA            DHE-DSS-RC4-SHA
+
+#
+# FIPS cipher list
+#        
+TLS_RSA_FIPS_WITH_3DES_EDE_CBC_SHA      Not_implemented
+TLS_RSA_FIPS_WITH_DES_CBC_SHA           Not_implemented
+SSL3_RSA_FIPS_WITH_3DES_EDE_CBC_SHA     Not_implemented
+SSL3_RSA_FIPS_WITH_DES_CBC_SHA          Not_implemented

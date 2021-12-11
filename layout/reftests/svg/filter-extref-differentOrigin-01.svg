@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <!-- In case we actually _can_ access the external resource (e.g. on Android
+       where reftests are served as http:// instead of file://), we include
+       this <use> element to be sure the resource loads before onload so that
+       we'll fail reliably. -->
+  <use xlink:href="../filters.svg#empty" />
+
+  <!-- giant lime rect, to match pass.svg -->
+  <rect height="100%" width="100%" fill="lime" />
+
+  <!-- The filter shouldn't resolve, so this should be transparent: -->
+  <rect height="100%" width="100%" fill="red"
+        filter="url(../filters.svg#NonWhiteToBlack)"/>
+</svg>

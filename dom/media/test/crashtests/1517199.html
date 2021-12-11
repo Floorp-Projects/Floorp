@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+<head>
+<script>
+(async _ => {
+  const video = document.createElement("video");
+    video.mozCaptureStreamUntilEnded();
+    video.src = "test.mp4";
+    video.playbackRate = 2;
+    await new Promise(r => video.onloadedmetadata = r);
+    video.currentTime = video.duration - 1;
+    await video.play();
+    await new Promise(r => video.onended = r);
+    document.documentElement.removeAttribute("class");
+})();
+</script>
+</head>
+</html>

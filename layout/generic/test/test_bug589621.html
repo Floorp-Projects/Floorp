@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=589621
+-->
+<head>
+  <title>Test for Bug 589621</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=589621">Mozilla Bug 589621</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script>
+/** Test for Bug 589621 **/
+var sel = getSelection();
+var range = document.createRange();
+sel.addRange(range);
+function t(n) {
+  try {
+    sel.getRangeAt(n);
+    ok(false, "Should not be here");
+  } catch(e) {
+    ok(e instanceof DOMException, "Should be a DOMException");
+    is(e.name, "IndexSizeError", "Should be an IndexSizeError");
+    is(e.code, DOMException.INDEX_SIZE_ERR, "Should be an INDEX_SIZE_ERR");
+  }
+}
+t(-1);
+t(1);
+</script>
+</pre>
+</body>
+</html>

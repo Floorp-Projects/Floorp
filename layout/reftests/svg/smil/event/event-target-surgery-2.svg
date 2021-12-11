@@ -1,0 +1,15 @@
+<!-- Test that animations are unregistered when removed -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.documentElement.removeChild(document.getElementById('anim'));
+        click('rect');
+        delayedSnapshot(2)">
+  <script xlink:href="event-util.js" type="text/javascript"/>
+  <rect width="100" height="100" fill="green" id="rect"/>
+  <set xlink:href="#rect" attributeName="fill" attributeType="CSS"
+    to="red" begin="click" dur="4s" id="anim"/>
+</svg>

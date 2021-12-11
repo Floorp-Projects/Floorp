@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.connect-page__breather {
+  margin-block-start: calc(var(--base-unit) * 6);
+}
+
+/*
+ *   +--------+----------------------+
+ *   | USB    |            |<button> |
+ *   +--------+            |         |
+ *   | status |            |         |
+ *   +--------+----------------------+
+ */
+.connect-page__usb-section__heading {
+  display: grid;
+  align-items: center;
+  grid-template-areas: "title  . toggle"
+                       "status . toggle";
+  grid-template-columns: auto 1fr auto;
+  grid-column-gap: calc(var(--base-unit) * 2);
+  grid-row-gap: var(--base-unit);
+}
+
+.connect-page__usb-section__heading__toggle {
+  grid-area: toggle;
+}
+
+.connect-page__usb-section__heading__title {
+  grid-area: title;
+  line-height: 1;
+}
+.connect-page__usb-section__heading__status {
+  grid-area: status;
+  line-height: 1;
+  font-size: var(--caption-20-font-size);
+  font-weight: var(--caption-20-font-weight);
+  color: var(--secondary-text-color);
+}
+
+.connect-page__troubleshoot {
+  font-size: var(--body-10-font-size);
+  font-weight: var(--body-10-font-weight);
+  margin-block-start: calc(var(--base-unit) * 2);
+}
+
+.connect-page__troubleshoot--network {
+  padding-inline: calc(var(--base-unit) * 6);
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Video controls test - Focus</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+let video, controlBar, playButton;
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["media.cache_size", 40000],
+    ["media.videocontrols.keyboard-tab-to-all-controls", true],
+  ]});
+
+  // We must create the video after the keyboard-tab-to-all-controls pref is
+  // set. Otherwise, the tabindex won't be set correctly.
+  video = document.createElement("video");
+  video.id = "video";
+  video.controls = true;
+  video.preload = "auto";
+  video.loop = true;
+  video.src = "video.ogg";
+  const caption = video.addTextTrack("captions", "English", "en");
+  caption.mode = "showing";
+  const content = document.getElementById("content");
+  content.append(video);
+  controlBar = getElementWithinVideo(video, "controlBar");
+  playButton = getElementWithinVideo(video, "playButton");
+  info("Waiting for video to load");
+  // We must wait for loadeddata here, not loadedmetadata, as the first frame
+  // isn't shown until loadeddata occurs and the controls won't hide until the
+  // first frame is shown.
+  await BrowserTestUtils.waitForEvent(video, "loadeddata");
+
+  // Play and mouseout to hide the controls.
+  info("Playing video");
+  const playing = BrowserTestUtils.waitForEvent(video, "play");
+  video.play();
+  await playing;
+  // controlBar.hidden returns true while the animation is happening. We use
+  // the controlbarchange event to know when it's fully hidden. Aside from
+  // avoiding waitForCondition, this is necessary to avoid racing with the
+  // animation.
+  const hidden = BrowserTestUtils.waitForEvent(video, "controlbarchange");
+  sendMouseEvent({type: "mouseout"}, controlBar);
+  info("Waiting for controls to hide");
+  await hidden;
+});
+
+add_task(async function testShowControlsOnFocus() {
+  ok(controlBar.hidden, "Controls initially hidden");
+  const shown = BrowserTestUtils.waitForEvent(video, "controlbarchange");
+  info("Focusing play button");
+  playButton.focus();
+  await shown;
+  ok(!controlBar.hidden, "Controls shown after focus");
+  await BrowserTestUtils.waitForEvent(video, "controlbarchange");
+  ok(controlBar.hidden, "Controls hidden after timeout");
+});
+
+add_task(async function testCcMenuStaysVisible() {
+  ok(controlBar.hidden, "Controls initially hidden");
+  const shown = BrowserTestUtils.waitForEvent(video, "controlbarchange");
+  info("Focusing CC button");
+  const ccButton = getElementWithinVideo(video, "closedCaptionButton");
+  ccButton.focus();
+  await shown;
+  ok(!controlBar.hidden, "Controls shown after focus");
+  // Checking this using an implementation detail is ugly, but there's no other
+  // way to do it without fragile timing.
+  const { widget } = window.windowGlobalChild.getActor("UAWidgets").widgets.get(
+    video);
+  ok(widget.impl.Utils._hideControlsTimeout, "Hide timeout set");
+  const ttList = getElementWithinVideo(video, "textTrackListContainer");
+  ok(ttList.hidden, "Text track list initially hidden");
+
+  synthesizeKey(" ");
+  ok(!ttList.hidden, "Text track list shown after space");
+  ok(
+    !widget.impl.Utils._hideControlsTimeout,
+    "Hide timeout cleared (controls won't hide)"
+  );
+  const ccOff = ttList.querySelector("button");
+  ccOff.focus();
+  synthesizeKey(" ");
+  ok(ttList.hidden, "Text track list hidden after activating Off button");
+  ok(!controlBar.hidden, "Controls still shown");
+  ok(widget.impl.Utils._hideControlsTimeout, "Hide timeout set");
+
+  await BrowserTestUtils.waitForEvent(video, "controlbarchange");
+  ok(controlBar.hidden, "Controls hidden after timeout");
+});
+</script>
+</pre>
+</body>
+</html>

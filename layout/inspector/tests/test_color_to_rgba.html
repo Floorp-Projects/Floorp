@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test InspectorUtils::ColorToRGBA</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  testColor("red", {r:255, g:0, b:0, a:1});
+  testColor("#f00", {r:255, g:0, b:0, a:1});
+  testColor("#ff0000", {r:255, g:0, b:0, a:1});
+  testColor("ff0000", null);
+  testColor("rgb(255,0,0)", {r:255, g:0, b:0, a:1});
+  testColor("rgba(255,0,0)", {r:255, g:0, b:0, a:1});
+  testColor("rgb(255,0,0,0.7)", {r:255, g:0, b:0, a:0.7});
+  testColor("rgba(255,0,0,0.7)", {r:255, g:0, b:0, a:0.7});
+  testColor("rgb(50%,75%,60%)", {r:128, g:191, b:153, a:1});
+  testColor("rgba(50%,75%,60%)", {r:128, g:191, b:153, a:1});
+  testColor("rgb(100%,50%,25%,0.7)", {r:255, g:128, b:64, a:0.7});
+  testColor("rgba(100%,50%,25%,0.7)", {r:255, g:128, b:64, a:0.7});
+  testColor("hsl(320,30%,10%)", {r:33, g:18, b:28, a:1});
+  testColor("hsla(320,30%,10%)", {r:33, g:18, b:28, a:1});
+  testColor("hsl(170,60%,40%,0.9)", {r:41, g:163, b:143, a:0.9});
+  testColor("hsla(170,60%,40%,0.9)", {r:41, g:163, b:143, a:0.9});
+
+  // NOTE: LightweightThemeConsumer is the only consumer of this API, for
+  // backwards compat reasons... But it doesn't seem like it'd really need to
+  // care about system colors, so maybe we can remove it in the future.
+  isnot(
+    InspectorUtils.colorToRGBA("ButtonText", document),
+    null,
+    "Should support system colors when given a displayed document"
+  );
+
+  function testColor(color, expected) {
+    let rgb = InspectorUtils.colorToRGBA(color);
+
+    if (rgb === null) {
+      ok(expected === null, "color: " + color + " returns null");
+      return;
+    }
+
+    let {r, g, b, a} = rgb;
+
+    is(r, expected.r, "color: " + color + ", red component is converted correctly");
+    is(g, expected.g, "color: " + color + ", green component is converted correctly");
+    is(b, expected.b, "color: " + color + ", blue component is converted correctly");
+    is(Math.round(a * 10) / 10, expected.a, "color: " + color + ", alpha component is a converted correctly");
+  }
+  </script>
+</head>
+<body>
+<h1>Test InspectorUtils::ColorToRGBA</h1>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

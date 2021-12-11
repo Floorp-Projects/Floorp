@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`promises utils function makeNodesForPromiseProperties 1`] = `
+Array [
+  Object {
+    "contents": Object {
+      "value": "rejected",
+    },
+    "meta": undefined,
+    "name": "<state>",
+    "parent": Object {
+      "contents": Object {
+        "value": Object {
+          "actor": "server2.conn2.child1/obj36",
+          "class": "Promise",
+          "type": "object",
+        },
+      },
+      "path": "root",
+    },
+    "path": "root◦<state>",
+    "propertyName": undefined,
+    "type": Symbol(<state>),
+  },
+  Object {
+    "contents": Object {
+      "front": null,
+      "value": Object {
+        "type": "3",
+      },
+    },
+    "meta": undefined,
+    "name": "<reason>",
+    "parent": Object {
+      "contents": Object {
+        "value": Object {
+          "actor": "server2.conn2.child1/obj36",
+          "class": "Promise",
+          "type": "object",
+        },
+      },
+      "path": "root",
+    },
+    "path": "root◦<reason>",
+    "propertyName": undefined,
+    "type": Symbol(<reason>),
+  },
+]
+`;

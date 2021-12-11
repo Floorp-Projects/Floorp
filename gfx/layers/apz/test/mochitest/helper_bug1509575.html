@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1509575
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test for Bug 1509575</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+  <div id="expand" style="background-color: paleturquoise ;">
+    Now you're scrolled, now you're not?
+  </div>
+  <script type="application/javascript">
+
+async function test() {
+  let transformEndPromise = promiseTransformEnd();
+  synthesizeNativeTouchDrag(document.body, 10, 100, -100, 0);
+  dump("Finished native drag, waiting for transform-end observer...\n");
+
+  // Wait for the APZ:TransformEnd to be fired after touch events are processed.
+  await transformEndPromise;
+
+  // Flush state.
+  await promiseApzFlushedRepaints();
+
+  is(window.scrollX, 0, "layout viewport didn't scroll");
+  let visualX = window.visualViewport.pageLeft;
+  ok(visualX > 0, "visual viewport did scroll");
+
+  let topWinUtils;
+  const isE10s = SpecialPowers.Services.appinfo.browserTabsRemoteAutostart;
+  // We need to reset the first paint flag on the root document in the process
+  // this test is loaded in.
+  if (!isE10s) {
+    // For non-e10s, such as in Fennec, this means we need the *chrome* window
+    // as the topmost entitiy in this process.
+    topWinUtils = SpecialPowers.getDOMWindowUtils(
+        SpecialPowers._getTopChromeWindow(window));
+  } else {
+    topWinUtils = SpecialPowers.getDOMWindowUtils(window);
+  }
+  let afterPaintPromise = promiseAfterPaint();
+  ok(topWinUtils.isFirstPaint === false, "first paint not set");
+  topWinUtils.isFirstPaint = true;
+  // do something that forces a paint *and* an APZ update.
+  document.getElementById("expand").style.width = "6000px";
+
+  // Wait for the event listener to fire.
+  await afterPaintPromise;
+  ok(true, "MozAfterPaint fired");
+
+  // Flush state just to be sure.
+  await promiseApzFlushedRepaints();
+
+  is(window.visualViewport.pageLeft, visualX, "visual viewport remains unchanged");
+}
+
+SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</body>
+</html>

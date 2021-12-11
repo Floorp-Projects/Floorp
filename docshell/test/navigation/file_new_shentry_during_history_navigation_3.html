@@ -1,0 +1,22 @@
+<script>
+  window.onpageshow = function(e) {
+    if (location.search == "?v2") {
+      onbeforeunload = function() {
+        history.pushState("data1", "", "?push1");
+      }
+    }
+
+    let bc = new BroadcastChannel("new_shentry_during_history_navigation");
+    bc.onmessage = function(event) {
+      bc.close();
+      if (event.data == "loadnext") {
+        location.href = "file_new_shentry_during_history_navigation_4.html";
+      } else if (event.data == "back") {
+        history.back();
+      } else if (event.data == "close") {
+        window.close();
+      }
+    }
+    bc.postMessage({page: location.href, type: e.type, persisted: e.persisted});
+  }
+</script>

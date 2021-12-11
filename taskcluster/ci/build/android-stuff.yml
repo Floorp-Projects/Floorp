@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    tags:
+        android-stuff: "true"
+    run:
+        mozconfig-variant: null
+
+android-geckoview-docs/opt:
+    description: "Android GeckoView docs"
+    index:
+        product: mobile
+        job-name: android-geckoview-docs
+    treeherder:
+        platform: android-4-1-armv7/opt
+        kind: build
+        tier: 2
+        symbol: A(gv-docs)
+    run-on-projects: [mozilla-central]
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: android-build}
+        env:
+            GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
+            PERFHERDER_EXTRA_OPTIONS: android-geckoview-docs
+            GECKOVIEW_DOCS_UPLOAD_SECRET: "project/releng/gecko/build/level-{level}/geckoview-docs-upload"
+        artifacts:
+            - name: public/android/geckoview-docs/geckoview-javadoc.jar
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/libs/geckoview-javadoc.jar
+              type: file
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        config:
+            - builds/releng_base_android_64_builds.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: android-geckoview-docs
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - android-gradle-dependencies
+            - android-sdk-linux
+            - linux64-node
+    optimization:
+        skip-unless-changed:
+            - "mobile/android/**/*.java"
+            - "mobile/android/gradle.configure"
+            - "**/*.gradle"

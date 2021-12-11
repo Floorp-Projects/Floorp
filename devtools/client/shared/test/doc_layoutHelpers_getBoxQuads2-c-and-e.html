@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset=utf-8>
+<script>
+'use strict';
+window.onmessage = event => {
+  const innerNode = window.document.getElementById("inner-node");
+  const wrappedNode = SpecialPowers.wrap(innerNode);
+  const wrappedQuads = wrappedNode.getBoxQuadsFromWindowOrigin();
+  const quad = SpecialPowers.unwrap(wrappedQuads[0]);
+
+  window.parent.postMessage({ quad }, "*");
+};
+</script>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: pink;
+  }
+  div {
+    margin: 50px;
+    width: 50px;
+    height: 50px;
+    background: green;
+  }
+</style>
+<div id="inner-node"></div>

@@ -1,0 +1,54 @@
+name: Generate Files
+
+on:
+  push:
+      branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - name: Setup Git Profile
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    - name: Revert Previous Change and Merge Master
+      run: |
+        if git ls-remote origin | grep refs/heads/ci_generated; then
+          # If the remote branch exists.
+          git fetch origin
+
+          # Merge master, discarding changes in origin/ci_generated
+          MASTER_REV=$(git log -1 master --pretty=%H)
+          git checkout -b ci_generated-master origin/master
+          git merge origin/ci_generated -m "Merge master ${MASTER_REV}" -s ours --allow-unrelated-histories
+        else
+          # Otherwise, just start from master branch.
+          git checkout -b ci_generated-master
+        fi
+    - name: Generate Files
+      run: |
+        make init-venv && make all
+        # OS independant replace
+        sed -i.bak '/*_generated.rs/d' .gitignore && rm .gitignore.bak
+    - name: Commit files
+      run: |
+        git add .
+        MASTER_REV=$(git log -1 master --pretty=%H)
+        git commit -m "Add Generated Files for ${MASTER_REV}" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ci_generated
+

@@ -1,0 +1,26 @@
+
+<!DOCTYPE html>
+<html reftest-zoom="2" class="reftest-wait">
+<head>
+
+    <script type="application/javascript">
+    // reftest-zoom is only applied at onload, so ensure the source-selection
+    // has happened after that
+    function clearWait() {
+      document.documentElement.classList.remove("reftest-wait");
+    }
+    window.addEventListener("load", function() {
+      setTimeout(function() {
+        var img = document.querySelector("img");
+        img.onload = clearWait;
+        img.onerror = clearWait;
+        img.src = img.src;
+      }, 0);
+    });
+  </script>
+</head>
+<body>
+  <img srcset="200.png 2x, 100.png" src="50.png">
+  <p>Test default source in sourceset, src should be ignored</p>
+</body>
+</html>

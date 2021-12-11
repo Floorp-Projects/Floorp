@@ -1,0 +1,72 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["IMPL_LIBXUL"] = True
+DEFINES["MOZILLA_INTERNAL_API"] = True
+
+# Do NOT export this library.  We don't actually want our test code
+# being added to libxul or anything.
+
+Library("dombindings_test_s")
+
+EXTRA_COMPONENTS += [
+    "TestInterfaceJS.js",
+    "TestInterfaceJS.manifest",
+]
+
+MOCHITEST_MANIFESTS += ["mochitest.ini"]
+
+MOCHITEST_CHROME_MANIFESTS += ["chrome.ini"]
+
+TEST_WEBIDL_FILES += [
+    "TestDictionary.webidl",
+    "TestJSImplInheritanceGen.webidl",
+    "TestTypedef.webidl",
+]
+
+PREPROCESSED_TEST_WEBIDL_FILES += [
+    "TestCodeGen.webidl",
+    "TestExampleGen.webidl",
+    "TestJSImplGen.webidl",
+]
+
+WEBIDL_EXAMPLE_INTERFACES += [
+    "TestExampleInterface",
+    "TestExampleProxyInterface",
+    "TestExampleThrowingConstructorInterface",
+    "TestExampleWorkerInterface",
+]
+
+# Bug 932082 tracks having bindings use namespaced includes.
+LOCAL_INCLUDES += [
+    "!/dist/include/mozilla/dom",
+]
+
+LOCAL_INCLUDES += [
+    "!..",
+    "/dom/bindings",
+    "/js/xpconnect/src",
+    "/js/xpconnect/wrappers",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+if CONFIG["MOZ_DEBUG"]:
+    XPIDL_SOURCES += [
+        "mozITestInterfaceJS.idl",
+    ]
+
+    XPIDL_MODULE = "dom_bindings_test"
+
+# Because we don't actually link this code anywhere, we don't care about
+# their optimization level, so don't waste time on optimization.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += ["-Od"]
+else:
+    CXXFLAGS += ["-O0"]

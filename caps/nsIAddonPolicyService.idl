@@ -1,0 +1,96 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+/**
+ * This interface allows the security manager to query custom per-addon security
+ * policy.
+ */
+[scriptable, uuid(8a034ef9-9d14-4c5d-8319-06c1ab574baa)]
+interface nsIAddonPolicyService : nsISupports
+{
+  /**
+   * Returns the default content security policy which applies to extension
+   * documents which do not specify any custom policies.
+   */
+  readonly attribute AString defaultCSP;
+
+  /**
+   * Returns the base content security policy which applies to all extension resources.
+   */
+  AString getBaseCSP(in AString aAddonId);
+
+  /**
+   * Returns the content security policy which applies to documents belonging
+   * to the extension with the given ID. This may be either a custom policy,
+   * if one was supplied, or the default policy if one was not.
+   */
+  AString getExtensionPageCSP(in AString aAddonId);
+
+  /**
+   * Returns the generated background page as a data-URI, if any. If the addon
+   * does not have an auto-generated background page, an empty string is
+   * returned.
+   */
+  ACString getGeneratedBackgroundPageUrl(in ACString aAddonId);
+
+  /**
+   * Returns true if the addon was granted the |aPerm| API permission.
+   */
+  boolean addonHasPermission(in AString aAddonId, in AString aPerm);
+
+  /**
+   * Returns true if unprivileged code associated with the given addon may load
+   * data from |aURI|.  If |aExplicit| is true, the <all_urls> permission and
+   * permissive host globs are ignored when checking for a match.
+   */
+  boolean addonMayLoadURI(in AString aAddonId, in nsIURI aURI, [optional] in boolean aExplicit);
+
+  /**
+   * Returns the name of the WebExtension with the given ID, or the ID string
+   * if no matching add-on can be found.
+   */
+  AString getExtensionName(in AString aAddonId);
+
+  /**
+   * Returns true if a given extension:// URI is web-accessible and loadable by the source.
+   * This should be called if the protocol flags for the extension URI has URI_WEB_ACCESSIBLE.
+   */
+  boolean sourceMayLoadExtensionURI(in nsIURI aSourceURI, in nsIURI aExtensionURI);
+
+  /**
+   * Maps an extension URI to the ID of the addon it belongs to.
+   */
+  AString extensionURIToAddonId(in nsIURI aURI);
+};
+
+/**
+ * This interface exposes functionality related to add-on content policy
+ * enforcement.
+ */
+[scriptable, uuid(7a4fe60b-9131-45f5-83f3-dc63b5d71a5d)]
+interface nsIAddonContentPolicy : nsISupports
+{
+  /* options to pass to validateAddonCSP
+   *
+   * Manifest V2 uses CSP_ALLOW_ANY.
+   * In Manifest V3, extension_pages would use CSP_ALLOW_LOCALHOST and
+   * sandbox would use CSP_ALLOW_EVAL.
+   */
+  const unsigned long CSP_ALLOW_ANY = 0xFFFF;
+  const unsigned long CSP_ALLOW_LOCALHOST = (1<<0);
+  const unsigned long CSP_ALLOW_EVAL = (1<<1);
+  const unsigned long CSP_ALLOW_REMOTE = (1<<2);
+
+  /**
+   * Checks a custom content security policy string, to ensure that it meets
+   * minimum security requirements. Returns null for valid policies, or a
+   * string describing the error for invalid policies.
+   */
+  AString validateAddonCSP(in AString aPolicyString, in unsigned long aPermittedPolicy);
+};

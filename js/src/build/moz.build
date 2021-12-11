@@ -1,0 +1,99 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CONFIGURE_SUBST_FILES += [
+    "js-config",
+    "js.pc",
+]
+
+LIBRARY_DEFINES["EXPORT_JS_API"] = True
+
+# Note: The static standalone js library is currently broken due
+# to static mozglue missing, see bug 1588340 for more information.
+LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True
+
+# JavaScript must be built shared, even for static builds, as it is used by
+# other modules which are always built shared. Failure to do so results in
+# the js code getting copied into xpinstall and jsd as well as mozilla-bin,
+# and then the static data cells used for locking no longer work.
+#
+# In fact, we now build both a static and a shared library, as the
+# JS shell would like to link to the static library.
+
+if CONFIG["JS_SHARED_LIBRARY"]:
+    GeckoSharedLibrary("js", linkage=None)
+    SHARED_LIBRARY_NAME = CONFIG["JS_LIBRARY_NAME"]
+
+    # Ensure symbol versions of shared library on Linux do not conflict
+    # with those in libxul.
+    if CONFIG["OS_TARGET"] == "Linux":
+        GeneratedFile(
+            "symverscript",
+            script="/build/gen_symverscript.py",
+            inputs=["symverscript.in"],
+            flags=[CONFIG["JS_LIBRARY_NAME"].replace("-", "_")],
+        )
+        SYMBOLS_FILE = "!symverscript"
+else:
+    Library("js")
+
+FORCE_STATIC_LIB = True
+STATIC_LIBRARY_NAME = "js_static"
+
+if CONFIG["JS_HAS_INTL_API"]:
+    USE_LIBS += [
+        "icu",
+    ]
+
+USE_LIBS += [
+    "nspr",
+    "zlib",
+]
+
+if CONFIG["OS_ARCH"] not in ("WINNT", "HP-UX"):
+    OS_LIBS += [
+        "m",
+    ]
+
+if CONFIG["OS_ARCH"] == "FreeBSD":
+    OS_LIBS += [
+        "-pthread",
+    ]
+
+if CONFIG["OS_ARCH"] == "Linux":
+    OS_LIBS += [
+        "dl",
+    ]
+
+if CONFIG["OS_ARCH"] == "SunOS":
+    OS_LIBS += [
+        "posix4",
+        "dl",
+        "nsl",
+        "socket",
+    ]
+
+if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
+    OS_LIBS += ["atomic"]
+
+OS_LIBS += CONFIG["REALTIME_LIBS"]
+
+NO_EXPAND_LIBS = True
+
+DIST_INSTALL = True
+
+# Run SpiderMonkey style checker after linking the static library. This avoids
+# running the script for no-op builds.
+GeneratedFile(
+    "spidermonkey_checks",
+    script="/config/run_spidermonkey_checks.py",
+    inputs=[
+        "!%sjs_static.%s" % (CONFIG["LIB_PREFIX"], CONFIG["LIB_SUFFIX"]),
+        "/config/check_spidermonkey_style.py",
+        "/config/check_macroassembler_style.py",
+        "/config/check_js_opcode.py",
+    ],
+)

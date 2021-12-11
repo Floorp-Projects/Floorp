@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset=utf-8>
+    <script type="text/javascript">
+      window.addEventListener("MozReftestInvalidate", () => {
+        let frameset = document.getElementById("frameset");
+        frameset.removeChild(frameset.lastChild);
+        frameset.rows = frameset.rows.replace(/,[^,]*$/, "");
+
+        document.documentElement.removeAttribute("class");
+      });
+    </script>
+  </head>
+  <frameset id="frameset" rows="*,*,*">
+    <frame />
+    <frame />
+    <frame />
+  </frameset>
+</html>

@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRequest.idl"
+
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIRequestObserver;
+interface nsIEventTarget;
+
+[scriptable, uuid(a5b2decf-4ede-4801-8b38-e5fe5db46bf2)]
+interface nsIAsyncStreamCopier2 : nsIRequest
+{
+    /**
+     * Initialize the stream copier.
+     *
+     * If neither the source nor the sink are buffered, buffering will
+     * be automatically added to the sink.
+     *
+     *
+     * @param aSource
+     *        contains the data to be copied.
+     * @param aSink
+     *        specifies the destination for the data.
+     * @param aTarget
+     *        specifies the thread on which the copy will occur.  a null value
+     *        is permitted and will cause the copy to occur on an unspecified
+     *        background thread.
+     * @param aChunkSize
+     *        specifies how many bytes to read/write at a time.  this controls
+     *        the granularity of the copying.  it should match the segment size
+     *        of the "buffered" streams involved.
+     * @param aCloseSource
+     *        true if aSource should be closed after copying (this is generally
+     *        the desired behavior).
+     * @param aCloseSink
+     *        true if aSink should be closed after copying (this is generally
+     *        the desired behavior).
+     */
+  void init(in nsIInputStream    aSource,
+            in nsIOutputStream   aSink,
+            in nsIEventTarget    aTarget,
+            in unsigned long     aChunkSize,
+            in boolean           aCloseSource,
+            in boolean           aCloseSink);
+
+  /**
+   * asyncCopy triggers the start of the copy.  The observer will be notified
+   * when the copy completes.
+   *
+   * @param aObserver
+   *        receives notifications.
+   * @param aObserverContext
+   *        passed to observer methods.
+   */
+  void asyncCopy(in nsIRequestObserver   aObserver,
+                 in nsISupports          aObserverContext);
+};

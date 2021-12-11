@@ -1,0 +1,32 @@
+# 
+# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#ident	"$Id$"
+#
+
+include $(srcdir)/../proto64.mk
+
+pkginfo: pkginfo.tmpl ../awk_pkginfo
+	$(RM) $@; nawk -f ../awk_pkginfo $< > $@
+
+pkg: $(PKGARCHIVE) prototype_$(MACH)
+	cp $(srcdir)/prototype_com .
+	cat $(srcdir)/prototype_$(MACH) | sed $(sed_proto64) > prototype_$(MACH)
+	cp $(srcdir)/depend .
+	pkgmk -f prototype_$(MACH) -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE)
+
+$(PKGARCHIVE):
+	[ -d $(PKGARCHIVE) ] || mkdir -p $(PKGARCHIVE)
+
+$(DATAFILES): %: $(srcdir)/../common_files/%
+	$(RM) $@; cp $(srcdir)/../common_files/$@ $@
+
+clobber clean::
+	-$(RM) $(CLOBBERFILES) $(CLEANFILES)
+
+.PHONY: pkg

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Custom page for the Console</title>
+</head>
+<body>
+<script>
+// These query parameters are set in damp.js:customConsole and define the number
+// of console API calls we do in this test.
+const searchParams = new URLSearchParams(location.search);
+const sync = searchParams.get("sync");
+const stream = searchParams.get("stream");
+const batch = searchParams.get("batch");
+const simple = searchParams.get("simple");
+
+// We log complex objects:
+// * a complex js object (window)
+// * a DOM node (body)
+// * a large array
+const bigArray = Array.from({length: 10000}, (_, i) => i);
+
+// Fill up the console with many logs synchronously during page load.
+for (let i = 0; i < sync; i++) {
+  console.log("sync log", i, window, document.body, bigArray);
+}
+
+// Then, do streamlogs, log asynchronously a lot of messages
+let n = 0;
+function streamLogs() {
+  console.log("stream log", n++, window, document.body, bigArray);
+  if (n < stream) {
+    requestAnimationFrame(streamLogs);
+  } else {
+    requestIdleCallback(batchLogs);
+  }
+}
+requestIdleCallback(streamLogs);
+
+// We batch log by small bulk asynchronously slightly more slowly thanks to idle callback
+let x = 0;
+function batchLogs() {
+  const batchSize = 10;
+  for (let i = 0; i < batchSize; i++) {
+    console.log("batch log", x++, window, document.body, bigArray);
+  }
+  if (x < batch) {
+    requestIdleCallback(batchLogs);
+  } else {
+    requestIdleCallback(simpleLogs);
+  }
+}
+
+// We log simple messages, too, as a way to test performance of a high volume of log messages
+function simpleLogs() {
+  for (let i = 0; i < simple; i++) {
+    console.log("simple log", i);
+  }
+}
+</script>
+</body>
+</html>

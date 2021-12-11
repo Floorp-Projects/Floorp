@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!-- Test setting word-wrap: break-word dynamically -->
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Test Wordwrap</title>
+  <script type="text/javascript">
+function SwapStyle()
+{
+  par = document.getElementById("pp");
+  par.style.wordWrap = "break-word";
+}
+  </script>
+ </head>
+ <body onload="SwapStyle()">
+  <p id="pp" style="width: 100px; word-wrap: normal;">It's lipsmackinthirstquenchinacetastinmotivatingoodbuzzincooltalkinhighwalkinfastlivinevergivincoolfizzin Firefox!</p>
+ </body>
+</html>

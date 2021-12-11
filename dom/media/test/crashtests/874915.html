@@ -1,0 +1,24 @@
+<script>
+var Context0= new AudioContext()
+var BufferSource6=Context0.createBufferSource();
+
+setInterval(function(){
+BufferSource6.buffer=function(){
+	var length=11283;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);
+	for (var i = 0; i < length; ++i) { bufferData[i] = Math.sin(i*(624))};
+	return Buffer;
+}();
+},0)
+
+BufferSource6.start(0.15831333969254047,0.23571860056836158,0.529235512483865);
+
+BufferSource6.buffer=function(){
+	var length=48517;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);
+	for (var i = 0; i < length; ++i) { bufferData[i] = Math.sin(i*(365))};
+	return Buffer;
+}();
+</script>

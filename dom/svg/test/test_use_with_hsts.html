@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1247733</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1247733">Mozilla Bug 1247733</a>
+<p id="display">
+  <iframe id="myIframe"></iframe>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test"></pre>
+<script type="application/javascript">
+  /** Test for Bug 1247733 **/
+
+  /**
+   * This test ensures that we render the SVG 'use' element correctly, in
+   * pages that have been upgraded from HTTP to HTTPS using strict transport
+   * security (HSTS)
+   *
+   * Specifically:
+   *  (1) We load a file using HTTPS, in an iframe. The file gets sent
+   *      with a Strict-Transport-Security flag.
+   *  (2) We load the same file again, but now over HTTP (which should get
+   *      upgraded to HTTPS, since we received the Strict-Transport-Security
+   *      flag during the first load).
+   *  (3) After each of the above loads, we take a snapshot of the iframe
+   *      and ensure that it renders as fully lime (which the 'use' element
+   *      is responsible for). If the 'use' element fails to render, the iframe
+   *      will be fully red, and we'll fail an "assertSnapshots" check.
+   */
+  SimpleTest.waitForExplicitFinish();
+
+  const iframe = document.getElementById("myIframe");
+  const iframeWin = iframe.contentWindow;
+
+  // URI for our testcase with 'use' element, via HTTP and HTTPS:
+  const insecureURI = "http://example.com/tests/dom/svg/test/use-with-hsts-helper.html";
+  const secureURI   = "https://example.com/tests/dom/svg/test/use-with-hsts-helper.html";
+
+  // Bookkeeping to be sure receiveMessage is called as many times as we expect:
+  var numPostMessageCalls = 0;
+  const expectedNumPostMessageCalls = 2; // (We load the helper file twice.)
+
+  // Helper function, called via postMessage, to check iframe's actual location:
+  function receiveMessage(event) {
+    is(event.data, secureURI, "iframe should end up viewing secure URI");
+    numPostMessageCalls++;
+  }
+
+  // Convenience helper which makes |iframe| load the given |uri|. Returns
+  // a promise that resolves when the load completes. This makes it handy to
+  // use with 'await', to avoid onload callback hell.
+  async function LoadIframeAsync(uri) {
+    return new Promise(resolve => {
+      iframe.addEventListener("load", resolve, {once: true});
+      // Kick off the requested load:
+      iframe.src = uri;
+    });
+  }
+
+  // MAIN TEST CODE BEGINS HERE.
+  async function runTest() {
+    // Capture a snapshot with nothing in the iframe, so we can do a
+    // sanity-check not-equal comparison against our reference case, to be
+    // sure we're rendering anything at all:
+    let blankSnapshot = await snapshotWindow(iframeWin);
+
+    // Load & snapshot a reference case (fully lime):
+    await LoadIframeAsync("data:text/html,<body style='background:lime'>");
+    let refSnapshot = await snapshotWindow(iframeWin);
+
+    // Ensure reference snapshot looks different from blank snapshot:
+    assertSnapshots(refSnapshot, blankSnapshot,
+                    false /* not equal*/, null /* no fuzz*/,
+                    "refSnapshot", "blankSnapshot");
+
+    // OK, assuming we've got a valid refSnapshot, we can now proceed to
+    // capture test screenshots.
+
+    // Register a postMessage handler, so that iframe can report its location:
+    window.addEventListener("message", receiveMessage);
+
+    // Load & snapshot secure (HTTPS) version of testcase, & check against ref:
+    await LoadIframeAsync(secureURI);
+    let secureSnapshot = await snapshotWindow(iframeWin);
+    assertSnapshots(secureSnapshot, refSnapshot,
+                    true /* equal*/, null /* no fuzz*/,
+                    "secureSnapshot", "refSnapshot");
+
+    // Load insecure (HTTP) version of testcase (which should get
+    // automatically upgraded to secure (HTTPS) under the hood):
+    await LoadIframeAsync(insecureURI);
+
+    // Double-check that iframe is really pointed at insecure URI, to be sure
+    // we're actually exercising HSTS. (Note that receiveMessage() will make
+    // sure it's been upgraded to a secure HTTPS URI under the hood.)
+    is(iframe.src, insecureURI,
+       "test should've attempted to load insecure HTTP URI, to exercise HSTS");
+
+    // Capture snapshot of iframe showing upgraded-to-HTTPS version of testcase:
+    let upgradedSnapshot = await snapshotWindow(iframeWin);
+    assertSnapshots(upgradedSnapshot, refSnapshot,
+                    true /* equal*/, null /* no fuzz*/,
+                    "upgradedSnapshot", "refSnapshot");
+
+    // Check that the iframe did actually invoke our postMessage handler (which
+    // is where we verify that the HSTS upgrade actually happened):
+    is(numPostMessageCalls, expectedNumPostMessageCalls,
+      "didn't receive as many messages from child iframe as expected");
+
+    // We're done! Clear the STS headers that we set, and finish.
+    SpecialPowers.cleanUpSTSData("http://example.com");
+    SimpleTest.finish();
+  }
+
+  SpecialPowers.pushPrefEnv(
+    { 'set': [["security.mixed_content.block_active_content", false]] },
+    function() { runTest(); }
+  );
+</script>
+</body>
+</html>

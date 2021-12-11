@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({title: "getUserMedia Play Video and Audio Twice", bug: "822109" });
+  /**
+   * Run a test that we can complete a video playback cycle twice in a row.
+   */
+  runTest(function () {
+    return getUserMedia({video: true, audio: true}).then(stream => {
+      var testVideo = createMediaElement('video', 'testVideo');
+      var playback = new MediaStreamPlayback(testVideo, stream);
+
+      return playback.playMediaWithoutStoppingTracks(false)
+        .then(() => playback.playMedia(true));
+    });
+  });
+
+</script>
+</pre>
+</body>
+</html>

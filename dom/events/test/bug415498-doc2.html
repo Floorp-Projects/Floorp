@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+function init() {
+  // This will throw a HierarchyRequestError exception
+  var doc = document.implementation.createDocument(null, 'DOC', null);
+  doc.documentElement.appendChild(doc);
+}
+onload = init;
+</script>
+</head>
+<body>
+  Testcase for bug 415498. This page should show an exception in Error Console on load
+</body>

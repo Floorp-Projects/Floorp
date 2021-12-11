@@ -1,0 +1,17 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var textNode = document.createTextNode("\u202B" + "A B");
+  document.body.appendChild(textNode);
+  document.body.offsetHeight;
+  textNode.data = "\u202B" + " C";
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html class="reftest-wait reftest-no-flush">
+<head>
+<meta charset=utf-8>
+<title>Bug 1267937</title>
+<style>
+#target {
+  width: 100px;
+  height: 100px;
+  background: green;
+}
+</style>
+</head>
+<body>
+<div id="target"></div>
+<script>
+  var target = document.getElementById("target");
+  var anim = target.animate(
+    { marginLeft: [ "0px", "10px" ] },
+    { duration: 500000 /* 500s */, easing: "steps(2, start)" });
+
+  anim.ready.then(function() {
+    // Set currentTime in before phase, i.e., GetComputedTimingAt() returns
+    // null progress in the phase so that we can skip ComposeStyle().
+    // This currentTime value should be far from zero in order to skip
+    // restyles requested by setting currentTime or frames in a next tick.
+    // If this value is near by zero, say -1, the restyles will be processed in
+    // the next tick and current time in the next tick must be greater than
+    // zero at that point, that means the animation with new frame values will
+    // be painted.  As a result, this test will be useless.
+    anim.currentTime = -500;
+
+    // Setting another frame does not cause any visual changes because
+    // the animation is still in the before phase.
+    anim.effect.setKeyframes({ marginLeft: [ "0px", "400px" ] });
+
+    var beforePhaseFrames = 0;
+    window.requestAnimationFrame(function handleFrame() {
+      if (anim.effect.getComputedTiming().progress === null) {
+        beforePhaseFrames++;
+      }
+      if (anim.effect.getComputedTiming().progress !== null) {
+        if (beforePhaseFrames == 0) {
+          console.log("WARNING: We never got frames in the before phase. " +
+                      "This test is going to be passed accidentally. " +
+                      "Consider setting smaller current time, e.g. -1000ms.");
+        }
+        // After starting the animation, progress should be 0.5, that means
+        // margin-left is 200px.
+        document.documentElement.classList.remove("reftest-wait");
+        return;
+      }
+      window.requestAnimationFrame(handleFrame);
+    });
+  });
+</script>
+</body>
+</html>

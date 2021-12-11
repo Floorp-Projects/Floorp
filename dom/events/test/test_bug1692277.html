@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1692277</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<style>
+  @font-face {
+    font-family: Ahem;
+    src: url("/tests/dom/base/test/Ahem.ttf");
+  }
+
+  #anchor {
+    font: 16px/1 Ahem;
+  }
+</style>
+
+<div>
+  <a href="#" id="anchor">A draggable link</a>
+</div>
+
+<script>
+  function waitForEvent(target, eventName) {
+    return new Promise(resolve => {
+      target.addEventListener(eventName, resolve, { once: true });
+    });
+  }
+
+  add_task(async function testPenDrag() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.w3c_pointer_events.dispatch_by_pointer_messages", true]],
+    });
+
+    await SimpleTest.promiseFocus();
+    const anchor = document.getElementById("anchor");
+    await promiseNativePointerDrag(anchor, "pen", 5, 5, 50, 50);
+    const promise = waitForEvent(anchor, "click");
+    await promiseNativePointerDrag(anchor, "pen", 5, 5, 5, 5);
+    await promise;
+    ok(true, "Got the click event");
+  });
+</script>

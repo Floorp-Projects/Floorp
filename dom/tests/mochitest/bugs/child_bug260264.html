@@ -1,0 +1,11 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <iframe id="frame"></iframe>
+    <script type="application/javascript">
+      var tempstr = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')+1);
+      document.getElementById("frame").src = "http://mochi.test:8888" + tempstr + "grandchild_bug260264.html" + window.location.hash;
+    </script>
+  </body>
+</html>

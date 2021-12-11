@@ -1,0 +1,66 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL sync behaviour for transform types</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="20" cy="20" r="15" fill="blue">
+    <animateTransform attributeName="transform" type="rotate"
+      from="90" to="180" begin="0s" dur="2s" fill="freeze"
+      additive="sum" id="anim1"/>
+  </circle>
+  <circle cx="20" cy="20" r="15" fill="blue">
+    <animateTransform attributeName="transform" type="scale"
+      from="1" to="2" begin="2s" dur="2s" id="anim2"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL sync behavior for transform types **/
+
+/* Global Variables */
+var svg = document.getElementById("svg");
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  testChangeBaseVal(document.getElementById("anim1"));
+  SimpleTest.finish();
+}
+
+function testChangeBaseVal(anim) {
+  // Check that a change to the base value is updated even after animation is
+  // frozen
+
+  var target = anim.targetElement;
+
+  var baseList = target.transform.baseVal;
+  var animList = target.transform.animVal;
+
+  // make sure element has ended
+  svg.setCurrentTime(anim.getSimpleDuration());
+
+  // check frozen value is applied
+  is(baseList.numberOfItems, 0);
+  is(animList.numberOfItems, 1);
+
+  // change base val and re-check
+  var newTransform = svg.createSVGTransform();
+  newTransform.setScale(1,2);
+  baseList.appendItem(newTransform);
+  is(baseList.numberOfItems, 1);
+  is(animList.numberOfItems, 2);
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

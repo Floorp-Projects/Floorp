@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozIStorageValueArray.idl"
+interface nsIVariant;
+
+[scriptable, uuid(62d1b6bd-cbfe-4f9b-aee1-0ead4af4e6dc)]
+interface mozIStorageRow : mozIStorageValueArray {
+
+  /**
+   * Obtains the result of a given column specified by aIndex.
+   *
+   * @param aIndex
+   *        Zero-based index of the result to get from the tuple.
+   * @returns the result of the specified column.
+   */
+  nsIVariant getResultByIndex(in unsigned long aIndex);
+
+  /**
+   * Obtains the result of a given column specified by aName.
+   *
+   * @param aName
+   *        Name of the result to get from the tuple.
+   * @returns the result of the specified column.
+   * @note The name of a result column is the value of the "AS" clause for that
+   *       column.  If there is no AS clause then the name of the column is
+   *       unspecified and may change from one release to the next.
+   */
+  nsIVariant getResultByName(in AUTF8String aName);
+};

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <head>
+    <style>
+      :invalid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('i').setCustomValidity('foo');
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <form>
+      <input id='i' type='submit'>
+    </form>
+  </body>
+</html>

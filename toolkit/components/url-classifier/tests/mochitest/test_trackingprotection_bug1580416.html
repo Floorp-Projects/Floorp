@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test Tracking Protection in Private Browsing mode</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var mainWindow = window.window.browsingContext.topChromeWindow;
+var contentPage1 = "http://www.example.com/chrome/toolkit/components/url-classifier/tests/mochitest/bug_1580416.html";
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+function testOnWindow(contentPage) {
+  return new Promise((resolve, reject) => {
+    var win = mainWindow.OpenBrowserWindow();
+    win.addEventListener("load", function() {
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => {
+        win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+          if (win.content.location.href != contentPage) {
+            BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+            return;
+          }
+          win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+
+          win.content.addEventListener("load", function innerLoad2() {
+            win.content.removeEventListener("load", innerLoad2);
+            SimpleTest.executeSoon(function() {
+              resolve(win);
+            });
+          }, false, true);
+        }, true);
+        SimpleTest.executeSoon(function() {
+          BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+        });
+      });
+    }, {capture: true, once: true});
+  });
+}
+
+var testData = [
+  { url: "apps.fbsbx.com/",
+    db: "test-track-simple",
+  },
+  { url: "www.example.com/?resource=apps.fbsbx.com",
+    db: "test-trackwhite-simple",
+  },
+];
+
+function checkLoads(aWindow, aWhitelisted) {
+  var win = aWindow.content;
+
+  is(win.document.getElementById("goodscript").dataset.touched, aWhitelisted ? "yes" : "no", "Should load whitelisted tracking javascript");
+}
+
+SpecialPowers.pushPrefEnv(
+  // Disable STS preloadlist because apps.fbsbx.com is in the list.
+  {"set": [["privacy.trackingprotection.enabled", true],
+           ["urlclassifier.trackingTable", "test-track-simple"],
+           ["urlclassifier.trackingWhitelistTable", "test-trackwhite-simple"],
+           ["network.stricttransportsecurity.preloadlist", false]]},
+  test);
+
+async function test() {
+  await classifierHelper.waitForInit();
+  await classifierHelper.addUrlToDB(testData);
+
+  // Load the test from a URL on the whitelist
+  await testOnWindow(contentPage1).then(function(aWindow) {
+    checkLoads(aWindow, true);
+    aWindow.close();
+  });
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>

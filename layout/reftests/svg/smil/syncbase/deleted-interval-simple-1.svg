@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.getElementById('a').setAttribute('end', '0s');
+        setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    A simple case of a deleting interval.
+    The timebase interval is made invalid by script and hence a delete
+    notification should be propagated to the dependent interval.
+   -->
+  <rect width="100" height="100" fill="green">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="1s" dur="10s"/>
+    <animate attributeName="fill" attributeType="CSS" id="b"
+      values="red; red"
+      begin="a.begin" dur="2s"/>
+  </rect>
+</svg>

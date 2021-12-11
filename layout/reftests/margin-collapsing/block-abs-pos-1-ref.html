@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Note: CSS 2.1 allows guessing the static position of an absolutely
+     positioned element whose offsets are 'auto' (initial value), i.e.
+     the reference of this test is just one of many possible outcomes.
+     See http://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width -->
+<style type="text/css">
+#in-flow-top {
+ height: 20px;
+ background-color: green;
+}
+#abs-pos {
+ width: 20px; height: 20px;
+ background-color: blue;
+ position: relative;
+ top: -10px;
+}
+#in-flow-bottom {
+ height: 20px;
+ background-color: lightgreen;
+}
+#spacer {
+ height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="in-flow-top"></div>
+<div id="spacer"></div>
+<div id="in-flow-bottom"></div>
+<div id="abs-pos"></div>
+</body>
+</html>

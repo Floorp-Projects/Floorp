@@ -1,0 +1,591 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ft=cpp tw=78 sw=2 et ts=8 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsILoadInfo;
+
+/**
+ * Interface for content policy mechanism.  Implementations of this
+ * interface can be used to control loading of various types of out-of-line
+ * content, or processing of certain types of in-line content.
+ *
+ * WARNING: do not block the caller from shouldLoad or shouldProcess (e.g.,
+ * by launching a dialog to prompt the user for something).
+ */
+
+[scriptable, uuid(caad4f1f-d047-46ac-ae9d-dc598e4fb91b)]
+interface nsIContentPolicy : nsISupports
+{
+  /**
+   * The type of nsIContentPolicy::TYPE_*
+   */
+  cenum nsContentPolicyType : 8 {
+    /**
+     * Indicates a unset or bogus policy type.
+     */
+    TYPE_INVALID = 0,
+
+    /**
+     * Gecko/Firefox developers: Avoid using TYPE_OTHER. Especially for
+     * requests that are coming from webpages. Or requests in general which
+     * you expect that security checks will be done on.
+     * Always use a more specific type if one is available. And do not hesitate
+     * to add more types as appropriate.
+     * But if you are fairly sure that no one would care about your more specific
+     * type, then it's ok to use TYPE_OTHER.
+     *
+     * Extension developers: Whenever it is reasonable, use one of the existing
+     * content types. If none of the existing content types are right for
+     * something you are doing, file a bug in the Core/DOM component that
+     * includes a patch that adds your new content type to the end of the list of
+     * TYPE_* constants here. But, don't start using your new content type until
+     * your patch has been accepted, because it will be uncertain what exact
+     * value and name your new content type will have; in that interim period,
+     * use TYPE_OTHER. In your patch, document your new content type in the style
+     * of the existing ones. In the bug you file, provide a more detailed
+     * description of the new type of content you want Gecko to support, so that
+     * the existing implementations of nsIContentPolicy can be properly modified
+     * to deal with that new type of content.
+     *
+     * Implementations of nsIContentPolicy should treat this the same way they
+     * treat unknown types, because existing users of TYPE_OTHER may be converted
+     * to use new content types.
+     *
+     * Note that the TYPE_INTERNAL_* constants are never passed to content
+     * policy implementations.  They are mapped to other TYPE_* constants, and
+     * are only intended for internal usage inside Gecko.
+     */
+    TYPE_OTHER = 1,
+
+    /**
+     * Indicates an executable script (such as JavaScript).
+     */
+    TYPE_SCRIPT = 2,
+
+    /**
+     * Indicates an image (e.g., IMG elements).
+     */
+    TYPE_IMAGE = 3,
+
+    /**
+     * Indicates a stylesheet (e.g., STYLE elements).
+     */
+    TYPE_STYLESHEET = 4,
+
+    /**
+     * Indicates a generic object (plugin-handled content typically falls under
+     * this category).
+     */
+    TYPE_OBJECT = 5,
+
+    /**
+     * Indicates a document at the top-level (i.e., in a browser).
+     */
+    TYPE_DOCUMENT = 6,
+
+    /**
+     * Indicates a document contained within another document (e.g., IFRAMEs,
+     * FRAMES, and OBJECTs).
+     */
+    TYPE_SUBDOCUMENT = 7,
+
+    /*
+     * XXX: nsContentPolicyType = 8 used to inicate a timed refresh request.
+     */
+
+    /*
+     * XXX: nsContentPolicyType = 9 used to inicate an XBL binding request.
+     */
+
+    /**
+     * Indicates a ping triggered by a click on <A PING="..."> element.
+     */
+    TYPE_PING = 10,
+
+    /**
+     * Indicates an XMLHttpRequest. Also used for document.load and for EventSource.
+     */
+    TYPE_XMLHTTPREQUEST = 11,
+
+    /**
+     * Indicates a request by a plugin.
+     */
+    TYPE_OBJECT_SUBREQUEST = 12,
+
+    /**
+     * Indicates a DTD loaded by an XML document.
+     */
+    TYPE_DTD = 13,
+
+    /**
+     * Indicates a font loaded via @font-face rule.
+     */
+    TYPE_FONT = 14,
+
+    /**
+     * Indicates a video or audio load.
+     */
+    TYPE_MEDIA = 15,
+
+    /**
+     * Indicates a WebSocket load.
+     */
+    TYPE_WEBSOCKET = 16,
+
+    /**
+     * Indicates a Content Security Policy report.
+     */
+    TYPE_CSP_REPORT = 17,
+
+    /**
+     * Indicates a style sheet transformation.
+     */
+    TYPE_XSLT = 18,
+
+    /**
+     * Indicates a beacon post.
+     */
+    TYPE_BEACON = 19,
+
+    /**
+     * Indicates a load initiated by the fetch() function from the Fetch
+     * specification.
+     */
+    TYPE_FETCH = 20,
+
+    /**
+     * Indicates a <img srcset> or <picture> request.
+     */
+    TYPE_IMAGESET = 21,
+
+    /**
+     * Indicates a web manifest.
+     */
+    TYPE_WEB_MANIFEST = 22,
+
+    /**
+     * Indicates an internal constant for scripts loaded through script
+     * elements.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+     */
+    TYPE_INTERNAL_SCRIPT = 23,
+
+    /**
+     * Indicates an internal constant for scripts loaded through a dedicated
+     * worker.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+     */
+    TYPE_INTERNAL_WORKER = 24,
+
+    /**
+     * Indicates an internal constant for scripts loaded through a shared
+     * worker.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+     */
+    TYPE_INTERNAL_SHARED_WORKER = 25,
+
+    /**
+     * Indicates an internal constant for content loaded from embed elements.
+     *
+     * This will be mapped to TYPE_OBJECT.
+     */
+    TYPE_INTERNAL_EMBED = 26,
+
+    /**
+     * Indicates an internal constant for content loaded from object elements.
+     *
+     * This will be mapped to TYPE_OBJECT.
+     */
+    TYPE_INTERNAL_OBJECT = 27,
+
+    /**
+     * Indicates an internal constant for content loaded from frame elements.
+     *
+     * This will be mapped to TYPE_SUBDOCUMENT.
+     */
+    TYPE_INTERNAL_FRAME = 28,
+
+    /**
+     * Indicates an internal constant for content loaded from iframe elements.
+     *
+     * This will be mapped to TYPE_SUBDOCUMENT.
+     */
+    TYPE_INTERNAL_IFRAME = 29,
+
+    /**
+     * Indicates an internal constant for content loaded from audio elements.
+     *
+     * This will be mapped to TYPE_MEDIA.
+     */
+    TYPE_INTERNAL_AUDIO = 30,
+
+    /**
+     * Indicates an internal constant for content loaded from video elements.
+     *
+     * This will be mapped to TYPE_MEDIA.
+     */
+    TYPE_INTERNAL_VIDEO = 31,
+
+    /**
+     * Indicates an internal constant for content loaded from track elements.
+     *
+     * This will be mapped to TYPE_MEDIA.
+     */
+    TYPE_INTERNAL_TRACK = 32,
+
+    /**
+     * Indicates an internal constant for an XMLHttpRequest.
+     *
+     * This will be mapped to TYPE_XMLHTTPREQUEST.
+     */
+    TYPE_INTERNAL_XMLHTTPREQUEST = 33,
+
+    /**
+     * Indicates an internal constant for EventSource.
+     *
+     * This will be mapped to TYPE_XMLHTTPREQUEST.
+     */
+    TYPE_INTERNAL_EVENTSOURCE = 34,
+
+    /**
+     * Indicates an internal constant for scripts loaded through a service
+     * worker.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+     */
+    TYPE_INTERNAL_SERVICE_WORKER = 35,
+
+    /**
+     * Indicates an internal constant for *preloaded* scripts
+     * loaded through script elements.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_SCRIPT_PRELOAD = 36,
+
+    /**
+     * Indicates an internal constant for normal images.
+     *
+     * This will be mapped to TYPE_IMAGE before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_IMAGE = 37,
+
+    /**
+     * Indicates an internal constant for *preloaded* images.
+     *
+     * This will be mapped to TYPE_IMAGE before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_IMAGE_PRELOAD = 38,
+
+    /**
+     * Indicates an internal constant for normal stylesheets.
+     *
+     * This will be mapped to TYPE_STYLESHEET before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_STYLESHEET = 39,
+
+    /**
+     * Indicates an internal constant for *preloaded* stylesheets.
+     *
+     * This will be mapped to TYPE_STYLESHEET before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_STYLESHEET_PRELOAD = 40,
+
+    /**
+     * Indicates an internal constant for favicon.
+     *
+     * This will be mapped to TYPE_IMAGE before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_IMAGE_FAVICON = 41,
+
+    /**
+     * Indicates an importScripts() inside a worker script.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+     */
+    TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS = 42,
+
+    /**
+     * Indicates an save-as link download from the front-end code.
+     */
+    TYPE_SAVEAS_DOWNLOAD = 43,
+
+    /**
+     * Indicates a speculative connection.
+     */
+    TYPE_SPECULATIVE = 44,
+
+    /**
+     * Indicates an internal constant for ES6 module scripts
+     * loaded through script elements or an import statement.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_MODULE = 45,
+
+    /**
+     * Indicates an internal constant for *preloaded* ES6 module scripts
+     * loaded through script elements or an import statement.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_MODULE_PRELOAD = 46,
+
+    /**
+     * Indicates a DTD loaded by an XML document the URI of which could
+     * not be mapped to a known local DTD.
+     */
+    TYPE_INTERNAL_DTD = 47,
+
+    /**
+     * Indicates a TYPE_INTERNAL_DTD which will not be blocked no matter
+     * what principal is being loaded from.
+     */
+    TYPE_INTERNAL_FORCE_ALLOWED_DTD = 48,
+
+    /**
+     * Indicates an internal constant for scripts loaded through an
+     * audioWorklet.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+     */
+    TYPE_INTERNAL_AUDIOWORKLET = 49,
+
+    /**
+     * Indicates an internal constant for scripts loaded through an
+     * paintWorklet.
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+     */
+    TYPE_INTERNAL_PAINTWORKLET = 50,
+
+    /**
+     * Same as TYPE_FONT but indicates this is a <link rel=preload as=font>
+     * preload initiated load.
+     */
+    TYPE_INTERNAL_FONT_PRELOAD = 51,
+
+    /**
+     * Indicates the load of a (Firefox-internal) script through ChromeUtils
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+    */
+    TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT = 52,
+
+    /**
+     * Indicates the load of a script through FrameMessageManager
+     *
+     * This will be mapped to TYPE_SCRIPT before being passed to content policy
+     * implementations.
+    */
+    TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT = 53,
+
+    /**
+     * Indicates an internal constant for *preloaded* fetch
+     * loaded through link elements.
+     *
+     * This will be mapped to TYPE_FETCH before being passed
+     * to content policy implementations.
+     */
+    TYPE_INTERNAL_FETCH_PRELOAD = 54,
+
+    /**
+     * Indicates a font loaded via @font-face rule in an UA style sheet.
+     * (CSP does not apply.)
+     */
+    TYPE_UA_FONT = 55,
+
+    /**
+     * Indicates the establishment of a TCP or TLS connection via an
+     * http/https proxy that will be used for webrtc media. When no web proxy
+     * is involved, webrtc uses lower level sockets that are not subject to
+     * any sort of content policy.
+     */
+    TYPE_PROXIED_WEBRTC_MEDIA = 56,
+
+    /* When adding new content types, please update
+     * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
+     * DoContentSecurityChecks, all nsIContentPolicy implementations, the
+     * static_assert in dom/cache/DBSchema.cpp, ChannelWrapper.webidl,
+     * ChannelWrapper.cpp, PermissionManager.cpp,
+     * IPCMessageUtilsSpecializations.h, and other things that are not
+     * listed here that are related to nsIContentPolicy. */
+  };
+
+  //////////////////////////////////////////////////////////////////////
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load or process request
+   * is rejected based on details of the request.
+   */
+  const short REJECT_REQUEST = -1;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based solely on its type (of the above flags).
+   *
+   * NOTE that it is not meant to stop future requests for this type--only the
+   * current request.
+   */
+  const short REJECT_TYPE = -2;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based on the server it is hosted on or requested from (aContentLocation or
+   * aRequestOrigin), e.g., if you block an IMAGE because it is served from
+   * goatse.cx (even if you don't necessarily block other types from that
+   * server/domain).
+   *
+   * NOTE that it is not meant to stop future requests for this server--only the
+   * current request.
+   */
+  const short REJECT_SERVER = -3;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based on some other criteria. Mozilla callers will handle this like
+   * REJECT_REQUEST; third-party implementors may, for example, use this to
+   * direct their own callers to consult the extra parameter for additional
+   * details.
+   */
+  const short REJECT_OTHER = -4;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is forbiddden
+   * based on enterprise policy.
+   */
+  const short REJECT_POLICY = -5;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load or process request
+   * is not rejected.
+   */
+  const short ACCEPT = 1;
+
+  /**
+   * Should the resource at this location be loaded?
+   * ShouldLoad will be called before loading the resource at aContentLocation
+   * to determine whether to start the load at all.
+   *
+   * @param aContentLocation  the location of the content being checked; must
+   *                          not be null
+   *
+   * @param aLoadInfo         the loadinfo of the channel being evaluated.
+   *
+   * @param aMimeTypeGuess    OPTIONAL. a guess for the requested content's
+   *                          MIME type, based on information available to
+   *                          the request initiator (e.g., an OBJECT's type
+   *                          attribute); does not reliably reflect the
+   *                          actual MIME type of the requested content
+   *
+   * @return ACCEPT or REJECT_*
+   *
+   * @note shouldLoad can be called while the DOM and layout of the document
+   * involved is in an inconsistent state.  This means that implementors of
+   * this method MUST NOT do any of the following:
+   * 1)  Modify the DOM in any way (e.g. setting attributes is a no-no).
+   * 2)  Query any DOM properties that depend on layout (e.g. offset*
+   *     properties).
+   * 3)  Query any DOM properties that depend on style (e.g. computed style).
+   * 4)  Query any DOM properties that depend on the current state of the DOM
+   *     outside the "context" node (e.g. lengths of node lists).
+   * 5)  [JavaScript implementations only] Access properties of any sort on any
+   *     object without using XPCNativeWrapper (either explicitly or
+   *     implicitly).  Due to various DOM0 things, this leads to item 4.
+   * If you do any of these things in your shouldLoad implementation, expect
+   * unpredictable behavior, possibly including crashes, content not showing
+   * up, content showing up doubled, etc.  If you need to do any of the things
+   * above, do them off timeout or event.
+   */
+  short shouldLoad(in nsIURI      aContentLocation,
+                   in nsILoadInfo aLoadInfo,
+                   in ACString    aMimeTypeGuess);
+
+  /**
+   * Should the resource be processed?
+   * ShouldProcess will be called once all the information passed to it has
+   * been determined about the resource, typically after part of the resource
+   * has been loaded.
+   *
+   * @param aContentLocation  OPTIONAL; the location of the resource being
+   *                          requested: MAY be, e.g., a post-redirection URI
+   *                          for the resource.
+   *
+   * @param aLoadInfo         the loadinfo of the channel being evaluated.
+   *
+   * @param aMimeType         the MIME type of the requested resource (e.g.,
+   *                          image/png), as reported by the networking library,
+   *                          if available (may be empty if inappropriate for
+   *                          the type).
+   *
+   * @return ACCEPT or REJECT_*
+   *
+   * @note shouldProcess can be called while the DOM and layout of the document
+   * involved is in an inconsistent state.  See the note on shouldLoad to see
+   * what this means for implementors of this method.
+   */
+  short shouldProcess(in nsIURI      aContentLocation,
+                      in nsILoadInfo aLoadInfo,
+                      in ACString    aMimeType);
+};
+
+typedef nsIContentPolicy_nsContentPolicyType nsContentPolicyType;
+
+%{C++
+enum class ExtContentPolicyType : uint8_t {
+  /**
+   * The type of ExtContentPolicy::TYPE_*
+   */
+  TYPE_INVALID = nsIContentPolicy::TYPE_INVALID,
+  TYPE_OTHER = nsIContentPolicy::TYPE_OTHER,
+  TYPE_SCRIPT = nsIContentPolicy::TYPE_SCRIPT,
+  TYPE_IMAGE = nsIContentPolicy::TYPE_IMAGE,
+  TYPE_STYLESHEET = nsIContentPolicy::TYPE_STYLESHEET,
+  TYPE_OBJECT = nsIContentPolicy::TYPE_OBJECT,
+  TYPE_DOCUMENT = nsIContentPolicy::TYPE_DOCUMENT,
+  TYPE_SUBDOCUMENT = nsIContentPolicy::TYPE_SUBDOCUMENT,
+  TYPE_PING = nsIContentPolicy::TYPE_PING,
+  TYPE_XMLHTTPREQUEST = nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+  TYPE_OBJECT_SUBREQUEST = nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+  TYPE_DTD = nsIContentPolicy::TYPE_DTD,
+  TYPE_FONT = nsIContentPolicy::TYPE_FONT,
+  TYPE_MEDIA = nsIContentPolicy::TYPE_MEDIA,
+  TYPE_WEBSOCKET = nsIContentPolicy::TYPE_WEBSOCKET,
+  TYPE_CSP_REPORT = nsIContentPolicy::TYPE_CSP_REPORT,
+  TYPE_XSLT = nsIContentPolicy::TYPE_XSLT,
+  TYPE_BEACON = nsIContentPolicy::TYPE_BEACON,
+  TYPE_FETCH = nsIContentPolicy::TYPE_FETCH,
+  TYPE_IMAGESET = nsIContentPolicy::TYPE_IMAGESET,
+  TYPE_WEB_MANIFEST = nsIContentPolicy::TYPE_WEB_MANIFEST,
+  TYPE_SAVEAS_DOWNLOAD = nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD,
+  TYPE_SPECULATIVE = nsIContentPolicy::TYPE_SPECULATIVE,
+  TYPE_UA_FONT = nsIContentPolicy::TYPE_UA_FONT,
+  TYPE_PROXIED_WEBRTC_MEDIA = nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA,
+};
+
+typedef ExtContentPolicyType ExtContentPolicy;
+%}

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style>
+    input, input:active { border: none; }
+  </style>
+</head>
+<body>
+<input id="input1" value="aaaaaaaaaaaaaaaaaaaa">
+<div id=div1 style="height: 100px;">
+  <textarea id="textarea1"></textarea>
+</div>
+<script>
+SimpleTest.waitForFocus(() => {
+  let div1 = document.getElementById('div1');
+  let textarea1 = document.getElementById('textarea1');
+  div1.addEventListener("drop", e => {
+    e.preventDefault();
+
+    textarea1.style = "display: none;";
+    SimpleTest.executeSoon(() => {
+      synthesizeKey("A");
+      document.documentElement.removeAttribute("class");
+    });
+  });
+
+  let input1 = document.getElementById('input1');
+  input1.focus();
+  input1.setSelectionRange(0, input1.value.length);
+
+  synthesizeDrop(input1, textarea1, [[{type: "text/plain", data: "foo"}]]);
+});
+</script>
+</body>
+</html>

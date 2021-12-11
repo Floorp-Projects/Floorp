@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=437915
+-->
+<head>
+  <title>Test for Bug 437915</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  div.classvalue { text-decoration: underline; }
+  div[title~="titlevalue"] { visibility: hidden; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437915">Mozilla Bug 437915</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 437915 **/
+
+var div = document.getElementById("content");
+var cs = document.defaultView.getComputedStyle(div);
+
+var chars = {
+  0x09: true, // tab
+  0x0a: true, // newline
+  0x0b: false, // vertical tab (MAY CHANGE IN FUTURE!)
+  0x0c: true, // form feed
+  0x0d: true, // carriage return
+  0x0e: false,
+  0x20: true, // space
+  0x2003: false,
+  0x200b: false,
+  0x2028: false,
+  0x2029: false,
+  0x3000: false
+};
+
+var wsmap = {
+  false: { str: " NOT", "text-decoration-line": "none", "visibility": "visible" },
+  true: { str: "", "text-decoration-line": "underline", "visibility": "hidden" }
+};
+
+for (var char in chars) {
+  var is_whitespace = chars[char];
+  var mapent = wsmap[is_whitespace];
+  div.setAttribute("class", "classvalue" + String.fromCharCode(char) + "b")
+  div.setAttribute("title", "a" + String.fromCharCode(char) + "titlevalue")
+  for (var prop of ["text-decoration-line", "visibility"]) {
+    is(cs.getPropertyValue(prop), mapent[prop],
+       "Character " + char + " should" + mapent.str +
+       " be treated as whitespace ("
+       + prop + " should be " + mapent[prop] + ")");
+  }
+}
+
+
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,74 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - gecko_taskgraph.transforms.spidermonkey:transforms
+    - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_lints:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        retrigger: true
+    treeherder:
+        kind: build
+        tier: 1
+    index:
+        product: firefox
+    worker-type: b-linux
+    run:
+        using: spidermonkey
+    when:
+        files-changed:
+            # any when.files-changed specified below in a job will be
+            # appended to this list
+            - build/**
+            - config/**
+            - configure.py
+            - dom/bindings/**
+            - intl/icu/**
+            - js/moz.configure
+            - js/public/**
+            - js/src/**
+            - layout/tools/reftest/reftest/**
+            - Makefile.in
+            - media/webrtc/trunk/tools/gyp/**
+            - memory/**
+            - mfbt/**
+            - modules/fdlibm/**
+            - modules/zlib/src/**
+            - mozglue/**
+            - moz.build
+            - moz.configure
+            - nsprpub/**
+            - python/**
+            - taskcluster/moz.build
+            - taskcluster/ci/spidermonkey/kind.yml
+            - testing/mozbase/**
+            - testing/web-platform/**
+            - test.mozbuild
+            - toolkit/mozapps/installer/package-name.mk
+            - toolkit/mozapps/installer/upload-files.mk
+    fetches:
+        toolchain:
+            by-worker-type:
+                .*-b-win2012:
+                    - win64-clang
+                    - win64-rust
+                default:
+                    - linux64-clang
+                    - linux64-gcc
+                    - linux64-rust
+                    - linux64-dump_syms
+                    - sysroot-x86_64-linux-gnu
+
+jobs-from:
+    - linux.yml
+    - windows.yml

@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 814677</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+span { display: table-cell; } 
+.t { display:table; }
+    </style>
+</head>
+<body>
+
+<div><span>A</span><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+<div class="t"><span>A</span></div>&#x0B;<div class="t"><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+<div class="t"><span>A</span></div>&nbsp;<div class="t"><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+
+<div><span>A</span><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+<div class="t"><span>A</span></div>&#x0B;<div class="t"><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+<div class="t"><span>A</span></div>&nbsp;<div class="t"><span>B</span></div>
+<div><span>A</span><span>B</span></div>
+
+
+</body>
+</html>

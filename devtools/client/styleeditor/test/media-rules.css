@@ -1,0 +1,29 @@
+@media not all {
+  div {
+    color: blue;
+  }
+}
+
+@media all {
+  div {
+    color: red;
+  }
+}
+
+div {
+  width: 20px;
+  height: 20px;
+  background-color: ghostwhite;
+}
+
+@media (max-width: 550px) {
+  div {
+    color: green;
+  }
+}
+
+@media (min-height: 300px) and (max-height: 320px) {
+  div {
+    color: orange;
+  }
+}

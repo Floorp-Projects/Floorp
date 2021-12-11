@@ -1,0 +1,29 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=737612
+-->
+<title>Test for Bug 737612</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=737612">Mozilla Bug 737612</a>
+<script>
+
+/** Test for Bug 737612 **/
+var text = document.createTextNode("abc");
+var range = document.createRange();
+range.setStart(text, 1);
+var threw = false;
+try {
+  range.insertNode(document.head);
+} catch(e) {
+  var threw = true;
+  is(e.name, "HierarchyRequestError",
+     "Must throw HierarchyRequestError");
+  is(Object.getPrototypeOf(e), DOMException.prototype,
+     "Must throw DOMException");
+  is(e.code, DOMException.HIERARCHY_REQUEST_ERR,
+     "Must throw HIERARCHY_REQUEST_ERR");
+}
+ok(threw, "Must throw when insertNode()ing into detached text node");
+
+</script>

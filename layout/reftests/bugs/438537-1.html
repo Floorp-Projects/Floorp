@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Testcase, bug 438537</title>
+    <script>
+      window.addEventListener("MozReftestInvalidate",
+        function() {
+          var div = document.getElementById("div");
+          div.style.height = "40px";
+          document.documentElement.className = "";
+        });
+    </script>
+  </head>
+  <body>
+    <div id="div" style="height:20px;border:solid 2px black;border-radius: 8px;overflow:hidden">
+    </div>
+  </body>
+</html>

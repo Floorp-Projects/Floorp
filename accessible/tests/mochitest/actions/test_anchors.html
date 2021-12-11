@@ -1,0 +1,146 @@
+<html>
+
+<head>
+  <title>nsIAccessible actions testing for HTML links that
+   scroll the page to named anchors</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../actions.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Event checkers
+
+    function scrollingChecker(aAcc) {
+      this.type = EVENT_SCROLLING_START;
+      this.target = aAcc;
+      this.getID = function scrollingChecker_getID() {
+        return "scrolling start handling for " + prettyName(aAcc);
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Test
+
+    // gA11yEventDumpID = "debug"; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
+
+    function doTest() {
+      var actionsArray = [
+        {
+          ID: "anchor1",
+          actionName: "jump",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new scrollingChecker(getAccessible("bottom1")),
+          ],
+        },
+        { // jump again (test for bug 437607)
+          ID: "anchor1",
+          actionName: "jump",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new scrollingChecker(getAccessible("bottom1")),
+          ],
+        },
+        {
+          ID: "anchor2",
+          actionName: "jump",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new scrollingChecker(getAccessible("bottom2")),
+          ],
+        },
+      ];
+
+      testActions(actionsArray);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=506389"
+     title="Some same page links do not fire EVENT_SYSTEM_SCROLLINGSTART">
+    Mozilla Bug 506389
+  </a><br>
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=437607"
+     title="Clicking the 'Skip to main content' link once works, second time fails to initiate a V cursor jump">
+    Mozilla Bug 437607
+  </a><br>
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=519303"
+     title="Same page links to targets with content fires scrolling start accessible event on leaf text node">
+    Mozilla Bug 519303
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="debug"></div>
+
+  <h1>This is a test page for anchors</h1>
+  This is a top anchor<a name="Top">
+  </a><a id="anchor1" href="#bottom1">Link to anchor</a>
+  <a id="anchor2" href="#bottom2">Link to div</a>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br>This is some text in the middle<br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  This is some text.
+  This is a bottom anchor<a id="bottom1"></a>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <div id="bottom2">This is a div</div>
+</body>
+</html>

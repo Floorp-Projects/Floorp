@@ -1,0 +1,223 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIPrefBranch;
+
+/**
+ * nsINetUtil provides various network-related utility methods.
+ */
+[scriptable, uuid(fe2625ec-b884-4df1-b39c-9e830e47aa94)]
+interface nsINetUtil : nsISupports
+{
+  /**
+   * Parse a Content-Type header value in strict mode.  This is a more
+   * conservative parser that reject things that violate RFC 7231 section
+   * 3.1.1.1.  This is typically useful for parsing Content-Type header values
+   * that are used for HTTP requests, and those that are used to make security
+   * decisions.
+   *
+   * @param aTypeHeader the header string to parse
+   * @param [out] aCharset the charset parameter specified in the
+   *              header, if any.
+   * @param [out] aHadCharset whether a charset was explicitly specified.
+   * @return the MIME type specified in the header, in lower-case.
+   */
+  AUTF8String parseRequestContentType(in AUTF8String aTypeHeader,
+                                      out AUTF8String aCharset,
+                                      out boolean aHadCharset);
+
+  /**
+   * Parse a Content-Type header value in relaxed mode.  This is a more
+   * permissive parser that ignores things that go against RFC 7231 section
+   * 3.1.1.1.  This is typically useful for parsing Content-Type header values
+   * received from web servers where we want to make a best effort attempt
+   * at extracting a useful MIME type and charset.
+   *
+   * NOTE: DO NOT USE THIS if you're going to make security decisions
+   * based on the result.
+   *
+   * @param aTypeHeader the header string to parse
+   * @param [out] aCharset the charset parameter specified in the
+   *              header, if any.
+   * @param [out] aHadCharset whether a charset was explicitly specified.
+   * @return the MIME type specified in the header, in lower-case.
+   */
+  AUTF8String parseResponseContentType(in AUTF8String aTypeHeader,
+                                       out AUTF8String aCharset,
+                                       out boolean aHadCharset);
+
+  /**
+   * Test whether the given URI's handler has the given protocol flags.
+   *
+   * @param aURI the URI in question
+   * @param aFlags the flags we're testing for.
+   *
+   * @return whether the protocol handler for aURI has all the flags
+   *         in aFlags.
+   */
+  boolean protocolHasFlags(in nsIURI aURI, in unsigned long aFlag);
+
+  /**
+   * Test whether the protocol handler for this URI or that for any of
+   * its inner URIs has the given protocol flags.  This will QI aURI to
+   * nsINestedURI and walk the nested URI chain.
+   *
+   * @param aURI the URI in question
+   * @param aFlags the flags we're testing for.
+   *
+   * @return whether any of the protocol handlers involved have all the flags
+   *         in aFlags.
+   */
+  boolean URIChainHasFlags(in nsIURI aURI, in unsigned long aFlags);
+
+  /** Escape every character with its %XX-escaped equivalent */
+  const unsigned long ESCAPE_ALL = 0;
+
+  /** Leave alphanumeric characters intact and %XX-escape all others */
+  const unsigned long ESCAPE_XALPHAS = 1;
+
+  /** Leave alphanumeric characters intact, convert spaces to '+',
+      %XX-escape all others */
+  const unsigned long ESCAPE_XPALPHAS = 2;
+
+  /** Leave alphanumeric characters and forward slashes intact,
+      %XX-escape all others */
+  const unsigned long ESCAPE_URL_PATH = 4;
+
+  /** Additional encoding for Apple's NSURL compatibility.
+      Like XALPHAS, but leave '%' to avoid double encoding, '+', and '/'.
+      %XX-escape all others */
+  const unsigned long ESCAPE_URL_APPLE_EXTRA = 8;
+
+  /**
+   * escape a string with %00-style escaping
+   */
+  ACString escapeString(in ACString aString, in unsigned long aEscapeType);
+
+  /** %XX-escape URL scheme */
+  const unsigned long ESCAPE_URL_SCHEME = 1;
+
+  /** %XX-escape username in the URL */
+  const unsigned long ESCAPE_URL_USERNAME = 1 << 1;
+
+  /** %XX-escape password in the URL */
+  const unsigned long ESCAPE_URL_PASSWORD = 1 << 2;
+
+  /** %XX-escape URL host */
+  const unsigned long ESCAPE_URL_HOST = 1 << 3;
+
+  /** %XX-escape URL directory */
+  const unsigned long ESCAPE_URL_DIRECTORY = 1 << 4;
+
+  /** %XX-escape file basename in the URL */
+  const unsigned long ESCAPE_URL_FILE_BASENAME = 1 << 5;
+
+  /** %XX-escape file extension in the URL */
+  const unsigned long ESCAPE_URL_FILE_EXTENSION = 1 << 6;
+
+  /** %XX-escape URL parameters */
+  const unsigned long ESCAPE_URL_PARAM = 1 << 7;
+
+  /** %XX-escape URL query */
+  const unsigned long ESCAPE_URL_QUERY = 1 << 8;
+
+  /** %XX-escape URL ref */
+  const unsigned long ESCAPE_URL_REF = 1 << 9;
+
+  /** %XX-escape URL path - same as escaping directory, basename and extension */
+  const unsigned long ESCAPE_URL_FILEPATH =
+    ESCAPE_URL_DIRECTORY | ESCAPE_URL_FILE_BASENAME | ESCAPE_URL_FILE_EXTENSION;
+
+  /** %XX-escape scheme, username, password, host, path, params, query and ref */
+  const unsigned long ESCAPE_URL_MINIMAL =
+    ESCAPE_URL_SCHEME | ESCAPE_URL_USERNAME | ESCAPE_URL_PASSWORD |
+    ESCAPE_URL_HOST   | ESCAPE_URL_FILEPATH | ESCAPE_URL_PARAM    |
+    ESCAPE_URL_QUERY  | ESCAPE_URL_REF;
+
+  /** Force %XX-escaping of already escaped sequences */
+  const unsigned long ESCAPE_URL_FORCED = 1 << 10;
+
+  /** Skip non-ascii octets, %XX-escape all others */
+  const unsigned long ESCAPE_URL_ONLY_ASCII = 1 << 11;
+
+  /**
+   * Skip graphic octets (0x20-0x7E) when escaping
+   * Skips all ASCII octets (0x00-0x7F) when unescaping
+   */
+  const unsigned long ESCAPE_URL_ONLY_NONASCII = 1 << 12;
+
+  /** Force %XX-escape of colon */
+  const unsigned long ESCAPE_URL_COLON = 1 << 14;
+
+  /** Skip C0 and DEL from unescaping */
+  const unsigned long ESCAPE_URL_SKIP_CONTROL = 1 << 15;
+
+  /** %XX-escape external protocol handler URL */
+  const unsigned long ESCAPE_URL_EXT_HANDLER = 1 << 17;
+
+  /**
+   * %XX-Escape invalid chars in a URL segment.
+   *
+   * @param aStr the URL to be escaped
+   * @param aFlags the URL segment type flags
+   *
+   * @return the escaped string (the string itself if escaping did not happen)
+   *
+   */
+  ACString escapeURL(in ACString aStr, in unsigned long aFlags);
+
+  /**
+   * Expands URL escape sequences
+   *
+   * @param aStr the URL to be unescaped
+   * @param aFlags only ESCAPE_URL_ONLY_NONASCII and ESCAPE_URL_SKIP_CONTROL
+   *               are recognized.  If |aFlags| is 0 all escape sequences are
+   *               unescaped
+   * @return unescaped string
+   */
+  ACString unescapeString(in AUTF8String aStr, in unsigned long aFlags);
+
+  /**
+   * Extract the charset parameter location and value from a content-type
+   * header.
+   *
+   * @param aTypeHeader the header string to parse
+   * @param [out] aCharset the charset parameter specified in the
+   *              header, if any.
+   * @param [out] aCharsetStart index of the start of the charset parameter
+   *              (the ';' separating it from what came before) in aTypeHeader.
+   *              If this function returns false, this argument will still be
+   *              set, to the index of the location where a new charset should
+   *              be inserted.
+   * @param [out] aCharsetEnd index of the end of the charset parameter (the
+   *              ';' separating it from what comes after, or the end
+   *              of the string) in aTypeHeader.  If this function returns
+   *              false, this argument will still be set, to the index of the
+   *              location where a new charset should be inserted.
+   *
+   * @return whether a charset parameter was found.  This can be false even in
+   * cases when parseContentType would claim to have a charset, if the type
+   * that won out does not have a charset parameter specified.
+   */
+  boolean extractCharsetFromContentType(in AUTF8String aTypeHeader,
+                                        out AUTF8String aCharset,
+                                        out long aCharsetStart,
+                                        out long aCharsetEnd);
+
+  /**
+   * This is test-only. Send an IPC message to let socket process send a
+   * telemetry.
+   */
+  void socketProcessTelemetryPing();
+
+  /**
+   * This is a void method that is C++ implemented and always
+   * returns NS_ERROR_NOT_IMPLEMENTED. To be used for testing.
+   */
+  void notImplemented();
+};

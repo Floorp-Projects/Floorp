@@ -1,0 +1,521 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Graphics: Layers")
+
+with Files("apz/**"):
+    BUG_COMPONENT = ("Core", "Panning and Zooming")
+
+EXPORTS += [
+    "composite/CompositableHost.h",
+    "CompositorTypes.h",
+    "D3D9SurfaceImage.h",
+    "FrameMetrics.h",
+    "GLImages.h",
+    "GPUVideoImage.h",
+    "ImageContainer.h",
+    "ImageTypes.h",
+    "IMFYCbCrImage.h",
+    "Layers.h",
+    "LayersTypes.h",
+    "LayerUserData.h",
+    "opengl/OGLShaderConfig.h",
+    "opengl/OGLShaderProgram.h",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    SOURCES += [
+        "D3D11ShareHandleImage.cpp",
+        "D3D11YCbCrImage.cpp",
+    ]
+    UNIFIED_SOURCES += [
+        "D3D9SurfaceImage.cpp",
+        "IMFYCbCrImage.cpp",
+    ]
+    if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
+        EXPORTS.mozilla.layers += [
+            "d3d11/CompositorD3D11.h",
+            "d3d11/DeviceAttachmentsD3D11.h",
+            "d3d11/DiagnosticsD3D11.h",
+            "d3d11/HelpersD3D11.h",
+            "d3d11/ReadbackManagerD3D11.h",
+            "d3d11/ShaderDefinitionsD3D11.h",
+            "d3d11/TextureD3D11.h",
+        ]
+        UNIFIED_SOURCES += [
+            "d3d11/DiagnosticsD3D11.cpp",
+            "d3d11/TextureD3D11.cpp",
+        ]
+        SOURCES += [
+            "d3d11/CompositorD3D11.cpp",
+            "d3d11/DeviceAttachmentsD3D11.cpp",
+            "d3d11/ReadbackManagerD3D11.cpp",
+        ]
+
+EXPORTS.gfxipc += [
+    "ipc/ShadowLayerUtils.h",
+    "ipc/SurfaceDescriptor.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "apz/util/CheckerboardReportService.h",
+]
+
+EXPORTS.mozilla.gfx += [
+    "BuildConstants.h",
+]
+
+EXPORTS.mozilla.layers += [
+    "AnimationHelper.h",
+    "AnimationInfo.h",
+    "AnimationStorageData.h",
+    "apz/public/APZInputBridge.h",
+    "apz/public/APZPublicUtils.h",
+    "apz/public/APZSampler.h",
+    "apz/public/APZUpdater.h",
+    "apz/public/CompositorController.h",
+    "apz/public/GeckoContentController.h",
+    "apz/public/GeckoContentControllerTypes.h",
+    "apz/public/IAPZCTreeManager.h",
+    "apz/public/MatrixMessage.h",
+    # exporting things from apz/src is temporary until we extract a
+    # proper interface for the code there
+    "apz/src/APZUtils.h",
+    "apz/src/AsyncDragMetrics.h",
+    "apz/src/FocusTarget.h",
+    "apz/src/KeyboardMap.h",
+    "apz/src/KeyboardScrollAction.h",
+    "apz/testutil/APZTestData.h",
+    "apz/util/ActiveElementManager.h",
+    "apz/util/APZCCallbackHelper.h",
+    "apz/util/APZEventState.h",
+    "apz/util/APZTaskRunnable.h",
+    "apz/util/APZThreadUtils.h",
+    "apz/util/ChromeProcessController.h",
+    "apz/util/ContentProcessController.h",
+    "apz/util/DoubleTapToZoom.h",
+    "apz/util/InputAPZContext.h",
+    "apz/util/ScrollingInteractionContext.h",
+    "apz/util/ScrollLinkedEffectDetector.h",
+    "apz/util/TouchActionHelper.h",
+    "apz/util/TouchCounter.h",
+    "AtomicRefCountedWithFinalize.h",
+    "AxisPhysicsModel.h",
+    "AxisPhysicsMSDModel.h",
+    "BSPTree.h",
+    "BufferTexture.h",
+    "BuildConstants.h",
+    "CanvasDrawEventRecorder.h",
+    "CanvasRenderer.h",
+    "client/CanvasClient.h",
+    "client/CompositableClient.h",
+    "client/GPUVideoTextureClient.h",
+    "client/ImageClient.h",
+    "client/TextureClient.h",
+    "client/TextureClientPool.h",
+    "client/TextureClientRecycleAllocator.h",
+    "client/TextureClientSharedSurface.h",
+    "client/TextureRecorded.h",
+    "composite/Diagnostics.h",
+    "composite/FrameUniformityData.h",
+    "composite/GPUVideoTextureHost.h",
+    "composite/ImageComposite.h",
+    "composite/TextureHost.h",
+    "CompositionRecorder.h",
+    "Compositor.h",
+    "CompositorAnimationStorage.h",
+    "CompositorTypes.h",
+    "D3D11ShareHandleImage.h",
+    "D3D11YCbCrImage.h",
+    "D3D9SurfaceImage.h",
+    "DirectionUtils.h",
+    "Effects.h",
+    "ImageDataSerializer.h",
+    "ipc/APZChild.h",
+    "ipc/APZCTreeManagerChild.h",
+    "ipc/APZCTreeManagerParent.h",
+    "ipc/APZInputBridgeChild.h",
+    "ipc/APZInputBridgeParent.h",
+    "ipc/CanvasChild.h",
+    "ipc/CanvasThread.h",
+    "ipc/CanvasTranslator.h",
+    "ipc/CompositableForwarder.h",
+    "ipc/CompositableTransactionParent.h",
+    "ipc/CompositorBridgeChild.h",
+    "ipc/CompositorBridgeParent.h",
+    "ipc/CompositorManagerChild.h",
+    "ipc/CompositorManagerParent.h",
+    "ipc/CompositorThread.h",
+    "ipc/CompositorVsyncScheduler.h",
+    "ipc/CompositorVsyncSchedulerOwner.h",
+    "ipc/ContentCompositorBridgeParent.h",
+    "ipc/ImageBridgeChild.h",
+    "ipc/ImageBridgeParent.h",
+    "ipc/ISurfaceAllocator.h",
+    "ipc/KnowsCompositor.h",
+    "ipc/LayerAnimationUtils.h",
+    "ipc/LayersMessageUtils.h",
+    "ipc/LayerTreeOwnerTracker.h",
+    "ipc/RefCountedShmem.h",
+    "ipc/RemoteContentController.h",
+    "ipc/SharedPlanarYCbCrImage.h",
+    "ipc/SharedRGBImage.h",
+    "ipc/SharedSurfacesChild.h",
+    "ipc/SharedSurfacesMemoryReport.h",
+    "ipc/SharedSurfacesParent.h",
+    "ipc/SynchronousTask.h",
+    "ipc/TextureForwarder.h",
+    "ipc/UiCompositorControllerChild.h",
+    "ipc/UiCompositorControllerMessageTypes.h",
+    "ipc/UiCompositorControllerParent.h",
+    "ipc/VideoBridgeChild.h",
+    "ipc/VideoBridgeParent.h",
+    "ipc/VideoBridgeUtils.h",
+    "LayerAttributes.h",
+    "LayersTypes.h",
+    "MemoryPressureObserver.h",
+    "NativeLayer.h",
+    "OOPCanvasRenderer.h",
+    "opengl/CompositingRenderTargetOGL.h",
+    "opengl/CompositorOGL.h",
+    "opengl/MacIOSurfaceTextureClientOGL.h",
+    "opengl/MacIOSurfaceTextureHostOGL.h",
+    "opengl/TextureClientOGL.h",
+    "opengl/TextureHostOGL.h",
+    "PersistentBufferProvider.h",
+    "ProfilerScreenshots.h",
+    "RepaintRequest.h",
+    "SampleTime.h",
+    "ScreenshotGrabber.h",
+    "ScrollableLayerGuid.h",
+    "ShareableCanvasRenderer.h",
+    "SourceSurfaceSharedData.h",
+    "SurfacePool.h",
+    "SyncObject.h",
+    "TextureSourceProvider.h",
+    "TextureWrapperImage.h",
+    "TransactionIdAllocator.h",
+    "TreeTraversal.h",
+    "UpdateImageHelper.h",
+    "wr/AsyncImagePipelineManager.h",
+    "wr/ClipManager.h",
+    "wr/DisplayItemCache.h",
+    "wr/HitTestInfoManager.h",
+    "wr/IpcResourceUpdateQueue.h",
+    "wr/OMTAController.h",
+    "wr/OMTASampler.h",
+    "wr/RenderRootStateManager.h",
+    "wr/RenderRootTypes.h",
+    "wr/StackingContextHelper.h",
+    "wr/WebRenderBridgeChild.h",
+    "wr/WebRenderBridgeParent.h",
+    "wr/WebRenderCanvasRenderer.h",
+    "wr/WebRenderCommandBuilder.h",
+    "wr/WebRenderDrawEventRecorder.h",
+    "wr/WebRenderImageHost.h",
+    "wr/WebRenderLayerManager.h",
+    "wr/WebRenderMessageUtils.h",
+    "wr/WebRenderScrollData.h",
+    "wr/WebRenderScrollDataWrapper.h",
+    "wr/WebRenderTextureHost.h",
+    "wr/WebRenderUserData.h",
+    "ZoomConstraints.h",
+]
+
+if CONFIG["MOZ_WAYLAND"]:
+    EXPORTS.mozilla.layers += [
+        "DMABUFSurfaceImage.h",
+        "NativeLayerWayland.h",
+        "opengl/DMABUFTextureClientOGL.h",
+        "opengl/DMABUFTextureHostOGL.h",
+        "SurfacePoolWayland.h",
+    ]
+    UNIFIED_SOURCES += [
+        "NativeLayerWayland.cpp",
+        "SurfacePoolWayland.cpp",
+    ]
+    SOURCES += [
+        "DMABUFSurfaceImage.cpp",
+        "opengl/DMABUFTextureClientOGL.cpp",
+        "opengl/DMABUFTextureHostOGL.cpp",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    REQUIRES_UNIFIED_BUILD = True
+    EXPORTS.mozilla.layers += [
+        "NativeLayerCA.h",
+        "SurfacePoolCA.h",
+        "TextureSync.h",
+    ]
+    EXPORTS += [
+        "MacIOSurfaceHelpers.h",
+        "MacIOSurfaceImage.h",
+    ]
+    UNIFIED_SOURCES += [
+        "NativeLayerCA.mm",
+        "SurfacePoolCA.mm",
+        "TextureSync.cpp",
+    ]
+    SOURCES += [
+        "MacIOSurfaceHelpers.cpp",
+        "MacIOSurfaceImage.cpp",
+    ]
+    OS_LIBS += [
+        "-framework IOSurface",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    EXPORTS.mozilla.layers += [
+        "AndroidHardwareBuffer.h",
+    ]
+    UNIFIED_SOURCES += [
+        "AndroidHardwareBuffer.cpp",
+        "apz/src/AndroidAPZ.cpp",
+        "apz/src/AndroidFlingPhysics.cpp",
+        "apz/src/AndroidVelocityTracker.cpp",
+    ]
+
+UNIFIED_SOURCES += [
+    "AnimationHelper.cpp",
+    "AnimationInfo.cpp",
+    "apz/src/APZCTreeManager.cpp",
+    "apz/src/APZInputBridge.cpp",
+    "apz/src/APZPublicUtils.cpp",
+    "apz/src/APZSampler.cpp",
+    "apz/src/APZUpdater.cpp",
+    "apz/src/APZUtils.cpp",
+    "apz/src/AsyncPanZoomController.cpp",
+    "apz/src/AutoscrollAnimation.cpp",
+    "apz/src/Axis.cpp",
+    "apz/src/CheckerboardEvent.cpp",
+    "apz/src/DragTracker.cpp",
+    "apz/src/ExpectedGeckoMetrics.cpp",
+    "apz/src/FlingAccelerator.cpp",
+    "apz/src/FocusState.cpp",
+    "apz/src/FocusTarget.cpp",
+    "apz/src/GenericScrollAnimation.cpp",
+    "apz/src/GestureEventListener.cpp",
+    "apz/src/HitTestingTreeNode.cpp",
+    "apz/src/IAPZHitTester.cpp",
+    "apz/src/InputBlockState.cpp",
+    "apz/src/InputQueue.cpp",
+    "apz/src/KeyboardMap.cpp",
+    "apz/src/KeyboardScrollAction.cpp",
+    "apz/src/OverscrollHandoffState.cpp",
+    "apz/src/PotentialCheckerboardDurationTracker.cpp",
+    "apz/src/QueuedInput.cpp",
+    "apz/src/SampledAPZCState.cpp",
+    "apz/src/ScrollThumbUtils.cpp",
+    "apz/src/SimpleVelocityTracker.cpp",
+    "apz/src/SmoothMsdScrollAnimation.cpp",
+    "apz/src/SmoothScrollAnimation.cpp",
+    "apz/src/WheelScrollAnimation.cpp",
+    "apz/src/WRHitTester.cpp",
+    "apz/testutil/APZTestData.cpp",
+    "apz/util/ActiveElementManager.cpp",
+    "apz/util/APZCCallbackHelper.cpp",
+    "apz/util/APZEventState.cpp",
+    "apz/util/APZTaskRunnable.cpp",
+    "apz/util/APZThreadUtils.cpp",
+    "apz/util/CheckerboardReportService.cpp",
+    "apz/util/ChromeProcessController.cpp",
+    "apz/util/ContentProcessController.cpp",
+    "apz/util/DoubleTapToZoom.cpp",
+    "apz/util/InputAPZContext.cpp",
+    "apz/util/ScrollingInteractionContext.cpp",
+    "apz/util/ScrollLinkedEffectDetector.cpp",
+    "apz/util/TouchActionHelper.cpp",
+    "apz/util/TouchCounter.cpp",
+    "AxisPhysicsModel.cpp",
+    "AxisPhysicsMSDModel.cpp",
+    "BSPTree.cpp",
+    "BufferTexture.cpp",
+    "CanvasDrawEventRecorder.cpp",
+    "CanvasRenderer.cpp",
+    "client/CanvasClient.cpp",
+    "client/CompositableClient.cpp",
+    "client/GPUVideoTextureClient.cpp",
+    "client/ImageClient.cpp",
+    "client/TextureClientPool.cpp",
+    "client/TextureClientRecycleAllocator.cpp",
+    "client/TextureClientSharedSurface.cpp",
+    "client/TextureRecorded.cpp",
+    "composite/CompositableHost.cpp",
+    "composite/FrameUniformityData.cpp",
+    "composite/GPUVideoTextureHost.cpp",
+    "composite/ImageComposite.cpp",
+    "CompositionRecorder.cpp",
+    "Compositor.cpp",
+    "CompositorAnimationStorage.cpp",
+    "CompositorTypes.cpp",
+    "Effects.cpp",
+    "FrameMetrics.cpp",
+    "GLImages.cpp",
+    "ImageDataSerializer.cpp",
+    "ipc/APZChild.cpp",
+    "ipc/APZCTreeManagerChild.cpp",
+    "ipc/APZCTreeManagerParent.cpp",
+    "ipc/APZInputBridgeChild.cpp",
+    "ipc/APZInputBridgeParent.cpp",
+    "ipc/CanvasChild.cpp",
+    "ipc/CanvasThread.cpp",
+    "ipc/CanvasTranslator.cpp",
+    "ipc/CompositableForwarder.cpp",
+    "ipc/CompositableTransactionParent.cpp",
+    "ipc/CompositorBench.cpp",
+    "ipc/CompositorBridgeChild.cpp",
+    "ipc/CompositorBridgeParent.cpp",
+    "ipc/CompositorManagerChild.cpp",
+    "ipc/CompositorManagerParent.cpp",
+    "ipc/CompositorThread.cpp",
+    "ipc/CompositorVsyncScheduler.cpp",
+    "ipc/ContentCompositorBridgeParent.cpp",
+    "ipc/ImageBridgeChild.cpp",
+    "ipc/ImageBridgeParent.cpp",
+    "ipc/ISurfaceAllocator.cpp",
+    "ipc/KnowsCompositor.cpp",
+    "ipc/LayerAnimationUtils.cpp",
+    "ipc/LayerTreeOwnerTracker.cpp",
+    "ipc/RefCountedShmem.cpp",
+    "ipc/RemoteContentController.cpp",
+    "ipc/SharedPlanarYCbCrImage.cpp",
+    "ipc/SharedRGBImage.cpp",
+    "ipc/SharedSurfacesChild.cpp",
+    "ipc/SharedSurfacesParent.cpp",
+    "ipc/UiCompositorControllerChild.cpp",
+    "ipc/UiCompositorControllerParent.cpp",
+    "ipc/VideoBridgeChild.cpp",
+    "ipc/VideoBridgeParent.cpp",
+    "Layers.cpp",
+    "LayersTypes.cpp",
+    "MemoryPressureObserver.cpp",
+    "opengl/CompositingRenderTargetOGL.cpp",
+    "opengl/CompositorOGL.cpp",
+    "opengl/GLBlitTextureImageHelper.cpp",
+    "opengl/OGLShaderProgram.cpp",
+    "opengl/TextureClientOGL.cpp",
+    "opengl/TextureHostOGL.cpp",
+    "ProfilerScreenshots.cpp",
+    "RepaintRequest.cpp",
+    "SampleTime.cpp",
+    "ScreenshotGrabber.cpp",
+    "ScrollableLayerGuid.cpp",
+    "ShareableCanvasRenderer.cpp",
+    "SourceSurfaceSharedData.cpp",
+    "SyncObject.cpp",
+    "TextureSourceProvider.cpp",
+    "TextureWrapperImage.cpp",
+    "wr/AsyncImagePipelineManager.cpp",
+    "wr/ClipManager.cpp",
+    "wr/DisplayItemCache.cpp",
+    "wr/HitTestInfoManager.cpp",
+    "wr/IpcResourceUpdateQueue.cpp",
+    "wr/OMTAController.cpp",
+    "wr/OMTASampler.cpp",
+    "wr/RenderRootStateManager.cpp",
+    "wr/RenderRootTypes.cpp",
+    "wr/StackingContextHelper.cpp",
+    "wr/WebRenderBridgeChild.cpp",
+    "wr/WebRenderBridgeParent.cpp",
+    "wr/WebRenderCanvasRenderer.cpp",
+    "wr/WebRenderCommandBuilder.cpp",
+    "wr/WebRenderDrawEventRecorder.cpp",
+    "wr/WebRenderImageHost.cpp",
+    "wr/WebRenderLayerManager.cpp",
+    "wr/WebRenderScrollData.cpp",
+    "wr/WebRenderUserData.cpp",
+    "ZoomConstraints.cpp",
+    # XXX here are some unified build error.
+    #'wr/WebRenderTextureHost.cpp'
+]
+
+SOURCES += [
+    "client/TextureClient.cpp",
+    "composite/TextureHost.cpp",
+    "ImageContainer.cpp",
+    "PersistentBufferProvider.cpp",
+    "wr/WebRenderTextureHost.cpp",
+]
+
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    SOURCES += [
+        "opengl/MacIOSurfaceTextureClientOGL.cpp",
+        "opengl/MacIOSurfaceTextureHostOGL.cpp",
+    ]
+
+IPDL_SOURCES += [
+    "ipc/LayersMessages.ipdlh",
+    "ipc/LayersSurfaces.ipdlh",
+    "ipc/PAPZ.ipdl",
+    "ipc/PAPZCTreeManager.ipdl",
+    "ipc/PAPZInputBridge.ipdl",
+    "ipc/PCanvas.ipdl",
+    "ipc/PCompositorBridge.ipdl",
+    "ipc/PCompositorBridgeTypes.ipdlh",
+    "ipc/PCompositorManager.ipdl",
+    "ipc/PImageBridge.ipdl",
+    "ipc/PTexture.ipdl",
+    "ipc/PUiCompositorController.ipdl",
+    "ipc/PVideoBridge.ipdl",
+    "ipc/PWebRenderBridge.ipdl",
+    "ipc/WebRenderMessages.ipdlh",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    GeneratedFile(
+        "CompositorD3D11Shaders.h",
+        script="d3d11/genshaders.py",
+        inputs=["d3d11/shaders.manifest"],
+    )
+
+LOCAL_INCLUDES += [
+    "/docshell/base",  # for nsDocShell.h
+    "/dom/canvas",  # for intertwined WebGL headers
+    "/gfx/cairo/cairo/src",
+    "/layout/base",  # for TouchManager.h
+    "/layout/generic",  # for nsTextFrame.h
+    "/media/libyuv/libyuv/include",  # for libyuv.h
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["MOZ_DEBUG"]:
+    DEFINES["D3D_DEBUG_INFO"] = True
+
+if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
+    DEFINES["MOZ_ENABLE_D3D10_LAYER"] = True
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["apz/test/gtest"]
+    DIRS += ["apz/test/gtest/mvm"]
+
+MOCHITEST_MANIFESTS += ["apz/test/mochitest/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["apz/test/mochitest/browser.ini"]
+
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += ["-Werror=switch"]
+
+LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+    # Suppress warnings in third-party code.
+    CXXFLAGS += ["-Wno-maybe-uninitialized"]
+
+UNIFIED_SOURCES += []
+
+if CONFIG["FUZZING"] and CONFIG["FUZZING_INTERFACES"]:
+    TEST_DIRS += ["ipc/fuzztest"]
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

@@ -1,0 +1,300 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsILoginInfo;
+interface nsIPropertyBag;
+
+[scriptable, uuid(38c7f6af-7df9-49c7-b558-2776b24e6cc1)]
+interface nsILoginManager : nsISupports {
+  /**
+   * This promise is resolved when initialization is complete, and is rejected
+   * in case initialization failed.  This includes the initial loading of the
+   * login data as well as any migration from previous versions.
+   *
+   * Calling any method of nsILoginManager before this promise is resolved
+   * might trigger the synchronous initialization fallback.
+   */
+  readonly attribute Promise initializationPromise;
+
+  /**
+   * Store a new login in the login manager.
+   *
+   * @param aLogin
+   *        The login to be added.
+   * @return a clone of the login info with the guid set (even if it was not provided)
+   *
+   * Default values for the login's nsILoginMetaInfo properties will be
+   * created. However, if the caller specifies non-default values, they will
+   * be used instead.
+   */
+  nsILoginInfo addLogin(in nsILoginInfo aLogin);
+
+  /**
+   * Like addLogin, but asynchronous and for many logins.
+   *
+   * @param aLogins
+   *        A JS Array of nsILoginInfos to add.
+   * @return A promise which resolves with a JS Array of cloned logins with
+   *         the guids set.
+   *
+   * Default values for each login's nsILoginMetaInfo properties will be
+   * created. However, if the caller specifies non-default values, they will
+   * be used instead.
+   */
+  Promise addLogins(in jsval aLogins);
+
+  /**
+   * Remove a login from the login manager.
+   *
+   * @param aLogin
+   *        The login to be removed.
+   *
+   * The specified login must exactly match a stored login. However, the
+   * values of any nsILoginMetaInfo properties are ignored.
+   */
+  void removeLogin(in nsILoginInfo aLogin);
+
+  /**
+   * Modify an existing login in the login manager.
+   *
+   * @param oldLogin
+   *        The login to be modified.
+   * @param newLoginData
+   *        The new login values (either a nsILoginInfo or nsIProperyBag)
+   *
+   * If newLoginData is a nsILoginInfo, all of the old login's nsILoginInfo
+   * properties are changed to the values from newLoginData (but the old
+   * login's nsILoginMetaInfo properties are unmodified).
+   *
+   * If newLoginData is a nsIPropertyBag, only the specified properties
+   * will be changed. The nsILoginMetaInfo properties of oldLogin can be
+   * changed in this manner.
+   *
+   * If the propertybag contains an item named "timesUsedIncrement", the
+   * login's timesUsed property will be incremented by the item's value.
+   */
+  void modifyLogin(in nsILoginInfo oldLogin, in nsISupports newLoginData);
+
+  /**
+   * Record that the password of a saved login was used (e.g. submitted or copied).
+   *
+   * @param {nsILoginInfo} aLogin
+   *        The login record of the password that was used.
+   * @param {boolean} aPrivateContextWithoutExplicitConsent
+   *        If the use was in private browsing AND without the user explicitly choosing to save/update.
+   *        Login use metadata will not be updated in this case but it will stil be counted for telemetry.
+   * @param {AString} aLoginType
+   *        One of "form_login", "form_password", "auth_login", or "prompt_login".
+   *        See saved_login_used in Events.yaml.
+   *        Don't assume that an auth. login is never used in a form and vice-versa. This argument
+   *        indicates the context of how it was used.
+   * @param {boolean} aFilled
+   *        Whether the login was filled, rather than being typed manually.
+   *
+   * If only the username was used, this method shouldn't be called as we don't
+   * want to double-count the use if both the username and password are copied.
+   * Copying of the username normally precedes the copying of the password anyways.
+   */
+  void recordPasswordUse(in nsILoginInfo aLogin, in boolean aPrivateContextWithoutExplicitConsent, in AString aLoginType, in boolean aFilled);
+
+  /**
+   * Remove all stored user facing logins.
+   *
+   * This will remove all the logins that a user can access through about:logins.
+   * This will not remove the FxA Sync key which is stored with the rest of a user's logins
+   * but is not accessible through about:logins
+   *
+   * The browser sanitization feature allows the user to clear any stored
+   * passwords. This interface allows that to be done without getting each
+   * login first.
+   *
+   */
+  void removeAllUserFacingLogins();
+
+  /**
+   * Completely remove all logins, including the user's FxA Sync key.
+   *
+   */
+  void removeAllLogins();
+
+  /**
+   * Fetch all logins in the login manager. An array is always returned;
+   * if there are no logins the array is empty.
+   *
+   * @deprecated Use `getAllLoginsAsync` instead.
+   *
+   * @return An array of nsILoginInfo objects.
+   */
+  Array<nsILoginInfo> getAllLogins();
+
+  /**
+   * Like getAllLogins, but asynchronous. This method is faster when large
+   * amounts of logins are present since it will handle decryption in one batch.
+   *
+   * @return A promise which resolves with a JS Array of nsILoginInfo objects.
+   */
+  Promise getAllLoginsAsync();
+
+  /**
+   * Obtain a list of all origins for which password saving is disabled.
+   *
+   * @return An array of origin strings. For example: ["https://www.site.com"].
+   */
+  Array<AString> getAllDisabledHosts();
+
+  /**
+   * Check to see if saving logins has been disabled for an origin.
+   *
+   * @param aHost
+   *        The origin to check. For example: "http://foo.com".
+   */
+  boolean getLoginSavingEnabled(in AString aHost);
+
+  /**
+   * Disable (or enable) storing logins for the specified origin. When
+   * disabled, the login manager will not prompt to store logins for
+   * that origin. Existing logins are not affected.
+   *
+   * @param aHost
+   *        The origin to set. For example: "http://foo.com".
+   * @param isEnabled
+   *        Specify if saving logins should be enabled (true) or
+   *        disabled (false)
+   */
+  void setLoginSavingEnabled(in AString aHost, in boolean isEnabled);
+
+  /**
+   * Search for logins matching the specified criteria. Called when looking
+   * for logins that might be applicable to a form or authentication request.
+   *
+   * @deprecated Use `searchLoginsAsync` instead.
+   *
+   * @param aOrigin
+   *        The origin to restrict searches to. For example: "http://www.site.com".
+   *        To find logins for a given nsIURI, you would typically pass in
+   *        its prePath (excluding userPass).
+   * @param aActionOrigin
+   *        For form logins, this argument should be the origin to which the
+   *        form will be submitted, not the whole URL.
+   *        For HTTP auth. logins, specify null.
+   *        An empty string ("") will match any value (except null).
+   * @param aHttpRealm
+   *        For HTTP auth. logins, this argument should be the HTTP Realm
+   *        for which the login applies. This is obtained from the
+   *        WWW-Authenticate header. See RFC2617. For form logins,
+   *        specify null.
+   *        An empty string ("") will match any value (except null).
+   * @return An array of nsILoginInfo objects.
+   */
+  Array<nsILoginInfo> findLogins(in AString aOrigin, in AString aActionOrigin,
+				 in AString aHttpRealm);
+
+  /**
+   * Search for logins matching the specified criteria, as with
+   * findLogins(). This interface only returns the number of matching
+   * logins (and not the logins themselves), which allows a caller to
+   * check for logins without causing the user to be prompted for a master
+   * password to decrypt the logins.
+   *
+   * @param aOrigin
+   *        The origin to restrict searches to. Specify an empty string
+   *        to match all origins. A null value will not match any logins, and
+   *        will thus always return a count of 0.
+   * @param aActionOrigin
+   *        The origin to which a form login will be submitted. To match any
+   *        form login, specify an empty string. To not match any form
+   *        login, specify null.
+   * @param aHttpRealm
+   *        The HTTP Realm for which the login applies. To match logins for
+   *        any realm, specify an empty string. To not match logins for any
+   *        realm, specify null.
+   */
+  unsigned long countLogins(in AString aOrigin, in AString aActionOrigin,
+                            in AString aHttpRealm);
+
+  /**
+   * Asynchonously search for logins in the login manager. The Promise always
+   * resolves to an array; if there are no logins the array is empty.
+   *
+   * @param {object} matchData
+   *        The data used to search as a JS object. This does not follow the same
+   *        requirements as findLogins for those fields. Wildcard matches are
+   *        simply not specified. If a `guid` is specified then no other properties
+   *        are used (outside of GeckoView).
+   * @return A promise resolving to an array of nsILoginInfo objects.
+   */
+  Promise searchLoginsAsync(in jsval matchData);
+
+  /**
+   * Search for logins in the login manager. An array is always returned;
+   * if there are no logins the array is empty.
+   * @deprecated New code should use `searchLoginsAsync`.
+   *             Only autocomplete, prompt, and test code still use this.
+   *
+   * @param matchData
+   *        The data used to search. This does not follow the same
+   *        requirements as findLogins for those fields. Wildcard matches are
+   *        simply not specified. If a `guid` is specified then no other properties
+   *        are used (outside of GeckoView).
+   * @return An array of nsILoginInfo objects.
+   */
+  Array<nsILoginInfo> searchLogins(in nsIPropertyBag matchData);
+
+  /**
+   * Returns the "sync id" used by Sync to know whether the store is current with
+   * respect to the sync servers.
+   *
+   * Returns null if the data doesn't exist or if the data can't be
+   * decrypted (including if the master-password prompt is cancelled). This is
+   * OK for Sync as it can't even begin syncing if the master-password is
+   * locked as the sync encrytion keys are stored in this login manager.
+   */
+  Promise getSyncID();
+
+  /**
+   * Sets the "sync id" used by Sync to know whether the store is current with
+   * respect to the sync servers. May be set to null.
+   *
+   * Throws if the data can't be encrypted (including if the master-password
+   * prompt is cancelled)
+   */
+  Promise setSyncID(in AString syncID);
+
+  /**
+   * Returns the timestamp of the last sync as a double (in seconds since Epoch
+   * rounded to two decimal places), or 0.0 if the data doesn't exist.
+   */
+  Promise getLastSync();
+
+  /**
+   * Sets the timestamp of the last sync.
+   */
+  Promise setLastSync(in double timestamp);
+
+  /**
+   * Ensures that the local sync ID for the engine matches the sync ID for
+   * the collection on the server. If they don't match, then we set
+    * the local sync ID to newSyncID and reset the last sync timestamp.
+   */
+  Promise ensureCurrentSyncID(in AString newSyncID);
+
+ /**
+  * True when a master password prompt is being displayed.
+  */
+  readonly attribute boolean uiBusy;
+
+ /**
+  * True when the master password has already been entered, and so a caller
+  * can ask for decrypted logins without triggering a prompt.
+  */
+  readonly attribute boolean isLoggedIn;
+};
+
+%{C++
+
+#define NS_LOGINMANAGER_CONTRACTID "@mozilla.org/login-manager;1"
+
+%}

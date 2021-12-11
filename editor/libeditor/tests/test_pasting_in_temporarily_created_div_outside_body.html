@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<title>Test for paste in temporarily created div element outside the body element</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const editor = document.querySelector("div[contenteditable]");
+  const heading = document.querySelector("h1");
+  getSelection().setBaseAndExtent(heading.firstChild, "So".length,
+                                  heading.firstChild, "Some te".length);
+  try {
+    await SimpleTest.promiseClipboardChange(
+      "me te", () => synthesizeKey("c", {accelKey: true}));
+  } catch (ex) {
+    ok(false, `Failed to copy selected text: ${ex}`);
+    SimpleTest.finish();
+  }
+  editor.focus();
+  editor.addEventListener("paste", () => {
+    const anotherEditor = document.createElement("div");
+    anotherEditor.setAttribute("contenteditable", "true");
+    document.documentElement.appendChild(anotherEditor);
+    anotherEditor.focus();
+  }, {once: true});
+  synthesizeKey("v", {accelKey: true});
+  const tempEditor = document.documentElement.lastChild;
+  is(tempEditor.nodeName.toLocaleLowerCase(), "div",
+    "Paste event handler should've inserted another editor");
+  is(tempEditor.textContent.trim(), "me te");
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body>
+  <h1>Some text</h1>
+  <div contenteditable></div>
+</body>
+</html>

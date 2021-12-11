@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+arch=$1
+prog=$2
+
+cd /qemu/init
+cp -f $2 prog
+find . | cpio --create --format='newc' --quiet | gzip > ../initrd.gz
+cd ..
+
+timeout 30s qemu-system-$arch \
+        -m 1024 \
+        -nographic \
+        -kernel kernel \
+        -initrd initrd.gz \
+        -append init=/prog > output || true
+
+# remove kernel messages
+tr -d '\r' < output | egrep -v '^\['
+
+# if the output contains a failure, return error
+! grep FAILED output > /dev/null

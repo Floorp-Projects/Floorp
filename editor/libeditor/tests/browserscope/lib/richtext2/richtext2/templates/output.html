@@ -1,0 +1,138 @@
+﻿<!-- Legend -->
+<TABLE CLASS="legend framed">
+  <THEAD>
+    <TR><TH COLSPAN=3 CLASS="legendHdr">Result Description</TH></TR>
+    <TR><TH>Status</TH><TH ALIGN="LEFT">Meaning</TH><TH ALIGN="LEFT">Explanation</TH><TH>Scoring</TH></TR>
+  </THEAD>
+  <TBODY>
+    <TR CLASS="lo"><TD CLASS="pass" ALIGN="CENTER">&nbsp;PASS&nbsp;</TD><TD CLASS="legend" ROWSPAN=2>Passed</TD><TD CLASS="legend" ROWSPAN=2>The result matches the expectation.</TD><TD ROWSPAN=2 ALIGN="CENTER" CLASS="pass">PASS (+1)</TD></TR>
+    <TR CLASS="hi"><TD CLASS="pass" ALIGN="CENTER">&nbsp;PASS&nbsp;</TD></TR>
+    <TR CLASS="lo"><TD CLASS="accept" ALIGN="CENTER">&nbsp;ACC.&nbsp;</TD><TD CLASS="legend" ROWSPAN=2>Acceptable</TD><TD CLASS="legend" ROWSPAN=2>The result is technically correct, but not ideal (too verbose, deprecated usage, etc.) - for informative purposes only.</TD><TD ROWSPAN=2 ALIGN="CENTER" CLASS="fail">FAIL (+0)</TD></TR>
+    <TR CLASS="hi"><TD CLASS="accept" ALIGN="CENTER">&nbsp;ACC.&nbsp;</TD></TR>
+    <TR CLASS="lo"><TD CLASS="fail" ALIGN="CENTER">&nbsp;FAIL&nbsp;</TD><TD CLASS="legend" ROWSPAN=2>Failure</TD><TD CLASS="legend" ROWSPAN=2>The result does not match any given expectation.</TD><TD ROWSPAN=2 ALIGN="CENTER" CLASS="fail">FAIL (+0)</TD></TR>
+    <TR CLASS="hi"><TD CLASS="fail" ALIGN="CENTER">&nbsp;FAIL&nbsp;</TD></TR>
+    <TR CLASS="lo"><TD CLASS="canary" ALIGN="CENTER">&nbsp;CANARY&nbsp;</TD><TD CLASS="legend" ROWSPAN=2>Canary</TD><TD CLASS="legend" ROWSPAN=2>The result changes HTML other than children of the contentEditable element.</TD><TD ROWSPAN=2 ALIGN="CENTER" CLASS="fail">FAIL (+0)</TD></TR>
+    <TR CLASS="hi"><TD CLASS="canary" ALIGN="CENTER">&nbsp;CANARY&nbsp;</TD></TR>
+    <TR CLASS="lo"><TD CLASS="unsupported" ALIGN="CENTER">&nbsp;UNS.&nbsp;</TD><TD CLASS="legend" ROWSPAN=2>Unsupported</TD><TD CLASS="legend" ROWSPAN=2>The specific function or value is unsupported (returned boolean 'false').</TD><TD ROWSPAN=2 ALIGN="CENTER" CLASS="fail">FAIL (+0)</TD></TR>
+    <TR CLASS="hi"><TD CLASS="unsupported" ALIGN="CENTER">&nbsp;UNS.&nbsp;</TD></TR>
+    <TR CLASS="lo"><TD CLASS="exception" ALIGN="CENTER">&nbsp;EXC.&nbsp;</TD><TD CLASS="legend" ROWSPAN=2>Exception</TD><TD CLASS="legend" ROWSPAN=2>An unexpected exception was thrown during the execution of the test.</TD><TD ROWSPAN=2 ALIGN="CENTER" CLASS="fail">FAIL (+0)</TD></TR>
+    <TR CLASS="hi"><TD CLASS="exception" ALIGN="CENTER">&nbsp;EXC.&nbsp;</TD></TR>
+    <TR CLASS="lo"><TD CLASS="na" ALIGN="CENTER">&nbsp;N/A&nbsp;</TD><TD CLASS="legend" ROWSPAN=2>Not Applicable</TD><TD CLASS="legend" ROWSPAN=2>The selection could not be tested, because the tested function failed to return a known result.</TD><TD ROWSPAN=2 ALIGN="CENTER" CLASS="fail">FAIL (+0)</TD></TR>
+    <TR CLASS="hi"><TD CLASS="na" ALIGN="CENTER">&nbsp;N/A&nbsp;</TD></TR>
+  </TBODY>
+</TABLE>
+<TABLE CLASS="legend framed">
+  <THEAD>
+    <TR><TH COLSPAN=2 CLASS="legendHdr">Selection and Result Display</TH></TR>
+    <TR><TH>Character</TH><TH ALIGN="LEFT">Explanation</TH></TR>
+  </THEAD>
+  <TBODY>
+    <TR><TD CLASS="sel" ALIGN="CENTER">[</TD><TD>Start of selection - selection point is within a text node.</TD></TR>
+    <TR><TD CLASS="sel" ALIGN="CENTER">]</TD><TD>End of selection - selection point is within a text node.</TD></TR>
+    <TR><TD CLASS="sel" ALIGN="CENTER">^</TD><TD>Collapsed selection - selection point is within a text node.</TD></TR>
+    <TR><TD COLSPAN=2>&nbsp;</TD></TR>
+    <TR><TD CLASS="sel" ALIGN="CENTER">{</TD><TD>Start of selection - selection point is within an element node.</TD></TR>
+    <TR><TD CLASS="sel" ALIGN="CENTER">}</TD><TD>End of selection - selection point is within an element node.</TD></TR>
+    <TR><TD CLASS="sel" ALIGN="CENTER">|</TD><TD>Collapsed selection - selection point is within an element node.</TD></TR>
+    <TR><TD COLSPAN=2>&nbsp;</TD></TR>
+    <TR><TD ALIGN="CENTER"><SPAN CLASS="fade">foo</SPAN></TD><TD>Greyed text indicates parts of the output that are ignored for the purposes of checking the result.</TD></TR>
+    <TR><TD ALIGN="CENTER"><SPAN CLASS="txt">foo</SPAN></TD><TD>Grey border indicates extent of text nodes in the result.</TD></TR>
+  </TBODY>
+</TABLE>
+<!-- progress meter -->
+<HR ID="divider">
+<H1>Running Test Suites: {% for s in suites %}<A HREF="#{{ s.id }}" ID="{{ s.id }}-progress" STYLE="color: #eeeeee">{{ s.id }}</A> {% endfor %}<SPAN ID="done">&nbsp;</SPAN></H1>
+<HR>
+<!-- main output -->
+{% for s in suites %}
+  <H1 ID="{{ s.id }}"><A NAME="{{ s.id }}" HREF="#{{ s.id }}">{{ s.id }}</A> - {{ s.caption }}: 
+    <SPAN ID="{{ s.id }}-{% ifequal s.id.0 'S' %}sel{% endifequal %}score">?/?</SPAN>
+    {% ifnotequal s.id.0 "Q" %}{% ifnotequal s.id.0 "S" %}
+    (Selection: <SPAN ID="{{ s.id }}-selscore">?/?</SPAN>)
+    {% endifnotequal %}{% endifnotequal %}
+    (time: <SPAN ID="{{ s.id }}-time">?</SPAN>&nbsp;ms)
+  </H1>
+  {% if s.comment %}
+  <DIV CLASS="comment">{{ s.comment|safe }}</DIV>
+  {% endif %}
+  {% for cls in classes %}{% for pk, pv in s.items %}{% ifequal pk cls %}
+  <H2 ID="{{ s.id }}-{{ cls }}"><A NAME="{{ s.id }}-{{ cls }}" HREF="#{{ s.id }}-{{ cls }}">{{ cls }} Tests</A>:
+    <SPAN ID="{{ s.id }}-{{ cls }}-{% ifequal s.id.0 'S' %}sel{% endifequal %}score">?/?</SPAN>
+    {% ifnotequal s.id.0 "Q" %}{% ifnotequal s.id.0 "S" %}
+    (Selection: <SPAN ID="{{ s.id }}-{{ cls }}-selscore">?/?</SPAN>)
+    {% endifnotequal %}{% endifnotequal %}
+  </H2>
+  <TABLE WIDTH=100%>
+    <THEAD>
+      <TR>
+        <TH TITLE="Unique ID of the test" ALIGN="LEFT">ID</TH>
+        <TH TITLE="Command or function used in the test" ALIGN="LEFT">Command</TH>
+        <TH TITLE="Value field for commands" ALIGN="LEFT">Value</TH>
+        {% ifnotequal s.id.0 "S" %}{% ifnotequal s.id.0 "Q" %}{% comment %} Don't output attribute and style columns for selection and "queryCommand..." tests. {% endcomment %}
+        <TH TITLE="check Atributes?">A</TH>
+        <TH TITLE="check Style">S</TH>
+        {% endifnotequal %}{% endifnotequal %}
+        <TH TITLE="Testing HTML Element">Env.</TH>
+        {% ifnotequal s.id.0 "S" %}{% comment %} Don't output HTML status column for selection tests. {% endcomment %}
+        <TH TITLE="State of the test">Status</TH>
+        {% endifnotequal %}
+        {% ifnotequal s.id.0 "Q" %}{% comment %} Don't output selection result column for "queryCommand..." tests. {% endcomment %}
+        <TH TITLE="State of the test regarding the selection">Selection</TH>
+        {% endifnotequal %}
+        <TH TITLE="Initial HTML and selection" ALIGN="LEFT">Initial</TH>
+        <TH TITLE="Expected HTML and selection" ALIGN="LEFT">Expected</TH>
+        <TH TITLE="Actual result HTML and selection" ALIGN="LEFT">Actual (lower case, canonicalized, selection marks)</TH>
+        <TH TITLE="Short description of the test" ALIGN="LEFT">Description</TH>
+      </TR>
+    </THEAD>
+    <TBODY>
+      {% for g in pv %}{% for t in g.tests %}
+      <TR ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:TR:dM" CLASS="{% cycle 'lo' 'lo' 'lo' 'hi' 'hi' 'hi' as shade %}">
+        <TD ROWSPAN=3 ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:tid"><A CLASS="idLabel" NAME="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}" HREF="#{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}">{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}</A></TD>
+        <TD ROWSPAN=3 ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:cmd">&nbsp;</TD>
+        <TD ROWSPAN=3 ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:val">&nbsp;</TD>
+        {% ifnotequal s.id.0 "S" %}{% ifnotequal s.id.0 "Q" %}{% comment %} Don't output attribute and style columns for selection and "queryCommand..." tests. {% endcomment %}
+        <TD ROWSPAN=3 ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:att" ALIGN="CENTER">&nbsp;</TD>
+        <TD ROWSPAN=3 ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:sty" ALIGN="CENTER">&nbsp;</TD>
+        {% endifnotequal %}{% endifnotequal %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:cnt:dM" TITLE="designMode=&quot;on&quot;" ALIGN="CENTER">dM</TD>
+        {% ifnotequal s.id.0 "S" %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:sta:dM" ALIGN="CENTER">NONE</TD>
+        {% endifnotequal %}
+        {% ifnotequal s.id.0 "Q" %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:sel:dM" ALIGN="CENTER">NONE</TD>
+        {% endifnotequal %}
+        <TD ROWSPAN=3 ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:pad">&nbsp;</TD>
+        <TD ROWSPAN=3 ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:exp">&nbsp;</TD>
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:act:dM"><I>Processing...</I></TD>
+        <TD ROWSPAN=3>{{ t.desc|default:"&nbsp;" }}</TD>
+      </TR>
+      <TR ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:TR:body" CLASS="{% cycle shade %}">
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:cnt:body" TITLE="&lt;body contentEditable=&quot;true&quot;&gt;" ALIGN="CENTER">body</TD>
+        {% ifnotequal s.id.0 "S" %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:sta:body" ALIGN="CENTER">NONE</TD>
+        {% endifnotequal %}
+        {% ifnotequal s.id.0 "Q" %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:sel:body" ALIGN="CENTER">NONE</TD>
+        {% endifnotequal %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:act:body"><I>Processing...</I></TD>
+      </TR>
+      <TR ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:TR:div" CLASS="{% cycle shade %}">
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:cnt:div" TITLE="&lt;div contentEditable=&quot;true&quot;&gt;" ALIGN="CENTER">div</TD>
+        {% ifnotequal s.id.0 "S" %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:sta:div" ALIGN="CENTER">NONE</TD>
+        {% endifnotequal %}
+        {% ifnotequal s.id.0 "Q" %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:sel:div" ALIGN="CENTER">NONE</TD>
+        {% endifnotequal %}
+        <TD ID="{{ commonIDPrefix }}-{{ s.id }}_{{ t.id }}_:act:div"><I>Processing...</I></TD>
+      </TR>
+      {% endfor %}{% endfor %}
+    </TBODY>
+  </TABLE>
+  {% endifequal %}{% endfor %}{% endfor %} 
+{% endfor %} 
+
+
+
+

@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+/*
+ * Page container for worker + manifest views
+ */
+
+.app-page {
+  padding: calc(var(--base-unit) * 3) calc(var(--base-unit) * 8);
+  user-select: none;
+  overflow-y: auto;
+}
+
+.app-page--empty {
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--body-10-font-size);
+  color: var(--theme-toolbar-color);
+}
+
+.app-page__title {
+  font-size: var(--title-20-font-size);
+  font-weight: var(--title-20-font-weight);
+  margin: 0;
+}
+
+.app-page__icon-container {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-column-gap: calc(var(--base-unit) * 4);
+}
+
+.app-page__icon {
+  width: calc(var(--base-unit) * 10);
+  height: calc(var(--base-unit) * 10);
+
+  fill: var(--dimmed-icon-color);
+  -moz-context-properties: fill;
+
+  /* alignment fix for text to compensate for low baseline */
+  margin-block-start: var(--base-unit);
+}

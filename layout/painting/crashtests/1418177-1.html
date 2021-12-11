@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <style>
+      * {
+        background: url(16.png), url(16.png) transparent;
+        -webkit-background-clip: text, text;
+        -moz-tab-size: calc(1 + 1) !important;
+        background-blend-mode: screen;
+        align-content: baseline;
+        background-color: green;
+      }
+    </style>
+    <script>
+      function fun_0() {
+        try { o3 = document.createElement('th') } catch (e) {};
+        try { o1.appendChild(o3) } catch (e) {}
+      }
+
+      try { o1 = document.createElement('tr') } catch (e) {}
+      try { o2 = document.createElement('ol') } catch (e) {}
+      try { xhr = new XMLHttpRequest({mozAnon: false }) } catch (e) {}
+      try { document.documentElement.appendChild(o1) } catch (e) {}
+      try { document.documentElement.appendChild(o2) } catch (e) {}
+      for (let i = 0; i < 100; i++) {
+        try { xhr.open('GET', 'data:text/html,1', false); } catch (e) {};
+        try { xhr.send(); } catch (e) {};
+        try { fuzzPriv.GC(); fuzzPriv.CC(); fuzzPriv.GC(); fuzzPriv.CC(); } catch (e) {};
+        try { xhr.addEventListener('readystatechange', fun_0, true) } catch (e) {};
+        try { o2.offsetLeft } catch (e) {};
+        try { document.styleSheets[0].cssRules[0].style['background-origin'] = 'border-box, border-box' } catch (e) {}
+      }
+    </script>
+  </head>
+</html>

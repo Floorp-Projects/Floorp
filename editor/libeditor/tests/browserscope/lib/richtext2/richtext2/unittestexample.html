@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" /> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  
+  <title>Rich Text 2 Unit Test Example</title>
+
+  <!-- utility scripts -->
+  <script type="text/javascript" src="static/js/variables.js"></script> 
+  <script type="text/javascript" src="static/js/canonicalize.js"></script> 
+  <script type="text/javascript" src="static/js/compare.js"></script> 
+  <script type="text/javascript" src="static/js/pad.js"></script> 
+  <script type="text/javascript" src="static/js/range.js"></script> 
+  <script type="text/javascript" src="static/js/units.js"></script> 
+  <script type="text/javascript" src="static/js/run.js"></script> 
+  <!-- you do not need static/js/output.js -->
+
+  <!-- 
+    Tests - note that those have the extensions .py, 
+    but can be used as JS files directly.
+  -->
+  <script type="text/javascript" src="tests/selection.py"></script> 
+  <script type="text/javascript" src="tests/apply.py"></script> 
+  <script type="text/javascript" src="tests/applyCSS.py"></script> 
+  <script type="text/javascript" src="tests/change.py"></script> 
+  <script type="text/javascript" src="tests/changeCSS.py"></script> 
+  <script type="text/javascript" src="tests/unapply.py"></script> 
+  <script type="text/javascript" src="tests/unapplyCSS.py"></script> 
+  <script type="text/javascript" src="tests/delete.py"></script> 
+  <script type="text/javascript" src="tests/forwarddelete.py"></script> 
+  <script type="text/javascript" src="tests/insert.py"></script> 
+  <script type="text/javascript" src="tests/querySupported.py"></script> 
+  <script type="text/javascript" src="tests/queryEnabled.py"></script> 
+  <script type="text/javascript" src="tests/queryIndeterm.py"></script> 
+  <script type="text/javascript" src="tests/queryState.py"></script> 
+  <script type="text/javascript" src="tests/queryValue.py"></script> 
+
+  <!-- Do something -->
+  <script type="text/javascript">
+    function runTest() {
+      initVariables();
+      initEditorDocs();
+
+      runTestSuite(UNAPPLY_TESTS);
+
+      // Below alert is just a simple demonstration on how to access the test results.
+      // Note that we only ran UNAPPLY tests above, so we have only results from that test set.
+      // 
+      // The 'results' structure is as follows:
+      //
+      // results                   structure containing all results                        
+      //     [<suite ID>]              structure containing the results for the given suite *)
+      //         .count                    number of tests in the given suite
+      //         .valscore                 sum of all test value results (HTML or query value)
+      //         .selscore                 sum of all selection results (HTML tests only)
+      //         [<class ID>]              structure containing the results for the given class **)
+      //             .count                    number of tests in the given suite
+      //             .valscore                 sum of all test value results (HTML or query value)
+      //             .selscore                 sum of all selection results (HTML tests only)
+      //             [<test ID>]               structure containing the reults for a given test ***)
+      //                 .valscore                 value score (0 or 1), minimum over all containers
+      //                 .selscore                 selection score (0 or 1), minimum over all containers (HTML tests only)
+      //                 .valresult                worst test value result (integer, see variables.js)
+      //                 .selresult                worst selection result (integer, see variables.js)
+      //                 [<cont. ID>]              structure containing the results of the test for a given container ****)
+      //                     .valscore                 value score (0 or 1)
+      //                     .selscore                 selection score (0 or 1)
+      //                     .valresult                value result (integer, see variables.js)
+      //                     .selresult                selection result (integer, see variables.js)
+      //                     .output                   output string (mainly for use by the online version)
+      //                     .innerHTML                inner HTML of the testing container (<div> or <body>) after the test
+      //                     .outerHTML                outer HTML of the testing container (<div> or <body>) after the test
+      //                     .bodyInnerHTML            inner HTML of the <body> after the test
+      //                     .bodyOuterHTML            outer HTML of the <body> after the test
+      //
+      // *)    <suite ID>:      a 1-3 character ID, e.g. UNAPPLY_TESTS.id, or 'U' (both referring the same suite)
+      // **)   <class ID>:      one of 'Proposed', 'RFC' or 'Finalized'
+      // ***)  <test ID>:       the ID of the test, without the leading 'RTE2-<suite ID>_' part
+      // ****) <container ID>:  one of 'div'  (test within a <div contenteditable="true">)
+      //                               'dM'   (test with designMode = 'on')
+      //                               'body' (test within a <body contenteditable="true">)
+
+      alert("Result of 'Apply' tests:\nOut of " + 
+            results[UNAPPLY_TESTS.id].count + " tests\n" +
+            results[UNAPPLY_TESTS.id].valscore + " had correct HTML, and\n" +
+            results[UNAPPLY_TESTS.id].selscore + " had a correct result selection\n(in all testing containers)." +
+            "\n\n" +
+            "Test RTE2-U_B_B-1_SW results with a contenteditable <body>:\n" +
+            results['U']['Proposed']['B_B-1_SW']['body'].valscore + " points for the value result, and\n" +
+            results['U']['Proposed']['B_B-1_SW']['body'].selscore + " points for the selection" +
+            ""
+      );
+    }
+  </script>  
+</head> 
+
+<body onload="runTest()">
+  <iframe name="iframe-dM" id="iframe-dM" src="static/editable-dM.html"></iframe>
+  <iframe name="iframe-body" id="iframe-body" src="static/editable-body.html"></iframe>
+  <iframe name="iframe-div" id="iframe-div" src="static/editable-div.html"></iframe>
+</body> 
+</html>

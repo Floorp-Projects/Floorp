@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<script>
+function boom() {
+  var ifr = document.getElementById("ifr");
+  ifr.style.display = "none";
+  // flush layout
+  document.documentElement.offsetLeft;
+  ifr.style.display = "block";
+  document.documentElement.removeAttribute("class");
+}
+</script>
+<body onload="boom();">
+<iframe id="ifr" src="816948-iframe.html">
+</iframe>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<filter id="filter1">
+  <feImage width="0"/>
+  <feTile/>
+</filter>
+
+<rect width="100%" height="100%" filter="url(#filter1)"/>
+
+</svg>

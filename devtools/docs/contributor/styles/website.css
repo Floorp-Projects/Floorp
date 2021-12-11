@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.book .book-summary ul.summary li {
+  cursor: pointer;
+}
+
+.book .book-body .page-wrapper .page-inner section.normal p,
+.book .book-body .page-wrapper .page-inner section.normal pre {
+  margin: 0.85em 0;
+}
+
+.book .book-body .page-wrapper .page-inner section.normal pre {
+  line-height: 1.25em;
+}
+
+/* Resets default style on the main page container */
+.page-inner {
+  max-width: unset !important;
+  margin: 0 10px !important;
+}
+
+/*
+ *  Sections are displayed on the grid. By default everything goes into the
+ *  second column, and we use left and right columns to expand content when needed,
+ *  for example for images, diagrams, code example, …
+ */
+.normal.markdown-section {
+  display: grid;
+  grid-template-columns: 1fr minmax(min-content, 800px) 1fr;
+  margin: 0 50px;
+}
+
+.normal.markdown-section > * {
+  grid-column: 2 / 3;
+}
+
+/* Hero element take the whole row */
+.normal.markdown-section > .hero {
+  grid-column: 1 / -1;
+  width: max-content;
+  max-width: 100%;
+  justify-self: center;
+}
+
+.diagram,
+pre.diagram {
+  width: max-content;
+  max-width: 100%;
+  background-color: #f9f9fa;
+  border: 3px solid #d7d7db;
+  margin: 0 auto !important;
+  padding: 2em;
+  overflow-x: auto;
+  white-space: pre;
+  font-size: 11px;
+}
+
+figcaption {
+  max-width: 800px;
+  font-size: 0.85em !important;
+  text-align: center;
+  font-style: italic;
+  margin: 10px auto 0;
+  line-height: 1.25;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=567213
+-->
+
+<head>
+  <title>Test for Bug 567213</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=567213">Mozilla Bug 567213</a>
+  <p id="display"></p>
+  <div id="content">
+    <div id="target" contenteditable="true">test</div>
+    <button id="thief">theif</button>
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 567213 **/
+
+      SimpleTest.waitForExplicitFinish();
+
+      addLoadEvent(function() {
+        var target = document.getElementById("target");
+        var thief = document.getElementById("thief");
+        var sel = window.getSelection();
+
+        // select the contents of the editable area
+        sel.removeAllRanges();
+        sel.selectAllChildren(target);
+        target.focus();
+
+        // press some key
+        sendString("X");
+        is(target.textContent, "X", "Text input should work (sanity check)");
+
+        // select the contents of the editable area again
+        sel.removeAllRanges();
+        sel.selectAllChildren(target);
+        thief.focus();
+
+        // press some key with the thief having focus
+        sendString("Y");
+        is(target.textContent, "X", "Text entry should not work with another element focused");
+
+        SimpleTest.finish();
+      });
+
+   </script>
+  </pre>
+</body>
+</html>

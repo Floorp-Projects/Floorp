@@ -1,0 +1,57 @@
+name: NotImplemented
+
+on:
+  push:
+      branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    # Check out master, so that we can count.
+    - uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - name: Get Count
+      # Record the count in a tmp file so it survives changing branches
+      run: |
+        find crates -iname '*.rs' -type f -exec cat {} + | grep -c -E "(Emit|Parse)Error::NotImplemented" > /tmp/count
+        git rev-parse HEAD > /tmp/commit
+        cp .metrics/not_implemented_badge.py /tmp
+        cp .metrics/not_implemented_count.py /tmp
+    # Checkout the results branch
+    - uses: actions/checkout@v2
+      with:
+        ref: ci_results
+    - name: Add NotImplemented count
+      run: |
+        export total_count=$(cat /tmp/count)
+        export current_commit=$(cat /tmp/commit)
+        # Make sure the generating files are up to date
+        cp -f /tmp/not_implemented_badge.py .metrics/not_implemented_badge.py
+        cp -f /tmp/not_implemented_count.py .metrics/not_implemented_count.py
+        # Run the files
+        cd .metrics
+        python not_implemented_badge.py
+        python not_implemented_count.py
+        git add badges/not-implemented.json
+        git add count/not-implemented.json
+    - name: Commit files
+      # fails if no files to commit
+      continue-on-error: true
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -m "update NotImplemented Count" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      continue-on-error: true
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ci_results
+        force: true

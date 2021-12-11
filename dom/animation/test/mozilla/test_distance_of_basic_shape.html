@@ -1,0 +1,91 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<script src='../testcommon.js'></script>
+<div id='log'></div>
+<script type='text/javascript'>
+'use strict';
+
+// We don't have an official spec to define the distance between two basic
+// shapes, but we still need this for DevTools, so Gecko and Servo backends use
+// the similar rules to define the distance. If there is a spec for it, we have
+// to update this test file.
+// See https://github.com/w3c/csswg-drafts/issues/662.
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'clip-path', 'none', 'none');
+  assert_equals(dist, 0, 'none and none');
+}, 'none and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'clip-path', 'circle(10px)', 'circle(20px)');
+  assert_equals(dist, 10, 'circle(10px) and circle(20px)');
+}, 'circles');
+
+test(function(t) {
+  var target = addDiv(t);
+  var circle1 = 'circle(calc(10px + 10px) at 20px 10px)';
+  var circle2 = 'circle(30px at 10px 10px)';
+  var dist = getDistance(target, 'clip-path', circle1, circle2);
+  assert_equals(dist,
+                Math.sqrt(10 * 10 + 10 * 10),
+                circle1 + ' and ' + circle2);
+}, 'circles with positions');
+
+test(function(t) {
+  var target = addDiv(t);
+  var ellipse1 = 'ellipse(20px calc(10px + 10px))';
+  var ellipse2 = 'ellipse(30px 30px)';
+  var dist = getDistance(target, 'clip-path', ellipse1, ellipse2);
+  assert_equals(dist,
+                Math.sqrt(10 * 10 + 10 * 10),
+                ellipse1 + ' and ' + ellipse2);
+}, 'ellipses');
+
+test(function(t) {
+  var target = addDiv(t);
+  var polygon1 = 'polygon(50px 0px, 100px 50px, 50px 100px, 0px 50px)';
+  var polygon2 = 'polygon(40px 0px, 100px 70px, 10px 100px, 0px 70px)';
+  var dist = getDistance(target, 'clip-path', polygon1, polygon2);
+  assert_equals(dist,
+                Math.sqrt(10 * 10 + 20 * 20 + 40 * 40 + 20 * 20),
+                polygon1 + ' and ' + polygon2);
+}, 'polygons');
+
+test(function(t) {
+  var target = addDiv(t);
+  var inset1 = 'inset(5px 5px 5px 5px round 40px 30px 20px 5px)';
+  var inset2 = 'inset(10px 5px round 50px 60px)';
+  var dist = getDistance(target, 'clip-path', inset1, inset2);
+
+  // if we have only two parameter in inset(), the first one means
+  // top and bottom edges, and the second one means left and right edges.
+  // and the definitions of inset is inset(top, right, bottom, left). Besides,
+  // the "round" part uses the shorthand of border radius for each corner, so
+  // each corner is a pair of (x, y). We are computing the distance between:
+  // 1. inset(5px  5px  5px 5px
+  //          round (40px 40px) (30px 30px) (20px 20px) (5px 5px))
+  // 2. inset(10px 5px 10px 5px
+  //          round (50px 50px) (60px 60px) (50px 50px) (60px 60px))
+  // That is why we need to multiply 2 for each border-radius corner.
+  assert_equals(dist,
+                Math.sqrt(5 * 5 + 5 * 5 +
+                          (50 - 40) * (50 - 40) * 2 +
+                          (60 - 30) * (60 - 30) * 2 +
+                          (50 - 20) * (50 - 20) * 2 +
+                          (60 - 5)  * (60 - 5)  * 2),
+                inset1 + ' and ' + inset2);
+}, 'insets');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'clip-path',
+                         'circle(20px)', 'ellipse(10px 20px)');
+  assert_equals(dist, 0, 'circle(20px) and ellipse(10px 20px)');
+}, 'Mismatched basic shapes');
+
+</script>
+</html>

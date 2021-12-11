@@ -1,0 +1,15 @@
+{
+  "name": "devtools-bin",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "tsc",
+    "test-ci": "tsc"
+  },
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "@types/react-dom-factories": "^1.0.2",
+    "@types/react-redux": "^7.1.18",
+    "@types/redux": "^3.6.0",
+    "typescript": "^4.3.5"
+  }
+}

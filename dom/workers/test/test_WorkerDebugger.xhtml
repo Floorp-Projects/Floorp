@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebugger"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebugger_worker.js";
+    const CHILD_WORKER_URL = "WorkerDebugger_childWorker.js";
+    const SHARED_WORKER_URL = "WorkerDebugger_sharedWorker.js";
+
+    function test() {
+      (async function() {
+        SimpleTest.waitForExplicitFinish();
+        SimpleTest.requestLongerTimeout(5);
+
+        info("Create a top-level chrome worker that creates a non-top-level " +
+             "content worker and wait for their debuggers to be registered.");
+        let promise = waitForMultiple([
+          waitForRegister(WORKER_URL),
+          waitForRegister(CHILD_WORKER_URL)
+        ]);
+        worker = new ChromeWorker(WORKER_URL);
+        let [dbg, childDbg] = await promise;
+
+        info("Check that the top-level chrome worker debugger has the " +
+             "correct properties.");
+        is(dbg.isChrome, true,
+           "Chrome worker debugger should be chrome.");
+        is(dbg.parent, null,
+           "Top-level debugger should not have parent.");
+        is(dbg.type, Ci.nsIWorkerDebugger.TYPE_DEDICATED,
+           "Chrome worker debugger should be dedicated.");
+        is(dbg.window, window,
+           "Top-level dedicated worker debugger should have window.");
+
+        info("Check that the non-top-level content worker debugger has the " +
+             "correct properties.");
+        is(childDbg.isChrome, false,
+           "Content worker debugger should be content.");
+        is(childDbg.parent, dbg,
+           "Non-top-level worker debugger should have parent.");
+        is(childDbg.type, Ci.nsIWorkerDebugger.TYPE_DEDICATED,
+           "Content worker debugger should be dedicated.");
+        is(childDbg.window, window,
+           "Non-top-level worker debugger should have window.");
+
+        info("Terminate the top-level chrome worker and the non-top-level " +
+             "content worker, and wait for their debuggers to be " +
+             "unregistered and closed.");
+        promise = waitForMultiple([
+          waitForUnregister(CHILD_WORKER_URL),
+          waitForDebuggerClose(childDbg),
+          waitForUnregister(WORKER_URL),
+          waitForDebuggerClose(dbg),
+        ]);
+        worker.terminate();
+        await promise;
+
+        info("Create a shared worker and wait for its debugger to be " +
+             "registered");
+        promise = waitForRegister(SHARED_WORKER_URL);
+        worker = new SharedWorker(SHARED_WORKER_URL);
+        let sharedDbg = await promise;
+
+        info("Check that the shared worker debugger has the correct " +
+             "properties.");
+        is(sharedDbg.isChrome, false,
+           "Shared worker debugger should be content.");
+        is(sharedDbg.parent, null,
+           "Shared worker debugger should not have parent.");
+        is(sharedDbg.type, Ci.nsIWorkerDebugger.TYPE_SHARED,
+           "Shared worker debugger should be shared.");
+        is(sharedDbg.window, null,
+           "Shared worker debugger should not have window.");
+
+        info("Create a shared worker with the same URL and check that its " +
+             "debugger is not registered again.");
+        let listener = {
+          onRegistered: function () {
+            ok(false,
+               "Shared worker debugger should not be registered again.");
+          },
+        };
+        wdm.addListener(listener);
+
+        worker = new SharedWorker(SHARED_WORKER_URL);
+
+        info("Send a message to the shared worker to tell it to close " +
+             "itself, and wait for its debugger to be closed.");
+        promise = waitForMultiple([
+          waitForUnregister(SHARED_WORKER_URL),
+          waitForDebuggerClose(sharedDbg)
+        ]);
+        worker.port.start();
+        worker.port.postMessage("close");
+        await promise;
+
+        promise = waitForRegister(SHARED_WORKER_URL);
+        worker = new SharedWorker(SHARED_WORKER_URL);
+        sharedDbg = await promise;
+
+        info("Send a message to the shared worker to tell it to close " +
+             "itself, then loop forever, and wait for its debugger to be closed.");
+        promise = waitForMultiple([
+          waitForUnregister(SHARED_WORKER_URL),
+          waitForDebuggerClose(sharedDbg)
+        ]);
+
+        // When the closing process begins, we schedule a timer to terminate
+        // the worker in case it's in an infinite loop, which is exactly what
+        // we do in this test.  We want a duration long enough that we can be
+        // confident that the infinite loop was entered as measured by
+        // performance.now() and that we terminated it, but not as long as our
+        // 30 second default we currently ship.
+        await SpecialPowers.pushPrefEnv({"set": [[ "dom.worker.canceling.timeoutMilliseconds", 15000 ]]});
+
+        worker.port.start();
+        worker.port.postMessage("close_loop");
+        await promise;
+
+        wdm.removeListener(listener);
+        SimpleTest.finish();
+      })();
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

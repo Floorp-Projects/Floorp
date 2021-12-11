@@ -1,0 +1,12 @@
+diff -r e10a8066a62c gfx/cairo/cairo/src/cairo-win32-private.h
+--- a/gfx/cairo/cairo/src/cairo-win32-private.h	Fri Jun 08 17:39:38 2007 -0700
++++ b/gfx/cairo/cairo/src/cairo-win32-private.h	Fri Jun 29 09:14:35 2007 +0200
+@@ -46,7 +46,7 @@
+ #define SB_NONE 0
+ #endif
+ 
+-#define WIN32_FONT_LOGICAL_SCALE 32
++#define WIN32_FONT_LOGICAL_SCALE 1
+ 
+ typedef struct _cairo_win32_surface {
+     cairo_surface_t base;

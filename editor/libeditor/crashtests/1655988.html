@@ -1,0 +1,22 @@
+<html>
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const element_0 = document.getElementById('id_0')
+        const element_1 = document.getElementById('id_1')
+        element_1.after('foo')
+        element_0.addEventListener('DOMAttrModified', () => {
+          window.find('foo')
+          document.execCommand('insertImage', false, '#')
+        })
+        element_0.setAttribute('i', '')
+      })
+    </script>
+</head>
+<body>
+<feDistantLight id="id_0" contenteditable="true">
+    <li id="id_1">A</li>
+    <!-- COMMENT -->
+</feDistantLight>
+</body>
+</html>

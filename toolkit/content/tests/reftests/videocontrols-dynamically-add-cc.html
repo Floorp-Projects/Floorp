@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  video {
+    width: 320px;
+    height:240px;
+  }
+
+  #mask {
+    position: absolute;
+    z-index: 3;
+    width: 320px;
+    height: 200px;
+    background-color: green;
+    top: 0;
+    left: 0;
+  }
+
+  #vid-preload-image {
+    visibility: hidden;
+  }
+</style>
+<script>
+  function addCCToVid(videoElem) {
+    videoElem.addTextTrack("subtitles", "English", "en");
+  }
+</script>
+</head>
+<body>
+  <video id="vid" controls></video>
+  <div id="mask"></div>
+  <!-- Create a hidden video with CC button displayed upfront to decode image
+  earlier, so that the CC image will be ready to paint once the track added. -->
+  <video id="vid-preload-image" controls>
+    <track kind="subtitles" src="foo.vtt" srclang="en">
+  </video>
+
+  <script>
+    function doTest() {
+      var vid = document.getElementById("vid");
+
+      // Videocontrols binding's "addtrack" handler synchronously fires
+      // "adjustControlSize()" first, and then the layout is ready for
+      // the reftest snapshot.
+      vid.textTracks.addEventListener("addtrack", function() {
+        document.documentElement.removeAttribute("class");
+      });
+
+      addCCToVid(vid);
+    }
+
+    window.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+</body>
+</html>

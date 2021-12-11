@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1284103",
+    title: "Test basic data channel audio connection for supported DTLS versions"
+  });
+
+  async function testDtlsVersion(options, version) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["media.peerconnection.dtls.version.min", version],
+        ["media.peerconnection.dtls.version.max", version]
+      ]
+    });
+
+    const test = new PeerConnectionTest(options);
+    addInitialDataChannel(test.chain);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+
+    await test.run();
+  }
+
+  runNetworkTest(async (options) => {
+    // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
+    for (var version = 770; version <= 772; version++) {
+      await testDtlsVersion(options, version);
+    }
+  });
+</script>
+</pre>
+</body>
+</html>

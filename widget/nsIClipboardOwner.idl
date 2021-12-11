@@ -1,0 +1,29 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+#include "nsITransferable.idl"
+
+
+[scriptable, uuid(5A31C7A1-E122-11d2-9A57-000064657374)]
+interface nsIClipboardOwner : nsISupports
+{
+   /**
+    * Notifies the owner of the clipboard transferable that the
+    * transferable is being removed from the clipboard
+    *
+    * @param  aTransferable The transferable
+    * @result NS_Ok if no errors
+    */
+
+    void LosingOwnership ( in nsITransferable aTransferable ) ;
+};
+
+
+%{ C++
+
+%}

@@ -1,0 +1,82 @@
+<html>
+
+<head>
+  <title>nsIAccessible value testing for meter element</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../value.js"></script>
+
+  <script src="chrome://mochikit/content/chrome-harness.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // HTML5 meter element tests
+      testValue("nothing", "0", 0, 0, 1, 0);
+      testValue("minOnly", "20", 20, 20, 20, 0);
+      testValue("maxOnly", "0", 0, 0, 20, 0);
+      testValue("valOnly", "1", 1, 0, 1, 0);
+      testValue("regular", "15", 15, 10, 30, 0);
+      testValue("noMin", "10", 10, 0, 100, 0);
+      testValue("noMax", "5", 5, 5, 5, 0);
+      testValue("noVal", "10", 10, 10, 20, 0);
+      testValue("invalidValue", "20", 20, 10, 20, 0);
+      testValue("invalidMax", "10", 10, 10, 10, 0);
+      testValue("invalidValueMax", "20", 20, 20, 20, 0);
+
+      testValue("plainText", "Hello world", 0, 0, 1, 0);
+      testValue("regularText", "You scored 15 out of 30", 15, 10, 30, 0);
+      testValue("invalidText", "Something isnt right here", 20, 20, 20, 0);
+
+      testValue("valueText", "value", 0, 0, 1, 0);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1460378"
+     title="HTML <meter> not spoken by screen readers">
+    Mozilla Bug 559773
+  </a><br />
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
+
+  <meter id="nothing"></meter>
+
+  <meter id="minOnly" min="20"></meter>
+  <meter id="maxOnly" max="20"></meter>
+  <meter id="valOnly" value="20"></meter>
+
+  <meter id="regular" min="10" value="15" max="30"></meter>
+
+  <meter id="noMin" value="10" max="100"></meter>
+  <meter id="noMax" min="5" value="10"></meter>
+  <meter id="noVal" min="10" max="20"></meter>
+
+  <meter id="invalidValue" min="10" value="30" max="20"></meter>
+  <meter id="invalidMax" min="10" value="15" max="2"></meter>
+  <meter id="invalidValueMax" min="20" value="17" max="10"></meter>
+
+  <meter id="plainText">Hello world</meter>
+  <meter id="regularText" min="10" value="15" max="30">You scored 15 out of 30</meter>
+  <meter id="invalidText" min="20" value="17" max="10">Something isnt right here</meter>
+
+  <meter id="valueText" aria-valuetext="value">valuetext should take precedence over internal text</meter>
+</body>
+</html>

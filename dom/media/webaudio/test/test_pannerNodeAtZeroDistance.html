@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test PannerNode produces output even when the even when the distance is from the listener is zero</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var BUF_SIZE = 128;
+
+var types = [
+  "equalpower",
+  "HRTF"
+]
+
+var finished = 2 * types.length;
+
+function finish() {
+  if (!--finished) {
+    SimpleTest.finish();
+  }
+}
+
+function testMono(type) {
+  var ac = new OfflineAudioContext(1, BUF_SIZE, 44100);
+
+  // A sine to be used to fill the buffers
+  function sine(t) {
+    return Math.sin(440 * 2 * Math.PI * t / ac.sampleRate);
+  }
+
+  var monoBuffer = ac.createBuffer(1, BUF_SIZE, ac.sampleRate);
+  for (var i = 0; i < BUF_SIZE; ++i) {
+    monoBuffer.getChannelData(0)[i] = sine(i);
+  }
+
+  var monoSource = ac.createBufferSource();
+  monoSource.buffer = monoBuffer;
+  monoSource.start(0);
+
+  var panner = ac.createPanner();
+  panner.distanceModel = "linear";
+  panner.refDistance = 1;
+  panner.positionX.value = 0;
+  panner.positionY.value = 0;
+  panner.positionZ.value = 0;
+  monoSource.connect(panner);
+
+  var panner2 = ac.createPanner();
+  panner2.distanceModel = "inverse";
+  panner2.refDistance = 1;
+  panner2.positionX.value = 0;
+  panner2.positionY.value = 0;
+  panner2.positionZ.value = 0;
+  panner.connect(panner2);
+
+  var panner3 = ac.createPanner();
+  panner3.distanceModel = "exponential";
+  panner3.refDistance = 1;
+  panner3.positionX.value = 0;
+  panner3.positionY.value = 0;
+  panner3.positionZ.value = 0;
+  panner2.connect(panner3);
+
+  panner3.connect(ac.destination);
+
+  // Use the input buffer to compare the output. According to the spec,
+  // mono input at zero distance will apply gain = cos(0.5 * Math.PI / 2)
+  // https://webaudio.github.io/web-audio-api/#Spatialzation-equal-power-panning
+  const gain = Math.cos(0.5 * Math.PI / 2);
+  for (var i = 0; i < BUF_SIZE; ++i) {
+    monoBuffer.getChannelData(0)[i] = gain * monoBuffer.getChannelData(0)[i];
+  }
+
+  ac.startRendering().then(function(buffer) {
+    compareBuffers(buffer, monoBuffer);
+    finish();
+  });
+}
+
+function testStereo(type) {
+  var ac = new OfflineAudioContext(2, BUF_SIZE, 44100);
+
+  // A sine to be used to fill the buffers
+  function sine(t) {
+    return Math.sin(440 * 2 * Math.PI * t / ac.sampleRate);
+  }
+
+  var stereoBuffer = ac.createBuffer(2, BUF_SIZE, ac.sampleRate);
+  for (var i = 0; i < BUF_SIZE; ++i) {
+    stereoBuffer.getChannelData(0)[i] = sine(i);
+    stereoBuffer.getChannelData(1)[i] = sine(i);
+  }
+
+  var stereoSource = ac.createBufferSource();
+  stereoSource.buffer = stereoBuffer;
+  stereoSource.start(0);
+
+  var panner = ac.createPanner();
+  panner.distanceModel = "linear";
+  panner.refDistance = 1;
+  panner.positionX.value = 0;
+  panner.positionY.value = 0;
+  panner.positionZ.value = 0;
+  stereoSource.connect(panner);
+
+  var panner2 = ac.createPanner();
+  panner2.distanceModel = "inverse";
+  panner2.refDistance = 1;
+  panner2.positionX.value = 0;
+  panner2.positionY.value = 0;
+  panner2.positionZ.value = 0;
+  panner.connect(panner2);
+
+  var panner3 = ac.createPanner();
+  panner3.distanceModel = "exponential";
+  panner3.refDistance = 1;
+  panner3.positionX.value = 0;
+  panner3.positionY.value = 0;
+  panner3.positionZ.value = 0;
+  panner2.connect(panner3);
+
+  panner3.connect(ac.destination);
+
+  ac.startRendering().then(function(buffer) {
+    compareBuffers(buffer, stereoBuffer);
+    finish();
+  });
+}
+
+function test(type) {
+  testMono(type);
+  testStereo(type);
+}
+
+addLoadEvent(function() {
+  types.forEach(test);
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

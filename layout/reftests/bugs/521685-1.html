@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div {
+background-color: green;
+}
+div[mixedCase=true] {
+background-color: red ! important;
+}
+</style>
+</head>
+<body onload="document.getElementById('d').removeAttribute('mixedcase');">
+<div id="d" mixedcase="true">text</div>
+</body>
+</html>

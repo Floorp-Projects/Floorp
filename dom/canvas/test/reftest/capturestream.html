@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<meta charset='UTF-8'>
+<!--
+Clear the canvas to green and capture it to a stream to test that we can get
+the stream to screen in a local video element.
+-->
+<html class="reftest-wait">
+
+<head>
+  <script type='text/javascript'>
+function finished() {
+  document.documentElement.removeAttribute("class");
+}
+
+function runTest() {
+  var canvas = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
+  context.fillStyle = "rgba(0, 255, 0, 1)";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  var video = document.getElementById('video');
+  video.srcObject = canvas.captureStream(0);
+  video.play();
+  video.onloadeddata = finished;
+  video.onerror = finished;
+}
+  </script>
+</head>
+
+<body onload='runTest();'>
+  <video id='video' width='256' height='256'></video>
+  <canvas id='canvas' width='256' height='256' style="display:none"></canvas>
+</body>
+
+</html>

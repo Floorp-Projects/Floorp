@@ -1,0 +1,65 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1109465
+-->
+<head>
+  <title>Test for Bug 1109465</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <textarea></textarea>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 1109465 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var t = document.querySelector("textarea");
+  t.focus();
+
+  // Type foo\nbar and place the caret at the end of the last line
+  sendString("foo");
+  synthesizeKey("KEY_Enter");
+  sendString("bar");
+  synthesizeKey("KEY_ArrowUp");
+  is(t.selectionStart, 3, "Correct start of selection");
+  is(t.selectionEnd, 3, "Correct end of selection");
+
+  // Compose an IME string
+  var composingString = "\u306B";
+  // FYI: "compositionstart" will be dispatched automatically.
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": composingString,
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
+      },
+      "caret": { "start": 1, "length": 0 },
+    });
+  synthesizeComposition({ type: "compositioncommitasis" });
+  is(t.value, "foo\u306B\nbar", "Correct value after composition");
+
+  // Now undo to test that the transaction merger has correctly detected the
+  // IMETextTxn.
+  synthesizeKey("Z", {accelKey: true});
+  is(t.value, "foo\nbar", "Correct value after undo");
+
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+
+</html>

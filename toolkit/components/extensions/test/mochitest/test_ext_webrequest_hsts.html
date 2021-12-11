@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+function getExtension() {
+  async function background() {
+    let expect;
+    let urls = ["*://*.example.org/tests/*"];
+    browser.webRequest.onBeforeRequest.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onBeforeRequest");
+    }, {urls}, ["blocking"]);
+    browser.webRequest.onBeforeSendHeaders.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onBeforeSendHeaders");
+    }, {urls}, ["blocking", "requestHeaders"]);
+    browser.webRequest.onSendHeaders.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onSendHeaders");
+    }, {urls}, ["requestHeaders"]);
+
+    async function testSecurityInfo(details, options) {
+      let securityInfo = await browser.webRequest.getSecurityInfo(details.requestId, options);
+      browser.test.assertTrue(securityInfo && securityInfo.state == "secure",
+                              "security info reflects https");
+
+      if (options.certificateChain) {
+        // Some of the tests here only produce a single cert in the chain.
+        browser.test.assertTrue(securityInfo.certificates.length >= 1, "have certificate chain");
+      } else {
+        browser.test.assertTrue(securityInfo.certificates.length == 1, "no certificate chain");
+      }
+      let cert = securityInfo.certificates[0];
+      let now = Date.now();
+      browser.test.assertTrue(Number.isInteger(cert.validity.start), "cert start is integer");
+      browser.test.assertTrue(Number.isInteger(cert.validity.end), "cert end is integer");
+      browser.test.assertTrue(cert.validity.start < now, "cert start validity is correct");
+      browser.test.assertTrue(now < cert.validity.end, "cert end validity is correct");
+      if (options.rawDER) {
+        for (let cert of securityInfo.certificates) {
+          browser.test.assertTrue(!!cert.rawDER.length, "have rawDER");
+        }
+      }
+    }
+
+    browser.webRequest.onHeadersReceived.addListener(async (details) => {
+      browser.test.assertEq(expect.shift(), "onHeadersReceived");
+
+      // We exepect all requests to have been upgraded at this point.
+      browser.test.assertTrue(details.url.startsWith("https"), "connection is https");
+      await testSecurityInfo(details, {});
+      await testSecurityInfo(details, {certificateChain: true});
+      await testSecurityInfo(details, {rawDER: true});
+      await testSecurityInfo(details, {certificateChain: true, rawDER: true});
+
+      let headers = details.responseHeaders || [];
+      for (let header of headers) {
+        if (header.name.toLowerCase() === "strict-transport-security") {
+          return;
+        }
+      }
+
+      headers.push({
+        name: "Strict-Transport-Security",
+        value: "max-age=31536000000",
+      });
+      return {responseHeaders: headers};
+    }, {urls}, ["blocking", "responseHeaders"]);
+    browser.webRequest.onBeforeRedirect.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onBeforeRedirect");
+    }, {urls});
+    browser.webRequest.onResponseStarted.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onResponseStarted");
+    }, {urls});
+    browser.webRequest.onCompleted.addListener(details => {
+      browser.test.assertEq(expect.shift(), "onCompleted");
+      browser.test.sendMessage("onCompleted", details.url);
+    }, {urls});
+    browser.webRequest.onErrorOccurred.addListener(details => {
+      browser.test.notifyFail(`onErrorOccurred ${JSON.stringify(details)}`);
+    }, {urls});
+
+    async function onUpdated(tabId, tabInfo, tab) {
+      if (tabInfo.status !== "complete" || tab.url === "about:blank") {
+        return;
+      }
+      browser.tabs.remove(tabId);
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.test.sendMessage("tabs-done", tab.url);
+    }
+    browser.test.onMessage.addListener((url, expected) => {
+      expect = expected;
+      browser.tabs.onUpdated.addListener(onUpdated);
+      browser.tabs.create({url});
+    });
+  }
+
+  let manifest = {
+    "permissions": [
+      "tabs",
+      "webRequest",
+      "webRequestBlocking",
+      "<all_urls>",
+    ],
+  };
+  return ExtensionTestUtils.loadExtension({
+    manifest,
+    background,
+  });
+}
+
+// This test makes a request against a server that redirects with a 302.
+add_task(async function test_hsts_request() {
+  const testPath = "example.org/tests/toolkit/components/extensions/test/mochitest";
+
+  let extension = getExtension();
+  await extension.startup();
+
+  // simple redirect
+  let sample = "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+  extension.sendMessage(
+    `https://${testPath}/redirect_auto.sjs?redirect_uri=${sample}`,
+    ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
+     "onHeadersReceived", "onBeforeRedirect", "onBeforeRequest",
+     "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
+     "onResponseStarted", "onCompleted"]);
+  // redirect_auto adds a query string
+  ok((await extension.awaitMessage("tabs-done")).startsWith(sample), "redirection ok");
+  ok((await extension.awaitMessage("onCompleted")).startsWith(sample), "redirection ok");
+
+  // priming hsts
+  extension.sendMessage(
+    `https://${testPath}/hsts.sjs`,
+    ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
+     "onHeadersReceived", "onResponseStarted", "onCompleted"]);
+  is(await extension.awaitMessage("tabs-done"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs",
+     "hsts primed");
+  is(await extension.awaitMessage("onCompleted"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs");
+
+  // test upgrade
+  extension.sendMessage(
+    `http://${testPath}/hsts.sjs`,
+    ["onBeforeRequest", "onBeforeRedirect", "onBeforeRequest",
+     "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
+     "onResponseStarted", "onCompleted"]);
+  is(await extension.awaitMessage("tabs-done"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs",
+     "hsts upgraded");
+  is(await extension.awaitMessage("onCompleted"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs");
+
+  await extension.unload();
+});
+
+// This test makes a priming request and adds the STS header, then tests the upgrade.
+add_task(async function test_hsts_header() {
+  const testPath = "test1.example.org/tests/toolkit/components/extensions/test/mochitest";
+
+  let extension = getExtension();
+  await extension.startup();
+
+  // priming hsts, this time there is no STS header, onHeadersReceived adds it.
+  let completed = extension.awaitMessage("onCompleted");
+  let tabdone = extension.awaitMessage("tabs-done");
+  extension.sendMessage(
+    `https://${testPath}/file_sample.html`,
+    ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
+     "onHeadersReceived", "onResponseStarted", "onCompleted"]);
+  is(await tabdone, `https://${testPath}/file_sample.html`, "priming request done");
+  is(await completed, `https://${testPath}/file_sample.html`, "priming request done");
+
+  // test upgrade from http to https due to onHeadersReceived adding STS header
+  completed = extension.awaitMessage("onCompleted");
+  tabdone = extension.awaitMessage("tabs-done");
+  extension.sendMessage(
+    `http://${testPath}/file_sample.html`,
+    ["onBeforeRequest", "onBeforeRedirect", "onBeforeRequest",
+     "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
+     "onResponseStarted", "onCompleted"]);
+  is(await tabdone, `https://${testPath}/file_sample.html`, "hsts upgraded");
+  is(await completed, `https://${testPath}/file_sample.html`, "request upgraded");
+
+  await extension.unload();
+});
+
+add_task(async function test_nonBlocking_securityInfo() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": [
+        "webRequest",
+        "<all_urls>",
+      ],
+    },
+    async background() {
+      let tab;
+      browser.webRequest.onHeadersReceived.addListener(async (details) => {
+        let securityInfo = await browser.webRequest.getSecurityInfo(details.requestId, {});
+        browser.test.assertTrue(!securityInfo, "securityInfo undefined on http request");
+        browser.tabs.remove(tab.id);
+        browser.test.notifyPass("success");
+      }, {urls: ["<all_urls>"], types: ["main_frame"]});
+      tab = await browser.tabs.create({url: "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html"});
+    },
+  });
+  await extension.startup();
+
+  await extension.awaitFinish("success");
+  await extension.unload();
+});
+</script>
+</head>
+<body>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=419132
+-->
+<head>
+  <title>Test for Bug 419132</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=419132">Mozilla Bug 419132</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<iframe id="i"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 419132 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var iframe = document.getElementById("i");
+  var loadCounts = 4;
+  iframe.addEventListener("load", function() {
+    if (--loadCounts == 0) {
+      ok(true, "This is a mochikit version of a crash test. To complete is to pass.");
+      SimpleTest.finish();
+    } else {
+      // Garbage collect after every other load
+      if ((loadCounts % 2) == 1) {
+        SpecialPowers.gc();
+      }
+      setTimeout(function() {
+        iframe.contentWindow.location.reload();
+      }, 0);
+    }
+  });
+  iframe.src = "bug419132.html";
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Satchel Test for Form Submisstion Field Cap</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  <form id="form1" onsubmit="return checkSubmit(1)">
+    <button type="submit">Submit</button>
+  </form>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* Test for bug 492701.
+   Save only the first MAX_FIELDS_SAVED changed fields in a form.
+   Generate numInputFields = MAX_FIELDS_SAVED + 1 fields, change all values,
+   and test that only MAX_FIELDS_SAVED are actually saved and that
+   field # numInputFields was not saved.
+*/
+
+var numSubmittedForms = 0;
+var numInputFields = 101;
+
+function checkInitialState() {
+  countEntries(null, null,
+               function(num) {
+                 ok(!num, "checking for initially empty storage");
+                 startTest();
+               });
+}
+
+function startTest() {
+  let form = document.getElementById("form1");
+  for (let i = 1; i <= numInputFields; i++) {
+    let newField = document.createElement("input");
+    newField.setAttribute("type", "text");
+    newField.setAttribute("name", "test" + i);
+    form.appendChild(newField);
+  }
+
+  // Fill in values for the various fields. We could just set the <input>'s
+  // value attribute, but we don't save default form values (and we want to
+  // ensure unsaved values are because of autocomplete=off or whatever).
+  for (let i = 1; i <= numInputFields; i++) {
+    $_(1, "test" + i).value = i;
+  }
+
+  // submit the first form.
+  let button = getFormSubmitButton(1);
+  button.click();
+}
+
+/* exported checkSubmit */
+// Called by each form's onsubmit handler.
+function checkSubmit(formNum) {
+  ok(true, "form " + formNum + " submitted");
+  numSubmittedForms++;
+
+  // check that the first (numInputFields - 1) CHANGED fields are saved
+  for (let i = 1; i < numInputFields; i++) { // check all but last
+    checkForSave("test" + i, i, "checking saved value " + i);
+  }
+
+  // End the test.
+  is(numSubmittedForms, 1, "Ensuring all forms were submitted.");
+  SimpleTest.finish();
+  return false; // return false to cancel current form submission
+}
+
+
+window.onload = checkInitialState;
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

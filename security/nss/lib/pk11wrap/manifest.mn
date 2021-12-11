@@ -1,0 +1,67 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+EXPORTS = \
+	secmod.h \
+	secmodt.h \
+	secpkcs5.h \
+	pk11func.h \
+	pk11hpke.h \
+	pk11pub.h \
+	pk11priv.h \
+	pk11sdr.h \
+	pk11pqg.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	secmodi.h \
+	secmodti.h \
+	dev3hack.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	dev3hack.c \
+	pk11akey.c \
+	pk11auth.c \
+	pk11cert.c \
+	pk11cxt.c \
+	pk11err.c  \
+	pk11hpke.c \
+	pk11kea.c \
+	pk11list.c \
+	pk11load.c \
+	pk11mech.c \
+	pk11merge.c \
+	pk11nobj.c \
+	pk11obj.c \
+	pk11pars.c \
+	pk11pbe.c \
+	pk11pk12.c \
+	pk11pqg.c \
+	pk11sdr.c \
+	pk11skey.c \
+	pk11slot.c \
+	pk11util.c \
+	$(NULL)
+
+LIBRARY_NAME = pk11wrap
+SHARED_LIBRARY = $(NULL)
+
+NSS_LIBRARY_VERSION = 3
+SOFTOKEN_LIBRARY_VERSION = 3
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" \
+        -DNSS_SHLIB_VERSION=\"$(NSS_LIBRARY_VERSION)\" \
+        -DSOFTOKEN_SHLIB_VERSION=\"$(SOFTOKEN_LIBRARY_VERSION)\"
+
+# only add module debugging in opt builds if DEBUG_PKCS11 is set
+ifdef DEBUG_PKCS11
+  DEFINES += -DDEBUG_MODULE -DFORCE_PR_LOG
+endif
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

@@ -1,0 +1,14 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" reftest-zoom="3"
+     width="40" height="30" viewBox="20 20 120 90">
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=407959 -->
+
+  <title>Test that zooming isn't broken when we have a viewBox</title>
+
+  <ellipse cx="40" cy="35" rx="20" ry="15" fill="blue"/>
+
+</svg>

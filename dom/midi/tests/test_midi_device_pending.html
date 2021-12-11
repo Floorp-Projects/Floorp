@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(true);
+
+
+       var checkCount = 0;
+       var state = "connecting";
+       var output;
+       var test_ports = [];
+       let access;
+
+       let accessRes;
+       let accessRej;
+       let accessPromise;
+       let portRes;
+       let portRej;
+       let portPromise;
+
+       function resetPromises() {
+         accessPromise = new Promise((res, rej) => { accessRes = res; accessRej = rej; });
+         portPromise = new Promise((res, rej) => { portRes = res; portRej = rej; });
+       }
+
+       function accessStateChangeHandler(event) {
+         var p = event.port;
+         // We'll get an open event for the output control port. Ignore it.
+         if (p.name == MIDITestUtils.outputInfo.name) {
+           return;
+         }
+         accessRes(event);
+       }
+
+       function portStateChangeHandler(event) {
+         var p = event.port;
+         // We'll get an open event for the output control port. Ignore it.
+         if (p.name == MIDITestUtils.outputInfo.name) {
+           return;
+         }
+         portRes(event);
+       }
+
+       // Part 1: Create MIDIAccess object, attach state change listener to list for new connections
+       access = await navigator.requestMIDIAccess({ "sysex": false });
+       ok(true, "MIDI Access Request successful");
+       is(access.sysexEnabled, false, "Sysex should be false");
+       access.addEventListener("statechange", accessStateChangeHandler);
+
+       // Part 2: open test device, make sure it connects, attach event handler to device object
+       output = access.outputs.get(MIDITestUtils.outputInfo.id);
+       resetPromises();
+       output.send([0x90, 0x01, 0x00]);
+       let accessEvent = await accessPromise;
+       let testPort = accessEvent.port;
+       test_ports.push(testPort);
+       testPort.addEventListener("statechange", portStateChangeHandler);
+       is(testPort.state, "connected", "Device " + testPort.name + " connected");
+
+       // Part 3: Listen for port status change on open as both an access event
+       // and a port event.
+       resetPromises();
+       testPort.open();
+       accessEvent = await accessPromise;
+       is(testPort.connection, "open", "Connection " + testPort.name + " opened");
+       let portEvent = await portPromise;
+       is(testPort.connection, "open", "Connection " + testPort.name + " opened");
+
+       // Part 4: Disconnect port but don't close, check status to make sure we're pending.
+       resetPromises();
+       output.send([0x90, 0x02, 0x00]);
+       accessEvent = await accessPromise;
+       is(testPort.connection, "pending", "Connection " + testPort.name + " pending");
+       is(access.inputs.has(testPort.id), false, "port removed from input map while pending");
+       portEvent = await portPromise;
+       is(testPort.connection, "pending", "Connection " + testPort.name + " pending");
+
+       // Part 5: Connect ports again, make sure we return to the right status. The events will
+       // fire because the device has been readded to the device maps in the access object.
+       resetPromises();
+       output.send([0x90, 0x01, 0x00]);
+       accessEvent = await accessPromise;
+       var port = access.inputs.get(testPort.id);
+       is(port, accessEvent.port, "port in map and port in event should be the same");
+       is(testPort.connection, "pending", "Connection " + testPort.name + " pending");
+       portEvent = await portPromise;
+       is(testPort.connection, "pending", "Connection " + testPort.name + " pending");
+
+       // Part 6: Close out everything and clean up.
+       resetPromises();
+       accessEvent = await accessPromise;
+       is(accessEvent.port.connection, "open", "Connection " + testPort.name + " opened");
+       portEvent = await portPromise;
+       is(portEvent.port.connection, "open", "Connection " + testPort.name + " opened");
+
+       /* for (let port of test_ports) {
+        *   port.removeEventListener("statechange", checkDevices);
+        * }
+        * access.removeEventListener("statechange", checkDevices);*/
+       output.send([0x90, 0x02, 0x00]);
+       testPort.removeEventListener("statechange", portStateChangeHandler);
+       access.removeEventListener("statechange", accessStateChangeHandler);
+       access = undefined;
+       output = undefined;
+       testPort = undefined;
+       accessEvent = undefined;
+       portEvent = undefined;
+       SimpleTest.finish();
+     }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,127 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ .overlay {
+  position: fixed;
+  z-index: 1;
+  inset: 0;
+  /* TODO: this color is used in the about:preferences overlay, but
+           why isn't it declared as a variable? */
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+}
+
+.container {
+  z-index: 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+  max-width: 660px;
+  min-height: 200px;
+  align-self: center;
+  margin-inline-start: calc(var(--sidebar-width) - 48px);
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-text-color);
+  box-shadow: var(--shadow-30);
+  /* show a border in high contrast mode */
+  outline: 1px solid transparent;
+}
+
+@media screen and (max-width: 938px) {
+  .container {
+    margin-inline-start: auto;
+    margin-inline-end: 8px;
+  }
+}
+
+@media screen and (max-width: 676px) {
+  .container {
+    margin-inline-start: 8px;
+    margin-inline-end: 8px;
+  }
+}
+
+.title {
+  grid-area: 1 / 2 / 2 / 8;
+}
+
+.message {
+  font-weight: 600;
+  grid-area: 2 / 2 / 3 / 8;
+  font-size: 1.25em;
+}
+
+.checkbox-text {
+  font-size: 1.25em;
+}
+
+.dismiss-button {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  min-width: 20px;
+  min-height: 20px;
+  margin: 16px;
+  padding: 0;
+  line-height: 0;
+}
+
+.dismiss-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.warning-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 32px;
+  height: 32px;
+  margin: 8px;
+}
+
+.content,
+.buttons {
+  padding: 36px 48px;
+  padding-bottom: 24px;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: 0.5fr 0.5fr 0.5fr;
+}
+
+.checkbox-wrapper {
+  grid-area: 3 / 2 / 4 / 8;
+  align-self: first baseline;
+  justify-self: start;
+}
+
+.warning-icon {
+  grid-area: 1 / 1 / 2 / 2;
+}
+
+.checkbox {
+  grid-area: 3 / 2 / 4 / 8;
+  font-size: 1.1em;
+  align-self: center;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  padding-block: 16px 32px;
+  padding-inline: 48px 0;
+  border-top: 1px solid var(--in-content-border-color);
+  margin-inline: 48px;
+}
+
+.buttons.macosx > .confirm-button {
+  order: 1;
+}
+
+.buttons > button {
+  min-width: 140px;
+}

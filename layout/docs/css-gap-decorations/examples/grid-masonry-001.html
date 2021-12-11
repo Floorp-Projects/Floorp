@@ -1,0 +1,77 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of 'column-rule-extent' values in a Masonry grid layout.</title>
+<style>
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid: masonry / 3ch 4ch 5ch;
+  gap: 20px;
+  margin-right: 20px;
+  margin-bottom: 40px;
+  background: lightgrey;
+
+  block-size: 160px;
+  align-content: center;
+
+  column-rule: solid blue;
+  column-rule-align: rule;
+  column-rule-edge-align: gap-over;
+  row-rule: 6px solid purple;
+  row-rule-extent: all-long;
+}
+.segment { column-rule-extent: segment; }
+.segment-allow-overlap { column-rule-extent: segment allow-overlap; }
+.short-allow-overlap { column-rule-extent: short allow-overlap; }
+.short { column-rule-extent: short; }
+.long-allow-overlap { column-rule-extent: long allow-overlap; }
+.long { column-rule-extent: long; }
+.start { column-rule-extent: start; }
+.end { column-rule-extent: end; }
+.all-long-allow-overlap { column-rule-extent: all-long allow-overlap; }
+.all-long { column-rule-extent: all-long; }
+
+x {
+  background: grey;
+  opacity: 0.5;
+}
+x:nth-child(1) { padding-block-start: 30px; }
+x:nth-child(2) { grid-column:span 2 }
+x:nth-child(3) { padding-block-end: 20px;  }
+x:nth-child(7) { grid-column: span 2;  }
+x:nth-child(8) { padding-block-end: 10px;  }
+
+.grid::after {
+  position: absolute;
+  bottom: -3em;
+  font-size: 10px;
+  font-style: italic;
+  vertical-align: top;
+  content: attr(test);
+  white-space: pre;
+}
+pre { font-size: 10px; }
+</style>
+
+<pre>All have <i>'column-rule-edge-align: gap-over'</i> to extend
+the edge rules out to the content-box edge.</pre>
+
+<div class="grid short"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid long"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+<div class="grid start"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid end"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('.grid')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    elm.setAttribute("test", 
+      "'column-rule-extent: " + cs.columnRuleExtent + "' \n" +
+      "'column-rule-align: " + cs.columnRuleAlign + "'"
+    );
+  });
+}
+</script>

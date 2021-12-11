@@ -1,0 +1,14 @@
+<html>
+<head>
+<script>
+window.onload = function(){
+  var frame = document.getElementById('test_iframe');
+  var win = frame.contentWindow;
+  frame.remove();
+  win.onvrdisplayactivate = function () {}
+};
+</script></head>
+<body>
+	<iframe id="test_iframe"></iframe>
+</body>
+</html>

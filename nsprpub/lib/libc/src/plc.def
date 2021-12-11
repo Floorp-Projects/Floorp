@@ -1,0 +1,72 @@
+;+#
+;+# This Source Code Form is subject to the terms of the Mozilla Public
+;+# License, v. 2.0. If a copy of the MPL was not distributed with this
+;+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+;+#
+;+# OK, this file is meant to support SUN, LINUX, AIX, OS/2 and WINDOWS
+;+#   1. For all unix platforms, the string ";-"  means "remove this line"
+;+#   2. For all unix platforms, the string " DATA " will be removed from any 
+;+#     line on which it occurs.
+;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
+;+#      On AIX, lines containing ";+" will be removed.
+;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   5. For all unix platforms, after the above processing has taken place,
+;+#    all characters after the first ";" on the line will be removed.
+;+#    And for AIX, the first ";" will also be removed.
+;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
+;+#   directives are hidden behind ";", ";+", and ";-"
+;+NSPR_4.0 {
+;+    global:
+LIBRARY plc4 ;-
+EXPORTS ;-
+PL_Base64Decode;
+PL_Base64Encode;
+PL_CreateOptState;
+PL_DestroyOptState;
+PL_FPrintError;
+PL_GetNextOpt;
+PL_PrintError;
+PL_strcasecmp;
+PL_strcaserstr;
+PL_strcasestr;
+PL_strcat;
+PL_strcatn;
+PL_strchr;
+PL_strcmp;
+PL_strcpy;
+PL_strdup;
+PL_strfree;
+PL_strlen;
+PL_strncasecmp;
+PL_strncaserstr;
+PL_strncasestr;
+PL_strncat;
+PL_strnchr;
+PL_strncmp;
+PL_strncpy;
+PL_strncpyz;
+PL_strndup;
+PL_strnlen;
+PL_strnpbrk;
+PL_strnprbrk;
+PL_strnrchr;
+PL_strnrstr;
+PL_strnstr;
+PL_strpbrk;
+PL_strprbrk;
+PL_strrchr;
+PL_strrstr;
+PL_strstr;
+libVersionPoint;
+;+    local: *;
+;+};
+;+
+;+NSPR_4.2 {
+;+    global:
+PL_strtok_r;
+;+} NSPR_4.0;
+;+
+;+NSPR_4.7 {
+;+    global:
+PL_CreateLongOptState;
+;+} NSPR_4.2;

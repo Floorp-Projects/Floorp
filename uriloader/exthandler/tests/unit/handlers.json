@@ -1,0 +1,90 @@
+{
+  "defaultHandlersVersion": {
+    "en-US": 999
+  },
+  "mimeTypes": {
+    "example/type.handleinternally": {
+      "unknownProperty": "preserved",
+      "action": 3,
+      "extensions": [
+        "example_one"
+      ]
+    },
+    "example/type.savetodisk": {
+      "action": 0,
+      "ask": true,
+      "handlers": [
+        {
+          "name": "Example Default Handler",
+          "uriTemplate": "https://www.example.com/?url=%s"
+        }
+      ],
+      "extensions": [
+        "example_two",
+        "example_three"
+      ]
+    },
+    "example/type.usehelperapp": {
+      "action": 2,
+      "ask": true,
+      "handlers": [
+        {
+          "name": "Example Default Handler",
+          "uriTemplate": "https://www.example.com/?url=%s"
+        },
+        {
+          "name": "Example Possible Handler One",
+          "uriTemplate": "http://www.example.com/?id=1&url=%s"
+        },
+        {
+          "name": "Example Possible Handler Two",
+          "uriTemplate": "http://www.example.com/?id=2&url=%s"
+        }
+      ],
+      "extensions": [
+        "example_two",
+        "example_three"
+      ]
+    },
+    "example/type.usesystemdefault": {
+      "action": 4,
+      "handlers": [
+        null,
+        {
+          "name": "Example Possible Handler",
+          "uriTemplate": "http://www.example.com/?url=%s"
+        }
+      ]
+    }
+  },
+  "schemes": {
+    "examplescheme.usehelperapp": {
+      "action": 2,
+      "ask": true,
+      "handlers": [
+        {
+          "name": "Example Default Handler",
+          "uriTemplate": "https://www.example.com/?url=%s"
+        },
+        {
+          "name": "Example Possible Handler One",
+          "uriTemplate": "http://www.example.com/?id=1&url=%s"
+        },
+        {
+          "name": "Example Possible Handler Two",
+          "uriTemplate": "http://www.example.com/?id=2&url=%s"
+        }
+      ]
+    },
+    "examplescheme.usesystemdefault": {
+      "action": 4,
+      "handlers": [
+        null,
+        {
+          "name": "Example Possible Handler",
+          "uriTemplate": "http://www.example.com/?url=%s"
+        }
+      ]
+    }
+  }
+}

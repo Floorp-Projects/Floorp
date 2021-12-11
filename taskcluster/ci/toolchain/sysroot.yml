@@ -1,0 +1,117 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-sysroot.sh
+        toolchain-artifact: public/build/sysroot.tar.zst
+
+sysroot-i686-linux-gnu:
+    description: "Sysroot for linux32 builds"
+    attributes:
+        local-toolchain: true
+    run-on-projects: [trunk]
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7>'}
+    treeherder:
+        symbol: TL(sysroot32)
+    dependencies:
+        gcc-7: packages-deb8-32-gcc-7
+    run:
+        toolchain-artifact: public/build/sysroot-i686-linux-gnu.tar.zst
+        arguments:
+            - i386
+
+sysroot-x86_64-linux-gnu:
+    description: "Sysroot for linux64 builds"
+    attributes:
+        local-toolchain: true
+    run-on-projects: [trunk]
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7>'}
+    treeherder:
+        symbol: TL(sysroot64)
+    dependencies:
+        gcc-7: packages-deb8-gcc-7
+    run:
+        toolchain-artifact: public/build/sysroot-x86_64-linux-gnu.tar.zst
+        arguments:
+            - amd64
+
+sysroot-x86_64-linux-gnu-x11:
+    description: "Sysroot for linux64 builds (X11-only)"
+    attributes:
+        local-toolchain: true
+    run-on-projects: [trunk]
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7> <gtk3>'}
+    treeherder:
+        symbol: TL(sysroot64-x11)
+    dependencies:
+        gcc-7: packages-deb8-gcc-7
+        gtk3: packages-deb8-gtk3
+    run:
+        toolchain-artifact: public/build/sysroot-x86_64-linux-gnu.tar.zst
+        arguments:
+            - amd64
+
+sysroot-wasm32-wasi:
+    description: "Sysroot for wasi"
+    attributes:
+        local-toolchain: true
+    run-on-projects: [trunk]
+    treeherder:
+        symbol: TL(sysroot-wasi)
+    run:
+        script: build-sysroot-wasi.sh
+        toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+            - wasi-sdk
+        toolchain:
+            - linux64-clang-13
+
+sysroot-aarch64-linux-gnu:
+    description: "Sysroot for linux64 aarch64 builds"
+    attributes:
+        local-toolchain: true
+    run-on-projects: [trunk]
+    treeherder:
+        symbol: TL(sysroot-aarch64)
+    run:
+        toolchain-artifact: public/build/sysroot-aarch64-linux-gnu.tar.zst
+        arguments:
+            - arm64
+
+linux64-toolchain-sysroot:
+    description: "Sysroot for linux64 toolchain builds"
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7>'}
+    treeherder:
+        symbol: TL(sysroot64-toolchain)
+    dependencies:
+        gcc-7: packages-deb8-gcc-7
+    run:
+        arguments:
+            - amd64
+            # For clang
+            - binutils-dev
+            - gcc-multilib
+            - lib32stdc++-7-dev
+            - libxml2-dev
+            # For minidump-stackwalk
+            - libcurl4-openssl-dev
+            - libssl-dev
+            - libbz2-dev
+            # For msix-package
+            - libicu-dev

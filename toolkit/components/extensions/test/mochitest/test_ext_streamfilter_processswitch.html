@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for using filterResponseData to intercept a cross-origin navigation that will involve a process switch with fission</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const TEST_HOST = "http://example.com/";
+const CROSS_ORIGIN_HOST = "http://example.org/";
+const TEST_PATH =
+  "tests/toolkit/components/extensions/test/mochitest/file_streamfilter.txt";
+
+const TEST_URL = TEST_HOST + TEST_PATH;
+const CROSS_ORIGIN_URL = CROSS_ORIGIN_HOST + TEST_PATH;
+
+add_task(async () => {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        ({ requestId }) => {
+          const filter = browser.webRequest.filterResponseData(requestId);
+          filter.ondata = event => {
+            filter.write(event.data);
+          };
+          filter.onstop = event => {
+            filter.write(new TextEncoder().encode(" End"));
+            filter.close();
+          };
+        },
+        {
+          urls: [
+            "http://example.org/*/file_streamfilter.txt",
+          ],
+        },
+        ["blocking"]
+      );
+    },
+  });
+
+  await extension.startup();
+
+  let iframe = document.createElement("iframe");
+  iframe.src = TEST_URL;
+  document.body.appendChild(iframe);
+  await new Promise(resolve => iframe.addEventListener("load", () => resolve(), {once: true}));
+
+
+  iframe.src = CROSS_ORIGIN_URL;
+  await new Promise(resolve => iframe.addEventListener("load", () => resolve(), {once: true}));
+
+  let content = await SpecialPowers.spawn(iframe, [], async () => {
+    return this.content.document.body.textContent;
+  });
+  SimpleTest.is(content, "Middle\n End", "Correctly intercepted page content");
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<title>Test for PerformanceServerTiming</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<script>
+function makeXHR(aUrl) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("get", aUrl, true);
+  xmlhttp.send();
+}
+
+// Note that |responseServerTiming| and |trailerServerTiming| SHOULD be synced with
+// the ones in serverTiming.sjs.
+var responseServerTiming = [{metric:"metric1", duration:"123.4", description:"description1"},
+                            {metric:"metric2", duration:"456.78", description:"description2"}];
+var trailerServerTiming = [{metric:"metric3", duration:"789.11", description:"description3"},
+                           {metric:"metric4", duration:"1112.13", description:"description4"}];
+
+function checkServerTimingContent(serverTiming) {
+  var expectedResult = responseServerTiming.concat(trailerServerTiming);
+  assert_equals(serverTiming.length, expectedResult.length);
+
+  for (var i = 0; i < expectedResult.length; i++) {
+    assert_equals(serverTiming[i].name, expectedResult[i].metric);
+    assert_equals(serverTiming[i].description, expectedResult[i].description);
+    assert_equals(serverTiming[i].duration, parseFloat(expectedResult[i].duration));
+  }
+}
+
+promise_test(t => {
+  var promise = new Promise(resolve => {
+    performance.clearResourceTimings();
+
+    var observer = new PerformanceObserver(list => resolve(list));
+    observer.observe({entryTypes: ['resource']});
+    t.add_cleanup(() => observer.disconnect());
+  });
+
+  makeXHR("serverTiming.sjs");
+
+  return promise.then(list => {
+    assert_equals(list.getEntries().length, 1);
+    checkServerTimingContent(list.getEntries()[0].serverTiming);
+  });
+}, "server-timing test");
+
+</script>
+</body>

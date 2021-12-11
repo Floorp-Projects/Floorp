@@ -1,0 +1,29 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'General')
+
+with Files('7zstub/**'):
+    BUG_COMPONENT = ('Firefox', 'Installer')
+
+with Files('atk-1.0/**'):
+    BUG_COMPONENT = ('Core', 'Disability Access APIs')
+
+with Files('bsdiff/**'):
+    BUG_COMPONENT = ('Core', 'XPCOM')
+
+with Files('ia2/**'):
+    BUG_COMPONENT = ('Core', 'Disability Access APIs')
+
+with Files('nsis/**'):
+    BUG_COMPONENT = ('Firefox', 'Installer')
+
+with Files('ply/**'):
+    BUG_COMPONENT = ('Core', 'JavaScript Engine')
+
+with Files('snappy/**'):
+    BUG_COMPONENT = ('Core', 'XPCOM')

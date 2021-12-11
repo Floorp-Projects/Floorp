@@ -1,0 +1,231 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This file contains an interface to the Permission Manager,
+ * used to persistenly store permissions for different object types (cookies,
+ * images etc) on a site-by-site basis.
+ *
+ * This service broadcasts the following notification when the permission list
+ * is changed:
+ *
+ * topic  : "perm-changed" (PERM_CHANGE_NOTIFICATION)
+ *          broadcast whenever the permission list changes in some way. there
+ *          are four possible data strings for this notification; one
+ *          notification will be broadcast for each change, and will involve
+ *          a single permission.
+ * subject: an nsIPermission interface pointer representing the permission object
+ *          that changed.
+ * data   : "deleted"
+ *          a permission was deleted. the subject is the deleted permission.
+ *          "added"
+ *          a permission was added. the subject is the added permission.
+ *          "changed"
+ *          a permission was changed. the subject is the new permission.
+ *          "cleared"
+ *          the entire permission list was cleared. the subject is null.
+ */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface nsIPermission;
+
+[scriptable, builtinclass, uuid(4dcb3851-eba2-4e42-b236-82d2596fca22)]
+interface nsIPermissionManager : nsISupports
+{
+  /**
+   * Predefined return values for the testPermission method and for
+   * the permission param of the add method
+   * NOTE: UNKNOWN_ACTION (0) is reserved to represent the
+   * default permission when no entry is found for a host, and
+   * should not be used by consumers to indicate otherwise.
+   */
+  const uint32_t UNKNOWN_ACTION = 0;
+  const uint32_t ALLOW_ACTION = 1;
+  const uint32_t DENY_ACTION = 2;
+  const uint32_t PROMPT_ACTION = 3;
+
+  /**
+   * Predefined expiration types for permissions.  Permissions can be permanent
+   * (never expire), expire at the end of the session, or expire at a specified
+   * time. Permissions that expire at the end of a session may also have a
+   * specified expiration time.
+   *
+   * EXPIRE_POLICY is a special expiration status. It is set when the permission
+   * is set by reading an enterprise policy. These permissions cannot be overridden.
+   */
+  const uint32_t EXPIRE_NEVER = 0;
+  const uint32_t EXPIRE_SESSION = 1;
+  const uint32_t EXPIRE_TIME = 2;
+  const uint32_t EXPIRE_POLICY = 3;
+
+
+  /**
+   * Get all custom permissions for a given nsIPrincipal. This will return an
+   * enumerator of all permissions which are not set to default and which
+   * belong to the matching principal of the given nsIPrincipal.
+   *
+   * @param principal  the URI to get all permissions for
+   */
+  Array<nsIPermission> getAllForPrincipal(in nsIPrincipal principal);
+
+  /**
+   * Get all custom permissions of a specific type, specified with a prefix
+   * string.  This will return an array of all permissions which are not set to
+   * default.  Also the passed type argument is either equal to or a prefix of
+   * the type of the returned permissions.
+   *
+   * @param prefix  the type prefix string
+   */
+  Array<nsIPermission> getAllWithTypePrefix(in ACString prefix);
+
+  /**
+   * Get all custom permissions of a specific type and that were modified after
+   * the specified date. This will return an array of all permissions which are
+   * not set to default.
+   *
+   * @param type    a case-sensitive ASCII string, identifying the permission.
+   * @param since   a unix timestamp representing the number of milliseconds from
+   *                Jan 1, 1970 00:00:00 UTC.
+   */
+  Array<nsIPermission> getAllByTypeSince(in ACString type, in int64_t since);
+
+  /**
+   * Add permission information for a given principal.
+   * It is internally calling the other add() method using the nsIURI from the
+   * principal.
+   * Passing a system principal will be a no-op because they will always be
+   * granted permissions.
+   */
+  void addFromPrincipal(in nsIPrincipal principal, in ACString type,
+                        in uint32_t permission,
+                        [optional] in uint32_t expireType,
+                        [optional] in int64_t expireTime);
+
+  /**
+   * Add permanent permission information for a given principal in private
+   * browsing.
+   *
+   * Normally permissions in private browsing are cleared at the end of the
+   * session, this method allows you to override this behavior and set
+   * permanent permissions.
+   *
+   * WARNING: setting permanent permissions _will_ leak data in private
+   * browsing. Only use if you understand the consequences and trade-offs. If
+   * you are unsure, |addFromPrincipal| is very likely what you want to use
+   * instead.
+   */
+  void addFromPrincipalAndPersistInPrivateBrowsing(in nsIPrincipal principal,
+                                                   in ACString type,
+                                                   in uint32_t permission);
+
+  /**
+   * Remove permission information for a given principal.
+   * This is internally calling remove() with the host from the principal's URI.
+   * Passing system principal will be a no-op because we never add them to the
+   * database.
+   */
+  void removeFromPrincipal(in nsIPrincipal principal, in ACString type);
+
+  /**
+   * Remove the given permission from the permission manager.
+   *
+   * @param perm   a permission obtained from the permission manager.
+   */
+  void removePermission(in nsIPermission perm);
+
+  /**
+   * Clear permission information for all websites.
+   */
+  void removeAll();
+
+  /**
+   * Clear all permission information added since the specified time.
+   */
+  void removeAllSince(in int64_t since);
+
+  /**
+   * Clear all permissions of the passed type.
+   */
+  void removeByType(in ACString type);
+
+  /**
+   * Clear all permissions of the passed type added since the specified time.
+   * @param type    a case-sensitive ASCII string, identifying the permission.
+   * @param since   a unix timestamp representing the number of milliseconds from
+   *                Jan 1, 1970 00:00:00 UTC.
+   */
+  void removeByTypeSince(in ACString type, in int64_t since);
+
+  /**
+   * Test whether the principal has the permission to perform a given action.
+   * System principals will always have permissions granted.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
+   */
+  uint32_t testPermissionFromPrincipal(in nsIPrincipal principal,
+                                       in ACString type);
+
+  /**
+   * Test whether the principal has the permission to perform a given action.
+   * This requires an exact hostname match. Subdomain principals do not match
+   * permissions of base domains.
+   * System principals will always have permissions granted.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
+   */
+  uint32_t testExactPermissionFromPrincipal(in nsIPrincipal principal,
+                                            in ACString type);
+
+  /**
+   * Test whether a website has permission to perform the given action
+   * ignoring active sessions.
+   * System principals will always have permissions granted.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
+   *
+   * @param principal the principal
+   * @param type      a case-sensitive ASCII string, identifying the consumer
+   * @param return    see add(), param permission. returns UNKNOWN_ACTION when
+   *                  there is no stored permission for this uri and / or type.
+   */
+  uint32_t testExactPermanentPermission(in nsIPrincipal principal,
+                                        in ACString type);
+
+  /**
+   * Get the permission object associated with the given principal and action.
+   * @param principal The principal
+   * @param type      A case-sensitive ASCII string identifying the consumer
+   * @param exactHost If true, only the specific host will be matched.
+   *                  If false, base domains of the principal will also
+   *                  be searched.
+   * @returns The matching permission object, or null if no matching object
+   *          was found. No matching object is equivalent to UNKNOWN_ACTION.
+   * @note Clients in general should prefer the test* methods unless they
+   *       need to know the specific stored details.
+   * @note This method will always return null for the system principal.
+   */
+  nsIPermission getPermissionObject(in nsIPrincipal principal,
+                                    in ACString type,
+                                    in boolean exactHost);
+
+  /**
+   * Returns all stored permissions.
+   * @return an array of nsIPermission objects
+   */
+  readonly attribute Array<nsIPermission> all;
+
+  /**
+   * Remove all permissions that will match the origin pattern.
+   */
+  void removePermissionsWithAttributes(in AString patternAsJSON);
+};
+
+%{ C++
+#define NS_PERMISSIONMANAGER_CONTRACTID "@mozilla.org/permissionmanager;1"
+
+#define PERM_CHANGE_NOTIFICATION "perm-changed"
+%}

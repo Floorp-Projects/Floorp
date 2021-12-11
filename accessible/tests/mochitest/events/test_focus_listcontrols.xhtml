@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible focus event testing">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    async function doTests()
+    {
+      // Test focus events.
+      gQueue = new eventQueue();
+      // Later tests use await.
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
+
+      gQueue.push(new synthFocus("richlistbox", new focusChecker("rlb_item1")));
+      gQueue.push(new synthDownKey("rlb_item1", new focusChecker("rlb_item2")));
+      gQueue.push(new synthFocus("multiselrichlistbox", new focusChecker("msrlb_item1")));
+      gQueue.push(new synthDownKey("msrlb_item1", new focusChecker("msrlb_item2"), { shiftKey: true }));
+      gQueue.push(new synthFocus("emptyrichlistbox", new focusChecker("emptyrichlistbox")));
+
+      gQueue.push(new synthFocus("menulist"));
+      gQueue.push(new synthClick("menulist", new focusChecker("ml_tangerine"),
+        { where: "center" }));
+      gQueue.push(new synthDownKey("ml_tangerine", new focusChecker("ml_marmalade")));
+      gQueue.push(new synthEscapeKey("ml_marmalade", new focusChecker("menulist")));
+
+      // On Windows, items get selected during navigation.
+      let expectedItem = WIN ? "ml_strawberry" : "ml_marmalade";
+      gQueue.push(new synthDownKey("menulist", new nofocusChecker(expectedItem)));
+      gQueue.push(new synthOpenComboboxKey("menulist", new focusChecker(expectedItem)));
+      gQueue.push(new synthEnterKey(expectedItem, new focusChecker("menulist")));
+
+      // no focus events for unfocused list controls when current item is
+      // changed.
+      gQueue.push(new synthFocus("emptyrichlistbox"));
+
+      gQueue.push(new changeCurrentItem("richlistbox", "rlb_item1"));
+      gQueue.push(new changeCurrentItem("menulist", WIN ? "ml_marmalade" : "ml_tangerine"));
+
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
+
+      // When a menulist contains something other than XUL menuitems, we need
+      // to manage focus with aria-activedescendant.
+      info("Testing opening a menupopup with aria-activedescendant");
+      let popupDiv1 = getNode("menupopup_ad_div1");
+      let focused = PromEvents.waitForEvent(EVENT_FOCUS, popupDiv1);
+      let popup = getNode("menupopup_ad");
+      popup.openPopup();
+      await focused;
+      info("Testing removal of previous active descendant + setting new active descendant");
+      focused = PromEvents.waitForEvent(EVENT_FOCUS, "menupopup_ad_div2");
+      popupDiv1.remove();
+      popup.setAttribute("aria-activedescendant", "menupopup_ad_div2");
+      await focused;
+      popup.hidePopup();
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=433418"
+         title="Accessibles for focused HTML Select elements are not getting focused state">
+        Mozilla Bug 433418
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=474893"
+         title="List controls should fire a focus event on the selected child when tabbing or when the selected child changes while the list is focused">
+        Mozilla Bug 474893
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552368"
+         title=" fire focus event on document accessible whenever the root or body element is focused">
+        Mozilla Bug 552368
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <richlistbox id="richlistbox">
+        <richlistitem id="rlb_item1">
+          <description>A XUL Description!</description>
+        </richlistitem>
+        <richlistitem id="rlb_item2">
+          <button label="A XUL Button"/>
+        </richlistitem>
+      </richlistbox>
+      <richlistbox id="multiselrichlistbox" seltype="multiple">
+        <richlistitem id="msrlb_item1">
+          <description>A XUL Description!</description>
+        </richlistitem>
+        <richlistitem id="msrlb_item2">
+          <button label="A XUL Button"/>
+        </richlistitem>
+      </richlistbox>
+      <richlistbox id="emptyrichlistbox" seltype="multiple"/>
+
+      <menulist id="menulist">
+        <menupopup>
+          <menuitem id="ml_tangerine" label="tangerine trees"/>
+          <menuitem id="ml_marmalade" label="marmalade skies"/>
+          <menuitem id="ml_strawberry" label="strawberry fields"/>
+        </menupopup>
+      </menulist>
+
+      <menulist>
+        <menupopup id="menupopup_ad" aria-activedescendant="menupopup_ad_div1">
+          <div id="menupopup_ad_div1" role="option"></div>
+          <div id="menupopup_ad_div2" role="option"></div>
+        </menupopup>
+      </menulist>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>

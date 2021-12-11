@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=625452
+-->
+<head>
+  <title>Test for Bug 625452</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625452">Mozilla Bug 625452</a>
+<p id="display"></p>
+<div id="content">
+<input>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 625452 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var i = document.querySelector("input");
+  var inputCount = 0;
+  i.addEventListener("input", function() { inputCount++; });
+
+  // test cut
+  i.focus();
+  i.value = "foo bar";
+  i.selectionStart = 0;
+  i.selectionEnd = 4;
+  synthesizeKey("X", {accelKey: true});
+  is(i.value, "bar", "Cut should work correctly");
+  is(inputCount, 1, "input event should be raised correctly");
+
+  // test undo
+  synthesizeKey("Z", {accelKey: true});
+  is(i.value, "foo bar", "Undo should work correctly");
+  is(inputCount, 2, "input event should be raised correctly");
+
+  // test redo
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+  is(i.value, "bar", "Redo should work correctly");
+  is(inputCount, 3, "input event should be raised correctly");
+
+  // test delete
+  i.selectionStart = 0;
+  i.selectionEnd = 2;
+  synthesizeKey("KEY_Delete");
+  is(i.value, "r", "Delete should work correctly");
+  is(inputCount, 4, "input event should be raised correctly");
+
+  // test DeleteSelection(eNone)
+  i.value = "retest"; // the "r" common prefix is crucial here
+  is(inputCount, 4, "input event should not have been raised");
+
+  // paste is tested in test_bug596001.html
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

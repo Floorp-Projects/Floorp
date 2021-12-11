@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="ahem.css" />
+  <title>Reference: Text runs that are separated by a block-level line will get separate backplates.</title>
+  <style>
+    body {
+      font: 20px Ahem;
+    }
+    .fake-backplate {
+      background-color: white;
+      width: max-content;
+    }
+    .sample {
+      background-image: url("blue.png");
+      height: 500px;
+    }
+  </style>
+</head>
+<body>
+<span class="fake-backplate">ppppp ppppp</span><div class="sample"><span class="fake-backplate">ppppp ppppp</span></div><span class="fake-backplate">ppppp ppppp</span>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form autofill - preview and highlight</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: preview and highlight
+
+<script>
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+
+"use strict";
+
+const MOCK_STORAGE = [{
+  organization: "Sesame Street",
+  "street-address": "123 Sesame Street.",
+  tel: "+13453453456",
+}, {
+  organization: "Mozilla",
+  "street-address": "331 E. Evelyn Avenue",
+}, {
+  organization: "Tel org",
+  tel: "+12223334444",
+}];
+
+
+initPopupListener();
+
+add_task(async function setup_storage() {
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
+  await addAddress(MOCK_STORAGE[2]);
+});
+
+add_task(async function check_preview() {
+  const focusedInput = await setInput("#organization", "");
+
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  await checkFormFieldsStyle(null);
+
+  for (let i = 0; i < MOCK_STORAGE.length; i++) {
+    synthesizeKey("KEY_ArrowDown");
+    await notifySelectedIndex(i);
+    await checkFormFieldsStyle(MOCK_STORAGE[i]);
+  }
+
+  // Navigate to the footer
+  synthesizeKey("KEY_ArrowDown");
+  await notifySelectedIndex(MOCK_STORAGE.length);
+  await checkFormFieldsStyle(null);
+
+  synthesizeKey("KEY_ArrowDown");
+  await notifySelectedIndex(-1);
+  await checkFormFieldsStyle(null);
+
+  focusedInput.blur();
+});
+
+add_task(async function check_filled_highlight() {
+  await triggerPopupAndHoverItem("#organization", 0);
+  // filled 1st address
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+  await checkFormFieldsStyle(MOCK_STORAGE[0], false);
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>organization: <input id="organization" autocomplete="organization"></label></p>
+    <p><label>streetAddress: <input id="street-address" autocomplete="street-address"></label></p>
+    <p><label>tel: <input id="tel" autocomplete="tel"></label></p>
+    <p><label>country: <input id="country" autocomplete="country"></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+
+<window id="FindbarTest"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="SimpleTest.executeSoon(startTest);"
+        title="findbar events test">
+
+  <script type="application/javascript"><![CDATA[
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+    var gFindBar = null;
+    var gBrowser;
+    const kTimeout = 5000; // 5 seconds.
+
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var is = window.arguments[0].is;
+    var info = window.arguments[0].info;
+    SimpleTest.requestLongerTimeout(2);
+
+    function startTest() {
+      (async function() {
+        gFindBar = document.getElementById("FindToolbar");
+        for (let browserId of ["content", "content-remote"]) {
+          await startTestWithBrowser(browserId);
+        }
+      })().then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
+    }
+
+    async function startTestWithBrowser(browserId) {
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+      const url = "data:text/html,hello there";
+      let promise = BrowserTestUtils.browserLoaded(gBrowser, false, url);
+      BrowserTestUtils.loadURI(gBrowser, url);
+      await promise;
+      await onDocumentLoaded();
+    }
+
+    async function onDocumentLoaded() {
+      gFindBar.open();
+      gFindBar.onFindCommand();
+
+      await testFind();
+      await testFindAgain();
+      await testCaseSensitivity();
+      await testDiacriticMatching();
+      await testHighlight();
+    }
+
+    function checkSelection() {
+      return new Promise(resolve => {
+        SimpleTest.executeSoon(() => {
+          SpecialPowers.spawn(gBrowser, [], async function() {
+            let selected = content.getSelection();
+            Assert.equal(String(selected), "", "No text is selected");
+
+            let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                       .getInterface(Ci.nsISelectionDisplay)
+                                       .QueryInterface(Ci.nsISelectionController);
+            let selection = controller.getSelection(controller.SELECTION_FIND);
+            Assert.equal(selection.rangeCount, 0, "No text is highlighted");
+          }).then(resolve);
+        });
+      });
+    }
+
+    function once(node, eventName, preventDefault = true) {
+      return new Promise((resolve, reject) => {
+        let timeout = window.setTimeout(() => {
+          reject("Event wasn't fired within " + kTimeout + "ms for event '" +
+            eventName + "'.");
+        }, kTimeout);
+
+        node.addEventListener(eventName, function clb(e) {
+          window.clearTimeout(timeout);
+          node.removeEventListener(eventName, clb);
+          if (preventDefault)
+            e.preventDefault();
+          resolve(e);
+        });
+      });
+    }
+
+    async function testFind() {
+      info("Testing normal find.");
+      let query = "t";
+      let promise = once(gFindBar, "find");
+
+      // Put some text in the find box.
+      let event = new KeyboardEvent("keypress", {
+        bubbles: true,
+        cancelable: true,
+        view: null,
+        keyCode: 0,
+        charCode: query.charCodeAt(0),
+      });
+      gFindBar._findField.dispatchEvent(event);
+
+      let e = await promise;
+      ok(e.detail.query === query, "find event query should match '" + query + "'");
+      // Since we're preventing the default make sure nothing was selected.
+      await checkSelection();
+    }
+
+    async function testFindAgain() {
+      info("Testing repeating normal find.");
+      let promise = once(gFindBar, "findagain");
+
+      gFindBar.onFindAgainCommand();
+
+      await promise;
+      // Since we're preventing the default make sure nothing was selected.
+      await checkSelection();
+    }
+
+    async function testCaseSensitivity() {
+      info("Testing normal case sensitivity.");
+      let promise = once(gFindBar, "findcasesensitivitychange", false);
+
+      let matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
+      matchCaseCheckbox.click();
+
+      let e = await promise;
+      ok(e.detail.caseSensitive, "find should be case sensitive");
+
+      // Toggle it back to the original setting.
+      matchCaseCheckbox.click();
+
+      // Changing case sensitivity does the search so clear the selected text
+      // before the next test.
+      await SpecialPowers.spawn(gBrowser, [], () => content.getSelection().removeAllRanges());
+    }
+
+    async function testDiacriticMatching() {
+      info("Testing normal diacritic matching.");
+      let promise = once(gFindBar, "finddiacriticmatchingchange", false);
+
+      let matchDiacriticsCheckbox = gFindBar.getElement("find-match-diacritics");
+      matchDiacriticsCheckbox.click();
+
+      let e = await promise;
+      ok(e.detail.matchDiacritics, "find should match diacritics");
+
+      // Toggle it back to the original setting.
+      matchDiacriticsCheckbox.click();
+
+      // Changing diacritic matching does the search so clear the selected text
+      // before the next test.
+      await SpecialPowers.spawn(gBrowser, [], () => content.getSelection().removeAllRanges());
+    }
+
+    async function testHighlight() {
+      info("Testing find with highlight all.");
+      // Update the find state so the highlight button is clickable.
+      gFindBar.updateControlState(Ci.nsITypeAheadFind.FIND_FOUND, false);
+
+      let promise = once(gFindBar, "findhighlightallchange");
+
+      let highlightButton = gFindBar.getElement("highlight");
+      if (!highlightButton.checked)
+        highlightButton.click();
+
+      let e = await promise;
+      ok(e.detail.highlightAll, "find event should have highlight all set");
+      // Since we're preventing the default make sure nothing was highlighted.
+      await checkSelection();
+
+      // Toggle it back to the original setting.
+      if (highlightButton.checked)
+        highlightButton.click();
+    }
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" messagemanagergroup="test" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content-remote" remote="true" messagemanagergroup="test" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>

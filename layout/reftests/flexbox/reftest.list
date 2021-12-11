@@ -1,0 +1,127 @@
+# NOTE: Most of our flexbox tests have moved to the w3c-css reftest directory.
+# The tests that remain in *this* directory are still here because either:
+#   a) They (or one of their closely-related tests) use some moz-prefixed
+#      feature, e.g. MozReftestInvalidate.
+# ...or...
+#   b) They test a feature that has known bugs (e.g. bug 874713)
+#
+# Where possible & practical, we should try to address these so we can migrate
+# tests over to the w3c-css directory, so that they can become part of the
+# W3C's test suite.
+
+# SUBDIRECTORY: Reftests for paginated flex containers
+include pagination/reftest.list
+
+# Tests for cross-axis alignment (align-self / align-items properties)
+fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
+== flexbox-align-self-baseline-horiz-3.xhtml flexbox-align-self-baseline-horiz-3-ref.xhtml
+== flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
+== flexbox-item-align-self-dynamic-pos-001.html flexbox-item-align-self-dynamic-pos-001-ref.html
+== flexbox-item-align-self-dynamic-pos-002.html flexbox-item-align-self-dynamic-pos-002-ref.html
+
+# Tests for box-sizing on flex containers and flex items.
+== flexbox-box-sizing-on-container-horiz-1.html flexbox-box-sizing-on-container-horiz-1-ref.html
+== flexbox-box-sizing-on-container-vert-1.html flexbox-box-sizing-on-container-vert-1-ref.html
+== flexbox-box-sizing-on-items-horiz-1a.html flexbox-box-sizing-on-items-horiz-1-ref.html
+== flexbox-box-sizing-on-items-horiz-1b.html flexbox-box-sizing-on-items-horiz-1-ref.html
+== flexbox-box-sizing-on-items-vert-1a.html flexbox-box-sizing-on-items-vert-1-ref.html
+== flexbox-box-sizing-on-items-vert-1b.html flexbox-box-sizing-on-items-vert-1-ref.html
+
+# Tests for dynamic modifications of content inside/around a flex container
+== flexbox-dyn-changeContent-1.html flexbox-dyn-changeContent-1-ref.html
+== flexbox-dyn-changeContent-2.html flexbox-dyn-changeContent-2-ref.html
+== flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1-ref.xhtml
+== flexbox-dyn-changeFrameWidth-2.xhtml flexbox-dyn-changeFrameWidth-2-ref.xhtml
+== flexbox-dyn-changeFrameWidth-3.xhtml flexbox-dyn-changeFrameWidth-3-ref.xhtml
+== flexbox-dyn-changeFrameWidth-4.xhtml flexbox-dyn-changeFrameWidth-4-ref.xhtml
+== flexbox-dyn-changeOrder-1a.html flexbox-dyn-changeOrder-1-ref.html
+== flexbox-dyn-changeOrder-1b.html flexbox-dyn-changeOrder-1-ref.html
+== flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1-ref.xhtml
+== flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1-ref.xhtml
+
+# Tests for dynamic insertions of content into a flex container
+# (with existing [div | span | text] inside the flexbox, and new content
+# inserted adjacent to that existing content.)
+fuzzy(0-3,0-10) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+== flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
+fuzzy(0-3,0-10) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+
+fuzzy(0-3,0-10) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+== flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
+fuzzy(0-3,0-10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+
+== flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
+== flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
+== flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
+
+# Variant of one of the above tests, to regression-test an invalidation issue
+== flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1-ref.xhtml
+
+# Tests for empty flexboxes (with no flex items)
+== flexbox-empty-1a.xhtml  flexbox-empty-1-ref.xhtml
+== flexbox-empty-1b.xhtml  flexbox-empty-1-ref.xhtml
+== flexbox-empty-container-synthesized-baseline-001.html flexbox-empty-container-synthesized-baseline-001-ref.html
+
+# Tests for handling of floated elements inside a flexbox
+== flexbox-float-1a.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-1b.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-1c.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-1d.xhtml  flexbox-float-1-ref.xhtml
+== flexbox-float-2a.xhtml  flexbox-float-2-ref.xhtml
+== flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
+
+# Tests for handling of absolutely/fixed/relatively-positioned flex items.
+== flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml
+== flexbox-position-absolute-2.xhtml  flexbox-position-absolute-2-ref.xhtml
+== flexbox-position-absolute-3.xhtml  flexbox-position-absolute-3-ref.xhtml
+== flexbox-position-absolute-4.xhtml  flexbox-position-absolute-4-ref.xhtml
+== flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
+fuzzy-if(Android,0-16,0-400) == flexbox-position-fixed-1.xhtml     flexbox-position-fixed-1-ref.xhtml
+fuzzy-if(Android,0-16,0-400) == flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml
+== flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
+== flexbox-position-fixed-4.xhtml     flexbox-position-fixed-4-ref.xhtml
+
+# Tests for inline content in a flexbox that gets wrapped in an anonymous block
+fails == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
+fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
+== flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
+== flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+== flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+== flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+== flexbox-inlinecontent-horiz-4.xhtml  flexbox-inlinecontent-horiz-4-ref.xhtml
+== flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
+
+# Tests for intrinsic sizing of flexboxes
+== flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+== flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+== flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
+== flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
+
+# Tests for invalidation after dynamic modifications
+== flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
+
+# Tests for flexbox in an iframe that gets resized.
+fuzzy(0-1,0-8) fuzzy-if(!nativeThemePref&&cocoaWidget,0-1,0-14) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
+fuzzy(0-1,0-5) == flexbox-resizeviewport-2.xhtml flexbox-resizeviewport-2-ref.xhtml
+
+# Tests for flexbox styling on things that don't support it
+== flexbox-styling-on-svg-1.svg flexbox-styling-on-svg-1-ref.svg
+
+# Tests with widgets as flex items
+fuzzy-if(gtkWidget,0-1,0-66) fuzzy-if(!nativeThemePref,0-1,0-1) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-74) fuzzy-if(winWidget,0-1,0-5) fuzzy-if(!nativeThemePref,0-1,0-19) fuzzy-if(!nativeThemePref&&swgl,0-26,0-20) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+skip-if(gtkWidget) fuzzy-if(!nativeThemePref,0-6,0-8) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html # bug 1260965 for gtk
+fuzzy-if(gtkWidget,0-1,0-31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+
+# Tests for table flex items
+== flexbox-table-flex-items-1.html flexbox-table-flex-items-1-ref.html
+== flexbox-table-flex-items-2.html flexbox-table-flex-items-2-ref.html
+== flexbox-table-flex-items-3.html flexbox-table-flex-items-3-ref.html
+== flexbox-table-flex-items-4.html flexbox-table-flex-items-4-ref.html
+== flexbox-table-flex-items-5.html flexbox-table-flex-items-5-ref.html
+
+# Tests for Bug 1500627. Keywords on min-height (block size) should behave as
+# the initial value. (i.e. auto)
+== flexbox-min-bsize-keywords-vert-1.html flexbox-min-bsize-keywords-vert-1-ref.html
+== flexbox-min-bsize-keywords-horiz-1.html flexbox-min-bsize-keywords-horiz-1-ref.html
+== flexbox-bsize-keywords-no-stretch-1.html flexbox-bsize-keywords-no-stretch-1-ref.html

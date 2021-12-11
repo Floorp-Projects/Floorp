@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Scrolling doesn't cause extra SchedulePaint calls</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  if (SpecialPowers.getBoolPref("apz.force_disable_desktop_zooming_scrollbars") ||
+      getPlatform() == "android") {
+    return;
+  }
+
+  while (window.scrollY == 0) {
+    // the scrollframe is not yet marked as APZ-scrollable. Mark it so before
+    // continuing.
+    window.scrollTo(0, 1000);
+    await promiseApzFlushedRepaints();
+  }
+
+  window.synthesizeKey("KEY_ArrowDown");
+  // This is really tricky. We want to check that during the main part of
+  // scrolling after this we don't get any SchedulePaint calls. The way that we
+  // test that is to use checkAndClearDisplayListState on the document element
+  // to make sure it didn't have display list building ran for it. The
+  // synthesizeKey calls above will end up in ScrollFrameHelper::ScrollBy,
+  // which calls SchedulePaint in order to pass the scroll to the compositor to
+  // perform. That SchedulePaint will result in display list building for the
+  // document element, and that's okay, but we want to call
+  // checkAndClearDisplayListState (to clear the display list building state)
+  // right after that display list building, so that we can observe if any
+  // display list building happens after it. That way that we do that is a rAF,
+  // which runs immediately before painting, and then a setTimeout from the
+  // rAF, which should run almost immediately after painting. Then we wait for
+  // a scroll event, this scroll event is triggered by the compositor updating
+  // the main thread scroll position. And here is where we finally get to what
+  // we want to actually test. The original bug came about when the main
+  // thread, while processing the repaint request from the compositor, called
+  // SchedulePaint, and hence caused display list building. So we want to check
+  // that the refresh driver tick after the scroll event does not do any
+  // display list building. We again use a setTimeout from a rAF to run right
+  // after the paint and check that there was no display list building.
+  await new Promise(resolve => {
+    window.requestAnimationFrame(() => {
+      setTimeout(checkNoDisplayListRebuild, 0, resolve);
+    });
+  });
+}
+
+function checkNoDisplayListRebuild(resolve) {
+  var utils = window.opener.SpecialPowers.getDOMWindowUtils(window);
+  var elem = document.documentElement;
+  utils.checkAndClearDisplayListState(elem);
+  window.addEventListener("scroll", function () {
+    window.requestAnimationFrame(() => {
+      setTimeout(function() {
+        is(utils.checkAndClearDisplayListState(elem), false, "Document element didn't get display list");
+        resolve();
+      },0);
+    });
+  }, {once: true});
+}
+
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body style="height: 5000px">
+ <div style="height: 50px">spacer</div>
+ <button id="b" style="width: 10px; height: 10px"></button>
+</body>
+</html>

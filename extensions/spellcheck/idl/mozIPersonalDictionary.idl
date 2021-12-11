@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIStringEnumerator;
+
+/**
+ * This interface represents a Personal Dictionary.
+ */
+[scriptable, uuid(7EF52EAF-B7E1-462B-87E2-5D1DBACA9048)]
+interface mozIPersonalDictionary : nsISupports {
+
+  /**
+   * Load the dictionary
+   */
+  void load();
+
+  /**
+   * Save the dictionary
+   */
+  void save();
+
+  /**
+   * Get the (lexicographically sorted) list of words
+   */
+  readonly attribute nsIStringEnumerator wordList;
+
+  /**
+   * Check a unicode string
+   */
+  boolean check(in AString word);
+
+  /**
+   * Add a word to the personal dictionary
+   */
+  void addWord(in AString word);
+
+  /**
+   * Remove a word from the personal dictionary
+   */
+  void removeWord(in AString word);
+
+  /**
+   * Add a word to the ignore all list
+   */
+  void ignoreWord(in AString word);
+
+  /**
+   * Clear the ignore list
+   */
+  void endSession();
+};

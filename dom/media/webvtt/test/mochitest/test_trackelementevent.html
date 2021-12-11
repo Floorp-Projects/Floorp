@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 882677 - Implement the 'sourcing out of band text tracks' algorithm</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id="v" src="seek.webm" preload="auto">
+<script type="text/javascript">
+/**
+ * This test is used to ensure that we can load resource from vtt files correctly
+ * and will dispatch `error` event for invalid vtt files.
+ */
+var video = document.getElementById("v");
+
+async function runTest() {
+  let tracks = createTextTrackElements();
+  appendTracksToVideo(tracks);
+  await waitUntilsTrackLoadedOrGetError(tracks);
+  SimpleTest.finish()
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = runTest;
+
+/**
+ * The following are test helper functions.
+ */
+function createTextTrackElements() {
+  // Only first track has valid vtt resource, other tracks should get the error
+  // event because of invalid vtt resources.
+  let trackOne = document.createElement("track");
+  trackOne.src = "basic.vtt";
+  trackOne.kind = "subtitles";
+  trackOne.expectedLoaded = true;
+
+  let trackTwo = document.createElement("track");
+  trackTwo.src = "bad-signature.vtt";
+  trackTwo.kind = "captions";
+  trackTwo.expectedLoaded = false;
+
+  let trackThree = document.createElement("track");
+  trackThree.src = "bad.vtt";
+  trackThree.kind = "chapters";
+  trackThree.expectedLoaded = false;
+
+  return [trackOne, trackTwo, trackThree];
+}
+
+function appendTracksToVideo(tracks) {
+  for (let track of tracks) {
+    video.appendChild(track);
+  }
+}
+
+async function waitUntilsTrackLoadedOrGetError(tracks) {
+  let promises = [];
+  for (let track of tracks) {
+    // explictly enable those track in order to start loading.
+    track.track.mode = "hidden";
+    if (track.expectedLoaded) {
+      info(`adding 'load' event to wait list.`);
+      promises.push(once(track, "load"));
+    } else {
+      info(`adding 'error' event to wait list.`);
+      promises.push(once(track, "error"));
+    }
+  }
+  info(`wait until tracks finish loading or get error.`);
+  await Promise.all(promises);
+  ok(true, "all tracks finish loading or get error.");
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import "chrome://devtools/content/shared/components/SidebarToggle.css";
+@import "chrome://devtools/content/shared/components/splitter/SplitBox.css";
+@import "chrome://devtools/content/shared/components/tree/TreeView.css";
+@import "chrome://devtools/content/shared/components/Accordion.css";
+@import "chrome://devtools/content/shared/components/tabs/Tabs.css";
+@import "chrome://devtools/skin/components-frame.css";
+@import "chrome://devtools/content/shared/sourceeditor/codemirror/lib/codemirror.css";
+@import "chrome://devtools/content/shared/sourceeditor/codemirror/addon/dialog/dialog.css";
+@import "chrome://devtools/content/shared/sourceeditor/codemirror/mozilla.css";
+@import "chrome://devtools/content/shared/components/MdnLink.css";
+@import "chrome://devtools/content/shared/components/NotificationBox.css";
+@import "chrome://devtools/content/shared/components/AppErrorBoundary.css";
+
+/* Network panel components & styles */
+@import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/Toolbar.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/StatusBar.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/RequestList.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkActionBar.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/RequestBlockingPanel.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsBar.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/StatisticsPanel.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/CustomRequestPanel.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/StatusCode.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/messages.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/search.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/UrlPreview.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/HeadersPanel.css";
+
+/* General */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#mount,
+.launchpad-root,
+.network-monitor,
+.monitor-panel {
+  flex: initial;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.split-box {
+  overflow: hidden;
+}
+
+/* Drag and drop HAR files */
+
+.network-monitor > div {
+  height: 100%;
+}
+
+.network-monitor .dropHarFiles {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  text-align: center;
+  inset: 25px;
+  z-index: 100;
+  font-size: 3.5rem;
+  color: gray;
+  border: 4px dashed gray;
+  pointer-events: none;
+}
+
+.network-monitor > div[dragging="true"] .dropHarFiles {
+  display: flex;
+}
+
+.network-monitor > div[dragging="true"] {
+  filter: opacity(50%);
+}

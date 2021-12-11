@@ -1,0 +1,1389 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query="@"
+  searchType="functions"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+      "variables": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query="@"
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={true}
+              size=""
+              summaryMsg=""
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className="empty"
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value="@"
+                  />
+                </div>
+              </div>
+            </SearchInput>
+            <ResultList
+              expanded={false}
+              items={Array []}
+              key="results"
+              role="listbox"
+              selectItem={[Function]}
+              selected={0}
+              size="small"
+            >
+              <ul
+                aria-live="polite"
+                className="result-list small"
+                id="result-list"
+                role="listbox"
+              />
+            </ResultList>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query="#"
+  searchType="variables"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+      "variables": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query="#"
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={true}
+              size=""
+              summaryMsg=""
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className="empty"
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value="#"
+                  />
+                </div>
+              </div>
+            </SearchInput>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal Basic render with mount 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query=""
+  searchType="sources"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query=""
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={false}
+              size="big"
+              summaryMsg=""
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field big"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className=""
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value=""
+                  />
+                </div>
+              </div>
+            </SearchInput>
+            <ResultList
+              expanded={false}
+              items={Array []}
+              key="results"
+              role="listbox"
+              selectItem={[Function]}
+              selected={0}
+              size="big"
+            >
+              <ul
+                aria-live="polite"
+                className="result-list big"
+                id="result-list"
+                role="listbox"
+              />
+            </ResultList>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal Doesn't render when disabled 1`] = `""`;
+
+exports[`QuickOpenModal Renders when enabled 1`] = `
+<Slide
+  handleClose={[Function]}
+  in={true}
+>
+  <SearchInput
+    count={0}
+    expanded={false}
+    handleClose={[Function]}
+    hasPrefix={true}
+    isLoading={false}
+    onChange={[Function]}
+    onKeyDown={[Function]}
+    placeholder="Go to file…"
+    query=""
+    selectedItemId=""
+    showClose={false}
+    showErrorEmoji={false}
+    size="big"
+    summaryMsg=""
+  />
+  <ResultList
+    expanded={false}
+    items={Array []}
+    key="results"
+    role="listbox"
+    selectItem={[Function]}
+    selected={0}
+    size="big"
+  />
+</Slide>
+`;
+
+exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query=":abc"
+  searchType="goto"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+      "variables": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query=":abc"
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={true}
+              size=""
+              summaryMsg="Go to line"
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className="empty"
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value=":abc"
+                  />
+                  <div
+                    className="search-field-summary"
+                  >
+                    Go to line
+                  </div>
+                </div>
+              </div>
+            </SearchInput>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query="dasdasdas"
+  searchType="sources"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={2}
+              expanded={true}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query="dasdasdas"
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={false}
+              size="big"
+              summaryMsg=""
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={true}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field big"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className=""
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value="dasdasdas"
+                  />
+                </div>
+              </div>
+            </SearchInput>
+            <ResultList
+              expanded={true}
+              items={
+                Array [
+                  1,
+                  2,
+                ]
+              }
+              key="results"
+              role="listbox"
+              selectItem={[Function]}
+              selected={0}
+              size="big"
+            >
+              <ul
+                aria-live="polite"
+                className="result-list big"
+                id="result-list"
+                role="listbox"
+              >
+                <li
+                  aria-describedby="undefined-subtitle"
+                  aria-labelledby="undefined-title"
+                  className="result-item selected"
+                  key="undefinedundefined0"
+                  onClick={[Function]}
+                  role="option"
+                >
+                  <div
+                    className="title"
+                    id="undefined-title"
+                  />
+                </li>
+                <li
+                  aria-describedby="undefined-subtitle"
+                  aria-labelledby="undefined-title"
+                  className="result-item"
+                  key="undefinedundefined1"
+                  onClick={[Function]}
+                  role="option"
+                >
+                  <div
+                    className="title"
+                    id="undefined-title"
+                  />
+                </li>
+              </ul>
+            </ResultList>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query=":2222"
+  searchType="goto"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query=":2222"
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={false}
+              size=""
+              summaryMsg="Go to line"
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className=""
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value=":2222"
+                  />
+                  <div
+                    className="search-field-summary"
+                  >
+                    Go to line
+                  </div>
+                </div>
+              </div>
+            </SearchInput>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query=""
+  searchType=""
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query=""
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={false}
+              size=""
+              summaryMsg=""
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className=""
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value=""
+                  />
+                </div>
+              </div>
+            </SearchInput>
+            <ResultList
+              expanded={false}
+              items={Array []}
+              key="results"
+              role="listbox"
+              selectItem={[Function]}
+              selected={0}
+              size="small"
+            >
+              <ul
+                aria-live="polite"
+                className="result-list small"
+                id="result-list"
+                role="listbox"
+              />
+            </ResultList>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query=":22k22"
+  searchType="goto"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query=":22k22"
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={true}
+              size=""
+              summaryMsg="Go to line"
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className="empty"
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value=":22k22"
+                  />
+                  <div
+                    className="search-field-summary"
+                  >
+                    Go to line
+                  </div>
+                </div>
+              </div>
+            </SearchInput>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query="test"
+  searchType=""
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="entering"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal entering"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query="test"
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={true}
+              size=""
+              summaryMsg=""
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className="empty"
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value="test"
+                  />
+                </div>
+              </div>
+            </SearchInput>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;
+
+exports[`QuickOpenModal shows loading loads with function type search 1`] = `
+<Slide
+  handleClose={[Function]}
+  in={true}
+>
+  <SearchInput
+    count={0}
+    expanded={false}
+    handleClose={[Function]}
+    hasPrefix={true}
+    isLoading={false}
+    onChange={[Function]}
+    onKeyDown={[Function]}
+    placeholder="Go to file…"
+    query=""
+    selectedItemId=""
+    showClose={false}
+    showErrorEmoji={false}
+    size=""
+    summaryMsg="Loading…"
+  />
+  <ResultList
+    expanded={false}
+    items={Array []}
+    key="results"
+    role="listbox"
+    selectItem={[Function]}
+    selected={0}
+    size="small"
+  />
+</Slide>
+`;
+
+exports[`QuickOpenModal updateResults on enable 1`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={false}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query=""
+  searchType="sources"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+/>
+`;
+
+exports[`QuickOpenModal updateResults on enable 2`] = `
+<QuickOpenModal
+  clearHighlightLineRange={[MockFunction]}
+  closeQuickOpen={[MockFunction]}
+  cx={
+    Object {
+      "navigateCounter": 0,
+    }
+  }
+  displayedSources={Array []}
+  enabled={true}
+  highlightLineRange={[MockFunction]}
+  isOriginal={false}
+  query=""
+  searchType="sources"
+  selectSpecificLocation={[MockFunction]}
+  setQuickOpenQuery={[MockFunction]}
+  shortcutsModalEnabled={false}
+  symbols={
+    Object {
+      "functions": Array [],
+    }
+  }
+  symbolsLoading={false}
+  tabs={Array []}
+  thread="FakeThread"
+  toggleShortcutsModal={[MockFunction]}
+>
+  <Slide
+    handleClose={[Function]}
+    in={true}
+  >
+    <Transition
+      appear={true}
+      enter={true}
+      exit={true}
+      in={true}
+      mountOnEnter={false}
+      onEnter={[Function]}
+      onEntered={[Function]}
+      onEntering={[Function]}
+      onExit={[Function]}
+      onExited={[Function]}
+      onExiting={[Function]}
+      timeout={50}
+      unmountOnExit={false}
+    >
+      <Modal
+        handleClose={[Function]}
+        status="exited"
+      >
+        <div
+          className="modal-wrapper"
+          onClick={[Function]}
+        >
+          <div
+            className="modal exited"
+            onClick={[Function]}
+          >
+            <SearchInput
+              count={0}
+              expanded={false}
+              handleClose={[Function]}
+              hasPrefix={true}
+              isLoading={false}
+              onChange={[Function]}
+              onKeyDown={[Function]}
+              placeholder="Go to file…"
+              query=""
+              selectedItemId=""
+              showClose={false}
+              showErrorEmoji={false}
+              size="big"
+              summaryMsg=""
+            >
+              <div
+                className="search-outline"
+              >
+                <div
+                  aria-expanded={false}
+                  aria-haspopup="listbox"
+                  aria-owns="result-list"
+                  className="search-field big"
+                  role="combobox"
+                >
+                  <AccessibleImage
+                    className="search"
+                  >
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
+                  <input
+                    aria-activedescendant=""
+                    aria-autocomplete="list"
+                    aria-controls="result-list"
+                    className=""
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onFocus={[Function]}
+                    onKeyDown={[Function]}
+                    placeholder="Go to file…"
+                    spellCheck={false}
+                    value=""
+                  />
+                </div>
+              </div>
+            </SearchInput>
+            <ResultList
+              expanded={false}
+              items={Array []}
+              key="results"
+              role="listbox"
+              selectItem={[Function]}
+              selected={0}
+              size="big"
+            >
+              <ul
+                aria-live="polite"
+                className="result-list big"
+                id="result-list"
+                role="listbox"
+              />
+            </ResultList>
+          </div>
+        </div>
+      </Modal>
+    </Transition>
+  </Slide>
+</QuickOpenModal>
+`;

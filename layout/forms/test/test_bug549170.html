@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=549170
+-->
+<head>
+  <title>Test for Bug 549170</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="window.setTimeout(runTests, 0);">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=549170">Mozilla Bug 549170</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<input id='i'
+  onmouseup="mouseHandler(event);"
+  onmousedown="mouseHandler(event);">
+<textarea id='t'
+  onmouseup="mouseHandler(event);"
+  onmousedown="mouseHandler(event);"></textarea><br>
+<input id='ip' placeholder='foo'
+  onmouseup="mouseHandler(event);"
+  onmousedown="mouseHandler(event);">
+<textarea id='tp' placeholder='foo'
+  onmouseup="mouseHandler(event);"
+  onmousedown="mouseHandler(event);"></textarea>
+<pre id="test">
+
+<script type="application/javascript">
+
+/** Test for Bug 549170 **/
+
+var gNumberOfMouseEventsCaught = 0;
+
+SimpleTest.waitForExplicitFinish();
+
+function mouseHandler(aEvent)
+{
+  gNumberOfMouseEventsCaught++;
+  is(SpecialPowers.wrap(aEvent).originalTarget.nodeName, "DIV", "An inner div should be the target of the event");
+  ok(SpecialPowers.wrap(aEvent).originalTarget.implementedPseudoElement == "::-moz-text-control-editing-root", "the target div should be the editor div");
+}
+
+function checkMouseEvents(element)
+{
+  gNumberOfMouseEventsCaught = 0;
+
+  let x = element.offsetWidth / 2;
+  let y = element.offsetHeight / 2;
+
+  synthesizeMouse(element, x, y, {type: "mousedown", button: 0});
+  synthesizeMouse(element, x, y, {type: "mouseup",   button: 0});
+  synthesizeMouse(element, x, y, {type: "mousedown", button: 1});
+  // NOTE: this event is going to copy the buffer on linux, this should not be a problem
+  synthesizeMouse(element, x, y, {type: "mouseup",   button: 1});
+  synthesizeMouse(element, x, y, {type: "mousedown", button: 2});
+  synthesizeMouse(element, x, y, {type: "mouseup",   button: 2});
+
+  is(gNumberOfMouseEventsCaught, 6, "Some mouse events have not been caught");
+}
+
+function runTests()
+{
+  checkMouseEvents(document.getElementById('i'));
+  checkMouseEvents(document.getElementById('t'));
+  checkMouseEvents(document.getElementById('ip'));
+  checkMouseEvents(document.getElementById('tp'));
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

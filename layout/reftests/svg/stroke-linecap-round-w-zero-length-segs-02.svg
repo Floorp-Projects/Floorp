@@ -1,0 +1,32 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  
+  <title>Test invalidation for 'stroke-linecap: round' with zero length path segments</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1075399 for path and
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1187770 for line -->
+
+  <script>
+
+function run()
+{
+  document.getElementById('path').setAttribute('stroke-linecap', 'butt');
+  document.getElementById('line').setAttribute('stroke-linecap', 'butt');
+  document.documentElement.removeAttribute('class');
+}
+
+window.addEventListener("MozReftestInvalidate", run, false);
+
+  </script>
+
+  <rect width="100%" height="100%" style="fill:lime"/>
+
+  <path id="path" stroke="red" stroke-width="200" stroke-linecap="round"
+        d="M100,100 L100,100"/>
+  <line id="line" stroke="red" stroke-width="200" stroke-linecap="round"
+        x1="300" y1="300" x2="300" y2="300"/>
+
+</svg>

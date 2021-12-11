@@ -1,0 +1,85 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    suite: awsy
+    max-run-time: 7200
+    instance-size: xlarge
+    virtualization:
+        by-test-platform:
+            windows10-64-2004(?:-shippable)?-qr/.*: virtual-with-gpu
+            default: virtual
+    allow-software-gl-layers: false
+    mozharness:
+        script: awsy_script.py
+        config:
+            by-test-platform:
+                windows.*:
+                    - awsy/taskcluster_windows_config.py
+                macosx.*/opt:
+                    - awsy/macosx_config.py
+                default:
+                    - awsy/linux_config.py
+    tier:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64(?!-shippable).*: 3
+                    windows10-64-2004(-qr)?/opt: 3
+                    default: 2
+            default: default
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    python-3: true
+
+
+awsy:
+    description: Are we slim yet - tp5 pageset
+    treeherder-symbol: SY(sy)
+    run-on-projects: []
+
+awsy-tp6:
+    description: Are we slim yet - tp6 pageset
+    variants: [fission]
+    treeherder-symbol: SY(sy-tp6)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: []  # don't run on devedition
+            windows.*-32.*/opt: []
+            (linux|windows10-64-2004|mac)(?!.*shippable).*/opt: []
+            default: [integration, mozilla-central, mozilla-beta, mozilla-release]
+    mozharness:
+        extra-options:
+            - --tp6
+
+awsy-dmd:
+    description: Are we slim yet - dmd enabled
+    treeherder-symbol: SY(sy-d)
+    run-on-projects: []
+    mozharness:
+        extra-options:
+            - --dmd
+
+awsy-base:
+    description: Are we slim yet - about:blank base case
+    variants: [fission]
+    treeherder-symbol: SY(ab)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: []  # don't run on devedition.
+            windows.*-32.*/opt: []
+            (linux|windows10-64-2004|mac)(?!.*shippable).*/opt: []
+            default: [integration, mozilla-central, mozilla-beta, mozilla-release]
+    tier: default
+    mozharness:
+        extra-options:
+            - --base
+
+awsy-base-dmd:
+    description: Are we slim yet - about:blank base case - dmd enabled
+    treeherder-symbol: SY(ab-d)
+    run-on-projects: []
+    mozharness:
+        extra-options:
+            - --base
+            - --dmd

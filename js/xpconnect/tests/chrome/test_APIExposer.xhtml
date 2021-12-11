@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=634156
+-->
+<window title="Testing API exposing capabilities"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=634156"
+     target="_blank">Mozilla Bug 634156</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+      var sandbox = new Cu.Sandbox("about:blank");
+      sandbox.ok = ok;
+      sandbox.is = is;
+      Cu.evalInSandbox("Object.defineProperty(Object.prototype, 'getProp', { get: function() { throw 'FAIL: called getter' }, set: function() { throw 'FAIL: called setter'; } })", sandbox);
+
+      var obj = Cu.createObjectIn(sandbox);
+      is(obj, Cu.waiveXrays(obj), "createObjectIn waives");
+      is(Object.getPrototypeOf(obj), Cu.waiveXrays(Cu.evalInSandbox("Object.prototype", sandbox)),
+         "Object is a sandbox object");
+
+      function genPropDesc(value) {
+          return { enumerable: true, configurable: true, writable: true,
+                   value: value };
+      }
+      const props = {
+          'getProp': genPropDesc(function() { ok(true, "called prop that shadowed a getter"); }),
+          'argument': genPropDesc(function(arg) { is(arg, 42, "can pass arguments through"); }),
+          'returnval': genPropDesc(function() { return 42; })
+      };
+      Object.defineProperties(obj, props);
+      Cu.makeObjectPropsNormal(obj);
+
+      sandbox.api = obj;
+      Cu.evalInSandbox("ok(Object.getPrototypeOf(api) === Object.prototype, 'we have the object we expected'); \
+      api.getProp(); api.argument(42); is(api.returnval(), 42, 'return value was correct');\
+      ok(typeof api.getProp === 'function', 'functions are functions');\
+      ok(Object.getPrototypeOf(api.getProp) === Function.prototype, 'functions come from our scope');", sandbox);
+  ]]></script>
+</window>

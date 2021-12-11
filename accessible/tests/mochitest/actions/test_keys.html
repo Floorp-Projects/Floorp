@@ -1,0 +1,57 @@
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <title>Keyboard shortcuts tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+
+  <script type="application/javascript">
+    function testAcessKey(aAccOrElmOrID, aKey) {
+      var acc = getAccessible(aAccOrElmOrID);
+      if (!acc)
+        return;
+
+      is(acc.accessKey, aKey,
+         "Wrong keyboard shortcut on " + prettyName(aAccOrElmOrID));
+    }
+
+    function doTest() {
+      testAcessKey("input1", "");
+      testAcessKey("input2", MAC ? "⌃⌥b" : "Alt+Shift+b");
+      testAcessKey("link", MAC ? "⌃⌥l" : "Alt+Shift+l");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank" rel="opener"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=381599"
+     title="Inverse relations cache">
+    Mozilla Bug 381599
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <label accesskey="a">
+    <input id="input1"/>
+  </label>
+  <label accesskey="b" for="input2">
+  <input id="input2"/>
+  <a id="link" accesskey="l">link</a>
+</body>
+</html>

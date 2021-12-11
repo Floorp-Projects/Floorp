@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1604340
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1604340</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  /* global WrapperCachedNonISupportsTestInterface */
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, go);
+
+  async function go() {
+    await SpecialPowers.pushPrefEnv({set: [["dom.webidl.test1", false]]});
+    let result = null;
+    let constructorThrew = false;
+
+    try {
+      result = new WrapperCachedNonISupportsTestInterface();
+    } catch {
+      constructorThrew = true;
+    }
+
+    is(result, null, "The result value should remain null if the constructor threw an exception as intended.");
+    ok(constructorThrew, "The constructor should throw an exception if its pref is not set to true.");
+
+    await SpecialPowers.pushPrefEnv({set: [["dom.webidl.test1", true]]});
+    result = null;
+    constructorThrew = false;
+
+    try {
+      result = new WrapperCachedNonISupportsTestInterface();
+    } catch {
+      constructorThrew = true;
+    }
+
+    isnot(result, null, "Constructor should have executed successfully.");
+    ok(!constructorThrew, "The constructor should not throw an exception if its pref is set.");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1604340">Mozilla Bug 1604340</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

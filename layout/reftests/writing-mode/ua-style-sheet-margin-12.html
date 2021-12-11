@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on ol elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+</style>
+<div class=ltr>
+  <ol>
+    <li>Item</li>
+  </ol>
+</div>
+<div class=rtl dir=rtl>
+  <ol>
+    <li>Item</li>
+  </ol>
+</div>
+<div class=v-rl>
+  <ol>
+    <li>Item</li>
+  </ol>
+</div>

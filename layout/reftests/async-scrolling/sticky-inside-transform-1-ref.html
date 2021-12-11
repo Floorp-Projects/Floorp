@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<meta charset="utf-8" />
+<style>
+html, body { margin: 0 }
+
+#scroll {
+  overflow-y: auto;
+  scrollbar-width: none;
+  height: 100vh;
+  background: green;
+}
+#transform {
+  transform: translateX(100%) rotate(90deg);
+  height: 600px;
+  position: relative;
+  top: -300px;
+  transform-origin: 0% 0%;
+  background: #ff0;
+}
+#sticky {
+  position: relative;
+  top: 300px;
+  background: #0ff;
+  height: 100px;
+}
+</style>
+<div id="scroll">
+  <div id="transform">
+    <div id="sticky"></div>
+  </div>
+  <div id="content" style="height: 2000px;"></div>
+</div>
+</html>

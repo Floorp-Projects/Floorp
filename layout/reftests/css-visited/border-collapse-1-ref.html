@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style type="text/css">
+
+div.table { display: table; border-collapse: collapse }
+div.row { display: table-row }
+div.link, div.visited { display: table-cell }
+
+.row1 .link { border: medium solid blue }
+.row1 .visited { border: medium solid fuchsia }
+
+.row2 .link { border: thin dotted black }
+.row2 .visited { border: thin dotted red }
+
+.row3 .link { border: 7px double gray }
+.row3 .visited { border: 7px double olive }
+
+</style>
+<div class="table">
+  <div class="row row1">
+    <div class="link">unvisited</div>
+    <div class="visited">visited</div>
+  </div>
+  <div class="row row2">
+    <div class="visited">visited</div>
+    <div class="link">unvisited</div>
+  </div>
+  <div class="row row3">
+    <div class="link">unvisited</div>
+    <div class="visited">visited</div>
+  </div>
+</div>

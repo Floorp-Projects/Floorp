@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<script>
+function ok(condition, message) {
+  parent.postMessage({type: "ok", status: condition, msg: message}, "*");
+}
+
+function done() {
+  parent.postMessage({type: "done"}, "*");
+}
+
+ok(location.protocol == "https:", "We should be loaded from HTTPS");
+ok(!window.isSecureContext, "Should not be secure context");
+ok(!("serviceWorker" in navigator), "ServiceWorkerContainer not availalble in insecure context");
+done();
+</script>

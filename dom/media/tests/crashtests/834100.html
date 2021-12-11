@@ -1,0 +1,25 @@
+<html class="reftest-wait">
+  <head>
+    <script language="javascript">
+
+function start() {
+  remotePC = new RTCPeerConnection();
+  var cand = new RTCIceCandidate(
+                {candidate: "1 1 UDP 1 127.0.0.1 34567 type host",
+                 sdpMid: "helloworld",
+                 sdbMid: "helloworld", // Mis-spelt attribute for bug 833948 compatibility.
+                 sdpMLineIndex: 1
+                });
+  try {remotePC.addIceCandidate(cand);} catch(e) {} // bug 842075 - remove try when fixed
+  try {remotePC.addIceCandidate(cand, function(sdp){}, finish);} catch(e) {} // bug 842075 - remove try when fixed
+  finish();
+}
+
+function finish(arg) {
+  document.documentElement.removeAttribute("class");
+}
+    </script>
+  </head>
+  <body onload="setTimeout(start, 100)">
+  </body>
+</html>

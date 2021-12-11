@@ -1,0 +1,19 @@
+== label-dynamic.html label-dynamic-ref.html
+== radio-stretched.html radio-stretched-ref.html # test for bug 464589
+!= checked-native.html checked-native-notref.html
+== checked-appearance-none.html about:blank
+== unchecked-appearance-none.html about:blank
+!= checked-native.html about:blank
+!= checked-native-notref.html about:blank
+== indeterminate-checked.html about:blank
+== indeterminate-checked-notref.html about:blank
+== indeterminate-unchecked.html about:blank
+!= indeterminate-native-checked.html indeterminate-native-checked-notref.html
+!= indeterminate-native-unchecked.html indeterminate-native-unchecked-notref.html
+== indeterminate-selector.html indeterminate-selector-ref.html
+skip-if(!gtkWidget||!nativeThemePref) == gtk-theme-width-height.html gtk-theme-width-height-ref.html
+== checkbox-baseline.html checkbox-baseline-ref.html
+== checkbox-radio-color.html checkbox-radio-color-ref.html
+skip-if(gtkWidget&&nativeThemePref) == checkbox-clamp-01.html checkbox-clamp-01-ref.html
+skip-if((OSX||winWidget)&&nativeThemePref) fuzzy-if(gtkWidget&&nativeThemePref,25-25,32-32) fails-if(Android&&nativeThemePref) == checkbox-clamp-02.html checkbox-clamp-02-ref.html
+fails-if(!OSX&&nativeThemePref) != checkbox-minimum-size.html checkbox-minimum-size-notref.html

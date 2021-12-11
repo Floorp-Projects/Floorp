@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <emItems>
+    <emItem id="test_bug393285_2@tests.mozilla.org"/>
+    <emItem id="test_bug393285_3a@tests.mozilla.org">
+      <versionRange minVersion="1.0" maxVersion="1.0"/>
+    </emItem>
+    <emItem id="test_bug393285_3b@tests.mozilla.org">
+      <versionRange minVersion="1.0" maxVersion="1.0"/>
+    </emItem>
+    <emItem id="test_bug393285_4@tests.mozilla.org">
+      <versionRange minVersion="1.0" maxVersion="1.0">
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="1.0" maxVersion="1.0"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="test_bug393285_5@tests.mozilla.org" os="Darwin"/>
+    <emItem id="test_bug393285_6@tests.mozilla.org" os="XPCShell"/>
+    <emItem id="test_bug393285_7@tests.mozilla.org" os="Darwin,XPCShell,WINNT"/>
+    <emItem id="test_bug393285_8@tests.mozilla.org" xpcomabi="x86-msvc"/>
+    <emItem id="test_bug393285_9@tests.mozilla.org" xpcomabi="noarch-spidermonkey"/>
+    <emItem id="test_bug393285_10@tests.mozilla.org" xpcomabi="ppc-gcc3,noarch-spidermonkey,x86-msvc"/>
+    <emItem id="test_bug393285_11@tests.mozilla.org" os="Darwin" xpcomabi="ppc-gcc3,x86-msvc"/>
+    <emItem id="test_bug393285_12@tests.mozilla.org" os="Darwin" xpcomabi="ppc-gcc3,noarch-spidermonkey,x86-msvc"/>
+    <emItem id="test_bug393285_13@tests.mozilla.org" os="XPCShell" xpcomabi="ppc-gcc3,x86-msvc"/>
+    <emItem id="test_bug393285_14@tests.mozilla.org" os="XPCShell,WINNT" xpcomabi="ppc-gcc3,x86-msvc,noarch-spidermonkey"/>
+  </emItems>
+</blocklist>

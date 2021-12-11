@@ -1,0 +1,89 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(2030770e-542e-40cd-8061-cd9d4ad4227f)]
+interface nsILoginManagerCrypto : nsISupports {
+
+  const unsigned long ENCTYPE_BASE64 = 0; // obsolete
+  const unsigned long ENCTYPE_SDR = 1;
+
+  /**
+   * encrypt
+   *
+   * @param plainText
+   *        The string to be encrypted.
+   *
+   * Encrypts the specified string, returning the ciphertext value.
+   *
+   * NOTE: The current implemention of this inferface simply uses NSS/PSM's
+   * "Secret Decoder Ring" service. It is not recommended for general
+   * purpose encryption/decryption.
+   *
+   * Can throw if the user cancels entry of their master password.
+   */
+  AString encrypt(in AString plainText);
+
+  /*
+   * encryptMany
+   *
+   * @param plainTexts
+   *        The strings to be encrypted.
+   *
+   * Encrypts the specified strings, similar to encrypt, but returning a promise
+   * which resolves with the the encrypted strings.
+   */
+  Promise encryptMany(in jsval plainTexts);
+
+  /**
+   * decrypt
+   *
+   * @param cipherText
+   *        The string to be decrypted.
+   *
+   * Decrypts the specified string, returning the plaintext value.
+   *
+   * Can throw if the user cancels entry of their master password, or if the
+   * cipherText value can not be successfully decrypted (eg, if it was
+   * encrypted with some other key).
+   */
+  AString decrypt(in AString cipherText);
+
+  /**
+   * @param cipherTexts
+   *        The strings to be decrypted.
+   *
+   * Decrypts the specified strings, returning the plaintext values.
+   *
+   * Can throw if the user cancels entry of their master password, or if the
+   * cipherText value can not be successfully decrypted (eg, if it was
+   * encrypted with some other key).
+   */
+  Promise decryptMany(in jsval cipherTexts);
+
+  /**
+   * uiBusy
+   *
+   * True when a master password prompt is being displayed.
+   */
+  readonly attribute boolean uiBusy;
+
+  /**
+   * isLoggedIn
+   *
+   * Current login state of the token used for encryption. If the user is
+   * not logged in, performing a crypto operation will result in a master
+   * password prompt.
+   */
+  readonly attribute boolean isLoggedIn;
+
+  /**
+   * defaultEncType
+   *
+   * Default encryption type used by an implementation of this interface.
+   */
+  readonly attribute unsigned long defaultEncType;
+};

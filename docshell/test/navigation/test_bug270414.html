@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>
+    <style type="text/css">
+      iframe { width: 90%; height: 50px; }
+    </style>
+<script>
+/* eslint-disable no-useless-concat */
+/* global window0:true, window1:true, window2:true, window3:true */
+var headerHTML = "<html><head>" +
+                 "<script src='/tests/SimpleTest/EventUtils.js'><\/script>" +
+                 "<script src='NavigationUtils.js'><\/script>" +
+                 "</head><body>";
+var footerHTML = "</body></html>";
+
+function testChild0() {
+  if (!window.window0) {
+    window0 = window.open("", "window0", "width=10,height=10");
+    window0.document.open();
+    window0.document.write(headerHTML);
+    window0.document.write("<script>navigateByLocation(opener.frames[0])<\/script>");
+    window0.document.write(footerHTML);
+    window0.document.close();
+  }
+}
+
+function testChild1() {
+  if (!window.window1) {
+    window1 = window.open("", "window1", "width=10,height=10");
+    window1.document.open();
+    window1.document.write(headerHTML);
+    window1.document.write("<script>navigateByOpen('child1');<\/script>");
+    window1.document.write(footerHTML);
+    window1.document.close();
+  }
+}
+
+function testChild2() {
+  if (!window.window2) {
+    window2 = window.open("", "window2", "width=10,height=10");
+    window2.document.open();
+    window2.document.write(headerHTML);
+    window2.document.write("<script>navigateByForm('child2');<\/script>");
+    window2.document.write(footerHTML);
+    window2.document.close();
+  }
+}
+
+function testChild3() {
+  if (!window.window3) {
+    window3 = window.open("", "window3", "width=10,height=10");
+    window3.document.open();
+    window3.document.write(headerHTML);
+    window3.document.write("<script>navigateByHyperlink('child3');<\/script>");
+    window3.document.write(footerHTML);
+    window3.document.close();
+  }
+}
+
+add_task(async function() {
+  await waitForFinishedFrames(4);
+
+  await isNavigated(frames[0], "Should be able to navigate on-domain opener's children by setting location.");
+  await isNavigated(frames[1], "Should be able to navigate on-domain opener's children by calling window.open.");
+  await isNavigated(frames[2], "Should be able to navigate on-domain opener's children by submitting form.");
+  await isNavigated(frames[3], "Should be able to navigate on-domain opener's children by targeted hyperlink.");
+
+  window0.close();
+  window1.close();
+  window2.close();
+  window3.close();
+
+  await cleanupWindows();
+});
+
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=270414">Mozilla Bug 270414</a>
+<div id="frames">
+<iframe onload="testChild0();" name="child0" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe onload="testChild1();" name="child1" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe onload="testChild2();" name="child2" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+<iframe onload="testChild3();" name="child3" src="http://test1.example.org:80/tests/docshell/test/navigation/blank.html"></iframe>
+</div>
+<pre id="test">
+<script type="text/javascript">
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=421765
+-->
+<head>
+  <title>Text.wholeText tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=421765">Mozilla Bug 421765</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="xmlDocument" src="wholeTexty-helper.xml"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 421765 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var xmlDoc;
+
+function text(t) { return document.createTextNode(t); }
+function element() { return document.createElement("div"); }
+function cdata(t)
+{
+  xmlDoc = $("xmlDocument").contentDocument;
+  // document.createCDATASection isn't implemented; clone for the win
+  var node = xmlDoc.documentElement.firstChild.cloneNode(false);
+  is(node.nodeType, Node.CDATA_SECTION_NODE,
+     "er, why isn't this a CDATA section node?");
+  node.data = t;
+  return node;
+}
+
+
+function firstTests()
+{
+  var outer = element();
+  var first = text("first");
+  var second = element();
+  second.appendChild(text("element contents"));
+  outer.appendChild(first);
+  outer.appendChild(second);
+
+  is(first.wholeText, "first", "wrong wholeText for first");
+
+  var insertedText = text("-continued");
+  outer.insertBefore(insertedText, second);
+
+  is(first.wholeText, "first-continued",
+     "wrong wholeText for first after insertedText insertion");
+  is(insertedText.wholeText, "first-continued",
+     "wrong wholeText for insertedText after insertedText insertion");
+
+  var cdataNode = cdata("zero-")
+  outer.insertBefore(cdataNode, first);
+
+  is(first.wholeText, "zero-first-continued",
+     "wrong wholeText for first after cdataNode insertion");
+  is(cdataNode.wholeText, "zero-first-continued",
+     "wrong wholeText for cdataNode after cdataNode insertion");
+  is(insertedText.wholeText, "zero-first-continued",
+     "wrong wholeText for insertedText after cdataNode insertion");
+
+  outer.insertBefore(element(), first);
+
+  is(first.wholeText, "first-continued",
+     "wrong wholeText for first after element insertion");
+  is(cdataNode.wholeText, "zero-",
+     "wrong wholeText for cdataNode after element insertion");
+  is(insertedText.wholeText, "first-continued",
+     "wrong wholeText for insertedText after element insertion");
+
+  var cdataNode2 = cdata("-interrupted");
+  outer.insertBefore(cdataNode2, insertedText);
+
+  is(first.wholeText, "first-interrupted-continued",
+     "wrong wholeText for first after cdataNode2 insertion");
+  is(cdataNode2.wholeText, "first-interrupted-continued",
+     "wrong wholeText for cdataNode2 after cdataNode2 insertion");
+  is(insertedText.wholeText, "first-interrupted-continued",
+     "wrong wholeText for insertedText after cdataNode2 insertion");
+}
+
+function middleTests()
+{
+  var outer = element();
+  var first = element();
+  var last = element();
+  var middle = text("middle");
+  first.appendChild(text("first element contents"));
+  last.appendChild(text("last element contents"));
+  outer.appendChild(first);
+  outer.appendChild(middle);
+  outer.appendChild(last);
+
+  is(middle.wholeText, "middle", "wrong wholeText for middle");
+
+  var beforeMiddle = text("before-");
+  outer.insertBefore(beforeMiddle, middle);
+
+  is(middle.wholeText, "before-middle",
+     "wrong wholeText for middle after beforeMiddle insertion");
+  is(beforeMiddle.wholeText, "before-middle",
+     "wrong wholeText for beforeMiddle after beforeMiddle insertion");
+
+  var midElement = element();
+  midElement.appendChild(text("middle element"));
+  outer.insertBefore(midElement, middle);
+
+  is(middle.wholeText, "middle",
+     "wrong wholeText for middle after midElement insertion");
+  is(beforeMiddle.wholeText, "before-",
+     "wrong wholeText for beforeMiddle after midElement insertion");
+
+  var cdataNode = cdata("after");
+  outer.insertBefore(cdataNode, midElement);
+
+  is(cdataNode.wholeText, "before-after",
+     "wrong wholeText for cdataNode after cdataNode insertion");
+  is(beforeMiddle.wholeText, "before-after",
+     "wrong wholeText for beforeMiddle after cdataNode insertion");
+  is(middle.wholeText, "middle",
+     "wrong wholeText for middle after cdataNode insertion");
+
+  var cdataNode2 = cdata("before-");
+  outer.insertBefore(cdataNode2, middle);
+
+  is(cdataNode.wholeText, "before-after",
+     "wrong wholeText for cdataNode after cdataNode2 insertion");
+  is(beforeMiddle.wholeText, "before-after",
+     "wrong wholeText for beforeMiddle after cdataNode2 insertion");
+  is(cdataNode2.wholeText, "before-middle",
+     "wrong wholeText for middle after cdataNode2 insertion");
+  is(middle.wholeText, "before-middle",
+     "wrong wholeText for middle after cdataNode2 insertion");
+}
+
+function lastTests()
+{
+  var outer = element();
+  var first = element();
+  var second = text("second");
+  first.appendChild(text("element contents"));
+  outer.appendChild(first);
+  outer.appendChild(second);
+
+  is(second.wholeText, "second", "wrong wholeText for second");
+
+  var insertedText = text("before-");
+  outer.insertBefore(insertedText, second);
+
+  is(second.wholeText, "before-second",
+     "wrong wholeText for second after insertedText insertion");
+  is(insertedText.wholeText, "before-second",
+     "wrong wholeText for insertedText after insertedText insertion");
+
+  var cdataNode = cdata("zero-")
+  outer.insertBefore(cdataNode, insertedText);
+
+  is(cdataNode.wholeText, "zero-before-second",
+     "wrong wholeText for cdataNode after cdataNode insertion");
+  is(second.wholeText, "zero-before-second",
+     "wrong wholeText for second after cdataNode insertion");
+  is(insertedText.wholeText, "zero-before-second",
+     "wrong wholeText for insertedText after cdataNode insertion");
+
+  outer.insertBefore(element(), second);
+
+  is(second.wholeText, "second",
+     "wrong wholeText for second after element insertion");
+  is(cdataNode.wholeText, "zero-before-",
+     "wrong wholeText for cdataNode after element insertion");
+  is(insertedText.wholeText, "zero-before-",
+     "wrong wholeText for insertedText after element insertion");
+
+  var cdataNode2 = cdata("interrupted-");
+  outer.insertBefore(cdataNode2, insertedText);
+
+  is(second.wholeText, "second",
+     "wrong wholeText for second after cdataNode2 insertion");
+  is(cdataNode2.wholeText, "zero-interrupted-before-",
+     "wrong wholeText for cdataNode2 after cdataNode2 insertion");
+  is(insertedText.wholeText, "zero-interrupted-before-",
+     "wrong wholeText for insertedText after cdataNode2 insertion");
+}
+
+function noParentTests()
+{
+  var textNode = text("foobar");
+  is(textNode.wholeText, textNode.data,
+     "orphaned textNode should have wholeText == data");
+  is(textNode.wholeText, "foobar",
+     "orphaned textNode should have wholeText == 'foobar'");
+
+  var cdataSection = cdata("baz");
+  is(cdataSection.wholeText, cdataSection.data,
+     "orphaned cdatasection should have wholeText == data");
+  is(cdataSection.wholeText, "baz",
+     "orphaned cdatasection should have wholeText == data");
+}
+
+function tests()
+{
+  try
+  {
+    firstTests();
+    middleTests();
+    lastTests();
+    noParentTests();
+  }
+  catch (e)
+  {
+    ok(false, "error thrown: " + e);
+  }
+  finally
+  {
+    SimpleTest.finish();
+  }
+}
+
+window.addEventListener("load", tests);
+</script>
+</pre>
+</body>
+</html>
+

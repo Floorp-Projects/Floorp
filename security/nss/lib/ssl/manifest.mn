@@ -1,0 +1,73 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+# DEFINES = -DTRACE
+
+ifdef ZLIB_INCLUDE_DIR
+INCLUDES += -I$(ZLIB_INCLUDE_DIR)
+endif
+
+EXPORTS = \
+        ssl.h \
+        sslt.h \
+        sslerr.h \
+        sslexp.h \
+        sslproto.h \
+        preenc.h \
+        $(NULL)
+
+MODULE = nss
+
+CSRCS = \
+        authcert.c \
+        cmpcert.c \
+        dtls13con.c \
+        dtlscon.c \
+        prelib.c \
+        selfencrypt.c \
+        ssl3con.c \
+        ssl3ecc.c \
+        ssl3ext.c \
+        ssl3exthandle.c \
+        ssl3gthr.c \
+        sslauth.c \
+        sslbloom.c \
+        sslcert.c \
+        sslcon.c \
+        ssldef.c \
+        sslencode.c \
+        sslenum.c \
+        sslerr.c \
+        sslerrstrs.c \
+        sslgrp.c \
+        sslinfo.c \
+        sslinit.c \
+        sslmutex.c \
+        sslnonce.c \
+        sslprimitive.c \
+        sslreveal.c \
+        sslsecur.c \
+        sslsnce.c \
+        sslsock.c \
+        sslspec.c \
+        ssltrace.c \
+        sslver.c \
+        tls13con.c \
+        tls13ech.c \
+        tls13echv.c \
+        tls13exthandle.c \
+        tls13hashstate.c \
+        tls13hkdf.c \
+        tls13psk.c \
+        tls13replay.c \
+        tls13subcerts.c \
+        $(NULL)
+
+LIBRARY_NAME = ssl
+LIBRARY_VERSION = 3
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

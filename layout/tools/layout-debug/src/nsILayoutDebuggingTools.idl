@@ -1,0 +1,47 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim:cindent:tabstop=4:expandtab:shiftwidth=4:
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindow;
+
+/**
+ * A series of hooks into non-IDL-ized layout code to allow all the
+ * layout debugging functions to be used from chrome.
+ */
+
+[scriptable, uuid(f336d8d3-9721-4ad3-85d0-a7018c0a3383)]
+interface nsILayoutDebuggingTools : nsISupports
+{
+
+    /*
+     * Initialize debugger object to act on a docshell.
+     */
+    void init(in mozIDOMWindow win);
+
+    // Repaint the window.
+    void forceRefresh();
+
+    /* Toggle various debugging states */
+    void setVisualDebugging(in boolean enabled);
+    void setVisualEventDebugging(in boolean enabled);
+    void setReflowCounts(in boolean enabled);
+    void setPagedMode(in boolean enabled);
+
+    /* Run various tests. */
+    void dumpContent();
+    void dumpFrames();
+    void dumpFramesInCSSPixels();
+    void dumpTextRuns();
+    void dumpViews();
+    void dumpCounterManager();
+
+    void dumpStyleSheets();
+    void dumpMatchedRules();
+    void dumpComputedStyles();
+
+    void dumpReflowStats();
+};

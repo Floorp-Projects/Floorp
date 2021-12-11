@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+add_task(async function test_connect_bidirectionally_and_postMessage() {
+  function background() {
+    let onConnectCount = 0;
+    browser.runtime.onConnect.addListener(port => {
+      // 3. onConnect by connect() from CS.
+      browser.test.assertEq("from-cs", port.name);
+      browser.test.assertEq(1, ++onConnectCount,
+                            "BG onConnect should be called once");
+
+      let tabId = port.sender.tab.id;
+      browser.test.assertTrue(tabId, "content script must have a tab ID");
+
+      let port2;
+      let postMessageCount1 = 0;
+      port.onMessage.addListener(msg => {
+        // 11. port.onMessage by port.postMessage in CS.
+        browser.test.assertEq("from CS to port", msg);
+        browser.test.assertEq(1, ++postMessageCount1,
+                              "BG port.onMessage should be called once");
+
+        // 12. should trigger port2.onMessage in CS.
+        port2.postMessage("from BG to port2");
+      });
+
+      // 4. Should trigger onConnect in CS.
+      port2 = browser.tabs.connect(tabId, {name: "from-bg"});
+      let postMessageCount2 = 0;
+      port2.onMessage.addListener(msg => {
+        // 7. onMessage by port2.postMessage in CS.
+        browser.test.assertEq("from CS to port2", msg);
+        browser.test.assertEq(1, ++postMessageCount2,
+                              "BG port2.onMessage should be called once");
+
+        // 8. Should trigger port.onMessage in CS.
+        port.postMessage("from BG to port");
+      });
+    });
+
+    // 1. Notify test runner to create a new tab.
+    browser.test.sendMessage("ready");
+  }
+
+  function contentScript() {
+    let onConnectCount = 0;
+    let port;
+    browser.runtime.onConnect.addListener(port2 => {
+      // 5. onConnect by connect() from BG.
+      browser.test.assertEq("from-bg", port2.name);
+      browser.test.assertEq(1, ++onConnectCount,
+                            "CS onConnect should be called once");
+
+      let postMessageCount2 = 0;
+      port2.onMessage.addListener(msg => {
+        // 12. port2.onMessage by port2.postMessage in BG.
+        browser.test.assertEq("from BG to port2", msg);
+        browser.test.assertEq(1, ++postMessageCount2,
+                              "CS port2.onMessage should be called once");
+
+        // TODO(robwu): Do not explicitly disconnect, it should not be a problem
+        // if we keep the ports open. However, not closing the ports causes the
+        // test to fail with NS_ERROR_NOT_INITIALIZED in ExtensionUtils.jsm, in
+        // Port.prototype.disconnect (nsIMessageSender.sendAsyncMessage).
+        port.disconnect();
+        port2.disconnect();
+        browser.test.notifyPass("ping pong done");
+      });
+      // 6. should trigger port2.onMessage in BG.
+      port2.postMessage("from CS to port2");
+    });
+
+    // 2. should trigger onConnect in BG.
+    port = browser.runtime.connect({name: "from-cs"});
+    let postMessageCount1 = 0;
+    port.onMessage.addListener(msg => {
+      // 9. onMessage by port.postMessage in BG.
+      browser.test.assertEq("from BG to port", msg);
+      browser.test.assertEq(1, ++postMessageCount1,
+                            "CS port.onMessage should be called once");
+
+      // 10. should trigger port.onMessage in BG.
+      port.postMessage("from CS to port");
+    });
+  }
+
+  let extensionData = {
+    background,
+    manifest: {
+      content_scripts: [{
+        js: ["contentscript.js"],
+        matches: ["http://mochi.test/*/file_sample.html"],
+      }],
+    },
+    files: {
+      "contentscript.js": contentScript,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  info("extension loaded");
+
+  await extension.awaitMessage("ready");
+
+  let win = window.open("file_sample.html");
+  await extension.awaitFinish("ping pong done");
+  win.close();
+
+  await extension.unload();
+  info("extension unloaded");
+});
+</script>
+</body>

@@ -1,0 +1,17 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIUploadChannel.idl"
+
+/**
+ * nsIFormPOSTActionChannel
+ *
+ * Channel classes that want to be allowed for HTML form POST action must
+ * implement this interface.
+ */
+[scriptable, uuid(fc826b53-0db8-42b4-aa6a-5dd2cfca52a4)]
+interface nsIFormPOSTActionChannel : nsIUploadChannel
+{
+};

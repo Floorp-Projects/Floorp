@@ -1,0 +1,43 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1081819",
+  title: "WebAudio on both input and output side of peerconnection"
+});
+
+// This tests WebAudio (a 700Hz OscillatorNode) as input to a PeerConnection.
+// It also tests that a PeerConnection works as input to WebAudio as the remote
+// stream is connected to an AnalyserNode and compared to the source node.
+
+runNetworkTest(function() {
+  const test = new PeerConnectionTest();
+  test.audioContext = new AudioContext();
+  test.setMediaConstraints([{audio: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function PC_LOCAL_WEBAUDIO_SOURCE(test) {
+      const oscillator = test.audioContext.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 700;
+      oscillator.start();
+      const dest = test.audioContext.createMediaStreamDestination();
+      oscillator.connect(dest);
+      test.pcLocal.attachLocalStream(dest.stream);
+    }
+  ]);
+  test.chain.append([
+    function CHECK_AUDIO_FLOW(test) {
+      return test.pcRemote.checkReceivingToneFrom(test.audioContext, test.pcLocal);
+    }
+  ]);
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=585745
+-->
+<head>
+  <title>Test for Bug 585745</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=585745">Mozilla Bug 585745</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 585745 **/
+
+  var a = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", 'span');
+  var htmlProto = Object.getPrototypeOf(b);
+  var svgProto = Object.getPrototypeOf(a);
+  // XXXbz once bug 560072 is fixed, we should be able to use
+  // getOwnPropertyDescriptor here.
+  Object.defineProperty(svgProto, "style", {
+      get: htmlProto.__lookupGetter__("style"),
+    });
+
+  var threw = false;
+  try {
+    a.style;
+  } catch(e) {
+    threw = true;
+  }
+  is(threw, true,
+     "Getting .style off an svg element should throw in this case");
+</script>
+</pre>
+</body>
+</html>

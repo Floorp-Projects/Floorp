@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>The div shouldn't pull the html element's background color through the body background. There should be no red on this page.</title>
+
+<style>
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+html {
+  background-color: red;
+}
+
+body {
+  transform: translateX(0.1px);
+  background-color: white;
+  box-sizing: border-box;
+  padding: 10px;
+}
+
+div {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  box-sizing: border-box;
+  border: 1px solid black;
+  animation: leftFrom0To100 steps(1,end) 20000s alternate infinite;
+}
+
+@keyframes leftFrom0To100 {
+  from { left: 0px; }
+  to { left: 100px; }
+}
+
+</style>
+
+<div></div>

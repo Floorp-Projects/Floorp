@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<!DOCTYPE window>
+
+<window
+   id         = "xulnote-main-window"
+   xmlns      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:html = "http://www.w3.org/1999/xhtml" 
+   onload     = "init();"
+>
+  <scrollbox>
+   <vbox style="background-color:white;">
+      <label value="hahaha  0"/>
+      <label value="hahaha  1"/>
+      <label value="hahaha  2"/>
+      <label value="hahaha  3"/>
+      <label value="hahaha  4"/>
+      <label value="hahaha  5"/>
+      <label value="hahaha  6"/>
+      <label value="hahaha  7"/>
+      <label value="hahaha  8"/>
+      <label value="hahaha  9"/>
+      <label value="hahaha 10"/>
+      <label value="hahaha 11"/>
+      <label value="hahaha 12"/>
+      <label value="hahaha 13"/>
+      <label value="hahaha 14"/>
+      <label value="hahaha 15"/>
+      <label value="hahaha 16"/>
+      <label value="hahaha 17"/>
+      <label value="hahaha 18"/>
+      <label value="hahaha 19"/>
+   </vbox>
+<scrollbar
+    id="identifier"
+    align="horizontal"
+    curpos="20"
+    maxpos="100"
+    increment="1"
+    pageincrement="10"/>
+
+  </scrollbox>
+
+ <script type="application/x-javascript">
+  <![CDATA[
+   function init()
+   {
+   }
+ ]]>
+ </script>
+
+</window>

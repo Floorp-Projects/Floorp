@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the fingerprinting classifier</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script class="testbody" type="text/javascript">
+
+/* eslint-env mozilla/frame-script */
+
+var tests = [
+  // All disabled.
+  { config: [ false, false ], imgLoadExpected: true, scriptLoadExpected: true },
+
+  // Just entitylisted.
+  { config: [ false, true ], imgLoadExpected: true, scriptLoadExpected: true },
+
+  // Just blocklisted.
+  { config: [ true, false ], imgLoadExpected: true, scriptLoadExpected: false },
+
+  // entitylist + blocklist: entitylist wins
+  { config: [ true, true ], imgLoadExpected: true, scriptLoadExpected: true },
+];
+
+function prefValue(value, what) {
+  return value ? what : "";
+}
+
+async function runTest(test) {
+  await SpecialPowers.pushPrefEnv({set: [
+    [ "urlclassifier.features.fingerprinting.blacklistHosts", prefValue(test.config[0], "example.com") ],
+    [ "urlclassifier.features.fingerprinting.whitelistHosts", prefValue(test.config[1], "mochi.test,mochi.xorigin-test") ],
+    [ "urlclassifier.features.fingerprinting.blacklistTables", prefValue(test.config[0], "mochitest1-track-simple") ],
+    [ "urlclassifier.features.fingerprinting.whitelistTables", "" ],
+    [ "privacy.trackingprotection.enabled", false ],
+    [ "privacy.trackingprotection.annotate_channels", false ],
+    [ "privacy.trackingprotection.cryptomining.enabled", false ],
+    [ "privacy.trackingprotection.fingerprinting.enabled", true ],
+    [ "privacy.trackingprotection.socialtracking.enabled", false ],
+  ]});
+
+  info("Testing: " + JSON.stringify(test.config) + "\n");
+
+  // Let's load an image with a random query string to avoid network cache.
+  let result = await new Promise(resolve => {
+    let image = new Image();
+    image.src = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?" + Math.random();
+    image.onload = _ => resolve(true);
+    image.onerror = _ => resolve(false);
+  });
+
+  is(result, test.imgLoadExpected, "Image loading happened correctly");
+
+  // Let's load an image with a random query string to avoid network cache.
+  result = await new Promise(resolve => {
+    let image = new Image();
+    image.src = "http://tracking.example.org/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?" + Math.random();
+    image.onload = _ => resolve(true);
+    image.onerror = _ => resolve(false);
+  });
+
+  is(result, test.imgLoadExpected, "Image loading happened correctly (by table)");
+
+  // Let's load a script with a random query string to avoid network cache.
+  result = await new Promise(resolve => {
+    let script = document.createElement("script");
+    script.setAttribute(
+      "src",
+      "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js?" +
+      Math.random()
+    );
+    script.onload = _ => resolve(true);
+    script.onerror = _ => resolve(false);
+    document.body.appendChild(script);
+  });
+
+  is(result, test.scriptLoadExpected, "Script loading happened correctly");
+
+  // Let's load a script with a random query string to avoid network cache.
+  result = await new Promise(resolve => {
+    let script = document.createElement("script");
+    script.setAttribute(
+      "src",
+      "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js?" +
+      Math.random()
+    );
+    script.onload = _ => resolve(true);
+    script.onerror = _ => resolve(false);
+    document.body.appendChild(script);
+  });
+
+  is(result, test.scriptLoadExpected, "Script loading happened correctly");
+}
+
+async function runTests() {
+  let chromeScript = SpecialPowers.loadChromeScript(_ => {
+    const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+
+    addMessageListener("loadTrackers", __ => {
+      return UrlClassifierTestUtils.addTestTrackers();
+    });
+
+    addMessageListener("unloadTrackers", __ => {
+      UrlClassifierTestUtils.cleanupTestTrackers();
+    });
+  });
+
+  await chromeScript.sendQuery("loadTrackers");
+
+  for (let test in tests) {
+    await runTest(tests[test]);
+  }
+
+  await chromeScript.sendQuery("unloadTrackers");
+
+  chromeScript.destroy();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTests();
+
+</script>
+</body>
+</html>

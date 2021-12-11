@@ -1,0 +1,22 @@
+.more-recommendations {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  line-height: 1.230769231; // (16 / 13) -> 16px computed
+
+  &::after {
+    background: url('chrome://global/skin/icons/arrow-right-12.svg') no-repeat center center;
+    content: '';
+    -moz-context-properties: fill;
+    display: inline-block;
+    fill: var(--newtab-primary-action-background);
+    height: 16px;
+    margin-inline-start: 5px;
+    vertical-align: top;
+    width: 12px;
+  }
+
+  &:dir(rtl)::after  {
+    background-image: url('chrome://global/skin/icons/arrow-left-12.svg');
+  }
+}

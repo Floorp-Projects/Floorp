@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=691707
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 691707</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=691707">Mozilla Bug 691707</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 691707 **/
+
+var nodeList = document.body.childNodes;
+var properties = [];
+for (let i in nodeList) {
+  properties.push(i);
+}
+for (var j = 1; j < nodeList.length; ++j)
+    ok(properties.includes("" + j), "Enumerating hit all numeric properties");
+ok(properties.includes("item"), "Enumerating hit 'item' from the prototype");
+ok(properties.includes("length"), "Enumerating hit 'length' from the prototype");
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=302186
+-->
+<head>
+  <title>Test for Bug 302186</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Color.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style>
+
+
+span { color: red }
+:default + span { color: green }
+
+span.reverse { color: green }
+:default + span.reverse { color: red }
+
+button { display: none }
+input { display: none }
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=302186">Mozilla Bug 302186</a>
+<p id="display"></p>
+<div id="content" style="display: block">
+   
+  <!-- static default 1 -->
+  <form>
+   <div>
+    <input type="submit" checked="checked"><span id="s1a">There should be no red.</span>
+   </div>
+   <div>
+    <input type="submit"><span id="s1b" class="reverse">There should be no red.</span>
+   </div>
+  </form>
+  
+  <!-- static default 2 -->
+  <form>
+   <div>
+    <button type="submit" checked="checked" id="foo"></button>
+    <span id="s2a">There should be no red.</span>
+   </div>
+   <div>
+    <button type="submit"></button>
+    <span class="reverse" id="s2b">There should be no red.</span>
+   </div>
+  </form>
+
+  <!-- static default 3 -->
+  <form>
+   <div>
+    <input type="checkbox" checked="checked" id="foo">
+    <span id="s3a">There should be no red.</span>
+   </div>
+   <div>
+    <input checked="checked">
+    <span class="reverse" id="s3b">There should be no red.</span>
+   </div>
+  </form>
+
+  <!-- static default 3 -->
+  <form>
+   <div>
+    <input type="radio" checked="checked" id="foo">
+    <span id="s4a">There should be no red.</span>
+   </div>
+   <div>
+    <input checked="checked">
+    <span class="reverse" id="s4b">There should be no red.</span>
+   </div>
+  </form>
+
+  <!-- static default 5 -->
+  <form>
+   <div>
+    <input type="image"><span id="s5a">There should be no red.</span>
+   </div>
+   <div>
+  <input type="image"><span id="s5b" class="reverse">There should be no red.</span>
+
+   </div>
+  </form>
+
+  <!-- dynamic default 1 -->
+  <form>
+   <div>
+    <input type="submit" checked="checked" id="foo1">
+    <span class="reverse" id="1a">There should be no red.</span>
+   </div>
+   <div>
+    <input type="submit">
+    <span id="1b">There should be no red.</span>
+
+   </div>
+  </form>
+
+  <!-- dynamic default 2 -->
+  <form>
+   <div>
+    <button type="submit" checked="checked" id="foo2"></button>
+    <span class="reverse" id="2a">There should be no red.</span>
+   </div>
+   <div>
+    <button type="submit"></button>
+    <span id="2b">There should be no red.</span>
+   </div>
+  </form>
+
+  <!-- dynamic default 3 -->
+  <form>
+   <div>
+    <input type="checkbox" checked="checked" id="foo3">
+    <span class="reverse" id="3a">There should be no red.</span>
+   </div>
+   <div>
+    <input checked="checked" id="bar3">
+    <span id="3b">There should be no red.</span>
+   </div>
+  </form>
+
+  <!-- dynamic default 4 -->
+  <form>
+   <div>
+    <input type="radio" checked="checked" id="foo4">
+    <span class="reverse" id="4a" >There should be no red.</span>
+   </div>
+   <div>
+    <input checked="checked" id="bar4">
+    <span id="4b">There should be no red.</span>
+   </div>
+  </form>
+
+  <!-- dynamic default 5 -->
+  <form>
+   <div>
+    <input type="submit">
+    <input type="radio" checked="checked" id="foo5">
+    <span id="5" class="reverse">There should be no red.</span>
+   </div>
+  </form>
+
+  <!-- dynamic default 6 -->
+  <form>
+  <div id="div6">
+  <span id="6a">There should be no red.</span>
+</div>
+<div>
+  <input type="submit"><span id="6b" class="reverse">There should be no red.</span>
+</div>
+  </form>
+
+  <!-- dynamic default 7 -->
+  <form>
+<div>
+  <input type="submit"><span id="7a">There should be no red.</span>
+</div>
+<div id="div7">
+  <span class="reverse" id="7b">There should be no red.</span>
+
+</div>
+</form>
+
+  <!-- dynamic default 8 -->
+<form>
+<div id="div8"><span id="8a">There should be no red.</span>
+</div>
+<div>
+  <input type="image" id="foo"><span class="reverse" id="8b">There should be no red.</span>
+
+</div>
+</form>
+
+  <!-- dynamic default 9 -->
+<form>
+<div>
+  <input type="image"><span id="9a">There should be no red.</span>
+</div>
+<div id="div9">
+  <span class="reverse" id="9b">There should be no red.</span>
+
+</div>
+</form>
+
+  <!-- dynamic default 10 -->
+<form>
+<div id="div10">
+  <input type="submit"><span id="10a" class="reverse">There should be no red.</span>
+</div>
+<div>
+  <input type="submit"><span id="10b" >There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 11 -->
+<form>
+<div id="div11a">
+  <input type="submit"><span id="11a">There should be no red.</span>
+</div>
+<div id="div11">
+  <input type="submit"><span id="11b" class="reverse">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 12 -->
+<form>
+<div id="div12">
+  <input type="image"><span id="12a" class="reverse">There should be no red.</span>
+</div>
+<div>
+  <input type="image"><span id="12b">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 13 -->
+<form>
+<div id="div13a">
+  <input type="image"><span id="13a">There should be no red.</span>
+</div>
+<div id="div13">
+  <input type="image"><span id="13b" class="reverse">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 14 -->
+<form>
+<div id="div14a">
+  <input type="submit" id="foo14"><span id="14a">There should be no red.</span>
+</div>
+<div id="div14b">
+  <input type="submit" id="foo14b"><span id="14b" class="reverse">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 15 -->
+<form>
+<div id="div15a">
+  <input type="image" id="foo15a"><span id="15a">There should be no red.</span>
+</div>
+<div id="div15b">
+  <input type="image" id="foo15b"><span id="15b" class="reverse">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 16 -->
+<form>
+<div>
+  <input type="image" checked="checked" id="foo16"></button>
+  <span class="reverse" id="16a">There should be no red.</span>
+</div>
+<div>
+  <input type="image"></button><span id="16b">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 17 -->
+<form>
+<div>
+  <button type="button" id="foo17"></button>
+  <span id="17a">There should be no red.</span>
+</div>
+<div>
+  <button type="submit"></button><span class="reverse" id="17b">There should be no red.</span>
+</div>
+</form>
+
+<!-- dynamic default 18 -->
+<form>
+<div>
+  <input type="button" id="foo18"></button>
+  <span id="18a">There should be no red.</span>
+</div>
+<div>
+  <input type="submit"></button><span id="18b" class="reverse">There should be no red.</span>
+
+</div>
+</form>
+
+<!-- dynamic default 19 -->
+<form>
+<div id="div19">
+  <span id="19a">There should be no red.</span>
+</div>
+</form>
+
+<!-- dynamic default 20 -->
+<form>
+<div id="div20">
+  <span id="20a">There should be no red.</span>
+</div>
+</form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 302186 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function idColor(anId) {
+ var color = Color.fromComputedStyle(anId, "color");
+ return color.toRGBString();
+}
+
+is(idColor("s1a"),"rgb(0,128,0)", "CSS static-default 1a");
+is(idColor("s1b"),"rgb(0,128,0)", "CSS static-default 1b");
+is(idColor("s2a"),"rgb(0,128,0)", "CSS static-default 2a");
+is(idColor("s2b"),"rgb(0,128,0)", "CSS static-default 2b");
+is(idColor("s3a"),"rgb(0,128,0)", "CSS static-default 3a");
+is(idColor("s3b"),"rgb(0,128,0)", "CSS static-default 3b");
+is(idColor("s4a"),"rgb(0,128,0)", "CSS static-default 4a");
+is(idColor("s4b"),"rgb(0,128,0)", "CSS static-default 4b");
+is(idColor("s5a"),"rgb(0,128,0)", "CSS static-default 5a");
+is(idColor("s5b"),"rgb(0,128,0)", "CSS static-default 5b");
+
+function dynamicDefault1() {
+  $('foo1').removeAttribute("type");
+  is(idColor("1a"),"rgb(0,128,0)", "CSS dynamic-default 1a");
+  is(idColor("1b"),"rgb(0,128,0)", "CSS dynamic-default 1b");
+}
+
+function dynamicDefault2() {
+  $('foo2').setAttribute("type", "button");
+  is(idColor("2a"),"rgb(0,128,0)", "CSS dynamic-default 2a");
+  is(idColor("2b"),"rgb(0,128,0)", "CSS dynamic-default 2b");
+}
+
+function dynamicDefault3() {
+  $('foo3').removeAttribute("type");
+  $('bar3').setAttribute("type", "checkbox");
+  is(idColor("3a"),"rgb(0,128,0)", "CSS dynamic-default 3a");
+  is(idColor("3b"),"rgb(0,128,0)", "CSS dynamic-default 3b");
+}
+
+function dynamicDefault4() {
+  $('foo4').removeAttribute("type");
+  $('bar4').setAttribute("type", "radio");
+  is(idColor("4a"),"rgb(0,128,0)", "CSS dynamic-default 4a");
+  is(idColor("4b"),"rgb(0,128,0)", "CSS dynamic-default 4b");
+}
+
+function dynamicDefault5() {
+  $('foo5').setAttribute("type", "submit")
+  is(idColor("5"),"rgb(0,128,0)", "CSS dynamic-default 5");
+}
+
+function dynamicDefault6() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "submit");
+  $('div6').insertBefore(but, $('div6').firstChild);
+  is(idColor("6a"),"rgb(0,128,0)", "CSS dynamic-default 6a");
+  is(idColor("6b"),"rgb(0,128,0)", "CSS dynamic-default 6b");
+}
+
+function dynamicDefault7() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "submit");
+  $('div7').insertBefore(but, $('div7').firstChild);
+  is(idColor("7a"),"rgb(0,128,0)", "CSS dynamic-default 7a");
+  is(idColor("7b"),"rgb(0,128,0)", "CSS dynamic-default 7b");
+}
+
+function dynamicDefault8() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "image");
+  $('div8').insertBefore(but, $('div8').firstChild);
+  is(idColor("8a"),"rgb(0,128,0)", "CSS dynamic-default 8a");
+  is(idColor("8b"),"rgb(0,128,0)", "CSS dynamic-default 8b");
+}
+
+function dynamicDefault9() {
+  var but = document.createElement("input");
+  but.setAttribute("type", "image");
+  $('div9').insertBefore(but, $('div9').firstChild);
+  is(idColor("9a"),"rgb(0,128,0)", "CSS dynamic-default 9a");
+  is(idColor("9b"),"rgb(0,128,0)", "CSS dynamic-default 9b");
+}
+
+function dynamicDefault10() {
+  var inputs = $('div10').getElementsByTagName("input");
+  $('div10').removeChild(inputs[0]);
+  is(idColor("10a"),"rgb(0,128,0)", "CSS dynamic-default 10a");
+  is(idColor("10b"),"rgb(0,128,0)", "CSS dynamic-default 10b");
+}
+
+function dynamicDefault11() {
+  var inputs = $('div11').getElementsByTagName("input");
+  $('div11').removeChild(inputs[0]);
+  is(idColor("11a"),"rgb(0,128,0)", "CSS dynamic-default 11a");
+  is(idColor("11b"),"rgb(0,128,0)", "CSS dynamic-default 11b");
+}
+
+function dynamicDefault12() {
+  var inputs = $('div12').getElementsByTagName("input");
+  $('div12').removeChild(inputs[0]);
+  is(idColor("12a"),"rgb(0,128,0)", "CSS dynamic-default 12a");
+  is(idColor("12b"),"rgb(0,128,0)", "CSS dynamic-default 12b");
+}
+
+function dynamicDefault13() {
+  var inputs = $('div13').getElementsByTagName("input");
+  $('div13').removeChild(inputs[0]);
+  is(idColor("13a"),"rgb(0,128,0)", "CSS dynamic-default 13a");
+  is(idColor("13b"),"rgb(0,128,0)", "CSS dynamic-default 13b");
+}
+
+function dynamicDefault14() {
+  var div1 = document.getElementById("div14a");
+  var inputs = div1.getElementsByTagName("input");
+  var firstElement = div1.removeChild(inputs[0]);
+  var div2 = document.getElementById("div14b");
+  inputs = div2.getElementsByTagName("input");
+  var secondElement = div2.removeChild(inputs[0]);
+  div1.insertBefore(secondElement, div1.firstChild);
+  div2.insertBefore(firstElement, div2.firstChild);
+  is(idColor("14a"),"rgb(0,128,0)", "CSS dynamic-default 14a");
+  is(idColor("14b"),"rgb(0,128,0)", "CSS dynamic-default 14b");
+}
+
+function dynamicDefault15() {
+  var div1 = document.getElementById("div15a");
+  var inputs = div1.getElementsByTagName("input");
+  var firstElement = div1.removeChild(inputs[0]);
+  var div2 = document.getElementById("div15b");
+  inputs = div2.getElementsByTagName("input");
+  var secondElement = div2.removeChild(inputs[0]);
+  div1.insertBefore(secondElement, div1.firstChild);
+  div2.insertBefore(firstElement, div2.firstChild);
+  is(idColor("15a"),"rgb(0,128,0)", "CSS dynamic-default 15a");
+  is(idColor("15b"),"rgb(0,128,0)", "CSS dynamic-default 15b");
+}
+
+function dynamicDefault16() {
+  $("foo16").setAttribute("type", "button");
+  is(idColor("16a"),"rgb(0,128,0)", "CSS dynamic-default 16a");
+  is(idColor("16b"),"rgb(0,128,0)", "CSS dynamic-default 16b");
+}
+
+function dynamicDefault17() {
+  $("foo17").setAttribute("type", "submit");
+  is(idColor("17a"),"rgb(0,128,0)", "CSS dynamic-default 17a");
+  is(idColor("17b"),"rgb(0,128,0)", "CSS dynamic-default 17b");
+}
+
+function dynamicDefault18() {
+  $("foo18").setAttribute("type", "submit");
+  is(idColor("18a"),"rgb(0,128,0)", "CSS dynamic-default 18a");
+  is(idColor("18b"),"rgb(0,128,0)", "CSS dynamic-default 18b");
+}
+
+function dynamicDefault19() {
+  var newSubmit = document.createElement("input");
+  newSubmit.setAttribute("type", "submit");
+  var div1 = document.getElementById("div19");
+  div1.insertBefore(newSubmit, div1.firstChild);
+  is(idColor("19a"),"rgb(0,128,0)", "CSS dynamic-default 19a");
+}
+
+function dynamicDefault20() {
+  var newSubmit = document.createElement("input");
+  newSubmit.setAttribute("type", "image");
+  var div1 = document.getElementById("div20");
+  div1.insertBefore(newSubmit, div1.firstChild);
+  is(idColor("20a"),"rgb(0,128,0)", "CSS dynamic-default 20a");
+}
+
+addLoadEvent(dynamicDefault1);
+addLoadEvent(dynamicDefault2);
+addLoadEvent(dynamicDefault3);
+addLoadEvent(dynamicDefault4);
+addLoadEvent(dynamicDefault5);
+addLoadEvent(dynamicDefault6);
+addLoadEvent(dynamicDefault7);
+addLoadEvent(dynamicDefault8);
+addLoadEvent(dynamicDefault9);
+addLoadEvent(dynamicDefault10);
+addLoadEvent(dynamicDefault11);
+addLoadEvent(dynamicDefault12);
+addLoadEvent(dynamicDefault13);
+addLoadEvent(dynamicDefault14);
+addLoadEvent(dynamicDefault15);
+addLoadEvent(dynamicDefault16);
+addLoadEvent(dynamicDefault17);
+addLoadEvent(dynamicDefault18);
+addLoadEvent(dynamicDefault19);
+addLoadEvent(dynamicDefault20);
+
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>
+

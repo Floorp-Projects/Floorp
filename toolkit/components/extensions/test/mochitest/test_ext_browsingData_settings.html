@@ -1,0 +1,65 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test browsingData.settings</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const SETTINGS_LIST = [
+  "cache",
+  "cookies",
+  "history",
+  "formData",
+  "downloads",
+].sort();
+
+add_task(async function testSettings() {
+  async function background() {
+    browser.browsingData.settings().then(settings => {
+      browser.test.sendMessage("settings", settings);
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["browsingData"],
+    },
+  });
+
+  await extension.startup();
+  let settings = await extension.awaitMessage("settings");
+
+  // Verify that we get the keys back we expect.
+  isDeeply(
+    Object.entries(settings.dataToRemove)
+      .filter(([key, value]) => value)
+      .map(([key, value]) => key)
+      .sort(),
+    SETTINGS_LIST,
+    "dataToRemove contains expected properties."
+  );
+  isDeeply(
+    Object.entries(settings.dataRemovalPermitted)
+      .filter(([key, value]) => value)
+      .map(([key, value]) => key)
+      .sort(),
+    SETTINGS_LIST,
+    "dataToRemove contains expected properties."
+  );
+  is("since" in settings.options, true, "options contains |since|");
+
+  await extension.unload();
+});
+</script>
+</body>
+</html>

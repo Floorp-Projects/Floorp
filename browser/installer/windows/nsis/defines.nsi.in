@@ -1,0 +1,143 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Defining FunnelcakeVersion will append the value of StubURLVersionAppend to
+# StubURLVersion, append the value of URLManualDownloadAppend to
+# URLManualDownload, and append the value of URLStubDownloadAppend to
+# URLStubDownload. The value of FunnelcakeVersion should not be defined when it
+# is not used and when it is defined its value should never be empty.
+# !define FunnelcakeVersion        "999"
+
+!ifdef FunnelcakeVersion
+!define URLManualDownloadAppend  "&f=${FunnelcakeVersion}"
+!define URLStubDownloadAppend    "-f${FunnelcakeVersion}"
+!define StubURLVersionAppend     "-${FunnelcakeVersion}"
+!else
+!define URLManualDownloadAppend  ""
+!define URLStubDownloadAppend    ""
+!define StubURLVersionAppend     ""
+!endif
+
+# These defines should match application.ini settings
+!define AppName               "Firefox"
+!define AppVersion            "@APP_VERSION@"
+!define GREVersion            @MOZILLA_VERSION@
+!define AB_CD                 "@AB_CD@"
+
+!define FileMainEXE           "@MOZ_APP_NAME@.exe"
+!define MainWindowClass       "MozillaWindowClass"
+!define DialogWindowClass     "MozillaDialogClass"
+!define DDEApplication        "Firefox"
+!define AppRegName            "Firefox"
+
+!define BrandProductName      "Firefox"
+!ifndef DEV_EDITION
+!define BrandShortName        "@MOZ_APP_DISPLAYNAME@"
+!endif
+!ifndef BrandFullName
+!define BrandFullName         "${BrandFullNameInternal}"
+!endif
+
+!define CERTIFICATE_NAME            "Mozilla Corporation"
+!define CERTIFICATE_ISSUER          "DigiCert SHA2 Assured ID Code Signing CA"
+; Changing the name or issuer requires us to have both the old and the new
+;  in the registry at the same time, temporarily.
+!define CERTIFICATE_NAME_PREVIOUS   "Mozilla Corporation"
+!define CERTIFICATE_ISSUER_PREVIOUS "DigiCert Assured ID Code Signing CA-1"
+
+# LSP_CATEGORIES is the permitted LSP categories for the application. Each LSP
+# category value is ANDed together to set multiple permitted categories.
+# See http://msdn.microsoft.com/en-us/library/ms742253%28VS.85%29.aspx
+# The value below removes all LSP categories previously set.
+!define LSP_CATEGORIES "0x00000000"
+
+!if "@MOZ_UPDATE_CHANNEL@" == ""
+!define UpdateChannel "Unknown"
+!else
+!define UpdateChannel "@MOZ_UPDATE_CHANNEL@"
+!endif
+
+!define AccessibleHandlerCLSID "@MOZ_HANDLER_CLSID@"
+
+#ifdef MOZ_LAUNCHER_PROCESS
+!define MOZ_LAUNCHER_PROCESS
+!define MOZ_LAUNCHER_SUBKEY "Software\Mozilla\${AppName}\Launcher"
+#endif
+
+#ifdef RELEASE_OR_BETA
+!define RELEASE_OR_BETA
+#endif
+
+# Due to official and beta using the same branding this is needed to
+# differentiante between the url used by the stub for downloading.
+!if "@MOZ_UPDATE_CHANNEL@" == "beta"
+!define BETA_UPDATE_CHANNEL
+!endif
+
+!define BaseURLStubPing "http://download-stats.mozilla.org/stub"
+
+# ARCH is used when it is necessary to differentiate the x64 registry keys from
+# the x86 registry keys (e.g. the uninstall registry key).
+#ifdef HAVE_64BIT_BUILD
+!define HAVE_64BIT_BUILD
+#ifdef _ARM64_
+!define ARCH "AArch64"
+!define MinSupportedVer "Microsoft Windows 10 for ARM"
+#else
+!define ARCH "x64"
+!define MinSupportedVer "Microsoft Windows 7 x64"
+#endif
+#else
+!define MinSupportedVer "Microsoft Windows 7"
+!define ARCH "x86"
+#endif
+
+!define MinSupportedCPU "SSE2"
+
+#ifdef MOZ_MAINTENANCE_SERVICE
+!define MOZ_MAINTENANCE_SERVICE
+#endif
+
+#ifdef MOZ_BITS_DOWNLOAD
+!define MOZ_BITS_DOWNLOAD
+#endif
+
+#ifdef MOZ_DEFAULT_BROWSER_AGENT
+!define MOZ_DEFAULT_BROWSER_AGENT
+#endif
+
+!if "@AB_CD@" == "en-US"
+!define MOZ_OPTIONAL_EXTENSIONS
+!else if "@AB_CD@" == "zh-CN"
+!define MOZ_OPTIONAL_EXTENSIONS
+!endif
+
+# File details shared by both the installer and uninstaller
+VIProductVersion "1.0.0.0"
+VIAddVersionKey "ProductName"     "${BrandShortName}"
+VIAddVersionKey "CompanyName"     "${CompanyName}"
+#ifdef MOZ_OFFICIAL_BRANDING
+VIAddVersionKey "LegalTrademarks" "${BrandShortName} is a Trademark of The Mozilla Foundation."
+#endif
+VIAddVersionKey "LegalCopyright"  "${CompanyName}"
+VIAddVersionKey "FileVersion"     "${AppVersion}"
+VIAddVersionKey "ProductVersion"  "${AppVersion}"
+# Comments is not used but left below commented out for future reference
+# VIAddVersionKey "Comments"        "Comments"
+
+# It isn't possible to get the size of the installation prior to downloading
+# so the stub installer uses an estimate. The size is derived from the size of
+# the complete installer, the size of the extracted complete installer, and at
+# least 15 MB additional for working room.
+!define APPROXIMATE_REQUIRED_SPACE_MB "145"
+
+# Constants for parts of the telemetry submission URL
+!define TELEMETRY_BASE_URL https://incoming.telemetry.mozilla.org/submit
+!define TELEMETRY_NAMESPACE firefox-installer
+!define TELEMETRY_INSTALL_PING_VERSION 1
+!define TELEMETRY_INSTALL_PING_DOCTYPE install
+
+!define TELEMETRY_UNINSTALL_PING_NAMESPACE telemetry
+!define TELEMETRY_UNINSTALL_PING_DOCTYPE uninstall

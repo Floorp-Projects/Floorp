@@ -1,0 +1,23 @@
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #2 for bug 614969</title>
+<style>
+html,body {
+    color:black; background-color:white; font-size:12px; padding:0; margin:0;
+}
+
+li {margin-left:0; padding-left:0px; width:200px; }
+ol {margin-left:0; padding-left:40px; }
+</style>
+</head>
+<body>
+
+<div style="position:absolute;left:0;top:0"><ol style="list-style: decimal inside"><div style="position:absolute"><li>ABS</li></div><li style="padding-top:1em">List item</li></ol></div>
+<div style="position:absolute;left:0;top:3em"><ol style="list-style: decimal inside"><div style="position:relative"><li>REL BLOCK</li></div><li style="padding-top:1em">List item</li></ol></div>
+<div style="position:absolute;left:0;top:7em"><ol style="list-style: decimal inside"><div style="float:left;height:2em"><li>FLOAT</li></div><li style="padding-top:1em">List item</li></ol></div>
+<div style="position:absolute;left:0;top:10em"><ol style="list-style: decimal inside"><span style="position:relative"><li>REL INLINE</li></span><li style="padding-top:1em">List item</li></ol></div>
+<div style="position:absolute;left:0;top:14em"><ol style="list-style: decimal inside"><ol style="position:relative"><li>REL OL</li></ol><li style="padding-top:1em">List item</li></ol></div>
+<div style="position:absolute;left:0;top:20em"><ol id="x" style="list-style: decimal inside"><ol id="y" style="position:absolute;left:0;right:0"><li>ABS OL</li></ol><li style="padding-top:2em">List item</li></ol></div>
+
+</body>
+</html>

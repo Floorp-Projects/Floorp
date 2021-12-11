@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>CSS 2.1 Test Suite: generated content</title>
+    <link rel="author" title="Robert O'Callahan" href="mailto:robert@ocallahan.org" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#before-after-content"/>
+    <meta name="flags" content="" />
+<style>
+div { counter-reset:ctr; quotes:"\0022" "\0022" "\0022" "\0022"; }
+
+.gen::before {
+  content:counter(ctr) url(square-outline-32x32.png) open-quote "Before " attr(class);
+  counter-increment:ctr;
+}
+.gen::after {
+  content:counter(ctr) url(square-outline-32x32.png) "After " attr(class) close-quote;
+  counter-increment:ctr;
+}
+
+.abs::before {
+  position:absolute;
+  left:0;
+}
+.abs::after {
+  position:absolute;
+  right:0;
+}
+
+.rel::before {
+  position:relative;
+  top:-10px;
+}
+.rel::after {
+  position:relative;
+  top:10px;
+}
+
+div { border:1px solid green; margin:5px; height:100px; }
+</style>
+</head>
+<div class="gen abs">Inner</div>
+<!-- an element should be the containing block for its positioned content -->
+<div style="position:relative;" class="gen abs">Inner</div>
+<div class="gen rel">Inner</div>
+<div>Begin <span class="gen rel">Inner</span> End</div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=412901
+-->
+<head>
+  <title>Test for Bug 412901</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=412901">Mozilla Bug 412901</a>
+<div id="testDiv" style="width:20px; height:20px; border:solid silver; border-left-width:0.2px; border-right-width:0px; border-top-width:2.3px; border-bottom-width:5.5px;">
+<div id="testDiv2" style="width:20px; height:20px; border:hidden solid silver; border-left-width:0.2px; border-right-width:0px; border-top-width:2.3px; border-bottom-width:5.5px;">
+<p id="display"></p>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 412901 **/
+
+var div = document.getElementById("testDiv");
+var computedStyle = document.defaultView.getComputedStyle(div);
+// we never round down to 0px, very small widths are rounded up to 1px
+is(computedStyle.borderLeftWidth, "1px");
+is(computedStyle.borderRightWidth, "0px");
+is(computedStyle.borderTopWidth, "2px");
+is(computedStyle.borderBottomWidth, "5px");
+
+var div2 = document.getElementById("testDiv2");
+var computedStyle2 = document.defaultView.getComputedStyle(div2);
+is(computedStyle2.borderLeftWidth, "0px");
+is(computedStyle2.borderRightWidth, "0px");
+is(computedStyle2.borderTopWidth, "0px");
+is(computedStyle2.borderBottomWidth, "0px");
+</script>
+</pre>
+</body>
+</html>

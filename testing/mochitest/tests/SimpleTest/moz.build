@@ -1,0 +1,27 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += [
+    "/docshell/test/chrome/docshell_helpers.js",
+    "AccessibilityUtils.js",
+    "ChromeTask.js",
+    "EventUtils.js",
+    "ExtensionTestUtils.js",
+    "iframe-between-tests.html",
+    "LogController.js",
+    "MemoryStats.js",
+    "MockObjects.js",
+    "MozillaLogger.js",
+    "NativeKeyCodes.js",
+    "paint_listener.js",
+    "setup.js",
+    "SimpleTest.js",
+    "test.css",
+    "TestRunner.js",
+    "WindowSnapshot.js",
+    "WorkerHandler.js",
+    "WorkerSimpleTest.js",
+]

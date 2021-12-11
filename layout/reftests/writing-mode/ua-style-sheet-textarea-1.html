@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical properties of textarea in the UA stylesheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+</style>
+<div class=ltr>
+  <textarea>hello</textarea>
+</div>
+
+<div class=rtl dir=rtl>
+  <textarea>hello</textarea>
+</div>
+
+<div class=v-rl>
+  <textarea>hello</textarea>
+</div>

@@ -1,0 +1,106 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIDocShellTreeOwner
+ */
+
+interface nsIDocShellTreeItem;
+interface nsIRemoteTab;
+
+[scriptable, uuid(0e3dc4b1-4cea-4a37-af71-79f0afd07574)]
+interface nsIDocShellTreeOwner : nsISupports
+{
+	/**
+	 * Called when a content shell is added to the docshell tree.  This is
+	 * _only_ called for "root" content shells (that is, ones whose parent is a
+	 * chrome shell).
+	 *
+	 * @param aContentShell the shell being added.
+	 * @param aPrimary whether the shell is primary.
+	 */
+	void contentShellAdded(in nsIDocShellTreeItem aContentShell,
+	                       in boolean aPrimary);
+
+	/**
+	 * Called when a content shell is removed from the docshell tree.  This is
+	 * _only_ called for "root" content shells (that is, ones whose parent is a
+	 * chrome shell).  Note that if aContentShell was never added,
+	 * contentShellRemoved should just do nothing.
+	 *
+	 * @param aContentShell the shell being removed.
+	 */
+	void contentShellRemoved(in nsIDocShellTreeItem aContentShell);
+
+	/*
+	Returns the Primary Content Shell
+	*/
+	readonly attribute nsIDocShellTreeItem primaryContentShell;
+
+	void remoteTabAdded(in nsIRemoteTab aTab, in boolean aPrimary);
+	void remoteTabRemoved(in nsIRemoteTab aTab);
+
+	/*
+	In multiprocess case we may not have primaryContentShell but
+	primaryRemoteTab.
+	 */
+	readonly attribute nsIRemoteTab primaryRemoteTab;
+
+	/*
+	Tells the tree owner to size its window or parent window in such a way
+	that the shell passed along will be the size specified.
+	*/
+	[can_run_script]
+	void sizeShellTo(in nsIDocShellTreeItem shell, in long cx, in long cy);
+
+	/*
+	Gets the size of the primary content area in CSS pixels. This should work
+	for both in-process and out-of-process content areas.
+	*/
+	void getPrimaryContentSize(out long width, out long height);
+	/*
+	Sets the size of the primary content area in CSS pixels. This should work
+	for both in-process and out-of-process content areas.
+	*/
+	void setPrimaryContentSize(in long width, in long height);
+
+	/*
+	Gets the size of the root docshell in CSS pixels.
+	*/
+	void getRootShellSize(out long width, out long height);
+	/*
+	Sets the size of the root docshell in CSS pixels.
+	*/
+	void setRootShellSize(in long width, in long height);
+
+	/*
+	Sets the persistence of different attributes of the window.
+	*/
+	void setPersistence(in boolean aPersistPosition,
+                            in boolean aPersistSize,
+                            in boolean aPersistSizeMode);
+
+	/*
+	Gets the current persistence states of the window.
+	*/
+	void getPersistence(out boolean aPersistPosition,
+                            out boolean aPersistSize,
+                            out boolean aPersistSizeMode);
+
+	/*
+	Gets the number of tabs currently open in our window, assuming
+	this tree owner has such a concept.
+	*/
+	readonly attribute unsigned long tabCount;
+
+	/*
+	Returns true if there is a primary content shell or a primary
+	remote tab.
+	*/
+	readonly attribute bool hasPrimaryContent;
+};

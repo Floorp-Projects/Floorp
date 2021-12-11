@@ -1,0 +1,4 @@
+/* neither of them should load. trying multiple cases*/
+@import url("style_imported.css");
+@import 'style_imported.css';
+#text-for-import-test { color: blue; }

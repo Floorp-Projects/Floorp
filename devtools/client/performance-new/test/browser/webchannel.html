@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title></title>
+  </head>
+  <body>
+    This content page will send a WebChannel message to enable the profiler menu button.
+    <script>
+      "use strict";
+      document.title = "WebChannel Page Ready";
+
+      window.dispatchEvent(
+        new CustomEvent('WebChannelMessageToChrome', {
+          detail: JSON.stringify({
+            id: 'profiler.firefox.com',
+            message: { type: "ENABLE_MENU_BUTTON" },
+            requestId: 0,
+          }),
+        })
+      );
+    </script>
+  </body>
+</html>

@@ -1,0 +1,214 @@
+RSS: Main: 54116352
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/gearflowers.svg (next: http://localhost:15707/page_load_test/svg/composite-scale.svg)
+RSS: Main: 57442304
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/composite-scale.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg)
+RSS: Main: 57868288
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg)
+RSS: Main: 57880576
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg)
+RSS: Main: 58232832
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg (next: http://localhost:15707/page_load_test/svg/hixie-001.xml)
+RSS: Main: 56283136
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/hixie-001.xml (next: http://localhost:15707/page_load_test/svg/hixie-002.xml)
+RSS: Main: 58114048
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/hixie-002.xml (next: http://localhost:15707/page_load_test/svg/hixie-003.xml)
+RSS: Main: 55123968
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/hixie-003.xml (next: http://localhost:15707/page_load_test/svg/hixie-004.xml)
+RSS: Main: 57470976
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/hixie-004.xml (next: http://localhost:15707/page_load_test/svg/hixie-005.xml)
+RSS: Main: 57995264
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/hixie-005.xml (next: http://localhost:15707/page_load_test/svg/hixie-006.xml)
+RSS: Main: 58552320
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/hixie-006.xml (next: http://localhost:15707/page_load_test/svg/hixie-007.xml)
+RSS: Main: 58793984
+
+Cycle 1(1): loaded http://localhost:15707/page_load_test/svg/hixie-007.xml (next: http://localhost:15707/page_load_test/svg/gearflowers.svg)
+RSS: Main: 59756544
+
+RSS: Main: 59756544
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/gearflowers.svg (next: http://localhost:15707/page_load_test/svg/composite-scale.svg)
+RSS: Main: 61984768
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/composite-scale.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg)
+RSS: Main: 62033920
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg)
+RSS: Main: 62033920
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg)
+RSS: Main: 62058496
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg (next: http://localhost:15707/page_load_test/svg/hixie-001.xml)
+RSS: Main: 59916288
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/hixie-001.xml (next: http://localhost:15707/page_load_test/svg/hixie-002.xml)
+RSS: Main: 58867712
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/hixie-002.xml (next: http://localhost:15707/page_load_test/svg/hixie-003.xml)
+RSS: Main: 58101760
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/hixie-003.xml (next: http://localhost:15707/page_load_test/svg/hixie-004.xml)
+RSS: Main: 58953728
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/hixie-004.xml (next: http://localhost:15707/page_load_test/svg/hixie-005.xml)
+RSS: Main: 59559936
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/hixie-005.xml (next: http://localhost:15707/page_load_test/svg/hixie-006.xml)
+RSS: Main: 58613760
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/hixie-006.xml (next: http://localhost:15707/page_load_test/svg/hixie-007.xml)
+RSS: Main: 58822656
+
+Cycle 2(1): loaded http://localhost:15707/page_load_test/svg/hixie-007.xml (next: http://localhost:15707/page_load_test/svg/gearflowers.svg)
+RSS: Main: 61407232
+
+RSS: Main: 61407232
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/gearflowers.svg (next: http://localhost:15707/page_load_test/svg/composite-scale.svg)
+RSS: Main: 62328832
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/composite-scale.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg)
+RSS: Main: 62447616
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg)
+RSS: Main: 62382080
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg)
+RSS: Main: 62398464
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg (next: http://localhost:15707/page_load_test/svg/hixie-001.xml)
+RSS: Main: 60207104
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/hixie-001.xml (next: http://localhost:15707/page_load_test/svg/hixie-002.xml)
+RSS: Main: 59191296
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/hixie-002.xml (next: http://localhost:15707/page_load_test/svg/hixie-003.xml)
+RSS: Main: 59179008
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/hixie-003.xml (next: http://localhost:15707/page_load_test/svg/hixie-004.xml)
+RSS: Main: 59752448
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/hixie-004.xml (next: http://localhost:15707/page_load_test/svg/hixie-005.xml)
+RSS: Main: 59912192
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/hixie-005.xml (next: http://localhost:15707/page_load_test/svg/hixie-006.xml)
+RSS: Main: 58626048
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/hixie-006.xml (next: http://localhost:15707/page_load_test/svg/hixie-007.xml)
+RSS: Main: 59596800
+
+Cycle 3(1): loaded http://localhost:15707/page_load_test/svg/hixie-007.xml (next: http://localhost:15707/page_load_test/svg/gearflowers.svg)
+RSS: Main: 61300736
+
+RSS: Main: 61300736
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/gearflowers.svg (next: http://localhost:15707/page_load_test/svg/composite-scale.svg)
+RSS: Main: 62353408
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/composite-scale.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg)
+RSS: Main: 62541824
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg)
+RSS: Main: 62488576
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg)
+RSS: Main: 62500864
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg (next: http://localhost:15707/page_load_test/svg/hixie-001.xml)
+RSS: Main: 60387328
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/hixie-001.xml (next: http://localhost:15707/page_load_test/svg/hixie-002.xml)
+RSS: Main: 59912192
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/hixie-002.xml (next: http://localhost:15707/page_load_test/svg/hixie-003.xml)
+RSS: Main: 59858944
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/hixie-003.xml (next: http://localhost:15707/page_load_test/svg/hixie-004.xml)
+RSS: Main: 60334080
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/hixie-004.xml (next: http://localhost:15707/page_load_test/svg/hixie-005.xml)
+RSS: Main: 60751872
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/hixie-005.xml (next: http://localhost:15707/page_load_test/svg/hixie-006.xml)
+RSS: Main: 60944384
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/hixie-006.xml (next: http://localhost:15707/page_load_test/svg/hixie-007.xml)
+RSS: Main: 59129856
+
+Cycle 4(1): loaded http://localhost:15707/page_load_test/svg/hixie-007.xml (next: http://localhost:15707/page_load_test/svg/gearflowers.svg)
+RSS: Main: 61718528
+
+RSS: Main: 61718528
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/gearflowers.svg (next: http://localhost:15707/page_load_test/svg/composite-scale.svg)
+RSS: Main: 62312448
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/composite-scale.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg)
+RSS: Main: 62607360
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-opacity.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg)
+RSS: Main: 62611456
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate.svg (next: http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg)
+RSS: Main: 62570496
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/composite-scale-rotate-opacity.svg (next: http://localhost:15707/page_load_test/svg/hixie-001.xml)
+RSS: Main: 60448768
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/hixie-001.xml (next: http://localhost:15707/page_load_test/svg/hixie-002.xml)
+RSS: Main: 59535360
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/hixie-002.xml (next: http://localhost:15707/page_load_test/svg/hixie-003.xml)
+RSS: Main: 59113472
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/hixie-003.xml (next: http://localhost:15707/page_load_test/svg/hixie-004.xml)
+RSS: Main: 59822080
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/hixie-004.xml (next: http://localhost:15707/page_load_test/svg/hixie-005.xml)
+RSS: Main: 60170240
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/hixie-005.xml (next: http://localhost:15707/page_load_test/svg/hixie-006.xml)
+RSS: Main: 61100032
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/hixie-006.xml (next: http://localhost:15707/page_load_test/svg/hixie-007.xml)
+RSS: Main: 59305984
+
+Cycle 5(1): loaded http://localhost:15707/page_load_test/svg/hixie-007.xml (next: http://localhost:15707/page_load_test/svg/gearflowers.svg)
+RSS: Main: 61734912
+
+__start_tp_report
+_x_x_mozilla_page_load
+_x_x_mozilla_page_load_details
+|i|pagename|runs|
+|0;gearflowers.svg;79;65;68;68;67
+|1;composite-scale.svg;46;35;44;41;42
+|2;composite-scale-opacity.svg;21;22;24;22;20
+|3;composite-scale-rotate.svg;23;21;21;20;19
+|4;composite-scale-rotate-opacity.svg;19;24;19;19;23
+|5;hixie-001.xml;45643;14976;17807;14971;17235
+|6;hixie-002.xml;51257;15193;21693;14969;14974
+|7;hixie-003.xml;5016;37375;5021;5024;5008
+|8;hixie-004.xml;5052;5053;5054;5054;5053
+|9;hixie-005.xml;4618;4533;4611;4532;4554
+|10;hixie-006.xml;5059;5107;9741;5107;5089
+|11;hixie-007.xml;1629;1651;1648;1652;1649
+__end_tp_report
+__start_cc_report
+_x_x_mozilla_cycle_collect,729
+__end_cc_report
+__startTimestamp1333666702130__endTimestamp
+
+__startBeforeLaunchTimestamp1333666292747__endBeforeLaunchTimestamp
+__startAfterTerminationTimestamp1333666702743__endAfterTerminationTimestamp

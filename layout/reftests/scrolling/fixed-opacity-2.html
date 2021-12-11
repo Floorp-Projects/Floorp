@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<body style="height:2000px; margin:0; overflow:hidden">
+<div style="height:1000px; background:url(repeatable-diagonal-gradient.png) fixed repeat-x; opacity:0.5"></div>
+<script type="application/javascript">
+var topElements = document.getElementsByClassName("scrollTop");
+if (!topElements.length) {
+  topElements = [document.documentElement];
+}
+
+var failed = false;
+
+function doScroll(d)
+{
+  if (failed)
+    return;
+  for (var i = 0; i < topElements.length; ++i) {
+    var e = topElements[i];
+    e.scrollTop = d;
+    if (e.scrollTop != d) {
+      document.documentElement.textContent =
+          "Scrolling failed on " + e.tagName + " element, " +
+          "tried to scroll to " + d + ", got " + e.scrollTop +
+          " (Random number: " + Math.random() + ")";
+      failed = true;
+    }
+  }
+}
+
+if (document.location.search == '?ref') {
+  doScroll(700);
+} else {
+  doScroll(800);
+  document.documentElement.setAttribute("class", "reftest-wait");
+  window.addEventListener("MozReftestInvalidate", function() {
+    document.documentElement.removeAttribute("class");
+    doScroll(700);
+  });
+}
+</script>
+</body>
+</html>

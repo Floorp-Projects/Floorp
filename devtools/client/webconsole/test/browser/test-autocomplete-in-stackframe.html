@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf8">
+    <!--
+    - Any copyright is dedicated to the Public Domain.
+    - http://creativecommons.org/publicdomain/zero/1.0/
+    -->
+    <title>Test for bug 842682 - use the debugger API for web console autocomplete</title>
+    <script>
+      /* eslint-disable */
+      var foo1 = "globalFoo";
+
+      var foo1Obj = Object.assign(Object.create(null), {
+        prop1: "111",
+        prop2: {
+          prop21: "212121"
+        }
+      });
+
+      function firstCall() {
+        var foo2 = "fooFirstCall";
+
+        var foo2Obj = Object.assign(Object.create(null), {
+          prop1: Object.assign(Object.create(null), {
+            prop11: "111111"
+          })
+        });
+
+        secondCall();
+      }
+
+      function secondCall() {
+        var foo3 = "fooSecondCall";
+
+        var foo3Obj = Object.assign(Object.create(null), {
+          prop1: Object.assign(Object.create(null), {
+            prop11: "313131"
+          })
+        });
+
+        debugger;
+      }
+    </script>
+  </head>
+  <body>
+    <p>Hello world!</p>
+  </body>
+</html>

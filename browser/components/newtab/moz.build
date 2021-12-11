@@ -1,0 +1,43 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "New Tab Page")
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/abouthomecache/browser.ini",
+    "test/browser/browser.ini",
+]
+
+SPHINX_TREES["docs"] = "docs"
+SPHINX_TREES["content-src/asrouter/docs"] = "content-src/asrouter/docs"
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "test/xpcshell/xpcshell.ini",
+]
+
+XPIDL_SOURCES += [
+    "nsIAboutNewTabService.idl",
+]
+
+XPIDL_MODULE = "browser-newtab"
+
+EXTRA_JS_MODULES += [
+    "AboutNewTabService.jsm",
+]
+
+FINAL_TARGET_FILES.actors += [
+    "aboutwelcome/AboutWelcomeChild.jsm",
+    "aboutwelcome/AboutWelcomeParent.jsm",
+    "actors/ASRouterChild.jsm",
+    "actors/ASRouterParent.jsm",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+JAR_MANIFESTS += ["jar.mn"]

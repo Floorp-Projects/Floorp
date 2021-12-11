@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div {
+background-color: red;
+}
+div[mixedCase=true] {
+background-color: green !important;
+}
+</style>
+<script>
+function f() {
+var elem = document.createElement("div");
+elem.setAttribute("mixedcase",true);
+elem.appendChild(document.createTextNode("text"));
+document.getElementsByTagName("body")[0].appendChild(elem); }
+</script>
+</head>
+<body onload="f();">
+</body>
+</html>

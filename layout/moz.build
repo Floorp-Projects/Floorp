@@ -1,0 +1,44 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+DIRS += [
+    "style",
+    "base",
+    "generic",
+    "forms",
+    "tables",
+    "svg",
+    "xul",
+    "ipc",
+    "mathml",
+    "inspector",
+    "reftests",
+    "painting",
+]
+
+
+IPDL_SOURCES = [
+    "printing/ipc/PRemotePrintJob.ipdl",
+]
+
+if CONFIG["NS_PRINTING"]:
+    DIRS += ["printing"]
+
+TEST_DIRS += [
+    "tools/reftest",
+]
+
+DIRS += ["build", "media"]
+
+if CONFIG["MOZ_LAYOUT_DEBUGGER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
+    DIRS += ["tools/layout-debug"]
+
+CRASHTEST_MANIFESTS += ["../testing/crashtest/crashtests.list"]
+
+SPHINX_TREES["/layout"] = "docs"

@@ -1,0 +1,161 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Global styles
+ */
+a {
+  color: var(--theme-highlight-blue);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Storage Host Tree */
+
+#storage-tree {
+  min-width: 220px;
+  max-width: 500px;
+  overflow: auto;
+}
+
+#storage-tree {
+  background: var(--theme-sidebar-background);
+}
+
+/* Let the component gain focus when a click hits an empty area */
+#storage-tree {
+  -moz-user-focus: normal;
+}
+
+#storage-tree:focus {
+  outline: 0;
+}
+
+/* Storage Table */
+
+/* Let the component gain focus when a click hits an empty area */
+#storage-table {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  -moz-user-focus: normal;
+}
+
+#storage-table:focus {
+  outline: 0;
+}
+
+/* The minimum column width needs to be determined by the header width */
+.table-widget-cell {
+  min-width: unset;
+}
+
+/* Set minimum column widths */
+#name {
+  min-width: 65px;
+}
+
+#host {
+  min-width: 80px;
+}
+
+#path {
+  min-width: 60px;
+}
+
+#value {
+  min-width: 95px;
+}
+
+#hostOnly,
+#isHttpOnly,
+#sameSite {
+  min-width: 58px;
+}
+
+#isSecure {
+  min-width: 48px;
+}
+
+#expires,
+#lastAccessed,
+#creationTime {
+  min-width: 115px;
+}
+
+/* Prevent all columns except for value from resizing with the panel */
+#storage-table .table-widget-column:not(#value) {
+  width: 0;
+}
+
+/* Text input in storage table */
+#storage-table input {
+  appearance: none;
+  -moz-box-flex: 1;
+  /* make sure the outline is not cut off */
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 2px;
+  font: inherit;
+  color: var(--theme-text-color-strong);
+  background-color: var(--theme-body-background);
+}
+
+#storage-table input:focus {
+  outline: 1px solid var(--blue-50);
+}
+
+/* Variables View Sidebar */
+
+#storage-sidebar {
+  max-width: 500px;
+  min-width: 250px;
+}
+
+#storage-sidebar .devtools-toolbar {
+  padding-inline: 0;
+}
+
+/* Toolbar */
+
+/*
+  .devtools-input-toolbar forces display: flex; which does not work
+  properly with XUL. Force XUL flexbox instead.
+*/
+#storage-toolbar {
+  display: -moz-box;
+}
+
+#storage-searchbox {
+  -moz-box-flex: 1;
+  margin-inline-start: -3px;
+  margin-inline-end: 1px;
+}
+
+#storage-toolbar .add-button::before {
+  background-image: url("chrome://devtools/skin/images/add.svg");
+  -moz-user-focus: normal;
+}
+
+#storage-toolbar .refresh-button::before {
+  background-image: url("chrome://devtools/skin/images/reload.svg");
+  -moz-user-focus: normal;
+}
+
+#storage-toolbar .devtools-button {
+  min-width: 0;
+}
+
+#storage-toolbar .devtools-button hbox,
+#storage-toolbar .sidebar-toggle[hidden] {
+  display: none;
+}
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  #storage-tree,
+  #storage-sidebar {
+    max-width: 100%;
+  }
+}

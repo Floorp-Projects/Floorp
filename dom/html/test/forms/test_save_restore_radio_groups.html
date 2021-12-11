@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=350022
+-->
+<head>
+  <title>Test for Bug 350022</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=350022">Mozilla Bug 350022</a>
+<p id="display"></p>
+<div id="content"><!-- style="display: none">-->
+  <iframe src="save_restore_radio_groups.sjs"></iframe>
+  <iframe src="save_restore_radio_groups.sjs"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 350022 **/
+
+function checkRadioGroup(aFrame, aResults)
+{
+  var radios = frames[aFrame].document.getElementsByTagName('input');
+
+  is(radios.length, aResults.length,
+     "Radio group should have " + aResults.length + "elements");
+
+  for (var i=0; i<aResults.length; ++i) {
+    is(radios[i].checked, aResults[i],
+       "Radio checked state should be " + aResults[i]);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  /**
+   * We have two iframes each containing one radio button group.
+   * We are going to change the selected radio button in one group.
+   * Then, both iframes will be reloaded and the new groups will have another
+   * radio checked by default.
+   * For the first group (which had a selection change), nothing should change.
+   * For the second, the selected radio button should change.
+   */
+  checkRadioGroup(0, [true, false, false]);
+  checkRadioGroup(1, [true, false, false]);
+
+  frames[0].document.getElementsByTagName('input')[2].checked = true;
+  checkRadioGroup(0, [false, false, true]);
+
+  framesElts = document.getElementsByTagName('iframe');
+  framesElts[0].addEventListener("load", function() {
+    checkRadioGroup(0, [false, false, true]);
+
+    framesElts[1].addEventListener("load", function() {
+      checkRadioGroup(1, [false, true, false]);
+      SimpleTest.finish();
+    }, {once: true});
+
+    frames[1].location.reload();
+  }, {once: true});
+
+  frames[0].location.reload();
+});
+
+</script>
+</pre>
+</body>
+</html>

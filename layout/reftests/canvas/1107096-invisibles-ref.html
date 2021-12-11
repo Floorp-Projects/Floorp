@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<script>
+function draw() {
+	var c = document.getElementById('cc');
+	var g = c.getContext('2d');
+	g.fillStyle = 'red';
+	g.fillRect(0, 0, 200, 200);
+	g.font = '24px arial, sans-serif';
+	g.fillStyle = '#fff';
+	g.fillText('__', 10, 30);
+	g.fillText('__', 10, 60);
+	g.fillText('__', 10, 90);
+	g.fillText('__', 10, 120);
+}
+</script>
+</head>
+<body onload='draw()'>
+<canvas id='cc' width='200' height='200'></canvas>
+</body>
+</html>

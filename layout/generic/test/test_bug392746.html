@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=392746
+-->
+<head>
+  <title>Test for Bug 392746</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=392746">Mozilla Bug 392746</a>
+<div id="content">
+text text text text text <span id="d">ddd text text </span>text text text <br>
+text <span id="c">ccc text</span> text text <span id="e">eee text</span> text text text <span id="b">bbb text</span><br>
+ text text text text text text <span id="a">aaa text</span> text text text <br>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ var wu = SpecialPowers.getDOMWindowUtils(window);
+
+function ctrlselect(aX,aY, aX2, aY2) {
+  var modifyers = (navigator.platform.includes("Mac")) ? 8 : 2;
+  wu.sendMouseEvent('mousedown',  aX, aY, 0, 1, modifyers);
+  wu.sendMouseEvent('mousemove',  aX2, aY2, 0, 0, modifyers);
+  wu.sendMouseEvent('mouseup',  aX2, aY2, 0, 1, modifyers);
+}
+
+ function test() {
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+
+  var a=document.getElementById('a').getBoundingClientRect();
+  ctrlselect(a.left+1, a.top+1, a.right-1, a.top+1);
+  var b=document.getElementById('b').getBoundingClientRect();
+  ctrlselect(b.left+1, b.top+1, b.right-1, b.top+1);
+  var c=document.getElementById('c').getBoundingClientRect();
+  ctrlselect(c.left+1, c.top+1, c.right-1, c.top+1);
+  var d=document.getElementById('d').getBoundingClientRect();
+  ctrlselect(d.left+1, d.top+1, d.right-1, d.top+1);
+  var e=document.getElementById('e').getBoundingClientRect();
+  ctrlselect(e.right-1, e.top+1, e.left+1, e.top+1);
+
+  ok(sel.getRangeAt(0).toString() == 'ddd text text ', 'First selection range should be "ddd text text "');
+  ok(sel.getRangeAt(1).toString() == 'ccc text', 'First selection range should be "ccc text"');
+  ok(sel.getRangeAt(2).toString() == 'eee text', 'First selection range should be "eee text"');
+  ok(sel.getRangeAt(3).toString() == 'bbb text', 'First selection range should be "bbb text"');
+  ok(sel.getRangeAt(4).toString() == 'aaa text', 'First selection range should be "aaa text"');
+
+  ok(sel.focusNode == sel.anchorNode, 'focusNode and anchorNode should be the same');
+  ok(sel.focusNode.parentNode == document.getElementById('e'), 'focusNode.parentNode should be the same as the node with id=e');
+  ok(sel.focusOffset == 0, 'focusOffset should be 0');
+  ok(sel.anchorOffset == 8, 'anchorOffset should be 8');
+
+  wu.sendMouseEvent('mousedown', 0, 0, 0, 1, 0);
+  wu.sendMouseEvent('mousemove',  0, 0, 0, 0, 0);
+  wu.sendMouseEvent('mouseup',  0, 0, 0, 1, 0);
+
+  SimpleTest.finish();
+}
+
+  window.onload=function() {
+    SimpleTest.waitForExplicitFinish();
+    setTimeout(test, 0);
+  };
+</script>
+</pre>
+</body>
+</html>

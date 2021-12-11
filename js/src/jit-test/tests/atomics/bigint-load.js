@@ -1,0 +1,91 @@
+// |jit-test| test-join=--spectre-mitigations=off
+
+// These do not test atomicity, just that code generation for BigInt values
+// works correctly.
+
+const bigIntValues = [
+  // Definitely heap digits.
+  -(2n ** 2000n),
+  -(2n ** 1000n),
+
+  // -(2n**64n)
+  -18446744073709551617n,
+  -18446744073709551616n,
+  -18446744073709551615n,
+
+  // -(2n**63n)
+  -9223372036854775809n,
+  -9223372036854775808n,
+  -9223372036854775807n,
+
+  // -(2**32)
+  -4294967297n,
+  -4294967296n,
+  -4294967295n,
+
+  // -(2**31)
+  -2147483649n,
+  -2147483648n,
+  -2147483647n,
+
+  -1n,
+  0n,
+  1n,
+
+  // 2**31
+  2147483647n,
+  2147483648n,
+  2147483649n,
+
+  // 2**32
+  4294967295n,
+  4294967296n,
+  4294967297n,
+
+  // 2n**63n
+  9223372036854775807n,
+  9223372036854775808n,
+  9223372036854775809n,
+
+  // 2n**64n
+  18446744073709551615n,
+  18446744073709551616n,
+  18446744073709551617n,
+
+  // Definitely heap digits.
+  2n ** 1000n,
+  2n ** 2000n,
+];
+
+function testLoad() {
+  const int64 = new BigInt64Array(2);
+  const uint64 = new BigUint64Array(2);
+
+  // Test with constant index.
+  for (let i = 0; i < 50; ++i) {
+    for (let j = 0; j < bigIntValues.length; ++j) {
+      let value = bigIntValues[j];
+
+      int64[0] = value;
+      assertEq(Atomics.load(int64, 0), BigInt.asIntN(64, value));
+
+      uint64[0] = value;
+      assertEq(Atomics.load(uint64, 0), BigInt.asUintN(64, value));
+    }
+  }
+
+  // Test with variable index.
+  for (let i = 0; i < 50; ++i) {
+    for (let j = 0; j < bigIntValues.length; ++j) {
+      let value = bigIntValues[j];
+      let idx = j & 1;
+
+      int64[idx] = value;
+      assertEq(Atomics.load(int64, idx), BigInt.asIntN(64, value));
+
+      uint64[idx] = value;
+      assertEq(Atomics.load(uint64, idx), BigInt.asUintN(64, value));
+    }
+  }
+}
+for (let i = 0; i < 2; ++i) testLoad();

@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+:root {
+  /* header height is 28px + 1px for its border */
+  --editor-header-height: 29px;
+  /* footer height is 24px + 1px for its border */
+  --editor-footer-height: 25px;
+  /* searchbar height is 24px + 1px for its top border */
+  --editor-searchbar-height: 25px;
+  /* Remove once https://bugzilla.mozilla.org/show_bug.cgi?id=1520440 lands */
+  --theme-code-line-height: calc(15 / 11);
+  /* Background and text colors and opacity for skipped breakpoint panes */
+  --skip-pausing-background-color: var(--theme-toolbar-hover);
+  --skip-pausing-opacity: 0.6;
+  --skip-pausing-color: var(--theme-body-color);
+}
+
+:root.theme-light,
+:root .theme-light {
+  --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+  --popup-shadow-color: #d0d0d0;
+  --theme-inline-preview-background: rgba(192, 105, 255, 0.05);
+  --theme-inline-preview-border-color: #ebd1ff;
+  --theme-inline-preview-label-color: #6300a6;
+  --theme-inline-preview-label-background: rgb(244, 230, 255);
+}
+
+:root.theme-dark,
+:root .theme-dark {
+  --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
+  --popup-shadow-color: #5c667b;
+  --theme-inline-preview-background: rgba(192, 105, 255, 0.05);
+  --theme-inline-preview-border-color: #47326c;
+  --theme-inline-preview-label-color: #dfccff;
+  --theme-inline-preview-label-background: #3f2e5f;
+}
+
+/* Animations */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,24 @@
+<html>
+<head>
+<style type="text/css">
+body {
+  /* try for some likely fonts that might implement the "fi" ligature */
+  font-family: Times, Calibri, Palatino Linotype, DejaVu Serif, serif;
+  font-size: 40pt;
+}
+.R {
+  color: #FF0000;
+}
+.G {
+  color: #00FF00;
+}
+</style>
+</head>
+<!--
+The reference has "fi" in a single red span; the expected result is
+NOT EQUAL, provided we successfully paint the ligature in two halves.
+-->
+<body>
+<span class="R">f</span><span class="G">i</span>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - offsets reference, bottom/right</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="padding-3-ref.html">
+    <meta name="assert" content="Bottom/right offsets should position the element with respect to the content box of the scrolling container">
+    <style>
+      body {
+        font-size: 0px;
+      }
+      #scroll {
+        width: 80px;
+        height: 80px;
+        overflow: scroll;
+        border: 10px solid black;
+        padding: 10px;
+        white-space: nowrap;
+      }
+      #sticky {
+        position: sticky;
+        bottom: 20px;
+        right: 20px;
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background-color: black;
+      }
+    </style>
+  <body>
+    <div id="scroll">
+      <div style="height: 90px; width: 100px"></div>
+      <div style="display: inline-block; width: 90px; height: 10px"></div
+      ><div id="sticky"></div>
+    </div>
+  </body>
+</html>

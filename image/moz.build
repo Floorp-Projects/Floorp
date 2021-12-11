@@ -1,0 +1,142 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += ["build", "decoders", "encoders"]
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["test/gtest"]
+
+if CONFIG["FUZZING_INTERFACES"]:
+    DIRS += ["test/fuzzing"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "ImageLib")
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+    "test/browser/browser_sandbox_headless.ini",
+]
+
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+
+MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+
+XPIDL_SOURCES += [
+    "imgICache.idl",
+    "imgIContainer.idl",
+    "imgIContainerDebug.idl",
+    "imgIEncoder.idl",
+    "imgILoader.idl",
+    "imgINotificationObserver.idl",
+    "imgIRequest.idl",
+    "imgIScriptedNotificationObserver.idl",
+    "imgITools.idl",
+    "nsIIconURI.idl",
+]
+
+XPIDL_MODULE = "imglib2"
+
+EXPORTS += [
+    "FrameTimeout.h",
+    "ImageBlocker.h",
+    "ImageCacheKey.h",
+    "ImageLogging.h",
+    "ImageMetadata.h",
+    "ImageOps.h",
+    "ImageRegion.h",
+    "ImgDrawResult.h",
+    "imgLoader.h",
+    "imgRequest.h",
+    "imgRequestProxy.h",
+    "IProgressObserver.h",
+    "Orientation.h",
+    "SurfaceCacheUtils.h",
+]
+
+EXPORTS.mozilla.image += [
+    "encoders/bmp/nsBMPEncoder.h",
+    "encoders/ico/nsICOEncoder.h",
+    "encoders/jpeg/nsJPEGEncoder.h",
+    "encoders/png/nsPNGEncoder.h",
+    "ICOFileHeaders.h",
+    "ImageMemoryReporter.h",
+    "Resolution.h",
+    "SourceSurfaceBlobImage.h",
+]
+
+UNIFIED_SOURCES += [
+    "AnimationFrameBuffer.cpp",
+    "AnimationSurfaceProvider.cpp",
+    "ClippedImage.cpp",
+    "DecodedSurfaceProvider.cpp",
+    "Decoder.cpp",
+    "DecoderFactory.cpp",
+    "DynamicImage.cpp",
+    "FrameAnimator.cpp",
+    "FrozenImage.cpp",
+    "IDecodingTask.cpp",
+    "Image.cpp",
+    "ImageBlocker.cpp",
+    "ImageCacheKey.cpp",
+    "ImageFactory.cpp",
+    "ImageMemoryReporter.cpp",
+    "ImageOps.cpp",
+    "ImageWrapper.cpp",
+    "imgFrame.cpp",
+    "imgLoader.cpp",
+    "imgRequest.cpp",
+    "imgRequestProxy.cpp",
+    "imgTools.cpp",
+    "MultipartImage.cpp",
+    "OrientedImage.cpp",
+    "ProgressTracker.cpp",
+    "RasterImage.cpp",
+    "ScriptedNotificationObserver.cpp",
+    "ShutdownTracker.cpp",
+    "SourceBuffer.cpp",
+    "SourceSurfaceBlobImage.cpp",
+    "SurfaceCache.cpp",
+    "SurfaceCacheUtils.cpp",
+    "SurfacePipe.cpp",
+    "SVGDocumentWrapper.cpp",
+    "VectorImage.cpp",
+]
+
+UNIFIED_SOURCES += ["Downscaler.cpp"]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    SOURCES += ["DecodePool.cpp"]
+else:
+    UNIFIED_SOURCES += ["DecodePool.cpp"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    # Because SVGDocumentWrapper.cpp includes "mozilla/dom/SVGSVGElement.h"
+    "/dom/base",
+    "/dom/svg",
+    # Because imgFrame.cpp includes "cairo.h"
+    "/gfx/cairo/cairo/src",
+    # We need to instantiate the decoders
+    "/image/decoders",
+    # For URI-related functionality
+    "/netwerk/base",
+    # For nsHttpChannel.h
+    "/netwerk/protocol/http",
+    # DecodePool uses thread-related facilities.
+    "/xpcom/threads",
+]
+
+LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

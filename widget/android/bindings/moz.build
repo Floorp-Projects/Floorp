@@ -1,0 +1,54 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("GeckoView", "General")
+
+# List of stems to generate .cpp and .h files for.  To add a stem, add it to
+# this list and ensure that $(stem)-classes.txt exists in this directory.
+generated = [
+    "AccessibilityEvent",
+    "AndroidBuild",
+    "AndroidGraphics",
+    "AndroidInputType",
+    "AndroidProcess",
+    "AndroidRect",
+    "InetAddress",
+    "JavaBuiltins",
+    "JavaExceptions",
+    "KeyEvent",
+    "MediaCodec",
+    "MotionEvent",
+    "SurfaceTexture",
+    "ViewConfiguration",
+]
+
+SOURCES += ["!%s.cpp" % stem for stem in generated]
+
+EXPORTS += ["!%s.h" % stem for stem in generated]
+
+# The recursive make backend treats the first output specially: it's passed as
+# an open FileAvoidWrite to the invoked script.  That doesn't work well with
+# the Gradle task that generates all of the outputs, so we add a dummy first
+# output.
+t = tuple(
+    ["sdk_bindings"]
+    + ["%s.cpp" % stem for stem in generated]
+    + ["%s.h" % stem for stem in generated]
+)
+
+GeneratedFile(
+    *t,
+    script="/mobile/android/gradle.py",
+    entry_point="generate_sdk_bindings",
+    inputs=["%s-classes.txt" % stem for stem in generated]
+)
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/widget/android",
+]

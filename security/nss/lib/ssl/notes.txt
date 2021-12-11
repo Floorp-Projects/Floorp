@@ -1,0 +1,104 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SSL's Buffers: enumerated and explained.
+
+---------------------------------------------------------------------------
+incoming:
+
+gs = ss->gather
+hs = ss->ssl3->hs
+
+gs->inbuf   incoming (encrypted) ssl records are placed here,
+        and then decrypted (or copied) to gs->buf.
+
+gs->buf     ssl3_HandleHandshake puts decrypted ssl records here.
+
+hs.msg_body When an incoming handshake message spans more
+        than one ssl record, the first part(s) of it are accumulated
+        here until it all arrives.
+
+hs.msgState an alternative set of pointers/lengths for gs->buf.
+        Used only when a handleHandshake function returns SECWouldBlock.
+        ssl3_HandleHandshake remembers how far it previously got by
+        using these pointers instead of gs->buf when it is called
+        after a previous SECWouldBlock return.
+
+---------------------------------------------------------------------------
+outgoing:
+
+sec = ss->sec
+ci  = ss->sec->ci   /* connect info */
+
+ci->sendBuf Outgoing handshake messages are appended to this buffer.
+        This buffer will then be sent as a single SSL record.
+
+sec->writeBuf   outgoing ssl records are constructed here and encrypted in
+        place before being written or copied to pendingBuf.
+
+ss->pendingBuf  contains outgoing ciphertext that was saved after a write
+        attempt to the socket failed, e.g. EWouldBlock.
+        Generally empty with blocking sockets (should be no incomplete
+        writes).
+
+ss->saveBuf Used only by socks code.  Intended to be used to buffer
+        outgoing data until a socks handshake completes.  However,
+        this buffer is always empty.  There is no code to put
+        anything into it.
+
+---------------------------------------------------------------------------
+
+SECWouldBlock means that the function cannot make progress because it is
+waiting for some event OTHER THAN socket I/O completion (e.g. waiting for
+user dialog to finish).  It is not the same as EWOULDBLOCK.
+
+---------------------------------------------------------------------------
+
+Rank (order) of locks
+
+recvLock ->\ firstHandshake -> recvbuf -> ssl3Handshake -> xmitbuf -> "spec"
+sendLock ->/
+
+crypto and hash Data that must be protected while turning plaintext into
+ciphertext:
+
+SSl3:   (in ssl3_SendPlainText)
+    ss->ssl3            (the pointer)
+    ss->ssl3->current_write*    (the pointer and the data in the spec
+                     and any data referenced by the spec.
+
+    ss->sec->isServer
+    ss->sec->writebuf* (ptr & content) locked by xmitBufLock
+    "buf"                  locked by xmitBufLock
+
+crypto and hash data that must be protected while turning ciphertext into
+plaintext:
+
+SSL3:   (in ssl3_HandleRecord )
+    ssl3->current_read* (the pointer and all data refernced)
+    ss->sec->isServer
+
+
+Data that must be protected while being used by a "writer":
+
+ss->pendingBuf.*
+ss->saveBuf.*       (which is dead)
+
+in ssl3_sendPlainText
+
+ss->ssl3->current_write-> (spec)
+ss->sec->writeBuf.*
+ss->sec->isServer
+
+in SendBlock
+
+ss->sec->writeBuf.*
+ss->pendingBuf
+
+--------------------------------------------------------------------------
+
+Data variables (not const) protected by the "sslGlobalDataLock".
+Note, this really should be a reader/writer lock.
+
+cipherSuites[]      ssl3con.c

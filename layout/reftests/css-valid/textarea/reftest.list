@@ -1,0 +1,13 @@
+== textarea-valid.html textarea-ref.html
+== textarea-customerror.html textarea-ref.html
+== textarea-disabled.html textarea-ref.html
+== textarea-dyn-disabled.html textarea-ref.html
+== textarea-dyn-not-disabled.html textarea-ref.html
+== textarea-readonly.html textarea-ref.html
+== textarea-dyn-readonly.html textarea-ref.html
+== textarea-dyn-not-readonly.html textarea-ref.html
+== textarea-required-valid.html textarea-withtext-ref.html
+== textarea-required-invalid.html textarea-ref.html
+== textarea-disabled-fieldset-1.html textarea-fieldset-ref.html
+== textarea-disabled-fieldset-2.html textarea-fieldset-ref.html
+== textarea-fieldset-legend.html textarea-fieldset-legend-ref.html

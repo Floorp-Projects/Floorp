@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAuthInformation;
+
+/**
+ * Interface for callback methods for the asynchronous nsIAuthPrompt2 method.
+ * Callers MUST call exactly one method if nsIAuthPrompt2::promptPasswordAsync
+ * returns successfully. They MUST NOT call any method on this interface before
+ * promptPasswordAsync returns.
+ */
+[scriptable, uuid(bdc387d7-2d29-4cac-92f1-dd75d786631d)]
+interface nsIAuthPromptCallback : nsISupports
+{
+  /**
+   * Authentication information is available.
+   *
+   * @param aContext
+   *        The context as passed to promptPasswordAsync
+   * @param aAuthInfo
+   *        Authentication information. Must be the same object that was passed
+   *        to promptPasswordAsync.
+   *
+   * @note  Any exceptions thrown from this method should be ignored.
+   */
+  void onAuthAvailable(in nsISupports aContext,
+                       in nsIAuthInformation aAuthInfo);
+
+  /**
+   * Notification that the prompt was cancelled.
+   *
+   * @param aContext
+   *        The context that was passed to promptPasswordAsync.
+   * @param userCancel
+   *        If false, this prompt was cancelled by calling the
+   *        the cancel method on the nsICancelable; otherwise,
+   *        it was cancelled by the user.
+   */
+  void onAuthCancelled(in nsISupports aContext, in boolean userCancel);
+};
+

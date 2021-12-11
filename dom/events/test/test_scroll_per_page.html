@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for scroll per page</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(() => {
+  open("window_empty_document.html", "_blank", "width=500,height=500,scrollbars=yes");
+});
+
+async function doTests(aWindow) {
+  await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
+  await SimpleTest.promiseFocus(aWindow);
+
+  function getNodeDescription(aNode) {
+    function getElementDescription(aElement) {
+      if (aElement.getAttribute("id") !== null) {
+        return `${aElement.tagName.toLowerCase()}#${aElement.getAttribute("id")}`;
+      }
+      if (aElement.tagName === "BR") {
+        return `${getElementDescription(aElement.previousSibling)} + br`;
+      }
+      return aElement.tagName.toLowerCase();
+    }
+    switch (aNode.nodeType) {
+      case aNode.TEXT_NODE:
+        return `text node in ${getElementDescription(aNode.parentElement)}`;
+      case aNode.ELEMENT_NODE:
+        return getElementDescription(aNode);
+      case aNode.DOCUMENT_NODE:
+        return `document node`;
+      default:
+        return "unknown node";
+    }
+  }
+
+  function getScrollPositionStr(aNode) {
+    return `{ scrollTop: ${aNode.scrollTop}, scrollHeight: ${
+      aNode.scrollHeight
+    }, scrollLeft: ${aNode.scrollLeft}, scrollWidth: ${aNode.scrollWidth} }`;
+  }
+
+  async function doPageDownOrUp(aKey, aFocusedElement, aScrollTargetElement) {
+    let scrollEventTarget =
+      aScrollTargetElement === doc.documentElement
+        ? doc
+        : aScrollTargetElement;
+    let scrollEventFired = false;
+    function onScroll(aEvent) {
+      scrollEventFired |= aEvent.target === scrollEventTarget;
+    }
+    scrollEventTarget.addEventListener("scroll", onScroll);
+    if (!navigator.platform.includes("Mac")) {
+      synthesizeKey(`KEY_${aKey}`, {}, aWindow);
+    } else {
+      synthesizeKey(`KEY_${aKey}`, { altKey: true }, aWindow);
+    }
+    let retry = 3;
+    while (retry--) {
+      await waitToClearOutAnyPotentialScrolls(aWindow);
+      if (scrollEventFired) {
+        break;
+      }
+    }
+    ok(scrollEventFired,
+      `Scroll event should've been fired on ${getNodeDescription(scrollEventTarget)}`);
+    scrollEventTarget.removeEventListener("scroll", onScroll);
+  }
+
+  async function doPageDown(aFocusedElement, aScrollTargetElement) {
+    await doPageDownOrUp("PageDown", aFocusedElement, aScrollTargetElement);
+  }
+
+  async function doPageUp(aFocusedElement, aScrollTargetElement) {
+    await doPageDownOrUp("PageUp", aFocusedElement, aScrollTargetElement);
+  }
+
+  // Let's put log of scroll events for making debug this test easier.
+  aWindow.addEventListener("scroll", (aEvent) => {
+    let scrollElement =
+      aEvent.target === doc
+        ? doc.documentElement
+        : aEvent.target;
+    info(`"scroll" event fired on ${getNodeDescription(aEvent.target)}: ${
+      getScrollPositionStr(scrollElement)
+    }`);
+  }, { capture: true });
+
+  let doc = aWindow.document;
+  let body = doc.body;
+  let selection = doc.getSelection();
+  let container;
+
+  body.innerHTML = '<div id="largeDiv" style="height: 1500px;">' +
+                   "<p>previous line of the editor.</p>" +
+                   '<div id="editor" contenteditable style="margin-top 500px; height: 5em; overflow: auto;">' +
+                   "Here is first line<br>" +
+                   "Here is second line" +
+                   "</div>" +
+                   "<p>next line of the editor.</p>" +
+                   "</div>";
+  container = doc.documentElement;
+  let editor = doc.getElementById("editor");
+  editor.focus();
+  await waitToClearOutAnyPotentialScrolls(aWindow);
+
+  let description = "PageDown in non-scrollable editing host: ";
+  let previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description}the document should be scrolled down even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
+  let range = selection.getRangeAt(0);
+  is(range.startContainer, editor.firstChild.nextSibling.nextSibling,
+     `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
+  ok(range.collapsed, description + "selection should be collapsed");
+  is(doc.activeElement, editor,
+     description + "the editing host should keep having focus");
+
+  description = "PageUp in non-scrollable editing host: ";
+  previousScrollTop = container.scrollTop;
+  await doPageUp(editor, container);
+  ok(container.scrollTop < previousScrollTop,
+     `${description}the document should be scrolled up even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
+  range = selection.getRangeAt(0);
+  is(range.startContainer, editor.firstChild,
+     `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
+  ok(range.collapsed, description + "selection should be collapsed");
+  is(doc.activeElement, editor,
+     description + "the editing host should keep having focus");
+
+  body.innerHTML = '<div id="largeDiv" style="height: 1500px;">' +
+                   "<p>previous line of the editor.</p>" +
+                   '<div id="editor" contenteditable style="margin-top 500px; height: 5em; overflow: auto;">' +
+                   '<div id="innerDiv" style="height: 10em;">' +
+                   "Here is first line<br>" +
+                   "Here is second line" +
+                   "</div>" +
+                   "</div>" +
+                   "<p>next line of the editor.</p>" +
+                   "</div>";
+  editor = doc.getElementById("editor");
+  container = editor;
+  editor.focus();
+  await waitToClearOutAnyPotentialScrolls(aWindow);
+
+  description = "PageDown in scrollable editing host: ";
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description}the editor should be scrolled down even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
+  range = selection.getRangeAt(0);
+  is(range.startContainer, editor.firstChild.firstChild.nextSibling.nextSibling,
+     `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
+  ok(range.collapsed, description + "selection should be collapsed");
+  is(doc.activeElement, editor,
+     description + "the editing host should keep having focus");
+
+  description = "PageUp in scrollable editing host: ";
+  previousScrollTop = container.scrollTop;
+  await doPageUp(editor, container);
+  ok(container.scrollTop < previousScrollTop,
+     `${description}the editor should be scrolled up even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
+  range = selection.getRangeAt(0);
+  is(range.startContainer, editor.firstChild.firstChild,
+     `${description}selection start shouldn't be moved to outside of the editing host (got: ${getNodeDescription(range.startContainer)})`);
+  ok(range.collapsed, description + "selection should be collapsed");
+  is(doc.activeElement, editor,
+     description + "the editing host should keep having focus");
+
+  // Should scroll one page of the scrollable element
+  body.innerHTML = `<div id="editor" contenteditable style="height: 1500px;">${"abc<br>".repeat(100)}</div>`;
+  editor = doc.getElementById("editor");
+  container = doc.documentElement;
+  editor.focus();
+  await waitToClearOutAnyPotentialScrolls(aWindow);
+
+  description = "PageDown in too large editing host: ";
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description} The document should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
+  ok(container.scrollTop <= previousScrollTop + container.clientHeight,
+     `${description} The document should not be scrolled down too much (got: ${container.scrollTop}, previous position: ${previousScrollTop}, scroll height: ${container.clientHeight})`);
+
+  selection.selectAllChildren(editor);
+  selection.collapseToEnd();
+  await waitToClearOutAnyPotentialScrolls(aWindow);
+
+  description = "PageUp in too large editing host: ";
+  container.scrollTop = container.scrollHeight;
+  previousScrollTop = container.scrollTop;
+  await doPageUp(editor, container);
+  ok(container.scrollTop >= previousScrollTop - container.clientHeight,
+     `${description} The document should not be scrolled up too much (got: ${container.scrollTop}, previous position: ${previousScrollTop}, scroll height: ${container.clientHeight})`);
+
+  // Shouldn't scroll to caret position after pagedown scrolls editing host.
+  body.innerHTML = '<div id="editor" contenteditable style="height: 300px; overflow: auto;"><div style="height: 1500px;">abc<br>def<br></div></div>';
+  editor = doc.getElementById("editor");
+  container = editor;
+  editor.focus();
+  await waitToClearOutAnyPotentialScrolls(aWindow);
+
+  description = "PageDown in scrollable editing host";
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #1: Should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #2: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #3: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  await doPageUp(editor, container);
+  ok(container.scrollTop < 300,
+     `PageUp in scrollable editing host after scrolled down 3 pages: should be scrolled up to show caret (got:${container.scrollTop}`);
+
+  // Shouldn't scroll to caret position after pagedown scrolls outside of editing host.
+  // NOTE: We've set the window height is 500px above, but on Android, the viewport size depends on the screen size.
+  //       Therefore, we need to compute enough height to test below with actual height of the window.
+  body.innerHTML = `<div id="editor" contenteditable style="height: ${aWindow.innerHeight * 3}px">abc<br>def<br></div>`;
+  editor = doc.getElementById("editor");
+  container = doc.documentElement;
+  editor.focus();
+  selection.collapse(editor.firstChild);
+  await waitToClearOutAnyPotentialScrolls(aWindow);
+
+  description = "PageDown in too high non-scrollable editing host";
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #1: Should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #2: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown(editor, container);
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #3: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  await doPageUp(editor, container);
+  ok(container.scrollTop < 300,
+     `PageUp in too high non-scrollable editing host after scrolled down 3 pages: should be scrolled up to show caret (got:${container.scrollTop}`);
+
+  aWindow.close();
+  SimpleTest.finish();
+}
+</script>
+</html>

@@ -1,0 +1,1694 @@
+<html>
+<head>
+  <title>Test for input event of text editor</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <iframe id="editor1" srcdoc="<html><body contenteditable id='eventTarget'></body></html>"></iframe>
+  <iframe id="editor2" srcdoc="<html contenteditable id='eventTarget'><body></body></html>"></iframe>
+  <iframe id="editor3" srcdoc="<html><body><div contenteditable id='eventTarget'></div></body></html>"></iframe>
+  <iframe id="editor4" srcdoc="<html contenteditable id='eventTarget'><body><div contenteditable></div></body></html>"></iframe>
+  <iframe id="editor5" srcdoc="<html><body id='eventTarget'></body><script>document.designMode='on';</script></html>"></iframe>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+const kIsWin = navigator.platform.indexOf("Win") == 0;
+const kIsMac = navigator.platform.indexOf("Mac") == 0;
+
+function runTests() {
+  const kWordSelectEatSpaceToNextWord = SpecialPowers.getBoolPref("layout.word_select.eat_space_to_next_word");
+  const kImgURL =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR42mNgaGD4D8YwBgAw9AX9Y9zBwwAAAABJRU5ErkJggg==";
+
+  function doTests(aDocument, aWindow, aDescription) {
+    aDescription += ": ";
+    aWindow.focus();
+
+    let body = aDocument.body;
+    let selection = aWindow.getSelection();
+
+    function getHTMLEditor() {
+      let editingSession = SpecialPowers.wrap(aWindow).docShell.editingSession;
+      if (!editingSession) {
+        return null;
+      }
+      let editor = editingSession.getEditorForWindow(aWindow);
+      if (!editor) {
+        return null;
+      }
+      return editor.QueryInterface(SpecialPowers.Ci.nsIHTMLEditor);
+    }
+    let htmlEditor = getHTMLEditor();
+
+    let eventTarget = aDocument.getElementById("eventTarget");
+    // The event target must be focusable because it's the editing host.
+    eventTarget.focus();
+
+    let editTarget = aDocument.getElementById("editTarget");
+    if (!editTarget) {
+      editTarget = eventTarget;
+    }
+
+    // Root element never can be edit target.  If the editTarget is the root
+    // element, replace with its body.
+    if (editTarget == aDocument.documentElement) {
+      editTarget = body;
+    }
+
+    editTarget.innerHTML = "";
+
+    // If the editTarget isn't its editing host, move caret to the start of it.
+    if (eventTarget != editTarget) {
+      aDocument.getSelection().collapse(editTarget, 0);
+    }
+
+    /**
+     * Tester function.
+     *
+     * @param aTestData Class like object to run a set of tests.
+     *                  - action:
+     *                    Short explanation what it does.
+     *                  - cancelBeforeInput:
+     *                    true if preventDefault() of "beforeinput" should be
+     *                    called.
+     * @param aFunc     Function to run test.
+     * @param aExpected Object which has:
+     *                  - innerHTML [optional]:
+     *                    Set string value if the test needs to check content of
+     *                    editTarget.
+     *                    Set undefined if the test does not need to check it.
+     *                  - innerHTMLForCanceled [optional]:
+     *                    Set string value if canceling "beforeinput" does not
+     *                    keep the value before calling aFunc.
+     *                  - beforeInputEvent [optional]:
+     *                    Set object which has `cancelable`, `inputType`, `data` and
+     *                    `targetRanges` if a "beforeinput" event should be fired.
+     *                    If getTargetRanges() should return same array as selection when
+     *                    the beforeinput event is dispatched, set `targetRanges` to
+     *                    kSameAsSelection.
+     *                    Set null if "beforeinput" event shouldn't be fired.
+     *                  - inputEvent [optional]:
+     *                    Set object which has `inputType` and `data` if an "input" event
+     *                    should be fired if aTestData.cancelBeforeInput is not true.
+     *                    Set null if "input" event shouldn't be fired.
+     *                    Note that if expected "beforeinput" event is cancelable and
+     *                    aTestData.cancelBeforeInput is true, this is ignored.
+     */
+    const kSameAsSelection = "same as selection";
+    function runTest(aTestData, aFunc, aExpected) {
+      let beforeInputEvent = null;
+      let inputEvent = null;
+      let selectionRanges = [];
+      let beforeInputHandler = aEvent => {
+        if (aTestData.cancelBeforeInput) {
+          aEvent.preventDefault();
+        }
+        ok(!beforeInputEvent,
+          `${aDescription}Multiple "beforeinput" events are fired at ${aTestData.action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
+        ok(aEvent.isTrusted,
+          `${aDescription}"beforeinput" event at ${aTestData.action} must be trusted`);
+        is(aEvent.target, eventTarget,
+          `${aDescription}"beforeinput" event at ${aTestData.action} is fired on unexpected element: ${aEvent.target.tagName}`);
+        is(aEvent.constructor.name, "InputEvent",
+          `${aDescription}"beforeinput" event at ${aTestData.action} should be dispatched with InputEvent interface`);
+        ok(aEvent.bubbles,
+          `${aDescription}"beforeinput" event at ${aTestData.action} must be bubbles`);
+        beforeInputEvent = aEvent;
+        selectionRanges = [];
+        for (let i = 0; i < selection.rangeCount; i++) {
+          let range = selection.getRangeAt(i);
+          selectionRanges.push({startContainer: range.startContainer, startOffset: range.startOffset,
+                                endContainer: range.endContainer, endOffset: range.endOffset});
+        }
+      };
+      let inputHandler = aEvent => {
+        ok(!inputEvent,
+          `${aDescription}Multiple "input" events are fired at ${aTestData.action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
+        ok(aEvent.isTrusted,
+          `${aDescription}"input" event at ${aTestData.action} must be trusted`);
+        is(aEvent.target, eventTarget,
+          `${aDescription}"input" event at ${aTestData.action} is fired on unexpected element: ${aEvent.target.tagName}`);
+        is(aEvent.constructor.name, "InputEvent",
+          `${aDescription}"input" event at ${aTestData.action} should be dispatched with InputEvent interface`);
+        ok(!aEvent.cancelable,
+          `${aDescription}"input" event at ${aTestData.action} must not be cancelable`);
+        ok(aEvent.bubbles,
+          `${aDescription}"input" event at ${aTestData.action} must be bubbles`);
+        let duration = Math.abs(window.performance.now() - aEvent.timeStamp);
+        ok(duration < 30 * 1000,
+          `${aDescription}perhaps, timestamp wasn't set correctly :${aEvent.timeStamp} (expected it to be within 30s of ` +
+          `the current time but it differed by ${duration}ms)`);
+        inputEvent = aEvent;
+      };
+
+      try {
+        aWindow.addEventListener("beforeinput", beforeInputHandler, true);
+        aWindow.addEventListener("input", inputHandler, true);
+
+        let initialValue = editTarget.innerHTML;
+
+        aFunc();
+
+        (function verify() {
+          try {
+            function checkTargetRanges(aEvent, aTargetRanges) {
+              let targetRanges = aEvent.getTargetRanges();
+              if (aTargetRanges.length === 0) {
+                is(targetRanges.length, 0,
+                  `${aDescription}getTargetRanges() of "${aEvent.type}" event for ${aTestData.action} should return empty array`);
+                return;
+              }
+              is(targetRanges.length, aTargetRanges.length,
+                `${aDescription}getTargetRanges() of "${aEvent.type}" event for ${aTestData.action} should return array of static range`);
+              if (targetRanges.length !== aTargetRanges.length) {
+                return;
+              }
+              for (let i = 0; i < aTargetRanges.length; i++) {
+                is(targetRanges[i].startContainer, aTargetRanges[i].startContainer,
+                  `${aDescription}startContainer of getTargetRanges()[${i}] of "${aEvent.type}" event for ${aTestData.action} does not match`);
+                is(targetRanges[i].startOffset, aTargetRanges[i].startOffset,
+                  `${aDescription}startOffset of getTargetRanges()[${i}] of "${aEvent.type}" event for ${aTestData.action} does not match`);
+                is(targetRanges[i].endContainer, aTargetRanges[i].endContainer,
+                  `${aDescription}endContainer of getTargetRanges()[${i}] of "${aEvent.type}" event for ${aTestData.action} does not match`);
+                is(targetRanges[i].endOffset, aTargetRanges[i].endOffset,
+                  `${aDescription}endOffset of getTargetRanges()[${i}] of "${aEvent.type}" event for ${aTestData.action} does not match`);
+              }
+            }
+
+            if (aExpected.innerHTML !== undefined) {
+              if (aTestData.cancelBeforeInput && aExpected.innerHTMLForCanceled === undefined) {
+                is(editTarget.innerHTML, initialValue,
+                  `${aDescription}innerHTML should be "${initialValue}" after ${aTestData.action}`);
+              } else {
+                let expectedValue =
+                  aTestData.cancelBeforeInput ? aExpected.innerHTMLForCanceled : aExpected.innerHTML;
+                is(editTarget.innerHTML, expectedValue,
+                  `${aDescription}innerHTML should be "${expectedValue}" after ${aTestData.action}`);
+              }
+            }
+            if (aExpected.beforeInputEvent === null || aExpected.beforeInputEvent === undefined) {
+              ok(!beforeInputEvent,
+                `${aDescription}"beforeinput" event shouldn't have been fired at ${aTestData.action}`);
+            } else {
+              ok(beforeInputEvent,
+                `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
+              is(beforeInputEvent.cancelable, aExpected.beforeInputEvent.cancelable,
+                `${aDescription}"beforeinput" event by ${aTestData.action} should be ${
+                    aExpected.beforeInputEvent.cancelable ? "cancelable" : "not cancelable"
+                }`);
+              is(beforeInputEvent.inputType, aExpected.beforeInputEvent.inputType,
+                `${aDescription}inputType of "beforeinput" event by ${aTestData.action} should be "${aExpected.beforeInputEvent.inputType}"`);
+              is(beforeInputEvent.data, aExpected.beforeInputEvent.data,
+                `${aDescription}data of "beforeinput" event by ${aTestData.action} should be ${
+                  aExpected.beforeInputEvent.data === null ? "null" : `"${aExpected.beforeInputEvent.data}"`
+                }`);
+              is(beforeInputEvent.dataTransfer, null,
+                `${aDescription}dataTransfer of "beforeinput" event by ${aTestData.action} should be null`);
+              checkTargetRanges(
+                beforeInputEvent,
+                aExpected.beforeInputEvent.targetRanges === kSameAsSelection
+                  ? selectionRanges
+                  : aExpected.beforeInputEvent.targetRanges
+              );
+            }
+            if ((
+                aTestData.cancelBeforeInput === true &&
+                aExpected.beforeInputEvent &&
+                aExpected.beforeInputEvent.cancelable
+                ) || aExpected.inputEvent === null || aExpected.inputEvent === undefined) {
+              ok(!inputEvent,
+                `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+            } else {
+              ok(inputEvent,
+                `${aDescription}"input" event should've been fired at ${aTestData.action}`);
+              is(inputEvent.cancelable, false,
+                `${aDescription}"input" event by ${aTestData.action} should be not be cancelable`);
+              is(inputEvent.inputType, aExpected.inputEvent.inputType,
+                `${aDescription}inputType of "input" event by ${aTestData.action} should be "${aExpected.inputEvent.inputType}"`);
+              is(inputEvent.data, aExpected.inputEvent.data,
+                `${aDescription}data of "input" event by ${aTestData.action} should be ${
+                  aExpected.inputEvent.data === null ? "null" : `"${aExpected.inputEvent.data}"`
+                }`);
+              is(inputEvent.dataTransfer, null,
+                `${aDescription}dataTransfer of "input" event by ${aTestData.action} should be null`);
+              is(inputEvent.getTargetRanges().length, 0,
+                `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+            }
+          } catch (ex) {
+            ok(false, `${aDescription}unexpected exception at verifying test result of "${aTestData.action}": ${ex.toString()}`);
+          }
+        })();
+      } finally {
+        aWindow.removeEventListener("beforeinput", beforeInputHandler, true);
+        aWindow.removeEventListener("input", inputHandler, true);
+      }
+    }
+
+    (function test_typing_a_in_empty_editor(aTestData) {
+      editTarget.innerHTML = "";
+      editTarget.focus();
+
+      runTest(aTestData,
+        () => {
+          synthesizeKey("a", {}, aWindow);
+        },
+        {
+          innerHTML: "a",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertText",
+            data: "a",
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertText",
+            data: "a",
+          },
+        }
+      );
+    })({
+      action: 'typing "a" in empty editor',
+    });
+
+    function test_typing_b_at_end_of_editor(aTestData) {
+      editTarget.innerHTML = "a";
+      selection.collapse(editTarget.firstChild, 1);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("b", {}, aWindow);
+        },
+        {
+          innerHTML: "ab",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertText",
+            data: "b",
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertText",
+            data: "b",
+          },
+        }
+      );
+    }
+    test_typing_b_at_end_of_editor({
+      action: 'typing "b" after "a" and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_b_at_end_of_editor({
+      action: 'typing "b" after "a"',
+      cancelBeforeInput: false,
+    });
+
+    function test_typing_backspace_to_delete_last_character(aTestData) {
+      editTarget.innerHTML = "a";
+      let textNode = editTarget.firstChild;
+      selection.collapse(textNode, 1);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Backspace", {}, aWindow);
+        },
+        {
+          innerHTML: "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentBackward",
+            data: null,
+            targetRanges: [
+              {
+                startContainer: textNode,
+                startOffset: 0,
+                endContainer: textNode,
+                endOffset: 1,
+              },
+            ],
+          },
+          inputEvent: {
+            inputType: "deleteContentBackward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_backspace_to_delete_last_character({
+      action: 'typing "Backspace" to delete the last character and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_backspace_to_delete_last_character({
+      action: 'typing "Backspace" to delete the last character',
+      cancelBeforeInput: false,
+    });
+
+    (function test_typing_backspace_in_empty_editor(aTestData) {
+      editTarget.innerHTML = "";
+      editTarget.focus();
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Backspace", {}, aWindow);
+        },
+        {
+          innerHTML: editTarget.tagName === "DIV" ? "" : "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentBackward",
+            data: null,
+            targetRanges: kSameAsSelection,
+          },
+        }
+      );
+    })({
+      action: 'typing "Backspace" in empty editor',
+    });
+
+    function test_typing_enter_at_end_of_editor(aTestData) {
+      editTarget.innerHTML = "B";
+      selection.collapse(editTarget.firstChild, 1);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Enter", {}, aWindow);
+        },
+        {
+          innerHTML:  "<div>B</div><div><br></div>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertParagraph",
+            data: null,
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertParagraph",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_enter_at_end_of_editor({
+      action: 'typing "Enter" at end of editor and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_enter_at_end_of_editor({
+      action: 'typing "Enter" at end of editor',
+      cancelBeforeInput: false,
+    });
+
+    function test_typing_C_in_empty_last_line(aTestData) {
+      editTarget.innerHTML = "<div>B</div><div><br></div>";
+      selection.collapse(editTarget.querySelector("div + div"), 0);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("C", {shiftKey: true}, aWindow);
+        },
+        {
+          innerHTML: "<div>B</div><div>C<br></div>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertText",
+            data: "C",
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertText",
+            data: "C",
+          },
+        }
+      );
+    }
+    test_typing_C_in_empty_last_line({
+      action: 'typing "C" in empty last line and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_C_in_empty_last_line({
+      action: 'typing "C" in empty last line',
+      cancelBeforeInput: false,
+    });
+
+    function test_typing_enter_in_non_empty_last_line(aTestData) {
+      editTarget.innerHTML = "<div>B</div><div>C<br></div>";
+      selection.collapse(editTarget.querySelector("div + div").firstChild, 1);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Enter", {}, aWindow);
+        },
+        {
+          innerHTML: "<div>B</div><div>C</div><div><br></div>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertParagraph",
+            data: null,
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertParagraph",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_enter_in_non_empty_last_line({
+      action: 'typing "Enter" at end of non-empty line and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_enter_in_non_empty_last_line({
+      action: 'typing "Enter" at end of non-empty line',
+      cancelBeforeInput: false,
+    });
+
+    (function test_setting_innerHTML(aTestData) {
+      editTarget.innerHTML = "";
+      editTarget.focus();
+
+      runTest(
+        aTestData,
+        () => {
+          editTarget.innerHTML = "foo-bar";
+        },
+        { innerHTML: "foo-bar" }
+      );
+    })({
+      action: "setting innerHTML to non-empty value",
+    });
+
+    (function test_setting_innerHTML_to_empty(aTestData) {
+      editTarget.innerHTML = "foo-bar";
+      editTarget.focus();
+
+      runTest(
+        aTestData,
+        () => {
+          editTarget.innerHTML = "";
+        },
+        { innerHTML: editTarget.tagName === "DIV" ? "" : "<br>"}
+      );
+    })({
+      action: "setting innerHTML to empty value",
+    });
+
+    function test_typing_white_space_in_empty_editor(aTestData) {
+      editTarget.innerHTML = "";
+      editTarget.focus();
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey(" ", {}, aWindow);
+        },
+        {
+          innerHTML: "&nbsp;",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertText",
+            data: " ",
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertText",
+            data: " ",
+          },
+        }
+      );
+    }
+    test_typing_white_space_in_empty_editor({
+      action: 'typing space in empty editor and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_white_space_in_empty_editor({
+      action: "typing space in empty editor",
+      cancelBeforeInput: false,
+    });
+
+    (function test_typing_delete_at_end_of_editor(aTestData) {
+      editTarget.innerHTML = "&nbsp;";
+      selection.collapse(editTarget.firstChild, 1);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Delete", {}, aWindow);
+        },
+        {
+          innerHTML: "&nbsp;",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentForward",
+            data: null,
+            targetRanges: kSameAsSelection,
+          },
+        }
+      );
+    })({
+      action: 'typing "Delete" at end of editor',
+    });
+
+    (function test_typing_arrow_left_to_move_caret(aTestData) {
+      editTarget.innerHTML = "&nbsp;";
+      selection.collapse(editTarget.firstChild, 1);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_ArrowLeft", {}, aWindow);
+        },
+        { innerHTML: "&nbsp;" }
+      );
+    })({
+      action: 'typing "ArrowLeft" to move caret',
+    });
+
+    function test_typing_delete_to_delete_last_character(aTestData) {
+      editTarget.innerHTML = "\u00A0";
+      let textNode = editTarget.firstChild;
+      selection.collapse(textNode, 0);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Delete", {}, aWindow);
+        },
+        {
+          innerHTML: "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentForward",
+            data: null,
+            targetRanges: [
+              {
+                startContainer: textNode,
+                startOffset: 0,
+                endContainer: textNode,
+                endOffset: 1,
+              },
+            ],
+          },
+          inputEvent: {
+            inputType: "deleteContentForward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_delete_to_delete_last_character({
+      action: 'typing "Delete" to delete last character (NBSP) and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_delete_to_delete_last_character({
+      action: 'typing "Delete" to delete last character (NBSP)',
+      cancelBeforeInput: false,
+    });
+
+    function test_undoing_deleting_last_character(aTestData) {
+      editTarget.innerHTML = "\u00A0";
+      selection.collapse(editTarget.firstChild, 0);
+      synthesizeKey("KEY_Delete", {}, aWindow);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("z", {accelKey: true}, aWindow);
+        },
+        {
+          innerHTML: "&nbsp;",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "historyUndo",
+            data: null,
+            targetRanges: [],
+          },
+          inputEvent: {
+            inputType: "historyUndo",
+            data: null,
+          },
+        }
+      );
+    }
+    test_undoing_deleting_last_character({
+      action: 'undoing deleting last character and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_undoing_deleting_last_character({
+      action: 'undoing deleting last character',
+      cancelBeforeInput: false,
+    });
+
+    (function test_undoing_without_undoable_transaction(aTestData) {
+      htmlEditor.enableUndo(false);
+      htmlEditor.enableUndo(true);
+      editTarget.innerHTML = "\u00A0";
+      selection.collapse(editTarget.firstChild, 0);
+      synthesizeKey("KEY_Delete", {}, aWindow);
+      synthesizeKey("z", {accelKey: true}, aWindow);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("z", {accelKey: true}, aWindow);
+        },
+        { innerHTML: "&nbsp;" }
+      );
+    })({
+      action: "trying to undo without undoable transaction",
+    });
+
+    function test_redoing_deleting_last_character(aTestData) {
+      htmlEditor.enableUndo(false);
+      htmlEditor.enableUndo(true);
+      editTarget.innerHTML = "\u00A0";
+      selection.collapse(editTarget.firstChild, 0);
+      synthesizeKey("KEY_Delete", {}, aWindow);
+      synthesizeKey("z", {accelKey: true}, aWindow);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("z", {accelKey: true, shiftKey: true}, aWindow);
+        },
+        {
+          innerHTML: "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "historyRedo",
+            data: null,
+            targetRanges: [],
+          },
+          inputEvent: {
+            inputType: "historyRedo",
+            data: null,
+          },
+        }
+      );
+    }
+    test_redoing_deleting_last_character({
+      action: 'redoing deleting last character and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_redoing_deleting_last_character({
+      action: 'redoing deleting last character',
+      cancelBeforeInput: false,
+    });
+
+    (function test_redoing_without_redoable_transaction(aTestData) {
+      htmlEditor.enableUndo(false);
+      htmlEditor.enableUndo(true);
+      editTarget.innerHTML = "\u00A0";
+      selection.collapse(editTarget.firstChild, 0);
+      synthesizeKey("KEY_Delete", {}, aWindow);
+      synthesizeKey("z", {accelKey: true}, aWindow);
+      synthesizeKey("z", {accelKey: true, shiftKey: true}, aWindow);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("z", {accelKey: true, shiftKey: true}, aWindow);
+        },
+        { innerHTML: "<br>" }
+      );
+    })({
+      action: "trying to redo without redoable transaction",
+    });
+
+    function test_inserting_linebreak(aTestData) {
+      editTarget.innerHTML = "<br>";
+      selection.collapse(editTarget, 0);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Enter", {shiftKey: true}, aWindow);
+        },
+        {
+          innerHTML: "<br><br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertLineBreak",
+            data: null,
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertLineBreak",
+            data: null,
+          },
+        }
+      );
+    }
+    test_inserting_linebreak({
+      action: 'inserting a linebreak and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_inserting_linebreak({
+      action: "inserting a linebreak",
+      cancelBeforeInput: false,
+    });
+
+    function test_typing_backspace_to_delete_selected_characters(aTestData) {
+      editTarget.innerHTML = "a";
+      selection.selectAllChildren(editTarget);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: editTarget.firstChild,
+          startOffset: 0,
+          endContainer: editTarget.firstChild,
+          endOffset: editTarget.firstChild.length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Backspace", {}, aWindow);
+        },
+        {
+          innerHTML: "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentBackward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: "deleteContentBackward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_backspace_to_delete_selected_characters({
+      action: 'typing "Backspace" to delete selected characters and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_backspace_to_delete_selected_characters({
+      action: 'typing "Backspace" to delete selected characters',
+      cancelBeforeInput: false,
+    });
+
+    function test_typing_delete_to_delete_selected_characters(aTestData) {
+      editTarget.innerHTML = "a";
+      selection.selectAllChildren(editTarget);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: editTarget.firstChild,
+          startOffset: 0,
+          endContainer: editTarget.firstChild,
+          endOffset: editTarget.firstChild.length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Delete", {}, aWindow);
+        },
+        {
+          innerHTML: "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentForward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: "deleteContentForward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_delete_to_delete_selected_characters({
+      action: 'typing "Delete" to delete selected characters and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_delete_to_delete_selected_characters({
+      action: 'typing "Delete" to delete selected characters',
+      cancelBeforeInput: false,
+    });
+
+    function test_deleting_word_backward_from_its_end(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.collapse(textNode, "abc def".length);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: "abc ".length,
+          endContainer: textNode,
+          endOffset: textNode.length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
+        },
+        {
+          innerHTML: "abc ",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteWordBackward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: "deleteWordBackward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_deleting_word_backward_from_its_end({
+      action: 'deleting word backward from its end and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_deleting_word_backward_from_its_end({
+      action: "deleting word backward from its end",
+      cancelBeforeInput: false,
+    });
+
+    function test_deleting_word_forward_from_its_start(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.collapse(textNode, 0);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: 0,
+          endContainer: textNode,
+          endOffset: kWordSelectEatSpaceToNextWord ? "abc ".length : "abc".length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
+        },
+        {
+          innerHTML: kWordSelectEatSpaceToNextWord ? "def" : " def",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteWordForward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: "deleteWordForward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_deleting_word_forward_from_its_start({
+      action: 'deleting word forward from its start and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_deleting_word_forward_from_its_start({
+      action: "deleting word forward from its start",
+      cancelBeforeInput: false,
+    });
+
+    (function test_deleting_word_backward_from_middle_of_second_word(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.setBaseAndExtent(textNode, "abc d".length, textNode, "abc de".length);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: kIsWin ? "abc ".length : "abc d".length,
+          endContainer: textNode,
+          endOffset: kIsWin ? "abc d".length : "abc de".length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
+        },
+        {
+          // Only on Windows, we collapse selection to start before handling this command.
+          innerHTML: kIsWin ? "abc ef" : "abc df",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: kIsWin ? "deleteWordBackward" : "deleteContentBackward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: kIsWin ? "deleteWordBackward" : "deleteContentBackward",
+            data: null,
+          },
+        }
+      );
+    })({
+      action: "removing characters backward from middle of second word",
+    });
+
+    (function test_deleting_word_forward_from_middle_of_first_word(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.setBaseAndExtent(textNode, "a".length, textNode, "ab".length);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: "a".length,
+          endContainer: textNode,
+          endOffset: (function expectedEndOffset() {
+            if (!kIsWin) {
+              return "ab".length;
+            }
+            return kWordSelectEatSpaceToNextWord ? "abc ".length : "abc".length;
+          })(),
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
+        },
+        {
+          // Only on Windows, we collapse selection to start before handling this command.
+          innerHTML: (function () {
+            if (!kIsWin) {
+              return "ac def";
+            }
+            return kWordSelectEatSpaceToNextWord ? "adef" : "a def";
+          })(),
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: kIsWin ? "deleteWordForward" : "deleteContentForward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: kIsWin ? "deleteWordForward" : "deleteContentForward",
+            data: null,
+          },
+        }
+      );
+    })({
+      action: "removing characters forward from middle of first word",
+    });
+
+    (function test_deleting_characters_backward_to_start_of_line(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.collapse(textNode, "abc d".length);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: 0,
+          endContainer: textNode,
+          endOffset: "abc d".length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
+        },
+        {
+          innerHTML: "ef",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteSoftLineBackward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: "deleteSoftLineBackward",
+            data: null,
+          },
+        }
+      );
+    })({
+      action: "removing characters backward to start of line",
+    });
+
+    (function test_deleting_characters_forward_to_end_of_line(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.collapse(textNode, "ab".length);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: "ab".length,
+          endContainer: textNode,
+          endOffset: "abc def".length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
+        },
+        {
+          innerHTML: "ab",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteSoftLineForward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: "deleteSoftLineForward",
+            data: null,
+          },
+        }
+      );
+    })({
+      action: "removing characters forward to end of line",
+    });
+
+    (function test_deleting_characters_backward_to_start_of_line_with_non_collapsed_selection(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.setBaseAndExtent(textNode, "abc d".length, textNode, "abc_de".length);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: kIsWin ? 0 : "abc d".length,
+          endContainer: textNode,
+          endOffset: kIsWin ? "abc d".length : "abc de".length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
+        },
+        {
+          // Only on Windows, we collapse selection to start before handling this command.
+          innerHTML: kIsWin ? "ef" : "abc df",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: kIsWin ? "deleteSoftLineBackward" : "deleteContentBackward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: kIsWin ? "deleteSoftLineBackward" : "deleteContentBackward",
+            data: null,
+          },
+        }
+      );
+    })({
+      action: "removing characters backward to start of line (with selection in second word)",
+    });
+
+    (function test_deleting_characters_forward_to_end_of_line_with_non_collapsed_selection(aTestData) {
+      editTarget.innerHTML = "abc def";
+      let textNode = editTarget.firstChild;
+      selection.setBaseAndExtent(textNode, "a".length, textNode, "ab".length);
+
+      let expectedTargetRanges = [
+        {
+          startContainer: textNode,
+          startOffset: "a".length,
+          endContainer: textNode,
+          endOffset: kIsWin ? "abc def".length : "ab".length,
+        },
+      ];
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
+        },
+        {
+          // Only on Windows, we collapse selection to start before handling this command.
+          innerHTML: kIsWin ? "a" : "ac def",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: kIsWin ? "deleteSoftLineForward" : "deleteContentForward",
+            data: null,
+            targetRanges: expectedTargetRanges,
+          },
+          inputEvent: {
+            inputType: kIsWin ? "deleteSoftLineForward" : "deleteContentForward",
+            data: null,
+          },
+        }
+      );
+    })({
+      action: "removing characters forward to end of line (with selection in second word)",
+    });
+
+    function test_switching_text_direction_from_default(aTestData) {
+      try {
+        body.removeAttribute("dir");
+        htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorRightToLeft;
+        htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
+        aDocument.documentElement.scrollTop; // XXX Update the body frame
+        editTarget.focus();
+
+        runTest(
+          aTestData,
+          () => {
+            SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
+            // XXX If editing host is a descendant of `<body>`, this must be a bug.
+            if (aTestData.cancelBeforeInput) {
+              is(body.getAttribute("dir"), null,
+                `${aDescription}dir attribute of the element shouldn't have been set by ${aTestData.action}`);
+            } else {
+              is(body.getAttribute("dir"), "rtl",
+                `${aDescription}dir attribute of the element should've been set to "rtl" by ${aTestData.action}`);
+            }
+          },
+          {
+            beforeInputEvent: {
+              cancelable: true,
+              inputType: "formatSetBlockTextDirection",
+              data: "rtl",
+              targetRanges: [],
+            },
+            inputEvent: {
+              inputType: "formatSetBlockTextDirection",
+              data: "rtl",
+            },
+          }
+        );
+      } finally {
+        body.removeAttribute("dir");
+        htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorRightToLeft;
+        htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
+        aDocument.documentElement.scrollTop; // XXX Update the body frame
+      }
+    }
+    test_switching_text_direction_from_default({
+      action: 'switching text direction from default to "rtl" and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_switching_text_direction_from_default({
+      action: 'switching text direction from default to "rtl"',
+      cancelBeforeInput: false,
+    });
+
+    function test_switching_text_direction_from_rtl_to_ltr(aTestData) {
+      try {
+        body.setAttribute("dir", "rtl");
+        htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorLeftToRight;
+        htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorRightToLeft; // XXX flags update is required, must be a bug.
+        aDocument.documentElement.scrollTop; // XXX Update the body frame
+        editTarget.focus();
+
+        runTest(
+          aTestData,
+          () => {
+            SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
+            // XXX If editing host is a descendant of `<body>`, this must be a bug.
+            let expectedDirValue = aTestData.cancelBeforeInput ? "rtl" : "ltr";
+            is(body.getAttribute("dir"), expectedDirValue,
+              `${aDescription}dir attribute of the element should be "${expectedDirValue}" after ${aTestData.action}`);
+          },
+          {
+            beforeInputEvent: {
+              cancelable: true,
+              inputType: "formatSetBlockTextDirection",
+              data: "ltr",
+              targetRanges: [],
+            },
+            inputEvent: {
+              inputType: "formatSetBlockTextDirection",
+              data: "ltr",
+            },
+          }
+        );
+      } finally {
+        body.removeAttribute("dir");
+        htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorRightToLeft;
+        htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
+        aDocument.documentElement.scrollTop; // XXX Update the body frame
+      }
+    }
+    test_switching_text_direction_from_rtl_to_ltr({
+      action: 'switching text direction from "rtl" to "ltr" and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_switching_text_direction_from_rtl_to_ltr({
+      action: 'switching text direction from "rtl" to "ltr" and canceling "beforeinput"',
+      cancelBeforeInput: false,
+    });
+
+
+    function test_inserting_link(aTestData) {
+      editTarget.innerHTML = "link";
+      selection.selectAllChildren(editTarget);
+
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_insertLinkNoUI", "https://example.com/foo/bar.html");
+        },
+        {
+          innerHTML: '<a href="https://example.com/foo/bar.html">link</a>',
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertLink",
+            data: "https://example.com/foo/bar.html",
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertLink",
+            data: "https://example.com/foo/bar.html",
+          },
+        }
+      );
+    }
+    test_inserting_link({
+      action: 'setting link with absolute URL and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_inserting_link({
+      action: "setting link with absolute URL",
+      cancelBeforeInput: false,
+    });
+
+    (function test_inserting_link_with_relative_url(aTestData) {
+      editTarget.innerHTML = "link";
+      selection.selectAllChildren(editTarget);
+
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_insertLinkNoUI", "foo/bar.html");
+        },
+        {
+          innerHTML: '<a href="foo/bar.html">link</a>',
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "insertLink",
+            data: "foo/bar.html",
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "insertLink",
+            data: "foo/bar.html",
+          },
+        }
+      );
+    })({
+      action: "setting link with relative URL",
+    });
+
+    (function test_format_commands() {
+      for (let test of [{command: "cmd_bold",
+                        tag: "b",
+                        otherRemoveTags: ["strong"],
+                        inputType: "formatBold"},
+                        {command: "cmd_italic",
+                        tag: "i",
+                        otherRemoveTags: ["em"],
+                        inputType: "formatItalic"},
+                        {command: "cmd_underline",
+                        tag: "u",
+                        inputType: "formatUnderline"},
+                        {command: "cmd_strikethrough",
+                        tag: "strike",
+                        otherRemoveTags: ["s"],
+                        inputType: "formatStrikeThrough"},
+                        {command: "cmd_subscript",
+                        tag: "sub",
+                        exclusiveTags: ["sup"],
+                        inputType: "formatSubscript"},
+                        {command: "cmd_superscript",
+                        tag: "sup",
+                        exclusiveTags: ["sub"],
+                        inputType: "formatSuperscript"}]) {
+        function test_formatting_text(aTestData) {
+          editTarget.innerHTML = "format";
+          selection.selectAllChildren(editTarget);
+
+          runTest(
+            aTestData,
+            () => {
+              SpecialPowers.doCommand(aWindow, test.command);
+            },
+            {
+              innerHTML: `<${test.tag}>format</${test.tag}>`,
+              beforeInputEvent: {
+                cancelable: true,
+                inputType: test.inputType,
+                data: null,
+                targetRanges: kSameAsSelection,
+              },
+              inputEvent: {
+                inputType: test.inputType,
+                data: null,
+              },
+            }
+          );
+        }
+        test_formatting_text({
+          action: `formatting with "${test.command}" and canceling "beforeinput"`,
+          cancelBeforeInput: true,
+        });
+        test_formatting_text({
+          action: `formatting with "${test.command}" and canceling "beforeinput"`,
+          cancelBeforeInput: false,
+        });
+
+        function test_removing_format_text(aTestData) {
+          editTarget.innerHTML = `<${test.tag}>format</${test.tag}>`;
+          selection.selectAllChildren(editTarget);
+
+          runTest(
+            aTestData,
+            () => {
+              SpecialPowers.doCommand(aWindow, test.command);
+            },
+            {
+              innerHTML: "format",
+              beforeInputEvent: {
+                cancelable: true,
+                inputType: test.inputType,
+                data: null,
+                targetRanges: kSameAsSelection,
+              },
+              inputEvent: {
+                inputType: test.inputType,
+                data: null,
+              },
+            }
+          );
+        }
+        test_removing_format_text({
+          action: `removing format with "${test.command}" and canceling "beforeinput"`,
+          cancelBeforeInput: true,
+        });
+        test_removing_format_text({
+          action: `removing format with "${test.command}" and canceling "beforeinput"`,
+          cancelBeforeInput: false,
+        });
+
+        (function test_removing_format_styled_by_others() {
+          if (!test.otherRemoveTags) {
+            return;
+          }
+          for (let anotherTag of test.otherRemoveTags) {
+            function test_removing_format_styled_by_another_element(aTestData) {
+              editTarget.innerHTML = `<${anotherTag}>format</${anotherTag}>`;
+              selection.selectAllChildren(editTarget);
+
+              runTest(
+                aTestData,
+                () => {
+                  SpecialPowers.doCommand(aWindow, test.command);
+                },
+                {
+                  innerHTML: "format",
+                  beforeInputEvent: {
+                    cancelable: true,
+                    inputType: test.inputType,
+                    data: null,
+                    targetRanges: kSameAsSelection,
+                  },
+                  inputEvent: {
+                    inputType: test.inputType,
+                    data: null,
+                  },
+                }
+              );
+            }
+            test_removing_format_styled_by_another_element({
+              action: `removing <${anotherTag}> element with "${test.command}" and canceling "beforeinput"`,
+              cancelBeforeInput: true,
+            });
+            test_removing_format_styled_by_another_element({
+              action: `removing <${anotherTag}> element with "${test.command}"`,
+              cancelBeforeInput: false,
+            });
+
+            function test_removing_format_styled_by_both_primary_one_and_another_one(aTestData) {
+              editTarget.innerHTML = `<${test.tag}><${anotherTag}>format</${anotherTag}></${test.tag}>`;
+              selection.selectAllChildren(editTarget);
+
+              runTest(
+                aTestData,
+                () => {
+                  SpecialPowers.doCommand(aWindow, test.command);
+                },
+                {
+                  innerHTML: "format",
+                  beforeInputEvent: {
+                    cancelable: true,
+                    inputType: test.inputType,
+                    data: null,
+                    targetRanges: kSameAsSelection,
+                  },
+                  inputEvent: {
+                    inputType: test.inputType,
+                    data: null,
+                  },
+                }
+              );
+            }
+            test_removing_format_styled_by_both_primary_one_and_another_one({
+              action: `removing both <${test.tag}> and <${anotherTag}> elements with "${test.command}" and canceling "beforeinput"`,
+              cancelBeforeInput: true,
+            });
+            test_removing_format_styled_by_both_primary_one_and_another_one({
+              action: `removing both <${test.tag}> and <${anotherTag}> elements with "${test.command}"`,
+              cancelBeforeInput: false,
+            });
+          }
+        })();
+        (function test_formatting_text_styled_by_exclusive_elements() {
+          if (!test.exclusiveTags) {
+            return;
+          }
+          for (let exclusiveTag of test.exclusiveTags) {
+            function test_formatting_text_styled_by_exclusive_element(aTestData) {
+              editTarget.innerHTML = `<${exclusiveTag}>format</${exclusiveTag}>`;
+              selection.selectAllChildren(editTarget);
+
+              runTest(
+                aTestData,
+                () => {
+                  SpecialPowers.doCommand(aWindow, test.command);
+                },
+                {
+                  innerHTML: `<${test.tag}>format</${test.tag}>`,
+                  beforeInputEvent: {
+                    cancelable: true,
+                    inputType: test.inputType,
+                    data: null,
+                    targetRanges: kSameAsSelection,
+                  },
+                  inputEvent: {
+                    inputType: test.inputType,
+                    data: null,
+                  },
+                }
+              );
+            }
+            test_formatting_text_styled_by_exclusive_element({
+              action: `removing <${exclusiveTag}> element with formatting with "${test.command}" and canceling "beforeinput"`,
+              cancelBeforeInput: true,
+            });
+            test_formatting_text_styled_by_exclusive_element({
+              action: `removing <${exclusiveTag}> element with formatting with "${test.command}"`,
+              cancelBeforeInput: false,
+            });
+          }
+        })();
+      }
+    })();
+
+    function test_indenting_text(aTestData) {
+      editTarget.innerHTML = "format";
+      selection.selectAllChildren(editTarget);
+
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_indent");
+        },
+        {
+          innerHTML: "<blockquote>format</blockquote>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "formatIndent",
+            data: null,
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "formatIndent",
+            data: null,
+          },
+        }
+      );
+    }
+    test_indenting_text({
+      action: 'indenting text and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_indenting_text({
+      action: 'indenting text',
+      cancelBeforeInput: false,
+    });
+
+    function test_outdenting_blockquote(aTestData) {
+      editTarget.innerHTML = "<blockquote>format</blockquote>";
+      selection.selectAllChildren(editTarget.firstChild);
+
+      runTest(
+        aTestData,
+        () => {
+          SpecialPowers.doCommand(aWindow, "cmd_outdent");
+        },
+        {
+          innerHTML: "format",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "formatOutdent",
+            data: null,
+            targetRanges: kSameAsSelection,
+          },
+          inputEvent: {
+            inputType: "formatOutdent",
+            data: null,
+          },
+        }
+      );
+    }
+    test_outdenting_blockquote({
+      action: 'outdenting blockquote and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_outdenting_blockquote({
+      action: 'outdenting blockquote',
+      cancelBeforeInput: false,
+    });
+
+    function test_typing_delete_to_delete_img(aTestData) {
+      editTarget.innerHTML = `<img src="${kImgURL}">`;
+      selection.collapse(editTarget, 0);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Delete", {}, aWindow);
+        },
+        {
+          innerHTML: "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentForward",
+            data: null,
+            targetRanges: [
+              {
+                startContainer: editTarget,
+                startOffset: 0,
+                endContainer: editTarget,
+                endOffset: 1,
+              },
+            ],
+          },
+          inputEvent: {
+            inputType: "deleteContentForward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_delete_to_delete_img({
+      action: 'typing "Delete" to delete the <img> element and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_delete_to_delete_img({
+      action: 'typing "Delete" to delete the <img> element',
+      cancelBeforeInput: false,
+    });
+
+    function test_typing_backspace_to_delete_img(aTestData) {
+      editTarget.innerHTML = `<img src="${kImgURL}">`;
+      selection.collapse(editTarget, 1);
+
+      runTest(
+        aTestData,
+        () => {
+          synthesizeKey("KEY_Backspace", {}, aWindow);
+        },
+        {
+          innerHTML: "<br>",
+          beforeInputEvent: {
+            cancelable: true,
+            inputType: "deleteContentBackward",
+            data: null,
+            targetRanges: [
+              {
+                startContainer: editTarget,
+                startOffset: 0,
+                endContainer: editTarget,
+                endOffset: 1,
+              },
+            ],
+          },
+          inputEvent: {
+            inputType: "deleteContentBackward",
+            data: null,
+          },
+        }
+      );
+    }
+    test_typing_backspace_to_delete_img({
+      action: 'typing "Backspace" to delete the <img> element and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_backspace_to_delete_img({
+      action: 'typing "Backspace" to delete the <img> element',
+      cancelBeforeInput: false,
+    });
+  }
+
+  doTests(document.getElementById("editor1").contentDocument,
+          document.getElementById("editor1").contentWindow,
+          "Editor1, body has contenteditable attribute");
+  doTests(document.getElementById("editor2").contentDocument,
+          document.getElementById("editor2").contentWindow,
+          "Editor2, html has contenteditable attribute");
+  doTests(document.getElementById("editor3").contentDocument,
+          document.getElementById("editor3").contentWindow,
+          "Editor3, div has contenteditable attribute");
+  doTests(document.getElementById("editor4").contentDocument,
+          document.getElementById("editor4").contentWindow,
+          "Editor4, html and div have contenteditable attribute");
+  doTests(document.getElementById("editor5").contentDocument,
+          document.getElementById("editor5").contentWindow,
+          "Editor5, html and div have contenteditable attribute");
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

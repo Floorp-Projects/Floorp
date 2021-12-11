@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=428021
+-->
+<head>
+  <title>Test for Bug 428021</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=428021">Mozilla Bug 428021</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+      /** Test for Bug 428021 **/
+      var rangetter, ransetter;
+      this.__defineGetter__('x', function() { rangetter = true; });
+      this.__defineSetter__('x', function(val) { ransetter = true; });
+
+      var exn;
+      try {
+          e = x;
+          x = false;
+      } catch (e) {
+          exn = e;
+      }
+      ok(!exn, "Exception caught: " + exn);
+      ok(rangetter, "Failed to run getter");
+      ok(ransetter, "Failed to run setter");
+      
+</script>
+</pre>
+</body>
+</html>
+

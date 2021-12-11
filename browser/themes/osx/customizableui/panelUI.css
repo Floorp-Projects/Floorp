@@ -1,0 +1,103 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/customizableui/panelUI.inc.css
+
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-inline: -16px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-block: -16px;
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
+  margin-inline: -8px;
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: -8px;
+}
+
+#downloadsPanel,
+#widget-overflow,
+#appMenu-popup,
+#customizationui-widget-panel,
+#identity-popup,
+#permission-popup,
+#protections-popup,
+#appMenu-notification-popup {
+  margin-top: -1px; /* Overrides value from panelUI.inc.css */
+}
+
+#BMB_bookmarksPopup {
+  margin-top: -4px; /* Overrides value from panelUI.inc.css */
+}
+
+.panel-subview-body {
+  scrollbar-color: color-mix(in srgb, currentColor 26%, transparent) transparent;
+}
+
+#appMenu-mainView > .panel-subview-body > .panel-banner-item {
+  padding-inline-start: 18px;
+}
+
+.subviewbutton:not([image],[targetURI],.bookmark-item) > .menu-iconic-left {
+  display: none;
+}
+
+#BMB_bookmarksPopup .subviewbutton > .menu-iconic-left {
+  margin-inline-end: 3px;
+}
+
+#BMB_bookmarksPopup .subviewbutton > .menu-iconic-text {
+  padding-inline-start: 0;
+}
+
+/* Override OSX-specific toolkit styles for the bookmarks panel */
+menu.subviewbutton > .menu-right {
+  margin-inline-end: -4px;
+  appearance: none;
+}
+
+.PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
+  padding-inline-start: 6px;
+}
+
+.PanelUI-remotetabs-notabsforclient-label {
+  margin-inline-start: 19px;
+  font-size: 13px;
+}
+
+#PanelUI-remotetabs[mainview] .PanelUI-remotetabs-notabsforclient-label {
+  margin-inline-start: 23px;
+}
+
+#PanelUI-remotetabs-tabslist {
+  padding-bottom: 4px;
+}
+
+.panel-button {
+  appearance: none;
+  border-radius: 2px;
+  background-color: var(--arrowpanel-dimmed);
+  color: inherit;
+  padding: 2px 6px;
+}
+
+.panel-button@buttonStateHover@ {
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
+.panel-button@buttonStateActive@ {
+  background-color: var(--panel-item-active-bgcolor);
+}
+
+.panel-button:-moz-focusring {
+  box-shadow: var(--focus-ring-box-shadow);
+}

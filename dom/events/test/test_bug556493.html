@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=556493
+-->
+<head>
+  <title>Test for Bug 556493</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    div {
+      border: 1px solid;
+    }
+  </style>
+</head>
+<body onload="setTimeout(runTest, 0)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=556493">Mozilla Bug 556493</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 556493 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var downCount = 0;
+var upCount = 0;
+var clickCount = 0;
+function runTest() {
+  var d0 = document.getElementById("d0");
+  var d1 = document.getElementById("d1");
+  var d2 = document.getElementById("d2");
+
+  d0.onmousedown = function(e) { ++downCount; };
+  d0.onmouseup = function(e) { ++upCount; }
+  d0.onclick = function(e) { ++clickCount; }
+
+  synthesizeMouse(d1, 3, 3, { type: "mousedown"});
+  synthesizeMouse(d1, 3, 3, { type: "mouseup"});
+
+  is(downCount, 1, "Wrong mousedown event count!");
+  is(upCount, 1, "Wrong mouseup event count!");
+  is(clickCount, 1, "Wrong click event count!");
+
+  synthesizeMouse(d1, 3, 3, { type: "mousedown"});
+  synthesizeMouse(d1, 30, 3, { type: "mouseup"});
+
+  is(downCount, 2, "Wrong mousedown event count!");
+  is(upCount, 2, "Wrong mouseup event count!");
+  is(clickCount, 2, "Wrong click event count!");
+
+  synthesizeMouse(d1, 3, 3, { type: "mousedown"});
+  synthesizeMouse(d2, 3, 3, { type: "mouseup"});
+
+  is(downCount, 3, "Wrong mousedown event count!");
+  is(upCount, 3, "Wrong mouseup event count!");
+  is(clickCount, 3, "Wrong click event count!");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<div id="d0">
+Test divs --
+<div id="d1">t</div><div id="d2">t</div>
+--
+</div>
+</body>
+</html>

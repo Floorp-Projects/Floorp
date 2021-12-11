@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form field autofill highlight</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+addLoginsInParent(
+  [window.location.origin, "https://autofill", null,
+              "user1", "pass1", "", ""]);
+
+let DEFAULT_ORIGIN = window.location.origin;
+</script>
+<body>
+<p id="display"></p>
+<div id="content">
+<pre id="test">
+<script>
+add_task(async function test_field_highlight_on_autofill() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <form id="form1" action="https://autofill" onsubmit="return false;">
+      <input  type="text"       id="uname">
+      <input  type="password"   id="pword">
+      <button type="submit">Submit</button>
+    </form>`, win);
+
+  await SpecialPowers.spawn(win, [], async function() {
+    let EventUtils = ContentTaskUtils.getEventUtils(this.content);
+    let doc = this.content.document;
+    let username = doc.getElementById("uname");
+    let password = doc.getElementById("pword");
+    ok(username.matches(":autofill"),
+       "Highlight was successfully applied to the username field on page load autofill");
+    ok(password.matches(":autofill"),
+       "Highlight was successfully applied to the password field on page load autofill");
+
+    // Test that initiating a change on the input value will remove the highlight. We check by pressing
+    // the tab key after backspace(by shifting focus to the next element) because the tab key is known to
+    // cause a bug where the highlight is applied once again.
+    username.focus();
+    await EventUtils.synthesizeKey("KEY_Backspace", {}, this.content);
+    await EventUtils.synthesizeKey("KEY_Tab", {}, this.content);
+
+    ok(!username.matches(":autofill"), "Highlight was successfully removed on change in value of username input element");
+
+    await EventUtils.synthesizeKey("KEY_Backspace", {}, this.content);
+    await EventUtils.synthesizeKey("KEY_Tab", {}, this.content);
+    ok(!password.matches(":autofill"), "Highlight was successfully removed on change in value of password input element");
+  });
+});
+</script>
+</body>
+</html>

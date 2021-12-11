@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for a.text</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <link rel="help" href="http://www.whatwg.org/html/#dom-a-text"/>
+</head>
+<body>
+<div id="content">
+<a href="a">a b c</a>
+<a href="b">a <!--b--> c</a>
+<a href="c">a <b>b</b> c</a>
+</div>
+<pre id="test">
+<script>
+var d = document.getElementById("content")
+                .appendChild(document.createElement("a"));
+d.href = "d";
+d.appendChild(document.createTextNode("a "));
+d.appendChild(document.createTextNode("b "));
+d.appendChild(document.createTextNode("c "));
+var expected = ["a b c", "a  c", "a b c", "a b c "];
+var list = document.getElementById("content").getElementsByTagName("a");
+for (var i = 0, il = list.length; i < il; ++i) {
+  is(list[i].text, list[i].textContent);
+  is(list[i].text, expected[i]);
+
+  list[i].text = "x";
+  is(list[i].text, "x");
+  is(list[i].textContent, "x");
+  is(list[i].firstChild.data, "x");
+  is(list[i].childNodes.length, 1);
+
+  list[i].textContent = "y";
+  is(list[i].text, "y");
+  is(list[i].textContent, "y");
+  is(list[i].firstChild.data, "y");
+  is(list[i].childNodes.length, 1);
+}
+</script>
+</pre>
+</body>
+</html>

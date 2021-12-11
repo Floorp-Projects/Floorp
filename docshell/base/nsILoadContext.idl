@@ -1,0 +1,148 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2 sts=2 cin
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindowProxy;
+
+webidl Element;
+
+[ref] native OriginAttributes(mozilla::OriginAttributes);
+
+%{C++
+#ifdef MOZILLA_INTERNAL_API
+namespace mozilla {
+class OriginAttributes;
+}
+#endif
+%}
+
+/**
+ * An nsILoadContext represents the context of a load.  This interface
+ * can be queried for various information about where the load is
+ * happening.
+ */
+[builtinclass, scriptable, uuid(2813a7a3-d084-4d00-acd0-f76620315c02)]
+interface nsILoadContext : nsISupports
+{
+  /**
+   * associatedWindow is the window with which the load is associated, if any.
+   * Note that the load may be triggered by a document which is different from
+   * the document in associatedWindow, and in fact the source of the load need
+   * not be same-origin with the document in associatedWindow.  This attribute
+   * may be null if there is no associated window.
+   */
+  readonly attribute mozIDOMWindowProxy associatedWindow;
+
+  /**
+   * topWindow is the top window which is of same type as associatedWindow.
+   * This is equivalent to associatedWindow.top, but is provided here as a
+   * convenience.  All the same caveats as associatedWindow of apply, of
+   * course.  This attribute may be null if there is no associated window.
+   */
+  readonly attribute mozIDOMWindowProxy topWindow;
+
+  /**
+   * topFrameElement is the <iframe>, <frame>, or <browser> element which
+   * contains the topWindow with which the load is associated.
+   *
+   * Note that we may have a topFrameElement even when we don't have an
+   * associatedWindow, if the topFrameElement's content lives out of process.
+   * topFrameElement is available in single-process and multiprocess contexts.
+   * Note that topFrameElement may be in chrome even when the nsILoadContext is
+   * associated with content.
+   */
+  readonly attribute Element topFrameElement;
+
+  /**
+   * True if the load context is content (as opposed to chrome).  This is
+   * determined based on the type of window the load is performed in, NOT based
+   * on any URIs that might be around.
+   */
+  readonly attribute boolean isContent;
+
+  /*
+   * Attribute that determines if private browsing should be used. May not be
+   * changed after a document has been loaded in this context.
+   */
+  attribute boolean usePrivateBrowsing;
+
+  /**
+   * Attribute that determines if remote (out-of-process) tabs should be used.
+   */
+  readonly attribute boolean useRemoteTabs;
+
+  /**
+   * Determines if out-of-process iframes should be used.
+   */
+  readonly attribute boolean useRemoteSubframes;
+
+  /*
+   * Attribute that determines if tracking protection should be used. May not be
+   * changed after a document has been loaded in this context.
+   */
+  attribute boolean useTrackingProtection;
+
+%{C++
+  /**
+   * De-XPCOMed getter to make call-sites cleaner.
+   */
+  bool UsePrivateBrowsing()
+  {
+    bool usingPB = false;
+    GetUsePrivateBrowsing(&usingPB);
+    return usingPB;
+  }
+
+  bool UseRemoteTabs()
+  {
+    bool usingRT = false;
+    GetUseRemoteTabs(&usingRT);
+    return usingRT;
+  }
+
+  bool UseRemoteSubframes()
+  {
+    bool usingRSF = false;
+    GetUseRemoteSubframes(&usingRSF);
+    return usingRSF;
+  }
+
+  bool UseTrackingProtection()
+  {
+    bool usingTP = false;
+    GetUseTrackingProtection(&usingTP);
+    return usingTP;
+  }
+%}
+
+  /**
+   * Set the private browsing state of the load context, meant to be used internally.
+   */
+  [noscript] void SetPrivateBrowsing(in boolean aInPrivateBrowsing);
+
+  /**
+   * Set the remote tabs state of the load context, meant to be used internally.
+   */
+  [noscript] void SetRemoteTabs(in boolean aUseRemoteTabs);
+
+  /**
+   * Set the remote subframes bit of this load context. Exclusively meant to be used internally.
+   */
+  [noscript] void SetRemoteSubframes(in boolean aUseRemoteSubframes);
+
+  /**
+   * A dictionary of the non-default origin attributes associated with this
+   * nsILoadContext.
+   */
+  [binaryname(ScriptableOriginAttributes), implicit_jscontext]
+  readonly attribute jsval originAttributes;
+
+  /**
+   * The C++ getter for origin attributes.
+   */
+  [noscript, notxpcom] void GetOriginAttributes(out OriginAttributes aAttrs);
+};

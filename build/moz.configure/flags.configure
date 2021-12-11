@@ -1,0 +1,107 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# We support C++14, but we don't want to enable the sized deallocation
+# facilities in C++14 yet.
+check_and_add_gcc_flag("-fno-sized-deallocation", compiler=cxx_compiler)
+# Likewise for C++17 and aligned allocation.  It's not immediately obvious
+# from the clang and GCC documentation, but they both support this.
+check_and_add_gcc_flag("-fno-aligned-new", compiler=cxx_compiler)
+
+# Please keep these last in this file.
+add_old_configure_assignment("_COMPILATION_CFLAGS", compilation_flags.cflags)
+add_old_configure_assignment("_COMPILATION_CXXFLAGS", compilation_flags.cxxflags)
+add_old_configure_assignment("_COMPILATION_HOST_CFLAGS", compilation_flags.host_cflags)
+add_old_configure_assignment(
+    "_COMPILATION_HOST_CXXFLAGS", compilation_flags.host_cxxflags
+)
+
+
+option(
+    "--disable-new-pass-manager",
+    help="Use the legacy LLVM pass manager in clang builds",
+)
+
+
+@depends(
+    "--enable-new-pass-manager",
+    c_compiler,
+    host,
+    target,
+    "MOZ_PGO",
+    enable_fuzzing,
+    ubsan,
+)
+def new_pass_manager_flags(enabled, compiler, host, target, pgo, enable_fuzzing, ubsan):
+    if host.os == "OSX":
+        # Some native Mac builds hang with the new pass manager. Given the
+        # inability to test in CI, don't take the risk of further breakage.
+        return None
+    if target.os == "OSX" and not pgo:
+        # Also disable when cross-compiling to Mac, because plain-ish opt
+        # builds hang. Variants like asan and ccov work fine, but it would be
+        # too tedious to test them all here. PGO is the only thing that matters
+        # enough to make an exception for.
+        return None
+    if enable_fuzzing and compiler.version < "10.0.0":
+        # Clang 9 does not seem to play well with libFuzzer
+        return None
+    if ubsan and compiler.version == "10.0.0":
+        # Clang 10.0.0 hangs with some ubsan-inserted code constructs.
+        # This was fixed in 10.0.1 (https://llvm.org/pr45835)
+        return None
+    if enabled and compiler.version >= "9.0.0":
+        if compiler.type == "clang":
+            return ["-fexperimental-new-pass-manager"]
+        elif compiler.type == "clang-cl":
+            return ["-Xclang", "-fexperimental-new-pass-manager"]
+
+
+set_config("MOZ_NEW_PASS_MANAGER_FLAGS", new_pass_manager_flags)
+
+
+# Try to make builds more reproducible and allow sharing built artifacts across
+# source and object directories by using -ffile-prefix-map and friends.  To
+# "unwind" the prefix maps, use:
+#
+# (gdb) set substitute-path /topsrcdir/ $topsrcdir/
+#
+# (lldb) settings set target.source-map /topobjdir/ $topobjdir/
+#
+# See, for example, https://lldb.llvm.org/use/map.html.
+@depends(
+    path_remapping,
+    path_remappings,
+    c_compiler,
+)
+@imports(_from="os", _import="sep")
+def file_prefix_map_flags(path_remapping, path_remappings, compiler):
+    if "c" not in path_remapping:
+        return []
+
+    if (compiler.type == "gcc" and compiler.version < "8.1") or (
+        compiler.type in ("clang", "clang-cl") and compiler.version < "10.0.0"
+    ):
+        die(
+            f"Compiler of type {compiler.type} and version {compiler.version} "
+            "does not support --enable-path-remapping."
+        )
+
+    flags = []
+    for old, new in path_remappings:
+        # We would prefer to use just -ffile-prefix-map, but clang-cl doesn't
+        # seem to recognize it.
+        for flag in ("-fdebug-prefix-map", "-fmacro-prefix-map"):
+            flag = f"{flag}={old}={new}"
+            if compiler.type in ("gcc", "clang"):
+                flags.append(flag)
+            elif compiler.type == "clang-cl":
+                flags.extend(["-Xclang", flag])
+
+    return flags
+
+
+set_config("MOZ_FILE_PREFIX_MAP_FLAGS", file_prefix_map_flags)

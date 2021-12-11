@@ -1,0 +1,147 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsISimpleEnumerator;
+interface nsIFile;
+interface nsIToolkitProfile;
+interface nsIProfileLock;
+
+[scriptable, builtinclass, uuid(1947899b-f369-48fa-89da-f7c37bb1e6bc)]
+interface nsIToolkitProfileService : nsISupports
+{
+    /**
+     * Tests whether the profile lists on disk have changed since they were
+     * loaded. When this is true attempts to flush changes to disk will fail.
+     */
+    [infallible] readonly attribute boolean isListOutdated;
+
+    /**
+     * When a downgrade is detected UI is presented to the user to ask how to
+     * proceed. These flags are used to pass some information to the UI.
+     */
+    cenum downgradeUIFlags: 8 {
+        hasSync = 1,
+    };
+
+    /**
+     * When a downgrade is detected UI is presented to the user to ask how to
+     * proceed. These are the possible options the user can choose.
+     */
+    cenum downgradeUIChoice: 8 {
+        quit = 0,
+        createNewProfile = 1,
+    };
+
+    cenum profileManagerResult: 8 {
+        exit = 0,
+        launchWithProfile = 1,
+        restart = 2,
+    };
+
+    attribute boolean startWithLastProfile;
+
+    readonly attribute nsISimpleEnumerator /*nsIToolkitProfile*/ profiles;
+
+    /**
+     * The profile currently in use if it is a named profile. This will return
+     * null if the current profile path doesn't match a profile in the database.
+     */
+    readonly attribute nsIToolkitProfile currentProfile;
+
+    /**
+     * The default profile for this build.
+     * On startup this is the profile selected unless overridden by command line
+     * arguments or environment variables. Setting this will change the profile
+     * used by default the next time the application is started.
+     * Attempting to change the default may throw an exception on builds that do
+     * not support changing the default profile, such as developer edition.
+     */
+    attribute nsIToolkitProfile defaultProfile;
+
+    /**
+     * Selects or creates a profile to use based on the profiles database, any
+     * environment variables and any command line arguments. Will not create
+     * a profile if aIsResetting is true. The profile is selected based on this
+     * order of preference:
+     * * Environment variables (set when restarting the application).
+     * * --profile command line argument.
+     * * --createprofile command line argument (this also causes the app to exit).
+     * * -p command line argument.
+     * * A new profile created if this is the first run of the application.
+     * * The default profile.
+     * aRootDir and aLocalDir are set to the data and local directories for the
+     * profile data. If a profile from the database was selected it will be
+     * returned in aProfile.
+     * This returns true if a new profile was created.
+     * This method is primarily for testing. It can be called only once.
+     */
+    bool selectStartupProfile(in Array<ACString> aArgv,
+                              in boolean aIsResetting, in AUTF8String aUpdateChannel,
+                              in AUTF8String aLegacyInstallHash,
+                              out nsIFile aRootDir, out nsIFile aLocalDir,
+                              out nsIToolkitProfile aProfile);
+
+    /**
+     * Get a profile by name. This is mainly for use by the -P
+     * commandline flag.
+     *
+     * @param aName The profile name to find.
+     */
+    nsIToolkitProfile getProfileByName(in AUTF8String aName);
+
+    /**
+     * Create a new profile.
+     *
+     * The profile temporary directory will be chosen based on where the
+     * profile directory is located.
+     *
+     * If a profile with the given name already exists it will be returned
+     * instead of creating a new profile.
+     *
+     * @param aRootDir
+     *        The profile directory. May be null, in which case a suitable
+     *        default will be chosen based on the profile name.
+     * @param aName
+     *        The profile name.
+     */
+    nsIToolkitProfile createProfile(in nsIFile aRootDir,
+                                    in AUTF8String aName);
+
+    /**
+     * Create a new profile with a unique name.
+     *
+     * As above however the name given will be altered to make it a unique
+     * profile name.
+     *
+     * @param aRootDir
+     *        The profile directory. May be null, in which case a suitable
+     *        default will be chosen based on the profile name.
+     * @param aNamePrefix
+     *        The prefix to use for the profile name. If unused this will be
+     *        used as the profile name otherwise additional characters will be
+     *        added to make the name unique.
+     */
+    nsIToolkitProfile createUniqueProfile(in nsIFile aRootDir,
+                                          in AUTF8String aNamePrefix);
+
+    /**
+     * Returns the number of profiles.
+     * @return the number of profiles.
+     */
+    readonly attribute unsigned long profileCount;
+
+    /**
+     * Flush the profiles list file. This will fail with
+     * NS_ERROR_DATABASE_CHANGED if the files on disk have changed since the
+     * profiles were loaded.
+     */
+    void flush();
+};
+
+%{C++
+#define NS_PROFILESERVICE_CONTRACTID "@mozilla.org/toolkit/profile-service;1"
+%}

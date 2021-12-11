@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>UA Widget unbind test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody">
+
+const content = document.getElementById("content");
+
+add_task(function() {
+  const video = document.createElement("video");
+  video.controls = true;
+  ok(!SpecialPowers.wrap(video).openOrClosedShadowRoot, "UA Widget Shadow Root is not created");
+  content.appendChild(video);
+  ok(!!SpecialPowers.wrap(video).openOrClosedShadowRoot, "UA Widget Shadow Root is created");
+  ok(!!SpecialPowers.wrap(video).openOrClosedShadowRoot.firstChild, "Widget is constructed");
+  content.removeChild(video);
+  ok(!SpecialPowers.wrap(video).openOrClosedShadowRoot, "UA Widget Shadow Root is removed");
+});
+
+add_task(function() {
+  const marquee = document.createElement("marquee");
+  ok(!SpecialPowers.wrap(marquee).openOrClosedShadowRoot, "UA Widget Shadow Root is not created");
+  content.appendChild(marquee);
+  ok(!!SpecialPowers.wrap(marquee).openOrClosedShadowRoot, "UA Widget Shadow Root is created");
+  ok(!!SpecialPowers.wrap(marquee).openOrClosedShadowRoot.firstChild, "Widget is constructed");
+  content.removeChild(marquee);
+  ok(SpecialPowers.wrap(marquee).openOrClosedShadowRoot, "UA Widget Shadow Root is not removed for marquee");
+});
+
+add_task(function() {
+  const input = document.createElement("input");
+  input.type = "date";
+  ok(!SpecialPowers.wrap(input).openOrClosedShadowRoot, "UA Widget Shadow Root is not created");
+  content.appendChild(input);
+  ok(!!SpecialPowers.wrap(input).openOrClosedShadowRoot, "UA Widget Shadow Root is created");
+  ok(!!SpecialPowers.wrap(input).openOrClosedShadowRoot.firstChild, "Widget is constructed");
+  content.removeChild(input);
+  ok(!SpecialPowers.wrap(input).openOrClosedShadowRoot, "UA Widget Shadow Root is removed");
+});
+
+</script>
+</pre>
+</body>
+</html>

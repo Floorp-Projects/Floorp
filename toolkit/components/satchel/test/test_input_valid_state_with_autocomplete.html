@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for valid state with autocomplete</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    input:invalid {
+      border: red 1px solid;
+    }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <form id="form1">
+    <input  type="email" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody">
+var input = document.querySelector("input[name=field1]");
+
+async function runTest() {
+  const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
+
+  let resolveFunc = null;
+  function onPopup() {
+    if (resolveFunc) {
+      resolveFunc();
+      resolveFunc = null;
+    }
+  }
+  registerPopupShownListener(onPopup);
+  function promisePopup() {
+    return new Promise(resolve => {
+      resolveFunc = resolve;
+    });
+  }
+
+  let beforeInputFired = false;
+  let inputFired = false;
+  let waitForPopup = promisePopup();
+  input.focus();
+  input.addEventListener("beforeinput", (event) => {
+    ok(!beforeInputFired, '"input" event should be fired only once at typing');
+    beforeInputFired = true;
+    ok(event.cancelable,
+       '"beforeinput" event for "insertText" should be cancelable');
+    is(event.inputType, "insertText",
+       "inputType of \"beforeinput\" event should be \"insertText\"");
+    ok(input.validity.valid,
+       "Should be valid immediately before inserting a character");
+    ok(!input.matches(":invalid"),
+       "Shouldn't match \":invalid\" immediately before inserting a character");
+  }, {once: true});
+  input.addEventListener("input", (event) => {
+    ok(!inputFired, '"input" event should be fired only once at typing');
+    inputFired = true;
+    is(event.inputType, "insertText",
+       "inputType of \"input\" event should be \"insertText\"");
+    ok(!input.validity.valid,
+       "Should be invalid immediately after inserting a character");
+    ok(input.matches(":invalid"),
+       "Should match \":invalid\" immediately after inserting a character");
+  }, {once: true});
+  beforeInputFired = false;
+  inputFired = false;
+  synthesizeKey("e");
+  ok(beforeInputFired, '"beforeinput" event should have been fired at typing "e"');
+  ok(inputFired, '"input" event should have been fired at typing "e"');
+
+  await waitForPopup;
+  synthesizeKey("KEY_ArrowDown");
+  input.addEventListener("beforeinput", (event) => {
+    ok(!beforeInputFired, '"input" event should be fired only once at typing');
+    beforeInputFired = true;
+    is(event.cancelable, kSetUserInputCancelable,
+       `"beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed by the pref`);
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"beforeinput\" event should be \"insertReplacementText\"");
+    ok(!input.validity.valid,
+       "Should be invalid immediately before selecting valid item in autocomplete list");
+    ok(input.matches(":invalid"),
+       "Should match \":invalid\" immediately before selecting valid item in autocomplete list");
+  }, {once: true});
+  input.addEventListener("input", (event) => {
+    ok(!inputFired, '"input" event should be fired only once at typing');
+    inputFired = true;
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"input\" event should be \"insertReplacementText\"");
+    ok(input.validity.valid,
+       "Should be valid immediately after selecting valid item in autocomplete list");
+    ok(!input.matches(":invalid"),
+       "Shouldn't match \":invalid\" immediately after selecting valid item in autocomplete list");
+  }, {once: true});
+  beforeInputFired = false;
+  inputFired = false;
+  synthesizeKey("KEY_Enter"); // Select valid item
+  ok(beforeInputFired, '"beforeinput" event should have been fired at selecting valid item');
+  ok(inputFired, '"input" event should have been fired at selecting valid item');
+
+  waitForPopup = promisePopup();
+  synthesizeKey("KEY_Backspace");
+  await waitForPopup;
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  input.addEventListener("beforeinput", (event) => {
+    ok(!beforeInputFired, '"input" event should be fired only once at typing');
+    beforeInputFired = true;
+    is(event.cancelable, kSetUserInputCancelable,
+       `"beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed by the pref`);
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"beforeinput\" event should be \"insertReplacementText\"");
+    ok(input.validity.valid,
+       "Should be valid immediately before selecting invalid item in autocomplete list");
+    ok(!input.matches(":invalid"),
+       "Shouldn't match \":invalid\" immediately after selecting invalid item in autocomplete list");
+  }, {once: true});
+  input.addEventListener("input", (event) => {
+    ok(!inputFired, '"input" event should be fired only once at typing');
+    inputFired = true;
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"input\" event should be \"insertReplacementText\"");
+    ok(!input.validity.valid,
+       "Should be invalid immediately after selecting invalid item in autocomplete list");
+    ok(input.matches(":invalid"),
+       "Should match \":invalid\" immediately after selecting invalid item in autocomplete list");
+  }, {once: true});
+  beforeInputFired = false;
+  inputFired = false;
+  synthesizeKey("KEY_Enter"); // Select invalid item
+  ok(beforeInputFired, '"beforeinput" event should have been fired at selecting invalid item');
+  ok(inputFired, '"input" event should have been fired at selecting invalid item');
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  updateFormHistory([
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "email@example.com" },
+    { op: "add", fieldname: "field1", value: "email@example.com." },
+  ], runTest);
+});
+</script>
+</pre>
+</body>

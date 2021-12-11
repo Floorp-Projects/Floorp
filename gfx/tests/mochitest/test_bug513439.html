@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=513439
+-->
+<head>
+  <title>Test for Bug 513439</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=513439">Mozilla Bug 513439</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 513439 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var domWindowUtils = SpecialPowers.DOMWindowUtils;
+SpecialPowers.pushPrefEnv({set: [["layout.css.devPixelsPerPx", "2"]]}, () => {
+  is(domWindowUtils.screenPixelsPerCSSPixel, 2, "devPixelsPerPx wasn't set correctly");
+
+  SpecialPowers.pushPrefEnv({set: [["layout.css.devPixelsPerPx", "1.5"]]}, () => {
+    is(domWindowUtils.screenPixelsPerCSSPixel, 1.5, "devPixelsPerPx wasn't set correctly");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

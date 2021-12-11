@@ -1,0 +1,51 @@
+.ASRouterButton {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  border-radius: 2px;
+  border: 0;
+  font-family: inherit;
+  padding: 8px 15px;
+  margin-inline-start: 12px;
+  color: inherit;
+  cursor: pointer;
+
+  .tall & {
+    margin-inline-start: 20px;
+  }
+
+  &.test-only {
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+  }
+
+  &.primary {
+    border: 1px solid var(--newtab-primary-action-background);
+    background-color: var(--newtab-primary-action-background);
+    color: var(--newtab-primary-element-text-color);
+
+    &:hover {
+      background-color: var(--newtab-primary-element-hover-color);
+    }
+
+    &:active {
+      background-color: var(--newtab-primary-element-active-color);
+    }
+  }
+
+  &.slim {
+    border: $border-primary;
+    margin-inline-start: 0;
+    font-size: 12px;
+    padding: 6px 12px;
+
+    &:hover,
+    &:focus {
+      box-shadow: $shadow-primary;
+      transition: box-shadow 150ms;
+    }
+  }
+}

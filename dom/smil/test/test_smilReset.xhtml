@@ -1,0 +1,82 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Tests for SMIL Reset Behavior </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle cx="20" cy="20" r="15" fill="blue">
+    <animate attributeName="cx" from="20" to="100" begin="2s" dur="4s"
+             id="anim1" attributeType="XML"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Tests for SMIL Reset Behavior  **/
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  var svg = document.getElementById("svg");
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  var anim = document.getElementById("anim1");
+  is(anim.getStartTime(), 2, "Unexpected initial start time");
+
+  svg.setCurrentTime(1);
+  anim.beginElementAt(2);
+
+  // We now have two instance times: 2, 3
+
+  // Restart (and reset) animation at t=1
+  anim.beginElement();
+
+  // Instance times should now be 1, 2 (3 should have be reset)
+  is(anim.getStartTime(), 1,
+    "Unexpected start time after restart. Perhaps the added instance time "
+    + "was cleared");
+  svg.setCurrentTime(4);
+  // Instance times will now be 2 (1 will have be reset when we restarted)
+  is(anim.getStartTime(), 2, "Unexpected start time after seek");
+
+  // Create a two new instance times at t=4, 5
+  anim.beginElement();
+  anim.beginElementAt(1);
+  is(anim.getStartTime(), 4, "Unexpected start time after beginElement");
+
+  // Here is a white box test to make sure we don't discard instance times
+  // created by DOM calls when setting/unsetting the 'begin' spec
+  anim.removeAttribute('begin');
+  is(anim.getStartTime(), 4, "Unexpected start time after clearing begin spec");
+  svg.setCurrentTime(6);
+  is(anim.getStartTime(), 5,
+    "Second DOM instance time cleared when begin spec was removed");
+
+  // And likewise, when we set it again
+  anim.beginElementAt(1); // Instance times now t=5s, 7s
+  anim.setAttribute('begin', '1s'); // + t=1s
+  is(anim.getStartTime(), 5, "Unexpected start time after setting begin spec");
+  svg.setCurrentTime(8);
+  is(anim.getStartTime(), 7,
+    "Second DOM instance time cleared when begin spec was added");
+
+  // But check we do update state appropriately
+  anim.setAttribute('begin', '8s');
+  is(anim.getStartTime(), 8, "Interval not updated with updated begin spec");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

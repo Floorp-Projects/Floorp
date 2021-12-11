@@ -1,0 +1,28 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US"><head>
+    <meta charset="utf-8">
+    <title>Console test</title>
+  </head>
+  <body>
+    <script type="text/javascript">
+      "use strict";
+
+      /* exported logFromWorker */
+
+      const worker = new Worker(`data:application/javascript,
+        console.log("initial-message-from-worker", {foo: "bar"}, globalThis);
+
+        onmessage = function (e) {
+          console.log("log-from-worker", e.data.msg, globalThis);
+          console.log(Symbol("logged-symbol-from-worker"));
+        };
+      `);
+
+      function logFromWorker(msg) {
+        worker.postMessage({type: "log", msg});
+      }
+    </script>
+  </body>
+</html>

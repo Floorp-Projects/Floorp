@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+div {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+</style>
+<body>
+<div id=o_0></div>
+<script>
+function boom(){
+  var anim = o_0.animate([
+    {},
+    {"transform": "scale(2)"},
+    {"transform": "none"}
+    ], {
+      duration: 100,
+      iterationStart: 0.5,
+    });
+  // We need to wait for finished promise just like we do in 1322291-1.html.
+  anim.finished.then(function() {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+}
+document.addEventListener("DOMContentLoaded", boom);
+</script>
+
+</body>
+</html>

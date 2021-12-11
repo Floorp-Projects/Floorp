@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Pagination with Borders</title>
+  <style type="text/css">
+    .container {
+      border-bottom: 10px solid aqua;
+    }
+    .overflow {
+      height: 175px;
+      border-bottom: solid 10px blue;
+    }
+    .rainbow {
+      border-top: 10px solid blue;
+      border-bottom: 10px solid aqua;
+    }
+
+    .multicol {
+      height: 200px;
+      width: 300px;
+      column-width: 150px;
+      column-gap: 0;
+      column-fill: auto;
+      border: solid silver;
+    }
+  </style>
+ </head>
+ <body>
+  There must be two continuous 10px lines at the top
+  of the gray box, the top one blue and the bottom one
+  aqua.
+  <div class="multicol">
+    <div class="rainbow"></div>
+    <div class="container">
+      <div class="overflow">
+      </div>
+    </div>
+  </div>
+ </body>
+</html>

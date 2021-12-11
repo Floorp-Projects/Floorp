@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Subtest for browser context menu</title>
+</head>
+<body>
+Browser context menu subtest.
+
+<div id="test-text">Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</div>
+<a id="test-link" href="http://mozilla.com">Click the monkey!</a>
+<div id="shadow-host"></div>
+<a href="http://mozilla.com" style="display: block">
+  <span id="shadow-host-in-link"></span>
+</a>
+<script>
+document.getElementById("shadow-host").attachShadow({ mode: "closed" }).innerHTML =
+  "<a href='http://mozilla.com'>Click the monkey!</a>";
+document.getElementById("shadow-host-in-link").attachShadow({ mode: "closed" }).innerHTML =
+  "<span>Click the monkey!</span>";
+</script>
+<a id="test-mailto" href="mailto:codemonkey@mozilla.com">Mail the monkey!</a><br>
+<input id="test-input"><br>
+<img id="test-image" src="ctxmenu-image.png">
+<svg>
+  <image id="test-svg-image" href="ctxmenu-image.png"/>
+</svg>
+<canvas id="test-canvas" width="100" height="100" style="background-color: blue"></canvas>
+<video controls id="test-video-ok"  src="video.ogg" width="100" height="100" style="background-color: green"></video>
+<video id="test-audio-in-video" src="audio.ogg" width="100" height="100" style="background-color: red"></video>
+<video controls id="test-video-bad" src="bogus.duh" width="100" height="100" style="background-color: orange"></video>
+<video controls id="test-video-bad2" width="100" height="100" style="background-color: yellow">
+  <source src="bogus.duh" type="video/durrrr;">
+</video>
+<iframe id="test-iframe" width="98"  height="98" style="border: 1px solid black"></iframe>
+<iframe id="test-video-in-iframe" src="video.ogg" width="98" height="98" style="border: 1px solid black"></iframe>
+<iframe id="test-audio-in-iframe" src="audio.ogg" width="98" height="98" style="border: 1px solid black"></iframe>
+<iframe id="test-image-in-iframe" src="ctxmenu-image.png" width="98" height="98" style="border: 1px solid black"></iframe>
+<iframe id="test-pdf-viewer-in-frame" src="file_pdfjs_test.pdf" width="100" height="100" style="border: 1px solid black"></iframe>
+<textarea id="test-textarea">chssseesbbbie</textarea> <!-- a weird word which generates only one suggestion -->
+<div id="test-contenteditable" contenteditable="true">chssseefsbbbie</div> <!-- a more weird word which generates no suggestions -->
+<div id="test-contenteditable-spellcheck-false" contenteditable="true" spellcheck="false">test</div> <!-- No Check Spelling menu item -->
+<div id="test-dom-full-screen">DOM full screen FTW</div>
+<div contextmenu="myMenu">
+  <p id="test-pagemenu" hopeless="true">I've got a context menu!</p>
+  <menu id="myMenu" type="context">
+    <menuitem label="Plain item" onclick="document.getElementById('test-pagemenu').removeAttribute('hopeless');"></menuitem>
+    <menuitem label="Disabled item" disabled></menuitem>
+    <menuitem> Item w/ textContent</menuitem>
+    <menu>
+      <menuitem type="checkbox" label="Checkbox" checked></menuitem>
+    </menu>
+    <menu>
+      <menuitem type="radio" label="Radio1" checked></menuitem>
+      <menuitem type="radio" label="Radio2"></menuitem>
+      <menuitem type="radio" label="Radio3"></menuitem>
+    </menu>
+    <menu>
+      <menuitem label="Item w/ icon" icon="favicon.ico"></menuitem>
+      <menuitem label="Item w/ bad icon" icon="http://example.com%0a%23.google.com/"></menuitem>
+    </menu>
+    <menu label="Submenu">
+      <menuitem type="radio" label="Radio1" radiogroup="rg"></menuitem>
+      <menuitem type="radio" label="Radio2" checked radiogroup="rg"></menuitem>
+      <menuitem type="radio" label="Radio3" radiogroup="rg"></menuitem>
+      <menu>
+        <menuitem type="checkbox" label="Checkbox"></menuitem>
+      </menu>
+    </menu>
+    <menu hidden>
+      <menuitem label="Bogus item"></menuitem>
+    </menu>
+    <menu>
+    </menu>
+    <menuitem label="Hidden item" hidden></menuitem>
+    <menuitem></menuitem>
+  </menu>
+</div>
+<div id="test-select-text">Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</div>
+<div id="test-select-text-link">http://mozilla.com</div>
+<a id="test-image-link" href="#"><img src="ctxmenu-image.png"></a>
+<input id="test-select-input-text" type="text" value="input">
+<input id="test-select-input-text-type-password" type="password" value="password">
+<img id="test-longdesc" src="ctxmenu-image.png" longdesc="http://www.mozilla.org"></embed>
+<iframe id="test-srcdoc" width="98"  height="98" srcdoc="Hello World" style="border: 1px solid black"></iframe>
+<svg id="svg-with-link" width=10 height=10><a xlink:href="http://example.com/"><circle cx="50%" cy="50%" r="50%" fill="blue"/></a></svg>
+<svg id="svg-with-link2" width=10 height=10><a xlink:href="http://example.com/" xlink:type="simple"><circle cx="50%" cy="50%" r="50%" fill="green"/></a></svg>
+<svg id="svg-with-link3" width=10 height=10><a href="http://example.com/"><circle cx="50%" cy="50%" r="50%" fill="red"/></a></svg>
+<svg id="svg-with-relative-link" width=10 height=10><a xlink:href="/"><circle cx="50%" cy="50%" r="50%" fill="blue"/></a></svg>
+<svg id="svg-with-relative-link2" width=10 height=10><a xlink:href="/" xlink:type="simple"><circle cx="50%" cy="50%" r="50%" fill="green"/></a></svg>
+<svg id="svg-with-relative-link3" width=10 height=10><a href="/"><circle cx="50%" cy="50%" r="50%" fill="red"/></a></svg>
+<span id="test-background-image" style="background-image: url('ctxmenu-image.png')">Text with background
+  <a id='test-background-image-link' href="about:blank">image</a>
+  .
+</span></body>
+</html>

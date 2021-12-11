@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for Bug 1709832</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<div id="container">
+  <span id="start" draggable="true">start</span><span id="dest" draggable="true">dest</span>
+</div>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.pushPrefEnv({
+    set: [["dom.event.dragexit.enabled", false]]
+  }).then(() => {
+    start.addEventListener("dragexit", ev => {
+      ok(false, "dragexit should not fire at non-chrome element")
+    });
+    start.addEventListener("dragleave", ev => {
+      ok(true, "got dragleave")
+      SimpleTest.finish();
+    });
+
+    sendDragEvent({ type: "dragover" }, start);
+    sendDragEvent({ type: "dragover" }, dest);
+  });
+</script>

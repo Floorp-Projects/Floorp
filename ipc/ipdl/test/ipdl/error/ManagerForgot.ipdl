@@ -1,0 +1,11 @@
+//error: |manager| declaration in protocol `ForgottenManagee' does not match any |manages| declaration in protocol `ManagerForgot'
+
+include protocol ForgottenManagee;
+
+// See ForgottenManagee.ipdl. This includes ForgottenManagee to
+// ensure that loading this file fails.
+
+protocol ManagerForgot {
+child:
+    async Msg();
+};

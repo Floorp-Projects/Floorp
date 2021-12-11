@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>embeded nulls test</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function startTest()
+{
+  var k = "key with\x00null";
+  var v = "value with\x00null";
+
+  localStorage.setItem(k, v);
+
+  is(localStorage.getItem("key with"), null,
+    "not accessible by truncated key");
+
+  is(localStorage.getItem(k), "value with\x00null",
+    "value is identical to what has been stored");
+
+  isnot(localStorage.getItem(k), "value with",
+    "value is not truncated");
+
+  localStorage.clear();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+# Known duplicate files
+# This file is ideally removed, but some existing files will be allowed exceptions
+# See bug 1303184
+#
+# PLEASE DO NOT ADD MORE EXCEPTIONS TO THIS LIST
+#
+
+# updater on osx is bug 1311194
+LaunchServices/org.mozilla.updater
+updater.app/Contents/MacOS/org.mozilla.updater
+
+plugin-container.app/Contents/PkgInfo
+updater.app/Contents/PkgInfo
+
+# Duplicated for XUL persistence, see PlacesUIUtils.jsm
+browser/chrome/browser/content/browser/places/bookmarkProperties.xhtml
+browser/chrome/browser/content/browser/places/bookmarkProperties2.xhtml
+
+# Duplicated on Linux by browser/branding/branding-common.mozbuild
+#ifdef XP_LINUX
+browser/chrome/browser/content/branding/icon16.png
+browser/chrome/icons/default/default16.png
+browser/chrome/browser/content/branding/icon32.png
+browser/chrome/icons/default/default32.png
+browser/chrome/browser/content/branding/icon48.png
+browser/chrome/icons/default/default48.png
+browser/chrome/browser/content/branding/icon64.png
+browser/chrome/icons/default/default64.png
+browser/chrome/browser/content/branding/icon128.png
+browser/chrome/icons/default/default128.png
+#endif
+
+chrome.manifest
+browser/chrome.manifest
+
+crashreporter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib
+crashreporter.app/Contents/Resources/English.lproj/MainMenuRTL.nib/classes.nib
+
+# firefox/firefox-bin is bug 658850
+@MOZ_APP_NAME@
+@MOZ_APP_NAME@-bin
+
+# Row and column icons are duplicated
+res/table-remove-column-active.gif
+res/table-remove-row-active.gif
+res/table-remove-column-hover.gif
+res/table-remove-row-hover.gif
+res/table-remove-column.gif
+res/table-remove-row.gif
+
+res/multilocale.txt
+update.locale
+
+# Bug 1451016 - Nightly-only PaymentRequest & Form Autofill code sharing.
+browser/features/formautofill@mozilla.org/chrome/content/editAddress.xhtml
+browser/chrome/browser/res/payments/formautofill/editAddress.xhtml
+browser/features/formautofill@mozilla.org/chrome/content/editCreditCard.xhtml
+browser/chrome/browser/res/payments/formautofill/editCreditCard.xhtml
+browser/features/formautofill@mozilla.org/chrome/content/autofillEditForms.js
+browser/chrome/browser/res/payments/formautofill/autofillEditForms.js
+
+# Bug 1451050 - Remote settings empty dumps (will be populated with data eventually)
+browser/defaults/settings/main/example.json
+browser/defaults/settings/main/password-rules.json
+browser/defaults/settings/main/search-default-override-allowlist.json
+browser/defaults/settings/main/url-classifier-skip-urls.json
+
+# Bug 1713693 - empty-shim.txt, an intentionally blank file used by SmartBlock (0 bytes)
+#ifdef MOZ_GTK
+browser/features/webcompat@mozilla.org/shims/empty-shim.txt
+removed-files
+#endif
+
+#ifdef MOZ_EME_WIN32_ARTIFACT
+gmp-clearkey/0.1/manifest.json
+i686/gmp-clearkey/0.1/manifest.json
+#endif
+
+# Bug 1496075 - Switch searchplugins to Web Extensions
+browser/chrome/browser/search-extensions/amazon/favicon.ico
+browser/chrome/browser/search-extensions/amazondotcn/favicon.ico
+browser/chrome/browser/search-extensions/amazondotcom/favicon.ico
+browser/chrome/browser/search-extensions/mercadolibre/favicon.ico
+browser/chrome/browser/search-extensions/mercadolivre/favicon.ico
+browser/chrome/browser/search-extensions/qwant/favicon.ico
+browser/chrome/browser/search-extensions/qwantjr/favicon.ico
+
+# Bug 1606928 - There's no reliable way to connect Top Sites favicons with the favicons in the Search Service
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/bbc-uk.ico
+browser/chrome/browser/search-extensions/bbc-alba/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/allegro-pl.ico
+browser/chrome/browser/search-extensions/allegro-pl/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/amazon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/ebay.ico
+browser/chrome/browser/search-extensions/ebay/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/twitter-com.ico
+browser/chrome/browser/search-extensions/twitter/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/bing-com.ico
+browser/chrome/browser/search-extensions/bing/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/duckduckgo-com.ico
+browser/chrome/browser/search-extensions/ddg/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/google-com.ico
+browser/chrome/browser/search-extensions/google/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/yandex-com.png
+browser/chrome/browser/search-extensions/yandex/yandex-en.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/yandex-ru.png
+browser/chrome/browser/search-extensions/yandex/yandex-ru.ico
+
+# Bug 1720584 - De-duplicate theme and customize icons
+chrome/toolkit/skin/classic/mozapps/extensions/themeGeneric.svg
+browser/chrome/browser/skin/classic/browser/customize.svg
+
+# Bug 1718144 - De-duplicate lightbulb icon
+browser/features/webcompat-reporter@mozilla.org/icons/lightbulb.svg
+chrome/toolkit/skin/classic/global/icons/lightbulb.svg
+
+# Bug 1710546 - Bundle Firefox extension as a builtin addon Nighly only
+# We plan to remove this duplicity after Firefox Translations become pref'd on
+browser/chrome/browser/builtin-addons/translations/wasm/cld-worker.js.mem
+browser/modules/translation/cld-worker.js.mem

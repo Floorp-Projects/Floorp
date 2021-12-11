@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include PBackgroundSharedTypes;
+include IPCServiceWorkerDescriptor;
+
+include "ipc/ErrorIPCUtils.h";
+include "mozilla/dom/ServiceWorkerIPCUtils.h";
+
+using ServiceWorkerUpdateViaCache from "mozilla/dom/ServiceWorkerRegistrationBinding.h";
+using mozilla::CopyableErrorResult from "mozilla/ErrorResult.h";
+
+namespace mozilla {
+namespace dom {
+
+// IPC type with enough information to create a ServiceWorker DOM object
+// in a child process.  Note that the state may be slightly out-of-sync
+// with the parent and should be updated dynamically if necessary.
+[Comparable] struct IPCServiceWorkerRegistrationDescriptor
+{
+  uint64_t id;
+  uint64_t version;
+
+  // These values should match the principal and scope in each
+  // associated worker.  It may be possible to optimize in the future,
+  // but for now we duplicate the information here to ensure correctness.
+  // Its possible we may need to reference a registration before the
+  // worker is installed yet, etc.
+  PrincipalInfo principalInfo;
+  nsCString scope;
+
+  ServiceWorkerUpdateViaCache updateViaCache;
+
+  IPCServiceWorkerDescriptor? installing;
+  IPCServiceWorkerDescriptor? waiting;
+  IPCServiceWorkerDescriptor? active;
+};
+
+union IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult
+{
+  IPCServiceWorkerRegistrationDescriptor;
+  CopyableErrorResult;
+};
+
+struct IPCServiceWorkerRegistrationDescriptorList
+{
+  IPCServiceWorkerRegistrationDescriptor[] values;
+};
+
+union IPCServiceWorkerRegistrationDescriptorListOrCopyableErrorResult
+{
+  IPCServiceWorkerRegistrationDescriptorList;
+  CopyableErrorResult;
+};
+
+} // namespace dom
+} // namespace mozilla

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1301094
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1301094</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1301094">Mozilla Bug 1301094</a>
+  <input id="file" type="file"></input>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var url = SimpleTest.getTestFileURL("script_createFile.js");
+script = SpecialPowers.loadChromeScript(url);
+
+var mainThreadOk, workerOk;
+
+function maybeFinish() {
+  if (mainThreadOk & workerOk) {
+    SimpleTest.finish();
+  }
+}
+
+function onOpened(message) {
+  var input = document.getElementById('file');
+  SpecialPowers.wrap(input).mozSetDndFilesAndDirectories([message.data]);
+
+  var worker = new Worker('worker_bug1301094.js');
+  worker.onerror = function() {
+    ok(false, "We should not see any error.");
+    SimpleTest.finish();
+  }
+
+  worker.onmessage = function(e) {
+    ok(e.data, "Everything seems OK on the worker-side.");
+
+    workerOk = true;
+    maybeFinish();
+  }
+
+  is(input.files.length, 1, "We have something");
+  ok(input.files[0] instanceof Blob, "We have one Blob");
+  worker.postMessage(input.files[0]);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", 'worker_bug1301094.js', false);
+  xhr.onload = function() {
+    ok(xhr.responseText, "Everything seems OK on the main-thread-side.");
+    mainThreadOk = true;
+    maybeFinish();
+  };
+
+  var fd = new FormData();
+  fd.append('file', input.files[0]);
+  xhr.send(fd);
+}
+
+script.addMessageListener("file.opened", onOpened);
+script.sendAsyncMessage("file.open");
+
+  </script>
+</body>
+</html>

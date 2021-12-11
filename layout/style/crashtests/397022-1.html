@@ -1,0 +1,17 @@
+<html>
+<head>
+<style>
+
+div:before { content: counter(c); }
+
+.b:before { content: "x"; }
+
+</style>
+</head>
+
+<body onload="document.getElementById('v').setAttribute('class', 'b');">
+
+<div id="v"></div>
+
+</body>
+</html>

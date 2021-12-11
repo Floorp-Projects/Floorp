@@ -1,0 +1,22 @@
+; This Source Code Form is subject to the terms of the Mozilla Public
+; License, v. 2.0. If a copy of the MPL was not distributed with this
+; file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LIBRARY mozglue.dll
+
+EXPORTS
+  ; symbols that are actually useful
+  malloc=je_malloc
+  calloc=je_calloc
+  realloc=je_realloc
+  free=je_free
+  posix_memalign=je_posix_memalign
+  malloc_usable_size=je_malloc_usable_size
+  malloc_good_size=je_malloc_good_size
+  _aligned_free=je_free
+  _aligned_malloc=wrap__aligned_malloc
+  strndup=wrap_strndup
+  strdup=wrap_strdup
+  _strdup=wrap_strdup
+  wcsdup=wrap_wcsdup
+  _wcsdup=wrap_wcsdup

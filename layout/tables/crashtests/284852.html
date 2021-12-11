@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 284852</title>
+    <style type="text/css">
+
+        table {
+	   border-collapse: collapse;
+           border:3px dashed blue;
+        }
+	td {
+	  border:3px dotted black;
+        }
+    </style>
+<script>
+  function insertCell(id,rowspan) {
+    var tr = document.getElementById(id);
+    var td = document.createElement('td');
+    td.setAttribute('rowspan',rowspan);
+    tr.insertBefore(td,tr.firstChild)
+  }
+</script>
+</head>
+<body>
+
+<table>
+<tbody>
+  <tr><td>g1row1</td></tr>
+  <tr><td>g1row2</td></tr>
+  <tr><td>g1row3</td></tr>
+</tbody>
+<tbody>
+  <tr><td>g2row1</td></tr>
+  <tr><td>g2row2</td></tr>
+  <tr><td>g2row3</td></tr>
+  <tr id="r1"><td rowspan="0">g2row4</td></tr>
+</tbody>
+</table>
+
+<script>
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+insertCell('r1','0');
+</script>
+
+<button onclick="insertCell('r1','0')">insert cell</button>
+<pre>
+Clicking the button above five times or more gives:
+
+###!!! ASSERTION: invalid BC damage area: 'PR_FALSE', file nsTableFrame.cpp, line 4567
+</pre>
+
+<table>
+<tbody>
+  <tr><td>g1row1</td></tr>
+  <tr><td>g1row2</td></tr>
+  <tr><td>g1row3</td></tr>
+</tbody>
+<tbody>
+  <tr><td>g2row1</td></tr>
+  <tr><td>g2row2</td></tr>
+  <tr><td>g2row3</td></tr>
+  <tr id="r2"><td rowspan="2">g2row4</td></tr>
+</tbody>
+</table>
+
+<script>
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+insertCell('r2','2');
+</script>
+<button onclick="insertCell('r2','2')">insert cell</button>
+<pre>
+Clicking the button gives:
+
+###!!! ASSERTION: invalid BC damage area: 'PR_FALSE', file nsTableFrame.cpp, line 4567
+</pre>
+
+<table>
+<tbody>
+  <tr><td>g1row1</td></tr>
+  <tr><td>g1row2</td></tr>
+  <tr><td>g1row3</td></tr>
+</tbody>
+<tbody>
+  <tr><td>g2row1</td></tr>
+  <tr><td>g2row2</td></tr>
+  <tr><td>g2row3</td></tr>
+  <tr id="r3"></tr>
+</tbody>
+</table>
+
+<script>
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+insertCell('r3','0');
+</script>
+
+<button onclick="insertCell('r3','0')">insert cell</button>
+<pre>
+Clicking the button the first time gives:
+
+###!!! ASSERTION: invalid BC damage area: 'PR_FALSE', file nsTableFrame.cpp, line 4567
+</pre>
+
+
+
+</body>
+</html>

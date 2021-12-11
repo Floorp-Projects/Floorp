@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1304689
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1285070</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    #outer {
+        height: 400px;
+        width: 415px;
+        overflow: scroll;
+        position: relative;
+        scroll-behavior: smooth;
+    }
+    #outer.contentBefore::before {
+        top: 0;
+        content: '';
+        display: block;
+        height: 2px;
+        position: absolute;
+        width: 100%;
+        z-index: 99;
+    }
+  </style>
+  <script type="application/javascript">
+
+async function test() {
+  var utils = SpecialPowers.DOMWindowUtils;
+  var elm = document.getElementById("outer");
+
+  // Set margins on the element, to ensure it is layerized
+  utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, /* priority*/ 1);
+  await promiseAllPaintsDone();
+  await promiseOnlyApzControllerFlushed();
+
+  // Take control of the refresh driver
+  utils.advanceTimeAndRefresh(0);
+
+  // Start a smooth-scroll animation in the compositor and let it go a few
+  // frames, so that there is some "user scrolling" going on (per the comment
+  // in AsyncPanZoomController::NotifyLayersUpdated)
+  elm.scrollTop = 10;
+  utils.advanceTimeAndRefresh(16);
+  utils.advanceTimeAndRefresh(16);
+  utils.advanceTimeAndRefresh(16);
+  utils.advanceTimeAndRefresh(16);
+
+  // Do another scroll update but also do a frame reconstruction within the same
+  // tick of the refresh driver.
+  elm.scrollTop = 100;
+  elm.classList.add("contentBefore");
+
+  // Now let everything settle and all the animations run out
+  for (var i = 0; i < 60; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  utils.restoreNormalRefresh();
+
+  await promiseOnlyApzControllerFlushed();
+  is(elm.scrollTop, 100, "The scrollTop now should be y=100");
+}
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  pushPrefs([["apz.displayport_expiry_ms", 0]])
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+}
+
+  </script>
+</head>
+<body>
+ <div id="outer">
+  <div id="inner">
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+    this is some scrollable text.<br>
+    this is a second line to make the scrolling more obvious.<br>
+    and a third for good measure.<br>
+  </div>
+ </div>
+</body>
+</html>

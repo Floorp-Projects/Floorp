@@ -1,0 +1,34 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "784519",
+    title: "setRemoteDescription (answer) in 'have-remote-offer'"
+  });
+
+runNetworkTest(function () {
+  const test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.removeAfter("PC_REMOTE_SET_REMOTE_DESCRIPTION");
+
+  test.chain.append([
+    function PC_REMOTE_SET_REMOTE_ANSWER(test) {
+      test.pcLocal._latest_offer.type = "answer";
+      test.pcRemote._pc.setRemoteDescription(test.pcLocal._latest_offer)
+        .then(generateErrorCallback('setRemoteDescription should fail'),
+              err =>
+              is(err.name, "InvalidStateError", "Error is InvalidStateError"));
+    }
+  ]);
+
+  return test.run();
+});
+</script>
+</pre>
+</body>
+</html>

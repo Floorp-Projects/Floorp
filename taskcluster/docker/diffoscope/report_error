@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+import sys
+stem = sys.argv[1]
+
+# We "parse" the diff output, so we look at the lines that contain a "tee", like:
+# ├── +++ b/firefox
+# │ ├── +++ b/firefox/libxul.so
+# │ │ ├── readelf --wide --notes {}
+# We ignore lines like the last one, to only report file names. And we ignore
+# lines for directories such as the first one.
+TEE = "├── "
+VERTICAL_LINE = "│"
+paths = set()
+with open(f"{stem}.txt") as fh:
+    for l in fh:
+        l = l.rstrip()
+        before, tee, after = l.partition(TEE)
+        if not tee:
+            continue
+        before = before.split()
+        assert all(x == VERTICAL_LINE for x in before)
+        depth = len(before)
+        _, plus, after = after.partition("+++ ")
+        if not plus:
+            continue
+        _, b, full_path = after.partition("b/")
+        assert b == "b/"
+        parent_path = "/".join(full_path.split("/")[:-1])
+        if parent_path in paths:
+            paths.remove(parent_path)
+        if full_path:
+            paths.add(full_path)
+
+for p in sorted(paths):
+    print(f"TEST-UNEXPECTED-FAIL | {p} differs. See the {stem}.html or {stem}.txt artifact")

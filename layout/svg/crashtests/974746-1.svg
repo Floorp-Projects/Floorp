@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+    <pattern id="patternRotated" width="1" patternTransform="rotate(45 50 50)">
+        <rect/>
+    </pattern>
+
+    <rect width="100" height="100" fill="url(#patternRotated)"/>
+
+</svg>

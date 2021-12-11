@@ -1,0 +1,39 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PerformanceResouceTiming in workers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// The worker assumes it will take some amount of time to load a resource.
+// With a low enough precision, the duration to load a resource may clamp
+// down to zero.
+var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
+
+var worker = new Worker('test_worker_performance_entries.js');
+worker.onmessage = function(event) {
+  if (event.data.type == "check") {
+    ok(event.data.status, event.data.msg);
+    return;
+  }
+
+  if (event.data.type == "finish") {
+    SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(false, "?!?");
+}
+
+</script>
+</body>
+</html>

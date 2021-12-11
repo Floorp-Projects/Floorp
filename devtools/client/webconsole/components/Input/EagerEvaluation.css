@@ -1,0 +1,122 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.eager-evaluation-result {
+  flex: none;
+  font-family: var(--monospace-font-family);
+  font-size: var(--theme-code-font-size);
+  line-height: var(--console-output-line-height);
+  color: var(--theme-text-color-alt);
+}
+
+.theme-light .eager-evaluation-result {
+  --log-icon-color: var(--grey-35);
+  /* Override Reps variables to turn eager eval output gray */
+  --object-color: var(--grey-50);
+  --number-color: var(--grey-50);
+  --string-color: var(--grey-50);
+  --node-color: var(--grey-50);
+  --reference-color: var(--grey-50);
+  --location-color: var(--grey-43);
+  --source-link-color: var(--grey-43);
+  --null-color: var(--grey-43);
+}
+
+.theme-dark .eager-evaluation-result {
+  --log-icon-color: var(--grey-55);
+  /* Override Reps variables to turn eager eval output gray */
+  --object-color: var(--grey-43);
+  --number-color: var(--grey-43);
+  --string-color: var(--grey-43);
+  --node-color: var(--grey-43);
+  --reference-color: var(--grey-43);
+  --location-color: var(--grey-50);
+  --source-link-color: var(--grey-50);
+  --null-color: var(--grey-50);
+}
+
+.eager-evaluation-result__row {
+  direction: ltr;
+  display: flex;
+  align-items: center;
+  overflow-y: hidden;
+  height: var(--console-row-height);
+  padding: 0 2px;
+}
+
+.eager-evaluation-result__icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 0 8px;
+  background: url(chrome://devtools/skin/images/webconsole/return.svg) no-repeat
+    center;
+  background-size: 12px;
+  -moz-context-properties: fill;
+  fill: var(--log-icon-color);
+}
+
+.eager-evaluation-result__text {
+  flex: 1 1 auto;
+  height: 14px;
+  overflow: hidden;
+  /* Use pre rather than nowrap because we want to preserve consecutive spaces,
+   * e.g. if we display "some   string" we should not collapse spaces. */
+  white-space: pre;
+}
+
+/* Style the reps result */
+.eager-evaluation-result__text > * {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eager-evaluation-result__text * {
+  /* Some Reps elements define white-space:pre-wrap, which lets the text break
+   * to a new line */
+  white-space: inherit !important;
+}
+
+.eager-evaluation-result__text .objectBox-function .param {
+  color: var(--null-color);
+}
+
+/* Object property label */
+.eager-evaluation-result__text .nodeName {
+  color: var(--object-color);
+}
+
+/*
+ * Inline mode specifics
+ */
+.webconsole-app:not(.jsterm-editor) .eager-evaluation-result {
+  /* It should fill the remaining height in the output+input area */
+  flex-grow: 1;
+  background-color: var(--console-input-background);
+  /* Reserve a bit of whitespace after the content. */
+  min-height: calc(
+    var(--console-row-height) + var(--console-input-extra-padding)
+  );
+}
+
+/*
+ * Editor mode specifics
+ */
+.webconsole-app.jsterm-editor .eager-evaluation-result {
+  border-top: 1px solid var(--theme-splitter-color);
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  /* Make text smaller when displayed in the sidebar */
+  font-size: 10px;
+  line-height: 14px;
+  background-color: var(--theme-sidebar-background);
+}
+
+.webconsole-app.jsterm-editor .eager-evaluation-result:empty {
+  display: none;
+}
+
+.webconsole-app.jsterm-editor .eager-evaluation-result__row {
+  height: var(--theme-toolbar-height);
+}

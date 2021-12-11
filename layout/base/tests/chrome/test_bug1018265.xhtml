@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
+-->
+<window title="Mozilla Bug 1018265"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="run()">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 1018265 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function run() {
+    window.openDialog("file_bug1018265.xhtml", "contentViewerTest", "chrome,width=100,height=100,noopener", window);
+  }
+
+  function done() {
+    ok(true, "done");
+    setTimeout(function() { SimpleTest.finish(); }, 0);
+  }
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1018265"
+     target="_blank">Mozilla Bug 1018265</a>
+  </body>
+</window>

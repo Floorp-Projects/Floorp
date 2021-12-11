@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>cellspacing</title>
+</head>
+<body>
+
+<!-- compare to CSS border-spacing -->
+<table border cellspacing="7" style="padding: 0"><tr><td>This is some text.</td></tr></table>
+<table border cellspacing="0" style="padding: 7px 10px"><tr><td>This is some text.</td></tr></table>
+
+
+<!-- drop borders and ensure that we get the right amount of space -->
+
+<div style="border: medium solid; margin: 1em 0; float: left; clear: left;">
+  <table border="0" cellpadding="0" cellspacing="8" style="padding: 0"><tr><td>This is some text.</td></tr></table>
+</div>
+
+<div style="border: medium solid; margin: 1em 0; float: left; clear: left;">
+  <table border="0" cellpadding="0" cellspacing="0" style="padding: 3px 5px 7px 9px"><tr><td>This is some text.</td></tr></table>
+</div>
+
+</body>
+</html>

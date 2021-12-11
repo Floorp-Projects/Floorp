@@ -1,0 +1,9 @@
+//error: redeclaration of symbol `f', first declared at
+
+sync protocol redeclParamReturn {
+
+    // it's an error to name a parameter with the same id as a return
+
+parent: async Msg(int f) returns (bool f);
+
+};

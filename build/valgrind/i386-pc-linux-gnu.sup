@@ -1,0 +1,53 @@
+# Full list is tracked through meta bug 793882
+
+####################################
+#  Leaks in third party libraries  #
+####################################
+
+{
+   Bug 793537
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libpango-1.0.so.0.2800.1
+   ...
+}
+{
+   Bug 793598
+   Memcheck:Leak
+   ...
+   obj:/lib/libdbus-1.so.3.4.0
+   ...
+}
+{
+   Bug 794366
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libgtk-x11-2.0.so.0.1800.9
+   ...
+}
+{
+   Bug 794368
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libXrandr.so.2.2.0
+   ...
+}
+{
+   Bug 794373
+   Memcheck:Leak
+   ...
+   obj:/lib/libgobject-2.0.so.0.2200.5
+   ...
+}
+
+###################################
+#  Leaks in short lived precesses #
+###################################
+
+{
+   Bug 984196
+   Memcheck:Leak
+   ...
+   fun:glxtest
+   ...
+}

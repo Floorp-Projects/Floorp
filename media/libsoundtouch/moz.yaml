@@ -1,0 +1,20 @@
+schema: 1
+
+bugzilla:
+  product: "Core"
+  component: "Audio/Video"
+
+# The whole library is not used, only the relevant files are imported in the
+# tree, using the script `update.sh`. Some changes have been made to the files,
+# using the patch `moz-libsoundtouch.patch`.
+# We also use a custom soundtouch_config.h.
+
+origin:
+  name: "SoundTouch"
+  description: "Audio processing library"
+
+  url: "http://www.surina.net/soundtouch"
+  license: "LGPL-2.1"
+
+  # From https://gitlab.com/soundtouch/soundtouch
+  release: "17a63e99d58053b0fbde8b69d7cc76a38119ce70 (2021-03-03 18:11:45 +0200)"

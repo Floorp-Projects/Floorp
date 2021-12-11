@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        style="width: 40em;"
+        onload="init()"
+        data-l10n-id="primary-password-dialog">
+<dialog id="changemp">
+
+  <script src="chrome://mozapps/content/preferences/changemp.js"/>
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="toolkit/preferences/preferences.ftl"/>
+  </linkset>
+
+  <description id="admin" class="header" data-l10n-id="primary-password-admin" hidden="true"></description>
+  <description control="pw1" data-l10n-id="primary-password-description"></description>
+
+  <vbox>
+    <hbox>
+      <label flex="1" control="oldpw" data-l10n-id="set-password-old-password"></label>
+      <html:input id="oldpw" type="password"/>
+      <!-- This textbox is inserted as a workaround to the fact that making the 'type'
+            & 'disabled' property of the 'oldpw' textbox toggle between ['password' &
+            'false'] and ['text' & 'true'] - as would be necessary if the menu has more
+            than one tokens, some initialized and some not - does not work properly. So,
+            either the textbox 'oldpw' or the textbox 'message' would be displayed,
+            depending on the state of the token selected
+      -->
+      <html:input type="text" data-l10n-attrs="value" data-l10n-id="password-not-set" id="message" disabled="true" />
+    </hbox>
+    <hbox>
+      <label flex="1" control="pw1" data-l10n-id="set-password-new-password"></label>
+      <html:input id="pw1" type="password"
+                  oninput="setPasswordStrength(); checkPasswords();"/>
+    </hbox>
+    <hbox>
+      <label flex="1" control="pw2" data-l10n-id="set-password-reenter-password"></label>
+      <html:input id="pw2" type="password" oninput="checkPasswords();"/>
+    </hbox>
+  </vbox>
+
+  <html:label for="pwmeter" style="display: -moz-box;" data-l10n-id="set-password-meter"></html:label>
+  <html:progress id="pwmeter" value="0" max="100"/>
+
+  <description control="pw2" class="header" data-l10n-id="primary-password-warning"></description>
+
+</dialog>
+</window>

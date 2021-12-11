@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=540462
+-->
+<head>
+  <title>Test for Bug 540462</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=540462">Mozilla Bug 540462</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 540462 **/
+
+var win;
+function runTest() {
+  win = window.open("file_bug540462.html", "", "width=100,height=100");
+}
+
+var dwlCount = 0;
+var originalURL;
+function documentWriteLoad() {
+  if (++dwlCount == 1) {
+    originalURL = win.document.body.firstChild.href;
+  } else if (dwlCount == 2) {
+    is(win.document.body.firstChild.href, originalURL, "Wrong href!");
+    win.close();
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

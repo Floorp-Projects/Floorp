@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1542194 - Check blockedURI in violation reports after redirects</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline' http://example.com">
+</head>
+<body>
+<button id="test1" onclick="createAndNavFrame('?test1a#ref1a')">Test 1: 302 redirect</button>
+<button id="test2" onclick="createAndNavFrame('?test2a#ref2a')">Test 2: JS redirect</button>
+<button id="test3" onclick="createAndNavFrame('?test3a#ref3a')">Test 3: Link navigation</button>
+<div id="div"></div>
+<script>
+  const SERVER_LOCATION =
+    "http://example.com/tests/dom/security/test/csp/file_blocked_uri_in_violation_event_after_redirects.sjs";
+
+  document.addEventListener('securitypolicyviolation', e => {
+    // just forward the blockedURI to the parent
+    window.parent.postMessage({blockedURI: e.blockedURI}, '*');
+  });
+
+  function createAndNavFrame(aTest) {
+  	let myFrame = document.createElement('iframe');
+    myFrame.src = SERVER_LOCATION + aTest;
+    div.appendChild(myFrame);
+  }
+
+  window.onload = function() {
+    let button1 = document.getElementById("test1");
+    button1.click();
+  
+    let button2 = document.getElementById("test2");
+    button2.click();
+  
+    let button3 = document.getElementById("test3");
+    button3.click();
+  }
+</script>
+</body>
+</html>

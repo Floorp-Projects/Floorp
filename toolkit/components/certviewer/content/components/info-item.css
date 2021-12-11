@@ -1,0 +1,65 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  line-height: 22px;
+  display: contents;
+  word-break: break-word;
+}
+
+:host * {
+  padding: 1px 0;
+}
+
+label {
+  text-align: end;
+  margin-inline-end: 0;
+  color: var(--in-content-deemphasized-text);
+  font-weight: 600;
+  font-size: 1em;
+}
+
+.hex {
+  overflow: hidden;
+  word-break: break-all;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.download-link-chain {
+  margin: 0 5px;
+}
+
+.long-hex:hover {
+  border-block: 1px solid var(--in-content-border-color);
+  background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
+  padding: 0;
+}
+
+.hex-open {
+  white-space: normal;
+}
+
+:host(.value) *,
+:host(.method) *,
+:host(.padding) * {
+  padding-bottom: 10px;
+}
+
+/* Elements that always need to be forced to LTR */
+.hex,
+:host(.dns-name) .info,
+.url {
+  direction: ltr;
+  text-align: match-parent;
+}
+
+/* Display some elements according to their text directionality */
+:host(.common-name) .info,
+:host(.name) .info,
+:host(.organization) .info {
+  unicode-bidi: plaintext;
+  text-align: match-parent;
+}

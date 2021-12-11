@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     onload="setTimeout(boom, 30);"
+     class="reftest-wait">
+
+<html:script>
+
+function boom()
+{
+  document.getElementById("text").appendChild(document.getElementById("fo"));
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</html:script>
+  
+<defs>
+  <marker>
+    <text id="text">svg:text</text>
+  </marker>
+</defs>
+
+<foreignObject id="fo">
+  <div xmlns="http://www.w3.org/1999/xhtml">
+    <p>HTML in a foreignObject</p>
+  </div>
+</foreignObject>
+
+</svg>

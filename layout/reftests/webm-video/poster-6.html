@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;">
+<!-- Test that poster frame should hide after completing a seek. -->
+<video src="black140x100.webm"
+       preload="auto"
+       id="v"
+       onloadeddata="var v = document.getElementById('v'); v.currentTime = v.duration;"
+       onseeked="setTimeout(function(){document.documentElement.className = '';}, 0);"
+       poster="blue250x200.png"></video>
+</body>
+</html>

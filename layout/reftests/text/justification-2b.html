@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+span { display:inline-block; width:100px; height:10px; background:yellow; }
+</style>
+</head>
+<!-- Test that text-align is taken from the containing block only -->
+<body style="text-align:justify; width:300px;">
+<span></span><span style="display:inline; text-align:left; background:none"> <span></span>
+<span></span>
+</body>
+</html>

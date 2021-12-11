@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window id="migrationWizard"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="migration-wizard"
+        windowtype="Browser:MigrationWizard"
+        onload="MigrationWizard.init()"
+        onunload="MigrationWizard.uninit()"
+        style="width: 40em;"
+        buttons="accept,cancel">
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="toolkit/global/wizard.ftl"/>
+  <html:link rel="localization" href="browser/migration.ftl"/>
+</linkset>
+
+<script src="chrome://global/content/customElements.js"/>
+<script src="chrome://browser/content/migration/migration.js"/>
+
+<wizard data-branded="true">
+  <wizardpage id="importSource" pageid="importSource" next="selectProfile"
+              data-header-label-id="import-source-page-title">
+    <description id="importAll" control="importSourceGroup" data-l10n-id="import-from"></description>
+    <description id="importBookmarks" control="importSourceGroup" data-l10n-id="import-from-bookmarks" hidden="true" ></description>
+
+    <radiogroup id="importSourceGroup" align="start">
+# NB: if you add items to this list, please also assign them a unique migrator ID in MigrationUtils.jsm
+      <radio id="firefox"   data-l10n-id="import-from-firefox"/>
+#ifdef XP_WIN
+      <radio id="chromium-edge"      data-l10n-id="import-from-edge"/>
+      <radio id="edge" data-l10n-id="import-from-edge-legacy" />
+      <radio id="chromium-edge-beta"      data-l10n-id="import-from-edge-beta"/>
+      <radio id="ie"        data-l10n-id="import-from-ie"/>
+      <radio id="chrome"    data-l10n-id="import-from-chrome"/>
+      <radio id="chrome-beta"  data-l10n-id="import-from-chrome-beta"/>
+      <radio id="chromium"  data-l10n-id="import-from-chromium"/>
+      <radio id="canary"    data-l10n-id="import-from-canary" />
+      <radio id="360se"     data-l10n-id="import-from-360se"/>
+#elifdef XP_MACOSX
+      <radio id="safari"    data-l10n-id="import-from-safari"/>
+      <radio id="chrome"    data-l10n-id="import-from-chrome"/>
+      <radio id="chromium-edge"      data-l10n-id="import-from-edge"/>
+      <radio id="chromium-edge-beta"      data-l10n-id="import-from-edge-beta"/>
+      <radio id="chromium"  data-l10n-id="import-from-chromium"/>
+      <radio id="canary"    data-l10n-id="import-from-canary"/>
+#elifdef XP_UNIX
+      <radio id="chrome"    data-l10n-id="import-from-chrome"/>
+      <radio id="chrome-beta"  data-l10n-id="import-from-chrome-beta"/>
+      <radio id="chrome-dev"  data-l10n-id="import-from-chrome-dev"/>
+      <radio id="chromium"  data-l10n-id="import-from-chromium"/>
+#endif
+      <radio id="nothing" data-l10n-id="import-from-nothing" hidden="true"/>
+    </radiogroup>
+    <label id="noSources" hidden="true" data-l10n-id="no-migration-sources"></label>
+    <spacer flex="1"/>
+    <description class="header" id="closeSourceBrowser" data-l10n-id="import-close-source-browser" style="visibility:hidden"></description>
+  </wizardpage>
+
+  <wizardpage id="selectProfile" pageid="selectProfile"
+              data-header-label-id="import-select-profile-page-title"
+              next="importItems">
+    <description control="profiles" data-l10n-id="import-select-profile-description"></description>
+
+    <radiogroup id="profiles" align="start"/>
+  </wizardpage>
+
+  <wizardpage id="importItems" pageid="importItems"
+              data-header-label-id="import-items-page-title"
+              next="migrating"
+              oncommand="MigrationWizard.onImportItemCommand();">
+    <description control="dataSources" data-l10n-id="import-items-description"></description>
+
+    <vbox id="dataSources" style="overflow: auto; appearance: auto; -moz-default-appearance: listbox" align="start" flex="1" role="group"/>
+  </wizardpage>
+
+  <wizardpage id="importPermissions" pageid="importPermissions"
+              data-header-label-id="import-permissions-page-title"
+              next="migrating">
+    <description data-l10n-id="import-permissions-description"></description>
+  </wizardpage>
+
+  <wizardpage id="migrating" pageid="migrating"
+              data-header-label-id="import-migrating-page-title"
+              next="done">
+    <description control="migratingItems" data-l10n-id="import-migrating-description"></description>
+
+    <vbox id="migratingItems" style="overflow: auto;" align="start" role="group"/>
+  </wizardpage>
+
+  <wizardpage id="done" pageid="done"
+              data-header-label-id="import-done-page-title">
+    <description control="doneItems" data-l10n-id="import-done-description"></description>
+
+    <vbox id="doneItems" style="overflow: auto;" align="start" role="group"/>
+  </wizardpage>
+
+</wizard>
+</window>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase, bug 364066</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css">
+
+table { margin: 1px 0; border-spacing: 0; }
+td { padding: 0; border: 1px solid; line-height: 1px; }
+img { visibility: hidden; vertical-align: bottom; }
+
+</style>
+</head>
+<body>
+
+<!-- solidblue.png is a 16x16 image -->
+
+<table border><tr>
+
+<td width="200">
+
+<table><tr><td><img src="solidblue.png"></td></tr></table>
+<table><tr><td>
+  <img src="solidblue.png" style="height: 32px">
+</td></tr></table>
+<table><tr><td>
+  <img src="solidblue.png" style="min-height: 32px">
+</td></tr></table>
+<table><tr><td>
+  <img src="solidblue.png" style="max-height: 8px">
+</td></tr></table>
+<table><tr><td>
+  <img src="solidblue.png" style="height: 4px;min-height:8px">
+</td></tr></table>
+<table><tr><td>
+  <img src="solidblue.png" style="max-height: 4px;min-height:8px">
+</td></tr></table>
+<table><tr><td>
+  <img src="solidblue.png" style="height: 12px;max-height:8px">
+</td></tr></table>
+<table><tr><td><div style="height: 40px">
+  <img src="solidblue.png" style="height: 80%">
+</div></td></tr></table>
+<table><tr><td><div style="height: 40px">
+  <img src="solidblue.png" style="min-height: 80%">
+</div></td></tr></table>
+<table><tr><td><div style="height: 40px">
+  <img src="solidblue.png" style="height: 60px; max-height: 80%">
+</div></td></tr></table>
+
+</td><td width="200">
+
+<table><tr><td><div style="height: 40px"><div style="height:100%"><div style="height:100%">
+  <img src="solidblue.png" style="height: 80%">
+</div></div></div></td></tr></table>
+<table><tr><td><div style="height: 64px; max-height: 40px">
+  <img src="solidblue.png" style="height: 80%">
+</div></td></tr></table>
+<table><tr><td><div style="height: 20px;min-height: 40px">
+  <img src="solidblue.png" style="height: 80%">
+</div></td></tr></table>
+<table><tr><td><div style="height: 40px"><div style="height:20px; min-height:100%"><div style="height:100px;max-height:100%">
+  <img src="solidblue.png" style="height: 80%">
+</div></div></div></td></tr></table>
+
+</td>
+
+</tr></table>
+
+</body>
+</html>

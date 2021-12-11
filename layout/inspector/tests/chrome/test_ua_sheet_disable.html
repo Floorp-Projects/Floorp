@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<title>Test for bug 1534399</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<script>
+function start() {
+  let sheet = InspectorUtils.getAllStyleSheets(document, false)[0];
+  ok(sheet.href.indexOf("test.css") == -1, "Shouldn't have found the author sheet");
+
+  is(sheet.disabled, false, "Sheet should initially be enabled");
+
+  sheet.disabled = true;
+  is(sheet.disabled, false, "Shouldn't be able to disable a UA sheet");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+document.addEventListener('DOMContentLoaded', start)
+</script>

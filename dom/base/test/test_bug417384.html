@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=417384
+-->
+<head>
+  <title>Test for Bug 417384</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417384">Mozilla Bug 417384</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 417384 **/
+
+var expectedSerialization = "about:blank document";
+function testSerializer() {
+  var doc = document.getElementById('test_iframe').contentDocument;
+  doc.body.textContent = expectedSerialization;
+  var head1 = doc.createElement("head");
+  doc.body.appendChild(head1);
+  var span = doc.createElement("span");
+  head1.appendChild(span);
+  span.appendChild(doc.createTextNode("before inner head\n"));
+  span.appendChild(doc.createElement("head"));
+  span.appendChild(doc.createTextNode("\nafter inner head"));
+
+  var encoder = SpecialPowers.Cu.createDocumentEncoder("text/html");
+  encoder.init(doc, "text/plain", 0);
+  encoder.setCharset("UTF-8");
+  var out = encoder.encodeToString();
+  ok(out == expectedSerialization, "Wrong serialization!");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(testSerializer);
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+<iframe id="test_iframe" src="about:blank"></iframe>
+</body>
+</html>
+

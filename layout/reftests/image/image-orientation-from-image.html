@@ -1,0 +1,40 @@
+<!DOCTYPE>
+<head>
+  <style>
+    body {
+      border:  0px;
+      margin:  0px;
+      padding: 0px;
+    }
+    img {
+      image-orientation: from-image;
+      border:  50px solid black;
+      margin:  50px;
+      padding: 50px;
+    }
+  </style>
+</head>
+<body>
+  <img id="image">
+
+  <script>
+    var orientationInfo = location.search.substring(1).split("&");
+    var angle = orientationInfo[0];
+    var flip = orientationInfo[1] == "flip" ? true : false;
+
+    // Determine the final image file. 'none' is special-cased since its
+    // filename doesn't quite follow the same pattern as the others.
+    var imageFile;
+    if (angle == "none") {
+      imageFile = "image-exif-none.jpg";
+    } else {
+      var imageFile = "image-exif-"
+                    + angle
+                    + "-deg"
+                    + (flip ? "-flip" : "")
+                    + ".jpg";
+    }
+
+    document.getElementById('image').src = imageFile;
+  </script>
+</body>

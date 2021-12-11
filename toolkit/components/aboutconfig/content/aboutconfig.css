@@ -1,0 +1,296 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --prefs-table-border-width: 1px;
+  --prefs-table-border: var(--prefs-table-border-width) solid var(--in-content-box-border-color);
+}
+
+.hidden {
+  display: none;
+}
+
+.table-shown > #show-all,
+.table-shown > .config-background-wrapper {
+  display: none;
+}
+
+.config-background {
+  background: url("chrome://global/content/aboutconfig/background.svg") no-repeat;
+  height: 182px;
+  margin: 32px auto;
+  width: 235px;
+}
+
+.config-help-text {
+  text-align: center;
+}
+
+.title {
+  background-image: url("chrome://global/skin/icons/warning.svg");
+  fill: #fcd100;
+}
+
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  background-color: var(--in-content-page-background);
+  padding: 10px;
+  padding-bottom: 0;
+  min-width: 644px;
+  display: flex;
+}
+
+.checkbox-container {
+  /* Center align and get rid of whitespace. */
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 1ch;
+}
+
+#about-config-search {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  box-sizing: border-box;
+  flex-grow: 1;
+  background-image: url("chrome://global/skin/icons/search-glass.svg");
+  background-repeat: no-repeat;
+  background-position: 8px center;
+  background-size: 16px;
+  /* Set horizontal margin to 0 to ensure alignment with table. */
+  margin-inline: 0;
+  text-align: match-parent;
+  /* All prefs must be left-to-right. */
+  direction: ltr;
+}
+
+@media not (prefers-contrast) {
+  #about-config-search {
+    fill-opacity: 0.4;
+  }
+}
+
+#about-config-search:placeholder-shown {
+  /* Display the placeholder in its natural directionality,
+   * even if the user changes the text direction manually
+   * (e.g. via RightCtrl+Shift). */
+  direction: inherit;
+}
+
+:root:dir(ltr) #about-config-search {
+  /* Be explicit about padding direction since
+   * `about-config-search` is forced to be LTR. */
+  padding-left: 32px;
+}
+
+:root:dir(rtl) #about-config-search {
+  background-position-x: right 8px;
+  padding-right: 32px;
+}
+
+#show-all {
+  display: block;
+  margin: 10px auto;
+}
+
+#prefs {
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
+  margin: 10px;
+  table-layout: fixed;
+  width: calc(100% - 20px);
+  min-width: 644px;
+  /* To stay consistent with about:preferences (664px - 20px margin). */
+  border: var(--prefs-table-border);
+  border-radius: 4px;
+  border-spacing: 0;
+}
+
+#prefs > tr.odd {
+  background-color: var(--in-content-box-background-odd);
+}
+
+#prefs > tr:hover {
+  background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
+}
+
+#prefs > tr.has-user-value {
+  font-weight: bold;
+}
+
+#prefs > tr.locked {
+  opacity: 0.4;
+  background-image: url("chrome://global/skin/icons/security.svg");
+  background-repeat: no-repeat;
+  background-position: 9px center;
+  background-size: 16px 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#prefs > tr.locked:dir(rtl) {
+  background-position-x: right 9px;
+}
+
+#prefs > tr > td,
+#prefs > tr > th {
+  padding: 4px;
+  font-weight: inherit;
+}
+
+#prefs > tr > th {
+  direction: ltr;
+  text-align: match-parent;
+}
+
+#prefs > tr:dir(ltr) > th {
+  /* Be explicit about padding direction since `th` is forced to be LTR. */
+  padding-left: 30px;
+}
+
+#prefs > tr:dir(rtl) > th {
+  padding-right: 30px;
+}
+
+#prefs > tr.deleted > th > span {
+  font-weight: bold;
+  color: var(--in-content-deemphasized-text);
+}
+
+#prefs > tr > td.cell-edit,
+#prefs > tr > td.cell-reset {
+  width: 40px;
+  padding: 0;
+}
+
+.cell-value {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+tr:not(.deleted) > .cell-value {
+  /* Always display the text in the value cell using left-to-right rules, but
+     align it according to the page direction. This doesn't apply to the radio
+     buttons shown for deleted preferences. */
+  direction: ltr;
+  text-align: match-parent;
+}
+
+:root:dir(ltr) tr:not(.deleted) > .cell-value > #form-edit {
+  /* Make the text in the form stay in the same place as before editing the pref. */
+  margin-left: -8px;
+}
+
+:root:dir(rtl) tr:not(.deleted) > .cell-value > #form-edit {
+  margin-right: -8px;
+}
+
+#form-edit > label {
+  /* Make the radiobutton's text wrap to a new line along with
+     the radiobutton itself, when space is constrained. */
+  display: inline-block;
+  margin-inline-end: 30px;
+}
+
+#form-edit > label:last-of-type {
+  margin-inline-end: 0;
+}
+
+#form-edit > label > :is(input[type="radio"], span) {
+  vertical-align: middle;
+}
+
+td.cell-value > form > input[type="text"],
+td.cell-value > form > input[type="number"] {
+  appearance: textfield;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  /* Align the text inside the input field in the same way as the table cell,
+     for both the left-to-right and right-to-left directions. */
+  text-align: match-parent;
+}
+
+.button-add,
+.button-save,
+.button-edit,
+.button-toggle,
+.button-delete,
+.button-reset {
+  -moz-context-properties: fill;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  fill: currentColor;
+  min-width: auto;
+  width: 32px;
+}
+
+.button-add {
+  background-image: url("chrome://global/skin/icons/plus.svg");
+}
+
+.button-save {
+  background-image: url("chrome://global/skin/icons/check.svg");
+}
+
+.button-edit {
+  background-image: url("chrome://global/skin/icons/edit.svg");
+}
+
+.button-toggle {
+  background-image: url("chrome://global/content/aboutconfig/toggle.svg");
+}
+
+.button-delete {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+.button-reset {
+  background-image: url("chrome://global/skin/icons/undo.svg");
+}
+
+.button-reset:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+/* The ::before creates a blank space between the last visible pref and the add row. */
+#prefs[has-visible-prefs] > .add > th::before,
+#prefs[has-visible-prefs] > .add > td::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  /* Make it wider by the border width so the border-inline is hidden. */
+  inset-inline: calc(var(--prefs-table-border-width) * -1);
+  height: 12px;
+  background-color: var(--in-content-page-background);
+  /* This is visually the top border on the add row. */
+  border-bottom: var(--prefs-table-border);
+}
+
+#prefs[has-visible-prefs] > .add > th,
+#prefs[has-visible-prefs] > .add > td {
+  /* This is the border underneath the last existing pref row. */
+  border-top: var(--prefs-table-border);
+  padding-top: 14px;
+  position: relative;
+}
+
+@media (prefers-contrast) {
+  #prefs > tr.deleted:hover > th > span {
+    color: inherit;
+  }
+
+  td:is(.cell-edit, .cell-reset) > button:hover,
+  tr:hover > td > button.primary,
+  tr.deleted:hover input[type="radio"]:checked:not(:hover) {
+    border-color: ThreeDShadow;
+  }
+}

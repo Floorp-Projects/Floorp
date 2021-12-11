@@ -1,0 +1,181 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=493251
+-->
+<head>
+  <title>Test for Bug 493251</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=493251">Mozilla Bug 493251</a>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 493251 **/
+
+  var win;
+
+  var mouseDown = 0;
+  var mouseUp = 0;
+  var mouseClick = 0;
+
+  var keyDown = 0;
+  var keyPress = 0;
+  var keyUp = 0;
+
+  function suppressEventHandling(aSuppress) {
+    var utils = SpecialPowers.getDOMWindowUtils(win);
+    ok(true, "suppressEventHandling: aSuppress=" + aSuppress);
+    utils.suppressEventHandling(aSuppress);
+  }
+
+  function dispatchMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers) {
+    var utils = SpecialPowers.getDOMWindowUtils(win);
+    ok(true, "Dipatching mouse event: aType=" + aType + ", aX=" + aX + ", aY" +
+               aY + ", aButton=" + aButton + ", aClickCount=" + aClickCount +
+               ", aModifiers=" + aModifiers);
+    utils.sendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers);
+  }
+
+  function dumpEvent(aEvent) {
+    var detail = "target=" + aEvent.target + ", originalTarget=" +
+                 aEvent.originalTarget + ", defaultPrevented=" +
+                 aEvent.defaultPrevented + ", isTrusted=" + aEvent.isTrusted;
+    switch (aEvent.type) {
+      case "keydown":
+      case "keypress":
+      case "keyup":
+        detail += ", charCode=0x" + aEvent.charCode.toString(16) +
+          ", keyCode=0x" + aEvent.keyCode.toString(16) +
+          ", altKey=" + (aEvent.altKey ? "PRESSED" : "no") +
+          ", ctrlKey=" + (aEvent.ctrlKey ? "PRESSED" : "no") +
+          ", shiftKey=" + (aEvent.shiftKey ? "PRESSED" : "no") +
+          ", metaKey=" + (aEvent.metaKey ? "PRESSED" : "no");
+        break;
+      case "mousedown":
+      case "mouseup":
+      case "click":
+        detail += ", screenX=" + aEvent.screenX + ", screenY=" + aEvent.screenY +
+          ", clientX=" + aEvent.clientX + ", clientY=" + aEvent.clientY +
+          ", altKey=" + (aEvent.altKey ? "PRESSED" : "no") +
+          ", ctrlKey=" + (aEvent.ctrlKey ? "PRESSED" : "no") +
+          ", shiftKey=" + (aEvent.shiftKey ? "PRESSED" : "no") +
+          ", metaKey=" + (aEvent.metaKey ? "PRESSED" : "no") +
+          ", button=" + aEvent.button +
+          ", relatedTarget=" + aEvent.relatedTarget;
+        break;
+    }
+    ok(true, aEvent.type + " event is handled: " + detail);
+
+    var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
+                        getService(SpecialPowers.Ci.nsIFocusManager);
+    ok(true, "focused element is \"" + fm.focusedElement +
+             "\" and focused window is \"" + fm.focusedWindow +
+             "\" (the testing window is \"" + win + "\"");
+  }
+
+  function doTest() {
+    win.document.getElementsByTagName("input")[0].focus();
+    win.addEventListener("keydown",
+                         function(e) { dumpEvent(e); ++keyDown; }, true);
+    win.addEventListener("keypress",
+                         function(e) { dumpEvent(e); ++keyPress; }, true);
+    win.addEventListener("keyup",
+                         function(e) { dumpEvent(e); ++keyUp; }, true);
+    win.addEventListener("mousedown",
+                         function(e) { dumpEvent(e); ++mouseDown; }, true);
+    win.addEventListener("mouseup",
+                         function(e) { dumpEvent(e); ++mouseUp; }, true);
+    win.addEventListener("click",
+                         function(e) { dumpEvent(e); ++mouseClick; }, true);
+
+    ok(true, "doTest #1...");
+    synthesizeKey("a", {}, win);
+    is(keyDown, 1, "Wrong number events (1)");
+    is(keyPress, 1, "Wrong number events (2)");
+    is(keyUp, 1, "Wrong number events (3)");
+
+    ok(true, "doTest #2...");
+    suppressEventHandling(true);
+    synthesizeKey("a", {}, win);
+    is(keyDown, 1, "Wrong number events (4)");
+    is(keyPress, 1, "Wrong number events (5)");
+    is(keyUp, 1, "Wrong number events (6)");
+    suppressEventHandling(false);
+    is(keyDown, 1, "Wrong number events (7)");
+    is(keyPress, 1, "Wrong number events (8)");
+    is(keyUp, 1, "Wrong number events (9)");
+
+    setTimeout(continueTest1, 0);
+    }
+
+  function continueTest1() {
+    ok(true, "continueTest1...");
+    win.addEventListener("keydown", () => { suppressEventHandling(true); }, {once: true});
+    synthesizeKey("a", {}, win);
+    is(keyDown, 2, "Wrong number events (10)");
+    is(keyPress, 1, "Wrong number events (11)");
+    is(keyUp, 1, "Wrong number events (12)");
+    suppressEventHandling(false);
+    setTimeout(continueTest2, 0);
+  }
+
+  function continueTest2() {
+    ok(true, "continueTest2 #1...");
+    is(keyDown, 2, "Wrong number events (13)");
+    is(keyPress, 2, "Wrong number events (14)");
+    is(keyUp, 2, "Wrong number events (15)");
+
+    dispatchMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    dispatchMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    is(mouseDown, 1, "Wrong number events (16)");
+    is(mouseUp, 1, "Wrong number events (17)");
+    is(mouseClick, 1, "Wrong number events (18)");
+
+    ok(true, "continueTest2 #2...");
+    suppressEventHandling(true);
+    dispatchMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    dispatchMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    suppressEventHandling(false);
+    is(mouseDown, 1, "Wrong number events (19)");
+    is(mouseUp, 1, "Wrong number events (20)");
+    is(mouseClick, 1, "Wrong number events (21)");
+
+    setTimeout(continueTest3, 0);
+  }
+
+  function continueTest3() {
+    ok(true, "continueTest3...");
+    dispatchMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    suppressEventHandling(true);
+    dispatchMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    suppressEventHandling(false);
+    setTimeout(continueTest4, 1000);
+  }
+
+  function continueTest4() {
+    ok(true, "continueTest4...");
+    is(mouseDown, 2, "Wrong number events (19)");
+    is(mouseUp, 2, "Wrong number events (20)");
+    is(mouseClick, 2, "Wrong number events (21)");
+    win.close();
+    SimpleTest.finish();
+  }
+
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+  win = window.open("window_bug493251.html", "_blank" , "width=500,height=500");
+
+</script>
+</pre>
+</body>
+</html>

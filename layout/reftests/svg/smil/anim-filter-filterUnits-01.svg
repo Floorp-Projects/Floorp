@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the "filterUnits" enum attributes of the "filter" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <filter id="flood_filter_1" filterUnits="userSpaceOnUse"
+          x="0%" y="0%" width="100%" height="100%">
+    <!-- this should reduce the referencing element to 50% of the
+         viewport width at 1.25s -->
+    <animate attributeName="filterUnits"
+             calcMode="discrete"
+             begin="0s" dur="2.5s"
+             from="userSpaceOnUse" to="objectBoundingBox"
+             fill="freeze"/>
+    <feFlood width="100%" height="100%" flood-color="lime"/>
+  </filter>
+  <filter id="flood_filter_2" x="0%" y="0%" width="100%" height="100%">
+    <!-- this should expand the referencing element to 100% of the
+         viewport width at 1s -->
+    <animate attributeName="filterUnits"
+             calcMode="discrete"
+             begin="0s" dur="2s"
+             from="objectBoundingBox" to="userSpaceOnUse"
+             fill="freeze"/>
+    <feFlood width="100%" height="100%" flood-color="lime"/>
+  </filter>
+  <rect width="100%" height="100%" fill="lime"/>
+  <rect width="100%" height="100" fill="red"/>
+
+  <!-- 40% through discrete animation simple duration -
+       tests animation doesn't affect the element too early -->
+  <svg height="50">
+    <rect width="50%" height="100%" fill="red" filter="url(#flood_filter_1)"/>
+  </svg>
+
+  <!-- 50% through discrete animation simple duration -
+       tests animation affects the element now -->
+  <svg y="50" height="50">
+    <rect width="50%" height="100%" fill="red" filter="url(#flood_filter_2)"/>
+  </svg>
+</svg>

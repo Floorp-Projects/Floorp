@@ -1,0 +1,99 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/customizableui/panelUI.inc.css
+
+@media (-moz-proton) {
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
+  margin-inline: -13px;
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: -13px;
+}
+
+#notification-popup {
+  margin-block: -4px;
+}
+} /** END Proton **/
+
+/* bookmark panel submenus */
+
+/* Override the menupopup shadow rule from windows/global/popup.css */
+#PlacesToolbar menupopup,
+#BMB_bookmarksPopup {
+  -moz-window-shadow: none;
+}
+
+#PlacesToolbar menupopup {
+  margin-top: -2px;
+}
+
+#PlacesToolbar menupopup,
+#BMB_bookmarksPopup menupopup {
+  appearance: none;
+  border: none;
+  padding-inline-start: 3px;
+}
+
+#BMB_bookmarksPopup menupopup {
+  -moz-window-shadow: none;
+  margin-top: -13px; /* 8px of padding, 4px of shadow margin, 1px of border */
+}
+
+#PlacesToolbar menupopup {
+  background: transparent;
+  padding-top: 4px;
+  margin-inline-start: -3px;
+}
+
+#BMB_bookmarksPopup menupopup::part(content) {
+  /* emulating MozPlacesPopupArrow but without the arrow */
+  box-shadow: var(--windows-panel-box-shadow);
+  margin: 4px;
+}
+
+#PlacesToolbar menupopup::part(content) {
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+  background: var(--arrowpanel-background);
+  color: var(--arrowpanel-color);
+  border: 1px solid var(--arrowpanel-border-color);
+  margin-block: -3px 4px;
+  margin-inline: 0 4px;
+}
+
+/* Add border-radius on Windows 7 */
+@media (-moz-os-version: windows-win7) {
+  #BMB_bookmarksPopup menupopup::part(content) {
+    border-radius: 3.5px;
+  }
+}
+
+@media (-moz-windows-non-native-menus) {
+  /* Override the menu-right margin rule windows/global/menu.css */
+  #BMB_bookmarksPopup .menu-right {
+    margin-inline-end: 0;
+  }
+}
+
+/* bookmark panel separator */
+#BMB_bookmarksPopup menuseparator {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Disabled empty item looks too small otherwise, because it has no icon. */
+menuitem.subviewbutton[disabled]:not(.menuitem-iconic) {
+  /* This is 16px for an icon + 3px for its margins + 1px for its padding +
+   * 2px for its border, see above */
+  min-height: 22px;
+}
+
+/* Anchor the bookmark menu drop down panel at the same height as other
+   panels when in the #toolbar-menubar */
+#toolbar-menubar #BMB_bookmarksPopup {
+  margin-top: -6px;
+}

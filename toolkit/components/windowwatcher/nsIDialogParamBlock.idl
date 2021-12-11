@@ -1,0 +1,42 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIMutableArray;
+
+/**
+ * An interface to pass strings, integers and nsISupports to a dialog
+ */
+
+[scriptable, uuid(f76c0901-437a-11d3-b7a0-e35db351b4bc)]
+interface nsIDialogParamBlock:  nsISupports {
+
+  /** Get or set an integer to pass.
+   * Index must be in the range 0..7
+   */
+  int32_t GetInt( in int32_t inIndex );
+  void SetInt( in int32_t inIndex, in int32_t inInt );
+
+  /** Set the maximum number of strings to pass. Default is 16.
+   * Use before setting any string (If you want to change it from the default).
+   */
+  void SetNumberStrings( in int32_t inNumStrings );
+
+  /** Get or set an string to pass.
+    * Index starts at 0
+    */
+  wstring GetString( in int32_t inIndex );
+  void SetString( in int32_t inIndex, in wstring inString);
+
+  /**
+   * A place where you can store an nsIMutableArray to pass nsISupports
+   */
+  attribute nsIMutableArray objects;
+};
+
+%{C++
+#define NS_DIALOGPARAMBLOCK_CONTRACTID "@mozilla.org/embedcomp/dialogparam;1"
+%}
+

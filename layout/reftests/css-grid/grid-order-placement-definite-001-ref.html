@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Test: Testing definite placement of grid items with 'order'</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107786">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+
+.grid {
+ /*display: grid;*/
+ position: relative;
+ grid-template-columns: 20px 20px 20px 20px;
+ grid-auto-flow: row;
+ grid-auto-columns: 23px;
+ grid-auto-rows: 17px;
+ padding: 17px 7px 11px 11px;
+ width: 100px;
+ height: 25px;
+}
+
+.a { left:73px; right:3px; background:lime; }
+.b { left:53px; right:3px; background:pink; }
+.c { left:33px; right:3px; background:yellow; }
+.d { left:13px; right:3px; background:silver; }
+
+span {
+  position:absolute;
+  border: 1px solid;
+  height: 18px;
+}
+
+x { background:black; order:99; float:right; }
+.f2 { background:white; }
+.f2 span { opacity: 0.5; }
+  </style>
+</head>
+<body>
+
+<f>
+
+<div class="grid">
+<span class="d">d</span>
+<span class="c">c</span>
+<span class="b">b</span>
+<span class="a">a</span>
+</div>
+
+<div class="grid">
+<span class="d">d</span>
+<span class="c">c</span>
+<span class="b">b</span>
+<span class="a">a</span>
+</div>
+
+</f>
+
+<script>
+  var f = document.querySelector('f');
+  var f2 = f.cloneNode(true);
+  f2.className = 'f2';
+  document.body.appendChild(f2);
+</script>
+
+</body>
+</html>

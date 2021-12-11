@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MARIONETTE_UNIT_MANIFESTS += ["harness/marionette_harness/tests/unit/unit-tests.ini"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Marionette")
+
+with Files("harness/**"):
+    SCHEDULES.exclusive = ["marionette", "firefox-ui"]
+
+SPHINX_PYTHON_PACKAGE_DIRS += ["client/marionette_driver"]

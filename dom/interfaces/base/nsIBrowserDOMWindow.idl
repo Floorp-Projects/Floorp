@@ -1,0 +1,187 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindowProxy;
+interface nsIDOMWindow;
+interface nsIURI;
+interface nsIPrincipal;
+interface nsIContentSecurityPolicy;
+interface nsIReferrerInfo;
+interface nsIOpenWindowInfo;
+webidl BrowsingContext;
+webidl Element;
+
+[scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
+interface nsIOpenURIInFrameParams : nsISupports
+{
+  readonly attribute nsIOpenWindowInfo openWindowInfo;
+
+  attribute nsIReferrerInfo referrerInfo;
+  readonly attribute boolean isPrivate;
+  attribute nsIPrincipal triggeringPrincipal;
+  attribute nsIContentSecurityPolicy csp;
+
+  // The browser or frame element in the parent process which holds the
+  // opener window in the content process. May be null.
+  readonly attribute Element openerBrowser;
+
+  [implicit_jscontext]
+  readonly attribute jsval openerOriginAttributes;
+};
+
+/**
+ * The C++ source has access to the browser script source through
+ * nsIBrowserDOMWindow. It is intended to be attached to the chrome DOMWindow
+ * of a toplevel browser window (a XUL window). A DOMWindow that does not
+ * happen to be a browser chrome window will simply have no access to any such
+ * interface.
+ */
+[scriptable, uuid(2a9bb880-5d73-40f3-8152-c60c8d137a14)]
+interface nsIBrowserDOMWindow : nsISupports
+{
+  /**
+   * Values for createContentWindow's and openURI's aWhere parameter.
+   */
+  /**
+   * Do whatever the default is based on application state, user preferences,
+   * and the value of the aContext parameter to openURI.
+   */
+  const short OPEN_DEFAULTWINDOW = 0;
+  /**
+   * Open in the "current window".  If aOpener is provided, this should be the
+   * top window in aOpener's window hierarchy, but exact behavior is
+   * application-dependent.  If aOpener is not provided, it's up to the
+   * application to decide what constitutes a "current window".
+   */
+  const short OPEN_CURRENTWINDOW = 1;
+  /**
+   * Open in a new window.
+   */
+  const short OPEN_NEWWINDOW     = 2;
+  /**
+   * Open in a new content tab in the toplevel browser window corresponding to
+   * this nsIBrowserDOMWindow.
+   */
+  const short OPEN_NEWTAB        = 3;
+  /**
+   * Open in a hidden browser. Used for printing.
+   */
+  const short OPEN_PRINT_BROWSER = 4;
+
+  /**
+   * Values for createContentWindow's and openURI's aFlags parameter.
+   * This is a bitflags field.
+   *
+   * The 0x1 bit decides the behavior of OPEN_DEFAULTWINDOW, and the 0x4 bit
+   * controls whether or not to set the window.opener property on the newly
+   * opened window.
+   *
+   * NOTE: The 0x2 bit is ignored for backwards compatibility with addons, as
+   * OPEN_NEW used to have the value 2. The values 0 and 2 are treated
+   * the same way internally.
+   */
+  /**
+   * Internal open new window.
+   */
+  const long OPEN_NEW           = 0x0;
+  /**
+   * External link (load request from another application, xremote, etc).
+   */
+  const long OPEN_EXTERNAL      = 0x1;
+
+  /**
+   * Don't set the window.opener property on the window which is being opened.
+   */
+  const long OPEN_NO_OPENER     = 0x4;
+
+  /**
+   * Don't set the referrer on the navigation inside the window which is
+   * being opened.
+   */
+  const long OPEN_NO_REFERRER   = 0x8;
+
+  /**
+   * Create the content window for the given URI.
+
+   * @param aURI the URI to be opened in the window (can be null).
+   * @param aWhere see possible values described above.
+   * @param aOpenWindowInfo info about the creation (can be null).
+   * @param aFlags flags which control the behavior of the load. The
+   *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
+   *               aWhere == OPEN_DEFAULTWINDOW.
+   * @param aTriggeringPrincipal the principal that would trigger the potential
+   *        load of aURI.
+   * @param aCsp the CSP to use (if any) for the new window.
+   * @return the window into which the URI would have been opened.
+  */
+  BrowsingContext
+  createContentWindow(in nsIURI aURI, in nsIOpenWindowInfo aOpenWindowInfo,
+                      in short aWhere, in long aFlags,
+                      in nsIPrincipal aTriggeringPrincipal,
+                      [optional] in nsIContentSecurityPolicy aCsp);
+
+  /**
+   * As above, but return the nsFrameLoaderOwner for the new window. Value is
+   * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
+   *
+   * Additional Parameters:
+   * @param aName The name to give the window opened in the new tab.
+   * @return The frame element for the newly opened window.
+   */
+  Element
+  createContentWindowInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
+                             in short aWhere, in long aFlags,
+                             in AString aName);
+
+  /**
+   * Load a URI.
+   * @param aURI the URI to open. null is not allowed. To create the window
+   *        without loading the URI, use createContentWindow instead.
+   * @param aWhere see possible values described above.
+   * @param aOpenWindowInfo info about the open (can be null).
+   * @param aFlags flags which control the behavior of the load. The
+   *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
+   *               aWhere == OPEN_DEFAULTWINDOW.
+   * @param aTriggeringPrincipal the principal that triggered the load of aURI.
+   * @param aCsp the CSP to be applied to the new load.
+   * @return the window into which the URI was opened.
+  */
+  BrowsingContext
+  openURI(in nsIURI aURI, in nsIOpenWindowInfo aOpenWindowInfo,
+          in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal,
+          [optional] in nsIContentSecurityPolicy aCsp);
+
+  /**
+   * As above, but return the nsFrameLoaderOwner for the new window. Value is
+   * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
+   *
+   * Additional Parameters:
+   * @param aName The name to give the window opened in the new tab.
+   * @return The frame element for the newly opened window.
+   // XXXbz is this the right API?
+   // See bug 537428
+   */
+  Element
+  openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
+                 in short aWhere, in long aFlags,
+                 in AString aName);
+
+  /**
+   * This function is responsible for calling
+   * nsIContentViewer::PermitUnload on each frame in the window. It
+   * returns true if closing the window is allowed. See canClose() in
+   * BrowserUtils.jsm for a simple implementation of this method.
+   */
+  boolean canClose();
+
+  /**
+   * The number browser tabs in the window. This number currently includes
+   * lazy tabs, though for most uses it probably should not.
+   */
+  readonly attribute unsigned long tabCount;
+};
+

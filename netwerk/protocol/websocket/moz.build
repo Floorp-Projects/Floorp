@@ -1,0 +1,70 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking: WebSockets")
+
+XPIDL_SOURCES += [
+    "nsITransportProvider.idl",
+    "nsIWebSocketChannel.idl",
+    "nsIWebSocketEventService.idl",
+    "nsIWebSocketImpl.idl",
+    "nsIWebSocketListener.idl",
+]
+
+XPIDL_MODULE = "necko_websocket"
+
+EXPORTS.mozilla.net += [
+    "BaseWebSocketChannel.h",
+    "IPCTransportProvider.h",
+    "WebSocketChannel.h",
+    "WebSocketChannelChild.h",
+    "WebSocketChannelParent.h",
+    "WebSocketConnectionBase.h",
+    "WebSocketConnectionChild.h",
+    "WebSocketConnectionListener.h",
+    "WebSocketConnectionParent.h",
+    "WebSocketEventListenerChild.h",
+    "WebSocketEventListenerParent.h",
+    "WebSocketEventService.h",
+    "WebSocketFrame.h",
+]
+
+UNIFIED_SOURCES += [
+    "BaseWebSocketChannel.cpp",
+    "IPCTransportProvider.cpp",
+    "WebSocketChannel.cpp",
+    "WebSocketChannelChild.cpp",
+    "WebSocketChannelParent.cpp",
+    "WebSocketConnection.cpp",
+    "WebSocketConnectionChild.cpp",
+    "WebSocketConnectionParent.cpp",
+    "WebSocketEventListenerChild.cpp",
+    "WebSocketEventListenerParent.cpp",
+    "WebSocketEventService.cpp",
+    "WebSocketFrame.cpp",
+]
+
+IPDL_SOURCES += [
+    "PTransportProvider.ipdl",
+    "PWebSocket.ipdl",
+    "PWebSocketConnection.ipdl",
+    "PWebSocketEventListener.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/netwerk/base",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

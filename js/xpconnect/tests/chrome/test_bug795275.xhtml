@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=795275
+-->
+<window title="Mozilla Bug 795275"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=795275"
+     target="_blank">Mozilla Bug 795275</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Warning in content scopes about Components. **/
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.executeSoon(function() {
+    SpecialPowers.pushPrefEnv({set: [["dom.use_components_shim", true]]},
+			      startLoad)
+  });
+  function startLoad() {
+    for (var i = 1; i <= document.getElementsByTagName('iframe').length; ++i) {
+      var frame = document.getElementById('frame' + i);
+      frame.contentWindow.location = 'http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug795275.html';
+      frame.onload = frameLoaded;
+    }
+  }
+
+  // Set up our console listener.
+  var gWarnings = 0;
+  function onWarning(consoleMessage) {
+    if (/soon be removed/.test(consoleMessage.message))
+      gWarnings++;
+  }
+  var gListener = {
+    observe: onWarning,
+    QueryInterface: function (iid) {
+      if (!iid.equals(Ci.nsIConsoleListener) &&
+          !iid.equals(Ci.nsISupports)) {
+        throw Cr.NS_ERROR_NO_INTERFACE;
+      }
+      return this;
+    }
+  };
+  var gConsoleService = Cc["@mozilla.org/consoleservice;1"]
+                          .getService(Ci.nsIConsoleService);
+  gConsoleService.registerListener(gListener);
+
+  // Wait for all four child frame to load.
+  var gLoadCount = 0;
+  function frameLoaded() {
+    if (++gLoadCount == document.getElementsByTagName('iframe').length)
+      go();
+  }
+
+  function getWin(id) { return document.getElementById(id).contentWindow.wrappedJSObject; }
+  function go() {
+    getWin('frame1').touchComponents();
+    getWin('frame2').touchInterfaces();
+    getWin('frame4').touchComponents();
+    getWin('frame4').touchInterfaces();
+
+    // Warnings are dispatched async, so stick ourselves at the end of the event
+    // queue.
+    setTimeout(done, 0);
+  }
+
+  function done() {
+    gConsoleService.unregisterListener(gListener);
+    is(gWarnings, 3, "Got the right number of warnings");
+    SimpleTest.finish();
+  }
+
+  ]]>
+
+  </script>
+  <iframe id="frame1"/>
+  <iframe id="frame2"/>
+  <iframe id="frame3"/>
+  <iframe id="frame4"/>
+
+</window>

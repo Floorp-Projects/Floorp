@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>EventSource event service reconnect error test</title>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var service = SpecialPowers.Cc["@mozilla.org/eventsourceevent/service;1"]
+                .getService(SpecialPowers.Ci.nsIEventSourceEventService);
+ok(!!service, "We have the nsIEventSourceEventService");
+
+var innerId = SpecialPowers.wrap(window).windowGlobalChild.innerWindowId;
+ok(innerId, "We have a valid innerWindowID: " + innerId);
+
+var channelId;
+var count = {
+  open: 0,
+  msg: 0,
+  close: 0
+};
+var listener = {
+    QueryInterface(aIID) {
+      if (
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIEventSourceEventListener)
+      ) {
+        return this;
+      }
+      throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
+    },
+    eventSourceConnectionOpened(httpChannelId) {
+      info("eventSourceConnectionOpened");
+      ok(httpChannelId > 0, "Channel ID received");
+      channelId = httpChannelId;
+      count.open++;
+    },
+    eventSourceConnectionClosed(httpChannelId) {
+      info("eventSourceConnectionClosed");
+      ok (httpChannelId === channelId, "Channel was closed on failure");
+      count.close++;
+      SimpleTest.requestFlakyTimeout("Test for open/close");
+      setTimeout(checkCallsCount, 2000);
+    },
+    eventReceived(httpChannelId, eventName, lastEventId, data, retry, timeStamp) {
+      info("eventReceived=", retry);
+      is(eventName, "message", "Event name is 'message'");
+      count.msg++;
+    }
+}
+
+service.addListener(innerId, listener);
+ok(true, "Listener added");
+addLoadEvent(function () {
+    const es = new EventSource("http://mochi.test:8888/tests/dom/base/test/eventsource_reconnect.sjs?id=" + Date.now());
+});
+SimpleTest.waitForExplicitFinish();
+
+function checkCallsCount() {
+  ok(count.open == 1, "No new open event");
+  ok(count.close == 1, "No new close event");
+  ok(count.msg == 1, "No new message event");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

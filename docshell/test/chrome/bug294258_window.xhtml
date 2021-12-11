@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="294258Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest, 0);"
+        title="bug 294258 test">
+
+  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
+  <script type="application/javascript"><![CDATA[
+
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    function $(id) { return TestWindow.getDocument().getElementById(id); }
+
+    ////
+    // Generator function for test steps for bug 294258:
+    // Form values should be preserved on reload.
+    //
+    function* testIterator()
+    {
+      // Load a page containing a form.
+      doPageNavigation( {
+          uri: getHttpUrl("bug294258_testcase.html"),
+          onNavComplete: nextTest
+        } );
+      yield undefined;
+
+      // Change the data for each of the form fields, and reload.
+      $("text").value = "text value";
+      $("checkbox").checked = true;
+      var file = SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
+      file.append("294258_test.file");
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
+      let filePath = file.path;
+      $("file").value = filePath;
+      $("textarea").value = "textarea value";
+      $("radio1").checked = true;
+      $("select").selectedIndex = 2;
+      doPageNavigation( {
+          reload: true,
+          onNavComplete: nextTest
+        } );
+      yield undefined;
+
+      // Verify that none of the form data has changed.
+      is($("text").value, "text value", "Text value changed");
+      is($("checkbox").checked, true, "Checkbox value changed");
+      is($("file").value, filePath, "File value changed");
+      is($("textarea").value, "textarea value", "Textarea value changed");
+      is($("radio1").checked, true, "Radio value changed");
+      is($("select").selectedIndex, 2, "Select value changed");
+
+      // Tell the framework the test is finished.
+      finish();
+    }
+
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+</window>

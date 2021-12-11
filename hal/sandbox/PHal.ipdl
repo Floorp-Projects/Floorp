@@ -1,0 +1,109 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PBrowser;
+
+include "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/GfxMessageUtils.h";
+
+using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
+using mozilla::hal::SensorType from "mozilla/HalSensor.h";
+using mozilla::hal::WakeLockControl from "mozilla/HalTypes.h";
+using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
+using nsIntRect from "nsRect.h";
+using PRTime from "prtime.h";
+
+namespace mozilla {
+
+namespace hal {
+struct BatteryInformation {
+  double level;
+  bool   charging;
+  double remainingTime;
+};
+
+struct SensorData {
+  SensorType sensor;
+  PRTime timestamp;
+  float[] values;
+};
+
+struct NetworkInformation {
+  uint32_t type;
+  bool   isWifi;
+  uint32_t dhcpGateway;
+};
+
+struct WakeLockInformation {
+  nsString topic;
+  uint32_t numLocks;
+  uint32_t numHidden;
+  uint64_t[] lockingProcesses;
+};
+
+struct ScreenConfiguration {
+  nsIntRect rect;
+  ScreenOrientation orientation;
+  uint16_t angle;
+  uint32_t colorDepth;
+  uint32_t pixelDepth;
+};
+
+} // namespace hal
+
+namespace hal_sandbox {
+
+[NestedUpTo=inside_cpow] sync protocol PHal {
+    manager PContent;
+
+child:
+    async NotifyBatteryChange(BatteryInformation aBatteryInfo);
+    async NotifyNetworkChange(NetworkInformation aNetworkInfo);
+    async NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
+    async NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
+
+parent:
+    async Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
+    async CancelVibrate(uint64_t[] id, PBrowser browser);
+
+    async EnableBatteryNotifications();
+    async DisableBatteryNotifications();
+    sync GetCurrentBatteryInformation()
+      returns (BatteryInformation aBatteryInfo);
+
+    async EnableNetworkNotifications();
+    async DisableNetworkNotifications();
+    sync GetCurrentNetworkInformation()
+      returns (NetworkInformation aNetworkInfo);
+
+    async ModifyWakeLock(nsString aTopic,
+                         WakeLockControl aLockAdjust,
+                         WakeLockControl aHiddenAdjust,
+                         uint64_t aProcessID);
+    async EnableWakeLockNotifications();
+    async DisableWakeLockNotifications();
+    sync GetWakeLockInfo(nsString aTopic)
+      returns (WakeLockInformation aWakeLockInfo);
+
+    async EnableScreenConfigurationNotifications();
+    async DisableScreenConfigurationNotifications();
+    sync LockScreenOrientation(ScreenOrientation aOrientation)
+      returns (bool allowed);
+    async UnlockScreenOrientation();
+
+child:
+    async NotifySensorChange(SensorData aSensorData);
+
+parent:
+    async EnableSensorNotifications(SensorType aSensor);
+    async DisableSensorNotifications(SensorType aSensor);
+
+    async __delete__();
+};
+
+} // namespace hal
+} // namespace mozilla

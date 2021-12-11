@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=559526
+-->
+<head>
+  <title>Test for Bug 559526</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=559526">Mozilla Bug 559526</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<div id="nodes" style="display:none">
+  <div id="child1"></div>
+  <div id="child2"></div>
+
+  <div id="child3"></div>
+  <div id="child4"></div>
+  <div id="child5"></div>
+  <div id="child6"></div>
+  <div id="child7"></div>
+  <div id="child8"></div>
+</div>
+<script type="application/javascript">
+
+/** Test for Bug 559526 **/
+
+var it;
+var recurse = false;
+var testCount = 0;
+function filter(node) {
+  if (node.id == "child3" && ! recurse) {
+    recurse = true;
+    var ex = null;
+    try {
+      var foo = it.nextNode();
+    } catch(e) {
+      ex = e;
+    }
+    ++testCount;
+    is(ex.name, "InvalidStateError", "Should have thrown an exception!");
+    is(ex.code, DOMException.INVALID_STATE_ERR, "Should have thrown an exception!");
+    recurse = false;
+  }
+  return NodeFilter.FILTER_ACCEPT;
+}
+
+(function testNodeIterator() {
+
+  it = document.createNodeIterator(
+    document.getElementById("nodes"),
+    NodeFilter.SHOW_ELEMENT,
+    filter
+  );
+  while (it.nextNode());
+})();
+
+(function testTreeWalker() {
+  it = document.createTreeWalker(
+    document.getElementById("nodes"),
+    NodeFilter.SHOW_ELEMENT,
+    filter
+  );
+  while(it.nextNode());
+
+  it = document.createTreeWalker(
+    document.getElementById("nodes"),
+    NodeFilter.SHOW_ELEMENT,
+    filter
+  );
+  it.firstChild();
+  while(it.nextSibling());
+
+  it = document.createTreeWalker(
+    document.getElementById("nodes"),
+    NodeFilter.SHOW_ELEMENT,
+    filter
+  );
+  it.lastChild();
+  while(it.previousSibling());
+})();
+
+is(testCount, 4, "Should have tests 3 filter calls!");
+
+</script>
+</pre>
+</body>
+</html>

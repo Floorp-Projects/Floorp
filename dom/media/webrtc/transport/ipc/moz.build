@@ -1,0 +1,54 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.net += [
+    "NrIceStunAddrMessageUtils.h",
+    "PStunAddrsParams.h",
+    "StunAddrsRequestChild.h",
+    "StunAddrsRequestParent.h",
+    "WebrtcTCPSocket.h",
+    "WebrtcTCPSocketCallback.h",
+    "WebrtcTCPSocketChild.h",
+    "WebrtcTCPSocketParent.h",
+]
+
+UNIFIED_SOURCES += [
+    "StunAddrsRequestChild.cpp",
+    "StunAddrsRequestParent.cpp",
+    "WebrtcTCPSocket.cpp",
+    "WebrtcTCPSocketChild.cpp",
+    "WebrtcTCPSocketLog.cpp",
+    "WebrtcTCPSocketParent.cpp",
+]
+
+IPDL_SOURCES += [
+    "PStunAddrsRequest.ipdl",
+    "PWebrtcTCPSocket.ipdl",
+    "WebrtcProxyConfig.ipdlh",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+DEFINES["R_DEFINED_INT2"] = "int16_t"
+DEFINES["R_DEFINED_UINT2"] = "uint16_t"
+DEFINES["R_DEFINED_INT4"] = "int32_t"
+DEFINES["R_DEFINED_UINT4"] = "uint32_t"
+# These are defined to avoid a conflict between typedefs in winsock2.h and
+# r_types.h. This is safe because these types are unused by the code here,
+# but still deeply unfortunate. There is similar code in the win32 version of
+# csi_platform.h, but that trick does not work here, even if that file is
+# directly included.
+DEFINES["R_DEFINED_INT8"] = "int8_t"
+DEFINES["R_DEFINED_UINT8"] = "uint8_t"
+
+LOCAL_INCLUDES += [
+    "/dom/media/webrtc/jsapi",
+    "/dom/media/webrtc/transport/third_party/nICEr/src/net",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr",
+    "/media/webrtc",
+    "/netwerk/base",
+    "/netwerk/protocol/http",
+]

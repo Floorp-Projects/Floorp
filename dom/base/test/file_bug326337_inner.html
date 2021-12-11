@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=326337
+-->
+<head>
+  <title>Inner file for Bug 326337</title>
+</head>
+<body>
+<script>
+
+document.domain = "example.com";
+
+runTest();
+
+var xhr;
+
+function runTest() {
+  xhr = new XMLHttpRequest();
+  xhr.open("GET", "file_bug326337.xml", true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      check(xhr.responseXML.documentElement.getAttribute("root"));
+      SpecialPowers.spawn(parent, [], () => {
+        content.location.hash = "#done";
+      });
+    }
+  }
+  xhr.send(null);
+}
+
+function check(attr) {
+  if (attr != "yes") {
+    SpecialPowers.spawn(parent, [], () => {
+      content.location.hash = "#fail";
+    });
+    throw 1;
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

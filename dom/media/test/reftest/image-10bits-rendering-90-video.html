@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+function doTest() {
+  var video = document.getElementById("v1");
+  video.src = "av1hdr2020.mp4";
+  video.preload = "metadata";
+  video.addEventListener("loadeddata", function() {
+    document.documentElement.removeAttribute('class');
+  });
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</head>
+<body>
+<video id="v1" style="position:absolute; left:0; top:0; filter:hue-rotate(90deg);"></video>
+<script>
+//doTest();
+</script>
+</body>
+</html>

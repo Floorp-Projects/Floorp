@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window title="Mozilla Bug 861493"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <script type="application/javascript">
+  <![CDATA[
+    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+    SimpleTest.waitForExplicitFinish();
+
+    addLoadEvent(() => {
+      ok(document.createElementNS(XUL_NS, "label") instanceof XULTextElement,
+        `<label> should be of XULTextElement type`);
+
+      ok(document.createElementNS(XUL_NS, "description") instanceof XULTextElement,
+        `<description> should be of XULTextElement type`);
+
+      SimpleTest.finish();
+    });
+  ]]>
+  </script>
+</window>

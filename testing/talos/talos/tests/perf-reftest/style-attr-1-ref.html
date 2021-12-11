@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  var div = document.createElement("div");
+  document.body.appendChild(div);
+  flush_style(div);
+  perf_start();
+  div.style.color = "green";
+  flush_style(div);
+  perf_finish();
+};
+</script>
+<body></body>

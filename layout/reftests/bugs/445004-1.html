@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      var loads = 0;
+      function loadStarted() {
+        ++loads;
+      }
+      function loadEnded() {
+        --loads;
+        if (loads == 0) {
+          document.documentElement.className = "";
+        }
+      }
+      loadStarted();
+      window.onload = function() {
+        if (location.protocol != 'file:') {
+          var txt = document.createTextNode('Must be run from file://');
+          var div = document.createElement("div");
+          div.appendChild(txt);
+          document.body.appendChild(div);
+        }
+        loadEnded();
+      }
+    </script>
+  </head>  
+  <body>
+    <iframe width="500" height="200" src="subdir/445004-subframe.html"
+            onload="window.frames[0].doIt();"></iframe>
+  </body>
+</html>

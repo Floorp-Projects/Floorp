@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Split intersect 2</title>
+
+<style>
+.container {
+  margin: 0 0;
+  width: 400px;
+  height: 400px;
+
+  transform-style: preserve-3d;
+}
+
+.shape {
+  margin: 0 0;
+  position: absolute;
+
+  width: 30px;
+  height: 100px;
+}
+
+.red {
+  background-color: rgba(255,0,0,1);
+  transform: translate(100px, 100px) rotateZ(90deg) rotateY(60deg);
+}
+
+.green {
+  background-color: rgba(0,255,0,1);
+  transform: translate(80px, 100px);
+}
+
+.blue {
+  background-color: rgba(0,0,255,1);
+  transform: translate(120px, 100px);
+}
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="shape red"></div>
+    <div class="shape green"></div>
+    <div class="shape blue"></div>
+  </div>
+</body>
+</html>

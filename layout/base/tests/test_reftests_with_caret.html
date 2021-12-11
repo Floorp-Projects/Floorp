@@ -1,0 +1,458 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Reftests with caret drawing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    iframe {
+      border: none;
+      width: 600px;
+      height: 400px;
+    }
+  </style>
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(3);
+
+var iframes = [];
+function callbackTestIframe(iframe)
+{
+  iframes.push(iframe);
+
+  if (iframes.length != 2)
+    return;
+
+  var result = iframes[0];
+  var reference = iframes[1];
+
+  // Using assertSnapshots is important to get the data-URIs of failing tests
+  // dumped into the log in a format that reftest-analyzer.xhtml can process. 
+  var passed = assertSnapshots(result.snapshot, reference.snapshot, true,
+                               null /*no fuzz*/, result.src, reference.src);
+
+  // Remove the iframes if the test was successful
+  if (passed) {
+    result.remove();
+    reference.remove();
+  }
+
+  iframes = [];
+  SimpleTest.waitForFocus(nextTest);
+}
+
+function doSnapShot(iframe) {
+  iframe.snapshot = snapshotWindow(iframe.contentWindow, true);
+  callbackTestIframe(iframe);
+};
+
+function remotePageLoaded(callback) {
+  var iframe = this;
+  setTimeout(function(){
+    doSnapShot(iframe);
+    callback();
+  }, 0);
+};
+
+const MAX_ITERATIONS = 1000;
+
+function createIframe(url,next) {
+  var iframe = document.createElement("iframe");
+  iframe.remotePageLoaded = remotePageLoaded;
+  var me = this;
+  var currentIteration = 0;
+  function iframeLoadCompleted() {
+    let loc = iframe.contentWindow.location;
+    if (loc && loc.href == "about:blank") {
+      return;
+    }
+    var docEl = iframe.contentDocument.documentElement;
+    if (docEl.className.includes("reftest-wait")) {
+      if (currentIteration++ > MAX_ITERATIONS) {
+        ok(false, "iframe load for " + url + " timed out");
+        endTest();
+      } else {
+        setTimeout(iframeLoadCompleted, 0);
+      }
+      return;
+    }
+    iframe.remotePageLoaded(function() {
+      if (next) {
+        setTimeout(function(){createIframe(next,null);}, 0)
+      }
+    });
+  }
+  iframe.addEventListener("load", iframeLoadCompleted);
+  window.document.body.appendChild(iframe);
+  iframe.clientHeight; // flush layout.
+  iframe.src = url;
+  iframe.focus();
+};
+
+function refTest(test,ref) {
+  createIframe(test,ref);
+};
+
+var caretBlinkTime = null;
+async function endTest() {
+  await SpecialPowers.spawn(window.parent, [], () => {
+    content.document.styleSheets[content.document.styleSheets.length-1].deleteRule(0);
+  });
+
+  // finish(), yet let the test actually end first, to be safe.
+  SimpleTest.executeSoon(SimpleTest.finish);
+}
+
+var tests = [
+    [ 'bug106855-1.html' , 'bug106855-1-ref.html' ] ,
+    [ 'bug106855-2.html' , 'bug106855-1-ref.html' ] ,
+    [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
+    [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
+    [ 'bug1082486-1.html', 'bug1082486-1-ref.html'] ,
+    [ 'bug1082486-2.html', 'bug1082486-2-ref.html'] ,
+    // The following test cases uses mouse events. We need to make
+    // AccessibleCaret unhide for them.
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.hide_carets_for_mouse_input', false]]}, nextTest);} ,
+    [ 'bug1516963-1.html', 'bug1516963-1-ref.html'] ,
+    [ 'bug1516963-2.html', 'bug1516963-2-ref.html'] ,
+    [ 'bug1516963-3.html', 'bug1516963-3-ref.html'] ,
+    [ 'bug1516963-4.html', 'bug1516963-4-ref.html'] ,
+    [ 'bug1516963-5.html', 'bug1516963-5-ref.html'] ,
+    [ 'bug1516963-6.html', 'bug1516963-6-ref.html'] ,
+    [ 'bug1550869-1a.html', 'bug1550869-1-ref.html'] ,
+    [ 'bug1550869-1b.html', 'bug1550869-1-ref.html'] ,
+    [ 'bug1550869-2a.html', 'bug1550869-2-ref.html'] ,
+    [ 'bug1550869-2b.html', 'bug1550869-2-ref.html'] ,
+    [ 'bug1550869-2c.html', 'bug1550869-2-ref.html'] ,
+    [ 'bug1550869-2d.html', 'bug1550869-2-ref.html'] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.hide_carets_for_mouse_input']]}, nextTest);} ,
+    // The following test cases are all involving with one sending
+    // synthesizeKey(), the other without. They fail when accessiblecaret
+    // is enabled. Test them with the preference off.
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.enabled_on_touch', false]]}, nextTest);} ,
+    [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
+    [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
+    [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
+    [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
+    [ 'bug482484.html'   , 'bug482484-ref.html'   ] ,
+    [ 'bug503399.html'   , 'bug503399-ref.html'   ] ,
+    [ 'bug585922.html'   , 'bug585922-ref.html'   ] ,
+    [ 'bug597519-1.html' , 'bug597519-1-ref.html' ] ,
+    [ 'bug602141-1.html' , 'bug602141-1-ref.html' ] ,
+    [ 'bug602141-2.html' , 'bug602141-2-ref.html' ] ,
+    [ 'bug602141-3.html' , 'bug602141-3-ref.html' ] ,
+    [ 'bug602141-4.html' , 'bug602141-4-ref.html' ] ,
+    [ 'bug612271-1.html' , 'bug612271-ref.html' ]   ,
+    [ 'bug612271-2.html' , 'bug612271-ref.html' ]   ,
+    [ 'bug612271-3.html' , 'bug612271-ref.html' ]   ,
+    [ 'bug613433-1.html' , 'bug613433-ref.html' ]   ,
+    [ 'bug613433-2.html' , 'bug613433-ref.html' ]   ,
+    [ 'bug613433-3.html' , 'bug613433-ref.html' ]   ,
+    [ 'bug632215-1.html' , 'bug632215-ref.html'   ] ,
+    [ 'bug632215-2.html' , 'bug632215-ref.html'   ] ,
+    [ 'bug633044-1.html' , 'bug633044-1-ref.html' ] ,
+    [ 'bug634406-1.html' , 'bug634406-1-ref.html' ] ,
+    [ 'bug644428-1.html' , 'bug644428-1-ref.html' ] ,
+    [ 'input-maxlength-valid-before-change.html', 'input-valid-ref.html'] ,
+    [ 'input-maxlength-valid-change.html', 'input-valid-ref.html'] ,
+    [ 'input-maxlength-invalid-change.html', 'input-invalid-ref.html'] ,
+    [ 'input-minlength-valid-before-change.html', 'input-valid-ref.html'] ,
+    [ 'input-minlength-valid-change.html', 'input-valid-ref.html'] ,
+    [ 'input-minlength-invalid-change.html', 'input-invalid-ref.html'] ,
+    [ 'input-maxlength-ui-valid-change.html', 'input-valid-ref.html'] ,
+    [ 'input-maxlength-ui-invalid-change.html', 'input-invalid-ref.html'] ,
+    [ 'input-minlength-ui-valid-change.html', 'input-valid-ref.html'] ,
+    [ 'input-minlength-ui-invalid-change.html', 'input-invalid-ref.html'] ,
+    [ 'input-password-remask.html', 'input-password-remask-ref.html' ],
+
+    // The following hash means language.
+    [ 'input-password-RTL-input.html#arabic', 'input-password-RTL-input-ref.html'],
+    [ 'input-password-RTL-input.html#hebrew', 'input-password-RTL-input-ref.html'],
+
+    // The following hash means "text ('_' is a space)" - unmarsk start - unmask end - selection start - selection end[ - text-transform].
+    [ 'input-password-unmask.html#abc_def-0-7-7-7', 'input-password-unmask-ref.html#abc_def-0-7-7-7'],
+    [ 'input-password-unmask.html#abc_def-0-7-7-7-capitalize', 'input-password-unmask-ref.html#Abc_Def-0-7-7-7'],
+    [ 'input-password-unmask.html#abc_def-0-7-7-7-uppercase', 'input-password-unmask-ref.html#ABC_DEF-0-7-7-7'],
+    [ 'input-password-unmask.html#ABC_DEF-0-7-7-7-lowercase', 'input-password-unmask-ref.html#abc_def-0-7-7-7'],
+    [ 'input-password-unmask.html#abc_def-0-1-1-1', 'input-password-unmask-ref.html#abc_def-0-1-1-1'],
+    [ 'input-password-unmask.html#abc_def-2-4-1-5', 'input-password-unmask-ref.html#abc_def-2-4-1-5'],
+    [ 'input-password-unmask.html#abc_def-6-7-7-7', 'input-password-unmask-ref.html#abc_def-6-7-7-7'],
+
+    // The following hash means unmarsk start - unmask end - selection start - selection end.
+    // The value is "a&#x1f914;b" so that the range is 0-4.
+    [ 'input-password-unmask-around-emoji.html#0-4-4-4', 'input-password-unmask-around-emoji-ref.html#0-4-4-4'],
+    [ 'input-password-unmask-around-emoji.html#0-3-3-3', 'input-password-unmask-around-emoji-ref.html#0-3-3-3'],
+    [ 'input-password-unmask-around-emoji.html#0-1-3-3', 'input-password-unmask-around-emoji-ref.html#0-1-3-3'],
+    [ 'input-password-unmask-around-emoji.html#1-2-3-3', 'input-password-unmask-around-emoji-ref.html#1-2-3-3'],
+    [ 'input-password-unmask-around-emoji.html#1-3-3-3', 'input-password-unmask-around-emoji-ref.html#1-3-3-3'],
+    [ 'input-password-unmask-around-emoji.html#2-3-3-3', 'input-password-unmask-around-emoji-ref.html#2-3-3-3'],
+    [ 'input-password-unmask-around-emoji.html#3-4-4-4', 'input-password-unmask-around-emoji-ref.html#3-4-4-4'],
+    [ 'input-password-unmask-around-emoji.html#1-4-4-4', 'input-password-unmask-around-emoji-ref.html#1-4-4-4'],
+
+    [ 'input-stoppropagation.html', 'input-stoppropagation-ref.html'] ,
+    [ 'textarea-maxlength-valid-before-change.html', 'textarea-valid-ref.html'] ,
+    [ 'textarea-maxlength-valid-change.html', 'textarea-valid-ref.html'] ,
+    [ 'textarea-maxlength-invalid-change.html', 'textarea-invalid-ref.html'] ,
+    [ 'textarea-minlength-valid-before-change.html', 'textarea-valid-ref.html'] ,
+    [ 'textarea-minlength-valid-change.html', 'textarea-valid-ref.html'] ,
+    [ 'textarea-minlength-invalid-change.html', 'textarea-invalid-ref.html'] ,
+    [ 'textarea-maxlength-ui-valid-change.html', 'textarea-valid-ref.html'] ,
+    [ 'textarea-maxlength-ui-invalid-change.html', 'textarea-invalid-ref.html'] ,
+    [ 'textarea-minlength-ui-valid-change.html', 'textarea-valid-ref.html'] ,
+    [ 'textarea-minlength-ui-invalid-change.html', 'textarea-invalid-ref.html'] ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['bidi.browser.ui', true]]}, nextTest);} ,
+    [ 'bug646382-1.html' , 'bug646382-1-ref.html' ] ,
+    [ 'bug646382-2.html' , 'bug646382-2-ref.html' ] ,
+    [ 'bug664087-1.html' , 'bug664087-1-ref.html' ] ,
+    [ 'bug664087-2.html' , 'bug664087-2-ref.html' ] ,
+    [ 'bug682712-1.html' , 'bug682712-1-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['bidi.browser.ui']]}, nextTest);} ,
+    [ 'bug746993-1.html' , 'bug746993-1-ref.html' ] ,
+    [ 'bug956530-1.html' , 'bug956530-1-ref.html' ] ,
+    [ 'bug989012-1.html' , 'bug989012-1-ref.html' ] ,
+    [ 'bug989012-2.html' , 'bug989012-2-ref.html' ] ,
+    [ 'bug989012-3.html' , 'bug989012-3-ref.html' ] ,
+    [ 'bug1007065-1.html' , 'bug1007065-1-ref.html' ] ,
+    [ 'bug1007067-1.html' , 'bug1007067-1-ref.html' ] ,
+    [ 'bug1061468.html'  , 'bug1061468-ref.html'  ] ,
+    [ 'bug1097242-1.html', 'bug1097242-1-ref.html'] ,
+    [ 'bug1109968-1.html', 'bug1109968-1-ref.html'] ,
+    [ 'bug1109968-2.html', 'bug1109968-2-ref.html'] ,
+    // [ 'bug1123067-1.html' , 'bug1123067-ref.html'  ] , TODO: bug 1129205
+    [ 'bug1123067-2.html' , 'bug1123067-ref.html'  ] ,
+    [ 'bug1123067-3.html' , 'bug1123067-ref.html'  ] ,
+    [ 'bug1132768-1.html' , 'bug1132768-1-ref.html'] ,
+    [ 'bug1237236-1.html' , 'bug1237236-1-ref.html' ] ,
+    [ 'bug1237236-2.html' , 'bug1237236-2-ref.html' ] ,
+    [ 'bug1258308-2.html' , 'bug1258308-2-ref.html' ] ,
+    [ 'bug1259949-1.html' , 'bug1259949-1-ref.html'] ,
+    [ 'bug1259949-2.html' , 'bug1259949-2-ref.html'] ,
+    [ 'bug1263288.html'   , 'bug1263288-ref.html'] ,
+    [ 'bug1263357-1.html' , 'bug1263357-1-ref.html'] ,
+    [ 'bug1263357-2.html' , 'bug1263357-2-ref.html'] ,
+    [ 'bug1263357-3.html' , 'bug1263357-3-ref.html'] ,
+    [ 'bug1263357-4.html' , 'bug1263357-4-ref.html'] ,
+    [ 'bug1263357-5.html' , 'bug1263357-5-ref.html'] ,
+    [ 'bug1354478-1.html' , 'bug1354478-1-ref.html'] ,
+    [ 'bug1354478-2.html' , 'bug1354478-2-ref.html'] ,
+    [ 'bug1354478-3.html' , 'bug1354478-3-ref.html'] ,
+    [ 'bug1354478-4.html' , 'bug1354478-4-ref.html'] ,
+    [ 'bug1354478-5.html' , 'bug1354478-5-ref.html'] ,
+    [ 'bug1354478-6.html' , 'bug1354478-6-ref.html'] ,
+    [ 'bug1359411.html'   , 'bug1359411-ref.html' ] ,
+    [ 'bug1415416.html'   , 'bug1415416-ref.html' ] ,
+    [ 'bug1423331-1.html' , 'bug1423331-1-ref.html' ] ,
+    [ 'bug1423331-2.html' , 'bug1423331-2-ref.html' ] ,
+    // FIXME(bug 1434949): These two fail in some platforms.
+    // [ 'bug1423331-3.html' , 'bug1423331-1-ref.html' ] ,
+    // [ 'bug1423331-4.html' , 'bug1423331-2-ref.html' ] ,
+    [ 'bug1484094-1.html' , 'bug1484094-1-ref.html' ] ,
+    [ 'bug1484094-2.html' , 'bug1484094-2-ref.html' ] ,
+    [ 'bug1496118.html'   , 'bug1496118-ref.html' ] ,
+    [ 'bug1506547-1.html' , 'bug1506547-2.html' ] ,
+    [ 'bug1506547-2.html' , 'bug1506547-3.html' ] ,
+    [ 'bug1506547-4.html' , 'bug1506547-4-ref.html' ] ,
+    [ 'bug1506547-5.html' , 'bug1506547-5-ref.html' ] ,
+    [ 'bug1506547-6.html' , 'bug1506547-5-ref.html' ] ,
+    [ 'bug1510942-1.html' , 'bug1510942-1-ref.html' ] ,
+    [ 'bug1510942-2.html' , 'bug1510942-2-ref.html' ] ,
+    [ 'bug1518339-1.html' , 'bug1518339-1-ref.html' ] ,
+    [ 'bug1518339-2.html' , 'bug1518339-2-ref.html' ] ,
+    [ 'bug1524266-1.html' , 'bug1524266-1-ref.html' ] ,
+    // Checks that the caret isn't occluded by children background content.
+    [ 'bug1591282-1.html' , 'bug1591282-1-ref.html' ] ,
+    // Caret on contenteditable with abspos and / or empty content.
+    [ 'bug1634543-1.html' , 'bug1634543-1-ref.html' ] ,
+    [ 'bug1634543-2.html' , 'bug1634543-1-ref.html' ] ,
+    // TODO(emilio): This fails because nsInlineFrame::GetCaretBaseline doesn't
+    // return one line-height for an empty inline, and it probably should..
+    // [ 'bug1634543-3.html' , 'bug1634543-1-ref.html' ] ,
+    [ 'bug1634543-4.html' , 'bug1634543-1-ref.html' ] ,
+    // Caret + line-height + pseudo-element only.
+    [ 'bug1634743-1.html' , 'bug1634743-1-ref.html' ] ,
+    [ 'bug1637476-1.html' , 'bug1637476-1-ref.html' ] ,
+    [ 'bug1637476-2.html' , 'bug1637476-2-ref.html' ] ,
+    [ 'bug1637476-3.html' , 'bug1637476-3-ref.html' ] ,
+    [ 'bug1663475-1.html' , 'bug1663475-1-ref.html' ] ,
+    [ 'bug1663475-2.html' , 'bug1663475-2-ref.html' ] ,
+    // shift+arrow key should select non-editable only
+    [ 'bug1670531-1.html' , 'bug1670531-2.html' ] ,
+    [ 'bug1670531-3.html' , 'bug1670531-3-ref.html' ] ,
+    [ 'bug1670531-4.html' , 'bug1670531-3-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['accessibility.browsewithcaret', true]]}, nextTest);} ,
+    [ 'bug1529492-1.html' , 'bug1529492-1-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['accessibility.browsewithcaret']]}, nextTest);} ,
+];
+
+if (!navigator.appVersion.includes("Android")) {
+  tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
+  tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
+  tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);
+  tests.push(function() {SpecialPowers.pushPrefEnv({'set': [['layout.css.overflow-clip-box.enabled', true]]}, nextTest);});
+  tests.push([ 'bug966992-1.html' , 'bug966992-1-ref.html' ]);
+  tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);
+  tests.push([ 'bug966992-3.html' , 'bug966992-3-ref.html' ]);
+  tests.push(function() {SpecialPowers.pushPrefEnv({'clear': [['layout.css.overflow-clip-box.enabled']]}, nextTest);});
+  tests.push([ 'bug1258308-1.html' , 'bug1258308-1-ref.html' ]); // maybe VK_END doesn't work on Android?
+} else {
+  is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platform or this if..else check removed");
+}
+
+if (navigator.platform.includes("Linux")) {
+  tests = tests.concat([
+    // Turn off accessiblecaret to prevent it from interfering with the
+    // multi-range selection.
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.enabled_on_touch', false]]}, nextTest);} ,
+    // eDirPrevious, Shift+click
+    [ 'multi-range-user-select.html#prev1S_' , 'multi-range-user-select-ref.html#prev1S_'  ] ,
+    [ 'multi-range-user-select.html#prev2S_' , 'multi-range-user-select-ref.html#prev2S_'  ] ,
+    [ 'multi-range-user-select.html#prev3S_' , 'multi-range-user-select-ref.html#prev3S_'  ] ,
+    [ 'multi-range-user-select.html#prev4S_' , 'multi-range-user-select-ref.html#prev4S_'  ] ,
+    [ 'multi-range-user-select.html#prev5S_' , 'multi-range-user-select-ref.html#prev5S_'  ] ,
+    [ 'multi-range-user-select.html#prev6S_' , 'multi-range-user-select-ref.html#prev6S_'  ] ,
+    [ 'multi-range-user-select.html#prev7S_' , 'multi-range-user-select-ref.html#prev7S_'  ] ,
+    // eDirPrevious, Shift+Accel+click
+    [ 'multi-range-user-select.html#prev1SA' , 'multi-range-user-select-ref.html#prev1SA'  ] ,
+    [ 'multi-range-user-select.html#prev2SA' , 'multi-range-user-select-ref.html#prev2SA'  ] ,
+    [ 'multi-range-user-select.html#prev3SA' , 'multi-range-user-select-ref.html#prev3SA'  ] ,
+    [ 'multi-range-user-select.html#prev4SA' , 'multi-range-user-select-ref.html#prev4SA'  ] ,
+    [ 'multi-range-user-select.html#prev5SA' , 'multi-range-user-select-ref.html#prev5SA'  ] ,
+    [ 'multi-range-user-select.html#prev6SA' , 'multi-range-user-select-ref.html#prev6SA'  ] ,
+    [ 'multi-range-user-select.html#prev7SA' , 'multi-range-user-select-ref.html#prev7SA'  ] ,
+    // eDirPrevious, Accel+drag-select (adding an additional range)
+    [ 'multi-range-user-select.html#prev1AD' , 'multi-range-user-select-ref.html#prev1AD'  ] ,
+    [ 'multi-range-user-select.html#prev7AD' , 'multi-range-user-select-ref.html#prev7AD'  ] ,
+    // eDirPrevious, Accel+drag-select (bug 1128722)
+    [ 'multi-range-user-select.html#prev8AD' , 'multi-range-user-select-ref.html#prev8AD'  ] ,
+    // eDirPrevious, VK_RIGHT / LEFT
+    [ 'multi-range-user-select.html#prev1SR' , 'multi-range-user-select-ref.html#prev1SR'  ] ,
+    [ 'multi-range-user-select.html#prev1SL' , 'multi-range-user-select-ref.html#prev1SL'  ] ,
+    // eDirNext, Shift+click
+    [ 'multi-range-user-select.html#next1S_' , 'multi-range-user-select-ref.html#next1S_'  ] ,
+    [ 'multi-range-user-select.html#next2S_' , 'multi-range-user-select-ref.html#next2S_'  ] ,
+    [ 'multi-range-user-select.html#next3S_' , 'multi-range-user-select-ref.html#next3S_'  ] ,
+    [ 'multi-range-user-select.html#next4S_' , 'multi-range-user-select-ref.html#next4S_'  ] ,
+    [ 'multi-range-user-select.html#next5S_' , 'multi-range-user-select-ref.html#next5S_'  ] ,
+    [ 'multi-range-user-select.html#next6S_' , 'multi-range-user-select-ref.html#next6S_'  ] ,
+    [ 'multi-range-user-select.html#next7S_' , 'multi-range-user-select-ref.html#next7S_'  ] ,
+    // eDirNext, Shift+Accel+click
+    [ 'multi-range-user-select.html#next1SA' , 'multi-range-user-select-ref.html#next1SA'  ] ,
+    [ 'multi-range-user-select.html#next2SA' , 'multi-range-user-select-ref.html#next2SA'  ] ,
+    [ 'multi-range-user-select.html#next3SA' , 'multi-range-user-select-ref.html#next3SA'  ] ,
+    [ 'multi-range-user-select.html#next4SA' , 'multi-range-user-select-ref.html#next4SA'  ] ,
+    [ 'multi-range-user-select.html#next5SA' , 'multi-range-user-select-ref.html#next5SA'  ] ,
+    [ 'multi-range-user-select.html#next6SA' , 'multi-range-user-select-ref.html#next6SA'  ] ,
+    [ 'multi-range-user-select.html#next7SA' , 'multi-range-user-select-ref.html#next7SA'  ] ,
+    // eDirNext, Accel+drag-select (adding an additional range)
+    [ 'multi-range-user-select.html#next1AD' , 'multi-range-user-select-ref.html#next1AD'  ] ,
+    [ 'multi-range-user-select.html#next7AD' , 'multi-range-user-select-ref.html#next7AD'  ] ,
+    // eDirNext, Accel+drag-select (bug 1128722)
+    [ 'multi-range-user-select.html#next8AD' , 'multi-range-user-select-ref.html#next8AD'  ] ,
+    // eDirNext, VK_RIGHT / LEFT
+    [ 'multi-range-user-select.html#next1SR' , 'multi-range-user-select-ref.html#next1SR'  ] ,
+    [ 'multi-range-user-select.html#next1SL' , 'multi-range-user-select-ref.html#next1SL'  ] ,
+    // eDirPrevious, Shift+click
+    [ 'multi-range-script-select.html#prev1S_' , 'multi-range-script-select-ref.html#prev1S_'  ] ,
+    [ 'multi-range-script-select.html#prev2S_' , 'multi-range-script-select-ref.html#prev2S_'  ] ,
+    [ 'multi-range-script-select.html#prev3S_' , 'multi-range-script-select-ref.html#prev3S_'  ] ,
+    [ 'multi-range-script-select.html#prev4S_' , 'multi-range-script-select-ref.html#prev4S_'  ] ,
+    [ 'multi-range-script-select.html#prev5S_' , 'multi-range-script-select-ref.html#prev5S_'  ] ,
+    [ 'multi-range-script-select.html#prev6S_' , 'multi-range-script-select-ref.html#prev6S_'  ] ,
+    [ 'multi-range-script-select.html#prev7S_' , 'multi-range-script-select-ref.html#prev7S_'  ] ,
+    // eDirPrevious, Shift+Accel+click
+    [ 'multi-range-script-select.html#prev1SA' , 'multi-range-script-select-ref.html#prev1SA'  ] ,
+    [ 'multi-range-script-select.html#prev2SA' , 'multi-range-script-select-ref.html#prev2SA'  ] ,
+    [ 'multi-range-script-select.html#prev3SA' , 'multi-range-script-select-ref.html#prev3SA'  ] ,
+    [ 'multi-range-script-select.html#prev4SA' , 'multi-range-script-select-ref.html#prev4SA'  ] ,
+    [ 'multi-range-script-select.html#prev5SA' , 'multi-range-script-select-ref.html#prev5SA'  ] ,
+    [ 'multi-range-script-select.html#prev6SA' , 'multi-range-script-select-ref.html#prev6SA'  ] ,
+    [ 'multi-range-script-select.html#prev7SA' , 'multi-range-script-select-ref.html#prev7SA'  ] ,
+    // eDirPrevious, Accel+drag-select (adding an additional range)
+    [ 'multi-range-script-select.html#prev1AD' , 'multi-range-script-select-ref.html#prev1AD'  ] ,
+    [ 'multi-range-script-select.html#prev7AD' , 'multi-range-script-select-ref.html#prev7AD'  ] ,
+    // eDirPrevious, VK_RIGHT / LEFT
+    [ 'multi-range-script-select.html#prev1SR' , 'multi-range-script-select-ref.html#prev1SR'  ] ,
+    [ 'multi-range-script-select.html#prev1SL' , 'multi-range-script-select-ref.html#prev1SL'  ] ,
+    // eDirNext, Shift+click
+    [ 'multi-range-script-select.html#next1S_' , 'multi-range-script-select-ref.html#next1S_'  ] ,
+    [ 'multi-range-script-select.html#next2S_' , 'multi-range-script-select-ref.html#next2S_'  ] ,
+    [ 'multi-range-script-select.html#next3S_' , 'multi-range-script-select-ref.html#next3S_'  ] ,
+    [ 'multi-range-script-select.html#next4S_' , 'multi-range-script-select-ref.html#next4S_'  ] ,
+    [ 'multi-range-script-select.html#next5S_' , 'multi-range-script-select-ref.html#next5S_'  ] ,
+    [ 'multi-range-script-select.html#next6S_' , 'multi-range-script-select-ref.html#next6S_'  ] ,
+    [ 'multi-range-script-select.html#next7S_' , 'multi-range-script-select-ref.html#next7S_'  ] ,
+    // eDirNext, Shift+Accel+click
+    [ 'multi-range-script-select.html#next1SA' , 'multi-range-script-select-ref.html#next1SA'  ] ,
+    [ 'multi-range-script-select.html#next2SA' , 'multi-range-script-select-ref.html#next2SA'  ] ,
+    [ 'multi-range-script-select.html#next3SA' , 'multi-range-script-select-ref.html#next3SA'  ] ,
+    [ 'multi-range-script-select.html#next4SA' , 'multi-range-script-select-ref.html#next4SA'  ] ,
+    [ 'multi-range-script-select.html#next5SA' , 'multi-range-script-select-ref.html#next5SA'  ] ,
+    [ 'multi-range-script-select.html#next6SA' , 'multi-range-script-select-ref.html#next6SA'  ] ,
+    [ 'multi-range-script-select.html#next7SA' , 'multi-range-script-select-ref.html#next7SA'  ] ,
+    // eDirNext, Accel+drag-select (adding an additional range)
+    [ 'multi-range-script-select.html#next1AD' , 'multi-range-script-select-ref.html#next1AD'  ] ,
+    [ 'multi-range-script-select.html#next7AD' , 'multi-range-script-select-ref.html#next7AD'  ] ,
+    // eDirNext, VK_RIGHT / LEFT
+    [ 'multi-range-script-select.html#next1SR' , 'multi-range-script-select-ref.html#next1SR'  ] ,
+    [ 'multi-range-script-select.html#next1SL' , 'multi-range-script-select-ref.html#next1SL'  ] ,
+
+    // Tries to select and delete non-selectable content in a user-select subtree.
+    [ 'bug1524266-2.html' , 'bug1524266-2-ref.html' ] ,
+    [ 'bug1524266-3.html' , 'bug1524266-2-ref.html' ] ,
+    // Tries to select and delete non-editable content in a user-select subtree.
+    [ 'bug1524266-4.html' , 'bug1524266-2-ref.html' ] ,
+    // Tries to edit an <input type="number"> with arrows inside a user-select: none element.
+    [ 'bug1611661.html' , 'bug1611661-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
+  ]);
+}
+
+var testIndex = 0;
+
+// Change it to something like /bug1524266/ to skip all other tests and make
+// debugging easier...
+const DEBUG_TEST_FILTER = null;
+
+function nextTest() {
+  if (testIndex < tests.length) {
+    let test = tests[testIndex];
+    if (typeof(test) == 'function') {
+      test();
+    } else if (!DEBUG_TEST_FILTER || DEBUG_TEST_FILTER.test(test[0])) {
+      refTest(test[0], test[1]);
+    } else {
+      setTimeout(nextTest, 0);
+    }
+    ++testIndex;
+  } else {
+    endTest();
+  }
+}
+async function runTests() {
+  try {
+    if (window.parent) {
+      await SpecialPowers.spawn(window.parent, [], () => {
+          content.document.styleSheets[content.document.styleSheets.length-1]
+            .insertRule("iframe#testframe{width:600px;height:400px}",0);
+      });
+    }
+    try {
+      caretBlinkTime = SpecialPowers.getIntPref("ui.caretBlinkTime");
+    } catch (e) {}
+    SpecialPowers.pushPrefEnv({'set': [['ui.caretBlinkTime', -1]]}, nextTest);
+  } catch(e) {
+    endTest();
+  }
+}
+
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</head>
+<body>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runNextTest);
+
+var TEST_URL = "http://mochi.test:8888/tests/docshell/test/chrome/allowContentRetargeting.sjs";
+
+function runNextTest() {
+  var test = tests.shift();
+  if (!test) {
+    SimpleTest.finish();
+    return;
+  }
+  test();
+}
+
+var tests = [
+
+  // Set allowContentRetargeting = false, load a downloadable URL, verify the
+  // downloadable stops loading.
+  function basic() {
+    var iframe = insertIframe();
+    iframe.contentWindow.docShell.allowContentRetargeting = false;
+    loadIframe(iframe);
+  },
+
+  // Set allowContentRetargeting = false on parent docshell, load a downloadable
+  // URL, verify the downloadable stops loading.
+  function inherit() {
+    var docshell = window.docShell;
+    docshell.allowContentRetargeting = false;
+    loadIframe(insertIframe());
+  },
+];
+
+function insertIframe() {
+  var iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  return iframe;
+}
+
+function loadIframe(iframe) {
+  iframe.setAttribute("src", TEST_URL);
+  iframe.contentWindow.docShell.
+    QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIWebProgress).
+    addProgressListener(progressListener,
+                        Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+}
+
+var progressListener = {
+  onStateChange(webProgress, req, flags, status) {
+    if (!(flags & Ci.nsIWebProgressListener.STATE_STOP))
+      return;
+    is(Components.isSuccessCode(status), false,
+       "Downloadable should have failed to load");
+    document.querySelector("iframe").remove();
+    runNextTest();
+  },
+
+  QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsISupportsWeakReference"]),
+};
+
+  </script>
+</head>
+<body>
+<p id="display">
+</p>
+</body>
+</html>

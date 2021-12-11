@@ -1,0 +1,4 @@
+# Because coloring of visited links is asynchronous and does not block
+# or fire any events, the tests in this directory are not run through
+# the reftest harness.  Instead, they are run through
+# layout/style/tests/test_visited_reftests.html .

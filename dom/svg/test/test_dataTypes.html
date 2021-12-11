@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=437448
+-->
+<head>
+  <title>Test for Bug 437448</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437448">Mozilla Bug 437448</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="dataTypes-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var doc = $("svg").contentWindow.document;
+  var filter = doc.getElementById("filter");
+  var convolve = doc.getElementById("convolve");
+  var blur = doc.getElementById("blur");
+  var marker = doc.getElementById("marker");
+
+  // class attribute
+  filter.setAttribute("class", "foo");
+  is(filter.getAttribute("class"), "foo", "class attribute");
+  is(filter.className.baseVal, "foo", "className baseVal");
+  is(filter.className.animVal, "foo", "className animVal");
+  filter.className.baseVal = "bar";
+  is(filter.getAttribute("class"), "bar", "class attribute");
+  is(filter.className.baseVal, "bar", "className baseVal");
+  is(filter.className.animVal, "bar", "className animVal");
+  filter.removeAttribute("class");
+  is(filter.hasAttribute("class"), false, "class attribute");
+  ok(filter.getAttribute("class") === null, "removed class attribute");
+  is(filter.className.baseVal, "", "className baseVal");
+  is(filter.className.animVal, "", "className animVal");
+  filter.setAttribute("class", "");
+  ok(filter.getAttribute("class") === "", "empty class attribute");
+
+  // length attribute
+
+  marker.setAttribute("markerWidth", "12.5");
+  is(marker.markerWidth.baseVal.value, 12.5, "length baseVal");
+  is(marker.markerWidth.animVal.value, 12.5, "length animVal");
+
+  var baseMarkerWidth = marker.markerWidth.baseVal;
+  var animMarkerWidth = marker.markerWidth.animVal;
+  marker.setAttribute("markerWidth", "15.5");
+  is(baseMarkerWidth.value, 15.5, "length baseVal");
+  is(animMarkerWidth.value, 15.5, "length animVal");
+
+  marker.markerWidth.baseVal.value = 7.5;
+  is(marker.markerWidth.animVal.value, 7.5, "length animVal");
+  is(marker.getAttribute("markerWidth"), "7.5", "length attribute");
+
+  marker.setAttribute("markerWidth", "");
+  ok(marker.getAttribute("markerWidth") === "", "empty length attribute");
+  marker.removeAttribute("markerWidth");
+  ok(marker.getAttribute("markerWidth") === null, "removed length attribute");
+
+  // number attribute
+
+  convolve.setAttribute("divisor", "12.5");
+  is(convolve.divisor.baseVal, 12.5, "number baseVal");
+  is(convolve.divisor.animVal, 12.5, "number animVal");
+
+  convolve.divisor.baseVal = 7.5;
+  is(convolve.divisor.animVal, 7.5, "number animVal");
+  is(convolve.getAttribute("divisor"), "7.5", "number attribute");
+
+  convolve.setAttribute("divisor", "");
+  ok(convolve.getAttribute("divisor") === "", "empty number attribute");
+  convolve.removeAttribute("divisor");
+  ok(convolve.getAttribute("divisor") === null, "removed number attribute");
+
+  // number-optional-number attribute
+
+  blur.setAttribute("stdDeviation", "20.5");
+  is(blur.stdDeviationX.baseVal, 20.5, "number-optional-number first baseVal");
+  is(blur.stdDeviationX.animVal, 20.5, "number-optional-number first animVal");
+  is(blur.stdDeviationY.baseVal, 20.5, "number-optional-number second baseVal");
+  is(blur.stdDeviationY.animVal, 20.5, "number-optional-number second animVal");
+
+  blur.stdDeviationX.baseVal = 8.5;
+  is(blur.stdDeviationX.animVal, 8.5, "number-optional-number first animVal");
+  is(blur.stdDeviationY.animVal, 20.5, "number-optional-number second animVal");
+  is(blur.getAttribute("stdDeviation"), "8.5, 20.5", "number-optional-number attribute");
+
+  blur.stdDeviationY.baseVal = 8.5;
+  is(blur.getAttribute("stdDeviation"), "8.5", "number-optional-number attribute");
+
+  blur.setStdDeviation(24.5, 0.5);
+  is(blur.stdDeviationX.baseVal, 24.5, "number-optional-number first baseVal");
+  is(blur.stdDeviationX.animVal, 24.5, "number-optional-number first animVal");
+  is(blur.stdDeviationY.baseVal, 0.5, "number-optional-number second baseVal");
+  is(blur.stdDeviationY.animVal, 0.5, "number-optional-number second animVal");
+
+  blur.setAttribute("stdDeviation", "");
+  ok(blur.getAttribute("stdDeviation") === "",
+     "empty number-optional-number attribute");
+  blur.removeAttribute("stdDeviation");
+  ok(blur.getAttribute("stdDeviation") === null,
+     "removed number-optional-number attribute");
+
+  // integer attribute
+
+  convolve.setAttribute("targetX", "12");
+  is(convolve.targetX.baseVal, 12, "integer baseVal");
+  is(convolve.targetX.animVal, 12, "integer animVal");
+  convolve.targetX.baseVal = 7;
+  is(convolve.targetX.animVal, 7, "integer animVal");
+  is(convolve.getAttribute("targetX"), "7", "integer attribute");
+  convolve.setAttribute("targetX", "");
+  ok(convolve.getAttribute("targetX") === "", "empty integer attribute");
+  convolve.removeAttribute("targetX");
+  ok(convolve.getAttribute("targetX") === null, "removed integer attribute");
+
+  // integer-optional-integer attribute
+
+  convolve.setAttribute("order", "5");
+  is(convolve.orderX.baseVal, 5, "integer-optional-integer first baseVal");
+  is(convolve.orderX.animVal, 5, "integer-optional-integer first animVal");
+  is(convolve.orderY.baseVal, 5, "integer-optional-integer second baseVal");
+  is(convolve.orderY.animVal, 5, "integer-optional-integer second animVal");
+
+  convolve.orderX.baseVal = 7;
+  is(convolve.orderX.animVal, 7, "integer-optional-integer first animVal");
+  is(convolve.orderY.animVal, 5, "integer-optional-integer second animVal");
+  is(convolve.getAttribute("order"), "7, 5", "integer-optional-integer attribute");
+
+  convolve.orderY.baseVal = 7;
+  is(convolve.getAttribute("order"), "7", "integer-optional-integer attribute");
+
+  convolve.setAttribute("order", "11, 13");
+  is(convolve.orderX.baseVal, 11, "integer-optional-integer first baseVal");
+  is(convolve.orderX.animVal, 11, "integer-optional-integer first animVal");
+  is(convolve.orderY.baseVal, 13, "integer-optional-integer second baseVal");
+  is(convolve.orderY.animVal, 13, "integer-optional-integer second animVal");
+
+  // 32 bit integer range
+  convolve.setAttribute("order", "-2147483648, 2147483647");
+  is(convolve.orderX.baseVal, -2147483648, "integer-optional-integer first baseVal");
+  is(convolve.orderX.animVal, -2147483648, "integer-optional-integer first animVal");
+  is(convolve.orderY.baseVal, 2147483647, "integer-optional-integer second baseVal");
+  is(convolve.orderY.animVal, 2147483647, "integer-optional-integer second animVal");
+
+  // too big, clamp
+  convolve.setAttribute("order", "-2147483649, 2147483648");
+  is(convolve.orderX.baseVal, -2147483648, "integer-optional-integer first baseVal");
+  is(convolve.orderX.animVal, -2147483648, "integer-optional-integer first animVal");
+  is(convolve.orderY.baseVal, 2147483647, "integer-optional-integer second baseVal");
+  is(convolve.orderY.animVal, 2147483647, "integer-optional-integer second animVal");
+
+  // invalid
+  convolve.setAttribute("order", "-00000000000invalid, 214748364720invalid");
+  is(convolve.orderX.baseVal, 3, "integer-optional-integer first baseVal");
+  is(convolve.orderX.animVal, 3, "integer-optional-integer first animVal");
+  is(convolve.orderY.baseVal, 3, "integer-optional-integer second baseVal");
+  is(convolve.orderY.animVal, 3, "integer-optional-integer second animVal");
+
+  convolve.setAttribute("order", "");
+  ok(convolve.getAttribute("order") === "",
+     "empty integer-optional-integer attribute");
+  convolve.removeAttribute("order");
+  ok(convolve.getAttribute("order") === null,
+     "removed integer-optional-integer attribute");
+
+  // angle attribute
+
+  marker.setAttribute("orient", "90deg");
+  is(marker.orientAngle.baseVal.value, 90, "angle baseVal");
+  is(marker.orientAngle.animVal.value, 90, "angle animVal");
+
+  var baseAngle = marker.orientAngle.baseVal;
+  var animAngle = marker.orientAngle.animVal;
+  marker.setAttribute("orient", "45deg");
+  is(baseAngle.value, 45, "angle baseVal");
+  is(animAngle.value, 45, "angle animVal");
+
+  marker.orientAngle.baseVal.value = 30;
+  is(marker.orientAngle.animVal.value, 30, "angle animVal");
+  is(marker.getAttribute("orient"), "30deg", "angle attribute");
+
+  marker.setAttribute("orient", "auto");
+  is(marker.getAttribute("orient"), "auto", "checking 'auto' string preserved");
+  is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO, "type baseVal");
+  is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO, "type animVal");
+
+  marker.setAttribute("orient", "auto-start-reverse");
+  is(marker.getAttribute("orient"), "auto-start-reverse", "checking 'auto-start-reverse' string preserved");
+  is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO_START_REVERSE, "type baseVal");
+  is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO_START_REVERSE, "type animVal");
+
+  marker.setAttribute("orient", "");
+  ok(marker.getAttribute("orient") === "", "empty angle attribute");
+  marker.removeAttribute("orient");
+  ok(marker.getAttribute("orient") === null, "removed angle attribute");
+
+  // boolean attribute
+
+  convolve.setAttribute("preserveAlpha", "false");
+  is(convolve.preserveAlpha.baseVal, false, "boolean baseVal");
+  is(convolve.preserveAlpha.animVal, false, "boolean animVal");
+  convolve.preserveAlpha.baseVal = true;
+  is(convolve.preserveAlpha.animVal, true, "boolean animVal");
+  is(convolve.getAttribute("preserveAlpha"), "true", "boolean attribute");
+  convolve.setAttribute("preserveAlpha", "");
+  ok(convolve.getAttribute("preserveAlpha") === "", "empty boolean attribute");
+  convolve.removeAttribute("preserveAlpha");
+  ok(convolve.getAttribute("preserveAlpha") === null,
+     "removed boolean attribute");
+
+  // enum attribute
+
+  is(1, SVGFEConvolveMatrixElement.SVG_EDGEMODE_DUPLICATE, "SVG_EDGEMODE_DUPLICATE value");
+  is(2, SVGFEConvolveMatrixElement.SVG_EDGEMODE_WRAP, "SVG_EDGEMODE_WRAP value");
+
+  convolve.setAttribute("edgeMode", "wrap");
+  is(convolve.edgeMode.baseVal, SVGFEConvolveMatrixElement.SVG_EDGEMODE_WRAP, "enum baseVal");
+  is(convolve.edgeMode.animVal, SVGFEConvolveMatrixElement.SVG_EDGEMODE_WRAP, "enum animVal");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_DUPLICATE;
+  is(convolve.edgeMode.animVal, SVGFEConvolveMatrixElement.SVG_EDGEMODE_DUPLICATE, "enum animVal");
+  is(convolve.getAttribute("edgeMode"), "duplicate", "enum attribute");
+  convolve.setAttribute("edgeMode", "");
+  ok(convolve.getAttribute("edgeMode") === "", "empty enum attribute");
+  convolve.removeAttribute("edgeMode");
+  ok(convolve.getAttribute("edgeMode") === null, "removed enum attribute");
+
+  // string attribute
+
+  convolve.setAttribute("result", "foo");
+  is(convolve.result.baseVal, "foo", "string baseVal");
+  is(convolve.result.animVal, "foo", "string animVal");
+  convolve.result.baseVal = "bar";
+  is(convolve.result.animVal, "bar", "string animVal");
+  is(convolve.getAttribute("result"), "bar", "string attribute");
+  convolve.setAttribute("result", "");
+  ok(convolve.getAttribute("result") === "", "empty string attribute");
+  convolve.removeAttribute("result");
+  ok(convolve.getAttribute("result") === null, "removed string attribute");
+
+  // preserveAspectRatio attribute
+
+  is(0, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_UNKNOWN, "SVG_PRESERVEASPECTRATIO_UNKNOWN value");
+  is(1, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_NONE, "SVG_PRESERVEASPECTRATIO_NONE value");
+  is(3, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN, "SVG_PRESERVEASPECTRATIO_XMIDYMIN value");
+  is(5, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMINYMID, "SVG_PRESERVEASPECTRATIO_XMINYMID value");
+  is(7, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMID, "SVG_PRESERVEASPECTRATIO_XMAXYMID value");
+  is(10, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMAX, "SVG_PRESERVEASPECTRATIO_XMAXYMAX value");
+
+  is(0, SVGPreserveAspectRatio.SVG_MEETORSLICE_UNKNOWN, "SVG_MEETORSLICE_UNKNOWN value");
+  is(1, SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET, "SVG_MEETORSLICE_MEET value");
+  is(2, SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE, "SVG_MEETORSLICE_SLICE value");
+
+  marker.setAttribute("preserveAspectRatio", "xMinYMid slice");
+  is(marker.preserveAspectRatio.baseVal.align,
+     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMINYMID, "preserveAspectRatio.align baseVal");
+  is(marker.preserveAspectRatio.animVal.align,
+     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMINYMID, "preserveAspectRatio.align animVal");
+  is(marker.preserveAspectRatio.baseVal.meetOrSlice,
+     SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE, "preserveAspectRatio.meetOrSlice baseVal");
+  is(marker.preserveAspectRatio.animVal.meetOrSlice,
+     SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE, "preserveAspectRatio.meetOrSlice animVal");
+  marker.preserveAspectRatio.baseVal.align =
+    SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN;
+  is(marker.preserveAspectRatio.animVal.align,
+     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN, "preserveAspectRatio animVal");
+  is(marker.preserveAspectRatio.animVal.meetOrSlice,
+     SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE, "preserveAspectRatio.meetOrSlice animVal");
+  marker.preserveAspectRatio.baseVal.meetOrSlice = SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET;
+  is(marker.preserveAspectRatio.animVal.align,
+     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN, "preserveAspectRatio animVal");
+  is(marker.preserveAspectRatio.animVal.meetOrSlice,
+     SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET, "preserveAspectRatio.meetOrSlice animVal");
+  is(marker.getAttribute("preserveAspectRatio"), "xMidYMin meet", "preserveAspectRatio attribute");
+
+  var basePreserveAspectRatio = marker.preserveAspectRatio.baseVal;
+  var animPreserveAspectRatio = marker.preserveAspectRatio.animVal;
+  marker.setAttribute("preserveAspectRatio", "xMaxYMid slice");
+  is(basePreserveAspectRatio.align,
+     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMID, "preserveAspectRatio.align baseVal");
+  is(animPreserveAspectRatio.align,
+     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMID, "preserveAspectRatio.align animVal");
+  is(basePreserveAspectRatio.meetOrSlice,
+     SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE, "preserveAspectRatio.meetOrSlice baseVal");
+  is(animPreserveAspectRatio.meetOrSlice,
+     SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE, "preserveAspectRatio.meetOrSlice animVal");
+
+  marker.setAttribute("preserveAspectRatio", " none"); // invalid, space at beginning
+  is(basePreserveAspectRatio.align, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMID,
+     "default preserveAspectRatio attribute");
+
+  marker.setAttribute("preserveAspectRatio", "none "); // invalid, space at end
+  is(basePreserveAspectRatio.align, SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMID,
+     "default preserveAspectRatio attribute");
+
+  marker.setAttribute("preserveAspectRatio", "");
+  ok(marker.getAttribute("preserveAspectRatio") === "",
+     "empty preserveAspectRatio attribute");
+  marker.removeAttribute("preserveAspectRatio");
+  ok(marker.getAttribute("preserveAspectRatio") === null,
+     "removed preserveAspectRatio attribute");
+
+  // viewBox attribute
+  var baseViewBox = marker.viewBox.baseVal;
+  var animViewBox = marker.viewBox.animVal;
+  is(baseViewBox, null, "viewBox baseVal");
+  is(animViewBox, null, "viewBox animVal");
+
+  marker.setAttribute("viewBox", "1 2 3 4");
+  is(marker.viewBox.baseVal.x, 1, "viewBox.x baseVal");
+  is(marker.viewBox.animVal.x, 1, "viewBox.x animVal");
+  is(marker.viewBox.baseVal.y, 2, "viewbox.y baseVal");
+  is(marker.viewBox.animVal.y, 2, "viewbox.y animVal");
+  is(marker.viewBox.baseVal.width, 3, "viewbox.width baseVal");
+  is(marker.viewBox.animVal.width, 3, "viewbox.width animVal");
+  is(marker.viewBox.baseVal.height, 4, "viewbox.height baseVal");
+  is(marker.viewBox.animVal.height, 4, "viewbox.height animVal");
+  marker.viewBox.baseVal.x = 5;
+  is(marker.viewBox.animVal.x, 5, "viewBox.x animVal");
+  marker.viewBox.baseVal.y = 6;
+  is(marker.viewBox.animVal.y, 6, "viewBox.y animVal");
+  marker.viewBox.baseVal.width = 7;
+  is(marker.viewBox.animVal.width, 7, "viewBox.width animVal");
+  marker.viewBox.baseVal.height = 8;
+  is(marker.viewBox.animVal.height, 8, "viewBox.height animVal");
+  is(marker.getAttribute("viewBox"), "5 6 7 8", "viewBox attribute");
+  var storedViewBox = marker.viewBox.baseVal;
+  marker.removeAttribute("viewBox");
+  is(marker.hasAttribute("viewBox"), false, "viewBox hasAttribute");
+  ok(marker.getAttribute("viewBox") === null, "removed viewBox attribute");
+  is(marker.viewBox.baseVal, null, "viewBox baseVal");
+  is(marker.viewBox.animVal, null, "viewBox animVal");
+
+  is(storedViewBox.width, 7, "Should not lose values");
+  storedViewBox.width = 200;
+  is(storedViewBox.width, 200, "Should be able to change detached viewBox rect");
+  is(marker.hasAttribute("viewBox"), false, "viewBox hasAttribute should still be false");
+  ok(marker.getAttribute("viewBox") === null, "viewBox attribute should still be null");
+  is(marker.viewBox.baseVal, null, "viewBox baseVal");
+  is(marker.viewBox.animVal, null, "viewBox animVal");
+
+  marker.setAttribute("viewBox", "none");
+  is(marker.hasAttribute("viewBox"), true, "viewBox hasAttribute");
+  is(marker.viewBox.baseVal, null, "viewBox baseVal");
+  is(marker.viewBox.animVal, null, "viewBox animVal");
+
+  marker.setAttribute("viewBox", "");
+  is(marker.hasAttribute("viewBox"), true, "viewBox hasAttribute");
+  ok(marker.getAttribute("viewBox") === "", "empty viewBox attribute");
+
+  marker.setAttribute("viewBox", "9 10 11 12");
+  marker.removeAttribute("viewBox");
+  marker.setAttribute("viewBox", "9 10 11 12");
+  is(marker.viewBox.baseVal.x, 9, "viewBox.x baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.baseVal.y, 10, "viewBox.y baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.baseVal.width, 11, "viewBox.width baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.baseVal.height, 12, "viewBox.height baseVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.x, 9, "viewBox.x animVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.y, 10, "viewBox.y animVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.width, 11, "viewBox.width animVal after re-setting attribute to same rect value");
+  is(marker.viewBox.animVal.height, 12, "viewBox.height animVal after re-setting attribute to same rect value");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTests);
+</script>
+</pre>
+</body>
+</html>

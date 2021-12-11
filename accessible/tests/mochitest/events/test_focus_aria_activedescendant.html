@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=429547
+-->
+<head>
+  <title>aria-activedescendant focus tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
+    // gA11yEventDumpToConsole = true; // debugging
+
+    function changeARIAActiveDescendant(aContainer, aItem) {
+      let itemID = aItem instanceof Node ? aItem.id : aItem;
+      this.eventSeq = [
+        new focusChecker(aItem),
+      ];
+
+      this.invoke = function changeARIAActiveDescendant_invoke() {
+        getNode(aContainer).setAttribute("aria-activedescendant", itemID);
+      };
+
+      this.getID = function changeARIAActiveDescendant_getID() {
+        return "change aria-activedescendant on " + itemID;
+      };
+    }
+
+    function clearARIAActiveDescendant(aID) {
+      this.eventSeq = [
+        new focusChecker(aID),
+      ];
+
+      this.invoke = function clearARIAActiveDescendant_invoke() {
+        getNode(aID).removeAttribute("aria-activedescendant");
+      };
+
+      this.getID = function clearARIAActiveDescendant_getID() {
+        return "clear aria-activedescendant on container " + aID;
+      };
+    }
+
+    /**
+     * Change aria-activedescendant to an invalid (non-existent) id.
+     * Ensure that focus is fired on the element itself.
+     */
+    function changeARIAActiveDescendantInvalid(aID, aInvalidID) {
+      if (!aInvalidID) {
+        aInvalidID = "invalid";
+      }
+
+      this.eventSeq = [
+        new focusChecker(aID),
+      ];
+
+      this.invoke = function changeARIAActiveDescendant_invoke() {
+        getNode(aID).setAttribute("aria-activedescendant", aInvalidID);
+      };
+
+      this.getID = function changeARIAActiveDescendant_getID() {
+        return "change aria-activedescendant to invalid id";
+      };
+    }
+    
+    function insertItemNFocus(aID, aNewItemID) {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, aNewItemID),
+        new focusChecker(aNewItemID),
+      ];
+
+      this.invoke = function insertItemNFocus_invoke() {
+        var container  = getNode(aID);
+
+        var itemNode = document.createElement("div");
+        itemNode.setAttribute("id", aNewItemID);
+        itemNode.setAttribute("role", "listitem");
+        itemNode.textContent = aNewItemID;
+        container.appendChild(itemNode);
+
+        container.setAttribute("aria-activedescendant", aNewItemID);
+      };
+
+      this.getID = function insertItemNFocus_getID() {
+        return "insert new node and focus it with ID: " + aNewItemID;
+      };
+    }
+
+    /**
+     * Change the id of an element to another id which is the target of
+     * aria-activedescendant.
+     * If another element already has the desired id, remove it from that
+     * element first.
+     * Ensure that focus is fired on the target element which was given the
+     * desired id.
+     * @param aFromID The existing id of the target element.
+     * @param aToID The desired id to be given to the target element.
+    */
+    function moveARIAActiveDescendantID(aFromID, aToID) {
+      this.eventSeq = [
+        new focusChecker(aToID),
+      ];
+
+      this.invoke = function moveARIAActiveDescendantID_invoke() {
+        let orig = document.getElementById(aToID);
+        if (orig) {
+          orig.id = "";
+        }
+        document.getElementById(aFromID).id = aToID;
+      };
+
+      this.getID = function moveARIAActiveDescendantID_getID() {
+        return "move aria-activedescendant id " + aToID;
+      };
+    }
+
+    var gQueue = null;
+    async function doTest() {
+      gQueue = new eventQueue();
+      // Later tests use await.
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
+
+      gQueue.push(new synthFocus("listbox", new focusChecker("item1")));
+      gQueue.push(new changeARIAActiveDescendant("listbox", "item2"));
+      gQueue.push(new changeARIAActiveDescendant("listbox", "item3"));
+
+      gQueue.push(new synthFocus("combobox_entry", new focusChecker("combobox_entry")));
+      gQueue.push(new changeARIAActiveDescendant("combobox", "combobox_option2"));
+
+      gQueue.push(new synthFocus("listbox", new focusChecker("item3")));
+      gQueue.push(new insertItemNFocus("listbox", "item4"));
+
+      gQueue.push(new clearARIAActiveDescendant("listbox"));
+      gQueue.push(new changeARIAActiveDescendant("listbox", "item1"));
+      gQueue.push(new changeARIAActiveDescendantInvalid("listbox", "invalid"));
+
+      gQueue.push(new changeARIAActiveDescendant("listbox", "roaming"));
+      gQueue.push(new moveARIAActiveDescendantID("roaming2", "roaming"));
+      gQueue.push(new changeARIAActiveDescendantInvalid("listbox", "roaming3"));
+      gQueue.push(new moveARIAActiveDescendantID("roaming", "roaming3"));
+
+      gQueue.push(new synthFocus("activedesc_nondesc_input",
+        new focusChecker("activedesc_nondesc_option")));
+
+      let shadowRoot = document.getElementById("shadow").shadowRoot;
+      let shadowListbox = shadowRoot.getElementById("shadowListbox");
+      let shadowItem1 = shadowRoot.getElementById("shadowItem1");
+      let shadowItem2 = shadowRoot.getElementById("shadowItem2");
+      gQueue.push(new synthFocus(shadowListbox, new focusChecker(shadowItem1)));
+      gQueue.push(new changeARIAActiveDescendant(shadowListbox, shadowItem2));
+
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
+
+      info("Testing simultaneous insertion, relocation and aria-activedescendant");
+      let comboboxWithHiddenList = getNode("comboboxWithHiddenList");
+      let focused = PromEvents.waitForEvent(EVENT_FOCUS, comboboxWithHiddenList);
+      comboboxWithHiddenList.focus();
+      await focused;
+      testStates(comboboxWithHiddenList, STATE_FOCUSED);
+      // hiddenList is owned, so unhiding causes insertion and relocation.
+      getNode("hiddenList").hidden = false;
+      focused = PromEvents.waitForEvent(EVENT_FOCUS, "hiddenListOption");
+      comboboxWithHiddenList.setAttribute("aria-activedescendant", "hiddenListOption");
+      await focused;
+      testStates("hiddenListOption", STATE_FOCUSED);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429547"
+     title="Support aria-activedescendant usage in nsIAccesible::TakeFocus()">
+    Mozilla Bug 429547
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=761102"
+     title="Focus may be missed when ARIA active-descendant is changed on active composite widget">
+    Mozilla Bug 761102
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="listbox" aria-activedescendant="item1" id="listbox" tabindex="1"
+       aria-owns="item3">
+    <div role="listitem" id="item1">item1</div>
+    <div role="listitem" id="item2">item2</div>
+    <div role="listitem" id="roaming">roaming</div>
+    <div role="listitem" id="roaming2">roaming2</div>
+  </div>
+  <div role="listitem" id="item3">item3</div>
+
+  <div role="combobox" id="combobox">
+    <input id="combobox_entry">
+    <ul>
+      <li role="option" id="combobox_option1">option1</li>
+      <li role="option" id="combobox_option2">option2</li>
+    </ul>
+  </div>
+
+  <!-- aria-activedescendant targeting a non-descendant -->
+  <input id="activedesc_nondesc_input" aria-activedescendant="activedesc_nondesc_option">
+  <div role="listbox">
+    <div role="option" id="activedesc_nondesc_option">option</div>
+  </div>
+
+  <div id="shadow"></div>
+  <script>
+    let host = document.getElementById("shadow");
+    let shadow = host.attachShadow({mode: "open"});
+    let listbox = document.createElement("div");
+    listbox.id = "shadowListbox";
+    listbox.setAttribute("role", "listbox");
+    listbox.setAttribute("tabindex", "0");
+    shadow.appendChild(listbox);
+    let item = document.createElement("div");
+    item.id = "shadowItem1";
+    item.setAttribute("role", "option");
+    listbox.appendChild(item);
+    listbox.setAttribute("aria-activedescendant", "shadowItem1");
+    item = document.createElement("div");
+    item.id = "shadowItem2";
+    item.setAttribute("role", "option");
+    listbox.appendChild(item);
+  </script>
+
+  <div id="comboboxWithHiddenList" tabindex="0" role="combobox" aria-owns="hiddenList">
+  </div>
+  <div id="hiddenList" hidden role="listbox">
+    <div id="hiddenListOption" role="option"></div>
+  </div>
+</body>
+</html>

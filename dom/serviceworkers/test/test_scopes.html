@@ -1,0 +1,141 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 984048 - Test scope glob matching.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var scriptsAndScopes = [
+    [ "worker.js", "./sub/dir/"],
+    [ "worker.js", "./sub/dir" ],
+    [ "worker.js", "./sub/dir.html" ],
+    [ "worker.js", "./sub/dir/a" ],
+    [ "worker.js", "./sub" ],
+    [ "worker.js", "./star*" ], // '*' has no special meaning
+  ];
+
+  function registerWorkers() {
+    var registerArray = [];
+    scriptsAndScopes.forEach(function(item) {
+      registerArray.push(navigator.serviceWorker.register(item[0], { scope: item[1] }));
+    });
+
+    // Check register()'s step 4 which uses script's url with "./" as the scope if no scope is passed.
+    // The other tests already check step 5.
+    registerArray.push(navigator.serviceWorker.register("scope/scope_worker.js"));
+
+    // Check that SW cannot be registered for a scope "above" the script's location.
+    registerArray.push(new Promise(function(resolve, reject) {
+      navigator.serviceWorker.register("scope/scope_worker.js", { scope: "./" })
+        .then(function() {
+          ok(false, "registration scope has to be inside service worker script scope.");
+          reject();
+        }, function() {
+          ok(true, "registration scope has to be inside service worker script scope.");
+          resolve();
+        });
+    }));
+    return Promise.all(registerArray);
+  }
+
+  function unregisterWorkers() {
+    var unregisterArray = [];
+    scriptsAndScopes.forEach(function(item) {
+      var p = navigator.serviceWorker.getRegistration(item[1]);
+      unregisterArray.push(p.then(function(reg) {
+        return reg.unregister();
+      }));
+    });
+
+    unregisterArray.push(navigator.serviceWorker.getRegistration("scope/").then(function (reg) {
+      return reg.unregister();
+    }));
+
+    return Promise.all(unregisterArray);
+  }
+
+  async function testScopes() {
+    function chromeScriptSource() {
+      let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
+                  .getService(Ci.nsIServiceWorkerManager);
+      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                     .getService(Ci.nsIScriptSecurityManager);
+      addMessageListener("getScope", (msg) => {
+        let principal = secMan.createContentPrincipalFromOrigin(msg.principal);
+        try {
+          return { scope: swm.getScopeForUrl(principal, msg.path) };
+        } catch (e) {
+          return { exception: e.message };
+        }
+      });
+    }
+
+    let chromeScript = SpecialPowers.loadChromeScript(chromeScriptSource);
+    let docPrincipal = SpecialPowers.wrap(document).nodePrincipal.spec;
+
+    getScope = async (path) => {
+      let rv = await chromeScript.sendQuery("getScope", { principal: docPrincipal, path });
+      if (rv.exception)
+        throw rv.exception;
+      return rv.scope;
+    };
+
+    var base = new URL(".", document.baseURI);
+
+    function p(s) {
+      return base + s;
+    }
+
+    async function fail(fn) {
+      try {
+        await getScope(p("index.html"));
+        ok(false, "No registration");
+      } catch(e) {
+        ok(true, "No registration");
+      }
+    }
+
+    is(await getScope(p("sub.html")), p("sub"), "Scope should match");
+    is(await getScope(p("sub/dir.html")), p("sub/dir.html"), "Scope should match");
+    is(await getScope(p("sub/dir")), p("sub/dir"), "Scope should match");
+    is(await getScope(p("sub/dir/foo")), p("sub/dir/"), "Scope should match");
+    is(await getScope(p("sub/dir/afoo")), p("sub/dir/a"), "Scope should match");
+    is(await getScope(p("star*wars")), p("star*"), "Scope should match");
+    is(await getScope(p("scope/some_file.html")), p("scope/"), "Scope should match");
+    await fail("index.html");
+    await fail("sua.html");
+    await fail("star/a.html");
+  }
+
+  function runTest() {
+    registerWorkers()
+      .then(testScopes)
+      .then(unregisterWorkers)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

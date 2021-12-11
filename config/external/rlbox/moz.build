@@ -1,0 +1,28 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.rlbox += [
+    "/third_party/rlbox/include/rlbox.hpp",
+    "/third_party/rlbox/include/rlbox_app_pointer.hpp",
+    "/third_party/rlbox/include/rlbox_conversion.hpp",
+    "/third_party/rlbox/include/rlbox_helpers.hpp",
+    "/third_party/rlbox/include/rlbox_noop_sandbox.hpp",
+    "/third_party/rlbox/include/rlbox_policy_types.hpp",
+    "/third_party/rlbox/include/rlbox_range.hpp",
+    "/third_party/rlbox/include/rlbox_sandbox.hpp",
+    "/third_party/rlbox/include/rlbox_stdlib.hpp",
+    "/third_party/rlbox/include/rlbox_stdlib_polyfill.hpp",
+    "/third_party/rlbox/include/rlbox_struct_support.hpp",
+    "/third_party/rlbox/include/rlbox_type_traits.hpp",
+    "/third_party/rlbox/include/rlbox_types.hpp",
+    "/third_party/rlbox/include/rlbox_unwrap.hpp",
+    "/third_party/rlbox/include/rlbox_wrapper_traits.hpp",
+    "rlbox_config.h",
+]
+
+SOURCES += ["rlbox_thread_locals.cpp"]
+
+FINAL_LIBRARY = "xul"

@@ -1,0 +1,48 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library('FuzzingAOM')
+
+LOCAL_INCLUDES += [
+    '/media/libaom/config',
+    '/third_party/aom',
+]
+
+# We currently only support building on Linux for fuzzing here, as guarded
+# in media/libaom/moz.build. More support can be added later if necessary.
+if CONFIG['CPU_ARCH'] == 'x86_64':
+    LOCAL_INCLUDES += [
+        '/media/libaom/config/linux/x64/',
+        '/media/libvpx/config/linux/x64/',
+    ]
+elif CONFIG['CPU_ARCH'] == 'x86':
+    LOCAL_INCLUDES += [
+        '/media/libaom/config/linux/ia32/',
+        '/media/libvpx/config/linux/ia32/',
+    ]
+elif CONFIG['CPU_ARCH'] == 'arm':
+    LOCAL_INCLUDES += [
+        '/media/libaom/config/linux/arm/',
+        '/media/libvpx/config/linux/arm/',
+    ]
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    LOCAL_INCLUDES += [
+        '/media/libaom/config/generic/',
+        '/media/libvpx/config/linux/arm64/',
+    ]
+
+SOURCES += [
+    '/media/libvpx/libvpx/ivfdec.c',
+    '/third_party/aom/common/tools_common.c',
+    'av1_fuzzer.cpp',
+]
+
+# Ignore unused variables in the imported AV1 fuzzer
+SOURCES['av1_fuzzer.cpp'].flags += ['-Wno-unused-variable']
+
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
+
+FINAL_LIBRARY = 'xul-gtest'

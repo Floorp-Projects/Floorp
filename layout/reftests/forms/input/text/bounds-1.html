@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for bug 806583</title>
+  <style>
+    body, div { background: blue }
+    div { position: fixed; }
+  </style>
+</head>
+<body>
+  <input id="input">
+  <div id="cover"/>
+  <script>
+var rect = document.getElementById("input").getBoundingClientRect();
+var cover = document.getElementById("cover");
+cover.style.left = rect.left + "px";
+cover.style.top = rect.top + "px";
+cover.style.width = rect.width + "px";
+cover.style.height = rect.height + "px";
+  </script>
+</body>
+</html>

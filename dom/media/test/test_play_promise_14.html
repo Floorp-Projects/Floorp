@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: loadAlgorithmKeepPromisesPendingWhenNotPausing
+// Case: step1: create an element with its paused member to be fause and networkState to be NETWORK_EMPTY.
+//       stpe2: invoke load() on the element and the load() leaves the promise pending.
+// Expected result: the pending promise should finally be resolved.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  // Invoke play() -> (1) the promise will be left pending.
+  //                  (2) invoke load() -> (1) set the networkState to be NETWORK_NO_SOURCE.
+  //                                       (2) queue a task to run resouce selection algorithm.
+  element.play().then(
+    (result) => {
+      if (result == undefined) {
+        ok(true, `${token} is resolved with ${result}.`);
+      } else {
+        ok(false, `${token} is resolved with ${result}.`);
+      }
+    },
+    (error) => {
+      ok(false, `${token} is rejected with ${error.name}.`);
+    }
+  ).then( () => { manager.finished(token); } );
+
+  once(element, "play").then(() => {
+    // The resouce selection algorithm has been done.
+    // -> set the networkState to be NETWORK_EMPTY because there is no valid resource to load.
+    ok(element.networkState == HTMLMediaElement.NETWORK_EMPTY);
+
+    // Invoke load() again and since the networkState is NETWORK_EMPTY, the load() does not reject the pending promise.
+    // The load() will queue a task to run resouce selection algorithm which will change the readyState and finally resolve the pending promise.
+    element.src = test.name;
+
+    // Since the networkState is NETWORK_EMPTY, the load() does not set paused to be true.
+    ok(!element.paused, `loadAlgorithmKeepPromisesPendingWhenNotPausing(${token}).paused should be false.`);
+  });
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>

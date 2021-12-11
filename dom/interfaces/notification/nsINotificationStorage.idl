@@ -1,0 +1,133 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(c1622232-259c-43b0-b52e-89c39dcd9796)]
+interface nsINotificationStorageCallback : nsISupports
+{
+  /**
+   * Callback function used to pass single notification back
+   * into C++ land for Notification.get return data.
+   *
+   * @param id: a uuid for this notification
+   * @param title: the notification title
+   * @param dir: the notification direction,
+   *             possible values are "ltr", "rtl", "auto"
+   * @param lang: the notification language
+   * @param body: the notification body
+   * @param tag: the notification tag
+   */
+  void handle(in AString id,
+              in AString title,
+              in AString dir,
+              in AString lang,
+              in AString body,
+              in AString tag,
+              in AString icon,
+              in AString data,
+              in AString behavior,
+              in AString serviceWorkerRegistrationScope);
+
+  /**
+   * Callback function used to notify C++ the we have returned
+   * all notification objects for this Notification.get call.
+   */
+  void done();
+};
+
+/**
+ * Interface for notification persistence layer.
+ */
+[scriptable, uuid(17f85e52-fe57-440e-9ba1-5c312ca02b95)]
+interface nsINotificationStorage : nsISupports
+{
+
+  /**
+   * Add/replace a notification to the persistence layer.
+   *
+   * @param origin: the origin/app of this notification
+   * @param id: a uuid for this notification
+   * @param title: the notification title
+   * @param dir: the notification direction,
+   *             possible values are "ltr", "rtl", "auto"
+   * @param lang: the notification language
+   * @param body: the notification body
+   * @param tag: notification tag, will replace any existing
+   *             notifications with same origin/tag pair
+   * @param alertName: the alert identifier as used by system app.
+   *                   Stored in the database to avoid re-computing
+   *                   it. Built from origin and tag or id depending
+   *                   whether there is a tag defined.
+   * @param registrationID: Opaque string that identifies the service worker
+   *                        registration this Notification is associated with.
+   *                        May be empty. Only set for Notifications created by
+   *                        showNotification().
+   */
+  void put(in AString origin,
+           in AString id,
+           in AString title,
+           in AString dir,
+           in AString lang,
+           in AString body,
+           in AString tag,
+           in AString icon,
+           in AString alertName,
+           in AString data,
+           in AString behavior,
+           in AString serviceWorkerRegistrationScope);
+
+  /**
+   * Retrieve a list of notifications.
+   *
+   * @param origin: the origin/app for which to fetch notifications from
+   * @param tag: used to fetch only a specific tag
+   * @param callback: nsINotificationStorageCallback, used for
+   *                  returning notifications objects
+   */
+  void get(in AString origin,
+           in AString tag,
+           in nsINotificationStorageCallback aCallback);
+
+  /**
+   * Retrieve a notification by ID.
+   *
+   * @param origin: the origin/app for which to fetch notifications.
+   * @param id: the id of the notification.
+   * @param callback: nsINotificationStorageCallback whose Handle method will
+   * be called *at most once* if the notification with that ID is found. Not
+   * called if that ID is not found. Done() will be called right after
+   * Handle().
+   */
+  void getByID(in AString origin,
+               in AString id,
+               in nsINotificationStorageCallback aCallback);
+
+  /**
+   * Remove a notification from storage.
+   *
+   * @param origin: the origin/app to delete the notification from
+   * @param id: the uuid for the notification to delete
+   */
+  void delete(in AString origin,
+              in AString id);
+
+  /**
+   * Notifications are not supposed to be persistent, according to spec, at
+   * least for now. But we want to be able to have this behavior on B2G. Thus,
+   * this method will check if the origin sending the notifications is a valid
+   * registered app with a manifest or not. Hence, a webpage that has none
+   * will have its notification sent and available (via Notification.get())
+   * during the life time of the page.
+   *
+   * @param origin: Origin from which the notification is sent.
+   *
+   * @return boolean
+   */
+  boolean canPut(in AString origin);
+};
+
+%{C++
+#define NS_NOTIFICATION_STORAGE_CONTRACTID "@mozilla.org/notificationStorage;1"
+%}

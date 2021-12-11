@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for document.cookie max-age pref</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+const kTwoDays = 2 * 24 * 60 * 60;
+const kSevenDays = 7 * 24 * 60 * 60;
+const kInTwoDays = (new Date().getTime() + kTwoDays * 1000);
+const kInSevenDays = (new Date().getTime() + kSevenDays * 1000);
+const kScriptURL = SimpleTest.getTestFileURL("file_documentcookie_maxage_chromescript.js");
+
+let gScript;
+
+function getDateInTwoDays()
+{
+  let date2 = new Date(kInTwoDays);
+  let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+                "Nov", "Dec"];
+  let day = date2.getUTCDate();
+  if (day < 10) {
+    day = "0" + day;
+  }
+  let month = months[date2.getUTCMonth()];
+  let year = date2.getUTCFullYear();
+  let hour = date2.getUTCHours();
+  if (hour < 10) {
+    hour = "0" + hour;
+  }
+  let minute = date2.getUTCMinutes();
+  if (minute < 10) {
+    minute = "0" + minute;
+  }
+  let second = date2.getUTCSeconds();
+  if (second < 10) {
+    second = "0" + second;
+  }
+  return days[date2.getUTCDay()] + ", " + day + "-" + month + "-" +
+         year + " " + hour + ":" + minute + ":" + second + " GMT";
+}
+
+function dotest()
+{
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({
+    set: [["privacy.documentCookies.maxage", kSevenDays]],
+  }).then(_ => {
+    gScript = SpecialPowers.loadChromeScript(kScriptURL);
+
+    return new Promise(resolve => {
+      gScript.addMessageListener("init:return", resolve);
+      gScript.sendAsyncMessage("init");
+    });
+  }).then(_ => {
+    let date2 = getDateInTwoDays();
+
+    document.cookie = "test1=value1; expires=Fri, 02-Jan-2037 00:00:01 GMT;";
+    document.cookie = "test2=value2; expires=" + date2 + ";";
+
+    return fetch("subResources.sjs?3");
+  }).then(_ => {
+    return fetch("subResources.sjs?4");
+  }).then(_ => {
+    return new Promise(resolve => {
+      gScript.addMessageListener("getCookies:return", resolve);
+      gScript.sendAsyncMessage("getCookies");
+    });
+  }).then(_ => {
+    for (let cookie of _.cookies) {
+      switch (cookie.name) {
+        case "test1": {
+          is(cookie.value, "value1", "The correct value expected");
+          let d = new Date(cookie.expires * 1000);
+          let [day, month, year] = [d.getUTCDate(), d.getUTCMonth(), d.getUTCFullYear()];
+          let d2 = new Date(kInSevenDays);
+          let [day2, month2, year2] = [d2.getUTCDate(), d2.getUTCMonth(), d2.getUTCFullYear()];
+          is(day, day2, "Days match");
+          is(month, month2, "Months match");
+          is(year, year2, "Years match");
+        }
+        break;
+
+      case "test2": {
+          is(cookie.value, "value2", "The correct value expected");
+          let d = new Date(cookie.expires * 1000);
+          let [day, month, year] = [d.getUTCDate(), d.getUTCMonth(), d.getUTCFullYear()];
+          let d2 = new Date(kInTwoDays);
+          let [day2, month2, year2] = [d2.getUTCDate(), d2.getUTCMonth(), d2.getUTCFullYear()];
+          is(day, day2, "Days match");
+          is(month, month2, "Months match");
+          is(year, year2, "Years match");
+        }
+        break;
+
+      case "test3": {
+          is(cookie.value, "value3", "The correct value expected");
+          let d = new Date(cookie.expires * 1000);
+          let [day, month, year] = [d.getUTCDate(), d.getUTCMonth(), d.getUTCFullYear()];
+          let d2 = new Date("Fri, 02 Jan 2037 00:00:01 GMT");
+          let [day2, month2, year2] = [d2.getUTCDate(), d2.getUTCMonth(), d2.getUTCFullYear()];
+          is(day, day2, "Days match");
+          is(month, month2, "Months match");
+          is(year, year2, "Years match");
+        }
+        break;
+
+      case "test4": {
+          is(cookie.value, "value4", "The correct value expected");
+          let d = new Date(cookie.expires * 1000);
+          let [day, month, year] = [d.getUTCDate(), d.getUTCMonth(), d.getUTCFullYear()];
+          let d2 = new Date(kInTwoDays);
+          let [day2, month2, year2] = [d2.getUTCDate(), d2.getUTCMonth(), d2.getUTCFullYear()];
+          is(day, day2, "Days match");
+          is(month, month2, "Months match");
+          is(year, year2, "Years match");
+        }
+        break;
+
+      default:
+        ok(false, "Unexpected cookie found!");
+        break;
+      }
+    }
+
+    return new Promise(resolve => {
+      gScript.addMessageListener("shutdown:return", resolve);
+      gScript.sendAsyncMessage("shutdown");
+    });
+  }).then(finish);
+}
+
+function finish()
+{
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onload="dotest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

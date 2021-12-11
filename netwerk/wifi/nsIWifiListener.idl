@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIWifiAccessPoint;
+
+[scriptable, uuid(BCD4BEDE-F4A5-4A62-9071-D7A60174E376)]
+interface nsIWifiListener : nsISupports
+{
+  /*
+   * Called when the list of access points changes.
+   *
+   * @param accessPoints An array of nsIWifiAccessPoint representing all
+   *                     access points in view.
+   */
+
+  void onChange(in Array<nsIWifiAccessPoint> accessPoints);
+
+  /*
+   * Called when there is a problem with listening to wifi
+   *
+   * @param error the error which caused this event.  The
+   *              error values will be nsresult codes.
+   */
+
+  void onError(in nsresult error);
+};

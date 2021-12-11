@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Grid container baselines</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151204">
+  <link rel="stylesheet" type="text/css" href="support/ahem.css">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font:16px/1 Ahem; padding:0; margin:0;
+}
+
+span {
+  background: lime;
+  display: inline-grid;
+  border: 1px solid black;
+  font-size:12px;
+}
+span:nth-child(1) {font-size:32px; }
+span:nth-child(2) {padding-block-end:20px; }
+
+.sfb { align-self:baseline; }
+.slb { align-self:last baseline; }
+.cfb { align-content:baseline; align-self:start; }
+.clb { align-content:last baseline; align-self:end; }
+.s { align-self:stretch; }
+
+.jfb { justify-self:baseline; }
+.jlb { justify-self:last baseline; }
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+.ib {
+  display: inline-table;
+  align-items: start;
+  border: 2px solid;
+  height: 120px;
+  margin: 1px;
+  font-size:1px;
+  position:relative;
+}
+.ib2 {
+  display: inline-table;
+  align-items: start;
+  padding-bottom: 20px;
+  font-size:1px;
+}
+
+</style>
+</head>
+<body>
+
+A<div class="ib"><span>B<br>B</span><span style="float:right">C<br>C</span></div>
+<div class="ib"><span style="float:left">B<br>B</span><span style="display:inline-flex">C<br>C</span></div>
+<div class="ib"><span>B<br>B</span><span style="float:right; visibility:hidden">C<br>C</span><span style="position:absolute; bottom:2px; right:2px; padding-bottom:20px;">C<br>C</span></div>
+
+<!-- TODO: figure out a reference for the corresponding test -->
+<!-- TODO: figure out a reference for the corresponding test -->
+
+<div class="ib"><div style="display:inline-grid; align-self:baseline; grid: 120px / auto auto"><span class="slb">B<br>B</span><span class="slb">C<br>C</span></div></div>
+<div class="ib"><span style="float:right">B<br>B</span><span>C<br>C</span></div>
+<div class="ib"><span style="float:right">B<br>B</span><span style="display:inline-flex">C<br>C</span></div>
+<!--
+<div class="ib"><span style="vertical-align:bottom; margin-bottom:-1px">B<br>B</span><span style="float:right">C<br>C</span></div>
+<div class="ib"><span style="float:right">B<br>B</span><span style="vertical-align:bottom; margin-bottom:-21px">C<br>C</span></div>
+-->
+<div class="ib"><span>B<br>B</span><span style="float:right">C<br>C</span></div>
+<div class="ib"><span style="float:right">B<br>B</span><span>C<br>C</span></div>
+<div class="ib"><span>B<br>B</span><span style="float:right">C<br>C</span></div>
+<div class="ib"><span style="float:right">B<br>B</span><span>C<br>C</span></div>
+
+<br>
+
+A<!--<div class="ib"><span>B<br>B</span><span style="float:right">C<br>C</span></div>
+<div class="ib"><span style="float:right">B<br>B</span><span>C<br>C</span></div>
+<div class="ib"><span>B<br>B</span><span style="float:right">C<br>C</span></div>
+<div class="ib"><span>B<br>B</span><span style="float:right">C<br>C</span></div>
+--><div class="ib"><span style="vertical-align:bottom; margin-top:50px">B<br>B</span><span style="float:right; margin-top:50px">C<br>C</span></div>
+
+</body>
+</html>

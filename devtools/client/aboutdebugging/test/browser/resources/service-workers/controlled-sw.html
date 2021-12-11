@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Service worker controlled</title>
+</head>
+<body>
+<script type="text/javascript">
+
+"use strict";
+
+let registration;
+
+const registerServiceWorker = async function() {
+  try {
+    registration = await navigator.serviceWorker.register("controlled-sw.js");
+    dump("Controlled service worker registered\n");
+  } catch (e) {
+    dump("Controlled service worker not registered: " + e + "\n");
+  }
+};
+
+// Helper called from helper-serviceworker.js to unregister the service worker.
+window.getRegistration = function() {
+  return registration;
+};
+
+// Called from browser_aboutdebugging_serviceworker_status.js
+window.installServiceWorker = function() {
+  registration.installing.postMessage("install-service-worker");
+};
+
+// Register the service worker.
+registerServiceWorker();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Pagination with Borders</title>
+  <style type="text/css">
+    .container {
+      padding-bottom: 10px;
+      border-bottom: 10px solid transparent;
+    }
+
+    .box {
+      background: green;
+    }
+    p {
+      font-size: 150px;
+      line-height: 1;
+      margin: 0;
+    }
+    p + p {
+      height: 200px;
+    }
+
+    body {
+      height: 200px;
+      width: 300px;
+      column-width: 150px;
+      column-gap: 0;
+      column-fill: auto;
+      border: solid silver;
+      border-style: none solid;
+    }
+  </style>
+ </head>
+ <body>
+  <div class="container">
+    <div class="box">
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+    </div>
+  </div>
+ </body>
+</html>

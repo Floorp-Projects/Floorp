@@ -1,0 +1,8 @@
+error[E0716]: temporary value dropped while borrowed
+ --> $DIR/temporary-value.rs:4:22
+  |
+4 |     let _ = anyhow!(&String::new());
+  |             ---------^^^^^^^^^^^^^-- temporary value is freed at the end of this statement
+  |             |        |
+  |             |        creates a temporary which is freed while still in use
+  |             argument requires that borrow lasts for `'static`

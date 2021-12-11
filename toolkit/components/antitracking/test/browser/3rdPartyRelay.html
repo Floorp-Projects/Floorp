@@ -1,0 +1,41 @@
+<html>
+<head>
+  <title>Tracker</title>
+  <script type="text/javascript" src="https://example.com/browser/toolkit/components/antitracking/test/browser/storageAccessAPIHelpers.js"></script>
+</head>
+<body>
+<h1>Relay</h1>
+<iframe></iframe>
+<script>
+
+function info(msg) {
+  parent.postMessage({ type: "info", msg }, "*");
+}
+
+function ok(what, msg) {
+  parent.postMessage({ type: "ok", what: !!what, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+onmessage = function(e) {
+  switch (e.data.type || "") {
+    case "finish":
+    case "ok":
+    case "info":
+      parent.postMessage(e.data, "*");
+      break;
+    default:
+      let iframe = document.querySelector("iframe");
+      iframe.contentWindow.postMessage(e.data, "*");
+      break;
+  }
+};
+
+document.querySelector("iframe").src = location.search.substr(1);
+
+</script>
+</body>
+</html>

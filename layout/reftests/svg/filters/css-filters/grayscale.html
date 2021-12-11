@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Grayscale an HTML Element</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-grayscale">
+  <link rel="match" href="grayscale-ref.html">
+  <meta name="assert"
+        content="The CSS grayscale filter function should desaturate an HTML
+                 element.">
+  <style type="text/css">
+    #target {
+      filter: grayscale(0.8);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a dull green square.</p>
+  <div id="target"></div>
+</body>
+</html>

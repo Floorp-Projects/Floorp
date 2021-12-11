@@ -1,0 +1,18 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [{ "name": "storage.sqlite", "dir": false }]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [{ "name": "ls-archive.sqlite", "dir": false }]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]

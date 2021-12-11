@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Test for animation.effect.updateTiming({ duration }) on compositor
+    animations
+  </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translate(0px) }
+      100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(SimpleTest.finish);
+}, SimpleTest.finish, SpecialPowers);
+
+addAsyncAnimTest(async function() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)', easing: "steps(2, start)" },
+      { transform: 'translate(100px)' } ], 4000);
+  await waitForPaints();
+
+  advance_clock(500);
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is running on compositor");
+  animation.effect.updateTiming({ duration: 2000 });
+  // Setter of timing option should set up the changes to animations for the
+  // next layer transaction but it won't schedule a paint immediately so we need
+  // to tick the refresh driver before we can wait on the next paint.
+  advance_clock(0);
+
+  await waitForPaints();
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation remains on compositor");
+
+  advance_clock(1000);
+  omta_is(div, "transform", { tx: 100 }, RunningOn.Compositor,
+          "Animation is updated on compositor");
+
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)', easing: "steps(2, end)" },
+      { transform: 'translate(100px)' } ], 4000);
+  await waitForPaints();
+
+  advance_clock(1000);
+  animation.effect.updateTiming({ duration: 2000 });
+  advance_clock(0);
+  await waitForPaints();
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is running on compositor");
+  done_div();
+})
+
+</script>
+</body>
+</html>

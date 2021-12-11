@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
+  <script type="application/javascript" src="../pc.js"></script>
+  <script type="application/javascript" src="../blacksilence.js"></script>
+  <script type="application/javascript" src="identityPcTest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  title: "setIdentityProvider leads to peerIdentity and assertions in SDP",
+  bug: "942367"
+});
+
+runNetworkTest(identityPcTest);
+</script>
+</pre>
+</body>
+</html>

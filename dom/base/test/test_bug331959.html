@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=331959
+-->
+<head>
+  <title>Test for Bug 331959</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=331959">Mozilla Bug 331959</a>
+<p id="display">
+  <iframe id="link-in-link-mouse"></iframe>
+  <iframe id="link-in-link-keyboard"></iframe>
+  <iframe id="input-in-link-mouse"></iframe>
+  <iframe id="input-in-link-keyboard"></iframe>
+  <iframe id="button-in-link-mouse"></iframe>
+  <iframe id="button-in-link-keyboard"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 331959 **/
+SimpleTest.waitForExplicitFinish();
+
+const FAILURL = "FAIL.html";
+const PASSURL = "PASS.html";
+
+var currentTest = 0;
+var tests = [ testLinkInLinkMouse, testLinkInLinkKeyboard,
+              testInputInLinkMouse, testInputInLinkKeyboard,
+              testButtonInLinkMouse, testButtonInLinkKeyboard ];
+function doNextTest() {
+  if (currentTest == tests.length) {
+    SimpleTest.finish();
+  } else {
+    tests[currentTest++]();
+  }
+}
+
+function generateLinkInLink(id, desc) {
+  var doc = $(id).contentDocument;
+  var outerA = doc.createElement("a");
+  var innerA = doc.createElement("a");
+  outerA.id = "outer";
+  innerA.id = "inner";
+  innerA.href = PASSURL;
+  outerA.href = FAILURL;
+  innerA.appendChild(doc.createTextNode("Text"));
+  outerA.appendChild(innerA);
+  doc.body.appendChild(outerA);
+  $(id).onload = function() {
+    is(this.contentDocument.documentElement.innerText, "PASS", desc);
+    // Have to remove the iframe we used from the DOM, because the harness is
+    // stupid and doesn't have enough space for more than one iframe.
+    $(id).remove();
+    doNextTest();
+  };
+  return [innerA, $(id).contentWindow];
+}
+
+function testLinkInLinkMouse() {
+  var [innerA, testWin] =
+    generateLinkInLink("link-in-link-mouse",
+                       "Clicking an inner link should load the inner link");
+  synthesizeMouseAtCenter(innerA, {}, testWin);
+}
+
+function testLinkInLinkKeyboard() {
+  var [innerA, testWin] =
+    generateLinkInLink("link-in-link-keyboard",
+                       "Hitting enter on an inner link should load the inner link");
+  innerA.focus();
+  synthesizeKey("VK_RETURN", {}, testWin);
+}
+
+function generateInputInLink(id, desc) {
+  var doc = $(id).contentDocument;
+  doc.body.innerHTML =
+    "<form action='" + PASSURL + "'><a href='" + FAILURL +
+    "'><input type='submit' id='submit'>";
+  $(id).onload = function() {
+    is(this.contentDocument.documentElement.innerText, "PASS", desc);
+    // Have to remove the iframe we used from the DOM, because the harness is
+    // stupid and doesn't have enough space for more than one iframe.
+    $(id).remove();
+    doNextTest();
+  };
+  var input = doc.getElementById("submit");
+  doc.body.offsetWidth;
+  return [input, $(id).contentWindow];
+}
+
+function testInputInLinkMouse() {
+  var [input, testWin] =
+    generateInputInLink("input-in-link-mouse",
+                        "Clicking an submit input inside an anchor should submit the form");
+  synthesizeMouseAtCenter(input, {}, testWin);
+}
+
+function testInputInLinkKeyboard() {
+  var [input, testWin] =
+    generateInputInLink("input-in-link-keyboard",
+                        "Return on submit input inside an anchor should submit the form");
+  input.focus();
+  synthesizeKey("VK_RETURN", {}, testWin);
+}
+
+function generateButtonInLink(id, desc) {
+  var doc = $(id).contentDocument;
+  doc.body.innerHTML =
+    "<form action='" + PASSURL + "'><a href='" + FAILURL +
+    "'><button type='submit' id='submit'>Submit</button>";
+  $(id).onload = function() {
+    is(this.contentDocument.documentElement.innerText, "PASS", desc);
+    // Have to remove the iframe we used from the DOM, because the harness is
+    // stupid and doesn't have enough space for more than one iframe.
+    $(id).remove();
+    doNextTest();
+  };
+  var button = doc.getElementById("submit");
+  return [button, $(id).contentWindow];
+}
+
+function testButtonInLinkMouse() {
+  var [button, testWin] =
+    generateButtonInLink("button-in-link-mouse",
+                        "Clicking an submit button inside an anchor should submit the form");
+  synthesizeMouseAtCenter(button, {}, testWin);
+}
+
+function testButtonInLinkKeyboard() {
+  var [button, testWin] =
+    generateButtonInLink("button-in-link-keyboard",
+                        "Return on submit button inside an anchor should submit the form");
+  button.focus();
+  synthesizeKey("VK_RETURN", {}, testWin);
+}
+
+// We need focus to handle clicks properly
+SimpleTest.waitForFocus(doNextTest);
+
+</script>
+</pre>
+</body>
+</html>

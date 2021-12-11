@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=513194
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 513194</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=631615"
+   >Mozilla Bug 513194</a>
+<script>
+// The use of document.write is deliberate.  We are testing for the
+// HTML parser to call the CSS parser once and only once when it
+// encounters a new <style> element.
+SpecialPowers.wrap(window).docShell.cssErrorReportingEnabled = true;
+SimpleTest.runTestExpectingConsoleMessages(
+  function () { document.write("<style>qux { foo : bar; }<\/style>") },
+  [{ errorMessage: /Unknown property/ }]
+);
+</script>
+</body>
+</html>
+

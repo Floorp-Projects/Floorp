@@ -1,0 +1,143 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WorkersPage filters out workers from diferent domains 1`] = `
+<section
+  className="app-page js-service-workers-page "
+>
+  <RegistrationList
+    canDebugWorkers={true}
+    registrations={
+      Array [
+        Object {
+          "id": "id-reg-1-example",
+          "registrationFront": "",
+          "scope": "SCOPE1",
+          "workers": Array [
+            Object {
+              "id": "id-worker-1-example",
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerDescriptorFront": "",
+            },
+          ],
+        },
+        Object {
+          "id": "id-reg-2-example",
+          "registrationFront": "",
+          "scope": "SCOPE2",
+          "workers": Array [
+            Object {
+              "id": "id-worker-2-example",
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerDescriptorFront": "",
+            },
+          ],
+        },
+      ]
+    }
+  />
+</section>
+`;
+
+exports[`WorkersPage filters out workers from different domains and renders an empty list when there is none left 1`] = `
+<section
+  className="app-page js-service-workers-page app-page--empty"
+>
+  <RegistrationListEmpty />
+</section>
+`;
+
+exports[`WorkersPage it renders a list with a single element if there's just 1 worker 1`] = `
+<section
+  className="app-page js-service-workers-page "
+>
+  <RegistrationList
+    canDebugWorkers={true}
+    registrations={
+      Array [
+        Object {
+          "id": "id-reg-1-example",
+          "registrationFront": "",
+          "scope": "SCOPE 123",
+          "workers": Array [
+            Object {
+              "id": "id-worker-1-example",
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerDescriptorFront": "",
+            },
+          ],
+        },
+      ]
+    }
+  />
+</section>
+`;
+
+exports[`WorkersPage renders a list with multiple elements when there are multiple workers 1`] = `
+<section
+  className="app-page js-service-workers-page "
+>
+  <RegistrationList
+    canDebugWorkers={true}
+    registrations={
+      Array [
+        Object {
+          "id": "id-reg-1-example",
+          "registrationFront": "",
+          "scope": "SCOPE1",
+          "workers": Array [
+            Object {
+              "id": "id-worker-1-example",
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerDescriptorFront": "",
+            },
+          ],
+        },
+        Object {
+          "id": "id-reg-1-example",
+          "registrationFront": "",
+          "scope": "SCOPE2",
+          "workers": Array [
+            Object {
+              "id": "id-worker-2-example",
+              "state": 2,
+              "stateText": "installed",
+              "url": "http://example.com/worker.js",
+              "workerDescriptorFront": "",
+            },
+          ],
+        },
+        Object {
+          "id": "id-reg-3-example",
+          "registrationFront": "",
+          "scope": "SCOPE3",
+          "workers": Array [
+            Object {
+              "id": "id-worker-3-example",
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerDescriptorFront": "",
+            },
+          ],
+        },
+      ]
+    }
+  />
+</section>
+`;
+
+exports[`WorkersPage renders an empty list if there are no workers 1`] = `
+<section
+  className="app-page js-service-workers-page app-page--empty"
+>
+  <RegistrationListEmpty />
+</section>
+`;

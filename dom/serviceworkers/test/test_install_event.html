@@ -1,0 +1,143 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 94048 - test install event.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function simpleRegister() {
+    var p = navigator.serviceWorker.register("worker.js", { scope: "./install_event" });
+    return p;
+  }
+
+  function nextRegister(reg) {
+    ok(reg instanceof ServiceWorkerRegistration, "reg should be a ServiceWorkerRegistration");
+    var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./install_event" });
+    return p.then(function(swr) {
+      ok(reg === swr, "register should resolve to the same registration object");
+      var update_found_promise = new Promise(function(resolve, reject) {
+        swr.addEventListener('updatefound', function(e) {
+          ok(true, "Received onupdatefound");
+          resolve();
+        });
+      });
+
+      var worker_activating = new Promise(function(res, reject) {
+        ok(swr.installing instanceof ServiceWorker, "There should be an installing worker if promise resolves.");
+        ok(swr.installing.state == "installing", "Installing worker's state should be 'installing'");
+        swr.installing.onstatechange = function(e) {
+          if (e.target.state == "activating") {
+            e.target.onstatechange = null;
+            res();
+          }
+        }
+      });
+
+      return Promise.all([update_found_promise, worker_activating]);
+    }, function(e) {
+      ok(false, "Unexpected Error in nextRegister! " + e);
+    });
+  }
+
+  function installError() {
+    // Silence worker errors so they don't cause the test to fail.
+    window.onerror = function(e) {}
+    return navigator.serviceWorker.register("install_event_error_worker.js", { scope: "./install_event" })
+      .then(function(swr) {
+        ok(swr.installing instanceof ServiceWorker, "There should be an installing worker if promise resolves.");
+        ok(swr.installing.state == "installing", "Installing worker's state should be 'installing'");
+        return new Promise(function(resolve, reject) {
+          swr.installing.onstatechange = function(e) {
+            ok(e.target.state == "redundant", "Installation of worker with error should fail.");
+            resolve();
+          }
+        });
+      }).then(function() {
+        return navigator.serviceWorker.getRegistration("./install_event").then(function(swr) {
+          var newest = swr.waiting || swr.active;
+          ok(newest, "Waiting or active worker should still exist");
+          ok(newest.scriptURL.match(/install_event_worker.js$/), "Previous worker should remain the newest worker");
+        });
+      });
+  }
+
+  function testActive(worker) {
+    is(worker.state, "activating", "Should be activating");
+    return new Promise(function(resolve, reject) {
+      worker.onstatechange = function(e) {
+        e.target.onstatechange = null;
+        is(e.target.state, "activated", "Activation of worker with error in activate event handler should still succeed.");
+        resolve();
+      }
+    });
+  }
+
+  function activateErrorShouldSucceed() {
+    // Silence worker errors so they don't cause the test to fail.
+    window.onerror = function() { }
+    return navigator.serviceWorker.register("activate_event_error_worker.js", { scope: "./activate_error" })
+      .then(function(swr) {
+        var p = new Promise(function(resolve, reject) {
+          ok(swr.installing.state == "installing", "activateErrorShouldSucceed(): Installing worker's state should be 'installing'");
+          swr.installing.onstatechange = function(e) {
+            e.target.onstatechange = null;
+            if (swr.waiting) {
+              swr.waiting.onstatechange = function(event) {
+                event.target.onstatechange = null;
+                testActive(swr.active).then(resolve, reject);
+              }
+            } else {
+              testActive(swr.active).then(resolve, reject);
+            }
+          }
+        });
+
+        return p.then(function() {
+          return Promise.resolve(swr);
+        });
+      }).then(function(swr) {
+        return swr.unregister();
+      });
+  }
+
+  function unregister() {
+    return navigator.serviceWorker.getRegistration("./install_event").then(function(reg) {
+      return reg.unregister();
+    });
+  }
+
+  function runTest() {
+    Promise.resolve()
+      .then(simpleRegister)
+      .then(nextRegister)
+      .then(installError)
+      .then(activateErrorShouldSucceed)
+      .then(unregister)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

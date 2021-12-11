@@ -1,0 +1,191 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1185544: Add data delivery to the WebSocket backend.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1185544</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/webpush.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1185544">Mozilla Bug 1185544</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+  /* globals webPushEncrypt */
+
+  var userAgentID = "ac44402c-85fc-41e4-a0d0-483316d15351";
+  var channelID = null;
+
+  var mockSocket = new MockWebSocket();
+  mockSocket.onRegister = function(request) {
+    channelID = request.channelID;
+    this.serverSendMsg(JSON.stringify({
+      messageType: "register",
+      uaid: userAgentID,
+      channelID,
+      status: 200,
+      pushEndpoint: "https://example.com/endpoint/1",
+    }));
+  };
+
+  var registration;
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(mockSocket);
+    await setPushPermission(true);
+
+    var url = "worker.js?" + (Math.random());
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
+  });
+
+  var controlledFrame;
+  add_task(async function createControlledIFrame() {
+    controlledFrame = await injectControlledFrame();
+  });
+
+  var pushSubscription;
+  add_task(async function subscribe() {
+    pushSubscription = await registration.pushManager.subscribe();
+  });
+
+  add_task(async function compareJSONSubscription() {
+    var json = pushSubscription.toJSON();
+    is(json.endpoint, pushSubscription.endpoint, "Wrong endpoint");
+
+    ["p256dh", "auth"].forEach(keyName => {
+      isDeeply(
+        base64UrlDecode(json.keys[keyName]),
+        new Uint8Array(pushSubscription.getKey(keyName)),
+        "Mismatched Base64-encoded key: " + keyName
+      );
+    });
+  });
+
+  add_task(async function comparePublicKey() {
+    var data = await sendRequestToWorker({ type: "publicKey" });
+    var p256dhKey = new Uint8Array(pushSubscription.getKey("p256dh"));
+    is(p256dhKey.length, 65, "Key share should be 65 octets");
+    isDeeply(
+      p256dhKey,
+      new Uint8Array(data.p256dh),
+      "Mismatched key share"
+    );
+    var authSecret = new Uint8Array(pushSubscription.getKey("auth"));
+    is(authSecret.length, 16, "Auth secret should be 16 octets");
+    isDeeply(
+      authSecret,
+      new Uint8Array(data.auth),
+      "Mismatched auth secret"
+    );
+  });
+
+  var version = 0;
+  function sendEncryptedMsg(pushSub, message) {
+    return webPushEncrypt(pushSub, message)
+      .then((encryptedData) => {
+        mockSocket.serverSendMsg(JSON.stringify({
+          messageType: "notification",
+          version: version++,
+          channelID,
+          data: encryptedData.data,
+          headers: {
+            encryption: encryptedData.encryption,
+            encryption_key: encryptedData.encryption_key,
+            encoding: encryptedData.encoding,
+          },
+        }));
+      });
+  }
+
+  function waitForMessage(pushSub, message) {
+    return Promise.all([
+      controlledFrame.waitOnWorkerMessage("finished"),
+      sendEncryptedMsg(pushSub, message),
+    ]).then(([msg]) => msg);
+  }
+
+  add_task(async function sendPushMessageFromPage() {
+    var typedArray = new Uint8Array([226, 130, 40, 240, 40, 140, 188]);
+    var json = { hello: "world" };
+
+    var message = await waitForMessage(pushSubscription, "Text message from page");
+    is(message.data.text, "Text message from page", "Wrong text message data");
+
+    message = await waitForMessage(
+      pushSubscription,
+      typedArray
+    );
+    isDeeply(new Uint8Array(message.data.arrayBuffer), typedArray,
+      "Wrong array buffer message data");
+
+    message = await waitForMessage(
+      pushSubscription,
+      JSON.stringify(json)
+    );
+    ok(message.data.json.ok, "Unexpected error parsing JSON");
+    isDeeply(message.data.json.value, json, "Wrong JSON message data");
+
+    message = await waitForMessage(
+      pushSubscription,
+      ""
+    );
+    ok(message, "Should include data for empty messages");
+    is(message.data.text, "", "Wrong text for empty message");
+    is(message.data.arrayBuffer.byteLength, 0, "Wrong buffer length for empty message");
+    ok(!message.data.json.ok, "Expected JSON parse error for empty message");
+
+    message = await waitForMessage(
+      pushSubscription,
+      new Uint8Array([0x48, 0x69, 0x21, 0x20, 0xf0, 0x9f, 0x91, 0x80])
+    );
+    is(message.data.text, "Hi! \ud83d\udc40", "Wrong text for message with emoji");
+    var text = await new Promise((resolve, reject) => {
+      var reader = new FileReader();
+      reader.onloadend = event => {
+        if (reader.error) {
+          reject(reader.error);
+        } else {
+          resolve(reader.result);
+        }
+      };
+      reader.readAsText(message.data.blob);
+    });
+    is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
+
+    var finishedPromise = controlledFrame.waitOnWorkerMessage("finished");
+    // Send a blank message.
+    mockSocket.serverSendMsg(JSON.stringify({
+      messageType: "notification",
+      version: "vDummy",
+      channelID,
+    }));
+
+    var msg = await finishedPromise;
+    ok(!msg.data, "Should exclude data for blank messages");
+  });
+
+  add_task(async function unsubscribe() {
+    controlledFrame.remove();
+    await pushSubscription.unsubscribe();
+  });
+
+  add_task(async function unregister() {
+    await registration.unregister();
+  });
+
+</script>
+</body>
+</html>

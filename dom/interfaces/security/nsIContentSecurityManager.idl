@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIPrincipal;
+interface nsIStreamListener;
+interface nsIURI;
+
+/**
+ * nsIContentSecurityManager
+ * Describes an XPCOM component used to perform security checks.
+ */
+
+[scriptable, uuid(3a9a1818-2ae8-4ec5-a340-8b29d31fca3b)]
+interface nsIContentSecurityManager : nsISupports
+{
+  /**
+   * Checks whether a channel is allowed to access the given URI and
+   * whether the channel should be openend or should be blocked consulting
+   * internal security checks like Same Origin Policy, Content Security
+   * Policy, Mixed Content Blocker, etc.
+   *
+   * If security checks within performSecurityCheck fail, the function
+   * throws an exception.
+   *
+   * @param aChannel
+   *     The channel about to be openend
+   * @param aStreamListener
+   *     The Streamlistener of the channel potentially wrapped
+   *     into CORSListenerProxy.
+   * @return
+   *     The StreamListener of the channel wrapped into CORSListenerProxy.
+   *
+   * @throws NS_ERROR_DOM_BAD_URI
+   *     If accessing the URI is not allowed (e.g. prohibted by SOP)
+   * @throws NS_ERROR_CONTENT_BLOCKED
+   *     If any of the security policies (CSP, Mixed content) is violated
+   */
+   nsIStreamListener performSecurityCheck(in nsIChannel aChannel,
+                                          in nsIStreamListener aStreamListener);
+
+};

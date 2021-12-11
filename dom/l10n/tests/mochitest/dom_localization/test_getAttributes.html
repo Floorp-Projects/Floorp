@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.getAttributes</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+
+  window.onload = function() {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      [],
+      false,
+    );
+
+    const p1 = document.querySelectorAll("p")[0];
+    const p2 = document.querySelectorAll("p")[1];
+    const p3 = document.querySelectorAll("p")[2];
+    const attrs1 = domLoc.getAttributes(p1);
+    const attrs2 = domLoc.getAttributes(p2);
+    const attrs3 = domLoc.getAttributes(p3);
+    isDeeply(attrs1, {
+      id: null,
+      args: null,
+    });
+    isDeeply(attrs2, {
+      id: "id1",
+      args: null,
+    });
+    isDeeply(attrs3, {
+      id: "id2",
+      args: {
+        userName: "John",
+      },
+    });
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <p />
+  <p data-l10n-id="id1" />
+  <p data-l10n-id="id2" data-l10n-args='{"userName": "John"}' />
+</body>
+</html>

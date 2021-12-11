@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<style>
+body {
+  padding: 100px;
+  width: 5000px;
+  height: 5000px;
+  overflow: scroll;
+}
+div {
+}
+#parent {
+  background:red;
+  width: 64px;
+  height: 64px;
+}
+#child {
+  background:green;
+  position:fixed;
+  width: 32px;
+  height: 32px;
+}
+</style>
+<div id="parent">
+<div id="child">
+
+</div>
+</div>
+<script type="application/javascript">
+
+if (document.location.search == '?willchange') {
+  document.getElementById("parent").style.willChange = "transform";
+} else if (document.location.search == '?ref') {
+  document.getElementById("parent").style.transform = "translateZ(1px)";
+} else if (document.location.search == '?noblock') {
+}
+
+document.documentElement.scrollTop = 10;
+document.documentElement.scrollLeft = 10;
+</script>
+</body>
+</html>

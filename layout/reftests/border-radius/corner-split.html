@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+#borders, .cover {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+#borders {
+    width: 50px;
+    height: 25px;
+    border-radius: 75px;
+    border-top: 50px solid red;
+    border-bottom: 100px solid blue;
+    border-left: 25px solid green;
+    border-right: 100px solid black;
+}
+    </style>
+  </head>
+  <body>
+    <div id="borders"></div>
+<svg width="178" height="178" class="cover">
+  <rect x="0" y="0" width="175" height="175" rx="75" ry="75" fill="none" stroke="orange" stroke-width="3" />
+  <line x1="145" y1="15" x2="75" y2="50" stroke="orange" stroke-width="3" />
+  <line x1="153.033004761" y1="153.033004761" x2="75" y2="75" stroke="orange" stroke-width="3" />
+  <line x1="9.580468178" y1="136.678131104" x2="25" y2="75" stroke="orange" stroke-width="3" />
+  <line x1="15.000000954" y1="30.000001907" x2="31.386978149" y2="62.773956299" stroke="orange" stroke-width="3" />
+  <path d="M75,50 L75,75 L25,75 A50,25 0 0,1 75,50" fill="none" stroke="orange" stroke-width="3" />
+</svg>
+  </body>
+</html>

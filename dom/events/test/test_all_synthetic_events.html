@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test all synthetic events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * kEventConstructors is a helper and database of all events.
+ * The sort order of the definition is by A to Z (ignore the Event postfix).
+ *
+ * XXX: should we move this into EventUtils.js?
+ *
+ * create: function or null.  If this is null, it's impossible to create untrusted event for it.
+ *         Otherwise, create(aName, aProps) returns an instance of the event initialized with aProps.
+ *         aName specifies the event's type name.  See each create() code for the detail of aProps.
+ */
+const kEventConstructors = {
+  Event:                                     { create (aName, aProps) {
+                                                         return new Event(aName, aProps);
+                                                       },
+                                             },
+  AnimationEvent:                            { create (aName, aProps) {
+                                                         return new AnimationEvent(aName, aProps);
+                                                       },
+                                             },
+  AnimationPlaybackEvent:                    { create (aName, aProps) {
+                                                         return new AnimationPlaybackEvent(aName, aProps);
+                                                       },
+                                             },
+  AudioProcessingEvent:                      { create: null, // Cannot create untrusted event from JS.
+                                             },
+  BeforeUnloadEvent:                         { create (aName, aProps) {
+                                                         var e = document.createEvent("beforeunloadevent");
+                                                         e.initEvent(aName, aProps.bubbles, aProps.cancelable);
+                                                         return e;
+                                                       },
+                                             },
+  BlobEvent:                                 { create (aName, aProps) {
+                                                         return new BlobEvent(aName, {
+                                                           data: new Blob([]),
+                                                         });
+                                                       },
+                                             },
+  CallEvent:                                 { create (aName, aProps) {
+                                                          return new CallEvent(aName, aProps);
+                                                       },
+                                             },
+  CallGroupErrorEvent:                       { create (aName, aProps) {
+                                                          return new CallGroupErrorEvent(aName, aProps);
+                                                       },
+                                             },
+  CFStateChangeEvent:                        { create (aName, aProps) {
+                                                          return new CFStateChangeEvent(aName, aProps);
+                                                       },
+                                             },
+  CloseEvent:                                { create (aName, aProps) {
+                                                         return new CloseEvent(aName, aProps);
+                                                       },
+                                             },
+  ClipboardEvent:                            { create (aName, aProps) {
+                                                         return new ClipboardEvent(aName, aProps);
+                                                       },
+                                             },
+  CompositionEvent:                          { create (aName, aProps) {
+                                                         var e = document.createEvent("compositionevent");
+                                                         e.initCompositionEvent(aName, aProps.bubbles, aProps.cancelable,
+                                                                                aProps.view, aProps.data, aProps.locale);
+                                                         return e;
+                                                       },
+                                             },
+  CustomEvent:                               { create (aName, aProps) {
+                                                         return new CustomEvent(aName, aProps);
+                                                       },
+                                             },
+  DataErrorEvent:                            { create (aName, aProps) {
+                                                          return new DataErrorEvent(aName, aProps);
+                                                       },
+                                             },
+  DeviceLightEvent:                          { create (aName, aProps) {
+                                                         return new DeviceLightEvent(aName, aProps);
+                                                       },
+                                             },
+  DeviceMotionEvent:                         { create (aName, aProps) {
+                                                         var e = document.createEvent("devicemotionevent");
+                                                         e.initDeviceMotionEvent(aName, aProps.bubbles, aProps.cancelable, aProps.acceleration,
+                                                                                 aProps.accelerationIncludingGravity, aProps.rotationRate,
+                                                                                 aProps.interval || 0.0);
+                                                         return e;
+                                                       },
+                                             },
+  DeviceOrientationEvent:                    { create (aName, aProps) {
+                                                         return new DeviceOrientationEvent(aName, aProps);
+                                                       },
+                                             },
+  DeviceProximityEvent:                      { create (aName, aProps) {
+                                                         return new DeviceProximityEvent(aName, aProps);
+                                                       },
+                                             },
+  DownloadEvent:                             { create (aName, aProps) {
+                                                         return new DownloadEvent(aName, aProps);
+                                                       },
+                                             },
+  DragEvent:                                 { create (aName, aProps) {
+                                                         var e = document.createEvent("dragevent");
+                                                         e.initDragEvent(aName, aProps.bubbles, aProps.cancelable,
+                                                                         aProps.view, aProps.detail,
+                                                                         aProps.screenX, aProps.screenY,
+                                                                         aProps.clientX, aProps.clientY,
+                                                                         aProps.ctrlKey, aProps.altKey, aProps.shiftKey, aProps.metaKey,
+                                                                         aProps.button, aProps.relatedTarget, aProps.dataTransfer);
+                                                         return e;
+                                                       },
+                                             },
+  ErrorEvent:                                { create (aName, aProps) {
+                                                         return new ErrorEvent(aName, aProps);
+                                                       },
+  },
+  FocusEvent:                                { create (aName, aProps) {
+                                                         return new FocusEvent(aName, aProps);
+                                                       },
+                                             },
+  FontFaceSetLoadEvent:                      { create (aName, aProps) {
+                                                         return new FontFaceSetLoadEvent(aName, aProps);
+                                                       },
+                                             },
+  FormDataEvent:                             { create (aName, aProps) {
+                                                        return new FormDataEvent(aName, {
+                                                            formData: new FormData()
+                                                        });
+                                                      },
+                                             },
+  GamepadEvent:                              { create (aName, aProps) {
+                                                         return new GamepadEvent(aName, aProps);
+                                                       },
+                                             },
+  GamepadAxisMoveEvent:                      { create (aName, aProps) {
+                                                         return new GamepadAxisMoveEvent(aName, aProps);
+                                                       },
+                                             },
+  GamepadButtonEvent:                        { create (aName, aProps) {
+                                                         return new GamepadButtonEvent(aName, aProps);
+                                                       },
+                                             },
+  GPUUncapturedErrorEvent:                   { create: null, //TODO: constructor test
+                                             },
+  HashChangeEvent:                           { create (aName, aProps) {
+                                                         return new HashChangeEvent(aName, aProps);
+                                                       },
+                                             },
+  IDBVersionChangeEvent:                     { create (aName, aProps) {
+                                                         return new IDBVersionChangeEvent(aName, aProps);
+                                                       },
+                                             },
+  ImageCaptureErrorEvent:                                { create (aName, aProps) {
+                                                         return new ImageCaptureErrorEvent(aName, aProps);
+                                                       },
+                                             },
+  InputEvent:                                { create (aName, aProps) {
+                                                         return new InputEvent(aName, aProps);
+                                                       },
+                                             },
+  KeyEvent:                                  { create (aName, aProps) {
+                                                         return new KeyboardEvent(aName, aProps);
+                                                       },
+                                             },
+  KeyboardEvent:                             { create (aName, aProps) {
+                                                         return new KeyboardEvent(aName, aProps);
+                                                       },
+                                             },
+  MediaEncryptedEvent:                       { create (aName, aProps) {
+                                                         return new MediaEncryptedEvent(aName, aProps);
+                                                       },
+                                             },
+  MediaKeyMessageEvent:                      { create (aName, aProps) {
+                                                         return new MediaKeyMessageEvent(aName, {
+                                                           messageType: "license-request",
+                                                           message: new ArrayBuffer(0)
+                                                         });
+                                                       },
+                                             },
+  MediaQueryListEvent:                       { create (aName, aProps) {
+                                                         return new MediaQueryListEvent(aName, aProps);
+                                                       },
+                                             },
+  MediaRecorderErrorEvent:                   { create (aName, aProps) {
+                                                         aProps.error = new DOMException();
+                                                         return new MediaRecorderErrorEvent(aName, aProps);
+                                                       },
+                                             },
+  MediaStreamEvent:                          { create (aName, aProps) {
+                                                         return new MediaStreamEvent(aName, aProps);
+                                                       },
+                                             },
+  MediaStreamTrackEvent:                     {
+                                               // Difficult to test required arguments.
+                                             },
+  MessageEvent:                              { create (aName, aProps) {
+                                                         var e = new MessageEvent("messageevent", { bubbles: aProps.bubbles,
+                                                             cancelable: aProps.cancelable, data: aProps.data, origin: aProps.origin,
+                                                             lastEventId: aProps.lastEventId, source: aProps.source });
+                                                         return e;
+                                                       },
+                                             },
+  MouseEvent:                                { create (aName, aProps) {
+                                                         return new MouseEvent(aName, aProps);
+                                                       },
+                                             },
+  MouseScrollEvent:                          { create: null
+                                               // Cannot create untrusted event from JS
+                                             },
+  MozApplicationEvent:                       { create (aName, aProps) {
+                                                         return new MozApplicationEvent(aName, aProps);
+                                                       },
+                                             },
+  MozClirModeEvent:                          { create (aName, aProps) {
+                                                         return new MozClirModeEvent(aName, aProps);
+                                                       },
+                                             },
+  MozContactChangeEvent:                     { create (aName, aProps) {
+                                                         return new MozContactChangeEvent(aName, aProps);
+                                                       },
+                                             },
+  MozEmergencyCbModeEvent:                   { create (aName, aProps) {
+                                                          return new MozEmergencyCbModeEvent(aName, aProps);
+                                                       },
+                                             },
+  MozMessageDeletedEvent:                    { create (aName, aProps) {
+                                                         return new MozMessageDeletedEvent(aName, aProps);
+                                                       },
+                                             },
+  MozMmsEvent:                               { create (aName, aProps) {
+                                                         return new MozMmsEvent(aName, aProps);
+                                                       },
+                                             },
+  MozOtaStatusEvent:                         { create (aName, aProps) {
+                                                          return new MozOtaStatusEvent(aName, aProps);
+                                                       },
+                                             },
+  MozSmsEvent:                               { create (aName, aProps) {
+                                                         return new MozSmsEvent(aName, aProps);
+                                                       },
+                                             },
+  MozStkCommandEvent:                        { create (aName, aProps) {
+                                                          return new MozStkCommandEvent(aName, aProps);
+                                                       },
+                                             },
+  MutationEvent:                             { create (aName, aProps) {
+                                                         var e = document.createEvent("mutationevent");
+                                                         e.initMutationEvent(aName, aProps.bubbles, aProps.cancelable,
+                                                                             aProps.relatedNode, aProps.prevValue, aProps.newValue,
+                                                                             aProps.attrName, aProps.attrChange);
+                                                         return e;
+                                                       },
+                                             },
+  OfflineAudioCompletionEvent:               { create: "AudioContext" in self
+                                                        ? function (aName, aProps) {
+                                                            var ac = new AudioContext();
+                                                            var ab = new AudioBuffer({ length: 42, sampleRate: ac.sampleRate });
+                                                            aProps.renderedBuffer = ab;
+                                                            return new OfflineAudioCompletionEvent(aName, aProps);
+                                                          }
+                                                        : null,
+                                             },
+  PageTransitionEvent:                       { create (aName, aProps) {
+                                                         return new PageTransitionEvent(aName, aProps);
+                                                       },
+                                             },
+  PointerEvent:                              { create (aName, aProps) {
+                                                         return new PointerEvent(aName, aProps);
+                                                       },
+                                             },
+  PopStateEvent:                             { create (aName, aProps) {
+                                                         return new PopStateEvent(aName, aProps);
+                                                       },
+                                             },
+  PopupBlockedEvent:                         { create (aName, aProps) {
+                                                         return new PopupBlockedEvent(aName, aProps);
+                                                       },
+                                             },
+  ProgressEvent:                             { create (aName, aProps) {
+                                                         return new ProgressEvent(aName, aProps);
+                                                       },
+                                             },
+  PromiseRejectionEvent:                     { create (aName, aProps) {
+                                                         aProps.promise = new Promise(() => {});
+                                                         return new PromiseRejectionEvent(aName, aProps);
+                                                       },
+                                             },
+  RTCDataChannelEvent:                       { create (aName, aProps) {
+                                                         let pc = new RTCPeerConnection();
+                                                         aProps.channel = pc.createDataChannel("foo");
+                                                         let e = new RTCDataChannelEvent(aName, aProps);
+                                                         aProps.channel.close();
+                                                         pc.close();
+                                                         return e;
+                                                       },
+                                             },
+  RTCDTMFToneChangeEvent:                       { create (aName, aProps) {
+                                                         return new RTCDTMFToneChangeEvent(aName, aProps);
+                                                       },
+                                             },
+  RTCPeerConnectionIceEvent:                 { create (aName, aProps) {
+                                                         return new RTCPeerConnectionIceEvent(aName, aProps);
+                                                       },
+                                             },
+  RTCTrackEvent:                             {
+                                               // Difficult to test required arguments.
+                                             },
+  ScrollAreaEvent:                           { create: null
+                                               // Cannot create untrusted event from JS
+                                             },
+  SpeechRecognitionError:                    { create (aName, aProps) {
+                                                         return new SpeechRecognitionError(aName, aProps);
+                                                       },
+                                             },
+  SpeechRecognitionEvent:                    { create (aName, aProps) {
+                                                         return new SpeechRecognitionEvent(aName, aProps);
+                                                       },
+                                             },
+  SpeechSynthesisErrorEvent:                 { create (aName, aProps) {
+                                                         aProps.error = "synthesis-unavailable";
+                                                         aProps.utterance = new SpeechSynthesisUtterance("Hello World");
+                                                         return new SpeechSynthesisErrorEvent(aName, aProps);
+                                                       },
+                                             },
+  SpeechSynthesisEvent:                      { create (aName, aProps) {
+                                                         aProps.utterance = new SpeechSynthesisUtterance("Hello World");
+                                                         return new SpeechSynthesisEvent(aName, aProps);
+                                                       },
+                                             },
+  StorageEvent:                              { create (aName, aProps) {
+                                                         return new StorageEvent(aName, aProps);
+                                                       },
+                                             },
+  StyleSheetApplicableStateChangeEvent:      { create (aName, aProps) {
+                                                         return new StyleSheetApplicableStateChangeEvent(aName, aProps);
+                                                       },
+                                               chromeOnly: true,
+                                             },
+  SubmitEvent:                               { create (aName, aProps) {
+                                                         return new SubmitEvent(aName, aProps);
+                                                       },
+                                             },
+  TCPSocketErrorEvent:                       { create(aName, aProps) {
+                                                         return new TCPSocketErrorEvent(aName, aProps);
+                                                       },
+                                             },
+  TCPSocketEvent:                            { create(aName, aProps) {
+                                                         return new TCPSocketEvent(aName, aProps);
+                                                       },
+                                             },
+  TCPServerSocketEvent:                      { create(aName, aProps) {
+                                                         return new TCPServerSocketEvent(aName, aProps);
+                                                       },
+                                             },
+  TimeEvent:                                 { create: null
+                                               // Cannot create untrusted event from JS
+                                             },
+  TouchEvent:                                { create (aName, aProps) {
+                                                         var e = document.createEvent("touchevent");
+                                                         e.initTouchEvent(aName, aProps.bubbles, aProps.cancelable,
+                                                                          aProps.view, aProps.detail,
+                                                                          aProps.ctrlKey, aProps.altKey, aProps.shiftKey, aProps.metaKey,
+                                                                          aProps.touches, aProps.targetTouches, aProps.changedTouches);
+                                                         return e;
+                                                       },
+                                             },
+  TrackEvent:                                { create (aName, aProps) {
+                                                         return new TrackEvent(aName, aProps);
+                                                       },
+                                             },
+  TransitionEvent:                           { create (aName, aProps) {
+                                                         return new TransitionEvent(aName, aProps);
+                                                       },
+                                             },
+  UIEvent:                                   { create (aName, aProps) {
+                                                         return new UIEvent(aName, aProps);
+                                                       },
+                                             },
+  UserProximityEvent:                        { create (aName, aProps) {
+                                                         return new UserProximityEvent(aName, aProps);
+                                                       },
+                                             },
+  USSDReceivedEvent:                         { create (aName, aProps) {
+                                                          return new USSDReceivedEvent(aName, aProps);
+                                                       },
+                                             },
+  VRDisplayEvent:                            { create: null,
+                                               // Required argument expects a VRDisplay that can not
+                                               // be created from Javascript without physical VR hardware
+                                               // connected.  When Bug 1229480 lands, this test can be
+                                               // updated to use the puppet VR device.
+                                             },
+  WheelEvent:                                { create (aName, aProps) {
+                                                         return new WheelEvent(aName, aProps);
+                                                       },
+                                             },
+  WebGLContextEvent:                         { create (aName, aProps) {
+                                                         return new WebGLContextEvent(aName, aProps);
+                                                       },
+                                             },
+  SecurityPolicyViolationEvent:              { create (aName, aProps) {
+                                                         return new SecurityPolicyViolationEvent(aName, aProps);
+                                                       },
+                                             },
+};
+
+function test() {
+  for (var name of Object.keys(kEventConstructors)) {
+    if (!kEventConstructors[name].chromeOnly) {
+      continue;
+    }
+    if (window[name]) {
+      ok(false, name + " should be chrome only.");
+    }
+    window[name] = SpecialPowers.unwrap(SpecialPowers.wrap(window)[name]);
+  }
+
+  var props = Object.getOwnPropertyNames(window);
+  for (var i = 0; i < props.length; i++) {
+    // Assume that event object must be named as "FooBarEvent".
+    if (!props[i].match(/^([A-Z][a-zA-Z]+)?Event$/)) {
+      continue;
+    }
+    if (!kEventConstructors[props[i]]) {
+      ok(false, "Unknown event found: " + props[i]);
+      continue;
+    }
+    if (!kEventConstructors[props[i]].create) {
+      todo(false, "Cannot create untrusted event of " + props[i]);
+      continue;
+    }
+    ok(true, "Creating " + props[i] + "...");
+    var event = kEventConstructors[props[i]].create("foo", {});
+    if (!event) {
+      ok(false, "Failed to create untrusted event: " + props[i]);
+      continue;
+    }
+    if (typeof(event.getModifierState) == "function") {
+      const kModifiers = [ "Shift", "Control", "Alt", "AltGr", "Meta", "CapsLock", "ScrollLock", "NumLock", "OS", "Fn", "FnLock", "Symbol", "SymbolLock" ];
+      for (var j = 0; j < kModifiers.length; j++) {
+        ok(true, "Calling " + props[i] + ".getModifierState(" + kModifiers[j] + ")...");
+        var modifierState = event.getModifierState(kModifiers[j]);
+        ok(true, props[i] + ".getModifierState(" + kModifiers[j] + ") = " + modifierState);
+      }
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true]]},
+  function() {
+    test();
+    SimpleTest.finish();
+  });
+</script>
+</pre>
+</body>
+</html>

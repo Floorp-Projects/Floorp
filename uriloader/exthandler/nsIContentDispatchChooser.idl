@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIHandlerInfo;
+interface nsIPrincipal;
+interface nsIURI;
+webidl BrowsingContext;
+
+/**
+ * This is used to ask a user what they would like to do with a given piece of
+ * content.
+ */
+[scriptable, uuid(456ca3b2-02be-4f97-89a2-08c08d3ad88f)]
+interface nsIContentDispatchChooser : nsISupports {
+ /**
+  * Opens the handler associated with the given resource.
+  * If the caller does not have permission or no handler is set, we ask the
+  * user to grant permission and pick a handler.
+  *
+  * @param aHander
+  *        The interface describing the details of how this content should or
+  *        can be handled.
+  * @param aURI
+  *        The URI of the resource that we are asking about.
+  * @param aTriggeringPrincipal
+  *        The principal making the request.
+  * @param aBrowsingContext
+  *        The browsing context where the load should happen.
+  * @param aWasTriggeredExternally
+  *        True if the load was tripped by an external app.
+  */
+  void handleURI(in nsIHandlerInfo aHandler,
+           in nsIURI aURI,
+           in nsIPrincipal aTriggeringPrincipal,
+           in BrowsingContext aBrowsingContext,
+           [optional] in bool aWasTriggeredExternally);
+};
+

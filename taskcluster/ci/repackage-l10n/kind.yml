@@ -1,0 +1,69 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+transforms:
+    - gecko_taskgraph.transforms.repackage_l10n:transforms
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.repackage:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - shippable-l10n-signing
+    - toolchain
+
+only-for-build-platforms:
+    - linux-shippable/opt
+    - linux64-shippable/opt
+    - macosx64-shippable/opt
+    - win32-shippable/opt
+    - win64-shippable/opt
+    - win64-aarch64-shippable/opt
+    - linux-devedition/opt
+    - linux64-devedition/opt
+    - macosx64-devedition/opt
+    - win32-devedition/opt
+    - win64-devedition/opt
+    - win64-aarch64-devedition/opt
+
+job-template:
+    worker-type: 'b-linux'
+    worker:
+        docker-image: {"in-tree": "debian11-amd64-build"}
+    mozharness:
+        config:
+            by-build-platform:
+                linux-.*:
+                    - repackage/base.py
+                    - repackage/linux32_signed.py
+                linux64-.*:
+                    - repackage/base.py
+                    - repackage/linux64_signed.py
+                macosx64-.*:
+                    - repackage/base.py
+                    - repackage/osx_signed.py
+                win32\b.*:
+                    - repackage/base.py
+                    - repackage/win32_sfx_stub.py
+                    - repackage/win32_signed.py
+                win64(?!-aarch64)\b.*:
+                    - repackage/base.py
+                    - repackage/win32_sfx_stub.py
+                    - repackage/win64_signed.py
+                win64-aarch64\b.*:
+                    - repackage/base.py
+                    - repackage/win64-aarch64_sfx_stub.py
+                    - repackage/win64_signed.py
+    package-formats:
+        by-build-platform:
+            linux.*: [mar]
+            macosx64\b.*: [mar, dmg]
+            win32\b.*: [mar, installer]
+            win64\b.*: [mar, installer]
+    fetches:
+        toolchain:
+            - linux64-mar-tools
+            - linux64-upx

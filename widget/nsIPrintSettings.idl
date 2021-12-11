@@ -1,0 +1,372 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+
+%{ C++
+#include "nsMargin.h"
+#include "nsTArray.h"
+%}
+
+/**
+ * Native types
+ */
+native nsNativeIntMargin(nsIntMargin);
+[ref] native nsNativeIntMarginRef(nsIntMargin);
+
+interface nsIPrintSession;
+
+/**
+ * Simplified graphics interface for JS rendering.
+ */
+[scriptable, builtinclass, uuid(ecc5cbad-57fc-4731-b0bd-09e865bd62ad)]
+interface nsIPrintSettings : nsISupports
+{
+  /**
+   * PrintSettings to be Saved Navigation Constants
+   */
+  /* Flag 0x00000001 is unused */
+  const unsigned long kInitSaveHeaderLeft     = 0x00000002;
+  const unsigned long kInitSaveHeaderCenter   = 0x00000004;
+  const unsigned long kInitSaveHeaderRight    = 0x00000008;
+  const unsigned long kInitSaveFooterLeft     = 0x00000010;
+  const unsigned long kInitSaveFooterCenter   = 0x00000020;
+  const unsigned long kInitSaveFooterRight    = 0x00000040;
+  const unsigned long kInitSaveBGColors       = 0x00000080;
+  const unsigned long kInitSaveBGImages       = 0x00000100;
+  const unsigned long kInitSavePaperSize      = 0x00000200;
+  const unsigned long kInitSaveResolution     = 0x00000400;
+  const unsigned long kInitSaveDuplex         = 0x00000800;
+  /* Flag 0x00001000 is unused */
+  /* Flag 0x00002000 is unused */
+  const unsigned long kInitSaveUnwriteableMargins = 0x00004000;
+  const unsigned long kInitSaveEdges          = 0x00008000;
+
+  const unsigned long kInitSaveReversed       = 0x00010000;
+  const unsigned long kInitSaveInColor        = 0x00020000;
+  const unsigned long kInitSaveOrientation    = 0x00040000;
+
+  const unsigned long kInitSavePrinterName    = 0x00100000;
+  const unsigned long kInitSavePrintToFile    = 0x00200000;
+  const unsigned long kInitSaveToFileName     = 0x00400000;
+  const unsigned long kInitSavePageDelay      = 0x00800000;
+  const unsigned long kInitSaveMargins        = 0x01000000;
+  const unsigned long kInitSaveNativeData     = 0x02000000;
+
+  const unsigned long kInitSaveShrinkToFit    = 0x08000000;
+  const unsigned long kInitSaveScaling        = 0x10000000;
+
+  const unsigned long kInitSaveAll            = 0xFFFFFFFF;
+
+  // These settings should be read from global prefs. Other settings should be
+  // read only from printer-specific prefs.
+  const unsigned long kGlobalSettings =
+      kInitSaveHeaderLeft | kInitSaveHeaderCenter | kInitSaveHeaderRight |
+      kInitSaveFooterLeft | kInitSaveFooterCenter | kInitSaveFooterRight |
+      kInitSaveEdges | kInitSaveReversed | kInitSaveInColor |
+      kInitSaveBGColors | kInitSaveBGImages | kInitSaveShrinkToFit;
+
+  /* Justification Enums */
+  const long kJustLeft   = 0;
+  const long kJustCenter = 1;
+  const long kJustRight  = 2;
+
+  /**
+   * Page Size Unit Constants
+   */
+  const short kPaperSizeInches      = 0;
+  const short kPaperSizeMillimeters = 1;
+
+  /**
+   * Orientation Constants
+   */
+  const short kPortraitOrientation  = 0;
+  const short kLandscapeOrientation = 1;
+
+  /**
+   * Output file format
+   */
+  const short kOutputFormatNative = 0;
+  const short kOutputFormatPS     = 1;
+  const short kOutputFormatPDF    = 2;
+
+  /**
+   * Duplex printing options.
+   *
+   * Note that other libraries refer to equivalent duplex settings using
+   * various sets of terminology. This can be confusing and inconsistent both
+   * with other libraries, and with the behavior that these terms intend to describe.
+   *
+   * kDuplexNone is equivalent to Simplex. Thankfully, both of these terms are
+   * consistent with the behavior that they describe, which is to have single-sided
+   * printing per sheet.
+   *
+   * kDuplexFlipOnLongEdge is equivalent to the following platform-specific constants:
+   *   CUPS/macOS: NoTumble
+   *      Windows: DMDUP_VERTICAL
+   *          GTK: GTK_PRINT_DUPLEX_HORIZONTAL
+   *
+   * kDuplexFlipOnShortEdge is equivalent to the following platform-specific constants:
+   *   CUPS/macOS: Tumble
+   *      Windows: DMDUP_HORIZONTAL
+   *          GTK: GTK_PRINT_DUPLEX_VERTICAL
+   *
+   *
+   * Notice that the GTK and Windows constants have opposite meanings for
+   * VERTICAL and HORIZONTAL.
+   *
+   * To make matters more confusing, these platform-specific terms describe different
+   * behavior (from the user's perspective) depending on whether the sheet is in
+   * portrait vs. landscape orientation.
+   *
+   * For example, the generic term "tumble" describes behavior where a sheet flips over
+   * a binding on the top edge (like a calendar). This requires that the back side of
+   * the sheet is printed upside down with respect to the front side of the sheet,
+   * so that its content appears upright to the reader when they tumble-flip the
+   * sheet over the top-edge binding.
+   *
+   * However, the CUPS/macOS Tumble setting only inverts the back side of the
+   * sheet in portrait orientation. When you switch to landscape orientation, the
+   * Tumble setting behaves like a book-like sheet flip, where the front and back
+   * sides of the sheet are both printed upright with respect to each other.
+   *
+   * This is why it is more consistent and more clear to think of these terms
+   * with regard to sheets being bound on the long edge or the short edge.
+   *
+   * kDuplexFlipOnLongEdge  + Portrait  =     book-like flip (front/back same direction)
+   * kDuplexFlipOnLongEdge  + Landscape = calendar-like flip (front/back inverted)
+   *
+   * kDuplexFlipOnShortEdge + Portrait  = calendar-like flip (front/back inverted)
+   * kDuplexFlipOnShortEdge + Landscape =     book-like flip (front/back same direction)
+   *
+   * The long-edge and short-edge terminology unfortunately breaks down when printing
+   * with square sheet dimensions. Thankfully this edge case (hah) is quite uncommon,
+   * since most standard printing paper dimensions are not square. Such a paper size
+   * would even break the uniformly used portrait and landscape terminology.
+   */
+  const short kDuplexNone = 0;
+  const short kDuplexFlipOnLongEdge = 1;
+  const short kDuplexFlipOnShortEdge = 2;
+
+  /**
+   * Get the page size in twips, considering the
+   * orientation (portrait or landscape).
+   */
+  void GetEffectivePageSize(out double aWidth, out double aHeight);
+
+  /**
+   * Get the printed sheet size in twips, considering both the user-specified
+   * orientation (portrait or landscape) *as well as* the fact that we might be
+   * inverting the orientation to account for 2 or 6 pages-per-sheet.
+   *
+   * This API will usually behave the same (& return the same thing) as
+   * GetEffectivePageSize, *except for* when we are printing with 2 or 6
+   * pages-per-sheet, in which case the return values (aWidth & aHeight) will
+   * be swapped with respect to what GetEffectivePageSize would return.
+   *
+   * Callers should use this method rather than GetEffectivePageSize when they
+   * really do want the size of the sheet of paper to be printed, rather than
+   * the possibly-"virtualized"-via-pages-per-sheet page size.
+   */
+  [noscript, notxpcom, nostdcall] void GetEffectiveSheetSize(out double aWidth,
+                                                             out double aHeight);
+
+  /**
+   * Get the orientation of a printed sheet. This is usually the same as the
+   * 'orientation' attribute (which is the orientation of individual pages),
+   * except when we're printing with 2 or 6 pages-per-sheet, in which case
+   * it'll be the opposite value.
+   *
+   * Note that this value is not independently settable. Its value is fully
+   * determined by the 'orientation' and 'numPagesPerSheet' attributes.
+   */
+  [noscript, notxpcom, nostdcall] long GetSheetOrientation();
+
+  /**
+   * Convenience getter, which returns true IFF the sheet orientation and the
+   * page orientation are orthogonal. (In other words, returns true IFF we
+   * are printing with 2 or 6 pages-per-sheet.)
+   */
+  [noscript, notxpcom, nostdcall] bool HasOrthogonalSheetsAndPages();
+
+  /**
+   * Makes a new copy
+   */
+  nsIPrintSettings clone();
+
+  /**
+   * Assigns the internal values from the "in" arg to the current object
+   */
+  void assign(in nsIPrintSettings aPS);
+
+  /**
+   * Data Members
+   */
+  [noscript] attribute nsIPrintSession printSession; /* We hold a weak reference */
+
+  /**
+   * The edge measurements define the positioning of the headers
+   * and footers on the page. They're treated as an offset from the edges of
+   * the page, but are forced to be at least the "unwriteable margin"
+   * (described below).
+   */
+  attribute double  edgeTop;     /*  these are in inches */
+  attribute double  edgeLeft;
+  attribute double  edgeBottom;
+  attribute double  edgeRight;
+
+  /**
+   * The margins define the positioning of the content on the page.
+   * and footers on the page. They're treated as an offset from the edges of
+   * the page, but are forced to be at least the "unwriteable margin"
+   * (described below).
+   */
+  attribute double  marginTop;     /*  these are in inches */
+  attribute double  marginLeft;
+  attribute double  marginBottom;
+  attribute double  marginRight;
+  /**
+   * The unwriteable margin defines the printable region of the paper.
+   */
+  attribute double  unwriteableMarginTop;     /*  these are in inches */
+  attribute double  unwriteableMarginLeft;
+  attribute double  unwriteableMarginBottom;
+  attribute double  unwriteableMarginRight;
+
+  attribute double  scaling;      /* values 0.0 - 1.0 */
+  [infallible] attribute boolean printBGColors; /* Print Background Colors */
+  [infallible] attribute boolean printBGImages; /* Print Background Images */
+
+  /** Whether @page rule margins should be honored or not. */
+  [infallible] attribute boolean honorPageRuleMargins;
+
+  /** Whether to draw guidelines showing the margin settings */
+  [infallible] attribute boolean showMarginGuides;
+
+  /** Whether whether the "print selection" radio button should be enabled
+   *  in the UI (i.e. whether there is an active selection) */
+  [infallible] attribute boolean isPrintSelectionRBEnabled;
+
+  /** Whether to only print the selected nodes */
+  [infallible] attribute boolean printSelectionOnly;
+
+  attribute AString title;
+  attribute AString docURL;
+
+  attribute AString headerStrLeft;
+  attribute AString headerStrCenter;
+  attribute AString headerStrRight;
+
+  attribute AString footerStrLeft;
+  attribute AString footerStrCenter;
+  attribute AString footerStrRight;
+
+  attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
+  readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
+  attribute boolean printSilent;         /* print without putting up the dialog */
+  attribute boolean shrinkToFit;         /* shrinks content to fit on page      */
+  attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
+
+  /* Additional XP Related */
+  attribute AString paperId;       /* identifier of paper (not display name) */
+  attribute double  paperWidth;    /* width of the paper in inches or mm */
+  attribute double  paperHeight;   /* height of the paper in inches or mm */
+  attribute short   paperSizeUnit; /* paper is in inches or mm */
+
+  attribute boolean printReversed;
+  [infallible] attribute boolean printInColor;  /* a false means grayscale */
+  attribute long    orientation;   /*  see orientation consts */
+  attribute long    numCopies;
+
+  /**
+   * For numPagesPerSheet, we support these values: 1, 2, 4, 6, 9, 16.
+   *
+   * Unsupported values will be treated internally as 1 page per sheet, and
+   * will trigger assertion failures in debug builds.
+   */
+  attribute long    numPagesPerSheet;
+
+  attribute AString printerName;   /* name of destination printer */
+
+  attribute boolean printToFile;
+  attribute AString toFileName;
+  attribute short   outputFormat;
+
+  attribute long    printPageDelay; /* in milliseconds */
+
+  attribute long    resolution;     /* print resolution (dpi) */
+
+  attribute long    duplex;         /* duplex mode */
+
+  /* initialize helpers */
+  /**
+   * This attribute tracks whether the PS has been initialized
+   * from a printer specified by the "printerName" attr.
+   * If a different name is set into the "printerName"
+   * attribute than the one it was initialized with the PS
+   * will then get intialized from that printer.
+   */
+  attribute boolean isInitializedFromPrinter;
+
+  /**
+   * This attribute tracks whether the PS has been initialized
+   * from prefs. If a different name is set into the "printerName"
+   * attribute than the one it was initialized with the PS
+   * will then get intialized from prefs again.
+   */
+  attribute boolean isInitializedFromPrefs;
+
+  /* C++ Helper Functions */
+  [noscript] void SetMarginInTwips(in nsNativeIntMarginRef aMargin);
+  [noscript] void SetEdgeInTwips(in nsNativeIntMarginRef aEdge);
+  [noscript, notxpcom, nostdcall] nsNativeIntMargin GetMarginInTwips();
+  [noscript, notxpcom, nostdcall] nsNativeIntMargin GetEdgeInTwips();
+
+  /**
+   * We call this function so that anything that requires a run of the event loop
+   * can do so safely. The print dialog runs the event loop but in silent printing
+   * that doesn't happen.
+   *
+   * Either this or ShowPrintDialog (but not both) MUST be called by the print engine
+   * before printing, otherwise printing can fail on some platforms.
+   */
+  [noscript] void SetupSilentPrinting();
+
+  /**
+   * Sets/Gets the "unwriteable margin" for the page format.  This defines
+   * the boundary from which we'll measure the EdgeInTwips and MarginInTwips
+   * attributes, to place the headers and content, respectively.
+   *
+   * Note: Implementations of SetUnwriteableMarginInTwips should handle
+   * negative margin values by falling back on the system default for
+   * that margin.
+   */
+  [noscript] void SetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
+  [noscript, notxpcom, nostdcall] nsNativeIntMargin GetUnwriteableMarginInTwips();
+
+  /**
+   * Get more accurate print ranges from the superior interval
+   * (startPageRange, endPageRange). The aPages array is populated with a
+   * list of pairs (start, end), where the endpoints are included. The print
+   * ranges (start, end), must not overlap and must be in the
+   * (startPageRange, endPageRange) scope.
+   *
+   * If there are no print ranges the aPages array is empty.
+   */
+  attribute Array<long> pageRanges;
+
+%{C++
+  static bool IsPageSkipped(int32_t aPageNum, const nsTArray<int32_t>& aRanges);
+%}
+};
+
+%{ C++
+namespace mozilla {
+struct PrintSettingsInitializer;
+}
+
+already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(const mozilla::PrintSettingsInitializer&);
+%}

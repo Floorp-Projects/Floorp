@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various touch tests that spawn in new windows (4)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var touch_action_prefs = getPrefs("TOUCH_ACTION");
+
+var subtests = [
+  // clicking on element with :active::after CSS property
+  {"file": "helper_bug1473108.html"},
+  // Resetting isFirstPaint shouldn't clobber the visual viewport
+  {"file": "helper_bug1509575.html", "prefs": [
+    ["apz.allow_zooming", true],
+    ["dom.visualviewport.enabled", true],
+    ...getPrefs("TOUCH_EVENTS:PAN")
+  ]},
+  // Exercise one of the main-thread touch-action determination codepaths.
+  {"file": "helper_bug1506497_touch_action_fixed_on_fixed.html", "prefs": touch_action_prefs},
+  {"file": "helper_bug1637113_main_thread_hit_test.html",
+   "prefs": [["apz.allow_zooming", true], ["dom.visualviewport.enabled", true]]},
+  {"file": "helper_bug1638458_contextmenu.html",
+   "prefs": [["apz.allow_zooming", true], ["dom.visualviewport.enabled", true]]},
+  {"file": "helper_bug1638441_fixed_pos_hit_test.html",
+   "prefs": [["apz.allow_zooming", true], ["dom.visualviewport.enabled", true]]},
+  {"file": "helper_bug1637135_narrow_viewport.html", "prefs": [["apz.allow_zooming", true],
+                                                               ["dom.meta-viewport.enabled", true]]},
+  {"file": "helper_bug1714934_mouseevent_buttons.html"},
+
+  // Add new subtests here. If this starts timing out because it's taking too
+  // long, create a test_group_touchevents-5.html file. Refer to 1423011#c57
+  // for more details.
+  // test_group_touchevents-5.html already exists because a new test would
+  // timeout (without making any process) with fission x-origin tests if added
+  // here. So you can add tests here or in test_group_touchevents-5.html until
+  // they start timing out.
+];
+
+if (isApzEnabled()) {
+  ok(window.TouchEvent, "Check if TouchEvent is supported (it should be, the test harness forces it on everywhere)");
+  if (getPlatform() == "android") {
+    // This has a lot of subtests, and Android emulators are slow.
+    SimpleTest.requestLongerTimeout(2);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

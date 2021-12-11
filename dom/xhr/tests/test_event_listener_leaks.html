@@ -1,0 +1,45 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1450271 - Test XHR event listener leak conditions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/events/test/event_leak_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<script class="testbody" type="text/javascript">
+// Manipulate XHR.  Its important here that we create a
+// listener callback from the DOM objects back to the frame's global
+// in order to exercise the leak condition.
+async function useXHR(contentWindow) {
+  let xhr = new contentWindow.XMLHttpRequest();
+  xhr.onabort = _ => {
+    contentWindow.abortCount += 1;
+  };
+  xhr.onreadystate = _ => {
+    contentWindow.stateCount += 1;
+  };
+  xhr.open("GET", "slow.sjs");
+}
+
+async function runTest() {
+  try {
+    await checkForEventListenerLeaks("XHR", useXHR);
+  } catch (e) {
+    ok(false, e);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addEventListener("load", runTest, { once: true });
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=613979
+-->
+<head>
+  <title>Test for Bug 613979</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613979">Mozilla Bug 613979</a>
+<p id="display"></p>
+<div id="content">
+  <input required>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 613979 **/
+
+var testNum = 0;
+var input = document.getElementsByTagName('input')[0];
+
+input.addEventListener("input", function() {
+  if (testNum == 0) {
+    ok(input.validity.valid, "input should be valid");
+    testNum++;
+    SimpleTest.executeSoon(function() {
+      synthesizeKey("KEY_Backspace");
+    });
+  } else if (testNum == 1) {
+    ok(!input.validity.valid, "input should not be valid");
+    input.removeEventListener("input", arguments.callee);
+    SimpleTest.finish();
+  }
+});
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  input.focus();
+  sendString("a");
+});
+
+</script>
+</pre>
+</body>
+</html>

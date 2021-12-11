@@ -1,0 +1,10 @@
+---
+RegexLinter:
+    description: >-
+        Make sure the string foobar never appears in a js variable
+        file because it is bad.
+    rule: no-foobar
+    include: ['.']
+    extensions: ['js', '.jsm']
+    type: regex
+    payload: foobar

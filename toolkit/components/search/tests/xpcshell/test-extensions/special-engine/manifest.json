@@ -1,0 +1,40 @@
+{
+  "name": "Special",
+  "description": "Special Engine",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "special-engine@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Special",
+      "search_url": "https://www.google.com/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "client",
+          "condition": "purpose",
+          "purpose": "keyword",
+          "value": "firefox-b-1-ab"
+        },
+        {
+          "name": "client",
+          "condition": "purpose",
+          "purpose": "searchbar",
+          "value": "firefox-b-1"
+        }
+      ],
+      "suggest_url": "https://www.google.com/complete/search?client=firefox&q={searchTerms}"
+    }
+  }
+}

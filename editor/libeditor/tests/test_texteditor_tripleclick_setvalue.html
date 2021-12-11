@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for TextEditor triple click and SetValue</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  body {
+    font: 1em/1 Ahem
+  }
+</style>
+<input id="input" value="foo bar baz">
+<script>
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(() => {
+    const { input } = document.all;
+    input.focus();
+    synthesizeMouse(input, 5, 5, { clickCount: 3 }, window);
+    is(input.selectionStart, 0, "selectionStart should be 0");
+    is(input.selectionEnd, input.value.length, "selectionEnd should be the end of the value");
+    synthesizeKey("KEY_Backspace");
+    is(input.value, "", ".value should be empty");
+
+    input.value = "hmm";
+    is(input.value, "hmm", ".value must be set");
+    SimpleTest.finish();
+  });
+</script>

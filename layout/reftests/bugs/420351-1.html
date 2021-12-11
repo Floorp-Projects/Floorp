@@ -1,0 +1,19 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>Testcase bug - List item marker takes up room now with list-style-type: none in strict mode</title>
+<style>
+li{
+  list-style-type: none;
+  list-style-position: inside;
+  border: 1px solid red;
+}
+div {
+  border: 1px solid black;
+}
+</style></head>
+<body>
+
+<ul><li><div>text</div></li></ul>
+</body>
+</html>

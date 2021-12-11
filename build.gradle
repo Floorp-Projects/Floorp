@@ -1,0 +1,285 @@
+import org.tomlj.Toml
+import org.tomlj.TomlParseResult
+import org.tomlj.TomlTable
+
+def tryInt = { string ->
+    if (string == null) {
+        return string
+    }
+    if (string.isInteger()) {
+        return string as Integer
+    }
+    return string
+}
+
+// Parses the Cargo.lock and returns the version for the given package name.
+def getRustVersionFor(packageName) {
+    String version = null;
+    TomlParseResult result = Toml.parse(file("Cargo.lock").getText());
+    for (object in result.getArray("package").toList()) {
+        def table = (TomlTable) object
+        if (table.getString("name") == packageName) {
+            if (version != null) {
+                throw new StopExecutionException("Multiple versions for '${packageName}' found." +
+                        " Ensure '${packageName}' is only included once.")
+            }
+            version = table.getString("version")
+        }
+    }
+    return version
+}
+
+allprojects {
+    // Expose the per-object-directory configuration to all projects.
+    ext {
+        mozconfig = gradle.mozconfig
+        topsrcdir = gradle.mozconfig.topsrcdir
+        topobjdir = gradle.mozconfig.topobjdir
+
+        gleanVersion = "42.1.0"
+        if (gleanVersion != getRustVersionFor("glean")) {
+          throw new StopExecutionException("Mismatched Glean version, expected: ${gleanVersion}," +
+              " found ${getRustVersionFor("glean")}")
+        }
+
+        buildToolsVersion = mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
+        compileSdkVersion = tryInt(mozconfig.substs.ANDROID_TARGET_SDK)
+        targetSdkVersion = tryInt(mozconfig.substs.ANDROID_TARGET_SDK)
+        minSdkVersion = tryInt(mozconfig.substs.MOZ_ANDROID_MIN_SDK_VERSION)
+        manifestPlaceholders = [
+            ANDROID_PACKAGE_NAME: mozconfig.substs.ANDROID_PACKAGE_NAME,
+            ANDROID_TARGET_SDK: mozconfig.substs.ANDROID_TARGET_SDK,
+            MOZ_ANDROID_MIN_SDK_VERSION: mozconfig.substs.MOZ_ANDROID_MIN_SDK_VERSION,
+        ]
+    }
+
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+            }
+        }
+    }
+
+    task downloadDependencies() {
+        description 'Download all dependencies to the Gradle cache'
+        doLast {
+            configurations.each { configuration ->
+                if (configuration.canBeResolved) {
+                    configuration.allDependencies.each { dependency ->
+                        try {
+                            configuration.files(dependency)
+                        } catch(e) {
+                            println("Could not resolve ${configuration.name} -> ${dependency.name}")
+                            println(" > ${e.message}")
+                            if (e.cause) {
+                                println(" >> ${e.cause}")
+                                if (e.cause.cause) {
+                                    println(" >> ${e.cause.cause}")
+                                }
+                            }
+                            println("")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+buildDir "${topobjdir}/gradle/build"
+
+buildscript {
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+            }
+        }
+    }
+
+    ext.kotlin_version = '1.5.20'
+
+    dependencies {
+        classpath 'org.mozilla.apilint:apilint:0.4.4'
+        classpath 'com.android.tools.build:gradle:4.2.0'
+        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
+        classpath 'org.apache.commons:commons-exec:1.3'
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:5.16.0'
+        classpath 'org.tomlj:tomlj:1.0.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// A stream that processes bytes line by line, prepending a tag before sending
+// each line to Gradle's logging.
+class TaggedLogOutputStream extends org.apache.commons.exec.LogOutputStream {
+    String tag
+    Logger logger
+
+    TaggedLogOutputStream(tag, logger) {
+        this.tag = tag
+        this.logger = logger
+    }
+
+    void processLine(String line, int level) {
+        logger.lifecycle("${this.tag} ${line}")
+    }
+}
+
+ext.geckoBinariesOnlyIf = { task ->
+    // Never when Gradle was invoked within `mach build`.
+    if ('1' == System.env.GRADLE_INVOKED_WITHIN_MACH_BUILD) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: within `mach build`")
+        return false
+    }
+
+    // Never for official builds.
+    if (mozconfig.substs.MOZILLA_OFFICIAL) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: MOZILLA_OFFICIAL")
+        return false
+    }
+
+    // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale.  To
+    // avoid failures, if Gradle is invoked with AB_CD=multi, we don't invoke
+    // Make at all.
+    if ('multi' == System.env.AB_CD) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: AB_CD=multi")
+        return false
+    }
+
+    // Single-locale l10n repacks set `IS_LANGUAGE_REPACK=1` and handle resource
+    // and code generation themselves.
+    if ('1' == System.env.IS_LANGUAGE_REPACK) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: IS_LANGUAGE_REPACK")
+        return false
+    }
+
+    rootProject.logger.lifecycle("Executing task ${task.path}")
+    return true
+}
+
+class MachExec extends Exec {
+    def MachExec() {
+        // Bug 1543982: When invoking `mach build` recursively, the outer `mach
+        // build` itself modifies the environment, causing configure to run
+        // again.  This tries to restore the environment that the outer `mach
+        // build` was invoked in.  See the comment in
+        // $topsrcdir/settings.gradle.
+        project.ext.mozconfig.mozconfig.env.unmodified.each { k, v -> environment.remove(k) }
+        environment project.ext.mozconfig.orig_mozconfig.env.unmodified
+        environment 'MOZCONFIG', project.ext.mozconfig.substs.MOZCONFIG
+    }
+}
+
+task machBuildFaster(type: MachExec) {
+    onlyIf rootProject.ext.geckoBinariesOnlyIf
+
+    workingDir "${topsrcdir}"
+
+    commandLine mozconfig.substs.PYTHON3
+    args "${topsrcdir}/mach"
+    args 'build'
+    args 'faster'
+
+    // Add `-v` if we're running under `--info` (or `--debug`).
+    if (project.logger.isEnabled(LogLevel.INFO)) {
+        args '-v'
+    }
+
+    // `path` is like `:machBuildFaster`.
+    standardOutput = new TaggedLogOutputStream("${path}>", logger)
+    errorOutput = standardOutput
+}
+
+task machStagePackage(type: MachExec) {
+    onlyIf rootProject.ext.geckoBinariesOnlyIf
+
+    dependsOn rootProject.machBuildFaster
+
+    workingDir "${topobjdir}"
+
+    // We'd prefer this to be a `mach` invocation, but `mach build
+    // mobile/android/installer/stage-package` doesn't work as expected.
+    commandLine mozconfig.substs.GMAKE
+    args '-C'
+    args "${topobjdir}/mobile/android/installer"
+    args 'stage-package'
+
+    outputs.file "${topobjdir}/dist/geckoview/assets/omni.ja"
+
+    outputs.file "${topobjdir}/dist/geckoview/assets/${mozconfig.substs.ANDROID_CPU_ARCH}/libxul.so"
+    outputs.file "${topobjdir}/dist/geckoview/lib/${mozconfig.substs.ANDROID_CPU_ARCH}/libmozglue.so"
+
+    // Force running `stage-package`.
+    outputs.upToDateWhen { false }
+
+    // `path` is like `:machStagePackage`.
+    standardOutput = new TaggedLogOutputStream("${path}>", logger)
+    errorOutput = standardOutput
+}
+
+afterEvaluate {
+    subprojects { project ->
+        tasks.withType(JavaCompile) {
+            // Add compiler args for all code except third-party code.
+            options.compilerArgs += [
+                // Turn on all warnings, except...
+                "-Xlint:all",
+                // Deprecation, because we do use deprecated API for compatibility.
+                "-Xlint:-deprecation",
+                // Serial, because we don't use Java serialization.
+                "-Xlint:-serial",
+                // Classfile, because javac has a bug with MethodParameters attributes
+                // with Java 7. https://bugs.openjdk.java.net/browse/JDK-8190452
+                "-Xlint:-classfile",
+                // Turn all remaining warnings into errors,
+                // unless marked by @SuppressWarnings.
+                "-Werror"]
+        }
+    }
+}
+
+apply plugin: 'idea'
+
+idea {
+    project {
+        languageLevel = '1.8'
+    }
+
+    module {
+        // Object directories take a huge amount of time for IntelliJ to index.
+        // Exclude them.  Convention is that object directories start with obj.
+        // IntelliJ is clever and will not exclude the parts of the object
+        // directory that are referenced, if there are any.  In practice,
+        // indexing the entirety of the tree is taking too long, so exclude all
+        // but mobile/.
+        def topsrcdirURI = file(topsrcdir).toURI()
+        excludeDirs += files(file(topsrcdir)
+            .listFiles({it.isDirectory()} as FileFilter)
+            .collect({topsrcdirURI.relativize(it.toURI()).toString()}) // Relative paths.
+            .findAll({!it.equals('mobile/')}))
+
+        // If topobjdir is below topsrcdir, hide only some portions of that tree.
+        def topobjdirURI = file(topobjdir).toURI()
+        if (!topsrcdirURI.relativize(topobjdirURI).isAbsolute()) {
+            excludeDirs -= file(topobjdir)
+            excludeDirs += files(file(topobjdir).listFiles())
+            excludeDirs -= file("${topobjdir}/gradle")
+        }
+    }
+}
+
+subprojects {
+    apply plugin: "com.diffplug.spotless"
+
+    spotless {
+        java {
+            target project.fileTree(project.projectDir) {
+                include '**/*.java'
+                exclude '**/thirdparty/**'
+            }
+            googleJavaFormat('1.7')
+        }
+    }
+}

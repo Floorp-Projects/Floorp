@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <rect fill="green" width="100" height="100">
+    <set id="a" attributeName="fill" to="blue"
+      begin="6s" end="986s"/>
+    <set id="b" attributeName="fill" to="orange"
+      begin="a.begin+69.3s;b.begin+700s" dur="700s" end="a.end"/>
+    <set id="c" attributeName="fill" to="yellow"
+      begin="0s;b.begin+700s"/>
+  </rect>
+  <script type="text/javascript">
+<![CDATA[
+const max_attempts = 100;
+var   attempts = 0;
+function attemptCrash()
+{
+  remove();
+  add();
+  if (++attempts >= max_attempts) {
+    document.documentElement.removeAttribute("class");
+  } else {
+    setTimeout(attemptCrash, 0);
+  }
+}
+function add()
+{
+  const svgns = "http://www.w3.org/2000/svg";
+  var elem = document.createElementNS(svgns, "set");
+  elem.setAttribute("id", "b");
+  elem.setAttribute("attributeName", "fill");
+  elem.setAttribute("to", "orange");
+  elem.setAttribute("begin", "a.begin+69.3s;b.begin+700s");
+  elem.setAttribute("dur", "700s");
+  elem.setAttribute("end", "a.end");
+  rect = document.getElementsByTagNameNS(svgns, "rect")[0];
+  rect.appendChild(elem);
+}
+function remove()
+{
+  var elem = document.getElementById('b');
+  elem.parentNode.removeChild(elem);
+  elem = null;
+}
+window.addEventListener("load", attemptCrash, false);
+]]>
+ </script>
+</svg>

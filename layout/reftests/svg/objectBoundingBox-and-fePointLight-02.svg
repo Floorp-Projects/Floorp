@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg width="100%" height="100%"
+  viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for objectBoundingBox with fePointLight</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=619992 -->
+
+  <defs>
+    <filter id="f" primitiveUnits="userSpaceOnUse">
+      <feSpecularLighting lighting-color="blue" surfaceScale="5" specularConstant="10" specularExponent="6">
+        <fePointLight x="30" y="30" z="-5"/>
+      </feSpecularLighting>
+    </filter>
+  </defs>
+
+  <g transform="translate(50 50)">
+    <rect x="-40" y="-40" width="80" height="80" filter="url(#f)" fill="none"/>
+  </g>
+</svg>

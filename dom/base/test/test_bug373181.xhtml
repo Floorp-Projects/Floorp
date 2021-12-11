@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Testcase for bug 373181</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"/>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/x-javascript">
+      function onLoadFired()
+      {
+        ok(true, "Body onload event should fire");
+        SimpleTest.finish();
+      }
+      SimpleTest.waitForExplicitFinish();
+    </script>
+  </head>
+  <body onload="onLoadFired();"/>
+</html>

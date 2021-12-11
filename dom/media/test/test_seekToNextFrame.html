@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test seekToNextFrame of media files that should play OK</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var video = document.createElement('video');
+  video.preload = "metadata";
+  video.token = token;
+  video.seenSeeking = false;
+  video.seenEnded = false;
+
+  var handler = {
+    "ontimeout": function() {
+      Log(token, "timed out: ended=" + video.seenEnded);
+    }
+  };
+  manager.started(token, handler);
+
+  video.src = test.name;
+  video.name = test.name;
+
+  function callSeekToNextFrame() {
+    video.seekToNextFrame().then(
+      () => {
+        if (!video.seenSeeking) {
+          ok(false, video.token + ": Should have already received seeking event.");
+        }
+        video.seenSeeking = false;
+        if (!video.ended) {
+          callSeekToNextFrame();
+        }
+      },
+      () => {
+        ok(false, video.token + ": seekToNextFrame() failed.");
+      }
+    );
+  }
+
+  var onLoadedmetadata = function(t, v) { return function() {
+    callSeekToNextFrame();
+  }}(test, video);
+
+  var finish = function() {
+    video.finished = true;
+    video.removeEventListener("loadedmetadata", onLoadedmetadata);
+    video.removeEventListener("seeking", onSeeking);
+    removeNodeAndSource(video);
+    manager.finished(video.token);
+  }
+
+  var onEnded = function(t, v) { return function() {
+    v.seenEnded = true;
+    finish();
+  }}(test, video);
+
+  var onSeeking = function(t, v) { return function() {
+    if (v.seenSeeking) {
+      ok(false, v.token + ": Should yet receive seeking event.");
+    }
+    v.seenSeeking = true;
+  }}(test, video);
+
+  video.addEventListener("loadedmetadata", onLoadedmetadata);
+  video.addEventListener("seeking", onSeeking);
+  video.addEventListener("ended", onEnded);
+
+  document.body.appendChild(video);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.seekToNextFrame.enabled", true ],
+      ["media.dormant-on-pause-timeout-ms", -1]
+    ]
+  },
+  function() {
+    manager.runTests(gSeekToNextFrameTests, startTest);
+  });
+
+</script>
+</pre>
+</body>
+</html>

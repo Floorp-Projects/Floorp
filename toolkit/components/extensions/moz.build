@@ -1,0 +1,138 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+with Files("**"):
+    BUG_COMPONENT = ("WebExtensions", "General")
+
+EXTRA_JS_MODULES += [
+    "ConduitsChild.jsm",
+    "ConduitsParent.jsm",
+    "Extension.jsm",
+    "ExtensionActions.jsm",
+    "ExtensionActivityLog.jsm",
+    "ExtensionChild.jsm",
+    "ExtensionChildDevToolsUtils.jsm",
+    "ExtensionCommon.jsm",
+    "ExtensionContent.jsm",
+    "ExtensionPageChild.jsm",
+    "ExtensionParent.jsm",
+    "ExtensionPermissions.jsm",
+    "ExtensionPreferencesManager.jsm",
+    "ExtensionProcessScript.jsm",
+    "extensionProcessScriptLoader.js",
+    "ExtensionSettingsStore.jsm",
+    "ExtensionShortcuts.jsm",
+    "ExtensionStorage.jsm",
+    "ExtensionStorageIDB.jsm",
+    "ExtensionStorageSync.jsm",
+    "ExtensionStorageSyncKinto.jsm",
+    "ExtensionTelemetry.jsm",
+    "ExtensionUtils.jsm",
+    "ExtensionWorkerChild.jsm",
+    "FindContent.jsm",
+    "MatchURLFilters.jsm",
+    "MessageManagerProxy.jsm",
+    "NativeManifests.jsm",
+    "NativeMessaging.jsm",
+    "PerformanceCounters.jsm",
+    "ProxyChannelFilter.jsm",
+    "Schemas.jsm",
+    "WebNavigation.jsm",
+    "WebNavigationFrames.jsm",
+]
+
+EXTRA_COMPONENTS += [
+    "extensions-toolkit.manifest",
+]
+
+TESTING_JS_MODULES += [
+    "ExtensionTestCommon.jsm",
+    "ExtensionXPCShellUtils.jsm",
+    "MessageChannel.jsm",
+]
+
+DIRS += [
+    "schemas",
+    "storage",
+    "webidl-api",
+    "webrequest",
+]
+
+IPDL_SOURCES += [
+    "PExtensions.ipdl",
+]
+
+XPIDL_SOURCES += [
+    "extIWebNavigation.idl",
+    "mozIExtensionAPIRequestHandling.idl",
+    "mozIExtensionProcessScript.idl",
+]
+
+XPIDL_MODULE = "webextensions"
+
+EXPORTS.mozilla = [
+    "ExtensionPolicyService.h",
+]
+
+EXPORTS.mozilla.extensions = [
+    "DocumentObserver.h",
+    "ExtensionsChild.h",
+    "ExtensionsParent.h",
+    "MatchGlob.h",
+    "MatchPattern.h",
+    "WebExtensionContentScript.h",
+    "WebExtensionPolicy.h",
+]
+
+UNIFIED_SOURCES += [
+    "ExtensionPolicyService.cpp",
+    "ExtensionsChild.cpp",
+    "ExtensionsParent.cpp",
+    "MatchPattern.cpp",
+    "WebExtensionPolicy.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+FINAL_LIBRARY = "xul"
+
+
+JAR_MANIFESTS += ["jar.mn"]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser-serviceworker.ini",
+    "test/browser/browser.ini",
+]
+
+MOCHITEST_MANIFESTS += [
+    "test/mochitest/mochitest-remote.ini",
+    "test/mochitest/mochitest.ini",
+]
+MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += [
+    "test/xpcshell/native_messaging.ini",
+    "test/xpcshell/xpcshell-e10s.ini",
+    "test/xpcshell/xpcshell-legacy-ep.ini",
+    "test/xpcshell/xpcshell-remote.ini",
+    "test/xpcshell/xpcshell.ini",
+]
+
+# Only include tests that requires the WebExtensions WebIDL API bindings
+# in builds where they are enabled (currently only on Nightly builds).
+if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
+    XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/webidl-api/xpcshell.ini"]
+
+SPHINX_TREES["webextensions"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+REQUIRES_UNIFIED_BUILD = True

@@ -1,0 +1,39 @@
+# HG changeset patch
+# User Ehsan Akhgari <ehsan@mozilla.com>
+
+Bug 945588 - Add include guards to SkConfig8888.h
+
+diff --git a/gfx/skia/src/core/SkConfig8888.h b/gfx/skia/src/core/SkConfig8888.h
+index 96eaef2..36bc9b4 100644
+--- a/gfx/skia/src/core/SkConfig8888.h
++++ b/gfx/skia/src/core/SkConfig8888.h
+@@ -1,16 +1,18 @@
+ 
+ /*
+  * Copyright 2011 Google Inc.
+  *
+  * Use of this source code is governed by a BSD-style license that can be
+  * found in the LICENSE file.
+  */
+ 
++#ifndef SkConfig8888_DEFINED
++#define SkConfig8888_DEFINED
+ 
+ #include "SkCanvas.h"
+ #include "SkColorPriv.h"
+ 
+ /**
+  * Converts pixels from one Config8888 to another Config8888
+  */
+ void SkConvertConfig8888Pixels(uint32_t* dstPixels,
+@@ -69,8 +71,10 @@ static inline void SkCopyConfig8888ToBitmap(const SkBitmap& dstBmp,
+     int h = dstBmp.height();
+     size_t dstRowBytes = dstBmp.rowBytes();
+     uint32_t* dstPixels = reinterpret_cast<uint32_t*>(dstBmp.getPixels());
+ 
+     SkConvertConfig8888Pixels(dstPixels, dstRowBytes, SkCanvas::kNative_Premul_Config8888, srcPixels, srcRowBytes, srcConfig8888, w, h);
+ }
+ 
+ }
++
++#endif

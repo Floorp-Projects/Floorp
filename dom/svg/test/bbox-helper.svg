@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <g transform="scale(0.5)">
+    <foreignObject id="fO" x="10" y="10" width="100" height="100"/>
+    <image id="i" x="10" y="10" width="100" height="100"/>
+  </g>
+  <text id="b" x="100" y="100">abcdef</text>
+  <text id="a" x="20" y="30">a</text>
+  <text id="y" x="20" y="40">y</text>
+  <text id="tspantext1">
+    <tspan id="tspan1" x="100" y="100">abcdef</tspan>
+  </text>
+  <text id="tspantext2" x="100" y="100">ABCEDF<tspan id="tspan2">ABCEDF</tspan></text>
+  <text id="text" x="20" y="60">text</text>
+  <!-- &#8206; is the same as the HTML &lrm; -->
+  <text id="lrmText" x="20" y="60">&#8206;text</text>
+  <g id="v">
+    <circle cx="100" cy="50" r="5"/>
+    <path d="M 100,100 L 100,200"/>
+  </g>
+  <g id="h">
+    <circle cx="200" cy="50" r="5"/>
+    <path d="M 200,100 L 300,100"/>
+  </g>
+  <g id="e">
+    <!-- empty container should not affect parent's bbox -->
+    <g/>
+    <!-- neither should a path, -->
+    <path/>
+    <!-- a polygon -->
+    <polygon/>
+    <!-- or an empty text element -->
+    <text x="185" y="25"/>
+    <circle cx="100" cy="100" r="5"/>
+    <g/>
+    <circle cx="100" cy="100" r="5"/>
+    <g/>
+  </g>
+  <use x="100" y="100" id="use_v" href="#v"/>
+  <use x="100" y="100" id="use_h" href="#h"/>
+  <use x="100" y="100" id="use_e" href="#e"/>
+</svg>

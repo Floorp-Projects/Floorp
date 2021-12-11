@@ -1,0 +1,187 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+function ok(cond, message) {
+  window.opener.ok(cond, message)
+}
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+function isnot(received, notExpected, message) {
+  window.opener.isnot(received, notExpected, message);
+}
+
+var bufferFullCounter = 0;
+const expectedBufferFullEvents = 0;
+
+const properties = ["startTime", "redirectStart", "redirectEnd", "fetchStart",
+                    "domainLookupStart", "domainLookupEnd", "connectStart",
+                    "connectEnd", "requestStart", "responseStart", "responseEnd"];
+
+window.onload = function() {
+  ok(!!window.performance, "Performance object should exist");
+  ok(!!window.performance.getEntries, "Performance.getEntries() should exist");
+  ok(!!window.performance.getEntriesByName, "Performance.getEntriesByName() should exist");
+  ok(!!window.performance.getEntriesByType, "Performance.getEntriesByType() should exist");
+
+  window.performance.onresourcetimingbufferfull = function() {
+    bufferFullCounter += 1;
+  }
+
+  makeXhr("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data.json", firstCheck);
+};
+
+function firstCheck() {
+  var entries = window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data.json");
+  ok(!!entries[0], "same origin test-data.json is missing from entries");
+  checkSameOrigin(entries[0]);
+
+  var entries = window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/res0.resource");
+  ok(!!entries[0], "same origin res0.resource is missing from entries");
+  checkSameOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res0.resource");
+  ok(!!entries[0], "cross origin res0.resource is missing from entries");
+  checkCrossOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res1.resource");
+  ok(!!entries[0], "res1.resource is missing from entries");
+  checkSameOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res2.resource");
+  ok(!!entries[0], "redirected res2.resource is missing from entries");
+  checkRedirectedCrossOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res3.resource");
+  ok(!!entries[0], "cross origin res3.resource is missing from entries");
+  checkSameOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res4.resource");
+  ok(!!entries[0], "redirected res4.resource is missing from entries");
+  checkRedirectedSameOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res5.resource");
+  ok(!!entries[0], "cross origin res5.resource is missing from entries");
+  checkCrossOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res6.resource");
+  ok(!!entries[0], "cross origin res6.resource is missing from entries");
+  checkCrossOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res7.resource");
+  ok(!!entries[0], "cross origin res7.resource is missing from entries");
+  checkCrossOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://test1.example.com/tests/dom/tests/mochitest/general/res8.resource");
+  ok(!!entries[0], "redirected res8.resource is missing from entries");
+  checkRedirectCrossOriginResourceSameOrigin(entries[0]);
+
+  entries = window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing.js");
+  ok(!!entries[0], "same origin resource_timing.js is missing from entries");
+  checkSameOrigin(entries[0]);
+
+  is(bufferFullCounter, expectedBufferFullEvents, "Buffer full was called");
+  finishTests();
+}
+
+function checkEntry(entry, checks) {
+  // If the entry is undefined, we return early so we don't get a JS error
+  if (entry == undefined)
+    return;
+
+  for (var j = 1; j < properties.length; ++j) {
+    var prop = properties[j];
+    if (checks[prop] != undefined) {
+      is(entry[prop], checks[prop], "Wrong value for prop " + prop + " for resource " + entry.name);
+    } else {
+      isnot(entry[prop], 0, "Wrong value for prop " + prop + " for resource " + entry.name);
+    }
+  }
+}
+
+// No redirects have occured so RedirectStart/End are 0
+function checkSameOrigin(entry) {
+  const checks = { "redirectStart": 0, "redirectEnd": 0 };
+  checkEntry(entry, checks);
+}
+
+// This is a cross-origin resource that doesn't pass the check
+// All of these attributes are 0. No redirects
+function checkCrossOrigin(entry) {
+  const checks = { "redirectStart": 0, "redirectEnd": 0,
+                   "domainLookupStart": 0, "domainLookupEnd": 0,
+                   "connectStart": 0, "connectEnd": 0,
+                   "requestStart": 0, "responseStart": 0 };
+  checkEntry(entry, checks);
+}
+
+// A cross-origin redirect has occured. RedirectStart/End and the rest of the
+// attributes are 0.
+function checkRedirectedCrossOrigin(entry) {
+  const checks = { "redirectStart": 0, "redirectEnd": 0,
+                   "domainLookupStart": 0, "domainLookupEnd": 0,
+                   "connectStart": 0, "connectEnd": 0,
+                   "requestStart": 0, "responseStart": 0 };
+  checkEntry(entry, checks);
+}
+
+// The redirect is to the same origin as the initial document,
+// so no entries are 0.
+function checkRedirectedSameOrigin(entry) {
+  const checks = { };
+  checkEntry(entry, checks);
+}
+
+// The final entry passes the timing-allow-check,
+// but one of the redirects does not. redirectStart/End are 0.
+function checkRedirectCrossOriginResourceSameOrigin(entry) {
+  const checks = { "redirectStart": 0, "redirectEnd": 0 };
+  checkEntry(entry, checks);
+}
+
+function makeXhr(aUrl, aCallback) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onload = aCallback;
+  xmlhttp.open("get", aUrl, true);
+  xmlhttp.send();
+}
+
+function finishTests() {
+  window.opener.finishTests();
+}
+
+</script>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=822480"
+     title="Add resource timing API.">
+    Bug #822480 -  Add in the Resource Timing API
+  </a>
+  <p id="display"></p>
+  <div id="content">
+    <object data="http://mochi.test:8888/tests/dom/tests/mochitest/general/res0.resource"></object> <!-- same origin, no header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res0.resource"></object> <!-- cross origin, no header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res1.resource"></object> <!-- cross origin, Timing-Allow-Origin: * header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res2.resource"></object> <!-- cross origin redirect to test2.example.com, no header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res3.resource"></object> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8888 header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res4.resource"></object> <!-- cross origin redirect to mochi.test:8888/.../res1.resource, Timing-Allow-Origin: * -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res5.resource"></object> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8889 -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res6.resource"></object> <!-- cross origin, Timing-Allow-Origin: "" (empty string) -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res7.resource"></object> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8888 http://test1.com header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res8.resource"></object> <!-- double cross origin redirect -->
+    <script type="text/javascript" src="http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing.js"></script> <!-- same origin script -->
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,45 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "Atom.h",
+    "AtomType.h",
+    "Box.h",
+    "BufferStream.h",
+    "ByteStream.h",
+    "DecoderData.h",
+    "Index.h",
+    "MoofParser.h",
+    "MP4Decoder.h",
+    "MP4Demuxer.h",
+    "MP4Interval.h",
+    "MP4Metadata.h",
+    "ResourceStream.h",
+    "SinfParser.h",
+]
+
+UNIFIED_SOURCES += [
+    "Box.cpp",
+    "BufferStream.cpp",
+    "DecoderData.cpp",
+    "Index.cpp",
+    "MoofParser.cpp",
+    "MP4Decoder.cpp",
+    "MP4Demuxer.cpp",
+    "MP4Metadata.cpp",
+    "ResourceStream.cpp",
+    "SinfParser.cpp",
+]
+
+FINAL_LIBRARY = "xul"
+
+# Suppress warnings for now.
+CXXFLAGS += [
+    "-Wno-sign-compare",
+]
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

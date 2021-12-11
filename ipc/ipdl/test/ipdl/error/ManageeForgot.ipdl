@@ -1,0 +1,11 @@
+//error: |manages| declaration in protocol `ForgottenManager' does not match any |manager| declaration in protocol `ManageeForgot'
+
+include protocol ForgottenManager;
+
+// See ForgottenManager. This includes ForgottenManager to ensure that
+// loading this file fails.
+
+protocol ManageeForgot {
+child:
+    async __delete__();
+};

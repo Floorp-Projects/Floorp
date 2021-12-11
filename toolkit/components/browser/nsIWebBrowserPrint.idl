@@ -1,0 +1,136 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include <functional>
+
+namespace mozilla {
+namespace dom {
+class PrintPreviewResultInfo;
+} // namespace dom
+} // namespace mozilla
+%}
+
+interface mozIDOMWindowProxy;
+interface nsIPrintSettings;
+interface nsIWebProgressListener;
+
+native PrintPreviewResolver(std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>&&);
+
+/**
+ * nsIWebBrowserPrint corresponds to the main interface
+ * for printing an embedded Gecko web browser window/document
+ */
+[scriptable, uuid(c9a934ed-fff1-4971-bfba-6c25ad70e1e6)]
+interface nsIWebBrowserPrint : nsISupports
+{
+  /**
+   * PrintPreview Navigation Constants
+   *
+   * XXXdholbert Consider renaming these? Strictly speaking, these deal with
+   * *sheets* (which are roughly the same as pages in the default configuration
+   * of one page per sheet). Fix in bug 1669762.
+   */
+  const short PRINTPREVIEW_GOTO_PAGENUM = 0;
+  const short PRINTPREVIEW_PREV_PAGE    = 1;
+  const short PRINTPREVIEW_NEXT_PAGE    = 2;
+  const short PRINTPREVIEW_HOME         = 3;
+  const short PRINTPREVIEW_END          = 4;
+
+  /**
+   * Returns a pointer to the PrintSettings object that
+   * that was passed into either "print" or "print preview"
+   *
+   * This enables any consumers of the interface to have access
+   * to the "current" PrintSetting at later points in the execution
+   */
+  readonly attribute nsIPrintSettings currentPrintSettings;
+
+  /**
+   * Returns whether it is in Print mode
+   */
+  readonly attribute boolean doingPrint;
+
+  /**
+   * Returns whether it is in Print Preview mode
+   */
+  readonly attribute boolean doingPrintPreview;
+
+  /**
+   * This represents the "raw" total number of pages, where "raw" means that
+   * this value is *not amended* to account for reductions from pages-per-sheet
+   * or page ranges (unlike other APIs on this interface).
+   *
+   * So e.g. for a 20-page document, this attribute will be 20, regardless of
+   * whether the user has chosen a smaller page range, and regardless of
+   * whether the user is using pages-per-sheet to reduce the number of sheets.
+   */
+  readonly attribute long rawNumPages;
+
+  /**
+   * This returns the total number of pages for the Print Preview
+   *
+   * XXXdholbert Consider renaming this? Strictly speaking, this is the number
+   * of *sheets* (which is the same as the number of pages in the default
+   * configuration of one page per sheet). Fix in bug 1669762.
+   */
+  readonly attribute long printPreviewNumPages;
+
+  /**
+   * This returns the number of the page which is currently in the Print Preview viewport
+   *
+   * XXXdholbert Consider renaming this? (similar to printPreviewNumPages above)
+   * Strictly speaking, this is the number of the *sheet* which is currently in
+   * the print preview viewport. Fix in bug 1669762.
+   */
+  readonly attribute long printPreviewCurrentPageNumber;
+
+  /**
+   * Print the specified DOM window
+   *
+   * @param aThePrintSettings - Printer Settings for the print job, if aThePrintSettings is null
+   *                            then the global PS will be used.
+   * @param aWPListener - is updated during the print
+   * @return void
+   */
+  [noscript] void print(in nsIPrintSettings aThePrintSettings,
+                        in nsIWebProgressListener aWPListener);
+
+  /**
+   * Print Preview the specified DOM window
+   *
+   * @param aThePrintSettings - Printer Settings for the print preview, if aThePrintSettings is null
+   *                            then the global PS will be used.
+   * @param aWPListener - is updated during the printpreview
+   * @return void
+   */
+  [noscript] void printPreview(in nsIPrintSettings aThePrintSettings,
+                               in nsIWebProgressListener aWPListener,
+                               in PrintPreviewResolver aCallback);
+
+  /**
+   * @param aNavType - navigation enum
+   * @param aPageNum - page num to navigate to when aNavType = ePrintPreviewGoToPageNum
+   * @return void
+   */
+  void printPreviewScrollToPage(in short aNavType, in long aPageNum);
+
+  /**
+   * Cancels the current print
+   * @return void
+   */
+  void cancel();
+
+  /**
+   * This exists PrintPreview mode and returns browser window to galley mode
+   * @return void
+   */
+  void exitPrintPreview();
+
+};
+

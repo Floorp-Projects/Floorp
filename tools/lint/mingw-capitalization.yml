@@ -1,0 +1,12 @@
+---
+mingw-capitalization:
+    description: >
+      "A Windows include file is not lowercase, and may break the MinGW build"
+    extensions: ['h', 'cpp', 'cc', 'c']
+    include: ['.']
+    exclude:
+        # We do not compile WebRTC with MinGW yet
+        - media/webrtc
+    type: external
+    level: error
+    payload: cpp.mingw-capitalization:lint

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "796895",
+    title: "Basic data channel audio connection"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addInitialDataChannel(test.chain);
+    var sld = test.chain.remove("PC_REMOTE_SET_LOCAL_DESCRIPTION");
+    test.chain.insertAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION", sld);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    return test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

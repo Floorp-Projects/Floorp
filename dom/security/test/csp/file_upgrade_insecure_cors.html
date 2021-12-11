@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1139297 - Implement CSP upgrade-insecure-requests directive</title>
+</head>
+<body>
+
+<script type="text/javascript">
+  // === TEST 1
+  var url1 = "http://test1.example.com/tests/dom/security/test/csp/file_upgrade_insecure_cors_server.sjs?test1";
+  var xhr1 = new XMLHttpRequest();
+  xhr1.open("GET", url1, true);
+  xhr1.onload = function() {
+  	window.parent.postMessage(xhr1.response, "*");
+  };
+  xhr1.onerror = function() {
+  	window.parent.postMessage("test1-failed", "*");
+  };
+  xhr1.send();
+
+  // === TEST 2
+  var url2 = "http://test1.example.com/tests/dom/security/test/csp/file_upgrade_insecure_cors_server.sjs?test2";
+  var xhr2 = new XMLHttpRequest();
+  xhr2.open("GET", url2, true);
+  xhr2.onload = function() {
+    window.parent.postMessage(xhr2.response, "*");
+  };
+  xhr2.onerror = function() {
+    window.parent.postMessage("test2-failed", "*");
+  };
+  xhr2.send();
+
+  // === TEST 3
+  var url3 = "http://test2.example.com/tests/dom/security/test/csp/file_upgrade_insecure_cors_server.sjs?test3";
+  var xhr3 = new XMLHttpRequest();
+  xhr3.open("GET", url3, true);
+  xhr3.onload = function() {
+  	window.parent.postMessage(xhr3.response, "*");
+  };
+  xhr3.onerror = function() {
+  	window.parent.postMessage("test3-failed", "*");
+  };
+  xhr3.send();
+
+</script>
+
+</body>
+</html>

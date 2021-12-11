@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<title>Testcase, Mozilla bug 1468654</title>
+<style>
+span {
+  display: block;
+  position: relative;
+}
+
+span:before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid black;
+  margin-left: 5px;
+  margin-top: 5px;
+  margin-right: 12px;
+  vertical-align: top;
+}
+
+body {
+  line-height: 1.6;
+}
+
+.column {
+  float: left;
+  width: 13em;
+  margin-right: 1em;
+}
+
+</style>
+
+<div class="column">
+<div><span>One</span></div>
+<div><span>Two</span></div>
+<div><span>Three</span></div>
+<div><span>Four</span></div>
+<div><span>Five</span></div>
+<div><span>Six</span></div>
+<div><span>Seven</span></div>
+</div>
+<div class="column">
+<div><span>Eight</span></div>
+<div><span>Nine</span></div>
+<div><span>Ten</span></div>
+<div><span>Eleven</span></div>
+<div><span>Twelve</span></div>
+<div><span>Thirteen</span></div>
+<div><span>Fourteen</span></div>
+</div>
+<div class="column">
+<div><span>Fifteen</span></div>
+<div><span>Sixteen</span></div>
+<div><span>Seventeen</span></div>
+<div><span>Eighteen</span></div>
+<div><span>Nineteen</span></div>
+<div><span>Twenty</span></div>
+<div><span>Twentyone</span></div>
+</div>

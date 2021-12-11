@@ -1,0 +1,19 @@
+include protocol PTestManyChildAllocs;
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestManyChildAllocsSub {
+    manager PTestManyChildAllocs;
+
+child:
+    async __delete__();
+
+parent:
+    async Hello();
+
+    // empty
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

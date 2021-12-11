@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      function doTest() {
+        document.getElementById('t').readOnly='ro';
+        document.documentElement.className='';
+      }
+      document.addEventListener("MozReftestInvalidate", doTest);
+    </script>
+  </head>
+  <!-- Test: if textarea is readonly, it is barred from constraint validation
+             and should not be affected by :invalid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body>
+    <textarea class='notinvalid' id='t' required></textarea>
+  </body>
+</html>

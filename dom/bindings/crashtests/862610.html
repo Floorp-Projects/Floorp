@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+  HTMLElement.prototype.__proto__ = new Proxy({}, {});
+  try {
+    window.Image;
+  } finally {
+    // Restore our prototype so the test harnesses can deal with us
+    // We can't just assign to __proto__ because it lives on our proto chain
+    // and we messed that up.
+    var desc = Object.getOwnPropertyDescriptor(Object.prototype, "__proto__");
+    desc.set.call(HTMLElement.prototype, Element.prototype);
+  }
+</script>
+</head>
+
+<body></body>
+</html>

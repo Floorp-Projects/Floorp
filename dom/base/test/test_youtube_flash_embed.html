@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1240471
+     -->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1240471</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+     let path = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + '/file_youtube_flash_embed.html';
+     onmessage = function(e) {
+       let msg = JSON.parse(e.data);
+       if (msg.fn == "finish") {
+         SimpleTest.finish();
+         return;
+       }
+       self[msg.fn].apply(null, msg.args);
+     }
+     function onLoad() {
+       // The test file must be loaded into youtube.com domain
+       // because it needs unprivileged access to fullscreenEnabled.
+       ifr.src = "https://mochitest.youtube.com" + path;
+     }
+    </script>
+  </head>
+  <body onload="onLoad()">
+    <iframe id="ifr" allowfullscreen></iframe>
+  </body>
+</html>

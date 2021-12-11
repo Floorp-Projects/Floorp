@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body onload="loaded()">
+    <iframe id="foo"></iframe> 
+    <script type="text/javascript">
+    function loaded() {
+      var n = document.getElementById('foo');
+        var f = n.contentWindow;
+        f.document.open();
+        f.document.write('');
+        f.onload = function() {
+          f.document.designMode = 'on';
+          setTimeout(function() {
+            f.document.designMode='on';
+            f.location = 'data:text/html;charset=utf-8,<body>FAIL<script>document.body.innerHTML="PASS"<\/script>';
+            n.addEventListener("load",
+                               function() { document.documentElement.className = ''; });
+          }, 0);
+        };
+        f.document.close();
+    }
+    </script>
+  </body>
+</html>

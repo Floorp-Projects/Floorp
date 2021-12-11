@@ -1,0 +1,23 @@
+.topics {
+  ul {
+    margin: 0;
+    padding: 0;
+    @media (min-width: $break-point-large) {
+      display: inline;
+      padding-inline-start: 12px;
+    }
+  }
+
+  ul li {
+    display: inline-block;
+
+    &::after {
+      content: '•';
+      padding: 8px;
+    }
+
+    &:last-child::after {
+      content: none;
+    }
+  }
+}

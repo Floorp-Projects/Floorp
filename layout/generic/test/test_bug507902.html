@@ -1,0 +1,382 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=507902
+-->
+<head>
+  <title>Test for Bug 507902</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=507902">Mozilla Bug 507902</a>
+
+<iframe id="testFrameElem"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+//
+// Mochitest to test nsImageFrame icons
+//
+// The 'loading' icon should be displayed up until we have enough image
+// data to determine the frame size.
+//
+// The 'broken' icon should be displayed when the URL is invalid (either
+// a bad server or a file that fails to be sniffed to an appropriate
+// mimetype).
+//
+
+// Boilerplate
+gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+// URL + paths
+//
+// We have a separate copy of the icons in the test directory to
+// avoid any firefox caching mechanisms that might affect the
+// behavior of the load.
+var us = window.location.href;
+var baseURL = us.substring(0, us.lastIndexOf('/') + 1);
+var loadIconFilename = "file_LoadingImageReference.png";
+var imageFilename = "file_Dolske.png";
+var brokenIconFilename = "file_BrokenImageReference.png";
+var serverFilename = "file_IconTestServer.sjs";
+var serverContinueFlag = "?continue=true";
+var bogusFilename = "oneuponatimewhendolskewasyoung.png";
+
+// Our test image element, inside a div, inside an iframe
+var testFrameElem = document.getElementById("testFrameElem");
+var innerDoc = testFrameElem.contentWindow.document;
+var divContainer = innerDoc.createElement("div");
+divContainer.style.cssFloat = "left";
+innerDoc.body.appendChild(divContainer);
+var testImageElem = new Image();
+divContainer.appendChild(testImageElem);
+var pingImage = new Image();
+
+// Set up the canvases
+var canvases = {};
+var canvasNames = [ "brokenIconTest",  "brokenIconReference",
+                    "loadingIconTest", "loadingIconReference",
+                    "loadedTest",      "loadedReference" ];
+var windowElem = document.documentElement;
+for (let i in canvasNames) {
+  var can = document.createElement("canvas");
+  can.setAttribute("width", windowElem.getAttribute("width"));
+  can.setAttribute("height", windowElem.getAttribute("height"));
+  canvases[canvasNames[i]] = can;
+
+  // When the image frame has no idea how to size itself, it sizes itself
+  // to dimensions capable of displaying the alt feedback icons. However, if
+  // the image has been loaded before, something (I don't know what) seems to
+  // remember the size of the last successful image for that URL. So when we
+  // create a new image frame for that URL, it uses that size until it hears
+  // something different. This happens through a refresh (not sure if this is
+  // desired behavior). This means that if you refresh the test, the "loading"
+  // icon for the test image will appear with a border that stretches further
+  // right and down, because that URL previously displayed an image with larger
+  // dimensions. This causes the verify stage to fail. To allow for
+  // successful test refreshes (only useful for people, not automated tests),
+  // we add a clipping region so that we see the left and top borders, along
+  // with the image, but not the bottom and right borders.
+
+  if ((i > 1) && (i < 4)) {
+    let ctx = can.getContext("2d");
+    ctx.beginPath();
+    ctx.rect(0,0, 30, 30);
+    ctx.clip();
+   }
+
+}
+
+// Stage 1 - Load the reference image for the broken icon
+function loadBrokenIconReference() {
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 1 called\n");};
+
+  // Debug - Figure out if we're getting an onerror instead of onload
+  testImageElem.onerror = function(event) {dump("test_bug507902.html DEBUG - Got onerror for testImageElem!\n");};
+
+  testImageElem.src = baseURL + brokenIconFilename;
+  stageTransition();
+}
+
+// Stage 2 - Draw the reference image for the broken icon to a canvas
+function drawBrokenIconReference() {
+
+  enableBorderAndPad();
+  drawWindowToCanvas("brokenIconReference");
+  disableBorderAndPad();
+
+  stageTransition();
+}
+
+// Stage 3 - Load the reference image for the loading icon
+function loadLoadingIconReference() {
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 3 called\n");};
+
+  testImageElem.src = baseURL + loadIconFilename;
+  stageTransition();
+}
+
+// Stage 4 - Draw the reference image for the loading icon to a canvas
+function drawLoadingIconReference() {
+
+  enableBorderAndPad();
+  drawWindowToCanvas("loadingIconReference");
+  disableBorderAndPad();
+
+  stageTransition();
+}
+
+// Stage 5 - Try to load a broken image
+function loadBrokenImage() {
+  resetImage();
+  testImageElem.src = baseURL + bogusFilename;
+  stageTransition();
+}
+
+// Stage 6 - Draw the screen to a canvas. This should hopefully
+// be the broken icon.
+function drawBrokenIcon() {
+  drawWindowToCanvas("brokenIconTest");
+  stageTransition();
+}
+
+// Stage 7 - Load the reference image for the test image
+function loadImageReference() {
+  resetImage();
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 7 called\n");};
+
+  testImageElem.src = baseURL + imageFilename;
+  stageTransition();
+}
+
+// Stage 8 - Draw the reference image for the test image to a canvas
+function drawImageReference() {
+  drawWindowToCanvas("loadedReference");
+  stageTransition();
+}
+
+// Stage 9 - Start a load of the test image from the delay-generating server
+function startServerLoad() {
+
+  // Reset the image
+  resetImage();
+
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - starting server load\n");
+
+  // Load the image
+  testImageElem.src = baseURL + serverFilename;
+  stageTransition();
+}
+
+// Stage 10 - Draw the screen to a canvas. This should hopefully be the loading
+// icon.
+function drawLoadingIcon() {
+
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - drawing loading icon\n");
+
+  drawWindowToCanvas("loadingIconTest");
+  stageTransition();
+}
+
+// Stage 11 - Tell the server to continue.
+function signalServerContinue() {
+
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - signaling server to continue\n");
+
+  pingImage.src = baseURL + serverFilename + serverContinueFlag;
+  stageTransition();
+}
+
+// Stage 12 - Draw the screen to a canvas. This should hopefully be the loaded
+// test image.
+function drawLoadedImage() {
+  drawWindowToCanvas("loadedTest");
+  stageTransition();
+}
+
+
+// Stage 13 - Verify That the appropriate canvases match
+function verifyCanvases() {
+
+  // Verify the broken icon
+  ok(canvasesAreEqual("brokenIconTest", "brokenIconReference"),
+     "Window drawn on broken load should match broken icon reference");
+
+  // Verify the loading icon
+  ok(canvasesAreEqual("loadingIconTest", "loadingIconReference"),
+     "Window drawn mid-load should match loading icon reference");
+
+  // Verify the loaded image
+  ok(canvasesAreEqual("loadedTest", "loadedReference"),
+     "Window drawn post-load should match reference image");
+
+  stageTransition();
+}
+
+// We have a bunch of different things that need to happen in order
+// with different transitions. We make a "stage table" here where
+// each entry contains the stage function ('fn') and a transition
+// ('trans'), which can be one of the following:
+// "instant" - Just calls the next stage directly
+// "onload" - Sets the next stage as an onload event for the image element
+// "onerror" - Sets the next stage as an onerror event for the image element
+// integer  - Sets the next stage to be called after the given timeout duration
+// "finish" - Finish the test
+var testStages = [
+  { "fn" : loadBrokenIconReference,  "trans" : "onload"},
+  { "fn" : drawBrokenIconReference,  "trans" : "instant"},
+  { "fn" : loadLoadingIconReference, "trans" : "onload" },
+  { "fn" : drawLoadingIconReference, "trans" : "instant" },
+  { "fn" : loadBrokenImage,          "trans" : "onerror" },
+  { "fn" : drawBrokenIcon,           "trans" : "instant" },
+  { "fn" : loadImageReference,       "trans" : "onload" },
+  { "fn" : drawImageReference,       "trans" : "instant" },
+  // XXXbholley - We use a timeout here because resetting the
+  // image doesn't seem to be quite synchronous. If we make
+  // this transition "instant", then the drawImage call draws
+  // an empty (0,0,0,0) rect to the canvas and we're left with
+  // whatever was there before. I don't know of any good event
+  // mechanism to figure out when the image frame is bootstrapped
+  // enough to display the loading image, so I did trial-and-error
+  // with timeouts. 50ms seems to be enough time for things to work
+  // reliably, so *= 6 for good measure.
+  { "fn" : startServerLoad,          "trans" : 300 },
+  { "fn" : drawLoadingIcon,          "trans" : "instant" },
+  { "fn" : signalServerContinue,     "trans" : "onload" },
+  { "fn" : drawLoadedImage,          "trans" : "instant" },
+  { "fn" : verifyCanvases,           "trans" : "finish" } ];
+var currentStage = 0;
+
+// Transition function called at the end of each stage
+function stageTransition() {
+
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - Current Stage: " + currentStage + "\n");
+
+  // What's our transition?
+  var trans = testStages[currentStage++].trans;
+
+  // If the transition is finish, stop now before we access out of bounds
+  if (trans == "finish") {
+    makeCanvasesVisible(); // Useful for debugging
+    SimpleTest.finish();
+    return;
+  }
+
+  // Otherwise, get the next function
+  var nextfn = testStages[currentStage].fn;
+
+  // Switch based on transition
+  switch (trans) {
+
+    // Continue right away
+    case "instant":
+      nextfn();
+      break;
+
+    // Continue after we get an onload event on the test image
+    case "onload":
+      testImageElem.onload = function(event) {testImageElem.onload = undefined; nextfn();};
+      break;
+
+    // Continue after we get an onerror event on the test image
+    case "onerror":
+      testImageElem.onerror = function(event) {testImageElem.onerror = undefined; nextfn();};
+      break;
+
+    // Timeout
+    default:
+      setTimeout(nextfn, trans);
+      break
+  }
+}
+
+// Lots if asynchronous behavior here
+SimpleTest.waitForExplicitFinish();
+
+// Catch somebody's eye
+dump("This test is failing intermittently, see bug 510001 - If you see orange here, please paste the following debugging output on the bug!\n");
+
+// Kick off the test by invoking the first stage. The stages call each other
+testStages[0].fn();
+
+
+// We need to get rid of the old image element and make a new one. If we
+// don't, the "current/pending" machinery will display the old image until
+// the new one is loaded, so we won't see the loading icon.
+function resetImage() {
+  divContainer.removeChild(testImageElem);
+  testImageElem = null;
+  testImageElem = new Image();
+  divContainer.appendChild(testImageElem);
+}
+
+//
+// Makes the canvases visible. Called before the tests finish. This is useful for
+// debugging.
+//
+function makeCanvasesVisible() {
+  for (let i = 0; i < canvasNames.length - 1; i += 2) {
+    var title = document.createElement("h3");
+    title.innerHTML = canvasNames[i] + ", " + canvasNames[i+1] + ":";
+    document.body.appendChild(title);
+    var myDiv = document.createElement("div");
+    myDiv.appendChild(canvases[canvasNames[i]]);
+    myDiv.appendChild(canvases[canvasNames[i+1]]);
+    document.body.appendChild(myDiv);
+  }
+}
+
+//
+// Enables and disables bordering/padding to mimic the look of alt feedback icons
+//
+function enableBorderAndPad() {
+  divContainer.style.border = "1px";
+  divContainer.style.borderStyle = "inset";
+  testImageElem.style.padding = "3px";
+}
+
+function disableBorderAndPad() {
+  testImageElem.style.padding = 0;
+  divContainer.style.border = "0px";
+  divContainer.style.borderStyle = "";
+}
+
+//
+// Helper canvas methods. This is mostly copped directly from the reftest framework
+//
+
+function drawWindowToCanvas(canvasName) {
+  var win = testFrameElem.contentWindow;
+  let ctx = canvases[canvasName].getContext("2d");
+  // drawWindow always draws one canvas pixel for each CSS pixel in the source
+  // window, so scale the drawing to show the zoom (making each canvas pixel be one
+  // device pixel instead)
+  ctx.drawWindow(win, win.scrollX, win.scrollY,
+                 Math.ceil(canvases[canvasName].width),
+                 Math.ceil(canvases[canvasName].height),
+                 "rgb(255,255,255)");
+}
+
+function canvasesAreEqual(canvas1Name, canvas2Name) {
+  var c1 = canvases[canvas1Name];
+  var c2 = canvases[canvas2Name];
+  var differences = gWindowUtils.compareCanvases(c1, c2, {});
+  return (differences == 0);
+}
+
+</script>
+</pre>
+</body>
+</html>

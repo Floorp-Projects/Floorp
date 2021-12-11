@@ -1,0 +1,246 @@
+<html>
+
+<head>
+  <title>Test for selection underline</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+// Canvas related code stolen from layout/base/tests/bidi_numeral_test.js which
+// stole from http://developer.mozilla.org/en/docs/Code_snippets:Canvas
+
+var RemoteCanvas = function(aIFrame, aTest) {
+  this.iframe = aIFrame;
+  this.test = aTest;
+  this.snapshot = null;
+};
+
+RemoteCanvas.CANVAS_WIDTH = 200;
+RemoteCanvas.CANVAS_HEIGHT = 100;
+
+RemoteCanvas.prototype.isReference = function() {
+  return this.iframe && (this.iframe.id == "reference");
+}
+
+RemoteCanvas.prototype.load = function(callback) {
+  this.iframe.contentWindow.wrappedJSObject.init(this.test);
+  var me = this;
+  setTimeout(function () { me.remotePagePrepared(callback) }, 100);
+}
+
+RemoteCanvas.prototype.remotePagePrepared = function(callback) {
+  this.snapshot = snapshotWindow(this.iframe.contentWindow);
+  callback(this);
+}
+
+var gPrefs = [
+  [ "ui.SpellCheckerUnderline", "#ff0000" ],
+  [ "ui.IMERawInputBackground", "transparent" ],
+  [ "ui.IMERawInputForeground", "#000000" ],
+  [ "ui.IMERawInputUnderline", "#00ff00" ],
+  [ "ui.IMESelectedRawTextBackground", "transparent" ],
+  [ "ui.IMESelectedRawTextForeground", "#000000" ],
+  [ "ui.IMESelectedRawTextUnderline", "#0000ff" ],
+  [ "ui.IMEConvertedTextBackground", "transparent" ],
+  [ "ui.IMEConvertedTextForeground", "#000000" ],
+  [ "ui.IMEConvertedTextUnderline", "#ffff00" ],
+  [ "ui.IMESelectedConvertedTextBackground", "transparent" ],
+  [ "ui.IMESelectedConvertedTextForeground", "#000000" ],
+  [ "ui.IMESelectedConvertedTextUnderline", "#00ffff" ],
+  [ "ui.SpellCheckerUnderlineStyle", 0 ],
+  [ "ui.IMERawInputUnderlineStyle", 0 ],
+  [ "ui.IMESelectedRawTextUnderlineStyle", 0 ],
+  [ "ui.IMEConvertedTextUnderlineStyle", 0 ],
+  [ "ui.IMESelectedConvertedTextUnderlineStyle", 0 ],
+  [ "ui.SpellCheckerUnderlineRelativeSize", 1.0 ],
+  [ "ui.IMEUnderlineRelativeSize", 1.0 ]
+];
+
+const nsISelectionController = Ci.nsISelectionController;
+
+var gSelectionIndex = -1;
+const kSelections = [
+  { type: nsISelectionController.SELECTION_SPELLCHECK,
+    typeName: "SpellCheck", isIME: false,
+    decorationColor: "#ff0000" },
+  { type: nsISelectionController.SELECTION_IME_RAWINPUT,
+    typeName: "IME-RawInput", isIME: true,
+    decorationColor: "#00ff00" },
+  { type: nsISelectionController.SELECTION_IME_SELECTEDRAWTEXT,
+    typeName: "IME-SelectedRawText", isIME: true,
+    decorationColor: "#0000ff" },
+  { type: nsISelectionController.SELECTION_IME_CONVERTEDTEXT,
+    typeName: "IME-ConvertedText", isIME: true,
+    decorationColor: "#ffff00" },
+  { type: nsISelectionController.SELECTION_IME_SELECTEDCONVERTEDTEXT,
+    typeName: "IME-SelectedConvertedText", isIME: true,
+    decorationColor: "#00ffff" },
+];
+
+const kFontName_Ahem = "AhemTest";
+const kFontName_MPlus = "mplusTest";
+
+var gFontIndex = 0;
+const kFonts = [
+  { family: kFontName_Ahem, defaultSize: 16 },
+  { family: kFontName_Ahem, defaultSize: 20 },
+  { family: kFontName_Ahem, defaultSize: 32 },
+  { family: kFontName_Ahem, defaultSize: 52 },
+
+  { family: kFontName_MPlus, defaultSize: 16 },
+  { family: kFontName_MPlus, defaultSize: 20 },
+  { family: kFontName_MPlus, defaultSize: 32 },
+  { family: kFontName_MPlus, defaultSize: 52 },
+];
+
+const kDecorationStyleNone   = 0;
+const kDecorationStyleDotted = 1;
+const kDecorationStyleDashed = 2;
+const kDecorationStyleSolid  = 3;
+const kDecorationStyleDouble = 4;
+const kDecorationStyleWavy   = 5;
+
+var gDecorationIndex = 0;
+const kDecorations = [
+  { relativeSize: 1.0, style: kDecorationStyleNone,   styleName: "-moz-none" },
+  { relativeSize: 1.0, style: kDecorationStyleSolid,  styleName: "solid"     },
+  { relativeSize: 1.0, style: kDecorationStyleDotted, styleName: "dotted"    },
+  { relativeSize: 1.0, style: kDecorationStyleDashed, styleName: "dashed"    },
+  { relativeSize: 1.0, style: kDecorationStyleDouble, styleName: "double"    },
+  { relativeSize: 1.0, style: kDecorationStyleWavy,   styleName: "wavy"      },
+
+// XXX relativeSize 2.0 cannot be tested by CSS3 text-decoration
+
+];
+
+function IsD2DEnabled() {
+  var enabled = false;
+
+  try {
+    enabled = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).D2DEnabled;
+  } catch(e) {}
+
+  return enabled;
+}
+
+function getFuzz(test) {
+  // Only failing on Windows with Direct2D enabled, and only for 16 permutations.
+  if (IsD2DEnabled() &&
+      test.decoration.styleName == "solid" &&
+      test.decoration.relativeSize == "1" &&
+      test.font.family == "mplusTest" &&
+      test.selection.typeName != "SpellCheck") {
+    return { numDifferentPixels: 194, maxDifference: 1 };
+  }
+  return null;
+}
+
+async function run()
+{
+  let prefs = [];
+  if (++gSelectionIndex == kSelections.length) {
+    if (++gFontIndex == kFonts.length) {
+      if (++gDecorationIndex == kDecorations.length) {
+        SimpleTest.finish();
+        return;
+      }
+      gFontIndex = 0;
+    }
+    gSelectionIndex = 0;
+    prefs.push([ "font.size.variable.x-western", kFonts[gFontIndex].defaultSize ]);
+  }
+
+  var test = {
+    font: kFonts[gFontIndex],
+    decoration: kDecorations[gDecorationIndex],
+    selection: kSelections[gSelectionIndex],
+  };
+
+  prefs.push(
+    ["ui.SpellCheckerUnderlineRelativeSize", test.decoration.relativeSize * 100],
+    ["ui.IMEUnderlineRelativeSize", test.decoration.relativeSize * 100],
+    ["ui.SpellCheckerUnderlineStyle", test.decoration.style],
+    ["ui.IMERawInputUnderlineStyle", test.decoration.style],
+    ["ui.IMESelectedRawTextUnderlineStyle", test.decoration.style],
+    ["ui.IMEConvertedTextUnderlineStyle", test.decoration.style],
+    ["ui.IMESelectedConvertedTextUnderlineStyle", test.decoration.style],
+  );
+
+  await SpecialPowers.pushPrefEnv({ set: prefs });
+  doTest(test);
+}
+
+function doTest(aTest)
+{
+
+  var canvases = [];
+  function callbackTestCanvas(canvas)
+  {
+    canvases.push(canvas);
+
+    if (canvases.length != 2)
+      return;
+
+    var result = !canvases[0].isReference() ? canvases[0] : canvases[1];
+    var reference = canvases[0].isReference() ? canvases[0] : canvases[1];
+
+    var description = "(selection: " + aTest.selection.typeName +
+                      ", style: " + aTest.decoration.styleName +
+                      ", relativeSize: " + aTest.decoration.relativeSize +
+                      ", font: " + aTest.font.family +
+                      ", default font size: " + aTest.font.defaultSize + ")";
+
+    // If the decoration line is thick and the descender of the text isn't
+    // enough for containing it, selection underline may be painted lower
+    // if it's possible.  Then, we cannot test it with CSS3 text-decoration.
+    if (aTest.decoration.style == kDecorationStyleDouble ||
+        aTest.decoration.style == kDecorationStyleWavy) {
+      todo(false, "Rendering of" + description);
+    } else {
+      assertSnapshots(result.snapshot, reference.snapshot, true,
+                      getFuzz(aTest), description, "");
+    }
+
+    canvases = [];
+
+    run();
+  }
+
+  var testCanvas = new RemoteCanvas(document.getElementById("result"), aTest);
+  testCanvas.load(callbackTestCanvas);
+
+  var refCanvas = new RemoteCanvas(document.getElementById("reference"), aTest);
+  refCanvas.load(callbackTestCanvas);
+}
+
+async function onLoad()
+{
+  await SpecialPowers.pushPrefEnv({ set: gPrefs });
+
+  var iframe = document.getElementById("result");
+  iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
+  iframe.height = RemoteCanvas.CANVAS_HEIGHT + "px";
+  iframe = document.getElementById("reference");
+  iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
+  iframe.height = RemoteCanvas.CANVAS_HEIGHT + "px";
+
+  run();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(onLoad, window);
+
+</script>
+
+</head>
+<body>
+
+<iframe src="frame_selection_underline.xhtml" id="result"></iframe>
+<iframe src="frame_selection_underline-ref.xhtml" id="reference"></iframe>
+<pre id="test">
+</pre>
+
+</body>
+</html>

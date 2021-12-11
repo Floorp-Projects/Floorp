@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=511075
+-->
+<head>
+  <title>Test for Bug 511075</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #scroller {
+    border: 1px solid black;
+  }
+  </style>
+</head>
+<body onload="runTests()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=511075">Mozilla Bug 511075</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 511075 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+var tests = [
+  function() {
+    ok(true, "Setting location.hash should scroll.");
+    nextTest();
+    // Click the top scroll arrow.
+    var x = scroller.getBoundingClientRect().width - 5;
+    var y = 5;
+    // On MacOSX the top scroll arrow can be below the slider just above
+    // the bottom scroll arrow.
+    if (navigator.platform.includes("Mac"))
+      y = scroller.getBoundingClientRect().height - 40;
+    synthesizeMouse(scroller, x, y, { type : "mousedown" }, window);
+    synthesizeMouse(scroller, x, y, { type: "mouseup" }, window);
+  },
+  function() {
+    ok(true, "Clicking the top scroll arrow should scroll.");
+    nextTest();
+    // Click the bottom scroll arrow.
+    var x = scroller.getBoundingClientRect().width - 5;
+    var y = scroller.getBoundingClientRect().height - 25;
+    synthesizeMouse(scroller, x, y, { type : "mousedown" }, window);
+    synthesizeMouse(scroller, x, y, { type: "mouseup" }, window);
+  },
+  function() {
+    ok(true, "Clicking the bottom scroll arrow should scroll.");
+    nextTest();
+    // Click the scrollbar.
+    var x = scroller.getBoundingClientRect().width - 5;
+    synthesizeMouse(scroller, x, 40, { type : "mousedown" }, window);
+    synthesizeMouse(scroller, x, 40, { type: "mouseup" }, window);
+  },
+  function() {
+    ok(true, "Clicking the scrollbar should scroll");
+    nextTest();
+    // Click the scrollbar.
+    var x = scroller.getBoundingClientRect().width - 5;
+    var y = scroller.getBoundingClientRect().height - 50;
+    synthesizeMouse(scroller, x, y, { type : "mousedown" }, window);
+    synthesizeMouse(scroller, x, y, { type: "mouseup" }, window);
+  },
+  function() {
+    scroller.onscroll = null;
+    ok(true, "Clicking the scrollbar should scroll");
+    finish();
+  }
+];
+
+document.onmousedown = function () { return false; };
+document.onmouseup = function () { return true; };
+
+
+var scroller;
+var timer = 0;
+
+function failure() {
+  ok(false, scroller.onscroll + " did not run!");
+  scroller.onscroll = null;
+  finish();
+}
+
+function nextTest() {
+  clearTimeout(timer);
+  scroller.onscroll = tests.shift();
+  timer = setTimeout(failure, 2000);
+}
+
+function runTests() {
+  scroller = document.getElementById("scroller");
+  nextTest();
+  window.location.hash = "initialPosition";
+}
+
+function finish() {
+  document.onmousedown = null;
+  document.onmouseup = null;
+  clearTimeout(timer);
+  window.location.hash = "topPosition";
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+<div id="scroller" style="overflow: scroll; width: 100px; height: 150px;">
+<a id="topPosition" name="topPosition">top</a>
+<div style="width: 20000px; height: 20000px;"></div>
+<a id="initialPosition" name="initialPosition">initialPosition</a>
+<div style="width: 20000px; height: 20000px;"></div>
+</div>
+</body>
+</html>

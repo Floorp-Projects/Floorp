@@ -1,0 +1,761 @@
+@import url("./photon-colors.css");
+body>* {
+  visibility: hidden
+}
+
+body.loaded>* {
+  visibility: visible
+}
+
+:root {
+  --button-border-radius: 4px;
+  --button-background-active: hsla(0, 0%, 70%, 0.6);
+  --button-background-hover: hsla(0, 0%, 70%, 0.4);
+  --close-icon-hover: rgba(0, 0, 0, 0.18);
+  --close-icon-active: rgba(0, 0, 0, 0.25);
+  --tab-height-normal: 52px;
+  --tab-height-compact: 36px;
+  --favicon-size: 16px;
+  --favicon-size-only: var(--favicon-size);
+  --tab-loading-fill: var(--blue-50);
+  --icons: var(--grey-90-a80);
+  --toolbar-background: var(--grey-10);
+  --toolbar-text: var(--grey-90);
+  --input-background: var(--white-100);
+  --input-border: hsla(0, 0%, 20%, 0.18);
+  --input-border-focus: var(--blue-50);
+  --input-text: var(--grey-50);
+  --input-text-focus: var(--grey-70);
+  --background: var(--white-100);
+  --tab-selected-line: var(--blue-50);
+  --tab-active-background: var(--grey-30);
+  --tab-hover-background: hsla(0, 0%, 50%, 0.2);
+  --tab-separator: rgba(0, 0, 0, 0.3);
+  --tab-text: var(--grey-90);
+  --identity-color-toolbar: #7c7c7d
+}
+
+body.incognito {
+  --identity-color: var(--purple-50)
+}
+
+body, html {
+  height: 100%
+}
+
+body {
+  background-color: var(--background);
+  color: var(--tab-text);
+  font: message-box
+}
+
+#spacer {
+  flex: 1
+}
+
+#topmenu {
+  background-color: var(--toolbar-background);
+  border-bottom: 1px solid rgba(0, 0, 0, .2);
+  color: var(--toolbar-text);
+  display: flex;
+  flex-shrink: 0;
+  height: 38px;
+  padding: 4px
+}
+
+#newtab, #settings {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 20 auto;
+  min-width: 24px;
+  padding: 4px 5px
+}
+
+canvas {
+  display: none
+}
+
+.tab :not(.clickable), img {
+  pointer-events: none
+}
+
+[data-identity-color=blue] {
+  --identity-color: var(--blue-50)
+}
+
+[data-identity-color=turquoise] {
+  --identity-color: var(--teal-50)
+}
+
+[data-identity-color=green] {
+  --identity-color: var(--green-50)
+}
+
+[data-identity-color=yellow] {
+  --identity-color: var(--yellow-50)
+}
+
+[data-identity-color=orange] {
+  --identity-color: var(--orange-50)
+}
+
+[data-identity-color=red] {
+  --identity-color: var(--red-50)
+}
+
+[data-identity-color=pink] {
+  --identity-color: var(--magenta-50)
+}
+
+[data-identity-color=purple] {
+  --identity-color: var(--purple-50)
+}
+
+[data-identity-color=toolbar] {
+  --identity-color: var(--identity-color-toolbar)
+}
+
+.topmenu-button {
+   border-radius: var(--button-border-radius)
+
+}
+
+.topmenu-button:hover {
+  filter: url(img/settings.svg);  
+  background-color: var(--button-background-hover)
+}
+
+.topmenu-button:hover:active {
+  filter: url(img/settings.svg);  
+  background-color: var(--button-background-active)
+}
+
+#newtab-icon, #settings-icon {
+  -moz-context-properties: fill;
+  fill: var(--icons);
+  background-position: 50%;
+  filter: url(img/filters.svg#fill);
+  height: 16px;
+  width: 16px
+}
+
+#newtab-icon {
+  background-image: url(img/new.svg)
+}
+
+#settings-icon {
+  background-image: url(img/settings.svg)
+  }
+
+#filterbox-icon {
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--input-text);
+  fill-opacity: .5;
+  background-image: url(img/search.svg);
+  background-position: 50%;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+  border-radius: var(--button-border-radius);
+  filter: url(img/filters.svg#fill);
+  margin: 0 0 0 4px;
+  min-width: 30px
+}
+
+#filterbox-input {
+  background-color: var(--input-background);
+  border: 1px solid var(--input-border);
+  border-radius: var(--button-border-radius);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+  color: var(--input-text);
+  cursor: text;
+  display: flex;
+  flex: 1;
+  font: inherit;
+  margin-left: -30px;
+  margin-right: 4px;
+  padding: 2px 2px 2px 26px;
+  transition: border-color .1s, box-shadow .1s
+}
+
+#filterbox-input:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .1)
+}
+
+#filterbox-input:focus {
+  border: 1px solid var(--input-border-focus)
+}
+
+body[platform=win] #filterbox-input {
+  border-radius: 2px
+}
+
+body[platform=mac] #filterbox-input {
+  font-size: 12px
+}
+
+body[platform=mac] #filterbox-input:focus {
+  border: 1px solid -moz-mac-focusring;
+  box-shadow: inset 0 0 0 1px -moz-mac-focusring, 0 0 0 1px -moz-mac-focusring
+}
+
+#filterbox-input::placeholder {
+  color: var(--input-text)
+}
+
+body.has-custom-input-color #filterbox-input::selection {
+  background-color: var(--input-selected-text-background);
+  color: var(--input-selected-text)
+}
+
+#tablist {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden
+}
+
+.tab {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  overflow: hidden
+}
+
+.tab:not(.active):hover {
+  background-color: var(--tab-hover-background)
+}
+
+#pinnedtablist:not(.compact) .tab, #tablist .tab {
+  border-bottom: 1px solid var(--tab-separator);
+  flex-shrink: 0;
+  height: var(--tab-height-normal);
+  max-height: var(--tab-height-normal);
+  min-height: 0;
+  min-width: 0;
+  padding: 0 2px;
+  position: relative
+}
+
+.tab.added, .tab.added *, .tab.deleted, .tab.deleted * {
+  pointer-events: none!important
+}
+
+#pinnedtablist:not(.compact) .tab.added, #pinnedtablist:not(.compact) .tab.deleted, #tablist .tab.added, #tablist .tab.deleted {
+  height: 0!important
+}
+
+#pinnedtablist.compact .tab {
+  height: calc(var(--tab-height-compact) - 2px);
+  max-height: calc(var(--tab-height-compact) - 2px);
+  max-width: calc(var(--tab-height-compact) - 2px);
+  min-width: 0;
+  position: relative;
+  width: calc(var(--tab-height-compact) - 2px)
+}
+
+body.animated #tablist {
+  scroll-behavior: smooth
+}
+
+body.animated #tablist-wrapper .tab {
+  transition: box-shadow .1s ease, height .05s linear
+}
+
+body.animated #pinnedtablist.compact .tab {
+  transition: box-shadow .1s ease, width .1s linear
+}
+
+#pinnedtablist:not(.compact) .tab.deleted+.tab, #tablist.compact .tab.deleted+.tab, #tablist:not(.compact) .tab.deleted+.tab {
+  border-top: 1px solid var(--tab-separator)
+}
+
+#pinnedtablist.compact .tab.added, #pinnedtablist.compact .tab.deleted {
+  width: 0!important
+}
+
+.tab.being-added *, .tab.deleted * {
+  opacity: 0
+}
+
+.tab.active {
+  background-color: var(--tab-active-background);
+  color: var(--tab-active-text)
+}
+
+.tab-loading-burst {
+  height: 100%;
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  width: 100%
+}
+
+.tab-loading-burst:before {
+  content: "";
+  height: 100%;
+  margin-left: 17px;
+  margin-top: 10px;
+  position: absolute;
+  width: 5%
+}
+
+.tab.bursting .tab-loading-burst:before {
+  -moz-context-properties: fill;
+  fill: var(--tab-loading-fill);
+  animation: tab-burst-animation 375ms ease-out;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  filter: url(img/filters.svg#fill)
+}
+
+.tab.bursting .tab-loading-burst:before, .tab:not(.active).bursting .tab-loading-burst:before {
+  background-image: url(img/loading-burst.svg)
+}
+
+.tab.bursting.unread .tab-loading-burst:before {
+  animation-name: tab-burst-animation-light
+}
+
+#pinnedtablist .tab .tab-loading-burst:before {
+  margin-left: 12px;
+  margin-top: 0
+}
+
+#tablist-wrapper.shrinked .tab-loading-burst:before {
+  margin-left: 10px;
+  margin-top: 0
+}
+
+@keyframes tab-burst-animation {
+  0% {
+    opacity: .4;
+    transform: scale(1)
+  }
+  to {
+    opacity: 0;
+    transform: scale(40)
+  }
+}
+
+@keyframes tab-burst-animation-light {
+  0% {
+    opacity: .2;
+    transform: scale(1)
+  }
+  to {
+    opacity: 0;
+    transform: scale(40)
+  }
+}
+
+#pinnedtablist:not(.compact) .tab.active, #tablist .tab.active {
+  box-shadow: inset 3px 0 0 0 var(--tab-selected-line)
+}
+
+body #pinnedtablist.compact .tab .tab-context {
+  height: 100%;
+  margin: 0 auto;
+  position: absolute;
+  width: 20px
+}
+
+body.incognito #pinnedtablist:not(.compact) .tab .tab-context, body.incognito #tablist .tab .tab-context {
+  height: 100%
+}
+
+body.incognito #pinnedtablist.compact .tab .tab-context, body:not(.incognito) #pinnedtablist.compact .tab-context {
+  box-shadow: inset 0 -2px 0 0 var(--identity-color)
+}
+
+body #pinnedtablist:not(.compact) .tab[data-identity-color] .tab-context, body #tablist .tab[data-identity-color] .tab-context, body.incognito #pinnedtablist:not(.compact) .tab .tab-context, body.incognito #tablist .tab .tab-context {
+  box-shadow: inset -3px 0 0 0 var(--identity-color);
+  height: 80%;
+  position: absolute;
+  width: 100%
+}
+
+#tablist-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto
+}
+
+#pinnedtablist {
+  background-color: var(--background);
+  z-index: 50
+}
+
+#pinnedtablist.compact {
+  display: flex;
+  flex-wrap: wrap
+}
+
+.tab.discarded .tab-meta-image {
+  opacity: .45
+}
+
+#pinnedtablist.compact .tab .tab-meta-image {
+  margin-bottom: -1px
+}
+
+#pinnedtablist.compact .tab.active {
+  box-shadow: inset 0 3px 0 0 var(--tab-selected-line)
+}
+
+body.incognito #pinnedtablist.compact .tab .tab-context {
+  margin-left: 0;
+  width: 100%
+}
+
+#pinnedtablist.compact:not(:empty) {
+  border-bottom: 1px solid var(--tab-separator)
+}
+
+#bottomshadow, #topshadow {
+  box-shadow: 0 0 7px 5px var(--grey-50);
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  width: 100%;
+  z-index: 25
+}
+
+#bottomshadow, #topshadow {
+  position: relative
+}
+
+#bottomshadow {
+  bottom: 0
+}
+
+body.animated #bottomshadow, body.animated #topshadow {
+  transition: opacity .3s ease
+}
+
+#tablist-wrapper.highlight-scroll-bottom #bottomshadow {
+  box-shadow: 0 0 7px 5px var(--blue-60);
+  transition: box-shadow 0s
+}
+
+#tablist-wrapper.can-scroll-bottom #bottomshadow, #tablist-wrapper.can-scroll-top #topshadow {
+  opacity: 1
+}
+
+.tab-icon-overlay {
+  background-clip: padding-box;
+  background-color: var(--white-100);
+  background-size: contain;
+  border: 1px solid rgba(0, 0, 0, .2);
+  border-radius: 50%;
+  bottom: 2px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .5);
+  display: none;
+  height: 14px;
+  position: absolute;
+  right: 1px;
+  width: 14px;
+  z-index: 1
+}
+
+.tab-drag-overlay {
+  height: 100%;
+  position: absolute;
+  width: 100%
+}
+
+#tablist-wrapper.shrinked #pinnedtablist:not(.compact) .tab-icon-overlay, #tablist-wrapper.shrinked #tablist:not(.compact) .tab-icon-overlay {
+  left: 18px
+}
+
+#tablist-wrapper:not(.shrinked) #pinnedtablist:not(.compact) .tab-icon-overlay, #tablist-wrapper:not(.shrinked) #tablist:not(.compact) .tab-icon-overlay {
+  height: 16px;
+  left: 10px;
+  top: 0;
+  width: 16px
+}
+
+.tab.audible:not(.muted) .tab-icon-overlay-audible {
+  background-image: url(img/tab-audio-small.svg#tab-audio);
+  display: block
+}
+
+.tab.muted .tab-icon-overlay-muted {
+  background-image: url(img/tab-audio-small.svg#tab-audio-muted);
+  display: block
+}
+
+#pinnedtablist.compact .tab>.tab-meta-image {
+  background-image: none!important
+}
+
+#tablist-wrapper:not(.shrinked) #pinnedtablist:not(.compact) .tab-meta-image, #tablist-wrapper:not(.shrinked) #tablist .tab-meta-image {
+  background-color: var(--white-100);
+  background-image: url(img/thumbnail-blank.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  border: 0;
+  box-shadow: 0 0 2px 2px rgba(0, 0, 0, .02), 0 2px 0 rgba(0, 0, 0, .05), 0 0 0 1px rgba(0, 0, 0, .2);
+  height: 40px;
+  margin-left: 6px;
+  min-width: 54px
+}
+
+#tablist-wrapper.shrinked #pinnedtablist:not(.compact) .tab-meta-image, #tablist-wrapper.shrinked #tablist.compact .tab-meta-image, #tablist-wrapper.shrinked #tablist:not(.compact) .tab-meta-image {
+  background: none!important;
+  height: 24px;
+  margin-left: 5px;
+  width: 24px
+}
+
+#tablist-wrapper:not(.shrinked) #pinnedtablist:not(.compact) .tab-meta-image.has-thumbnail, #tablist-wrapper:not(.shrinked) #tablist .tab-meta-image.has-thumbnail {
+  border: 2px solid #fff
+}
+
+.tab-icon-wrapper {
+  display: flex;
+  height: 24px;
+  width: 24px
+}
+
+#tablist-wrapper:not(.shrinked) #pinnedtablist:not(.compact) .tab-icon-wrapper, #tablist-wrapper:not(.shrinked) #tablist .tab-icon-wrapper {
+  background-color: var(--white-100);
+  border-radius: var(--button-border-radius);
+  box-shadow: 0 0 2px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .08);
+  height: calc(var(--favicon-size) + 2px);
+  margin-left: 0;
+  margin-top: 20px;
+  width: calc(var(--favicon-size) + 2px)
+}
+
+#tablist-wrapper:not(.shrinked) #pinnedtablist:not(.compact) .tab-meta-image.has-thumbnail>.tab-icon-wrapper, #tablist-wrapper:not(.shrinked) #tablist .tab-meta-image.has-thumbnail>.tab-icon-wrapper {
+  margin-left: -2px;
+  margin-top: 18px
+}
+
+.tab-icon {
+  background-image: var(--favicon-url);
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: var(--favicon-size);
+  margin: auto;
+  width: var(--favicon-size)
+}
+
+.tab-icon.chrome-icon {
+  -moz-context-properties: fill;
+  fill: var(--tab-text);
+  filter: url(img/filters.svg#fill)
+}
+
+.tab-icon.chrome-icon.default-favicon {
+  fill-opacity: .8
+}
+
+#tablist-wrapper:not(.shrinked) #pinnedtablist:not(.compact) .tab-icon.chrome-icon, #tablist-wrapper:not(.shrinked) #tablist .tab-icon.chrome-icon {
+  fill: var(--grey-90)
+}
+
+.tab.loading .tab-icon {
+  background-image: none!important;
+  overflow: hidden;
+  position: relative
+}
+
+#pinnedtablist.compact .tab-icon {
+  --favicon-size: var(--favicon-size-only)
+}
+
+.tab .tab-icon:before {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  content: "";
+  filter: url(img/filters.svg#fill)
+}
+
+.tab.loading .tab-icon:before {
+  -moz-context-properties: fill;
+  animation: tab-throbber-animation 1.05s steps(30) infinite;
+  background-image: url(img/loading.svg);
+  background-position: 0;
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  height: 100%;
+  opacity: .7;
+  position: absolute;
+  width: calc(var(--favicon-size)*30)
+}
+
+#tablist-wrapper:not(.shrinked) #pinnedtablist:not(.compact) .tab-icon:before, #tablist-wrapper:not(.shrinked) #tablist .tab-icon:before {
+  fill: var(--grey-90)
+}
+
+@keyframes tab-throbber-animation {
+  0% {
+    transform: translateX(0)
+  }
+  to {
+    transform: translateX(-100%)
+  }
+}
+
+@keyframes tab-throbber-animation-rtl {
+  0% {
+    transform: translateX(0)
+  }
+  to {
+    transform: translateX(100%)
+  }
+}
+
+.tab-title-wrapper {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  margin-left: 6px;
+  mask-image: linear-gradient(270deg, transparent 0, #000 2em);
+  min-width: 0
+}
+
+#tablist-wrapper.shrinked .tab-title-wrapper {
+  margin-left: 6px
+}
+
+#tablist .tab:hover>.tab-title-wrapper {
+  mask-image: linear-gradient(270deg, transparent 28px, #000 calc(2em + 28px));
+  z-index: 0
+}
+
+.tab-title, .tab-url {
+  overflow: hidden;
+  white-space: nowrap
+}
+
+.tab-url {
+  opacity: .6
+}
+
+.tab.discarded .tab-title {
+  opacity: .5
+}
+
+#tablist-wrapper.shrinked .tab-url, .tab-pin {
+  display: none
+}
+
+#pinnedtablist:not(.compact) .tab .tab-pin {
+  background-image: url(img/pin.svg);
+  background-size: 16px;
+  height: 14px;
+  margin-right: 7px;
+  width: 14px
+}
+
+#pinnedtablist:not(.compact) .tab .tab-pin, .tab-close {
+  -moz-context-properties: fill;
+  fill: var(--icons);
+  background-position: 50%;
+  background-repeat: no-repeat;
+  display: block;
+  filter: url(img/filters.svg#fill)
+}
+
+.tab-close {
+  background-image: url(img/close.svg);
+  background-size: 18px;
+  bottom: 0;
+  height: 100%;
+  margin: auto;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 28px
+}
+
+.tab-close:hover {
+  background-color: var(--close-icon-hover)
+}
+
+.tab:hover>.tab-close {
+  opacity: 1
+}
+
+.tab-close:hover:active {
+  background-color: var(--close-icon-active)
+}
+
+#tablist-wrapper.shrinked #pinnedtablist:not(.compact) .tab, #tablist-wrapper.shrinked #tablist .tab {
+  height: var(--tab-height-compact);
+  max-height: var(--tab-height-normal)
+}
+
+#tablist-wrapper.can-scroll-top #tablist .tab:last-of-type {
+  border-bottom: 0
+}
+
+#pinnedtablist:empty {
+  display: none
+}
+
+#tablist-wrapper #pinnedtablist {
+  flex-shrink: 0
+}
+
+#pinnedtablist.compact .tab>.tab-title-wrapper, #pinnedtablist .tab>.tab-close {
+  display: none
+}
+
+#pinnedtablist.compact .tab.wants-attention {
+  background-image: url(img/tab-attention.svg);
+  background-position: bottom;
+  background-repeat: no-repeat
+}
+
+#moretabs {
+  align-items: center;
+  background-color: var(--background);
+  display: flex;
+  height: var(--tab-height-compact);
+  padding-left: 31px;
+  z-index: 50
+}
+
+#moretabs:hover {
+  background-color: rgba(0, 0, 0, .1)
+}
+
+#moretabs:not(.hasMoreTabs) {
+  display: none
+}
+
+#tablist-wrapper:not(.can-scroll-top):not(.can-scroll-bottom) #moretabs {
+  border-bottom: 1px solid var(--tab-separator)
+}
+
+.filtered, .hidden, .will-be-deleted {
+  display: none!important
+}
+
+#pinnedtablist:not(.compact) .tab.drag-highlight-previous .tab-drag-overlay, #tablist .tab.drag-highlight-previous .tab-drag-overlay {
+  box-shadow: inset 0 2px 0 0 var(--tab-selected-line)!important
+}
+
+#pinnedtablist:not(.compact) .tab.drag-highlight-next, #tablist .tab.drag-highlight-next {
+  border-bottom-color: var(--tab-selected-line)
+}
+
+#pinnedtablist:not(.compact) .tab.drag-highlight-next .tab-drag-overlay, #tablist .tab.drag-highlight-next .tab-drag-overlay {
+  box-shadow: inset 0 -1px 0 0 var(--tab-selected-line)!important
+}
+
+#pinnedtablist.compact .tab.drag-highlight-previous .tab-drag-overlay {
+  box-shadow: inset 2px 0 0 0 var(--tab-selected-line)!important
+}
+
+#pinnedtablist.compact .tab.drag-highlight-next .tab-drag-overlay {
+  box-shadow: inset -2px 0 0 0 var(--tab-selected-line)!important
+}

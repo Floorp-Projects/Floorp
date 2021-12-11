@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <style>
+  fieldset.outer {
+    column-count: 1;
+    transform: translateX(3px);
+    position: relative;
+    width: 100px;
+    height: 50px;
+    border: 1px solid blue;
+    margin: 0;
+  }
+
+  div.fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: green;
+  }
+  </style>
+
+  <!-- ABC should be inside the fieldset since 'transform' creates a stacking context. -->
+  <fieldset class="outer">
+    <legend>Legend</legend>
+    <div class="fixed">ABC</div>
+  </fieldset>
+</html>

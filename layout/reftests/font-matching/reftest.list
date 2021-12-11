@@ -1,0 +1,175 @@
+# Font-matching reftests may fail intermittently/transiently due to asynch fallback,
+# so we disable the async mechanism for this directory.
+defaults pref(gfx.font_rendering.fallback.async,false)
+
+== CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
+
+# tests for bug 1394311 (case-insensitive lang tag processing)
+# (First attempt is random-if(windows 7), due to intermittent failure with a
+# single missing character - see bug 1451723 & more generally bug 1392106.)
+pref(font.default.zh-CN,"serif") pref(font.default.zh-TW,"serif") pref(font.default.ja,"serif") pref(font.default.ko,"serif") random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1394311.htm 1394311-ref.htm # Bug 1392106
+pref(font.default.zh-CN,"sans-serif") pref(font.default.zh-TW,"sans-serif") pref(font.default.ja,"sans-serif") pref(font.default.ko,"sans-serif") skip-if(winWidget&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1394311.htm 1394311-ref.htm
+
+# tests for bug 1367860 (correct default generic font based on language)
+== 1367860-1.htm 1367860-ref.htm
+== 1367860-2.htm 1367860-ref.htm
+== 1367860-3.htm 1367860-ref.htm
+
+# Test for bug 1458158: Arabic text in Arial weight 900 should fall back to Bold rather than Regular.
+# Limited to Windows because this is specific to the fonts shipped on Windows by default.
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(!winWidget) == 1458158-1.html 1458158-1-ref.html # Bug 1392106
+
+# basic tests for bug 538730
+!= synthetic-bold-1.html synthetic-bold-1-ref.html
+!= synthetic-bold-2.html synthetic-bold-2-ref.html
+
+# synthetic bold/italic tests
+!= defaultfont-bold.html defaultfont.html
+!= defaultfont-italic.html defaultfont.html
+!= defaultfont-oblique.html defaultfont.html
+!= defaultfont-bolditalic.html defaultfont.html
+!= defaultfont-bolditalic.html defaultfont-bold.html
+
+!= defaultjapanese-bold.html defaultjapanese.html
+!= defaultjapanese-italic.html defaultjapanese.html
+!= defaultjapanese-oblique.html defaultjapanese.html
+!= defaultjapanese-bolditalic.html defaultjapanese.html
+!= defaultjapanese-bolditalic.html defaultjapanese-bold.html
+
+random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
+!= impact-italic.html impact.html
+!= impact-oblique.html impact.html
+!= impact-bolditalic.html impact.html
+!= impact-bolditalic.html impact-bold.html
+
+!= arialunicode-bold.html arialunicode.html
+!= arialunicode-italic.html arialunicode.html
+!= arialunicode-oblique.html arialunicode.html
+!= arialunicode-bolditalic.html arialunicode.html
+!= arialunicode-bolditalic.html arialunicode-bold.html
+
+!= lucidaconsole-bold.html lucidaconsole.html
+!= lucidaconsole-italic.html lucidaconsole.html
+!= lucidaconsole-oblique.html lucidaconsole.html
+!= lucidaconsole-bolditalic.html lucidaconsole.html
+!= lucidaconsole-bolditalic.html lucidaconsole-bold.html
+
+# checking that we don't match fullnames, psnames (see bug 538103)
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-1.html arial-variations-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-2.html arial-variations-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-3.html arial-variations-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-4.html arial-variations-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-5.html arial-variations-5-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-6.html arial-variations-6-ref.html # Bug 1392106
+
+# localized font family names should always match just as English names do
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-001.html localized-family-names-001-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-002.html localized-family-names-002-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-003.html localized-family-names-003-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-004.html localized-family-names-004-ref.html # Bug 1392106
+
+# family names with escaped spaces shouldn't match the names without the spaces
+fails-if(gtkWidget) == familyname-escapedidents.html familyname-escapedidents-ref.html # bug 1309425, bug 1328771
+
+# weight mapping tests
+== normalmedium.html normalmedium-ref.html
+!= normalmedium.html normalmedium-notref.html
+
+# Linux fails due to bug 604815
+fuzzy-if(OSX==1010&&browserIsRemote,0-1,0-23) == weightmapping-12.html weightmapping-12-ref.html
+== weightmapping-25.html weightmapping-25-ref.html
+== weightmapping-45.html weightmapping-45-ref.html
+== weightmapping-458.html weightmapping-458-ref.html
+== weightmapping-478.html weightmapping-478-ref.html
+== weightmapping-7.html weightmapping-7-ref.html
+fuzzy-if(OSX==1010,0-1,0-30) == weightmapping-12579.html weightmapping-12579-ref.html
+
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == stretchmapping-all.html stretchmapping-all-ref.html # Bug 1392106
+== stretchmapping-reverse.html stretchmapping-reverse-ref.html
+fuzzy-if(OSX==1010&&browserIsRemote,0-1,0-17) fuzzy-if(Android,0-4,0-8) == stretchmapping-35.html stretchmapping-35-ref.html
+fuzzy-if(OSX==1010,0-3,0-5) == stretchmapping-137.html stretchmapping-137-ref.html
+
+# test for font-stretch using @font-face
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == font-stretch-1.html font-stretch-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == font-shorthand-stretch-1.html font-stretch-1-ref.html # Bug 1392106
+
+# bug 724231 - applying synthetic styles to a single @font-face font
+# should apply artificial obliquing, not switch to a true styled face
+fails-if(geckoview) != synthetic-style-1.html synthetic-style-1-notref.html # Bug 1558513 for GV
+fails-if(geckoview) != synthetic-style-2.html synthetic-style-2-notref.html # Bug 1558513 for GV
+
+# Bug 765906 - synthetic bold should be used if necessary together with system fallback.
+# **NOTE** we skip these on Linux because of bug 769659.
+# test 1 uses Cherokee; expected to pass on OS X and Win7
+random-if(!(cocoaWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu))) skip-if(gtkWidget) != bold-system-fallback-1.html bold-system-fallback-1-notref.html
+# test 2 uses Chess symbols; expected to pass on Android
+random-if(!Android) skip-if(gtkWidget) != bold-system-fallback-2.html bold-system-fallback-2-notref.html
+
+# Bug 769475 - applying 'italic' to Arabic text in Arial should NOT change family or metrics.
+# Expected to pass on MacOSX and Windows; other platforms unknown, depending on font availability.
+random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic-ref.html
+
+!= syntheticbold-rotated.html syntheticbold-rotated-ref.html
+
+== font-synthesis-1.html font-synthesis-1-ref.html
+== font-synthesis-2.html font-synthesis-2-ref.html
+
+# Bug 1060791 - support for format 10 cmap in Apple Symbols;
+# relevant fonts not present on other platforms.
+skip-if(!cocoaWidget) != apple-symbols-1.html apple-symbols-1-notref.html
+
+# distinguish between italic and oblique
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-oblique.html simple-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-1.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-2.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-3.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-4.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-5.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-6.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-7.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-8.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == italic-oblique-9.html italic-oblique-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != italic-oblique-kinnari.html italic-oblique-kinnari-ref.html # Bug 1392106
+
+# GTK and Windows 7 don't have full emoji and symbol font, so emoji-fallback-2
+# don't work well.
+== emoji-fallback-1.html emoji-fallback-1-ref.html
+skip-if(gtkWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == emoji-fallback-2.html emoji-fallback-2-ref.html
+== emoji-fallback-3.html emoji-fallback-3-ref.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != emoji-keycap.html emoji-keycap-notref.html
+== emoji-skintone.html emoji-skintone-ref.html
+
+# system font generic per-language tests, only works under OSX currently
+# Bug 1212731 - initial implementation caused startup regression and
+# regression with full-width digits display in UI elements. Disable
+# tests until these problems are corrected.
+# random-if(!OSX) == system-generic-fallback-1.html system-generic-fallback-1-ref.html
+# random-if(!OSX) == system-generic-fallback-2.html system-generic-fallback-2-ref.html
+# random-if(!OSX) == system-generic-fallback-3.html system-generic-fallback-3-ref.html
+# random-if(!OSX) == system-generic-fallback-4.html system-generic-fallback-4-ref.html
+# random-if(!OSX) != system-generic-fallback-ko.html system-generic-fallback-ja.html
+# random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-ja.html
+# random-if(!OSX) != system-generic-fallback-zh-cn.html system-generic-fallback-ja.html
+# random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-zh-cn.html
+
+# Tests for legacy font family name (GDI-model families) matching;
+# these depend on specific fonts that are available as standard on macOS and Windows,
+# and are not expected to pass on platforms that don't have those same fonts.
+skip-if(!cocoaWidget) == legacy-family-names-1.html legacy-family-names-1-ref.html
+skip-if(!winWidget) == legacy-family-names-2.html legacy-family-names-2-ref.html
+
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-ranges.html descriptor-ranges-ref.html # Bug 1392106
+
+# Test that prefs font fallback respects the CSS generic from content (bug 1687426)
+skip-if(Android) fuzzy-if(winWidget&&isCoverageBuild,255-255,2373-2373) == fallback-respects-generic-1.html fallback-respects-generic-1-ref.html # fonts present on Android are too unpredictable for easy testing
+
+skip-if(Android) fails-if(winWidget&&isCoverageBuild) != system-ui-fallback.html system-ui-fallback-notref.html # Roboto supports the characters in the reftest, and that's better behavior.
+
+# Japanese monospace font on macOS is Osaka-mono
+# If Osaka is present then Osaka-mono should also be available.
+skip-if(!cocoaWidget) == osaka-mono-exists.html osaka-mono-exists-ref.html
+# Disabled because Osaka-Mono isn't available on automation.
+# skip-if(!cocoaWidget) == osaka-mono.html osaka-mono-ref.html
+
+# Reset default prefs.
+defaults

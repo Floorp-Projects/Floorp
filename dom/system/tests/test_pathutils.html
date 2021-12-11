@@ -1,0 +1,446 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>PathUtils tests</title>
+</head>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script>
+  "use strict";
+
+  const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
+  const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+
+  const UNRECOGNIZED_PATH = /Could not initialize path: NS_ERROR_FILE_UNRECOGNIZED_PATH/;
+  const EMPTY_PATH = /PathUtils does not support empty paths/;
+  const JOIN = /Could not append to path/;
+
+  add_task(function test_filename() {
+    Assert.throws(
+      () => PathUtils.filename(""),
+      EMPTY_PATH,
+      "PathUtils.filename() does not support empty paths"
+    );
+    Assert.throws(
+      () => PathUtils.filename("foo.txt"),
+      UNRECOGNIZED_PATH,
+      "PathUtils.filename() does not support relative paths"
+    );
+
+    if (Services.appinfo.OS === "WINNT") {
+      is(
+        PathUtils.filename("C:"),
+        "C:",
+        "PathUtils.filename() with a drive path"
+      );
+      is(
+        PathUtils.filename("C:\\"),
+        "C:",
+        "PathUtils.filename() with a drive path"
+      );
+      is(
+        PathUtils.filename("C:\\Windows"),
+        "Windows",
+        "PathUtils.filename() with a path with 2 components"
+      );
+      is(
+        PathUtils.filename("C:\\Windows\\"),
+        "Windows",
+        "PathUtils.filename() with a path with 2 components and a trailing slash"
+      );
+      is(
+        PathUtils.filename("C:\\Windows\\System32"),
+        "System32",
+        "PathUtils.filename() with a path with 3 components"
+      );
+      is(
+        PathUtils.filename("\\\\server"),
+        "\\\\server",
+        "PathUtils.filename() with a UNC server path"
+      );
+      is(
+        PathUtils.filename("C:\\file.dat"),
+        "file.dat",
+        "PathUtils.filename() with a file path"
+      );
+    } else {
+      is(
+        PathUtils.filename("/"),
+        "/",
+        "PathUtils.filename() with a root path"
+      );
+      is(
+        PathUtils.filename("/usr/"),
+        "usr",
+        "PathUtils.filename() with a non-root path"
+      );
+      is(
+        PathUtils.filename("/usr/lib/libfoo.so"),
+        "libfoo.so",
+        "PathUtils.filename() with a path with 3 components"
+      );
+    }
+  });
+
+  add_task(function test_parent() {
+    Assert.throws(
+      () => PathUtils.parent("."),
+      UNRECOGNIZED_PATH,
+      "PathUtils.parent() does not support relative paths"
+    );
+    Assert.throws(
+      () => PathUtils.parent(""),
+      EMPTY_PATH,
+      "PathUtils.parent() does not support empty paths"
+    );
+
+    if (Services.appinfo.OS === "WINNT") {
+      is(
+        PathUtils.parent("C:"),
+        null,
+        "PathUtils.parent() with a drive path"
+      );
+      is(
+        PathUtils.parent("\\\\server"),
+        null,
+        "PathUtils.parent() with a UNC server path"
+      );
+      is(
+        PathUtils.parent("\\\\server\\foo"),
+        "\\\\server",
+        "PathUtils.parent() with a UNC server path and child component"
+      );
+    } else {
+      is(
+        PathUtils.parent("/"),
+        null,
+        "PathUtils.parent() with a root path"
+      );
+      is(
+        PathUtils.parent("/var"),
+        "/",
+        "PathUtils.parent() with a 2 component path"
+      );
+      is(
+        PathUtils.parent("/var/run"),
+        "/var",
+        "PathUtils.parent() with a 3 component path"
+      );
+    }
+  });
+
+  add_task(function test_join() {
+    is(
+      PathUtils.join(),
+      "",
+      "PathUtils.join() with an empty sequence"
+    );
+    Assert.throws(
+      () => PathUtils.join(""),
+      EMPTY_PATH,
+      "PathUtils.join() does not support empty paths"
+    );
+    Assert.throws(
+      () => PathUtils.join("foo", "bar"),
+      UNRECOGNIZED_PATH,
+      "PathUtils.join() does not support relative paths"
+    );
+    Assert.throws(
+      () => PathUtils.join("."),
+      UNRECOGNIZED_PATH,
+      "PathUtils.join() does not support relative paths"
+    );
+
+    if (Services.appinfo.OS === "WINNT") {
+      is(
+        PathUtils.join("C:"),
+        "C:",
+        "PathUtils.join() with a single path"
+      );
+      is(
+        PathUtils.join("C:\\Windows", "System32"),
+        "C:\\Windows\\System32",
+        "PathUtils.join() with a 2 component path and an additional component"
+      );
+      is(
+        PathUtils.join("C:", "Users", "Example"),
+        "C:\\Users\\Example",
+        "PathUtils.join() with a root path and two additional components"
+      );
+      is(
+        PathUtils.join("\\\\server", "Files", "Example.dat"),
+        "\\\\server\\Files\\Example.dat",
+        "PathUtils.join() with a server path"
+      );
+    } else {
+      is(
+        PathUtils.join("/"),
+        "/",
+        "PathUtils.join() with a root path"
+      );
+      is(
+        PathUtils.join("/usr", "lib"),
+        "/usr/lib",
+        "PathUtils.join() with a 2 component path and an additional component"
+      );
+      is(
+        PathUtils.join("/", "home", "example"),
+        "/home/example",
+        "PathUtils.join() with a root path and two additional components"
+      );
+    }
+  });
+
+  add_task(function test_join_relative() {
+    if (Services.appinfo.OS === "WINNT") {
+      is(
+        PathUtils.joinRelative("C:", ""),
+        "C:",
+        "PathUtils.joinRelative() with an empty relative path"
+      );
+
+      is(
+        PathUtils.joinRelative("C:", "foo\\bar\\baz"),
+        "C:\\foo\\bar\\baz",
+        "PathUtils.joinRelative() with a relative path containing path separators"
+      );
+    } else {
+      is(
+        PathUtils.joinRelative("/", ""),
+        "/",
+        "PathUtils.joinRelative() with an empty relative path"
+      );
+
+      is(
+        PathUtils.joinRelative("/", "foo/bar/baz"),
+        "/foo/bar/baz",
+        "PathUtils.joinRelative() with a relative path containing path separators"
+      );
+    }
+  });
+
+  add_task(async function test_normalize() {
+    Assert.throws(
+      () => PathUtils.normalize(""),
+      EMPTY_PATH,
+      "PathUtils.normalize() does not support empty paths"
+    );
+    Assert.throws(
+      () => PathUtils.normalize("."),
+      UNRECOGNIZED_PATH,
+      "PathUtils.normalize() does not support relative paths"
+    );
+
+    if (Services.appinfo.OS === "WINNT") {
+      is(
+        PathUtils.normalize("C:\\\\Windows\\\\..\\\\\\.\\Users\\..\\Windows"),
+        "C:\\Windows",
+        "PathUtils.normalize() with a non-normalized path"
+      );
+    } else {
+      // nsLocalFileUnix::Normalize() calls realpath, which resolves symlinks
+      // and requires the file to exist.
+      //
+      // On Darwin, the temp directory is located in `/private/var`, which is a
+      // symlink to `/var`, so we need to pre-normalize our temporary directory
+      // or expected paths won't match.
+      const tmpDir = PathUtils.join(
+        PathUtils.normalize(await PathUtils.getTempDir()),
+        "pathutils_test"
+      );
+
+      await IOUtils.makeDirectory(tmpDir, { ignoreExisting: true });
+      info(`created tmpDir ${tmpDir}`);
+      SimpleTest.registerCleanupFunction(async () => {
+        await IOUtils.remove(tmpDir, {
+          recursive: true,
+        });
+      });
+
+      await IOUtils.makeDirectory(PathUtils.join(tmpDir, "foo", "bar"), {
+        createAncestors: true,
+      });
+
+      is(
+        PathUtils.normalize("/"),
+        "/",
+        "PathUtils.normalize() with a normalized path"
+      );
+
+      is(
+        PathUtils.normalize(
+          PathUtils.join(
+            tmpDir,
+            "foo",
+            ".",
+            "..",
+            "foo",
+            ".",
+            "bar",
+            "..",
+            "bar"
+          )
+        ),
+        PathUtils.join(tmpDir, "foo", "bar"),
+        "PathUtils.normalize() with a non-normalized path"
+      );
+    }
+  });
+
+  add_task(function test_split() {
+    Assert.throws(
+      () => PathUtils.split("foo"),
+      UNRECOGNIZED_PATH,
+      "PathUtils.split() does not support relative paths"
+    );
+    Assert.throws(
+      () => PathUtils.split(""),
+      EMPTY_PATH,
+      "PathUtils.split() does not support empty paths"
+    );
+
+    if (Services.appinfo.OS === "WINNT") {
+      Assert.deepEqual(
+        PathUtils.split("C:\\Users\\Example"),
+        ["C:", "Users", "Example"],
+        "PathUtils.split() on an absolute path"
+      );
+
+      Assert.deepEqual(
+        PathUtils.split("C:\\Users\\Example\\"),
+        ["C:", "Users", "Example"],
+        "PathUtils.split() on an absolute path with a trailing slash"
+      );
+
+      Assert.deepEqual(
+        PathUtils.split("\\\\server\\Files\\Example.dat"),
+        ["\\\\server", "Files", "Example.dat"],
+        "PathUtils.split() with a server as the root"
+      );
+    } else {
+      Assert.deepEqual(
+        PathUtils.split("/home/foo"),
+        ["/", "home", "foo"],
+        "PathUtils.split() on absolute path"
+      );
+
+      Assert.deepEqual(
+        PathUtils.split("/home/foo/"),
+        ["/", "home", "foo"],
+        "PathUtils.split() on absolute path with trailing slash"
+      );
+    }
+  });
+
+  add_task(function test_toFileURI() {
+    Assert.throws(
+      () => PathUtils.toFileURI("."),
+      UNRECOGNIZED_PATH,
+      "PathUtils.toFileURI() does not support relative paths"
+    );
+    Assert.throws(
+      () => PathUtils.toFileURI(""),
+      EMPTY_PATH,
+      "PathUtils.toFileURI() does not support empty paths"
+    );
+
+    if (Services.appinfo.OS === "WINNT") {
+      is(
+        PathUtils.toFileURI("C:\\"),
+        "file:///C:/",
+        "PathUtils.toFileURI() with a root path"
+      );
+
+      is(
+        PathUtils.toFileURI("C:\\Windows\\"),
+        "file:///C:/Windows/",
+        "PathUtils.toFileURI() with a non-root directory path"
+      );
+
+      is(
+        PathUtils.toFileURI("C:\\Windows\\system32\\notepad.exe"),
+        "file:///C:/Windows/system32/notepad.exe",
+        "PathUtils.toFileURI() with a file path"
+      );
+    } else {
+      is(
+        PathUtils.toFileURI("/"),
+        "file:///",
+        "PathUtils.toFileURI() with a root path"
+      );
+
+      is(
+        PathUtils.toFileURI("/bin"),
+        "file:///bin/",
+        "PathUtils.toFileURI() with a non-root directory path"
+      );
+
+      is(
+        PathUtils.toFileURI("/bin/ls"),
+        "file:///bin/ls",
+        "PathUtils.toFileURI() with a file path"
+      );
+    }
+  });
+
+  add_task(async function test_getDirectories() {
+    const profile = await PathUtils.getProfileDir();
+    is(
+      profile,
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+      "PathUtils.getProfileDir() should match dirsvc"
+    );
+
+    const localProfile = await PathUtils.getLocalProfileDir();
+    is(
+      localProfile,
+      Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
+      "PathUtils.getLocalProfileDir() should match dirsvc"
+    );
+
+    // See: nsAppDirectoryServiceDefs.h
+    const tempDir = await PathUtils.getTempDir();
+    if (AppConstants.MOZ_SANDBOX) {
+      is(
+        tempDir,
+        Services.dirsvc.get("ContentTmpD", Ci.nsIFile).path,
+        "PathUtils.getTempDir() should match dirsvc"
+      );
+    } else {
+      is(
+        tempDir,
+        Services.dirsvc.get("TmpD", Ci.nsIFile).path,
+        "PathUtils.getTempDir() should match dirsvc"
+      );
+    }
+  });
+
+  add_task(async function test_createUniquePath() {
+    let path = PathUtils.join(await PathUtils.getProfileDir(), ".test");
+
+    let firstPath = PathUtils.createUniquePath(path);
+    let secondPath = PathUtils.createUniquePath(path);
+    SimpleTest.registerCleanupFunction(async () => {
+      await IOUtils.remove(firstPath);
+      await IOUtils.remove(secondPath);
+    });
+
+    isnot(firstPath, secondPath, "Create unique paths returns different paths");
+    is(PathUtils.filename(firstPath), ".test", "PathUtils.createUniquePath() matches filename for first path");
+    is(PathUtils.filename(secondPath), "-1.test", "PathUtils.createUniquePath() has unique filename for second path");
+  });
+</script>
+
+<body>
+</body>
+
+</html>

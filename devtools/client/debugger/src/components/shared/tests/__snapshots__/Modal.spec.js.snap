@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Modal renders 1`] = `
+<div
+  className="modal-wrapper"
+  onClick={[Function]}
+>
+  <div
+    className="modal entering"
+    onClick={[Function]}
+  />
+</div>
+`;

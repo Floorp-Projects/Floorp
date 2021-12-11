@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html >
+ <head>
+  <title>CSS Test: HTML bordercolor Attribute</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="RELEVANT_SPEC_SECTION"/>
+  <meta name="assert" content="Figure out which rules are ignored and how."/>
+  <style type="text/css">
+    html { color: blue; }
+    table { margin: 0.5em; }
+    .thin, .elemthin { border-width: thin; border-style: outset; }
+    .thin * { border-width: thin; border-style: inset; }
+    .orange, .orange *, .elemorange { border-color: orange; }
+  </style>
+ </head>
+ <body>
+  <table class="orange thin">
+    <tr><td>A<td>A
+  </table>
+
+  <table class="elemorange elemthin">
+    <tr><td>B<td>B
+  </table>
+
+  <table class=orange style="border-collapse: collapse;">
+    <tr><td style="border-right-width: thin; border-right-style: solid;
+        border-bottom-width: thin; border-bottom-style: solid;">C
+        <td style="border-bottom-width: thin; border-bottom-style: solid;">C
+    <tr><td style="border-right-width: thin; border-right-style: solid;">C<td>C
+  </table>
+
+  <table class=orange style="border-collapse: collapse;">
+    <tr><td style="border-right-width: thin; border-right-style: solid;">D<td>D
+    <tr><td style="border-right-width: thin; border-right-style: solid;">D<td>D
+  </table>
+
+  <table>
+    <tr><td>E<td>E
+    <tr><td>E<td>E
+  </table>
+
+  <table>
+    <tr><td>F<td>F
+  </table>
+
+  <table style="border-collapse: collapse;">
+    <tr class=orange><td style="border-right-width: thin; border-right-style: solid;
+        border-bottom-width: thin; border-bottom-style: solid;">G
+        <td style="border-bottom-width: thin; border-bottom-style: solid;">G
+    <tr class=orange><td style="border-right-width: thin; border-right-style: solid;">G<td>G
+  </table>
+
+  <table class="elemorange thin">
+    <tr><td>H<td>H
+  </table>
+ </body>
+</html>

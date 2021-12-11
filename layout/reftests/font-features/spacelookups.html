@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>contextual substitutions for fonts with spaces in lookups</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="author" title="John Daggett" href="mailto:jdaggett@mozilla.com"/>
+<link rel="help" href="http://www.w3.org/TR/css-fonts-3/#default-features"/>
+<link rel="help" href="http://www.w3.org/TR/css-fonts-3/#font-feature-settings"/>
+<link rel="match" href="spacelookups-ref.html"/>
+<meta name="flags" content=""/>
+<meta name="assert" content="spaces in contextual lookups should not affect glyph substitutions"/>
+<meta name="bug" content="https://bugzilla.mozilla.org/show_bug.cgi?id=921858"/>
+<style type="text/css">
+/*
+  Fonts below contain different arrangements of features/lookups. All
+  contain substitution rules for words such "default-script". Each individual
+  font has additional substitution rules so that a sequence of words with
+  spaces will end up as a thumbs up icon glyph.
+*/
+
+@font-face {
+  font-family: spacelookup-defscr-deflang-deffeat;
+  src: url(../fonts/spacelookups/spacelookup-defscr-deflang-deffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-defscr-deflang-ndeffeat;
+  src: url(../fonts/spacelookups/spacelookup-defscr-deflang-ndeffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-deflang-deffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-deflang-deffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-deflang-ndeffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-deflang-ndeffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-fralang-deffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-fralang-deffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-fralang-ndeffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-fralang-ndeffeat.ttf);
+}
+
+body {
+  margin: 20px 40px;
+  line-height: 1.2;
+}
+
+div { font-size: 400%; }
+
+.spacelookup-defscr-deflang-deffeat { font-family: spacelookup-defscr-deflang-deffeat; }
+.spacelookup-defscr-deflang-ndeffeat { font-family: spacelookup-defscr-deflang-ndeffeat; }
+.spacelookup-latnscr-deflang-deffeat { font-family: spacelookup-latnscr-deflang-deffeat; }
+.spacelookup-latnscr-deflang-ndeffeat { font-family: spacelookup-latnscr-deflang-ndeffeat; }
+.spacelookup-latnscr-fralang-deffeat { font-family: spacelookup-latnscr-fralang-deffeat; }
+.spacelookup-latnscr-fralang-ndeffeat { font-family: spacelookup-latnscr-fralang-ndeffeat; }
+
+.dlig {
+  -webkit-font-feature-settings: "dlig" on;
+  font-feature-settings: "dlig" on;
+}
+</style>
+
+</head>
+<body>
+<div class="spacelookup-defscr-deflang-deffeat">
+<span class="spacelookup-defscr-deflang-deffeat">default-script default-lang default-feature</span>
+<span class="spacelookup-defscr-deflang-ndeffeat dlig">default-script default-lang non-default-feature</span>
+<span class="spacelookup-latnscr-deflang-deffeat">latn-script default-lang default-feature</span>
+<span class="spacelookup-latnscr-deflang-ndeffeat dlig">latn-script default-lang non-default-feature</span>
+<span class="spacelookup-latnscr-fralang-deffeat" lang="fr">latn-script fra-lang default-feature</span>
+<span class="spacelookup-latnscr-fralang-ndeffeat dlig" lang="fr">latn-script fra-lang non-default-feature</span>
+</div>
+</body>
+</html>

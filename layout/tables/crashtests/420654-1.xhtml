@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:m="http://www.w3.org/1998/Math/MathML">
+<head>
+<style type="text/css">
+
+[class="wide"] { width: 100000000px }
+
+</style>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("targ").appendChild(document.getElementById("cm").cloneNode(true)); 
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<table>
+  <tbody>
+    <td><m:mrow class="wide" id="cm"></m:mrow></td>
+    <tr><m:mrow id="targ"></m:mrow></tr>
+  </tbody>
+</table>
+</body>
+
+</html>

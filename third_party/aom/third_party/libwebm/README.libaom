@@ -1,0 +1,22 @@
+URL: https://chromium.googlesource.com/webm/libwebm
+Version: af81f26025b7435fa9a14ad07c58b44cf9280430
+License: BSD
+License File: LICENSE.txt
+
+Description:
+libwebm is used to handle WebM container I/O.
+
+Local Changes:
+Add av1 codec as an eligible codec for webm:
+ https://aomedia-review.googlesource.com/c/aom/+/15103
+Only keep:
+ - Android.mk
+ - AUTHORS.TXT
+ - common/
+    file_util.cc/h
+    hdr_util.cc/h
+    webmids.h
+ - LICENSE.TXT
+ - mkvmuxer/
+ - mkvparser/
+ - PATENTS.TXT

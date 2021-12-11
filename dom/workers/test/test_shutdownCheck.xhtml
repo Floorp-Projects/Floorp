@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window title="Worker shutdown check"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+SimpleTest.waitForExplicitFinish()
+
+const URL = "worker_shutdownCheck.js";
+
+function checkWorker() {
+  const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
+              getService(Ci.nsIWorkerDebuggerManager);
+
+  let e = wdm.getWorkerDebuggerEnumerator();
+  while (e.hasMoreElements()) {
+    let dbg = e.getNext().QueryInterface(Ci.nsIWorkerDebugger);
+    if (dbg.url == URL) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+new Promise(resolve => {
+  var w = new Worker(URL);
+  ok(checkWorker(), "We have the worker");
+  w.onmessage = () => { resolve(); }
+}).then(() => {
+  info("Waiting...");
+
+  // We don't know if the worker thread is able to shutdown when calling
+  // CC/GC. Better to check again in case.
+  function checkGC() {
+    Cu.forceCC();
+    Cu.forceGC();
+    if (!checkWorker()) {
+      ok(true, "We don't have the worker");
+      SimpleTest.finish();
+      return;
+    }
+    setTimeout(checkGC, 200);
+  }
+
+  checkGC();
+});
+
+  ]]>
+  </script>
+</window>

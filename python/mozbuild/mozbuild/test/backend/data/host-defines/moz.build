@@ -1,0 +1,9 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+value = "xyz"
+HOST_DEFINES["FOO"] = True
+HOST_DEFINES["BAZ"] = '"ab\'cd"'
+HOST_DEFINES["BAR"] = 7
+HOST_DEFINES["VALUE"] = value
+HOST_DEFINES["QUX"] = False

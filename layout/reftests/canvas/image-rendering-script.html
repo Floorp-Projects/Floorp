@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+  -->
+<html reftest-zoom="2" class="reftest-wait">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>test image-rendering script change</title>
+    <style>
+      canvas { position:absolute;left:0px;top:0px; }
+    </style>
+    <script type="text/javascript">
+      document.addEventListener("MozReftestInvalidate", updateImageRendering);
+
+      function updateImageRendering() {
+        var canvas = document.getElementById("canvas");
+        canvas.style.imageRendering = '-moz-crisp-edges';
+        document.documentElement.removeAttribute('class');
+      }
+    </script>
+  </head>
+
+  <body>
+    <canvas style="image-rendering: auto;" id="canvas" width="300" height="300">
+    </canvas>
+
+    <script type="text/javascript">
+      var canvas = document.getElementById("canvas");
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "rgb(255,0,0)";
+      ctx.fillRect(25,25,100,100);
+      ctx.fillStyle = "rgb(0,255,0)";
+      ctx.fillRect(25,25,50,50);
+    </script>
+  </body>
+
+</html>

@@ -1,0 +1,38 @@
+; Many RTCP-FB feed back types take a parameter
+; Most of these will not parse.
+; One can experiment by commenting out individual lines.
+; Note: comment lines only work in the example parser.
+v=0
+o=- 4294967296 2 IN IP4 127.0.0.1
+s=SIP Call
+c=IN IP4 198.51.100.7
+t=0 0
+m=video 56436 RTP/SAVPF 120
+a=rtpmap:120 VP8/90000
+a=rtpmap:122 red/90000
+a=rtcp-fb:120 ack rpsi
+a=rtcp-fb:120 ack app
+a=rtcp-fb:120 ack app foo
+a=rtcp-fb:120 ack foo bar
+a=rtcp-fb:120 ack foo bar baz
+a=rtcp-fb:120 nack
+a=rtcp-fb:120 nack pli
+a=rtcp-fb:120 nack sli
+a=rtcp-fb:120 nack rpsi
+a=rtcp-fb:120 nack app
+a=rtcp-fb:120 nack app foo
+a=rtcp-fb:120 nack app foo bar
+a=rtcp-fb:120 nack foo bar baz
+a=rtcp-fb:120 trr-int 0
+a=rtcp-fb:120 trr-int 123
+a=rtcp-fb:120 goog-remb
+a=rtcp-fb:120 ccm fir
+a=rtcp-fb:120 ccm tmmbr
+a=rtcp-fb:120 ccm tstr
+a=rtcp-fb:120 ccm vbcm 123 456 789
+a=rtcp-fb:120 ccm foo
+a=rtcp-fb:120 ccm foo bar baz
+a=rtcp-fb:120 foo
+a=rtcp-fb:120 foo bar
+a=rtcp-fb:120 foo bar baz
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level

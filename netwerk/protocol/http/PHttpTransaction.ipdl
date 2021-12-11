@@ -1,0 +1,106 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PSocketProcess;
+include protocol PFileDescriptorSet; // FIXME: bug #792908
+include protocol PInputChannelThrottleQueue;
+
+include IPCStream;
+include NeckoChannelParams;
+
+include "mozilla/net/NeckoMessageUtils.h";
+
+using class mozilla::net::nsHttpRequestHead from "nsHttpRequestHead.h";
+using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
+using mozilla::net::NetAddr from "mozilla/net/DNS.h";
+
+namespace mozilla {
+namespace net {
+
+struct H2PushedStreamArg {
+  PHttpTransaction transWithPushedStream;
+  uint32_t pushedStreamId;
+};
+
+struct NetworkAddressArg {
+  NetAddr selfAddr;
+  NetAddr peerAddr;
+  bool resolvedByTRR;
+  bool echConfigUsed;
+};
+
+[RefCounted] protocol PHttpTransaction
+{
+  manager PSocketProcess;
+
+parent:
+  async OnStartRequest(nsresult                   status,
+                       nsHttpResponseHead?        responseHead,
+                       nsCString                  securityInfoSerialization,
+                       bool                       proxyConnectFailed,
+                       TimingStructArgs           timings,
+                       int32_t                    proxyConnectResponseCode,
+                       uint8_t[]                  dataForSniffer,
+                       nsCString?                 altSvcUsed,
+                       bool                       dataToChildProcess,
+                       bool                       restarted,
+                       uint32_t                   HTTPSSVCReceivedStage,
+                       bool                       supportsHttp3);
+  async OnTransportStatus(nsresult status,
+                          int64_t progress,
+                          int64_t progressMax,
+                          NetworkAddressArg? networkAddressArg);
+  async OnDataAvailable(nsCString data,
+                        uint64_t  offset,
+                        uint32_t  count);
+  async OnStopRequest(nsresult status,
+                      bool responseIsComplete,
+                      int64_t transferSize,
+                      TimingStructArgs timings,
+                      nsHttpHeaderArray? responseTrailers,
+                      TransactionObserverResult? transactionObserverResult,
+                      TimeStamp lastActiveTabOptimization,
+                      uint32_t caps,
+                      HttpConnectionInfoCloneArgs connInfoArgs);
+  async OnInitFailed(nsresult status);
+  async OnH2PushStream(uint32_t pushedStreamId,
+                       nsCString resourceUrl,
+                       nsCString requestString);
+
+child:
+  async __delete__();
+  async Init(uint32_t caps,
+             HttpConnectionInfoCloneArgs aArgs,
+             nsHttpRequestHead reqHeaders,
+             IPCStream? requestBody,
+             uint64_t reqContentLength,
+             bool reqBodyIncludesHeaders,
+             uint64_t topLevelOuterContentWindowId,
+             uint8_t httpTrafficCategory,
+             uint64_t requestContextID,
+             uint32_t classOfService,
+             uint32_t initialRwin,
+             bool responseTimeoutEnabled,
+             uint64_t channelId,
+             bool hasTransactionObserver,
+             H2PushedStreamArg? pushedStreamArg,
+             PInputChannelThrottleQueue? throttleQueue,
+             bool aIsDocumentLoad,
+             TimeStamp aRedirectStart,
+             TimeStamp aRedirectEnd);
+
+  async CancelPump(nsresult status);
+  async SuspendPump();
+  async ResumePump();
+
+  async SetDNSWasRefreshed();
+  async DontReuseConnection();
+  async SetH2WSConnRefTaken();
+};
+
+} // namespace net
+} // namespace mozilla

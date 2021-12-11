@@ -1,0 +1,136 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+<head>
+<title>CRMF Test Page for PSM</title>
+<script language=javascript>
+var request;
+//This variable must be set to the first value
+//in the select field "testType" in the form.
+var keyGenType="SigningOnlyRSA";
+
+var requestedDN = "CN=Javi CA Shack ID, O=NSS";
+
+function setTestType() {
+  var testType = document.crmfForm.testType;
+  
+  keyGenType = testType.options[testType.selectedIndex].value;
+}
+
+function setRequest() {
+  with (document.crmfForm) {
+    CRMFRequest.value = request.request;
+    submit();
+  }
+}
+
+function generateSignAndEncryptRSARequest() {
+    request = crypto.generateCRMFRequest(requestedDN,
+                                         null, null, null, "setRequest()",
+                                         crypto.algorithms.rsa.keyEx.keySizes[0],
+                                         null, "rsa-dual-use");    
+}
+
+function generateSigningOnlyRSARequest() {
+    request = crypto.generateCRMFRequest(requestedDN,null,null,null,"setRequest()",
+                                         crypto.algorithms.rsa.signing.keySizes[0],
+                                         null, "rsa-sign");
+}
+
+function generateEncryptionOnlyRSARequest() {
+    request = crypto.generateCRMFRequest(requestedDN, null, null, null, "setRequest()",
+                                         crypto.algorithms.rsa.keyEx.keySizes[0],
+                                         null, "rsa-ex");
+}
+
+function generateDualRSAKeys() {
+    request = crypto.generateCRMFRequest(requestedDN, null, null, null, "setRequest()",
+                                         crypto.algorithms.rsa.keyEx.keySizes[0],
+                                         null, "rsa-ex",
+                                         crypto.algorithms.rsa.signing.keySizes[0],
+                                         null, "rsa-sign");
+}
+
+function generateDSAKey() {
+    request = crypto.generateCRMFRequest(requestedDN, null, null, null, "setRequest()",
+                                         crypto.algorithms.dsa.keySizes[0],
+                                         null, "dsa-sign-nonrepudiation");
+}
+
+function processForm(form) {
+  with (form) {
+    if (typeof(crypto.version) == "undefined") {
+      alert('You must be running PSM in order to use this page.');
+      return false;
+    }
+    if (NSSDirectory.value == "") {
+      alert('You must provide a path for NSS to use.');
+      return false;
+    }
+    if (dbPassword.value == "") {
+      alert('You must provide a password for the certificate database.');
+      return false;
+    }
+    if (CANickname.value == "") {
+      alert('You must provide a CA Nickname to use.');
+      return false;
+    }
+    //Now do the correct key generation.
+    if (keyGenType == "SignAndEncryptRSA") {
+      generateSignAndEncryptRSARequest();
+    } else if (keyGenType == "SigningOnlyRSA") {
+      generateSigningOnlyRSARequest();
+    } else if (keyGenType == "EncryptionOnlyRSA") {
+      generateEncryptionOnlyRSARequest();
+    } else if (keyGenType == "DualRSAKeys") {
+      generateDualRSAKeys();
+    } else if (keyGenType == "DSAKeyGen") {
+      generateDSAKey();
+    }
+  }
+  return true;
+}
+</script>
+</head>
+<body>
+<h1><center>CRMF Test page for PSM</center></h1>
+This page is designed to be used in combination with the executable
+produced by ns/security/cmd/crmf-cgi in a CGI environment.  In order
+to successfully use this page, modify its action to post to a a server
+where you have installed the crmfcgi executable and you'll be able to
+test the functionality.
+<hr>
+<form name="crmfForm" method=post action="http://www.cgi-site.com/cgi-bin/crmfcgi"> 
+<h2>Certificate Database information</h2>
+First, enter all the information for the CGI to use for initializing 
+NSS.  The CGI will use the directory entered below as the directory
+where to look for the certificate and key databases.
+<pre>
+Path for NSS Config: <input size=40 type="text" name="NSSDirectory">
+</pre>
+Enter the password for the certificate database found in the direcotry
+above.
+<pre>
+Database Password:   <input type="password" name="dbPassword" size=40>
+</pre>
+Now enter the nickname of the certificate to use for signing the 
+certificate issued during this test.
+<pre>
+CA Nickname:         <input size=40 type="text" name="CANickname">
+</pre>
+<h2>Now, figure out which type of key generation you want to test:</h2>
+<select name="testType" onChange="setTestType()">`
+<option value="SigningOnlyRSA">Signing Only-RSA
+<option value="EncryptionOnlyRSA">Encryption Only-RSA
+<option value="SignAndEncryptRSA">Sign and Encrypt Single Key -RSA
+<option value="DualRSAKeys">Dual Keys-RSA
+<option value="DSAKeyGen">DSA Key Gen
+</select>
+<input type="hidden" name=CRMFRequest value="">
+<hr>
+<input type="button" value="OK" onclick="processForm(document.crmfForm)">
+</form>
+</body>
+</html>

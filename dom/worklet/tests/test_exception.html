@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Exception in Worklet script</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  // This loading should fail
+  var audioContext = new AudioContext();
+  audioContext.audioWorklet.addModule("404.js")
+  .then(() => {
+    ok(false, "We should not be called!");
+  }, () => {
+    ok(true, "The script thrown but we are still here.");
+  })
+
+  // This should throw from JS
+  .then(() => {
+    return audioContext.audioWorklet.addModule("worklet_exception.js")
+  })
+  .then(() => {
+    ok(true, "The script threw but we are still here.");
+  }, () => {
+    ok(false, "We should not be called!");
+  })
+
+  .then(() => {
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</body>
+</html>

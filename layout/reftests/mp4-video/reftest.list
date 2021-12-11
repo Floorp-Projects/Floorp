@@ -1,0 +1,4 @@
+skip-if(winWidget) == canvas-1.xhtml canvas-1-ref.xhtml
+fuzzy-if(OSX,1-1,107584-107584) == image-rendering-css.html image-rendering-ref.html
+fuzzy-if(OSX,1-1,107584-107584) == image-rendering-script.html image-rendering-ref.html
+fuzzy-if(OSX,0-1,0-107584) != image-rendering-css.html image-rendering-css-auto.html

@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1446722
+-->
+<head>
+<title>Test for bug 1446722</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1446722">Mozilla bug 1446722</a>
+<p id="display"></p>
+<div id="content">
+<form>
+<input type="time" id="input_time" value="10:30" onchange="++numberChangeEvents"
+                                                 oninput="++numberInputEvents">
+<input type="date" id="input_date" value="2012-05-06" onchange="++numberChangeEvents"
+                                                      oninput="++numberInputEvents">
+<input type="time" id="input_time2" value="11:30" onchange="++numberChangeEvents"
+                                                  oninput="++numberInputEvents">
+<input type="date" id="input_date2" value="2014-07-08"
+                                    onchange="++numberChangeEvents"
+                                    oninput="++numberInputEvents">
+<input type="time" id="input_time3" value="12:30" onchange="++numberChangeEvents"
+                                                  oninput="++numberInputEvents">
+<input type="date" id="input_date3" value="2014-08-09"
+                                    onchange="++numberChangeEvents"
+                                    oninput="++numberInputEvents">
+<input type="reset" id="input_reset">
+</form>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+/**
+ * Test for bug 1446722.
+ *
+ * Test change and input events are fired for date and time inputs when the
+ * default value is reset from the date UI and the time UI.
+ * Test they are not fired when the value is changed via a script.
+ * Test clicking the reset button of a form does not fire these events.
+ **/
+
+const INPUT_FIELD_ID_PREFIX = "input_";
+
+var numberChangeEvents = 0;
+var numberInputEvents = 0;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  if (isDesktopUserAgent(navigator)) {
+    test_reset_in_ui_triggers_change_and_input_event(
+      "time", numberChangeEvents, numberInputEvents);
+    test_reset_in_ui_triggers_change_and_input_event(
+      "date", numberChangeEvents, numberInputEvents);
+  }
+
+  test_reset_in_script_does_not_trigger_change_and_input_event(
+    "time2", numberChangeEvents, numberInputEvents);
+  test_reset_in_script_does_not_trigger_change_and_input_event(
+    "date2", numberChangeEvents, numberInputEvents);
+
+  test_reset_form_does_not_trigger_change_and_input_events("time3", "14:00",
+    numberChangeEvents, numberInputEvents);
+  test_reset_form_does_not_trigger_change_and_input_events("date3", "2016-01-01",
+    numberChangeEvents, numberInputEvents);
+
+  SimpleTest.finish();
+});
+
+function test_reset_in_ui_triggers_change_and_input_event(
+  inputFieldIdSuffix, oldNumberChangeEvents, oldNumberInputEvents) {
+  const inputFieldName = INPUT_FIELD_ID_PREFIX + inputFieldIdSuffix;
+  var input = document.getElementById(inputFieldName);
+
+  is(input.value, input.defaultValue,
+    "Check " + inputFieldName + "'s default value is initialized correctly.");
+  is(numberChangeEvents, oldNumberChangeEvents,
+    "Check numberChangeEvents is initialized correctly for " + inputFieldName +
+  ".");
+  is(numberInputEvents, oldNumberInputEvents,
+    "Check numberInputEvents is initialized correctly for " + inputFieldName +
+    ".");
+
+  simulateUserClicksResetButton(input);
+
+  is(input.value, "",
+    "Check " + inputFieldName + "'s value was set correctly.");
+  is(numberChangeEvents, oldNumberChangeEvents + 1,
+    "Change event should be dispatched for " + inputFieldName + ".");
+  is(numberInputEvents, oldNumberInputEvents + 1,
+    "Input event should be dispatched for " + inputFieldName + ".");
+}
+
+function test_reset_in_script_does_not_trigger_change_and_input_event(
+  inputFieldIdSuffix, oldNumberChangeEvents, oldNumberInputEvents) {
+  const inputFieldName = INPUT_FIELD_ID_PREFIX + inputFieldIdSuffix;
+  var input = document.getElementById(inputFieldName);
+
+  is(input.value, input.defaultValue,
+    "Check " + inputFieldName + "'s default value is initialized correctly.");
+  is(numberChangeEvents, oldNumberChangeEvents,
+    "Check numberChangeEvents is initialized correctly for " + inputFieldName +
+  ".");
+  is(numberInputEvents, oldNumberInputEvents,
+    "Check numberInputEvents is initialized correctly for " + inputFieldName +
+    ".");
+
+  input.value = "";
+
+  is(numberChangeEvents, oldNumberChangeEvents,
+    "Change event should not be dispatched for " + inputFieldName + ".");
+  is(numberInputEvents, oldNumberInputEvents,
+    "Input event should not be dispatched for " + inputFieldName + ".");
+}
+
+function test_reset_form_does_not_trigger_change_and_input_events(
+  inputFieldIdSuffix, newValue, oldNumberChangeEvents, oldNumberInputEvents) {
+  const inputFieldName = INPUT_FIELD_ID_PREFIX + inputFieldIdSuffix;
+  const inputFieldResetButtonName = "input_reset";
+  var input = document.getElementById(inputFieldName);
+
+  is(input.value, input.defaultValue,
+    "Check " + inputFieldName + "'s default value is initialized correctly.");
+  isnot(input.defaultValue, newValue, "Check default value differs from newValue for " +
+    inputFieldName + ".");
+  is(numberChangeEvents, oldNumberChangeEvents,
+    "Check numberChangeEvents is initialized correctly for " + inputFieldName +
+  ".");
+  is(numberInputEvents, oldNumberInputEvents,
+    "Check numberInputEvents is initialized correctly for " + inputFieldName +
+    ".");
+
+  input.value = newValue;
+
+  var resetButton = document.getElementById(inputFieldResetButtonName);
+  synthesizeMouseAtCenter(resetButton, {});
+
+  is(input.value, input.defaultValue, "Check value is reset to default for " +
+    inputFieldName + ".");
+  is(numberChangeEvents, oldNumberChangeEvents,
+    "Change event should not be dispatched for " + inputFieldResetButtonName + ".");
+  is(numberInputEvents, oldNumberInputEvents,
+    "Input event should not be dispatched for " + inputFieldResetButtonName + ".");
+}
+
+</script>
+</pre>
+</body>
+</html>

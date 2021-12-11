@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style type="text/css">
+<![CDATA[
+@namespace pp url("prettyprint");
+pp|expander-box,
+pp|pre-content {
+  display: block;
+}
+
+pp|expander-box[collapsed] > pp|float,
+pp|expander-box[collapsed] > pp|pre-content {
+  display: inline;
+  float: none;
+}
+
+pp|float {
+  float: left;
+}
+    ]]></style>
+  </head>
+
+  <body>
+    <div>
+<pp:content xmlns:pp="prettyprint">
+  <pp:expander-box collapsed="collapsed"><pp:float>-</pp:float>
+    <pp:pre-content>pre</pp:pre-content>
+  </pp:expander-box>
+</pp:content>
+    </div>
+  </body>
+</html>

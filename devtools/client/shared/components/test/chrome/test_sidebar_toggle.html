@@ -1,0 +1,59 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test sidebar toggle button
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Sidebar toggle button test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  const SidebarToggle = browserRequire("devtools/client/shared/components/SidebarToggle.js");
+
+  try {
+    await test();
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function test() {
+    const output1 = shallowRenderComponent(SidebarToggle, {
+      collapsed: false,
+      collapsePaneTitle: "Expand",
+      expandPaneTitle: "Collapse"
+    });
+
+    is(output1.type, "button", "Output is a button element");
+    is(output1.props.title, "Expand", "Proper title is set");
+    is(output1.props.className.indexOf("pane-collapsed"), -1,
+      "Proper class name is set");
+
+    const output2 = shallowRenderComponent(SidebarToggle, {
+      collapsed: true,
+      collapsePaneTitle: "Expand",
+      expandPaneTitle: "Collapse"
+    });
+
+    is(output2.props.title, "Collapse", "Proper title is set");
+    ok(output2.props.className.includes("pane-collapsed"),
+      "Proper class name is set");
+  }
+};
+</script>
+</pre>
+</body>
+</html>

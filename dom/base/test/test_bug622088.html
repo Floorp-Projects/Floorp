@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 622088 - Test that XHR gives the referrer corresponding to the dynamic script context.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=622088">Mozilla Bug 622088</a>
+<pre id="test">
+
+<iframe id='iframe' src='file_bug622088_inner.html'></iframe>
+
+<iframe id='dataWindow' srcdoc="<html><head>
+<script>function getXHRObject() { return new XMLHttpRequest(); }</script>
+</head><body onload='parent.dataWindowLoaded()'>Hello!!</body></html>"></iframe>
+
+<script class="testbody" type="application/javascript">
+
+// Bug 622088 - Test that XHR gives the referrer corresponding to the
+// dynamic script context.
+
+const kOriginalLocation = location.href;
+
+SimpleTest.waitForExplicitFinish();
+
+var innerFinishedLoading = false;
+function innerLoaded(inner) {
+  // Here, we're being called through inner's onload handler, so our referrer
+  // should be inner's URL.
+  var referrer = inner.doXHR();
+  is (referrer, String(inner.document.location), 'Expected inner frame location');
+
+  // Now change the location of the inner frame.  This should be reflected in
+  // the XHR's referrer.
+  inner.history.pushState('', '', Math.random());
+  referrer = inner.doXHR();
+  is (referrer, String(inner.document.location), 'Expected inner frame location after pushstate');
+
+  innerFinishedLoading = true;
+}
+
+var dataWindowFinishedLoading = false;
+function dataWindowLoaded() {
+  dataWindowFinishedLoading = true;
+}
+
+function callXHR() {
+  if (innerFinishedLoading && dataWindowFinishedLoading) {
+    var inner = document.getElementById('iframe').contentWindow;
+    var referrer = inner.doXHR();
+    is (referrer, String(inner.document.location),
+        'Expected inner frame location when called from outer frame.');
+
+    var referrer = inner.doXHR(new XMLHttpRequest());
+    is (referrer, String(document.location),
+        "Expected outer frame location when called with outer's XHR object.");
+
+    // Now do a request within the inner window using an XMLHttpRequest
+    // retrieved from a data: URI.  The referrer should be this window, not the
+    // data: URI.
+    var dataWindow = document.getElementById('dataWindow').contentWindow;
+    var referrer = inner.doXHR(dataWindow.getXHRObject());
+    is (referrer, String(document.location),
+        "Expected outer frame location when called with data's XHR object.");
+
+    // Now do that test again, but after having changed the outer window's URI.
+    // This currently fails, due to basically bug 631949.  It's not even clear
+    // what the right behavior is.  So marking as a todo for now.
+    history.replaceState('', '', Math.random());
+
+    var referrer = inner.doXHR(dataWindow.getXHRObject());
+    todo_is (referrer, String(document.location),
+             "Expected outer frame location when called with data's XHR object " +
+             "after replaceState.");
+
+    // In case you're temped, you probably don't want to do history.pushState
+    // here and test again with the outer frame.  Calling pushState on the
+    // outer frame messes up Mochitest in subtle ways.
+
+    history.replaceState('', '', kOriginalLocation);
+    SimpleTest.finish();
+  }
+  else {
+    // ugh.
+    setTimeout(callXHR, 0);
+  }
+}
+
+callXHR();
+
+</script>
+</pre>
+</body>
+</html>

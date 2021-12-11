@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+# -*- Mode: HTML -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#define HIDDEN_WINDOW
+
+<?xml-stylesheet href="chrome://browser/skin/webRTC-menubar-indicator.css" type="text/css"?>
+
+<window id="main-window"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        data-l10n-sync="true">
+
+  <linkset>
+    <html:link rel="localization" href="browser/appmenu.ftl"/>
+  </linkset>
+
+#include macWindow.inc.xhtml
+
+<!-- Dock menu -->
+<popupset>
+  <!-- Hide this menupopup from the accessibility tree so that we don't fire
+       any unintended accessibility notifications for it. Accessibility for the
+       Dock menu is handled natively by macOS. -->
+  <menupopup id="menu_mac_dockmenu" aria-hidden="true">
+    <!-- The command cannot be cmd_newNavigator because we need to activate
+         the application. -->
+    <menuitem data-l10n-id="appmenuitem-new-window" oncommand="OpenBrowserWindowFromDockMenu();"
+              id="macDockMenuNewWindow" />
+    <menuitem data-l10n-id="appmenuitem-new-private-window" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
+              id="macDockMenuNewPrivateWindow" />
+  </menupopup>
+</popupset>
+
+</window>

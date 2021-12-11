@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=416168
+-->
+<head>
+  <title>Test for Bug 416168</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=416168">Mozilla Bug 416168</a>
+<p id="display">
+
+<div id="a" style="overflow: hidden; outline: 1px solid black; height: 0px;">
+  <div style="margin-top: 50px; width:20px; height:20px;"></div>
+</div>
+
+<div id="b" style="overflow: hidden; outline: 1px solid black; width:0px; height: 100px;">
+</div>
+
+<div id="c" style="overflow: hidden; outline: 1px solid black; width:100px; height: 0px;">
+</div>
+
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var a = document.getElementById("a");
+is(a.scrollHeight, 70, "margin-top included");
+
+var b = document.getElementById("b");
+is(b.scrollHeight, 100, "zero width");
+
+var c = document.getElementById("c");
+is(c.scrollWidth, 100, "zero height");
+
+</script>
+</pre>
+</body>
+</html>

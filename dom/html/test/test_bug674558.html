@@ -1,0 +1,290 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=674558
+-->
+<head>
+  <title>Test for Bug 674558</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=674558">Mozilla Bug 674558</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 674558 **/
+SimpleTest.waitForExplicitFinish();
+
+// Turn off spatial navigation because it hijacks VK_RIGHT and VK_LEFT keydown
+// events.
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
+});
+function startTest() {
+  function textAreaCtor() {
+    return document.createElement("textarea");
+  }
+  var ctors = [textAreaCtor];
+  ["text", "password", "search"].forEach(function(type) {
+    ctors.push(function inputCtor() {
+      var input = document.createElement("input");
+      input.type = type;
+      return input;
+    });
+  });
+
+  for (var ctor in ctors) {
+    test(ctors[ctor]);
+  }
+
+  SimpleTest.finish();
+}
+
+function test(ctor) {
+  var elem = ctor();
+  ok(true, "Testing " + name(elem));
+
+  ok("selectionDirection" in elem, "elem should have the selectionDirection property");
+
+  is(elem.selectionStart, elem.value.length, "Default value");
+  is(elem.selectionEnd, elem.value.length, "Default value");
+  is(elem.selectionDirection, "forward", "Default value");
+
+  var content = document.getElementById("content");
+  content.appendChild(elem);
+
+  function flush() { document.body.clientWidth; }
+  function hide() {
+    content.style.display = "none";
+    flush();
+  }
+  function show() {
+    content.style.display = "";
+    flush();
+  }
+
+  elem.value = "foobar";
+
+  is(elem.selectionStart, elem.value.length, "Default value");
+  is(elem.selectionEnd, elem.value.length, "Default value");
+  is(elem.selectionDirection, "forward", "Default value");
+
+  elem.setSelectionRange(1, 3);
+  is(elem.selectionStart, 1, "Correct value");
+  is(elem.selectionEnd, 3, "Correct value");
+  is(elem.selectionDirection, "forward", "If not set, should default to forward");
+
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 3, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 3, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  // extend to right
+  elem.focus();
+  synthesizeKey("VK_RIGHT", {shiftKey: true});
+
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Correct value");
+  is(elem.selectionDirection, "forward", "Still forward");
+
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  // change the direction
+  elem.selectionDirection = "backward";
+
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Correct value");
+
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  // extend to right again
+  synthesizeKey("VK_RIGHT", {shiftKey: true});
+
+  is(elem.selectionStart, 2, "Correct value");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Still backward");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  elem.selectionEnd = 5;
+
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Correct value");
+  is(elem.selectionDirection, "backward", "Still backward");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  elem.selectionDirection = "none";
+
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "none not supported");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  elem.selectionDirection = "backward";
+
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Correct Value");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  elem.selectionDirection = "invalid";
+
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Treated as none");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  elem.selectionDirection = "backward";
+
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Correct Value");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  elem.setSelectionRange(1, 4);
+
+  is(elem.selectionStart, 1, "Correct value");
+  is(elem.selectionEnd, 4, "Correct value");
+  is(elem.selectionDirection, "forward", "Correct value");
+
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  elem.setSelectionRange(1, 1);
+  synthesizeKey("VK_RIGHT", {shiftKey: true});
+  synthesizeKey("VK_RIGHT", {shiftKey: true});
+  synthesizeKey("VK_RIGHT", {shiftKey: true});
+
+  is(elem.selectionStart, 1, "Correct value");
+  is(elem.selectionEnd, 4, "Correct value");
+  is(elem.selectionDirection, "forward", "Correct value");
+
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  elem.setSelectionRange(5, 5);
+  synthesizeKey("VK_LEFT", {shiftKey: true});
+  synthesizeKey("VK_LEFT", {shiftKey: true});
+  synthesizeKey("VK_LEFT", {shiftKey: true});
+
+  is(elem.selectionStart, 2, "Correct value");
+  is(elem.selectionEnd, 5, "Correct value");
+  is(elem.selectionDirection, "backward", "Correct value");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+}
+
+function name(elem) {
+  var tag = elem.localName;
+  if (tag == "input") {
+    tag += "[type=" + elem.type + "]";
+  }
+  return tag;
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=478321
+-->
+<head>
+  <title>Test for CSS 'rem' unit</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478321">Mozilla Bug 478321</a>
+<p id="display"></p>
+<p id="display2"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for CSS 'rem' unit **/
+
+function px_to_num(str)
+{
+    return Number(String(str).match(/^([\d.]+)px$/)[1]);
+}
+
+function fs(elt)
+{
+    return px_to_num(getComputedStyle(elt, "").fontSize);
+}
+
+var html = document.documentElement;
+var body = document.body;
+var p = document.getElementById("display");
+var p2 = document.getElementById("display2");
+
+html.style.font = "initial";
+
+var defaultFontSize = fs(html);
+
+// NOTE:  This test assumes that the default font size is an
+// integral number of pixels (which is always the case at present).
+// If that ever becomes false, the calls to "is" may need to be replaced by
+// calls to "isapprox" that allows errors of up to some small fraction
+// of a pixel.
+
+html.style.fontSize = "3rem";
+is(fs(html), 3 * defaultFontSize,
+   "3rem on root should triple root's font size");
+body.style.font = "initial";
+is(fs(body), defaultFontSize,
+   "initial should produce initial font size");
+body.style.fontSize = "1em";
+is(fs(body), 3 * defaultFontSize, "1em should inherit from parent");
+body.style.fontSize = "200%";
+is(fs(body), 6 * defaultFontSize, "200% should double parent");
+body.style.fontSize = "2rem";
+is(fs(body), 6 * defaultFontSize, "2rem should double root");
+p.style.font = "inherit";
+is(fs(p), 6 * defaultFontSize, "inherit should inherit from parent");
+p2.style.fontSize = "2rem";
+is(fs(p2), 6 * defaultFontSize, "2rem should double root");
+body.style.font = "initial";
+is(fs(p), defaultFontSize, "inherit should inherit from parent");
+is(fs(p2), 6 * defaultFontSize, "2rem should double root");
+body.style.fontSize = "5em";
+html.style.fontSize = "200%";
+is(fs(p), 10 * defaultFontSize, "inherit should inherit from parent");
+is(fs(p2), 4 * defaultFontSize, "2rem should double root");
+
+
+// Make things readable again.
+html.style.fontSize = "1em";
+body.style.fontSize = "1em";
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,176 @@
+{
+	"allTabsLabel": {
+		"message": "すべてのタブを表示…"
+	},
+    "sidebar_name":{
+        "message":"垂直タブ"
+    },
+	"closeTabButtonTooltip": {
+		"message": "タブを閉じます"
+	},
+	"contextMenuCloseOtherTabs": {
+		"message": "他のタブをすべて閉じる"
+	},
+	"contextMenuCloseTab": {
+		"message": "タブを閉じる"
+	},
+	"contextMenuCloseTabsAfter": {
+		"message": "下のタブをすべて閉じる"
+	},
+	"contextMenuDuplicateTab": {
+		"message": "タブを複製"
+	},
+	"optionsCustomCSSWikiLink": {
+		"message": "設定を保存"
+	},
+	"contextMenuMoveTab": {
+		"message": "タブを移動"
+	},
+	"contextMenuMoveTabToEnd": {
+		"message": "最後のタブへ移動"
+	},
+	"optionsThemeIntegration": {
+		"message": "ブラウザのテーマを使用"
+	},
+	"optionsThemeIntegrationExplanation": {
+		"message": "　ブラウザのテーマを使用します。"
+	},
+	"contextMenuMoveTabToNewWindow": {
+		"message": "新しいウィンドウへ移動"
+	},
+	"contextMenuMoveTabToStart": {
+		"message": "最初のタブへ移動"
+	},
+	"optionsAppearanceTitle": {
+		"message": "外観の設定"
+	},
+	"optionsBehaviorTitle": {
+		"message": "動作設定"
+	},
+	"contextMenuMuteTab": {
+		"message": "タブをミュート"
+	},
+	"optionsSwitchLastActiveTabExplanation": {
+		"message": "　タブを閉じた際、最後に操作したタブに切り替わります"
+	},
+	"contextMenuOpenInContextualTab": {
+		"message": "コンテナーを開きなおす"
+	},
+	"optionsSwitchByScrollingWithCtrlExplanation": {
+		"message": "　垂直タブ上で、スクロールした際の動作を変更出来ます。ctrl を選択すると、Ctrl を押したときのみ動作します"
+	},
+	"optionsSwitchLastActiveTab": {
+		"message": "最後に操作したタブに移動"
+	},
+	"optionsSwitchByScrollingAlways": {
+		"message": "有効"
+	},
+	"optionsSwitchByScrollingNever": {
+		"message": "無効　"
+	},
+	"optionsSwitchByScrollingWithCtrl": {
+		"message": "Ctrl"
+	},
+    "optionsSwitchByScrolling": {
+		"message":"　スクロール時の動作"
+	},
+	"contextMenuReloadAllTabs": {
+		"message": "すべてのタブを再読み込み"
+	},
+	"contextMenuReloadTab": {
+		"message": "タブを再読み込み"
+	},
+	"contextMenuUndoCloseTab": {
+		"message": "閉じたタブを元に戻す"
+	},
+	"contextMenuUnmuteTab": {
+		"message": "タブのミュートを解除"
+	},
+	"contextMenuUnpinTab": {
+		"message": "タブのピン留めを外す"
+	},
+	"extensionDescription": {
+		"message": "Tab Center は、ユーザーのタブの使い方から生じるいくつかの問題 (特に「タブを開きすぎてしまう」状況) を解決し、将来の革新に向けてより自在な UI の基礎を提供しようとする試みです。この Firefox アドオンの初回版では、タブを水平ではなく垂直に配置してみました。これは素晴らしい VerticalTabs アドオンに強く触発され、そのアイデアを借用したものです。"
+	},
+	"newTabBtnLabel": {
+		"message": "新しいタブ"
+	},
+	"newTabBtnTooltip": {
+		"message": "新しいタブを開きます"
+	},
+	"optionsAdvancedTitle": {
+		"message": "上級者設定"
+	},
+	"optionsCompactMode": {
+		"message": "　コンパクトモード"
+	},
+	"optionsCompactModeDynamic": {
+		"message": "自動"
+	},
+	"optionsCompactModeExplanation": {
+		"message": ""
+	},
+	"optionsNotifyClosingManyTabsExplanation": {
+		"message": "　 $COUNT$ 以上のタブを閉じたときにできるように通知を表示します",
+		"placeholders": {
+			"count": {
+				"content": "$1",
+				"example": "5"
+			}
+		}
+	},
+	"optionsNotifyClosingManyTabs": {
+		"message": "大量のタブを閉じたときに通知する"
+	},
+	"optionsCompactModeOff": {
+		"message": "無効　"
+	},
+	"optionsCompactModeStrict": {
+		"message": "常時"
+	},
+	"optionsCompactPins": {
+		"message": "ピン留めタブをアイコン表示"
+	},
+	"optionsCustomCSS": {
+		"message": "CSSを保存"
+	},
+	"optionsDarkTheme": {
+		"message": "暗いテーマ"
+	},
+	"optionsSaveCustomCSS": {
+		"message": "CSSを保存"
+	},
+	"optionsTitle": {
+		"message": "設定"
+	},
+	"searchPlaceholder": {
+		"message": "タブを探索"
+	},
+	"settingsBtnTooltip": {
+		"message": "設定を変更します"
+	},
+	"contextMenuNoContainer": {
+		"message": "コンテナーなし (&N)",
+		"description": "Taken from Firefox: https://pontoon.mozilla.org/en-GB/firefox/all-resources/?string=153932 and https://pontoon.mozilla.org/en-GB/firefox/all-resources/?string=153933. Context menu item label."
+	},
+	"browserActionTitle": {
+		"message": "Tab Center Rebornを開閉",
+		"description": "Tooltip shown when hovering the toolbar button."
+	},
+	"muteTabButtonTooltip": {
+		"message": "タブをミュート",
+		"description": "Taken from Firefox: https://pontoon.mozilla.org/en-GB/firefox/all-resources/?string=99188. Tooltip of the audible icon on tabs, displayed on the favicon."
+	},
+	"contextMenuCloseTabsBefore": {
+		"message": "上のタブをすべて閉じる",
+		"description": "Context menu item label."
+	},
+	"contextMenuCloseTabs": {
+		"message": "タブを閉じる",
+		"description": "Taken from Firefox: https://pontoon.mozilla.org/en-GB/firefox/all-resources/?string=197250. Context Menu item label"
+	},
+	"OptionsAnimations": {
+		"message": "アニメーション",
+		"description": "Option in options page."
+	}
+}

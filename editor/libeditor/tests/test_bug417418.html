@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=417418
+-->
+<head>
+  <title>Test for Bug 417418</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417418">Mozilla Bug 417418</a>
+<div id="display" contenteditable="true">
+<p id="coin">first paragraph</p>
+<p>second paragraph. <img id="img" src="green.png"></p>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 417418 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+function resetSelection() {
+  window.getSelection().collapse(document.getElementById("coin"), 0);
+}
+
+function runTest() {
+    var rightClickDown = {type: "mousedown", button: 2},
+        rightClickUp = {type: "mouseup", button: 2},
+        singleClickDown = {type: "mousedown", button: 0},
+        singleClickUp = {type: "mouseup", button: 0};
+    var selection = window.getSelection();
+
+    var div = document.getElementById("display");
+    var img = document.getElementById("img");
+    var divRect = div.getBoundingClientRect();
+    var imgselected;
+
+    resetSelection();
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, rightClickDown);
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, rightClickUp);
+    ok(selection.isCollapsed, "selection is not collapsed");
+
+    resetSelection();
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, singleClickDown);
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, singleClickUp);
+    ok(selection.isCollapsed, "selection is not collapsed");
+
+    resetSelection();
+    synthesizeMouseAtCenter(img, rightClickDown);
+    synthesizeMouseAtCenter(img, rightClickUp);
+    imgselected = selection.anchorNode == img.parentNode &&
+                      selection.anchorOffset === 1 &&
+                      selection.rangeCount === 1;
+    ok(imgselected, "image is not selected");
+
+    resetSelection();
+    synthesizeMouseAtCenter(img, singleClickDown);
+    synthesizeMouseAtCenter(img, singleClickUp);
+    imgselected = selection.anchorNode == img.parentNode &&
+                      selection.anchorOffset === 1 &&
+                      selection.rangeCount === 1;
+    ok(imgselected, "image is not selected");
+
+    SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>

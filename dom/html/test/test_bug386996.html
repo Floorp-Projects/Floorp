@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=386996
+-->
+<head>
+  <title>Test for Bug 386996</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/EventUtils.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=386996">Mozilla Bug 386996</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input1"><input disabled><input id="input2">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 386996 **/
+
+var frame = document.getElementById("testIframe");
+
+function testContentEditable() {
+  var focusedElement;
+  document.getElementById("input1").onfocus = function() { focusedElement = this };
+  document.getElementById("input2").onfocus = function() { focusedElement = this };
+
+  document.getElementById("input1").focus();
+  synthesizeKey("KEY_Tab");
+
+  is(focusedElement.id, "input2");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(testContentEditable);
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>

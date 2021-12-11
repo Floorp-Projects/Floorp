@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  background-image: url("chrome://global/skin/illustrations/error-malformed-url.svg");
+  min-height: 300px;
+  background-repeat: no-repeat;
+  padding-inline-start: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 500px;
+  background-size: 30%;
+  background-position: left center;
+}
+
+:host(:dir(rtl)) {
+  background-position-x: right;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.5em;
+  font-weight: lighter;
+}

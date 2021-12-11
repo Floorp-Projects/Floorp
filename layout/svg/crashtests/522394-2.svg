@@ -1,0 +1,12 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <filter id="f1" x="0" y="0" width="100000000" height="100000000" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse">
+    <feFlood flood-color="lime" x="0" y="0" width="100%" height="100%"/>
+  </filter>
+</defs>
+<rect x="10" y="10" width="10" height="10" filter="url(#f1)"/>
+</svg>

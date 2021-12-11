@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html,charset=utf-8">
+  <title>Tests of nsIEditor#documentCharacterSet</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(() => {
+      const originalBody = document.body.innerHTML;
+
+      (function test_with_text_editor() {
+        for (const test of [
+            {
+              tag: "input",
+              innerHTML: "<input>",
+            },
+            {
+              tag: "textarea",
+              innerHTML: "<textarea></textarea>",
+            },
+          ]) {
+            document.body.innerHTML = test.innerHTML;
+            const textControl = document.body.querySelector(test.tag);
+            const editor = SpecialPowers.wrap(textControl).editor;
+            try {
+              editor.documentCharacterSet;
+              ok(false, `TextEditor::GetDocumentCharacterSet() for <${test.tag}> should throw an exception`);
+            } catch (e) {
+              ok(true, `TextEditor::GetDocumentCharacterSet() for <${test.tag}> should throw an exception`);
+            }
+            try {
+              editor.documentCharacterSet = "windows-1252";
+              ok(false, `TextEditor::SetDocumentCharacterSet() for <${test.tag}> should throw an exception`);
+            } catch (e) {
+              ok(true, `TextEditor::SetDocumentCharacterSet() for <${test.tag}> should throw an exception`);
+            }
+          }
+      })();
+
+      function getHTMLEditor(win = window) {
+        const editingSession = SpecialPowers.wrap(win).docShell.editingSession;
+        if (!editingSession) {
+          return null;
+        }
+        return editingSession.getEditorForWindow(win);
+      }
+
+      (function test_with_contenteditable() {
+        document.body.innerHTML = "<div contenteditable><p>abc</p></div>";
+        const editor = getHTMLEditor();
+        is(editor.documentCharacterSet, "UTF-8",
+          "HTMLEditor::GetDocumentCharacterSet() should return \"UTF-8\"");
+        editor.documentCharacterSet = "windows-1252";
+        is(document.querySelector("meta[http-equiv]").getAttribute("content"), "text/html,charset=windows-1252",
+          "HTMLEditor::SetDocumentCharacterSet() should add <meta> element whose \"http-equiv\" attribute has \"windows-1252\"");
+        is(editor.documentCharacterSet, "windows-1252",
+          "HTMLEditor::GetDocumentCharacterSet() should return \"windows-1252\" after setting the value");
+        editor.documentCharacterSet = "utf-8";
+        is(document.querySelector("meta[http-equiv]").getAttribute("content"), "text/html,charset=utf-8",
+          "HTMLEditor::SetDocumentCharacterSet() should add <meta> element whose \"http-equiv\" attribute has \"utf-8\"");
+        is(editor.documentCharacterSet, "UTF-8",
+          "HTMLEditor::GetDocumentCharacterSet() should return \"UTF-8\" after setting the value");
+      })();
+
+      (function test_with_designMode() {
+        while (document.querySelector("meta")) {
+          document.querySelector("meta").remove();
+        }
+        document.body.innerHTML = "<iframe></iframe>";
+        const editdoc = document.querySelector("iframe").contentDocument;
+        editdoc.designMode = "on";
+        const editor = getHTMLEditor(document.querySelector("iframe").contentWindow);
+
+        editor.documentCharacterSet = "us-ascii";
+        const metaWithHttpEquiv = editdoc.getElementsByTagName("meta")[0];
+        is(metaWithHttpEquiv.getAttribute("http-equiv"), "Content-Type",
+          "meta element should have http-equiv");
+        is(metaWithHttpEquiv.getAttribute("content"), "text/html;charset=us-ascii",
+          "charset should be set as us-ascii");
+
+        const dummyMeta = editdoc.createElement("meta");
+        dummyMeta.setAttribute("name", "keywords");
+        dummyMeta.setAttribute("content", "test");
+        metaWithHttpEquiv.parentNode.insertBefore(dummyMeta, metaWithHttpEquiv);
+
+        editor.documentCharacterSet = "utf-8";
+
+        is(dummyMeta, editdoc.getElementsByTagName("meta")[0],
+          "<meta> element shouldn't be touched");
+        isnot(dummyMeta.getAttribute("http-equiv"), "Content-Type",
+          "first meta element shouldn't have http-equiv");
+
+        is(metaWithHttpEquiv, editdoc.getElementsByTagName("meta")[1],
+          "The second <meta> element should be reused");
+        is(metaWithHttpEquiv.getAttribute("http-equiv"), "Content-Type",
+          "second meta element should have http-equiv");
+        is(metaWithHttpEquiv.getAttribute("content"), "text/html;charset=utf-8",
+          "charset should be set as utf-8");
+      })();
+
+      document.body.innerHTML = originalBody;
+      SimpleTest.finish();
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

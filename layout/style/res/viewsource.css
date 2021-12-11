@@ -1,0 +1,101 @@
+@charset "utf-8";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+
+*|*:root {
+  background-color: white;
+  color: black;
+  direction: ltr;
+  -moz-control-character-visibility: visible;
+  height: 100%;
+}
+#viewsource {
+  font-family: -moz-fixed;
+  font-weight: normal;
+  white-space: pre;
+  counter-reset: line;
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px;
+}
+#viewsource.wrap {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+pre {
+  font: inherit;
+  color: inherit;
+  white-space: inherit;
+  margin: 0 0 0 5ch;
+}
+pre[id]:before,
+span[id]:before {
+  content: counter(line) " ";
+  counter-increment: line;
+  user-select: none;
+  display: inline-block;
+  width: 5ch;
+  margin: 0 0 0 -5ch;
+  text-align: right;
+  color: #ccc;
+  font-weight: normal;
+  font-style: normal;
+}
+.highlight .start-tag {
+ color: purple;
+ font-weight: bold;
+}
+.highlight .end-tag {
+ color: purple;
+ font-weight: bold;
+}
+.highlight .comment {
+ color: green;
+ font-style: italic;
+}
+.highlight .cdata {
+ color: #CC0066;
+}
+.highlight .doctype {
+ color: steelblue;
+ font-style: italic;
+}
+.highlight .pi {
+ color: orchid;
+ font-style: italic;
+}
+.highlight .entity {
+ color: #FF4500;
+ font-weight: normal;
+}
+.highlight .text {
+  font-weight: normal;
+}
+.highlight .attribute-name {
+ color: black;
+ font-weight: bold;
+}
+.highlight .attribute-value {
+ color: blue;
+ font-weight: normal;
+}
+.highlight .markupdeclaration {
+ color: steelblue;
+ font-style: italic;
+}
+span:not(.error), a:not(.error) {
+ unicode-bidi: embed;
+}
+span[id] {
+ unicode-bidi: isolate;
+}
+.highlight .error,
+.highlight .error > :is(.start-tag, .end-tag, .comment, .cdata, .doctype,
+                        .pi, .entity, .attribute-name, .attribute-value) {
+  color: red;
+  font-weight: bold;
+}

@@ -1,0 +1,252 @@
+<?xml version="1.0"?>
+
+<window title="Browser element keyhandling tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    const IS_MAC = navigator.platform.indexOf("Mac") === 0;
+    const VK = {};
+    const CHARS = {};
+
+    // Copied values from NativeKeyCodes.js and EventUtils.js
+    if (IS_MAC) {
+      VK.LEFT = MAC_VK_LeftArrow;
+      CHARS.LEFT = "\uF702";
+      VK.RIGHT = MAC_VK_RightArrow;
+      CHARS.RIGHT = "\uF703";
+      VK.UP = MAC_VK_UpArrow;
+      CHARS.UP = "\uF700";
+      VK.DOWN = MAC_VK_DownArrow;
+      CHARS.DOWN = "\uF701";
+      VK.SPACE = MAC_VK_Space;
+      VK.PGDOWN = MAC_VK_PageDown;
+      CHARS.PGDOWN = "\uF72D";
+      VK.PGUP = MAC_VK_PageUp;
+      CHARS.PGUP = "\uF72C";
+      VK.C = MAC_VK_ANSI_C;
+      VK.HOME = MAC_VK_Home;
+      CHARS.HOME = "\uF729";
+      VK.END = MAC_VK_End;
+      CHARS.END = "\uF72B";
+    } else {
+      VK.LEFT = WIN_VK_LEFT;
+      CHARS.LEFT = "";
+      VK.RIGHT = WIN_VK_RIGHT;
+      CHARS.RIGHT = "";
+      VK.UP = WIN_VK_UP;
+      CHARS.UP = "";
+      VK.DOWN = WIN_VK_DOWN;
+      CHARS.DOWN = "";
+      VK.SPACE = WIN_VK_SPACE;
+      VK.PGDOWN = WIN_VK_NEXT;
+      CHARS.PGDOWN = "";
+      VK.PGUP = WIN_VK_PRIOR;
+      CHARS.PGUP = "";
+      VK.C = WIN_VK_C;
+      VK.HOME = WIN_VK_HOME;
+      CHARS.HOME = "";
+      VK.END = WIN_VK_END;
+      CHARS.END = "";
+    }
+
+    function waitForEvent(target, event) {
+      info(`Waiting for ${event} event.`);
+      return new Promise(resolve => {
+        browser.addEventListener(event, resolve, { once: true });
+      });
+    }
+
+    function synthesizeKey(keyCode, modifiers, chars) {
+      return new Promise((resolve, reject) => {
+        if (!synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, keyCode, modifiers, chars, chars, resolve)) {
+          reject();
+        }
+      });
+    }
+
+    function getWindowProperties(browser, properties) {
+      let results = {};
+      for (let prop of properties) {
+        results[prop] = browser.contentWindow[prop];
+      }
+
+      return results;
+    }
+
+    function getScrollPosition(browser) {
+      return getWindowProperties(browser, ["scrollX", "scrollY"]);
+    }
+
+    async function test() {
+      // Smooth scrolling makes scroll events take time and it's difficult to know
+      // when they've ended, so turn it off for this test.
+      await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]] });
+
+      let browser = document.getElementById("browser");
+      browser.focus();
+      let { scrollX, scrollY } = await getScrollPosition(browser);
+      is(scrollX, 0, "Should not be scrolled");
+      is(scrollY, 0, "Should not be scrolled");
+
+      info("down");
+      await synthesizeKey(VK.DOWN, {}, CHARS.DOWN);
+      await waitForEvent(browser.contentWindow, "scroll");
+      let { scrollX: lineScrollX, scrollY: lineScrollY } = await getScrollPosition(browser);
+      is(lineScrollX, 0, "Should not be scrolled");
+      ok(lineScrollY > 0, "Should be scrolled");
+
+      info("up");
+      await synthesizeKey(VK.UP, {}, CHARS.UP);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY } = await getScrollPosition(browser);
+        is(scrollX, 0, "Should not be scrolled");
+        is(scrollY, 0, "Should not be scrolled");
+      }
+
+      info("right");
+      await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+      await waitForEvent(browser.contentWindow, "scroll");
+      let { scrollX: rightScrollX, scrollY: rightScrollY } = await getScrollPosition(browser);
+      ok(rightScrollX > 0, "Should be scrolled");
+      is(rightScrollY, 0, "Should not be scrolled");
+
+      info("left");
+      await synthesizeKey(VK.LEFT, {}, CHARS.LEFT);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY } = await getScrollPosition(browser);
+        is(scrollX, 0, "Should not be scrolled");
+        is(scrollY, 0, "Should not be scrolled");
+      }
+
+      info("space");
+      await synthesizeKey(VK.SPACE, {}, " ");
+      await waitForEvent(browser.contentWindow, "scroll");
+      let { scrollX: pageScrollX, scrollY: pageScrollY } = await getScrollPosition(browser);
+      is(pageScrollX, 0, "Should not be scrolled");
+      ok(pageScrollY > lineScrollY, "Should be scrolled more than a single line");
+
+      info("shift+space");
+      await synthesizeKey(VK.SPACE, { shiftKey: true }, " ");
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY } = await getScrollPosition(browser);
+        is(scrollX, 0, "Should not be scrolled");
+        is(scrollY, 0, "Should not be scrolled");
+      }
+
+      info("page down");
+      await synthesizeKey(VK.PGDOWN, {}, CHARS.PGDOWN);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY } = await getScrollPosition(browser);
+        is(scrollX, 0, "Should not be scrolled");
+        is(scrollY, pageScrollY, "Should be scrolled a page");
+      }
+
+      info("page up");
+      await synthesizeKey(VK.PGUP, {}, CHARS.PGUP);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY } = await getScrollPosition(browser);
+        is(scrollX, 0, "Should not be scrolled");
+        is(scrollY, 0, "Should not be scrolled");
+      }
+
+      info("accel+down");
+      await synthesizeKey(VK.DOWN, { accelKey: true }, CHARS.DOWN);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY, innerHeight } = await getWindowProperties(browser, ["scrollX", "scrollY", "innerHeight"]);
+        is(scrollX, 0, "Should not be scrolled");
+        // We can't know the scrollbar height so check that we're scrolled to within 100px of what we expect.
+        isfuzzy(scrollY, browser.contentDocument.body.clientHeight - innerHeight, 100, "Should be scrolled to the end.");
+      }
+
+      info("accel+up");
+      await synthesizeKey(VK.UP, { accelKey: true }, CHARS.UP);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY } = await getScrollPosition(browser);
+        is(scrollX, 0, "Should not be scrolled");
+        is(scrollY, 0, "Should not be scrolled");
+      }
+
+      info("end");
+      await synthesizeKey(VK.END, {}, CHARS.END);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY, innerHeight } = await getWindowProperties(browser, ["scrollX", "scrollY", "innerHeight"]);
+        is(scrollX, 0, "Should not be scrolled");
+        // We can't know the scrollbar height so check that we're scrolled to within 100px of what we expect.
+        isfuzzy(scrollY, browser.contentDocument.body.clientHeight - innerHeight, 100, "Should be scrolled to the end.");
+      }
+
+      info("home");
+      await synthesizeKey(VK.HOME, {}, CHARS.HOME);
+      await waitForEvent(browser.contentWindow, "scroll");
+      {
+        let { scrollX, scrollY } = await getScrollPosition(browser);
+        is(scrollX, 0, "Should not be scrolled");
+        is(scrollY, 0, "Should not be scrolled");
+      }
+
+      // Select the start of the first paragraph
+      let paragraph = browser.contentDocument.getElementById("paragraph");
+      let selection = browser.contentWindow.getSelection();
+      selection.setBaseAndExtent(paragraph.firstChild, 0, paragraph.firstChild, "Lots of".length);
+
+      info("copy");
+      await SimpleTest.promiseClipboardChange("Lots of", () => {
+        synthesizeKey(VK.C, { accelKey: true }, "c");
+      });
+
+      for (let i = 0; i < " paragraphs".length; i++) {
+        info("select right");
+        await synthesizeKey(VK.RIGHT, { shiftKey: true }, CHARS.RIGHT);
+      }
+
+      info("copy");
+      await SimpleTest.promiseClipboardChange("Lots of paragraphs", () => {
+        synthesizeKey(VK.C, { accelKey: true }, "c");
+      });
+
+      for (let i = 0; i < " paragraphs".length; i++) {
+        info("select left");
+        await synthesizeKey(VK.LEFT, { shiftKey: true }, CHARS.LEFT);
+      }
+
+      info("copy");
+      await SimpleTest.promiseClipboardChange("Lots of", () => {
+        synthesizeKey(VK.C, { accelKey: true }, "c");
+      });
+
+      info("select down");
+      await synthesizeKey(VK.DOWN, { shiftKey: true }, CHARS.DOWN);
+
+      info("copy");
+      await SimpleTest.promiseClipboardChange("Lots of paragraphs to make a vertical scrollbar.\n\nLots of", () => {
+        synthesizeKey(VK.C, { accelKey: true }, "c");
+      });
+
+      SimpleTest.finish();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <browser id="browser" src="browsertest.html" style="height: 500px"/>
+</window>

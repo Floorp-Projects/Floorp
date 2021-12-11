@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1230473
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1230473</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230473">Mozilla Bug 1230473</a>
+<input id="input">
+<textarea id="textarea"></textarea>
+<div id="div" contenteditable></div>
+<script type="application/javascript">
+/** Test for Bug 1230473 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  function runTest(aEditor) {
+    function committer() {
+      aEditor.blur();
+      aEditor.focus();
+    }
+    function isNSEditableElement() {
+      return aEditor.tagName.toLowerCase() == "input" || aEditor.tagName.toLowerCase() == "textarea";
+    }
+    function value() {
+      return isNSEditableElement() ? aEditor.value : aEditor.textContent;
+    }
+    function isComposing() {
+      return isNSEditableElement() ? SpecialPowers.wrap(aEditor)
+                                                  .editor
+                                                  .composing :
+                                     SpecialPowers.wrap(window)
+                                                  .docShell
+                                                  .editor
+                                                  .composing;
+    }
+    function clear() {
+      if (isNSEditableElement()) {
+        aEditor.value = "";
+      } else {
+        aEditor.textContent = "";
+      }
+    }
+
+    clear();
+
+    // FYI: Chrome commits composition if blur() and focus() are called during
+    //      composition.  But note that if they are called by compositionupdate
+    //      listener, the behavior is unstable.  On Windows, composition is
+    //      canceled.  On Linux and macOS, the composition is committed
+    //      internally but the string keeps underlined.  If they are called
+    //      by input event listener, committed on any platforms though.
+    //      On the other hand, Edge and Safari keeps composition even with
+    //      calling both blur() and focus().
+
+    // Committing at compositionstart
+    aEditor.focus();
+    aEditor.addEventListener("compositionstart", committer, true);
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }, key: { key: "a" }});
+    aEditor.removeEventListener("compositionstart", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by compositionstart event handler");
+    is(value(), "", "composition in " + aEditor.id + " shouldn't insert any text since it's committed at compositionstart");
+    clear();
+
+    // Committing at first compositionupdate
+    aEditor.focus();
+    aEditor.addEventListener("compositionupdate", committer, true);
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }, key: { key: "a" }});
+    aEditor.removeEventListener("compositionupdate", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by compositionupdate event handler");
+    is(value(), "a", "composition in " + aEditor.id + " should have \"a\" since IME committed with it");
+    clear();
+
+    // Committing at second compositionupdate
+    aEditor.focus();
+    // FYI: "compositionstart" will be dispatched automatically.
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }, key: { key: "a" }});
+    ok(isComposing(), "composition should be in " + aEditor.id + " before dispatching second compositionupdate");
+    is(value(), "a", "composition in " + aEditor.id + " should be 'a' before dispatching second compositionupdate");
+    aEditor.addEventListener("compositionupdate", committer, true);
+    synthesizeCompositionChange({ composition: { string: "ab", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 2, length: 0 }, key: { key: "b" }});
+    aEditor.removeEventListener("compositionupdate", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by compositionupdate event handler");
+    is(value(), "ab", "composition in " + aEditor.id + " should have \"ab\" since IME committed with it");
+    clear();
+  }
+  runTest(document.getElementById("input"));
+  runTest(document.getElementById("textarea"));
+  runTest(document.getElementById("div"));
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

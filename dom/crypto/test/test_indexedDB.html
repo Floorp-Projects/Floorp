@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1188750 - WebCrypto must ensure NSS is initialized before deserializing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"?>
+</head>
+<body>
+  <script type="application/javascript">
+    /*
+     * Bug 1188750 - The WebCrypto API must ensure that NSS was initialized
+     * for the current process before trying to deserialize objects like
+     * CryptoKeys from e.g. IndexedDB.
+     */
+    "use strict";
+
+    const TEST_URI = "https://example.com/tests/" +
+                     "dom/crypto/test/file_indexedDB.html";
+
+    function createFrame() {
+      let frame = document.createElement("iframe");
+      frame.src = TEST_URI;
+
+      return new Promise(resolve => {
+        addEventListener("message", event => {
+          is(event.source.frameElement, frame,
+             "Message must come from the correct iframe");
+          resolve([frame, event.data]);
+        }, { once: true });
+
+        document.body.appendChild(frame);
+      });
+    }
+
+    add_task(async function() {
+      // Load the test app once, to generate and store keys.
+      let [frame, result] = await createFrame();
+      is(result, "ok", "stored keys successfully");
+      frame.remove();
+
+      // Load the test app again to retrieve stored keys.
+      let [recFrame, recResult] = await createFrame();
+      is(recResult, "ok", "retrieved keys successfully");
+      recFrame.remove();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  var newText = document.createTextNode('x');
+  document.getElementById("a").parentNode.appendChild(newText);
+}
+</script>
+</head>
+
+<body onload="boom()">
+
+<table border="1">
+ <tr>
+  <td>1</td>
+  <td id="a" style="padding-left: 10%"><select style="padding-left: 20%; bottom: 10%;"><option style="padding: 0 0 10% 20%;">pppp</option></select></td>
+ </tr>
+</table>
+
+</body>
+</html>

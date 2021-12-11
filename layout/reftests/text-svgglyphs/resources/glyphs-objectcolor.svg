@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<!--
+    Test SVG glyphs for text object pattern inheritance
+    Covers glyph ID range 49 (N) to 52 (Q)
+-->
+<!-- context-fill, no stroke -->
+  <!-- N -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    stroke="none" fill="context-fill" id="glyph49"/>
+
+  <!-- O -->
+  <rect x="50" y="-950" width="900" height="900" stroke-width="100"
+    fill="context-fill" stroke="none" id="glyph50"/>
+
+<!-- context-stroke -->
+  <!-- P -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    stroke="context-stroke" fill="burlywood" id="glyph51"/>
+
+<!-- both context-stroke and context-fill (but note swapped usage!) -->
+  <!-- Q -->
+  <rect x="50" y="-950" width="900" height="900" stroke-width="100"
+    fill="context-stroke" stroke="context-fill" id="glyph52"/>
+</svg>

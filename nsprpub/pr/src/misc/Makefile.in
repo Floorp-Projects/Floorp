@@ -1,0 +1,80 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#! gmake
+
+MOD_DEPTH	= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+CSRCS = \
+	pralarm.c  \
+	pratom.c   \
+	prcountr.c \
+	prdtoa.c   \
+	prenv.c    \
+	prerr.c  \
+	prerror.c  \
+	prerrortable.c  \
+	prinit.c   \
+	prinrval.c \
+	pripc.c \
+	prlog2.c   \
+	prlong.c   \
+	prnetdb.c  \
+	praton.c  \
+	prolock.c  \
+	prrng.c    \
+	prsystem.c \
+	prtime.c   \
+	prthinfo.c \
+	prtpool.c \
+	prtrace.c  \
+	$(NULL)
+
+ifndef USE_PTHREADS
+CSRCS += \
+	pripcsem.c \
+	$(NULL)
+endif
+
+TARGETS	= $(OBJS)
+
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+DEFINES	+= -D_NSPR_BUILD_
+
+RELEASE_BINS = $(srcdir)/compile-et.pl $(srcdir)/prerr.properties
+
+include $(topsrcdir)/config/rules.mk
+
+# Prevent floating point errors caused by MSVC 6.0 Processor Pack
+# optimizations (bug 207421).  This disables optimizations that
+# could change the precision of floating-point calculations for
+# this single compilation unit.
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
+$(OBJDIR)/prdtoa.$(OBJ_SUFFIX): prdtoa.c
+	@$(MAKE_OBJDIR)
+ifeq (,$(filter-out 1100 1200 1300 1310,$(MSC_VER)))
+	$(CC) -Fo$@ -c $(CFLAGS) -Op $(call pr_abspath,$<)
+else
+	$(CC) -Fo$@ -c $(CFLAGS) -fp:precise $(call pr_abspath,$<)
+endif
+endif
+
+#
+# Generate prerr.h, prerr.c, and prerr.properties from prerr.et.
+#
+build_prerr:
+	cd $(srcdir); $(PERL) compile-et.pl prerr.et
+
+export:: $(TARGETS)
+
+

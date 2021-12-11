@@ -1,0 +1,139 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test browsingData.remove indexedDB</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ],
+  });
+});
+
+add_task(async function testServiceWorkers() {
+  async function background() {
+    const PAGE =
+      "/tests/toolkit/components/extensions/test/mochitest/file_serviceWorker.html";
+
+    browser.runtime.onMessage.addListener(msg => {
+      browser.test.sendMessage("serviceWorkerRegistered");
+    });
+
+    let tabs = [];
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg == "cleanup") {
+        await browser.tabs.remove(tabs.map(tab => tab.id));
+        browser.test.sendMessage("done");
+        return;
+      }
+
+      await browser.browsingData.remove(
+        { hostnames: msg.hostnames },
+        { serviceWorkers: true }
+      );
+      browser.test.sendMessage("serviceWorkersRemoved");
+    });
+
+    // Create two serviceWorkers.
+    let tab = await browser.tabs.create({ url: `http://mochi.test:8888${PAGE}` });
+    tabs.push(tab);
+
+    tab = await browser.tabs.create({ url: `https://example.com${PAGE}` });
+    tabs.push(tab);
+  }
+
+  function contentScript() {
+    // eslint-disable-next-line mozilla/balanced-listeners
+    window.addEventListener(
+      "message",
+      msg => {
+        if (msg.data == "serviceWorkerRegistered") {
+          browser.runtime.sendMessage("serviceWorkerRegistered");
+        }
+      },
+      true
+    );
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["browsingData", "tabs"],
+      content_scripts: [
+        {
+          matches: [
+            "http://mochi.test/*/file_serviceWorker.html",
+            "https://example.com/*/file_serviceWorker.html",
+          ],
+          js: ["script.js"],
+          run_at: "document_start",
+        },
+      ],
+    },
+    files: {
+      "script.js": contentScript,
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("serviceWorkerRegistered");
+  await extension.awaitMessage("serviceWorkerRegistered");
+
+  // Even though we await the registrations by waiting for the messages,
+  // sometimes the serviceWorkers are still not registered at this point.
+  async function getRegistrations(count) {
+    await TestUtils.waitForCondition(
+      async () => (await SpecialPowers.registeredServiceWorkers()).length === count,
+      `Wait for ${count} service workers to be registered`
+    );
+    return SpecialPowers.registeredServiceWorkers();
+  }
+
+  let serviceWorkers = await getRegistrations(2);
+  is(serviceWorkers.length, 2, "ServiceWorkers have been registered.");
+
+  extension.sendMessage({ hostnames: ["example.com"] });
+  await extension.awaitMessage("serviceWorkersRemoved");
+
+  serviceWorkers = await getRegistrations(1);
+  is(
+    serviceWorkers.length,
+    1,
+    "ServiceWorkers for example.com have been removed."
+  );
+
+  let { scriptSpec } = serviceWorkers[0];
+  dump(`Service worker spec: ${scriptSpec}`);
+  ok(scriptSpec.startsWith("http://mochi.test:8888/"),
+     "ServiceWorkers for example.com have been removed.");
+
+  extension.sendMessage({});
+  await extension.awaitMessage("serviceWorkersRemoved");
+
+  serviceWorkers = await getRegistrations(0);
+  is(serviceWorkers.length, 0, "All ServiceWorkers have been removed.");
+
+  extension.sendMessage("cleanup");
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+</script>
+</body>
+</html>

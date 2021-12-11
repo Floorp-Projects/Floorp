@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="nsIAccessible XUL textboxes states tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function getInput(aID)
+    {
+      return getNode(aID).inputField;
+    }
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // Search textbox without search button, searches as you type and filters
+      // a separate control.
+      testStates(getInput("searchbox"),
+                 STATE_FOCUSABLE,
+                 EXT_STATE_EDITABLE | EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 0,
+                 "searchbox");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Search textbox with search button, does not support autoCompletion.
+      testStates(getInput("searchfield"),
+                 STATE_FOCUSABLE,
+                 EXT_STATE_EDITABLE,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 "searchfield");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=442648">
+      Mozilla Bug 442648
+    </a>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=648235"
+       title="XUL textbox can inherit more states from underlying HTML input">
+      Mozilla Bug 648235
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox flex="1">
+    <search-textbox id="searchbox" flex="1" results="historyTree"/>
+    <search-textbox id="searchfield" placeholder="Search all add-ons"
+                    searchbutton="true"/>
+  </vbox>
+  </hbox>
+</window>

@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestPage renders the expected snapshot when the manifest is loading 1`] = `
+<section
+  className="app-page js-manifest-page app-page--empty"
+>
+  <Connect(ManifestLoader) />
+</section>
+`;
+
+exports[`ManifestPage renders the expected snapshot when the manifest needs to load 1`] = `
+<section
+  className="app-page js-manifest-page app-page--empty"
+>
+  <Connect(ManifestLoader) />
+</section>
+`;
+
+exports[`ManifestPage renders the expected snapshot when there is a manifest 1`] = `
+<section
+  className="app-page js-manifest-page "
+>
+  <Manifest
+    icons={
+      Array [
+        Object {
+          "key": Object {
+            "contentType": "image/png",
+            "sizes": "1x1",
+          },
+          "type": "icon",
+          "value": Object {
+            "purpose": "any",
+            "src": "something.png",
+          },
+        },
+      ]
+    }
+    identity={
+      Array [
+        Object {
+          "key": "name",
+          "type": "string",
+          "value": "foo",
+        },
+      ]
+    }
+    presentation={
+      Array [
+        Object {
+          "key": "lorem",
+          "type": "string",
+          "value": "ipsum",
+        },
+        Object {
+          "key": "foo",
+          "type": "string",
+          "value": "bar",
+        },
+      ]
+    }
+    validation={
+      Array [
+        Object {
+          "level": "warning",
+          "message": "This is a warning",
+        },
+      ]
+    }
+  />
+</section>
+`;
+
+exports[`ManifestPage renders the expected snapshot when there is no manifest 1`] = `
+<section
+  className="app-page js-manifest-page app-page--empty"
+>
+  <ManifestEmpty />
+</section>
+`;

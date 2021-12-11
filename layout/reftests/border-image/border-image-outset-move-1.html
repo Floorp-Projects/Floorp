@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait" lang="en-US">
+<head>
+  <title>-moz-border-outset move</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+  div {
+    margin: 20px;
+    border-width: 10px;
+    border-style: solid;
+    border-image: url('3x3green-1DD813.png') 1 1 1 1;
+    border-image-outset: 10px;
+  }
+  </style>
+</head>
+<body>
+<div id="container" style="width: 80px; margin-left: 60px;">
+Hello World!
+</div>
+<script type="text/javascript">
+// The purpose of this test is to move the border and ensure that the
+// overflow area caused by border-image-outset is redrawn.
+setTimeout(function() {
+    document.getElementById("container").style.marginLeft = "20px";
+    document.documentElement.className = "";
+  }, 100);
+</script>
+</body>
+</html>

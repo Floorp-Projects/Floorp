@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--https://bugzilla.mozilla.org/show_bug.cgi?id=633602-->
+<head>
+  <title>Bug 633602</title>
+  <script src="/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+    Mozilla Bug 633602
+  </a>
+  <div id="host"></div>
+  <pre id="test">
+    <script type="text/javascript">
+      /*
+       * Test for Bug 1430303
+       * Make sure DOM API is correct.
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var div,
+        host,
+        hasRequestPointerLock = false,
+        pointerLockChangeEventFired = false,
+        pointerUnlocked = false,
+        pointerLocked = false,
+        hasExitPointerLock = false,
+        pointerLockElement = false,
+        hasMovementX = false,
+        hasMovementY = false;
+        gotContextMenuEvent = false;
+
+      function runTests () {
+        ok(hasRequestPointerLock, "Element should have requestPointerLock.");
+        ok(pointerLockChangeEventFired, "pointerlockchange event should fire.");
+        ok(pointerUnlocked, "Should be able to unlock pointer locked element.");
+        ok(pointerLocked, "Requested element should be able to lock.");
+        ok(hasExitPointerLock, "Document should have exitPointerLock");
+        ok(pointerLockElement, "Document should keep track of correct pointer locked element");
+        ok(hasMovementX, "Mouse Event should have movementX.");
+        ok(hasMovementY, "Mouse Event should have movementY.");
+        ok(!gotContextMenuEvent, "Shouldn't have got a contextmenu event.");
+      }
+
+      function mouseMoveHandler(e) {
+        info("Got mousemove");
+        document.removeEventListener("mousemove", mouseMoveHandler);
+
+        hasMovementX = "movementX" in e;
+        hasMovementY = "movementY" in e;
+
+        hasExitPointerLock = "exitPointerLock" in document;
+        document.exitPointerLock();
+      }
+
+      document.addEventListener("pointerlockchange", function (e) {
+        pointerLockChangeEventFired = true;
+
+        if (document.pointerLockElement) {
+          info("Got pointerlockchange for entering");
+          pointerLocked = true;
+          pointerLockElement = document.pointerLockElement === host;
+          is(host.shadowRoot.firstChild, host.shadowRoot.pointerLockElement,
+             "ShadowRoot's pointerLockElement shouldn't be retargeted.");
+ 
+          window.addEventListener("contextmenu",
+                                  function() { gotContextMenuEvent = true; },
+                                  true);
+          synthesizeMouse(document.body, 4, 4,
+                          { type: "contextmenu", button: 2 },
+                          window);
+
+          document.addEventListener("mousemove", mouseMoveHandler);
+          synthesizeMouseAtCenter(host, {type: "mousemove"}, window);
+        } else {
+          info("Got pointerlockchange for exiting");
+          pointerUnlocked = true;
+          addFullscreenChangeContinuation("exit", function() {
+            info("Got fullscreenchange for exiting");
+            runTests();
+            SimpleTest.finish();
+          });
+          document.exitFullscreen();
+        }
+      });
+
+      function start() {
+        host = document.getElementById("host");
+        var sr = host.attachShadow({mode: "open"});
+        sr.innerHTML = "<div><div>";
+        div = sr.firstChild;
+        info("Requesting fullscreen on parent");
+        addFullscreenChangeContinuation("enter", function() {
+          info("Got fullscreenchange for entering");
+          hasRequestPointerLock = "requestPointerLock" in div;
+          div.requestPointerLock();
+        });
+        host.requestFullscreen();
+      }
+    </script>
+  </pre>
+</body>
+</html>

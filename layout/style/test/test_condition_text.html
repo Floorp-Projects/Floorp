@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=814907
+-->
+<head>
+  <title>Test for Bug 814907</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style">
+    @-moz-document media-document(video) {}
+    @-moz-document media-document(image) {}
+    @-moz-document media-document(plugin) {}
+    @-moz-document media-document(all) {}
+    @-moz-document plain-text-document() {}
+    @-moz-document unobservable-document() {}
+
+    @-moz-document url(http://www.example.com/) {}
+    @-moz-document url('http://www.example.com/') {}
+    @-moz-document url("http://www.example.com/") {}
+    @-moz-document url-prefix('http://www.example.com/') {}
+    @-moz-document url-prefix("http://www.example.com/") {}
+    @-moz-document domain('example.com') {}
+    @-moz-document domain("example.com") {}
+    @-moz-document regexp('http://www.w3.org/TR/\\d{4}/[^/]*-CSS2-\\d{8}/') {}
+    @-moz-document regexp("http://www.w3.org/TR/\\d{4}/[^/]*-CSS2-\\d{8}/") {}
+
+    @media all {}
+    @media only color {}
+    @media (color ) {}
+    @media color \0061ND ( monochrome ) {}
+    @media (max-width: 200px), (color) {}
+
+    @supports(color: green){}
+    @supports (color: green) {}
+    @supports ((color: green)) {}
+    @supports (color: green) and (color: blue) {}
+    @supports ( Font:  20px serif ! Important)  {}
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=814907">Mozilla Bug 814907</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 814907 **/
+
+function runTest()
+{
+  // re-parse the style sheet with the pref turned on
+  var style = document.getElementById("style");
+  style.textContent += " ";
+
+  var sheet = style.sheet;
+
+  var conditions = [
+    "media-document(video)",
+    "media-document(image)",
+    "media-document(plugin)",
+    "media-document(all)",
+    "plain-text-document()",
+    "unobservable-document()",
+    "url(\"http://www.example.com/\")",
+    "url(\"http://www.example.com/\")",
+    "url(\"http://www.example.com/\")",
+    "url-prefix(\"http://www.example.com/\")",
+    "url-prefix(\"http://www.example.com/\")",
+    "domain(\"example.com\")",
+    "domain(\"example.com\")",
+    "regexp(\"http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/\")",
+    "regexp(\"http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/\")",
+    "all",
+    "only color",
+    "(color)",
+    "color and (monochrome)",
+    "(max-width: 200px), (color)",
+    "(color: green)",
+    "(color: green)",
+    "((color: green))",
+    "(color: green) and (color: blue)",
+    "( Font:  20px serif ! Important)"
+  ];
+
+  is(sheet.cssRules.length, conditions.length);
+
+  for (var i = 0; i < sheet.cssRules.length; i++) {
+    var rule = sheet.cssRules[i];
+    is(rule.conditionText, conditions[i], "rule " + i + " has expected conditionText");
+    if (rule.type == CSSRule.MEDIA_RULE) {
+      is(rule.conditionText, rule.media.mediaText, "rule " + i + " conditionText matches media.mediaText");
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  { "set": [["layout.css.moz-document.content.enabled", true]]},
+  runTest);
+</script>
+</pre>
+</body>
+</html>

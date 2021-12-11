@@ -1,0 +1,180 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIVariant;
+
+[scriptable, uuid(41e4ccc9-f0c8-4cd7-9753-7a38514b8488)]
+interface mozIVisitInfo : nsISupports
+{
+  /**
+   * The machine-local (internal) id of the visit.
+   */
+  readonly attribute long long visitId;
+
+  /**
+   * The time the visit occurred.
+   */
+  readonly attribute PRTime visitDate;
+
+  /**
+   * The transition type used to get to this visit.  One of the TRANSITION_TYPE
+   * constants on nsINavHistory.
+   *
+   * @see nsINavHistory.idl
+   */
+  readonly attribute unsigned long transitionType;
+
+  /**
+   * The referring URI of this visit.  This may be null.
+   */
+  readonly attribute nsIURI referrerURI;
+};
+
+[scriptable, uuid(ad83e137-c92a-4b7b-b67e-0a318811f91e)]
+interface mozIPlaceInfo : nsISupports
+{
+  /**
+   * The machine-local (internal) id of the place.
+   */
+  readonly attribute long long placeId;
+
+  /**
+   * The globally unique id of the place.
+   */
+  readonly attribute ACString guid;
+
+  /**
+   * The URI of the place.
+   */
+  readonly attribute nsIURI uri;
+
+  /**
+   * The title associated with the place.
+   */
+  readonly attribute AString title;
+
+  /**
+   * The frecency of the place.
+   */
+  readonly attribute long long frecency;
+
+  /**
+   * An array of mozIVisitInfo objects for the place.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval visits;
+};
+
+/**
+ * Shared Callback interface for mozIAsyncHistory methods. The semantics
+ * for each method are detailed in mozIAsyncHistory.
+ */
+[scriptable, uuid(1f266877-2859-418b-a11b-ec3ae4f4f93d)]
+interface mozIVisitInfoCallback : nsISupports
+{
+  /**
+   * Called when the given place could not be processed.
+   *
+   * @param aResultCode
+   *        nsresult indicating the failure reason.
+   * @param aPlaceInfo
+   *        The information that was given to the caller for the place.
+   */
+  void handleError(in nsresult aResultCode,
+                   in mozIPlaceInfo aPlaceInfo);
+
+  /**
+   * Called for each place processed successfully.
+   *
+   * @param aPlaceInfo
+   *        The current info stored for the place.
+   */
+  void handleResult(in mozIPlaceInfo aPlaceInfo);
+
+  /**
+   * Called when all records were processed.
+   * @param aUpdatedItems
+   *        How many items were successfully updated.
+   */
+  void handleCompletion(in unsigned long aUpdatedItems);
+
+  /**
+   * These two attributes govern whether we attempt to call
+   * handleResult and handleError, respectively, if/once
+   * results/errors occur.
+   */
+  readonly attribute bool ignoreResults;
+  readonly attribute bool ignoreErrors;
+};
+
+[scriptable, function, uuid(994092bf-936f-449b-8dd6-0941e024360d)]
+interface mozIVisitedStatusCallback : nsISupports
+{
+  /**
+   * Notifies whether a certain URI has been visited.
+   *
+   * @param aURI
+   *        URI being notified about.
+   * @param aVisitedStatus
+   *        The visited status of aURI.
+   */
+  void isVisited(in nsIURI aURI,
+                 in boolean aVisitedStatus);
+};
+
+/**
+ * This interface contains APIs for cpp consumers.
+ * Javascript consumers should look at History.jsm instead,
+ * that is exposed through PlacesUtils.history.
+ *
+ * If you're evaluating adding a new history API, it should
+ * usually go to History.jsm, unless it needs to do long and
+ * expensive work in a batch, then it could be worth doing
+ * that in History.cpp.
+ */
+
+[scriptable, uuid(1643EFD2-A329-4733-A39D-17069C8D3B2D)]
+interface mozIAsyncHistory : nsISupports
+{
+  /**
+   * Adds a set of visits for one or more mozIPlaceInfo objects, and updates
+   * each mozIPlaceInfo's title or guid.
+   *
+   * aCallback.handleResult is called for each visit added.
+   *
+   * @param aPlaceInfo
+   *        The mozIPlaceInfo object[s] containing the information to store or
+   *        update.  This can be a single object, or an array of objects.
+   * @param [optional] aCallback
+   *        A mozIVisitInfoCallback object which consists of callbacks to be
+   *        notified for successful and/or failed changes.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *         - Passing in NULL for aPlaceInfo.
+   *         - Not providing at least one valid guid, or uri for all
+   *           mozIPlaceInfo object[s].
+   *         - Not providing an array or nothing for the visits property of
+   *           mozIPlaceInfo.
+   *         - Not providing a visitDate and transitionType for each
+   *           mozIVisitInfo.
+   *         - Providing an invalid transitionType for a mozIVisitInfo.
+   */
+  [implicit_jscontext]
+  void updatePlaces(in jsval aPlaceInfo,
+                    [optional] in mozIVisitInfoCallback aCallback);
+
+  /**
+   * Checks if a given URI has been visited.
+   *
+   * @param aURI
+   *        The URI to check for.
+   * @param aCallback
+   *        A mozIVisitStatusCallback object which receives the visited status.
+   */
+  void isURIVisited(in nsIURI aURI,
+                    in mozIVisitedStatusCallback aCallback);
+};

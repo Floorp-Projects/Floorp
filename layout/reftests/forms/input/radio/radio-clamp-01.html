@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+  <meta charset="utf-8">
+  <title>Test clamping width/height of radio.</title>
+  <link rel="author" title="Louis Chang" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1400050">
+  <link rel="match" href="radio-clamp-ref.html">
+  </head>
+    <style>
+div {
+  position: relative;
+  line-height: 0px;
+}
+    </style>
+  <body>
+    <div>
+      <input type="radio">
+      <input type="radio" checked>
+    <div>
+    <script>
+      // If we grow the radio vertically, horizontal size shouldn't change,
+      // instead it should be centered vertically. We grow it by a hundred
+      // pixels, and the reference positions it manually at 50px, which is where
+      // it should end up.
+      for (let input of document.querySelectorAll("input")) {
+        input.style.height = (100 + input.getBoundingClientRect().height) + "px";
+      }
+    </script>
+  </body>
+</html>

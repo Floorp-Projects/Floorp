@@ -1,0 +1,23 @@
+# ICO BMP 24BPP tests
+
+# Images of various sizes
+== ico-size-1x1-24bpp.ico   ico-size-1x1-24bpp.png
+== ico-size-2x2-24bpp.ico   ico-size-2x2-24bpp.png
+== ico-size-3x3-24bpp.ico   ico-size-3x3-24bpp.png
+== ico-size-4x4-24bpp.ico   ico-size-4x4-24bpp.png
+== ico-size-5x5-24bpp.ico   ico-size-5x5-24bpp.png
+== ico-size-6x6-24bpp.ico   ico-size-6x6-24bpp.png
+== ico-size-7x7-24bpp.ico   ico-size-7x7-24bpp.png
+== ico-size-8x8-24bpp.ico   ico-size-8x8-24bpp.png
+== ico-size-9x9-24bpp.ico   ico-size-9x9-24bpp.png
+== ico-size-15x15-24bpp.ico ico-size-15x15-24bpp.png
+== ico-size-16x16-24bpp.ico ico-size-16x16-24bpp.png
+== ico-size-17x17-24bpp.ico ico-size-17x17-24bpp.png
+== ico-size-31x31-24bpp.ico ico-size-31x31-24bpp.png
+== ico-size-32x32-24bpp.ico ico-size-32x32-24bpp.png
+== ico-size-33x33-24bpp.ico ico-size-33x33-24bpp.png
+== ico-size-256x256-24bpp.ico ico-size-256x256-24bpp.png
+== ico-partial-transparent-24bpp.ico ico-partial-transparent-24bpp.png
+== ico-transparent-24bpp.ico ico-transparent-24bpp.png
+== ico-not-square-transparent-24bpp.ico ico-not-square-transparent-24bpp.png
+

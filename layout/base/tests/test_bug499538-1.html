@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=499538
+-->
+<head>
+  <title>Test for Bug 499538</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=499538">Mozilla Bug 499538</a>
+<p id="display"></p>
+<div id="content">
+<input type="text" id="testInput" style="-moz-appearance:none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 499538 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function test() {
+  var textInput = $("testInput");
+  var s1, s2, s3, equal, str1, str2;
+
+  textInput.focus();
+  sendString("a ");
+  sendString("\u0639\u063A");
+  sendString(" b");
+  s1 = snapshotWindow(window);
+
+  textInput.select();
+  sendString("a  b");
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_ArrowLeft");
+  sendString("\u0639\u063A");
+  s2 = snapshotWindow(window);
+
+  [equal, str1, str2] = compareSnapshots(s1, s2, true);
+  ok(equal, "Arabic text between English words not connected: expected " +
+     str1 + " but got " + str2);
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

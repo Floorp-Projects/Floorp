@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+  createHTML({
+    title: "SetSinkId in HTMLMediaElement",
+    bug: "934425",
+  });
+
+  const memoryReportPath = 'explicit/media/media-manager-aggregates';
+
+  /**
+   * Run a test to verify set sink id in audio element.
+   */
+  runTest(async () => {
+    await pushPrefs(["media.setsinkid.enabled", true]);
+
+    if (!SpecialPowers.getCharPref("media.audio_loopback_dev", "")) {
+      ok(false, "No loopback device set by framework. Try --use-test-media-devices");
+      return;
+    }
+
+    // Expose an audio output device.
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    await navigator.mediaDevices.selectAudioOutput();
+
+    const allDevices = await navigator.mediaDevices.enumerateDevices();
+    const audioDevices = allDevices.filter(({kind}) => kind == 'audiooutput');
+    is(audioDevices.length, 1, "Number of output devices found");
+
+    const audio = createMediaElement("audio", "audio");
+    document.body.appendChild(audio);
+
+    is(audio.sinkId, "", "Initial value is empty string");
+
+    const p = audio.setSinkId(audioDevices[0].deviceId);
+    is(audio.sinkId, "", "Value is unchanged upon function return");
+    is(await p, undefined, "promise resolves with undefined");
+    is(audio.sinkId, audioDevices[0].deviceId, `Sink device is set, id: ${audio.sinkId}`);
+
+    await audio.setSinkId(audioDevices[0].deviceId);
+    ok(true, `Sink device is set for 2nd time for the same id: ${audio.sinkId}`);
+
+    try {
+      await audio.setSinkId("dummy sink id");
+      ok(false, "Never enter here, this must fail");
+    } catch (error) {
+      ok(true, `Set sink id expected to fail: ${error}`);
+      is(error.name, "NotFoundError", "Verify correct error");
+    }
+
+    const {usage: usage1} =
+          await collectMemoryUsage(memoryReportPath); // Provided by head.js
+
+    ok(usage1 > 0, "MediaManager memory usage should be non-zero to store \
+device ids after enumerateDevices");
+
+    const p2 = audio.setSinkId("");
+    is(audio.sinkId, audioDevices[0].deviceId,
+       'sinkId after setSinkId("") return');
+    is(await p2, undefined,
+       "promise resolution value when sinkId parameter is empty");
+    is(audio.sinkId, "", 'sinkId after setSinkId("") resolution');
+
+    await audio.setSinkId(audioDevices[0].deviceId);
+
+    const {usage: usage2, reportCount} =
+          await collectMemoryUsage(memoryReportPath);
+    is(reportCount, 1,
+       'Expect only one MediaManager to report in content processes.');
+    is(usage2, usage1, "MediaManager memory usage should return to previous \
+value after promise resolution");
+  });
+
+</script>
+</pre>
+</body>
+</html>

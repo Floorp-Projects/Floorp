@@ -1,0 +1,142 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#! gmake
+
+MOD_DEPTH	= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH), BeOS)
+    CFLAGS += -frtti -fexceptions
+endif
+
+INCLUDES = -I$(dist_includedir)
+
+HEADERS = $(wildcard $(srcdir)/*.h)
+
+CSRCS = \
+	plvrsion.c \
+	$(NULL)
+
+CXXSRCS = \
+	prstrms.cpp \
+	$(NULL)
+
+OBJS = $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)) $(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
+
+ifeq ($(OS_ARCH), WINNT)
+        RES=$(OBJDIR)/prstrms.res
+        RESNAME=prstrms.rc
+        OS_LIBS = user32.lib
+else
+    ifeq ($(OS_ARCH),OS2)
+        OS_LIBS = -lstdcpp
+    else
+    ifeq ($(OS_ARCH), AIX)
+      ifeq ($(OS_RELEASE), 4.1)
+        ifeq ($(CLASSIC_NSPR),1)
+            OS_LIBS += -lC -lc
+        else
+            OS_LIBS += -lC_r -lc_r
+        endif
+      else
+        # makeC++SharedLib(_r) is in either /usr/lpp/xlC/bin
+        # or /usr/ibmcxx/bin.
+        ifeq ($(CLASSIC_NSPR),1)
+            MKSHLIB = makeC++SharedLib -p 0
+        else
+            MKSHLIB = makeC++SharedLib_r -p 0
+        endif
+        OS_LIBS += -ldl
+      endif
+    endif
+    endif
+endif
+
+ifeq ($(OS_ARCH),BeOS)
+    OS_LIBS = -lstdc++.r4
+endif
+
+ifeq ($(OS_ARCH), UNIXWARE)
+    OS_LIBS += -lC
+endif
+
+EXTRA_LIBS = $(LIBNSPR)
+
+# On SCOOS, we can't link with extra libraries when
+# we build a shared library.  If we do so, the linker doesn't
+# complain, but we would run into weird problems at run-time.
+# Therefore on these platforms, we link just the object files.
+ifeq ($(OS_ARCH),SCOOS)
+    EXTRA_LIBS =
+endif
+
+ifdef RESOLVE_LINK_SYMBOLS
+EXTRA_LIBS += $(OS_LIBS)
+endif
+
+LIBRARY_NAME    = prstrms
+LIBRARY_VERSION = $(MOD_MAJOR_VERSION)
+
+RELEASE_HEADERS = $(HEADERS)
+RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)
+RELEASE_LIBS    = $(TARGETS)
+
+include $(topsrcdir)/config/rules.mk
+
+#
+# Version information generation (begin)
+#
+ECHO = echo
+TINC = $(OBJDIR)/_pl_bld.h
+PROD = $(notdir $(SHARED_LIBRARY))
+NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
+SH_DATE = $(shell date "+%Y-%m-%d %T")
+SH_NOW = $(shell $(NOW))
+
+ifeq ($(OS_ARCH), WINNT)
+	SUF = i64
+else
+	SUF = LL
+endif
+
+$(TINC):
+	@$(MAKE_OBJDIR)
+	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)
+	@if test ! -z "$(SH_NOW)"; then \
+	    $(ECHO) '#define _BUILD_TIME $(SH_NOW)$(SUF)' >> $(TINC); \
+	else \
+	    true; \
+	fi
+	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
+
+
+$(OBJDIR)/plvrsion.$(OBJ_SUFFIX): plvrsion.c $(TINC)
+ifeq ($(OS_ARCH), WINNT)
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
+else
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
+endif
+#
+# Version information generation (end)
+#
+
+export:: $(TARGETS) $(HEADERS)
+	$(INSTALL) -m 444 $(HEADERS) $(dist_includedir)
+	$(INSTALL) -m 444 $(TARGETS) $(dist_libdir)
+ifeq ($(OS_ARCH),OS2)
+	$(INSTALL) -m 444 $(TARGETS) $(dist_bindir)
+endif
+ifeq ($(OS_ARCH),HP-UX)
+ifdef SHARED_LIBRARY
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_libdir)
+endif
+endif

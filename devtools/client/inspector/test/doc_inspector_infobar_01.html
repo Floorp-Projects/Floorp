@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    body {
+      width: 100%;
+      height: 100%;
+    }
+    div {
+      position: absolute;
+      height: 100px;
+      width: 500px;
+    }
+
+    #bottom {
+      bottom: 0px;
+      background: blue;
+    }
+
+    #vertical {
+      height: 100%;
+      background: green;
+    }
+
+    svg {
+      width: 10px;
+      height: 10px;
+    }
+   </style>
+ </head>
+ <body>
+  <div id="vertical">Vertical</div>
+  <div id="top" class="class1 class2">Top</div>
+  <div id="bottom">Bottom</div>
+  <svg viewBox="0 0 10 10">
+    <clipPath id="clip">
+      <rect x="0" y="0" width="10" height="5"></rect>
+    </clipPath>
+    <circle cx="5" cy="5" r="5" fill="blue" clip-path="url(#clip)"></circle>
+  </svg>
+ </body>
+ </html>

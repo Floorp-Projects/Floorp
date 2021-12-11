@@ -1,0 +1,97 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+transport_lcppsrcs = [
+    "dtlsidentity.cpp",
+    "mediapacket.cpp",
+    "nr_socket_proxy_config.cpp",
+    "nr_socket_prsock.cpp",
+    "nr_socket_tcp.cpp",
+    "nr_timer.cpp",
+    "nricectx.cpp",
+    "nricemediastream.cpp",
+    "nriceresolver.cpp",
+    "nriceresolverfake.cpp",
+    "nricestunaddr.cpp",
+    "nrinterfaceprioritizer.cpp",
+    "rlogconnector.cpp",
+    "simpletokenbucket.cpp",
+    "SrtpFlow.cpp",
+    "stun_socket_filter.cpp",
+    "test_nr_socket.cpp",
+    "transportflow.cpp",
+    "transportlayer.cpp",
+    "transportlayerdtls.cpp",
+    "transportlayerice.cpp",
+    "transportlayerlog.cpp",
+    "transportlayerloopback.cpp",
+    "transportlayersrtp.cpp",
+    "WebrtcTCPSocketWrapper.cpp",
+]
+
+transport_cppsrcs = [
+    "/dom/media/webrtc/transport/%s" % s for s in sorted(transport_lcppsrcs)
+]
+
+LOCAL_INCLUDES += [
+    "/dom/media/webrtc/transport/",
+    "/dom/media/webrtc/transport/third_party/",
+    "/dom/media/webrtc/transport/third_party/nICEr/src/crypto",
+    "/dom/media/webrtc/transport/third_party/nICEr/src/ice",
+    "/dom/media/webrtc/transport/third_party/nICEr/src/net",
+    "/dom/media/webrtc/transport/third_party/nICEr/src/stun",
+    "/dom/media/webrtc/transport/third_party/nICEr/src/util",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/event",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/log",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/plugin",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/port/generic/include",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/registry",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/share",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/stats",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr",
+    "/third_party/libsrtp/src/crypto/include",
+    "/third_party/libsrtp/src/include",
+]
+
+if CONFIG["OS_TARGET"] in ["Darwin", "DragonFly", "FreeBSD", "NetBSD", "OpenBSD"]:
+    if CONFIG["OS_TARGET"] == "Darwin":
+        DEFINES["DARWIN"] = True
+    else:
+        DEFINES["BSD"] = True
+    LOCAL_INCLUDES += [
+        "/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include",
+    ]
+elif CONFIG["OS_TARGET"] == "Linux":
+    DEFINES["LINUX"] = True
+    LOCAL_INCLUDES += [
+        "/dom/media/webrtc/transport/third_party/nrappkit/src/port/linux/include",
+    ]
+elif CONFIG["OS_TARGET"] == "Android":
+    DEFINES["LINUX"] = True
+    DEFINES["ANDROID"] = True
+    LOCAL_INCLUDES += [
+        "/dom/media/webrtc/transport/third_party/nrappkit/src/port/android/include",
+    ]
+elif CONFIG["OS_TARGET"] == "WINNT":
+    DEFINES["WIN"] = True
+    # for stun.h
+    DEFINES["WIN32"] = True
+    LOCAL_INCLUDES += [
+        "/dom/media/webrtc/transport/third_party/nrappkit/src/port/win32/include",
+    ]
+
+for var in ("HAVE_STRDUP", "NR_SOCKET_IS_VOID_PTR"):
+    DEFINES[var] = True
+
+DEFINES["R_DEFINED_INT2"] = "int16_t"
+DEFINES["R_DEFINED_UINT2"] = "uint16_t"
+DEFINES["R_DEFINED_INT4"] = "int32_t"
+DEFINES["R_DEFINED_UINT4"] = "uint32_t"
+DEFINES["R_DEFINED_INT8"] = "int64_t"
+DEFINES["R_DEFINED_UINT8"] = "uint64_t"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

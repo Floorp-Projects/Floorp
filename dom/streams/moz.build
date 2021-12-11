@@ -1,0 +1,40 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Streams")
+
+EXPORTS.mozilla.dom += [
+    "CountQueuingStrategy.h",
+    "QueueWithSizes.h",
+    "ReadableStream.h",
+    "ReadableStreamDefaultController.h",
+    "ReadableStreamDefaultReader.h",
+    "ReadableStreamGenericReader.h",
+    "ReadRequest.h",
+    "TeeState.h",
+    "UnderlyingSourceCallbackHelpers.h",
+]
+
+UNIFIED_SOURCES += [
+    "CountQueuingStrategy.cpp",
+    "ReadableStream.cpp",
+    "ReadableStreamDefaultController.cpp",
+    "ReadableStreamDefaultReader.cpp",
+    "TeeState.cpp",
+    "UnderlyingSourceCallbackHelpers.cpp",
+]
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+]
+
+# MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+# ROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

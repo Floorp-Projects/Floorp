@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Clipboard Events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<script>
+"use strict";
+
+// The clipboard event tests require `GlobalEventHandlers.onbeforeinput`
+// attribute which is available only when `beforeinput` event is enabled.
+// For ensuring it's available with any element in the document, we need
+// to enable it in this window and then, create elements in the new
+// document in a child window.
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // NOTE: The tests operate under the assumption that the protected mode of
+      // DataTransfer is enabled.
+      ["dom.events.dataTransfer.protected.enabled", true],
+    ]
+  });
+  let childWindow =
+    window.open("window_clipboard_events.html", "_blank", "width=500,height=800");
+  ok(childWindow, "A child window should've been opened");
+  childWindow.onclose = () => {
+    SimpleTest.finish();
+  };
+});
+</script>
+</body>
+</html>

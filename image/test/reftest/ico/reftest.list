@@ -1,0 +1,11 @@
+# ICO tests
+
+include ico-bmp-1bpp/reftest.list
+include ico-bmp-4bpp/reftest.list
+include ico-bmp-8bpp/reftest.list
+include ico-bmp-24bpp/reftest.list
+include ico-bmp-32bpp/reftest.list
+include ico-bmp-corrupted/reftest.list
+include ico-png/reftest.list
+include ico-mixed/reftest.list
+include cur/reftest.list

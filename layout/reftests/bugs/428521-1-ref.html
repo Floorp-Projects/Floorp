@@ -1,0 +1,28 @@
+<html>
+<head>
+  <style>
+    body  { margin: 0; }
+    div.a, div.b { display: inline-block;      }
+    div.a { width: 200px;  background: blue;   }
+    div.b { width: 200px;  background: green;  }
+    td.c  { width: 75%;    background: orange; }
+    div.d { width: 100px;  background: purple; }
+  </style>
+</head>
+<body>
+The blue and green divs should be on the same line.
+<table cellspacing=0 cellpadding=0>
+  <tr><td>
+    <table cellspacing=0 cellpadding=0>
+      <tr>
+        <td colspan="2"><div class="a">a</div><div class="b">b</div></td>
+      </tr>
+      <tr>
+        <td class="c">c</td>
+        <td><div class="d">d</div></td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

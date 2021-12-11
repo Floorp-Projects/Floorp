@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1">
+
+  <!-- use an empty g to force filters.svg to load before onload -->
+  <use xlink:href="../filters.svg#empty" />
+
+  <foreignObject filter="url(../filters.svg#NonWhiteToBlack)"
+                 x="0" y="0" height="100%" width="100%">
+<!-- ZWNJ test #1. Persian words containing a ZWNJ (copied from
+  http://www.unics.uni-hannover.de/nhtcapri/bidirectional-text.html) -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>ZWNJ test</title>
+  <style type="text/css">
+  body {
+    font-size: 36px;
+    background: white;
+    color: black;
+  }
+  </style>
+ </head>
+ <body lang="ar">
+  <p>&#x647;&#x641;&#x62A;&#x647;&#x200C;&#x647;&#x627;</p>
+  <p>&#x645;&#x648;&#x632;&#x647;&#x200C;&#x647;&#x627;</p>
+  <p>&#x633;&#x647;&#x200C;&#x634;&#x646;&#x628;&#x647;</p>
+  <p>&#x631;&#x627;&#x647;&#x200C;&#x622;&#x647;&#x646;</p>
+  <p>&#x646;&#x631;&#x645;&#x200C;&#x627;&#x641;&#x632;&#x627;&#x631;</p>
+ </body>
+</html>
+</foreignObject>
+</svg>

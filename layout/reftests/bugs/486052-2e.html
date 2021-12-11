@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function doTest() {
+        var d = document.createElement("div");
+        d.textContent = "Test";
+        d.style.top = d.style.left = 0;
+        d.style.position = "absolute";
+        document.getElementById("t").appendChild(d);
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <div style="position: relative; display: table-row-group;"><div style="display: table-row"><div style="display: table-cell" id="t"></div></div></div>
+  </body>
+</html>

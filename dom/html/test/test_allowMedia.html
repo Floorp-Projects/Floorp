@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=759964
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 759964</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 759964 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runNextTest);
+
+var SJS = `${location.origin}/tests/dom/html/test/allowMedia.sjs`;
+var TEST_PAGE = "data:text/html,<audio src='" + SJS + "?audio'></audio>";
+
+function runNextTest() {
+  var test = tests.shift();
+  if (!test) {
+    SimpleTest.finish();
+    return;
+  }
+  test();
+}
+
+var tests = [
+
+  // Set allowMedia = false, load a page with <audio>, verify the <audio>
+  // doesn't load its source.
+  function basic() {
+    var iframe = insertIframe();
+    SpecialPowers.allowMedia(iframe.contentWindow, false);
+    loadIframe(iframe, TEST_PAGE, function () {
+      verifyPass();
+      iframe.remove();
+      runNextTest();
+    });
+  },
+
+  // Set allowMedia = false on parent docshell, load a page with <audio> in a
+  // child iframe, verify the <audio> doesn't load its source.
+  function inherit() {
+    SpecialPowers.allowMedia(window, false);
+
+    var iframe = insertIframe();
+    loadIframe(iframe, TEST_PAGE, function () {
+      verifyPass();
+      iframe.remove();
+      SpecialPowers.allowMedia(window, true);
+      runNextTest();
+    });
+  },
+
+  // In a display:none iframe, set allowMedia = false, load a page with <audio>,
+  // verify the <audio> doesn't load its source.
+  function displayNone() {
+    var iframe = insertIframe();
+    iframe.style.display = "none";
+    SpecialPowers.allowMedia(iframe.contentWindow, false);
+    loadIframe(iframe, TEST_PAGE, function () {
+      verifyPass();
+      iframe.remove();
+      runNextTest();
+    });
+  },
+];
+
+function insertIframe() {
+  var iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  return iframe;
+}
+
+function loadIframe(iframe, url, onDone) {
+  iframe.setAttribute("src", url);
+  iframe.addEventListener("load", onDone);
+}
+
+function verifyPass() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", SJS, false);
+  xhr.send();
+  is(xhr.responseText, "PASS", "<audio> source should not have been loaded.");
+}
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=759964">Mozilla Bug 759964</a>
+<p id="display">
+</p>
+</body>
+</html>

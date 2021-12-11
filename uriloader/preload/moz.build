@@ -1,0 +1,28 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+TEST_DIRS += ["gtest"]
+
+EXPORTS.mozilla += [
+    "FetchPreloader.h",
+    "PreloaderBase.h",
+    "PreloadHashKey.h",
+    "PreloadService.h",
+]
+
+UNIFIED_SOURCES += [
+    "FetchPreloader.cpp",
+    "PreloaderBase.cpp",
+    "PreloadHashKey.cpp",
+    "PreloadService.cpp",
+]
+
+FINAL_LIBRARY = "xul"
+
+REQUIRES_UNIFIED_BUILD = True

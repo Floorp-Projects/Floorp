@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Line boundary getText* functions tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript">
+    function doTest() {
+      const isCacheEnabled = Services.prefs.getBoolPref(
+        "accessibility.cache.enabled",
+        false
+      );
+      // Flag to pass to testTextAtOffset for tests fixed by TextLeafPoint.
+      // if TextLeafPoint is enabled, those tests should pass. If not, they
+      // should be expected failures.
+      const okIfCache = isCacheEnabled ? kOk : kTodo;
+
+      testTextAtOffset("line_test_1", BOUNDARY_LINE_START,
+                       [[0, 6, "Line 1 ", 0, 7],
+                        // See the okIfCache test below.
+                        // [7, 7, kEmbedChar, 7, 8],
+                        [8, 15, "Line 3 ", 8, 15]]);
+      testTextAtOffset(/* aOffset */ 7, BOUNDARY_LINE_START,
+        kEmbedChar, /* aStartOffset */ 7, /* aEndOffset */ 8,
+        "line_test_1",
+        /* returned text */ okIfCache,
+        /* returned start offset */ kOk, /* returned end offset */ okIfCache);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+
+      var IDs = [ "input", "div", "editable", "textarea",
+                  getNode("ta", getNode("ta_cntr").contentDocument) ];
+
+      testTextBeforeOffset(IDs, BOUNDARY_LINE_START,
+                           [ [ 0, 15, "", 0, 0 ] ]);
+      testTextBeforeOffset(IDs, BOUNDARY_LINE_END,
+                           [ [ 0, 15, "", 0, 0 ] ]);
+
+      testTextAtOffset(IDs, BOUNDARY_LINE_START,
+                       [ [ 0, 15, "hello my friend", 0, 15 ] ]);
+      testTextAtOffset(IDs, BOUNDARY_LINE_END,
+                       [ [ 0, 15, "hello my friend", 0, 15 ] ]);
+
+      testTextAfterOffset(IDs, BOUNDARY_LINE_START,
+                          [ [ 0, 15, "", 15, 15 ] ]);
+      testTextAfterOffset(IDs, BOUNDARY_LINE_END,
+                          [ [ 0, 15, "", 15, 15 ] ]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // __o__n__e__w__o__r__d__\n
+      //  0  1  2  3  4  5  6  7
+      // __\n
+      //  8
+      // __t__w__o__ __w__o__r__d__s__\n
+      //  9 10 11 12 13 14 15 16 17 18
+
+      IDs = [ "ml_div", "ml_divbr", "ml_editable", "ml_editablebr", "ml_textarea"];
+
+      testTextBeforeOffset(IDs, BOUNDARY_LINE_START,
+                           [ [ 0, 7, "", 0, 0 ],
+                             [ 8, 8, "oneword\n", 0, 8 ],
+                             [ 9, 18, "\n", 8, 9 ],
+                             [ 19, 19, "two words\n", 9, 19 ]]);
+
+      testTextBeforeOffset(IDs, BOUNDARY_LINE_END,
+                          [ [ 0, 7, "", 0, 0 ],
+                            [ 8, 8, "oneword", 0, 7 ],
+                            [ 9, 18, "\n", 7, 8 ],
+                            [ 19, 19, "\ntwo words", 8, 18 ]]);
+
+      testTextAtOffset(IDs, BOUNDARY_LINE_START,
+                       [ [ 0, 7, "oneword\n", 0, 8 ],
+                         [ 8, 8, "\n", 8, 9 ],
+                         [ 9, 18, "two words\n", 9, 19 ],
+                         [ 19, 19, "", 19, 19 ]]);
+      testTextAtOffset(IDs, BOUNDARY_LINE_END,
+                       [ [ 0, 7, "oneword", 0, 7 ],
+                         [ 8, 8, "\n", 7, 8 ],
+                         [ 9, 18, "\ntwo words", 8, 18 ],
+                         [ 19, 19, "\n", 18, 19 ]]);
+
+      testTextAfterOffset(IDs, BOUNDARY_LINE_START,
+                          [ [ 0, 7, "\n", 8, 9 ],
+                            [ 8, 8, "two words\n", 9, 19 ],
+                            [ 9, 19, "", 19, 19 ]]);
+      testTextAfterOffset(IDs, BOUNDARY_LINE_END,
+                          [ [ 0, 7, "\n", 7, 8 ],
+                            [ 8, 8, "\ntwo words", 8, 18 ],
+                            [ 9, 18, "\n", 18, 19 ],
+                            [ 19, 19, "", 19, 19 ]]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // a * b (* is embedded char for link)
+      testTextBeforeOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_START,
+                           [ [ 0, 5, "", 0, 0 ] ]);
+
+      testTextBeforeOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_END,
+                           [ [ 0, 5, "", 0, 0 ] ]);
+
+      testTextAtOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_START,
+                       [ [ 0, 5, "a " + kEmbedChar + " c", 0, 5 ] ]);
+
+      testTextAtOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_END,
+                       [ [ 0, 5, "a " + kEmbedChar + " c", 0, 5 ] ]);
+
+      testTextAfterOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_START,
+                          [ [ 0, 5, "", 5, 5 ] ]);
+
+      testTextAfterOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_END,
+                          [ [ 0, 5, "", 5, 5 ] ]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // foo<br> and foo<br><br>
+
+      testTextAtOffset([ getAccessible("ht_2").firstChild.firstChild ],
+                       BOUNDARY_LINE_START,
+                       [ [ 0, 3, "foo\n", 0, 4 ] ]);
+      testTextAtOffset([ getAccessible("ht_3").firstChild.firstChild ],
+                       BOUNDARY_LINE_START,
+                       [ [ 0, 3, "foo\n", 0, 4 ], [ 4, 4, "\n", 4, 5 ] ]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // 'Hello world ' (\n is rendered as space)
+
+      testTextAtOffset([ "ht_4" ], BOUNDARY_LINE_START,
+                       [ [ 0, 12, "Hello world ", 0, 12 ] ]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // list items
+
+      testTextAtOffset([ "li1" ], BOUNDARY_LINE_START,
+                       [ [ 0, 6, kDiscBulletText + "Item", 0, 6 ] ]);
+      testTextAtOffset([ "li2" ], BOUNDARY_LINE_START,
+                       [ [ 0, 2, kDiscBulletText, 0, 2 ] ]);
+      testTextAtOffset([ "li3" ], BOUNDARY_LINE_START,
+                       [ [ 0, 8, kDiscBulletText + "a long ", 0, 9 ],
+                         [ 9, 12, "and ", 9, 13 ] ]);
+      testTextAtOffset([ "li4" ], BOUNDARY_LINE_START,
+                       [ [ 0, 7, kDiscBulletText + "a " + kEmbedChar + " c", 0, 7 ] ]);
+      testTextAtOffset([ "li5" ], BOUNDARY_LINE_START,
+                       [ [ 0, 2, kDiscBulletText + "\n", 0, 3 ],
+                         [ 3, 7, "hello", 3, 8 ] ]);
+      testTextAtOffset([ "ul1" ], BOUNDARY_LINE_START,
+                       [ [ 0, 0, kEmbedChar, 0, 1 ],
+                         [ 1, 1, kEmbedChar, 1, 2 ],
+                         [ 2, 2, kEmbedChar, 2, 3 ],
+                         [ 3, 3, kEmbedChar, 3, 4 ],
+                         [ 4, 5, kEmbedChar, 4, 5 ] ]);
+
+      testTextAtOffset([ "li6" ], BOUNDARY_LINE_START,
+                       [ [ 0, 7, "1. Item", 0, 7 ] ]);
+      testTextAtOffset([ "li7" ], BOUNDARY_LINE_START,
+                       [ [ 0, 3, "2. ", 0, 3 ] ]);
+      testTextAtOffset([ "li8" ], BOUNDARY_LINE_START,
+                       [ [ 0, 9, "3. a long ", 0, 10 ],
+                         [ 10, 13, "and ", 10, 14 ] ]);
+      testTextAtOffset([ "li9" ], BOUNDARY_LINE_START,
+                       [ [ 0, 8, "4. a " + kEmbedChar + " c", 0, 8 ] ]);
+      testTextAtOffset([ "li10" ], BOUNDARY_LINE_START,
+                       [ [ 0, 3, "5. \n", 0, 4 ],
+                         [ 4, 8, "hello", 4, 9 ] ]);
+      testTextAtOffset([ "ol1" ], BOUNDARY_LINE_START,
+                       [ [ 0, 0, kEmbedChar, 0, 1 ],
+                         [ 1, 1, kEmbedChar, 1, 2 ],
+                         [ 2, 2, kEmbedChar, 2, 3 ],
+                         [ 3, 3, kEmbedChar, 3, 4 ],
+                         [ 4, 5, kEmbedChar, 4, 5 ] ]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Nested hypertexts
+
+      testTextAtOffset(["ht_5" ], BOUNDARY_LINE_START,
+                       [ [ 0, 0, kEmbedChar, 0, 1 ] ]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Block followed by list
+
+      testTextAtOffset([ "block_then_ul" ], BOUNDARY_LINE_START,
+                       [ [ 0, 0, kEmbedChar, 0, 1 ],
+                         [ 1, 1, kEmbedChar, 1, 2 ] ]);
+
+      // Embedded char containing a line break breaks line offsets in parent.
+      testTextAtOffset([ "brInEmbed" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + " d", 0, 5],
+                         [3, 5, kEmbedChar + " d", 2, 5] ]);
+      testTextAtOffset([ "brInEmbedAndBefore" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a\n", 0, 2],
+                         [2, 3, "b " + kEmbedChar, 2, 5],
+                         [4, 4, "b " + kEmbedChar + " e", 2, 7],
+                         [5, 7, kEmbedChar + " e", 4, 7] ]);
+      testTextAtOffset([ "brInEmbedAndAfter" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + " d\n", 0, 6],
+                         [3, 5, kEmbedChar + " d\n", 2, 6],
+                         [6, 7, "e", 6, 7] ]);
+      testTextAtOffset([ "brInEmbedAndBlockElementAfter" ], BOUNDARY_LINE_START,
+                       [ [0, 2, "a " + kEmbedChar, 0, 3],
+                         [3, 4, kEmbedChar, 3, 4] ]);
+      testTextAtOffset([ "brInEmbedThenTextThenBlockElement" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + " d", 0, 5],
+                         [3, 4, kEmbedChar + " d", 2, 5],
+                         [5, 6, kEmbedChar, 5, 6] ]);
+      testTextAtOffset([ "noBrInEmbedButOneBefore" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a\n", 0, 2],
+                         [2, 7, "b " + kEmbedChar + " d", 2, 7] ]);
+      testTextAtOffset([ "noBrInEmbedButOneAfter" ], BOUNDARY_LINE_START,
+                       [ [0, 3, "a " + kEmbedChar + "\n", 0, 4],
+                         [4, 5, "c", 4, 5] ]);
+      testTextAtOffset([ "twoEmbedsWithBRs" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + kEmbedChar, 0, 4],
+                         [3, 3, kEmbedChar + kEmbedChar + " f", 2, 6],
+                         [4, 6, kEmbedChar + " f", 3, 6] ]);
+
+      // Inline block span with nested spans and BRs
+      testTextAtOffset([ "inlineBlockWithSpansAndBrs" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a\n", 0, 2],
+                         [2, 3, "b\n", 2, 4],
+                         [4, 5, "c", 4, 5] ]);
+
+      // Spans with BRs and whitespaces.      
+      testTextAtOffset([ "spansWithWhitespaces" ], BOUNDARY_LINE_START,
+                       [ [0, 6, "Line 1\n", 0, 7],
+                         [7, 13, "Line 2\n", 7, 14],
+                         [14, 20, "Line 3\n", 14, 21],
+                         [21, 27, "Line 4\n", 21, 28],
+                         [28, 28, "", 28, 28] ]);
+
+      // A line with an empty display: contents leaf in the middle.
+      testTextAtOffset([ "displayContents" ], BOUNDARY_LINE_START,
+                       // See the okIfCache test below.
+                       // [ [0, 3, `a${kEmbedChar}b`, 0, 3] ]);
+                       [ [0, 0, `a${kEmbedChar}b`, 0, 3],
+                         [2, 3, `a${kEmbedChar}b`, 0, 3] ]);
+      testTextAtOffset(/* aOffset */ 1, BOUNDARY_LINE_START,
+        `a${kEmbedChar}b`, /* aStartOffset */ 0, /* aEndOffset */ 3,
+        "displayContents",
+        /* returned text */ okIfCache,
+        /* returned start offset */ okIfCache,
+        /* returned end offset */ okIfCache);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="getTextAtOffset for word boundaries: beginning of a new life"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=853340">
+    Bug 853340
+  </a>
+  <a target="_blank"
+     title="getTextBeforeOffset for word boundaries: evolving"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=855732">
+    Bug 855732
+  </a>
+  <a target="_blank"
+     title=" getTextAfterOffset for line boundary on new rails"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=882292">
+    Bug 882292
+  </a>
+  <a target="_blank"
+     title="getTextAtOffset broken for last object when closing tag is preceded by newline char"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=947170">
+    Bug 947170
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input" value="hello my friend"/>
+  <div id="div">hello my friend</div>
+  <div id="editable" contenteditable="true">hello my friend</div>
+  <textarea id="textarea">hello my friend</textarea>
+  <iframe id="ta_cntr"
+          src="data:text/html,<html><body><textarea id='ta'>hello my friend</textarea></body></html>"></iframe>
+
+  <pre>
+    <div id="ml_div" style="border-style:outset;">oneword
+
+two words
+</div>
+  <div id="ml_divbr" style="border-style:outset;">oneword<br/><br/>two words<br/></div>
+  <div id="ml_editable" style="border-style:outset;" contenteditable="true">oneword
+
+two words
+</div>
+  <div id="ml_editablebr" contenteditable="true" style="border-style:outset;">oneword<br/><br/>two words<br/></div>
+  <textarea id="ml_textarea" cols="300">oneword
+
+two words
+</textarea>
+  </pre>
+
+  <iframe id="ht_1" src="data:text/html,<html><body>a <a href=''>b</a> c</body></html>"></iframe>
+
+  <iframe id="ht_2" src="data:text/html,<div contentEditable='true'>foo<br/></div>"></iframe>
+  <iframe id="ht_3" src="data:text/html,<div contentEditable='true'>foo<br/><br/></div>"></iframe>
+
+  <p id="ht_4">Hello world
+</p>
+
+  <ul id="ul1">
+    <li id="li1">Item</li>
+    <li id="li2"></li>
+    <li id="li3" style="font-family:monospace; font-size:10pt; width:8ch;">a long and winding road that lead me to your door</li>
+    <li id="li4">a <a href=''>b</a> c</li>
+    <li id="li5"><br>hello</li>
+  </ul>
+
+  <ol id="ol1">
+    <li id="li6">Item</li>
+    <li id="li7"></li>
+    <li id="li8" style="font-family:monospace; font-size:10pt; width:8ch;">a long and winding road that lead me to your door</li>
+    <li id="li9">a <a href=''>b</a> c</li>
+    <li id="li10"><br>hello</li>
+  </ol>
+
+  <div id="ht_5">
+    <div>
+      <p>sectiounus</p>
+      <p>seciofarus</p>
+    </div>
+  </div>
+  <div id="line_test_1">
+    Line 1
+    <center><input type="TEXT"><input value="Button" type="SUBMIT"></center>
+    Line 3
+  </div>
+
+  <div id="block_then_ul">
+    <p>Block</p>
+    <ul><li>Li</li></ul>
+  </div>
+  <div id="brInEmbed" contenteditable>a <a href="https://mozilla.org/">b<br>c</a> d</div>
+  <div id="brInEmbedAndBefore">a<br>b <a href="https://mozilla.org/">c<br>d</a> e</div>
+  <div id="brInEmbedAndAfter">a <a href="https://mozilla.org/">b<br>c</a> d<br>e</div>
+  <div id="brInEmbedAndBlockElementAfter">a <a href="https://mozilla.org/">b<br>c</a><p>d</p></div>
+  <div id="brInEmbedThenTextThenBlockElement">a <a href="https://mozilla.org/">b<br>c</a> d<p>e</p></div>
+  <div id="noBrInEmbedButOneBefore">a<br>b <a href="https://mozilla.org/">c</a> d</div>
+  <div id="noBrInEmbedButOneAfter">a <a href="https://mozilla.org/">b</a><br>c</div>
+  <div id="twoEmbedsWithBRs">a <a href="https://mozilla.org">b<br>c</a><a href="https://mozilla.org">d<br>e</a> f</div>
+  <span id="inlineBlockWithSpansAndBrs" style="display: inline-block;"><span>a<br>b<br><span></span></span>c</span>
+  <div id="spansWithWhitespaces">				<!-- Don't indent the following block -->
+<span>Line 1<br/>
+</span>
+<span>Line 2<br/>
+</span>
+<span>Line 3<br/>
+</span>
+<span>Line 4<br/>
+</span></div><!-- OK to indent again -->
+  <div id="displayContents">a<ul style="display: contents;"><li style="display: contents;"></li></ul>b</div>
+</body>
+</html>

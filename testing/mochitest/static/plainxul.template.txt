@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css"?>
+<window title="TODO: Insert title here"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script><![CDATA[
+    ok(true, "TODO: implement the test");
+  ]]></script>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+</window>

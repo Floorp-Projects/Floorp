@@ -1,0 +1,22 @@
+fuzzy-if(Android,0-4,0-12) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
+== multiple.html multiple-ref.html
+== boguskids.html boguskids-ref.html
+== dynamic-boguskids.html boguskids-ref.html
+== option-children.html option-children-ref.html
+fuzzy(0-1,0-4) == padding-button-placement.html padding-button-placement-ref.html
+== vertical-centering.html vertical-centering-ref.html
+== 997709-2.html 997709-2-ref.html
+fuzzy(0-4,0-1) needs-focus == focusring-1.html focusring-1-ref.html
+needs-focus == focusring-2.html focusring-2-ref.html
+needs-focus == focusring-3.html focusring-3-ref.html
+== dynamic-text-indent-1.html dynamic-text-indent-1-ref.html
+== dynamic-text-overflow-1.html dynamic-text-overflow-1-ref.html
+== listbox-zero-row-initial.html listbox-zero-row-initial-ref.html
+skip-if(Android) == select-option-display-none-inline-size.html select-option-display-none-inline-size-ref.html
+
+# Android and Windows actually use the anonymous select > button (rather than
+# drawing the arrow as a background like Linux and Mac), so most of this test
+# doesn't apply since when over-constrained it gets zero-sized.
+skip-if(Android||winWidget) == themed-select-padding-no-clip.html themed-select-padding-no-clip-ref.html
+
+== select-scrollbar-width.html select-scrollbar-width-ref.html

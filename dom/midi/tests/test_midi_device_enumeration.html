@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     let objectCompare = (type, props, obj) => {
+       for (var prop in props) {
+         is(props[prop], obj[prop], type + " property value " + prop + " is " + props[prop]);
+       }
+     };
+     let failOnCall = (event) => {
+       ok(false, "No connect/state events should be received on startup!");
+     };
+     async function runTests () {
+       await MIDITestUtils.permissionSetup(true);
+       // Request access without sysex.
+       let access = await navigator.requestMIDIAccess({ "sysex": false });
+       ok(true, "MIDI Access Request successful");
+       is(access.sysexEnabled, false, "Sysex should be false");
+       access.addEventListener("statechange", failOnCall);
+       var input_id = MIDITestUtils.inputInfo.id;
+       var output_id = MIDITestUtils.outputInfo.id;
+       var inputs = access.inputs;
+       var outputs = access.outputs;
+       is(inputs.size, 1, "Should have one input");
+       is(outputs.size, 2, "Should have two outputs");
+       ok(inputs.has(input_id), "input list should contain input id");
+       ok(outputs.has(output_id), "output list should contain output id");
+       var input = access.inputs.get(input_id);
+       var output = access.outputs.get(output_id);
+       objectCompare("input", MIDITestUtils.inputInfo, input);
+       objectCompare("output", MIDITestUtils.outputInfo, output);
+       access.removeEventListener("statechange", failOnCall);
+       SimpleTest.finish();
+     };
+    </script>
+  </body>
+</html>

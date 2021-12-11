@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=326337
+-->
+<head>
+  <title>Test for Bug 326337</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=326337">Mozilla Bug 326337</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 326337 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var win = window.open("file_bug326337_outer.html", "", "width=10, height=10");
+
+function finishTest(str) {
+    win.close();
+    is(str, "#done", "failed to run");
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

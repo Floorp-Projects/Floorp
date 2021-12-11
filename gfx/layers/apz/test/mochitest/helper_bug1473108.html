@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1473108
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for Bug 1473108</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  .a {
+    background: green;
+    height: 64px;
+    width: 32px;
+    display: block;
+  }
+  span::before {
+    content: "";
+    background: red;
+    height: 32px;
+    width: 32px;
+    display: block;
+  }
+  span:active::after {
+    content: "";
+  }
+</style>
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1473108">Mozilla Bug 1473108</a>
+  <a class="a" id="event"><span id="target"></span></a>
+
+  <script type="application/javascript">
+
+  waitUntilApzStable().then(() => {
+    let target = document.getElementById("target");
+    target.addEventListener("click", function(e) {
+      is(e.target, target, `Clicked on at (${e.clientX}, ${e.clientY})`);
+      subtestDone();
+    });
+    synthesizeNativeTap(target, 5, 5);
+  });
+
+</script>
+</body>
+</html>

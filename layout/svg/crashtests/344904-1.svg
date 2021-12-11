@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" onload="setTimeout(boom, 30);" class="reftest-wait">
+
+<script>
+
+function boom()
+{
+  document.getElementById("m").setAttribute("stroke-miterlimit", 1);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+
+<marker>
+  <path id="m" />
+</marker>
+
+
+</svg>

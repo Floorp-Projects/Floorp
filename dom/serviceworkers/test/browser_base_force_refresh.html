@@ -1,0 +1,27 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+</head>
+<body>
+<script type="text/javascript">
+addEventListener('load', function(event) {
+  navigator.serviceWorker.register('force_refresh_browser_worker.js').then(function(swr) {
+    if (!swr) {
+      return;
+    }
+    window.dispatchEvent(new Event("base-register", { bubbles: true }));
+  });
+
+  navigator.serviceWorker.ready.then(function() {
+    window.dispatchEvent(new Event("base-sw-ready", { bubbles: true }));
+  });
+
+  window.dispatchEvent(new Event("base-load", { bubbles: true }));
+});
+</script>
+</body>
+</html>

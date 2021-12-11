@@ -1,0 +1,466 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ :host {
+  overflow: hidden;
+
+  --reveal-checkbox-opacity: .8;
+  --reveal-checkbox-opacity-hover: .6;
+  --reveal-checkbox-opacity-active: 1;
+  --success-color: #2AC3A2;
+  --edit-delete-button-color: #4a4a4f;
+}
+
+/* Only overwrite the deemphasized text color in non-dark mode. */
+@media not (prefers-color-scheme: dark) {
+  :host {
+    --in-content-deemphasized-text: #737373;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --reveal-checkbox-opacity: .8;
+    --reveal-checkbox-opacity-hover: 1;
+    --reveal-checkbox-opacity-active: .6;
+    --success-color: #54FFBD;
+    --edit-delete-button-color: #cfcfd1;
+  }
+}
+
+.container {
+  overflow: auto;
+  padding: 40px;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 520px;
+}
+
+@media (max-width: 830px) {
+  .container {
+    padding-inline: 20px;
+  }
+}
+
+.column {
+  min-height: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  min-width: 100px;
+}
+
+form {
+  flex-grow: 1;
+}
+
+:host([data-editing]) .edit-button,
+:host([data-editing]) .copy-button,
+:host([data-is-new-login].no-logins) .cancel-button,
+:host([data-is-new-login]) .delete-button,
+:host([data-is-new-login]) .origin-saved-value,
+:host([data-is-new-login]) .meta-info,
+:host([data-is-new-login]) .login-item-title,
+:host(:not([data-is-new-login])) .new-login-title,
+:host(:not([data-editing])) .form-actions-row {
+  display: none;
+}
+
+input[type="password"],
+input[type="text"],
+input[type="url"] {
+  text-align: match-parent !important; /* override `all: unset` in the rule below */
+}
+
+input[type="password"]:read-only,
+input[type="text"]:read-only,
+input[type="url"]:read-only {
+  all: unset;
+  font-size: 1.1em;
+  display: inline-block;
+  background-color: transparent !important; /* override common.inc.css */
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* We can't use `margin-inline-start` here because we force
+ * the input to have dir="ltr", so we set the margin manually
+ * using the parent element's directionality. */
+.detail-cell:dir(ltr) input:not([type="checkbox"]) {
+  margin-left: 0;
+}
+
+.detail-cell:dir(rtl) input:not([type="checkbox"]) {
+  margin-right: 0;
+}
+
+.save-changes-button {
+  margin-inline-start: 0; /* Align the button on the start side */
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--in-content-border-color);
+  margin-bottom: 40px;
+}
+
+.title {
+  margin-block: 0;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delete-button,
+.edit-button {
+  color: var(--edit-delete-button-color);
+  background-repeat: no-repeat;
+  background-position: 8px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-width: auto;
+  /* See bug 1627164: In CJK locales, line break could happen in any letter of the button. The fix here is to explicitly specify flex property so that the button couldn't grow or shrink. */
+  flex: 0 0 auto;
+}
+
+.delete-button:dir(rtl),
+.edit-button:dir(rtl) {
+  background-position-x: right 8px;
+}
+
+.delete-button {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+  padding-inline-start: 30px; /* 8px on each side, and 14px for icon width */
+}
+
+.edit-button {
+  background-image: url("chrome://global/skin/icons/edit.svg");
+  padding-inline-start: 32px; /* 8px on each side, and 16px for icon width */
+}
+
+input[type="url"]:read-only {
+  color: var(--in-content-link-color) !important;
+  cursor: pointer;
+}
+
+input[type="url"]:read-only:hover {
+  color: var(--in-content-link-color-hover) !important;
+  text-decoration: underline;
+}
+
+input[type="url"]:read-only:hover:active {
+  color: var(--in-content-link-color-active) !important;
+}
+
+input[type = "url"]:focus:not(:-moz-ui-invalid):invalid ~ .tooltip-container {
+  display: block;
+}
+
+input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-container {
+  display: block;
+}
+
+.tooltip-container {
+  display: none;
+  position: absolute;
+  inset-inline-start: 315px;
+  width: 232px;
+  box-shadow: 2px 2px 10px 1px rgba(0,0,0,0.18);
+  top: 0;
+}
+
+.tooltip-message {
+  margin: 0;
+  font-size: 14px;
+}
+
+.arrow-box {
+  position: relative;
+  padding: 12px;
+	background: var(--in-content-box-background);
+	border: 1px solid var(--in-content-border-color);
+}
+
+.arrow-box::after, .arrow-box::before {
+  inset-inline-end: 100%;
+  top: 40px; /* This allows the arrow to stay in the correct position, even if the text length is changed */
+	border: solid transparent;
+	content: "";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+}
+
+.arrow-box::after {
+	border-inline-end-color: var(--in-content-box-background);
+	border-width: 10px;
+	margin-top: -10px;
+}
+.arrow-box::before {
+	border-inline-end-color: var(--in-content-border-color);
+	border-width: 11px;
+	margin-top: -11px;
+}
+
+.reveal-password-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, max-content) auto;
+  grid-template-rows: auto;
+  column-gap: 20px;
+  row-gap: 40px;
+  justify-content: start;
+}
+
+:host([data-editing]) .detail-grid {
+  grid-template-columns: auto;
+}
+
+.detail-grid > .detail-row:not([hidden]) {
+  display: contents;
+}
+
+.detail-grid > .detail-row > .detail-cell {
+  grid-column: 1;
+}
+
+.detail-grid > .detail-row > .copy-button {
+  grid-column: 2;
+  margin-inline-start: 0; /* Reset button's margin so it doesn't affect the overall grid's width */
+  justify-self: start;
+  align-self: end;
+}
+
+.detail-row {
+  display: flex;
+  position: relative; /* Allows for the hint message to be positioned correctly */
+}
+
+.detail-grid,
+.detail-row,
+.form-actions-row {
+  margin-bottom: 40px;
+}
+
+.detail-cell {
+  flex-grow: 1;
+  min-width: 0; /* Allow long passwords to collapse down to flex item width */
+}
+
+.field-label {
+  display: block;
+  font-size: smaller;
+  color: var(--in-content-deemphasized-text);
+  margin-bottom: 8px;
+}
+
+:host([data-editing]) .detail-cell input:read-write:not([type="checkbox"]) {
+  width: 280px;
+}
+
+.copy-button {
+  margin-bottom: 0; /* Align button at the bottom of the row */
+}
+
+.copy-button:not([data-copied]) .copied-button-text,
+.copy-button[data-copied] .copy-button-text {
+  display: none;
+}
+
+.copy-button[data-copied] {
+  color: var(--success-color) !important; /* override common.css */
+  background-color: transparent;
+  opacity: 1; /* override common.css fading out disabled buttons */
+}
+
+.copy-button[data-copied]:-moz-focusring {
+  outline-width: 0;
+  box-shadow: none;
+}
+
+.copied-button-text {
+  background-image: url(chrome://global/skin/icons/check.svg);
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  padding-inline-start: 22px;
+}
+
+.copied-button-text:dir(rtl) {
+  background-position-x: right;
+}
+
+.meta-info {
+  font-size: smaller;
+  color: var(--in-content-deemphasized-text);
+  margin-block: 0 8px;
+}
+
+.meta-info:first-of-type::before {
+  content: "";
+  display: block;
+  margin-bottom: 20px;
+  border-top: 1px solid var(--in-content-border-color);
+  width: 40px;
+}
+
+input.password-display,
+input[name="password"] {
+  font-family: monospace !important; /* override `all: unset` in the rule above */
+}
+
+.reveal-password-checkbox {
+  /* !important is needed to override common.css styling for checkboxes */
+  background-color: transparent !important;
+  border-width: 0 !important;
+  background-image: url("chrome://browser/content/aboutlogins/icons/password.svg") !important;
+  margin-inline: 10px 0 !important;
+  cursor: pointer;
+  -moz-context-properties: fill;
+  fill: currentColor !important;
+  color: inherit !important;
+  opacity: var(--reveal-checkbox-opacity);
+  flex-shrink: 0;
+}
+
+.reveal-password-checkbox:hover {
+  opacity: var(--reveal-checkbox-opacity-hover);
+}
+
+.reveal-password-checkbox:hover:active {
+  opacity: var(--reveal-checkbox-opacity-active);
+}
+
+.reveal-password-checkbox:checked {
+  background-image: url("chrome://browser/content/aboutlogins/icons/password-hide.svg") !important;
+}
+
+.login-item-favicon {
+  width: 24px;
+}
+
+.login-item-favicon-wrapper {
+  margin-inline-end: 12px;
+  height: 24px;
+  width: 24px;
+  flex-shrink: 0;
+  background-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.75;
+}
+
+.login-item-favicon-wrapper.hide-default-favicon {
+  background-image: none;
+}
+
+.vulnerable-alert,
+.breach-alert {
+  border-radius: 4px;
+  border: 1px solid var(--in-content-border-color);
+  box-shadow: 0 2px 8px 0 var(--grey-90-a10);
+  font-size: .9em;
+  line-height: 1.4;
+  padding-block: 12px;
+  padding-inline: 64px 32px;
+  margin-block-end: 40px;
+  position: relative;
+}
+
+.breach-alert {
+  background-color: var(--red-70);
+  color: #fff;
+}
+
+.vulnerable-alert {
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
+}
+
+.alert-title {
+  font-size: 22px;
+  font-weight: normal;
+  line-height: 1em;
+  margin-block: 0 12px;
+}
+
+.alert-date {
+  display: block;
+  font-weight: 600;
+}
+
+.alert-link:visited,
+.alert-link {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.breach-alert > .alert-link:visited,
+.breach-alert > .alert-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.alert-icon {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-start: 32px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 24px;
+}
+
+.alert-learn-more-link:hover,
+.alert-learn-more-link:visited,
+.alert-learn-more-link {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-end: 32px;
+  color: inherit;
+  font-size: 13px;
+}
+
+.vulnerable-alert > .alert-learn-more-link {
+  color: var(--in-content-deemphasized-text);
+}
+
+.error-message {
+  color: #fff;
+  background-color: var(--red-60);
+  border: 1px solid transparent;
+  padding-block: 6px;
+  display: inline-block;
+  padding-inline: 32px 16px;
+  background-image: url("chrome://global/skin/icons/warning.svg");
+  background-repeat: no-repeat;
+  background-position: left 10px center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-bottom: 38px;
+}
+
+.error-message:dir(rtl) {
+  background-position-x: right 10px;
+}
+
+.error-message-link > a,
+.error-message-link > a:hover,
+.error-message-link > a:hover:active {
+  color: currentColor;
+  text-decoration: underline;
+  font-weight: 600;
+}

@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=551846
+-->
+<head>
+  <title>Test for Bug 551846</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=551846">Mozilla Bug 551846</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <select id='s'>
+    <option>Tulip</option>
+    <option>Lily</option>
+    <option>Gagea</option>
+    <option>Snowflake</option>
+    <option>Ismene</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 551846 **/
+
+function checkSizeReflection(element, defaultValue)
+{
+  is(element.size, defaultValue, "Default size should be " + defaultValue);
+
+  element.setAttribute('size', -15);
+  is(element.size, defaultValue,
+    "The reflecting IDL attribute should return the default value when content attribute value is invalid");
+  is(element.getAttribute('size'), "-15",
+    "The content attribute should containt the previously set value");
+
+  element.setAttribute('size', 0);
+  is(element.size, 0,
+    "0 should be considered as a valid value");
+  is(element.getAttribute('size'), "0",
+    "The content attribute should containt the previously set value");
+
+  element.setAttribute('size', 2147483647); /* PR_INT32_MAX */
+  is(element.size, 2147483647,
+    "PR_INT32_MAX should be considered as a valid value");
+  is(element.getAttribute('size'), "2147483647",
+    "The content attribute should containt the previously set value");
+
+  element.setAttribute('size', -2147483648); /* PR_INT32_MIN */
+  is(element.size, defaultValue,
+    "The reflecting IDL attribute should return the default value when content attribute value is invalid");
+  is(element.getAttribute('size'), "-2147483648",
+    "The content attribute should containt the previously set value");
+
+  element.setAttribute('size', 'non-numerical-value');
+  is(element.size, defaultValue,
+    "The reflecting IDL attribute should return the default value when content attribute value is invalid");
+  is(element.getAttribute('size'), 'non-numerical-value',
+    "The content attribute should containt the previously set value");
+
+  element.setAttribute('size', 4294967294); /* PR_INT32_MAX * 2 */
+  is(element.size, defaultValue,
+    "Value greater than PR_INT32_MAX should be considered as invalid");
+  is(element.getAttribute('size'), "4294967294",
+    "The content attribute should containt the previously set value");
+
+  element.setAttribute('size', -4294967296); /* PR_INT32_MIN * 2 */
+  is(element.size, defaultValue,
+    "The reflecting IDL attribute should return the default value when content attribute value is invalid");
+  is(element.getAttribute('size'), "-4294967296",
+    "The content attribute should containt the previously set value");
+
+  element.size = defaultValue + 1;
+  element.removeAttribute('size');
+  is(element.size, defaultValue,
+    "When the attribute is removed, the size should be the default size");
+
+  element.setAttribute('size', 'foobar');
+  is(element.size, defaultValue,
+    "The reflecting IDL attribute should return the default value when content attribute value is invalid");
+  element.removeAttribute('size');
+  is(element.size, defaultValue,
+    "When the attribute is removed, the size should be the default size");
+}
+
+function checkSetSizeException(element)
+{
+  var caught = false;
+
+  try {
+    element.size = 1;
+  } catch(e) {
+    caught = true;
+  }
+  ok(!caught, "Setting a positive size shouldn't throw an exception");
+
+  caught = false;
+  try {
+    element.size = 0;
+  } catch(e) {
+    caught = true;
+  }
+  ok(!caught, "Setting a size to 0 from the IDL shouldn't throw an exception");
+
+  element.size = 1;
+
+  caught = false;
+  try {
+    element.size = -1;
+  } catch(e) {
+    caught = true;
+  }
+  ok(!caught, "Setting a negative size from the IDL shouldn't throw an exception");
+
+  is(element.size, 0, "The size should now be equal to the minimum non-negative value");
+
+  caught = false;
+  try {
+    element.setAttribute('size', -10);
+  } catch(e) {
+    caught = true;
+  }
+  ok(!caught, "Setting an invalid size in the content attribute shouldn't throw an exception");
+
+  // reverting to defalut
+  element.removeAttribute('size');
+}
+
+function checkSizeWhenChangeMultiple(element, aDefaultNonMultiple, aDefaultMultiple)
+{
+  s.setAttribute('size', -1)
+  is(s.size, aDefaultNonMultiple, "Size IDL attribute should be 1");
+
+  s.multiple = true;
+  is(s.size, aDefaultMultiple, "Size IDL attribute should be 4");
+
+  is(s.getAttribute('size'), "-1", "Size content attribute should be -1");
+
+  s.setAttribute('size', -2);
+  is(s.size, aDefaultMultiple, "Size IDL attribute should be 4");
+
+  s.multiple = false;
+  is(s.size, aDefaultNonMultiple, "Size IDL attribute should be 1");
+
+  is(s.getAttribute('size'), "-2", "Size content attribute should be -2");
+}
+
+var s = document.getElementById('s');
+
+checkSizeReflection(s, 0);
+checkSetSizeException(s);
+
+s.setAttribute('multiple', 'true');
+checkSizeReflection(s, 0);
+checkSetSizeException(s);
+s.removeAttribute('multiple');
+
+checkSizeWhenChangeMultiple(s, 0, 0);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Interface used to generate random data.
+ *
+ * @threadsafe
+ */
+[scriptable, uuid(2362d97a-747a-4576-8863-697667309209)]
+interface nsIRandomGenerator : nsISupports {
+  /**
+   * Generates the specified amount of random bytes.
+   *
+   * @param aLength
+   *        The length of the data to generate.
+   * @param aBuffer
+   *        A buffer that contains random bytes of size aLength.
+   */
+  void generateRandomBytes(in unsigned long aLength,
+                           [retval, array, size_is(aLength)] out octet aBuffer);
+};

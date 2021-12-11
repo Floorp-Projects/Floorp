@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<title>What happens if main thread scrolls?</title>
+<style>
+html, body { margin: 0; }
+
+html {
+  background:
+    repeating-linear-gradient(45deg, transparent 0, transparent 100px, rgba(0,0,0,0.1) 0, rgba(0,0,0,0.1) 200px),
+    repeating-linear-gradient(-45deg, transparent 0, transparent 100px, rgba(0,0,0,0.1) 0, rgba(0,0,0,0.1) 200px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 500px, rgba(0,0,0,0.4) 0, rgba(0,0,0,0.4) 1000px),
+    repeating-linear-gradient(to bottom, hsl(0, 60%, 80%), hsl(0, 60%, 80%) 200px, hsl(70, 60%, 80%) 0, hsl(70, 60%, 80%) 400px, hsl(140, 60%, 80%) 0, hsl(140, 60%, 80%) 600px, hsl(210, 60%, 80%) 0, hsl(210, 60%, 80%) 800px),
+    white;
+  background-size:
+    283px 283px,
+    283px 283px,
+    100px 1000px,
+    100px 800px;
+}
+
+body {
+  height: 10000px;
+}
+</style>
+
+<script>
+var intervalId;
+// Start periodic content expansions after we get a scroll event triggered by
+// a key press in test() function below, otherwise we may have same scroll
+// offsets caused by this script before we start scrolling.
+window.addEventListener("scroll",  () => {
+  var offset = 0;
+  var initialBodyHeight = 10000;
+  intervalId = setInterval(() => {
+    // "Add content" at the top. We do this by making the body longer and adjusting the background position.
+    offset += 10;
+    document.documentElement.style.backgroundPosition = `0px ${offset}px`;
+    document.body.style.height = `${initialBodyHeight + offset}px`;
+
+    window.scrollBy(0, 10);
+
+    // Simulate some jank.
+    var freezeDurationInMilliseconds = 100;
+    var startTime = Date.now();
+    while (Date.now() - startTime < freezeDurationInMilliseconds) {} // eslint-disable-line no-empty
+  }, 300);
+}, { once: true });
+
+
+function collectRootScrollOffsets() {
+  let data = SpecialPowers.DOMWindowUtils.getCompositorAPZTestData();
+  let sampledResults = data.sampledResults;
+
+  const layersId = SpecialPowers.DOMWindowUtils.getLayersId();
+  const scrollId = SpecialPowers.DOMWindowUtils.getViewId(document.scrollingElement);
+
+  return sampledResults.filter(
+    result => SpecialPowers.wrap(result).layersId == layersId &&
+              SpecialPowers.wrap(result).scrollId == scrollId
+  );
+}
+
+async function test() {
+  // Once this content starts scrolling, it triggers a 100ms jank every 300ms so
+  // sending arrow down keys for 1500ms will cause some jank.
+  const timeAtStart = performance.now();
+  while (performance.now() - timeAtStart < 1500) {
+    synthesizeKey("KEY_ArrowDown");
+    await promiseFrame(window);
+  }
+
+  // Stop the periodic expansions.
+  clearInterval(intervalId);
+
+  const records = collectRootScrollOffsets();
+
+  let previousRecord = { scrollOffsetY: 0, sampledTimeStamp: 0 };
+  for (const record of records) {
+    // Ignore offsets before scrolling.
+    if (record.scrollOffsetY == 0) {
+      continue;
+    }
+    ok(
+      record.scrollOffsetY > previousRecord.scrollOffsetY,
+      "scroll offset should be strictly monotonically increasing" +
+      "previous offset: " + previousRecord.scrollOffsetY +
+      ", offset: " + record.scrollOffsetY
+    );
+    ok(
+      record.sampledTimeStamp > previousRecord.sampledTimeStamp,
+      "sampled time stamp should be strictly monotonically increasing" +
+      "previous timestamp: " + previousRecord.sampledTimeStamp +
+      ", timestamp: " + record.sampledTimeStamp
+    );
+    previousRecord = record;
+  }
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>

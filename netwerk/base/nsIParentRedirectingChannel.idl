@@ -1,0 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIParentChannel.idl"
+
+interface nsIRemoteTab;
+interface nsIChannel;
+interface nsIAsyncVerifyRedirectCallback;
+
+[builtinclass, uuid(01987690-48cf-45de-bae3-e143c2adc2a8)]
+interface nsIAsyncVerifyRedirectReadyCallback : nsISupports
+{
+  /**
+   * Asynchronous callback when redirected channel finishes the preparation for
+   * completing the verification procedure.
+   *
+   * @param result
+   *    SUCCEEDED if preparation for redirection verification succceed.
+   *    If FAILED the redirection must be aborted.
+   */
+  void readyToVerify(in nsresult result);
+};
+
+/**
+ * Implemented by chrome side of IPC protocols that support redirect responses.
+ */
+
+[scriptable, uuid(3ed1d288-5324-46ee-8a98-33ac37d1080b)]
+interface nsIParentRedirectingChannel : nsIParentChannel
+{
+  /**
+   * Called when the channel got a response that redirects it to a different
+   * URI.  The implementation is responsible for calling the redirect observers
+   * on the child process and provide the decision result to the callback.
+   *
+   * @param newURI
+   *    the URI we redirect to
+   * @param callback
+   *    redirect result callback, usage is compatible with how
+   *    nsIChannelEventSink defines it
+   */
+  void startRedirect(in nsIChannel newChannel,
+                     in uint32_t redirectFlags,
+                     in nsIAsyncVerifyRedirectCallback callback);
+
+  /**
+   * Called to new channel when the original channel got Redirect2Verify
+   * response from child. Callback will be invoked when the new channel
+   * finishes the preparation for Redirect2Verify and can be called immediately.
+   *
+   * @param callback
+   *    redirect ready callback, will be called when redirect verification
+   *    procedure can proceed.
+   */
+  void continueVerification(in nsIAsyncVerifyRedirectReadyCallback callback);
+
+  /**
+   * Called after we are done with redirecting process and we know if to
+   * redirect or not.  Forward the redirect result to the child process.  From
+   * that moment the nsIParentChannel implementation expects it will be
+   * forwarded all notifications from the 'real' channel.
+   *
+   * Primarilly used by ParentChannelListener::OnRedirectResult and kept as
+   * mActiveChannel and mRedirectChannel in that class.
+   */
+  void completeRedirect(in boolean succeeded);
+};

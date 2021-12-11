@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=583889
+-->
+<head>
+  <title>Test for Bug 583889</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=583889">Mozilla Bug 583889</a>
+<iframe id="inner" style="width: 10px; height: 10px;"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 583889 **/
+SimpleTest.waitForExplicitFinish();
+
+function grabEventAndGo(event) {
+  gen.next(event);
+}
+
+function* runTest() {
+  window.onload = grabEventAndGo;
+  // Wait for onLoad event.
+  yield;
+
+  var inner = $("inner");
+  inner.src = "bug583889_inner1.html";
+  window.onmessage = grabEventAndGo;
+  // Wait for message from 'inner' iframe.
+  event = yield;
+
+  while (event.data != "done") {
+    data = JSON.parse(event.data);
+    is(data.top, 300, "should remain at same top");
+    is(data.left, 300, "should remain at same left");
+
+    // Wait for message from 'inner' iframe.
+    event = yield;
+  }
+
+  // finish(), yet let the test actually end first, to be safe.
+  SimpleTest.executeSoon(SimpleTest.finish);
+}
+
+var gen = runTest();
+gen.next();
+</script>
+</pre>
+</body>
+</html>

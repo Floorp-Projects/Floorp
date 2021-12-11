@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=394800
+-->
+  <title>Test Mozilla bug 394800</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<script class="testbody" type="application/javascript">
+
+function do_test()
+{
+  var x = document.getElementById("x");
+  x.parentNode.removeChild(x);
+  is(0, 0, "this is a crash/assertion test, so we're ok if we survived this far");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</head>
+
+<body>
+
+<xul:menulist><xul:tooltip/><div><span><xul:hbox id="x"/></span></div></xul:menulist>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=394800">Mozilla Bug 394800</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+
+<script>
+  addLoadEvent(do_test);
+</script>
+
+</body>
+</html>

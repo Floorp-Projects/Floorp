@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="frame2"
+        style="background-color:red;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<spacer height="10px"/>
+<caption id="cap2" style="background-color:white;" label=""/>
+<script class="testbody" type="application/javascript">
+
+// Fire a mouse move event aimed at this window, and check to be
+// sure the client coords translate from widget to the dom correctly.
+
+function runTests()
+{
+  synthesizeMouse(document.getElementById("frame2"), 6, 5, { type: "mousemove" });
+}
+
+function mouseMove(e) {
+  e.stopPropagation();
+  var el = document.getElementById("cap2");
+  el.label = "client: (" + e.clientX + "," + e.clientY + ")";
+  parent.parent.arguments[0].SimpleTest.is(e.clientX, 6, "mouse event clientX on sub frame 2");
+  parent.parent.arguments[0].SimpleTest.is(e.clientY, 5, "mouse event clientY on sub frame 2");
+  parent.parent.arguments[0].SimpleTest.finish();
+  parent.parent.close();
+}
+
+window.addEventListener("mousemove", mouseMove);
+
+</script>
+</window>

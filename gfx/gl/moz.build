@@ -1,0 +1,168 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+gl_provider = "Null"
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    gl_provider = "WGL"
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    gl_provider = "CGL"
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
+    gl_provider = "EAGL"
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    if CONFIG["MOZ_EGL_XRENDER_COMPOSITE"]:
+        gl_provider = "EGL"
+    else:
+        gl_provider = "GLX"
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    gl_provider = "EGL"
+
+if CONFIG["MOZ_GL_PROVIDER"]:
+    gl_provider = CONFIG["MOZ_GL_PROVIDER"]
+
+EXPORTS += [
+    "AndroidSurfaceTexture.h",
+    "DecomposeIntoNoRepeatTriangles.h",
+    "ForceDiscreteGPUHelperCGL.h",
+    "GfxTexturesReporter.h",
+    "GLBlitHelper.h",
+    "GLConsts.h",
+    "GLContext.h",
+    "GLContextEGL.h",
+    "GLContextProvider.h",
+    "GLContextProviderImpl.h",
+    "GLContextSymbols.h",
+    "GLContextTypes.h",
+    "GLDefs.h",
+    "GLLibraryEGL.h",
+    "GLLibraryLoader.h",
+    "GLReadTexImageHelper.h",
+    "GLScreenBuffer.h",
+    "GLTextureImage.h",
+    "GLTypes.h",
+    "GLUploadHelpers.h",
+    "HeapCopyOfStackArray.h",
+    "MozFramebuffer.h",
+    "ScopedGLHelpers.h",
+    "SharedSurface.h",
+    "SharedSurfaceEGL.h",
+    "SharedSurfaceGL.h",
+    "SurfaceTypes.h",
+]
+
+# Win32 is a special snowflake, for ANGLE
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    REQUIRES_UNIFIED_BUILD = True
+    EXPORTS += [
+        "GLContextWGL.h",
+        "SharedSurfaceANGLE.h",  # Needs <windows.h> for `HANDLE`.
+        "SharedSurfaceD3D11Interop.h",
+        "WGLLibrary.h",
+    ]
+    UNIFIED_SOURCES += [
+        "GLBlitHelperD3D.cpp",
+        "GLContextProviderWGL.cpp",
+        "SharedSurfaceANGLE.cpp",
+        "SharedSurfaceD3D11Interop.cpp",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    EXPORTS += [
+        "AndroidNativeWindow.h",
+        "SharedSurfaceAndroidHardwareBuffer.h",
+    ]
+    UNIFIED_SOURCES += [
+        "SharedSurfaceAndroidHardwareBuffer.cpp",
+    ]
+
+if gl_provider == "CGL":
+    # These files include Mac headers that are unfriendly to unified builds
+    SOURCES += [
+        "GLContextProviderCGL.mm",
+    ]
+    EXPORTS += [
+        "GLContextCGL.h",
+        "SharedSurfaceIO.h",
+    ]
+    # SharedSurfaceIO.cpp includes MacIOSurface.h which include Mac headers
+    # which define Size and Point types in root namespace with often conflict with
+    # our own types. While I haven't actually hit this issue in the present case,
+    # it's been an issue in gfx/layers so let's not risk it.
+    SOURCES += [
+        "SharedSurfaceIO.cpp",
+    ]
+    OS_LIBS += [
+        "-framework IOSurface",
+    ]
+
+elif gl_provider == "EAGL":
+    # These files include ObjC headers that are unfriendly to unified builds
+    SOURCES += [
+        "GLContextProviderEAGL.mm",
+    ]
+    EXPORTS += [
+        "GLContextEAGL.h",
+    ]
+
+elif gl_provider == "GLX":
+    # GLContextProviderGLX.cpp needs to be kept out of UNIFIED_SOURCES
+    # as it includes X11 headers which cause conflicts.
+    SOURCES += [
+        "GLContextProviderGLX.cpp",
+        "GLContextProviderX11.cpp",
+    ]
+    EXPORTS += ["GLContextGLX.h", "GLXLibrary.h"]
+
+if CONFIG["MOZ_WAYLAND"]:
+    SOURCES += ["GLContextProviderWayland.cpp", "SharedSurfaceDMABUF.cpp"]
+
+UNIFIED_SOURCES += [
+    "AndroidSurfaceTexture.cpp",
+    "DecomposeIntoNoRepeatTriangles.cpp",
+    "GfxTexturesReporter.cpp",
+    "GLBlitHelper.cpp",
+    "GLContext.cpp",
+    "GLContextFeatures.cpp",
+    "GLContextProviderEGL.cpp",
+    "GLDebugUtils.cpp",
+    "GLLibraryEGL.cpp",
+    "GLLibraryLoader.cpp",
+    "GLReadTexImageHelper.cpp",
+    "GLTextureImage.cpp",
+    "GLUploadHelpers.cpp",
+    "MozFramebuffer.cpp",
+    "ScopedGLHelpers.cpp",
+    "SharedSurface.cpp",
+    "SharedSurfaceEGL.cpp",
+    "SharedSurfaceGL.cpp",
+]
+SOURCES += [
+    "GLScreenBuffer.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["MOZ_D3DCOMPILER_VISTA_DLL"]:
+    DEFINES["MOZ_D3DCOMPILER_VISTA_DLL"] = CONFIG["MOZ_D3DCOMPILER_VISTA_DLL"]
+
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+CFLAGS += CONFIG["TK_CFLAGS"]
+
+CXXFLAGS += ["-Werror=switch"]
+
+if CONFIG["MOZ_WAYLAND"]:
+    CXXFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
+    CFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
+
+LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+LOCAL_INCLUDES += [
+    "/gfx/cairo/cairo/src",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

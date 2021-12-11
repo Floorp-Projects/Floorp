@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("tree").firstChild.data = "xyz";
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<xul:tree id="tree">a</xul:tree>
+
+</body>
+</html>

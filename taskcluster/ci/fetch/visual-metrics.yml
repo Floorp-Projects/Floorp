@@ -1,0 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+visual-metrics:
+    description: "Browsertime visual metrics analsyis script"
+    fetch:
+        type: static-url
+        url: https://raw.githubusercontent.com/sitespeedio/browsertime/7a37d88a2592f3307699973536126b4a6089ac14/browsertime/visualmetrics.py
+        sha256: 8a0043242b095a42b6aa8f052703535be60630305b2a3acee7b26a0cb8c50a3f
+        size: 87647

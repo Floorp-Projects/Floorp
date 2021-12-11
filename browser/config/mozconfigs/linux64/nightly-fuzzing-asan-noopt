@@ -1,0 +1,34 @@
+# We still need to build with debug symbols
+ac_add_options --disable-debug
+ac_add_options --disable-optimize
+
+#add-on signing is checked but not enforced
+MOZ_REQUIRE_SIGNING=
+
+# ASan specific options on Linux
+ac_add_options --enable-valgrind
+
+. $topsrcdir/build/unix/mozconfig.asan
+ac_add_options --disable-elf-hack
+
+# Enable ASan for rust code. This is done for specific build tasks rather than
+# globally in mozconfig.asan because it requires an unstable -Z flag.
+export RUSTFLAGS="$RUSTFLAGS -Zsanitizer=address"
+
+# gold is required for libFuzzer to work properly
+ac_add_options --enable-linker=gold
+
+ac_add_options --enable-fuzzing
+unset MOZ_STDCXX_COMPAT
+
+# Piggybacking UBSan for now since only a small subset of checks are enabled.
+# A new build can be created when appropriate.
+ac_add_options --enable-undefined-sanitizer
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=asan
+
+. "$topsrcdir/build/mozconfig.common.override"

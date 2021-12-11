@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=565538
+-->
+<head>
+  <title>Test for Bug 565538</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=565538">Mozilla Bug 565538</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 565538 **/
+
+var gElementTestData = [
+/* element     result */
+  ['input',    true],
+  ['button',   false],
+  ['fieldset', false],
+  ['label',    false],
+  ['option',   false],
+  ['optgroup', false],
+  ['output',   false],
+  ['legend',   false],
+  ['select',   false],
+  ['textarea', false],
+  ['object',   false],
+];
+
+var gInputTestData = [
+/* type        result */
+  ['password', true],
+  ['tel',      true],
+  ['text',     true],
+  ['button',   false],
+  ['checkbox', false],
+  ['file',     false],
+  ['hidden',   false],
+  ['reset',    false],
+  ['image',    false],
+  ['radio',    false],
+  ['submit',   false],
+  ['search',   true],
+  ['email',    true],
+  ['url',      true],
+  ['number',   false],
+  ['range',    false],
+  ['date',     false],
+  ['time',     false],
+  ['color',    false],
+  ['month',    false],
+  ['week',     false],
+  ['datetime-local', false],
+];
+
+function checkMozIsTextFieldDefined(aElement, aResult)
+{
+  var element = document.createElement(aElement);
+
+  var msg = "mozIsTextField should be "
+  if (aResult) {
+    msg += "defined";
+  } else {
+    msg += "undefined";
+  }
+
+  is('mozIsTextField' in element, aResult, msg);
+}
+
+function checkMozIsTextFieldValue(aInput, aResult)
+{
+  is(aInput.mozIsTextField(false), aResult,
+     "mozIsTextField(false) should return " + aResult);
+
+  if (aInput.type == 'password') {
+    ok(!aInput.mozIsTextField(true),
+       "mozIsTextField(true) should return false for password");
+  } else {
+    is(aInput.mozIsTextField(true), aResult,
+       "mozIsTextField(true) should return " + aResult);
+  }
+}
+
+function checkMozIsTextFieldValueTodo(aInput, aResult)
+{
+  todo_is(aInput.mozIsTextField(false), aResult,
+          "mozIsTextField(false) should return " + aResult);
+  todo_is(aInput.mozIsTextField(true), aResult,
+          "mozIsTextField(true) should return " + aResult);
+}
+
+// Check if the method is defined for the correct elements.
+for (data of gElementTestData) {
+  checkMozIsTextFieldDefined(data[0], data[1]);
+}
+
+// Check if the method returns the correct value.
+var input = document.createElement('input');
+for (data of gInputTestData) {
+  input.type = data[0];
+  checkMozIsTextFieldValue(input, data[1]);
+}
+
+</script>
+</pre>
+</body>
+</html>

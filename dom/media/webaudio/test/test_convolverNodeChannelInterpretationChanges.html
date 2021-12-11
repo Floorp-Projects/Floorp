@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<title>Test up-mixing in ConvolverNode after ChannelInterpretation change</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+// This test is not in wpt because it requires that multiple changes to the
+// nodes in an AudioContext during a single event will be processed by the
+// audio thread in a single transaction.  Gecko provides that, but this is not
+// currently required by the Web Audio API.
+
+const EPSILON = Math.pow(2, -23);
+// sampleRate is a power of two so that delay times are exact in base-2
+// floating point arithmetic.
+const SAMPLE_RATE = 32768;
+// Length of initial mono signal in frames, if the test has an initial mono
+// signal.  This is more than one block to ensure that at least one block
+// will be mono, even if interpolation in the DelayNode means that stereo is
+// output one block earlier than if frames are delayed without interpolation.
+const MONO_FRAMES = 256;
+// Length of response buffer.  This is greater than 1 to ensure that the
+// convolver has stereo output at least one block after stereo input is
+// disconnected.
+const RESPONSE_FRAMES = 2;
+
+function test_interpretation_change(t, initialInterpretation, initialMonoFrames)
+{
+  let context = new AudioContext({sampleRate: SAMPLE_RATE});
+
+  // Three independent signals.  These are constant so that results are
+  // independent of the timing of the `ended` event.
+  let monoOffset = 0.25
+  let monoSource = new ConstantSourceNode(context, {offset: monoOffset});
+  let leftOffset = 0.125;
+  let rightOffset = 0.5;
+  let leftSource = new ConstantSourceNode(context, {offset: leftOffset});
+  let rightSource = new ConstantSourceNode(context, {offset: rightOffset});
+  monoSource.start();
+  leftSource.start();
+  rightSource.start();
+
+  let stereoMerger = new ChannelMergerNode(context, {numberOfInputs: 2});
+  leftSource.connect(stereoMerger, 0, 0);
+  rightSource.connect(stereoMerger, 0, 1);
+
+  // The DelayNode initially has a single channel of silence, and so the
+  // output of the delay node is first mono silence (if there is a non-zero
+  // initialMonoFrames), then stereo.  In Gecko, this triggers a convolver
+  // configuration that is different for different channelInterpretations.
+  let delay =
+      new DelayNode(context,
+                    {maxDelayTime: MONO_FRAMES / context.sampleRate,
+                     delayTime: initialMonoFrames / context.sampleRate});
+  stereoMerger.connect(delay);
+
+  // Two convolvers with the same impulse response.  The test convolver will
+  // process a mix of stereo and mono signals.  The reference convolver will
+  // always process stereo, including the up-mixed mono signal.
+  let response = new AudioBuffer({numberOfChannels: 1,
+                                  length: RESPONSE_FRAMES,
+                                  sampleRate: context.sampleRate});
+  response.getChannelData(0)[response.length - 1] = 1;
+
+  let testConvolver = new ConvolverNode(context,
+                                        {disableNormalization: true,
+                                         buffer: response});
+  testConvolver.channelInterpretation = initialInterpretation;
+  let referenceConvolver = new ConvolverNode(context,
+                                             {disableNormalization: true,
+                                              buffer: response});
+  // No need to set referenceConvolver.channelInterpretation because
+  // input is always stereo, due to up-mixing at gain node.
+  let referenceMixer = new GainNode(context);
+  referenceMixer.channelCount = 2;
+  referenceMixer.channelCountMode = "explicit";
+  referenceMixer.channelInterpretation = initialInterpretation;
+  referenceMixer.connect(referenceConvolver);
+
+  delay.connect(testConvolver);
+  delay.connect(referenceMixer);
+
+  monoSource.connect(testConvolver);
+  monoSource.connect(referenceMixer);
+
+  // A timer sends 'ended' when the convolvers are known to be processing
+  // stereo.
+  let timer = new ConstantSourceNode(context);
+  timer.start();
+  timer.stop((initialMonoFrames + 1) / context.sampleRate);
+
+  timer.onended = t.step_func(() => {
+    let changedInterpretation =
+        initialInterpretation == "speakers" ? "discrete" : "speakers";
+
+    // Switch channelInterpretation in test and reference paths.
+    testConvolver.channelInterpretation = changedInterpretation;
+    referenceMixer.channelInterpretation = changedInterpretation;
+
+    // Disconnect the stereo input from both test and reference convolvers.
+    // The disconnected convolvers will continue to output stereo for at least
+    // one frame.  The test convolver will up-mix its mono input into its two
+    // buffers.
+    delay.disconnect();
+
+    // Capture the outputs in a script processor.
+    //
+    // The first two channels contain signal where some up-mixing occurs
+    // internally to the test convolver.
+    //
+    // The last two channels are expected to contain the same signal, but
+    // up-mixing was performed at a GainNode prior to convolution.
+    //
+    // Two stereo splitters will collect test and reference outputs.
+    let testSplitter =
+        new ChannelSplitterNode(context, {numberOfOutputs: 2});
+    let referenceSplitter =
+        new ChannelSplitterNode(context, {numberOfOutputs: 2});
+    testConvolver.connect(testSplitter);
+    referenceConvolver.connect(referenceSplitter);
+
+    let outputMerger = new ChannelMergerNode(context, {numberOfInputs: 4});
+    testSplitter.connect(outputMerger, 0, 0);
+    testSplitter.connect(outputMerger, 1, 1);
+    referenceSplitter.connect(outputMerger, 0, 2);
+    referenceSplitter.connect(outputMerger, 1, 3);
+
+    let processor = context.createScriptProcessor(256, 4, 0);
+    outputMerger.connect(processor);
+
+    processor.onaudioprocess = t.step_func_done((e) => {
+      e.target.onaudioprocess = null;
+      outputMerger.disconnect();
+
+      // The test convolver output is stereo for the first block.
+      let length = 128;
+
+      let buffer = e.inputBuffer;
+      let maxDiff = -1.0;
+      let frameIndex = 0;
+      let channelIndex = 0;
+      for (let c = 0; c < 2; ++c) {
+        let testOutput = buffer.getChannelData(0 + c);
+        let referenceOutput = buffer.getChannelData(2 + c);
+        for (var i = 0; i < length; ++i) {
+          var diff = Math.abs(testOutput[i] - referenceOutput[i]);
+          if (diff > maxDiff) {
+            maxDiff = diff;
+            frameIndex = i;
+            channelIndex = c;
+          }
+        }
+      }
+      assert_approx_equals(buffer.getChannelData(0 + channelIndex)[frameIndex],
+                           buffer.getChannelData(2 + channelIndex)[frameIndex],
+                           EPSILON,
+                           `output at ${frameIndex} ` +
+                             `in channel ${channelIndex}` );
+    });
+  });
+}
+
+async_test((t) => test_interpretation_change(t, "speakers", MONO_FRAMES),
+           "speakers to discrete, initially mono");
+async_test((t) => test_interpretation_change(t, "discrete", MONO_FRAMES),
+           "discrete to speakers");
+// Gecko uses a separate path for "speakers" initial up-mixing when the
+// convolver's first input is stereo, so test that separately.
+async_test((t) => test_interpretation_change(t, "speakers", 0),
+           "speakers to discrete, initially stereo");
+</script>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<script>
+  function tryLocationGet() {
+    var desc = Object.getOwnPropertyDescriptor(window, "location");
+    try {
+      desc.get.call(parent);
+      return "get succeeded";
+    } catch (e) {
+      return e.message;
+    }
+  }
+</script>
+  

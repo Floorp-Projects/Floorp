@@ -1,0 +1,121 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIProxyInfo;
+[ptr] native PRFileDescStar(struct PRFileDesc);
+native OriginAttributes(mozilla::OriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
+
+%{ C++
+#include "mozilla/BasePrincipal.h"
+%}
+
+/**
+ * nsISocketProvider
+ */
+[scriptable, uuid(508d5469-9e1e-4a08-b5b0-7cfebba1e51a)]
+interface nsISocketProvider : nsISupports
+{
+    /**
+     * newSocket
+     *
+     * @param aFamily
+     *        The address family for this socket (PR_AF_INET or PR_AF_INET6).
+     * @param aHost
+     *        The origin hostname for this connection.
+     * @param aPort
+     *        The origin port for this connection.
+     * @param aProxyHost
+     *        If non-null, the proxy hostname for this connection.
+     * @param aProxyPort
+     *        The proxy port for this connection.
+     * @param aFlags
+     *        Control flags that govern this connection (see below.)
+     * @param aTlsFlags
+     *        An opaque flags for non-standard behavior of the TLS system.
+     *        It is unlikely this will need to be set outside of telemetry
+     *        studies relating to the TLS implementation.
+     * @param aFileDesc
+     *        The resulting PRFileDesc.
+     * @param aSecurityInfo
+     *        Any security info that should be associated with aFileDesc.  This
+     *        object typically implements nsITransportSecurityInfo.
+     */
+    [noscript]
+    void newSocket(in long                      aFamily,
+                   in string                    aHost,
+                   in long                      aPort,
+                   in nsIProxyInfo              aProxy,
+                   in const_OriginAttributesRef aOriginAttributes,
+                   in unsigned long             aFlags,
+                   in unsigned long             aTlsFlags,
+                   out PRFileDescStar           aFileDesc,
+                   out nsISupports              aSecurityInfo);
+
+    /**
+     * addToSocket
+     *
+     * This function is called to allow the socket provider to layer a
+     * PRFileDesc on top of another PRFileDesc.  For example, SSL via a SOCKS
+     * proxy.
+     *
+     * Parameters are the same as newSocket with the exception of aFileDesc,
+     * which is an in-param instead.
+     */
+    [noscript]
+    void addToSocket(in long                      aFamily,
+                     in string                    aHost,
+                     in long                      aPort,
+                     in nsIProxyInfo              aProxy,
+                     in const_OriginAttributesRef aOriginAttributes,
+                     in unsigned long             aFlags,
+                     in unsigned long             aTlsFlags,
+                     in PRFileDescStar            aFileDesc,
+                     out nsISupports              aSecurityInfo);
+
+    /**
+     * PROXY_RESOLVES_HOST
+     *
+     * This flag is set if the proxy is to perform hostname resolution instead
+     * of the client.  When set, the hostname parameter passed when in this
+     * interface will be used instead of the address structure passed for a
+     * later connect et al. request.
+     */
+    const long PROXY_RESOLVES_HOST = 1 << 0;
+
+    /**
+     * When setting this flag, the socket will not apply any
+     * credentials when establishing a connection. For example,
+     * an SSL connection would not send any client-certificates
+     * if this flag is set.
+     */
+    const long ANONYMOUS_CONNECT = 1 << 1;
+
+    /**
+     * If set, indicates that the connection was initiated from a source
+     * defined as being private in the sense of Private Browsing. Generally,
+     * there should be no state shared between connections that are private
+     * and those that are not; it is OK for multiple private connections
+     * to share state with each other, and it is OK for multiple non-private
+     * connections to share state with each other.
+     */
+    const unsigned long NO_PERMANENT_STORAGE = 1 << 2;
+
+    /**
+     * If set, do not use newer protocol features that might have interop problems
+     * on the Internet. Intended only for use with critical infra like the updater.
+     * default is false.
+     */
+    const unsigned long BE_CONSERVATIVE = 1 << 3;
+
+    /**
+     * This is used for a temporary workaround for a web-compat issue. The flag is
+     * only set on CORS preflight request to allowed sending client certificates
+     * on a connection for an anonymous request.
+     */
+    const long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = 1 << 4;
+};

@@ -1,0 +1,5 @@
+[java.lang.IllegalStateException = skip:true]
+<init>(Ljava/lang/String;)V =
+
+[java.lang.IllegalArgumentException = skip:true]
+<init>(Ljava/lang/String;)V =

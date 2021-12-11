@@ -1,0 +1,46 @@
+[ ocspd ]
+
+default_ocspd = OCSPD_default
+
+[ OCSPD_default ]
+
+dir = @DIR@
+db = $dir/index.txt
+md = sha1
+
+ca_certificate = $dir/@CA_CERT@
+ocspd_certificate = $dir/@CA_CERT@
+ocspd_key = $dir/@CA_KEY@
+pidfile = $dir/@OCSP_PID@
+
+user = nobody 
+group = nobody
+
+bind = *
+port = @PORT@
+
+max_req_size = 8192
+threads_num = 150
+max_timeout_secs = 5
+crl_auto_reload = 3600
+crl_check_validity = 600
+crl_reload_expired = yes
+response = ocsp_response
+dbms = dbms_file
+
+[ ocsp_response ]
+
+dir = @DIR@
+next_update_days = 0
+next_update_mins = 5
+
+[ dbms_file ]
+
+0.ca = @first_ca
+
+[ first_ca ]
+
+crl_url = file:///@DIR@/@CA_CRL@
+ca_url  = file:///@DIR@/@CA_CERT@
+server_cert  = file:///@DIR@/@CA_CERT@
+

@@ -1,0 +1,32 @@
+<html class="reftest-wait"><head>
+<title>Testcase bug 363370 - [reflow branch] Crash [@ nsTArray_base::ShiftData] with testcase that appends table cells</title>
+</head>
+<body>
+
+<table border>
+<thead id="b"><tr><td rowspan="3">td</td></tr></thead>
+<tbody colspan="1" id="f"><tr></tr></tbody></table>
+
+<script>
+function doe()  {
+
+
+var x=document.createElement('td');
+var text = document.createTextNode("td");
+x.appendChild(text);
+
+document.getElementById('b').appendChild(x);
+
+
+var y=document.createElement('td');
+var t2 = document.createTextNode("td");
+ y.appendChild(t2);
+
+
+document.getElementById('f').appendChild(y);
+document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doe);
+</script>
+</body>
+</html>

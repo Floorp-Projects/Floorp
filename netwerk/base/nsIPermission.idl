@@ -1,0 +1,82 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface nsIURI;
+
+/**
+ * This interface defines a "permission" object,
+ * used to specify allowed/blocked objects from
+ * user-specified sites (cookies, images etc).
+ */
+[scriptable, uuid(bb409a51-2371-4fea-9dc9-b7286a458b8c)]
+interface nsIPermission : nsISupports
+{
+    /**
+     * The principal for which this permission applies.
+     */
+    readonly attribute nsIPrincipal principal;
+
+    /**
+     * a case-sensitive ASCII string, indicating the type of permission
+     * (e.g., "cookie", "image", etc).
+     * This string is specified by the consumer when adding a permission
+     * via nsIPermissionManager.
+     * @see nsIPermissionManager
+     */
+    readonly attribute ACString type;
+
+    /**
+     * The permission (see nsIPermissionManager.idl for allowed values)
+     */
+    readonly attribute uint32_t capability;
+
+    /**
+     * The expiration type of the permission (session, time-based or none).
+     * Constants are EXPIRE_*, defined in nsIPermissionManager.
+     * @see nsIPermissionManager
+     */
+    readonly attribute uint32_t expireType;
+
+    /**
+     * The expiration time of the permission (milliseconds since Jan 1 1970
+     * 0:00:00).
+     */
+    readonly attribute int64_t expireTime;
+
+    /**
+     * The last modification time of the permission (milliseconds since Jan 1 1970
+     * 0:00:00).
+     */
+    readonly attribute int64_t modificationTime;
+
+    /**
+     * Test whether a principal would be affected by this permission.
+     *
+     * @param principal  the principal to test
+     * @param exactHost  If true, only the specific host will be matched,
+     *                   @see nsIPermissionManager::testExactPermission.
+     *                   If false, subdomains will also be searched,
+     *                   @see nsIPermissionManager::testPermission.
+     */
+    boolean matches(in nsIPrincipal principal,
+                    in boolean exactHost);
+
+    /**
+     * Test whether a URI would be affected by this permission.
+     * NOTE: This performs matches with default origin attribute values.
+     *
+     * @param uri        the uri to test
+     * @param exactHost  If true, only the specific host will be matched,
+     *                   @see nsIPermissionManager::testExactPermission.
+     *                   If false, subdomains will also be searched,
+     *                   @see nsIPermissionManager::testPermission.
+     */
+    boolean matchesURI(in nsIURI uri,
+                       in boolean exactHost);
+};

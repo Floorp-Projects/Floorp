@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=502091
+
+Adding a <meta> element by writing to innerHTML should work correctly.
+-->
+<head>
+  <title>Test for Bug 502091</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=502091">Mozilla Bug 502091</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="test">
+<script class="testbody" type="text/javascript">
+  function $(id) { return document.getElementById(id); }
+
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("id", "iframe");
+  iframe.src = "bug_502091_iframe.html";
+  iframe.onload = function() {
+    var div = $("iframe").contentDocument.getElementById("testdiv");
+    var meta = div.getElementsByTagName("meta");
+    is(meta.length, 1, "meta element not added to div");
+  };
+  $("test").appendChild(iframe);
+
+</script>
+</div>
+</body>
+</html>
+

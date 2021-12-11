@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Spanning cell has no specified width</title>
+  <style>
+    table     { width: 500px;      }
+    td        { height: 2em;       }
+    td.aqua   { background: aqua   }
+    td.lime   { background: lime   }
+    td.blue   { background: blue   }
+    td.pink   { background: pink   }
+    td.yellow { background: yellow }
+
+    td.lowPct    { width: 10% }
+    td.medPct    { width: 40% }
+    td.hiPct     { width: 50% }
+    td.specWidth { width: 50px }
+  </style>
+</head>
+<body>
+  <h2>No third column</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td colspan="2" class="aqua"></td>
+    </tr><tr>
+      <td class="lime specWidth"></td>
+      <td class="blue"></td>
+    </tr>
+  </table>
+
+  <h2>Third column with low percent width</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td colspan="2" class="aqua"></td>
+      <td class="yellow lowPct"></td>
+    </tr><tr>
+      <td class="lime specWidth"></td>
+      <td class="blue"></td>
+      <td class="pink lowPct"></td>
+    </tr>
+  </table>
+
+  <h2>Third column with medium percent width</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td colspan="2" class="aqua"></td>
+      <td class="yellow medPct"></td>
+    </tr><tr>
+      <td class="lime specWidth"></td>
+      <td class="blue"></td>
+      <td class="pink medPct"></td>
+    </tr>
+  </table>
+
+  <h2>Third column with preferred width</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td colspan="2" class="aqua"></td>
+      <td class="yellow specWidth"></td>
+    </tr><tr>
+      <td class="lime specWidth"></td>
+      <td class="blue"></td>
+      <td class="pink specWidth"></td>
+    </tr>
+  </table>
+</body>
+</html>

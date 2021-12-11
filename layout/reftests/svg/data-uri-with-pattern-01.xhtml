@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <style>
+    body { overflow: hidden; margin: 0px }
+    html, body, embed { height: 100%; width: 100% }
+  </style>
+  <title>Testcase for referencing a pattern within a data URI</title>
+</head>
+<body>
+  <embed src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20version%3D%221.1%22%0A%20%20%20%20%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3Cpattern%20width%3D%221%22%20height%3D%221%22%20id%3D%22pat%22%20patternUnits%3D%22userSpaceOnUse%22%3E%0A%20%20%20%20%20%20%3Crect%20width%3D%221%22%20height%3D%221%22%20fill%3D%22lime%22%2F%3E%0A%20%20%20%20%3C%2Fpattern%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20%20fill%3D%22url(%23pat)%22%20%2F%3E%0A%3C%2Fsvg%3E%0A%0A"/>
+</body>
+</html>

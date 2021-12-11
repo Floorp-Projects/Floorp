@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+
+ <script type="application/javascript">
+   document.addEventListener("MozReftestInvalidate", doTest, false);
+
+   function doTest() {
+     document.getElementById('redsquare').setAttribute('fill', 'green');
+     document.documentElement.removeAttribute('class');
+   }
+
+ </script>
+
+<!-- Tests that patterns are live to fill attribute changes in elements referenced through the |use| element. -->
+
+<defs>
+  <rect id="redsquare" x="10" y="10" width="10" height="10" fill="red" />
+</defs>
+
+<pattern patternUnits="userSpaceOnUse" id="pat1" width="20" height="20">
+	<use xlink:href="#redsquare" />
+</pattern>
+
+<rect x="25" y="25" width="430" height="60" stroke="black" fill="url(#pat1)" />
+		
+</svg>

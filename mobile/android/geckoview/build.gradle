@@ -1,0 +1,608 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
+
+import groovy.json.JsonOutput
+
+apply plugin: 'com.android.library'
+apply plugin: 'checkstyle'
+apply plugin: 'kotlin-android'
+
+apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
+
+// The SDK binding generation tasks depend on the JAR creation task of the
+// :annotations project.
+evaluationDependsOn(':annotations')
+
+// Non-official versions are like "61.0a1", where "a1" is the milestone.
+// This simply strips that off, leaving "61.0" in this example.
+def getAppVersionWithoutMilestone() {
+    return mozconfig.substs.MOZ_APP_VERSION.replaceFirst(/a[0-9]/, "")
+}
+
+// This converts MOZ_APP_VERSION into an integer
+// version code.
+//
+// We take something like 58.1.2a1 and come out with 5800102
+// This gives us 3 digits for the major number, and 2 digits
+// each for the minor and build number. Beta and Release
+//
+// This must be synchronized with _compute_gecko_version(...) in /taskcluster/gecko_taskgraph/transforms/task.py
+def computeVersionCode() {
+    String appVersion = getAppVersionWithoutMilestone()
+
+    // Split on the dot delimiter, e.g. 58.1.1a1 -> ["58, "1", "1a1"]
+    String[] parts = appVersion.split('\\.')
+
+    assert parts.size() == 2 || parts.size() == 3
+
+    // Major
+    int code = Integer.parseInt(parts[0]) * 100000
+
+    // Minor
+    code += Integer.parseInt(parts[1]) * 100
+
+    // Build
+    if (parts.size() == 3) {
+        code += Integer.parseInt(parts[2])
+    }
+
+    return code;
+}
+
+def getVersionNumber() {
+    def appVersion = getAppVersionWithoutMilestone()
+    def parts = appVersion.split('\\.')
+    def version = parts[0] + "." + parts[1] + "." + getBuildId()
+    if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+        // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
+        version += "-SNAPSHOT"
+    }
+    return version
+}
+
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    return file("${topobjdir}/buildid.h").getText('utf-8').split()[2]
+}
+
+android {
+    buildToolsVersion project.ext.buildToolsVersion
+    compileSdkVersion project.ext.compileSdkVersion
+
+    useLibrary 'android.test.runner'
+    useLibrary 'android.test.base'
+    useLibrary 'android.test.mock'
+
+    defaultConfig {
+        targetSdkVersion project.ext.targetSdkVersion
+        minSdkVersion project.ext.minSdkVersion
+        manifestPlaceholders = project.ext.manifestPlaceholders
+        multiDexEnabled true
+
+        versionCode computeVersionCode()
+        versionName "${mozconfig.substs.MOZ_APP_VERSION}-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+        consumerProguardFiles 'proguard-rules.txt'
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField 'String', "GRE_MILESTONE", "\"${mozconfig.substs.GRE_MILESTONE}\""
+        buildConfigField 'String', "MOZ_APP_BASENAME", "\"${mozconfig.substs.MOZ_APP_BASENAME}\"";
+
+        // For the benefit of future archaeologists:
+        // GRE_BUILDID is exactly the same as MOZ_APP_BUILDID unless you're running
+        // on XULRunner, which is never the case on Android.
+        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${getBuildId()}\"";
+        buildConfigField 'String', "MOZ_APP_ID", "\"${mozconfig.substs.MOZ_APP_ID}\"";
+        buildConfigField 'String', "MOZ_APP_NAME", "\"${mozconfig.substs.MOZ_APP_NAME}\"";
+        buildConfigField 'String', "MOZ_APP_VENDOR", "\"${mozconfig.substs.MOZ_APP_VENDOR}\"";
+        buildConfigField 'String', "MOZ_APP_VERSION", "\"${mozconfig.substs.MOZ_APP_VERSION}\"";
+        buildConfigField 'String', "MOZ_APP_DISPLAYNAME", "\"${mozconfig.substs.MOZ_APP_DISPLAYNAME}\"";
+        buildConfigField 'String', "MOZ_APP_UA_NAME", "\"${mozconfig.substs.MOZ_APP_UA_NAME}\"";
+        buildConfigField 'String', "MOZ_UPDATE_CHANNEL", "\"${mozconfig.substs.MOZ_UPDATE_CHANNEL}\"";
+
+        // MOZILLA_VERSION is oddly quoted from autoconf, but we don't have to handle it specially in Gradle.
+        buildConfigField 'String', "MOZILLA_VERSION", "\"${mozconfig.substs.MOZILLA_VERSION}\"";
+        buildConfigField 'String', "OMNIJAR_NAME", "\"${mozconfig.substs.OMNIJAR_NAME}\"";
+
+        // Keep in sync with actual user agent in nsHttpHandler::BuildUserAgent
+        buildConfigField 'String', "USER_AGENT_GECKOVIEW_MOBILE", "\"Mozilla/5.0 (Android \" + android.os.Build.VERSION.RELEASE + \"; Mobile; rv:\" + ${mozconfig.defines.MOZILLA_UAVERSION} + \") Gecko/\" + ${mozconfig.defines.MOZILLA_UAVERSION} + \" Firefox/\" + ${mozconfig.defines.MOZILLA_UAVERSION}";
+        buildConfigField 'String', "USER_AGENT_GECKOVIEW_TABLET", "\"Mozilla/5.0 (Android \" + android.os.Build.VERSION.RELEASE + \"; Tablet; rv:\" + ${mozconfig.defines.MOZILLA_UAVERSION} + \") Gecko/\" + ${mozconfig.defines.MOZILLA_UAVERSION} + \" Firefox/\" + ${mozconfig.defines.MOZILLA_UAVERSION}";
+
+        buildConfigField 'int', 'MIN_SDK_VERSION', mozconfig.substs.MOZ_ANDROID_MIN_SDK_VERSION;
+
+        // Is the underlying compiled C/C++ code compiled with --enable-debug?
+        buildConfigField 'boolean', 'DEBUG_BUILD', mozconfig.substs.MOZ_DEBUG ? 'true' : 'false';
+
+        // See this wiki page for more details about channel specific build defines:
+        // https://wiki.mozilla.org/Platform/Channel-specific_build_defines
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'RELEASE_OR_BETA', mozconfig.substs.RELEASE_OR_BETA ? 'true' : 'false';
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'NIGHTLY_BUILD', mozconfig.substs.NIGHTLY_BUILD ? 'true' : 'false';
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'MOZ_CRASHREPORTER', mozconfig.substs.MOZ_CRASHREPORTER ? 'true' : 'false';
+
+        buildConfigField 'int', 'MOZ_ANDROID_CONTENT_SERVICE_COUNT', mozconfig.substs.MOZ_ANDROID_CONTENT_SERVICE_COUNT;
+
+        // Official corresponds, roughly, to whether this build is performed on
+        // Mozilla's continuous integration infrastructure. You should disable
+        // developer-only functionality when this flag is set.
+        // This makes no sense for GeckoView and should be removed as soon as possible.
+        buildConfigField 'boolean', 'MOZILLA_OFFICIAL', mozconfig.substs.MOZILLA_OFFICIAL ? 'true' : 'false';
+
+        // This env variable signifies whether we are running an isolated process build.
+        buildConfigField 'boolean', 'MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS', mozconfig.substs.MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS ? 'true' : 'false';
+    }
+
+    project.configureProductFlavors.delegate = it
+    project.configureProductFlavors()
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    dexOptions {
+        javaMaxHeapSize "32g"
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDir "${topsrcdir}/mobile/android/geckoview/src/thirdparty/java"
+
+                if (!mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
+                    exclude 'com/google/android/exoplayer2/**'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsAudioRenderer.java'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsPlayer.java'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsRendererBase.java'
+                    exclude 'org/mozilla/gecko/media/GeckoHlsVideoRenderer.java'
+                    exclude 'org/mozilla/gecko/media/Utils.java'
+                }
+
+                if (mozconfig.substs.MOZ_WEBRTC) {
+                    srcDir "${topsrcdir}/dom/media/systemservices/android_video_capture/java/src"
+                    srcDir "${topsrcdir}/third_party/libwebrtc/webrtc/sdk/android"
+                    srcDir "${topsrcdir}/third_party/libwebrtc/webrtc/rtc_base/java"
+                }
+
+                srcDir "${topobjdir}/mobile/android/geckoview/src/main/java"
+            }
+
+            resources {
+                if (mozconfig.substs.MOZ_ASAN) {
+                    // If this is an ASAN build, include a `wrap.sh` for Android 8.1+ devices.  See
+                    // https://developer.android.com/ndk/guides/wrap-script.
+                    srcDir "${topsrcdir}/mobile/android/geckoview/src/asan/resources"
+                }
+            }
+
+            assets {
+            }
+
+            debug {
+                manifest.srcFile "${topobjdir}/mobile/android/geckoview/src/main/AndroidManifest_overlay.xml"
+            }
+
+            release {
+                manifest.srcFile "${topobjdir}/mobile/android/geckoview/src/main/AndroidManifest_overlay.xml"
+            }
+        }
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+    // Translate Kotlin messages like "w: ..." and "e: ..." into
+    // "...: warning: ..." and "...: error: ...", to make Treeherder understand.
+    def listener = {
+        if (it.startsWith("e: warnings found")) {
+            return
+        }
+
+        if (it.startsWith('w: ') || it.startsWith('e: ')) {
+            def matches = (it =~ /([ew]): (.+): \((\d+), (\d+)\): (.*)/)
+            if (!matches) {
+                logger.quiet "kotlinc message format has changed!"
+                if (it.startsWith('w: ')) {
+                    // For warnings, don't continue because we don't want to throw an
+                    // exception. For errors, we want the exception so that the new error
+                    // message format gets translated properly.
+                    return
+                }
+            }
+            def (_, type, file, line, column, message) = matches[0]
+            type = (type == 'w') ? 'warning' : 'error'
+            // Use logger.lifecycle, which does not go through stderr again.
+            logger.lifecycle "$file:$line:$column: $type: $message"
+        }
+    } as StandardOutputListener
+
+    kotlinOptions {
+        allWarningsAsErrors = true
+    }
+
+    doFirst {
+        logging.addStandardErrorListener(listener)
+    }
+    doLast {
+        logging.removeStandardErrorListener(listener)
+    }
+}
+
+configurations {
+    withGeckoBinariesApi {
+        outgoing {
+            if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+                // The omni build provides glean-native
+                capability("org.mozilla.telemetry:glean-native:${project.ext.gleanVersion}")
+            }
+            afterEvaluate {
+                // Implicit capability
+                capability("org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}")
+            }
+        }
+    }
+    // TODO: This is a workaround for a bug that was fixed in Gradle 7.
+    // The variant resolver _should_ pick the RuntimeOnly configuration when building
+    // the tests as those define the implicit :geckoview capability but it doesn't,
+    // so we manually define it here.
+    withGeckoBinariesRuntimeOnly {
+        outgoing {
+            afterEvaluate {
+                // Implicit capability
+                capability("org.mozilla.geckoview:geckoview:${getVersionNumber()}")
+            }
+        }
+    }
+}
+
+dependencies {
+    // For exoplayer.
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+    compileOnly "org.checkerframework:checker-compat-qual:2.5.0"
+    compileOnly "org.checkerframework:checker-qual:2.5.0"
+    compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
+
+    implementation "androidx.annotation:annotation:1.1.0"
+    implementation "androidx.legacy:legacy-support-v4:1.0.0"
+
+    implementation "com.google.android.gms:play-services-fido:18.1.0"
+    implementation "org.yaml:snakeyaml:1.24:android"
+
+    implementation "androidx.lifecycle:lifecycle-extensions:2.0.0"
+    implementation "androidx.lifecycle:lifecycle-common-java8:2.0.0"
+
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.robolectric:robolectric:4.3'
+    testImplementation 'org.mockito:mockito-core:1.10.19'
+
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2"
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.1.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+
+    androidTestImplementation 'com.koushikdutta.async:androidasync:3.1.0'
+
+    androidTestImplementation 'androidx.multidex:multidex:2.0.0'
+}
+
+apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
+
+android.libraryVariants.all { variant ->
+    // See the notes in mobile/android/app/build.gradle for details on including
+    // Gecko binaries and the Omnijar.
+    if ((variant.productFlavors*.name).contains('withGeckoBinaries')) {
+        configureVariantWithGeckoBinaries(variant)
+    }
+
+    // Javadoc and Sources JAR configuration cribbed from
+    // https://github.com/mapbox/mapbox-gl-native/blob/d169ea55c1cfa85cd8bf19f94c5f023569f71810/platform/android/MapboxGLAndroidSDK/build.gradle#L85
+    // informed by
+    // https://code.tutsplus.com/tutorials/creating-and-publishing-an-android-library--cms-24582,
+    // and amended from numerous Stackoverflow posts.
+    def name = variant.name
+    def javadoc = task "javadoc${name.capitalize()}"(type: Javadoc) {
+        failOnError = false
+        description = "Generate Javadoc for build variant $name"
+        destinationDir = new File(destinationDir, variant.baseName)
+
+        // The javadoc task will not re-run if the previous run is still up-to-date,
+        // this is a problem for the javadoc lint, which needs to read the output of the task
+        // to determine if there are warnings or errors. To force that we pass a -Pandroid-lint
+        // parameter to all lints that can be used here to force running the task every time.
+        outputs.upToDateWhen {
+            !project.hasProperty('android-lint')
+        }
+
+        doFirst {
+            classpath = files(variant.javaCompileProvider.get().classpath.files)
+        }
+
+        def results = []
+        def listener = {
+            if (!it.toLowerCase().contains("warning") && !it.toLowerCase().contains("error")) {
+              // Likely not an error or a warning
+              return
+            }
+            // Like '/abs/path/to/topsrcdir/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/ContentBlocking.java:480: warning: no @return'
+            def matches = (it =~ /(.+):(\d+):.*(warning|error)(.*)/)
+            if (!matches) {
+                // could not parse, let's add it anyway since it's a warning or error
+                results << [path: "parsing-failed", lineno: 0, level: "error", message: it]
+                return
+            }
+            def (_, file, line, level, message) = matches[0]
+            results << [path: file, lineno: line, level: level, message: message]
+        } as StandardOutputListener
+
+        doFirst {
+            logging.addStandardErrorListener(listener)
+        }
+
+        doLast {
+            logging.removeStandardErrorListener(listener)
+
+            // We used to treat Javadoc warnings as errors here; now we rely on the
+            // `android-javadoc` linter to fail in the face of Javadoc warnings.
+            def resultsJson = JsonOutput.toJson(results)
+
+            file("$buildDir/reports").mkdirs()
+            file("$buildDir/reports/javadoc-results-${name}.json").write(resultsJson)
+        }
+
+        source = variant.sourceSets.collect({ it.java.srcDirs })
+        exclude '**/R.java', '**/BuildConfig.java'
+        include 'org/mozilla/geckoview/**.java'
+        options.addPathOption('sourcepath', ':').setValue(
+             variant.sourceSets.collect({ it.java.srcDirs }).flatten() +
+             variant.generateBuildConfigProvider.get().sourceOutputDir.asFile.get() +
+             variant.aidlCompileProvider.get().sourceOutputDir.asFile.get()
+        )
+
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath += variant.javaCompileProvider.get().classpath
+
+        // javadoc 8 has a bug that requires the rt.jar file from the JRE to be
+        // in the bootclasspath (https://stackoverflow.com/a/30458820).
+        options.bootClasspath = [
+            file("${System.properties['java.home']}/lib/rt.jar")] + android.bootClasspath
+        options.memberLevel = JavadocMemberLevel.PROTECTED
+        options.source = 8
+        options.links("https://d.android.com/reference/")
+
+        options.docTitle = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
+        options.header = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
+        options.noTimestamp = true
+        options.noIndex = true
+        options.noQualifiers = ['java.lang']
+        options.tags = ['hide:a:']
+    }
+
+    def javadocJar = task("javadocJar${name.capitalize()}", type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    // This task is used by `mach android geckoview-docs`.
+    task("javadocCopyJar${name.capitalize()}", type: Copy) {
+        from(javadocJar.destinationDir) {
+            include 'geckoview-*-javadoc.jar'
+            rename { _ -> 'geckoview-javadoc.jar' }
+        }
+        into javadocJar.destinationDir
+        dependsOn javadocJar
+    }
+
+    def sourcesJar = task("sourcesJar${name.capitalize()}", type: Jar) {
+        classifier 'sources'
+        description = "Generate Javadoc for build variant $name"
+        destinationDir = new File(destinationDir, variant.baseName)
+        from files(variant.sourceSets.collect({ it.java.srcDirs }).flatten())
+    }
+
+    task("checkstyle${name.capitalize()}", type: Checkstyle) {
+        classpath = variant.javaCompileProvider.get().classpath
+        // TODO: cleanup and include all sources
+        source = ['src/main/java/']
+        include '**/*.java'
+
+    }
+}
+
+checkstyle {
+    configDirectory = file(".")
+    configFile = file("checkstyle.xml")
+    toolVersion = "8.36.2"
+}
+
+android.libraryVariants.all { variant ->
+    if (variant.name == mozconfig.substs.GRADLE_ANDROID_GECKOVIEW_VARIANT_NAME) {
+        configureLibraryVariantWithJNIWrappers(variant, "Generated")
+    }
+}
+
+android.libraryVariants.all { variant ->
+    // At this point, the Android-Gradle plugin has created all the Android
+    // tasks and configurations.  This is the time for us to declare additional
+    // Glean files to package into AAR files.  This packs `metrics.yaml` in the
+    // root of the AAR, sibling to `AndroidManifest.xml` and `classes.jar`.  By
+    // default, consumers of the AAR will ignore this file, but consumers that
+    // look for it can find it (provided GeckoView is a `module()` dependency
+    // and not a `project()` dependency.)  Under the hood this uses that the
+    // task provided by `packageLibraryProvider` task is a Maven `Zip` task,
+    // and we can simply extend its inputs.  See
+    // https://android.googlesource.com/platform/tools/base/+/0cbe8846f7d02c0bb6f07156b9f4fde16d96d329/build-system/gradle-core/src/main/java/com/android/build/gradle/tasks/BundleAar.kt#94.
+    variant.packageLibraryProvider.get().from("${topsrcdir}/toolkit/components/telemetry/geckoview/streaming/metrics.yaml")
+}
+
+apply plugin: 'maven-publish'
+
+version = getVersionNumber()
+group = 'org.mozilla.geckoview'
+
+def getArtifactId() {
+    def id = "geckoview"
+    // Release artifacts don't specify the channel, for the sake of simplicity.
+    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
+        id += "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+    }
+
+    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+        id += "-omni"
+    }
+
+    if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+        // In automation, per-architecture artifacts identify
+        // the architecture; multi-architecture artifacts don't.
+        // When building locally, we produce a "skinny AAR" with
+        // one target architecture masquerading as a "fat AAR"
+        // to enable Gradle composite builds to substitute this
+        // project into consumers easily.
+        id += "-${mozconfig.substs.ANDROID_CPU_ARCH}"
+    }
+
+    return id
+}
+
+publishing {
+    publications {
+        android.libraryVariants.all { variant ->
+            "${variant.name}"(MavenPublication) {
+                from components.findByName(variant.name)
+
+                pom {
+                    afterEvaluate {
+                        artifactId = getArtifactId()
+                    }
+
+                    url = 'https://geckoview.dev'
+
+                    licenses {
+                        license {
+                            name = 'The Mozilla Public License, v. 2.0'
+                            url = 'http://mozilla.org/MPL/2.0/'
+                            distribution = 'repo'
+                        }
+                    }
+
+                    scm {
+                        if (mozconfig.substs.MOZ_INCLUDE_SOURCE_INFO) {
+                            // URL is like "https://hg.mozilla.org/mozilla-central/rev/1e64b8a0c546a49459d404aaf930d5b1f621246a".
+                            connection = "scm::hg::${mozconfig.substs.MOZ_SOURCE_REPO}"
+                            url = mozconfig.substs.MOZ_SOURCE_URL
+                            tag = mozconfig.substs.MOZ_SOURCE_CHANGESET
+                        } else {
+                            // Default to mozilla-central.
+                            connection = 'scm::hg::https://hg.mozilla.org/mozilla-central/'
+                            url = 'https://hg.mozilla.org/mozilla-central/'
+                        }
+                    }
+                }
+
+                // Javadoc and sources for developer ergononomics.
+                artifact tasks["javadocJar${variant.name.capitalize()}"]
+                artifact tasks["sourcesJar${variant.name.capitalize()}"]
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = "${project.buildDir}/maven"
+        }
+    }
+}
+
+// This is all related to the withGeckoBinaries approach; see
+// mobile/android/gradle/with_gecko_binaries.gradle.
+afterEvaluate {
+    // The bundle tasks are only present when the particular configuration is
+    // being built, so this task might not exist.  (This is due to the way the
+    // Android Gradle plugin defines things during configuration.)
+    def bundleWithGeckoBinaries = tasks.findByName('bundleWithGeckoBinariesReleaseAar')
+    if (!bundleWithGeckoBinaries) {
+        return
+    }
+
+    // Remove default configuration, which is the release configuration, when
+    // we're actually building withGeckoBinaries.  This makes `gradle install`
+    // install the withGeckoBinaries artifacts, not the release artifacts (which
+    // are withoutGeckoBinaries and not suitable for distribution.)
+    def Configuration archivesConfig = project.getConfigurations().getByName('archives')
+    archivesConfig.artifacts.removeAll { it.extension.equals('aar') }
+
+    // For now, ensure Kotlin is only used in tests.
+    android.sourceSets.all { sourceSet ->
+        if (sourceSet.name.startsWith('test') || sourceSet.name.startsWith('androidTest')) {
+            return
+        }
+        (sourceSet.java.srcDirs + sourceSet.kotlin.srcDirs).each {
+            if (!fileTree(it, { include '**/*.kt' }).empty) {
+                throw new GradleException("Kotlin used in non-test directory ${it.path}")
+            }
+        }
+    }
+}
+
+// Bug 1353055 - Strip 'vars' debugging information to agree with moz.build.
+apply from: "${topsrcdir}/mobile/android/gradle/debug_level.gradle"
+android.libraryVariants.all configureVariantDebugLevel
+
+// There's nothing specific to the :geckoview project here -- this just needs to
+// be somewhere where the Android plugin is available so that we can fish the
+// path to "android.jar".
+task("generateSDKBindings", type: JavaExec) {
+    classpath project(':annotations').jar.archivePath
+    classpath project(':annotations').compileJava.classpath
+
+    // To use the lint APIs: "Lint must be invoked with the System property
+    // com.android.tools.lint.bindir pointing to the ANDROID_SDK tools
+    // directory"
+    systemProperties = [
+        'com.android.tools.lint.bindir': "${android.sdkDirectory}/tools",
+    ]
+
+    main = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
+    // We only want to generate bindings for the main framework JAR,
+    // but not any of the additional android.test libraries.
+    args android.bootClasspath.findAll { it.getName().startsWith('android.jar') }
+    args 16
+    args "${topobjdir}/widget/android/bindings"
+
+    // Configure the arguments at evaluation-time, not at configuration-time.
+    doFirst {
+        // From -Pgenerate_sdk_bindings_args=... on command line; missing in
+        // `android-gradle-dependencies` toolchain task.
+        if (project.hasProperty('generate_sdk_bindings_args')) {
+            args project.generate_sdk_bindings_args.split(';')
+        }
+    }
+
+    workingDir "${topsrcdir}/widget/android/bindings"
+
+    dependsOn project(':annotations').jar
+}
+
+apply plugin: 'org.mozilla.apilint'
+
+apiLint {
+    // TODO: Change this to `org` after hiding org.mozilla.gecko
+    packageFilter = 'org.mozilla.geckoview'
+    changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
+    skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
+    lintFilters = ['GV']
+    deprecationAnnotation = 'org.mozilla.geckoview.DeprecationSchedule'
+    libraryVersion = mozconfig.substs.MOZILLA_VERSION.split('\\.')[0] as Integer
+    allowedPackages = [
+        'java',
+        'android',
+        'androidx',
+        'org.json',
+        'org.mozilla.geckoview',
+    ]
+}

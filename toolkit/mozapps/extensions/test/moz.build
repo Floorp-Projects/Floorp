@@ -1,0 +1,20 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += ["browser"]
+
+BROWSER_CHROME_MANIFESTS += ["xpinstall/browser.ini"]
+MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["mochitest/chrome.ini"]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "xpcshell/rs-blocklist/xpcshell.ini",
+    "xpcshell/xpcshell-unpack.ini",
+    "xpcshell/xpcshell.ini",
+]
+
+with Files("xpcshell/rs-blocklist/**"):
+    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")

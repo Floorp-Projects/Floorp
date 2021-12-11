@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls with Audio file test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="metadata"></video>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  function findElementByAttribute(element, aName, aValue) {
+    if (!("getAttribute" in element)) {
+      return false;
+    }
+    if (element.getAttribute(aName) === aValue) {
+      return element;
+    }
+    let children =
+      InspectorUtils.getChildrenForNode(element, true);
+    for (let child of children) {
+      var result = findElementByAttribute(child, aName, aValue);
+      if (result) {
+        return result;
+      }
+    }
+    return false;
+  }
+
+  function loadedmetadata(event) {
+    SimpleTest.executeSoon(function() {
+      var controlBar = findElementByAttribute(video, "class", "controlBar");
+      is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
+      SimpleTest.finish();
+    });
+  }
+
+  var video = document.getElementById("video");
+
+  SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
+  function startTest() {
+    // Kick off test once audio has loaded.
+    video.addEventListener("loadedmetadata", loadedmetadata);
+    video.src = "audio.ogg";
+  }
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

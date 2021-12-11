@@ -1,0 +1,406 @@
+/* vim:set ts=4 sw=4 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsINetAddr;
+interface nsIUDPSocketListener;
+interface nsIUDPSocketSyncListener;
+interface nsIUDPMessage;
+interface nsISocketTransport;
+interface nsIOutputStream;
+interface nsIInputStream;
+interface nsIPrincipal;
+
+%{ C++
+#include "nsTArrayForwardDeclare.h"
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
+%}
+native NetAddr(mozilla::net::NetAddr);
+[ptr] native NetAddrPtr(mozilla::net::NetAddr);
+[ref] native Uint8TArrayRef(FallibleTArray<uint8_t>);
+
+/**
+ * nsIUDPSocket
+ *
+ * An interface to a UDP socket that can accept incoming connections.
+ */
+[scriptable, uuid(d423bf4e-4499-40cf-bc03-153e2bf206d1)]
+interface nsIUDPSocket : nsISupports
+{
+    /**
+     * init
+     *
+     * This method initializes a UDP socket.
+     *
+     * @param aPort
+     *        The port of the UDP socket.  Pass -1 to indicate no preference,
+     *        and a port will be selected automatically.
+     * @param aLoopbackOnly
+     *        If true, the UDP socket will only respond to connections on the
+     *        local loopback interface.  Otherwise, it will accept connections
+     *        from any interface.  To specify a particular network interface,
+     *        use initWithAddress.
+     * @param aPrincipal
+     *        The principal connected to this socket.
+     * @param aAddressReuse
+     *        If true, the socket is allowed to be bound to an address that is
+     *        already in use. Default is true.
+     */
+    [optional_argc] void init(in long aPort,
+                              in boolean aLoopbackOnly,
+                              in nsIPrincipal aPrincipal,
+                              [optional] in boolean aAddressReuse);
+
+    [optional_argc] void init2(in AUTF8String aAddr,
+                               in long aPort,
+                               in nsIPrincipal aPrincipal,
+                               [optional] in boolean aAddressReuse);
+
+    /**
+     * initWithAddress
+     *
+     * This method initializes a UDP socket, and binds it to a particular
+     * local address (and hence a particular local network interface).
+     *
+     * @param aAddr
+     *        The address to which this UDP socket should be bound.
+     * @param aPrincipal
+     *        The principal connected to this socket.
+     * @param aAddressReuse
+     *        If true, the socket is allowed to be bound to an address that is
+     *        already in use. Default is true.
+     */
+    [noscript, optional_argc] void initWithAddress([const] in NetAddrPtr aAddr,
+                                                   in nsIPrincipal aPrincipal,
+                                                   [optional] in boolean aAddressReuse);
+
+    /**
+     * close
+     *
+     * This method closes a UDP socket.  This does not affect already
+     * connected client sockets (i.e., the nsISocketTransport instances
+     * created from this UDP socket).  This will cause the onStopListening
+     * event to asynchronously fire with a status of NS_BINDING_ABORTED.
+     */
+    void close();
+
+    /**
+     * asyncListen
+     *
+     * This method puts the UDP socket in the listening state.  It will
+     * asynchronously listen for and accept client connections.  The listener
+     * will be notified once for each client connection that is accepted.  The
+     * listener's onSocketAccepted method will be called on the same thread
+     * that called asyncListen (the calling thread must have a nsIEventTarget).
+     *
+     * The listener will be passed a reference to an already connected socket
+     * transport (nsISocketTransport).  See below for more details.
+     *
+     * @param aListener
+     *        The listener to be notified when client connections are accepted.
+     */
+    void asyncListen(in nsIUDPSocketListener aListener);
+
+    /**
+     * This adds a nsIUDPSocketSyncListener listener (defined below).
+     * When data is available onPacketReceived is called and the lisener uses
+     * recvWithAddr to actually retrive data from the socket.
+     * The listener can be use only if it runs on the socket thread.
+     * If it is used off the socket thread there is a risk of triggering a bug
+     * in OS thatcan cause a crash.
+     */
+    void syncListen(in nsIUDPSocketSyncListener aListener);
+
+    /**
+     * connect
+     *
+     * This method connects the UDP socket to a remote UDP address.
+     *
+     * @param aRemoteAddr
+     *        The remote address to connect to
+     */
+     void connect([const] in NetAddrPtr aAddr);
+
+    /**
+     * Returns the local address of this UDP socket
+     */
+    readonly attribute nsINetAddr localAddr;
+
+    /**
+     * Returns the port of this UDP socket.
+     */
+    readonly attribute long port;
+
+    /**
+     * Returns the address to which this UDP socket is bound.  Since a
+     * UDP socket may be bound to multiple network devices, this address
+     * may not necessarily be specific to a single network device.  In the
+     * case of an IP socket, the IP address field would be zerod out to
+     * indicate a UDP socket bound to all network devices.  Therefore,
+     * this method cannot be used to determine the IP address of the local
+     * system.  See nsIDNSService::myHostName if this is what you need.
+     */
+    [noscript] NetAddr getAddress();
+
+    /**
+     * send
+     *
+     * Send out the datagram to specified remote host and port.
+     * DNS lookup will be triggered.
+     *
+     * @param host The remote host name.
+     * @param port The remote port.
+     * @param data The buffer containing the data to be written.
+     * @return number of bytes written. (0 or length of data)
+     */
+    unsigned long send(in AUTF8String host, in unsigned short port,
+                       in Array<uint8_t> data);
+
+    /**
+     * sendWithAddr
+     *
+     * Send out the datagram to specified remote host and port.
+     *
+     * @param addr The remote host address.
+     * @param data The buffer containing the data to be written.
+     * @return number of bytes written. (0 or length of data)
+     */
+    unsigned long sendWithAddr(in nsINetAddr addr,
+                               in Array<uint8_t> data);
+
+
+    /**
+     * Receive a datagram.
+     * @param addr The remote host address.
+     * @param data The buffer to store received datagram.
+     */
+    [noscript] void recvWithAddr(out NetAddr addr,
+                                 out Array<uint8_t> data);
+
+    /**
+     * sendWithAddress
+     *
+     * Send out the datagram to specified remote address and port.
+     *
+     * @param addr The remote host address.
+     * @param data The buffer containing the data to be written.
+     * @return number of bytes written. (0 or length of data)
+     */
+    [noscript] unsigned long sendWithAddress([const] in NetAddrPtr addr,
+                                             in Array<uint8_t> data);
+
+    /**
+     * sendBinaryStream
+     *
+     * Send out the datagram to specified remote address and port.
+     *
+     * @param host The remote host name.
+     * @param port The remote port.
+     * @param stream The input stream to be sent. This must be a buffered stream implementation.
+     */
+    void sendBinaryStream(in AUTF8String host, in unsigned short port,
+                          in nsIInputStream stream);
+
+    /**
+     * sendBinaryStreamWithAddress
+     *
+     * Send out the datagram to specified remote address and port.
+     *
+     * @param addr The remote host address.
+     * @param stream The input stream to be sent. This must be a buffered stream implementation.
+     */
+    void sendBinaryStreamWithAddress([const] in NetAddrPtr addr,
+                                     in nsIInputStream stream);
+
+    /**
+     * joinMulticast
+     *
+     * Join the multicast group specified by |addr|.  You are then able to
+     * receive future datagrams addressed to the group.
+     *
+     * @param addr
+     *        The multicast group address.
+     * @param iface
+     *        The local address of the interface on which to join the group.  If
+     *        this is not specified, the OS may join the group on all interfaces
+     *        or only the primary interface.
+     */
+    void joinMulticast(in AUTF8String addr, [optional] in AUTF8String iface);
+    [noscript] void joinMulticastAddr([const] in NetAddr addr,
+                                      [const, optional] in NetAddrPtr iface);
+
+    /**
+     * leaveMulticast
+     *
+     * Leave the multicast group specified by |addr|.  You will no longer
+     * receive future datagrams addressed to the group.
+     *
+     * @param addr
+     *        The multicast group address.
+     * @param iface
+     *        The local address of the interface on which to leave the group.
+     *        If this is not specified, the OS may leave the group on all
+     *        interfaces or only the primary interface.
+     */
+    void leaveMulticast(in AUTF8String addr, [optional] in AUTF8String iface);
+    [noscript] void leaveMulticastAddr([const] in NetAddr addr,
+                                       [const, optional] in NetAddrPtr iface);
+
+    /**
+     * multicastLoopback
+     *
+     * Whether multicast datagrams sent via this socket should be looped back to
+     * this host (assuming this host has joined the relevant group).  Defaults
+     * to true.
+     * Note: This is currently write-only.
+     */
+    attribute boolean multicastLoopback;
+
+    /**
+     * multicastInterface
+     *
+     * The interface that should be used for sending future multicast datagrams.
+     * Note: This is currently write-only.
+     */
+    attribute AUTF8String multicastInterface;
+
+    /**
+     * multicastInterfaceAddr
+     *
+     * The interface that should be used for sending future multicast datagrams.
+     * Note: This is currently write-only.
+     */
+    [noscript] attribute NetAddr multicastInterfaceAddr;
+
+    /**
+     * recvBufferSize
+     *
+     * The size of the receive buffer. Default depends on the OS.
+     */
+    [noscript] attribute long recvBufferSize;
+
+    /**
+     * sendBufferSize
+     *
+     * The size of the send buffer. Default depends on the OS.
+     */
+    [noscript] attribute long sendBufferSize;
+
+    /**
+     * dontFragment
+     *
+     * The don't fragment flag.
+     * The socket must be initialized before calling this function. 
+     */
+    [noscript] attribute boolean dontFragment;
+};
+
+/**
+ * nsIUDPSocketListener
+ *
+ * This interface is notified whenever a UDP socket accepts a new connection.
+ * The transport is in the connected state, and read/write streams can be opened
+ * using the normal nsITransport API.  The address of the client can be found by
+ * calling the nsISocketTransport::GetAddress method or by inspecting
+ * nsISocketTransport::GetHost, which returns a string representation of the
+ * client's IP address (NOTE: this may be an IPv4 or IPv6 string literal).
+ */
+[scriptable, uuid(2E4B5DD3-7358-4281-B81F-10C62EF39CB5)]
+interface nsIUDPSocketListener : nsISupports
+{
+    /**
+     * onPacketReceived
+     *
+     * This method is called when a client sends an UDP packet.
+     *
+     * @param aSocket
+     *        The UDP socket.
+     * @param aMessage
+     *        The message.
+     */
+    void onPacketReceived(in nsIUDPSocket aSocket,
+                          in nsIUDPMessage aMessage);
+
+    /**
+     * onStopListening
+     *
+     * This method is called when the listening socket stops for some reason.
+     * The UDP socket is effectively dead after this notification.
+     *
+     * @param aSocket
+     *        The UDP socket.
+     * @param aStatus
+     *        The reason why the UDP socket stopped listening.  If the
+     *        UDP socket was manually closed, then this value will be
+     *        NS_BINDING_ABORTED.
+     */
+    void onStopListening(in nsIUDPSocket aSocket, in nsresult aStatus);
+};
+
+/**
+ * nsIUDPMessage
+ *
+ * This interface is used to encapsulate an incomming UDP message
+ */
+[scriptable, builtinclass, uuid(afdc743f-9cc0-40d8-b442-695dc54bbb74)]
+interface nsIUDPMessage : nsISupports
+{
+    /**
+     * Address of the source of the message
+     */
+    readonly attribute nsINetAddr fromAddr;
+
+    /**
+     * Data of the message
+     */
+    readonly attribute ACString data;
+
+    /**
+     * Stream to send a response
+     */
+    readonly attribute nsIOutputStream outputStream;
+
+    /**
+     * Raw Data of the message
+     */
+    [implicit_jscontext] readonly attribute jsval rawData;
+    [noscript, notxpcom, nostdcall] Uint8TArrayRef getDataAsTArray();
+};
+
+[noscript, builtinclass, uuid(99f3d085-3d69-45da-a2c2-a6176af617cb)]
+interface nsIUDPSocketSyncListener : nsISupports
+{
+    /**
+     * onPacketReceived
+     *
+     * This method is called when a client sends an UDP packet.
+     *
+     * @param aSocket
+     *        The UDP socket.
+     * @param aMessage
+     *        The message.
+     */
+    void onPacketReceived(in nsIUDPSocket aSocket);
+
+    /**
+     * onStopListening
+     *
+     * This method is called when the listening socket stops for some reason.
+     * The UDP socket is effectively dead after this notification.
+     *
+     * @param aSocket
+     *        The UDP socket.
+     * @param aStatus
+     *        The reason why the UDP socket stopped listening.  If the
+     *        UDP socket was manually closed, then this value will be
+     *        NS_BINDING_ABORTED.
+     */
+    void onStopListening(in nsIUDPSocket aSocket, in nsresult aStatus);
+};

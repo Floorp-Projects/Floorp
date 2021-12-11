@@ -1,0 +1,167 @@
+<!doctype html>
+<title>Test for Bug 1425700: CSS properties use-counters</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<body>
+<iframe id="iframe"></iframe>
+<iframe id="second-iframe"></iframe>
+<script>
+const iframe = document.getElementById("iframe");
+
+function iframe_reload(frame = iframe) {
+  return new Promise(resolve => {
+    frame.addEventListener("load", _ => resolve());
+    frame.contentWindow.location.reload();
+  });
+}
+
+function assert_recorded(win, recorded, properties, desc) {
+  const utils = SpecialPowers.getDOMWindowUtils(win);
+  isnot(properties.length, 0, "Sanity check");
+  for (const prop of properties) {
+    try {
+      is(utils.isCssPropertyRecordedInUseCounter(prop), recorded,
+         `${desc} - ${prop}`)
+    } catch(ex) {
+      ok(false, "Threw: " + prop);
+    }
+  }
+}
+
+// NOTE(emilio): This is no longer meaningful now we always record in the style
+// system itself, which is what this tests. But we could conceivably change
+// it so it doesn't hurt.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["layout.css.use-counters.enabled", true],
+      ["layout.css.use-counters-unimplemented.enabled", true]
+    ]
+  });
+});
+
+// TODO(emilio): Make work (and test) inline style and maybe even CSSOM and
+// such?
+//
+// Make sure that something on the lines of the following passes:
+//
+//   element.style.webkitTransform = "rotate(1deg)"
+//   assert_recorded(true, ["-webkit-transform"]);
+//   assert_recorded(false, ["transform"]);
+//
+const IMPLEMENTED_PROPERTIES = {
+  description: "unimplemented properties",
+  css: `
+    * {
+      grid-gap: 1px; /* shorthand alias */
+      -webkit-background-size: 100px 100px; /* longhand alias */
+      transform-origin: top left; /* longhand */
+      background: green; /* shorthand */
+    }
+  `,
+  recorded: [
+    "grid-gap",
+    "-webkit-background-size",
+    "transform-origin",
+    "background",
+  ],
+  // Should only record the aliases, not the non-aliased property.
+  // Should only record shorthands, not the longhands it expands to.
+  not_recorded: [
+    "gap",
+    "background-size",
+    "-moz-transform-origin",
+    "-webkit-transform-origin",
+    "background-color",
+  ],
+};
+
+const UNIMPLEMENTED_PROPERTIES = {
+  description: "unimplemented properties",
+  css: `
+    * {
+      grid-gap: 1px; /* shorthand alias */
+      -webkit-background-size: 100px 100px; /* longhand alias */
+      transform-origin: top left; /* longhand */
+      background: green; /* shorthand */
+      -webkit-font-smoothing: auto; /* counted unknown */
+      zoom: 0.5; /* counted unknown */
+    }
+  `,
+  recorded: [
+    "grid-gap",
+    "-webkit-background-size",
+    "transform-origin",
+    "background",
+    "-webkit-font-smoothing",
+    "zoom",
+  ],
+  not_recorded: [
+    "size",
+    "speak",
+  ],
+};
+
+// Test on regular <style> elements.
+add_task(async () => {
+  for (let test of [IMPLEMENTED_PROPERTIES, UNIMPLEMENTED_PROPERTIES]) {
+    await iframe_reload();
+
+    const win = iframe.contentWindow;
+    const style = document.createElement('style');
+    style.textContent = test.css;
+
+    iframe.contentDocument.body.appendChild(style);
+
+    assert_recorded(win, true, test.recorded, `Test ${test.description} in <style> elements`);
+    assert_recorded(win, false, test.not_recorded, `Test ${test.description} in <style> elements`);
+  }
+});
+
+// Test on constructable stylesheets.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["layout.css.constructable-stylesheets.enabled", true]
+    ]
+  });
+
+  for (let test of [IMPLEMENTED_PROPERTIES, UNIMPLEMENTED_PROPERTIES]) {
+    for (let method of ["replace", "replaceSync"]) {
+      await iframe_reload();
+      const win = iframe.contentWindow;
+
+      const sheet = new win.CSSStyleSheet();
+      await sheet[method](test.css);
+
+      assert_recorded(win, true, test.recorded, `Test ${test.description} in constructed sheet`);
+      assert_recorded(win, false, test.not_recorded, `Test ${test.description} in constructed sheet`);
+    }
+  }
+});
+
+add_task(async () => {
+  // Test for <link rel="stylesheet">. One iteration for the uncached version, one for the cached one.
+  for (let test of [IMPLEMENTED_PROPERTIES, UNIMPLEMENTED_PROPERTIES]) {
+    const uri = "data:text/css," + encodeURIComponent(test.css);
+    for (let frame of [iframe, document.getElementById("second-iframe")]) {
+      await iframe_reload(frame);
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      const link = doc.createElement("link");
+      link.rel = "stylesheet";
+      const linkLoaded = new Promise(resolve => {
+        link.onload = resolve;
+      });
+      link.href = uri;
+      doc.body.appendChild(link);
+      await linkLoaded;
+      assert_recorded(win, true, test.recorded, `Test ${test.description} in <link> ${frame.id}`);
+      assert_recorded(win, false, test.not_recorded, `Test ${test.description} in <link> ${frame.id}`);
+    }
+  }
+});
+
+</script>
+</body>

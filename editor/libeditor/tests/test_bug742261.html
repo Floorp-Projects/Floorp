@@ -1,0 +1,14 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=742261
+-->
+<title>Test for Bug 742261</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<body>
+<script>
+is(document.execCommandShowHelp, undefined,
+   "execCommandShowHelp shouldn't exist");
+is(document.queryCommandText, undefined,
+   "queryCommandText shouldn't exist");
+</script>

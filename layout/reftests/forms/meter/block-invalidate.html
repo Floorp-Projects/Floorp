@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <style>
+    meter { display: block; }
+  </style>
+  <script>
+    function loadHandler() {
+      setTimeout(function() {
+        var p = document.getElementsByTagName('meter')[0];
+        p.value = '0.5';
+        document.documentElement.className = '';
+      }, 0);
+    }
+  </script>
+  <body onload="loadHandler();">
+    <meter value='0'></meter>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <script>
+      // Note, this page does not enter bfcache because of an HTTP header.
+
+      // Ensure layout is flushed before doing anything with scrolling.
+      function flushAndExecute(callback) {
+        window.requestAnimationFrame(function() {
+          setTimeout(callback);
+        });
+      }
+
+      var bc = new BroadcastChannel("notbfcached");
+      bc.onmessage = (msgEvent) => {
+        if (msgEvent.data == "scroll") {
+          flushAndExecute(() => {  window.scrollTo(0, 4000); });
+        } else if (msgEvent.data == "getScrollY") {
+          flushAndExecute(() => { bc.postMessage({ scrollY: window.scrollY}); });
+        } else if (msgEvent.data == "back") {
+          flushAndExecute(() => { bc.close(); history.back(); });
+        } else if (msgEvent.data == "close") {
+          bc.postMessage("closed");
+          bc.close();
+          window.close();
+        }
+      };
+      window.onpageshow = (event) => {
+        bc.postMessage({command: "pageshow", persisted: event.persisted});
+      };
+    </script>
+  </head>
+  <body>
+    <div style="height: 5000px; border: 1px solid black;">content</div>
+  </body>
+</html>

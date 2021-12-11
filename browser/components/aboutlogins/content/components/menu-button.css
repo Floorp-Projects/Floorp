@@ -1,0 +1,94 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  position: relative;
+}
+
+.menu-button {
+  background-image: url("chrome://global/skin/icons/more.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 30px;
+  min-width: 30px;
+  margin-inline: 0;
+}
+
+.menu {
+  position: absolute;
+  top: 30px;
+  inset-inline-end: 0;
+  margin: 0;
+  padding: 5px 0;
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 4px;
+  box-shadow: var(--shadow-30);
+  min-width: max-content;
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  /* Show on top of .breach-alert which is also positioned */
+  z-index: 1;
+  font: menu;
+}
+
+.menuitem-button {
+  padding: 4px 8px;
+  /* 32px = 8px (padding) + 16px (icon) + 8px (padding) */
+  padding-inline-start: 32px;
+  background-repeat: no-repeat;
+  background-position: left 8px center;
+  background-size: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+
+  /* Override common.inc.css properties */
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  text-align: start;
+  min-height: initial;
+  font: inherit;
+}
+
+.menuitem-button:dir(rtl) {
+  background-position-x: right 8px;
+}
+
+.menuitem-button:focus-visible {
+  outline-offset: -2px;
+}
+
+.menuitem-separator {
+  border-top-width: 1px;
+  margin-block: 5px;
+  width: 100%;
+}
+
+.menuitem-help {
+  background-image: url("chrome://global/skin/icons/help.svg");
+}
+
+.menuitem-import-browser {
+  background-image: url("chrome://browser/skin/import.svg");
+}
+
+.menuitem-import-file {
+  background-image: url("chrome://browser/skin/import.svg");
+}
+
+.menuitem-export {
+  background-image: url("chrome://browser/skin/save.svg");
+}
+
+.menuitem-remove-all-logins {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+.menuitem-preferences {
+  background-image: url("chrome://global/skin/icons/settings.svg");
+}

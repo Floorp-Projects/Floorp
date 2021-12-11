@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>font-variant-caps fallback</title>
+<meta charset="UTF-8">
+<style>
+
+/* Fira Sans only supports smcp/c2sc, not pcap/c2pc */
+@font-face {
+  font-family: firasans;
+  src: url(../fonts/fira/FiraSans-Regular.otf);
+}
+
+body {
+  margin: 20px;
+  font-family: firasans, sans-serif;
+}
+
+p {
+  margin: 0;
+  font-size: 50px;
+}
+
+.allsmallcaps { font-variant-caps: all-small-caps; }
+</style>
+</head>
+<body>
+<p class=allsmallcaps>Aa Bb Gg Δδ Γγ Σσ Бб Фф</p>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Handling of unsafe bidi chars</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<iframe id="test"></iframe>
+<script type="text/javascript">
+var tests = [
+  ["test.png:large", "test.png"],
+  ["test.png/large", "test.png"],
+  [":test.png::large:", "test.png"],
+];
+
+add_task(async function() {
+  function promiseMessage(messageName) {
+    return new Promise(resolve => {
+      chromeScript.addMessageListener(messageName, function listener(data) {
+        chromeScript.removeMessageListener(messageName, listener);
+        resolve(data);
+      });
+    });
+  }
+
+  let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
+  let chromeScript = SpecialPowers.loadChromeScript(url);
+
+  function wrongAPICallListener(msg) {
+    ok(
+      false,
+      `Called ${msg} when improvements pref was set to ${
+        Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        )
+      }, which shouldn't happen.`
+    );
+  }
+  chromeScript.addMessageListener("wrongAPICall", wrongAPICallListener);
+
+  for (let prefVal of [false, true]) {
+    await SpecialPowers.pushPrefEnv({set: [["browser.download.improvements_to_download_panel", prefVal]]});
+    // Run all the tests.
+    for (let [name, expected] of tests) {
+      let promiseName = promiseMessage("suggestedFileName");
+      document.getElementById("test").src =
+        "invalidCharFileExtension.sjs?name=" + encodeURIComponent(name);
+      is((await promiseName), expected, "got the expected sanitized name");
+    }
+  }
+
+  // Clean up.
+  let promise = promiseMessage("unregistered");
+  chromeScript.sendAsyncMessage("unregister");
+  await promise;
+
+  chromeScript.removeMessageListener("wrongAPICall", wrongAPICallListener);
+  chromeScript.destroy();
+});
+</script>
+</body>
+</html>

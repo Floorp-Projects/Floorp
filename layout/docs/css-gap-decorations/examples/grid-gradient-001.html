@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Example of a gradient rule image</title>
+
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+.grid {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 50px);
+  width: 300px;
+  height: 240px;
+  place-content: space-around;
+
+  column-rule: min(100%, max(16px, 50%)) solid;
+  column-rule-image: linear-gradient(#f008,#fc08);
+  column-rule-align: rule;
+  column-rule-extent: all-long;
+
+  row-rule: min(16px, 100%) solid;
+  row-rule-image: linear-gradient(90deg,#f008,#fc08);
+  row-rule-align: rule;
+  row-rule-extent: long;
+
+  border: 2px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+
+x {
+  block-size: 48px;
+  background: grey;
+}
+x:nth-child(2), x:nth-child(6) {
+  grid-column: span 2;
+}
+</style>
+
+<div class="grid test1"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x></div>

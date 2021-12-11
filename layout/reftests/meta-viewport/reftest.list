@@ -1,0 +1,42 @@
+defaults pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,true)
+
+# These tests assume that viewport width in reftest is 800px.
+== box-shadow.html initial-scale-0_5-ref.html
+== initial-scale-0.html initial-scale-0_25-ref.html
+== initial-scale-100.html initial-scale-10-ref.html
+== no-viewport.html initial-scale-0_5-ref.html
+== viewport-width.html initial-scale-0_5-ref.html
+== initial-scale-1.html no-zoom-ref.html
+== minimum-scale.html no-zoom-ref.html
+== invalid-width.html invalid-width-ref.html
+== invalid-content.html width-980-ref.html
+== removal.html width-980-ref.html
+== device-height-for-width.html invalid-width-ref.html
+== negative-initial-and-maximum-scale.html initial-scale-0_5-ref.html
+== no-scalable-with-minimum-scale.html no-scalable-with-minimum-scale-ref.html
+== clamped-by-default-minimum-scale.html initial-scale-0_25-ref.html
+== position-fixed-on-half-height-content.html position-fixed-on-half-height-content-ref.html
+== position-fixed-on-landscape-content.html position-fixed-on-half-height-content-ref.html
+== position-fixed-on-square-content.html position-fixed-on-square-content-ref.html
+== async-scroll-to-no-content-area.html async-scroll-to-no-content-area-ref.html # bug 1571623 to track down the failure on WebRender
+== resolution-change-on-landscape-content.html resolution-change-on-landscape-content-ref.html
+== scrollbars-in-half-height-content.html scrollbars-in-half-height-content-ref.html
+== scrollbars-in-landscape-content.html scrollbars-in-landscape-content-ref.html
+
+skip-if(!Android) == position-fixed-on-minimum-scale-size.html position-fixed-on-minimum-scale-size-ref.html
+== position-fixed-out-of-view.html about:blank
+
+== overflow-region.html overflow-region-ref.html
+== overflow-hidden-region.html overflow-region-ref.html
+pref(ui.useOverlayScrollbars,1) == overflow-hidden-region-with-negative-left-positioned-element.html overflow-region-ref.html
+== horizontal-overflow-hidden-region.html horizontal-overflow-hidden-region-ref.html
+== vertical-overflow-hidden-region.html about:blank
+== scroll-to-unreachable-area.html scroll-to-unreachable-area-ref.html
+== wrapped-text-at-icb.html wrapped-text-at-icb-ref.html
+== overflow-hidden-region-dynamic-width-change.html overflow-region-ref.html
+== remove-overflow-hidden-region.html remove-overflow-hidden-region-ref.html
+== dynamic-grow-width.html horizontal-overflow-hidden-region-ref.html
+== dynamic-grow-width-and-height.html overflow-region-ref.html
+== not-able-to-scrollTo.html about:blank
+== min-scale-aspect-ratio.html about:blank
+pref(layout.dynamic-toolbar-max-height,100) == device-height-with-dynamic-toolbar.html device-height-with-dynamic-toolbar-ref.html

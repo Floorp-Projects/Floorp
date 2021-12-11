@@ -1,0 +1,25 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o basic-scan-32-actual.txt --clamp-contents basic-scan.json
+
+Invocation {
+  $DMD = '--mode=scan'
+  Mode = 'live'
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  1 block in heap block record 1 of 1
+  32 bytes (24 requested / 8 slop)
+  100.00% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 32 bytes in 1 blocks
+}
+

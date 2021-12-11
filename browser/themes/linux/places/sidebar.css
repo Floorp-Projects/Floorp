@@ -1,0 +1,43 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Sidebars */
+
+%include ../../shared/places/sidebar.inc.css
+
+#sidebar-search-container {
+  padding: 8px;
+}
+
+#search-box {
+  margin: 0;
+}
+
+#viewButton {
+  margin: 1px 0;
+  margin-inline-start: 4px;
+}
+
+#viewButton:-moz-focusring:not(:hover, [open]) {
+  outline: 1px dotted -moz-DialogText;
+}
+
+:root[uidensity=touch] #search-box,
+:root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+  min-height: 32px;
+}
+
+.sidebar-placesTreechildren::-moz-tree-cell(leaf) ,
+.sidebar-placesTreechildren::-moz-tree-image(leaf) {
+  cursor: pointer;
+}
+
+.sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sidebar-placesTreechildren::-moz-tree-cell(separator) {
+  cursor: default;
+}

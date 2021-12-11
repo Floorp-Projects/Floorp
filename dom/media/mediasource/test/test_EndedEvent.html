@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: basic functionality</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, el) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("seek.webm")));
+  sb.addEventListener("updateend", () => ms.endOfStream());
+
+  // Test "ended" is fired when seeking to the end of the media
+  // once the duration is known.
+  ms.onsourceended = () => el.currentTime = el.duration;
+  await once(el, "ended");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

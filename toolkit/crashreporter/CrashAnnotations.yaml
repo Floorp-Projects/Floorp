@@ -1,0 +1,978 @@
+# This lists all the available crash annotations.
+#
+# Mandatory fields for each entry are:
+# - description: A string describing the annotation
+# - type: the annotation type, currently `string`, `integer` or `boolean`.
+#   The latter are stringified to `1` for true and `0` for false.
+#
+# Additionally a field can have the following optional fields:
+# - altname: A string that will be used when writing out the annotation to the
+#   .extra file instead of the annotation name
+# - ping: A boolean that indicates whether the annotation is whitelisted for
+#   going into the crash ping, if not specified this defaults to false
+
+A11yHandlerRegistered:
+  description: >
+    Set to "true" if the accessibility handler is registered, "false" otherwise.
+  type: string
+
+AbortMessage:
+  description: >
+    Message passed to NS_DebugBreak().
+  type: string
+
+Accessibility:
+  description: >
+    Set to "Active" by the accessibility service when it is active.
+  type: string
+
+AccessibilityClient:
+  description: >
+    Accessibility client ID.
+  type: string
+
+AccessibilityInProcClient:
+  description: >
+    Hexadecimal mask of in-process accessibility consumers, see
+    accessible/windows/msaa/Compatibility.h for the mappings.
+  type: string
+
+ActualStreamLen:
+  description: >
+    Actual length of an IPC proxy stream.
+  type: integer
+
+AdapterDeviceID:
+  description: >
+    Graphics adapter name.
+  type: string
+
+AdapterDriverVendor:
+  description: >
+    Graphics adapter driver vendor.
+  type: string
+
+AdapterDriverVersion:
+  description: >
+    Graphics adapter driver version.
+  type: string
+
+AdapterSubsysID:
+  description: >
+    Graphics adapter subsystem ID.
+  type: string
+
+AdapterVendorID:
+  description: >
+    Graphics adapter vendor name.
+  type: string
+
+additional_minidumps:
+  description: >
+    Comma separated list of additional minidumps for this crash, each element
+    in the list represent the suffix used in the dump filename. E.g. the
+    "browser" entry for crash fa909194-737b-4b93-b8da-da110ac785e0 implies the
+    existence of the fa909194-737b-4b93-b8da-da110ac785e0-browser.dmp file.
+  type: string
+
+Addons:
+  description: >
+    List of currently enabled add-ons.
+  type: string
+  altname: Add-ons
+
+AppInitDLLs:
+  description: >
+    List of DLLs loaded when launching any application on Windows, this
+    reflects the contents of the AppInit_DLLs registry key.
+  type: string
+
+ApplicationBuildID:
+  description: >
+    Product application's build ID.
+  type: string
+
+AsyncShutdownTimeout:
+  description: >
+    This annotation is present if a shutdown blocker was not released in time
+    and the browser was crashed instead of waiting for shutdown to finish. The
+    condition that caused the hang is contained in the annotation.
+  type: string
+  ping: true
+
+AvailablePageFile:
+  description: >
+    Available commit-space in bytes.
+    - Under Windows, computed from the PERFORMANCE_INFORMATION structure by substracting
+      the CommitTotal field from the CommitLimit field.
+    - Under Linux, computed from /proc/meminfo's CommitLimit - Committed_AS. Note that
+      the kernel is not guaranteed to enforce that CommittedLimit >= Committed_AS. If
+      Committed_AS > CommittedLimit, this value is set to 0.
+    - Not available on other platforms.
+  type: string
+  ping: true
+
+AvailablePhysicalMemory:
+  description: >
+    Amount of free physical memory in bytes.
+    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
+    ullAvailPhys field.
+    - Under macOS, populated with vm_statistics64_data_t::free_count.
+    - Under Linux, populated with /proc/meminfo's MemFree.
+    - Not available on other platforms.
+  type: string
+  ping: true
+
+AvailableSwapMemory:
+  description: >
+    Amount of free swap space in bytes.
+    - Under macOS, populated with the contents of
+      sysctl "vm.swapusage" :: xsu_avail.
+    - Under Linux, populated with /proc/meminfo's SwapFree.
+    - Not available on other platforms.
+  type: string
+  ping: true
+
+AvailableVirtualMemory:
+  description: >
+    Amount of free virtual memory in bytes
+    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure ullAvailVirtual field.
+    - Under Linux, populated with /proc/meminfo's MemAvailable.
+    - Not available on other platforms.
+    - For macOS, see AvailableSwapMemory, AvailablePhysicalMemory and PurgeablePhysicalMemory.
+  type: string
+  ping: true
+
+BlockedDllList:
+  description: >
+    Comma-separated list of blocked DLLS, Windows-only
+  type: string
+  ping: true
+
+BlocklistInitFailed:
+  description: >
+    Set to 1 if the DLL blocklist could not be initialized.
+  type: boolean
+  ping: true
+
+Breadcrumbs:
+  description: >
+    Trail of events that occurred before a report. this will consist of multiple breadcrumbs with
+    timestamp, message, category, level, type and data in JSON format.
+  type: string
+
+BuildID:
+  description: >
+    Application build ID, the format is YYYYMMDDHHMMSS.
+  type: string
+  ping: true
+
+ClassRegistrationInfoChild:
+  description: >
+    Microsoft COM class registration annotation for the child process.
+  type: string
+
+ClassRegistrationInfoParent:
+  description: >
+    Microsoft COM class registration annotation for the parent process.
+  type: string
+
+CoMarshalInterfaceFailure:
+  description: >
+    Annotation describing the error returned by trying to marshal an object
+    via CoMarshalInterface during the creation of an IPC proxy stream.
+  type: string
+
+ContainsMemoryReport:
+  description: >
+    Indicates that the crash dump contains a memory report.
+  type: boolean
+  ping: true
+
+ContentSandboxCapabilities:
+  description: >
+    List of capabilities of the content process sandbox.
+  type: string
+
+ContentSandboxEnabled:
+  description: >
+    Set to 1 when content process sandboxing is enabled.
+  type: boolean
+
+ContentSandboxCapable:
+  description: >
+    Set to 1 if the client is capable of content sandboxing.
+  type: boolean
+
+ContentSandboxLevel:
+  description: >
+    Content sandbox level.
+  type: integer
+
+ContentSandboxWin32kState:
+  description: >
+    Content sandbox Win32k state
+  type: string
+
+CoUnmarshalInterfaceResult:
+  description: >
+    Annotation describing the error returned by trying to unmarshal an object
+    via CoUnmarshalInterface during the creation of an IPC proxy stream.
+  type: integer
+
+CPUMicrocodeVersion:
+  description: >
+    Version of the CPU microcode.
+  type: string
+
+CrashAddressLikelyWrong:
+  description: >
+    Set to 1 if signal handling is broken, in which case the crash address is
+    likely to be wrong.
+  type: boolean
+
+CrashTime:
+  description: >
+    Crash time in seconds since the Epoch.
+  type: string
+  ping: true
+
+CreateStreamOnHGlobalFailure:
+  description: >
+    Set when failing to obtain a global memory handle during the creation of an
+    IPC proxy stream.
+  type: string
+
+CycleCollector:
+  description: >
+    Reason why the cycle collector crashed.
+  type: string
+
+DesktopEnvironment:
+  description: >
+    Desktop environment used on Linux, e.g. GNOME, KDE, XFCE, etc.
+  type: string
+
+DeviceResetReason:
+  description: >
+    Reason why a DirectX device has been reset, Windows only.
+  type: string
+
+DOMFissionEnabled:
+  description: >
+    Set to 1 when DOM fission is enabled, and subframes are potentially loaded
+    in a separate process.
+  type: boolean
+  ping: true
+
+DOMIPCEnabled:
+  description: >
+    Set to 1 when a tab is running in a content process
+  type: boolean
+
+DumperError:
+  description: >
+    Error message of the minidump writer, in case there was an error during dumping.
+  type: string
+
+EMCheckCompatibility:
+  description: >
+    Set to 1 if add-on compatibility checking is enabled.
+  type: boolean
+
+EventLoopNestingLevel:
+  description: >
+    Present only if higher than 0, indicates that we're running in a nested
+    event loop and indicates the nesting level.
+  type: integer
+  ping: true
+
+ExpectedStreamLen:
+  description: >
+    Expected length of an IPC proxy stream.
+  type: integer
+
+ExperimentalFeatures:
+  description: >
+    Comma-separated list of enabled experimental features from about:preferences#experimental.
+  type: string
+  ping: true
+
+GetHGlobalFromStreamFailure:
+  description: >
+    Error returned when invoking GetHGlobalFromStreamFailure() during the
+    creation of an IPC stream proxy.
+  type: string
+
+GMPLibraryPath:
+  description: >
+    Holds the path to the GMP plugin library.
+  type: string
+
+GMPPlugin:
+  description: >
+    Set to 1 if the GMP plugin is enabled.
+  type: boolean
+
+GPUProcessLaunchCount:
+  description: >
+    Number of times the GPU process was launched.
+  type: integer
+  ping: true
+
+GPUProcessStatus:
+  description: >
+    Status of the GPU process, can be set to "Running" or "Destroyed"
+  type: string
+
+GraphicsCompileShader:
+  description: >
+    Name of the shader we are in the process of compiling, if applicable. See
+    file names in gfx/wr/webrender/res/* for the possible values.
+  type: string
+
+GraphicsCriticalError:
+  description: >
+    Information of a critical error that occurred within the graphics code.
+  type: string
+
+GraphicsDrawShader:
+  description: >
+    Name of the shader that is currently bound for a draw call, if applicable.
+    See file names in gfx/wr/webrender/res/* for the possible values.
+  type: string
+
+GraphicsStartupTest:
+  description: >
+    Set to 1 by the graphics driver crash guard when it's activated.
+  type: boolean
+
+PHCKind:
+  description: >
+    The allocation kind, if the crash involved a bad access of a special PHC
+    allocation.
+  type: string
+
+PHCBaseAddress:
+  description: >
+    The allocation's base address, if the crash involved a bad access of a
+    special PHC allocation. Encoded as a decimal address.
+  type: string
+
+PHCUsableSize:
+  description: >
+    The allocation's usable size, if the crash involved a bad access of a
+    special PHC allocation.
+  # A 32-bit integer is enough because the maximum usable size of a special PHC
+  # allocation is far less than 2 GiB.
+  type: integer
+
+PHCAllocStack:
+  description: >
+    The allocation's allocation stack trace, if the crash involved a bad access
+    of a special PHC allocation. Encoded as a comma-separated list of decimal
+    addresses.
+  type: string
+
+PHCFreeStack:
+  description: >
+    The allocation's free stack trace, if the crash involved a bad access
+    of a special PHC allocation. Encoded as a comma-separated list of decimal
+    addresses.
+  type: string
+
+HasDeviceTouchScreen:
+  description: >
+    Set to 1 if the device had a touch-screen, this only applies to Firefox
+    desktop as on mobile devices we assume a touch-screen is always present.
+  type: boolean
+
+IAccessibleConfig:
+  description: >
+    Set when something is seriously wrong with the IAccessible configuration in
+    the computer's registry. The value is always set to "NoSystemTypeLibOrPS"
+  type: string
+
+InstallTime:
+  description: >
+    The time when Firefox was installed expressed as seconds since the Epoch
+  type: integer
+
+InterfaceRegistrationInfoChild:
+  description: >
+    Microsoft COM interface registration annotation for the child process.
+  type: string
+
+InterfaceRegistrationInfoParent:
+  description: >
+    Microsoft COM interface registration annotation for the parent process.
+  type: string
+
+ipc_channel_error:
+  description: >
+    Set before a content process crashes because of an IPC channel error, holds
+    a description of the error.
+  type: string
+  ping: true
+
+IpcCreateEndpointsNsresult:
+  description: >
+    errno value retrieved after failing to create an IPC transport object.
+  type: integer
+
+IpcCreatePipeCloExecErrno:
+  description: >
+    errno value retrieved after failing to set the O_CLOEXEC flag on a pipe
+    used for IPC.
+  type: integer
+
+IpcCreatePipeFcntlErrno:
+  description: >
+    errno value retrieved after a call to fcntl() on a pipe used for IPC failed.
+  type: integer
+
+IpcCreatePipeSocketPairErrno:
+  description: >
+    errno value retrieved after a socketpair() call failed while creating an IPC
+    transport object.
+  type: integer
+
+IpcCreateTransportDupErrno:
+  description: >
+    errno value retrieved after a dup() call failed while creating an IPC
+    transport object.
+  type: integer
+
+IPCFatalErrorMsg:
+  description: >
+    Describes a fatal error that occurred during IPC operation.
+  type: string
+
+IPCFatalErrorProtocol:
+  description: >
+    Name of the protocol used by IPC when a fatal error occurred.
+  type: string
+
+IPCMessageName:
+  description: >
+    Name of the IPC message that caused a crash because it was too large.
+  type: string
+
+IPCMessageSize:
+  description: >
+    Size of the IPC message that caused a crash because it was too large.
+  type: integer
+
+IPCReadErrorReason:
+  description: >
+    Reason why reading an object via IPC failed.
+  type: string
+
+IPCShutdownState:
+  description: >
+    IPC shutdown state, can be set to either "RecvShutdown" or
+    "SendFinishShutdown" by a content process while it's shutting down.
+  type: string
+
+IPCSystemError:
+  description: >
+    Description of the last system error that occurred during IPC operation.
+  type: string
+
+IPCTransportFailureReason:
+  description: >
+    Reason why creating an IPC channel failed.
+  type: string
+
+IsGarbageCollecting:
+  description: >
+    If true then the JavaScript garbage collector was running when the crash
+    occurred.
+  type: boolean
+  ping: true
+
+IsWayland:
+  description: >
+    If true then the Wayland windowing system was in use.
+  type: boolean
+
+IsWebRenderResourcePathOverridden:
+  description: >
+    If true then the WebRender resources (i.e. shaders) are loaded from a user specified path.
+  type: boolean
+
+JavaException:
+  description: >
+    JSON structured Java stack trace, only present on Firefox for Android if we encounter an
+    uncaught Java exception.
+  type: string
+
+JavaStackTrace:
+  description: >
+    Java stack trace, only present on Firefox for Android if we encounter an
+    uncaught Java exception.
+  type: string
+
+JSActorMessage:
+  description: >
+    If an actor is currently treating a message, this is the name of the message.
+    Otherwise, empty.
+  type: string
+
+JSActorName:
+  description: >
+    If an actor is currently treating a message, this is the name of the actor.
+    Otherwise, empty.
+  type: string
+
+JSLargeAllocationFailure:
+  description: >
+    A large allocation couldn't be satisfied, check the JSOutOfMemory
+    description for the possible values of this annotation.
+  type: string
+
+JSModuleLoadError:
+  description: >
+    The error raised when attempting to import a critical JS module from C++
+  type: string
+
+JSOutOfMemory:
+  description: >
+    A small allocation couldn't be satisfied, the annotation may contain the
+    "Reporting", "Reported" or "Recovered" value. The first one means that
+    we crashed while responding to the OOM condition (possibly while running a
+    memory-pressure observers), the second that we crashed after having tried to
+    free some memory, and the last that the GC had managed to free enough memory
+    to satisfy the allocation.
+  type: string
+
+LastInteractionDuration:
+  description: >
+    How long the user had been inactive in seconds if the user was inactive
+    at crash.  The value is not set if the user state was active.
+  type: integer
+  ping: true
+
+MacMemoryPressure:
+  description: >
+    The current memory pressure state as provided by the macOS memory pressure
+    dispatch source. The annotation value is one of "Normal" for no memory
+    pressure, "Unset" indicating a memory pressure event has not been received,
+    "Warning" or "Critical" mapping to the system memory pressure levels,
+    or "Unexpected" for an unexpected level. This is a Mac-specific annotation.
+  type: string
+
+MacMemoryPressureNormalTime:
+  description: >
+    The time when the memory pressure state last transitioned to 'Normal'
+    expressed as seconds since the Epoch.
+  type: string
+
+MacMemoryPressureWarningTime:
+  description: >
+    The time when the memory pressure state last transitioned to 'Warning'
+    expressed as seconds since the Epoch.
+  type: string
+
+MacMemoryPressureCriticalTime:
+  description: >
+    The time when the memory pressure state last transitioned to 'Critical'
+    expressed as seconds since the Epoch.
+  type: string
+
+MacMemoryPressureSysctl:
+  description: >
+    The value of the memory pressure sysctl
+    'kern.memorystatus_vm_pressure_level'. Indicates which memory
+    pressure level the system is in at the time of the crash. The expected
+    values are one of 4 (Critical), 2 (Warning), or 1 (Normal).
+  type: integer
+
+MacAvailableMemorySysctl:
+  description: >
+    The value of the available memory sysctl 'kern.memorystatus_level'.
+    Expected to be a percentage integer value.
+  type: integer
+
+LauncherProcessState:
+  description: >
+    Launcher process enabled state. The integer value of this annotation must
+    match with one of the values in the
+    mozilla::LauncherRegistryInfo::EnableState enum
+  type: integer
+
+LowPhysicalMemoryEvents:
+  description: >
+    Number of times the available memory tracker has detected that free
+    physical memory is running low. This is a Windows-specific annotation.
+  type: integer
+  ping: true
+
+MainThreadRunnableName:
+  description: >
+    Name of the currently executing nsIRunnable on the main thread.
+  type: string
+  ping: true
+
+MarshalActCtxManifestPath:
+  description: >
+    Proxy stream marshalling current activation context manifest path.
+  type: string
+
+MozCrashReason:
+  description: >
+    Plaintext description of why Firefox crashed, this is usually set by
+    assertions and the like.
+  type: string
+  ping: true
+
+Notes:
+  description: >
+    Miscellaneous notes that can be appended to a crash.
+  type: string
+
+OOMAllocationSize:
+  description: >
+    Size of the allocation that caused an out-of-memory condition.
+  type: string
+  ping: true
+
+PluginFilename:
+  description: >
+    Plugin filename, only the process holding the plugin has this annotation.
+  type: string
+
+PluginName:
+  description: >
+    Display name of a plugin, only the process holding the plugin has this
+    annotation.
+  type: string
+
+PluginVersion:
+  description: >
+    Version of a plugin, only the process holding the plugin has this
+    annotation.
+  type: string
+
+ProcessType:
+  description: >
+    Type of the process that crashed, the possible values are defined in
+    GeckoProcessTypes.h.
+  type: string
+
+ProductName:
+  description: >
+    Application name (e.g. Firefox).
+  type: string
+  ping: true
+
+ProductID:
+  description: >
+    Application UUID (e.g. ec8030f7-c20a-464f-9b0e-13a3a9e97384).
+  type: string
+  ping: true
+
+ProfilerChildShutdownPhase:
+  description: >
+    When a child process shuts down, this describes if the profiler is running,
+    and the point the profiler shutdown sequence has reached.
+  type: string
+  ping: true
+
+ProxyStreamSize:
+  description: >
+    Size of an IPC proxy stream.
+  type: integer
+
+ProxyStreamSizeFrom:
+  description: >
+    Describes how the size of a proxy stream was obtained. It can be set to
+    either Stream::Stat or GlobalSize.
+  type: string
+
+ProxyStreamUnmarshalStatus:
+  description: >
+    Status of the proxy stream unmarshalling, see ipc/mscom/ProxyStream.cpp for
+    the various value this annotation can take.
+  type: string
+
+ProxyStreamValid:
+  description: >
+    Set to "false" when encountering an invalid IPC proxy stream.
+  type: string
+
+PurgeablePhysicalMemory:
+  description: >
+    macOS only. Amount of physical memory currently allocated but which may
+    be deallocated by the system in case of memory pressure. Populated from
+    vm_statistics64_data_t::purgeable_count * vm_page_size.
+  type: string
+  ping: true
+
+QuotaManagerShutdownTimeout:
+  description: >
+    This annotation is present if the quota manager shutdown (resp. the shutdown
+    of the quota manager clients) was not finished in time and the browser was
+    crashed instead of waiting for the shutdown to finish. The status of objects
+    which were blocking completion of the shutdown when reaching the timeout
+    is contained in the annotation.
+
+    In the case of IndexedDB, objects are divided into three groups:
+    FactoryOperations, LiveDatabases and DatabaseMaintenances.
+
+    In the case of LocalStorage, objects are divided into three groups:
+    PrepareDatastoreOperations, Datastores and LiveDatabases.
+
+    In the case of Cache API, objects are in one group only:
+    Managers.
+
+    Each group is reported separately and contains the number of objects in the
+    group and the status of individual objects in the group (duplicate entries
+    are removed):
+    "GroupName: N (objectStatus1, objectStatus2, ...)" where N is the number of
+    objects in the group.
+
+    The status of individual objects is constructed by taking selected object
+    properties. Properties which contain origin strings are anonymized.
+
+    In addition, intermediate steps are recorded for change events after shutdown
+    started. These include the time difference and the type of object.
+  type: string
+  ping: true
+
+RDDProcessStatus:
+  description: >
+    Status of the RDD process, can be set to "Running" or "Destroyed"
+  type: string
+
+ReleaseChannel:
+  description: >
+    Application release channel (e.g. default, beta, ...)
+  type: string
+  ping: true
+
+RemoteType:
+  description: >
+    Type of the content process, can be set to "web", "file" or "extension".
+  type: string
+  ping: true
+
+SafeMode:
+  description: >
+    Set to 1 if the browser was started in safe mode.
+  type: boolean
+
+SecondsSinceLastCrash:
+  description: >
+    Time in seconds since the last crash occurred.
+  type: string
+  ping: true
+
+ServerURL:
+  description: >
+    URL used to post the crash report.
+  type: string
+
+ShutdownProgress:
+  description: >
+    Shutdown step at which the browser crashed, can be set to "quit-application",
+    "profile-change-teardown", "profile-before-change", "xpcom-will-shutdown" or
+    "xpcom-shutdown".
+  type: string
+  ping: true
+
+StartupCrash:
+  description: >
+    If set to 1 then this crash occurred during startup.
+  type: boolean
+  ping: true
+
+StartupTime:
+  description: >
+    The time when Firefox was launched expressed in seconds since the Epoch.
+  type: integer
+
+StatFailure:
+  description: >
+    Error returned when invoking IStream's Stat function during the creation
+    of an IPC proxy stream.
+  type: string
+
+StorageConnectionNotClosed:
+  description: >
+    This annotation is added when a mozStorage connection has not been properly
+    closed during shutdown. The annotation holds the filename of the database
+    associated with the connection.
+  type: string
+
+SubmittedFromInfobar:
+  description: >
+    This annotation is set to 1 when the crash report has been manually
+    submitted from Firefox info-bar or has been automatically submitted after
+    the user opted-in to auto-submission.
+  type: boolean
+
+SystemMemoryUsePercentage:
+  description: >
+    Windows-only, percentage of physical memory in use. This annotation is
+    populated with the contents of the MEMORYSTATUSEX's structure dwMemoryLoad
+    field.
+  type: integer
+  ping: true
+
+TelemetryClientId:
+  description: >
+    Telemetry client ID.
+  type: string
+
+TelemetryEnvironment:
+  description: >
+    The telemetry environment in JSON format.
+  type: string
+
+TelemetryServerURL:
+  description: >
+    Telemetry server URL. Used to send main process crash pings directly from
+    the crashreporter client.
+  type: string
+
+TelemetrySessionId:
+  description: >
+    Telemetry session ID.
+  type: string
+
+TestKey:
+  description: >
+    Annotation used in tests.
+  type: string
+
+TestUnicode:
+  description: >
+    Annotation used in tests.
+  type: string
+
+TextureUsage:
+  description: >
+    Amount of memory in bytes consumed by textures.
+  type: string
+  ping: true
+
+ThreadIdNameMapping:
+  description: >
+    List of thread names with their corresponding thread IDs.
+  type: string
+
+TotalPageFile:
+  description: >
+    Maximum amount of memory that can be committed without extending the swap/page file.
+    - Under Windows, populated with the contents of the PERFORMANCE_INFORMATION's
+      structure CommitLimit field.
+    - Under Linux, populated with /proc/meminfo MemTotal + SwapTotal. The swap file
+      typically cannot be extended, so that's a hard limit.
+    - Not available on other systems.
+  type: string
+  ping: true
+
+TotalPhysicalMemory:
+  description: >
+    Amount of physical memory in bytes.
+    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
+    ullTotalPhys field.
+    - Under macOS, populated with sysctl "hw.memsize".
+    - Under Linux, populated with /proc/meminfo's "MemTotal".
+    - Not available on other systems.
+  type: string
+  ping: true
+
+TotalVirtualMemory:
+  description: >
+    Size of the virtual address space.
+    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
+      ullTotalVirtual field.
+    - Not available on other platforms.
+  type: string
+  ping: true
+
+UnknownNetAddrSocketFamily:
+  description: >
+    An unknown network address family was requested to Necko. The value is the
+    requested family number.
+  type: integer
+
+UnmarshalActCtx:
+  description: >
+    Proxy stream unmarshalling current activation context.
+  type: string
+
+UnmarshalActCtxManifestPath:
+  description: >
+    Proxy stream unmarshalling current activation context manifest path.
+  type: string
+
+UptimeTS:
+  description: >
+    Uptime in seconds. This annotation uses a string instead of an integer
+    because it has a fractional component.
+  type: string
+  ping: true
+
+URL:
+  description: >
+    URL being loaded.
+  type: string
+
+URLSegments:
+  description: >
+    The offsets of the nsStandardURL segments that fail a sanity check
+  type: string
+
+User32BeforeBlocklist:
+  description: >
+    Set to 1 if user32.dll was loaded before we could install the DLL blocklist.
+  type: boolean
+  ping: true
+
+useragent_locale:
+  description: >
+    User-agent locale.
+  type: string
+
+Vendor:
+  description: >
+    Application vendor (e.g. Mozilla).
+  type: string
+
+Version:
+  description: >
+    Product version.
+  type: string
+
+VRProcessStatus:
+  description: >
+    Status of the VR process, can be set to "Running" or "Destroyed"
+  type: string
+
+WasmLibrarySandboxMallocFailed:
+  description: >
+    Set to 1 if a rlbox wasm library sandbox ran out of memory, causing a
+    malloc inside the sandbox to fail.
+  type: boolean
+  ping: true
+
+WindowsErrorReporting:
+  description: >
+    Set to 1 if this crash was intercepted via the Windows Error Reporting
+    runtime exception module.
+  type: boolean
+  ping: true
+
+Winsock_LSP:
+  description: >
+    Information on winsock LSPs injected in our networking stack.
+  type: string
+
+XPCOMSpinEventLoopStack:
+  description: >
+    If we crash while some code is spinning manually the event
+    loop, we will see the stack of nested annotations here.
+  type: string

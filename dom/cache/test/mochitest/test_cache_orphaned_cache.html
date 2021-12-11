@@ -1,0 +1,164 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cache with QuotaManager Restart</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="large_url_list.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
+function clearStorage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var request = qms.clearStoragesForPrincipal(principal);
+    var cb = SpecialPowers.wrapCallback(resolve);
+    request.callback = cb;
+  });
+}
+
+function storageUsage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var cb = SpecialPowers.wrapCallback(function(request) {
+      var result = request.result;
+      resolve(result.usage);
+    });
+    qms.getUsageForPrincipal(principal, cb);
+  });
+}
+
+function resetStorage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var request = qms.reset();
+    var cb = SpecialPowers.wrapCallback(resolve);
+    request.callback = cb;
+  });
+}
+
+function gc() {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.exactGC(resolve);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.caches.testing.enabled", true],
+          ["dom.quotaManager.testing", true]],
+}, function() {
+  var name = "toBeOrphaned";
+  var cache = null;
+  var initialUsage = 0;
+  var fullUsage = 0;
+  var endUsage = 0;
+  var url = "test_cache_add.js";
+
+  // start from a fresh origin directory so other tests do not influence our
+  // results
+  setupTestIframe().then(function() {
+    return clearStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    is(0, usage, "disk usage should be zero to start");
+  })
+
+  // Initialize and populate an initial cache to get the base sqlite pages
+  // and directory structure allocated.
+  .then(function() {
+    return caches.open(name);
+  }).then(function(c) {
+    return c.add(url);
+  }).then(function() {
+    return gc();
+  }).then(function() {
+    return caches.delete(name);
+  }).then(function(deleted) {
+    ok(deleted, "cache should be deleted");
+
+    // This is a bit superfluous, but its necessary to make sure the Cache is
+    // fully deleted before we proceed.  The deletion actually takes place in
+    // two async steps.  We don't want to resetStorage() until the second step
+    // has taken place.  This extra Cache operation ensure that all the
+    // runnables have been flushed through the threads, etc.
+    return caches.has(name);
+  })
+
+  // Now measure initial disk usage
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    initialUsage = usage;
+  })
+
+  // Now re-populate the Cache object
+  .then(function() {
+    return caches.open(name);
+  }).then(function(c) {
+    cache = c;
+    return cache.add(url);
+  }).then(function() {
+    return caches.delete(name);
+  }).then(function(deleted) {
+    ok(deleted, "cache should be deleted");
+  })
+
+  // Reset the quota dir while the cache is deleted, but still referenced
+  // from the DOM.  This forces it to be orphaned.
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    fullUsage = usage;
+    ok(fullUsage > initialUsage, "disk usage should have grown");
+  })
+
+  // Now perform a new Cache operation that will reopen the origin.  This
+  // should clean up the orphaned Cache data.
+  .then(function() {
+    return caches.has(name);
+  }).then(function(result) {
+    ok(!result, "cache should not exist in storage");
+  })
+
+  // Finally, verify orphaned data was cleaned up by re-checking the disk
+  // usage.  Reset the storage first to ensure any WAL transaction files
+  // are flushed before measuring the usage.
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    endUsage = usage;
+    dump("### ### initial:" + initialUsage + ", full:" + fullUsage +
+         ", end:" + endUsage + "\n");
+    ok(endUsage < fullUsage, "disk usage should have shrank");
+    is(endUsage, initialUsage, "disk usage should return to original");
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>
+</html>

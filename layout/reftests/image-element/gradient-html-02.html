@@ -1,0 +1,21 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+  <div style="width:100px; height:100px; background:-moz-element(#g);">
+    <div style="height:100px;"></div>
+    <div style="width:100px; height:100px; background:blue;"></div>
+  </div>
+  <svg>
+    <defs>
+    <linearGradient id="g" x2="0" y2="1">
+      <stop stop-color="lime" offset="0"></stop>
+      <stop stop-color="lime" stop-opacity="0" offset="1"></stop>
+    </linearGradient>
+    </defs>
+  </svg>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var a = document.createTextNode(" ");
+  (document.documentElement).appendChild(a);
+  var b = document.createElement("span");
+  (document.documentElement).appendChild(b);
+  var c = document.createTextNode(" ");
+  (document.documentElement).appendChild(c);
+  var r = document.createRange();
+  r.setStart(a, 0); 
+  r.setEnd(c, 0); 
+  try {
+    r.surroundContents(document.documentElement); 
+  } catch(e) {
+  }
+  document.documentElement.appendChild(b);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

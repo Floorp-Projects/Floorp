@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=498240
+-->
+<head>
+  <title>Test for Bug 498240</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+ .container { border: 1px solid blue; display:block; }
+ b { color:blue; }
+ i { color:magenta; }
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=498240">Mozilla Bug 498240</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 498240 **/
+
+
+function create(s) {
+  var p = document.createElement('span');
+  p.innerHTML = s;
+  p.setAttribute("class","container");
+  document.body.appendChild(p);
+  return p;
+}
+function select(start, startOffset, end, endOffset) {
+  var sel = getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.setStart(start, startOffset);
+  range.setEnd(end, endOffset);
+  sel.addRange(range);
+}
+
+function insertClone(node) {
+  var sel = getSelection();
+  var range = sel.getRangeAt(0);
+  range.insertNode(node.cloneNode(true));
+}
+function insertCloneAtEnd(node) {
+  var sel = getSelection();
+  var range = sel.getRangeAt(0);
+  range.endContainer.insertBefore(node.cloneNode(true),range.endContainer.childNodes[range.endOffset]);
+}
+
+function check(start, startOffset, end, endOffset, s) {
+  var sel = getSelection();
+  var range = sel.getRangeAt(0);
+  is(range.startContainer, start, "wrong start node for range: '"+range.toString()+"'");
+  is(range.startOffset, startOffset, "wrong start offset for range: '"+range.toString()+"'");
+  is(range.endContainer, end, "wrong end node for range: '"+range.toString()+"'");
+  is(range.endOffset, endOffset, "wrong end offset for range: '"+range.toString()+"'");
+}
+
+function testInsertNode(node) {
+  var p;
+
+  p = create('a<b>bc</b>');
+  select(p.childNodes[0],0,p.childNodes[1],0);
+  insertClone(node);
+  check(p.childNodes[0],0,p.childNodes[3],0);
+
+  p = create('d<b>ef</b>');
+  select(p.childNodes[0],0,p.childNodes[1],1);
+  insertClone(node);
+  check(p.childNodes[0],0,p.childNodes[3],1);
+
+  p = create('g<b>h</b>');
+  select(p.childNodes[0],0,p.childNodes[0],0);
+  insertClone(node);
+  check(p.childNodes[0],0,p,2);
+
+  p = create('i<b>j</b>');
+  select(p.childNodes[0],1,p.childNodes[0],1);
+  insertClone(node);
+  check(p.childNodes[0],1,p,2);
+
+  p = create('k<b>l</b>');
+  select(p.childNodes[0],0,p.childNodes[1].childNodes[0],0);
+  insertClone(node);
+  check(p.childNodes[0],0,p.childNodes[3].childNodes[0],0);
+
+  p = create('m<b>no</b>');
+  select(p.childNodes[0],1,p.childNodes[1].childNodes[0],0);
+  insertClone(node);
+  check(p.childNodes[0],1,p.childNodes[3].childNodes[0],0);
+
+  p = create('p<b>qr</b>');
+  select(p.childNodes[0],1,p.childNodes[1].childNodes[0],1);
+  insertClone(node);
+  check(p.childNodes[0],1,p.childNodes[3].childNodes[0],1);
+
+  p = create('s<b>tu</b>');
+  select(p.childNodes[0],1,p.childNodes[1],0);
+  insertClone(node);
+  check(p.childNodes[0],1,p.childNodes[3],0);
+
+  p = create('<i>A</i><b>BC</b>');
+  select(p.childNodes[0],0,p.childNodes[1],0);
+  insertClone(node);
+  check(p.childNodes[0],0,p.childNodes[1],0);
+
+  p = create('<i>D</i><b>EF</b>');
+  select(p.childNodes[0],1,p.childNodes[1],1);
+  insertClone(node);
+  check(p.childNodes[0],1,p.childNodes[1],1);
+
+  p = create('<i></i><b>GH</b>');
+  select(p.childNodes[0],0,p.childNodes[1],0);
+  insertClone(node);
+  check(p.childNodes[0],0,p.childNodes[1],0);
+
+  p = create('<i>I</i><b>J</b>');
+  select(p,0,p.childNodes[1],0);
+  insertClone(node);
+  check(p,0,p.childNodes[2],0);
+
+  p = create('<i>K</i><b>L</b>');
+  select(p,0,p,2);
+  insertClone(node);
+  check(p,0,p,3);
+
+  p = create('<i>M</i><b>N</b>');
+  select(p,1,p,2);
+  insertClone(node);
+  check(p,1,p,3);
+
+  p = create('<i>O</i><b>P</b>');
+  select(p,1,p,1);
+  insertClone(node);
+  check(p,1,p,2);
+
+  p = create('<i>Q</i><b>R</b>');
+  select(p,2,p,2);
+  insertClone(node);
+  check(p,2,p,3);
+
+  p = create('<i>S</i><b>T</b>');
+  select(p,1,p,1);
+  insertCloneAtEnd(node);
+  check(p,1,p,1);
+
+  p = create('<i>U</i><b>V</b>');
+  select(p,2,p,2);
+  insertCloneAtEnd(node);
+  check(p,2,p,2);
+
+  p = create('<i>X</i><b>Y</b>');
+  select(p,0,p,1);
+  insertCloneAtEnd(node);
+  check(p,0,p,1);
+
+  p = create('<i>X</i><b><s>Y</s></b>');
+  select(p,0,p.childNodes[1],1);
+  insertCloneAtEnd(node);
+  check(p,0,p.childNodes[1],1);
+
+  p = create('<i>Z</i><b></b>');
+  select(p,0,p.childNodes[1],0);
+  insertCloneAtEnd(node);
+  check(p,0,p.childNodes[1],0);
+
+  p = create('<i>ZA</i><b><s>ZB</s><u>ZC</u></b>');
+  select(p,0,p.childNodes[1],1);
+  insertCloneAtEnd(node);
+  check(p,0,p.childNodes[1],1);
+}
+function testInvalidNodeType(node) {
+  try { 
+    testInsertNode(node); 
+    ok(false,"Expected an InvalidNodeTypeError"); 
+  } catch(e) {
+    is(e.name, "InvalidNodeTypeError", "Wrong exception, expected InvalidNodeTypeError");
+    ok(e instanceof DOMException, "Wrong type of exception: " + e);
+    is(e.code, DOMException.INVALID_NODE_TYPE_ERR, "Wrong exception code, expected INVALID_NODE_TYPE_ERR");
+  }
+}
+
+function runTest() {
+  testInsertNode(document.createTextNode('123'));
+
+  var i = document.createElement('SPAN')
+  i.innerHTML='456'
+  testInsertNode(i);
+
+  i = document.createDocumentFragment();
+  i.appendChild(document.createTextNode('789'));
+  testInsertNode(i);
+
+  /// DOM2 Traversal and Range Specification 2.13 "insertNode":
+  ///   RangeException INVALID_NODE_TYPE_ERR: Raised if newNode is an Attr, Entity, Notation, or Document node.
+  // BUG: testInvalidNodeType(document.createAttribute('a'));
+  todo(false, "Test insertion of Entity node into range");
+  // TODO: testInvalidNodeType(document.createEntity());
+  todo(false, "Test insertion of Notation node into range");
+  // TODO: testInvalidNodeType(document.createNotation());
+  // BUG: testInvalidNodeType(document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', null));
+
+  // Intentionally fails because of bug 418755.
+  todo(false, "test that Range::insertNode() throws WrongDocumentError when it should");
+  i = document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', null).createElement('html');
+  try { 
+    testInsertNode(i);
+    todo(false,"Expected a WrongDocumentError"); 
+  } catch(e) {
+    is(e.name, "WrongDocumentError", "Wrong exception, expected WrongDocumentError");
+    ok(e instanceof DOMException, "Wrong type of exception: " + e);
+    is(e.code, DOMException.WRONG_DOCUMENT_ERR, "Wrong exception code, expected WRONG_DOCUMENT_ERR");
+  }
+
+  // Inserting an ancestor of the start container should throw HierarchyRequestError
+  todo(false, "test that Range::insertNode() throws HierarchyRequestError when it should");
+  var p = create('<b>IJK</b>');
+  select(p.childNodes[0],0,p.childNodes[0],1);
+  var sel = getSelection();
+  var range = sel.getRangeAt(0);
+  try { 
+    range.insertNode(p);
+    ok(false,"Expected a HierarchyRequestError"); 
+  } catch(e) {
+    is(e.name, "HierarchyRequestError", "Wrong exception, expected HierarchyRequestError");
+    ok(e instanceof DOMException, "Wrong type of exception: " + e);
+    is(e.code, DOMException.HIERARCHY_REQUEST_ERR, "Wrong exception code, expected HIERARCHY_REQUEST_ERR");
+  }
+
+  // TODO: we should also have a test for:
+  /// "HierarchyRequestError: Raised if the container of the start of the Range is of a type
+  ///   that does not allow children of the type of newNode"
+
+  todo(false, "InvalidStateError test goes here...");
+
+  var sel = getSelection();
+  sel.removeAllRanges();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+
+</script>
+</pre>
+</body>
+</html>

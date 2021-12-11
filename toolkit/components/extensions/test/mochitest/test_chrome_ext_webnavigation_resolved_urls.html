@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function webnav_unresolved_uri_on_expected_URI_scheme() {
+  function background() {
+    let checkURLs;
+
+    browser.webNavigation.onCompleted.addListener(async msg => {
+      if (checkURLs.length) {
+        let expectedURL = checkURLs.shift();
+        browser.test.assertEq(expectedURL, msg.url, "Got the expected URL");
+        await browser.tabs.remove(msg.tabId);
+        browser.test.sendMessage("next");
+      }
+    });
+
+    browser.test.onMessage.addListener((name, urls) => {
+      if (name == "checkURLs") {
+        checkURLs = urls;
+      }
+    });
+
+    browser.test.sendMessage("ready", browser.runtime.getURL("/tab.html"));
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background,
+    files: {
+      "tab.html": `<!DOCTYPE html>
+        <html>
+          <head>
+           <meta charset="utf-8">
+          </head>
+        </html>
+      `,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  await extension.startup();
+
+  let checkURLs = [
+    "resource://gre/modules/Services.jsm",
+    "chrome://mochikit/content/tests/SimpleTest/SimpleTest.js",
+    "about:mozilla",
+  ];
+
+  let tabURL = await extension.awaitMessage("ready");
+  checkURLs.push(tabURL);
+
+  extension.sendMessage("checkURLs", checkURLs);
+
+  for (let url of checkURLs) {
+    window.open(url);
+    await extension.awaitMessage("next");
+  }
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

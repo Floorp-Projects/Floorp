@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  setTimeout(function(){
+    document.documentElement.removeChild(document.body);
+  }, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<input value="f" pattern="[">
+</body>
+
+</html>

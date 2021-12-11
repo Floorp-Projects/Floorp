@@ -1,0 +1,26 @@
+# Tests using placeholder-focus-ref.html as a reference are disabled because
+# we can't change the caret colour nor disable it and we can't change the
+# text colour without changing the caret which means that the tested page has
+# a black caret with a grey text and the reference has a grey caret with grey
+# text. The only thing that is doable is to make the caret grey in the tested
+# page but that would make the test moot because a failure wouldn't be seen.
+# A real way to fix this would be to be able to style the caret or to implement
+# ::value (bug 648643), depending of the ::value behaviour (it could change the
+# caret colour and the text colour or just the text colour).
+
+== placeholder-simple.html placeholder-simple-ref.html
+# needs-focus == placeholder-focus.html placeholder-focus-ref.html
+needs-focus == placeholder-blur.html placeholder-simple-ref.html
+== placeholder-value.html placeholder-value-ref.html
+== placeholder-empty-string.html placeholder-empty-string-ref.html
+== placeholder-add.html placeholder-simple-ref.html
+== placeholder-removal.html textarea-ref.html
+== placeholder-value-set.html placeholder-value-ref.html
+== placeholder-value-unset.html placeholder-simple-ref.html
+== placeholder-value-reset.html placeholder-simple-ref.html
+== placeholdershown.html placeholdershown-ref.html
+== css-resize.html css-resize-ref.html
+== css-display.html placeholder-simple-ref.html
+# We can't check except by verifying that the output is different.
+# Same reasons as focus issues explained above.
+!= css-opacity.html placeholder-simple-ref.html

@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+MODULE = nss
+
+CSRCS = signver.c	\
+        pk7print.c	\
+	$(NULL)
+
+REQUIRES = dbm seccmd
+
+PROGRAM = signver
+
+PACKAGE_FILES = README.txt signedForm.html signedForm.pl form.pl
+ifeq ($(subst /,_,$(shell uname -s)),WINNT)
+PACKAGE_FILES += signedForm.nt.pl signver.exe
+else
+PACKAGE_FILES += signver
+endif
+
+ARCHIVE_NAME  = signver

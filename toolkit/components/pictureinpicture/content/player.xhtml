@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      windowtype="Toolkit:PictureInPicture"
+      chromemargin="0,0,0,0">
+  <head>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" type="text/css"
+          href="chrome://global/skin/pictureinpicture/player.css"/>
+    <link rel="localization" href="toolkit/pictureinpicture/pictureinpicture.ftl"/>
+    <link rel="localization" href="browser/browserSets.ftl"/>
+    <script src="chrome://global/content/pictureinpicture/player.js"></script>
+    <title data-l10n-id="pictureinpicture-player-title"></title>
+  </head>
+
+  <body>
+    <xul:commandset>
+      <xul:command id="View:PictureInPicture" oncommand="Player.onCommand(event);"/>
+    </xul:commandset>
+
+    <xul:keyset>
+#ifndef XP_MACOSX
+      <xul:key data-l10n-id="picture-in-picture-toggle-shortcut" command="View:PictureInPicture" modifiers="accel,shift"/>
+      <xul:key data-l10n-id="picture-in-picture-toggle-shortcut-alt" command="View:PictureInPicture" modifiers="accel,shift"/>
+#else
+      <xul:key data-l10n-id="picture-in-picture-toggle-shortcut-mac" command="View:PictureInPicture" modifiers="accel,alt,shift"/>
+      <xul:key data-l10n-id="picture-in-picture-toggle-shortcut-mac-alt" command="View:PictureInPicture" modifiers="accel,alt,shift"/>
+#endif
+    </xul:keyset>
+
+    <div class="player-holder">
+      <xul:browser type="content" primary="true" remote="true" remoteType="web" id="browser" tabindex="-1"></xul:browser>
+    </div>
+    <div id="controls">
+      <button id="close"
+              class="control-item"
+#ifdef XP_MACOSX
+              mac="true"
+#endif
+              data-l10n-id="pictureinpicture-close"
+              tabindex="3"/>
+      <div id="controls-bottom">
+        <button id="unpip" class="control-item" data-l10n-id="pictureinpicture-unpip" tabindex="2"></button>
+        <div class="gap"></div>
+        <button id="playpause" class="control-item" tabindex="1" autofocus="true"
+                data-l10n-id="pictureinpicture-pause"/>
+        <div class="gap" hidden="true"></div>
+        <button id="audio" class="control-item" hidden="true" tabindex="1"
+                data-l10n-id="pictureinpicture-mute"/>
+      </div>
+    </div>
+  </body>
+</html>

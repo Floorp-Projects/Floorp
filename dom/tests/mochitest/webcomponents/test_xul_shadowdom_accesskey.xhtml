@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="XUL ShadowDOM accesskey"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<body xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" rel="opener"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=1037709"
+   title="XUL ShadowDOM accesskey">
+Mozilla Bug 1037709
+</a>
+<div id="container" style="position: relative"></div>
+</body>
+<!-- Tests code -->
+<script type="application/javascript">
+<![CDATA[
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const container = document.getElementById("container");
+
+function pressAccessKey(accessKey){
+  synthesizeKey(accessKey, navigator.platform.includes("Mac") ? { altKey: true, ctrlKey: true }
+                                                              : { altKey: true, shiftKey: true });
+}
+
+function testAccesskeyInShadowTree(mode) {
+  add_task(async () => {
+    const host = document.createXULElement("div");
+    container.appendChild(host);
+
+    const shadowRoot = host.attachShadow({mode})
+    const button = document.createXULElement("button");
+    button.innerText = "Click Me";
+    button.setAttribute("accesskey", "g");
+    shadowRoot.appendChild(button);
+
+    // Trigger frame construction which is constructed lazily on XUL Element.
+    button.getBoundingClientRect();
+
+    let isClickFired = false;
+    button.addEventListener("click", function(e) {
+      isClickFired = true;
+    }, { once: true });
+
+    pressAccessKey("g");
+    ok(isClickFired, `button element with accesskey in the shadow tree of ${mode} mode`);
+
+    host.remove();
+  });
+}
+
+testAccesskeyInShadowTree("open");
+testAccesskeyInShadowTree("closed");
+
+]]>
+</script>
+</window>

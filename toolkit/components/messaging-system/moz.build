@@ -1,0 +1,24 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Messaging System")
+
+BROWSER_CHROME_MANIFESTS += [
+    "schemas/SpecialMessageActionSchemas/test/browser/browser.ini",
+    "schemas/TriggerActionSchemas/test/browser/browser.ini",
+]
+
+SPHINX_TREES["docs"] = "schemas"
+
+XPCSHELL_TESTS_MANIFESTS += ["targeting/test/unit/xpcshell.ini"]
+
+TESTING_JS_MODULES += [
+    "schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.json",
+    "schemas/TriggerActionSchemas/TriggerActionSchemas.json",
+]
+
+JAR_MANIFESTS += ["jar.mn"]

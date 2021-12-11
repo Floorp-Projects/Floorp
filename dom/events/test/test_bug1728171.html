@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1728171</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+
+<style>
+  #container {
+    width: 100px;
+    height: 100px;
+  }
+</style>
+
+<div id="container"></div>
+
+<script>
+  const container = document.getElementById("container");
+
+  add_task(async function testPenContextMenu() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.w3c_pointer_events.dispatch_by_pointer_messages", true],
+        ...getPrefs("TOUCH_EVENTS:PAN"),
+      ],
+    });
+
+    await waitUntilApzStable();
+
+    let pointerUpSeen = false
+    container.addEventListener("pointerup", () => {
+      pointerUpSeen = true;
+    }, { once: true });
+    const contextMenuPromise = promiseOneEvent(container, "contextmenu");
+    await promiseNativePointerTap(container, "pen", 50, 50, { button: 2 });
+
+    const contextmenu = await contextMenuPromise;
+    ok(pointerUpSeen, "pointerup event was seen");
+    is(contextmenu.button, 2, ".button indicates secondary button");
+  });
+
+  add_task(async function testPenContextMenuWhenButtonChange() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.w3c_pointer_events.dispatch_by_pointer_messages", true],
+        ...getPrefs("TOUCH_EVENTS:PAN"),
+      ],
+    });
+
+    await waitUntilApzStable();
+
+    const contextMenuPromise = promiseOneEvent(container, "contextmenu");
+
+    await promiseNativePointerInput(container, "pen", SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, 50, 50, { button: 2 });
+    // no button
+    await promiseNativePointerInput(container, "pen", SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, 50, 50);
+    await promiseNativePointerInput(container, "pen", SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, 50, 50);
+
+    const contextmenu = await contextMenuPromise;
+    is(contextmenu.button, 2, ".button still indicates secondary button");
+  });
+</script>

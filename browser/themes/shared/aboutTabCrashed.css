@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  font-size: 1.25rem;
+}
+
+#reportSent {
+  font-weight: bold;
+}
+
+#reportBox {
+  background-color: var(--in-content-box-info-background);
+  margin: 24px 0;
+  padding: 14px;
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
+}
+
+#reportBox > h2:first-child {
+  margin-top: 0;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+}
+
+input[type="text"] {
+  margin-inline-start: 0;
+}
+
+#options {
+  list-style: none;
+  margin-inline-start: 0;
+}
+
+#options > li,
+#email {
+  margin-top: 11px;
+}

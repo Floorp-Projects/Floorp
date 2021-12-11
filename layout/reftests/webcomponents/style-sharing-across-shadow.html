@@ -1,0 +1,22 @@
+<!doctype html>
+<style>
+  div { display: contents }
+</style>
+<div></div>
+<div></div>
+<script>
+  let divs = document.querySelectorAll('div');
+  divs[0].attachShadow({mode: 'open'}).innerHTML = `
+    <style>
+      * { color: green; }
+    </style>
+    <span>Should be green</span>
+  `;
+  divs[1].attachShadow({mode: 'open'}).innerHTML = `
+    <style>
+      * { color: initial; }
+      [foo] { }
+    </style>
+    <span>Should not be green</span>
+  `;
+</script>

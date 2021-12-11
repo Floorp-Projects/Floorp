@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== radio.css ===================================================
+  == Styles used by the XUL radio element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: radio ::::: */
+
+radio {
+  appearance: auto;
+  -moz-default-appearance: radio-container;
+  -moz-box-align: center;
+  margin: 2px 4px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
+}
+
+.radio-check {
+  appearance: auto;
+  -moz-default-appearance: radio;
+  margin: 1px 0;
+}
+
+.radio-label-box {
+  margin-inline-start: 2px;
+  padding-bottom: 1px;
+  padding-inline-start: 1px;
+}
+
+.radio-icon[src] {
+  margin-inline-end: 2px;
+}
+
+.radio-label {
+  margin: 0;
+}
+
+/* ..... focused state ..... */
+
+radio[focused="true"] > .radio-label-box {
+  outline: 1px dotted;
+}
+
+/* ..... disabled state ..... */
+
+radio[disabled="true"] {
+  color: GrayText;
+}
+
+@media (-moz-windows-classic) {
+  radio[disabled="true"] {
+    color: ThreeDShadow;
+    text-shadow: 1px 1px ThreeDHighlight;
+  }
+}

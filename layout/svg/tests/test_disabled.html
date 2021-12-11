@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<!--
+Copied from https://bugzilla.mozilla.org/show_bug.cgi?id=744830
+-->
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235</a>
+<iframe></iframe>
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["svg.disabled", true]]}, function() {
+    document.querySelector('iframe').src = "file_disabled_iframe.html";
+  });
+</script>

@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=649740
+-->
+<head>
+  <title>Test for Bug 649740</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style">
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=649740">Mozilla Bug 649740</a>
+<p id="display1"></p>
+<p id="display2"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 649740 **/
+
+function condition(s) {
+  return s.replace(/^@supports\s*/, '').replace(/ \s*{\s*}\s*$/, '');
+}
+
+var styleSheetText =
+  "@supports(color: green){ }\n" +
+  "@supports (color: green) { }\n" +
+  "@supports ((color: green)) { }\n" +
+  "@supports (color: green) and (color: blue) { }\n" +
+  "@supports ( Font:  20px serif ! Important)  { }";
+
+function runTest() {
+  var style = document.getElementById("style");
+  style.textContent = styleSheetText;
+
+  var sheet = style.sheet;
+
+  is(condition(sheet.cssRules[0].cssText), "(color: green)");
+  is(condition(sheet.cssRules[1].cssText), "(color: green)");
+  is(condition(sheet.cssRules[2].cssText), "((color: green))");
+  is(condition(sheet.cssRules[3].cssText), "(color: green) and (color: blue)");
+  is(condition(sheet.cssRules[4].cssText), "( Font:  20px serif ! Important)");
+
+  var cs1 = getComputedStyle(document.getElementById("display1"), "");
+  var cs2 = getComputedStyle(document.getElementById("display2"), "");
+  function check_balanced_condition(condition_inner, expected_match) {
+    style.textContent = "#display1, #display2 { text-decoration: overline }\n" +
+                        "@supports " + condition_inner + "{\n" +
+                        "  #display1 { text-decoration: line-through }\n" +
+                        "}\n" +
+                        "#display2 { text-decoration: underline }\n";
+    is(cs1.textDecorationLine,
+       expected_match ? "line-through" : "overline",
+       "@supports condition \"" + condition_inner + "\" should " +
+       (expected_match ? "" : "NOT ") + "match");
+    is(cs2.textDecorationLine, "underline",
+       "@supports condition \"" + condition_inner + "\" should be balanced");
+  }
+
+  check_balanced_condition("not (color: green)", false);
+  check_balanced_condition("not (colour: green)", true);
+  check_balanced_condition("not(color: green)", false);
+  check_balanced_condition("not(colour: green)", false);
+  check_balanced_condition("not/* */(color: green)", false);
+  check_balanced_condition("not/* */(colour: green)", true);
+  check_balanced_condition("not /* */ (color: green)", false);
+  check_balanced_condition("not /* */ (colour: green)", true);
+  check_balanced_condition("(color: green) and (color: blue)", true);
+  check_balanced_condition("(color: green) /* */ /* */ and /* */ /* */ (color: blue)", true);
+  check_balanced_condition("(color: green) and(color: blue)", false);
+  check_balanced_condition("(color: green) and/* */(color: blue)", true);
+  check_balanced_condition("(color: green)and (color: blue)", true);
+  check_balanced_condition("(color: green) or (color: blue)", true);
+  check_balanced_condition("(color: green) /* */ /* */ or /* */ /* */ (color: blue)", true);
+  check_balanced_condition("(color: green) or(color: blue)", false);
+  check_balanced_condition("(color: green) or/* */(color: blue)", true);
+  check_balanced_condition("(color: green)or (color: blue)", true);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+</script>
+</pre>
+</body>
+</html>

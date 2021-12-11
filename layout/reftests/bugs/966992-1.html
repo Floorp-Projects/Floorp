@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcases for overflow-clip-box:content-box</title>
+    <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px monospace; padding:0; margin:7px;
+}
+
+input {
+  width: 100px; padding:50px; -moz-appearance:none; overflow-clip-box:content-box;
+  border: 3px solid black;
+  background-color: white;
+  font-family: monospace;
+}
+
+p {
+ position:absolute;
+ margin:0;
+ width:70%;
+ height: 1px;
+ background:magenta;
+}
+.rel p { width:200%; }
+.block {
+  border:1px solid grey; height:50px; width:200px; padding:20px;
+  overflow:auto; overflow-clip-box:content-box;
+}
+.rel { position:relative; }
+.button { width:0px; padding:0 50px; overflow:hidden; }
+.pb { overflow-clip-box:padding-box; }
+.cb { overflow-clip-box:content-box; }
+    </style>
+</head>
+<body>
+
+<div class="rel block">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX<p></p></div>
+<div style="float:right">
+
+<div class="block" style="-moz-box-sizing:border-box;height:90px">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</div>
+</div>
+
+<div class="rel block">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX<p></p></div>
+<div id="d1" class="rel block">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX<p></p></div>
+<script>
+document.getElementById("d1").scrollLeft = "100000";
+</script>
+<div class="block">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX<p></p></div>
+
+<input spellcheck=false type="text" placeholder="someveryveryveryveryverylongvalue">
+<input spellcheck=false type="text" value="someveryveryveryveryverylongvalue"><br>
+<input spellcheck=false type="password" value="someveryveryveryveryverylongpassword">
+<input spellcheck=false type="email" value="someveryveryveryveryverylongvalue">
+<input spellcheck=false type="blah" value="someveryveryveryveryverylongvalue"><br>
+<input spellcheck=false type="button" value="button" class="button" style="overflow-clip-box:initial">
+<input spellcheck=false type="button" value="button" class="button pb">
+<input spellcheck=false type="reset" class="button pb">
+<input spellcheck=false type="submit" class="button pb"><br>
+<input spellcheck=false type="button" value="button" class="button cb">
+<input spellcheck=false type="reset" class="button cb">
+<input spellcheck=false type="submit" class="button cb"><br>
+
+</body>
+</html>

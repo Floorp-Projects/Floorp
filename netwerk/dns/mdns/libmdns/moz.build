@@ -1,0 +1,51 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    UNIFIED_SOURCES += [
+        "MDNSResponderOperator.cpp",
+        "MDNSResponderReply.cpp",
+        "nsDNSServiceDiscovery.cpp",
+    ]
+
+    LOCAL_INCLUDES += [
+        "/netwerk/base",
+    ]
+
+else:
+    EXTRA_JS_MODULES += [
+        "DNSServiceDiscovery.jsm",
+        "fallback/DataReader.jsm",
+        "fallback/DataWriter.jsm",
+        "fallback/DNSPacket.jsm",
+        "fallback/DNSRecord.jsm",
+        "fallback/DNSResourceRecord.jsm",
+        "fallback/DNSTypes.jsm",
+        "fallback/MulticastDNS.jsm",
+    ]
+
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+        EXTRA_JS_MODULES += [
+            "MulticastDNSAndroid.jsm",
+        ]
+
+UNIFIED_SOURCES += [
+    "nsDNSServiceInfo.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

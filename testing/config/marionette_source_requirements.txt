@@ -1,0 +1,13 @@
+# These dependencies are required for running marionette based tests from a source checkout
+
+-r mozbase_source_requirements.txt
+
+../web-platform/tests/tools/wptserve
+../web-platform/tests/tools/third_party/certifi
+../web-platform/tests/tools/third_party/enum ; python_version < '3'
+../web-platform/tests/tools/third_party/h2
+../web-platform/tests/tools/third_party/hyperframe
+../web-platform/tests/tools/third_party/hpack
+
+../marionette/client
+../marionette/harness

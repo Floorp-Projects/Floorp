@@ -1,0 +1,18 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0">
+  <desc>
+    The 'viewBox' attribute on the inner 'svg' should push the red 'rect' it
+    contains outside the viewport, so if transforms and clipping are working
+    correctly when the inner 'svg' is being filtered, then none of the red
+    'rect' should be visible.
+  </desc>
+  <filter id="filter"><feGaussianBlur stdDeviation="0.001"/></filter>
+  <!--circle fill="lime" r="100" cx="300" cy="100"/-->
+  <rect width="100%" height="100%" fill="lime"/>
+  <svg width="200" height="200" viewBox="-200 0 200 200" filter="url(#filter)">
+	<circle fill="red" r="98" cx="100" cy="100"/>
+  </svg>
+</svg>

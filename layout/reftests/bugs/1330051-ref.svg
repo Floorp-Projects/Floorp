@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" class="reftest-wait">
+  <foreignObject width="500" height="500">
+    <iframe xmlns="http://www.w3.org/1999/xhtml"
+            srcdoc="A test">
+    </iframe>
+  </foreignObject>
+  <script>
+    frames[0].onload = function() {
+      var doc = frames[0].document;
+      let el = doc.createElement('div');
+      el.innerHTML = "This should remain green";
+      el.style.color = "green";
+      doc.body.appendChild(el);
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</svg>

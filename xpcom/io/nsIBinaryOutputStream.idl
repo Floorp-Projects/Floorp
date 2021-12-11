@@ -1,0 +1,103 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIOutputStream.idl"
+
+%{C++
+namespace mozilla {
+template<class ElementType, size_t Extent> class Span;
+}
+%}
+native Bytes(mozilla::Span<const uint8_t>);
+
+/**
+ * This interface allows writing of primitive data types (integers,
+ * floating-point values, booleans, etc.) to a stream in a binary, untagged,
+ * fixed-endianness format.  This might be used, for example, to implement
+ * network protocols or to produce architecture-neutral binary disk files,
+ * i.e. ones that can be read and written by both big-endian and little-endian
+ * platforms.  Output is written in big-endian order (high-order byte first),
+ * as this is traditional network order.
+ *
+ * @See nsIBinaryInputStream
+ */
+
+[scriptable, builtinclass, uuid(204ee610-8765-11d3-90cf-0040056a906e)]
+interface nsIBinaryOutputStream : nsIOutputStream {
+    void setOutputStream(in nsIOutputStream aOutputStream);
+
+    /**
+     * Write a boolean as an 8-bit char to the stream.
+     */
+    void writeBoolean(in boolean aBoolean);
+
+    void write8(in uint8_t aByte);
+    void write16(in uint16_t a16);
+    void write32(in uint32_t a32);
+    void write64(in uint64_t a64);
+
+    void writeFloat(in float aFloat);
+    void writeDouble(in double aDouble);
+
+    /**
+     * Write an 8-bit pascal style string to the stream.
+     * 32-bit length field, followed by length 8-bit chars.
+     */
+    void writeStringZ(in string aString);
+
+    /**
+     * Write a 16-bit pascal style string to the stream.
+     * 32-bit length field, followed by length PRUnichars.
+     */
+    void writeWStringZ(in wstring aString);
+
+    /**
+     * Write an 8-bit pascal style string (UTF8-encoded) to the stream.
+     * 32-bit length field, followed by length 8-bit chars.
+     */
+    void writeUtf8Z(in wstring aString);
+
+    /**
+     * Write an opaque byte array to the stream.
+     */
+    [binaryname(WriteBytesFromJS)]
+    void writeBytes([size_is(aLength)] in string aString,
+                    [optional] in uint32_t aLength);
+
+    /**
+     * Non-scriptable and saner-signature version of the same.
+     */
+    [noscript, nostdcall, binaryname(WriteBytes)]
+    void writeBytesNative(in Bytes aBytes);
+
+    /**
+     * Write an opaque byte array to the stream.
+     */
+    void writeByteArray(in Array<uint8_t> aBytes);
+};
+
+%{C++
+
+inline nsresult
+NS_WriteOptionalStringZ(nsIBinaryOutputStream* aStream, const char* aString)
+{
+    bool nonnull = (aString != nullptr);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteStringZ(aString);
+    return rv;
+}
+
+inline nsresult
+NS_WriteOptionalWStringZ(nsIBinaryOutputStream* aStream, const char16_t* aString)
+{
+    bool nonnull = (aString != nullptr);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteWStringZ(aString);
+    return rv;
+}
+
+%}

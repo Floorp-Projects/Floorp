@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Basic test that click and hold on a scrollbar button works as expected</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript">
+
+
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  let scroller = document.getElementById('scroller');
+  let w = {}, h = {};
+  utils.getScrollbarSizes(scroller, w, h);
+  let verticalScrollbarWidth = w.value;
+  if (verticalScrollbarWidth == 0) {
+    ok(false, "No scrollbar, test will fail");
+  }
+  let downArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
+  var mouseX = scroller.clientWidth + verticalScrollbarWidth / 2;
+  let mouseY = scroller.clientHeight - (downArrowHeight / 2);
+
+  let waitForScroll = waitForScrollEvent(scroller);
+
+  info("Synthesizing click at (" + mouseX + ", " + mouseY);
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
+
+  await waitForScroll;
+
+  // Sanity-check: we should have scrolled.
+  ok(scroller.scrollTop > 0, "Should have scrolled by clicking the scrollbar button");
+
+  let startPos = scroller.scrollTop;
+
+  info("scroller.scrollTop " + scroller.scrollTop);
+
+  // mouse move over the scrollbar button
+  await promiseNativeMouseEventWithAPZ({
+    type: "mousemove",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
+  // mouse down
+  await promiseNativeMouseEventWithAPZ({
+    type: "mousedown",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
+
+  info("sent mouse down");
+
+  info("scroller.scrollTop " + scroller.scrollTop);
+
+  // mouse down on the scrollbar button and then wait until
+  // we scroll more 2x the distance of one click.
+  while ((scroller.scrollTop - startPos) < 2*startPos) {
+    let waitForScroll2 = waitForScrollEvent(scroller);
+    // Wait a bit
+    await SpecialPowers.promiseTimeout(50);
+    await waitForScroll2;
+    info("loop scroller.scrollTop " + scroller.scrollTop);
+  }
+
+  await promiseNativeMouseEventWithAPZ({
+    type: "mouseup",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
+
+  ok(true, "got enough scroll");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .spacer {
+      background-color: #212121;
+      height: 9000vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroller" style="overflow: auto; width: 200px; height: 200px;">
+    <div class="spacer"></div>
+  </div>
+</body>
+</html>

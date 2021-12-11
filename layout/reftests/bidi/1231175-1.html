@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+div { width: 200px; border: 1px solid blue; }
+span { direction: rtl; color: red; }
+</style>
+<body>
+<p>The number in the red text should read "18" in all cases.
+<div>
+<ol dir=rtl>
+<li><span style="unicode-bidi: normal">18 ديسمبر</span></li>
+<li><span style="unicode-bidi: embed">18 ديسمبر</span></li>
+<li><span style="unicode-bidi: isolate">18 ديسمبر</span></li>
+<li><span style="unicode-bidi: plaintext">18 ديسمبر</span></li>
+<li><span>&#x202B;18 ديسمبر&#x202C;</span></li>
+<li><span>&#x2067;18 ديسمبر&#x2069;</span></li>
+<li><span>&#x2068;18 ديسمبر&#x2069;</span></li>

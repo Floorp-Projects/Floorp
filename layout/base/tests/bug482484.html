@@ -1,0 +1,22 @@
+<!DOCTYPE HTML><html><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div contentEditable="true" id="div" spellcheck="false"><p id="p">BC</p></div>
+<script>
+  // Position the caret before the "B"
+  var div = document.getElementById('div');
+  div.focus();
+  var p = document.getElementById('p');
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.setStart(p.firstChild, 0)
+  range.setEnd(p.firstChild, 0);
+  sel.addRange(range);
+
+  sendKey('UP');  // move UP
+  sendChar('A');  // insert "A"
+</script>
+</body>
+</html>

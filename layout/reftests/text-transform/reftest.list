@@ -1,0 +1,45 @@
+# Some text-transform tests may require font fallback
+defaults pref(gfx.font_rendering.fallback.async,false)
+
+== capitalize-1.html capitalize-ref.html
+== capitalize-2.html capitalize-ref.html
+== capitalize-3.html capitalize-3-ref.html
+== capitalize-4.html capitalize-4-ref.html
+== capitalize-5.html capitalize-5-ref.html
+== capitalize-6.html capitalize-6-ref.html
+== capitalize-7.html capitalize-7-ref.html
+== capitalize-7a.html capitalize-7-ref.html
+== capitalize-8.html capitalize-8-ref.html
+== lowercase-1.html lowercase-ref.html
+== lowercase-sigma-1.html lowercase-sigma-1-ref.html
+random-if(winWidget) == small-caps-1.html small-caps-1-ref.html # fails if default font supports 'smcp'
+== fake-small-caps-1.html fake-small-caps-1-ref.html
+== opentype-small-caps-1.html opentype-small-caps-1-ref.html
+!= opentype-small-caps-1.html opentype-small-caps-1-notref.html
+== graphite-small-caps-1.html graphite-small-caps-1-ref.html
+!= graphite-small-caps-1.html graphite-small-caps-1-notref.html
+== uppercase-1.html uppercase-ref.html
+== uppercase-szlig-1.html uppercase-szlig-ref.html
+# these use DejaVu Sans via @font-face for consistency of results
+fuzzy-if(cocoaWidget,0-250,0-15) == all-upper.html all-upper-ref.html # bug 1140292
+fuzzy(0-1,0-1800) == all-lower.html all-lower-ref.html # bug 1140292
+fuzzy(0-1,0-80) == all-title.html all-title-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-upper.html smtp-upper-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-lower.html smtp-lower-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-title.html smtp-title-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == turkish-casing-1.html turkish-casing-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != small-caps-turkish-1.html small-caps-turkish-1-notref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-1a.html greek-uppercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-1b.html greek-uppercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-2.html greek-uppercase-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-3.html greek-uppercase-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-small-caps-1.html greek-small-caps-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == irish-uppercase-1.html irish-uppercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == irish-lowercase-1a.html irish-lowercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == irish-lowercase-1b.html irish-lowercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-1.html fullwidth-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-2.html fullwidth-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-all.html fullwidth-all-ref.html # Bug 1392106
+
+# Reset default prefs
+defaults

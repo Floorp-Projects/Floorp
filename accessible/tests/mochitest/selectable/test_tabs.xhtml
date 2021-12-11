@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL tabs selectable tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../selectable.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTest()
+    {
+      var id = "tabs_single";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for tabs_single");
+      var select = getAccessible(id, [nsIAccessibleSelectable]);
+
+      testSelectableSelection(select, ["tab_single1"]);
+
+      select.unselectAll();
+      select.addItemToSelection(1); // tab_single2
+      testSelectableSelection(select, ["tab_single2"], "select tab_single2: ");
+
+      id = "tabs_multi";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for tabs_multi");
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+
+      // Make sure both XUL selection and ARIA selection are included.
+      testSelectableSelection(select, ["tab_multi_xul1", "tab_multi_aria"]);
+
+      select.unselectAll();
+      select.addItemToSelection(2); // tab_multi_xul2
+      // We can only affect XUL selection, so ARIA selection won't change.
+      testSelectableSelection(select, ["tab_multi_aria", "tab_multi_xul2"],
+                              "select tab_multi_xul2: ");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+        href="https://bugzilla.mozilla.org/show_bug.cgi?id=1480058"
+        title="XUL tabs don't support ARIA selection">
+       Mozilla Bug 1480058
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tabbox>
+        <tabs id="tabs_single">
+          <tab id="tab_single1" label="tab1" selected="true"/>
+          <tab id="tab_single2" label="tab2"/>
+        </tabs>
+      </tabbox>
+
+      <tabbox>
+        <tabs id="tabs_multi" aria-multiselectable="true">
+          <tab id="tab_multi_xul1" label="tab1" selected="true"/>
+          <tab id="tab_multi_aria" label="tab2" aria-selected="true"/>
+          <tab id="tab_multi_xul2" label="tab3"/>
+        </tabs>
+      </tabbox>
+    </vbox>
+  </hbox>
+
+</window>

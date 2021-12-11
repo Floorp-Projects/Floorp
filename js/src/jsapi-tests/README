@@ -1,0 +1,173 @@
+# JSAPI Test Suite
+
+The tests in this directory exercise the JSAPI.
+
+
+## Building and running the tests
+
+If you built JS, you already built the tests.
+
+The tests are built by default when you build JS. All the tests are compiled
+into a single binary named jsapi-tests. They all run in a single process.
+They must be run from the js/src directory.
+
+To run the tests:
+
+    $OBJDIR/dist/bin/jsapi-tests
+
+To run the tests in a debugger:
+
+    gdb $OBJDIR/dist/bin/jsapi-tests
+
+
+## Creating new tests
+
+1.  You can either add to an existing test*.cpp file or make a new one.
+    Copy an existing test and replace the body with your test code.
+    The test harness provides `cx`, `rt`, and `global` for your use.
+
+2.  If you made a new .cpp file, add it to the UNIFIED_SOURCES list
+    in moz.build.
+
+
+## Writing test code
+
+Here is a sample test:
+
+    #include "jsapi-tests/tests.h"
+
+    BEGIN_TEST(testIntString_bug515273)
+    {
+        RootedValue v(cx);
+
+        EVAL("'42';", &v);
+        JSString *str = v.toString();
+        CHECK(JS_StringHasBeenInterned(cx, str));
+        CHECK(JS_FlatStringEqualsLiteral(JS_ASSERT_STRING_IS_FLAT(str), "42"));
+        return true;
+    }
+    END_TEST(testIntString_bug515273)
+
+The BEGIN_TEST and END_TEST macros bracket each test. By convention, the test
+name is <testFilename>_<detail>. (The above test is in testIntString.cpp.)
+
+The curly braces are required. This block is the body of a C++ member function
+that returns bool. The test harness calls this member function
+automatically. If the function returns true, the test passes. False, it fails.
+
+JSAPI tests often need extra global C/C++ code: a JSClass, a getter or setter
+function, a resolve hook. Put these before the BEGIN_TEST macro.
+
+The body of the test can use these member variables and macros, defined in
+tests.h:
+
+    JSRuntime *rt;
+    JSContext *cx;
+    JSObject *global;
+
+        The test framework creates these fresh for each test. The default
+        environment has reasonable default settings, including
+        JSOPTION_VAROBJFIX, JSOPTION_JIT, a global object of a class with
+        JSCLASS_GLOBAL_FLAGS, and an error reporter that prints to stderr.
+        See also "Custom test setup" below.
+
+    EXEC(const char *code);
+
+        Execute some JS code in global scope, using JS::Evaluate. Return
+        false if that fails. (This means that if the code throws an uncaught JS
+        exception, the test fails.)
+
+    EVAL(const char *code, jsval *vp);
+
+        Same as EXEC, but store the result value in *vp.
+
+    CHECK(bool cond);
+
+        If the condition is not true, print an error message and return false,
+        failing the test.
+
+    CHECK_SAME(jsval a, jsval b);
+
+        If a and b are different values, print an error message and return
+        false, failing the test.
+
+        This is like CHECK(sameValue(a, b)) but with a more detailed error
+        message on failure. See sameValue below.
+
+    CHECK_EQUAL(const T &a, const U &b);
+
+        CHECK(a == b), but with a more detailed error message.
+
+    CHECK_NULL(const T *ptr);
+
+        CHECK(ptr == nullptr), but with a more detailed error message.
+
+        (This is here because CHECK_EQUAL(ptr, nullptr) fails to compile on GCC
+        2.5 and before.)
+
+
+    bool knownFail;
+
+        Set this to true if your test is known to fail. The test runner will
+        print a TEST-KNOWN-FAIL line rather than a TEST-UNEXPECTED-FAIL
+        line. This way you can check in a test illustrating a bug ahead of the
+        fix.
+
+        If your test actually crashes the process or triggers an assertion,
+        this of course will not help, so you should add something like
+
+            knownFail = true;  // see bug 123456
+            return false;  // the code below crashes!
+
+        as the first two lines of the test.
+
+    bool isNegativeZero(jsval v);
+    bool isNaN(jsval v);
+
+        Self-explanatory.
+
+    bool sameValue(jsval v1, jsval v2);
+
+        True if v1 and v2 are the same value according to the ES5 SameValue()
+        function, to wit:
+
+        SameValue(NaN, NaN) is true.
+        SameValue(-0, 0) is false.
+        Otherwise SameValue(a, b) iff a === b.
+
+
+## Custom test setup
+
+Before executing each test, the test framework calls the tests' init() member
+function, which populates the rt, cx, and global member variables.
+
+A test can customize the test setup process by overloading virtual member
+functions from the JSAPITest class, like this:
+
+    const JSClass globalClassWithResolve = { ... };
+
+    BEGIN_TEST(testGlobalResolveHook)
+        {
+            RootedValue v;
+            EVAL("v", v.address());
+            CHECK_SAME(v, JSVAL_VOID);
+            return true;
+        }
+
+        // Other class members can go here.
+
+        // This one overloads a base-class method.
+        virtual JSClass *getGlobalJSClass() {
+            return &globalClassWithResolve;
+        }
+    END_TEST(testGlobalResolveHook)
+
+The overloadable member functions are:
+
+    virtual bool init();
+    virtual void uninit();
+    virtual JSRuntime * createRuntime();
+    virtual JSContext * createContext();
+    virtual JSClass * getGlobalClass();
+    virtual JSObject * createGlobal();
+

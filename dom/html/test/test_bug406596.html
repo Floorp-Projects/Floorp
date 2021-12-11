@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=406596
+-->
+<head>
+  <title>Test for Bug 406596</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=406596">Mozilla Bug 406596</a>
+<div id="content">
+  <div id="edit" contenteditable="true">This text is editable, you can change its content <a href="#" id="a" tabindex="0">ABCDEFGHIJKLMNOPQRSTUV</a> <input type="submit" value="abcd" id="b"></input> <img src="foo.png" id="c"></div>
+  <div tabindex="0">This text is not editable but is focusable</div>
+  <div tabindex="0">This text is not editable but is focusable</div>
+  <a href="#" id="d" contenteditable="true">ABCDEFGHIJKLMNOPQRSTUV</a>
+  <div tabindex="0">This text is not editable but is focusable</div>
+  <div tabindex="0">This text is not editable but is focusable</div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 406596 **/
+
+function testTabbing(click, focus, selectionOffset) {
+  var wu = SpecialPowers.getDOMWindowUtils(window);
+
+  var elem = document.getElementById(click);
+  var rect = elem.getBoundingClientRect();
+  var selection = window.getSelection();
+
+  var x = (rect.left + rect.right) / 4;
+  var y = (rect.top + rect.bottom) / 2;
+  wu.sendMouseEvent("mousedown", x, y, 0, 1, 0);
+  wu.sendMouseEvent("mousemove", x + selectionOffset, y, 0, 1, 0);
+  wu.sendMouseEvent("mouseup", x + selectionOffset, y, 0, 1, 0);
+  if (selectionOffset) {
+    is(selection.rangeCount, 1, "there should be one range in the selection");
+    var range = selection.getRangeAt(0);
+  }
+  var focusedElement = document.activeElement;
+  is(focusedElement, document.getElementById(focus),
+     "clicking should move focus to the contentEditable node");
+  synthesizeKey("KEY_Tab");
+  synthesizeKey("KEY_Tab");
+  synthesizeKey("KEY_Tab", {shiftKey: true});
+  synthesizeKey("KEY_Tab", {shiftKey: true});
+  is(document.activeElement, focusedElement,
+     "tab/shift-tab should move focus back to the contentEditable node");
+  if (selectionOffset) {
+    is(selection.rangeCount, 1,
+       "there should still be one range in the selection");
+    var newRange = selection.getRangeAt(0);
+    is(newRange.compareBoundaryPoints(Range.START_TO_START, range), 0,
+       "the selection should be the same as before the tabbing");
+    is(newRange.compareBoundaryPoints(Range.END_TO_END, range), 0,
+       "the selection should be the same as before the tabbing");
+  }
+}
+
+function test() {
+  window.getSelection().removeAllRanges();
+  testTabbing("edit", "edit", 0);
+  testTabbing("a", "edit", 0);
+  testTabbing("d", "d", 0);
+  testTabbing("edit", "edit", 10);
+  testTabbing("a", "edit", 10);
+  testTabbing("d", "d", 10);
+
+  SimpleTest.finish();
+}
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  setTimeout(test, 0);
+};
+
+</script>
+</pre>
+</body>
+</html>

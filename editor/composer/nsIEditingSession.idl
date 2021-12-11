@@ -1,0 +1,85 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+interface mozIDOMWindowProxy;
+interface nsIEditor;
+
+%{ C++
+class mozIDOMWindowProxy;
+namespace mozilla {
+class HTMLEditor;
+} // namespace mozilla
+%}
+
+[scriptable, builtinclass, uuid(24f963d1-e6fc-43ea-a206-99ac5fcc5265)]
+interface nsIEditingSession : nsISupports
+{
+  /**
+   *  Error codes when we fail to create an editor
+   *  is placed in attribute editorStatus
+   */
+  const long eEditorOK = 0;
+  const long eEditorCreationInProgress = 1;
+  const long eEditorErrorCantEditMimeType = 2;
+  const long eEditorErrorFileNotFound = 3;
+  const long eEditorErrorCantEditFramesets = 8;
+  const long eEditorErrorUnknown = 9;
+
+  /**
+   *  Status after editor creation and document loading
+   *  Value is one of the above error codes
+   */
+  readonly attribute unsigned long editorStatus;
+
+  /**
+   *  Make this window editable
+   *  @param aWindow nsIDOMWindow, the window the embedder needs to make editable
+   *  @param aEditorType string, "html" "htmlsimple" "text" "textsimple"
+   *  @param aMakeWholeDocumentEditable if PR_TRUE make the whole document in
+   *                                    aWindow editable, otherwise it's the
+   *                                    embedder who should make the document
+   *                                    (or part of it) editable.
+   *  @param aInteractive if PR_FALSE turn off scripting and plugins
+   */
+  [can_run_script]
+  void makeWindowEditable(in mozIDOMWindowProxy window,
+                          in string aEditorType,
+                          in boolean doAfterUriLoad,
+                          in boolean aMakeWholeDocumentEditable,
+                          in boolean aInteractive);
+
+  /**
+   *  Test whether a specific window has had its editable flag set; it may have an editor
+   *  now, or will get one after the uri load.
+   *
+   *  Use this, passing the content root window, to test if we've set up editing
+   *  for this content.
+   */
+  boolean windowIsEditable(in mozIDOMWindowProxy window);
+
+  /**
+   *  Get the editor for this window. May return null
+   */
+	nsIEditor getEditorForWindow(in mozIDOMWindowProxy window);
+
+  /**
+   *   Destroy editor and related support objects
+   */
+  [noscript] void tearDownEditorOnWindow(in mozIDOMWindowProxy window);
+
+%{C++
+  /**
+   * This method is implemented with nsIDocShell::GetHTMLEditor().  I.e.,
+   * This method doesn't depend on nsEditingSession.  Therefore, even if
+   * there were some implementation of nsIEditingSession interface, this
+   * would be safe to use.
+   */
+  mozilla::HTMLEditor* GetHTMLEditorForWindow(mozIDOMWindowProxy* aWindow);
+%}
+};
+

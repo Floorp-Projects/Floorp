@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test context-stroke with different stroke values (test image caching correctness)</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  -moz-context-properties: stroke;
+}
+
+#img1 {
+  stroke: blue;
+}
+
+#img2 {
+  stroke: yellow;
+}
+
+    </style>
+  </head>
+  <body>
+    <img id="img1" src="context-stroke-05.svg">
+    <img id="img2" src="context-stroke-05.svg">
+  </body>
+</html>

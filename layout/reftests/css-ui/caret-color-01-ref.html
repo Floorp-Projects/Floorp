@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<style>
+@font-face {
+  font-family: Ahem;
+  src: url(../fonts/Ahem.ttf);
+}
+div {
+  font: 16px/1 Ahem;
+  width: 1em;
+  background: green;
+}
+</style>
+<div><span></span></div>
+<script>
+let $div = document.querySelector('div');
+let $span = document.querySelector('span');
+$div.style.height = $span.getBoundingClientRect().height + 'px';
+</script>

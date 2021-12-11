@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<script>
+onmessage = function(e) {
+  parent.postMessage(e.data, '*', e.ports);
+}
+
+onmessageerror = function() {
+  parent.postMessage("error", '*');
+}
+</script>
+</body>
+</html>

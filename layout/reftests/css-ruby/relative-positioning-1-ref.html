@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1055658 - Relative positioning for ruby</title>
+  <script type="text/javascript" src="utils.js"></script>
+</head>
+<body>
+  <div style="height: 80px; line-height: 80px; width: 50px; text-align: center">
+    <span id="inline" style="position: relative">
+      <div id="annotation" style="position: absolute; width: 50px; top: -100%">
+        a<span style="position: relative; top: -10px;">b</span>c
+      </div>
+      base
+    </span>
+  </div>
+  <script type="text/javascript">
+    makeBSizeMatchInlineBox(document.getElementById('annotation'),
+                            document.getElementById('inline'));
+  </script>
+</body>
+</html>

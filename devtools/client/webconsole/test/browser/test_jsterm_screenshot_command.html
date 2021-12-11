@@ -1,0 +1,87 @@
+<html>
+  <head>
+    <meta charset="utf8">
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        --fixed-header-height: 50px;
+        margin-top: var(--fixed-header-height);
+      }
+
+      header {
+          height: var(--fixed-header-height);
+          background: rgb(255, 0, 0);
+          position: fixed;
+          left: 0;
+          top: 0;
+          right: 0;
+          /* Since we may check the background-color, put the text in the center so we don't pick a pixel from the text */
+          text-align: center;
+      }
+
+      img {
+        height: 100px;
+        width: 100px;
+      }
+
+      iframe {
+        display: block;
+        height: 50px;
+        border: none;
+      }
+
+      .overflow {
+        overflow: scroll;
+        height: 200vh;
+        width: 200vw;
+      }
+    </style>
+  </head>
+  <body>
+    <header>Fixed header</header>
+    <iframe id="same-origin-iframe" data-bg-color="rgb(255, 255, 0)"></iframe>
+    <iframe id="remote-iframe" data-bg-color="rgb(0, 255, 255)"></iframe>
+    <img id="testImage"></img>
+    <script>
+      "use strict";
+
+      async function loadIframe(iframeEl, origin) {
+        const onIframeLoaded = new Promise(resolve => {
+          iframeEl.addEventListener("load", resolve, {once: true})
+        });
+        const bgColor = iframeEl.getAttribute("data-bg-color");
+        iframeEl.src =
+          `${origin}/document-builder.sjs?html=
+            <style>
+              html {
+                background:${bgColor};
+                text-align: center;
+              }
+
+              span {
+                background-color: rgb(0, 100, 0);
+                /* move the text to right so we can check the span background color from test */
+                padding-left: 10px;
+              }
+            </style>
+            <span>${origin}</span>`;
+        await onIframeLoaded;
+        iframeEl.classList.add("loaded-iframe");
+      }
+
+      const origin = document.location.origin;
+      // Since we can't know on which origin the document is loaded, we check it so we
+      // can pick another one for the remote iframe.
+      const remoteOrigin = origin.endsWith(".com")
+        ? origin.replace(".com", ".org")
+        : origin.replace(".org", ".com");
+
+      loadIframe(document.getElementById("same-origin-iframe"), origin);
+      loadIframe(document.getElementById("remote-iframe"), remoteOrigin);
+    </script>
+  </body>
+</html>

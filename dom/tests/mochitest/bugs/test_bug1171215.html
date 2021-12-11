@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1022869</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  /** Test for Bug 1022869 **/
+  function startTest() {
+    // Initialize our cookie.
+    document.cookie = "a=b";
+
+    SpecialPowers.pushPrefEnv({ set: [["network.cookie.cookieBehavior", 1]] }).then(_ => {
+      let w = window.open("window_bug1171215.html");
+      onmessage = e => {
+        if (e.data.type == "finish") {
+          w.close();
+          SimpleTest.finish();
+          return;
+        }
+
+        if (e.data.type == "info") {
+          info(e.data.msg);
+          return;
+        }
+
+        if (e.data.type == "test") {
+          ok(e.data.test, e.data.msg);
+          return;
+        }
+
+        ok(false, "Unknown message");
+      };
+    });
+  }
+  </script>
+</head>
+<body onload="startTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1022869">Mozilla Bug 1022869</a>
+</body>
+</html>

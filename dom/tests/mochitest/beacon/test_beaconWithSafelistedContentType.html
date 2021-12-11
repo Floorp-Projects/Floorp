@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1557386
+-->
+<head>
+  <title>Test for Bug 1557386</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1557386">Mozilla Bug 1557386</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// not enabled by default yet.
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const { clearInterval, setInterval } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished");
+}
+
+let baseURL = "http://mochi.test:8888/chrome/dom/tests/mochitest/beacon/";
+let windowsToClose = [];
+let listener = msg => {
+  if (!(msg instanceof Ci.nsIConsoleMessage)) {
+    return;
+  }
+  if (msg.message.match("Cross-Origin Request Blocked:")) {
+    ok(false, "CORS response console warning found");
+  }
+};
+
+function beginTest() {
+  Services.console.registerListener(listener);
+
+  let mainWindow = window.docShell.rootTreeItem.domWindow;
+
+  let win = mainWindow.OpenBrowserWindow({});
+  windowsToClose.push(win);
+  whenDelayedStartupFinished(win, async function() {
+    Services.obs.addObserver(function waitCookie() {
+      Services.obs.removeObserver(waitCookie, "cookie-changed");
+      ok(true, "cookie set by beacon request in normal window");
+      testOnPrivateWindow();
+    }, "cookie-changed");
+    let testURL = baseURL + "file_beaconSafelist.html";
+    BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, testURL);
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, false, testURL);
+    await SpecialPowers.spawn(win.gBrowser.selectedBrowser, [], async () => {
+      await new Promise((resolve, reject) => {
+        let intervalId;
+        function queryIfBeaconSucceeded() {
+          content.clearInterval(intervalId);
+          let xhr = new content.XMLHttpRequest();
+          let baseURL = "http://example.com/tests/dom/tests/mochitest/beacon/";
+          let checkUrl = baseURL + "beacon-handler.sjs?getLastBeaconCors";
+          xhr.open("GET", checkUrl, true);
+          xhr.onload = function() {
+            let res = JSON.parse(xhr.responseText);
+            is(res.data, "text", "Got correct data");
+            resolve();
+          };
+          xhr.onerror = function() {
+            ok(false, "Error getting last beacon");
+            reject();
+          };
+          xhr.send();
+        }
+        intervalID = content.setInterval(queryIfBeaconSucceeded, 2000);
+      });
+    });
+    cleanup();
+  });
+}
+
+function cleanup() {
+  Services.console.unregisterListener(listener);
+  for (let i = 0; i < windowsToClose.length; ++i) {
+    windowsToClose[i].close();
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

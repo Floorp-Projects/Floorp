@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1038811: Push tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1038811</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1038811">Mozilla Bug 1038811</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+  function debug(str) {
+  // console.log(str + "\n");
+  }
+
+  var registration;
+
+  add_task(async function start() {
+    await setupPrefsAndMockSocket(new MockWebSocket());
+
+    var url = "worker.js?" + Math.random();
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
+  });
+
+  add_task(async function hasPermission() {
+    var state = await registration.pushManager.permissionState();
+    debug("state: " + state);
+    ok(["granted", "denied", "prompt"].includes(state), "permissionState() returned a valid state.");
+  });
+
+  add_task(async function unregister() {
+    var result = await registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
+
+</script>
+</body>
+</html>

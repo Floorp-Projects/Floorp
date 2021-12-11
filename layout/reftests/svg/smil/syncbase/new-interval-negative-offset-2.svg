@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Simple case of a negative offset before the syncbase has begun.
+
+    SMILANIM 3.3.6 Propagating changes to times has:
+
+      When an element begins or ends, the time dependents of the element are
+      effectively notified of the action, and the schedule for the time
+      dependents may be affected. Note than an element must actually begin
+      before any of the time dependents (dependent on the begin) are affected,
+      and that an element must actually end before any of the time dependents
+      (dependent on the end) are affected.
+
+    This would suggest that a time dependent that is defined to start BEFORE its
+    syncbase does not actually start until the syncbase starts. However Opera,
+    WebKit, and Batik all agree that when we know when the syncbase will start,
+    we resolve the negative offset in advance.
+   -->
+  <rect width="100" height="100" fill="red">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="3s" dur="4s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="green; orange"
+      begin="a.begin-1s" dur="3s"/>
+  </rect>
+</svg>

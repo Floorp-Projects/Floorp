@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token)
+{
+  // Case 1. setting MediaKeys on an element captured by MediaElementSource should fail.
+  var case1token = token + "_case1";
+  let v1 = document.createElement("video");
+
+  function setMediaKeys() {
+    let p = new EMEPromise;
+    CreateMediaKeys(v1, test, case1token)
+    .then(mediaKeys => {
+      v1.setMediaKeys(mediaKeys)
+      .then(() => {
+        p.reject(`${case1token} setMediaKeys shouldn't succeed.`);
+      }, () => {
+        ok(true, TimeStamp(case1token) + " setMediaKeys failed as expected.");
+        p.resolve();
+      })
+    }, p.reject);
+    return p.promise;
+  }
+
+  var context = new AudioContext();
+  context.createMediaElementSource(v1);
+  v1.addEventListener("loadeddata", function(ev) {
+    ok(false, TimeStamp(case1token) + " should never reach loadeddata, as setMediaKeys should fail");
+  });
+
+  manager.started(case1token);
+
+  Promise.all([
+    LoadTest(test, v1, case1token),
+    setMediaKeys()])
+  .catch(reason => ok(false, reason))
+  .then(() => {
+    CleanUpMedia(v1);
+    manager.finished(case1token);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(gEMETests, startTest);
+</script>
+</pre>
+</body>
+</html>

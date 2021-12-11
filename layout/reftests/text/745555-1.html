@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>Bug 745555 - line-wrapping with uppercased es-zet</title>
+<style type="text/css">
+div {
+  font-family: monospace;
+  text-transform: uppercase;
+  display: inline-block;
+  border: 1px solid red;
+  vertical-align: top;
+}
+</style>
+</head>
+<body>
+<div style="width:3.0em">ß ß ß ß ß</div>
+<div style="width:3.2em">ß ß ß ß ß</div>
+<div style="width:3.4em">ß ß ß ß ß</div>
+<div style="width:3.6em">ß ß ß ß ß</div>
+<div style="width:3.8em">ß ß ß ß ß</div>
+<div style="width:4.0em">ß ß ß ß ß</div>
+<div style="width:4.2em">ß ß ß ß ß</div>
+<div style="width:4.4em">ß ß ß ß ß</div>
+<div style="width:4.6em">ß ß ß ß ß</div>
+<div style="width:4.8em">ß ß ß ß ß</div>
+<div style="width:5.0em">ß ß ß ß ß</div>
+</body>
+</html>

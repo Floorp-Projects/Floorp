@@ -1,0 +1,290 @@
+# Grammar for ECMArkup grammar descriptions
+
+var token CHR;        # <NL>
+var token EQ;         # ::
+var token MATCH_REF;  # $0
+var token NL;         # (actual newline character)
+var token NT;         # IdentifierName
+var token NTALT;      # |LineTerminator|
+var token NTCALL;     # Expression (when followed by `[` or `<`)
+var token PRODID;     # #comment
+var token PROSE;      # > any text following a greater than sign
+var token T;          # `var`
+var token WPROSE;     # [> any text after greater than sign, wrapped in brackets]
+var token RUSTCOMMENT;# //comment
+
+token But = "but";
+token Empty = "empty";
+token Here = "here";
+token Lookahead = "lookahead";
+token No = "no";
+token Not = "not";
+token Of = "of";
+token One = "one";
+token Or = "or";
+token Through = "through";
+token Returns = "returns";
+token Some = "Some";
+token None = "None";
+token Arrow = "=>";
+token Comma = ",";
+token OpenBracket = "[";
+token CloseBracket = "]";
+token QuestionMark = "?";
+token Tilde = "~";
+token PlusSign = "+";
+token Equal = "=";
+token Equals = "==";
+token IsNotEqualTo = "!=";
+token IsNotIn = "<!";
+token OpenBrace = "{";
+token CloseBrace = "}";
+token OpenParen = "(";
+token CloseParen = ")";
+token AtSign = "@";
+token OpenAngle = "<";
+token CloseAngle = ">";
+token Impl = "impl";
+token For = "for";
+token Let = "let";
+token SemiColon = ";";
+token Lifetime = "'";
+
+// Entry point for grammar_extension! macro's content.
+goal nt rust_edsl {
+    rust_impl rust_nt_def_list => rust_edsl($0, $1);
+}
+
+nt rust_impl {
+    "impl" nt_type "for" nt_type "{" "}" ";" => rust_impl($1, $3);
+    "impl" "<" nt_type_params ">" nt_type "for" nt_type "{" "}" ";" => rust_param_impl($4, $6, $2);
+}
+
+nt rust_nt_def_list {
+    rust_nt_def_or_blank_line;
+    rust_nt_def_list rust_nt_def_or_blank_line => concat($0, $1);
+}
+
+nt rust_nt_def_or_blank_line {
+    NL => blank_line();
+    RUSTCOMMENT => blank_line();
+    rust_nt_def => nt_def_to_list($0);
+}
+
+// grammar extension syntax for adding/removing/extending the productions.
+nt rust_nt_def {
+    "let" nt_lhs "=" "{" rust_rhs_line "}" ";" => rust_nt_def($1, $4);
+}
+
+nt rust_rhs_line {
+    rust_symbols => rust_rhs_line($0);
+}
+
+nt rust_symbols {
+    rust_symbol;
+    rust_symbols rust_symbol => concat($0, $1);
+}
+
+nt rust_symbol {
+    "{" rust_expr "}" => single($1);
+    symbol => single($0);
+    NL => empty();
+}
+
+nt rust_expr {
+    expr => rust_expr($0);
+}
+
+// Entry point for esgrammar files.
+goal nt grammar {
+    nt_def_list;
+}
+
+nt nt_def_list {
+    nt_def_or_blank_line;
+    nt_def_list nt_def_or_blank_line => concat($0, $1);
+}
+
+nt nt_def_or_blank_line {
+    NL => blank_line();
+    nt_def => nt_def_to_list($0);
+}
+
+nt nt_def {
+    nt_type_line? nt_lhs EQ NL rhs_lines NL => nt_def($0, $1, $2, $4);
+    nt_type_line? nt_lhs EQ "one" "of" NL t_list_lines NL => nt_def_one_of($0, $1, $2, $6);
+}
+
+nt nt_lhs {
+    NT => nt_lhs_no_params($0);
+    NTCALL "[" params "]" => nt_lhs_with_params($0, $2);
+}
+
+nt params {
+    param => single($0);
+    params "," param => append($0, $2);
+}
+
+nt param {
+    NT;
+}
+
+nt nt_type_line {
+    "@" "returns" nt_type NL => $2;
+}
+
+// Define a type as understood by Rust type-system.
+nt nt_type {
+   NT => simple_type($0);
+   NTCALL "<" nt_type_params ">" => parameterized_type($0, $2);
+}
+
+nt nt_type_params {
+    nt_type_param => single($0);
+    nt_type_params "," nt_type_param => append($0, $2);
+}
+
+nt nt_type_param {
+   nt_type;
+   "'" NT => lifetime_type($0);
+}
+
+nt t_list_lines {
+    t_list_line;
+    t_list_lines t_list_line => concat($0, $1);
+}
+
+nt t_list_line {
+    terminal_seq NL => t_list_line($0);
+}
+
+nt terminal_seq {
+    terminal => single($0);
+    terminal_seq terminal => append($0, $1);
+}
+
+nt terminal {
+    T => terminal($0);
+    CHR => chr($0);
+}
+
+nt rhs_lines {
+    rhs_line => single($0);
+    rhs_lines rhs_line => append($0, $1);
+}
+
+nt rhs_line {
+    ifdef? rhs reducer? PRODID? NL => rhs_line($0, $1, $2, $3);
+    PROSE NL => rhs_line_prose($0);
+}
+
+nt rhs {
+    symbols;
+    "[" "empty" "]" => empty_rhs();
+}
+
+nt reducer {
+   NL? "=>" expr => $2;
+}
+
+nt expr {
+    MATCH_REF => expr_match_ref($0);
+    NT "(" expr_args? ")" expr_try? => expr_call($0, $2, $4);
+    "Some" "(" expr ")" => expr_some($2);
+    "None" => expr_none();
+}
+
+nt expr_try {
+    "?";
+}
+
+nt expr_args {
+    expr => single($0);
+    expr_args "," expr => append($0, $2);
+}
+
+nt ifdef {
+   "[" definite_sigil NT "]" => ifdef($1, $2);
+}
+
+nt symbols {
+    symbol => single($0);
+    symbols symbol => append($0, $1);
+}
+
+nt symbol {
+    terminal;
+    nonterminal;
+    nonterminal "?" => optional($0);
+    nonterminal "but" "not" exclusion => but_not($0, $3);
+    nonterminal "but" "not" "one" "of" exclusion_list => but_not_one_of($0, $5);
+    "[" "lookahead" lookahead_assertion "]" => $2;
+    no_line_terminator_here;
+    WPROSE => $0;
+}
+
+nt no_line_terminator_here {
+    "[" "no" line_terminator "here" "]" => no_line_terminator_here($2);
+}
+
+nt nonterminal {
+    NT => nonterminal($0);
+    NTCALL "[" args "]" => nonterminal_apply($0, $2);
+}
+
+nt args {
+    arg => single($0);
+    args "," arg => append($0, $2);
+}
+
+nt arg {
+    sigil NT => arg_expr($0, $1);
+}
+
+nt sigil {
+    definite_sigil;
+    "?";
+}
+
+nt definite_sigil {
+    "~" => sigil_false();
+    "+" => sigil_true();
+}
+
+nt exclusion_list {
+    exclusion => single($0);
+    exclusion_list "or" exclusion => append($0, $2);
+}
+
+nt exclusion {
+    terminal => exclusion_terminal($0);
+    nonterminal => exclusion_nonterminal($0);
+    CHR "through" CHR => exclusion_chr_range($0, $2);
+}
+
+nt lookahead_assertion {
+    "==" terminal => la_eq($1);
+    "!=" terminal => la_ne($1);
+    "<!" NT => la_not_in_nonterminal($1);
+    "<!" "{" lookahead_exclusions "}" => la_not_in_set($2);
+}
+
+nt lookahead_exclusions {
+    lookahead_exclusion => single($0);
+    lookahead_exclusions "," lookahead_exclusion => append($0, $2);
+}
+
+nt lookahead_exclusion {
+    lookahead_exclusion_element => single($0);
+    lookahead_exclusion lookahead_exclusion_element => append($0, $1);
+}
+
+nt lookahead_exclusion_element {
+    terminal;
+    no_line_terminator_here;
+}
+
+nt line_terminator {
+    NT;
+    NTALT;
+}

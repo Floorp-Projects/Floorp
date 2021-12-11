@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1073952 - CSP should restrict scripts in srcdoc iframe even if sandboxed</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">Bug 1073952</p>
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+}
+
+examiner.prototype  = {
+  observe(subject, topic, data) {
+
+    if(topic === "csp-on-violate-policy") {
+      var violationString = SpecialPowers.getPrivilegedProps(SpecialPowers.
+                             do_QueryInterface(subject, "nsISupportsCString"), "data");
+      // the violation subject for inline script violations is unfortunately vague,
+      // all we can do is match the string.
+      if (!violationString.includes("Inline Script")) {
+        return
+      }
+      ok(true, "CSP inherited into sandboxed srcdoc iframe, script blocked.");
+      window.testFinished();
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+window.examiner = new examiner();
+
+function testFinished() {
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+addEventListener("message", function(e) {
+  ok(false, "We should not execute JS in srcdoc iframe.");
+  window.testFinished();
+})
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_iframe_sandbox_srcdoc.html';
+
+</script>
+</body>
+</html>

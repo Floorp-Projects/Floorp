@@ -1,0 +1,33 @@
+<?xml-stylesheet
+   type="text/css"
+   href="data:text/css,circle { fill: white }" ?>
+<!-- test for javascript: execution: shouldn't happen -->
+<?xml-stylesheet
+   type="text/css"
+   href="javascript:'circle { fill: black }'" ?>
+<svg height="0" xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    /* XXXbz this should really be an external reference to mask-html-01.xhtml
+       but there's the little problem of "fill" not using nsReferencedElement
+       yet, so that's broken */
+    /* Test that media queries work on resource documents while we're here */
+    @media (min-resolution: 1dpi) {
+      rect { fill: url(#g); }
+    }
+  </style>
+  <!-- so that other documents can svg:use this one and force it to
+       load before onload -->
+  <g id="empty" />
+  <mask id="m1" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+    <linearGradient id="g" gradientUnits="objectBoundingBox" x2="0" y2="1">
+      <stop stop-color="white" offset="0"/>
+      <stop stop-color="white" stop-opacity="0" offset="1"/>
+    </linearGradient>
+    <circle cx="0.25" cy="0.25" r="0.25" id="circle" fill="black"/>
+    <rect x="0.5" y="0" width="0.5" height="1" fill="black"/>
+  </mask>
+  <script type="application/ecmascript">
+    // Make sure scripts don't run
+    document.getElementById("m1").textContent = "";
+  </script>
+</svg>

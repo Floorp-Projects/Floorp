@@ -1,0 +1,17 @@
+Bugs to fix:
+- make content-length generation not rely on .available() returning the entire
+  size of the body stream's contents -- some sort of wrapper (but how does that
+  work for the unscriptable method WriteSegments, which is good to support from
+  a performance standpoint?)
+
+Ideas for future improvements:
+- add API to disable response buffering which, when called, causes errors when
+  you try to do anything other than write to the body stream (i.e., modify
+  headers or status line) once you've written anything to it -- useful when
+  storing the entire response in memory is unfeasible (e.g., you're testing
+  >4GB download characteristics)
+- add an API which performs asynchronous response processing (instead of
+  nsIHttpRequestHandler.handle, which must construct the response before control
+  returns; |void asyncHandle(request, response)|) -- useful, and can it be done
+  in JS?
+- other awesomeness?

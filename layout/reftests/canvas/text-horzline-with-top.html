@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure top basline-anchored text doesn't intersect horz line</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64" style="direction:ltr"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  ctx.strokeStyle = 'black';
+  ctx.beginPath();
+  ctx.moveTo(0,32);
+  ctx.lineTo(128,32);
+  ctx.stroke();
+
+  ctx.font = '30px sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillText('TEXT', 64, 32);
+
+</script>
+</body>
+</html>

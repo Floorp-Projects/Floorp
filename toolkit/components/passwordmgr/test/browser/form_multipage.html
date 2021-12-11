@@ -1,0 +1,32 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<!-- Form with a username-only field. -->
+<form id="form-basic">
+  <input id="form-basic-username" type="text" name="username" autocomplete="username">
+  <input id="form-basic-submit" type="submit">
+</form>
+
+<script>
+  const form = document.getElementById( "form-basic" );
+  form.addEventListener( "submit", function onFormSubmit(event) {
+    event.preventDefault()
+    document.getElementById("form-basic").remove();
+
+    // Create the password-only form after the username-only form is submitted.
+    var form = document.createElement("form");
+    form.id = "form-basic";
+    var password = document.createElement("input");
+    password.id = "form-basic-password";
+    password.type = "password";
+    form.appendChild(password);
+    var submit = document.createElement("input");
+    submit.id = "form-basic-submit";
+    submit.type = "submit";
+    form.appendChild(submit);
+    document.body.appendChild(form);
+  });
+</script>
+
+</body></html>

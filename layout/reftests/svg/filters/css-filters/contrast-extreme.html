@@ -1,0 +1,29 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Increase the Contrast of an HTML Element Using a Large Factor</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-contrast">
+  <link rel="match" href="contrast-extreme-ref.html">
+  <meta name="assert"
+        content="Given a large factor, the CSS contrast filter function should
+                 should change color channel values to be much farther from
+                 their middle value.">
+  <style type="text/css">
+    #target {
+      filter: contrast(1000);
+      background-color: rgb(127, 129, 127); /* 127 should change to 0, and 129 should change to 255. */
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a bright green square.</p>
+  <div id="target"></div>
+</body>
+</html>

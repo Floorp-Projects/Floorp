@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<style type="text/css">
+#parent {
+  width: 400px;
+  height: 400px;
+  transform-style: flat;
+}
+
+#child {
+  width: 400px;
+  height: 400px;
+  overflow: scroll;
+}
+
+.box {
+  width: 400px;
+  height: 300px;
+  background-color: red;
+}
+</style>
+
+</head>
+<body>
+
+<div id="parent">
+  <div id="child">
+    <div class="box"></div>
+    <div class="box"></div>
+  </div>
+</div>
+
+<script>
+function doTest() {
+  document.documentElement.removeAttribute("class");
+  document.getElementById("child").scrollTop = 200;
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+
+</body>
+</html>

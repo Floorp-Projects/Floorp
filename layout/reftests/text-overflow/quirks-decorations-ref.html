@@ -1,0 +1,73 @@
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+-->
+<html><head>
+<title>text-overflow: Quirks mode text-decorations</title>
+<style type="text/css">
+@font-face {
+  font-family: Ahem;
+  src: url(../fonts/Ahem.ttf);
+}
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:hidden;
+  float:left;
+  height:2em;
+  white-space:pre;
+  margin-left:1em;
+  margin-bottom:1em;
+  font-size:20px; 
+  color:blue;
+}
+span {
+  font-size:16px;
+  color:black;
+}
+.xspan {
+  text-shadow:0px 1em 2px blue;
+  text-decoration: line-through;
+}
+.rtl .xspan {
+  text-shadow:0 1em 0px blue;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction:rtl;
+}
+.lro {
+  unicode-bidi: bidi-override;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+.t1 { width:7.3em; }
+.t2 { width:20px;}
+.t3 { width:22px;}
+.t4 { width:1px; font-family:Ahem; }
+.t3 span {margin-left:14px; }
+
+m { font-size:20px; color:blue; }
+
+</style>
+
+</head><body>
+
+<div class="test t1"><span><span class="xspan">0123&nbsp;56789012</span><m>&#x2026;</m></span></div>
+<div class="test rtl t1"><span><span class="xspan">1&nbsp;56789012345</span><m>&#x2026;</m></span></div>
+<div class="test t2"><span class="xspan">xxxx<m>x</m></span></div>
+<div class="test t3"><span class="xspan">x<m>x</m></span></div>
+<div class="test t4"><span class="xspan">x<m>x</m></span></div>
+
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+<html class="reftest-wait">
+  <head>
+    <style>
+    div {
+      width: 200px;
+      height: 200px;
+      background-color: blue;
+      opacity: 0.95;
+      position: absolute;
+    }
+    #first {
+      display: none;
+    }
+    #second {
+      width: 600px;
+      height: 800px;
+      display: none;
+      background-color: green;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="first">
+        <div id="second"></div>
+    </div>
+    <div style="z-index:-2; top: 220px;"></div>
+    <div style="top: 440px;"></div>
+
+    <script>
+      function doTest2() {
+        document.getElementById("second").style.display = "block";
+        document.documentElement.removeAttribute("class");
+      }
+
+      function doTest() {
+        document.getElementById("first").style.display = "block";
+        setTimeout(doTest2, 500);
+      }
+      document.addEventListener("MozReftestInvalidate", doTest);
+    </script>
+  </body>
+</html>
+

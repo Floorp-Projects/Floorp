@@ -1,0 +1,70 @@
+<!doctype html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style id="sheet"></style>
+<script>
+// Even though some of these no longer exist, we still do want to test that
+// they aren't exposed to the web.
+const NON_CONTENT_ACCESIBLE_PSEUDOS = [
+  "::-moz-complex-control-wrapper",
+  "::-moz-number-wrapper",
+  "::-moz-number-text",
+  "::-moz-number-spin-up",
+  "::-moz-number-spin-down",
+  "::-moz-number-spin-box",
+  "::-moz-search-clear-button",
+
+  ":-moz-native-anonymous",
+  ":-moz-use-shadow-tree-root",
+  ":-moz-table-border-nonzero",
+  ":-moz-browser-frame",
+  ":-moz-devtools-highlighted",
+  ":-moz-styleeditor-transitioning",
+  ":-moz-handler-clicktoplay",
+  ":-moz-handler-vulnerable-updatable",
+  ":-moz-handler-vulnerable-no-update",
+  ":-moz-handler-disabled",
+  ":-moz-handler-blocked",
+  ":-moz-handler-chrased",
+  ":-moz-has-dir-attr",
+  ":-moz-dir-attr-ltr",
+  ":-moz-dir-attr-rtl",
+  ":-moz-dir-attr-like-auto",
+  ":-moz-autofill-preview",
+
+  "::-moz-tree-row",
+  "::-moz-tree-row(foo)",
+];
+
+if (!SpecialPowers.getBoolPref("layout.css.autofill.enabled")) {
+  NON_CONTENT_ACCESIBLE_PSEUDOS.push(":autofill", ":-webkit-autofill");
+}
+
+test(function() {
+  sheet.textContent = `div { color: initial }`;
+  assert_equals(sheet.sheet.cssRules.length, 1);
+}, "sanity");
+
+for (const pseudo of NON_CONTENT_ACCESIBLE_PSEUDOS) {
+  test(function() {
+    sheet.textContent = `${pseudo} { color: blue; }`;
+    assert_equals(sheet.sheet.cssRules.length, 0,
+      pseudo + " shouldn't be accessible to content");
+    if (pseudo.indexOf("::") === 0) {
+      let pseudoStyle;
+      try {
+        pseudoStyle = getComputedStyle(document.documentElement, pseudo);
+      } catch (ex) {
+        // We can hit this when layout.css.computed-style.throw-on-invalid-pseudo is true
+        assert_true(true, `${pseudo} shouldn't be visible to content`);
+        return;
+      }
+      let elementStyle = getComputedStyle(document.documentElement);
+      for (prop of pseudoStyle) {
+        assert_equals(pseudoStyle[prop], elementStyle[prop],
+                      pseudo + " styles shouldn't be visible from getComputedStyle");
+      }
+    }
+  }, pseudo);
+}
+</script>

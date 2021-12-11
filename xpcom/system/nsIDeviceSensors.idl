@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+
+[scriptable, uuid(0462247e-fe8c-4aa5-b675-3752547e485f)]
+interface nsIDeviceSensorData : nsISupports
+{
+  // Keep in sync with hal/HalSensor.h
+
+  // 1. TYPE_ORIENTATION: absolute device orientation, not spec-conform and
+  // deprecated on Android.
+  // 2. TYPE_ROTATION_VECTOR: absolute device orientation affected by drift.
+  // 3. TYPE_GAME_ROTATION_VECTOR: relative device orientation less affected by drift.
+  // Preferred fallback priorities on Android are [3, 2, 1] for the general case
+  // and [2, 1] if absolute orientation (compass heading) is required.
+  const unsigned long TYPE_ORIENTATION = 0;
+  const unsigned long TYPE_ACCELERATION = 1;
+  const unsigned long TYPE_PROXIMITY = 2;
+  const unsigned long TYPE_LINEAR_ACCELERATION = 3;
+  const unsigned long TYPE_GYROSCOPE = 4;
+  const unsigned long TYPE_LIGHT = 5;
+  const unsigned long TYPE_ROTATION_VECTOR = 6;
+  const unsigned long TYPE_GAME_ROTATION_VECTOR = 7;
+
+  readonly attribute unsigned long type;
+
+  readonly attribute double x;
+  readonly attribute double y;
+  readonly attribute double z;
+};
+
+[scriptable, uuid(e46e47c7-55ff-44c4-abce-21b14ba07f86)]
+interface nsIDeviceSensors : nsISupports
+{
+  /**
+   * Returns true if the given window has any listeners of the given type
+   */
+  bool hasWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
+
+  // Holds pointers, not AddRef objects -- it is up to the caller
+  // to call RemoveWindowListener before the window is deleted.
+
+  [noscript] void addWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
+  [noscript] void removeWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
+  [noscript] void removeWindowAsListener(in nsIDOMWindow aWindow);
+};
+
+%{C++
+
+#define NS_DEVICE_SENSORS_CID \
+{ 0xecba5203, 0x77da, 0x465a, \
+{ 0x86, 0x5e, 0x78, 0xb7, 0xaf, 0x10, 0xd8, 0xf7 } }
+
+#define NS_DEVICE_SENSORS_CONTRACTID "@mozilla.org/devicesensors;1"
+
+%}

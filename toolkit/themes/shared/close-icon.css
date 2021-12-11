@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.close-icon {
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  list-style-image: url(chrome://global/skin/icons/close.svg);
+  border-radius: 4px;
+  color: inherit;
+  fill: currentColor;
+  padding: 2px;
+  width: 20px;
+  height: auto;
+}
+
+@media not (prefers-contrast) {
+  .close-icon:hover {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
+
+@media (prefers-contrast) {
+  .close-icon:hover {
+    outline: 1px solid currentColor;
+  }
+}
+
+.close-icon:hover:active {
+  background-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.close-icon > .button-icon,
+.close-icon > .button-box > .button-icon,
+.close-icon > .toolbarbutton-icon {
+  margin: 0;
+}
+
+.close-icon > .button-box > .button-text,
+.close-icon > .toolbarbutton-text {
+  display: none;
+}

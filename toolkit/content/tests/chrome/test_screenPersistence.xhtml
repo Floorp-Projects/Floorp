@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Window Open Test"
+        onload="runTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script class="testbody" type="application/javascript"><![CDATA[
+  SimpleTest.waitForExplicitFinish();
+  let win;
+  var left = 60 + screen.availLeft;
+  var upper = 60 + screen.availTop;
+
+  function runTest() {
+    win = window.browsingContext.topChromeWindow
+                .openDialog("window_screenPosSize.xhtml",
+                            "_blank",
+                            "chrome,dialog=no,all,screenX=" + left + ",screenY=" + upper + ",outerHeight=200,outerWidth=200");
+    SimpleTest.waitForFocus(checkTest, win);
+  }
+  function checkTest() {
+    is(win.screenX, left, "The window should be placed now at x=" + left + "px");
+    is(win.screenY, upper, "The window should be placed now at y=" + upper + "px");
+    is(win.outerHeight, 200, "The window size should be height=200px");
+    is(win.outerWidth, 200, "The window size should be width=200px");
+    runTest2();
+  }
+  function runTest2() {
+    win.close();
+    win = window.browsingContext.topChromeWindow
+                .openDialog("window_screenPosSize.xhtml",
+                            "_blank",
+                            "chrome,dialog=no,all");
+    SimpleTest.waitForFocus(checkTest2, win);
+  }
+  function checkTest2() {
+    let runTime = SpecialPowers.Services.appinfo;
+    if (runTime.OS != "Linux") {
+      is(win.screenX, 80, "The window should be placed now at x=80px");
+      is(win.screenY, 80, "The window should be placed now at y=80px");
+    }
+    is(win.innerHeight, 300, "The window size should be height=300px");
+    is(win.innerWidth, 300, "The window size should be width=300px");
+    win.close();
+    SimpleTest.finish();
+  }
+]]></script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

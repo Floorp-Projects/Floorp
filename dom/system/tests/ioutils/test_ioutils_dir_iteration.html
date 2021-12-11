@@ -1,0 +1,84 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+
+    add_task(async function iterate_dir_failure() {
+      const tmpDir = await PathUtils.getTempDir();
+      let notExists = PathUtils.join(tmpDir, 'does_not_exist_dir.tmp.d');
+
+      await Assert.rejects(
+        IOUtils.getChildren(notExists),
+        /Could not get children of file\(.*\) because it does not exist/,
+        "IOUtils::getChildren rejects if the file does not exist"
+      );
+      ok(!await fileExists(notExists), `Expected ${notExists} not to exist`);
+
+      info('Try to get the children of a regular file');
+
+      let tmpFileName = PathUtils.join(tmpDir, 'iterator_file.tmp');
+      await createFile(tmpFileName)
+      await Assert.rejects(IOUtils.getChildren(tmpFileName),
+        /Could not get children of file\(.*\) because it is not a directory/,
+        "IOUtils::getChildren rejects if the file is not a dir"
+      );
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function iterate_dir() {
+      info('Try to get the children of a multi-level directory hierarchy');
+
+      const tmpDir = await PathUtils.getTempDir();
+      let root = PathUtils.join(tmpDir, 'iterator.tmp.d');
+      let child1 = PathUtils.join(root, 'child1.tmp');
+      let child2 = PathUtils.join(root, 'child2.tmp');
+      let grandchild = PathUtils.join(child1, 'grandchild.tmp');
+
+      await createDir(grandchild); // Ancestors will be created.
+      await createDir(child2);
+
+      let entries = await IOUtils.getChildren(root);
+
+      is(entries.length, 2, `Expected 2 entries below the path at ${root}`);
+      ok(!entries.includes(grandchild), "IOUtils::getChildren does not enter subdirectories");
+
+      await cleanup(root);
+    });
+
+    add_task(async function iterate_empty_dir() {
+      info('Try to get the children of an empty directory');
+
+      const tmpDir = await PathUtils.getTempDir();
+      let emptyDir = PathUtils.join(tmpDir, 'iterator_empty_dir.tmp.d');
+      await createDir(emptyDir);
+
+      is(
+        (await IOUtils.getChildren(emptyDir)).length,
+        0,
+        "IOUtils::getChildren return an empty array when called on an empty dir"
+      );
+
+      await cleanup(emptyDir);
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

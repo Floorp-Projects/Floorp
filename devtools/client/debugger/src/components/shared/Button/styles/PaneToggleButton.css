@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.toggle-button {
+  padding: 4px 6px;
+}
+
+.toggle-button .img {
+  vertical-align: middle;
+}
+
+.toggle-button.end {
+  margin-inline-end: 0px;
+  margin-inline-start: auto;
+}
+
+.toggle-button.start {
+  margin-inline-start: 0px;
+}
+
+html[dir="rtl"] .toggle-button.start .img,
+html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
+  transform: scaleX(-1);
+}
+
+.toggle-button.end.vertical .img {
+  transform: rotate(-90deg);
+}

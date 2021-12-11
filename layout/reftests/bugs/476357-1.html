@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>Testcase, bug 476357</title>
+<div style="font-size: 10px;" id="page">
+  <div style="float: right; height: 1px"></div>
+  <div style="clear:both">.</div>
+  <!-- We never give the following div a reflow with NS_FRAME_IS_DIRTY -->
+  <div>Text<span>Text</span></div>
+</div>
+<script type="text/javascript">
+function run() {
+  document.getElementById('page').style.fontSize='30px';
+  document.documentElement.removeAttribute("class");
+}
+setTimeout(run, 0);
+</script>

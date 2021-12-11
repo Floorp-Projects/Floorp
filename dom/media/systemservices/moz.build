@@ -1,0 +1,115 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
+
+if CONFIG["MOZ_WEBRTC"]:
+    EXPORTS += [
+        "CamerasChild.h",
+        "CamerasParent.h",
+        "VideoEngine.h",
+        "VideoFrameUtils.h",
+    ]
+    UNIFIED_SOURCES += [
+        "CamerasChild.cpp",
+        "CamerasParent.cpp",
+        "VideoEngine.cpp",
+        "VideoFrameUtils.cpp",
+    ]
+    LOCAL_INCLUDES += [
+        "/dom/media/webrtc",
+        "/media/libyuv/libyuv/include",
+        "/third_party/libwebrtc",
+        "/third_party/libwebrtc/webrtc",
+        "/tools/profiler/public",
+    ]
+
+    if CONFIG["OS_TARGET"] == "Android":
+        UNIFIED_SOURCES += [
+            "android_video_capture/device_info_android.cc",
+            "android_video_capture/video_capture_android.cc",
+        ]
+    elif CONFIG["OS_TARGET"] == "Darwin":
+        REQUIRES_UNIFIED_BUILD = True
+        UNIFIED_SOURCES += [
+            "objc_video_capture/device_info.mm",
+            "objc_video_capture/device_info_objc.mm",
+            "objc_video_capture/rtc_video_capture_objc.mm",
+            "objc_video_capture/video_capture.mm",
+        ]
+        CMMFLAGS += [
+            "-fobjc-arc",
+        ]
+
+    if CONFIG["OS_TARGET"] != "Android":
+        UNIFIED_SOURCES += [
+            "video_engine/desktop_capture_impl.cc",
+            "video_engine/platform_uithread.cc",
+            "video_engine/tab_capturer.cc",
+        ]
+
+
+if CONFIG["OS_TARGET"] == "Android":
+    DEFINES["WEBRTC_ANDROID"] = True
+
+
+if CONFIG["OS_TARGET"] == "Android":
+    EXPORTS += ["OpenSLESProvider.h"]
+    UNIFIED_SOURCES += [
+        "OpenSLESProvider.cpp",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    UNIFIED_SOURCES += ["OSXRunLoopSingleton.cpp"]
+    EXPORTS += ["OSXRunLoopSingleton.h"]
+
+EXPORTS.mozilla += [
+    "ShmemPool.h",
+]
+
+EXPORTS.mozilla.media += [
+    "CamerasTypes.h",
+    "MediaChild.h",
+    "MediaParent.h",
+    "MediaSystemResourceClient.h",
+    "MediaSystemResourceManager.h",
+    "MediaSystemResourceManagerChild.h",
+    "MediaSystemResourceManagerParent.h",
+    "MediaSystemResourceMessageUtils.h",
+    "MediaSystemResourceService.h",
+    "MediaSystemResourceTypes.h",
+    "MediaTaskUtils.h",
+    "MediaUtils.h",
+]
+UNIFIED_SOURCES += [
+    "MediaChild.cpp",
+    "MediaParent.cpp",
+    "MediaSystemResourceClient.cpp",
+    "MediaSystemResourceManager.cpp",
+    "MediaSystemResourceManagerChild.cpp",
+    "MediaSystemResourceManagerParent.cpp",
+    "MediaSystemResourceService.cpp",
+    "MediaUtils.cpp",
+    "ShmemPool.cpp",
+]
+IPDL_SOURCES += [
+    "PCameras.ipdl",
+    "PMedia.ipdl",
+    "PMediaSystemResourceManager.ipdl",
+]
+# /dom/base needed for nsGlobalWindow.h in MediaChild.cpp
+LOCAL_INCLUDES += [
+    "/dom/base",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+with Files("android_video_capture/**"):
+    SCHEDULES.exclusive = ["android"]

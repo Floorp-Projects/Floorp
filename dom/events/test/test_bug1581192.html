@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redispatching test with PresShell</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<button>click me!</button>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  /**
+   * We have same tests in Event-dispatch-redispatch.html of WPT.  However,
+   * it does not send the event to the main process.  Therefore the reported
+   * crash couldn't reproduce.
+   */
+  await SpecialPowers.pushPrefEnv({set: [["test.events.async.enabled", true]]});
+  let button = document.querySelector("button");
+  try {
+    await promiseElementReadyForUserInput(button, window, info);
+  } catch (ex) {
+    ok(false, ex.message);
+    SimpleTest.finish();
+    return;
+  }
+  let mouseupEvent;
+  button.addEventListener("mouseup", aNativeMouseUpEvent => {
+    ok(aNativeMouseUpEvent.isTrusted,"First mouseup event should be trusted");
+    mouseupEvent = aNativeMouseUpEvent;
+    try {
+      button.dispatchEvent(aNativeMouseUpEvent);
+      ok(false, "Dispatching trusted mouseup event which is being dispatched should throw an exception");
+    } catch (e) {
+      is(e.name, "InvalidStateError", "Trusted mouseup event which is being dispatched shouldn't be able to be dispatched");
+    }
+  }, {once: true});
+
+  button.addEventListener("click", aNativeClickEvent => {
+    ok(aNativeClickEvent.isTrusted, "First click event should be trusted");
+    try {
+      button.dispatchEvent(aNativeClickEvent);
+      ok(false, "Dispatching trusted click event which is being dispatched should throw an exception");
+    } catch (e) {
+      is(e.name, "InvalidStateError", "Trusted click event which is being dispatched shouldn't be able to be dispatched");
+    }
+    let mouseupEventFired = false;
+    button.addEventListener("mouseup", aDispatchedMouseUpEvent => {
+      ok(!aDispatchedMouseUpEvent.isTrusted, "Redispatched mouseup event shouldn't be trusted");
+      mouseupEventFired = true;
+    }, {once: true});
+    function onClick(aNonDispatchedClickEvent) {
+      ok(false, "Redispatched mouseup event shouldn't cause dispatching another click event");
+    }
+    button.addEventListener("click", onClick);
+    ok(mouseupEvent.isTrusted, "Received mouseup event should be trusted before redispatching from click event listener");
+    button.dispatchEvent(mouseupEvent);
+    ok(!mouseupEvent.isTrusted, "Received mouseup event shouldn't be trusted after redispatching");
+    ok(mouseupEventFired, "Redispatched mouseup event should've been received");
+    button.removeEventListener("click", onClick);
+    ok(aNativeClickEvent.isTrusted, "First click event should still be trusted even after redispatching mouseup event");
+    SimpleTest.finish();
+  }, {once: true});
+  synthesizeMouseAtCenter(button, {});
+});
+</script>
+</body>
+</html>

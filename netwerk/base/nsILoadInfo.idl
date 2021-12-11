@@ -1,0 +1,1394 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2 sts=2 cin
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
+#include "nsIScriptSecurityManager.idl"
+
+interface nsIChannel;
+interface nsIContentSecurityPolicy;
+interface nsICookieJarSettings;
+interface nsICSPEventListener;
+interface nsINode;
+interface nsIPrincipal;
+interface nsIRedirectHistoryEntry;
+interface nsIURI;
+webidl Document;
+webidl BrowsingContext;
+native LoadContextRef(already_AddRefed<nsISupports>);
+%{C++
+#include "nsTArray.h"
+#include "mozilla/LoadTainting.h"
+#include "mozilla/OriginAttributes.h"
+#include "mozilla/UniquePtr.h"
+#include "nsStringFwd.h"
+
+namespace mozilla {
+namespace dom {
+class ClientInfo;
+class ClientSource;
+class PerformanceStorage;
+class ServiceWorkerDescriptor;
+} // namespace dom
+} // namespace mozilla
+%}
+
+[ref] native nsIRedirectHistoryEntryArray(const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>);
+native OriginAttributes(mozilla::OriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
+[ref] native CStringArrayRef(const nsTArray<nsCString>);
+[ref] native StringArrayRef(const nsTArray<nsString>);
+[ref] native Uint64ArrayRef(const nsTArray<uint64_t>);
+[ref] native PrincipalArrayRef(const nsTArray<nsCOMPtr<nsIPrincipal>>);
+[ref] native const_ClientInfoRef(const mozilla::dom::ClientInfo);
+      native UniqueClientSource(mozilla::UniquePtr<mozilla::dom::ClientSource>);
+      native UniqueClientSourceMove(mozilla::UniquePtr<mozilla::dom::ClientSource>&&);
+[ref] native const_MaybeClientInfoRef(const mozilla::Maybe<mozilla::dom::ClientInfo>);
+[ref] native const_ServiceWorkerDescriptorRef(const mozilla::dom::ServiceWorkerDescriptor);
+[ref] native const_MaybeServiceWorkerDescriptorRef(const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>);
+[ptr] native PerformanceStoragePtr(mozilla::dom::PerformanceStorage);
+      native LoadTainting(mozilla::LoadTainting);
+      native CSPRef(already_AddRefed<nsIContentSecurityPolicy>);
+
+typedef unsigned long nsSecurityFlags;
+
+/**
+ * The LoadInfo object contains information about a network load, why it
+ * was started, and how we plan on using the resulting response.
+ * If a network request is redirected, the new channel will receive a new
+ * LoadInfo object. The new object will contain mostly the same
+ * information as the pre-redirect one, but updated as appropriate.
+ * For detailed information about what parts of LoadInfo are updated on
+ * redirect, see documentation on individual properties.
+ */
+[scriptable, builtinclass, uuid(ddc65bf9-2f60-41ab-b22a-4f1ae9efcd36)]
+interface nsILoadInfo : nsISupports
+{
+  /**
+   * The following five flags determine the security mode and hence what kind of
+   * security checks should be performed throughout the lifetime of the channel.
+   *
+   *    * SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT
+   *    * SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
+   *    * SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT
+   *    * SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL
+   *    * SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT
+   *
+   * Exactly one of these flags are required to be set in order to allow
+   * the channel to perform the correct security checks (SOP, CORS, ...) and
+   * return the correct result principal. If none or more than one of these
+   * flags are set AsyncOpen will fail.
+   */
+
+   /**
+    * Warning: Never use this flag when creating a new channel!
+    * Only use this flag if you have to create a temporary LoadInfo
+    * for performing an explicit nsIContentPolicy check, like e.g.
+    * when loading something from the cache that needs an explicit
+    * nsIContentPolicy check. In all other cases pick one of the
+    * security flags underneath.
+    */
+  const unsigned long SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK = 0;
+
+  /*
+   * Enforce the same origin policy where loads inherit the principal.
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
+   */
+  const unsigned long SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT = (1<<0);
+
+  /*
+   * Enforce the same origin policy and data: loads are blocked.
+   */
+  const unsigned long SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED = (1<<1);
+
+  /**
+   * Allow loads from other origins. Loads which inherit the principal should
+   * see the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
+   *
+   * Commonly used by plain <img>, <video>, <link rel=stylesheet> etc.
+   */
+  const unsigned long SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT = (1 << 2);
+
+  /**
+   * Allow loads from other origins. Loads from data: will be allowed,
+   * but the resulting resource will get a null principal.
+   * Used in blink/webkit for <iframe>s. Likely also the mode
+   * that should be used by most Chrome code.
+   */
+  const unsigned long SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL = (1<<3);
+
+  /**
+   * Allow loads from any origin, but require CORS for cross-origin loads.
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
+   *
+   * Commonly used by <img crossorigin>, <video crossorigin>,
+   * XHR, fetch(), etc.
+   */
+  const unsigned long SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT = (1<<4);
+
+  /**
+   * Choose cookie policy. The default policy is equivalent to "INCLUDE" for
+   * SEC_REQUIRE_SAME_ORIGIN_* and SEC_ALLOW_CROSS_ORIGIN_* modes, and
+   * equivalent to "SAME_ORIGIN" for SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT mode.
+   *
+   * This means that if you want to perform a CORS load with credentials, pass
+   * SEC_COOKIES_INCLUDE.
+   *
+   * Note that these flags are still subject to the user's cookie policies.
+   * For example, if the user is blocking 3rd party cookies, those cookies
+   * will be blocked no matter which of these flags are set.
+   */
+  const unsigned long SEC_COOKIES_DEFAULT = (0 << 5);
+  const unsigned long SEC_COOKIES_INCLUDE = (1 << 5);
+  const unsigned long SEC_COOKIES_SAME_ORIGIN = (2 << 5);
+  const unsigned long SEC_COOKIES_OMIT = (3 << 5);
+
+  /**
+   * Force inheriting of the principal.  See the documentation for
+   * principalToInherit, which describes exactly what principal is inherited.
+   *
+   * Setting this flag will cause GetChannelResultPrincipal to return the
+   * principal to be inherited as the channel principal.
+   *
+   * This will happen independently of the scheme of the URI that the
+   * channel is loading.
+   *
+   * So if the principal that gets inherited is "http://a.com/", and the channel
+   * is loading the URI "http://b.com/whatever", GetChannelResultPrincipal
+   * will return a principal from "http://a.com/".
+   *
+   * This flag can not be used together with SANDBOXED_ORIGIN sandbox flag.  If
+   * both are passed to the LoadInfo constructor then this flag will be dropped.
+   * If you need to know whether this flag would have been present but was dropped
+   * due to sandboxing, check for the forceInheritPrincipalDropped flag.
+   */
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<7);
+
+  /**
+   * Inherit the Principal for about:blank.
+   */
+  const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<9);
+
+  /**
+   * Allow access to chrome: packages that are content accessible.
+   */
+  const unsigned long SEC_ALLOW_CHROME = (1<<10);
+
+  /**
+   * Disallow access to javascript: uris.
+   */
+  const unsigned long SEC_DISALLOW_SCRIPT = (1<<11);
+
+  /**
+   * Don't follow redirects. Instead the redirect response is returned
+   * as a successful response for the channel.
+   *
+   * Redirects not initiated by a server response, i.e. REDIRECT_INTERNAL and
+   * REDIRECT_STS_UPGRADE, are still followed.
+   *
+   * Note: If this flag is set and the channel response is a redirect, then
+   * the response body might not be available.
+   * This can happen if the redirect was cached.
+   */
+  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<12);
+
+  /**
+   * Load an error page, it should be one of following : about:neterror,
+   * about:certerror, about:blocked, about:tabcrashed or about:restartrequired.
+   */
+  const unsigned long SEC_LOAD_ERROR_PAGE = (1<<13);
+
+  /**
+   * Force inheriting of the principal, overruling any owner that might be set
+   * on the channel. (Please note that channel.owner is deprecated and will be
+   * removed within Bug 1286838).  See the documentation for principalToInherit,
+   * which describes exactly what principal is inherited.
+   *
+   * Setting this flag will cause GetChannelResultPrincipal to return the
+   * principal to be inherited as the channel principal.
+   *
+   * This will happen independently of the scheme of the URI that the
+   * channel is loading.
+   */
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL_OVERRULE_OWNER = (1<<14);
+
+  /**
+   * This is the principal of the network request's caller/requester where
+   * the resulting resource will be used. I.e. it is the principal which
+   * will get access to the result of the request. (Where "get access to"
+   * might simply mean "embed" depending on the type of resource that is
+   * loaded).
+   *
+   * For example for an image, it is the principal of the document where
+   * the image is rendered. For a stylesheet it is the principal of the
+   * document where the stylesheet will be applied.
+   *
+   * So if document at http://a.com/page.html loads an image from
+   * http://b.com/pic.jpg, then loadingPrincipal will be
+   * http://a.com/page.html.
+   *
+   * For <iframe> and <frame> loads, the LoadingPrincipal is the
+   * principal of the parent document. For top-level loads, the
+   * LoadingPrincipal is null. For all loads except top-level loads
+   * the LoadingPrincipal is never null.
+   *
+   * If the loadingPrincipal is the system principal, no security checks
+   * will be done at all. There will be no security checks on the initial
+   * load or any subsequent redirects. This means there will be no
+   * nsIContentPolicy checks or any CheckLoadURI checks. Because of
+   * this, never set the loadingPrincipal to the system principal when
+   * the URI to be loaded is controlled by a webpage.
+   * If the loadingPrincipal and triggeringPrincipal are both
+   * content principals, then we will always call into
+   * nsIContentPolicies and CheckLoadURI. The call to nsIContentPolicies
+   * and CheckLoadURI happen even if the URI to be loaded is same-origin
+   * with the loadingPrincipal or triggeringPrincipal.
+   */
+  readonly attribute nsIPrincipal loadingPrincipal;
+
+  /**
+   * A C++-friendly version of triggeringPrincipal.
+   *
+   * This is a bit awkward because we can't use
+   * binaryname(GetLoadingPrincipal).
+   */
+  [noscript, notxpcom, nostdcall]
+  nsIPrincipal virtualGetLoadingPrincipal();
+
+%{C++
+  nsIPrincipal* GetLoadingPrincipal() {
+    return VirtualGetLoadingPrincipal();
+  }
+%}
+
+  /**
+   * This is the principal which caused the network load to start. I.e.
+   * this is the principal which provided the URL to be loaded. This is
+   * often the same as the LoadingPrincipal, but there are a few cases
+   * where that's not true.
+   *
+   * For example for loads into an <iframe>, the LoadingPrincipal is always
+   * the principal of the parent document. However the triggeringPrincipal
+   * is the principal of the document which provided the URL that the
+   * <iframe> is navigating to. This could be the previous document inside
+   * the <iframe> which set document.location. Or a document elsewhere in
+   * the frame tree which contained a <a target="..."> which targetted the
+   * <iframe>.
+   *
+   * If a stylesheet links to a sub-resource, like an @imported stylesheet,
+   * or a background image, then the triggeringPrincipal is the principal
+   * of the stylesheet, while the LoadingPrincipal is the principal of the
+   * document being styled.
+   *
+   * The triggeringPrincipal is never null.
+   *
+   * If the triggeringPrincipal is the system principal, no security checks
+   * will be done at all. There will be no security checks on the initial
+   * load or any subsequent redirects. This means there will be no
+   * nsIContentPolicy checks or any CheckLoadURI checks. Because of
+   * this, never set the triggeringPrincipal to the system principal when
+   * the URI to be loaded is controlled by a webpage.
+   * If the loadingPrincipal and triggeringPrincipal are both
+   * content principals, then we will always call into
+   * nsIContentPolicies and CheckLoadURI. The call to nsIContentPolicies
+   * and CheckLoadURI happen even if the URI to be loaded is same-origin
+   * with the loadingPrincipal or triggeringPrincipal.
+   */
+  readonly attribute nsIPrincipal triggeringPrincipal;
+
+  /**
+   * A C++-friendly version of triggeringPrincipal.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(TriggeringPrincipal)]
+  nsIPrincipal binaryTriggeringPrincipal();
+
+  /**
+   * For non-document loads the principalToInherit is always null. For
+   * loads of type TYPE_DOCUMENT or TYPE_SUBDOCUMENT the principalToInherit
+   * might be null. If it's non null, then this is the principal that is
+   * inherited if a principal needs to be inherited. If the principalToInherit
+   * is null but the inherit flag is set, then the triggeringPrincipal is
+   * the principal that is inherited.
+   */
+  attribute nsIPrincipal principalToInherit;
+
+  /**
+   * A C++-friendly version of principalToInherit.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(PrincipalToInherit)]
+  nsIPrincipal binaryPrincipalToInherit();
+
+  /**
+   * Finds the correct principal to inherit for the given channel, based on
+   * the values of PrincipalToInherit and TriggeringPrincipal.
+   */
+  [noscript, notxpcom, nostdcall]
+  nsIPrincipal FindPrincipalToInherit(in nsIChannel aChannel);
+
+  /**
+   * This is the ownerDocument of the LoadingNode. Unless the LoadingNode
+   * is a Document, in which case the LoadingDocument is the same as the
+   * LoadingNode.
+   *
+   * For top-level loads, and for loads originating from workers, the
+   * LoadingDocument is null. When the LoadingDocument is not null, the
+   * LoadingPrincipal is set to the principal of the LoadingDocument.
+   */
+  readonly attribute Document loadingDocument;
+
+  /**
+   * A C++-friendly version of loadingDocument (loadingNode).
+   * This is the Node where the resulting resource will be used. I.e. it is
+   * the Node which will get access to the result of the request. (Where
+   * "get access to" might simply mean "embed" depending on the type of
+   * resource that is loaded).
+   *
+   * For example for an <img>/<video> it is the image/video element. For
+   * document loads inside <iframe> and <frame>s, the LoadingNode is the
+   * <iframe>/<frame> element. For an XMLHttpRequest, it is the Document
+   * which contained the JS which initiated the XHR. For a stylesheet, it
+   * is the Document that contains <link rel=stylesheet>.
+   *
+   * For loads triggered by the HTML pre-parser, the LoadingNode is the
+   * Document which is currently being parsed.
+   *
+   * For top-level loads, and for loads originating from workers, the
+   * LoadingNode is null. If the LoadingNode is non-null, then the
+   * LoadingPrincipal is the principal of the LoadingNode.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(LoadingNode)]
+  nsINode binaryLoadingNode();
+
+  /**
+   * A C++ friendly version of the loadingContext for toplevel loads.
+   * Most likely you want to query the ownerDocument or LoadingNode
+   * and not this context only available for TYPE_DOCUMENT loads.
+   * Please note that except for loads of TYPE_DOCUMENT, this
+   * ContextForTopLevelLoad will always return null.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(ContextForTopLevelLoad)]
+  LoadContextRef binaryContextForTopLevelLoad();
+
+  /**
+   * For all loads except loads of TYPE_DOCUMENT, the loadingContext
+   * simply returns the loadingNode. For loads of TYPE_DOCUMENT this
+   * will return the context available for top-level loads which
+   * do not have a loadingNode.
+   */
+  [binaryname(LoadingContextXPCOM)]
+  readonly attribute nsISupports loadingContext;
+
+  /**
+   * A C++ friendly version of the loadingContext.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(GetLoadingContext)]
+  LoadContextRef binaryGetLoadingContext();
+
+  /**
+   * The securityFlags of that channel.
+   */
+  readonly attribute nsSecurityFlags securityFlags;
+
+%{C++
+  inline nsSecurityFlags GetSecurityFlags()
+  {
+    nsSecurityFlags result;
+    mozilla::DebugOnly<nsresult> rv = GetSecurityFlags(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
+
+  /**
+   * The sandboxFlags of that channel.
+   */
+  [infallible] readonly attribute unsigned long sandboxFlags;
+
+  /**
+  *   The TriggingSandboxFlags are the SandboxFlags of the entity
+  *   responsible for causing the load to occur.
+  */
+  [infallible] attribute unsigned long triggeringSandboxFlags;
+
+  /**
+   * Allows to query only the security mode bits from above.
+   */
+  [infallible] readonly attribute unsigned long securityMode;
+
+  /**
+   * This flag is used for any browsing context where we should not sniff
+   * the content type. E.g if an iframe has the XCTO nosniff header, then
+   * that flag is set to true so we skip content sniffing for that browsing
+   * context.
+   */
+  [infallible] attribute boolean skipContentSniffing;
+
+  /**
+   * (default) If this flag is set, it has not yet been determined if the
+   * HTTPS-Only mode will upgrade the request.
+   */
+  const unsigned long HTTPS_ONLY_UNINITIALIZED = (1 << 0);
+
+  /**
+   * Indicates that the request will get upgraded, and the HTTPS-Only
+   * StreamListener got registered.
+   */
+  const unsigned long HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED = (1 << 1);
+
+  /**
+   * Indicates that this is the first time the request gets upgraded, and thus
+   * the HTTPS-Only StreamListener hasn't been registered yet. Even though there
+   * might be multiple channels per request that have to be upgraded (e.g.,
+   * because of redirects), the StreamListener only has to be attached to one
+   * channel.
+   */
+  const unsigned long HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED = (1 << 2);
+
+  /**
+   * This flag can be manually set if the HTTPS-Only mode should exempt the
+   * request and not upgrade it. (e.g in the case of OCSP.
+   */
+  const unsigned long HTTPS_ONLY_EXEMPT = (1 << 3);
+
+  /**
+   * This flag can only ever be set on top-level loads. It indicates
+   * that the top-level https connection succeeded. This flag is mostly
+   * used to counter time-outs which allows to cancel the channel
+   * if the https load has not started.
+   */
+  const unsigned long HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS = (1 << 4);
+
+  /**
+   * This flag indicates that the request should not be logged to the
+   * console.
+   */
+  const unsigned long HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE = (1 << 5);
+
+  /**
+   * This flag indicates that the request should not be logged to the
+   * console.
+   */
+  const unsigned long HTTPS_ONLY_UPGRADED_HTTPS_FIRST = (1 << 6);
+
+  /**
+   * Upgrade state of HTTPS-Only Mode. The flag HTTPS_ONLY_EXEMPT can get
+   * set on requests that should be excempt from an upgrade.
+   */
+  [infallible] attribute unsigned long httpsOnlyStatus;
+
+  /**
+   * Returns true if at the time of the loadinfo construction the document
+   * that triggered this load has the bit hasValidTransientUserGestureActivation
+   * set or the load was triggered from External. (Mostly this bool is used
+   * in the context of Sec-Fetch-User.)
+   */
+  [infallible] attribute boolean hasValidUserGestureActivation;
+
+  /**
+   * We disallow the SystemPrincipal to initiate requests to
+   * the public web. This flag is to allow exceptions.
+   */
+  [infallible] attribute boolean allowDeprecatedSystemRequests;
+
+  /**
+   * Only ever returns true if the loadinfo is of TYPE_SCRIPT and
+   * the script was created by the HTML parser.
+   */
+  [infallible] attribute boolean parserCreatedScript;
+
+  /**
+   * True if this request is from DevTools.
+   */
+  [infallible] attribute boolean isInDevToolsContext;
+
+  /**
+   * True if this request is embedded in a context that can't be third-party
+   * (i.e. an iframe embedded in a cross-origin parent window). If this is
+   * false, then this request may be third-party if it's a third-party to
+   * loadingPrincipal.
+   */
+  [infallible] attribute boolean isInThirdPartyContext;
+
+  /**
+   * True if this request is a third party in respect to the top-level window.
+   *
+   * Note that this doesn't consider the parent window. I.e. It will still
+   * return false even in the case that the parent is cross-origin but the
+   * top-level is same-origin.
+   *
+   * This value would be set during opening the channel in parent and propagate
+   * to the channel in the content.
+   */
+  [infallible] attribute boolean isThirdPartyContextToTopWindow;
+
+  /**
+   * See the SEC_COOKIES_* flags above. This attribute will never return
+   * SEC_COOKIES_DEFAULT, but will instead return what the policy resolves to.
+   * I.e. SEC_COOKIES_SAME_ORIGIN for CORS mode, and SEC_COOKIES_INCLUDE
+   * otherwise.
+   */
+  [infallible] readonly attribute unsigned long cookiePolicy;
+
+  /**
+   * The cookie jar settings inherited from the top-level document's loadInfo.
+   * It cannot be null.
+   */
+  attribute nsICookieJarSettings cookieJarSettings;
+
+  cenum StoragePermissionState : 8 {
+    NoStoragePermission = 0,
+    HasStoragePermission = 1,
+    StoragePermissionAllowListed = 2,
+  };
+
+  /**
+   * The result of the storage permission check of the loading document. This
+   * value would be set during opening the channel.
+   */
+  [infallible] attribute nsILoadInfo_StoragePermissionState
+        storagePermission;
+
+  /**
+   * True if the load was triggered by a meta refresh.
+   */
+  [infallible] attribute boolean isMetaRefresh;
+
+  /**
+   * If forceInheritPrincipal is true, the data coming from the channel should
+   * inherit its principal, even when the data is loaded over http:// or another
+   * protocol that would normally use a URI-based principal.
+   *
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
+   *
+   * This attribute will never be true when loadingSandboxed is true.
+   */
+  [infallible] readonly attribute boolean forceInheritPrincipal;
+
+  /**
+   * If forceInheritPrincipalOverruleOwner is true, the data coming from the
+   * channel should inherit the principal, even when the data is loaded over
+   * http:// or another protocol that would normally use a URI-based principal
+   * and even if the channel's .owner is not null.  This last is the difference
+   * between forceInheritPrincipalOverruleOwner and forceInheritPrincipal: the
+   * latter does _not_ overrule the .owner setting.
+   *
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
+   */
+  [infallible] readonly attribute boolean forceInheritPrincipalOverruleOwner;
+
+  /**
+   * If loadingSandboxed is true, the data coming from the channel is
+   * being loaded sandboxed, so it should have a nonce origin and
+   * hence should use a NullPrincipal.
+   */
+  [infallible] readonly attribute boolean loadingSandboxed;
+
+  /**
+   * If aboutBlankInherits is true, then about:blank should inherit
+   * the principal.
+   */
+  [infallible] readonly attribute boolean aboutBlankInherits;
+
+  /**
+   * If allowChrome is true, then use nsIScriptSecurityManager::ALLOW_CHROME
+   * when calling CheckLoadURIWithPrincipal().
+   */
+  [infallible] readonly attribute boolean allowChrome;
+
+  /**
+   * If disallowScript is true, then use nsIScriptSecurityManager::DISALLOW_SCRIPT
+   * when calling CheckLoadURIWithPrincipal().
+   */
+  [infallible] readonly attribute boolean disallowScript;
+
+%{C++
+  uint32_t CheckLoadURIFlags() {
+    uint32_t flags = nsIScriptSecurityManager::STANDARD;
+    if (GetAllowChrome()) {
+      flags |= nsIScriptSecurityManager::ALLOW_CHROME;
+    }
+    if (GetDisallowScript()) {
+      flags |= nsIScriptSecurityManager::DISALLOW_SCRIPT;
+    }
+    return flags;
+  }
+%}
+
+  /**
+   * Returns true if SEC_DONT_FOLLOW_REDIRECTS is set.
+   */
+  [infallible] readonly attribute boolean dontFollowRedirects;
+
+  /**
+   * Returns true if SEC_LOAD_ERROR_PAGE is set.
+   */
+  [infallible] readonly attribute boolean loadErrorPage;
+
+  /**
+   * True if the load was initiated by a form request.
+   * This is important to know to handle the CSP directive navigate-to.
+   */
+  [infallible] attribute boolean isFormSubmission;
+
+  /**
+   * The external contentPolicyType of the channel, used for security checks
+   * like Mixed Content Blocking and Content Security Policy.
+   *
+   * Specifically, content policy types with _INTERNAL_ in their name will
+   * never get returned from this attribute.
+   */
+  readonly attribute nsContentPolicyType externalContentPolicyType;
+
+  /**
+   * CSP uses this parameter to send or not CSP violation events.
+   * Default value: true.
+   */
+  [infallible] attribute boolean sendCSPViolationEvents;
+
+%{ C++
+  inline ExtContentPolicyType GetExternalContentPolicyType()
+  {
+    nsContentPolicyType result;
+    mozilla::DebugOnly<nsresult> rv = GetExternalContentPolicyType(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return static_cast<ExtContentPolicyType>(result);
+  }
+%}
+
+  /**
+   * The internal contentPolicyType of the channel, used for constructing
+   * RequestContext values when creating a fetch event for an intercepted
+   * channel.
+   *
+   * This should not be used for the purposes of security checks, since
+   * the content policy implementations cannot be expected to deal with
+   * _INTERNAL_ values.  Please use the contentPolicyType attribute above
+   * for that purpose.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(InternalContentPolicyType)]
+  nsContentPolicyType binaryInternalContentPolicyType();
+
+  readonly attribute nsContentPolicyType internalContentPolicyType;
+
+  /**
+   * Returns true if document or any of the documents ancestors
+   * up to the toplevel document make use of the CSP directive
+   * 'block-all-mixed-content'.
+   *
+   * Warning: If the loadingDocument is null, then the
+   * blockAllMixedContent is false.
+   */
+  [infallible] readonly attribute boolean blockAllMixedContent;
+
+  /**
+   * Returns true if document or any of the documents ancestors
+   * up to the toplevel document make use of the CSP directive
+   * 'upgrade-insecure-requests'.
+   *
+   * Warning: If the loadingDocument is null, then the
+   * upgradeInsecureRequests is false.
+   */
+  [infallible] readonly attribute boolean upgradeInsecureRequests;
+
+  /**
+   * Returns true if the the page is https and the content is upgradable from http
+   * requires 'security.mixed_content.upgrade_display_content' pref to be true.
+   * Currently this only upgrades display content but might be expanded to other loads.
+   * This is very similar in implementation to upgradeInsecureRequests but browser set.
+   */
+  [infallible] readonly attribute boolean browserUpgradeInsecureRequests;
+
+  /**
+   * Returns true if the display content was or will get upgraded from http to https.
+   * Requires 'security.mixed_content.upgrade_display_content' pref to be true.
+   * Flag is set purely to collect telemetry.
+   */
+  [infallible] attribute boolean browserDidUpgradeInsecureRequests;
+
+  /**
+   * Returns true if the the page is https and the content is upgradable from http
+   * requires 'security.mixed_content.upgrade_display_content' pref to be false.
+   * See browserUpgradeInsecureRequests for more details, this only happens
+   * when *not* upgrading purely for telemetry.
+   */
+  [infallible] readonly attribute boolean browserWouldUpgradeInsecureRequests;
+
+  /**
+   * If true, toplevel data: URI navigation is allowed
+   */
+  [infallible] attribute boolean forceAllowDataURI;
+
+  /**
+   * If true, insecure redirects to a data: URI are allowed.
+   */
+  [infallible] attribute boolean allowInsecureRedirectToDataURI;
+
+  /**
+   * If true, the content policy security check is excluded from web requests.
+   */
+  [infallible] attribute boolean skipContentPolicyCheckForWebRequest;
+
+  /**
+   * If true, this is the load of a frame's original src attribute
+   */
+  [infallible] attribute boolean originalFrameSrcLoad;
+
+  /**
+   * The SEC_FORCE_INHERIT_PRINCIPAL flag may be dropped when a load info
+   * object is created.  Specifically, it will be dropped if the SANDBOXED_ORIGIN
+   * sandbox flag is also present.  This flag is set if SEC_FORCE_INHERIT_PRINCIPAL
+   * was dropped.
+   */
+  [infallible] readonly attribute boolean forceInheritPrincipalDropped;
+
+  /**
+   * This is the inner window ID of the window in which the element being
+   * loaded lives.
+   *
+   * Note that this window ID can be 0 if the window is not
+   * available.
+   */
+  [infallible] readonly attribute unsigned long long innerWindowID;
+
+  /**
+   * The BrowsingContext performing the load for this nsILoadInfo object.
+   */
+  [infallible] readonly attribute unsigned long long browsingContextID;
+  [infallible] readonly attribute BrowsingContext browsingContext;
+
+  /**
+   * Only when the element being loaded is <frame src="foo.html">
+   * (or, more generally, if the element QIs to nsFrameLoaderOwner),
+   * the frameBrowsingContext is the browsing context containing the
+   * foo.html document.
+   *
+   * Note: For other cases, frameBrowsingContextID is 0.
+   */
+  [infallible] readonly attribute unsigned long long frameBrowsingContextID;
+  [infallible] readonly attribute BrowsingContext frameBrowsingContext;
+
+  /**
+   * If the element being loaded is a nsFrameLoaderOwner,
+   * `targetBrowsingContext` is the Browsing Context which will contain the
+   * loading document (see `frameBrowsingContext`). Otherwise, it is the
+   * Browsing Context performing the load (see `browsingContext`).
+   */
+  [infallible] readonly attribute unsigned long long targetBrowsingContextID;
+  [infallible] readonly attribute BrowsingContext targetBrowsingContext;
+
+  /**
+   * Resets the PrincipalToInherit to a freshly created NullPrincipal
+   * which inherits the origin attributes from the loadInfo.
+   *
+   * WARNING: Please only use that function if you know exactly what
+   * you are doing!!!
+   */
+  void resetPrincipalToInheritToNullPrincipal();
+
+  /**
+   * Customized OriginAttributes within LoadInfo to allow overwriting of the
+   * default originAttributes from the loadingPrincipal.
+   *
+   * In chrome side, originAttributes.privateBrowsingId will always be 0 even if
+   * the usePrivateBrowsing is true, because chrome docshell won't set
+   * privateBrowsingId on origin attributes (See bug 1278664). This is to make
+   * sure nsILoadInfo and nsILoadContext have the same origin attributes.
+   */
+  [implicit_jscontext, binaryname(ScriptableOriginAttributes)]
+  attribute jsval originAttributes;
+
+  [noscript, nostdcall, binaryname(GetOriginAttributes)]
+  OriginAttributes binaryGetOriginAttributes();
+
+  [noscript, nostdcall, binaryname(SetOriginAttributes)]
+  void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
+
+%{ C++
+  inline mozilla::OriginAttributes GetOriginAttributes()
+  {
+    mozilla::OriginAttributes result;
+    mozilla::DebugOnly<nsresult> rv = GetOriginAttributes(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
+
+  /**
+   * Whenever a channel is evaluated by the ContentSecurityManager
+   * the first time, we set this flag to true to indicate that
+   * subsequent calls of AsyncOpen() do not have to enforce all
+   * security checks again. E.g., after a redirect there is no
+   * need to set up CORS again. We need this separate flag
+   * because the redirectChain might also contain internal
+   * redirects which might pollute the redirectChain so we can't
+   * rely on the size of the redirectChain-array to query whether
+   * a channel got redirected or not.
+   *
+   * Please note, once the flag is set to true it must remain true
+   * throughout the lifetime of the channel. Trying to set it
+   * to anything else than true will be discarded.
+   *
+   */
+  [infallible] attribute boolean initialSecurityCheckDone;
+
+  /**
+   * Returns true if the load was triggered from an external application
+   * (e.g. Thunderbird). Please note that this flag will only ever be true
+   * if the load is of TYPE_DOCUMENT.
+   */
+  [infallible] attribute boolean loadTriggeredFromExternal;
+
+  /**
+   * True if the tainting has been set by the service worker.
+   */
+  [noscript, infallible] readonly attribute boolean serviceWorkerTaintingSynthesized;
+
+  /**
+   * Whenever a channel gets redirected, append the redirect history entry of
+   * the channel which contains principal referrer and remote address [before
+   * the channels got redirected] to the loadinfo, so that at every point this
+   * array provides us information about all the redirects this channel went
+   * through.
+   * @param channelToDeriveFrom the channel being redirected
+   * @param aIsInternalRedirect should be true if the channel is going
+   *        through an internal redirect, otherwise false.
+   */
+  void appendRedirectHistoryEntry(in nsIChannel channelToDeriveFrom,
+                                  in boolean isInternalRedirect);
+
+  /**
+   * An array of nsIRedirectHistoryEntry which stores redirects associated
+   * with this channel. This array is filled whether or not the channel has
+   * ever been opened. The last element of the array is associated with the
+   * most recent redirect. Please note, that this array *includes* internal
+   * redirects.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval redirectChainIncludingInternalRedirects;
+
+  /**
+   * A C++-friendly version of redirectChain.
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall, binaryname(RedirectChainIncludingInternalRedirects)]
+  nsIRedirectHistoryEntryArray binaryRedirectChainIncludingInternalRedirects();
+
+  /**
+   * Same as RedirectChain but does *not* include internal redirects.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval redirectChain;
+
+  /**
+   * A C++-friendly version of redirectChain.
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
+  nsIRedirectHistoryEntryArray binaryRedirectChain();
+
+  /**
+   * This array is only filled out when we are in the parent process and we are
+   * creating a loadInfo object or deserializing LoadInfoArgs into LoadInfo,
+   * as we ever only need in the parent process.
+   *
+   * The array is meant to be a list of principals of the documents that the
+   * browsing context, corresponding to this loadInfo object, is "nested through" in
+   * the sense of
+   * <https://html.spec.whatwg.org/multipage/browsers.html#browsing-context-nested-through>.
+   * Note that the array does not include the principal corresponding to the frame
+   * loading this request. The closest ancestor is at index zero and the top level
+   * ancestor is at the last index.
+   *
+   * If this is a toplevel content browsing context (i.e. toplevel document in spec
+   * terms), the list is empty.
+   *
+   * Otherwise the array is a list for the document we're nested through (again in
+   * the spec sense), with the principal of that document prepended. The
+   * ancestorPrincipals[0] entry for an iframe load will be the principal of the
+   * iframe element's owner document. The ancestorPrincipals[0] entry for an image
+   * loaded in an iframe will be the principal of the iframe element's owner
+   * document. This matches the ordering specified for Location.ancestorOrigins.
+   *
+   * Please note that this array has the same lifetime as the loadInfo object - use
+   * with caution!
+   */
+  [noscript, notxpcom, nostdcall]
+  PrincipalArrayRef AncestorPrincipals();
+
+  /**
+   * An array of BrowsingContext IDs which correspond to nsILoadInfo::AncestorPrincipals
+   * above.  AncestorBrowsingContextIDs[0] is the BrowsingContext ID of the frame
+   * associated with the principal at ancestorPrincipals[0], and so forth.
+   *
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall]
+  Uint64ArrayRef AncestorBrowsingContextIDs();
+
+  /**
+   * Sets the list of unsafe headers according to CORS spec, as well as
+   * potentially forces a preflight.
+   * Note that you do not need to set the Content-Type header. That will be
+   * automatically detected as needed.
+   *
+   * Only call this function when using the SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT mode.
+   */
+  [noscript, notxpcom, nostdcall]
+  void setCorsPreflightInfo(in CStringArrayRef unsafeHeaders,
+                            in boolean forcePreflight);
+
+  /**
+   * A C++-friendly getter for the list of cors-unsafe headers.
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall, binaryname(CorsUnsafeHeaders)]
+  CStringArrayRef corsUnsafeHeaders();
+
+  /**
+   * Returns value set through setCorsPreflightInfo.
+   */
+  [infallible] readonly attribute boolean forcePreflight;
+
+  /**
+   * A C++ friendly getter for the forcePreflight flag.
+   */
+  [infallible] readonly attribute boolean isPreflight;
+
+  /**
+  * Constants reflecting the channel tainting.  These are mainly defined here
+  * for script.  Internal C++ code should use the enum defined in LoadTainting.h.
+  * See LoadTainting.h for documentation.
+  */
+  const unsigned long TAINTING_BASIC = 0;
+  const unsigned long TAINTING_CORS = 1;
+  const unsigned long TAINTING_OPAQUE = 2;
+
+  /**
+   * Determine the associated channel's current tainting.  Note, this can
+   * change due to a service worker intercept, so it should be checked after
+   * OnStartRequest() fires.
+   */
+  readonly attribute unsigned long tainting;
+
+  /**
+   * Note a new tainting level and possibly increase the current tainting
+   * to match.  If the tainting level is already greater than the given
+   * value, then there is no effect.  It is not possible to reduce the tainting
+   * level on an existing channel/loadinfo.
+   */
+  void maybeIncreaseTainting(in unsigned long aTainting);
+
+  /**
+   * Various helper code to provide more convenient C++ access to the tainting
+   * attribute and maybeIncreaseTainting().
+   */
+%{C++
+  static_assert(TAINTING_BASIC == static_cast<uint32_t>(mozilla::LoadTainting::Basic),
+                "basic tainting enums should match");
+  static_assert(TAINTING_CORS == static_cast<uint32_t>(mozilla::LoadTainting::CORS),
+                "cors tainting enums should match");
+  static_assert(TAINTING_OPAQUE == static_cast<uint32_t>(mozilla::LoadTainting::Opaque),
+                "opaque tainting enums should match");
+
+  mozilla::LoadTainting GetTainting()
+  {
+    uint32_t tainting = TAINTING_BASIC;
+    MOZ_ALWAYS_SUCCEEDS(GetTainting(&tainting));
+    return static_cast<mozilla::LoadTainting>(tainting);
+  }
+
+  void MaybeIncreaseTainting(mozilla::LoadTainting aTainting)
+  {
+    uint32_t tainting = static_cast<uint32_t>(aTainting);
+    MOZ_ALWAYS_SUCCEEDS(MaybeIncreaseTainting(tainting));
+  }
+%}
+
+  /**
+   * Returns true if this load is for top level document.
+   * Note that the load for a sub-frame's document will return false here.
+   */
+  [infallible] readonly attribute boolean isTopLevelLoad;
+
+  /**
+   * If this is non-null, this property represents two things: (1) the
+   * URI to be used for the principal if the channel with this loadinfo
+   * gets a principal based on URI and (2) the URI to use for a document
+   * created from the channel with this loadinfo.
+   */
+  attribute nsIURI resultPrincipalURI;
+
+  /**
+   * Returns a unique nsID used to construct the null principal for the
+   * resulting resource if the SANDBOXED_ORIGIN flag is set.  This is used by
+   * GetChannelResultPrincipal() to ensure that the same null principal is
+   * returned every time.
+   */
+  [noscript, nostdcall, notxpcom]
+  nsIDRef GetSandboxedNullPrincipalID();
+
+  /**
+   * Generates a new nsID to be returned by a future call to
+   * `GetSandboxedNullPrincipalID()`.
+   */
+  [noscript, nostdcall, notxpcom]
+  void ResetSandboxedNullPrincipalID();
+
+  /**
+   * Return the top-level principal, which is the principal of the top-level
+   * window.
+   */
+  [notxpcom, nostdcall] readonly attribute nsIPrincipal topLevelPrincipal;
+
+  /**
+   * Note which client (i.e. global) initiated this network request.  All
+   * nsGlobalWindow and WorkerPrivate can be converted to a ClientInfo to
+   * be set here.  While this is being added to support service worker
+   * FetchEvent, it can also be used to communicate other information about
+   * the source global context in the future.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SetClientInfo(in const_ClientInfoRef aClientInfo);
+
+  /**
+   * Get the ClientInfo for the global that initiated the network request,
+   * if it has been set.
+   */
+  [noscript, nostdcall, notxpcom]
+  const_MaybeClientInfoRef GetClientInfo();
+
+  /**
+   * Give a pre-allocated ClientSource to the channel LoadInfo.  This is
+   * intended to be used by docshell when loading windows without an
+   * initial about:blank document.  The docshell will allocate the ClientSource
+   * to represent the client that will be created as a result of the navigation
+   * network request.  If the channel succeeds and remains same-origin, then
+   * the result nsGlobalWindow will take ownership of the reserved ClientSource.
+   *
+   * This method is also called when a cross-origin redirect occurs.  A new
+   * ClientSource with a different UUID must be created in this case.
+   *
+   * This method automatically calls SetReservedClientInfo() with the
+   * ClientSource::Info().
+   */
+  [noscript, nostdcall, notxpcom]
+  void GiveReservedClientSource(in UniqueClientSourceMove aClientSource);
+
+  /**
+   * This method takes ownership of the reserved ClientSource previously
+   * provided in GiveReservedClientSource().  It may return nullptr if the
+   * nsILoadInfo does not own a ClientSource object.
+   */
+  [noscript, nostdcall, notxpcom]
+  UniqueClientSource TakeReservedClientSource();
+
+  /**
+   * Note the reserved client that be created if this non-subresource
+   * network request succeeds.  Depending on the type of client this
+   * may be called directly or indirectly via GiveReservedClientSource().
+   * For example, web workers do not call give their ClientSource to
+   * the nsILoadInfo, but must still call this method to indicate the
+   * reserved client for their main script load.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SetReservedClientInfo(in const_ClientInfoRef aClientInfo);
+
+  /**
+   * This will clear any existing reserved or initial client and override
+   * it with the given reserved client.  This is similar to calling
+   * TakeReservedClientSource() and then GiveReservedClientSource() with
+   * a new client as ClientChannelHelper does.  This method is needed,
+   * though, to perform this operation in the parent process where
+   * the LoadInfo does not have direct access to a ClientSource.
+   *
+   * If in doubt, do not call this method.  Its really only needed for
+   * a specific redirect case where the child has created a new client on
+   * redirect and we need to override the parent side's reserved client
+   * to match.
+   */
+  [noscript, nostdcall, notxpcom]
+  void OverrideReservedClientInfoInParent(in const_ClientInfoRef aClientInfo);
+
+  /**
+   * Return the reserved ClientInfo for this load, if one has been set.
+   */
+  [noscript, nostdcall, notxpcom]
+  const_MaybeClientInfoRef GetReservedClientInfo();
+
+  /**
+   * Note that this non-subresource network request will result in
+   * re-using an existing "initial" active client.  This mainly only
+   * happens when an initial about:blank document is replaced with
+   * a real load in a window.  In these cases we need to track this
+   * initial client so that we may report its existence in a FetchEvent.
+   *
+   * Note, an nsILoadInfo may only have a reserved client or an
+   * initial client.  It should never have both.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SetInitialClientInfo(in const_ClientInfoRef aClientInfo);
+
+  /**
+   * Return the initial ClientInfo for this load, if one has been set.
+   */
+  [noscript, nostdcall, notxpcom]
+  const_MaybeClientInfoRef GetInitialClientInfo();
+
+  /**
+   * Note that this network request should be controlled by a service worker.
+   * For non-subresource requests this may be set during the load when
+   * the first service worker interception occurs.  For subresource requests
+   * it may be set by the source client if its already controlled by a
+   * service worker.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SetController(in const_ServiceWorkerDescriptorRef aServiceWorker);
+
+  /**
+   * Clear the service worker controller for this channel.  This should only
+   * be used for window navigation redirects.  By default we want to keep
+   * the controller in all other cases.
+   */
+  [noscript, nostdcall, notxpcom]
+  void ClearController();
+
+  /**
+   * Get the service worker controlling this network request, if one has
+   * been set.
+   */
+  [noscript, nostdcall, notxpcom]
+  const_MaybeServiceWorkerDescriptorRef GetController();
+
+  /**
+   * Set a custom performance storage. This is meant to be executed only for
+   * workers. If a PerformanceStorage is not set, the loadingDocument->Window
+   * Performance object will be returned instead.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SetPerformanceStorage(in PerformanceStoragePtr aPerformanceStorage);
+
+  /**
+   * Get the custom PerformanceStorage if set by SetPerformanceStorage.
+   * Otherwise the loadingDocument->Window Performance object will be returned
+   * instead if all the following conditions are met:
+   * - the triggeringPrincipal is the same as the loadingDocument's principal.
+   * - if the external content policy type is TYPE_SUBDOCUMENT then loading
+   *   wasn't caused by processing the attributes of the browsing context
+   *   container.
+   */
+  [noscript, nostdcall, notxpcom]
+  PerformanceStoragePtr GetPerformanceStorage();
+
+  /**
+   * Returns the CSP (or Preload CSP for preloads) which should be enforced
+   * when fetching the resource this loadinfo belongs to.
+   *
+   * a) Non-navigations:
+   * For non-navigation loads, GetCSP() returns what the spec refers to as the
+   * "request's client's global object's CSP list". In practice, if this is the
+   * loadinfo of a subresource load (e.g an image load), then GetCSP() or
+   * GetPreloadCSP() returns the CSP of the document which embeds the image.
+   * The returned CSP includes any policy delivered through the HTTP header or
+   * also through the meta tag (modulo the difference for preloads, e.g. image
+   * preloads have to query GetPreloadCsp() because at the time of preloading
+   * we are not entirely sure if the Meta CSP will be applied to the document
+   * in the end or not). Please note that GetCSPToInherit() called on a
+   * loadinfo for any non-navigation always returns null.
+   *
+   * b) Navigations:
+   *   * Top-level loads:
+   *     For top-level loads (navigations) GetCSP() will return null, unless
+   *     the navigation is started by a WebExtension, in which case it will
+   *     return the CSP of the webextension, if any.
+   *     If you need to query the CSP that potentially should apply to the
+   *     new top-level load, you have to query GetCspToInherit(), which is
+   *     the CSP of the request's client's global object, just like GetCsp()
+   *     is for non-navigation requests.
+   *
+   *   * Iframe-loads:
+   *     For iframe-loads (navigations) GetCSP() will return the CSP of the
+   *     parent document, unless the navigation is started by a WebExtension,
+   *     in which case it will return the CSP of the webextension, if any.
+   *
+   * If you need to query the CSP that should potentially be inherited
+   * into the new document, you have to query GetCSPToInherit().
+   *
+   * TODO Bug 1557114:
+   * After evaluating what CSP to use for frame navigations we should
+   * update the above documentation to match the outcome of Bug 1557114.
+   */
+  [notxpcom,nostdcall] CSPRef GetCsp();
+  [notxpcom,nostdcall] CSPRef GetPreloadCsp();
+  [notxpcom,nostdcall] CSPRef GetCspToInherit();
+
+  /**
+    * The service worker and fetch specifications require returning the
+    * exact tainting level of the Response passed to FetchEvent.respondWith().
+    * This method allows us to override the tainting level in that case.
+    *
+    * NOTE: This should not be used outside of service worker code! Use
+    *       nsILoadInfo::MaybeIncreaseTainting() instead.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SynthesizeServiceWorkerTainting(in LoadTainting aTainting);
+
+  /**
+    * The top-level document has been user-interacted.
+    */
+  [infallible] attribute boolean documentHasUserInteracted;
+
+  /**
+    * During a top-level document channel redirect from tracking to
+    * non-tracking resources, our anti-tracking heuristic, grants the storage
+    * access permission for a short amount of seconds (See
+    * privacy.restrict3rdpartystorage.expiration_redirect pref).
+    * We use this flag to remember this decision even if this channel is part
+    * of a chain of redirects.
+    */
+  [infallible] attribute boolean allowListFutureDocumentsCreatedFromThisRedirectChain;
+
+  /**
+   * Indicates that we need to check if we should apply the anti-tracking
+   * heuristic after the channel has been classified.
+   */
+  [infallible] attribute boolean needForCheckingAntiTrackingHeuristic;
+
+  /**
+   * A snapshot of the nonce at load start time which is used for CSP
+   * checks and only set for:
+   *  * TYPE_SCRIPT and
+   *  * TYPE_STYLESHEET
+   */
+  attribute AString cspNonce;
+
+  /**
+   * List of possible reasons the request associated with this load info
+   * may have been blocked, set by various content blocking checkers.
+   */
+  const uint32_t BLOCKING_REASON_NONE = 0;
+  const uint32_t BLOCKING_REASON_CORSDISABLED = 1001;
+  const uint32_t BLOCKING_REASON_CORSDIDNOTSUCCEED = 1002;
+  const uint32_t BLOCKING_REASON_CORSREQUESTNOTHTTP = 1003;
+  const uint32_t BLOCKING_REASON_CORSMULTIPLEALLOWORIGINNOTALLOWED = 1004;
+  const uint32_t BLOCKING_REASON_CORSMISSINGALLOWORIGIN = 1005;
+  const uint32_t BLOCKING_REASON_CORSNOTSUPPORTINGCREDENTIALS = 1006;
+  const uint32_t BLOCKING_REASON_CORSALLOWORIGINNOTMATCHINGORIGIN = 1007;
+  const uint32_t BLOCKING_REASON_CORSMISSINGALLOWCREDENTIALS = 1008;
+  const uint32_t BLOCKING_REASON_CORSORIGINHEADERNOTADDED = 1009;
+  const uint32_t BLOCKING_REASON_CORSEXTERNALREDIRECTNOTALLOWED = 1010;
+  const uint32_t BLOCKING_REASON_CORSPREFLIGHTDIDNOTSUCCEED = 1011;
+  const uint32_t BLOCKING_REASON_CORSINVALIDALLOWMETHOD = 1012;
+  const uint32_t BLOCKING_REASON_CORSMETHODNOTFOUND = 1013;
+  const uint32_t BLOCKING_REASON_CORSINVALIDALLOWHEADER = 1014;
+  const uint32_t BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT = 1015;
+  const uint32_t BLOCKING_REASON_CLASSIFY_MALWARE_URI = 2001;
+  const uint32_t BLOCKING_REASON_CLASSIFY_PHISHING_URI = 2002;
+  const uint32_t BLOCKING_REASON_CLASSIFY_UNWANTED_URI = 2003;
+  const uint32_t BLOCKING_REASON_CLASSIFY_TRACKING_URI = 2004;
+  const uint32_t BLOCKING_REASON_CLASSIFY_BLOCKED_URI = 2005;
+  const uint32_t BLOCKING_REASON_CLASSIFY_HARMFUL_URI = 2006;
+  const uint32_t BLOCKING_REASON_CLASSIFY_CRYPTOMINING_URI = 2007;
+  const uint32_t BLOCKING_REASON_CLASSIFY_FINGERPRINTING_URI = 2008;
+  const uint32_t BLOCKING_REASON_CLASSIFY_SOCIALTRACKING_URI = 2009;
+  const uint32_t BLOCKING_REASON_MIXED_BLOCKED = 3001;
+  // The general reason comes from nsCSPContext::permitsInternal(),
+  // which is way too generic to distinguish an exact reason.
+  const uint32_t BLOCKING_REASON_CONTENT_POLICY_GENERAL = 4000;
+  const uint32_t BLOCKING_REASON_CONTENT_POLICY_NO_DATA_PROTOCOL = 4001;
+  const uint32_t BLOCKING_REASON_CONTENT_POLICY_WEBEXT = 4002;
+  const uint32_t BLOCKING_REASON_CONTENT_POLICY_CONTENT_BLOCKED = 4003;
+  const uint32_t BLOCKING_REASON_CONTENT_POLICY_DATA_DOCUMENT = 4004;
+  const uint32_t BLOCKING_REASON_CONTENT_POLICY_WEB_BROWSER = 4005;
+  const uint32_t BLOCKING_REASON_CONTENT_POLICY_PRELOAD = 4006;
+  // The reason used when SEC_REQUIRE_SAME_ORIGIN_* is set and not satisifed.
+  const uint32_t BLOCKING_REASON_NOT_SAME_ORIGIN = 5000;
+  // The reason used when an extension cancels the request via the WebRequest api.
+  const uint32_t BLOCKING_REASON_EXTENSION_WEBREQUEST = 6000;
+
+  /**
+   * If the request associated with this load info was blocked by some of
+   * our content or load blockers, the reason can be found here.
+   * Note that setting this attribute has NO EFFECT on blocking the request.
+   * This attribute is only informative!
+   *
+   * By default the value is '0' - NONE.
+   * Each write rewrites the last value.
+   * Can be accessed only on a single thread.
+   */
+  [infallible] attribute unsigned long requestBlockingReason;
+
+  /**
+    * The object in charged to receive CSP violation events. It can be null.
+    * This attribute will be merged into the CSP object eventually.
+    * See bug 1500908.
+    */
+  attribute nsICSPEventListener cspEventListener;
+
+  /**
+   * This attribute will be true if this is a load triggered by
+   * https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes
+   * or https://html.spec.whatwg.org/multipage/obsolete.html#process-the-frame-attributes
+   */
+  [infallible] readonly attribute boolean isFromProcessingFrameAttributes;
+
+  cenum CrossOriginOpenerPolicy : 8 {
+    OPENER_POLICY_UNSAFE_NONE = 0,
+    OPENER_POLICY_SAME_ORIGIN = 1,
+    OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS = 2,
+    OPENER_POLICY_EMBEDDER_POLICY_REQUIRE_CORP_FLAG = 0x10,
+    OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP =
+        OPENER_POLICY_SAME_ORIGIN |
+        OPENER_POLICY_EMBEDDER_POLICY_REQUIRE_CORP_FLAG
+  };
+
+  cenum CrossOriginEmbedderPolicy : 8 {
+    EMBEDDER_POLICY_NULL = 0,
+    EMBEDDER_POLICY_REQUIRE_CORP = 1,
+  };
+
+  /**
+   * This attribute is the loading context's cross origin embedder policy.
+   * The value is initialized with corresponding WindowContext which get by
+   * innerWindowIID in the nsILoadInfo.
+   * It also could be set by workers when fetch is called under
+   * the workers' scope.
+   */
+  [infallible] attribute nsILoadInfo_CrossOriginEmbedderPolicy
+        loadingEmbedderPolicy;
+
+  /**
+   * This attribute will be true if this is a load triggered by a media
+   * element.
+   */
+  [infallible] attribute boolean isMediaRequest;
+
+  /**
+   * This attribute will be true if this is a load triggered by a media
+   * element and it's an initial request.
+   */
+  [infallible] attribute boolean isMediaInitialRequest;
+
+  /**
+   * This attribute will be true if the fetch request is from object or embed
+   * elements
+   */
+  [infallible] attribute boolean isFromObjectOrEmbed;
+  
+  /**
+   * If this is non-null, this property holds the URI as it was before query
+   * stripping was performed.
+   */
+  attribute nsIURI unstrippedURI;
+};

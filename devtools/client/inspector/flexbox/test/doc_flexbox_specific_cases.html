@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+@font-face {
+  font-family: Ahem;
+  src: url("Ahem.ttf");
+}
+.container {
+  width: 300px;
+  height: 150px;
+  margin: 10px;
+  display: flex;
+}
+.container.column {
+  height: 300px;
+  width: 150px;
+  flex-direction: column;
+}
+.item {
+  background: #0004;
+}
+.shrinking .item {
+  flex-basis: 500px;
+  flex-shrink: 1;
+}
+.shrinking.is-clamped .item {
+  min-width: 350px;
+}
+.growing .item {
+  flex-basis: 200px;
+  flex-grow: 1;
+}
+.growing.is-clamped .item {
+  max-width: 250px;
+}
+
+#want-to-grow-more-than-max {
+  width: 500px;
+  display: flex;
+}
+#want-to-grow-more-than-max div {
+  flex: 1;
+  max-width: 200px;
+}
+
+#did-not-grow-or-shrink {
+  width: 500px;
+  display: flex;
+}
+#did-not-grow-or-shrink div {
+  flex: 0 300px;
+}
+
+#just-enough-space-for-clamped-items {
+  display:flex;
+  width:100px;
+  height:40px
+}
+#just-enough-space-for-clamped-items div:first-child {
+  flex: 1 300px;
+  max-width: 20px;
+  background: teal;
+}
+#just-enough-space-for-clamped-items div:last-child {
+  flex: 1 10px;
+  min-width: 80px;
+  background: salmon;
+}
+
+#wanted-to-shrink-more-than-basis {
+  display: flex;
+  width: 5px;
+}
+#wanted-to-shrink-more-than-basis div:first-child {
+  flex: 0 2 200px;
+  /* Using the Ahem test font to make sure the text has the exact same size on all test
+     platforms */
+  font-family: Ahem;
+  font-size: 10px;
+}
+#wanted-to-shrink-more-than-basis div:last-child {
+  flex: 0 1 200px;
+}
+</style>
+<div id="container" class="container">
+  <div class="item">flex item in a row flex container</div>
+</div>
+<div class="container column">
+  <div class="item">flex item in a column flex container</div>
+</div>
+<div class="container shrinking">
+  <div class="item">Shrinking flex item</div>
+</div>
+<div class="container shrinking is-clamped">
+  <div class="item">Shrinking and clamped flex item</div>
+</div>
+<div class="container growing">
+  <div class="item">Growing flex item</div>
+</div>
+<div class="container growing is-clamped">
+  <div class="item">Growing and clamped flex item</div>
+</div>
+<div id="want-to-grow-more-than-max">
+  <div>item wants to grow more</div>
+</div>
+<div id="did-not-grow-or-shrink">
+  <div>item did not grow or shrink</div>
+</div>
+<div id="just-enough-space-for-clamped-items">
+ <div></div>
+ <div></div>
+</div>
+<div id="wanted-to-shrink-more-than-basis">
+  <div>item wants to shrink more than its basis</div>
+  <div></div>
+</div>
+<div class="container" id="container-only">
+  <div class="container" id="container-and-item">
+    <div id="item-only">This item is inside a container-item element</div>
+  </div>
+</div>

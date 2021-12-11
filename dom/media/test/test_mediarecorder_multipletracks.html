@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that MediaRecorder fires an error event when started with >1 track of a kind</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/media/webrtc/tests/mochitests/head.js"></script>
+</head>
+<body>
+<script class="testbody">
+"use strict";
+
+(async () => {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("Failure timeouts");
+
+  try {
+    const stream = new MediaStream;
+    const recorder = new MediaRecorder(stream);
+
+    {
+      info("Testing with two audio tracks");
+      const ac = new AudioContext;
+      const track = ac.createMediaStreamDestination().stream.getTracks()[0];
+      stream.addTrack(track);
+      stream.addTrack(track.clone());
+      mustThrowWith("Starting with multiple audio tracks",
+                    "NotSupportedError",
+                    () => recorder.start());
+      await Promise.all([
+        haveNoEvent(recorder, "start"),
+        haveNoEvent(recorder, "error"),
+        haveNoEvent(recorder, "stop"),
+      ]);
+      for (let t of stream.getTracks()) {
+        stream.removeTrack(t);
+        t.stop();
+      }
+    }
+
+    {
+      info("Testing with two video tracks");
+      const canvas = document.createElement("canvas");
+      canvas.getContext("2d");
+      const track = canvas.captureStream().getTracks()[0];
+      stream.addTrack(track);
+      stream.addTrack(track.clone());
+      mustThrowWith("Starting with multiple video tracks",
+                    "NotSupportedError",
+                    () => recorder.start());
+      await Promise.all([
+        haveNoEvent(recorder, "start"),
+        haveNoEvent(recorder, "error"),
+        haveNoEvent(recorder, "stop"),
+      ]);
+      for (let t of stream.getTracks()) {
+        stream.removeTrack(t);
+        t.stop();
+      }
+    }
+  } catch(e) {
+    ok(false, `${e}\n${e.stack}`);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+</script>
+</body>
+</html>

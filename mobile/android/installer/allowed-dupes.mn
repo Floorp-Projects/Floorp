@@ -1,0 +1,28 @@
+# Known duplicate files
+# This file is ideally removed, but some existing files will be grandfathered in
+# See bug 1303184
+#
+# PLEASE DO NOT ADD MORE EXCEPTIONS TO THIS LIST
+#
+
+# Row and column icons are duplicated
+res/table-remove-column-active.gif
+res/table-remove-row-active.gif
+res/table-remove-column-hover.gif
+res/table-remove-row-hover.gif
+res/table-remove-column.gif
+res/table-remove-row.gif
+
+res/multilocale.txt
+update.locale
+
+#ifdef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+defaults/pref/arm64-v8a/geckoview-prefs.js
+defaults/pref/armeabi-v7a/geckoview-prefs.js
+defaults/pref/x86/geckoview-prefs.js
+defaults/pref/x86_64/geckoview-prefs.js
+arm64-v8a/greprefs.js
+armeabi-v7a/greprefs.js
+x86/greprefs.js
+x86_64/greprefs.js
+#endif # MOZ_ANDROID_FAT_AAR_ARCHITECTURES

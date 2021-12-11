@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="org.mozilla.geckoview">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <uses-feature
+            android:name="android.hardware.location"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.location.gps"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.touchscreen"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.camera"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.camera.autofocus"
+            android:required="false"/>
+
+    <uses-feature
+            android:name="android.hardware.audio.low_latency"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.microphone"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.camera.any"
+            android:required="false"/>
+
+    <!-- GeckoView requires OpenGL ES 2.0 -->
+    <uses-feature
+            android:glEsVersion="0x00020000"
+            android:required="true"/>
+
+    <application>
+        <service
+                android:name="org.mozilla.gecko.media.MediaManager"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":media">
+        </service>
+        <service
+                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$gmplugin"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":gmplugin">
+        </service>
+        <service
+                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$socket"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":socket">
+        </service>
+        <service
+                android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false">
+        </service>
+    </application>
+
+</manifest>

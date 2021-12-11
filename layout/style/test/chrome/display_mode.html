@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1104916
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Display Mode</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    var imports = [ "SimpleTest", "is", "isnot", "ok" ];
+    for (var n of imports) {
+        window[n] = window.opener.wrappedJSObject[n];
+    }
+
+    /** Test for Display Mode **/
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    function waitOneEvent(element, name) {
+      return new Promise(function(resolve, reject) {
+        element.addEventListener(name, function() {
+          resolve();
+        }, {once: true});
+      });
+    }
+
+    function promiseNextTick() {
+      return new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    async function test_task() {
+      var iframe = document.getElementById("subdoc");
+      var subdoc = iframe.contentDocument;
+      var style = subdoc.getElementById("style");
+      var bodyComputedStyled = subdoc.defaultView.getComputedStyle(subdoc.body);
+      var win = Services.wm.getMostRecentWindow("navigator:browser");
+
+      function queryApplies(q) {
+        style.setAttribute("media", q);
+        return bodyComputedStyled.getPropertyValue("text-decoration-line") ==
+               "underline";
+      }
+
+      function shouldApply(q) {
+        ok(queryApplies(q), q + " should apply");
+      }
+
+      function shouldNotApply(q) {
+        ok(!queryApplies(q), q + " should not apply");
+      }
+
+      function setDisplayMode(mode) {
+        window.browsingContext.top.displayMode = mode;
+      }
+
+      shouldApply("all and (display-mode: browser)");
+      shouldNotApply("all and (display-mode: fullscreen)");
+      shouldNotApply("all and (display-mode: standalone)");
+      shouldNotApply("all and (display-mode: minimal-ui)");
+
+      // Test entering the OS's fullscreen mode.
+      var fullScreenEntered = waitOneEvent(win, "sizemodechange");
+      synthesizeKey("KEY_F11");
+      await fullScreenEntered;
+      // Wait for the next tick to apply media feature changes. See bug 1430380.
+      await promiseNextTick();
+      shouldApply("all and (display-mode: fullscreen)");
+      shouldNotApply("all and (display-mode: browser)");
+      var fullScreenExited = waitOneEvent(win, "sizemodechange");
+      synthesizeKey("KEY_F11");
+      await fullScreenExited;
+      // Wait for the next tick to apply media feature changes. See bug 1430380.
+      await promiseNextTick();
+      shouldNotApply("all and (display-mode: fullscreen)");
+      shouldApply("all and (display-mode: browser)");
+
+      // Test entering fullscreen through document requestFullScreen.
+      fullScreenEntered = waitOneEvent(document, "mozfullscreenchange");
+      document.body.mozRequestFullScreen();
+      await fullScreenEntered
+      ok(document.mozFullScreenElement, "window entered fullscreen");
+      shouldApply("all and (display-mode: fullscreen)");
+      shouldNotApply("all and (display-mode: browser)");
+      fullScreenExited = waitOneEvent(document, "mozfullscreenchange");
+      document.mozCancelFullScreen();
+      await fullScreenExited;
+      ok(!document.mozFullScreenElement, "window exited fullscreen");
+      shouldNotApply("all and (display-mode: fullscreen)");
+      shouldApply("all and (display-mode: browser)");
+
+      // Test entering display mode mode through docshell
+      setDisplayMode("standalone");
+      shouldApply("all and (display-mode: standalone)");
+      shouldNotApply("all and (display-mode: fullscreen)");
+      shouldNotApply("all and (display-mode: browser)");
+      shouldNotApply("all and (display-mode: minimal-ui)");
+
+      // Test that changes in the display mode are reflected
+      setDisplayMode("minimal-ui");
+      shouldApply("all and (display-mode: minimal-ui)");
+      shouldNotApply("all and (display-mode: standalone)");
+
+      // Set the display mode back.
+      setDisplayMode("browser");
+
+      window.close();
+      window.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="test_task()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1104916">Mozilla Bug 1104916</a>
+<iframe id="subdoc" src="http://mochi.test:8888/tests/layout/style/test/chrome/media_queries_iframe.html" allowfullscreen></iframe>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

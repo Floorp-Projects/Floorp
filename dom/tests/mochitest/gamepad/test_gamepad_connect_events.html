@@ -1,0 +1,22 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- bug 893785 - Test that sending a gamepadconnected event to a new window
+     doesn't result in a gamepadconnected event being sent to existing
+     windows that have already received it. -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test hidden frames</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+// This test loads in an iframe, to ensure that the navigator instance is
+// loaded with the correct value of the preference.
+SimpleTest.waitForExplicitFinish();
+setGamepadPreferenceAndCreateIframe("test_gamepad_connect_events_iframe.html");
+</script>
+</body>
+</html>

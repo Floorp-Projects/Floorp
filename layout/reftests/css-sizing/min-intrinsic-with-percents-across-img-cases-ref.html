@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<title>References for bug 823483</title>
+<style>
+
+td:first-child {
+   background: aqua;
+   border: thin solid;
+   padding: 2px 0;
+}
+
+td:nth-child(2) {
+  width: 100%;
+}
+
+img { vertical-align: bottom }
+
+</style>
+
+
+<table><tr>
+  <td><img style="width: 32px; height: 32px"></td>
+  <td>unstyled</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 10px; height: 10px"></td>
+  <td>width: 10px</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0"></td>
+  <td>width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 32px; height: 32px"></td>
+  <td>min-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0"></td>
+  <td>max-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0"></td>
+  <td>width: 10px; max-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 10px; height: 10px"></td>
+  <td>width: 10px; min-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0"></td>
+  <td>width: 150%</td>
+</tr></table>
+
+<table><tr>
+  <td><div style="width: 32px"><img style="width: 48px; height: 48px"></div></td>
+  <td>min-width: 150%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0"></td>
+  <td>max-width: 150%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0"></td>
+  <td>width: 10px; max-width: 150%</td>
+</tr></table>
+
+<table><tr>
+  <td><div style="width: 10px"><img style="width: 15px; height: 15px"></div></td>
+  <td>width: 10px; min-width: 150%</td>
+</tr></table>
+
+<script>
+
+var images = document.getElementsByTagName("img");
+for (var i = 0; i < images.length; ++i) {
+  var image = images[i];
+  image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUEBAAAEBLCjf2dK8NsKrJLJp84zgUAgEAgEAoFAcGUBocYBP+pqhN4AAAAASUVORK5CYII=";
+}
+
+</script>

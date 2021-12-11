@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait" onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <!-- In this test we will attempt to interpolate since fill is interpolatable
+       but fail since the base value can't be converted to an RGB color value
+       and hence should fall back to discrete calcMode which, in the case of
+       to-animation, sets the to value for the second half of the simple
+       duration. -->
+  <defs>
+    <linearGradient id="red">
+      <stop offset="0.0" stop-color="#f00"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#red)">
+    <animate attributeName="fill" to="lime" dur="3s"/>
+  </rect>
+</svg>

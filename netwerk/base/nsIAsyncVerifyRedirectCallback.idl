@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(8d171460-a716-41f1-92be-8c659db39b45)]
+interface nsIAsyncVerifyRedirectCallback : nsISupports
+{
+    /**
+     * Complement to nsIChannelEventSink asynchronous callback. The result of
+     * the redirect decision is passed through this callback.
+     *
+     * @param result
+     *    Result of the redirect veto decision. If FAILED the redirect has been
+     *    vetoed. If SUCCEEDED the redirect has been allowed by all consumers.
+     */
+    void onRedirectVerifyCallback(in nsresult result);
+};

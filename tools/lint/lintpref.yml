@@ -1,0 +1,17 @@
+---
+lintpref:
+    description: Linter for static prefs.
+    include:
+        - 'modules/libpref/init'
+        - 'browser/app/profile/'
+        - 'mobile/android/app/'
+        - 'devtools/client/preferences/'
+        - 'browser/branding/'
+        - 'mobile/android/installer/'
+        - 'mobile/android/locales/'
+    exclude: []
+    extensions: ['js']
+    type: external
+    payload: libpref:checkdupes
+    support-files:
+        - 'modules/libpref/init/StaticPrefList.yaml'

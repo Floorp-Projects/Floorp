@@ -1,0 +1,130 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
+
+with Files("crashtests/430628*"):
+    BUG_COMPONENT = ("Core", "DOM: Editor")
+
+with Files("crashtests/432114*"):
+    BUG_COMPONENT = ("Core", "DOM: Editor")
+
+with Files("crashtests/500328*"):
+    BUG_COMPONENT = ("Firefox", "Bookmarks & History")
+
+with Files("IHistory.h"):
+    BUG_COMPONENT = ("Toolkit", "Places")
+
+with Files("*LoadContext.*"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+with Files("nsAboutRedirector.*"):
+    BUG_COMPONENT = ("Core", "General")
+
+with Files("nsIScrollObserver.*"):
+    BUG_COMPONENT = ("Core", "Panning and Zooming")
+
+DIRS += [
+    "timeline",
+]
+
+XPIDL_SOURCES += [
+    "nsIContentViewer.idl",
+    "nsIContentViewerEdit.idl",
+    "nsIDocShell.idl",
+    "nsIDocShellTreeItem.idl",
+    "nsIDocShellTreeOwner.idl",
+    "nsIDocumentLoaderFactory.idl",
+    "nsILoadContext.idl",
+    "nsILoadURIDelegate.idl",
+    "nsIPrivacyTransitionObserver.idl",
+    "nsIReflowObserver.idl",
+    "nsIRefreshURI.idl",
+    "nsITooltipListener.idl",
+    "nsITooltipTextProvider.idl",
+    "nsIURIFixup.idl",
+    "nsIWebNavigation.idl",
+    "nsIWebNavigationInfo.idl",
+    "nsIWebPageDescriptor.idl",
+]
+
+XPIDL_MODULE = "docshell"
+
+EXPORTS += [
+    "nsCTooltipTextProvider.h",
+    "nsDocShell.h",
+    "nsDocShellLoadState.h",
+    "nsDocShellLoadTypes.h",
+    "nsDocShellTreeOwner.h",
+    "nsIScrollObserver.h",
+    "nsWebNavigationInfo.h",
+    "SerializedLoadContext.h",
+]
+
+EXPORTS.mozilla += [
+    "BaseHistory.h",
+    "IHistory.h",
+    "LoadContext.h",
+]
+
+EXPORTS.mozilla.dom += [
+    "BrowsingContext.h",
+    "BrowsingContextGroup.h",
+    "BrowsingContextWebProgress.h",
+    "CanonicalBrowsingContext.h",
+    "ChildProcessChannelListener.h",
+    "SyncedContext.h",
+    "SyncedContextInlines.h",
+    "WindowContext.h",
+]
+
+UNIFIED_SOURCES += [
+    "BaseHistory.cpp",
+    "BrowsingContext.cpp",
+    "BrowsingContextGroup.cpp",
+    "BrowsingContextWebProgress.cpp",
+    "CanonicalBrowsingContext.cpp",
+    "ChildProcessChannelListener.cpp",
+    "LoadContext.cpp",
+    "nsAboutRedirector.cpp",
+    "nsDocShell.cpp",
+    "nsDocShellEditorData.cpp",
+    "nsDocShellEnumerator.cpp",
+    "nsDocShellLoadState.cpp",
+    "nsDocShellTelemetryUtils.cpp",
+    "nsDocShellTreeOwner.cpp",
+    "nsDSURIContentListener.cpp",
+    "nsPingListener.cpp",
+    "nsRefreshTimer.cpp",
+    "nsWebNavigationInfo.cpp",
+    "SerializedLoadContext.cpp",
+    "WindowContext.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    "/docshell/shistory",
+    "/dom/base",
+    "/dom/bindings",
+    "/js/xpconnect/src",
+    "/layout/base",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/xul",
+    "/netwerk/base",
+    "/netwerk/protocol/viewsource",
+    "/toolkit/components/browser",
+    "/toolkit/components/find",
+    "/tools/profiler",
+]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+EXTRA_JS_MODULES += ["URIFixup.jsm"]

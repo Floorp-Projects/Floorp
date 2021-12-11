@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="peerconnection_audio_forced_sample_rate.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1437366",
+  title: "Basic audio-only peer connection, with the MTG running at a rate not supported by the MediaPipeline (49000Hz)"
+});
+
+test_peerconnection_audio_forced_sample_rate(49000);
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,181 @@
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsICancelable.idl"
+
+interface nsIURI;
+interface nsIRequest;
+interface nsIStreamListener;
+interface nsIFile;
+interface nsIMIMEInfo;
+interface nsIWebProgressListener2;
+interface nsIInterfaceRequestor;
+webidl BrowsingContext;
+
+/**
+ * The external helper app service is used for finding and launching
+ * platform specific external applications for a given mime content type.
+ */
+[scriptable, uuid(1E4F3AE1-B737-431F-A95D-31FA8DA70199)]
+interface nsIExternalHelperAppService : nsISupports
+{
+  /**
+   * Binds an external helper application to a stream listener. The caller
+   * should pump data into the returned stream listener. When the OnStopRequest
+   * is issued, the stream listener implementation will launch the helper app
+   * with this data.
+   * @param aMimeContentType The content type of the incoming data
+   * @param aRequest The request corresponding to the incoming data
+   * @param aContentContext Used in processing content document refresh
+   *  headers after target content is downloaded.
+   * @param aForceSave True to always save this content to disk, regardless of
+   *  nsIMIMEInfo and other such influences.
+   * @param aWindowContext Used in parenting helper app dialogs, usually
+   *  points to the parent browser window. This parameter may be null,
+   *  in which case dialogs will be parented to aContentContext.
+   * @return A nsIStreamListener which the caller should pump the data into.
+   */
+  nsIStreamListener doContent (in ACString aMimeContentType,
+                               in nsIRequest aRequest,
+                               in nsIInterfaceRequestor aContentContext,
+                               in boolean aForceSave,
+                               [optional] in nsIInterfaceRequestor aWindowContext);
+  
+  /**
+   * Binds an external helper application to a stream listener. The caller
+   * should pump data into the returned stream listener. When the OnStopRequest
+   * is issued, the stream listener implementation will launch the helper app
+   * with this data.
+   * Replaces doContent for native code, and uses BrowsingContext.
+   *
+   * @param aMimeContentType The content type of the incoming data
+   * @param aRequest The request corresponding to the incoming data
+   * @param aContentContext The BrowsingContext that the request was initiated
+   *  by. Used for closing the window if we opened one specifically for this download.
+   * @param aForceSave True to always save this content to disk, regardless of
+   *  nsIMIMEInfo and other such influences.
+   * @param aWindowContext Used in parenting helper app dialogs, usually
+   *  points to the parent browser window. This parameter may be null,
+   *  in which case dialogs will be parented to aContentContext.
+   * @return A nsIStreamListener which the caller should pump the data into.
+   */
+  nsIStreamListener createListener (in ACString aMimeContentType,
+                                                   in nsIRequest aRequest,
+                                                   in BrowsingContext aContentContext,
+                                                   in boolean aForceSave,
+                                                   [optional] in nsIInterfaceRequestor aWindowContext);
+
+  /**
+   * Returns true if data from a URL with this extension combination
+   * is to be decoded from aEncodingType prior to saving or passing
+   * off to helper apps, false otherwise.
+   */
+  boolean applyDecodingForExtension(in AUTF8String aExtension,
+                                    in ACString aEncodingType);
+
+};
+
+/**
+ * This is a private interface shared between external app handlers and the platform specific
+ * external helper app service
+ */
+[scriptable, uuid(6613e2e7-feab-4e3a-bb1f-b03200d544ec)]
+interface nsPIExternalAppLauncher : nsISupports
+{
+  /**
+   * mscott --> eventually I should move this into a new service so other
+   * consumers can add temporary files they want deleted on exit.
+   * @param aTemporaryFile A temporary file we should delete on exit.
+   */
+  void deleteTemporaryFileOnExit(in nsIFile aTemporaryFile);
+  /**
+   * Delete a temporary file created inside private browsing mode when
+   * the private browsing mode has ended.
+   */
+  void deleteTemporaryPrivateFileWhenPossible(in nsIFile aTemporaryFile);
+};
+
+/**
+ * A helper app launcher is a small object created to handle the launching
+ * of an external application.
+ *
+ * Note that cancelling the load via the nsICancelable interface will release
+ * the reference to the launcher dialog.
+ */
+[scriptable, uuid(acf2a516-7d7f-4771-8b22-6c4a559c088e)]
+interface nsIHelperAppLauncher : nsICancelable
+{
+  /**
+   * The mime info object associated with the content type this helper app
+   * launcher is currently attempting to load
+   */
+  readonly attribute nsIMIMEInfo MIMEInfo;
+
+  /**
+   * The source uri
+   */
+  readonly attribute nsIURI source;
+
+  /**
+   * The suggested name for this file
+   */
+  readonly attribute AString suggestedFileName;
+
+  /**
+   * Saves the final destination of the file.
+   * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
+   */
+  void promptForSaveDestination();
+
+  /**
+   * Tell the launcher that we will want to open the file.
+   * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
+   * @param aHandleInternally TRUE if we should handle opening this internally.
+   * @param aNewFileLocation a preferred location choosen through the File Picker.
+   * Null if going through the fast save without File Picker.
+   */
+  void launchWithApplication(in boolean aHandleInternally, in nsIFile aFile);
+
+  /**
+   * Callback invoked by nsIHelperAppLauncherDialog::promptForSaveToFileAsync
+   * after the user has chosen a file through the File Picker (or dismissed it).
+   * @param aFile The file that was chosen by the user (or null if dialog was dismissed).
+   */
+  void saveDestinationAvailable(in nsIFile aFile);
+
+  /**
+   * The following methods are used by the progress dialog to get or set
+   * information on the current helper app launcher download.
+   * This reference will be released when the download is finished (after the
+   * listener receives the STATE_STOP notification).
+   */
+  void setWebProgressListener(in nsIWebProgressListener2 aWebProgressListener);
+
+  /**
+   * The file we are saving to
+   */
+  readonly attribute nsIFile targetFile;
+
+  /**
+   * The executable-ness of the target file
+   */
+  readonly attribute boolean targetFileIsExecutable;
+
+  /**
+   * Time when the download started
+   */
+  readonly attribute PRTime timeDownloadStarted;
+
+  /**
+   * The download content length, or -1 if the length is not available.
+   */
+  readonly attribute int64_t contentLength;
+
+  /**
+   * The browsingContext ID of the launcher's source
+   */
+  readonly attribute uint64_t browsingContextId;
+};

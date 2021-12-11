@@ -1,0 +1,48 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
+if CONFIG["MOZ_BUILD_APP"] == "mobile/android":
+    DEFINES["MOZ_FENNEC"] = True
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    DEFINES["MOZ_GTK"] = True
+
+JAR_MANIFESTS += ["jar.mn"]
+
+GeneratedFile("multilocale.txt", script="gen_multilocale.py")
+FINAL_TARGET_FILES.res += [
+    "!multilocale.txt",
+]
+
+if CONFIG["MOZ_CRASHREPORTER"]:
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+        # TODO: fixing bug 1223748 should let us remove this special case
+        LOCALIZED_FILES["crashreporter.app"].Contents.Resources += [
+            "en-US/crashreporter/crashreporter.ini"
+        ]
+    else:
+        LOCALIZED_FILES += ["en-US/crashreporter/crashreporter.ini"]
+
+LOCALIZED_GENERATED_FILES += ["update.locale"]
+update_locale = LOCALIZED_GENERATED_FILES["update.locale"]
+update_locale.script = "generate_update_locale.py"
+LOCALIZED_FILES += ["!update.locale"]
+
+LOCALIZED_GENERATED_FILES += ["locale.ini"]
+LOCALIZED_GENERATED_FILES["locale.ini"].script = "generate_locale_ini.py"
+LOCALIZED_FILES += ["!locale.ini"]
+
+if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
+    LOCALIZED_GENERATED_FILES += ["defaultagent_localized.ini"]
+    wdba_l10n = LOCALIZED_GENERATED_FILES["defaultagent_localized.ini"]
+    wdba_l10n.script = "/browser/locales/generate_ini.py"
+    wdba_l10n.inputs = [
+        "/browser/locales/en-US/defaultagent/defaultagent_localized.ini",
+    ]
+    LOCALIZED_FILES += ["!defaultagent_localized.ini"]

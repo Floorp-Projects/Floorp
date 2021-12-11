@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test that repeated scrollbar button clicks do not cause checkerboarding</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript">
+
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  let scrollId = utils.getViewId(document.documentElement);
+  let w = {}, h = {};
+  utils.getScrollbarSizes(document.documentElement, w, h);
+  let verticalScrollbarWidth = w.value;
+  if (verticalScrollbarWidth == 0) {
+    ok(true, "No scrollbar, can't do this test");
+  }
+  let downArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
+  var mouseX = document.documentElement.clientWidth + verticalScrollbarWidth / 2;
+  let mouseY = document.documentElement.clientHeight - (downArrowHeight / 2);
+
+  // Hold the mouse down on the scrollbar button and
+  // keep it down to trigger the "button repeat" codepath.
+  await promiseNativeMouseEventWithAPZ({
+    type: "mousedown",
+    target: window,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
+
+  const repetitions = 20;
+  const repeat_delay = 50;  // milliseconds
+  for (i = 0; i < repetitions; i++) {
+    // Wait for the results of the click (or, on subsequent iterations
+    // the repeat) to be painted.
+    await promiseFrame();
+
+    assertNotCheckerboarded(utils, scrollId, "after scrollbar button click-hold", true);
+
+    // Wait enough time to trigger the repeat timer.
+    await SpecialPowers.promiseTimeout(repeat_delay);
+  }
+
+  // Release mouse button to clean up.
+  await promiseNativeMouseEventWithAPZ({
+    type: "mouseup",
+    target: window,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
+
+  // Sanity-check: we should have scrolled.
+  ok(window.scrollY > 0, "Should have scrolled by clicking the scrollbar button");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .page-footer {
+      background-color: #212121;
+      color: #fff;
+      height: 3000px;
+    }
+  </style>
+</head>
+<body>
+  <footer class="page-footer"></footer>
+</body>
+</html>

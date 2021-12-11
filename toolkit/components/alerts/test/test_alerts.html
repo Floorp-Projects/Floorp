@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test for Alerts Service</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<p id="display"></p>
+
+<br>Alerts service, with observer "synchronous" case.
+<br>
+<br>Did a notification appear anywhere?
+<br>If so, the test will finish once the notification disappears.
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var notifier;
+var alertName = "fiorello";
+
+var observer = {
+  alertShow: false,
+  observe(aSubject, aTopic, aData) {
+    is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
+    if (aTopic == "alertclickcallback") {
+      todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
+    } else if (aTopic == "alertshow") {
+      ok(!this.alertShow, "Alert should not be shown more than once");
+      this.alertShow = true;
+
+      // Notifications are native on OS X 10.8 and later, GNOME Shell with
+      // libnotify (bug 1236036) and Windows >= 8. These notifications persist
+      // in the Notification Center, and only fire the `alertfinished` event
+      // when closed. For platforms where native notifications may be used, we
+      // need to close explicitly to avoid a hang. This also works for XUL
+      // notifications when running this test on OS X < 10.8, or a window
+      // manager like Ubuntu Unity with incomplete libnotify support.
+      notifier.closeAlert(alertName);
+    } else {
+      is(aTopic, "alertfinished", "Checking the topic for a finished notification");
+      SimpleTest.finish();
+    }
+  },
+};
+
+function runTest() {
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
+
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application");
+    return;
+  }
+
+  ok(true, "Alerts service exists in this application");
+
+  try {
+    notifier = Cc["@mozilla.org/alerts-service;1"].
+               getService(Ci.nsIAlertsService);
+    ok(true, "Alerts service is available");
+  } catch (ex) {
+    todo(false,
+         "Alerts service is not available.", ex);
+    return;
+  }
+
+  try {
+    SimpleTest.waitForExplicitFinish();
+    notifier.showAlertNotification(null, "Notification test",
+                                   "Surprise! I'm here to test notifications!",
+                                   false, "foobarcookie", observer, alertName);
+    ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
+  } catch (ex) {
+    todo(false, "showAlertNotification() failed.", ex);
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.requestCompleteLog(); // Bug 1407296
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

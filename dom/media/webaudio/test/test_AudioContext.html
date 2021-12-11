@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether we can create an AudioContext interface</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var ac = new AudioContext();
+  ok(ac, "Create a AudioContext object");
+  ok(ac instanceof EventTarget, "AudioContexts must be EventTargets");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

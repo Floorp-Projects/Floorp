@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<script>
+  function ok(v, msg) {
+    window.parent.postMessage({status: "ok", result: !!v, message: msg}, "*");
+  }
+
+  function done(reg) {
+    ok(reg.active, "The active worker should be available.");
+    window.parent.postMessage({status: "registrationdone"}, "*");
+  }
+
+  navigator.serviceWorker.ready.then(reg => {
+    return window.caches.open("cache").then(function(cache) {
+      var synth = new Response('<!DOCTYPE html><script>window.parent.postMessage({status: "done-synth-window"}, "*");</scri' + 'pt>',
+                               {headers:{"Content-Type": "text/html"}});
+      return cache.put('synth-window.html', synth).then(_ => done(reg));
+    });
+  });
+  navigator.serviceWorker.register("https_test.js", {scope: "."});
+</script>

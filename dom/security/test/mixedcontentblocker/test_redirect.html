@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug1402363: Test mixed content redirects</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body onload='startTest()'>
+<iframe style="width:100%;height:300px;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const PATH = "https://example.com/tests/dom/security/test/mixedcontentblocker/";
+let testcounter = 0;
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  if (event.data === "https-to-https-loaded") {
+    ok(true, "https to https fetch redirect should be allowed");
+  }
+  else if (event.data === "https-to-http-blocked") {
+    ok(true, "https to http fetch redirect should be blocked");
+  }
+  else {
+    ok(false, "sanity: we should never enter that branch (" + event.data + ")");
+  }
+  testcounter++;
+  if (testcounter < 2) {
+    return;
+  }
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+function startTest() {
+  let testframe = document.getElementById("testframe");
+  testframe.src = PATH + "file_redirect.html";
+}
+
+</script>
+</body>
+</html>

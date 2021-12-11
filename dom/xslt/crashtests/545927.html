@@ -1,0 +1,28 @@
+<html>
+<head>
+<script>
+function main()
+{
+	xml=document.implementation.createDocument('', '', null);
+	xml.appendChild(doc=xml.createElement('root'));
+
+	var p = new DOMParser();
+	text  = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">';
+	text += '<xsl:template match="/">';
+	text += '<body>';
+	text += '<xsl:number value="2147483648" format="i"/>';
+	text += '</body>';
+	text += '</xsl:template>';	
+	text += '</xsl:stylesheet>';
+	xsl=p.parseFromString(text, 'text/xml');
+
+	xsltProcessor=new XSLTProcessor();
+	xsltProcessor.importStylesheet(xsl);
+	d = xsltProcessor.transformToFragment(xml, document);
+}
+</script>
+</head>
+<body onload="main()">
+</body>
+</html>
+

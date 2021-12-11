@@ -1,0 +1,20 @@
+In file included from overridden_methods.cpp:5:
+./overridden_methods.h:43:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
+  virtual void SomeMethod();
+          ^
+./overridden_methods.h:47:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
+  virtual void SomeInlineMethod() {}
+          ^
+./overridden_methods.h:51:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
+  virtual void SomeNonPureBaseMethod() {}
+          ^
+overridden_methods.cpp:24:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
+  virtual void SomeMethod();
+          ^
+overridden_methods.cpp:28:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
+  virtual void SomeInlineMethod() {}
+          ^
+overridden_methods.cpp:32:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
+  virtual void SomeNonPureBaseMethod() {}
+          ^
+6 warnings generated.

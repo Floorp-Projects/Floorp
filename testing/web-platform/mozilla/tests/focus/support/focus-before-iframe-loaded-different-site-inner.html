@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>focus() before iframe loaded different site</title>
+</head>
+<body>
+<script>
+    window.onload = function() {
+        parent.postMessage("onload", "*");
+    }
+    document.body.onfocus = function() {
+        parent.postMessage("onfocus", "*");
+    }
+</script>
+</body>
+</html>

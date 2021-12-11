@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1443344
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1443344</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1443344 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var sheetURL = new URL("file_bug1443344.css", location.href);
+  sheetURL.protocol = "http";
+  var link = document.createElement("link");
+  link.href = `data:text/css,@import url("${sheetURL}");`
+  link.rel = "stylesheet";
+  var loadFired = false, errorFired = false;
+  link.onload = () => loadFired = true;
+  link.onerror = () => errorFired = true;
+  document.head.appendChild(link);
+
+  addLoadEvent(() => {
+    is(loadFired, false, "Should not fire onload for erroring @import");
+    is(errorFired, true, "Should fire onerror for erroring @import");
+    is(getComputedStyle($("importTarget")).color, "rgb(0, 255, 0)",
+       "Erroring sheet should not load");
+    SimpleTest.finish();
+  });
+
+  </script>
+  <style>
+    #importTarget { color: rgb(0, 255, 0); }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1443344">Mozilla Bug 1443344</a>
+<p id="display"><div id="importTarget"></div></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

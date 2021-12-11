@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--This testing should match the 55th frame of gizmo.mp4. The
+55th frame's time is 1.8s, so seek to a time which is a little
+greater than 1.8s, the display frame should be the 55th frame.
+-->
+<head>
+<script type="text/javascript">
+function doTest() {
+  var video = document.getElementById("v1");
+  video.src = "../gizmo.mp4";
+  video.preload = "metadata";
+
+  video.currentTime = 1.801;
+
+  video.addEventListener("seeked", function() {
+    // Since the our media pipeline send the frame to imageBridge, then fire
+    // seeked event, the target frame may not be shown on the screen.
+    // So using canvas to access the target frame in the imageContainer in
+    // videoElement.
+    var canvas = document.getElementById("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+    document.documentElement.removeAttribute('class');
+  });
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</head>
+<body>
+<video id="v1" style="position:absolute; left:0; top:0"></video>
+<canvas id="canvas" style="position:absolute; left:0; top:0"></video>
+</body>
+</html>

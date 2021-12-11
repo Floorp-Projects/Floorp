@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<style>
+.test::after {
+    content:"::after content";
+}
+</style>
+
+<table>
+  <tr>
+    <td>
+      Cell contents
+    </td>
+  </tr>
+</table>
+
+<script>
+  var td = document.querySelector("td");
+  td.offsetWidth;
+  td.className = "test";
+</script>

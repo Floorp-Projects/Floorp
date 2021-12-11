@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Observer for exception list updates.
+ */
+[scriptable, function, uuid(f7c918e5-94bf-4b6e-9758-ef7bdab6af7e)]
+interface nsIUrlClassifierExceptionListObserver : nsISupports
+{
+  /**
+   * Called by nsIUrlClassifierExceptionListService when the exception list
+   * for a designated feature changes and when the observer is first registered.
+   *
+   * @param aList
+   *        A comma-separated list of url patterns, intended to be parsed
+   *        by nsContentUtils::IsURIInList.
+   */
+  void onExceptionListUpdate(in ACString aList);
+};
+
+/**
+ * A service that monitors updates to the exception list of url-classifier
+ * feature from sources such as a local pref and remote settings updates.
+ */
+[scriptable, uuid(75c3d1a3-e977-4079-9e27-b3b56bdb76ea)]
+interface nsIUrlClassifierExceptionListService : nsISupports
+{
+  /**
+   * Register a new observer to exception list updates. When the observer is
+   * registered it is called immediately once. Afterwards it will be called
+   * whenever the specified pref changes or when remote settings for
+   * url-classifier features updates.
+   *
+   * @param aFeature
+   *        The feature for which to observe the exception list.
+   *
+   * @param aPrefName
+   *        (Optional) A pref name to monitor. The pref must be of string
+   *        type and contain a comma-separated list of URL patterns.
+   *
+   * @param aObserver
+   *        An nsIUrlClassifierExceptionListObserver object or function that
+   *        will receive updates to the exception list as a comma-separated
+   *        string. Will be called immediately with the current exception
+   *        list value.
+   */
+  void registerAndRunExceptionListObserver(in ACString aFeature,
+                                      in ACString aPrefName,
+                                      in nsIUrlClassifierExceptionListObserver aObserver);
+
+  /**
+   * Unregister an observer.
+   *
+   * @param aFeature
+   *        The feature for which to stop observing.
+   *
+   * @param aObserver
+   *        The nsIUrlClassifierExceptionListObserver object to unregister.
+   */
+  void unregisterExceptionListObserver(in ACString aFeature,
+                                  in nsIUrlClassifierExceptionListObserver aObserver);
+
+  /**
+   *  Clear all data in the service.
+   *  This API is for testing only.
+   */
+  void clear();
+};

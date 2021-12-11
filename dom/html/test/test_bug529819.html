@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=529819
+-->
+<head>
+  <title>Test for Bug 529819</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529819">Mozilla Bug 529819</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<form id="form">
+  <input name="foo" id="foo">
+  <input name="bar" type="radio">
+  <input name="bar" id="bar" type="radio">
+</form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 529819 **/
+is($("form").elements.foo instanceof HTMLInputElement, true, "Should have an element here");
+is($("form").elements.bar instanceof HTMLInputElement, false, "Should have a list here");
+is($("form").elements.bar.length, 2, "Should have a list with two elements here");
+
+</script>
+</pre>
+</body>
+</html>

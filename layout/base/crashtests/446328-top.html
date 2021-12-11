@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>Bug 446328 – Crash [@ nsImageLoader::RedrawDirtyFrame] with document that has border-image and gets display: none</title>
+</head>
+<body>
+<iframe src="446328-iframe.html" id="a"></iframe>
+<script>
+function doe(){
+  var v = document.body.offsetHeight;
+  document.getElementById('a').style.display = 'none';
+  document.getElementById('a').style.display = 'inline';
+  v = document.body.offsetHeight;
+  document.getElementById('a').style.display = 'block';
+  document.getElementById('a').style.display = 'none';
+  v = document.body.offsetHeight;
+}
+setTimeout(doe,10);
+setTimeout("location.reload()",20);
+</script>
+</body>
+</html>

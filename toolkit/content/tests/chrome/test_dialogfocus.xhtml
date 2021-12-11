@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<button id="test" label="Test"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestCompleteLog();
+
+var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two", "textbox-yes", "one", "root" ];
+// non-Mac will always focus the default button if any of the dialog buttons
+// would be focused
+if (!navigator.platform.includes("Mac"))
+  expected[1] = "_accept";
+
+let extraDialog = "data:application/xhtml+xml,<window id='root'><dialog " +
+                  "buttons='none' " +
+                  "xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
+                  "<button id='nonbutton' noinitialfocus='true'/></dialog></window>";
+
+var step = 0;
+var fullKeyboardAccess = false;
+
+function startTest()
+{
+  var testButton = document.getElementById("test");
+  synthesizeKey("KEY_Tab");
+  fullKeyboardAccess = (document.activeElement == testButton);
+  info("We " + (fullKeyboardAccess ? "have" : "don't have") + " full keyboard access");
+  runTest();
+}
+
+function runTest()
+{
+  step++;
+  info("runTest(), step = " + step + ", expected = " + expected[step - 1]);
+  if (step > expected.length || (!fullKeyboardAccess && step == 2)) {
+    info("finishing");
+    SimpleTest.finish();
+    return;
+  }
+
+  var expectedFocus = expected[step - 1];
+  let filename = expectedFocus == "root" ? "dialog_dialogfocus2.xhtml" : "dialog_dialogfocus.xhtml";
+  var win = window.browsingContext.topChromeWindow.openDialog(filename, "_new", "chrome,dialog", step);
+
+  function checkDialogFocus(event)
+  {
+    info(`checkDialogFocus()`);
+    let match = false;
+    let activeElement = win.document.activeElement;
+    let dialog = win.document.getElementById("dialog-focus");
+
+    if (activeElement == dialog) {
+      let shadowActiveElement =
+        dialog.shadowRoot.activeElement;
+      if (shadowActiveElement) {
+        activeElement = shadowActiveElement;
+      }
+    }
+    // if full keyboard access is not on, just skip the tests
+    if (fullKeyboardAccess) {
+      if (!(event.target instanceof Element)) {
+        info("target not an Element");
+        return;
+      }
+
+      if (expectedFocus[0] == "_")
+        match = (activeElement.getAttribute("dlgtype") == expectedFocus.substring(1));
+      else
+        match = (activeElement.id == expectedFocus);
+      info("match = " + match);
+      if (!match)
+        return;
+    }
+    else {
+      match = (activeElement == win.document.documentElement);
+      info("match = " + match);
+    }
+
+    win.removeEventListener("focus", checkDialogFocusEvent, true);
+    dialog.shadowRoot.removeEventListener(
+      "focus", checkDialogFocusEvent, true);
+    ok(match, "focus step " + step);
+
+    win.close();
+    SimpleTest.waitForFocus(runTest, window);
+  }
+
+  let finalCheckInitiated = false;
+  function checkDialogFocusEvent(event) {
+    // Delay to have time for focus/blur to occur.
+    if (expectedFocus == "root") {
+      if (!finalCheckInitiated) {
+        setTimeout(() => {
+          is(win.document.activeElement, win.document.documentElement,
+             "No other focus but root");
+          win.close();
+          SimpleTest.waitForFocus(runTest, window);
+        }, 0);
+        finalCheckInitiated = true;
+      }
+    } else {
+      checkDialogFocus(event);
+    }
+  }
+  win.addEventListener("focus", checkDialogFocusEvent, true);
+  win.addEventListener("load", () => {
+    win.document.getElementById("dialog-focus").shadowRoot.addEventListener(
+      "focus", checkDialogFocusEvent, true);
+  });
+}
+
+SimpleTest.waitForFocus(startTest, window);
+
+]]>
+
+</script>
+
+</window>

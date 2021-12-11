@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=932937
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 932937</title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+let gWalker = null;
+
+addTest(async function setup() {
+  const url = document.getElementById("inspectorContent").href;
+  const { target } = await attachURL(url);
+  const inspector = await target.getFront("inspector");
+  gWalker = inspector.walker;
+  runNextTest();
+});
+
+addTest(async function testLargeImage() {
+  // Select the image node from the test page
+  const img = await gWalker.querySelector(gWalker.rootNode, ".big-horizontal");
+  ok(img, "Image node found in the test page");
+  ok(img.getImageData, "Image node has the getImageData function");
+  const imageData = await img.getImageData(100);
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 5333, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 3000, "Natural width of the image correct");
+  ok(imageData.size.resized, "Image was resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
+});
+
+addTest(async function testLargeCanvas() {
+  // Select the canvas node from the test page
+  const canvas = await gWalker.querySelector(gWalker.rootNode, ".big-vertical");
+  ok(canvas, "Image node found in the test page");
+  ok(canvas.getImageData, "Image node has the getImageData function");
+  const imageData = await canvas.getImageData(350);
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 1000, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 2000, "Natural width of the image correct");
+  ok(imageData.size.resized, "Image was resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
+});
+
+addTest(async function testSmallImage() {
+  // Select the small image node from the test page
+  const img = await gWalker.querySelector(gWalker.rootNode, ".small");
+  ok(img, "Image node found in the test page");
+  ok(img.getImageData, "Image node has the getImageData function");
+  const imageData = await img.getImageData();
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 245, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 240, "Natural width of the image correct");
+  ok(!imageData.size.resized, "Image was NOT resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
+});
+
+addTest(async function testDataImage() {
+  // Select the data image node from the test page
+  const img = await gWalker.querySelector(gWalker.rootNode, ".data");
+  ok(img, "Image node found in the test page");
+  ok(img.getImageData, "Image node has the getImageData function");
+  const imageData = await img.getImageData(14);
+  ok(imageData.data, "Image data actor was sent back");
+  ok(imageData.size, "Image size info was sent back too");
+  is(imageData.size.naturalWidth, 28, "Natural width of the image correct");
+  is(imageData.size.naturalHeight, 28, "Natural width of the image correct");
+  ok(imageData.size.resized, "Image was resized");
+  const str = await imageData.data.string();
+  ok(str, "We have an image data string!");
+  testResizing(imageData, str);
+});
+
+addTest(async function testNonImgOrCanvasElements() {
+  const body = await gWalker.querySelector(gWalker.rootNode, "body");
+  await ensureRejects(body.getImageData(), "Invalid element");
+  runNextTest();
+});
+
+addTest(function cleanup() {
+  gWalker = null;
+  runNextTest();
+});
+
+/**
+ * Checks if the server told the truth about resizing the image
+ */
+function testResizing(imageData, str) {
+  const img = document.createElement("img");
+  img.addEventListener("load", () => {
+    const resized = !(img.naturalWidth == imageData.size.naturalWidth &&
+                    img.naturalHeight == imageData.size.naturalHeight);
+    is(imageData.size.resized, resized, "Server told the truth about resizing");
+    runNextTest();
+  });
+  img.src = str;
+}
+
+/**
+ * Asserts that the given promise rejects.
+ */
+function ensureRejects(promise, desc) {
+  return promise.then(() => {
+    ok(false, desc + ": promise resolved unexpectedly.");
+  }, () => {
+    ok(true, desc + ": promise rejected as expected.");
+  });
+}
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=932937">Mozilla Bug 932937</a>
+<a id="inspectorContent" target="_blank" href="inspector_getImageData.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

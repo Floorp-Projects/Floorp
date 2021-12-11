@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=507902
+-->
+<head>
+  <title>Test for devicemotion</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=507902">Mozilla Bug 507902</a>
+<p id="display"></p>
+<div id="content">
+<iframe id="frame" src="bug507902-frame.html"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function boom()
+{
+  window.addEventListener("unload", function(){});
+  window.addEventListener("devicemotion", function(){});
+  location = "data:text/html,2";
+
+  ok(1, "leak will be at the end of mochitests. so pass.");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

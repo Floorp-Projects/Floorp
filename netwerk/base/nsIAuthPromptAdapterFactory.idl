@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAuthPrompt;
+interface nsIAuthPrompt2;
+
+/**
+ * An interface for wrapping nsIAuthPrompt interfaces to make
+ * them usable via an nsIAuthPrompt2 interface.
+ */
+[scriptable, uuid(60e46383-bb9a-4860-8962-80d9c5c05ddc)]
+interface nsIAuthPromptAdapterFactory : nsISupports
+{
+  /**
+   * Wrap an object implementing nsIAuthPrompt so that it's usable via
+   * nsIAuthPrompt2.
+   */
+  nsIAuthPrompt2 createAdapter(in nsIAuthPrompt aPrompt);
+};

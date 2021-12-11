@@ -1,0 +1,82 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("*"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+TEST_DIRS += ["test"]
+
+DIRS += ["featurepolicy", "sanitizer"]
+
+EXPORTS.mozilla.dom += [
+    "CSPEvalChecker.h",
+    "DOMSecurityMonitor.h",
+    "FramingChecker.h",
+    "nsContentSecurityManager.h",
+    "nsContentSecurityUtils.h",
+    "nsCSPContext.h",
+    "nsCSPService.h",
+    "nsCSPUtils.h",
+    "nsHTTPSOnlyStreamListener.h",
+    "nsHTTPSOnlyUtils.h",
+    "nsMixedContentBlocker.h",
+    "PolicyTokenizer.h",
+    "ReferrerInfo.h",
+    "SecFetch.h",
+    "SRICheck.h",
+    "SRILogHelper.h",
+    "SRIMetadata.h",
+]
+
+EXPORTS += [
+    "nsContentSecurityManager.h",
+    "nsContentSecurityUtils.h",
+    "nsMixedContentBlocker.h",
+    "ReferrerInfo.h",
+]
+
+UNIFIED_SOURCES += [
+    "CSPEvalChecker.cpp",
+    "DOMSecurityMonitor.cpp",
+    "FramingChecker.cpp",
+    "nsContentSecurityManager.cpp",
+    "nsContentSecurityUtils.cpp",
+    "nsCSPContext.cpp",
+    "nsCSPParser.cpp",
+    "nsCSPService.cpp",
+    "nsCSPUtils.cpp",
+    "nsHTTPSOnlyStreamListener.cpp",
+    "nsHTTPSOnlyUtils.cpp",
+    "nsMixedContentBlocker.cpp",
+    "PolicyTokenizer.cpp",
+    "ReferrerInfo.cpp",
+    "SecFetch.cpp",
+    "SRICheck.cpp",
+    "SRIMetadata.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    "/caps",
+    "/docshell/base",  # for nsDocShell.h
+    "/netwerk/base",
+    "/netwerk/protocol/data",  # for nsDataHandler.h
+    "/netwerk/protocol/http",  # for HttpBaseChannel.h
+]
+
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
+if CONFIG["FUZZING_INTERFACES"]:
+    TEST_DIRS += ["fuzztest"]
+
+
+XPIDL_SOURCES += [
+    "nsIHttpsOnlyModePermission.idl",
+]
+
+XPIDL_MODULE = "dom_security"

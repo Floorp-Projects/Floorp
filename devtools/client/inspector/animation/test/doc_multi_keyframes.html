@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      width: 50px;
+      height: 50px;
+    }
+    </style>
+  </head>
+  <body>
+    <script>
+    "use strict";
+
+    function createAnimation(name, keyframes, effectEasing) {
+      const div = document.createElement("div");
+      div.classList.add(name);
+      document.body.appendChild(div);
+
+      const effect = {
+        duration: 100000,
+        fill: "forwards",
+      };
+
+      if (effectEasing) {
+        effect.easing = effectEasing;
+      }
+
+      div.animate(keyframes, effect);
+    }
+
+    createAnimation(
+      "multi-types",
+      [
+        {
+          backgroundColor: "red",
+          backgroundRepeat: "space round",
+          fontSize: "10px",
+          marginLeft: "0px",
+          opacity: 0,
+          textAlign: "right",
+          transform: "translate(0px)",
+        },
+        {
+          backgroundColor: "lime",
+          backgroundRepeat: "round space",
+          fontSize: "20px",
+          marginLeft: "100px",
+          opacity: 1,
+          textAlign: "center",
+          transform: "translate(100px)",
+        },
+      ]
+    );
+
+    createAnimation(
+      "multi-types-reverse",
+      [
+        {
+          backgroundColor: "lime",
+          backgroundRepeat: "space",
+          fontSize: "20px",
+          marginLeft: "100px",
+          opacity: 1,
+          textAlign: "center",
+          transform: "translate(100px)",
+        },
+        {
+          backgroundColor: "red",
+          backgroundRepeat: "round",
+          fontSize: "10px",
+          marginLeft: "0px",
+          opacity: 0,
+          textAlign: "right",
+          transform: "translate(0px)",
+        },
+      ]
+    );
+
+    createAnimation(
+      "middle-keyframe",
+      [
+        {
+          backgroundColor: "red",
+          backgroundRepeat: "space",
+          fontSize: "10px",
+          marginLeft: "0px",
+          opacity: 0,
+          textAlign: "right",
+          transform: "translate(0px)",
+        },
+        {
+          backgroundColor: "blue",
+          backgroundRepeat: "round",
+          fontSize: "20px",
+          marginLeft: "100px",
+          opacity: 1,
+          textAlign: "center",
+          transform: "translate(100px)",
+        },
+        {
+          backgroundColor: "lime",
+          backgroundRepeat: "space",
+          fontSize: "10px",
+          marginLeft: "0px",
+          opacity: 0,
+          textAlign: "right",
+          transform: "translate(0px)",
+        },
+      ]
+    );
+
+    createAnimation(
+      "steps-keyframe",
+      [
+        {
+          backgroundColor: "red",
+          backgroundRepeat: "space",
+          fontSize: "10px",
+          marginLeft: "0px",
+          opacity: 0,
+          textAlign: "right",
+          transform: "translate(0px)",
+          easing: "steps(2)",
+        },
+        {
+          backgroundColor: "lime",
+          backgroundRepeat: "round",
+          fontSize: "20px",
+          marginLeft: "100px",
+          opacity: 1,
+          textAlign: "center",
+          transform: "translate(100px)",
+        },
+      ]
+    );
+
+    createAnimation(
+      "steps-effect",
+      [
+        {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+        },
+      ],
+      "steps(2)"
+    );
+
+    createAnimation(
+      "steps-jump-none-keyframe",
+      [
+        {
+          easing: "steps(5, jump-none)",
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+        },
+      ]
+    );
+
+    createAnimation(
+      "narrow-offsets",
+      [
+        {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          easing: "steps(2)",
+          offset: 0.1,
+        },
+        {
+          opacity: 0,
+          offset: 0.13,
+        },
+      ]
+    );
+
+    createAnimation(
+      "duplicate-offsets",
+      [
+        {
+          opacity: 1,
+        },
+        {
+          opacity: 1,
+          offset: 0.5,
+        },
+        {
+          opacity: 0,
+          offset: 0.5,
+        },
+        {
+          opacity: 1,
+          offset: 1,
+        },
+      ]
+    );
+
+    createAnimation(
+      "same-color",
+      [
+        {
+          backgroundColor: "lime",
+        },
+        {
+          backgroundColor: "lime",
+        },
+      ]
+    );
+
+    createAnimation(
+      "currentcolor",
+      [
+        {
+          backgroundColor: "currentColor",
+        },
+        {
+          backgroundColor: "lime",
+        },
+      ]
+    );
+    </script>
+  </body>
+</html>

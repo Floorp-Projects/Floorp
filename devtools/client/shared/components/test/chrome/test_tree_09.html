@@ -1,0 +1,85 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that when an item in the Tree component is expanded or collapsed the appropriate event handler fires.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+'use strict'
+
+window.onload = async function () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree = createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+
+    let numberOfExpands = 0;
+    let lastExpandedItem = null;
+
+    let numberOfCollapses = 0;
+    let lastCollapsedItem = null;
+
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        {
+          autoExpandDepth: 0,
+          onExpand: item => {
+            lastExpandedItem = item;
+            numberOfExpands++;
+            TEST_TREE.expanded.add(item);
+          },
+          onCollapse: item => {
+            lastCollapsedItem = item;
+            numberOfCollapses++;
+            TEST_TREE.expanded.delete(item);
+          },
+          onFocus: item => renderTree({ focused: item })
+        },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
+
+    const tree = renderTree({ focused: "A" });
+
+    is(lastExpandedItem, null);
+    is(lastCollapsedItem, null);
+
+    // Expand "A" via the keyboard and then let the component re-render.
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
+    await forceRender(tree);
+
+    is(lastExpandedItem, "A", "Our onExpand callback should have been fired.");
+    is(numberOfExpands, 1);
+
+    // Now collapse "A" via the keyboard and then let the component re-render.
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
+    await forceRender(tree);
+
+    is(lastCollapsedItem, "A", "Our onCollapsed callback should have been fired.");
+    is(numberOfCollapses, 1);
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

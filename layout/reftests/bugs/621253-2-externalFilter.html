@@ -1,0 +1,20 @@
+<html class="reftest-wait"
+      reftest-zoom="1.5">
+<head>
+<script>
+  function doTest() {
+    var iframe = document.getElementsByTagName("iframe")[0];
+    iframe.setAttribute("onload", "snapshot()");
+    iframe.contentWindow.location.reload();
+  }
+
+  function snapshot() {
+    document.documentElement.removeAttribute("class");
+  }
+</script>
+</head>
+<body onload="doTest()" style="margin: 0">
+<iframe scrolling="no" src="621253-helper-externalFilter.xhtml"
+	style="border: 0"></iframe>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+
+    <link href="./doc_urls_clickable.css" rel="stylesheet" type="text/css">
+
+    <style>
+    .relative2 {
+        background-image: url(doc_test_image.png);
+    }
+    </style>
+  </head>
+  <body>
+
+    <div class="relative1">Background image #1 with relative path (loaded from external css)</div>
+
+    <div class="relative2">Background image #2 with relative path (loaded from style tag)</div>
+
+    <div class="absolute">Background image with absolute path (loaded from external css)</div>
+
+    <div class="base64">Background image with base64 url (loaded from external css)</div>
+
+    <div class="inline" style="background: url(doc_test_image.png);">Background image with relative path (loaded from style attribute)</div>
+
+    <div class="inline-resolved" style="background-image: url(./doc_test_image.png)">Background image with resolved relative path (loaded from style attribute)</div>
+
+    <div class="noimage">No background image :(</div>
+  </body>
+</html>

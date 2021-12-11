@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL Animation Behavior with textZoom</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <svg xmlns="http://www.w3.org/2000/svg" width="300px" height="200px"
+       onload="this.pauseAnimations()">
+    <text y="100px" x="0px" style="font-size: 5px">
+      abc
+      <animate attributeName="font-size" attributeType="CSS" fill="freeze"
+               from="20px" to="40px" begin="1s" dur="1s"/>
+    </text>
+    <rect y="100px" x="50px" style="stroke-width: 5px">
+      <animate attributeName="stroke-width" attributeType="CSS" fill="freeze"
+               from="20px" to="40px" begin="1s" dur="1s"/>
+    </rect>
+  </svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+// Helper function
+function verifyStyle(aNode, aPropertyName, aExpectedVal)
+{
+  var computedVal = SMILUtil.getComputedStyleSimple(aNode, aPropertyName);
+
+  // Bug 1379908: The computed value of stroke-* properties should be
+  // serialized with px units, but currently Gecko and Servo don't do that
+  // when animating these values.
+  if ('stroke-width' == aPropertyName) {
+    var expectedVal = SMILUtil.stripPx(aExpectedVal);
+    var unitlessComputedVal = SMILUtil.stripPx(computedVal);
+    is(unitlessComputedVal, expectedVal, "computed value of " + aPropertyName);
+    return;
+  }
+  is(computedVal, aExpectedVal, "computed value of " + aPropertyName);
+}
+
+function main()
+{
+  // Start out pause
+  var svg = SMILUtil.getSVGRoot();
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  // Set text zoom to 2x
+  var origTextZoom =  SpecialPowers.getTextZoom(window);
+  SpecialPowers.setTextZoom(window, 2);
+
+  try {
+    // Verify computed style values at various points during animation.
+    // * Correct behavior is for the computed values of 'font-size' to be
+    // the same as their corresponding specified values, since text zoom
+    // should not affect SVG text elements.
+    // * I also include tests for an identical animation of the "stroke-width"
+    // property, which should _not_ be affected by textZoom.
+    var text = document.getElementsByTagName("text")[0];
+    var rect = document.getElementsByTagName("rect")[0];
+
+    verifyStyle(text, "font-size",    "5px");
+    verifyStyle(rect, "stroke-width", "5px");
+    svg.setCurrentTime(1);
+    verifyStyle(text, "font-size",    "20px");
+    verifyStyle(rect, "stroke-width", "20px");
+    svg.setCurrentTime(1.5);
+    verifyStyle(text, "font-size",    "30px");
+    verifyStyle(rect, "stroke-width", "30px");
+    svg.setCurrentTime(2);
+    verifyStyle(text, "font-size",    "40px");
+    verifyStyle(rect, "stroke-width", "40px");
+    svg.setCurrentTime(3);
+    verifyStyle(text, "font-size",    "40px");
+    verifyStyle(rect, "stroke-width", "40px");
+  } catch (e) {
+    // If anything goes wrong, make sure we restore textZoom before bubbling
+    // the exception upwards, so that we don't mess up subsequent tests.
+    SpecialPowers.setTextZoom(window, origTextZoom);
+
+    throw e;
+  }
+
+  // We're done! Restore original text-zoom before finishing
+  SpecialPowers.setTextZoom(window, origTextZoom);
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

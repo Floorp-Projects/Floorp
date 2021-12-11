@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for opening links in new tabs from extension frames</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function promiseObserved(topic, check) {
+  return new Promise(resolve => {
+    let obs = SpecialPowers.Services.obs;
+
+    function observer(subject, topic, data) {
+      subject = SpecialPowers.wrap(subject);
+      if (check(subject, data)) {
+        obs.removeObserver(observer, topic);
+        resolve({subject, data});
+      }
+    }
+    obs.addObserver(observer, topic);
+  });
+}
+
+add_task(async function test_target_blank_link_no_opener_from_privileged() {
+  const linkURL = "http://example.com/";
+
+  function extension_tab() {
+    document.getElementById("link").click();
+  }
+
+  function content_script() {
+    browser.runtime.sendMessage("content_page_loaded");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        js: ["content_script.js"],
+        matches: ["http://example.com/*"],
+        run_at: "document_idle",
+      }],
+      permissions: ["tabs"],
+    },
+    files: {
+      "page.html": `<!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"></html>
+          <body>
+            <a href="${linkURL}" target="_blank" id="link">link</a>
+            <script src="extension_tab.js"><\/script>
+          </body>
+        </html>`,
+      "extension_tab.js": extension_tab,
+      "content_script.js": content_script,
+    },
+    async background() {
+      let pageTab;
+      browser.test.onMessage.addListener(async (msg) => {
+        if (msg !== "close_tab") {
+          browser.test.fail("Unexpected test message: " + msg);
+          return;
+        }
+        if (!pageTab) {
+          browser.test.fail("Unexpected close-tab test message received when there is no pageTab");
+          return;
+        }
+        await browser.tabs.remove(pageTab.id);
+        browser.test.sendMessage("close_tab_done");
+      });
+      browser.runtime.onMessage.addListener(async (msg, sender) => {
+        if (sender.tab) {
+          await browser.tabs.remove(sender.tab.id);
+          browser.test.sendMessage(msg, sender.tab.url);
+        }
+      });
+      pageTab = await browser.tabs.create({ url: browser.runtime.getURL("page.html") });
+      browser.test.sendMessage("tab_created");
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("tab_created");
+
+  // Make sure page is loaded correctly
+  const url = await extension.awaitMessage("content_page_loaded");
+  is(url, linkURL, "Page URL should match");
+
+  // Clean up opened tab.
+  extension.sendMessage("close_tab");
+  await extension.awaitMessage("close_tab_done");
+
+  await extension.unload();
+});
+
+add_task(async function test_target_blank_link() {
+  const linkURL = "http://mochi.test:8888/tests/toolkit/";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_security_policy: "script-src 'self' 'unsafe-eval'; object-src 'self';",
+
+      web_accessible_resources: ["iframe.html"],
+    },
+    files: {
+      "iframe.html": `<!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"></html>
+          <body>
+            <a href="${linkURL}" target="_blank" id="link" rel="opener">link</a>
+          </body>
+        </html>`,
+    },
+    background() {
+      browser.test.sendMessage("frame_url", browser.runtime.getURL("iframe.html"));
+    },
+  });
+
+  await extension.startup();
+
+  let url = await extension.awaitMessage("frame_url");
+
+  let iframe = document.createElement("iframe");
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  await new Promise(resolve => iframe.addEventListener("load", () => setTimeout(resolve, 0), {once: true}));
+
+  let win = SpecialPowers.wrap(iframe).contentWindow;
+
+  {
+    // Flush layout so that synthesizeMouseAtCenter on a cross-origin iframe
+    // works as expected.
+    document.body.getBoundingClientRect();
+
+    let promise = promiseObserved("document-element-inserted", doc => doc.documentURI === linkURL);
+
+    await SpecialPowers.spawn(iframe, [], async () => {
+      this.content.document.getElementById("link").click();
+    });
+
+    let {subject: doc} = await promise;
+    info("Link opened");
+    doc.defaultView.close();
+    info("Window closed");
+  }
+
+  {
+    let promise = promiseObserved("document-element-inserted", doc => doc.documentURI === linkURL);
+
+    let res = win.eval(`window.open("${linkURL}")`);
+    let {subject: doc} = await promise;
+    is(SpecialPowers.unwrap(res), SpecialPowers.unwrap(doc.defaultView), "window.open worked as expected");
+
+    doc.defaultView.close();
+  }
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

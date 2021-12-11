@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * The current layout of about:debugging is
+ *
+ *  +-------------+-------------------------------+
+ *  |   Sidebar   | Page (Runtime or Connect)     |
+ *  |   (240px)   |                               |
+ *  |             |                               |
+ *  +-------------+-------------------------------+
+ *
+ * Some of the values (font sizes, widths, etc.) are the same as
+ * about:preferences, which uses the shared common.css
+ */
+
+.app {
+  /* from common */
+  --sidebar-width: 280px;
+  --app-top-padding: 70px;
+  --app-bottom-padding: 40px;
+  --app-left-padding: 32px;
+  --app-right-padding: 32px;
+
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* we don't want the sidebar to scroll, only the main content */
+
+  display: grid;
+  grid-column-gap: 40px;
+  grid-template-columns: var(--sidebar-width) auto;
+
+  font-size: var(--base-font-size);
+  font-weight: var(--base-font-weight);
+  line-height: var(--base-line-height);
+}
+
+.app__sidebar {
+  padding-block-start: var(--app-top-padding);
+  padding-block-end: var(--app-bottom-padding);
+  padding-inline-start: var(--app-left-padding);
+}
+
+.app__content {
+  /* we want to scroll only the main content, not the sidebar */
+  overflow-y: auto;
+
+  /* padding will give space for card shadow to appear and
+     margin will correct the alignment */
+  margin-inline-start: calc(var(--card-shadow-blur-radius) * -1);
+  padding-inline: var(--card-shadow-blur-radius);
+  padding-block-start: var(--app-top-padding);
+}
+
+/* Workaround for Gecko clipping the padding-bottom of a scrollable container;
+   we create a block to act as the bottom padding instead. */
+.app__content::after {
+  content: "";
+  display: block;
+  height: var(--app-bottom-padding);
+}
+
+.page {
+  max-width: var(--page-width);
+  min-width: min-content;
+  font-size: var(--body-20-font-size);
+  font-weight: var(--body-20-font-weight);
+  padding-inline-end: var(--app-right-padding);
+}

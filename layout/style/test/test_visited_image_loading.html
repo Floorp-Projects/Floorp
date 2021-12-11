@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557287
+-->
+<head>
+  <title>Test for Bug 557287</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557287">Mozilla Bug 147777</a>
+<pre id="test">
+<script type="application/ecmascript" src="visited_image_loading.sjs?reset"></script>
+<script type="application/javascript">
+
+/** Test for Bug 557287 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+var subdoc, subwin;
+
+window.addEventListener("load", run);
+
+function run()
+{
+  subwin = window.open("visited_image_loading_frame.html", "_blank");
+  subwin.addEventListener("load", function() {
+    subdoc = subwin.document;
+    setTimeout(check_link_styled, 50);
+  });
+}
+
+function visitedDependentComputedStyle(win, elem, property) {
+  return SpecialPowers.DOMWindowUtils
+           .getVisitedDependentComputedStyle(elem, "", property);
+}
+
+function check_link_styled()
+{
+  var vislink = subdoc.getElementById("visited");
+  var bgcolor =
+    visitedDependentComputedStyle(subwin, vislink, "background-color");
+  if (bgcolor == "rgb(128, 0, 128)") {
+    // We've done our async :visited processing and restyled accordingly.
+    // Make sure that we've actually painted before finishing the test.
+    subwin.addEventListener("MozAfterPaint", paint_listener);
+    // do something that forces a paint
+    subdoc.body.appendChild(subdoc.createTextNode("new text node"));
+  } else {
+    setTimeout(check_link_styled, 50);
+  }
+}
+
+function paint_listener(event)
+{
+  subwin.removeEventListener("MozAfterPaint", paint_listener);
+  var s = document.createElement("script");
+  s.src = "visited_image_loading.sjs?waitforresult";
+  document.body.appendChild(s);
+  subwin.close();
+}
+
+</script>
+</pre>
+</body>
+</html>

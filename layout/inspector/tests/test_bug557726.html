@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557726
+-->
+<head>
+  <title>Test for Bug 557726</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="pseudo-style">
+    #div1 {
+      color: blue;
+    }
+
+    #div1:first-letter {
+      font-weight: bold;
+    }
+
+    #div1:before {
+      content: '"';
+    }
+
+    #div1:after {
+      content: '"';
+    }
+
+    #div1:after, #div1:before {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557726">Mozilla Bug 557726</a>
+
+<div id="div1">
+  text with ::before, ::after, and ::first-letter pseudo-elements
+</div>
+
+<script type="application/javascript">
+
+/** Test for Bug 557726 **/
+
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+function getSelectors (rules) {
+  var styleElement = document.getElementById("pseudo-style");
+  var selectors = [];
+  for (var i = 0; i < rules.length; i++) {
+    var rule = rules[i];
+    if (SpecialPowers.unwrap(rule.parentStyleSheet.ownerNode) == styleElement) // no user agent rules
+      selectors.push(rule.selectorText);
+  }
+  return selectors;
+}
+
+var div = document.getElementById("div1");
+
+/* empty or missing pseudo-element argument */
+var selectors = getSelectors(InspectorUtils.getCSSStyleRules(div));
+is(selectors.length, 1, "psuedo-element argument should be optional");
+is(selectors[0], "#div1", "should only have the non-pseudo element rule");
+
+selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, ""));
+is(selectors.length, 1, "pseudo-element argument can be empty string");
+is(selectors[0], "#div1", "should only have the non pseudo-element rule");
+
+
+/* invalid pseudo-element argument */
+var rules = InspectorUtils.getCSSStyleRules(div, "not a valid pseudo element");
+is(rules.length, 0, "invalid pseudo-element returns no rules");
+
+
+/* valid pseudo-element argument */
+selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, ":first-letter"));
+is(selectors.length, 1, "pseudo-element argument can be used");
+is(selectors[0], "#div1::first-letter", "should only have the ::first-letter rule");
+
+selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, ":before"));
+is(selectors.length, 2, "::before pseudo-element has two matching rules");
+isnot(selectors.indexOf("#div1::after, #div1::before"), -1, "fetched rule for ::before")
+isnot(selectors.indexOf("#div1::before"), -1, "fetched rule for ::before")
+
+selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, ":first-line"));
+is(selectors.length, 0, "valid pseudo-element but no matching rules");
+
+</script>
+</pre>
+</body>
+</html>

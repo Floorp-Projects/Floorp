@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a MediaStream captured from one element plays back in another</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const manager = new MediaTestManager();
+
+function checkDrawImage(vout, msg) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(vout, 0, 0);
+  const imgData = ctx.getImageData(0, 0, 1, 1);
+  is(imgData.data[3], 255, msg);
+}
+
+function isGreaterThanOrEqualEps(a, b, msg) {
+  ok(a >= b, `Got ${a}, expected at least ${b}; ${msg}`);
+}
+
+async function startTest(test, token) {
+  manager.started(token);
+  const v = document.createElement('video');
+  const vout = document.createElement('video');
+
+  v.token = token;
+  v.id = "MediaDecoder";
+  vout.id = "MediaStream";
+
+  document.body.appendChild(vout);
+
+  // Log events for debugging.
+  const events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause"];
+  function logEvent(e) {
+    Log(token, `${e.target.id} got ${e.type}`);
+  }
+  for (const e of events) {
+    v.addEventListener(e, logEvent);
+    vout.addEventListener(e, logEvent);
+  };
+
+  v.src = test.name;
+  v.preload = 'metadata';
+  await new Promise(r => v.onloadedmetadata = r);
+
+  const stream = v.mozCaptureStreamUntilEnded();
+  vout.srcObject = stream;
+  is(vout.srcObject, stream,
+    `${token} set output element .srcObject correctly`);
+  // Wait for the resource fetch algorithm to have run, so that the media
+  // element is hooked up to the MediaStream and ready to go. If we don't do
+  // this, we're not guaranteed to render the very first video frame, which
+  // can make this test fail the drawImage test when a video resource only
+  // contains one frame.
+  await new Promise(r => vout.onloadstart = r);
+  v.play();
+  vout.play();
+
+  await Promise.race([
+    Promise.all([
+      new Promise(r => vout.onended = r),
+      new Promise(r => v.onended = r),
+    ]),
+    new Promise((res, rej) => vout.onerror = () => rej(new Error(vout.error.message))),
+    new Promise((res, rej) => v.onerror = () => rej(new Error(v.error.message))),
+  ]);
+
+  let duration = test.duration;
+  if (typeof(test.contentDuration) == "number") {
+    duration = test.contentDuration;
+  }
+  if (duration) {
+    isGreaterThanOrEqualEps(vout.currentTime, duration,
+      `${token} current time at end`);
+  }
+  is(vout.readyState, vout.HAVE_CURRENT_DATA,
+    `${token} checking readyState`);
+  ok(vout.ended, `${token} checking playback has ended`);
+  isnot(stream.getTracks().length, 0, `${token} results in some tracks`);
+  if (stream.getVideoTracks().length > 0) {
+    ok(test.type.match(/^video/), `${token} is a video resource`);
+    checkDrawImage(vout, `${token} checking video frame pixel has been drawn`);
+  }
+  vout.remove();
+  removeNodeAndSource(v);
+}
+
+(async () => {
+  SimpleTest.requestCompleteLog();
+  SimpleTest.waitForExplicitFinish();
+  await SpecialPowers.pushPrefEnv(
+    { "set": [
+      ["privacy.reduceTimerPrecision", false],
+      // This test exhibits bug 1543980 with RDD enabled.
+      ["media.rdd-process.enabled", false],
+    ]});
+  let tests = gPlayTests;
+  // Filter out bug1377278.webm due to bug 1541401.
+  tests = tests.filter(t => !t.name.includes("1377278"));
+
+  manager.runTests(tests, async (test, token) => {
+    try {
+      await startTest(test, token);
+    } catch(e) {
+      ok(false, `Caught exception for ${token}: ${e}`);
+    }
+    manager.finished(token);
+  });
+})();
+</script>
+</pre>
+</body>
+</html>

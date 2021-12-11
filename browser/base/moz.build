@@ -1,0 +1,90 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+SPHINX_TREES["sslerrorreport"] = "content/docs/sslerrorreport"
+SPHINX_TREES["tabbrowser"] = "content/docs/tabbrowser"
+
+with Files("content/docs/sslerrorreport/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "content/test/chrome/chrome.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "content/test/about/browser.ini",
+    "content/test/alerts/browser.ini",
+    "content/test/backforward/browser.ini",
+    "content/test/caps/browser.ini",
+    "content/test/captivePortal/browser.ini",
+    "content/test/contextMenu/browser.ini",
+    "content/test/favicons/browser.ini",
+    "content/test/forms/browser.ini",
+    "content/test/fullscreen/browser.ini",
+    "content/test/general/browser.ini",
+    "content/test/gesture/browser.ini",
+    "content/test/historySwipeAnimation/browser.ini",
+    "content/test/keyboard/browser.ini",
+    "content/test/menubar/browser.ini",
+    "content/test/metaTags/browser.ini",
+    "content/test/notificationbox/browser.ini",
+    "content/test/outOfProcess/browser.ini",
+    "content/test/pageActions/browser.ini",
+    "content/test/pageinfo/browser.ini",
+    "content/test/pageStyle/browser.ini",
+    "content/test/performance/browser.ini",
+    "content/test/performance/hidpi/browser.ini",
+    "content/test/performance/io/browser.ini",
+    "content/test/performance/lowdpi/browser.ini",
+    "content/test/permissions/browser.ini",
+    "content/test/plugins/browser.ini",
+    "content/test/popupNotifications/browser.ini",
+    "content/test/popups/browser.ini",
+    "content/test/protectionsUI/browser.ini",
+    "content/test/referrer/browser.ini",
+    "content/test/sanitize/browser.ini",
+    "content/test/sidebar/browser.ini",
+    "content/test/siteIdentity/browser.ini",
+    "content/test/startup/browser.ini",
+    "content/test/static/browser.ini",
+    "content/test/statuspanel/browser.ini",
+    "content/test/sync/browser.ini",
+    "content/test/tabcrashed/browser.ini",
+    "content/test/tabdialogs/browser.ini",
+    "content/test/tabMediaIndicator/browser.ini",
+    "content/test/tabPrompts/browser.ini",
+    "content/test/tabs/browser.ini",
+    "content/test/touch/browser.ini",
+    "content/test/webextensions/browser.ini",
+    "content/test/webrtc/browser.ini",
+    "content/test/webrtc/gracePeriod/browser.ini",
+    "content/test/webrtc/legacyIndicator/browser.ini",
+    "content/test/zoom/browser.ini",
+]
+
+PERFTESTS_MANIFESTS += ["content/test/perftest.ini"]
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_VERSION_DISPLAY"] = CONFIG["MOZ_APP_VERSION_DISPLAY"]
+
+DEFINES["APP_LICENSE_BLOCK"] = "%s/content/overrides/app-license.html" % SRCDIR
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("windows", "gtk", "cocoa"):
+    DEFINES["CONTEXT_COPY_IMAGE_CONTENTS"] = 1
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("windows", "gtk"):
+    DEFINES["MENUBAR_CAN_AUTOHIDE"] = 1
+
+JAR_MANIFESTS += ["jar.mn"]
+
+GeneratedFile(
+    "content/certerror/aboutNetErrorCodes.js",
+    script="content/certerror/gen_aboutneterror_codes.py",
+    inputs=["/browser/locales/en-US/browser/nsserrors.ftl"],
+)

@@ -1,0 +1,1137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Form History Autocomplete</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form History test: form field autocomplete
+<p id="display"></p>
+
+<!-- We presumably can't hide the content for this test. The large top padding is to allow
+     listening for scrolls to occur. -->
+<div id="content" style="padding-top: 20000px;">
+
+  <!-- normal, basic form -->
+  <form id="form1" onsubmit="return false;">
+    <input  type="text" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- normal, basic form (new fieldname) -->
+  <form id="form2" onsubmit="return false;">
+    <input  type="text" name="field2">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with autocomplete=off on input -->
+  <form id="form3" onsubmit="return false;">
+    <input  type="text" name="field2" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with autocomplete=off on form -->
+  <form id="form4" autocomplete="off" onsubmit="return false;">
+    <input  type="text" name="field2">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- normal form for testing filtering -->
+  <form id="form5" onsubmit="return false;">
+    <input  type="text" name="field3">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- normal form for testing word boundary filtering -->
+  <form id="form6" onsubmit="return false;">
+    <input  type="text" name="field4">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with maxlength attribute on input -->
+  <form id="form7" onsubmit="return false;">
+    <input  type="text" name="field5" maxlength="10">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='email' -->
+  <form id="form8" onsubmit="return false;">
+    <input  type="email" name="field6">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='tel' -->
+  <form id="form9" onsubmit="return false;">
+    <input  type="tel" name="field7">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='url' -->
+  <form id="form10" onsubmit="return false;">
+    <input  type="url" name="field8">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='search' -->
+  <form id="form11" onsubmit="return false;">
+    <input  type="search" name="field9">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='number' -->
+  <form id="form12" onsubmit="return false;">
+    <input  type="text" name="field10"> <!-- TODO: change back to type=number -->
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- normal, basic form (with fieldname='searchbar-history') -->
+  <form id="form13" onsubmit="return false;">
+    <input  type="text" name="searchbar-history">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='date' -->
+  <form id="form14" onsubmit="return false;">
+    <input  type="date" name="field11">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='time' -->
+  <form id="form15" onsubmit="return false;">
+    <input  type="time" name="field12">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='range' -->
+  <form id="form16" onsubmit="return false;">
+    <input  type="range" name="field13" max="64">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='color' -->
+  <form id="form17" onsubmit="return false;">
+    <input  type="color" name="field14">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='month' -->
+  <form id="form18" onsubmit="return false;">
+    <input  type="month" name="field15">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='week' -->
+  <form id="form19" onsubmit="return false;">
+    <input  type="week" name="field16">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='datetime-local' -->
+  <form id="form20" onsubmit="return false;">
+    <input  type="datetime-local" name="field17">
+    <button type="submit">Submit</button>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Form History autocomplete **/
+
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
+var kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
+
+var input = $_(1, "field1");
+
+function setupFormHistory(aCallback) {
+  updateFormHistory([
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "value1" },
+    { op: "add", fieldname: "field1", value: "value2" },
+    { op: "add", fieldname: "field1", value: "value3" },
+    { op: "add", fieldname: "field1", value: "value4" },
+    { op: "add", fieldname: "field2", value: "value1" },
+    { op: "add", fieldname: "field3", value: "a" },
+    { op: "add", fieldname: "field3", value: "aa" },
+    { op: "add", fieldname: "field3", value: "aaz" },
+    { op: "add", fieldname: "field3", value: "aa\xe6" }, // 0xae == latin ae pair (0xc6 == AE)
+    { op: "add", fieldname: "field3", value: "az" },
+    { op: "add", fieldname: "field3", value: "z" },
+    { op: "add", fieldname: "field4", value: "a\xe6" },
+    { op: "add", fieldname: "field4", value: "aa a\xe6" },
+    { op: "add", fieldname: "field4", value: "aba\xe6" },
+    { op: "add", fieldname: "field4", value: "bc d\xe6" },
+    { op: "add", fieldname: "field5", value: "1" },
+    { op: "add", fieldname: "field5", value: "12" },
+    { op: "add", fieldname: "field5", value: "123" },
+    { op: "add", fieldname: "field5", value: "1234" },
+    { op: "add", fieldname: "field6", value: "value" },
+    { op: "add", fieldname: "field7", value: "value" },
+    { op: "add", fieldname: "field8", value: "value" },
+    { op: "add", fieldname: "field9", value: "value" },
+    { op: "add", fieldname: "field10", value: "42" },
+    // not used, since type=date doesn't have autocomplete currently
+    { op: "add", fieldname: "field11", value: "2010-10-10" },
+    // not used, since type=time doesn't have autocomplete currently
+    { op: "add", fieldname: "field12", value: "21:21" },
+    // not used, since type=range doesn't have a drop down menu
+    { op: "add", fieldname: "field13", value: "32" },
+    // not used, since type=color doesn't have autocomplete currently
+    { op: "add", fieldname: "field14", value: "#ffffff" },
+    { op: "add", fieldname: "field15", value: "2016-08" },
+    { op: "add", fieldname: "field16", value: "2016-W32" },
+    { op: "add", fieldname: "field17", value: "2016-10-21T10:10" },
+    { op: "add", fieldname: "searchbar-history", value: "blacklist test" },
+  ], aCallback);
+}
+
+function setForm(value) {
+  input.value = value;
+  input.focus();
+}
+
+// Restore the form to the default state.
+function restoreForm() {
+  setForm("");
+}
+
+// Check for expected form data.
+function checkForm(expectedValue) {
+  let formID = input.parentNode.id;
+  is(input.value, expectedValue, "Checking " + formID + " input");
+}
+
+var testNum = 0;
+var expectingPopup = false;
+
+function expectPopup() {
+  info("expecting popup for test " + testNum);
+  expectingPopup = true;
+}
+
+function popupShownListener() {
+  info("popup shown for test " + testNum);
+  if (expectingPopup) {
+    expectingPopup = false;
+    SimpleTest.executeSoon(runTest);
+  } else {
+    if (testNum == 253) {
+      // Bug 1420103
+      todo(false, "Autocomplete popup not expected during test " + testNum);
+      return;
+    }
+    ok(false, "Autocomplete popup not expected during test " + testNum);
+  }
+}
+
+registerPopupShownListener(popupShownListener);
+
+/*
+ * Main section of test...
+ *
+ * This is a bit hacky, as many operations happen asynchronously.
+ * Various mechanisms call runTests as a result of operations:
+ *   - set expectingPopup to true, and the next test will occur when the autocomplete popup
+ *     is shown
+ *   - call waitForMenuChange(x) to run the next test when the autocomplete popup
+ *     to have x items in it
+ *   - addEntry calls runs the test when an entry has been added
+ *   - some tests scroll the window. This is because the form fill controller happens to scroll
+ *     the field into view near the end of the search, and there isn't any other good notification
+ *     to listen to for when the search is complete.
+ *   - some items still use setTimeout
+ */
+async function runTest() { // eslint-disable-line complexity
+  testNum++;
+
+  ok(true, "Starting test #" + testNum);
+
+  switch (testNum) {
+    case 1:
+      // Make sure initial form is empty.
+      checkForm("");
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 2:
+      checkMenuEntries(["value1", "value2", "value3", "value4"], testNum);
+      // Check first entry
+      synthesizeKey("KEY_ArrowDown");
+      checkForm(""); // value shouldn't update
+      synthesizeKey("KEY_Enter");
+      checkForm("value1");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 3:
+      // Check second entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value2");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 4:
+      // Check third entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value3");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 5:
+      // Check fourth entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value4");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 6:
+      // Check first entry (wraparound)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown"); // deselects
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value1");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 7:
+      // Check the last entry via arrow-up
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_Enter");
+      checkForm("value4");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 8:
+      // Check the last entry via arrow-up
+      synthesizeKey("KEY_ArrowDown"); // select first entry
+      synthesizeKey("KEY_ArrowUp"); // selects nothing!
+      synthesizeKey("KEY_ArrowUp"); // select last entry
+      synthesizeKey("KEY_Enter");
+      checkForm("value4");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 9:
+      // Check the last entry via arrow-up (wraparound)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowUp"); // deselects
+      synthesizeKey("KEY_ArrowUp"); // last entry
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_ArrowUp"); // first entry
+      synthesizeKey("KEY_ArrowUp"); // deselects
+      synthesizeKey("KEY_ArrowUp"); // last entry
+      synthesizeKey("KEY_Enter");
+      checkForm("value4");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 10:
+      // Set first entry w/o triggering autocomplete
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowRight");
+      checkForm("value1");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 11:
+      // Set first entry w/o triggering autocomplete
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowLeft");
+      checkForm("value1");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 12:
+      // Check first entry (page up)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_PageUp");
+      synthesizeKey("KEY_Enter");
+      checkForm("value1");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 13:
+      // Check last entry (page down)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_PageDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value4");
+
+      // Trigger autocomplete popup
+      testNum = 49;
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    /* Test removing entries from the dropdown */
+
+    case 50:
+      checkMenuEntries(["value1", "value2", "value3", "value4"], testNum);
+      // Delete the first entry (of 4)
+      setForm("value");
+      synthesizeKey("KEY_ArrowDown");
+
+      // On OS X, shift-backspace and shift-delete work, just delete does not.
+      // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
+      if (SpecialPowers.OS == "Darwin") {
+        synthesizeKey("KEY_Backspace", {shiftKey: true});
+      } else {
+        synthesizeKey("KEY_Delete", {shiftKey: true});
+      }
+
+      // This tests that on OS X shift-backspace didn't delete the last character
+      // in the input (bug 480262).
+      waitForMenuChange(3);
+      break;
+
+    case 51:
+      checkForm("value");
+      countEntries("field1", "value1",
+                   function(num) {
+                     ok(!num, testNum + " checking that f1/v1 was deleted");
+                     runTest();
+                   });
+      break;
+
+    case 52:
+      synthesizeKey("KEY_Enter");
+      checkForm("value2");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 53:
+      checkMenuEntries(["value2", "value3", "value4"], testNum);
+      // Check the new first entry (of 3)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value2");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 54:
+      // Delete the second entry (of 3)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+      waitForMenuChange(2);
+      break;
+
+    case 55:
+      checkForm("");
+      countEntries("field1", "value3",
+                   function(num) {
+                     ok(!num, testNum + " checking that f1/v3 was deleted");
+                     runTest();
+                   });
+      break;
+
+    case 56:
+      synthesizeKey("KEY_Enter");
+      checkForm("value4");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 57:
+      checkMenuEntries(["value2", "value4"], testNum);
+      // Check the new first entry (of 2)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value2");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 58:
+      // Delete the last entry (of 2)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+      checkForm("");
+      waitForMenuChange(1);
+      break;
+
+    case 59:
+      countEntries("field1", "value4",
+                   function(num) {
+                     ok(!num, testNum + " checking that f1/v4 was deleted");
+                     runTest();
+                   });
+      break;
+
+    case 60:
+      synthesizeKey("KEY_Enter");
+      checkForm("value2");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 61:
+      checkMenuEntries(["value2"], testNum);
+      // Check the new first entry (of 1)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value2");
+
+      // Trigger autocomplete popup
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 62:
+      // Delete the only remaining entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+      waitForMenuChange(0);
+      break;
+
+    case 63:
+      checkForm("");
+      countEntries("field1", "value2",
+                   function(num) {
+                     ok(!num, testNum + " checking that f1/v2 was deleted");
+                     runTest();
+                   });
+      break;
+
+    case 64:
+      // Look at form 2, trigger autocomplete popup
+      input = $_(2, "field2");
+      testNum = 99;
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    /* Test entries with autocomplete=off */
+
+    case 100:
+      // Select first entry
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value1");
+
+      // Look at form 3, try to trigger autocomplete popup
+      input = $_(3, "field2");
+      restoreForm();
+      // Sometimes, this will fail if scrollTo(0, 0) is called, so that doesn't
+      // happen here. Fortunately, a different input is used from the last test,
+      // so a scroll should still occur.
+      synthesizeKey("KEY_ArrowDown");
+      waitForScroll();
+      break;
+
+    case 101:
+      // Ensure there's no autocomplete dropdown (autocomplete=off is present)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("");
+
+      // Look at form 4, try to trigger autocomplete popup
+      input = $_(4, "field2");
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      waitForMenuChange(0);
+      break;
+
+    case 102:
+      // Ensure there's no autocomplete dropdown (autocomplete=off is present)
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("");
+
+      // Look at form 5, try to trigger autocomplete popup
+      input = $_(5, "field3");
+      restoreForm();
+      testNum = 199;
+      expectPopup();
+      input.focus();
+      sendChar("a");
+      break;
+
+    /* Test filtering as characters are typed. */
+
+    case 200:
+      checkMenuEntries(["a", "aa", "aaz", "aa\xe6", "az"], testNum);
+      input.focus();
+      sendChar("a");
+      waitForMenuChange(3);
+      break;
+
+    case 201:
+      checkMenuEntries(["aa", "aaz", "aa\xe6"], testNum);
+      input.focus();
+      sendChar("\xc6");
+      waitForMenuChange(1);
+      break;
+
+    case 202:
+      checkMenuEntries(["aa\xe6"], testNum);
+      synthesizeKey("KEY_Backspace");
+      waitForMenuChange(3);
+      break;
+
+    case 203:
+      checkMenuEntries(["aa", "aaz", "aa\xe6"], testNum);
+      synthesizeKey("KEY_Backspace");
+      waitForMenuChange(5);
+      break;
+
+    case 204:
+      checkMenuEntries(["a", "aa", "aaz", "aa\xe6", "az"], testNum);
+      input.focus();
+      sendChar("z");
+      waitForMenuChange(2);
+      break;
+
+    case 205:
+      checkMenuEntries(["az", "aaz"], testNum);
+      input.focus();
+      synthesizeKey("KEY_ArrowLeft");
+      expectPopup();
+      // Check case-insensitivity.
+      sendChar("A");
+      break;
+
+    case 206:
+      checkMenuEntries(["aaz"], testNum);
+      addEntry("field3", "aazq");
+      break;
+
+    case 207:
+      // check that results were cached
+      input.focus();
+      synthesizeKey("KEY_ArrowRight");
+      sendChar("q");
+      waitForMenuChange(0);
+      break;
+
+    case 208:
+      // check that results were cached
+      checkMenuEntries([], testNum);
+      addEntry("field3", "aazqq");
+      break;
+
+    case 209:
+      input.focus();
+      window.scrollTo(0, 0);
+      sendChar("q");
+      waitForMenuChange(0);
+      break;
+
+    case 210:
+      // check that empty results were cached - bug 496466
+      checkMenuEntries([], testNum);
+      synthesizeKey("KEY_Escape");
+
+      // Look at form 6, try to trigger autocomplete popup
+      input = $_(6, "field4");
+      restoreForm();
+      testNum = 249;
+      expectPopup();
+      input.focus();
+      sendChar("a");
+      break;
+
+    /* Test substring matches and word boundary bonuses */
+
+    case 250:
+      // alphabetical results for first character
+      checkMenuEntries(["aa a\xe6", "aba\xe6", "a\xe6"], testNum);
+      input.focus();
+
+      sendChar("\xe6");
+      waitForMenuChange(3, "a\xe6");
+      break;
+
+    case 251:
+      // prefix match comes first, then word boundary match
+      // followed by substring match
+      checkMenuEntries(["a\xe6", "aa a\xe6", "aba\xe6"], testNum);
+
+      restoreForm();
+      input.focus();
+      sendChar("b");
+      waitForMenuChange(1, "bc d\xe6");
+      break;
+
+    case 252:
+      checkMenuEntries(["bc d\xe6"], testNum);
+      input.focus();
+      sendChar(" ");
+      waitForMenuChange(1);
+      break;
+
+    case 253:
+      // check that trailing space has no effect after single char.
+      checkMenuEntries(["bc d\xe6"], testNum);
+      input.focus();
+      sendChar("\xc6");
+      waitForMenuChange(2);
+      break;
+
+    case 254:
+      // check multi-word substring matches
+      checkMenuEntries(["bc d\xe6", "aba\xe6"]);
+      input.focus();
+      expectPopup();
+      synthesizeKey("KEY_ArrowLeft");
+      sendChar("d");
+      break;
+
+    case 255:
+      // check inserting in multi-word searches
+      checkMenuEntries(["bc d\xe6"], testNum);
+      input.focus();
+      sendChar("z");
+      waitForMenuChange(0);
+      break;
+
+    case 256:
+      checkMenuEntries([], testNum);
+
+      // Look at form 7, try to trigger autocomplete popup
+      input = $_(7, "field5");
+      testNum = 299;
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 300:
+      checkMenuEntries(["1", "12", "123", "1234"], testNum);
+      input.maxLength = 4;
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 301:
+      checkMenuEntries(["1", "12", "123", "1234"], testNum);
+      input.maxLength = 3;
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 302:
+      checkMenuEntries(["1", "12", "123"], testNum);
+      input.maxLength = 2;
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 303:
+      checkMenuEntries(["1", "12"], testNum);
+      input.maxLength = 1;
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 304:
+      checkMenuEntries(["1"], testNum);
+      input.maxLength = 0;
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      waitForMenuChange(0);
+      break;
+
+    case 305:
+      checkMenuEntries([], testNum);
+      input.maxLength = 4;
+
+      // now again with a character typed
+      input.focus();
+      sendChar("1");
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 306:
+      checkMenuEntries(["1", "12", "123", "1234"], testNum);
+      input.maxLength = 3;
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 307:
+      checkMenuEntries(["1", "12", "123"], testNum);
+      input.maxLength = 2;
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 308:
+      checkMenuEntries(["1", "12"], testNum);
+      input.maxLength = 1;
+      expectPopup();
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 309:
+      checkMenuEntries(["1"], testNum);
+      input.maxLength = 0;
+      synthesizeKey("KEY_Escape");
+      synthesizeKey("KEY_ArrowDown");
+      waitForMenuChange(0);
+      break;
+
+    case 310:
+      checkMenuEntries([], testNum);
+
+      input = $_(8, "field6");
+      testNum = 399;
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 400:
+    case 401:
+    case 402:
+    case 403:
+      checkMenuEntries(["value"], testNum);
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("value");
+
+      if (testNum == 400) {
+        input = $_(9, "field7");
+      } else if (testNum == 401) {
+        input = $_(10, "field8");
+      } else if (testNum == 402) {
+        input = $_(11, "field9");
+      } else if (testNum == 403) {
+        todo(false, "Fix input type=number");
+        input = $_(12, "field10");
+      }
+
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 404:
+      checkMenuEntries(["42"], testNum);
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("42");
+
+      input = $_(14, "field11");
+      restoreForm();
+      waitForMenuChange(0);
+      break;
+
+    case 405:
+      checkMenuEntries([]); // type=date with it's own control frame does not
+      // have a drop down menu for now
+      checkForm("");
+
+      input = $_(15, "field12");
+      restoreForm();
+      waitForMenuChange(0);
+      break;
+
+    case 406:
+      checkMenuEntries([]); // type=time with it's own control frame does not
+      // have a drop down menu for now
+      checkForm("");
+
+      input = $_(16, "field13");
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      waitForMenuChange(0);
+      break;
+
+    case 407:
+      checkMenuEntries([]); // type=range does not have a drop down menu
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("30"); // default (midway between minimum (0) and maximum (64)) - step
+
+      input = $_(17, "field14");
+      restoreForm();
+      waitForMenuChange(0);
+      break;
+
+    case 408:
+      checkMenuEntries([]); // type=color does not have a drop down menu
+      checkForm("#000000"); // default color value
+
+      input = $_(18, "field15");
+      restoreForm();
+      expectPopup();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 409:
+      checkMenuEntries(["2016-08"]);
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("2016-08");
+
+      input = $_(19, "field16");
+      restoreForm();
+      expectPopup();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 410:
+      checkMenuEntries(["2016-W32"]);
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Enter");
+      checkForm("2016-W32");
+
+      input = $_(20, "field17");
+      restoreForm();
+      waitForMenuChange(0);
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    case 411:
+      checkMenuEntries([]); // type=datetime-local with it's own control frame
+                            // does not have a drop down menu for now
+      checkForm("");
+
+      addEntry("field1", "value1");
+      break;
+
+    case 412:
+      input = $_(1, "field1");
+      // Go to test 500.
+      testNum = 499;
+
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+
+    // Check that the input event is fired.
+    case 500: {
+      let beforeInputFired = false;
+      input.addEventListener("beforeinput", (event) => {
+        beforeInputFired = true;
+        ok(event instanceof InputEvent,
+           `${testNum} "beforeinput" event should be dispatched with InputEvent interface`);
+        ok(event.bubbles, `${testNum} "beforeinput" event should bubble`);
+        is(event.cancelable, kSetUserInputCancelable,
+           `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed by the pref`);
+        is(event.inputType, "insertReplacementText",
+           `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
+        is(event.data, "value1",
+           `${testNum} data of "beforeinput" event should be "value1"`);
+        is(event.dataTransfer, null,
+           `${testNum} dataTransfer of "beforeinput" event should be null`);
+        is(event.getTargetRanges().length, 0,
+           `${testNum} getTargetRanges() of "beforeinput" event should empty array`);
+        is(input.value, "", `${testNum} input value should've not been modified yet at "beforeinput" event`);
+      }, {once: true});
+      let inputFired = false;
+      input.addEventListener("input", (event) => {
+        inputFired = true;
+        ok(event instanceof InputEvent,
+           `${testNum} "input" event should be dispatched with InputEvent interface`);
+        ok(event.bubbles, `${testNum} "input" event should bubble`);
+        ok(!event.cancelable, `${testNum} "input" event shouldn't be cancelable`);
+        is(event.inputType, "insertReplacementText",
+           `${testNum} inputType of "input" event should be "insertReplacementText"`);
+        is(event.data, "value1",
+           `${testNum} data of "input" event should be "value1"`);
+        is(event.dataTransfer, null,
+           `${testNum} dataTransfer of "input" event should be null`);
+        is(event.getTargetRanges().length, 0,
+           `${testNum} getTargetRanges() of "input" event should empty array`);
+        is(input.value, "value1", `${testNum} input value should've already been modified at "input" event`);
+      }, {once: true});
+
+      synthesizeKey("KEY_ArrowDown");
+      checkForm("");
+      synthesizeKey("KEY_Enter");
+      ok(beforeInputFired, `${testNum} "beforeinput" event should have been fired`);
+      ok(inputFired, `${testNum} "input" event should have been fired`);
+      checkForm("value1");
+
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      break;
+    }
+    // Check that canceling the beforeinput event cancels autocompletion.
+    case 501: {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.input_event.allow_to_cancel_set_user_input", true]],
+      });
+      input.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
+      let inputFired = false;
+      input.addEventListener("input", () => { inputFired = true; }, {once: true});
+
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      checkForm("");
+      synthesizeKey("KEY_Enter");
+      ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
+      checkForm("");
+
+      await SpecialPowers.pushPrefEnv({
+        clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
+      });
+
+      // Go to test 500.
+      testNum = 599;
+      setTimeout(runTest, 100);
+      break;
+    }
+    case 600:
+      // check we don't show autocomplete for searchbar-history
+      input = $_(13, "searchbar-history");
+
+      // Trigger autocomplete popup
+      checkForm("");
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
+      waitForMenuChange(0);
+      break;
+
+    case 601:
+      checkMenuEntries([], testNum);
+      input.blur();
+      SimpleTest.finish();
+      return;
+
+    default:
+      ok(false, "Unexpected invocation of test #" + testNum);
+      SimpleTest.finish();
+  }
+}
+
+function addEntry(name, value) {
+  updateFormHistory({ op: "add", fieldname: name, value }, runTest);
+}
+
+// Runs the next test when scroll event occurs
+function waitForScroll() {
+  addEventListener("scroll", function listener() {
+    if (!window.pageYOffset) {
+      return;
+    }
+
+    removeEventListener("scroll", listener, false);
+    setTimeout(runTest, 100);
+  }, false);
+}
+
+function waitForMenuChange(expectedCount, expectedFirstValue) {
+  notifyMenuChanged(expectedCount, expectedFirstValue, runTest);
+}
+
+function checkMenuEntries(expectedValues, testNumber) {
+  let actualValues = getMenuEntries();
+  is(actualValues.length, expectedValues.length, testNumber + " Checking length of expected menu");
+  for (let i = 0; i < expectedValues.length; i++) {
+    is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #" + i);
+  }
+}
+
+function startTest() {
+  setupFormHistory(function() {
+    runTest();
+  });
+}
+
+SimpleTest.waitForFocus(startTest);
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+</script>
+</pre>
+</body>
+</html>

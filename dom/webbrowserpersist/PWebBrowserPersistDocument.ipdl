@@ -1,0 +1,102 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PWebBrowserPersistResources;
+include protocol PWebBrowserPersistSerialize;
+include protocol PFileDescriptorSet;
+include protocol PChildToParentStream; //FIXME: bug #792908
+include protocol PParentToChildStream; //FIXME: bug #792908
+
+include PBackgroundSharedTypes;
+include IPCStream;
+include NeckoChannelParams;
+
+include "mozilla/dom/ReferrerInfoUtils.h";
+
+[RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
+
+namespace mozilla {
+
+// nsIWebBrowserPersistDocument has attributes which can be read
+// synchronously.  To avoid using sync IPC for them, the actor sends
+// this structure from the child to the parent before the parent actor
+// is exposed to XPCOM.
+struct WebBrowserPersistDocumentAttrs {
+  bool isPrivate;
+  nsCString documentURI;
+  nsCString baseURI;
+  nsCString contentType;
+  nsCString characterSet;
+  nsString title;
+  nsIReferrerInfo referrerInfo;
+  CookieJarSettingsArgs cookieJarSettings;
+  nsString contentDisposition;
+  uint32_t sessionHistoryCacheKey;
+  uint32_t persistFlags;
+  PrincipalInfo principal;
+};
+
+// IPDL doesn't have tuples, so this gives the pair of strings from
+// nsIWebBrowserPersistURIMap::getURIMapping a name.
+struct WebBrowserPersistURIMapEntry {
+  nsCString mapFrom;
+  nsCString mapTo;
+};
+
+// nsIWebBrowserPersistURIMap is just copied over IPC as one of these,
+// not proxied, to simplify the protocol.
+struct WebBrowserPersistURIMap {
+  WebBrowserPersistURIMapEntry[] mapURIs;
+  nsCString targetBaseURI;
+};
+
+// This remotes nsIWebBrowserPersistDocument and its visitors.  The
+// lifecycle is a little complicated: the initial document is
+// constructed parent->child, but subdocuments are constructed
+// child->parent and then passed back.  Subdocuments aren't subactors,
+// because that would impose a lifetime relationship that doesn't
+// exist in the XPIDL; instead they're all managed by the enclosing
+// PContent.
+protocol PWebBrowserPersistDocument {
+  manager PContent;
+  manages PWebBrowserPersistResources;
+  manages PWebBrowserPersistSerialize;
+
+parent:
+  // The actor isn't exposed to XPCOM until after it gets one of these
+  // two messages; see also the state transition rules.  The message
+  // is either a response to the constructor (if it was parent->child)
+  // or sent after it (if it was child->parent).
+  async Attributes(WebBrowserPersistDocumentAttrs aAttrs,
+                   IPCStream? stream);
+  async InitFailure(nsresult aStatus);
+
+child:
+  async SetPersistFlags(uint32_t aNewFlags);
+  async PWebBrowserPersistResources();
+  async PWebBrowserPersistSerialize(WebBrowserPersistURIMap aMap,
+                                    nsCString aRequestedContentType,
+                                    uint32_t aEncoderFlags,
+                                    uint32_t aWrapColumn);
+  async __delete__();
+
+/*
+state START:
+  recv Attributes goto MAIN;
+  recv InitFailure goto FAILED;
+
+state MAIN:
+  send SetPersistFlags goto MAIN;
+  send PWebBrowserPersistResources goto MAIN;
+  send PWebBrowserPersistSerialize goto MAIN;
+  send __delete__;
+
+state FAILED:
+  send __delete__;
+*/
+};
+
+} // namespace mozilla

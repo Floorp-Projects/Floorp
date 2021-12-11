@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html class="reftest-paged">
+  <meta charset="utf-8">
+  <title>CSS Flexbox Test: Fragmentation of nested block-size:auto flex containers with a tall flex item in print context, not top-of-page</title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <link rel="help" href="https://drafts.csswg.org/css-flexbox-1/#pagination">
+  <link rel="match" href="flexbox-single-column-4-ref.html">
+  <meta name="assert" content="This test verifies fragmentation of a tall flex item in nested block-size:auto single-line column flex containers in print context.">
+
+  <style>
+  @page { size:5in 3in; margin:0.5in; }
+
+  html, body {
+    font-size: 12pt; margin: 0;
+  }
+
+  .flexContainer {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    background: gray;
+    border: 0.25in solid lightgray;
+  }
+  article {
+    background: yellow;
+    block-size: 2in;
+  }
+  </style>
+
+  <body>
+    <div style="block-size: 0.25in; background: lightblue"></div>
+    <div class="flexContainer">
+      <div class="flexContainer">
+        <div class="flexContainer">
+          <!-- <article> is expected to have 1 inch in the first page and 1 inch
+               in the second page.  -->
+          <article></article>
+        </div>
+      </div>
+    </div>
+    <div style="block-size: 0.25in; background: lightblue"></div>
+  </body>
+</html>

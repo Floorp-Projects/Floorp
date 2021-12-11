@@ -1,0 +1,57 @@
+@use 'sass:math';
+
+.context-menu {
+  background: var(--newtab-background-color-secondary);
+  border-radius: $context-menu-border-radius;
+  box-shadow: $context-menu-shadow;
+  display: block;
+  font-size: $context-menu-font-size;
+  margin-inline-start: 5px;
+  inset-inline-start: 100%;
+  position: absolute;
+  top: math.div($context-menu-button-size, 4);
+  z-index: 8;
+
+  > ul {
+    list-style: none;
+    margin: 0;
+    padding: $context-menu-outer-padding 0;
+
+    > li {
+      margin: 0;
+      width: 100%;
+
+      &.separator {
+        border-bottom: $border-secondary;
+        margin: $context-menu-outer-padding 0;
+      }
+
+      > a,
+      > button {
+        align-items: center;
+        color: inherit;
+        cursor: pointer;
+        display: flex;
+        width: 100%;
+        line-height: 16px;
+        outline: none;
+        border: 0;
+        padding: $context-menu-item-padding;
+        white-space: nowrap;
+
+        &:is(:focus, :hover) {
+          background: var(--newtab-element-secondary-hover-color);
+        }
+
+        &:active {
+          background: var(--newtab-element-secondary-active-color);
+        }
+
+        &.disabled {
+          opacity: 0.4;
+          pointer-events: none;
+        }
+      }
+    }
+  }
+}

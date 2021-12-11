@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=385434
+-->
+<head>
+  <title>Test for Bug 385434</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=385434">Mozilla Bug 385434</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="frame" style="height:100px; width:100px; border:0"></iframe>
+  <div id="status" style="display: none"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 385434 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.expectAssertions(0, 1); // bug 1333702
+
+var gNumHashchanges = 0;
+var gCallbackOnIframeLoad = false;
+var gSampleEvent;
+
+function statusMsg(msg) {
+  var msgElem = document.createElement("p");
+  msgElem.appendChild(document.createTextNode(msg));
+
+  document.getElementById("status").appendChild(msgElem);
+}
+
+function longWait() {
+  setTimeout(function() { gGen.next(); }, 1000);
+}
+
+// onIframeHashchange, onIframeLoad, and onIframeScroll are all called by the
+// content we load into our iframe in order to notify the parent frame of an
+// event which was fired.
+function onIframeHashchange() {
+  gNumHashchanges++;
+  gGen.next();
+}
+
+function onIframeLoad() {
+  if (gCallbackOnIframeLoad) {
+    gCallbackOnIframeLoad = false;
+    gGen.next();
+  }
+}
+
+function onIframeScroll() {
+  is(gNumHashchanges, 0, "onscroll should fire before onhashchange.");
+}
+
+function enableIframeLoadCallback() {
+  gCallbackOnIframeLoad = true;
+}
+
+function noEventExpected(msg) {
+  is(gNumHashchanges, 0, msg);
+
+  // Even if there's an error, set gNumHashchanges to 0 so other tests don't
+  // fail.
+  gNumHashchanges = 0;
+}
+
+function eventExpected(msg) {
+  is(gNumHashchanges, 1, msg);
+
+  // Eat up this event, whether the test above was true or not
+  gNumHashchanges = 0;
+}
+
+/*
+ * The hashchange event is dispatched asynchronously, so if we want to observe
+ * it, we have to yield within run_test(), transferring control back to the
+ * event loop.
+ *
+ * When we're expecting our iframe to observe a hashchange event after we poke
+ * it, we just yield and wait for onIframeHashchange() to call gGen.next() and
+ * wake us up.
+ *
+ * When we're testing to ensure that the iframe doesn't dispatch a hashchange
+ * event, we try to hook onto the iframe's load event.  We call
+ * enableIframeLoadCallback(), which causes onIframeLoad() to call gGen.next()
+ * upon the next observed load.  After we get our callback, we check that a
+ * hashchange didn't occur.
+ *
+ * We can't always just wait for page load in order to observe that a
+ * hashchange didn't happen.  In these cases, we call longWait() and yield
+ * until either a hashchange occurs or longWait's callback is scheduled.  This
+ * is something of a hack; it's entirely possible that longWait won't wait long
+ * enough, and we won't observe what should have been a failure of the test.
+ * But it shouldn't happen that good code will randomly *fail* this test.
+ */
+function* run_test() {
+  /*
+   * TEST 1 tests that:
+   *    <body onhashchange = ... >  works,
+   *    the event is (not) fired at the correct times
+   */
+  var frame = document.getElementById("frame");
+  var frameCw = frame.contentWindow;
+
+  enableIframeLoadCallback();
+  frameCw.document.location = "file_bug385434_1.html";
+  // Wait for the iframe to load and for our callback to fire
+  yield undefined;
+
+  noEventExpected("No hashchange expected initially.");
+
+  sendMouseEvent({type: "click"}, "link1", frameCw);
+  yield undefined;
+  eventExpected("Clicking link1 should trigger a hashchange.");
+
+  sendMouseEvent({type: "click"}, "link1", frameCw);
+  longWait();
+  yield undefined;
+  // succeed if a hashchange event wasn't triggered while we were waiting
+  noEventExpected("Clicking link1 again should not trigger a hashchange.");
+
+  sendMouseEvent({type: "click"}, "link2", frameCw);
+  yield undefined;
+  eventExpected("Clicking link2 should trigger a hashchange.");
+
+  frameCw.history.go(-1);
+  yield undefined;
+  eventExpected("Going back should trigger a hashchange.");
+
+  frameCw.history.go(1);
+  yield undefined;
+  eventExpected("Going forward should trigger a hashchange.");
+
+  // window.location has a trailing '#' right now, so we append "link1", not
+  // "#link1".
+  frameCw.window.location = frameCw.window.location + "link1";
+  yield undefined;
+  eventExpected("Assigning to window.location should trigger a hashchange.");
+
+  // Set up history in the iframe which looks like:
+  //   file_bug385434_1.html#link1
+  //   file_bug385434_2.html
+  //   file_bug385434_1.html#foo      <-- current page
+  enableIframeLoadCallback();
+  frameCw.window.location = "file_bug385434_2.html";
+  yield undefined;
+
+  enableIframeLoadCallback();
+  frameCw.window.location = "file_bug385434_1.html#foo";
+  yield undefined;
+
+  // Now when we do history.go(-2) on the frame, it *shouldn't* fire a
+  // hashchange.  Although the URIs differ only by their hashes, they belong to
+  // two different Documents.
+  frameCw.history.go(-2);
+  longWait();
+  yield undefined;
+  noEventExpected("Moving between different Documents shouldn't " +
+                  "trigger a hashchange.");
+
+  /*
+   * TEST 2 tests that:
+   *     <frameset onhashchange = ... > works,
+   *     the event is targeted at the window object
+   *     the event's cancelable, bubbles settings are correct
+   */
+
+  enableIframeLoadCallback();
+  frameCw.document.location = "file_bug385434_2.html";
+  yield undefined;
+
+  frameCw.document.location = "file_bug385434_2.html#foo";
+  yield undefined;
+
+  eventExpected("frame onhashchange should fire events.");
+  // iframe should set gSampleEvent
+  is(gSampleEvent.target, frameCw,
+     "The hashchange event should be targeted to the window.");
+  is(gSampleEvent.type, "hashchange",
+     "Event type should be 'hashchange'.");
+  is(gSampleEvent.cancelable, false,
+     "The hashchange event shouldn't be cancelable.");
+  is(gSampleEvent.bubbles, false,
+     "The hashchange event should not bubble.");
+
+  /*
+   * TEST 3 tests that:
+   *     hashchange is dispatched if the current document readyState is
+   *     not "complete" (bug 504837).
+   */
+  frameCw.document.location = "file_bug385434_3.html";
+  yield undefined;
+  eventExpected("Hashchange should fire even if the document " +
+                "hasn't finished loading.");
+
+  SimpleTest.finish();
+}
+
+var gGen = run_test();
+gGen.next();
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=503473
+-->
+<head>
+  <title>Test for Bug 503473</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=503473">Mozilla Bug 503473</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 503473 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function done() {
+  var iframe = document.getElementById("iframe");
+  var divs = iframe.contentWindow.document.getElementsByTagName("div").length;
+  is(divs, 0, "Div wasn't blown away.")
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<div id="content" style="display: none">
+  <iframe id='iframe' src="file_bug503473-frame.sjs">
+  </iframe>
+</div>
+</body>
+</html>

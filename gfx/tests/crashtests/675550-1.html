@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+.justify {
+  width: 400px;
+  text-align: justify;
+  background: lightgreen;
+}
+
+.force {
+  width: 400px;
+  display: inline-block;
+  height: 3px;
+  background: yellow;
+}
+
+</style>
+</head>
+<body onload="document.getElementById('s').textContent='\u202E\0 \u1DCEz'; /* cannot express \0 in html markup using amp escape */">
+<div class="justify"><span class="force"></span><span id="s"></span><span class="force"></span></div>
+</body>
+</html>

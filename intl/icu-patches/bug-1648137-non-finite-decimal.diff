@@ -1,0 +1,30 @@
+# Allow to support non-finite decimal number strings.
+#
+# ICU bug: https://unicode-org.atlassian.net/browse/ICU-21675
+
+diff --git a/intl/icu/source/i18n/number_utils.cpp b/intl/icu/source/i18n/number_utils.cpp
+--- a/intl/icu/source/i18n/number_utils.cpp
++++ b/intl/icu/source/i18n/number_utils.cpp
+@@ -175,22 +175,16 @@ void DecNum::_setTo(const char* str, int
+     if ((fContext.status & DEC_Conversion_syntax) != 0) {
+         status = U_DECIMAL_NUMBER_SYNTAX_ERROR;
+         return;
+     } else if (fContext.status != 0) {
+         // Not a syntax error, but some other error, like an exponent that is too large.
+         status = U_UNSUPPORTED_ERROR;
+         return;
+     }
+-
+-    // For consistency with Java BigDecimal, no support for DecNum that is NaN or Infinity!
+-    if (decNumberIsSpecial(fData.getAlias())) {
+-        status = U_UNSUPPORTED_ERROR;
+-        return;
+-    }
+ }
+ 
+ void
+ DecNum::setTo(const uint8_t* bcd, int32_t length, int32_t scale, bool isNegative, UErrorCode& status) {
+     if (length > kDefaultDigits) {
+         fData.resize(length, 0);
+         fContext.digits = length;
+     } else {

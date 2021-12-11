@@ -1,0 +1,156 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    "nsIArray.idl",
+    "nsIArrayExtensions.idl",
+    "nsIINIParser.idl",
+    "nsIMutableArray.idl",
+    "nsIObserver.idl",
+    "nsIObserverService.idl",
+    "nsIPersistentProperties2.idl",
+    "nsIProperties.idl",
+    "nsIProperty.idl",
+    "nsIPropertyBag.idl",
+    "nsIPropertyBag2.idl",
+    "nsISerializable.idl",
+    "nsISimpleEnumerator.idl",
+    "nsIStringEnumerator.idl",
+    "nsISupportsIterators.idl",
+    "nsISupportsPrimitives.idl",
+    "nsIVariant.idl",
+    "nsIWritablePropertyBag.idl",
+    "nsIWritablePropertyBag2.idl",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    XPIDL_SOURCES += [
+        "nsIWindowsRegKey.idl",
+    ]
+    EXPORTS += ["nsWindowsRegKey.h"]
+    SOURCES += ["nsWindowsRegKey.cpp"]
+
+XPIDL_MODULE = "xpcom_ds"
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+EXPORTS += [
+    "!nsGkAtomConsts.h",
+    "!nsGkAtomList.h",
+    "nsArray.h",
+    "nsArrayEnumerator.h",
+    "nsArrayUtils.h",
+    "nsAtom.h",
+    "nsBaseHashtable.h",
+    "nsCharSeparatedTokenizer.h",
+    "nsCheapSets.h",
+    "nsClassHashtable.h",
+    "nsCOMArray.h",
+    "nsCRT.h",
+    "nsDeque.h",
+    "nsEnumeratorUtils.h",
+    "nsExpirationTracker.h",
+    "nsGkAtoms.h",
+    "nsHashKeys.h",
+    "nsHashPropertyBag.h",
+    "nsHashtablesFwd.h",
+    "nsInterfaceHashtable.h",
+    "nsMathUtils.h",
+    "nsPersistentProperties.h",
+    "nsPointerHashKeys.h",
+    "nsProperties.h",
+    "nsQuickSort.h",
+    "nsRefCountedHashtable.h",
+    "nsRefPtrHashtable.h",
+    "nsSimpleEnumerator.h",
+    "nsStaticAtomUtils.h",
+    "nsStaticNameTable.h",
+    "nsStringEnumerator.h",
+    "nsSupportsPrimitives.h",
+    "nsTArray-inl.h",
+    "nsTArray.h",
+    "nsTArrayForwardDeclare.h",
+    "nsTHashMap.h",
+    "nsTHashSet.h",
+    "nsTHashtable.h",
+    "nsTObserverArray.h",
+    "nsTPriorityQueue.h",
+    "nsVariant.h",
+    "nsWhitespaceTokenizer.h",
+    "PLDHashTable.h",
+]
+
+EXPORTS.mozilla += [
+    "ArenaAllocator.h",
+    "ArenaAllocatorExtensions.h",
+    "ArrayAlgorithm.h",
+    "ArrayIterator.h",
+    "AtomArray.h",
+    "Dafsa.h",
+    "IncrementalTokenizer.h",
+    "MruCache.h",
+    "Observer.h",
+    "PerfectHash.h",
+    "SimpleEnumerator.h",
+    "StickyTimeDuration.h",
+    "Tokenizer.h",
+]
+
+UNIFIED_SOURCES += [
+    "Dafsa.cpp",
+    "IncrementalTokenizer.cpp",
+    "nsArray.cpp",
+    "nsArrayEnumerator.cpp",
+    "nsArrayUtils.cpp",
+    "nsAtomTable.cpp",
+    "nsCOMArray.cpp",
+    "nsCRT.cpp",
+    "nsDeque.cpp",
+    "nsEnumeratorUtils.cpp",
+    "nsGkAtoms.cpp",
+    "nsHashPropertyBag.cpp",
+    "nsINIParserImpl.cpp",
+    "nsObserverList.cpp",
+    "nsObserverService.cpp",
+    "nsPersistentProperties.cpp",
+    "nsProperties.cpp",
+    "nsQuickSort.cpp",
+    "nsSimpleEnumerator.cpp",
+    "nsStaticNameTable.cpp",
+    "nsStringEnumerator.cpp",
+    "nsSupportsPrimitives.cpp",
+    "nsTArray.cpp",
+    "nsTObserverArray.cpp",
+    "nsVariant.cpp",
+    "PLDHashTable.cpp",
+    "Tokenizer.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "../io",
+]
+
+GeneratedFile(
+    "nsGkAtomList.h",
+    script="StaticAtoms.py",
+    entry_point="generate_nsgkatomlist_h",
+    inputs=["Atom.py", "HTMLAtoms.py"],
+)
+
+GeneratedFile(
+    "nsGkAtomConsts.h",
+    script="StaticAtoms.py",
+    entry_point="generate_nsgkatomconsts_h",
+    inputs=["Atom.py", "HTMLAtoms.py"],
+)
+
+FINAL_LIBRARY = "xul"
+
+PYTHON_UNITTEST_MANIFESTS += [
+    "test/python.ini",
+]

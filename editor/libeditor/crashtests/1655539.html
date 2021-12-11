@@ -1,0 +1,15 @@
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    selection = document.getSelection()
+    element = document.createElementNS('', 'm')
+    document.documentElement.appendChild(element)
+    range = new Range()
+    range.setStartBefore(element)
+    selection.addRange(range)
+    document.documentElement.contentEditable = true
+    document.execCommand('forwardDelete', false, null)
+  })
+</script>
+<iframe class='\'>'>
+</iframe>
+<!-- COMMENT -->

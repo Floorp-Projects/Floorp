@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=946632
+-->
+<head>
+  <title>Test for bug 946632 - propagate mouse-wheel vertical scroll events to container</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .scrollable {
+      overflow: scroll;
+      height: 200px;
+      width: 200px;
+    }
+    input {
+      font-size: 72px;
+      height: 20px;
+      width: 20px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946632">Mozilla Bug 946632</a>
+<p id="display"></p>
+<div id="container" class="scrollable">
+ <input value="value">
+ x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>
+ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["general.smoothScroll", false],
+           ["mousewheel.system_scroll_override.enabled", false]]
+    }, runTests)
+  }, window);
+
+var input = document.querySelector("input");
+var container = document.querySelector("#container");
+
+function reset()
+{
+  container.scrollTop = 0;
+  container.scrollLeft = 0;
+  input.scrollTop = 0;
+  input.scrollLeft = 0;
+  container.style.display='none';
+  container.getBoundingClientRect();
+}
+
+function prepare(check)
+{
+  return new Promise(resolve => {
+    container.style.display='';
+    container.getBoundingClientRect();
+    scrollHandler = function(event) {
+      window.removeEventListener("scroll", arguments.callee, true);
+      event.stopPropagation();
+      check(event)
+      resolve();
+    };
+    window.addEventListener("scroll", scrollHandler, true);
+  });
+}
+
+var tests = [
+  { 
+    check(event) {
+      is(event.target, container, "<input> vertical line scroll targets container");
+      ok(container.scrollTop > 0, "<input> vertical line scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> vertical line scroll container.scrollLeft");
+      is(input.scrollTop, 0, "<input> horizontal line scroll input.scrollTop");
+      is(input.scrollLeft, 0, "<input> horizontal line scroll input.scrollLeft");
+    },
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaY: 1.0,
+      lineOrPageDeltaY: 1,
+    }
+  },
+ { 
+    check(event) {
+      is(event.target, input, "<input> horizontal line scroll targets <input>");
+      is(input.scrollTop, 0, "<input> horizontal line scroll input.scrollTop");
+      ok(input.scrollLeft > 0, "<input> horizontal line scroll input.scrollLeft");
+      is(container.scrollTop, 0, "<input> horizontal line scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> horizontal line scroll container.scrollLeft");
+    },
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaX: 1.0,
+      lineOrPageDeltaX: 1
+    }
+  },
+ { 
+    check(event) {
+      is(event.target, container, "<input> vertical page scroll targets container");
+      ok(container.scrollTop > 0, "<input> vertical line scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> vertical line scroll container.scrollLeft");
+      is(input.scrollTop, 0, "<input> vertical page scroll input.scrollTop");
+      is(input.scrollLeft, 0, "<input> vertical page scroll input.scrollLeft");
+    },
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_PAGE,
+      deltaY: 1.0,
+      lineOrPageDeltaY: 1
+    }
+  },
+ { 
+    check(event) {
+      is(event.target, input, "<input> horizontal page scroll targets <input>");
+      is(input.scrollTop, 0, "<input> horizontal page scroll input.scrollTop");
+      ok(input.scrollLeft > 0, "<input> horizontal page scroll input.scrollLeft");
+      is(container.scrollTop, 0, "<input> horizontal page scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> horizontal page scroll container.scrollLeft");
+    },
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_PAGE,
+      deltaX: 1.0,
+      lineOrPageDeltaX: 1
+    }
+  },
+];
+
+async function runTests()
+{
+  for (var i = 0; i < tests.length; i++) {
+    var test = tests[i];
+    reset();
+    await promiseApzFlushedRepaints();
+    let testEndPromise = prepare(test.check);
+    await new Promise(resolve => {
+      sendWheelAndPaint(input, 8, 6, test.event, resolve);
+    });
+    await testEndPromise;
+  }
+
+  SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

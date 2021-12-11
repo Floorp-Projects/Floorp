@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script type="text/javascript">
+    function doTest() {
+      var t = document.getElementById("t");
+      t.style.display = "none";
+      document.body.offsetWidth;
+      t.style.display = "table-cell";
+      document.documentElement.className = "";
+    }
+  </script>
+</head>
+<body onload="doTest()">
+  <span style="display: block">
+    <span style="display: table-cell">a</span>
+    <span style="display: table-cell; white-space: pre"> </span>
+    <span style="display: table-cell;" id="t">bc</span>
+    <span style="display: table-cell; white-space: pre"> </span>
+    <span style="display: table-cell">d</span>
+</body>
+</html>

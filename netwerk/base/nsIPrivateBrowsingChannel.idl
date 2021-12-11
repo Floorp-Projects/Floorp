@@ -1,0 +1,58 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface is implemented by channels which support overriding the
+ * privacy state of the channel.
+ *
+ * This interface must be used only from the XPCOM main thread.
+ */
+[scriptable, uuid(df702bb0-55b8-11e2-bcfd-0800200c9a66)]
+interface nsIPrivateBrowsingChannel : nsISupports
+{
+    /**
+     * Determine whether the channel is tied to a private browsing window.
+     *
+     * This value can be set only before the channel is opened.  Setting it
+     * after that does not have any effect.  This value overrides the privacy
+     * state of the channel, which means that if you call this method, then
+     * the loadGroup and load context will no longer be consulted when we
+     * need to know the private mode status for a channel.
+     *
+     * Note that this value is only meant to be used when the channel's privacy
+     * status cannot be obtained from the loadGroup or load context (for
+     * example, when the channel is not associated with any loadGroup or load
+     * context.)  Setting this value directly should be avoided if possible.
+     *
+     * Implementations must enforce the ordering semantics of this function by
+     * raising errors if setPrivate is called on a channel which has a loadGroup
+     * and/or callbacks that implement nsILoadContext, or if the loadGroup
+     * or notificationCallbacks are set after setPrivate has been called.
+     *
+     * @param aPrivate whether the channel should be opened in private mode.
+     */
+    void setPrivate(in boolean aPrivate);
+
+    /**
+     * States whether the channel is in private browsing mode. This may either
+     * happen because the channel is opened from a private mode context or
+     * when the mode is explicitly set with ::setPrivate().
+     *
+     * This attribute is equivalent to NS_UsePrivateBrowsing(), but scriptable.
+     */
+    readonly attribute boolean isChannelPrivate;
+
+    /*
+     * This function is used to determine whether the channel's private mode
+     * has been overridden by a call to setPrivate.  It is intended to be used
+     * by NS_UsePrivateBrowsing(), and you should not call it directly.
+     *
+     * @param aValue the overridden value.  This will only be set if the function
+     *               returns true.
+     */
+    [noscript] boolean isPrivateModeOverriden(out boolean aValue);
+};

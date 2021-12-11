@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<!-- vim: set shiftwidth=4 tabstop=8 autoindent expandtab: -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<head>
+  <title>Test for Author style sheet aspects of CSS cascading</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  </style>
+</head>
+<body id="thebody">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<div class="content_class" id="content" style="position:relative"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Author style sheet aspects of CSS cascading **/
+
+var style_element = document.createElement("style");
+var style_contents = document.createTextNode("");
+style_element.appendChild(style_contents);
+document.getElementsByTagName("head")[0].appendChild(style_element);
+
+var div = document.getElementById("content");
+var cs = window.getComputedStyle(div);
+var zindex = 0;
+
+/**
+ * Given the selectors |sel1| and |sel2|, in that order (the "order"
+ * aspect of the cascade), with declarations that are !important if
+ * |imp1|/|imp2| are true, assert that the one that wins in the
+ * cascading order is given by |winning| (which must be either 1 or 2).
+ */
+function do_test(sel1, imp1, sel2, imp2, winning) {
+  var ind1 = ++zindex;
+  var ind2 = ++zindex;
+  style_contents.data =
+    sel1 + " { z-index: " + ind1 + (imp1 ? "!important" :"") + " } " +
+    sel2 + " { z-index: " + ind2 + (imp2 ? "!important" :"") + " } ";
+  var result = cs.zIndex;
+  is(result, String((winning == 1) ? ind1 : ind2),
+     "cascading of " + style_contents.data);
+}
+
+// Test order, and order combined with !important
+do_test("div", false, "div", false, 2);
+do_test("div", false, "div", true, 2);
+do_test("div", true, "div", false, 1);
+do_test("div", true, "div", true, 2);
+
+// Test specificity on a single element
+do_test("div", false, "div.content_class", false, 2);
+do_test("div.content_class", false, "div", false, 1);
+
+// Test specificity across elements
+do_test("body#thebody div", false, "body div.content_class", false, 1);
+do_test("body div.content_class", false, "body#thebody div", false, 2);
+
+// Test specificity combined with !important
+do_test("div.content_class", false, "div", false, 1);
+do_test("div.content_class", true, "div", false, 1);
+do_test("div.content_class", false, "div", true, 2);
+do_test("div.content_class", true, "div", true, 1);
+
+function do_test_greater(sel1, sel2) {
+  do_test(sel1, false, sel2, false, 1);
+  do_test(sel2, false, sel1, false, 2);
+}
+
+function do_test_equal(sel1, sel2) {
+  do_test(sel1, false, sel2, false, 2);
+  do_test(sel2, false, sel1, false, 2);
+}
+
+// Test specificity of contents of :not()
+do_test_equal("div.content_class", "div:not(.wrong_class)");
+do_test_greater("div.content_class.content_class", "div.content_class");
+do_test_greater("div.content_class", "div");
+do_test_greater("div:not(.wrong_class)", "div");
+do_test_greater("div:not(.wrong_class):not(.wrong_class)",
+                "div:not(.wrong_class)");
+
+</script>
+</pre>
+</body>
+</html>
+

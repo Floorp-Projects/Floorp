@@ -1,0 +1,43 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/clang/clang.gni")
+import("//build/config/sanitizers/sanitizers.gni")
+import("//build/config/sysroot.gni")
+import("//build/toolchain/toolchain.gni")
+
+assert(is_posix)
+
+group("posix") {
+  visibility = [ "//:optimize_gn_gen" ]
+}
+
+# This is included by reference in the //build/config/compiler:runtime_library
+# config that is applied to all targets. It is here to separate out the logic
+# that is Posix-only. Please see that target for advice on what should go in
+# :runtime_library vs. :compiler.
+config("runtime_library") {
+  if (!is_mac && !is_ios && sysroot != "" && !build_with_mozilla) {
+    # Pass the sysroot to all C compiler variants, the assembler, and linker.
+    cflags = [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
+    asmflags = cflags
+    ldflags = cflags
+
+    # Need to get some linker flags out of the sysroot.
+    ld_paths = exec_script("sysroot_ld_path.py",
+                           [
+                             rebase_path("//build/linux/sysroot_ld_path.sh",
+                                         root_build_dir),
+                             rebase_path(sysroot),
+                           ],
+                           "list lines")
+    foreach(ld_path, ld_paths) {
+      ld_path = rebase_path(ld_path, root_build_dir)
+      ldflags += [
+        "-L" + ld_path,
+        "-Wl,-rpath-link=" + ld_path,
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+include protocol PTestIndirectProtocolParamManage;
+
+namespace mozilla {
+namespace _ipdltest {
+
+sync protocol PTestIndirectProtocolParamSecond {
+    manager PTestIndirectProtocolParamManage;
+both:
+    async __delete__();
+};
+
+}
+}

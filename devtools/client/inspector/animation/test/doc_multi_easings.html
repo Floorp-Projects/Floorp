@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      background-color: lime;
+      height: 50px;
+    }
+    </style>
+  </head>
+  <body>
+    <script>
+    "use strict";
+
+    function createAnimation(name, keyframes, effectEasing) {
+      const div = document.createElement("div");
+      div.classList.add(name);
+      document.body.appendChild(div);
+
+      const effect = {
+        duration: 100000,
+        fill: "forwards",
+      };
+
+      if (effectEasing) {
+        effect.easing = effectEasing;
+      }
+
+      div.animate(keyframes, effect);
+    }
+
+    createAnimation(
+      "no-easing",
+      [
+        { opacity: 1 },
+        { opacity: 0 },
+      ]
+    );
+
+    createAnimation(
+      "effect-easing",
+      [
+        { opacity: 1 },
+        { opacity: 0 },
+      ],
+      "steps(5, jump-none)"
+    );
+
+    createAnimation(
+      "keyframe-easing",
+      [
+        { opacity: 1, easing: "steps(2)" },
+        { opacity: 0 },
+      ]
+    );
+
+    createAnimation(
+      "both-easing",
+      [
+        { offset: 0, opacity: 1, easing: "steps(2)" },
+        { offset: 0, marginLeft: "0px", easing: "steps(1)" },
+        { marginLeft: "100px", opacity: 0 },
+      ],
+      "steps(10)"
+    );
+
+    createAnimation(
+      "narrow-keyframes",
+      [
+        { opacity: 0 },
+        { offset: 0.1, opacity: 1, easing: "steps(1)" },
+        { offset: 0.13, opacity: 0 },
+      ]
+    );
+
+    createAnimation(
+      "duplicate-keyframes",
+      [
+        { opacity: 0 },
+        { offset: 0.5, opacity: 1 },
+        { offset: 0.5, opacity: 0, easing: "steps(1)" },
+        { opacity: 1 },
+      ]
+    );
+
+    createAnimation(
+      "color-keyframes",
+      [
+        { color: "red", easing: "ease-in" },
+        { offset: 0.4, color: "blue", easing: "ease-out" },
+        { color: "lime" },
+      ]
+    );
+
+    createAnimation(
+      "jump-start",
+      [
+        { opacity: 1, easing: "steps(2, jump-start)" },
+        { opacity: 0 },
+      ],
+    );
+
+    createAnimation(
+      "jump-end",
+      [
+        { opacity: 1, easing: "steps(2, jump-end)" },
+        { opacity: 0 },
+      ],
+    );
+
+    createAnimation(
+      "jump-both",
+      [
+        { opacity: 1, easing: "steps(3, jump-both)" },
+        { opacity: 0 },
+      ],
+    );
+    </script>
+  </body>
+</html>

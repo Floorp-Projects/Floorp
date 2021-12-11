@@ -1,0 +1,240 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+typedef long AccessibleTextBoundary;
+
+interface nsIAccessible;
+interface nsIArray;
+interface nsIPersistentProperties;
+interface nsIAccessibleTextRange;
+
+[scriptable, builtinclass, uuid(a4cc7576-45bb-44c5-b347-d9cb3ca4de9f)]
+interface nsIAccessibleText : nsISupports
+{
+  // In parameters for character offsets:
+  //  -1 will be treated as the equal to the end of the text
+  //  -2 will be treated as the caret position
+  const int32_t TEXT_OFFSET_END_OF_TEXT = -1;
+  const int32_t TEXT_OFFSET_CARET       = -2;
+
+  const AccessibleTextBoundary BOUNDARY_CHAR = 0;
+  const AccessibleTextBoundary BOUNDARY_WORD_START = 1;
+  const AccessibleTextBoundary BOUNDARY_WORD_END = 2;
+  const AccessibleTextBoundary BOUNDARY_SENTENCE_START = 3; // don't use, deprecated
+  const AccessibleTextBoundary BOUNDARY_SENTENCE_END = 4;  // don't use, deprecated
+  const AccessibleTextBoundary BOUNDARY_LINE_START = 5;
+  const AccessibleTextBoundary BOUNDARY_LINE_END = 6;
+  const AccessibleTextBoundary BOUNDARY_PARAGRAPH = 7;
+
+  /**
+   * The current current caret offset.
+   * If set < 0 then caret will be placed  at the end of the text
+   */
+  attribute long caretOffset;
+
+  readonly attribute long characterCount;
+  readonly attribute long selectionCount;
+
+    /**
+      * String methods may need to return multibyte-encoded strings,
+      * since some locales can't be encoded using 16-bit chars.
+      * So the methods below might return UTF-16 strings, or they could
+      * return "string" values which are UTF-8.
+      */
+  AString getText (in long startOffset, in long endOffset);
+
+  AString getTextAfterOffset (in long offset,
+                              in AccessibleTextBoundary boundaryType,
+                              out long startOffset,
+                              out long endOffset);
+
+  AString getTextAtOffset (in long offset,
+                           in AccessibleTextBoundary boundaryType,
+                           out long startOffset,
+                           out long endOffset);
+
+  AString getTextBeforeOffset (in long offset,
+                               in AccessibleTextBoundary boundaryType,
+                               out long startOffset,
+                               out long endOffset);
+
+    /**
+      * It would be better to return an unsigned long here,
+      * to allow unicode chars > 16 bits
+      */
+  wchar getCharacterAtOffset (in long offset);
+
+  /**
+   * Get the accessible start/end offsets around the given offset,
+   * return the text attributes for this range of text.
+   *
+   * @param  includeDefAttrs   [in] points whether text attributes applied to
+   *                           the entire accessible should be included or not.
+   * @param  offset            [in] text offset
+   * @param  rangeStartOffset  [out] start offset of the range of text
+   * @param  rangeEndOffset    [out] end offset of the range of text
+   */
+  nsIPersistentProperties getTextAttributes(in boolean includeDefAttrs,
+                                            in long offset,
+                                            out long rangeStartOffset,
+                                            out long rangeEndOffset);
+
+  /**
+   * Return the text attributes that apply to the entire accessible.
+   */
+  readonly attribute nsIPersistentProperties defaultTextAttributes;
+
+  /**
+   * Returns the bounding box of the specified position.
+   *
+   * The virtual character after the last character of the represented text,
+   * i.e. the one at position length is a special case. It represents the
+   * current input position and will therefore typically be queried by AT more
+   * often than other positions. Because it does not represent an existing
+   * character its bounding box is defined in relation to preceding characters.
+   * It should be roughly equivalent to the bounding box of some character when
+   * inserted at the end of the text. Its height typically being the maximal
+   * height of all the characters in the text or the height of the preceding
+   * character, its width being at least one pixel so that the bounding box is
+   * not degenerate.
+   *
+   * @param offset - Index of the character for which to return its bounding
+   *                  box. The valid range is 0..length.
+   * @param x - X coordinate of the bounding box of the referenced character.
+   * @param y - Y coordinate of the bounding box of the referenced character.
+   * @param width - Width of the bounding box of the referenced character.
+   * @param height - Height of the bounding box of the referenced character.
+   * @param coordType - Specifies if the coordinates are relative to the screen
+   *                    or to the parent window (see constants declared in
+   *                    nsIAccessibleCoordinateType).
+  */
+  void getCharacterExtents (in long offset,
+                            out long x,
+                            out long y,
+                            out long width,
+                            out long height,
+                            in unsigned long coordType);
+
+  void getRangeExtents (in long startOffset,
+                        in long endOffset,
+                        out long x,
+                        out long y,
+                        out long width,
+                        out long height,
+                        in unsigned long coordType);
+
+  /**
+   * Get the text offset at the given point, or return -1
+   * if no character exists at that point
+   *
+   * @param x - The position's x value for which to look up the index of the
+   *            character that is rendered on to the display at that point.
+   * @param y - The position's y value for which to look up the index of the
+   *            character that is rendered on to the display at that point.
+   * @param coordType - Screen coordinates or window coordinates (see constants
+   *                    declared in nsIAccessibleCoordinateType).
+   * @return offset - Index of the character under the given point or -1 if
+   *                  the point is invalid or there is no character under
+   *                  the point.
+   */
+  long getOffsetAtPoint (in long x, in long y,
+                         in unsigned long coordType);
+
+  void getSelectionBounds (in long selectionNum,
+                           out long startOffset,
+                           out long endOffset);
+
+  /**
+   * Set the bounds for the given selection range.
+   * A reverse range where the start offset is larger than the end offset is
+   * acceptable. The caretOffset will be set to the endOffset argument.
+   */
+  void setSelectionBounds (in long selectionNum,
+                           in long startOffset,
+                           in long endOffset);
+
+  void addSelection (in long startOffset, in long endOffset);
+
+  void removeSelection (in long selectionNum);
+
+
+  /**
+   * Makes a specific part of string visible on screen.
+   *
+   * @param startIndex  0-based character offset
+   * @param endIndex    0-based character offset - the offset of the
+   *                    character just past the last character of the
+   *                    string
+   * @param scrollType  defines how to scroll (see nsIAccessibleScrollType for
+   *                    available constants)
+   */
+  void scrollSubstringTo(in long startIndex, in long endIndex,
+                         in unsigned long scrollType);
+
+  /**
+   * Moves the top left of a substring to a specified location.
+   *
+   * @param startIndex      0-based character offset
+   * @param endIndex        0-based character offset - the offset of the
+   *                        character just past the last character of
+   *                        the string
+   * @param coordinateType  specifies the coordinates origin (for available
+   *                        constants refer to nsIAccessibleCoordinateType)
+   * @param x               defines the x coordinate
+   * @param y               defines the y coordinate
+   */
+  void scrollSubstringToPoint(in long startIndex, in long endIndex,
+                              in unsigned long coordinateType,
+                              in long x, in long y);
+
+  /**
+   * Return a range that encloses this text control or otherwise the document
+   * this text accessible belongs to.
+   */
+  readonly attribute nsIAccessibleTextRange enclosingRange;
+
+  /**
+   * Return an array of disjoint ranges for selected text within the text control
+   * or otherwise the document this accessible belongs to.
+   */
+  readonly attribute nsIArray selectionRanges;
+
+  /**
+   * Return an array of disjoint ranges of visible text within the text control
+   * or otherwise the document this accessible belongs to.
+   */
+  readonly attribute nsIArray visibleRanges;
+
+  /**
+   * Return a range containing the given accessible.
+   */
+  nsIAccessibleTextRange getRangeByChild(in nsIAccessible child);
+
+  /**
+   * Return a range containing an accessible at the given point.
+   */
+  nsIAccessibleTextRange getRangeAtPoint(in long x, in long y);
+};
+
+/*
+ Assumptions:
+
+ Using wstring (UCS2) instead of string encoded in UTF-8.
+ Multibyte encodings (or at least potentially multi-byte
+ encodings) would be preferred for the reasons cited above.
+
+ The following methods will throw an exception on failure
+ (since not every text component will allow every operation):
+ setSelectionBounds, addSelection, removeSelection, setCaretOffset.
+
+ we assume that all text components support the idea of
+ a caret offset, whether visible or "virtual".  If this
+ isn't the case, caretOffset can be made readonly and
+ a setCaretOffset method provided which throws an exception
+ on failure (as with *selection methods above).
+*/

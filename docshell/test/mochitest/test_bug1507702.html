@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1507702
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1507702</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="icon" href="about:crashparent"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1507702">Mozilla Bug 1507702</a>
+<img src="about:crashparent">
+<img src="about:crashcontent">
+<iframe src="about:crashparent"></iframe>
+<iframe src="about:crashcontent"></iframe>
+<script>
+  let urls = ["about:crashparent", "about:crashcontent"];
+  async function testFetch() {
+    const url = urls.shift();
+    if (!url) {
+      return Promise.resolve();
+    }
+
+    let threw;
+    try {
+      await fetch(url);
+      threw = false;
+    } catch (e) {
+      threw = true;
+    }
+
+    ok(threw === true, "fetch should reject");
+    return testFetch();
+  }
+
+  document.body.onload = async () => {
+    for (const url of ["about:crashparent", "about:crashcontent"]) {
+      SimpleTest.doesThrow(() => {
+        top.location.href = url;
+      }, "navigation should throw");
+
+      SimpleTest.doesThrow(() => {
+        location.href = url;
+      }, "navigation should throw");
+    }
+
+    await testFetch();
+    SimpleTest.finish();
+  };
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

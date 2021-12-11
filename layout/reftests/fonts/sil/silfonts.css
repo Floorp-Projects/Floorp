@@ -1,0 +1,34 @@
+
+/* SIL fonts */
+
+/* Gentium - http://scripts.sil.org/gentium */
+/* Note: only regular and italic faces, no bold faces */
+
+@font-face {
+  font-family: Gentium;
+  src: url(GenR102.ttf);
+}
+
+@font-face {
+  font-family: Gentium;
+  src: url(GenI102.ttf);
+  font-style: italic;
+}  
+
+@font-face {
+  font-family: GentiumAlt;
+  src: url(GenAR102.ttf);
+}
+
+@font-face {
+  font-family: GentiumAlt;
+  src: url(GenAI102.ttf);
+  font-style: italic;
+}
+
+/* Scheherazade - http://scripts.sil.org/ArabicFonts */
+
+@font-face {
+  font-family: Scheherazade;
+  src: url(ScheherazadeRegOT.ttf) format("opentype");
+}  

@@ -1,0 +1,70 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.repo_update:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+
+job-defaults:
+    worker:
+        env:
+            DO_HSTS:
+                by-project:
+                    mozilla-(central|beta|esr.*): "1"
+                    default: ""
+            DO_HPKP:
+                by-project:
+                    mozilla-(central|beta|esr.*): "1"
+                    default: ""
+            DO_REMOTE_SETTINGS:
+                by-project:
+                    mozilla-(central|beta|release|esr.*): "1"
+                    default: ""
+            DO_SUFFIX_LIST:
+                by-project:
+                    mozilla-(central|beta|esr.*): "1"
+                    default: ""
+            USE_MOZILLA_CENTRAL:
+                by-project:
+                    mozilla-central: "1"
+                    default: ""
+
+
+jobs:
+    hsts-hpkp-blocklist:
+        name: periodic_file_update
+        description: HSTS, HPKP and remote settings update
+        run-on-projects: []  # Only run via cron
+        treeherder:
+            kind: build
+            platform: linux64/opt
+            symbol: pfu
+            tier: 1
+        worker-type: b-linux
+        worker:
+            implementation: docker-worker
+            os: linux
+            docker-image: {in-tree: periodic-updates}
+            max-run-time: 14400  # Takes up to 4 hours
+            env:
+                PRODUCT: firefox
+                REVIEWERS: "ryanvm"
+            command:
+                - /runme.sh
+            taskcluster-proxy: true
+            artifacts:
+                - name: 'public/build/nsSTSPreloadList.diff'
+                  path: '/home/worker/artifacts/nsSTSPreloadList.diff'
+                  type: file
+                - name: 'public/build/StaticHPKPins.h.diff'
+                  path: '/home/worker/artifacts/StaticHPKPins.h.diff'
+                  type: file
+                - name: 'public/build/remote-settings.diff'
+                  path: '/home/worker/artifacts/remote-settings.diff'
+                  type: file
+        scopes:
+            - secrets:get:project/releng/gecko/build/level-{level}/arc-phabricator-token

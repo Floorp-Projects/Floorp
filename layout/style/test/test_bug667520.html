@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=667520
+-->
+<head>
+  <title>Test for Bug 667520</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=667520">Mozilla Bug 667520</a>
+<p id="display">
+  <!-- important: we need a <span> as the second element child and then
+       non-span elements between that and the next </span> -->
+  <i></i>
+  <span id="2"></span>
+  <i></i>
+  <i></i>
+  <i></i>
+  <i></i>
+  <span id="7"></span>
+  <span id="8"></span>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 667520 **/
+var spans = $("display").querySelectorAll("span");
+is(spans.length, 3, "Should have 3 span kids");
+
+is($("display").querySelector("span:nth-child(3)"), null, "Third child is not span");
+is($("display").querySelector("span:nth-child(4)"), null, "Fourth child is not span");
+
+for (var i = 0; i < spans.length; ++i) {
+  var id = spans[i].id;
+  /* Important: need to include 'span' in that selector so we only match
+     nth-child against spans. */
+  var target = $("display").querySelector("span:nth-child("+id+")");
+  is(target, spans[i], "Unexpected element");
+  is(target.id, spans[i].id, "Unexpected id");
+}
+
+</script>
+</pre>
+</body>
+</html>

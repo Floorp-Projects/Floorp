@@ -1,0 +1,74 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# The removed-files.in file specifies files and directories to be removed during
+# an application update that are not automatically removed by the application
+# update process. The application update process handles the vast majority of
+# file and directory removals automatically so this file should not be used in
+# the vast majority of cases.
+
+# When to use removed-files.in file to remove files and directories:
+# * Empty directories that were accidentally added to the installation
+#   directory.
+# * Files and directories that were added to the installation directory after
+#   the build was completed (typically third party files). Under normal
+#   circumstances this should only be done after release drivers have approved
+#   the removal of these third party files.
+
+# If you are not sure whether a file or directory should be removed using the
+# removed-files.in file please contact a developer that works on application
+# update.
+
+# Note: the "distribution/" and "browser/extensions/" directories should never
+# be removed recursively since these directories are used by Partner builds and
+# custom installations.
+
+# To specify a file to be removed add the path to the file.
+# * If the file doesn't exist the update will succeed.
+# * If the file exists and can't be removed (e.g. the file is locked) the
+#   update will fail.
+#
+# Example: path/to/file
+
+# To specify a directory to be removed only if it is empty add the path to the
+# directory with a trailing forward slash.
+# * If the directory doesn't exist the update will succeed.
+# * If the directory can't be removed (e.g. the directory is locked, contains
+#   files, etc.) the update will succeed.
+#
+# Example: path/to/dir/
+
+# To specify a directory that should be recursively removed add the path to the
+# directory with a trailing forward slash and "*".
+# * If the directory doesn't exist the update will succeed.
+# * If all of the files the directory contains can be removed but the directory
+#   or a subdirectory can't be removed (e.g. the directory is locked) the update
+#   will succeed.
+# * If a file within the directory can't be removed the update will fail.
+#
+# Example: path/to/dir/*
+
+# Due to Apple Mac OS X packaging requirements files that are in the same
+# directory on other platforms must be located in different directories on
+# Mac OS X. The following defines allow specifying the Mac OS X bundle
+# location and will use an empty string on other platforms.
+#
+# @DIR_MACOS@
+# Equals Contents/MacOS/ on Mac OS X and is an empty string on other platforms.
+#
+# @DIR_RESOURCES@
+# Equals Contents/Resources/ on Mac OS X and is an empty string on other
+# platforms.
+
+# An update watershed was required to update to Firefox 56 for LZMA and SHA384
+# support. This made it possible to delete all of the removal instructions in
+# this file.
+
+# Remove the toplevel chrome.manifest added by bug 1295542.
+#ifndef MOZ_GTK
+  @DIR_MACOS@chrome.manifest
+  #ifdef XP_MACOSX
+    @DIR_RESOURCES@chrome.manifest
+  #endif
+#endif

@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=558788
+-->
+<head>
+  <title>Test for Bug 558788</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=558788">Mozilla Bug 558788</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 558788 **/
+
+var validElementsDescription = [
+  /* element type value required pattern maxlength minlength */
+  /* <input> */
+  [ "input", null, null, null, null, null, null ],
+  /* <input required value='foo'> */
+  [ "input", null, "foo", true, null, null, null ],
+  /* <input type='email'> */
+  [ "input", "email", null, null, null, null, null ],
+  /* <input type='email' value='foo@mozilla.org'> */
+  [ "input", "email", "foo@mozilla.org", null, null, null, null ],
+  /* <input type='url'> */
+  [ "input", "url", null, null, null, null, null ],
+  /* <input type='url' value='http://mozilla.org'> */
+  [ "input", "url", "http://mozilla.org", null, null, null, null ],
+  /* <input pattern='\\d\\d'> */
+  [ "input", null, null, null, "\\d\\d", null, null ],
+  /* <input pattern='\\d\\d' value='42'> */
+  [ "input", null, "42", null, "\\d\\d", null, null ],
+  /* <input maxlength='3'> - still valid until user interaction */
+  [ "input", null, null, null, null, "3", null ],
+  /* <input maxlength='3'> */
+  [ "input", null, "fooo", null, null, "3", null ],
+  /* <input minlength='3'> - still valid until user interaction */
+  [ "input", null, null, null, null, null, "3" ],
+  /* <input minlength='3'> */
+  [ "input", null, "fo", null, null, null, "3" ],
+  /* <textarea></textarea> */
+  [ "textarea", null, null, null, null, null, null ],
+  /* <textarea required>foo</textarea> */
+  [ "textarea", null, "foo", true, null, null, null ]
+];
+
+var invalidElementsDescription = [
+  /* element type value required pattern maxlength minlength valid-value */
+  /* <input required> */
+  [ "input", null, null, true, null, null, null, "foo" ],
+  /* <input type='email' value='foo'> */
+  [ "input", "email", "foo", null, null, null, null, "foo@mozilla.org" ],
+  /* <input type='url' value='foo'> */
+  [ "input", "url", "foo", null, null, null, null, "http://mozilla.org" ],
+  /* <input pattern='\\d\\d' value='foo'> */
+  [ "input", null, "foo", null, "\\d\\d", null, null, "42" ],
+  /* <input maxlength='3'> - still valid until user interaction */
+  [ "input", null, "foooo", null, null, "3", null, "foo" ],
+  /* <input minlength='3'> - still valid until user interaction */
+  [ "input", null, "foo", null, null, null, "3", "foo" ],
+  /* <textarea required></textarea> */
+  [ "textarea", null, null, true, null, null, null, "foo" ],
+];
+
+var validElements = [];
+var invalidElements = [];
+
+function appendElements(aElementsDesc, aElements)
+{
+  var content = document.getElementById('content');
+  var length = aElementsDesc.length;
+
+  for (var i=0; i<length; ++i) {
+    var e = document.createElement(aElementsDesc[i][0]);
+    if (aElementsDesc[i][1]) {
+      e.type = aElementsDesc[i][1];
+    }
+    if (aElementsDesc[i][2]) {
+      e.value = aElementsDesc[i][2];
+    }
+    if (aElementsDesc[i][3]) {
+      e.required = true;
+    }
+    if (aElementsDesc[i][4]) {
+      e.pattern = aElementsDesc[i][4];
+    }
+    if (aElementsDesc[i][5]) {
+      e.maxLength = aElementsDesc[i][5];
+    }
+    if (aElementsDesc[i][6]) {
+      e.minLength = aElementsDesc[i][6];
+    }
+
+    content.appendChild(e);
+
+    // Adding the element to the appropriate list.
+    aElements.push(e);
+  }
+}
+
+function compareArrayWithSelector(aElements, aSelector)
+{
+  var aSelectorElements = document.querySelectorAll(aSelector);
+
+  is(aSelectorElements.length, aElements.length,
+     aSelector + " selector should return the correct number of elements");
+
+  if (aSelectorElements.length != aElements.length) {
+    return;
+  }
+
+  var length = aElements.length;
+  for (var i=0; i<length; ++i) {
+    is(aSelectorElements[i], aElements[i],
+       aSelector + " should return the correct elements");
+  }
+}
+
+function makeMinMaxLengthElementsActuallyInvalid(aInvalidElements,
+                                                 aInvalidElementsDesc)
+{
+  // min/maxlength elements are not invalid until user edits them
+  var length = aInvalidElementsDesc.length;
+
+  for (var i=0; i<length; ++i) {
+    var e = aInvalidElements[i];
+    if (aInvalidElementsDesc[i][5]) { // maxlength
+      e.focus();
+      synthesizeKey("KEY_Backspace");
+    } else if (aInvalidElementsDesc[i][6]) { // minlength
+      e.focus();
+      synthesizeKey("KEY_Backspace");
+    }
+  }
+}
+
+function makeInvalidElementsValid(aInvalidElements,
+                                  aInvalidElementsDesc,
+                                  aValidElements)
+{
+  var length = aInvalidElementsDesc.length;
+
+  for (var i=0; i<length; ++i) {
+    var e = aInvalidElements.shift();
+    e.value = aInvalidElementsDesc[i][7];
+    aValidElements.push(e);
+  }
+}
+
+appendElements(validElementsDescription, validElements);
+appendElements(invalidElementsDescription, invalidElements);
+
+makeMinMaxLengthElementsActuallyInvalid(invalidElements, invalidElementsDescription);
+
+compareArrayWithSelector(validElements, ":valid");
+compareArrayWithSelector(invalidElements, ":invalid");
+
+makeInvalidElementsValid(invalidElements, invalidElementsDescription,
+                         validElements);
+
+compareArrayWithSelector(validElements, ":valid");
+compareArrayWithSelector(invalidElements, ":invalid");
+
+</script>
+</pre>
+</body>
+</html>

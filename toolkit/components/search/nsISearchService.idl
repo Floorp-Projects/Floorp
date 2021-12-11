@@ -1,0 +1,509 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIInputStream;
+
+[scriptable, uuid(5799251f-5b55-4df7-a9e7-0c27812c469a)]
+interface nsISearchSubmission : nsISupports
+{
+  /**
+   * The POST data associated with a search submission, wrapped in a MIME
+   * input stream. May be null.
+   */
+  readonly attribute nsIInputStream postData;
+
+  /**
+   * The URI to submit a search to.
+   */
+  readonly attribute nsIURI uri;
+};
+
+[scriptable, uuid(620bd920-0491-48c8-99a8-d6047e64802d)]
+interface nsISearchEngine : nsISupports
+{
+  /**
+   * Gets a nsISearchSubmission object that contains information about what to
+   * send to the search engine, including the URI and postData, if applicable.
+   *
+   * @param  data
+   *         Data to add to the submission object.
+   *         i.e. the search terms.
+   *
+   * @param  responseType [optional]
+   *         The MIME type that we'd like to receive in response
+   *         to this submission.  If null, will default to "text/html".
+   *
+   * @param purpose [optional]
+   *        A string meant to indicate the context of the search request. This
+   *        allows the search service to provide a different nsISearchSubmission
+   *        depending on e.g. where the search is triggered in the UI.
+   *
+   * @returns A nsISearchSubmission object that contains information about what
+   *          to send to the search engine.  If no submission can be
+   *          obtained for the given responseType, returns null.
+   */
+  nsISearchSubmission getSubmission(in AString data,
+                                    [optional] in AString responseType,
+                                    [optional] in AString purpose);
+
+  /**
+   * Returns the name of the parameter used for the search terms for a submission
+   * URL of type `SearchUtils.URL_TYPE.SEARCH`.
+   *
+   * @returns A string which is the name of the parameter, or empty string
+   *          if no parameter cannot be found or is not supported (e.g. POST).
+   */
+  readonly attribute AString searchUrlQueryParamName;
+
+  /**
+   * Returns the public suffix for the submission URL of type
+   * `SearchUtils.URL_TYPE.SEARCH`.
+   *
+   * @returns A string which is a known public suffix, or empty string
+   *          if one cannot be found.
+   */
+  readonly attribute AString searchUrlPublicSuffix;
+
+  /**
+   * Determines whether the engine can return responses in the given
+   * MIME type.  Returns true if the engine spec has a URL with the
+   * given responseType, false otherwise.
+   *
+   * @param responseType
+   *        The MIME type to check for
+   */
+  boolean supportsResponseType(in AString responseType);
+
+  /**
+   * Returns a string with the URL to an engine's icon matching both width and
+   * height. Returns null if icon with specified dimensions is not found.
+   *
+   * @param width
+   *        Width of the requested icon.
+   * @param height
+   *        Height of the requested icon.
+   */
+  AString getIconURLBySize(in long width, in long height);
+
+  /**
+   * Gets an array of all available icons. Each entry is an object with
+   * width, height and url properties. width and height are numeric and
+   * represent the icon's dimensions. url is a string with the URL for
+   * the icon.
+   */
+  jsval getIcons();
+
+  /**
+   * Opens a speculative connection to the engine's search URI
+   * (and suggest URI, if different) to reduce request latency
+   *
+   * @param  options
+   *         An object that must contain the following fields:
+   *         {window} the content window for the window performing the search
+   *         {originAttributes} the originAttributes for performing the search
+   *
+   * @throws NS_ERROR_INVALID_ARG if options is omitted or lacks required
+   *         elemeents
+   */
+  void speculativeConnect(in jsval options);
+
+  /**
+   * An optional shortcut alias for the engine.
+   * When not an empty string, this is a unique identifier.
+   */
+  attribute AString alias;
+
+  /**
+   * An array of aliases including the user defined alias and
+   * ones specified by the webextensions keywords field.
+   */
+  readonly attribute Array<AString> aliases;
+
+  /**
+   * A text description describing the engine.
+   */
+  readonly attribute AString description;
+
+  /**
+   * Whether the engine should be hidden from the user.
+   */
+  attribute boolean hidden;
+
+  /**
+   * A nsIURI corresponding to the engine's icon, stored locally. May be null.
+   */
+  readonly attribute nsIURI iconURI;
+
+  /**
+   * The display name of the search engine. This is a unique identifier.
+   */
+  readonly attribute AString name;
+
+  /**
+   * A URL string pointing to the engine's search form.
+   */
+  readonly attribute AString searchForm;
+
+  /**
+   * A boolean to indicate if we should send an attribution request to Mozilla's
+   * server.
+   */
+  readonly attribute boolean sendAttributionRequest;
+
+  /**
+   * The identifier to use for this engine when submitting to telemetry.
+   */
+  readonly attribute AString telemetryId;
+
+  /**
+   * An optional unique identifier for this search engine within the context of
+   * the distribution, as provided by the distributing entity.
+   */
+  readonly attribute AString identifier;
+
+  /**
+   * Whether or not this engine is provided by the application, e.g. it is
+   * in the list of configured search engines, or provided by a distribution
+   * set-up.
+   */
+  readonly attribute boolean isAppProvided;
+
+  /**
+   * Whether or not this engine is a "general" search engine, e.g. is it for
+   * generally searching the web, or does it have a specific purpose like
+   * shopping.
+   */
+  readonly attribute boolean isGeneralPurposeEngine;
+
+  /**
+   * Gets a string representing the hostname from which search results for a
+   * given responseType are returned.  This can be specified as an url attribute
+   * in the engine description file, but will default to host from the <Url>'s
+   * template otherwise.
+   *
+   * @param  responseType [optional]
+   *         The MIME type to get resultDomain for.  Defaults to "text/html".
+   *
+   * @return the resultDomain for the given responseType.
+   */
+  AString getResultDomain([optional] in AString responseType);
+};
+
+[scriptable, uuid(0dc93e51-a7bf-4a16-862d-4b3469ff6206)]
+interface nsISearchParseSubmissionResult : nsISupports
+{
+  /**
+   * The search engine associated with the URL passed in to
+   * nsISearchEngine::parseSubmissionURL, or null if the URL does not represent
+   * a search submission.
+   */
+  readonly attribute nsISearchEngine engine;
+
+  /**
+   * String containing the sought terms.  This can be an empty string in case no
+   * terms were specified or the URL does not represent a search submission.
+   */
+  readonly attribute AString terms;
+
+  /**
+   * The name of the query parameter used by `engine` for queries. E.g. "q".
+   */
+  readonly attribute AString termsParameterName;
+
+  /**
+   * The offset of the string |terms| in the URL passed in to
+   * nsISearchEngine::parseSubmissionURL, or -1 if the URL does not represent
+   * a search submission.
+   */
+  readonly attribute long termsOffset;
+
+  /**
+   * The length of the |terms| in the original encoding of the URL passed in to
+   * nsISearchEngine::parseSubmissionURL. If the search term in the original
+   * URL is encoded then this will be bigger than |terms.length|.
+   */
+  readonly attribute long termsLength;
+};
+
+[scriptable, uuid(0301834b-2630-440e-8b98-db8dc55f34b9)]
+interface nsISearchService : nsISupports
+{
+  const unsigned long ERROR_DOWNLOAD_FAILURE = 0x1;
+  const unsigned long ERROR_DUPLICATE_ENGINE = 0x2;
+  const unsigned long ERROR_ENGINE_CORRUPTED = 0x3;
+
+  /**
+   * Start asynchronous initialization.
+   *
+   * The promise is resolved once initialization is complete, which may be
+   * immediately, if initialization has already been completed by some previous
+   * call to this method.
+   * This method should only be called when you need or want to wait for the
+   * full initialization of the search service.
+   */
+  Promise init();
+
+  /**
+   * Determine whether initialization has been completed.
+   *
+   * Clients of the service can use this attribute to quickly determine whether
+   * initialization is complete, and decide to trigger some immediate treatment,
+   * to launch asynchronous initialization or to bailout.
+   *
+   * Note that this attribute does not indicate that initialization has succeeded.
+   *
+   * @return |true| if the search service is now initialized, |false| if
+   * initialization has not been triggered yet.
+   */
+  readonly attribute bool isInitialized;
+
+  /**
+   * Runs background checks; Designed to be run on idle.
+   */
+  Promise runBackgroundChecks();
+
+  /**
+   * Resets the default engine to its original value.
+   */
+  Promise resetToOriginalDefaultEngine();
+
+  /**
+   * Adds a new Open Search engine from the file at the supplied URI.
+   *
+   * @param engineURL
+   *        The URL to the search engine's description file.
+   *
+   * @param iconURL
+   *        A URL string to an icon file to be used as the search engine's
+   *        icon. This value may be overridden by an icon specified in the
+   *        engine description file.
+   *
+   * @throws NS_ERROR_FAILURE if the description file cannot be successfully
+   *         loaded.
+   */
+  Promise addOpenSearchEngine(in AString engineURL, in AString iconURL);
+
+  /**
+   * Adds a new search engine for enterprises.
+   *
+   * @param details
+   *        An object that simulates the WebExtension manifest structure:
+   *
+   *        {iconURL} Optional
+   *        {description} Optional
+   *        {chrome_settings_overrides} This should contain a {search_provider}
+   *                                    structure that mimics the WebExtension
+   *                                    manifest structure.
+   */
+  Promise addPolicyEngine(in jsval details);
+
+  /**
+   * Adds a new search engine defined by the user.
+   *
+   * @param name
+   *        The name of the engine.
+   * @param url
+   *        The url of the engine with %s denoting where to
+   *        replace the search term.
+   * @param alias [optional]
+   *        The alias to refer to the engine.
+   */
+  Promise addUserEngine(in AString name,
+                        in AString url,
+                        [optional] in AString alias);
+
+  /**
+   * Adds search providers to the search service.  If the search
+   * service is configured to load multiple locales for the extension,
+   * it may load more than one search engine. If called directly
+   * ensure the extension has been initialised.
+   *
+   * @param extension
+   *        The extension to load from.
+   * @returns Promise that resolves when finished.
+   */
+  Promise addEnginesFromExtension(in jsval extension);
+
+  /**
+   * Un-hides all engines in the set of engines returned by getAppProvidedEngines.
+   */
+  void restoreDefaultEngines();
+
+  /**
+   * Returns an engine with the specified alias.
+   *
+   * @param   alias
+   *          The search engine's alias.
+   * @returns The corresponding nsISearchEngine object, or null if it doesn't
+   *          exist.
+   */
+  Promise getEngineByAlias(in AString alias);
+
+  /**
+   * Returns an engine with the specified name.
+   *
+   * @param   aEngineName
+   *          The name of the engine.
+   * @returns The corresponding nsISearchEngine object, or null if it doesn't
+   *          exist.
+   */
+  nsISearchEngine getEngineByName(in AString aEngineName);
+
+  /**
+   * Returns an array of all installed search engines.
+   * The array is sorted either to the user requirements or the default order.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  Promise getEngines();
+
+  /**
+   * Returns an array of all installed search engines whose hidden attribute is
+   * false.
+   * The array is sorted either to the user requirements or the default order.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  Promise getVisibleEngines();
+
+  /**
+   * Returns an array of all default search engines. This includes all loaded
+   * engines that aren't in the user's profile directory.
+   * The array is sorted to the default order.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  Promise getAppProvidedEngines();
+
+  /**
+   * Returns an array of search engines installed by a given extension.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  Promise getEnginesByExtensionID(in AString extensionID);
+
+  /**
+   * Moves a visible search engine.
+   *
+   * @param  engine
+   *         The engine to move.
+   * @param  newIndex
+   *         The engine's new index in the set of visible engines.
+   *
+   * @throws NS_ERROR_FAILURE if newIndex is out of bounds, or if engine is
+   *         hidden.
+   */
+  Promise moveEngine(in nsISearchEngine engine, in long newIndex);
+
+  /**
+   * Removes the search engine. If the search engine is installed in a global
+   * location, this will just hide the engine. If the engine is in the user's
+   * profile directory, it will be removed from disk.
+   *
+   * @param  engine
+   *         The engine to remove.
+   */
+  Promise removeEngine(in nsISearchEngine engine);
+
+  /**
+   * Notify nsSearchService that an extension has been removed. Removes any
+   * engines that are associated with that extension.
+   *
+   * @param  id
+   *         The id of the extension.
+   */
+  Promise removeWebExtensionEngine(in AString id);
+
+  /**
+   * The original Engine object that is the default for this region,
+   * ignoring changes the user may have subsequently made.
+   */
+  readonly attribute nsISearchEngine originalDefaultEngine;
+
+  /**
+   * The original Engine object that is the default for this region when in
+   * private browsing mode, ignoring changes the user may have subsequently made.
+   */
+  readonly attribute nsISearchEngine originalPrivateDefaultEngine;
+
+  /**
+   * The currently active search engine.
+   * Unless the application doesn't ship any search plugin, this should never
+   * be null. If the currently active engine is removed, this attribute will
+   * fallback first to the original default engine if it's not hidden, then to
+   * the first visible engine, and as a last resort it will unhide the original
+   * default engine.
+   */
+  attribute nsISearchEngine defaultEngine;
+
+  Promise getDefault();
+  Promise setDefault(in nsISearchEngine engine);
+
+  /**
+   * The currently active search engine for private browsing mode.
+   * @see defaultEngine.
+   */
+  attribute nsISearchEngine defaultPrivateEngine;
+
+  Promise getDefaultPrivate();
+  Promise setDefaultPrivate(in nsISearchEngine engine);
+
+  /**
+   * Allows the add-on manager to discover if a WebExtension based search engine
+   * may change the default to an application provided search engine.
+   * If that WebExtension is on the allow list, then it will override the
+   * built-in engine's urls and parameters.
+   *
+   *  @param extension
+   *        The extension to load from.
+   *  @returns An object with two booleans:
+   *        - canChangeToAppProvided: indicates if the WebExtension engine may
+   *            set the named engine as default e.g. it is application provided.
+   *        - canInstallEngine: indicates if the WebExtension engine may be
+   *            installed, e.g. it is not an app-provided engine.
+   */
+  Promise maybeSetAndOverrideDefault(in jsval extension);
+
+  /**
+   * Gets a representation of the default engine in an anonymized JSON
+   * string suitable for recording in the Telemetry environment.
+   *
+   * @return {object} result
+   *   contains anonymized info about the default engine(s).
+   * @return {string} result.defaultSearchEngine
+   *   contains the telemetry id of the default engine.
+   * @return {object} result.defaultSearchEngineData
+   *   contains information about the default engine:
+   *     name, loadPath, original submissionURL
+   * @return {string} [result.defaultPrivateSearchEngine]
+   *   only returned if the preference for having a separate engine in private
+   *   mode is turned on.
+   *   contains the telemetry id of the default engine for private browsing mode.
+   * @return {object} [result.defaultPrivateSearchEngineData]
+   *   only returned if the preference for having a separate engine in private
+   *   mode is turned on.
+   *   contains information about the default engine for private browsing mode:
+   *     name, loadPath, original submissionURL
+   */
+  Promise getDefaultEngineInfo();
+
+  /**
+   * Determines if the provided URL represents results from a search engine, and
+   * provides details about the match.
+   *
+   * The lookup mechanism checks whether the domain name and path of the
+   * provided HTTP or HTTPS URL matches one of the known values for the visible
+   * search engines.  The match does not depend on which of the schemes is used.
+   * The expected URI parameter for the search terms must exist in the query
+   * string, but other parameters are ignored.
+   *
+   * @param url
+   *        String containing the URL to parse, for example
+   *        "https://www.google.com/search?q=terms".
+   */
+  nsISearchParseSubmissionResult parseSubmissionURL(in AString url);
+};

@@ -1,0 +1,187 @@
+<html>
+
+<head>
+  <title>Elements with CSS generated content</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    .gentext:before {
+      content: "START"
+    }
+    .gentext:after {
+      content: "END"
+    }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+    // //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Insert new node with CSS generated content style applied to container.
+     */
+    function insertNodeHavingGenContent(aContainerID) {
+      this.containerNode = getNode(aContainerID);
+      this.container = getAccessible(this.containerNode);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getFirstChild, this.container),
+        new invokerChecker(EVENT_REORDER, this.container),
+      ];
+
+      this.invoke = function insertNodeHavingGenContent_invoke() {
+        var node = document.createElement("div");
+        node.textContent = "text";
+        node.setAttribute("class", "gentext");
+        this.containerNode.appendChild(node);
+      };
+
+      this.finalCheck = function insertNodeHavingGenContent_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { SECTION: [ // inserted node
+              { STATICTEXT: [] }, // :before
+              { TEXT_LEAF: [] }, // primary text
+              { STATICTEXT: [] }, // :after
+            ] },
+          ] };
+        testAccessibleTree(this.container, accTree);
+      };
+
+      this.getID = function insertNodeHavingGenContent_getID() {
+        return "insert node having generated content to " + prettyName(aContainerID);
+      };
+    }
+
+    /**
+     * Add CSS generated content to the given node contained by container node.
+     */
+    function addGenContent(aContainerID, aNodeID) {
+      this.container = getAccessible(aContainerID);
+      this.nodeAcc = getAccessible(aNodeID);
+      this.node = getNode(aNodeID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getFirstChild, this.nodeAcc),
+        new invokerChecker(EVENT_SHOW, getLastChild, this.nodeAcc),
+        new invokerChecker(EVENT_REORDER, this.nodeAcc),
+      ];
+
+      this.invoke = function addGenContent_invoke() {
+        this.node.classList.add("gentext");
+      };
+
+      this.finalCheck = function insertNodeHavingGenContent_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { SECTION: [ // inserted node
+              { STATICTEXT: [] }, // :before
+              { TEXT_LEAF: [] }, // primary text
+              { STATICTEXT: [] }, // :after
+            ] },
+          ] };
+        testAccessibleTree(this.container, accTree);
+      };
+
+      this.getID = function addGenContent_getID() {
+        return "add generated content to" + prettyName(aNodeID);
+      };
+    }
+
+    /**
+     * Remove CSS generated content from the given node contained by container node.
+     */
+    function removeGenContent(aContainerID, aNodeID) {
+      this.container = getAccessible(aContainerID);
+      this.nodeAcc = getAccessible(aNodeID);
+      this.node = getNode(aNodeID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.nodeAcc.lastChild),
+        new invokerChecker(EVENT_HIDE, this.nodeAcc.firstChild),
+        new invokerChecker(EVENT_REORDER, this.nodeAcc),
+      ];
+
+      this.invoke = function removeGenContent_invoke() {
+        this.node.classList.remove("gentext");
+      };
+
+      this.finalCheck = function removeGenContent_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { SECTION: [ // inserted node
+              { TEXT_LEAF: [] }, // primary text
+            ] },
+          ] };
+        testAccessibleTree(this.container, accTree);
+      };
+
+      this.getID = function addGenContent_getID() {
+        return "remove generated content from" + prettyName(aNodeID);
+      };
+    }
+    /**
+     * Target getters.
+     */
+    function getFirstChild(aAcc) {
+      try { return aAcc.firstChild; } catch (e) { return null; }
+    }
+
+    function getLastChild(aAcc) {
+      try { return aAcc.lastChild; } catch (e) { return null; }
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+    // //////////////////////////////////////////////////////////////////////////
+
+    var gQueue = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new insertNodeHavingGenContent("container1"));
+      gQueue.push(new addGenContent("container2", "container2_child"));
+      gQueue.push(new removeGenContent("container3", "container3_child"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=646350"
+     title="Add a test for dynamic chnages of CSS generated content">
+    Mozilla Bug 646350</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div id="container1"></div>
+  <div id="container2"><div id="container2_child">text</div></div>
+  <div id="container3"><div id="container3_child" class="gentext">text</div></div>
+</body>
+</html>

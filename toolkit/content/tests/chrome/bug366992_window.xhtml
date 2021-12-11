@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="366992 test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="onLoad();"
+        width="600"
+        height="600"
+        title="366992 test">
+
+  <commandset id="editMenuCommands">
+    <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select"
+                oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+    <commandset id="editMenuCommandSetUndo" commandupdater="true" events="undo"
+                oncommandupdate="goUpdateUndoEditMenuItems()"/>
+    <commandset id="editMenuCommandSetPaste" commandupdater="true" events="clipboard"
+                oncommandupdate="goUpdatePasteMenuItems()"/>
+    <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')"/>
+    <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')"/>
+    <command id="cmd_cut" oncommand="goDoCommand('cmd_cut')"/>
+    <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')"/>
+    <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')"/>
+    <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')"/>
+    <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+    <command id="cmd_switchTextDirection" oncommand="goDoCommand('cmd_switchTextDirection');"/>
+  </commandset>
+
+  <script type="application/javascript"
+          src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/editMenuOverlay.js"/>
+  <script type="application/javascript"><![CDATA[
+    // Without the fix for bug 366992, the delete command would be enabled
+    // for the input even though the input's controller for this command
+    // disables it.
+    var gShouldNotBeReachedController = {
+      supportsCommand(aCommand) {
+        return aCommand == "cmd_delete";
+      },
+      isCommandEnabled(aCommand) {
+        return aCommand == "cmd_delete";
+      },
+      doCommand(aCommand) { }
+    }
+
+    function ok(condition, message) {
+      window.arguments[0].SimpleTest.ok(condition, message);
+    }
+    function finish() {
+      window.controllers.removeController(gShouldNotBeReachedController);
+      window.close();
+      window.arguments[0].SimpleTest.finish();
+    }
+
+    function onLoad() {
+      document.getElementById("input").focus();
+      var deleteDisabled = document.getElementById("cmd_delete")
+                                   .getAttribute("disabled") == "true";
+      ok(deleteDisabled,
+         "cmd_delete should be disabled when the empty input is focused");
+      finish();
+    }
+
+    window.controllers.appendController(gShouldNotBeReachedController);
+  ]]></script>
+
+  <html:input id="input"/>
+</window>

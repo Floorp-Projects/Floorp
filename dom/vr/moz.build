@@ -1,0 +1,67 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "WebVR")
+
+EXPORTS.mozilla.dom += [
+    "VRDisplay.h",
+    "VRDisplayEvent.h",
+    "VREventObserver.h",
+    "VRServiceTest.h",
+    "XRBoundedReferenceSpace.h",
+    "XRFrame.h",
+    "XRInputSource.h",
+    "XRInputSourceArray.h",
+    "XRNativeOrigin.h",
+    "XRPermissionRequest.h",
+    "XRPose.h",
+    "XRReferenceSpace.h",
+    "XRRenderState.h",
+    "XRRigidTransform.h",
+    "XRSession.h",
+    "XRSpace.h",
+    "XRSystem.h",
+    "XRView.h",
+    "XRViewerPose.h",
+    "XRViewport.h",
+]
+
+UNIFIED_SOURCES = [
+    "VRDisplay.cpp",
+    "VRDisplayEvent.cpp",
+    "VREventObserver.cpp",
+    "VRServiceTest.cpp",
+    "XRBoundedReferenceSpace.cpp",
+    "XRFrame.cpp",
+    "XRInputSource.cpp",
+    "XRInputSourceArray.cpp",
+    "XRInputSpace.cpp",
+    "XRNativeOriginFixed.cpp",
+    "XRNativeOriginLocal.cpp",
+    "XRNativeOriginLocalFloor.cpp",
+    "XRNativeOriginTracker.cpp",
+    "XRNativeOriginViewer.cpp",
+    "XRPermissionRequest.cpp",
+    "XRPose.cpp",
+    "XRReferenceSpace.cpp",
+    "XRRenderState.cpp",
+    "XRRigidTransform.cpp",
+    "XRSession.cpp",
+    "XRSpace.cpp",
+    "XRSystem.cpp",
+    "XRView.cpp",
+    "XRViewerPose.cpp",
+    "XRViewport.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += ["/dom/base"]
+
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+REFTEST_MANIFESTS += ["test/reftest/reftest.list"]

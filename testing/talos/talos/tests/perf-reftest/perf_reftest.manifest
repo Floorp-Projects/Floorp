@@ -1,0 +1,25 @@
+# base_vs_ref is set in test.py for this test, so each of these lines is the base vs ref test pag
+# both pages are run and then the results compared, the ultimate reported results are the comparisons.
+# Each line is reported as a subtest like the other talos tests that have multiple lines of URLs.
+& http://localhost/tests/perf-reftest/bloom-basic.html, http://localhost/tests/perf-reftest/bloom-basic-ref.html
+& http://localhost/tests/perf-reftest/bloom-basic-2.html, http://localhost/tests/perf-reftest/bloom-basic-ref.html
+& http://localhost/tests/perf-reftest/coalesce-1.html, http://localhost/tests/perf-reftest/coalesce-ref.html
+& http://localhost/tests/perf-reftest/coalesce-2.html, http://localhost/tests/perf-reftest/coalesce-ref.html
+& http://localhost/tests/perf-reftest/style-sharing.html, http://localhost/tests/perf-reftest/style-sharing-ref.html
+& http://localhost/tests/perf-reftest/style-sharing-style-attr.html, http://localhost/tests/perf-reftest/style-sharing-ref.html
+& http://localhost/tests/perf-reftest/display-none-1.html, http://localhost/tests/perf-reftest/display-none-1-ref.html
+& http://localhost/tests/perf-reftest/nth-index-1.html, http://localhost/tests/perf-reftest/nth-index-ref.html
+& http://localhost/tests/perf-reftest/nth-index-2.html, http://localhost/tests/perf-reftest/nth-index-ref.html
+& http://localhost/tests/perf-reftest/some-descendants-1.html, http://localhost/tests/perf-reftest/some-descendants-1-ref.html
+& http://localhost/tests/perf-reftest/only-children-1.html, http://localhost/tests/perf-reftest/only-children-ref.html
+& http://localhost/tests/perf-reftest/dep-check-1.html, http://localhost/tests/perf-reftest/dep-check-1-ref.html
+& http://localhost/tests/perf-reftest/slow-selector-1.html, http://localhost/tests/perf-reftest/slow-selector-1-ref.html
+& http://localhost/tests/perf-reftest/slow-selector-2.html, http://localhost/tests/perf-reftest/slow-selector-2-ref.html
+& http://localhost/tests/perf-reftest/style-attr-1.html, http://localhost/tests/perf-reftest/style-attr-1-ref.html
+& http://localhost/tests/perf-reftest/stop-cascade-1.html, http://localhost/tests/perf-reftest/stop-cascade-ref.html
+& http://localhost/tests/perf-reftest/stop-cascade-2.html, http://localhost/tests/perf-reftest/stop-cascade-ref.html
+
+& http://localhost/tests/perf-reftest/bidi-resolution-1.html, http://localhost/tests/perf-reftest/bidi-resolution-1-ref.html
+
+& http://localhost/tests/perf-reftest/recompute-position-vertical-lr.html, http://localhost/tests/perf-reftest/recompute-position-horizontal-tb.html
+& http://localhost/tests/perf-reftest/recompute-position-vertical-rl.html, http://localhost/tests/perf-reftest/recompute-position-horizontal-tb.html

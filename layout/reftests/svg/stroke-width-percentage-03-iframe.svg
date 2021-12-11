@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=875069 -->
+
+  <!-- Don't give the line's x/y attributes percentages since that
+       may trigger reflow in which case this test wouldn't be
+       testing what we intend!
+  -->
+  <line x1="50" x2="50" y2="50" stroke="blue" stroke-width="100%"/>
+</svg>

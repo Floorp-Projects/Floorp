@@ -1,0 +1,24 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../../..
+
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = nss
+
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\"
+
+CSRCS = \
+	mangle.c \
+	$(NULL)
+
+
+# headers for the MODULE (defined above) are implicitly required.
+REQUIRES = 
+
+PROGRAM = mangle
+
+USE_STATIC_LIBS = 1
+

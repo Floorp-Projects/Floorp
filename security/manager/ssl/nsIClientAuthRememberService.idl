@@ -1,0 +1,74 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID "@mozilla.org/security/clientAuthRememberService;1"
+%}
+
+interface nsIX509Cert;
+
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
+
+[scriptable, uuid(e92825af-7e81-4b5c-b412-8e1dd36d14fe)]
+interface nsIClientAuthRememberRecord : nsISupports
+{
+
+  readonly attribute ACString asciiHost;
+
+  readonly attribute ACString fingerprint;
+
+  readonly attribute ACString dbKey;
+
+  readonly attribute ACString entryKey;
+
+};
+
+
+[scriptable, uuid(1dbc6eb6-0972-4bdb-9dc4-acd0abf72369)]
+interface nsIClientAuthRememberService : nsISupports
+{
+
+  [must_use]
+  void forgetRememberedDecision(in ACString key);
+
+
+  [must_use]
+  Array<nsIClientAuthRememberRecord> getDecisions();
+
+
+  [must_use, noscript]
+  void rememberDecision(in ACString aHostName,
+                        in const_OriginAttributesRef aOriginAttributes,
+                        in nsIX509Cert aServerCert,
+                        in nsIX509Cert aClientCert);
+
+  [implicit_jscontext]
+  void rememberDecisionScriptable(in ACString aHostName,
+                                  in jsval originAttributes,
+                                  in nsIX509Cert aServerCert,
+                                  in nsIX509Cert aClientCert);
+
+  [must_use, noscript]
+  bool hasRememberedDecision(in ACString aHostName,
+                             in const_OriginAttributesRef aOriginAttributes,
+                             in nsIX509Cert aServerCert,
+                             out ACString aCertDBKey);
+
+  [implicit_jscontext]
+  bool hasRememberedDecisionScriptable(in ACString aHostName,
+                                       in jsval originAttributes,
+                                       in nsIX509Cert aServerCert,
+                                       out ACString aCertDBKey);
+
+  [must_use]
+  void clearRememberedDecisions();
+
+  [implicit_jscontext]
+  void deleteDecisionsByHost(in ACString aHostName,
+                             in jsval aOriginAttributes);
+};

@@ -1,0 +1,313 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+/**************************************************************************/
+/* namespace for MathML elements                                          */
+/**************************************************************************/
+
+@namespace url(http://www.w3.org/1998/Math/MathML);
+
+/**************************************************************************/
+/* <math> - outermost math element                                        */
+/**************************************************************************/
+
+math {
+  writing-mode: horizontal-tb !important;
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline;
+  font-size: inherit;
+  font-style: normal;
+  font-family: serif;
+  line-height: normal;
+  word-spacing: normal;
+  letter-spacing: normal;
+  text-rendering: optimizeLegibility;
+  -moz-float-edge: margin-box;
+  math-style: compact;
+}
+math[display="block" i] {
+  display: block;
+  text-align: -moz-center;
+  math-style: normal;
+}
+math[display="inline" i] {
+  display: inline;
+  math-style: compact;
+}
+
+/**************************************************************************/
+/* Token elements                                                         */
+/**************************************************************************/
+
+ms {
+  display: inline;
+}
+ms:before, ms:after {
+  content: "\0022"
+}
+ms[lquote]:before {
+  content: attr(lquote)
+}
+ms[rquote]:after {
+  content: attr(rquote)
+ }
+
+/**************************************************************************/
+/* Links                                                                  */
+/**************************************************************************/
+:any-link {
+  text-decoration: none !important;
+}
+
+/**************************************************************************/
+/* attributes common to all tags                                          */
+/**************************************************************************/
+
+/* These attributes are mapped to style in MathMLElement.cpp:
+
+   - background -> background                             (deprecated)
+   - color -> color                                       (deprecated)
+   - fontfamily -> font-family                            (deprecated)
+   - fontsize -> font-size                                (deprecated)
+   - fontstyle -> font-style                              (deprecated)
+   - fontweight -> font-weight                            (deprecated)
+   - mathvariant -> -moz-math-variant
+   - scriptsizemultiplier -> -moz-script-size-multiplier
+   - scriptminsize -> -moz-script-min-size
+   - scriptlevel -> math-depth
+   - mathsize -> font-size
+   - mathcolor -> color
+   - mathbackground -> background
+
+*/
+
+
+/**************************************************************************/
+/* merror                                                                 */
+/**************************************************************************/
+
+merror {
+  display: block;
+  font-family: sans-serif;
+  font-weight: bold;
+  white-space: pre;
+  margin: 1em;
+  padding: 1em;
+  border-width: thin;
+  border-style: inset;
+  border-color: red;
+  font-size: 14pt;
+  background-color: lightyellow;
+}
+
+/**************************************************************************/
+/* mtable and its related tags                                            */
+/**************************************************************************/
+
+mtable {
+  display: inline-table;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-indent: 0;
+}
+mtable[frame="none"] {
+  border: none;
+}
+mtable[frame="solid"] {
+  border: solid thin;
+}
+mtable[frame="dashed"] {
+  border: dashed thin;
+}
+
+mtr, mlabeledtr {
+  display: table-row;
+  vertical-align: baseline;
+}
+
+mtd {
+  display: table-cell;
+  vertical-align: inherit;
+  text-align: -moz-center;
+  white-space: nowrap;
+}
+
+/* Don't support m(labeled)tr without mtable, nor mtd without m(labeled)tr */
+:not(mtable) > mtr,
+:not(mtable) > mlabeledtr,
+:not(mtr, mlabeledtr) > mtd {
+  display: none !important;
+}
+
+/* Hide the label because mlabeledtr is not supported yet (bug 356870). This
+   rule can be overriden by users. */
+mlabeledtr > mtd:first-child {
+    display: none;
+}
+
+/**********************************************************************/
+/* rules to achieve the default spacing between cells. When rowspacing,
+   columnspacing and framespacing aren't set on mtable.  The back-end code
+   will set the internal attributes depending on the cell's position.
+   When they are set, the spacing behaviour is handled outside of CSS */
+mtd {
+  padding-right: 0.4em;  /* half of columnspacing[colindex] */
+  padding-left: 0.4em;   /* half of columnspacing[colindex-1] */
+  padding-bottom: 0.5ex; /* half of rowspacing[rowindex] */
+  padding-top: 0.5ex;    /* half of rowspacing[rowindex-1] */
+}
+/* turn off the spacing at the periphery of boundary cells */
+mtr:first-child > mtd {
+  padding-top: 0ex;
+}
+mtr:last-child > mtd {
+  padding-bottom: 0ex;
+}
+mtd:first-child {
+  padding-inline-start: 0em;
+}
+mtd:last-child {
+  padding-inline-end: 0em;
+}
+/* re-instate the spacing if the table has a surrounding frame */
+mtable[frame="solid"] > mtr:first-child > mtd,
+mtable[frame="dashed"] > mtr:first-child > mtd {
+  padding-top: 0.5ex; /* framespacing.top */
+}
+mtable[frame="solid"] > mtr:last-child > mtd,
+mtable[frame="dashed"] > mtr:last-child > mtd {
+  padding-bottom: 0.5ex; /* framespacing.bottom */
+}
+mtable[frame="solid"] > mtr > mtd:first-child,
+mtable[frame="dashed"] > mtr > mtd:first-child {
+  padding-inline-start: 0.4em; /* framespacing.left (or right in rtl)*/
+}
+mtable[frame="solid"] > mtr > mtd:last-child,
+mtable[frame="dashed"] > mtr > mtd:last-child {
+  padding-inline-end: 0.4em; /* framespacing.right (or left in rtl)*/
+}
+
+mtable[rowspacing] > mtr > mtd,
+mtable[columnspacing] > mtr > mtd,
+mtable[framespacing] > mtr > mtd {
+  /* Spacing handled outside of CSS */
+  padding: 0px;
+}
+
+/**********************************************************************/
+/* This is used when wrapping non-MathML inline elements inside math. */
+*|*::-moz-mathml-anonymous-block {
+  display: inline-block !important;
+  position: static !important;
+  text-indent: 0;
+}
+
+/**************************************************************************/
+/* Controlling Displaystyle and Scriptlevel                               */
+/**************************************************************************/
+
+/*
+  http://www.w3.org/Math/draft-spec/chapter3.html#presm.scriptlevel
+
+  The determination of math-style for <math> involves the displaystyle
+  and display attributes. See the <math> section above.
+*/
+
+/*  munder, mover and munderover change the scriptlevels of their children
+   using -moz-math-increment-script-level because regular CSS rules are
+   insufficient to control when the scriptlevel should be incremented. All other
+   cases can be described using regular CSS, so we do it this way because it's
+   more efficient and less code. */
+:-moz-math-increment-script-level { math-depth: add(1); }
+
+/*
+   The mfrac element sets displaystyle to "false", or if it was already false
+   increments scriptlevel by 1, within numerator and denominator.
+*/
+mfrac > * {
+    math-depth: auto-add;
+    math-style: compact;
+}
+
+/*
+   The mroot element increments scriptlevel by 2, and sets displaystyle to
+   "false", within index, but leaves both attributes unchanged within base.
+   The msqrt element leaves both attributes unchanged within its argument.
+*/
+mroot > :not(:first-child) {
+    math-depth: add(2);
+    math-style: compact;
+}
+
+/*
+   The msub element [...] increments scriptlevel by 1, and sets displaystyle to
+   "false", within subscript, but leaves both attributes unchanged within base.
+
+   The msup element [...] increments scriptlevel by 1, and sets displaystyle to
+   "false", within superscript, but leaves both attributes unchanged within
+   base.
+
+   The msubsup element [...] increments scriptlevel by 1, and sets displaystyle
+   to "false", within subscript and superscript, but leaves both attributes
+   unchanged within base.
+
+   The mmultiscripts element increments scriptlevel by 1, and sets displaystyle
+   to "false", within each of its arguments except base, but leaves both
+   attributes unchanged within base.
+ */
+msub > :not(:first-child),
+msup > :not(:first-child),
+msubsup > :not(:first-child),
+mmultiscripts > :not(:first-child) {
+    math-depth: add(1);
+    math-style: compact;
+}
+
+/*
+   The munder element [...] always sets displaystyle to "false" within the
+   underscript, but increments scriptlevel by 1 only when accentunder is
+   "false". Within base, it always leaves both attributes unchanged.
+
+   The mover element [...] always sets displaystyle to "false" within
+   overscript, but increments scriptlevel by 1 only when accent is "false".
+   Within base, it always leaves both attributes unchanged.
+
+   The munderover [..] always sets displaystyle to "false" within underscript
+   and overscript, but increments scriptlevel by 1 only when accentunder or
+   accent, respectively, are "false". Within base, it always leaves both
+   attributes unchanged.
+*/
+munder > :not(:first-child),
+mover > :not(:first-child),
+munderover > :not(:first-child) {
+    math-style: compact;
+}
+
+/*
+   The displaystyle attribute is allowed on the mtable element to set the
+   inherited value of the attribute. If the attribute is not present, the
+   mtable element sets displaystyle to "false" within the table elements.
+*/
+mtable { math-style: compact; }
+
+/*
+   The mscarries element sets displaystyle to "false", and increments
+   scriptlevel by 1, so the children are typically displayed in a smaller font.
+   XXXfredw: This element is not implemented yet. See bug 534967.
+mscarries {
+  math-depth: add(1);
+  math-style: compact;
+}
+*/
+
+/* "The mphantom element renders invisibly, but with the same size and other
+   dimensions, including baseline position, that its contents would have if
+   they were rendered normally.".
+   Also, we do not expose the <mphantom> element to the accessible tree
+   (see bug 1108378). */
+mphantom {
+    visibility: hidden;
+}

@@ -1,0 +1,5 @@
+{
+  "policies": {
+    "DisableDeveloperTools": true
+  }
+}

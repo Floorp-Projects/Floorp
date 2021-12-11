@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for accessing symbols on a cross-origin window</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<iframe id="sameProc" src="http://test1.mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<iframe id="crossProc" src="http://www1.w3c-test.org/common/blank.html"></iframe>
+<script>
+/* global async_test, assert_equals, assert_throws */
+
+async_test(function(t) {
+  window.addEventListener("load", t.step_func(
+    function() {
+      assert_equals(document.getElementById("sameProc").contentDocument, null, "Should have a crossorigin frame");
+      assert_equals(document.getElementById("crossProc").contentDocument, null, "Should have a crossorigin frame");
+      for (let f of [0, 1]) {
+        assert_throws("SecurityError", function() {
+          frames[f][Symbol.iterator];
+        }, "Should throw exception on cross-origin Window symbol-named get");
+        assert_throws("SecurityError", function() {
+          frames[f].location[Symbol.iterator];
+        }, "Should throw exception on cross-origin Location symbol-named get");
+      }
+      t.done();
+    }
+  ));
+}, "Check Symbol access on load");
+</script>

@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAutoCompleteInput;
+
+webidl Element;
+
+[scriptable, uuid(bd3c2662-a988-41ab-8c94-c15ed0e6ac7d)]
+interface nsIAutoCompletePopup : nsISupports
+{
+  /*
+   * The input object that the popup is currently bound to
+   */
+  readonly attribute nsIAutoCompleteInput input;
+
+  /*
+   * An alternative value to be used when text is entered, rather than the
+   * value of the selected item
+   */
+  readonly attribute AString overrideValue;
+
+  /*
+   * The index of the result item that is currently selected
+   */
+  attribute long selectedIndex;
+
+  /*
+   * Indicates if the popup is currently open
+   */
+  readonly attribute boolean popupOpen;
+
+  /*
+   * Bind the popup to an input object and display it with the given coordinates
+   *
+   * @param input - The input object that the popup will be bound to
+   * @param element - The element that the popup will be aligned with
+   */
+  void openAutocompletePopup(in nsIAutoCompleteInput input, in Element element);
+
+  /*
+   * Close the popup and detach from the bound input
+   */
+  void closePopup();
+
+  /*
+   * Instruct the result view to repaint itself to reflect the most current
+   * underlying data
+   *
+   * @param reason - The reason the popup needs to be invalidated, one of the
+   *        INVALIDATE_REASON consts.
+   */
+  void invalidate(in unsigned short reason);
+
+  /*
+   * Possible values of invalidate()'s 'reason' argument.
+   */
+  const unsigned short INVALIDATE_REASON_NEW_RESULT = 0;
+  const unsigned short INVALIDATE_REASON_DELETE = 1;
+
+  /*
+   * Change the selection relative to the current selection and make sure
+   * the newly selected row is visible
+   *
+   * @param reverse - Select a row above the current selection
+   * @param page - Select a row that is a full visible page from the current selection
+   * @return The currently selected result item index
+   */
+  void selectBy(in boolean reverse, in boolean page);
+};

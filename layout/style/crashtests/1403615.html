@@ -1,0 +1,24 @@
+<html class="reftest-wait">
+<script>
+window.onload = () => {
+  a = document.createElement("body")
+  b = document.createElement("span")
+  a.appendChild(b)
+  c = document.createElement("div")
+  d = document.createElement("div")
+  c.appendChild(d)
+  a.appendChild(c)
+  document.documentElement.appendChild(a)
+  setTimeout(() => {
+    a.style.display = "table-column-group"
+    d.appendChild(document.createTextNode("\u05D2"))
+    setTimeout(() => {
+      d.appendChild(document.createElement("span"))
+      b.style.zIndex = "1073741824"
+      document.documentElement.offsetTop;
+      document.documentElement.className = "";
+    }, 0)
+  }, 0)
+}
+</script>
+</html>

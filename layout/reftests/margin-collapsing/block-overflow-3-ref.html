@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+.separator {
+ height: 20px;
+ background-color: blue;
+}
+#overflow {
+ overflow-y: scroll;
+ height: 160px;
+ margin: 20px 0;
+ padding-top: 40px;
+ background-color: lightgreen;
+}
+#child {
+ height: 160px;
+ background-color: green;
+}
+#margin {
+ height: 40px;
+}
+</style>
+</head>
+<body>
+<div class="separator"></div>
+<div id="overflow">
+ <div id="child"></div>
+ <div id="margin"></div>
+</div>
+<div class="separator"></div>
+</body>
+</html>

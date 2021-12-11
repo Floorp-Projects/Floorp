@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test explicit original target of dblclick event</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display">Test explicit original target of dblclick event</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests()
+{
+  synthesizeMouse(document.getElementById("display"), 5, 5, { clickCount: 2 });
+}
+
+window.onmousedown = function(event) {
+  is(event.explicitOriginalTarget.nodeType, Node.TEXT_NODE,
+     "explicitOriginalTarget is a text node");
+  is(event.explicitOriginalTarget, document.getElementById("display").firstChild,
+     "explicitOriginalTarget should point to the child node of the click target");
+}
+
+window.onmouseup = function(event) {
+  is(event.explicitOriginalTarget.nodeType, Node.TEXT_NODE,
+     "explicitOriginalTarget is a text node");
+  is(event.explicitOriginalTarget, document.getElementById("display").firstChild,
+     "explicitOriginalTarget should point to the child node of the click target");
+}
+
+// The old versions of Gecko had explicitOriginalTarget pointing to a Text node
+// when handling *click events, newer versions target Elements.
+window.ondblclick = function(event) {
+  is(event.explicitOriginalTarget.nodeType, Node.ELEMENT_NODE,
+     "explicitOriginalTarget is an element node");
+    is(event.explicitOriginalTarget, document.getElementById("display"),
+     "explicitOriginalTarget should point to the click target");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

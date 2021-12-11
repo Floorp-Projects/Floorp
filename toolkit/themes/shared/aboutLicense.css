@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* License Illustration */
+
+.license-header {
+  background-image: url("chrome://global/skin/illustrations/about-license.svg");
+  background-repeat: no-repeat;
+  background-position: right center;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  padding-inline-end: 320px;
+}

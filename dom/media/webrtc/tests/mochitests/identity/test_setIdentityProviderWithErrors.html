@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
+  <script type="application/javascript" src="../pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+'use strict';
+  createHTML({
+    title: "Identity Provider returning errors is handled correctly",
+    bug: "942367"
+  });
+
+runNetworkTest(function () {
+  var test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  // No IdP for local.
+  // Remote generates a bad assertion, but that only fails to validate
+  test.pcRemote.setIdentityProvider('example.com',
+                                    { protocol: 'idp.js#bad-validate',
+                                      usernameHint: 'nobody' });
+
+  // Save the peerIdentity promises now, since when they reject they are
+  // replaced and we expect them to be rejected this time
+  var peerIdentityLocal = test.pcLocal._pc.peerIdentity;
+  var peerIdentityRemote = test.pcRemote._pc.peerIdentity;
+
+  test.chain.append([
+    function ONLY_REMOTE_SDP_INCLUDES_IDENTITY_ASSERTION(t) {
+      ok(!t.originalOffer.sdp.includes('a=identity'),
+         'a=identity not contained in the offer SDP');
+      ok(t.originalAnswer.sdp.includes('a=identity'),
+         'a=identity is contained in the answer SDP');
+    },
+    function PEER_IDENTITY_IS_EMPTY(t) {
+      // we are only waiting for the local side to complete
+      // an error on the remote side is immediately fatal though
+      return Promise.race([
+        peerIdentityLocal.then(
+          () => ok(false, t.pcLocal + ' incorrectly received valid peer identity'),
+          e => ok(e, t.pcLocal + ' correctly failed to validate peer identity')),
+        peerIdentityRemote.then(
+          () => ok(false, t.pcRemote + ' incorrecly received a valid peer identity'),
+          e => ok(false, t.pcRemote + ' incorrectly rejected peer identity'))
+      ]);
+    }
+  ]);
+
+  return test.run();
+});
+
+</script>
+</pre>
+</body>
+</html>

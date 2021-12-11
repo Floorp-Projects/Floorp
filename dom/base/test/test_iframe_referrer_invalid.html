@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test iframe referrer policy attribute for Bug 1175736</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing that iframe referrer attribute is honoured correctly
+  * invalid referrer policies
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1175736
+  -->
+
+  <script type="application/javascript">
+
+  const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "SCHEME_FROM", "SCHEME_TO"];
+
+  const testCases = [
+    {ACTION: ["generate-iframe-policy-test"],
+      TESTS: [
+        // setting invalid refer values -> we expect either full referrer (default)
+        // or whatever is specified in the meta referrer policy
+
+        // Note that for those test cases which require cross-origin test, we use different
+        // scheme to result in cross-origin request.
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-no-meta',
+         META_POLICY: '',
+         DESC: "origin-when-cross-origin (iframe) with no meta",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'default',
+         NAME: 'default-with-no-meta',
+         META_POLICY: '',
+         DESC: "default (iframe) with no meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'something',
+         NAME: 'something-with-no-meta',
+         META_POLICY: '',
+         DESC: "something (iframe) with no meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         DESC: "origin-when-cross-origin (iframe) with no-referrer in meta",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-unsafe-url-in-meta',
+         META_POLICY: 'unsafe-url',
+         DESC: "origin-when-cross-origin (iframe) with unsafe-url in meta",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "origin-when-cross-origin (iframe) with origin in meta",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
+        {NAME: 'origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "origin in meta",
+         RESULT: 'origin'},
+        {NAME: 'no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         DESC: "no-referrer in meta",
+         RESULT: 'none'}]}
+  ];
+  </script>
+  <script type="application/javascript" src="/tests/dom/base/test/referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>

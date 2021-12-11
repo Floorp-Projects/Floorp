@@ -1,0 +1,34 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1516720544 21600
+#      Tue Jan 23 09:15:44 2018 -0600
+# Node ID 2b4556cb7407c196522e52cfd286ee88c3bb6e72
+# Parent  60aa47b111918d4e30f7e363359d1dcc3a3f277d
+Bug 1432295 Cast GetProcAddress to (void*) r?bobowen
+
+error: invalid conversion from 'FARPROC {aka int (__attribute__((__stdcall__)) *)()}' to 'void*' [-fpermissive]
+
+According to http://stackoverflow.com/questions/13958081/, msvc does the fixup
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/security/sandbox/chromium/sandbox/win/src/target_process.cc
+--- a/security/sandbox/chromium/sandbox/win/src/target_process.cc
++++ b/security/sandbox/chromium/sandbox/win/src/target_process.cc
+@@ -231,17 +231,17 @@ ResultCode TargetProcess::TransferVariab
+ 
+   void* child_var = address;
+ 
+ #if SANDBOX_EXPORTS
+   HMODULE module = ::LoadLibrary(exe_name_.get());
+   if (!module)
+     return SBOX_ERROR_CANNOT_LOADLIBRARY_EXECUTABLE;
+ 
+-  child_var = ::GetProcAddress(module, name);
++  child_var = reinterpret_cast<void*>(::GetProcAddress(module, name));
+   ::FreeLibrary(module);
+ 
+   if (!child_var)
+     return SBOX_ERROR_CANNOT_FIND_VARIABLE_ADDRESS;
+ 
+   size_t offset =
+       reinterpret_cast<char*>(child_var) - reinterpret_cast<char*>(module);
+   child_var = reinterpret_cast<char*>(MainModule()) + offset;

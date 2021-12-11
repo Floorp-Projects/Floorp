@@ -1,0 +1,78 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PFileDescriptorSet;
+include protocol PRemoteLazyInputStream;
+
+include IPCBlob;
+
+namespace mozilla {
+namespace dom {
+
+struct FileSystemFileResponse
+{
+  IPCBlob blob;
+};
+
+struct FileSystemDirectoryResponse
+{
+  nsString realPath;
+};
+
+struct FileSystemDirectoryListingResponseFile
+{
+  IPCBlob blob;
+};
+
+struct FileSystemDirectoryListingResponseDirectory
+{
+  // This is the full real path for the directory that we are sending via IPC.
+  nsString directoryRealPath;
+};
+
+union FileSystemDirectoryListingResponseData
+{
+  FileSystemDirectoryListingResponseFile;
+  FileSystemDirectoryListingResponseDirectory;
+};
+
+struct FileSystemDirectoryListingResponse
+{
+  FileSystemDirectoryListingResponseData[] data;
+};
+
+struct FileSystemFilesResponse
+{
+  FileSystemFileResponse[] data;
+};
+
+struct FileSystemErrorResponse
+{
+  nsresult error;
+};
+
+union FileSystemResponseValue
+{
+  FileSystemDirectoryResponse;
+  FileSystemDirectoryListingResponse;
+  FileSystemFileResponse;
+  FileSystemFilesResponse;
+  FileSystemErrorResponse;
+};
+
+[RefCounted] protocol PFileSystemRequest
+{
+  manager PBackground;
+
+child:
+  async __delete__(FileSystemResponseValue response);
+};
+
+} // namespace dom
+} // namespace mozilla

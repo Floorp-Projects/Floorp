@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 1175040 - PageStyleActor.getLayout</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script type="application/javascript" src="inspector-helpers.js"></script>
+<script type="application/javascript">
+"use strict";
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+let gWalker = null;
+let gStyles = null;
+
+addTest(async function() {
+  const url = document.getElementById("inspectorContent").href;
+  const { target } = await attachURL(url);
+  const inspector = await target.getFront("inspector");
+  gWalker = inspector.walker;
+  gStyles = await inspector.getPageStyle();
+  runNextTest();
+});
+
+addTest(function() {
+  ok(gStyles.getLayout, "The PageStyleActor has a getLayout method");
+  runNextTest();
+});
+
+addAsyncTest(async function() {
+  const node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
+  const layout = await gStyles.getLayout(node, {});
+
+  const properties = ["width", "height",
+                      "margin-top", "margin-right", "margin-bottom",
+                      "margin-left", "padding-top", "padding-right",
+                      "padding-bottom", "padding-left", "border-top-width",
+                      "border-right-width", "border-bottom-width",
+                      "border-left-width", "z-index", "box-sizing", "display",
+                      "position"];
+  for (const prop of properties) {
+    ok((prop in layout), "The layout object returned has " + prop);
+  }
+
+  runNextTest();
+});
+
+addAsyncTest(async function() {
+  const node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
+  const layout = await gStyles.getLayout(node, {});
+
+  const expected = {
+    "box-sizing": "border-box",
+    "position": "absolute",
+    "z-index": "2",
+    "display": "block",
+    "width": 50,
+    "height": 50,
+    "margin-top": "10px",
+    "margin-right": "20px",
+    "margin-bottom": "30px",
+    "margin-left": "0px",
+  };
+
+  for (const name in expected) {
+    is(layout[name], expected[name], "The " + name + " property is correct");
+  }
+
+  runNextTest();
+});
+
+addAsyncTest(async function() {
+  const node = await gWalker.querySelector(gWalker.rootNode,
+                                         "#layout-auto-margin-element");
+
+  let layout = await gStyles.getLayout(node, {});
+  ok(!("autoMargins" in layout),
+     "By default, getLayout doesn't return auto margins");
+
+  layout = await gStyles.getLayout(node, {autoMargins: true});
+  ok(("autoMargins" in layout),
+     "getLayout does return auto margins when asked to");
+  is(layout.autoMargins.left, "auto", "The left margin is auto");
+  is(layout.autoMargins.right, "auto", "The right margin is auto");
+  ok(!layout.autoMargins.bottom, "The bottom margin is not auto");
+  ok(!layout.autoMargins.top, "The top margin is not auto");
+
+  runNextTest();
+});
+
+addTest(function() {
+  gStyles = gWalker = null;
+  runNextTest();
+});
+
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1175040">Mozilla Bug 1175040</a>
+<a id="inspectorContent" target="_blank" href="inspector-styles-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

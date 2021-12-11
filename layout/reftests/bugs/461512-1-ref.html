@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <style type="text/css">
+      body { background-color: white; margin: 0; padding: 0; }
+      div.mask {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: white;
+      }
+      div.tr {
+        right: 10px;
+      }
+      div.tl {
+        left: 10px;
+      }
+      div.bl {
+        left: 10px;
+        margin-top: 20px;
+      }
+      div.br {
+        right: 10px;
+        margin-top: 20px;
+      }
+      p {
+        margin: 10px;
+        padding: 0;
+        border: 10px solid rgb(227, 207, 187);
+        height: 10px;
+      }
+      p.groove, p.ridge {
+        border-width: 5px;
+        height: 20px;
+      }
+      p.groove > span, p.ridge > span {
+        border: 5px solid;
+        margin: 0;
+        padding: 0;
+        display: block;
+        height: 10px;
+      }
+      p.inset, p.groove, p.ridge > span {
+        border-color: rgb(194, 180, 167) rgb(227, 207, 187) rgb(227, 207, 187) rgb(194, 180, 167);
+      }
+      p.outset, p.ridge, p.groove > span {
+        border-color: rgb(227, 207, 187) rgb(194, 180, 167) rgb(194, 180, 167) rgb(227, 207, 187);
+      }
+    </style>
+  </head>
+  <body>
+    <p style="border-style: solid;">&nbsp;</p>
+    <!-- <p style="border-style: dashed;">&nbsp;</p> -->
+    <!-- <p style="border-style: dotted;">&nbsp;</p> -->
+    <p style="border-style: double;">&nbsp;</p>
+    <div class="mask tr"></div>
+    <div class="mask bl"></div>
+    <p class="ridge"><span>&nbsp;</span></p>
+    <div class="mask tr"></div>
+    <div class="mask bl"></div>
+    <p class="groove"><span>&nbsp;</span></p>
+    <div class="mask tr"></div>
+    <div class="mask bl"></div>
+    <p class="inset">&nbsp;</p>
+    <div class="mask tr"></div>
+    <div class="mask bl"></div>
+    <p class="outset">&nbsp;</p>
+  </body>
+</html>

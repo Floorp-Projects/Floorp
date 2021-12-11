@@ -1,0 +1,26 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    "txDouble.cpp",
+    "txExpandedName.cpp",
+    "txExpandedNameMap.cpp",
+    "txList.cpp",
+    "txNamespaceMap.cpp",
+    "txURIUtils.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "..",
+    "../xml",
+    "../xpath",
+    "../xslt",
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

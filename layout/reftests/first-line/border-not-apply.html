@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<title>border should not apply to :first-line (bug 469227)</title>
+<style type="text/css">
+
+p::first-line {
+  /* specify all the properties in nsStyleBorder */
+  border-inline-start: medium solid red ! important;
+  border-inline-end: medium solid red ! important;
+  border: medium solid red ! important;
+  border-image: none ! important;
+  -moz-float-edge: content-box ! important;
+  border-radius: 0 ! important;
+  box-shadow: none ! important;
+}
+
+</style>
+<p>Hello</p>

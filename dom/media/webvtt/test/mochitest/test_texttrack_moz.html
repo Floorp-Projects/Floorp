@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 881976 - TextTrackList</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id="v" src="seek.webm" preload="metadata">
+<script type="text/javascript">
+/**
+ * This test is used to ensure the text track list we got from video is as same
+ * as the one in the text track.
+ */
+var video = document.getElementById("v");
+
+async function runTest() {
+  addTrackViaAddTrackAPI();
+  await addTrackViaTrackElement();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = runTest;
+
+/**
+ * The following are test helper functions.
+ */
+function addTrackViaAddTrackAPI() {
+  // Check if adding a text track manually sets the TextTrackList correctly.
+  video.addTextTrack("subtitles", "", "");
+  // TextTrack.textTrackList is an extension available only to privileged code,
+  // so we need to access it through the SpecialPowers object.
+  is(SpecialPowers.unwrap(SpecialPowers.wrap(video.textTracks[0]).textTrackList),
+     video.textTracks,
+     "The Track's TextTrackList should be the Video's TextTrackList.");
+}
+
+async function addTrackViaTrackElement() {
+  // Check if loading a Track via a TrackElement sets the TextTrackList correctly.
+  let trackElement = document.createElement("track");
+  trackElement.src = "basic.vtt";
+  trackElement.kind = "subtitles";
+  trackElement.default = true;
+  video.appendChild(trackElement);
+
+  info(`wait until the track finishes loading`);
+  await once(trackElement, "load");
+
+  is(trackElement.readyState, HTMLTrackElement.LOADED,
+     "Track::ReadyState should be set to LOADED.");
+  is(SpecialPowers.unwrap(SpecialPowers.wrap(trackElement.track).textTrackList),
+     video.textTracks,
+     "TrackElement's Track's TextTrackList should be the Video's TextTrackList.");
+}
+
+</script>
+</body>
+</html>

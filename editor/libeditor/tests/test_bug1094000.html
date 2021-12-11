@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1094000
+-->
+<head>
+  <title>Test for Bug 1094000</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1094000">Mozilla Bug 1094000</a>
+<p id="display"></p>
+<div id="content">
+  <div id="editor0" contenteditable></div>
+  <div id="editor1" contenteditable><br></div>
+  <div id="editor2" contenteditable>a</div>
+  <div id="editor3" contenteditable>b</div>
+  <div id="editor4" contenteditable>c</div>
+  <div id="editor5" contenteditable>d</div>
+  <div id="editor6" contenteditable>e</div>
+  <div id="editor7" contenteditable><span>f</span></div>
+  <div id="editor8" contenteditable><span>g</span></div>
+  <div id="editor9" contenteditable><span>h</span></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1094000 **/
+
+SimpleTest.waitForExplicitFinish();
+
+const kIsLinux = navigator.platform.indexOf("Linux") == 0;
+
+function runTests() {
+  var editor0 = document.getElementById("editor0");
+  var editor1 = document.getElementById("editor1");
+  var editor2 = document.getElementById("editor2");
+  var editor3 = document.getElementById("editor3");
+  var editor4 = document.getElementById("editor4");
+  var editor5 = document.getElementById("editor5");
+  var editor6 = document.getElementById("editor6");
+  var editor7 = document.getElementById("editor7");
+  var editor8 = document.getElementById("editor8");
+  var editor9 = document.getElementById("editor9");
+
+  ok(Math.abs(editor1.getBoundingClientRect().height - editor0.getBoundingClientRect().height) <= 1,
+     "an editor having a <br> element and an empty editor should be same height");
+  ok(Math.abs(editor1.getBoundingClientRect().height - editor2.getBoundingClientRect().height) <= 1,
+     "an editor having only a <br> element and an editor having \"a\" should be same height");
+
+  editor2.focus();
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Backspace");
+  is(editor2.innerHTML, "<br>",
+     "an editor which had \"a\" should have only <br> element after Backspace keypress");
+  ok(Math.abs(editor2.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Backspace key should have a place to put a caret");
+
+  editor3.focus();
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_Delete");
+  is(editor3.innerHTML, "<br>",
+     "an editor which had \"b\" should have only <br> element after Delete keypress");
+  ok(Math.abs(editor3.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Delete key should have a place to put a caret");
+
+  editor4.focus();
+  window.getSelection().selectAllChildren(editor4);
+  synthesizeKey("KEY_Backspace");
+  is(editor4.innerHTML, "<br>",
+     "an editor which had \"c\" should have only <br> element after removing selected text with Backspace key");
+  ok(Math.abs(editor4.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was selected and removed by Backspace key should have a place to put a caret");
+
+  editor5.focus();
+  window.getSelection().selectAllChildren(editor5);
+  synthesizeKey("KEY_Delete");
+  is(editor5.innerHTML, "<br>",
+     "an editor which had \"d\" should have only <br> element after removing selected text with Delete key");
+  ok(Math.abs(editor5.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was selected and removed by Delete key should have a place to put a caret");
+
+  editor6.focus();
+  window.getSelection().selectAllChildren(editor6);
+  synthesizeKey("x", {accelKey: true});
+  is(editor6.innerHTML, "<br>",
+     "an editor which had \"e\" should have only <br> element after removing selected text by \"Cut\"");
+  ok(Math.abs(editor6.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was selected and removed by \"Cut\" should have a place to put a caret");
+
+  editor7.focus();
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Backspace");
+  is(
+    editor7.innerHTML,
+    SpecialPowers.getBoolPref("editor.white_space_normalization.blink_compatible")
+      ? "<br>"
+      : "<span><br></span>",
+    "an editor which had \"f\" in a <span> element should have only <br> element after Backspace keypress"
+  );
+  ok(Math.abs(editor7.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Backspace key should have a place to put a caret");
+
+  editor8.focus();
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_Delete");
+  todo_is(editor8.innerHTML, "<br>",
+    "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
+  todo_isnot(
+    editor8.innerHTML,
+    SpecialPowers.getBoolPref("editor.white_space_normalization.blink_compatible")
+      ? "<br><span></span>"
+      : "<span><br></span>",
+    "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress"
+  );
+  ok(Math.abs(editor8.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Backspace key should have a place to put a caret");
+
+  editor9.focus();
+  window.getSelection().selectAllChildren(editor9.querySelector("span"));
+  synthesizeKey("KEY_Backspace");
+  todo_is(editor9.innerHTML, "<br>",
+     "an editor which had \"h\" in a <span> element should have only <br> element after removing selected text with Backspace key");
+  todo_isnot(editor9.innerHTML, "<span><br></span>",
+     "an editor which had \"h\" in a <span> element should have only <br> element after removing selected text with Backspace key");
+  ok(Math.abs(editor9.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Backspace key should have a place to put a caret");
+
+  editor0.focus();
+  synthesizeKey("KEY_Backspace");
+  is(editor0.innerHTML, "",
+     "an empty editor should keep being empty even if Backspace key is pressed");
+  synthesizeKey("KEY_Delete");
+  is(editor0.innerHTML, "",
+     "an empty editor should keep being empty even if Delete key is pressed");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference for bug 1338293</title>
+  <style type="text/css">
+
+.none {
+  display:inline-block;
+  width:0; height:0; margin:0;
+}
+
+.b { border: 20px solid; }
+.o { outline: 20px solid; }
+
+  </style>
+</head>
+<body>
+
+<span class="none b" type="checkbox"></span>
+<span class="none o" type="checkbox"></span>
+
+<span class="none b" type="radio"></span>
+<span class="none o" type="radio"></span>
+
+<div style="color:green">
+<span class="none b" type="checkbox"></span>
+<span class="none o" type="checkbox"></span>
+
+<span class="none b" type="radio"></span>
+<span class="none o" type="radio"></span>
+</div>
+
+</body>
+</html>

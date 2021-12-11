@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSS 2.1 Test Suite: border collapse</title>
+    <link rel="author" title="Bernd Mielke" href="mailto:bmlk@gmx.de" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#collapsing-borders" />
+    <meta name="flags" content="" />
+<style>
+td {width: 100px; text-align:center}
+caption {border:solid 4px green}
+
+</style>
+</head>
+
+<body>
+<!-- by default, td has padding of 1px -->
+<table style="border-collapse:collapse;"><caption>caption</caption>
+  <tr><td style="border:solid 4px orange; height:30px">cell 1</td></tr>
+</table>
+
+</body>
+</html>

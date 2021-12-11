@@ -1,0 +1,22 @@
+<html>
+<head>
+<script>
+
+function init()
+{
+
+  var x = document.getElementById("d");
+  x.__proto__ = document.getElementById("f");
+  x.inputname;
+}
+
+</script>
+</head>
+
+<body onload="init();">
+
+<div id="d"></div>
+<form id="f"><input name="inputname"></form>
+
+</body>
+</html>

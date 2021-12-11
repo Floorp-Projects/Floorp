@@ -1,0 +1,32 @@
+<html>
+<head>
+
+<style id="s">
+.container {
+  height: 30px;
+}
+</style>
+
+<style>
+.overflow {
+  height: 150px;
+  border: 1px silver solid;
+}
+body {
+  height: 60px;
+  width: 300px;
+  column-width: 50px;
+  column-gap: 1px;
+  column-fill: auto;
+}
+</style>
+
+</head>
+
+<body onload="s=document.getElementById('s'); s.parentNode.removeChild(s);">
+
+<div class="container"><div class="overflow"></div></div>
+<div class="container"><div class="overflow"></div></div>
+
+</body>
+</html>

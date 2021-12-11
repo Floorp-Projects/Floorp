@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>HTML Test: BDI: neutral to surrounding letters</title>
+    <link rel="reference" href="https://bug712600.bugzilla.mozilla.org/bdi-neutral-to-surrounding-run-ref.html">
+    <link rel="author" title="Aharon Lanin" href="mailto:aharon@google.com">
+    <link rel="author" title="HTML5 bidi test WG" href="mailto:html5bidi@googlegroups.com">
+    <link rel="help" href="http://dev.w3.org/html5/spec/Overview.html#the-bdi-element">
+    <meta name="assert" content="
+      'For the purposes of applying the bidirectional algorithm to the paragraph-level
+      container that a bdi element finds itself within, the bdi element must be treated
+      like a U+FFFC OBJECT REPLACEMENT CHARACTER.'
+
+      Thus, regardless of its content and its dir attribute (if any), a BDI will not prevent
+      a strongly RTL (or LTR) character preceding it from forming a single directional run with
+      another strongly RTL (LTR) character following it.">
+    <style>
+      body{
+        font-size:2em;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Key to entities used below:
+      &#x05D0; ... &#x05D5; - The first six Hebrew letters (strongly RTL).
+      &#x202D; - The LRO (left-to-right-override) formatting character.
+      &#x202C; - The PDF (pop directional formatting) formatting character; closes LRO. -->
+
+      <!--
+        If the BDI in the following DIV were a SPAN, its b would prevent the &#x05D0; and the &#x05D1;
+        from forming a single RTL run and thus keep the &gt;s between from being mirrored into &lt;s.
+      -->
+      <div dir="ltr">א &gt; <bdi>[b]</bdi> &gt; ג...</div>
+      <div dir="ltr">א &gt; <bdi dir="ltr">[b]</bdi> &gt; ג...</div>
+      <div dir="ltr">א &gt; <bdi dir="rtl">[b]</bdi> &gt; ג...</div>
+      <div dir="rtl">a &gt; <bdi>[ב]</bdi> &gt; c...</div>
+      <div dir="rtl">a &gt; <bdi dir="ltr">[ב]</bdi> &gt; c...</div>
+      <div dir="rtl">a &gt; <bdi dir="rtl">[ב]</bdi> &gt; c...</div>
+ 
+
+</body></html>

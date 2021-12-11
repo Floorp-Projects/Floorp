@@ -1,0 +1,353 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1367669
+https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
+-->
+<title>Test for PaymentRequest API currency amount validation</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+"use strict";
+SimpleTest.waitForExplicitFinish();
+
+const gUrl = SimpleTest.getTestFileURL(
+  "CurrencyAmountValidationChromeScript.js"
+);
+const gScript = SpecialPowers.loadChromeScript(gUrl);
+
+function testFailHandler(message) {
+  ok(false, message);
+}
+gScript.addMessageListener("test-fail", testFailHandler);
+
+const defaultMethods = [
+  {
+    supportedMethods: "basic-card",
+  },
+];
+const defaultDetails = {
+  total: {
+    label: "total",
+    amount: {
+      currency: "usd",
+      value: "1.00",
+    },
+  },
+};
+
+const specialAmountDetails = {
+  total: {
+    label: "total",
+    amount: {
+      currency: "usd",
+      value: {
+        toString() {
+          throw "42";
+        },
+      },
+    },
+  },
+};
+
+const wellFormedCurrencyCodes = [
+  "BOB",
+  "EUR",
+  "usd", // currency codes are case-insensitive
+  "XdR",
+  "xTs",
+];
+
+const invalidCurrencyCodes = [
+  "",
+  "€",
+  "$",
+  "SFr.",
+  "DM",
+  "KR₩",
+  "702",
+  "ßP",
+  "ınr",
+  "invalid",
+  "in",
+  "123",
+];
+
+const updatedInvalidCurrencyDetails = {
+  total: {
+    label: "Total",
+    amount: {
+      currency: "Invalid",
+      value: "1.00",
+    },
+  },
+};
+
+const updatedInvalidAmountDetails = {
+  total: {
+    label: "Total",
+    amount: {
+      currency: "USD",
+      value: "-1.00",
+    },
+  },
+};
+
+const invalidAmounts = [
+  "-",
+  "notdigits",
+  "ALSONOTDIGITS",
+  "10.",
+  ".99",
+  "-10.",
+  "-.99",
+  "10-",
+  "1-0",
+  "1.0.0",
+  "1/3",
+  "",
+  null,
+  " 1.0  ",
+  " 1.0 ",
+  "1.0 ",
+  "USD$1.0",
+  "$1.0",
+  {
+    toString() {
+      return " 1.0";
+    },
+  },
+  undefined,
+];
+const invalidTotalAmounts = invalidAmounts.concat([
+  "-1",
+  "-1.0",
+  "-1.00",
+  "-1000.000",
+]);
+
+function updateWithInvalidAmount() {
+  return new Promise((resolve, reject) => {
+    resolve(updatedInvalidAmountDetails);
+  });
+}
+
+async function testWithLowerCaseCurrency() {
+  const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+  return new Promise(resolve => {
+    gScript.addMessageListener(
+      "check-complete",
+      function checkCompleteHandler() {
+        gScript.removeMessageListener("check-complete", checkCompleteHandler);
+        resolve();
+      }
+    );
+    gScript.sendAsyncMessage("check-lower-case-currency");
+  });
+}
+
+function testWithWellFormedCurrencyCodes() {
+  for (const currency of wellFormedCurrencyCodes) {
+    const details = {
+      total: {
+        label: "Well Formed Currency",
+        amount: {
+          currency,
+          value: "1.00",
+        },
+      },
+    };
+    try {
+      const payRequest = new PaymentRequest(defaultMethods, details);
+    } catch (e) {
+      const msg = `Unexpected error while creating payment request with well-formed currency (${currency}) ${
+        e.name
+      }`;
+      ok(false, msg);
+    }
+  }
+}
+
+function testWithInvalidCurrencyCodes() {
+  for (const invalidCurrency of invalidCurrencyCodes) {
+    const invalidDetails = {
+      total: {
+        label: "Invalid Currency",
+        amount: {
+          currency: invalidCurrency,
+          value: "1.00",
+        },
+      },
+    };
+    try {
+      const payRequest = new PaymentRequest(defaultMethods, invalidDetails);
+      ok(
+        false,
+        `Creating a Payment Request with invalid currency (${invalidCurrency}) must throw.`
+      );
+    } catch (e) {
+      is(
+        e.name,
+        "RangeError",
+        `Expected rejected with 'RangeError', but got '${e.name}'.`
+      );
+    }
+  }
+}
+
+async function testUpdateWithInvalidCurrency() {
+  const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(
+    true
+  );
+  gScript.sendAsyncMessage("set-update-with-invalid-details-ui-service");
+  const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+  payRequest.addEventListener("shippingaddresschange", event => {
+    event.updateWith(Promise.resolve(updatedInvalidCurrencyDetails));
+  });
+  payRequest.addEventListener("shippingoptionchange", event => {
+    event.updateWith(updatedInvalidCurrencyDetails);
+  });
+  try {
+    await payRequest.show();
+    ok(false, "Should have rejected with 'RangeError'");
+  } catch (err) {
+    is(
+      err.name,
+      "RangeError",
+      `Should be rejected with 'RangeError', but got '${err.name}'.`
+    );
+  }
+  handler.destruct();
+}
+
+async function testUpdateWithInvalidAmount() {
+  const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(
+    true
+  );
+  gScript.sendAsyncMessage("set-update-with-invalid-details-ui-service");
+  const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+  payRequest.addEventListener("shippingaddresschange", event => {
+    event.updateWith(updateWithInvalidAmount());
+  });
+  payRequest.addEventListener("shippingoptionchange", event => {
+    event.updateWith(updateWithInvalidAmount());
+  });
+  try {
+    await payRequest.show();
+    ok(false, "Should be rejected with 'TypeError'");
+  } catch (err) {
+    is(
+      err.name,
+      "TypeError",
+      `Should be rejected with 'TypeError', but got ${err.name}.`
+    );
+  }
+  handler.destruct();
+}
+
+function testSpecialAmount() {
+  try {
+    new PaymentRequest(defaultMethods, specialAmountDetails);
+    ok(false, "Should throw '42', but got resolved.");
+  } catch (e) {
+    is(e, "42", "Expected throw '42'. but got " + e);
+  }
+}
+
+function testInvalidTotalAmounts() {
+  for (const invalidAmount of invalidTotalAmounts) {
+    try {
+      const invalidDetails = {
+        total: {
+          label: "",
+          amount: {
+            currency: "USD",
+            value: invalidAmount,
+          },
+        },
+      };
+      new PaymentRequest(defaultMethods, invalidDetails);
+      ok(false, "Should throw 'TypeError', but got resolved.");
+    } catch (err) {
+      is(err.name, "TypeError", `Expected 'TypeError', but got '${err.name}'`);
+    }
+  }
+}
+
+function testInvalidAmounts() {
+  for (const invalidAmount of invalidAmounts) {
+    try {
+      new PaymentRequest(defaultMethods, {
+        total: {
+          label: "",
+          amount: {
+            currency: "USD",
+            value: "1.00",
+          },
+        },
+        displayItems: [
+          {
+            label: "",
+            amount: {
+              currency: "USD",
+              value: invalidAmount,
+            },
+          },
+        ],
+      });
+      ok(false, "Should throw 'TypeError', but got resolved.");
+    } catch (err) {
+      is(err.name, "TypeError", `Expected 'TypeError', but got '${err.name}'.`);
+    }
+  }
+}
+
+function teardown() {
+  return new Promise(resolve => {
+    gScript.addMessageListener(
+      "teardown-complete",
+      function teardownCompleteHandler() {
+        gScript.removeMessageListener(
+          "teardown-complete",
+          teardownCompleteHandler
+        );
+        gScript.removeMessageListener("test-fail", testFailHandler);
+        gScript.destroy();
+        SimpleTest.finish();
+        resolve();
+      }
+    );
+    gScript.sendAsyncMessage("teardown");
+  });
+}
+
+async function runTests() {
+  try {
+    testInvalidTotalAmounts();
+    testSpecialAmount();
+    testInvalidAmounts();
+    testWithWellFormedCurrencyCodes();
+    testWithInvalidCurrencyCodes();
+    await testUpdateWithInvalidAmount();
+    await testUpdateWithInvalidCurrency();
+    await testWithLowerCaseCurrency();
+    await teardown();
+  } catch (e) {
+    console.error(e);
+    ok(false, "Unexpected error: " + e.name);
+    SimpleTest.finish();
+  }
+}
+
+window.addEventListener("load", () => {
+  SpecialPowers.pushPrefEnv(
+    {
+      set: [["dom.payments.request.enabled", true]],
+    },
+    runTests
+  );
+});
+</script>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1367669">Mozilla Bug 1367669</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1388661">Mozilla Bug 1388661</a>

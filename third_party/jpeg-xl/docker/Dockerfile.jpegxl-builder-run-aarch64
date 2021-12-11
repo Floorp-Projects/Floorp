@@ -1,0 +1,37 @@
+# Copyright (c) the JPEG XL Project Authors. All rights reserved.
+#
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Build an Ubuntu-based docker image for aarch64 with the installed software
+# needed to run JPEG XL. This is only useful when running on actual aarch64
+# hardware.
+
+FROM arm64v8/ubuntu:bionic
+
+COPY scripts/99_norecommends /etc/apt/apt.conf.d/99_norecommends
+
+# Set a prompt for when using it locally.
+ENV PS1="\[\033[01;33m\]\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN set -ex; \
+  apt-get update -y; \
+  apt-get install -y \
+    bsdmainutils \
+    cmake \
+    curl \
+    ca-certificates \
+    extra-cmake-modules \
+    git \
+    imagemagick \
+    libjpeg8 \
+    libgif7 \
+    libgoogle-perftools4 \
+    libopenexr22 \
+    libpng16-16 \
+    libqt5x11extras5 \
+    libsdl2-2.0-0 \
+    parallel; \
+  rm -rf /var/lib/apt/lists/*;

@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a media element captureStream works when disabling MediaTracks</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const manager = new MediaTestManager();
+
+async function startTest(test, token) {
+  manager.started(token);
+  const v = document.createElement('video');
+
+  document.body.appendChild(v);
+  v.token = token;
+  v.id = "MediaDecoder";
+
+  // Log events for debugging.
+  const events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause"];
+  function logEvent(e) {
+    Log(token, `${token}: ${e.target.id} got ${e.type}`);
+  }
+  for (const e of events) {
+    v.addEventListener(e, logEvent);
+  };
+
+  v.src = test.name;
+  v.preload = 'metadata';
+  await new Promise(r => v.onloadedmetadata = r);
+
+  const stream = v.mozCaptureStream();
+
+  is(stream.getAudioTracks().length, Math.min(1, v.audioTracks.length),
+    `${token}: Expected number of audio tracks`);
+  is(stream.getVideoTracks().length, Math.min(1, v.videoTracks.length),
+    `${token}: Expected number of video tracks`);
+
+  if (v.audioTracks.length) {
+    v.audioTracks[0].enabled = false;
+    const track = stream.getAudioTracks()[0];
+    await new Promise(r => track.onended = r);
+    is(track.readyState, "ended", `${token}: Audio track has ended on removal`);
+    await new Promise(r => stream.onremovetrack = r);
+    is(stream.getAudioTracks().length, 0,
+      `${token}: Audio track was removed on removetrack`);
+  }
+
+  if (v.videoTracks.length) {
+    v.videoTracks[0].selected = false;
+    const track = stream.getVideoTracks()[0];
+    await new Promise(r => track.onended = r);
+    is(track.readyState, "ended", `${token}: Video track has ended on removal`);
+    await new Promise(r => stream.onremovetrack = r);
+    is(stream.getVideoTracks().length, 0,
+      `${token}: Video track was removed on removetrack`);
+  }
+
+  stream.onaddtrack = () => ok(false, "Unexpected addtrack event");
+
+  v.play();
+
+  await Promise.race([
+    new Promise(r => v.ontimeupdate = r),
+    new Promise((res, rej) => v.onerror = () => rej(new Error(v.error.message))),
+  ]);
+
+  is(stream.getTracks().length, 0, `${token}: no tracks appeared during playback`);
+  removeNodeAndSource(v);
+}
+
+(async () => {
+  SimpleTest.requestCompleteLog();
+  SimpleTest.waitForExplicitFinish();
+  await SpecialPowers.pushPrefEnv(
+    { "set": [
+      ["media.track.enabled", true],
+    ]});
+  let tests = gPlayTests;
+  // Filter out bug1377278.webm due to bug 1541401.
+  tests = tests.filter(t => !t.name.includes("1377278"));
+
+  manager.runTests(tests, async (test, token) => {
+    try {
+      await startTest(test, token);
+    } catch(e) {
+      ok(false, `Caught exception for ${token}: ${e}`);
+    }
+    manager.finished(token);
+  });
+})();
+</script>
+</pre>
+</body>
+</html>

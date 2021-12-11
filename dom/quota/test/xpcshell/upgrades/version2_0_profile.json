@@ -1,0 +1,105 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "chrome",
+                "dir": true,
+                "entries": [
+                  {
+                    "name": "cache",
+                    "dir": true,
+                    "entries": [
+                      { "name": "morgue", "dir": true },
+                      { "name": "caches.sqlite", "dir": false }
+                    ]
+                  },
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "asmjs", "dir": true },
+                  {
+                    "name": "cache",
+                    "dir": true,
+                    "entries": [
+                      { "name": "morgue", "dir": true },
+                      { "name": "caches.sqlite", "dir": false }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterInit",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "chrome",
+                "dir": true,
+                "entries": [
+                  {
+                    "name": "cache",
+                    "dir": true,
+                    "entries": [
+                      { "name": "morgue", "dir": true },
+                      { "name": ".padding", "dir": false },
+                      { "name": "caches.sqlite", "dir": false }
+                    ]
+                  },
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  {
+                    "name": "cache",
+                    "dir": true,
+                    "entries": [
+                      { "name": "morgue", "dir": true },
+                      { "name": ".padding", "dir": false },
+                      { "name": "caches.sqlite", "dir": false }
+                    ]
+                  },
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          { "name": "ls-archive.sqlite", "dir": false }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]

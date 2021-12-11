@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783129
+-->
+<head>
+  <title>Test for custom elements lifecycle callback</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
+<div id="container">
+</div>
+<script>
+
+var container = document.getElementById("container");
+
+function testChangeAttributeInEnteredViewCallback() {
+  var attributeChangedCallbackCalled = false;
+  var connectedCallbackCalled = false;
+
+  class Two extends HTMLElement
+  {
+    connectedCallback() {
+      is(connectedCallbackCalled, false, "Connected callback should be called only once in this test.");
+      connectedCallbackCalled = true;
+      is(attributeChangedCallbackCalled, false, "Attribute changed callback should not be called before changing attribute.");
+      this.setAttribute("foo", "bar");
+      is(attributeChangedCallbackCalled, true, "Transition from user-agent implementation to script should result in attribute changed callback being called.");
+      runNextTest();
+    }
+
+    attributeChangedCallback() {
+      is(connectedCallbackCalled, true, "Connected callback should have been called prior to attribute changed callback.");
+      is(attributeChangedCallbackCalled, false, "Attribute changed callback should only be called once in this tests.");
+      attributeChangedCallbackCalled = true;
+    }
+
+    static get observedAttributes() {
+      return ["foo"];
+    }
+  }
+
+  customElements.define("x-two", Two);
+  var elem = document.createElement("x-two");
+
+  var container = document.getElementById("container");
+  container.appendChild(elem);
+}
+
+function testLeaveViewInEnteredViewCallback() {
+  var connectedCallbackCalled = false;
+  var disconnectedCallbackCalled = false;
+  var container = document.getElementById("container");
+
+  class Three extends HTMLElement {
+    connectedCallback() {
+      is(this.parentNode, container, "Parent node should the container in which the node was appended.");
+      is(connectedCallbackCalled, false, "Connected callback should be called only once in this test.");
+      connectedCallbackCalled = true;
+      is(disconnectedCallbackCalled, false, "Disconnected callback should not be called prior to removing element from document.");
+      container.removeChild(this);
+      is(disconnectedCallbackCalled, true, "Transition from user-agent implementation to script should run left view callback.");
+      runNextTest();
+    }
+
+    disconnectedCallback() {
+      is(disconnectedCallbackCalled, false, "The disconnected callback should only be called once in this test.");
+      is(connectedCallbackCalled, true, "The connected callback should be called prior to disconnected callback.");
+      disconnectedCallbackCalled = true;
+    }
+  };
+
+  customElements.define("x-three", Three);
+  var elem = document.createElement("x-three");
+
+  container.appendChild(elem);
+}
+
+function testStackedAttributeChangedCallback() {
+  var attributeChangedCallbackCount = 0;
+
+  var attributeSequence = ["foo", "bar", "baz"];
+
+  class Four extends HTMLElement
+  {
+    attributeChangedCallback(attrName, oldValue, newValue) {
+      if (newValue == "baz") {
+        return;
+      }
+
+      var nextAttribute = attributeSequence.shift();
+      ok(true, nextAttribute);
+      // Setting this attribute will call this function again, when
+      // control returns to the script, the last attribute in the sequence should
+      // be set on the element.
+      this.setAttribute("foo", nextAttribute);
+      is(this.getAttribute("foo"), "baz", "The last value in the sequence should be the value of the attribute.");
+
+      attributeChangedCallbackCount++;
+      if (attributeChangedCallbackCount == 3) {
+        runNextTest();
+      }
+    }
+
+    static get observedAttributes() {
+      return ["foo"];
+    }
+  }
+
+  customElements.define("x-four", Four);
+  var elem = document.createElement("x-four");
+  elem.setAttribute("foo", "changeme");
+}
+
+var testFunctions = [
+  testChangeAttributeInEnteredViewCallback,
+  testLeaveViewInEnteredViewCallback,
+  testStackedAttributeChangedCallback,
+  SimpleTest.finish
+];
+
+function runNextTest() {
+  if (testFunctions.length > 0) {
+    var nextTestFunction = testFunctions.shift();
+    info(`Start ${nextTestFunction.name} ...`);
+    nextTestFunction();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+runNextTest();
+
+</script>
+</body>
+</html>

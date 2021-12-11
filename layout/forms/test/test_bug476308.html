@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=476308
+-->
+<head>
+  <title>Test for Bug 345267</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<button style="-moz-appearance: none; width: 100px; height: 60px; background-color: red; border: 2px solid green; box-shadow: 30px 0px 3.5px black; position: absolute; top: 300px; left: 20px;"
+        id="button1">1</button>
+
+<br />
+<div style="width: 100px; height: 100px; background-color: green; border: 3px dotted blue; box-shadow: -30px -20px 0px black; position: absolute; top: 500px; left: 70px;"
+     id="div1">2</div>
+
+<script type="text/javascript">
+  var elem = document.elementFromPoint(130, 310);
+  isnot(elem, document.getElementById("button1"), "button1's box-shadow is receiving events when it shouldn't");
+
+  elem = document.elementFromPoint(50, 500);
+  isnot(elem, document.getElementById("div1"), "div1's box-shadow is receiving events when it shouldn't");
+</script>
+
+</body>
+</html>
+

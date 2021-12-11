@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1699284
+-->
+<window title="Mozilla Bug 1699284"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<body>
+<label id="label1" accesskey="a">Label 1</label><button id="button1" accesskey="a">Button 1</button>
+<label id="label2" accesskey="a" tabindex="0">Label 2</label><button id="button2">Button 2</button>
+<label id="label3">Label 3</label><button id="button3" accesskey="a">Button 3</button>
+<label id="label4" accesskey="a" control="button4">Label 4</label><button id="button4" disabled="true">Button 4</button>
+<label id="label5" accesskey="a" control="button5">Label 5</label><button id="button5">Button 5</button>
+<!-- Tests code -->
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1699284 **/
+
+function PerformAccessKey(aKey) {
+  synthesizeKey(aKey, navigator.platform.includes("Mac") ? { altKey: true, ctrlKey: true }
+                                                         : { altKey: true, shiftKey: true });
+};
+
+add_task(async function test_accesskey() {
+  let [label1, label2, label3, label4, label5] = document.querySelectorAll("label");
+  let [button1, button2, button3, button4, button5] = document.querySelectorAll("button");
+
+  [
+    label1, label2, label3, label4, label5, button1, button2, button3, button4, button5
+  ].forEach(function(ele) {
+    ele.addEventListener("click", function(e) {
+      ok(false, `${e.target.id} should not receive click event`);
+    });
+  });
+
+  PerformAccessKey("a");
+  is(document.activeElement.id, button1.id, `focus should move to ${button1.id}`);
+
+  PerformAccessKey("a");
+  is(document.activeElement.id, button3.id, `focus should move to ${button3.id}`);
+
+  PerformAccessKey("a");
+  is(document.activeElement.id, button5.id, `focus should move to ${button5.id}`);
+
+  // Cycle back to first element
+  PerformAccessKey("a");
+  is(document.activeElement.id, button1.id, `focus should move to ${button1.id}`);
+});
+
+]]>
+</script>
+</body>
+</window>

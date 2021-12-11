@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=382113
+-->
+<head>
+  <title>Test for Bug 382113</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script class="testbody" type="application/javascript">
+
+    SimpleTest.waitForExplicitFinish();
+    var childGotOnload = false;
+    var objectGotOnload = false;
+
+    /** Test for Bug 100533 **/
+    function checkEvents() {
+      is(childGotOnload, true, "Child got load event");
+      is(objectGotOnload, true, "Object got load event");
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="checkEvents()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=382113">Mozilla Bug 382113</a>
+<p id="display"></p>
+<div id="content">
+  <object type="text/html" data="bug382113_object.html"
+          onload="objectGotOnload = true;"></object>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
+

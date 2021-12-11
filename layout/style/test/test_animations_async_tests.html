@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1086937</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  function run() {
+    SpecialPowers.pushPrefEnv(
+      {"set": [['layout.css.font-loading-api.enabled', true]]},
+      function() { window.open("file_animations_async_tests.html"); });
+  }
+  </script>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1086937">Mozilla Bug 1086937</a>
+<div id="display"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form field autofill in sandboxed documents (null principal)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script>
+var chromeScript = runChecksAfterCommonInit();
+
+var setupScript = runInParent(function setup() {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                           Ci.nsILoginInfo, "init");
+  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
+
+  var login1 = new nsLoginInfo("https://example.com", "", null,
+                               "tempuser1", "temppass1", "uname", "pword");
+
+  // try/catch in case someone runs the tests manually, twice.
+  try {
+    Services.logins.addLogin(login1);
+  } catch (e) {
+    assert.ok(false, "addLogin threw: " + e);
+  }
+});
+</script>
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="sandboxed"
+          sandbox=""></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: form field autofill in sandboxed documents (null principal) **/
+
+let sandboxed = document.getElementById("sandboxed");
+let uname;
+let pword;
+
+function promiseExecuteSoon() {
+  return new Promise(SimpleTest.executeSoon);
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["security.insecure_field_warning.contextual.enabled", true],
+  ]});
+});
+
+add_task(async function test_no_autofill_in_form() {
+  sandboxed.src = "form_basic.html";
+  let frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
+  let DOMFormHasPasswordPromise = new Promise(resolve => {
+    SpecialPowers.addChromeEventListener("DOMFormHasPassword", function onDFHP() {
+      SpecialPowers.removeChromeEventListener("DOMFormHasPassword", onDFHP);
+      resolve();
+    });
+  });
+  // Can't use SimpleTest.promiseFocus as it doesn't work with the sandbox.
+  await SimpleTest.promiseWaitForCondition(() => {
+    return frameWindow.document.readyState == "complete" &&
+             frameWindow.location.href.endsWith("form_basic.html");
+  }, "Check frame is loaded");
+  info("frame loaded");
+  await DOMFormHasPasswordPromise;
+  let frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
+
+  uname = frameDoc.getElementById("form-basic-username");
+  pword = frameDoc.getElementById("form-basic-password");
+
+  await promiseExecuteSoon();
+  // Autofill shouldn't happen in the sandboxed frame but would have happened by
+  // now since DOMFormHasPassword was observed above.
+  checkLoginForm(uname, "", pword, "");
+
+  info("blurring the username field after typing the username");
+  uname.focus();
+  uname.setUserInput("tempuser1");
+  synthesizeKey("VK_TAB", {}, frameWindow);
+  await promiseExecuteSoon();
+  await promiseExecuteSoon();
+  await promiseExecuteSoon();
+  checkLoginForm(uname, "tempuser1", pword, "");
+});
+
+add_task(async function test_no_autofill_outside_form() {
+  sandboxed.src = "formless_basic.html";
+  let frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
+  let DOMInputPasswordAddedPromise = new Promise(resolve => {
+    SpecialPowers.addChromeEventListener("DOMInputPasswordAdded", function onDIPA() {
+      SpecialPowers.removeChromeEventListener("DOMInputPasswordAdded", onDIPA);
+      resolve();
+    });
+  });
+  // Can't use SimpleTest.promiseFocus as it doesn't work with the sandbox.
+  await SimpleTest.promiseWaitForCondition(() => {
+    return frameWindow.document.readyState == "complete" &&
+             frameWindow.location.href.endsWith("formless_basic.html");
+  }, "Check frame is loaded");
+  info("frame loaded");
+  await DOMInputPasswordAddedPromise;
+  let frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
+
+  uname = frameDoc.getElementById("form-basic-username");
+  pword = frameDoc.getElementById("form-basic-password");
+
+  await promiseExecuteSoon();
+  // Autofill shouldn't happen in the sandboxed frame but would have happened by
+  // now since DOMInputPasswordAdded was observed above.
+  checkLoginForm(uname, "", pword, "");
+});
+</script>
+</pre>
+</body>
+</html>

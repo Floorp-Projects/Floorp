@@ -1,0 +1,150 @@
+<html>
+
+<head>
+  <title>Testing HTML scrollable frames (css overflow style)</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+    // //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Change scroll range to not empty size and inserts a child into container
+     * to trigger tree update of the container. Prior to bug 677154 not empty
+     * size resulted to accessible creation for scroll area, container tree
+     * update picked up that accessible unattaching scroll area accessible
+     * subtree.
+     */
+    function changeScrollRange(aContainerID, aScrollAreaID) {
+      this.containerNode = getNode(aContainerID);
+      this.container = getAccessible(this.containerNode);
+      this.scrollAreaNode = getNode(aScrollAreaID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.container),
+      ];
+
+      this.invoke = function changeScrollRange_invoke() {
+        this.scrollAreaNode.style.width = "20px";
+        this.containerNode.appendChild(document.createElement("input"));
+      };
+
+      this.finalCheck = function changeScrollRange_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { SECTION: [ // scroll area
+              { ENTRY: [] }, // child content
+            ] },
+            { ENTRY: [] }, // inserted input
+          ] };
+        testAccessibleTree(this.container, accTree);
+      };
+
+      this.getID = function changeScrollRange_getID() {
+        return "change scroll range for " + prettyName(aScrollAreaID);
+      };
+    }
+
+    /**
+     * Change scrollbar styles from hidden to auto to make the scroll area focusable.
+     * That causes us to create an accessible for it.
+     * Make sure the tree stays intact.
+     * The scroll area has no ID on purpose to make it inaccessible initially.
+     */
+    function makeFocusableByScrollbarStyles(aContainerID) {
+      this.container = getAccessible(aContainerID);
+      this.scrollAreaNode = getNode(aContainerID).firstChild;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getAccessible, this.scrollAreaNode),
+        new invokerChecker(EVENT_REORDER, this.container),
+      ];
+
+      this.invoke = function makeFocusableByScrollbarStyles_invoke() {
+        var accTree =
+          { SECTION: [ // container
+            { PARAGRAPH: [ // paragraph
+              { TEXT_LEAF: [] },
+            ] },
+          ] };
+        testAccessibleTree(this.container, accTree);
+
+        this.scrollAreaNode.style.overflow = "auto";
+      };
+
+      this.finalCheck = function makeFocusableByScrollbarStyles_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { role: ROLE_SECTION,  // focusable scroll area
+              states: STATE_FOCUSABLE,
+              children: [
+                { PARAGRAPH: [ // paragraph
+                  { TEXT_LEAF: [] }, // text leaf
+                ] },
+              ],
+            }, // focusable scroll area
+          ] };
+        testAccessibleTree(this.container, accTree);
+      };
+
+      this.getID = function makeFocusableByScrollbarStyles_getID() {
+        return "make div focusable through scrollbar styles "
+               + prettyName(aContainerID);
+      };
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+    // //////////////////////////////////////////////////////////////////////////
+
+    var gQueue = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    // gA11yEventDumpToConsole = true;
+
+    function doTests() {
+      gQueue = new eventQueue();
+
+      gQueue.push(new changeScrollRange("container", "scrollarea"));
+      gQueue.push(new makeFocusableByScrollbarStyles("container3"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=677154"
+     title="Detached document accessibility tree">
+    Mozilla Bug 677154</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div id="container"><div id="scrollarea" style="overflow:auto;"><input></div></div>
+  <div id="container2"><div id="scrollarea2" style="overflow:hidden;"></div></div>
+  <div id="container3"><div style="overflow: hidden; height: 1px;"><p>foo</p></div></div>
+</body>
+</html>

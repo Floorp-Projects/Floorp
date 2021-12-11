@@ -1,0 +1,36 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Remote Settings Client")
+
+DIRS += [
+    "dumps",
+    "static-dumps",
+]
+
+EXTRA_COMPONENTS += [
+    "servicesSettings.manifest",
+]
+
+EXTRA_JS_MODULES["services-settings"] += [
+    "Attachments.jsm",
+    "Database.jsm",
+    "IDBHelpers.jsm",
+    "remote-settings.js",
+    "RemoteSettingsClient.jsm",
+    "RemoteSettingsComponents.jsm",
+    "RemoteSettingsWorker.js",
+    "RemoteSettingsWorker.jsm",
+    "SharedUtils.jsm",
+    "Utils.jsm",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+
+SPHINX_TREES["/services/settings"] = "docs"

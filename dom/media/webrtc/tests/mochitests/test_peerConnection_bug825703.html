@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "825703",
+    title: "RTCConfiguration valid/invalid permutations"
+  });
+
+// ^^^ Don't insert data above this line without adjusting line number below!
+var lineNumberAndFunction = {
+// <--- 16 is the line this must be.
+  line: 17, func: () => new RTCPeerConnection().onaddstream = () => {}
+};
+
+var makePC = (config, expected_error) => {
+  var exception;
+  try {
+    new RTCPeerConnection(config).close();
+  } catch (e) {
+    exception = e;
+  }
+  is((exception? exception.name : "success"), expected_error || "success",
+     "RTCPeerConnection(" + JSON.stringify(config) + ")");
+};
+
+// The order of properties in objects is not guaranteed in JavaScript, so this
+// transform produces json-comparable dictionaries. The resulting copy is only
+// meant to be used in comparisons (e.g. array-ness is not preserved).
+
+var toComparable = o =>
+    (typeof o != 'object' || !o)? o : Object.keys(o).sort().reduce((co, key) => {
+  co[key] = toComparable(o[key]);
+  return co;
+}, {});
+
+// This is a test of the iceServers parsing code + readable errors
+runNetworkTest(() => {
+  var exception = null;
+
+  try {
+    new RTCPeerConnection().close();
+  } catch (e) {
+    exception = e;
+  }
+  ok(!exception, "RTCPeerConnection() succeeds");
+  exception = null;
+
+  // Some overlap still with WPT RTCConfiguration-iceServers.html
+
+  makePC({ iceServers: [
+    { urls:"stun:127.0.0.1" },
+    { urls:"stun:localhost", foo:"" },
+    { urls: ["stun:127.0.0.1", "stun:localhost"] },
+    { urls:"stuns:localhost", foo:"" },
+    { urls:"turn:[::1]:3478", username:"p", credential:"p" },
+    { urls:"turn:[::1]:3478", username:"", credential:"" },
+    { urls:"turns:[::1]:3478", username:"", credential:"" },
+    { urls:"turn:localhost:3478?transport=udp", username:"p", credential:"p" },
+    { urls: ["turn:[::1]:3478", "turn:localhost"], username:"p", credential:"p" },
+    { urls:"turns:localhost:3478?transport=udp", username:"p", credential:"p" },
+    { url:"stun:localhost", foo:"" },
+    { url:"turn:localhost", username:"p", credential:"p" }
+  ]});
+
+  makePC({ iceServers: [{ urls:"http:0.0.0.0" }] }, "SyntaxError");
+
+  try {
+    new RTCPeerConnection({ iceServers: [{ url:"http:0.0.0.0" }] }).close();
+  } catch (e) {
+    ok(e.message.indexOf("http") > 0,
+       "RTCPeerConnection() constructor has readable exceptions");
+  }
+
+  // Test getConfiguration
+  const config = {
+    bundlePolicy: "max-bundle",
+    iceTransportPolicy: "relay",
+    peerIdentity: null,
+    iceServers: [
+      { urls: ["stun:127.0.0.1", "stun:localhost"], credentialType:"password" },
+      { urls: ["turn:[::1]:3478"], username:"p", credential:"p", credentialType:"password" },
+    ],
+  };
+  // Make sure sdpSemantics is not exposed in getConfiguration
+  const configWithExtraProps = Object.assign({},
+                                             config,
+                                             {sdpSemantics: "plan-b"});
+  ok("sdpSemantics" in configWithExtraProps, "sdpSemantics control");
+
+  const pc = new RTCPeerConnection(configWithExtraProps);
+  is(JSON.stringify(toComparable(pc.getConfiguration())),
+     JSON.stringify(toComparable(config)), "getConfiguration");
+  pc.close();
+
+  var push = prefs => SpecialPowers.pushPrefEnv(prefs);
+
+  return Promise.resolve()
+  // This set of tests are setting the about:config User preferences for default
+  // ice servers and checking the outputs when RTCPeerConnection() is
+  // invoked. See Bug 1167922 for more information.
+  .then(() => push({ set: [['media.peerconnection.default_iceservers', ""]] })
+    .then(() => makePC())
+    .then(() => push({ set: [['media.peerconnection.default_iceservers', "k"]] }))
+    .then(() => makePC())
+    .then(() => push({ set: [['media.peerconnection.default_iceservers', "[{\"urls\": [\"stun:stun.services.mozilla.com\"]}]"]] }))
+    .then(() => makePC()))
+  // This set of tests check that warnings work. See Bug 1254839 for more.
+  .then(() => {
+    let promise = new Promise(resolve => {
+      SpecialPowers.registerConsoleListener(msg => {
+        if (msg.message.includes("onaddstream")) {
+          SpecialPowers.postConsoleSentinel();
+          resolve(msg.message);
+        }
+      });
+    });
+    lineNumberAndFunction.func();
+    return promise;
+  }).then(warning => {
+    is(warning.split('"')[1],
+       "WebRTC: onaddstream is deprecated! Use peerConnection.ontrack instead.",
+       "warning logged");
+    var remainder = warning.split('"').slice(2).join('"');
+    info(remainder);
+    ok(remainder.includes('file: "' + window.location + '"'),
+       "warning has this file");
+    ok(remainder.includes('line: ' + lineNumberAndFunction.line),
+       "warning has correct line number");
+    });
+});
+</script>
+</pre>
+</body>
+</html>

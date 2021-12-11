@@ -1,0 +1,40 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# dummy library name to avoid skipping building the source here, which
+# we only need the object for.
+Library("elfhack_inject")
+
+DIST_INSTALL = False
+
+cpu = CONFIG["CPU_ARCH"]
+
+gen_src = "%s.c" % cpu
+GeneratedFile(
+    gen_src, script="copy_source.py", entry_point="copy", inputs=["../inject.c"]
+)
+
+SOURCES += [
+    "!%s" % gen_src,
+]
+
+NO_PGO = True
+
+for v in ("OS_CPPFLAGS", "OS_CFLAGS", "DEBUG", "CLANG_PLUGIN", "OPTIMIZE", "FRAMEPTR"):
+    flags = []
+    idx = 0
+    for flag in COMPILE_FLAGS[v]:
+        if flag == "-isystem":
+            flags.append("".join(COMPILE_FLAGS[v][idx : idx + 2]))
+        elif flag.startswith(("-m", "-I", "-isystem")) or flag == "-fPIC":
+            flags.append(flag)
+        idx += 1
+    COMPILE_FLAGS[v] = flags
+
+COMPILE_FLAGS["OS_CFLAGS"] += ["-O2", "-fno-stack-protector", "-fno-lto"]
+
+AllowCompilerWarnings()
+NoVisibilityFlags()

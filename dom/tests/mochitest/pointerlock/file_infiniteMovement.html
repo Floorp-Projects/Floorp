@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+  <head>
+    <title>Bug 633602 - file_movementXY.html</title>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <div id="div"></div>
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 633602
+         * This test checks if movementX and movementY
+         * are present in a mouse event object.
+         * It also checks the values for movementXY.
+         * They should be equal to the current screenXY minus
+         * the last screenXY
+         * This test will also test that the incremental movement is
+         * not constrained to the width of the screen.
+         */
+
+        SimpleTest.waitForExplicitFinish();
+
+        var div = document.getElementById("div")
+          , divCenterWidth = 0
+          , divCenterHeight = 0
+          , totalMovementX = 0
+          , totalMovementY = 0
+          , mouseMoveIntervalID;
+
+        function runTests () {
+          ok(totalMovementX > div.getBoundingClientRect().width,
+               "Should have moved more than one screen's worth in width." +
+               "TotalX: " + totalMovementX + " Screensize X: " + div.getBoundingClientRect().width);
+          ok(totalMovementY > div.getBoundingClientRect().height,
+             "Should have moved more than one screen's worth in height." +
+             "TotalY: " + totalMovementY + " Screensize Y: " + div.getBoundingClientRect().height);
+        }
+
+        var firstMoveListener = function (e) {
+          info("Got first mousemove");
+          clearInterval(mouseMoveIntervalID);
+          div.removeEventListener("mousemove", firstMoveListener);
+          div.addEventListener("mousemove", secondMoveListener);
+
+          // Bug 1357082
+          // Retrigger synthesizeMouse until it actually happens.
+          mouseMoveIntervalID = setInterval(() => {
+            synthesizeMouse(div,(divCenterWidth/2) * 3,
+              (divCenterHeight/2) * 3, {
+              type: "mousemove"
+            }, window);
+          }, 100);
+        }
+
+        var secondMoveListener = function (e) {
+          info("Got second mousemove");
+          clearInterval(mouseMoveIntervalID);
+          totalMovementX = divCenterWidth + ((divCenterWidth / 2) * 3);
+          totalMovementY = divCenterHeight + ((divCenterHeight / 2) * 3);
+
+          div.removeEventListener("mousemove", secondMoveListener);
+          addFullscreenChangeContinuation("exit", function() {
+            info("Got fullscreenchange for exiting");
+            runTests();
+            SimpleTest.finish();
+          });
+          document.exitFullscreen();
+        }
+
+        document.addEventListener("pointerlockchange", function (e) {
+          if (document.pointerLockElement === div) {
+            info("Got pointerlockchange for entering");
+            div.addEventListener("mousemove", firstMoveListener);
+
+            divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
+            divCenterHeight = Math.round(div.getBoundingClientRect().height / 2);
+
+            // Bug 1357082
+            // Retrigger synthesizeMouse until it actually happens.
+            mouseMoveIntervalID = setInterval(() => {
+              synthesizeMouse(div, divCenterWidth, divCenterHeight, {
+                type: "mousemove"
+              }, window);
+            }, 100);
+          } else {
+            info("Got pointerlockchange for exiting");
+          }
+        });
+
+        function start() {
+          info("Requesting fullscreen on parent");
+          addFullscreenChangeContinuation("enter", function() {
+            info("Got fullscreenchange for entering");
+            div.requestPointerLock();
+          });
+          div.requestFullscreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

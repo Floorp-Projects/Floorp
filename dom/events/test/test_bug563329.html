@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=563329
+-->
+<head>
+  <title>Test for Bug 563329</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=563329">Mozilla Bug 563329</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 563329 **/
+/*  ui.click_hold_context_menus preference */
+
+var target = null;
+var testGen = getTests();
+var currentTest = null;
+
+function* getTests() {
+  let tests = [
+    { "func": function() { setTimeout(doCheckContextMenu, 100)}, "message": "Context menu should has fired"},
+    { "func": function() { setTimeout(doCheckDuration, 100)}, "message": "Context menu should has fired with delay"},
+    { "func": function() { setTimeout(finishTest, 100)}, "message": "" }
+  ];
+
+  let i = 0;
+  while (i < tests.length)
+    yield tests[i++];
+}
+
+function doTest() {
+  target = document.getElementById("testTarget");
+
+  document.documentElement.addEventListener("contextmenu", function() {
+    SimpleTest.ok(true, currentTest.message);
+    synthesizeMouse(target, 0, 0, {type: "mouseup"});
+    SimpleTest.executeSoon(function() {
+      currentTest = testGen.next();
+      currentTest.func();
+    });
+  });
+
+  SimpleTest.executeSoon(function() {
+    currentTest = testGen.next();
+    currentTest.func();
+  });
+}
+
+function doCheckContextMenu() {
+  synthesizeMouse(target, 0, 0, {type: "mousedown"});
+}
+
+function doCheckDuration() {
+  var duration = 50;
+
+  // Change click hold delay
+  SpecialPowers.pushPrefEnv({"set":[["ui.click_hold_context_menus.delay", duration]]}, function() { synthesizeMouse(target, 0, 0, {type: "mousedown"}); });
+}
+
+function finishTest() {
+  synthesizeKey("VK_ESCAPE", {}, window);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set":[["ui.click_hold_context_menus", true]]}, doTest);
+});
+</script>
+</pre>
+<span id="testTarget" style="border: 1px solid black;">testTarget</span>
+</body>
+</html>

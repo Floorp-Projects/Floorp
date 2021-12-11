@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+    <title></title>
+</head>
+<body>
+<script type="text/javascript">
+    function loadFrame() {
+        document.documentElement.className = "";
+    }
+</script>
+<iframe id=frame onload="loadFrame()" srcdoc="<body><span lang='en'>text</span></body>" marginwidth="100px" marginheight="100px" width=300px height=300px></iframe>
+</body>
+</html>

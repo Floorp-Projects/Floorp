@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Dragging the mouse on a scrollbar for a scrollframe inside nested transforms with a scale component</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript">
+
+async function test() {
+  var scrollableDiv = document.getElementById("scrollable");
+  let scrollPromise = new Promise(resolve => {
+    scrollableDiv.addEventListener("scroll", resolve, {once: true});
+  });
+
+  // Scroll down a small amount (7px). The bug in this case is that the
+  // scrollthumb "jumps" most of the way down the scroll track because with
+  // the bug, the code was incorrectly combining the transforms.
+  // Given the scrollable height of 0.7*2000px and scrollframe height of 0.7*400px,
+  // the scrollthumb should be approximately 0.7*80px = 56px tall. Dragging it 7px
+  // should scroll approximately 50 (unscaled) pixels. If the bug manifests, it will get
+  // dragged by a lot more and scroll to approximately 1300px.
+  var dragFinisher = await promiseVerticalScrollbarDrag(scrollableDiv, 7, 7, 0.7);
+  if (!dragFinisher) {
+    ok(true, "No scrollbar, can't do this test");
+    return;
+  }
+
+  // the events above might be stuck in APZ input queue for a bit until the
+  // layer is activated, so we wait here until the scroll event listener is
+  // triggered.
+  await scrollPromise;
+
+  await dragFinisher();
+
+  // Flush everything just to be safe
+  await promiseOnlyApzControllerFlushed();
+
+  // Ensure the scroll position ended up roughly where we wanted it (around
+  // 50px, but definitely less than 1300px).
+  ok(scrollableDiv.scrollTop < 100, "Scrollbar drag resulted in a scroll position of " + scrollableDiv.scrollTop);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+    <div style="width: 500px; height: 300px; transform: translate(500px, 500px) scale(0.7)">
+        <div id="scrollable" style="transform: translate(-600px, -600px); overflow: scroll">
+            <div style="width: 600px; height: 400px">
+                <div style="width: 600px; height: 2000px; background-image: linear-gradient(red,blue)"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

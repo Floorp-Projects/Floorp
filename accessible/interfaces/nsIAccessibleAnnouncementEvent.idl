@@ -1,0 +1,23 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAccessibleEvent.idl"
+
+/**
+ * Fired when announce() is called on the target accessible.
+ */
+[scriptable, builtinclass, uuid(8818e49c-1286-4fe6-ae82-4d1b795ec88d)]
+interface nsIAccessibleAnnouncementEvent : nsIAccessibleEvent
+{
+  const unsigned short POLITE = 0;
+  const unsigned short ASSERTIVE = 1;
+
+  // String of actual announcement
+  readonly attribute AString announcement;
+
+  // Priority for announcement, could be POLITE or ASSERTIVE, ATs
+  // will decide how to appropriately present it.
+  readonly attribute unsigned short priority;
+};

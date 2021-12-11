@@ -1,0 +1,77 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+This directory contains both sample applications and performance evaluation
+applications.
+
+SAMPLE APPLICATIONS
+
+Currently, there are two performance applications: libpkix_buildThreads and
+nss_threads. And three sample applications: dumpcert, dumpcrl and 
+validateChain..
+
+============================================================================
+
+USAGE: 	dumpcert <certFile>
+	Parses a certificate located at <certFile> and displays it.
+
+Source: <root>/tests/sample_apps/dumpcert.c
+Binary: <root>/bin/sample_apps/dumpcert
+
+============================================================================
+
+USAGE: 	dumpcrl <crlFile>
+	Parses a CRL located at <crlFile> and displays it.
+
+Source: <root>/tests/sample_apps/dumpcrl.c
+Binary: <root>/bin/sample_apps/dumpcrl
+
+============================================================================
+
+USAGE: 	validateChain <trustedCert> <cert_1> <cert_2> ... <cert_n>
+	Validates a chain of n certificates using the given trust anchor.
+
+Source: <root>/tests/sample_apps/validateChain.c
+Binary: <root>/bin/sample_apps/validateChain
+
+============================================================================
+
+PERFORMANCE EVALUATION APPLICATIONS
+
+============================================================================
+
+USAGE:  libpkix_buildthreads <duration> <threads> <eecertNickname> 
+
+	Sets up and runs a PKIX_BuildChain call for the number of seconds
+	specified by <duration> using the number of threads specified by
+	<threads>. This application assumes that the NSS certutil application
+	has already been run to create the NSS databases and that the
+	various nicknames on the command line have been associated with
+	certificates in the NSS databases. The NSS databases MUST reside
+	in the directory where this file is located and MUST be named
+	"cert8.db", "key3.db", and "secmod.db". There must exist a nickname
+        in the databases which has been marked as trusted.
+
+Source: <root>/perf/libpkix_buildthreads/libpkix_buildthreads.c
+Binary: <root>/perf/libpkix_buildthreads/*.OBJ/libpkix_buildthreads
+
+============================================================================
+
+USAGE:  nssThreads <duration> <threads> <eecertNickname>
+
+	Sets up and runs a CERT_VerifyCertificate call for the number of
+	seconds specified by <duration> using the number of threads specified
+	by <threads>. This application assumes that the NSS certutil
+	application has already been run to create the NSS databases and that
+	the various nicknames on the command line have been associated with
+	certificates in the NSS databases. The NSS databases MUST reside
+	in the directory where this file is located and MUST be named
+	"cert8.db", "key3.db", and "secmod.db". There must exist a nickname in
+	the databases which has been marked as trusted.
+
+Source: <root>/perf/nss_threads/nss_threads.c
+Binary: <root>/perf/nss_threads/*.OBJ/nss_threads
+
+============================================================================
+

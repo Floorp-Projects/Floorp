@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    function tweak(){
+      document.body.innerHTML="fuzz"
+    }
+  </script>
+</head>
+<body onload="tweak()">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <text>
+      <foreignObject requiredFeatures="foo">
+        <svg style="position: absolute;"/>
+      </foreignObject>
+    </text>
+  </svg>
+</body>
+</html>
+
+

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    var f = document.createElementNS("http://www.w3.org/1999/xhtml", "input");
+    f.setAttributeNS(null, "type", "file");
+    document.body.appendChild(f);
+    f.style.whiteSpace = "pre-line";
+    f.style.display = "flex";
+    document.body.style.transitionTimingFunction = "linear";
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

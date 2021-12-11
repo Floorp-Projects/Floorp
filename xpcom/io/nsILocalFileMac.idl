@@ -1,0 +1,179 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIFile.idl"
+
+%{C++
+#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+%}
+
+      native OSType(OSType);
+      native FSSpec(FSSpec);
+      native FSRef(FSRef);
+[ptr] native FSRefPtr(FSRef);
+      native CFURLRef(CFURLRef);
+
+[scriptable, builtinclass, uuid(623eca5b-c25d-4e27-be5a-789a66c4b2f7)]
+interface nsILocalFileMac : nsIFile
+{
+   /**
+    * initWithCFURL
+    *
+    * Init this object with a CFURLRef
+    *
+    * NOTE: Supported only for XP_MACOSX
+    * NOTE: If the path of the CFURL is /a/b/c, at least a/b must exist beforehand.
+    *
+    * @param   aCFURL         the CoreFoundation URL
+    *
+    */
+  [noscript] void initWithCFURL(in CFURLRef aCFURL);
+
+   /**
+    * initWithFSRef
+    *
+    * Init this object with an FSRef
+    *
+    * NOTE: Supported only for XP_MACOSX
+    *
+    * @param   aFSRef         the native FSRef
+    *
+    */
+  [noscript] void initWithFSRef([const] in FSRefPtr aFSRef);
+
+    /**
+    * getCFURL
+    *
+    * Returns the CFURLRef of the file object. The caller is
+    * responsible for calling CFRelease() on it.
+    *
+    * NOTE: Observes the state of the followLinks attribute.
+    * If the file object is an alias and followLinks is TRUE, returns
+    * the target of the alias. If followLinks is FALSE, returns
+    * the unresolved alias file.
+    *
+    * NOTE: Supported only for XP_MACOSX
+    *
+    * @return
+    *
+    */
+  [noscript] CFURLRef getCFURL();
+
+    /**
+    * getFSRef
+    *
+    * Returns the FSRef of the file object.
+    *
+    * NOTE: Observes the state of the followLinks attribute.
+    * If the file object is an alias and followLinks is TRUE, returns
+    * the target of the alias. If followLinks is FALSE, returns
+    * the unresolved alias file.
+    *
+    * NOTE: Supported only for XP_MACOSX
+    *
+    * @return
+    *
+    */
+  [noscript] FSRef getFSRef();
+
+   /**
+    * getFSSpec
+    *
+    * Returns the FSSpec of the file object.
+    *
+    * NOTE: Observes the state of the followLinks attribute.
+    * If the file object is an alias and followLinks is TRUE, returns
+    * the target of the alias. If followLinks is FALSE, returns
+    * the unresolved alias file.
+    *
+    * @return
+    *
+    */
+  [noscript] FSSpec getFSSpec();
+
+   /**
+    * fileSizeWithResFork
+    *
+    * Returns the combined size of both the data fork and the resource
+    * fork (if present) rather than just the size of the data fork
+    * as returned by GetFileSize()
+    *
+    */
+   readonly attribute int64_t fileSizeWithResFork;
+
+   /**
+    * fileType, creator
+    *
+    * File type and creator attributes
+    *
+    */
+   [noscript] attribute OSType fileType;
+   [noscript] attribute OSType fileCreator;
+
+   /**
+    * launchWithDoc
+    *
+    * Launch the application that this file points to with a document.
+    *
+    * @param   aDocToLoad          Must not be NULL. If no document, use nsIFile::launch
+    * @param   aLaunchInBackground TRUE if the application should not come to the front.
+    *
+    */
+   void launchWithDoc(in nsIFile aDocToLoad, in boolean aLaunchInBackground);
+
+   /**
+    * openDocWithApp
+    *
+    * Open the document that this file points to with the given application.
+    *
+    * @param   aAppToOpenWith      The application with  which to open the document.
+    *                              If NULL, the creator code of the document is used
+    *                              to determine the application.
+    * @param   aLaunchInBackground TRUE if the application should not come to the front.
+    *
+    */
+   void openDocWithApp(in nsIFile aAppToOpenWith, in boolean aLaunchInBackground);
+
+   /**
+    * isPackage
+    *
+    * returns true if a directory is determined to be a package under Mac OS 9/X
+    *
+    */
+   boolean isPackage();
+
+   /**
+    * bundleDisplayName
+    *
+    * returns the display name of the application bundle (usually the human
+    * readable name of the application)
+    */
+   readonly attribute AString bundleDisplayName;
+
+   /**
+    * bundleIdentifier
+    *
+    * returns the identifier of the bundle
+    */
+   readonly attribute AUTF8String bundleIdentifier;
+
+    /**
+     * Last modified time of a bundle's contents (as opposed to its package
+     * directory).  Our convention is to make the bundle's Info.plist file
+     * stand in for the rest of its contents -- since this file contains the
+     * bundle's version information and other identifiers.  For non-bundles
+     * this is the same as lastModifiedTime.
+     */
+    readonly attribute int64_t bundleContentsLastModifiedTime;
+};
+
+%{C++
+extern "C"
+{
+NS_EXPORT nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef, bool aFollowSymlinks, nsILocalFileMac** result);
+NS_EXPORT nsresult NS_NewLocalFileWithCFURL(const CFURLRef aURL, bool aFollowSymlinks, nsILocalFileMac** result);
+}
+%}

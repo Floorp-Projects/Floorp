@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundFileHandle;
+include protocol PBackgroundIDBDatabase;
+
+include "mozilla/dom/filehandle/SerializationHelpers.h";
+
+using mozilla::dom::FileMode
+  from "mozilla/dom/FileModeBinding.h";
+
+namespace mozilla {
+namespace dom {
+
+sync protocol PBackgroundMutableFile
+{
+  manager PBackgroundIDBDatabase;
+
+  manages PBackgroundFileHandle;
+
+parent:
+  async DeleteMe();
+
+  async PBackgroundFileHandle(FileMode mode);
+
+  // Use only for testing!
+  sync GetFileId()
+    returns (int64_t fileId);
+
+child:
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

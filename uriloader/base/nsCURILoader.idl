@@ -1,0 +1,36 @@
+/* -*- Mode: IDL; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIURILoader.idl"
+
+/*
+nsCURILoader implements:
+-------------------------
+nsIURILoader
+*/
+
+%{ C++
+#define NS_CONTENT_HANDLER_CONTRACTID               "@mozilla.org/uriloader/content-handler;1"
+#define NS_CONTENT_HANDLER_CONTRACTID_PREFIX	     NS_CONTENT_HANDLER_CONTRACTID "?type="
+
+/**
+ * A category where content listeners can register. The name of the entry must
+ * be the content that this listener wants to handle, the value must be a
+ * contract ID for the listener. It will be created using createInstance (not
+ * getService).
+ *
+ * Listeners added this way are tried after the initial target of the load and
+ * after explicitly registered listeners (nsIURILoader::registerContentListener).
+ *
+ * These listeners must implement at least nsIURIContentListener (and
+ * nsISupports).
+ *
+ * @see nsICategoryManager
+ * @see nsIURIContentListener
+ */
+#define NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY   "external-uricontentlisteners"
+
+%}

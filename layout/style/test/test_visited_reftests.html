@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=147777
+-->
+<head>
+  <title>Test for Bug 147777</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=147777">Mozilla Bug 147777</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 147777 **/
+
+// Because link-coloring for visited links is asynchronous, running
+// reftests that involve link coloring requires that we poll for the
+// correct result until all links are styled correctly.
+
+// A requirement of these reftests is that the reference rendering is
+// styled correctly when loaded.  We only poll for the tests.
+
+var gTests = [
+  // there's also an implicit "load visited-page.html" at the start,
+  // thanks to the code below.
+
+  // IMPORTANT NOTE: For these tests, the test and reference are not
+  // snapshotted in the same way.  The REFERENCE (second file) is
+  // assumed to be complete when loaded, but we poll for visited link
+  // coloring on the TEST (first file) until the test passes.
+  "== pseudo-classes-02.svg pseudo-classes-02-ref.svg",
+  "needs-focus == caret-color-on-visited-1.html caret-color-on-visited-1-ref.html",
+  "!= color-on-link-1-ref.html color-on-visited-1-ref.html",
+  "== color-on-link-1.html color-on-link-1-ref.html",
+  "== color-on-link-before-1.html color-on-link-1-ref.html",
+  "== color-on-visited-1.html color-on-visited-1-ref.html",
+  "== color-on-visited-before-1.html color-on-visited-1-ref.html",
+  "== color-on-visited-text-1.html color-on-visited-text-1-ref.html",
+  "!= content-color-on-link-before-1-ref.html content-color-on-visited-before-1-ref.html",
+  "== content-color-on-link-before-1.html content-color-on-link-before-1-ref.html",
+  "== content-color-on-visited-before-1.html content-color-on-visited-before-1-ref.html",
+  "== content-on-link-before-1.html content-before-1-ref.html",
+  "== content-on-visited-before-1.html content-before-1-ref.html",
+  "== color-on-text-decoration-1.html color-on-text-decoration-1-ref.html",
+  "== color-on-bullets-1.html color-on-bullets-1-ref.html",
+  // NOTE: background-color is tested by all the selector tests (and
+  // also color-choice-1) and therefore doesn't have its own tests.
+  // FIXME: Maybe add a test for selection colors (foreground and
+  // background), if possible.
+  "== width-on-link-1.html width-1-ref.html",
+  "== width-on-visited-1.html width-1-ref.html",
+  "== border-1.html border-1-ref.html",
+  "== border-2a.html border-2-ref.html",
+  "== border-2b.html border-2-ref.html",
+  // FIXME: Commented out because of dynamic change handling bugs in
+  // border-collapse tables that mean we get an incorrect rendering when
+  // the asynchronous restyle-from-history arrives.
+  //"== border-collapse-1.html border-collapse-1-ref.html",
+  "== outline-1.html outline-1-ref.html",
+  "== column-rule-1.html column-rule-1-ref.html",
+  "!= column-rule-1.html column-rule-1-notref.html",
+  "== color-choice-1.html color-choice-1-ref.html",
+  "== selector-descendant-1.html selector-descendant-1-ref.html",
+  "== selector-descendant-2.xhtml selector-descendant-2-ref.xhtml",
+  "== selector-child-1.html selector-child-1-ref.html",
+  "== selector-child-2.xhtml selector-child-2-ref.xhtml",
+  "== selector-adj-sibling-1.html selector-adj-sibling-1-ref.html",
+  "== selector-adj-sibling-2.html selector-adj-sibling-2-ref.html",
+  "== selector-adj-sibling-3.xhtml selector-adj-sibling-3-ref.xhtml",
+  "== selector-any-sibling-1.html selector-any-sibling-1-ref.html",
+  "== selector-any-sibling-2.html selector-any-sibling-2-ref.html",
+  "== subject-of-selector-descendant-1.html subject-of-selector-1-ref.html",
+  "== subject-of-selector-descendant-2.xhtml subject-of-selector-descendant-2-ref.xhtml",
+  "== subject-of-selector-child-1.html subject-of-selector-1-ref.html",
+  "== subject-of-selector-adj-sibling-1.html subject-of-selector-1-ref.html",
+  "== subject-of-selector-any-sibling-1.html subject-of-selector-1-ref.html",
+  "== inherit-keyword-1.xhtml inherit-keyword-1-ref.html",
+  "== svg-image-visited-1a.html svg-image-visited-1-ref.html",
+  "== svg-image-visited-1b.html svg-image-visited-1-ref.html",
+  "== svg-image-visited-1c.html svg-image-visited-1-ref.html",
+  "== svg-image-visited-1d.html svg-image-visited-1-ref.html",
+  // FIXME: commented out because dynamic changes on the non-first-line
+  // part of the test don't work right when the link becomes visited.
+  //"== first-line-1.html first-line-1-ref.html",
+  "== white-to-transparent-1.html white-to-transparent-1-ref.html",
+  "== link-root-1.xhtml link-root-1-ref.xhtml",
+  "== mathml-links.html mathml-links-ref.html",
+  "== placeholder-1.html placeholder-1-ref.html",
+  "== visited-inherit-1.html visited-inherit-1-ref.html",
+  "== transition-on-visited.html transition-on-visited-ref.html",
+  "== logical-box-border-color-visited-link-001.html logical-box-border-color-visited-link-ref.html",
+  "== logical-box-border-color-visited-link-002.html logical-box-border-color-visited-link-ref.html",
+  "== logical-box-border-color-visited-link-003.html logical-box-border-color-visited-link-ref.html",
+  "== svg-paint-currentcolor-visited.svg svg-paint-currentcolor-visited-ref.svg",
+];
+
+// We record the maximum number of times we had to look at a test before
+// it switched to the passing state (though we assume it's 10 to start
+// rather than 0 so that we have a reasonable default).  Then we make a
+// test "time out" if it takes more than gTimeoutFactor times that
+// amount of time.  This allows us to report a test failure rather than
+// making a test failure just show up as a timeout.
+var gMaxPassingTries = 10;
+var gTimeoutFactor = 10;
+
+function startIframe(url) {
+  return new Promise(resolve => {
+    var element = document.createElement("iframe");
+    element.addEventListener("load", () => {
+      element.contentDocument.fonts.ready.then(() => {
+        resolve(element.contentWindow);
+      });
+    }, {once: true});
+    // smaller than normal reftests, but enough for these
+    element.setAttribute("style", "width: 30em; height: 10em");
+    element.src = "css-visited/" + url;
+    document.body.appendChild(element);
+  });
+}
+
+async function runTests() {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("async link coloring");
+  // Set caret to a known size, for tests of :visited caret-color styling
+  await SpecialPowers.pushPrefEnv({'set': [['ui.caretWidth', 16]]});
+  info("opening visited page");
+  let win = window.open("css-visited/visited-page.html", "_blank");
+  await new Promise(resolve => {
+    win.onload = resolve;
+  });
+  info("running tests");
+  await Promise.all(gTests.map(runTest));
+  win.close();
+  SimpleTest.finish();
+}
+
+function passes(equal, shot1, shot2)
+{
+  let [correct] = compareSnapshots(shot1, shot2, equal);
+  return correct;
+}
+
+function waitFor100msAndIdle() {
+  return new Promise(resolve => setTimeout(function() {
+    requestIdleCallback(resolve);
+  }, 100));
+}
+
+async function runTest(testLine) {
+  let splitData = testLine.split(" ");
+  let isEqual;
+  let needsFocus = false;
+  while (true) {
+    let op = splitData.shift();
+    if (op == "needs-focus") {
+      needsFocus = true;
+    } else if (op == "==" || op == "!=") {
+      isEqual = op == "==";
+      break;
+    } else {
+      ok(false, "Unknown syntax");
+      return;
+    }
+  }
+  let [testFile, refFile] = splitData;
+
+  let promiseTestWin = startIframe(testFile);
+  let promiseRefWin = startIframe(refFile);
+  let refSnapshot = snapshotWindow(await promiseRefWin);
+  let testWindow = await promiseTestWin;
+  // Always wait at least 100ms, so that any test that switches
+  // from passing to failing when the asynchronous link coloring
+  // happens should fail at least some of the time.
+  await waitFor100msAndIdle();
+
+  let tries;
+  let testSnapshot;
+  for (tries = 0; tries < gMaxPassingTries * gTimeoutFactor; ++tries) {
+    if (needsFocus) {
+      await SimpleTest.promiseFocus(testWindow, false);
+    }
+    testSnapshot = snapshotWindow(testWindow, true);
+    if (passes(isEqual, testSnapshot, refSnapshot)) {
+      if (tries > gMaxPassingTries) {
+        gMaxPassingTries = tries;
+      }
+      break;
+    }
+    // Links might not have been colored yet. Try again in 100ms.
+    await waitFor100msAndIdle();
+  }
+
+  let result = assertSnapshots(testSnapshot, refSnapshot,
+                               isEqual, null, testFile, refFile);
+  if (!result) {
+    info(`Gave up after ${tries} tries, ` +
+         `maxp=${gMaxPassingTries}, fact=${gTimeoutFactor}`);
+  }
+}
+
+runTests();
+
+</script>
+</pre>
+</body>
+</html>

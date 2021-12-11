@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaStreamAudioSourceNode doesn't get data from cross-origin media resources</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function binIndexForFrequency(frequency, analyser) {
+  return 1 + Math.round(frequency *
+                        analyser.fftSize /
+                        analyser.context.sampleRate);
+}
+
+function debugCanvas(analyser) {
+  var cvs = document.createElement("canvas");
+  document.body.appendChild(cvs);
+
+  // Easy: 1px per bin
+  cvs.width = analyser.frequencyBinCount;
+  cvs.height = 256;
+  cvs.style.border = "1px solid red";
+
+  var c = cvs.getContext('2d');
+  var buf = new Uint8Array(analyser.frequencyBinCount);
+
+  function render() {
+    c.clearRect(0, 0, cvs.width, cvs.height);
+    analyser.getByteFrequencyData(buf);
+    for (var i = 0; i < buf.length; i++) {
+      c.fillRect(i, (256 - (buf[i])), 1, 256);
+    }
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+}
+
+
+function checkFrequency(an) {
+  an.getFloatFrequencyData(frequencyArray);
+  // We should have no energy when checking the data largely outside the index
+  // for 440Hz (the frequency of the sine wave), start checking an octave above,
+  // the Opus compression can add some harmonics to the pure since wave.
+  var maxNoiseIndex = binIndexForFrequency(880, an);
+  for (var i = maxNoiseIndex + 1; i < frequencyArray.length; i++) {
+    if (frequencyArray[i] > frequencyArray[maxNoiseIndex]) {
+       maxNoiseIndex = i;
+    }
+  }
+
+  // On the other hand, we should find a peak at 440Hz. Our sine wave is not
+  // attenuated, we're expecting the peak to reach 0dBFs.
+  var index = binIndexForFrequency(440, an);
+  info("energy at 440: " + frequencyArray[index] +
+       ", threshold " + (an.maxDecibels - 10) +
+       "; max noise at index " + maxNoiseIndex +
+       ": " + frequencyArray[maxNoiseIndex] );
+  if (frequencyArray[index] < (an.maxDecibels - 10)) {
+    return false;
+  }
+  // Let some slack, there might be some noise here because of int -> float
+  // conversion or the Opus encoding.
+  if (frequencyArray[maxNoiseIndex] > an.minDecibels + 40) {
+    return false;
+  }
+
+  return true;
+}
+
+var audioElement = new Audio();
+audioElement.src = 'sine-440-10s.opus'
+audioElement.loop = true;
+var ac = new AudioContext();
+var mediaElementSource = ac.createMediaElementSource(audioElement);
+var an = ac.createAnalyser();
+// Use no smoothing as this would just average with previous
+// getFloatFrequencyData() calls.  Non-seamless looping would introduce noise,
+// and smoothing would spread this into calls after the loop point.
+an.smoothingTimeConstant = 0;
+frequencyArray = new Float32Array(an.frequencyBinCount);
+
+// Uncomment this to check what the analyser is doing.
+// debugCanvas(an);
+
+mediaElementSource.connect(an)
+
+audioElement.play();
+// We want to check the we have the expected audio for at least two loop of
+// the HTMLMediaElement, piped into an AudioContext. The file is ten seconds,
+// and we use the default FFT size.
+var lastCurrentTime = 0;
+var loopCount = 0;
+audioElement.onplaying = function() {
+  audioElement.ontimeupdate = function() {
+    // We don't run the analysis when close to loop point or at the
+    // beginning, since looping is not seamless, there could be an
+    // unpredictable amount of silence
+    var rv = checkFrequency(an);
+    info("currentTime: " + audioElement.currentTime);
+    if (audioElement.currentTime < 4 ||
+        audioElement.currentTime > 8){
+      return;
+    }
+    if (!rv) {
+      ok(false, "Found unexpected noise during analysis.");
+      audioElement.ontimeupdate = null;
+      audioElement.onplaying = null;
+      ac.close();
+      audioElement.src = '';
+      SimpleTest.finish()
+      return;
+    }
+    ok(true, "Found correct audio signal during analysis");
+    info(lastCurrentTime + " " + audioElement.currentTime);
+    if (lastCurrentTime > audioElement.currentTime) {
+      info("loopCount: " + loopCount);
+      if (loopCount > 1) {
+        audioElement.ontimeupdate = null;
+        audioElement.onplaying = null;
+        ac.close();
+        audioElement.src = '';
+        SimpleTest.finish();
+      }
+      lastCurrentTime = audioElement.currentTime;
+      loopCount++;
+    } else {
+      lastCurrentTime = audioElement.currentTime;
+    }
+  }
+}
+
+</script>

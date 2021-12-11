@@ -1,0 +1,488 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* Colors from common.css */
+  --bg-color: #f9f9fa; /* --in-content-background-color */
+  --text-color: #0c0c0d; /* --in-content-text-color */
+  --secondary-text-color: var(--grey-50);
+
+  --border-color: #d7d7db; /* --in-content-border-color */
+
+  --box-background: #fff;
+  --box-border-color: #d7d7db;
+
+  --button-background-color: var(--grey-90-a10); /* Note: this is from Photon Default button */
+  --button-color: var(--grey-90); /* Note: this is from Photon Default button */
+  --button-hover-background-color: var(--grey-90-a20); /* Note: this is from Photon Default button */
+  --button-active-background-color: var(--grey-90-a30); /* Note: this is from Photon Default button */
+
+  --category-background-hover: rgba(12,12,13,0.1);
+  --category-text: rgba(12,12,13);
+  --category-text-selected: #0a84ff;
+
+  --fieldpair-text-color: var(--grey-50);
+
+  --sidebar-text-color: var(--category-text);
+  --sidebar-selected-color: var(--category-text-selected);
+  --sidebar-background-hover: var(--category-background-hover);
+
+  --card-background-color: var(--white-100);
+  --card-separator-color: var(--grey-20);
+
+  /* Dimensions from common.css #categories > .category */
+  /* TODO: Values are not based on photon's 4px base distance, see bug 1501638 */
+  --category-height: 48px;
+  --category-padding: 10px;
+  --category-transition-duration: 150ms;
+
+  --icon-ok-color: var(--green-70);
+  --icon-info-color: var(--grey-90);
+
+  --link-color: #0a8dff;
+  --link-color-active: #003eaa;
+  --link-color-hover: #0060df;
+
+  --primary-button-background-color: var(--blue-60);
+  --primary-button-color: var(--white-100);
+  --primary-button-hover-background-color: var(--blue-70);
+  --primary-button-active-background-color: var(--blue-80);
+
+  /* Colors from Photon */
+  --success-background: #30e60b;
+  --warning-background: #fffbd6; /* from the Web Console */
+  --warning-border: rgba(164, 127, 0, 0.27); /* yellow-70(#a47f00) at 27% */
+  --warning-icon: var(--yellow-65); /* from the Web Console */
+  --warning-text: var(--yellow-80); /* from the Web Console */
+  --error-background: #fdf2f5; /* from the Web Console */
+  --error-border: rgba(90, 0, 2, 0.16); /*  red-80(#5a0002) at 16% */
+  --error-icon: var(--red-60); /* from the Web Console */
+  --error-text: var(--red-70); /* from the Web Console */
+  --highlight-50: #0a84ff;
+  --grey-20: #ededf0; /* for ui, no special semantic */
+  --grey-30: #d7d7db; /* for ui, no special semantic */
+  --grey-50: #737373; /* for ui, no special semantic */
+  --grey-90: #0c0c0d; /* for ui, no special semantic */
+  --grey-90-a10: rgba(12, 12, 13, 0.1);
+  --grey-90-a20: rgba(12, 12, 13, 0.2);
+  --grey-90-a30: rgba(12, 12, 13, 0.3);
+  --grey-90-a60: rgba(12, 12, 13, 0.6);
+  --grey-90-a80: rgba(12, 12, 13, 0.8);
+  --red-70: #a4000f; /* for ui, no special semantic */
+  --white-100: #fff; /* for ui, no special semantic */
+  --yellow-60: #d7b600; /* for ui, no special semantic */
+  --yellow-70: #a47f00; /* for ui, no special semantic */
+
+  /* Typography from Photon */
+  /* See https://firefox-dev.tools/photon/visuals/typography.html */
+  --body-10-font-size: 13px;
+  --body-10-font-weight: 400;
+  --body-20-font-size: 15px;
+  --body-20-font-weight: 400;
+  --body-20-font-weight-bold: 700;
+  --caption-10-font-size: 11px;
+  --caption-10-font-weight: 400;
+  --caption-20-font-size: 13px;
+  --caption-20-font-weight: 400;
+  --display-10-font-size: 28px;
+  --display-10-font-weight: 200;
+  --title-20-font-size: 17px;
+  --title-20-font-weight: 600;
+  --title-30-font-size: 22px;
+  --title-30-font-weight: 300;
+
+  /* Global layout vars */
+  --page-width: 664px;
+  --base-unit: 4px;
+
+  /* Global styles */
+  --base-font-style: message-box;
+  --base-font-size: var(--body-10-font-size);
+  --base-font-weight: var(--body-10-font-weight);
+  --base-line-height: 1.8;
+  --icon-label-font-size: var(--body-10-font-size);
+  --message-font-size: var(--body-10-font-size);
+  --button-font-size: var(--base-font-size);
+  --micro-font-size: 11px;
+  --monospace-font-family: monospace;
+
+  --card-separator-color: var(--grey-20);
+  --card-shadow-blur-radius: var(--base-unit);
+
+  /*
+   * Variables particular to about:debugging
+   */
+  --alt-heading-icon-size: calc(var(--base-unit) * 6);
+  --alt-heading-icon-gap: var(--base-unit);
+  --main-heading-icon-size: calc(var(--base-unit) * 17); /* 4px * 17 = 68px */
+  --main-heading-icon-gap: calc(var(--base-unit) * 3);
+  --main-subheading-icon-size: calc(var(--base-unit) * 4);
+  --main-subheading-heading-icon-gap: calc(var(--base-unit) * 2);
+}
+
+/* Dark Theme variables */
+
+@media  (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: rgb(28, 27, 34); /* --in-content-background-color */
+    --text-color: #eee; /* --in-content-text-color */
+    --secondary-text-color: rgb(168, 168, 168);
+
+    --box-background: rgb(35, 34, 43);
+    --box-border-color: rgba(249,249,250,0.2);
+
+    --link-color: #00ddff;
+    --link-color-active: rgb(170,242,255);
+    --link-color-hover: rgb(128,235,255);
+
+    --button-background-color: rgb(72, 72, 84);
+    --button-color: var(--white-100);
+    --button-hover-background-color: rgb(92, 92, 106);
+
+    --category-background-hover: rgba(12,12,13,0.1);
+    --category-text: var(--text-color);
+
+    --fieldpair-text-color: var(--text-color);
+
+    --sidebar-text-color: var(--text-color);
+    --sidebar-selected-color: var(--link-color);
+    --sidebar-background-hover: rgb(92, 92, 106);
+
+    --card-background-color: rgb(35, 34, 43);
+    --card-separator-color: var(--grey-50);
+
+    --icon-ok-color: var(--white-100);
+    --icon-info-color: var(--white-100);
+
+    /*
+     * From common.inc.css
+     * https://searchfox.org/mozilla-central/rev/b52cf6bbe214bd9d93ed9333d0403f7d556ad7c8/toolkit/themes/shared/in-content/common.inc.css#165-168
+     */
+    --primary-button-background-color: #00ddff;
+    --primary-button-color: rgb(43,42,51);
+    --primary-button-active-background-color: rgb(170,242,255);
+    --primary-button-hover-background-color: rgb(128,235,255);
+  }
+}
+
+/*
+* Reset some tags
+*/
+
+html {
+  font: var(--base-font-style);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+  font-size: var(--base-font-size);
+  font-weight: var(--base-font-weight);
+  line-height: var(--base-line-height);
+  background: var(--bg-color);
+}
+
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--link-color-hover);
+  text-decoration: underline;
+}
+a:active {
+  color: var(--link-color-active);
+}
+
+p, h1 {
+  margin: 0;
+}
+
+/*
+* Utils
+*/
+
+/* text that needs to be cut with … */
+.ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Technical text that should use a monospace font, such as code, error messages. */
+.technical-text {
+  font-family: var(--monospace-font-family);
+}
+
+/* Links that need to look like current text */
+.undecorated-link,
+.undecorated-link:hover {
+  text-decoration: none;
+  color: currentColor;
+}
+
+/* Text needs to wrap anywhere */
+.word-wrap-anywhere {
+  word-wrap: anywhere;
+}
+
+/*
+* Typography
+*/
+
+/* Main style for heading (i.e. h1) */
+.main-heading {
+  font-size: var(--display-10-font-size);
+  font-weight: var(--display-10-font-weight);
+  line-height: 1.2;
+}
+
+.main-heading__icon {
+  width: 100%;
+}
+
+.main-heading-subtitle {
+  font-size: var(--title-30-font-size);
+  font-weight: var(--title-30-font-weight);
+}
+
+/* Main style for a subheading (i.e. h2). It features an icon */
+/* +--------+-------------+
+*  | [Icon] | Lorem ipsum |
+*  +--------+-------------+
+*/
+.main-subheading {
+  margin-block: calc(var(--base-unit) * 4) 0;
+  font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
+  font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
+
+  display: grid;
+  grid-template-columns: var(--main-subheading-icon-size) 1fr;
+  grid-column-gap: var(--main-subheading-heading-icon-gap);
+  align-items: center;
+}
+
+.main-subheading__icon {
+  width: 100%;
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
+/* Alternative style for a heading (i.e. h1) */
+.alt-heading {
+  font-weight: var(--title-20-font-weight);
+  font-size: var(--title-20-font-size);
+
+  margin-block-start: 0;
+  margin-block-end: calc(var(--base-unit) * 4);
+}
+
+.alt-heading--larger {
+  font-size: var(--title-30-font-size);
+  font-weight: var(--title-30-font-weight);
+}
+
+/* Alternative style for a subheading (i.e. h2). It features an icon */
+/* +--------+-------------+
+*  | [Icon] | Lorem ipsum |
+*  +--------+-------------+
+*/
+.alt-subheading {
+  margin-block-start: calc(var(--base-unit) * 4);
+  font-weight: 600;
+  font-size: 1.14em;
+  line-height: 1.4em; /* odd value - from common.inc.css */
+
+  display: grid;
+  grid-template-columns: var(--alt-heading-icon-size) 1fr;
+  grid-column-gap: var(--alt-heading-icon-gap);
+  align-items: center;
+}
+
+.alt-subheading__icon {
+  width: 100%;
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
+/*
+* Layout elements
+*/
+
+/* for horizontal rules / separators */
+.separator {
+  border-style: solid none none none;
+  border-color: var(--border-color);
+}
+
+/* adds breathing space to the separator */
+.separator--breathe {
+  margin: calc(var(--base-unit) * 5) 0;
+}
+
+/* a series of button-like elements, layed out horizontally */
+.toolbar {
+  display: flex;
+  column-gap: calc(var(--base-unit) * 3);
+}
+
+.toolbar--right-align {
+  justify-content: end;
+}
+
+/*
+Form controls
+*/
+.default-button, .default-input {
+  box-sizing: border-box;
+  font-size: 1em;
+}
+
+/* Buttons from Photon */
+.default-button, .primary-button {
+  appearance: none;
+  margin: 0;
+  height: calc(var(--base-unit) * 8);
+  padding-inline-start: calc(var(--base-unit) * 5);
+  padding-inline-end: calc(var(--base-unit) * 5);
+
+  border: none;
+  border-radius: calc(var(--base-unit) / 2);
+
+  font-size: var(--button-font-size);
+}
+
+/* Disabled state for buttons from Photon */
+.default-button:disabled, .primary-button:disabled {
+  opacity: 0.4;
+}
+
+/* Smaller variant size for buttons, from Photon */
+.default-button--micro, .primary-button--micro {
+  padding-inline-start: calc(2 * var(--base-unit));
+  padding-inline-end: calc(2 * var(--base-unit));
+  font-size: var(--micro-font-size);
+  height: calc(var(--base-unit) * 6);
+}
+
+/* Photon button representing a primary action */
+.primary-button {
+  color: var(--primary-button-color);
+  background-color: var(--primary-button-background-color);
+}
+
+.primary-button:enabled:hover {
+  background: var(--primary-button-hover-background-color);
+}
+
+.primary-button:enabled:active {
+  background: var(--primary-button-active-background-color);
+}
+
+/* Photon standard button */
+.default-button {
+  color: var(--button-color);
+  background-color: var(--button-background-color);
+}
+
+.default-button:enabled:hover {
+  background: var(--button-hover-background-color);
+}
+
+.default-button:enabled:active {
+  background: var(--button-active-background-color);
+}
+
+/* Photon ghost button. Icon button with no background */
+.ghost-button {
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--base-unit) / 2);
+  fill: var(--grey-90-a80);
+  height: calc(var(--base-unit) * 6);
+  padding: calc(var(--base-unit));
+  width: calc(var(--base-unit) * 6);
+
+  -moz-context-properties: fill;
+}
+
+.ghost-button:hover {
+  background-color: var(--grey-30);
+}
+
+.ghost-button:active {
+  background-color: var(--grey-40);
+}
+
+/* Standard inputs */
+.default-input {
+  line-height: unset;
+  padding: 0 calc(var(--base-unit) * 2);
+  height: 100%;
+
+  border: 1px solid var(--box-border-color);
+  border-radius: 2px;
+  color: var(--text-color);
+  background-color: var(--box-background);
+}
+
+/*
+* Other UI components
+*/
+
+/*
+* A small, colored badge.
+* NOTE: styles borrowed from Photon's micro buttons (there aren't badges)
+*/
+.badge {
+  background: var(--grey-30);
+  border-radius: calc(var(--base-unit) / 2);
+  font-size: var(--micro-font-size);
+  padding: var(--base-unit) calc(2 * var(--base-unit));
+}
+
+.badge--info {
+  background: var(--highlight-50);
+}
+
+.badge--success {
+  background: var(--success-background);
+}
+
+.badge--warning {
+  background: var(--warning-background);
+}
+
+.badge--error {
+  background: var(--error-background);
+}
+
+/*
+ * Card UI, from Photon
+ */
+.card {
+  background-color: var(--card-background-color); /* from common.inc.css */
+  border-radius: var(--card-shadow-blur-radius); /* from common.inc.css */
+  box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
+  box-sizing: border-box;
+  min-width: min-content;
+  padding-block: calc(var(--base-unit) * 5);
+}
+
+.card__heading {
+  font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
+  font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
+}

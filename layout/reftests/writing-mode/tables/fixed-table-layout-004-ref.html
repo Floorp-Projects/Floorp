@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+ <head>
+  <title>CSS Reftest Reference</title>
+  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+  <style type="text/css">
+ .test { writing-mode: vertical-lr; }
+  div.stripe
+  {
+    width: 20px;
+    height: 100px;
+  }
+  div#blue-stripe {background-color: blue;}
+  div#reference {background-color: black;}
+  div.middle { width: 20px; height: 50px; }
+  div.bottom { background-color: orange; float: right; }
+  div.top { background-color: silver; float: left; }
+  </style>
+ </head>
+ <body>
+      <p>Test passes if the blue and black bars are the same height
+and the gray and orange boxes are half of that height.</p>
+  <div class="test">
+    <div class="stripe" id="reference"></div>
+    <div class="stripe">
+      <div class="middle top"></div>
+      <div class="middle bottom"></div>
+    </div>
+    <div class="stripe" id="blue-stripe"></div>
+  </div>
+ </body>
+</html>

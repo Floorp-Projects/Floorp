@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Reference</title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  30px;
+      height: 50px;
+      margin: 1px;
+      float: left;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- No color stops (transparent): -->
+  <div></div>
+
+  <!-- Add another background to be sure we're transparent, not white: -->
+  <div style="background: linear-gradient(to right, pink, purple)"></div>
+  <br>
+
+  <!-- One color stop, at various positions (renders as solid color): -->
+  <div style="background: blue"></div>
+  <div style="background: blue"></div>
+  <div style="background: blue"></div>
+  <div style="background: blue"></div>
+  <br>
+
+  <!-- Two color stops, both at the same position: -->
+  <div style="background: yellow"></div>
+  <div style="background: blue"></div>
+  <div style="background: linear-gradient(to right,
+                                          blue 30%, yellow 30%)"></div>
+  <div style="background: yellow"></div>
+  <div style="background: blue"></div>
+  <br>
+
+  <!-- Color stops out of order & need (stable) sorting: -->
+  <div style="background: linear-gradient(to right,
+                                          blue, yellow)"></div>
+  <div style="background: linear-gradient(to right,
+                                          salmon, yellow)"></div>
+  <div style="background: linear-gradient(to right,
+                                          blue, yellow)"></div>
+  <div style="background: linear-gradient(to right,
+                                          blue, yellow)"></div>
+  <div style="background: linear-gradient(to right,
+                                          yellow, salmon 80%, blue)"></div>
+</body>
+</html>

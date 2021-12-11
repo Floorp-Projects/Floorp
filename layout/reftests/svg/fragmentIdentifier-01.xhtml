@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Testcases for SVG fragment identifiers</title>
+    <style>
+
+iframe {
+  border: none;
+}
+
+    </style>
+  </head>
+  <body style="background-color: lime;">
+    <div>
+      <iframe scrolling="no" type="image/svg+xml" width="100" height="100" src="fragmentIdentifier-rect-01.svg#limeView" />
+      <iframe scrolling="no" type="image/svg+xml" width="100" height="100" src="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,200,100,100))" />
+      <iframe scrolling="no" type="image/svg+xml" width="100" height="100" src="fragmentIdentifier-rect-01.svg#view" />
+    </div>
+    <div>
+      <iframe scrolling="no" type="image/svg+xml" width="100" height="100" src="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,0,100,100);transform(translate(0,200)))" />
+      <iframe scrolling="no" id="replace" type="image/svg+xml" width="100" height="100" src="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,0,100,100);transform(translate(0,0))" />
+      <iframe scrolling="no" id="remove" type="image/svg+xml" width="100" height="100" src="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,200,100,100);transform(translate(0,200)))" />
+    </div>
+    <script type="text/javascript">
+      window.onload = function() {
+        document.getElementById("replace").setAttribute("src","fragmentIdentifier-rect-01.svg#svgView(viewBox(0,0,100,100);transform(translate(0,200)))");
+        document.getElementById("remove").setAttribute("src","fragmentIdentifier-rect-01.svg#svgView(viewBox(0,200,100,100))");
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Testcase #1 for bug 602331</title>
+        <script type="text/javascript" charset="utf-8">
+            function selectExisting() {
+                window.getSelection().removeAllRanges();
+                
+                var range = document.createRange();
+                range.selectNode(document.getElementById('existing_node'));
+                window.getSelection().addRange(range);
+            }
+        </script>
+    </head>
+    <body onload="selectExisting()">
+        * <span id="existing_node">Hello Kitty</span> *
+    </body>
+</html>

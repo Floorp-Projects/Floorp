@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
+-->
+<head>
+  <title>Test focus/blur behaviour for date/time input types</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288591">Mozilla Bug 1288591</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input_time" type="time">
+  <input id="input_date" type="date">
+  <input id="input_datetime-local" type="datetime-local">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1288591.
+ * This test checks whether date/time input types' .focus()/.blur() works
+ * correctly. This test also checks when focusing on an date/time input element,
+ * the focus is redirected to the anonymous text control, but the
+ * document.activeElement still returns date/time input element.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function testFocusBlur(type) {
+  let input = document.getElementById("input_" + type);
+  input.focus();
+
+  // The active element returns the date/time input element.
+  let activeElement = document.activeElement;
+  is(activeElement, input, "activeElement should be the date/time input element");
+  is(activeElement.localName, "input", "activeElement should be an input element");
+  is(activeElement.type, type, "activeElement should be of type " + type);
+
+  // Use FocusManager to check that the actual focus is on the anonymous
+  // text control.
+  let fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"]
+                        .getService(SpecialPowers.Ci.nsIFocusManager);
+  let focusedElement = fm.focusedElement;
+  is(focusedElement.localName, "span", "focusedElement should be an span element");
+
+  input.blur();
+  isnot(document.activeElement, input, "activeElement should no longer be the datetime input element");
+}
+
+function test() {
+  for (let inputType of ["time", "date", "datetime-local"]) {
+    testFocusBlur(inputType);
+  }
+}
+</script>
+</pre>
+</body>
+</html>

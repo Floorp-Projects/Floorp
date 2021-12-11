@@ -1,0 +1,69 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PYTHON_UNITTEST_MANIFESTS += [
+    "manifestparser/tests/manifest.ini",
+    "mozcrash/tests/manifest.ini",
+    "mozdebug/tests/manifest.ini",
+    "mozdevice/tests/manifest.ini",
+    "mozfile/tests/manifest.ini",
+    "mozgeckoprofiler/tests/manifest.ini",
+    "mozhttpd/tests/manifest.ini",
+    "mozinfo/tests/manifest.ini",
+    "mozinstall/tests/manifest.ini",
+    "mozleak/tests/manifest.ini",
+    "mozlog/tests/manifest.ini",
+    "moznetwork/tests/manifest.ini",
+    "mozpower/tests/manifest.ini",
+    "mozprocess/tests/manifest.ini",
+    "mozprofile/tests/manifest.ini",
+    "mozproxy/tests/manifest.ini",
+    "mozrunner/tests/manifest.ini",
+    "mozsystemmonitor/tests/manifest.ini",
+    "moztest/tests/manifest.ini",
+    "mozversion/tests/manifest.ini",
+]
+
+python_modules = [
+    "manifestparser",
+    "mozcrash",
+    "mozdebug",
+    "mozdevice",
+    "mozfile",
+    "mozgeckoprofiler",
+    "mozhttpd",
+    "mozinfo",
+    "mozinstall",
+    "mozleak",
+    "mozlog",
+    "moznetwork",
+    "mozpower",
+    "mozprocess",
+    "mozprofile",
+    "mozproxy",
+    "mozrunner",
+    "mozscreenshot",
+    "mozsystemmonitor",
+    "moztest",
+    "mozversion",
+]
+
+TEST_HARNESS_FILES.mozbase += [m + "/**" for m in python_modules]
+
+TEST_HARNESS_FILES.mozbase += [
+    "setup_development.py",
+]
+
+SPHINX_TREES["/mozbase"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Mozbase")
+
+with Files("rust/**"):
+    BUG_COMPONENT = ("Testing", "Mozbase Rust")

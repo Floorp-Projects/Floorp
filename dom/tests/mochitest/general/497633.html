@@ -1,0 +1,35 @@
+<html>
+<head>
+</head>
+<body>
+<script>
+var t = 0;
+function doe() {
+setTimeout(function() {
+  if (t == 1) {
+    window.close();
+    window.opener.done();
+  }
+  else {
+    window.frames[0].location.reload();
+    t++;
+  }
+}, 300);
+}
+</script>
+
+<iframe srcdoc="<html xmlns='http://www.w3.org/1999/xhtml'>
+    <iframe/>
+      <frameset onblur='window.frameElement.parentNode.removeChild(window.frameElement)' id='frame'/>
+
+      <script>
+function doe(i){
+  document.getElementById('frame').focus();
+  document.getElementsByTagName('*')[1].focus();
+}
+top.opener.SimpleTest.waitForFocus(function () setTimeout(doe, 100), top);
+      </script>
+  </html>" onload="doe()" id="content"></iframe>
+</body>
+</html>
+

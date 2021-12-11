@@ -1,0 +1,88 @@
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 433700</title>
+    <style type="text/css">
+
+body { font-family: sans-serif; font-size: 16px; }
+
+fieldset,legend { padding:0; margin:0; border-width:0; border-style:solid; }
+fieldset { border-right:7px solid blue; font-size: 16px; }
+
+#test1 { position:fixed; }
+#test1 fieldset { padding-left:35px; border-left:25px solid lime; background:lime; }
+#test1 legend  { margin-left: -30px; background:pink; }
+
+#test2 { position:fixed; top:3em; }
+#test2 fieldset { padding-left:35px; border-left:25px solid lime; background:lime; width:200px; }
+#test2 legend  { margin-left: -20%; background:pink; }
+
+#test3 { position:fixed; top:6em; width:200px; }
+#test3 fieldset { padding-left:35px; border-left:25px solid lime; background:lime; }
+#test3 legend  { margin-left: 20px; background:pink; }
+
+#test4 { position:fixed; top:9em; width:200px; }
+#test4 fieldset { padding-left:35px; border-left:25px solid lime; background:lime; width:200px; }
+#test4 legend  { margin-left: 10%; background:pink; }
+
+#test5 { position:fixed; top:12em; width:200px; }
+#test5 fieldset { padding-left:35px; border-left:25px solid lime; background:lime; }
+#test5 legend  { margin-left: 100%; background:pink; }
+
+#test6 { position:fixed; left:60px; top:15em; width:200px; }
+#test6 fieldset { padding-left:35px; border-left:25px solid white; }
+#test6 fieldset div { width:200px;  background:lime;  }
+#test6 legend  { margin-left: -50%; background:pink; }
+
+    </style>
+</head>
+<body>
+
+<div id="test1">
+<fieldset>
+<legend>LEGEND</legend>
+FIELDSET
+<script>var v = document.body.offsetHeight;</script>
+</fieldset>
+</div>
+
+<div id="test2">
+<fieldset>
+<legend>LEGEND</legend>
+FIELDSET
+<script>var v = document.body.offsetHeight;</script>
+</fieldset>
+</div>
+
+<div id="test3">
+<fieldset>
+<legend>LEGEND</legend>
+FIELDSET
+<script>var v = document.body.offsetHeight;</script>
+</fieldset>
+</div>
+
+<div id="test4">
+<fieldset>
+<legend>LEGEND</legend>
+FIELDSET
+<script>var v = document.body.offsetHeight;</script>
+</fieldset>
+</div>
+
+<div id="test5">
+<fieldset>
+<legend>LEGEND</legend>
+FIELDSET
+<script>var v = document.body.offsetHeight;</script>
+</fieldset>
+</div>
+
+<div id="test6">
+<fieldset>
+<legend>LEGEND</legend>
+<div>FIELDSET</div>
+<script>var v = document.body.offsetHeight;</script>
+</fieldset>
+</div>
+
+</body></html>

@@ -1,0 +1,69 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=99: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using nscolor from "nsColor.h";
+
+namespace mozilla {
+namespace widget {
+
+[Comparable] struct LookAndFeelFont {
+    bool haveFont;
+    nsString name;
+    float size;
+    float weight;
+    bool italic;
+};
+
+/**
+ * The format allows for some compression compared with having fixed
+ * length arrays for each value type and some indication of whether
+ * a value is present.  This is because not all values are present on
+ * a given platform, and because there is also substantial repetition
+ * of specific values.
+ *
+ * Each of ints, floats, colors, and fonts is an array that stores the
+ * unique values that occur in the LookAndFeel.  intMap, floatMap,
+ * colorMap, and fontMap map from value IDs (LookAndFeel::IntID, etc.)
+ * to indexes into the value arrays.  The map arrays are of fixed
+ * length, determined by the maximum ID value.  If a value for a
+ * particular ID is not present, the entry in the map is set to -1.
+ */
+struct LookAndFeelTables {
+    int32_t[] ints;
+    float[] floats;
+    LookAndFeelFont[] fonts;
+    nscolor[] lightColors;
+    nscolor[] darkColors;
+
+    uint8_t[] intMap;
+    uint8_t[] floatMap;
+    uint8_t[] fontMap;
+    uint8_t[] lightColorMap;
+    uint8_t[] darkColorMap;
+
+    uint16_t passwordChar;
+    bool passwordEcho;
+};
+
+struct LookAndFeelTheme {
+#ifdef MOZ_WIDGET_GTK
+    nsCString themeName;
+    bool preferDarkTheme;
+#endif
+};
+
+/**
+ * Stores the entirety of a LookAndFeel's data.
+ */
+struct FullLookAndFeel {
+    LookAndFeelTables tables;
+#ifdef MOZ_WIDGET_GTK
+    LookAndFeelTheme theme;
+#endif
+};
+
+} // namespace widget
+} // namespace mozilla

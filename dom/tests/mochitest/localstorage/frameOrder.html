@@ -1,0 +1,27 @@
+<html>
+<head>
+</head>
+<script type="text/javascript">
+function doTest()
+{
+  var query = location.search.substring(1);
+  query = unescape(query);
+  var keyNames = eval(query);
+
+  parent.is(localStorage.a, "10", "a = 10");
+  parent.is(localStorage.b, "20", "b = 20");
+  parent.is(localStorage.c, "30", "c = 30");
+  parent.is(localStorage.d, "40", "d = 40");
+  parent.is(localStorage.e, "50", "e = 50");
+  parent.is(localStorage.length, 5, "length = 5");
+
+  for (var i = 0; i < localStorage.length; ++i)
+    parent.is(keyNames[i], localStorage.key(i), "key "+keyNames[i]+" on same index");
+
+  parent.SimpleTest.finish();
+  localStorage.clear();
+}
+</script>
+<body onload="doTest();">
+</body>
+</html>

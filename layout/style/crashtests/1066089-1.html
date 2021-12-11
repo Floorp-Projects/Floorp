@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf8">
+<style>
+  @counter-style triangle { symbols: a; }
+  @counter-style disc     { system: extends triangle; }
+</style>
+<script>
+  function crash() {
+    var styleNode = document.createElement("style");
+    styleNode.textContent =
+      "@counter-style triangle { symbols: b; } " +
+      "@counter-style disc     { system: extends triangle; } " +
+      "ul {}";
+    document.getElementsByTagName("head")[0].appendChild(styleNode);
+  }
+</script>
+</head>
+<body onload="crash()">
+  <ul><li>Don't technically need any text here, but here's some anyway.

@@ -1,0 +1,22 @@
+table {
+  margin-bottom: 0.5in;
+}
+caption {
+  font-weight: bold;
+  font-style: italic;
+}
+td {background-color:LightCyan}
+table.topLight {border-top: 1px solid #b2b2b2}
+table.bottom {border-bottom: 1px solid black}
+table.bottomDark {border-bottom: 1px solid #4c4c4c}
+table.leftLight {border-left: 1px solid #b2b2b2}
+table.right {border-right: 1px solid  black}
+table.rightDark {border-right: 1px solid #4c4c4c}
+table.top {border-top: 1px solid  black}
+table.left {border-left: 1px solid  black}
+table.bc {border-collapse:collapse}
+tbody.border{border-top: 1px solid  black; border-bottom: 1px solid black; }
+tr.border{border-top: 1px solid black; border-bottom: 1px solid  black; }
+td.border{border-left:1px solid black;}
+div.maskPixel{position:absolute; background-color:Black; width:1px; height:1px; }
+

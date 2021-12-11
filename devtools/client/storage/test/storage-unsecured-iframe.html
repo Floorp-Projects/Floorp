@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Iframe for testing multiple host detetion in storage actor
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<script>
+"use strict";
+const cookieExpiresTime = 2000000000000;
+document.cookie = "uc1=foobar; domain=.example.org; path=/";
+document.cookie = "uc2=foobar-2; expires=" +
+  new Date(cookieExpiresTime).toGMTString() + "; path=/; domain=.example.org";
+localStorage.setItem("iframe-u-ls1", "foobar");
+sessionStorage.setItem("iframe-u-ss1", "foobar1");
+sessionStorage.setItem("iframe-u-ss2", "foobar2");
+dump("added cookies and storage from unsecured iframe\n");
+</script>
+</body>
+</html>

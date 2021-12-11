@@ -1,0 +1,1453 @@
+@returns Identifier
+IdentifierReference[Yield, Await] :
+  Identifier
+    => identifier_reference($0)
+
+@returns BindingIdentifier
+BindingIdentifier[Yield, Await] :
+  Identifier
+    => binding_identifier($0)
+  `yield`
+    => binding_identifier_yield($0)
+  `await`
+    => binding_identifier_await($0)
+
+@returns Label
+LabelIdentifier[Yield, Await] :
+  Identifier
+    => label_identifier($0)
+
+@returns Expression
+PrimaryExpression[Yield, Await] :
+  `this`
+    => this_expr($0)
+  IdentifierReference[?Yield, ?Await]
+    => identifier_expr($0)
+  Literal
+    => $0
+  ArrayLiteral[?Yield, ?Await]
+    => $0
+  ObjectLiteral[?Yield, ?Await]
+    => $0
+  FunctionExpression
+    => $0
+  ClassExpression[?Yield, ?Await]
+    => $0
+  GeneratorExpression
+    => $0
+  AsyncFunctionExpression
+    => $0
+  AsyncGeneratorExpression
+    => $0
+  RegularExpressionLiteral
+    => regexp_literal($0)
+  TemplateLiteral[?Yield, ?Await, ~Tagged]
+    => untagged_template_expr($0)
+  CoverParenthesizedExpressionAndArrowParameterList[?Yield, ?Await]
+    => uncover_parenthesized_expression($0)
+
+@returns CoverParenthesized
+CoverParenthesizedExpressionAndArrowParameterList[Yield, Await] :
+  `(` Expression[+In, ?Yield, ?Await] `)`
+    => cover_parenthesized_expression($0, $1, $2)
+  `(` Expression[+In, ?Yield, ?Await] `,` `)`
+    => cover_arrow_parameter_list($0, expression_to_parameter_list($1), None, $3)
+  `(` `)`
+    => cover_arrow_parameter_list($0, empty_parameter_list(), None, $1)
+  `(` `...` BindingIdentifier[?Yield, ?Await] `)`
+    => cover_arrow_parameter_list($0, empty_parameter_list(), Some(binding_identifier_to_binding($2)), $3)
+  `(` `...` BindingPattern[?Yield, ?Await] `)`
+    => cover_arrow_parameter_list($0, empty_parameter_list(), Some($2), $3)
+  `(` Expression[+In, ?Yield, ?Await] `,` `...` BindingIdentifier[?Yield, ?Await] `)`
+    => cover_arrow_parameter_list($0, expression_to_parameter_list($1), Some(binding_identifier_to_binding($4)), $5)
+  `(` Expression[+In, ?Yield, ?Await] `,` `...` BindingPattern[?Yield, ?Await] `)`
+    => cover_arrow_parameter_list($0, expression_to_parameter_list($1), Some($4), $5)
+
+
+@returns Expression
+Literal :
+  NullLiteral
+    => null_literal($0)
+  BooleanLiteral
+    => boolean_literal($0)
+  NumericLiteral
+    => numeric_literal($0)
+  BigIntLiteral
+    => bigint_literal($0)
+  StringLiteral
+    => string_literal($0)
+
+
+@returns Expression
+ArrayLiteral[Yield, Await] :
+  `[` Elision? `]`
+    => array_literal_empty($0, $1, $2)
+  `[` ElementList[?Yield, ?Await] `]`
+    => array_literal($0, $1, $2)
+  `[` ElementList[?Yield, ?Await] `,` Elision? `]`
+    => array_literal_with_trailing_elision($0,$1, $3, $4)
+
+@returns ArrayExpression
+ElementList[Yield, Await] :
+  Elision? AssignmentExpression[+In, ?Yield, ?Await]
+    => element_list_first($0, $1)
+  Elision? SpreadElement[?Yield, ?Await]
+    => element_list_first_spread($0, $1)
+  ElementList[?Yield, ?Await] `,` Elision? AssignmentExpression[+In, ?Yield, ?Await]
+    => element_list_append($0, $2, $3)
+  ElementList[?Yield, ?Await] `,` Elision? SpreadElement[?Yield, ?Await]
+    => element_list_append_spread($0, $2, $3)
+
+@returns ArrayExpression
+Elision :
+  `,`
+    => elision_single($0)
+  Elision `,`
+    => elision_append($0, $1)
+
+@returns Expression
+SpreadElement[Yield, Await] :
+  `...` AssignmentExpression[+In, ?Yield, ?Await]
+    => spread_element($1)
+
+
+@returns Expression
+ObjectLiteral[Yield, Await] :
+  `{` `}`
+    => object_literal_empty($0, $1)
+  `{` PropertyDefinitionList[?Yield, ?Await] `}`
+    => object_literal($0, $1, $2)
+  `{` PropertyDefinitionList[?Yield, ?Await] `,` `}`
+    => object_literal($0, $1, $2)
+
+@returns ObjectExpression
+PropertyDefinitionList[Yield, Await] :
+  PropertyDefinition[?Yield, ?Await]
+    => property_definition_list_single($0)
+  PropertyDefinitionList[?Yield, ?Await] `,` PropertyDefinition[?Yield, ?Await]
+    => property_definition_list_append($0, $2)
+
+@returns ObjectProperty
+PropertyDefinition[Yield, Await] :
+  IdentifierReference[?Yield, ?Await]
+    => shorthand_property($0)
+  CoverInitializedName[?Yield, ?Await]
+    => $0
+  PropertyName[?Yield, ?Await] `:` AssignmentExpression[+In, ?Yield, ?Await]
+    => property_definition($0, $2)
+  MethodDefinition[?Yield, ?Await]
+    => property_definition_method($0)
+  `...` AssignmentExpression[+In, ?Yield, ?Await]
+    => property_definition_spread($1)
+
+@returns PropertyName
+PropertyName[Yield, Await] :
+  LiteralPropertyName
+    => $0
+  ComputedPropertyName[?Yield, ?Await]
+    => $0
+
+@returns PropertyName
+LiteralPropertyName :
+  IdentifierName
+    => property_name_identifier($0)
+  StringLiteral
+    => property_name_string($0)
+  NumericLiteral
+    => property_name_numeric($0)
+  BigIntLiteral
+    => property_name_bigint($0)
+
+@returns PropertyName
+ComputedPropertyName[Yield, Await] :
+  `[` AssignmentExpression[+In, ?Yield, ?Await] `]`
+    => computed_property_name($0, $1, $2)
+
+@returns ObjectProperty
+CoverInitializedName[Yield, Await] :
+  IdentifierReference[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]
+    => cover_initialized_name($0, $1)
+
+@returns Expression
+Initializer[In, Yield, Await] :
+  `=` AssignmentExpression[?In, ?Yield, ?Await]
+    => $1
+
+
+@returns TemplateExpression
+TemplateLiteral[Yield, Await, Tagged] :
+  NoSubstitutionTemplate
+    => template_literal($0)
+  SubstitutionTemplate[?Yield, ?Await, ?Tagged]
+    => $0
+
+@returns TemplateExpression
+SubstitutionTemplate[Yield, Await, Tagged] :
+  TemplateHead Expression[+In, ?Yield, ?Await] TemplateSpans[?Yield, ?Await, ?Tagged]
+    => substitution_template($0, $1, $2)
+
+@returns Void
+TemplateSpans[Yield, Await, Tagged] :
+  TemplateTail
+    => template_spans(None, $0)
+  TemplateMiddleList[?Yield, ?Await, ?Tagged] TemplateTail
+    => template_spans(Some($0), $1)
+
+@returns Void
+TemplateMiddleList[Yield, Await, Tagged] :
+  TemplateMiddle Expression[+In, ?Yield, ?Await]
+    => template_middle_list_single($0, $1)
+  TemplateMiddleList[?Yield, ?Await, ?Tagged] TemplateMiddle Expression[+In, ?Yield, ?Await]
+    => template_middle_list_append($0, $1, $2)
+
+@returns Expression
+MemberExpression[Yield, Await] :
+  PrimaryExpression[?Yield, ?Await]
+    => $0
+  MemberExpression[?Yield, ?Await] `[` Expression[+In, ?Yield, ?Await] `]`
+    => computed_member_expr($0, $2, $3)
+  MemberExpression[?Yield, ?Await] `.` IdentifierName
+    => static_member_expr($0, $2)
+  MemberExpression[?Yield, ?Await] TemplateLiteral[?Yield, ?Await, +Tagged]
+    => tagged_template_expr($0, $1)
+  SuperProperty[?Yield, ?Await]
+    => $0
+  MetaProperty
+    => $0
+  `new` MemberExpression[?Yield, ?Await] Arguments[?Yield, ?Await]
+    => new_expr_with_arguments($0, $1, $2)
+  MemberExpression[?Yield, ?Await] `.` PrivateIdentifier
+    => private_field_expr($0, $2)
+
+@returns Expression
+SuperProperty[Yield, Await] :
+  `super` `[` Expression[+In, ?Yield, ?Await] `]`
+    => super_property_computed($0, $2, $3)
+  `super` `.` IdentifierName
+    => super_property_static($0, $2)
+
+@returns Expression
+MetaProperty :
+  NewTarget
+    => $0
+
+@returns Expression
+NewTarget :
+  `new` `.` `target`
+    => new_target_expr($0, $2)
+
+@returns Expression
+NewExpression[Yield, Await] :
+  MemberExpression[?Yield, ?Await]
+    => $0
+  `new` NewExpression[?Yield, ?Await]
+    => new_expr_without_arguments($0, $1)
+
+@returns Expression
+CallExpression[Yield, Await] :
+  CoverCallExpressionAndAsyncArrowHead[?Yield, ?Await]
+    => $0
+  SuperCall[?Yield, ?Await]
+    => $0
+  ImportCall[?Yield, ?Await]
+    => $0
+  CallExpression[?Yield, ?Await] Arguments[?Yield, ?Await]
+    => call_expr($0, $1)
+  CallExpression[?Yield, ?Await] `[` Expression[+In, ?Yield, ?Await] `]`
+    => computed_member_expr($0, $2, $3)
+  CallExpression[?Yield, ?Await] `.` IdentifierName
+    => static_member_expr($0, $2)
+  CallExpression[?Yield, ?Await] TemplateLiteral[?Yield, ?Await, +Tagged]
+    => tagged_template_expr($0, $1)
+  CallExpression[?Yield, ?Await] `.` PrivateIdentifier
+    => private_field_expr($0, $2)
+
+@returns Expression
+SuperCall[Yield, Await] :
+  `super` Arguments[?Yield, ?Await]
+    => super_call($0, $1)
+
+@returns Expression
+ImportCall[Yield, Await] :
+  `import` `(` AssignmentExpression[+In, ?Yield, ?Await] `)`
+    => import_call($0, $2, $3)
+
+@returns Arguments
+Arguments[Yield, Await] :
+  `(` `)`
+    => arguments_empty($0, $1)
+  `(` ArgumentList[?Yield, ?Await] `)`
+    => arguments($0, $1, $2)
+  `(` ArgumentList[?Yield, ?Await] `,` `)`
+    => arguments($0, $1, $3)
+
+@returns Arguments
+ArgumentList[Yield, Await] :
+  AssignmentExpression[+In, ?Yield, ?Await]
+    => arguments_single($0)
+  `...` AssignmentExpression[+In, ?Yield, ?Await]
+    => arguments_spread_single($1)
+  ArgumentList[?Yield, ?Await] `,` AssignmentExpression[+In, ?Yield, ?Await]
+    => arguments_append($0, $2)
+  ArgumentList[?Yield, ?Await] `,` `...` AssignmentExpression[+In, ?Yield, ?Await]
+    => arguments_append_spread($0, $3)
+
+@returns Expression
+OptionalExpression[Yield, Await] :
+  MemberExpression[?Yield, ?Await] OptionalChain[?Yield, ?Await]
+    => optional_expr($0, $1)
+  CallExpression[?Yield, ?Await] OptionalChain[?Yield, ?Await]
+    => optional_expr($0, $1)
+  OptionalExpression[?Yield, ?Await] OptionalChain[?Yield, ?Await]
+    => optional_expr($0, $1)
+
+@returns Expression
+OptionalChain[Yield, Await] :
+  `?.` `[` Expression[+In, ?Yield, ?Await] `]`
+    => optional_computed_member_expr_tail($0, $2, $3)
+  `?.` IdentifierName
+    => optional_static_member_expr_tail($0, $1)
+  `?.` PrivateIdentifier
+    => optional_private_field_member_expr_tail($0, $1)
+  `?.` Arguments[?Yield, ?Await]
+    => optional_call_expr_tail($0, $1)
+  `?.` TemplateLiteral[?Yield, ?Await, +Tagged]
+    => error_optional_chain_with_template()
+  OptionalChain[?Yield, ?Await] `[` Expression[+In, ?Yield, ?Await] `]`
+    => optional_computed_member_expr($0, $2, $3)
+  OptionalChain[?Yield, ?Await] `.` IdentifierName
+    => optional_static_member_expr($0, $2)
+  OptionalChain[?Yield, ?Await] `.` PrivateIdentifier
+    => optional_private_field_member_expr($0, $2)
+  OptionalChain[?Yield, ?Await] Arguments[?Yield, ?Await]
+    => optional_call_expr($0, $1)
+  OptionalChain[?Yield, ?Await] TemplateLiteral[?Yield, ?Await, +Tagged]
+    => error_optional_chain_with_template()
+
+@returns Expression
+LeftHandSideExpression[Yield, Await] :
+  NewExpression[?Yield, ?Await]
+    => $0
+  CallExpression[?Yield, ?Await]
+    => $0
+  OptionalExpression[?Yield, ?Await]
+    => $0
+
+
+@returns Expression
+CallMemberExpression[Yield, Await] :
+  MemberExpression[?Yield, ?Await] Arguments[?Yield, ?Await]
+    => call_expr($0, $1)
+
+
+@returns Expression
+UpdateExpression[Yield, Await] :
+  LeftHandSideExpression[?Yield, ?Await]
+    => $0
+  LeftHandSideExpression[?Yield, ?Await] [no LineTerminator here] `++`
+    => post_increment_expr($0, $1)
+  LeftHandSideExpression[?Yield, ?Await] [no LineTerminator here] `--`
+    => post_decrement_expr($0, $1)
+  `++` UnaryExpression[?Yield, ?Await]
+    => pre_decrement_expr($0, $1)
+  `--` UnaryExpression[?Yield, ?Await]
+    => pre_decrement_expr($0, $1)
+
+
+@returns Expression
+UnaryExpression[Yield, Await] :
+  UpdateExpression[?Yield, ?Await]
+    => $0
+  `delete` UnaryExpression[?Yield, ?Await]
+    => delete_expr($0, $1)
+  `void` UnaryExpression[?Yield, ?Await]
+    => void_expr($0, $1)
+  `typeof` UnaryExpression[?Yield, ?Await]
+    => typeof_expr($0, $1)
+  `+` UnaryExpression[?Yield, ?Await]
+    => unary_plus_expr($0, $1)
+  `-` UnaryExpression[?Yield, ?Await]
+    => unary_minus_expr($0, $1)
+  `~` UnaryExpression[?Yield, ?Await]
+    => bitwise_not_expr($0, $1)
+  `!` UnaryExpression[?Yield, ?Await]
+    => logical_not_expr($0, $1)
+  [+Await] AwaitExpression[?Yield]
+    => $0
+
+
+@returns Expression
+ExponentiationExpression[Yield, Await] :
+  UnaryExpression[?Yield, ?Await]
+    => $0
+  UpdateExpression[?Yield, ?Await] `**` ExponentiationExpression[?Yield, ?Await]
+    => binary_expr(pow_op($1), $0, $2)
+
+
+@returns Expression
+MultiplicativeExpression[Yield, Await] :
+  ExponentiationExpression[?Yield, ?Await]
+    => $0
+  MultiplicativeExpression[?Yield, ?Await] MultiplicativeOperator ExponentiationExpression[?Yield, ?Await]
+    => multiplicative_expr($0, $1, $2)
+
+@returns BinaryOperator
+MultiplicativeOperator :
+  `*`
+    => box_op(mul_op($0))
+  `/`
+    => box_op(div_op($0))
+  `%`
+    => box_op(mod_op($0))
+
+
+@returns Expression
+AdditiveExpression[Yield, Await] :
+  MultiplicativeExpression[?Yield, ?Await]
+    => $0
+  AdditiveExpression[?Yield, ?Await] `+` MultiplicativeExpression[?Yield, ?Await]
+    => binary_expr(add_op($1), $0, $2)
+  AdditiveExpression[?Yield, ?Await] `-` MultiplicativeExpression[?Yield, ?Await]
+    => binary_expr(sub_op($1), $0, $2)
+
+
+@returns Expression
+ShiftExpression[Yield, Await] :
+  AdditiveExpression[?Yield, ?Await]
+    => $0
+  ShiftExpression[?Yield, ?Await] `<<` AdditiveExpression[?Yield, ?Await]
+    => binary_expr(left_shift_op($1), $0, $2)
+  ShiftExpression[?Yield, ?Await] `>>` AdditiveExpression[?Yield, ?Await]
+    => binary_expr(right_shift_op($1), $0, $2)
+  ShiftExpression[?Yield, ?Await] `>>>` AdditiveExpression[?Yield, ?Await]
+    => binary_expr(right_shift_ext_op($1), $0, $2)
+
+
+@returns Expression
+RelationalExpression[In, Yield, Await] :
+  ShiftExpression[?Yield, ?Await]
+    => $0
+  RelationalExpression[?In, ?Yield, ?Await] `<` ShiftExpression[?Yield, ?Await]
+    => binary_expr(less_than_op($1), $0, $2)
+  RelationalExpression[?In, ?Yield, ?Await] `>` ShiftExpression[?Yield, ?Await]
+    => binary_expr(greater_than_op($1), $0, $2)
+  RelationalExpression[?In, ?Yield, ?Await] `<=` ShiftExpression[?Yield, ?Await]
+    => binary_expr(less_than_or_equal_op($1), $0, $2)
+  RelationalExpression[?In, ?Yield, ?Await] `>=` ShiftExpression[?Yield, ?Await]
+    => binary_expr(greater_than_or_equal_op($1), $0, $2)
+  RelationalExpression[?In, ?Yield, ?Await] `instanceof` ShiftExpression[?Yield, ?Await]
+    => binary_expr(instanceof_op($1), $0, $2)
+  [+In] RelationalExpression[+In, ?Yield, ?Await] `in` ShiftExpression[?Yield, ?Await]
+    => binary_expr(in_op($1), $0, $2)
+
+
+@returns Expression
+EqualityExpression[In, Yield, Await] :
+  RelationalExpression[?In, ?Yield, ?Await]
+    => $0
+  EqualityExpression[?In, ?Yield, ?Await] `==` RelationalExpression[?In, ?Yield, ?Await]
+    => binary_expr(equals_op($1), $0, $2)
+  EqualityExpression[?In, ?Yield, ?Await] `!=` RelationalExpression[?In, ?Yield, ?Await]
+    => binary_expr(not_equals_op($1), $0, $2)
+  EqualityExpression[?In, ?Yield, ?Await] `===` RelationalExpression[?In, ?Yield, ?Await]
+    => binary_expr(strict_equals_op($1), $0, $2)
+  EqualityExpression[?In, ?Yield, ?Await] `!==` RelationalExpression[?In, ?Yield, ?Await]
+    => binary_expr(strict_not_equals_op($1), $0, $2)
+
+
+@returns Expression
+BitwiseANDExpression[In, Yield, Await] :
+  EqualityExpression[?In, ?Yield, ?Await]
+    => $0
+  BitwiseANDExpression[?In, ?Yield, ?Await] `&` EqualityExpression[?In, ?Yield, ?Await]
+    => binary_expr(bitwise_and_op($1), $0, $2)
+
+@returns Expression
+BitwiseXORExpression[In, Yield, Await] :
+  BitwiseANDExpression[?In, ?Yield, ?Await]
+    => $0
+  BitwiseXORExpression[?In, ?Yield, ?Await] `^` BitwiseANDExpression[?In, ?Yield, ?Await]
+    => binary_expr(bitwise_xor_op($1), $0, $2)
+
+@returns Expression
+BitwiseORExpression[In, Yield, Await] :
+  BitwiseXORExpression[?In, ?Yield, ?Await]
+    => $0
+  BitwiseORExpression[?In, ?Yield, ?Await] `|` BitwiseXORExpression[?In, ?Yield, ?Await]
+    => binary_expr(bitwise_or_op($1), $0, $2)
+
+@returns Expression
+LogicalANDExpression[In, Yield, Await] :
+  BitwiseORExpression[?In, ?Yield, ?Await]
+    => $0
+  LogicalANDExpression[?In, ?Yield, ?Await] `&&` BitwiseORExpression[?In, ?Yield, ?Await]
+    => binary_expr(logical_and_op($1), $0, $2)
+
+@returns Expression
+LogicalORExpression[In, Yield, Await] :
+  LogicalANDExpression[?In, ?Yield, ?Await]
+    => $0
+  LogicalORExpression[?In, ?Yield, ?Await] `||` LogicalANDExpression[?In, ?Yield, ?Await]
+    => binary_expr(logical_or_op($1), $0, $2)
+
+@returns Expression
+ShortCircuitExpression[In, Yield, Await] :
+  LogicalORExpression[?In, ?Yield, ?Await]
+    => $0
+  CoalesceExpression[?In, ?Yield, ?Await]
+    => $0
+
+@returns Expression
+CoalesceExpression[In, Yield, Await] :
+  CoalesceExpressionHead[?In, ?Yield, ?Await] `??` BitwiseORExpression[?In, ?Yield, ?Await]
+    => binary_expr(coalesce_op($1), $0, $2)
+
+@returns Expression
+CoalesceExpressionHead[In, Yield, Await] :
+  CoalesceExpression[?In, ?Yield, ?Await]
+    => $0
+  BitwiseORExpression[?In, ?Yield, ?Await]
+    => $0
+
+@returns Expression
+ConditionalExpression[In, Yield, Await] :
+  ShortCircuitExpression[?In, ?Yield, ?Await]
+    => $0
+  ShortCircuitExpression[?In, ?Yield, ?Await] `?` AssignmentExpression[+In, ?Yield, ?Await] `:` AssignmentExpression[?In, ?Yield, ?Await]
+    => conditional_expr($0, $2, $4)
+
+
+@returns Expression
+AssignmentExpression[In, Yield, Await] :
+  ConditionalExpression[?In, ?Yield, ?Await]
+    => $0
+  [+Yield] YieldExpression[?In, ?Await]
+    => $0
+  ArrowFunction[?In, ?Yield, ?Await]
+    => $0
+  AsyncArrowFunction[?In, ?Yield, ?Await]
+    => $0
+  LeftHandSideExpression[?Yield, ?Await] `=` AssignmentExpression[?In, ?Yield, ?Await]
+    => assignment_expr($0, $2)
+  LeftHandSideExpression[?Yield, ?Await] AssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
+    => compound_assignment_expr($0, $1, $2)
+  LeftHandSideExpression[?Yield, ?Await] LogicalAssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
+    => compound_assignment_expr($0, $1, $2)
+
+@returns CompoundAssignmentOperator
+AssignmentOperator :
+  `*=`
+    => box_assign_op(mul_assign_op($0))
+  `/=`
+    => box_assign_op(div_assign_op($0))
+  `%=`
+    => box_assign_op(mod_assign_op($0))
+  `+=`
+    => box_assign_op(add_assign_op($0))
+  `-=`
+    => box_assign_op(sub_assign_op($0))
+  `<<=`
+    => box_assign_op(left_shift_assign_op($0))
+  `>>=`
+    => box_assign_op(right_shift_assign_op($0))
+  `>>>=`
+    => box_assign_op(right_shift_ext_assign_op($0))
+  `&=`
+    => box_assign_op(bitwise_and_assign_op($0))
+  `^=`
+    => box_assign_op(bitwise_xor_assign_op($0))
+  `|=`
+    => box_assign_op(bitwise_or_assign_op($0))
+  `**=`
+    => box_assign_op(pow_assign_op($0))
+
+@returns CompoundAssignmentOperator
+LogicalAssignmentOperator :
+  `&&=`
+    => box_assign_op(logical_and_assign_op($0))
+  `||=`
+    => box_assign_op(logical_or_assign_op($0))
+  `??=`
+    => box_assign_op(coalesce_assign_op($0))
+
+AssignmentPattern[Yield, Await] :
+  ObjectAssignmentPattern[?Yield, ?Await]
+  ArrayAssignmentPattern[?Yield, ?Await]
+
+ObjectAssignmentPattern[Yield, Await] :
+  `{` `}`
+  `{` AssignmentRestProperty[?Yield, ?Await] `}`
+  `{` AssignmentPropertyList[?Yield, ?Await] `}`
+  `{` AssignmentPropertyList[?Yield, ?Await] `,` AssignmentRestProperty[?Yield, ?Await]? `}`
+
+ArrayAssignmentPattern[Yield, Await] :
+  `[` Elision? AssignmentRestElement[?Yield, ?Await]? `]`
+  `[` AssignmentElementList[?Yield, ?Await] `]`
+  `[` AssignmentElementList[?Yield, ?Await] `,` Elision? AssignmentRestElement[?Yield, ?Await]? `]`
+
+AssignmentRestProperty[Yield, Await] :
+  `...` DestructuringAssignmentTarget[?Yield, ?Await]
+
+AssignmentPropertyList[Yield, Await] :
+  AssignmentProperty[?Yield, ?Await]
+  AssignmentPropertyList[?Yield, ?Await] `,` AssignmentProperty[?Yield, ?Await]
+
+AssignmentElementList[Yield, Await] :
+  AssignmentElisionElement[?Yield, ?Await]
+  AssignmentElementList[?Yield, ?Await] `,` AssignmentElisionElement[?Yield, ?Await]
+
+AssignmentElisionElement[Yield, Await] :
+  Elision? AssignmentElement[?Yield, ?Await]
+
+AssignmentProperty[Yield, Await] :
+  IdentifierReference[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]?
+  PropertyName[?Yield, ?Await] `:` AssignmentElement[?Yield, ?Await]
+
+AssignmentElement[Yield, Await] :
+  DestructuringAssignmentTarget[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]?
+
+AssignmentRestElement[Yield, Await] :
+  `...` DestructuringAssignmentTarget[?Yield, ?Await]
+
+DestructuringAssignmentTarget[Yield, Await] :
+  LeftHandSideExpression[?Yield, ?Await]
+
+
+@returns Expression
+Expression[In, Yield, Await] :
+  AssignmentExpression[?In, ?Yield, ?Await]
+    => $0
+  Expression[?In, ?Yield, ?Await] `,` AssignmentExpression[?In, ?Yield, ?Await]
+    => binary_expr(comma_op($1), $0, $2)
+
+
+@returns Statement
+Statement[Yield, Await, Return] :
+  BlockStatement[?Yield, ?Await, ?Return]
+    => $0
+  VariableStatement[?Yield, ?Await]
+    => $0
+  EmptyStatement
+    => $0
+  ExpressionStatement[?Yield, ?Await]
+    => $0
+  IfStatement[?Yield, ?Await, ?Return]
+    => $0
+  BreakableStatement[?Yield, ?Await, ?Return]
+    => $0
+  ContinueStatement[?Yield, ?Await]
+    => $0
+  BreakStatement[?Yield, ?Await]
+    => $0
+  [+Return] ReturnStatement[?Yield, ?Await]
+    => $0
+  WithStatement[?Yield, ?Await, ?Return]
+    => $0
+  LabelledStatement[?Yield, ?Await, ?Return]
+    => $0
+  ThrowStatement[?Yield, ?Await]
+    => $0
+  TryStatement[?Yield, ?Await, ?Return]
+    => $0
+  DebuggerStatement
+    => $0
+
+@returns Statement
+Declaration[Yield, Await] :
+  HoistableDeclaration[?Yield, ?Await, ~Default]
+    => $0
+  ClassDeclaration[?Yield, ?Await, ~Default]
+    => $0
+  LexicalDeclaration[+In, ?Yield, ?Await]
+    => $0
+
+@returns Statement
+HoistableDeclaration[Yield, Await, Default] :
+  FunctionDeclaration[?Yield, ?Await, ?Default]
+    => $0
+  GeneratorDeclaration[?Yield, ?Await, ?Default]
+    => $0
+  AsyncFunctionDeclaration[?Yield, ?Await, ?Default]
+    => $0
+  AsyncGeneratorDeclaration[?Yield, ?Await, ?Default]
+    => $0
+
+@returns Statement
+BreakableStatement[Yield, Await, Return] :
+  IterationStatement[?Yield, ?Await, ?Return]
+    => $0
+  SwitchStatement[?Yield, ?Await, ?Return]
+    => $0
+
+
+@returns Statement
+BlockStatement[Yield, Await, Return] :
+  Block[?Yield, ?Await, ?Return]
+    => block_statement($0)
+
+@returns Block
+Block[Yield, Await, Return] :
+  `{` StatementList[?Yield, ?Await, ?Return]? `}`
+    => block($0, $1, $2)
+
+@returns Vec<Statement>
+StatementList[Yield, Await, Return] :
+  StatementListItem[?Yield, ?Await, ?Return]
+    => statement_list_single($0)
+  StatementList[?Yield, ?Await, ?Return] StatementListItem[?Yield, ?Await, ?Return]
+    => statement_list_append($0, $1)
+
+@returns Statement
+StatementListItem[Yield, Await, Return] :
+  Statement[?Yield, ?Await, ?Return]
+    => $0
+  Declaration[?Yield, ?Await]
+    => $0
+
+
+@returns Statement
+LexicalDeclaration[In, Yield, Await] :
+  LetOrConst BindingList[?In, ?Yield, ?Await] `;`
+    => lexical_declaration($0, $1)
+
+@returns VariableDeclarationOrExpression
+ForLexicalDeclaration[In, Yield, Await] :
+  LetOrConst BindingList[?In, ?Yield, ?Await] `;`
+    => for_lexical_declaration($0, $1)
+
+@returns VariableDeclarationKind
+LetOrConst :
+  `let`
+    => let_kind($0)
+  `const`
+    => const_kind($0)
+
+@returns Vec<VariableDeclarator>
+BindingList[In, Yield, Await] :
+  LexicalBinding[?In, ?Yield, ?Await]
+    => variable_declaration_list_single($0)
+  BindingList[?In, ?Yield, ?Await] `,` LexicalBinding[?In, ?Yield, ?Await]
+    => variable_declaration_list_append($0, $2)
+
+@returns VariableDeclarator
+LexicalBinding[In, Yield, Await] :
+  BindingIdentifier[?Yield, ?Await] Initializer[?In, ?Yield, ?Await]?
+    => variable_declaration(binding_identifier_to_binding($0), $1)
+  BindingPattern[?Yield, ?Await] Initializer[?In, ?Yield, ?Await]
+    => variable_declaration($0, Some($1))
+
+
+@returns Statement
+VariableStatement[Yield, Await] :
+  `var` VariableDeclarationList[+In, ?Yield, ?Await] `;`
+    => variable_statement($0, $1)
+
+@returns Vec<VariableDeclarator>
+VariableDeclarationList[In, Yield, Await] :
+  VariableDeclaration[?In, ?Yield, ?Await]
+    => variable_declaration_list_single($0)
+  VariableDeclarationList[?In, ?Yield, ?Await] `,` VariableDeclaration[?In, ?Yield, ?Await]
+    => variable_declaration_list_append($0, $2)
+
+@returns VariableDeclarator
+VariableDeclaration[In, Yield, Await] :
+  BindingIdentifier[?Yield, ?Await] Initializer[?In, ?Yield, ?Await]?
+    => variable_declaration(binding_identifier_to_binding($0), $1)
+  BindingPattern[?Yield, ?Await] Initializer[?In, ?Yield, ?Await]
+    => variable_declaration($0, Some($1))
+
+
+@returns Binding
+BindingPattern[Yield, Await] :
+  ObjectBindingPattern[?Yield, ?Await]
+    => $0
+  ArrayBindingPattern[?Yield, ?Await]
+    => $0
+
+@returns Binding
+ObjectBindingPattern[Yield, Await] :
+  `{` `}`
+    => object_binding_pattern($0, binding_property_list_empty(), None, $1)
+  `{` BindingRestProperty[?Yield, ?Await] `}`
+    => object_binding_pattern($0, binding_property_list_empty(), Some($1), $2)
+  `{` BindingPropertyList[?Yield, ?Await] `}`
+    => object_binding_pattern($0, $1, None, $2)
+  `{` BindingPropertyList[?Yield, ?Await] `,` BindingRestProperty[?Yield, ?Await]? `}`
+    => object_binding_pattern($0, $1, $3, $4)
+
+@returns Binding
+ArrayBindingPattern[Yield, Await] :
+  `[` Elision? BindingRestElement[?Yield, ?Await]? `]`
+    => array_binding_pattern($0, binding_element_list_empty(), $1, $2, $3)
+  `[` BindingElementList[?Yield, ?Await] `]`
+    => array_binding_pattern($0, $1, None, None, $2)
+  `[` BindingElementList[?Yield, ?Await] `,` Elision? BindingRestElement[?Yield, ?Await]? `]`
+    => array_binding_pattern($0, $1, $3, $4, $5)
+
+@returns BindingIdentifier
+BindingRestProperty[Yield, Await] :
+  `...` BindingIdentifier[?Yield, ?Await]
+    => $1
+
+@returns Vec<BindingProperty>
+BindingPropertyList[Yield, Await] :
+  BindingProperty[?Yield, ?Await]
+    => binding_property_list_single($0)
+  BindingPropertyList[?Yield, ?Await] `,` BindingProperty[?Yield, ?Await]
+    => binding_property_list_append($0, $2)
+
+@returns Vec<Option<Parameter>>
+BindingElementList[Yield, Await] :
+  BindingElisionElement[?Yield, ?Await]
+    => $0
+  BindingElementList[?Yield, ?Await] `,` BindingElisionElement[?Yield, ?Await]
+    => binding_element_list_append($0, $2)
+
+@returns Vec<Option<Parameter>>
+BindingElisionElement[Yield, Await] :
+  Elision? BindingElement[?Yield, ?Await]
+   => binding_elision_element($0, $1)
+
+@returns BindingProperty
+BindingProperty[Yield, Await] :
+  SingleNameBinding[?Yield, ?Await]
+    => binding_property_shorthand($0)
+  PropertyName[?Yield, ?Await] `:` BindingElement[?Yield, ?Await]
+    => binding_property($0, $2)
+
+@returns Parameter
+BindingElement[Yield, Await] :
+  SingleNameBinding[?Yield, ?Await]
+    => $0
+  BindingPattern[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]?
+    => binding_element_pattern($0, $1)
+
+@returns Parameter
+SingleNameBinding[Yield, Await] :
+  BindingIdentifier[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]?
+    => single_name_binding($0, $1)
+
+@returns Binding
+BindingRestElement[Yield, Await] :
+  `...` BindingIdentifier[?Yield, ?Await]
+    => binding_identifier_to_binding($1)
+  `...` BindingPattern[?Yield, ?Await]
+    => $1
+
+
+@returns Statement
+EmptyStatement :
+  `;`
+    => empty_statement($0)
+
+@returns Statement
+ExpressionStatement[Yield, Await] :
+  [lookahead <! {`{`, `function`, `async`, `class`, `let`}] Expression[+In, ?Yield, ?Await] `;`
+    => expression_statement($0)
+
+
+@returns Statement
+IfStatement[Yield, Await, Return] :
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] `else` Statement[?Yield, ?Await, ?Return]
+    => if_statement($0, $2, $4, Some($6))
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] [lookahead != `else`]
+    => if_statement($0, $2, $4, None)
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] `else` Statement[?Yield, ?Await, ?Return]
+    => if_statement($0, $2, make_block_stmt_from_function_decl($4), Some($6))
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] `else` FunctionDeclaration[?Yield, ?Await, ~Default]
+    => if_statement($0, $2, $4, Some(make_block_stmt_from_function_decl($6)))
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] `else` FunctionDeclaration[?Yield, ?Await, ~Default]
+    => if_statement($0, $2, make_block_stmt_from_function_decl($4), Some(make_block_stmt_from_function_decl($6)))
+  `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] [lookahead != `else`]
+    => if_statement($0, $2, make_block_stmt_from_function_decl($4), None)
+
+
+@returns Statement
+IterationStatement[Yield, Await, Return] :
+  `do` Statement[?Yield, ?Await, ?Return] `while` `(` Expression[+In, ?Yield, ?Await] `)` `;`
+    => do_while_statement($0, $1, $4, $5)
+  `while` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => while_statement($0, $2, $4)
+  `for` `(` [lookahead != `let`] Expression[~In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await, ?Return]
+    => for_statement($0, for_expression($2), $4, $6, $8)
+  `for` `(` `var` VariableDeclarationList[~In, ?Yield, ?Await] `;` Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await, ?Return]
+    => for_statement($0, Some(for_var_declaration($2, $3)), $5, $7, $9)
+  `for` `(` ForLexicalDeclaration[~In, ?Yield, ?Await] Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await, ?Return]
+    => for_statement_lexical($0, unbox_for_lexical_declaration($2), $3, $5, $7)
+  `for` `(` [lookahead != `let`] LeftHandSideExpression[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_in_statement($0, for_assignment_target($2), $4, $6)
+  `for` `(` `var` ForBinding[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_in_statement($0, for_in_or_of_var_declaration($2, $3, None), $5, $7)
+  `for` `(` `var` BindingIdentifier[?Yield, ?Await] Initializer[~In, ?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_in_statement($0, for_in_or_of_var_declaration($2, binding_identifier_to_binding($3), Some($4)), $6, $8)
+  `for` `(` ForDeclaration[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_in_statement_lexical($0, unbox_for_declaration($2), $4, $6)
+  `for` `(` [lookahead <! {`async`, `let`} ] LeftHandSideExpression[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_of_statement($0, for_assignment_target($2), $4, $6)
+  `for` `(` `var` ForBinding[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_of_statement($0, for_in_or_of_var_declaration($2, $3, None), $5, $7)
+  `for` `(` ForDeclaration[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_of_statement_lexical($0, unbox_for_declaration($2), $4, $6)
+  [+Await] `for` `await` `(` [lookahead <! {`async`, `let`} ] LeftHandSideExpression[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_await_of_statement($0, for_assignment_target($3), $5, $7)
+  [+Await] `for` `await` `(` `var` ForBinding[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_await_of_statement($0, for_in_or_of_var_declaration($3, $4, None), $6, $8)
+  [+Await] `for` `await` `(` ForDeclaration[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => for_await_of_statement_lexical($0, unbox_for_declaration($3), $5, $7)
+
+@returns VariableDeclarationOrAssignmentTarget
+ForDeclaration[Yield, Await] :
+  LetOrConst ForBinding[?Yield, ?Await]
+    => for_declaration($0, $1)
+
+@returns Binding
+ForBinding[Yield, Await] :
+  BindingIdentifier[?Yield, ?Await]
+    => binding_identifier_to_binding($0)
+  BindingPattern[?Yield, ?Await]
+    => $0
+
+
+@returns Statement
+ContinueStatement[Yield, Await] :
+  `continue` `;`
+    => continue_statement($0, None)
+  `continue` [no LineTerminator here] LabelIdentifier[?Yield, ?Await] `;`
+    => continue_statement($0, Some($1))
+
+
+@returns Statement
+BreakStatement[Yield, Await] :
+  `break` `;`
+    => break_statement($0, None)
+  `break` [no LineTerminator here] LabelIdentifier[?Yield, ?Await] `;`
+    => break_statement($0, Some($1))
+
+
+@returns Statement
+ReturnStatement[Yield, Await] :
+  `return` `;`
+    => return_statement($0, None)
+  `return` [no LineTerminator here] Expression[+In, ?Yield, ?Await] `;`
+    => return_statement($0, Some($1))
+
+
+@returns Statement
+WithStatement[Yield, Await, Return] :
+  `with` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+    => with_statement($0, $2, $4)
+
+
+@returns Statement
+SwitchStatement[Yield, Await, Return] :
+  `switch` `(` Expression[+In, ?Yield, ?Await] `)` CaseBlock[?Yield, ?Await, ?Return]
+    => switch_statement($0, $2, $4)
+
+@returns Statement
+CaseBlock[Yield, Await, Return] :
+  `{` CaseClauses[?Yield, ?Await, ?Return]? `}`
+    => case_block($0, $1, $2)
+  `{` CaseClauses[?Yield, ?Await, ?Return]? DefaultClause[?Yield, ?Await, ?Return] CaseClauses[?Yield, ?Await, ?Return]? `}`
+    => case_block_with_default($0, $1, $2, $3, $4)
+
+@returns Vec<SwitchCase>
+CaseClauses[Yield, Await, Return] :
+  CaseClause[?Yield, ?Await, ?Return]
+    => case_clauses_single($0)
+  CaseClauses[?Yield, ?Await, ?Return] CaseClause[?Yield, ?Await, ?Return]
+    => case_clauses_append($0, $1)
+
+@returns SwitchCase
+CaseClause[Yield, Await, Return] :
+  `case` Expression[+In, ?Yield, ?Await] `:` StatementList[?Yield, ?Await, ?Return]?
+    => case_clause($0, $1, $2, $3)
+
+@returns SwitchDefault
+DefaultClause[Yield, Await, Return] :
+  `default` `:` StatementList[?Yield, ?Await, ?Return]?
+    => default_clause($0, $1, $2)
+
+
+@returns Statement
+LabelledStatement[Yield, Await, Return] :
+  LabelIdentifier[?Yield, ?Await] `:` LabelledItem[?Yield, ?Await, ?Return]
+    => labelled_statement($0, $2)
+
+@returns Statement
+LabelledItem[Yield, Await, Return] :
+  Statement[?Yield, ?Await, ?Return]
+    => $0
+  FunctionDeclaration[?Yield, ?Await, ~Default]
+    => $0
+
+
+@returns Statement
+ThrowStatement[Yield, Await] :
+  `throw` [no LineTerminator here] Expression[+In, ?Yield, ?Await] `;`
+    => throw_statement($0, $1)
+
+@returns Statement
+TryStatement[Yield, Await, Return] :
+  `try` Block[?Yield, ?Await, ?Return] Catch[?Yield, ?Await, ?Return]
+    => try_statement($0, $1, Some($2), None)
+  `try` Block[?Yield, ?Await, ?Return] Finally[?Yield, ?Await, ?Return]
+    =>  try_statement($0, $1, None, Some($2))
+  `try` Block[?Yield, ?Await, ?Return] Catch[?Yield, ?Await, ?Return] Finally[?Yield, ?Await, ?Return]
+    => try_statement($0, $1, Some($2), Some($3))
+
+@returns CatchClause
+Catch[Yield, Await, Return] :
+  `catch` `(` CatchParameter[?Yield, ?Await] `)` CatchBlock[?Yield, ?Await, ?Return]
+    => catch($0, $2, $4)
+  `catch` Block[?Yield, ?Await, ?Return]
+    => catch_no_param($0, $1)
+
+@returns Block
+CatchBlock[Yield, Await, Return] :
+  `{` StatementList[?Yield, ?Await, ?Return]? `}`
+    => catch_block($0, $1, $2)
+
+@returns Block
+Finally[Yield, Await, Return] :
+  `finally` Block[?Yield, ?Await, ?Return]
+    => $1
+
+@returns Binding
+CatchParameter[Yield, Await] :
+  BindingIdentifier[?Yield, ?Await]
+    => binding_identifier_to_binding($0)
+  BindingPattern[?Yield, ?Await]
+    => $0
+
+
+@returns Statement
+DebuggerStatement :
+  `debugger` `;`
+    => debugger_statement($0)
+
+
+@returns Statement
+FunctionDeclaration[Yield, Await, Default] :
+  `function` BindingIdentifier[?Yield, ?Await] `(` FormalParameters[~Yield, ~Await] `)` `{` FunctionBody[~Yield, ~Await] `}`
+    => function_decl(function($0, Some($1), $2, $3, $4, $5, $6, $7))
+  [+Default] `function` `(` FormalParameters[~Yield, ~Await] `)` `{` FunctionBody[~Yield, ~Await] `}`
+    => function_decl(function($0, None, $1, $2, $3, $4, $5, $6))
+
+@returns Expression
+FunctionExpression :
+  `function` BindingIdentifier[~Yield, ~Await]? `(` FormalParameters[~Yield, ~Await] `)` `{` FunctionBody[~Yield, ~Await] `}`
+    => function_expr(function($0, $1, $2, $3, $4, $5, $6, $7))
+
+@returns FormalParameters
+UniqueFormalParameters[Yield, Await] :
+  FormalParameters[?Yield, ?Await]
+    => unique_formal_parameters($0)
+
+@returns FormalParameters
+FormalParameters[Yield, Await] :
+  [empty]
+    => empty_formal_parameters()
+  FunctionRestParameter[?Yield, ?Await]
+    => with_rest_parameter(empty_formal_parameters(), $0)
+  FormalParameterList[?Yield, ?Await]
+    => $0
+  FormalParameterList[?Yield, ?Await] `,`
+    => $0
+  FormalParameterList[?Yield, ?Await] `,` FunctionRestParameter[?Yield, ?Await]
+    => with_rest_parameter($0, $2)
+
+@returns FormalParameters
+FormalParameterList[Yield, Await] :
+  FormalParameter[?Yield, ?Await]
+    => formal_parameter_list_single($0)
+  FormalParameterList[?Yield, ?Await] `,` FormalParameter[?Yield, ?Await]
+    => formal_parameter_list_append($0, $2)
+
+@returns Binding
+FunctionRestParameter[Yield, Await] :
+  BindingRestElement[?Yield, ?Await]
+    => $0
+
+@returns Parameter
+FormalParameter[Yield, Await] :
+  BindingElement[?Yield, ?Await]
+    => $0
+
+@returns FunctionBody
+FunctionBody[Yield, Await] :
+  FunctionStatementList[?Yield, ?Await]
+    => function_body($0)
+
+@returns Vec<Statement>
+FunctionStatementList[Yield, Await] :
+  StatementList[?Yield, ?Await, +Return]?
+    => function_statement_list($0)
+
+
+@returns Expression
+ArrowFunction[In, Yield, Await] :
+  ArrowParameters[?Yield, ?Await] [no LineTerminator here] `=>` ConciseBody[?In]
+    => arrow_function($0, $2)
+
+@returns FormalParameters
+ArrowParameters[Yield, Await] :
+  BindingIdentifier[?Yield, ?Await]
+    => arrow_parameters_bare($0)
+  CoverParenthesizedExpressionAndArrowParameterList[?Yield, ?Await]
+    => uncover_arrow_parameters($0)
+
+@returns ArrowExpressionBody
+ConciseBody[In] :
+  [lookahead != `{` ] AssignmentExpression[?In, ~Yield, ~Await]
+    => concise_body_expression($0)
+  `{` FunctionBody[~Yield, ~Await] `}`
+    => concise_body_block($0, $1, $2)
+
+
+ArrowFormalParameters[Yield, Await] :
+  `(` UniqueFormalParameters[?Yield, ?Await] `)`
+
+
+@returns MethodDefinition
+MethodDefinition[Yield, Await] :
+  ClassElementName[?Yield, ?Await] `(` UniqueFormalParameters[~Yield, ~Await] `)` `{` FunctionBody[~Yield, ~Await] `}`
+    => method_definition($0, $1, $2, $3, $4, $5, $6)
+  GeneratorMethod[?Yield, ?Await]
+    => $0
+  AsyncMethod[?Yield, ?Await]
+    => $0
+  AsyncGeneratorMethod[?Yield, ?Await]
+    => $0
+  `get` ClassElementName[?Yield, ?Await] `(` `)` `{` FunctionBody[~Yield, ~Await] `}`
+    => getter($0, $1, $4, $5, $6)
+  `set` ClassElementName[?Yield, ?Await] `(` PropertySetParameterList `)` `{` FunctionBody[~Yield, ~Await] `}`
+    => setter($0, $1, $2, $3, $4, $5, $6, $7)
+
+@returns Parameter
+PropertySetParameterList :
+  FormalParameter[~Yield, ~Await]
+    => $0
+
+
+@returns MethodDefinition
+GeneratorMethod[Yield, Await] :
+  `*` ClassElementName[?Yield, ?Await] `(` UniqueFormalParameters[+Yield, ~Await] `)` `{` GeneratorBody `}`
+    => generator_method($0, $1, $2, $3, $4, $5, $6, $7)
+
+@returns Statement
+GeneratorDeclaration[Yield, Await, Default] :
+  `function` `*` BindingIdentifier[?Yield, ?Await] `(` FormalParameters[+Yield, ~Await] `)` `{` GeneratorBody `}`
+    => function_decl(generator($0, Some($2), $3, $4, $5, $6, $7, $8))
+  [+Default] `function` `*` `(` FormalParameters[+Yield, ~Await] `)` `{` GeneratorBody `}`
+    => function_decl(generator($0, None, $2, $3, $4, $5, $6, $7))
+
+@returns Expression
+GeneratorExpression :
+  `function` `*` BindingIdentifier[+Yield, ~Await]? `(` FormalParameters[+Yield, ~Await] `)` `{` GeneratorBody `}`
+    => function_expr(generator($0, $2, $3, $4, $5, $6, $7, $8))
+
+@returns FunctionBody
+GeneratorBody :
+  FunctionBody[+Yield, ~Await]
+    => $0
+
+@returns Expression
+YieldExpression[In, Await] :
+  `yield`
+    => yield_expr($0, None)
+  `yield` [no LineTerminator here] AssignmentExpression[?In, +Yield, ?Await]
+    => yield_expr($0, Some($1))
+  `yield` [no LineTerminator here] `*` AssignmentExpression[?In, +Yield, ?Await]
+    => yield_star_expr($0, $2)
+
+
+@returns MethodDefinition
+AsyncGeneratorMethod[Yield, Await] :
+  `async` [no LineTerminator here] `*` ClassElementName[?Yield, ?Await] `(` UniqueFormalParameters[+Yield, +Await] `)` `{` AsyncGeneratorBody `}`
+    => async_generator_method($0, $2, $3, $4, $5, $6, $7, $8)
+
+@returns Statement
+AsyncGeneratorDeclaration[Yield, Await, Default] :
+  `async` [no LineTerminator here] `function` `*` BindingIdentifier[?Yield, ?Await] `(` FormalParameters[+Yield, +Await] `)` `{` AsyncGeneratorBody `}`
+    => function_decl(async_generator($0, Some($3), $4, $5, $6, $7, $8, $9))
+  [+Default] `async` [no LineTerminator here] `function` `*` `(` FormalParameters[+Yield, +Await] `)` `{` AsyncGeneratorBody `}`
+    => function_decl(async_generator($0, None, $3, $4, $5, $6, $7, $8))
+
+@returns Expression
+AsyncGeneratorExpression :
+  `async` [no LineTerminator here] `function` `*` BindingIdentifier[+Yield, +Await]? `(` FormalParameters[+Yield, +Await] `)` `{` AsyncGeneratorBody `}`
+    => function_expr(async_function($0, $3, $4, $5, $6, $7, $8, $9))
+
+@returns FunctionBody
+AsyncGeneratorBody :
+  FunctionBody[+Yield, +Await]
+    => $0
+
+
+@returns Statement
+ClassDeclaration[Yield, Await, Default] :
+  `class` BindingIdentifier[?Yield, ?Await] ClassTail[?Yield, ?Await]
+    => class_declaration($0, Some($1), $2)
+  [+Default] `class` ClassTail[?Yield, ?Await]
+    => class_declaration($0, None, $1)
+
+@returns Expression
+ClassExpression[Yield, Await] :
+  `class` BindingIdentifier[?Yield, ?Await]? ClassTail[?Yield, ?Await]
+    => class_expression($0, $1, $2)
+
+@returns ClassExpression
+ClassTail[Yield, Await] :
+  ClassHeritage[?Yield, ?Await]? `{` ClassBody[?Yield, ?Await]? `}`
+    => class_tail($0, $2, $3)
+
+@returns Expression
+ClassHeritage[Yield, Await] :
+  `extends` LeftHandSideExpression[?Yield, ?Await]
+    => $1
+
+@returns Vec<Box<ClassElement>>
+ClassBody[Yield, Await] :
+  ClassElementList[?Yield, ?Await]
+    => $0
+
+@returns Vec<Box<ClassElement>>
+ClassElementList[Yield, Await] :
+  ClassElement[?Yield, ?Await]
+    => $0
+  ClassElementList[?Yield, ?Await] ClassElement[?Yield, ?Await]
+    => class_element_list_append($0, $1)
+
+@returns ClassElement
+FieldDefinition[Yield, Await] :
+  ClassElementName[?Yield, ?Await] Initializer[+In, ~Yield, ~Await]?
+    => class_field_definition($0, $1)
+
+@returns ClassElementName
+ClassElementName[Yield, Await] :
+  PropertyName[?Yield, ?Await]
+    => property_name_to_class_element_name($0)
+  PrivateIdentifier
+    => class_element_name_private($0)
+
+@returns Vec<Box<ClassElement>>
+ClassElement[Yield, Await] :
+  MethodDefinition[?Yield, ?Await]
+    => class_element($0)
+  `static` MethodDefinition[?Yield, ?Await]
+    => class_element_static($0, $1)
+  FieldDefinition[?Yield, ?Await] `;`
+    => class_element_to_vec($0)
+  `static` FieldDefinition[?Yield, ?Await] `;`
+    => class_element_static_field($0, $1)
+  `;`
+    => class_element_empty()
+
+
+@returns Statement
+AsyncFunctionDeclaration[Yield, Await, Default] :
+  `async` [no LineTerminator here] `function` BindingIdentifier[?Yield, ?Await] `(` FormalParameters[~Yield, +Await] `)` `{` AsyncFunctionBody `}`
+    => function_decl(async_function($0, Some($2), $3, $4, $5, $6, $7, $8))
+  [+Default] `async` [no LineTerminator here] `function` `(` FormalParameters[~Yield, +Await] `)` `{` AsyncFunctionBody `}`
+    => function_decl(async_function($0, None, $2, $3, $4, $5, $6, $7))
+
+@returns Expression
+AsyncFunctionExpression :
+  `async` [no LineTerminator here] `function` `(` FormalParameters[~Yield, +Await] `)` `{` AsyncFunctionBody `}`
+    => function_expr(async_function($0, None, $2, $3, $4, $5, $6, $7))
+  `async` [no LineTerminator here] `function` BindingIdentifier[~Yield, +Await] `(` FormalParameters[~Yield, +Await] `)` `{` AsyncFunctionBody `}`
+    => function_expr(async_function($0, Some($2), $3, $4, $5, $6, $7, $8))
+
+@returns MethodDefinition
+AsyncMethod[Yield, Await] :
+  `async` [no LineTerminator here] PropertyName[?Yield, ?Await] `(` UniqueFormalParameters[~Yield, +Await] `)` `{` AsyncFunctionBody `}`
+    => async_method($0, $1, $2, $3, $4, $5, $6, $7)
+
+@returns FunctionBody
+AsyncFunctionBody :
+  FunctionBody[~Yield, +Await]
+    => $0
+
+@returns Expression
+AwaitExpression[Yield] :
+  `await` UnaryExpression[?Yield, +Await]
+    => await_expr($0, $1)
+
+
+@returns Expression
+AsyncArrowFunction[In, Yield, Await] :
+  `async` [no LineTerminator here] AsyncArrowBindingIdentifier[?Yield] [no LineTerminator here] `=>` AsyncConciseBody[?In]
+    => async_arrow_function_bare($0, $1, $3)
+  CoverCallExpressionAndAsyncArrowHead[?Yield, ?Await] [no LineTerminator here] `=>` AsyncConciseBody[?In]
+    => async_arrow_function($0, $2)
+
+@returns ArrowExpressionBody
+AsyncConciseBody[In] :
+  [lookahead != `{`] AssignmentExpression[?In, ~Yield, +Await]
+    => concise_body_expression($0)
+  `{` AsyncFunctionBody `}`
+    => concise_body_block($0, $1, $2)
+
+@returns BindingIdentifier
+AsyncArrowBindingIdentifier[Yield] :
+  BindingIdentifier[?Yield, +Await]
+    => $0
+
+@returns Expression
+CoverCallExpressionAndAsyncArrowHead[Yield, Await] :
+  MemberExpression[?Yield, ?Await] Arguments[?Yield, ?Await]
+    => call_expr($0, $1)
+
+
+AsyncArrowHead :
+  `async` [no LineTerminator here] ArrowFormalParameters[~Yield, +Await]
+
+
+@returns Script
+Script :
+  ScriptBody?
+    => script($0)
+
+@returns Script
+ScriptBody :
+  StatementList[~Yield, ~Await, ~Return]
+    => script_body($0)
+
+@returns Vec<Statement>
+Module :
+  ModuleBody?
+    => module($0)
+
+@returns Vec<Statement>
+ModuleBody :
+  ModuleItemList
+    => $0
+
+@returns Vec<Statement>
+ModuleItemList :
+  ModuleItem
+    => module_item_list_single($0)
+  ModuleItemList ModuleItem
+    => module_item_list_append($0, $1)
+
+@returns Statement
+ModuleItem :
+  ImportDeclaration
+    => $0
+  ExportDeclaration
+    => $0
+  StatementListItem[~Yield, ~Await, ~Return]
+    => $0
+
+
+@returns Statement
+ImportDeclaration :
+  `import` ImportClause FromClause `;`
+    => import_declaration(Some($1), $2)
+  `import` ModuleSpecifier `;`
+    => import_declaration(None, $1)
+
+@returns Void
+ImportClause :
+  ImportedDefaultBinding
+    => import_clause(Some($0), None, None)
+  NameSpaceImport
+    => import_clause(None, Some($0), None)
+  NamedImports
+    => import_clause(None, None, Some($0))
+  ImportedDefaultBinding `,` NameSpaceImport
+    => import_clause(Some($0), Some($2), None)
+  ImportedDefaultBinding `,` NamedImports
+    => import_clause(Some($0), None, Some($2))
+
+@returns BindingIdentifier
+ImportedDefaultBinding :
+  ImportedBinding
+    => $0
+
+@returns Void
+NameSpaceImport :
+  `*` `as` ImportedBinding
+    => name_space_import($2)
+
+@returns Void
+NamedImports :
+  `{` `}`
+    => imports_list_empty()
+  `{` ImportsList `}`
+    => $1
+  `{` ImportsList `,` `}`
+    => $1
+
+@returns Token
+FromClause :
+  `from` ModuleSpecifier
+    => $1
+
+@returns Void
+ImportsList :
+  ImportSpecifier
+    => imports_list_append(imports_list_empty(), $0)
+  ImportsList `,` ImportSpecifier
+    => imports_list_append($0, $2)
+
+@returns Void
+ImportSpecifier :
+  ImportedBinding
+    => import_specifier($0)
+  IdentifierName `as` ImportedBinding
+    => import_specifier_renaming($0, $2)
+
+@returns Token
+ModuleSpecifier :
+  StringLiteral
+    => module_specifier($0)
+
+@returns BindingIdentifier
+ImportedBinding :
+  BindingIdentifier[~Yield, ~Await]
+    => $0
+
+
+@returns Statement
+ExportDeclaration :
+  `export` `*` FromClause `;`
+    => export_all_from($2)
+  `export` ExportClause FromClause `;`
+    => export_set_from($1, $2)
+  `export` ExportClause `;`
+    => export_set($1)
+  `export` VariableStatement[~Yield, ~Await]
+    => export_vars($1)
+  `export` Declaration[~Yield, ~Await]
+    => export_declaration($1)
+  `export` `default` HoistableDeclaration[~Yield, ~Await, +Default]
+    => export_default_hoistable($2)
+  `export` `default` ClassDeclaration[~Yield, ~Await, +Default]
+    => export_default_class($2)
+  `export` `default` [lookahead <! {`function`, `async`, `class`}] AssignmentExpression[+In, ~Yield, ~Await] `;`
+    => export_default_value($2)
+
+@returns Void
+ExportClause :
+  `{` `}`
+    => exports_list_empty()
+  `{` ExportsList `}`
+    => $1
+  `{` ExportsList `,` `}`
+    => $1
+
+@returns Void
+ExportsList :
+  ExportSpecifier
+    => exports_list_append(exports_list_empty(), $0)
+  ExportsList `,` ExportSpecifier
+    => exports_list_append($0, $2)
+
+@returns Void
+ExportSpecifier :
+  IdentifierName
+    => export_specifier($0)
+  IdentifierName `as` IdentifierName
+    => export_specifier_renaming($0, $2)
+

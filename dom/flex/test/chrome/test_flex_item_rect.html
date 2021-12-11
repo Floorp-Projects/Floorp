@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+f {
+  display: flex;
+  background-color: grey;
+  width: 400px;
+  height: 25px;
+  margin-bottom: 5px;
+}
+
+f > * {
+  width: 100px;
+  height: 10px;
+}
+
+b {
+  background-color: gold;
+}
+
+c {
+  background-color: yellow;
+}
+</style>
+
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function testItemMatchesExpectedValues(item, values, index) {
+  is(item.frameRect.x, values.x,
+     "Item index " + index + " should have expected frameRect.x.");
+  is(item.frameRect.y, values.y,
+     "Item index " + index + " should have expected frameRect.y.");
+  if (typeof(values.width) != "undefined") {
+    is(item.frameRect.width, values.width,
+       "Item index " + index + " should have expected frameRect.width.");
+  }
+  is(item.frameRect.height, values.height,
+     "Item index " + index + " should have expected frameRect.height.");
+}
+
+function runTests() {
+  /**
+   * The expectedValues array contains one rect for each flex container child of
+   * of the body. The values in this object are compared against the returned flex
+   * API values of the LAST flex item in the first line of the corresponding flex
+   * container.
+   **/
+  const expectedValues = [
+    { x: 0, y: 0, width: 100, height: 10 },
+    { x: 0, y: 0, width: undefined /* not tested */, height: 25 /* stretched to container */ },
+    { x: 0, y: 0, width: 100, height: 10 },
+    { x: 0, y: 0, width: 100, height: 10 },
+    { x: 100, y: 0, width: 100, height: 10 },
+    { x: 10, y: 10, width: 100, height: 10 },
+    { x: 10, y: 10, width: 100, height: 10 },
+    { x: 0, y: 0, width: 200, height: 20 },
+    { x: 0, y: 0, width: 400, height: 25 },
+    { x: 0, y: 0, width: 100, height: 10 },
+    { x: 0, y: 0, width: 100, height: 10 },
+  ];
+
+  let children = document.body.children;
+  is(children.length, expectedValues.length, "Document should have expected number of flex containers.");
+
+  for (let i = 0; i < children.length; ++i) {
+    const flex = children.item(i).getAsFlexContainer();
+    ok(flex, "Document child index " + i + " should be a flex container.");
+    if (flex) {
+      const values = expectedValues[i];
+      const firstLine = flex.getLines()[0];
+      const items = firstLine.getItems();
+      const lastItem = items[items.length - 1];
+      testItemMatchesExpectedValues(lastItem, values, i);
+    }
+  }
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+
+<body onLoad="runTests();">
+  <!-- a single item -->
+  <f><b></b></f>
+
+  <!-- an anonymous box item around a text node -->
+  <f style="font-size: 10px">anonymous</f>
+
+  <!-- a table item -->
+  <f><table></table></f>
+
+  <!-- a display:table-cell item -->
+  <f><b style="display: table-cell"></b></f>
+
+  <!-- an item after a fixed size item -->
+  <f><b></b><c></c></f>
+
+  <!-- a relatively-positioned item -->
+  <f><b style="position: relative; top: 10px; left: 10px"></b></f>
+
+  <!-- a margin-adjusted item -->
+  <f><b style="margin-top: 10px; margin-left: 10px"></b></f>
+
+  <!-- an item sized with inline styles -->
+  <f><b style="width: 200px; height: 20px"></b></f>
+
+  <!-- an item that is flexed/stretched, in both axes -->
+  <f style="align-items: stretch"><b style="flex-grow: 1; height: auto"></b></f>
+
+  <!-- These stylings should have no effect on the frameRect. -->
+  <!-- a transform:scale item -->
+  <f><b style="transform: scale(2.0)"></b></f>
+
+  <!-- a transform:translate item -->
+  <f><b style="transform: translate(10px, 10px)"></b></f>
+</body>
+</html>

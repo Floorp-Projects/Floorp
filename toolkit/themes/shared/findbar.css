@@ -1,0 +1,196 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+findbar {
+  border-top: 1px solid ThreeDShadow;
+  min-width: 1px;
+  transition-property: margin-bottom, opacity, visibility;
+  transition-duration: 150ms, 150ms, 0s;
+  transition-timing-function: ease-in-out, ease-in-out, linear;
+  padding-block: 6px;
+}
+
+findbar[hidden] {
+  /* Override display:none to make the transition work. */
+  display: -moz-box;
+  visibility: collapse;
+  margin-bottom: -1em;
+  opacity: 0;
+  transition-delay: 0s, 0s, 150ms;
+}
+
+findbar[noanim] {
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+.findbar-container {
+  margin-inline-start: 8px;
+  height: 28px;
+  overflow-inline: clip; /* Ensures the close button stays visible. */
+}
+
+/* Remove start margin when close button is on the left side (on macOS) */
+.findbar-closebutton + .findbar-container {
+  margin-inline-start: 0;
+}
+
+/* Search field */
+
+/* Don't apply theme colors on findbar when header image is applied to avoid
+contrast issues, see bug 1506913 */
+html|html[lwtheme-image] findbar {
+  --toolbar-field-background-color: initial;
+  --toolbar-field-color: initial;
+  --toolbar-field-border-color: initial;
+  --toolbar-field-focus-background-color: initial;
+  --toolbar-field-focus-color: initial;
+}
+
+html|input.findbar-textbox {
+  appearance: none;
+  background-color: Field;
+  border: 1px solid var(--input-border-color, var(--toolbar-field-border-color));
+  border-radius: 4px;
+  outline: none;
+  margin: 0;
+  padding: 2px 5px;
+  padding-inline-start: 8px;
+  width: 18em;
+}
+
+html|input.findbar-textbox:-moz-lwtheme {
+  background-color: var(--input-bgcolor, var(--toolbar-field-background-color));
+  color: var(--input-color, var(--toolbar-field-color));
+  color-scheme: light;
+}
+
+:root[lwt-toolbar-field-focus-brighttext] html|input.findbar-textbox {
+  color-scheme: dark;
+}
+
+html|input.findbar-textbox:focus {
+  border-color: transparent;
+  outline: 2px solid color-mix(in srgb, var(--focus-outline-color, -moz-accent-color) 50%, transparent);
+  outline-offset: -2px;
+}
+
+html|input.findbar-textbox:-moz-lwtheme::selection {
+  background-color: var(--lwt-toolbar-field-highlight, Highlight);
+  color: var(--lwt-toolbar-field-highlight-text, HighlightText);
+}
+
+html|input.findbar-textbox:not(:focus):-moz-lwtheme::selection {
+  background-color: var(--lwt-toolbar-field-highlight, text-select-background-disabled);
+}
+
+html|input.findbar-textbox[status="notfound"] {
+  border-color: transparent;
+  outline: 2px solid var(--input-error-border-color, #E22850);
+  outline-offset: -2px;
+}
+
+html|input.findbar-textbox[flash="true"] {
+  background-color: rgba(255,233,0,.3);
+  color: inherit;
+}
+
+/* Previous/next buttons */
+
+.findbar-find-previous,
+.findbar-find-next {
+  margin-inline-start: 0;
+  appearance: none;
+  padding: 4px 7px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: inherit;
+  border-radius: 4px;
+}
+
+.findbar-find-previous:not([disabled]):hover,
+.findbar-find-next:not([disabled]):hover {
+  background: var(--button-hover-bgcolor, rgba(190,190,190,.2));
+}
+
+.findbar-find-previous:not([disabled]):hover:active,
+.findbar-find-next:not([disabled]):hover:active {
+  background: var(--button-active-bgcolor, rgba(190,190,190,.4));
+}
+
+.findbar-find-previous {
+  list-style-image: url(chrome://global/skin/icons/arrow-up.svg);
+  border-inline-width: 0;
+  margin-inline: 8px 0;
+}
+
+.findbar-find-next {
+  margin-inline-end: 8px;
+  list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
+}
+
+.findbar-find-previous > .toolbarbutton-icon,
+.findbar-find-next > .toolbarbutton-icon {
+  margin: 0;
+}
+
+.findbar-find-previous[disabled="true"] > .toolbarbutton-icon,
+.findbar-find-next[disabled="true"] > .toolbarbutton-icon {
+  opacity: .4;
+}
+
+/* Checkboxes & Labels */
+
+.findbar-highlight,
+.findbar-case-sensitive,
+.findbar-match-diacritics,
+.findbar-entire-word,
+.findbar-label {
+  margin: 0 8px;
+}
+
+.findbar-find-status,
+.found-matches {
+  margin-inline-start: 12px;
+}
+
+.findbar-find-status[status="notfound"] {
+  color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
+}
+
+@media not (prefers-contrast) {
+/* Revert default placeholder text fade to fade with color below. */
+html|input.findbar-textbox::placeholder {
+  opacity: 1;
+}
+
+html|input.findbar-textbox::placeholder,
+.findbar-highlight,
+.findbar-case-sensitive,
+.findbar-match-diacritics,
+.findbar-entire-word,
+.findbar-label {
+  color: color-mix(in srgb, currentColor 70%, transparent);
+}
+}
+
+.find-status-icon {
+  display: none;
+}
+
+/* Close button */
+
+/* Increase specificity to override close-icon.css */
+.close-icon.findbar-closebutton {
+  margin: 2px 8px;
+  width: 24px;
+}
+
+.findbar-find-status[status="notfound"] {
+  color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
+  opacity: 0.8;
+}

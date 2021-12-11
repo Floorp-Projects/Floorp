@@ -1,0 +1,16 @@
+<HTML>
+<HEAD>
+<title>Testcase bug 317876 - Crash  with evil testcase on hovering after reload with display:table-row, display:inherit</title>   
+</HEAD>
+<BODY>
+<div onmouseover="this.removeAttribute('style')" style="width: 20px; height: 30px;">
+  <div style="display: table-row;">
+     <span style="display: table-row;"> 
+     </span>
+     <span style="display: inherit;">
+       Hovering over this should not crash Mozilla 
+     </span>
+  </div>
+</div>
+</BODY>
+</HTML>

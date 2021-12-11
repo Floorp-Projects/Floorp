@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track flex max-sizing</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151212">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#algo-flex-tracks">
+  <link rel="match" href="grid-max-sizing-flex-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  grid-auto-columns: minmax(0,1fr);
+  border: dashed blue;
+  float: left;
+  clear: left;
+  justify-items: stretch;
+}
+
+.c1 { grid-column: 1 / span 2; min-width:40px; }
+.r1 { grid-column: 2 / span 3; min-width:70px; }
+.c3 { grid-column: 3 / span 1; min-width:0; }
+
+span {
+  background: gray;
+  border-style: solid;
+  border-width: 1px 3px 5px 7px;
+  padding: 1px 3px;
+  margin: 1px 5px;
+}
+
+x { display:inline-block; width:10px; height:18px; }
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+</div>
+
+<div class="grid">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="c3"><x></x></span>
+</div>
+
+<div class="grid">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="r1"><x></x></span>
+</div>
+<div class="grid" style="grid-template-columns: minmax(0,1fr) 400px;">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="c3"><x></x></span>
+</div>
+
+<div class="grid" style="width:500px;">
+<span class="c1" style="min-width:20px"><x></x></span>
+<span class="r1" style="min-width:10px"><x></x></span>
+<span class="r1" style="min-width:30px"><x></x></span>
+<span class="r1" style="min-width:10px"><x></x></span>
+</div>
+
+<div class="grid" style="grid-template-columns: minmax(0,1fr) minmax(0,500px);">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="c3"><x></x></span>
+</div>
+
+<div class="grid">
+<span class="c1" style="width:100px"><x></x></span>
+<span class="r1" style="width:300px"><x></x></span>
+<span class="c3"><x></x></span>
+</div>
+
+<div class="grid">
+<span class="c1" style="width:100px; border-sizing:border-box"><x></x></span>
+<span class="r1" style="width:300px; border-sizing:border-box"><x></x></span>
+<span class="c3"><x></x></span>
+</div>
+
+</body>
+</html>

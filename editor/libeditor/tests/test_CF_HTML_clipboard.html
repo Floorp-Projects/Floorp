@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=572642
+-->
+<head>
+  <title>Test for Bug 572642</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=572642">Mozilla Bug 572642</a>
+<p id="display"></p>
+<div id="content">
+  <div id="editor1" contenteditable="true"></div>
+  <iframe id="editor2"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 572642 **/
+
+function copyCF_HTML(cfhtml, success, failure) {
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
+  const CF_HTML = "application/x-moz-nativehtml";
+
+  function getLoadContext() {
+    return SpecialPowers.wrap(window)
+                 .docShell
+                 .QueryInterface(Ci.nsILoadContext);
+  }
+
+  var cb = SpecialPowers.Services.clipboard;
+
+  var counter = 0;
+  function copyCF_HTML_worker(successFn, failureFn) {
+    if (++counter > 50) {
+      ok(false, "Timed out while polling clipboard for pasted data");
+      failure();
+      return;
+    }
+
+    var flavors = [CF_HTML];
+    if (!cb.hasDataMatchingFlavors(flavors, cb.kGlobalClipboard)) {
+      setTimeout(function() { copyCF_HTML_worker(successFn, failureFn); }, 100);
+      return;
+    }
+
+    var trans = Cc["@mozilla.org/widget/transferable;1"].
+                createInstance(Ci.nsITransferable);
+    trans.init(getLoadContext());
+    trans.addDataFlavor(CF_HTML);
+    cb.getData(trans, cb.kGlobalClipboard);
+    var data = SpecialPowers.createBlankObject();
+    try {
+      trans.getTransferData(CF_HTML, data);
+      data = SpecialPowers.wrap(data).value.QueryInterface(Ci.nsISupportsCString).data;
+    } catch (e) {
+      setTimeout(function() { copyCF_HTML_worker(successFn, failureFn); }, 100);
+      return;
+    }
+    success();
+  }
+
+  var trans = Cc["@mozilla.org/widget/transferable;1"].
+              createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
+  trans.addDataFlavor(CF_HTML);
+  var data = Cc["@mozilla.org/supports-cstring;1"].
+             createInstance(Ci.nsISupportsCString);
+  data.data = cfhtml;
+  trans.setTransferData(CF_HTML, data);
+  cb.setData(trans, null, cb.kGlobalClipboard);
+  copyCF_HTML_worker(success, failure);
+}
+
+function loadCF_HTMLdata(filename) {
+  var req = new XMLHttpRequest();
+  req.open("GET", filename, false);
+  req.overrideMimeType("text/plain; charset=x-user-defined");
+  req.send(null);
+  is(req.status, 200, "Could not read the binary file " + filename);
+  return req.responseText;
+}
+
+var gTests = [
+  // Copied from Firefox
+  {fileName: "cfhtml-firefox.txt", expected: "Firefox"},
+  // Copied from OpenOffice.org
+  {fileName: "cfhtml-ooo.txt", expected: "hello"},
+  // Copied from IE
+  {fileName: "cfhtml-ie.txt", expected: "browser"},
+  // Copied from Chromium
+  {fileName: "cfhtml-chromium.txt", expected: "Pacific"},
+  // CF_HTML with no context specified (StartHTML and EndHTML set to -1)
+  {fileName: "cfhtml-nocontext.txt", expected: "3.1415926535897932"},
+];
+var gTestIndex = 0;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("It's a legacy test.");
+
+for (var i = 0; i < gTests.length; ++i) {
+  gTests[i].data = loadCF_HTMLdata("data/" + gTests[i].fileName);
+}
+
+function runTest() {
+  var test = gTests[gTestIndex++];
+
+  copyCF_HTML(test.data, function() {
+    // contenteditable
+    var contentEditable = document.getElementById("editor1");
+    contentEditable.innerHTML = "";
+    contentEditable.focus();
+    synthesizeKey("v", {accelKey: true});
+    isnot(contentEditable.textContent.indexOf(test.expected), -1,
+      "Paste operation for " + test.fileName + " should be successful in contenteditable");
+
+    // designMode
+    var iframe = document.getElementById("editor2");
+    iframe.addEventListener("load", function() {
+      var doc = iframe.contentDocument;
+      var win = doc.defaultView;
+      setTimeout(function() {
+        win.addEventListener("focus", function() {
+          doc.designMode = "on";
+          synthesizeKey("v", {accelKey: true}, win);
+          isnot(doc.body.textContent.indexOf(test.expected), -1,
+            "Paste operation for " + test.fileName + " should be successful in designMode");
+
+          if (gTestIndex == gTests.length)
+            SimpleTest.finish();
+          else
+            runTest();
+        }, {once: true});
+        win.focus();
+      }, 0);
+    }, {once: true});
+    iframe.srcdoc = "foo";
+  }, SimpleTest.finish);
+}
+
+SimpleTest.waitForFocus(runTest);
+</script>
+</pre>
+</body>
+</html>

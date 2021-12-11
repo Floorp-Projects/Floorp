@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style type="text/css">
+p { margin: 5px 1em; width: 0px; }
+</style>
+</head>
+<body>
+
+<!-- bug 827779:
+     Allow break after hyphen even when there is adjacent closing punctuation
+     before the hyphen, or opening punctuation after it. -->
+<p>
+  extra-“special”<br>
+  “extra”-special<br>
+  “extra”-“special”<br>
+  extra-«special»<br>
+  «extra»-special<br>
+  «extra»-«special»<br>
+  extra-(special)<br>
+  (extra)-special<br>
+  (extra)-(special)
+</p>
+
+<!-- but not in variants such as these: -->
+<p>
+  (extra-)special<br>
+  extra(-special)
+</p>
+
+</body>
+</html>

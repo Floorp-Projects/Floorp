@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <script>
+onload = function() {
+  var x = null;
+  try {
+    x = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "spacer");
+  } catch(ex) {}
+  window.parent.postMessage(x == null, "http://mochi.test:8888");
+}
+    </script>
+  </head>
+  <body>
+    Here be dragons!
+  </body>
+</html>

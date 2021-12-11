@@ -1,0 +1,7 @@
+[NestedUpTo=inside_cpow] sync protocol PNested {
+parent:
+  [Nested=not] async NotNested();
+  [Nested=inside_sync] sync InsideSync();
+  [Nested=inside_cpow] async InsideCpow();
+  [Nested=inside_cpow] sync InsideCpowSync();
+};

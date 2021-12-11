@@ -1,0 +1,12 @@
+<html class="reftest-wait">
+<head>
+<title>Testcase bug 336994 - Crash when window gets destroyed on SVGZoom event</title>
+<script>
+setTimeout('document.documentElement.className = ""', 500);
+</script>
+</head>
+<body>
+This page should not crash Mozilla, you should see no iframe<br>
+<iframe src="data:image/svg+xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20standalone%3D%22no%22%3F%3E%0A%3C%21DOCTYPE%20svg%20PUBLIC%20%22-//W3C//DTD%20SVG%201.1//EN%22%20%22http%3A//www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd%22%3E%0A%3Csvg%20width%3D%22100%25%22%20height%3D%22100%25%22%20version%3D%221.1%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%3Cscript%20xmlns%3D%22http%3A//www.w3.org/1999/xhtml%22%3E%0Awindow.addEventListener%28%27SVGZoom%27%2C%20doe%2C%20true%29%3B%0Afunction%20doe%28e%29%20%7B%0Avar%20x%3D%20parent.document.getElementsByTagName%28%27iframe%27%29%5B0%5D%3B%0Ax.parentNode.removeChild%28x%29%3B%0A%7D%0AsetTimeout%28doe2%2C%201000%29%3B%0A%0Afunction%20doe2%28%29%20%7B%0Adocument.documentElement.currentScale%20%3D%202%3B%0A%7D%0A%3C/script%3E%0A%3C/svg%3E"></iframe>
+</body>
+</html>

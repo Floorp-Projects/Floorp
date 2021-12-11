@@ -1,0 +1,624 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Word Movement (including nsTextFrame::PeekOffsetWord)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: block">
+<div contentEditable id="editor"></div>
+</div>
+<p id="catch">Catch-all
+<pre id="test"><script class="testbody" type="text/javascript">
+
+/** Tests for bugs 384147, 981281, 1066756 **/
+
+const kIsMac = navigator.platform.includes("Mac");
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function(){setTimeout(focusing, 0)});
+
+function focusing() {
+  document.getElementById("editor").focus();
+  // This seems to be necessary because the selection is not set up properly otherwise
+  setTimeout(test, 0);
+}
+
+var eatSpace;
+var stopAtPunctuation;
+var sel = window.getSelection();
+var editor = document.getElementById("editor");
+
+function setPrefs(eat_space, stop_at_punctuation, callback) {
+  eatSpace = eat_space;
+  stopAtPunctuation = stop_at_punctuation;
+  SpecialPowers.pushPrefEnv({"set": [["layout.word_select.eat_space_to_next_word", eat_space], ["layout.word_select.stop_at_punctuation", stop_at_punctuation]]}, callback);
+}
+
+function errString(dir) {
+  return dir + " movement broken with eatSpace=" + eatSpace +
+    ", stopAtPunctuation=" + stopAtPunctuation + " in \"" + editor.innerHTML +
+    "\"; sel.anchorNode.parentNode=" + sel.anchorNode.parentNode;
+}
+
+function testRight(node, offset) {
+  if (!kIsMac) {
+    synthesizeKey("KEY_ArrowRight", { ctrlKey: true });
+  } else {
+    // macOS does not have default shortcut key to move caret per word.
+    SpecialPowers.doCommand(window, "cmd_wordNext");
+  }
+  is(sel.anchorNode, node, errString("Right"));
+  is(sel.anchorOffset, offset, errString("Right"));
+}
+
+function testLeft(node, offset) {
+  if (!kIsMac) {
+    synthesizeKey("KEY_ArrowLeft", { ctrlKey: true });
+  } else {
+    // macOS does not have default shortcut key to move caret per word.
+    SpecialPowers.doCommand(window, "cmd_wordPrevious");
+  }
+  is(sel.anchorNode, node, errString("Left"));
+  is(sel.anchorOffset, offset, errString("Left"));
+}
+
+var afterEditorNode = document.getElementById("catch").firstChild;
+
+var ChineseChars = "&#x6F22;&#x5B57;";
+var HiraganaChars = "&#x3072;&#x3089;&#x304C;&#x306A;";
+var KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
+var JapaneseFullStop = "&#x3002;";
+var JapaneseComma = "&#x3001;";
+var ModifierColon = "&#xA789;";
+var Symbol = "&#x26C5;"; // "sun behind cloud" (weather symbol)
+var Emoji = "&#x1f400;"; // rat emoji
+var DeseretChars = "&#x10440;&#x10441;";
+var ChineseCharsPlane2 = "&#x2000B;&#x2003F;";
+
+function test() {
+  setPrefs(false, true, test1);
+}
+
+function test1() {
+  editor.innerHTML = "Hello Kitty";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 11);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello</b> Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 6);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello </b>Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 5);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.firstChild, 6);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Log out</b>  roc";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 3);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 5);
+  // In the next test, we expect to be at the end of the
+  // space that is not collapsed away
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 4);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "http://www.mozilla.org";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 11);
+  testRight(editor.firstChild, 19);
+  testLeft(editor.firstChild, 11);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "Set .rc to <b>'</b>quiz'";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild.nextSibling.nextSibling, 5);
+  testLeft(editor.firstChild.nextSibling.firstChild, 1);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 19);
+  testRight(editor.firstChild, 38);
+  testLeft(editor.firstChild, 19);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + KatakanaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 12);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + JapaneseComma + ChineseChars + JapaneseFullStop + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 3);
+  testLeft(editor.firstChild, 0);
+
+  // test for bug 1066756
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  // test word selection in Deseret (alphabet in Plane 1)
+  editor.innerHTML = DeseretChars + " " + DeseretChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 9);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  // Latin words separated by a pictographic symbol
+  editor.innerHTML = "hello" + Symbol + "world";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 11);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  // Latin words separated by an emoji symbol
+  editor.innerHTML = "hello" + Emoji + "world";
+  sel.collapse(editor.firstChild, 0);
+//  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 12);
+//  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  // Emoji and Chinese
+  editor.innerHTML = Emoji + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 4);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  // test that word selection stops at Latin/Chinese boundary
+  editor.innerHTML = "hello" + ChineseChars + "world";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 12);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  // similar, but with Deseret (alphabet in Plane 1) in place of Latin
+  editor.innerHTML = DeseretChars + ChineseChars + DeseretChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 10);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  // with Plane 2 Chinese characters
+  editor.innerHTML = "hello" + ChineseCharsPlane2 + "world";
+  sel.collapse(editor.firstChild, 0);
+//  testRight(editor.firstChild, 5);
+//  testRight(editor.firstChild, 9);
+  testRight(editor.firstChild, 14);
+//  testLeft(editor.firstChild, 9);
+//  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  // Plane 1 Deseret and Plane 2 Chinese characters
+  editor.innerHTML = DeseretChars + ChineseCharsPlane2 + DeseretChars;
+  sel.collapse(editor.firstChild, 0);
+//  testRight(editor.firstChild, 4);
+//  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 12);
+//  testLeft(editor.firstChild, 8);
+//  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  // test basic word movement with eat_space_next_to_word true.
+  setPrefs(true, true, test2);
+}
+
+function test2() {
+  editor.innerHTML = "Hello Kitty";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 11);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello</b> Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 1);
+  testRight(editor.firstChild.nextSibling, 6);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello </b>Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.firstChild, 6);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Log out</b>  roc";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 4);
+  testRight(editor.firstChild.nextSibling, 2);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 4);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "http://www.mozilla.org";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 11);
+  testRight(editor.firstChild, 19);
+  testLeft(editor.firstChild, 11);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "Set .rc to <b>'</b>quiz'";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild.nextSibling.firstChild, 0);
+  testRight(editor.firstChild.nextSibling.nextSibling, 5);
+  testLeft(editor.firstChild.nextSibling.firstChild, 1);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 19);
+  testRight(editor.firstChild, 38);
+  testLeft(editor.firstChild, 19);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + KatakanaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 12);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + JapaneseComma + ChineseChars + JapaneseFullStop + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 3);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  // Test basic word movement with stop_at_punctuation false (bug 981281).
+  setPrefs(false, false, test3);
+}
+
+function test3() {
+  editor.innerHTML = "Hello Kitty";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 11);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello</b> Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 6);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello </b>Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 5);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.firstChild, 6);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Log out</b>  roc";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 3);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 4);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "http://www.mozilla.org";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 22);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "Set .rc to <b>'</b>quiz'";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild.nextSibling.nextSibling, 5);
+  testLeft(editor.firstChild, 11);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 38);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + KatakanaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 12);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + JapaneseComma + ChineseChars + JapaneseFullStop + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  // And again with eat_space_next_to_word true.
+  setPrefs(true, false, test4);
+}
+
+function test4() {
+  editor.innerHTML = "Hello Kitty";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 11);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello</b> Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 1);
+  testRight(editor.firstChild.nextSibling, 6);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello </b>Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.firstChild, 6);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Log out</b>  roc";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 4);
+  testRight(editor.firstChild.nextSibling, 2);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 4);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "http://www.mozilla.org";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 22);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "Set .rc to <b>'</b>quiz'";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild.nextSibling.firstChild, 0);
+  testRight(editor.firstChild.nextSibling.nextSibling, 5);
+  testLeft(editor.firstChild, 11);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 38);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + KatakanaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 12);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + JapaneseComma + ChineseChars + JapaneseFullStop + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  SimpleTest.finish();
+}
+
+
+</script></pre>
+</body>
+</html>

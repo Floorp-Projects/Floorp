@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="200" height="100">
+</canvas>
+<script>
+var ctx = document.getElementById("c").getContext("2d");
+ctx.save();
+ctx.mozFillRule = 'nonzero';
+ctx.save();
+ctx.mozFillRule = 'evenodd';
+ctx.rect(0,0, 1,1);
+ctx.restore();
+ctx.isPointInPath(0,0);
+ctx.restore();
+ctx.lineTo(10, 0);
+</script>
+</body>
+</html>

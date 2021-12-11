@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=533845
+-->
+<window title="Mozilla Bug 533845"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="doTest()">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<panel id="panel" width="50" height="50">
+  <iframe type="content" id="contentFrame" src="data:text/html,&lt;html&gt;&lt;body onclick='document.body.textContent=1'&gt;This is a panel!&lt;/body&gt;&lt;/html&gt;" width="500" height="500"/>
+</panel>
+<body xmlns="http://www.w3.org/1999/xhtml">
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=533845"
+   target="_blank">Mozilla Bug 533845</a>
+</body>
+  <!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function doTest() {
+  let panel = document.getElementById("panel");
+  panel.addEventListener("popupshown", function onpopupshown() {
+    continueTest();
+    panel.addEventListener("popuphidden", function onpopuphidden() {
+      SimpleTest.finish();
+    }, { once: true });
+    panel.hidePopup();
+  }, { once: true });
+  panel.openPopup();
+}
+
+function continueTest() {
+  var ifrwindow = document.getElementById("contentFrame").contentWindow;
+  ifrwindow.focus();
+  var utils = ifrwindow.windowUtils;
+  var rect = ifrwindow.document.body.getBoundingClientRect();
+  var x = rect.left + (rect.width/2);
+  var y = rect.top + (rect.height/2);
+  utils.sendMouseEvent("mousedown", x, y, 0, 1, 0);
+  utils.sendMouseEvent("mouseup", x, y, 0, 1, 0);
+  is(ifrwindow.document.body.textContent, "1", "Should have got a click event!");
+}
+
+]]></script>
+</window>

@@ -1,0 +1,17 @@
+<!doctype html>
+<script src="util.js"></script>
+<script>
+onload = function() {
+  var count = 20000000;
+  var el = document.createElement("span");
+  // The longest string we can share via the external string cache after
+  // checking the chars (100 chars).
+  el.id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  var getter = Object.getOwnPropertyDescriptor(Element.prototype, "id").get;
+  perf_start();
+  for (var i = 0; i < count; ++i) {
+    getter.call(el);
+  }
+  perf_finish();
+};
+</script>

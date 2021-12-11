@@ -1,0 +1,63 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="parser_rtp.js"></script>
+  <script type="application/javascript" src="sdpUtils.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1416932",
+    title: "Basic audio-only peer connection and verify rtp header extensions"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    // pc.js uses video elements by default, we want to test audio elements here
+    test.pcLocal.audioElementsOnly = true;
+
+    let getRtpPacket = (pc) => {
+      // we only examine received packets
+      let sending = false;
+      pc.mozEnablePacketDump(0, "rtp", sending);
+      return new Promise((res, rej) =>
+        pc.mozSetPacketCallback((...args) => {
+          res([...args]);
+          pc.mozSetPacketCallback(() => {});
+          pc.mozDisablePacketDump(0, "rtp", sending);
+        })
+      );
+    }
+
+    const pc = SpecialPowers.wrap(test.pcRemote._pc);
+    const haveFirstPacket = getRtpPacket(pc);
+
+    test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
+      async function PC_REMOTE_CHECK_RTP_HEADER_EXTS_AGAINST_SDP() {
+
+        const sdpExtmapIds = sdputils.findExtmapIds(test.originalAnswer.sdp);
+
+        const [level, type, sending, data] = await haveFirstPacket;
+        const extensions = ParseRtpPacket(data).header.extensions;
+
+        // make sure we got the same number of rtp header extensions in
+        // the received packet as were negotiated in the sdp.  Then
+        // check to make sure each of the received extension ids were in
+        // the sdp.
+        is(sdpExtmapIds.length, extensions.length, "number of received ids match sdp ids");
+        // note, we are comparing a number (from the parsed rtp packet)
+        // and a string (from the answer sdp)
+        ok(extensions.every((ext) => sdpExtmapIds.includes(""+ext.id)), "extension id arrays equivalent");
+      }
+    ]);
+
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

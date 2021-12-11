@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375003
+-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Test 2 for bug 375003</title>
+
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+    <style type="text/css">
+
+        html {
+             padding:0; margin:0;
+        }
+        body {
+            color:black; background-color:white; font-size:12px; padding:10px; margin:0;
+        }
+	
+        #div1,#abs1,#table1 {
+          border: 20px solid lime;
+          padding: 30px;
+          width: 100px;
+          height: 60px;
+          overflow:scroll;
+        }
+        #abs1,#table2parent {
+          position:absolute;
+          left:500px;
+        }
+        #table3parent {
+          position:fixed;
+          left:300px;
+          top:100px;
+        }
+        .content {
+          display:block;
+	  width:200px;
+	  height:200px;
+	  background:yellow;
+	  border: 0px dotted black;
+        }
+</style>
+
+
+<script type="text/javascript">
+var x = [ 'Left','Top','Width','Height' ];
+function test(id,s,expected) {
+  var el = document.getElementById(id);
+  for(var i = 0; i < x.length; ++i) {
+    var actual = eval('el.'+s+x[i]);
+    if (expected[i] != -1 && s+x[i]!='scrollHeight')
+      is(actual, expected[i], id+"."+s+x[i]);
+  }
+}
+function t3(id,c,o,s,pid) {
+  test(id,'client',c);
+  test(id,'offset',o);
+  test(id,'scroll',s);
+  var p = document.getElementById(id).offsetParent; 
+  is(p.id, pid, id+".offsetParent");
+}
+
+function run_test() {
+   // XXX how test clientWidth/clientHeight (the -1 below) in cross-platform manner
+   // without hard-coding the scrollbar width?
+   t3('div1',[20,20,-1,-1],[10,10,200,160],[0,0,230,20],'body');
+   t3('abs1',[20,20,-1,-1],[500,170,200,160],[0,0,230,20],'body');
+   t3('table1',[0,0,306,306],[10,170,306,306],[0,0,306,306],'body');
+   t3('table2',[0,0,206,206],[0,0,206,206],[0,0,206,20],'table2parent');
+   t3('table3',[0,0,228,228],[0,0,228,228],[0,0,228,228],'table3parent');
+   t3('table3parent',[0,0,228,228],[300,100,228,228],[0,0,228,228],'body');
+}
+</script>
+
+</head>
+<body id="body">
+<div id="content">
+<div id="div1parent">
+  <div id="div1"><span class="content">DIV</span></div>
+</div>
+
+<div id="abs1parent">
+  <div id="abs1"><span class="content">abs.pos.DIV</span></div>
+</div>
+
+<div id="table1parent">
+  <table id="table1"><tbody><tr><td id="td1"><span class="content">TABLE</span></td></tr></tbody></table>
+</div>
+
+<div id="table2parent">
+  <table id="table2"><tbody><tr><td id="td2"><span class="content">TABLE in abs</span></td></tr></tbody></table>
+</div>
+
+<div id="table3parent">
+  <table id="table3" border="10"><tbody><tr><td id="td3"><span class="content">TABLE in fixed</span></td></tr></tbody></table>
+</div>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+run_test();
+</script>
+</pre>
+
+</body>
+</html>

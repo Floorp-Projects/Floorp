@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1671849
+-->
+<head>
+<title>Bug 1671849</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="pointerevent_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+#target {
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+iframe {
+  width: 400px;
+  height: 300px;
+  border: 1px solid blue;
+}
+</style>
+</head>
+<body>
+<a target="_blank"href="https://bugzilla.mozilla.org/show_bug.cgi?id=1671849">Mozilla Bug 1671849</a>
+<div id="target"></div>
+<iframe src="https://example.com/tests/dom/events/test/pointerevents/iframe.html"></iframe>
+
+<pre id="test">
+<script type="text/javascript">
+/**
+ * Test for Bug 1671849
+ */
+function requestPointerLockOnRemoteTarget(aRemoteTarget, aTagName) {
+  return SpecialPowers.spawn(aRemoteTarget, [aTagName], async (tagName) => {
+    SpecialPowers.wrap(content.document).notifyUserGestureActivation();
+    let target = content.document.querySelector(tagName);
+    target.requestPointerLock();
+    await new Promise((aResolve) => {
+      let eventHandler = function(e) {
+        is(e.type, "pointerlockchange", `Got ${e.type} on iframe`);
+        is(content.document.pointerLockElement, target, `pointer lock element`);
+        content.document.removeEventListener("pointerlockchange", eventHandler);
+        content.document.removeEventListener("pointerlockerror", eventHandler);
+        aResolve();
+      };
+      content.document.addEventListener("pointerlockchange", eventHandler);
+      content.document.addEventListener("pointerlockerror", eventHandler);
+    });
+  });
+}
+
+function exitPointerLockOnRemoteTarget(aRemoteTarget) {
+  return SpecialPowers.spawn(aRemoteTarget, [], async () => {
+    content.document.exitPointerLock();
+    await new Promise((aResolve) => {
+      let eventHandler = function(e) {
+        is(e.type, "pointerlockchange", `Got ${e.type} on iframe`);
+        is(content.document.pointerLockElement, null, `pointer lock element`);
+        content.document.removeEventListener("pointerlockchange", eventHandler);
+        content.document.removeEventListener("pointerlockerror", eventHandler);
+        aResolve();
+      };
+      content.document.addEventListener("pointerlockchange", eventHandler);
+      content.document.addEventListener("pointerlockerror", eventHandler);
+    });
+  });
+}
+
+function waitEventOnRemoteTarget(aRemoteTarget, aEventName) {
+  return SpecialPowers.spawn(aRemoteTarget, [aEventName], async (eventName) => {
+    await new Promise((aResolve) => {
+      content.document.body.addEventListener(eventName, (e) => {
+        ok(true, `got ${e.type} event on ${e.target}`);
+        aResolve();
+      }, { once: true });
+    });
+  });
+}
+
+add_task(async function test_pointer_capture_xorigin_iframe_pointer_lock() {
+  await SimpleTest.promiseFocus();
+
+  // Request pointer capture on top-level.
+  let target = document.getElementById("target");
+  synthesizeMouse(target, 10, 10, { type: "mousedown" });
+  await waitForEvent(target, "pointerdown", function(e) {
+    target.setPointerCapture(e.pointerId);
+  });
+
+  let iframe = document.querySelector("iframe");
+  synthesizeMouse(iframe, 10, 10, { type: "mousemove" });
+  await Promise.all([waitForEvent(target, "gotpointercapture"),
+                     waitForEvent(target, "pointermove")]);
+
+  // Request pointer lock on iframe.
+  let iframeWin = iframe.contentWindow;
+  await Promise.all([requestPointerLockOnRemoteTarget(iframeWin, "div"),
+                     waitForEvent(target, "lostpointercapture")]);
+
+  // Exit pointer lock on iframe.
+  await exitPointerLockOnRemoteTarget(iframeWin);
+
+  synthesizeMouse(target, 10, 10, { type: "mouseup" });
+  await waitForEvent(target, "pointerup");
+});
+</script>
+</pre>
+</body>
+</html>

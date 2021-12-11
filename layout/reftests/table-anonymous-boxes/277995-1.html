@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script type="text/javascript" language="javascript">
+    function doMore(data) {
+      while(data.hasChildNodes()) 
+        data.firstChild.remove();
+      for (var i = 0; i < 10; i++) {
+	append(data);
+      }
+    }
+
+    function append(data) {
+      var row = document.createElement("div");
+      row.setAttribute("class", "row");
+
+      var cell = document.createElement("span");
+      cell.appendChild(document.createTextNode("More Data"));
+      cell.setAttribute("class", "cell");
+      row.appendChild(cell);
+      data.appendChild(row);
+    }
+
+    function doTest() {
+      for (var i = 0; i < 10; ++i) {
+        document.body.offsetWidth;
+        doMore(document.getElementById('data'));
+      }
+      document.documentElement.className = '';
+    }
+  </script>
+  <style>
+    .table {
+      display: table;
+    }
+    .row {
+      display: table-row;
+
+    }
+    .cell {
+      display: table-cell;
+    }
+  </style>
+</head>
+<body onload="doTest()">
+<table>
+  <tr>
+    <td>
+      <div id="data" class="table">
+      </div>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

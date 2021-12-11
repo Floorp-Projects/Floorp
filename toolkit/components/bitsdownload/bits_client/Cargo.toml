@@ -1,0 +1,19 @@
+[package]
+name = "bits_client"
+version = "0.2.0"
+authors = ["Adam Gashlin <agashlin@mozilla.com>"]
+license = "MPL-2.0"
+publish = false
+
+[dependencies]
+bits = { path = "./bits" }
+comedy = "0.2.0"
+guid_win = "0.2.0"
+thiserror = "1"
+
+[dev-dependencies]
+#ctrlc = "3.1.1"
+lazy_static = "1.0.1"
+rand = "0.7"
+regex = { version = "1", default_features = false, features = ["perf", "std"] }
+tempfile = "3"

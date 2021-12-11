@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1372069
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1372069</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  const BASE_GEO_URL = "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+
+  /** Test for Bug 1372069 **/
+  /** Modified for Bug 1441295 **/
+  SimpleTest.waitForExplicitFinish();
+  window.onload = () => {
+    SimpleTest.waitForFocus(() => {
+      SpecialPowers.pushPrefEnv({"set":
+        [
+          ["privacy.resistFingerprinting", true],
+          ["geo.prompt.testing", true],
+          ["geo.prompt.testing.allow", true],
+          ["geo.provider.network.url", BASE_GEO_URL],
+        ],
+      }, doTest_getCurrentPosition);
+    }, window);
+  };
+
+  function doTest_getCurrentPosition() {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        ok(true, "Success callback is expected to be called");
+        doTest_watchPosition();
+      },
+      (error) => {
+        ok(false, "Should be able to call success callback, Got error. code = " + error.code);
+        doTest_watchPosition();
+      }
+    );
+  }
+
+  function doTest_watchPosition() {
+    let wid = navigator.geolocation.watchPosition(
+      (position) => {
+        ok(true, "Success callback is expected to be called");
+        navigator.geolocation.clearWatch(wid);
+        SimpleTest.finish();
+      },
+      (error) => {
+        ok(false, "Should be able to call success callback, Got error. code = " + error.code);
+        navigator.geolocation.clearWatch(wid);
+        SimpleTest.finish();
+      }
+    );
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test"></pre>
+</body>
+</html>

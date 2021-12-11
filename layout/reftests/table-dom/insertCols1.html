@@ -1,0 +1,25 @@
+<HEAD>
+<SCRIPT src=tableDom.js>
+</SCRIPT>
+<SCRIPT>
+
+function doIt() {
+  var refCol = document.getElementsByTagName("COL")[0];
+  var col = document.createElement("COL", null);
+  col.width = 100;
+  refCol.parentNode.insertBefore(col, refCol);
+  // HTML5 parser implies a colgroup around col, so this test 
+  // case should really be XHTML
+}
+</SCRIPT>  
+</HEAD>
+<BODY onload="doIt()">
+<table bgcolor=orange border>
+ <col width=200>
+ <col width=300>
+ <tr>
+  <td>100</td><td>200</td><td>300</td>
+ </tr>
+</table>
+</BODY></HTML>
+

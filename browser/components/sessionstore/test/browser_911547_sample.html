@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test 911547</title>
+  </head>
+<body>
+
+  <!--
+   this element gets modified by an injected script;
+   that script should be blocked by CSP
+  -->
+  <input type="text" id="test_id1" value="id1_initial">
+
+  <a id="test_data_link" href="data:text/html;charset=utf-8,<input type='text' id='test_id2' value='id2_initial'/> <script>document.getElementById('test_id2').value = 'id2_modified';</script>">Test Link</a>
+
+</body>
+</html>

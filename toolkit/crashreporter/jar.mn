@@ -1,0 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+#ifdef MOZ_CRASHREPORTER
+  content/global/crashes.html            (content/crashes.html)
+  content/global/crashes.js               (content/crashes.js)
+  content/global/crashes.css              (content/crashes.css)
+#endif

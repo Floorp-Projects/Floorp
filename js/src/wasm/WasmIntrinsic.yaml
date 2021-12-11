@@ -1,0 +1,17 @@
+# The file contains information need to define wasm intrinsic operations.
+
+# i8vecmul(dest: i32, src1: i32, src2: i32, len: i32)
+#  Performs pairwise multiplication of two i8 vectors of 'len' specified at
+#  'src1' and 'src2'. Output is written to 'dest'. This is used as a
+#  basic self-test for intrinsics.
+- op: I8VecMul
+  symbolic_address:
+    name: IntrI8VecMul
+    type: Args_Int32_GeneralInt32Int32Int32Int32General
+  entry: Instance::intrI8VecMul
+  export: i8vecmul
+  params:
+    - I32
+    - I32
+    - I32
+    - I32

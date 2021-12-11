@@ -1,0 +1,45 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1733878
+-->
+<head>
+  <meta charset="UTF-8" />
+  <title>Test for bug 1733878</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script>
+  /** Test for bug 1733878 **/
+  window.addEventListener("DOMContentLoaded", (event) => {
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(function() {
+      document.body.textContent = ""; // It would be \n\n otherwise...
+      synthesizeMouseAtCenter(document.body, {});
+
+      var editor = getEditor();
+      is(document.body.textContent, "", "Initial body check");
+      editor.rewrap(false);
+      is(document.body.textContent, "", "Initial body check after rewrap");
+
+      document.body.innerHTML = "> hello world this_is_a_very_long_long_word_which_has_a_length_higher_than_the_max_column";
+      editor.rewrap(true);
+      is(document.body.innerText, "> hello world\n> this_is_a_very_long_long_word_which_has_a_length_higher_than_the_max_column", "Rewrapped");
+
+      SimpleTest.finish();
+    });
+  });
+
+  function getEditor() {
+    var Ci = SpecialPowers.Ci;
+    var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+    var editor = editingSession.getEditorForWindow(window);
+    editor.QueryInterface(Ci.nsIHTMLEditor);
+    editor.QueryInterface(Ci.nsIEditorMailSupport);
+    editor.flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+    return editor;
+  }
+  </script>
+</head>
+<body contenteditable></body>
+</html>

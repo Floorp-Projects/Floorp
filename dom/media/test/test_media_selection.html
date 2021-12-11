@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: media selection</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function maketest(attach_media, name, type, check_metadata) {
+  return function (token) {
+    var e = document.createElement('video');
+    e.preload = "metadata";
+    token = name + "-" + token;
+    manager.started(token);
+    var errorRun = false;
+    if (check_metadata) {
+      e.addEventListener('loadedmetadata', function () {
+          ok(e.readyState >= HTMLMediaElement.HAVE_METADATA,
+             'test ' +  token + ' readyState ' + e.readyState + ' expected >= ' + HTMLMediaElement.HAVE_METADATA);
+          is(e.currentSrc.substring(e.currentSrc.length - name.length), name, 'test ' + token);
+          // The load can go idle due to cache size limits
+          ok(e.networkState >= HTMLMediaElement.NETWORK_IDLE,
+              'test ' + token + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_IDLE);
+          check_metadata(e);
+          removeNodeAndSource(e);
+          manager.finished(token);
+        });
+    } else {
+      e.addEventListener('error', function onerror(event) {
+        is(errorRun, false, "error handler should run once only!");
+        errorRun = true;
+        is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
+           'test ' + token + ' readyState should be HAVE_NOTHING when load fails.');
+        e.removeEventListener('error', onerror, true);
+        removeNodeAndSource(e);
+        manager.finished(token);
+      }, true);
+    }
+    attach_media(e, name, type);
+  }
+}
+
+function set_src(element, name, type) {
+  element.src = name;
+  document.body.appendChild(element);
+}
+
+function add_source(element, name, type) {
+  do_add_source(element, name, type);
+  document.body.appendChild(element);
+}
+
+function do_add_source(element, name, type) {
+  var source = document.createElement('source');
+  if (type) {
+    source.type = type;
+  }
+  source.src = name;
+  element.appendChild(source);
+}
+
+function add_sources_last(element, name, type) {
+  do_add_source(element, name, 'unsupported/type');
+  do_add_source(element, name, type);
+  document.body.appendChild(element);
+}
+
+function add_sources_first(element, name, type) {
+  do_add_source(element, name, type);
+  do_add_source(element, name, 'unsupported/type');
+  document.body.appendChild(element);
+}
+
+function late_add_sources_last(element, name, type) {
+  document.body.appendChild(element);
+  do_add_source(element, name, 'unsupported/type');
+  do_add_source(element, name, type);
+}
+
+function late_add_sources_first(element, name, type) {
+  document.body.appendChild(element);
+  do_add_source(element, name, type);
+  do_add_source(element, name, 'unsupported/type');
+}
+
+var nextTest  = 0;
+var subtests = [
+  maketest(add_source, 'unknown.raw', 'bogus/type', null)
+];
+
+var tmpVid = document.createElement('video');
+
+for (var i = 0; i < gSmallTests.length; ++i) {
+  var test = gSmallTests[i];
+  var src = test.name;
+  var type = test.type;
+
+  if (!tmpVid.canPlayType(type))
+    continue;
+
+  // The following nested function hack is to ensure that 'test' is correctly
+  // captured in the closure and we don't end up getting the value 'test'
+  // had in the last iteration of the loop. I blame Brendan.
+  var check = function(t) { return function (e) {
+    checkMetadata(t.name, e, t);
+  }}(test);
+
+  var otherType = type.match(/^video\//) ? "audio/x-wav" : "video/ogg";
+  subtests.push(maketest(set_src, src, null, check),
+                maketest(add_source, src, null, check),
+                maketest(add_source, src, type, check),
+                maketest(add_sources_last, src, null, check),
+                maketest(add_sources_first, src, type, check),
+
+                // type hint matches a decoder, actual type matches different decoder
+                maketest(add_source, src, otherType, check),
+                maketest(add_source, 'unknown.raw', type, null),
+
+                // should not start loading, type excludes it from media candiate list
+                maketest(add_source, src, 'bogus/type', null),
+
+                // element doesn't notice source children attached later, needs bug 462455 fixed
+                maketest(late_add_sources_last, src, type, check),
+                maketest(late_add_sources_first, src, type, check));
+}
+
+function startTest(t, token) {
+  t(token);
+}
+
+manager.runTests(subtests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

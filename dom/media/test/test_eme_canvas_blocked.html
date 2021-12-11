@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager();
+
+function startTest(test, token) {
+  manager.started(token);
+
+  let v = document.createElement("video");
+  v.preload = "auto"; // Required due to "canplay" not firing for MSE unless we do this.
+
+  var p1 = new EMEPromise();
+  v.addEventListener("loadeddata", function(ev) {
+    var video = ev.target;
+    var canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+    if (canvas.width || canvas.height) {
+      let pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      for (let byte of pixels) {
+        if (byte != 0) {
+          ok(false, "Should not draw EME video to canvas");
+          // We don't need a log for each pixel, break after 1st failure.
+          break;
+        }
+      }
+    }
+    p1.resolve();
+  });
+
+  let p2 = SetupEME(v, test, token);
+
+  Promise.all([p1.promise, p2])
+    .catch(reason => ok(false, reason))
+    .then(() => {
+      CleanUpMedia(v);
+      manager.finished(token);
+    });
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(gEMETests, startTest);
+</script>
+</pre>
+</body>
+</html>

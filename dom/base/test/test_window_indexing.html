@@ -1,0 +1,139 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=823228
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 823228</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=823228">Mozilla Bug 823228</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="x" id="x"></iframe>
+  <iframe name="y" id="y"></iframe>
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 823228 **/
+  is(window, window.frames, "These better be equal");
+  ok("0" in window, "We have a subframe");
+  ok("1" in window, "We have two subframes");
+  ok(!("2" in window), "But we don't have three subframes");
+  window[2] = "myString";
+  ok(!("2" in window), "Should not be able to set indexed expando");
+  Object.getPrototypeOf(window)[3] = "Hey there";
+  ok("3" in window, "Should be walking up the proto chain");
+
+  is(window[0].name, "x", "First frame is x");
+  is(window[1].name, "y", "Second frame is y");
+  is(window[2], undefined, "We should still not have our expando");
+  is(window[3], "Hey there", "We should still have our prop on the proto chain");
+
+  var x = $("x");
+  var y = $("y");
+
+  is(x.contentWindow, window[0], "First frame should have correct window");
+  is(y.contentWindow, window[1], "Second frame should have correct window");
+
+  // set() hook test
+  throws(TypeError, function () {
+    "use strict";
+    window[1] = "FAIL strict";
+  });
+
+  // set() hook test
+  window[1] = "FAIL";
+  is(window[1].name, "y", "Second frame is still y");
+  y.remove();
+  ok(!("1" in window), "We no longer have two subframes");
+  is(window[1], undefined, "We should not have a value here");
+
+  // defineProperty() hook test
+  function throws(errorCtor, f) {
+    try {
+      f();
+    } catch (exc) {
+      if (!(exc instanceof errorCtor))
+        throw exc;
+      return;
+    }
+    throw new Error("expected " + errCtor.name + ", no exception thrown: " + f);
+  }
+
+  x.parentNode.appendChild(y);
+  throws(TypeError, function () {
+    Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
+                                         writable: true });
+  });
+  y.remove();
+  ok(!("1" in window), "We no longer have two subframes, again");
+  is(window[1], undefined, "We should not have a value here either");
+
+  // More set() hook test
+  throws(TypeError, function () {
+    "use strict";
+    window[1] = "FAIL3 strict";
+  });
+  window[1] = "FAIL3";
+  ok(!("1" in window), "We shouldn't allow indexed expandos");
+  is(window[1], undefined, "We should not have a value for an indexed expando");
+  var desc = Object.getOwnPropertyDescriptor(window, "1");
+  is(desc, undefined, "We really really shouldn't have indexed expandos");
+
+  x.parentNode.appendChild(y);
+  is(window[1], y.contentWindow, "Second frame should now be visible");
+  desc = Object.getOwnPropertyDescriptor(window, "1");
+  ok(desc.configurable, "Subframe should be configurable");
+  ok(desc.enumerable, "Subframe should be configurable");
+  ok(!desc.writable, "Subframe should not be writable");
+  is(desc.value, y.contentWindow, "Subframe should have correct value");
+
+  y.remove();
+  is(window[1], undefined, "And now we should be back to no [1] property");
+
+  // And more defineProperty()
+  throws(TypeError, function () {
+    Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
+                                         writable: true });
+  });
+  ok(!("1" in window), "Defining indexed properties really just shouldn't work");
+  is(window[1], undefined, "Defining past end of list should not work");
+
+  // Enumeration tests
+  x.parentNode.appendChild(y);
+
+  var names = Object.getOwnPropertyNames(window);
+  is(names[0], "0", "Must start with 0");
+  is(names[1], "1", "Must continue with 1");
+  is(names.indexOf("2"), -1, "And 2, an attempted expando, should not be in there");
+  is(names.indexOf("3"), -1, "But no 3; that's on the proto");
+
+  names = [];
+  for (var name in window) {
+    names.push(name);
+  }
+  is(names[0], "0", "Enumeration must start with 0");
+  is(names[1], "1", "Enumeration must continue with 1");
+  is(names.indexOf("2"), -1, "Enumeration: but no expando 2");
+  isnot(names.indexOf("3"), -1, "Enumeration: and then 3, defined on the proto");
+  is(names.indexOf("4"), -1, "But no 4 around");
+
+  // Delete tests
+  is(delete window[1], false, "Deleting supported index should return false");
+  is(window[1], y.contentWindow, "Shouldn't be able to delete a supported index");
+  y.remove();
+  is(window[1], undefined,
+     "And now we should have no property here");
+  is(delete window[1], true, "Deleting unsupported index should return true");
+  is(window[1], undefined,
+     "And we shouldn't have things magically appear due to delete");
+  </script>
+</body>
+</html>

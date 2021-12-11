@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Layout of Form History Autocomplete: Bug 787624</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    .container {
+        border: 1px solid #333;
+        width: 80px;
+        height: 26px;
+        position: absolute;
+        z-index: 2;
+    }
+
+    .subcontainer {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .subcontainer input {
+        width: 120px;
+        margin: 2px 6px;
+        padding-right: 4px;
+        border: none;
+        height: 22px;
+        z-index: 1;
+        outline: 1px dashed #555
+    }
+  </style>
+</head>
+<body>
+Form History Layout test: form field autocomplete: Bug 787624
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+  <!-- in this form, the input field is partially hidden and can scroll -->
+  <div class="container">
+    <div class="subcontainer">
+      <form id="form1" onsubmit="return false;">
+        <input  type="text" name="field1">
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Form History autocomplete Layout: Bug 787624 **/
+
+var resolvePopupShownListener;
+registerPopupShownListener(() => resolvePopupShownListener());
+
+function waitForNextPopup() {
+  return new Promise(resolve => { resolvePopupShownListener = resolve; });
+}
+
+add_task(async function test_popup_not_move_input() {
+  let input = $_(1, "field1");
+  let rect = input.getBoundingClientRect();
+
+  await new Promise(resolve => updateFormHistory([
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "value1" },
+    { op: "add", fieldname: "field1", value: "value2" },
+  ], resolve));
+
+  let popupShown = waitForNextPopup();
+  input.focus();
+  synthesizeKey("KEY_ArrowDown", {});
+  await popupShown;
+
+  let newRect = input.getBoundingClientRect();
+  is(newRect.left, rect.left,
+     "autocomplete popup does not disturb the input position");
+  is(newRect.top, rect.top,
+     "autocomplete popup does not disturb the input position");
+});
+
+</script>
+</pre>
+</body>
+</html>

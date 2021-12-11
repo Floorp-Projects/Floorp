@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<script type="application/javascript">
+
+  function waitForMessage() {
+    return new Promise(function(resolve) {
+      window.addEventListener('message', function(evt) {
+        resolve(evt.data);
+      }, {once: true});
+    });
+  }
+
+  // Set up the objects for cloning.
+  function setup() {
+    window.testObject = { myNumber: 42,
+                          myString: "hello",
+                          myImageData: new ImageData(10, 10) };
+  }
+
+  // Called by the chrome parent window.
+  function tryToClone(obj, shouldSucceed, message) {
+    var success = false;
+    try { window.postMessage(obj, '*'); success = true; }
+    catch (e) { message = message + ' (threw: ' + e.message + ')'; }
+    is(success, shouldSucceed, message);
+    return (success && shouldSucceed) ? waitForMessage() : Promise.resolve();
+  }
+
+</script>
+</head>
+<body onload="setup()">
+<input id="fileinput" type="file"></input>
+</body>
+</html>

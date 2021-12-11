@@ -1,0 +1,47 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    "nsIPluginTag.idl",
+]
+
+XPIDL_MODULE = "plugin"
+
+EXPORTS += [
+    "nsPluginHost.h",
+    "nsPluginLogging.h",
+    "nsPluginTags.h",
+]
+
+UNIFIED_SOURCES += [
+    "nsPluginHost.cpp",
+    "nsPluginTags.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/gfx/cairo/cairo/src",
+    "/layout/generic",
+    "/layout/xul",
+    "/netwerk/base",
+    "/widget",
+    "/widget/cocoa",
+    "/xpcom/base",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    LOCAL_INCLUDES += [
+        "/xpcom/base",
+    ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

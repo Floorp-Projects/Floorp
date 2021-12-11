@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      #focusable-1 {
+        outline: none;
+      }
+
+      #focusable-2:focus {
+        outline: none;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+<body>
+  <div id="button-1" class="Button" tabindex="0">I should really be a button</div>
+  <div id="button-2" class="Button">I should really be a button</div>
+  <div id="input-container"><input id="input-1" type="text" tabindex="-1" /></div>
+  <input id="input-2" type="text" tabindex="-1" disabled />
+  <input id="input-3" type="text" disabled />
+  <input id="input-4" type="text" />
+  <a id="link-1">Though a link, I'm not interactive.</a>
+  <a id="link-2" href="example.com">I'm a proper link.</a>
+  <a id="link-3" href="#">Link 3</a>
+  <a id="link-4" href="">Link 4</a>
+  <a id="link-5" href="https://example.com">Website</a>
+  <button id="button-3">Button with no tabindex</button>
+  <button id="button-4" tabindex="-1">Button with -1 tabindex</button>
+  <button id="button-5" tabindex="0">Button with 0 tabindex</button>
+  <button id="button-6" tabindex="1">Button with 1 tabindex</button>
+  <div id="focusable-1" role="button" tabindex="0">Focusable with no focus style.</div>
+  <div id="focusable-2" role="button" tabindex="0">Focusable with focus style.</div>
+  <div id="focusable-3" role="button" tabindex="0">Focusable with focus style.</div>
+  <div id="mouse-only-1" onclick="console.log('foo');">Button for mouse only</div>
+  <div id="focusable-4" onclick="console.log('foo');" tabindex="0">Button no semantics</div>
+  <div id="button-7" onclick="console.log('foo');" role="button">Semantic button not focusable</div>
+  <div id="button-8" onclick="console.log('foo');" role="button" tabindex="0">Button</div>
+  <img id="img-1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  <img id="img-2" longdesc="https://example.com" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  <img id="img-3" longdesc="https://example.com" onclick="console.log('foo');" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  <img id="img-4" onclick="console.log('foo');" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  <button id="buttonmenu-1" aria-haspopup="true">I have a popup</button>
+  <div role="button" id="buttonmenu-2" aria-haspopup="true">I have a popup</div>
+  <input id="checkbox-1" type="checkbox" name="hello" />
+  <select id="listbox-1" size="2">
+    <option id="lb_orange">orange</option>
+    <option id="lb_apple">apple</option>
+  </select>
+  <select id="combobox-1"></select>
+  <select id="combobox-2"><option>One</option></select>
+  <select id="combobox-3">
+    <option id="cb_orange">orange</option>
+    <option id="cb_apple">apple</option>
+  </select>
+  <div id="editcombobox-1" role="combobox"><span role="option">One</span></div>
+  <span id="editcombobox-2"role="combobox"></span>
+  <span id="editcombobox-3"role="combobox" tabindex="0"></span>
+  <span id="switch-1" role="switch"></span>
+  <span id="switch-2" role="switch" tabindex="0"></span>
+  <div aria-label="Tag" role="combobox" aria-expanded="true" aria-owns="owned_listbox" aria-haspopup="listbox">
+    <input type="text" aria-autocomplete="list" aria-controls="owned_listbox" aria-activedescendant="selected_option">
+  </div>
+  <ul role="listbox" id="owned_listbox">
+      <li role="option">Zebra</li>
+      <li role="option" id="selected_option">Zoom</li>
+  </ul>
+  <label id="label-1">hello<input type="checkbox" name="world" /></label>
+  <label id="label-2" for="checkbox-1">hello</label>
+  <label id="label-3">hello</label>
+  <label id="label-4">hello</label><input type="checkbox" name="world" />
+  <a href="about:mozilla" target="_blank" rel="opener">
+    <img id="img-5" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <a onmousedown="">
+    <img id="img-6" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <a onclick="">
+    <img id="img-7" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <a onmouseup="">
+    <img id="img-8" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <section id="section-1" class="collapsible-section top-sites animation-enabled" aria-expanded="true"></section>
+  <main id="main" tabindex="-1">Main content</main>
+  <div id="not-keyboard-focusable-1" tabindex="-1">Not keyboard fqocusable with no focus style.</div>
+  <div id="grid-1" role="grid" aria-label="Interactive grid"></div>
+  <div id="grid-2" tabindex="0" role="grid" aria-label="Interactive grid"></div>
+  <div id="table-1" role="table" aria-label="Non-interactive ARIA table"></div>
+  <div id="table-2" tabindex="0" role="table" aria-label="Non-interactive ARIA table"></div>
+  <table id="table-3" aria-label="Non-interactive table"></table>
+  <table id="table-4" tabindex="0" aria-label="Non-interactive table"></table>
+  <div id="article-1" role="article"></div>
+  <div id="article-2" role="article" tabindex="0"></div>
+  <div role="grid" aria-label="Interactive grid">
+    <div id="columnheader-1" role="columnheader"></div>
+    <div id="rowheader-1" role="rowheader"></div>
+    <div id="gridcell-1" role="gridcell"></div>
+    <div id="gridcell-2" role="gridcell" tabindex="0"></div>
+  </div>
+  <div role="table" aria-label="Non-interactive table">
+    <div id="columnheader-2" role="columnheader"></div>
+    <div id="rowheader-2" role="rowheader"></div>
+  </div>
+  <table>
+    <tr>
+      <th id="columnheader-3">Animals</th>
+    </tr>
+    <tr>
+      <th id="columnheader-4" tabindex="0">Hippopotamus</th>
+    </tr>
+    <tr>
+      <th id="rowheader-3">Horse</th>
+      <td>Mare</td>
+    </tr>
+    <tr>
+      <th id="rowheader-4" tabindex="0">Chicken</th>
+      <td>Hen</td>
+    </tr>
+  </table>
+  <table role="grid">
+    <tr>
+      <th id="columnheader-5">Animals</th>
+    </tr>
+    <tr>
+      <th id="columnheader-6" tabindex="0">Hippopotamus</th>
+    </tr>
+    <tr>
+      <th id="rowheader-5">Horse</th>
+      <td id="gridcell-3">Mare</td>
+    </tr>
+    <tr>
+      <th id="rowheader-6" tabindex="0">Chicken</th>
+      <td id="gridcell-4" tabindex="0">Hen</td>
+    </tr>
+  </table>
+  <div id="tablist-1" role="tablist"></div>
+  <div id="tablist-2" role="tablist" tabindex="0"></div>
+  <div id="scrollbar-1" role="scrollbar"></div>
+  <div id="scrollbar-2" role="scrollbar" tabindex="0"></div>
+  <div id="separator-1" role="separator"></div>
+  <div id="separator-2" role="separator" tabindex="0"></div>
+  <div id="toolbar-1" role="toolbar"></div>
+  <div id="toolbar-2" role="toolbar" tabindex="0"></div>
+  <div id="menu-1" role="menu"></div>
+  <div id="menu-2" role="menu" tabindex="0"></div>
+  <div id="menubar-1" role="menubar"></div>
+  <div id="menubar-2" role="menubar" tabindex="0"></div>
+</body>
+</html>

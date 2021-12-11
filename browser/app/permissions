@@ -1,0 +1,26 @@
+# This file has default permissions for the permission manager.
+# The file-format is strict:
+# * matchtype \t type \t permission \t host
+# * "origin" should be used for matchtype, "host" is supported for legacy reasons
+# * type is a string that identifies the type of permission (e.g. "cookie")
+# * permission is an integer between 1 and 15
+# Permissions defined here will also be set for private browsing.
+# See PermissionManager.cpp for more...
+
+# UITour
+# Bug 1557153: www.mozilla.org gets a special workaround in UITourChild.jsm
+origin	uitour	1	https://www.mozilla.org
+origin	uitour	1	https://monitor.firefox.com
+origin	uitour	1	https://screenshots.firefox.com
+origin	uitour	1	https://support.mozilla.org
+origin	uitour	1	about:home
+origin	uitour	1	about:newtab
+
+# XPInstall
+origin	install	1	https://addons.mozilla.org
+
+# Remote troubleshooting
+origin	remote-troubleshooting	1	https://support.mozilla.org
+
+# addon install
+origin	install	1	https://fpn.firefox.com

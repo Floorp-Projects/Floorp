@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+div { font: 16px/24px serif; width: 8em; float: left; font-kerning: none; }
+p { hyphens: auto; width: 2em; margin: 1em 0; }
+</style>
+<script>
+for (const lang of ["en-US", "en", "de", "de-DE", "de-1901", "de-1996"]) {
+  document.write("<div lang='" + lang + "'>" + lang +
+                 ":<p>intercaps</p><p>Intercaps</p><p>interCaps</p></div>");
+}
+</script>

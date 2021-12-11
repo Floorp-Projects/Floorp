@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1120222
+-->
+<head>
+    <meta charset=utf-8>
+    <title>Test document-title-changed observer</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+    <script>
+        SimpleTest.waitForExplicitFinish();
+        const obsSvc = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+
+        const observer = {
+            observe: (aSubject, aTopic, aData) => {
+                if (aTopic === "document-title-changed") {
+                    SimpleTest.ok(true, "document-title-changed was received.");
+                    obsSvc.removeObserver(observer, "document-title-changed");
+                    SimpleTest.finish();
+                }
+            },
+        };
+
+        obsSvc.addObserver(observer, "document-title-changed");
+        document.title = "Changed title";
+    </script>
+</body>
+</html>

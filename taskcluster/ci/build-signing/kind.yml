@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.multi_dep:loader
+
+group-by: platform
+
+transforms:
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.upstream_artifact_task:transforms
+    - gecko_taskgraph.transforms.build_signing:transforms
+    - gecko_taskgraph.transforms.signing:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - build
+    - build-fat-aar
+    - build-notarization-part-1
+    - build-notarization-poller
+
+primary-dependency:
+    - build
+    - build-fat-aar
+
+only-for-attributes:
+    - nightly
+    - shippable
+    - enable-build-signing

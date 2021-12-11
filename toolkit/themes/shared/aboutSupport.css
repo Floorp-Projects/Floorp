@@ -1,0 +1,91 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/info-pages.css");
+
+#contents {
+  clear: both;
+}
+
+.major-section {
+  margin-block: 2em 1em;
+  font-size: large;
+  text-align: start;
+  font-weight: bold;
+}
+
+button {
+  margin-inline: 0 8px;
+}
+
+th.title-column {
+  white-space: nowrap;
+  width: 0;
+  font-size: medium;
+}
+
+td.integer {
+  text-align: end;
+  font-family: monospace;
+}
+
+#update-dir-row > td:dir(rtl),
+#profile-row > td:dir(rtl) {
+  /* Overrides info-pages.css to display the buttons in the right order compared to the text */
+  unicode-bidi: normal;
+}
+
+.prefs-table {
+  table-layout: fixed;
+}
+
+.pref-name {
+  width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pref-value {
+  width: 30%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#crashes-table th:first-child {
+  width: 50%;
+}
+
+#features-table th:first-child,
+#remote-processes-table th:first-child {
+  width: 30%;
+}
+
+#features-table th:nth-child(2) {
+  width: 20%;
+}
+
+#reset-box,
+#safe-mode-box {
+  display: none;
+}
+
+#reset-box > h3 {
+  margin-top: 0;
+}
+
+.action-box button {
+  display: block;
+}
+
+#enumerate-database-result,
+#verify-place-result {
+  max-height: 200px;
+  overflow: auto;
+  text-align: left;
+  direction: ltr;
+}
+
+.hidden {
+  display: none;
+}

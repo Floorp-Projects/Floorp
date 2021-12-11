@@ -1,0 +1,308 @@
+// Type sizes
+$header-font-size: 17;
+$header-line-height: 24;
+$excerpt-font-size: 14;
+$excerpt-line-height: 20;
+
+.ds-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  .playhead {
+    background: var(--newtab-primary-action-background) url('chrome://activity-stream/content/data/content/assets/glyph-playhead.svg') no-repeat 12px center;
+    border-radius: 20px;
+    bottom: -16px;
+    color: color-mix(in srgb, var(--newtab-primary-element-text-color) 0%, transparent);
+    display: flex;
+    flex-direction: column;
+    height: 40px;
+    justify-content: center;
+    left: 16px;
+    min-width: 40px;
+    padding: 0 0 0 40px;
+    position: absolute;
+    transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
+
+    &:hover {
+      color: var(--newtab-primary-element-text-color);
+      padding: 0 20px 0 40px;
+    }
+
+    span {
+      display: none;
+    }
+
+    &:hover span {
+      display: inline;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 13px;
+    }
+  }
+
+  &.placeholder {
+    background: transparent;
+    box-shadow: inset $inner-box-shadow;
+    border-radius: 4px;
+    min-height: 300px;
+  }
+
+  .img-wrapper {
+    width: 100%;
+    position: relative;
+  }
+
+  .card-stp-button-hover-background {
+    opacity: 0;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    height: 0;
+    transition: opacity;
+    transition-duration: 0s;
+    padding-top: 50%;
+    pointer-events: none;
+    background: $black-40;
+    border-radius: 8px;
+
+    .card-stp-button-position-wrapper {
+      position: absolute;
+      margin-top: -16px;
+      left: 0;
+      right: 0;
+      top: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .icon-pocket-save,
+    .icon-pocket {
+      margin-inline-end: 4px;
+      height: 15px;
+      width: 15px;
+      background-size: 15px;
+    }
+
+    .icon-pocket {
+      fill: $pocket-icon-fill;
+    }
+
+    .context-menu-button {
+      position: static;
+      transition: none;
+    }
+
+    .context-menu-position-container {
+      position: relative;
+    }
+
+    .context-menu {
+      margin-inline-start: 18.5px;
+      inset-inline-start: auto;
+      position: absolute;
+      top: 20.25px;
+    }
+
+    .card-stp-button {
+      display: flex;
+      margin-inline-end: 12px;
+      font-weight: 400;
+      font-size: 13px;
+      line-height: 16px;
+      background-color: var(--newtab-background-color-secondary);
+      border: 0;
+      border-radius: 4px;
+      padding: 8px;
+      white-space: nowrap;
+
+      &:hover {
+        .icon-pocket-save {
+          fill: $pocket-icon-fill;
+        }
+      }
+    }
+
+    button,
+    .context-menu {
+      pointer-events: auto;
+    }
+
+    button {
+      cursor: pointer;
+    }
+  }
+
+  &.last-item {
+    .card-stp-button-hover-background {
+      .context-menu {
+        margin-inline-start: auto;
+        margin-inline-end: 18.5px;
+      }
+    }
+  }
+
+  &:hover,
+  &.active {
+    .card-stp-button-hover-background {
+      display: block;
+      opacity: 1;
+      transition-duration: 0.3s;
+    }
+  }
+
+  .img {
+    height: 0;
+    padding-top: 50%; // 2:1 aspect ratio
+
+    img {
+      border-radius: 4px;
+      box-shadow: $shadow-image-inset;
+    }
+  }
+
+  .ds-card-link {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    &:hover {
+      header {
+        color: var(--newtab-primary-action-background);
+      }
+    }
+
+    &:focus {
+      @include ds-focus;
+
+      transition: none;
+
+      header {
+        color: var(--newtab-primary-action-background);
+      }
+    }
+
+    &:active {
+      header {
+        color: var(--newtab-primary-element-active-color);
+      }
+    }
+  }
+
+  &.video-card .meta {
+    margin-top: 4px;
+  }
+
+  &.last-card-message {
+    .ds-last-card-desc {
+      font-size: 13px;
+      color: var(--newtab-text-secondary-color);
+    }
+
+    .ds-last-card-desc,
+    .title {
+      text-align: center;
+    }
+
+    .last-card-message-image {
+      object-fit: contain;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+
+  .meta {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px;
+    flex-grow: 1;
+
+    .info-wrap {
+      flex-grow: 1;
+    }
+
+    .title {
+      // show only 3 lines of copy
+      @include limit-visible-lines(3, $header-line-height, $header-font-size);
+      font-weight: 600;
+    }
+
+    .excerpt {
+      // show only 3 lines of copy
+      @include limit-visible-lines(
+        3,
+        $excerpt-line-height,
+        $excerpt-font-size
+      );
+    }
+
+    .source {
+      -webkit-line-clamp: 1;
+      margin-bottom: 2px;
+      font-size: 13px;
+      color: var(--newtab-text-secondary-color);
+    }
+
+    .cta-button {
+      background-color: var(--newtab-button-secondary-color);
+      width: 100%;
+      margin: 12px 0 4px;
+      box-shadow: none;
+      border-radius: 4px;
+      height: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 5px 8px 7px;
+      border: $border-primary;
+
+      &:active {
+        box-shadow: $shadow-primary;
+      }
+    }
+
+    .cta-link {
+      color: var(--newtab-primary-action-background);
+      fill: var(--newtab-primary-action-background);
+
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 24px;
+      height: 24px;
+      width: auto;
+      background-size: auto;
+      background-position: right 1.5px;
+      padding-right: 9px;
+
+      &:focus {
+        box-shadow: $shadow-primary;
+
+        border-radius: 4px;
+        outline: 0;
+      }
+
+      &:active {
+        color: var(--newtab-primary-element-active-color);
+        fill: var(--newtab-primary-element-active-color);
+        box-shadow: none;
+      }
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  header {
+    line-height: $header-line-height * 1px;
+    font-size: $header-font-size * 1px;
+    color: var(--newtab-text-primary-color);
+  }
+
+  p {
+    font-size: $excerpt-font-size * 1px;
+    line-height: $excerpt-line-height * 1px;
+    color: var(--newtab-text-primary-color);
+    margin: 0;
+  }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>When HCM is enabled, only background images sourced from URL's should be rendered. </title>
+  <style>
+    .outer {
+      background-image: url("blue.png");
+    }
+    .size {
+      height: 100px;
+      width: 100px;
+    }
+    .gradient {
+      background-image: linear-gradient(red, red);
+    }
+    .url {
+      background-image: url("green.png");
+    }
+    .urlGradient {
+      background-image: url("red.png"), linear-gradient(red, red);
+    }
+    .gradientUrl {
+      background-image: linear-gradient(red, red), url("red.png");
+    }
+    .urlNone {
+      background-image: url("red.png");
+      background-image: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="outer">
+    <div class="size url"></div><br>
+    <div class="size gradient"></div></br>
+    <div class="size urlGradient"></div><br>
+    <div class="size gradientUrl"></div><br>
+    <div class="size url gradient"></div><br>
+    <div class="size urlNone"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Simple scriptable serialization helper. Can be used as a service.
+ */
+
+interface nsISerializable;
+
+[scriptable, uuid(31654c0f-35f3-44c6-b31e-37a11516e6bc)]
+interface nsISerializationHelper : nsISupports
+{
+  /**
+   * Serialize the object to a base64 string. This string can be later passed
+   * as an input to deserializeObject method.
+   */
+  ACString serializeToString(in nsISerializable serializable);
+
+  /**
+   * Takes base64 encoded string that cointains serialization of a single
+   * object. Most commonly, input is result of previous call to
+   * serializeToString.
+   */
+  nsISupports deserializeObject(in ACString input);
+};

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="https://example.com:443/tests/dom/media/test/eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* import-globals-from eme.js */
+var manager = new MediaTestManager;
+
+function startTest(test, token)
+{
+  manager.started(token);
+
+  let v = document.createElement("video");
+  document.body.appendChild(v);
+
+  var gotWaitingForKey = 0;
+  var gotOnwaitingforkey = 0;
+
+  let waitForKey = new EMEPromise;
+  v.addEventListener("waitingforkey", function() {
+    gotWaitingForKey += 1;
+    waitForKey.resolve();
+  });
+
+  v.onwaitingforkey = function() {
+    gotOnwaitingforkey += 1;
+  };
+
+  v.addEventListener("loadedmetadata", function() {
+    ok(SpecialPowers.do_lookupGetter(v, "isEncrypted").apply(v),
+       TimeStamp(token) + " isEncrypted should be true");
+    is(v.isEncrypted, undefined, "isEncrypted should not be accessible from content");
+  });
+
+  let finish = new EMEPromise;
+  v.addEventListener("ended", function() {
+    ok(true, TimeStamp(token) + " got ended event");
+    // We expect only one waitingForKey as we delay until all sessions are ready.
+    // I.e. one waitingForKey should be fired, after which, we process all sessions,
+    // so it should not be possible to be blocked by a key after that point.
+    ok(gotWaitingForKey == 1,  "Expected number 1 wait, got: " + gotWaitingForKey);
+    ok(gotOnwaitingforkey == gotWaitingForKey, "Should have as many event listener calls as event handler calls, got: " + gotOnwaitingforkey);
+
+    finish.resolve();
+  });
+
+  Promise.all([
+    LoadInitData(v, test, token),
+    CreateAndSetMediaKeys(v, test, token),
+    LoadTest(test, v, token),
+    waitForKey.promise])
+  .then(values => {
+    let initData = values[0];
+    return ProcessInitData(v, test, token, initData);
+  })
+  .then(sessions => {
+    Log(token, "Updated all sessions, loading complete -> Play");
+    v.play();
+    finish.promise.then(() => CloseSessions(v, sessions));
+    return finish.promise;
+  })
+  .catch(reason => ok(false, reason))
+  .then(() => manager.finished(token));
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(gEMETests, startTest);
+</script>
+</pre>
+</body>
+</html>

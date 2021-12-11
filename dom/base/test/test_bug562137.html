@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=562137
+-->
+<head>
+  <title>Test for Bug 562137</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=562137">Mozilla Bug 562137</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 562137 **/
+var myStr = "I\ufffdhave\ufffdnbsp\n";
+
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "file_bug562137.txt", false);
+xhr.send();
+is(xhr.responseText, myStr);
+
+
+</script>
+</pre>
+</body>
+</html>

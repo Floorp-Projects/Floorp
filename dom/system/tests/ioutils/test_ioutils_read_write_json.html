@@ -1,0 +1,168 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { ObjectUtils } = ChromeUtils.import(
+      "resource://gre/modules/ObjectUtils.jsm"
+    );
+
+    const OBJECT = {
+      "foo": [
+        "bar",
+        123,
+        456.789,
+        true,
+        false,
+        null,
+      ],
+      "bar": {
+        "baz": {},
+      },
+    };
+
+    const ARRAY = [1, 2.3, true, false, null, { "foo": "bar" }];
+
+    const PRIMITIVES = [123, true, false, "hello, world", null];
+
+    add_task(async function read_json() {
+      const tmpDir = await PathUtils.getTempDir();
+      const filename = PathUtils.join(tmpDir, "test_ioutils_read_json.tmp");
+
+      info("Testing IOUtils.readJSON() with a serialized object...");
+      await IOUtils.writeUTF8(filename, JSON.stringify(OBJECT));
+      const readObject = await IOUtils.readJSON(filename);
+      const parsedObject = JSON.parse(await IOUtils.readUTF8(filename));
+      ok(ObjectUtils.deepEqual(OBJECT, readObject), "JSON objects should round-trip");
+      ok(
+        ObjectUtils.deepEqual(parsedObject, readObject),
+        "IOUtils.readJSON() equivalent to JSON.parse() for objects"
+      );
+
+      info("Testing IOUtils.readJSON() with a serialized array...");
+      await IOUtils.writeUTF8(filename, JSON.stringify(ARRAY));
+      const readArray = await IOUtils.readJSON(filename);
+      const parsedArray = JSON.parse(await IOUtils.readUTF8(filename));
+      ok(ObjectUtils.deepEqual(ARRAY, readArray), "JSON arrays should round-trip");
+      ok(
+        ObjectUtils.deepEqual(parsedArray, readArray),
+        "IOUtils.readJSON() equivalent to JSON.parse(IOUtils.readUTF8()) for arrays"
+      );
+
+      info("Testing IOUtils.readJSON() with serialized primitives...");
+      for (const primitive of PRIMITIVES) {
+        await IOUtils.writeUTF8(filename, JSON.stringify(primitive));
+        const readPrimitive = await IOUtils.readJSON(filename);
+        const parsedPrimitive = JSON.parse(await IOUtils.readUTF8(filename));
+        ok(primitive === readPrimitive, `JSON primitive ${primitive} should round trip`);
+        ok(
+          readPrimitive === parsedPrimitive,
+          `${readPrimitive} === ${parsedPrimitive} -- IOUtils.readJSON() equivalent to JSON.parse() for primitive`
+        );
+      }
+
+      info("Testing IOUtils.readJSON() with a file that does not exist...");
+      const notExistsFilename = PathUtils.join(tmpDir, "test_ioutils_read_json_not_exists.tmp");
+      ok(!await IOUtils.exists(notExistsFilename), `${notExistsFilename} should not exist`);
+      await Assert.rejects(
+        IOUtils.readJSON(notExistsFilename),
+        /NotFoundError: Could not open the file at/,
+        "IOUtils::readJSON rejects when file does not exist"
+      );
+
+      info("Testing IOUtils.readJSON() with a file that does not contain JSON");
+      const invalidFilename = PathUtils.join(tmpDir, "test_ioutils_read_json_invalid.tmp");
+      await IOUtils.writeUTF8(invalidFilename, ":)");
+
+      await Assert.rejects(
+        IOUtils.readJSON(invalidFilename),
+        /SyntaxError: JSON\.parse/,
+        "IOUTils::readJSON rejects when the file contains invalid JSON"
+      );
+
+      await cleanup(filename, invalidFilename);
+    });
+
+    add_task(async function write_json() {
+      const tmpDir = await PathUtils.getTempDir();
+      const filename = PathUtils.join(tmpDir, "test_ioutils_write_json.tmp");
+
+      info("Testing IOUtils.writeJSON() with an object...");
+      await IOUtils.writeJSON(filename, OBJECT);
+      const readObject = await IOUtils.readJSON(filename);
+      const readObjectStr = await IOUtils.readUTF8(filename);
+      ok(ObjectUtils.deepEqual(OBJECT, readObject), "JSON objects should round-trip");
+      ok(
+        readObjectStr === JSON.stringify(OBJECT),
+        "IOUtils.writeJSON() eqvuialent to JSON.stringify() for an object"
+      );
+
+      info("Testing IOUtils.writeJSON() with an array...");
+      await IOUtils.writeJSON(filename, ARRAY);
+      const readArray = await IOUtils.readJSON(filename);
+      const readArrayStr = await IOUtils.readUTF8(filename);
+      ok(ObjectUtils.deepEqual(ARRAY, readArray), "JSON arrays should round-trip");
+      ok(
+        readArrayStr === JSON.stringify(ARRAY),
+        "IOUtils.writeJSON() equivalent to JSON.stringify() for an array"
+      );
+
+      info("Testing IOUtils.writeJSON() with primitives...");
+      for (const primitive of PRIMITIVES) {
+        await IOUtils.writeJSON(filename, primitive);
+        const readPrimitive = await IOUtils.readJSON(filename);
+        const readPrimitiveStr = await IOUtils.readUTF8(filename);
+        ok(
+          primitive === readPrimitive,
+          `${primitive} === ${readPrimitive} -- IOUtils.writeJSON() should round trip primitive`
+        );
+        ok(
+          readPrimitiveStr === JSON.stringify(primitive),
+          `${readPrimitiveStr} === ${JSON.stringify(primitive)} -- IOUtils.writeJSON() equivalent to JSON.stringify for primitive`
+        );
+      }
+
+      info("Testing IOUtils.writeJSON() with unserializable objects...");
+      await Assert.rejects(
+        IOUtils.writeJSON(filename, window),
+        /TypeError: cyclic object value/,
+        "IOUtils.writeJSON() cannot write cyclic objects"
+      );
+
+      await cleanup(filename);
+    });
+
+    add_task(async function test_append_json() {
+      const tmpDir = await PathUtils.getTempDir();
+      const filename = PathUtils.join(tmpDir, "test_ioutils_append_json.tmp");
+
+      await IOUtils.writeJSON(filename, OBJECT);
+
+      await Assert.rejects(
+        IOUtils.writeJSON(filename, OBJECT, {mode: "append"}),
+        /NotSupportedError: IOUtils.writeJSON does not support appending to files/,
+        "IOUtils.writeJSON() cannot append"
+      );
+
+      await cleanup(filename);
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

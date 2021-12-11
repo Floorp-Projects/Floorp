@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test CSP 1.1 nonce-source for scripts and styles</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="visibility:hidden">
+  <iframe style="width:100%;" id='cspframe'></iframe>
+</div>
+<script class="testbody" type="text/javascript">
+
+var testsRun = 0;
+var totalTests = 20;
+
+// This is used to watch the blocked data bounce off CSP
+function examiner() {
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+}
+
+examiner.prototype = {
+  observe(subject, topic, data) {
+    var testid_re = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be blocked!
+
+    if (topic === "specialpowers-http-notify-request") {
+      var uri = data;
+      if (!testid_re.test(uri)) return;
+      var testid = testid_re.exec(uri)[1];
+      ok(/_good/.test(testid), "should allow URI with good testid " + testid);
+      ranTests(1);
+    }
+
+    if (topic === "csp-on-violate-policy") {
+      try {
+        // if it is an blocked external load, subject will be the URI of the resource
+        var blocked_uri = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+        if (!testid_re.test(blocked_uri)) return;
+        var testid = testid_re.exec(blocked_uri)[1];
+        ok(/_bad/.test(testid), "should block URI with bad testid " + testid);
+        ranTests(1);
+      } catch (e) {
+        // if the subject is blocked inline, data will be a violation message
+        // we can't distinguish which resources triggered these, so we ignore them
+      }
+    }
+  },
+  // must eventually call this to remove the listener, or mochitests might get borked.
+  remove() {
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+function cleanup() {
+  // remove the observer so we don't bork other tests
+  window.examiner.remove();
+  // finish the tests
+  SimpleTest.finish();
+}
+
+function ranTests(num) {
+  testsRun += num;
+  if (testsRun < totalTests) {
+    return;
+  }
+  cleanup();
+}
+
+function checkInlineScriptsAndStyles () {
+  var cspframe = document.getElementById('cspframe');
+  var getElementColorById = function (id) {
+    return window.getComputedStyle(cspframe.contentDocument.getElementById(id)).color;
+  };
+  // Inline style tries to change an element's color to green. If blocked, the
+  // element's color will be the (unchanged) default black.
+  var green = "rgb(0, 128, 0)";
+  var red = "rgb(255,0,0)";
+  var black = "rgb(0, 0, 0)";
+
+  // inline script tests
+  is(getElementColorById('inline-script-correct-nonce'), green,
+     "Inline script with correct nonce should execute");
+  is(getElementColorById('inline-script-incorrect-nonce'), black,
+     "Inline script with incorrect nonce should not execute");
+  is(getElementColorById('inline-script-correct-style-nonce'), black,
+     "Inline script with correct nonce for styles (but not for scripts) should not execute");
+  is(getElementColorById('inline-script-no-nonce'), black,
+     "Inline script with no nonce should not execute");
+
+  // inline style tests
+  is(getElementColorById('inline-style-correct-nonce'), green,
+     "Inline style with correct nonce should be allowed");
+  is(getElementColorById('inline-style-incorrect-nonce'), black,
+     "Inline style with incorrect nonce should be blocked");
+  is(getElementColorById('inline-style-correct-script-nonce'), black,
+     "Inline style with correct nonce for scripts (but incorrect nonce for styles) should be blocked");
+  is(getElementColorById('inline-style-no-nonce'), black,
+     "Inline style with no nonce should be blocked");
+
+  ranTests(8);
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+window.examiner = new examiner();
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_nonce_source.html';
+document.getElementById('cspframe').addEventListener('load', checkInlineScriptsAndStyles);
+</script>
+</pre>
+</body>
+</html>

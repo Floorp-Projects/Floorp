@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1432966
+-->
+<window title="Mozilla Bug 1432966"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript"><![CDATA[
+
+const NS_HTML = "http://www.w3.org/1999/xhtml";
+
+function awaitLoad(frame) {
+  return new Promise(resolve => {
+    frame.addEventListener("load", resolve, {once: true});
+  });
+}
+
+async function testFrame(frame, html, expected = html) {
+  document.querySelector("body").appendChild(frame);
+  await awaitLoad(frame);
+
+  // Remove the xmlns attributes that will be automatically added when we're
+  // in an XML document, and break the comparison.
+  function unNS(text) {
+    return text.replace(RegExp(` xmlns="${NS_HTML}"`, "g"), "");
+  }
+
+  let doc = frame.contentDocument;
+  let body = doc.body || doc.documentElement;
+
+  let div = doc.createElementNS(NS_HTML, "div");
+  body.appendChild(div);
+
+  div.innerHTML = html;
+  is(unNS(div.innerHTML), expected, "innerHTML value");
+
+  div.innerHTML = "<div></div>";
+  div.firstChild.outerHTML = html;
+  is(unNS(div.innerHTML), expected, "outerHTML value");
+
+  div.textContent = "";
+  div.insertAdjacentHTML("beforeend", html);
+  is(unNS(div.innerHTML), expected, "insertAdjacentHTML('beforeend') value");
+
+  div.innerHTML = "<a>foo</a>";
+  div.firstChild.insertAdjacentHTML("afterend", html);
+  is(unNS(div.innerHTML), "<a>foo</a>" + expected, "insertAdjacentHTML('afterend') value");
+
+  frame.remove();
+}
+
+add_task(async function test_fragment_sanitization() {
+  const XUL_URL = "chrome://global/content/win.xhtml";
+  const HTML_URL = "chrome://mochitests/content/chrome/dom/base/test/file_empty.html";
+
+  const HTML = '<a onclick="foo()" href="javascript:foo"><script>bar()<\/script>Meh.</a><a href="http://foo/"></a>';
+  const SANITIZED = '<a>Meh.</a><a href="http://foo/"></a>';
+
+  info("Test content HTML document");
+  {
+    let frame = document.createElementNS(NS_HTML, "iframe");
+    frame.src = "http://example.com/";
+
+    await testFrame(frame, HTML);
+  }
+
+  info("Test chrome HTML document");
+  {
+    let frame = document.createElementNS(NS_HTML, "iframe");
+    frame.src = HTML_URL;
+
+    await testFrame(frame, HTML, SANITIZED);
+  }
+
+  info("Test chrome XUL document");
+  {
+    let frame = document.createElementNS(NS_HTML, "iframe");
+    frame.src = XUL_URL;
+
+    await testFrame(frame, HTML, SANITIZED);
+  }
+});
+
+  ]]></script>
+
+  <description style="-moz-user-focus: normal; user-select: text;"><![CDATA[
+    hello
+    world
+  ]]></description>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1432966"
+       target="_blank">Mozilla Bug 1432966</a>
+  </body>
+</window>

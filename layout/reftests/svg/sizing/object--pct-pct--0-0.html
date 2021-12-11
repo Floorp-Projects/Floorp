@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+
+    <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=288276 -->
+
+    <title>Test: the width/height of SVG embedded by reference must be overridden</title>
+
+    <style type="text/css">
+
+* {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: red;
+}
+
+    </style>
+
+  </head>
+  <body>
+    <!-- embedded SVG has width="0" height="0" which should be overridden -->
+    <object type="image/svg+xml" data="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPg0KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJsaW1lIi8%2BDQo8L3N2Zz4%3D">FAILED TO LOAD</object>
+  </body>
+</html>

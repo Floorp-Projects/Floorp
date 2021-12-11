@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=388558
+-->
+<head>
+  <title>Test for Bug 388558</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=388558">Mozilla Bug 388558</a>
+<p id="display"></p>
+<div id="content">
+  <input type="text" id="input" onchange="++inputChange;">
+  <textarea id="textarea" onchange="++textareaChange;"></textarea>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 388558 **/
+var inputChange = 0;
+var textareaChange = 0;
+
+function testUserInput() {
+  var input = document.getElementById("input");
+  var textarea = SpecialPowers.wrap(document.getElementById("textarea"));
+
+  input.focus();
+  SpecialPowers.wrap(input).setUserInput("foo");
+  input.blur();
+  is(inputChange, 1, "Input element should have got one change event.");
+
+  input.focus();
+  input.value = "bar";
+  input.blur();
+  is(inputChange, 1,
+     "Change event dispatched when setting the value of the input element");
+
+  input.value = "";
+  is(inputChange, 1, 
+     "Change event dispatched when setting the value of the input element (2).");
+
+  SpecialPowers.wrap(input).setUserInput("foo");
+  is(inputChange, 2,
+     "Change event dispatched when input element doesn't have focus.");
+
+  textarea.focus();
+  textarea.setUserInput("foo");
+  textarea.blur();
+  is(textareaChange, 1, "Textarea element should have got one change event.");
+
+  textarea.focus();
+  textarea.value = "bar";
+  textarea.blur();
+  is(textareaChange, 1,
+     "Change event dispatched when setting the value of the textarea element.");
+
+  textarea.value = "";
+  is(textareaChange, 1,
+     "Change event dispatched when setting the value of the textarea element (2).");
+
+  textarea.setUserInput("foo");
+  is(textareaChange, 1,
+     "Change event dispatched when textarea element doesn't have focus.");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(testUserInput);
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <!-- Form in an iframe -->
+    <iframe src="https://example.org/browser/toolkit/components/passwordmgr/test/browser/form_basic.html" id="test-iframe"></iframe>
+
+    <!-- Form in a fully sandboxed iframe -->
+    <iframe src="https://example.org/browser/toolkit/components/passwordmgr/test/browser/form_basic.html"
+            sandbox=""
+            id="test-iframe-sandbox"></iframe>
+
+    <!-- Form in an "allow-same-origin" sandboxed iframe -->
+    <iframe src="https://example.org/browser/toolkit/components/passwordmgr/test/browser/form_basic.html"
+            sandbox="allow-same-origin"
+            id="test-iframe-sandbox-same-origin"></iframe>
+</body>
+
+</html>

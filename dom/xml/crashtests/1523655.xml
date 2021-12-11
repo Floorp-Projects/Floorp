@@ -1,0 +1,3 @@
+<body>
+  <!-- XML root element with an known, allow-to-attch-shadow-root HTML tag name in non-HTML namespace should not trigger a crash -->
+</body>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<div style="width: 100px; height: 100px; background-color: red; overflow: hidden; transform: scaleY(-1);">
+    <canvas id="c" width="200" height="200"></canvas>
+</div>
+
+<script>
+var ctx = document.getElementById('c').getContext('2d', { alpha: false });
+ctx.fillStyle = 'green';
+ctx.fillRect(0, 0, 200, 200);
+</script>

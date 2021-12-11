@@ -1,0 +1,39 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+/*
+ *	This defines the interface for a test object.
+ *
+ */
+
+[scriptable, uuid(6a2f918e-cda2-11e8-bc9a-a34c716d1f2a)]
+interface nsIXPCTestCEnums : nsISupports {
+  const long testConst = 1;
+
+  cenum testFlagsExplicit: 8 {
+    shouldBe1Explicit = 1,
+    shouldBe2Explicit = 2,
+    shouldBe4Explicit = 4,
+    shouldBe8Explicit = 8,
+    shouldBe12Explicit = shouldBe4Explicit | shouldBe8Explicit,
+  };
+
+  cenum testFlagsImplicit: 8 {
+    shouldBe0Implicit,
+    shouldBe1Implicit,
+    shouldBe2Implicit,
+    shouldBe3Implicit,
+    shouldBe5Implicit = 5,
+    shouldBe6Implicit,
+    shouldBe2AgainImplicit = 2,
+    shouldBe3AgainImplicit,
+  };
+
+  void testCEnumInput(in nsIXPCTestCEnums_testFlagsExplicit abc);
+
+  nsIXPCTestCEnums_testFlagsExplicit testCEnumOutput();
+};

@@ -1,0 +1,333 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Arrow Panels"
+        style="padding: 10px;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<stack flex="1">
+  <label id="topleft" value="Top Left Corner" style="justify-self: left; margin-left: 15px; align-self: start; margin-top: 15px;"/>
+  <label id="topright" value="Top Right" style="justify-self: right; margin-right: 15px; align-self: start; margin-top: 15px;"/>
+  <label id="bottomleft" value="Bottom Left Corner" style="justify-self: left; margin-left: 15px; align-self: end; margin-bottom: 15px;"/>
+  <label id="bottomright" value="Bottom Right" style="justify-self: right; margin-right: 15px; align-self: end; margin-bottom: 15px;"/>
+  <!-- Our SimpleTest/TestRunner.js runs tests inside an iframe which sizes are W=500 H=300.
+       'left' and 'top' values need to be set so that the panel (popup) has enough room to display on its 4 sides. -->
+  <label id="middle" value="+/- Centered" style="justify-self: left; margin-left: 225px; align-self: start; margin-top: 135px;"/>
+  <iframe id="frame" type="content"
+          src="data:text/html,&lt;input id='input'&gt;" style="width: 100px; height: 100px; justify-self: left; margin-left: 225px; align-self: start; margin-top: 120px;"/>
+</stack>
+
+<panel id="panel" type="arrow" animate="false"
+       onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">
+  <box width="115" height="65"/>
+</panel>
+
+<panel id="bigpanel" type="arrow" animate="false"
+       onpopupshown="checkBigPanel(this)" onpopuphidden="runNextTest.next()">
+  <box width="125" height="3000"/>
+</panel>
+
+<panel id="animatepanel" type="arrow"
+       onpopupshown="animatedPopupShown = true;"
+       onpopuphidden="animatedPopupHidden = true; runNextTest.next();">
+  <label value="Animate Closed" height="40"/>
+</panel>
+
+<html:style type="text/css">
+  panel {
+    /**
+     * We hardcode a panel padding here to avoid rounding issues caused by
+     * using em unit padding, which is the default as of bug 1701920.
+     */
+    --arrowpanel-padding: 16px;
+  }
+</html:style>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+const isOSXYosemite = navigator.userAgent.includes("Mac OS X 10.10");
+
+var expectedAnchor = null;
+var expectedSide = "", expectedAnchorEdge = "", expectedPack = "";
+var zoomFactor = 1;
+var animatedPopupShown = false;
+var animatedPopupHidden = false;
+var runNextTest;
+
+function startTest()
+{
+  runNextTest = nextTest();
+  runNextTest.next();
+}
+
+function* nextTest()
+{
+  var panel = $("panel");
+
+  function openPopup(position, anchor, expected, anchorEdge, pack, alignment)
+  {
+    expectedAnchor = anchor instanceof Node ? anchor : $(anchor);
+    expectedSide = expected;
+    expectedAnchorEdge = anchorEdge;
+    expectedPack = pack;
+
+    panel.removeAttribute("side");
+    panel.openPopup(expectedAnchor, position, 0, 0, false, false, null);
+  }
+
+  for (var iter = 0; iter < 2; iter++) {
+    openPopup("after_start", "topleft", "top", "left", "start");
+    yield;
+    openPopup("after_start", "bottomleft", "bottom", "left", "start", "before_start");
+    yield;
+    openPopup("before_start", "topleft", "top", "left", "start", "after_start");
+    yield;
+    openPopup("before_start", "bottomleft", "bottom", "left", "start");
+    yield;
+    openPopup("after_start", "middle", "top", "left", "start");
+    yield;
+    openPopup("before_start", "middle", "bottom", "left", "start");
+    yield;
+
+    openPopup("after_start", "topright", "top", "right", "end", "after_end");
+    yield;
+    openPopup("after_start", "bottomright", "bottom", "right", "end", "before_end");
+    yield;
+    openPopup("before_start", "topright", "top", "right", "end", "after_end");
+    yield;
+    openPopup("before_start", "bottomright", "bottom", "right", "end", "before_end");
+    yield;
+
+    openPopup("after_end", "middle", "top", "right", "end");
+    yield;
+    openPopup("before_end", "middle", "bottom", "right", "end");
+    yield;
+
+    openPopup("start_before", "topleft", "left", "top", "start", "end_before");
+    yield;
+    openPopup("start_before", "topright", "right", "top", "start");
+    yield;
+    openPopup("end_before", "topleft", "left", "top", "start");
+    yield;
+    openPopup("end_before", "topright", "right", "top", "start", "start_before");
+    yield;
+    openPopup("start_before", "middle", "right", "top", "start");
+    yield;
+    openPopup("end_before", "middle", "left", "top", "start");
+    yield;
+
+    openPopup("start_before", "bottomleft", "left", "bottom", "end", "end_after");
+    yield;
+    openPopup("start_before", "bottomright", "right", "bottom", "end", "start_after");
+    yield;
+    openPopup("end_before", "bottomleft", "left", "bottom", "end", "end_after");
+    yield;
+    openPopup("end_before", "bottomright", "right", "bottom", "end", "start_after");
+    yield;
+
+    openPopup("start_after", "middle", "right", "bottom", "end");
+    yield;
+    openPopup("end_after", "middle", "left", "bottom", "end");
+    yield;
+
+    openPopup("topcenter bottomleft", "bottomleft", "bottom", "center left", "start", "before_start");
+    yield;
+    openPopup("bottomcenter topleft", "topleft", "top", "center left", "start", "after_start");
+    yield;
+    openPopup("topcenter bottomright", "bottomright", "bottom", "center right", "end", "before_end");
+    yield;
+    openPopup("bottomcenter topright", "topright", "top", "center right", "end", "after_end");
+    yield;
+    openPopup("topcenter bottomleft", "middle", "bottom", "center left", "start", "before_start");
+    yield;
+    openPopup("bottomcenter topleft", "middle", "top", "center left", "start", "after_start");
+    yield;
+
+    openPopup("leftcenter topright", "middle", "right", "center top", "start", "start_before");
+    yield;
+    openPopup("rightcenter bottomleft", "middle", "left", "center bottom", "end", "end_after");
+    yield;
+
+/*
+    XXXndeakin disable these parts of the test which often cause problems, see bug 626563
+
+    openPopup("after_start", frames[0].document.getElementById("input"), "top", "left", "start");
+    yield;
+
+    setScale(frames[0], 1.5);
+    openPopup("after_start", frames[0].document.getElementById("input"), "top", "left", "start");
+    yield;
+
+    setScale(frames[0], 2.5);
+    openPopup("before_start", frames[0].document.getElementById("input"), "bottom", "left", "start");
+    yield;
+
+    setScale(frames[0], 1);
+*/
+
+    $("bigpanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
+    yield;
+
+    // switch to rtl mode
+    document.documentElement.style.direction = "rtl";
+
+    $("topleft").style.marginRight = "15px";
+    $("topleft").style.justifySelf = "right";
+
+    $("topright").style.marginLeft = "15px";
+    $("topright").style.justifySelf = "left";
+
+    $("bottomleft").style.marginRight = "15px";
+    $("bottomleft").style.justifySelf = "right";
+
+    $("bottomright").style.marginLeft = "15px";
+    $("bottomright").style.justifySelf = "left";
+
+    $("topleft").style.removeProperty("marginLeft");
+    $("topright").style.removeProperty("marginRight");
+    $("bottomleft").style.removeProperty("marginLeft");
+    $("bottomright").style.removeProperty("marginRight");
+  }
+
+  // Test that a transition occurs when opening or closing the popup.
+  if (SpecialPowers.getBoolPref("xul.panel-animations.enabled")) {
+    function transitionEnded(event) {
+      if ($("animatepanel").state != "open") {
+        is($("animatepanel").state, "showing", "state is showing during transitionend");
+        ok(!animatedPopupShown, "popupshown not fired yet")
+      } else {
+        is($("animatepanel").state, "open", "state is open after transitionend");
+        ok(animatedPopupShown, "popupshown now fired")
+        SimpleTest.executeSoon(() => runNextTest.next());
+      }
+    }
+
+    // Check that the transition occurs for an arrow panel with animate="true"
+    $("animatepanel").addEventListener("transitionend", transitionEnded);
+    $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
+    is($("animatepanel").state, "showing", "state is showing");
+    yield;
+    $("animatepanel").removeEventListener("transitionend", transitionEnded);
+
+    synthesizeKey("KEY_Escape");
+    ok(!animatedPopupHidden, "animated popup not hidden yet");
+    yield;
+  }
+
+  SimpleTest.finish()
+}
+
+function setScale(win, scale)
+{
+  SpecialPowers.setFullZoom(win, scale);
+  zoomFactor = scale;
+}
+
+function checkPanelPosition(panel)
+{
+  let anchor = panel.anchorNode;
+  let adj = 0, hwinpos = 0, vwinpos = 0;
+  if (anchor.ownerDocument != document) {
+    var framerect = anchor.ownerGlobal.frameElement.getBoundingClientRect();
+    hwinpos = framerect.left;
+    vwinpos = framerect.top;
+  }
+
+  // Positions are reversed in rtl yet the coordinates used in the computations
+  // are not, so flip the expected label side and anchor edge.
+  var isRTL = (window.getComputedStyle(panel).direction == "rtl");
+  if (isRTL) {
+    var flipLeftRight = val => val == "left" ? "right" : "left";
+    expectedAnchorEdge = expectedAnchorEdge.replace(/(left|right)/, flipLeftRight);
+    expectedSide = expectedSide.replace(/(left|right)/, flipLeftRight);
+  }
+
+  var panelRect = panel.getBoundingClientRect();
+  var anchorRect = anchor.getBoundingClientRect();
+  var contentRect = panel.firstChild.getBoundingClientRect();
+  switch (expectedSide) {
+    case "top":
+      ok(contentRect.top > vwinpos + anchorRect.bottom * zoomFactor + 5, "panel content is below");
+      break;
+    case "bottom":
+      ok(contentRect.bottom < vwinpos + anchorRect.top * zoomFactor - 5, "panel content is above");
+      break;
+    case "left":
+      ok(contentRect.left > hwinpos + anchorRect.right * zoomFactor + 5, "panel content is right");
+      break;
+    case "right":
+      ok(contentRect.right < hwinpos + anchorRect.left * zoomFactor - 5, "panel content is left");
+      break;
+  }
+
+  let iscentered = false;
+  if (expectedAnchorEdge.indexOf("center ") == 0) {
+    expectedAnchorEdge = expectedAnchorEdge.substring(7);
+    iscentered = true;
+  }
+
+  switch (expectedAnchorEdge) {
+    case "top":
+      adj = vwinpos + parseInt(getComputedStyle(panel, "").marginTop);
+      if (iscentered)
+        adj += Math.round(anchorRect.height) / 2;
+      isWithinHalfPixel(panelRect.top, anchorRect.top * zoomFactor + adj, "anchored on top");
+      break;
+    case "bottom":
+      adj = vwinpos + parseInt(getComputedStyle(panel, "").marginBottom);
+      if (iscentered)
+        adj += Math.round(anchorRect.height) / 2;
+      isWithinHalfPixel(panelRect.bottom, anchorRect.bottom * zoomFactor - adj, "anchored on bottom");
+      break;
+    case "left":
+      adj = hwinpos + parseInt(getComputedStyle(panel, "").marginLeft);
+      if (iscentered)
+        adj += Math.round(anchorRect.width) / 2;
+      isWithinHalfPixel(panelRect.left, anchorRect.left * zoomFactor + adj, "anchored on left ");
+      break;
+    case "right":
+      adj = hwinpos + parseInt(getComputedStyle(panel, "").marginRight);
+      if (iscentered)
+        adj += Math.round(anchorRect.width) / 2;
+      if (!isOSXYosemite)
+        isWithinHalfPixel(panelRect.right, anchorRect.right * zoomFactor - adj, "anchored on right");
+      break;
+  }
+
+  is(anchor, expectedAnchor, "anchor");
+
+  var arrow = panel.shadowRoot.querySelector(".panel-arrow");
+  is(panel.getAttribute("side"), expectedSide, "panel arrow side");
+  is(arrow.hidden, false, "panel hidden");
+  is(arrow.parentNode.getAttribute("pack"), expectedPack, "panel arrow pack");
+
+  panel.hidePopup();
+}
+
+function isWithinHalfPixel(a, b, desc)
+{
+  ok(Math.abs(a - b) <= 0.5, desc);
+}
+
+function checkBigPanel(panel)
+{
+  ok(panel.firstChild.getBoundingClientRect().height < 2800, "big panel height");
+  panel.hidePopup();
+}
+
+SimpleTest.waitForFocus(startTest);
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml"/>
+
+</window>

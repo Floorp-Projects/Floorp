@@ -1,0 +1,154 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * IPC Transaction protocol for the WebAuthn DOM API. This IPC protocol allows
+ * the content process to call to the parent to access hardware for
+ * authentication registration and challenges. All transactions start in the
+ * child process, and the parent replies with a "Confirm*" message, or a
+ * "Cancel" message if there was an error (no hardware available, no registered
+ * keys, etc) or interruption (another transaction was started in another
+ * content process). Similarly, the content process can also request a cancel,
+ * either triggered explicitly by the user/script or due to UI events like
+ * selecting a different tab.
+ */
+
+include protocol PBackground;
+
+using mozilla::dom::AttestationConveyancePreference from "mozilla/dom/WebAuthnUtil.h";
+using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::UserVerificationRequirement from "mozilla/dom/WebAuthnUtil.h";
+
+namespace mozilla {
+namespace dom {
+
+struct WebAuthnAuthenticatorSelection {
+  bool requireResidentKey;
+  UserVerificationRequirement userVerificationRequirement;
+  AuthenticatorAttachment? authenticatorAttachment;
+};
+
+struct WebAuthnScopedCredential {
+  uint8_t[] id;
+  uint8_t transports;
+};
+
+struct WebAuthnExtensionAppId {
+  uint8_t[] AppId;
+  nsString appIdentifier;
+};
+
+struct WebAuthnExtensionHmacSecret {
+  bool hmacCreateSecret;
+};
+
+union WebAuthnExtension {
+  WebAuthnExtensionAppId;
+  WebAuthnExtensionHmacSecret;
+};
+
+struct WebAuthnExtensionResultAppId {
+  bool AppId;
+};
+
+struct WebAuthnExtensionResultHmacSecret {
+  bool hmacCreateSecret;
+};
+
+union WebAuthnExtensionResult {
+  WebAuthnExtensionResultAppId;
+  WebAuthnExtensionResultHmacSecret;
+};
+
+struct WebAuthnMakeCredentialRpInfo {
+  nsString Name;
+  nsString Icon;
+};
+
+struct WebAuthnMakeCredentialUserInfo {
+  uint8_t[] Id;
+  nsString Name;
+  nsString Icon;
+  nsString DisplayName;
+};
+
+struct CoseAlg {
+  long alg;
+};
+
+struct WebAuthnMakeCredentialExtraInfo {
+  WebAuthnMakeCredentialRpInfo Rp;
+  WebAuthnMakeCredentialUserInfo User;
+  CoseAlg[] coseAlgs;
+  WebAuthnExtension[] Extensions;
+  WebAuthnAuthenticatorSelection AuthenticatorSelection;
+  AttestationConveyancePreference attestationConveyancePreference;
+};
+
+struct WebAuthnMakeCredentialInfo {
+  nsString Origin;
+  nsString RpId;
+  uint8_t[] Challenge;
+  nsCString ClientDataJSON;
+  uint32_t TimeoutMS;
+  WebAuthnScopedCredential[] ExcludeList;
+  WebAuthnMakeCredentialExtraInfo? Extra;
+  uint64_t BrowsingContextId;
+};
+
+struct WebAuthnMakeCredentialResult {
+  nsCString ClientDataJSON;
+  uint8_t[] AttestationObject;
+  uint8_t[] KeyHandle;
+  /* Might be empty if the token implementation doesn't support CTAP1. */
+  uint8_t[] RegistrationData;
+  WebAuthnExtensionResult[] Extensions;
+};
+
+struct WebAuthnGetAssertionExtraInfo {
+  WebAuthnExtension[] Extensions;
+  UserVerificationRequirement userVerificationRequirement;
+};
+
+struct WebAuthnGetAssertionInfo {
+  nsString Origin;
+  nsString RpId;
+  uint8_t[] Challenge;
+  nsCString ClientDataJSON;
+  uint32_t TimeoutMS;
+  WebAuthnScopedCredential[] AllowList;
+  WebAuthnGetAssertionExtraInfo? Extra;
+  uint64_t BrowsingContextId;
+};
+
+struct WebAuthnGetAssertionResult {
+  nsCString ClientDataJSON;
+  uint8_t[] KeyHandle;
+  uint8_t[] Signature;
+  uint8_t[] AuthenticatorData;
+  WebAuthnExtensionResult[] Extensions;
+  /* Might be empty if the token implementation doesn't support CTAP1. */
+  uint8_t[] SignatureData;
+  uint8_t[] UserHandle;
+};
+
+async protocol PWebAuthnTransaction {
+  manager PBackground;
+
+  parent:
+    async RequestRegister(uint64_t aTransactionId, WebAuthnMakeCredentialInfo aTransactionInfo);
+    async RequestSign(uint64_t aTransactionId, WebAuthnGetAssertionInfo aTransactionInfo);
+    [Tainted] async RequestCancel(uint64_t aTransactionId);
+    async DestroyMe();
+
+  child:
+    async __delete__();
+    async ConfirmRegister(uint64_t aTransactionId, WebAuthnMakeCredentialResult aResult);
+    async ConfirmSign(uint64_t aTransactionId, WebAuthnGetAssertionResult aResult);
+    async Abort(uint64_t aTransactionId, nsresult Error);
+};
+
+}
+}

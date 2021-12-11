@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+
+  add_task(async function() {
+    let seenPaste = false;
+    let seenCopy = false;
+    document.addEventListener("copy", function oncpy(e) {
+      e.clipboardData.setData("text/plain", "my text");
+      e.preventDefault();
+      seenCopy = true;
+    }, {once: true});
+    document.addEventListener("paste", function onpst(e) {
+      is(e.clipboardData.getData("text/plain"), "my text",
+         "The correct text was read from the clipboard");
+      e.preventDefault();
+      seenPaste = true;
+    }, {once: true});
+
+    ok(SpecialPowers.wrap(document).execCommand("copy"),
+       "Call should succeed");
+    ok(seenCopy, "Successfully copied the text to the clipboard");
+    ok(SpecialPowers.wrap(document).execCommand("paste"),
+       "Call should succeed");
+    ok(seenPaste, "Successfully read text from the clipboard");
+
+    // Check that reading text from the clipboard in non-privileged contexts
+    // still doesn't work.
+    function onpstfail(e) {
+      ok(false, "Should not see paste event triggered by non-privileged call");
+    }
+    document.addEventListener("paste", onpstfail);
+    ok(!document.execCommand("paste"), "Call should fail");
+    document.removeEventListener("paste", onpstfail);
+  });
+
+</script>
+</body>
+</html>

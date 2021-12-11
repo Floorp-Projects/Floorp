@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=547996
+-->
+<head>
+  <title>Test for Bug 547996</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=547996">Mozilla Bug 547996</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript"><![CDATA[
+
+/** Test for Bug 547996 **/
+/* mouseEvent.mozInputSource attribute */
+
+var expectedInputSource = null;
+
+function check(event) {
+  is(event.mozInputSource, expectedInputSource, ".mozInputSource");
+}
+
+function doTest() {
+  setup();
+
+  expectedInputSource = MouseEvent.MOZ_SOURCE_KEYBOARD;
+  testKeyboard();
+
+  expectedInputSource = MouseEvent.MOZ_SOURCE_MOUSE;
+  testMouse();
+
+  expectedInputSource = MouseEvent.MOZ_SOURCE_UNKNOWN;
+  testScriptedClicks();
+
+  cleanup();
+  SimpleTest.finish();
+}
+
+function testKeyboard() {
+
+  $("inputTarget").focus();
+  synthesizeKey("VK_SPACE", {});
+  synthesizeKey("VK_RETURN", {});
+
+  $("buttonTarget").focus();
+  synthesizeKey("VK_SPACE", {});
+  synthesizeKey("VK_RETURN", {});
+
+  //XUL buttons do not generate click on ENTER or SPACE,
+  //they do only on accessKey
+
+  $("anchorTarget").focus();
+  synthesizeKey("VK_RETURN", {});
+
+  synthesizeKey("VK_TAB", {});
+  synthesizeKey("VK_SPACE", {});
+  synthesizeKey("VK_RIGHT", {});
+
+  $("checkboxTarget").focus();
+  synthesizeKey("VK_SPACE", {});
+
+  var accessKeyDetails = (navigator.platform.includes("Mac")) ?
+                          { ctrlKey : true } : { altKey : true, shiftKey: true };
+
+  synthesizeKey("o", accessKeyDetails);
+  synthesizeKey("t", accessKeyDetails);
+}
+
+function testMouse() {
+  synthesizeMouse($("inputTarget"), 0, 0, {});
+  synthesizeMouse($("buttonTarget"), 0, 0, {});
+  synthesizeMouse($("xulButtonTarget"), 0, 0, {});
+  synthesizeMouse($("anchorTarget"), 0, 0, {});
+  synthesizeMouse($("radioTarget1"), 0, 0, {});
+  synthesizeMouse($("radioTarget2"), 0, 0, {});
+  synthesizeMouse($("checkboxTarget"), 0, 0, {});
+}
+
+function testScriptedClicks() {
+  $("inputTarget").click();
+  $("buttonTarget").click();
+  $("xulButtonTarget").click();
+}
+
+function setup() {
+  $("inputTarget").addEventListener("click", check);
+  $("buttonTarget").addEventListener("click", check);
+  $("anchorTarget").addEventListener("click", check);
+  $("xulButtonTarget").addEventListener("click", check);
+  $("radioTarget1").addEventListener("click", check);
+  $("radioTarget2").addEventListener("click", check);
+  $("checkboxTarget").addEventListener("click", check);
+
+}
+
+function cleanup() {
+  $("inputTarget").removeEventListener("click", check);
+  $("buttonTarget").removeEventListener("click", check);
+  $("xulButtonTarget").removeEventListener("click", check);
+  $("anchorTarget").removeEventListener("click", check);
+  $("radioTarget1").removeEventListener("click", check);
+  $("radioTarget2").removeEventListener("click", check);
+  $("checkboxTarget").removeEventListener("click", check);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(doTest, window);
+
+]]></script>
+</pre>
+<input type="checkbox" id="checkboxTarget">Checkbox target</input>
+<input id="inputTarget" type="button" value="HTML Input" accesskey="o"/>
+<button id="buttonTarget">HTML Button</button>
+<xul:button id="xulButtonTarget" accesskey="t">XUL Button</xul:button>
+<a href="#" id="anchorTarget">Anchor</a>
+<input type="radio" id="radioTarget1" name="group">Radio Target 1</input>
+<input type="radio" id="radioTarget2" name="group">Radio Target 2</input>
+</body>
+</html>

@@ -1,0 +1,20 @@
+Marionette [ ˌmarɪəˈnɛt] is
+
+  * a puppet worked by strings: the bird bobs up and down like
+    a marionette;
+
+  * a person who is easily manipulated or controlled: many officers
+    dismissed him as the mayor’s marionette;
+
+  * the remote protocol that lets out-of-process programs communicate
+    with, instrument, and control Gecko-based browsers.
+
+Marionette provides interfaces for interacting with both the internal
+JavaScript runtime and UI elements of Gecko-based browsers, such
+as Firefox on desktop and mobile.  It can control both the chrome- and content
+documents, giving a high level of control and ability to replicate,
+or emulate, user interaction.
+
+Head on to the Marionette documentation to find out more:
+
+	https://firefox-source-docs.mozilla.org/testing/marionette/

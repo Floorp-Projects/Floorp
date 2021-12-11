@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArray.idl"
+#include "nsISupports.idl"
+#include "nsITouchBarInput.idl"
+
+webidl Document;
+
+/**
+ * Back-to-frontend communication for the Touch Bar
+ */
+[scriptable, uuid(ea109912-3acc-48de-b679-c23b6a122da5)]
+interface nsITouchBarHelper : nsISupports
+{
+  /**
+   * Returns the active browser's URL.
+   */
+  readonly attribute AString activeUrl;
+
+  /**
+   * Return the active browser's page title.
+   */
+  readonly attribute AString activeTitle;
+
+  /**
+   * Return true if the Urlbar has focus.
+   */
+  readonly attribute boolean isUrlbarFocused;
+
+  /**
+   * Returns all available Touch Bar Inputs in an nsIArray
+   * of nsITouchBarInput objects.
+   */
+  attribute nsIArray allItems;
+
+  /**
+   * The context in which this nsITouchBarHelper exists. Required to create
+   * an imgLoader to load our SVG icons.
+   */
+  readonly attribute Document document;
+
+  /**
+   * Returns the requested TouchBarInput.
+   * Exposed for testing.
+   */
+  nsITouchBarInput getTouchBarInput(in string aInputName);
+
+  /**
+   * Inserts a search restriction string in the Urlbar.
+   * Exposed for testing.
+   */
+  void insertRestrictionInUrlbar(in string aToken);
+};

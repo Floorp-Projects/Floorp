@@ -1,0 +1,107 @@
+<html>
+<head>
+  <title>Bug 957439 - Media Recording - Assertion fail at Pause if unsupported input stream.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="gUM_support.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=957439">Mozilla Bug 957439</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function unexpected(e) {
+  ok(false, `Got unexpected ${e.type} event`);
+}
+
+
+async function startTest() {
+  // also do general checks on mimetype support for audio-only
+  ok(MediaRecorder.isTypeSupported("audio/ogg"),
+    'Should support audio/ogg');
+  ok(MediaRecorder.isTypeSupported('audio/ogg; codecs=opus'),
+    'Should support audio/ogg+opus');
+  ok(!MediaRecorder.isTypeSupported('audio/ogg; codecs=foobar'),
+    'Should not support audio/ogg + unknown_codec');
+  ok(MediaRecorder.isTypeSupported("video/webm"),
+    'Should support video/webm');
+  ok(!MediaRecorder.isTypeSupported("video/mp4"),
+    'Should not support video/mp4');
+
+  try {
+    await setupGetUserMediaTestPrefs();
+    const expectedMimeType = 'video/webm; codecs="vp8, opus"';
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+    const [audioTrack] = stream.getAudioTracks();
+
+    // Expected event sequence should be:
+    // 1. start
+    // 2. error (from removed track)
+    // 3. dataavailable
+    // 4. stop
+    const mediaRecorder = new MediaRecorder(stream);
+    is(mediaRecorder.stream, stream, 'Stream should be provided on creation');
+
+    mediaRecorder.onstart = unexpected;
+    mediaRecorder.onerror = unexpected;
+    mediaRecorder.ondataavailable = unexpected;
+    mediaRecorder.onstop = unexpected;
+
+    mediaRecorder.start();
+    is(mediaRecorder.state, 'recording', 'state should be recording');
+    is(mediaRecorder.mimeType, '', 'mimetype should be unset');
+
+    await new Promise(r => mediaRecorder.onstart = r);
+    mediaRecorder.onstart = unexpected;
+    ok(true, 'start event fired');
+    is(mediaRecorder.mimeType, expectedMimeType, 'mimetype should be set');
+
+    // Trigger an error
+    stream.removeTrack(audioTrack);
+
+    const err = await new Promise(r => mediaRecorder.onerror = r);
+    mediaRecorder.onerror = unexpected;
+    ok(true, 'error event fired');
+    is(err.error.name, 'InvalidModificationError',
+      'Error name should be InvalidModificationError.');
+    ok(err.error.stack.includes('test_mediarecorder_onerror_pause.html'),
+      'Events fired from onerror should include an error with a stack trace indicating ' +
+      'an error in this test');
+    is(mediaRecorder.mimeType, '', 'mimetype should be unset');
+    is(mediaRecorder.state, 'inactive', 'state is inactive');
+
+    try {
+      mediaRecorder.pause();
+      ok(false, 'pause should fire an exception if called on an inactive recorder');
+    } catch(e) {
+      ok(e instanceof DOMException, 'pause should fire an exception ' +
+        'if called on an inactive recorder');
+      is(e.name, 'InvalidStateError', 'Exception name should be InvalidStateError');
+    }
+
+    const evt = await new Promise(r => mediaRecorder.ondataavailable = r);
+    mediaRecorder.ondataavailable = unexpected;
+    ok(true, 'dataavailable event fired');
+    isnot(evt.data.size, 0, 'data size should not be zero');
+    ok(evt instanceof BlobEvent,
+        'Events fired from ondataavailable should be BlobEvent');
+    is(evt.data.type, expectedMimeType, 'blob mimeType is set');
+
+    await new Promise(r => mediaRecorder.onstop = r);
+    mediaRecorder.onstop = unexpected;
+    ok(true, 'onstop event fired');
+    is(mediaRecorder.state, 'inactive', 'state should be inactive');
+  } catch (err) {
+    ok(false, `Unexpected error fired with: ${err}`);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+window.onload = startTest;
+
+</script>
+</head>
+</html>

@@ -1,0 +1,217 @@
+# HG changeset patch
+# User Gian-Carlo Pascutto <gcp@mozilla.com>
+# Date 1515402436 -3600
+#      Mon Jan 08 10:07:16 2018 +0100
+# Node ID 205e7ae2a6bc5ed1cdd1a982a12d99f52ce33258
+# Parent  a89071894b4904a0130139a03147d4a6cb5c3bfc
+Bug 1297740.
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/broker_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+@@ -414,16 +414,17 @@ DWORD WINAPI BrokerServicesBase::TargetE
+   NOTREACHED();
+   return 0;
+ }
+ 
+ // SpawnTarget does all the interesting sandbox setup and creates the target
+ // process inside the sandbox.
+ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
+                                            const wchar_t* command_line,
++                                           base::EnvironmentMap& env_map,
+                                            scoped_refptr<TargetPolicy> policy,
+                                            ResultCode* last_warning,
+                                            DWORD* last_error,
+                                            PROCESS_INFORMATION* target_info) {
+   if (!exe_path)
+     return SBOX_ERROR_BAD_PARAMS;
+ 
+   if (!policy)
+@@ -609,17 +610,17 @@ ResultCode BrokerServicesBase::SpawnTarg
+   // Brokerservices does not own the target object. It is owned by the Policy.
+   base::win::ScopedProcessInformation process_info;
+   TargetProcess* target = new TargetProcess(
+       std::move(initial_token), std::move(lockdown_token), job.Get(),
+       thread_pool_.get(),
+       profile ? profile->GetImpersonationCapabilities() : std::vector<Sid>());
+ 
+   result = target->Create(exe_path, command_line, inherit_handles, startup_info,
+-                          &process_info, last_error);
++                          &process_info, env_map, last_error);
+ 
+   if (result != SBOX_ALL_OK) {
+     SpawnCleanup(target);
+     return result;
+   }
+ 
+   if (lowbox_token.IsValid()) {
+     *last_warning = target->AssignLowBoxToken(lowbox_token);
+diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.h b/security/sandbox/chromium/sandbox/win/src/broker_services.h
+--- a/security/sandbox/chromium/sandbox/win/src/broker_services.h
++++ b/security/sandbox/chromium/sandbox/win/src/broker_services.h
+@@ -7,16 +7,17 @@
+ 
+ #include <list>
+ #include <map>
+ #include <memory>
+ #include <set>
+ #include <utility>
+ 
+ #include "base/compiler_specific.h"
++#include "base/environment.h"
+ #include "base/macros.h"
+ #include "base/memory/scoped_refptr.h"
+ #include "base/win/scoped_handle.h"
+ #include "sandbox/win/src/crosscall_server.h"
+ #include "sandbox/win/src/job.h"
+ #include "sandbox/win/src/sandbox.h"
+ #include "sandbox/win/src/sandbox_policy_base.h"
+ #include "sandbox/win/src/sharedmem_ipc_server.h"
+@@ -39,16 +40,17 @@ class BrokerServicesBase final : public 
+ 
+   ~BrokerServicesBase();
+ 
+   // BrokerServices interface.
+   ResultCode Init() override;
+   scoped_refptr<TargetPolicy> CreatePolicy() override;
+   ResultCode SpawnTarget(const wchar_t* exe_path,
+                          const wchar_t* command_line,
++                         base::EnvironmentMap& env_map,
+                          scoped_refptr<TargetPolicy> policy,
+                          ResultCode* last_warning,
+                          DWORD* last_error,
+                          PROCESS_INFORMATION* target) override;
+   ResultCode WaitForAllTargets() override;
+   ResultCode AddTargetPeer(HANDLE peer_process) override;
+ 
+   // Checks if the supplied process ID matches one of the broker's active
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sandbox/chromium/sandbox/win/src/sandbox.h
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox.h
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox.h
+@@ -84,16 +84,17 @@ class BrokerServices {
+   //   parameter will hold the last Win32 error value.
+   //   target: returns the resulting target process information such as process
+   //   handle and PID just as if CreateProcess() had been called. The caller is
+   //   responsible for closing the handles returned in this structure.
+   // Returns:
+   //   ALL_OK if successful. All other return values imply failure.
+   virtual ResultCode SpawnTarget(const wchar_t* exe_path,
+                                  const wchar_t* command_line,
++                                 base::EnvironmentMap& env_map,
+                                  scoped_refptr<TargetPolicy> policy,
+                                  ResultCode* last_warning,
+                                  DWORD* last_error,
+                                  PROCESS_INFORMATION* target) = 0;
+ 
+   // This call blocks (waits) for all the targets to terminate.
+   // Returns:
+   //   ALL_OK if successful. All other return values imply failure.
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/security/sandbox/chromium/sandbox/win/src/target_process.cc
+--- a/security/sandbox/chromium/sandbox/win/src/target_process.cc
++++ b/security/sandbox/chromium/sandbox/win/src/target_process.cc
+@@ -9,16 +9,17 @@
+ 
+ #include <memory>
+ #include <utility>
+ #include <vector>
+ 
+ #include "base/macros.h"
+ #include "base/memory/free_deleter.h"
+ #include "base/numerics/safe_conversions.h"
++#include "base/process/environment_internal.h"
+ #include "base/win/startup_information.h"
+ #include "base/win/windows_version.h"
+ #include "sandbox/win/src/crosscall_client.h"
+ #include "sandbox/win/src/crosscall_server.h"
+ #include "sandbox/win/src/policy_low_level.h"
+ #include "sandbox/win/src/restricted_token_utils.h"
+ #include "sandbox/win/src/sandbox_types.h"
+ #include "sandbox/win/src/security_capabilities.h"
+@@ -137,16 +138,17 @@ TargetProcess::~TargetProcess() {
+ // Creates the target (child) process suspended and assigns it to the job
+ // object.
+ ResultCode TargetProcess::Create(
+     const wchar_t* exe_path,
+     const wchar_t* command_line,
+     bool inherit_handles,
+     const base::win::StartupInformation& startup_info,
+     base::win::ScopedProcessInformation* target_info,
++    base::EnvironmentMap& env_changes,
+     DWORD* win_error) {
+   exe_name_.reset(_wcsdup(exe_path));
+ 
+   // the command line needs to be writable by CreateProcess().
+   std::unique_ptr<wchar_t, base::FreeDeleter> cmd_line(_wcsdup(command_line));
+ 
+   // Start the target process suspended.
+   DWORD flags =
+@@ -156,22 +158,29 @@ ResultCode TargetProcess::Create(
+     flags |= EXTENDED_STARTUPINFO_PRESENT;
+ 
+   if (job_ && base::win::GetVersion() < base::win::Version::WIN8) {
+     // Windows 8 implements nested jobs, but for older systems we need to
+     // break out of any job we're in to enforce our restrictions.
+     flags |= CREATE_BREAKAWAY_FROM_JOB;
+   }
+ 
++  LPTCH original_environment = GetEnvironmentStrings();
++  base::NativeEnvironmentString new_environment =
++    base::internal::AlterEnvironment(original_environment, env_changes);
++  // Ignore return value? What can we do?
++  FreeEnvironmentStrings(original_environment);
++  LPVOID new_env_ptr = (void*)new_environment.data();
++
+   PROCESS_INFORMATION temp_process_info = {};
+   if (!::CreateProcessAsUserW(lockdown_token_.Get(), exe_path, cmd_line.get(),
+                               nullptr,  // No security attribute.
+                               nullptr,  // No thread attribute.
+                               inherit_handles, flags,
+-                              nullptr,  // Use the environment of the caller.
++                              new_env_ptr,
+                               nullptr,  // Use current directory of the caller.
+                               startup_info.startup_info(),
+                               &temp_process_info)) {
+     *win_error = ::GetLastError();
+     return SBOX_ERROR_CREATE_PROCESS;
+   }
+   base::win::ScopedProcessInformation process_info(temp_process_info);
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.h b/security/sandbox/chromium/sandbox/win/src/target_process.h
+--- a/security/sandbox/chromium/sandbox/win/src/target_process.h
++++ b/security/sandbox/chromium/sandbox/win/src/target_process.h
+@@ -9,16 +9,17 @@
+ 
+ #include <stddef.h>
+ #include <stdint.h>
+ 
+ #include <memory>
+ #include <vector>
+ 
+ #include "base/macros.h"
++#include "base/environment.h"
+ #include "base/memory/free_deleter.h"
+ #include "base/win/scoped_handle.h"
+ #include "base/win/scoped_process_information.h"
+ #include "sandbox/win/src/crosscall_server.h"
+ #include "sandbox/win/src/sandbox_types.h"
+ 
+ namespace base {
+ namespace win {
+@@ -54,16 +55,17 @@ class TargetProcess {
+   void Release() {}
+ 
+   // Creates the new target process. The process is created suspended.
+   ResultCode Create(const wchar_t* exe_path,
+                     const wchar_t* command_line,
+                     bool inherit_handles,
+                     const base::win::StartupInformation& startup_info,
+                     base::win::ScopedProcessInformation* target_info,
++                    base::EnvironmentMap& env_map,
+                     DWORD* win_error);
+ 
+   // Assign a new lowbox token to the process post creation. The process
+   // must still be in its initial suspended state, however this still
+   // might fail in the presence of third-party software.
+   ResultCode AssignLowBoxToken(const base::win::ScopedHandle& token);
+ 
+   // Destroys the target process.

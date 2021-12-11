@@ -1,0 +1,21 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script src="slow_load.sjs"></script>
+<script>
+  let time = Date.now();
+  SimpleTest.waitForExplicitFinish();
+
+  onload = function() {
+    let styleTime = parseInt(getComputedStyle(document.documentElement).zIndex, 10);
+    isnot(styleTime, 0, "Should apply the @import sheet");
+    ok(!isNaN(styleTime), "Should apply the @import sheet (and not be nan)");
+    // This is technically a bit racy... Also see the comment in slow_load.sjs about the clamping.
+    time = time % (Math.pow(2, 31) - 1);
+    ok(styleTime < time, "Should try to fetch the import before running the script: " + styleTime + " vs. " + time);
+    SimpleTest.finish();
+  }
+</script>
+<style>
+  @import url(slow_load.sjs?css)
+</style>

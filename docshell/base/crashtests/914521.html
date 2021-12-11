@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+
+function f()
+{
+    function spin() {
+        for (var i = 0; i < 8; ++i) {
+            var x = new XMLHttpRequest();
+            x.open('GET', 'data:text/html,' + i, false);
+            x.send();
+        }
+    }
+
+    window.addEventListener("popstate", spin);
+    window.close();
+    window.location = "#c";
+    document.documentElement.removeAttribute("class");
+}
+
+function start()
+{
+    var win = window.open("javascript:'<html><body>dummy</body></html>';", null, "width=300,height=300");
+    win.onload = f;
+}
+
+</script>
+</head>
+<body onload="start();"></body>
+</html>

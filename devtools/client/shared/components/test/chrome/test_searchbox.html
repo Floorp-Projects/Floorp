@@ -1,0 +1,74 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+<!--
+Test the searchbox component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>SearchBox component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script src="head.js"></script>
+<script>
+"use strict";
+window.onload = function () {
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const SearchBox = React.createFactory(
+    browserRequire("devtools/client/shared/components/SearchBox")
+  );
+  ok(SearchBox, "Got the SearchBox factory");
+
+  async function testSimpleSearchBox() {
+    // Test initial state
+    const { component, $ } = await createComponentTest(SearchBox, {
+      type: "search",
+      keyShortcut: "CmdOrCtrl+F",
+      placeholder: "crazy placeholder",
+    });
+
+    is(component.state.value, "", "Initial value is blank");
+    ok(!component.state.focused, "Input isn't initially focused");
+    ok($(".devtools-searchinput-clear").hidden, "Clear button hidden");
+    is($(".devtools-searchinput").placeholder, "crazy placeholder",
+     "Placeholder is properly set");
+
+    synthesizeKey("f", { accelKey: true });
+    await forceRender(component); // Wait for state update
+    ok(component.state.focused, "Shortcut key focused the input box");
+
+    $(".devtools-searchinput").blur();
+    await forceRender(component);
+    ok(!component.state.focused, "`focused` state set to false after blur");
+
+    // Test changing value in state
+    await setState(component, {
+      value: "foo",
+    });
+
+    is(component.state.value, "foo", "value was properly set on state");
+    is($(".devtools-searchinput").value, "foo", "value was properly set on element");
+
+    // Filling input should show clear button
+    ok(!$(".devtools-searchinput-clear").hidden, "Clear button shown");
+
+    // Clearing value should hide clear button
+    await setState(component, {
+      value: "",
+    });
+    await forceRender(component);
+    ok($(".devtools-searchinput-clear").hidden, "Clear button was hidden");
+  }
+
+  add_task(async function () {
+    await testSimpleSearchBox();
+  });
+};
+</script>
+</body>
+</html>

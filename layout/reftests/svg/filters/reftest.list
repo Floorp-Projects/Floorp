@@ -1,0 +1,142 @@
+# In general, the fe*-1 tests test basic functionality clipped to a filter primitive
+# subregion. The fe*-2 tests test with no clipping (which stresses
+# the automatic optimal surface-size computation a bit more).
+
+# CSS filter tests
+include css-filters/reftest.list
+
+# CSS filter chain tests
+include css-filter-chains/reftest.list
+
+# Combined CSS and SVG filter chain tests
+include css-svg-filter-chains/reftest.list
+
+# SVG filter chain tests
+include svg-filter-chains/reftest.list
+
+== dynamic-filtered-foreignObject-01.svg pass.svg
+== dynamic-filter-invalidation-01.svg pass.svg
+== dynamic-filter-invalidation-02.svg pass.svg
+== dynamic-filter-invalidation-03.svg pass.svg
+== dynamic-filter-invalidation-04.svg pass.svg
+
+fuzzy(0-1,0-42500) == feBlend-1.svg feBlend-1-ref.svg
+== feBlend-2.svg feBlend-2-ref.svg
+
+fuzzy(0-1,0-6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
+fuzzy(0-1,0-10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
+
+== feComponentTransfer-1.svg feComponentTransfer-1-ref.svg
+== feComponentTransfer-2.svg feComponentTransfer-2-ref.svg
+
+fuzzy(0-1,0-9600) == feComposite-1.svg feComposite-1-ref.svg
+fuzzy(0-1,0-10000) == feComposite-2.svg feComposite-2-ref.svg
+
+== feConvolveMatrix-1.svg feConvolveMatrix-1-ref.svg
+== feConvolveMatrix-2.svg feConvolveMatrix-2-ref.svg
+
+== feDisplacementMap-1.svg feDisplacementMap-1-ref.svg
+== feDisplacementMap-2.svg feDisplacementMap-2-ref.svg
+
+fuzzy(0-1,0-1600) == feFlood-1.svg feFlood-1-ref.svg
+skip-if(d2d) fuzzy(0-1,0-6400) == feFlood-2.svg feFlood-2-ref.svg
+
+fuzzy(0-1,0-6404) fuzzy-if(!useDrawSnapshot,177-178,2556-3042) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy(0-2,0-304) == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
+# != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
+fuzzy-if(!useDrawSnapshot,2-5,4764-8168) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
+fuzzy-if(geckoview,0-4,0-200) == feGaussianBlur-5.svg feGaussianBlur-5-ref.svg
+== feGaussianBlur-6.svg feGaussianBlur-6-ref.svg
+skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software-ref.html
+
+!= feImage-1.svg about:blank # (Make sure our image renders at all)
+== feImage-1.svg feImage-1-ref.svg
+== feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion-ref.html
+
+== feMerge-1.svg feMerge-1-ref.svg
+== feMerge-2.svg feMerge-2-ref.svg
+
+== feMorphology-1.svg feMorphology-1-ref.svg
+== feMorphology-2.svg feMorphology-2-ref.svg
+
+== feOffset-1.svg feOffset-1-ref.svg
+== feOffset-2.svg feOffset-2-ref.svg
+
+== feTile-1.svg feTile-1-ref.svg
+== feTile-2.svg feTile-2-ref.svg
+
+# no tests for feTurbulence
+
+fuzzy-if(geckoview,0-36,0-220) == filter-clipped-rect-01.svg pass.svg
+== filter-in-pattern-01.svg pass.svg
+fuzzy(0-5,0-67) != filter-in-pattern-02.svg filter-in-pattern-02-ref.svg
+random-if(winWidget) == filter-in-mask-01.svg pass.svg # bug 1356139
+== filter-in-mask-02.svg pass.svg
+== filter-inner-svg-01.svg pass.svg
+== filter-inner-svg-02.svg pass.svg
+== filter-inner-svg-03.svg pass.svg
+fails == filter-marked-line-01.svg pass.svg # bug 477704
+== filter-kernelUnitLength-01.svg filter-kernelUnitLength-01-ref.svg
+== filter-marked-line-02.svg pass.svg
+== filter-marked-line-03.svg pass.svg
+== filter-marked-line-04.svg pass.svg
+== filter-marked-line-05.svg pass.svg
+== filter-marked-line-06.svg pass.svg
+== filter-marked-line-07.svg pass.svg
+== filter-marked-line-08.svg pass.svg
+== filter-marked-line-09.svg pass.svg
+== filter-nested-filtering-01.svg pass.svg
+== filter-nested-filtering-02.svg pass.svg
+== filter-patterned-rect-01.svg pass.svg
+== filter-patterned-rect-02.svg pass.svg
+== filter-region-01a.html pass.svg
+== filter-region-01b.html pass.svg
+== filter-transform-01.svg pass.svg
+
+== feColorMatrix-saturate-01.svg pass.svg
+
+== feComponentTransfer-03.svg pass.svg
+== feComponentTransfer-04.svg pass.svg
+== feComposite-arguments-01.svg pass.svg
+fuzzy-if(winWidget,0-1,0-39600) == feComposite-operator-lighter.svg feComposite-operator-lighter-ref.html
+fuzzy(0-1,0-26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
+fuzzy(0-1,0-10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
+== feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
+
+fuzzy(0-1,0-400) == feDisplacementMap-alpha-01.svg pass.svg
+fuzzy(0-2,0-500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
+== feDisplacementMap-scale-01.svg pass.svg
+
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(!useDrawSnapshot,55-98,14033-16345) == feDropShadow-01.svg feDropShadow-01-ref.svg
+
+== feFlood-color-01.svg pass.svg
+
+fuzzy-if(!useDrawSnapshot||(winWidget&&isCoverageBuild),20-21,5540-5647) == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
+
+== feMorphology-radius-negative-01.svg pass.svg
+== feMorphology-radius-negative-02.svg pass.svg
+== feMorphology-radius-zero-01.svg pass.svg
+== feMorphology-radius-zero-02.svg pass.svg
+
+== feTile-large-01.svg pass.svg
+== feTile-large-02.svg feTile-large-02-ref.svg
+== feTile-outside-01.svg feTile-outside-01-ref.svg
+
+fuzzy(0-1,0-219) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
+
+fuzzy(0-2,0-2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
+
+== filter-lighting-region.svg filter-lighting-region-ref.svg
+
+fails-if(useDrawSnapshot) == fePointLight-zoomed-page.svg fePointLight-zoomed-page-ref.svg
+
+== feTurbulence-offset.svg feTurbulence-offset-ref.svg
+fuzzy(0-1,0-10000) == feTurbulence-zero-baseFreq-01.svg feTurbulence-zero-baseFreq-01-ref.svg
+!= feTurbulence-zero-baseFreq-02.svg about:blank
+
+== outside-sourcegraphic-1.svg outside-sourcegraphic-ref.svg
+# These failures are caused by bug 1586055
+fails-if(!useDrawSnapshot) == outside-sourcegraphic-2.svg outside-sourcegraphic-ref.svg
+fails-if(!useDrawSnapshot) == outside-sourcegraphic-3.svg outside-sourcegraphic-ref.svg
+== nested-filter.html nested-filter-ref.html
+== filter-giant.svg pass.svg

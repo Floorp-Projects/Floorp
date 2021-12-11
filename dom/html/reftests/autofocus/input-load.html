@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function focusHandler()
+    {
+      document.documentElement.removeAttribute('class');
+    }
+  </script>
+  <body>
+    <input><input autofocus onfocus="focusHandler();"><input autofocus onfocus="focusHandler();">
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for adding and removing animations from a time container</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle cx="-20" cy="20" r="15" fill="blue" id="circle">
+    <set attributeName="cy" to="120" begin="0s; 2s" dur="1s" id="b"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for adding and removing animations from a time container **/
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  var svg = getElement("svg");
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  // Create animation and check initial state
+  var anim = createAnim();
+  anim.setAttribute('begin','b.begin+2s; 6s');
+  ok(noStart(anim), "Animation has start time before attaching to document.");
+
+  // Attach animation to container
+  var circle = getElement("circle");
+  circle.appendChild(anim);
+
+  // Check state after attaching
+  is(anim.getStartTime(), 2);
+
+  // Unbind from tree -- the syncbase instance time(s) should become unresolved
+  // but the offset time should remain
+  anim.remove();
+  is(anim.getStartTime(), 6);
+
+  // Rebind and check everything is re-resolved
+  circle.appendChild(anim);
+  is(anim.getStartTime(), 2);
+
+  // Advance document time to t=1s
+  // Now the current interval for b is 2s-3s but the current interval for anim
+  // is still 2s-2.5s based on b's previous interval
+  svg.setCurrentTime(1);
+  is(anim.getStartTime(), 2);
+
+  // Unbind
+  anim.remove();
+  is(anim.getStartTime(), 6);
+
+  // Rebind
+  // At this point only the current interval will be re-added to anim (this is
+  // for consistency since old intervals may or may not have been filtered).
+  // Therefore the start time should be 4s instead of 2s.
+  circle.appendChild(anim);
+  is(anim.getStartTime(), 4);
+
+  SimpleTest.finish();
+}
+
+function createAnim() {
+  const svgns="http://www.w3.org/2000/svg";
+  var anim = document.createElementNS(svgns,'set');
+  anim.setAttribute('attributeName','cx');
+  anim.setAttribute('to','100');
+  anim.setAttribute('dur','0.5s');
+  return anim;
+}
+
+function noStart(elem) {
+  var exceptionCaught = false;
+
+  try {
+    elem.getStartTime();
+  } catch(e) {
+    exceptionCaught = true;
+    is (e.name, "InvalidStateError",
+        "Unexpected exception from getStartTime.");
+    is (e.code, DOMException.INVALID_STATE_ERR,
+        "Unexpected exception code from getStartTime.");
+  }
+
+  return exceptionCaught;
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

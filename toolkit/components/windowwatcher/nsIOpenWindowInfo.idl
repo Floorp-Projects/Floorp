@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl BrowsingContext;
+
+%{ C++
+namespace mozilla {
+class OriginAttributes;
+namespace dom {
+class BrowserParent;
+} // namespace dom
+} // namespace mozilla
+%}
+[ref] native const_OriginAttributes(const mozilla::OriginAttributes);
+[ptr] native BrowserParent(mozilla::dom::BrowserParent);
+
+/*
+ * nsIBrowsingContextReadyCallback.browsingContextReady() is called within
+ * nsFrameLoader to indicate that the browsing context for a newly opened
+ * window/tab is ready.
+ */
+[uuid(0524ee06-7f4c-4cd3-ab80-084562745cad)]
+interface nsIBrowsingContextReadyCallback : nsISupports
+{
+  void browsingContextReady(in BrowsingContext bc);
+};
+
+/**
+ * nsIOpenWindowInfo is a helper type which contains details used when opening
+ * new content windows. This object is used to correctly create new initial
+ * content documents when creating a new window.
+ */
+[scriptable, builtinclass, uuid(30359edb-126c-4f65-ae80-07fb158697f9)]
+interface nsIOpenWindowInfo : nsISupports {
+  /** BrowsingContext which requested the creation of this new window */
+  [infallible]
+  readonly attribute BrowsingContext parent;
+
+  /** If `true`, the content document should be created initially-remote */
+  [infallible]
+  readonly attribute boolean isRemote;
+
+  /** Should |opener| be set on the newly-created content window? */
+  [infallible]
+  readonly attribute boolean forceNoOpener;
+
+  /** Whether this is a window opened for printing */
+  [infallible]
+  readonly attribute boolean isForPrinting;
+
+  /**
+   * Whether this is a window opened for window.print().
+   * When this is true, isForPrinting is necessarily true as well.
+   */
+  [infallible]
+  readonly attribute boolean isForWindowDotPrint;
+
+  /** BrowserParent instance to use in the new window */
+  [notxpcom, nostdcall]
+  BrowserParent getNextRemoteBrowser();
+
+  /** Origin Attributes for the to-be-created toplevel BrowsingContext */
+  [implicit_jscontext, binaryname(ScriptableOriginAttributes)]
+  readonly attribute jsval originAttributes;
+
+  [notxpcom, nostdcall, binaryname(GetOriginAttributes)]
+  const_OriginAttributes binaryGetOriginAttributes();
+
+  /* Callback to invoke when the browsing context for a new window is ready. */
+  [notxpcom, nostdcall]
+  nsIBrowsingContextReadyCallback browsingContextReadyCallback();
+};

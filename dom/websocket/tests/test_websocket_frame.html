@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Basic websocket frame interception test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+const URI = "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_basic";
+
+var frameReceivedCounter = 0;
+var frameSentCounter = 0;
+var webSocketCreatedCounter = 0;
+var webSocketOpenedCounter = 0;
+var webSocketMessageAvailableCounter = 0;
+var webSocketClosedCounter = 0;
+
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+var tests = [
+  { payload: "Hello world!" },
+  { payload: (function() { var buffer = ""; for (var i = 0; i < 120; ++i) buffer += i; return buffer; }()) },
+]
+
+var innerId = window.windowGlobalChild.innerWindowId;
+ok(innerId, "We have a valid innerWindowID: " + innerId);
+
+var service = Cc["@mozilla.org/websocketevent/service;1"]
+                .getService(Ci.nsIWebSocketEventService);
+ok(!!service, "We have the nsIWebSocketEventService");
+
+var listener = {
+  QueryInterface: ChromeUtils.generateQI(["nsIWebSocketEventListener"]),
+
+  webSocketCreated(aWebSocketSerialID, aURI, aProtocols) {
+    info("WebSocketCreated");
+
+    is(aURI, URI, "URI matches");
+    is(aProtocols, "frame", "Protocol matches");
+
+    webSocketCreatedCounter++;
+  },
+
+  webSocketOpened(aWebSocketSerialID, aEffectiveURI, aProtocols, aExtensions, httpChannelId) {
+    info("WebSocketOpened");
+
+    is(aEffectiveURI, URI, "EffectiveURI matches");
+    is(aProtocols, "frame", "Protocol matches");
+    is(aExtensions, "permessage-deflate", "No extensions");
+    ok(httpChannelId > 0, "Channel ID received");
+
+    webSocketOpenedCounter++;
+  },
+
+  webSocketMessageAvailable(aWebSocketSerialID, aData, aMessageType) {
+    info("WebSocketMessageAvailable");
+
+    if (tests.length) {
+      is(aData, tests[0].payload, "Message matches!");
+      is(aMessageType, Ci.nsIWebSocketEventListener.TYPE_STRING, "The type is 'string'");
+
+      webSocketMessageAvailableCounter++;
+
+      tests.shift();
+      if (tests.length) {
+        ws.send(tests[0].payload);
+      } else {
+        ws.send("end");
+      }
+    }
+  },
+
+  webSocketClosed(aWebSocketSerialID, aWasClean,
+                            aCode, aReason) {
+    info("WebSocketClosed");
+
+    ok(aWasClean, "The socket is closed in a clean state");
+    is(aCode, 1000, "Exit code 1000");
+    ok(!aReason.length, "No reason");
+
+    webSocketClosedCounter++;
+    checkListener();
+  },
+
+  frameReceived(aWebSocketSerialID, aFrame) {
+    ok(!!aFrame, "We have received a frame");
+
+    if (tests.length) {
+      ok(aFrame.timeStamp, "Checking timeStamp: " + aFrame.timeStamp);
+      is(aFrame.finBit, true, "Checking finBit");
+      is(aFrame.rsvBit1, true, "Checking rsvBit1");
+      is(aFrame.rsvBit2, false, "Checking rsvBit2");
+      is(aFrame.rsvBit3, false, "Checking rsvBit3");
+      is(aFrame.opCode, aFrame.OPCODE_TEXT, "Checking opCode");
+      is(aFrame.maskBit, false, "Checking maskBit");
+      is(aFrame.mask, 0, "Checking mask");
+      is(aFrame.payload, tests[0].payload, "Checking payload: " + aFrame.payload);
+    }
+
+    frameReceivedCounter++;
+  },
+
+  frameSent(aWebSocketSerialID, aFrame) {
+    ok(!!aFrame, "We have sent a frame");
+
+    if (tests.length) {
+      ok(aFrame.timeStamp, "Checking timeStamp: " + aFrame.timeStamp);
+      is(aFrame.finBit, true, "Checking finBit");
+      is(aFrame.rsvBit1, true, "Checking rsvBit1");
+      is(aFrame.rsvBit2, false, "Checking rsvBit2");
+      is(aFrame.rsvBit3, false, "Checking rsvBit3");
+      is(aFrame.opCode, aFrame.OPCODE_TEXT, "Checking opCode");
+      is(aFrame.maskBit, true, "Checking maskBit");
+      ok(!!aFrame.mask, "Checking mask: " + aFrame.mask);
+      is(aFrame.payload, tests[0].payload, "Checking payload: " + aFrame.payload);
+    }
+
+    frameSentCounter++;
+  }
+};
+
+service.addListener(innerId, listener);
+ok(true, "Listener added");
+
+function checkListener() {
+  service.removeListener(innerId, listener);
+
+  ok(frameReceivedCounter, "We received some frames!");
+  ok(frameSentCounter, "We sent some frames!");
+  ok(webSocketCreatedCounter, "We have a create notification");
+  ok(webSocketOpenedCounter, "We have a open notification");
+  ok(webSocketMessageAvailableCounter, "We have a messageAvailable notification");
+  ok(webSocketClosedCounter, "We have a close notification");
+  SimpleTest.finish();
+}
+
+var ws = new WebSocket(URI, "frame");
+ws.onopen = function(e) {
+  info("onopen");
+
+  ws.send(tests[0].payload);
+}
+
+ws.onclose = function(e) {
+  info("onclose");
+}
+
+ws.onmessage = function(e) {
+  info("onmessage");
+  if (tests.length) {
+    is(e.data, tests[0].payload, "Wrong data");
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

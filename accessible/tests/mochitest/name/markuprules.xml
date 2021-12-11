@@ -1,0 +1,385 @@
+<?xml version="1.0"?>
+
+<!--
+  This XML file is used to create sequence of accessible name tests. It consist
+  of two sections. The first section 'ruledfn' declares name computation rules.
+  The second section 'rulesample' defines markup samples we need to check name
+  computation rules for.
+
+  <ruledfn>
+    <ruleset>
+      <rule>
+
+  Section 'ruledfn' contains 'ruleset' elements. Every 'ruleset' element is
+  presented by 'rule' elements so that sequence of 'rule' elements gives the
+  sequence of name computations rules. Every 'rule' element can be one of four
+  types.
+
+   * <rule attr='' type='string'/> used when name is equal to the value of
+     attribute presented on the element.
+
+     Example, 'aria-label' attribute. In this case 'rule' element has 'attr'
+     attribute pointing to attribute name and 'type' attribute with 'string'
+     value. For example, <rule attr="aria-label" type="string"/>.
+
+   * <rule attr='' type='ref'/> used when name is calculated from elements that
+     are pointed to by attribute value on the element.
+
+     Example is 'aria-labelledby'. In this case 'rule' element has 'attr'
+     attribute holding the sequence of IDs of elements used to compute the name,
+     in addition the 'rule' element has 'type' attribute with 'ref' value.
+     For example, <rule attr="aria-labelledby" type="ref"/>.
+
+   * <rule elm='' elmattr=''/> used when name is calculated from another
+     element. These attributes are used to find an element by tagname and
+     attribute with value equaled to ID of the element. If 'elmattr' is missed
+     then element from subtree with the given tagname is used.
+
+     Example, html:label@for element, <rule elm="label" elmattr="for"/>.
+     Example, html:caption element, <rule elm="caption"/>
+
+   * <rule fromsubtree='true'/> used when name is computed from subtree.
+
+     Example, html:button. In this case 'rule' element has 'fromsubtree'
+     attribute with 'true' value.
+
+  <rulesample>
+    <markup ruleset=''>
+
+  Section 'rulesample' provides set of markup samples ('markup' elements). Every
+  'markup' element contains an element that accessible name will be computed for
+  (let's call it test element). In addition the 'markup' element contains some
+  other elements from native markup used in name calculation process for test
+  element. Test element is pointed to by 'ref' attribute on 'markup' element.
+  Also 'markup' element has 'ruleset' attribute to indicate ruleset for the test
+  element.
+
+  How does it work? Let's consider simple example:
+  <ruledfn>
+    <ruleset id="aria">
+      <rule attr="aria-label" type="string"/>
+      <rule attr="aria-labelledby" type="ref"/>
+    </ruleset>
+  </ruledfn>
+  <rulesample>
+    <markup ref="html:div" ruleset="aria">
+      <html:span id="label" textequiv="test2">test2</html:span>
+      <html:div aria-label="test1"
+                aria-labelledby="label">it's a div</html:div>
+    </markup>
+  </rulesample>
+
+  Initially 'markup' element holds markup for all rules specified by 'ruleset'
+  attribute. This allows us to check if the sequence of name computation rules
+  is correct. Here 'ruleset' element defines two rules. We get the first rule
+  which means accessible name is computed from value of 'aria-label' attribute.
+  Then we check accessible name for the test element and remove 'aria-label'
+  attribute. After we get the second rule which means we should get IDs from
+  'aria-labelledby' attribute and compose accessible name from values of
+  'textequiv' attributes (that are supposed to give the desired name for each
+  element that is being pointed to by aria-labelledby). Check accessible name
+  and finish test.
+-->
+
+<rules xmlns:html="http://www.w3.org/1999/xhtml"
+       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <ruledfn>
+
+    <!-- bricks -->
+    <ruleset id="ARIA">
+      <rule attr="aria-labelledby" type="ref"/>
+      <rule attr="aria-label" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLControl:Head">
+      <ruleset ref="ARIA"/>
+      <rule elm="label" elmattr="for"/>
+    </ruleset>
+
+    <!-- general -->
+    <ruleset id="HTMLControl">
+      <ruleset ref="HTMLControl:Head"/>
+      <rule fromsubtree="true"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLElm">
+      <ruleset ref="ARIA"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <!-- specific -->
+    <ruleset id="HTMLARIAGridCell">
+      <ruleset ref="ARIA"/>
+      <rule fromsubtree="true"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLInputButton">
+      <ruleset ref="HTMLControl:Head"/>
+      <rule attr="value" type="string" explict-name="false" reordered="true"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLInputSubmit" defaultName="Submit Query">
+      <ruleset ref="HTMLControl:Head"/>
+      <rule attr="value" type="string" explict-name="false"/>
+    </ruleset>
+
+    <ruleset id="HTMLInputReset" defaultName="Reset">
+      <ruleset ref="HTMLControl:Head"/>
+      <rule attr="value" type="string" explict-name="false"/>
+    </ruleset>
+
+    <ruleset id="HTMLInputImage">
+      <ruleset ref="HTMLControl:Head"/>
+      <rule attr="alt" type="string"/>
+      <rule attr="value" type="string"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLInputImageNoValidSrc" defaultName="Submit Query">
+      <ruleset ref="HTMLControl:Head"/>
+      <rule attr="alt" type="string" explict-name="false"/>
+      <rule attr="value" type="string" explict-name="false"/>
+    </ruleset>
+
+    <ruleset id="HTMLOption">
+      <ruleset ref="ARIA"/>
+      <rule attr="label" type="string"/>
+      <rule fromsubtree="true"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLImg">
+      <ruleset ref="ARIA"/>
+      <rule attr="alt" type="string"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLImgEmptyAlt">
+      <ruleset ref="ARIA"/>
+      <rule attr="title" type="string"/>
+      <rule attr="alt" type="string"/>
+    </ruleset>
+
+    <ruleset id="HTMLTable">
+      <ruleset ref="ARIA"/>
+      <rule elm="caption"/>
+      <rule attr="summary" type="string"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+  </ruledfn>
+
+  <rulesample>
+
+    <markup id="HTMLButtonTest"
+            ref="html:button" ruleset="HTMLControl">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="btn" textequiv="test4">test4</html:label>
+      <html:button id="btn"
+                   aria-label="test1"
+                   aria-labelledby="l1 l2"
+                   title="test5"
+                   textequiv="press me">press me</html:button>
+    </markup>
+
+    <markup id="HTMLInputButtonTest"
+            ref="html:input" ruleset="HTMLInputButton">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="btn" textequiv="test4">test4</html:label>
+      <html:input id="btn"
+                  type="button"
+                  aria-label="test1"
+                  aria-labelledby="l1 l2"
+                  value="name from value"
+                  alt="no name from al"
+                  src="no name from src"
+                  data="no name from data"
+                  title="name from title"/>
+    </markup>
+
+    <markup id="HTMLInputSubmitTest"
+            ref="html:input" ruleset="HTMLInputSubmit">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="btn-submit" textequiv="test4">test4</html:label>
+      <html:input id="btn-submit"
+                  type="submit"
+                  aria-label="test1"
+                  aria-labelledby="l1 l2"
+                  value="name from value"
+                  alt="no name from atl"
+                  src="no name from src"
+                  data="no name from data"
+                  title="no name from title"/>
+    </markup>
+
+    <markup id="HTMLInputResetTest"
+            ref="html:input" ruleset="HTMLInputReset">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="btn-reset" textequiv="test4">test4</html:label>
+      <html:input id="btn-reset"
+                  type="reset"
+                  aria-label="test1"
+                  aria-labelledby="l1 l2"
+                  value="name from value"
+                  alt="no name from alt"
+                  src="no name from src"
+                  data="no name from data"
+                  title="no name from title"/>
+    </markup>
+
+    <!--
+      Disabled due to intermittent failures (bug 1436323) which became more
+      frequent due to the landing of bug 1383682. The latter bug made loading
+      of images from cache much more consistent, which appears to have impacted
+      the timing for this test case. If the image is switched to a unique
+      image (e.g. always decoding since there is no cache), the failure rate
+      increases, presumably because the test is dependent on a specific ordering
+      of events, and implicitly assumes the image is loaded immediately.
+    -->
+
+    <!--
+    <markup id="HTMLInputImageTest"
+            ref="html:input" ruleset="HTMLInputImage">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="btn-image" textequiv="test4">test4</html:label>
+      <html:input id="btn-image"
+                  type="image"
+                  aria-label="test1"
+                  aria-labelledby="l1 l2"
+                  alt="name from alt"
+                  value="name from value"
+                  src="../moz.png"
+                  data="no name from data"
+                  title="name from title"/>
+    </markup>
+    -->
+
+    <markup id="HTMLInputImageNoValidSrcTest"
+            ref="html:input" ruleset="HTMLInputImageNoValidSrc">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="btn-image" textequiv="test4">test4</html:label>
+      <html:input id="btn-image"
+                  type="image"
+                  aria-label="test1"
+                  aria-labelledby="l1 l2"
+                  alt="name from alt"
+                  value="name from value"
+                  data="no name from data"
+                  title="no name from title"/>
+    </markup>
+
+    <markup id="HTMLOptionTest"
+            ref="html:select/html:option[1]" ruleset="HTMLOption">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:select>
+        <html:option id="opt"
+                     aria-label="test1"
+                     aria-labelledby="l1 l2"
+                     label="test4"
+                     title="test5"
+                     textequiv="option1">option1</html:option>
+        <html:option>option2</html:option>
+      </html:select>
+    </markup>
+
+    <markup id="HTMLImageTest"
+            ref="html:img" ruleset="HTMLImg">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:img id="img"
+                aria-label="Logo of Mozilla"
+                aria-labelledby="l1 l2"
+                alt="Mozilla logo"
+                title="This is a logo"
+                src="../moz.png"/>
+    </markup>
+
+    <markup id="HTMLImageEmptyAltTest"
+            ref="html:img" ruleset="HTMLImgEmptyAlt">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:img id="imgemptyalt"
+                 aria-label="Logo of Mozilla"
+                 aria-labelledby="l1 l2"
+                 title="This is a logo"
+                 alt=""
+                 src="../moz.png"/>
+    </markup>
+
+    <markup id="HTMLTdTest"
+            ref="html:table/html:tr/html:td" ruleset="HTMLElm">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="tc" textequiv="test4">test4</html:label>
+      <html:table>
+        <html:tr>
+          <html:td id="tc"
+                   aria-label="test1"
+                   aria-labelledby="l1 l2"
+                   title="test5">
+            <html:p>This is a paragraph</html:p>
+            <html:a href="#">This is a link</html:a>
+            <html:ul>
+              <html:li>This is a list</html:li>
+            </html:ul>
+          </html:td>
+        </html:tr>
+      </html:table>
+    </markup>
+
+    <markup id="HTMLTdARIAGridCellTest"
+            ref="html:table/html:tr/html:td" ruleset="HTMLARIAGridCell">
+      <html:span id="l1" textequiv="test2">test2</html:span>
+      <html:span id="l2" textequiv="test3">test3</html:span>
+      <html:label for="gc" textequiv="test4">test4</html:label>
+      <html:table>
+        <html:tr>
+          <html:td id="gc"
+                   role="gridcell"
+                   aria-label="test1"
+                   aria-labelledby="l1 l2"
+                   textequiv="This is a paragraph This is a link • Listitem1 • Listitem2"
+                   title="This is a paragraph This is a link This is a list">
+            <html:p>This is a paragraph</html:p>
+            <html:a href="#">This is a link</html:a>
+            <html:ul>
+              <html:li>Listitem1</html:li>
+              <html:li>Listitem2</html:li>
+            </html:ul>
+          </html:td>
+        </html:tr>
+      </html:table>
+    </markup>
+
+    <markup id="HTMLTableTest"
+            ref="html:table" ruleset="HTMLTable">
+      <html:span id="l1" textequiv="lby_tst6_1">lby_tst6_1</html:span>
+      <html:span id="l2" textequiv="lby_tst6_2">lby_tst6_2</html:span>
+      <html:label for="t" textequiv="label_tst6">label_tst6</html:label>
+      <!-- layout frame are recreated due to varous reasons, here's text frame
+          placed after caption frame triggres table frame recreation when
+          caption element is removed from DOM; get rid text node after caption
+          node to make the test working -->
+      <html:table id="t" aria-label="arialabel_tst6"
+                  aria-labelledby="l1 l2"
+                  summary="summary_tst6"
+                  title="title_tst6">
+        <html:caption textequiv="caption_tst6">caption_tst6</html:caption><html:tr>
+          <html:td>cell1</html:td>
+          <html:td>cell2</html:td>
+        </html:tr>
+      </html:table>
+    </markup>
+
+  </rulesample>
+</rules>

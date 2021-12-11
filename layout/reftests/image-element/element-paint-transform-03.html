@@ -1,0 +1,37 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test paint servers that are rotated. We have to paint them as rectangles.
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0; filter:url(#thresholdAt128);">
+  <div style="width:80px; height:40px; border:1px solid black;
+              background:-moz-element(#d1);"></div>
+  <div style="width:80px; height:40px; border:1px solid black;
+              background:-moz-element(#d2);"></div>
+  <div style="width:80px; height:40px; border:1px solid black;
+              background:-moz-element(#d3);"></div>
+
+  <div style="overflow:hidden; height:0;">
+    <div id="d1" style="width:40px; height:40px; -moz-transform:rotate(-30deg);">
+      <div id="d2" style="width:40px; height:40px">
+        <div id="d3" style="border:10px solid blue; width:20px; height:20px;
+                            -moz-transform:rotate(30deg); background:lime">
+        </div>
+      </div>
+    </div>
+  </div>
+  <svg>
+    <filter id="thresholdAt128" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix"
+           values="255 0 0 0 -128 
+                   0 255 0 0 -128 
+                   0 0 255 0 -128 
+                   0 0 0 255 -128"/>
+
+    </filter>
+  </svg>
+</body>
+</html>

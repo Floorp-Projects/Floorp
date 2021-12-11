@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BracketArrow render 1`] = `
+<div
+  className="bracket-arrow down"
+  style={
+    Object {
+      "bottom": 50,
+      "left": 10,
+      "top": 20,
+    }
+  }
+/>
+`;
+
+exports[`BracketArrow render up 1`] = `
+<div
+  className="bracket-arrow up"
+  style={
+    Object {
+      "bottom": 50,
+      "left": 10,
+      "top": 20,
+    }
+  }
+/>
+`;

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/toolbox.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/components/NotificationBox.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/framework/components/DebugTargetErrorPage.css" type="text/css"?>
+
+
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        csp="default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'" role="application">
+  <linkset>
+    <html:link rel="localization" href="devtools/client/tooltips.ftl"/>
+  </linkset>
+
+  <html:link href="chrome://browser/skin/window.svg" rel="shortcut icon"/>
+  <script src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script src="chrome://global/content/viewSourceUtils.js"/>
+
+  <script src="chrome://devtools/content/framework/toolbox-init.js"/>
+
+  <vbox id="toolbox-container" flex="1" role="group">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-error-mount"/>
+    <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-notificationbox"/>
+    <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-toolbar-mount"
+         role="toolbar" />
+    <vbox flex="1" class="theme-body">
+      <!-- Set large flex to allow the toolbox-panel-webconsole to have a
+           height set to a small value without flexing to fill up extra
+           space. There must be a flex on both to ensure that the console
+           panel itself is sized properly -->
+      <box id="toolbox-deck" flex="10000" minheight="75" />
+      <splitter id="toolbox-console-splitter" class="devtools-horizontal-splitter" hidden="true" />
+      <box minheight="75" flex="1" id="toolbox-panel-webconsole" collapsed="true" />
+    </vbox>
+    <tooltip id="aHTMLTooltip" page="true" />
+  </vbox>
+</window>

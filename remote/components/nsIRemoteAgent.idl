@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The Gecko remote agent is an RPC subsystem that exposes
+ * browser-internal interfaces and services to the surrounding
+ * system.
+ *
+ * Consumers, whether remote or browser-local, can interface with
+ * the browser through an assorted set of services ranging from
+ * document introspection and script evaluation, to instrumentation,
+ * user interaction simulation, and event subscription.
+ */
+[scriptable, uuid(8f685a9d-8181-46d6-a71d-869289099c6d)]
+interface nsIRemoteAgent : nsISupports
+{
+  /**
+   * Address of the HTTP server under which the remote agent is reachable.
+   */
+  readonly attribute AString debuggerAddress;
+
+  /**
+   * Whether the remote agent is currently listening for new,
+   * incoming connections.
+   */
+  readonly attribute boolean listening;
+
+  /**
+   * Asynchronously starts the remote agent, and listens for new
+   * connections.
+   *
+   * The address must be a fully qualified URL that uses the "http://"
+   * scheme, and can optionally include a desired port.  If no port
+   * is chosen, the default port 9222 is used.
+   *
+   * If the requested port is 0, the system will atomically allocate
+   * a port.
+   *
+   * A "remote-listening" system observer notification with the URL
+   * of the main target's WebSocket will be emitted once listening.
+   *
+   * @throws NS_ERROR_LAUNCHED_CHILD_PROCESS
+   *     When called from a child process.
+   * @throws NS_ERROR_ILLEGAL_VALUE
+   *     If requested to bind to a non-loopback device
+   *     if remote.force-local is true.
+   */
+  void listen(in AString aURL);
+
+  /** Stops listening and drops existing connections. */
+  void close();
+};
+
+%{C++
+#define NS_REMOTEAGENT_CONTRACTID "@mozilla.org/remote/agent;1"
+#define NS_REMOTEAGENT_CID \
+  { 0x8f685a9d, 0x8181, 0x46d6, \
+    { 0xa7, 0x1d, x86, x92, x89, x09, x9c, x6d } }
+%}

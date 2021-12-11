@@ -1,0 +1,72 @@
+Squaring Algorithm
+
+When you are squaring a value, you can take advantage of the fact that
+half the multiplications performed by the more general multiplication
+algorithm (see 'mul.txt' for a description) are redundant when the
+multiplicand equals the multiplier.
+
+In particular, the modified algorithm is:
+
+k = 0
+for j <- 0 to (#a - 1)
+  w = c[2*j] + (a[j] ^ 2);
+  k = w div R
+
+  for i <- j+1 to (#a - 1)
+    w = (2 * a[j] * a[i]) + k + c[i+j]
+    c[i+j] = w mod R
+    k = w div R
+  endfor
+  c[i+j] = k;
+  k = 0;
+endfor
+
+On the surface, this looks identical to the multiplication algorithm;
+however, note the following differences:
+
+  - precomputation of the leading term in the outer loop
+
+  - i runs from j+1 instead of from zero
+
+  - doubling of a[i] * a[j] in the inner product
+
+Unfortunately, the construction of the inner product is such that we
+need more than two digits to represent the inner product, in some
+cases.  In a C implementation, this means that some gymnastics must be
+performed in order to handle overflow, for which C has no direct
+abstraction.  We do this by observing the following:
+
+If we have multiplied a[i] and a[j], and the product is more than half
+the maximum value expressible in two digits, then doubling this result
+will overflow into a third digit.  If this occurs, we take note of the
+overflow, and double it anyway -- C integer arithmetic ignores
+overflow, so the two digits we get back should still be valid, modulo
+the overflow.
+
+Having doubled this value, we now have to add in the remainders and
+the digits already computed by earlier steps.  If we did not overflow
+in the previous step, we might still cause an overflow here.  That
+will happen whenever the maximum value expressible in two digits, less
+the amount we have to add, is greater than the result of the previous
+step.  Thus, the overflow computation is:
+
+
+  u = 0
+  w = a[i] * a[j]
+
+  if(w > (R - 1)/ 2)
+    u = 1;
+
+  w = w * 2
+  v = c[i + j] + k
+
+  if(u == 0 && (R - 1 - v) < w)
+    u = 1
+
+If there is an overflow, u will be 1, otherwise u will be 0.  The rest
+of the parameters are the same as they are in the above description.
+
+------------------------------------------------------------------
+ This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.

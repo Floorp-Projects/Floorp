@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1390562
+-->
+<html>
+<head>
+  <title>Test for Bug 1390562</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1390562">Mozilla Bug 1390562</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editor" contenteditable></div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("editor");
+
+  editor.focus();
+
+  // Make the HTML editor's default break is <br>
+  document.execCommand("defaultParagraphSeparator", false, "br");
+
+  editor.innerHTML = "<div>abc<br><br></div>def";
+
+  // Collapse selection at the end of the first text node.
+  window.getSelection().collapse(editor.firstChild.firstChild, 3);
+
+  // Then, typing Enter should insert <br> for <div> container.
+  // This is necessary for backward compatibility.  When we change default
+  // value of "defaultParagraphSeparator" to "div" or "p", it may be possible
+  // to remove this hack.
+  synthesizeKey("KEY_Enter");
+
+  is(editor.innerHTML,
+     "<div>abc<br><br><br></div>def",
+     "Enter key press at end of a text node followed by a visible <br> shouldn't split <div> container when defaultParagraphSeparator is 'br'");
+
+  // Check also the case of <p> as container.
+  editor.innerHTML = "<p>abc<br><br></p>def";
+
+  // Collapse selection at the end of the first text node.
+  window.getSelection().collapse(editor.firstChild.firstChild, 3);
+
+  // Then, typing Enter should splitting <p> container and remove the visible
+  // <br> element next to the caret position.
+  // This is not consistent with <div> container, but this is better behavior
+  // and keep using this behavior.
+  synthesizeKey("KEY_Enter");
+
+  is(editor.innerHTML,
+     "<p>abc</p><p><br></p>def",
+     "Enter key press at end of a text node followed by a visible <br> should split <p> container and remove the visible <br> when defaultParagraphSeparator is 'br'");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

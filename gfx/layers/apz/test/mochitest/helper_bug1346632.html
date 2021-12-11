@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Dragging the scrollbar on a page with a fixed-positioned element just past the right edge of the content</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      height: 2000px;
+    }
+    #fixed {
+      width: 240px;
+      height: 100%;
+      position: fixed;
+      top: 0px;
+      right: -240px;
+      z-index: 1000;
+      overflow-y: scroll;
+    }
+    #fixed-content {
+      height: 2000px;
+    }
+  </style>
+  <script type="text/javascript">
+async function test() {
+  var root = document.scrollingElement;
+  var scrollPos = root.scrollTop;
+  var scrollPromise = new Promise((resolve, reject) => {
+    document.addEventListener("scroll", () => {
+      ok(root.scrollTop > scrollPos, "document scrolled after dragging scrollbar");
+      resolve();
+    }, {once: true});
+  });
+
+  if (window.innerWidth == root.clientWidth) {
+    // No scrollbar, abort the test. This can happen e.g. on local macOS runs
+    // with OS settings to only show scrollbars on trackpad/mouse activity.
+    ok(false, "No scrollbars found, cannot run this test!");
+    return;
+  }
+
+  var scrollbarX = (window.innerWidth + root.clientWidth) / 2;
+  // Move the mouse to the scrollbar
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 100,
+    type: "mousemove",
+  });
+  // mouse down
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 100,
+    type: "mousedown",
+  });
+  // drag vertically
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 150,
+    type: "mousemove",
+  });
+  // wait for the scroll listener to fire
+  await scrollPromise;
+  // and release
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 150,
+    type: "mouseup",
+  });
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  <div id="fixed">
+    <p id="fixed-content"></p>
+  </div>
+</body>
+</html>

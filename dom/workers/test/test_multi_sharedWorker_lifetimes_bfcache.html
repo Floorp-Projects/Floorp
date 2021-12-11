@@ -1,0 +1,128 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for SharedWorker</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+      <script class="testbody" type="text/javascript">
+        "use strict";
+
+        const windowRelativeURL = "multi_sharedWorker_frame_bfcache.html";
+        // This suffix will be used as a search query parameter when we are
+        // navigating from navigate.html to the multi_sharedWorker_frame_bfcache
+        // page again. Since we are not using history.back() we are not loading
+        // that page from bfcache, but instead loading it anew, while the page
+        // we loaded initially stays in bfcache. In order to not kick out the
+        // page that is currently in the bfcache, we need to use a different
+        // BroadcastChannel. So we use search query param as part of
+        // BroadcastChannel's  name.
+        const suffix = "?3";
+        const storedData = "0123456789abcdefghijklmnopqrstuvwxyz";
+        var bc, bc2, bc3;
+        bc = new BroadcastChannel("bugSharedWorkerLiftetime");
+        bc3 = new BroadcastChannel("bugSharedWorkerLiftetime" + suffix);
+        bc.onmessage = (event) => {
+          var msg = event.data;
+          var command = msg.command;
+          if (command == "debug") {
+            info(msg.message);
+          } else if (command == "fromWorker" || command == "loaded") {
+            sendToGenerator(msg.workerMessage);
+          }
+        }
+        bc3.onmessage = (event) => {
+          var msg = event.data;
+          var command = msg.command;
+          if (command == "finished") {
+            bc.close();
+            bc3.close();
+            bc2.close();
+            SimpleTest.finish();
+          } else if (command == "debug") {
+            info(msg.message);
+          } else if (command == "fromWorker" || command == "loaded") {
+            sendToGenerator(msg.workerMessage);
+          }
+        }
+        bc2 = new BroadcastChannel("navigate");
+        bc2.onmessage = (event) => {
+          if (event.data.command == "loaded") {
+            sendToGenerator();
+          }
+        }
+
+        function postToWorker(aBc, workerMessage) {
+          aBc.postMessage({command: "postToWorker", workerMessage});
+        }
+
+        let testGenerator = (function*() {
+          SimpleTest.waitForExplicitFinish();
+
+          // Open the window
+          window.open(windowRelativeURL, "testWin", "noopener");
+          yield undefined;
+
+          postToWorker(bc, { command: "retrieve" });
+
+          var msg = yield undefined;
+          is(msg.type, "result", "Got a result message");
+          is(msg.data, undefined, "No data stored");
+
+          postToWorker(bc, { command: "store", data: storedData });
+          postToWorker(bc, { command: "retrieve" });
+
+          msg = yield undefined;
+          is(msg.type, "result", "Got a result message");
+          is(msg.data, storedData, "Got stored data");
+
+
+          // Navigate when the bfcache is enabled.
+          info("Navigating to a different page");
+          bc.postMessage({command: "navigate", location: "navigate.html"});
+          yield undefined;
+
+          for (let i = 0; i < 3; i++) {
+            info("Running GC");
+            SpecialPowers.exactGC(sendToGenerator);
+            yield undefined;
+
+            // It seems using SpecialPowers.executeSoon() would make the
+            // entryGlobal being the BrowserChildGlobal (and that would make the
+            // baseURI in the location assignment below being incorrect);
+            // setTimeout on the otherhand ensures the entryGlobal is this
+            // window.
+            info("Waiting the event queue to clear");
+            setTimeout(sendToGenerator, 0);
+            yield undefined;
+          }
+
+          info("Navigating to " + windowRelativeURL);
+          bc2.postMessage({command: "navigate", location: windowRelativeURL + suffix});
+          yield undefined;
+
+          postToWorker(bc3, { command: "retrieve" });
+
+          msg = yield undefined;
+          is(msg.type, "result", "Got a result message");
+          is(msg.data, storedData, "Still have data stored");
+
+          bc3.postMessage({command: "finish"});
+        })();
+
+        let sendToGenerator = testGenerator.next.bind(testGenerator);
+
+        function runTest() {
+          // If Fission is disabled, the pref is no-op.
+          SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+            testGenerator.next();
+          });
+        }
+      </script>
+  </head>
+  <body onload="runTest()">
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html reftest-async-scroll>
+<head>
+    <meta charset="UTF-8">
+    <title>Fixed background inside blur filter</title>
+    <style>
+        .scrollable {
+            width: 100px;
+            height: 100px;
+            overflow: scroll;
+            scrollbar-width: none;
+        }
+        .bg {
+            width: 100px;
+            height: 100px;
+            background-image: url("repeatable-diagonal-gradient.png");
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .blur {
+            filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+<div class="scrollable"
+     reftest-displayport-x="0" reftest-displayport-y="0"
+     reftest-displayport-w="100" reftest-displayport-h="200"
+     reftest-async-scroll-x="0" reftest-async-scroll-y="100">
+    <div class="bg"></div>
+    <div class="bg blur"></div>
+</div>
+</body>
+</html>

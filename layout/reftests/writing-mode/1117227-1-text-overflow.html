@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1117227 - text-overflow on vertical text</title>
+  <style>
+    @font-face {
+      font-family: DejaVuSansMono;
+      src: url(../fonts/DejaVuSansMono.woff);
+    }
+    body {
+      font: 16px DejaVuSansMono;
+      text-orientation: sideways-right;
+    }
+    .c {
+      block-size: 3em; inline-size: 4em;
+      overflow: hidden;
+    }
+    .e { text-overflow: ellipsis; }
+    .ee { text-overflow: ellipsis ellipsis; }
+    .ec { text-overflow: ellipsis clip; }
+    .s { text-overflow: '$'; }
+    .ss { text-overflow: '^' '$'; }
+    .se { text-overflow: '^' ellipsis; }
+    .vlr { writing-mode: vertical-lr; }
+    .vrl { writing-mode: vertical-rl; }
+    .t { margin-inline-start: -1em; }
+
+    #tests { position: relative; }
+    #tests > div { position: absolute; }
+    .r1 { top: 0em; }
+    .r2 { top: 4.5em; }
+    .c1 { left: 0em; }
+    .c2 { left: 4em; }
+    .c3 { left: 8em; }
+    .c4 { left: 12em; }
+    .c5 { left: 16em; }
+    .c6 { left: 20em; }
+  </style>
+</head>
+<body>
+  <p style="font-family: sans-serif">Test for text-overflow in vertical mode:</p>
+
+  <div id="tests">
+    <div class="r1 c1"><div class="c e vrl"><span class="t">0123456789</span></div></div>
+    <div class="r1 c2"><div class="c e vlr"><span class="t">0123456789</span></div></div>
+    <div class="r1 c3"><div class="c ee vrl"><span class="t">0123456789</span></div></div>
+    <div class="r1 c4"><div class="c ee vlr"><span class="t">0123456789</span></div></div>
+    <div class="r1 c5"><div class="c ec vrl"><span class="t">0123456789</span></div></div>
+    <div class="r1 c6"><div class="c ec vlr"><span class="t">0123456789</span></div></div>
+
+    <div class="r2 c1"><div class="c s vrl"><span class="t">0123456789</span></div></div>
+    <div class="r2 c2"><div class="c s vlr"><span class="t">0123456789</span></div></div>
+    <div class="r2 c3"><div class="c ss vrl"><span class="t">0123456789</span></div></div>
+    <div class="r2 c4"><div class="c ss vlr"><span class="t">0123456789</span></div></div>
+    <div class="r2 c5"><div class="c se vrl"><span class="t">0123456789</span></div></div>
+    <div class="r2 c6"><div class="c se vlr"><span class="t">0123456789</span></div></div>
+  </div>
+</body>
+</html>

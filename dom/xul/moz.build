@@ -1,0 +1,89 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "XUL")
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DEFINES["MOZ_BREAK_XUL_OVERLAYS"] = True
+
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+
+if CONFIG["MOZ_XUL"]:
+    EXPORTS += [
+        "nsXULCommandDispatcher.h",
+        "nsXULElement.h",
+        "nsXULPrototypeDocument.h",
+        "nsXULSortService.h",
+    ]
+
+    EXPORTS.mozilla.dom += [
+        "XULBroadcastManager.h",
+        "XULFrameElement.h",
+        "XULMenuElement.h",
+        "XULPersist.h",
+        "XULPopupElement.h",
+        "XULTextElement.h",
+        "XULTooltipElement.h",
+        "XULTreeElement.h",
+    ]
+
+    UNIFIED_SOURCES += [
+        "nsXULCommandDispatcher.cpp",
+        "nsXULContentSink.cpp",
+        "nsXULContentUtils.cpp",
+        "nsXULElement.cpp",
+        "nsXULPopupListener.cpp",
+        "nsXULPrototypeCache.cpp",
+        "nsXULPrototypeDocument.cpp",
+        "nsXULSortService.cpp",
+        "XULBroadcastManager.cpp",
+        "XULFrameElement.cpp",
+        "XULMenuElement.cpp",
+        "XULPersist.cpp",
+        "XULPopupElement.cpp",
+        "XULTextElement.cpp",
+        "XULTooltipElement.cpp",
+        "XULTreeElement.cpp",
+    ]
+
+XPIDL_SOURCES += [
+    "nsIBrowserController.idl",
+    "nsIController.idl",
+    "nsIControllers.idl",
+]
+
+XPIDL_MODULE = "xul"
+
+EXPORTS.mozilla.dom += [
+    "ChromeObserver.h",
+]
+
+
+UNIFIED_SOURCES += [
+    "ChromeObserver.cpp",
+    "nsXULControllers.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/docshell/base",
+    "/dom/base",
+    "/dom/html",
+    "/dom/xml",
+    "/layout/base",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/xul",
+    "/layout/xul/tree",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

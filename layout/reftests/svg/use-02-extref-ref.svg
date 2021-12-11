@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <g id="testContent" color="forestgreen">
+    <defs>
+      <linearGradient id="linearGrad" gradientUnits="objectBoundingBox" y1="0" x1="0" y2="1" x2="1">
+      	<stop offset="0%" stop-color="royalblue"/>
+      	<stop offset="33%" stop-color="white"/>
+      	<stop offset="50%" stop-color="darkblue"/>
+      	<stop offset="66%" stop-color="white"/>
+      	<stop offset="100%" stop-color="royalblue"/>
+      </linearGradient>
+
+      <radialGradient id="radialGrad" gradientUnits="objectBoundingBox" cx="0.5" cy="0.5" r="0.5" fx="0.15" fy="0.15">
+      	<stop offset="000%" stop-color="orange" />
+      	<stop offset="033%" stop-color="red"    />
+      	<stop offset="050%" stop-color="gold"   />
+      	<stop offset="066%" stop-color="red"    />
+      	<stop offset="100%" stop-color="orange" />
+      </radialGradient>
+    </defs>
+
+    <rect x="0" y="0" width="200" height="125" stroke="none"
+	  fill="url(#linearGrad)"/>
+    <rect x="200" y="0" width="200" height="125" stroke="none"
+	  fill="currentColor"/>
+    <rect x="0" y="125" width="200" height="125" stroke="none"
+	  fill="currentColor"/>
+    <rect x="200" y="125" width="200" height="125" stroke="none" fill="url(#radialGrad)" />
+  </g>
+</svg>

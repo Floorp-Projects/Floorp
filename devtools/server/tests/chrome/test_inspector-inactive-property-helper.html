@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test for InactivePropertyHelper</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+    <script type="application/javascript">
+"use strict";
+SimpleTest.waitForExplicitFinish();
+
+(async function() {
+  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const Services = require("Services");
+  const { inactivePropertyHelper } = require("devtools/server/actors/utils/inactive-property-helper");
+  let { isPropertyUsed } = inactivePropertyHelper;
+  isPropertyUsed = isPropertyUsed.bind(inactivePropertyHelper);
+
+  const INACTIVE_CSS_PREF = "devtools.inspector.inactive.css.enabled";
+  Services.prefs.setBoolPref(INACTIVE_CSS_PREF, true);
+  SimpleTest.registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(INACTIVE_CSS_PREF);
+  });
+
+  const FOLDER = "./inactive-property-helper";
+
+  // Each file should `export default` an array of objects, representing each test case.
+  // A single test case is an object of the following shape:
+  // - {String} info: a summary of the test case
+  // - {String} property: the CSS property that should be tested
+  // - {String|undefined} tagName: the tagName of the element we're going to test.
+  //                               Optional only if there's a createTestElement property.
+  // - {Function|undefined} createTestElement: A function that takes a node as a parameter
+  //                                           where elements used for the test case will
+  //                                           be appended. The function should return the
+  //                                           element that will be passed to
+  //                                           isPropertyUsed.
+  //                                           Optional only if there's a tagName property
+  // - {Array<String>} rules: An array of the rules that will be applied on the element.
+  //                          This can't be empty as isPropertyUsed need a rule.
+  // - {Integer|undefined} ruleIndex: If there are multiples rules in `rules`, the index
+  //                                  of the one that should be tested in isPropertyUsed.
+  // - {Boolean} isActive: should the property be active (isPropertyUsed `used` result).
+  const testFiles = [
+    "align-content.js",
+    "flex-grid-item-properties.js",
+    "float.js",
+    "gap.js",
+    "grid-container-properties.js",
+    "grid-with-absolute-properties.js",
+    "margin-padding.js",
+    "max-min-width-height.js",
+    "place-items-content.js",
+    "positioned.js",
+    "scroll-padding.js",
+    "vertical-align.js",
+    "table.js",
+    "text-overflow.js",
+  ].map(file => `${FOLDER}/${file}`);
+
+  // Import all the test cases
+  const tests =
+  // eslint-disable-next-line no-unsanitized/method
+    (await Promise.all(testFiles.map(f => import(f).then(data => data.default)))).flat();
+
+  for (const {
+    info: summary,
+    property,
+    tagName,
+    createTestElement,
+    rules,
+    ruleIndex,
+    isActive
+  } of tests) {
+    // Create an element which will contain the test elements.
+    const main = document.createElement("main");
+    document.firstElementChild.appendChild(main);
+
+    // Apply the CSS rules to the document.
+    const style = document.createElement("style");
+    main.append(style);
+    for (const dataRule of rules) {
+      style.sheet.insertRule(dataRule);
+    }
+    const rule = style.sheet.cssRules[ruleIndex || 0];
+
+    // Create the test elements
+    let el;
+    if (createTestElement) {
+      el = createTestElement(main);
+    } else {
+      el = document.createElement(tagName);
+      main.append(el);
+    }
+
+    const { used } = isPropertyUsed(el, getComputedStyle(el), rule, property);
+    ok(used === isActive, summary);
+
+    main.remove();
+  }
+  SimpleTest.finish();
+})();
+    </script>
+  </head>
+  <body></body>
+</html>

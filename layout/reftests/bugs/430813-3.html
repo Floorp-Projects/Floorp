@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Testcase, bug 430813</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+<div style="margin-bottom: 1px">text</div>
+<div style="float:left;width:90px;height:300px"></div>
+<div style="overflow:hidden; font-size: 16px;">
+<!-- restrict size to prevent wrap, can lead to antialiasing problem in the test -->
+<span style="padding:0.2em;">This text should be near the top of the page, not pushed below the float.</span>
+</div>
+</body>
+</html>

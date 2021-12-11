@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS 2.1 Test Suite: handling of blocks inside inlines</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/visuren.html#anonymous-block-level"/>
+    <link rel="help" href="http://www.w3.org/TR/CSS21/visuren.html#inline-formatting"/>
+    <meta name="flags" content="" />
+    <style>
+      .r { direction: rtl; }
+      .l { direction: ltr; }
+      span { border: 2px solid; padding: 0 10px 0 5px; margin: 0 60px 0 30px; }
+    </style>
+  </head>
+  <body>
+    <div class="r"><span>One<div></div>Two</span></div>
+  </body>
+</html>

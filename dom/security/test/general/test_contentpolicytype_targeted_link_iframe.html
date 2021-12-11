@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1255240 - Test content policy types within content policies for targeted links in iframes</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * Let's load a link into a targeted iframe and make sure the content policy
+ * type used for content policy checks is of TYPE_SUBDOCUMENT.
+ */
+
+/* eslint-env mozilla/frame-script */
+function createChromeScript() {
+  const POLICYNAME = "@mozilla.org/testpolicy;1";
+  const POLICYID = Components.ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
+  const EXPECTED_URL =
+        "http://mochi.test:8888/tests/dom/security/test/general/file_contentpolicytype_targeted_link_iframe.sjs?innerframe";
+
+  var policy = {
+    // nsISupports implementation
+    QueryInterface: ChromeUtils.generateQI([
+       "nsIFactory",
+       "nsIContentPolicy",
+    ]),
+
+    // nsIFactory implementation
+    createInstance(outer, iid) {
+      return this.QueryInterface(iid);
+    },
+
+    // nsIContentPolicy implementation
+    shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+      if (contentLocation.asciiSpec === EXPECTED_URL) {
+        sendAsyncMessage("loadBlocked", { policyType: loadInfo.externalContentPolicyType});
+        Services.catMan.deleteCategoryEntry(
+          "content-policy",
+          POLICYNAME,
+          false
+        );
+        componentManager.unregisterFactory(POLICYID, policy);
+        return Ci.nsIContentPolicy.REJECT_REQUEST;
+      }
+      return Ci.nsIContentPolicy.ACCEPT;
+    },
+
+    shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+      return Ci.nsIContentPolicy.ACCEPT;
+    }
+  };
+
+  // Register content policy
+  var componentManager = Components.manager.QueryInterface(
+    Ci.nsIComponentRegistrar
+  );
+
+  componentManager.registerFactory(
+    POLICYID,
+    "Test content policy",
+    POLICYNAME,
+    policy
+  );
+  Services.catMan.addCategoryEntry(
+    "content-policy",
+    POLICYNAME,
+    POLICYNAME,
+    false,
+    true
+  );
+
+  // Adding a new category dispatches an event to update
+  // caches, so we need to also dispatch an event to make
+  // sure we don't start the load until after that happens.
+  Services.tm.dispatchToMainThread(() => {
+    sendAsyncMessage("setupComplete");
+  });
+}
+
+add_task(async function() {
+  let chromeScript = SpecialPowers.loadChromeScript(createChromeScript);
+  await chromeScript.promiseOneMessage("setupComplete");
+
+  var testframe = document.getElementById("testframe");
+  testframe.src =
+      "file_contentpolicytype_targeted_link_iframe.sjs?testframe";
+
+  let result = await chromeScript.promiseOneMessage("loadBlocked");
+
+  is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
+     "content policy type should TYPESUBDOCUMENT");
+
+  chromeScript.destroy();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIURL.idl"
+
+/**
+ * JAR URLs have the following syntax
+ *
+ * jar:<jar-file-uri>!/<jar-entry>
+ *
+ * EXAMPLE: jar:http://www.big.com/blue.jar!/ocean.html
+ *
+ * The nsIURL methods operate on the <jar-entry> part of the spec.
+ */
+[scriptable, builtinclass, uuid(646a508c-f786-4e14-be6d-8dda2a633c60)]
+interface nsIJARURI : nsIURL {
+
+    /**
+     * Returns the root URI (the one for the actual JAR file) for this JAR
+     * (e.g., http://www.big.com/blue.jar).
+     */
+    readonly attribute nsIURI JARFile;
+
+    /**
+     * Returns the entry specified for this JAR URI (e.g., "ocean.html").  This
+     * value may contain %-escaped byte sequences.
+     */
+    readonly attribute AUTF8String JAREntry;
+};
+
+[builtinclass, uuid(d66df117-eda7-4324-b4e4-1f670ff6718e)]
+interface nsIJARURIMutator : nsISupports
+{
+    /**
+     * Will initalize a URI using the passed spec, baseURI and charset.
+     */
+    void setSpecBaseCharset(in AUTF8String aSpec, in nsIURI aBase, in string aCharset);
+};

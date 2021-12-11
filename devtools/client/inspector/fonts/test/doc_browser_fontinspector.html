@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<style>
+  @font-face {
+    font-family: bar;
+    src: url(bad/font/name.ttf), url(ostrich-regular.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: barnormal;
+    font-weight: normal;
+    src: url(ostrich-regular.ttf);
+  }
+  @font-face {
+    font-family: bar;
+    font-weight: bold;
+    src: url(ostrich-black.ttf);
+  }
+  @font-face {
+    font-family: bar;
+    font-weight: 800;
+    src: url(ostrich-black.ttf);
+  }
+  body{
+    /* Arial doesn't exist on Linux. Liberation Sans is the default sans-serif there. */
+    font-family:Arial, "Liberation Sans";
+    font-size: 36px;
+  }
+  div {
+    font-size: 1em;
+    font-family:bar, "Missing Family", sans-serif;
+  }
+  .normal-text {
+    font-family: barnormal;
+    font-weight: normal;
+  }
+  .bold-text {
+    font-family: bar;
+    font-weight: bold;
+    font-size: inherit;
+  }
+  .black-text {
+    font-family: bar;
+    font-weight: 800;
+  }
+  .viewport-size {
+    font-size: 10vw;
+  }
+  .input-field {
+    font-family: bar;
+    font-size: 36px;
+    color: blue;
+  }
+</style>
+
+<body>
+  BODY
+  <div>DIV
+    <span class="nested-span">NESTED SPAN</span>
+  </div>
+  <iframe src="test_iframe.html"></iframe>
+  <div class="normal-text">NORMAL DIV</div>
+  <div class="bold-text">BOLD DIV</div>
+  <div class="black-text">800 DIV</div>
+  <div class="empty"></div>
+  <div class="viewport-size">VIEWPORT SIZE</div>
+  <input class="input-field" value="Input text value"/>
+</body>

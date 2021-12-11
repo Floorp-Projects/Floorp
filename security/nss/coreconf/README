@@ -1,0 +1,510 @@
+OVERVIEW of "ns/coreconf":
+
+    This README file is an attempt to provide the reader with a simple
+    synopsis of the "ns/coreconf" build system which was originally
+    fundamentally designed and built to accomodate Netscape's binary
+    release model.  Wherever possible, an attempt has been made to
+    comply with the NSPR 2.0 build system, including mimicing the
+    compiler/linker flags, and directory naming structure.  The reader
+    should keep in mind that the system builds binary releases of
+    header files, class files, libraries, and executables on numerous
+    flavors of UNIX and Windows operating systems.  Unfortunately,
+    no serious attempt has ever been made to incorporate an ability to
+    generate cross-platform binaries on an Apple MacIntosh platform.
+
+    Note that this file will not attempt to redefine or document the
+    architecture of this system.  However, documents on this subject
+    are available at the following URL:
+
+        http://warp/hardcore/prj-ttools/specs/release/index.html
+
+
+
+DEPENDENCIES of "ns/coreconf":
+
+    The "ns/coreconf" build system requires the specified versions of
+    the following platform-dependent tools:
+
+        UNIX Platforms:
+        --------------
+        gmake (version 3.74 or later)
+        perl 4.0 (NOTE:  perl 5.003 or later recommended)
+        uname
+
+        Windows Platforms:
+        -----------------
+        gmake 3.74 (must use hacked Netscape version)
+        shmsdos.exe (contained in Netscape gmake.exe)
+        nsinstall.exe (contained in Netscape gmake.exe)
+        perl.exe (version 4.0 for everything except testing;
+                  NOTE:  MKS toolkit perl 5.002 is broken)
+        perl5.exe (for testing;
+                   NOTE:  perl 5.003 or later recommended;
+                          MKS toolkit perl 5.002 is broken)
+        uname.exe (use nstools version)
+
+ENHANCEMENTS to "ns/coreconf":
+
+    With the advent of Certificate Server 4.0 using the ns/coreconf
+    build system, several changes had to be made to enhance
+    ns/coreconf support for building Java/JNI classes/programs, as
+    well as libraries slated to be released as binaries.  While the
+    following may not represent an exhaustive list of these changes,
+    it does attempt to be at least somewhat comprehensive:
+
+        (1) During the course of these enhancements, a total of
+            four files have been modified, and four new files have
+            been added.
+
+            The following files have been modified:
+
+                - command.mk:    removed old definition of JAR
+
+                - config.mk:     added include statement of new
+                                 "jdk.mk" file
+
+                - ruleset.mk:    allowed the $(MKPROG) variable to be
+                                 overridden by supplying it with a
+                                 default value of $(CC); augmented
+                                 numerous definitions to enhance
+                                 ability of ns/coreconf to produce
+                                 a more robust set of libraries;
+                                 added some JNI definitions; PACKAGE
+                                 definition may be overridden by new
+                                 "jdk.mk" file
+
+                - rules.mk:      separated the compile phase of a
+                                 program from the link phase of a
+                                 program such that a developer can
+                                 now strictly override program linkage
+                                 by simply supplying a $(MKPROG)
+                                 variable; augmented NETLIBDEPTH
+                                 to use CORE_DEPTH but retain backward
+                                 compatibility; added JNI section;
+                                 modified .PRECIOUS rule;
+
+            The following files have been added:
+
+                - README:        this file; an ASCII-based text
+                                 document used to summarize the
+                                 ns/coreconf build system and
+                                 suitable (paginated) for printing
+
+                - jdk.mk:        a file comprising most (if not all)
+                                 of the default Java related build
+                                 information; the definitions in this
+                                 file are only included if NS_USE_JDK
+                                 has been defined
+
+                - jniregen.pl:   a perl script used to create a
+                                 dependency for when JNI files should
+                                 be regenerated (based upon any change
+                                 to the ".class" file from which the
+                                 ".h" file was originally generated)
+
+                - outofdate.pl:  a perl script used to create a
+                                 dependency for when ".class" files
+                                 should be regenerated (based upon
+                                 any change to the ".java" file
+                                 from which the ".class" file was
+                                 originally generated)
+
+        (2) As stated above, the ns/coreconf build system now separates
+            the link phase of a program from its compilation phase.
+            While ns/coreconf still works exactly as it used to because
+            the $(MKPROG) variable is assigned $(CC) by default, a developer
+            may now override this behavior by simply supplying their
+            own unique value for $(MKPROG) on every platform.  This allows
+            a program compiled with $(CC) to link with external libraries
+            that may contain "C++" linkage.  Before this change, a
+            programmer would need to reference their own local copy of
+            rules.mk (see the ns/sectools/cmd/pk12util program for
+            an example of how this used to be accomplished).
+
+        (3) Currently, the ns/coreconf build system differs from the
+            NSPR 2.0 build system which utilizes an "_s" to denote
+            static libraries from import libraries.  In fact, the
+            ns/coreconf build system adds no prefixes or suffixes to
+            distinguish one version of static libraries from another.
+            Note that both the ns/coreconf build system as well as the
+            NSPR 2.0 build system do nothing to provide a method of
+            distinguishing 16-bit from 32-bit static libraries on the
+            same machine, either, since:
+
+                a) this might only provide difficulty during
+                   development, since static libraries always
+                   need to be embedded within a program
+                   (note this is highly unlikely, since libraries
+                    for different platforms are subdivided via
+                    a well-known subdirectory structure, and
+                    a developer may use multiple trees for
+                    development),
+
+                b) this maintains backwards compatibility,
+                   something very important since no legacy
+                   programs will need to change their link phase, and
+
+                c) Netscape as a company has dropped any plans
+                   of future development of 16-bit products.
+
+        (4) Since several members of the Hardcore Security group did
+            not favor NSPR 2.0's solution of adding an "_s" to static
+            libraries on Windows platforms as a method to distinguish
+            them from their import library cousins, a different solution
+            was proposed and has been recently implemented for ns/coreconf:
+
+                - a 16 has been added as a suffix to both dynamic and
+                  import libraries built on 16-bit Windows platforms
+
+                - a 32 has been added as a suffix to both dynamic and
+                  import libraries built on 32-bit Windows platforms
+
+            Since the HCL release process currently only contains a
+            single instance of building a dynamic library,
+            ns/security/lib/fortcrypt/fort12.dll, the impact of this
+            change should be relatively small.  (Note: HCL was the
+            old name of NSS.)
+
+            It should be noted that although this would additionally
+            limit the 8.3 namespace on 16-bit platforms, it is highly
+            unlikely that any future development will be performed on
+            this platform.
+
+        (5) The $(LIBRARY_VERSION) tag has been added to all non-static
+            libraries created on UNIX operating systems to alleviate
+            any future confusion for binary releases which utilize this
+            tag.  Again, it should be noted that this tag is only
+            utilized on non-static libraries, since more than one
+            version of the library may need to exist simultaneously
+            if multiple products are utilized.
+
+            Currently, only one HCL released library utilizes this tag:
+
+                ns/security/lib/fortcrypt/fort12.a
+                (e. g. - in this library, the tag has been set to '12')
+
+            Again, it should be noted that although this would
+            additionally limit the 8.3 namespace on 16-bit platforms,
+            it is highly unlikely that any future development will be
+            performed on this platform.
+
+        (6) The $(JDK_DEBUG_SUFFIX) extension has been added to all
+            library and program names to support debug versions of
+            Java programs (e. g. - java_g, javac_g, etc).
+
+            Once again, it should be noted that although this would
+            additionally limit the 8.3 namespace on 16-bit platforms,
+            it is highly unlikely that any future Java development
+            will be performed on this platform.
+
+        (7) Most (if not all) default definitions for java have been
+            encapsulated within their own file, jdk.mk, which is
+            always included by default in ns/coreconf/config.mk.
+            However, the definitions within this file are only ever
+            activated if NS_USE_JDK has been set to be 1.
+
+
+        (8) Two perl scripts (jniregen.pl and outofdate.pl) have been
+            added to the system to foster a more robust development
+            environment for composing Java and JNI programs
+            utilizing the ns/coreconf build system.  Both of these
+            perl scripts are related to resolving dependencies which
+            can not be accomplished through normal makefile dependencies.
+
+        (9) This file, README, was created in an attempt to allow
+            developers who have familiarity with ns/coreconf a simple
+            roadmap for what has changed, as well as a top-level view of
+            what comprises ns/coreconf.  This file was written in
+            ASCII (rather than HTML) primarily to promote simple
+            paginated printing.
+
+OVERVIEW of "config.mk":
+
+    This file contains the configuration information necessary to
+    build each "Core Components" source module:
+
+        include file name       Purpose
+        ===================     =======================================
+        arch.mk                 source and release <architecture> tags
+
+        command.mk              default command macros 
+				(NOTE: may be overridden in $(OS_CONFIG).mk)
+
+        $(OS_CONFIG).mk         <architecture>-specific macros
+                                (dependent upon <architecture> tags)
+
+        tree.mk                 release <tree> tags 
+				(dependent upon <architecture> tags)
+
+        module.mk               source and release <component> tags 
+				(NOTE:  A component is also called a module 
+				or a subsystem.  This file is dependent upon
+                                $(MODULE) being defined on the command
+                                line, as an environment variable, or in
+                                individual makefiles, or more
+                                appropriately, manifest.mn)
+
+        version.mk              release <version> tags 
+				(dependent upon $(MODULE) being defined on 
+				the command line, as an environment variable, 
+				or in individual makefiles, or more
+                                appropriately, manifest.mn)
+
+        location.mk             macros to figure out binary code location
+                                (dependent upon <platform> tags)
+
+        source.mk               <component>-specific source path
+                                (dependent upon <user_source_tree>,
+                                <source_component>, <version>, and
+                                <platform> tags)
+
+        headers.mk              include switch for support header files 
+				(dependent upon <tree>, <component>, <version>,
+                                and <platform> tags)
+
+        prefix.mk               compute program prefixes
+
+        suffix.mk               compute program suffixes 
+				(dependent upon <architecture> tags)
+
+        jdk.mk                  define JDK 
+				(dependent upon <architecture>,
+                                <source>, and <suffix> tags)
+
+        ruleset.mk              Master "Core Components" rule set
+                                (should always be the last file
+                                included by config.mk)
+
+
+
+OVERVIEW of "rules.mk":
+
+    The "rules.mk" file consists of four sections.  The first section
+    contains the "master" build rules for all binary releases.  While
+    this section can (and should) largely be thought of as "language"
+    independent, it does utilize the "perl" scripting language to
+    perform both the "import" and "release" of binary modules.
+
+    The rules which dwell in this section and their purpose:
+
+
+        CATEGORY/rule::         Purpose
+        ===================     =======================================
+
+        GENERAL
+        -------
+        all::                   "default" all-encompassing rule which
+                                performs "export libs program install"
+
+        export::                recursively copy specified
+                                cross-platform header files to the
+                                $(SOURCE_XPHEADERS_DIR) directory;
+                                recursively copy specified
+                                machine-dependent header files to the
+                                $(SOURCE_MDHEADERS_DIR) directory;
+                                although all rules can be written to
+                                repetively "chain" into other sections,
+                                this rule is the most commonly used
+                                rule to "chain" into other sections
+                                such as Java providing a simple
+                                mechanism which allows no need for
+                                developers to memorize specialized
+                                rules
+
+        libs::                  recursively build
+                                static (archival) $(LIBRARY), shared
+                                (dynamic link) $(SHARED_LIBRARY),
+                                and/or import $(IMPORT_LIBRARY)
+                                libraries
+
+        program::               recursively build $(PROGRAM)
+                                executable
+
+        install::               recursively copy all libraries to
+                                $(SOURCE_LIB_DIR) directory;
+                                recursively copy all executables to
+                                $(SOURCE_BIN_DIR) directory
+
+        clean::                 remove all files specified in the
+                                $(ALL_TRASH) variable
+
+        clobber::               synonym for "clean::" rule
+
+        realclean::             remove all files specified by
+                                $(wildcard *.OBJ), dist, and in
+                                the $(ALL_TRASH) variable
+
+        clobber_all::           synonym for "realclean::" rule
+
+
+        RELEASE
+        -------
+        release_clean::         remove all files from the
+                                $(SOURCE_RELEASE_PREFIX) directory
+
+        release::               place specified VERSION of the
+                                binary release in the appropriate
+                                $(RELEASE_TREE) directory
+
+        release_export::        recursively copy specified
+                                cross-platform header files to the
+                                $(SOURCE_XPHEADERS_DIR)/include
+                                directory
+
+        release_md::            recursively copy all libraries to
+                                $(SOURCE_RELEASE_PREFIX)/
+                                $(SOURCE_RELEASE_LIB_DIR) directory;
+                                recursively copy all executables to
+                                $(SOURCE_RELEASE_PREFIX)/
+                                $(SOURCE_RELEASE_BIN_DIR) directory
+
+
+        TOOLS and AUTOMATION
+        --------------------
+        platform::              tool used to display the platform name
+                                as composed within the "arch.mk" file
+
+        autobuild::             automation rule used by "Bonsai" and
+                                "Tinderbox" to automatically generate
+                                binary releases on various platforms
+
+        check::                 automation tool used to run the
+                                "regress" and "reporter" tools 
+                                on various regression test suites
+
+    The second section of "rules.mk" primarily contains several
+    "language" dependent build rules for binary releases.  These are
+    generally "computed" rules (created on the "fly"), and include
+    rules used by "C", "C++", assembly, the preprocessor, perl, and
+    the shell.
+
+    The rules which dwell in this section and their purpose:
+
+
+        CATEGORY/rule::                   Purpose
+        ===================               =============================
+
+        LIBRARIES
+        ---------
+        $(LIBRARY):                       build the static library
+                                          specified by the $(LIBRARY)
+                                          variable
+
+        $(IMPORT_LIBRARY):                build the import library
+                                          specified by the
+                                          $(IMPORT_LIBRARY) variable
+
+        $(SHARED_LIBRARY):                build the shared
+                                          (dynamic link) library
+                                          specified by the
+                                          $(SHARED_LIBRARY) variable
+
+
+        PROGRAMS
+        --------
+        $(PROGRAM):                       build the binary executable
+                                          specified by the $(PROGRAM)
+                                          rule
+
+        $(OBJDIR)/
+        $(PROG_PREFIX)%.pure:             build the "purified" binary
+                                          executable specified by this
+                                          rule
+
+
+        OBJECTS
+        -------
+        $(OBJDIR)/
+        $(PROG_PREFIX)%$(OBJ_SUFFIX):     build the object file
+                                          associated with the
+                                          makefile rule dependency:
+
+                                              %.c   = C file
+                                              %.cpp = C++ file
+                                              %.cc  = C++ file
+                                              %.s   = assembly file
+                                              %.S   = assembly file
+
+        $(OBJDIR)/
+        $(PROG_PREFIX)%:                  (NOTE: deprecated rule)
+                                          build the object file
+                                          associated with the
+                                          makefile rule dependency:
+
+                                              %.cpp = C++ file
+
+        MISCELLANEOUS
+        -------------
+        %.i:                              build the preprocessor file
+                                          associated with the
+                                          makefile rule dependency:
+
+                                              %.c   = C file
+                                              %.cpp = C++ file
+
+        %:                                process the specified file
+                                          using the method associated
+                                          with the makefile rule
+                                          dependency:
+
+                                              %.pl = perl script
+                                              %.sh = shell script
+
+        alltags:                          tool used to recursively
+                                          create a "ctags"-style
+                                          file for reference
+
+    The third section of "rules.mk' primarily contains several JAVA
+    "language" build rules for binary releases.  These are also
+    generally "computed" rules (created on the "fly").
+
+    The rules which dwell in this section and their purpose:
+
+
+        CATEGORY/rule::                   Purpose
+        ===================               =============================
+        $(JAVA_DESTPATH)::                create directory specified
+                                          as the Java destination path
+                                          for where classes are
+                                          deposited
+
+        $(JAVA_DESTPATH)/$(PACKAGE)::     create directories specified
+                                          within the $(PACKAGE)
+                                          variable
+
+        $(JMCSRCDIR)::                    create directory specified
+                                          as the JMC destination path
+
+        $(JRI_HEADER_CFILES):             used to generate/regenerate
+                                          JRI header files for "C"
+
+        $(JRI_STUB_CFILES):               used to generate/regenerate
+                                          JRI stub files for "C"
+
+        $(JNI_HEADERS):                   used to generate/regenerate
+                                          JNI header files for "C"
+
+    The fourth section of "rules.mk" primarily contains miscellaneous
+    build rules for binary releases.  Many of these rules are here to
+    create new subdirectories, manage dependencies, and/or override
+    standard gmake "Makefile" rules.
+
+    The rules which dwell in this section and their purpose:
+
+
+        CATEGORY/rule::                   Purpose
+        ===================               =============================
+
+        $(SOURCE_XP_DIR)/
+        release/include::                 create directory used to
+                                          house "C" header files
+                                          contained in a release
+
+        .DEFAULT:                         standard gmake rule
+
+        .SUFFIXES:                        standard gmake rule
+
+        .PRECIOUS:                        standard gmake rule
+
+        .PHONY:                           standard gmake rule
+

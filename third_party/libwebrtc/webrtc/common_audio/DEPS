@@ -1,0 +1,4 @@
+include_rules = [
+  "+dl/sp/api",  # For openmax_dl.
+  "+system_wrappers",
+]

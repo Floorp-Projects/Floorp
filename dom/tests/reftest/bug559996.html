@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<body>
+
+<iframe src="bug559996-iframe.html#down" style="height: 200px; width: 200px"></iframe>
+<script>
+function endTest() {
+  document.documentElement.removeAttribute("class");
+}
+function waitForInactivity() {
+  setTimeout(endTest, 1000);
+}
+document.addEventListener("MozReftestInvalidate", waitForInactivity);
+</script>
+
+</body>
+</html>

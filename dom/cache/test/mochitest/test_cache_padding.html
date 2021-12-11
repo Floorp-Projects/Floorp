@@ -1,0 +1,196 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cache generate padding size for opaque repsonse</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="large_url_list.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
+function clearStorage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var request = qms.clearStoragesForPrincipal(principal);
+    var cb = SpecialPowers.wrapCallback(resolve);
+    request.callback = cb;
+  });
+}
+
+function resetStorage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var request = qms.reset();
+    var cb = SpecialPowers.wrapCallback(resolve);
+    request.callback = cb;
+  });
+}
+
+function getStorageUsage(fromMemory) {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var cb = SpecialPowers.wrapCallback(function(request) {
+      var result = request.result;
+      resolve(result.usage);
+    });
+
+    // Actually, the flag is used to distingulish getting group usage and origin
+    // usage, but we utilize this to get usage from in-memory and the disk.
+    // Default value for "fromMemory" is false.
+    qms.getUsageForPrincipal(principal, cb, !!fromMemory);
+  });
+}
+
+async function verifyUsage() {
+  // Although it returns group usage when passing true, it calculate the usage
+  // from tracking usage object (in-memory object) in QuotaManager.
+  let memoryUsage = await getStorageUsage(/* fromMemory */ true);
+  // This will returns the origin usage by re-calculating usage from directory.
+  let diskUsage = await getStorageUsage(/* fromMemory */ false);
+
+  is(memoryUsage, diskUsage,
+     "In-memory usage and disk usage should be the same.");
+  return memoryUsage;
+}
+
+async function waitForIOToComplete(cache, request) {
+  info("Wait for IO complete.");
+  // The following lines ensure we've deleted orphaned body.
+  // First, wait for cache operation delete the orphaned body.
+  await cache.match(request);
+
+  // Finally, wait for -wal file finish its job.
+  return resetStorage();
+}
+
+function fetchOpaqueResponse(url) {
+  return fetch(url, { mode: "no-cors" });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.caches.testing.enabled", true],
+          ["dom.quotaManager.testing", true]],
+}, async function() {
+  // This test is mainly to verify we only generate different padding size for
+  // the opaque response which is comming from netwrok.
+  // Besides, this test utilizes verifyUsage() to ensure Cache Acions does
+  // update thier usage/padding size to the QM, does record padding size to
+  // the directory padding file and does do above two things synchronously.
+  // So that, opaque response's size is bigger than the normal response's size
+  // and we always have the same usage bewteen from in-memory and from
+  // the file-system.
+  // Note: For the cloned and cached opaque response, the padding size shouldn't
+  // be changed. Thus, it makes the attacker harder to get the padding size.
+
+  const name = "cachePadding";
+  const other_name = "cachePaddingOther";
+  const cors_base = "https://example.com/test/dom/cache/test/mochitest/";
+  const url = "test_cache_add.js";
+
+  await setupTestIframe();
+
+  info("Stage 1: Clean storage.");
+  await clearStorage();
+
+  let cache = await caches.open(name);
+  await waitForIOToComplete(cache, url);
+  let usage1 = await verifyUsage();
+
+  info("Stage 2: Verify opaque responses have padding.");
+  cache = await caches.open(name);
+  await cache.add(url);
+  await waitForIOToComplete(cache, url);
+  let usage2 = await verifyUsage();
+  let sizeForNormalResponse = usage2 - usage1;
+
+  let opaqueResponse = await fetchOpaqueResponse(cors_base + url);
+  cache = await caches.open(name);
+  await cache.put(cors_base + url, opaqueResponse.clone());
+  await waitForIOToComplete(cache, url);
+  let usage3 = await verifyUsage();
+  let sizeForOpaqueResponse = usage3 - usage2;
+  ok(sizeForOpaqueResponse > sizeForNormalResponse,
+     "The opaque response should have larger size than the normal response.");
+
+  info("Stage 3: Verify the cloned response has the same size.");
+  cache = await caches.open(name);
+  await cache.put(cors_base + url, opaqueResponse.clone());
+  await waitForIOToComplete(cache, url);
+  let usage4 = await verifyUsage();
+  // Since we put the same request and response again, the size should be the
+  // same (DOM Cache removes the previous cached request and response)
+  ok(usage4 == usage3,
+     "We won't generate different padding for cloned response");
+
+  info("Stage 4: Verify the cached response has the same size.");
+  cache = await caches.open(name);
+  opaqueResponse = await cache.match(cors_base + url);
+  ok(opaqueResponse);
+
+  await cache.put(cors_base + url, opaqueResponse);
+  await waitForIOToComplete(cache, url);
+  let usage5 = await verifyUsage();
+  ok(usage5 == usage3,
+     "We won't generate different padding for cached response");
+
+  info("Stage 5: Verify padding size may changes in different fetch()s.");
+  let paddingSizeChange = false;
+  // Since we randomly generate padding size and rounding the overall size up,
+  // we will probably have the same size. So, fetch it multiple times.
+  for (let i = 0; i < 10; i++) {
+    opaqueResponse = await fetchOpaqueResponse(cors_base + url);
+    cache = await caches.open(name);
+    await cache.put(cors_base + url, opaqueResponse);
+    await waitForIOToComplete(cache, url);
+    let usage6  = await verifyUsage();
+    if (usage6 != usage5) {
+      paddingSizeChange = true;
+      break;
+    }
+  }
+  ok(paddingSizeChange,
+     "We should generate different padding size for fetching response");
+
+  info("Stage 6: Verify the padding is removed once on caches.delete() and " +
+       "cache.delete().");
+  // Add an opauqe response on other cache storage and then delete that storage.
+  cache = await caches.open(other_name);
+  opaqueResponse = await fetchOpaqueResponse(cors_base + url);
+  await cache.put(cors_base + url, opaqueResponse);
+  await caches.delete(other_name);
+  await caches.has(other_name);
+  // Force remove orphaned cached in the next action
+  await resetStorage();
+
+  // Delete the opauqe repsonse on current cache storage.
+  cache = await caches.open(name);
+  await cache.delete(cors_base + url);
+  await waitForIOToComplete(cache, url);
+  let usage7  = await verifyUsage();
+  ok(usage7 == usage2,
+     "The opaque response should be removed by caches.delete() and " +
+     "cache.delete()");
+
+  await SimpleTest.finish();
+});
+</script>
+</body>
+</html>

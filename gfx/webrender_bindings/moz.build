@@ -1,0 +1,128 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Graphics: WebRender")
+
+EXPORTS.mozilla.webrender += [
+    "RenderBufferTextureHost.h",
+    "RenderCompositor.h",
+    "RenderCompositorEGL.h",
+    "RenderCompositorLayersSWGL.h",
+    "RenderCompositorOGL.h",
+    "RenderCompositorOGLSWGL.h",
+    "RenderCompositorSWGL.h",
+    "RenderEGLImageTextureHost.h",
+    "RendererOGL.h",
+    "RendererScreenshotGrabber.h",
+    "RenderExternalTextureHost.h",
+    "RenderSharedSurfaceTextureHost.h",
+    "RenderTextureHost.h",
+    "RenderTextureHostSWGL.h",
+    "RenderTextureHostWrapper.h",
+    "RenderThread.h",
+    "webrender_ffi.h",
+    "WebRenderAPI.h",
+    "WebRenderTypes.h",
+]
+
+UNIFIED_SOURCES += [
+    "Moz2DImageRenderer.cpp",
+    "RenderBufferTextureHost.cpp",
+    "RenderCompositor.cpp",
+    "RenderCompositorEGL.cpp",
+    "RenderCompositorLayersSWGL.cpp",
+    "RenderCompositorOGL.cpp",
+    "RenderCompositorOGLSWGL.cpp",
+    "RenderCompositorSWGL.cpp",
+    "RenderEGLImageTextureHost.cpp",
+    "RendererOGL.cpp",
+    "RendererScreenshotGrabber.cpp",
+    "RenderExternalTextureHost.cpp",
+    "RenderSharedSurfaceTextureHost.cpp",
+    "RenderTextureHost.cpp",
+    "RenderTextureHostSWGL.cpp",
+    "RenderTextureHostWrapper.cpp",
+    "RenderThread.cpp",
+    "WebRenderAPI.cpp",
+    "WebRenderTypes.cpp",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    EXPORTS.mozilla.webrender += [
+        "RenderCompositorNative.h",
+        "RenderMacIOSurfaceTextureHost.h",
+    ]
+    UNIFIED_SOURCES += [
+        "RenderCompositorNative.cpp",
+        "RenderMacIOSurfaceTextureHost.cpp",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    EXPORTS.mozilla.webrender += [
+        "RenderAndroidHardwareBufferTextureHost.h",
+        "RenderAndroidSurfaceTextureHost.h",
+    ]
+    UNIFIED_SOURCES += [
+        "RenderAndroidHardwareBufferTextureHost.cpp",
+        "RenderAndroidSurfaceTextureHost.cpp",
+    ]
+
+if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
+    REQUIRES_UNIFIED_BUILD = True
+    DEFINES["MOZ_ENABLE_D3D10_LAYER"] = True
+    EXPORTS.mozilla.webrender += [
+        "DCLayerTree.h",
+        "RenderCompositorANGLE.h",
+        "RenderCompositorD3D11SWGL.h",
+        "RenderD3D11TextureHost.h",
+    ]
+    UNIFIED_SOURCES += [
+        "RenderCompositorD3D11SWGL.cpp",
+        "RenderD3D11TextureHost.cpp",
+    ]
+    SOURCES += [
+        "DCLayerTree.cpp",
+        "RenderCompositorANGLE.cpp",
+    ]
+
+if CONFIG["MOZ_WAYLAND"]:
+    EXPORTS.mozilla.webrender += [
+        "RenderCompositorNative.h",
+        "RenderDMABUFTextureHost.h",
+    ]
+    SOURCES += [
+        "RenderCompositorNative.cpp",
+        "RenderDMABUFTextureHost.cpp",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android", "gtk"):
+    CXXFLAGS += CONFIG["CAIRO_FT_CFLAGS"]
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    EXPORTS.mozilla.webrender += [
+        "!webrender_ffi_generated.h",
+    ]
+
+    CbindgenHeader(
+        "webrender_ffi_generated.h",
+        inputs=[
+            "/gfx/webrender_bindings",
+            "/gfx/wr/webrender",
+            "/gfx/wr/webrender_api",
+        ],
+    )
+
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/gfx/cairo/cairo/src",
+]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += ["-Werror=switch"]

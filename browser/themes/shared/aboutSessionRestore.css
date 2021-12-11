@@ -1,0 +1,88 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#tabsToggle {
+  cursor: pointer;
+  /* Override button background-color and color from common.css */
+  background-color: transparent;
+  color: var(--in-content-link-color) !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  border: none;
+  padding: 0;
+  margin: 0;
+  padding-inline-end: 45px;
+  position: relative;
+}
+
+#tabsToggle:after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  inset-inline-start: 0;
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-repeat: no-repeat;
+  background-size: 20px;
+  background-position: right center;
+}
+
+#tabsToggle:dir(rtl):after {
+  background-position-x: left;
+}
+
+#tabsToggle:not(.show-tabs):after {
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+#tabsToggle.show-tabs > #hideTabs,
+#tabsToggle:not(.show-tabs) > #showTabs {
+  display: none;
+}
+
+.tree-container:not(.expanded) {
+  visibility: collapse;
+}
+
+.button-container {
+  text-align: end;
+}
+
+treechildren::-moz-tree-image(icon),
+treechildren::-moz-tree-image(noicon) {
+  padding-inline-end: 2px;
+  margin: 0 2px;
+  width: 16px;
+  height: 16px;
+}
+
+treechildren::-moz-tree-image(noicon) {
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+treechildren::-moz-tree-image(container, noicon) {
+  list-style-image: url("chrome://browser/skin/window.svg");
+}
+
+treechildren::-moz-tree-image(checked),
+treechildren::-moz-tree-image(partial) {
+  -moz-context-properties: fill, stroke;
+  fill: var(--in-content-accent-color);
+}
+
+treechildren::-moz-tree-image(checked, selected),
+treechildren::-moz-tree-image(partial, selected) {
+  fill: var(--in-content-item-selected-text);
+  stroke: var(--in-content-item-selected);
+}
+
+treechildren::-moz-tree-image(checked) {
+  list-style-image: url("chrome://global/skin/icons/check.svg");
+}
+
+treechildren::-moz-tree-image(partial) {
+  list-style-image: url("chrome://global/skin/icons/check-partial.svg");
+}

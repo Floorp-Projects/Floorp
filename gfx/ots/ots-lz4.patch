@@ -1,0 +1,74 @@
+diff --git a/gfx/ots/src/glat.cc b/gfx/ots/src/glat.cc
+--- a/gfx/ots/src/glat.cc
++++ b/gfx/ots/src/glat.cc
+@@ -4,9 +4,9 @@
+ 
+ #include "glat.h"
+ 
+ #include "gloc.h"
+-#include "lz4.h"
++#include "mozilla/Compression.h"
+ #include <list>
+ #include <memory>
+ 
+ namespace ots {
+@@ -214,16 +214,17 @@ bool OpenTypeGLAT_v3::Parse(const uint8_
+                             OTS_MAX_DECOMPRESSED_TABLE_SIZE / (1024.0 * 1024.0),
+                             decompressed_size / (1024.0 * 1024.0));
+       }
+       std::unique_ptr<uint8_t> decompressed(new uint8_t[decompressed_size]());
+-      int ret = LZ4_decompress_safe_partial(
++      size_t outputSize = 0;
++      bool ret = mozilla::Compression::LZ4::decompressPartial(
+           reinterpret_cast<const char*>(data + table.offset()),
+-          reinterpret_cast<char*>(decompressed.get()),
+           table.remaining(),  // input buffer size (input size + padding)
++          reinterpret_cast<char*>(decompressed.get()),
+           decompressed_size,  // target output size
+-          decompressed_size);  // output buffer size
+-      if (ret < 0 || unsigned(ret) != decompressed_size) {
+-        return DropGraphite("Decompression failed with error code %d", ret);
++          &outputSize);  // return output size
++      if (!ret || outputSize != decompressed_size) {
++        return DropGraphite("Decompression failed");
+       }
+       return this->Parse(decompressed.get(), decompressed_size, true);
+     }
+     default:
+diff --git a/gfx/ots/src/silf.cc b/gfx/ots/src/silf.cc
+--- a/gfx/ots/src/silf.cc
++++ b/gfx/ots/src/silf.cc
+@@ -4,9 +4,9 @@
+ 
+ #include "silf.h"
+ 
+ #include "name.h"
+-#include "lz4.h"
++#include "mozilla/Compression.h"
+ #include <cmath>
+ #include <memory>
+ 
+ namespace ots {
+@@ -49,16 +49,17 @@ bool OpenTypeSILF::Parse(const uint8_t* 
+                               OTS_MAX_DECOMPRESSED_TABLE_SIZE / (1024.0 * 1024.0),
+                               decompressed_size / (1024.0 * 1024.0));
+         }
+         std::unique_ptr<uint8_t> decompressed(new uint8_t[decompressed_size]());
+-        int ret = LZ4_decompress_safe_partial(
++        size_t outputSize = 0;
++        bool ret = mozilla::Compression::LZ4::decompressPartial(
+             reinterpret_cast<const char*>(data + table.offset()),
+-            reinterpret_cast<char*>(decompressed.get()),
+             table.remaining(),  // input buffer size (input size + padding)
++            reinterpret_cast<char*>(decompressed.get()),
+             decompressed_size,  // target output size
+-            decompressed_size);  // output buffer size
+-        if (ret < 0 || unsigned(ret) != decompressed_size) {
+-          return DropGraphite("Decompression failed with error code %d", ret);
++            &outputSize);   // return output size
++        if (!ret || outputSize != decompressed_size) {
++          return DropGraphite("Decompression failed");
+         }
+         return this->Parse(decompressed.get(), decompressed_size, true);
+       }
+       default:

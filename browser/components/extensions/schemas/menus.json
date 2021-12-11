@@ -1,0 +1,607 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "PermissionNoPrompt",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "menus",
+            "contextMenus"
+          ]
+        }]
+      }, {
+        "$extend": "OptionalPermissionNoPrompt",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "menus.overrideContext"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "contextMenus",
+    "permissions": ["contextMenus"],
+    "description": "Use the browser.contextMenus API to add items to the browser's context menu. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
+    "$import": "menus"
+  },
+  {
+    "namespace": "menus",
+    "permissions": ["menus"],
+    "description": "Use the browser.menus API to add items to the browser's menus. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
+    "properties": {
+      "ACTION_MENU_TOP_LEVEL_LIMIT": {
+        "value": 6,
+        "description": "The maximum number of top level extension items that can be added to an extension action context menu. Any items beyond this limit will be ignored."
+      }
+    },
+    "types": [
+      {
+        "id": "ContextType",
+        "description": "The different contexts a menu can appear in. Specifying 'all' is equivalent to the combination of all other contexts except for 'tab' and 'tools_menu'.",
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["all", "page", "frame", "selection", "link", "editable", "password", "image", "video", "audio", "launcher", "bookmark", "tab", "tools_menu"]
+          },
+          {
+            "type": "string",
+            "enum": ["browser_action", "page_action"],
+            "max_manifest_version": 2
+          },
+          {
+            "type": "string",
+            "enum": ["action"],
+            "min_manifest_version": 3
+          }
+        ]
+      },
+      {
+        "id": "ItemType",
+        "type": "string",
+        "enum": ["normal", "checkbox", "radio", "separator"],
+        "description": "The type of menu item."
+      },
+      {
+        "id": "OnClickData",
+        "type": "object",
+        "description": "Information sent when a context menu item is clicked.",
+        "properties": {
+          "menuItemId": {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "description": "The ID of the menu item that was clicked."
+          },
+          "parentMenuItemId": {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "optional": true,
+            "description": "The parent ID, if any, for the item clicked."
+          },
+          "viewType": {
+            "$ref": "extension.ViewType",
+            "optional": true,
+            "description": "The type of view where the menu is clicked. May be unset if the menu is not associated with a view."
+          },
+          "mediaType": {
+            "type": "string",
+            "optional": true,
+            "description": "One of 'image', 'video', or 'audio' if the context menu was activated on one of these types of elements."
+          },
+          "linkText": {
+            "type": "string",
+            "optional": true,
+            "description": "If the element is a link, the text of that link."
+          },
+          "linkUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "If the element is a link, the URL it points to."
+          },
+          "srcUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "Will be present for elements with a 'src' URL."
+          },
+          "pageUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "The URL of the page where the menu item was clicked. This property is not set if the click occured in a context where there is no current page, such as in a launcher context menu."
+          },
+          "frameId": {
+           "type": "integer",
+           "optional": true,
+           "minimum": 0,
+           "description": "The id of the frame of the element where the context menu was clicked."
+          },
+          "frameUrl": {
+            "type": "string",
+            "optional": true,
+            "description": " The URL of the frame of the element where the context menu was clicked, if it was in a frame."
+          },
+          "selectionText": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the context selection, if any."
+          },
+          "editable": {
+            "type": "boolean",
+            "description": "A flag indicating whether the element is editable (text input, textarea, etc.)."
+          },
+          "wasChecked": {
+            "type": "boolean",
+            "optional": true,
+            "description": "A flag indicating the state of a checkbox or radio item before it was clicked."
+          },
+          "checked": {
+            "type": "boolean",
+            "optional": true,
+            "description": "A flag indicating the state of a checkbox or radio item after it is clicked."
+          },
+          "bookmarkId": {
+            "type": "string",
+            "description": "The id of the bookmark where the context menu was clicked, if it was on a bookmark."
+          },
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Shift", "Alt", "Command", "Ctrl", "MacCtrl"]
+            },
+            "description": "An array of keyboard modifiers that were held while the menu item was clicked."
+          },
+          "button": {
+            "type": "integer",
+            "optional": true,
+            "description": "An integer value of button by which menu item was clicked."
+          },
+          "targetElementId": {
+            "type": "integer",
+            "optional": true,
+            "description": "An identifier of the clicked element, if any. Use menus.getTargetElement in the page to find the corresponding element."
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "create",
+        "type": "function",
+        "description": "Creates a new context menu item. Note that if an error occurs during creation, you may not find out until the creation callback fires (the details will be in $(ref:runtime.lastError)).",
+        "returns": {
+          "choices": [
+            { "type": "integer" },
+            { "type": "string" }
+          ],
+          "description": "The ID of the newly created item."
+        },
+        "parameters": [
+          {
+            "type": "object",
+            "name": "createProperties",
+            "properties": {
+              "type": {
+                "$ref": "ItemType",
+                "optional": true,
+                "description": "The type of menu item. Defaults to 'normal' if not specified."
+              },
+              "id": {
+                "type": "string",
+                "optional": true,
+                "description": "The unique ID to assign to this item. Mandatory for event pages. Cannot be the same as another ID for this extension."
+              },
+              "icons": {
+                "type": "object",
+                "optional" : true,
+                "patternProperties" : {
+                  "^[1-9]\\d*$": { "type" : "string" }
+                }
+              },
+              "title": {
+                "type": "string",
+                "optional": true,
+                "description": "The text to be displayed in the item; this is <em>required</em> unless <code>type</code> is 'separator'. When the context is 'selection', you can use <code>%s</code> within the string to show the selected text. For example, if this parameter's value is \"Translate '%s' to Pig Latin\" and the user selects the word \"cool\", the context menu item for the selection is \"Translate 'cool' to Pig Latin\"."
+              },
+              "checked": {
+                "type": "boolean",
+                "optional": true,
+                "description": "The initial state of a checkbox or radio item: true for selected and false for unselected. Only one radio item can be selected at a time in a given group of radio items."
+              },
+              "contexts": {
+                "type": "array",
+                "items": {
+                  "$ref": "ContextType"
+                },
+                "minItems": 1,
+                "optional": true,
+                "description": "List of contexts this menu item will appear in. Defaults to ['page'] if not specified."
+              },
+              "viewTypes": {
+                "type": "array",
+                "items": {
+                  "$ref": "extension.ViewType"
+                },
+                "minItems": 1,
+                "optional": true,
+                "description": "List of view types where the menu item will be shown. Defaults to any view, including those without a viewType."
+              },
+              "visible": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the item is visible in the menu."
+              },
+              "onclick": {
+                "type": "function",
+                "optional": true,
+                "description": "A function that will be called back when the menu item is clicked. Event pages cannot use this; instead, they should register a listener for $(ref:contextMenus.onClicked).",
+                "parameters": [
+                  {
+                    "name": "info",
+                    "$ref": "OnClickData",
+                    "description": "Information about the item clicked and the context where the click happened."
+                  },
+                  {
+                    "name": "tab",
+                    "$ref": "tabs.Tab",
+                    "description": "The details of the tab where the click took place. Note: this parameter only present for extensions."
+                  }
+                ]
+              },
+              "parentId": {
+                "choices": [
+                  { "type": "integer" },
+                  { "type": "string" }
+                ],
+                "optional": true,
+                "description": "The ID of a parent menu item; this makes the item a child of a previously added item."
+              },
+              "documentUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true,
+                "description": "Lets you restrict the item to apply only to documents whose URL matches one of the given patterns. (This applies to frames as well.) For details on the format of a pattern, see $(topic:match_patterns)[Match Patterns]."
+              },
+              "targetUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true,
+                "description": "Similar to documentUrlPatterns, but lets you filter based on the src attribute of img/audio/video tags and the href of anchor tags."
+              },
+              "enabled": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether this context menu item is enabled or disabled. Defaults to true."
+              },
+              "command": {
+                "choices": [
+                  { "type": "string" },
+                  {
+                    "type": "string",
+                    "enum": ["_execute_browser_action", "_execute_page_action", "_execute_sidebar_action"],
+                    "max_manifest_version": 2,
+                    "description": "Manifest V2 supports internal commands _execute_page_action, _execute_browser_action and _execute_sidebar_action."
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["_execute_action", "_execute_page_action", "_execute_sidebar_action"],
+                    "min_manifest_version": 3,
+                    "description": "Manifest V3 supports internal commands _execute_page_action, _execute_action and _execute_sidebar_action."
+                  }
+                ],
+                "optional": true,
+                "description": "Specifies a command to issue for the context click."
+              }
+            }
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "description": "Called when the item has been created in the browser. If there were any problems creating the item, details will be available in $(ref:runtime.lastError).",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "update",
+        "type": "function",
+        "description": "Updates a previously created context menu item.",
+        "async": "callback",
+        "parameters": [
+          {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "name": "id",
+            "description": "The ID of the item to update."
+          },
+          {
+            "type": "object",
+            "name": "updateProperties",
+            "description": "The properties to update. Accepts the same values as the create function.",
+            "properties": {
+              "type": {
+                "$ref": "ItemType",
+                "optional": true
+              },
+              "icons": {
+                "type": "object",
+                "optional": "omit-key-if-missing",
+                "patternProperties" : {
+                  "^[1-9]\\d*$": { "type" : "string" }
+                }
+              },
+              "title": {
+                "type": "string",
+                "optional": true
+              },
+              "checked": {
+                "type": "boolean",
+                "optional": true
+              },
+              "contexts": {
+                "type": "array",
+                "items": {
+                  "$ref": "ContextType"
+                },
+                "minItems": 1,
+                "optional": true
+              },
+              "viewTypes": {
+                "type": "array",
+                "items": {
+                  "$ref": "extension.ViewType"
+                },
+                "minItems": 1,
+                "optional": true
+              },
+              "visible": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the item is visible in the menu."
+              },
+              "onclick": {
+                "type": "function",
+                "optional": "omit-key-if-missing",
+                "parameters": [
+                  {
+                    "name": "info",
+                    "$ref": "OnClickData"
+                  },
+                  {
+                    "name": "tab",
+                    "$ref": "tabs.Tab",
+                    "description": "The details of the tab where the click took place. Note: this parameter only present for extensions."
+                  }
+                ]
+              },
+              "parentId": {
+                "choices": [
+                  { "type": "integer" },
+                  { "type": "string" }
+                ],
+                "optional": true,
+                "description": "Note: You cannot change an item to be a child of one of its own descendants."
+              },
+              "documentUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true
+              },
+              "targetUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true
+              },
+              "enabled": {
+                "type": "boolean",
+                "optional": true
+              }
+            }
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [],
+            "description": "Called when the context menu has been updated."
+          }
+        ]
+      },
+      {
+        "name": "remove",
+        "type": "function",
+        "description": "Removes a context menu item.",
+        "async": "callback",
+        "parameters": [
+          {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "name": "menuItemId",
+            "description": "The ID of the context menu item to remove."
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [],
+            "description": "Called when the context menu has been removed."
+          }
+        ]
+      },
+      {
+        "name": "removeAll",
+        "type": "function",
+        "description": "Removes all context menu items added by this extension.",
+        "async": "callback",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [],
+            "description": "Called when removal is complete."
+          }
+        ]
+      },
+      {
+        "name": "overrideContext",
+        "permissions": ["menus.overrideContext"],
+        "type": "function",
+        "description": "Show the matching menu items from this extension instead of the default menu. This should be called during a 'contextmenu' DOM event handler, and only applies to the menu that opens after this event.",
+        "parameters": [
+          {
+            "name": "contextOptions",
+            "type": "object",
+            "properties": {
+              "showDefaults": {
+                "type": "boolean",
+                "optional": true,
+                "default": false,
+                "description": "Whether to also include default menu items in the menu."
+              },
+              "context": {
+                "type": "string",
+                "enum": ["bookmark", "tab"],
+                "optional": true,
+                "description": "ContextType to override, to allow menu items from other extensions in the menu. Currently only 'bookmark' and 'tab' are supported. showDefaults cannot be used with this option."
+              },
+              "bookmarkId": {
+                "type": "string",
+                "minLength": 1,
+                "optional": true,
+                "description": "Required when context is 'bookmark'. Requires 'bookmark' permission."
+              },
+              "tabId": {
+                "type": "integer",
+                "minimum": 0,
+                "optional": true,
+                "description": "Required when context is 'tab'. Requires 'tabs' permission."
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "refresh",
+        "type": "function",
+        "description": "Updates the extension items in the shown menu, including changes that have been made since the menu was shown. Has no effect if the menu is hidden. Rebuilding a shown menu is an expensive operation, only invoke this method when necessary.",
+        "async": true,
+        "parameters": []
+      }
+    ],
+    "events": [
+      {
+        "name": "onClicked",
+        "type": "function",
+        "description": "Fired when a context menu item is clicked.",
+        "parameters": [
+          {
+            "name": "info",
+            "$ref": "OnClickData",
+            "description": "Information about the item clicked and the context where the click happened."
+          },
+          {
+            "name": "tab",
+            "$ref": "tabs.Tab",
+            "description": "The details of the tab where the click took place. If the click did not take place in a tab, this parameter will be missing.",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "onShown",
+        "type": "function",
+        "description": "Fired when a menu is shown. The extension can add, modify or remove menu items and call menus.refresh() to update the menu.",
+        "parameters": [
+          {
+            "name": "info",
+            "type": "object",
+            "description": "Information about the context of the menu action and the created menu items. For more information about each property, see OnClickData. The following properties are only set if the extension has host permissions for the given context: linkUrl, linkText, srcUrl, pageUrl, frameUrl, selectionText.",
+            "properties": {
+              "menuIds": {
+                "description": "A list of IDs of the menu items that were shown.",
+                "type": "array",
+                "items": {
+                  "choices": [
+                    { "type": "integer" },
+                    { "type": "string" }
+                  ]
+                }
+              },
+              "contexts": {
+                "description": "A list of all contexts that apply to the menu.",
+                "type": "array",
+                "items": {"$ref": "ContextType"}
+              },
+              "viewType": {
+                "$ref": "extension.ViewType",
+                "optional": true
+              },
+              "editable": {
+                "type": "boolean"
+              },
+              "mediaType": {
+                "type": "string",
+                "optional": true
+              },
+              "linkUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "linkText": {
+                "type": "string",
+                "optional": true
+              },
+              "srcUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "pageUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "frameUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "selectionText": {
+                "type": "string",
+                "optional": true
+              },
+              "targetElementId": {
+                "type": "integer",
+                "optional": true
+              }
+            }
+          },
+          {
+            "name": "tab",
+            "$ref": "tabs.Tab",
+            "description": "The details of the tab where the menu was opened."
+          }
+        ]
+      },
+      {
+        "name": "onHidden",
+        "type": "function",
+        "description": "Fired when a menu is hidden. This event is only fired if onShown has fired before.",
+        "parameters": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for document.blockParsing</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+async function runTest(url, initialHTML, finalHTML) {
+  let iframe = document.createElement("iframe");
+  iframe.src = url;
+
+  let blockerPromise;
+  let promise = TestUtils.topicObserved("document-element-inserted", document => {
+    if (document !== iframe.contentDocument) {
+      return false;
+    }
+
+    blockerPromise = new Promise(resolve => {
+      setTimeout(resolve, 0);
+    }).then(() => {
+      return new Promise(resolve => setTimeout(resolve, 0));
+    }).then(() => {
+      return new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    is(document.documentElement.outerHTML, initialHTML,
+       "Should have initial HTML during document-element-inserted");
+    is(document.defaultView.wrappedJSObject.scriptRan, undefined,
+       "Script node should not have run");
+
+    document.blockParsing(blockerPromise);
+
+    return true;
+  }).then(([document]) => {
+    return document;
+  });
+
+  document.body.appendChild(iframe);
+
+  // Wait for document-element-inserted to fire.
+  let doc = await promise;
+  let win = doc.defaultView.wrappedJSObject;
+  let root = doc.documentElement;
+
+  // At this point, if the parser was successfully blocked, we should still
+  // have the initial skeleton HTML for the page.
+  is(root.outerHTML, initialHTML, "Should have initial HTML after document-element-inserted returns");
+  is(win.scriptRan, undefined, "Script node should still not have run");
+
+  await blockerPromise;
+
+  // Just after the promise that's blocking the parser fires, we shouldn't have
+  // returned to the main event loop, so we should still have the initial HTML.
+  is(root.outerHTML, initialHTML, "Should still have initial HTML");
+  is(win.scriptRan, undefined, "Script node should still not have run");
+
+  await new Promise(resolve => win.addEventListener("DOMContentLoaded", resolve, {once: true}));
+
+  // Parsing should have resumed, and we should have finished loading the document.
+  is(root.outerHTML, finalHTML, "Should have final HTML");
+  is(win.scriptRan, true, "Script node should have run");
+
+  iframe.remove();
+}
+
+add_task(async function() {
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_inline_script.html",
+                '<html lang="en"></html>',
+                '<html lang="en"><head>\n  <script>window.scriptRan = true;<\/script>\n  <meta charset="utf-8">\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n\n\n</body></html>');
+
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_inline_script.xhtml",
+                '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"></html>',
+                '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <script>window.scriptRan = true;<\/script>\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n</body>\n</html>');
+
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_external_script.html",
+                '<html lang="en"></html>',
+                '<html lang="en"><head>\n  <script src="file_script.js"><\/script>\n  <meta charset="utf-8">\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n\n\n</body></html>');
+
+  await runTest("http://mochi.test:8888/chrome/dom/base/test/file_external_script.xhtml",
+                '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"></html>',
+                '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <script src="file_script.js"><\/script>\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n</body>\n</html>');
+});
+
+add_task(async function test_cleanup() {
+  const TOPIC = "blocking-promise-destroyed";
+
+  const finalizationWitness = Cc["@mozilla.org/toolkit/finalizationwitness;1"]
+      .getService(Ci.nsIFinalizationWitnessService);
+
+  for (let url of ["http://mochi.test:8888/chrome/dom/base/test/file_inline_script.html",
+                   "http://mochi.test:8888/chrome/dom/base/test/file_inline_script.xhtml"]) {
+    let iframe = document.createElement("iframe");
+    iframe.src = url;
+
+    // Create a promise that never resolves.
+    let blockerPromise = new Promise(() => {});
+
+    // Create a finalization witness so we can be sure that the promises
+    // have been collected before the end of the test.
+    let destroyedPromise = TestUtils.topicObserved(TOPIC);
+    let witness = finalizationWitness.make(TOPIC, url);
+    blockerPromise.witness = witness;
+
+    let insertedPromise = TestUtils.topicObserved("document-element-inserted", document => {
+      document.blockParsing(blockerPromise).witness = witness;
+
+      return true;
+    });
+
+    document.body.appendChild(iframe);
+    await insertedPromise;
+
+    // Clear the promise reference, destroy the document, and force GC/CC. This should
+    // trigger any potential leaks or cleanup issues.
+    blockerPromise = null;
+    witness = null;
+    iframe.remove();
+
+    Cu.forceGC();
+    Cu.forceCC();
+    Cu.forceGC();
+
+    // Make sure the blocker promise has been collected.
+    let [, data] = await destroyedPromise;
+    is(data, url, "Should have correct finalizer URL");
+  }
+});
+</script>
+</body>
+</html>

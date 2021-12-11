@@ -1,0 +1,85 @@
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    max-run-time: 1800
+    suite: raptor
+    run-on-projects: []
+    tier: 2
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    target:
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: mobile.v2.reference-browser.raptor.latest.arm64-v8a
+                name: target.arm64-v8a.apk
+            default:
+                index: mobile.v2.reference-browser.raptor.latest.armeabi-v7a
+                name: target.armeabi-v7a.apk
+    virtualization: hardware
+    mozharness:
+        script: raptor_script.py
+        config:
+            - raptor/android_hw_config.py
+    python-3: true
+
+raptor-scn-cpu-memory-idle-refbrow:
+    description: "Raptor idle-browser cpu/memory on Reference Browser"
+    try-name: raptor-scn-cpu-memory-idle-refbrow
+    treeherder-symbol: Rap-refbrow(idl-cm)
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
+raptor-scn-cpu-memory-power-idle-refbrow:
+    description: "Raptor idle-browser cpu/memory/power on Reference Browser"
+    try-name: raptor-scn-cpu-memory-power-idle-refbrow
+    treeherder-symbol: Rap-refbrow(idl-cmp)
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
+raptor-scn-cpu-memory-idle-bg-refbrow:
+    description: "Raptor idle-browser (backgrounded) cpu/memory on Reference Browser"
+    try-name: raptor-scn-cpu-memory-idle-bg-refbrow
+    treeherder-symbol: Rap-refbrow(idlbg-cm)
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
+raptor-scn-cpu-memory-power-idle-bg-refbrow:
+    description: "Raptor idle-browser (backgrounded) cpu/memory/power on Reference Browser"
+    try-name: raptor-scn-cpu-memory-power-idle-bg-refbrow
+    treeherder-symbol: Rap-refbrow(idlbg-cmp)
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity

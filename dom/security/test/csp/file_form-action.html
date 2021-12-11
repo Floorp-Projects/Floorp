@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 529697 - Test mapping of form submission to form-action</title>
+</head>
+<body>
+  <form action="submit-form">
+    <input id="submitButton" type="submit" value="Submit form">
+  </form>
+  <script type="text/javascript">
+  var submitButton = document.getElementById('submitButton');
+  submitButton.click();
+  </script>
+</body>
+</html>

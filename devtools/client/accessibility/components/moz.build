@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    "AccessibilityPrefs.js",
+    "AccessibilityRow.js",
+    "AccessibilityRowValue.js",
+    "AccessibilityTree.js",
+    "AccessibilityTreeFilter.js",
+    "Accessible.js",
+    "AuditController.js",
+    "AuditFilter.js",
+    "AuditProgressOverlay.js",
+    "Badge.js",
+    "Badges.js",
+    "Button.js",
+    "Check.js",
+    "Checks.js",
+    "ColorContrastAccessibility.js",
+    "ContrastBadge.js",
+    "Description.js",
+    "DisplayTabbingOrder.js",
+    "KeyboardBadge.js",
+    "KeyboardCheck.js",
+    "LearnMoreLink.js",
+    "MainFrame.js",
+    "RightSidebar.js",
+    "SimulationMenuButton.js",
+    "TextLabelBadge.js",
+    "TextLabelCheck.js",
+    "Toolbar.js",
+)

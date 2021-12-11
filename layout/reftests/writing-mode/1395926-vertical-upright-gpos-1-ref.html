@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+<style>
+@font-face { font-family: Charis; src: url(../fonts/sil/CharisSIL-R.ttf); }
+div { writing-mode: vertical-rl; text-orientation: upright; }
+p { position: absolute; top: 50px; }
+.times { font: 36px Times New Roman, DejaVu Serif, serif; letter-spacing: .25em; left: 50px; }
+.arial { font: 36px Arial, DejaVu Sans, sans-serif; letter-spacing: .25em; left: 150px; }
+.charis { font: 36px Charis, serif; letter-spacing: .25em; left: 250px; }
+.overlay { color: transparent; background: green; }
+</style>
+
+Red diacritics should <i>not</i> extend beyond the green boxes:
+
+<div>
+<p class="times overlay">&nbsp;A&#x315;b&#x323;&#x329;c&#x32d;d&#x305;e&#x309;&#x306;&#x308;
+<p class="arial overlay">&nbsp;A&#x315;b&#x323;&#x329;c&#x32d;d&#x305;e&#x309;&#x306;&#x308;
+<p class="charis overlay">&nbsp;A&#x315;b&#x323;&#x329;c&#x32d;d&#x305;e&#x309;&#x306;&#x308;
+</div>

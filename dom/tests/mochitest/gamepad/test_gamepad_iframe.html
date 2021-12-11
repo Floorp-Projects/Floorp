@@ -1,0 +1,81 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test gamepad</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+let ok = window.parent.ok;
+let is = window.parent.is;
+let SimpleTest = window.parent.SimpleTest;
+let SpecialPowers = window.parent.SpecialPowers;
+
+// This should be held for the entire time the testing API is being used to
+// ensure monitoring has been started and that a single GamepadPlatformService
+// instance is used for the entire test
+var GamepadsKungFuDeathGrip = navigator.getGamepads();
+
+// Due to gamepad being a polling API instead of event driven, test ordering
+// ends up being a little weird in order to deal with e10s. Calls to
+// GamepadService are async across processes, so we'll need to make sure
+// we account for timing before checking values.
+window.addEventListener("gamepadconnected", connecthandler);
+var index;
+var testNum = 0;
+
+window.addEventListener("gamepadbuttondown", () => {
+  SpecialPowers.executeSoon(buttontest1);
+});
+
+window.addEventListener("gamepadbuttonup", () => {
+  SpecialPowers.executeSoon(buttontest2);
+});
+
+runGamepadTest(startTest);
+
+async function startTest() {
+  // Add a gamepad
+  index = await GamepadService.addGamepad("test gamepad", // id
+                     GamepadService.standardMapping,
+                     GamepadService.noHand,
+                     4,
+                     2,
+                     0,
+                     0,
+                     0);
+  await GamepadService.newButtonEvent(index, 0, true, true);
+}
+
+function connecthandler(e) {
+  ok(e.gamepad.timestamp <= performance.now(),
+     "gamepad.timestamp should less than or equal to performance.now()");
+  is(e.gamepad.index, 0, "correct gamepad index");
+  is(e.gamepad.id, "test gamepad", "correct gamepad name");
+  is(e.gamepad.mapping, "standard", "standard mapping");
+  is(e.gamepad.buttons.length, 4, "correct number of buttons");
+  is(e.gamepad.axes.length, 2, "correct number of axes");
+}
+
+async function buttontest1() {
+  var gamepads = navigator.getGamepads();
+  is(gamepads[0].buttons[0].pressed, true, "gamepad button should register as pressed");
+  is(gamepads[0].buttons[0].touched, true, "gamepad button should register as touched");
+  await GamepadService.newButtonValueEvent(index, 1, true, true, 0.5);
+}
+
+async function buttontest2() {
+  var gamepads = navigator.getGamepads();
+  is(gamepads[0].buttons[1].pressed, true, "gamepad button should register as pressed");
+  is(gamepads[0].buttons[1].touched, true, "gamepad button should register as touched");
+  is(gamepads[0].buttons[1].value, 0.5, "gamepad button value should be 0.5");
+  await GamepadService.removeGamepad(index);
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

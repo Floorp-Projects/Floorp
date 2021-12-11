@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <!-- This test checks our behavior with animations that initially
+       have no 'xlink:href' attribute, but receive one via scripting. -->
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <script type="text/javascript">
+    function go() {
+      var anim = document.getElementById("anim");
+      anim.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#blueRect");
+      setTimeAndSnapshot(2.5, false)
+    }
+  </script>
+  <rect id="blueRect" x="15" y="15" width="200" height="100" fill="blue">
+  </rect>
+  <rect id="redRect" x="15" y="215" width="200" height="0" fill="red">
+    <animate id="anim" attributeName="height"
+             to="200" begin="0s" dur="2s" fill="freeze"/>
+  </rect>
+</svg>

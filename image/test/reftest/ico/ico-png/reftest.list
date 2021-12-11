@@ -1,0 +1,29 @@
+# ICO PNG tests
+
+# Images of various sizes
+== ico-size-1x1-png.ico   ico-size-1x1-png.png
+== ico-size-2x2-png.ico   ico-size-2x2-png.png
+== ico-size-3x3-png.ico   ico-size-3x3-png.png
+== ico-size-4x4-png.ico   ico-size-4x4-png.png
+== ico-size-5x5-png.ico   ico-size-5x5-png.png
+== ico-size-6x6-png.ico   ico-size-6x6-png.png
+== ico-size-7x7-png.ico   ico-size-7x7-png.png
+== ico-size-8x8-png.ico   ico-size-8x8-png.png
+== ico-size-9x9-png.ico   ico-size-9x9-png.png
+== ico-size-15x15-png.ico ico-size-15x15-png.png
+== ico-size-16x16-png.ico ico-size-16x16-png.png
+== ico-size-17x17-png.ico ico-size-17x17-png.png
+== ico-size-31x31-png.ico ico-size-31x31-png.png
+== ico-size-32x32-png.ico ico-size-32x32-png.png
+== ico-size-33x33-png.ico ico-size-33x33-png.png
+== ico-size-256x256-png.ico ico-size-256x256-png.png
+
+# Corrupted files so no image should be loaded
+# x00n0g01 - empty 0x0 grayscale file
+== wrapper.html?x00n0g01.ico about:blank
+# xcrn0g04 - added cr bytes
+== wrapper.html?xcrn0g04.ico about:blank
+
+# Test ICO PNG transparency
+== transparent-png.ico transparent-png.png
+

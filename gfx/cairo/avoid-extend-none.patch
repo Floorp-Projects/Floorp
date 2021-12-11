@@ -1,0 +1,39 @@
+changeset:   93076:25d0c8a38d7d
+tag:         none
+tag:         qbase
+tag:         qtip
+tag:         tip
+user:        Jeff Muizelaar <jmuizelaar@mozilla.com>
+date:        Thu May 03 15:21:52 2012 -0400
+summary:     Bug 751668. Avoid incorrectly using EXTEND_NONE. r=joe
+
+diff --git a/gfx/cairo/cairo/src/cairo-image-surface.c b/gfx/cairo/cairo/src/cairo-image-surface.c
+--- a/gfx/cairo/cairo/src/cairo-image-surface.c
++++ b/gfx/cairo/cairo/src/cairo-image-surface.c
+@@ -1390,25 +1390,16 @@ static pixman_image_t *
+ 	cairo_image_surface_t *source = (cairo_image_surface_t *) pattern->surface;
+ 	cairo_surface_type_t type;
+ 
+ 	if (source->base.backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+ 	    source = (cairo_image_surface_t *) ((cairo_surface_snapshot_t *) pattern->surface)->target;
+ 
+ 	type = source->base.backend->type;
+ 	if (type == CAIRO_SURFACE_TYPE_IMAGE) {
+-	    if (extend != CAIRO_EXTEND_NONE &&
+-		sample.x >= 0 &&
+-		sample.y >= 0 &&
+-		sample.x + sample.width  <= source->width &&
+-		sample.y + sample.height <= source->height)
+-	    {
+-		extend = CAIRO_EXTEND_NONE;
+-	    }
+-
+ 	    if (sample.width == 1 && sample.height == 1) {
+ 		if (sample.x < 0 ||
+ 		    sample.y < 0 ||
+ 		    sample.x >= source->width ||
+ 		    sample.y >= source->height)
+ 		{
+ 		    if (extend == CAIRO_EXTEND_NONE)
+ 			return _pixman_transparent_image ();
+

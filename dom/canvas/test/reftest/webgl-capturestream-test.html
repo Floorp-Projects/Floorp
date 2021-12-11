@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<meta charset='UTF-8'>
+<!--
+Clear the canvas to green and capture it to a stream to test that we can get
+the stream to screen in a local video element.
+-->
+<html class="reftest-wait">
+
+<head>
+  <script type='text/javascript' src='webgl-utils.js'></script>
+  <script type='text/javascript'>
+'use strict';
+
+function setStatus(text) {
+  var elem = document.getElementById('status');
+  elem.innerHTML = text;
+}
+
+function finished() {
+  document.documentElement.removeAttribute("class");
+}
+
+function runTest() {
+  var canvas = document.getElementById('canvas');
+
+  var gl = initGL(canvas);
+  if (!gl) {
+    setStatus('WebGL context creation failed.');
+    return;
+  }
+
+  gl.clearColor(0.0, 1.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  var video = document.getElementById('video');
+  video.srcObject = canvas.captureStream(0);
+  video.play();
+  video.onloadeddata = finished;
+  video.onerror = finished;
+}
+  </script>
+</head>
+
+<body onload='runTest();'>
+  <video id='video' width='256' height='256'></video>
+  <canvas id='canvas' width='256' height='256' style="display:none"></canvas>
+  <div id='status'></div>
+</body>
+
+</html>

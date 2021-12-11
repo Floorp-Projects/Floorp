@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for sync XHR into sync XHRs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+
+let xhr = new XMLHttpRequest();
+let testCompleted = false;
+
+let frame = document.createElement('frame');
+frame.addEventListener('load', function() {
+  if (testCompleted) {
+    return;
+  }
+
+  try {
+    xhr.responseType = "blob";
+    ok(false, "xhr.responseType cannot be settable");
+  } catch(e) {
+    ok(true, "xhr.responseType cannot be settable");
+  }
+
+  try {
+    xhr.abort();
+    ok(false, "xhr.abort should throw");
+  } catch(e) {
+    ok(true, "xhr.abort should throw");
+  }
+
+  try {
+    xhr.getAllResponseHeaders();
+    ok(false, "xhr.getAllResponseHeaders should throw");
+  } catch(e) {
+    ok(true, "xhr.getAllResponseHeaders should throw");
+  }
+
+  try {
+    xhr.getResponseHeader("foo");
+    ok(false, "xhr.getResponseHeader should throw");
+  } catch(e) {
+    ok(true, "xhr.getResponseHeader should throw");
+  }
+
+  try {
+    xhr.open('POST', location, false);
+    ok(false, "xhr.open should throw");
+  } catch(e) {
+    ok(true, "xhr.open should throw");
+  }
+
+  try {
+    xhr.send();
+    ok(false, "xhr.send should throw");
+  } catch(e) {
+    ok(true, "xhr.send should throw");
+  }
+
+  try {
+    xhr.timeout = 42;
+    ok(false, "xhr.timeout cannot be settable");
+  } catch(e) {
+    ok(true, "xhr.timeout cannot be settable");
+  }
+
+  try {
+    xhr.withCredentials = false;
+    ok(false, "xhr.withCredentials cannot be settable");
+  } catch(e) {
+    ok(true, "xhr.withCredentials cannot be settable");
+  }
+
+  try {
+    xhr.overrideMimeType("wow")
+    ok(false, "xhr.overrideMimeType should throw");
+  } catch(e) {
+    ok(true, "xhr.overrideMimeType should throw");
+  }
+}, { once: true });
+
+// This test is racy because we try to check that the loading of the frame
+// happens during a sync XHR. If the loading happens after, we still need to
+// consider the test passed.
+ok(xhr, "We have an XHR.");
+
+document.documentElement.appendChild(frame);
+xhr.open('POST', location, false);
+xhr.send('X');
+
+// Nothing can guarantee that the frame is loaded during the sync XHR.
+testCompleted = true;
+
+frame.remove();
+  </script>
+</body>
+</html>

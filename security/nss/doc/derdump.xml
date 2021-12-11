@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY date SYSTEM "date.xml">
+<!ENTITY version SYSTEM "version.xml">
+]>
+
+<refentry id="derdump">
+
+  <refentryinfo>
+    <date>&date;</date>
+    <title>NSS Security Tools</title>
+    <productname>nss-tools</productname>
+    <productnumber>&version;</productnumber>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>DERDUMP</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>derdump </refname>
+    <refpurpose>Dumps C-sequence strings from a DER encoded certificate file</refpurpose>
+  </refnamediv>
+
+ <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>derdump</command>
+      <arg><option>-r</option></arg>
+      <arg><option>-i <replaceable>input-file</replaceable></option></arg>
+      <arg><option>-o <replaceable>output-file</replaceable></option></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsection>
+    <title>STATUS</title>
+    <para>This documentation is still work in progress. Please contribute to the initial review in <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=836477">Mozilla NSS bug 836477</ulink>
+    </para>
+  </refsection>
+
+  <refsection>
+    <title>Description</title>
+
+    <para><command>derdump </command>dumps C-sequence strings from a DER encode certificate file </para>
+
+  </refsection>
+
+<refsection>
+    <title>Options</title>
+    
+    <variablelist>
+    
+    <varlistentry>
+        <term><option>-r </option></term>
+        <listitem><simpara>For formatted items, dump raw bytes as well</simpara></listitem>
+      </varlistentry>
+      
+      <varlistentry>
+        <term><option>-i </option> <replaceable>DER encoded file</replaceable></term>
+        <listitem><simpara>Define an input file to use (default is stdin)</simpara></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-o </option> <replaceable>output file</replaceable></term>
+        <listitem><simpara>Define an output file to use (default is stdout).</simpara></listitem>
+      </varlistentry>
+    
+        </variablelist>
+  </refsection>
+  
+  <refsection id="resources">
+    <title>Additional Resources</title>
+    <para>NSS is maintained in conjunction with PKI and security-related projects through Mozilla dn Fedora. The most closely-related project is Dogtag PKI, with a project wiki at <ulink url="http://pki.fedoraproject.org/wiki/">PKI Wiki</ulink>. </para>
+	<para>For information specifically about NSS, the NSS project wiki is located at <ulink url="http://www.mozilla.org/projects/security/pki/nss/">Mozilla NSS site</ulink>. The NSS site relates directly to NSS code changes and releases.</para>
+	<para>Mailing lists: pki-devel@redhat.com and pki-users@redhat.com</para>
+	<para>IRC: Freenode at #dogtag-pki</para>
+  </refsection>
+
+<!-- fill in your name first; keep the other names for reference -->
+  <refsection id="authors">
+    <title>Authors</title>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
+    <para>
+	Authors: Gerhardus Geldenhuis &lt;gerhardus.geldenhuis@gmail.com>. Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com&gt;
+    </para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="license">
+    <title>LICENSE</title>
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    </para>
+  </refsection>
+
+</refentry>

@@ -1,0 +1,225 @@
+<html>
+<head>
+  <title>CSS-like attributes tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    var gQueue = null;
+
+    function removeElm(aID) {
+      this.node = getNode(aID);
+      this.accessible = getAccessible(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.accessible),
+      ];
+
+      this.invoke = function removeElm_invoke() {
+        this.node.remove();
+      };
+
+      this.check = function removeElm_check() {
+        testAbsentCSSAttrs(this.accessible);
+      };
+
+      this.getID = function removeElm_getID() {
+        return "test CSS-based attributes on removed accessible";
+      };
+    }
+
+    function doTest() {
+      // CSS display
+      testCSSAttrs("display_block");
+      testCSSAttrs("display_inline");
+      testCSSAttrs("display_inline-block");
+      testCSSAttrs("display_list-item");
+      testCSSAttrs("display_table");
+      testCSSAttrs("display_inline-table");
+      testCSSAttrs("display_table-row-group");
+      testCSSAttrs("display_table-column");
+      testCSSAttrs("display_table-column-group");
+      testCSSAttrs("display_table-header-group");
+      testCSSAttrs("display_table-footer-group");
+      testCSSAttrs("display_table-row");
+      testCSSAttrs("display_table-cell");
+      testCSSAttrs("display_table-caption");
+
+      // CSS text-align
+      testCSSAttrs("text-align_left");
+      testCSSAttrs("text-align_right");
+      testCSSAttrs("text-align_center");
+      testCSSAttrs("text-align_justify");
+      testCSSAttrs("text-align_inherit");
+
+      // CSS text-indent
+      testCSSAttrs("text-indent_em");
+      testCSSAttrs("text-indent_ex");
+      testCSSAttrs("text-indent_in");
+      testCSSAttrs("text-indent_cm");
+      testCSSAttrs("text-indent_mm");
+      testCSSAttrs("text-indent_pt");
+      testCSSAttrs("text-indent_pc");
+      testCSSAttrs("text-indent_px");
+      testCSSAttrs("text-indent_percent");
+      testCSSAttrs("text-indent_inherit");
+
+      // CSS margin
+      testCSSAttrs("margin_em");
+      testCSSAttrs("margin_ex");
+      testCSSAttrs("margin_in");
+      testCSSAttrs("margin_cm");
+      testCSSAttrs("margin_mm");
+      testCSSAttrs("margin_pt");
+      testCSSAttrs("margin_pc");
+      testCSSAttrs("margin_px");
+      testCSSAttrs("margin_percent");
+      testCSSAttrs("margin_auto");
+      testCSSAttrs("margin_inherit");
+
+      testCSSAttrs("margin-left");
+      testCSSAttrs("margin-right");
+      testCSSAttrs("margin-top");
+      testCSSAttrs("margin-bottom");
+
+      // Elements
+      testCSSAttrs("span");
+      testCSSAttrs("div");
+      testCSSAttrs("p");
+      testCSSAttrs("input");
+      testCSSAttrs("table");
+      testCSSAttrs("tr");
+      testCSSAttrs("td");
+
+      // no CSS-based object attributes
+      testAbsentCSSAttrs(getAccessible("listitem").firstChild);
+
+      gQueue = new eventQueue();
+      gQueue.push(new removeElm("div"));
+      gQueue.invoke(); // SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=439566"
+     title="Include the css display property as an IAccessible2 object attribute">
+    Mozilla Bug 439566
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=460932"
+     title="text-indent and text-align should really be object attribute">
+    Mozilla Bug 460932
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=689540"
+     title="Expose IA2 margin- object attributes">
+    Mozilla Bug 689540
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=714579"
+     title="Don't use GetComputedStyle for object attribute calculation">
+    Mozilla Bug 714579
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=729831"
+     title="Don't expose CSS-based object attributes on not in tree accessible and accessible having no DOM element">
+    Mozilla Bug 729831
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="display_block" role="img"
+       style="display: block;">display: block</div>
+  <div id="display_inline" role="img"
+       style="display: inline;">display: inline</div>
+  <div id="display_inline-block" role="img"
+       style="display: inline-block;">display: inline-block</div>
+  <div id="display_list-item" role="img"
+       style="display: list-item;">display: list-item</div>
+  <div id="display_table" role="img"
+       style="display: table;">display: table</div>
+  <div id="display_inline-table" role="img"
+       style="display: inline-table;">display: inline-table</div>
+  <div id="display_table-row-group" role="img"
+       style="display: table-row-group;">display: table-row-group</div>
+  <div id="display_table-column" role="img"
+       style="display: table-column;">display: table-column</div>
+  <div id="display_table-column-group" role="img"
+       style="display: table-column-group;">display: table-column-group</div>
+  <div id="display_table-header-group" role="img"
+       style="display: table-header-group;">display: table-header-group</div>
+  <div id="display_table-footer-group" role="img"
+       style="display: table-footer-group;">display: table-footer-group</div>
+  <div id="display_table-row" role="img"
+       style="display: table-row;">display: table-row</div>
+  <div id="display_table-cell" role="img"
+       style="display: table-cell;">display: table-cell</div>
+  <div id="display_table-caption" role="img"
+       style="display: table-caption;">display: table-caption</div>
+
+  <p id="text-align_left" style="text-align: left;">text-align: left</p>
+  <p id="text-align_right" style="text-align: right;">text-align: right</p>
+  <p id="text-align_center" style="text-align: center;">text-align: center</p>
+  <p id="text-align_justify" style="text-align: justify;">text-align: justify</p>
+  <p id="text-align_inherit" style="text-align: inherit;">text-align: inherit</p>
+
+  <p id="text-indent_em" style="text-indent: 0.5em;">text-indent: 0.5em</p>
+  <p id="text-indent_ex" style="text-indent: 1ex;">text-indent: 1ex</p>
+  <p id="text-indent_in" style="text-indent: 0.5in;">text-indent: 0.5in</p>
+  <p id="text-indent_cm" style="text-indent: 2cm;">text-indent: 2cm</p>
+  <p id="text-indent_mm" style="text-indent: 10mm;">text-indent: 10mm</p>
+  <p id="text-indent_pt" style="text-indent: 30pt;">text-indent: 30pt</p>
+  <p id="text-indent_pc" style="text-indent: 2pc;">text-indent: 2pc</p>
+  <p id="text-indent_px" style="text-indent: 5px;">text-indent: 5px</p>
+  <p id="text-indent_percent" style="text-indent: 10%;">text-indent: 10%</p>
+  <p id="text-indent_inherit" style="text-indent: inherit;">text-indent: inherit</p>
+
+  <p id="margin_em" style="margin: 0.5em;">margin: 0.5em</p>
+  <p id="margin_ex" style="margin: 1ex;">margin: 1ex</p>
+  <p id="margin_in" style="margin: 0.5in;">margin: 0.5in</p>
+  <p id="margin_cm" style="margin: 2cm;">margin: 2cm</p>
+  <p id="margin_mm" style="margin: 10mm;">margin: 10mm</p>
+  <p id="margin_pt" style="margin: 30pt;">margin: 30pt</p>
+  <p id="margin_pc" style="margin: 2pc;">margin: 2pc</p>
+  <p id="margin_px" style="margin: 5px;">margin: 5px</p>
+  <p id="margin_percent" style="margin: 10%;">margin: 10%</p>
+  <p id="margin_auto" style="margin: auto;">margin: auto</p>
+  <p id="margin_inherit" style="margin: inherit;">margin: inherit</p>
+
+  <p id="margin-left" style="margin-left: 11px;">margin-left: 11px</p>
+  <p id="margin-right" style="margin-right: 21px;">margin-right</p>
+  <p id="margin-top" style="margin-top: 31px;">margin-top: 31px</p>
+  <p id="margin-bottom" style="margin-bottom: 41px;">margin-bottom: 41px</p>
+
+  <span id="span" role="group">It's span</span>
+  <div id="div">It's div</div>
+  <p id="p">It's paragraph"</p>
+  <input id="input"/>
+  <table id="table" style="margin: 2px; text-align: center; text-indent: 10%;">
+    <tr id="tr" role="group">
+      <td id="td">td</td>
+    </tr>
+  </table>
+
+  <ul>
+    <li id="listitem">item
+  </ul>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Reference: Perspective scrolling with nested clips</title>
+
+<style>
+
+html {
+  padding: 50px 0 3000px;
+}
+
+body {
+  margin: 0;
+}
+
+.scrollbox {
+  width: 600px;
+  height: 500px;
+  perspective: 1px;
+  overflow: auto;
+}
+
+.transformed {
+  will-change: transform;
+  width: 200px;
+  height: 200px;
+  margin: 200px 100px;
+  border: 10px solid black;
+}
+
+.spacer {
+  height: 4000px;
+}
+
+</style>
+
+<div class="scrollbox">
+  <div class="transformed"></div>
+  <div class="spacer"></div>
+</div>
+
+<script>
+document.documentElement.scrollTop = 250;
+</script>

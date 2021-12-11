@@ -1,0 +1,133 @@
+$Id: README,v 1.3 2007/11/21 00:09:10 adamcain Exp $ 
+
+nrappkit 1.0b2
+Copyright (C) 2006 Network Resonance, Inc.
+
+
+nrappkit is a toolkit for building standalone applications and
+appliances. It provides:
+
+- registry-based configuration (with change callbacks)
+- extensible command and configuration shell
+- extensible statistics system
+- configurable logging system
+- event and timer handling
+- generic plugin system
+- launcher daemon
+
+The contents of nrappkit were extracted from Network Resonance's
+product on the theory that they were generally useful for 
+application developers. 
+
+THIS PACKAGE DOES NOT GRANT A LICENSE OR RIGHT TO ANY OTHER NETWORK
+RESONANCE TECHNOLOGY OR SOFTWARE.
+
+
+
+BUILDING
+
+Builds are done semi-manually with port directories for each
+platform. There are pre-existing ports to FreeBSD, Linux (Ubuntu
+and Fedora Core), and Darwin (MacOSX). To build the system:
+
+	cd src/make/<platform>
+	gmake
+
+Some of the platforms come in several variants. Most notably,
+if a platform exists in "regular" and "-appliance" variant,
+this means that the regular variant just builds binaries intended
+to be run out of the make directory (for development) and the
+appliance variant is intended to be installed in a real system.
+
+By default we want to install things owned as user "pcecap".
+Either make this user or edit the Makefile to be a user you
+like (e.g., nobody).
+
+If you want to include the 'nrsh' command-line configuration
+tool in your build, you will need to make sure the line
+  BUILD_NRSH=yes
+appears (uncommented-out) in your platform Makefile.  You will 
+also need to to build OpenSSL and libedit and point your nrappkit
+Makefile to the correct paths. You can obtain these packages at:
+    openssl-0.9.7l
+    http://www.openssl.org/source/openssl-0.9.7l.tar.gz
+
+    libedit-20060829-2.9
+    http://freshmeat.net/redir/editline/53029/url_tgz/libedit-20060829-2.9.tar.gz
+
+
+INSTALLING
+If you're doing an appliance as opposed to a development build,
+you'll want to install it. This is easy:
+
+	su
+ 	gmake install
+
+Most binaries and libraries ends up in /usr/local/pcecap while
+data files are in /var/pcecap. However, you can tweak
+this in the Makefile. By default it's all owned by pcecap.
+
+To ensure that dynamic libraries are loaded correctly at runtime,
+you'd want to make sure the right directory is included in your
+LD_LIBRARY_PATH or via ldconfig.
+
+
+QUICK TOUR
+The build makes the following binaries that you may find useful:
+
+- captured    -- the launcher (the name is historical)
+- registryd   -- the registry daemon
+- nrregctl    -- a registry control program
+- nrsh        -- the command shell (when included in build)
+- nrstatsctl  -- the stats control program
+
+Using the nrcapctl script is the easiest way to interact with
+the applications. It is run as "nrcapctl <command>" with the
+following commands recognized:
+
+  startup            -- fires up captured, which in turn runs and
+                        initializes the registry
+
+  shutdown           -- kills captured and its child processes
+
+  status             -- prints the running status of captured in
+                        human-readable form
+
+  stat               -- prints the running status of captured in
+                        a form easily parsed by scripts
+
+  enable             -- alters the mode.txt file so that captured
+                        starts 
+
+  disable            -- alters the mode.txt file so that captured
+                        does not start
+
+  clear-statistics   -- equivalent to "nrstatsctl -z" (requires
+                        that captured be running)
+
+Note: the "start" and "stop" nrcapctl commands do nothing as they
+use components not included in nrappkit. However the associated
+script logic in nrcapctl demonstrates how additional applications
+might be launched using nrcapctl and particular registry settings.
+
+
+EXTENDING
+When things come up, they're pretty dumb. You'll probably want to
+write your own applications, otherwise it's not clear why you're doing
+this. The general idea is that you write your application using the
+facilities that nrappkit provides and then write plugins to the
+nrappkit components as necessary. So, for example, say you want
+to write a network daemon. You would:
+
+ - configure the launcher to launch your daemon (using the registry,
+   naturally).
+ - make calls to the registry to get configuration data
+ - make calls to the logging system to log data
+ - implement a stats module to record statistics
+ - write a plugin to nrsh to let people configure your parameters
+
+Examples of some of this stuff can be found in examples/demo_plugin.
+Otherwise, read the source. More documentation will be on the way,
+hopefully.
+
+

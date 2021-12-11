@@ -1,0 +1,42 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>An example of 'row-rule-extent: end'</title>
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace; padding:0; margin:0;
+}
+
+.flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  column-rule: 8px solid orange;
+  row-rule: 60% solid blue;
+  row-rule-extent: end;
+
+  place-content: center;
+  border: 5px solid;
+  margin: 2em;
+  block-size: 6em;
+  inline-size: 200px;
+  background: lightgrey;
+}
+
+x {
+  inline-size: 50px;
+  block-size: 2em;
+  background: grey;
+  opacity: .6;
+}
+x:nth-child(1) { order: 2; }
+x:nth-child(2) { inline-size: 45px; }
+x:nth-child(3) { inline-size: 35px; }
+x:nth-child(4) { inline-size: 60px; }
+
+</style>
+
+<div class="flex"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>

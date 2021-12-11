@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<head>
+  <!-- See ssty-1-ref.html for an explanation of this font -->
+  <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "sstyfont";
+      src: url("ssty.woff");
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Test changes of scriptsizemultiplier on setting of ssty font feature -->
+
+  <math>
+    <!-- No changes with scriptsizemultipliers that make things bigger -->
+    <mstyle style="font-family: 'sstyfont';" scriptsizemultiplier="1.2">
+      <mroot>
+        <mo>D</mo>
+        <mo>D</mo>
+      </mroot>
+
+      <mfrac>
+        <mo>D</mo>
+        <mo>D</mo>
+      </mfrac>
+
+      <mfrac>
+        <mfrac>
+          <mo>D</mo>
+          <mo>D</mo>
+        </mfrac>
+        <mfrac>
+          <mo>D</mo>
+          <mo>D</mo>
+        </mfrac>
+      </mfrac>
+
+    <mfrac>
+      <mroot>
+        <mo>D</mo>
+        <mo>D</mo>
+      </mroot>
+      <mo>D</mo>
+    </mfrac>
+
+    <mover>
+      <mo>D</mo>
+      <mover>
+        <mo>D</mo>
+        <mo>D</mo>
+      </mover>
+    </mover>
+
+    <munder>
+      <mo>D</mo>
+      <munder>
+        <mo>D</mo>
+        <mo>D</mo>
+      </munder>
+    </munder>
+
+    <munderover>
+      <mo>D</mo>
+      <munderover>
+        <mo>D</mo>
+        <mo>D</mo>
+        <mo>D</mo>
+      </munderover>
+      <munderover>
+        <mo>D</mo>
+        <mo>D</mo>
+        <mo>D</mo>
+      </munderover>
+    </munderover>
+
+  </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+   <!-- A slower increase in ssty setting.
+        scriptlevel=1 corresponds to ssty=0
+        scriptlevel=2 corresponds to ssty=1
+        scriptlevel=3 corresponds to ssty=2 -->
+    <mstyle style="font-family: 'sstyfont';" scriptsizemultiplier="0.8">
+      <mroot>
+        <mo>A</mo>
+        <mo>A</mo>
+      </mroot>
+
+      <mfrac>
+        <mo>A</mo>
+        <mo>A</mo>
+      </mfrac>
+
+      <mfrac>
+        <mfrac>
+          <mo>A</mo>
+          <mo>A</mo>
+        </mfrac>
+        <mfrac>
+          <mo>A</mo>
+          <mo>A</mo>
+        </mfrac>
+      </mfrac>
+
+      <mfrac>
+        <mroot>
+          <mo>A</mo>
+          <mo>A</mo>
+        </mroot>
+        <mo>A</mo>
+      </mfrac>
+
+    <mover>
+      <mo>A</mo>
+      <mover>
+        <mo>A</mo>
+        <mo>A</mo>
+      </mover>
+    </mover>
+
+    <munder>
+      <mo>A</mo>
+      <munder>
+        <mo>A</mo>
+        <mo>A</mo>
+      </munder>
+    </munder>
+
+    <munderover>
+      <mo>A</mo>
+      <munderover>
+        <mo>A</mo>
+        <mo>A</mo>
+        <mo>A</mo>
+      </munderover>
+      <munderover>
+        <mo>A</mo>
+        <mo>A</mo>
+        <mo>A</mo>
+      </munderover>
+    </munderover>
+
+  </mstyle>
+  </math>
+
+  <p>
+
+  <math>
+    <!-- A faster increase in ssty setting.
+         scriptlevel=1 corresponds to ssty=2
+         scriptlevel=2 corresponds to ssty=2
+         scriptlevel=3 corresponds to ssty=2 -->
+    <mstyle style="font-family: 'sstyfont';" scriptsizemultiplier="0.5">
+      <mroot>
+        <mo>D</mo>
+        <mo>C</mo>
+      </mroot>
+
+      <mfrac>
+        <mo>C</mo>
+        <mo>C</mo>
+      </mfrac>
+
+      <mfrac>
+        <mfrac>
+          <mo>C</mo>
+          <mo>C</mo>
+        </mfrac>
+        <mfrac>
+          <mo>C</mo>
+          <mo>C</mo>
+        </mfrac>
+      </mfrac>
+
+      <mfrac>
+        <mroot>
+          <mo>C</mo>
+          <mo>C</mo>
+        </mroot>
+        <mo>C</mo>
+      </mfrac>
+
+    <mover>
+      <mo>D</mo>
+      <mover>
+        <mo>C</mo>
+        <mo>C</mo>
+      </mover>
+    </mover>
+
+    <munder>
+      <mo>D</mo>
+      <munder>
+        <mo>C</mo>
+        <mo>C</mo>
+      </munder>
+    </munder>
+
+    <munderover>
+      <mo>D</mo>
+      <munderover>
+        <mo>C</mo>
+        <mo>C</mo>
+        <mo>C</mo>
+      </munderover>
+      <munderover>
+        <mo>C</mo>
+        <mo>C</mo>
+        <mo>C</mo>
+      </munderover>
+    </munderover>
+
+  </mstyle>
+  </math>
+</body>

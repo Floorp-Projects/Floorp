@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607464
+-->
+<head>
+  <title>Test for Bug 607464</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=607464">Mozilla Bug 607464</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 607464:
+ * Pixel scrolling shouldn't scroll smoothly, even if general.smoothScroll is on.
+ **/
+
+function scrollDown150PxWithPixelScrolling(scrollbox) {
+  var win = scrollbox.ownerDocument.defaultView;
+  let event = {
+    deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+    deltaY: 30.0,
+    lineOrPageDeltaY: 1
+  };
+  // A pixel scroll with lineOrPageDeltaY.
+  synthesizeWheel(scrollbox, 10, 10, event, win);
+  // then 4 pixel scrolls without lineOrPageDeltaY.
+  event.lineOrPageDeltaY = 0;
+  for (let i = 0; i < 4; ++i) {
+    synthesizeWheel(scrollbox, 10, 10, event, win);
+  }
+
+  // Note: the line scroll shouldn't have any effect because it has
+  // hasPixels = true set on it. We send it to emulate normal
+  // behavior.
+}
+
+function runTest() {
+  var win = open('bug607464.html', '_blank', 'width=300,height=300');
+  SimpleTest.waitForFocus(function () {
+    var scrollbox = win.document.getElementById("scrollbox");
+    let scrollTopBefore = scrollbox.scrollTop;
+
+    win.addEventListener("scroll", function(e) {
+      is(scrollbox.scrollTop % 30, 0,
+         "Pixel scrolling should happen instantly, not smoothly. The " +
+         "scroll position " + scrollbox.scrollTop + " in this sequence of wheel " +
+         "events should be a multiple of 30.");
+      if (scrollbox.scrollTop == 150) {
+        win.close();
+        SimpleTest.finish();
+      }
+    }, true);
+
+    promiseOnlyApzControllerFlushed(win).then(function() {
+      scrollDown150PxWithPixelScrolling(scrollbox);
+    });
+  }, win);
+}
+
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["general.smoothScroll", true],
+           ["mousewheel.acceleration.start", -1],
+           ["mousewheel.system_scroll_override.enabled", false]]}, runTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.testInChaosMode();
+
+</script>
+</pre>
+
+</body>
+</html>

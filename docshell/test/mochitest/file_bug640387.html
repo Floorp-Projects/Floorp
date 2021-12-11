@@ -1,0 +1,26 @@
+<html>
+<body onhashchange='hashchange()' onload='load()' onpopstate='popstate()'>
+
+<script>
+function hashchange() {
+  var f = (opener || parent).childHashchange;
+  if (f)
+    f();
+}
+
+function load() {
+  var f = (opener || parent).childLoad;
+  if (f)
+    f();
+}
+
+function popstate() {
+  var f = (opener || parent).childPopstate;
+  if (f)
+    f();
+}
+</script>
+
+Not much to see here...
+</body>
+</html>

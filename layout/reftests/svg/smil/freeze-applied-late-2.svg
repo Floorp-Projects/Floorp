@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <!-- This test checks for correct behavior when fill="freeze" is applied
+       *after* the end of an animation's interval.  In this case, we take one
+       sample partway through the animation.  Then we immediately seek to a
+       time after the end, so that only the one sample will have been taken
+       when we apply fill="freeze". -->
+  <script>
+    function go() {
+      var svg = document.documentElement;
+      svg.pauseAnimations();
+      svg.setCurrentTime(1.0);
+      svg.setCurrentTime(4.0);
+      document.getElementById("anim").setAttribute("fill", "freeze");
+      svg.removeAttribute("class");
+    }
+  </script>
+  <rect id="blueRect" x="15" y="15" width="200" height="100" fill="blue">
+    <animate id="anim" attributeName="height"
+             to="200" begin="0s" dur="2s"/>
+  </rect>
+</svg>

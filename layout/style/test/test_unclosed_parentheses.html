@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=575672
+-->
+<head>
+  <title>Test for Bug 575672</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style type="text/css" id="style"></style>
+  <style type="text/css">
+    #display { position: relative }
+  </style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=575672">Mozilla Bug 575672</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for unclosed parentheses in CSS values. **/
+
+// Each of the following semicolon-terminated @-rules should have a
+// single missing ')' in the value.
+var semirules = [
+  "@import (",
+  "@import url(",
+  "@import url(foo",
+  "@import url('foo'",
+  "@import foo(",
+];
+
+// Each of the following declarations should have a single missing ')'
+// in the value.
+var declarations = [
+  "content: url(",
+  "content: url( ",
+  "content: url(http://www.foo.com",
+  "content: url('http://www.foo.com'",
+  "content: foobar(",
+  "content: foobar( ",
+  "content: foobar(http://www.foo.com",
+  "content: foobar('http://www.foo.com'",
+  "color: url(",
+  "color: url( ",
+  "color: url(http://www.foo.com",
+  "color: url('http://www.foo.com'",
+  "background-image: linear-gradient(",
+  "background-image: linear-gradient( ",
+  "background-image: linear-gradient(to",
+  "background-image: linear-gradient(to top",
+  "background-image: linear-gradient(to top left",
+  "background-image: linear-gradient(to top left,",
+  "background-image: repeating-linear-gradient(to top left, red, blue",
+  "background-image: linear-gradient(to top left, red, yellow, blue",
+  "background-image: linear-gradient(to top left, red 1px, yellow 5px, blue 10px",
+  "background-image: linear-gradient(to top left, red, yellow, rgb(0, 0, 255)",
+  "background-image: linear-gradient(red, blue",
+  "background-image: linear-gradient(red, yellow, blue",
+  "background-image: linear-gradient(red 1px, yellow 5px, blue 10px",
+  "background-image: linear-gradient(red, yellow, rgb(0, 0, 255)",
+  "background-image: radial-gradient(",
+  "background-image: radial-gradient( ",
+  "background-image: radial-gradient(at",
+  "background-image: radial-gradient(at ",
+  "background-image: radial-gradient(at center",
+  "background-image: radial-gradient(at center,",
+  "background-image: radial-gradient(at center ",
+  "background-image: radial-gradient(closest-corner",
+  "background-image: radial-gradient(farthest-side ",
+  "background-image: radial-gradient(closest-corner ellipse",
+  "background-image: radial-gradient(farthest-side circle ",
+  "background-image: radial-gradient(closest-corner ellipse at",
+  "background-image: radial-gradient(farthest-side circle at ",
+  "background-image: radial-gradient(closest-corner ellipse at center",
+  "background-image: radial-gradient(farthest-side circle at center ",
+  "background-image: radial-gradient(50px",
+  "background-image: radial-gradient(50px,",
+  "background-image: radial-gradient(50px ",
+  "background-image: radial-gradient(50px at",
+  "background-image: radial-gradient(50px at ",
+  "background-image: radial-gradient(50px at center",
+  "background-image: radial-gradient(50px at center ",
+  "background-image: radial-gradient(50px at center,",
+  "background-image: radial-gradient(50px 50px",
+  "background-image: radial-gradient(50px 50px,",
+  "background-image: radial-gradient(50px 50px ",
+  "background-image: radial-gradient(50px 50px at",
+  "background-image: radial-gradient(50px 50px at ",
+  "background-image: radial-gradient(50px 50px at center",
+  "background-image: radial-gradient(50px 50px at center ",
+  "background-image: radial-gradient(50px 50px at center,",
+  "background-image: radial-gradient(50px 50px at center, red, blue",
+  "background-image: radial-gradient(ellipse at",
+  "background-image: radial-gradient(ellipse at ",
+  "background-image: radial-gradient(circle",
+  "background-image: radial-gradient(circle ",
+  "background-image: radial-gradient(circle closest-corner",
+  "background-image: radial-gradient(circle farthest-side ",
+  "background-image: radial-gradient(ellipse closest-corner at center",
+  "background-image: radial-gradient(ellipse farthest-side at center,",
+  "background-image: radial-gradient(circle at center",
+  "background-image: radial-gradient(circle at center,",
+  "background-image: radial-gradient(circle at center ",
+  "background-image: radial-gradient(circle at 50px center",
+  "background-image: radial-gradient(circle at 50px center ",
+  "background-image: radial-gradient(ellipse 50px",
+  "background-image: radial-gradient(ellipse 50px ",
+  "background-image: radial-gradient(ellipse 50px 50px",
+  "background-image: radial-gradient(ellipse 50px 50px,",
+  "background-image: radial-gradient(ellipse 50px 50px ",
+  "background-image: radial-gradient(ellipse 50px 50px at",
+  "background-image: radial-gradient(ellipse 50px 50px at ",
+  "background-image: radial-gradient(ellipse 50px 50px at center",
+  "background-image: radial-gradient(ellipse 50px 50px at center ",
+  "background-image: radial-gradient(ellipse 50px 50px at center,",
+  "background-image: radial-gradient(ellipse 50px 50px at center, red, blue",
+  "background-image: radial-gradient(at top left, red, blue",
+  "background-image: radial-gradient(farthest-corner, red, blue",
+  "background-image: radial-gradient(ellipse closest-corner, red, hsl(240, 50%, 50%)",
+  "background-image: radial-gradient(farthest-side circle, red, blue",
+  "background-image: repeating-radial-gradient(50%",
+  "background-image: repeating-radial-gradient(50% ",
+  "background-image: repeating-radial-gradient(50% 50%",
+  "background-image: repeating-radial-gradient(50% 50%,",
+  "background-image: repeating-radial-gradient(50% 50%, red, blue",
+  "background-image: repeating-radial-gradient(circle, red, blue",
+  "background-image: -moz-image-rect(",
+  "background-image: -moz-image-rect( ",
+  "background-image: -moz-image-rect(url(foo.jpg)",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10 ",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10,",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, ",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10 ",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10,",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10, ",
+  "color: rgb(",
+  "color: rgb( ",
+  "color: rgb(128, 0",
+  "color: rgb(128, 0, 128",
+  "color: rgb(128, 0, 128, 128",
+  "color: rgba(",
+  "color: rgba( ",
+  "color: rgba(128, 0",
+  "color: rgba(128, 0, 128",
+  "color: rgba(128, 0, 128, 1",
+  "color: rgba(128, 0, 128, 1, 1",
+  "color: hsl(",
+  "color: hsl( ",
+  "color: hsl(240, 50%",
+  "color: hsl(240, 50%, 50%",
+  "color: hsl(240, 50%, 50%, 50%",
+  "color: hsla(",
+  "color: hsla( ",
+  "color: hsla(240, 50%",
+  "color: hsla(240, 50%, 50%",
+  "color: hsla(240, 50%, 50%, 1",
+  "color: hsla(240, 50%, 50%, 1, 1",
+  "content: counter(",
+  "content: counter( ",
+  "content: counter(foo",
+  "content: counter(foo ",
+  "content: counter(foo,",
+  "content: counter(foo, ",
+  "content: counter(foo, upper-roman",
+  "content: counter(foo, upper-roman ",
+  "content: counter(foo, upper-roman,",
+  "content: counter(foo, upper-roman, ",
+  "content: counters(",
+  "content: counters( ",
+  "content: counters(foo, ','",
+  "content: counters(foo, ',' ",
+  "content: counters(foo, ',',",
+  "content: counters(foo, ',', ",
+  "content: counters(foo, ',', upper-roman",
+  "content: counters(foo, ',', upper-roman ",
+  "content: counters(foo, ',', upper-roman,",
+  "content: counters(foo, ',', upper-roman, ",
+  "content: attr(",
+  "content: attr( ",
+  "content: attr(href",
+  "content: attr(href ",
+  "content: attr(html",
+  "content: attr(html ",
+  "content: attr(html|",
+  "content: attr(html| ",
+  "content: attr(html|href",
+  "content: attr(html|href ",
+  "content: attr(|",
+  "content: attr(| ",
+  "content: attr(|href",
+  "content: attr(|href ",
+  "transition-timing-function: cubic-bezier(",
+  "transition-timing-function: cubic-bezier( ",
+  "transition-timing-function: cubic-bezier(0, 0, 1",
+  "transition-timing-function: cubic-bezier(0, 0, 1 ",
+  "transition-timing-function: cubic-bezier(0, 0, 1,",
+  "transition-timing-function: cubic-bezier(0, 0, 1, ",
+  "transition-timing-function: cubic-bezier(0, 0, 1, 1",
+  "transition-timing-function: cubic-bezier(0, 0, 1, 1 ",
+  "transition-timing-function: cubic-bezier(0, 0, 1, 1,",
+  "transition-timing-function: cubic-bezier(0, 0, 1, 1, ",
+  "border-top-width: calc(",
+  "border-top-width: calc( ",
+  "border-top-width: calc(2em",
+  "border-top-width: calc(2em ",
+  "border-top-width: calc(2em +",
+  "border-top-width: calc(2em + ",
+  "border-top-width: calc(2em *",
+  "border-top-width: calc(2em * ",
+  "border-top-width: calc((2em)",
+  "border-top-width: calc((2em) ",
+];
+
+var selectors = [
+  ":not(",
+  ":not( ",
+  ":not(-",
+  ":not(- ",
+  ":not(>",
+  ":not(> ",
+  ":not(div p",
+  ":not(div p ",
+  ":not(div >",
+  ":not(div > ",
+];
+
+var textNode = document.createTextNode("");
+document.getElementById("style").appendChild(textNode);
+var cs = getComputedStyle(document.getElementById("display"), "");
+
+for (var i = 0; i < semirules.length; ++i) {
+  var sheet = semirules[i] +
+              "p#display { color: red } ) ; p { color: green; z-index: " + (i + 1) + " }";
+  textNode.data = sheet;
+  is(cs.color, "rgb(0, 128, 0)",
+     "color for rule '" + semirules[i] + "'");
+  is(cs.zIndex, String(i + 1),
+     "z-index for rule '" + semirules[i] + "'");
+}
+
+for (var i = 0; i < declarations.length; ++i) {
+  var sheet = "@namespace html url(http://www.w3.org/1999/xhtml);\n" +
+              "#display { color: green; " + declarations[i] +
+              " x x x x x x x ; color: red; ) ; z-index: " + (i + 1) + " }";
+  textNode.data = sheet;
+  is(cs.color, "rgb(0, 128, 0)",
+     "color for declaration '" + declarations[i] + "'");
+  is(cs.zIndex, String(i + 1),
+     "z-index for declaration '" + declarations[i] + "'");
+}
+
+for (var i = 0; i < selectors.length; ++i) {
+  var sheet = "@namespace html url(http://www.w3.org/1999/xhtml);\n" +
+              "#display { color: green } " +
+              selectors[i] + " x x x x x x x , #display { color: red } #display { color: red } ) , #display { color: red } " +
+              "#display { z-index: " + (i + 1) + " }";
+  textNode.data = sheet;
+  is(cs.color, "rgb(0, 128, 0)",
+     "color for selector '" + selectors[i] + "'");
+  is(cs.zIndex, String(i + 1),
+     "z-index for selector '" + selectors[i] + "'");
+}
+
+</script>
+</pre>
+</body>
+</html>

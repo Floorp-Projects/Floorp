@@ -1,0 +1,152 @@
+[
+  {
+    "namespace": "permissions",
+    "permissions": ["manifest:optional_permissions"],
+    "types": [
+      {
+        "id": "Permissions",
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "items": { "$ref": "manifest.OptionalPermission" },
+            "optional": true,
+            "default": []
+          },
+          "origins": {
+            "type": "array",
+            "items": { "$ref": "manifest.MatchPattern" },
+            "optional": true,
+            "default": []
+          }
+        }
+      },
+      {
+        "id": "AnyPermissions",
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "items": { "$ref": "manifest.Permission" },
+            "optional": true,
+            "default": []
+          },
+          "origins": {
+            "type": "array",
+            "items": { "$ref": "manifest.MatchPattern" },
+            "optional": true,
+            "default": []
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "getAll",
+        "type": "function",
+        "async": "callback",
+        "description": "Get a list of all the extension's permissions.",
+        "parameters": [
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "permissions",
+                "$ref": "AnyPermissions"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "contains",
+        "type": "function",
+        "async": "callback",
+        "description": "Check if the extension has the given permissions.",
+        "parameters": [
+          {
+            "name": "permissions",
+            "$ref": "AnyPermissions"
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "request",
+        "type": "function",
+        "allowedContexts": ["content"],
+        "async": "callback",
+        "requireUserInput": true,
+        "description": "Request the given permissions.",
+        "parameters": [
+          {
+            "name": "permissions",
+            "$ref": "Permissions"
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "granted",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "remove",
+        "type": "function",
+        "async": "callback",
+        "description": "Relinquish the given permissions.",
+        "parameters": [
+          {
+            "name": "permissions",
+            "$ref": "Permissions"
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+            ]
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onAdded",
+        "type": "function",
+        "description": "Fired when the extension acquires new permissions.",
+        "parameters": [
+          {
+            "name": "permissions",
+            "$ref": "Permissions"
+          }
+        ]
+      },
+      {
+        "name": "onRemoved",
+        "type": "function",
+        "description": "Fired when permissions are removed from the extension.",
+        "parameters": [
+          {
+            "name": "permissions",
+            "$ref": "Permissions"
+          }
+        ]
+      }
+    ]
+  }
+]

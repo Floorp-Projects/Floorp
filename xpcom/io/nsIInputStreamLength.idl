@@ -1,0 +1,85 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIEventTarget;
+interface nsIInputStreamLengthCallback;
+
+/**
+ * Note: Instead of using these interfaces directly, consider to use
+ * InputStreamLengthHelper class.
+ */
+
+[uuid(452d059f-9a9c-4434-8839-e10d1405647c)]
+interface nsIInputStreamLength : nsISupports
+{
+  /**
+   * Returns the total length of the stream if known. Otherwise it returns -1.
+   * This is different than calling available() which returns the number of
+   * bytes ready to be read from the stream.
+   * -1 is a valid value for a stream that doesn't know its length. For
+   * instance, a pipe stream could return such value.
+   *
+   * It could throw NS_BASE_STREAM_WOULD_BLOCK if the inputStream is
+   * non-blocking. If this happens, you should use
+   * nsIAsyncInputStreamLength::asyncLengthWait().
+   *
+   * If the stream has already been read (read()/readSegments()/close()/seek()
+   * methods has been called), length() returns NS_ERROR_NOT_AVAILABLE.
+   *
+   * This is not an attribute because a stream can change its length. For
+   * instance, if the stream is a file inputStream and the underlying OS file
+   * changes, its length will change as well.
+   */
+  long long length();
+};
+
+[uuid(b63f9ecf-4668-44a3-93bd-72dbc65a6125)]
+interface nsIAsyncInputStreamLength : nsISupports
+{
+  /**
+   * If the stream is non-blocking, nsIInputStreamLength::length() can return
+   * NS_BASE_STREAM_WOULD_BLOCK. The caller must then wait for the stream to
+   * know its length.
+   *
+   * If the stream implements nsIAsyncInputStreamLength, then the caller can
+   * use this interface to request an asynchronous notification when the
+   * stream's length becomes known (via the AsyncLengthWait method).
+   * If the length is already known, the aCallback will be still called
+   * asynchronously.
+   *
+   * If the stream has already been read (read()/readSegments()/close()/seek()
+   * methods has been called), length() returns NS_ERROR_NOT_AVAILABLE.
+   *
+   * @param aCallback
+   *        This object is notified when the length becomes known. This
+   *        parameter may be null to clear an existing callback.
+   * @param aEventTarget
+   *        Specify that the notification must be delivered to a specific event
+   *        target.
+   */
+  void asyncLengthWait(in nsIInputStreamLengthCallback aCallback,
+                      in nsIEventTarget aEventTarget);
+};
+
+/**
+ * This is a companion interface for
+ * nsIAsyncInputStreamLength::asyncLengthWait.
+ */
+[function, uuid(9c0c13b9-1b33-445d-8adb-a8a7866a6c06)]
+interface nsIInputStreamLengthCallback : nsISupports
+{
+  /**
+   * Called to inform what the total length of the stream is.
+   *
+   * @param aStream
+   *        The stream whose asyncLengthWait method was called.
+   * @param aLength
+   *        The stream's length. It can be -1 if the stream doesn't know its
+   *        length. For instance, this can happen for a pipe inputStream.
+   */
+  void onInputStreamLengthReady(in nsIAsyncInputStreamLength aStream,
+                                in long long aLength);
+};

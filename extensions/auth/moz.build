@@ -1,0 +1,39 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    "nsAuthGSSAPI.cpp",
+]
+
+SOURCES += [
+    "nsAuthSASL.cpp",
+    "nsHttpNegotiateAuth.cpp",  # contains constants whose names conflict with constants in other files
+    "nsIAuthModule.cpp",  # includes windows.h recursively which conflicts with TimeStamp.h
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    SOURCES += [
+        "nsAuthSSPI.cpp",
+    ]
+    DEFINES["USE_SSPI"] = True
+else:
+    UNIFIED_SOURCES += [
+        "nsAuthSambaNTLM.cpp",
+    ]
+
+LOCAL_INCLUDES += [
+    "/netwerk/dns",  # For nsDNSService2.h
+    "/security/manager/ssl",
+]
+
+FINAL_LIBRARY = "xul"
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
+include("/ipc/chromium/chromium-config.mozbuild")

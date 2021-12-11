@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessibility Name Calculating Test.">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../treeview.js" />
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    function treeTester(aID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function treeTester_invoke()
+      {
+        this.DOMNode.view = new nsTreeTreeView();
+      }
+
+      this.check = function treeTester_check(aEvent)
+      {
+        var tree = {
+          role: ROLE_OUTLINE,
+          children: [
+            {
+              role: ROLE_LIST
+            },
+            {
+              role: ROLE_OUTLINEITEM,
+              children: [],
+              name: "row1col"
+            },
+            {
+              role: ROLE_OUTLINEITEM,
+              children: [],
+              name: "row2_col"
+            },
+            {
+              role: ROLE_OUTLINEITEM,
+              children: [],
+              name: "row2.1_col"
+            },
+            {
+              role: ROLE_OUTLINEITEM,
+              children: [],
+              name: "row2.2_col"
+            },
+            {
+              role: ROLE_OUTLINEITEM,
+              children: [],
+              name: "row3_col"
+            },
+            {
+              role: ROLE_OUTLINEITEM,
+              children: [],
+              name: "row4col"
+            }
+          ]
+        };
+        testAccessibleTree(this.DOMNode, tree);
+      }
+
+      this.getID = function treeTester_getID()
+      {
+        return "Tree name testing for " + aID;
+      }
+    }
+
+    function tableTester(aID, aIsTable, aCol1ID, aCol2ID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function tableTester_invoke()
+      {
+        this.DOMNode.view = new nsTableTreeView(2);
+      }
+
+      this.check = function tableTester_check(aEvent)
+      {
+        var tree = {
+          role: aIsTable ? ROLE_TABLE : ROLE_TREE_TABLE,
+          children: [
+            {
+              role: ROLE_LIST
+            },
+            {
+              role: ROLE_ROW,
+              children: [
+                {
+                  role: ROLE_GRID_CELL,
+                  children: [],
+                  name: "row0_" + aCol1ID
+                },
+                {
+                  role: ROLE_GRID_CELL,
+                  children: [],
+                  name: "row0_" + aCol2ID
+                }
+              ],
+              name: "row0_" + aCol1ID + " row0_" + aCol2ID
+            },
+            {
+              role: ROLE_ROW,
+              children: [
+                {
+                  role: ROLE_GRID_CELL,
+                  children: [],
+                  name: "row1_" + aCol1ID
+                },
+                {
+                  role: ROLE_GRID_CELL,
+                  children: [],
+                  name: "row1_" + aCol2ID
+                }
+              ],
+              name: "row1_" + aCol1ID + " row1_" + aCol2ID
+            }
+          ]
+        };
+        testAccessibleTree(this.DOMNode, tree);
+      }
+
+      this.getID = function tableTester_getID()
+      {
+        return "Tree name testing for " + aID;
+      }
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue(EVENT_REORDER);
+
+      gQueue.push(new treeTester("tree"));
+      gQueue.push(new tableTester("table", true, "t_col1", "t_col2"));
+      gQueue.push(new tableTester("treetable", false, "tt_col1", "tt_col2"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=546812"
+       title="Treegrid row accessible shouldn't inherit name from tree accessible">
+      Mozilla Bug 546812
+    </a>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=664376"
+       title="Table rows of XUL trees no longer containing cell content as accessible name">
+      Mozilla Bug 664376
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox flex="1">
+
+  <tree id="tree" flex="1">
+    <treecols>
+      <treecol id="col" flex="1" primary="true" label="column"/>
+    </treecols>
+    <treechildren/>
+  </tree>
+
+  <tree id="table" flex="1">
+    <treecols>
+      <treecol id="t_col1" flex="1" label="column"/>
+      <treecol id="t_col2" flex="1" label="column 2"/>
+    </treecols>
+    <treechildren/>
+  </tree>
+
+  <tree id="treetable" flex="1">
+    <treecols>
+      <treecol id="tt_col1" flex="1" label="column" primary="true"/>
+      <treecol id="tt_col2" flex="1" label="column 2"/>
+    </treecols>
+    <treechildren/>
+  </tree>
+
+  </vbox> <!-- close tests area -->
+  </hbox> <!-- close main area -->
+</window>

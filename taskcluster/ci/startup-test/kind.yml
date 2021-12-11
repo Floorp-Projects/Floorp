@@ -1,0 +1,126 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    # We want to test the signed version of a build, to make sure
+    # any startup problems or crashes caused by signing are caught
+    # This means we depend on a different kind depending on the platform
+    # linux
+    - build-signing
+    # mac
+    - repackage
+    # windows
+    - repackage-signing
+
+transforms:
+    - gecko_taskgraph.transforms.startup_test:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    name: startup-test
+    description: Check whether or not a product crashes on startup
+    run-on-projects: ['mozilla-central']
+    worker:
+        max-run-time: 3600
+    run:
+        sparse-profile: mozharness
+    attributes:
+        build_type: opt
+    treeherder:
+        symbol: SUT
+        kind: test
+        tier: 1
+
+jobs:
+    linux32:
+        dependencies:
+            build-signing: build-signing-linux-shippable/opt
+        run:
+            using: run-task
+            cwd: "{checkout}"
+        extra-config:
+            upstream_kind: build-signing
+            upstream_artifact: target.tar.bz2
+            binary: firefox
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: ubuntu1804-test}
+        shipping-product: firefox
+        attributes:
+            build_platform: linux-shippable
+        treeherder:
+            platform: linux-shippable/opt
+
+    linux64:
+        dependencies:
+            build-signing: build-signing-linux64-shippable/opt
+        run:
+            using: run-task
+            cwd: "{checkout}"
+        extra-config:
+            upstream_kind: build-signing
+            upstream_artifact: target.tar.bz2
+            binary: firefox
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: ubuntu1804-test}
+        shipping-product: firefox
+        attributes:
+            build_platform: linux64-shippable
+        treeherder:
+            platform: linux64-shippable/opt
+
+    macosx64:
+        dependencies:
+            repackage: repackage-macosx64-shippable/opt
+        run:
+            using: mach
+            python-version: 3
+        extra-config:
+            upstream_kind: repackage
+            upstream_artifact: target.dmg
+            binary: Contents/MacOS/firefox
+        worker-type: t-osx-1015-r8
+        shipping-product: firefox
+        attributes:
+            build_platform: macosx64-shippable
+        treeherder:
+            platform: macosx64-shippable/opt
+
+    win32:
+        dependencies:
+            repackage-signing: repackage-signing-win32-shippable/opt
+        run:
+            using: mach
+            python-version: 3
+        extra-config:
+            upstream_kind: repackage-signing
+            upstream_artifact: target.installer.exe
+            binary: core/firefox.exe
+        worker-type: win10-64-2004-source
+        shipping-product: firefox
+        attributes:
+            build_platform: win32-shippable
+        treeherder:
+            platform: windows2012-32-shippable/opt
+
+    win64:
+        dependencies:
+            repackage-signing: repackage-signing-win64-shippable/opt
+        run:
+            using: mach
+            python-version: 3
+        extra-config:
+            upstream_kind: repackage-signing
+            upstream_artifact: target.installer.exe
+            binary: core/firefox.exe
+        worker-type: win10-64-2004-source
+        shipping-product: firefox
+        attributes:
+            build_platform: win64-shippable
+        treeherder:
+            platform: windows2012-64-shippable/opt

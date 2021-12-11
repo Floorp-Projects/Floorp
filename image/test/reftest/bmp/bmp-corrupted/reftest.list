@@ -1,0 +1,21 @@
+# Corrupted BMP tests
+
+== wrapper.html?invalid-signature.bmp about:blank
+== wrapper.html?invalid-bpp.bmp about:blank
+== wrapper.html?os2-invalid-bpp.bmp about:blank
+# Tests for an unsupported compression value
+== wrapper.html?invalid-compression.bmp about:blank
+# Tests for RLE4 with an invalid BPP
+== wrapper.html?invalid-compression-RLE4.bmp about:blank
+# Tests for RLE8 with an invalid BPP
+== wrapper.html?invalid-compression-RLE8.bmp about:blank
+
+# Test for BITFIELDS with an invalid BIH size. (This is the obscure
+# BITMAPV3INFOHEADER variant mentioned in
+# https://en.wikipedia.org/wiki/BMP_file_format which we don't accept.)
+== wrapper.html?invalid-compression-BITFIELDS.bmp about:blank
+
+== wrapper.html?invalid-truncated-metadata.bmp about:blank
+
+# Test for an invalid data offset
+== wrapper.html?invalid-data-offset.bmp about:blank

@@ -1,0 +1,29 @@
+<html><head>
+<title>Testcase bug - Crash [@ nsRuleNode::GetParentData]</title>
+<script>
+function addstyles1(){
+var x=document.createElementNS('http://www.w3.org/1999/xhtml','style');
+x.innerHTML='\
+*::first-letter {float: right; }\
+';
+document.documentElement.appendChild(x);
+
+setTimeout(removestyles,500);
+}
+setTimeout(addstyles1,200);
+
+function removestyles(i){
+document.getElementsByTagName('tfoot')[0].removeAttribute('style');
+document.getElementsByTagName('table')[0].removeAttribute('style');
+
+window.parent.document.documentElement.className = "";
+}
+</script>
+<style>
+*::before { content:"before text";}
+</style>
+</head><body>
+<table style="display: block;">
+<tbody><tr><td></td></tr></tbody><tfoot style="position: absolute;"></tfoot>
+</table>
+</body></html>

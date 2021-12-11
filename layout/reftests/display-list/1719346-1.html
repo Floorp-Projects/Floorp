@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<head>
+<style>
+.main {
+	border-image: url('1719346-1.gif') 16 fill / 16px / 0 repeat;
+	width: 100px;
+	height: 100px;
+}
+
+#mover {
+	position: fixed;
+	padding: 0;
+	margin: 0;
+	bottom: 0;
+	top: 250px;
+	left: 250px;
+}
+</style>
+</head>
+<body>
+<div class="main"></div>
+<div id="mover">text</div>
+
+<script>
+	function doTest() {
+		var elem = document.getElementById("mover");
+		elem.style.top = "100px";
+		document.documentElement.removeAttribute("class");
+	}
+	document.addEventListener("MozReftestInvalidate", doTest);
+	setTimeout(doTest, 5000);
+</script>
+</body>
+</html>

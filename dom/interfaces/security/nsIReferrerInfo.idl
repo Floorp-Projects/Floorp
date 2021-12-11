@@ -1,0 +1,146 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsISerializable.idl"
+
+%{C++
+namespace mozilla::dom {
+enum class ReferrerPolicy : uint8_t;
+}
+%}
+
+interface nsIURI;
+webidl Document;
+webidl Element;
+
+native ReferrerPolicy(mozilla::dom::ReferrerPolicy);
+native URIRef(already_AddRefed<nsIURI>);
+
+[scriptable, builtinclass, uuid(081cdc36-f2e2-4f94-87bf-78578f06f1eb)]
+interface nsIReferrerInfo : nsISerializable
+{
+  /**
+   * Unfortunately we can not query the ReferrerPolicy values defined within
+   * ReferrerPolicy.webidl directly from xpidl. Hence we define the enum value
+   * ReferrerPolicyIDL to set up the ReferrerInfo object from JS. If you need
+   * ReferrerPolicy in native code, please directly query it from
+   * ReferrerPolicy.webidl.
+   */
+  cenum ReferrerPolicyIDL : 8 {
+  /**
+   * The undefined state, or no referrer policy, usually causing a fallback to a
+   * referrer policy definded in higher level policy. For example: request by
+   * clicking <a> element with empty referrer policy will be sent with the
+   * referrer policy of the a element’s node document.
+   * If there is no higher-level policy available, we fall back to the default
+   * value, which usually is "no-referrer-when-downgrade".
+   */
+  EMPTY = 0,
+  /**
+   * Do not send referrer from https->http
+   */
+  NO_REFERRER_WHEN_DOWNGRADE = 1,
+  /**
+   * Do not send referrer at all.
+   */
+  NO_REFERRER = 2,
+  /**
+   * Only send the origin of the referring URL
+   */
+  ORIGIN = 3,
+  /**
+   * Send origin when cross-origin.
+   */
+  ORIGIN_WHEN_CROSS_ORIGIN = 4,
+  /**
+   * Always sends the referrer, even on downgrade.
+   */
+  UNSAFE_URL = 5,
+  /**
+   * Send referrer when same-origin, no referrer when cross-origin
+   */
+  SAME_ORIGIN = 6,
+  /**
+   * Send origin when request from https->https or http->http(s). No referrer
+   * when request from https->http.
+   */
+  STRICT_ORIGIN = 7,
+  /**
+   * Send referrer when same-origin, send origin when cross-origin from
+   * https->https or http->http(s). No referrer when request from https->http.
+   */
+  STRICT_ORIGIN_WHEN_CROSS_ORIGIN = 8,
+  };
+
+  /**
+   * The original referrer URI which indicates the full referrer before applying
+   * referrer policy
+   */
+  [infallible] readonly attribute nsIURI originalReferrer;
+
+  /**
+   * Referrer policy which is applied to the referrer
+   */
+  [implicit_jscontext] readonly attribute nsIReferrerInfo_ReferrerPolicyIDL referrerPolicy;
+
+  /**
+   * C++ friendly version of referrerPolicy getter
+   */
+  [noscript, notxpcom, nostdcall, binaryname(ReferrerPolicy)]
+  ReferrerPolicy binaryReferrerPolicy();
+
+  /**
+   * Get referrer policy as string
+   */
+  ACString getReferrerPolicyString();
+
+  /**
+   * Indicates if the referrer should not be sent or not even when it's available.
+   */
+  [infallible] readonly attribute boolean sendReferrer;
+
+  /**
+  * Indicates if the referrer should not be sent or not even when it's available.
+  */
+  readonly attribute AString computedReferrerSpec;
+
+  /**
+   * Get the computed referrer, if one has been set. The computed referrer is
+   * the original referrer manipulated by the referrer-policy. Use the result of
+   * this function as the actual referrer value for the channel.
+   */
+  [must_use, noscript, nostdcall, notxpcom]
+  URIRef GetComputedReferrer();
+
+  /**
+   * Returns whether the other referrerInfo is equivalent to this referrerInfo.
+   */
+  boolean equals(in nsIReferrerInfo other);
+
+  /**
+   * Initialize method to create ReferrerInfo object from JS
+   * @param aReferrerPolicy referrer policy of the created object
+   * @param aSendReferrer sendReferrer of the created object, defaults to false
+   * @param aOriginalReferrer the original referrer, defaults to null.
+   */
+  void init(in nsIReferrerInfo_ReferrerPolicyIDL aReferrerPolicy,
+           [optional] in boolean aSendReferrer,
+           [optional] in nsIURI aOriginalReferrer);
+
+  /**
+   * Initialize with a given document.
+   * @param aDocument the document to init referrerInfo object
+   */
+  void initWithDocument([const] in Document aDocument);
+
+  /**
+   * Initialize with a given node. It you are working with node which supports
+   * referrerpolicy attribute: <a>, <img>, <area>, <script>, <iframe>, please
+   * try to use this init instead of initWithDocument, because referrer policy
+   * from rel and attribute has a higher priority.
+   * @param aNode the element to init referrerInfo object
+   */
+  void initWithElement([const] in Element aNode);
+};

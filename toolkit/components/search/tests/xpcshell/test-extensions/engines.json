@@ -1,0 +1,49 @@
+{
+  "data": [
+    {
+      "webExtension": {
+        "id": "plainengine@search.mozilla.org"
+      },
+      "orderHint": 10000,
+      "sendAttributionRequest": true,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes-if-no-other"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "special-engine@search.mozilla.org"
+      },
+      "orderHint": 7000,
+      "appliesTo": [{
+        "included": { "regions": ["tr"] },
+        "default": "yes"
+      }, {
+        "included": { "everywhere": true },
+        "sendAttributionRequest": true
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "multilocale@search.mozilla.org",
+        "locales": ["an"]
+      },
+      "orderHint": 6000,
+      "appliesTo": [{
+        "included": { "regions": ["an"] },
+        "default": "yes"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "multilocale@search.mozilla.org",
+        "locales": ["af", "an"]
+      },
+      "orderHint": 6500,
+      "appliesTo": [{
+        "included": { "regions": ["af"] }
+      }]
+    }
+  ]
+}

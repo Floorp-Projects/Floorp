@@ -1,0 +1,23 @@
+<div>
+  Here
+  is
+  some
+  stuff
+  so
+  that
+  the
+  source's
+  start
+  line
+  is
+  not
+  one
+</div>
+<script>
+// Make sure the source stays alive.
+function foo() {
+}
+// After the outer script has been GC'ed, breakpoints can't be set here.
+var x = null;
+setTimeout(() => SpecialPowers.gc(), 0);
+</script>

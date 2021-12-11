@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Scrolling over checkerboarded area respects overscroll-behavior</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    #subframe {
+      width: 100px;
+      height: 100px;
+      overflow: scroll;
+      margin-top: 10px;
+      margin-left: 10px;
+      overscroll-behavior: contain;
+    }
+    #contents {
+      width: 100%;
+      height: 1000px;
+      background-image: linear-gradient(red, blue);
+    }
+  </style>
+</head>
+<body>
+  <div id="subframe">
+    <div id="contents"></div>
+  </div>
+  <div id="make_root_scrollable" style="height: 5000px"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  var subframe = document.getElementById("subframe");
+
+  // Activate the scrollframe but keep the main-thread scroll position at 0.
+  // Also apply an async scroll offset in the y-direction large enough
+  // to make the scrollframe checkerboard.
+  // Note: We have to be careful with the numbers here.
+  //   promiseMoveMouseAndScrollWheelOver() relies on the main thread receiving
+  //   the synthesized mouse-move and wheel events. However, the async
+  //   transform created by setAsyncScrollOffset() will cause an untransform
+  //   to be applied to the synthesized events' coordinates before they're
+  //   passed to the main thread. We have to make sure the transform is
+  //   large enough to cause the scroll frame to checkerboard, but not so
+  //   large that the untransformed coordinates hit-test out of bounds for
+  //   the browser's content area. This is why we make the scroll frame
+  //   small (100x100), and give it a display port that's also just 100x100,
+  //   so we can keep the async scroll offset small enough (300 in this case)
+  //   that the untransformed coordinates are still in-bounds for the window.
+  utils.setDisplayPortForElement(0, 0, 100, 100, subframe, 1);
+  await promiseAllPaintsDone();
+  var scrollY = 300;
+  utils.setAsyncScrollOffset(subframe, 0, scrollY);
+  // Tick the refresh driver once to make sure the compositor has applied the
+  // async scroll offset (for WebRender hit-testing we need to make sure WR has
+  // the latest info).
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+
+  // Scroll over the subframe, and make sure that the page does not scroll,
+  // i.e. overscroll-behavior is respected.
+  var waitForScroll = false; // don't wait for a scroll event, it will never come
+  await promiseMoveMouseAndScrollWheelOver(subframe, 50, 50, waitForScroll);
+  is(window.scrollY, 0, "overscroll-behavior was respected");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

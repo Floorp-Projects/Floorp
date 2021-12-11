@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for cached messages</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for cached messages</p>
+
+<script class="testbody" type="application/javascript">
+"use strict";
+
+const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
+
+const previousEnabled = window.docShell.cssErrorReportingEnabled;
+window.docShell.cssErrorReportingEnabled = true;
+
+SimpleTest.registerCleanupFunction(() => {
+  window.docShell.cssErrorReportingEnabled = previousEnabled;
+});
+
+var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+                          .getService(Ci.nsIConsoleAPIStorage);
+let expectedConsoleCalls = [];
+let expectedPageErrors = [];
+
+function doPageErrors() {
+  Services.console.reset();
+
+  expectedPageErrors = [
+    {
+      errorMessage: /fooColor/,
+      sourceName: /.+/,
+      category: MESSAGE_CATEGORY.CSS_PARSER,
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: true,
+    },
+    {
+      errorMessage: /doTheImpossible/,
+      sourceName: /.+/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: true,
+      warning: false,
+    },
+  ];
+
+  let container = document.createElement("script");
+  document.body.appendChild(container);
+  container.textContent = "document.body.style.color = 'fooColor';";
+  document.body.removeChild(container);
+
+  SimpleTest.expectUncaughtException();
+
+  container = document.createElement("script");
+  document.body.appendChild(container);
+  container.textContent = "document.doTheImpossible();";
+  document.body.removeChild(container);
+}
+
+function doConsoleCalls() {
+  ConsoleAPIStorage.clearEvents();
+
+  top.console.log("foobarBaz-log", undefined);
+  top.console.info("foobarBaz-info", null);
+  top.console.warn("foobarBaz-warn", document.body);
+
+  expectedConsoleCalls = [
+    {
+      level: "log",
+      filename: /test_cached_messages/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-log", { type: "undefined" }],
+    },
+    {
+      level: "info",
+      filename: /test_cached_messages/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-info", { type: "null" }],
+    },
+    {
+      level: "warn",
+      filename: /test_cached_messages/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-warn", { type: "object", actor: /[a-z]/ }],
+    },
+  ];
+}
+</script>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+var {ConsoleServiceListener} =
+  require("devtools/server/actors/webconsole/listeners/console-service");
+var {ConsoleAPIListener} =
+  require("devtools/server/actors/webconsole/listeners/console-api");
+
+let consoleAPIListener, consoleServiceListener;
+let consoleAPICalls = 0;
+let pageErrors = 0;
+
+async function onConsoleAPICall(message) {
+  for (const msg of expectedConsoleCalls) {
+    if (msg.functionName == message.functionName &&
+        msg.filename.test(message.filename)) {
+      consoleAPICalls++;
+      break;
+    }
+  }
+  if (consoleAPICalls == expectedConsoleCalls.length) {
+    await checkConsoleAPICache();
+  }
+}
+
+async function onConsoleServiceMessage(message) {
+  if (!(message instanceof Ci.nsIScriptError)) {
+    return;
+  }
+  for (const msg of expectedPageErrors) {
+    if (msg.category == message.category &&
+        msg.errorMessage.test(message.errorMessage)) {
+      pageErrors++;
+      break;
+    }
+  }
+  if (pageErrors == expectedPageErrors.length) {
+    await testPageErrors();
+  }
+}
+
+function startTest() {
+  removeEventListener("load", startTest);
+
+  consoleAPIListener = new ConsoleAPIListener(top, onConsoleAPICall);
+  consoleAPIListener.init();
+
+  doConsoleCalls();
+}
+
+async function checkConsoleAPICache() {
+  consoleAPIListener.destroy();
+  consoleAPIListener = null;
+  const {state} = await attachConsole(["ConsoleAPI"]);
+  const response = await state.webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  onCachedConsoleAPI(state, response);
+}
+
+function onCachedConsoleAPI(state, response) {
+  const msgs = response.messages;
+  info("cached console messages: " + msgs.length);
+
+  ok(msgs.length >= expectedConsoleCalls.length,
+     "number of cached console messages");
+
+  for (const {message} of msgs) {
+    for (const expected of expectedConsoleCalls) {
+      if (expected.functionName == message.functionName &&
+          expected.filename.test(message.filename)) {
+        expectedConsoleCalls.splice(expectedConsoleCalls.indexOf(expected));
+        checkConsoleAPICall(message, expected);
+        break;
+      }
+    }
+  }
+
+  is(expectedConsoleCalls.length, 0, "all expected messages have been found");
+
+  closeDebugger(state, function() {
+    consoleServiceListener = new ConsoleServiceListener(null, onConsoleServiceMessage);
+    consoleServiceListener.init();
+    doPageErrors();
+  });
+}
+
+async function testPageErrors() {
+  consoleServiceListener.destroy();
+  consoleServiceListener = null;
+  const {state} = await attachConsole(["PageError"]);
+  const response = await state.webConsoleFront.getCachedMessages(["PageError"]);
+  onCachedPageErrors(state, response);
+}
+
+function onCachedPageErrors(state, response) {
+  const msgs = response.messages;
+  info("cached page errors: " + msgs.length);
+
+  ok(msgs.length >= expectedPageErrors.length,
+     "number of cached page errors");
+
+  for (const {pageError} of msgs) {
+    for (const expected of expectedPageErrors) {
+      if (expected.category == pageError.category &&
+          expected.errorMessage.test(pageError.errorMessage)) {
+        expectedPageErrors.splice(expectedPageErrors.indexOf(expected));
+        checkObject(pageError, expected);
+        break;
+      }
+    }
+  }
+
+  is(expectedPageErrors.length, 0, "all expected messages have been found");
+
+  closeDebugger(state, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

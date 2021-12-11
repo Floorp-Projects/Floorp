@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<!--
+  NOTE! The content of this file is duplicated in file_CrossSiteXHR_inner.jar
+  and file_CrossSiteXHR_inner_data.sjs
+  Please update those files if you update this one.
+-->
+
+<html>
+<head>
+<script>
+function trimString(stringValue) {
+  return stringValue.replace(/^\s+|\s+$/g, '');
+};
+
+window.addEventListener("message", function(e) {
+
+  sendData = null;
+
+  req = JSON.parse(e.data);
+  var res = {
+    didFail: false,
+    events: [],
+    progressEvents: 0,
+    status: 0,
+    responseText: "",
+    statusText: "",
+    responseXML: null,
+    sendThrew: false
+  };
+  
+  var xhr = new XMLHttpRequest();
+  for (type of ["load", "abort", "error", "loadstart", "loadend"]) {
+    xhr.addEventListener(type, function(e) {
+      res.events.push(e.type);
+    });
+  }
+  xhr.addEventListener("readystatechange", function(e) {
+    res.events.push("rs" + xhr.readyState);
+  });
+  xhr.addEventListener("progress", function(e) {
+    res.progressEvents++;
+  });
+  if (req.uploadProgress) {
+    xhr.upload.addEventListener(req.uploadProgress, function(e) {
+      res.progressEvents++;
+    });
+  }
+  xhr.onerror = function(e) {
+    res.didFail = true;
+  };
+  xhr.onloadend = function (event) {
+    res.status = xhr.status;
+    try {
+      res.statusText = xhr.statusText;
+    } catch (e) {
+      delete(res.statusText);
+    }
+    res.responseXML = xhr.responseXML ?
+      (new XMLSerializer()).serializeToString(xhr.responseXML) :
+      null;
+    res.responseText = xhr.responseText;
+
+    res.responseHeaders = {};
+    for (responseHeader in req.responseHeaders) {
+      res.responseHeaders[responseHeader] =
+        xhr.getResponseHeader(responseHeader);
+    }
+    res.allResponseHeaders = {};
+    var splitHeaders = xhr.getAllResponseHeaders().split("\r\n");
+    for (var i = 0; i < splitHeaders.length; i++) {
+      var headerValuePair = splitHeaders[i].split(":");
+        if(headerValuePair[1] != null) {
+          var headerName = trimString(headerValuePair[0]);
+          var headerValue = trimString(headerValuePair[1]);
+          res.allResponseHeaders[headerName] = headerValue;
+        }
+    }
+    post(e, res);
+  }
+
+  if (req.withCred)
+    xhr.withCredentials = true;
+  if (req.body)
+    sendData = req.body;
+
+  res.events.push("opening");
+  // Allow passign in falsy usernames/passwords so we can test them
+  try {
+    xhr.open(req.method, req.url, true,
+             ("username" in req) ? req.username : "",
+             ("password" in req) ? req.password : "");
+  } catch (ex) {
+    res.didFail = true;
+    post(e, res);
+  }
+
+  for (header in req.headers) {
+    xhr.setRequestHeader(header, req.headers[header]);
+  }
+
+  res.events.push("sending");
+  try {
+    xhr.send(sendData);
+  } catch (ex) {
+    res.didFail = true;
+    res.sendThrew = true;
+    post(e, res);
+  }
+
+});
+
+function post(e, res) {
+  e.source.postMessage(JSON.stringify(res), "http://mochi.test:8888");
+}
+
+</script>
+</head>
+<body>
+Inner page
+</body>
+</html>

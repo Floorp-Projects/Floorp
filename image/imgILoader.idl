@@ -1,0 +1,97 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface imgINotificationObserver;
+interface imgIRequest;
+
+interface nsIChannel;
+interface nsILoadGroup;
+interface nsIPrincipal;
+interface nsIStreamListener;
+interface nsIURI;
+interface nsIReferrerInfo;
+
+interface nsISimpleEnumerator;
+
+webidl Document;
+
+#include "nsIRequest.idl" // for nsLoadFlags
+#include "nsIContentPolicy.idl" // for nsContentPolicyType
+
+/**
+ * imgILoader interface
+ *
+ * @author Stuart Parmenter <pavlov@netscape.com>
+ * @version 0.3
+ * @see imagelib2
+ */
+[scriptable, builtinclass, uuid(e61377d2-910e-4c65-a64b-428d150e1fd1)]
+interface imgILoader : nsISupports
+{
+  // Extra flags to pass to loadImage if you want a load to use CORS
+  // validation.
+  const unsigned long LOAD_CORS_ANONYMOUS = 1 << 16;
+  const unsigned long LOAD_CORS_USE_CREDENTIALS = 1 << 17;
+
+  /**
+   * Start the load and decode of an image.
+   * @param aURI the URI to load
+   * @param aInitialDocumentURI the URI that 'initiated' the load -- used for
+   *           3rd party cookie blocking
+   * @param aReferrerInfo the referrer info to compute sending referrer.
+   * @param aLoadingPrincipal the principal of the loading document
+   * @param aLoadGroup Loadgroup to put the image load into
+   * @param aObserver the observer (may be null)
+   * @param aLoadingDocument loading document
+   * @param aLoadFlags Load flags for the request
+   * @param aCacheKey cache key to use for a load if the original
+   *                  image came from a request that had post data
+   * @param aContentPolicyType [optional] the nsContentPolicyType to
+   *                           use for this load. Defaults to
+   *                           nsIContentPolicy::TYPE_IMAGE
+
+
+   * ImageLib does NOT keep a strong ref to the observer; this prevents
+   * reference cycles.  This means that callers of loadImage should
+   * make sure to Cancel() the resulting request before the observer
+   * goes away.
+   */
+  imgIRequest loadImageXPCOM(in nsIURI aURI,
+                             in nsIURI aInitialDocumentURL,
+                             in nsIReferrerInfo aReferrerInfo,
+                             in nsIPrincipal aLoadingPrincipal,
+                             in nsILoadGroup aLoadGroup,
+                             in imgINotificationObserver aObserver,
+                             in Document aLoadingDocument,
+                             in nsLoadFlags aLoadFlags,
+                             in nsISupports cacheKey,
+                             [optional]
+                             in nsContentPolicyType aContentPolicyType);
+
+  /**
+   * Start the load and decode of an image.
+   * @param aChannel the channel to load the image from.  This must
+   *                 already be opened before this method is called, and there
+   *                 must have been no OnDataAvailable calls for it yet.
+   * @param aObserver the observer (may be null)
+   * @param aLoadingDocument loading document
+   * @param aListener [out]
+   *        A listener that you must send the channel's notifications and data
+   *        to.  Can be null, in which case imagelib has found a cached image
+   *        and is not interested in the data. @aChannel will be canceled for
+   *        you in this case.
+   *
+   * ImageLib does NOT keep a strong ref to the observer; this prevents
+   * reference cycles.  This means that callers of loadImageWithChannel should
+   * make sure to Cancel() the resulting request before the observer goes away.
+   */
+  imgIRequest loadImageWithChannelXPCOM(in nsIChannel aChannel,
+                                        in imgINotificationObserver aObserver,
+                                        in Document aLoadingDocument,
+                                        out nsIStreamListener aListener);
+};

@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL input control state tests">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    var gQueue = null;
+    function doTest()
+    {
+      testStates("checkbox", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("checkbox2", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("radiogroup", 0, 0, STATE_FOCUSABLE | STATE_UNAVAILABLE);
+      testStates("radio", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("radio-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("radiogroup-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("radio-disabledradiogroup", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("button", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("button-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("checkbutton",
+                 STATE_FOCUSABLE | STATE_CHECKABLE | STATE_PRESSED);
+      testStates("fakecheckbutton", STATE_FOCUSABLE | STATE_PRESSED, 0, 
+                 STATE_CHECKABLE);
+      testStates("combobox", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
+      testStates("combobox-disabled", STATE_UNAVAILABLE | STATE_HASPOPUP, 0, STATE_FOCUSABLE);
+      testStates("listbox", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("listitem", STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED, 0, STATE_UNAVAILABLE);
+      testStates("listbox-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
+      testStates("listitem-disabledlistbox", STATE_UNAVAILABLE | STATE_SELECTED, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
+      testStates("menubar", 0, 0, STATE_FOCUSABLE);
+      testStates("menu", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("menu-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
+      testStates("tab", STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED, 0, STATE_UNAVAILABLE);
+      testStates("tab-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED);
+
+      gQueue = new eventQueue();
+      gQueue.invoke(); // Will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+     <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=599163"
+         title="check disabled state instead of attribute">
+        Mozilla Bug 599163
+     </a>
+     <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=756983"
+         title="Isolate focusable and unavailable states from State()">
+        Mozilla Bug 756983
+     </a>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+
+    <checkbox id="checkbox" checked="true" label="Steak"/>
+    <checkbox id="checkbox2" checked="true" label="Salad" disabled="true"/>
+
+    <radiogroup id="radiogroup">
+      <radio id="radio" label="Orange"/>
+      <radio id="radio-disabled" selected="true" label="Violet" disabled="true"/>
+    </radiogroup>
+
+    <radiogroup id="radiogroup-disabled" disabled="true">
+      <radio id="radio-disabledradiogroup" label="Orange"/>
+      <radio id="violet2" selected="true" label="Violet"/>
+    </radiogroup>
+
+    <button id="button" value="button"/>
+    <button id="button-disabled" disabled="true" value="button"/>
+    <button id="checkbutton" type="checkbox" checked="true" 
+            value="checkbutton" />
+    <button id="fakecheckbutton" checked="true" value="fakecheckbutton" />
+
+    <menulist id="combobox">
+      <menupopup>
+        <menuitem label="item1"/>
+      </menupopup>
+    </menulist>
+
+    <menulist id="combobox-disabled" disabled="true">
+      <menupopup>
+        <menuitem label="item1"/>
+      </menupopup>
+    </menulist>
+
+    <richlistbox id="listbox">
+      <richlistitem id="listitem">
+        <label value="list item"/>
+      </richlistitem>
+    </richlistbox>
+
+    <richlistbox id="listbox-disabled" disabled="true">
+      <richlistitem id="listitem-disabledlistbox">
+        <label value="list item"/>
+      </richlistitem>
+    </richlistbox>
+
+    <toolbox>
+      <menubar id="menubar">
+        <menu id="menu" label="menu1">
+          <menupopup>
+            <menuitem id="menu1-item1" label="menuitem1.1"/>
+          </menupopup>
+        </menu>
+        <menu id="menu-disabled" label="menu2" disabled="true">
+          <menupopup>
+            <menuitem id="menu-disabled-item1" label="menuitem2.1"/>
+          </menupopup>
+        </menu>
+      </menubar>
+    </toolbox>
+
+    <tabbox>
+      <tabs>
+        <tab id="tab" label="tab1" tooltip="tooltip"/>
+        <tab id="tab-disabled" label="tab1" disabled="true"/>
+      </tabs>
+      <tabpanels>
+        <tabpanel/>
+        <tabpanel/>
+      </tabpanels>
+    </tabbox>
+
+    <tooltip id="tooltip"><description>tooltip</description></tooltip>
+    </vbox>
+  </hbox>
+
+</window>

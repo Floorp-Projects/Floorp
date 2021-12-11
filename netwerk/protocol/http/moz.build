@@ -1,0 +1,210 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking: HTTP")
+
+XPIDL_SOURCES += [
+    "nsIBackgroundChannelRegistrar.idl",
+    "nsIHttpActivityObserver.idl",
+    "nsIHttpAuthenticableChannel.idl",
+    "nsIHttpAuthenticator.idl",
+    "nsIHttpAuthManager.idl",
+    "nsIHttpChannel.idl",
+    "nsIHttpChannelAuthProvider.idl",
+    "nsIHttpChannelChild.idl",
+    "nsIHttpChannelInternal.idl",
+    "nsIHttpHeaderVisitor.idl",
+    "nsIHttpProtocolHandler.idl",
+    "nsIRaceCacheWithNetwork.idl",
+    "nsITlsHandshakeListener.idl",
+    "nsIWellKnownOpportunisticUtils.idl",
+]
+
+XPIDL_MODULE = "necko_http"
+
+EXPORTS += [
+    "nsCORSListenerProxy.h",
+    "nsHttp.h",
+    "nsHttpAtomList.h",
+    "nsHttpHeaderArray.h",
+    "nsHttpRequestHead.h",
+    "nsHttpResponseHead.h",
+]
+
+EXPORTS.mozilla.net += [
+    "AltDataOutputStreamChild.h",
+    "AltDataOutputStreamParent.h",
+    "AltServiceChild.h",
+    "AltServiceParent.h",
+    "AltSvcTransactionChild.h",
+    "AltSvcTransactionParent.h",
+    "BackgroundChannelRegistrar.h",
+    "BackgroundDataBridgeChild.h",
+    "BackgroundDataBridgeParent.h",
+    "ClassifierDummyChannel.h",
+    "ClassifierDummyChannelChild.h",
+    "ClassifierDummyChannelParent.h",
+    "HttpAuthUtils.h",
+    "HttpBackgroundChannelChild.h",
+    "HttpBackgroundChannelParent.h",
+    "HttpBaseChannel.h",
+    "HttpChannelChild.h",
+    "HttpChannelParent.h",
+    "HttpConnectionMgrChild.h",
+    "HttpConnectionMgrParent.h",
+    "HttpConnectionMgrShell.h",
+    "HttpInfo.h",
+    "HttpTransactionChild.h",
+    "HttpTransactionParent.h",
+    "HttpTransactionShell.h",
+    "nsAHttpTransaction.h",
+    "nsServerTiming.h",
+    "NullHttpChannel.h",
+    "NullHttpTransaction.h",
+    "OpaqueResponseUtils.h",
+    "ParentChannelListener.h",
+    "PHttpChannelParams.h",
+    "PSpdyPush.h",
+    "SpeculativeTransaction.h",
+    "TimingStruct.h",
+]
+
+SOURCES += [
+    "nsHttpChannelAuthProvider.cpp",  # redefines GetAuthType
+]
+
+UNIFIED_SOURCES += [
+    "AltDataOutputStreamChild.cpp",
+    "AltDataOutputStreamParent.cpp",
+    "AlternateServices.cpp",
+    "AltServiceChild.cpp",
+    "AltServiceParent.cpp",
+    "AltSvcTransactionChild.cpp",
+    "AltSvcTransactionParent.cpp",
+    "ASpdySession.cpp",
+    "BackgroundChannelRegistrar.cpp",
+    "BackgroundDataBridgeChild.cpp",
+    "BackgroundDataBridgeParent.cpp",
+    "CacheControlParser.cpp",
+    "CachePushChecker.cpp",
+    "ClassifierDummyChannel.cpp",
+    "ClassifierDummyChannelChild.cpp",
+    "ClassifierDummyChannelParent.cpp",
+    "ConnectionDiagnostics.cpp",
+    "ConnectionEntry.cpp",
+    "ConnectionHandle.cpp",
+    "DnsAndConnectSocket.cpp",
+    "Http2Compression.cpp",
+    "Http2Push.cpp",
+    "Http2Session.cpp",
+    "Http2Stream.cpp",
+    "Http3Session.cpp",
+    "Http3Stream.cpp",
+    "HttpAuthUtils.cpp",
+    "HttpBackgroundChannelChild.cpp",
+    "HttpBackgroundChannelParent.cpp",
+    "HttpBaseChannel.cpp",
+    "HttpChannelChild.cpp",
+    "HttpChannelParent.cpp",
+    "HttpConnectionBase.cpp",
+    "HttpConnectionMgrChild.cpp",
+    "HttpConnectionMgrParent.cpp",
+    "HttpConnectionUDP.cpp",
+    "HttpInfo.cpp",
+    "HTTPSRecordResolver.cpp",
+    "HttpTrafficAnalyzer.cpp",
+    "HttpTransactionChild.cpp",
+    "HttpTransactionParent.cpp",
+    "InterceptedChannel.cpp",
+    "InterceptedHttpChannel.cpp",
+    "NetworkMarker.cpp",
+    "nsCORSListenerProxy.cpp",
+    "nsHttp.cpp",
+    "nsHttpActivityDistributor.cpp",
+    "nsHttpAuthCache.cpp",
+    "nsHttpAuthManager.cpp",
+    "nsHttpBasicAuth.cpp",
+    "nsHttpChannel.cpp",
+    "nsHttpChunkedDecoder.cpp",
+    "nsHttpConnection.cpp",
+    "nsHttpConnectionInfo.cpp",
+    "nsHttpConnectionMgr.cpp",
+    "nsHttpDigestAuth.cpp",
+    "nsHttpHeaderArray.cpp",
+    "nsHttpNTLMAuth.cpp",
+    "nsHttpRequestHead.cpp",
+    "nsHttpResponseHead.cpp",
+    "nsHttpTransaction.cpp",
+    "nsServerTiming.cpp",
+    "NullHttpChannel.cpp",
+    "NullHttpTransaction.cpp",
+    "OpaqueResponseUtils.cpp",
+    "ParentChannelListener.cpp",
+    "PendingTransactionInfo.cpp",
+    "PendingTransactionQueue.cpp",
+    "QuicSocketControl.cpp",
+    "SpeculativeTransaction.cpp",
+    "TRRServiceChannel.cpp",
+    "TunnelUtils.cpp",
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    UNIFIED_SOURCES += [
+        "HttpWinUtils.cpp",
+    ]
+
+# These files cannot be built in unified mode because of OS X headers.
+SOURCES += [
+    "nsHttpHandler.cpp",
+]
+
+IPDL_SOURCES += [
+    "HttpChannelParams.ipdlh",
+    "PAltDataOutputStream.ipdl",
+    "PAltService.ipdl",
+    "PAltSvcTransaction.ipdl",
+    "PBackgroundDataBridge.ipdl",
+    "PClassifierDummyChannel.ipdl",
+    "PHttpBackgroundChannel.ipdl",
+    "PHttpChannel.ipdl",
+    "PHttpConnectionMgr.ipdl",
+    "PHttpTransaction.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/extensions/auth",
+    "/netwerk/base",
+    "/netwerk/cookie",
+    "/netwerk/dns",
+    "/netwerk/ipc",
+    "/netwerk/socket/neqo_glue",
+    "/netwerk/url-classifier",
+]
+
+EXTRA_JS_MODULES += [
+    "WellKnownOpportunisticUtils.jsm",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+if CONFIG["OS_TARGET"] == "Darwin":
+    if not CONFIG["HOST_MAJOR_VERSION"]:
+        DEFINES["HAS_CONNECTX"] = True
+    elif CONFIG["HOST_MAJOR_VERSION"] >= "15":
+        DEFINES["HAS_CONNECTX"] = True
+
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True

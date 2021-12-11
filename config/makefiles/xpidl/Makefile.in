@@ -1,0 +1,90 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+STANDALONE_MAKEFILE := 1
+
+include $(topsrcdir)/config/rules.mk
+
+# Building XPIDLs effectively consists of two steps:
+#
+#   1) Staging all .idl files to a common directory.
+#   2) Doing everything with the .idl files.
+#
+# Each .idl file is processed into a .h file and typelib information.
+# The .h file shares the same stem as the input file and is installed
+# in the common headers include directory.
+#
+# XPIDL files are logically grouped together by modules. The typelib
+# information for all XPIDLs in the same module is linked together into
+# an .xpt file having the name of the module.
+#
+# As an optimization to reduce overall CPU usage, we process all .idl
+# belonging to a module with a single command invocation. This prevents
+# redundant parsing of .idl files and significantly reduces CPU cycles.
+
+# For dependency files.
+idl_deps_dir := .deps
+
+dist_idl_dir := $(DIST)/idl
+dist_include_dir := $(DIST)/include
+dist_xpcrs_dir := $(DIST)/xpcrs
+stub_file := xptdata.stub
+process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
+target_file := $(topobjdir)/xpcom/reflect/xptinfo/xptdata.cpp
+xptdata_h := $(dist_include_dir)/xptdata.h
+generated_files := $(target_file) $(xptdata_h)
+code_gen_py := $(topsrcdir)/xpcom/reflect/xptinfo/xptcodegen.py
+code_gen_deps := $(topsrcdir)/xpcom/ds/tools/perfecthash.py
+
+# TODO we should use py_action, but that would require extra directories to be
+# in the virtualenv.
+%.xpt:
+	$(REPORT_BUILD)
+	$(PYTHON3) $(process_py) --depsdir $(idl_deps_dir) \
+		--bindings-conf $(topsrcdir)/dom/bindings/Bindings.conf \
+		$(foreach dir,$(all_idl_dirs),-I $(dir)) \
+		$(dist_include_dir) $(dist_xpcrs_dir) $(@D) \
+		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
+# When some IDL is added or removed, if the actual IDL file was already, or
+# still is, in the tree, simple dependencies can't detect that the XPT needs
+# to be rebuilt.
+# Add the current value of $($(xpidl_module)_deps) in the depend file, such that
+# we can later check if the value has changed since last build, which will
+# indicate whether IDLs were added or removed.
+# Note that removing previously built files is not covered.
+	@echo $(basename $(notdir $@))_deps_built = $($(basename $(notdir $@))_deps) >> $(idl_deps_dir)/$(basename $(notdir $@)).pp
+
+xpidl_modules := @xpidl_modules@
+xpt_files := $(addsuffix .xpt,$(xpidl_modules))
+
+@xpidl_rules@
+
+depends_files := $(foreach root,$(xpidl_modules),$(idl_deps_dir)/$(root).pp)
+
+ifdef COMPILE_ENVIRONMENT
+xpidl:: $(generated_files)
+endif
+
+# See bug 1420119 for why we need the semicolon.
+$(target_file) $(xptdata_h) : $(stub_file) ;
+
+$(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir) $(dist_xpcrs_dir))
+
+$(stub_file) : $(xpt_files) $(code_gen_py) $(code_gen_deps)
+	$(REPORT_BUILD)
+	$(PYTHON3) $(code_gen_py) $(generated_files) $(xpt_files)
+	@touch $@
+
+-include $(depends_files)
+
+define xpt_deps
+$(1): $(call mkdir_deps,$(dir $(1)))
+ifneq ($($(basename $(notdir $(1)))_deps),$($(basename $(notdir $(1)))_deps_built))
+$(1): FORCE
+endif
+endef
+
+$(foreach xpt,$(xpt_files),$(eval $(call xpt_deps,$(xpt))))
+
+.PHONY: xpidl

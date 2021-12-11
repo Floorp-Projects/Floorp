@@ -1,0 +1,69 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.theme-dark {
+  --sidemenu-selected-arrow: url(images/item-arrow-dark-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/item-arrow-dark-rtl.svg);
+}
+.theme-light {
+  --sidemenu-selected-arrow: url(images/item-arrow-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/item-arrow-rtl.svg);
+}
+
+/* Loading animation */
+@keyframes item-load {
+  0% {
+    transform: scaleY(0) translateY(-100%);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.splitview-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: var(--theme-sidebar-background);
+}
+
+.splitview-nav > li {
+  animation: item-load .5s var(--animation-curve);
+  padding-inline-end: 8px;
+  -moz-box-align: center;
+  outline: 0;
+  vertical-align: bottom;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background: inherit;
+}
+
+.placeholder {
+  -moz-box-flex: 1;
+  text-align: center;
+}
+
+.splitview-nav > li.splitview-active {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+  background-image: var(--sidemenu-selected-arrow);
+  background-repeat: no-repeat;
+  background-position: center right;
+}
+
+.splitview-nav > li.splitview-active:-moz-locale-dir(rtl) {
+  background-image: var(--sidemenu-selected-arrow-rtl);
+  background-position: center left;
+}
+
+/* Toolbars */
+
+.splitview-main > .devtools-toolbar {
+  background-origin: border-box;
+  background-clip: border-box;
+}
+
+.splitview-main > toolbar,
+.loading .splitview-nav-container {
+  border-inline-end: 1px solid var(--theme-splitter-color);
+}

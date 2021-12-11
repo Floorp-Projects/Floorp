@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>document.write() from script-inserted inline scripts and script@onload</title>
+</head>
+<body>
+1
+<script>
+function write(num) {
+  document.write(num + " ");
+}
+function scriptload() {
+  document.write("\u003Cscript src='data:text/javascript,write(9)'>\u003C/script> 10 \u003Cscript>write(11)\u003C/script>");
+  write(12);
+}
+function scripterror() {
+  document.write("\u003Cscript src='data:text/javascript,write(16)'>\u003C/script> 17 \u003Cscript>write(18)\u003C/script>");
+  write(19);
+}
+write(2);
+document.write("\u003Cscript src='data:text/javascript,write(3)'>\u003C/script> 4 \u003Cscript>write(5)\u003C/script>");
+var s = document.createElement("script");
+s.textContent = "write(6)";
+document.body.appendChild(s);
+write(7);
+document.write("\u003Cscript src='data:text/javascript,write(8)' onload='scriptload()'>\u003C/script> 13 \u003Cscript>write(14)\u003C/script>");
+write(15);
+document.write(`\u003Cscript src='nosuchscriptoutthere.js' onload='write("fail")' onerror='scripterror()'>\u003C/script> 20 \u003Cscript>write(21)\u003C/script>`);
+write(22);
+</script>
+</body>
+</html>

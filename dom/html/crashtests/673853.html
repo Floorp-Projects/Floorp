@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var otherDoc = document.implementation.createDocument('', '', null);
+  var input = otherDoc.createElementNS("http://www.w3.org/1999/xhtml", "input");
+  var form = otherDoc.createElementNS("http://www.w3.org/1999/xhtml", "form");
+  input.setAttributeNS(null, "form", "x");
+  form.setAttributeNS(null, "id", "x");
+  input.appendChild(form);
+  otherDoc.appendChild(input);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

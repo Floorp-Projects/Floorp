@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIUrlClassifierDBService.idl"
+
+/**
+ * This is a class to manage large table updates from the server.  Rather than
+ * downloading the whole update and then updating the sqlite database, we
+ * update tables as the data is streaming in.
+ */
+[scriptable, uuid(e1797597-f4d6-4dd3-a1e1-745ad352cd80)]
+interface nsIUrlClassifierStreamUpdater : nsISupports
+{
+  /**
+   * Try to download updates from updateUrl. If an update is already in
+   * progress, queues the requested update. This is used in nsIUrlListManager
+   * as well as in testing.
+   * @param aRequestTables Comma-separated list of tables included in this
+   *        update.
+   * @param aRequestPayload The payload for the request.
+   * @param aIsPostRequest Whether the request should be sent by POST method.
+   *                       Should be 'true' for v2 usage.
+   * @param aUpdateUrl The plaintext url from which to request updates.
+   * @param aSuccessCallback Called after a successful update.
+   * @param aUpdateErrorCallback Called for problems applying the update
+   * @param aDownloadErrorCallback Called if we get an http error or a
+   *        connection refused error.
+   */
+  boolean downloadUpdates(in ACString aRequestTables,
+                          in ACString aRequestPayload,
+                          in boolean aIsPostRequest,
+                          in ACString aUpdateUrl,
+                          in nsIUrlClassifierCallback aSuccessCallback,
+                          in nsIUrlClassifierCallback aUpdateErrorCallback,
+                          in nsIUrlClassifierCallback aDownloadErrorCallback);
+};

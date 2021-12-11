@@ -1,0 +1,501 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test URL API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887364">Mozilla Bug 887364</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=991471">Mozilla Bug 991471</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=996055">Mozilla Bug 996055</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="x" id="x"></iframe>
+  <iframe name="y" id="y"></iframe>
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 887364 **/
+  ok("URL" in window, "window.URL exists");
+
+  var tests = [
+    { url: "http://www.abc.com",
+      base: undefined,
+      error: false,
+      href: "http://www.abc.com/",
+      origin: "http://www.abc.com",
+      protocol: "http:",
+      username: "",
+      password: "",
+      host: "www.abc.com",
+      hostname: "www.abc.com",
+      port: "",
+      pathname: "/",
+      search: "",
+      hash: "",
+    },
+    { url: "ftp://auser:apw@www.abc.com",
+      base: undefined,
+      error: false,
+      href: "ftp://auser:apw@www.abc.com/",
+      origin: "ftp://www.abc.com",
+      protocol: "ftp:",
+      username: "auser",
+      password: "apw",
+      host: "www.abc.com",
+      hostname: "www.abc.com",
+      port: "",
+      pathname: "/",
+      search: "",
+      hash: "",
+    },
+    { url: "http://www.abc.com:90/apath/",
+      base: undefined,
+      error: false,
+      href: "http://www.abc.com:90/apath/",
+      origin: "http://www.abc.com:90",
+      protocol: "http:",
+      username: "",
+      password: "",
+      host: "www.abc.com:90",
+      hostname: "www.abc.com",
+      port: "90",
+      pathname: "/apath/",
+      search: "",
+      hash: "",
+    },
+    { url: "http://www.abc.com/apath/afile.txt#ahash",
+      base: undefined,
+      error: false,
+      href: "http://www.abc.com/apath/afile.txt#ahash",
+      origin: "http://www.abc.com",
+      protocol: "http:",
+      username: "",
+      password: "",
+      host: "www.abc.com",
+      hostname: "www.abc.com",
+      port: "",
+      pathname: "/apath/afile.txt",
+      search: "",
+      hash: "#ahash",
+    },
+    { url: "http://example.com/?test#hash",
+      base: undefined,
+      error: false,
+      href: "http://example.com/?test#hash",
+      origin: "http://example.com",
+      protocol: "http:",
+      username: "",
+      password: "",
+      host: "example.com",
+      hostname: "example.com",
+      port: "",
+      pathname: "/",
+      search: "?test",
+      hash: "#hash",
+    },
+    { url: "http://example.com/?test",
+      base: undefined,
+      error: false,
+      href: "http://example.com/?test",
+      origin: "http://example.com",
+      protocol: "http:",
+      username: "",
+      password: "",
+      host: "example.com",
+      hostname: "example.com",
+      port: "",
+      pathname: "/",
+      search: "?test",
+      hash: "",
+    },
+    { url: "http://example.com/carrot#question%3f",
+      base: undefined,
+      error: false,
+      hash: "#question%3f",
+    },
+    { url: "https://example.com:4443?",
+      base: undefined,
+      error: false,
+      protocol: "https:",
+      port: "4443",
+      pathname: "/",
+      hash: "",
+      search: "",
+    },
+    { url: "http://www.abc.com/apath/afile.txt#ahash?asearch",
+      base: undefined,
+      error: false,
+      href: "http://www.abc.com/apath/afile.txt#ahash?asearch",
+      protocol: "http:",
+      pathname: "/apath/afile.txt",
+      hash: "#ahash?asearch",
+      search: "",
+    },
+    { url: "http://www.abc.com/apath/afile.txt?asearch#ahash",
+      base: undefined,
+      error: false,
+      href: "http://www.abc.com/apath/afile.txt?asearch#ahash",
+      protocol: "http:",
+      pathname: "/apath/afile.txt",
+      hash: "#ahash",
+      search: "?asearch",
+    },
+    { url: "http://abc.com/apath/afile.txt?#ahash",
+      base: undefined,
+      error: false,
+      pathname: "/apath/afile.txt",
+      hash: "#ahash",
+      search: "",
+    },
+    { url: "http://auser:apassword@www.abc.com:90/apath/afile.txt?asearch#ahash",
+      base: undefined,
+      error: false,
+      protocol: "http:",
+      username: "auser",
+      password: "apassword",
+      host: "www.abc.com:90",
+      hostname: "www.abc.com",
+      port: "90",
+      pathname: "/apath/afile.txt",
+      hash: "#ahash",
+      search: "?asearch",
+      origin: "http://www.abc.com:90",
+    },
+
+    { url: "/foo#bar",
+      base: "www.test.org",
+      error: true,
+    },
+    { url: "/foo#bar",
+      base: null,
+      error: true,
+    },
+    { url: "/foo#bar",
+      base: 42,
+      error: true,
+    },
+    { url: "ftp://ftp.something.net",
+      base: undefined,
+      error: false,
+      protocol: "ftp:",
+    },
+    { url: "file:///tmp/file",
+      base: undefined,
+      error: false,
+      protocol: "file:",
+    },
+    { url: "gopher://gopher.something.net",
+      base: undefined,
+      error: false,
+      protocol: "gopher:",
+    },
+    { url: "ws://ws.something.net",
+      base: undefined,
+      error: false,
+      protocol: "ws:",
+    },
+    { url: "wss://ws.something.net",
+      base: undefined,
+      error: false,
+      protocol: "wss:",
+    },
+    { url: "foo://foo.something.net",
+      base: undefined,
+      error: false,
+      protocol: "foo:",
+    },
+
+    { url: "about:blank",
+      base: undefined,
+      error: false,
+      protocol: "about:",
+      pathname: "blank",
+      skip_setters: false,
+    },
+
+    { url: "foo:bar?what#yeah",
+      base: undefined,
+      error: false,
+      protocol: "foo:",
+      pathname: "bar",
+      search: "?what",
+      hash: "#yeah",
+      skip_setters: false,
+    },
+
+    { url: "http://sub2.xn--lt-uia.mochi.test:8888/foo",
+      base: undefined,
+      error: false,
+      href: "http://sub2.xn--lt-uia.mochi.test:8888/foo",
+      origin: "http://sub2.xn--lt-uia.mochi.test:8888",
+      protocol: "http:",
+      username: "",
+      password: "",
+      host: "sub2.xn--lt-uia.mochi.test:8888",
+      hostname: "sub2.xn--lt-uia.mochi.test",
+      port: "8888",
+      pathname: "/foo",
+      search: "",
+      hash: "",
+    },
+    { url: "http://sub2.ält.mochi.test:8888/foo",
+      base: undefined,
+      error: false,
+      href: "http://sub2.xn--lt-uia.mochi.test:8888/foo",
+      origin: "http://sub2.xn--lt-uia.mochi.test:8888",
+      protocol: "http:",
+      username: "",
+      password: "",
+      host: "sub2.xn--lt-uia.mochi.test:8888",
+      hostname: "sub2.xn--lt-uia.mochi.test",
+      port: "8888",
+      pathname: "/foo",
+      search: "",
+      hash: "",
+    },
+  ];
+
+  while (tests.length) {
+    var test = tests.shift();
+
+    var error = false;
+    var url;
+    try {
+      if (test.base) {
+        url = new URL(test.url, test.base);
+      } else {
+        url = new URL(test.url);
+      }
+    } catch (e) {
+      error = true;
+    }
+
+    is(test.error, error, "Error creating URL");
+    if (test.error) {
+      continue;
+    }
+
+    if ("href" in test) is(url.href, test.href, "href");
+    if ("origin" in test) is(url.origin, test.origin, "origin");
+    if ("protocol" in test) is(url.protocol, test.protocol, "protocol");
+    if ("username" in test) is(url.username, test.username, "username");
+    if ("password" in test) is(url.password, test.password, "password");
+    if ("host" in test) is(url.host, test.host, "host");
+    if ("hostname" in test) is(url.hostname, test.hostname, "hostname");
+    if ("port" in test) is(url.port, test.port, "port");
+    if ("pathname" in test) is(url.pathname, test.pathname, "pathname");
+    if ("search" in test) is(url.search, test.search, "search");
+    if ("hash" in test) is(url.hash, test.hash, "hash");
+
+    if ("skip_setters" in test && test.skip_setters === false) {
+      info("Skip setter methods for URL: " + test);
+      continue;
+    }
+
+    url = new URL("https://www.example.net/what#foo?bar");
+    ok(url, "Url exists!");
+
+    if ("href" in test) url.href = test.href;
+    if ("protocol" in test) url.protocol = test.protocol;
+    if ("username" in test && test.username) url.username = test.username;
+    if ("password" in test && test.password) url.password = test.password;
+    if ("host" in test) url.host = test.host;
+    if ("hostname" in test) url.hostname = test.hostname;
+    if ("port" in test) url.port = test.port;
+    if ("pathname" in test) url.pathname = test.pathname;
+    if ("search" in test) url.search = test.search;
+    if ("hash" in test) url.hash = test.hash;
+
+    if ("href" in test) is(url.href, test.href, "href");
+    if ("origin" in test) is(url.origin, test.origin, "origin");
+    if ("protocol" in test) is(url.protocol, test.protocol, "protocol");
+    if ("username" in test) is(url.username, test.username, "username");
+    if ("password" in test) is(url.password, test.password, "password");
+    if ("host" in test) is(url.host, test.host, "host");
+    if ("hostname" in test) is(test.hostname, url.hostname, "hostname");
+    if ("port" in test) is(test.port, url.port, "port");
+    if ("pathname" in test) is(test.pathname, url.pathname, "pathname");
+    if ("search" in test) is(test.search, url.search, "search");
+    if ("hash" in test) is(test.hash, url.hash, "hash");
+
+    if ("href" in test) is(test.href, url + "", "stringify works");
+  }
+
+  </script>
+
+  <script>
+    /** Test for Bug 991471 **/
+    var url = new URL("http://localhost/");
+    url.hostname = "";
+    url.username = "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt";
+    url.hostname = "www.mozilla.org";
+    url.username = "";
+    url.hostname = "www.mozilla.org";
+    is(url.href, "http://www.mozilla.org/", "No parsing error with empty host");
+  </script>
+
+  <script>
+    /** Test for Bug 996055 **/
+    var url = new URL("http://localhost/");
+    url.hostname = "";
+    is(url.href, "http://localhost/", "Empty hostname is ignored");
+  </script>
+
+  <script>
+    /** Test for Bug 960014 **/
+    var url = new URL("http://localhost/");
+    url.hostname = "[2001::1]";
+    is(url.hostname, "[2001::1]", "IPv6 hostname");
+    is(url.href, "http://[2001::1]/");
+
+    url.hostname = "[::192.9.5.5]";
+    is(url.hostname, "[::c009:505]", "IPv6 hostname");
+    is(url.href, "http://[::c009:505]/");
+
+    url = new URL("http://localhost/");
+    url.hostname = "[::]";
+    is(url.hostname, "[::]", "IPv6 hostname");
+
+    url = new URL("http://localhost/");
+    url.host = "[2001::1]:30";
+    is(url.hostname, "[2001::1]", "IPv6 hostname");
+    is(url.port, "30", "Port");
+    is(url.host, "[2001::1]:30", "IPv6 host");
+
+    url = new URL("http://localhost/");
+    // This should silently fail since it's missing the brackets
+    url.hostname = "2001::1";
+    is(url.hostname, "localhost", "Setting bad hostname fails");
+  </script>
+
+  <script>
+    var blob = new Blob(["a"]);
+    var url = URL.createObjectURL(blob);
+
+    var u = new URL(url);
+    is(u.origin, location.origin, "The URL generated from a blob URI has an origin");
+  </script>
+
+  <script>
+    var blob = new Blob(["a"]);
+    var url = URL.createObjectURL(blob);
+
+    var a = document.createElement("A");
+    a.href = url;
+    is(a.origin, location.origin, "The 'a' element has the correct origin");
+  </script>
+
+  <script>
+    var blob = new Blob(["a"]);
+    var url = URL.createObjectURL(blob);
+    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url);
+    ok(true, "Calling revokeObjectURL twice should be ok");
+  </script>
+
+  <script>
+    URL.revokeObjectURL("blob:something");
+    ok(true, "This should not throw.");
+  </script>
+
+  <script>
+    var base = new URL("http:\\\\test.com\\path/to\\file?query\\backslash#hash\\");
+    is(base.href, "http://test.com/path/to/file?query\\backslash#hash\\");
+
+    var url = new URL("..\\", base);
+    is(url.href, "http://test.com/path/");
+
+    url = new URL("\\test", base);
+    is(url.href, "http://test.com/test");
+
+    url = new URL("\\test\\", base);
+    is(url.href, "http://test.com/test/");
+
+    url = new URL("http://example.org/test", base);
+    is(url.href, "http://example.org/test");
+
+    url = new URL("ftp://tmp/test", base);
+    is(url.href, "ftp://tmp/test");
+
+    url = new URL("ftp:\\\\tmp\\test", base);
+    is(url.href, "ftp://tmp/test");
+
+    url = new URL("scheme://tmp\\test", base);
+    is(url.href, "scheme://tmp\\test");
+  </script>
+
+  <script>
+    /** Test for Bug 1275746 **/
+    SimpleTest.doesThrow(() => { new URL("http:"); }, "http: is not a valid URL");
+    SimpleTest.doesThrow(() => { new URL("http:///"); }, "http: is not a valid URL");
+
+    var url = new URL("file:");
+    is(url.href, "file:///", "Parsing file: should work.");
+
+    url = new URL("file:///");
+    is(url.href, "file:///", "Parsing file:/// should work.");
+  </script>
+
+  <script>
+    var url = new URL("scheme:path/to/file?query#hash");
+    is(url.href, "scheme:path/to/file?query#hash");
+    is(url.pathname, "path/to/file");
+    is(url.search, "?query");
+    is(url.hash, "#hash");
+
+    // pathname cannot be overwritten.
+    url.pathname = "new/path?newquery#newhash";
+    is(url.href, "scheme:path/to/file?query#hash");
+
+    // don't escape '#' until we implement a spec-compliant parser.
+    url.search = "?newquery#newhash";
+    is(url.href, "scheme:path/to/file?newquery#newhash#hash");
+
+    // nulls get encoded, whitespace gets stripped
+    url = new URL("scheme:pa\0\nth/to/fi\0\nle?qu\0\nery#ha\0\nsh");
+    is(url.href, "scheme:pa%00th/to/fi%00le?qu%00ery#ha%00sh");
+
+    url.search = "new\0\nquery";
+    is(url.href, "scheme:pa%00th/to/fi%00le?new%00%0Aquery#ha%00sh");
+    url.hash = "new\0\nhash";
+    is(url.href, "scheme:pa%00th/to/fi%00le?new%00%0Aquery#new%00%0Ahash");
+
+    url = new URL("scheme:path#hash");
+    is(url.href, "scheme:path#hash");
+    url.search = "query";
+    is(url.href, "scheme:path?query#hash");
+    url.hash = "";
+    is(url.href, "scheme:path?query");
+    url.hash = "newhash";
+    is(url.href, "scheme:path?query#newhash");
+    url.search = "";
+    is(url.href, "scheme:path#newhash");
+
+    // we don't implement a spec-compliant parser yet.
+    // make sure we are bug compatible with existing implementations.
+    url = new URL("data:text/html,<a href=\"http://example.org/?q\">Link</a>");
+    is(url.href, "data:text/html,<a href=\"http://example.org/?q\">Link</a>");
+  </script>
+
+  <script>
+    var u = new URL("http://www.example.org");
+    is(u.toJSON(), "http://www.example.org/", "URL.toJSON()");
+    is(JSON.stringify(u), "\"http://www.example.org/\"", "JSON.stringify(u) works");
+  </script>
+
+  <script>
+    // bug 1648493
+    var url = new URL("http://example.com/");
+    url.protocol = 'file'
+    url.protocol = 'resource'
+    url.password = 'Ãª'
+    url.username = 'Ã§'
+    url.protocol = 't'
+  </script>
+</body>
+</html>

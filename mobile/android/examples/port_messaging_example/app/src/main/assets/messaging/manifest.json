@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "messaging",
+  "version": "1.0",
+  "description": "Example messaging web extension.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "messaging@example.com"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "nativeMessaging",
+    "geckoViewAddons"
+  ]
+}

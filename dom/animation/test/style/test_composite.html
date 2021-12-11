@@ -1,0 +1,142 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+div {
+  /* Element needs geometry to be eligible for layerization */
+  width: 20px;
+  height: 20px;
+  background-color: white;
+}
+</style>
+<body>
+<div id="log"></div>
+<script>
+'use strict';
+
+if (!SpecialPowers.DOMWindowUtils.layerManagerRemote ||
+    !SpecialPowers.getBoolPref(
+      'layers.offmainthreadcomposition.async-animations')) {
+  // If OMTA is disabled, nothing to run.
+  done();
+}
+
+function waitForPaintsFlushed() {
+  return new Promise(function(resolve, reject) {
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+promise_test(t => {
+  // Without this, the first test case fails on Android.
+  return waitForDocumentLoad();
+}, 'Ensure document has been loaded');
+
+promise_test(t => {
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate({ transform: ['translateX(0px)', 'translateX(200px)'],
+                  composite: 'accumulate' },
+                100 * MS_PER_SEC);
+
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 200, 0)',
+      'Transform value at 50%');
+  });
+}, 'Accumulate onto the base value');
+
+promise_test(t => {
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    div.animate({ transform: ['translateX(100px)', 'translateX(200px)'],
+                  composite: 'replace' },
+                100 * MS_PER_SEC);
+    div.animate({ transform: ['translateX(0px)', 'translateX(100px)'],
+                  composite: 'accumulate' },
+                100 * MS_PER_SEC);
+
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 200, 0)',
+      'Transform value at 50%');
+  });
+}, 'Accumulate onto an underlying animation value');
+
+promise_test(t => {
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate([{ transform: 'translateX(100px)', composite: 'accumulate' },
+                 { transform: 'translateX(300px)', composite: 'replace' }],
+                100 * MS_PER_SEC);
+
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 250, 0)',
+      'Transform value at 50s');
+  });
+}, 'Composite when mixing accumulate and replace');
+
+promise_test(t => {
+  var div;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t, { style: 'transform: translateX(100px)' });
+    div.animate([{ transform: 'translateX(100px)', composite: 'replace' },
+                 { transform: 'translateX(300px)' }],
+                { duration: 100 * MS_PER_SEC, composite: 'accumulate' });
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 250, 0)',
+      'Transform value at 50%');
+  });
+}, 'Composite specified on a keyframe overrides the composite mode of the ' +
+   'effect');
+
+promise_test(t => {
+  var div;
+  var anim;
+  return useTestRefreshMode(t).then(() => {
+    div = addDiv(t);
+    div.animate({ transform: [ 'scale(2)', 'scale(2)' ] }, 100 * MS_PER_SEC);
+    anim = div.animate({ transform: [ 'scale(4)', 'scale(4)' ] },
+                       { duration: 100 * MS_PER_SEC, composite: 'add' });
+
+    return waitForPaintsFlushed();
+  }).then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(8, 0, 0, 8, 0, 0)',
+      'The additive scale value should be scale(8)'); // scale(2) scale(4)
+
+    anim.effect.composite = 'accumulate';
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(1);
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(5, 0, 0, 5, 0, 0)',
+      // (scale(2 - 1) + scale(4 - 1) + scale(1))
+      'The accumulate scale value should be scale(5)');
+  });
+}, 'Composite operation change');
+
+</script>
+</body>

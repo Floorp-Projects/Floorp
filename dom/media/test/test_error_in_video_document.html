@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=604067
+-->
+<head>
+  <title>Test for Bug 604067</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=604067">Mozilla Bug 604067</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 604067 **/
+
+function documentVideo() {
+  return document.body.getElementsByTagName("iframe")[0]
+                 .contentDocument.body.getElementsByTagName("video")[0];
+}
+
+function check() {
+  var v = documentVideo();
+
+  // Debug info for Bug 608634
+  ok(true, "iframe src=" + document.body.getElementsByTagName("iframe")[0].src);
+  is(v.readyState, v.HAVE_NOTHING, "Ready state");
+
+  isnot(v.error, null, "Error object");
+  is(v.networkState, v.NETWORK_NO_SOURCE, "Network state");
+  is(v.error.code, MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, "Expected media not supported error");
+  SimpleTest.finish();
+}
+
+// Find an error test that we'd think we should be able to play (if it
+// wasn't already known to fail).
+var t = getPlayableVideo(gErrorTests);
+if (!t) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+
+  var f = document.createElement("iframe");
+  f.src = t.name;
+  f.addEventListener("load", check);
+  document.body.appendChild(f);
+}
+
+</script>
+</pre>
+</body>
+</html>

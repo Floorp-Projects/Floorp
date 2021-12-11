@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+kind-dependencies:
+    - release-generate-checksums
+
+transforms:
+    - gecko_taskgraph.transforms.release_generate_checksums_signing:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-template:
+    shipping-phase: promote

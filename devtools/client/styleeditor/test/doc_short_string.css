@@ -1,0 +1,15 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+/* ☺ */
+
+body {
+  background: white;
+}
+
+div {
+  font-size: 4em;
+}
+
+div > span {
+   text-decoration: underline;
+}

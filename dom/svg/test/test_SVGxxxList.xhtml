@@ -1,0 +1,1372 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=515116
+-->
+<head>
+  <title>Generic tests for SVG animated length lists</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="matrixUtils.js"></script>
+  <script type="text/javascript" src="MutationEventChecker.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=515116">Mozilla Bug 515116</a>
+<p id="display"></p>
+<div id="content">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100"
+     onload="this.pauseAnimations();">
+  <defs>
+    <filter>
+      <feComponentTransfer>
+        <feFuncR id="feFuncR" type="table"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <text id="text">text</text>
+  <path id="path"/>
+  <polyline id="polyline"/>
+  <g id="g"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+
+SimpleTest.waitForExplicitFinish();
+
+/*
+This file runs a series of type-agnostic tests to check the state of the mini DOM trees that represent various SVG 'list' attributes (including checking the "object identity" of the objects in those trees) in the face of various changes, both with and without the complication of SMIL animation being active.
+
+For additional high level information on the tests that are run, see the comment for 'create_animate_elements' below.
+
+To have the battery of generic tests run for a new list attribute, add an element with that attribute to the document, then add a JavaScript object literal to the following 'tests' array with the following properties:
+
+  target_element_id
+    The ID of the element that has the attribute that is to be tested.
+  attr_name
+    The name of the attribute that is to be tested.
+  prop_name
+    The name of the DOM property that corresponds to the attribute that is to
+    be tested. For some list types the SVGAnimatedXxxList interface is
+    inherited by the element interface rather than the element having a
+    property of that type, and in others the list type is not animatable so
+    there is no SVGAnimatedXxxList interface for that list type. In these
+    cases this property should be set to null.
+  bv_name
+    The name of the DOM base value property for the attribute that is to be
+    tested. This is usually 'baseVal', but not always. In the case of
+    SVGStringList, which is not animatable, this is the name of the
+    SVGStringList property.
+  av_name
+    The name of the DOM anim value property for the attribute that is to be
+    tested. This is usually 'animVal' but not always. In the case of
+    SVGStringList, which is not animatable, this should be set to null.
+  el_type
+    The name of the SVGXxxElement interface on which the property corresponding
+    to the attribute being tested is defined.
+  prop_type
+    The name of the SVGAnimatedXxxList interface (e.g. SVGAnimatedLengthList),
+    if it exists, and if the element has a property is of this type (as
+    opposed to the element interface inheriting it).
+  list_type
+    The name of the SVGXxxList interface implemented by the baseVal and
+    animVal objects.
+  item_type
+    The name of the SVGXxx interface implemented by the list items.
+  attr_val_3a:
+  attr_val_3b:
+    Two attribute values containing three different items.
+  attr_val_4
+    An attribute value containing four items.
+  attr_val_5a:
+  attr_val_5b:
+    Two attribute values containing five different items.
+  attr_val_5b_firstItem_x3_constructor:
+    Function to construct a list-item that should match the first item in a
+    SVGXxxList after three repeats of a cumulative animation to attr_val_5b.
+    This function takes t.item_constructor as its only argument.
+  item_constructor:
+    Function to create a dummy list item.
+  item_is:
+    Function to compare two list items for equality, like "is()". If this
+    property is omitted, it is assumed that we can just compare
+    "item.value" (which is the case for most list types).
+*/
+// helper method
+function keys(obj) {
+    var rval = [];
+    for (var prop in obj) {
+        rval.push(prop);
+    }
+    return rval;
+}
+
+var tests = [
+  {
+    // SVGLengthList test:
+    target_element_id: "text",
+    attr_name: "x",
+    prop_name: "x",
+    bv_name: "baseVal",
+    av_name: "animVal",
+    el_type: "SVGTextElement",
+    prop_type: "SVGAnimatedLengthList",
+    list_type: "SVGLengthList",
+    item_type: "SVGLength",
+    attr_val_3a: "10 20ex, 30in",
+    attr_val_3b: "30in 10, 20ex",
+    attr_val_4: "10 20ex, 30in ,40cm",
+    attr_val_5a: "10 20ex, 30in ,40cm , 50%",
+    attr_val_5b: "20 50%, 20ex ,30in , 40cm",
+    attr_val_5b_firstItem_x3_constructor(constructor) {
+      var expected = constructor();
+      expected.value = 60;
+      return expected;
+    },
+    item_constructor() {
+      // We need this function literal to avoid "Illegal operation on
+      // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
+      return document.getElementById("svg").createSVGLength();
+    },
+  },
+  {
+    // SVGNumberList test:
+    target_element_id: "text",
+    attr_name: "rotate",
+    prop_name: "rotate",
+    bv_name: "baseVal",
+    av_name: "animVal",
+    el_type: "SVGTextElement",
+    prop_type: "SVGAnimatedNumberList",
+    list_type: "SVGNumberList",
+    item_type: "SVGNumber",
+    attr_val_3a: "0 20 40",
+    attr_val_3b: "60 40 20",
+    attr_val_4: "40 20 10 80",
+    attr_val_5a: "90 30 60 20 70",
+    attr_val_5b: "30 20 70 30 90",
+    attr_val_5b_firstItem_x3_constructor(constructor) {
+      var expected = constructor();
+      expected.value = 90;
+      return expected;
+    },
+    item_constructor() {
+      // We need this function literal to avoid "Illegal operation on
+      // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
+      return document.getElementById("svg").createSVGNumber();
+    },
+  },
+  {
+    // SVGNumberList test:
+    target_element_id: "feFuncR",
+    attr_name: "tableValues",
+    prop_name: "tableValues",
+    bv_name: "baseVal",
+    av_name: "animVal",
+    el_type: "SVGFEComponentTransferElement",
+    prop_type: "SVGAnimatedNumberList",
+    list_type: "SVGNumberList",
+    item_type: "SVGNumber",
+    attr_val_3a: "0 .5 .2",
+    attr_val_3b: "1 .7 .1",
+    attr_val_4: ".5 .3 .8 .2",
+    attr_val_5a: "3 4 5 6 7",
+    attr_val_5b: "7 6 5 4 3",
+    attr_val_5b_firstItem_x3_constructor(constructor) {
+      var expected = constructor();
+      expected.value = 21;
+      return expected;
+    },
+    item_constructor() {
+      // We need this function literal to avoid "Illegal operation on
+      // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
+      return document.getElementById("svg").createSVGNumber();
+    },
+  },
+  {
+    // SVGPointList test:
+    target_element_id: "polyline",
+    attr_name: "points",
+    prop_name: null, // SVGAnimatedPoints is an inherited interface!
+    bv_name: "points",
+    av_name: "animatedPoints",
+    el_type: "SVGPolylineElement",
+    prop_type: null,
+    list_type: "SVGPointList",
+    item_type: "SVGPoint",
+    attr_val_3a: " 10,10 50,50 90,10 ",
+    attr_val_3b: " 10,50 50,10 90,50 ",
+    attr_val_4: " 10,10 50,50 90,10 200,100 ",
+    attr_val_5a: " 10,10 50,50 90,10 130,50 170,10 ",
+    attr_val_5b: " 50,10 50,10 90,50 130,10 170,50 ",
+    attr_val_5b_firstItem_x3_constructor(constructor) {
+      var expected = constructor();
+      expected.x = 150;
+      expected.y = 30;
+      return expected;
+    },
+    item_constructor() {
+      // XXX return different values each time
+      return document.getElementById("svg").createSVGPoint();
+    },
+    item_is(itemA, itemB, message) {
+      ok(typeof(itemA.x) != "undefined" &&
+         typeof(itemB.x) != "undefined",
+         "expecting x property");
+      ok(typeof(itemA.y) != "undefined" &&
+         typeof(itemB.y) != "undefined",
+         "expecting y property");
+
+      is(itemA.x, itemB.x, message);
+      is(itemA.y, itemB.y, message);
+    },
+  },
+  {
+    // SVGStringList test:
+    target_element_id: "g",
+    attr_name: "requiredExtensions", // systemLanguage, viewTarget
+    prop_name: null, // SVGStringList attributes are not animatable
+    bv_name: "requiredExtensions",
+    av_name: null,
+    el_type: "SVGGElement",
+    prop_type: null,
+    list_type: "SVGStringList",
+    item_type: "DOMString",
+    attr_val_3a: "http://www.w3.org/TR/SVG11/feature#Shape http://www.w3.org/TR/SVG11/feature#Image " +
+                 "http://www.w3.org/TR/SVG11/feature#Style",
+    attr_val_3b: "http://www.w3.org/TR/SVG11/feature#CoreAttribute http://www.w3.org/TR/SVG11/feature#Structure " +
+                 "http://www.w3.org/TR/SVG11/feature#Gradient",
+    attr_val_4: "http://www.w3.org/TR/SVG11/feature#Pattern http://www.w3.org/TR/SVG11/feature#Clip " +
+                 "http://www.w3.org/TR/SVG11/feature#Mask http://www.w3.org/TR/SVG11/feature#Extensibility",
+    attr_val_5a: "http://www.w3.org/TR/SVG11/feature#BasicStructure http://www.w3.org/TR/SVG11/feature#BasicText " +
+                 "http://www.w3.org/TR/SVG11/feature#BasicPaintAttribute http://www.w3.org/TR/SVG11/feature#BasicGraphicsAttribute " +
+                 "http://www.w3.org/TR/SVG11/feature#BasicClip",
+    attr_val_5b: "http://www.w3.org/TR/SVG11/feature#DocumentEventsAttribute http://www.w3.org/TR/SVG11/feature#GraphicalEventsAttribute " +
+                 "http://www.w3.org/TR/SVG11/feature#AnimationEventsAttribute http://www.w3.org/TR/SVG11/feature#Hyperlinking " +
+                 "http://www.w3.org/TR/SVG11/feature#XlinkAttribute",
+    item_constructor() {
+      return "http://www.w3.org/TR/SVG11/feature#XlinkAttribute";
+    },
+  },
+  {
+    // SVGTransformList test:
+    target_element_id: "g",
+    attr_name: "transform", // gradientTransform, patternTransform
+    prop_name: "transform",
+    bv_name: "baseVal",
+    av_name: "animVal",
+    el_type: "SVGGElement",
+    prop_type: "SVGAnimatedTransformList",
+    list_type: "SVGTransformList",
+    item_type: "SVGTransform",
+    attr_val_3a: "translate(20 10) rotate(90 10 10) skewX(45)",
+    attr_val_3b: "translate(30 40) scale(2) matrix(1 2 3 4 5 6)",
+    attr_val_4: "scale(3 2) translate(19) skewY(2) rotate(-10)",
+    attr_val_5a:
+      "translate(20) rotate(-10) skewY(3) matrix(1 2 3 4 5 6) scale(0.5)",
+    attr_val_5b:
+      "skewX(45) rotate(45 -10 -10) skewX(-45) scale(2) matrix(6 5 4 3 2 1)",
+    // SVGTransformList animation addition is tested in
+    // test_SVGTransformListAddition.xhtml so we don't need:
+    // - attr_val_3b
+    // - attr_val_3b
+    // - attr_val_5b_firstItem_x3_constructor
+    // But we populate the first two anyway just in case they are later used for
+    // something other than testing animation.
+    // attr_val_5b_firstItem_x3_constructor is only used for animation
+    item_constructor() {
+      // XXX populate the matrix with different values each time
+      return document.getElementById("svg").createSVGTransform();
+    },
+    item_is(itemA, itemB, message) {
+      ok(typeof(itemA.type) != "undefined" &&
+         typeof(itemB.type) != "undefined",
+         "expecting type property");
+      ok(typeof(itemA.matrix) != "undefined" &&
+         typeof(itemB.matrix) != "undefined",
+         "expecting matrix property");
+      ok(typeof(itemA.angle) != "undefined" &&
+         typeof(itemB.angle) != "undefined",
+         "expecting matrix property");
+
+      is(itemA.type, itemB.type, message);
+      is(itemA.angle, itemB.angle, message);
+      cmpMatrix(itemA.matrix, itemB.matrix, message);
+    },
+  },
+];
+
+
+/*
+This function returns a DocumentFragment with three 'animate' element children. The duration of the three animations is as follows:
+
+  animation 1: |  *-----------*-----------*-----------*
+  animation 2: |     *--*
+  animation 3: |                    *--*
+               |___________________________________________> time (s)
+               |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+               0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+
+The first animation repeats once so that we can test state on a repeat animation.
+
+The second animation overrides the first animation for a short time, and has fewer list items than the first animation. This allows us to test object identity and other state on and after an overriding animation. Specifically, it allows us to check whether animVal list items are kept or discarded after the end of an overriding animation that has fewer items.
+
+The third animation has additive="sum", with fewer items than the lower priority animation 1, allowing us to test object identity and other state in that scenario. TODO: some type aware tests to check whether the composite fails or works?
+
+At t=0s and t=1s we test the effect of an attribute value changes in the absence and presence of SMIL animation respectively.
+
+At t=10s we programmatically remove the fill="freeze" from animation 1.
+*/
+function create_animate_elements(test) {
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var df = document.createDocumentFragment();
+
+  if (is_transform_attr(test.attr_name)) {
+    // animateTransform is "special". Although it targets an
+    // SVGAnimatedTransformList it only takes SVGTransform values as
+    // animation values. Therefore all the assumptions we're testing about the
+    // length of lists don't apply. We simply have to test it separately.
+    // This is done in test_SVGTransformListAddition.xhtml.
+    return df; // Return the empty document fragment
+  }
+
+  var animate1 = document.createElementNS(SVG_NS, "animate");
+  var animate2 = document.createElementNS(SVG_NS, "animate");
+  var animate3 = document.createElementNS(SVG_NS, "animate");
+
+  animate1.setAttribute("attributeName", test.attr_name);
+  animate1.setAttribute("from", test.attr_val_5a);
+  animate1.setAttribute("to", test.attr_val_5b);
+  animate1.setAttribute("begin", "1s");
+  animate1.setAttribute("dur", "4s");
+  animate1.setAttribute("repeatCount", "3");
+  animate1.setAttribute("accumulate", "sum");
+  animate1.setAttribute("fill", "freeze");
+  df.appendChild(animate1);
+
+  animate2.setAttribute("attributeName", test.attr_name);
+  animate2.setAttribute("from", test.attr_val_3a);
+  animate2.setAttribute("to", test.attr_val_3b);
+  animate2.setAttribute("begin", "2s");
+  animate2.setAttribute("dur", "1s");
+  df.appendChild(animate2);
+
+  animate3.setAttribute("attributeName", test.attr_name);
+  animate3.setAttribute("from", test.attr_val_3a);
+  animate3.setAttribute("to", test.attr_val_3b);
+  animate3.setAttribute("begin", "7s");
+  animate3.setAttribute("dur", "1s");
+  animate3.setAttribute("additive", "sum");
+  df.appendChild(animate3);
+
+  return df;
+}
+
+function is_transform_attr(attr_name) {
+  return attr_name == "transform" ||
+         attr_name == "gradientTransform" ||
+         attr_name == "patternTransform";
+}
+
+function get_array_of_list_items(list) {
+  let array = [];
+  for (var i = 0; i < list.numberOfItems; ++i) {
+    array.push(list.getItem(i));
+  }
+  return array;
+}
+
+
+/**
+ * This function tests the SVGXxxList API for the base val list. This means
+ * running tests for the following property and methods:
+ *
+ *   numberOfItems
+ *   clear()
+ *   SVGLength initialize(in SVGLength newItem)
+ *   SVGLength getItem(in unsigned long index)
+ *   SVGLength insertItemBefore(in SVGLength newItem, in unsigned long index)
+ *   SVGLength replaceItem(in SVGLength newItem, in unsigned long index)
+ *   SVGLength removeItem(in unsigned long index)
+ *   SVGLength appendItem(in SVGLength newItem)
+ *
+ * @param t A test from the 'tests' array.
+ */
+function run_baseVal_API_tests() {
+  var res, threw;
+  var eventChecker = new MutationEventChecker;
+
+  for (var t of tests) {
+    // Test .clear():
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    is(t.baseVal.numberOfItems, 4,
+       "The " + t.list_type + " object should contain four list items.");
+
+    eventChecker.watchAttr(t.element, t.attr_name);
+    eventChecker.expect("modify");
+    res = t.baseVal.clear();
+
+    is(t.baseVal.numberOfItems, 0,
+       "The method " + t.list_type + ".clear() should clear the " + t.list_type +
+       " object.");
+    is(res, undefined,
+       "The method " + t.list_type + ".clear() should not return a value.");
+    ok(t.element.hasAttribute(t.attr_name),
+       "The method " + t.list_type + ".clear() should not remove the attribute.");
+    ok(t.element.getAttribute(t.attr_name) === "",
+       "Cleared " + t.attr_name + " (" + t.list_type + ") but did not get an " +
+       "empty string back.");
+
+    eventChecker.expect("");
+    t.baseVal.clear();
+    eventChecker.ignoreEvents();
+
+    // Test empty strings
+
+    t.element.setAttribute(t.attr_name, "");
+    ok(t.element.getAttribute(t.attr_name) === "",
+       "Set an empty attribute value for " + t.attr_name + " (" + t.list_type +
+       ") but did not get an empty string back.");
+
+    // Test removed attributes
+
+    t.element.removeAttribute(t.attr_name);
+    ok(t.element.getAttribute(t.attr_name) === null,
+       "Removed attribute value for " + t.attr_name + " (" + t.list_type +
+       ") but did not get null back.");
+    ok(!t.element.hasAttribute(t.attr_name),
+       "Removed attribute value for " + t.attr_name + " (" + t.list_type +
+       ") but hasAttribute still returns true.");
+
+    // Test .initialize():
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    var item = t.item_constructor();
+    // Our current implementation of 'initialize' for most list types performs
+    // a 'clear' followed by an 'insertItemBefore'. This results in two
+    // modification events being dispatched. SVGStringList however avoids the
+    // additional clear.
+    var expectedModEvents =
+      t.item_type == "DOMString" ? "modify" : "modify modify";
+    eventChecker.expect(expectedModEvents);
+    res = t.baseVal.initialize(item);
+    eventChecker.ignoreEvents();
+
+
+    is(t.baseVal.numberOfItems, 1,
+       "The " + t.list_type + " object should contain one list item.");
+    ok(res === item,
+       "The list item returned by " + t.list_type + ".initialize() should be the " +
+       "exact same object as the item that was passed to that method, since " +
+       "the item that was passed to that method did not already belong to a " +
+       "list.");
+    ok(t.baseVal.getItem(0) === item,
+       "The list item at index 0 should be the exact same object as the " +
+       "object that was passed to the " + t.list_type + ".initialize() method, " +
+       "since the item that was passed to that method did not already " +
+       "belong to a list.");
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    if (t.item_type != "DOMString") {
+      var old_items = get_array_of_list_items(t.baseVal);
+      item = t.baseVal.getItem(3);
+      res = t.baseVal.initialize(item);
+
+      ok(res !== item &&
+         t.baseVal.getItem(0) !== item &&
+         t.baseVal.getItem(0) !== old_items[0] &&
+         res === t.baseVal.getItem(0),
+         "The method " + t.list_type + ".initialize() should clone the object that " +
+         "is passed in if that object is already in a list.");
+      // [SVGWG issue] not what the spec currently says
+
+
+      item = t.baseVal.getItem(0);
+      res = t.baseVal.initialize(item);
+
+      ok(res !== item &&
+         t.baseVal.getItem(0) !== item,
+         "The method " + t.list_type + ".initialize() should clone the object that " +
+         "is passed in, even if that object is the only item in that list.");
+      // [SVGWG issue] not what the spec currently says
+
+      eventChecker.expect("");
+      threw = false;
+      try {
+        t.baseVal.initialize({});
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw,
+         "The method " + t.list_type + ".initialize() should throw if passed an " +
+         "object of the wrong type.");
+      eventChecker.ignoreEvents();
+    }
+
+    // Test .insertItemBefore():
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    old_items = get_array_of_list_items(t.baseVal);
+    item = t.item_constructor();
+    eventChecker.expect("modify");
+    res = t.baseVal.insertItemBefore(item, 2);
+    eventChecker.ignoreEvents();
+
+    is(t.baseVal.numberOfItems, 5,
+       "The " + t.list_type + " object should contain five list items.");
+    ok(res === item,
+       "The list item returned by " + t.list_type + ".insertItemBefore() should " +
+       "be the exact same object as the item that was passed to that method, " +
+       "since the item that was passed to that method did not already belong " +
+       "to a list.");
+    ok(t.baseVal.getItem(2) === item,
+       "The list item at index 2 should be the exact same object as the " +
+       "object that was passed to the " + t.list_type + ".insertItemBefore() " +
+       "method, since the item that was passed to that method did not " +
+       "already belong to a list.");
+    ok(t.baseVal.getItem(3) === old_items[2],
+       "The list item that was at index 2 should be at index 3 after " +
+       "inserting a new item at index 2 using the " + t.list_type +
+       ".insertItemBefore() method.");
+
+    item = t.item_constructor();
+    t.baseVal.insertItemBefore(item, 100);
+
+    ok(t.baseVal.getItem(5) === item,
+       "When the index passed to the " + t.list_type + ".insertItemBefore() " +
+       "method is out of bounds, the supplied list item should be appended " +
+       "to the list.");
+
+    item = t.baseVal.getItem(4);
+    res = t.baseVal.insertItemBefore(item, 2);
+
+    is(t.baseVal.numberOfItems, 7,
+       "The " + t.list_type + " object should contain seven list items.");
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(2) !== item &&
+         t.baseVal.getItem(2) !== old_items[2] &&
+         res === t.baseVal.getItem(2),
+         "The method " + t.list_type + ".insertItemBefore() should clone the " +
+         "object that is passed in if that object is already in a list.");
+      // [SVGWG issue] not what the spec currently says
+    }
+
+    item = t.baseVal.getItem(2);
+    res = t.baseVal.insertItemBefore(item, 2);
+
+    is(t.baseVal.numberOfItems, 8,
+       "The " + t.list_type + " object should contain eight list items.");
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(2) !== item,
+         "The method " + t.list_type + ".insertItemBefore() should clone the " +
+         "object that is passed in, even if that object is the item in " +
+         "the list at the index specified.");
+      // [SVGWG issue] not what the spec currently says
+
+      eventChecker.expect("");
+      threw = false;
+      try {
+        t.baseVal.insertItemBefore({}, 2);
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw,
+         "The method " + t.list_type + ".insertItemBefore() should throw if passed " +
+         "an object of the wrong type.");
+      eventChecker.ignoreEvents();
+    }
+
+    // Test .replaceItem():
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    old_items = get_array_of_list_items(t.baseVal);
+    item = t.item_constructor();
+    eventChecker.expect("modify");
+    res = t.baseVal.replaceItem(item, 2);
+    eventChecker.ignoreEvents();
+
+    is(t.baseVal.numberOfItems, 4,
+       "The " + t.list_type + " object should contain four list items.");
+    if (t.item_type != "DOMString") {
+      ok(res === item,
+         "The list item returned by " + t.list_type + ".replaceItem() should be " +
+         "the exact same object as the item that was passed to that method, " +
+         "since the item that was passed to that method did not already belong " +
+         "to a list.");
+    }
+    ok(t.baseVal.getItem(2) === item,
+       "The list item at index 2 should be the exact same object as the " +
+       "object that was passed to the " + t.list_type + ".replaceItem() method, " +
+       "since the item that was passed to that method did not already belong " +
+       "to a list.");
+    ok(t.baseVal.getItem(3) === old_items[3],
+       "The list item that was at index 3 should still be at index 3 after " +
+       "the item at index 2 was replaced using the " + t.list_type +
+       ".replaceItem() method.");
+
+    item = t.item_constructor();
+
+    eventChecker.expect("");
+    threw = false;
+    try {
+      t.baseVal.replaceItem(item, 100);
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".replaceItem() should throw if passed " +
+       "an index that is out of bounds.");
+    eventChecker.ignoreEvents();
+
+    old_items = get_array_of_list_items(t.baseVal);
+    item = t.baseVal.getItem(3);
+    res = t.baseVal.replaceItem(item, 1);
+
+    is(t.baseVal.numberOfItems, 4,
+       "The " + t.list_type + " object should contain four list items.");
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(1) !== item &&
+         t.baseVal.getItem(1) !== old_items[1] &&
+         res === t.baseVal.getItem(1),
+         "The method " + t.list_type + ".replaceItem() should clone the object " +
+         "that is passed in if that object is already in a list.");
+      // [SVGWG issue] not what the spec currently says
+    }
+
+    item = t.baseVal.getItem(1);
+    res = t.baseVal.replaceItem(item, 1);
+
+    is(t.baseVal.numberOfItems, 4,
+       "The " + t.list_type + " object should contain four list items.");
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(1) !== item,
+         "The method " + t.list_type + ".replaceItem() should clone the object " +
+         "that is passed in, even if the object that object and the object " +
+         "that is being replaced are the exact same objects.");
+      // [SVGWG issue] not what the spec currently says
+
+      threw = false;
+      try {
+        t.baseVal.replaceItem({}, 2);
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw,
+         "The method " + t.list_type + ".replaceItem() should throw if passed " +
+         "an object of the wrong type.");
+    }
+
+    // Test .removeItem():
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    old_items = get_array_of_list_items(t.baseVal);
+    item = t.baseVal.getItem(2);
+    eventChecker.expect("modify");
+    res = t.baseVal.removeItem(2);
+    eventChecker.ignoreEvents();
+
+    is(t.baseVal.numberOfItems, 3,
+       "The " + t.list_type + " object should contain three list items.");
+    if (t.item_type != "DOMString") {
+      ok(res === item,
+         "The list item returned by " + t.list_type + ".removeItem() should be the " +
+         "exact same object as the item that was at the specified index.");
+    }
+    ok(t.baseVal.getItem(1) === old_items[1],
+       "The list item that was at index 1 should still be at index 1 after " +
+       "the item at index 2 was removed using the " + t.list_type +
+       ".replaceItem() method.");
+    ok(t.baseVal.getItem(2) === old_items[3],
+       "The list item that was at index 3 should still be at index 2 after " +
+       "the item at index 2 was removed using the " + t.list_type +
+       ".replaceItem() method.");
+
+    eventChecker.expect("");
+    threw = false;
+    try {
+      t.baseVal.removeItem(100);
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".removeItem() should throw if passed " +
+       "an index that is out of bounds.");
+    eventChecker.ignoreEvents();
+
+    // Test .appendItem():
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    old_items = get_array_of_list_items(t.baseVal);
+    item = t.item_constructor();
+    eventChecker.expect("modify");
+    res = t.baseVal.appendItem(item);
+    eventChecker.ignoreEvents();
+
+    is(t.baseVal.numberOfItems, 5,
+       "The " + t.list_type + " object should contain five list items.");
+    ok(res === item,
+       "The list item returned by " + t.list_type + ".appendItem() should be the " +
+       "exact same object as the item that was passed to that method, since " +
+       "the item that was passed to that method did not already belong " +
+       "to a list.");
+    ok(t.baseVal.getItem(4) === item,
+       "The last list item should be the exact same object as the object " +
+       "that was passed to the " + t.list_type + ".appendItem() method, since " +
+       "the item that was passed to that method did not already belong to " +
+       "a list.");
+    ok(t.baseVal.getItem(3) === old_items[3],
+       "The list item that was at index 4 should still be at index 4 after " +
+       "appending a new item using the " + t.list_type + ".appendItem() " +
+       "method.");
+
+    item = t.baseVal.getItem(2);
+    res = t.baseVal.appendItem(item);
+
+    is(t.baseVal.numberOfItems, 6,
+       "The " + t.list_type + " object should contain six list items.");
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(5) !== item &&
+         res === t.baseVal.getItem(5),
+         "The method " + t.list_type + ".appendItem() should clone the object " +
+         "that is passed in if that object is already in a list.");
+      // [SVGWG issue] not what the spec currently says
+    }
+
+    item = t.baseVal.getItem(5);
+    res = t.baseVal.appendItem(item);
+
+    is(t.baseVal.numberOfItems, 7,
+       "The " + t.list_type + " object should contain seven list items.");
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(6) !== item,
+         "The method " + t.list_type + ".appendItem() should clone the object " +
+         "that is passed in, if that object is already the last item in " +
+         "that list.");
+      // [SVGWG issue] not what the spec currently says
+
+      eventChecker.expect("");
+      threw = false;
+      try {
+        t.baseVal.appendItem({});
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw,
+         "The method " + t.list_type + ".appendItem() should throw if passed " +
+         "an object of the wrong type.");
+      eventChecker.ignoreEvents();
+    }
+
+    // Test removal and addition events
+
+    eventChecker.expect("remove add");
+    t.element.removeAttribute(t.attr_name);
+    t.element.removeAttributeNS(null, t.attr_name);
+    res = t.baseVal.appendItem(item);
+    eventChecker.finish();
+  }
+}
+
+
+/**
+ * This function tests the SVGXxxList API for the anim val list (see also the
+ * comment for test_baseVal_API).
+ */
+function run_animVal_API_tests() {
+  var threw, item;
+
+  for (var t of tests) {
+    if (!t.animVal)
+      continue; // SVGStringList isn't animatable
+
+    item = t.item_constructor();
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    is(t.animVal.numberOfItems, 4,
+       "The " + t.list_type + " object should contain four list items.");
+
+    // Test .clear():
+
+    threw = false;
+    try {
+      t.animVal.clear();
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".clear() should throw when called on an " +
+       "anim val list, since anim val lists should be readonly.");
+
+    // Test .getItem():
+
+    item = t.animVal.getItem(2);
+    ok(item != null && item === t.animVal.getItem(2),
+       "The method " + t.list_type + ".getItem() should work when called on an " +
+       "anim val list, and always return the exact same object.");
+
+    // .initialize()
+
+    threw = false;
+    try {
+      t.animVal.initialize(item);
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".initialize() should throw when called on " +
+       "an anim val list, since anim val lists should be readonly.");
+
+    // Test .insertItemBefore():
+
+    threw = false;
+    try {
+      t.animVal.insertItemBefore(item, 2);
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".insertItemBefore() should throw when " +
+       "called on an anim val list, since anim val lists should be readonly.");
+
+    // Test .replaceItem():
+
+    threw = false;
+    try {
+      t.animVal.replaceItem(item, 2);
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".replaceItem() should throw when called " +
+       "on an anim val list, since anim val lists should be readonly.");
+
+    // Test .removeItem():
+
+    threw = false;
+    try {
+      t.animVal.removeItem(2);
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".removeItem() should throw when called " +
+       "on an anim val list, since anim val lists should be readonly.");
+
+    // Test .appendItem():
+
+    threw = false;
+    try {
+      t.animVal.appendItem(item);
+    } catch (e) {
+      threw = true;
+    }
+    ok(threw,
+       "The method " + t.list_type + ".appendItem() should throw when called " +
+       "on an anim val list, since anim val lists should be readonly.");
+  }
+}
+
+
+/**
+ * This function runs some basic tests to check the effect of setAttribute()
+ * calls on object identity, without taking SMIL animation into consideration.
+ */
+function run_basic_setAttribute_tests() {
+  for (var t of tests) {
+    // Since the t.prop, t.baseVal and t.animVal objects should never ever
+    // change, we leave testing of them to our caller so that it can check
+    // them after all the other mutations such as SMIL changes.
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+    ok(t.baseVal.numberOfItems == 4 && t.baseVal.getItem(3) != null,
+       "The length of the " + t.list_type + " object for " + t.bv_path + " should " +
+       "have been set to 4 by the setAttribute() call.");
+
+    if (t.animVal) {
+      ok(t.baseVal.numberOfItems == t.animVal.numberOfItems,
+         "When no animations are active, the " + t.list_type + " objects for " +
+         t.bv_path + " and " + t.av_path + " should be the same length (4).");
+
+      ok(t.baseVal !== t.animVal,
+         "The " + t.list_type + " objects for " + t.bv_path + " and " + t.av_path +
+         " should be different objects.");
+
+      ok(t.baseVal.getItem(0) !== t.animVal.getItem(0),
+         "The " + t.item_type + " list items in the " + t.list_type + " objects for " +
+         t.bv_path + " and " + t.av_path + " should be different objects.");
+    }
+
+    // eslint-disable-next-line no-self-compare
+    ok(t.baseVal.getItem(0) === t.baseVal.getItem(0),
+       "The exact same " + t.item_type + " DOM object should be returned each " +
+       "time the item at a given index in the " + t.list_type + " for " +
+       t.bv_path + " is accessed, given that the index was not made invalid " +
+       "by a change in list length between the successive accesses.");
+
+    if (t.animVal) {
+      // eslint-disable-next-line no-self-compare
+      ok(t.animVal.getItem(0) === t.animVal.getItem(0),
+         "The exact same " + t.item_type + " DOM object should be returned each " +
+         "time the item at a given index in the " + t.list_type + " for " +
+         t.av_path + " is accessed, given that the index was not made invalid " +
+         "by a change in list length between the successive accesses.");
+    }
+
+    // Test the effect of setting the attribute to new values:
+
+    t.old_baseVal_items = get_array_of_list_items(t.baseVal);
+    if (t.animVal) {
+      t.old_animVal_items = get_array_of_list_items(t.animVal);
+    }
+
+    t.element.setAttribute(t.attr_name, t.attr_val_3a);
+    t.element.setAttribute(t.attr_name, t.attr_val_5a);
+
+    ok(t.baseVal.numberOfItems == 5 && t.baseVal.getItem(4) != null,
+       "The length of the " + t.list_type + " object for " + t.bv_path + " should " +
+       "have been set to 5 by the setAttribute() call.");
+
+    if (t.animVal) {
+      ok(t.baseVal.numberOfItems == t.animVal.numberOfItems,
+         "Since no animations are active, the length of the " + t.list_type + " " +
+         "objects for " + t.bv_path + " and " + t.av_path + " should be the same " +
+         "(5).");
+    }
+
+    if (t.item_type != "DOMString") {
+      ok(t.baseVal.getItem(2) === t.old_baseVal_items[2],
+         "After its attribute changes, list items in the " + t.list_type + " for " +
+         t.bv_path + " that are at indexes that existed prior to the attribute " +
+         "change should be the exact same objects as the objects that were " +
+         "at those indexes prior to the attribute change.");
+
+      ok(t.baseVal.getItem(3) !== t.old_baseVal_items[3],
+         "After its attribute changes, list items in the " + t.list_type + " for " +
+         t.bv_path + " that are at indexes that did not exist prior to the " +
+         "attribute change should not be the same objects as any objects that " +
+         "were at those indexes at some earlier time.");
+    }
+
+    if (t.animVal) {
+      ok(t.animVal.getItem(2) === t.old_animVal_items[2],
+         "After its attribute changes, list items in the " + t.list_type + " for " +
+         t.av_path + " that are at indexes that existed prior to the attribute " +
+         "change should be the exact same objects as the objects that were " +
+         "at those indexes prior to the attribute change.");
+
+      ok(t.animVal.getItem(3) !== t.old_animVal_items[3],
+         "After its attribute changes, list items in the " + t.list_type + " for " +
+         t.av_path + " that are at indexes that did not exist prior to the " +
+         "attribute change should not be the same objects as any objects " +
+         "that were at those indexes at some earlier time.");
+    }
+  }
+}
+
+/**
+ * This function verifies that a list's animVal is kept in sync with its
+ * baseVal, when we add & remove items from the baseVal.
+ */
+function run_list_mutation_tests() {
+  for (var t of tests) {
+    if (t.animVal) {
+      // Test removeItem()
+      // =================
+      // Save second item in baseVal list; then make it the first item, and
+      // check that animVal is updated accordingly.
+      t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+      var secondVal = t.baseVal.getItem(1);
+      var removedFirstVal = t.baseVal.removeItem(0);
+      t.item_is(t.animVal.getItem(0), secondVal,
+                "animVal for " + t.attr_name + " needs update after first item " +
+                "removed");
+
+      // Repeat with last item
+      var secondToLastVal = t.baseVal.getItem(1);
+      var removedLastVal = t.baseVal.removeItem(2);
+
+      var threw = false;
+      try {
+        t.animVal.getItem(2);
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw,
+         "The method " + t.attr_name + ".animVal.getItem() for previously-final " +
+         "index should throw after final item is removed from baseVal.");
+
+      t.item_is(t.animVal.getItem(1), secondToLastVal,
+                "animVal for " + t.attr_name + " needs update after last item " +
+                "removed");
+
+      // Test insertItemBefore()
+      // =======================
+      // Reset base value, insert value @ start, check that animVal is updated.
+      t.element.setAttribute(t.attr_name, t.attr_val_3a);
+      t.baseVal.insertItemBefore(removedLastVal, 0);
+      t.item_is(t.animVal.getItem(0), removedLastVal,
+                "animVal for " + t.attr_name + " needs update after insert at " +
+                "beginning");
+
+      // Repeat with insert at end
+      t.element.setAttribute(t.attr_name, t.attr_val_3a);
+      t.baseVal.insertItemBefore(removedFirstVal, t.baseVal.numberOfItems);
+      t.item_is(t.animVal.getItem(t.baseVal.numberOfItems - 1),
+                removedFirstVal,
+                "animVal for " + t.attr_name + " needs update after insert at end");
+
+      // Test appendItem()
+      // =================
+      var dummy = t.item_constructor();
+      t.baseVal.appendItem(dummy);
+      t.item_is(t.animVal.getItem(t.baseVal.numberOfItems - 1), dummy,
+                "animVal for " + t.attr_name + " needs update after appendItem");
+
+      // Test clear()
+      // ============
+      t.baseVal.clear();
+      threw = false;
+      try {
+        t.animVal.getItem(0);
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw,
+         "The method " + t.attr_name + ".animVal.getItem() should throw after " +
+         "we've cleared baseVal.");
+
+      is(t.animVal.numberOfItems, 0,
+         "animVal for " + t.attr_name + " should be empty after baseVal cleared");
+
+      // Test initialize()
+      // =================
+      t.element.setAttribute(t.attr_name, t.attr_val_3a);
+      t.baseVal.initialize(dummy);
+
+      is(t.animVal.numberOfItems, 1,
+         "animVal for " + t.attr_name + " should have length 1 after initialize");
+      t.item_is(t.animVal.getItem(0), dummy,
+                "animVal for " + t.attr_name + " needs update after initialize");
+    }
+  }
+}
+
+/**
+ * In this function we run a series of tests at various points along the SMIL
+ * animation timeline, using SVGSVGElement.setCurrentTime() to move forward
+ * along the timeline.
+ *
+ * See the comment for create_animate_elements() for details of the animations
+ * and their timings.
+ */
+function run_animation_timeline_tests() {
+  var svg = document.getElementById("svg");
+
+  for (var t of tests) {
+    // Skip if there is no animVal for this test or if it is a transform list
+    // since these are handled specially
+    if (!t.animVal || is_transform_attr(t.attr_name))
+      continue;
+
+    svg.setCurrentTime(0); // reset timeline
+
+    // Reset attributes before moving along the timeline and triggering SMIL:
+    t.element.setAttribute(t.attr_name, t.attr_val_4);
+    t.old_baseVal_items = get_array_of_list_items(t.baseVal);
+    t.old_animVal_items = get_array_of_list_items(t.animVal);
+
+
+    /** ******************    t = 1s    ********************/
+
+    svg.setCurrentTime(1); // begin first animation
+
+    ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
+       t.baseVal.getItem(3) === t.old_baseVal_items[3],
+       "The start of an animation should never affect the " + t.list_type +
+       " for " + t.bv_path + ", or its list items.");
+
+    ok(t.animVal.numberOfItems == 5 && t.animVal.getItem(4) != null,
+       "The start of the animation should have changed the number of items " +
+       "in the " + t.list_type + " for " + t.bv_path + " to 5.");
+
+    // TODO
+    ok(t.animVal.getItem(3) === t.old_animVal_items[3],
+       "When affected by SMIL animation, list items in the " + t.list_type +
+       " for " + t.bv_path + " that are at indexes that existed prior to the " +
+       "start of the animation should be the exact same objects as the " +
+       "objects that were at those indexes prior to the start of the " +
+       "animation.");
+
+    t.old_animVal_items = get_array_of_list_items(t.animVal);
+
+    t.element.setAttribute(t.attr_name, t.attr_val_3a);
+
+    ok(t.baseVal.numberOfItems == 3 &&
+       t.baseVal.getItem(2) === t.old_baseVal_items[2],
+       "Setting the underlying attribute should change the items in the " +
+       t.list_type + " for " + t.bv_path + ", including when an animation is " +
+       "in progress.");
+
+    ok(t.animVal.numberOfItems == 5 &&
+       t.animVal.getItem(4) === t.old_animVal_items[4],
+       "Setting the underlying attribute should not change the " + t.list_type +
+       " for " + t.bv_path + " when an animation that does not depend on the " +
+       "base val is in progress.");
+
+    t.element.setAttribute(t.attr_name, t.attr_val_4); // reset
+
+    t.old_baseVal_items = get_array_of_list_items(t.baseVal);
+    t.old_animVal_items = get_array_of_list_items(t.animVal);
+
+
+    /** ******************    t = 2s    ********************/
+
+    svg.setCurrentTime(2); // begin override animation
+
+    ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
+       t.baseVal.getItem(3) === t.old_baseVal_items[3],
+       "The start of an override animation should never affect the " +
+       t.list_type + " for " + t.bv_path + ", or its list items.");
+
+    is(t.animVal.numberOfItems, 3,
+       "The start of the override animation should have changed the number " +
+       "of items in the " + t.list_type + " for " + t.bv_path + " to 3.");
+
+    ok(t.animVal.getItem(2) === t.old_animVal_items[2],
+       "When affected by an override SMIL animation, list items in the " +
+       t.list_type + " for " + t.bv_path + " that are at indexes that existed " +
+       "prior to the start of the animation should be the exact same " +
+       "objects as the objects that were at those indexes prior to the " +
+       "start of that animation.");
+
+    t.old_animVal_items = get_array_of_list_items(t.animVal);
+
+
+    /** ******************    t = 3s    ********************/
+
+    svg.setCurrentTime(3); // end of override animation
+
+    ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
+       t.baseVal.getItem(3) === t.old_baseVal_items[3],
+       "The end of an override animation should never affect the " +
+       t.list_type + " for " + t.bv_path + ", or its list items.");
+
+    is(t.animVal.numberOfItems, 5,
+       "At the end of the override animation, the number of items in the " +
+       t.list_type + " for " + t.bv_path + " should have reverted to 5.");
+
+    ok(t.animVal.getItem(2) === t.old_animVal_items[2],
+       "At the end of the override animation, list items in the " +
+       t.list_type + " for " + t.bv_path + " that are at indexes that existed " +
+       "prior to the end of the animation should be the exact same " +
+       "objects as the objects that were at those indexes prior to the " +
+       "end of that animation.");
+
+    t.old_animVal_items = get_array_of_list_items(t.animVal);
+
+
+    /** ******************    t = 5s    ********************/
+
+    svg.setCurrentTime(5); // animation repeat point
+
+    ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
+       t.baseVal.getItem(3) === t.old_baseVal_items[3],
+       "When a SMIL animation repeats, it should never affect the " +
+       t.list_type + " for " + t.bv_path + ", or its list items.");
+
+    ok(t.animVal.numberOfItems == t.old_animVal_items.length &&
+       t.animVal.getItem(4) === t.old_animVal_items[4],
+       "When an animation repeats, the list items that are at a given " +
+       "index in the " + t.list_type + " for " + t.av_path + " should be the exact " +
+       "same objects as were at that index before the repeat occurred.");
+
+
+    /** ******************    t = 6s    ********************/
+
+    svg.setCurrentTime(6); // inside animation repeat
+
+    ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
+       t.baseVal.getItem(3) === t.old_baseVal_items[3],
+       "When a SMIL animation repeats, it should never affect the " +
+       t.list_type + " for " + t.bv_path + ", or its list items.");
+
+    ok(t.animVal.numberOfItems == t.old_animVal_items.length &&
+       t.animVal.getItem(4) === t.old_animVal_items[4],
+       "When an animation repeats, the list items that are at a given " +
+       "index in the " + t.list_type + " for " + t.av_path + " should be the exact " +
+       "same objects as were at that index before the repeat occurred.");
+
+
+    /** ******************    t = 7s    ********************/
+
+    svg.setCurrentTime(7); // start of additive="sum" animation
+
+    ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
+       t.baseVal.getItem(3) === t.old_baseVal_items[3],
+       "When a new SMIL animation starts and should blend with an " +
+       "underlying animation, it should never affect the " +
+       t.list_type + " for " + t.bv_path + ", or its list items.");
+
+    if (t.list_type == "SVGLengthList") {
+      // Length lists are a special case where it makes sense to allow shorter
+      // lists to be composed on top of longer lists (but not necessarily vice
+      // versa - see comment below).
+
+      ok(t.animVal.numberOfItems == t.old_animVal_items.length &&
+         t.animVal.getItem(3) === t.old_animVal_items[3],
+         'When an animation with additive="sum" is added on top of an ' +
+         "existing animation that has more list items, the length of the " +
+         t.list_type + " for " + t.av_path + " should not change.");
+    } else {
+
+/* TODO
+      ok(false,
+         'Decide what to do here - see ' +
+         'https://bugzilla.mozilla.org/show_bug.cgi?id=573716 - we ' +
+         'probably should be discarding any animation sandwich layers from ' +
+         'a layer that fails to add, on up.');
+*/
+
+      // In other words, we wouldn't need the if-else check here.
+
+    }
+
+    // XXX what if the higher priority sandwich layer has *more* list items
+    // than the underlying animation? In that case we would need to
+    // distinguish between different SVGLengthList attributes, since although
+    // all SVGLengthList attributes allow a short list to be added to longer
+    // list, they do not all allow a longer list to be added to shorter list.
+    // Specifically that would not be good for 'x' and 'y' on <text> since
+    // lengths there are not naturally zero. See the comment in
+    // SVGLengthListSMILAttr::Add().
+
+
+    /** ******************    t = 13s    ********************/
+
+    svg.setCurrentTime(13); // all animations have finished, but one is frozen
+
+    ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
+       t.baseVal.getItem(3) === t.old_baseVal_items[3],
+       "When a SMIL animation ends, it should never affect the " +
+       t.list_type + " for " + t.bv_path + ", or its list items.");
+
+    is(t.animVal.numberOfItems, 5,
+       "Even though all SMIL animation have finished, the number " +
+       "of items in the " + t.list_type + " for " + t.av_path +
+       " should still be more than the same as the number of items in " +
+       t.bv_path + " since one of the animations is still frozen.");
+
+    var expected = t.attr_val_5b_firstItem_x3_constructor(t.item_constructor);
+    t.item_is(t.animVal.getItem(0), expected,
+      'animation with accumulate="sum" and repeatCount="3" for attribute "' +
+       t.attr_name + '" should end up at 3x the "to" value.');
+
+    // Unfreeze frozen animation (removing its effects)
+    var frozen_animate_element =
+      t.element.querySelector('animate[fill][attributeName="' + t.attr_name + '"]');
+    frozen_animate_element.removeAttribute("fill");
+
+    ok(t.animVal.numberOfItems == t.baseVal.numberOfItems,
+       "Once all SMIL animation have finished and been un-frozen, the number " +
+       "of items in the " + t.list_type + " for " + t.av_path +
+       " should be the same as the number of items in " + t.bv_path + ".");
+
+    ok(t.animVal.getItem(2) === t.old_animVal_items[2],
+       "Even after an animation finishes and is un-frozen, the list items " +
+       "that are at a given index in the " + t.list_type + " for " + t.av_path +
+       " should be the exact same objects as were at that index before the " +
+       "end and unfreezing of the animation occurred.");
+   }
+}
+
+
+function run_tests() {
+  // Initialize each test object with some useful properties, and create their
+  // 'animate' elements. Note that 'prop' and 'animVal' may be null.
+  for (let t of tests) {
+    t.element = document.getElementById(t.target_element_id);
+    t.prop = t.prop_name ? t.element[t.prop_name] : null;
+    t.baseVal = ( t.prop || t.element )[t.bv_name];
+    t.animVal = t.av_name ? ( t.prop || t.element )[t.av_name] : null;
+    t.bv_path = t.el_type + "." +
+                (t.prop ? t.prop_name + "." : "") +
+                t.bv_name; // e.g. 'SVGTextElement.x.baseVal'
+    if (t.animVal) {
+      t.av_path = t.el_type + "." +
+                  (t.prop ? t.prop_name + "." : "") +
+                  t.av_name;
+    }
+    t.prop_type = t.prop_type || null;
+
+    // use fallback 'is' function, if none was provided.
+    if (!t.item_is) {
+      t.item_is = function(itemA, itemB, message) {
+      ok(typeof(itemA.value) != "undefined" &&
+         typeof(itemB.value) != "undefined",
+         "expecting value property");
+        is(itemA.value, itemB.value, message);
+      };
+    }
+
+    if (t.animVal) {
+      t.element.appendChild(create_animate_elements(t));
+    }
+  }
+
+  // Run the major test groups:
+
+  run_baseVal_API_tests();
+  run_animVal_API_tests();
+  run_basic_setAttribute_tests();
+  run_list_mutation_tests();
+  run_animation_timeline_tests();
+
+  // After all the other test manipulations, we check that the following
+  // objects have still not changed, since they never should:
+
+  for (let t of tests) {
+    if (t.prop) {
+      ok(t.prop === t.element[t.prop_name],
+         "The same " + t.prop_type + " object should ALWAYS be returned for " +
+         t.el_type + "." + t.prop_name + " each time it is accessed.");
+    }
+
+    ok(t.baseVal === ( t.prop || t.element )[t.bv_name],
+       "The same " + t.list_type + " object should ALWAYS be returned for " +
+       t.el_type + "." + t.prop_name + "." + t.bv_name + " each time it is accessed.");
+
+    if (t.animVal) {
+      ok(t.animVal === ( t.prop || t.element )[t.av_name],
+         "The same " + t.list_type + " object should ALWAYS be returned for " +
+         t.el_type + "." + t.prop_name + "." + t.av_name + " each time it is accessed.");
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run_tests);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

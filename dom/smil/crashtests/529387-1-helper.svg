@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <text y="20pt">abc
+    <animate attributeName="opacity" from="1" to="0" begin="0s" dur="2s"/>
+  </text>
+</svg>

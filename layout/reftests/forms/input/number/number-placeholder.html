@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+
+input {
+  width: 15em;
+}
+
+input[type=number]::placeholder {
+  color: blue;
+  opacity: 1.0;
+}
+
+input[type=number]::-moz-placeholder {
+  font-style: italic;
+  opacity: 1.0;
+}
+    </style>
+  </head>
+  <body>
+    <input type="number" placeholder="123">
+  </body>
+</html>

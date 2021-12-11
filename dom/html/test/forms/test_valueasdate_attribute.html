@@ -1,0 +1,751 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=769370
+-->
+<head>
+  <title>Test for input.valueAsDate</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=769370">Mozilla Bug 769370</a>
+<iframe name="testFrame" style="display: none"></iframe>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 769370**/
+
+/**
+ * This test is checking .valueAsDate.
+ */
+
+var element = document.createElement("input");
+
+var validTypes =
+[
+  ["text", false],
+  ["password", false],
+  ["search", false],
+  ["tel", false],
+  ["email", false],
+  ["url", false],
+  ["hidden", false],
+  ["checkbox", false],
+  ["radio", false],
+  ["file", false],
+  ["submit", false],
+  ["image", false],
+  ["reset", false],
+  ["button", false],
+  ["number", false],
+  ["range", false],
+  ["date", true],
+  ["time", true],
+  ["color", false],
+  ["month", true],
+  ["week", true],
+  ["datetime-local", true],
+];
+
+function checkAvailability()
+{
+  for (let data of validTypes) {
+    var exceptionCatched = false;
+    element.type = data[0];
+    try {
+      element.valueAsDate;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, false,
+       "valueAsDate shouldn't throw exception on getting");
+
+    exceptionCatched = false;
+    try {
+      element.valueAsDate = new Date();
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, !data[1], "valueAsDate for " + data[0] +
+                                   " availability is not correct");
+  }
+}
+
+function checkGarbageValues()
+{
+  for (let type of validTypes) {
+    if (!type[1]) {
+      continue;
+    }
+    type = type[0];
+
+    var inputElement = document.createElement('input');
+    inputElement.type = type;
+
+    inputElement.value = "test";
+    inputElement.valueAsDate = null;
+    is(inputElement.value, "", "valueAsDate should set the value to the empty string");
+
+    inputElement.value = "test";
+    inputElement.valueAsDate = undefined;
+    is(inputElement.value, "", "valueAsDate should set the value to the empty string");
+
+    inputElement.value = "test";
+    inputElement.valueAsDate = new Date(NaN);
+    is(inputElement.value, "", "valueAsDate should set the value to the empty string");
+
+    var illegalValues = [
+      "foobar", 42, {}, function() { return 42; }, function() { return Date(); }
+    ];
+
+    for (let value of illegalValues) {
+      try {
+        var caught = false;
+        inputElement.valueAsDate = value;
+      } catch(e) {
+        is(e.name, "TypeError", "Exception should be 'TypeError'.");
+        caught = true;
+      }
+      ok(caught, "Assigning " + value + " to .valueAsDate should throw");
+    }
+  }
+}
+
+function checkDateGet()
+{
+  var validData =
+  [
+    [ "2012-07-12", 1342051200000 ],
+    [ "1970-01-01", 0 ],
+    [ "1970-01-02", 86400000 ],
+    [ "1969-12-31", -86400000 ],
+    [ "0311-01-31", -52350451200000 ],
+    [ "275760-09-13", 8640000000000000 ],
+    [ "0001-01-01", -62135596800000 ],
+    [ "2012-02-29", 1330473600000 ],
+    [ "2011-02-28", 1298851200000 ],
+  ];
+
+  var invalidData =
+  [
+    [ "invaliddate" ],
+    [ "-001-12-31" ],
+    [ "901-12-31" ],
+    [ "1901-13-31" ],
+    [ "1901-12-32" ],
+    [ "1901-00-12" ],
+    [ "1901-01-00" ],
+    [ "1900-02-29" ],
+    [ "0000-01-01" ],
+    [ "" ],
+    // This date is valid for the input element, but is out of
+    // the date object range. In this case, on getting valueAsDate,
+    // a Date object will be created, but it will have a NaN internal value,
+    // and will return the string "Invalid Date".
+    [ "275760-09-14", true ],
+  ];
+
+  element.type = "date";
+  for (let data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this date");
+  }
+
+  for (let data of invalidData) {
+    element.value = data[0];
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid date");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid date");
+    }
+  }
+}
+
+function checkDateSet()
+{
+  var testData =
+  [
+    [ 1342051200000,     "2012-07-12" ],
+    [ 0,                 "1970-01-01" ],
+    // Maximum valid date (limited by the ecma date object range).
+    [ 8640000000000000,  "275760-09-13" ],
+    // Minimum valid date (limited by the input element minimum valid value).
+    [ -62135596800000 ,   "0001-01-01" ],
+    [ 1330473600000,     "2012-02-29" ],
+    [ 1298851200000,     "2011-02-28" ],
+    // "Values must be truncated to valid dates"
+    [ 42.1234,           "1970-01-01" ],
+    [ 123.123456789123,  "1970-01-01" ],
+    [ 1e-1,              "1970-01-01" ],
+    [ 1298851200010,     "2011-02-28" ],
+    [ -1,                "1969-12-31" ],
+    [ -86400000,         "1969-12-31" ],
+    [ 86400000,          "1970-01-02" ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding date string is the empty string
+    [ -62135596800001,   "" ],
+    // Invalid dates.
+  ];
+
+  element.type = "date";
+  for (let data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to "
+                                + data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
+  }
+}
+
+function checkTimeGet()
+{
+  var tests = [
+    // Some invalid values to begin.
+    { value: "", result: null },
+    { value: "foobar", result: null },
+    { value: "00:", result: null },
+    { value: "24:00", result: null },
+    { value: "00:99", result: null },
+    { value: "00:00:", result: null },
+    { value: "00:00:99", result: null },
+    { value: "00:00:00:", result: null },
+    { value: "00:00:00.", result: null },
+    { value: "00:00:00.0000", result: null },
+    // Some simple valid values.
+    { value: "00:00", result: { time: 0, hours: 0, minutes: 0, seconds: 0, ms: 0 } },
+    { value: "00:01", result: { time: 60000, hours: 0, minutes: 1, seconds: 0, ms: 0 } },
+    { value: "01:00", result: { time: 3600000, hours: 1, minutes: 0, seconds: 0, ms: 0 } },
+    { value: "01:01", result: { time: 3660000, hours: 1, minutes: 1, seconds: 0, ms: 0 } },
+    { value: "13:37", result: { time: 49020000, hours: 13, minutes: 37, seconds: 0, ms: 0 } },
+    // Valid values including seconds.
+    { value: "00:00:01", result: { time: 1000, hours: 0, minutes: 0, seconds: 1, ms: 0 } },
+    { value: "13:37:42", result: { time: 49062000, hours: 13, minutes: 37, seconds: 42, ms: 0 } },
+    // Valid values including seconds fractions.
+    { value: "00:00:00.001", result: { time: 1, hours: 0, minutes: 0, seconds: 0, ms: 1 } },
+    { value: "00:00:00.123", result: { time: 123, hours: 0, minutes: 0, seconds: 0, ms: 123 } },
+    { value: "00:00:00.100", result: { time: 100, hours: 0, minutes: 0, seconds: 0, ms: 100 } },
+    { value: "00:00:00.000", result: { time: 0, hours: 0, minutes: 0, seconds: 0, ms: 0 } },
+    { value: "20:17:31.142", result: { time: 73051142, hours: 20, minutes: 17, seconds: 31, ms: 142 } },
+    // Highest possible value.
+    { value: "23:59:59.999", result: { time: 86399999, hours: 23, minutes: 59, seconds: 59, ms: 999 } },
+    // Some values with one or two digits for the fraction of seconds.
+    { value: "00:00:00.1", result: { time: 100, hours: 0, minutes: 0, seconds: 0, ms: 100 } },
+    { value: "00:00:00.14", result: { time: 140, hours: 0, minutes: 0, seconds: 0, ms: 140 } },
+    { value: "13:37:42.7", result: { time: 49062700, hours: 13, minutes: 37, seconds: 42, ms: 700 } },
+    { value: "23:31:12.23", result: { time: 84672230, hours: 23, minutes: 31, seconds: 12, ms: 230 } },
+  ];
+
+  var inputElement = document.createElement('input');
+  inputElement.type = 'time';
+
+  for (let test of tests) {
+    inputElement.value = test.value;
+    if (test.result === null) {
+      is(inputElement.valueAsDate, null, "element.valueAsDate should return null");
+    } else {
+      var date = inputElement.valueAsDate;
+      isnot(date, null, "element.valueAsDate should not be null");
+
+      is(date.getTime(), test.result.time);
+      is(date.getUTCHours(), test.result.hours);
+      is(date.getUTCMinutes(), test.result.minutes);
+      is(date.getUTCSeconds(), test.result.seconds);
+      is(date.getUTCMilliseconds(), test.result.ms);
+    }
+  }
+}
+
+function checkTimeSet()
+{
+  var tests = [
+    // Simple tests.
+    { value: 0, result: "00:00" },
+    { value: 1, result: "00:00:00.001" },
+    { value: 100, result: "00:00:00.100" },
+    { value: 1000, result: "00:00:01" },
+    { value: 60000, result: "00:01" },
+    { value: 3600000, result: "01:00" },
+    { value: 83622234, result: "23:13:42.234" },
+    // Some edge cases.
+    { value: 86400000, result: "00:00" },
+    { value: 86400001, result: "00:00:00.001" },
+    { value: 170022234, result: "23:13:42.234" },
+    { value: 432000000, result: "00:00" },
+    { value: -1, result: "23:59:59.999" },
+    { value: -86400000, result: "00:00" },
+    { value: -86400001, result: "23:59:59.999" },
+    { value: -56789, result: "23:59:03.211" },
+    { value: 0.9, result: "00:00" },
+  ];
+
+  var inputElement = document.createElement('input');
+  inputElement.type = 'time';
+
+  for (let test of tests) {
+    inputElement.valueAsDate = new Date(test.value);
+    is(inputElement.value, test.result,
+       "element.value should have been changed by setting valueAsDate");
+  }
+}
+
+function checkWithBustedPrototype()
+{
+  for (let type of validTypes) {
+    if (!type[1]) {
+      continue;
+    }
+
+    type = type[0];
+
+    var inputElement = document.createElement('input');
+    inputElement.type = type;
+
+    var backupPrototype = {};
+    backupPrototype.getUTCFullYear = Date.prototype.getUTCFullYear;
+    backupPrototype.getUTCMonth = Date.prototype.getUTCMonth;
+    backupPrototype.getUTCDate = Date.prototype.getUTCDate;
+    backupPrototype.getTime = Date.prototype.getTime;
+    backupPrototype.setUTCFullYear = Date.prototype.setUTCFullYear;
+
+    Date.prototype.getUTCFullYear = function() { return {}; };
+    Date.prototype.getUTCMonth = function() { return {}; };
+    Date.prototype.getUTCDate = function() { return {}; };
+    Date.prototype.getTime = function() { return {}; };
+    Date.prototype.setUTCFullYear = function(y,m,d) { };
+
+    inputElement.valueAsDate = new Date();
+
+    isnot(inputElement.valueAsDate, null, ".valueAsDate should not return null");
+    // The object returned by element.valueAsDate should return a Date object
+    // with the same prototype:
+    is(inputElement.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
+       "prototype is the same");
+    is(inputElement.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
+       "prototype is the same");
+    is(inputElement.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
+       "prototype is the same");
+    is(inputElement.valueAsDate.getTime, Date.prototype.getTime,
+       "prototype is the same");
+    is(inputElement.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
+       "prototype is the same");
+
+    // However the Date should have the correct information.
+    // Skip type=month for now, since .valueAsNumber returns number of months
+    // and not milliseconds.
+    if (type != "month") {
+      var witnessDate = new Date(inputElement.valueAsNumber);
+      is(inputElement.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+    }
+
+    // Same test as above but using NaN instead of {}.
+
+    Date.prototype.getUTCFullYear = function() { return NaN; };
+    Date.prototype.getUTCMonth = function() { return NaN; };
+    Date.prototype.getUTCDate = function() { return NaN; };
+    Date.prototype.getTime = function() { return NaN; };
+    Date.prototype.setUTCFullYear = function(y,m,d) { };
+
+    inputElement.valueAsDate = new Date();
+
+    isnot(inputElement.valueAsDate, null, ".valueAsDate should not return null");
+    // The object returned by element.valueAsDate should return a Date object
+    // with the same prototype:
+    is(inputElement.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
+       "prototype is the same");
+    is(inputElement.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
+       "prototype is the same");
+    is(inputElement.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
+       "prototype is the same");
+    is(inputElement.valueAsDate.getTime, Date.prototype.getTime,
+       "prototype is the same");
+    is(inputElement.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
+       "prototype is the same");
+
+    // However the Date should have the correct information.
+    // Skip type=month for now, since .valueAsNumber returns number of months
+    // and not milliseconds.
+    if (type != "month") {
+      var witnessDate = new Date(inputElement.valueAsNumber);
+      is(inputElement.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+    }
+
+    Date.prototype.getUTCFullYear = backupPrototype.getUTCFullYear;
+    Date.prototype.getUTCMonth = backupPrototype.getUTCMonth;
+    Date.prototype.getUTCDate = backupPrototype.getUTCDate;
+    Date.prototype.getTime = backupPrototype.getTime;
+    Date.prototype.setUTCFullYear = backupPrototype.setUTCFullYear;
+  }
+}
+
+function checkMonthGet()
+{
+  var validData =
+  [
+    [ "2016-07",   1467331200000    ],
+    [ "1970-01",   0                ],
+    [ "1970-02",   2678400000       ],
+    [ "1969-12",   -2678400000      ],
+    [ "0001-01",   -62135596800000  ],
+    [ "275760-09", 8639998963200000 ],
+  ];
+
+  var invalidData =
+  [
+    [ "invalidmonth" ],
+    [ "0000-01"      ],
+    [ "2016-00"      ],
+    [ "123-01"       ],
+    [ "2017-13"      ],
+    [ ""             ],
+    // This month is valid for the input element, but is out of
+    // the date object range. In this case, on getting valueAsDate,
+    // a Date object will be created, but it will have a NaN internal value,
+    // and will return the string "Invalid Date".
+    [ "275760-10", true ],
+  ];
+
+  element.type = "month";
+  for (let data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this month");
+  }
+
+  for (let data of invalidData) {
+    element.value = data[0];
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid month");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid month");
+    }
+  }
+}
+
+function checkMonthSet()
+{
+  var testData =
+  [
+    [ 1342051200000,      "2012-07" ],
+    [ 0,                  "1970-01" ],
+    // Maximum valid month (limited by the ecma date object range).
+    [ 8640000000000000,   "275760-09" ],
+    // Minimum valid month (limited by the input element minimum valid value).
+    [ -62135596800000 ,   "0001-01" ],
+    [ 1330473600000,      "2012-02" ],
+    [ 1298851200000,      "2011-02" ],
+    // "Values must be truncated to valid months"
+    [ 42.1234,            "1970-01" ],
+    [ 123.123456789123,   "1970-01" ],
+    [ 1e-1,               "1970-01" ],
+    [ 1298851200010,      "2011-02" ],
+    [ -1,                 "1969-12" ],
+    [ -86400000,          "1969-12" ],
+    [ 86400000,           "1970-01" ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding month string is the empty string
+    [ -62135596800001,    "" ],
+  ];
+
+  element.type = "month";
+  for (let data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to "
+                                + data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
+  }
+}
+
+function checkWeekGet()
+{
+  var validData =
+  [
+    // Common years starting on different days of week.
+    [ "2007-W01", Date.UTC(2007, 0, 1)   ], // Mon
+    [ "2013-W01", Date.UTC(2012, 11, 31) ], // Tue
+    [ "2014-W01", Date.UTC(2013, 11, 30) ], // Wed
+    [ "2015-W01", Date.UTC(2014, 11, 29) ], // Thu
+    [ "2010-W01", Date.UTC(2010, 0, 4)   ], // Fri
+    [ "2011-W01", Date.UTC(2011, 0, 3)   ], // Sat
+    [ "2017-W01", Date.UTC(2017, 0, 2)   ], // Sun
+    // Common years ending on different days of week.
+    [ "2007-W52", Date.UTC(2007, 11, 24) ], // Mon
+    [ "2013-W52", Date.UTC(2013, 11, 23) ], // Tue
+    [ "2014-W52", Date.UTC(2014, 11, 22) ], // Wed
+    [ "2015-W53", Date.UTC(2015, 11, 28) ], // Thu
+    [ "2010-W52", Date.UTC(2010, 11, 27) ], // Fri
+    [ "2011-W52", Date.UTC(2011, 11, 26) ], // Sat
+    [ "2017-W52", Date.UTC(2017, 11, 25) ], // Sun
+    // Leap years starting on different days of week.
+    [ "1996-W01", Date.UTC(1996, 0, 1)   ], // Mon
+    [ "2008-W01", Date.UTC(2007, 11, 31) ], // Tue
+    [ "2020-W01", Date.UTC(2019, 11, 30) ], // Wed
+    [ "2004-W01", Date.UTC(2003, 11, 29) ], // Thu
+    [ "2016-W01", Date.UTC(2016, 0, 4)   ], // Fri
+    [ "2000-W01", Date.UTC(2000, 0, 3)   ], // Sat
+    [ "2012-W01", Date.UTC(2012, 0, 2)   ], // Sun
+    // Leap years ending on different days of week.
+    [ "2012-W52", Date.UTC(2012, 11, 24) ], // Mon
+    [ "2024-W52", Date.UTC(2024, 11, 23) ], // Tue
+    [ "1980-W52", Date.UTC(1980, 11, 22) ], // Wed
+    [ "1992-W53", Date.UTC(1992, 11, 28) ], // Thu
+    [ "2004-W53", Date.UTC(2004, 11, 27) ], // Fri
+    [ "1988-W52", Date.UTC(1988, 11, 26) ], // Sat
+    [ "2000-W52", Date.UTC(2000, 11, 25) ], // Sun
+    // Other normal cases.
+    [ "2016-W36",   1473033600000    ],
+    [ "1969-W52",   -864000000       ],
+    [ "1970-W01",   -259200000       ],
+    [ "275760-W37", 8639999568000000 ],
+  ];
+
+  var invalidData =
+  [
+    [ "invalidweek" ],
+    [ "0000-W01"     ],
+    [ "2016-W00"     ],
+    [ "123-W01"      ],
+    [ "2016-W53"     ],
+    [ ""             ],
+    // This week is valid for the input element, but is out of
+    // the date object range. In this case, on getting valueAsDate,
+    // a Date object will be created, but it will have a NaN internal value,
+    // and will return the string "Invalid Date".
+    [ "275760-W38", true ],
+  ];
+
+  element.type = "week";
+  for (let data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this week");
+  }
+
+  for (let data of invalidData) {
+    element.value = data[0];
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid week");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid week");
+    }
+  }
+}
+
+function checkWeekSet()
+{
+  var testData =
+  [
+    // Common years starting on different days of week.
+    [ Date.UTC(2007, 0, 1), "2007-W01"   ], // Mon
+    [ Date.UTC(2013, 0, 1), "2013-W01"   ], // Tue
+    [ Date.UTC(2014, 0, 1), "2014-W01"   ], // Wed
+    [ Date.UTC(2015, 0, 1), "2015-W01"   ], // Thu
+    [ Date.UTC(2010, 0, 1), "2009-W53"   ], // Fri
+    [ Date.UTC(2011, 0, 1), "2010-W52"   ], // Sat
+    [ Date.UTC(2017, 0, 1), "2016-W52"   ], // Sun
+    // Common years ending on different days of week.
+    [ Date.UTC(2007, 11, 31), "2008-W01" ], // Mon
+    [ Date.UTC(2013, 11, 31), "2014-W01" ], // Tue
+    [ Date.UTC(2014, 11, 31), "2015-W01" ], // Wed
+    [ Date.UTC(2015, 11, 31), "2015-W53" ], // Thu
+    [ Date.UTC(2010, 11, 31), "2010-W52" ], // Fri
+    [ Date.UTC(2011, 11, 31), "2011-W52" ], // Sat
+    [ Date.UTC(2017, 11, 31), "2017-W52" ], // Sun
+    // Leap years starting on different days of week.
+    [ Date.UTC(1996, 0, 1), "1996-W01"   ], // Mon
+    [ Date.UTC(2008, 0, 1), "2008-W01"   ], // Tue
+    [ Date.UTC(2020, 0, 1), "2020-W01"   ], // Wed
+    [ Date.UTC(2004, 0, 1), "2004-W01"   ], // Thu
+    [ Date.UTC(2016, 0, 1), "2015-W53"   ], // Fri
+    [ Date.UTC(2000, 0, 1), "1999-W52"   ], // Sat
+    [ Date.UTC(2012, 0, 1), "2011-W52"   ], // Sun
+    // Leap years ending on different days of week.
+    [ Date.UTC(2012, 11, 31), "2013-W01" ], // Mon
+    [ Date.UTC(2024, 11, 31), "2025-W01" ], // Tue
+    [ Date.UTC(1980, 11, 31), "1981-W01" ], // Wed
+    [ Date.UTC(1992, 11, 31), "1992-W53" ], // Thu
+    [ Date.UTC(2004, 11, 31), "2004-W53" ], // Fri
+    [ Date.UTC(1988, 11, 31), "1988-W52" ], // Sat
+    [ Date.UTC(2000, 11, 31), "2000-W52" ], // Sun
+    // Other normal cases.
+    [ Date.UTC(2016, 8, 9),  "2016-W36" ],
+    [ Date.UTC(2010, 0, 3),  "2009-W53" ],
+    [ Date.UTC(2010, 0, 4),  "2010-W01" ],
+    [ Date.UTC(2010, 0, 10), "2010-W01" ],
+    [ Date.UTC(2010, 0, 11), "2010-W02" ],
+    [ 0,                     "1970-W01" ],
+    // Maximum valid month (limited by the ecma date object range).
+    [ 8640000000000000,      "275760-W37" ],
+    // Minimum valid month (limited by the input element minimum valid value).
+    [ -62135596800000 ,      "0001-W01" ],
+    // "Values must be truncated to valid week"
+    [ 42.1234,               "1970-W01" ],
+    [ 123.123456789123,      "1970-W01" ],
+    [ 1e-1,                  "1970-W01" ],
+    [ -1.1,                  "1970-W01" ],
+    [ -345600000,            "1969-W52" ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding week string is the empty string
+    [ -62135596800001,       "" ],
+  ];
+
+  element.type = "week";
+  for (let data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to "
+                                + data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
+  }
+}
+
+function checkDatetimeLocalGet()
+{
+  var validData =
+  [
+    // Simple cases.
+    [ "2016-12-27T10:30",          Date.UTC(2016, 11, 27, 10, 30, 0)       ],
+    [ "2016-12-27T10:30:40",       Date.UTC(2016, 11, 27, 10, 30, 40)      ],
+    [ "2016-12-27T10:30:40.567",   Date.UTC(2016, 11, 27, 10, 30, 40, 567) ],
+    [ "1969-12-31T12:00:00",       Date.UTC(1969, 11, 31, 12, 0, 0)        ],
+    [ "1970-01-01T00:00",          0                                       ],
+    // Leap years.
+    [ "1804-02-29 12:34",          Date.UTC(1804, 1, 29, 12, 34, 0)        ],
+    [ "2016-02-29T12:34",          Date.UTC(2016, 1, 29, 12, 34, 0)        ],
+    [ "2016-12-31T12:34:56",       Date.UTC(2016, 11, 31, 12, 34, 56)      ],
+    [ "2016-01-01T12:34:56.789",   Date.UTC(2016, 0, 1, 12, 34, 56, 789)   ],
+    [ "2017-01-01 12:34:56.789",   Date.UTC(2017, 0, 1, 12, 34, 56, 789)   ],
+    // Maximum valid datetime-local (limited by the ecma date object range).
+    [ "275760-09-13T00:00",        8640000000000000                        ],
+    // Minimum valid datetime-local (limited by the input element minimum valid value).
+    [ "0001-01-01T00:00",          -62135596800000                         ],
+  ];
+
+  var invalidData =
+  [
+    [ "invaliddateime-local" ],
+    [ "0000-01-01T00:00"     ],
+    [ "2016-12-25T00:00Z"    ],
+    [ "2015-02-29T12:34"     ],
+    [ "1-1-1T12:00"          ],
+    [ ""                     ],
+    // This datetime-local is valid for the input element, but is out of the
+    // date object range. In this case, on getting valueAsDate, a Date object
+    // will be created, but it will have a NaN internal value, and will return
+    // the string "Invalid Date".
+    [ "275760-09-13T12:00", true ],
+  ];
+
+  element.type = "datetime-local";
+  for (let data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this datetime-local");
+  }
+
+  for (let data of invalidData) {
+    element.value = data[0];
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid datetime-local");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid datetime-local");
+    }
+  }
+}
+
+function checkDatetimeLocalSet()
+{
+  var testData =
+  [
+    // Simple cases.
+    [ Date.UTC(2016, 11, 27, 10, 30, 0),       "2016-12-27T10:30"        ],
+    [ Date.UTC(2016, 11, 27, 10, 30, 30),      "2016-12-27T10:30:30"     ],
+    [ Date.UTC(1999, 11, 31, 23, 59, 59),      "1999-12-31T23:59:59"     ],
+    [ Date.UTC(1999, 11, 31, 23, 59, 59, 999), "1999-12-31T23:59:59.999" ],
+    [ Date.UTC(123456, 7, 8, 9, 10),           "123456-08-08T09:10"      ],
+    [ 0,                                       "1970-01-01T00:00"        ],
+    // Maximum valid datetime-local (limited by the ecma date object range).
+    [ 8640000000000000,      "275760-09-13T00:00"      ],
+    // Minimum valid datetime-local (limited by the input element minimum valid value).
+    [ -62135596800000,       "0001-01-01T00:00"        ],
+    // Leap years.
+    [ Date.UTC(1804, 1, 29, 12, 34, 0),        "1804-02-29T12:34"        ],
+    [ Date.UTC(2016, 1, 29, 12, 34, 0),        "2016-02-29T12:34"        ],
+    [ Date.UTC(2016, 11, 31, 12, 34, 56),      "2016-12-31T12:34:56"     ],
+    [ Date.UTC(2016, 0, 1, 12, 34, 56, 789),   "2016-01-01T12:34:56.789" ],
+    [ Date.UTC(2017, 0, 1, 12, 34, 56, 789),   "2017-01-01T12:34:56.789" ],
+    // "Values must be truncated to valid datetime-local"
+    [ 123.123456789123,      "1970-01-01T00:00:00.123" ],
+    [ 1e-1,                  "1970-01-01T00:00"        ],
+    [ -1.1,                  "1969-12-31T23:59:59.999" ],
+    [ -345600000,            "1969-12-28T00:00"        ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding datetime-local string is the empty string
+    [ -62135596800001,       ""                        ],
+  ];
+
+  element.type = "datetime-local";
+  for (let data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to " +
+                               data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
+  }
+}
+
+checkAvailability();
+checkGarbageValues();
+checkWithBustedPrototype();
+
+// Test <input type='date'>.
+checkDateGet();
+checkDateSet();
+
+// Test <input type='time'>.
+checkTimeGet();
+checkTimeSet();
+
+// Test <input type='month'>.
+checkMonthGet();
+checkMonthSet();
+
+// Test <input type='week'>.
+checkWeekGet();
+checkWeekSet();
+
+// Test <input type='datetime-local'>.
+checkDatetimeLocalGet();
+checkDatetimeLocalSet();
+
+</script>
+</pre>
+</body>
+</html>

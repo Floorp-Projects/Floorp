@@ -1,0 +1,23 @@
+<html>
+<head>
+	<title>Testcase for bug 498897</title>
+<script type="application/javascript" language="javascript">
+<!--
+function test()
+{
+  var hadException = false;
+  try {
+    document.createComment('a');
+  }
+  catch (e) {
+    hadException = true;
+  }
+  parent.ok(!hadException, "Shouldn't have got an exception!");
+  parent.testFinished();
+}
+//-->
+</script>
+</head>
+<body onload="test();">
+</body>
+</html>

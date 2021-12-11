@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+-->
+<html><head>
+<title>text-overflow: anonymous block</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:hidden;
+  width:50%;
+  height:10em;
+
+  border:1px solid black;
+  white-space:pre;
+  margin-left:2em;
+  margin-bottom:2em;
+  line-height:1.5em;
+}
+i {
+  display:inline-block;
+  height: 3em;
+  width: 5em;
+  background: blue;
+  font-style:normal;
+}
+span {
+  position:relative;
+  background:pink;
+  top:40px;
+  left:16em;
+}
+
+.t1 {width:6em;}
+.t2 {width:2em;}
+.t3 {width:25em;}
+.t4 {width:17.5em;}
+
+input { font-family:DejaVuSansMono; }
+
+</style>
+
+</head><body>
+
+
+<div class="test t1"><x>Some ove<m>&#x2026;</m><span><i style="display:block;">anonymous<br>block</i>and</span> unin<m>&#x2026;</m></x></div>
+<div class="test t2"><x>So<m>&#x2026;</m><i style="display:block;">anonymous<br>block</i>an<m>&#x2026;</m></x></div>
+<div style="position:absolute;"><div class="test t3" style="border-style:none;padding:1px"><x>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<m style="padding-left:16em">&#x2026;</m></div></div>
+<div class="test t3"><x>Some overly <span>l&nbsp;&nbsp;&nbsp;</span><span><i style="display:block;">anonymous<br>block</i>and</span> uninformative sentence</x></div>
+<div class="test t4"><x>Some overly <m>&#x2026;</m><span>long<i style="display:block;">anonymous<br>block</i>a&nbsp;&nbsp;</span> uninformative sentence</x></div>
+
+<input size="4" placeholder="pla&#x2026;">
+<input size="4" dir="rtl" placeholder="der&#x2026;">
+<input size="4" placeholder="plaX">
+<input size="4" dir="rtl" placeholder="Xder">
+
+</body>
+</html>

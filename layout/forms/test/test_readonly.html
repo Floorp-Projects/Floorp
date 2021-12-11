@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="should-apply">
+  <textarea></textarea>
+  <input type="text">
+  <input type="password">
+  <input type="search">
+  <input type="tel">
+  <input type="email">
+  <input type="url">
+  <input type="number">
+  <input type="date">
+  <input type="time">
+  <input type="month">
+  <input type="week">
+  <input type="datetime-local">
+</div>
+<div id="should-not-apply">
+  <input type="hidden">
+  <input type="button">
+  <input type="image">
+  <input type="reset">
+  <input type="submit">
+  <input type="radio">
+  <input type="file">
+  <input type="checkbox">
+  <input type="range">
+  <input type="color">
+</div>
+<script>
+for (const element of Array.from(document.querySelectorAll('#should-apply *'))) {
+  let elementDesc = element.tagName.toLowerCase();
+  if (elementDesc === "input")
+    elementDesc += ` type="${element.type}"`;
+  test(function() {
+    assert_false(element.matches(':read-only'), "Shouldn't be initially read-only");
+    assert_true(element.matches(':read-write'), "Thus should be read-write");
+    element.setAttribute("readonly", "readonly");
+    assert_true(element.matches(':read-only'), "Should become read-only");
+    assert_false(element.matches(':read-write'), "Thus should stop being read-write");
+  }, elementDesc);
+}
+
+for (const element of Array.from(document.querySelectorAll('#should-not-apply *'))) {
+  let elementDesc = element.tagName.toLowerCase();
+  if (elementDesc === "input")
+    elementDesc += ` type="${element.type}"`;
+  test(function() {
+    assert_true(element.matches(':read-only'), "Should match read-only");
+    assert_false(element.matches(':read-write'), "Should not be read-write");
+    element.setAttribute("readonly", "readonly");
+    assert_true(element.matches(':read-only'), "Should keep matching read-only");
+    assert_false(element.matches(':read-write'), "Should still not be read-write");
+  }, elementDesc);
+}
+</script>

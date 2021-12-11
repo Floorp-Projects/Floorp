@@ -1,0 +1,138 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Test for styles after finished on the compositor</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<style>
+.compositor {
+  /* Element needs geometry to be eligible for layerization */
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+</style>
+</head>
+<body>
+<div id="log"></div>
+<script>
+"use strict";
+
+promise_test(async t => {
+  const div = addDiv(t, { 'class': 'compositor' });
+  const anim = div.animate([ { offset: 0, opacity: 1 },
+                             { offset: 1, opacity: 0 } ],
+                           { delay: 10,
+                             duration: 100 });
+
+  await anim.finished;
+
+  await waitForNextFrame();
+
+  const opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+
+  assert_equals(opacity, '', 'No opacity animation runs on the compositor');
+}, 'Opacity animation with positive delay is removed from compositor when ' +
+   'finished');
+
+promise_test(async t => {
+  const div = addDiv(t, { 'class': 'compositor' });
+  const anim = div.animate([ { offset: 0,   opacity: 1 },
+                             { offset: 0.9, opacity: 1 },
+                             { offset: 1,   opacity: 0 } ],
+                           { duration: 100 });
+
+  await anim.finished;
+
+  await waitForNextFrame();
+
+  const opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+
+  assert_equals(opacity, '', 'No opacity animation runs on the compositor');
+}, 'Opacity animation initially opacity: 1 is removed from compositor when ' +
+   'finished');
+
+promise_test(async t => {
+  const div = addDiv(t, { 'class': 'compositor' });
+  const anim = div.animate([ { offset: 0,    opacity: 0 },
+                             { offset: 0.5,  opacity: 1 },
+                             { offset: 0.51, opacity: 1 },
+                             { offset: 1,    opacity: 0 } ],
+                           { delay: 10, duration: 100 });
+
+  await waitForAnimationFrames(2);
+
+  // Setting the current time at the offset generating opacity: 1.
+  anim.currentTime = 60;
+
+  await anim.finished;
+
+  await waitForNextFrame();
+
+  const opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+
+  assert_equals(opacity, '', 'No opacity animation runs on the compositor');
+}, 'Opacity animation is removed from compositor even when it only visits ' +
+   'exactly the point where the opacity: 1 value was set');
+
+promise_test(async t => {
+  const div = addDiv(t, { 'class': 'compositor' });
+  const anim = div.animate([ { offset: 0, transform: 'none' },
+                             { offset: 1, transform: 'translateX(100px)' } ],
+                           { delay: 10,
+                             duration: 100 });
+
+  await anim.finished;
+
+  await waitForNextFrame();
+
+  const transform = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+
+  assert_equals(transform, '', 'No transform animation runs on the compositor');
+}, 'Transform animation with positive delay is removed from compositor when ' +
+   'finished');
+
+promise_test(async t => {
+  const div = addDiv(t, { 'class': 'compositor' });
+  const anim = div.animate([ { offset: 0,   transform: 'none' },
+                             { offset: 0.9, transform: 'none' },
+                             { offset: 1,   transform: 'translateX(100px)' } ],
+                           { duration: 100 });
+
+  await anim.finished;
+
+  await waitForNextFrame();
+
+  const transform = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+
+  assert_equals(transform, '', 'No transform animation runs on the compositor');
+}, 'Transform animation initially transform: none is removed from compositor ' +
+   'when finished');
+
+
+promise_test(async t => {
+  const div = addDiv(t, { 'class': 'compositor' });
+  const anim = div.animate([ { offset: 0,   transform: 'translateX(100px)' },
+                             { offset: 0.5, transform: 'none' },
+                             { offset: 0.9, transform: 'none' },
+                             { offset: 1,   transform: 'translateX(100px)' } ],
+                           { delay: 10, duration: 100 });
+
+  await waitForAnimationFrames(2);
+
+  // Setting the current time at the offset generating transform: none.
+  anim.currentTime = 60;
+
+  await anim.finished;
+
+  await waitForNextFrame();
+
+  const transform = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+
+  assert_equals(transform, '', 'No transform animation runs on the compositor');
+}, 'Transform animation is removed from compositor even when it only visits ' +
+   'exactly the point where the transform: none value was set');
+
+</script>
+</body>

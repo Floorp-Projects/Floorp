@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+    The default style of these tabs is that of an NSTabView with tabs at
+    the top in the "regular" size. These tabs can be used with or without
+    a tabbox element.
+*/
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+tabbox {
+  margin: 0 5px;
+}
+
+tabpanels {
+  appearance: auto;
+  -moz-default-appearance: tabpanels;
+  padding: 33px 15px 15px;
+}
+
+tabs {
+  -moz-box-align: center;
+  font: menu;
+  padding: 0 10px;
+  margin-bottom: -12px;
+  position: relative;
+}
+
+tab {
+  appearance: auto;
+  -moz-default-appearance: tab;
+  padding-top: 1px;
+}
+
+tab:-moz-focusring {
+  /* Tab focus rings need to overlay adjacent tabs. */
+  position: relative;
+}
+
+tab:first-of-type {
+  padding-inline-start: 2px;
+}
+
+tab:last-of-type {
+  padding-inline-end: 2px;
+}
+
+tab[visuallyselected="true"]:not(:-moz-window-inactive) {
+  color: #FFF;
+}
+
+.tab-middle {
+  padding: 1px 6px 2px;
+}
+
+.tabs-left,
+.tabs-right  {
+  -moz-box-flex: 1;
+}

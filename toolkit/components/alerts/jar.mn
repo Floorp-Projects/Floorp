@@ -1,0 +1,8 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+  content/global/alerts/alert.css (alert.css)
+  content/global/alerts/alert.xhtml (alert.xhtml)
+  content/global/alerts/alert.js  (alert.js)

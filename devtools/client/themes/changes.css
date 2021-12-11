@@ -1,0 +1,211 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* CSS Variables specific to the Changes panel that aren't defined by the themes */
+:root {
+  --diff-add-background-color: #f1feec;
+  --diff-add-text-color: #54983f;
+  --diff-remove-background-color: #fbf2f5;
+  --diff-remove-text-color: #bf7173;
+  --diff-source-background: var(--theme-toolbar-background);
+  --diff-level: 0;
+  --diff-level-offset: 10px;
+  /*
+    Minimum padding so content on the first level (zero) isn't touching the edge. Added
+    and removed lines will re-declare this to add extra padding to clear the +/- icons.
+  */
+  --diff-level-min-offset: 5px;
+}
+
+:root.theme-dark {
+  --diff-add-background-color: rgba(18, 188, 0, 0.15);
+  --diff-add-text-color: #12BC00;
+  --diff-remove-background-color: rgba(255, 0, 57, 0.15);
+  --diff-remove-text-color: #FF0039;
+  --diff-source-background: #222225;
+}
+
+:root[dir="rtl"] {
+  /* Increase minimum offset on right-to-left layout to clear the floating scrollbar. */
+  --diff-level-min-offset: 15px;
+}
+
+:root[dir="rtl"] #sidebar-panel-changes .source {
+  /* Enforce left-to-right code rendering on right-to-left layout. */
+  direction: ltr;
+}
+
+#sidebar-panel-changes {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: var(--theme-sidebar-background);
+}
+
+#sidebar-panel-changes .href {
+  display: flex;
+  align-items: center;
+  color: var(--theme-toolbar-color);
+  background: var(--diff-source-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 4px;
+  padding-inline-start: var(--diff-level-min-offset);
+  font-size: 12px;
+}
+
+#sidebar-panel-changes .source:first-child .href {
+  border-top: unset;
+}
+
+#sidebar-panel-changes .href span {
+  /* Allows trimming of flex item with overflow ellipsis within the flex container */
+  min-width: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+#sidebar-panel-changes .level {
+  padding-top: 3px;
+  padding-right: 5px;
+  padding-bottom: 3px;
+  padding-left: calc(var(--diff-level-min-offset) +
+                     var(--diff-level-offset) * var(--diff-level));
+}
+
+#sidebar-panel-changes .changes__toolbar {
+  background: var(--theme-sidebar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 2px 5px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Remove the top border of the first source to avoid double border from sticky toolbar */
+#sidebar-panel-changes .changes__toolbar + .source .href {
+  border-top: none;
+}
+
+.changes__copy-all-changes-button {
+  -moz-context-properties: fill;
+  /* Use the Firefox copy icon (16px) instead of the smaller DevTools one (12px) */
+  background: url(chrome://global/skin/icons/edit-copy.svg) no-repeat;
+  background-position: 4px 3px;
+  background-size: 16px;
+  border: none;
+  border-radius: 3px;
+  color: var(--theme-body-color);
+  fill: currentColor;
+  padding-block: 4px;
+  padding-inline: 25px 5px;
+}
+
+.changes__copy-all-changes-button:dir(rtl) {
+  background-position-x: right 4px;
+}
+
+.changes__copy-all-changes-button:hover,
+.changes__copy-all-changes-button:focus {
+  background-color: var(--theme-button-background);
+}
+
+.changes__copy-all-changes-button:active {
+  background-color: var(--theme-button-active-background);
+}
+
+/* Hide the Copy Rule button by default. */
+.changes__copy-rule-button {
+  /**
+   * The rgba() format of the background colors makes the button see-through and it looks
+   * bad when stacked on top of long selectors.
+   *
+   * To solve this and not change the color format which is inherited from the Photon
+   * color guide in `client/themes/variables.css`, we use a blending trick to overlay the
+   * rgba() color value onto a solid color used for the panel background (achieved with
+   * a linear gradient with no transition). This keeps the rgba() color, but prevents the
+   * see-through effect.
+   */
+  background-blend-mode: overlay;
+  background-color: var(--theme-button-background);
+  background-image:
+    linear-gradient(var(--theme-sidebar-background), var(--theme-sidebar-background));
+  border-radius: 8px;
+  border: none;
+  color: var(--theme-body-color);
+  display: none;
+  padding: 1px 7px;
+  position: absolute;
+  right: 5px;
+  top: 2px;
+}
+
+.changes__copy-rule-button:active {
+  background-color: var(--theme-button-active-background);
+}
+
+.changes__rule {
+  position: relative;
+}
+
+.changes__selector {
+  word-wrap: break-word;
+}
+
+/* Show the Copy Rule button when hovering over the rule's selector elements */
+.changes__selector:hover + .changes__copy-rule-button,
+.changes__selector:hover + .changes__selector + .changes__copy-rule-button,
+.changes__copy-rule-button:hover {
+  display: block;
+}
+
+.changes__declaration {
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.changes__declaration-name {
+  margin-left: 10px;
+}
+
+.diff-add,
+.diff-remove {
+  --diff-level-min-offset: 15px;
+  position: relative;
+}
+
+.diff-add::before,
+.diff-remove::before {
+  position: absolute;
+  left: 5px;
+}
+
+.diff-add {
+  background-color: var(--diff-add-background-color);
+}
+
+.diff-add::before {
+  content: "+";
+  color: var(--diff-add-text-color);
+}
+
+.diff-remove {
+  background-color: var(--diff-remove-background-color);
+}
+
+.diff-remove::before {
+  content: "-";
+  color: var(--diff-remove-text-color);
+}
+
+#sidebar-panel-changes .devtools-sidepanel-no-result :not(:first-child) {
+  font-style: normal;
+}
+
+#sidebar-panel-changes.inspector-tabpanel {
+  min-width: 0;
+}

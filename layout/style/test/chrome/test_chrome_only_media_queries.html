@@ -1,0 +1,92 @@
+<!doctype html>
+<title>Test for parsing of non-content-exposed media-queries.</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome-only-media-queries.js"></script>
+<style></style>
+<script>
+const SHEET = document.querySelector('style');
+
+SimpleTest.waitForExplicitFinish();
+
+async function testWithPref() {
+  await new Promise(r => {
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [
+          ["layout.css.forced-colors.enabled", false],
+        ],
+      },
+      r
+    );
+  });
+  expectParseable("(forced-colors: none)");
+  expectParseable("(forced-colors: active)");
+  expectParseable("(forced-colors)");
+  SimpleTest.finish();
+}
+
+function expect(q, shouldBeParseable) {
+  const NOT_PARSEABLE_TEXT = "@media screen, not all {\n}";
+
+  let text = "@media screen, " + q + " {\n}";
+  SHEET.textContent = text;
+
+  let rules = SHEET.sheet.cssRules;
+  is(rules.length, 1, `Rule not parsed for ${q}`);
+  is(rules[0].cssText,
+     shouldBeParseable ? text : NOT_PARSEABLE_TEXT,
+     `Serialization for ${q}`);
+}
+
+function expectParseable(q) {
+  expect(q, true);
+}
+
+function expectNonParseable(q) {
+  expect(q, false);
+}
+
+// Test a toggle that should always match for `1` or `0`.
+function testToggle(toggle) {
+  expectParseable(`(${toggle})`);
+  expectParseable(`(${toggle}: 1)`);
+  expectParseable(`(${toggle}: 0)`);
+
+  expectNonParseable(`(${toggle}: foo)`);
+  expectNonParseable(`(${toggle}: true)`);
+  expectNonParseable(`(${toggle}: false)`);
+  expectNonParseable(`(${toggle}: -1)`);
+  expectNonParseable(`(min-${toggle}: 0)`);
+  expectNonParseable(`(max-${toggle}: 0)`);
+  expectNonParseable(`(max-${toggle})`);
+  expectNonParseable(`(min-${toggle})`);
+
+  let matches_1 = matchMedia(`(${toggle}: 1)`).matches;
+  let matches_0 = matchMedia(`(${toggle}: 0)`).matches;
+  isnot(matches_0, matches_1, `Should not match both true and false: ${toggle}`);
+  is(matches_0 || matches_1, true, `Should match at least one: ${toggle}`);
+}
+
+for (let toggle of CHROME_ONLY_TOGGLES) {
+  testToggle(toggle)
+}
+
+for (let query of CHROME_ONLY_QUERIES) {
+  expectParseable(query);
+}
+
+// These might be exposed to content by pref, we just want to make sure they're
+// always exposed to chrome.
+expectParseable("(prefers-contrast: more)")
+expectParseable("(prefers-contrast: no-preference)")
+expectParseable("(prefers-contrast: less)");
+expectParseable("(prefers-contrast)")
+
+expectParseable("(forced-colors: none)");
+expectParseable("(forced-colors: active)");
+expectParseable("(forced-colors)");
+
+expectNonParseable("(-moz-os-version: )");
+
+testWithPref();
+</script>

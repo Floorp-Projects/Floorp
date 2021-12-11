@@ -1,0 +1,27 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIFile.idl"
+
+// Note that the PrefixSet name is historical and we do properly support
+// duplicated values, so it's really a Prefix Trie.
+// All methods are thread-safe.
+[scriptable, uuid(3d8579f0-75fa-4e00-ba41-38661d5b5d17)]
+interface nsIUrlClassifierPrefixSet : nsISupports
+{
+  // Initialize the PrefixSet. Give it a name for memory reporting.
+  void init(in ACString aName);
+  // Fills the PrefixSet with the given array of prefixes.
+  // Can send an empty Array to clear the tree.
+  // Requires array to be sorted.
+  void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
+                   in unsigned long aLength);
+  void getPrefixes(out unsigned long aCount,
+                  [array, size_is(aCount), retval] out unsigned long aPrefixes);
+  // Do a lookup in the PrefixSet, return whether the value is present.
+  boolean contains(in unsigned long aPrefix);
+  boolean isEmpty();
+};

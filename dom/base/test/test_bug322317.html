@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=322317
+-->
+<head>
+  <title>Test for Bug 322317</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=322317">Mozilla Bug 322317</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 322317 **/
+/* Test that this does not throw exceptions */
+var http =new XMLHttpRequest();
+http.open("GET", window.location.href);
+http.send(null);
+http.open("GET", window.location.href);
+http.send(null);
+is(1, 1, "Got here, yay!");
+
+</script>
+</pre>
+</body>
+</html>
+

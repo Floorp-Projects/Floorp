@@ -1,0 +1,59 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.release_version_bump:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-beetmover-push-to-release
+
+job-defaults:
+    description: Release Promotion version bump/tag
+    run-on-projects: []
+    shipping-phase: ship
+    worker-type: tree
+    worker:
+        implementation: treescript
+        dontbuild: true
+        tags: ['release']
+        bump: true
+        bump-files:
+            by-project:
+                default: ["browser/config/version_display.txt"]
+                mozilla-(release|esr.*):
+                    - "browser/config/version.txt"
+                    - "browser/config/version_display.txt"
+                    - "config/milestone.txt"
+                maple:
+                    - "browser/config/version.txt"
+                    - "browser/config/version_display.txt"
+                    - "config/milestone.txt"
+        push:
+            by-project:
+                mozilla-(beta|release|esr.*): true
+                maple: true
+                default: false
+
+jobs:
+    firefox:
+        name: firefox-version-bump
+        shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(VerBump)
+            tier: 1
+            kind: build
+
+    devedition:
+        name: devedition-version-bump
+        shipping-product: devedition
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(VerBump)
+            tier: 1
+            kind: build

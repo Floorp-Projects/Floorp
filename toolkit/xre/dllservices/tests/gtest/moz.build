@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("dllservicestest")
+
+UNIFIED_SOURCES += [
+    "TestDLLBlocklist.cpp",
+]
+
+if CONFIG["CPU_ARCH"] != "x86":
+    UNIFIED_SOURCES += [
+        "TestUntrustedModules.cpp",
+    ]
+
+LOCAL_INCLUDES += [
+    "/toolkit/components/telemetry/other",
+    "/toolkit/components/telemetry/tests/gtest",
+]
+
+TEST_DIRS += [
+    "TestDllBlocklist_AllowByVersion",
+    "TestDllBlocklist_MatchByName",
+    "TestDllBlocklist_MatchByVersion",
+    "TestDllBlocklist_NoOpEntryPoint",
+    "TestUntrustedModules_Dll1",
+    "TestUntrustedModules_Dll2",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul-gtest"

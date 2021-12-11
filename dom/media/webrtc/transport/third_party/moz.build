@@ -1,0 +1,40 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include('/build/gyp.mozbuild')
+
+GYP_DIRS += [
+    'nICEr',
+    'nrappkit',
+]
+
+# Set gyp vars that webrtc needs when building under various analysis tools.
+# Primarily this prevents webrtc from setting NVALGRIND and breaking builds.
+gyp_vars_copy = gyp_vars.copy()
+if CONFIG['MOZ_VALGRIND']:
+    gyp_vars_copy.update(build_for_tool="memcheck")
+elif CONFIG['MOZ_ASAN']:
+    gyp_vars_copy.update(build_for_tool="asan")
+elif CONFIG['MOZ_TSAN']:
+    gyp_vars_copy.update(build_for_tool="tsan")
+
+# These files cannot be built in unified mode because of name clashes on RCSSTRING
+
+GYP_DIRS['nICEr'].input = 'nICEr/nicer.gyp'
+GYP_DIRS['nICEr'].variables = gyp_vars_copy
+GYP_DIRS['nICEr'].sandbox_vars['REQUIRES_UNIFIED_BUILD'] = True
+GYP_DIRS['nICEr'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
+GYP_DIRS['nrappkit'].input = 'nrappkit/nrappkit.gyp'
+GYP_DIRS['nrappkit'].variables = gyp_vars_copy
+GYP_DIRS['nrappkit'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
+
+
+if CONFIG["CC_TYPE"] == "gcc":
+    GYP_DIRS['nICEr'].sandbox_vars['CFLAGS'] = ['-Wno-stringop-overflow']
+    GYP_DIRS['nrappkit'].sandbox_vars['CFLAGS'] = ['-Wno-stringop-overflow']
+    if int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
+        GYP_DIRS['nICEr'].sandbox_vars['CFLAGS'] += ['-Wno-stringop-truncation']
+        GYP_DIRS['nrappkit'].sandbox_vars['CFLAGS'] += ['-Wno-stringop-truncation']

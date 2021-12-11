@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Sanity touch-tapping test</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  while (window.scrollY == 0) {
+    // the scrollframe is not yet marked as APZ-scrollable. Mark it so
+    // before continuing.
+    window.scrollTo(0, 1);
+    await promiseApzFlushedRepaints();
+  }
+
+  // This is a scroll by 20px that should use paint-skipping if possible.
+  // If paint-skipping is enabled, this should not trigger a paint, but go
+  // directly to the compositor using an empty transaction. We check for this
+  // by ensuring the document element did not get painted.
+  var utils = window.opener.SpecialPowers.getDOMWindowUtils(window);
+  var elem = document.documentElement;
+  var skipping = location.search == "?true";
+  utils.checkAndClearPaintedState(elem);
+  window.scrollTo(0, 20);
+  await promiseAllPaintsDone();
+
+  if (skipping) {
+    is(utils.checkAndClearPaintedState(elem), false, "Document element didn't get painted");
+  }
+
+  // After that's done, we click on the button to make sure the
+  // skipped-paint codepath still has working APZ event transformations.
+  let clickPromise = new Promise(resolve => {
+    document.addEventListener("click", resolve);
+  });
+
+  synthesizeNativeTap(document.getElementById("b"), 5, 5, function() {
+    dump("Finished synthesizing tap, waiting for button to be clicked...\n");
+  });
+
+  let clickEvent = await clickPromise;
+  is(clickEvent.target, document.getElementById("b"), "Clicked on button, yay! (at " + clickEvent.clientX + "," + clickEvent.clientY + ")");
+}
+
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body style="height: 5000px">
+ <div style="height: 50px">spacer</div>
+ <button id="b" style="width: 10px; height: 10px"></button>
+</body>
+</html>

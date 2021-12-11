@@ -1,0 +1,109 @@
+== table-repaint-a.html table-repaint-a-ref.html
+== table-repaint-b.html table-repaint-b-ref.html
+== table-repaint-border-collapse.html table-repaint-border-collapse-ref.html
+== table-repaint-c.html table-repaint-c-ref.html
+== table-repaint-d.html table-repaint-d-ref.html
+== table-repaint-e.html table-repaint-e-ref.html
+== table-repaint-non-border-collapse.html table-repaint-non-border-collapse-ref.html
+== chrome://reftest/content/invalidation/540247-1.xhtml chrome://reftest/content/invalidation/540247-1-ref.xhtml
+== 543681-1.html 543681-1-ref.html
+== 1243409-1.html 1243409-1-ref.html
+skip == test-image-layers.html test-image-layers-ref.html # Bug 1067360
+skip == test-image-layers-multiple-displayitem.html test-image-layers-ref.html # Bug 1067360
+skip-if(gtkWidget) == test-animated-image-layers.html test-animated-image-layers-ref.html
+skip-if(gtkWidget) == test-animated-image-layers-background.html test-animated-image-layers-ref.html
+== box-shadow-border-radius.html box-shadow-border-radius-ref.html
+== filter-userspace-offset.svg?offsetContainer=rect filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=innerSVG filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=foreignObject filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&filter=flood-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&filter=flood-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&filter=matrix-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&filter=flood-userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&filter=flood-userSpace-atZero filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-userSpace-atZero filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&filter=matrix-userSpace-atZero filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-userSpace-atZero filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&mask=boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&mask=boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=innerSVG&mask=boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=foreignObject&mask=boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&mask=userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&mask=userSpace-atZero filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=innerSVG&mask=userSpace-atZero filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100 filter-userspace-offset.svg
+
+!= scroll-inactive-layers.html about:blank
+!= scroll-inactive-layers-2.html about:blank
+random-if(useDrawSnapshot) != inactive-layertree-visible-region-1.html about:blank
+!= inactive-layertree-visible-region-2.html about:blank
+!= transform-floating-point-invalidation.html about:blank
+!= transform-floating-point-invalidation.html?reverse about:blank
+!= nudge-to-integer-invalidation.html about:blank
+!= nudge-to-integer-invalidation.html?reverse about:blank
+!= clipped-animated-transform-1.html about:blank
+!= paintedlayer-recycling-1.html about:blank
+!= paintedlayer-recycling-2.html about:blank
+pref(layers.single-tile.enabled,false) != paintedlayer-recycling-3.html about:blank
+!= paintedlayer-recycling-4.html about:blank
+!= paintedlayer-recycling-5.html about:blank
+!= paintedlayer-recycling-6.html about:blank
+!= paintedlayer-recycling-7.html about:blank
+!= masklayer-1.html about:blank
+!= masklayer-2.html about:blank
+!= layer-splitting-1.html about:blank
+!= layer-splitting-2.html about:blank
+!= layer-splitting-3.html about:blank
+!= layer-splitting-4.html about:blank
+!= layer-splitting-5.html about:blank
+!= layer-splitting-6.html about:blank
+!= layer-splitting-7.html about:blank
+fuzzy(0-16,0-3230) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
+!= image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-notref.html
+pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
+== background-position-1.html background-position-1-ref.html
+== background-position-2a.html background-position-2-ref.html
+== background-position-2b.html background-position-2-ref.html
+== background-position-2c.html background-position-2-ref.html
+== background-position-2d.html background-position-2-ref.html
+== background-position-2e.html background-position-2-ref.html
+== background-position-2f.html background-position-2-ref.html
+== zero-opacity-animation.html about:blank
+== zero-opacity-text.html about:blank
+== negative-w-component.html negative-w-component-ref.html
+
+== mask-invalidation-1a.html mask-invalidation-1-ref.html
+== mask-invalidation-1b.html mask-invalidation-1-ref.html
+
+== mask-invalidation-2a.html mask-invalidation-2-ref.html
+== mask-invalidation-2b.html mask-invalidation-2-ref.html
+== mask-invalidation-2c.html mask-invalidation-2-ref.html
+== mask-invalidation-2d.html mask-invalidation-2-ref.html
+
+== clip-path-invalidation-1a.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1b.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1c.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1d.html mask-invalidation-2-ref.html
+
+!= fractional-transform-1.html about:blank
+skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != fractional-transform-2.html about:blank
+!= fractional-transform-3.html about:blank
+
+== partially-scrolled-svg-group.html partially-scrolled-svg-group-ref.html
+
+== paintedlayer-recycling-8.html paintedlayer-recycling-8-ref.html
+pref(image.downscale-during-decode.enabled,true) == jetstream-scroll.html jetstream-scroll-ref.html
+
+fuzzy(0-2,0-2) == svg-paint-rect-changes.html svg-paint-rect-changes-ref.html
+== border-radius-1.html border-radius-1-ref.html

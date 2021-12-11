@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+      "use strict";
+
+      // eslint-disable-next-line no-unused-vars
+      function test_inspect_function() {
+        // a function to inspect using `inspect(test_inspect_function)`,
+        // the related test case asserts that it is defined at line 9
+        // of this file.
+      }
+
+      function test_bound_target() {
+        // Another function to inspect, expected to be located at line 15.
+      }
+
+      window.test_bound_function = test_bound_target.bind(window);
+    </script>
+  </head>
+  <body>
+    <div id="container">
+      <span id="nested-container">
+        <a id="link-to-inspect" href="#link-ref">link to inspect</a>
+      </span>
+    </div>
+  </body>
+</html>

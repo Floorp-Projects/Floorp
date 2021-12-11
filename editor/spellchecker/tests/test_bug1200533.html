@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1200533
+-->
+<head>
+  <title>Test for Bug 1200533</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1200533">Mozilla Bug 1200533</a>
+<p id="display"></p>
+<iframe id="content"></iframe>
+
+</div>
+<pre id="test">
+<script class="testbody" ttype="application/javascript">
+
+/** Test for Bug 1200533 **/
+/** Visit the elements defined above and check the dictionary we got **/
+SimpleTest.waitForExplicitFinish();
+var content = document.getElementById("content");
+
+var tests = [
+    // text area, value of spellchecker.dictionary, result.
+    // Result: Document language.
+    [ "none",  "", "en-US" ],
+    // Result: Element language.
+    [ "en-GB", "", "en-GB" ],
+    [ "en-gb", "", "en-GB" ],
+    // Result: Random en-* or en-US (if application locale is en-US).
+    [ "en-ZA-not-avail", "", "*" ],
+    [ "en-generic",      "", "*" ],
+    [ "en",              "", "*" ],
+    // Result: Locale.
+    [ "ko-not-avail",    "", "en-US" ],
+
+    // Result: Preference value in all cases.
+    [ "en-ZA-not-avail", "en-AU", "en-AU" ],
+    [ "en-generic",      "en-AU", "en-AU" ],
+    [ "ko-not-avail",    "en-AU", "en-AU" ],
+
+    // Result: Random en-*.
+    [ "en-ZA-not-avail", "de-DE", "*" ],
+    [ "en-generic",      "de-DE", "*" ],
+    // Result: Preference value.
+    [ "ko-not-avail",    "de-DE", "de-DE" ],
+  ];
+
+var loadCount = 0;
+var retrying = false;
+var script;
+
+var loadListener = async function(evt) {
+  if (loadCount == 0) {
+    /* eslint-env mozilla/frame-script */
+    script = SpecialPowers.loadChromeScript(function() {
+      // eslint-disable-next-line mozilla/use-services
+      var dir = Cc["@mozilla.org/file/directory_service;1"]
+                  .getService(Ci.nsIProperties)
+                  .get("CurWorkD", Ci.nsIFile);
+      dir.append("tests");
+      dir.append("editor");
+      dir.append("spellchecker");
+      dir.append("tests");
+
+      var hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
+                       .getService(Ci.mozISpellCheckingEngine);
+
+      // Install en-GB, en-AU and de-DE dictionaries.
+      var en_GB = dir.clone();
+      var en_AU = dir.clone();
+      var de_DE = dir.clone();
+      en_GB.append("en-GB");
+      en_AU.append("en-AU");
+      de_DE.append("de-DE");
+      hunspell.addDirectory(en_GB);
+      hunspell.addDirectory(en_AU);
+      hunspell.addDirectory(de_DE);
+
+      addMessageListener("check-existence",
+                         () => [en_GB.exists(), en_AU.exists(),
+                                de_DE.exists()]);
+      addMessageListener("destroy", () => {
+        hunspell.removeDirectory(en_GB);
+        hunspell.removeDirectory(en_AU);
+        hunspell.removeDirectory(de_DE);
+      });
+    });
+    var existenceChecks = await script.sendQuery("check-existence");
+    is(existenceChecks[0], true, "true expected (en-GB directory should exist)");
+    is(existenceChecks[1], true, "true expected (en-AU directory should exist)");
+    is(existenceChecks[2], true, "true expected (de-DE directory should exist)");
+  }
+
+  SpecialPowers.pushPrefEnv({set: [["spellchecker.dictionary", tests[loadCount][1]]]},
+                            function() { continueTest(evt); });
+};
+
+function continueTest(evt) {
+  var doc = evt.target.contentDocument;
+  var elem = doc.getElementById(tests[loadCount][0]);
+  var editor = SpecialPowers.wrap(elem).editor;
+  editor.setSpellcheckUserOverride(true);
+  var inlineSpellChecker = editor.getInlineSpellChecker(true);
+  const is_en_US = SpecialPowers.Services.locale.appLocaleAsBCP47 == "en-US";
+
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(elem, function() {
+    var spellchecker = inlineSpellChecker.spellChecker;
+    try {
+      var dict = spellchecker.GetCurrentDictionary();
+    } catch (e) {}
+
+    if (!dict && !retrying) {
+      // It's possible for an asynchronous font-list update to cause a reflow
+      // that disrupts the async spell-check and results in not getting a
+      // current dictionary here; if that happens, we retry the same testcase
+      // by reloading the iframe without bumping loadCount.
+      info(`No current dictionary: retrying testcase ${loadCount}`);
+      retrying = true;
+    } else {
+      if (tests[loadCount][2] != "*") {
+        is(dict, tests[loadCount][2], "expected " + tests[loadCount][2]);
+      } else if (is_en_US && tests[loadCount][0].startsWith("en")) {
+        // Current application locale is en-US and content lang is en or
+        // en-unknown, so we should use en-US dictionary as default.
+        is(dict, "en-US", "expected en-US that is application locale");
+      } else {
+        var gotEn = (dict == "en-GB" || dict == "en-AU" || dict == "en-US");
+        is(gotEn, true, "expected en-AU or en-GB or en-US");
+      }
+
+      loadCount++;
+      retrying = false;
+    }
+
+    if (loadCount < tests.length) {
+      // Load the iframe again.
+      content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=false";
+    } else {
+      // Remove the fake  dictionaries again, since it's otherwise picked up by later tests.
+      script.sendAsyncMessage("destroy");
+
+      SimpleTest.finish();
+    }
+  });
+}
+
+content.addEventListener("load", loadListener);
+
+content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=true";
+
+</script>
+</pre>
+</body>
+</html>

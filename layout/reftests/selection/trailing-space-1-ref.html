@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for bug 1146754</title>
+    <script>
+      function selectTest() {
+        window.getSelection().removeAllRanges();
+        var range = document.createRange();
+        range.selectNode(document.querySelector('#test'));
+        window.getSelection().addRange(range);
+      }
+    </script>
+    <style>
+      body { padding: 1em; }
+      div>div { height: 2em; }
+    </style>
+  </head>
+  <body onload="selectTest()" contenteditable>
+    <div id="test">
+      <div>123 <span style="color:transparent;font-size:0">x</span></div>
+      <div style="text-shadow:8px 3px 0 red;">456 <span style="color:transparent;font-size:0">x</span></div>
+      <div><u>789</u> <span style="color:transparent;font-size:0">x</span></div>
+      <div style="text-shadow:-4px 3px 0 red;"><u>012</u> <span style="color:transparent;font-size:0">x</span></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAppWindow;
+
+[scriptable, uuid(2F276982-0D60-4377-A595-D350BA516395)]
+interface nsIWindowMediatorListener : nsISupports
+{
+    void onOpenWindow(in nsIAppWindow window);
+    void onCloseWindow(in nsIAppWindow window);
+};
+

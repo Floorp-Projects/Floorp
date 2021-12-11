@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  var v = document.createElement('video');
+  v.src = URL.createObjectURL(new MediaSource());
+  v.play();
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

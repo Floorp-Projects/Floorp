@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="run()">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+async function run() {
+  try {
+    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
+      Ci.nsIPrinterList
+    );
+
+    let printers = await printerList.printers;
+    for (let printer of printers) {
+      printer.QueryInterface(Ci.nsIPrinter);
+      info(`Listing basic attributes for ${printer.name}:`);
+      let [supportsDuplex, supportsColor] = await Promise.all([printer.supportsDuplex, printer.supportsColor]);
+      info(`* supportsDuplex: ${supportsDuplex}`);
+      info(`* supportsColor: ${supportsColor}`);
+    }
+
+    ok(true, "Retrieved printer basic attributes successfully.");
+  } catch (e) {
+    ok(false, `Error thrown while retrieving printer basic attributes: ${e}.`);
+    Cu.reportError(e);
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

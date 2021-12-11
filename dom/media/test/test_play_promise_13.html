@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: loadAlgorithmDoesNotCancelTasks
+// Case: re-invoke the load() on an element which had dispatched a task to resolve a promise.
+// Expected result: the already dispatched promise should still be resolved with undefined.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.preload = "auto";
+  element.src = test.name;
+
+  // We must wait for "canplay" event; otherwise, invoke play() will lead to a
+  // pending promise and will then be rejected by the following load().
+  once(element, "canplay").then(() => {
+    // The play() promise will be queued to be resolved immediately, which means
+    // the promise is not in the pending list.
+    element.play().then(
+      (result) => {
+        if (result == undefined) {
+          ok(true, `${token} is resolved with ${result}.`);
+        } else {
+          ok(false, `${token} is resolved with ${result}.`);
+        }
+      },
+      (error) => {
+        ok(false, `${token} is rejected with ${error.name}.`);
+      }
+    ).then( () => { manager.finished(token); } );
+    element.src = test.name; // Re-invoke the load algorithm again.
+  });
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>

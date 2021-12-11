@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+
+input {
+  border: 3px solid black;
+  padding: 4px;
+  width: 300px;
+  height: 300px;
+  max-height: 100px;
+  box-sizing: border-box;
+  /* hide the spin buttons: */
+  -moz-appearance: textfield;
+}
+
+* > input[type=number] {
+  /* get rid of background gradient for Firefox OS */
+  background-color: transparent ! important;
+}
+
+    </style>
+  </head>
+  <body>
+    <input type="number">
+  </body>
+</html>

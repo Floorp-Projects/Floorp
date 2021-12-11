@@ -1,0 +1,8 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+  content/global/aboutProcesses.html                (content/aboutProcesses.html)
+  content/global/aboutProcesses.js                  (content/aboutProcesses.js)
+* content/global/aboutProcesses.css                 (content/aboutProcesses.css)

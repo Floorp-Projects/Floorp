@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+
+/**
+ * Methods specific to LocalStorage, see nsIDOMStorageManager for methods shared
+ * with SessionStorage.  Methods may migrate there as SessionStorage is
+ * overhauled.
+ */
+[scriptable, builtinclass, uuid(d4f534da-2744-4db3-8774-8b187c64ade9)]
+interface nsILocalStorageManager : nsISupports
+{
+  readonly attribute boolean nextGenLocalStorageEnabled;
+
+  /**
+   * Trigger preload of LocalStorage for the given principal.  For use by
+   * ContentParent::AboutToLoadHttpFtpDocumentForChild to maximize the
+   * amount of time we have to load the data off disk before the page might
+   * attempt to touch LocalStorage.
+   *
+   * This method will not create a QuotaManager-managed directory on disk if
+   * one does not already exist for the principal.
+   */
+  [implicit_jscontext]
+  Promise preload(in nsIPrincipal aPrincipal);
+
+  [implicit_jscontext]
+  Promise isPreloaded(in nsIPrincipal aPrincipal);
+};

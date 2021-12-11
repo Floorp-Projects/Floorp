@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<title>Test getCSSStyleRules for pseudo elements</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+
+<div id="host">
+  <test-element id="test1" slot="slot1">test1</test-element>
+  <test-element id="test2" slot="slot2">test2</test-element>
+</div>
+
+<script>
+  const host = document.getElementById("host");
+  const shadow = host.attachShadow({ mode: "open" });
+  shadow.innerHTML = `
+    <style>
+      #outer ::slotted(test-element) {
+        color: red;
+      }
+    </style>
+    <div id="outer">
+      <slot name="slot1"></slot>
+    </div>
+    <div id="nested">
+      <slot name="slot2"></slot>
+    </div>
+  `;
+
+  const nested = shadow.querySelector("#nested").attachShadow({ mode: "open" });
+  nested.innerHTML = `
+    <style>
+      #inner ::slotted(test-element) {
+        font-weight: bold;
+      }
+    </style>
+    <div id="inner">
+      <slot></slot>
+    </div>
+  `;
+
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  function checkElementRules(id, text, property) {
+    const element = document.getElementById(id);
+    let slottedRules = InspectorUtils.getCSSStyleRules(element);
+    is(slottedRules.length, 1, "Slotted element has expected number of rules.");
+
+    let slottedText = slottedRules[0].cssText;
+    ok(slottedText.includes(text), "Slotted node has expected style content.");
+    ok(slottedText.includes(property), "Has expected property.");
+  }
+
+  info("Check that slotted rules are retrieved");
+  checkElementRules("test1", "#outer ::slotted(test-element)", "color");
+
+  info("Check that slotted rules are also retrieved for nested slots");
+  checkElementRules("test2", "#inner ::slotted(test-element)", "font-weight");
+</script>

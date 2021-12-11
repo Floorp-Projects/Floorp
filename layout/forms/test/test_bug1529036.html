@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1529036
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1529036</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+html,body {
+  color:black; background-color:white; font:16px/1 monospace; padding:0; margin:0;
+}
+  </style>
+  <script type="application/javascript">
+
+  /** Test for Bug 1529036 **/
+
+  function doTest() {
+    SimpleTest.waitForExplicitFinish();
+
+    var clicks = 0;
+    var elms = document.querySelectorAll('.click');
+    for (var i = 0; i < elms.length; ++i) {
+      var e = elms[i];
+      e.addEventListener('click', function(event) {
+        ++clicks;
+      });
+    }
+
+    var elms = document.querySelectorAll('.click.hit');
+    for (var i = 0; i < elms.length; ++i) {
+      var e = elms[i];
+      let r = e.getBoundingClientRect();
+      synthesizeMouse(e, 50, 50, {});
+    }
+    is(clicks, elms.length, "click events on overflow");
+
+    clicks = 0;
+    elms = document.querySelectorAll('.click.nohit');
+    for (var i = 0; i < elms.length; ++i) {
+      var e = elms[i];
+      let r = e.getBoundingClientRect();
+      synthesizeMouse(e, 50, 50, {});
+    }
+    is(clicks, 0, "click events on clipped overflow");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body onload="SimpleTest.waitForFocus(doTest, window)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1529036">Mozilla Bug 1529036</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<div style="border: 1px solid">
+<button class="click hit" id="t1" style="width:10px; height:10px; padding:20px; border-radius:50%"><div>button<br>button<br>button<br>button<br>button<br></div></button>
+<button class="click hit" id="t2" style="width:10px; height:10px; padding:20px; border:1px solid"><div>button<br>button<br>button<br>button<br>button<br></div></button>
+<button class="click hit" id="t3" style="width:10px; height:10px; border-width:20px; border-radius:50%"><div>button<br>button<br>button<br>button<br>button<br></div></button>
+<button class="click hit" id="t4" style="width:10px; height:10px; border:20px solid"><div>button<br>button<br>button<br>button<br>button<br></div></button>
+<button class="click nohit" id="t5" style="width:10px; height:10px; padding:20px; overflow:hidden; border-radius:50%"><div>button<br>button<br>button<br>button<br>button<br></div></button>
+<button class="click nohit" id="t6" style="width:10px; height:10px; padding:20px; overflow:hidden; border:1px solid"><div>button<br>button<br>button<br>button<br>button<br></div></button>
+</div>
+
+</body>
+</html>

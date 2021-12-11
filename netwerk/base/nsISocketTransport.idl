@@ -1,0 +1,363 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsITransport.idl"
+#include "nsIRequest.idl"
+
+interface nsIInterfaceRequestor;
+interface nsINetAddr;
+
+%{ C++
+#include "mozilla/BasePrincipal.h"
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
+%}
+native NetAddr(mozilla::net::NetAddr);
+[ptr] native NetAddrPtr(mozilla::net::NetAddr);
+native OriginAttributes(mozilla::OriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
+
+/**
+ * nsISocketTransport
+ *
+ * NOTE: Connection setup is triggered by opening an input or output stream,
+ * it does not start on its own. Completion of the connection setup is
+ * indicated by a STATUS_CONNECTED_TO notification to the event sink (if set).
+ *
+ * NOTE: This is a free-threaded interface, meaning that the methods on
+ * this interface may be called from any thread.
+ */
+[scriptable, builtinclass, uuid(79221831-85e2-43a8-8152-05d77d6fde31)]
+interface nsISocketTransport : nsITransport
+{
+    /**
+     * Get the peer's host for the underlying socket connection.
+     * For Unix domain sockets, this is a pathname, or the empty string for
+     * unnamed and abstract socket addresses.
+     */
+    readonly attribute AUTF8String host;
+
+    /**
+     * Get the port for the underlying socket connection.
+     * For Unix domain sockets, this is zero.
+     */
+    readonly attribute long port;
+
+    /**
+     * The origin attributes are used to create sockets.  The first party domain
+     * will eventually be used to isolate OCSP cache and is only non-empty when
+     * "privacy.firstparty.isolate" is enabled.  Setting this is the only way to
+     * carry origin attributes down to NSPR layers which are final consumers.
+     * It must be set before the socket transport is built.
+     */
+    [implicit_jscontext, binaryname(ScriptableOriginAttributes)]
+    attribute jsval originAttributes;
+
+    [noscript, nostdcall, binaryname(GetOriginAttributes)]
+    OriginAttributes binaryGetOriginAttributes();
+
+    [noscript, nostdcall, binaryname(SetOriginAttributes)]
+    void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
+
+    /**
+     * Returns the IP address of the socket connection peer. This
+     * attribute is defined only once a connection has been established.
+     */
+    [noscript] NetAddr getPeerAddr();
+
+    /**
+     * Returns the IP address of the initiating end. This attribute
+     * is defined only once a connection has been established.
+     */
+    [noscript] NetAddr getSelfAddr();
+
+    /**
+     * Bind to a specific local address.
+     */
+    [noscript] void bind(in NetAddrPtr aLocalAddr);
+
+    /**
+     * Returns a scriptable version of getPeerAddr. This attribute is defined
+     * only once a connection has been established.
+     */
+    nsINetAddr getScriptablePeerAddr();
+
+    /**
+     * Returns a scriptable version of getSelfAddr. This attribute is defined
+     * only once a connection has been established.
+     */
+    nsINetAddr getScriptableSelfAddr();
+
+    /**
+     * Security info object returned from the secure socket provider.  This
+     * object supports nsISSLSocketControl, nsITransportSecurityInfo, and
+     * possibly other interfaces.
+     *
+     * This attribute is only available once the socket is connected.
+     */
+    readonly attribute nsISupports securityInfo;
+
+    /**
+     * Security notification callbacks passed to the secure socket provider
+     * via nsISSLSocketControl at socket creation time.
+     *
+     * NOTE: this attribute cannot be changed once a stream has been opened.
+     */
+    attribute nsIInterfaceRequestor securityCallbacks;
+
+    /**
+     * Test if this socket transport is (still) connected.
+     */
+    boolean isAlive();
+
+    /**
+     * Socket timeouts in seconds.  To specify no timeout, pass UINT32_MAX
+     * as aValue to setTimeout.  The implementation may truncate timeout values
+     * to a smaller range of values (e.g., 0 to 0xFFFF).
+     */
+    unsigned long getTimeout(in unsigned long aType);
+    void          setTimeout(in unsigned long aType, in unsigned long aValue);
+
+    /**
+     * Sets the SO_LINGER option with the specified values for the l_onoff and
+     * l_linger parameters. This applies PR_SockOpt_Linger before PR_Close and
+     * can be used with a timeout of zero to send an RST packet when closing.
+     */
+    void setLinger(in boolean aPolarity, in short aTimeout);
+
+    /**
+     * True to set addr and port reuse socket options.
+     */
+    void setReuseAddrPort(in bool reuseAddrPort);
+
+    /**
+     * Values for the aType parameter passed to get/setTimeout.
+     */
+    const unsigned long TIMEOUT_CONNECT    = 0;
+    const unsigned long TIMEOUT_READ_WRITE = 1;
+
+    /**
+     * nsITransportEventSink status codes.
+     *
+     * Although these look like XPCOM error codes and are passed in an nsresult
+     * variable, they are *not* error codes.  Note that while they *do* overlap
+     * with existing error codes in Necko, these status codes are confined
+     * within a very limited context where no error codes may appear, so there
+     * is no ambiguity.
+     *
+     * The values of these status codes must never change.
+     *
+     * The status codes appear in near-chronological order (not in numeric
+     * order).  STATUS_RESOLVING may be skipped if the host does not need to be
+     * resolved.  STATUS_WAITING_FOR is an optional status code, which the impl
+     * of this interface may choose not to generate.
+     *
+     * In C++, these constants have a type of uint32_t, so C++ callers must use
+     * the NS_NET_STATUS_* constants defined below, which have a type of
+     * nsresult.
+     */
+    const unsigned long STATUS_RESOLVING      = 0x804b0003;
+    const unsigned long STATUS_RESOLVED       = 0x804b000b;
+    const unsigned long STATUS_CONNECTING_TO  = 0x804b0007;
+    const unsigned long STATUS_CONNECTED_TO   = 0x804b0004;
+    const unsigned long STATUS_SENDING_TO     = 0x804b0005;
+    const unsigned long STATUS_WAITING_FOR    = 0x804b000a;
+    const unsigned long STATUS_RECEIVING_FROM = 0x804b0006;
+    const unsigned long STATUS_TLS_HANDSHAKE_STARTING = 0x804b000c;
+    const unsigned long STATUS_TLS_HANDSHAKE_ENDED    = 0x804b000d;
+
+    /**
+     * connectionFlags is a bitmask that can be used to modify underlying
+     * behavior of the socket connection. See the flags below.
+     */
+    attribute unsigned long connectionFlags;
+
+    /**
+     * Values for the connectionFlags
+     *
+     * When making a new connection BYPASS_CACHE will force the Necko DNS
+     * cache entry to be refreshed with a new call to NSPR if it is set before
+     * opening the new stream.
+     */
+    const unsigned long BYPASS_CACHE = (1 << 0);
+
+    /**
+     * When setting this flag, the socket will not apply any
+     * credentials when establishing a connection. For example,
+     * an SSL connection would not send any client-certificates
+     * if this flag is set.
+     */
+    const unsigned long ANONYMOUS_CONNECT = (1 << 1);
+
+    /**
+     * If set, we will skip all IPv6 addresses the host may have and only
+     * connect to IPv4 ones.
+     */
+    const unsigned long DISABLE_IPV6 = (1 << 2);
+
+    /**
+     * If set, indicates that the connection was initiated from a source
+     * defined as being private in the sense of Private Browsing. Generally,
+     * there should be no state shared between connections that are private
+     * and those that are not; it is OK for multiple private connections
+     * to share state with each other, and it is OK for multiple non-private
+     * connections to share state with each other.
+     */
+    const unsigned long NO_PERMANENT_STORAGE = (1 << 3);
+
+    /**
+     * If set, we will skip all IPv4 addresses the host may have and only
+     * connect to IPv6 ones.
+     */
+    const unsigned long DISABLE_IPV4 = (1 << 4);
+
+    /**
+     * If set, indicates that the socket should not connect if the hostname
+     * resolves to an RFC1918 address or IPv6 equivalent.
+     */
+    const unsigned long DISABLE_RFC1918 = (1 << 5);
+
+    /**
+     * If set, do not use newer protocol features that might have interop problems
+     * on the Internet. Intended only for use with critical infra like the updater.
+     * default is false.
+     */
+    const unsigned long BE_CONSERVATIVE = (1 << 6);
+
+    /**
+     * If set, do not use TRR for resolving the host name. Intended only for
+     * retries or other scenarios when TRR is deemed likely to have returned a
+     * wrong adddress.
+     */
+    const unsigned long DISABLE_TRR = (1 << 7);
+
+    /**
+     * Values for the connectionFlags
+     *
+     * When using BYPASS_CACHE, setting this bit will invalidate the existing
+     * cached entry immediately while the new resolve is being done to avoid
+     * other users from using stale content in the mean time.
+     */
+    const unsigned long REFRESH_CACHE = (1 << 8);
+
+    /**
+     * If this flag is set then it means that if connecting the preferred ip
+     * family has failed, retry with the oppsite one once more.
+     */
+    const unsigned long RETRY_WITH_DIFFERENT_IP_FAMILY = (1 << 9);
+
+    /**
+     * If we know that a server speaks only tls <1.3 there is no need to try
+     * to use ech.
+     */
+    const unsigned long DONT_TRY_ECH = (1 << 10);
+
+    /**
+     * These two bits encode the TRR mode of the request.
+     * Use the static helper methods convert between the TRR mode and flags.
+     */
+    const unsigned long TRR_MODE_FLAGS = (1 << 11) | (1 << 12);
+
+%{C++
+
+    static uint32_t GetFlagsFromTRRMode(nsIRequest::TRRMode aMode) {
+        return static_cast<uint32_t>(aMode) << 11;
+    }
+
+    static nsIRequest::TRRMode GetTRRModeFromFlags(uint32_t aFlags) {
+        return static_cast<nsIRequest::TRRMode>((aFlags & TRR_MODE_FLAGS) >> 11);
+    }
+%}
+
+    /**
+     * If set, we will use IP hint addresses to connect to the host.
+     */
+    const unsigned long USE_IP_HINT_ADDRESS = (1 << 13);
+
+    /**
+     * This is used for a temporary workaround for a web-compat issue. The flag is
+     * only set on CORS preflight request to allowed sending client certificates
+     * on a connection for an anonymous request.
+     */
+    const long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = (1 << 14);
+
+    /**
+     * An opaque flags for non-standard behavior of the TLS system.
+     * It is unlikely this will need to be set outside of telemetry studies
+     * relating to the TLS implementation.
+     */
+    attribute unsigned long tlsFlags;
+
+    /**
+     * Socket QoS/ToS markings. Valid values are IPTOS_DSCP_AFxx or
+     * IPTOS_CLASS_CSx (or IPTOS_DSCP_EF, but currently no supported
+     * services require expedited-forwarding).
+     * Not setting this value will leave the socket with the default
+     * ToS value, which on most systems if IPTOS_CLASS_CS0 (formerly
+     * IPTOS_PREC_ROUTINE).
+     */
+    attribute octet QoSBits;
+
+    /**
+     * TCP send and receive buffer sizes. A value of 0 means OS level
+     * auto-tuning is in effect.
+     */
+    attribute unsigned long recvBufferSize;
+    attribute unsigned long sendBufferSize;
+
+    /**
+     * TCP keepalive configuration (support varies by platform).
+     * Note that the attribute as well as the setter can only accessed
+     * in the socket thread.
+     */
+    attribute boolean keepaliveEnabled;
+    void setKeepaliveVals(in long keepaliveIdleTime,
+                          in long keepaliveRetryInterval);
+
+    /**
+     * If true, this socket transport has found out the prefered family
+     * according it's connection flags could not be used to establish
+     * connections any more.  Hence, the preference should be reset.
+     */
+    readonly attribute boolean resetIPFamilyPreference;
+
+    /**
+     * This attribute holds information whether echConfig has been used.
+     * The value is set after PR_Connect is called.
+     */
+   readonly attribute boolean echConfigUsed;
+
+    /**
+     * Called to set the echConfig to the securityInfo object.
+     */
+    void setEchConfig(in ACString echConfig);
+
+    /**
+     * IP address resolved using TRR.
+     */
+    bool resolvedByTRR();
+
+    /**
+     * Indicate whether this socket is created from a private window. If yes,
+     * this socket will be closed when the last private window is closed.
+     */
+    [noscript] void setIsPrivate(in boolean isPrivate);
+
+    /**
+     * If DNS is performed externally, this flag informs the caller that it may
+     * retry connecting with a different DNS configuration (e.g. different IP
+     * family preference). The flag is set only if a network error is encounder,
+     * e.g. NS_ERROR_CONNECTION_REFUSED, NS_ERROR_RESET, etc.
+     */
+    readonly attribute boolean retryDnsIfPossible;
+
+    /**
+     * Return the current status of the socket.
+     */
+    [noscript] readonly attribute nsresult status;
+};

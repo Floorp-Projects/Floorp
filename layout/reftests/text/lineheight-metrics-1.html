@@ -1,0 +1,31 @@
+<title>Testcase, bug 643781</title>
+<style>
+html { background: white; }
+@font-face {
+   font-family: "MarkA-lineheight1500";
+   src: url(../fonts/markA-lineheight1500.ttf);
+}
+body {
+   padding: 1px;
+   background: blue;
+   width: 100px;
+   height: 33px;
+   font-size: 0px; /* remove the effect of the strut ascent and descent */
+}
+div {
+   background: aqua;
+}
+/*
+MarkA-lineheight1500 at 22 pixel em-size has a line height that is an --
+integer number of pixels but the components (ascent/descent/leading) are not
+integer.  This test checks that the line-height remains accurate.
+*/
+span {
+   color: transparent;
+   font-family: MarkA-lineheight1500;
+   font-size: 22px;
+}
+</style>
+<body>
+<div><span>A</span></div>
+</body>

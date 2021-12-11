@@ -1,0 +1,7 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/l10n-nightly"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/nightly-lite"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

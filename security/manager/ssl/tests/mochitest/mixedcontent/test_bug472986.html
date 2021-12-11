@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>img.src replace</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  "use strict";
+
+  SimpleTest.expectAssertions(0, 4);
+
+  // Clear the default onload assigned to test start because we must
+  // wait for replaced image to load and only after that test the security state
+  var onLoadFunction = window.onload;
+  window.onload = function()
+  {
+    let img1 = document.getElementById("img1");
+    img1.addEventListener("load", onLoadFunction);
+    img1.src = "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
+  };
+
+  async function runTest()
+  {
+    await isSecurityState("secure", "secure");
+    finish();
+  }
+
+  async function afterNavigationTest()
+  {
+    await isSecurityState("secure", "secure after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img id="img1" src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/hugebmp.sjs" />
+</body>
+</html>

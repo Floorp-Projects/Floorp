@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- fieldset with one valid element and you dynamically add a barred constraint
+validation element -->
+<html>
+  <head>
+    <style>
+      fieldset:valid { display:none }
+    </style>
+    <script>
+      function onLoadHandler()
+      {
+        document.getElementById("fieldset").appendChild(document.getElementById('i'));
+        document.documentElement.className='';
+      }
+    </script>
+  </head>
+  <body onload='onLoadHandler();'>
+    <input id='i' value='foo' readonly>
+    <fieldset id="fieldset" id="fieldset">
+      <input id='j' value='bar' required>
+    </fieldset>
+  </body>
+</html>

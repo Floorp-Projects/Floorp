@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(4, true)">
+  <title>Test animation of the "overflow" shorthand attribute</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <rect width="100%" height="100%" fill="none"/>
+  <marker id="marker" markerWidth="20" markerHeight="20"
+          viewBox="0 0 10 10">
+    <path fill="red" d="M 0 0 L 20 10 L 0 20 z" />
+    <set attributeName="overflow"
+         calcMode="linear"
+         begin="0s" dur="2s"
+         from="hidden" to="hidden"
+         fill="freeze"/>
+  </marker>
+  <line x2="0" y2="0" marker-end="url(#marker)" stroke="transparent"/>
+</svg>

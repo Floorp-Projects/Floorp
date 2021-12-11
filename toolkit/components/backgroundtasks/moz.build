@@ -1,0 +1,69 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    # TODO: House this somewhere more specific?
+    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
+
+SPHINX_TREES["/toolkit/components/backgroundtasks"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
+
+FINAL_LIBRARY = "xul"
+
+for var in ("MOZ_APP_VENDOR",):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
+UNIFIED_SOURCES += [
+    "BackgroundTasks.cpp",
+]
+
+EXPORTS.mozilla += [
+    "BackgroundTasks.h",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+XPIDL_SOURCES += [
+    "nsIBackgroundTasks.idl",
+    "nsIBackgroundTasksManager.idl",
+]
+
+XPIDL_MODULE = "toolkit_backgroundtasks"
+
+EXTRA_JS_MODULES += [
+    "BackgroundTasksManager.jsm",
+    "BackgroundTasksUtils.jsm",
+]
+
+EXTRA_JS_MODULES.backgroundtasks += [
+    "BackgroundTask_exception.jsm",
+    "BackgroundTask_failure.jsm",
+    "BackgroundTask_success.jsm",
+]
+
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+
+TESTING_JS_MODULES += [
+    "BackgroundTasksTestUtils.jsm",
+]
+
+TESTING_JS_MODULES.backgroundtasks += [
+    "tests/BackgroundTask_backgroundtask_specific_pref.jsm",
+    "tests/BackgroundTask_crash.jsm",
+    "tests/BackgroundTask_policies.jsm",
+    "tests/BackgroundTask_shouldprocessupdates.jsm",
+    "tests/BackgroundTask_timeout.jsm",
+    "tests/BackgroundTask_unique_profile.jsm",
+    "tests/BackgroundTask_update_sync_manager.jsm",
+    "tests/BackgroundTask_wait.jsm",
+]
+
+FINAL_TARGET_FILES.defaults.backgroundtasks += [
+    "defaults/backgroundtasks.js",
+]

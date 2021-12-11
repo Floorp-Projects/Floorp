@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" class="willBeRemoved">
+<head>
+<link rel="stylesheet" type="text/css" href="frame_selection_underline.css"/>
+<script type="text/javascript">
+<![CDATA[
+
+function init(aTest)
+{
+  var docShell = window.docShell;
+  var controller =
+    docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsISelectionDisplay)
+            .QueryInterface(Ci.nsISelectionController);
+
+  var selections = [
+    controller.SELECTION_SPELLCHECK,
+    controller.SELECTION_IME_RAWINPUT,
+    controller.SELECTION_IME_SELECTEDRAWTEXT,
+    controller.SELECTION_IME_CONVERTEDTEXT,
+    controller.SELECTION_IME_SELECTEDCONVERTEDTEXT,
+  ];
+  for (var i = 0; i < selections.length; i++) {
+    var sel = controller.getSelection(selections[i]);
+    sel.removeAllRanges();
+  }
+
+  var target = document.getElementById("target");
+  target.style.fontFamily = aTest.font.family;
+  target.style.fontSize = aTest.font.defaultSize;
+
+  var range = document.createRange();
+  range.selectNodeContents(target);
+  controller.getSelection(aTest.selection.type).addRange(range);
+
+  document.documentElement.removeAttribute("class");
+  setTimeout(function () {
+    document.documentElement.setAttribute("class", "willBeRemoved"); }, 0);
+}
+
+]]>
+</script>
+</head>
+<body class="test">
+  <div id="target"><span id="decoration">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
+</body>
+</html>

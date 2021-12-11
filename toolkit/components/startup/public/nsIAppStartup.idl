@@ -1,0 +1,252 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIToolkitProfile;
+
+[scriptable, builtinclass, uuid(6621f6d5-6c04-4a0e-9e74-447db221484e)]
+interface nsIAppStartup : nsISupports
+{
+    /**
+     * Create the hidden window.
+     */
+    void createHiddenWindow();
+
+    /**
+     * Destroys the hidden window. This will have no effect if the hidden window
+     * has not yet been created.
+     */
+    void destroyHiddenWindow();
+
+    /**
+     * Runs an application event loop: normally the main event pump which
+     * defines the lifetime of the application. If there are no windows open
+     * and no outstanding calls to enterLastWindowClosingSurvivalArea this
+     * method will exit immediately.
+     *
+     * @returnCode NS_SUCCESS_RESTART_APP
+     *             This return code indicates that the application should be
+     *             restarted because quit was called with the eRestart flag.
+     */
+    void run();
+
+    /**
+     * There are situations where all application windows will be
+     * closed but we don't want to take this as a signal to quit the
+     * app. Bracket the code where the last window could close with
+     * these.
+     */
+    void enterLastWindowClosingSurvivalArea();
+    void exitLastWindowClosingSurvivalArea();
+
+    /**
+     * Startup Crash Detection
+     *
+     * Keeps track of application startup begining and success using flags to
+     * determine whether the application is crashing on startup.
+     * When the number of crashes crosses the acceptable threshold, safe mode
+     * or other repair procedures are performed.
+     */
+
+    /**
+     * Whether automatic safe mode is necessary at this time.  This gets set
+     * in trackStartupCrashBegin.
+     *
+     * @see trackStartupCrashBegin
+     */
+    readonly attribute boolean automaticSafeModeNecessary;
+
+    /**
+     * Restart the application in safe mode
+     * @param aQuitMode
+     *        This parameter modifies how the app is shutdown.
+     * @see nsIAppStartup::quit
+     */
+    void restartInSafeMode(in uint32_t aQuitMode);
+
+    /**
+     * Run a new instance of this app with a specified profile
+     * @param aProfile
+     *        The profile we want to use.
+     * @see nsIAppStartup::quit
+     */
+    void createInstanceWithProfile(in nsIToolkitProfile aProfile);
+
+    /**
+     * If the last startup crashed then increment a counter.
+     * Set a flag so on next startup we can detect whether TrackStartupCrashEnd
+     * was called (and therefore the application crashed).
+     * @return whether safe mode is necessary
+     */
+    bool trackStartupCrashBegin();
+
+    /**
+     * We have succesfully started without crashing. Clear flags that were
+     * tracking past crashes.
+     */
+    void trackStartupCrashEnd();
+
+    /**
+     * The following flags may be passed as the aMode parameter to the quit
+     * method.  One and only one of the "Quit" flags must be specified.  The
+     * eRestart flag may be bit-wise combined with one of the "Quit" flags to
+     * cause the application to restart after it quits.
+     */
+
+    /**
+     * Attempt to quit if all windows are closed.
+     */
+    const uint32_t eConsiderQuit = 0x01;
+
+    /**
+     * Try to close all windows, then quit if successful.
+     */
+    const uint32_t eAttemptQuit = 0x02;
+
+    /**
+     * Quit, damnit!
+     */
+    const uint32_t eForceQuit = 0x03;
+
+    /**
+     * Restart the application after quitting.  The application will be
+     * restarted with the same profile and an empty command line.
+     */
+    const uint32_t eRestart = 0x10;
+
+    /**
+     * Only valid when combined with eRestart. Only relevant on macOS.
+     *
+     * On macOS, it is possible for Firefox to run with no windows open (the
+     * icon in the dock will retain the little dot under it to indicate that
+     * the application is still running). Normally, we never want to launch
+     * Firefox into this state. But we do occasionally want it to restart this
+     * way. Passing this flag prevents Firefox from opening any windows when it
+     * restarts.
+     *
+     * Note that, if there is an application update pending, this also silences
+     * the update. This means that no UI will be shown including elevation
+     * dialogs (potentially preventing the update from being installed).
+     */
+    const uint32_t eSilently = 0x100;
+
+    /**
+     * Exit the event loop, and shut down the app.
+     *
+     * @param aMode
+     *        This parameter modifies how the app is shutdown, and it is
+     *        constructed from the constants defined above.
+     * @param aExitCode
+     *        The exit code to return from the process. The precise code
+     *        returned by the process may vary depending on the platform. Only
+     *        values 0-255 should generallt be used. If not specified an exit
+     *        code of 0 will be used.
+     *
+     * @return false if the shutdown was cancelled due to the presence
+     *         of a hidden window or if the user disallowed a window
+     *         to be closed.
+     */
+    bool quit(in uint32_t aMode, [optional] in int32_t aExitCode);
+
+    /**
+    * These values must match the xpcom/base/ShutdownPhase.h values.
+    * We do not expose late XPCOM shutdown phases here, everything
+    * after SHUTDOWN_PHASE_XPCOMSHUTDOWN is expected to be irrelevant 
+    * for JS.
+    */
+    cenum IDLShutdownPhase : 8 {
+        SHUTDOWN_PHASE_NOTINSHUTDOWN = 0,
+        SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED,
+        SHUTDOWN_PHASE_APPSHUTDOWNNETTEARDOWN,
+        SHUTDOWN_PHASE_APPSHUTDOWNTEARDOWN,
+        SHUTDOWN_PHASE_APPSHUTDOWN,
+        SHUTDOWN_PHASE_APPSHUTDOWNQM,
+        SHUTDOWN_PHASE_APPSHUTDOWNRELEMETRY,
+        SHUTDOWN_PHASE_XPCOMWILLSHUTDOWN,
+        SHUTDOWN_PHASE_XPCOMSHUTDOWN
+    };
+
+    /**
+     * Wrapper for shutdown notifications that informs the terminator before
+     * we notify other observers. Calls MaybeFastShutdown.
+     * This function is supposed to be used only from some (xpcshell) tests
+     * explicitely dealing with shutdown.
+     * 
+     * @param aPhase
+     *        The shutdown phase we want to advance to. Please note, that
+     *        we cannot go back to earlier phases or abort shutdown once
+     *        it started.
+     */
+    void advanceShutdownPhase(in nsIAppStartup_IDLShutdownPhase aPhase);
+
+    /**
+     * Check if we entered or passed a specific shutdown phase.
+     * 
+     * @param aPhase
+     *        The shutdown phase we want to check. 
+     *
+     * @return true if we are in or beyond the given phase.
+     */
+    bool isInOrBeyondShutdownPhase(in nsIAppStartup_IDLShutdownPhase aPhase);
+
+    /**
+     * True if the application is in the process of shutting down.
+     */
+    [infallible] readonly attribute boolean shuttingDown;
+
+    /**
+     * True if the application is in the process of starting up.
+     *
+     * Startup is complete once all observers of final-ui-startup have returned.
+     */
+    readonly attribute boolean startingUp;
+
+    /**
+     * Mark the startup as completed.
+     *
+     * Called at the end of startup by nsAppRunner.
+     */
+    [noscript] void doneStartingUp();
+
+    /**
+     * True if the application is being restarted
+     */
+    readonly attribute boolean restarting;
+
+    /**
+     * True if this is the startup following restart, i.e. if the application
+     * was restarted using quit(eRestart*).
+     */
+    readonly attribute boolean wasRestarted;
+
+    /**
+     * True if this is the startup following a silent restart, i.e. if the
+     * application was restarted using quit(eSilently*), or if the application
+     * was started with the "silentmode" command line flag.
+     */
+    readonly attribute boolean wasSilentlyStarted;
+
+    /**
+     * The number of seconds since the OS was last rebooted
+     */
+    readonly attribute int64_t secondsSinceLastOSRestart;
+
+    /**
+     * Whether or not we showed the startup skeleton UI.
+     */
+    readonly attribute bool showedPreXULSkeletonUI;
+
+    /**
+     * Returns an object with main, process, firstPaint, sessionRestored properties.
+     * Properties may not be available depending on platform or application
+     */
+    [implicit_jscontext] jsval getStartupInfo();
+
+    /**
+     * True if startup was interrupted by an interactive prompt.
+     */
+    attribute boolean interrupted;
+};

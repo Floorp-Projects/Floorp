@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(5, true)">
+  <title>Test animation of the &lt;number-list&gt; attribute on the 'text' element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <!-- The difference between respective numbers in the effective 'from' and
+       'to' lists below is carefully designed to be a factor of 3. That way
+       our reference file (which checks against a one third complete animation)
+       can contain whole numbers, which is necessary to avoid failure due to
+       hard coded rounded numbers in the reference not matching platform
+       specific rounding behaviour.
+    -->
+
+  <!-- Test calcMode="linear". -->
+
+  <text transform="translate(20, 20)"
+        rotate="10 20 30">ABC
+
+    <!-- At 5s the animVal should be "110 120 130". -->
+    <animate attributeName="rotate"
+             calcMode="linear"
+             begin="0s" dur="15s"
+             to="310 320 330"
+             fill="freeze"/>
+
+  </text>
+
+
+  <!-- Test 'by' animation. -->
+
+  <text transform="translate(120, 20)"
+        rotate="10 20 30">DEF
+
+    <!-- At 5s the animVal should be "110 120 130". -->
+    <animate attributeName="rotate"
+             calcMode="linear"
+             begin="0s" dur="15s"
+             by="300 300 300"
+             fill="freeze"/>
+
+  </text>
+
+
+  <!-- Test calcMode="paced". -->
+
+  <text transform="translate(220, 20)">GHI
+
+    <!-- At 5s the animVal should be "110 120 130". -->
+    <animate attributeName="rotate"
+             calcMode="paced"
+             begin="0s" dur="15s"
+             values="10 20 30; 210 220 230; 310 320 330"
+             fill="freeze"/>
+
+  </text>
+
+
+  <!-- Test calcMode="discrete". -->
+
+  <text transform="translate(320, 20)" rotate="10 20 30">JKL
+
+    <!-- The value should be "310 320 330" at 3s. -->
+    <animate attributeName="rotate"
+             calcMode="discrete"
+             begin="0s" dur="6s"
+             to="310 320 330"
+             fill="freeze"/>
+
+  </text>
+
+</svg>

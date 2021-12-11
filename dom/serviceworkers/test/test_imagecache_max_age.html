@@ -1,0 +1,71 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that the image cache respects a synthesized image's Cache headers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+<iframe></iframe>
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var iframe;
+  var framesLoaded = 0;
+  function runTest() {
+    iframe = document.querySelector("iframe");
+    iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/register.html";
+    window.onmessage = function(e) {
+      if (e.data.status == "ok") {
+        ok(e.data.result, e.data.message);
+      } else if (e.data.status == "registrationdone") {
+        iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/index.html";
+      } else if (e.data.status == "result") {
+        switch (++framesLoaded) {
+        case 1:
+          is(e.data.url, "image-20px.png", "Correct url expected");
+          is(e.data.url2, "image-20px.png", "Correct url expected");
+          is(e.data.width, 20, "Correct width expected");
+          is(e.data.width2, 20, "Correct width expected");
+          // Wait for 100ms so that the image gets expired.
+          setTimeout(function() {
+            iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/index.html?new"
+          }, 100);
+          break;
+        case 2:
+          is(e.data.url, "image-40px.png", "Correct url expected");
+          is(e.data.url2, "image-40px.png", "Correct url expected");
+          is(e.data.width, 40, "Correct width expected");
+          is(e.data.width2, 40, "Correct width expected");
+          iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/unregister.html";
+          break;
+        default:
+          ok(false, "This should never happen");
+        }
+      } else if (e.data.status == "unregistrationdone") {
+        window.onmessage = null;
+        SimpleTest.finish();
+      }
+    };
+  }
+
+  SimpleTest.requestFlakyTimeout("This test needs to simulate the passing of time");
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ]}, runTest);
+  };
+</script>
+</pre>
+</body>
+</html>

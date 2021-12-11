@@ -1,0 +1,280 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<panel id="widget-overflow"
+       class="panel-no-padding"
+       role="group"
+       type="arrow"
+       noautofocus="true"
+       position="bottomcenter topright"
+       hidden="true">
+  <panelmultiview mainViewId="widget-overflow-mainView">
+    <panelview id="widget-overflow-mainView"
+               context="toolbar-context-menu">
+      <vbox class="panel-subview-body">
+        <vbox id="widget-overflow-list" class="widget-overflow-list"
+              overflowfortoolbar="nav-bar"/>
+        <toolbarseparator id="widget-overflow-fixed-separator" hidden="true"/>
+        <vbox id="widget-overflow-fixed-list" class="widget-overflow-list" hidden="true" />
+      </vbox>
+      <toolbarseparator />
+      <toolbarbutton command="cmd_CustomizeToolbars"
+                      id="overflowMenu-customize-button"
+                      class="subviewbutton panel-subview-footer-button"
+                      data-l10n-id="toolbar-overflow-customize-button"/>
+    </panelview>
+  </panelmultiview>
+  <!-- This menu is here because not having it in the menu in which it's used flickers
+       when hover styles overlap. See https://bugzilla.mozilla.org/show_bug.cgi?id=1378427 .
+       -->
+  <menupopup id="customizationPanelItemContextMenu"
+             onpopupshowing="gCustomizeMode.onPanelContextMenuShowing(event); ToolbarContextMenu.updateExtension(this)">
+    <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
+              data-lazy-l10n-id="toolbar-context-menu-manage-extension"
+              contexttype="toolbaritem"
+              class="customize-context-manageExtension"/>
+    <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
+              data-lazy-l10n-id="toolbar-context-menu-remove-extension"
+              contexttype="toolbaritem"
+              class="customize-context-removeExtension"/>
+    <menuitem oncommand="ToolbarContextMenu.reportExtensionForContextAction(this.parentElement, 'toolbar_context_menu')"
+              data-lazy-l10n-id="toolbar-context-menu-report-extension"
+              contexttype="toolbaritem"
+              class="customize-context-reportExtension"/>
+    <menuseparator/>
+    <menuitem oncommand="gCustomizeMode.addToPanel(this.parentNode.triggerNode, 'panelitem-context')"
+              id="customizationPanelItemContextMenuPin"
+              data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
+              closemenu="single"
+              class="customize-context-moveToPanel"/>
+    <menuitem oncommand="gCustomizeMode.addToToolbar(this.parentNode.triggerNode, 'panelitem-context')"
+              id="customizationPanelItemContextMenuUnpin"
+              closemenu="single"
+              class="customize-context-moveToToolbar"
+              data-l10n-id="customize-menu-unpin-from-overflowmenu"/>
+    <menuitem oncommand="gCustomizeMode.removeFromArea(this.parentNode.triggerNode, 'panelitem-context')"
+              closemenu="single"
+              class="customize-context-removeFromPanel"
+              data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"/>
+    <menuseparator/>
+    <menuitem command="cmd_CustomizeToolbars"
+              class="viewCustomizeToolbar"
+              data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar"/>
+  </menupopup>
+</panel>
+
+<html:template id="panicButtonNotificationTemplate">
+  <panel id="panic-button-success-notification"
+         type="arrow"
+         position="bottomcenter topright"
+         hidden="true"
+         role="alert"
+         orient="vertical">
+    <hbox id="panic-button-success-header">
+      <image id="panic-button-success-icon" alt=""/>
+      <vbox>
+        <description data-l10n-id="panic-button-thankyou-msg1"></description>
+        <description data-l10n-id="panic-button-thankyou-msg2"></description>
+      </vbox>
+    </hbox>
+    <button id="panic-button-success-closebutton"
+            data-l10n-id="panic-button-thankyou-button"
+            oncommand="PanicButtonNotifier.close()"/>
+  </panel>
+</html:template>
+
+<html:template id="appMenuNotificationTemplate">
+  <panel id="appMenu-notification-popup"
+         class="popup-notification-panel panel-no-padding"
+         type="arrow"
+         position="after_start"
+         flip="slide"
+         orient="vertical"
+         noautofocus="true"
+         noautohide="true"
+         nopreventnavboxhide="true"
+         role="alert">
+    <popupnotification id="appMenu-update-available-notification"
+                       popupid="update-available"
+                       data-lazy-l10n-id="appmenu-update-available2"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hasicon="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-available-notification-content" orient="vertical">
+        <description id="update-available-description" data-lazy-l10n-id="appmenu-update-available-message2"></description>
+      </popupnotificationcontent>
+    </popupnotification>
+
+    <popupnotification id="appMenu-update-manual-notification"
+                       popupid="update-manual"
+                       data-lazy-l10n-id="appmenu-update-manual2"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hasicon="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-manual-notification-content" orient="vertical">
+        <description id="update-manual-description" data-lazy-l10n-id="appmenu-update-manual-message2"></description>
+      </popupnotificationcontent>
+    </popupnotification>
+
+    <popupnotification id="appMenu-update-unsupported-notification"
+                       popupid="update-unsupported"
+                       data-lazy-l10n-id="appmenu-update-unsupported2"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hasicon="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-unsupported-notification-content" orient="vertical">
+        <description id="update-unsupported-description" data-lazy-l10n-id="appmenu-update-unsupported-message2"></description>
+      </popupnotificationcontent>
+    </popupnotification>
+
+    <popupnotification id="appMenu-update-restart-notification"
+                       popupid="update-restart"
+                       data-lazy-l10n-id="appmenu-update-restart2"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hasicon="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-restart-notification-content" orient="vertical">
+        <description id="update-restart-description" data-lazy-l10n-id="appmenu-update-restart-message2"></description>
+      </popupnotificationcontent>
+    </popupnotification>
+
+    <popupnotification id="appMenu-update-other-instance-notification"
+                       popupid="update-other-instance"
+                       data-lazy-l10n-id="appmenu-update-other-instance"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hasicon="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-other-instance-notification-content" orient="vertical">
+        <description id="update-other-instance-description" data-lazy-l10n-id="appmenu-update-other-instance-message"></description>
+      </popupnotificationcontent>
+    </popupnotification>
+
+    <popupnotification id="appMenu-addon-installed-notification"
+                       popupid="addon-installed"
+                       closebuttonhidden="true"
+                       secondarybuttonhidden="true"
+                       data-lazy-l10n-id="appmenu-addon-private-browsing-installed2"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hidden="true">
+      <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
+        <description id="addon-install-description" data-lazy-l10n-id="appmenu-addon-post-install-message3"/>
+        <checkbox id="addon-incognito-checkbox"
+                  data-lazy-l10n-id="appmenu-addon-post-install-incognito-checkbox"/>
+      </popupnotificationcontent>
+    </popupnotification>
+  </panel>
+</html:template>
+
+<html:template id="customModeWrapper">
+  <menupopup id="customizationPaletteItemContextMenu"
+             onpopupshowing="gCustomizeMode.onPaletteContextMenuShowing(event)">
+    <menuitem oncommand="gCustomizeMode.addToToolbar(this.parentNode.triggerNode, 'palette-context')"
+              class="customize-context-addToToolbar"
+              data-l10n-id="customize-menu-add-to-toolbar"/>
+    <menuitem oncommand="gCustomizeMode.addToPanel(this.parentNode.triggerNode, 'palette-context')"
+              class="customize-context-addToPanel"
+              data-l10n-id="customize-menu-add-to-overflowmenu"/>
+  </menupopup>
+
+  <panel id="downloads-button-autohide-panel"
+         role="group"
+         type="arrow"
+         onpopupshown="gCustomizeMode._downloadPanelAutoHideTimeout = setTimeout(() => event.target.hidePopup(), 4000);"
+         onmouseover="clearTimeout(gCustomizeMode._downloadPanelAutoHideTimeout);"
+         onmouseout="gCustomizeMode._downloadPanelAutoHideTimeout = setTimeout(() => event.target.hidePopup(), 2000);"
+         onpopuphidden="clearTimeout(gCustomizeMode._downloadPanelAutoHideTimeout);"
+         >
+    <checkbox id="downloads-button-autohide-checkbox"
+              data-l10n-id="customize-mode-downloads-button-autohide" checked="true"
+              oncommand="gCustomizeMode.onDownloadsAutoHideChange(event)"/>
+  </panel>
+</html:template>
+
+<panel id="appMenu-popup"
+       class="cui-widget-panel panel-no-padding"
+       role="group"
+       type="arrow"
+       hidden="true"
+       flip="slide"
+       position="bottomcenter topright"
+       noautofocus="true">
+  <panelmultiview id="appMenu-multiView" mainViewId="appMenu-protonMainView"
+                  viewCacheId="appMenu-viewCache">
+  </panelmultiview>
+</panel>
+
+<html:template id="extensionNotificationTemplate">
+  <panel id="extension-notification-panel"
+         class="popup-notification-panel panel-no-padding"
+         role="group"
+         type="arrow"
+         flip="slide"
+         position="bottomcenter topright"
+         tabspecific="true">
+    <popupnotification id="extension-new-tab-notification"
+                       class="extension-controlled-notification"
+                       popupid="extension-new-tab"
+                       hidden="true"
+                       data-lazy-l10n-id="appmenu-new-tab-controlled-changes"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       buttonhighlight="true"
+                       checkboxhidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description id="extension-new-tab-notification-description"/>
+      </popupnotificationcontent>
+    </popupnotification>
+    <popupnotification id="extension-homepage-notification"
+                       class="extension-controlled-notification"
+                       popupid="extension-homepage"
+                       hidden="true"
+                       data-lazy-l10n-id="appmenu-homepage-controlled-changes"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       buttonhighlight="true"
+                       checkboxhidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description id="extension-homepage-notification-description"/>
+      </popupnotificationcontent>
+    </popupnotification>
+    <popupnotification id="extension-tab-hide-notification"
+                       class="extension-controlled-notification"
+                       popupid="extension-tab-hide"
+                       hidden="true"
+                       data-lazy-l10n-id="appmenu-tab-hide-controlled"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description id="extension-tab-hide-notification-description"/>
+      </popupnotificationcontent>
+    </popupnotification>
+  </panel>
+</html:template>

@@ -1,0 +1,6 @@
+---
+extends: default
+
+ignore: |
+  *node_modules*
+  *bad.yml

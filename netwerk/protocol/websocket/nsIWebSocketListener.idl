@@ -1,0 +1,96 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIWebSocketListener: passed to nsIWebSocketChannel::AsyncOpen. Receives
+ * websocket traffic events as they arrive.
+ */
+[scriptable, uuid(d74c96b2-65b3-4e39-9e39-c577de5d7a73)]
+interface nsIWebSocketListener : nsISupports
+{
+    /**
+     * Called to signify the establishment of the message stream.
+     *
+     * Unlike most other networking channels (which use nsIRequestObserver
+     * instead of this class), we do not guarantee that OnStart is always
+     * called: OnStop is called without calling this function if errors occur
+     * during connection setup.  If the websocket connection is successful,
+     * OnStart will be called before any other calls to this API.
+     *
+     * @param aContext user defined context
+     */
+    [must_use] void onStart(in nsISupports aContext);
+
+    /**
+     * Called to signify the completion of the message stream.
+     * OnStop is the final notification the listener will receive and it
+     * completes the WebSocket connection: after it returns the
+     * nsIWebSocketChannel will release its reference to the listener.
+     *
+     * Note: this event can be received in error cases even if
+     * nsIWebSocketChannel::Close() has not been called.
+     *
+     * @param aContext user defined context
+     * @param aStatusCode reason for stopping (NS_OK if completed successfully)
+     */
+    [must_use] void onStop(in nsISupports aContext,
+                           in nsresult aStatusCode);
+
+    /**
+     * Called to deliver text message.
+     *
+     * @param aContext user defined context
+     * @param aMsg the message data
+     */
+    [must_use] void onMessageAvailable(in nsISupports aContext,
+                                       in AUTF8String aMsg);
+
+    /**
+     * Called to deliver binary message.
+     *
+     * @param aContext user defined context
+     * @param aMsg the message data
+     */
+    [must_use] void onBinaryMessageAvailable(in nsISupports aContext,
+                                             in ACString aMsg);
+
+    /**
+     * Called to acknowledge message sent via sendMsg() or sendBinaryMsg.
+     *
+     * @param aContext user defined context
+     * @param aSize number of bytes placed in OS send buffer
+     */
+    [must_use] void onAcknowledge(in nsISupports aContext, in uint32_t aSize);
+
+    /**
+     * Called to inform receipt of WebSocket Close message from server.
+     * In the case of errors onStop() can be called without ever
+     * receiving server close.
+     *
+     * No additional messages through onMessageAvailable(),
+     * onBinaryMessageAvailable() or onAcknowledge() will be delievered
+     * to the listener after onServerClose(), though outgoing messages can still
+     * be sent through the nsIWebSocketChannel connection.
+     *
+     * @param aContext user defined context
+     * @param aCode the websocket closing handshake close code.
+     * @param aReason the websocket closing handshake close reason
+     */
+    [must_use] void onServerClose(in nsISupports aContext,
+                                  in unsigned short aCode,
+                                  in AUTF8String aReason);
+
+    /**
+     * Called to inform an error is happened. The connection will be closed
+     * when this is called.
+     */
+    [must_use] void OnError();
+
+};
+
+

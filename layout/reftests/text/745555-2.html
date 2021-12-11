@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>Bug 745555 - preformatted tabs/newlines with uppercased es-zet</title>
+<style type="text/css">
+pre {
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+<pre>
+foo	ßar	baß
+	foobar
+the	quick	brown	fox	jumpß
+</pre>
+</body>
+</html>

@@ -1,0 +1,23 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1091242",
+    title: "Multistream: Two audio streams"
+  });
+
+  runNetworkTest(function (options) {
+    const test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}, {audio: true}],
+                             [{audio: true}, {audio: true}]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

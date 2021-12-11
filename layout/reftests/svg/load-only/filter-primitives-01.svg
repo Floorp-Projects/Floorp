@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait">
+  <script>
+
+function test(e) {
+  var root = document.documentElement;
+  var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  document.getElementById("feMerge").appendChild(rect);
+  root.removeAttribute("class")
+}
+
+window.addEventListener("MozReftestInvalidate", test, false); 
+
+  </script>
+  <filter id="filter">
+    <feMerge id="feMerge"></feMerge>
+  </filter>
+</svg>
+

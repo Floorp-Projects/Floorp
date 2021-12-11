@@ -1,0 +1,17 @@
+<!doctype html>
+<title>::selection should use native colors in high contrast mode</title>
+<style>
+::selection {
+  background: purple;
+  color: blue;
+}
+</style>
+<p>
+  Some selected text
+</p>
+<script>
+getSelection().removeAllRanges();
+let r = document.createRange();
+r.selectNode(document.documentElement);
+getSelection().addRange(r);
+</script>

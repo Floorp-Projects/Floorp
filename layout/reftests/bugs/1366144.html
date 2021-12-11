@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<style>
+  div::after { color: green }
+  div.foo::after { content: "Bar" }
+</style>
+<div></div>
+<script>
+  onload = function() {
+    document.querySelector('div').classList.add('foo');
+  }
+</script>

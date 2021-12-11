@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Pause, seek to middle of animation, and then seek to exactly 1 duration
+    // before the animation begins (to make sure animation effects are cleared)
+    var svg = document.documentElement;
+    svg.pauseAnimations();
+    svg.setCurrentTime(3);
+    svg.setCurrentTime(0);
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="15" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="100" begin="2s" dur="2s"/>
+  </rect>
+</svg>

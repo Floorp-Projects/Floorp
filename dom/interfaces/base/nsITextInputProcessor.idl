@@ -1,0 +1,674 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindow;
+interface nsITextInputProcessorCallback;
+
+webidl Event;
+
+/**
+ * An nsITextInputProcessor instance is associated with a top level widget which
+ * handles native IME.  It's associated by calling beginInputTransaction() or
+ * beginInputTransactionForTests().  While an instance has composition, nobody
+ * can steal the rights to make composition on the top level widget.  In other
+ * words, if another instance is composing on a top level widget, either
+ * beginInputTransaction() or beginInputTransactionForTests() returns false
+ * (i.e., not throws an exception).
+ *
+ * NOTE: See nsITextInputProcessorCallback.idl for examples of |callback| in
+ *       following examples,
+ *
+ * Example #1 JS-IME can start composition like this:
+ *
+ *   var TIP = Components.classes["@mozilla.org/text-input-processor;1"].
+ *               createInstance(Components.interfaces.nsITextInputProcessor);
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to make composition
+ *   }
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   // Set new composition string first
+ *   TIP.setPendingCompositionString("some-words-are-inputted");
+ *   // Set clause information.
+ *   TIP.appendClauseToPendingComposition(23, TIP.ATTR_RAW_CLAUSE);
+ *   // Set caret position, this is optional.
+ *   TIP.setCaretInPendingComposition(23);
+ *   // Flush the pending composition
+ *   if (!TIP.flushPendingComposition(keyEvent)) {
+ *     // If it returns false, it fails to start composition.
+ *     return;
+ *   }
+ *
+ * Example #2 JS-IME can separate composition string to two or more clauses:
+ *
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   // First, set composition string again
+ *   TIP.setPendingCompositionString("some-words-are-inputted");
+ *   // Then, if "are" is selected to convert, there are 3 clauses:
+ *   TIP.appendClauseToPendingComposition(11, TIP.ATTR_CONVERTED_CLAUSE);
+ *   TIP.appendClauseToPendingComposition(3,  TIP.ATTR_SELECTED_CLAUSE);
+ *   TIP.appendClauseToPendingComposition(9,  TIP.ATTR_CONVERTED_CLAUSE);
+ *   // Show caret at the beginning of the selected clause
+ *   TIP.setCaretInPendingComposition(11);
+ *   // Flush the pending composition.  Note that if there is a composition,
+ *   // flushPendingComposition() won't return false.
+ *   TIP.flushPendingComposition(keyEvent);
+ *
+ * Example #3 JS-IME can commit composition with specific string with this:
+ *
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   // First, there is a composition.
+ *   TIP.setPendingCompositionString("some-words-directly-inputted");
+ *   TIP.appendClauseToPendingComposition(28, TIP.ATTR_RAW_CLAUSE);
+ *   TIP.flushPendingComposition(keyEvent1);
+ *   // Create a keyboard event if the following commit composition is caused
+ *   // by a key event.
+ *   var keyEvent2 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   // This is useful when user selects a commit string from candidate list UI
+ *   // which is provided by JS-IME.
+ *   TIP.commitCompositionWith("selected-words-from-candidate-list", keyEvent2);
+ *
+ * Example #4 JS-IME can commit composition with the last composition string
+ *            without specifying commit string:
+ *
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   // First, there is a composition.
+ *   TIP.setPendingCompositionString("some-words-will-be-commited");
+ *   TIP.appendClauseToPendingComposition(27, TIP.ATTR_RAW_CLAUSE);
+ *   TIP.flushPendingComposition(keyEvent1);
+ *   // Create a keyboard event if the following commit is caused by a key
+ *   // event.
+ *   var keyEvent2 =
+ *     new KeyboardEvent("", { key: "Enter", code: "Enter",
+                               keyCode: KeyboardEvent.DOM_VK_RETURN });
+ *   // This is useful when user just type Enter key.
+ *   TIP.commitComposition(keyEvent2);
+ *
+ * Example #5 JS-IME can cancel composition with this:
+ *
+ *   // Create a keyboard event if the following composition change is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   // First, there is a composition.
+ *   TIP.setPendingCompositionString("some-words-will-be-canceled");
+ *   TIP.appendClauseToPendingComposition(27, TIP.ATTR_RAW_CLAUSE);
+ *   TIP.flushPendingComposition(keyEvent1);
+ *   // Create a keyboard event if the following canceling composition is
+ *   // caused by a key event.
+ *   var keyEvent2 =
+ *     new KeyboardEvent("", { key: "Escape", code: "Escape",
+                               keyCode: KeyboardEvent.DOM_VK_ESCAPE });
+ *   // This is useful when user doesn't want to commit the composition.
+ *   // FYI: This is same as TIP.commitCompositionWith("") for now.
+ *   TIP.cancelComposition(keyEvent2);
+ *
+ * Example #6 JS-IME can insert text only with commitCompositionWith():
+ *
+ *   // Create a keyboard event if the following inserting text is caused by a
+ *   // key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to make composition
+ *   }
+ *   TIP.commitCompositionWith("Some words", keyEvent1);
+ *
+ * Example #7 JS-IME can start composition explicitly:
+ *
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to make composition
+ *   }
+ *   // Create a keyboard event if the following starting composition is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
+ *   // If JS-IME don't want to show composing string in the focused editor,
+ *   // JS-IME can dispatch only compositionstart event with this.
+ *   if (!TIP.startComposition(keyEvent1)) {
+ *     // Failed to start composition.
+ *     return;
+ *   }
+ *   // And when user selects a result from UI of JS-IME, commit with it.
+ *   // Then, the key event should be null.
+ *   TIP.commitCompositionWith("selected-words");
+ *
+ * Example #8 JS-IME or JS-Keyboard should dispatch key events even during
+ *            composition (non-printable key case):
+ *
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   // You don't need to specify .keyCode value if it's non-printable key
+ *   // because it can be computed from .key value.
+ *   // If you specify non-zero value to .keyCode, it'll be used.
+ *   var keyEvent = new KeyboardEvent("", { code: "Enter", key: "Enter" });
+ *   if (TIP.keydown(keyEvent)) {
+ *     // Handle its default action
+ *   }
+ *
+ *   // Even if keydown event was consumed, keyup event should be dispatched.
+ *   if (TIP.keyup(keyEvent)) {
+ *     // Handle its default action
+ *   }
+ *
+ * Example #9 JS-IME or JS-Keyboard should dispatch key events even during
+ *            composition (printable key case):
+ *
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   // You need to specify .keyCode value if it's printable key.
+ *   // The rules of .keyCode value is documented in MDN:
+ *   //   https://developer.mozilla.org/docs/Web/API/KeyboardEvent.keyCode
+ *   //
+ *   //   #1 If the key location is DOM_KEY_LOCATION_NUMPAD and NumLock is
+ *   //      active, you should specify DOM_VK_NUMPAD[0-9], DOM_VK_MULTIPLY,
+ *   //      DOM_VK_ADD, DOM_VK_SEPARATOR, DOM_VK_SUBTRACT, DOM_VK_DECIMAL or
+ *   //      DOM_VK_DIVIDE.
+ *   //   #2 If the key is Spacebar, use DOM_VK_SPACE.
+ *   //
+ *   //   Following rules are printable keys in DOM_KEY_LOCATION_STANDARD.
+ *   //   .keyCode value for a key shouldn't be changed by modifier states:
+ *   //     #1 If the key can input [0-9] with any modifier state (except
+ *   //        NumLock state), the value should be DOM_VK_[0-9].
+ *   //     #2 Otherwise, and if the key inputs an ASCII alphabet with no
+ *   //        active modifiers, use DOM_VK_[A-Z].
+ *   //     #3 Otherwise, and if the key inputs an ASCII alphabet with no
+ *   //        active modifiers except Shift key state, use DOM_VK_[A-Z] for
+ *   //        the shifted character.  E.g., if a key causes non-alphabet
+ *   //        character such as "@" or a Unicode character without Shift key
+ *   //        but "a" is inputted when Shift key is pressed, the proper
+ *   //        keyCode is DOM_VK_A.
+ *   //     #4 Otherwise, and if the key inputs another ASCII character with
+ *   //        no modifier states, use a proper value for the character.  E.g.,
+ *   //        if the key inputs "*" without Shift key state, it should be
+ *   //        DOM_VK_ASTERISK.
+ *   //     #5 Otherwise, and if the key inputs another ASCII character with
+ *   //        Shift key state, use a proper value for the character.  E.g.,
+ *   //        if a key causes a Unicode character without Shift key but "&"
+ *   //        is inputted when Shift key is pressed, the proper keyCode is
+ *   //        DOM_VK_AMPERSAND.
+ *   //     See above document for the other cases.
+ *   //
+ *   // NOTE: If the software keyboard is 10-key like simple phone,
+ *   //       We don't have common rules to decide its .keyCode value.
+ *   //       Above rules should be used when the JS-Keyboard emulates PC
+ *   //       keyboard.
+ *   // .key value should be inputting character by the key with current
+ *   // modifier state.
+ *   // .code value should be empty string if the JS-Keyboard isn't emulating
+ *   // physical keyboard.  Otherwise, use same value with physical keyboard's
+ *   // same key.
+ *   var keyEvent = new KeyboardEvent("", { code: "KeyA", key: "a",
+ *                                          keyCode: KeyboardEvent.DOM_VK_A });
+ *   if (TIP.keydown(keyEvent)) {
+ *     // Handle its default action
+ *   }
+ *
+ *   // Even if keydown event was consumed, keyup event should be dispatched.
+ *   if (TIP.keyup(keyEvent)) {
+ *     // Handle its default action
+ *   }
+ *
+ * Example #10 JS-Keyboard doesn't need to initialize modifier states at
+ *             calling either keydown() or keyup().
+ *
+ *   // Neither beginInputTransaction() nor beginInputTransactionForTests()
+ *   // resets modifier state.
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   var leftShift = new KeyboardEvent("", { code: "ShiftLeft", key: "Shift" });
+ *
+ *   // This causes following key events will be shifted automatically.
+ *   TIP.keydown(leftShift);
+ *
+ *   var rightShift =
+ *     new KeyboardEvent("", { code: "ShiftRight", key: "Shift" });
+ *
+ *   TIP.keydown(rightShift);
+ *
+ *   // keyup of one of shift key doesn't cause inactivating "Shift" state.
+ *   TIP.keyup(rightShift);
+ *
+ *   // This causes inactivating "Shift" state completely.
+ *   TIP.keyup(leftShift);
+ */
+
+[scriptable, builtinclass, uuid(47ae2181-2e98-4d58-84a2-b8db6764ce9a)]
+interface nsITextInputProcessor : nsISupports
+{
+  /**
+   * Returns true if this instance was dispatched compositionstart but hasn't
+   * dispatched compositionend yet.
+   */
+  readonly attribute boolean hasComposition;
+
+  /**
+   * When you create an instance, you must call beginInputTransaction() first
+   * except when you created the instance for automated tests.
+   *
+   * @param aWindow         A DOM window.  The instance will look for a top
+   *                        level widget from this.
+   * @param aCallback       Callback interface which handles requests to
+   *                        IME and notifications to IME.  This must not be
+   *                        null.
+   * @return                If somebody uses internal text input service for a
+   *                        composition, this returns false.  Otherwise, returns
+   *                        true.  I.e., only your TIP can create composition
+   *                        when this returns true.  If this returns false,
+   *                        your TIP should wait next chance.
+   */
+  boolean beginInputTransaction(in mozIDOMWindow aWindow,
+                                in nsITextInputProcessorCallback aCallback);
+
+  /**
+   * When you create an instance for automated test, you must call
+   * beginInputTransaction(), first.  See beginInputTransaction() for more
+   * detail of this.
+   * Note that aCallback can be null.  If it's null, nsITextInputProcessor
+   * implementation will handle them automatically.
+   */
+  [optional_argc] boolean
+    beginInputTransactionForTests(
+      in mozIDOMWindow aWindow,
+      [optional] in nsITextInputProcessorCallback aCallback);
+
+  /**
+   * startComposition() dispatches compositionstart event explicitly.
+   * IME does NOT need to call this typically since compositionstart event
+   * is automatically dispatched by sendPendingComposition() if
+   * compositionstart event hasn't been dispatched yet.  If this is called
+   * when compositionstart has already been dispatched, this throws an
+   * exception.
+   *
+   * @param aKeyboardEvent  Key event which causes starting composition.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
+   * @param aKeyFlags       See KEY_* constants.
+   * @return                Returns true if composition starts normally.
+   *                        Otherwise, returns false because it might be
+   *                        canceled by the web application.
+   */
+  [can_run_script, optional_argc]
+    boolean startComposition([optional] in Event aKeyboardEvent,
+                             [optional] in unsigned long aKeyFlags);
+
+  /**
+   * Set new composition string.  Pending composition will be flushed by
+   * a call of flushPendingComposition().  However, if the new composition
+   * string isn't empty, you need to call appendClauseToPendingComposition() to
+   * fill all characters of aString with one or more clauses before flushing.
+   * Note that if you need to commit or cancel composition, use
+   * commitComposition(), commitCompositionWith() or cancelComposition().
+   */
+  void setPendingCompositionString(in AString aString);
+
+  // ATTR_RAW_CLAUSE means that the clause hasn't been selected nor converted
+  // yet.
+  const unsigned long ATTR_RAW_CLAUSE           = 0x02;
+  // ATTR_SELECTED_RAW_CLAUSE means that the clause hasn't been converted yet
+  // but is selected for converting to the other string.
+  const unsigned long ATTR_SELECTED_RAW_CLAUSE  = 0x03;
+  // ATTR_CONVERTED_CLAUSE means that the clause has already been converted but
+  // is not selected.  This does NOT mean that this clause isn't modifiable.
+  const unsigned long ATTR_CONVERTED_CLAUSE     = 0x04;
+  // ATTR_SELECTED_CLAUSE means that the clause has already been converted and
+  // is selected.  In other words, the clause is being converted.
+  const unsigned long ATTR_SELECTED_CLAUSE      = 0x05;
+
+  /**
+   * Append a clause to the pending composition.
+   *
+   * If you need to fill the pending composition string with a clause, you
+   * should call this once.  For example:
+   *   appendClauseToPendingComposition(compositionString.length,
+   *                                    ATTR_RAW_CLAUSE);
+   * is enough.  If you need to separate the pending composition string to
+   * multiple clauses, you need to call this multiple times. For example,
+   * if your pending composition string has three clauses and the second clause
+   * is being converted:
+   *  appendClauseToPendingComposition(firstClauseLength,
+   *                                   ATTR_CONVERTED_CLAUSE);
+   *  appendClauseToPendingComposition(secondClauseLength,
+   *                                   ATTR_SELECTED_CLAUSE);
+   *  appendClauseToPendingComposition(thirdClauseLength,
+   *                                   ATTR_CONVERTED_CLAUSE);
+   * Note that if sum of aLength mismatches length of the pending composition
+   * string, flushPendingComposition() will throw an exception.  I.e.,
+   * |firstClauseLength + secondClauseLength + thirdClauseLength| must be
+   * same as the length of pending composition string.
+   *
+   * TODO: Should be able to specify custom clause style.
+   *
+   * @param aLength         Length of the clause.
+   * @param aAttribute      One of ATTR_* constants.
+   */
+  void appendClauseToPendingComposition(in unsigned long aLength,
+                                        in unsigned long aAttribute);
+
+  /**
+   * Set caret offset in the pending composition string.  If you don't need to
+   * show a caret, you don't need to call this.
+   *
+   * @param aOffset         Caret offset in the pending composition string.
+   *                        This must be between 0 and length of the pending
+   *                        composition string.
+   */
+  void setCaretInPendingComposition(in unsigned long aOffset);
+
+  /**
+   * flushPendingComposition() must be called after
+   * setPendingCompositionString() and appendClauseToPendingComposition()
+   * (setCaretInPendingComposition() is optional) are called.
+   *
+   * Note that compositionstart will be automatically dispatched if this is
+   * called when there is no composition.
+   *
+   * Note that if sum of lengths of appended clauses are not same as composition
+   * string or caret offset is larger than the composition string length, this
+   * throws an exception.
+   *
+   * @param aKeyboardEvent  Key event which causes the composition string.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
+   * @param aKeyFlags       See KEY_* constants.
+   * @return                Returns true if there is a composition already or
+   *                        starting composition automatically.
+   *                        Otherwise, i.e., if it cannot start composition
+   *                        automatically, e.g., canceled by web apps, returns
+   *                        false.
+   */
+  [can_run_script, optional_argc]
+    boolean flushPendingComposition(
+      [optional] in Event aKeyboardEvent,
+      [optional] in unsigned long aKeyFlags);
+
+  /**
+   * commitComposition() will commit composition with the last composition
+   * string.  If there is no composition, this will throw an exception.
+   *
+   * @param aKeyboardEvent  Key event which causes the commit composition.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
+   * @param aKeyFlags       See KEY_* constants.
+   */
+  [can_run_script, optional_argc]
+    void commitComposition([optional] in Event aKeyboardEvent,
+                           [optional] in unsigned long aKeyFlags);
+
+  /**
+   * commitCompositionWith() will commit composition with the specific string.
+   * If there is no composition, this will start composition and commit it
+   * with the specified string.
+   *
+   * @param aCommitString   The string to be committed.
+   * @param aKeyboardEvent  Key event which causes the commit composition.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
+   * @param aKeyFlags       See KEY_* constants.
+   * @return                Returns true if there is a composition already or
+   *                        starting composition automatically.
+   *                        Otherwise, i.e., if it cannot start composition
+   *                        automatically, e.g., canceled by web apps, returns
+   *                        false.
+   */
+  [can_run_script, optional_argc]
+    boolean commitCompositionWith(in AString aCommitString,
+                                  [optional] in Event aKeyboardEvent,
+                                  [optional] in unsigned long aKeyFlags);
+
+  /**
+   * cancelComposition() will cancel composition.  This is for now the same as
+   * calling commitComposition("").  However, in the future, this might work
+   * better.  If your IME needs to cancel composition, use this instead of
+   * commitComposition().
+   *
+   * Note that if you tries to cancel composition when there is no composition,
+   * this throws an exception.
+   *
+   * @param aKeyboardEvent  Key event which causes the canceling composition.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
+   * @param aKeyFlags       See KEY_* constants.
+   */
+  [can_run_script, optional_argc]
+    void cancelComposition([optional] in Event aKeyboardEvent,
+                           [optional] in unsigned long aKeyFlags);
+
+  // Specifying KEY_DEFAULT_PREVENTED can dispatch key events whose
+  // defaultPrevented are true.  Note that if this is specified, keypress event
+  // won't be fired.
+  const unsigned long KEY_DEFAULT_PREVENTED                        = 0x00000001;
+  // If KEY_NON_PRINTABLE_KEY is specified and the .key value isn't valid
+  // key name, the methods will throws an exception.  In other words, this
+  // flag prevents to dispatch key events with wrong key values and to cause
+  // such key events input the key values as text.
+  const unsigned long KEY_NON_PRINTABLE_KEY                        = 0x00000002;
+  // If KEY_FORCE_PRINTABLE_KEY is specified and even if the .key value is a
+  // registered key name, it's treated as inputting text value.
+  const unsigned long KEY_FORCE_PRINTABLE_KEY                      = 0x00000004;
+  // If KEY_KEEP_KEY_LOCATION_STANDARD is specified when its .location is not
+  // initialized or initialized with 0, the value isn't computed with .code
+  // value.  Note that if .location is initialized with non-zero value,
+  // this flag causes throwing an exception.
+  // NOTE: This is not recommended to use except for tests.
+  const unsigned long KEY_KEEP_KEY_LOCATION_STANDARD               = 0x00000008;
+  // If KEY_KEEP_KEYCODE_ZERO is specified when its .keyCode is not initialized
+  // or initialized with 0, the value isn't computed with .key value when it
+  // represents non-printable key.  Note that if .keyCode is initialized with
+  // non-zero value, this flag causes throwing an exception.
+  const unsigned long KEY_KEEP_KEYCODE_ZERO                        = 0x00000010;
+  // If KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT is specified when the key event is
+  // a modifier key's, keydown() and keyup() only modifies its modifier state
+  // without dispatching key events.  This is useful for testing odd behavior
+  // or emulating legacy API behavior.
+  const unsigned long KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT         = 0x00000020;
+  // If KEY_DONT_MARK_KEYDOWN_AS_PROCESSED is specified, key value and keyCode
+  // value of keydown event are not changed to "Process" and DOM_VK_PROCESSKEY.
+  const unsigned long KEY_DONT_MARK_KEYDOWN_AS_PROCESSED           = 0x00000040;
+  // If KEY_MARK_KEYUP_AS_PROCESSED is specified, key value and keyCode value
+  // of keyup event are changed to "Process" and DOM_VK_PROCESSKEY.
+  const unsigned long KEY_MARK_KEYUP_AS_PROCESSED                  = 0x00000080;
+
+  // These values can be used to do bitwise operation with the return value of
+  // the keydown() method.
+  const unsigned long KEYEVENT_NOT_CONSUMED                        = 0x00000000;
+  const unsigned long KEYDOWN_IS_CONSUMED                          = 0x00000001;
+  const unsigned long KEYPRESS_IS_CONSUMED                         = 0x00000002;
+
+  /**
+   * keydown() may dispatch a keydown event and some keypress events if
+   * preceding keydown event isn't consumed and they are necessary.
+   * Note that even if this is called during composition, key events may not
+   * be dispatched.  In this case, this returns false.
+   *
+   * You should initialize at least .key value and .code value of the event.
+   * Additionally, if you try to emulate a printable key, .keyCode value should
+   * be specified if there is proper key value.  See the comment of above
+   * example how to decide .keyCode value of a printable key.  On the other
+   * hand, .keyCode value is automatically computed when you try to emulate
+   * non-printable key.  However, if you try to emulate physical keyboard of
+   * desktop platform, you need to specify proper value explicitly because
+   * the mapping table of this API isn't enough to emulate the behavior of
+   * Gecko for desktop platforms.
+   *
+   * NOTE: Even if this has composition, JS-Keyboard should call keydown() and
+   *       keyup().  Although, with the default preferences and normal
+   *       conditions, DOM key events won't be fired during composition.
+   *       However, they MAY be dispatched for some reasons, e.g., the web
+   *       content listens only key events, or if the standard DOM event spec
+   *       will be changed in the future.
+   *
+   * @param aKeyboardEvent  Must be a keyboard event which should be dispatched
+   *                        as a keydown event and keypress events.
+   *                        #1 Note that you don't need to set charCode value
+   *                        because it's computed from its key value.
+   *                        #2 If code value is set properly and location value
+   *                        isn't specified (i.e., 0), the location value will
+   *                        be guessed from the code value.
+   *                        #3 Non-defined code names are not allowed. If your
+   *                        key isn't registered, file a bug. If your key isn't
+   *                        defined by any standards, use "" (empty string).
+   *                        #4 .keyCode is guessed from .key value if the key
+   *                        name is registered and .keyCode isn't initialized.
+   *                        #5 modifier key states, e.g., .shiftKey, are
+   *                        ignored.  Instead, modifier states are managed by
+   *                        each instance and set automatically.
+   * @param aKeyFlags       Special flags.  The values can be some of KEY_*
+   *                        constants.
+   * @return                KEYEVENT_NOT_CONSUMED, if the keydown event nor
+   *                        the following keypress event(s) are consumed.
+   *                        KEYDOWN_IS_CONSUMED, if the keydown event is
+   *                        consumed. No keypress event will be dispatched in
+   *                        this case.
+   *                        KEYPRESS_IS_CONSUMED, if the keypress event(s) is
+   *                        consumed when dispatched.
+   *                        Note that keypress event is always consumed by
+   *                        native code for the printable keys (indicating the
+   *                        default action has been taken).
+   */
+  [can_run_script, optional_argc]
+    unsigned long keydown(in Event aKeyboardEvent,
+                          [optional] in unsigned long aKeyFlags);
+
+  /**
+   * Similar to keydown(), but this dispatches only a keyup event.
+   */
+  [optional_argc]
+    boolean keyup(in Event aKeyboardEvent,
+                  [optional] in unsigned long aKeyFlags);
+
+  /**
+   * getModifierState() returns modifier state managed by this instance.
+   *
+   * @param aModifier       One of modifier key names.  This doesn't support
+   *                        virtual modifiers like "Accel".
+   * @return                true if the modifier key is active.  Otherwise,
+   *                        false.
+   */
+  boolean getModifierState(in AString aModifierKey);
+
+  /**
+   * shareModifierStateOf() makes the instance shares modifier state of
+   * another instance.  When this is called, the instance refers the modifier
+   * state of another instance.  After that, changes to either this and the
+   * other instance's modifier state is synchronized.
+   *
+   * @param aOther          Another instance which will be referred by the
+   *                        instance.  If this is null, the instance restarts
+   *                        to manage modifier state independently.
+   */
+  void shareModifierStateOf(in nsITextInputProcessor aOther);
+
+  /**
+   * Helper method to get usual |.code| value of non-printable keys.
+   *
+   * @param aKeyValue       A predefined key value such as "Enter".
+   *                        If this is not a proper non-printable key value
+   *                        or a proper key value but not in usual keyboard of
+   *                        the platform, this returns empty string.
+   * @param aLocation       The |.location| value.  This is important if
+   *                        the key may be in different location.
+   *                        E.g., Left vs. Right or Standard vs. Numpad.
+   *                        If this is undefined or null, it'll be treated
+   *                        as Standard or Left.
+   * @return                One of a code value of well-known key on usual
+   *                        keyboard on the platform, or empty string.
+   */
+  [optional_argc]
+    AString computeCodeValueOfNonPrintableKey(
+              in AString aKeyValue,
+              [optional] in jsval aLocation);
+
+  /**
+   * Helper method to guess |.code| value of a printable key which is in usual
+   * keyboard of the platform and when active keyboard layout is US-English.
+   * Note that this is not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value. Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           or Numpad. If this is undefined or null, will
+   *                           be treated as Standard.
+   * @return                   Returns empty string if there is no proper key.
+   */
+  [optional_argc]
+    AString guessCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+              in AString aKeyValue,
+              [optional] in jsval aLocation);
+
+  /**
+   * Helper method to guess |.keyCode| value of a printable key which is in
+   * usual keyboard of the platform and when active keyboard layout is
+   * US-English.
+   * Note that this is not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value.  Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           our Numpad.  If this is undefined or null,
+   *                           will be treated as Standard.
+   * @return                   Returns 0 if there is no proper key to input
+   *                           aKeyValue with US-English keyboard layout.
+   */
+  [optional_argc]
+    unsigned long guessKeyCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+                    in AString aKeyValue,
+                    [optional] in jsval aLocation);
+};
+
+%{C++
+#define TEXT_INPUT_PROCESSOR_CID \
+  { 0xcaaab47f, 0x1e31, 0x478e, \
+    { 0x89, 0x19, 0x97, 0x09, 0x04, 0xe9, 0xcb, 0x72 } }
+#define TEXT_INPUT_PROCESSOR_CONTRACTID \
+  "@mozilla.org/text-input-processor;1"
+%}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Test: Testing a horizontal flex container with box-sizing:border-box</title>
+  <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+  <meta charset="utf-8">
+  <style>
+    .container {
+      display: flex;
+      width: 110px;
+      height: 30px;
+      border: 5px solid black;
+      box-sizing: border-box;
+    }
+    .itemA {
+      flex: 1 28px;
+      background: purple;
+      border: 1px solid indigo;
+    }
+    .itemB {
+      flex: 1 48px;
+      background: teal;
+      border: 1px solid lightblue;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="itemA"></div>
+    <div class="itemB"></div>
+  </div>
+</body>
+</html>

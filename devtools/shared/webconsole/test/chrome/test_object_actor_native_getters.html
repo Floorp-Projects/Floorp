@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the native getters in object actors</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the native getters in object actors</p>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+async function startTest() {
+  removeEventListener("load", startTest);
+  const {state} = await attachConsoleToTab(["ConsoleAPI"]);
+
+  const onConsoleAPICall = state.webConsoleFront.once("consoleAPICall");
+  top.console.log("hello", document);
+  const {message} = await onConsoleAPICall;
+
+  info("checking the console API call packet");
+  checkConsoleAPICall(message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "startTest",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+    }],
+  });
+
+  info("inspecting object properties");
+  const args = message.arguments;
+  const {ownProperties, safeGetterValues} = await args[1].getPrototypeAndProperties();
+
+  const expectedProps = {
+    "location": {
+      get: {
+        type: "object",
+        class: "Function",
+        actor: /[a-z]/,
+      },
+    },
+  };
+  ok(Object.keys(ownProperties).length >= Object.keys(expectedProps).length, 
+    "number of properties");
+
+  info("check ownProperties");
+  checkObject(ownProperties, expectedProps);
+
+  info("check safeGetterValues");
+  checkObject(safeGetterValues, {
+    "title": {
+      getterValue: /native getters in object actors/,
+      getterPrototypeLevel: 2,
+    },
+    "styleSheets": {
+      getterValue: /Front for obj\//,
+      getterPrototypeLevel: 2,
+    },
+  });
+
+  await closeDebugger(state);
+  SimpleTest.finish();
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

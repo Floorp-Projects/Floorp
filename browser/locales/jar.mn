@@ -1,0 +1,53 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Note: This file should only contain locale entries. All
+# override and resource entries should go to browser/base/jar.mn to avoid
+# having to create the same entry for each locale.
+
+[localization] @AB_CD@.jar:
+  preview/ion.ftl                                  (../components/ion/content/ion.ftl)
+  preview/protections.ftl                          (../components/protections/content/protections.ftl)
+  preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
+  preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
+  preview/moreFromMozilla.ftl                      (../components/preferences/content/moreFromMozilla.ftl)
+  browser                                          (%browser/**/*.ftl)
+
+@AB_CD@.jar:
+% locale browser @AB_CD@ %locale/browser/
+# bookmarks.html is produced by LOCALIZED_GENERATED_FILES.
+    locale/browser/bookmarks.html                  (bookmarks.html)
+
+    locale/browser/accounts.properties             (%chrome/browser/accounts.properties)
+    locale/browser/browser.properties              (%chrome/browser/browser.properties)
+    locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
+    locale/browser/uiDensity.properties            (%chrome/browser/uiDensity.properties)
+    locale/browser/search.properties               (%chrome/browser/search.properties)
+    locale/browser/siteData.properties             (%chrome/browser/siteData.properties)
+    locale/browser/sitePermissions.properties      (%chrome/browser/sitePermissions.properties)
+    locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
+    locale/browser/tabbrowser.properties           (%chrome/browser/tabbrowser.properties)
+    locale/browser/taskbar.properties              (%chrome/browser/taskbar.properties)
+    locale/browser/translation.dtd                 (%chrome/browser/translation.dtd)
+    locale/browser/translation.properties          (%chrome/browser/translation.properties)
+    locale/browser/webrtcIndicator.properties      (%chrome/browser/webrtcIndicator.properties)
+    locale/browser/downloads/downloads.properties  (%chrome/browser/downloads/downloads.properties)
+    locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
+    locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
+    locale/browser/safebrowsing/safebrowsing.properties   (%chrome/browser/safebrowsing/safebrowsing.properties)
+    locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
+    locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
+% locale browser-region @AB_CD@ %locale/browser-region/
+    locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
+# the following files are browser-specific overrides
+    locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
+    locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
+
+#ifdef XPI_NAME
+# Bug 1240628, restructure how l10n repacks work with feature addons
+# This is hacky, but ensures the chrome.manifest chain is complete
+[.] chrome.jar:
+% manifest features/chrome.manifest
+#endif

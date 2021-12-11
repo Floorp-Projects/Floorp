@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reference for bug 1483499</title>
+  <style>
+    legend, .legendRef {
+      /* Here in the reference case, we explicitly specify padding, and we also
+         use a custom-styled div as the reference case for any legend element
+         that is not directly snapped into a fieldset border. */
+      background: yellow;
+      border: 1px solid brown;
+      padding: 0px 2px;
+    }
+  </style>
+</head>
+<body>
+<!-- Test: legend default styling shouldn't be affected
+     by presence of a display:contents wrapper: -->
+<fieldset>
+  <legend>DisplayContentsWrapper</legend>
+</fieldset>
+<br>
+
+<!-- Test: legend should get the same 2px of inline-axis padding, even
+     if it's not inside of a fieldset at all. -->
+<div class="legendRef">JustALegend</div>
+<br>
+
+<div class="legendRef">
+  <div class="legendRef">NestedLegend</div>
+</div>
+<br>
+
+<fieldset>
+  <legend>
+    <div class="legendRef">
+      <div class="legendRef">NestedLegendInFieldset</div>
+    </div>
+  </legend>
+</fieldset>
+
+</body>
+</html>

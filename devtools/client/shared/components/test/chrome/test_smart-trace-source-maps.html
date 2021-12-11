@@ -1,0 +1,290 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the rendering of a stack trace
+-->
+<head>
+  <meta charset="utf-8">
+  <title>StackTrace component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<script src="head.js"></script>
+<script>
+"use strict";
+
+window.onload = function() {
+  const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const SmartTrace = React.createFactory(
+    browserRequire("devtools/client/shared/components/SmartTrace"));
+  ok(SmartTrace, "Got the SmartTrace factory");
+
+  add_task(async function testHappyPath() {
+    const stacktrace = [
+      {
+        filename: "http://myfile.com/bundle.js",
+        lineNumber: 1,
+        columnNumber: 10,
+      },
+      {
+        functionName: "loadFunc",
+        filename: "http://myfile.com/bundle.js",
+        lineNumber: 2,
+      },
+    ];
+
+    let onReadyCount = 0;
+    const props = {
+      stacktrace,
+      initialRenderDelay: 2000,
+      onViewSourceInDebugger: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
+      // A mock source map service.
+      sourceMapURLService: {
+	      subscribeByLocation: function ({ line, column }, callback) {
+	        const newLine = Number(line.toString().repeat(2));
+	        // Resolve immediately.
+          callback({
+            url: "https://bugzilla.mozilla.org/original.js",
+            line: newLine,
+            column,
+          });
+          return () => {};
+	      },
+      },
+    };
+
+    const trace = ReactDOM.render(SmartTrace(props),
+      window.document.body.querySelector("#s1"));
+    await forceRender(trace);
+
+    const traceEl = ReactDOM.findDOMNode(trace);
+    ok(traceEl, "Rendered SmartTrace has an element");
+
+    const frameEls = Array.from(traceEl.querySelectorAll(".frame"));
+    ok(frameEls, "Rendered SmartTrace has frames");
+    is(frameEls.length, 2, "SmartTrace has 2 frames");
+
+    checkSmartFrameString({
+      el: frameEls[0],
+      functionName: "<anonymous>",
+      location: "original.js:11",
+      tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:11",
+    });
+
+    checkSmartFrameString({
+      el: frameEls[1],
+      functionName: "loadFunc",
+      location: "original.js:22",
+      tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:22",
+    });
+
+    is(onReadyCount, 1, "onReady was called once");
+  });
+
+  add_task(async function testSlowSourcemapService() {
+    const stacktrace = [
+      {
+        filename: "http://myfile.com/bundle.js",
+        functionName: "last",
+        lineNumber: 1,
+        columnNumber: 10,
+      },
+      {
+        filename: "http://myfile.com/bundle.js",
+        functionName: "first",
+        lineNumber: 2,
+        columnNumber: 10,
+      },
+    ];
+
+    const sourcemapTimeout = 2000;
+    const initialRenderDelay = 300;
+    let onReadyCount = 0;
+
+    const props = {
+      stacktrace,
+      initialRenderDelay,
+      onViewSourceInDebugger: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
+      // A mock source map service.
+      sourceMapURLService: {
+        subscribeByLocation: function ({ line, column }, callback) {
+          // Resolve after a while.
+          setTimeout(() => {
+            const newLine = Number(line.toString().repeat(2));
+            callback({
+              url: "http://myfile.com/react.js",
+              line: newLine,
+              column,
+            });
+          }, sourcemapTimeout)
+
+          return () => {};
+        },
+      },
+    };
+
+    const trace = ReactDOM.render(SmartTrace(props),
+      window.document.body.querySelector("#s2"));
+
+    let traceEl = ReactDOM.findDOMNode(trace);
+    ok(!traceEl, "Nothing was rendered at first");
+    is(onReadyCount, 0, "onReady isn't called if SmartTrace isn't rendered");
+
+    info("Wait for the initial delay to be over");
+    await new Promise(res => setTimeout(res, initialRenderDelay));
+
+    traceEl = ReactDOM.findDOMNode(trace);
+    ok(traceEl, "The trace was rendered");
+
+    let frameEls = Array.from(traceEl.querySelectorAll(".frame"));
+    ok(frameEls, "Rendered SmartTrace has frames");
+    is(frameEls.length, 2, "SmartTrace has 2 frames");
+
+    info("Check that the original frames are displayed after the initial delay");
+    checkSmartFrameString({
+      el: frameEls[0],
+      functionName: "last",
+      location: "http://myfile.com/bundle.js:1",
+      tooltip: "View source in Debugger → http://myfile.com/bundle.js:1",
+    });
+
+    checkSmartFrameString({
+      el: frameEls[1],
+      functionName: "first",
+      location: "http://myfile.com/bundle.js:2",
+      tooltip: "View source in Debugger → http://myfile.com/bundle.js:2",
+    });
+
+    is(onReadyCount, 1, "onReady was called once");
+
+    info("Check the the sourcemapped version is rendered after the sourcemapTimeout");
+    await waitFor(() => !!traceEl.querySelector(".group"));
+
+    frameEls = Array.from(traceEl.querySelectorAll(".frame"));
+    is(frameEls.length, 0, "SmartTrace has no frame");
+
+    const groups = Array.from(traceEl.querySelectorAll(".group"));
+    is(groups.length, 1, "SmartTrace has a group");
+    is(groups[0].textContent.trim(), "React 2", "A collapsed React group is displayed");
+
+    is(onReadyCount, 1, "onReady was only called once");
+  });
+
+  add_task(async function testFlakySourcemapService() {
+    const stacktrace = [
+      {
+        filename: "http://myfile.com/bundle.js",
+        functionName: "last",
+        lineNumber: 1,
+        columnNumber: 10,
+      },
+      {
+        filename: "http://myfile.com/bundle.js",
+        functionName: "pending",
+        lineNumber: 2,
+        columnNumber: 10,
+      },
+      {
+        filename: "http://myfile.com/bundle.js",
+        functionName: "first",
+        lineNumber: 3,
+        columnNumber: 10,
+      },
+    ];
+
+    const initialRenderDelay = 300;
+    const onSourceMapResultDebounceDelay = 50;
+    let onReadyCount = 0;
+
+    const props = {
+      stacktrace,
+      initialRenderDelay,
+      onSourceMapResultDebounceDelay,
+      onViewSourceInDebugger: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
+      // A mock source map service.
+      sourceMapURLService: {
+        subscribeByLocation: function ({ line, column }, callback) {
+          // Don't call the callback for the second frame to simulate a flaky sourcemap
+          // service request.
+          if (line === 2) {
+            return () => {};
+          }
+
+          const newLine = Number(line.toString().repeat(2));
+          callback({
+            url: `http://myfile.com/file-${line}.js`,
+            line: newLine,
+            column,
+          });
+          return () => {};
+        },
+      },
+    };
+
+    const trace = ReactDOM.render(SmartTrace(props),
+      window.document.body.querySelector("#s3"));
+
+    let traceEl = ReactDOM.findDOMNode(trace);
+    ok(!traceEl, "Nothing was rendered at first");
+    is(onReadyCount, 0, "onReady isn't called if SmartTrace isn't rendered");
+
+    info("Wait for the initial delay + debounce to be over");
+    await waitFor(() => {
+      const  el = ReactDOM.findDOMNode(trace)
+      return el && el.textContent.includes("file-1.js");
+    });
+
+    traceEl = ReactDOM.findDOMNode(trace);
+    ok(traceEl, "The trace was rendered");
+
+    const frameEls = Array.from(traceEl.querySelectorAll(".frame"));
+    ok(frameEls, "Rendered SmartTrace has frames");
+    is(frameEls.length, 3, "SmartTrace has 3 frames");
+
+    info("Check that the original frames are displayed even if there's no sourcemap " +
+      "response for some frames");
+    checkSmartFrameString({
+      el: frameEls[0],
+      functionName: "last",
+      location: "file-1.js:11",
+      tooltip: "View source in Debugger → http://myfile.com/file-1.js:11",
+    });
+
+    checkSmartFrameString({
+      el: frameEls[1],
+      functionName: "pending",
+      location: "bundle.js:2",
+      tooltip: "View source in Debugger → http://myfile.com/bundle.js:2",
+    });
+
+    checkSmartFrameString({
+      el: frameEls[2],
+      functionName: "first",
+      location: "file-3.js:33",
+      tooltip: "View source in Debugger → http://myfile.com/file-3.js:33",
+    });
+
+    is(onReadyCount, 1, "onReady was only called once");
+  });
+
+};
+</script>
+<section id=s1></section>
+<section id=s2></section>
+<section id=s3></section>
+</body>
+</html>

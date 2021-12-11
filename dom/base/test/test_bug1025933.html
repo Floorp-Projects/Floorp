@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1025933
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1025933</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1025933 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function test() {
+    var iframe = document.createElement('iframe');
+    iframe.srcdoc = '<div id="content"> <div id="host"></div </div>';
+
+    iframe.onload = function() {
+      var s = iframe.contentDocument.getElementById("host").attachShadow({mode: 'open'});
+      s.innerHTML = '<div style="width:100px;height:100px;background:red"></div>';
+      var el = s.firstElementChild;
+      is(el.clientWidth, 100);
+      is(el.clientHeight, 100);
+      SimpleTest.finish();
+    }
+
+    document.body.appendChild(iframe);
+  }
+
+  </script>
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1025933">Mozilla Bug 1025933</a>
+<p id="display"></p>
+<pre id="test">
+</pre>
+</body>
+</html>

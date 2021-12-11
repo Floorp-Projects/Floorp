@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<form id="form1">
+   <input id="input1" type="input" name="input" value="1"/>
+   <input id="input2" type="input" name="input" value="2"/>
+   <input id="input3" type="input" name="input" value="3"/>
+   <input id="input4" type="input" name="input" value="4"/>
+   <input id="input5" type="input" name="input" value="5"/>
+   <input id="input6" type="input" name="input" value="6"/>
+   <input id="input7" type="input" name="input" value="7"/>
+   <input id="input8" type="input" name="input" value="8"/>
+   <input id="input9" type="input" name="input" value="9"/>
+   <input id="input10" type="input" name="input" value="10"/>
+
+
+
+
+</form>
+<script>
+ 	var input1 = document.getElementById("input1");
+	var input2 = document.getElementById("input2");
+	var input3 = document.getElementById("input3");
+	var input4 = document.getElementById("input4");
+	var input5 = document.getElementById("input5");
+	var input6 = document.getElementById("input6");
+	var input7 = document.getElementById("input7");
+	var input8 = document.getElementById("input8");
+	var input9 = document.getElementById("input9");
+	var input10 = document.getElementById("input10");
+
+
+	var form1 = document.getElementById("form1");
+
+	form1.insertBefore(input2, input1);
+	form1.insertBefore(input10, input6);
+	form1.insertBefore(input8, input4);
+	form1.insertBefore(input9, input2);
+
+	is(form1.elements.input.length, 10, "Form 1 'input' has the correct length");
+	is(form1.elements.input[0].value, "9", "Form 1 element 1 is correct");
+	is(form1.elements.input[1].value, "2", "Form 1 element 2 is correct");
+	is(form1.elements.input[2].value, "1", "Form 1 element 3 is correct");
+	is(form1.elements.input[3].value, "3", "Form 1 element 4 is correct");
+	is(form1.elements.input[4].value, "8", "Form 1 element 5 is correct");
+	is(form1.elements.input[5].value, "4", "Form 1 element 6 is correct");
+	is(form1.elements.input[6].value, "5", "Form 1 element 7 is correct");
+	is(form1.elements.input[7].value, "10", "Form 1 element 8 is correct");
+	is(form1.elements.input[8].value, "6", "Form 1 element 9 is correct");
+	is(form1.elements.input[9].value, "7", "Form 1 element 10 is correct");
+
+	is(form1.elements.input[0].id, "input9", "Form 1 element 1 id is correct");
+	is(form1.elements.input[1].id, "input2", "Form 1 element 2 id is correct");
+	is(form1.elements.input[2].id, "input1", "Form 1 element 3 id is correct");
+	is(form1.elements.input[3].id, "input3", "Form 1 element 4 id is correct");
+	is(form1.elements.input[4].id, "input8", "Form 1 element 5 id is correct");
+	is(form1.elements.input[5].id, "input4", "Form 1 element 6 id is correct");
+	is(form1.elements.input[6].id, "input5", "Form 1 element 7 id is correct");
+	is(form1.elements.input[7].id, "input10", "Form 1 element 8 id is correct");
+	is(form1.elements.input[8].id, "input6", "Form 1 element 9 id is correct");
+	is(form1.elements.input[9].id, "input7", "Form 1 element 10  id is correct");
+
+</script>
+</body>
+</html>

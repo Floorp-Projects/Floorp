@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    // Insert a <summary> as the last child of the <details>.
+    var summary = document.createElement("summary");
+    var text = document.createTextNode("Summary");
+    summary.appendChild(text);
+
+    var details = document.getElementById("details");
+    details.appendChild(summary);
+
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details open id="details">
+      <p>This is the details.</p>
+    </details>
+  </body>
+</html>

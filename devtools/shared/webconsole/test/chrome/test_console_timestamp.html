@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for console.group styling with %c</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+  <script>
+"use strict";
+
+window.onload = async function () {
+  SimpleTest.waitForExplicitFinish();
+  let state;
+  try {
+    state = (await attachConsole(["ConsoleAPI"])).state;
+    const consoleFront = state.webConsoleFront;
+
+    info("Testing console.log packet timestamp correctness");
+    const clientLogTimestamp = Date.now();
+    const packet = await consoleAPICall(consoleFront,
+      () => top.console.log("test"));
+    const packetReceivedTimestamp = Date.now();
+
+    const {timeStamp} = packet.message;
+    ok(clientLogTimestamp <= timeStamp && timeStamp <= packetReceivedTimestamp,
+      "console.log message timestamp is between the expected time range " +
+      `(${clientLogTimestamp} <= ${timeStamp} <= ${packetReceivedTimestamp})`
+    );
+  } catch (e) {
+    ok(false, `Error thrown: ${e.message}`);
+  }
+
+  await closeDebugger(state);
+  SimpleTest.finish();
+};
+
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

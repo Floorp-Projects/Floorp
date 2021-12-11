@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test frame for triggering media session's action handler</title>
+    <script src="MediaSessionTestUtils.js"></script>
+  </head>
+<body>
+<video id="testVideo" src="gizmo.mp4" loop></video>
+<script>
+
+const video = document.getElementById("testVideo");
+const w = window.opener || window.parent;
+
+window.onmessage = async event => {
+  if (event.data == "play") {
+    await video.play();
+    // As we can't observe `media-displayed-playback-changed` notification,
+    // that can only be observed in the chrome process. Therefore, we use a
+    // workaround instead which is to wait for a while to ensure that the
+    // controller has already been created in the chrome process.
+    let timeupdatecount = 0;
+    await new Promise(r => video.ontimeupdate = () => {
+      if (++timeupdatecount == 3) {
+        video.ontimeupdate = null;
+        r();
+      }
+    });
+    w.postMessage("played", "*");
+  }
+}
+
+// Setup the action handlers which would post the result back to the main window.
+for (const action of gMediaSessionActions) {
+  navigator.mediaSession.setActionHandler(action, () => {
+    w.postMessage(action, "*");
+  });
+}
+</script>
+</body>
+</html>

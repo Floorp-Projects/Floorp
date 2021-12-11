@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.bracket-arrow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.bracket-arrow::before,
+.bracket-arrow::after {
+  content: "";
+  height: 0;
+  width: 0;
+  position: absolute;
+  border: 7px solid transparent;
+}
+
+.bracket-arrow.up::before {
+  border-bottom-color: var(--theme-splitter-color);
+  top: -1px;
+}
+
+.theme-dark .bracket-arrow.up::before {
+  border-bottom-color: var(--theme-body-color);
+}
+
+.bracket-arrow.up::after {
+  border-bottom-color: var(--theme-body-background);
+  top: 0px;
+}
+
+.bracket-arrow.down::before {
+  border-bottom-color: transparent;
+  border-top-color: var(--theme-splitter-color);
+  top: 0px;
+}
+
+.theme-dark .bracket-arrow.down::before {
+  border-top-color: var(--theme-body-color);
+}
+
+.bracket-arrow.down::after {
+  border-bottom-color: transparent;
+  border-top-color: var(--theme-body-background);
+  top: -1px;
+}
+
+.bracket-arrow.left::before {
+  border-left-color: transparent;
+  border-right-color: var(--theme-splitter-color);
+  top: 0px;
+}
+
+.theme-dark .bracket-arrow.left::before {
+  border-right-color: var(--theme-body-color);
+}
+
+.bracket-arrow.left::after {
+  border-left-color: transparent;
+  border-right-color: var(--theme-body-background);
+  top: 0px;
+  left: 1px;
+}

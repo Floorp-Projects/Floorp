@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <script type="application/javascript">
+  function runTest() {
+    document.write("<body>");
+    var succeeded = true;
+    try {
+      new XMLHttpRequest();
+    } catch(e) {
+      succeeded = false;
+    }
+    window.parent.ok(succeeded, "Creating XMLHttpRequest failed!");
+    window.parent.nextTest();
+  }
+  </script>
+</head>
+<body onload="runTest()">
+</body>
+</html>

@@ -1,0 +1,77 @@
+Multiplication
+
+This describes the multiplication algorithm used by the MPI library.
+
+This is basically a standard "schoolbook" algorithm.  It is slow --
+O(mn) for m = #a, n = #b -- but easy to implement and verify.
+Basically, we run two nested loops, as illustrated here (R is the
+radix):
+
+k = 0
+for j <- 0 to (#b - 1)
+  for i <- 0 to (#a - 1)
+    w = (a[j] * b[i]) + k + c[i+j]
+    c[i+j] = w mod R
+    k = w div R
+  endfor
+  c[i+j] = k;
+  k = 0;
+endfor
+
+It is necessary that 'w' have room for at least two radix R digits.
+The product of any two digits in radix R is at most:
+
+	(R - 1)(R - 1) = R^2 - 2R + 1
+
+Since a two-digit radix-R number can hold R^2 - 1 distinct values,
+this insures that the product will fit into the two-digit register.
+
+To insure that two digits is enough for w, we must also show that
+there is room for the carry-in from the previous multiplication, and
+the current value of the product digit that is being recomputed.
+Assuming each of these may be as big as R - 1 (and no larger,
+certainly), two digits will be enough if and only if:
+
+	(R^2 - 2R + 1) + 2(R - 1) <= R^2 - 1
+
+Solving this equation shows that, indeed, this is the case:
+
+	R^2 - 2R + 1 + 2R - 2 <= R^2 - 1
+
+	R^2 - 1 <= R^2 - 1
+
+This suggests that a good radix would be one more than the largest
+value that can be held in half a machine word -- so, for example, as
+in this implementation, where we used a radix of 65536 on a machine
+with 4-byte words.  Another advantage of a radix of this sort is that
+binary-level operations are easy on numbers in this representation.
+
+Here's an example multiplication worked out longhand in radix-10,
+using the above algorithm:
+
+   a =     999
+   b =   x 999
+  -------------
+   p =   98001
+
+w = (a[jx] * b[ix]) + kin + c[ix + jx]
+c[ix+jx] = w % RADIX
+k = w / RADIX
+                                                               product
+ix	jx	a[jx]	b[ix]	kin	w	c[i+j]	kout	000000
+0	0	9	9	0	81+0+0	1	8	000001
+0	1	9	9	8	81+8+0	9	8	000091
+0	2	9	9	8	81+8+0	9	8	000991
+				8			0	008991
+1	0	9	9	0	81+0+9	0	9	008901
+1	1	9	9	9	81+9+9	9	9	008901
+1	2	9	9	9	81+9+8	8	9	008901
+				9			0	098901
+2	0	9	9	0	81+0+9	0	9	098001
+2	1	9	9	9	81+9+8	8	9	098001
+2	2	9	9	9	81+9+9	9	9	098001
+
+------------------------------------------------------------------
+ This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.

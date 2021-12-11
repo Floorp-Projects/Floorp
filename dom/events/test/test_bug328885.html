@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=328885
+-->
+<head>
+  <title>Test for Bug 328885</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=328885">Mozilla Bug 328885</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<input type="text" id="inputelement"
+       style="position: absolute; left: 0px; top: 0px;">
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 328885 **/
+
+  var inputelement = null;
+  var mutationCount = 0;
+
+  function mutationListener(evt) {
+    ++mutationCount;
+  }
+
+  function clickTest() {
+    inputelement.addEventListener("DOMSubtreeModified", mutationListener);
+    inputelement.addEventListener("DOMNodeInserted", mutationListener);
+    inputelement.addEventListener("DOMNodeRemoved", mutationListener);
+    inputelement.addEventListener("DOMNodeRemovedFromDocument", mutationListener);
+    inputelement.addEventListener("DOMNodeInsertedIntoDocument", mutationListener);
+    inputelement.addEventListener("DOMAttrModified", mutationListener);
+    inputelement.addEventListener("DOMCharacterDataModified", mutationListener);
+
+    inputelement.addEventListener('click',
+      function(event) {
+        var evt = SpecialPowers.wrap(event);
+        ok(SpecialPowers.call_Instanceof(evt.originalTarget, HTMLDivElement),
+           "(1) Wrong originalTarget!");
+        is(SpecialPowers.unwrap(evt.originalTarget.parentNode), inputelement,
+           "(2) Wront parent node!");
+        ok(mutationCount == 0, "(3) No mutations should have happened! [" + mutationCount + "]");
+        evt.originalTarget.textContent = "foo";
+        ok(mutationCount == 0, "(4) Mutation listener shouldn't have been called! [" + mutationCount + "]");
+        evt.originalTarget.innerHTML = "foo2";
+        ok(mutationCount == 0, "(5) Mutation listener shouldn't have been called! [" + mutationCount + "]");
+        evt.originalTarget.lastChild.data = "bar";
+        ok(mutationCount == 0, "(6) Mutation listener shouldn't have been called! [" + mutationCount + "]");
+
+        var r = SpecialPowers.wrap(document.createRange());
+        r.selectNodeContents(evt.originalTarget);
+        r.deleteContents();
+        ok(mutationCount == 0, "(7) Mutation listener shouldn't have been called! [" + mutationCount + "]");
+
+        evt.originalTarget.textContent = "foo";
+        ok(mutationCount == 0, "(8) Mutation listener shouldn't have been called! [" + mutationCount + "]");
+        r = SpecialPowers.wrap(document.createRange());
+        r.selectNodeContents(evt.originalTarget);
+        r.extractContents();
+        ok(mutationCount == 0, "(9) Mutation listener shouldn't have been called! [" + mutationCount + "]");
+
+        evt.originalTarget.setAttribute("foo", "bar");
+        ok(mutationCount == 0, "(10) Mutation listener shouldn't have been called! ["+ mutationCount + "]");
+
+        // We played with the internal div, now restore its initial state
+        evt.originalTarget.replaceChildren(new Text());
+
+        // Same tests with non-native-anononymous element.
+        // mutationCount should be increased by 2 each time, since there is
+        // first a mutation specific event and then DOMSubtreeModified.
+        inputelement.textContent = "foo";
+        ok(mutationCount == 2, "(11) Mutation listener should have been called! [" + mutationCount + "]");
+        inputelement.lastChild.data = "bar";
+        ok(mutationCount == 4, "(12) Mutation listener should have been called! [" + mutationCount + "]");
+
+        r = document.createRange();
+        r.selectNodeContents(inputelement);
+        r.deleteContents();
+        ok(mutationCount == 6, "(13) Mutation listener should have been called! [" + mutationCount + "]");
+
+        inputelement.textContent = "foo";
+        ok(mutationCount == 8, "(14) Mutation listener should have been called! [" + mutationCount + "]");
+        r = document.createRange();
+        r.selectNodeContents(inputelement);
+        r.extractContents();
+        ok(mutationCount == 10, "(15) Mutation listener should have been called! [" + mutationCount + "]");
+
+        inputelement.setAttribute("foo", "bar");
+        ok(mutationCount == 12, "(16) Mutation listener should have been called! ["+ mutationCount + "]");
+
+        // Then try some mixed mutations. The mutation handler of non-native-a
+        inputelement.addEventListener("DOMAttrModified",
+          function (evt2) {
+            evt.originalTarget.setAttribute("foo", "bar" + mutationCount);
+            ok(evt.originalTarget.getAttribute("foo") == "bar" + mutationCount,
+               "(17) Couldn't update the attribute?!?");
+          });
+        inputelement.setAttribute("foo", "");
+        ok(mutationCount == 14, "(18) Mutation listener should have been called! ["+ mutationCount + "]");
+
+        inputelement.textContent = "foo";
+        ok(mutationCount == 16, "(19) Mutation listener should have been called! ["+ mutationCount + "]");
+        inputelement.addEventListener("DOMCharacterDataModified",
+          function (evt2) {
+            evt.originalTarget.textContent =  "bar" + mutationCount;
+          });
+        // This one deletes and inserts a new node, then DOMSubtreeModified.
+        inputelement.textContent = "bar";
+        ok(mutationCount == 19, "(20) Mutation listener should have been called! ["+ mutationCount + "]");
+      });
+    synthesizeMouseAtCenter(inputelement, {}, window);
+    SimpleTest.finish();
+  }
+
+  function doTest() {
+    inputelement = document.getElementById('inputelement');
+    inputelement.focus();
+    setTimeout(clickTest, 100);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+  addLoadEvent(doTest);
+
+</script>
+</pre>
+</body>
+</html>
+

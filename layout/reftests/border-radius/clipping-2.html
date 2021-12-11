@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head>
+<title>Border clipping</title>
+<style>
+.div1 { width: 50px; height: 50px;
+      border: 4px dotted black; 
+      border-radius: 10px;
+      position: fixed;
+      background: red;
+      left: 50px;
+      top: 50px;
+      background-clip: padding-box;
+}
+
+.div2 { width: 50px; height: 50px;
+      border: 4px dotted black; 
+      border-radius: 10px;
+      position: fixed;
+      background: red;
+      left: 50px;
+      top: 140px;
+      background-clip: border-box;
+}
+
+</style>
+</head>
+<body>
+  <div class="div1"/>
+  <div class="div2"/>
+</body></html>

@@ -1,0 +1,50 @@
+# This directory contains tests for "display: -webkit-box" and associated
+# CSS properties.
+
+# Tests for abspos children inside of a -webkit-box:
+== webkit-box-abspos-children-1.html webkit-box-abspos-children-1-ref.html
+
+# Tests for anonymous flex item formation inside of a "-webkit-box":
+# Note: some of these tests are marked as failing, because we don't match
+# WebKit/Blink on them.  (The reference case represents the WebKit/Blink
+# rendering.) We could probably make them pass by implementing some quirks, if
+# it turns out that the web depends on WebKit/Blink's behavior in these cases.
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == webkit-box-anon-flex-items-1a.html webkit-box-anon-flex-items-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == webkit-box-anon-flex-items-1b.html webkit-box-anon-flex-items-1-ref.html # Bug 1392106
+fails == webkit-box-anon-flex-items-2.html webkit-box-anon-flex-items-2-ref.html
+fails == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3-ref.html
+
+# Tests for "-webkit-box" & "-webkit-inline-box" as display values:
+== webkit-display-values-1.html webkit-display-values-1-ref.html
+
+# Tests for "-webkit-box-align" (cross-axis alignment):
+== webkit-box-align-horiz-1a.html webkit-box-align-horiz-1-ref.html
+== webkit-box-align-horiz-1b.html webkit-box-align-horiz-1-ref.html
+== webkit-box-align-vert-1.html webkit-box-align-vert-1-ref.html
+
+# Tests for "-webkit-box-direction":
+== webkit-box-direction-1.html webkit-box-direction-1-ref.html
+== webkit-box-direction-2.html webkit-box-direction-2-ref.html
+
+# Tests for "-webkit-box-flex" (flexibility of items)
+== webkit-box-flex-1.html webkit-box-flex-1-ref.html
+
+# Tests for "-webkit-box-ordinal-group"
+== webkit-box-ordinal-group-1.html webkit-box-ordinal-group-1-ref.html
+# XXXdholbert The following test fails because we accept "0" as a valid value
+# for -webkit-box-ordinal-group (unlike Chrome/Blink), because that's simply
+# how its aliased property (-moz-box-ordinal-group) behaves. This shouldn't
+# matter in practice; it could only cause trouble if sites accidentally depend
+# on the "0" value being rejected.
+fails == webkit-box-ordinal-group-2.html webkit-box-ordinal-group-2-ref.html
+== webkit-box-ordinal-group-3.html webkit-box-ordinal-group-3-ref.html
+
+# Tests for "-webkit-box-pack" (main-axis alignment):
+== webkit-box-pack-horiz-1a.html webkit-box-pack-horiz-1-ref.html
+== webkit-box-pack-horiz-1b.html webkit-box-pack-horiz-1-ref.html
+== webkit-box-pack-vert-1.html webkit-box-pack-vert-1-ref.html
+
+# Tests for "display: -webkit-box" container mixed with modern flex properties
+# (which shouldn't influence behavior of -webkit-box)
+== webkit-box-with-modern-css-1.html webkit-box-with-modern-css-1-ref.html
+== webkit-box-with-modern-css-2.html webkit-box-with-modern-css-2-ref.html

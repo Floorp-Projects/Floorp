@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-paged">
+<head>
+<style>
+@page {
+  size: 5in 3in;
+  margin: 0.5in;
+}
+
+html,body {
+  color:black; background-color:white; font:20px/1 monospace; padding:0; margin:0;
+  writing-mode: vertical-rl;
+}
+
+.ib {
+  display: inline-block;
+  inline-size: 50vh;
+  block-size: 150vw;
+  background-color: grey;
+  vertical-align: top;
+}
+
+.after {
+  inline-size: 50vh;
+  block-size: 10vw;
+  background-color: black;
+}
+</style>
+</head>
+<body>
+    <div class="ib"></div>
+    <div class="after"></div>
+</body>
+</html>

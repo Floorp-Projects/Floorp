@@ -1,0 +1,15 @@
+/**
+ * livescience.com - a scrollbar covering navigation menu
+ * Bug #1653075 - https://bugzilla.mozilla.org/show_bug.cgi?id=1653075
+ *
+ * The scrollbar is covering navigation items and that makes them half hidden.
+ * There are some ::-webkit-scrollbar css rules applied to the scrollbar,
+ * making it thinner. Adding similar rules for Firefox fixes the issue.
+ */
+@media screen and (max-width: 900px) {
+  .trending__wrapper .trending__items,
+  .trending-wrapper .trending-items {
+    scrollbar-width: thin;
+    scrollbar-color: #f9ae3b #f5f5f5;
+  }
+}

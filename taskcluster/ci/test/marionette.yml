@@ -1,0 +1,62 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    suite: marionette
+    mozharness:
+        script: marionette.py
+        config:
+            by-test-platform:
+                macosx.*:
+                    - marionette/prod_config.py
+                    - marionette/mac_taskcluster_config.py
+                windows.*:
+                    - marionette/windows_taskcluster_config.py
+                default:
+                    - marionette/prod_config.py
+                    - remove_executables.py
+        extra-options:
+            - --setpref=toolkit.asyncshutdown.log=true
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    tier:
+        by-variant:
+            fission: 2
+            default: default
+    variants:
+        - fission
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    (linux.*64|windows10-64)(-shippable)?(-qr)?/.*: ['trunk']
+                    linux.*64-asan-qr/opt: ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    .*/debug: built-projects
+                    default: []
+            default: built-projects
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual
+    python-3: true
+
+marionette:
+    description: "Marionette unittest run"
+    treeherder-symbol: Mn
+    max-run-time: 5400
+    instance-size: default
+    chunks: 1
+
+marionette-headless:
+    description: "Marionette headless unittest run"
+    treeherder-symbol: MnH
+    max-run-time: 5400
+    instance-size: default
+    tier: 2
+    mozharness:
+        extra-options:
+            - --headless

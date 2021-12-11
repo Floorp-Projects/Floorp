@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1312410</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_temporaryFileBlob.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+var tests = [
+  // from common_temporaryFileBlob.js:
+  test_fetch_basic,
+  test_fetch_worker,
+  test_xhr_basic,
+  test_xhr_worker,
+  test_response_basic,
+  test_response_worker,
+  test_request_basic,
+  test_request_worker,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SpecialPowers.pushPrefEnv({ "set" : [[ "dom.blob.memoryToTemporaryFile", 1 ]] },
+                          next);
+SimpleTest.waitForExplicitFinish();
+
+  </script>
+</body>
+</html>

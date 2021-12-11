@@ -1,0 +1,633 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for JavaScript terminal functionality</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for JavaScript terminal autocomplete functionality</p>
+
+<script class="testbody" type="text/javascript">
+  "use strict";
+
+  SimpleTest.waitForExplicitFinish();
+  const {
+    MAX_AUTOCOMPLETE_ATTEMPTS,
+    MAX_AUTOCOMPLETIONS
+  } = require("devtools/shared/webconsole/js-property-provider");
+  const RESERVED_JS_KEYWORDS = require("devtools/shared/webconsole/reserved-js-words");
+
+
+  addEventListener("load", startTest);
+
+  async function startTest() {
+    // First run the tests with a tab as a target.
+    let {state} = await attachConsoleToTab(["PageError"]);
+    await performTests({state, isWorker: false});
+
+    // Then run the tests with a worker as a target.
+    state = (await attachConsoleToWorker(["PageError"])).state;
+    await performTests({state, isWorker: true});
+
+    SimpleTest.finish();
+  }
+
+  async function performTests({state, isWorker}) {
+    // Set up the global variables needed to test autocompletion in the target.
+    const script = `
+      // This is for workers so autocomplete acts the same
+      if (!this.window) {
+        window = this;
+      }
+
+      window.foobarObject = Object.create(null);
+      window.foobarObject.foo = 1;
+      window.foobarObject.foobar = 2;
+      window.foobarObject.foobaz = 3;
+      window.foobarObject.omg = 4;
+      window.foobarObject.omgfoo = 5;
+      window.foobarObject.strfoo = "foobarz";
+      window.foobarObject.omgstr = "foobarz" +
+        (new Array(${DevToolsServer.LONG_STRING_LENGTH})).join("abb");
+      window.largeObject1 = Object.create(null);
+      for (let i = 0; i < ${MAX_AUTOCOMPLETE_ATTEMPTS + 1}; i++) {
+        window.largeObject1['a' + i] = i;
+      }
+
+      window.largeObject2 = Object.create(null);
+      for (let i = 0; i < ${MAX_AUTOCOMPLETIONS * 2}; i++) {
+        window.largeObject2['a' + i] = i;
+      }
+
+      window.proxy1 = new Proxy({foo: 1}, {
+        getPrototypeOf() { throw new Error() }
+      });
+      window.proxy2 = new Proxy(Object.create(Object.create(null, {foo:{}})), {
+        ownKeys() { throw new Error() }
+      });
+      window.emojiObject = Object.create(null);
+      window.emojiObject["😎"] = "😎";
+
+      window.insensitiveTestCase = Object.create(null, Object.getOwnPropertyDescriptors({
+        PROP: "",
+        Prop: "",
+        prop: "",
+        PRÖP: "",
+        pröp: "",
+      }));
+
+      window.elementAccessTestCase = Object.create(null, Object.getOwnPropertyDescriptors({
+        bar: "",
+        BAR: "",
+        dataTest: "",
+        "data-test": "",
+        'da"ta"test': "",
+        'da\`ta\`test': "",
+        "da'ta'test": "",
+      }));
+
+      window.varify = true;
+    `;
+    await evaluateExpression(state.webConsoleFront, script);
+
+    const tests = [
+      doAutocomplete1,
+      doAutocomplete2,
+      doAutocomplete3,
+      doAutocomplete4,
+      doAutocompleteLarge1,
+      doAutocompleteLarge2,
+      doAutocompleteProxyThrowsPrototype,
+      doAutocompleteProxyThrowsOwnKeys,
+      doAutocompleteDotSurroundedBySpaces,
+      doAutocompleteAfterOr,
+      doInsensitiveAutocomplete,
+      doElementAccessAutocomplete,
+      doAutocompleteAfterOperator,
+      dontAutocompleteAfterDeclaration,
+      doKeywordsAutocomplete,
+      dontAutocomplete,
+    ];
+
+    if (!isWorker) {
+      // `Cu` is not defined in workers, then we can't test `Cu.Sandbox`
+      tests.push(doAutocompleteSandbox);
+      // Some cases are handled in worker context because we can't use parser.js.
+      // See Bug 1507181.
+      tests.push(
+        doAutocompleteArray,
+        doAutocompleteString,
+        doAutocompleteCommands,
+        doAutocompleteBracketSurroundedBySpaces,
+      );
+    }
+
+    for (const test of tests) {
+      await test(state.webConsoleFront);
+    }
+
+    // Null out proxy1 and proxy2: the proxy handlers use scripted functions
+    // that can keep the debugger sandbox alive longer than necessary via their
+    // environment chain (due to the webconsole helper functions defined there).
+    await evaluateExpression(state.webConsoleFront, `this.proxy1 = null; this.proxy2 = null;`);
+
+    await closeDebugger(state);
+  }
+
+  async function doAutocomplete1(webConsoleFront) {
+    info("test autocomplete for 'window.foo'");
+    const response = await webConsoleFront.autocomplete("window.foo");
+    const matches = response.matches;
+
+    is(response.matchProp, "foo", "matchProp");
+    is(matches.length, 1, "matches.length");
+    is(matches[0], "foobarObject", "matches[0]");
+  }
+
+  async function doAutocomplete2(webConsoleFront) {
+    info("test autocomplete for 'window.foobarObject.'");
+    const response = await webConsoleFront.autocomplete("window.foobarObject.");
+    const matches = response.matches;
+
+    ok(!response.matchProp, "matchProp");
+    is(matches.length, 7, "matches.length");
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+  }
+
+  async function doAutocomplete3(webConsoleFront) {
+    // Check that completion suggestions are offered inside the string.
+    info("test autocomplete for 'dump(window.foobarObject.)'");
+    const response = await webConsoleFront.autocomplete("dump(window.foobarObject.)", 25);
+    const matches = response.matches;
+
+    ok(!response.matchProp, "matchProp");
+    is(matches.length, 7, "matches.length");
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+  }
+
+  async function doAutocomplete4(webConsoleFront) {
+    // Check that completion requests can have no suggestions.
+    info("test autocomplete for 'dump(window.foobarObject.)'");
+    const response = await webConsoleFront.autocomplete("dump(window.foobarObject.)");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches, null, "matches is null");
+  }
+
+  async function doAutocompleteLarge1(webConsoleFront) {
+    // Check that completion requests with too large objects will
+    // have no suggestions.
+    info("test autocomplete for 'window.largeObject1.'");
+    const response = await webConsoleFront.autocomplete("window.largeObject1.");
+    ok(!response.matchProp, "matchProp");
+    info (response.matches.join("|"));
+    is(response.matches.length, 0, "Bailed out with too many properties");
+  }
+
+  async function doAutocompleteLarge2(webConsoleFront) {
+    // Check that completion requests with pretty large objects will
+    // have MAX_AUTOCOMPLETIONS suggestions
+    info("test autocomplete for 'window.largeObject2.'");
+    const response = await webConsoleFront.autocomplete("window.largeObject2.");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches.length, MAX_AUTOCOMPLETIONS, "matches.length is MAX_AUTOCOMPLETIONS");
+  }
+
+  async function doAutocompleteProxyThrowsPrototype(webConsoleFront) {
+    // Check that completion provides own properties even if [[GetPrototypeOf]] throws.
+    info("test autocomplete for 'window.proxy1.'");
+    const response = await webConsoleFront.autocomplete("window.proxy1.");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches.length, 1, "matches.length");
+    checkObject(response.matches, ["foo"]);
+  }
+
+  async function doAutocompleteProxyThrowsOwnKeys(webConsoleFront) {
+    // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
+    info("test autocomplete for 'window.proxy2.'");
+    const response = await webConsoleFront.autocomplete("window.proxy2.");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches.length, 1, "matches.length");
+    checkObject(response.matches, ["foo"]);
+  }
+
+  async function doAutocompleteSandbox(webConsoleFront) {
+    // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
+    info("test autocomplete for 'Cu.Sandbox.'");
+    const response = await webConsoleFront.autocomplete("Cu.Sandbox.");
+    ok(!response.matchProp, "matchProp");
+    const keys = Object.getOwnPropertyNames(Object.prototype).sort();
+    is(response.matches.length, keys.length, "matches.length");
+    // checkObject(response.matches, keys);
+    is(response.matches.join(" - "), keys.join(" - "));
+  }
+
+  async function doAutocompleteArray(webConsoleFront) {
+    info("test autocomplete for [1,2,3]");
+    const response = await webConsoleFront.autocomplete("[1,2,3].");
+    let {matches} = response;
+
+    ok(matches.length > 0, "There are completion results for the array");
+    ok(matches.includes("length") && matches.includes("filter"),
+      "Array autocomplete contains expected results");
+
+    info("test autocomplete for '[] . '");
+    matches = (await webConsoleFront.autocomplete("[] . ")).matches;
+    ok(matches.length > 1);
+    ok(matches.includes("length") && matches.includes("filter"),
+      "Array autocomplete contains expected results");
+    ok(!matches.includes("copy"), "Array autocomplete does not contain helpers");
+
+    info("test autocomplete for '[1,2,3]['");
+    matches = (await webConsoleFront.autocomplete("[1,2,3][")).matches;
+    ok(matches.length > 1);
+    ok(matches.includes('"length"') && matches.includes('"filter"'),
+      "Array autocomplete contains expected results, surrounded by quotes");
+
+    info("test autocomplete for '[1,2,3]['");
+    matches = (await webConsoleFront.autocomplete("[1,2,3]['")).matches;
+    ok(matches.length > 1);
+    ok(matches.includes("'length'") && matches.includes("'filter'"),
+      "Array autocomplete contains expected results, surrounded by quotes");
+
+    info("test autocomplete for '[1,2,3][l");
+    matches = (await webConsoleFront.autocomplete("[1,2,3][l")).matches;
+    ok(matches.length >= 1);
+    ok(matches.includes('"length"'),
+      "Array autocomplete contains expected results, surrounded by quotes");
+
+    info("test autocomplete for '[1,2,3]['l");
+    matches = (await webConsoleFront.autocomplete("[1,2,3]['l")).matches;
+    ok(matches.length >= 1);
+    ok(matches.includes("'length'"),
+      "Array autocomplete contains expected results, surrounded by quotes");
+  }
+
+  async function doAutocompleteString(webConsoleFront) {
+    info(`test autocomplete for "foo".`);
+    const response = await webConsoleFront.autocomplete(`"foo".`);
+    let {matches} = response;
+
+    ok(matches.length > 0, "There are completion results for the string");
+    ok(matches.includes("substr") && matches.includes("trim"),
+      "String autocomplete contains expected results");
+
+    info("test autocomplete for `foo`[");
+    matches = (await webConsoleFront.autocomplete("`foo`[")).matches;
+    ok(matches.length > 1, "autocomplete string with bracket works");
+    ok(matches.includes('"substr"') && matches.includes('"trim"'),
+      "String autocomplete contains expected results, surrounded by quotes");
+  }
+
+  async function doAutocompleteDotSurroundedBySpaces(webConsoleFront) {
+    info("test autocomplete for 'window.foobarObject\n  .'");
+    let {matches} = await webConsoleFront.autocomplete("window.foobarObject\n  .");
+    is(matches.length, 7);
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+    info("test autocomplete for 'window.foobarObject\n  .o'");
+    matches = (await webConsoleFront.autocomplete("window.foobarObject\n  .o")).matches;
+    is(matches.length, 3);
+    checkObject(matches, ["omg", "omgfoo", "omgstr"]);
+
+    info("test autocomplete for 'window.foobarObject\n  .\n  s'");
+    matches = (await webConsoleFront.autocomplete("window.foobarObject\n  .\n  s")).matches;
+    is(matches.length, 1);
+    checkObject(matches, ["strfoo"]);
+
+    info("test autocomplete for 'window.foobarObject\n  .  '");
+    matches = (await webConsoleFront.autocomplete("window.foobarObject\n  .  ")).matches;
+    is(matches.length, 7);
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+    matches =
+      (await webConsoleFront.autocomplete("window.foobarObject.  foo ; window.foo")).matches;
+    is(matches.length, 1);
+    checkObject(matches, ["foobarObject"]);
+  }
+
+  async function doAutocompleteBracketSurroundedBySpaces(webConsoleFront) {
+    const wrap = (arr, quote = `"`) => arr.map(x => `${quote}${x}${quote}`);
+    let matches = await getAutocompleteMatches(webConsoleFront, "window.foobarObject\n  [")
+    is(matches.length, 7);
+    checkObject(matches,
+      wrap(["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]));
+
+    matches = await getAutocompleteMatches(webConsoleFront, "window.foobarObject\n  ['o")
+    is(matches.length, 3);
+    checkObject(matches, wrap(["omg", "omgfoo", "omgstr"], "'"));
+
+    matches = await getAutocompleteMatches(webConsoleFront, "window.foobarObject\n  [\n  s");
+    is(matches.length, 1);
+    checkObject(matches, [`"strfoo"`]);
+
+    matches = await getAutocompleteMatches(webConsoleFront, "window.foobarObject\n  [  ");
+    is(matches.length, 7);
+    checkObject(matches,
+      wrap(["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]));
+
+    matches = await getAutocompleteMatches(webConsoleFront, "window.emojiObject  [   '");
+    is(matches.length, 1);
+    checkObject(matches, [`'😎'`]);
+  }
+
+  async function doAutocompleteAfterOr(webConsoleFront) {
+    info("test autocomplete for 'true || foo'");
+    const {matches} = await webConsoleFront.autocomplete("true || foobar");
+    is(matches.length, 1, "autocomplete returns expected results");
+    is(matches.join("-"), "foobarObject");
+  }
+
+  async function doInsensitiveAutocomplete(webConsoleFront) {
+    info("test autocomplete for 'window.insensitiveTestCase.'");
+    let {matches} = await webConsoleFront.autocomplete("window.insensitiveTestCase.");
+    is(matches.join("-"), "prop-pröp-Prop-PROP-PRÖP",
+      "autocomplete returns the expected items, in the expected order");
+
+    info("test autocomplete for 'window.insensitiveTestCase.p'");
+    matches = (await webConsoleFront.autocomplete("window.insensitiveTestCase.p")).matches;
+    is(matches.join("-"), "prop-pröp-Prop-PROP-PRÖP",
+      "autocomplete is case-insensitive when first letter is lowercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.pRoP'");
+    matches = (await webConsoleFront.autocomplete("window.insensitiveTestCase.pRoP")).matches;
+    is(matches.join("-"), "prop-Prop-PROP",
+      "autocomplete is case-insensitive when first letter is lowercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.P'");
+    matches = (await webConsoleFront.autocomplete("window.insensitiveTestCase.P")).matches;
+    is(matches.join("-"), "Prop-PROP-PRÖP",
+      "autocomplete is case-sensitive when first letter is uppercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.PROP'");
+    matches = (await webConsoleFront.autocomplete("window.insensitiveTestCase.PROP")).matches;
+    is(matches.join("-"), "PROP",
+      "autocomplete is case-sensitive when first letter is uppercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.prö'");
+    matches = (await webConsoleFront.autocomplete("window.insensitiveTestCase.prö")).matches;
+    is(matches.join("-"), "pröp-PRÖP", "expected result with lowercase diacritic");
+
+    info("test autocomplete for 'window.insensitiveTestCase.PRÖ'");
+    matches = (await webConsoleFront.autocomplete("window.insensitiveTestCase.PRÖ")).matches;
+    is(matches.join("-"), "PRÖP", "expected result with uppercase diacritic");
+  }
+
+  async function doElementAccessAutocomplete(webConsoleFront) {
+    info("test autocomplete for 'window.elementAccessTestCase['");
+    let res = (await webConsoleFront.autocomplete("window.elementAccessTestCase["));
+    is(
+      res.matches.join("|"),
+      `"bar"|"da'ta'test"|"da\\"ta\\"test"|"da\`ta\`test"|"data-test"|"dataTest"|"BAR"`,
+      "autocomplete returns the expected items, wrapped in quotes");
+    is(res.isElementAccess, true);
+
+    info("test autocomplete for 'window.elementAccessTestCase[d'");
+    res = await webConsoleFront.autocomplete("window.elementAccessTestCase[d");
+    is(
+      res.matches.join("|"),
+      `"da'ta'test"|"da\\"ta\\"test"|"da\`ta\`test"|"data-test"|"dataTest"`,
+      "autocomplete returns the expected filtered items");
+    is(res.isElementAccess, true);
+
+    info(`test autocomplete for 'window.elementAccessTestCase["d'`);
+    res = await webConsoleFront.autocomplete(`window.elementAccessTestCase["d`);
+    is(
+      res.matches.join("|"),
+      `"da'ta'test"|"da\\"ta\\"test"|"da\`ta\`test"|"data-test"|"dataTest"`,
+      "autocomplete returns the expected items, wrapped in quotes");
+    is(res.isElementAccess, true);
+
+    info(`test autocomplete for 'window.elementAccessTestCase["data-`);
+    res = await webConsoleFront.autocomplete(`window.elementAccessTestCase["data-`);
+    is(res.matches.join("|"), `"data-test"`,
+      "autocomplete returns the expected items, wrapped in quotes");
+    is(res.isElementAccess, true);
+
+    info(`test autocomplete for 'window.elementAccessTestCase['d'`);
+    res = await webConsoleFront.autocomplete(`window.elementAccessTestCase['d`);
+    is(
+      res.matches.join("|"),
+      `'da"ta"test'|'da\\'ta\\'test'|'da\`ta\`test'|'data-test'|'dataTest'`,
+      "autocomplete returns the expected items, wrapped in the same quotes the user entered");
+    is(res.isElementAccess, true);
+
+    info("test autocomplete for 'window.elementAccessTestCase[`d'");
+    res = await webConsoleFront.autocomplete("window.elementAccessTestCase[`d");
+    is(
+      res.matches.join("|"),
+      "`da'ta'test`|`da\"ta\"test`|`da\\`ta\\`test`|`data-test`|`dataTest`",
+      "autocomplete returns the expected items, wrapped in the same quotes the user entered");
+    is(res.isElementAccess, true);
+
+    info(`test autocomplete for '['`);
+    res = await webConsoleFront.autocomplete(`[`);
+    is(res.matches, null, "it does not return anything");
+
+    info(`test autocomplete for '[1,2,3'`);
+    res = await webConsoleFront.autocomplete(`[1,2,3`);
+    is(res.matches, null, "it does not return anything");
+
+    info(`test autocomplete for '["'`);
+    res = await webConsoleFront.autocomplete(`["`);
+    is(res.matches, null, "it does not return anything");
+
+    info(`test autocomplete for '[;'`);
+    res = await webConsoleFront.autocomplete(`[;`);
+    is(res.matches, null, "it does not return anything");
+  }
+
+  async function doAutocompleteCommands(webConsoleFront) {
+    info("test autocomplete for 'c'");
+    let matches = (await webConsoleFront.autocomplete("c")).matches;
+    ok(matches.includes("clear"), "commands are returned");
+
+    info("test autocomplete for 's'");
+    matches = (await webConsoleFront.autocomplete("s")).matches;
+    is(matches.includes("screenshot"), false, "screenshot is not returned");
+
+    info("test autocomplete for ':s'");
+    matches = (await webConsoleFront.autocomplete(":s")).matches;
+    is(matches.includes(":screenshot"), true, "screenshot is returned");
+
+    info("test autocomplete for 'window.c'");
+    matches = (await webConsoleFront.autocomplete("window.c")).matches;
+    ok(!matches.includes("clear"), "commands are not returned");
+
+    info("test autocomplete for 'window[c'");
+    matches = (await webConsoleFront.autocomplete("window[c")).matches;
+    ok(!matches.includes("clear"), "commands are not returned");
+
+    info(`test autocomplete for 'window["c'`);
+    matches = (await webConsoleFront.autocomplete(`window["c`)).matches;
+    ok(!matches.includes("clear"), "commands are not returned");
+
+    info(`test autocomplete for 'window["c'`);
+    matches = (await webConsoleFront.autocomplete(`window["c`)).matches;
+    ok(!matches.includes("clear"), "commands are not returned");
+
+    info(`test autocomplete for 'window[";c'`);
+    matches = (await webConsoleFront.autocomplete(`window[";c`)).matches;
+    ok(!matches.includes("clear"), "commands are not returned");
+
+    info(`test autocomplete for 'window[;c'`);
+    matches = (await webConsoleFront.autocomplete(`window[;c`)).matches;
+    ok(!matches.includes("clear"), "commands are not returned");
+  }
+
+  async function doAutocompleteAfterOperator(webConsoleFront) {
+    const inputs = [
+      "true;foob",
+      "true,foob",
+      "({key:foob",
+      "a=foob",
+      "if(a<foob",
+      "if(a>foob",
+      "1+foob",
+      "1-foob",
+      "++foob",
+      "--foob",
+      "1*foob",
+      "2**foob",
+      "1/foob",
+      "1%foob",
+      "1|foob",
+      "1&foob",
+      "1^foob",
+      "~foob",
+      "1<<foob",
+      "1>>foob",
+      "1>>>foob",
+      "false||foob",
+      "false&&foob",
+      "x=true?foob",
+      "x=false?1:foob",
+      "!foob",
+      "false??foob",
+    ];
+
+    for (const input of inputs) {
+      info(`test autocomplete for "${input}"`);
+      const matches = (await webConsoleFront.autocomplete(input)).matches;
+      ok(matches.includes("foobarObject"), `Expected autocomplete result for ${input}"`);
+    }
+  }
+
+  async function dontAutocompleteAfterDeclaration(webConsoleFront) {
+    info("test autocomplete for 'var win'");
+    let matches = (await webConsoleFront.autocomplete("var win")).matches;
+    is(matches, null, "no autocompletion on a var declaration");
+
+    info("test autocomplete for 'const win'");
+    matches = (await webConsoleFront.autocomplete("const win")).matches;
+    is(matches, null, "no autocompletion on a const declaration");
+
+    info("test autocomplete for 'let win'");
+    matches = (await webConsoleFront.autocomplete("let win")).matches;
+    is(matches, null, "no autocompletion on a let declaration");
+
+    info("test autocomplete for 'function win'");
+    matches = (await webConsoleFront.autocomplete("function win")).matches;
+    is(matches, null, "no autocompletion on a function declaration");
+
+    info("test autocomplete for 'class win'");
+    matches = (await webConsoleFront.autocomplete("class win")).matches;
+    is(matches, null, "no autocompletion on a class declaration");
+
+    info("test autocomplete for 'const win = win'");
+    matches = (await webConsoleFront.autocomplete("const win = win")).matches;
+    ok(matches.includes("window"), "autocompletion still happens after the `=` sign");
+
+    info("test autocomplete for 'in var'");
+    matches = (await webConsoleFront.autocomplete("in var")).matches;
+    ok(matches.includes("varify"),
+      "autocompletion still happens with a property name starting with 'var'");
+}
+
+async function doKeywordsAutocomplete(webConsoleFront) {
+  info("test autocomplete for 'func'");
+  let matches = (await webConsoleFront.autocomplete("func")).matches;
+  ok(matches.includes("function"), "keywords are returned");
+
+  info("test autocomplete for ':func'");
+  matches = (await webConsoleFront.autocomplete(":func")).matches;
+  is(!matches.includes("function"), true,
+    "'function' is not returned when prefixed with ':'");
+
+  info("test autocomplete for 'window.func'");
+  matches = (await webConsoleFront.autocomplete("window.func")).matches;
+  ok(!matches.includes("function"),
+    "'function' is not returned when doing a property access");
+
+  info("test autocomplete for 'window[func'");
+  matches = (await webConsoleFront.autocomplete("window[func")).matches;
+  ok(!matches.includes("function"),
+    "'function' is not returned when doing an element access");
+  }
+
+  async function dontAutocomplete(webConsoleFront) {
+    const inputs = [
+      "",
+      "       ",
+      "\n",
+      "\n  ",
+      "  \n  ",
+      "  \n",
+      "true;",
+      "true,",
+      "({key:",
+      "a=",
+      "if(a<",
+      "if(a>",
+      "1+",
+      "1-",
+      "++",
+      "--",
+      "1*",
+      "2**",
+      "1/",
+      "1%",
+      "1|",
+      "1&",
+      "1^",
+      "~",
+      "1<<",
+      "1>>",
+      "1>>>",
+      "false||",
+      "false&&",
+      "x=true?",
+      "x=false?1:",
+      "!",
+      ...RESERVED_JS_KEYWORDS.map(keyword => `${keyword} `),
+      ...RESERVED_JS_KEYWORDS.map(keyword => `${keyword}  `),
+    ];
+    for (const input of inputs) {
+      info(`test autocomplete for "${input}"`);
+      const matches = (await webConsoleFront.autocomplete(input)).matches;
+      is(matches, null, `No autocomplete result for ${input}"`);
+    }
+  }
+
+  async function getAutocompleteMatches(webConsoleFront, input) {
+    info(`test autocomplete for "${input}"`);
+    const res = (await webConsoleFront.autocomplete(input));
+    return res.matches;
+  }
+
+  async function evaluateExpression(consoleFront, expression) {
+    const onEvaluationResult = consoleFront.once("evaluationResult");
+    await consoleFront.evaluateJSAsync({ text: expression });
+    return onEvaluationResult;
+  }
+
+</script>
+</body>
+</html>

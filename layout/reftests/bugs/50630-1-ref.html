@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>CSS 2.1 Test Suite: Test for float placement rules (reference)</title>
+<link rel="author" title="Robert O'Callahan" href="mailto:robert@ocallahan.org" />
+<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+<style>
+.left { float:left; }
+.right { float:right; }
+.left, .right { width:50px; height:50px; background:yellow; }
+p { overflow:auto; }
+</style>
+</head>
+<body style="width:400px;">
+<p><span class="left"></span>HelloKitty
+<p><span class="right"></span>HelloKitty
+<p dir="rtl"><span class="left"></span>HelloKitty
+<p dir="rtl"><span class="right"></span>HelloKitty
+<p style="text-align:right;"><span class="left"></span>HelloKitty
+<p style="text-align:right;"><span class="right"></span>HelloKitty
+</body>
+</html>

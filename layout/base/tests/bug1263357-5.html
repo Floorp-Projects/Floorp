@@ -1,0 +1,28 @@
+<!DOCTYPE HTML><html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=bug1263357
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Testcase #5 for bug1263357</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="editable" contenteditable='true' spellcheck=false style="outline: 1px solid;"><span id="theSpan">text<br></span>    more</div>
+<script>
+
+function start() {
+  var sel = window.getSelection();
+  // Focus on editable block.
+  theDiv = document.getElementById("editable");
+  theSpan = document.getElementById("theSpan");
+  theDiv.focus();
+  sel.collapse(theSpan, 2);
+}
+
+SimpleTest.waitForFocus(start);
+
+</script>
+</body>
+</html>

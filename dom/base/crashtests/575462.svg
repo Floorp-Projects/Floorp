@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<g id="a"><g id="b"/></g>
+
+<script type="text/javascript">
+<![CDATA[
+
+function j()
+{
+  var a = document.getElementById("a");
+  var b = document.getElementById("b");
+  window.addEventListener("DOMAttrModified", k, true);
+  function k()
+  {
+    window.removeEventListener("DOMAttrModified", k, true);
+    a.appendChild(b);
+  }
+  b.removeAttribute("id");
+}
+
+window.addEventListener("load", j, false);
+
+]]>
+</script>
+</svg>

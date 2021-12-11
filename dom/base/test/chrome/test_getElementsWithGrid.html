@@ -1,0 +1,121 @@
+<!doctype html>
+<html id="root" class="g">
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+.no-match {
+  display: block;
+}
+.g {
+  display: grid;
+}
+.s {
+  display: subgrid;
+}
+.gi {
+  display: inline-grid;
+}
+</style>
+
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function testTargetsAreInElements(targets, elements) {
+  let c = 0;
+  for (let target of targets) {
+    if (c >= elements.length) {
+      ok(false, "We shouldn't have more targets than elements found.");
+      break;
+    }
+    let element = elements[c];
+    let isMatching = (target.id == element.id);
+    let test_function = (target.todo ? todo : ok);
+
+    test_function(isMatching, "Should find " + target.message + ".");
+
+    // Only move to the next element in the elements if this one was a match.
+    // This handles the case of an unexpected element showing up, and prevents
+    // cascading errors in that case. If we've instead screwed up the target
+    // list, then we will get cascading errors.
+    if (isMatching) {
+      ++c;
+    }
+  }
+
+  // Make sure we don't have any extra elements after going through all the targets.
+  is(c, elements.length, "We shouldn't have more elements than we have targets.");
+}
+
+function runTests() {
+  // Part 1: Look for all the grid elements starting from the document root.
+  let elementsFromRoot = document.documentElement.getElementsWithGrid();
+
+  // Check that the expected elements were returned.
+  // Targets are provided in order we expect them to appear.
+  // Has to end in a non-todo element in order for testing logic to work.
+  let targetsFromRoot = [
+    {id: "root", message: "root with display:grid"},
+    {id: "a", message: "'plain' grid container with display:grid"},
+    {id: "b", message: "display:subgrid inside display:grid (to be fixed in Bug 1240834)", todo: true},
+    {id: "c", message: "'plain' grid container with display:inline-grid"},
+    {id: "d", message: "display:subgrid inside display:inline-grid (to be fixed in Bug 1240834)", todo: true},
+    {id: "e", message: "grid container with visibility:hidden"},
+    {id: "f", message: "grid container inside an element"},
+    {id: "g", message: "overflow:scroll grid container"},
+    {id: "h", message: "button as a grid container"},
+    {id: "i", message: "fieldset as a grid container"},
+    {id: "k1", message: "grid container containing a grid container"},
+    {id: "k2", message: "grid container inside a grid container"},
+  ];
+  is(elementsFromRoot.length, 10, "Found expected number of elements within document root.");
+  testTargetsAreInElements(targetsFromRoot, elementsFromRoot);
+
+
+  // Part 2: Look for all the grid elements starting from a non-root element.
+  let elementsFromNonRoot = document.getElementById("a_non_root_element").getElementsWithGrid();
+
+  let targetsFromNonRoot = [
+    {id: "f", message: "grid container inside an element (from non-root element)"},
+  ];
+  is(elementsFromNonRoot.length, 1, "Found expected number of elements from non-root element.");
+  testTargetsAreInElements(targetsFromNonRoot, elementsFromNonRoot);
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+<div id="a" class="g">
+  <div class="no-match"></div>
+  <div id="b" class="s"></div>
+</div>
+
+<div class="no-match"></div>
+
+<div id="c" class="gi">
+  <div id="d" class="s"></div>
+</div>
+
+<div id="e" class="g" style="visibility:hidden"></div>
+
+<div id="a_non_root_element"><div id="f" class="g"></div></div>
+
+<div class="no-match"></div>
+
+<div id="g" style="overflow:scroll" class="g"></div>
+
+<button id="h" class="g"></button>
+
+<fieldset id="i" class="g"></fieldset>
+
+<div id="a_display_none_element" style="display:none"><div id="j" class="g"></div></div>
+
+<div id="k1" class="g"><div id="k2" class="g"></div></div>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Annotations test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+
+body {
+  margin: 20px;
+  font-size: 800%;
+  font-family: Hiragino Maru Gothic ProN, Meiryo;
+}
+
+/* for platforms without these fonts the default glyphs will show */
+
+@font-face {
+  font-family: testMeiryo-circled;
+  src: local(Meiryo);
+  font-feature-settings: "nalt" 4;
+}
+
+@font-face {
+  font-family: testMeiryo-black-circled;
+  src: local(Meiryo);
+  font-feature-settings: "nalt" 5;
+}
+
+@font-face {
+  font-family: testMeiryo-rounded-box;
+  src: local(Meiryo);
+  font-feature-settings: "nalt" 9;
+}
+
+@font-face {
+  font-family: testHiraginoMaru-circled;
+  src: local(HiraMaruProN-W4), local(Hiragino Maru Gothic ProN W4);
+  font-feature-settings: "nalt" 1;
+}
+
+@font-face {
+  font-family: testHiraginoMaru-black-circled;
+  src: local(HiraMaruProN-W4), local(Hiragino Maru Gothic ProN W4);
+  font-feature-settings: "nalt" 4;
+}
+
+@font-face {
+  font-family: testHiraginoMaru-rounded-box;
+  src: local(HiraMaruProN-W4), local(Hiragino Maru Gothic ProN W4);
+  font-feature-settings: "nalt" 10;
+}
+
+#test1 {
+  font-family: testHiraginoMaru-circled, testMeiryo-circled;
+}
+
+#test2 {
+  font-family: testHiraginoMaru-black-circled, testMeiryo-black-circled;
+}
+
+#test3 {
+  font-family: testHiraginoMaru-rounded-box, testMeiryo-rounded-box;
+}
+
+</style>
+
+</head>
+<body>
+<div><span id="test1">1</span> <span id="test2">2</span> <span id="test3">3</span></div>
+</body>
+</html>

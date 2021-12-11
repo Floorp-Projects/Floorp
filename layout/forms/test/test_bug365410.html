@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=365410
+-->
+<title>Test for Bug 365410</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+  select { box-sizing: content-box }
+</style>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=365410">Mozilla Bug 365410</a>
+<p id="display">
+<select id="test0" multiple="multiple">
+	<option id="option">Item 1</option>
+	<option>Item 2</option>
+	<option>Item 3</option>
+	<option>Item 4</option>
+	<option>Item 5</option>
+	<option>Item 6</option>
+	<option>Item 7</option>
+	<option>Item 8</option>
+	<option>Item 9</option>
+	<option>Item 10</option>
+	<option>Item 11</option>
+	<option>Item 12</option>
+	<option>Item 13</option>
+	<option>Item 14</option>
+	<option>Item 15</option>
+</select>
+<select id="test1" multiple="multiple" size="1">
+	<option>Item 1</option>
+	<option>Item 2</option>
+	<option>Item 3</option>
+	<option>Item 4</option>
+	<option>Item 5</option>
+	<option>Item 6</option>
+	<option>Item 7</option>
+	<option>Item 8</option>
+	<option>Item 9</option>
+	<option>Item 10</option>
+	<option>Item 11</option>
+	<option>Item 12</option>
+	<option>Item 13</option>
+	<option>Item 14</option>
+	<option>Item 15</option>
+</select>
+<select id="test2" multiple="multiple" size="1" style="height:0.9em">
+	<option>Item 1</option>
+	<option>Item 2</option>
+	<option>Item 3</option>
+	<option>Item 4</option>
+	<option>Item 5</option>
+	<option>Item 6</option>
+	<option>Item 7</option>
+	<option>Item 8</option>
+	<option>Item 9</option>
+	<option>Item 10</option>
+	<option>Item 11</option>
+	<option>Item 12</option>
+	<option>Item 13</option>
+	<option>Item 14</option>
+	<option>Item 15</option>
+</select>
+<select id="test3" multiple="multiple" size="1"></select>
+<select id="test4" multiple="multiple" size="1" style="height:0.9em"></select>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 365410 **/
+
+function pageUpDownTest(id,index) {
+  var elm = document.getElementById(id);
+  elm.focus();
+  elm.selectedIndex = 0;
+  sendKey("page_down");
+  sendKey("page_down");
+  sendKey("page_up");
+  sendKey("page_down");
+  is(elm.selectedIndex, index, "pageUpDownTest: selectedIndex for " + id + " is " + index);
+}
+
+function upDownTest(id,index) {
+  var elm = document.getElementById(id);
+  elm.focus();
+  elm.selectedIndex = 0;
+  sendKey("down");
+  sendKey("down");
+  sendKey("up");
+  sendKey("down");
+  is(elm.selectedIndex, index, "upDownTest: selectedIndex for " + id + " is " + index);
+}
+
+function setHeight(id, h) {
+  var elm = document.getElementById(id);
+  elm.style.height = h + 'px';
+}
+
+function runTest() {
+  var h = document.getElementById("option").clientHeight;
+  var list5itemsHeight = h * 5.5;
+  setHeight("test0", list5itemsHeight);
+  setHeight("test1", list5itemsHeight);
+  setHeight("test3", list5itemsHeight);
+
+  pageUpDownTest("test0",8);
+  pageUpDownTest("test1",8);
+  pageUpDownTest("test2",2);
+  pageUpDownTest("test3",-1);
+  pageUpDownTest("test4",-1);
+  upDownTest("test0",2);
+  upDownTest("test1",2);
+  upDownTest("test2",2);
+  upDownTest("test3",-1);
+  upDownTest("test4",-1);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+// Turn off spatial nav so that it does not hijack the up and down events.
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTest);
+});
+
+</script>
+</pre>
+</body>
+</html>

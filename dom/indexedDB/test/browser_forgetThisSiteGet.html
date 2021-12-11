@@ -1,0 +1,36 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Indexed Database Test</title>
+
+    <script type="text/javascript">
+      function* testSteps()
+      {
+        let request = indexedDB.open("browser_forgetThisSite.js");
+        request.onerror = grabEventAndContinueHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        let event = yield undefined;
+
+        if (event.type == "error") {
+          testResult = event.target.error.name;
+        }
+        else {
+          let db = event.target.result;
+          testResult = db.version;
+        }
+
+        finishTest();
+        yield undefined;
+      }
+    </script>
+
+    <script type="text/javascript" src="browserHelpers.js"></script>
+
+  </head>
+
+  <body onload="runTest();" onunload="finishTestNow();"></body>
+
+</html>

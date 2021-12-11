@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.datetimebox {
+  display: flex;
+  line-height: normal;
+  /* TODO: Enable selection once bug 1455893 is fixed */
+  user-select: none;
+}
+
+.datetime-input-box-wrapper {
+  display: inline-flex;
+  flex: 1;
+  background-color: inherit;
+  min-width: 0;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.datetime-input-edit-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  flex-grow: 1;
+}
+
+.datetime-edit-field {
+  display: inline;
+  text-align: center;
+  padding: 1px 3px;
+  border: 0;
+  margin: 0;
+  ime-mode: disabled;
+  outline: none;
+}
+
+.datetime-edit-field:not([disabled="true"]):focus {
+  background-color: Highlight;
+  color: HighlightText;
+  outline: none;
+}
+
+.datetime-edit-field[disabled="true"],
+.datetime-edit-field[readonly="true"] {
+  user-select: none;
+}
+
+.datetime-reset-button {
+  color: inherit;
+  font-size: inherit;
+  fill: currentColor;
+  opacity: .5;
+  background-color: transparent;
+  border: none;
+  flex: none;
+  padding-inline: 2px;
+  padding-block: 0;
+  line-height: 1;
+}
+
+.datetime-reset-button-svg {
+  pointer-events: none;
+  /* When using a very small font-size, we don't want the button to take extra
+   * space (which will affect the baseline of the form control) */
+  max-width: 1em;
+  max-height: 1em;
+}

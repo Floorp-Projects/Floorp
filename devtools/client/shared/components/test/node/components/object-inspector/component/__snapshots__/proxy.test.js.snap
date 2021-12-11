@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - Proxy renders Proxy as expected 1`] = `
+"
+▼ Proxy { <target>: {…}, <handler>: (3) […] }
+|  ▶︎ <target>: Object { … }
+|  ▶︎ <handler>: Array(3) [ … ]
+"
+`;

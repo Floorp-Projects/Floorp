@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for bug 1398619</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+let referenceFontSize = getComputedStyle(document.body).fontSize;
+
+function checkComputedStyle(desc, doc) {
+  try {
+    let fontSize = getComputedStyle(doc.body).fontSize;
+    is(fontSize, referenceFontSize, `${desc}: get computed font-size`);
+  } catch (e) {
+    ok(false, `${desc}: fail to get computed font-size, ${e}`);
+  }
+}
+
+async function runTest() {
+  // DOMParser
+  {
+    let parser = new DOMParser();
+    let doc = parser.parseFromString("<body>", "text/html");
+    checkComputedStyle("DOMParser", doc);
+  }
+  // DOMImplementation
+  {
+    let doc = document.implementation.createHTMLDocument("");
+    checkComputedStyle("DOMImplementation", doc);
+  }
+  // XMLHttpRequest
+  {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "empty.html");
+    xhr.responseType = "document";
+    let promise = new Promise(resolve => {
+      xhr.onload = resolve;
+    });
+    xhr.send();
+    await promise;
+    checkComputedStyle("XMLHttpRequest", xhr.responseXML);
+  }
+}
+runTest()
+  .catch(e => ok(false, `Exception: ${e}`))
+  .then(() => SimpleTest.finish());
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+
+<window id="263683test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="SimpleTest.executeSoon(startTest);"
+        title="263683 test">
+
+  <script type="application/javascript"><![CDATA[
+    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+    var gPrefsvc = SpecialPowers.Services.prefs.nsIPrefBranch;
+    var gFindBar = null;
+    var gBrowser;
+
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var info = window.arguments[0].info;
+    var is = window.arguments[0].is;
+
+    function startTest() {
+      (async function() {
+        gFindBar = document.getElementById("FindToolbar");
+        // Testing on a remote browser has been disabled due to frequent
+        // intermittent failures.
+        for (let browserId of ["content"/*, "content-remote"*/]) {
+          await startTestWithBrowser(browserId);
+        }
+      })().then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
+    }
+
+    async function startTestWithBrowser(browserId) {
+      // We're bailing out when testing a remote browser on OSX 10.6, because it
+      // fails permanently.
+      if (browserId.endsWith("remote") && AppConstants.isPlatformAndVersionAtMost("macosx", 11)) {
+        return;
+      }
+
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
+      BrowserTestUtils.loadURI(gBrowser, 'data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+      await promise;
+      await onDocumentLoaded();
+    }
+
+    function toggleHighlightAndWait(highlight) {
+      return new Promise(resolve => {
+        let listener = {
+          onHighlightFinished() {
+            gFindBar.browser.finder.removeResultListener(listener);
+            resolve();
+          }
+        };
+        gFindBar.browser.finder.addResultListener(listener);
+        gFindBar.toggleHighlight(highlight);
+      });
+    }
+
+    async function onDocumentLoaded() {
+      gFindBar.open();
+      var search = "mozilla";
+      gFindBar._findField.focus();
+      gFindBar._findField.value = search;
+      var matchCase = gFindBar.getElement("find-case-sensitive");
+      if (matchCase.checked) {
+        matchCase.doCommand();
+      }
+
+      let promise = toggleHighlightAndWait(true);
+      gFindBar._find();
+      await promise;
+
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsISelectionDisplay)
+                                   .QueryInterface(Ci.nsISelectionController);
+        Assert.ok("SELECTION_FIND" in controller, "Correctly detects new selection type");
+        let selection = controller.getSelection(controller.SELECTION_FIND);
+
+        Assert.equal(selection.rangeCount, 1,
+          "Correctly added a match to the selection type");
+        Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+      });
+
+      await toggleHighlightAndWait(false);
+
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsISelectionDisplay)
+                                   .QueryInterface(Ci.nsISelectionController);
+        let selection = controller.getSelection(controller.SELECTION_FIND);
+        Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
+
+        let input = content.document.getElementById("inp");
+        input.value = args.search;
+      });
+ 
+      await toggleHighlightAndWait(true);
+
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
+        let input = content.document.getElementById("inp");
+        let inputController = input.editor.selectionController;
+        let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
+
+        Assert.equal(inputSelection.rangeCount, 1,
+          "Correctly added a match from input to the selection type");
+        Assert.equal(inputSelection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+      });
+
+      await toggleHighlightAndWait(false);
+
+      await SpecialPowers.spawn(gBrowser, [], async function() {
+        let input = content.document.getElementById("inp");
+        let inputController = input.editor.selectionController;
+        let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
+
+        Assert.equal(inputSelection.rangeCount, 0, "Correctly removed the range");
+      });
+
+      // For posterity, test iframes too.
+
+      promise = BrowserTestUtils.browserLoaded(gBrowser);
+      BrowserTestUtils.loadURI(gBrowser, 'data:text/html,<h2>Text mozilla</h2><iframe id="leframe" ' +
+        'src="data:text/html,Text mozilla"></iframe>');
+      await promise;
+
+      await toggleHighlightAndWait(true);
+
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
+        function getSelection(docShell) {
+          let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsISelectionDisplay)
+                                     .QueryInterface(Ci.nsISelectionController);
+          return controller.getSelection(controller.SELECTION_FIND);
+        }
+
+        let selection = getSelection(docShell);
+        Assert.equal(selection.rangeCount, 1,
+          "Correctly added a match to the selection type");
+        Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+
+        // Check the iframe too:
+        let frame = content.document.getElementById("leframe");
+        // Hoops! Get the docShell first, then the selection.
+        selection = getSelection(frame.contentWindow.docShell);
+        Assert.equal(selection.rangeCount, 1,
+          "Correctly added a match to the selection type");
+        Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+      });
+
+      await toggleHighlightAndWait(false);
+
+      let matches = gFindBar._foundMatches.value.match(/([\d]*)\sof\s([\d]*)/);
+      is(matches[1], "2", "Found correct amount of matches")
+
+      await SpecialPowers.spawn(gBrowser, [], async function(args) {
+        function getSelection(docShell) {
+          let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsISelectionDisplay)
+                                     .QueryInterface(Ci.nsISelectionController);
+          return controller.getSelection(controller.SELECTION_FIND);
+        }
+
+        let selection = getSelection(docShell);
+        Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
+
+        // Check the iframe too:
+        let frame = content.document.getElementById("leframe");
+        // Hoops! Get the docShell first, then the selection.
+        selection = getSelection(frame.contentWindow.docShell);
+        Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
+
+        content.document.documentElement.focus();
+      });
+
+      gFindBar.close(true);
+    }
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" messagemanagergroup="test" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content-remote" remote="true" messagemanagergroup="test" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>

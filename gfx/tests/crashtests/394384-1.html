@@ -1,0 +1,26 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var t1 = document.createTextNode(String.fromCharCode(0x2011) + String.fromCharCode(13));
+  document.body.appendChild(t1);
+  
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  var letterA = document.createTextNode(String.fromCharCode(65));
+  document.body.appendChild(letterA);
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 50);"></body>
+
+</html>

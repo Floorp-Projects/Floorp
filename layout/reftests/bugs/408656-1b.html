@@ -1,0 +1,25 @@
+<html>
+<head><style>
+body {
+  margin: 0px;
+}
+span.a  {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border: 1px solid black;
+  overflow: hidden;
+}
+</style></head>
+<body>
+<!-- Note: This variant testcase (with no whitespace   -->
+<!-- between </script> and <div>) only reproduces the  -->
+<!-- bug on nightlies after May 1st, 2005.             -->
+<script>document.body.offsetHeight;</script
+><div style="padding: 100px;">
+  <span style="position: relative;">
+    <span class="a"></span>
+  </span>
+</div>
+</body>
+</html>

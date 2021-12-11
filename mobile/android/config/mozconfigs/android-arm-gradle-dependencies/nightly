@@ -1,0 +1,7 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+. "$topsrcdir/build/mozconfig.no-compile"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-arm-gradle-dependencies/base"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

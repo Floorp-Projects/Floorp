@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autocomplete behavior when tabbing between form fields</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                                                           SpecialPowers.Ci.nsILoginInfo,
+                                                                           "init");
+let readyPromise = registerRunTests(1);
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+  <form id="form1" action="https://autofill" onsubmit="return false;">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+
+async function prepareLogins(logins = []) {
+  await LoginManager.removeAllUserFacingLogins();
+
+  for (let login of logins) {
+    let storageAddPromise = promiseStorageChanged(["addLogin"]);
+    await LoginManager.addLogin(login);
+    await storageAddPromise;
+  }
+  let count = (await LoginManager.getAllLogins()).length;
+  is(count, logins.length, "All logins were added");
+}
+
+let origin = window.location.origin;
+const availableLogins = {
+  "exampleUser1": new nsLoginInfo(origin, "https://autofill", null,
+                              "user1", "pass1", "uname", "pword"),
+  "subdomainUser1": new nsLoginInfo("https://sub." + window.location.host,
+                              "https://autofill", null,
+                              "user1", "pass1", "uname", "pword"),
+  "emptyUsername": new nsLoginInfo(origin, "https://autofill", null,
+                              "", "pass2", "uname", "pword"),
+}
+
+const tests = [
+  {
+    name: "single_login_exact_origin_no_inputs",
+    logins: ["exampleUser1"],
+    expectedAutofillUsername: "user1",
+    expectedAutofillPassword: "pass1",
+    expectedACLabels: ["user1"],
+    typeUsername: null,
+    expectedTabbedUsername: "",
+    expectedTabbedPassword: "",
+  },
+  {
+    name: "single_login_exact_origin_initial_letter",
+    logins: ["exampleUser1"],
+    expectedAutofillUsername: "user1",
+    expectedAutofillPassword: "pass1",
+    expectedACLabels: ["user1"],
+    typeUsername: "u",
+    expectedTabbedUsername: "u",
+    expectedTabbedPassword: "",
+  },
+  {
+    name: "single_login_exact_origin_type_username",
+    logins: ["exampleUser1"],
+    expectedAutofillUsername: "user1",
+    expectedAutofillPassword: "pass1",
+    expectedACLabels: ["user1"],
+    typeUsername: "user1",
+    expectedTabbedUsername: "user1",
+    expectedTabbedPassword: "pass1",
+  },
+  {
+    name: "single_login_subdomain_no_inputs",
+    logins: ["subdomainUser1"],
+    expectedAutofillUsername: "",
+    expectedAutofillPassword: "",
+    expectedACLabels: ["user1"],
+    typeUsername: null,
+    expectedTabbedUsername: "",
+    expectedTabbedPassword: "",
+  },
+  {
+    name: "single_login_subdomain_type_username",
+    logins: ["subdomainUser1"],
+    expectedAutofillUsername: "",
+    expectedAutofillPassword: "",
+    expectedACLabels: ["user1"],
+    typeUsername: "user1",
+    expectedTabbedUsername: "user1",
+    expectedTabbedPassword: "",
+  },
+  {
+    name: "two_logins_one_with_empty_username",
+    logins: ["exampleUser1", "emptyUsername"],
+    expectedAutofillUsername: "user1",
+    expectedAutofillPassword: "pass1",
+    expectedACLabels: ["user1"],
+    typeUsername: "",
+    expectedTabbedUsername: "",
+    expectedTabbedPassword: "",
+  },
+];
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [["signon.includeOtherSubdomainsInLookup", true]]});
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
+});
+
+async function testResultOfTabInteractions(testData) {
+  await SimpleTest.promiseFocus(window);
+  let logins = testData.logins.map(name => availableLogins[name]);
+  await prepareLogins(logins);
+
+  info("recreating form");
+  let processed = promiseFormsProcessedInSameProcess();
+  recreateTree(document.getElementById("form1"));
+  info("waiting for form processed");
+  await processed;
+  // check autofill results
+  checkForm(1, testData.expectedAutofillUsername, testData.expectedAutofillPassword);
+  let pword = $_(1, "pword");
+  let uname = $_(1, "uname");
+
+  SpecialPowers.wrap(pword).setUserInput("");
+  SpecialPowers.wrap(uname).setUserInput("");
+
+  info("Placing focus in the password field");
+  const shownPromise = promiseACShown();
+  pword.focus();
+  await synthesizeKey("KEY_Tab", { shiftKey: true }); // blur pw, focus un
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+
+  // moving focus shouldn't change anything
+  checkForm(1, "", "");
+
+  await synthesizeKey("KEY_ArrowDown");
+  info("waiting for AC results");
+  let results = await shownPromise;
+  info("checking results");
+  checkAutoCompleteResults(results, testData.expectedACLabels,
+                           window.location.host, "Check all rows are correct");
+
+  if (testData.typeUsername) {
+    await sendString(testData.typeUsername);
+  }
+
+  // don't select anything from the AC menu
+  await synthesizeKey("KEY_Escape");
+  await TestUtils.waitForCondition(async () => {
+    let popupState = await getPopupState();
+    return !popupState.open;
+  }, "AutoComplete popup should have closed");
+
+  await synthesizeKey("KEY_Tab");
+  // Filling password is performed asynchronously.  So, let's wait the value
+  // change instead of just waiting next event loop.
+  if (testData.expectedTabbedPassword === "") {
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  } else {
+    await TestUtils.waitForCondition(() => {
+      return pword.value === testData.expectedTabbedPassword;
+    }, "Password field should be filled");
+  }
+
+  ok($_(1, "pword").matches("input:focus"), "pword field is focused");
+  checkForm(1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
+
+  recreateTree(document.getElementById("form1"));
+  await promiseFormsProcessedInSameProcess();
+  // tidy up by closing any open AC popup
+  await synthesizeKey("KEY_Escape");
+}
+
+for (let testData of tests) {
+  let tmp = {
+    async [testData.name]() {
+      await testResultOfTabInteractions(testData);
+    },
+  };
+  add_task(tmp[testData.name]);
+}
+
+</script>
+</pre>
+</body>
+</html>

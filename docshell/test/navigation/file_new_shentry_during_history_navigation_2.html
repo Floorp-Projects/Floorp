@@ -1,0 +1,10 @@
+<script>
+  onload = function() {
+    opener.postMessage("load");
+  }
+
+  onbeforeunload = function() {
+    opener.postMessage("beforeunload");
+    history.pushState("data1", "", "?push1");
+  }
+</script>

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=613722
+-->
+<head>
+  <title>Test for Bug 613722</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613722">Mozilla Bug 613722</a>
+<p id="display"></p>
+<div id="content">
+  <embed src="test_plugin.tst" hidden>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 613722 **/
+
+var rect = document.getElementsByTagName('embed')[0].getBoundingClientRect();
+
+var hasFrame = rect.left != 0 || rect.right != 0 || rect.top != 0 ||
+               rect.bottom != 0;
+
+ok(hasFrame, "embed should have a frame with hidden set");
+
+</script>
+</pre>
+</body>
+</html>

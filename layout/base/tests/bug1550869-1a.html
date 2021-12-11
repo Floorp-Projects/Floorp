@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+  <title>Bug 1516963: Test AccessibleCaret doesn't show when clicking on a draggable image.</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #container {
+    border: 1px solid blue;
+    width: 100px;
+    height: 100px;
+    background-color: yellow;
+  }
+  img {
+    width: 60px;
+    height: 40px;
+  }
+  </style>
+  <script>
+  document.addEventListener("selectionchange", () => {
+    ok(window.getSelection().isCollapsed, "The selection should be collapsed!");
+  });
+
+  function click() {
+    let img = document.getElementById("img");
+    synthesizeMouseAtCenter(img, {});
+    setTimeout(() => { document.documentElement.removeAttribute("class"); });
+  }
+  </script>
+  <body onload="SimpleTest.waitForFocus(click);">
+    <div id="container"><img id="img" src="chrome/blue-32x32.png"></div>
+  </body>
+</html>

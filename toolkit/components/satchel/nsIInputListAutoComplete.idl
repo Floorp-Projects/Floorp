@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAutoCompleteResult;
+
+webidl HTMLInputElement;
+
+[scriptable, uuid(0e33de3e-4faf-4a1a-b96e-24115b8bfd45)]
+interface nsIInputListAutoComplete: nsISupports {
+  /**
+   * Generate results for a form input autocomplete menu.
+   */
+  nsIAutoCompleteResult autoCompleteSearch(in AString aSearchString,
+                                           in HTMLInputElement aField);
+};

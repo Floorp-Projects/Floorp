@@ -1,0 +1,33 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'ImageLib')
+
+SOURCES += [
+    'bit_reader_utils.c',
+    'color_cache_utils.c',
+    'filters_utils.c',
+    'huffman_utils.c',
+    'quant_levels_dec_utils.c',
+    'quant_levels_utils.c',
+    'random_utils.c',
+    'rescaler_utils.c',
+    'thread_utils.c',
+    'utils.c',
+]
+
+LOCAL_INCLUDES += [
+    '/media/libwebp',
+]
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
+
+FINAL_LIBRARY = 'gkmedias'
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()

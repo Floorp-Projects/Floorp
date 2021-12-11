@@ -1,0 +1,100 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker terminate feature
+-->
+<head>
+  <title>Test for DOM Worker Navigator</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+
+  var messageCount = 0;
+  var intervalCount = 0;
+
+  var interval;
+
+  var worker;
+
+  function messageListener(event) {
+    is(event.data, "Still alive!", "Correct message!");
+    if (++messageCount == 20) {
+      ok(worker.onmessage === messageListener,
+         "Correct listener before terminate");
+
+      worker.terminate();
+
+      var exception = false;
+      try {
+        worker.addEventListener("message", messageListener);
+      }
+      catch (e) {
+        exception = true;
+      }
+      is(exception, false, "addEventListener didn't throw after terminate");
+
+      exception = false;
+      try {
+        worker.removeEventListener("message", messageListener);
+      }
+      catch (e) {
+        exception = true;
+      }
+      is(exception, false, "removeEventListener didn't throw after terminate");
+
+      exception = false;
+      try {
+        worker.postMessage("foo");
+      }
+      catch (e) {
+        exception = true;
+      }
+      is(exception, false, "postMessage didn't throw after terminate");
+
+      exception = false;
+      try {
+        worker.terminate();
+      }
+      catch (e) {
+        exception = true;
+      }
+      is(exception, false, "terminate didn't throw after terminate");
+
+      ok(worker.onmessage === messageListener,
+         "Correct listener after terminate");
+
+      worker.onmessage = function(msg) { }
+
+      interval = setInterval(testCount, 1000);
+    }
+  }
+
+  function testCount() {
+    is(messageCount, 20, "Received another message after terminated!");
+    if (intervalCount++ == 5) {
+      clearInterval(interval);
+      SimpleTest.finish();
+    }
+  }
+
+  worker = new Worker("terminate_worker.js");
+  worker.onmessage = messageListener;
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

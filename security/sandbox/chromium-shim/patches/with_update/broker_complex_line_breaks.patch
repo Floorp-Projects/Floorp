@@ -1,0 +1,502 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1632737723 -3600
+#      Mon Sep 27 11:15:23 2021 +0100
+# Node ID 096696bc1648dbacdfab881c4ed8fe770ebe58b1
+# Parent  254b1fc8768f67d208af199135276abae9aabc0c
+Bug 1713973 p2: Add Uniscribe Line Breaking via chromium-sandbox IPC. r=toshi!,r=jfkthame!
+
+This adds a new cross call using the chromium shared memory IPC to proxy use of
+the Uniscribe line breaker, because it cannot be used in the content process
+with win32k lockdown enabled.
+
+If the text being processed is too long to fit into the IPC params then it is
+processed in chunks.
+
+This change implements an INPTR_TYPE in the sandbox, which appears to have
+been removed at some point.
+It also fixes a bug in OpcodeFactory::MakeOpAction, so that a null param is
+passed and we can use an empty parameter set.
+
+New files are in chromium-shim as these are most likely to require changes and
+this means we will not have to update the main chromium patch.
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_client.h b/security/sandbox/chromium/sandbox/win/src/crosscall_client.h
+--- a/security/sandbox/chromium/sandbox/win/src/crosscall_client.h
++++ b/security/sandbox/chromium/sandbox/win/src/crosscall_client.h
+@@ -39,20 +39,16 @@
+ //             interpretation of the answer is private to client and server.
+ //
+ // The return value is ALL_OK if the IPC was delivered to the server, other
+ // return codes indicate that the IPC transport failed to deliver it.
+ namespace sandbox {
+ 
+ enum class IpcTag;
+ 
+-// this is the assumed channel size. This can be overridden in a given
+-// IPC implementation.
+-const uint32_t kIPCChannelSize = 1024;
+-
+ // The copy helper uses templates to deduce the appropriate copy function to
+ // copy the input parameters in the buffer that is going to be send across the
+ // IPC. These template facility can be made more sophisticated as need arises.
+ 
+ // The default copy helper. It catches the general case where no other
+ // specialized template matches better. We set the type to UINT32_TYPE, so this
+ // only works with objects whose size is 32 bits.
+ template <typename T>
+@@ -207,16 +203,42 @@ class CopyHelper<const wchar_t[n]> : pub
+ // parameters.
+ class InOutCountedBuffer : public CountedBuffer {
+  public:
+   InOutCountedBuffer(void* buffer, uint32_t size)
+       : CountedBuffer(buffer, size) {}
+ };
+ 
+ // This copy helper template specialization catches the cases where the
++// parameter is a an input buffer.
++template <>
++class CopyHelper<CountedBuffer> {
++ public:
++  CopyHelper(const CountedBuffer t) : t_(t) {}
++
++  // Returns the pointer to the start of the string.
++  const void* GetStart() const { return t_.Buffer(); }
++
++  // Update not required so just return true;
++  bool Update(void* buffer) { return true; }
++
++  // Returns the size of the string in bytes. We define a nullptr string to
++  // be of zero length.
++  uint32_t GetSize() const { return t_.Size(); }
++
++  // Returns true if the current type is used as an In or InOut parameter.
++  bool IsInOut() { return false; }
++
++  ArgType GetType() { return INPTR_TYPE; }
++
++ private:
++  const CountedBuffer t_;
++};
++
++// This copy helper template specialization catches the cases where the
+ // parameter is a an input/output buffer.
+ template <>
+ class CopyHelper<InOutCountedBuffer> {
+  public:
+   CopyHelper(const InOutCountedBuffer t) : t_(t) {}
+ 
+   // Returns the pointer to the start of the string.
+   const void* GetStart() const { return t_.Buffer(); }
+diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h b/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
+--- a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
++++ b/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
+@@ -41,16 +41,20 @@
+ // them are not supported.
+ //
+ // Another limitation of CrossCall is that the return value and output
+ // parameters can only be uint32_t integers. Returning complex structures or
+ // strings is not supported.
+ 
+ namespace sandbox {
+ 
++// this is the assumed channel size. This can be overridden in a given
++// IPC implementation.
++const uint32_t kIPCChannelSize = 1024;
++
+ // This is the list of all imported symbols from ntdll.dll.
+ SANDBOX_INTERCEPT NtExports g_nt;
+ 
+ namespace {
+ 
+ // Increases |value| until there is no need for padding given an int64_t
+ // alignment. Returns the increased value.
+ inline uint32_t Align(uint32_t value) {
+@@ -216,16 +220,21 @@ class ActualCallParams : public CrossCal
+   // Testing-only constructor. Allows setting the |number_params| to a
+   // wrong value.
+   ActualCallParams(IpcTag tag, uint32_t number_params)
+       : CrossCallParams(tag, number_params) {
+     param_info_[0].offset_ =
+         static_cast<uint32_t>(parameters_ - reinterpret_cast<char*>(this));
+   }
+ 
++  static constexpr size_t MaxParamsSize() {
++    return sizeof(
++        ActualCallParams<NUMBER_PARAMS, kIPCChannelSize>::parameters_);
++  }
++
+   // Testing-only method. Allows setting the apparent size to a wrong value.
+   // returns the previous size.
+   uint32_t OverrideSize(uint32_t new_size) {
+     uint32_t previous_size = param_info_[NUMBER_PARAMS].offset_;
+     param_info_[NUMBER_PARAMS].offset_ = new_size;
+     return previous_size;
+   }
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc b/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc
+--- a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc
++++ b/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc
+@@ -301,17 +301,17 @@ bool CrossCallParamsEx::GetParameterStr(
+ 
+ bool CrossCallParamsEx::GetParameterPtr(uint32_t index,
+                                         uint32_t expected_size,
+                                         void** pointer) {
+   uint32_t size = 0;
+   ArgType type;
+   void* start = GetRawParameter(index, &size, &type);
+ 
+-  if ((size != expected_size) || (INOUTPTR_TYPE != type))
++  if ((size != expected_size) || (INOUTPTR_TYPE != type && INPTR_TYPE != type))
+     return false;
+ 
+   if (!start)
+     return false;
+ 
+   *pointer = start;
+   return true;
+ }
+diff --git a/security/sandbox/chromium/sandbox/win/src/ipc_args.cc b/security/sandbox/chromium/sandbox/win/src/ipc_args.cc
+--- a/security/sandbox/chromium/sandbox/win/src/ipc_args.cc
++++ b/security/sandbox/chromium/sandbox/win/src/ipc_args.cc
+@@ -15,16 +15,17 @@ namespace sandbox {
+ void ReleaseArgs(const IPCParams* ipc_params, void* args[kMaxIpcParams]) {
+   for (size_t i = 0; i < kMaxIpcParams; i++) {
+     switch (ipc_params->args[i]) {
+       case WCHAR_TYPE: {
+         delete reinterpret_cast<std::wstring*>(args[i]);
+         args[i] = nullptr;
+         break;
+       }
++      case INPTR_TYPE:
+       case INOUTPTR_TYPE: {
+         delete reinterpret_cast<CountedBuffer*>(args[i]);
+         args[i] = nullptr;
+         break;
+       }
+       default:
+         break;
+     }
+@@ -69,16 +70,17 @@ bool GetArgs(CrossCallParamsEx* params,
+           void* data;
+           if (!params->GetParameterVoidPtr(i, &data)) {
+             ReleaseArgs(ipc_params, args);
+             return false;
+           }
+           args[i] = data;
+           break;
+         }
++        case INPTR_TYPE:
+         case INOUTPTR_TYPE: {
+           if (!args[i]) {
+             ReleaseArgs(ipc_params, args);
+             return false;
+           }
+           CountedBuffer* buffer = new CountedBuffer(args[i], size);
+           args[i] = buffer;
+           break;
+diff --git a/security/sandbox/chromium/sandbox/win/src/ipc_tags.h b/security/sandbox/chromium/sandbox/win/src/ipc_tags.h
+--- a/security/sandbox/chromium/sandbox/win/src/ipc_tags.h
++++ b/security/sandbox/chromium/sandbox/win/src/ipc_tags.h
+@@ -41,16 +41,17 @@ enum class IpcTag {
+   GDI_GETCERTIFICATESIZE,
+   GDI_DESTROYOPMPROTECTEDOUTPUT,
+   GDI_CONFIGUREOPMPROTECTEDOUTPUT,
+   GDI_GETOPMINFORMATION,
+   GDI_GETOPMRANDOMNUMBER,
+   GDI_GETSUGGESTEDOPMPROTECTEDOUTPUTARRAYSIZE,
+   GDI_SETOPMSIGNINGKEYANDSEQUENCENUMBERS,
+   NTCREATESECTION,
++  GETCOMPLEXLINEBREAKS,
+   LAST
+ };
+ 
+ constexpr size_t kMaxServiceCount = 64;
+ constexpr size_t kMaxIpcTag = static_cast<size_t>(IpcTag::LAST);
+ static_assert(kMaxIpcTag <= kMaxServiceCount, "kMaxServiceCount is too low");
+ 
+ }  // namespace sandbox
+diff --git a/security/sandbox/chromium/sandbox/win/src/policy_engine_opcodes.cc b/security/sandbox/chromium/sandbox/win/src/policy_engine_opcodes.cc
+--- a/security/sandbox/chromium/sandbox/win/src/policy_engine_opcodes.cc
++++ b/security/sandbox/chromium/sandbox/win/src/policy_engine_opcodes.cc
+@@ -78,17 +78,17 @@ EvalResult OpcodeEval<OP_ALWAYS_TRUE>(Po
+ }
+ 
+ //////////////////////////////////////////////////////////////////////////////
+ // Opcode OpAction:
+ // Does not require input parameter.
+ // Argument 0 contains the actual action to return.
+ 
+ PolicyOpcode* OpcodeFactory::MakeOpAction(EvalResult action, uint32_t options) {
+-  PolicyOpcode* opcode = MakeBase(OP_ACTION, options, 0);
++  PolicyOpcode* opcode = MakeBase(OP_ACTION, options, -1);
+   if (!opcode)
+     return nullptr;
+   opcode->SetArgument(0, action);
+   return opcode;
+ }
+ 
+ template <>
+ EvalResult OpcodeEval<OP_ACTION>(PolicyOpcode* opcode,
+diff --git a/security/sandbox/chromium/sandbox/win/src/policy_params.h b/security/sandbox/chromium/sandbox/win/src/policy_params.h
+--- a/security/sandbox/chromium/sandbox/win/src/policy_params.h
++++ b/security/sandbox/chromium/sandbox/win/src/policy_params.h
+@@ -56,11 +56,15 @@ POLPARAMS_BEGIN(OpenKey)
+ POLPARAMS_END(OpenKey)
+ 
+ // Policy parameter for name-based policies.
+ POLPARAMS_BEGIN(HandleTarget)
+   POLPARAM(NAME)
+   POLPARAM(TARGET)
+ POLPARAMS_END(HandleTarget)
+ 
++// Policy parameters where no parameter based checks are done.
++POLPARAMS_BEGIN(EmptyParams)
++POLPARAMS_END(EmptyParams)
++
+ }  // namespace sandbox
+ 
+ #endif  // SANDBOX_SRC_POLICY_PARAMS_H__
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sandbox/chromium/sandbox/win/src/sandbox.h
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox.h
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox.h
+@@ -176,16 +176,19 @@ class TargetServices {
+   //   If the return is ERROR_GENERIC, you can call ::GetLastError() to get
+   //   more information.
+   virtual ResultCode DuplicateHandle(HANDLE source_handle,
+                                      DWORD target_process_id,
+                                      HANDLE* target_handle,
+                                      DWORD desired_access,
+                                      DWORD options) = 0;
+ 
++  virtual ResultCode GetComplexLineBreaks(const WCHAR* text, uint32_t length,
++                                          uint8_t* break_before) = 0;
++
+  protected:
+   ~TargetServices() {}
+ };
+ 
+ class PolicyInfo {
+  public:
+   // Returns a JSON representation of the policy snapshot.
+   // This pointer has the same lifetime as this PolicyInfo object.
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
+@@ -27,17 +27,18 @@ class TargetPolicy {
+   enum SubSystem {
+     SUBSYS_FILES,            // Creation and opening of files and pipes.
+     SUBSYS_NAMED_PIPES,      // Creation of named pipes.
+     SUBSYS_PROCESS,          // Creation of child processes.
+     SUBSYS_REGISTRY,         // Creation and opening of registry keys.
+     SUBSYS_SYNC,             // Creation of named sync objects.
+     SUBSYS_HANDLES,          // Duplication of handles to other processes.
+     SUBSYS_WIN32K_LOCKDOWN,  // Win32K Lockdown related policy.
+-    SUBSYS_SIGNED_BINARY     // Signed binary policy.
++    SUBSYS_SIGNED_BINARY,    // Signed binary policy.
++    SUBSYS_LINE_BREAK        // Complex line break policy.
+   };
+ 
+   // Allowable semantics when a rule is matched.
+   enum Semantics {
+     FILES_ALLOW_ANY,       // Allows open or create for any kind of access that
+                            // the file system supports.
+     FILES_ALLOW_READONLY,  // Allows open or create with read access only.
+     FILES_ALLOW_QUERY,     // Allows access to query the attributes of a file.
+@@ -60,17 +61,18 @@ class TargetPolicy {
+     REG_ALLOW_READONLY,     // Allows readonly access to a registry key.
+     REG_ALLOW_ANY,          // Allows read and write access to a registry key.
+     FAKE_USER_GDI_INIT,     // Fakes user32 and gdi32 initialization. This can
+                             // be used to allow the DLLs to load and initialize
+                             // even if the process cannot access that subsystem.
+     IMPLEMENT_OPM_APIS,     // Implements FAKE_USER_GDI_INIT and also exposes
+                             // IPC calls to handle Output Protection Manager
+                             // APIs.
+-    SIGNED_ALLOW_LOAD       // Allows loading the module when CIG is enabled.
++    SIGNED_ALLOW_LOAD,      // Allows loading the module when CIG is enabled.
++    LINE_BREAK_ALLOW        // Allow complex line break brokering.
+   };
+ 
+   // Increments the reference count of this object. The reference count must
+   // be incremented if this interface is given to another component.
+   virtual void AddRef() = 0;
+ 
+   // Decrements the reference count of this object. When the reference count
+   // is zero the object is automatically destroyed.
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
+@@ -15,16 +15,17 @@
+ #include "base/strings/stringprintf.h"
+ #include "base/win/win_util.h"
+ #include "base/win/windows_version.h"
+ #include "sandbox/win/src/acl.h"
+ #include "sandbox/win/src/filesystem_policy.h"
+ #include "sandbox/win/src/handle_policy.h"
+ #include "sandbox/win/src/interception.h"
+ #include "sandbox/win/src/job.h"
++#include "sandbox/win/src/line_break_policy.h"
+ #include "sandbox/win/src/named_pipe_policy.h"
+ #include "sandbox/win/src/policy_broker.h"
+ #include "sandbox/win/src/policy_engine_processor.h"
+ #include "sandbox/win/src/policy_low_level.h"
+ #include "sandbox/win/src/process_mitigations.h"
+ #include "sandbox/win/src/process_mitigations_win32k_policy.h"
+ #include "sandbox/win/src/process_thread_policy.h"
+ #include "sandbox/win/src/registry_policy.h"
+@@ -809,16 +810,23 @@ ResultCode PolicyBase::AddRuleInternal(S
+                "policy rules.";
+         if (!SignedPolicy::GenerateRules(pattern, semantics, policy_maker_)) {
+           NOTREACHED();
+           return SBOX_ERROR_BAD_PARAMS;
+         }
+       }
+       break;
+     }
++    case SUBSYS_LINE_BREAK: {
++      if (!LineBreakPolicy::GenerateRules(pattern, semantics, policy_maker_)) {
++        NOTREACHED();
++        return SBOX_ERROR_BAD_PARAMS;
++      }
++      break;
++    }
+ 
+     default: { return SBOX_ERROR_UNSUPPORTED; }
+   }
+ 
+   return SBOX_ALL_OK;
+ }
+ 
+ }  // namespace sandbox
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.cc b/security/sandbox/chromium/sandbox/win/src/target_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/target_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/target_services.cc
+@@ -9,16 +9,17 @@
+ #include <process.h>
+ #include <stdint.h>
+ 
+ #include "base/win/windows_version.h"
+ #include "sandbox/win/src/crosscall_client.h"
+ #include "sandbox/win/src/handle_closer_agent.h"
+ #include "sandbox/win/src/handle_interception.h"
+ #include "sandbox/win/src/heap_helper.h"
++#include "sandbox/win/src/line_break_interception.h"
+ #include "sandbox/win/src/ipc_tags.h"
+ #include "sandbox/win/src/process_mitigations.h"
+ #include "sandbox/win/src/restricted_token_utils.h"
+ #include "sandbox/win/src/sandbox.h"
+ #include "sandbox/win/src/sandbox_nt_util.h"
+ #include "sandbox/win/src/sandbox_types.h"
+ #include "sandbox/win/src/sharedmem_ipc_client.h"
+ 
+@@ -240,19 +241,24 @@ void ProcessState::SetRevertedToSelf() {
+   if (process_state_ < ProcessStateInternal::REVERTED_TO_SELF)
+     process_state_ = ProcessStateInternal::REVERTED_TO_SELF;
+ }
+ 
+ void ProcessState::SetCsrssConnected(bool csrss_connected) {
+   csrss_connected_ = csrss_connected;
+ }
+ 
+-
+ ResultCode TargetServicesBase::DuplicateHandle(HANDLE source_handle,
+                                                DWORD target_process_id,
+                                                HANDLE* target_handle,
+                                                DWORD desired_access,
+                                                DWORD options) {
+   return sandbox::DuplicateHandleProxy(source_handle, target_process_id,
+                                        target_handle, desired_access, options);
+ }
+ 
++ResultCode TargetServicesBase::GetComplexLineBreaks(const WCHAR* text,
++                                                    uint32_t length,
++                                                    uint8_t* break_before) {
++  return sandbox::GetComplexLineBreaksProxy(text, length, break_before);
++}
++
+ }  // namespace sandbox
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.h b/security/sandbox/chromium/sandbox/win/src/target_services.h
+--- a/security/sandbox/chromium/sandbox/win/src/target_services.h
++++ b/security/sandbox/chromium/sandbox/win/src/target_services.h
+@@ -45,16 +45,18 @@ class TargetServicesBase : public Target
+   ResultCode Init() override;
+   void LowerToken() override;
+   ProcessState* GetState() override;
+   ResultCode DuplicateHandle(HANDLE source_handle,
+                              DWORD target_process_id,
+                              HANDLE* target_handle,
+                              DWORD desired_access,
+                              DWORD options) override;
++  ResultCode GetComplexLineBreaks(const WCHAR* text, uint32_t length,
++                                  uint8_t* break_before) final;
+ 
+   // Factory method.
+   static TargetServicesBase* GetInstance();
+ 
+   // Sends a simple IPC Message that has a well-known answer. Returns true
+   // if the IPC was successful and false otherwise. There are 2 versions of
+   // this test: 1 and 2. The first one send a simple message while the
+   // second one send a message with an in/out param.
+diff --git a/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.cc b/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.cc
+--- a/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.cc
++++ b/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.cc
+@@ -9,16 +9,17 @@
+ 
+ #include "base/logging.h"
+ #include "sandbox/win/src/crosscall_server.h"
+ #include "sandbox/win/src/filesystem_dispatcher.h"
+ #include "sandbox/win/src/handle_dispatcher.h"
+ #include "sandbox/win/src/interception.h"
+ #include "sandbox/win/src/internal_types.h"
+ #include "sandbox/win/src/ipc_tags.h"
++#include "sandbox/win/src/line_break_dispatcher.h"
+ #include "sandbox/win/src/named_pipe_dispatcher.h"
+ #include "sandbox/win/src/process_mitigations_win32k_dispatcher.h"
+ #include "sandbox/win/src/process_thread_dispatcher.h"
+ #include "sandbox/win/src/registry_dispatcher.h"
+ #include "sandbox/win/src/sandbox_policy_base.h"
+ #include "sandbox/win/src/signed_dispatcher.h"
+ #include "sandbox/win/src/sync_dispatcher.h"
+ 
+@@ -90,16 +91,20 @@ TopLevelDispatcher::TopLevelDispatcher(P
+       IpcTag::GDI_GETSUGGESTEDOPMPROTECTEDOUTPUTARRAYSIZE)] = dispatcher;
+   ipc_targets_[static_cast<size_t>(
+       IpcTag::GDI_SETOPMSIGNINGKEYANDSEQUENCENUMBERS)] = dispatcher;
+   process_mitigations_win32k_dispatcher_.reset(dispatcher);
+ 
+   dispatcher = new SignedDispatcher(policy_);
+   ipc_targets_[static_cast<size_t>(IpcTag::NTCREATESECTION)] = dispatcher;
+   signed_dispatcher_.reset(dispatcher);
++
++  dispatcher = new LineBreakDispatcher(policy_);
++  ipc_targets_[static_cast<size_t>(IpcTag::GETCOMPLEXLINEBREAKS)] = dispatcher;
++  line_break_dispatcher_.reset(dispatcher);
+ }
+ 
+ TopLevelDispatcher::~TopLevelDispatcher() {}
+ 
+ // When an IPC is ready in any of the targets we get called. We manage an array
+ // of IPC dispatchers which are keyed on the IPC tag so we normally delegate
+ // to the appropriate dispatcher unless we can handle the IPC call ourselves.
+ Dispatcher* TopLevelDispatcher::OnMessageReady(IPCParams* ipc,
+diff --git a/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.h b/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.h
+--- a/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.h
++++ b/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.h
+@@ -38,16 +38,17 @@ class TopLevelDispatcher : public Dispat
+   std::unique_ptr<Dispatcher> filesystem_dispatcher_;
+   std::unique_ptr<Dispatcher> named_pipe_dispatcher_;
+   std::unique_ptr<Dispatcher> thread_process_dispatcher_;
+   std::unique_ptr<Dispatcher> sync_dispatcher_;
+   std::unique_ptr<Dispatcher> registry_dispatcher_;
+   std::unique_ptr<Dispatcher> handle_dispatcher_;
+   std::unique_ptr<Dispatcher> process_mitigations_win32k_dispatcher_;
+   std::unique_ptr<Dispatcher> signed_dispatcher_;
++  std::unique_ptr<Dispatcher> line_break_dispatcher_;
+   Dispatcher* ipc_targets_[kMaxIpcTag];
+ 
+   DISALLOW_COPY_AND_ASSIGN(TopLevelDispatcher);
+ };
+ 
+ }  // namespace sandbox
+ 
+ #endif  // SANDBOX_SRC_TOP_LEVEL_DISPATCHER_H__

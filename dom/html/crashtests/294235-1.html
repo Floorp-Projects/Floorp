@@ -1,0 +1,14 @@
+<html>
+   <head>
+      <title>bug 294235</title>
+      <script>
+         function countdown(){
+            count2.innerHTML="foo";
+         }
+         document.links.length;
+      </script>
+   </head>
+   <body>
+      <strong><div id="count2"><script>countdown();</script><noscript>bar</noscript></div></strong>
+   </body>
+</html>

@@ -1,0 +1,140 @@
+<html>
+<head>
+  <title>Test for root element replacement</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+function runDesignModeTest(aDoc, aFocus, aNewSource) {
+  aDoc.designMode = "on";
+
+  if (aFocus) {
+    aDoc.documentElement.focus();
+  }
+
+  aDoc.open();
+  aDoc.write(aNewSource);
+  aDoc.close();
+  aDoc.documentElement.focus();
+}
+
+function runContentEditableTest(aDoc, aFocus, aNewSource) {
+  if (aFocus) {
+    aDoc.body.setAttribute("contenteditable", "true");
+    aDoc.body.focus();
+  }
+
+  aDoc.open();
+  aDoc.write(aNewSource);
+  aDoc.close();
+  aDoc.getElementById("focus").focus();
+}
+
+var gTestIndex = 0;
+
+const kTests = [
+  { description: "Replace to '<body></body>', designMode",
+    initializer: runDesignModeTest,
+    args: [ "<body></body>" ] },
+  { description: "Replace to '<html><body></body></html>', designMode",
+    initializer: runDesignModeTest,
+    args: [ "<html><body></body></html>" ] },
+  { description: "Replace to '<html>&nbsp;<body></body></html>', designMode",
+    initializer: runDesignModeTest,
+    args: [ "<html> <body></body></html>" ] },
+  { description: "Replace to '&nbsp;<html>&nbsp;<body></body></html>', designMode",
+    initializer: runDesignModeTest,
+    args: [ " <html> <body></body></html>" ] },
+
+  { description: "Replace to '<html contenteditable='true'><body></body></html>",
+    initializer: runContentEditableTest,
+    args: [ "<html contenteditable='true' id='focus'><body></body></html>" ] },
+  { description: "Replace to '<html><body contenteditable='true'></body></html>",
+    initializer: runContentEditableTest,
+    args: [ "<html><body contenteditable='true' id='focus'></body></html>" ] },
+  { description: "Replace to '<body contenteditable='true'></body>",
+    initializer: runContentEditableTest,
+    args: [ "<body contenteditable='true' id='focus'></body>" ] },
+];
+
+var gIFrame;
+var gSetFocusToIFrame = false;
+
+function onLoadIFrame() {
+  var frameDoc = gIFrame.contentWindow.document;
+
+  var selCon = SpecialPowers.wrap(gIFrame).contentWindow.
+    docShell.
+    QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+    getInterface(SpecialPowers.Ci.nsISelectionDisplay).
+    QueryInterface(SpecialPowers.Ci.nsISelectionController);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+
+  // move focus to the HTML editor
+  const kTest = kTests[gTestIndex];
+  ok(true, "Running " + kTest.description);
+  if (kTest.args.length == 1) {
+    kTest.initializer(frameDoc, gSetFocusToIFrame, kTest.args[0]);
+    ok(selCon.caretVisible, "caret isn't visible -- " + kTest.description);
+  } else {
+    ok(false, "kTests is broken at index=" + gTestIndex);
+  }
+
+  is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
+     "IME isn't enabled -- " + kTest.description);
+  synthesizeKey("A", { }, gIFrame.contentWindow);
+  synthesizeKey("B", { }, gIFrame.contentWindow);
+  synthesizeKey("C", { }, gIFrame.contentWindow);
+  var content = frameDoc.body.firstChild;
+  ok(content, "body doesn't have contents -- " + kTest.description);
+  if (content) {
+    is(content.nodeType, Node.TEXT_NODE,
+       "the content of body isn't text node -- " + kTest.description);
+    if (content.nodeType == Node.TEXT_NODE) {
+      is(content.data, "ABC",
+         "the content of body text isn't 'ABC' -- " + kTest.description);
+      is(frameDoc.body.innerHTML, "ABC",
+         "the innerHTML of body isn't 'ABC' -- " + kTest.description);
+    }
+  }
+
+  document.getElementById("display").removeChild(gIFrame);
+
+  // Do next test or finish the tests.
+  if (++gTestIndex < kTests.length) {
+    setTimeout(runTest, 0);
+  } else if (!gSetFocusToIFrame) {
+    gSetFocusToIFrame = true;
+    gTestIndex = 0;
+    setTimeout(runTest, 0);
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+function runTest() {
+  gIFrame = document.createElement("iframe");
+  document.getElementById("display").appendChild(gIFrame);
+  gIFrame.src = "about:blank";
+  gIFrame.onload = onLoadIFrame;
+}
+
+</script>
+</body>
+
+</html>

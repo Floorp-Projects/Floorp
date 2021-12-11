@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Mozilla Bug 761723"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=761723" target="_blank">Mozilla Bug 761723</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript" src="outoflinexulscript.js"></script>
+  <script type="application/javascript"><![CDATA[
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+function inlinefunction() {
+         return 42;
+}
+
+var src;
+src = inlinefunction.toSource();
+isnot(src.indexOf("return 42"), -1, "inline XUL script should have source");
+is(src.charAt(src.length - 1), "}", "inline XUL source should end with '}'");
+src = outoflinefunction.toSource();
+isnot(src.indexOf("return 42"), -1, "out of line XUL script should have source")
+is(src.charAt(src.length - 1), "}", "out of line XUL source should end with '}'");
+src = NetUtil.asyncFetch.toSource();
+isnot(src.indexOf("return"), -1, "JSM should have source");
+var ns = {};
+Services.scriptloader.loadSubScript("resource://gre/modules/NetUtil.jsm", ns);
+src = ns.NetUtil.asyncFetch.toSource();
+isnot(src.indexOf("return"), -1, "subscript should have source");
+
+var base = /.*\//.exec(window.location.href)[0];
+var reg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
+var resolvedBase = reg.convertChromeURL(NetUtil.newURI(base)).spec;
+
+ns = {};
+Services.scriptloader.loadSubScript(resolvedBase + "subscript.js", ns);
+src = ns.NetUtil.asyncFetch.toSource();
+isnot(src.indexOf("return"), -1, "subscript of a subscript should have source");
+
+ns = {};
+Services.scriptloader.loadSubScript(resolvedBase + "utf8_subscript.js", ns);
+src = ns.f.toSource();
+isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
+
+ns = {};
+Services.scriptloader.loadSubScriptWithOptions(resolvedBase + "utf8_subscript.js",
+                                               {target: ns, ignoreCache: true});
+src = ns.f.toSource();
+isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
+
+ns = {};
+let b = new Blob([
+  "var Exported = 17;"
+]);
+var blobUrl = URL.createObjectURL(b);
+Services.scriptloader.loadSubScript(blobUrl, ns);
+is(ns.Exported, 17, "subscript from a blob URL should work");
+  ]]></script>
+</window>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML button accessible states</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  function doTest() {
+    // Default state.
+    testStates("f1_image", STATE_DEFAULT | STATE_FOCUSABLE);
+    testStates("f2_submit", STATE_DEFAULT | STATE_FOCUSABLE);
+    testStates("f3_submitbutton", STATE_DEFAULT | STATE_FOCUSABLE);
+    testStates("f3_disabled_reset", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE, 0);
+    testStates("f4_button", STATE_FOCUSABLE, 0, STATE_DEFAULT);
+    testStates("f4_disabled_button", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE, 0);
+    testStates("f4_image1", STATE_DEFAULT | STATE_FOCUSABLE);
+    testStates("f4_image2", STATE_FOCUSABLE, 0, STATE_DEFAULT);
+    testStates("f4_submit", STATE_FOCUSABLE, 0, STATE_DEFAULT);
+    testStates("f4_submitbutton", STATE_FOCUSABLE, 0, STATE_DEFAULT);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=664142"
+     title="DEFAULT state exposed incorrectly for HTML">
+    Mozilla Bug 664142
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p>A form with an image button</p>
+  <form name="form1" method="get">
+    <input type="text" name="hi">
+
+    <input id="f1_image" type="image" value="image-button">
+  </form>
+
+  <p>A form with a submit button:</p>
+  <form name="form2" method="get">
+    <input type="text" name="hi">
+    <input id="f2_submit" type="submit">
+  </form>
+
+  <p>A form with a HTML4 submit button:</p>
+  <form name="form3" method="get">
+    <input type="text" name="hi">
+    <button id="f3_submitbutton" type="submit">submit</button>
+    <button id="f3_disabled_reset" type="reset" disabled>reset</button>
+  </form>
+
+  <p>A form with normal button, two image buttons, submit button,
+    HTML4 submit button:</p>
+  <form name="form4" method="get">
+    <input type="text" name="hi">
+    <input id="f4_button" type="button" value="normal" name="normal-button">
+    <input id="f4_disabled_button" type="button" value="disabled" name="disabled-button" disabled>
+    <input id="f4_image1" type="image" value="image-button1" name="image-button1">
+    <input id="f4_image2" type="image" value="image-button2" name="image-button2">
+    <input id="f4_submit" type="submit" value="real-submit" name="real-submit">
+    <button id="f4_submitbutton" type="submit">submit</button>
+  </form>
+
+  </body>
+</html>

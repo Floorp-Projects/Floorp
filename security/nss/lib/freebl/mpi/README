@@ -1,0 +1,646 @@
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+About the MPI Library
+---------------------
+
+The files 'mpi.h' and 'mpi.c' define a simple, arbitrary precision
+signed integer arithmetic package.  The implementation is not the most
+efficient possible, but the code is small and should be fairly easily
+portable to just about any machine that supports an ANSI C compiler,
+as long as it is capable of at least 16-bit arithmetic (but also see
+below for more on this).
+
+This library was written with an eye to cryptographic applications;
+thus, some care is taken to make sure that temporary values are not
+left lying around in memory when they are no longer in use.  This adds
+some overhead for zeroing buffers before they are released back into
+the free pool; however, it gives you the assurance that there is only
+one copy of your important values residing in your process's address
+space at a time.  Obviously, it is difficult to guarantee anything, in
+a pre-emptive multitasking environment, but this at least helps you
+keep a lid on the more obvious ways your data can get spread around in
+memory.
+
+
+Using the Library
+-----------------
+
+To use the MPI library in your program, you must include the header:
+
+#include "mpi.h"
+
+This header provides all the type and function declarations you'll
+need to use the library.  Almost all the names defined by the library
+begin with the prefix 'mp_', so it should be easy to keep them from
+clashing with your program's namespace (he says, glibly, knowing full
+well there are always pathological cases).
+
+There are a few things you may want to configure about the library.
+By default, the MPI library uses an unsigned short for its digit type,
+and an unsigned int for its word type.  The word type must be big
+enough to contain at least two digits, for the primitive arithmetic to
+work out.  On my machine, a short is 2 bytes and an int is 4 bytes --
+but if you have 64-bit ints, you might want to use a 4-byte digit and
+an 8-byte word.  I have tested the library using 1-byte digits and
+2-byte words, as well.  Whatever you choose to do, the things you need
+to change are:
+
+(1) The type definitions for mp_digit and mp_word.
+
+(2) The macro DIGIT_FMT which tells mp_print() how to display a
+    single digit.  This is just a printf() format string, so you
+    can adjust it appropriately.
+
+(3) The macros DIGIT_MAX and MP_WORD_MAX, which specify the
+    largest value expressible in an mp_digit and an mp_word,
+    respectively.
+
+Both the mp_digit and mp_word should be UNSIGNED integer types.  The
+code relies on having the full positive precision of the type used for
+digits and words.
+
+The remaining type definitions should be left alone, for the most
+part.  The code in the library does not make any significant
+assumptions about the sizes of things, but there is little if any
+reason to change the other parameters, so I would recommend you leave
+them as you found them.
+
+
+Conventions
+-----------
+
+Most functions in the library return a value of type mp_err.  This
+permits the library to communicate success or various kinds of failure
+to the calling program.  The return values currently defined are:
+
+        MP_OKAY         - okay, operation succeeded, all's well
+        MP_YES          - okay, the answer is yes (same as MP_OKAY)
+        MP_NO           - okay, but answer is no (not MP_OKAY)
+        MP_MEM          - operation ran out of memory
+        MP_RANGE        - input parameter was out of range
+        MP_BADARG       - an invalid input parameter was provided
+        MP_UNDEF        - no output value is defined for this input
+
+The only function which currently uses MP_UNDEF is mp_invmod().
+Division by zero is undefined, but the division functions will return
+MP_RANGE for a zero divisor.  MP_BADARG usually means you passed a
+bogus mp_int structure to the function.  MP_YES and MP_NO are not used
+by the library itself; they're defined so you can use them in your own
+extensions.
+
+If you need a readable interpretation of these error codes in your
+program, you may also use the mp_strerror() function.  This function
+takes an mp_err as input, and returns a pointer to a human-readable
+string describing the meaning of the error.  These strings are stored
+as constants within the library, so the caller should not attempt to
+modify or free the memory associated with these strings.
+
+The library represents values in signed-magnitude format.  Values
+strictly less than zero are negative, all others are considered
+positive (zero is positive by fiat).  You can access the 'sign' member
+of the mp_int structure directly, but better is to use the mp_cmp_z()
+function, to find out which side of zero the value lies on.
+
+Most arithmetic functions have a single-digit variant, as well as the
+full arbitrary-precision.  An mp_digit is an unsigned value between 0
+and DIGIT_MAX inclusive.  The radix is available as RADIX.  The number
+of bits in a given digit is given as DIGIT_BIT.
+
+Generally, input parameters are given before output parameters.
+Unless otherwise specified, any input parameter can be re-used as an
+output parameter, without confusing anything.
+
+The basic numeric type defined by the library is an mp_int.  Virtually
+all the functions in the library take a pointer to an mp_int as one of
+their parameters.  An explanation of how to create and use these
+structures follows.  And so, without further ado...
+
+
+Initialization and Cleanup
+--------------------------
+
+The basic numeric type defined by the library is an 'mp_int'.
+However, it is not sufficient to simply declare a variable of type
+mp_int in your program.  These variables also need to be initialized
+before they can be used, to allocate the internal storage they require
+for computation.
+
+This is done using one of the following functions:
+
+        mp_init(mp_int *mp);
+        mp_init_copy(mp_int *mp, mp_int *from);
+        mp_init_size(mp_int *mp, mp_size p);
+
+Each of these requires a pointer to a structure of type mp_int.  The
+basic mp_init() simply initializes the mp_int to a default size, and
+sets its value to zero.  If you would like to initialize a copy of an
+existing mp_int, use mp_init_copy(), where the 'from' parameter is the
+mp_int you'd like to make a copy of.  The third function,
+mp_init_size(), permits you to specify how many digits of precision
+should be preallocated for your mp_int.  This can help the library
+avoid unnecessary re-allocations later on.
+
+The default precision used by mp_init() can be retrieved using:
+
+        precision = mp_get_prec();
+
+This returns the number of digits that will be allocated.  You can
+change this value by using:
+
+        mp_set_prec(unsigned int prec);
+
+Any positive value is acceptable -- if you pass zero, the default
+precision will be re-set to the compiled-in library default (this is
+specified in the header file 'mpi-config.h', and typically defaults to
+8 or 16).
+
+Just as you must allocate an mp_int before you can use it, you must
+clean up the structure when you are done with it.  This is performed
+using the mp_clear() function.  Remember that any mp_int that you
+create as a local variable in a function must be mp_clear()'d before
+that function exits, or else the memory allocated to that mp_int will
+be orphaned and unrecoverable.
+
+To set an mp_int to a given value, the following functions are given:
+
+        mp_set(mp_int *mp, mp_digit d);
+        mp_set_int(mp_int *mp, long z);
+        mp_set_ulong(mp_int *mp, unsigned long z);
+
+The mp_set() function sets the mp_int to a single digit value, while
+mp_set_int() sets the mp_int to a signed long integer value.
+
+To set an mp_int to zero, use:
+
+        mp_zero(mp_int *mp);
+
+
+Copying and Moving
+------------------
+
+If you have two initialized mp_int's, and you want to copy the value
+of one into the other, use:
+
+        mp_copy(from, to)
+
+This takes care of clearing the old value of 'to', and copies the new
+value into it.  If 'to' is not yet initialized, use mp_init_copy()
+instead (see above).
+
+Note:   The library tries, whenever possible, to avoid allocating
+----    new memory.  Thus, mp_copy() tries first to satisfy the needs
+        of the copy by re-using the memory already allocated to 'to'.
+        Only if this proves insufficient will mp_copy() actually
+        allocate new memory.
+
+        For this reason, if you know a priori that 'to' has enough
+        available space to hold 'from', you don't need to check the
+        return value of mp_copy() for memory failure.  The USED()
+        macro tells you how many digits are used by an mp_int, and
+        the ALLOC() macro tells you how many are allocated.
+
+If you have two initialized mp_int's, and you want to exchange their
+values, use:
+
+        mp_exch(a, b)
+
+This is better than using mp_copy() with a temporary, since it will
+not (ever) touch the memory allocator -- it just swaps the exact
+contents of the two structures.  The mp_exch() function cannot fail;
+if you pass it an invalid structure, it just ignores it, and does
+nothing.
+
+
+Basic Arithmetic
+----------------
+
+Once you have initialized your integers, you can operate on them.  The
+basic arithmetic functions on full mp_int values are:
+
+mp_add(a, b, c)         - computes c = a + b
+mp_sub(a, b, c)         - computes c = a - b
+mp_mul(a, b, c)         - computes c = a * b
+mp_sqr(a, b)            - computes b = a * a
+mp_div(a, b, q, r)      - computes q, r such that a = bq + r
+mp_div_2d(a, d, q, r)   - computes q = a / 2^d, r = a % 2^d
+mp_expt(a, b, c)        - computes c = a ** b
+mp_2expt(a, k)          - computes a = 2^k
+
+The mp_div_2d() function efficiently computes division by powers of
+two.  Either the q or r parameter may be NULL, in which case that
+portion of the computation will be discarded.
+
+The algorithms used for some of the computations here are described in
+the following files which are included with this distribution:
+
+mul.txt         Describes the multiplication algorithm
+div.txt         Describes the division algorithm
+expt.txt        Describes the exponentiation algorithm
+sqrt.txt        Describes the square-root algorithm
+square.txt      Describes the squaring algorithm
+
+There are single-digit versions of most of these routines, as well.
+In the following prototypes, 'd' is a single mp_digit:
+
+mp_add_d(a, d, c)       - computes c = a + d
+mp_sub_d(a, d, c)       - computes c = a - d
+mp_mul_d(a, d, c)       - computes c = a * d
+mp_mul_2(a, c)          - computes c = a * 2
+mp_div_d(a, d, q, r)    - computes q, r such that a = bq + r
+mp_div_2(a, c)          - computes c = a / 2
+mp_expt_d(a, d, c)      - computes c = a ** d
+
+The mp_mul_2() and mp_div_2() functions take advantage of the internal
+representation of an mp_int to do multiplication by two more quickly
+than mp_mul_d() would.  Other basic functions of an arithmetic variety
+include:
+
+mp_zero(a)              - assign 0 to a
+mp_neg(a, c)            - negate a: c = -a
+mp_abs(a, c)            - absolute value: c = |a|
+
+
+Comparisons
+-----------
+
+Several comparison functions are provided.  Each of these, unless
+otherwise specified, returns zero if the comparands are equal, < 0 if
+the first is less than the second, and > 0 if the first is greater
+than the second:
+
+mp_cmp_z(a)             - compare a <=> 0
+mp_cmp_d(a, d)          - compare a <=> d, d is a single digit
+mp_cmp(a, b)            - compare a <=> b
+mp_cmp_mag(a, b)        - compare |a| <=> |b|
+mp_isodd(a)             - return nonzero if odd, zero otherwise
+mp_iseven(a)            - return nonzero if even, zero otherwise
+
+
+Modular Arithmetic
+------------------
+
+Modular variations of the basic arithmetic functions are also
+supported.  These are available if the MP_MODARITH parameter in
+mpi-config.h is turned on (it is by default).  The modular arithmetic
+functions are:
+
+mp_mod(a, m, c)         - compute c = a (mod m), 0 <= c < m
+mp_mod_d(a, d, c)       - compute c = a (mod d), 0 <= c < d (see below)
+mp_addmod(a, b, m, c)   - compute c = (a + b) mod m
+mp_submod(a, b, m, c)   - compute c = (a - b) mod m
+mp_mulmod(a, b, m, c)   - compute c = (a * b) mod m
+mp_sqrmod(a, m, c)      - compute c = (a * a) mod m
+mp_exptmod(a, b, m, c)  - compute c = (a ** b) mod m
+mp_exptmod_d(a, d, m, c)- compute c = (a ** d) mod m
+
+The mp_sqr() function squares its input argument.  A call to mp_sqr(a,
+c) is identical in meaning to mp_mul(a, a, c); however, if the
+MP_SQUARE variable is set true in mpi-config.h (see below), then it
+will be implemented with a different algorithm, that is supposed to
+take advantage of the redundant computation that takes place during
+squaring.  Unfortunately, some compilers result in worse performance
+on this code, so you can change the behaviour at will.  There is a
+utility program "mulsqr.c" that lets you test which does better on
+your system.
+
+The mp_sqrmod() function is analogous to the mp_sqr() function; it
+uses the mp_sqr() function rather than mp_mul(), and then performs the
+modular reduction.  This probably won't help much unless you are doing
+a lot of them.
+
+See the file 'square.txt' for a synopsis of the algorithm used.
+
+Note:   The mp_mod_d() function computes a modular reduction around
+----    a single digit d.  The result is a single digit c.
+
+Because an inverse is defined for a (mod m) if and only if (a, m) = 1
+(that is, if a and m are relatively prime), mp_invmod() may not be
+able to compute an inverse for the arguments.  In this case, it
+returns the value MP_UNDEF, and does not modify c.  If an inverse is
+defined, however, it returns MP_OKAY, and sets c to the value of the
+inverse (mod m).
+
+See the file 'redux.txt' for a description of the modular reduction
+algorithm used by mp_exptmod().
+
+
+Greatest Common Divisor
+-----------------------
+
+If The greates common divisor of two values can be found using one of the
+following functions:
+
+mp_gcd(a, b, c)         - compute c = (a, b) using binary algorithm
+mp_lcm(a, b, c)         - compute c = [a, b] = ab / (a, b)
+mp_xgcd(a, b, g, x, y)  - compute g, x, y so that ax + by = g = (a, b)
+
+Also provided is a function to compute modular inverses, if they
+exist:
+
+mp_invmod(a, m, c)      - compute c = a^-1 (mod m), if it exists
+
+The function mp_xgcd() computes the greatest common divisor, and also
+returns values of x and y satisfying Bezout's identity.  This is used
+by mp_invmod() to find modular inverses.  However, if you do not need
+these values, you will find that mp_gcd() is MUCH more efficient,
+since it doesn't need all the intermediate values that mp_xgcd()
+requires in order to compute x and y.
+
+The mp_gcd() (and mp_xgcd()) functions use the binary (extended) GCD
+algorithm due to Josef Stein.
+
+
+Input & Output Functions
+------------------------
+
+The following basic I/O routines are provided.  These are present at
+all times:
+
+mp_read_radix(mp, str, r)  - convert a string in radix r to an mp_int
+mp_read_raw(mp, s, len)    - convert a string of bytes to an mp_int
+mp_radix_size(mp, r)       - return length of buffer needed by mp_toradix()
+mp_raw_size(mp)            - return length of buffer needed by mp_toraw()
+mp_toradix(mp, str, r)     - convert an mp_int to a string of radix r
+                             digits
+mp_toraw(mp, str)          - convert an mp_int to a string of bytes
+mp_tovalue(ch, r)          - convert ch to its value when taken as
+                             a radix r digit, or -1 if invalid
+mp_strerror(err)           - get a string describing mp_err value 'err'
+
+If you compile the MPI library with MP_IOFUNC defined, you will also
+have access to the following additional I/O function:
+
+mp_print(mp, ofp)       - print an mp_int as text to output stream ofp
+
+Note that mp_radix_size() returns a size in bytes guaranteed to be AT
+LEAST big enough for the digits output by mp_toradix().  Because it
+uses an approximation technique to figure out how many digits will be
+needed, it may return a figure which is larger than necessary.  Thus,
+the caller should not rely on the value to determine how many bytes
+will actually be written by mp_toradix().  The string mp_toradix()
+creates will be NUL terminated, so the standard C library function
+strlen() should be able to ascertain this for you, if you need it.
+
+The mp_read_radix() and mp_toradix() functions support bases from 2 to
+64 inclusive.  If you require more general radix conversion facilities
+than this, you will need to write them yourself (that's why mp_div_d()
+is provided, after all).
+
+Note:   mp_read_radix() will accept as digits either capital or
+----    lower-case letters.  However, the current implementation of
+        mp_toradix() only outputs upper-case letters, when writing
+        bases betwee 10 and 36.  The underlying code supports using
+        lower-case letters, but the interface stub does not have a
+        selector for it.  You can add one yourself if you think it
+        is worthwhile -- I do not.  Bases from 36 to 64 use lower-
+        case letters as distinct from upper-case.  Bases 63 and
+        64 use the characters '+' and '/' as digits.
+
+        Note also that compiling with MP_IOFUNC defined will cause
+        inclusion of <stdio.h>, so if you are trying to write code
+        which does not depend on the standard C library, you will
+        probably want to avoid this option.  This is needed because
+        the mp_print() function takes a standard library FILE * as
+        one of its parameters, and uses the fprintf() function.
+
+The mp_toraw() function converts the integer to a sequence of bytes,
+in big-endian ordering (most-significant byte first).  Assuming your
+bytes are 8 bits wide, this corresponds to base 256.  The sign is
+encoded as a single leading byte, whose value is 0 for zero or
+positive values, or 1 for negative values.  The mp_read_raw() function
+reverses this process -- it takes a buffer of bytes, interprets the
+first as a sign indicator (0 = zero/positive, nonzero = negative), and
+the rest as a sequence of 1-byte digits in big-endian ordering.
+
+The mp_raw_size() function returns the exact number of bytes required
+to store the given integer in "raw" format (as described in the
+previous paragraph).  Zero is returned in case of error; a valid
+integer will require at least three bytes of storage.
+
+In previous versions of the MPI library, an "external representation
+format" was supported.  This was removed, however, because I found I
+was never using it, it was not as portable as I would have liked, and
+I decided it was a waste of space.
+
+
+Other Functions
+---------------
+
+The files 'mpprime.h' and 'mpprime.c' define some routines which are
+useful for divisibility testing and probabilistic primality testing.
+The routines defined are:
+
+mpp_divis(a, b)          - is a divisible by b?
+mpp_divis_d(a, d)        - is a divisible by digit d?
+mpp_random(a)            - set a to random value at current precision
+mpp_random_size(a, prec) - set a to random value at given precision
+
+Note:  The mpp_random() and mpp_random_size() functions use the C
+----   library's rand() function to generate random values.  It is
+       up to the caller to seed this generator before it is called.
+       These functions are not suitable for generating quantities
+       requiring cryptographic-quality randomness; they are intended
+       primarily for use in primality testing.
+
+       Note too that the MPI library does not call srand(), so your
+       application should do this, if you ever want the sequence
+       to change.
+
+mpp_divis_vector(a, v, s, w)  - is a divisible by any of the s digits
+                                in v?  If so, let w be the index of
+                                that digit
+
+mpp_divis_primes(a, np)       - is a divisible by any of the first np
+                                primes?  If so, set np to the prime
+                                which divided a.
+
+mpp_fermat(a, d)              - test if w^a = w (mod a).  If so,
+                                returns MP_YES, otherwise MP_NO.
+
+mpp_pprime(a, nt)             - perform nt iterations of the Rabin-
+                                Miller probabilistic primality test
+                                on a.  Returns MP_YES if all tests
+                                passed, or MP_NO if any test fails.
+
+The mpp_fermat() function works based on Fermat's little theorem, a
+consequence of which is that if p is a prime, and (w, p) = 1, then:
+
+        w^p = w (mod p)
+
+Put another way, if w^p != w (mod p), then p is not prime.  The test
+is expensive to compute, but it helps to quickly eliminate an enormous
+class of composite numbers prior to Rabin-Miller testing.
+
+Building the Library
+--------------------
+
+The MPI library is designed to be as self-contained as possible.  You
+should be able to compile it with your favourite ANSI C compiler, and
+link it into your program directly.  If you are on a Unix system using
+the GNU C compiler (gcc), the following should work:
+
+% gcc -ansi -pedantic -Wall -O2 -c mpi.c
+
+The file 'mpi-config.h' defines several configurable parameters for
+the library, which you can adjust to suit your application.  At the
+time of this writing, the available options are:
+
+MP_IOFUNC       - Define true to include the mp_print() function,
+                  which is moderately useful for debugging.  This
+                  implicitly includes <stdio.h>.
+
+MP_MODARITH     - Define true to include the modular arithmetic
+                  functions.  If you don't need modular arithmetic
+                  in your application, you can set this to zero to
+                  leave out all the modular routines.
+
+MP_LOGTAB       - If true, the file "logtab.h" is included, which
+                  is basically a static table of base 2 logarithms.
+                  These are used to compute how big the buffers for
+                  radix conversion need to be.  If you set this false,
+                  the library includes <math.h> and uses log().  This
+                  typically forces you to link against math libraries.
+
+
+MP_ARGCHK       - Set to 0, 1, or 2.  This defines how the argument
+                  checking macro, ARGCHK(), gets expanded.  If this
+                  is set to zero, ARGCHK() expands to nothing; no
+                  argument checks are performed.  If this is 1, the
+                  ARGCHK() macro expands to code that returns MP_BADARG
+                  or similar at runtime.  If it is 2, ARGCHK() expands
+                  to an assert() call that aborts the program on a
+                  bad input.
+
+MP_DEBUG        - Turns on debugging output.  This is probably not at
+                  all useful unless you are debugging the library.  It
+                  tends to spit out a LOT of output.
+
+MP_DEFPREC      - The default precision of a newly-created mp_int, in
+                  digits.  The precision can be changed at runtime by
+                  the mp_set_prec() function, but this is its initial
+                  value.
+
+MP_SQUARE       - If this is set to a nonzero value, the mp_sqr()
+                  function will use an alternate algorithm that takes
+                  advantage of the redundant inner product computation
+                  when both multiplicands are identical.  Unfortunately,
+                  with some compilers this is actually SLOWER than just
+                  calling mp_mul() with the same argument twice.  So
+                  if you set MP_SQUARE to zero, mp_sqr() will be expan-
+                  ded into a call to mp_mul().  This applies to all
+                  the uses of mp_sqr(), including mp_sqrmod() and the
+                  internal calls to s_mp_sqr() inside mpi.c
+
+                  The program 'mulsqr' (mulsqr.c) can be used to test
+                  which works best for your configuration.  Set up the
+                  CC and CFLAGS variables in the Makefile, then type:
+
+                        make mulsqr
+
+                  Invoke it with arguments similar to the following:
+
+                        mulsqr 25000 1024
+
+                  That is, 25000 products computed on 1024-bit values.
+                  The output will compare the two timings, and recommend
+                  a setting for MP_SQUARE.  It is off by default.
+
+If you would like to use the mp_print() function (see above), be sure
+to define MP_IOFUNC in mpi-config.h.  Many of the test drivers in the
+'tests' subdirectory expect this to be defined (although the test
+driver 'mpi-test' doesn't need it)
+
+The Makefile which comes with the library should take care of building
+the library for you, if you have set the CC and CFLAGS variables at
+the top of the file appropriately.  By default, they are set up to
+use the GNU C compiler:
+
+CC=gcc
+CFLAGS=-ansi -pedantic -Wall -O2
+
+If all goes well, the library should compile without warnings using
+this combination.  You should, of course, make whatever adjustments
+you find necessary.
+
+The MPI library distribution comes with several additional programs
+which are intended to demonstrate the use of the library, and provide
+a framework for testing it.  There are a handful of test driver
+programs, in the files named 'mptest-X.c', where X is a digit.  Also,
+there are some simple command-line utilities (in the 'utils'
+directory) for manipulating large numbers.  These include:
+
+basecvt.c       A radix-conversion program, supporting bases from
+                2 to 64 inclusive.
+
+bbsrand.c       A BBS (quadratic residue) pseudo-random number
+                generator.  The file 'bbsrand.c' is just the driver
+                for the program; the real code lives in the files
+                'bbs_rand.h' and 'bbs_rand.c'
+
+dec2hex.c       Converts decimal to hexadecimal
+
+gcd.c           Computes the greatest common divisor of two values.
+                If invoked as 'xgcd', also computes constants x and
+                y such that (a, b) = ax + by, in accordance with
+                Bezout's identity.
+
+hex2dec.c       Converts hexadecimal to decimal
+
+invmod.c        Computes modular inverses
+
+isprime.c       Performs the Rabin-Miller probabilistic primality
+                test on a number.  Values which fail this test are
+                definitely composite, and those which pass are very
+                likely to be prime (although there are no guarantees)
+
+lap.c           Computes the order (least annihilating power) of
+                a value v modulo m.  Very dumb algorithm.
+
+primegen.c      Generates large (probable) primes.
+
+prng.c          A pseudo-random number generator based on the
+                BBS generator code in 'bbs_rand.c'
+
+sieve.c         Implements the Sieve of Eratosthenes, using a big
+                bitmap, to generate a list of prime numbers.
+
+fact.c          Computes the factorial of an arbitrary precision
+                integer (iterative).
+
+exptmod.c       Computes arbitrary precision modular exponentiation
+                from the command line (exptmod a b m -> a^b (mod m))
+
+Most of these can be built from the Makefile that comes with the
+library.  Try 'make tools', if your environment supports it.
+
+
+Acknowledgements:
+----------------
+
+The algorithms used in this library were drawn primarily from Volume
+2 of Donald Knuth's magnum opus, _The Art of Computer Programming_,
+"Semi-Numerical Methods".  Barrett's algorithm for modular reduction
+came from Menezes, Oorschot, and Vanstone's _Handbook of Applied
+Cryptography_, Chapter 14.
+
+Thanks are due to Tom St. Denis, for finding an obnoxious sign-related
+bug in mp_read_raw() that made things break on platforms which use
+signed chars.
+
+About the Author
+----------------
+
+This software was written by Michael J. Fromberger.  You can contact
+the author as follows:
+
+E-mail:   <sting@linguist.dartmouth.edu>
+
+Postal:   8000 Cummings Hall, Thayer School of Engineering
+          Dartmouth College, Hanover, New Hampshire, USA
+
+PGP key:  http://linguist.dartmouth.edu/~sting/keys/mjf.html
+          9736 188B 5AFA 23D6 D6AA  BE0D 5856 4525 289D 9907
+
+Last updated:  16-Jan-2000

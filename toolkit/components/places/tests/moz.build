@@ -1,0 +1,74 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_DIRS += ["gtest"]
+
+TESTING_JS_MODULES += [
+    "PlacesTestUtils.jsm",
+]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "bookmarks/xpcshell.ini",
+    "expiration/xpcshell.ini",
+    "favicons/xpcshell.ini",
+    "history/xpcshell.ini",
+    "legacy/xpcshell.ini",
+    "maintenance/xpcshell.ini",
+    "migration/xpcshell.ini",
+    "queries/xpcshell.ini",
+    "sync/xpcshell.ini",
+    "unit/xpcshell.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "chrome/chrome.ini",
+]
+
+TEST_HARNESS_FILES.xpcshell.toolkit.components.places.tests += [
+    "head_common.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.browser += [
+    "browser/1601563-1.html",
+    "browser/1601563-2.html",
+    "browser/399606-history.go-0.html",
+    "browser/399606-httprefresh.html",
+    "browser/399606-location.reload.html",
+    "browser/399606-location.replace.html",
+    "browser/399606-window.location.href.html",
+    "browser/399606-window.location.html",
+    "browser/461710_link_page-2.html",
+    "browser/461710_link_page-3.html",
+    "browser/461710_link_page.html",
+    "browser/461710_visited_page.html",
+    "browser/begin.html",
+    "browser/favicon-normal16.png",
+    "browser/favicon-normal32.png",
+    "browser/favicon.html",
+    "browser/final.html",
+    "browser/history_post.html",
+    "browser/history_post.sjs",
+    "browser/redirect-target.html",
+    "browser/redirect.sjs",
+    "browser/redirect_once.sjs",
+    "browser/redirect_self.sjs",
+    "browser/redirect_thrice.sjs",
+    "browser/redirect_twice.sjs",
+    "browser/redirect_twice_perma.sjs",
+    "browser/title1.html",
+    "browser/title2.html",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.chrome += [
+    "chrome/bad_links.atom",
+    "chrome/link-less-items-no-site-uri.rss",
+    "chrome/link-less-items.rss",
+    "chrome/rss_as_html.rss",
+    "chrome/rss_as_html.rss^headers^",
+    "chrome/sample_feed.atom",
+]

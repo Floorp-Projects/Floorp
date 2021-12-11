@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448600
+-->
+<head>
+  <title>Test for Bug 448600</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448600">Mozilla Bug 448600</a>
+<p id="display"></p>
+
+
+<pre id="test">
+<script type="application/javascript">
+
+function filename(uri) {
+  return uri.substr(uri.lastIndexOf("/")+1);
+}
+
+function e(id) {
+  return document.getElementById(id);
+}
+
+var gLoadError = {};
+
+gLoadError.video1 = 0;
+gLoadError.video2 = 0;
+gLoadError.video3 = 0;
+
+var gErrorCount = 0;
+
+SimpleTest.waitForExplicitFinish();
+
+function finishTest() {
+  is(e('video1').currentSrc,
+     "",
+     'video1 currentSrc should be empty when there\'s no playable typed source children');
+  is(filename(e('video2').currentSrc),
+     filename(e('video2').src),
+     'video2 currentSrc should match src');
+  is(filename(e('video3').currentSrc),
+     filename(e('video3').src),
+     'video3 currentSrc should match src');
+
+  is(gLoadError.video1, 2, "Expect one error per invalid source child on video1");
+  is(gLoadError.video2, 1, "Expect one error on video2");
+  is(gLoadError.video3, 1, "Expect one error on video3");
+
+  SimpleTest.finish();
+}
+
+function videoError(event, id) {
+  gLoadError[id]++;
+  gErrorCount++;
+  if (gErrorCount >= 4) {
+    finishTest();
+  }
+}
+
+</script>
+<!-- We make the resource URIs unique to ensure that they are (re)loaded with the new disable-decoder prefs. -->
+<div id="content">
+</div>
+<script>
+function makeVideos() {
+  document.getElementById('content').innerHTML = '<video id="video1" preload="metadata"><source type="video/ogg" src="320x240.ogv?decoder_disabled=1" onerror="videoError(event, \'video1\');"/><source type="audio/wave" src="r11025_u8_c1.wav?decoder_disabled=1" id=\'s2\' onerror="videoError(event, \'video1\');"/></video><video id="video2" preload="metadata" src="320x240.ogv?decoder_disabled=2" onerror="videoError(event, \'video2\');"></video><video id="video3" preload="metadata" src="r11025_u8_c1.wav?decoder_disabled=2" onerror="videoError(event, \'video3\');"></video>';
+}
+
+SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false], ["media.wave.enabled", false]]}, makeVideos);
+</script>
+
+</pre>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style type="text/css">
+@font-face {
+  font-family: Ahem;
+  src: local("Ahem"), url("../fonts/Ahem.ttf");
+  unicode-range: U+0-7F; /* ASCII only */
+}
+div { font-size: 50px; line-height: 100px; }
+/* We use vertical writing-mode because in horizontal mode, the Regular and Mono
+   faces have slightly different line-height metrics, and so although the glyph
+   would match, its positioning would differ. */
+.ref { font-family: Ahem, "Osaka", serif; writing-mode: vertical-rl; }
+.test { font-family: Ahem, "Osaka-Mono", serif; writing-mode: vertical-rl; }
+</style>
+</head>
+<body>
+<p>The two Japanese characters below should use the same font:
+if "Osaka" is present, the name "Osaka-Mono" should also work.</p>
+<div><span class=ref>絵</div>
+<div><span class=test>絵</div>
+</body>
+</html>

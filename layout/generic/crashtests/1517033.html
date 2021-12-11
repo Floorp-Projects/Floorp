@@ -1,0 +1,24 @@
+<!-- COMMENT -->
+<style id="style"></style>
+<script>
+  function start() {
+    try { o = [] } catch (e) {}
+    try { window = window } catch (e) {}
+    try { document = document } catch (e) {}
+    try { header_0 = document.getElementById('header') } catch (e) {}
+    try { style_0 = document.getElementById('style') } catch (e) {}
+    try { style_1 = document.createElement('style') } catch (e) {}
+    try { computed = window.getComputedStyle(style_0) } catch (e) {}
+    try { style_1.textContent = '#header, i { column-span:all } c,* { columns: 2 !important }' } catch (e) {}
+    try { document.firstElementChild.appendChild(style_1) } catch (e) {}
+    try { computed.getPropertyValue('quotes') } catch (e) {}
+    try { header_0.style.setProperty('scroll-behavior', 'smooth', undefined) } catch (e) {}
+    try { window.scrollBy(256, 1) } catch (e) {}
+    try { header_0.style.setProperty('scroll-snap-type', 'both mandatory', '') } catch (e) {}
+    try { header_0.getClientRects() } catch (e) {}
+    try { style_1.sheet.insertRule('i { }', undefined) } catch (e) {}
+  }
+  window.addEventListener('load', start)
+</script>
+<header id="header"></header>
+<!-- COMMENT -->

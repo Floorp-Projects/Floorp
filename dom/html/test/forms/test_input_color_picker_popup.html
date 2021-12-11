@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=885996
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1234567</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style> body { font-family: serif } </style>
+  <script type="application/javascript">
+
+  /** Test the behaviour of the <input type='color'> when clicking on it from
+      different ways. **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  var MockColorPicker = SpecialPowers.MockColorPicker;
+
+  var test = runTest();
+  var testData = [
+    { id: 'normal', result: true },
+    { id: 'hidden', result: false },
+    { id: 'normal', type: 'untrusted', result: true },
+    { id: 'normal', type: 'prevent-default-1', result: false },
+    { id: 'normal', type: 'prevent-default-2', result: false },
+    { id: 'normal', type: 'click-method', result: true },
+    { id: 'normal', type: 'right-click', result: false },
+    { id: 'normal', type: 'middle-click', result: false },
+    { id: 'label-1', result: true },
+    { id: 'label-2', result: true },
+    { id: 'label-3', result: true },
+    { id: 'label-4', result: true },
+    { id: 'button-click', result: true },
+    { id: 'button-down', result: true },
+    { id: 'button-up', result: true },
+    { id: 'div-click', result: true },
+    { id: 'div-click-on-demand', result: true },
+  ];
+
+  SimpleTest.waitForFocus(function() {
+    test.next();
+  });
+
+  function* runTest() {
+    let currentTest = null;
+    MockColorPicker.init(window);
+    var element = null;
+
+    MockColorPicker.showCallback = function(picker) {
+      ok(currentTest.result);
+      SimpleTest.executeSoon(function() {
+        test.next();
+      });
+      return "";
+    };
+
+    while (testData.length != 0) {
+      currentTest = testData.shift();
+      element = document.getElementById(currentTest.id);
+
+      // To make sure we can actually click on the element.
+      element.focus();
+
+      switch (currentTest.type) {
+        case 'untrusted':
+          var e = document.createEvent('MouseEvents');
+          e.initEvent('click', true, false);
+          document.getElementById(element.dispatchEvent(e));
+          break;
+        case 'prevent-default-1':
+          element.onclick = function() {
+            return false;
+          };
+          element.click();
+          element.onclick = function() {};
+          break;
+        case 'prevent-default-2':
+          element.onclick = function(event) {
+            event.preventDefault();
+          };
+          element.click();
+          element.onclick = function() {};
+          break;
+        case 'click-method':
+          element.click();
+          break;
+        case 'right-click':
+          synthesizeMouseAtCenter(element, { button: 2 });
+          break;
+        case 'middle-click':
+          synthesizeMouseAtCenter(element, { button: 1 });
+          break;
+        default:
+          synthesizeMouseAtCenter(element, {});
+      }
+
+      if (!currentTest.result) {
+        setTimeout(function() {
+          setTimeout(function() {
+            ok(true);
+            SimpleTest.executeSoon(function() {
+              test.next();
+            });
+          });
+        });
+      }
+      yield undefined;
+    };
+
+    MockColorPicker.cleanup();
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=885996">Mozilla Bug 885996</a>
+<p id="display"></p>
+<div id="content">
+  <input type='color' id='normal'>
+  <input type='color' id='hidden' hidden>
+  <label id='label-1'>foo<input type='color'></label>
+  <label id='label-2' for='labeled-2'>foo</label><input id='labeled-2' type='color'></label>
+  <label id='label-3'>foo<input type='color'></label>
+  <label id='label-4' for='labeled-4'>foo</label><input id='labeled-4' type='color'></label>
+  <input id='by-button' type='color'>
+  <button id='button-click' onclick="document.getElementById('by-button').click();">click</button>
+  <button id='button-down' onclick="document.getElementById('by-button').click();">click</button>
+  <button id='button-up' onclick="document.getElementById('by-button').click();">click</button>
+  <div id='div-click' onclick="document.getElementById('by-button').click();">click</div>
+  <div id='div-click-on-demand' onclick="var i=document.createElement('input'); i.type='color'; i.click();">click</div>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

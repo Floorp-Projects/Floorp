@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(4, true)">
+  <title>Test animation of the "orient" attribute of the "marker" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- Check that midway through the simple duration the orient attribute has
+       an animated value of -90deg -->
+  <marker id="marker_1" markerWidth="50" markerHeight="50"
+          markerUnits="userSpaceOnUse">
+    <rect width="20" height="20" fill="lime"/>
+    <animate attributeName="orient"
+             calcMode="linear"
+             begin="0s" dur="8s"
+             from="0deg" to="-180deg"
+             fill="freeze"/>
+  </marker>
+  <rect width="20" height="20" fill="red"/>
+  <line x2="0" y2="20" marker-end="url(#marker_1)" stroke="transparent"/>
+
+  <!-- Check that at the end of the simple duration the orient attribute has
+       an animated value of -90deg -->
+  <marker id="marker_2" markerWidth="50" markerHeight="50"
+          markerUnits="userSpaceOnUse">
+    <rect width="20" height="20" fill="lime"/>
+    <animate attributeName="orient"
+             calcMode="linear"
+             begin="0s" dur="4s"
+             from="0deg" to="-90deg"
+             fill="freeze"/>
+  </marker>
+  <rect x="20" width="20" height="20" fill="red"/>
+  <line x2="20" y2="20" marker-end="url(#marker_2)" stroke="transparent"/>
+
+</svg>

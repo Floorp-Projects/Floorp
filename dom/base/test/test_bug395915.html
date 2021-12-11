@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html class="A b">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=395915
+-->
+<head>
+  <title>Test for Bug 395915</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=395915">Mozilla Bug 395915</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 395915 **/
+is(document.getElementsByClassName("a").length, 0,
+   "Class names are case-sensitive");
+is(document.getElementsByClassName("A").length, 1,
+   "Have one node of class A");
+is(document.getElementsByClassName("A")[0], document.documentElement,
+   "Root is class A");
+
+is(document.getElementsByClassName("a b").length, 0,
+   "Class names are case-sensitive two");
+is(document.getElementsByClassName("A B").length, 0,
+   "Class names are case-sensitive three");
+is(document.getElementsByClassName("a B").length, 0,
+   "Class names are case-sensitive four");
+is(document.getElementsByClassName("A b").length, 1,
+   "Have one node of class 'A b'");
+is(document.getElementsByClassName("A b")[0], document.documentElement,
+   "Root is class 'A b'");
+
+</script>
+</pre>
+</body>
+</html>
+

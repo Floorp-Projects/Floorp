@@ -1,0 +1,34 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PKIX_DEPTH = ../..
+PLAT_DEPTH = $(PKIX_DEPTH)/..
+CORE_DEPTH = $(PKIX_DEPTH)/../../..
+
+# MODULE public and private header directories are implicitly REQUIRED.
+MODULE = nss
+
+CSRCS = test_basicchecker.c \
+	test_basicconstraintschecker.c \
+	test_buildchain.c \
+	test_buildchain_uchecker.c \
+	test_buildchain_partialchain.c \
+	test_buildchain_resourcelimits.c \
+	test_customcrlchecker.c \
+	test_defaultcrlchecker2stores.c \
+	test_ocsp.c \
+	test_policychecker.c \
+	test_subjaltnamechecker.c \
+	test_validatechain.c \
+	test_validatechain_bc.c \
+	test_validatechain_NB.c \
+	$(NULL)
+
+LIBRARY_NAME = pkixtooltop
+SHARED_LIBRARY = $(NULL)
+
+SOURCE_LIB_DIR=$(PKIX_DEPTH)/$(OBJDIR)
+
+NO_MD_RELEASE = 1

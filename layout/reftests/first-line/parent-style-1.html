@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSS 2.1 Test Suite: :first-line</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/selector.html#first-line"/>
+    <meta name="flags" content="" />
+<style>
+
+.a:first-line { }
+.a { overflow: scroll; }
+.b, .c { overflow: inherit; }
+
+</style>
+</head>
+<body>
+
+<div class="a"><span class="b"><div class="c"></div></span></div>
+
+</body>
+</html>

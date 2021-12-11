@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(5, true)">
+  <title>Test animation of the &lt;length-list&gt; attributes on the 'text' element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <style type="text/css">
+    :root { font-size: 16px; }  /* see comment below - sets 1em == 16px */
+  </style>
+
+  <!-- If we start getting random orange on this test, see:
+       https://bugzilla.mozilla.org/show_bug.cgi?id=515116#c34
+    -->
+
+  <!-- One of the things that this file tests is animation between lengths
+       of _different unit_. One difficulty this creates is knowing the
+       values to use in the reference file. For example, what length should
+       be used in the reference to comparing against an animation that's mid
+       way between 50px and 10in? The SMIL engine will convert the start
+       length to the unit of the end length and then interpolate, but the
+       number of inches in 50px is not always the same, so we can't fix how
+       many inches is midway between 50px and 10in in the reference file. To
+       get around this problem this test mainly pairs different units with a
+       known, fixed, relationship. For example, animating between cm and mm,
+       or between 'in' and pt (72 pt/in) or between 'in' and pc (6 pc/in).
+       Note that we can animate between px and em by fixing the relationship
+       between these units by setting the CSS 'font-size' property to a fixed
+       number of px units as we've done above.
+
+       The problem with only testing pairs with a fixed relationship is that
+       implementations may only implement interpolation between those pairs
+       because it's easy. To test interpolation between pairs of units
+       without a fixed relationship we use another strategy: we animate from
+       zero of the start unit. Since zero is zero regardless of the unit, we
+       then know what to use in the reference. In theory implementations might
+       specialize for zero, but that's unlikely (hopefully!).
+
+       (An alternative would be to only test end points of the animation, but
+       implementations may use discrete animation rather than interpolation
+       when lengths of different units are encountered, so that would be a bad
+       approach.)
+
+       (Another better alternative would be to use
+       SVGLength.convertToSpecifiedUnits() in the reference file to figure out
+       the conversion of the start unit and set values in the reference file
+       dynamically.)
+  -->
+
+  <!-- Another thing that this file test is animation between lists
+       of _different length_. One implementation strategy when faced with such
+       an animation is to pad the shorter list with zeros for the purposes of
+       animation. This works exactly as you would hope in the case of the
+       <text> element's 'dx' and 'dy' attributes, since for those attributes
+       lengths are offsets from the coordinate at which respective glyph's
+       would otherwise be positioned. In other words, appending a list of
+       zeros to any 'dx' or 'dy' attribute will never have an affect on
+       rendering. However, in the case of 'x' and 'y' attributes on <text>,
+       any lengths given are distances from zero along the relevant axis of
+       the current coordinate system, and zero is not likely to be the
+       position that all glyphs would otherwise be given. Their position will
+       actually depend on CSS parameters, the implementation's text layout
+       algorithm, and the layout of the characters that came before it. Hence
+       zero padding any 'x' or 'y' attribute will likely drastically alter
+       the rendering of the text, and in the case of animation would cause
+       glyphs to animate from/to zero in their coordinate system instead of
+       from/to their natural position. Clearly this is neither what authors
+       would expect, or want, so Mozilla currently disallows animation of 'x'
+       and 'y' if lists of different length are encountered to prevent content
+       being created that relies on such undesirable behavior.
+
+       Ideally the implementation would provide the SMIL engine with the
+       natural position of each glyph so that it can animate from/to those
+       positions. That's tricky, but we do have a bug open to try and
+       implement that. See:
+
+       https://bugzilla.mozilla.org/show_bug.cgi?id=573431
+    -->
+
+  <!-- Test calcMode="linear". -->
+
+  <text transform="translate(20, 20)"
+        x="10px 0.5cm 0.25in 0.5in 16px 0cm 0%">ABCDEFGH
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 72pt 2em 3% 1ex". -->
+    <animate attributeName="x"
+             calcMode="linear"
+             begin="0s" dur="15s"
+             to="40 20mm 6pc 144pt 4em 9% 3ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 36pt 2em 3% 1ex 1".
+         Note that the 'to' list has one extra list item on purpose! -->
+    <animate attributeName="dy"
+             calcMode="linear"
+             begin="0s" dur="15s"
+             from="10px 0.5cm 0.25in 0.25in 16px 0cm 0%"
+             to="40 20mm 6pc 72pt 4em 9% 3ex 3"
+             fill="freeze"/>
+  </text>
+
+
+  <!-- Test 'by' animation. -->
+
+  <text transform="translate(120, 20)"
+        x="10px 0.5cm 0.25in 0.5in 16px 0cm 0%">IJKLMNOP
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 72pt 2em 3% 1ex". -->
+    <animate attributeName="x"
+             calcMode="linear"
+             begin="0s" dur="15s"
+             by="30 15mm 4.5pc 108pt 3em 9% 3ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 36pt 2em 3% 1ex".
+         Note that the 'from' list is essentially zero length! -->
+    <animate attributeName="dy"
+             calcMode="linear"
+             begin="0s" dur="15s"
+             by="60 30mm 9pc 108pt 6em 9% 3ex"
+             fill="freeze"/>
+  </text>
+
+
+  <!-- Test calcMode="paced". It doesn't make a lot of sense to use paced
+       animation with a length list, but since we support it, we test it.
+  -->
+
+  <text transform="translate(220, 20)">QRSTUVWX
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 72pt 2em 3% 1ex". -->
+    <animate attributeName="x"
+             calcMode="paced"
+             begin="0s" dur="15s"
+             values="10px 0.5cm 0.25in 0.5in 16px 0cm 0%;
+                     30 15mm 4.5pc 108pt 3em 6% 2ex;
+                     40 20mm 6pc 144pt 4em 9% 3ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 36pt 2em 3% 1ex 1".
+         Note that the 'to' lists have one extra list item on purpose! -->
+    <animate attributeName="dy"
+             calcMode="paced"
+             begin="0s" dur="15s"
+             values="10px 0.5cm 0.25in 0.25in 16px 0cm 0%;
+                     30 15mm 4.5pc 54pt 3em 6% 2ex 2;
+                     40 20mm 6pc 72pt 4em 9% 3ex 3"
+             fill="freeze"/>
+  </text>
+
+
+  <!-- Test calcMode="discrete". In this case SMIL treats the 'from' and 'to'
+       as two discrete values to jump between. Some authors may expect
+       discrete animation to jump from integer to integer in the unit of the
+       list item in question (or the unit of the 'to' item if the units of
+       corresponding 'from' and 'to' items differ), but that's not the case.
+  -->
+
+  <text transform="translate(320, 20)">YZ123456
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 72pt 2em 3% 1ex". -->
+    <animate attributeName="x"
+             calcMode="discrete"
+             begin="0s" dur="10s"
+             from="10px 0.5cm 0.25in 0.5in 16px 0cm 0%"
+             to="20 10mm 3pc 72pt 2em 3% 1ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 36pt 2em 3% 1ex".
+         Note that the 'to' list has one extra list item on purpose! -->
+    <animate attributeName="dy"
+             calcMode="discrete"
+             begin="0s" dur="10.1s"
+             from="20 10mm 3pc 36pt 2em 3% 1ex"
+             to="40px 2cm 1in 1in 16px 0cm 0% 3"
+             fill="freeze"/>
+  </text>
+
+
+  <!-- Test 'by' animation with calcMode="discrete". -->
+
+  <text transform="translate(420, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex">7890abcd
+
+    <!-- At 5s the animVal should be "10px 0.5cm 0.25in 0.5in 16px 0cm 0%",
+         since the discrete animation is considered to be an additive
+         animation from an empty list to the list specified in by="". -->
+    <animate attributeName="x"
+             calcMode="discrete"
+             begin="0s" dur="15s"
+             by="30 15mm 4.5pc 108pt 3em 9% 3ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be the empty list, as both the underlying
+         value and the first value of the equivalent additive animation are
+         empty lists. -->
+    <animate attributeName="dy"
+             calcMode="discrete"
+             begin="0s" dur="15s"
+             by="20 10mm 3pc 36pt 2em 3% 1ex"
+             fill="freeze"/>
+  </text>
+
+  <text transform="translate(520, 20)"
+        x="10px 0.5cm 0.25in 0.5in 16px 0cm 0%">efghijkl
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 72pt 2em 3% 1ex". -->
+    <animate attributeName="x"
+             calcMode="discrete"
+             begin="0s" dur="8s"
+             by="10 5mm 1.5pc 36pt 1em 3% 1ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 36pt 2em 3% 1ex". -->
+    <animate attributeName="dy"
+             calcMode="discrete"
+             begin="0s" dur="8s"
+             by="20 10mm 3pc 36pt 2em 3% 1ex"
+             fill="freeze"/>
+  </text>
+
+</svg>

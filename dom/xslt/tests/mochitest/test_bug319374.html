@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=319374
+-->
+<head>
+  <title>Test for Bug 319374</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=319374">Mozilla Bug 319374</a>
+<p id="display"></p>
+<div id="content"><custom-el></custom-el><custom-el></custom-el><custom-el></custom-el></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+customElements.define("custom-el", class extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML =
+      `<span attr="attribute"><span></span></span><span> anon text </span><br>`;
+  }
+});
+
+  function testChangesInShadowDOM() {
+    // Test 1: Make sure that modifying anonymous content doesn't
+    //         cause non-anonymous XPath result to throw exceptions..
+    var counter = 0;
+    var error = null;
+    try {
+      var xp = new XPathEvaluator();
+      var result = xp.evaluate("*",
+                               document.getElementById('content'),
+                               null,
+                               XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+                               null);
+      var res = null;
+      while (res = result.iterateNext()) {
+        ++counter;
+        let anon = res.shadowRoot.childNodes;
+        anon[0].firstChild.remove(); // Removing a child node
+        anon[0].removeAttribute("attr1"); // Removing an attribute
+        anon[1].firstChild.data = "anon text changed" // Modifying text data
+      }
+    } catch (e) {
+      error = e;
+    }
+    ok(!error, error);
+    ok(counter == 3, "XPathEvaluator should have found 3 elements.")
+
+    // Test 2: If the context node is in anonymous content, changing some
+    //         other anonymous tree shouldn't cause XPath result to throw.
+    let shadowAttr1 = document.getElementById("content").firstChild.
+      shadowRoot.firstChild.getAttributeNode("attr");
+    let shadowAttr2 = document.getElementById("content").lastChild.
+      shadowRoot.firstChild.getAttributeNode("attr");
+    var resultAttr = null;
+    try {
+      var xp2 = xp.evaluate(".",
+                            shadowAttr1,
+                            null,
+                            XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+                            null);
+      // Attribute changing in a different anonymous tree.
+      shadowAttr2.value = "foo";
+      resultAttr = xp2.iterateNext();
+      is(resultAttr, shadowAttr1, "XPathEvaluator returned wrong attribute!");
+    } catch (e) {
+      ok(false, e);
+    }
+
+    // Test 3: If the anonymous tree in which context node is in is modified,
+    //         XPath result should throw when iterateNext() is called.
+    resultAttr = null;
+    try {
+      var xp3 = xp.evaluate(".",
+                            shadowAttr1,
+                            null,
+                            XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+                            null);
+      // Attribute changing in the same anonymous tree.
+      shadowAttr1.ownerElement.setAttribute("foo", "bar");
+      resultAttr = xp3.iterateNext();
+      ok(resultAttr == shadowAttr1,
+         "XPathEvaluator should have thrown an exception!")
+    } catch (e) {
+      ok(true, e);
+    }
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(testChangesInShadowDOM);
+</script>
+</pre>
+</body>
+</html>
+

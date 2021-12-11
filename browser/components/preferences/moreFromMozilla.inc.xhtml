@@ -1,0 +1,44 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- More From Mozilla panel -->
+
+<script src="chrome://browser/content/preferences/moreFromMozilla.js"/>
+<html:template id="template-paneMoreFromMozilla">
+  <vbox id="moreFromMozillaCategory"
+    class="subcategory"
+    data-hidden-from-search="true"
+    data-category="paneMoreFromMozilla">
+    <html:h1 class="title" data-l10n-id="pane-more-from-mozilla-title" />
+    <html:p class="subtitle" data-l10n-id="pane-more-from-mozilla-subtitle" />
+    <!-- Mozilla Products -->
+    <vbox class="list-item">
+      <label>
+        <html:h2 id="firefox-mobile" class="product-title" data-l10n-id="firefox-mobile-title" />
+      </label>
+      <html:p class="description" data-l10n-id="firefox-mobile-description" />
+      <hbox>
+        <button id="fxMobile" class="primary small-button" data-l10n-id="button-firefox-mobile" />
+      </hbox>
+    </vbox>
+    <vbox class="list-item">
+      <label>
+        <html:h2 id="mozilla-vpn" class="product-title" data-l10n-id="mozilla-vpn-title" />
+      </label>
+      <html:p class="description" data-l10n-id="mozilla-vpn-description" />
+      <hbox>
+        <button id="mozillaVPN" class="primary small-button" data-l10n-id="button-mozilla-vpn" />
+      </hbox>
+    </vbox>
+    <vbox class="list-item">
+      <label>
+        <html:h2 id="mozilla-rally" class="product-title" data-l10n-id="mozilla-rally-title" />
+      </label>
+      <html:p class="description" data-l10n-id="mozilla-rally-description" />
+      <hbox>
+        <button id="mozillaRally" class="primary small-button" data-l10n-id="button-mozilla-rally" />
+      </hbox>
+    </vbox>
+  </vbox>
+</html:template>

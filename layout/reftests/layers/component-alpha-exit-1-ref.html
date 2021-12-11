@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Reference for test transition from component-alpha layer to single-alpha layer</title>
+<script type="text/javascript">
+document.addEventListener("MozReftestInvalidate", function scrollDownAllTheWay () {
+  var scrollbox = document.getElementById("scrollbox");
+  scrollbox.scrollTop = 1000;
+  document.documentElement.className = "";
+});
+</script>
+<style>
+#scrollbox {
+  margin: 20px;
+  width: 300px;
+  height: 400px;
+  overflow-y: hidden;
+  background: linear-gradient(#FFF, #FFF);
+}
+
+#inner {
+  background-color: #000;
+  padding-bottom: 415px;
+}
+</style>
+
+<div id="scrollbox">
+  <div id="inner">
+    
+  </div>
+</div>

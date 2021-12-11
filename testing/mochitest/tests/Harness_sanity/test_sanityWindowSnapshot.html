@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Profiling test suite for WindowSnapshot</title>
+  <script type="text/javascript">
+  var start = new Date();
+  </script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript">
+  var loadTime = new Date();
+  </script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest()">
+<script class="testbody" type="text/javascript">
+info("\nProfile::WindowSnapshotLoadTime: " + (loadTime - start) + "\n");
+function starttest() {
+  SimpleTest.waitForExplicitFinish();
+  var startTime = new Date();
+  var snap = snapshotWindow(window, false);
+  var snap2 = snapshotWindow(window, false);
+  is(compareSnapshots(snap, snap2, true)[0], true, "this should be true");
+  var div1 = createEl('div', {'id': 'somediv', 'display': 'block'}, "I am a div");
+  document.body.appendChild(div1);
+  snap2 = snapshotWindow(window, false);
+  is(compareSnapshots(snap, snap2, true)[0], false, "this should be false");
+  document.body.removeChild(div1);
+  var endTime = new Date();
+  info("\nProfile::WindowSnapshotRunTime: " + (endTime-startTime) + "\n");
+  SimpleTest.finish();
+};
+</script>
+</body>
+</html>

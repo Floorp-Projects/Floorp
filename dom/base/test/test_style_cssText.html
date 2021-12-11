@@ -1,0 +1,85 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test for Bug 1391169</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style id="style"></style>
+</head>
+<body>
+<pre id="log">
+Log is:
+</pre>
+<script>
+let styleElement = document.getElementById("style");
+let logElement = document.getElementById("log");
+console.log("logElement is " + logElement);
+
+function log(text)
+{
+  logElement.innerHTML += text + "\n";
+}
+
+function textContentToCssText(text)
+{
+  // Pass input in via textContent.
+  styleElement.textContent = text;
+
+  // Read output from concatenated cssText of all rules.
+  let s = "";
+  let rules = document.styleSheets[1].cssRules;
+  for (let i = 0; i < rules.length; ++i) {
+    s += rules.item(i).cssText;
+  }
+  return s;
+}
+
+function noWhitespace(text)
+{
+  return text.replace(/\s/g, "");
+}
+
+function testData(input)
+{
+  let text;
+  let pass1Goal;
+  if (typeof(input) == "string") {
+    // Only text data, assume characters should be the same.
+    text = input;
+    pass1Goal = input;
+  } else {
+    [text, pass1Goal] = input;
+  }
+
+  let pass1Text = textContentToCssText(text);
+  is(noWhitespace(pass1Text), noWhitespace(pass1Goal), "textContent --> cssText correct characters emitted with input \"" + text + "\"");
+
+  let pass2Text = textContentToCssText(pass1Text);
+  is(pass2Text, pass1Text, "textContent --> cssText roundtrip with input \"" + text + "\"");
+
+  log(text + " --> " + pass1Text + " --> " + pass2Text);
+}
+
+let data = [
+  "*{}",
+  "* *{}",
+  "* > *{}",
+  "*>*{}",
+  "* * *{}",
+  "* > * > *{}",
+  "* + *{}",
+  "* ~ *{}",
+  ["*|*{}", "*{}"],
+  ["*|* > *{}", "* > *{}"],
+  "#tag{}",
+  "tag{}",
+  "@namespace tag url(\"fakeURL\"); tag|*{}",
+  "@namespace tag url(\"fakeURL\"); tag|* + *{}",
+];
+
+for (let i = 0; i < data.length; i++) {
+  testData(data[i]);
+}
+</script>
+</body>
+</html>

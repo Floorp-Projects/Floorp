@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    :is(input, textarea)::placeholder {
+      visibility: hidden;
+      padding: 20px;
+      float: right;
+      overflow: visible;
+
+      /*
+       * This list could be endless given that all non-whitelisted properties
+       * are restricted.
+       */
+    }
+  </style>
+  <body>
+    <input placeholder='foo'>
+    <textarea placeholder='foo'></textarea>
+    <!-- for overflow and white-space -->
+    <input placeholder='this is a quitelongetextforasmallelement'>
+    <textarea placeholder='this is a quitelongetextforasmallelement'></textarea>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*** Downloads Panel ***/
+
+#downloadsListBox > richlistitem:not([selected]) button {
+  /* Only focus buttons in the selected item. */
+  -moz-user-focus: none;
+}
+
+#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
+#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
+#downloadsFooter:not([showingsummary]) #downloadsSummary {
+  display: none;
+}
+
+#downloadsFooter[showingsummary] > stack:hover > #downloadsSummary,
+#downloadsFooter[showingsummary] > stack:not(:hover) > #downloadsFooterButtons {
+  /* If we used "visibility: hidden;" then the mouseenter event of
+     #downloadsHistory wouldn't be triggered immediately, and the hover styling
+     of the button would not apply until the mouse is moved again.
+
+     "-moz-user-focus: ignore;" prevents the elements with "opacity: 0;" from
+     being focused with the keyboard. */
+  opacity: 0;
+  -moz-user-focus: ignore;
+}
+
+/*** Downloads View ***/
+
+#downloadsRichListBox > richlistitem button {
+  /* These buttons should never get focus, as that would "disable"
+     the downloads view controller (it's only used when the richlistbox
+     is focused). */
+  -moz-user-focus: none;
+}
+
+/*** Visibility of controls inside download items ***/
+.download-state[buttonhidden] > .downloadButton {
+  display: none;
+}
+
+.download-state:not([state="6"],/* Blocked (parental) */
+                    [state="8"],/* Blocked (dirty)    */
+                    [state="9"] /* Blocked (policy)   */)
+                                           .downloadBlockedBadge,
+
+.download-state:not([state="-1"],/* Starting (initial) */
+                    [state="5"], /* Starting (queued)  */
+                    [state="0"], /* Downloading        */
+                    [state="4"], /* Paused             */
+                    [state="7"]  /* Scanning           */)
+                                           .downloadProgress {
+  display: none;
+}
+
+/*** Visibility of download button labels ***/
+
+.download-state:not([state="-1"],/* Starting (initial) */
+                    [state="5"], /* Starting (queued)  */
+                    [state="0"], /* Downloading        */
+                    [state="4"]  /* Paused             */)
+                                           .downloadCancel,
+
+.download-state:not([state="2"], /* Failed             */
+                    [state="3"]  /* Canceled           */)
+                                           .downloadRetry,
+
+.download-state:not([state="1"]  /* Finished           */)
+                                           .downloadShow {
+  display: none;
+}
+
+/*** Downloads panel ***/
+
+#downloadsPanel[hasdownloads] #emptyDownloads,
+#downloadsPanel:not([hasdownloads]) #downloadsListBox {
+  display: none;
+}
+
+/*** Downloads panel multiview (main view and blocked-downloads subview) ***/
+
+/* Make the panel wide enough to show the download list items without improperly
+   truncating them. */
+#downloadsPanel-multiView > .panel-viewcontainer,
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack {
+  max-width: unset;
+}
+
+#downloadsPanel-blockedSubview,
+#downloadsPanel-mainView {
+  font: caption;
+  min-width: 37em;
+  padding: 0.62em;
+}
+
+#downloadsHistory,
+#downloadsFooterButtons {
+  margin: 0;
+}

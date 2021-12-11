@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bug 1375812 - Interpolation between interpolatematrix and none tranform
+</title>
+<meta charset="UTF-8">
+<style>
+  #target {
+    transition: all 10s linear;
+    transform: translateX(100px);
+  }
+</style>
+<script>
+  function go() {
+    var div = document.getElementById('target');
+    div.style.setProperty("transform", "rotate(60deg)", "");
+    window.getComputedStyle(div).transform;
+    div.style.setProperty("transform", "none", "");
+  }
+</script>
+</head>
+<body onload="go()">
+<div id="target"></div>
+</body>
+</html>

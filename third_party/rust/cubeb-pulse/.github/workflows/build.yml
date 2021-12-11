@@ -1,0 +1,44 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable]
+        experimental: [false]
+        include:
+          - rust: nightly
+            experimental: true
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install Rust
+      run: rustup toolchain install ${{ matrix.rust }} --profile minimal --component rustfmt clippy
+
+    - name: Install Dependencies (Linux)
+      run: sudo apt-get install libpulse-dev
+
+    - name: Check format
+      shell: bash
+      run: rustup run ${{ matrix.rust }} cargo fmt --all -- --check
+
+    - name: Clippy
+      shell: bash
+      run: rustup run ${{ matrix.rust }} cargo clippy --all -- -D warnings
+
+    - name: Build
+      shell: bash
+      run: rustup run ${{ matrix.rust }} cargo build --all
+
+    - name: Test
+      shell: bash
+      run: rustup run ${{ matrix.rust }} cargo test --all
+

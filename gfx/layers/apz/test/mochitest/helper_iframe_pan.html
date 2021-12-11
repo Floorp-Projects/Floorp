@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Sanity panning test for scrollable div</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var outer = document.getElementById("outer");
+  var transformEndPromise = promiseTransformEnd();
+
+  synthesizeNativeTouchDrag(outer.contentDocument.body, 10, 100, 0, -50);
+  dump("Finished native drag, waiting for transform-end observer...\n");
+
+  await transformEndPromise;
+
+  dump("Transform complete; flushing repaints...\n");
+  await promiseOnlyApzControllerFlushed(outer.contentWindow);
+
+  var outerScroll = outer.contentWindow.scrollY;
+  if (getPlatform() == "windows") {
+    // On windows, because we run this test with native event synthesization,
+    // Windows can end up eating the first touchmove which can result in the
+    // scroll amount being slightly smaller than 50px. See bug 1388955.
+    dump("iframe scrolled " + outerScroll + "px");
+    ok(outerScroll > 45, "iframe scrolled at least 45 px");
+    ok(outerScroll <= 50, "iframe scrolled at most 50 px");
+  } else {
+    is(outerScroll, 50, "check that the iframe scrolled");
+  }
+}
+
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone);
+
+  </script>
+</head>
+<body>
+ <iframe id="outer" style="height: 250px; border: solid 1px black" srcdoc="<body style='height:5000px'>"></iframe>
+ <div style="height: 5000px; background-color: lightgreen;">
+  This div makes the top-level page scrollable.
+ </div>
+</body>
+</html>

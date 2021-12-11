@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+<!-- This video file has a timescale of 0 in the mdhd atom -->
+<video src="0-timescale.mp4"
+       autoplay
+       onerror="document.documentElement.className=undefined"
+       onloadedmetadata="this.src=''; document.documentElement.className=undefined">
+<!-- Note we reset 'src' to release decoder resources and cubeb streams to prevent OOM or OpenCubeb() failures. -->
+</video>
+</body>
+</html>

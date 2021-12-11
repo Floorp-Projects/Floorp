@@ -1,0 +1,22 @@
+<!--
+Inner frame for test of bug 385434.
+https://bugzilla.mozilla.org/show_bug.cgi?id=385434
+-->
+<html>
+<head>
+  <script type="application/javascript">
+    // Notify our parent if we have a hashchange and once we're done loading.
+    window.addEventListener("hashchange", parent.onIframeHashchange);
+
+    window.addEventListener("DOMContentLoaded", function() {
+      // This also should trigger a hashchange, becuase the readystate is
+      // "interactive", not "complete" during DOMContentLoaded.
+      window.location.hash = "2";
+    });
+
+  </script>
+</head>
+
+<body>
+</body>
+</html>

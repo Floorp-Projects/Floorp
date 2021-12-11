@@ -1,0 +1,41 @@
+These scripts are used to run fipstest on a directory of CAVS vectors.
+
+individual cipher scripts:
+aesgcm.sh aes.sh dsa.sh ecdsa.sh hmac.sh ike.sh kas.sh
+kbkdf.sh rng.sh rsa.sh sha.sh tdea.sh tls.sh
+
+Each individual cipher script handles all the tests in a particular directory.
+The scripts have 2 modes:
+  1) run [default] which generates the .rsp file from the .req file.
+  2) verify  which verify the generated .req file, either from a pregenerated
+.fax file, or by running the appropriate fipstest verify function. The latter
+is used for output that's non-deterministic (like randomly generated keys, or
+signatures with random elements in them like DSA).
+
+The verify scripts return 0 on success and non-zero on failure.
+
+The validate1.sh script is used by these individual cipher scripts to make
+sure .rsp and .fax files are identical, sans some expected differences like
+white space or comment differences. It returns 0 on success or non-zero on
+failure.
+
+When the scripts use fipstest to validate a .resp file, it uses grep to look
+for failure cases. grep returns '1' if no failures are found and '1' if
+failures or found. The scripts switches this back to 0 for success and 1 for
+failure with the command 'test 1 = $?` which returns 0 if $? is 1 and 1 if $?
+is 0.
+
+To run and individual cipher test, just type:
+   ./{script}.sh {path-to-cavs-root}
+
+to verify with an individual cipher test, just type:
+  ./{script}.sh {path-to-cavs-root} verify
+
+You can run all the cipher scripts with the runtest.sh:
+   ./runtest.sh {path-to-cavs-root}
+
+And you can verify the result with:
+  ./runtest.sh {path-to-cavs-root} verify
+Or
+  ./validate.sh {patch-to-cavs-root}
+

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>add_search_engine_3</ShortName>
+<Url type="text/html" method="GET" template="http://mochi.test:8888/" rel="searchform">
+  <Param name="terms" value="{searchTerms}"/>
+</Url>
+</SearchPlugin>

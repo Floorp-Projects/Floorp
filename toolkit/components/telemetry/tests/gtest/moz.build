@@ -1,0 +1,32 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, you can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("telemetrytest")
+
+LOCAL_INCLUDES += [
+    "../..",
+]
+
+UNIFIED_SOURCES = [
+    "TelemetryFixture.cpp",
+    "TelemetryTestHelpers.cpp",
+]
+
+if CONFIG["OS_TARGET"] != "Android":
+    UNIFIED_SOURCES += [
+        "TestCombinedStacks.cpp",
+        "TestCounters.cpp",
+        "TestEvents.cpp",
+        "TestHistograms.cpp",
+        "TestOrigins.cpp",
+        "TestScalars.cpp",
+    ]
+
+FINAL_LIBRARY = "xul-gtest"
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+REQUIRES_UNIFIED_BUILD = True

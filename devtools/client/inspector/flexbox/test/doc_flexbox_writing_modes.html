@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+.flex-container {
+  display: flex;
+}
+
+.flex-container.vertical-rl {
+  writing-mode: vertical-rl;
+}
+
+.flex-container.sideways-lr {
+  writing-mode: sideways-lr;
+}
+
+.column {
+  flex-direction: column;
+}
+
+.item {
+  min-width: 300px;
+  min-height: 300px;
+}
+
+</style>
+<div class="flex-container vertical-rl">
+  <span class="row vertical-rl item">Vertical-tb Row content</span>
+</div>
+<div class="flex-container column">
+  <span class="column vertical-tb item">Vertical-tb Column Content</span>
+</div>
+<div class="flex-container sideways-lr">
+  <span class="row vertical-bt item">Vertical-bt Row Content</span>
+</div>
+<div class="flex-container vertical-rl column">
+  <span class="column horizontal-rl item">Horizontal-rl Column Content</span>
+</div>
+<div class="flex-container">
+  <span class="row horizontal-lr item">Horizontal-lr Row Content</span>
+</div>

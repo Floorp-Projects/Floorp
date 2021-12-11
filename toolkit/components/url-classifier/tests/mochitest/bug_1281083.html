@@ -1,0 +1,11 @@
+<html>
+<head>
+<title></title>
+</head>
+<body>
+
+<!-- Try loading from a malware javascript URI -->
+<script id="badscript" data-touched="not sure" src="http://bug1281083.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
+
+</body>
+</html>

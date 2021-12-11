@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: remove video track"
+  });
+
+  runNetworkTest(async (options) => {
+    // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+    if (navigator.userAgent.includes("Android")) {
+      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                      ["media.webrtc.hw.h264.enabled", false]);
+    }
+
+    const test = new PeerConnectionTest(options);
+    let receivedTrack, element;
+    addRenegotiation(test.chain,
+      [
+        function PC_REMOTE_SETUP_HELPER(test) {
+          is(test.pcRemote._pc.getReceivers().length, 1,
+             "pcRemote should have one receiver before renegotiation");
+
+          receivedTrack = test.pcRemote._pc.getReceivers()[0].track;
+          is(receivedTrack.readyState, "live",
+             "The received track should be live");
+
+          element = createMediaElement("video", "pcRemoteReceivedVideo");
+          element.srcObject = new MediaStream([receivedTrack]);
+          return haveEvent(element, "loadeddata");
+        },
+        function PC_LOCAL_REMOVE_VIDEO_TRACK(test) {
+          test.setOfferOptions({ offerToReceiveVideo: true });
+          test.setMediaConstraints([], [{video: true}]);
+          return test.pcLocal.removeSender(0);
+        },
+      ],
+      [
+        function PC_REMOTE_CHECK_FLOW_STOPPED(test) {
+          is(test.pcRemote._pc.getTransceivers().length, 1,
+              "pcRemote should have one transceiver");
+          const track = test.pcRemote._pc.getTransceivers()[0].receiver.track;
+
+          const vAdded = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(track.id));
+          const helper = new VideoStreamHelper();
+          return helper.checkVideoPaused(vAdded, 10, 10, 16, 5000);
+        },
+      ]
+    );
+
+    test.setMediaConstraints([{video: true}], [{video: true}]);
+    await test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

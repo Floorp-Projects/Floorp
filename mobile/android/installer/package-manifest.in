@@ -1,0 +1,217 @@
+; This Source Code Form is subject to the terms of the Mozilla Public
+; License, v. 2.0. If a copy of the MPL was not distributed with this
+; file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+; Package file for the Fennec build.
+;
+; File format:
+;
+; [] designates a toplevel component. Example: [xpcom]
+; - in front of a file specifies it to be removed from the destination
+; * wildcard support to recursively copy the entire directory
+; ; file comment
+;
+
+#filter substitution
+
+[@AB_CD@]
+@BINPATH@/@PREF_DIR@/mobile-l10n.js
+@BINPATH@/update.locale
+#ifdef MOZ_UPDATER
+@BINPATH@/updater.ini
+#endif
+@BINPATH@/dictionaries/*
+@BINPATH@/hyphenation/*
+@BINPATH@/localization/*
+
+[lib destdir="lib/@ANDROID_CPU_ARCH@"]
+
+#ifdef MOZ_CLANG_RT_ASAN_LIB
+@BINPATH@/@MOZ_CLANG_RT_ASAN_LIB@
+#endif
+
+#ifndef MOZ_STATIC_JS
+@BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
+#endif
+#ifdef MOZ_DMD
+@BINPATH@/@DLL_PREFIX@dmd@DLL_SUFFIX@
+#endif
+#ifndef MOZ_FOLD_LIBS
+@BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@lgpllibs@DLL_SUFFIX@
+#ifdef MOZ_FFVPX
+@BINPATH@/@DLL_PREFIX@mozavutil@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@mozavcodec@DLL_SUFFIX@
+#endif
+#ifdef MOZ_OMX_PLUGIN
+@BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@omxpluginkk@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
+
+@BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
+#ifndef MOZ_FOLD_LIBS
+@BINPATH@/@DLL_PREFIX@nssutil3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@smime3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@ssl3@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@softokn3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
+#ifndef CROSS_COMPILE
+@BINPATH@/@DLL_PREFIX@freebl3.chk
+@BINPATH@/@DLL_PREFIX@softokn3.chk
+#endif
+
+#ifndef MOZ_FOLD_LIBS
+@BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
+#endif
+
+@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
+# This should be MOZ_CHILD_PROCESS_NAME, but that has a "lib/" prefix.
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME@
+
+#ifdef MOZ_ANDROID_GOOGLE_VR
+@BINPATH@/@DLL_PREFIX@gvr@DLL_SUFFIX@
+#endif
+
+[xpcom]
+@BINPATH@/package-name.txt
+
+[browser]
+; [Base Browser Files]
+@BINPATH@/application.ini
+@BINPATH@/platform.ini
+@BINPATH@/defaults/settings/last_modified.json
+@BINPATH@/defaults/settings/blocklists/addons.json
+; TODO bug 1639050: addons-bloomfilters should be used instead of addons.json
+@BINPATH@/defaults/settings/security-state/onecrl.json
+@BINPATH@/defaults/settings/main/password-recipes.json
+
+; [Components]
+@BINPATH@/components/components.manifest
+
+; JavaScript components
+@BINPATH@/components/toolkitsearch.manifest
+
+@BINPATH@/components/extensions.manifest
+
+@BINPATH@/components/antitracking.manifest
+
+@BINPATH@/components/ProcessSingleton.manifest
+@BINPATH@/components/HandlerService.manifest
+@BINPATH@/components/HandlerService.js
+@BINPATH@/components/servicesComponents.manifest
+@BINPATH@/components/servicesSettings.manifest
+@BINPATH@/components/l10n-registry.manifest
+
+#if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
+@BINPATH@/components/TestInterfaceJS.js
+@BINPATH@/components/TestInterfaceJS.manifest
+#endif
+
+; Modules
+@BINPATH@/modules/*
+@BINPATH@/actors/*
+
+; [Browser Chrome Files]
+@BINPATH@/chrome/toolkit@JAREXT@
+@BINPATH@/chrome/toolkit.manifest
+
+; [Extensions]
+@BINPATH@/components/extensions-toolkit.manifest
+@BINPATH@/components/extensions-mobile.manifest
+
+; Features
+@BINPATH@/features/*
+
+; DevTools
+@BINPATH@/chrome/devtools@JAREXT@
+@BINPATH@/chrome/devtools.manifest
+
+; [Default Preferences]
+; All the pref files must be part of base to prevent migration bugs
+#ifndef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+@BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
+@BINPATH@/@PREF_DIR@/@ANDROID_CPU_ARCH@/geckoview-prefs.js
+#else
+@BINPATH@/*/greprefs.js
+@BINPATH@/@PREF_DIR@/*/geckoview-prefs.js
+#endif # !MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+@BINPATH@/@PREF_DIR@/channel-prefs.js
+@BINPATH@/defaults/autoconfig/prefcalls.js
+
+; [Layout Engine Resources]
+; Style Sheets, Graphics and other Resources used by the layout engine.
+@BINPATH@/res/EditorOverride.css
+@BINPATH@/res/contenteditable.css
+@BINPATH@/res/designmode.css
+@BINPATH@/res/table-add-column-after-active.gif
+@BINPATH@/res/table-add-column-after-hover.gif
+@BINPATH@/res/table-add-column-after.gif
+@BINPATH@/res/table-add-column-before-active.gif
+@BINPATH@/res/table-add-column-before-hover.gif
+@BINPATH@/res/table-add-column-before.gif
+@BINPATH@/res/table-add-row-after-active.gif
+@BINPATH@/res/table-add-row-after-hover.gif
+@BINPATH@/res/table-add-row-after.gif
+@BINPATH@/res/table-add-row-before-active.gif
+@BINPATH@/res/table-add-row-before-hover.gif
+@BINPATH@/res/table-add-row-before.gif
+@BINPATH@/res/table-remove-column-active.gif
+@BINPATH@/res/table-remove-column-hover.gif
+@BINPATH@/res/table-remove-column.gif
+@BINPATH@/res/table-remove-row-active.gif
+@BINPATH@/res/table-remove-row-hover.gif
+@BINPATH@/res/table-remove-row.gif
+@BINPATH@/res/grabber.gif
+@BINPATH@/res/dtd/*
+@BINPATH@/res/language.properties
+@BINPATH@/res/locale/layout/HtmlForm.properties
+@BINPATH@/res/locale/layout/MediaDocument.properties
+@BINPATH@/res/locale/layout/xmlparser.properties
+@BINPATH@/res/locale/dom/dom.properties
+
+#ifndef MOZ_ANDROID_EXCLUDE_FONTS
+@BINPATH@/res/fonts/*
+#else
+@BINPATH@/res/fonts/*.properties
+#endif
+
+; Content-accessible resources.
+@BINPATH@/contentaccessible/*
+
+; svg
+@BINPATH@/res/svg.css
+
+; For process sandboxing
+#if defined(MOZ_SANDBOX)
+@BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
+#endif
+
+; [Crash Reporter]
+; CrashService is not used on Android but the ini files are required for L10N
+; strings, see bug 1191351.
+#ifdef MOZ_CRASHREPORTER
+@BINPATH@/crashreporter.ini
+@BINPATH@/crashreporter-override.ini
+#endif
+
+[mobile]
+@BINPATH@/chrome/geckoview@JAREXT@
+@BINPATH@/chrome/geckoview.manifest
+
+@BINPATH@/components/GeckoView.manifest
+
+; WebDriver (Marionette, Remote Agent) remote protocols
+#ifdef ENABLE_WEBDRIVER
+@BINPATH@/chrome/remote@JAREXT@
+@BINPATH@/chrome/remote.manifest
+#endif
+
+#ifdef PKG_LOCALE_MANIFEST
+#include @PKG_LOCALE_MANIFEST@
+#endif

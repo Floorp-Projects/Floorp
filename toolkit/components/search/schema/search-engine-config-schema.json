@@ -1,0 +1,459 @@
+{
+  "type": "object",
+  "required": [
+    "webExtension"
+  ],
+  "properties": {
+    "default": {
+      "$ref": "#/definitions/default"
+    },
+    "defaultPrivate": {
+      "$ref": "#/definitions/defaultPrivate"
+    },
+    "orderHint": {
+      "$ref": "#/definitions/orderHint"
+    },
+    "appliesTo": {
+      "type": "array",
+      "title": "Applies To",
+      "description": "This section defines the region/locales/application information for where a search engine is available, and any specifics for that region/locale/application. If there are no entries in the list, it is considered to be included everywhere",
+      "items": {
+        "$ref": "#/definitions/appliesToSection"
+      }
+    },
+    "sendAttributionRequest": {
+      "$ref": "#/definitions/sendAttributionRequest"
+    },
+    "telemetryId": {
+      "type": "string",
+      "title": "Telemetry Id",
+      "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
+    },
+    "webExtension": {
+      "$ref": "#/definitions/webExtension"
+    },
+    "params": {
+      "$ref": "#/definitions/params"
+    },
+    "extraParams": {
+      "$ref": "#/definitions/extraParams"
+    },
+    "regionParams": {
+      "$ref": "#/definitions/regionParams"
+    }
+  },
+  "definitions": {
+    "application": {
+      "type": "object",
+      "title": "Application Details",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "pattern": "^[a-z]{0,100}$",
+          "description": "The application this applies to (default/not specified is everywhere)",
+          "enum": [
+            "",
+            "firefox"
+          ]
+        },
+        "channel": {
+          "type": "array",
+          "title": "Channel",
+          "description": "Which channel this belongs to (not set = everywhere). For ESR this is also keyed from the display version.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{0,100}$",
+            "enum": [
+              "default",
+              "nightly",
+              "aurora",
+              "beta",
+              "release",
+              "esr"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "distributions": {
+          "type": "array",
+          "title": "Distributions",
+          "description": "Which distributions this applies to.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9.-]{0,100}$"
+          },
+          "uniqueItems": true
+        },
+        "excludedDistributions": {
+          "type": "array",
+          "title": "Excluded Distributions",
+          "description": "Which distributions this does not apply to.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9.-]{0,100}$"
+          },
+          "uniqueItems": true
+        },
+        "minVersion": {
+          "type": "string",
+          "title": "Minimum Version",
+          "pattern": "^[0-9a-z.]{0,20}$",
+          "description": "The minimum version this applies to"
+        },
+        "maxVersion": {
+          "type": "string",
+          "title": "Maxium Version",
+          "pattern": "^[0-9a-z.]{0,20}$",
+          "description": "The maximum version this applies to (less-than comparison)"
+        }
+      }
+    },
+    "default": {
+      "type": "string",
+      "title": "Default Status",
+      "pattern": "^[a-z-]{0,20}$",
+      "description": "Whether or not this engine should be default.",
+      "enum": [
+        "yes",
+        "yes-if-no-other",
+        "no"
+      ]
+    },
+    "defaultPrivate": {
+      "type": "string",
+      "title": "Default Status (PBM)",
+      "pattern": "^[a-z-]{0,20}$",
+      "description": "Whether or not this engine should be default in private browsing mode.",
+      "enum": [
+        "yes",
+        "yes-if-no-other",
+        "no"
+      ]
+    },
+    "extraParams": {
+      "type": "array",
+      "title": "Extra Parameters",
+      "description": "Extra parameters for the search engine (aka MozParams)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "pattern": "^[a-z]{0,20}$",
+            "description": "Name of the parameter that will be used in the search query"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition",
+            "pattern": "^[a-z]{0,10}$",
+            "description": "The type of parameter (pref or purpose)",
+            "enum": [
+              "pref",
+              "purpose"
+            ]
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "pattern": "^[a-z{}]{0,100}$",
+            "description": "The search purpose that triggers this parameter being appended.",
+            "enum": [
+              "searchbar",
+              "keyword",
+              "contextmenu",
+              "homepage",
+              "newtab"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "pattern": "^[a-zA-Z0-9_]{0,100}$",
+            "description": "If this is a purpose type, the value is used as the value of the parameter in the query"
+          },
+          "pref": {
+            "type": "string",
+            "title": "Preference name",
+            "pattern": "^[a-z0-9_]{0,100}$",
+            "description": "The preference name to get the value from (i.e. browser.search.param.<preference name>)."
+          }
+        }
+      }
+    },
+    "orderHint": {
+      "type": "number",
+      "title": "Order Hint",
+      "description": "A hint to the display order (higher is a higer rank)"
+    },
+    "sapCodes": {
+      "type": "object",
+      "title": "Search Access Point Codes",
+      "description": "Codes for the search access points.",
+      "properties": {
+        "any": {
+          "type": "string",
+          "title": "Any",
+          "pattern": "^[a-z0-9]{0,100}$",
+          "description": "SAP code that is used for all access points (overrides the others)."
+        },
+        "contextMenu": {
+          "type": "string",
+          "title": "Context Menu",
+          "pattern": "^[a-z0-9]{0,100}$",
+          "description": "SAP code for searches from the context menu."
+        },
+        "homePage": {
+          "type": "string",
+          "title": "Home page",
+          "pattern": "^[a-z0-9]{0,100}$",
+          "description": "SAP code for searches from the home page."
+        },
+        "keyword": {
+          "type": "string",
+          "title": "Keyword",
+          "pattern": "^[a-z0-9]{0,100}$",
+          "description": "SAP code for searches via keywords."
+        },
+        "newTab": {
+          "type": "string",
+          "title": "New Tab",
+          "pattern": "^[a-z0-9]{0,100}$",
+          "description": "SAP code for searches from the new tab page."
+        },
+        "searchBar": {
+          "type": "string",
+          "title": "Search Bar",
+          "pattern": "^[a-z0-9]{0,100}$",
+          "description": "SAP code for searches from the search bar."
+        }
+      }
+    },
+    "searchUrlCodes": {
+      "type": "array",
+      "title": "Codes",
+      "description": "A array of objects - map of parameter name to the parameter value.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "pattern": "^[a-zA-Z0-9.-]{0,100}$",
+            "description": "Name of the parameter that will be used in the query"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "pattern": "^[a-zA-Z0-9_{}:/.-]{0,100}$",
+            "description": "The value of parameter (pref or purpose)"
+          }
+        }
+      }
+    },
+    "params": {
+      "type": "object",
+      "title": "Parameters",
+      "description": "Various parameters for the search engines",
+      "properties": {
+        "searchUrlGetParams": {
+          "title": "Search URL GET Parameters",
+          "description": "Extra parameters for search URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
+        },
+        "suggestUrlGetParams": {
+          "title": "Suggestion URL GET Parameters",
+          "description": "Extra parameters for search suggestion URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
+        },
+        "searchUrlPostParams": {
+          "title": "Search URL POST Parameters",
+          "description": "Extra parameters for search URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
+        },
+        "suggestUrlPostParams": {
+          "title": "Suggestion URL POST Parameters",
+          "description": "Extra parameters for search suggestion URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
+        },
+        "sapCodes": {
+          "$ref": "#/definitions/sapCodes"
+        }
+      }
+    },
+    "regionParams": {
+      "type": "object",
+      "title": "Region Parameters",
+      "description": "A map of regions to an array of parameter overrides",
+      "patternProperties": {
+        "^([a-z][a-z]|default)$": {
+          "type": "array",
+          "title": "Parameter Overrides",
+          "description": "A array of objects - map of parameter name to the parameter value.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Name",
+                "pattern": "^[a-zA-Z0-9.-]{0,100}$",
+                "description": "Name of the parameter to override"
+              },
+              "value": {
+                "type": "string",
+                "title": "Value",
+                "pattern": "^[a-zA-Z0-9_{}:/.-]{0,100}$",
+                "description": "The value to override with"
+              }
+            }
+          }
+        }
+      }
+    },
+    "sendAttributionRequest": {
+      "type": "boolean",
+      "title": "Send Attribution Request",
+      "description": "Indicates if we should send an attribution request to Mozilla's server."
+    },
+    "telemetryId": {
+      "type": "string",
+      "title": "Telemetry Id",
+      "pattern": "^[a-zA-Z0-9-]{0,100}$",
+      "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
+    },
+    "webExtension": {
+      "type": "object",
+      "title": "WebExtension",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "WebExtension Id",
+          "description": "The identifier (local part) of the associated WebExtension should be of the format example@search.mozilla.org",
+          "pattern": "^[a-zA-Z0-9-._]*@search.mozilla.org$"
+        },
+        "locale": {
+          "type": "string",
+          "title": "WebExtension Locale",
+          "pattern": "^[a-zA-Z0-9-]{0,100}$",
+          "description": "Overrides the WebExtension locales and specifies to use a particular one. Ideally this should only be used when really necessary, otherwise considered deprecated."
+        }
+      }
+    },
+    "regionDetails": {
+      "type": "array",
+      "title": "Regions",
+      "description": "Two-letter region codes.",
+      "items": {
+        "type": "string",
+        "pattern": "^([a-z][a-z]|default)$",
+        "minLength": 2,
+        "maxLength": 7
+      }
+    },
+    "localeDetails": {
+      "type": "object",
+      "title": "Locales",
+      "description": "Locale codes.",
+      "properties": {
+        "matches": {
+          "type": "array",
+          "title": "Matches exactly the codes",
+          "items": {
+            "type": "string",
+            "pattern": "^([a-z]{2,3}(-[a-zA-Z]{2,})?(-macos)?|default)$",
+            "minLength": 2
+          }
+        },
+        "startsWith": {
+          "type": "array",
+          "title": "Matches any code starting with",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}$",
+            "minLength": 2,
+            "maxLength": 3
+          }
+        }
+      }
+    },
+    "included": {
+      "type": "object",
+      "title": "Included Locations",
+      "description": "The locations to which this section applies. Note: Regions and Locales are 'and'ed together.",
+      "properties": {
+        "everywhere": {
+          "type": "boolean",
+          "title": "Everywhere",
+          "description": "Set to true to signify that this is included everywhere."
+        },
+        "regions": {
+          "$ref" : "#/definitions/regionDetails"
+        },
+        "locales": {
+          "$ref": "#/definitions/localeDetails"
+        }
+      }
+    },
+    "excluded": {
+      "type": "object",
+      "title": "Excluded Locations",
+      "description": "The locations to which this section applies. Note: Regions and Locales are 'and'ed together.",
+      "properties": {
+        "regions": {
+          "$ref" : "#/definitions/regionDetails"
+        },
+        "locales": {
+          "$ref": "#/definitions/localeDetails"
+        }
+      }
+    },
+    "appliesToSection": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "$ref": "#/definitions/default"
+        },
+        "defaultPrivate": {
+          "$ref": "#/definitions/defaultPrivate"
+        },
+        "orderHint": {
+          "$ref": "#/definitions/orderHint"
+        },
+        "included": {
+          "$ref": "#/definitions/included"
+        },
+        "excluded": {
+          "$ref": "#/definitions/excluded"
+        },
+        "application": {
+          "$ref": "#/definitions/application"
+        },
+        "webextension": {
+          "$ref": "#/definitions/webExtension"
+        },
+        "sendAttributionRequest": {
+          "$ref": "#/definitions/sendAttributionRequest"
+        },
+        "telemetryId": {
+          "$ref": "#/definitions/telemetryId"
+        },
+        "params": {
+          "$ref": "#/definitions/params"
+        },
+        "regionParams": {
+          "$ref": "#/definitions/regionParams"
+        },
+        "extraParams": {
+          "$ref": "#/definitions/extraParams"
+        },
+        "experiment": {
+          "type": "string",
+          "title": "Experiment",
+          "pattern": "^[a-zA-Z0-9-]{0,100}$",
+          "description": "The experiment this section is associated with, if blank it is associated with any configuration."
+        }
+      }
+    }
+  }
+}

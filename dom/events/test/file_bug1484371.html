@@ -1,0 +1,94 @@
+<html>
+  <head>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      var mouseEnterCount = 0;
+      function mouseEnter() {
+        ++mouseEnterCount;
+      }
+      var mouseLeaveCount = 0;
+      function mouseLeave() {
+        ++mouseLeaveCount;
+      }
+
+      var pointerEnterCount = 0;
+      function pointerEnter() {
+        ++pointerEnterCount;
+      }
+      var pointerLeaveCount = 0;
+      function pointerLeave() {
+        ++pointerLeaveCount;
+      }
+
+      function pointerEventsEnabled() {
+        return "onpointerenter" in document.body;
+      }
+
+      function checkEventCounts(expected, msg) {
+        parent.is(mouseEnterCount, expected.mouseEnterCount, msg + ": mouseenter event count");
+        parent.is(mouseLeaveCount, expected.mouseLeaveCount, msg + ": mouseleave event count");
+        if (pointerEventsEnabled()) {
+          parent.is(pointerEnterCount, expected.pointerEnterCount, msg + ": pointerenter event count");
+          parent.is(pointerLeaveCount, expected.pointerLeaveCount, msg + ": pointerleave event count");
+        }
+      }
+
+      function test() {
+        var lightDiv = document.getElementById("lightDiv");
+        var host = document.getElementById("host");
+        var sr = host.attachShadow({mode: "closed"});
+        sr.innerHTML = "<div>shadow DOM<div>";
+        var shadowDiv = sr.firstChild;
+
+        host.addEventListener("mouseenter", mouseEnter, true);
+        host.addEventListener("mouseleave", mouseLeave, true);
+        host.addEventListener("pointerenter", pointerEnter, true);
+        host.addEventListener("pointerleave", pointerLeave, true);
+
+        shadowDiv.addEventListener("mouseenter", mouseEnter, true);
+        shadowDiv.addEventListener("mouseleave", mouseLeave, true);
+        shadowDiv.addEventListener("pointerenter", pointerEnter, true);
+        shadowDiv.addEventListener("pointerleave", pointerLeave, true);
+
+        synthesizeMouseAtCenter(lightDiv, { type: "mousemove" });
+        checkEventCounts({ mouseEnterCount: 0,
+                           mouseLeaveCount: 0,
+                           pointerEnterCount: 0,
+                           pointerLeaveCount: 0
+                         },
+                         "Entered light DOM"
+                         );
+
+        synthesizeMouseAtCenter(shadowDiv, { type: "mousemove" })
+        checkEventCounts({ mouseEnterCount: 2,
+                           mouseLeaveCount: 0,
+                           pointerEnterCount: 2,
+                           pointerLeaveCount: 0
+                         },
+                         "Entered shadow DOM");
+
+        synthesizeMouseAtCenter(lightDiv, { type: "mousemove" })
+        checkEventCounts({ mouseEnterCount: 2,
+                           mouseLeaveCount: 2,
+                           pointerEnterCount: 2,
+                           pointerLeaveCount: 2
+                         },
+                         "Left shadow DOM"
+                         );
+
+        parent.SimpleTest.finish();
+      }
+
+    function lazyRequestAnimationFrame(fn) {
+      requestAnimationFrame(
+        function() {
+          setTimeout(fn);
+        });
+    }
+    </script>
+  </head>
+  <body onload="lazyRequestAnimationFrame(test)">
+    <div id="lightDiv">light DOM</div>
+    <div id="host"></div>
+  </body>
+</html>

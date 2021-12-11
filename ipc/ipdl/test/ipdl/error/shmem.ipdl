@@ -1,0 +1,8 @@
+//error: redeclaration of symbol `Shmem', first declared at
+//error: redeclaration of symbol `mozilla::ipc::Shmem', first declared at
+
+using class mozilla::ipc::Shmem from "mozilla/ipc/Shmem.h";      // redeclaration
+
+protocol shmem {
+child: async Msg(Shmem s);
+};

@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Testing 'auto' min-sizing with definite min-width/height</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+br { clear:both; }
+	
+.grid {
+  display: grid;
+  border: 1px dashed silver;
+  grid-template-columns: minmax(0,min-content);
+  grid-template-rows: minmax(0,min-content) minmax(0,min-content);
+  float: left;
+  margin-bottom:20px;
+  align-items: start;
+  justify-items: start;
+}
+.v { 
+  writing-mode: vertical-lr;
+  -webkit-writing-mode: vertical-lr;
+}
+.h { 
+  writing-mode: horizontal-tb;
+  -webkit-writing-mode: horizontal-tb;
+}
+.bb {
+  box-sizing: border-box;
+}
+
+span { 
+  display: block;
+  background: lime;
+  margin: 7px 13px 50% 20%;
+  padding:1px 3px 10% 30%;
+}
+
+span.v {
+  height: 30px;
+  width: 10px;
+  border-left: 1px solid;
+  border-top: 3px solid;
+}
+
+span.h {
+  width: 30px;
+  height: 10px;
+  border-left: 3px solid;
+  border-top: 1px solid;
+}
+
+b40 {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 1px solid pink;
+  z-index: 1; position:relative;
+}
+
+.h.r {
+  height: 42px;
+  width: 42px;
+  /* 49px is the percentage basis, i.e. the column size */
+  margin-left: calc(0.2 * 49px);
+  padding: 1px 3px calc(0.1 * 49px) calc(0.3 * 49px);
+}
+.v.r {
+  height: 42px;
+  width: 42px;
+  /* This margin-left is 20% of 54px-wide grid area */
+  /* 27px is the percentage basis, i.e. the column size */
+  margin-left: calc(0.2 * 27px);
+  padding: 1px 3px calc(0.1 * 27px) calc(0.3 * 27px);
+}
+
+.r { position:relative; }
+
+.t4 { width: 49px;
+      height: calc(10px /* item min-height */ +
+                   7px  /* item margin-top */ +
+                   1px /* item padding-top */ +
+                   1px /* item border-top */ +
+                   calc(0.5 * 49px) /* item margin-bottom */ +
+                   calc(0.1 * 49px) /* item padding-bottom */);
+    }
+.t6 { width:46px; }
+.t8 { width: 27px;
+      height: calc(30px /* item min-height */ +
+                   7px  /* item margin-top */ +
+                   3px /* item padding-top */ +
+                   1px /* item border-top */ +
+                   calc(0.5 * 27px) /* item margin-bottom */ +
+                   calc(0.1 * 27px) /* item padding-bottom */);
+    }
+   
+
+xx {
+  display: block;
+  background: lime;
+  padding: 32px 32px calc(0.2 * 32px) calc(0.4 * 32px);
+  margin: 0 0 calc(0.4 * 32px) calc(0.2 * 32px);
+}
+.t9, .t10 {
+  position: relative;
+  z-index: 1;
+  grid: calc(32px + calc(0.4 * 32px) + calc(0.2 * 32px)) 0 / 32px;
+}
+  </style>
+</head>
+<body>
+
+
+<div class="grid"><span class="h"><x></x></span></div>
+<div class="grid"><span class="h bb"><x></x></span></div>
+<div class="grid"><span class="h"><x></x></span><span class="h"><x></x></span></div>
+<div class="grid t4"><span class="h r"><b40></b40></span></div>
+<br>
+<div class="grid"><span class="v"><x></x></span></div>
+<div class="grid"><span class="v bb"><x></x></span></div>
+<div class="grid"><span class="v"><x></x></span><span class="v"><x></x></span></div>
+<div class="grid t8"><span class="v r"><b40></b40></span></div>
+
+<div class="grid t9"><xx class="v"></xx></div>
+<div class="grid v t10"><xx class="h"></xx></div>
+
+</body>
+</html>

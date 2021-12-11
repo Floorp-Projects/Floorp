@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=765772
+-->
+<head>
+  <title>Test for Bug 765772</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug 765772</a>
+<p id="display"></p>
+<iframe name="submit_frame" style="visibility: hidden;"></iframe>
+<div id="content">
+  <form id='f' target="submit_frame" action="foo">
+    <input name=i id="i" step='any' >
+  </form>
+</div>
+<pre id="test">
+<script>
+
+/*
+ * This test checks that when a user types in some input types, it will not be
+ * in a state where the value will be un-sanitized and usable (by a script).
+ */
+
+var input = document.getElementById('i');
+var form = document.getElementById('f');
+var submitFrame = document.getElementsByTagName('iframe')[0];
+var testData = [];
+var gCurrentTest = null;
+var gValidData = [];
+var gInvalidData = [];
+
+function submitForm() {
+  form.submit();
+}
+
+function sendKeyEventToSubmitForm() {
+  sendKey("return");
+}
+
+function urlify(aStr) {
+  return aStr.replace(/:/g, '%3A');
+}
+
+function runTestsForNextInputType()
+{
+  let {done} = testRunner.next();
+  if (done) {
+    SimpleTest.finish();
+  }
+}
+
+function checkValueSubmittedIsValid()
+{
+  is(frames.submit_frame.location.href,
+     `${location.origin}/tests/dom/html/test/forms/foo?i=${urlify(gValidData[valueIndex++])}`,
+     "The submitted value should not have been sanitized");
+
+  input.value = "";
+
+  if (valueIndex >= gValidData.length) {
+    if (gCurrentTest.canHaveBadInputValidityState) {
+      // Don't run the submission tests on the invalid input if submission
+      // will be blocked by invalid input.
+      runTestsForNextInputType();
+      return;
+    }
+    valueIndex = 0;
+    submitFrame.onload = checkValueSubmittedIsInvalid;
+    testData = gInvalidData;
+  }
+  testSubmissions();
+}
+
+function checkValueSubmittedIsInvalid()
+{
+  is(frames.submit_frame.location.href,
+     `${location.origin}/tests/dom/html/test/forms/foo?i=`,
+     "The submitted value should have been sanitized");
+
+  valueIndex++;
+  input.value = "";
+
+  if (valueIndex >= gInvalidData.length) {
+    if (submitMethod == sendKeyEventToSubmitForm) {
+      runTestsForNextInputType();
+      return;
+    }
+    valueIndex = 0;
+    submitMethod = sendKeyEventToSubmitForm;
+    submitFrame.onload = checkValueSubmittedIsValid;
+    testData = gValidData;
+  }
+  testSubmissions();
+}
+
+function testSubmissions() {
+  input.focus();
+  sendString(testData[valueIndex]);
+  submitMethod();
+}
+
+var valueIndex = 0;
+var submitMethod = submitForm;
+
+SimpleTest.waitForExplicitFinish();
+
+function* runTest()
+{
+  SimpleTest.requestLongerTimeout(4);
+
+  var data = [
+    {
+      type: 'number',
+      canHaveBadInputValidityState: true,
+      validData: [
+        "42",
+        "-42", // should work for negative values
+        "42.1234",
+        "123.123456789123",  // double precision
+        "1e2", // e should be usable
+        "2e1",
+        "1e-1", // value after e can be negative
+        "1E2", // E can be used instead of e
+      ],
+      invalidData: [
+        "e",
+        "e2",
+        "1e0.1",
+        "foo",
+        "42,13", // comma can't be used as a decimal separator
+      ]
+    },
+    {
+      type: 'month',
+      validData: [
+        '0001-01',
+        '2012-12',
+        '100000-01',
+      ],
+      invalidData: [
+        '1-01',
+        '-',
+        'december',
+        '2012-dec',
+        '2012/12',
+        '2012-99',
+        '2012-1',
+      ]
+    },
+    {
+      type: 'week',
+      validData: [
+        '0001-W01',
+        '1970-W53',
+        '100000-W52',
+        '2016-W30',
+      ],
+      invalidData: [
+        '1-W01',
+        'week',
+        '2016-30',
+        '2010-W80',
+        '2000/W30',
+        '1985-W00',
+        '1000-W'
+      ]
+    },
+  ];
+
+  for (test of data) {
+    gCurrentTest = test;
+
+    input.type = test.type;
+    gValidData = test.validData;
+    gInvalidData = test.invalidData;
+
+    for (data of gValidData) {
+      input.value = "";
+      input.focus();
+      sendString(data);
+      input.blur();
+      is(input.value, data, "valid user input should not be sanitized");
+    }
+
+    for (data of gInvalidData) {
+      input.value = "";
+      input.focus();
+      sendString(data);
+      input.blur();
+      is(input.value, "", "invalid user input should be sanitized");
+    }
+
+    input.value = '';
+
+    testData = gValidData;
+    valueIndex = 0;
+    submitFrame.onload = checkValueSubmittedIsValid;
+    testSubmissions();
+    yield undefined;
+  }
+}
+
+var testRunner = runTest();
+
+addLoadEvent(function () {
+  testRunner.next();
+});
+
+</script>
+</pre>
+</body>
+</html>

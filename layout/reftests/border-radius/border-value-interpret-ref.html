@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test different types of values with border radius</title>
+    <!-- This bug will break when bug 451134 is fixed -->
+    <style>
+      div { width: 200px;
+            height: 200px;
+            background: green;
+            border: 10px dashed black;
+            border-top-left-radius: 2em 10px;
+            border-top-right-radius: 10px 0.5em;
+            border-bottom-right-radius: 3em 10px;
+            border-bottom-left-radius: 10px 0.5em;
+          }
+
+</style>
+</head>
+<body>
+  <div></div>
+</body></html>

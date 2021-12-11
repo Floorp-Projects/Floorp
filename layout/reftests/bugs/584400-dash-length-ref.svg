@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    rect { stroke: blue; stroke-width: 15px; }
+  </style>
+  
+  <rect x="70px" y="20px" width="145px" height="145px"
+        style="stroke: none; stroke-dasharray: 20px, 5px">
+  </rect>
+  <rect x="270px" y="20px" width="145px" height="145px"
+        style="stroke: none; stroke-dasharray: 20px, 5px">
+  </rect>
+  
+  <line x1="60px" y1="280px" x2="440px" y2="280px"
+        style="stroke: blue; stroke-width: 200px; stroke-dasharray: 165px, 40px">
+  </line>
+</svg>

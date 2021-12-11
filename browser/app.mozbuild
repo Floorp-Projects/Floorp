@@ -1,0 +1,15 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include('/toolkit/toolkit.mozbuild')
+
+if CONFIG['MOZ_EXTENSIONS']:
+    DIRS += ['/extensions']
+
+DIRS += ['/%s' % CONFIG['MOZ_BRANDING_DIRECTORY']]
+
+# Never add dirs after browser because they apparently won't get
+# packaged properly on Mac.
+DIRS += ['/browser']

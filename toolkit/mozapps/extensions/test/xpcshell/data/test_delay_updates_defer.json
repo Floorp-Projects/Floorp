@@ -1,0 +1,11 @@
+{
+  "addons": {
+    "test_delay_update_defer_webext@tests.mozilla.org": {
+      "updates": [
+        { "version": "2.0",
+          "update_link": "http://example.com/addons/test_delay_update_defer_webextension_v2.xpi"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,46 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=386575
+-->
+<head>
+  <title>Test for Bug 386575</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=386575">Mozilla Bug 386575</a>
+<p id="display">
+
+
+<!-- the image is http://searchfox.org/mozilla-central/source/layout/reftests/bugs/solidblue.png -->
+<!-- solidblue.png is a 16x16 image -->
+<table>
+  <tbody>
+    <div style="height:20px; min-height:100%">
+      <img src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%06%00%00%00%1F%F3%FFa%00%00%00%01sRGB%00%AE%CE%1C%E9%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%20cHRM%00%00z%26%00%00%80%84%00%00%FA%00%00%00%80%E8%00%00u0%00%00%EA%60%00%00%3A%98%00%00%17p%9C%BAQ%3C%00%00%00%18tEXtSoftware%00Paint.NET%20v3.01%1C%AE%24E%00%00%00'IDAT8Ocd%10%AE%FF%CF%40%11%00%19%40%09%A6H3%D8%F5%94%D8%3Ej%00%24%F6F%03q4%0C%80%E9%00%00%D6%11y%92%15%8F%DC%CE%00%00%00%00IEND%AEB%60%82" style="height: 80%" />
+    </div>
+  </tbody>
+</table>
+
+
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 386575 **/
+
+
+SimpleTest.waitForExplicitFinish();
+ok(true,"This is an assertion test");
+SimpleTest.finish();
+
+]]>
+</script>
+</pre>
+</body>
+</html>

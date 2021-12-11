@@ -1,0 +1,41 @@
+---
+base_repository: https://hg.mozilla.org/mozilla-unified
+build_date: 1509302065
+build_number: 1
+app_version: 60.0a1
+version: 60.0a1
+next_version: null
+do_not_optimize: []
+existing_tasks: {}
+filters:
+    - target_tasks_method
+head_ref: c83100c88242aba3593102b99ece7f8073f93177
+head_repository: https://hg.mozilla.org/mozilla-central
+head_rev: c83100c88242aba3593102b99ece7f8073f93177
+hg_branch: default
+level: "3"
+message: " "
+moz_build_date: "20171029183425"
+optimize_target_tasks: true
+owner: ffxbld@noreply.mozilla.org
+project: mozilla-central
+pushdate: 1509302065
+pushlog_id: "32768"
+release_eta: ""
+release_history: {}
+release_enable_partners: false
+release_partners: []
+release_partner_build_number: 1
+release_partner_config: null
+release_enable_emefree: false
+target_tasks_method: default
+tasks_for: hg-push
+try_mode: null
+try_options: null
+try_task_config: {}
+release_type: "nightly"
+release_product: null
+required_signoffs: []
+signoff_urls: {}
+phabricator_diff:
+test_manifest_loader: default

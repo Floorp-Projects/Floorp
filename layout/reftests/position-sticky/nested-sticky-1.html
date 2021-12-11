@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html reftest-async-scroll reftest-async-scroll-y="50">
+<style>
+html, body {
+    margin: 0;
+}
+thead tr {
+    position: sticky;
+    top: 0;
+}
+th {
+    position: sticky;
+    top: -2px;
+    background-color: green;
+    height: 20px;
+}
+td {
+    background-color: blue;
+}
+</style>
+<body>
+<table cellspacing=0>
+    <thead>
+        <tr><th></th></tr>
+    </thead>
+    <tbody>
+        <tr><td style="height: 2000px; vertical-align: top">table cell</td></tr>
+    </tbody>
+</table>
+</html>

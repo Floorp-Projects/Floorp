@@ -1,0 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  display: flex;
+  align-items: center;
+}
+
+::slotted(a) {
+  margin-inline-end: 12px;
+}
+
+:host([checked]) {
+  --icon: url("chrome://global/skin/icons/check.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+button {
+  background-color: transparent;
+  color: inherit;
+  background-image: var(--icon);
+  background-position: 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  border: none;
+  position: relative;
+  display: block;
+  font: inherit;
+  padding: 4px 8px;
+  padding-inline-start: 32px;
+  text-align: start;
+  width: 100%;
+}
+
+button:dir(rtl) {
+  background-position-x: right 8px;
+}
+
+:host([badged]) button::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue-50);
+  position: absolute;
+  top: 4px;
+  inset-inline-start: 28px;
+}
+
+button:enabled:hover {
+  background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
+}
+
+button:enabled:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+button:focus-visible {
+  outline-offset: -2px;
+}
+
+button:disabled {
+  opacity: 0.4;
+}

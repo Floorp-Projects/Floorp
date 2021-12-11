@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.icon-label {
+  display: flex;
+  column-gap: var(--base-unit);
+  align-items: center;
+  margin: calc(var(--base-unit) * 2) 0;
+  -moz-context-properties: fill;
+
+  font-size: var(--icon-label-font-size);
+}
+
+.icon-label--ok {
+  --icon-color: var(--icon-ok-color);
+}
+.icon-label--info {
+  --icon-color: var(--icon-info-color);
+}
+
+.icon-label__icon {
+  padding: var(--base-unit);
+  fill: var(--icon-color);
+  width: calc(var(--base-unit) * 4);
+  height: calc(var(--base-unit) * 4);
+}

@@ -1,0 +1,13 @@
+<!doctype html>
+<div id="host"></div>
+<script>
+  // Test references in <svg:use> work properly.
+  host.attachShadow({ mode: "open" }).innerHTML = `
+    <svg width="100" height="100">
+      <defs>
+        <rect fill="lime" id="rect-4" width="100" height="100">
+      </defs>
+      <use href="#rect-4" />
+    </svg>
+  `;
+</script>

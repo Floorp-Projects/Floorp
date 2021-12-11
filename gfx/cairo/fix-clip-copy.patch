@@ -1,0 +1,30 @@
+commit f49a9740350d2f0d69ed59e913f0263a899cfb2a
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Fri Jan 29 14:39:24 2010 -0500
+
+    Fix clip copy
+
+diff --git a/src/cairo-clip.c b/src/cairo-clip.c
+index 8d66a5f..6acbcff 100644
+--- a/src/cairo-clip.c
++++ b/src/cairo-clip.c
+@@ -280,13 +280,12 @@ cairo_clip_t *
+ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
+ {
+     if (other != NULL) {
+-	if (other->path == NULL) {
+-	    _cairo_clip_init (clip);
+-	    clip = NULL;
+-	} else {
+-	    clip->all_clipped = other->all_clipped;
+-	    clip->path = _cairo_clip_path_reference (other->path);
+-	}
++	clip->all_clipped = other->all_clipped;
++	clip->path = _cairo_clip_path_reference (other->path);
++
++	/* this guy is here because of the weird return semantics of _cairo_clip_init_copy */
++	if (!other->path)
++	    return NULL;
+     } else {
+ 	_cairo_clip_init (clip);
+     }

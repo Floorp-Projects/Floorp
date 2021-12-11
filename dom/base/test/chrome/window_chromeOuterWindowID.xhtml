@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1474662
+Test that the chromeOuterWindowID on the MessageManager interface
+works, and that it properly updates when swapping frameloaders between
+windows.
+-->
+<window title="Mozilla Bug 1242644"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <browser id="non-remote" nodefaultsrc="true" type="content" flex="1"/>
+  <browser id="remote" remote="true" nodefaultsrc="true" type="content" flex="1"/>
+</window>

@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAccessible;
+interface nsIArray;
+
+/**
+ * An accessibility interface for selectable widgets.
+ */
+[scriptable, builtinclass, uuid(8efb03d4-1354-4875-94cf-261336057626)]
+interface nsIAccessibleSelectable : nsISupports
+{
+  /**
+   * Return an nsIArray of selected items within the widget.
+   */
+  readonly attribute nsIArray selectedItems;
+
+  /**
+   * Return the number of currently selected items.
+   */
+  readonly attribute unsigned long selectedItemCount;
+
+  /**
+   * Return a nth selected item within the widget.
+   */
+  nsIAccessible getSelectedItemAt(in unsigned long index);
+
+  /**
+   * Return true if the given item is selected.
+   */
+  boolean isItemSelected(in unsigned long index);
+
+  /**
+   * Adds the specified item to the widget's selection.
+   */
+  void addItemToSelection(in unsigned long index);
+
+  /**
+   * Removes the specified item from the widget's selection.
+   */
+  void removeItemFromSelection(in unsigned long index);
+
+  /**
+   * Select all items.
+   *
+   * @return false if the object does not accept multiple selection,
+   *         otherwise true.
+   */
+  boolean selectAll();
+
+  /**
+   * Unselect all items.
+   */
+  void unselectAll();
+};

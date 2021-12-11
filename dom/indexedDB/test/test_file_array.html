@@ -1,0 +1,86 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+  function* testSteps()
+  {
+    const name = window.location.pathname;
+
+    const objectStoreName = "Blobs";
+
+    const b1 = getRandomBlob(10000);
+
+    const b2 = [ getRandomBlob(5000), getRandomBlob(3000), getRandomBlob(12000),
+      getRandomBlob(17000), getRandomBlob(16000), getRandomBlob(16000),
+      getRandomBlob(8000),
+    ];
+
+    const b3 = [ getRandomBlob(5000), getRandomBlob(3000), getRandomBlob(9000)];
+
+    const objectStoreData = [
+      { key: 1, blobs: [ b1, b1, b1, b1, b1, b1, b1, b1, b1, b1 ],
+        expectedFileIds: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] },
+      { key: 2, blobs: [ b2[0], b2[1], b2[2], b2[3], b2[4], b2[5], b2[6] ],
+        expectedFileIds: [2, 3, 4, 5, 6, 7, 8] },
+      { key: 3, blobs: [ b3[0], b3[0], b3[1], b3[2], b3[2], b3[0], b3[0] ],
+        expectedFileIds: [9, 9, 10, 11, 11, 9, 9] },
+    ];
+
+    SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },
+                              continueToNextStep);
+    yield undefined;
+
+    let request = indexedDB.open(name, 1);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield undefined;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    let objectStore = db.createObjectStore(objectStoreName, { });
+
+    for (let data of objectStoreData) {
+      objectStore.add(data.blobs, data.key);
+    }
+
+    event = yield undefined;
+
+    is(event.type, "success", "Got correct event type");
+
+    for (let data of objectStoreData) {
+      objectStore = db.transaction([objectStoreName])
+                      .objectStore(objectStoreName);
+
+      request = objectStore.get(data.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      verifyBlobArray(event.target.result, data.blobs, data.expectedFileIds);
+      yield undefined;
+    }
+
+    is(bufferCache.length, 11, "Correct length");
+
+    finishTest();
+  }
+  </script>
+  <script type="text/javascript" src="file.js"></script>
+  <script type="text/javascript" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

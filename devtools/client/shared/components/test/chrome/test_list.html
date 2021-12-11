@@ -1,0 +1,127 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that List renders correctly.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>List component test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script src="list.snapshots.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const {
+      Simulate,
+      renderIntoDocument,
+      findRenderedDOMComponentWithClass,
+      scryRenderedDOMComponentsWithTag,
+      scryRenderedComponentsWithType,
+    } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const { List, ListItem } =
+      browserRequire("devtools/client/shared/components/List");
+
+    const testItems = [
+      {
+        component: div({ className: "item-1" }, "Test List Item 1"),
+        className: "list-item-1",
+        key: "list-item-1",
+      },
+      {
+        component: div({ className: "item-2" }, "Test List Item 2"),
+        className: "list-item-2",
+        key: "list-item-2",
+      },
+      {
+        component: div({ className: "item-3" }, "Test List Item 3"),
+        className: "list-item-3",
+        key: "list-item-3",
+      },
+    ];
+
+    const listReactEl = React.createElement(List, {
+      items: testItems,
+      labelledBy: "test-labelledby",
+    });
+
+    const list = renderIntoDocument(listReactEl);
+    const listEl = findRenderedDOMComponentWithClass(list, "list");
+    const items = scryRenderedComponentsWithType(list, ListItem);
+    const itemEls = scryRenderedDOMComponentsWithTag(list, "li");
+
+    function testCurrent(index) {
+      is(list.state.current, index, "Correct current item.");
+      is(listEl.getAttribute("aria-activedescendant"), testItems[index].key,
+         "Correct active descendant.");
+    }
+
+    is(items.length, 3, "Correct number of list item components in tree.");
+    is(itemEls.length, 3, "Correct number of list items is rendered.");
+    info("Testing initial tree properties.");
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index];
+      const itemEl = itemEls[index];
+      const { active, current, item: itemProp } = item.props;
+      const content = itemEl.querySelector(".list-item-content");
+
+      is(active, false, "Correct active state.");
+      is(current, false, "Correct current state.");
+      is(itemProp, testItems[index], "Correct rendered item.");
+      is(item.contentRef.current, content, "Correct content ref.");
+
+      is(itemEl.className, testItems[index].className, "Correct list item class.");
+      is(itemEl.id, testItems[index].key, "Correct list item it.");
+      is(content.getAttribute("role"), "presentation", "Correct content role.");
+
+      is(content.innerHTML,
+         `<div class="item-${index + 1}">Test List Item ${index + 1}</div>`,
+         "Content rendered correctly.");
+    }
+
+    is(list.state.current, null, "Current item is not set by default.");
+    is(list.state.active, null, "Active item is not set by default.");
+    is(list.listRef.current, listEl, "Correct list ref.");
+
+    is(listEl.className, "list", "Correct list class.");
+    is(listEl.tabIndex, 0, "List is focusable.");
+    ok(!listEl.hasAttribute("aria-label"), "List has no label.");
+    is(listEl.getAttribute("aria-labelledby"), "test-labelledby",
+       "Correct list labelled by attribute.");
+    ok(!listEl.hasAttribute("aria-activedescendant"),
+      "No active descendant set by default.");
+
+    Simulate.focus(listEl);
+    testCurrent(0);
+
+    Simulate.click(itemEls[2]);
+    testCurrent(2);
+
+    Simulate.blur(listEl);
+    testCurrent(2);
+
+    Simulate.focus(listEl);
+    testCurrent(2);
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

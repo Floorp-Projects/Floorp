@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test WeakRef works when target is in different compartment in the browser</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        let Cu = SpecialPowers.Cu;
+        let isSameCompartment = Cu.getJSTestingFunctions().isSameCompartment;
+
+        // Open a new window, which will be from different compartment.
+        let win = window.open();
+        is(isSameCompartment(win, window), false,
+           "Test for opeing a window from a different compartment.");
+
+        let wr1, wr2, wr3;
+        {
+          let obj = {};
+
+          // WeakRef and target are both from different compartment.
+          wr1 = new win.WeakRef(new win.Object());
+
+          // WeakRef is same compartment, but target isn't.
+          wr2 = new WeakRef(new win.Object());
+
+          // WeakRef is in different compartment, but target is.
+          wr3 = new win.WeakRef(obj);
+
+          obj = null;
+        }
+
+        // WeakRef should keep the target in the current task.
+        isnot(wr1.deref(), undefined, "wr1.deref() should return its target.");
+        isnot(wr2.deref(), undefined, "wr2.deref() should return its target.");
+        isnot(wr3.deref(), undefined, "we3.deref() should return its target.");
+
+        // Weakref should keep the target until the end of current Job, that
+        // includes microtask(Promise).
+        Promise.resolve().then(() => {
+          isnot(wr1.deref(), undefined,
+                "wr1.deref() should return its target in promise");
+          isnot(wr2.deref(), undefined,
+                "wr2.deref() should return its target in promise");
+          isnot(wr3.deref(), undefined,
+                "wr3.deref() should return its target in promise");
+        });
+
+        // setTimeout will launch a new job and call ClearKeptObjects().
+        setTimeout(() => {
+          // Call gc() forcibly to clear the target of wr.
+          SpecialPowers.DOMWindowUtils.garbageCollect();
+
+          is(wr1.deref(), undefined, "wr1.deref() should return undefined in the new job.");
+          is(wr2.deref(), undefined, "wr2.deref() should return undefined in the new job.");
+          is(wr3.deref(), undefined, "wr3.deref() should return undefined in the new job.");
+
+          win.close();
+          SimpleTest.finish();
+        }, 0);
+      }
+
+    </script>
+  </head>
+  <body onload="go()"></body>
+</html>

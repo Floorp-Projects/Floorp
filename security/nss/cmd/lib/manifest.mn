@@ -1,0 +1,42 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH	= ../..
+
+LIBRARY_NAME	= sectool
+SHARED_LIBRARY = $(NULL)
+
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE		= nss
+
+DEFINES		= -DNSPR20
+
+ifdef NSS_BUILD_SOFTOKEN_ONLY
+PRIVATE_EXPORTS = basicutil.h \
+		  pk11table.h \
+		  $(NULL)
+
+CSRCS = basicutil.c \
+	pk11table.c \
+	$(NULL)
+else
+PRIVATE_EXPORTS	= basicutil.h \
+		  secutil.h \
+		  pk11table.h \
+		  $(NULL)
+
+CSRCS	= basicutil.c \
+		secutil.c \
+		secpwd.c    \
+		derprint.c \
+		moreoids.c \
+		pppolicy.c \
+		ffs.c \
+		pk11table.c \
+		$(NULL)
+endif
+
+NO_MD_RELEASE	= 1
+
+USE_STATIC_LIBS = 1

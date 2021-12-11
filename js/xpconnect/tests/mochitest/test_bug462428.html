@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462428
+-->
+<head>
+  <title>Test for Bug 462428</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462428">Mozilla Bug 462428</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 462428 **/
+var getter = document.__lookupGetter__('documentElement');
+ok(getter !== undefined, "But able to look it up the normal way");
+ok(!document.hasOwnProperty('documentElement'), "property should still be on the prototype");
+
+var sawProp = false;
+for (var i in document) {
+    if (i === "documentElement") {
+        sawProp = true;
+    }
+}
+
+ok(sawProp, "property should be enumerable");
+
+is(getter.call(document), document.documentElement, "the getter actually works");
+
+Document.prototype.__defineSetter__('documentElement', function() {});
+is(getter.call(document), document.documentElement, "the getter works after defineSetter");
+
+var oldTitle = document.title;
+try {
+    var setter = document.__lookupSetter__('title');
+    setter.call(document, "title 1");
+    is(document.title, "title 1", "the setter is bound correctly");
+} finally {
+    document.title = oldTitle
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>Bidi isolation - css</title>
+  <style type="text/css">
+   body { font-family: monospace; }
+   span { unicode-bidi: isolate; }
+   span.override { unicode-bidi: isolate-override; }
+  </style>
+ </head>
+ <body>
+  <p><span>פיצה זהב 24 קאראט</span> - 3 reviews</p>
+  <p>מסעדה ראשונה: <span dir="ltr">Joe's פלאפל Bar</span> - 5 תגובות</p>
+  <p>מסעדה ראשונה: <span class="override" dir="rtl">raB פלאפל s'eoJ</span> - 5 תגובות</p>
+  <p dir="rtl" align="left">תשתמש ב-css (<span dir="ltr">position: relative</span>).</p>
+  <p>documents &gt; <span dir="rtl">הרומן הראשון שלי</span> &gt; <span dir="rtl">פרק 1</span></p>
+  <p><span>joe hacker&#x202e;</span>: overdrawn</p>
+ </body>
+</html>

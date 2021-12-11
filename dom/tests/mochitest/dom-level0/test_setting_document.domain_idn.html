@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Setting document.domain and IDN</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<!--
+
+This test checks that the value of document.domain is always punycode,
+no matter if the TLD is whitelisted or not.
+Prior to bug 945240 that was not true.
+
+-->
+
+<div>
+<h2>Whitelisted</h2>
+<iframe name="idnKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-whitelist"></iframe>
+<iframe name="punycodeKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-whitelist"></iframe>
+</div>
+
+<div>
+<h2>Not whitelisted</h2>
+<iframe name="idnKidNoWhitelist" src="http://sub1.exaмple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-nowhitelist"></iframe>
+<iframe name="punycodeKidNoWhitelist" src="http://sub1.exaмple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-nowhitelist"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var gotIDNNoWhitelist = false;
+var gotPunycodeNoWhitelist = false;
+var gotIDNWhitelist = false;
+var gotPunycodeWhitelist = false;
+
+var whitelistRegex =
+  new RegExp("^http://sub1\\.παράδειγμα\\.δοκιμή/tests/dom/tests/" +
+             "mochitest/dom-level0/idn_child\\.html\\?(.+)$");
+
+var noWhitelistRegex =
+  new RegExp("^http://sub1\\.exaмple\\.test/tests/dom/tests/" +
+             "mochitest/dom-level0/idn_child\\.html\\?(.+)$");
+
+var state = 0;
+
+var messages =
+  [
+   "idn-whitelist",
+   "punycode-whitelist",
+   "idn-nowhitelist",
+   "punycode-nowhitelist",
+  ];
+
+
+function receiveMessage(evt)
+{
+  var origin = evt.origin;
+  var match;
+  if (/test$/.test(origin))
+  {
+    is(evt.origin, "http://sub1.xn--exaple-kqf.test", "wrong sender");
+  }
+  else
+  {
+    is(evt.origin, "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp", "wrong sender");
+  }
+
+  is(messages[state] + "-response", evt.data.split(" ")[0],
+     "unexpected data: " + evt.data);
+
+  switch (messages[state])
+  {
+    case "idn-whitelist":
+      gotIDNWhitelist = true;
+      ok(evt.source === window.frames.idnKidWhitelist, "wrong source");
+      is(evt.data, "idn-whitelist-response", "wrong response for IDN");
+      break;
+
+    case "punycode-whitelist":
+      gotPunycodeWhitelist = true;
+      ok(evt.source === window.frames.punycodeKidWhitelist, "wrong source");
+      is(evt.data, "punycode-whitelist-response", "wrong response for punycode");
+      break;
+
+    case "idn-nowhitelist":
+      gotIDNNoWhitelist = true;
+      ok(evt.source === window.frames.idnKidNoWhitelist, "wrong source");
+      is(evt.data, "idn-nowhitelist-response", "wrong response for IDN");
+      break;
+
+    case "punycode-nowhitelist":
+      gotPunycodeNoWhitelist = true;
+      ok(evt.source === window.frames.punycodeKidNoWhitelist, "wrong source");
+      is(evt.data, "punycode-nowhitelist-response", "wrong response for punycode");
+      break;
+
+    default:
+      ok(false, "unreached");
+      break;
+  }
+
+  state++;
+}
+
+function* rungen() {
+  var target = window.frames.idnKidWhitelist;
+  target.postMessage("idn-whitelist", "http://sub1.παράδειγμα.δοκιμή");
+  receiveMessage(yield);
+
+  ok(gotIDNWhitelist, "IDN whitelist message not received");
+
+  var target = window.frames.punycodeKidWhitelist;
+  target.postMessage("punycode-whitelist", "http://sub1.παράδειγμα.δοκιμή");
+
+  receiveMessage(yield);
+
+  ok(gotPunycodeWhitelist, "punycode whitelist message not received");
+
+  var target = window.frames.idnKidNoWhitelist;
+  target.postMessage("idn-nowhitelist", "http://sub1.exaмple.test");
+
+  receiveMessage(yield);
+
+  ok(gotIDNNoWhitelist, "IDN no-whitelist message not received");
+
+  var target = window.frames.punycodeKidNoWhitelist;
+  target.postMessage("punycode-nowhitelist",
+                     "http://sub1.exaмple.test");
+
+  receiveMessage(yield);
+
+  ok(gotPunycodeNoWhitelist,
+     "punycode no-whitelist message not received");
+
+  SimpleTest.finish();
+}
+
+var gen = rungen();
+window.addEventListener("message", (m) => gen.next(m));
+window.addEventListener("load", () => gen.next());
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<html class="reftest-wait">
+<head>
+  <title>Image reftest wrapper</title>
+  <link rel="stylesheet" href="ImageDocument.css">
+  <style type="text/css">
+    #image_from_encoder { background-color: rgb(10, 100, 250); }
+  </style>
+
+  <script>
+  // Parse out the URL command line params
+  // Valid options are:
+  // - img=<reference image to use>
+  // - mime=<mime type>
+  // - options=<canvas toDataURL encoder options>
+  // Example: 
+  // encoder.html?img=escape(reference_image.png)
+  //             &mime=escape(image/ico)
+  //             &options=escape(-moz-parse-options:bpp=24;format=png)
+  var getVars = {};
+  function buildValue(sValue) 
+  {
+    if (/^\s*$/.test(sValue)) { 
+      return null; 
+    }
+    if (/^(true|false)$/i.test(sValue)) {
+      return sValue.toLowerCase() === "true"; 
+    }
+    if (isFinite(sValue)) { 
+      return parseFloat(sValue); 
+    }
+    if (isFinite(Date.parse(sValue))) { 
+      return new Date(sValue); 
+    }
+    return sValue;
+  }
+  if (window.location.search.length > 1) {
+    var couple, couples = window.location.search.substr(1).split("&");
+    for (var couplId = 0; couplId < couples.length; couplId++) {
+      couple = couples[couplId].split("=");
+      getVars[unescape(couple[0])] = couple.length > 1 ? 
+                                       buildValue(unescape(couple[1])) : null;
+    }
+  }
+
+  // Create the image that we will load the reference image to 
+  var img = new Image();
+
+  // Create the canvas that we will draw the image img onto and
+  // eventually call toDataURL to invoke the encoder on
+  var canvas = document.createElement("canvas");
+
+  // Starts the test by loading the reference image
+  function runTest() 
+  {
+    // Load the reference image to start the test
+    img.onload = onReferenceImageLoad;
+    img.onerror = onReferenceImageLoad;
+    img.src = getVars.img;
+  }
+
+  // Once the encoded image from the canvas is loaded we can
+  // let the reftest compare
+  function onEncodedImageLoad() 
+  {
+    document.documentElement.removeAttribute("class");
+  }
+
+  // Once the image loads async, we then draw the image onto the canvas,
+  // and call canvas.toDataURL to invoke the encoder, and then set a new
+  // image to the encoded data URL
+  function onReferenceImageLoad() 
+  {
+    // mimeType will hold the mime type of which encoder to invoke
+    var mimeType = getVars.mime;
+    // parseOptions will hold the encoder options to use 
+    var parseOptions = getVars.options;
+
+    // Obtain the canvas and draw the reference image
+    canvas.width = img.width;
+    canvas.height = img.height;
+    var ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0);
+
+    // Obtain the data URL with parsing options if specified
+    var dataURL;
+    if (parseOptions) 
+      dataURL = canvas.toDataURL(mimeType, parseOptions);
+    else
+      dataURL = canvas.toDataURL(mimeType);
+
+    // Setup async image loaded events
+    var image_from_encoder = document.getElementById('image_from_encoder');
+    image_from_encoder.onload = onEncodedImageLoad;
+    image_from_encoder.onerror = onEncodedImageLoad;
+
+    // Only set the image if we have the correct mime type
+    // because we want to fail the ref test if toDataURL fell
+    // back to image/png
+    if (dataURL.substring(0, mimeType.length+5) == "data:" + mimeType) {
+      // Set the image to the BMP data URL
+      image_from_encoder.src = dataURL; 
+    } else {
+      // Blank image so that we won't have to timeout the reftest
+      image_from_encoder.src = "data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw%3D%3D";
+    }
+  };
+  </script>
+</head>
+
+<body onload="runTest()">
+<img id="image_from_encoder">
+</body>
+</html>

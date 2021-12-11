@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test IPCBlob and CreateImageBitmap</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function test_mainThread() {
+  let bc = new BroadcastChannel('testMainThread');
+  bc.onmessage = e => {
+    createImageBitmap(e.data).then(image => {
+      ok(image.height, "this image has a valid size.");
+    }, () => {
+      ok(false, "error creating the image!");
+    }).then(next);
+  }
+
+  fetch('green.jpg').then(r => r.blob()).then(blob => {
+    let bc = new BroadcastChannel('testMainThread');
+    bc.postMessage(blob);
+  });
+}
+
+function test_worker() {
+  function workerScript() {
+    function ok(a, msg) { postMessage({ type: 'test', status: !!a, msg }); };
+    function finish() { postMessage({ type: 'finish' }); };
+
+    let bc = new BroadcastChannel('testWorker');
+    bc.onmessage = e => {
+      createImageBitmap(e.data).then(image => {
+        ok(image.height, "this image has a valid size.");
+      }, () => {
+        ok(false, "error creating the image!");
+      }).then(finish);
+    }
+
+    fetch('http://mochi.test:8888/tests/dom/file/ipc/tests/green.jpg').then(r => r.blob()).then(blob => {
+      let bc = new BroadcastChannel('testWorker');
+      bc.postMessage(blob);
+    });
+  }
+  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
+  let worker = new Worker(workerUrl);
+
+  worker.onmessage = event => {
+    if (event.data.type == 'test') {
+      ok(event.data.status, event.data.msg);
+      return;
+    }
+
+    if (event.data.type == 'finish') {
+      next();
+    }
+  }
+}
+
+let tests = [
+  test_mainThread,
+  test_worker,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let test = tests.shift();
+  test();
+}
+
+next();
+
+</script>
+</pre>
+</body>
+</html>

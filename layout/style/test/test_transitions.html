@@ -1,0 +1,787 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435441
+-->
+<head>
+  <title>Test for Bug 435441</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  #display p { margin-top: 0; margin-bottom: 0; }
+  #display .before, #display .after {
+    width: -moz-fit-content; border: 1px solid black;
+  }
+  #display .before::before, #display .after::after {
+    display: block;
+    width: 0;
+    text-indent: 0;
+  }
+  #display .before.started::before, #display .after.started::after {
+    width: 100px;
+    text-indent: 100px;
+    transition: 8s width ease-in-out, 8s text-indent ease-in-out;
+  }
+  #display .before::before {
+    content: "Before";
+  }
+  #display .after::after {
+    content: "After";
+  }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435441">Mozilla Bug 435441</a>
+<div id="display">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 435441 **/
+
+// Run tests simultaneously so we don't have to take up too much time.
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+var gTestsRunning = 0;
+function TestStarted() { ++gTestsRunning; }
+function TestFinished() { if (--gTestsRunning == 0) SimpleTest.finish(); }
+
+// An array of arrays of functions to be called at the outer index number
+// of seconds after the present.
+var gFutureCalls = [];
+
+function add_future_call(index, func)
+{
+    if (!(index in gFutureCalls)) {
+        gFutureCalls[index] = [];
+    }
+    gFutureCalls[index].push(func);
+    TestStarted();
+}
+var gStartTime1, gStartTime2;
+var gCurrentTime;
+var gSetupComplete = false;
+
+function process_future_calls(index)
+{
+    var calls = gFutureCalls[index];
+    if (!calls)
+        return;
+    gCurrentTime = Date.now();
+    for (var i = 0; i < calls.length; ++i) {
+        calls[i]();
+        TestFinished();
+    }
+}
+
+var timingFunctions = {
+  // a map from the value of 'transition-timing-function' to an array of
+  // the portions this function yields at 0 (always 0), 1/4, 1/2, and
+  // 3/4 and all (always 1) of the way through the time of the
+  // transition.  Each portion is represented as a value and an
+  // acceptable error tolerance (based on a time error of 1%) for that
+  // value.
+
+  // ease
+  "ease": bezier(0.25, 0.1, 0.25, 1),
+  "cubic-bezier(0.25, 0.1, 0.25, 1.0)": bezier(0.25, 0.1, 0.25, 1),
+
+  // linear and various synonyms for it
+  "linear": function(x) { return x; },
+  "cubic-bezier(0.0, 0.0, 1.0, 1.0)": function(x) { return x; },
+  "cubic-bezier(0, 0, 1, 1)": function(x) { return x; },
+  "cubic-bezier(0, 0, 0, 0.0)": function(x) { return x; },
+  "cubic-bezier(1.0, 1, 0, 0)": function(x) { return x; },
+
+  // ease-in
+  "ease-in": bezier(0.42, 0, 1, 1),
+  "cubic-bezier(0.42, 0, 1.0, 1.0)": bezier(0.42, 0, 1, 1),
+
+  // ease-out
+  "ease-out": bezier(0, 0, 0.58, 1),
+  "cubic-bezier(0, 0, 0.58, 1.0)": bezier(0, 0, 0.58, 1),
+
+  // ease-in-out
+  "ease-in-out": bezier(0.42, 0, 0.58, 1),
+  "cubic-bezier(0.42, 0, 0.58, 1.0)": bezier(0.42, 0, 0.58, 1),
+
+  // other cubic-bezier values
+  "cubic-bezier(0.4, 0.1, 0.7, 0.95)": bezier(0.4, 0.1, 0.7, 0.95),
+  "cubic-bezier(1, 0, 0, 1)": bezier(1, 0, 0, 1),
+  "cubic-bezier(0, 1, 1, 0)": bezier(0, 1, 1, 0),
+
+};
+
+var div = document.getElementById("display");
+
+// Set up all the elements on which we are going to initiate transitions.
+
+// We have two reference elements to check the expected timing range.
+// They both have 16s linear transitions from 0 to 1000px.
+// This means they move through 62.5 pixels per second.
+const REF_PX_PER_SEC = 62.5;
+function make_reference_p() {
+    let p = document.createElement("p");
+    p.appendChild(document.createTextNode("reference"));
+    p.style.textIndent = "0px";
+    p.style.transition = "16s text-indent linear";
+    div.appendChild(p);
+    return p;
+}
+var earlyref = make_reference_p();
+var earlyrefcs = getComputedStyle(earlyref, "");
+
+// Test all timing functions using a set of 8-second transitions, which
+// we check at times 0, 2s, 4s, 6s, and 8s.
+var tftests = [];
+for (let tf in timingFunctions) {
+    let p = document.createElement("p");
+    let t = document.createTextNode("transition-timing-function: " + tf);
+    p.appendChild(t);
+    p.style.textIndent = "0px";
+    p.style.transition = "8s text-indent linear";
+    p.style.transitionTimingFunction = tf;
+    div.appendChild(p);
+    is(getComputedStyle(p, "").textIndent, "0px",
+       "should be zero before changing value");
+    tftests.push([ p, tf ]);
+}
+
+// Check that the timing function continues even when we restyle in the
+// middle.
+var interrupt_tests = [];
+for (var restyleParent of [true, false]) {
+    for (let itime = 2; itime < 8; itime += 2) {
+        let p = document.createElement("p");
+        let t = document.createTextNode("interrupt on " +
+                                        (restyleParent ? "parent" : "node itself") +
+                                        " at " + itime + "s");
+        p.appendChild(t);
+        p.style.textIndent = "0px";
+        p.style.transition = "8s text-indent cubic-bezier(0, 1, 1, 0)";
+        if (restyleParent) {
+          let d = document.createElement("div");
+          d.appendChild(p);
+          div.appendChild(d);
+        } else {
+          div.appendChild(p);
+        }
+        is(getComputedStyle(p, "").textIndent, "0px",
+           "should be zero before changing value");
+        setTimeout("interrupt_tests[" + interrupt_tests.length + "]" +
+                   "[0]" + (restyleParent ? ".parentNode" : "") +
+                   ".style.color = 'blue';" +
+                   "check_interrupt_tests()", itime*1000);
+        interrupt_tests.push([ p, itime ]);
+    }
+}
+
+// Test transition-delay values of -4s through 4s on a 4s transition
+// with 'ease-out' timing function.
+var delay_tests = {};
+for (let d = -4; d <= 4; ++d) {
+    let p = document.createElement("p");
+    let delay = d + "s";
+    let t = document.createTextNode("transition-delay: " + delay);
+    p.appendChild(t);
+    p.style.marginLeft = "0px";
+    p.style.transition = "4s margin-left ease-out " + delay;
+    div.appendChild(p);
+    is(getComputedStyle(p, "").marginLeft, "0px",
+       "should be zero before changing value");
+    delay_tests[d] = p;
+}
+
+// Test transition-delay values of -4s through 4s on a 4s transition
+// with duration of zero.
+var delay_zero_tests = {};
+for (let d = -4; d <= 4; ++d) {
+    let p = document.createElement("p");
+    let delay = d + "s";
+    let t = document.createTextNode("transition-delay: " + delay);
+    p.appendChild(t);
+    p.style.marginLeft = "0px";
+    p.style.transition = "0s margin-left linear " + delay;
+    div.appendChild(p);
+    is(getComputedStyle(p, "").marginLeft, "0px",
+       "should be zero before changing value");
+    delay_zero_tests[d] = p;
+}
+
+// Test that changing the value on an already-running transition to the
+// value it currently happens to have resets the transition.
+function make_reset_test(transition, description)
+{
+    let p = document.createElement("p");
+    let t = document.createTextNode(description);
+    p.appendChild(t);
+    p.style.marginLeft = "0px";
+    p.style.transition = transition;
+    div.appendChild(p);
+    is(getComputedStyle(p, "").marginLeft, "0px",
+       "should be zero before changing value");
+    return p;
+}
+var reset_test = make_reset_test("4s margin-left ease-out 4s", "transition-delay reset to starting point");
+var reset_test_reference = make_reset_test("4s margin-left linear -3s", "reference for previous test (reset test)");
+
+// Test that transitions on descendants start correctly when the
+// inherited value is itself transitioning.  In other words, when
+// ancestor and descendant both have a transition for the same property,
+// and the descendant inherits the property from the ancestor, the
+// descendant's transition starts as specified, based on the concepts of
+// the before-change style, the after-change style, and the
+// after-transition style.
+var descendant_tests = [
+    { parent_transition: "",
+      child_transition: "4s text-indent" },
+    { parent_transition: "4s text-indent",
+      child_transition: "" },
+    { parent_transition: "4s text-indent",
+      child_transition: "16s text-indent" },
+    { parent_transition: "4s text-indent",
+      child_transition: "1s text-indent" },
+    { parent_transition: "8s letter-spacing",
+      child_transition: "4s text-indent" },
+    { parent_transition: "4s text-indent",
+      child_transition: "8s letter-spacing" },
+    { parent_transition: "4s text-indent",
+      child_transition: "8s all" },
+    { parent_transition: "8s text-indent",
+      child_transition: "4s all" },
+    // examples with positive and negative delay
+    { parent_transition: "4s text-indent 1s",
+      child_transition: "8s text-indent" },
+    { parent_transition: "4s text-indent -1s",
+      child_transition: "8s text-indent" }
+];
+
+for (let i in descendant_tests) {
+    let test = descendant_tests[i];
+    test.parentNode = document.createElement("div");
+    test.childNode = document.createElement("p");
+    test.parentNode.appendChild(test.childNode);
+    test.childNode.appendChild(document.createTextNode(
+        "parent with \"" + test.parent_transition + "\" and " +
+        "child with \"" + test.child_transition + "\""));
+    test.parentNode.style.transition = test.parent_transition;
+    test.childNode.style.transition = test.child_transition;
+    test.parentNode.style.textIndent = "50px"; // transition from 50 to 150
+    test.parentNode.style.letterSpacing = "10px"; // transition from 10 to 5
+    div.appendChild(test.parentNode);
+    var parentCS = getComputedStyle(test.parentNode, "");
+    var childCS = getComputedStyle(test.childNode, "");
+    is(parentCS.textIndent, "50px",
+       "parent text-indent should be 50px before changing");
+    is(parentCS.letterSpacing, "10px",
+       "parent letter-spacing should be 10px before changing");
+    is(childCS.textIndent, "50px",
+       "child text-indent should be 50px before changing");
+    is(childCS.letterSpacing, "10px",
+       "child letter-spacing should be 10px before changing");
+    test.childCS = childCS;
+}
+
+// For all of these transitions, the transition for margin-left should
+// have a duration of 8s, and the default timing function (ease) and
+// delay (0).
+// This is because we're implementing the proposal in
+// http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
+var number_tests = [
+  { style: "transition: 4s margin, 8s margin-left" },
+  { style: "transition: 4s margin-left, 8s margin" },
+  { style: "transition-property: margin-left; " +
+             "transition-duration: 8s, 2s" },
+  { style: "transition-property: margin-left, margin-left; " +
+             "transition-duration: 2s, 8s" },
+  { style: "transition-property: margin-left, margin-left, margin-left; " +
+             "transition-duration: 8s, 2s" },
+  { style: "transition-property: margin-left; " +
+             "transition-duration: 8s, 16s" },
+  { style: "transition-property: margin-left, margin-left; " +
+             "transition-duration: 16s, 8s" },
+  { style: "transition-property: margin-left, margin-left, margin-left; " +
+             "transition-duration: 8s, 16s" },
+  { style: "transition-property: text-indent,word-spacing,margin-left; " +
+             "transition-duration: 8s; " +
+             "transition-delay: 0, 8s" },
+  { style: "transition-property: text-indent,word-spacing,margin-left; " +
+             "transition-duration: 8s, 16s; " +
+             "transition-delay: 8s, 8s, 0, 8s, 8s, 8s" },
+];
+
+for (let i in number_tests) {
+    let test = number_tests[i];
+    let p = document.createElement("p");
+    p.setAttribute("style", test.style);
+    let t = document.createTextNode(test.style);
+    p.appendChild(t);
+    p.style.marginLeft = "100px";
+    div.appendChild(p);
+    is(getComputedStyle(p, "").marginLeft, "100px",
+       "should be 100px before changing value");
+    test.node = p;
+}
+
+// Test transitions that are also from-display:none, to-display:none, and
+// display:none throughout.
+var from_none_test, to_none_test, always_none_test;
+function make_display_test(initially_none, text)
+{
+    let p = document.createElement("p");
+    p.appendChild(document.createTextNode(text));
+    p.style.textIndent = "0px";
+    p.style.transition = "8s text-indent ease-in-out";
+    if (initially_none)
+        p.style.display = "none";
+    div.appendChild(p);
+    return p;
+}
+from_none_test   = make_display_test(true,  "transition from display:none");
+to_none_test     = make_display_test(false, "transition to display:none");
+always_none_test = make_display_test(true,  "transition always display:none");
+var display_tests = [ from_none_test, to_none_test, always_none_test ];
+
+// Test transitions on pseudo-elements
+var before_test, after_test;
+function make_pseudo_elem_test(pseudo)
+{
+    let p = document.createElement("p");
+    p.className = pseudo;
+    div.appendChild(p);
+    return {"pseudo": pseudo, element: p};
+}
+before_test = make_pseudo_elem_test("before");
+after_test = make_pseudo_elem_test("after");
+var pseudo_element_tests = [ before_test, after_test ];
+
+// FIXME (Bug 522599): Test a transition that reverses partway through.
+
+var lateref = make_reference_p();
+var laterefcs = getComputedStyle(lateref, "");
+
+// flush style changes
+var x = getComputedStyle(div, "").width;
+
+// Start our timer as close as possible to when we start the first
+// transition.
+// Do not use setInterval because once it gets off in time, it stays off.
+for (let i = 1; i <= 8; ++i) {
+    setTimeout(process_future_calls, i * 1000, i);
+}
+gStartTime1 = Date.now(); // set before any transitions have started
+
+// Start all the transitions.
+earlyref.style.textIndent = "1000px";
+for (let test in tftests) {
+    let p = tftests[test][0];
+    p.style.textIndent = "100px";
+}
+for (let test in interrupt_tests) {
+    let p = interrupt_tests[test][0];
+    p.style.textIndent = "100px";
+}
+for (let d in delay_tests) {
+    let p = delay_tests[d];
+    p.style.marginLeft = "100px";
+}
+for (let d in delay_zero_tests) {
+    let p = delay_zero_tests[d];
+    p.style.marginLeft = "100px";
+}
+reset_test.style.marginLeft = "100px";
+reset_test_reference.style.marginLeft = "100px";
+for (let i in descendant_tests) {
+    let test = descendant_tests[i];
+    test.parentNode.style.textIndent = "150px";
+    test.parentNode.style.letterSpacing = "5px";
+}
+for (let i in number_tests) {
+    let test = number_tests[i];
+    test.node.style.marginLeft = "50px";
+}
+from_none_test.style.textIndent = "100px";
+from_none_test.style.display = "";
+to_none_test.style.textIndent = "100px";
+to_none_test.style.display = "none";
+always_none_test.style.textIndent = "100px";
+for (let i in pseudo_element_tests) {
+    let test = pseudo_element_tests[i];
+    test.element.classList.add("started");
+}
+lateref.style.textIndent = "1000px";
+
+// flush style changes
+x = getComputedStyle(div, "").width;
+
+gStartTime2 = Date.now(); // set after all transitions have started
+gCurrentTime = gStartTime2;
+
+/**
+ * Assert that a transition whose timing function yields the bezier
+ * |func|, running from |start_time| to |end_time| (both in seconds
+ * relative to when the transitions were started) should have produced
+ * computed value |cval| given that the transition was from
+ * |start_value| to |end_value| (both numbers in CSS pixels).
+ */
+function check_transition_value(func, start_time, end_time,
+                                start_value, end_value, cval, desc,
+                                xfail)
+{
+    /**
+     * Compute the value at a given time |elapsed|, by normalizing the
+     * input to the timing function using start_time and end_time and
+     * then turning the output into a value using start_value and
+     * end_value.
+     *
+     * The |error_direction| argument should be either -1, 0, or 1,
+     * suggesting adding on a little bit of error, to allow for the
+     * cubic-bezier calculation being an approximation.  The amount of
+     * error is proportional to the slope of the timing function, since
+     * the error is added to the *input* of the timing function (after
+     * normalization to 0-1 based on start_time and end_time).
+     */
+    function value_at(elapsed, error_direction) {
+        var time_portion = (elapsed - start_time) / (end_time - start_time);
+        if (time_portion < 0)
+            time_portion = 0;
+        else if (time_portion > 1)
+            time_portion = 1;
+        // Assume a small error since bezier computation can be off slightly.
+        // (This test's computation is probably more accurate than Mozilla's.)
+        var value_portion = func(time_portion + error_direction * 0.0005);
+        if (value_portion < 0)
+            value_portion = 0;
+        else if (value_portion > 1)
+            value_portion = 1;
+        var value = (1 - value_portion) * start_value + value_portion * end_value;
+        if (start_value > end_value)
+            error_direction = -error_direction;
+        // Computed values get rounded to 1/60th of a pixel.
+        return value + error_direction * 0.02;
+    }
+
+    var time_range; // in seconds
+    var uns_range; // |range| before being sorted (so errors give it
+                   // in the original order
+    if (!gSetupComplete) {
+        // No timers involved
+        time_range = [0, 0];
+        if (start_time < 0) {
+            uns_range = [ value_at(0, -1), value_at(0, 1) ];
+        } else {
+            var val = value_at(0, 0);
+            uns_range = [val, val];
+        }
+    } else {
+        time_range = [ px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC,
+                       px_to_num(laterefcs.textIndent) / REF_PX_PER_SEC ];
+        // seconds
+        uns_range = [ value_at(time_range[0], -1),
+                      value_at(time_range[1], 1) ];
+    }
+    var range = uns_range.concat(). /* concat to clone array */
+                  sort(function compareNumbers(a,b) { return a - b; });
+    var actual = px_to_num(cval);
+
+    var fn = ok;
+    if (xfail && xfail(range))
+      fn = todo;
+
+    fn(range[0] <= actual && actual <= range[1],
+       desc + ": computed value " + cval + " should be between " +
+       uns_range[0].toFixed(6) + "px and " + uns_range[1].toFixed(6) +
+       "px at time between " + time_range[0] + "s and " + time_range[1] + "s.");
+}
+
+function check_ref_range()
+{
+    // This is the only test where we compare the progress of the
+    // transitions to an actual time; we need considerable tolerance at
+    // the low end (we are using half a second).
+    var expected_range = [ (gCurrentTime - gStartTime2 - 40) / 16,
+                           (Date.now() - gStartTime1 + 20) / 16 ];
+    if (expected_range[0] > 1000) {
+        expected_range[0] = 1000;
+    }
+    if (expected_range[1] > 1000) {
+        expected_range[1] = 1000;
+    }
+    function check(desc, value) {
+        // The timing on the unit test VMs is not reliable, so make this
+        // test report PASS when it succeeds and TODO when it fails.
+        var passed = expected_range[0] <= value && value <= expected_range[1];
+        (passed ? ok : todo)(passed,
+           desc + ": computed value " + value + "px should be between " +
+           expected_range[0].toFixed(6) + "px and " +
+           expected_range[1].toFixed(6) + "px at time between " +
+           expected_range[0]/REF_PX_PER_SEC + "s and " +
+           expected_range[1]/REF_PX_PER_SEC + "s.");
+    }
+    check("early reference", px_to_num(earlyrefcs.textIndent));
+    check("late reference", px_to_num(laterefcs.textIndent));
+}
+
+for (let i = 1; i <= 8; ++i) {
+    add_future_call(i, check_ref_range);
+}
+
+function check_tf_test()
+{
+    for (var test in tftests) {
+        var p = tftests[test][0];
+        var tf = tftests[test][1];
+
+        check_transition_value(timingFunctions[tf], 0, 8, 0, 100,
+                               getComputedStyle(p, "").textIndent,
+                               "timing function test for timing function " + tf);
+
+    }
+
+    check_interrupt_tests();
+}
+
+check_tf_test();
+add_future_call(2, check_tf_test);
+add_future_call(4, check_tf_test);
+add_future_call(6, check_tf_test);
+add_future_call(8, check_tf_test);
+
+function check_interrupt_tests()
+{
+    for (let test in interrupt_tests) {
+        var p = interrupt_tests[test][0];
+        var itime = interrupt_tests[test][1];
+
+        check_transition_value(timingFunctions["cubic-bezier(0, 1, 1, 0)"],
+                               0, 8, 0, 100,
+                               getComputedStyle(p, "").textIndent,
+                               "interrupt " +
+                               (p.parentNode == div ? "" : "on parent ") +
+                               "test for time " + itime + "s");
+    }
+}
+
+// check_interrupt_tests is called from check_tf_test and from
+// where we reset the interrupts
+
+function check_delay_test(time)
+{
+    let tf = timingFunctions["ease-out"];
+    for (let d in delay_tests) {
+        let p = delay_tests[d];
+
+        check_transition_value(tf, Number(d), Number(d) + 4, 0, 100,
+                               getComputedStyle(p, "").marginLeft,
+                               "delay test for delay " + d + "s");
+    }
+}
+
+check_delay_test(0);
+for (let i = 1; i <= 8; ++i) {
+    add_future_call(i, check_delay_test);
+}
+
+function check_delay_zero_test(time)
+{
+    for (let d in delay_zero_tests) {
+        let p = delay_zero_tests[d];
+
+        time_range = [ px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC,
+                       px_to_num(laterefcs.textIndent) / REF_PX_PER_SEC ];
+        var m = getComputedStyle(p, "").marginLeft;
+        var desc = "delay_zero test for delay " + d + "s";
+        if (time_range[0] < d && time_range[1] < d) {
+            is(m, "0px", desc);
+        } else if ((time_range[0] > d && time_range[1] > d) ||
+                   (d == 0 && time == 0)) {
+            is(m, "100px", desc);
+        }
+    }
+}
+
+check_delay_zero_test(0);
+for (let i = 1; i <= 8; ++i) {
+    add_future_call(i, check_delay_zero_test);
+}
+
+function reset_reset_test(time)
+{
+    reset_test.style.marginLeft = "0px";
+}
+function check_reset_test(time)
+{
+    is(getComputedStyle(reset_test, "").marginLeft, "0px",
+       "reset test value at time " + time + "s.");
+}
+check_reset_test(0);
+// reset the reset test right now so we don't have to worry about clock skew
+// To make sure that this is valid, check that a pretty-much-identical test is
+// already transitioning.
+is(getComputedStyle(reset_test_reference, "").marginLeft, "75px",
+   "reset test reference value");
+reset_reset_test();
+check_reset_test(0);
+for (let i = 1; i <= 8; ++i) {
+    (function(j) {
+        add_future_call(j, function() { check_reset_test(j); });
+    })(i);
+}
+
+check_descendant_tests();
+add_future_call(2, check_descendant_tests);
+add_future_call(6, check_descendant_tests);
+
+function check_descendant_tests() {
+    // text-indent: transition from 50px to 150px
+    // letter-spacing: transition from 10px to 5px
+    var values = {};
+    values["text-indent"] = [ 50, 150 ];
+    values["letter-spacing"] = [ 10, 5 ];
+    let tf = timingFunctions.ease;
+
+    var time = px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC;
+
+    for (let i in descendant_tests) {
+        let test = descendant_tests[i];
+
+        /* ti=text-indent, ls=letter-spacing */
+        var child_ti_duration = 0;
+        var child_ls_duration = 0;
+        var child_ti_delay = 0;
+        var child_ls_delay = 0;
+
+        if (test.parent_transition != "") {
+            var props = test.parent_transition.split(" ");
+            var duration = parseInt(props[0]);
+            var delay = (props.length > 2) ? parseInt(props[2]) : 0;
+            var property = props[1];
+            if (property == "text-indent") {
+                child_ti_duration = duration;
+                child_ti_delay = delay;
+            } else if (property == "letter-spacing") {
+                child_ls_duration = duration;
+                child_ls_delay = delay;
+            } else {
+                ok(false, "fix this test (unexpected transition-property " +
+                          property + " on parent)");
+            }
+        }
+
+        if (test.child_transition != "") {
+            var props = test.child_transition.split(" ");
+            var duration = parseInt(props[0]);
+            var delay = (props.length > 2) ? parseInt(props[2]) : 0;
+            var property = props[1];
+            if (property != "text-indent" && property != "letter-spacing" &&
+                property != "all") {
+                ok(false, "fix this test (unexpected transition-property " +
+                          property + " on child)");
+            }
+
+            // Override the parent's transition with the child's as long
+            // as the child transition is still running.
+            if (property != "letter-spacing" && duration + delay > time) {
+                child_ti_duration = duration;
+                child_ti_delay = delay;
+            }
+            if (property != "text-indent" && duration + delay > time) {
+                child_ls_duration = duration;
+                child_ls_delay = delay;
+            }
+        }
+
+        var time_portions = {
+          "text-indent":
+            { duration: child_ti_duration, delay: child_ti_delay },
+          "letter-spacing":
+            { duration: child_ls_duration, delay: child_ls_delay },
+        };
+
+        for (var prop in {"text-indent": true, "letter-spacing": true}) {
+            var time_portion = time_portions[prop];
+
+            if (time_portion.duration == 0) {
+                time_portion.duration = 0.01;
+                time_portion.delay = -1;
+            }
+
+            check_transition_value(tf, time_portion.delay,
+                                   time_portion.delay + time_portion.duration,
+                                   values[prop][0], values[prop][1],
+                                   test.childCS.getPropertyValue(prop),
+                                   `descendant test #${Number(i)+1}, property ${prop}`);
+        }
+    }
+}
+
+function check_number_tests()
+{
+    let tf = timingFunctions.ease;
+    for (let d in number_tests) {
+        let test = number_tests[d];
+        let p = test.node;
+
+        check_transition_value(tf, 0, 8, 100, 50,
+                               getComputedStyle(p, "").marginLeft,
+                               "number of transitions test for style " +
+                                 test.style);
+    }
+}
+
+check_number_tests(0);
+add_future_call(2, check_number_tests);
+add_future_call(4, check_number_tests);
+add_future_call(6, check_number_tests);
+add_future_call(8, check_number_tests);
+
+function check_display_tests(time)
+{
+    for (let i in display_tests) {
+        let p = display_tests[i];
+
+        // There is no transition if the old or new style is display:none, so
+        // the computed value is always the end value.
+        var computedValue = getComputedStyle(p, "").textIndent;
+        is(computedValue, "100px",
+           "display test for test with " + p.childNodes[0].data +
+           ": computed value " + computedValue + " should be 100px.");
+    }
+}
+
+check_display_tests(0);
+add_future_call(2, function() { check_display_tests(2); });
+add_future_call(4, function() { check_display_tests(4); });
+add_future_call(6, function() { check_display_tests(6); });
+add_future_call(8, function() { check_display_tests(8); });
+
+function check_pseudo_element_tests(time)
+{
+    let tf = timingFunctions["ease-in-out"];
+    for (let i in pseudo_element_tests) {
+        let test = pseudo_element_tests[i];
+
+        check_transition_value(tf, 0, 8, 0, 100,
+                               getComputedStyle(test.element, "").width,
+                               "::"+test.pseudo+" test");
+        check_transition_value(tf, 0, 8, 0, 100,
+                               getComputedStyle(test.element,
+                                                "::"+test.pseudo).textIndent,
+                               "::"+test.pseudo+" indent test");
+    }
+}
+check_pseudo_element_tests(0);
+add_future_call(2, function() { check_pseudo_element_tests(2); });
+add_future_call(4, function() { check_pseudo_element_tests(4); });
+add_future_call(6, function() { check_pseudo_element_tests(6); });
+add_future_call(8, function() { check_pseudo_element_tests(8); });
+
+gSetupComplete = true;
+</script>
+</pre>
+</body>
+</html>

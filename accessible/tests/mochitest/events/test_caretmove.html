@@ -1,0 +1,142 @@
+<html>
+
+<head>
+  <title>Accessible caret move events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Click checker.
+     */
+    function clickChecker(aCaretOffset, aIsSelectionCollapsed, aID, aExtraNodeOrID, aExtraCaretOffset) {
+      this.__proto__ = new caretMoveChecker(aCaretOffset, aIsSelectionCollapsed, aID);
+
+      this.extraNode = getNode(aExtraNodeOrID);
+
+      this.check = function clickChecker_check(aEvent) {
+        this.__proto__.check(aEvent);
+
+        if (this.extraNode) {
+          var acc = getAccessible(this.extraNode, [nsIAccessibleText]);
+          is(acc.caretOffset, aExtraCaretOffset,
+             "Wrong caret offset for " + aExtraNodeOrID);
+        }
+      };
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    // gA11yEventDumpToConsole = true;
+
+    function doTests() {
+      // test caret move events and caret offsets
+      gQueue = new eventQueue();
+
+      var id = "textbox";
+      gQueue.push(new synthFocus(id, new caretMoveChecker(5, true, id)));
+      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, false, id)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, true, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
+
+      if (!MAC) {
+        gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, false, id)));
+        gQueue.push(new synthHomeKey(id, new caretMoveChecker(0, true, id)));
+        gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
+      }
+      else {
+        todo(false, "Make these tests pass on OSX (bug 650294)");
+      }
+
+      id = "textarea";
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, true, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(12, true, id)));
+
+      id = "textarea_wrapped";
+      gQueue.push(new setCaretOffset(id, 4, id));
+      gQueue.push(new synthLeftKey(id, new caretMoveChecker(4, true, id)));
+
+      id = "p";
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, true, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(6, true, id)));
+
+      id = "p1_in_div";
+      gQueue.push(new synthClick(id, new clickChecker(0, true, id, "p2_in_div", -1)));
+
+      id = "p";
+      gQueue.push(new synthShiftTab(id, new caretMoveChecker(0, true, id)));
+      id = "textarea";
+      gQueue.push(new synthShiftTab(id, new caretMoveChecker(12, true, id)));
+      id = "p";
+      gQueue.push(new synthTab(id, new caretMoveChecker(0, true, id)));
+
+      // Set caret after a child of span element, i.e. after 'text' text.
+      gQueue.push(new moveCaretToDOMPoint("test1", getNode("test1_span"), 1,
+                                           4, "test1"));
+      gQueue.push(new moveCaretToDOMPoint("test2", getNode("test2_span"), 1,
+                                           4, "test2"));
+
+      // empty text element
+      gQueue.push(new moveCaretToDOMPoint("test3", getNode("test3"), 0,
+                                           0, "test3"));
+      gQueue.push(new moveCaretToDOMPoint("test4", getNode("test4_span"), 0,
+                                           0, "test4"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=454377"
+     title="Accessible caret move events testing">
+    Bug 454377
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=567571"
+     title="caret-moved events missing at the end of a wrapped line of text">
+    Bug 567571
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=824901"
+     title="HyperTextAccessible::DOMPointToHypertextOffset fails for node and offset equal to node child count">
+    Bug 824901
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="textbox" value="hello"/>
+
+  <textarea id="textarea">text<br>text</textarea>
+  <p id="p" contentEditable="true"><span>text</span><br/>text</p>
+  <div id="div" contentEditable="true"><p id="p1_in_div">text</p><p id="p2_in_div">text</p></div>
+
+  <p contentEditable="true" id="test1"><span id="test1_span">text</span>ohoho</p>
+  <p contentEditable="true" id="test2"><span><span id="test2_span">text</span></span>ohoho</p>
+  <p contentEditable="true" id="test3"></p>
+  <p contentEditable="true" id="test4"><span id="test4_span"></span></p>
+
+  <textarea id="textarea_wrapped" cols="5">hey friend</textarea>
+</body>
+</html>

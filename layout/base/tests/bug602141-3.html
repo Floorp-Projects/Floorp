@@ -1,0 +1,21 @@
+<!DOCTYPE HTML><html><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+noteditable<span id="x" contenteditable="true" spellcheck="false">navigable|unnavigable</span><br />
+<script>
+  // Position the caret after "|"
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  var x = document.getElementById('x');
+  var t = x.firstChild;
+  range.setStart(t, 10);
+  range.setEnd(t, 10);
+  sel.addRange(range);
+  x.focus();
+
+  sendKey('RIGHT'); // Try to move the caret one position to the right
+</script>
+</body>
+</html>

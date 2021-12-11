@@ -1,0 +1,2 @@
+product-1.0.lang.platform.complete.mar,product-2.0.lang.platform.complete.mar,test.mar,""
+product-1.0.lang.mac.complete.mar,product-2.0.lang.mac.complete.mar,test-mac.mar,""

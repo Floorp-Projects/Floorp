@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=199692
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test for Bug 199692</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    // The popup calls MochiTest methods in this window through window.opener
+    window.open("bug199692-popup.html", "bug199692", "width=600,height=600");
+  </script>
+</body>
+</html>
+

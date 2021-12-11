@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: basic functionality</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This test checks that readyState is properly set and the appropriate events are being fired accordingly:
+// 1. Ensure that play/playing aren't fired before any media data been added.
+// 2. Load more than 10s of data and ensure that canplay, play and playing events are fired.
+
+runWithMSE(async (ms, el) => {
+  el.controls = true;
+  el.autoplay = true;
+  const eventCounts = { play: 0, playing: 0 };
+  await once(ms, "sourceopen");
+  logEvents(el);
+  ok(true, "Receive a sourceopen event");
+
+  const forbiddenEvents = e => {
+    ok(el.readyState >= el.HAVE_FUTURE_DATA, "Must not have received event too early");
+    is(eventCounts[e.type], 0, "event should have only be fired once");
+    eventCounts[e.type]++;
+  };
+  el.addEventListener("play", forbiddenEvents);
+  el.addEventListener("playing", forbiddenEvents);
+
+  const videosb = ms.addSourceBuffer("video/mp4");
+  el.addEventListener("error", e => {
+    ok(false, `should not fire ${e.type} event`);
+    SimpleTest.finish();
+  });
+  is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  let p = once(el, "loadedmetadata");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
+  await p;
+  ok(true, "got loadedmetadata event");
+  // We shift the timestamps slightly to create a small gaps at the start.
+  // one that should normally be ignored.
+  videosb.timestampOffset = 0.1;
+  p = Promise.all(["loadeddata", "canplay", "play", "playing"].map(e => once(el, e)));
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 14), ".m4s");
+  await p;
+  ok(true, "got all required event");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

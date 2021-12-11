@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=795418
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test #3 for Bug 772796</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772796">Mozilla Bug 795418</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div id="copySource">Copy this</div>
+<iframe srcdoc="<html><body><span>AB</span>"></iframe>
+
+<pre id="test">
+
+<script type="application/javascript">
+
+/** Test for Bug 795418 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var div = document.getElementById("copySource");
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+
+  // Select the text from the text node in div.
+  var r = document.createRange();
+  r.setStart(div.firstChild, 0);
+  r.setEnd(div.firstChild, 9);
+  sel.addRange(r);
+
+  function checkResult() {
+    var iframe = document.querySelector("iframe");
+    var theEdit = iframe.contentDocument.body;
+    theEdit.offsetHeight;
+    is(theEdit.innerHTML,
+       "<span>AB<blockquote type=\"cite\">Copy this</blockquote></span>",
+       "unexpected HTML for test");
+    SimpleTest.finish();
+  }
+
+  function pasteQuote() {
+    var iframe = document.querySelector("iframe");
+    var iframeWindow = iframe.contentWindow;
+    var theEdit = iframe.contentDocument.body;
+    iframe.contentDocument.designMode = "on";
+    iframe.contentDocument.body.offsetHeight;
+    iframeWindow.focus();
+    SimpleTest.waitForFocus(function() {
+      var iframeSel = iframeWindow.getSelection();
+      iframeSel.removeAllRanges();
+      iframeSel.collapse(theEdit.firstChild, 1);
+
+      SpecialPowers.doCommand(iframeWindow, "cmd_pasteQuote");
+      setTimeout(checkResult, 0);
+    }, iframeWindow);
+  }
+
+  SimpleTest.waitForClipboard(
+    aData => {
+      // XXX Oddly, specifying `r.toString()` causes timeout in headless mode.
+      info(`copied text: "${aData}"`);
+      return true;
+    },
+    function setup() {
+      synthesizeKey("C", {accelKey: true});
+    },
+    function onSuccess() {
+      setTimeout(pasteQuote, 0);
+    },
+    function onFailure() {
+      SimpleTest.finish();
+    },
+    "text/html"
+  );
+});
+
+</script>
+
+</pre>
+</body>
+</html>

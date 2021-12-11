@@ -1,0 +1,34 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 et
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIStorageBindingParams;
+
+[scriptable, uuid(67eea5c3-4881-41ff-b0fe-09f2356aeadb)]
+interface mozIStorageBindingParamsArray : nsISupports {
+  /**
+   * Creates a new mozIStorageBindingParams object that can be added to this
+   * array.
+   *
+   * @return a mozIStorageBindingParams object that can be used to specify
+   *         parameters that need to be bound.
+   */
+  mozIStorageBindingParams newBindingParams();
+
+  /**
+   * Adds the parameters to the end of this array.
+   *
+   * @param aParameters
+   *        The parameters to add to this array.
+   */
+  void addParams(in mozIStorageBindingParams aParameters);
+
+  /**
+   * The number of mozIStorageBindingParams this object contains.
+   */
+  readonly attribute unsigned long length;
+};

@@ -1,0 +1,291 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.cairo += [
+    'cairo-deprecated.h',
+    'cairo-features.h',
+    'cairo-platform.h',
+    'cairo-rename.h',
+    'cairo-tee.h',
+    'cairo-version.h',
+    'cairo.h',
+    'pixman-rename.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('cocoa', 'uikit'):
+    EXPORTS.cairo += [
+        'cairo-pdf.h',
+    ]
+    SOURCES += [
+        'cairo-base85-stream.c',
+        'cairo-cff-subset.c',
+        'cairo-deflate-stream.c',
+        'cairo-pdf-interchange.c',
+        'cairo-pdf-operators.c',
+        'cairo-pdf-shading.c',
+        'cairo-pdf-surface.c',
+        'cairo-truetype-subset.c',
+        'cairo-type1-fallback.c',
+        'cairo-type1-glyph-names.c',
+        'cairo-type1-subset.c',
+        'cairo-type3-glyph-surface.c',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['MOZ_DISABLE_WINDOWS_WRAPPER'] = True
+    EXPORTS.cairo += [
+        'cairo-win32.h',
+    ]
+    SOURCES += [
+        'win32/cairo-dwrite-font.cpp',
+        'win32/cairo-win32-device.c',
+        'win32/cairo-win32-display-surface.c',
+        'win32/cairo-win32-font.c',
+        'win32/cairo-win32-gdi-compositor.c',
+        'win32/cairo-win32-surface.c',
+    ]
+    DEFINES['DISABLE_SOME_FLOATING_POINT'] = True
+    DEFINES['CAIRO_WIN32_STATIC_BUILD'] = True
+    if CONFIG['NS_PRINTING']:
+        SOURCES += [
+            'win32/cairo-win32-printing-surface.c',
+        ]
+    else:
+        DEFINES['CAIRO_OMIT_WIN32_PRINTING'] = True
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] in {'cocoa', 'uikit'}:
+    EXPORTS.cairo += [
+        'cairo-quartz-image.h',
+        'cairo-quartz.h',
+    ]
+    SOURCES += [
+        'cairo-quartz-font.c',
+        'cairo-quartz-image-surface.c',
+        'cairo-quartz-surface.c',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
+    EXPORTS.cairo += [
+        'cairo-beos.h',
+    ]
+    SOURCES += [
+        'cairo-beos-surface.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    EXPORTS.cairo += [
+        'cairo-ps.h',
+    ]
+    SOURCES += [
+        'cairo-ps-surface.c',
+    ]
+
+if CONFIG['MOZ_X11']:
+    EXPORTS.cairo += [
+        'cairo-xlib-xrender.h',
+        'cairo-xlib.h',
+    ]
+    SOURCES += [
+        'cairo-xlib-core-compositor.c',
+        'cairo-xlib-display.c',
+        'cairo-xlib-fallback-compositor.c',
+        'cairo-xlib-render-compositor.c',
+        'cairo-xlib-screen.c',
+        'cairo-xlib-source.c',
+        'cairo-xlib-surface-shm.c',
+        'cairo-xlib-surface.c',
+        'cairo-xlib-visual.c',
+        'cairo-xlib-xcb-surface.c',
+    ]
+
+if CONFIG['MOZ_ENABLE_CAIRO_FT']:
+    EXPORTS.cairo += [
+        'cairo-ft.h',
+    ]
+    SOURCES += [
+        'cairo-ft-font.c',
+    ]
+
+SOURCES += [
+    'cairo-bentley-ottmann-rectangular.c', # redefinition of '_cairo_bo_trap'
+    'cairo-bentley-ottmann-rectilinear.c', # redefinition of '_cairo_bo_trap'
+    'cairo-bentley-ottmann.c', # redefinition of '_cairo_bo_trap'
+    'cairo-boxes-intersect.c', # a bunch of redefinitions
+    'cairo-clip-surface.c', #  redefinition of '_cairo_path_fixed_add_box'
+    'cairo-image-source.c', #  redefinition of 'fill'
+    'cairo-mask-compositor.c', #  redefinition of 'fill'
+    'cairo-path-stroke-traps.c', #  redefinition of 'stroker'
+    'cairo-path-stroke-tristrip.c', #  redefinition of 'stroker'
+    'cairo-polygon-intersect.c',  #  redefinition of 'edge_compare_for_y_against_x'
+    'cairo-polygon-reduce.c',  #  redefinition of 'edge_compare_for_y_against_x'
+    'cairo-rectangular-scan-converter.c', #  redefinition of '_pqueue'
+    'cairo-surface-wrapper.c', #  redefinition of '_copy_transformed_pattern'
+    'cairo-tor-scan-converter.c', #  redefinition of 'struct cell'
+    'cairo-traps-compositor.c', #  redefinition of 'is_recording_pattern'
+]
+
+UNIFIED_SOURCES += [
+    'cairo-analysis-surface.c',
+    'cairo-arc.c',
+    'cairo-array.c',
+    'cairo-atomic.c',
+    'cairo-base64-stream.c',
+    'cairo-botor-scan-converter.c',
+    'cairo-boxes.c',
+    'cairo-cache.c',
+    'cairo-clip-boxes.c',
+    'cairo-clip-polygon.c',
+    'cairo-clip-region.c',
+    'cairo-clip.c',
+    'cairo-color.c',
+    'cairo-composite-rectangles.c',
+    'cairo-compositor.c',
+    'cairo-contour.c',
+    'cairo-damage.c',
+    'cairo-debug.c',
+    'cairo-default-context.c',
+    'cairo-device.c',
+    'cairo-error.c',
+    'cairo-fallback-compositor.c',
+    'cairo-fixed.c',
+    'cairo-font-face-twin-data.c',
+    'cairo-font-face-twin.c',
+    'cairo-font-face.c',
+    'cairo-font-options.c',
+    'cairo-freed-pool.c',
+    'cairo-freelist.c',
+    'cairo-gstate.c',
+    'cairo-hash.c',
+    'cairo-hull.c',
+    'cairo-image-compositor.c',
+    'cairo-image-info.c',
+    'cairo-image-surface.c',
+    'cairo-line.c',
+    'cairo-lzw.c',
+    'cairo-matrix.c',
+    'cairo-mesh-pattern-rasterizer.c',
+    'cairo-misc.c',
+    'cairo-mono-scan-converter.c',
+    'cairo-mutex.c',
+    'cairo-no-compositor.c',
+    'cairo-observer.c',
+    'cairo-output-stream.c',
+    'cairo-paginated-surface.c',
+    'cairo-path-bounds.c',
+    'cairo-path-fill.c',
+    'cairo-path-fixed.c',
+    'cairo-path-in-fill.c',
+    'cairo-path-stroke-boxes.c',
+    'cairo-path-stroke-polygon.c',
+    'cairo-path-stroke.c',
+    'cairo-path.c',
+    'cairo-pattern.c',
+    'cairo-pen.c',
+    'cairo-polygon.c',
+    'cairo-raster-source-pattern.c',
+    'cairo-recording-surface.c',
+    'cairo-rectangle.c',
+    'cairo-region.c',
+    'cairo-scaled-font-subsets.c',
+    'cairo-scaled-font.c',
+    'cairo-shape-mask-compositor.c',
+    'cairo-slope.c',
+    'cairo-spans-compositor.c',
+    'cairo-spans.c',
+    'cairo-spline.c',
+    'cairo-stroke-dash.c',
+    'cairo-stroke-style.c',
+    'cairo-surface-clipper.c',
+    'cairo-surface-fallback.c',
+    'cairo-surface-offset.c',
+    'cairo-surface-snapshot.c',
+    'cairo-surface-subsurface.c',
+    'cairo-surface.c',
+    'cairo-tag-attributes.c',
+    'cairo-tag-stack.c',
+    'cairo-tee-surface.c',
+    'cairo-tor22-scan-converter.c',
+    'cairo-toy-font-face.c',
+    'cairo-traps.c',
+    'cairo-tristrip.c',
+    'cairo-unicode.c',
+    'cairo-user-font.c',
+    'cairo-version.c',
+    'cairo-wideint.c',
+    'cairo.c',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['PACKAGE_VERSION'] = '"moz"'
+DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+
+for var in ('CAIRO_HAS_PTHREAD', '_GNU_SOURCE'):
+    DEFINES[var] = True
+
+if CONFIG['MOZ_TREE_PIXMAN']:
+    DEFINES['MOZ_TREE_PIXMAN'] = True
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    DEFINES['HAVE_CXX11_ATOMIC_PRIMITIVES'] = True
+    # We would normally use autoconf to set these up, using AC_CHECK_SIZEOF.
+    # But AC_CHECK_SIZEOF requires running programs to determine the sizes,
+    # and that doesn't work so well with cross-compiling.  So instead we
+    # use these magic macros, available since at least GCC 4.3, to define
+    # the preprocessor macros cairo wanted from autoconf.
+    DEFINES['SIZEOF_VOID_P'] = '__SIZEOF_POINTER__'
+    DEFINES['SIZEOF_INT'] = '__SIZEOF_INT__'
+    DEFINES['SIZEOF_LONG'] = '__SIZEOF_LONG__'
+    DEFINES['SIZEOF_LONG_LONG'] = '__SIZEOF_LONG_LONG__'
+
+# Normally determined by cairo's configure script.
+DEFINES['HAVE_UINT64_T'] = True
+
+if CONFIG['MOZ_TREE_FREETYPE']:
+    DEFINES['HAVE_FT_LIBRARY_SETLCDFILTER'] = True
+    DEFINES['FT_LCD_FILTER_H'] = '../../../modules/freetype2/include/freetype/ftlcdfil.h'
+
+# Suppress warnings in third-party code.
+CFLAGS += [
+    '-Wno-enum-compare',
+    '-Wno-int-to-pointer-cast',
+    '-Wno-int-conversion',
+    '-Wno-incompatible-pointer-types',
+    '-Wno-sign-compare',
+    '-Wno-type-limits',
+    '-Wno-missing-field-initializers',
+    '-Wno-conversion',
+    '-Wno-narrowing',
+    '-Wno-switch',
+    '-Wno-unused',
+    '-Wno-unused-variable',
+    '-Wno-error=uninitialized',
+]
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CFLAGS += [
+        '-Wno-absolute-value',
+        '-Wno-deprecated-register',
+        '-Wno-incompatible-pointer-types',
+        '-Wno-macro-redefined',
+        '-Wno-shift-negative-value',
+        '-Wno-tautological-compare',
+        '-Wno-tautological-constant-out-of-range-compare',
+        '-Wno-unreachable-code',
+    ]
+else:
+    CFLAGS += ['-Wno-unused-but-set-variable']
+
+# See bug 386897.
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') and CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
+    CFLAGS += ['-O2']
+    CXXFLAGS += ['-O2']
+
+if CONFIG['MOZ_X11']:
+    CFLAGS += CONFIG['MOZ_X11_CFLAGS']
+
+if CONFIG['MOZ_ENABLE_CAIRO_FT']:
+    CFLAGS += CONFIG['CAIRO_FT_CFLAGS']
+    CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']

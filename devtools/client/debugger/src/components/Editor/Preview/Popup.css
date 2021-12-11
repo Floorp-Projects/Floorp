@@ -1,0 +1,204 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.popover .preview-popup {
+  background: var(--theme-body-background);
+  width: 350px;
+  border: 1px solid var(--theme-splitter-color);
+  padding: 10px;
+  height: auto;
+  overflow: auto;
+  box-shadow: 1px 2px 3px var(--popup-shadow-color);
+}
+
+.gap svg {
+  pointer-events: none;
+}
+
+.gap polygon {
+  pointer-events: auto;
+}
+
+.theme-dark .popover .preview-popup {
+  box-shadow: 1px 2px 3px var(--popup-shadow-color);
+}
+
+.popover .preview-popup .header-container {
+  width: 100%;
+  line-height: 15px;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 5px;
+}
+
+.popover .preview-popup .logo {
+  width: 20px;
+  margin-right: 5px;
+}
+
+.popover .preview-popup .header-container h3 {
+  margin: 0;
+  margin-bottom: 5px;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+  margin-left: 4px;
+}
+
+.popover .preview-popup .header .link {
+  align-self: flex-end;
+  color: var(--theme-highlight-blue);
+  text-decoration: underline;
+}
+
+.popover .preview-popup .object-node {
+  padding-inline-start: 0px;
+}
+
+.preview-token:hover {
+  cursor: default;
+}
+
+.preview-token,
+.debug-expression.preview-token {
+  background-color: var(--theme-highlight-yellow);
+}
+
+.theme-dark .preview-token,
+.theme-dark .debug-expression.preview-token {
+  background-color: #743884;
+}
+
+.theme-dark .cm-s-mozilla .preview-token,
+.theme-dark .cm-s-mozilla .debug-expression.preview-token {
+  color: #e7ebee;
+}
+
+.popover .preview-popup .function-signature {
+  padding-top: 10px;
+}
+
+.theme-dark .popover .preview-popup {
+  border-color: var(--theme-body-color);
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 100;
+}
+
+.tooltip .preview-popup {
+  background: var(--theme-toolbar-background);
+  max-width: inherit;
+  min-height: 80px;
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: 1px 2px 4px 1px var(--theme-toolbar-background-alt);
+  padding: 5px;
+  height: auto;
+  min-height: inherit;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.theme-dark .tooltip .preview-popup {
+  border-color: var(--theme-body-color);
+}
+
+.tooltip .gap {
+  height: 4px;
+  padding-top: 0px;
+}
+
+.add-to-expression-bar {
+  border: 1px solid var(--theme-splitter-color);
+  border-top: none;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  font-size: 14px;
+  line-height: 30px;
+  background: var(--theme-toolbar-background);
+  color: var(--theme-text-color-inactive);
+  padding: 0 4px;
+}
+
+.add-to-expression-bar .prompt {
+  width: 1em;
+}
+
+.add-to-expression-bar .expression-to-save-label {
+  width: calc(100% - 4em);
+}
+
+.add-to-expression-bar .expression-to-save-button {
+  font-size: 14px;
+  color: var(--theme-comment);
+}
+
+/* Exception popup */
+.exception-popup .exception-text {
+  color: var(--red-70);
+}
+
+.theme-dark .exception-popup .exception-text {
+  color: var(--red-20);
+}
+
+.exception-popup .exception-message {
+  display: flex;
+  align-items: center;
+}
+
+.exception-message .arrow {
+  margin-inline-end: 4px;
+}
+
+.exception-popup .exception-stacktrace {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-column-gap: 8px;
+  padding-inline: 2px 3px;
+  line-height: var(--theme-code-line-height);
+}
+
+.exception-stacktrace .frame {
+  display: contents;
+  cursor: pointer;
+}
+
+.exception-stacktrace .title {
+  grid-column: 1/2;
+  color: var(--grey-90);
+}
+
+.theme-dark .exception-stacktrace .title {
+  color: white;
+}
+
+.exception-stacktrace .location {
+  grid-column: -1/-2;
+  color: var(--theme-highlight-purple);
+  direction: rtl;
+  text-align: end;
+  white-space: nowrap;
+  /* Force the location to be on one line and crop at start if wider then max-width */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 350px;
+}
+
+.theme-dark .exception-stacktrace .location {
+  color: var(--blue-40);
+}
+
+.exception-stacktrace .line {
+  color: var(--theme-highlight-blue);
+}
+
+.theme-dark .exception-stacktrace .line {
+  color: hsl(210, 40%, 60%);
+}

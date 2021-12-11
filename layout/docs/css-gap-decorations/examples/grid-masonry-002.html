@@ -1,0 +1,78 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of 'column-rule-extent: all-*' values in a Masonry grid layout.</title>
+<style>
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid: masonry / 3ch 4ch 5ch;
+  gap: 20px;
+  margin-right: 20px;
+  margin-bottom: 40px;
+  background: lightgrey;
+
+  block-size: 160px;
+  align-content: center;
+  align-tracks: center;
+
+  column-rule: solid blue;
+  column-rule-align: rule;
+  row-rule: 6px solid purple;
+  row-rule-align: rule;
+}
+
+.all-start { column-rule-extent: all-start;  column-rule-lateral-inset-start: 0; }
+.all-end { column-rule-extent: all-end;  column-rule-lateral-inset-end: 0; }
+.all-short { column-rule-extent: all-short; }
+.all-long { column-rule-extent: all-long; }
+
+x {
+  background: grey;
+  opacity: 0.5;
+}
+x:nth-child(1) { }
+x:nth-child(2) {  }
+x:nth-child(3) { padding-block-end: 30px;  }
+x:nth-child(7) { }
+x:nth-child(8) { padding-block-end: 20px;  }
+
+.grid::after {
+  position: absolute;
+  bottom: -2.5em;
+  font-size: 10px;
+  font-style: italic;
+  vertical-align: top;
+  content: attr(test);
+  white-space: pre;
+}
+pre { font-size: 10px; }
+</style>
+
+<pre>All have 'row-rule-align: rule' to make the purple rules
+align with the nearest edge of the blue column rules.
+
+In the bottom two grids, 'column-rule-lateral-inset-start/end'
+is zero, respectively, to make the blue rule attach to the side
+of the track that it used for its longitudinal sizing.
+</pre>
+
+<div class="grid all-short"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid all-long"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+<div class="grid all-start"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid all-end"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('.grid')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    var inset = cs.columnRuleLateralInsetStart + " " + cs.columnRuleLateralInsetEnd;
+    inset = inset != "auto auto" ? ("\n" + "'column-rule-lateral-inset: " + inset) : "";
+    elm.setAttribute("test", 
+      "'column-rule-extent: " + cs.columnRuleExtent + inset
+    );
+  });
+}
+</script>

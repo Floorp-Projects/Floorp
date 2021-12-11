@@ -1,0 +1,9 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "e35c4fb06a1e79fa42fd75d2be15f557c125fb1e24cdc28d2f0b25e36b12ed2e50d6df304365583b2f1109ea8a6360f5ef76b23e4e133d07813ba61df5482456",
+    "filename": "mitm6-android-fenix-google-maps.zip",
+    "size": 82227,
+    "visibility": "public"
+  }
+]

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Flexbox Reference: caption size test for table flex items</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1334403">
+  <style type="text/css">
+* { vertical-align: top; }
+.flex {
+  display: inline-flex;
+  border: 3px solid grey;
+  height: 73px;
+  width: 110px;
+  align-items: start;  /* no support for stretch yet: bug 799725 */
+}
+
+table {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+  flex: auto;
+  min-width: 0;
+  min-height: 0;
+  width: 32px;
+  height: 22px;
+}
+
+caption { border: 1px dashed blue; height: 16px; }
+t { display:block; width:30px; height:20px; }
+i:nth-of-type(1) { width:10px; height:20px; }
+i:nth-of-type(2) { width:20px; height:10px; }
+
+.hma10 { margin: 7px 3px 1px auto; }
+.hmaa  { margin: 7px auto 1px auto; }
+.vma10 { margin: auto 7px 3px 1px; }
+.vmaa  { margin: auto 7px auto 1px; }
+
+.vr { writing-mode: vertical-rl; }
+  </style>
+</head>
+<body>
+
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0 class="hma10"><caption></caption><td><t></t></td></table></div>
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0 class="hmaa"><caption></caption><td><t></t></td></table><i></i></div>
+
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0 class="vma10"><caption></caption><td><t></t></td></table><i></i></div>
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0 class="vmaa"><caption></caption><td><t></t></td></table><i></i></div>
+
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0><caption class="hma10"></caption><td><t></t></td></table><i></i></div>
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0><caption class="hmaa"></caption><td><t></t></td></table><i></i></div>
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0><caption class="vma10"></caption><td><t></t></td></table><i></i></div>
+<div class="flex"><i></i><table cellpadding=0 cellspacing=0><caption class="vmaa"></caption><td><t></t></td></table><i></i></div>
+
+</body>
+</html>

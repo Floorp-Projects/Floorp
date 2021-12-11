@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1195018
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1195018</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * theme_color member
+ * https://w3c.github.io/manifest/#theme_color-member
+ **/
+"use strict";
+
+testValidColors("theme_color");
+testInvalidColors("theme_color");
+  </script>
+</head>

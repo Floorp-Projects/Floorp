@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=147777
+-->
+<head>
+  <title>Test for Bug 147777</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=147777">Mozilla Bug 147777</a>
+<iframe id="iframe" src="visited-lying-inner.html" style="width: 20em; height: 5em"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 147777 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+window.addEventListener("load", start);
+
+var iframe;
+var visitedlink, unvisitedlink;
+var snapshot1;
+
+function start()
+{
+  // Our load event has fired, so we know our iframe is loaded.
+  iframe = document.getElementById("iframe");
+  visitedlink = iframe.contentDocument.getElementById("visitedlink");
+  unvisitedlink = iframe.contentDocument.getElementById("unvisitedlink");
+
+  // First, take a snapshot of it with both links unvisited.
+  snapshot1 = snapshotWindow(iframe.contentWindow, false);
+
+  // Then, change one of the links in the iframe to being visited.
+  visitedlink.href = top.location;
+
+  // Then, start polling to see when the history has updated the display.
+  setTimeout(poll_for_restyle, 100);
+}
+
+function poll_for_restyle()
+{
+  var snapshot2 = snapshotWindow(iframe.contentWindow, false);
+  var equal = compareSnapshots(snapshot1, snapshot2, true)[0];
+  if (equal) {
+    // keep polling
+    setTimeout(poll_for_restyle, 100);
+  } else {
+    // We now know that the link is visited, so we're ready to run
+    // tests.
+    run_tests();
+  }
+}
+
+function run_tests()
+{
+  // Test querySelector and querySelectorAll.
+  var subdoc = iframe.contentDocument;
+  is(subdoc.querySelector(":link"), unvisitedlink,
+     "first :link should be the unvisited link");
+  is(subdoc.querySelector(":visited"), null,
+     "querySelector should not find anything :visited");
+  var qsr = subdoc.querySelectorAll(":link");
+  is(qsr.length, 2, "querySelectorAll(:link) should find 2 results");
+  is(qsr[0], unvisitedlink, "querySelectorAll(:link)[0]");
+  is(qsr[1], visitedlink, "querySelectorAll(:link)[1]");
+  qsr = subdoc.querySelectorAll(":visited");
+  is(qsr.length, 0, "querySelectorAll(:visited) should find 0 results");
+
+  // Test getComputedStyle.
+  var subwin = iframe.contentWindow;
+  is(subwin.getComputedStyle(unvisitedlink).color, "rgb(0, 0, 255)",
+     "getComputedStyle on unvisited link should report color is blue");
+  is(subwin.getComputedStyle(visitedlink).color, "rgb(0, 0, 255)",
+     "getComputedStyle on visited link should report color is blue");
+
+  // Test matches.
+  is(unvisitedlink.matches(":link"), true,
+     "unvisited link matches :link");
+  is(visitedlink.matches(":link"), true,
+     "visited link matches :link");
+  is(unvisitedlink.matches(":visited"), false,
+     "unvisited link does not match :visited");
+  is(visitedlink.matches(":visited"), false,
+     "visited link does not match :visited");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

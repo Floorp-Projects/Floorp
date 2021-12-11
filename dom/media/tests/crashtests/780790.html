@@ -1,0 +1,16 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=780790
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Simple gUM test - null success callback</title>
+  <script type="application/javascript">
+    navigator.mozGetUserMedia({video: true, fake: true}, null, null);
+  </script>
+</head>
+
+<body>
+</body>
+</html>

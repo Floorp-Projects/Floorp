@@ -1,0 +1,68 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=335976
+-->
+<head>
+  <title>Test for Bug 335976</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=335976">Mozilla Bug 335976</a>
+<p id="display"></p>
+
+<iframe srcdoc="&lt;html xmlns='http://www.w3.org/1999/xhtml'&gt;&lt;body&gt; &lt;input&gt; &lt;/body&gt;&lt;/html&gt;" style="width: 95%; height: 150px;"></iframe>
+
+<div id="rootish" style="background: yellow">
+  <div>
+    <input/>
+  </div>
+</div>
+
+
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+function lookAtTextboxesIn(root, numExpected) 
+{
+  var textboxes = root.getElementsByTagName("input");
+  var threw;
+  var i;
+  var n;
+  
+  for (i = 0; n = textboxes[i]; ++i) {
+    threw = true;
+    try { n.nodeType; threw = false; } catch(e) { }
+    ok(!threw, "n.nodeType threw");
+  }
+
+  ok(textboxes.length == numExpected, "Wrong number of textboxes");
+}
+
+function init()
+{
+  // Look at the textbox in the yellow div.
+  lookAtTextboxesIn(document.getElementById('rootish'), 1);
+
+  // Move the yellow div into the iframe.
+  var nd = window.frames[0].document; 
+  nd.body.appendChild(nd.adoptNode(document.getElementById('rootish')));
+  
+  // Look at the textboxes in the iframe.
+  lookAtTextboxesIn(window.frames[0].document.body, 2);
+  
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(init);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

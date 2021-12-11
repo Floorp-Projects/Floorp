@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+Reftest for Bug 1394311 (reference file)
+-->
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+span {
+  font-family: Foo;  /* insert a bogus font-family to avoid Bug 1367860 */
+  font-weight: bold;
+  border: 2px solid black;
+}
+</style>
+</head>
+<body style="font-size: xx-large">
+  <span lang="zh-cn">述</span><span lang="zh-cn">述</span><span lang="zh-hans">述</span><span lang="zh-hans">述</span><br>
+  <span lang="zh-tw">述</span><span lang="zh-tw">述</span><span lang="zh-hant">述</span><span lang="zh-hant">述</span><br>
+  <span lang="ja-jp">述</span><span lang="ja-jp">述</span><br>
+  <span lang="ko-kr">述</span><span lang="ko-kr">述</span><br>
+</body>
+</html>

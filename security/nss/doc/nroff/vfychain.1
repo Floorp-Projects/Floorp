@@ -1,0 +1,169 @@
+'\" t
+.\"     Title: VFYCHAIN
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 19 May 2021
+.\"    Manual: NSS Security Tools
+.\"    Source: nss-tools
+.\"  Language: English
+.\"
+.TH "VFYCHAIN" "1" "19 May 2021" "nss-tools" "NSS Security Tools"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+vfychain_ \- vfychain [options] [revocation options] certfile [[options] certfile] \&.\&.\&.
+.SH "SYNOPSIS"
+.HP \w'\fBvfychain\fR\ 'u
+\fBvfychain\fR
+.SH "STATUS"
+.PP
+This documentation is still work in progress\&. Please contribute to the initial review in
+\m[blue]\fBMozilla NSS bug 836477\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "DESCRIPTION"
+.PP
+The verification Tool,
+\fBvfychain\fR, verifies certificate chains\&.
+\fBmodutil\fR
+can add and delete PKCS #11 modules, change passwords on security databases, set defaults, list module contents, enable or disable slots, enable or disable FIPS 140\-2 compliance, and assign default providers for cryptographic operations\&. This tool can also create certificate, key, and module security database files\&.
+.PP
+The tasks associated with security module database management are part of a process that typically also involves managing key databases and certificate databases\&.
+.SH "OPTIONS"
+.PP
+\fB\-a\fR
+.RS 4
+the following certfile is base64 encoded
+.RE
+.PP
+\fB\-b \fR \fIYYMMDDHHMMZ\fR
+.RS 4
+Validate date (default: now)
+.RE
+.PP
+\fB\-d \fR \fIdirectory\fR
+.RS 4
+database directory
+.RE
+.PP
+\fB\-f \fR
+.RS 4
+Enable cert fetching from AIA URL
+.RE
+.PP
+\fB\-o \fR \fIoid\fR
+.RS 4
+Set policy OID for cert validation(Format OID\&.1\&.2\&.3)
+.RE
+.PP
+\fB\-p \fR
+.RS 4
+Use PKIX Library to validate certificate by calling:
+.sp
+* CERT_VerifyCertificate if specified once,
+.sp
+* CERT_PKIXVerifyCert if specified twice and more\&.
+.RE
+.PP
+\fB\-r \fR
+.RS 4
+Following certfile is raw binary DER (default)
+.RE
+.PP
+\fB\-t\fR
+.RS 4
+Following cert is explicitly trusted (overrides db trust)
+.RE
+.PP
+\fB\-u \fR \fIusage\fR
+.RS 4
+0=SSL client, 1=SSL server, 2=SSL StepUp, 3=SSL CA, 4=Email signer, 5=Email recipient, 6=Object signer, 9=ProtectedObjectSigner, 10=OCSP responder, 11=Any CA
+.RE
+.PP
+\fB\-T \fR
+.RS 4
+Trust both explicit trust anchors (\-t) and the database\&. (Without this option, the default is to only trust certificates marked \-t, if there are any, or to trust the database if there are certificates marked \-t\&.)
+.RE
+.PP
+\fB\-v \fR
+.RS 4
+Verbose mode\&. Prints root cert subject(double the argument for whole root cert info)
+.RE
+.PP
+\fB\-w \fR \fIpassword\fR
+.RS 4
+Database password
+.RE
+.PP
+\fB\-W \fR \fIpwfile\fR
+.RS 4
+Password file
+.RE
+.PP
+.RS 4
+Revocation options for PKIX API (invoked with \-pp options) is a collection of the following flags: [\-g type [\-h flags] [\-m type [\-s flags]] \&.\&.\&.] \&.\&.\&.
+.sp
+Where:
+.RE
+.PP
+\fB\-g \fR \fItest\-type\fR
+.RS 4
+Sets status checking test type\&. Possible values are "leaf" or "chain"
+.RE
+.PP
+\fB\-g \fR \fItest type\fR
+.RS 4
+Sets status checking test type\&. Possible values are "leaf" or "chain"\&.
+.RE
+.PP
+\fB\-h \fR \fItest flags\fR
+.RS 4
+Sets revocation flags for the test type it follows\&. Possible flags: "testLocalInfoFirst" and "requireFreshInfo"\&.
+.RE
+.PP
+\fB\-m \fR \fImethod type\fR
+.RS 4
+Sets method type for the test type it follows\&. Possible types are "crl" and "ocsp"\&.
+.RE
+.PP
+\fB\-s \fR \fImethod flags\fR
+.RS 4
+Sets revocation flags for the method it follows\&. Possible types are "doNotUse", "forbidFetching", "ignoreDefaultSrc", "requireInfo" and "failIfNoInfo"\&.
+.RE
+.SH "ADDITIONAL RESOURCES"
+.PP
+For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at
+\m[blue]\fBhttp://www\&.mozilla\&.org/projects/security/pki/nss/\fR\m[]\&. The NSS site relates directly to NSS code changes and releases\&.
+.PP
+Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
+.PP
+IRC: Freenode at #dogtag\-pki
+.SH "AUTHORS"
+.PP
+The NSS tools were written and maintained by developers with Netscape, Red Hat, Sun, Oracle, Mozilla, and Google\&.
+.PP
+Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
+.SH "LICENSE"
+.PP
+Licensed under the Mozilla Public License, v\&. 2\&.0\&. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla\&.org/MPL/2\&.0/\&.
+.SH "NOTES"
+.IP " 1." 4
+Mozilla NSS bug 836477
+.RS 4
+\%https://bugzilla.mozilla.org/show_bug.cgi?id=836477
+.RE

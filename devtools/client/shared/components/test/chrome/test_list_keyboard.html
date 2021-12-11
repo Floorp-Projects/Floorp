@@ -1,0 +1,283 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that List component has working keyboard interactions.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>List component keyboard test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = function() {
+  try {
+    const { a, button, div } =
+      require("devtools/client/shared/vendor/react-dom-factories");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const {
+      Simulate,
+      findRenderedDOMComponentWithClass,
+      findRenderedDOMComponentWithTag,
+      scryRenderedDOMComponentsWithTag,
+    } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const { List } =
+      browserRequire("devtools/client/shared/components/List");
+
+    const testItems = [
+      {
+        component: div({}, "Test List Item 1"),
+        className: "list-item-1",
+        key: "list-item-1",
+      },
+      {
+        component: div({},
+          "Test List Item 2",
+          a({ href: "#" }, "Focusable 1"),
+          button({ }, "Focusable 2")),
+        className: "list-item-2",
+        key: "list-item-2",
+      },
+      {
+        component: div({}, "Test List Item 3"),
+        className: "list-item-3",
+        key: "list-item-3",
+      },
+    ];
+
+    const list = React.createElement(List, {
+      items: testItems,
+      labelledby: "test-labelledby",
+    });
+
+    const tree = ReactDOM.render(list, document.body);
+    const listEl = findRenderedDOMComponentWithClass(tree, "list");
+    scryRenderedDOMComponentsWithTag(tree, "li");
+    const defaultFocus = listEl.ownerDocument.body;
+
+    function blurEl(el) {
+      // Simulate.blur does not seem to update the activeElement.
+      el.blur();
+    }
+
+    function focusEl(el) {
+      // Simulate.focus does not seem to update the activeElement.
+      el.focus();
+    }
+
+    const tests = [{
+      name: "Test default List state. Keyboard focus is set to document body by default.",
+      state: { current: null, active: null },
+      activeElement: defaultFocus,
+    }, {
+      name: "Current item must be set to the first list item on initial focus. " +
+            "Keyboard focus should be set on list's conatiner (<ul>).",
+      action: () => focusEl(listEl),
+      activeElement: listEl,
+      state: { current: 0 },
+    }, {
+      name: "Current item should remain set even when the list is blured. " +
+            "Keyboard focus should be set back to document body.",
+      action: () => blurEl(listEl),
+      state: { current: 0 },
+      activeElement: defaultFocus,
+    }, {
+      name: "Unset list's current state.",
+      action: () => tree.setState({ current: null }),
+      state: { current: null },
+    }, {
+      name: "Current item must be re-set again to the first list item on initial " +
+            "focus. Keyboard focus should be set on list's conatiner (<ul>).",
+      action: () => focusEl(listEl),
+      activeElement: listEl,
+      state: { current: 0 },
+    }, {
+      name: "Current item should be updated to next on ArrowDown.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowDown" }},
+      state: { current: 1 },
+    }, {
+      name: "Current item should be updated to last on ArrowDown.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowDown" }},
+      state: { current: 2 },
+    }, {
+      name: "Current item should remain on last on ArrowDown.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowDown" }},
+      state: { current: 2 },
+    }, {
+      name: "Current item should be updated to previous on ArrowUp.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowUp" }},
+      state: { current: 1 },
+    }, {
+      name: "Current item should be updated to first on ArrowUp.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowUp" }},
+      state: { current: 0 },
+    }, {
+      name: "Current item should remain on first on ArrowUp.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowUp" }},
+      state: { current: 0 },
+    }, {
+      name: "Current item should be updated to last on End.",
+      event: { type: "keyDown", el: listEl, options: { key: "End" }},
+      state: { current: 2 },
+    }, {
+      name: "Current item should be updated to first on Home.",
+      event: { type: "keyDown", el: listEl, options: { key: "Home" }},
+      state: { current: 0 },
+    }, {
+      name: "Current item should be set as active on Enter.",
+      event: { type: "keyDown", el: listEl, options: { key: "Enter" }},
+      state: { current: 0, active: 0 },
+      activeElement: listEl,
+    }, {
+      name: "Active item should be unset on Escape.",
+      event: { type: "keyDown", el: listEl, options: { key: "Escape" }},
+      state: { current: 0, active: null },
+    }, {
+      name: "Current item should be set as active on Space.",
+      event: { type: "keyDown", el: listEl, options: { key: " " }},
+      state: { current: 0, active: 0 },
+      activeElement: listEl,
+    }, {
+      name: "Current item should unset when focus leaves the list.",
+      action: () => blurEl(listEl),
+      state: { current: 0, active: null },
+      activeElement: defaultFocus,
+    }, {
+      name: "Keyboard focus should be set on list's conatiner (<ul>) on focus.",
+      action: () => focusEl(listEl),
+      activeElement: listEl,
+    }, {
+      name: "Current item should be updated to next on ArrowDown.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowDown" }},
+      state: { current: 1, active: null },
+    }, {
+      name: "Current item should be set as active on Enter. Keyboard focus should be " +
+            "set on the first focusable element inside the list item, if available.",
+      event: { type: "keyDown", el: listEl, options: { key: "Enter" }},
+      state: { current: 1, active: 1 },
+      get activeElement() {
+        // When list item becomes active/inactive, it is replaced with a newly rendered
+        // one.
+        return findRenderedDOMComponentWithTag(tree, "a");
+      },
+    }, {
+      name: "Keyboard focus should be set to next tabbable element inside the active " +
+            "list item on Tab.",
+      action() {
+        synthesizeKey("KEY_Tab");
+      },
+      state: { current: 1, active: 1 },
+      get activeElement() {
+        // When list item becomes active/inactive, it is replaced with a newly rendered
+        // one.
+        return findRenderedDOMComponentWithTag(tree, "button");
+      },
+    }, {
+      name: "Keyboard focus should wrap inside the list item when focused on last " +
+            "tabbable element.",
+      action() {
+        synthesizeKey("KEY_Tab");
+      },
+      state: { current: 1, active: 1 },
+      get activeElement() {
+        return findRenderedDOMComponentWithTag(tree, "a");
+      },
+    }, {
+      name: "Keyboard focus should wrap inside the list item when focused on first " +
+            "tabbable element.",
+      action() {
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+      },
+      state: { current: 1, active: 1 },
+      get activeElement() {
+        return findRenderedDOMComponentWithTag(tree, "button");
+      },
+    }, {
+      name: "Active item should be unset on Escape. Focus should move back to the " +
+            "list container.",
+      event: { type: "keyDown", el: listEl, options: { key: "Escape" }},
+      state: { current: 1, active: null },
+      activeElement: listEl,
+    }, {
+      name: "Current item should be set as active on Space. Keyboard focus should be " +
+            "set on the first focusable element inside the list item, if available.",
+      event: { type: "keyDown", el: listEl, options: { key: " " }},
+      state: { current: 1, active: 1 },
+      get activeElement() {
+        // When list item becomes active/inactive, it is replaced with a newly rendered
+        // one.
+        return findRenderedDOMComponentWithTag(tree, "a");
+      },
+    }, {
+      name: "Current item should remain set even when the list is blured. " +
+            "Keyboard focus should be set back to document body.",
+      action: () => listEl.ownerDocument.activeElement.blur(),
+      state: { current: 1, active: null, },
+      activeElement: defaultFocus,
+    }, {
+      name: "Keyboard focus should be set on list's conatiner (<ul>) on focus.",
+      action: () => focusEl(listEl),
+      state: { current: 1, active: null },
+      activeElement: listEl,
+    }, {
+      name: "Current item should be updated to previous on ArrowUp.",
+      event: { type: "keyDown", el: listEl, options: { key: "ArrowUp" }},
+      state: { current: 0, active: null },
+    }, {
+      name: "Current item should be set as active on Enter.",
+      event: { type: "keyDown", el: listEl, options: { key: "Enter" }},
+      state: { current: 0, active: 0 },
+      activeElement: listEl,
+    }, {
+      name: "Keyboard focus should move to another focusable element outside of the " +
+            "list when there's nothing to focus on inside the list item.",
+      action() {
+        synthesizeKey("KEY_Tab", { shiftKey: true });
+      },
+      state: { current: 0, active: null },
+      activeElement: listEl.ownerDocument.documentElement,
+    }];
+
+    for (const test of tests) {
+      const { action, event, state, name } = test;
+
+      is(listEl, findRenderedDOMComponentWithClass(tree, "list"), "Sanity check");
+
+      info(name);
+      if (event) {
+        const { type, options, el } = event;
+        Simulate[type](el, options);
+      } else if (action) {
+        action();
+      }
+
+      if (test.activeElement) {
+        is(listEl.ownerDocument.activeElement, test.activeElement,
+           "Focus is set correctly.");
+      }
+
+      for (const key in state) {
+        is(tree.state[key], state[key], `${key} state is correct.`);
+      }
+    }
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

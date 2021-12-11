@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Wave Media test: ended</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test if the ended event works correctly.
+var endPassed = false;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return;
+  var v = document.getElementById('v');
+  v.play();
+}
+
+function playbackEnded() {
+  if (completed)
+    return;
+
+  var v = document.getElementById('v');
+  completed = true;
+  ok(v.currentTime >= 0.9 && v.currentTime <= 1.1,
+     "Checking currentTime at end: " + v.currentTime);
+  ok(v.ended, "Checking playback has ended");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<audio id='v'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'>
+  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
+</audio>
+</body>
+</html>

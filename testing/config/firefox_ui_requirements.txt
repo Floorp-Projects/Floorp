@@ -1,0 +1,2 @@
+-r marionette_requirements.txt
+../firefox-ui/harness/

@@ -1,0 +1,4 @@
+Code taken from rlz project in Chromium repository: https://chromium.googlesource.com/chromium/src.git/+/6f3478dfd7d29b9872871718bd08493ed0c8bc8e
+
+Note: base/ contains wrappers/dummies to provide implementations of the
+Chromium APIs that this code relies upon.

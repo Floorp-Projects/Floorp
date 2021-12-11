@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" color="red" stop-color="currentColor">
+      <stop offset="0" style="color:lime;" stop-color="inherit" />
+      <stop offset="1" stop-color="lime" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#gradient)" />
+</svg>

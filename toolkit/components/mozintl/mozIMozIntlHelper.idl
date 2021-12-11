@@ -1,0 +1,63 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This is an internal helper for mozIMozIntl API. There should be virtually
+ * no reason for you to call this API except from mozIMozIntl implementation.
+ *
+ * This API helps accessing the SpiderMonkey Intl APIs, but it is mozIMozIntl
+ * that exposes the thin wrapper around them that binds the functionality
+ * to Gecko.
+ */
+[scriptable, uuid(189eaa7d-b29a-43a9-b1fb-7658990df940)]
+interface mozIMozIntlHelper : nsISupports
+{
+  [implicit_jscontext] void addGetCalendarInfo(in jsval intlObject);
+
+  /**
+   * Adds a MozDateTimeFormat contructor to the given object.
+   *
+   * The difference between regular Intl.DateTimeFormat and the method created here
+   * is that we support two more options:
+   *
+   *    timeStyle: full | long | medium | short
+   *    dateStyle: full | long | medium | short
+   *
+   * which allow user to create normalized date/time style formats.
+   * Additionally, when those options are used instead of the regular atomic
+   * options (hour, minute, month, etc.) this code will look into host
+   * Operating System regional preferences and adjust for that.
+   *
+   * That means that if user will manually select time format (hour12/24) or
+   * adjust how the date should be displayed, MozDateTimeFormat will use that.
+   *
+   * This API should be used everywhere in the UI instead of regular Intl  API.
+   */
+  [implicit_jscontext] void addDateTimeFormatConstructor(in jsval intlObject);
+
+  /**
+   * Adds a MozDisplayNames contructor to the given object.
+   *
+   * The difference between regular Intl.DisplayNames and the method created here
+   * is that we additionally support the following values for the "type" option:
+   *
+   *    weekday
+   *    month
+   *    quarter
+   *    dayPeriod
+   *
+   * And we additionally support "abbreviated" for the "style" option.
+   *
+   * MozDisplayNames.prototype.of accepts the following inputs for these options:
+   *
+   *    weekday: an integer in the range 1 = Monday to 7 = Sunday.
+   *    month: an integer in the range 1 = January to 13 = Undecimber.
+   *    quarter: an integer in the range 1 to 4.
+   *    dayPeriod: a string from the set {"am", "pm"}.
+   */
+  [implicit_jscontext] void addDisplayNamesConstructor(in jsval intlObject);
+};

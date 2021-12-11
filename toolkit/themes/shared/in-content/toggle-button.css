@@ -1,0 +1,69 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+input[type="checkbox"].toggle-button {
+  --button-height: 16px;
+  --button-half-height: 8px;
+  --button-width: 26px;
+  --button-border-width: 1px;
+  /* dot-size = button-height - 2*dot-margin - 2*button-border-width */
+  --dot-size: 10px;
+  --dot-margin: 2px;
+  /* --dot-transform-x = button-width - 2*dot-margin - dot-size - 2*button-border-width */
+  --dot-transform-x: 10px;
+  --border-color: hsla(210,4%,10%,.14);
+}
+
+input[type="checkbox"].toggle-button {
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  border: var(--button-border-width) solid var(--border-color);
+  height: var(--button-height);
+  width: var(--button-width);
+  border-radius: var(--button-half-height);
+  background: var(--in-content-button-background);
+  box-sizing: border-box;
+}
+input[type="checkbox"].toggle-button:enabled:hover {
+  background: var(--in-content-button-background-hover);
+  border-color: var(--border-color);
+}
+input[type="checkbox"].toggle-button:enabled:active {
+  background: var(--in-content-button-background-active);
+  border-color: var(--border-color);
+}
+
+input[type="checkbox"].toggle-button:checked {
+  background: var(--in-content-primary-button-background);
+  border-color: var(--in-content-primary-button-background-hover);
+}
+input[type="checkbox"].toggle-button:checked:hover {
+  background: var(--in-content-primary-button-background-hover);
+  border-color: var(--in-content-primary-button-background-active);
+}
+input[type="checkbox"].toggle-button:checked:active {
+  background: var(--in-content-primary-button-background-active);
+  border-color: var(--in-content-primary-button-background-active);
+}
+
+input[type="checkbox"].toggle-button::before {
+  display: block;
+  content: "";
+  background: #fff;
+  height: var(--dot-size);
+  width: var(--dot-size);
+  margin: var(--dot-margin);
+  border-radius: 50%;
+  outline: 1px solid var(--border-color);
+  transition: transform 100ms;
+  transform: translate(0, calc(50% - var(--dot-size) / 2));
+}
+input[type="checkbox"].toggle-button:checked::before {
+  transform: translate(var(--dot-transform-x), calc(50% - var(--dot-size) / 2));
+}
+input[type="checkbox"].toggle-button:-moz-locale-dir(rtl)::before,
+input[type="checkbox"].toggle-button:dir(rtl)::before {
+  scale: -1;
+}

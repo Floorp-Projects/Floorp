@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html style="overflow:hidden">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=width-device; initial-scale=1.0">
+  <title>Test for bug 1280013</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+async function test() {
+  ok(screen.height > 500, "Screen height must be at least 500 pixels for this test to work");
+
+  // Scroll down to the iframe. Do it in two drags instead of one in case the
+  // device screen is short.
+  let transformEnd = promiseTransformEnd();
+  synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
+  await transformEnd;
+
+  transformEnd = promiseTransformEnd();
+  synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
+  await transformEnd;
+
+  // Now the top of the visible area should be at y=350 of the top-level page,
+  // so if the screen is >= 500px tall, the entire iframe should be visible, at
+  // least vertically.
+
+  // However, because of the overflow:hidden on the root elements, all this
+  // scrolling is happening in APZ and is not reflected in the main-thread
+  // scroll position (it is stored in the callback transform instead). We check
+  // this by checking the scroll offset.
+  await promiseOnlyApzControllerFlushed();
+  is(window.scrollY, 0, "Main-thread scroll position is still at 0");
+
+  // Scroll the iframe by 150px.
+  var subframe = document.getElementById("subframe");
+  transformEnd = promiseTransformEnd();
+  synthesizeNativeTouchDrag(subframe, 10, 100, 0, -150);
+  await transformEnd;
+
+  // Flush any pending paints on the APZ side, and wait for the main thread
+  // to process them all so that we get the correct test data
+  await promiseApzFlushedRepaints();
+
+  // get the displayport for the subframe
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var contentPaints = utils.getContentAPZTestData().paints;
+  var lastPaint = convertScrollFrameData(getLastNonemptyBucket(contentPaints).scrollFrames);
+  var foundIt = 0;
+  for (var scrollId in lastPaint) {
+    if (("contentDescription" in lastPaint[scrollId]) &&
+        (lastPaint[scrollId].contentDescription.includes("tall_html"))) {
+      var dp = getPropertyAsRect(lastPaint, scrollId, "displayport");
+      ok(dp.y <= 0, "The displayport top should be less than or equal to zero to cover the visible part of the subframe; it is " + dp.y);
+      ok(dp.y + dp.h >= subframe.clientHeight, "The displayport bottom should be greater than the clientHeight; it is " + (dp.y + dp.h));
+      foundIt++;
+    }
+  }
+  is(foundIt, 1, "Found exactly one displayport for the subframe we were interested in.");
+}
+
+SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body style="overflow:hidden">
+  The iframe below is at (0, 400). Scroll it into view, and then scroll the contents. The content should be fully rendered in high-resolution.
+  <iframe id="subframe" style="position:absolute; left: 0px; top: 400px; width: 300px; height: 175px" src="helper_tall.html"></iframe>
+</body>
+</html>

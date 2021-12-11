@@ -1,0 +1,10 @@
+setup.py
+pytoml/__init__.py
+pytoml/core.py
+pytoml/parser.py
+pytoml/writer.py
+pytoml.egg-info/PKG-INFO
+pytoml.egg-info/SOURCES.txt
+pytoml.egg-info/dependency_links.txt
+pytoml.egg-info/top_level.txt
+test/test.py

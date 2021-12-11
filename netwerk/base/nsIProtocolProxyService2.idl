@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIProtocolProxyService.idl"
+
+/**
+ * An extension of nsIProtocolProxyService
+ */
+[scriptable, builtinclass, uuid(b2e5b2c0-e21e-4845-b336-be6d60a38951)]
+interface nsIProtocolProxyService2 : nsIProtocolProxyService
+{
+  /**
+   * Call this method to cause the PAC file (if any is configured) to be
+   * reloaded.  The PAC file is loaded asynchronously.
+   */
+  void reloadPAC();
+
+    /**
+     * This method is identical to asyncResolve() except:
+     *  - it only accepts an nsIChannel, not an nsIURI;
+     *  - it may execute the callback function immediately (i.e from the stack
+     *    of asyncResolve2()) if it is immediately ready to run.
+     *    The nsICancelable return value will be null in that case.
+     */
+  nsICancelable asyncResolve2(
+      in nsIChannel aChannel, in unsigned long aFlags,
+      in nsIProtocolProxyCallback aCallback,
+      [optional] in nsISerialEventTarget aMainThreadTarget);
+};

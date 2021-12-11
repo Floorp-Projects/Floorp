@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Test multiple backgrounds with border-radius</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998792">
+  <link rel="help" href="http://dev.w3.org/csswg/css-backgrounds/#the-border-radius">
+  <link rel="match" href="background-multiple-with-border-radius-ref.html">
+  <meta charset="utf-8">
+<style>
+
+.b {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD%2FgAIDAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoUlEQVR42u3bwQ0AIAgEwcOmtXttgScmsxWQCTyp3EysJo61IliwYMGCBUuwYMGCBQuWYMGCBQsWLMGCBQsWLFiCBQsWLFiwBAsWLFiwYAkWLFiwYMESLFiwYMGCpXaVka%2BsO8dmOUNYggULFixYsAQLFixYsGAJFixYsGDBEixYsGDBgiVYsGDBggVLsGDBggULlmDBggULFizBggUL1t89N%2FYEtBGStpoAAAAASUVORK5CYII%3D) content-box, yellow padding-box;
+}
+
+div {
+  width: 100px;
+  height: 100px;
+  padding: 30px;
+  border: 10px dashed blue;
+  border-radius: 10px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="b"></div>
+
+</body>
+</html>

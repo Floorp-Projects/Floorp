@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<fieldset id="f" style="overflow:hidden; width:200px; height:200px; padding:0">
+  <legend style="overflow:hidden">Legend</legend>
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+  <p>Hello Kitty
+</fieldset>
+<script>
+f.scrollTop = 0;
+function doTest() {
+  f.scrollTop = 20;
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

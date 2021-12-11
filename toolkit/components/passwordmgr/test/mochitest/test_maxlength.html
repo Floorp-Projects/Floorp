@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for maxlength attributes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: Bug 391514
+<script>
+gTestDependsOnDeprecatedLogin = true;
+runChecksAfterCommonInit(() => startTest());
+
+let DEFAULT_ORIGIN = window.location.origin;
+</script>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/* Test for Login Manager: 391514 (Login Manager gets confused with
+ * password/PIN on usaa.com)
+ */
+
+async function startTest() {
+  let win = window.open("about:blank");
+  SimpleTest.registerCleanupFunction(() => win.close());
+  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+    <!-- normal form. -->
+    <form id="form1" action="formtest.js">
+      <input  type="text"     name="uname">
+      <input  type="password" name="pword">
+
+      <button type="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>
+
+    <!-- limited username -->
+    <form id="form2" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="4">
+      <input  type="password" name="pword">
+    </form>
+
+    <!-- limited password -->
+    <form id="form3" action="formtest.js">
+      <input  type="text"     name="uname">
+      <input  type="password" name="pword" maxlength="4">
+    </form>
+
+    <!-- limited username and password -->
+    <form id="form4" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="4">
+      <input  type="password" name="pword" maxlength="4">
+    </form>
+
+
+    <!-- limited username -->
+    <form id="form5" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="0">
+      <input  type="password" name="pword">
+    </form>
+
+    <!-- limited password -->
+    <form id="form6" action="formtest.js">
+      <input  type="text"     name="uname">
+      <input  type="password" name="pword" maxlength="0">
+    </form>
+
+    <!-- limited username and password -->
+    <form id="form7" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="0">
+      <input  type="password" name="pword" maxlength="0">
+    </form>
+
+
+    <!-- limited, but ok, username -->
+    <form id="form8" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="999">
+      <input  type="password" name="pword">
+    </form>
+
+    <!-- limited, but ok, password -->
+    <form id="form9" action="formtest.js">
+      <input  type="text"     name="uname">
+      <input  type="password" name="pword" maxlength="999">
+    </form>
+
+    <!-- limited, but ok, username and password -->
+    <form id="form10" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="999">
+      <input  type="password" name="pword" maxlength="999">
+    </form>
+
+
+    <!-- limited, but ok, username -->
+    <!-- (note that filled values are exactly 8 characters) -->
+    <form id="form11" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="8">
+      <input  type="password" name="pword">
+    </form>
+
+    <!-- limited, but ok, password -->
+    <!-- (note that filled values are exactly 8 characters) -->
+    <form id="form12" action="formtest.js">
+      <input  type="text"     name="uname">
+      <input  type="password" name="pword" maxlength="8">
+    </form>
+
+    <!-- limited, but ok, username and password -->
+    <!-- (note that filled values are exactly 8 characters) -->
+    <form id="form13" action="formtest.js">
+      <input  type="text"     name="uname" maxlength="8">
+      <input  type="password" name="pword" maxlength="8">
+    </form>`, win);
+
+  var i;
+
+  await checkLoginFormInFrameWithElementValues(win, 1, "testuser", "testpass");
+
+  for (i = 2; i < 8; i++) {
+    await checkLoginFormInFrameWithElementValues(win, i, "", "");
+  }
+
+  for (i = 8; i < 14; i++) {
+    await checkLoginFormInFrameWithElementValues(win, i, "testuser", "testpass");
+  }
+
+  // Note that tests 11-13 are limited to exactly the expected value.
+  // Assert this lest someone change the login we're testing with.
+  await SpecialPowers.spawn(win, [11, 8], (formNum, length) => {
+    let form = this.content.document.getElementById(`form${formNum}`);
+    let field = form.querySelector("[name='uname']");
+    is(field.value.length, length, "asserting test assumption is valid.");
+  });
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

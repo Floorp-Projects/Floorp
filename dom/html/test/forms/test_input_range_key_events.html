@@ -1,0 +1,210 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=843725
+-->
+<head>
+  <title>Test key events for range</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=843725">Mozilla Bug 843725</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 843725
+ * This test checks how the value of <input type=range> changes in response to
+ * various key events while it is in various states.
+ **/
+SimpleTest.waitForExplicitFinish();
+
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
+    test();
+    SimpleTest.finish();
+  });
+});
+
+const defaultMinimum = 0;
+const defaultMaximum = 100;
+const defaultStep = 1;
+
+// Helpers:
+// For the sake of simplicity, we do not currently support fractional value,
+// step, etc.
+
+function minimum(element) {
+  return Number(element.min || defaultMinimum);
+}
+
+function maximum(element) {
+  return Number(element.max || defaultMaximum);
+}
+
+function range(element) {
+  var max = maximum(element);
+  var min = minimum(element);
+  if (max < min) {
+    return 0;
+  }
+  return max - min;
+}
+
+function defaultValue(element) {
+  return minimum(element) + range(element)/2;
+}
+
+function value(element) {
+  return Number(element.value || defaultValue(element));
+}
+
+function step(element) {
+  var stepSize = Number(element.step || defaultStep);
+  return stepSize <= 0 ? defaultStep : stepSize;
+}
+
+function clampToRange(val, element) {
+  var min = minimum(element);
+  var max = maximum(element);
+  if (max < min) {
+    return min;
+  }
+  if (val < min) {
+    return min;
+  }
+  if (val > max) {
+    return max;
+  }
+  return val;
+}
+
+// Functions used to specify expected test results:
+
+function valuePlusStep(element) {
+  return clampToRange(value(element) + step(element), element);
+}
+
+function valueMinusStep(element) {
+  return clampToRange(value(element) - step(element), element);
+}
+
+/**
+ * Returns the current value of the range plus whichever is greater of either
+ * 10% of the range or its current step value, clamped to the range's minimum/
+ * maximum. The reason for using the step if it is greater than 10% of the
+ * range is because otherwise the PgUp/PgDn keys would do nothing in that case.
+ */
+function valuePlusTenPctOrStep(element) {
+  var tenPct = range(element)/10;
+  var stp = step(element);
+  return clampToRange(value(element) + Math.max(tenPct, stp), element);
+}
+
+function valueMinusTenPctOrStep(element) {
+  var tenPct = range(element)/10;
+  var stp = step(element);
+  return clampToRange(value(element) - Math.max(tenPct, stp), element);
+}
+
+// Test table:
+
+const LTR = "ltr";
+const RTL = "rtl";
+
+var testTable = [
+  ["KEY_ArrowLeft",  LTR, valueMinusStep],
+  ["KEY_ArrowLeft",  RTL, valuePlusStep],
+  ["KEY_ArrowRight", LTR, valuePlusStep],
+  ["KEY_ArrowRight", RTL, valueMinusStep],
+  ["KEY_ArrowUp",    LTR, valuePlusStep],
+  ["KEY_ArrowUp",    RTL, valuePlusStep],
+  ["KEY_ArrowDown",  LTR, valueMinusStep],
+  ["KEY_ArrowDown",  RTL, valueMinusStep],
+  ["KEY_PageUp",     LTR, valuePlusTenPctOrStep],
+  ["KEY_PageUp",     RTL, valuePlusTenPctOrStep],
+  ["KEY_PageDown",   LTR, valueMinusTenPctOrStep],
+  ["KEY_PageDown",   RTL, valueMinusTenPctOrStep],
+  ["KEY_Home",       LTR, minimum],
+  ["KEY_Home",       RTL, minimum],
+  ["KEY_End",        LTR, maximum],
+  ["KEY_End",        RTL, maximum],
+]
+
+function test() {
+  var elem = document.createElement("input");
+  elem.type = "range";
+
+  var content = document.getElementById("content");
+  content.appendChild(elem);
+  elem.focus();
+
+  for (test of testTable) {
+    var [key, dir, expectedFunc] = test;
+    var oldVal, expectedVal;
+
+    elem.step = "2";
+    elem.style.direction = dir;
+    var flush = document.body.clientWidth;
+
+    // Start at middle:
+    elem.value = oldVal = defaultValue(elem);
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the midpoint (" + oldVal + ")");
+
+    // Same again:
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
+
+    // Start at maximum:
+    elem.value = oldVal = maximum(elem);
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the maximum (" + oldVal + ")");
+
+    // Same again:
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
+
+    // Start at minimum:
+    elem.value = oldVal = minimum(elem);
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the minimum (" + oldVal + ")");
+
+    // Same again:
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
+
+    // Test for a step value that is greater than 10% of the range:
+    elem.step = 20;
+    elem.value = 60;
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with a step that is greater than 10% of the range (step=" + elem.step + ")");
+
+    // Same again:
+    expectedVal = expectedFunc(elem);
+    synthesizeKey(key);
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
+
+    // reset step:
+    elem.step = 2;
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

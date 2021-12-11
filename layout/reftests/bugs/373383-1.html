@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+    #a { width: 15em; border: 1px solid black; }
+    #b { float: right; width: 8em; height: 3em; background: #ccc; }
+  </style>
+</head>
+<body>
+  <div id="a">
+    <div id="b">float right</div>
+    <div>Long text long text long text long text long text long text long text long text long text long text long text long text long text</div>
+  </div>
+  
+  <script>
+  var longWord = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+  document.body.offsetWidth;
+  n = document.getElementById("b").nextSibling;
+  n.data = longWord + n.data;
+  
+  </script>
+</body>
+</html>

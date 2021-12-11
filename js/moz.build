@@ -1,0 +1,32 @@
+component_engine = ("Core", "JavaScript Engine")
+component_gc = ("Core", "JavaScript: GC")
+
+with Files("**"):
+    BUG_COMPONENT = component_engine
+
+for header in (
+    "GCAnnotations.h",
+    "GCAPI.h",
+    "HeapAPI.h",
+    "RootingAPI.h",
+    "SliceBudget.h",
+    "SweepingAPI.h",
+    "TraceKind.h",
+    "TracingAPI.h",
+    "WeakMap.h",
+    "WeakMapPtr.h",
+    "GCHashTable.h",
+    "GCPolicyAPI.h",
+    "GCVariant.h",
+    "GCVector.h",
+):
+    with Files("public/" + header):
+        BUG_COMPONENT = component_gc
+
+with Files("src/**"):
+    SCHEDULES.inclusive += ["jittest", "jsreftest"]
+
+with Files("public/**"):
+    SCHEDULES.inclusive += ["jittest", "jsreftest"]
+
+SPHINX_TREES["/js"] = "src/doc"

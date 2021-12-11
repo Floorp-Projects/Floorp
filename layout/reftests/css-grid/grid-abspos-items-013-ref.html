@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: grid abs.pos. child in grid with gutters</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230695">
+  <style type="text/css">
+body { width:800px; }
+
+.grid {
+  display: block;
+  position: relative;
+  grid-template-columns: repeat(5, 20px);
+  grid-auto-rows: 10px;
+  grid-gap: 100px 10px;
+  border: 1px solid;
+  padding: 0 3px 0 5px;
+  height: 40px;
+  margin-bottom: 2px;
+}
+.grid.r {
+  grid-template-columns: 20px;
+  grid-template-rows: repeat(5, 20px);
+  height: 160px;
+  padding: 2px 3px 4px 5px;
+  float: left;
+  min-width: 70px;
+  margin-right: 2px;
+}
+
+x {
+  position: absolute;
+  width: 20px;
+  height: 10px;
+  background: lime;
+}
+
+a {
+  position: absolute;
+  left:0; right:0; bottom:20px; height: 3px;
+  background: black;
+}
+b {
+  position: absolute;
+  left:0; right:0; bottom:10px; height: 3px;
+  background: grey;
+}
+c {
+  position: absolute;
+  left:0; right:0; bottom:0; height: 3px;
+  background: blue;
+}
+
+.r a {
+  left:50px; top:0; bottom:0; width: 3px; height:auto;
+}
+.r b {
+  left:40px; top:0; bottom:0; width: 3px; height:auto;
+}
+.r c {
+  left:30px; top:0; bottom:0; width: 3px; height:auto;
+}
+
+x:nth-of-type(1) { left:5px; }
+x:nth-of-type(2) { left:125px; }
+x:nth-of-type(3) { left:245px; }
+x:nth-of-type(4) { left:365px; }
+
+.r x { left:5px; height:20px; }
+.r x:nth-of-type(1) { top:2px; }
+.r x:nth-of-type(2) { top:32px; }
+.r x:nth-of-type(3) { top:62px; }
+.r x:nth-of-type(4) { top:92px; }
+
+.s x:nth-of-type(1) { left:120px; }
+.s x:nth-of-type(2) { left:255px; }
+.s x:nth-of-type(3) { left:390px; }
+.s x:nth-of-type(4) { left:525px; }
+
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<x></x><x></x><x></x><x></x>
+<a style="left:125px; width:140px"></a><b style="width:265px"></b><c style="left:365px"></c>
+</div>
+
+<div class="grid">
+<x></x><x></x><x></x><x></x>
+<a style="left:5px; width:260px"></a><b style="width:5px"></b><c style="left:5px"></c>
+</div>
+
+<div class="grid">
+<x></x><x></x><x></x><x></x>
+<a style="left:505px"></a><b style="width:505px"></b><c style="left:505px"></c>
+</div>
+
+<div class="grid s">
+<x></x><x></x><x></x><x></x>
+<a style="left:255px; width:155px"></a><b style="width:410px"></b><c style="left:525px"></c>
+</div>
+
+<div class="grid s">
+<x></x><x></x><x></x><x></x>
+<a style="left:120px; width:290px"></a><b style="width:120px"></b><c style="left:120px"></c>
+</div>
+
+<div class="grid s">
+<x></x><x></x><x></x><x></x>
+<a style="left:680px"></a><b style="width:680px"></b><c style="left:680px"></c>
+</div>
+
+<div class="grid r">
+<x></x><x></x><x></x><x></x>
+<a style="top:32px; height:50px"></a><b style="height:82px"></b><c style="top:92px"></c>
+</div>
+
+<div class="grid r">
+<x></x><x></x><x></x><x></x>
+<a style="top:2px; height:80px"></a><b style="height:2px"></b><c style="top:2px"></c>
+</div>
+
+<div class="grid r">
+<x></x><x></x><x></x><x></x>
+<a style="top:142px"></a><b style="height:142px"></b><c style="top:142px"></c>
+</div>
+
+</body>
+</html>

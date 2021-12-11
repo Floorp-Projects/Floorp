@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Picture-in-Picture tests</title>
+  <script type="text/javascript" src="click-event-helper.js"></script>
+</head>
+<style>
+  video {
+    display: block;
+    border: 1px solid black;
+  }
+</style>
+<body>
+  <script>
+    function fireEvents() {
+      for (let videoID of ["with-controls", "no-controls"]) {
+        let video = document.getElementById(videoID);
+        let event = new CustomEvent("MozTogglePictureInPicture", { bubbles: true });
+        video.dispatchEvent(event);
+      }
+    }
+  </script>
+</body>
+</html>

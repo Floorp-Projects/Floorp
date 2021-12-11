@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-size: 100% 100%; stretch</title>
+  <style type="text/css">
+#outer
+{
+  border: 10px solid black;
+  width: 60px;
+  height: 120px;
+}
+#inner
+{
+  width: 60px;
+  height: 120px;
+  background-image: url(blue-8x20-green-16x20.png);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+#innermost
+{
+  width: 15px;
+  height: 120px;
+
+  /* obscure sampling artifacts at the color boundary */
+  border-right: 10px solid black;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"><div id="innermost"></div></div></div>
+</body>
+</html>

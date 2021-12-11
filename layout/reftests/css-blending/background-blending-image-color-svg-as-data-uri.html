@@ -1,0 +1,26 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<style>
+.reftest {
+  width: 200px;
+  height: 200px;
+  background-size: 100px 100px, 200px 200px;
+  background-repeat: no-repeat;
+}
+
+.blend {
+  background-color: rgb(0,255,0);
+  background-blend-mode: difference;
+}
+
+.svg {
+  background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20version%3D%271.1%27%20viewBox%3D%270%200%20100%20100%27%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20fill%3D%27%2300FF00%27%2F%3E%3C%2Fsvg%3E");
+}
+
+</style>
+<div class="reftest blend svg"></div>
+</html>

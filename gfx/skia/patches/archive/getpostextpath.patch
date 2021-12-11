@@ -1,0 +1,70 @@
+diff --git a/gfx/skia/include/core/SkPaint.h b/gfx/skia/include/core/SkPaint.h
+--- a/gfx/skia/include/core/SkPaint.h
++++ b/gfx/skia/include/core/SkPaint.h
+@@ -836,16 +836,19 @@ public:
+ 
+     /** Return the path (outline) for the specified text.
+         Note: just like SkCanvas::drawText, this will respect the Align setting
+               in the paint.
+     */
+     void getTextPath(const void* text, size_t length, SkScalar x, SkScalar y,
+                      SkPath* path) const;
+ 
++    void getPosTextPath(const void* text, size_t length, 
++                        const SkPoint pos[], SkPath* path) const;
++
+ #ifdef SK_BUILD_FOR_ANDROID
+     const SkGlyph& getUnicharMetrics(SkUnichar);
+     const void* findImage(const SkGlyph&);
+ 
+     uint32_t getGenerationID() const;
+ #endif
+ 
+     // returns true if the paint's settings (e.g. xfermode + alpha) resolve to
+diff --git a/gfx/skia/src/core/SkPaint.cpp b/gfx/skia/src/core/SkPaint.cpp
+--- a/gfx/skia/src/core/SkPaint.cpp
++++ b/gfx/skia/src/core/SkPaint.cpp
+@@ -1242,16 +1242,43 @@ void SkPaint::getTextPath(const void* te
+     const SkPath*   iterPath;
+     while ((iterPath = iter.next(&xpos)) != NULL) {
+         matrix.postTranslate(xpos - prevXPos, 0);
+         path->addPath(*iterPath, matrix);
+         prevXPos = xpos;
+     }
+ }
+ 
++void SkPaint::getPosTextPath(const void* textData, size_t length,
++                             const SkPoint pos[], SkPath* path) const {
++    SkASSERT(length == 0 || textData != NULL);
++
++    const char* text = (const char*)textData;
++    if (text == NULL || length == 0 || path == NULL) {
++        return;
++    }
++
++    SkTextToPathIter    iter(text, length, *this, false, true);
++    SkMatrix            matrix;
++    SkPoint             prevPos;
++    prevPos.set(0, 0);
++
++    matrix.setScale(iter.getPathScale(), iter.getPathScale());
++    path->reset();
++
++    unsigned int    i = 0;
++    const SkPath*   iterPath;
++    while ((iterPath = iter.next(NULL)) != NULL) {
++        matrix.postTranslate(pos[i].fX - prevPos.fX, pos[i].fY - prevPos.fY);
++        path->addPath(*iterPath, matrix);
++        prevPos = pos[i];
++        i++;
++    }
++}
++
+ static void add_flattenable(SkDescriptor* desc, uint32_t tag,
+                             SkFlattenableWriteBuffer* buffer) {
+     buffer->flatten(desc->addEntry(tag, buffer->size(), NULL));
+ }
+ 
+ // SkFontHost can override this choice in FilterRec()
+ static SkMask::Format computeMaskFormat(const SkPaint& paint) {
+     uint32_t flags = paint.getFlags();

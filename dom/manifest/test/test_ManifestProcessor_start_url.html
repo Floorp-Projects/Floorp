@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079453</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * Manifest start_url
+ * https://w3c.github.io/manifest/#start_url-member
+ **/
+"use strict";
+typeTests.forEach((type) => {
+  var expected = `Expect non - string start_url to be doc's url: ${typeof type}.`;
+  data.jsonText = JSON.stringify({
+    start_url: type,
+  });
+  var result = processor.process(data);
+  is(result.start_url.toString(), docURL.toString(), expected);
+});
+
+// Not same origin
+var expected = `Expect different origin URLs to become document's URL.`;
+data.jsonText = JSON.stringify({
+  start_url: "http://not-same-origin",
+});
+var result = processor.process(data);
+is(result.start_url.toString(), docURL.toString(), expected);
+
+// Empty string test
+expected = `Expect empty string for start_url to become document's URL.`;
+data.jsonText = JSON.stringify({
+  start_url: "",
+});
+result = processor.process(data);
+is(result.start_url.toString(), docURL.toString(), expected);
+
+// Resolve URLs relative to manifest
+var URLs = [
+  "path",
+  "/path",
+  "../../path",
+  `${whiteSpace}path${whiteSpace}`,
+  `${whiteSpace}/path`,
+  `${whiteSpace}../../path`,
+];
+
+URLs.forEach((url) => {
+  expected = `Resolve URLs relative to manifest.`;
+  data.jsonText = JSON.stringify({
+    start_url: url,
+  });
+  var absURL = new URL(url, manifestURL).toString();
+  result = processor.process(data);
+  is(result.start_url.toString(), absURL, expected);
+});
+
+// It retains the fragment
+var startURL = "./path?query=123#fragment";
+data.jsonText = JSON.stringify({
+  start_url: startURL,
+});
+var absURL = new URL(startURL, manifestURL).href;
+result = processor.process(data);
+is(result.start_url.toString(), absURL, "Retains fragment");
+
+// It retains the fragment on the document's location too.
+window.location = "#here";
+data.jsonText = JSON.stringify({});
+result = processor.process(data);
+is(
+  window.location.href,
+  result.start_url.toString(),
+  `Retains the fragment of document's location`
+);
+</script>
+  </head>
+</html>

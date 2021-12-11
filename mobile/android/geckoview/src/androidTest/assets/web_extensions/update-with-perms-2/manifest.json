@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "update",
+  "browser_specific_settings": {
+    "gecko": {
+        "id": "update-with-perms@example.com"
+    }
+  },
+  "version": "2.0",
+  "description": "Adds a blue border to all webpages matching example.com.",
+  "content_scripts": [
+    {
+      "matches": ["*://*.example.com/*"],
+      "js": ["borderify.js"]
+    }
+  ],
+  "permissions": [
+    "tabs"
+  ]
+}

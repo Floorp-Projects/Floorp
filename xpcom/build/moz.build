@@ -1,0 +1,105 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "nsXPCOM.h",
+    "nsXPCOMCID.h",
+    "nsXPCOMCIDInternal.h",
+    "nsXULAppAPI.h",
+    "XREChildData.h",
+    "xrecore.h",
+    "XREShellData.h",
+]
+
+EXPORTS.mozilla += [
+    "!Services.h",
+    "FileLocation.h",
+    "GeckoProcessTypes.h",
+    "IOInterposer.h",
+    "LateWriteChecks.h",
+    "Omnijar.h",
+    "PoisonIOInterposer.h",
+    "SmallArrayLRUCache.h",
+    "XPCOM.h",
+    "XREAppData.h",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    EXPORTS.mozilla += [
+        "perfprobe.h",
+    ]
+    SOURCES += [
+        "perfprobe.cpp",
+        "PoisonIOInterposerBase.cpp",
+        "PoisonIOInterposerWin.cpp",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    UNIFIED_SOURCES += [
+        "PoisonIOInterposerBase.cpp",
+        "PoisonIOInterposerMac.cpp",
+    ]
+    if CONFIG["CPU_ARCH"] != "aarch64":
+        SOURCES += ["mach_override.c"]
+        SOURCES["mach_override.c"].flags += ["-Wno-unused-function"]
+else:
+    SOURCES += ["PoisonIOInterposerStub.cpp"]
+
+include("../glue/objs.mozbuild")
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+UNIFIED_SOURCES += xpcom_gluens_src_cppsrcs
+UNIFIED_SOURCES += xpcom_glue_src_cppsrcs
+
+UNIFIED_SOURCES += [
+    "FileLocation.cpp",
+    "IOInterposer.cpp",
+    "LateWriteChecks.cpp",
+    "MainThreadIOLogger.cpp",
+    "Omnijar.cpp",
+    "XPCOMInit.cpp",
+]
+
+SOURCES += ["!Services.cpp"]
+
+if CONFIG["OS_ARCH"] != "WINNT":
+    SOURCES += [
+        "NSPRInterposer.cpp",
+    ]
+
+GeneratedFile("Services.cpp", script="Services.py", entry_point="services_cpp")
+GeneratedFile("Services.h", script="Services.py", entry_point="services_h")
+GeneratedFile("services.rs", script="Services.py", entry_point="services_rs")
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+DEFINES["_IMPL_NS_STRINGAPI"] = True
+DEFINES["OMNIJAR_NAME"] = CONFIG["OMNIJAR_NAME"]
+
+LOCAL_INCLUDES += [
+    "!..",
+    "../base",
+    "../components",
+    "../ds",
+    "../glue",
+    "../io",
+    "../threads",
+    "/chrome",
+    "/docshell/base",
+    "/js/xpconnect/loader",
+]
+
+if CONFIG["MOZ_VPX"]:
+    LOCAL_INCLUDES += [
+        "/media/libvpx",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]

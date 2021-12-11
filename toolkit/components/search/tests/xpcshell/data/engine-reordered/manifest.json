@@ -1,0 +1,40 @@
+{
+  "name": "Test search engine (Reordered)",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-reordered@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "A test search engine (based on Google search)",
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Test search engine (Reordered)",
+      "search_url": "https://www.google.com/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "channel",
+          "condition": "purpose",
+          "purpose": "contextmenu",
+          "value": "rcs"
+        },
+        {
+          "name": "channel",
+          "condition": "purpose",
+          "purpose": "keyword",
+          "value": "fflb"
+        }
+      ],
+      "suggest_url": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}"
+    }
+  }
+}

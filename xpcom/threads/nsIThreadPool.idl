@@ -1,0 +1,107 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIEventTarget.idl"
+
+[uuid(ef194cab-3f86-4b61-b132-e5e96a79e5d1)]
+interface nsIThreadPoolListener : nsISupports
+{
+  /**
+   * Called when a new thread is created by the thread pool. The notification
+   * happens on the newly-created thread.
+   */
+  void onThreadCreated();
+
+  /**
+   * Called when a thread is about to be destroyed by the thread pool. The
+   * notification happens on the thread that is about to be destroyed.
+   */
+  void onThreadShuttingDown();
+};
+
+/**
+ * An interface to a thread pool.  A thread pool creates a limited number of
+ * anonymous (unnamed) worker threads.  An event dispatched to the thread pool
+ * will be run on the next available worker thread.
+ */
+[uuid(76ce99c9-8e43-489a-9789-f27cc4424965)]
+interface nsIThreadPool : nsIEventTarget
+{
+  /**
+   * Shutdown the thread pool.  This method may not be executed from any thread
+   * in the thread pool.  Instead, it is meant to be executed from another
+   * thread (usually the thread that created this thread pool).  When this
+   * function returns, the thread pool and all of its threads will be shutdown,
+   * and it will no longer be possible to dispatch tasks to the thread pool.
+   *
+   * As a side effect, events on the current thread will be processed.
+   */
+  void shutdown();
+
+  /**
+   * Shutdown the thread pool, but only wait for aTimeoutMs. After the timeout
+   * expires, any threads that have not shutdown yet are leaked and will not
+   * block shutdown.
+   *
+   * This method should only be used at during shutdown to cleanup threads that
+   * made blocking calls to code outside our control, and can't be safely
+   * terminated. We choose to leak them intentionally to avoid a shutdown hang.
+   */
+  [noscript] void shutdownWithTimeout(in long aTimeoutMs);
+
+  /**
+   * Get/set the maximum number of threads allowed at one time in this pool.
+   */
+  attribute unsigned long threadLimit;
+
+  /**
+   * Get/set the maximum number of idle threads kept alive.
+   */
+  attribute unsigned long idleThreadLimit;
+
+  /**
+   * Get/set the amount of time in milliseconds before an idle thread is
+   * destroyed.
+   */
+  attribute unsigned long idleThreadTimeout;
+
+  /**
+   * If set to true the idle timeout will be calculated as idleThreadTimeout
+   * divideded by the number of idle threads at the moment.  This may help
+   * save memory allocations but still keep reasonable amount of idle threads.
+   * Default is false, use |idleThreadTimeout| for all threads.
+   */
+  attribute boolean idleThreadTimeoutRegressive;
+
+  /**
+   * Get/set the number of bytes reserved for the stack of all threads in
+   * the pool. By default this is nsIThreadManager::DEFAULT_STACK_SIZE.
+   */
+  attribute unsigned long threadStackSize;
+
+  /**
+   * An optional listener that will be notified when a thread is created or
+   * destroyed in the course of the thread pool's operation.
+   *
+   * A listener will only receive notifications about threads created after the
+   * listener is set so it is recommended that the consumer set the listener
+   * before dispatching the first event. A listener that receives an
+   * onThreadCreated() notification is guaranteed to always receive the
+   * corresponding onThreadShuttingDown() notification.
+   *
+   * The thread pool takes ownership of the listener and releases it when the
+   * shutdown() method is called. Threads created after the listener is set will
+   * also take ownership of the listener so that the listener will be kept alive
+   * long enough to receive the guaranteed onThreadShuttingDown() notification.
+   */
+  attribute nsIThreadPoolListener listener;
+
+  /**
+   * Set the label for threads in the pool. All threads will be named
+   * "<aName> #<n>", where <n> is a serial number.
+   */
+  void setName(in ACString aName);
+};

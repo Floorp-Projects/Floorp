@@ -1,0 +1,9 @@
+root {
+ display: block;
+ padding: 30px 0;
+}
+leaf {
+ display: block;
+ background-color: green;
+ height: 100px;
+}

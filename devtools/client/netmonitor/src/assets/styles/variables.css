@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --primary-toolbar-height: 29px;
+  /* HTTP status codes */
+  --status-code-color-1xx: var(--theme-highlight-blue);
+  --status-code-color-2xx: var(--theme-highlight-green);
+  --status-code-color-3xx: transparent;
+  --status-code-color-4xx: var(--theme-highlight-pink);
+  --status-code-color-5xx: var(--theme-highlight-red);
+}
+
+:root.theme-dark {
+  --table-splitter-color: var(--grey-70);
+  --table-zebra-background: rgba(255,255,255,0.05);
+  --table-zebra-inline-icons-background: rgb(49, 47, 47);
+  --table-selection-background-hover: rgba(53, 59, 72, 1);
+  --table-selection-inline-icons-background-hover: rgba(53, 59, 72, 1);
+
+  --timing-blocked-color: var(--red-20);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
+  --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
+}
+
+:root.theme-light {
+  --table-splitter-color: var(--grey-20);
+  --table-zebra-background: rgba(247, 247, 247, 0.8);
+  --table-zebra-inline-icons-background: rgba(247, 247, 247);
+  --table-selection-background-hover: rgba(209, 232, 255, 0.8);
+  --table-selection-inline-icons-background-hover: rgba(209, 232, 255);
+
+  --timing-blocked-color: var(--red-70);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(0, 136, 204, 0.8); /* blue */
+  --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(44, 187, 15, 0.8); /* green */
+}

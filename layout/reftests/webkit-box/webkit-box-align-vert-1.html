@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: vertically-oriented "display: -webkit-box" container,
+    with all the various -webkit-box-align values.
+  </title>
+  <style>
+    .box {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      border: 1px solid black;
+      margin: 5px 20px;
+      float: left; /* For testing in "rows" */
+      font: 10px serif;
+    }
+    .box > *:nth-child(1) {
+      background: turquoise;
+      /* auto width */
+      height: 1em;
+    }
+    .box > *:nth-child(2) {
+      background: salmon;
+      font-size: 50%;
+      width: 2em;
+      /* auto height */
+    }
+
+    .bastart    { -webkit-box-align: start;    }
+    .bacenter   { -webkit-box-align: center;   }
+    .baend      { -webkit-box-align: end;      }
+    .babaseline { -webkit-box-align: baseline; }
+    .bastretch  { -webkit-box-align: stretch;  }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW: Default -webkit-box-align -->
+  <!-- intrinsically sized -->
+  <div class="box">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- SECOND ROW:  -webkit-box-align: start -->
+  <!-- intrinsically sized -->
+  <div class="box bastart">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box bastart" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box bastart" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box bastart" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- THIRD ROW:  -webkit-box-align: center -->
+  <!-- intrinsically sized -->
+  <div class="box bacenter">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box bacenter" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box bacenter" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box bacenter" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- FOURTH ROW:  -webkit-box-align: end -->
+  <!-- intrinsically sized -->
+  <div class="box baend">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box baend" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box baend" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box baend" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+  <!-- FIFTH ROW:  -webkit-box-align: baseline -->
+  <!-- intrinsically sized -->
+  <div class="box babaseline">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box babaseline" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box babaseline" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box babaseline" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+  <!-- SIXTH ROW:  -webkit-box-align: stretch -->
+  <!-- intrinsically sized -->
+  <div class="box bastretch">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra width -->
+  <div class="box bastretch" style="width: 36px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height -->
+  <div class="box bastretch" style="height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+
+  <!-- explicit size, extra height and width -->
+  <div class="box bastretch" style="width: 36px; height: 40px">
+    <div>a</div><div>b</div>
+  </div>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!-- Intentionally in quirks mode. -->
+<html><head>
+<!-- baseline -->
+<style>
+body, html { margin: 0; padding: 0; overflow: hidden }
+div {
+  width: 60px;
+  height: 20px;
+  position: relative;
+}
+p {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+}
+p + p { left: 22px }
+
+#IA1i, #IA1l, #IA2i, #IA2l, #IB1i, #IB1l, #IB2i, #IB2l,
+#IC1i, #IC1l, #IC2i, #IC2l, #ID1i, #ID1l, #ID2i, #ID2l,
+#JA1i, #JA1l, #JA2i, #JA2l, #JD1i, #JD1l, #JD2i, #JD2l
+ { background-color: red }
+
+#JB1i, #JB1l, #JC1i, #JC1l,
+#JB2i, #JB2l, #JC2i, #JC2l
+ { background-color: lime }
+
+#IA3i, #IA3l, #IB3i, #IB3l, #IC3i, #IC3l, #ID3i, #ID3l,
+#JA3i, #JA3l, #JB3i, #JB3l, #JC3i, #JC3l, #JD3i, #JD3l
+ { background-color: lime }
+</style>
+
+<!-- @import rules -->
+<style>
+@import url("ccd.sjs?IA1iq");
+@import url("ccd.sjs?IA2iq");
+@import url("ccd.sjs?IA3iq");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?IB1iq");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?IB2iq");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?IB3iq");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC1iq");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC2iq");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC3iq");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID1iq");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID2iq");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID3iq");
+@import url("ccd.sjs?JA1iq");
+@import url("ccd.sjs?JA2iq");
+@import url("ccd.sjs?JA3iq");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?JB1iq");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?JB2iq");
+@import url("http://example.org/tests/layout/style/test/ccd.sjs?JB3iq");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC1iq");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC2iq");
+@import url("redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC3iq");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD1iq");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD2iq");
+@import url("http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD3iq");
+</style>
+
+<!-- link directives -->
+<link rel="stylesheet" href="ccd.sjs?IA1lq">
+<link rel="stylesheet" href="ccd.sjs?IA2lq">
+<link rel="stylesheet" href="ccd.sjs?IA3lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB1lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB2lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?IB3lq">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC1lq">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC2lq">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?IC3lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID1lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID2lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?ccd.sjs?ID3lq">
+<link rel="stylesheet" href="ccd.sjs?JA1lq">
+<link rel="stylesheet" href="ccd.sjs?JA2lq">
+<link rel="stylesheet" href="ccd.sjs?JA3lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB1lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB2lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/ccd.sjs?JB3lq">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC1lq">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC2lq">
+<link rel="stylesheet" href="redirect.sjs?http://example.org/tests/layout/style/test/ccd.sjs?JC3lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD1lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD2lq">
+<link rel="stylesheet" href="http://example.org/tests/layout/style/test/redirect.sjs?http://mochi.test:8888/tests/layout/style/test/ccd.sjs?JD3lq">
+
+</head><body>
+<div></div>
+<div></div>
+<div><p id="IA1i"></p><p id="IA1l"></p></div>
+<div><p id="IA2i"></p><p id="IA2l"></p></div>
+<div><p id="IA3i"></p><p id="IA3l"></p></div>
+<div></div>
+<div><p id="IB1i"></p><p id="IB1l"></p></div>
+<div><p id="IB2i"></p><p id="IB2l"></p></div>
+<div><p id="IB3i"></p><p id="IB3l"></p></div>
+<div></div>
+<div><p id="IC1i"></p><p id="IC1l"></p></div>
+<div><p id="IC2i"></p><p id="IC2l"></p></div>
+<div><p id="IC3i"></p><p id="IC3l"></p></div>
+<div></div>
+<div><p id="ID1i"></p><p id="ID1l"></p></div>
+<div><p id="ID2i"></p><p id="ID2l"></p></div>
+<div><p id="ID3i"></p><p id="ID3l"></p></div>
+<div></div>
+<div></div>
+<div><p id="JA1i"></p><p id="JA1l"></p></div>
+<div><p id="JA2i"></p><p id="JA2l"></p></div>
+<div><p id="JA3i"></p><p id="JA3l"></p></div>
+<div></div>
+<div><p id="JB1i"></p><p id="JB1l"></p></div>
+<div><p id="JB2i"></p><p id="JB2l"></p></div>
+<div><p id="JB3i"></p><p id="JB3l"></p></div>
+<div></div>
+<div><p id="JC1i"></p><p id="JC1l"></p></div>
+<div><p id="JC2i"></p><p id="JC2l"></p></div>
+<div><p id="JC3i"></p><p id="JC3l"></p></div>
+<div></div>
+<div><p id="JD1i"></p><p id="JD1l"></p></div>
+<div><p id="JD2i"></p><p id="JD2l"></p></div>
+<div><p id="JD3i"></p><p id="JD3l"></p></div>
+</body></html>

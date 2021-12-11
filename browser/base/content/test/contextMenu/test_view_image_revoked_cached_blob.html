@@ -1,0 +1,40 @@
+<!doctype html>
+<html class="wait">
+<meta charset="utf-8">
+<title>currentSrc is right even if underlying image is a shared blob</title>
+<img id="first">
+<img id="second">
+<script>
+(async function() {
+  let canvas = document.createElement("canvas");
+  canvas.width = 100;
+  canvas.height = 100;
+  let ctx = canvas.getContext("2d");
+  ctx.fillStyle = "green";
+  ctx.rect(0, 0, 100, 100);
+  ctx.fill();
+
+  let blob = await new Promise(resolve => canvas.toBlob(resolve));
+
+  let first = document.querySelector("#first");
+  let second = document.querySelector("#second");
+
+  let firstLoad = new Promise(resolve => {
+    first.addEventListener("load", resolve, { once: true });
+  });
+
+  let secondLoad = new Promise(resolve => {
+    second.addEventListener("load", resolve, { once: true });
+  });
+
+  let uri1 = URL.createObjectURL(blob);
+  let uri2 = URL.createObjectURL(blob);
+  first.src = uri1;
+  second.src = uri2;
+
+  await firstLoad;
+  await secondLoad;
+  URL.revokeObjectURL(uri1);
+  document.documentElement.className = "";
+}());
+</script>

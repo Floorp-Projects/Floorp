@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+
+     async function runTests() {
+       await MIDITestUtils.permissionSetup(false);
+       // Request access without sysex.
+       try {
+         await navigator.requestMIDIAccess({ "sysex": false });
+         ok(false, "MIDI Access Request Deny failed");
+         SimpleTest.finish();
+       } catch (ex) {
+         ok(true, "MIDI Access Request Deny successful!");
+         SimpleTest.finish();
+       }
+     }
+    </script>
+  </body>
+</html>

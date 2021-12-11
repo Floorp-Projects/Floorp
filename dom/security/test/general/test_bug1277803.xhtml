@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Bug 1277803 test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="runTest();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.requestCompleteLog();
+
+    const BASE_URI = "http://mochi.test:8888/chrome/dom/security/test/general/";
+    const FAVICON_URI = BASE_URI + "favicon_bug1277803.ico";
+    const LOADING_URI = BASE_URI + "bug1277803.html";
+    let testWindow; //will be used to trigger favicon load
+
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    let expectedPrincipal = Services.scriptSecurityManager
+        .createContentPrincipal(Services.io.newURI(LOADING_URI), {});
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+
+    function runTest() {
+      // Register our observer to intercept favicon requests.
+      function observer(aSubject, aTopic, aData) {
+        // Make sure this is a favicon request.
+        let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+        if (FAVICON_URI != httpChannel.URI.spec) {
+          return;
+        }
+
+        // Ensure the topic is the one we set an observer for.
+        is(aTopic, "http-on-modify-request", "Expected observer topic");
+
+        // Check for the correct loadingPrincipal, triggeringPrincipal.
+        let triggeringPrincipal = httpChannel.loadInfo.triggeringPrincipal;
+        let loadingPrincipal = httpChannel.loadInfo.loadingPrincipal;
+
+        ok(loadingPrincipal.equals(expectedPrincipal), "Should be loading with the expected principal.");
+        ok(triggeringPrincipal.equals(expectedPrincipal), "Should be triggered with the expected principal.");
+
+        Services.obs.removeObserver(this, "http-on-modify-request");
+        SimpleTest.finish();
+      }
+      Services.obs.addObserver(observer, "http-on-modify-request");
+
+      // Now that the observer is set up, trigger a favicon load with navigation
+      testWindow = window.open(LOADING_URI);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.registerCleanupFunction(function() {
+      if (testWindow) {
+        testWindow.close();
+      }
+    });
+  ]]></script>
+
+  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+</window>

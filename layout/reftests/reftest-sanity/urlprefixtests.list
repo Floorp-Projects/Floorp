@@ -1,0 +1,23 @@
+# test url-prefix
+
+# test that url-prefix is not be applied to absolute uris.
+url-prefix absolute
+
+== data:text/html,<body> about:blank
+== data:text/plain, about:blank
+!= data:text/plain,HELLO about:blank
+
+# test that url-prefix is applied to test items.
+url-prefix prefix-
+
+script suffix.html
+
+# test if url-prefix containing / works.
+url-prefix prefix/
+
+script suffix.html
+
+# test that url-prefix should not be applied to include commands.
+
+include urlprefixtests-include.list
+

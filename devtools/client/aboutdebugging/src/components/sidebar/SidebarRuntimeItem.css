@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Layout of a runtime sidebar item
+ *
+ *  +--------+----------------+---------------------------+
+ *  | Icon   | Runtime name   | Connect button            |
+ *  +--------+----------------+---------------------------+
+ */
+
+.sidebar-runtime-item__container {
+  box-sizing: border-box;
+  height: var(--category-height);
+  align-items: center;
+  display: grid;
+  grid-column-gap: var(--base-unit);
+  grid-template-columns: calc(var(--base-unit) * 6) 1fr auto;
+  font-size: var(--body-20-font-size);
+  font-weight: var(--body-20-font-weight);
+}
+
+.sidebar-runtime-item__icon {
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
+.sidebar-runtime-item__runtime {
+  line-height: 1;
+}
+
+.sidebar-runtime-item__runtime__details {
+  font-size: var(--caption-10-font-size);
+  font-weight: var(--caption-10-font-weight);
+  line-height: 1.2;
+}
+
+.sidebar-runtime-item__message:first-of-type {
+  margin-block-start: calc(var(--base-unit) * -1);
+}

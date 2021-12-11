@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     class="reftest-wait">
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=708155 -->
+
+  <title>Testcase for style change on foreignObject</title>
+
+  <script>
+
+  document.addEventListener("MozReftestInvalidate", doTest, false);
+  setTimeout(doTest, 4000); // fallback for running outside reftest
+
+  function doTest() {
+    document.getElementById('fo').style.opacity = '1';
+    
+    document.documentElement.removeAttribute('class');
+  }
+  </script>
+
+  <rect width="100%" height="100%" fill="red"/>
+  <foreignObject id="fo" width="100%" height="100%" opacity="0">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;background-color: lime;">
+    </div>
+  </foreignObject>
+
+</svg>

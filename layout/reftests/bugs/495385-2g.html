@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Test that removing a <br> can create frames for text around it -->
+<style>
+body > div { border:1px solid black; margin:1em;
+             font-family:sans-serif; letter-spacing:2px; }
+</style>
+<script>
+function remove(id) {
+  var e = document.getElementById(id);
+  e.remove();
+}
+function loaded() {
+  document.body.offsetHeight;
+  remove("b1");
+  remove("b2");
+  remove("b3");
+  remove("b4");
+}
+</script>
+</head>
+<body onload="loaded()">
+  <div><span>Hello</span><br id="b1"> <span>Kitty</span></div>
+  <div><span>Hello</span> <br id="b2"><span>Kitty</span></div>
+  <!-- we'll create frames here, but they won't make a difference to the rendering -->
+  <div><br id="b3"> <span>Hello</span> <span>Kitty</span></div>
+  <div><span>Hello</span> <span>Kitty</span> <br id="b4"></div>
+</body>
+</html>

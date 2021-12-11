@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait" style="height: 100%">
+  <head>
+    <script>
+      function doIt() {
+        var d = document.createElement("div");
+        d.setAttribute("style",
+                       "position: absolute; left: 0; right: 0; top: 0; " +
+                       "bottom: 0; background: green");
+        document.getElementById("x").appendChild(d);
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate", doIt);
+    </script>
+  </head>
+  <body style="height: 100%">
+    <fieldset id="x" style="position: relative; display: table; width: 50%;
+                            height: 50%; top: 25%; left: 25%">
+    </fieldset>
+  </body>
+</html>

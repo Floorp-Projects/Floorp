@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var a = [];
+  a[31] = undefined;
+  a[40] = undefined;
+  a[44] = {};
+  a[45] = new XMLHttpRequest();
+  a[48] = new XMLHttpRequest();
+  a[53] = XMLHttpRequest.prototype;
+  a[53].__proto__ = {};
+  a[53].nodeType = 100;
+  search(a, 41);
+}
+
+
+function search(a, start)
+{
+  var N = a.length;
+  
+  for (var j = start; j < N; ++j) {
+    var e = a[j];
+    if (typeof e == "object" && "nodeType" in e && e.nodeType == 99)
+      return j;
+  }
+
+  return null;
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type"
+  content="application/xhtml+xml; charset=us-ascii" />
+  <title>Test mstyle</title>
+  <style type="text/css">
+    table { width: 100%;  border-collapse: collapse; }
+    td { border: solid black 1px; }
+  </style>
+</head>
+
+<body>
+
+<!-- The attributes below (except math@display) should no longer have effect on
+     <mstyle>/<math> elements. See bug 838509 -->
+
+<table>
+  <tbody>
+    <tr>
+      <td>mo: form</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" form="postfix">
+          <mstyle form="postfix">
+            <mrow>
+              <!-- We assume that the infix/postfix forms of _ do -->
+              <!-- not have the same lspace/rspace values in the operator dictionary -->
+              <mtext>_</mtext>
+              <mo>_</mo>
+              <mtext>_</mtext>
+            </mrow>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: lspace, rspace</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" lspace="0" rspace="0">
+          <mstyle lspace="0" rspace="0">
+            <mrow>
+              <!-- We assume that the infix form of _ has -->
+              <!-- nonzero lspace/rspace values in the operator dictionary -->
+              <mtext>_</mtext>
+              <mo>_</mo>
+              <mtext>_</mtext>
+            </mrow>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: stretchy</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" stretchy="false">
+          <mstyle stretchy="false">
+            <mover>
+              <!-- We assume that the arrow has stretchy=true in the operator dictionary -->
+              <mtext>abcd</mtext>
+              <mo>&#x2192;</mo>
+            </mover>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: accent</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accent="false">
+          <mstyle accent="false">
+            <mover>
+              <!-- We assume &#x23de; has accent=true in the operator dictionary -->
+              <mrow>
+                <mi>x</mi>
+                <mo>+</mo>
+                <mi>y</mi>
+                <mo>+</mo>
+                <mi>z</mi>
+              </mrow>
+              <mo>&#x23de;</mo>
+            </mover>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: maxsize</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" maxsize="1">
+          <mstyle maxsize="1">
+            <mo>(</mo>
+            <mspace height="3em"/>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: minsize</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" minsize="3">
+          <mstyle minsize="3">
+            <mo>(</mo>
+            <mspace height="1em"/>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: symmetric</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" symmetric="false">
+          <!-- We assume that ( has symmetric=true in the operator dictionary -->
+          <mstyle symmetric="false">
+            <mtext>_</mtext>
+            <mo minsize="2">(</mo>
+            <mtext>_</mtext>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: movablelimits</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" movablelimits="false">
+          <!-- We assume that &#x2211; has movablelimits=true in the operator dictionary -->
+          <mstyle movablelimits="false">
+            <munderover>
+              <mo>&#x2211;</mo>
+              <mi>a</mi>
+              <mi>b</mi>
+            </munderover>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mo: largeop</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" largeop="false">
+          <!-- We assume that &#x2211; has largeop=true in the operator dictionary -->
+          <mstyle largeop="false">
+            <mo>&#x2211;</mo>
+          </mstyle>
+        </math></td>
+    </tr>
+    <!-- 
+            fence: This attribute generally has no direct effect on the visual rendering.
+            separator: This attribute generally has no direct effect on the visual rendering.
+      -->
+  </tbody>
+</table>
+</body>
+</html>

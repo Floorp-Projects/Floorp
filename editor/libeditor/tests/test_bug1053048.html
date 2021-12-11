@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1053048</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+
+  /** Test for Bug 1053048 **/
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(runTests);
+
+  const nsISelectionListener = SpecialPowers.Ci.nsISelectionListener;
+
+  async function runTests() {
+    var textarea = SpecialPowers.wrap(document.getElementById("textarea"));
+    textarea.focus();
+
+    var editor = textarea.editor;
+    var selectionPrivate = editor.selection;
+
+    // Move caret to the end of the textarea
+    synthesizeMouse(textarea, 290, 10, {});
+    is(textarea.selectionStart, 3, "selectionStart should be 3 (after \"foo\")");
+    is(textarea.selectionEnd, 3, "selectionEnd should be 3 (after \"foo\")");
+
+    // This test **was** trying to check whether a selection listener which
+    // runs while an editor handles an edit action does not stop handling it.
+    // However, this selection listener caught previous selection change
+    // notification immediately before synthesizing the `Enter` key press
+    // unexpectedly.  And now, selection listener may not run immediately after
+    // synthesizing the key press.  So, we don't need to check whether a
+    // notification actually comes here.
+    let selectionListener = {
+      notifySelectionChanged(aDocument, aSelection, aReason) {
+        ok(true, "selectionStart: " + textarea.selectionStart);
+        ok(true, "selectionEnd: " + textarea.selectionEnd);
+      },
+    };
+    selectionPrivate.addSelectionListener(selectionListener);
+    synthesizeKey("KEY_Enter");
+    is(textarea.selectionStart, 4, "selectionStart should be 4");
+    is(textarea.selectionEnd, 4, "selectionEnd should be 4");
+    is(textarea.value, "foo\n", "The line break should be appended");
+    selectionPrivate.removeSelectionListener(selectionListener);
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1053048">Mozilla Bug 1053048</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<textarea id="textarea"
+          style="height: 100px; width: 300px; -moz-appearance: none"
+          spellcheck="false"
+          onkeydown="this.style.display='block'; this.style.height='200px';">foo</textarea>
+
+<pre id="test">
+</pre>
+</body>
+</html>

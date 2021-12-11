@@ -1,0 +1,38 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+namespace mozilla {
+namespace extensions {
+
+async protocol PStreamFilter
+{
+parent:
+  async Write(uint8_t[] data);
+
+  async FlushedData();
+
+  async Suspend();
+  async Resume();
+  async Close();
+  async Disconnect();
+  async Destroy();
+
+child:
+  async Resumed();
+  async Suspended();
+  async Closed();
+  async Error(nsCString error);
+
+  async FlushData();
+
+  async StartRequest();
+  async Data(uint8_t[] data);
+  async StopRequest(nsresult aStatus);
+};
+
+} // namespace extensions
+} // namespace mozilla
+

@@ -1,0 +1,20 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+geckoview.jar:
+
+% skin geckoview classic/1.0 %skin/
+  skin/config.css                           (config.css)
+  skin/images/accessiblecaret-normal.svg (images/accessiblecaret-normal.svg)
+  skin/images/accessiblecaret-tilt-left.svg (images/accessiblecaret-tilt-left.svg)
+  skin/images/accessiblecaret-tilt-right.svg (images/accessiblecaret-tilt-right.svg)
+  skin/images/add.svg                       (images/add.svg)
+  skin/images/arrow-down.svg                (images/arrow-down.svg)
+  skin/images/arrow-up.svg                  (images/arrow-up.svg)
+  skin/images/dropmarker-right.svg          (images/dropmarker-right.svg)
+  skin/images/dropmarker.svg                (images/dropmarker.svg)
+  skin/images/lock.svg                      (images/lock.svg)
+  skin/images/search-clear.svg              (images/search-clear.svg)
+  skin/images/search.svg                    (images/search.svg)

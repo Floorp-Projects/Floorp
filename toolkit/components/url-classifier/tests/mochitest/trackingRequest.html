@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+<title></title>
+
+</head>
+<body>
+
+<!--
+    This domain is not blocklisted for annotations but it is for tracking protection.
+    Therefore if tracking protection is accidentally enabled, this test will fail. On
+    the other hand, tracking.example.com will not be used in any of the same-origin
+    comparisons since we always look for the top window URI when there is one and
+    that's set to be www.itisatrap.org.
+-->
+<script id="badscript" data-touched="not sure" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js"></script>
+
+</body>
+</html>

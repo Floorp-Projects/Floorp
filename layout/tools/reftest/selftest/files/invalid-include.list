@@ -1,0 +1,2 @@
+# non-skip items are not allowed with include
+pref(foo.bar,1) include defaults.list

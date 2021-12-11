@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions access can be gated by application</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// These test cases should be used to make a request to
+// requestMediaKeySystemAccess and have the following members:
+// name: a name describing the test.
+// askAppApproval: used to set prefs such so that Gecko will ask for app
+// approval for EME if true, or not if false.
+// appApproves: used to set prefs to simulate app approval of permission
+// request, true if the app approves the request, false if not.
+// expectedKeySystemAccess: true if we expect to be granted key system access,
+// false if not.
+const testCases = [
+  {
+    name: "Don't check for app approval",
+    askAppApproval: false,
+    expectedKeySystemAccess: true,
+  },
+  {
+    name: "Check for app approval and app denies request",
+    askAppApproval: true,
+    appApproves: false,
+    expectedKeySystemAccess: false,
+  },
+  {
+    name: "Check for app approval and app allows request",
+    askAppApproval: true,
+    appApproves: true,
+    expectedKeySystemAccess: true,
+  },
+];
+
+// Options for requestMediaKeySystemAccess that are expected to work.
+const options = [{
+  initDataTypes: ['webm'],
+  audioCapabilities: [
+    { contentType: 'audio/webm; codecs="opus"' },
+  ],
+  videoCapabilities: [
+    { contentType: 'video/webm; codecs="vp8"' }
+  ]
+}];
+
+async function setTestPrefs({askAppApproval, appApproves}) {
+  if (!askAppApproval) {
+    // Test doesn't want app approval, set pref so we don't ask and unset prefs
+    // used to determine permission response as we don't need them.
+    await SpecialPowers.pushPrefEnv({
+      set: [["media.eme.require-app-approval", false]],
+      clear: [
+        ["media.eme.require-app-approval.prompt.testing"],
+        ["media.eme.require-app-approval.prompt.testing.allow"],
+      ]
+    });
+    return;
+  }
+
+  // Test wants app approval, and will approve deny requests per appApproces
+  // value, set prefs accordingly.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.eme.require-app-approval", true],
+      ["media.eme.require-app-approval.prompt.testing", true],
+      ["media.eme.require-app-approval.prompt.testing.allow", appApproves],
+    ],
+  });
+}
+
+// Run a test case that makes a single requestMediaKeySystemAccess call. The
+// outcome of such a test run should depend on the test case's setting of
+// preferences controlling the eme app approval.
+async function testSingleRequest(testCase) {
+  await setTestPrefs(testCase);
+
+  try {
+    await navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, options);
+    ok(testCase.expectedKeySystemAccess,
+       `testSingleRequest ${testCase.name}: allowed media key system access.`);
+  } catch(e) {
+    is(e.name,
+       "NotSupportedError",
+       "Should get NotSupportedError when request is blocked.");
+    is(e.message,
+       "The application embedding this user agent has blocked MediaKeySystemAccess",
+       "Should get blocked error message.");
+    ok(!testCase.expectedKeySystemAccess,
+       `testSingleRequest ${testCase.name}: denied media key system access.`);
+  }
+}
+
+// Run a test case that, but using invalid arguments for
+// requestMediaKeySystemAccess. Because we expect the args to be checked
+// before requesting app approval, this test ensures that we always fail when
+// using bad args, regardless of the app approval prefs set.
+async function testRequestWithInvalidArgs(testCase) {
+  const badOptions = [{
+    initDataTypes: ['badType'],
+    audioCapabilities: [
+      { contentType: 'audio/webm; codecs="notACodec"' },
+    ],
+    videoCapabilities: [
+      { contentType: 'video/webm; codecs="notACodec"' }
+    ]
+  }];
+
+  await setTestPrefs(testCase);
+
+  // Check that calls with a bad key system fail.
+  try {
+    await navigator.requestMediaKeySystemAccess("BadKeySystem", options);
+    ok(false,
+       `testRequestWithInvalidArgs ${testCase.name}: should not get access when using bad key system.`);
+  } catch(e) {
+    is(e.name,
+       "NotSupportedError",
+       "Should get NotSupportedError using bad key system.");
+    is(e.message,
+       "Key system is unsupported",
+       "Should get not supported key system error message.");
+  }
+
+  // Check that calls with the bad options fail.
+  try {
+    await navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, badOptions);
+    ok(false,
+       `testRequestWithInvalidArgs ${testCase.name}: should not get access when using bad options.`);
+  } catch(e) {
+    is(e.name,
+       "NotSupportedError",
+       "Should get NotSupportedError using bad options.");
+    is(e.message,
+       "Key system configuration is not supported",
+       "Should get not supported config error message.");
+  }
+}
+
+// Run a test case and make multiple requests with the same case. Check that
+// all requests are resolved with the expected outcome.
+async function testMultipleRequests(testCase) {
+  // Number of requests to concurrently make.
+  const NUM_REQUESTS = 5;
+
+  await setTestPrefs(testCase);
+
+  let resolveHandler = () => {
+    ok(testCase.expectedKeySystemAccess,
+       `testMultipleRequests ${testCase.name}: allowed media key system access.`);
+  }
+
+  let rejectHandler = e => {
+    is(e.name,
+       "NotSupportedError",
+       "Should get NotSupportedError when request is blocked.");
+    is(e.message,
+       "The application embedding this user agent has blocked MediaKeySystemAccess",
+       "Should get blocked error message.");
+    ok(!testCase.expectedKeySystemAccess,
+       `testMultipleRequests ${testCase.name}: denied media key system access.`);
+  }
+
+  let accessPromises = [];
+  for(let i = 0; i < NUM_REQUESTS; i++) {
+    // Request access then chain to our resolve and reject handlers. The
+    // handlers assert test state then resolve the promise chain. Ensuring the
+    // chain is always resolved allows us to correctly await all outstanding
+    // requests -- otherwise rejects short circuit the Promise.all call below.
+    let accessPromise = navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, options)
+      .then(resolveHandler, rejectHandler);
+    accessPromises.push(accessPromise);
+  }
+  // Wait for all promises to be resolved. If not, we'll time out. Because
+  // our reject handler chains back into a resolved promise, this should wait
+  // for all requests to be serviced, even when requestMediaKeySystemAccess's
+  // promise is rejected.
+  await Promise.all(accessPromises);
+}
+
+// The tests rely on prefs being set, so run them in sequence. If we run in
+// parallel the tests break each other by overriding prefs.
+for (const testCase of testCases) {
+  add_task(() => testSingleRequest(testCase));
+}
+for (const testCase of testCases) {
+  add_task(() => testRequestWithInvalidArgs(testCase));
+}
+for (const testCase of testCases) {
+  add_task(() => testMultipleRequests(testCase));
+}
+</script>
+</pre>
+</body>
+</html>

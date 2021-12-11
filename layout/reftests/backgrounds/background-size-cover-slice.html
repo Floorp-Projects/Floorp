@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-size: cover; box-decoration-break: slice</title>
+  <style type="text/css">
+@font-face
+{
+  font-family: Ahem;
+  src: url(../fonts/Ahem.ttf);
+}
+
+#outer
+{
+  border: 1px solid black;
+  width: 10em;
+}
+#ahem-lines
+{
+  font-family: Ahem;
+  font-size: 32px;
+  white-space: pre;
+  background-image: url(blue-8x20-green-8x20.png);
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-decoration-break: slice;
+}
+</style>
+</head>
+<body>
+<div id="outer">
+<span id="ahem-lines">      <!-- EOL -->
+        <!-- mix it up for slice --><!-- EOL -->
+      <!-- EOL -->
+      <!-- EOL -->
+      </span></div>
+</body>
+</html>

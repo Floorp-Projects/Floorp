@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>src local on load fallback</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+body {
+  margin: 50px;
+  font-size: 24pt;
+  font-family: sans-serif;
+}
+
+p { margin-left: 1em; }
+
+@font-face {
+  font-family: test0;
+  src: local("Futura-Medium"), local("Bitstream Vera Sans"), local("Bitstream Vera Sans Roman"), local("DejaVu Sans"), local("Arial");
+}
+
+@font-face {
+  font-family: test1;
+  src: url(bogus-dir/bogus.ttf), local("Futura-Medium"), local("Bitstream Vera Sans"), local("Bitstream Vera Sans Roman"), local("DejaVu Sans"), local("Arial");
+}
+
+@font-face {
+  font-family: test2;
+  src: url(../fonts/README), local("Futura-Medium"), local("Bitstream Vera Sans"), local("Bitstream Vera Sans Roman"), local("DejaVu Sans"), local("Arial");
+}
+
+@font-face {
+  font-family: test3;
+  src: url(../fonts/README), local("Bogosity"), local("Futura-Medium"), local("Bitstream Vera Sans"), local("Bitstream Vera Sans Roman"), local("DejaVu Sans"), local("Arial");
+}
+
+@font-face {
+  font-family: test4;
+  src: url(../fonts/README), local("Bogosity"), url(bogus-dir/bogus.ttf), local("Futura-Medium"), local("Bitstream Vera Sans"), local("Bitstream Vera Sans Roman"), local("DejaVu Sans"), local("Arial");
+}
+
+#test0 { font-family: test0, serif; }
+#test1 { font-family: test1, serif; }
+#test2 { font-family: test2, serif; }
+#test3 { font-family: test3, serif; }
+#test4 { font-family: test4, serif; }
+
+</style>
+  
+<script type="text/javascript">
+
+</script>
+  
+</head>
+<body>
+
+<h4>These should appear in sans-serif face, not serif:</h4>
+
+<p id="test0">Simple use of src local()</p>
+
+<p id="test1">The URL for the font data is bogus</p>
+
+<p id="test2">The URL exists but does not return font data</p>
+
+<p id="test3">Same as above, but first local not found</p>
+
+<p id="test4">Same as above, bogus url follows unknown local font</p>
+
+</body>
+</html>

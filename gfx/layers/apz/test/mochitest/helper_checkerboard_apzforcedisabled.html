@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html id="root-element">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Checkerboarding while root scrollframe async-scrolls and a
+         subframe has APZ force disabled</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var subframe = document.getElementById('subframe');
+
+  // layerize subframe
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: subframe,
+    offsetX: 10,
+    offsetY: 10,
+  });
+
+  // verify layerization
+  await promiseAllPaintsDone();
+  ok(isLayerized("subframe"), "subframe should be layerized at this point");
+  var subframeScrollId = utils.getViewId(subframe);
+  ok(subframeScrollId > 0, "subframe should have a scroll id");
+
+  // then disable APZ for it
+  utils.disableApzForElement(subframe);
+
+  // wait for the dust to settle
+  await promiseAllPaintsDone();
+
+  // Check that the root element's displayport has at least 500px of vertical
+  // displayport margin on either side. This will ensure that we can scroll
+  // by 500px without causing the displayport to move, which in turn means that
+  // the scroll will not trigger repaints (due to paint-skipping).
+  var rootElem = document.documentElement;
+  var rootDisplayport = getLastContentDisplayportFor(rootElem.id);
+  ok(rootDisplayport != null, "root element should have a displayport");
+  dump("root dp: " + JSON.stringify(rootDisplayport) +
+       ", height: " + rootElem.clientHeight);
+  var rootDpVerticalMargin = (rootDisplayport.h - rootElem.clientHeight) / 2;
+  ok(rootDpVerticalMargin > 500,
+     "root element should have at least 500px of vertical displayport margin");
+
+  // Scroll enough that we reveal new parts of the subframe, but not so much
+  // that the root displayport starts moving. If the root displayport moves,
+  // the main-thread will trigger a repaint of the subframe, but if the root
+  // displayport doesn't move, we get a paint-skipped scroll which is where the
+  // bug manifests. (The bug being that the subframe ends in a visual perma-
+  // checkerboarding state). Note that we do an 'auto' behavior scroll so
+  // that it's "instant" rather than an animation. Animations would demonstrate
+  // the bug too but are more complicated to wait for.
+  window.scrollBy({top: 500, left: 0, behavior: 'auto'});
+  is(window.scrollY, 500, "document got scrolled instantly");
+
+  // Note that at this point we must NOT call promiseOnlyApzControllerFlushed, because
+  // otherwise APZCCallbackHelper::NotifyFlushComplete will trigger a repaint
+  // (for unrelated reasons), and the repaint will clear the checkerboard
+  // state. We do, however, want to wait for a "steady state" here that
+  // includes all pending paints from the main thread and a composite that
+  // samples the APZ state. In order to accomplish this we wait for all the main
+  // thread paints, and then force a composite via advanceTimeAndRefresh. The
+  // advanceTimeAndRefresh has the additional advantage of freezing the refresh
+  // driver which avoids any additional externally-triggered repaints from
+  // erasing the symptoms of the bug.
+  await promiseAllPaintsDone();
+  assertNotCheckerboarded(utils, subframeScrollId, "subframe");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    #subframe {
+        overflow-x: auto;
+        margin-left: 100px; /* makes APZ minimap easier to see */
+    }
+  </style>
+</head>
+<body>
+ <div id="subframe">
+  <div style="width: 10000px; height: 10000px; background-image: linear-gradient(green, red)">
+  </div>
+ </div>
+</body>
+</html>

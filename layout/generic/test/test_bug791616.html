@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 791616</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+#t {
+    overflow: auto;
+    position: absolute;
+    left: 200px;
+    top: 100px;
+    font: 14px/1.3em "Consolas","Bitstream Vera Sans Mono","Courier New",Courier,monospace;
+}
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="t" contenteditable>
+  <div>66666666666666</div>
+  <div id="target">777777777777777777777777777777777777777</div>
+</div>
+</div>
+<pre id="test">
+<script class="testbody">
+var t = document.getElementById("t");
+var target = document.getElementById("target");
+var sel = window.getSelection();
+var smoothScrollPref = "general.smoothScroll";
+
+SimpleTest.waitForExplicitFinish();
+t.scrollTop = 0;
+var targetY = target.getBoundingClientRect().top;
+
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
+});
+function runTest() {
+    is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to waitForFocus");
+    t.focus();
+    is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to focus change");
+
+    // Move the caret to scroll it into view
+    sel.collapse(target.firstChild, 2);
+    synthesizeKey("KEY_ArrowLeft");
+
+    // Delay until next repaint in case stuff is asynchronous. Also
+    // take a trip through the event loop.
+    setTimeout(function() {
+      window.requestAnimationFrame(function() {
+        is(sel.anchorNode, target.firstChild, "Should have selected 'target' text node");
+        is(sel.anchorOffset, 1, "Selection should have moved left one character");
+        // We should not have needed to scroll the caret into view
+        is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled");
+        SimpleTest.finish();
+      });
+      // Make sure repainting actually happens.
+      target.style.background = "yellow";
+    });
+}
+</script>
+</pre>
+</body>
+</html>

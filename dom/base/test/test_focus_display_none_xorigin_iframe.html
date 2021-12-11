@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1716762
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 1716762</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1716762">Mozilla Bug 1716762</a><br>
+<input></input><br>
+<div id="target" style="display: none;">
+<iframe src="http://example.org/tests/dom/base/test/file_focus_display_none_xorigin_iframe_inner.html"></iframe>
+</div>
+<script type="text/javascript">
+
+let waitForMessage = function(aMsg) {
+  return new Promise(reslove => {
+    window.addEventListener("message", function handler(e) {
+      info(`main received message: ${e.data}`);
+      if (e.data === aMsg) {
+        window.removeEventListener("message", handler);
+        reslove();
+      }
+    });
+  });
+};
+
+let sendMessage = async function(aWindow, aMsg) {
+  aWindow.postMessage(aMsg, "*");
+  await waitForMessage("done");
+}
+
+let getFocus = function(aWindow) {
+  return new Promise(reslove => {
+    window.addEventListener("message", function handler(e) {
+      info(e.data);
+      reslove(e.data);
+    }, { once: true });
+    aWindow.postMessage("getfocus", "*");
+  });
+}
+
+/** Test for Bug 1716762  **/
+
+let input = document.querySelector("input");
+let iframe = document.querySelector("iframe");
+
+add_task(async function test_ancestor_display_none_init() {
+  // focus input element
+  input.focus();
+  is(document.activeElement.tagName, "INPUT", "focus should move to input element");
+
+  // focus input element in hidden iframe
+  await sendMessage(iframe.contentWindow, "focus");
+  is(document.activeElement.tagName, "INPUT", "focus should stay on input element");
+});
+
+add_task(async function test_remove_ancestor_display_none() {
+  // remove `display: none` from the ancestor of iframe
+  document.getElementById("target").style = "";
+  document.body.offsetWidth;
+
+  // focus input element
+  input.focus();
+  is(document.activeElement.tagName, "INPUT", "focus should move to input element");
+
+  // focus input element in hidden iframe
+  await sendMessage(iframe.contentWindow, "focus");
+  is(document.activeElement.tagName, "IFRAME", "focus should move to iframe element");
+});
+
+add_task(async function test_ancestor_display_none() {
+  // add `display: none` to the ancestor of iframe back
+  document.getElementById("target").style = "display: none;";
+  document.body.offsetWidth;
+
+  // focus input element
+  input.focus();
+  is(document.activeElement.tagName, "INPUT", "focus should move to input element");
+
+  // focus input element in hidden iframe
+  await sendMessage(iframe.contentWindow, "focus");
+  is(document.activeElement.tagName, "INPUT", "focus should stay on input element");
+});
+
+add_task(async function test_remove_ancestor_display_none_again() {
+  // remove `display: none` from the ancestor of iframe
+  document.getElementById("target").style = "";
+  document.body.offsetWidth;
+
+  // focus input element
+  input.focus();
+  is(document.activeElement.tagName, "INPUT", "focus should move to input element");
+
+  // focus input element in hidden iframe
+  await sendMessage(iframe.contentWindow, "focus");
+  is(document.activeElement.tagName, "IFRAME", "focus should move to iframe element");
+});
+
+add_task(async function test_iframe_display_none() {
+  // add `display: none` to iframe
+  iframe.style = "display: none;";
+  document.body.offsetWidth;
+
+  // focus input element
+  input.focus();
+  is(document.activeElement.tagName, "INPUT", "focus should move to input element");
+
+  // focus input element in hidden iframe
+  await sendMessage(iframe.contentWindow, "focus");
+  is(document.activeElement.tagName, "INPUT", "focus should stay on input element");
+});
+
+add_task(async function test_remove_iframe_display_none() {
+  // remove `display: none` from iframe
+  iframe.style = "";
+  document.body.offsetWidth;
+
+  // focus input element
+  input.focus();
+  is(document.activeElement.tagName, "INPUT", "focus should move to input element");
+
+  // focus input element in hidden iframe
+  await sendMessage(iframe.contentWindow, "focus");
+  is(document.activeElement.tagName, "IFRAME", "focus should move to iframe element");
+});
+
+</script>
+</body>
+</html>

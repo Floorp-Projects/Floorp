@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import "objidl.idl";
+import "oaidl.idl";
+
+cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//")
+cpp_quote("// ISimpleDOMText")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// An interface that extends MSAA's IAccessible to provide important additional capabilities on text nodes")
+cpp_quote("//")
+cpp_quote("// [propget] domText(/* out,retval */ BSTR *domText")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Similar to IAccessible::get_accName, but does not strip out whitespace characters.")
+cpp_quote("// Important for retrieving the correct start/end substring indices to use with other")
+cpp_quote("// methods in ISimpleDOMText.")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("// get_[un]clippedSubstringBounds(")
+cpp_quote("//   /* [in] */ unsigned int startIndex,")
+cpp_quote("//   /* [in] */ unsigned int endIndex,")
+cpp_quote("//   /* [out] */ int *x,")
+cpp_quote("//   /* [out] */ int *y,")
+cpp_quote("//   /* [out] */ int *width,")
+cpp_quote("//   /* [out] */ int *height);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Both methods get_clippedSubstringBounds and get_unclippedSubstringBounds return the screen pixel")
+cpp_quote("// coordinates of the given text substring. The in parameters for start and end indices refer")
+cpp_quote("// to the string returned by ISimpleDOMText::get_domText().")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("// scrollToSubstring(")
+cpp_quote("//   /* [in] */ unsigned int startIndex,")
+cpp_quote("//   /* [in] */ unsigned int endIndex);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// In scrollable views, scrolls to ensure that the specified substring is visible onscreen.")
+cpp_quote("// The in parameters for start and end indices refer to the string returned")
+cpp_quote("// by ISimpleDOMText::get_domText().")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("// [propget] fontFamily(/* out,retval */ BSTR *fontFamily);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Return a single computed font family name, which is better than the comma delineated list")
+cpp_quote("// that is returned by the ISimpleDOMNode computed style methods for font-family.")
+cpp_quote("// In other words, return something like 'Arial' instead of 'Arial, Helvetica, Sans-serif'.")
+cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
+cpp_quote("")
+cpp_quote("")
+
+[object, uuid(4e747be5-2052-4265-8af0-8ecad7aad1c0)]
+interface ISimpleDOMText: IUnknown
+{
+  // Includes whitespace in DOM
+  [propget] HRESULT domText([out, retval] BSTR *domText);
+
+  HRESULT get_clippedSubstringBounds([in] unsigned int startIndex,
+                                     [in] unsigned int endIndex,
+                                     [out] int *x,
+                                     [out] int *y,
+                                     [out] int *width,
+                                     [out] int *height);
+
+  HRESULT get_unclippedSubstringBounds([in] unsigned int startIndex,
+                                       [in] unsigned int endIndex,
+                                       [out] int *x,
+                                       [out] int *y,
+                                       [out] int *width,
+                                       [out] int *height);
+
+  HRESULT scrollToSubstring([in] unsigned int startIndex,
+                            [in] unsigned int endIndex);
+
+  [propget] HRESULT fontFamily([out, retval] BSTR *fontFamily);
+};
+

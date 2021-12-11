@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=429659
+-->
+<head>
+  <title>nsIAccessibleImage chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="common.js"></script>
+  <script type="application/javascript"
+          src="role.js"></script>
+  <script type="application/javascript"
+          src="attributes.js"></script>
+  <script type="application/javascript"
+          src="layout.js"></script>
+
+  <script type="application/javascript">
+    function testCoordinates(aID, aAcc, aWidth, aHeight) {
+      var screenX = {}, screenY = {}, windowX = {}, windowY = {}, parentX = {},
+          parentY = {};
+
+      // get screen coordinates.
+      aAcc.getImagePosition(
+               nsIAccessibleCoordinateType.COORDTYPE_SCREEN_RELATIVE,
+               screenX, screenY);
+      // get window coordinates.
+      aAcc.getImagePosition(
+               nsIAccessibleCoordinateType.COORDTYPE_WINDOW_RELATIVE,
+               windowX, windowY);
+      // get parent related coordinates.
+      aAcc.getImagePosition(
+               nsIAccessibleCoordinateType.COORDTYPE_PARENT_RELATIVE,
+               parentX, parentY);
+      // XXX For linked images, a negative parentY value is returned, and the
+      // screenY coordinate is the link's screenY coordinate minus 1.
+      // Until this is fixed, set parentY to -1 if it's negative.
+      if (parentY.value < 0)
+        parentY.value = -1;
+
+      // See if asking image for child at image's screen coordinates gives
+      // correct accessible. getChildAtPoint operates on screen coordinates.
+      var tempAcc = null;
+      try {
+        tempAcc = aAcc.getChildAtPoint(screenX.value, screenY.value);
+      } catch (e) {}
+      is(tempAcc, aAcc,
+         "Wrong accessible returned for position of " + aID + "!");
+
+      // get image's parent.
+      var imageParentAcc = null;
+      try {
+        imageParentAcc = aAcc.parent;
+      } catch (e) {}
+      ok(imageParentAcc, "no parent accessible for " + aID + "!");
+
+      if (imageParentAcc) {
+        // See if parent's screen coordinates plus image's parent relative
+        // coordinates equal to image's screen coordinates.
+        var parentAccX = {}, parentAccY = {}, parentAccWidth = {},
+            parentAccHeight = {};
+        imageParentAcc.getBounds(parentAccX, parentAccY, parentAccWidth,
+                                 parentAccHeight);
+        is(parentAccX.value + parentX.value, screenX.value,
+           "Wrong screen x coordinate for " + aID + "!");
+// XXX see bug 456344        is(parentAccY.value + parentY.value, screenY.value,
+//           "Wrong screen y coordinate for " + aID + "!");
+      }
+
+      var [expected_w, expected_h] = CSSToDevicePixels(window, aWidth, aHeight);
+      var width = {}, height = {};
+      aAcc.getImageSize(width, height);
+      is(width.value, expected_w, "Wrong width for " + aID + "!");
+      is(height.value, expected_h, "wrong height for " + aID + "!");
+    }
+
+    function testThis(aID, aSRC, aWidth, aHeight,
+                      aActionCount, aActionNames) {
+      var acc = getAccessible(aID, [nsIAccessibleImage]);
+      if (!acc)
+        return;
+
+      // Test role
+      testRole(aID, ROLE_GRAPHIC);
+
+      // test coordinates and size
+      testCoordinates(aID, acc, aWidth, aHeight);
+
+      // bug 429659: Make sure the SRC attribute is set for any image
+      var attributes = {"src": aSRC};
+      testAttrs(acc, attributes, true);
+
+      var actionCount = aActionCount || 0;
+      is(acc.actionCount, actionCount,
+         "Wrong number of actions for " + aID + "!");
+      if (actionCount) {
+        for (let index = 0; index < aActionNames.length; index++) {
+          is(acc.getActionName(index), aActionNames[index],
+             "Wrong action name for " + aID + ", index " + index + "!");
+        }
+      }
+    }
+
+    function doTest() {
+      // Test non-linked image
+      testThis("nonLinkedImage", "moz.png", 89, 38);
+
+      // Test linked image
+      var actionNamesArray = ["jump"];
+      testThis("linkedImage", "moz.png", 89, 38, 1,
+               actionNamesArray);
+
+      // Image with long desc
+      actionNamesArray = ["showlongdesc"];
+      testThis("longdesc", "moz.png", 89, 38, 1,
+               actionNamesArray);
+
+      // Image with invalid url in long desc
+      testThis("invalidLongdesc", "moz.png", 89, 38, 0);
+
+      // Image with click and long desc
+      actionNamesArray = null;
+      actionNamesArray = ["click", "showlongdesc"];
+      testThis("clickAndLongdesc", "moz.png",
+               89, 38, 2, actionNamesArray);
+
+      // Image with click
+      actionNamesArray = null;
+      actionNamesArray = ["click"];
+      testThis("click", "moz.png",
+               89, 38, 1, actionNamesArray);
+
+      // Image with long desc
+      actionNamesArray = null;
+      actionNamesArray = ["showlongdesc"];
+      testThis("longdesc2", "moz.png",
+               89, 38, 1, actionNamesArray);
+
+      // Image described by HTML:a@href with whitespaces
+      actionNamesArray = null;
+      actionNamesArray = ["showlongdesc"];
+      testThis("longdesc3", "moz.png",
+               89, 38, 1, actionNamesArray);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=429659">Mozilla Bug 429659</a>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=652635"
+    title="fall back missing @longdesc to aria-describedby pointing to a href">
+     Mozilla Bug 652635
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <br>Simple image:<br>
+  <img id="nonLinkedImage" src="moz.png"/>
+  <br>Linked image:<br>
+  <a href="http://www.mozilla.org"><img id="linkedImage" src="moz.png"></a>
+  <br>Image with longdesc:<br>
+  <img id="longdesc" src="moz.png" longdesc="longdesc_src.html"
+       alt="Image of Mozilla logo"/>
+  <br>Image with invalid url in longdesc:<br>
+  <img id="invalidLongdesc" src="moz.png" longdesc="longdesc src.html"
+       alt="Image of Mozilla logo"/>
+  <br>Image with click and longdesc:<br>
+  <img id="clickAndLongdesc" src="moz.png" longdesc="longdesc_src.html"
+       alt="Another image of Mozilla logo" onclick="alert('Clicked!');"/>
+
+  <br>image described by a link to be treated as longdesc<br>
+  <img id="longdesc2" src="moz.png" aria-describedby="describing_link"
+       alt="Second Image of Mozilla logo"/>
+  <a id="describing_link" href="longdesc_src.html">link to description of image</a>
+
+  <br>Image described by a link to be treated as longdesc with whitespaces<br>
+  <img id="longdesc3" src="moz.png" aria-describedby="describing_link2"
+       alt="Second Image of Mozilla logo"/>
+  <a id="describing_link2" href="longdesc src.html">link to description of image</a>
+
+  <br>Image with click:<br>
+  <img id="click" src="moz.png"
+       alt="A third image of Mozilla logo" onclick="alert('Clicked, too!');"/>
+
+</body>
+</html>

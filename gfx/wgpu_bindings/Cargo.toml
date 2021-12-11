@@ -1,0 +1,37 @@
+[package]
+name = "wgpu_bindings"
+version = "0.1.0"
+authors = [
+	"Dzmitry Malyshau <kvark@mozilla.com>",
+	"Joshua Groves <josh@joshgroves.com>",
+]
+edition = "2018"
+license = "MPL-2.0"
+publish = false
+
+[lib]
+
+[features]
+default = []
+
+[dependencies.wgc]
+package = "wgpu-core"
+git = "https://github.com/gfx-rs/wgpu"
+rev = "37288a6"
+features = ["replay", "trace", "serial-pass"]
+
+[dependencies.wgt]
+package = "wgpu-types"
+git = "https://github.com/gfx-rs/wgpu"
+rev = "37288a6"
+
+[dependencies.wgh]
+package = "wgpu-hal"
+git = "https://github.com/gfx-rs/wgpu"
+rev = "37288a6"
+
+[dependencies]
+bincode = "1"
+log = "0.4"
+parking_lot = "0.11"
+serde = "1"

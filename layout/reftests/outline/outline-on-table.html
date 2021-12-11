@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<style>
+#target {
+  display: table;
+  width: 100px;
+  height: 100px;
+}
+</style>
+<div id="target"></div>
+<script>
+document.addEventListener("MozReftestInvalidate", () => {
+  target.style.outline = "1px solid black";
+  document.documentElement.classList.remove("reftest-wait");
+});
+</script>
+</html>

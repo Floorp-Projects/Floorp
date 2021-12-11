@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Reftest",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "reftest@mozilla.org"
+    }
+  },
+
+  "experiment_apis": {
+    "reftest": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

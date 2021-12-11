@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popup Prevent Default Tests"
+  onload="setTimeout(runTest, 0);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<!--
+  This tests checks that preventDefault can be called on a popupshowing
+  event and that preventDefault has no effect for the popuphiding event.
+  -->
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var gBlockShowing = true;
+var gShownNotAllowed = true;
+
+function runTest()
+{
+  document.getElementById("menu").open = true;
+}
+
+function popupShowing(event)
+{
+  if (gBlockShowing) {
+    event.preventDefault();
+    gBlockShowing = false;
+    setTimeout(function() {
+                 gShownNotAllowed = false;
+                 document.getElementById("menu").open = true;
+               }, 3000, true);
+  }
+}
+
+function popupShown()
+{
+  ok(!gShownNotAllowed, "popupshowing preventDefault");
+  document.getElementById("menu").open = false;
+}
+
+function popupHiding(event)
+{
+  // since this is a content test, preventDefault should have no effect
+  event.preventDefault();
+}
+
+function popupHidden()
+{
+  ok(true, "popuphiding preventDefault not allowed");
+  SimpleTest.finish();
+}
+</script>
+
+<button id="menu" type="menu" label="Menu">
+  <menupopup onpopupshowing="popupShowing(event);"
+             onpopupshown="popupShown();"
+             onpopuphiding="popupHiding(event);"
+             onpopuphidden="popupHidden();">
+    <menuitem label="Item"/>
+  </menupopup>
+</button>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

@@ -1,0 +1,554 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test pasting table rows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <style>
+    /**
+     * A small font-size, so that the loaded document fits on the screens of all
+     * test devices.
+     */
+    * { font-size: 8px; }
+
+    /**
+     * Helps fitting the tables on the screens of all test devices.
+     */
+    div[class="tableContainer"] {
+      display: inline-block;
+    }
+  </style>
+  <script>
+    const kEditabilityModeContenteditable = "contenteditable";
+    const kEditabilityModeDesignMode = "designMode";
+
+    // All column names of the test-tables used below.
+    const kColumns = ["c1", "c2", "c3"];
+
+    // Ctrl+click on table cells to select them.
+    const kSelectionModeClickSelection = "click-selection";
+    // Click and drag from the first given row to the end of the last given row.
+    const kSelectionModeDragSelection = "drag-selection";
+
+    const kTableTagName = "TABLE";
+    const kTbodyTagName = "TBODY";
+    const kTheadTagName = "THEAD";
+    const kTfootTagName = "TFOOT";
+
+    const kInputEventType = "input";
+    const kInputEventInputTypeInsertFromPaste = "insertFromPaste";
+
+    // Where a table is pasted to in the test.
+    const kTargetElementId = "targetElement";
+
+    /**
+     * @param aTableName see Test::constructor::aTableName.
+     * @param aRowsInTable see Test::constructor::aRowsInTable.
+     * @return an array of elements of aRowsInTable.
+     */
+    function FilterRowsWithParentTag(aTableName, aRowsInTable, aTagName) {
+      return aRowsInTable.filter(rowName => document.getElementById(aTableName +
+        rowName).parentElement.tagName == aTagName);
+    }
+
+    /**
+     * Tables used with this class are required to:
+     * - have ids of the following form for each table cell:
+          <tableName><rowName><column>. Where <column> has to be one of
+          `kColumns`.
+       - have exactly `kColumns.length` columns per row.
+       - have an id of the form <tableName><rowName> for each table row.
+     */
+    class Test {
+      /**
+       * @param aTableName indicates which table to operate on.
+       * @param aRowsInTable an array of row names. Ordered from top to bottom.
+       * @param aEditabilityMode `kEditabilityModeContenteditable` or
+       *                         `kEditabilityModeDesignMode`.
+       * @param aSelectionMode `kSelectionModeClickSelection` or
+       *                       `kSelectionModeDragSelection`.
+       */
+      constructor(aTableName, aRowsInTable, aEditabilityMode, aSelectionMode) {
+        ok(aEditabilityMode == kEditabilityModeContenteditable ||
+           aEditabilityMode == kEditabilityModeDesignMode,
+          "Editablity mode is valid.");
+
+        ok(aSelectionMode == kSelectionModeClickSelection ||
+           aSelectionMode == kSelectionModeDragSelection,
+          "Selection mode is valid.");
+
+        this._tableName = aTableName;
+        this._rowsInTable = aRowsInTable;
+        this._editabilityMode = aEditabilityMode;
+        this._selectionMode = aSelectionMode;
+        this._innerHTMLOfTargetBeforeTestRun =
+          document.getElementById(kTargetElementId).innerHTML;
+
+        if (this._editabilityMode == kEditabilityModeDesignMode) {
+          this._removeContenteditableAttributeOfTarget();
+          document.designMode = "on";
+        }
+
+        SimpleTest.info("Constructed the test (" + this._toString() + ").");
+      }
+
+      /**
+       * Call `_restoreStateOfDocumentBeforeRun` afterwards.
+       */
+      async _run() {
+        // Generate the expected pasted HTML before pasting the clipboard's
+        // content, because that may duplicate ids, hence leading to creating
+        // a wrong expectation string.
+        const expectedPastedHTML = this._createExpectedOuterHTMLOfTable();
+
+        if (this._selectionMode == kSelectionModeDragSelection) {
+          this._dragSelectAllCellsInRowsOfTable();
+        } else {
+          this._clickSelectAllCellsInRowsOfTable();
+        }
+
+        await this._copyToClipboard(expectedPastedHTML);
+        this._pasteToTargetElement();
+
+        const targetElement = document.getElementById(kTargetElementId);
+        is(targetElement.children.length, 1,
+          "Target element has exactly one child.");
+        is(targetElement.children[0]?.tagName, kTableTagName,
+          "Target element has a table child.");
+
+        // Linebreaks and whitespace after tags are irrelevant, hence stripping
+        // them.
+        is(SimpleTest.stripLinebreaksAndWhitespaceAfterTags(
+          targetElement.children[0]?.outerHTML), expectedPastedHTML,
+          "Pasted table (" + this._toString() + ") has expected outerHTML.");
+      }
+
+      _restoreStateOfDocumentBeforeRun() {
+        if (this._editabilityMode == kEditabilityModeDesignMode) {
+          document.designMode = "off";
+          this._setContenteditableAttributeOfTarget();
+        }
+
+        const targetElement = document.getElementById(kTargetElementId);
+        targetElement.innerHTML = this._innerHTMLOfTargetBeforeTestRun;
+        targetElement.getBoundingClientRect();
+
+        SimpleTest.info(
+          "Restored the state of the document before the test run.");
+      }
+
+      _toString() {
+        return "table: " + this._tableName + "; row(s): " +
+          this._rowsInTable.toString() + "; editability-mode: " +
+          this._editabilityMode + "; selection-mode: " + this._selectionMode;
+      }
+
+      _removeContenteditableAttributeOfTarget() {
+        const targetElement = document.getElementById(kTargetElementId);
+        SimpleTest.info("Removing target's 'contenteditable' attribute.");
+        targetElement.removeAttribute("contenteditable");
+      }
+
+      _setContenteditableAttributeOfTarget() {
+        const targetElement = document.getElementById(kTargetElementId);
+        SimpleTest.info("Setting 'contenteditable' attribute of target.");
+        targetElement.setAttribute("contenteditable", "");
+      }
+
+      _getOuterHTMLAndStripLinebreaksAndWhitespaceAfterTags(aElementId) {
+        const outerHTML = document.getElementById(aElementId).outerHTML;
+        return SimpleTest.stripLinebreaksAndWhitespaceAfterTags(outerHTML);
+      }
+
+      _createExpectedOuterHTMLOfTable() {
+        const rowsInTableHead = FilterRowsWithParentTag(this._tableName,
+          this._rowsInTable, kTheadTagName);
+
+        const rowsInTableBody = FilterRowsWithParentTag(this._tableName,
+          this._rowsInTable, kTbodyTagName);
+
+        const rowsInTableFoot = FilterRowsWithParentTag(this._tableName,
+          this._rowsInTable, kTfootTagName);
+
+        let expectedTableOuterHTML = '\
+<table>';
+
+        if (rowsInTableHead.length > 0) {
+          expectedTableOuterHTML += '\
+<thead>';
+          rowsInTableHead.forEach(rowName =>
+            expectedTableOuterHTML +=
+            this._getOuterHTMLAndStripLinebreaksAndWhitespaceAfterTags(
+              this._tableName + rowName));
+          expectedTableOuterHTML +='\
+</thead>';
+        }
+
+        if (rowsInTableBody.length > 0) {
+          expectedTableOuterHTML += '\
+<tbody>';
+
+          rowsInTableBody.forEach(rowName =>
+            expectedTableOuterHTML +=
+            this._getOuterHTMLAndStripLinebreaksAndWhitespaceAfterTags(
+              this._tableName + rowName));
+
+          expectedTableOuterHTML +='\
+</tbody>';
+        }
+
+        if (rowsInTableFoot.length > 0) {
+          expectedTableOuterHTML += '\
+<tfoot>';
+          rowsInTableFoot.forEach(rowName =>
+            expectedTableOuterHTML +=
+            this._getOuterHTMLAndStripLinebreaksAndWhitespaceAfterTags(this._tableName
+              + rowName));
+          expectedTableOuterHTML += '\
+</tfoot>';
+        }
+
+        expectedTableOuterHTML += '\
+</table>';
+
+        return expectedTableOuterHTML;
+      }
+
+      _clickSelectAllCellsInRowsOfTable() {
+        function synthesizeAccelKeyAndClickAt(aElementId) {
+          const element = document.getElementById(aElementId);
+          synthesizeMouseAtCenter(element, { accelKey: true });
+        }
+
+        this._rowsInTable.forEach(rowName => kColumns.forEach(column =>
+          synthesizeAccelKeyAndClickAt(this._tableName + rowName + column)));
+      }
+
+      _dragSelectAllCellsInRowsOfTable() {
+        const firstColumnOfFirstRow = document.getElementById(this._tableName +
+          this._rowsInTable[0] + kColumns[0]);
+        const lastColumnOfLastRow = document.getElementById(this._tableName +
+          this._rowsInTable.slice(-1)[0] + kColumns.slice(-1)[0]);
+
+        synthesizeMouse(firstColumnOfFirstRow, 0 /* aOffsetX */,
+          0 /* aOffsetY */, { type: "mousedown" } /* aEvent */);
+
+        const rectOfLastColumnOfLastRow =
+          lastColumnOfLastRow.getBoundingClientRect();
+
+        synthesizeMouse(lastColumnOfLastRow, rectOfLastColumnOfLastRow.width
+          /* aOffsetX */, rectOfLastColumnOfLastRow.height /* aOffsetY */,
+          { type: "mousemove" } /* aEvent */);
+
+        synthesizeMouse(lastColumnOfLastRow, rectOfLastColumnOfLastRow.width
+          /* aOffsetX */, rectOfLastColumnOfLastRow.height /* aOffsetY */,
+          { type: "mouseup" } /* aEvent */);
+      }
+
+      /**
+       * @return a promise.
+       */
+      async _copyToClipboard(aExpectedPastedHTML) {
+        const flavor = "text/html";
+
+        const expectedPastedHTML = (() => {
+          if (navigator.platform.includes(kPlatformWindows)) {
+            // TODO: ideally, this should be factored out, see bug 1669963.
+
+            // Windows wraps the pasted HTML, see
+            // https://searchfox.org/mozilla-central/rev/8f7b017a31326515cb467e69eef1f6c965b4f00e/widget/windows/nsDataObj.cpp#1798-1805,1839-1840,1842.
+            return kTextHtmlPrefixClipboardDataWindows +
+              aExpectedPastedHTML + kTextHtmlSuffixClipboardDataWindows;
+          }
+          return aExpectedPastedHTML;
+        })();
+
+        function validatorFn(aData) {
+          // The data's format doesn't specify whether there should be line
+          // breaks or whitspace between tags. Hence, remove them.
+          if (SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aData) ==
+                SimpleTest.stripLinebreaksAndWhitespaceAfterTags(expectedPastedHTML)) {
+              return true;
+          }
+          info(`Waiting clipboard data: expected:\n"${
+            SimpleTest.stripLinebreaksAndWhitespaceAfterTags(expectedPastedHTML)
+          }"\n, but got:\n"${
+            SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aData)
+          }"`);
+          return false;
+        }
+
+        return SimpleTest.promiseClipboardChange(validatorFn,
+          () => synthesizeKey("c", { accelKey: true } /* aEvent*/), flavor);
+      }
+
+      _pasteToTargetElement() {
+        const editingHost = (this._editabilityMode ==
+          kEditabilityModeContenteditable) ?
+          document.getElementById(kTargetElementId) :
+          document;
+
+        let inputEvent;
+        function handleInputEvent(aEvent) {
+          if (aEvent.inputType == kInputEventInputTypeInsertFromPaste) {
+            editingHost.removeEventListener(kInputEventType, handleInputEvent);
+            SimpleTest.info(
+              'Listened to an "' + kInputEventInputTypeInsertFromPaste + '" "'
+              + kInputEventType + ' event.');
+            inputEvent = aEvent;
+          }
+        }
+        editingHost.addEventListener(kInputEventType, handleInputEvent);
+
+        const targetElement = document.getElementById(kTargetElementId);
+        synthesizeMouseAtCenter(targetElement, {});
+        synthesizeKey("v", { accelKey: true } /* aEvent */);
+
+        ok(
+          inputEvent != undefined,
+          `An ${kInputEventType} whose "inputType" is ${
+            kInputEventInputTypeInsertFromPaste
+          } should've been fired on ${editingHost.localName}`
+        );
+      }
+    }
+
+    function ContainsRowWithParentTag(aTableName, aRowsInTable, aTagName) {
+      return FilterRowsWithParentTag(aTableName, aRowsInTable,
+        aTagName).length > 0;
+    }
+
+    function DoesContainRowInTheadAndTbody(aTableName, aRowsInTable) {
+      return ContainsRowWithParentTag(aTableName, aRowsInTable, kTheadTagName) &&
+        ContainsRowWithParentTag(aTableName, aRowsInTable, kTbodyTagName);
+    }
+
+    function DoesContainRowInTbodyAndTfoot(aTableName, aRowsInTable) {
+      return ContainsRowWithParentTag(aTableName, aRowsInTable, kTbodyTagName)
+        && ContainsRowWithParentTag(aTableName, aRowsInTable, kTfootTagName);
+    }
+
+    async function runTests() {
+      const kClickSelectionTests = {
+        selectionMode : kSelectionModeClickSelection,
+        tablesToTest : ["t1", "t2", "t3", "t4", "t5"],
+        rowsToSelect : [
+           ["r1", "r2", "r3", "r4"],
+           ["r1"],
+           ["r2", "r3"],
+           ["r1", "r3"],
+           ["r3", "r4"],
+           ["r4"],
+        ],
+      };
+
+      const kDragSelectionTests = {
+        selectionMode : kSelectionModeDragSelection,
+        tablesToTest : ["t1", "t2", "t3", "t4", "t5"],
+        // Only consecutive rows when drag-selecting.
+        rowsToSelect : [
+           ["r1", "r2", "r3", "r4"],
+           ["r1"],
+           ["r2", "r3"],
+           ["r3", "r4"],
+           ["r4"],
+        ],
+      };
+
+      const kTestGroups = [kClickSelectionTests, kDragSelectionTests];
+
+      const kEditabilityModes = [
+        kEditabilityModeContenteditable,
+        kEditabilityModeDesignMode,
+      ];
+
+      for (const editabilityMode of kEditabilityModes) {
+        for (const testGroup of kTestGroups) {
+          for (const tableName of testGroup.tablesToTest) {
+            for (const rowsToSelect of testGroup.rowsToSelect) {
+              if (DoesContainRowInTheadAndTbody(tableName, rowsToSelect) ||
+                  DoesContainRowInTbodyAndTfoot(tableName, rowsToSelect)) {
+                todo(false,
+                  'Rows to select (' + rowsToSelect.toString() + ') contains ' +
+                  ' row in <tbody> and <thead> or <tfoot> of table "' +
+                  tableName + '", see bug 1667786.');
+                continue;
+              }
+
+              const test = new Test(tableName, rowsToSelect, editabilityMode,
+                                    testGroup.selectionMode);
+              try {
+                await test._run();
+              } catch (ex) {
+                ok(false, `Aborting the following tests due to unexpected error: ${ex.message}`);
+                SimpleTest.finish();
+                return;
+              }
+              test._restoreStateOfDocumentBeforeRun();
+            }
+          }
+        }
+      }
+
+      SimpleTest.finish();
+    }
+
+    function onLoad() {
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(runTests);
+    }
+  </script>
+</head>
+<body onload="onLoad()">
+<p id="display"></p>
+  <h4>Test for <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1639972">bug 1639972</a></h4>
+  <div id="content">
+    <div class="tableContainer">Table with <code>tbody</code> and <code>td</code>:
+      <table>
+        <tbody>
+          <tr id="t1r1">
+            <td id="t1r1c1">r1c1</td>
+            <td id="t1r1c2">r1c2</td>
+            <td id="t1r1c3">r1c3</td>
+          </tr>
+          <tr id="t1r2">
+            <td id="t1r2c1">r2c1</td>
+            <td id="t1r2c2">r2c2</td>
+            <td id="t1r2c3">r2c3</td>
+          </tr>
+          <tr id="t1r3">
+            <td id="t1r3c1">r3c1</td>
+            <td id="t1r3c2">r3c2</td>
+            <td id="t1r3c3">r3c3</td>
+          </tr>
+          <tr id="t1r4">
+            <td id="t1r4c1">r4c1</td>
+            <td id="t1r4c2">r4c2</td>
+            <td id="t1r4c3">r4c3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tableContainer">Table with <code>tbody</code>, <code>td</code> and <code>th</code>:
+      <table>
+        <tbody>
+          <tr id="t2r1">
+            <th id="t2r1c1">r1c1</th>
+            <th id="t2r1c2">r1c2</th>
+            <th id="t2r1c3">r1c3</th>
+          </tr>
+          <tr id="t2r2">
+            <td id="t2r2c1">r2c1</td>
+            <td id="t2r2c2">r2c2</td>
+            <td id="t2r2c3">r2c3</td>
+          </tr>
+          <tr id="t2r3">
+            <td id="t2r3c1">r3c1</td>
+            <td id="t2r3c2">r3c2</td>
+            <td id="t2r3c3">r3c3</td>
+          </tr>
+          <tr id="t2r4">
+            <td id="t2r4c1">r4c1</td>
+            <td id="t2r4c2">r4c2</td>
+            <td id="t2r4c3">r4c3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tableContainer">Table with <code>thead</code>, <code>tbody</code>, <code>td</code>:
+      <table>
+        <thead>
+          <tr id="t3r1">
+            <td id="t3r1c1">r1c1</td>
+            <td id="t3r1c2">r1c2</td>
+            <td id="t3r1c3">r1c3</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="t3r2">
+            <td id="t3r2c1">r2c1</td>
+            <td id="t3r2c2">r2c2</td>
+            <td id="t3r2c3">r2c3</td>
+          </tr>
+          <tr id="t3r3">
+            <td id="t3r3c1">r3c1</td>
+            <td id="t3r3c2">r3c2</td>
+            <td id="t3r3c3">r3c3</td>
+          </tr>
+          <tr id="t3r4">
+            <td id="t3r4c1">r4c1</td>
+            <td id="t3r4c2">r4c2</td>
+            <td id="t3r4c3">r4c3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tableContainer">Table with <code>thead</code>, <code>tbody</code>, <code>td</code> and <code>th</code>:
+      <table>
+        <thead>
+          <tr id="t4r1">
+            <th id="t4r1c1">r1c1</th>
+            <th id="t4r1c2">r1c2</th>
+            <th id="t4r1c3">r1c3</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="t4r2">
+            <td id="t4r2c1">r2c1</td>
+            <td id="t4r2c2">r2c2</td>
+            <td id="t4r2c3">r2c3</td>
+          </tr>
+          <tr id="t4r3">
+            <td id="t4r3c1">r3c1</td>
+            <td id="t4r3c2">r3c2</td>
+            <td id="t4r3c3">r3c3</td>
+          </tr>
+          <tr id="t4r4">
+            <td id="t4r4c1">r4c1</td>
+            <td id="t4r4c2">r4c2</td>
+            <td id="t4r4c3">r4c3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tableContainer">Table with <code>thead</code>,
+      <code>tbody</code>, <code>tfoot</code>, and <code>td</code>:
+      <table>
+        <thead>
+          <tr id="t5r1">
+            <td id="t5r1c1">r1c1</td>
+            <td id="t5r1c2">r1c2</td>
+            <td id="t5r1c3">r1c3</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="t5r2">
+            <td id="t5r2c1">r2c1</td>
+            <td id="t5r2c2">r2c2</td>
+            <td id="t5r2c3">r2c3</td>
+          </tr>
+          <tr id="t5r3">
+            <td id="t5r3c1">r3c1</td>
+            <td id="t5r3c2">r3c2</td>
+            <td id="t5r3c3">r3c3</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr id="t5r4">
+            <td id="t5r4c1">r4c1</td>
+            <td id="t5r4c2">r4c2</td>
+            <td id="t5r4c3">r4c3</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p>Target for pasting:
+      <div id="targetElement" contenteditable><!-- Some content so that it can be clicked on. -->X</div>
+    </p>
+  </div>
+</html>

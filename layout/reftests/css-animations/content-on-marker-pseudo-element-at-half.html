@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <style>
+  @keyframes anim {
+    from { content: ''; }
+    to { content: 'content'; }
+  }
+  #target::marker {
+    content: 'initial';
+    animation: anim 100s linear -50s paused;
+  }
+  #target {
+    display: list-item;
+    margin-left: 200px;
+  }
+  </style>
+  <div id='target'></div>
+</html>

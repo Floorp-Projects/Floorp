@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for File API + Slice (in file)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common_blob.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+<p id="display">
+  <canvas id=canvas width=1100 height=1100 hidden moz-opaque></canvas>
+</p>
+
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(4);
+
+let canvasData;
+
+createCanvasURL()
+.then(data => {
+  canvasData = data;
+  return createFile(data, "basicTestFile1");
+})
+
+.then(file => {
+  return testSlice(file, canvasData.length, "", canvasData, "fileFile", RANGE_1);
+})
+
+.then(SimpleTest.finish);
+
+</script>
+</body>
+</html>

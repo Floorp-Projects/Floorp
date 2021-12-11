@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for clicking on an element which is restyled/reframed by mousedown event</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .before-pseudo-element *:active::before {
+      content: "";
+      display: block;
+      height: 2px;
+      position: absolute;
+      top: -2px;
+      left: 0;
+      width: 100%;
+    }
+    .position-relative *:active {
+      position: relative;
+      top: 1px;
+    }
+  </style>
+</head>
+<body>
+<section class="before-pseudo-element"><a href="about:blank">link</a></section><!-- bug 1398196 -->
+<section class="before-pseudo-element"><span>span</span></section>
+<section class="position-relative"><a href="about:blank">link</a></section><!-- bug 1506508 -->
+<section class="position-relative"><span>span</span></section>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function doTest() {
+  for (let sectionId of ["before-pseudo-element", "position-relative"]) {
+    for (let element of ["a", "span"]) {
+      let target = document.querySelector(`section.${sectionId} ${element}`);
+      target.scrollIntoView(true);
+      let clicked = false;
+      target.addEventListener("click", (aEvent) => {
+        is(aEvent.target, target, `click event is fired on the <${element}> element in ${sectionId} section as expected`);
+        aEvent.preventDefault();
+        clicked = true;
+      }, {once: true});
+      synthesizeMouseAtCenter(target, {});
+      ok(clicked, `Click event should've been fired on the <${element}> element in ${sectionId} section`);
+    }
+  }
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

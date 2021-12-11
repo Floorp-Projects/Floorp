@@ -1,0 +1,27 @@
+<html>
+<head>
+<style>
+/* explicitly load a font that supports the "fi" ligature */
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+}
+body {
+  font-family: test, serif;
+  padding: 20px;
+}
+</style>
+<script>
+function m()
+{
+  document.body.offsetHeight;
+  var div = document.getElementById("div");
+  div.appendChild(document.createTextNode("i"));
+}
+</script>
+</head>
+
+<body onload="m();">
+<div id="div" style="font-size: 40px"><span>if</span></div>
+</body>
+</html>

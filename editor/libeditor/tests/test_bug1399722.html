@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1399722
+-->
+<html>
+<head>
+  <title>Test for Bug 1399722</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1399722">Mozilla Bug 1399722</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<input spellcheck="true" onkeypress="if (event.key=='Enter')this.value='';">
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let elm = document.querySelector("input");
+
+  elm.focus();
+  sendString("AB");
+  synthesizeKey("KEY_Enter");
+  sendString("CD");
+  is(elm.value, "CD", "Can type into the textbox successfully after the onkeypress handler deleting the value");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

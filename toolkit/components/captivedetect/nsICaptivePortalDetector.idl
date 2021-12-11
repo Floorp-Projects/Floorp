@@ -1,0 +1,53 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(593fdeec-6284-4de8-b416-8e63cbdc695e)]
+interface nsICaptivePortalCallback : nsISupports
+{
+  /**
+   * Preparation for network interface before captive portal detection started.
+   */
+  void prepare();
+
+  /**
+   * Invoke callbacks after captive portal detection finished.
+   */
+  void complete(in bool success);
+};
+
+[scriptable, uuid(2f827c5a-f551-477f-af09-71adbfbd854a)]
+interface nsICaptivePortalDetector : nsISupports
+{
+  /**
+   * Perform captive portal detection on specific network interface.
+   * @param ifname The name of network interface, exception will be thrwon
+   *               if the same interface has unfinished request.
+   * @param callback Callbacks when detection procedure starts and finishes.
+   */
+  void checkCaptivePortal(in AString ifname,
+                          in nsICaptivePortalCallback callback);
+
+  /**
+   * Abort captive portal detection for specific network interface
+   * due to system failure, callback will not be invoked.
+   * @param ifname The name of network interface.
+   */
+  void abort(in AString ifname);
+
+  /**
+   * Cancel captive portal login procedure by user, callback will be invoked.
+   * @param eventId Login event id provided in |captive-portal-login| event.
+   */
+  void cancelLogin(in AString eventId);
+
+  /**
+   * Notify prepare phase is finished, routing and dns must be ready for sending
+   * out XMLHttpRequest. this is callback for CaptivePortalDetector API user.
+   * @param ifname The name of network interface, must be unique.
+   */
+  void finishPreparation(in AString ifname);
+};

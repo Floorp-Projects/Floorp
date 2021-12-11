@@ -1,0 +1,800 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://devtools/skin/splitters.css");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+:root {
+  /* Bug 1458224: the initial `font-size` is different on Mac/Windows
+   * (appears fixed to 11px) and Linux (bigger, depends on user settings).
+   * Workaround: specify font-size on root, on form inputs, and whenever
+   * we're using the `font` shorthand. */
+  font: message-box;
+  font-size: var(--theme-body-font-size);
+
+  --tab-line-hover-color: rgba(0,0,0,.2);
+  --tab-line-selected-color: var(--blue-50);
+  --toggle-thumb-color: white;
+  --toggle-track-color: var(--grey-30);
+
+  --searchbox-no-match-background-color: #ffe5e5;
+  --searchbox-no-match-stroke-color: var(--red-60);
+
+  /* Default to light form controls */
+  color-scheme: light;
+}
+
+:root.theme-dark {
+  --tab-line-hover-color: rgba(255,255,255,.2);
+  --toggle-thumb-color: var(--grey-40);
+  --toggle-track-color: var(--grey-60);
+
+  --searchbox-no-match-background-color: #402325;
+  --searchbox-no-match-stroke-color: var(--red-50);
+
+  color-scheme: dark;
+}
+
+:root[platform="mac"] {
+  --monospace-font-family: Menlo, monospace;
+}
+
+:root[platform="win"] {
+  --monospace-font-family: Consolas, monospace;
+}
+
+:root[platform="linux"] {
+  --monospace-font-family: monospace;
+}
+
+/**
+ * Customize the dark theme's scrollbar colors to avoid excessive contrast.
+ */
+:root.theme-dark {
+  scrollbar-color: var(--grey-50) var(--theme-splitter-color);
+}
+
+/**
+ * Customize scrollbar colors on Linux + light theme, to avoid visual conflicts
+ * between the light theme and the selected GTK theme (see bug 1471163).
+ * This removes GTK scrollbars and uses a fallback design (see bug 1464723).
+ */
+:root[platform="linux"].theme-light {
+  scrollbar-color: var(--grey-40) var(--grey-20);
+}
+
+::selection {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.devtools-monospace {
+  font-family: var(--monospace-font-family);
+  font-size: var(--theme-code-font-size);
+}
+
+/**
+ * For text that needs to be cut with an ellipsis …
+ */
+.devtools-ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/**
+ * Override global.css input styles
+ */
+html|input {
+  margin: revert;
+}
+
+/**
+ * Override wrong system font from forms.css
+ * Bug 1458224: buttons use a wrong default font-size on Linux
+ */
+html|button, html|select, html|input {
+  font: message-box;
+  font-size: var(--theme-body-font-size);
+}
+
+/* Devtools rely on the old Gecko/HTML4 button hit testing */
+html|button > * {
+  pointer-events: none;
+}
+
+/* Prevent buttons from having a text selection highlight. Bug 1546366 */
+button::selection {
+  all: unset;
+}
+
+/* Autocomplete Popup */
+.devtools-autocomplete-popup {
+  overflow: hidden;
+
+  /* Devtools autocompletes display technical english keywords and should be displayed
+     using LTR direction. */
+  direction: ltr !important;
+}
+
+/* Reset list styles. */
+.devtools-autocomplete-popup ul {
+  list-style: none;
+}
+
+.devtools-autocomplete-popup ul,
+.devtools-autocomplete-popup li {
+  margin: 0;
+}
+
+.devtools-autocomplete-listbox {
+  --autocomplete-item-padding-inline: 8px;
+  appearance: none !important;
+  background-color: transparent;
+  border-width: 0px !important;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  max-height: 20rem;
+  box-sizing: border-box;
+}
+
+.devtools-autocomplete-listbox .autocomplete-item {
+  width: 100%;
+  background-color: transparent;
+  color: var(--theme-popup-color);
+  padding: 1px var(--autocomplete-item-padding-inline);
+  cursor: default;
+  text-overflow: ellipsis;
+  white-space: pre;
+  overflow: hidden;
+}
+
+.devtools-autocomplete-listbox .autocomplete-item > .initial-value,
+.devtools-autocomplete-listbox .autocomplete-item > .autocomplete-value {
+  margin: 0;
+  padding: 0;
+  float: inline-start;
+}
+
+.devtools-autocomplete-listbox .autocomplete-item > .autocomplete-postlabel {
+  font-style: italic;
+  float: inline-end;
+  padding-inline-end: 3px;
+}
+
+.devtools-autocomplete-listbox .autocomplete-item > .autocomplete-count {
+  text-align: end;
+}
+
+.devtools-autocomplete-listbox .autocomplete-swatch {
+  cursor: pointer;
+  border-radius: 50%;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  /* align the swatch with its value */
+  margin-top: -1px;
+  margin-inline-end: 5px;
+  display: inline-block;
+  position: relative;
+}
+
+.devtools-autocomplete-listbox .autocomplete-colorswatch::before {
+  content: '';
+  background-color: #eee;
+  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+                    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+  position: absolute;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+/* Rest of the dark and light theme */
+.devtools-autocomplete-popup,
+.tooltip-panel.devtools-autocomplete-popup,
+.CodeMirror-hints,
+.CodeMirror-Tern-tooltip {
+  border: 1px solid var(--theme-popup-border-color);
+  background-color: var(--theme-popup-background);
+  color: var(--theme-popup-color);
+}
+
+.devtools-autocomplete-listbox .autocomplete-item:hover {
+  background-color: var(--theme-popup-dimmed);
+}
+
+.devtools-autocomplete-listbox .autocomplete-selected,
+.devtools-autocomplete-listbox .autocomplete-selected:hover {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.devtools-autocomplete-listbox .autocomplete-selected > .initial-value {
+  font-weight: bold;
+}
+
+/* Autocomplete list clone used for accessibility. */
+
+.devtools-autocomplete-list-aria-clone {
+  /* Cannot use display:none or visibility:hidden : screen readers ignore the element. */
+  position: fixed;
+  overflow: hidden;
+  margin: 0;
+  width: 0;
+  height: 0;
+}
+
+.devtools-autocomplete-list-aria-clone li {
+  /* Prevent screen readers from prefacing every item with 'bullet'. */
+  list-style-type: none;
+}
+
+/* links to source code, like displaying `myfile.js:45` */
+
+.devtools-source-link {
+  font-family: var(--monospace-font-family);
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  text-decoration: none;
+  font-size: 11px;
+  width: 12em; /* probably should be changed for each tool */
+}
+
+.devtools-source-link:hover {
+  text-decoration: underline;
+}
+
+.devtools-source-link > .filename {
+  text-overflow: ellipsis;
+  text-align: end;
+  overflow: hidden;
+  margin: 2px 0px;
+  cursor: pointer;
+}
+
+.devtools-source-link > .line-number {
+  flex: none;
+  margin: 2px 0px;
+  cursor: pointer;
+}
+
+/* Keyboard focus highlight styles */
+
+:-moz-focusring {
+  outline: var(--theme-focus-outline);
+  outline-offset: -1px;
+}
+
+textbox[focused="true"] {
+  border-color: var(--theme-focus-border-color-textbox);
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+  transition: all 0.2s ease-in-out
+}
+
+textbox :-moz-focusring {
+  box-shadow: none;
+  outline: none;
+}
+
+/* Form fields should already have box-shadow hightlight */
+select:-moz-focusring,
+input[type="radio"]:-moz-focusring,
+input[type="checkbox"]:-moz-focusring,
+checkbox:-moz-focusring {
+  outline: none;
+}
+
+/* Tab and button of toolbox does not need to display outline */
+
+.devtools-button:-moz-focusring,
+.devtools-tab:-moz-focusring {
+  outline:none;
+}
+
+/* Toolbar buttons */
+.devtools-togglebutton,
+.devtools-button {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  color: var(--theme-body-color);
+  transition: background-color 0.05s ease-in-out;
+  -moz-box-align: center;
+  text-shadow: none;
+  padding: 2px;
+  margin: 1px;
+
+  /* Button text should not wrap on multiple lines */
+  white-space: nowrap;
+}
+
+.devtools-togglebutton {
+  padding: 1px 6px;
+}
+
+/* Remove system form border from devtools-button. */
+.devtools-button::-moz-focus-inner {
+  border: 0;
+}
+
+/* Button with text */
+.devtools-button:not(:empty) {
+  padding-inline: 5px;
+  background: var(--toolbarbutton-background);
+}
+
+/* Button icon */
+.devtools-button::before {
+  content: none;
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  margin: 0 3px;
+  transition: opacity 0.05s ease-in-out;
+  color: var(--theme-icon-color);
+  font-size: 11px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Reveal the icon */
+.devtools-button:empty::before {
+  content: "";
+}
+
+.devtools-button.checked::before {
+  color: var(--theme-icon-checked-color);
+}
+
+/* Icon-only buttons */
+.devtools-button:hover::before,
+.devtools-button.checked::before {
+  opacity: 1;
+}
+
+/* Button states */
+.devtools-button:disabled {
+  pointer-events: none;
+  opacity: 0.5 !important;
+}
+
+.devtools-button:focus {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.devtools-button:empty:not([aria-expanded="true"]):hover {
+  background: var(--toolbarbutton-hover-background);
+}
+
+/* Standalone buttons */
+.devtools-button[data-standalone] {
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  background: var(--toolbarbutton-background);
+}
+
+.theme-light .devtools-button[data-standalone] {
+  border-color: rgba(138,161,180,0.2);
+}
+
+/* Selectable button which is unchecked. */
+
+.devtools-button:not(:empty, .checked):hover,
+.devtools-button:empty:is(:hover:active,.checked),
+.devtools-button[aria-haspopup="menu"][aria-expanded="true"] {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+.devtools-button:not(:empty, .checked):hover:active {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.devtools-button:not(:empty, .checked):focus {
+  background-color: var(--toolbarbutton-focus-background);
+  color: var(--toolbarbutton-focus-color);
+}
+
+.devtools-togglebutton:not([aria-pressed="true"]) {
+  background: var(--theme-toolbarbutton-background);
+  color: var(--theme-toolbarbutton-color);
+}
+
+.devtools-togglebutton:hover:not([aria-pressed="true"], :active) {
+  background-color: var(--theme-toolbarbutton-hover-background);
+}
+
+/* Selectable button which is checked. */
+
+.devtools-button:not(:empty).checked {
+  background: var(--toolbarbutton-checked-background);
+  color: var(--toolbarbutton-checked-color);
+}
+
+.devtools-button:not(:empty).checked:focus {
+  background-color: var(--toolbarbutton-checked-focus-background);
+}
+
+.devtools-togglebutton[aria-pressed="true"] {
+  background-color: var(--theme-toolbarbutton-checked-background);
+  color: var(--theme-toolbarbutton-checked-color);
+}
+
+.devtools-togglebutton[aria-pressed="true"]:hover:not(:active) {
+  background: var(--theme-toolbarbutton-checked-hover-background);
+  color: var(--theme-toolbarbutton-checked-hover-color);
+}
+
+.devtools-togglebutton:active {
+  background: var(--theme-toolbarbutton-active-background);
+  color: var(--theme-toolbarbutton-active-color);
+}
+
+.devtools-togglebutton::-moz-focus-inner {
+  border-color: transparent;
+}
+
+/* Icons */
+
+.devtools-button.devtools-clear-icon::before {
+  background-image: url("chrome://devtools/skin/images/clear.svg");
+}
+
+.devtools-option-toolbarbutton {
+  list-style-image: url("chrome://devtools/skin/images/settings.svg");
+}
+
+.devtools-button.devtools-feature-callout::after {
+  content: url("chrome://global/skin/icons/badge-blue.svg");
+  width: 14px;
+  height: 14px;
+  display: block;
+  position: absolute;
+  top: -2px;
+  right: 0;
+}
+
+/* Text input */
+
+.devtools-textinput,
+.devtools-searchinput,
+.devtools-filterinput {
+  appearance: none;
+  margin: 0;
+  padding: 0 4px;
+  font: inherit;
+  border: 1px solid transparent;
+  background-color: var(--theme-body-background);
+  color: var(--theme-body-color);
+  flex-grow: 1;
+}
+
+.devtools-searchinput,
+.devtools-filterinput {
+  padding-inline-start: 22px;
+  background-position: 7px center;
+  background-size: 12px;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.devtools-searchinput {
+  background-image: url(chrome://devtools/skin/images/search.svg);
+}
+
+.devtools-filterinput {
+  background-image: url(chrome://devtools/skin/images/filter-small.svg);
+}
+
+.devtools-searchinput:-moz-locale-dir(rtl),
+.devtools-searchinput:dir(rtl),
+.devtools-filterinput:-moz-locale-dir(rtl),
+.devtools-filterinput:dir(rtl) {
+  background-position-x: right 7px;
+}
+
+.devtools-searchinput .textbox-input::placeholder,
+.devtools-filterinput .textbox-input::placeholder {
+  font-style: normal;
+}
+
+/* Searchbox with extra button(s) (MDN help or clear button) */
+.devtools-searchbox {
+  display: inline-flex;
+  flex-grow: 1;
+  position: relative;
+  border: 1px solid transparent;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.devtools-searchbox > .devtools-searchinput,
+.devtools-searchbox > .devtools-filterinput {
+  /* Let .devtools-searchbox handle the background and border */
+  background-color: transparent;
+  border: none;
+  flex-grow: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.devtools-searchbox:focus-within,
+.devtools-textinput:focus,
+.devtools-searchinput:focus,
+.devtools-filterinput:focus {
+  border-color: var(--blue-50);
+  outline: none;
+}
+
+.devtools-searchbox-no-match {
+  background-color: var(--searchbox-no-match-background-color);
+  border-color: var(--searchbox-no-match-stroke-color);
+}
+
+/* Clear icon within the searchbox */
+.devtools-searchinput-clear {
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0 4px;
+  padding: 0;
+  border: 0;
+  width: 16px;
+  height: 16px;
+  background-color: transparent;
+  background-image: url("chrome://devtools/skin/images/search-clear.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--theme-icon-color);
+  fill-opacity: 0.8;
+}
+
+.devtools-searchbox-no-match > .devtools-searchinput-clear {
+  fill: var(--searchbox-no-match-stroke-color);
+}
+
+.devtools-searchinput-clear:hover {
+  fill-opacity: 1;
+}
+
+/* MDN link within the searchbox */
+.devtools-searchbox .learn-more-link::before {
+  opacity: 0.6;
+}
+
+.devtools-searchbox:not(:hover) .learn-more-link {
+  visibility: hidden;
+}
+
+.devtools-searchbox .devtools-searchinput-summary {
+  flex-basis: auto;
+  flex-grow: 0;
+  flex-shrink: 0;
+  color: var(--theme-comment);
+  align-self: center;
+}
+
+/* Autocomplete popup within the searchbox */
+.devtools-searchbox .devtools-autocomplete-popup {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  line-height: initial !important;
+  /* See bug - 1414609. z-index is greater than 1000 so that searchbox's z-index
+  is more than z-index of requests-list-headers-wrapper in netmonitor */
+  z-index: 1001;
+}
+
+/* Twisty and checkbox controls */
+
+.theme-twisty {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  background-image: url("chrome://devtools/skin/images/arrow.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 10px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+  transform: rotate(-90deg);
+}
+
+/* Mirror the twisty for rtl direction */
+.theme-twisty:dir(rtl),
+.theme-twisty:-moz-locale-dir(rtl) {
+  transform: rotate(90deg);
+}
+
+.theme-selected ~ .theme-twisty {
+  fill: var(--theme-selection-color);
+}
+
+.theme-twisty:-moz-focusring {
+  outline-style: none;
+}
+
+.theme-twisty[open],
+.theme-twisty.open {
+  transform: none;
+}
+
+.theme-twisty[invisible] {
+  visibility: hidden;
+}
+
+/* Throbbers */
+.devtools-throbber::before {
+  content: "";
+  display: inline-block;
+  vertical-align: bottom;
+  margin-inline-end: 0.5em;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: 1.1s linear throbber-spin infinite;
+}
+
+@keyframes throbber-spin {
+  from {
+    transform: none;
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Common tabs styles */
+
+.all-tabs-menu {
+  position: absolute;
+
+  top: 0;
+  inset-inline-end: 0;
+  width: 15px;
+  height: 100%;
+
+  padding: 0;
+  border: none;
+  border-inline-start: 1px solid var(--theme-splitter-color);
+
+  background: var(--theme-tab-toolbar-background);
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
+}
+
+.all-tabs-menu:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.all-tabs-menu:hover:active {
+  background-color: var(--theme-toolbar-hover-active);
+}
+
+.devtools-tab-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.devtools-tab:hover .devtools-tab-line,
+.tabs-menu-item:hover .devtools-tab-line {
+  background: var(--tab-line-hover-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.devtools-tab.selected .devtools-tab-line,
+.tabs-menu-item.is-active .devtools-tab-line {
+  background: var(--tab-line-selected-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion) {
+  .devtools-tab-line {
+    transition: none;
+  }
+}
+
+.devtools-tab:not(.selected):focus .devtools-tab-line {
+  background: var(--tab-line-hover-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* No result message styles */
+
+.devtools-sidepanel-no-result {
+  font-style: italic;
+  padding: 0.5em 20px;
+  user-select: none;
+  font-size: 12px;
+  line-height: calc(16 / 12);
+}
+
+/* Checkbox Toggle */
+
+.devtools-checkbox-toggle {
+  --x-pos: .15em;
+  /* Reset native checkbox styling. */
+  appearance: none;
+  background-color: var(--toggle-track-color);
+  cursor: pointer;
+  /* Change font-size to scale. */
+  font-size: 16px;
+  width: 2em;
+  height: 1em;
+  border-radius: 1em;
+  border: 1px solid transparent;
+  box-sizing: content-box;
+  /* Animate the thumb position between states of the checkbox. */
+  transition: background-color .1s ease-out;
+}
+
+.devtools-checkbox-toggle[disabled]{
+  opacity: 0.5;
+}
+
+/* For right-to-left layout, the toggle thumb goes in the opposite direction. */
+html[dir="rtl"] .devtools-checkbox-toggle {
+  --x-pos: -.15em;
+}
+
+.devtools-checkbox-toggle:not(:checked):focus {
+  border-color: var(--blue-55);
+}
+
+.devtools-checkbox-toggle:checked:focus {
+  background-color: var(--blue-40);
+}
+
+.devtools-checkbox-toggle:checked {
+  --x-pos: 1.15em;
+  background-color: var(--blue-55);
+}
+
+html[dir="rtl"] .devtools-checkbox-toggle:checked {
+  --x-pos: -1.15em;
+}
+
+.devtools-checkbox-toggle::before {
+  position: relative;
+  width: calc(1em - .3em);
+  height: calc(1em - .3em);
+  transform: translateY(.15em) translateX(var(--x-pos));
+  border-radius: 100%;
+  display: block;
+  content: "";
+  background-color: var(--toggle-thumb-color);
+  transition: transform .1s ease-out;
+}
+
+.devtools-checkbox-toggle:checked::before {
+  background-color: white;
+}

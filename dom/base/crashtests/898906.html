@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+var plug = navigator.plugins[0];
+var mime = plug[0];
+// This shouldn't leak.
+mime.expando = true;
+
+</script>
+</head>
+</html>

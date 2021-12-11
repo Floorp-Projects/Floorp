@@ -1,0 +1,36 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Reftest")
+    SCHEDULES.exclusive = ["reftest", "crashtest"]
+
+XPI_NAME = "reftest"
+USE_EXTENSION_MANIFEST = True
+JAR_MANIFESTS += ["jar.mn"]
+FINAL_TARGET_FILES += [
+    "api.js",
+    "manifest.json",
+    "schema.json",
+]
+
+TEST_HARNESS_FILES.reftest += [
+    "/build/pgo/server-locations.txt",
+    "/testing/mochitest/server.js",
+    "mach_test_package_commands.py",
+    "output.py",
+    "reftestcommandline.py",
+    "remotereftest.py",
+    "runreftest.py",
+]
+
+TEST_HARNESS_FILES.reftest.chrome += [
+    "chrome/binding.xml",
+    "chrome/userContent-import.css",
+    "chrome/userContent.css",
+]
+
+TEST_HARNESS_FILES.reftest.manifest += ["reftest/__init__.py"]

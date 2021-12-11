@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: AVC3 content playback.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, el) => {
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const videosb = ms.addSourceBuffer("video/mp4");
+
+  await fetchAndLoad(videosb, "avc3/init", [""], ".mp4");
+  const p = once(el, "loadeddata");
+  await fetchAndLoad(videosb, "avc3/segment", range(1, 2), ".m4s");
+  await p;
+  is(videosb.buffered.length, 1, "continuous buffered range");
+  ok(true, "got loadeddata");
+  ms.endOfStream();
+  await once(ms, "sourceended");
+  ok(true, "endOfStream completed");
+  // Now ensure that we can play to the end.
+  el.play();
+  await once(el, "ended");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

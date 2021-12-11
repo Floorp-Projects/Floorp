@@ -1,0 +1,122 @@
+<script>
+function fuzz(){
+  var a=document.getElementById('a');
+  var b=document.getElementById('b');
+  var pa=a.parentNode;
+  b.parentNode.replaceChild(a,b);
+  pa.appendChild(b);
+}
+</script>
+<big>
+<menu>
+<address>
+<optgroup label="a"></optgroup>
+"
+<blockquote>
+a
+<ruby>a</ruby>
+</address>
+<s dir="rtl">
+<section>
+<fieldset id="a"><iframe></iframe></fieldset>
+</section>
+<body onmouseover="fuzz()">
+<video id="b">
+
+<!--
+==21242==ERROR: AddressSanitizer: heap-use-after-free on address 0x61700022a21c at pc 0x7f0fe52bd9bc bp 0x7fff20ff6650 sp 0x7fff20ff6648
+READ of size 4 at 0x61700022a21c thread T0
+    #0 0x7f0fe52bd9bb (libxul.so!PresShell::DispatchSynthMouseMove(mozilla::WidgetGUIEvent*, bool)+0x1db)
+        Line 75 of "/builds/slave/m-in-l64-asan-0000000000000000/build/layout/base/RestyleManager.h"
+    #1 0x7f0fe52cc0c4 (libxul.so!PresShell::ProcessSynthMouseMoveEvent(bool)+0xde4)
+        Line 5256 of "/builds/slave/m-in-l64-asan-0000000000000000/build/layout/base/nsPresShell.cpp"
+    #2 0x7f0fe52f0547 (libxul.so!nsRefreshDriver::Tick(long, mozilla::TimeStamp)+0xbb7)
+        Line 1074 of "/builds/slave/m-in-l64-asan-0000000000000000/build/layout/base/nsRefreshDriver.cpp"
+    #3 0x7f0fe52f64e0 (libxul.so!mozilla::RefreshDriverTimer::Tick()+0x1f0)
+        Line 168 of "/builds/slave/m-in-l64-asan-0000000000000000/build/layout/base/nsRefreshDriver.cpp"
+    #4 0x7f0fe8de4c31 (libxul.so!nsTimerImpl::Fire()+0x6d1)
+        Line 546 of "/builds/slave/m-in-l64-asan-0000000000000000/build/xpcom/threads/nsTimerImpl.cpp"
+    #5 0x7f0fe8de52d6 (libxul.so!nsTimerEvent::Run()+0x66)
+        Line 630 of "/builds/slave/m-in-l64-asan-0000000000000000/build/xpcom/threads/nsTimerImpl.cpp"
+    #6 0x7f0fe8ddc019 (libxul.so!nsThread::ProcessNextEvent(bool, bool*)+0xaa9)
+        Line 622 of "/builds/slave/m-in-l64-asan-0000000000000000/build/xpcom/threads/nsThread.cpp"
+    #7 0x7f0fe8d08371 (libxul.so!NS_ProcessNextEvent(nsIThread*, bool)+0xb1)
+        Line 251 of "/builds/slave/m-in-l64-asan-0000000000000000/build/xpcom/glue/nsThreadUtils.cpp"
+    #8 0x7f0fe7955091 (libxul.so!mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*)+0x311)
+        Line 85 of "/builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/MessagePump.cpp"
+    #9 0x7f0fe8ef7653 (libxul.so!MessageLoop::Run()+0x1c3)
+        Line 220 of "/builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/base/message_loop.cc"
+    #10 0x7f0fe7733cac (libxul.so!nsBaseAppShell::Run()+0x5c)
+        Line 161 of "/builds/slave/m-in-l64-asan-0000000000000000/build/widget/xpwidgets/nsBaseAppShell.cpp"
+    #11 0x7f0fe7135d9e (libxul.so!nsAppStartup::Run()+0xbe)
+        Line 268 of "/builds/slave/m-in-l64-asan-0000000000000000/build/toolkit/components/startup/nsAppStartup.cpp"
+    #12 0x7f0fe46bf1c5 (libxul.so!XREMain::XRE_mainRun()+0x1e05)
+        Line 3886 of "/builds/slave/m-in-l64-asan-0000000000000000/build/toolkit/xre/nsAppRunner.cpp"
+    #13 0x7f0fe46c00fa (libxul.so!XREMain::XRE_main(int, char**, nsXREAppData const*)+0x4fa)
+        Line 3954 of "/builds/slave/m-in-l64-asan-0000000000000000/build/toolkit/xre/nsAppRunner.cpp"
+    #14 0x7f0fe46c102b (libxul.so!XRE_main+0x3ab)
+        Line 4156 of "/builds/slave/m-in-l64-asan-0000000000000000/build/toolkit/xre/nsAppRunner.cpp"
+    #15 0x459d1d (firefox!main+0x94d)
+        Line 275 of "/builds/slave/m-in-l64-asan-0000000000000000/build/browser/app/nsBrowserApp.cpp"
+    #16 0x7f0ff3d5876c (libc.so.6!__libc_start_main+0xec)
+        Line 226 of "libc-start.c"
+    #17 0x45929c (firefox!_start+0x28)
+0x61700022a21c is located 28 bytes inside of 760-byte region [0x61700022a200,0x61700022a4f8)
+freed by thread T0 here:
+    #0 0x4461a5 (firefox!free+0x55)
+        Line 64 of "/builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc"
+    #1 0x7f0fe529f118 (libxul.so!mozilla::RestyleManager::Release()+0x138)
+        Line 225 of "../../dist/include/mozilla/mozalloc.h"
+previously allocated by thread T0 here:
+    #0 0x4462e5 (firefox!malloc+0x55)
+        Line 74 of "/builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc"
+    #1 0x7f0feddfe5c8 (libmozalloc.so!moz_xmalloc+0x8)
+        Line 54 of "/builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp"
+    #2 0x7f0fe5230421 (libxul.so!nsDocumentViewer::InitInternal(nsIWidget*, nsISupports*, nsIntRect const&, bool, bool, bool)+0x581)
+        Line 824 of "/builds/slave/m-in-l64-asan-0000000000000000/build/layout/base/nsDocumentViewer.cpp"
+    #3 0x7f0fe522fe90 (libxul.so!nsDocumentViewer::Init(nsIWidget*, nsIntRect const&)+0x20)
+        Line 642 of "/builds/slave/m-in-l64-asan-0000000000000000/build/layout/base/nsDocumentViewer.cpp"
+    #4 0x7f0fe929f537 (libxul.so!nsDocShell::Embed(nsIContentViewer*, char const*, nsISupports*)+0xe7)
+        Line 6397 of "/builds/slave/m-in-l64-asan-0000000000000000/build/docshell/base/nsDocShell.cpp"
+    #5 0x7f0fe92b14f4 (libxul.so!nsDocShell::CreateContentViewer(char const*, nsIRequest*, nsIStreamListener**)+0x1084)
+        Line 8173 of "/builds/slave/m-in-l64-asan-0000000000000000/build/docshell/base/nsDocShell.cpp"
+    #6 0x7f0fe9254ad4 (libxul.so!nsDSURIContentListener::DoContent(char const*, bool, nsIRequest*, nsIStreamListener**, bool*)+0x304)
+        Line 122 of "/builds/slave/m-in-l64-asan-0000000000000000/build/docshell/base/nsDSURIContentListener.cpp"
+    #7 0x7f0fe92f698f (libxul.so!nsDocumentOpenInfo::TryContentListener(nsIURIContentListener*, nsIChannel*)+0x6ef)
+        Line 680 of "/builds/slave/m-in-l64-asan-0000000000000000/build/uriloader/base/nsURILoader.cpp"
+    #8 0x7f0fe92f433c (libxul.so!nsDocumentOpenInfo::DispatchContent(nsIRequest*, nsISupports*)+0x67c)
+        Line 382 of "/builds/slave/m-in-l64-asan-0000000000000000/build/uriloader/base/nsURILoader.cpp"
+    #9 0x7f0fe92f3aaf (libxul.so!nsDocumentOpenInfo::OnStartRequest(nsIRequest*, nsISupports*)+0x32f)
+        Line 258 of "/builds/slave/m-in-l64-asan-0000000000000000/build/uriloader/base/nsURILoader.cpp"
+    #10 0x7f0fe4964bc2 (libxul.so!nsBaseChannel::OnStartRequest(nsIRequest*, nsISupports*)+0x1e2)
+        Line 718 of "/builds/slave/m-in-l64-asan-0000000000000000/build/netwerk/base/src/nsBaseChannel.cpp"
+Shadow bytes around the buggy address:
+  0x0c2e8003d3f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c2e8003d400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c2e8003d410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c2e8003d420: 00 fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c2e8003d430: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+=>0x0c2e8003d440: fd fd fd[fd]fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c2e8003d450: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c2e8003d460: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c2e8003d470: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c2e8003d480: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c2e8003d490: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07
+  Heap left redzone:     fa
+  Heap right redzone:    fb
+  Freed heap region:     fd
+  Stack left redzone:    f1
+  Stack mid redzone:     f2
+  Stack right redzone:   f3
+  Stack partial redzone: f4
+  Stack after return:    f5
+  Stack use after scope: f8
+  Global redzone:        f9
+  Global init order:     f6
+  Poisoned by user:      f7
+  ASan internal:         fe
+==21242==ABORTING
+-->

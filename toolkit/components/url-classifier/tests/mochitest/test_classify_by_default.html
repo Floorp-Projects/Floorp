@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1442496</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1442496">Mozilla Bug 1442496</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script type="text/javascript" src="classifierHelper.js"></script>
+<script class="testbody" type="text/javascript">
+
+// To add a request to test, add the request in trackerFrame.html
+// and the id of query string "?id=xxx" here.
+const trackersAll = [
+  "img-src",
+  "object-data",
+  "script-src",
+  "iframe-src",
+  "link-rel-stylesheet",
+  "video-src",
+  "track-src",
+  "ping",
+  "fetch",
+  "xmlhttprequest",
+  "send-beacon",
+  "fetch-in-sw",
+];
+
+const TRACKER_DOMAIN = "itisatracker.org";
+const TEST_TOP_DOMAIN = "example.com";
+
+const TEST_TOP_PAGE = "trackerFrame.html";
+const TRACKER_SERVER = "trackerFrame.sjs";
+
+const TEST_PATH = "/tests/toolkit/components/url-classifier/tests/mochitest/";
+
+const TEST_TOP_SITE = "https:///" + TEST_TOP_DOMAIN + TEST_PATH;
+const TRACKER_SITE = "https://" + TRACKER_DOMAIN  + TEST_PATH;
+const TRACKER_SJS = "https://" + TRACKER_DOMAIN + TEST_PATH + TRACKER_SERVER;
+
+// This function ask the server to set the cookie
+async function setupAndRun(hasCookie, topLevelSite = TEST_TOP_SITE) {
+  await fetch(TRACKER_SJS + "?init=" + trackersAll.length, {
+    credentials: "include",
+  });
+
+  return new Promise(resolve => {
+    let win;
+    let query = hasCookie ? "with-cookie" : "without-cookie";
+    fetch(TRACKER_SJS + "?callback=" + query).then(r => {
+      r.text().then((body) => {
+        let trackers_found = body.split(",");
+        for (let tracker of trackersAll) {
+          let description = "Tracker request " + tracker + "received " +
+            (hasCookie ? "with" : "without") + " cookie";
+          ok(trackers_found.includes(tracker), description);
+        }
+        win.close();
+        resolve();
+      });
+    });
+
+    win = window.open(topLevelSite + TEST_TOP_PAGE);
+  });
+}
+
+async function cleanup(topLevelSite = TEST_TOP_SITE) {
+  function clearServiceWorker() {
+    return new Promise(resolve => {
+      let w;
+      window.onmessage = function(e) {
+        if (e.data.status == "unregistrationdone") {
+          w.close();
+          resolve();
+        }
+      }
+      w = window.open(TEST_TOP_SITE + "sw_unregister.html");
+    });
+  }
+
+  // Ensure we clear the stylesheet cache so that we re-classify.
+  SpecialPowers.DOMWindowUtils.clearSharedStyleSheetCache();
+
+  await clearServiceWorker();
+}
+
+async function runTests() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["urlclassifier.trackingAnnotationTable.testEntries", TRACKER_DOMAIN],
+    ["urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple"],
+    ["network.cookie.cookieBehavior", 4],
+    ["privacy.trackingprotection.enabled", false ],
+    ["privacy.trackingprotection.annotate_channels", false],
+    ["browser.send_pings", true],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+
+  await classifierHelper.waitForInit();
+
+  let hasCookie;
+
+  info("Test all requests should be sent with cookies when ETP is off");
+  hasCookie = true;
+  await setupAndRun(hasCookie);
+  await cleanup();
+
+  info("Test all requests should be sent without cookies when ETP is on");
+  await SpecialPowers.pushPrefEnv({set: [
+    [ "privacy.trackingprotection.annotate_channels", true],
+  ]});
+
+  hasCookie = false;
+  await setupAndRun(hasCookie);
+  await cleanup();
+
+  info("Test all requests should be sent with cookies when top-level is in the whitelist");
+  await classifierHelper.addUrlToDB([{
+    url: TEST_TOP_DOMAIN + "/?resource=" + TRACKER_DOMAIN,
+    db: "test-trackwhite-simple",
+  }]);
+
+  hasCookie = true;
+  await setupAndRun(hasCookie);
+  await cleanup();
+
+  info("Test all requests should be sent with cookies when the tracker is a first-party");
+  hasCookie = true;
+  await setupAndRun(hasCookie, TRACKER_SITE);
+  await cleanup(TRACKER_SITE);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTests();
+
+</script>
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="HTML template in XUL"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <template id="template">Content<span>Content</span></template>
+<script type="application/javascript"><![CDATA[
+  add_task(async function test_template() {
+    let template = document.getElementById("template");
+    ok("content" in template, "Template has shadow root.");
+    is(template.childNodes.length, 0, "Template should have no children.");
+    is(template.content.childNodes.length, 2, "Template content should have two children.");
+  });
+]]></script>
+  </body>
+</window>

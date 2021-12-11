@@ -1,0 +1,36 @@
+<!--
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Simulated Attrib 0 Bug Test</title>
+<script src="../js/js-test-pre.js"></script>
+<script src="../js/webgl-test-utils.js"></script>
+</head>
+<body>
+<div>Simulated Attrib 0 Bug Test</div>
+<div id="description"></div>
+<div id="console"></div>
+<script>
+"use strict";
+var wtu = WebGLTestUtils;
+var context = wtu.create3DContext();
+var program = wtu.loadStandardProgram(context);
+
+context.useProgram(program);
+debug("This line attempts to draw with 0x7FFFFFFF triangles with attrib 0 off");
+debug("A buggy simulated attrib 0 impl will probably mult 0x7FFFFFFF * sizeof(vec4)");
+shouldBe("context.drawArrays(context.TRIANGLES, 0, 0x7fffffff);", "undefined");
+debug("This line attempts to draw with 0x7ffffff triangles.");
+debug("A buggy simulated attrib 0 impl will probably pass 0x7FFFFFF0 to glBufferData and then not check that it failed");
+shouldBe("context.drawArrays(context.TRIANGLES, 0, 0x7ffffff);", "undefined");
+debug("")
+debug("NOTE!: You may not see any manifestation here. Check your impl for these issues");
+</script>
+</body>
+</html>
+

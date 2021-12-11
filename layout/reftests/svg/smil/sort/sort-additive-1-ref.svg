@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- start line -->
+  <line x1="5" x2="5" y1="0" y2="330" stroke="grey" stroke-width="2"
+    stroke-dasharray="5,5"/>
+  <!-- non-additive line -->
+  <line x1="105" x2="105" y1="0" y2="330" stroke="grey" stroke-width="2"
+    stroke-dasharray="5,5"/>
+  <!-- additive line -->
+  <line x1="205" x2="205" y1="0" y2="330" stroke="grey" stroke-width="2"
+    stroke-dasharray="5,5"/>
+  <g transform="translate(5, 5)">
+    <rect style="stroke: black; fill: lightskyblue" x="100" y="0" width="30"
+      height="30"/>
+  </g>
+  <g transform="translate(5, 45)">
+    <rect style="stroke: black; fill: lightskyblue" x="200" y="0" width="30"
+      height="30"/>
+  </g>
+  <g transform="translate(5, 85)">
+    <rect style="stroke: black; fill: lightskyblue" x="100" y="0" width="30"
+      height="30"/>
+  </g>
+  <g transform="translate(5, 125)">
+    <rect style="stroke: black; fill: lightskyblue" x="200" y="0" width="30"
+      height="30"/>
+  </g>
+  <g transform="translate(5, 165)">
+    <rect style="stroke: black; fill: lightskyblue" x="100" y="0" width="30"
+      height="30"/>
+  </g>
+  <g transform="translate(5, 205)">
+    <rect style="stroke: black; fill: lightskyblue" x="200" y="0" width="30"
+      height="30"/>
+  </g>
+  <g transform="translate(5, 245)">
+    <rect style="stroke: black; fill: lightskyblue" x="100" y="0" width="30"
+      height="30"/>
+  </g>
+  <g transform="translate(5, 285)">
+    <rect style="stroke: black; fill: lightskyblue" x="200" y="0" width="30"
+      height="30"/>
+  </g>
+</svg>

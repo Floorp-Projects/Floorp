@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Navigator.hardwareConcurrency</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  "use strict";
+
+  function resistFingerprinting(value) {
+    return SpecialPowers.pushPrefEnv({"set": [["privacy.resistFingerprinting", value]]});
+  }
+
+  var x = navigator.hardwareConcurrency;
+  is(typeof x, "number", "hardwareConcurrency should be a number.");
+  ok(x > 0, "hardwareConcurrency should be greater than 0.");
+
+  SimpleTest.waitForExplicitFinish();
+
+  resistFingerprinting(true).then(() => {
+    const y = navigator.hardwareConcurrency;
+    ok(y === 2, "hardwareConcurrency should always be 2 when we're resisting fingerprinting.");
+
+    resistFingerprinting(false).then(() => {
+      const z = navigator.hardwareConcurrency;
+      ok(z === x, "hardwareConcurrency should be the same as before we were resisting fingerprinting.");
+      SimpleTest.finish();
+    });
+  });
+
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

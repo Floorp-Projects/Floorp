@@ -1,0 +1,34 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+=head1 NAME
+
+ invmod - compute modular inverse of an integer
+
+=head1 SYNOPSIS
+
+ invmod <a> <m>
+
+=head1 DESCRIPTION
+
+The B<invmod> program computes the inverse of I<a>, modulo I<m>, if
+that inverse exists.  Both I<a> and I<m> are arbitrary-precision
+integers in decimal notation.  The result is written in standard
+decimal notation to the standard output.
+
+If there is no inverse, the message:
+
+ No inverse
+
+...will be printed to the standard output (an inverse exists if and
+only if the greatest common divisor of I<a> and I<m> is 1).
+
+=head1 SEE ALSO
+
+gcd(1), isprime(1), lap(1)
+
+=head1 AUTHOR
+
+ Michael J. Fromberger <sting@linguist.dartmouth.edu>
+ Thayer School of Engineering, Hanover, New Hampshire, USA

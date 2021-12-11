@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <!-- This test checks our behavior with an 'xlink:href'-targeted animation
+       when the target's ID is changed (which makes it no longer the target) -->
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <script type="text/javascript">
+    function go() {
+      var rect = document.getElementById("blueRect");
+      rect.setAttributeNS(null, "id", "differentBlueRect");
+      setTimeAndSnapshot(2.5, false)
+    }
+  </script>
+  <rect id="blueRect" x="15" y="15" width="200" height="200" fill="blue"/>
+  <animate id="anim" xlink:href="#blueRect" attributeName="height"
+           to="0" begin="0s" dur="2s" fill="freeze"/>
+</svg>

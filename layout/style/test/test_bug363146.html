@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=363146
+-->
+<head>
+  <title>Test for Bug 363146</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=363146">Mozilla Bug 363146</a>
+<div style="width:100px; height:400px; position:relative;">
+  <table id="t1" border="0" cellspacing="0" cellpadding="0"
+         style="border:10px solid black; margin:20px; position:absolute; left:50px; top:35px;">
+    <caption align="top" style="height:100px;">Caption</caption>
+    <tr>
+      <td><div style="width:400px; height:100px;">Cell</div></td>
+    </tr>
+  </table>
+</div>
+<div style="width:100px; height:400px; position:relative;">
+  <table id="t2" border="0" cellspacing="0" cellpadding="0"
+         style="margin:20%;">
+    <caption align="top" style="height:100px;">Caption</caption>
+    <tr>
+      <td><div style="width:400px; height:100px;">Cell</div></td>
+    </tr>
+  </table>
+</div>
+<p id="display"></p>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var c = window.getComputedStyle(document.getElementById("t1"));
+is(c.width, "420px");
+is(c.height, "120px");
+is(c.left, "50px");
+is(c.top, "35px");
+is(c.borderLeftWidth, "10px");
+is(c.borderRightWidth, "10px");
+is(c.borderTopWidth, "10px");
+is(c.borderBottomWidth, "10px");
+is(c.marginLeft, "20px");
+is(c.marginRight, "20px");
+is(c.marginTop, "20px");
+is(c.marginBottom, "20px");
+
+var c2 = window.getComputedStyle(document.getElementById("t2"));
+is(c2.marginLeft, "20px");
+is(c2.marginRight, "20px");
+is(c2.marginTop, "20px");
+is(c2.marginBottom, "20px");
+
+</script>
+</pre>
+</body>
+</html>

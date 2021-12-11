@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=812785
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Bug 812785 - WebRTC use-after-free crash</title>
+  <script type="application/javascript">
+    var pc1, pc2, pc1_offer, pc2_answer, localAudio, remoteAudio;
+
+    function onFailure(code) {
+      stop();
+    }
+
+    function stop() {
+      pc1.close(); pc1 = null;
+      pc2.close(); pc2 = null;
+
+      var index = localStorage.index || 0;
+      if (index < 5) {
+        localStorage.index = index + 1;
+        window.location.reload();
+      }
+      else {
+        finish();
+      }
+    }
+
+    function start() {
+      localAudio = document.getElementById("local");
+      remoteAudio = document.getElementById("remote");
+
+      var stream = localAudio.mozCaptureStreamUntilEnded();
+
+      pc1 = new RTCPeerConnection();
+      pc2 = new RTCPeerConnection();
+
+      pc1.addStream(stream);
+      pc1.createOffer(function (offer) {
+        pc1_offer = offer;
+        pc1.setLocalDescription(pc1_offer, function () {
+          pc2.setRemoteDescription(pc1_offer, function () {
+            pc2.createAnswer(function (answer) {
+              pc2_answer = answer;
+              pc2.setLocalDescription(pc2_answer, function () {
+                pc1.setRemoteDescription(pc2_answer, function step6() {
+                  stop();
+                }, onFailure);
+              }, onFailure);
+            }, onFailure);
+          }, onFailure);
+        }, onFailure);
+      }, onFailure);
+    }
+
+    function finish() {
+      delete localStorage["index"];
+
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</head>
+
+<body onload="setTimeout(start, 100)">
+  <audio id="local" controls autoplay><source type="audio/wav" src="" /></audio>
+  <audio id="remote" controls></audio>
+</body>
+</html>
+

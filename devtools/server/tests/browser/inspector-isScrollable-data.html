@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Inspector test of isScrollable</title>
+  <style>
+  /* "e" is our custom tag name for "element" */
+  e {
+    background: lightgray;
+    display: inline-block;
+    margin: 10px;
+    padding: 0;
+    border: 0;
+    width: 100px;
+    height: 100px;
+    overflow: auto;
+  }
+
+  /* "c" is our custom tag name for "child" */
+  c {
+    display: block;
+    background: green;
+  }
+
+  .fixedSize {
+    width: 10px;
+    height: 10px;
+  }
+
+  .target {
+    background: red;
+  }
+  </style>
+</head>
+<body id="body">
+<e id="no_children"></e>
+
+<e id="one_child_no_overflow">
+  <c></c>
+</e>
+
+<e id="margin_left_overflow">
+  <c class="target" style="margin-left:100px">abcd</c>
+</e>
+
+<e id="transform_overflow">
+  <c class="target" style="transform: translate(50px)">abcd</c>
+</e>
+
+<e id="nested_overflow">
+  <c>
+    <c class="target" style="margin-left:100px">abcd</c>
+  </c>
+</e>
+
+<e id="intermediate_overflow">
+  <c class="fixedSize target" style="margin-left:100px">
+    <c></c>
+  </c>
+</e>
+
+<e id="multiple_overflow_at_different_depths">
+  <c class="fixedSize target" style="margin-left:100px">
+    <c></c>
+  </c>
+  <c style="margin-left:100px">
+    <c class="target">abcd</c>
+  </c>
+</e>
+
+<e id="overflow_hidden" style="overflow:hidden">
+  <c class="target" style="margin-left:100px">abcd</c>
+</e>
+
+<e id="scrollbar_none" style="scrollbar-width:none">
+  <c class="target" style="margin-left:100px">abcd</c>
+</e>
+</body>
+</html>

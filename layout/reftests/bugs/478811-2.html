@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+  <head>
+    <script>
+      function doIt() {
+        var d = document.createElement("div");
+        d.setAttribute("style",
+                       "position: absolute; left: 0; right: 0; top: 0; " +
+                       "bottom: 0; background: green");
+        document.getElementById("x").appendChild(d);
+      }
+    </script>
+  </head>
+  <body style="height: 100%" onload="doIt()">
+    <!-- Button shouldn't get pointer events because it confuses tests if it
+         can be hovered -->
+    <button id="x" style="position: relative; display: table; width: 50%;
+                          height: 50%; top: 25%; left: 25%;
+                          pointer-events: none">
+    </button>
+  </body>
+</html>

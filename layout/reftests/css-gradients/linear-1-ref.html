@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      class="reftest-wait">
+<head>
+<script>
+function doDraw() {
+  var ctx = document.getElementById('canvas').getContext('2d');
+
+  var grad = ctx.createLinearGradient(0,150,300,150);
+  grad.addColorStop(0, 'red');
+  grad.addColorStop(1, 'rgb(100, 200, 0)');
+  grad.addColorStop(0.5, '#7777FF');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,300,300);
+
+  document.documentElement.removeAttribute('class');
+}
+</script>
+</head>
+<body onload="doDraw();">
+<canvas id="canvas" width="300" height="300"/>
+</body>
+</html>
+

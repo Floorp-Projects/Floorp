@@ -1,0 +1,53 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: add second video stream"
+  });
+
+  runNetworkTest(async function (options) {
+    // Use fake video here since the native fake device on linux doesn't
+    // change color as needed by checkVideoPlaying() below.
+    await pushPrefs(
+      ['media.video_loopback_dev', ''],
+      ['media.navigator.streams.fake', true]);
+    // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+    if (navigator.userAgent.includes("Android")) {
+      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                      ["media.webrtc.hw.h264.enabled", false]);
+    }
+
+    const test = new PeerConnectionTest(options);
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{video: true}, {video: true}],
+                                   [{video: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{video: true}]);
+        },
+      ],
+      [
+        function PC_REMOTE_CHECK_VIDEO_FLOW(test) {
+          const h = new VideoStreamHelper();
+          is(test.pcRemote.remoteMediaElements.length, 2,
+             "Should have two remote media elements after renegotiation");
+          return Promise.all(test.pcRemote.remoteMediaElements.map(video =>
+            h.checkVideoPlaying(video)));
+        },
+      ]
+    );
+
+    test.setMediaConstraints([{video: true, fake: true}], [{video: true}]);
+    return test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

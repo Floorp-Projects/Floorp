@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function SetPrefs(prefs) {
+  return SpecialPowers.pushPrefEnv({"set": prefs});
+}
+
+function observe() {
+  return new Promise(function(resolve, reject) {
+    var observer = function(subject, topic, data) {
+      SpecialPowers.Services.obs.removeObserver(observer, "mediakeys-request");
+      resolve(JSON.parse(data).status);
+    };
+    SpecialPowers.Services.obs.addObserver(observer, "mediakeys-request");
+  });
+}
+
+function Test(test) {
+  var p = test.prefs ? SetPrefs(test.prefs) : Promise.resolve();
+  var name = "'" + test.keySystem + "'";
+
+  var res = observe().then((status) => {
+    is(status, test.expectedStatus, name + " expected status");
+  });
+
+  p.then(() => navigator.requestMediaKeySystemAccess(test.keySystem, gCencMediaKeySystemConfig))
+   .then((keySystemAccess) => keySystemAccess.createMediaKeys());
+
+  return res;
+}
+
+var tests = [
+  {
+    keySystem: CLEARKEY_KEYSYSTEM,
+    expectedStatus: 'cdm-created',
+    prefs: [["media.eme.enabled", false]]
+  },
+  {
+    keySystem: "com.widevine.alpha",
+    expectedStatus: 'api-disabled',
+    prefs: [["media.eme.enabled", false]]
+  },
+  {
+    keySystem: "com.widevine.alpha",
+    expectedStatus: 'cdm-disabled',
+    prefs: [["media.eme.enabled", true], ["media.gmp-widevinecdm.enabled", false]]
+  },
+  {
+    keySystem: "com.widevine.alpha",
+    expectedStatus: 'cdm-not-installed',
+    prefs: [["media.eme.enabled", true], ["media.gmp-widevinecdm.enabled", true]]
+  },
+  {
+    keySystem: CLEARKEY_KEYSYSTEM,
+    expectedStatus: 'cdm-created',
+    prefs: [["media.eme.enabled", true]]
+  }
+];
+
+SimpleTest.waitForExplicitFinish();
+tests
+  .reduce(function(p, c, i, array) {
+    return p.then(function() {
+      return Test(c);
+    });
+  }, Promise.resolve())
+  .then(SimpleTest.finish);
+</script>
+</pre>
+</body>
+</html>

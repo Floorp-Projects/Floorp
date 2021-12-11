@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<title>Backplates should not include margins, indentation, padding, border space, or text-alignment space.</title>
+<style>
+  .outer {
+    background: url("blue.png");
+  }
+  div {
+    margin-bottom: 30px;
+  }
+</style>
+<div class="outer">
+  <div>div</div>
+  <div style="margin-left: 30px">div w/ margin-left</div>
+  <div><span style="margin-left: 100px">span w/ margin-left</span></div>
+  <div><span><span style="margin: 0px 100px">nested span w/ margin on inner</span></span></div>
+  <div><span style="padding: 0px 50px">span w/ padding</span></div>
+  <div><span style="border: 10px dotted purple">span w/ thick dotted border</span></div>
+  <div style="text-align: center">div w/ text-align:center</div>
+  <div style="text-align: right">div w/ text-align:right</div>
+  <div style="direction: rtl; text-align: center">div w/ RTL &amp; text-align:center</div>
+  <div style="text-indent: 200px">div w/ text-indent</div>
+</div>

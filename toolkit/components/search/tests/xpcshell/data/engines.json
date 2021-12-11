@@ -1,0 +1,83 @@
+{
+  "data": [
+    {
+      "webExtension": {
+        "id": "engine@search.mozilla.org"
+      },
+      "orderHint": 10000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["gd"] } },
+        "default": "yes"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-pref@search.mozilla.org"
+      },
+      "orderHint": 7000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de"] } },
+        "default": "no",
+        "defaultPrivate": "yes"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-rel-searchform-purpose@search.mozilla.org"
+      },
+      "orderHint": 6000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
+      }, {
+        "included": { "locales": { "matches": ["gd"] } },
+        "orderHint": 9000
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-chromeicon@search.mozilla.org"
+      },
+      "orderHint": 8000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
+      }, {
+        "included": { "regions": ["ru"] },
+        "default": "no"
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-resourceicon@search.mozilla.org"
+      },
+      "orderHint": 9000,
+      "appliesTo": [{
+        "included": { "locales": { "matches": ["en-US", "fr"] } },
+        "excluded": { "regions": ["ru"] },
+        "default": "no"
+      }, {
+        "included": { "locales": { "matches": ["gd"] } },
+        "default": "yes",
+        "webExtension": {
+          "locales": ["gd"]
+        }
+      }]
+    },
+    {
+      "webExtension": {
+        "id": "engine-reordered@search.mozilla.org"
+      },
+      "orderHint": 5000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
+      }]
+    }
+  ]
+}

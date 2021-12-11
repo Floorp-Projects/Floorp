@@ -1,0 +1,35 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+
+EXPORTS = \
+	ocsp.h \
+	ocspt.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	ocspti.h \
+	ocspi.h \
+	$(NULL)
+
+MODULE = nss
+
+CSRCS = \
+	certhtml.c \
+	certreq.c \
+	crlv2.c \
+	ocsp.c \
+	ocspsig.c \
+	certhigh.c \
+ 	certvfy.c \
+ 	certvfypkix.c \
+ 	xcrldist.c \
+	$(NULL)
+
+LIBRARY_NAME = certhi
+SHARED_LIBRARY = $(NULL)
+
+# This part of the code, including all sub-dirs, can be optimized for size
+export ALLOW_OPT_CODE_SIZE = 1

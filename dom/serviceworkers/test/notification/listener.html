@@ -1,0 +1,27 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1114554 - proxy to forward messages from SW to test</title>
+<script class="testbody" type="text/javascript">
+  var testWindow = parent;
+  if (opener) {
+    testWindow = opener;
+  }
+
+  navigator.serviceWorker.onmessage = function(msg) {
+    // worker message;
+    testWindow.postMessage(msg.data, "*");
+    if (msg.data.type == 'finish') {
+      window.close();
+    }
+  };
+</script>
+
+</head>
+<body>
+</body>
+</html>

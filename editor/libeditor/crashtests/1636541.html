@@ -1,0 +1,14 @@
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        document.documentElement.contentEditable = true
+        document.execCommand('indent', false, null)
+        const selection = document.getSelection()
+        selection.collapse(document.documentElement, (3474956128 % document.documentElement.childNodes))
+        document.execCommand('indent', false, null)
+        document.execCommand('outdent', false, null)
+      })
+    </script>
+</head>
+</html>

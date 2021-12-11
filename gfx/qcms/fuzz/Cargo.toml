@@ -1,0 +1,28 @@
+
+[package]
+name = "qcms-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+libc = "0.2"
+
+[dependencies.qcms]
+path = ".."
+features = ["c_bindings"]
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_target_qcms"
+path = "fuzz_targets/fuzz_target_qcms.rs"
+test = false
+doc = false

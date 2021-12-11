@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test accessible tree when ARIA role presentation is used</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+  function doTest() {
+    // Presentation role don't allow accessible.
+    var tree =
+      { SECTION: [ // container
+        { TEXT_LEAF: [ ] }, // child text of 'presentation' node
+        { TEXT_LEAF: [ ] }, // child text of 'none' node
+      ] };
+    testAccessibleTree("div_cnt", tree);
+
+    // Focusable element, 'presentation' and 'none' roles are ignored.
+    tree =
+      { SECTION: [ // container
+        { PUSHBUTTON: [ // button having 'presentation' role
+          { TEXT_LEAF: [ ] },
+        ] },
+        { PUSHBUTTON: [ // button having 'none' role
+          { TEXT_LEAF: [ ] },
+        ] },
+      ] };
+    testAccessibleTree("btn_cnt", tree);
+
+    // Presentation table, no table structure is exposed.
+    tree =
+      { SECTION: [ // container
+        { TEXT_CONTAINER: [ // td generic accessible inside 'presentation' table
+          { TEXT_LEAF: [ ] }, // cell text
+        ] },
+        { TEXT_CONTAINER: [ // td generic accessible inside 'none' table
+          { TEXT_LEAF: [ ] }, // cell text
+        ] },
+      ] };
+    testAccessibleTree("tbl_cnt", tree);
+
+    // Focusable table, 'presentation' and 'none' roles are ignored.
+    tree =
+      { SECTION: [ // container
+        { TABLE: [ // table having 'presentation' role
+          { ROW: [ // tr
+            { CELL: [ // td
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] },
+        { TABLE: [ // table having 'none' role
+          { ROW: [ // tr
+            { CELL: [ // td
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] },
+      ] };
+    testAccessibleTree("tblfocusable_cnt", tree);
+
+    // Presentation list, expose generic accesisble for list items.
+    tree =
+      { SECTION: [ // container
+        { TEXT_CONTAINER: [ // li generic accessible inside 'presentation' role
+          { TEXT_LEAF: [ ] }, // li text
+        ] },
+        { TEXT_CONTAINER: [ // li generic accessible inside 'none' role
+          { TEXT_LEAF: [ ] }, // li text
+        ] },
+      ] };
+    testAccessibleTree("list_cnt", tree);
+
+    // Has ARIA globals or referred by ARIA relationship, role='presentation'
+    // and role='none' are ignored.
+    tree =
+      { SECTION: [ // container
+        { LABEL: [ // label, has aria-owns
+          { TEXT_LEAF: [ ] },
+          { LABEL: [ // label, referenced by aria-owns
+            { TEXT_LEAF: [ ] },
+          ] },
+        ] },
+        { LABEL: [ // label, has aria-owns
+          { TEXT_LEAF: [ ] },
+          { LABEL: [ // label, referenced by aria-owns
+            { TEXT_LEAF: [ ] },
+          ] },
+        ] },
+      ] };
+    testAccessibleTree("airaglobalprop_cnt", tree);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=548291"
+     title="Accessible tree of ARIA image maps">
+    Bug 548291
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=666504"
+     title="Ignore role presentation on focusable elements">
+    Bug 666504
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=971212"
+     title="Implement ARIA role=none">
+    Bug 971212
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="div_cnt"><div role="presentation">t</div><div role="none">t</div></div>
+
+  <div id="btn_cnt"><button role="presentation">btn</button><button role="none">btn</button></div>
+
+  <div id="tbl_cnt">
+    <table role="presentation">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
+    <table role="none">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
+  </div>
+
+  <div id="tblfocusable_cnt">
+    <table role="presentation" tabindex="0">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
+    <table role="none" tabindex="0">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
+  </div>
+
+  <div id="list_cnt">
+    <ul role="presentation">
+      <li>item</li>
+    </ul>
+    <ul role="none">
+      <li>item</li>
+    </ul>
+  </div>
+
+  <div id="airaglobalprop_cnt"><label
+    role="presentation" aria-owns="ariaowned">has aria-owns</label><label
+    role="presentation" id="ariaowned">referred by aria-owns</label><label
+    role="none" aria-owns="ariaowned2">has aria-owns</label><label
+    role="none" id="ariaowned2">referred by aria-owns</label></div>
+
+</body>
+</html>

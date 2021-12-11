@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script>
+
+createHTML({
+  bug: "1259788",
+  title: "Test CaptureStream track output on HTMLMediaElement playing a gUM MediaStream",
+  visible: true
+});
+
+let audioElement;
+let audioCaptureStream;
+let videoElement;
+let videoCaptureStream;
+let untilEndedElement;
+let streamUntilEnded;
+const tracks = [];
+runTest(async () => {
+  try {
+    let stream = await getUserMedia({audio: true, video: true});
+    // We need to test with multiple tracks. We add an extra of each kind.
+    for (const track of stream.getTracks()) {
+      stream.addTrack(track.clone());
+    }
+
+    audioElement = createMediaElement("audio", "gUMAudio");
+    audioElement.srcObject = stream;
+
+    await haveEvent(audioElement, "loadedmetadata", wait(50000, new Error("Timeout")));
+
+    info("Capturing audio element (loadedmetadata -> captureStream)");
+    audioCaptureStream = audioElement.mozCaptureStream();
+
+    is(audioCaptureStream.getAudioTracks().length, 2,
+      "audio element should capture two audio tracks");
+    is(audioCaptureStream.getVideoTracks().length, 0,
+      "audio element should not capture any video tracks");
+
+    await haveNoEvent(audioCaptureStream, "addtrack");
+
+    videoElement = createMediaElement("video", "gUMVideo");
+
+    info("Capturing video element (captureStream -> loadedmetadata)");
+    videoCaptureStream = videoElement.mozCaptureStream();
+    videoElement.srcObject = audioElement.srcObject.clone();
+
+    is(videoCaptureStream.getTracks().length, 0,
+      "video element should have no tracks before metadata known");
+
+    await haveEventsButNoMore(
+      videoCaptureStream, "addtrack", 3, wait(50000, new Error("No event")));
+
+    is(videoCaptureStream.getAudioTracks().length, 2,
+      "video element should capture two audio tracks");
+    is(videoCaptureStream.getVideoTracks().length, 1,
+      "video element should capture one video track at most");
+
+    info("Testing dynamically adding audio track to audio element");
+    audioElement.srcObject.addTrack(
+      audioElement.srcObject.getAudioTracks()[0].clone());
+    await haveEventsButNoMore(
+      audioCaptureStream, "addtrack", 1, wait(50000, new Error("No event")));
+
+    is(audioCaptureStream.getAudioTracks().length, 3,
+      "Audio element should have three audio tracks captured.");
+
+    info("Testing dynamically adding video track to audio element");
+    audioElement.srcObject.addTrack(
+      audioElement.srcObject.getVideoTracks()[0].clone());
+    await haveNoEvent(audioCaptureStream, "addtrack");
+
+    is(audioCaptureStream.getVideoTracks().length, 0,
+      "Audio element should have no video tracks captured.");
+
+    info("Testing dynamically adding audio track to video element");
+    videoElement.srcObject.addTrack(
+      videoElement.srcObject.getAudioTracks()[0].clone());
+    await haveEventsButNoMore(
+      videoCaptureStream, "addtrack", 1, wait(50000, new Error("Timeout")));
+
+    is(videoCaptureStream.getAudioTracks().length, 3,
+      "Captured video stream should have three audio tracks captured.");
+
+    info("Testing dynamically adding video track to video element");
+    videoElement.srcObject.addTrack(
+      videoElement.srcObject.getVideoTracks()[0].clone());
+    await haveNoEvent(videoCaptureStream, "addtrack");
+
+    is(videoCaptureStream.getVideoTracks().length, 1,
+      "Captured video stream should have at most one video tracks captured.");
+
+    info("Testing track removal.");
+    tracks.push(...videoElement.srcObject.getTracks());
+    for (const track of videoElement.srcObject.getVideoTracks().reverse()) {
+      videoElement.srcObject.removeTrack(track);
+    }
+    is(videoCaptureStream.getVideoTracks().length, 1,
+      "Captured video should have still have one video track.");
+
+    await haveEvent(videoCaptureStream.getVideoTracks()[0], "ended",
+      wait(50000, new Error("Timeout")));
+    await haveEvent(videoCaptureStream, "removetrack",
+      wait(50000, new Error("Timeout")));
+
+    is(videoCaptureStream.getVideoTracks().length, 0,
+      "Captured video stream should have no video tracks after removal.");
+
+
+    info("Testing source reset.");
+    stream = await getUserMedia({audio: true, video: true});
+    videoElement.srcObject = stream;
+    for (const track of videoCaptureStream.getTracks()) {
+      await Promise.race(videoCaptureStream.getTracks().map(
+        t => haveEvent(t, "ended", wait(50000, new Error("Timeout"))))
+      );
+      await haveEvent(videoCaptureStream, "removetrack", wait(50000, new Error("Timeout")));
+    }
+    await haveEventsButNoMore(
+      videoCaptureStream, "addtrack", 2, wait(50000, new Error("Timeout")));
+    is(videoCaptureStream.getAudioTracks().length, 1,
+      "Captured video stream should have one audio track");
+
+    is(videoCaptureStream.getVideoTracks().length, 1,
+      "Captured video stream should have one video track");
+
+    info("Testing CaptureStreamUntilEnded");
+    untilEndedElement =
+      createMediaElement("video", "gUMVideoUntilEnded");
+    untilEndedElement.srcObject = audioElement.srcObject;
+
+    await haveEvent(untilEndedElement, "loadedmetadata",
+      wait(50000, new Error("Timeout")));
+
+    streamUntilEnded = untilEndedElement.mozCaptureStreamUntilEnded();
+
+    is(streamUntilEnded.getAudioTracks().length, 3,
+      "video element should capture all 3 audio tracks until ended");
+    is(streamUntilEnded.getVideoTracks().length, 1,
+      "video element should capture only 1 video track until ended");
+
+    for (const track of untilEndedElement.srcObject.getTracks()) {
+      track.stop();
+    }
+
+    await haveEvent(untilEndedElement, "ended", wait(50000, new Error("Timeout")));
+    for (const track of streamUntilEnded.getTracks()) {
+      await Promise.race(streamUntilEnded.getTracks().map(
+        t => haveEvent(t, "ended", wait(50000, new Error("Timeout"))))
+      );
+      await haveEvent(streamUntilEnded, "removetrack", wait(50000, new Error("Timeout")));
+    }
+
+    info("Element and tracks ended. Ensuring that new tracks aren't created.");
+    untilEndedElement.srcObject = videoElement.srcObject;
+    await haveEventsButNoMore(
+      untilEndedElement, "loadedmetadata", 1, wait(50000, new Error("Timeout")));
+
+    is(streamUntilEnded.getTracks().length, 0, "Should have no tracks");
+  } catch(e) {
+    ok(false, "Test failed: " + e + (e && e.stack ? "\n" + e.stack : ""));
+  } finally {
+    if (videoElement) {
+      tracks.push(...videoElement.srcObject.getTracks());
+    }
+    for(const track of tracks) {
+      track.stop();
+    }
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>

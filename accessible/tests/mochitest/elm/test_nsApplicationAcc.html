@@ -1,0 +1,67 @@
+<html>
+
+<head>
+  <title>application accessible name</title>
+  <link rel="stylesheet" type="text/css"
+         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      var accessible = getApplicationAccessible();
+      if (!accessible) {
+        SimpleTest.finish();
+        return;
+      }
+
+      var brandBundle =
+        Services.strings.createBundle("chrome://branding/locale/brand.properties");
+
+      // nsIAccessible::name
+      var applicationName = "";
+      if (LINUX || SOLARIS) {
+        applicationName = Services.appinfo.name;
+      } else {
+        try {
+          applicationName = brandBundle.GetStringFromName("brandShortName");
+        } catch (e) {
+        }
+
+        if (applicationName == "")
+          applicationName = "Gecko based application";
+      }
+      is(accessible.name, applicationName, "wrong application accessible name");
+
+      // nsIAccessibleApplication
+      is(accessible.appName, Services.appinfo.name, "Wrong application name");
+      is(accessible.appVersion, Services.appinfo.version, "Wrong application version");
+      is(accessible.platformName, "Gecko", "Wrong platform name");
+      is(accessible.platformVersion, Services.appinfo.platformVersion,
+         "Wrong platform version");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+  </head>
+  <body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=456121"
+    title="nsApplicationAccessible::GetName does not return a default value when brand.properties does not exist">
+    Mozilla Bug 454211
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  </body>
+</html>

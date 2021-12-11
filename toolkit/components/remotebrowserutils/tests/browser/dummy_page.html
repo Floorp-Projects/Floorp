@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<html>
+<body>
+<p>Page</p>
+    <script>
+        // Prevent this page from being stored in the bfcache for the
+        // browser_httpToFileHistory.js test
+        window.addEventListener('beforeunload', event => {
+            // do nothing
+        });
+    </script>
+</body>
+</html>

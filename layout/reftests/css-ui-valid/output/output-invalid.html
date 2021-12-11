@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if output has a custom error, it should not be affected by :-moz-ui-valid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('b').setCustomValidity('foo'); document.documentElement.className='';">
+    <output class='notvalid' id='b'>foo</output>
+  </body>
+</html>

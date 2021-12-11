@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage's interaction with closed windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=417075">Bug 417075</a></p>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<div id="holder"></div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.origin, "http://mochi.test:8888", "wrong origin");
+  ok(evt.source === openedWindow, "wrong source");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+
+  is(evt.data, "message", "wrong data");
+  if (evt.data !== "message")
+    return; // prevent recursion if bugs
+
+  evt.source.close();
+
+  function afterClose()
+  {
+    document.removeEventListener("message", receiveMessage);
+    evt.source.postMessage("NOT-RECEIVED", "*");
+
+    var iframe = document.createElement("iframe");
+    iframe.id = "insertedIframe";
+    $("holder").appendChild(iframe);
+    iframe.addEventListener("load", iframeLoaded);
+    iframe.src = "postMessage_closed_helper.html?parent";
+  }
+
+  setTimeout(afterClose, 0);
+}
+
+window.addEventListener("message", receiveMessage);
+
+function iframeLoaded(evt)
+{
+  var iframe = $("insertedIframe");
+  iframe.removeEventListener("load", iframeLoaded);
+
+  var iframeWindow = iframe.contentWindow;
+  $("holder").removeChild($("insertedIframe"));
+  iframeWindow.postMessage("NOT-RECEIVED", "*");
+
+  SimpleTest.finish();
+}
+
+var openedWindow;
+
+function run()
+{
+  openedWindow = window.open("postMessage_closed_helper.html?opener", "foobar");
+  if (!openedWindow)
+  {
+    ok(false, "this test must be run with popup blocking disabled");
+    SimpleTest.finish();
+  }
+}
+
+window.addEventListener("load", run);
+</script>
+</pre>
+</body>
+</html>

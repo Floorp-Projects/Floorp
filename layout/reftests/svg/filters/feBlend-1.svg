@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%">
+<filter id="f0" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="normal"/>
+</filter>
+<rect x="0" y="0" width="50" height="50" filter="url(#f0)"/>
+<filter id="f1" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="multiply"/>
+</filter>
+<rect x="50" y="0" width="50" height="50" filter="url(#f1)"/>
+<filter id="f2" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="screen"/>
+</filter>
+<rect x="100" y="0" width="50" height="50" filter="url(#f2)"/>
+<filter id="f3" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="darken"/>
+</filter>
+<rect x="150" y="0" width="50" height="50" filter="url(#f3)"/>
+<filter id="f4" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="lighten"/>
+</filter>
+<rect x="200" y="0" width="50" height="50" filter="url(#f4)"/>
+<filter id="f5" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="overlay"/>
+</filter>
+<rect x="250" y="0" width="50" height="50" filter="url(#f5)"/>
+<filter id="f6" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="color-dodge"/>
+</filter>
+<rect x="300" y="0" width="50" height="50" filter="url(#f6)"/>
+<filter id="f7" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="color-burn"/>
+</filter>
+<rect x="350" y="0" width="50" height="50" filter="url(#f7)"/>
+<filter id="f8" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="hard-light"/>
+</filter>
+<rect x="0" y="50" width="50" height="50" filter="url(#f8)"/>
+<filter id="f9" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="soft-light"/>
+</filter>
+<rect x="50" y="50" width="50" height="50" filter="url(#f9)"/>
+<filter id="f10" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="difference"/>
+</filter>
+<rect x="100" y="50" width="50" height="50" filter="url(#f10)"/>
+<filter id="f11" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="exclusion"/>
+</filter>
+<rect x="150" y="50" width="50" height="50" filter="url(#f11)"/>
+<filter id="f12" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="hue"/>
+</filter>
+<rect x="200" y="50" width="50" height="50" filter="url(#f12)"/>
+<filter id="f13" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="saturation"/>
+</filter>
+<rect x="250" y="50" width="50" height="50" filter="url(#f13)"/>
+<filter id="f14" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="color"/>
+</filter>
+<rect x="300" y="50" width="50" height="50" filter="url(#f14)"/>
+<filter id="f15" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="luminosity"/>
+</filter>
+<rect x="350" y="50" width="50" height="50" filter="url(#f15)"/>
+<filter id="f16" x="0%" y="0%" width="100%" height="100%">
+  <feFlood result="a" flood-color="rgb(255,0,0)" flood-opacity="0.5"/>
+  <feFlood result="b" flood-color="rgb(0,255,0)" flood-opacity="0.5"/>
+  <feBlend in="a" in2="b" mode="undefined"/>
+</filter>
+<rect x="0" y="100" width="50" height="50" filter="url(#f16)"/>
+</svg>

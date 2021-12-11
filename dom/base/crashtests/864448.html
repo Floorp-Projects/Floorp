@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    document.setUserData('key', {}, null);
+
+    // Depending on the pref bidi.direction, one of these will hit the page scrollbar.
+    window.cpRight = document.caretPositionFromPoint(window.innerWidth - 1, 0);
+    window.cpLeft = document.caretPositionFromPoint(0, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<div style="height: 50000px;"></div>
+</body>
+</html>

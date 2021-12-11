@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll>
+<body>
+  <div style="width:400px; height:300px; overflow:scroll; scrollbar-width:none; border:2px solid black"
+       reftest-displayport-x="0" reftest-displayport-y="0"
+       reftest-displayport-w="800" reftest-displayport-h="2000"
+       reftest-async-scroll-x="0" reftest-async-scroll-y="150">
+    <!-- In this test the position:sticky element has already been adjusted by
+         the main thread paint, and then clamped by the bounding container. The
+         async scroll causes a reduction in that adjustment, but by less than
+         the amount of the scroll (because of the clamping). -->
+    <div style="height: 500px; margin-top: 250px; margin-bottom: 250px">
+      <div style="width: 100px; height: 300px"></div>
+      <div style="position:sticky; width: 100px; height: 100px; bottom: 50px; background-color: green"></div>
+    </div>
+  </div>

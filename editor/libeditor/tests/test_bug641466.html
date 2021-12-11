@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=641466
+-->
+<head>
+  <title>Test for Bug 641466</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=641466">Mozilla Bug 641466</a>
+<p id="display"></p>
+<div id="content">
+<input value="&#x10451;&#x10467;&#x10455;&#x10451;">
+<textarea>&#x10451;&#x10467;&#x10455;&#x10451;</textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 641466 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  function doTest(element) {
+    element.focus();
+    element.selectionStart = 4;
+    element.selectionEnd = 4;
+    synthesizeKey("KEY_Backspace", {repeat: 4});
+
+    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500964
+    // This test is not working for several reasons:
+    // - race conditions between each event, we should wait before sending the next backspace
+    // - race conditions between the two tests
+    // - the value has an initial length of 8, not 4
+    todo_is(element.value, "", "4 backspaces should delete all of the characters in the " + element.localName);
+  }
+
+  doTest(document.querySelector("input"));
+  doTest(document.querySelector("textarea"));
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

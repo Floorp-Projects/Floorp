@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    function doTest() {
+      var d = document.createElement("div");
+      d.textContent = "This is a test";
+      var l = document.getElementById("l");
+      l.textContent = "before";
+      l.appendChild(d);
+      l.appendChild(document.createTextNode("after"));
+    }
+  </script>
+</head>
+<body onload="doTest()">
+  <fieldset>
+    <legend style="border: 2px solid green">This is a test</legend>
+    First fieldset
+  </fieldset>
+  <fieldset>
+    <legend id="l" style="border: 2px solid green"></legend>
+    First fieldset
+  </fieldset>
+</body>

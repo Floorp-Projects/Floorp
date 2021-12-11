@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=379440
+-->
+<head>
+  <title>Test for Bug 379440</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+    #display > * { cursor: auto }
+    #t1 {
+      cursor: url(file:///tmp/foo), url(file:///c|/),
+              url(http://example.com/), crosshair;
+    }
+    #t2 {
+      cursor: url(file:///tmp/foo), url(file:///c|/), crosshair;
+    }
+    #t3 {
+      cursor: url(http://example.com/), crosshair;
+    }
+    #t4 {
+      cursor: url(http://example.com/);
+    }
+    #t5 {
+      cursor: url(http://example.com/), no-such-cursor-exists;
+    }
+    #t6 {
+      cursor: crosshair;
+    }
+    #t7 {
+      cursor: no-such-cursor-exists;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=379440">Mozilla Bug 379440</a>
+<p id="display">
+  <div id="t1"> </div>
+  <div id="t2"></div>
+  <div id="t3"></div>
+  <div id="t4"></div>
+  <div id="t5"></div>
+  <div id="t6"></div>
+  <div id="t7"></div>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 379440 **/
+
+function cur(id) {
+  return document.defaultView.getComputedStyle($(id)).cursor;
+}
+
+is(cur("t1"), 'url("file:///tmp/foo"), url("file:///c:/"), ' +
+              'url("http://example.com/"), crosshair',
+              "Serialize unloadable URLs using their specified value");
+is(cur("t2"), 'url("file:///tmp/foo"), url("file:///c:/"), crosshair',
+              "Serialize unloadable URLs using their specified value");
+is(cur("t3"), 'url("http://example.com/"), crosshair', "URI + fallback");
+is(cur("t4"), "auto", "Must have a fallback");
+is(cur("t5"), "auto", "Fallback must be recognized");
+is(cur("t6"), "crosshair", "Just a fallback");
+is(cur("t7"), "auto", "Invalid fallback means ignore");
+
+</script>
+</pre>
+</body>
+</html>
+

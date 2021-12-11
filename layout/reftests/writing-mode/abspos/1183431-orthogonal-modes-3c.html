@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<style>
+body>div { margin: 50px 20px; width: 120px; height: 150px; border: 5px solid blue; }
+.vlr { writing-mode: vertical-lr; }
+.rel { position: relative; }
+span { display: inline-block; padding: 5px; block-size: 1.5em; border: 2px solid red; }
+p { position: absolute; margin: 0; padding: 2px; border: 2px solid green; }
+</style>
+<body>
+<div class="vlr">
+  <div class="rel"><span>abc def</span><p>xyzzy</p></div>
+</div>

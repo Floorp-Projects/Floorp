@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+      div {
+        min-height: 36px;
+        overflow-x: auto;
+      }
+    </style>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      function test() {
+        document.querySelector("div").focus();
+        // type a character, then press backspace to delete it
+        sendChar("X");
+        sendKey("BACK_SPACE");
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </head>
+  <body onload="test()">
+    <div id="div1" contenteditable></div>
+  </body>
+</html>

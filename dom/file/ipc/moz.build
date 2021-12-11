@@ -1,0 +1,74 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: File")
+
+XPIDL_SOURCES += [
+    "mozIRemoteLazyInputStream.idl",
+]
+
+XPIDL_MODULE = "dom"
+
+EXPORTS.mozilla.dom += [
+    "FileCreatorChild.h",
+    "FileCreatorParent.h",
+    "IPCBlobUtils.h",
+    "TemporaryIPCBlobChild.h",
+    "TemporaryIPCBlobParent.h",
+]
+
+EXPORTS.mozilla += [
+    "RemoteLazyInputStream.h",
+    "RemoteLazyInputStreamChild.h",
+    "RemoteLazyInputStreamParent.h",
+    "RemoteLazyInputStreamStorage.h",
+    "RemoteLazyInputStreamThread.h",
+    "RemoteLazyInputStreamUtils.h",
+]
+
+UNIFIED_SOURCES += [
+    "FileCreatorChild.cpp",
+    "FileCreatorParent.cpp",
+    "IPCBlobUtils.cpp",
+    "RemoteLazyInputStream.cpp",
+    "RemoteLazyInputStreamChild.cpp",
+    "RemoteLazyInputStreamParent.cpp",
+    "RemoteLazyInputStreamStorage.cpp",
+    "RemoteLazyInputStreamThread.cpp",
+    "RemoteLazyInputStreamUtils.cpp",
+    "TemporaryIPCBlobChild.cpp",
+    "TemporaryIPCBlobParent.cpp",
+]
+
+IPDL_SOURCES += [
+    "BlobTypes.ipdlh",
+    "IPCBlob.ipdlh",
+    "PFileCreator.ipdl",
+    "PRemoteLazyInputStream.ipdl",
+    "PTemporaryIPCBlob.ipdl",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/file",
+    "/dom/ipc",
+    "/xpcom/build",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]

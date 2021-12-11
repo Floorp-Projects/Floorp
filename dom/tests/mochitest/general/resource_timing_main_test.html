@@ -1,0 +1,289 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!--
+  This file contains test for the Resource Timing and Performance Timeline APIs.
+  The test starts by checking that all the entries were added to the performance
+  object.
+  The next step is to check that the "performance" object and its "getEntries()"
+  methods are available. We check all the 3 methods: getEntries,
+  getEntriesByName() and getEntriesByType().
+
+  As a next step, we check that the entries contain the correct information
+  ("checkEntries()" method).
+  The test checks that the entries contain all the required members, that the
+  timings are sorted properly and that the entries were returned in
+  chronological order with respect to startTime. In "checkEntries()", it is also
+  checked if the order of the entries is the expected order (the expected order
+  is hard-coded here).
+  The last test from the "checkEntries()" method will verify the iframe case:
+  the iframe must be added as an entry to this window's performance object,
+  while the image from the iframe should not be added here.
+
+  Next tests will check the Performance API extensions introduced by the
+  resource timing: window.performance.setResourceTimingBufferSize(1) and
+  window.performance.clearResourceTimings();
+
+  The last tests will verify that the xhr resources are also added as entries
+  to our performance object.
+
+  Meanwhile, the iframe from the page will get loaded
+  (resource_timing_iframe.html).
+  The iframe contains a second script that will do some tests, as well, plus
+  an image - its own resource.
+  The script from the iframe will check that the iframe itself was not added
+  as an entry (to itself). Also, it will check that its image was added as
+  entry to the iframe's performance object.
+  The last check is a double check: check that no subdocuments were added as
+  entries for this iframe's performance object.
+  The parent's (this window) "ok_wrapper()" method will be called once the tests
+  are completed.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="/tests/SimpleTest/test.css?resource-timing-main-test"/>
+	<script type="application/javascript">
+
+var mainWindowTestsDone = false;
+var iframeTestsDone = false;
+
+function ok(cond, message) {
+  window.opener.ok(cond, message)
+}
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+function isnot(received, notExpected, message) {
+  window.opener.isnot(received, notExpected, message);
+}
+
+var bufferFullCounter = 0;
+const expectedBufferFullEvents = 1;
+
+var allResources = {
+  "http://mochi.test:8888/tests/SimpleTest/test.css?resource-timing-main-test": "link",
+  "http://mochi.test:8888/tests/image/test/mochitest/blue.png" : "img",
+  "http://mochi.test:8888/tests/image/test/mochitest/red.png" : "object",
+  "http://mochi.test:8888/tests/image/test/mochitest/big.png" : "embed",
+  "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html" : "iframe"};
+
+window.onload = function() {
+  ok(!!window.performance, "Performance object should exist");
+  ok(!!window.performance.getEntries, "Performance.getEntries() should exist");
+  ok(!!window.performance.getEntriesByName, "Performance.getEntriesByName() should exist");
+  ok(!!window.performance.getEntriesByType, "Performance.getEntriesByType() should exist");
+
+  window.performance.onresourcetimingbufferfull = function() {
+    bufferFullCounter += 1;
+  }
+
+  is(window.performance.getEntriesByType("resource").length, Object.keys(allResources).length, "Performance.getEntriesByType() returned wrong number of entries.");
+
+  checkStringify(window.performance.getEntriesByType("resource")[0]);
+
+  ok(!!window.performance.getEntriesByType("resource").length,
+    "Performance.getEntriesByType() should return some results");
+  ok(!!window.performance.getEntriesByName("http://mochi.test:8888/tests/image/test/mochitest/blue.png").length,
+    "Performance.getEntriesByName() should return some results");
+
+  // Checks that two calls for "getEntriesByType()" return a different array with the same
+  // entries.
+  isnot(window.performance.getEntriesByType("resource"), window.performance.getEntriesByType("resource"),
+        "getEntriesByType() should return a different array object every time.");
+  ok(function (array1, array2) {
+       if (array1.length != array2.length) {
+         return false;
+       }
+       for (var i = 0 ; i < array1.length ; i++) {
+         if (array1[i] !== array2[i]) {
+           return false;
+         }
+       }
+       return true;
+     }(window.performance.getEntriesByType("resource"), window.performance.getEntriesByType("resource")),
+     "The arrays should have the same entries.");
+
+  checkEntries(window.performance.getEntriesByType("resource"));
+
+  window.performance.setResourceTimingBufferSize(1);
+  is(window.performance.getEntriesByType("resource").length, Object.keys(allResources).length, "No entries should be " +
+    "removed when setResourceTimingBufferSize is called.");
+
+  window.performance.setResourceTimingBufferSize(4);
+  is(window.performance.getEntriesByType("resource").length, Object.keys(allResources).length, "No entries should be " +
+    "removed when setResourceTimingBufferSize is called.");
+
+  window.performance.setResourceTimingBufferSize(1);
+  window.performance.clearResourceTimings();
+  is(window.performance.getEntriesByType("resource").length, 0, "All the entries should " +
+    "be removed when when clearResourceTimings is being called.");
+
+  makeXhr("test-data.json", firstCheck);
+}
+
+function checkStringify(entry) {
+  var object = JSON.parse(JSON.stringify(entry));
+  var keys = ["initiatorType","redirectStart","redirectEnd","fetchStart",
+    "domainLookupStart","domainLookupEnd","connectStart","connectEnd",
+    "secureConnectionStart","requestStart","responseStart","responseEnd",
+    "name","entryType","startTime","duration"];
+  for (var i in keys) {
+    ok(keys[i] in object, "The serialization should contain key: "+keys[i]);
+  }
+}
+
+function checkEntries(anEntryList) {
+  // Check that all the entries have all the properties.
+  for (var i = 0 ; i < anEntryList.length ; i++) {
+    var entry = anEntryList[i];
+
+    ok(!!entry, "PerformanceEntry should not be null");
+    ok(!!entry.name, "PerformanceEntry.name should be valid.");
+    ok(entry.startTime > 0, "PerformanceEntry.startTime should be grater than 0");
+
+    // The entries list should be in chronological order with respect to startTime
+    if (i > 0) {
+      ok(anEntryList[i - 1].startTime <= anEntryList[i].startTime,
+        "Entries list should be in chronological order with respect to startTime.");
+    }
+
+    // Check that each entry has all the properties and that the timings were
+    // returned in the expected order.
+    if ("initiatorType" in entry) {
+      ok("redirectStart" in entry, "PerformanceEntry.redirectStart should be part of PerformanceEntry");
+      ok("redirectEnd" in entry, "PerformanceEntry.redirectEnd should be part of PerformanceEntry");
+      ok("fetchStart" in entry, "PerformanceEntry.fetchStart should be part of PerformanceEntry");
+      ok("domainLookupStart" in entry, "PerformanceEntry.domainLookupStart should be part of PerformanceEntry");
+      ok("domainLookupEnd" in entry, "PerformanceEntry.domainLookupEnd should be part of PerformanceEntry");
+      ok("connectStart" in entry, "PerformanceEntry.connectStart should be part of PerformanceEntry");
+      ok("connectEnd" in entry, "PerformanceEntry.connectEnd should be part of PerformanceEntry");
+      ok("secureConnectionStart" in entry, "PerformanceEntry.secureConnectionStart should be part of PerformanceEntry");
+      ok("requestStart" in entry, "PerformanceEntry.requestStart should be part of PerformanceEntry");
+      ok("responseStart" in entry, "PerformanceEntry.responseStart should be part of PerformanceEntry");
+      ok("responseEnd" in entry, "PerformanceEntry.responseEnd should be part of PerformanceEntry");
+
+      // Check that timings are in proper order
+      sequence = ['startTime', 'redirectStart', 'redirectEnd', 'fetchStart',
+                  'domainLookupStart', 'domainLookupEnd', 'connectStart',
+                  'connectEnd', 'requestStart', 'responseStart', 'responseEnd'];
+      for (var j = 1; j < sequence.length; ++j) {
+        var prop = sequence[j];
+        var prevProp = sequence[j-1];
+        if (prop == 'redirectStart' && entry[prop] == 0)
+          continue;
+        if (prop == 'redirectEnd' && entry[prop] == 0)
+          continue;
+        ok(entry[prevProp] <= entry[prop],
+          ['Expected ', prevProp, ' to happen before ', prop,
+           ', got ', prevProp, ' = ', entry[prevProp],
+          ', ', prop, ' = ', entry[prop]].join(''));
+      }
+    }
+  }
+
+  // Check that the entries have the expected initiator type. We can't check
+  // the order (the order might depend on the platform the tests are running).
+  for (resourceName in allResources) {
+    // Check that we have a resource with the specific name.
+    namedEntries = window.performance.getEntriesByName(resourceName);
+    ok (!!namedEntries && (namedEntries.length == 1),
+      "An entry with the name '" + resourceName + "' should be available");
+
+    if (!namedEntries.length) {
+      continue;
+    }
+
+    // Double check for the entry name.
+    is (namedEntries[0].name, resourceName, "The resource name is invalid");
+
+    // Check the initiator type.
+    is (namedEntries[0].initiatorType, allResources[resourceName],
+      "The initiator type for " + resourceName + " is invalid");
+  }
+
+  // Check that the iframe's image was NOT added as an entry to this window's performance entry.
+  ok(!window.performance.getEntriesByName("http://mochi.test:8888/tests/image/test/mochitest/damon.jpg").length,
+    "http://mochi.test:8888/tests/image/test/mochitest/damon.jpg should be a valid entry name");
+}
+
+function firstCheck() {
+  is(window.performance.getEntriesByType("resource").length, 1, "The first xhr entry was not added.");
+  is(window.performance.getEntriesByType("resource")[0].initiatorType, "xmlhttprequest",
+    "The initiatorType is incorrect for this entry");
+  makeXhr("test-data2.json", secondCheck);
+}
+
+function secondCheck() {
+  // Since the buffer max size was set to '1', 'peformance.getEntriesByType()' should
+  // return only  '1' entry (first xhr results).
+  is(window.performance.getEntriesByType("resource").length, 1, "The second xhr entry should not be " +
+    "returned since the buffer size was set to 1.");
+  isnot(window.performance.getEntriesByType("resource")[0].name, "http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json",
+    "We returned the second xhr instead of the first one");
+  finishTest();
+}
+
+function finishTest() {
+  // Check if all the tests are completed.
+  SpecialPowers.executeSoon(function () {
+    if (iframeTestsDone) {
+        is(bufferFullCounter, expectedBufferFullEvents, "onresourcetimingbufferfull called a wrong number of times");
+        window.opener.finishTests();
+    } else {
+        mainWindowTestsDone = true;
+    }
+  }, window);
+}
+
+function makeXhr(aUrl, aCallback) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onload = aCallback;
+  xmlhttp.open("get", aUrl, true);
+  xmlhttp.send();
+}
+
+function checkArraysHaveSameElementsInSameOrder(array1, array2) {
+  if (array1.length != array2.length) {
+    return false;
+  }
+  for (var i = 0 ; i < array1.length ; i++) {
+    if (array1[i] !== array2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function iframeTestsCompleted() {
+  if (mainWindowTestsDone) {
+    is(bufferFullCounter, expectedBufferFullEvents, "onresourcetimingbufferfull called a wrong number of times");
+    window.opener.finishTests();
+  }
+  else {
+    iframeTestsDone = true;
+  }
+}
+
+</script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=822480"
+     title="Add resource timing API.">
+    Bug #822480 -  Add in the Resource Timing API
+  </a>
+  <p id="display"></p>
+  <div id="content">
+    <img src="http://mochi.test:8888/tests/image/test/mochitest/blue.png">
+    <object data="http://mochi.test:8888/tests/image/test/mochitest/red.png" type="image/png"></object>
+    <embed src="http://mochi.test:8888/tests/image/test/mochitest/big.png" type="image/png"/>
+    <iframe sandbox="allow-same-origin allow-scripts" id="if_2" src="resource_timing_iframe.html" height="10" width="10"></iframe>
+  </div>
+</body>
+</html>

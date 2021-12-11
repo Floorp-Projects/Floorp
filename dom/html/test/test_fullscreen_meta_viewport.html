@@ -1,0 +1,33 @@
+<!doctype html>
+<title>Test for Bug 545812</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.meta-viewport.enabled", true]]
+  });
+
+  let win = window.open("file_fullscreen_meta_viewport.html", "", "width=500,height=500,scrollbars=yes");
+  await SimpleTest.promiseFocus(win);
+
+  is(win.innerWidth, 980, "Meta viewport should be in effect");
+
+  let element = win.document.querySelector("#player");
+  await SpecialPowers.wrap(element).requestFullscreen();
+
+  ok(win.document.fullscreen, "Window should be in fullscreen");
+  is(win.document.fullscreenElement, element, "#player should be the fullscreen element");
+  is(win.innerWidth, screen.width, "Should be fullscreen (w)");
+  is(win.innerHeight, screen.height, "Should be fullscreen (h)");
+  is(element.clientWidth, win.innerWidth, "Element should fill the viewport vertically");
+  is(element.clientHeight, win.innerHeight, "Element should fill the viewport vertically");
+
+  SpecialPowers.wrap(win.document).exitFullscreen();
+  win.close();
+  SimpleTest.finish();
+}())
+</script>

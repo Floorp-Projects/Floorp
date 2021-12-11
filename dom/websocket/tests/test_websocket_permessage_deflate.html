@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Basic test of permessage compression websocket extension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="loadDeflate()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=792831">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var ws;
+var textMessage = "This is a text message";
+var binaryMessage = "This is a binary message";
+var testIdx = 0;
+var sendText = true;
+
+tests = [
+  // enable PMCE
+  [ true, true, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate" ],
+  // disable PMCE
+  [ false, false, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate_disabled" ],
+  // server rejects offered PMCE
+  [ true, false, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate_rejected" ],
+  // server returns parameters in the handshake
+  [ true, true, "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_permessage_deflate_params" ]
+]
+
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
+
+function str2ab(str) {
+  var buf = new ArrayBuffer(str.length*2);
+  var bufView = new Uint16Array(buf);
+  for (var i=0, strLen=str.length; i<strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
+function sendMessage() {
+  if (sendText) {
+    ws.send(textMessage);
+  } else {
+    ws.binaryType = "arraybuffer";
+    ws.send(str2ab(binaryMessage));
+  }
+}
+
+function testDeflate() {
+  ws = new WebSocket(tests[testIdx][2]);
+
+  ws.onopen = function(e) {
+    if (tests[testIdx][1]) {
+      is(ws.extensions, "permessage-deflate", "permessage-deflate not negotiated!");
+    } else {
+      is(ws.extensions, "", "permessage-deflate should not be negotiated!");
+    }
+
+    sendMessage();
+  }
+
+  ws.onclose = function(e) {
+    if (!e.wasClean) {
+      ok(false, "Connection should be closed cleanly!");
+      SimpleTest.finish();
+    }
+  }
+
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+
+  ws.onmessage = function(e) {
+    if (sendText) {
+      is(e.data, textMessage, "Text message not received successfully!");
+      sendText = false;
+      sendMessage();
+    } else {
+      ok(e.data instanceof ArrayBuffer, "Should receive an arraybuffer!");
+      is(ab2str(e.data), binaryMessage, "Binary message not received successfully!");
+      ws.close();
+
+      sendText = true;
+      testIdx++;
+      if (testIdx < tests.length) {
+        loadDeflate();
+      } else {
+        SimpleTest.finish();
+      }
+    }
+  }
+}
+
+function loadDeflate() {
+  SpecialPowers.pushPrefEnv({"set":[['network.websocket.extensions.permessage-deflate', tests[testIdx][0]]]}, testDeflate);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

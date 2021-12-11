@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<div id="content"></div>
+<pre id="test">
+<script type="application/javascript">
+
+
+var gValues = [
+  {
+     element: "<li type='i'></li>",
+     property: "list-style-type",
+     value: "lower-roman"
+  },
+  {
+     element: "<li type='I'></li>",
+     property: "list-style-type",
+     value: "upper-roman"
+  },
+  {
+     element: "<li type='a'></li>",
+     property: "list-style-type",
+     value: "lower-alpha"
+  },
+  {
+     element: "<li type='A'></li>",
+     property: "list-style-type",
+     value: "upper-alpha"
+  },
+  {
+     element: "<li type='1'></li>",
+     property: "list-style-type",
+     value: "decimal"
+  },
+  {
+     element: "<ol type='i'></ol>",
+     property: "list-style-type",
+     value: "lower-roman"
+  },
+  {
+     element: "<ol type='I'></ol>",
+     property: "list-style-type",
+     value: "upper-roman"
+  },
+  {
+     element: "<ol type='a'></ol>",
+     property: "list-style-type",
+     value: "lower-alpha"
+  },
+  {
+     element: "<ol type='A'></ol>",
+     property: "list-style-type",
+     value: "upper-alpha"
+  },
+  {
+     element: "<ol type='1'></ol>",
+     property: "list-style-type",
+     value: "decimal"
+  },
+];
+
+var content = document.getElementById("content");
+for (var i = 0; i < gValues.length; ++i) {
+  var v = gValues[i];
+
+  content.innerHTML = v.element;
+  is(getComputedStyle(content.firstChild, "").getPropertyValue(v.property),
+     v.value,
+     v.property + " for " + v.element);
+}
+
+</script>
+</pre>
+</body>
+</html>

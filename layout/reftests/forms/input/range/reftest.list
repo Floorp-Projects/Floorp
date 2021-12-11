@@ -1,0 +1,61 @@
+
+# sanity checks:
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1c-notref.html
+
+# dynamic type changes:
+fuzzy(0-1,0-40) == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
+== from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
+
+# for different values:
+!= different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1-notref.html
+== same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1-ref.html
+
+# dynamic value changes:
+fuzzy(0-1,0-40) == value-prop-unthemed.html 75pct-unthemed-common-ref.html
+== value-prop.html 75pct-common-ref.html
+fuzzy(0-1,0-40) == valueAsNumber-prop-unthemed.html 75pct-unthemed-common-ref.html
+== valueAsNumber-prop.html 75pct-common-ref.html
+fuzzy(0-1,0-40) == stepDown-unthemed.html 75pct-unthemed-common-ref.html
+== stepDown.html 75pct-common-ref.html
+fuzzy(0-1,0-40) == stepUp-unthemed.html 75pct-unthemed-common-ref.html
+== stepUp.html 75pct-common-ref.html
+random-if(Android) == max-prop.html 100pct-common-ref.html # Snapping in different ways in debug and opt builds, bug 1621141
+fuzzy-if(!nativeThemePref,0-1,0-4) == reset-value.html reset-value-ref.html
+
+# 'direction' property:
+== direction-unthemed-1.html direction-unthemed-1-ref.html
+
+# ::-moz-range-progress pseudo-element:
+== moz-range-progress-1.html moz-range-progress-1-ref.html
+== moz-range-progress-2.html moz-range-progress-2-ref.html
+== moz-range-progress-3.html moz-range-progress-3-ref.html
+
+# Tests for block and inline orientation in combination with writing-mode
+!= range-orient-horizontal.html range-orient-vertical.html
+!= range-orient-horizontal.html range-orient-horizontal-rtl.html
+== range-orient-block.html range-orient-vertical.html
+== range-orient-inline.html range-orient-horizontal.html
+== range-vlr.html range-orient-vertical.html
+== range-vlr-orient-block.html range-orient-horizontal.html
+== range-vlr-orient-inline.html range-orient-vertical.html
+== range-vlr-orient-horizontal.html range-orient-horizontal.html
+== range-vlr-orient-vertical.html range-orient-vertical.html
+== range-vrl.html range-orient-vertical-rtl.html
+== range-vrl-orient-block.html range-orient-horizontal-rtl.html
+== range-vrl-orient-inline.html range-orient-vertical-rtl.html
+== range-vrl-orient-horizontal.html range-orient-horizontal-rtl.html
+== range-vrl-orient-vertical.html range-orient-vertical-rtl.html
+
+skip-if(Android) == range-border-background.html range-border-background-ref.html # Android doesn't have a native theme for -webkit-appearance:range
+
+# Other range-percent-intrinsic-size-*.html tests lives in
+# testing/web-platform/tests/css/css-sizing/.  Vertical layout with
+# -webkit-appearance:none isn't supported in other UAs so this test
+# is an internal reftest for now.
+== range-percent-intrinsic-size-2b.html range-percent-intrinsic-size-2b-ref.html
+
+fails-if(Android) fuzzy-if(!nativeThemePref,0-2,0-80) == auto-size.html auto-size-ref.html # Snapping, bug 1621141
+== range-track-bg.html range-track-bg-ref.html
+!= track-default-rendering.html track-default-rendering-ref.html

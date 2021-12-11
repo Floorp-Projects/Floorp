@@ -1,0 +1,28 @@
+<html>
+<head>
+<script>
+function boom()
+{
+  var tbody = document.getElementById("tbody");
+  tbody.style.overflow = "auto";
+  document.body.offsetWidth;
+  tbody.style.overflow = "";
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<table border="1">
+  <tbody id="tbody">
+    <tr>
+      <td>
+        <p>A</p>
+        <p style="height: 18000000px">B</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

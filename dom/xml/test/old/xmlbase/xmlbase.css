@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace xlink url(http://www.w3.org/1999/xlink);
+
+title {
+  font-weight: bold;
+  display: block;
+}
+
+xlink|link {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline;
+  padding-left: +5px;
+}
+
+sect1,sect2,sect3 {
+  display: block;
+  padding-left: +20px;
+}
+
+p {
+  display: block;
+  padding-left: +5px;
+}

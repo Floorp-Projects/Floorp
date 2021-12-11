@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div {
+        min-height: 10px; min-width: 10px;
+        border: 1px solid red;
+        margin: 10px;
+      }
+      #pseudo-container::before {
+        content: 'before';
+      }
+      #pseudo-container::after {
+        content: 'after';
+      }
+    </style>
+  </head>
+  <body>
+    <article id="i1">
+      <div id="i11">
+        <div id="i111">
+          <div id="i1111">
+          </div>
+        </div>
+      </div>
+    </article>
+    <article id="i2">
+      <div id="i21">
+        <div id="i211">
+          <div id="i2111">
+          </div>
+        </div>
+      </div>
+      <div id="i22">
+        <div id="i221">
+        </div>
+        <div id="i222">
+          <div id="i2221">
+            <div id="i22211">
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    <article id="i3">
+      <link id="i31" />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+      <link />
+    </article>
+    <div id='pseudo-container'></div>
+    <!-- This is a comment node -->
+    <svg id="vector" viewBox="0 0 10 10">
+      <clipPath id="clip">
+        <rect id="rectangle" x="0" y="0" width="10" height="5"></rect>
+      </clipPath>
+      <circle cx="5" cy="5" r="5" fill="blue" clip-path="url(#clip)"></circle>
+    </svg>
+  </body>
+</html>

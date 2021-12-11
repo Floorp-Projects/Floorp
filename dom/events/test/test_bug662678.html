@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=662678
+-->
+<head>
+  <title>Test for Bug 662678</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=662678">Mozilla Bug 662678</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 662678 **/
+SimpleTest.waitForExplicitFinish();
+
+var checkMotion = function(event) {
+  window.removeEventListener("devicemotion", checkMotion, true);
+
+  is(event.acceleration.x, 1.5, "acceleration.x");
+  is(event.acceleration.y, 2.5, "acceleration.y");
+  is(event.acceleration.z, 3.5, "acceleration.z");
+  is(event.accelerationIncludingGravity.x, 4.5, "accelerationIncludingGravity.x");
+  is(event.accelerationIncludingGravity.y, 5.5, "accelerationIncludingGravity.y");
+  is(event.accelerationIncludingGravity.z, 6.5, "accelerationIncludingGravity.z");
+  is(event.rotationRate.alpha, 7.5, "rotationRate.alpha");
+  is(event.rotationRate.beta, 8.5, "rotationRate.beta");
+  is(event.rotationRate.gamma, 9.5, "rotationRate.gamma");
+  is(event.interval, 0.5, "interval");
+
+  var e = document.createEvent("DeviceMotionEvent");
+  e.initDeviceMotionEvent('devicemotion', true, true,
+                          null, null, null, null);
+  is(e.acceleration.x, null, "acceleration.x");
+  is(e.acceleration.y, null, "acceleration.y");
+  is(e.acceleration.z, null, "acceleration.z");
+  is(e.accelerationIncludingGravity.x, null, "accelerationIncludingGravity.x");
+  is(e.accelerationIncludingGravity.y, null, "accelerationIncludingGravity.y");
+  is(e.accelerationIncludingGravity.z, null, "accelerationIncludingGravity.z");
+  is(e.rotationRate.alpha, null, "rotationRate.alpha");
+  is(e.rotationRate.beta, null, "rotationRate.beta");
+  is(e.rotationRate.gamma, null, "rotationRate.gamma");
+  is(e.interval, null, "interval");
+
+  e.initDeviceMotionEvent('devicemotion', true, true,
+                          {}, {}, {}, 0);
+  is(e.acceleration.x, null, "acceleration.x");
+  is(e.acceleration.y, null, "acceleration.y");
+  is(e.acceleration.z, null, "acceleration.z");
+  is(e.accelerationIncludingGravity.x, null, "accelerationIncludingGravity.x");
+  is(e.accelerationIncludingGravity.y, null, "accelerationIncludingGravity.y");
+  is(e.accelerationIncludingGravity.z, null, "accelerationIncludingGravity.z");
+  is(e.rotationRate.alpha, null, "rotationRate.alpha");
+  is(e.rotationRate.beta, null, "rotationRate.beta");
+  is(e.rotationRate.gamma, null, "rotationRate.gamma");
+  is(e.interval, 0, "interval");
+
+  window.addEventListener("devicemotion", checkMotionCtor, true);
+
+  event = new DeviceMotionEvent('devicemotion', {
+    bubbles: true, cancelable: true,
+    acceleration: {x:1.5,y:2.5,z:3.5},
+    accelerationIncludingGravity: {x:4.5,y:5.5,z:6.5},
+    rotationRate: {alpha:7.5,beta:8.5,gamma:9.5},
+    interval: 0.5
+  });
+  window.dispatchEvent(event);
+};
+
+var checkMotionCtor = function(event) {
+  window.removeEventListener("devicemotion", checkMotionCtor, true);
+
+  is(event.acceleration.x, 1.5, "acceleration.x");
+  is(event.acceleration.y, 2.5, "acceleration.y");
+  is(event.acceleration.z, 3.5, "acceleration.z");
+  is(event.accelerationIncludingGravity.x, 4.5, "accelerationIncludingGravity.x");
+  is(event.accelerationIncludingGravity.y, 5.5, "accelerationIncludingGravity.y");
+  is(event.accelerationIncludingGravity.z, 6.5, "accelerationIncludingGravity.z");
+  is(event.rotationRate.alpha, 7.5, "rotationRate.alpha");
+  is(event.rotationRate.beta, 8.5, "rotationRate.beta");
+  is(event.rotationRate.gamma, 9.5, "rotationRate.gamma");
+  is(event.interval, 0.5, "interval");
+
+  var e = new DeviceMotionEvent('devicemotion');
+  is(e.acceleration.x, null, "acceleration.x");
+  is(e.acceleration.y, null, "acceleration.y");
+  is(e.acceleration.z, null, "acceleration.z");
+  is(e.accelerationIncludingGravity.x, null, "accelerationIncludingGravity.x");
+  is(e.accelerationIncludingGravity.y, null, "accelerationIncludingGravity.y");
+  is(e.accelerationIncludingGravity.z, null, "accelerationIncludingGravity.z");
+  is(e.rotationRate.alpha, null, "rotationRate.alpha");
+  is(e.rotationRate.beta, null, "rotationRate.beta");
+  is(e.rotationRate.gamma, null, "rotationRate.gamma");
+  is(e.interval, null, "interval");
+
+  e = new DeviceMotionEvent('devicemotion', {
+    bubbles: true, cancelable: true,
+    acceleration: null, accelerationIncludingGravity: null,
+    rotationRate: null, interval: null
+  });
+  is(e.acceleration.x, null, "acceleration.x");
+  is(e.acceleration.y, null, "acceleration.y");
+  is(e.acceleration.z, null, "acceleration.z");
+  is(e.accelerationIncludingGravity.x, null, "accelerationIncludingGravity.x");
+  is(e.accelerationIncludingGravity.y, null, "accelerationIncludingGravity.y");
+  is(e.accelerationIncludingGravity.z, null, "accelerationIncludingGravity.z");
+  is(e.rotationRate.alpha, null, "rotationRate.alpha");
+  is(e.rotationRate.beta, null, "rotationRate.beta");
+  is(e.rotationRate.gamma, null, "rotationRate.gamma");
+  is(e.interval, null, "interval");
+
+  e = new DeviceMotionEvent('devicemotion', {
+    bubbles: true, cancelable: true,
+    acceleration: {}, accelerationIncludingGravity: {},
+    rotationRate: {}, interval: 0
+  });
+  is(e.acceleration.x, null, "acceleration.x");
+  is(e.acceleration.y, null, "acceleration.y");
+  is(e.acceleration.z, null, "acceleration.z");
+  is(e.accelerationIncludingGravity.x, null, "accelerationIncludingGravity.x");
+  is(e.accelerationIncludingGravity.y, null, "accelerationIncludingGravity.y");
+  is(e.accelerationIncludingGravity.z, null, "accelerationIncludingGravity.z");
+  is(e.rotationRate.alpha, null, "rotationRate.alpha");
+  is(e.rotationRate.beta, null, "rotationRate.beta");
+  is(e.rotationRate.gamma, null, "rotationRate.gamma");
+  is(e.interval, 0, "interval");
+
+  SimpleTest.finish();
+};
+
+window.addEventListener("devicemotion", checkMotion, true);
+
+var event = DeviceMotionEvent;
+ok(!!event, "Should have seen DeviceMotionEvent!");
+
+event = document.createEvent("DeviceMotionEvent");
+event.initDeviceMotionEvent('devicemotion', true, true, 
+                            {x:1.5,y:2.5,z:3.5},
+                            {x:4.5,y:5.5,z:6.5},
+                            {alpha:7.5,beta:8.5,gamma:9.5},
+                            0.5);
+window.dispatchEvent(event);
+
+</script>
+</pre>
+</body>
+</html>

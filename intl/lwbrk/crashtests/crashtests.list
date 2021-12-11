@@ -1,0 +1,2 @@
+load 416721.html
+skip-if(!winWidget) pref(intl.compare_against_brokered_complex_line_breaks,true) pref(security.sandbox.content.win32k-disable,false) load UDHR_Thai_test_page_long_sequences.html

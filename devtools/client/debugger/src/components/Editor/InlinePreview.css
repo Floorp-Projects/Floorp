@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.inline-preview {
+  display: inline-block;
+  margin-inline-start: 8px;
+  user-select: none;
+}
+
+.inline-preview-outer {
+  background-color: var(--theme-inline-preview-background);
+  border: 1px solid var(--theme-inline-preview-border-color);
+  border-radius: 3px;
+  font-size: 10px;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+.inline-preview-label {
+  padding: 0px 2px 0px 4px;
+  border-radius: 2px 0 0 2px;
+  color: var(--theme-inline-preview-label-color);
+  background-color: var(--theme-inline-preview-label-background);
+}
+
+.inline-preview-value {
+  padding: 2px 6px;
+}

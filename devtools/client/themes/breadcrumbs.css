@@ -1,0 +1,135 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ :root {
+  --breadcrumb-id-class-color: #909090;
+  --breadcrumb-pseudo-class-text-color: var(--yellow-70) ;
+ }
+
+ .theme-dark:root {
+  --breadcrumb-id-class-color: var(--theme-text-color-strong);
+  --breadcrumb-pseudo-class-text-color: var(--yellow-50);
+ }
+
+/* Inspector HTMLBreadcrumbs */
+
+.breadcrumbs-widget-container {
+  margin-right: 3px;
+  max-height: 24px; /* Set max-height for proper sizing on linux */
+  height: 24px; /* Set height to prevent starting small waiting for content */
+}
+
+.breadcrumbs-widget-container:-moz-locale-dir(rtl) {
+  margin-right: 0;
+  margin-left: 3px;
+}
+
+.scrollbutton-up,
+.scrollbutton-down {
+  appearance: none;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  list-style-image: none;
+  margin: 0;
+  padding: 0;
+  visibility: collapse;
+}
+
+.scrollbutton-up > .toolbarbutton-icon,
+.scrollbutton-down > .toolbarbutton-icon {
+  appearance: none;
+  width: 20px;
+  height: 16px;
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url("images/breadcrumbs-scrollbutton.svg");
+  list-style-image: none;
+  padding: 0;
+
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
+}
+
+.scrollbutton-up:not([disabled]):active:hover,
+.scrollbutton-down:not([disabled]):active:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.scrollbutton-up[disabled] > .toolbarbutton-icon,
+.scrollbutton-down[disabled] > .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+/* Draw shadows to indicate there is more content 'behind' scrollbuttons. */
+.scrollbutton-up {
+  border-right: solid 1px var(--theme-splitter-color);
+  border-left: solid 1px transparent;
+  box-shadow: 3px 0px 3px -3px var(--theme-sidebar-background);
+}
+
+.scrollbutton-down {
+  border-right: solid 1px transparent;
+  border-left: solid 1px var(--theme-splitter-color);
+  box-shadow: -3px 0px 3px -3px var(--theme-sidebar-background);
+}
+
+.scrollbutton-up[disabled],
+.scrollbutton-down[disabled] {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.scrollbutton-down > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
+.breadcrumbs-widget-item {
+  background-color: transparent;
+  border: none;
+  margin-inline: 10px 1px;
+  padding: 0;
+}
+
+.breadcrumbs-widget-item:first-child::before {
+  /* The first crumb does not need any separator before itself */
+  content: unset;
+}
+
+.breadcrumbs-widget-item:not(:first-child)::before {
+  content: url(chrome://devtools/skin/images/breadcrumbs-divider.svg);
+  background: none;
+  position: relative;
+  left: -3px;
+  margin: 0 4px 0 -1px;
+  top: -1px;
+}
+
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id {
+  color: var(--theme-highlight-purple);
+}
+
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
+  color: var(--theme-highlight-blue);
+}
+
+.theme-dark .breadcrumbs-widget-item {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .breadcrumbs-widget-item {
+  color: var(--theme-body-color);
+}
+
+.breadcrumbs-widget-item-id,
+.breadcrumbs-widget-item-classes {
+  color: var(--breadcrumb-id-class-color);
+}
+
+.breadcrumbs-widget-item-pseudo-classes {
+  color: var(--breadcrumb-pseudo-class-text-color);
+}

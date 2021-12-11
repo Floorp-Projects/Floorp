@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=478957
+-->
+<head>
+  <title>Test for Bug 478957</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478957">Mozilla Bug 478957</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<div id="log" style="font-size: small;"></div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 478957 **/
+
+// Tests whether we leak events and state change info when loading stuff from local files from a webserver.
+
+var manager = new MediaTestManager;
+
+var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
+
+var gExpectedEvents = ['loadstart', 'error'];
+
+function createTestArray() {
+  var tests = [];
+  var tmpVid = document.createElement("video");
+
+  return makeInfoLeakTests().then(infoLeakTests => {
+    for (var testNum=0; testNum < infoLeakTests.length; testNum++) {
+      var test = infoLeakTests[testNum];
+      if (!tmpVid.canPlayType(test.type)) {
+        continue;
+      }
+
+      var t = {};
+      t.name = test.src;
+      t.type = test.type;
+
+      tests.push(t);
+    }
+    return tests;
+  })
+}
+
+function log(msg) {
+  info(msg);
+  var l = document.getElementById('log');
+  // eslint-disable-next-line no-unsanitized/property
+  l.innerHTML += msg + "<br>";
+}
+
+function finish(v) {
+  log("finish: " + v.name);
+  clearInterval(v.checkStateInterval);
+
+  for (var i=0; i<gEventTypes.length; i++) {
+    v.removeEventListener(gEventTypes[i], listener);
+  }
+  removeNodeAndSource(v);
+
+  manager.finished(v.token);
+  v = null;
+}
+
+function listener(evt) {
+  var v = evt.target;
+  log(filename(v.name) + ': got ' + evt.type);
+
+  // On slow machines like B2G emulator, progress timer could time out before
+  // receiving any HTTP notification. We will ignore the 'stalled' event to
+  // pass the tests.
+  if (evt.type == 'stalled') {
+    return;
+  }
+
+  ok(v.eventNum < gExpectedEvents.length, filename(v.name)  + " Too many events received");
+  var expected = (v.eventNum < gExpectedEvents.length) ? gExpectedEvents[v.eventNum] : "NoEvent";
+  is(evt.type, expected, filename(v.name) + " Events received in wrong order");
+  v.eventNum++;
+  if (v.eventNum == gExpectedEvents.length) {
+    // In one second, move onto the next test. This give a chance for any
+    // other events to come in. Note: we don't expect any events to come
+    // in, unless we've leaked some info, and 1 second should be enough time
+    // for the leak to show up.
+    setTimeout(function() {finish(v);}, 1000);
+  }
+}
+
+function createMedia(type, src, token) {
+  var tag = getMajorMimeType(type);
+  var v = document.createElement(tag);
+  for (var i=0; i<gEventTypes.length; i++) {
+    v.addEventListener(gEventTypes[i], listener);
+  }
+  v.preload = "metadata";
+  v.src = src;
+  v.name = src;
+  document.body.appendChild(v);
+  v.eventNum = 0;
+  v.token = token;
+  setTimeout(
+  function() {
+    v.checkStateInterval = setInterval(function(){checkState(v);},1);
+  }, 0);
+}
+
+// Define our own ok() and is() functions. The mochitest ones take ages constructing the log
+// of all the passes, so only report failures.
+function test_ok(b, msg) {
+  if (!b) {
+    log("FAILED test_ok: " + msg);
+    ok(b, msg);
+  }
+}
+
+function test_is(a, b, msg) {
+  if (a != b) {
+    log("FAILED test_is: " + msg);
+    is(a,b,msg);
+  }
+}
+
+function filename(uri) {
+  return uri.substr(uri.lastIndexOf("/")+1);
+}
+
+function checkState(v) {
+  test_ok(v.networkState <= HTMLMediaElement.NETWORK_LOADING ||
+          v.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+          "NetworkState of " + v.networkState + " was leaked.");
+  test_ok(v.readyState == HTMLMediaElement.HAVE_NOTHING,
+          "Ready state of " + v.readyState + " was leaked");
+  test_is(v.seeking, false, "Seeking leaked");
+  test_is(v.currentTime, 0, "Leaked currentTime");
+  test_ok(isNaN(v.duration), "Leaked duration");
+  test_is(v.paused, true, "Paused leaked");
+  test_is(v.ended, false, "Ended leaked");
+  test_is(v.autoplay, false, "Autoplay leaked");
+  test_is(v.controls, false, "Controls leaked");
+  test_is(v.muted, false, "muted leaked");
+  test_ok(v.error==null || v.error.code==MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
+          "Error code should not exist or be SRC_NOT_SUPPORTED. v.error=" +
+          (v.error ? v.error.code : "null"));
+  test_ok(filename(v.currentSrc) == filename(v.name) ||
+          v.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+          "currentSrc should match candidate uri, if we've got a valid source");
+}
+
+
+function startTest(test, token) {
+  manager.started(token);
+  log("Testing: " + test.type + " @ " + test.name);
+  createMedia(test.type, test.name, token);
+}
+
+SimpleTest.waitForExplicitFinish();
+createTestArray().then(testArray => {
+  manager.runTests(testArray, startTest);
+});
+
+</script>
+</pre>
+
+</body>
+</html>

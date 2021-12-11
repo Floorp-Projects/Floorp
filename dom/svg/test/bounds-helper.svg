@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="750"
+     xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+  <style type="text/css">
+text { font: 20px monospace; }
+#css-trans-rect-2 { transform: scaleX(2) }
+  </style>
+
+<g id="g">
+  <svg id="svg1" x="10" y="10" width="25" height="30"/>
+  <svg id="svg2" width="1" height="1" overflow="visible">
+    <rect width="2" height="2" fill="yellow"/>
+  </svg>
+  <svg id="svg3" width="1" height="1" overflow="hidden">
+    <rect width="2" height="2" fill="yellow"/>
+  </svg>
+  <symbol>
+    <rect id="use-test" width="50" height="10"/>
+  </symbol>
+  <use id="use1" href="#use-test" x="100" y="50" fill="yellow"/>
+  <text id="text1" x="25" y="25">abc</text>
+  <text id="text1a" x="85" y="25" stroke="black" stroke-width="4">abc</text>
+  <rect id="rect1" x="50" y="50" width="50" height="50" fill="green"/>
+  <rect id="rect1a" x="50" y="50" width="50" height="50" fill="none" stroke-width="4" stroke="yellow"/>
+  <text id="text2" x="125" y="25">abc</text>
+  <text id="text2a" x="185" y="25" stroke="black" stroke-width="10">abc</text>
+  <g transform="rotate(45 175 75)">
+    <rect id="rect2" x="150" y="50" width="50" height="50" fill="yellow"/>
+    <rect id="rect2a" x="150" y="50" width="50" height="50" fill="none" stroke-width="4" stroke="blue"/>
+    <text id="text3" x="150" y="50" text-anchor="middle">abc</text>
+  </g>
+  <g transform="scale(2)">
+    <rect id="rect3" x="25" y="80" width="50" height="50" fill="green"/>
+    <rect id="rect3a" x="25" y="80" width="50" height="50" fill="none" stroke-width="4" stroke="blue"/>
+    <rect id="rect3b" vector-effect="non-scaling-stroke" x="100" y="100" width="25" height="25" fill="orange" stroke-width="4" stroke="yellow"/>
+    <image id="i" x="10" y="10" width="100" height="100"/>
+  </g>
+  <g transform="scale(2) rotate(45 175 75)">
+    <rect id="rect4" x="150" y="50" width="50" height="50" fill="yellow"/>
+    <rect id="rect4a" x="150" y="50" width="50" height="50" fill="none" stroke-width="4" stroke="blue"/>
+  </g>
+  <text id="text4" x="185" y="25"/>
+  <g id="g2">
+    <rect x="100" y="100" width="50" height="50" fill="pink"/>
+    <text x="200" y="200"/>
+  </g>
+  <circle id="nonScalingStrokedCircle1" cx="0" cy="0" r="10"
+          transform="translate(45 130) scale(3 -2)"
+          fill="none" stroke="gray" stroke-width="10"
+          vector-effect="non-scaling-stroke"/>
+  <ellipse id="nonScalingStrokedEllipse1" cx="20" cy="-10" rx="5" ry="5"
+           transform="matrix(0 3 -2 0 0 0)"
+           fill="none" stroke="steelblue" stroke-width="10"
+           vector-effect="non-scaling-stroke" />
+  <line id="nonScalingStrokedLine1" x1="120" y1="5" x2="120" y2="10"
+        transform="scale(2 3)"
+        stroke-width="10" stroke-linecap="round" stroke="orange"
+        vector-effect="non-scaling-stroke" />
+  <line id="nonScalingStrokedLine2" x1="130" y1="5" x2="140" y2="5"
+        transform="rotate(45 260 15) scale(2 3)"
+        stroke-width="10" stroke-linecap="square" stroke="crimson"
+        vector-effect="non-scaling-stroke" />
+  <line id="nonScalingStrokedLine3" x1="140" y1="5" x2="150" y2="5"
+        transform="rotate(45 280 15) scale(2 3)"
+        stroke-width="10" stroke-linecap="butt" stroke="indigo"
+        vector-effect="non-scaling-stroke" />
+
+  <marker id="marker1" markerWidth="100" markerHeight="100"
+          refX="0" refY="50" markerUnits="userSpaceOnUse">
+    <line x1="0" y1="50" x2="50" y2="100" stroke="aqua" stroke-width="20"
+          transform="rotate(-45 0 50)" />
+  </marker>
+  <line id="shapeWithMarker1" x1="160" y1="130" x2="170" y2="130"
+        stroke="black" stroke-width="3" marker-end="url(#marker1)"/>
+
+  <line id="rotatedLine1" x1="160" y1="150" x2="180" y2="170"
+        stroke="darkmagenta" stroke-width="10"
+        transform="rotate(-45 160 150)" />
+
+  <rect id="css-trans-rect-2" x="5" y="5" width="6" height="6"></rect>
+</g>
+</svg>

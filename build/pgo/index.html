@@ -1,0 +1,109 @@
+<script>
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* global Quitter */
+
+ var list =
+     [
+  "blueprint/elements.html",
+  "blueprint/forms.html",
+  "blueprint/grid.html",
+  "blueprint/sample.html",
+  "js-input/3d-thingy.html",
+  "js-input/crypto-otp.html",
+  "js-input/sunspider/3d-cube.html",
+  "js-input/sunspider/3d-morph.html",
+  "js-input/sunspider/3d-raytrace.html",
+  "js-input/sunspider/access-binary-trees.html",
+  "js-input/sunspider/access-fannkuch.html",
+  "js-input/sunspider/access-nbody.html",
+  "js-input/sunspider/access-nsieve.html",
+  "js-input/sunspider/bitops-3bit-bits-in-byte.html",
+  "js-input/sunspider/bitops-bits-in-byte.html",
+  "js-input/sunspider/bitops-bitwise-and.html",
+  "js-input/sunspider/bitops-nsieve-bits.html",
+  "js-input/sunspider/controlflow-recursive.html",
+  "js-input/sunspider/crypto-aes.html",
+  "js-input/sunspider/crypto-md5.html",
+  "js-input/sunspider/crypto-sha1.html",
+  "js-input/sunspider/date-format-tofte.html",
+  "js-input/sunspider/date-format-xparb.html",
+  "js-input/sunspider/math-cordic.html",
+  "js-input/sunspider/math-partial-sums.html",
+  "js-input/sunspider/math-spectral-norm.html",
+  "js-input/sunspider/regexp-dna.html",
+  "js-input/sunspider/string-base64.html",
+  "js-input/sunspider/string-fasta.html",
+  "js-input/sunspider/string-tagcloud.html",
+  "js-input/sunspider/string-unpack-code.html",
+  "js-input/sunspider/string-validate-input.html",
+  "talos/tests/perf-reftest-singletons/abspos-reflow-1.html",
+  "talos/tests/perf-reftest-singletons/attr-selector-1.html",
+  "talos/tests/perf-reftest-singletons/bidi-resolution-1.html",
+  "talos/tests/perf-reftest-singletons/bloom-basic-2.html",
+  "talos/tests/perf-reftest-singletons/bloom-basic.html",
+  "talos/tests/perf-reftest-singletons/coalesce-1.html",
+  "talos/tests/perf-reftest-singletons/coalesce-2.html",
+  "talos/tests/perf-reftest-singletons/display-none-1.html",
+  "talos/tests/perf-reftest-singletons/external-string-pass.html",
+  "talos/tests/perf-reftest-singletons/getElementById-1.html",
+  "talos/tests/perf-reftest-singletons/id-getter-1.html",
+  "talos/tests/perf-reftest-singletons/id-getter-2.html",
+  "talos/tests/perf-reftest-singletons/id-getter-3.html",
+  "talos/tests/perf-reftest-singletons/id-getter-4.html",
+  "talos/tests/perf-reftest-singletons/id-getter-5.html",
+  "talos/tests/perf-reftest-singletons/id-getter-6.html",
+  "talos/tests/perf-reftest-singletons/id-getter-7.html",
+  "talos/tests/perf-reftest-singletons/inline-style-cache-1.html",
+  "talos/tests/perf-reftest-singletons/link-style-cache-1.html",
+  "talos/tests/perf-reftest-singletons/nth-index-1.html",
+  "talos/tests/perf-reftest-singletons/nth-index-2.html",
+  "talos/tests/perf-reftest-singletons/only-children-1.html",
+  "talos/tests/perf-reftest-singletons/parent-basic-singleton.html",
+  "talos/tests/perf-reftest-singletons/scrollbar-styles-1.html",
+  "talos/tests/perf-reftest-singletons/slow-selector-1.html",
+  "talos/tests/perf-reftest-singletons/slow-selector-2.html",
+  "talos/tests/perf-reftest-singletons/style-attr-1.html",
+  "talos/tests/perf-reftest-singletons/style-sharing-style-attr.html",
+  "talos/tests/perf-reftest-singletons/style-sharing.html",
+  "talos/tests/perf-reftest-singletons/tiny-traversal-singleton.html",
+  "talos/tests/perf-reftest-singletons/window-named-property-get.html",
+  "webkit/PerformanceTests/Speedometer/index.html",
+  "webkit/PerformanceTests/webaudio/index.html?raptor&rendering-buffer-length=30",
+     ];
+ var defaultInterval = 2000;
+ var idx = 0;
+ var w;
+
+ window.onload = function() {
+     w = window.open("about:blank");
+     window.setTimeout(loadURL, defaultInterval);
+ };
+ function loadURL() {
+     var interval = defaultInterval;
+     var testURL = list[idx++];
+     if (testURL.includes("webkit")) {
+         interval = 90000;
+     }
+     w.close();
+     w = window.open(testURL);
+
+     // Prevent the perf-reftest-singletons from calling alert()
+     w.tpRecordTime = function() { };
+
+     if (idx < list.length) {
+     window.setTimeout(loadURL, interval);
+     } else {
+         window.setTimeout(Quitter.quit, interval);
+     }
+ }
+ var i;
+
+ for (i = 0; i < list.length;i++) {
+     // eslint-disable-next-line no-unsanitized/method
+     document.write(list[i]);
+     document.write("<br>");
+ }
+  </script>

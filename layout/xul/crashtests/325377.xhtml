@@ -1,0 +1,16 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
+ title="Testcase bug 325377 - Crash on reload with evil xul textcase, using menulist and nested tooltips">
+<menulist style="display: table-cell;">
+<tooltip style="display: none;">
+    <tooltip/>
+</tooltip>
+</menulist>
+
+<html:script>
+function removestyles(){
+document.getElementsByTagName('tooltip')[0].removeAttribute('style');
+}
+try { document.getElementsByTagName('tooltip')[0].offsetHeight; } catch(e) {}
+setTimeout(removestyles,0);
+</html:script>
+</window>

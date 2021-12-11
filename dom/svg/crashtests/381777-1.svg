@@ -1,0 +1,96 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"> 
+	<defs>
+
+    <filter id="BlendNormal" >
+      <feOffset in="SourceGraphic" dx="75" dy="0" result="temp"/>
+      <feBlend in2="SourceGraphic" in="temp" mode="normal"/>
+	  </filter>
+    
+    <filter id="BlendMultiply" >
+      <feOffset in="SourceGraphic" dx="75" dy="0" result="temp"/>
+      <feBlend in2="SourceGraphic" in="temp" mode="multiply"/>
+	  </filter>
+    
+    <filter id="BlendScreen" >
+      <feOffset in="SourceGraphic" dx="75" dy="0" result="temp"/>
+      <feBlend in2="SourceGraphic" in="temp" mode="screen"/>
+	  </filter>
+    
+    <filter id="BlendDarken" >
+      <feOffset in="SourceGraphic" dx="75" dy="0" result="temp"/>
+      <feBlend in2="SourceGraphic" in="temp" mode="darken"/>
+	  </filter>
+    
+    <filter id="BlendLighten" >
+      <feOffset in="SourceGraphic" dx="75" dy="0" result="temp"/>
+      <feBlend in2="SourceGraphic" in="temp" mode="lighten"/>
+	  </filter>
+  
+    <filter id="noblend"  >
+      <feOffset in="SourceGraphic" dx="75" dy="0" result="temp"/>
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="temp"/>
+      </feMerge>
+    </filter>
+
+    <radialGradient id="grad">
+      <stop offset="0" stop-color="yellow"/>
+      <stop offset="1" stop-color="lightgreen"/>
+    </radialGradient>
+    
+    <g id="swatch">
+      <rect x="0" y="0" width="75" height="75" fill="lightblue"/>
+      <rect x="75" y="0" width="75" height="75" fill="url(#grad)"/>
+    </g>
+    
+    <g id="swatchHalf">
+      <rect x="0" y="0" width="75" height="75" fill="lightblue" opacity="0.5"/>
+      <rect x="75" y="0" width="75" height="75" fill="url(#grad)" opacity="0.5"/>
+    </g>
+    
+    <g id="mask">
+      <rect x="0" y="0" width="75" height="75" fill="white"/>
+      <rect x="150" y="0" width="75" height="75" fill="white"/>
+    </g>
+    
+  </defs>
+
+  
+  <use xlink:href="#swatch" x="0" y="25" filter="url(#BlendNormal)"/>
+  <use xlink:href="#mask" x="0" y ="25"/>
+  <use xlink:href="#swatchHalf" x="150" y="25" filter="url(#BlendNormal)"/>
+  <use xlink:href="#mask" x="150" y ="25"/>
+  <text x="10" y="50">normal</text>
+
+  <use xlink:href="#swatch" x="0" y="125" filter="url(#BlendMultiply)"/>
+  <use xlink:href="#mask" x="0" y ="125"/>
+  <use xlink:href="#swatchHalf" x="150" y="125" filter="url(#BlendMultiply)"/>
+  <use xlink:href="#mask" x="150" y ="125"/>
+  <text x="10" y="150">multiply</text>
+
+  <use xlink:href="#swatch" x="0" y="225" filter="url(#BlendScreen)"/>
+  <use xlink:href="#mask" x="0" y ="225"/>
+  <use xlink:href="#swatchHalf" x="150" y="225" filter="url(#BlendScreen)"/>
+  <use xlink:href="#mask" x="150" y ="225"/>
+  <text x="10" y="250">screen</text>
+
+  <use xlink:href="#swatch" x="0" y="325" filter="url(#BlendDarken)"/>
+  <use xlink:href="#mask" x="0" y ="325"/>
+  <use xlink:href="#swatchHalf" x="150" y="325" filter="url(#BlendDarken)"/>
+  <use xlink:href="#mask" x="150" y ="325"/>
+  <text x="10" y="350">darken</text>
+
+  <use xlink:href="#swatch" x="0" y="425" filter="url(#BlendLighten)"/>
+  <use xlink:href="#mask" x="0" y ="425"/>
+  <use xlink:href="#swatchHalf" x="150" y="425" filter="url(#BlendLighten)"/>
+  <use xlink:href="#mask" x="150" y ="425"/>
+  <text x="10" y="450">lighten</text>
+
+  <use xlink:href="#swatch" x="0" y="525" filter="url(#noblend)"/>
+  <use xlink:href="#mask" x="0" y ="525"/>
+  <use xlink:href="#swatchHalf" x="150" y="525" filter="url(#noblend)"/>
+  <use xlink:href="#mask" x="150" y ="525"/>
+  <text x="10" y="550">no blend</text>
+
+</svg>

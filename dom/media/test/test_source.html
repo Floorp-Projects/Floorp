@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: append source child</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<video id="v1"></video>
+<audio id="a1"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v1 = document.getElementById("v1");
+var a1 = document.getElementById("a1");
+v1.preload = "auto";
+a1.preload = "auto";
+
+is(v1.src, "", "src should be null");
+is(a1.src, "", "src should be null");
+is(v1.currentSrc, "", "currentSrc should be null");
+is(a1.currentSrc, "", "currentSrc should be null");
+is(v1.childNodes.length, 0, "should have no children");
+is(a1.childNodes.length, 0, "should have no children");
+
+function newSource(filter) {
+  var candidates = gSmallTests.filter(function(x){return filter.test(x.type);});
+  if (candidates.length > 0) {
+    var e = document.createElement("source");
+    e.type = candidates[0].type;
+    e.src = candidates[0].name;
+    return e;
+  }
+    return null
+
+}
+
+var audioLoaded = false;
+var videoLoaded = false;
+
+function loaded(e) {
+  var media = e.target;
+  ok(media.networkState > 0, "networkState should be > 0");
+  is(media.childNodes.length, 1, "should have 1 child");
+  var sourceFile = media.currentSrc.substring(media.currentSrc.lastIndexOf('/')+1);
+  var resource = media.firstChild.src.substring(media.firstChild.src.lastIndexOf('/')+1);
+  is(sourceFile, resource, "loaded wrong resource!");
+  if (media == a1)
+    audioLoaded = true;
+  else if (media == v1)
+    videoLoaded = true;
+  if (audioLoaded && videoLoaded) {
+    SimpleTest.finish();
+  }
+}
+
+v1.addEventListener('loadeddata', loaded);
+a1.addEventListener('loadeddata', loaded);
+
+var videoSource = newSource(/^video/);
+if (videoSource) {
+  v1.appendChild(videoSource);
+  v1.load();
+} else {
+  // No video backends? Don't test anything.
+  videoLoaded = true;
+}
+
+var audioSource = newSource(/^audio/);
+if (audioSource) {
+  a1.appendChild(audioSource);
+  a1.load();
+} else {
+  audioLoaded = true;
+}
+
+if (!audioLoaded && !videoLoaded) {
+  SimpleTest.waitForExplicitFinish();
+} else {
+  if (audioLoaded) {
+    todo(false, "No audio types supported");
+  }
+  if (videoLoaded) {
+    todo(false, "No video types supported");
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

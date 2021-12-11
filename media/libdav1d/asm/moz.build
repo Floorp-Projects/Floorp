@@ -1,0 +1,244 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 4 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# ASM enabled
+
+ASFLAGS += [
+    '-I%s/third_party/dav1d/src/' % TOPSRCDIR,
+    '-DHAVE_AVX512ICL=1',
+]
+
+LOCAL_INCLUDES += [
+    '/third_party/dav1d/',
+    '/third_party/dav1d/include/',
+    '/third_party/dav1d/src/',
+]
+
+# Don't export DAV1D_API symbols from libxul
+# see: third_party/dav1d/include/dav1d/common.h
+DEFINES['DAV1D_API'] = ''
+
+CFLAGS += [
+    # find the config.h file.
+    '-I%s/dist/include/dav1d/' % TOPOBJDIR,
+]
+
+# Store the stack alignment that will be used.
+stack_alignment = 0
+
+# Attaching config.asm file
+if CONFIG['CPU_ARCH'] == 'x86':
+    # Default stack alignment can be 4 bytes.
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        stack_alignment = 4
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/win/' % TOPSRCDIR]
+    else:
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/' % TOPSRCDIR]
+        stack_alignment = 16
+        # Change stack alignment to 16 bytes.
+        if CONFIG['CC_TYPE'] == 'clang':
+            CFLAGS += ['-mstack-alignment=16']
+        elif CONFIG['CC_TYPE'] == 'gcc':
+            CFLAGS += ['-mpreferred-stack-boundary=4']
+elif CONFIG['CPU_ARCH'] == 'x86_64':
+    # Default stack aligment is 16 bytes.
+    stack_alignment = 16
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
+    elif CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/win/' % TOPSRCDIR]
+    else:
+        # The rest of the platforms are all Linux-like: plain Linux
+        # Android, OpenBSD, NetBSD, FreeBSD, DragonFly, SunOS
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/linux/' % TOPSRCDIR]
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    stack_alignment = 16
+    ASFLAGS += ['-I%s/dist/include/dav1d/' % TOPOBJDIR]
+else:
+    error('Cpu arch %s is not expected' % CONFIG['CPU_ARCH'])
+
+# Set the macro here instead of config.h
+if stack_alignment == 0:
+    error('Stack alignment cannot be zero.')
+DEFINES['STACK_ALIGNMENT'] = stack_alignment
+
+if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    ASFLAGS += ['-Dprivate_prefix=dav1d']
+
+    SOURCES += [
+        '../../../third_party/dav1d/src/x86/cpu.c',
+        '../../../third_party/dav1d/src/x86/msac_init.c',
+        '../../../third_party/dav1d/src/x86/refmvs_init.c',
+    ]
+
+    EXPORTS.dav1d += [
+        '../../../third_party/dav1d/src/x86/cpu.h',
+        '../../../third_party/dav1d/src/x86/msac.h',
+    ]
+
+    # ASM source files
+    if CONFIG['CPU_ARCH'] == 'x86_64':
+        # Empty file on all other archs. Nasm produces
+        # an error when it compiles empty files.
+        SOURCES += [
+            '../../../third_party/dav1d/src/x86/cdef16_avx2.asm', # moved from autovendored
+            '../../../third_party/dav1d/src/x86/cdef_avx2.asm',
+            '../../../third_party/dav1d/src/x86/cdef_avx512.asm',
+            '../../../third_party/dav1d/src/x86/film_grain16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/film_grain_avx2.asm',
+            '../../../third_party/dav1d/src/x86/ipred_avx2.asm',
+            '../../../third_party/dav1d/src/x86/itx16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/itx_avx2.asm',
+            '../../../third_party/dav1d/src/x86/loopfilter16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/loopfilter_avx2.asm',
+            '../../../third_party/dav1d/src/x86/looprestoration16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/looprestoration_avx2.asm',
+            '../../../third_party/dav1d/src/x86/mc16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/mc_avx2.asm',
+            '../../../third_party/dav1d/src/x86/mc_avx512.asm',
+        ]
+
+    SOURCES += [
+        '../../../third_party/dav1d/src/x86/cdef16_sse.asm',
+        '../../../third_party/dav1d/src/x86/cdef_sse.asm',
+        '../../../third_party/dav1d/src/x86/cpuid.asm',
+        '../../../third_party/dav1d/src/x86/film_grain16_sse.asm',
+        '../../../third_party/dav1d/src/x86/film_grain_sse.asm',
+        '../../../third_party/dav1d/src/x86/ipred16_avx2.asm',
+        '../../../third_party/dav1d/src/x86/ipred16_sse.asm',
+        '../../../third_party/dav1d/src/x86/ipred_sse.asm',
+        '../../../third_party/dav1d/src/x86/itx16_sse.asm',
+        '../../../third_party/dav1d/src/x86/itx_sse.asm',
+        '../../../third_party/dav1d/src/x86/loopfilter16_sse.asm',
+        '../../../third_party/dav1d/src/x86/loopfilter_sse.asm',
+        '../../../third_party/dav1d/src/x86/looprestoration16_sse.asm', # moved from autovendored
+        '../../../third_party/dav1d/src/x86/looprestoration_sse.asm',
+        '../../../third_party/dav1d/src/x86/mc16_sse.asm',
+        '../../../third_party/dav1d/src/x86/mc_sse.asm',
+        '../../../third_party/dav1d/src/x86/msac.asm',
+        '../../../third_party/dav1d/src/x86/refmvs.asm',
+    ]
+
+    # BITDEPTH
+    relative_path = '../../../third_party/dav1d/src/x86/'
+    bitdepth_basenames = [
+        'cdef_init_tmpl.c',
+        'film_grain_init_tmpl.c',
+        'ipred_init_tmpl.c',
+        'itx_init_tmpl.c',
+        'loopfilter_init_tmpl.c',
+        'looprestoration_init_tmpl.c',
+        'mc_init_tmpl.c',
+    ]
+
+
+    for f in bitdepth_basenames:
+        SOURCES += [
+            '!16bd_%s' % f
+        ]
+        GeneratedFile('16bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '16'])
+        SOURCES += [
+            '!8bd_%s' % f
+        ]
+        GeneratedFile('8bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '8'])
+
+elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
+    SOURCES += [
+        '../../../third_party/dav1d/src/arm/cpu.c',
+        '../../../third_party/dav1d/src/arm/refmvs_init.c',
+    ]
+    EXPORTS += [
+        '../../../third_party/dav1d/src/arm/asm-offsets.h',
+        '../../../third_party/dav1d/src/arm/cpu.h',
+        '../../../third_party/dav1d/src/arm/msac.h',
+    ]
+
+    # BITDEPTH c file
+    relative_path = '../../../third_party/dav1d/src/arm/'
+    bitdepth_basenames = [
+        'cdef_init_tmpl.c',
+        'film_grain_init_tmpl.c',
+        'ipred_init_tmpl.c',
+        'itx_init_tmpl.c',
+        'loopfilter_init_tmpl.c',
+        'looprestoration_init_tmpl.c',
+        'mc_init_tmpl.c',
+    ]
+
+    for f in bitdepth_basenames:
+        SOURCES += [
+            '!16bd_%s' % f
+        ]
+        GeneratedFile('16bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '16'])
+        SOURCES += [
+            '!8bd_%s' % f
+        ]
+        GeneratedFile('8bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '8'])
+
+    # BITDEPTH .S files
+    if CONFIG['CPU_ARCH'] == 'aarch64':
+        SOURCES += [
+            '../../../third_party/dav1d/src/arm/64/cdef.S',
+            '../../../third_party/dav1d/src/arm/64/cdef16.S',
+            '../../../third_party/dav1d/src/arm/64/cdef_tmpl.S',
+            '../../../third_party/dav1d/src/arm/64/film_grain.S',
+            '../../../third_party/dav1d/src/arm/64/film_grain16.S',
+            '../../../third_party/dav1d/src/arm/64/ipred.S',
+            '../../../third_party/dav1d/src/arm/64/ipred16.S',
+            # itx.S is used for both 8 and 16 bpc.
+            '../../../third_party/dav1d/src/arm/64/itx.S',
+            '../../../third_party/dav1d/src/arm/64/itx16.S',
+            '../../../third_party/dav1d/src/arm/64/loopfilter.S',
+            '../../../third_party/dav1d/src/arm/64/loopfilter16.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration16.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration_common.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration_tmpl.S',
+            '../../../third_party/dav1d/src/arm/64/mc.S',
+            '../../../third_party/dav1d/src/arm/64/mc16.S',
+            '../../../third_party/dav1d/src/arm/64/msac.S',
+            '../../../third_party/dav1d/src/arm/64/refmvs.S',
+        ]
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += [
+            '../../../third_party/dav1d/src/arm/32/cdef.S',
+            '../../../third_party/dav1d/src/arm/32/cdef16.S',
+            '../../../third_party/dav1d/src/arm/32/cdef_tmpl.S',
+            '../../../third_party/dav1d/src/arm/32/film_grain.S',
+            '../../../third_party/dav1d/src/arm/32/film_grain16.S',
+            '../../../third_party/dav1d/src/arm/32/ipred.S',
+            '../../../third_party/dav1d/src/arm/32/ipred16.S',
+            '../../../third_party/dav1d/src/arm/32/itx.S',
+            '../../../third_party/dav1d/src/arm/32/itx16.S',
+            '../../../third_party/dav1d/src/arm/32/loopfilter.S',
+            '../../../third_party/dav1d/src/arm/32/loopfilter16.S',
+            '../../../third_party/dav1d/src/arm/32/looprestoration.S',
+            '../../../third_party/dav1d/src/arm/32/looprestoration16.S',
+            '../../../third_party/dav1d/src/arm/32/looprestoration_common.S',
+            '../../../third_party/dav1d/src/arm/32/looprestoration_tmpl.S',
+            '../../../third_party/dav1d/src/arm/32/mc.S',
+            '../../../third_party/dav1d/src/arm/32/mc16.S',
+            '../../../third_party/dav1d/src/arm/32/msac.S',
+            '../../../third_party/dav1d/src/arm/32/refmvs.S',
+        ]
+
+if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    USE_NASM = True
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
+    USE_INTEGRATED_CLANGCL_AS = True
+
+FINAL_LIBRARY = 'gkmedias'
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()

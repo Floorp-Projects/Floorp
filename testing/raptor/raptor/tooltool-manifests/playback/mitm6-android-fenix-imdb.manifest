@@ -1,0 +1,9 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "ec96303a6c0c019282f1f808fe99de78303b45063f9106fe42e61f1a146e6f2485431a39946b57595e33d645c358c699a8bf7983755bccc123fb88c6eb301dea",
+    "filename": "mitm6-android-fenix-imdb.zip",
+    "size": 3934494,
+    "visibility": "public"
+  }
+]

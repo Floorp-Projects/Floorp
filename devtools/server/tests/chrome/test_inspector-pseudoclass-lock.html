@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+const InspectorUtils = require("InspectorUtils");
+
+let gInspectee = null;
+let gWalker = null;
+
+async function setup(callback) {
+  const url = document.getElementById("inspectorContent").href;
+  const { target, doc } = await attachURL(url);
+  gInspectee = doc;
+  const inspector = await target.getFront("inspector");
+  ok(inspector.walker, "getWalker() should return an actor.");
+  gWalker = inspector.walker;
+  runNextTest();
+}
+
+function teardown() {
+  gWalker = null;
+  gInspectee = null;
+}
+
+function checkChange(change, expectation) {
+  is(change.type, "pseudoClassLock", "Expect a pseudoclass lock change.");
+  const target = change.target;
+  if (expectation.id) {
+    is(target.id, expectation.id, "Expect a change on node id " + expectation.id);
+  }
+  if (expectation.nodeName) {
+    is(target.nodeName, expectation.nodeName,
+       "Expect a change on node name " + expectation.nodeName);
+  }
+
+  is(target.pseudoClassLocks.length, expectation.pseudos.length,
+     "Expect " + expectation.pseudos.length + " pseudoclass locks.");
+  for (let i = 0; i < expectation.pseudos.length; i++) {
+    const pseudo = expectation.pseudos[i];
+    const enabled = expectation.enabled === undefined ? true : expectation.enabled[i];
+    ok(target.hasPseudoClassLock(pseudo), "Expect lock: " + pseudo);
+    const rawNode = target.rawNode();
+    ok(InspectorUtils.hasPseudoClassLock(rawNode, pseudo),
+       "Expect lock in dom: " + pseudo);
+
+    is(rawNode.matches(pseudo), enabled,
+       `Target should match pseudoclass, '${pseudo}', if enabled (with .matches())`);
+  }
+
+  for (const pseudo of PSEUDO_CLASSES) {
+    if (!expectation.pseudos.some(expected => pseudo === expected)) {
+      ok(!target.hasPseudoClassLock(pseudo), "Don't expect lock: " + pseudo);
+      ok(!InspectorUtils.hasPseudoClassLock(target.rawNode(), pseudo),
+         "Don't expect lock in dom: " + pseudo);
+    }
+  }
+}
+
+function checkMutations(mutations, expectations) {
+  is(mutations.length, expectations.length, "Should get the right number of mutations.");
+  for (let i = 0; i < mutations.length; i++) {
+    checkChange(mutations[i], expectations[i]);
+  }
+}
+
+addTest(function testPseudoClassLock() {
+  let contentNode;
+  let nodeFront;
+  setup(() => {
+    contentNode = gInspectee.querySelector("#b");
+    return promiseDone(gWalker.querySelector(gWalker.rootNode, "#b").then(front => {
+      nodeFront = front;
+      // Lock the pseudoclass alone, no parents.
+      gWalker.addPseudoClassLock(nodeFront, ":active");
+      // Expect a single pseudoClassLock mutation.
+      return promiseOnce(gWalker, "mutations");
+    }).then(mutations => {
+      is(mutations.length, 1, "Should get one mutation");
+      is(mutations[0].target, nodeFront, "Should be the node we tried to apply to");
+      checkChange(mutations[0], {
+        id: "b",
+        nodeName: "DIV",
+        pseudos: [":active"],
+      });
+    }).then(() => {
+      // Now add :hover, this time with parents.
+      gWalker.addPseudoClassLock(nodeFront, ":hover", {parents: true});
+      return promiseOnce(gWalker, "mutations");
+    }).then(mutations => {
+      const expectedMutations = [{
+        id: "b",
+        nodeName: "DIV",
+        pseudos: [":hover", ":active"],
+      },
+      {
+        id: "longlist",
+        nodeName: "DIV",
+        pseudos: [":hover"],
+      },
+      {
+        nodeName: "BODY",
+        pseudos: [":hover"],
+      },
+      {
+        nodeName: "HTML",
+        pseudos: [":hover"],
+      }];
+      checkMutations(mutations, expectedMutations);
+    }).then(() => {
+      // Now remove the :hover on all parents
+      gWalker.removePseudoClassLock(nodeFront, ":hover", {parents: true});
+      return promiseOnce(gWalker, "mutations");
+    }).then(mutations => {
+      const expectedMutations = [{
+        id: "b",
+        nodeName: "DIV",
+        // Should still have :active on the original node.
+        pseudos: [":active"],
+      },
+      {
+        id: "longlist",
+        nodeName: "DIV",
+        pseudos: [],
+      },
+      {
+        nodeName: "BODY",
+        pseudos: [],
+      },
+      {
+        nodeName: "HTML",
+        pseudos: [],
+      }];
+      checkMutations(mutations, expectedMutations);
+    }).then(() => {
+      gWalker.addPseudoClassLock(nodeFront, ":hover", {enabled: false});
+      return promiseOnce(gWalker, "mutations");
+    }).then(mutations => {
+      is(mutations.length, 1, "Should get one mutation");
+      is(mutations[0].target, nodeFront, "Should be the node we tried to apply to");
+      checkChange(mutations[0], {
+        id: "b",
+        nodeName: "DIV",
+        pseudos: [":hover", ":active"],
+        enabled: [false, true],
+      });
+    }).then(() => {
+      // Now shut down the walker and make sure that clears up the remaining lock.
+      return gWalker.release();
+    }).then(() => {
+      ok(!InspectorUtils.hasPseudoClassLock(contentNode, ":active"),
+         "Pseudoclass should have been removed during destruction.");
+      teardown();
+    }).then(runNextTest));
+  });
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

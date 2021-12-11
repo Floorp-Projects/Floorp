@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" dir="">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+  <link rel="stylesheet" href="chrome://devtools/skin/breadcrumbs.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/inspector.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/badge.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/rules.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/compatibility.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/computed.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/changes.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/fonts.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/boxmodel.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/layout.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/animation.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/tabs/Tabs.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/SidebarToggle.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/inspector/components/InspectorTabPanel.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/splitter/SplitBox.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/Accordion.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/reps/reps.css"/>
+  <!-- Needed for the ObjectInspector -->
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/Tree.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/object-inspector/components/ObjectInspector.css"/>
+  <link rel="stylesheet" href="chrome://devtools/content/shared/components/tree/TreeView.css"/>
+
+  <script src="chrome://devtools/content/shared/theme-switching.js"></script>
+  <script>
+    /* eslint-disable */
+    var isInChrome = window.location.href.includes("chrome:");
+    if (isInChrome) {
+      var exports = {};
+      var { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm");
+      var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js");
+    }
+  </script>
+
+  <script src="resource://devtools/client/inspector/inspector.js" defer="true"></script>
+</head>
+<body class="theme-body" role="application">
+  <div class="inspector-responsive-container theme-body inspector"
+       data-localization-bundle="devtools/client/locales/inspector.properties">
+
+    <!-- Main Panel Content -->
+    <div id="inspector-main-content" class="devtools-main-content" style="visibility: hidden;">
+      <!-- Toolbar -->
+      <div id="inspector-toolbar" class="devtools-toolbar devtools-input-toolbar" nowindowdrag="true">
+        <div id="inspector-search" class="devtools-searchbox">
+          <input id="inspector-searchbox" class="devtools-searchinput"
+                 type="search"
+                 data-localization="placeholder=inspectorSearchHTML.label3"/>
+          <button id="inspector-searchinput-clear" class="devtools-searchinput-clear" hidden="" tabindex="-1"></button>
+        </div>
+        <div id="inspector-searchlabel-container" hidden="">
+          <div class="devtools-separator"></div>
+          <span id="inspector-searchlabel"></span>
+        </div>
+        <div class="devtools-separator"></div>
+        <button id="inspector-element-add-button" class="devtools-button"
+                data-localization="title=inspectorAddNode.label"></button>
+        <button id="inspector-eyedropper-toggle" class="devtools-button"></button>
+      </div>
+
+      <!-- Markup Container -->
+      <div id="markup-box"></div>
+      <div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
+        <div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
+             role="toolbar" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0"></div>
+      </div>
+    </div>
+
+    <!-- Splitter -->
+    <div id="inspector-splitter-box"></div>
+
+    <!-- Split Sidebar Container -->
+    <div id="inspector-rules-container">
+      <div id="inspector-rules-sidebar" hidden=""></div>
+    </div>
+
+    <!-- Sidebar Container -->
+    <div id="inspector-sidebar-container">
+      <div id="inspector-sidebar" hidden=""></div>
+    </div>
+
+    <!-- Sidebar Panel Definitions -->
+    <div id="tabpanels" style="visibility: collapse">
+      <div id="sidebar-panel-ruleview" class="theme-sidebar inspector-tabpanel">
+        <div id="ruleview-toolbar-container">
+          <div id="ruleview-toolbar" class="devtools-toolbar devtools-input-toolbar">
+            <div class="devtools-searchbox">
+              <input id="ruleview-searchbox"
+                     class="devtools-filterinput"
+                     type="search"
+                     data-localization="placeholder=inspector.filterStyles.placeholder"/>
+              <button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></button>
+            </div>
+            <div class="devtools-separator"></div>
+            <div id="ruleview-command-toolbar">
+              <button id="pseudo-class-panel-toggle" data-localization="title=inspector.togglePseudo.tooltip" class="devtools-button"></button>
+              <button id="class-panel-toggle" data-localization="title=inspector.classPanel.toggleClass.tooltip" class="devtools-button"></button>
+              <button id="ruleview-add-rule-button" data-localization="title=inspector.addRule.tooltip" class="devtools-button"></button>
+              <button id="color-scheme-simulation-light-toggle" data-localization="title=inspector.colorSchemeSimulationLight.tooltip" class="devtools-button" hidden=""></button>
+              <button id="color-scheme-simulation-dark-toggle" data-localization="title=inspector.colorSchemeSimulationDark.tooltip" class="devtools-button" hidden=""></button>
+              <button id="print-simulation-toggle" data-localization="title=inspector.printSimulation.tooltip" class="devtools-button" hidden=""></button>
+            </div>
+          </div>
+          <div id="pseudo-class-panel" class="theme-toolbar ruleview-reveal-panel" hidden="">
+            <!-- Populated with checkbox inputs once the Rules view is instantiated -->
+          </div>
+          <div id="ruleview-class-panel" class="theme-toolbar ruleview-reveal-panel" hidden=""></div>
+        </div>
+
+        <div id="ruleview-container" class="ruleview" role="document">
+          <div id="ruleview-container-focusable" tabindex="-1">
+          </div>
+        </div>
+      </div>
+
+      <div id="sidebar-panel-computedview" class="theme-sidebar inspector-tabpanel">
+        <div id="computed-toolbar" class="devtools-toolbar devtools-input-toolbar">
+          <div class="devtools-searchbox">
+            <input id="computed-searchbox"
+                   class="devtools-filterinput"
+                   type="search"
+                   data-localization="placeholder=inspector.filterStyles.placeholder"/>
+            <button id="computed-searchinput-clear" class="devtools-searchinput-clear"></button>
+          </div>
+          <div class="devtools-separator"></div>
+          <input id="browser-style-checkbox"
+                 type="checkbox"
+                 class="includebrowserstyles"/>
+          <label id="browser-style-checkbox-label" for="browser-style-checkbox"
+                 data-localization="content=inspector.browserStyles.label"></label>
+        </div>
+
+        <div id="computed-container" role="document">
+          <div id="computed-container-focusable" tabindex="-1">
+            <div id="computed-property-container" class="devtools-monospace" tabindex="0" dir="ltr"></div>
+            <div id="computed-no-results" class="devtools-sidepanel-no-result" hidden="" data-localization="content=inspector.noProperties"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

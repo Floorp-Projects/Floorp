@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioParam.exponentialRampToValue</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var V0 = 0.1;
+var V1 = 0.9;
+var T0 = 0;
+
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph(context) {
+    var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      sourceBuffer.getChannelData(0)[i] = 1;
+    }
+
+    var source = context.createBufferSource();
+    source.buffer = sourceBuffer;
+
+    var gain = context.createGain();
+    gain.gain.setValueAtTime(V0, 0);
+    gain.gain.exponentialRampToValueAtTime(V1, 2048/context.sampleRate);
+
+    source.connect(gain);
+
+    source.start(0);
+    return gain;
+  },
+  createExpectedBuffers(context) {
+    var T1 = 2048 / context.sampleRate;
+    var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      var t = i / context.sampleRate;
+      expectedBuffer.getChannelData(0)[i] = V0 * Math.pow(V1 / V0, (t - T0) / (T1 - T0));
+    }
+    return expectedBuffer;
+  },
+};
+
+
+SimpleTest.waitForExplicitFinish();
+// Comparing different AudioContexts may result in different timing reated information being reported
+// when we jitter time, as they are on different Relative Timelines.
+SpecialPowers.pushPrefEnv({"set": [["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false]]}, runTest);
+
+</script>
+</pre>
+</body>
+</html>

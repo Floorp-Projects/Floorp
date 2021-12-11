@@ -1,0 +1,326 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozIStorageBaseStatement.idl"
+%{C++
+#include "mozilla/DebugOnly.h"
+%}
+
+[ptr] native octetPtr(uint8_t);
+
+/**
+ * A SQL statement that can be used for both synchronous and asynchronous
+ * purposes.
+ */
+[scriptable, builtinclass, uuid(5f567c35-6c32-4140-828c-683ea49cfd3a)]
+interface mozIStorageStatement : mozIStorageBaseStatement {
+  /**
+   * Create a clone of this statement, by initializing a new statement
+   * with the same connection and same SQL statement as this one.  It
+   * does not preserve statement state; that is, if a statement is
+   * being executed when it is cloned, the new statement will not be
+   * executing.
+   */
+  mozIStorageStatement clone();
+
+  /*
+   * Number of parameters
+   */
+  readonly attribute unsigned long parameterCount;
+
+  /**
+   * Name of nth parameter, if given
+   */
+  AUTF8String getParameterName(in unsigned long aParamIndex);
+
+  /**
+   * Returns the index of the named parameter.
+   *
+   * @param aName
+   *        The name of the parameter you want the index for.  This does not
+   *        include the leading ':'.
+   * @return the index of the named parameter.
+   */
+  unsigned long getParameterIndex(in AUTF8String aName);
+
+  /**
+   * Number of columns returned
+   */
+  readonly attribute unsigned long columnCount;
+
+  /**
+   * Name of nth column
+   */
+  AUTF8String getColumnName(in unsigned long aColumnIndex);
+
+  /**
+   * Obtains the index of the column with the specified name.
+   *
+   * @param aName
+   *        The name of the column.
+   * @return The index of the column with the specified name.
+   */
+  unsigned long getColumnIndex(in AUTF8String aName);
+
+  /**
+   * Reset parameters/statement execution
+   */
+  void reset();
+
+  /**
+   * Execute the query, ignoring any results.  This is accomplished by
+   * calling executeStep() once, and then calling reset().
+   *
+   * Error and last insert info, etc. are available from
+   * the mozStorageConnection.
+   */
+  void execute();
+
+  /**
+   * Execute a query, using any currently-bound parameters.  Reset
+   * must be called on the statement after the last call of
+   * executeStep.
+   *
+   * @return a boolean indicating whether there are more rows or not;
+   *         row data may be accessed using mozIStorageValueArray methods on
+   *         the statement.
+   */
+  boolean executeStep();
+
+  /**
+   * Execute a query, using any currently-bound parameters.  Reset is called
+   * when no more data is returned.  This method is only available to JavaScript
+   * consumers.
+   *
+   * @deprecated As of Mozilla 1.9.2 in favor of executeStep().
+   *
+   * @return a boolean indicating whether there are more rows or not.
+   *
+   * [deprecated] boolean step();
+   */
+
+  /**
+   * Obtains the current list of named parameters, which are settable.  This
+   * property is only available to JavaScript consumers.
+   *
+   * readonly attribute mozIStorageStatementParams params;
+   */
+
+  /**
+   * Obtains the current row, with access to all the data members by name.  This
+   * property is only available to JavaScript consumers.
+   *
+   * readonly attribute mozIStorageStatementRow row;
+   */
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Copied contents of mozIStorageValueArray
+
+  /**
+   * These type values are returned by getTypeOfIndex
+   * to indicate what type of value is present at
+   * a given column.
+   */
+  const long VALUE_TYPE_NULL = 0;
+  const long VALUE_TYPE_INTEGER = 1;
+  const long VALUE_TYPE_FLOAT = 2;
+  const long VALUE_TYPE_TEXT = 3;
+  const long VALUE_TYPE_BLOB = 4;
+
+  /**
+   * The number of entries in the array (each corresponding to a column in the
+   * database row)
+   */
+  readonly attribute unsigned long numEntries;
+
+  /**
+   * Indicate the data type of the current result row for the the given column.
+   * SQLite will perform type conversion if you ask for a value as a different
+   * type than it is stored as.
+   *
+   * @param aIndex
+   *        0-based column index.
+   * @return The type of the value at the given column index; one of
+   *         VALUE_TYPE_NULL, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT,
+   *         VALUE_TYPE_TEXT, VALUE_TYPE_BLOB.
+   */
+  long getTypeOfIndex(in unsigned long aIndex);
+
+  /**
+   * Retrieve the contents of a column from the current result row as a
+   * variant.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return A variant with the type of the column value.
+   */
+  nsIVariant getVariant(in unsigned long aIndex);
+
+  /**
+   * Retrieve the contents of a column from the current result row as an
+   * integer.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return Column value interpreted as an integer per type conversion rules.
+   * @{
+   */
+  long getInt32(in unsigned long aIndex);
+  long long getInt64(in unsigned long aIndex);
+  /** @} */
+  /**
+   * Retrieve the contents of a column from the current result row as a
+   * floating point double.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return Column value interpreted as a double per type conversion rules.
+   */
+  double getDouble(in unsigned long aIndex);
+  /**
+   * Retrieve the contents of a column from the current result row as a
+   * string.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return The value for the result column interpreted as a string.  If the
+   *         stored value was NULL, you will get an empty string with IsVoid set
+   *         to distinguish it from an explicitly set empty string.
+   * @{
+   */
+  AUTF8String getUTF8String(in unsigned long aIndex);
+  AString getString(in unsigned long aIndex);
+  /** @} */
+
+  /**
+   * Retrieve the contents of a column from the current result row as a
+   * blob.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @param[out] aDataSize
+   *             The number of bytes in the blob.
+   * @param[out] aData
+   *             The contents of the BLOB.  This will be NULL if aDataSize == 0.
+   */
+  void getBlob(in unsigned long aIndex, out unsigned long aDataSize, [array,size_is(aDataSize)] out octet aData);
+
+  /**
+   * Retrieve the contents of a Blob column from the current result row as a
+   * string.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return The value for the result Blob column interpreted as a String.
+   *         No encoding conversion is performed.
+   */
+  AString getBlobAsString(in unsigned long aIndex);
+
+  /**
+   * Retrieve the contents of a Blob column from the current result row as a
+   * UTF8 string.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return The value for the result Blob column interpreted as a UTF8 String.
+   *         No encoding conversion is performed.
+   */
+  AUTF8String getBlobAsUTF8String(in unsigned long aIndex);
+
+  /**
+   * Check whether the given column in the current result row is NULL.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return true if the value for the result column is null.
+   */
+  boolean getIsNull(in unsigned long aIndex);
+
+  /**
+   * Returns a shared string pointer.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @param aByteLength
+   *        The number of bytes in the string or blob. This is the same as the
+   *        number of characters for UTF-8 strings, and twice the number of
+   *        characters for UTF-16 strings.
+   * @param aResult
+   *        A pointer to the string or blob.
+   */
+  [noscript] void getSharedUTF8String(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out string aResult);
+  [noscript] void getSharedString(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out wstring aResult);
+  [noscript] void getSharedBlob(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out octetPtr aResult);
+
+%{C++
+  /**
+   * Getters for native code that return their values as
+   * the return type, for convenience and sanity.
+   *
+   * Not virtual; no vtable bloat.
+   */
+
+  inline int32_t AsInt32(uint32_t idx) {
+    int32_t v = 0;
+    mozilla::DebugOnly<nsresult> rv = GetInt32(idx, &v);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return v;
+  }
+
+  inline int64_t AsInt64(uint32_t idx) {
+    int64_t v = 0;
+    mozilla::DebugOnly<nsresult> rv = GetInt64(idx, &v);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return v;
+  }
+
+  inline double AsDouble(uint32_t idx) {
+    double v = 0.0;
+    mozilla::DebugOnly<nsresult> rv = GetDouble(idx, &v);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return v;
+  }
+
+  inline const char* AsSharedUTF8String(uint32_t idx, uint32_t *len) {
+    const char *str = nullptr;
+    *len = 0;
+    mozilla::DebugOnly<nsresult> rv = GetSharedUTF8String(idx, len, &str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return str;
+  }
+
+  inline const char16_t* AsSharedWString(uint32_t idx, uint32_t *len) {
+    const char16_t *str = nullptr;
+    *len = 0;
+    mozilla::DebugOnly<nsresult> rv = GetSharedString(idx, len, &str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return str;
+  }
+
+  inline const uint8_t* AsSharedBlob(uint32_t idx, uint32_t *len) {
+    const uint8_t *blob = nullptr;
+    *len = 0;
+    mozilla::DebugOnly<nsresult> rv = GetSharedBlob(idx, len, &blob);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || IsNull(idx),
+               "Getting value failed, wrong column index?");
+    return blob;
+  }
+
+  inline bool IsNull(uint32_t idx) {
+    bool b = false;
+    mozilla::DebugOnly<nsresult> rv = GetIsNull(idx, &b);
+    MOZ_ASSERT(NS_SUCCEEDED(rv),
+               "Getting value failed, wrong column index?");
+    return b;
+  }
+
+%}
+};

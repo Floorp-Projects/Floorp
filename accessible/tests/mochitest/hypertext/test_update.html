@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIHyper>TextAccessible in dynamic tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    const kLinksCount = 128;
+    function addLinks(aContainerID) {
+      this.containerNode = getNode(aContainerID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+      ];
+
+      this.invoke = function addLinks_invoke() {
+        for (var jdx = 0; jdx < kLinksCount; jdx++) {
+          var a = document.createElement("a");
+          a.setAttribute("href", "mozilla.org");
+          a.textContent = "mozilla";
+          this.containerNode.appendChild(a);
+
+          var span = document.createElement("span");
+          span.textContent = " text ";
+          this.containerNode.appendChild(span);
+        }
+      };
+
+      this.finalCheck = function addLinks_finalCheck() {
+        // getLinkAt and getLinkIndex.
+        var htAcc = getAccessible(this.containerNode, [nsIAccessibleHyperText]);
+        for (var jdx = 0; jdx < kLinksCount; jdx++) {
+          var link = htAcc.getLinkAt(jdx);
+          ok(link, "No link at index " + jdx + " for '" + aContainerID + "'");
+
+          var linkIdx = htAcc.getLinkIndex(link);
+          is(linkIdx, jdx, "Wrong link index for '" + aContainerID + "'!");
+        }
+      };
+
+      this.getID = function addLinks_getID() {
+        return "Add links for '" + aContainerID + "'";
+      };
+    }
+
+    function updateText(aContainerID) {
+      this.containerNode = getNode(aContainerID);
+      this.container = getAccessible(this.containerNode, nsIAccessibleHyperText);
+      this.text = this.container.firstChild;
+      this.textNode = this.text.DOMNode;
+      this.textLen = this.textNode.data.length;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_INSERTED, this.containerNode),
+      ];
+
+      this.invoke = function updateText_invoke() {
+        is(this.container.getLinkIndexAtOffset(this.textLen), 0,
+           "Wrong intial text offsets!");
+
+        this.text.DOMNode.appendData(" my");
+      };
+
+      this.finalCheck = function updateText_finalCheck() {
+        is(this.container.getLinkIndexAtOffset(this.textLen), -1,
+           "Text offsets weren't updated!");
+      };
+
+      this.getID = function updateText_getID() {
+        return "update text for '" + aContainerID + "'";
+      };
+    }
+
+    /**
+     * Text offsets must be updated when hypertext child is removed.
+     */
+    function removeChild(aContainerID, aChildID, aInitialText, aFinalText) {
+      this.containerNode = getNode(aContainerID);
+      this.container = getAccessible(this.containerNode, nsIAccessibleText);
+      this.childNode = getNode(aChildID);
+
+      // Call first to getText so offsets are cached
+      is(this.container.getText(0, -1), aInitialText,
+         "Wrong text before child removal");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.containerNode),
+      ];
+
+      this.invoke = function removeChild_invoke() {
+        this.containerNode.removeChild(this.childNode);
+      };
+
+      this.finalCheck = function removeChild_finalCheck() {
+        is(this.container.getText(0, -1), aFinalText,
+           "Wrong text after child removal");
+        is(this.container.characterCount, aFinalText.length,
+           "Wrong text after child removal");
+      };
+
+      this.getID = function removeChild_getID() {
+        return "check text after removing child from '" + aContainerID + "'";
+      };
+    }
+
+    function removeFirstChild(aContainer) {
+      this.ht = getAccessible(aContainer, [ nsIAccessibleHyperText ]);
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer),
+      ];
+
+      this.invoke = function removeFirstChild_invoke() {
+        is(this.ht.linkCount, 2, "Wrong embedded objects count before removal");
+
+        getNode(aContainer).removeChild(getNode(aContainer).firstElementChild);
+      };
+
+      this.finalCheck = function removeFirstChild_finalCheck() {
+        // check list index before link count
+        is(this.ht.getLinkIndex(this.ht.firstChild), 0, "Wrong child index");
+        is(this.ht.linkCount, 1, "Wrong embedded objects count after removal");
+      };
+
+      this.getID = function removeFirstChild_getID() {
+        return "Remove first child and check embedded object indeces";
+      };
+    }
+
+    function removeLastChild(aContainer) {
+      this.ht = getAccessible(aContainer, [ nsIAccessibleHyperText ]);
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer),
+      ];
+
+      this.invoke = function removeLastChild_invoke() {
+        is(this.ht.linkCount, 1, "Wrong embedded objects count before removal");
+
+        getNode(aContainer).removeChild(getNode(aContainer).lastElementChild);
+      };
+
+      this.finalCheck = function removeLastChild_finalCheck() {
+        is(this.ht.linkCount, 0, "Wrong embedded objects count after removal");
+
+        var link = null;
+        try {
+          link = this.ht.getLinkAt(0);
+        } catch (e) { }
+        ok(!link, "No embedded object is expected");
+      };
+
+      this.getID = function removeLastChild_getID() {
+        return "Remove last child and try its embedded object";
+      };
+    }
+
+    // gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTest() {
+      gQueue = new eventQueue();
+      gQueue.push(new addLinks("p1"));
+      gQueue.push(new updateText("p2"));
+      gQueue.push(new removeChild("div1", "div2",
+                                  "hello my good friend", "hello friend"));
+      gQueue.push(new removeFirstChild("c4"));
+      gQueue.push(new removeLastChild("c5"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Cache links within hypertext accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=572394">
+    Mozilla Bug 572394
+  </a>
+  <a target="_blank"
+     title="Text offsets don't get updated when text of first child text accessible is changed"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=625009">
+    Mozilla Bug 625009
+  </a>
+  <a target="_blank"
+     title="Crash in nsHyperTextAccessible::GetText()"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=630841">
+    Mozilla Bug 630841
+  </a><br>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="p1"></p>
+  <p id="p2"><b>hello</b><a>friend</a></p>
+  <div id="div1">hello<span id="div2"> my<span id="div3"> good</span></span> friend</span></div>
+  <form id="c4">
+    <label for="c4_input">label</label>
+    <input id="c4_input">
+  </form>
+  <div id="c5">TextLeaf<input id="c5_input"></div>
+</body>
+</html>

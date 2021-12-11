@@ -1,0 +1,128 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [
+          {
+            "type": "string",
+            "pattern": "^experiments(\\.\\w+)+$"
+          }
+        ]
+      },
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "experiment_apis": {
+            "type": "object",
+            "additionalProperties": {"$ref": "experiments.ExperimentAPI"},
+            "optional": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "namespace": "experiments",
+    "types": [
+      {
+        "id": "ExperimentAPI",
+        "type": "object",
+        "properties": {
+          "schema": {"$ref": "ExperimentURL"},
+
+          "parent": {
+            "type": "object",
+            "properties": {
+              "events": {
+                "$ref": "APIEvents",
+                "optional": true,
+                "default": []
+              },
+
+              "paths": {
+                "$ref": "APIPaths",
+                "optional": true,
+                "default": []
+              },
+
+              "script": {"$ref": "ExperimentURL"},
+
+              "scopes": {
+                "type": "array",
+                "items": {"$ref": "APIParentScope", "onError": "warn"},
+                "optional": true,
+                "default": []
+              }
+            },
+            "optional": true
+          },
+
+          "child": {
+            "type": "object",
+            "properties": {
+              "paths": {"$ref": "APIPaths"},
+
+              "script": {"$ref": "ExperimentURL"},
+
+              "scopes": {
+                "type": "array",
+                "minItems": 1,
+                "items": {"$ref": "APIChildScope", "onError": "warn"}
+              }
+            },
+            "optional": true
+          }
+        }
+      },
+      {
+        "id": "ExperimentURL",
+        "type": "string",
+        "format": "unresolvedRelativeUrl"
+      },
+      {
+        "id": "APIPaths",
+        "type": "array",
+        "items": {"$ref": "APIPath"},
+        "minItems": 1
+      },
+      {
+        "id": "APIPath",
+        "type": "array",
+        "items": {"type": "string"},
+        "minItems": 1
+      },
+      {
+        "id": "APIEvents",
+        "type": "array",
+        "items": {"$ref": "APIEvent", "onError": "warn"}
+      },
+      {
+        "id": "APIEvent",
+        "type": "string",
+        "enum": [
+          "startup"
+        ]
+      },
+      {
+        "id": "APIParentScope",
+        "type": "string",
+        "enum": [
+          "addon_parent",
+          "content_parent",
+          "devtools_parent"
+        ]
+      },
+      {
+        "id": "APIChildScope",
+        "type": "string",
+        "enum": [
+          "addon_child",
+          "content_child",
+          "devtools_child"
+        ]
+      }
+    ]
+  }
+]

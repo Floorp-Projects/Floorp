@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<style>
+.test::after {
+    content:"::after content";
+}
+</style>
+
+<button>
+  Button contents
+</button>
+<script>
+  var td = document.querySelector("button");
+  td.offsetWidth;
+  td.className = "test";
+</script>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>file_anchor_ping.html</title>
+  </head>
+  <body onload="document.body.firstElementChild.click()">
+    <a href="/">click me</a>
+    <script>
+      document.body.firstElementChild.ping = window.location.search.slice(1);
+    </script>
+  </body>
+</html>

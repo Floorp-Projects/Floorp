@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+    function tweak() {
+      // div with style "border: 10px solid green"
+      var outerShadow = document.createElement("div");
+      outerShadow.style.border = "10px solid green";
+
+      var outerInsertionPoint = document.createElement("slot");
+      outerShadow.appendChild(outerInsertionPoint);
+
+      // div with style "border: 10px solid orange"
+      var innerShadow = document.createElement("div");
+      innerShadow.style.border = "10px solid orange";
+
+      var slot = document.createElement("slot");
+      innerShadow.appendChild(slot);
+
+      outerShadow.attachShadow({mode: 'open'}).appendChild(innerShadow);
+
+      var shadowRoot =
+        document.getElementById('outer').attachShadow({mode: 'open'});
+      shadowRoot.appendChild(outerShadow);
+    }
+  </script>
+</head>
+<body onload="tweak()">
+<div id="outer">Hello</div>
+</body>
+</html>

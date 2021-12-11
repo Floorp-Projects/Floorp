@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Webconsole console.group test page</title>
+  </head>
+  <body>
+    <p>console.group() & console.groupCollapsed() test page</p>
+    <script>
+    /* exported doLog */
+    "use strict";
+
+    function doLog() {
+      console.group("group-1");
+      console.log("log-1");
+      console.group("group-2");
+      console.log("log-2");
+      console.groupEnd();
+      console.log("log-3");
+      console.groupEnd();
+      console.log("log-4");
+      console.groupCollapsed("group-3");
+      console.log("log-5");
+      console.groupEnd();
+      console.log("log-6");
+    }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,105 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - fetch
+
+transforms:
+    - gecko_taskgraph.transforms.release_notifications:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+jobs:
+    verify:
+        description: Verify Job for Updatebot
+        run-on-projects: ['autoland']
+        treeherder:
+            kind: other
+            platform: updatebot/all
+            symbol: verify
+            tier: 1
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: debian11-amd64-build}
+            max-run-time: 3600
+            env:
+                PYTHONUNBUFFERED: "1"
+        run:
+            using: run-task
+            cwd: '{checkout}'
+            command: ./mach python taskcluster/scripts/misc/verify-updatebot.py
+        notifications:
+            subject: 'updatebot verify job failed'
+            message: 'updatebot verify job failed'
+            status-types:
+                - on-failed
+                - on-exception
+            emails: ["tom@mozilla.com", "jewilde@mozilla.com"]
+
+    cron:
+        description: Cron Job for Updatebot
+        run-on-projects: []
+        treeherder:
+            kind: other
+            platform: updatebot/all
+            symbol: cron
+            tier: 1
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: updatebot}
+            max-run-time: 3600
+            taskcluster-proxy: true
+        scopes:
+            - secrets:get:project/updatebot/{level}/try-sshkey
+            - secrets:get:project/updatebot/{level}/phabricator-token
+            - secrets:get:project/updatebot/{level}/bugzilla-api-key
+            - secrets:get:project/updatebot/{level}/database-password
+            - secrets:get:project/updatebot/{level}/sentry-url
+            - secrets:get:project/updatebot/{level}/sql-proxy-config
+            - hooks:trigger-hook:project-gecko/in-tree-action-1-generic/*
+        run:
+            using: run-task
+            command: /builds/worker/run.py /builds/worker/checkouts/gecko /builds/worker/updatebot
+        notifications:
+            subject: 'updatebot cron failed'
+            message: 'updatebot cron failed'
+            status-types:
+                - on-failed
+                - on-exception
+            emails: ["tom@mozilla.com", "jewilde@mozilla.com"]
+
+    cron-win:
+        description: Cron Job for Updatebot (Windows)
+        run-on-projects: []
+        treeherder:
+            kind: other
+            platform: updatebot/all
+            symbol: w-cron
+            tier: 1
+        worker-type: b-win2012
+        worker:
+            max-run-time: 3600
+            taskcluster-proxy: true
+            env:
+                TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/vc++-2019-runtime.manifest"
+        run:
+            using: run-task
+            cwd: '{checkout}'
+            command: ./taskcluster/docker/updatebot/windows-setup.sh
+            tooltool-downloads: internal
+        scopes:
+            - secrets:get:project/updatebot/{level}/try-sshkey
+            - secrets:get:project/updatebot/{level}/phabricator-token
+            - secrets:get:project/updatebot/{level}/bugzilla-api-key
+            - secrets:get:project/updatebot/{level}/database-password
+            - secrets:get:project/updatebot/{level}/sentry-url
+            - secrets:get:project/updatebot/{level}/sql-proxy-config
+            - hooks:trigger-hook:project-gecko/in-tree-action-1-generic/*
+        fetches:
+            fetch:
+                - cloud-sql-proxy-1.25.0
+                - php-windows-7.4.24
+                - arcanist

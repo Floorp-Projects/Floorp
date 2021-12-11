@@ -1,0 +1,215 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=436418
+-->
+<head>
+  <title>Test for overriding of path-defining attributes for animateMotion</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js" />
+  <script type="text/javascript" src="smilAnimateMotionValueLists.js" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=436418">Mozilla Bug 436418</a>
+<p id="display"></p>
+<div id="content" style="visibility: hidden">
+<svg xmlns="http://www.w3.org/2000/svg" id="svg"
+     width="200px" height="200px"
+     onload="this.pauseAnimations()">
+  <!-- Paths for mpath to refer to -->
+  <path id="validPathElem"   d="M10 10 h-10"/>
+  <path id="invalidPathElem" d="abc"/>
+
+  <!-- The rect whose motion is animated -->
+  <rect id="rect" x="20" y="20" width="200" height="200"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+// Constant strings (& string-arrays)
+const SVGNS   = "http://www.w3.org/2000/svg";
+const XLINKNS = "http://www.w3.org/1999/xlink";
+
+// Constant objects
+const gSvg = document.getElementById("svg");
+const gRect = document.getElementById("rect");
+const gUnAnimatedCTM = gRect.getCTM();
+
+// Values for path-defining attributes, and their expected
+// CTMs halfway through the animation
+var gMpathValidTarget    = "#validPathElem";
+var gMpathCTM = CTMUtil.generateCTM([ 5, 10, 0 ]);
+
+var gMpathInvalidTargetA = "#invalidPathElem";
+var gMpathInvalidTargetB = "#nonExistentElem";
+
+var gInvalidAttrValue = "i-am-invalid"; // Invalid for all tested attributes
+
+var gPathValidValue = "M20 20 h10";
+var gPathCTM = CTMUtil.generateCTM([ 25, 20, 0 ]);
+
+var gValuesValidValue = "30 30; 40 30"
+var gValuesCTM = CTMUtil.generateCTM([ 35, 30, 0 ]);
+
+var gFromValidValue = "50 50";
+
+var gByValidValue =   "10 2";
+var gPureByCTM = CTMUtil.generateCTM([  5,  1, 0 ]);
+var gFromByCTM = CTMUtil.generateCTM([ 55, 51, 0 ]);
+
+var gToValidValue =   "80 60";
+var gPureToCTM = CTMUtil.generateCTM([ 40, 30, 0 ]);
+var gFromToCTM = CTMUtil.generateCTM([ 65, 55, 0 ]);
+
+
+SimpleTest.waitForExplicitFinish();
+
+function createAnim()
+{
+  var anim = document.createElementNS(SVGNS, "animateMotion");
+  return gRect.appendChild(anim);
+}
+
+function removeElem(aElem)
+{
+  aElem.remove();
+}
+
+function createMpath(aAnimElement, aHrefVal)
+{
+  var mpath = document.createElementNS(SVGNS, "mpath");
+  mpath.setAttributeNS(XLINKNS, "href", aHrefVal);
+  return aAnimElement.appendChild(mpath);
+}
+
+function runTest() {
+  // Start out with valid values for all path-defining attributes
+  var attrSettings = {
+    "mpath"  : gMpathValidTarget,
+    "path"   : gPathValidValue,
+    "values" : gValuesValidValue,
+    "from"   : gFromValidValue,
+    "to"     : gToValidValue,
+    "by"     : gByValidValue,
+  };
+
+  // Test that <mpath> overrides everything below it
+  testAttrSettings(attrSettings, gMpathCTM,
+                   "<mpath> should win");
+  var mpathInvalidTargets = [gMpathInvalidTargetA, gMpathInvalidTargetB];
+  for (var i in mpathInvalidTargets) {
+    var curInvalidValue = mpathInvalidTargets[i];
+    attrSettings.mpath = curInvalidValue;
+    testAttrSettings(attrSettings, gUnAnimatedCTM,
+                     "invalid <mpath> should block animation");
+  }
+  delete attrSettings.mpath;
+
+  // Test that 'path' overrides everything below it
+  testAttrSettings(attrSettings, gPathCTM,
+                   "'path' should win vs all but mpath");
+  attrSettings.path = gInvalidAttrValue;
+  testAttrSettings(attrSettings, gUnAnimatedCTM,
+                   "invalid 'path' should block animation vs all but mpath");
+  delete attrSettings.path;
+
+  // Test that 'values' overrides everything below it
+  testAttrSettings(attrSettings, gValuesCTM,
+                   "'values' should win vs from/by/to");
+  attrSettings.values = gInvalidAttrValue;
+  testAttrSettings(attrSettings, gUnAnimatedCTM,
+                   "invalid 'values' should block animation vs from/by/to");
+  delete attrSettings.values;
+
+  // Test that 'from' & 'to' overrides 'by'
+  testAttrSettings(attrSettings, gFromToCTM,
+                   "'from/to' should win vs 'by'");
+  attrSettings.to = gInvalidAttrValue;
+  testAttrSettings(attrSettings, gUnAnimatedCTM,
+                   "invalid 'to' should block animation vs 'by'");
+  delete attrSettings.to;
+
+  // Test that 'from' & 'by' are effective
+  testAttrSettings(attrSettings, gFromByCTM,
+                   "'from/by' should be visible");
+  attrSettings.by = gInvalidAttrValue;
+  testAttrSettings(attrSettings, gUnAnimatedCTM,
+                   "invalid 'by' should block animation");
+  delete attrSettings.from;
+
+  // REINSERT "to" & fix up "by" so we can test pure-"to" vs pure-"by"
+  attrSettings.to = gToValidValue;
+  attrSettings.by = gByValidValue;
+  testAttrSettings(attrSettings, gPureToCTM,
+                   "pure-'to' should be effective & beat pure-'by'");
+  attrSettings.to = gInvalidAttrValue;
+  testAttrSettings(attrSettings, gUnAnimatedCTM,
+                   "invalid pure-'to' should block animation vs pure-'by'");
+  delete attrSettings.to;
+
+  // Test that pure-"by" is effective
+  testAttrSettings(attrSettings, gPureByCTM,
+                   "pure-by should be visible");
+  attrSettings.by = gInvalidAttrValue;
+  testAttrSettings(attrSettings, gUnAnimatedCTM,
+                   "invalid 'by' should block animation");
+  delete attrSettings.by;
+
+  // Make sure that our hash is empty now.
+  for (var unexpectedKey in attrSettings) {
+    ok(false, "Unexpected mapping remains in attrSettings: " +
+       unexpectedKey + "-->" + unexpectedValue);
+  }
+}
+
+function testAttrSettings(aAttrValueHash, aExpectedCTM, aErrMsg)
+{
+  var isDebug = false; // XXdholbert
+  !isDebug || todo(false, "ENTERING testAttrSettings");
+  // Set up animateMotion element
+  var animElement = document.createElementNS(SVGNS, "animateMotion");
+  animElement.setAttribute("dur", "2s");
+  for (var attrName in aAttrValueHash) {
+    !isDebug || todo(false, "setting '" + attrName +"' to '" +
+                     aAttrValueHash[attrName] +"'");
+    if (attrName == "mpath") {
+      createMpath(animElement, aAttrValueHash[attrName]);
+    } else {
+      animElement.setAttribute(attrName, aAttrValueHash[attrName]);
+    }
+  }
+
+  gRect.appendChild(animElement);
+
+  // Seek to halfway through animation
+  SMILUtil.getSVGRoot().setCurrentTime(1); // Seek halfway through animation
+
+  // Check CTM against expected value
+  CTMUtil.assertCTMEqual(gRect.getCTM(), aExpectedCTM,
+                         CTMUtil.CTM_COMPONENTS_ALL, aErrMsg, false);
+
+  // CLEAN UP
+  SMILUtil.getSVGRoot().setCurrentTime(0);
+  removeElem(animElement);
+}
+
+// Main Function
+function main()
+{
+  // Start out with document paused
+  var svg = SMILUtil.getSVGRoot();
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  runTest();
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main);
+]]>
+</script>
+</pre>
+</body>
+</html>

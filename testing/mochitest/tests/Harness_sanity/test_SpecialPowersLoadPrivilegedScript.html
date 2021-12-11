@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers.loadChromeScript</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* eslint-disable mozilla/use-services */
+function loadPrivilegedScriptTest() {
+  function isMainProcess() {
+    return Cc["@mozilla.org/xre/app-info;1"].
+             getService(Ci.nsIXULRuntime).
+             processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  }
+  port.postMessage({'isMainProcess': isMainProcess()});
+}
+
+var contentProcessType = SpecialPowers.isMainProcess();
+var port;
+try {
+  port = SpecialPowers.loadPrivilegedScript(loadPrivilegedScriptTest.toString());
+} catch (e) {
+  ok(false, "loadPrivilegedScript shoulde not throw");
+}
+port.onmessage = (e) => {
+  is(contentProcessType, e.data.isMainProcess, "content and the script should be in the same process");
+  SimpleTest.finish();
+};
+</script>

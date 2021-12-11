@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+* Global styles
+*/
+@import "chrome://devtools/skin/variables.css";
+@import "chrome://devtools/content/aboutdebugging/src/base.css";
+
+/*
+* Components
+*/
+@import "chrome://devtools/content/aboutdebugging/src/components/App.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/ProfilerDialog.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/RuntimeActions.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/RuntimeInfo.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/connect/ConnectPage.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/connect/ConnectSection.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/connect/ConnectSteps.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/connect/NetworkLocationsForm.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/connect/NetworkLocationsList.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/DebugTargetItem.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/DebugTargetList.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/DebugTargetPane.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/FieldPair.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/ServiceWorkerAction.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/TemporaryExtensionInstallSection.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/shared/IconLabel.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/shared/Message.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/sidebar/Sidebar.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/sidebar/SidebarFixedItem.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/sidebar/SidebarItem.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/sidebar/SidebarRuntimeItem.css";

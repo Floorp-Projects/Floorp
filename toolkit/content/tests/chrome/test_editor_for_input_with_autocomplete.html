@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Basic editor behavior for HTML input element with autocomplete</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="file_editor_with_autocomplete.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="formTarget" name="formTarget"></iframe>
+  <form action="data:text/html," target="formTarget">
+    <input name="test" id="input"><input type="submit">
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+async function registerWord(aTarget, aAutoCompleteController) {
+  // Register a word to the form history.
+  let chromeScript = SpecialPowers.loadChromeScript(function addEntry() {
+    let {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+    FormHistory.update({ op: "add", fieldname: "test", value: "Mozilla" });
+  });
+  aTarget.focus();
+  aTarget.value = "Mozilla";
+
+  await waitForCondition(() => {
+    if (aAutoCompleteController.searchStatus == aAutoCompleteController.STATUS_NONE ||
+        aAutoCompleteController.searchStatus == aAutoCompleteController.STATUS_COMPLETE_NO_MATCH) {
+      aAutoCompleteController.startSearch("Mozilla");
+    }
+    return aAutoCompleteController.matchCount > 0;
+  });
+  chromeScript.destroy();
+  aTarget.value = "";
+  synthesizeKey("KEY_Escape");
+}
+
+async function runTests() {
+  var formFillController =
+    SpecialPowers.getFormFillController()
+                 .QueryInterface(Ci.nsIAutoCompleteInput);
+  var originalFormFillTimeout = formFillController.timeout;
+
+  SpecialPowers.attachFormFillControllerTo(window);
+  var target = document.getElementById("input");
+
+  // Register a word to the form history.
+  await registerWord(target, formFillController.controller);
+
+  let tests1 = new nsDoTestsForEditorWithAutoComplete(
+    "Testing on HTML input (asynchronously search)",
+    window, target, formFillController.controller, is, todo_is,
+    function() { return target.value; });
+  await tests1.run();
+
+  target.setAttribute("timeout", 0);
+  let tests2 = new nsDoTestsForEditorWithAutoComplete(
+        "Testing on HTML input (synchronously search)",
+        window, target, formFillController.controller, is, todo_is,
+        function() { return target.value; });
+  await tests2.run();
+
+  formFillController.timeout = originalFormFillTimeout;
+  SpecialPowers.detachFormFillControllerFrom(window);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</pre>
+</body>
+</html>

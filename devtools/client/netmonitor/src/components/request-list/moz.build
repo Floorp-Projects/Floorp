@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    "RequestList.js",
+    "RequestListColumnContentSize.js",
+    "RequestListColumnCookies.js",
+    "RequestListColumnDomain.js",
+    "RequestListColumnFile.js",
+    "RequestListColumnInitiator.js",
+    "RequestListColumnMethod.js",
+    "RequestListColumnProtocol.js",
+    "RequestListColumnRemoteIP.js",
+    "RequestListColumnResponseHeader.js",
+    "RequestListColumnScheme.js",
+    "RequestListColumnSetCookies.js",
+    "RequestListColumnStatus.js",
+    "RequestListColumnTime.js",
+    "RequestListColumnTransferredSize.js",
+    "RequestListColumnType.js",
+    "RequestListColumnUrl.js",
+    "RequestListColumnWaterfall.js",
+    "RequestListContent.js",
+    "RequestListEmptyNotice.js",
+    "RequestListHeader.js",
+    "RequestListItem.js",
+)

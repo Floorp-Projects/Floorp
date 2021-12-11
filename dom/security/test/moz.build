@@ -1,0 +1,43 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("cors/**"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "unit/xpcshell.ini",
+]
+
+TEST_DIRS += [
+    "gtest",
+]
+
+MOCHITEST_MANIFESTS += [
+    "cors/mochitest.ini",
+    "csp/mochitest.ini",
+    "general/mochitest.ini",
+    "https-first/mochitest.ini",
+    "https-only/mochitest.ini",
+    "mixedcontentblocker/mochitest.ini",
+    "referrer-policy/mochitest.ini",
+    "sec-fetch/mochitest.ini",
+    "sri/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "general/chrome.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "cors/browser.ini",
+    "csp/browser.ini",
+    "general/browser.ini",
+    "https-first/browser.ini",
+    "https-only/browser.ini",
+    "mixedcontentblocker/browser.ini",
+    "referrer-policy/browser.ini",
+    "sec-fetch/browser.ini",
+]

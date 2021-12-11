@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Blur on a 2x Zoomed Page</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    body {
+      margin: 2rem;
+    }
+    #target {
+      filter: url(#blur);
+      background-color: #0f0;
+      width: 200px;
+      height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="blur" x="-100" y="-100" width="400" height="400" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="6" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>User activation popup</title>
+</head>
+<body>
+<iframe sandbox="allow-top-navigation-by-user-activation allow-scripts allow-same-origin"></iframe>
+<script>
+  window.addEventListener("message", (e) => {
+    if (e.data === "triggerIframeLoad") {
+      // Load into the the iframe a script which notifies the opener of top level navigation or if it was prevented. 
+      let script = `window.opener.postMessage("topNavigation");`;
+      frames[0].frameElement.src = `javascript:try{window.top.location='javascript:${encodeURIComponent(script)}';} catch (e) {window.top.opener.postMessage("topNavigationBlocked");}`;
+    } else {
+      window.opener.postMessage("unexpected");
+    }
+  });
+</script>
+</body>
+</html>

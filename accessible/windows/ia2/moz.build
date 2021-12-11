@@ -1,0 +1,61 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "ia2Accessible.h",
+    "ia2AccessibleAction.h",
+    "ia2AccessibleComponent.h",
+    "ia2AccessibleEditableText.h",
+    "ia2AccessibleHyperlink.h",
+    "ia2AccessibleHypertext.h",
+    "ia2AccessibleText.h",
+    "ia2AccessibleValue.h",
+]
+
+UNIFIED_SOURCES += [
+    "ia2Accessible.cpp",
+    "ia2AccessibleAction.cpp",
+    "ia2AccessibleApplication.cpp",
+    "ia2AccessibleComponent.cpp",
+    "ia2AccessibleEditableText.cpp",
+    "ia2AccessibleHyperlink.cpp",
+    "ia2AccessibleHypertext.cpp",
+    "ia2AccessibleImage.cpp",
+    "ia2AccessibleRelation.cpp",
+    "ia2AccessibleText.cpp",
+    "ia2AccessibleValue.cpp",
+]
+
+# These files cannot be built in unified mode because they both include
+# AccessibleTable2_i.c.
+SOURCES += [
+    "ia2AccessibleTable.cpp",
+    "ia2AccessibleTableCell.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/accessible/base",
+    "/accessible/generic",
+    "/accessible/html",
+    "/accessible/windows",
+    "/accessible/windows/msaa",
+    "/accessible/xpcom",
+    "/accessible/xul",
+]
+
+FINAL_LIBRARY = "xul"
+
+# The Windows MIDL code generator creates things like:
+#
+#   #endif !_MIDL_USE_GUIDDEF_
+#
+# which clang-cl complains about.  MSVC doesn't, so turn this warning off.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += ["-Wno-extra-tokens"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+REQUIRES_UNIFIED_BUILD = True

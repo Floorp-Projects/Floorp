@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=426082
+-->
+<head>
+  <title>Test for Bug 426082</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426082">Mozilla Bug 426082</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<p><input type="button" value="Button" id="button"></p>
+<p><label for="button" id="label">Label</label></p>
+<p id="outside">Something under the label</p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 426082 **/
+
+function runTests() {
+  SimpleTest.executeSoon(tests);
+}
+
+SimpleTest.waitForFocus(runTests);
+
+function oneTick() {
+  return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
+function sendMouseEvent(t, elem) {
+  let r = elem.getBoundingClientRect();
+  synthesizeMouse(elem, r.width / 2, r.height / 2, {type: t});
+}
+
+async function tests() {
+  let button = document.getElementById("button");
+  let label = document.getElementById("label");
+  let outside = document.getElementById("outside");
+
+  let is = window.opener.is;
+  let ok = window.opener.ok;
+
+  // Press the label.
+  sendMouseEvent("mousemove", label);
+  sendMouseEvent("mousedown", label);
+
+  await oneTick();
+
+  ok(label.matches(":hover"), "Label is hovered");
+  ok(button.matches(":hover"), "Button should be hovered too");
+
+  ok(label.matches(":active"), "Label is active");
+  ok(button.matches(":active"), "Button should be active too");
+
+  // Move the mouse down from the label.
+  sendMouseEvent("mousemove", outside);
+
+  await oneTick();
+
+  ok(!label.matches(":hover"), "Label is no longer hovered");
+  ok(!button.matches(":hover"), "Button should not be hovered too");
+
+  ok(label.matches(":active"), "Label is still active");
+  ok(button.matches(":active"), "Button is still active too");
+
+  // And up again.
+  sendMouseEvent("mousemove", label);
+
+  await oneTick();
+
+
+  ok(label.matches(":hover"), "Label hovered again");
+  ok(button.matches(":hover"), "Button be hovered again");
+  ok(label.matches(":active"), "Label is still active");
+  ok(button.matches(":active"), "Button is still active too");
+
+  // Release.
+  sendMouseEvent("mouseup", label);
+
+  await oneTick();
+
+  ok(!label.matches(":active"), "Label is no longer active");
+  ok(!button.matches(":active"), "Button is no longer active");
+
+  ok(label.matches(":hover"), "Label is still hovered");
+  ok(button.matches(":hover"), "Button is still hovered");
+
+  // Press the label and remove it.
+  sendMouseEvent("mousemove", label);
+  sendMouseEvent("mousedown", label);
+
+  await oneTick();
+
+  label.remove();
+
+  await oneTick();
+
+  ok(!label.matches(":active"), "Removing label should have unpressed it");
+  ok(!label.matches(":focus"), "Removing label should have unpressed it");
+  ok(!label.matches(":hover"), "Removing label should have unhovered it");
+  ok(!button.matches(":active"), "Removing label should have unpressed the button");
+  ok(!button.matches(":focus"), "Removing label should have unpressed the button");
+  ok(!button.matches(":hover"), "Removing label should have unhovered the button");
+
+  sendMouseEvent("mouseup", label);
+  window.opener.finishTests();
+}
+</script>
+</pre>
+</body>
+</html>

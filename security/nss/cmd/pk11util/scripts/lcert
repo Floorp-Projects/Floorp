@@ -1,0 +1,35 @@
+Load nsscapi.dll
+C_Initialize NULL
+C_GetSlotList false NULL slotCount
+NewArray slotList CK_ULONG slotCount
+C_GetSlotList false slotList slotCount
+#change the following to the appropriate slot id
+set slotID 1
+#set slotID slotList[0]
+C_GetSlotInfo slotID slotInfo
+C_GetTokenInfo slotID tokenInfo
+C_OpenSession slotID CKF_SERIAL_SESSION session
+#
+#uncomment the following line and include the correct password
+#C_Login session CKU_USER 0000 4 
+#
+# build the search template
+#
+NewTemplate search CKA_CLASS
+SetTemplate search 0 CKO_CERTIFICATE
+NewArray certID CK_ULONG 10
+C_FindObjectsInit session search 1
+C_FindObjects session certID sizeA(certID) count
+C_FindObjectsFinal session
+#
+# now read the cert out
+#
+#NewTemplate derCert CKA_VALUE
+#NewTemplate certName CKA_LABEL,CKA_VALUE
+#C_GetAttributeValue session certID[0] certName sizeA(certName)
+#BuildTemplate certName
+#C_GetAttributeValue session certID[0] certName sizeA(certName)
+#print certName[0]
+Set countm1 count
+Decrement countm1 1
+LoopRun pLabel1 i 0 countm1 1

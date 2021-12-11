@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="utf-8">
+</head>
+<body onload="start()">
+<textarea style="width:500px; height: 200px; border-width:0">-----------------------------------------{insert newline before opening bracket}-----------------------------------b</textarea>
+<select><option value="AED">AED - United Arab Emirates Dirham - د.إ</option></select>
+    <script>
+      function start() {
+        var input = document.querySelector("textarea");
+        input.selectionStart = 41
+        input.selectionEnd = 41
+        input.focus();
+        window.parent.synthesizeKey("VK_RETURN", { }, window)
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+</body>
+</html>

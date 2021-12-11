@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<style>
+html, body {
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+}
+</style>
+<div style="width:100%;height:100%;background-color:blue;"></div>
+<script>
+  document.querySelector("div").addEventListener("click", event => {
+    parent.postMessage("innerclick", "*");
+  });
+  window.onload = async () => {
+    // Wait for APZ state stable so that mouse event handling APZ works properly
+    // in out-of-process iframes.
+    await promiseApzFlushedRepaints();
+    parent.postMessage("innerready", "*");
+  };
+  document.body.onfocus = () => {
+    parent.postMessage("innerfocus", "*");
+  };
+  document.body.onblur = () => {
+    parent.postMessage("innerblur", "*");
+  };
+</script>

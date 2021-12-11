@@ -1,0 +1,21 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+[scriptable, builtinclass, uuid(eda2e65c-a758-451f-9b05-77cb8de74ed2)]
+interface nsIHTMLInlineTableEditor : nsISupports
+{
+  /**
+   * boolean indicating if inline table editing is enabled in the editor.
+   * When inline table editing is enabled, and when the selection is
+   * contained in a table cell, special buttons allowing to add/remove
+   * a line/column are available on the cell's border.
+   */
+  [setter_can_run_script]
+  attribute boolean inlineTableEditingEnabled;
+};
+

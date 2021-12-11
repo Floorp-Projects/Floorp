@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing over a checkerboarded area</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+</head>
+<body>
+ <div id="scroller" style="width: 300px; height: 300px; overflow:scroll; margin-top: 100px; margin-left: 50px">
+  <!-- Make the contents tall enough to be sure we can checkerboard -->
+  <div id="contents" style="width: 100%; height: 5000px; background-image: linear-gradient(blue,red)">
+  </div>
+ </div>
+ <div id="make_root_scrollable" style="height: 5000px"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  var scroller = document.getElementById("scroller");
+
+  // Activate the scrollframe but keep the main-thread scroll position at 0.
+  // Also apply an async scroll offset in the y-direction such that the
+  // scrollframe scrolls all the way to the bottom of its range, where it's
+  // sure to checkerboard.
+  utils.setDisplayPortForElement(0, 0, 300, 1000, scroller, 1);
+  await promiseApzFlushedRepaints();
+  var scrollY = scroller.scrollTopMax;
+  utils.setAsyncScrollOffset(scroller, 0, scrollY);
+  // Tick the refresh driver once to make sure the compositor has applied the
+  // async scroll offset (for WebRender hit-testing we need to make sure WR has
+  // the latest info).
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+
+  var scrollerViewId = utils.getViewId(scroller);
+
+  // Hit-test the middle of the scrollframe, which is now inside the
+  // checkerboarded region, and check that we hit the scrollframe and
+  // not its parent.
+  checkHitResult(hitTest(centerOf(scroller)),
+                 APZHitResultFlags.VISIBLE,
+                 scrollerViewId,
+                 utils.getLayersId(),
+                 "active scrollframe");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

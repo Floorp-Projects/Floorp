@@ -1,0 +1,64 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include LayersMessages;
+include protocol PTexture;
+include ProtocolTypes;
+include protocol PMediaSystemResourceManager;
+
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
+
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h";
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * The PImageBridge protocol is used to allow isolated threads or processes to push
+ * frames directly to the compositor thread/process without relying on the main thread
+ * which might be too busy dealing with content script.
+ */
+sync protocol PImageBridge
+{
+  manages PTexture;
+  manages PMediaSystemResourceManager;
+
+child:
+  async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
+
+  async DidComposite(ImageCompositeNotification[] aNotifications);
+
+  // Report the number of frames dropped for the given CompositableHost.
+  async ReportFramesDropped(CompositableHandle aHandle, uint32_t aFrames);
+
+parent:
+  async Update(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId);
+
+  // First step of the destruction sequence. This puts ImageBridge
+  // in a state in which it can't send asynchronous messages
+  // so as to not race with the channel getting closed.
+  // In the child side, the Closing the channel does not happen right after WillClose,
+  // it is scheduled in the ImageBridgeChild's message queue in order to ensure
+  // that all of the messages from the parent side have been received and processed
+  // before sending closing the channel.
+  async WillClose();
+
+  async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
+  async PMediaSystemResourceManager();
+
+  sync NewCompositable(CompositableHandle aHandle, TextureInfo aInfo);
+  async ReleaseCompositable(CompositableHandle aHandle);
+};
+
+
+} // namespace
+} // namespace
+

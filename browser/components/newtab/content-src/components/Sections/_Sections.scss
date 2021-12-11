@@ -1,0 +1,123 @@
+.sections-list {
+  .section-list {
+    display: grid;
+    grid-gap: $base-gutter;
+    grid-template-columns: repeat(auto-fit, $card-width);
+    margin: 0;
+
+    @media (max-width: $break-point-medium) {
+      @include context-menu-open-left;
+    }
+
+    @media (min-width: $break-point-medium) and (max-width: $break-point-large) {
+      :nth-child(2n) {
+        @include context-menu-open-left;
+      }
+    }
+
+    @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width) {
+      :nth-child(3n) {
+        @include context-menu-open-left;
+      }
+    }
+
+    @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width) {
+      // 3n for normal cards, 4n for compact cards
+      :nth-child(3n),
+      :nth-child(4n) {
+        @include context-menu-open-left;
+      }
+    }
+  }
+
+  .section-empty-state {
+    border: $border-secondary;
+    border-radius: $border-radius;
+    display: flex;
+    height: $card-height;
+    width: 100%;
+
+    .empty-state {
+      margin: auto;
+      max-width: 350px;
+
+      .empty-state-message {
+        color: var(--newtab-text-primary-color);
+        font-size: 13px;
+        margin-bottom: 0;
+        text-align: center;
+      }
+    }
+
+    @media (min-width: $break-point-widest) {
+      height: $card-height-large;
+    }
+  }
+}
+
+.top-stories-bottom-container {
+  color: var(--newtab-text-primary-color);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: $topic-margin-top;
+  display: flex;
+  justify-content: space-between;
+
+  a {
+    color: var(--newtab-primary-action-background);
+    font-weight: bold;
+
+    &.more-recommendations {
+      font-weight: normal;
+      font-size: 13px;
+    }
+  }
+
+  .wrapper-topics,
+  .wrapper-cta + .wrapper-more-recommendations {
+    @media (max-width: $break-point-large - 1) {
+      display: none;
+    }
+  }
+
+  @media (max-width: $break-point-medium - 1) {
+    .wrapper-cta {
+      text-align: center;
+
+      .pocket-logged-in-cta {
+        display: block;
+        margin-inline-end: 0;
+
+        .pocket-cta-button {
+          max-width: none;
+          display: block;
+          margin-inline-end: 0;
+          margin: 5px 0 10px;
+        }
+      }
+    }
+
+    .wrapper-more-recommendations {
+      width: 100%;
+
+      .more-recommendations {
+        justify-content: center;
+
+        &::after {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@media (min-width: $break-point-widest) {
+  .sections-list {
+    // Compact cards stay the same size but normal cards get bigger.
+    .normal-cards {
+      .section-list {
+        grid-template-columns: repeat(auto-fit, $card-width-large);
+      }
+    }
+  }
+}

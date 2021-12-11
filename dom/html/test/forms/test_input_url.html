@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for &lt;input type='url'&gt; validity</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input type='url' id='i' oninvalid='invalidEventHandler(event);'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Tests for <input type='url'> validity **/
+
+// More checks are done in test_bug551670.html.
+
+var gInvalid = false;
+
+function invalidEventHandler(e)
+{
+  is(e.type, "invalid", "Invalid event type should be invalid");
+  gInvalid = true;
+}
+
+function checkValidURL(element)
+{
+  gInvalid = false;
+  ok(!element.validity.typeMismatch,
+    "Element should not suffer from type mismatch");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "Element should be valid");
+  ok(!gInvalid, "The invalid event should not have been thrown");
+  is(element.validationMessage, '',
+    "Validation message should be the empty string");
+  ok(element.matches(":valid"), ":valid pseudo-class should apply");
+}
+
+function checkInvalidURL(element)
+{
+  gInvalid = false;
+  ok(element.validity.typeMismatch,
+    "Element should suffer from type mismatch");
+  ok(!element.validity.valid, "Element should not be valid");
+  ok(!element.checkValidity(), "Element should not be valid");
+  ok(gInvalid, "The invalid event should have been thrown");
+  is(element.validationMessage, "Please enter a URL.",
+    "Validation message should be related to invalid URL");
+  ok(element.matches(":invalid"),
+     ":invalid pseudo-class should apply");
+}
+
+var url = document.getElementById('i');
+
+var values = [
+  // [ value, validity ]
+  // The empty string should be considered as valid.
+  [ "", true ],
+  [ "foo", false ],
+  [ "http://mozilla.com/", true ],
+  [ "http://mozilla.com", true ],
+  [ "http://mozil\nla\r.com/", true ],
+  [ "  http://mozilla.com/  ", true ],
+  [ "\r  http://mozilla.com/  \n", true ],
+  [ "file:///usr/bin/tulip", true ],
+  [ "../../bar.html", false ],
+  [ "http://mozillá.org", true ],
+  [ "https://mózillä.org", true ],
+  [ "http://mózillä.órg", true ],
+  [ "ht://mózillä.órg", true ],
+  [ "httŭ://mózillä.órg", false ],
+];
+
+values.forEach(function([value, valid]) {
+  url.value = value;
+
+  if (valid) {
+    checkValidURL(url);
+  } else {
+    checkInvalidURL(url);
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>

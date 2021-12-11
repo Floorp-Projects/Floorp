@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ensure positioned content inside inactive scollframes but on top of OOPIFs hit-test properly</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+let make_oopif_scrollable = function() {
+  // ensure the oopif is scrollable, and wait for the paint so that the
+  // compositor also knows it's scrollable.
+  document.body.style.height = "200vh";
+  promiseApzFlushedRepaints().then(() => {
+    let utils = SpecialPowers.getDOMWindowUtils(window);
+    let result = {
+      layersId: utils.getLayersId(),
+      viewId: utils.getViewId(document.scrollingElement)
+    };
+    dump(`OOPIF computed IDs ${JSON.stringify(result)}\n`);
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Scrollable", result);
+  });
+  return true;
+};
+
+async function test() {
+  let iframe = document.getElementById("testframe");
+
+  let oopifScrollerIdsPromise = promiseOneEvent(window, "OOPIF:Scrollable", null);
+  ok(await FissionTestHelper.sendToOopif(iframe, `(${make_oopif_scrollable})()`),
+     "Ran code to make OOPIF scrollable");
+  let oopifScrollerIds = (await oopifScrollerIdsPromise).data;
+
+  let config = getHitTestConfig();
+  let utils = config.utils;
+
+  // The #scroller div is (a) inactive, and (b) under the OOPIF. However, it
+  // also contains a positioned element with a high z-index (#abspos). #abspos
+  // therefore sits on top of the OOPIF. Hit-testing on #abspos should hit
+  // #scroller, but anywhere else within the OOPIF box should hit the OOPIF.
+
+  checkHitResult(await fissionHitTest(centerOf("abspos"), iframe),
+                 APZHitResultFlags.VISIBLE |
+                 (config.activateAllScrollFrames ? 0 : APZHitResultFlags.INACTIVE_SCROLLFRAME),
+                 config.activateAllScrollFrames ?
+                   utils.getViewId(document.getElementById("scroller")) :
+                   utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "abspos element on top of OOPIF should hit parent doc hosting the OOPIF");
+
+  // If the fix for the bug this test is for is not active (as indicated by
+  // config.activateAllScrollFrames) then we just accept the wrong answer. As
+  // of writing this comment the fix will only be active if fission is pref'ed
+  // on, not just enabled for this window, ie the test suite is run in fission
+  // mode.
+  checkHitResult(await fissionHitTest(centerOf("scroller"), iframe),
+                 APZHitResultFlags.VISIBLE |
+                 (config.activateAllScrollFrames ? 0 : APZHitResultFlags.INACTIVE_SCROLLFRAME),
+                 config.activateAllScrollFrames ?
+                   oopifScrollerIds.viewId :
+                   utils.getViewId(document.scrollingElement),
+                 config.activateAllScrollFrames ?
+                   oopifScrollerIds.layersId :
+                   utils.getLayersId(),
+                 "Part of OOPIF sitting on top of the inactive scrollframe should hit OOPIF");
+
+  checkHitResult(await fissionHitTest({x: 250, y: 100}, iframe),
+                 APZHitResultFlags.VISIBLE,
+                 oopifScrollerIds.viewId,
+                 oopifScrollerIds.layersId,
+                 "part of OOPIF outside the inactive scfollframe rect should hit the OOPIF");
+}
+
+  </script>
+</head>
+<body>
+<style>
+html, body {
+    margin: 0;
+}
+body {
+    /* Ensure root document is scrollable so that #scroller is inactive by
+      default */
+    height: 200vh;
+}
+iframe {
+    position: absolute;
+    width: 300px;
+    height: 200px;
+}
+
+#scroller {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 200px;
+    background-color: transparent;
+    overflow-y: scroll;
+}
+</style>
+<div id="scroller">
+  <div style="height:500px">inside scroller</div>
+  <div id="abspos" style="position: absolute; z-index: 5; left: 0; width: 80px; top: 20px; height: 80px; background-color: green">abspos inside scroller</div>
+</div>
+<iframe id="testframe"></iframe>
+</body>
+</html>

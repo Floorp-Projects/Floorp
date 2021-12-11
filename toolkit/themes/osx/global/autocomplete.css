@@ -1,0 +1,79 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+html|input[nomatch="true"][highlightnonmatches="true"] {
+  color: red;
+}
+
+/* ::::: autocomplete popups ::::: */
+
+panel[type="autocomplete-richlistbox"] {
+  appearance: none;
+  font: icon;
+  --panel-padding: 0px;
+  --panel-color: FieldText;
+  --panel-background: Field;
+}
+
+/* ::::: richlistbox autocomplete ::::: */
+
+.autocomplete-richlistbox {
+  appearance: none;
+  margin: 0;
+}
+
+.ac-type-icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  margin-inline-start: 6px;
+  margin-inline-end: 6px;
+}
+
+.ac-site-icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  margin-inline-start: 6px;
+  margin-inline-end: 8px;
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.ac-title {
+  margin-inline-start: 0;
+  margin-inline-end: 6px;
+}
+
+.ac-separator {
+  display: none;
+  margin-inline-start: 0;
+  margin-inline-end: 6px;
+}
+
+.ac-url {
+  display: none;
+}
+
+/* Better align the URL with the title. */
+.ac-separator,
+.ac-url {
+  margin-bottom: -2px;
+}
+
+.ac-title-text,
+.ac-separator-text,
+.ac-url-text,
+.ac-text-overflow-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}

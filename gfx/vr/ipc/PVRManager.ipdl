@@ -1,0 +1,84 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include protocol PVRLayer;
+include LayersMessages;
+include GamepadEventTypes;
+
+include "VRMessageUtils.h";
+
+using struct mozilla::gfx::VRFieldOfView from "gfxVR.h";
+using struct mozilla::gfx::VRDisplayInfo from "gfxVR.h";
+using struct mozilla::gfx::VRSensorUpdate from "gfxVR.h";
+using struct mozilla::gfx::VRHMDSensorState from "gfxVR.h";
+using struct mozilla::gfx::VRControllerInfo from "gfxVR.h";
+using struct mozilla::gfx::VRSubmitFrameResultInfo from "gfxVR.h";
+using mozilla::gfx::VRDisplayCapabilityFlags from "moz_external_vr.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
+
+
+namespace mozilla {
+namespace gfx {
+
+/**
+ * The PVRManager protocol is used to enable communication of VR display
+ * enumeration and sensor state between the compositor thread and
+ * content threads/processes.
+ */
+sync protocol PVRManager
+{
+  manages PVRLayer;
+
+parent:
+  async PVRLayer(uint32_t aDisplayID, uint32_t aGroup);
+
+  // Detect runtime capabilities.  This will return the presense of VR and/or AR
+  // runtime software, without enumerating or activating any hardware devices.
+  async DetectRuntimes();
+
+  // (Re)Enumerate VR Displays.  An updated list of VR displays will be returned
+  // asynchronously to children via UpdateDisplayInfo.
+  async RefreshDisplays();
+
+  async SetGroupMask(uint32_t aDisplayID, uint32_t aGroupMask);
+  async SetHaveEventListener(bool aHaveEventListener);
+
+  async ControllerListenerAdded();
+  async ControllerListenerRemoved();
+  async VibrateHaptic(GamepadHandle aGamepadHandle, uint32_t aHapticIndex,
+                      double aIntensity, double aDuration, uint32_t aPromiseID);
+  async StopVibrateHaptic(GamepadHandle aGamepadHandle);
+  async StartVRNavigation(uint32_t aDeviceID);
+  async StopVRNavigation(uint32_t aDeviceID, TimeDuration aDuration);
+  async StartActivity();
+  async StopActivity();
+
+  async RunPuppet(uint64_t[] buffer);
+  async ResetPuppet();
+
+child:
+  // Notify children of updated VR display enumeration and details.  This will
+  // be sent to all children when the parent receives RefreshDisplays, even
+  // if no changes have been detected.  This ensures that Promises exposed
+  // through DOM calls are always resolved.
+  async UpdateDisplayInfo(VRDisplayInfo aDisplayInfo);
+
+  async UpdateRuntimeCapabilities(VRDisplayCapabilityFlags aCapabilities);
+
+  async ReplyGamepadVibrateHaptic(uint32_t aPromiseID);
+  async NotifyPuppetCommandBufferCompleted(bool aSuccess);
+  async NotifyPuppetResetComplete();
+
+  async __delete__();
+
+};
+
+} // gfx
+} // mozilla

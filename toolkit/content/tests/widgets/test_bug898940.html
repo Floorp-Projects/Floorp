@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that an audio element that's already playing when controls are attached displays the controls</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <audio id="audio" controls src="audio.ogg"></audio>
+</div>
+
+<pre id="test">
+<script class="testbody">
+  var audio = document.getElementById("audio");
+  audio.play();
+  audio.ontimeupdate = function doTest() {
+    ok(audio.getBoundingClientRect().height > 0,
+       "checking audio element height is greater than zero");
+    audio.ontimeupdate = null;
+    SimpleTest.finish();
+  };
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

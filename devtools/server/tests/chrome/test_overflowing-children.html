@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test InspectorUtils.GetOverflowingChildrenOfElement in various cases
+-->
+<head>
+<meta charset="utf-8">
+<title>Test InspectorUtils.GetOverflowingChildrenOfElement</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+/* "e" is our custom tag name for "element" */
+e {
+  background: lightgray;
+  display: inline-block;
+  margin: 10px;
+  padding: 0;
+  border: 0;
+  width: 100px;
+  height: 100px;
+  overflow: auto;
+}
+
+/* "c" is our custom tag name for "child" */
+c {
+  display: block;
+  background: green;
+}
+
+.fixedSize {
+  width: 10px;
+  height: 10px;
+}
+
+.target {
+  background: red;
+}
+</style>
+
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+const CASES = [
+  {id: "no_children", expected: 0},
+  {id: "one_child_no_overflow", expected: 0},
+  {id: "margin_left_overflow", expected: 1},
+  {id: "transform_overflow", expected: 1},
+  {id: "nested_overflow", expected: 1},
+  {id: "intermediate_overflow", expected: 1},
+  {id: "multiple_overflow_at_different_depths", expected: 2},
+];
+
+function runTests() {
+  // Assign each child element to an inner id so each of them can be identified for testing.
+  Array.from(document.getElementsByTagName('c')).forEach((e, i) => {e.id = `inner${i}`});
+
+  for (const {id, expected} of CASES) {
+    info(`Checking element id ${id}.`);
+
+    const element = document.getElementById(id);
+    if (!element) {
+      ok(false, `Expected to find element with id ${id}.`);
+      continue;
+    }
+    const overflowing_children = InspectorUtils.getOverflowingChildrenOfElement(element);
+
+    is(overflowing_children.length, expected, `${id} has the expected number of children.`);
+
+    // Check that each child has the "target" class. Otherwise, we're getting the
+    // wrong children. We don't check each child with a test function, because we
+    // don't want to needlessly inflate the number of test functions in the log.
+    // But if we find a child that *doesn't* have the class "target", we report
+    // that as a test failure.
+    for (const child of overflowing_children) {
+      // child is a Node, but not necessarily an Element. We want to get the containing
+      // Element so that we can use its classList, tagName, and id properties.
+      let e = child;
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        e = child.parentElement;
+      }
+      if (!e.classList.contains("target")) {
+        ok(false, `${id} is reporting this unexpected child as a target: ${e.tagName} id=${e.id}`);
+      }
+    }
+  }
+
+  SimpleTest.finish();
+};
+window.onload = runTests;
+</script>
+</head>
+<body onload="runTests()">
+
+<e id="no_children"></e>
+
+<e id="one_child_no_overflow">
+  <c></c>
+</e>
+
+<e id="margin_left_overflow">
+  <c class="target" style="margin-left:100px">abcd</c>
+</e>
+
+<e id="transform_overflow">
+  <c class="target" style="transform: translate(50px)">abcd</c>
+</e>
+
+<e id="nested_overflow">
+  <c>
+    <c class="target" style="margin-left:100px">abcd</c>
+  </c>
+</e>
+
+<e id="intermediate_overflow">
+  <c class="fixedSize target" style="margin-left:100px">
+    <c></c>
+  </c>
+</e>
+
+<e id="multiple_overflow_at_different_depths">
+  <c class="fixedSize target" style="margin-left:100px">
+    <c></c>
+  </c>
+  <c style="margin-left:100px">
+    <c class="target">abcd</c>
+  </c>
+</e>
+</body>
+</html>

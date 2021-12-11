@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS 2.1 Test Suite: @charset</title>
+    <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#charset"/>
+    <meta name="flags" content="" />
+    <style type="text/css">
+      body { color: red; }
+    </style>
+    <link rel="stylesheet" type="text/css" charset="us-ascii"
+          href="test-charset-utf-16-bom-be.css" />
+  </head>
+  <body>
+    This should be green
+  </body>
+</html>
+  

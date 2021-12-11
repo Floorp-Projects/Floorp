@@ -1,0 +1,16 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect x="0" y="0" width="500" height="500" style="mask: url(#m1); fill: lime;"/>
+  <mask id="m1" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+    <linearGradient id="g" gradientUnits="objectBoundingBox" x2="0" y2="1">
+      <stop stop-color="white" offset="0"/>
+      <stop stop-color="white" stop-opacity="0" offset="1"/>
+    </linearGradient>
+    <circle cx="0.25" cy="0.25" r="0.25" id="circle" fill="white"/>
+    <rect x="0.5" y="0" width="0.5" height="1" fill="url(#g)"/>
+  </mask>
+</svg>

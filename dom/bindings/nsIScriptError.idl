@@ -1,0 +1,296 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * nsIConsoleMessage subclass for representing JavaScript errors and warnings.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+#include "nsIConsoleMessage.idl"
+interface nsIURI;
+
+%{C++
+#include "nsString.h" // for nsDependentCString
+%}
+
+[scriptable, uuid(e8933fc9-c302-4e12-a55b-4f88611d9c6c)]
+interface nsIScriptErrorNote : nsISupports
+{
+    readonly attribute AString errorMessage;
+    readonly attribute AString sourceName;
+
+    /**
+     * Unique identifier within the process for the script source this note is
+     * associated with, or zero.
+     */
+    readonly attribute uint32_t sourceId;
+
+    readonly attribute uint32_t lineNumber;
+    readonly attribute uint32_t columnNumber;
+
+    AUTF8String toString();
+};
+
+[scriptable, uuid(63eb4d3e-7d99-4150-b4f3-11314f9d82a9)]
+interface nsIScriptError : nsIConsoleMessage
+{
+    /** pseudo-flag for default case */
+    const unsigned long errorFlag = 0x0;
+
+    /** message is warning */
+    const unsigned long warningFlag = 0x1;
+
+    /** just a log message */
+    const unsigned long infoFlag = 0x8;
+
+    /**
+     * The error message without any context/line number information.
+     *
+     * @note nsIConsoleMessage.message will return the error formatted
+     *       with file/line information.
+     */
+    readonly attribute AString errorMessage;
+
+    readonly attribute AString sourceName;
+    readonly attribute AString sourceLine;
+
+    /**
+     * Unique identifier within the process for the script source this error is
+     * associated with, or zero.
+     */
+    readonly attribute uint32_t sourceId;
+
+    readonly attribute uint32_t lineNumber;
+    readonly attribute uint32_t columnNumber;
+    readonly attribute uint32_t flags;
+
+    /**
+     * Categories I know about -
+     * XUL javascript
+     * content javascript (both of these from nsDocShell, currently)
+     * system javascript (errors in JS components and other system JS)
+     */
+    readonly attribute string category;
+
+    /* Get the window id this was initialized with.  Zero will be
+       returned if init() was used instead of initWithWindowID(). */
+    readonly attribute unsigned long long outerWindowID;
+
+    /* Get the inner window id this was initialized with.  Zero will be
+       returned if init() was used instead of initWithWindowID(). */
+    readonly attribute unsigned long long innerWindowID;
+
+    readonly attribute boolean isFromPrivateWindow;
+
+    readonly attribute boolean isFromChromeContext;
+
+    // Error created from a Promise rejection.
+    readonly attribute boolean isPromiseRejection;
+
+    [noscript] void initIsPromiseRejection(in bool isPromiseRejection);
+
+    // The "exception" value generated when an uncaught exception is thrown
+    // by JavaScript. This can be any value, e.g.
+    // - an Error object (`throw new Error("foobar"`)
+    // - some primitive (`throw "hello"`)
+    attribute jsval exception;
+
+    // The hasException attribute is used to differentiate between no thrown
+    // exception and `throw undefined`.
+    readonly attribute boolean hasException;
+
+    attribute jsval stack;
+
+    /**
+     * If |stack| is an object, then stackGlobal must be a global object that's
+     * same-compartment with |stack|. This can be used to enter the correct
+     * realm when working with the stack object. We can't use the object itself
+     * because it might be a cross-compartment wrapper and CCWs are not
+     * associated with a single realm/global.
+     */
+    [noscript] readonly attribute jsval stackGlobal;
+
+    /**
+     * The name of a template string associated with the error message.  See
+     * js/public/friend/ErrorNumbers.msg.
+     */
+    attribute AString errorMessageName;
+
+    readonly attribute nsIArray notes;
+
+    /**
+     * If the ScriptError is a CSS parser error, this value will contain the
+     * CSS selectors of the CSS ruleset where the error occured.
+     */
+    attribute AString cssSelectors;
+
+    void init(in AString message,
+              in AString sourceName,
+              in AString sourceLine,
+              in uint32_t lineNumber,
+              in uint32_t columnNumber,
+              in uint32_t flags,
+              in string category,
+              [optional] in bool fromPrivateWindow,
+              [optional] in bool fromChromeContext);
+
+    /* This should be called instead of nsIScriptError.init to
+     * initialize with a window id.  The window id should be for the
+     * inner window associated with this error.
+     *
+     * This function will check whether sourceName is a uri and sanitize it if
+     * needed. If you know the source name is sanitized already, use
+     * initWithSanitizedSource.
+     * A "sanitized" source name means that passwords are not shown. It will
+     * use the sensitiveInfoHiddenSpec function of nsIURI interface, that is
+     * replacing paswords with ***
+     * (e.g. https://USERNAME:****@example.com/some/path).
+     */
+    void initWithWindowID(in AString message,
+                          in AString sourceName,
+                          in AString sourceLine,
+                          in uint32_t lineNumber,
+                          in uint32_t columnNumber,
+                          in uint32_t flags,
+                          in ACString category,
+                          in unsigned long long innerWindowID,
+                          [optional] in bool fromChromeContext);
+
+    /* This is the same function as initWithWindowID, but it expects an already
+     * sanitized sourceName.
+     * Please use it only if sourceName string is already sanitized.
+     */
+    void initWithSanitizedSource(in AString message,
+                                 in AString sourceName,
+                                 in AString sourceLine,
+                                 in uint32_t lineNumber,
+                                 in uint32_t columnNumber,
+                                 in uint32_t flags,
+                                 in ACString category,
+                                 in unsigned long long innerWindowID,
+                                 [optional] in bool fromChromeContext);
+
+    /* This is the same function as initWithWindowID with an uri as a source parameter.
+     */
+    void initWithSourceURI(in AString message,
+                           in nsIURI sourceURI,
+                           in AString sourceLine,
+                           in uint32_t lineNumber,
+                           in uint32_t columnNumber,
+                           in uint32_t flags,
+                           in ACString category,
+                           in unsigned long long innerWindowID,
+                           [optional] in bool fromChromeContext);
+
+    /* Initialize the script source ID in a new error. */
+    void initSourceId(in uint32_t sourceId);
+
+%{C++
+    nsresult InitWithWindowID(const nsAString& message,
+                              const nsAString& sourceName,
+                              const nsAString& sourceLine,
+                              uint32_t lineNumber,
+                              uint32_t columnNumber,
+                              uint32_t flags,
+                              const nsACString& category,
+                              uint64_t aInnerWindowID)
+    {
+        return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
+                                columnNumber, flags, category, aInnerWindowID,
+                                false);
+    }
+    // These overloads allow passing a literal string for category.
+    template<uint32_t N>
+    nsresult InitWithWindowID(const nsAString& message,
+                              const nsAString& sourceName,
+                              const nsAString& sourceLine,
+                              uint32_t lineNumber,
+                              uint32_t columnNumber,
+                              uint32_t flags,
+                              const char (&c)[N],
+                              uint64_t aInnerWindowID,
+                              bool aFromChromeContext = false)
+    {
+        nsDependentCString category(c, N - 1);
+        return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
+                                columnNumber, flags, category, aInnerWindowID,
+                                aFromChromeContext);
+    }
+
+    nsresult InitWithSanitizedSource(const nsAString& message,
+                                     const nsAString& sourceName,
+                                     const nsAString& sourceLine,
+                                     uint32_t lineNumber,
+                                     uint32_t columnNumber,
+                                     uint32_t flags,
+                                     const nsACString& category,
+                                     uint64_t aInnerWindowID)
+    {
+        return InitWithSanitizedSource(message, sourceName, sourceLine,
+                                       lineNumber, columnNumber, flags,
+                                       category, aInnerWindowID,
+                                       false);
+    }
+
+    template<uint32_t N>
+    nsresult InitWithSanitizedSource(const nsAString& message,
+                                     const nsAString& sourceName,
+                                     const nsAString& sourceLine,
+                                     uint32_t lineNumber,
+                                     uint32_t columnNumber,
+                                     uint32_t flags,
+                                     const char (&c)[N],
+                                     uint64_t aInnerWindowID,
+                                     bool aFromChromeContext = false)
+    {
+        nsDependentCString category(c, N - 1);
+        return InitWithSanitizedSource(message, sourceName, sourceLine,
+                                       lineNumber, columnNumber, flags,
+                                       category, aInnerWindowID,
+                                       aFromChromeContext);
+    }
+
+    nsresult InitWithSourceURI(const nsAString& message,
+                               nsIURI* sourceURI,
+                               const nsAString& sourceLine,
+                               uint32_t lineNumber,
+                               uint32_t columnNumber,
+                               uint32_t flags,
+                               const nsACString& category,
+                               uint64_t aInnerWindowID)
+    {
+        return InitWithSourceURI(message, sourceURI, sourceLine,
+                                 lineNumber, columnNumber, flags,
+                                 category, aInnerWindowID, false);
+    }
+
+    template<uint32_t N>
+    nsresult InitWithSourceURI(const nsAString& message,
+                               nsIURI* sourceURI,
+                               const nsAString& sourceLine,
+                               uint32_t lineNumber,
+                               uint32_t columnNumber,
+                               uint32_t flags,
+                               const char (&c)[N],
+                               uint64_t aInnerWindowID,
+                               bool aFromChromeContext = false)
+    {
+        nsDependentCString category(c, N - 1);
+        return InitWithSourceURI(message, sourceURI, sourceLine,
+                                 lineNumber, columnNumber, flags,
+                                 category, aInnerWindowID, aFromChromeContext);
+    }
+%}
+
+};
+
+%{ C++
+#define NS_SCRIPTERROR_CID \
+{ 0x1950539a, 0x90f0, 0x4d22, { 0xb5, 0xaf, 0x71, 0x32, 0x9c, 0x68, 0xfa, 0x35 }}
+
+#define NS_SCRIPTERROR_CONTRACTID "@mozilla.org/scripterror;1"
+%}

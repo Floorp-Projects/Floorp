@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<style>
+  body::first-line { color: purple; }
+</style>
+<body style="width: 0; color: red"><span id="x" style="visibility: hidden">This is some text</span>
+  <script type="text/javascript">
+    document.body.offsetWidth;
+    document.getElementById("x").style.visibility = "visible";
+    document.body.style.color = "green";
+  </script>
+</body>

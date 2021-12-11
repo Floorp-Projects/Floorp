@@ -1,0 +1,49 @@
+/* Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../components/contextualidentity/content/usercontext.css
+
+#category-containers {
+  display: none;
+}
+
+.container-header-links {
+  font-size: 1.25rem;
+  margin-block-end: 15px;
+}
+
+[data-identity-icon] {
+  margin: 0;
+  margin-inline-end: 16px;
+}
+
+#containersView {
+  border: 0;
+  background: transparent;
+  margin-block-end: 8px;
+}
+
+#containersView richlistitem {
+  padding-block: 4px;
+  border-block-end: 1px solid var(--in-content-border-color);
+}
+
+#containersView richlistitem > .container-buttons {
+  margin-inline-end: 4px;
+}
+
+/* Crop the label at the end using CSS. This isn't using XUL crop
+ * and a value attribute because those labels cannot be highlighted
+ * by the prefs' find-in-page feature.
+ */
+.userContext-label-inprefs {
+  display: -moz-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#containersView richlistitem:last-of-type {
+  border-block-end: 0;
+}

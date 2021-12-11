@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+  <style type="text/css">
+    @keyframes anim {
+       0% { transform: translate(0px) }
+       100% { transform: translate(100px) }
+    }
+    div {
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<script type="application/javascript">
+
+window.addEventListener("load", function() {
+  document.querySelector("div").setAttribute("style",
+    "animation: 100s 300s anim linear");
+  advance_clock(200000);
+  advance_clock(300000);
+
+  Promise.resolve().then(function() {
+    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+  }).then(function() {
+    document.documentElement.className = "";
+  });
+});
+
+function advance_clock(milliseconds) {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
+}
+</script>
+</html>

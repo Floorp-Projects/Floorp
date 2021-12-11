@@ -1,0 +1,39 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    "OmxDecoderModule.h",
+]
+
+UNIFIED_SOURCES += [
+    "OmxDataDecoder.cpp",
+    "OmxDecoderModule.cpp",
+    "OmxPlatformLayer.cpp",
+    "OmxPromiseLayer.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/media/openmax_il/il112",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["MOZ_OMX"]:
+    UNIFIED_SOURCES += [
+        "PureOmxPlatformLayer.cpp",
+    ]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
+
+# Avoid warnings from third-party code that we can not modify.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += ["-Wno-invalid-source-encoding"]
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

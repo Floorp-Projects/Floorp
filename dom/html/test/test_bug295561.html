@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=295561
+-->
+<head>
+  <title>Test for Bug 295561</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=295561">Mozilla Bug 295561</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<table id="testTable">
+<thead>
+<tr id="headRow"><td></td></tr>
+</thead>
+<tfoot>
+<tr id="footRow"><td></td></tr>
+</tfoot>
+<tbody id="tBody" name="namedTBody">
+<tr id="trow" name="namedTRow">
+<td id="tcell" name="namedTCell"></td>
+<th id="tcellh" name="namedTH"></th>
+</tr>
+<tr><td></td></tr>
+</tbody>
+<tbody id="tBody2" name="namedTBody2">
+<tr id="trow2" name="namedTRow2">
+<td id="tcell2" name="namedTCell2"></td>
+<th id="tcellh2" name="namedTH2"></th>
+</tr>
+</table>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testItById(id, collection, collectionName) {
+  is(collection[id], $(id), 
+     "Should be able to get by id '" + id + "' from " + collectionName +
+     " collection using square brackets.")
+  is(collection.namedItem(id), $(id), 
+     "Should be able to get by id '" + id + "' from " + collectionName +
+     " collection using namedItem.")
+}
+
+function testItByName(name, id, collection, collectionName) {
+  is(collection[name], $(id), 
+     "Should be able to get by name '" + name + "' from " + collectionName +
+     " collection using square brackets.")
+  is(collection.namedItem(name), $(id), 
+     "Should be able to get by name '" + name + "' from " + collectionName +
+     " collection using namedItem.")
+}
+
+function testIt(name, id, collection, collectionName) {
+  testItByName(name, id, collection, collectionName);
+  testItById(id, collection, collectionName);
+}
+
+var table = $("testTable")
+testIt("namedTBody", "tBody",  table.tBodies,     "tBodies")
+testIt("namedTRow", "trow",   table.rows,        "table rows")
+testIt("namedTRow", "trow",   $("tBody").rows,   "tbody rows")
+testIt("namedTCell", "tcell",  $("trow").cells,   "cells")
+testIt("namedTH", "tcellh", $("trow").cells,   "cells")
+testIt("namedTBody2", "tBody2",  table.tBodies,     "tBodies")
+testIt("namedTRow2", "trow2",   table.rows,        "table rows")
+testIt("namedTRow2", "trow2",   $("tBody2").rows,   "tbody rows")
+testIt("namedTCell2", "tcell2",  $("trow2").cells,   "cells")
+testIt("namedTH2", "tcellh2", $("trow2").cells,   "cells")
+is(table.tBodies.length, 2, "Incorrect tBodies length");
+is(table.rows.length, 5, "Incorrect rows length");
+is(table.rows[0], $("headRow"), "THead row in wrong spot");
+is(table.rows[1], $("trow"), "First tbody row in wrong spot");
+is(table.rows[3], $("trow2"), "Second tbody row in wrong spot");
+is(table.rows[4], $("footRow"), "TFoot row in wrong spot");
+
+
+</script>
+</pre>
+</body>
+</html>

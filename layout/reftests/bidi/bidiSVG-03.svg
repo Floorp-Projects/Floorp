@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200">
+  <text x="400" y="20" direction="rtl" unicode-bidi="embed">left-to-right text עם עברית in right-to-left element</text>
+</svg>

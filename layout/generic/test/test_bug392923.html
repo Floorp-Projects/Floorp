@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=392923
+-->
+<head>
+  <title>Test for Bug 392923</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>p { column-count: 2; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=392923">Mozilla Bug 392923</a>
+<div id="content">
+<p>&#x5E2;&#x5D1;&#x5E8;&#x5D9;&#x5EA; Lorem ipsum dolor sit
+amet, consectetuer adipiscing elit. Maecenas volutpat. Duis purus lectus,
+hendrerit vitae, blandit ac, tristique quis, neque. Cras a nisl. Cum sociis
+natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In
+consectetuer lorem sit amet quam facilisis mollis. Etiam dolor. Donec
+elementum leo in ligula. Duis lacus diam, sodales vitae, rutrum a,
+feugiat non, tortor. Maecenas cursus lobortis diam. Mauris in pede eu
+purus ultricies vehicula. &#x5E2;&#x5D1;&#x5E8;&#x5D9;&#x5EA;</p>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ function test()
+{
+/** Test for Bug 392923 **/
+  ok(true, "Should not crash");
+  SimpleTest.finish();
+}
+
+  SimpleTest.requestFlakyTimeout("untriaged");
+  setTimeout(test, 500);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

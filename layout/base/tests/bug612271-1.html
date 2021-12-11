@@ -1,0 +1,15 @@
+<!DOCTYPE HTML><html><head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+ <textarea id="target" style="height: 100px; -moz-appearance: none" spellcheck="false"
+    onkeydown="this.style.display='block';this.style.height='200px';">foo</textarea>
+<script>
+  var t = document.querySelector("textarea");
+  t.focus();
+  t.selectionStart = t.selectionEnd = t.value.length;
+  sendKey('RETURN');
+  document.body.appendChild(document.createTextNode(t.selectionStart + " - " + t.selectionEnd));
+</script>
+</body>
+</html>

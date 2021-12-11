@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    div.test {
+      /* Author expects this to prevent wrapping, and may add
+         "overflow:hidden;text-overflow:ellipsis" for nice effect: */
+      white-space: nowrap;
+
+      /* BUT these (combined) seem to allow wrapping: */
+      -ms-hyphens: auto;
+      -webkit-hyphens: auto;
+      hyphens: auto;
+      word-break: break-all;
+
+      width: 200px;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <div class="test">
+    Does this text wrap? Does this text wrap? Does this text wrap?
+    Does this text wrap?
+  </div>
+</body>
+</html>

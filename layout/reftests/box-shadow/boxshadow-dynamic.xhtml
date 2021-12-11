@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="data:text/css,
+
+hbox {
+  margin: 50px;
+  background: yellow;
+}
+
+hbox[x] {
+  box-shadow: 1px 2px 2px black, 0 0 7px white, 0 0 14px rgb(50, 170, 255), 0 0 21px rgb(50, 170, 255);
+  border-radius: 10px;
+}
+
+"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="reftest-wait">
+  
+  <script>
+  <![CDATA[
+  
+  document.documentElement.addEventListener("MozReftestInvalidate", 
+    doTest, false);
+
+  function doTest() {
+    document.getElementById("hbox1").setAttribute("x",1);
+    document.documentElement.removeAttribute("class"); 
+  }
+  
+  ]]>
+  </script>
+
+  <hbox id="hbox1" flex="1"/>
+</window>

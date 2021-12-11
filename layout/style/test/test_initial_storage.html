@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375363
+-->
+<head>
+  <title>Test for parsing, storage, and serialization of CSS 'initial' on all properties and 'unset' on reset properties</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375363">Mozilla Bug 375363</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for parsing, storage, and serialization of CSS 'initial' on all
+    properties and 'unset' on reset properties **/
+
+var gDeclaration = document.getElementById("testnode").style;
+
+/**
+ * Checks that the passed-in property-value (returned by getPropertyValue) is
+ * consistent with the DOM accessors that we know about for the given sproperty.
+ */
+function check_consistency(sproperty, valFromGetPropertyValue, messagePrefix)
+{
+  var sinfo = gCSSProperties[sproperty];
+  is(valFromGetPropertyValue, gDeclaration[sinfo.domProp],
+     `(${messagePrefix}) consistency between ` +
+     `decl.getPropertyValue(${sproperty}) and decl.${sinfo.domProp}`);
+
+  if (sinfo.domProp.startsWith("webkit")) {
+    // For webkit-prefixed DOM accessors, test with lowercase and uppercase
+    // first letter.
+    var uppercaseDomProp = "W" + sinfo.domProp.substring(1);
+    is(valFromGetPropertyValue, gDeclaration[uppercaseDomProp],
+       `(${messagePrefix}) consistency between ` +
+       `decl.getPropertyValue(${sproperty}) and decl.${uppercaseDomProp}`);
+  }
+}
+
+function test_property(property)
+{
+  var info = gCSSProperties[property];
+
+  var keywords = ["initial"];
+  if (!info.inherited)
+    keywords.push("unset");
+
+  keywords.forEach(function(keyword) {
+    function check_initial(sproperty) {
+      var val = gDeclaration.getPropertyValue(sproperty);
+      is(val, "", "value of '" + sproperty + "' before we do anything");
+      check_consistency(sproperty, val, "initial");
+    }
+    check_initial(property);
+    if ("subproperties" in info)
+      for (var idx in info.subproperties)
+        check_initial(info.subproperties[idx]);
+
+    gDeclaration.setProperty(property, keyword, "");
+
+    function check_set(sproperty) {
+      val = gDeclaration.getPropertyValue(sproperty);
+      is(val, keyword,
+         keyword + " reported back for property '" + sproperty + "'");
+      check_consistency(sproperty, val, "set");
+    }
+    check_set(property);
+    if ("subproperties" in info)
+      for (var idx in info.subproperties)
+        check_set(info.subproperties[idx]);
+
+    // We don't care particularly about the whitespace or the placement of
+    // semicolons, but for simplicity we'll test the current behavior.
+    if ("alias_for" in info) {
+      is(gDeclaration.cssText, info.alias_for + ": " + keyword + ";",
+        "declaration should serialize to exactly what went in (for " + keyword + ")");
+    } else if (info.type == CSS_TYPE_LEGACY_SHORTHAND) {
+      // We can't assert anything more meaningful here, really.
+      is(property, "zoom", "Zoom is a bit special because it never " +
+                           "serializes as-is, we always serialize the longhands, " +
+                           "but it doesn't just map to a single property " +
+                           "(and thus we can't use the 'alias_for' mechanism)");
+    } else {
+      is(gDeclaration.cssText, property + ": " + keyword + ";",
+        "declaration should serialize to exactly what went in (for " + keyword + ")");
+    }
+
+    gDeclaration.removeProperty(property);
+
+    function check_final(sproperty) {
+      var val = gDeclaration.getPropertyValue(sproperty);
+      is(val, "", "value of '" + sproperty + "' after removal of value");
+      check_consistency(sproperty, val, "final");
+    }
+    check_final(property);
+    if ("subproperties" in info)
+      for (var idx in info.subproperties)
+        check_final(info.subproperties[idx]);
+
+    // can all properties be removed from the style?
+    function test_remove_all_properties(propName, value) {
+      var i, p = [];
+      for (i = 0; i < gDeclaration.length; i++) p.push(gDeclaration[i]);
+      for (i = 0; i < p.length; i++) gDeclaration.removeProperty(p[i]);
+      var errstr = "when setting property " + propName + " to " + value;
+      is(gDeclaration.length, 0, "unremovable properties " + errstr);
+      is(gDeclaration.cssText, "", "non-empty serialization after removing all properties " + errstr);
+    }
+
+    // sanity check shorthands to make sure disabled props aren't exposed
+    if (info.type != CSS_TYPE_LONGHAND) {
+      gDeclaration.setProperty(property, keyword, "");
+      test_remove_all_properties(property, keyword);
+      gDeclaration.removeProperty(property);
+    }
+  });
+}
+
+for (var prop in gCSSProperties)
+  test_property(prop);
+
+</script>
+</pre>
+</body>
+</html>

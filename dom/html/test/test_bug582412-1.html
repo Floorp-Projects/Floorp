@@ -1,0 +1,200 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=566160
+-->
+<head>
+  <title>Test for Bug 566160</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566160">Mozilla Bug 566160</a>
+<p id="display"></p>
+<style>
+  iframe { width: 130px; height: 100px;}
+</style>
+<iframe name='frame1' id='frame1'></iframe>
+<iframe name='frame2' id='frame2'></iframe>
+<iframe name='frame3' id='frame3'></iframe>
+<iframe name='frame3bis' id='frame3bis'></iframe>
+<iframe name='frame4' id='frame4'></iframe>
+<iframe name='frame5' id='frame5'></iframe>
+<iframe name='frame6' id='frame6'></iframe>
+<iframe name='frame7' id='frame7'></iframe>
+<iframe name='frame8' id='frame8'></iframe>
+<iframe name='frame9' id='frame9'></iframe>
+<div id="content">
+  <!-- submit controls with formaction that are validated with a CLICK -->
+  <form target="frame1" action="dummy_page.html" method="POST">
+    <input name='foo' value='foo'>
+    <input type='submit' id='is' formmethod="GET">
+  </form>
+  <form target="frame2" action="dummy_page.html" method="POST">
+    <input name='bar' value='bar'>
+    <input type='image' id='ii' formmethod="GET">
+  </form>
+  <form target="frame3" action="dummy_page.html" method="POST">
+    <input name='tulip' value='tulip'>
+    <button type='submit' id='bs' formmethod="GET">submit</button>
+  </form>
+  <form target="frame3bis" action="dummy_page.html" method="POST">
+    <input name='tulipbis' value='tulipbis'>
+    <button type='submit' id='bsbis' formmethod="GET">submit</button>
+  </form>
+
+  <!-- submit controls with formaction that are validated with ENTER -->
+  <form target="frame4" action="dummy_page.html" method="POST">
+    <input name='footulip' value='footulip'>
+    <input type='submit' id='is2' formmethod="GET">
+  </form>
+  <form target="frame5" action="dummy_page.html" method="POST">
+    <input name='foobar' value='foobar'>
+    <input type='image' id='ii2' formmethod="GET">
+  </form>
+  <form target="frame6" action="dummy_page.html" method="POST">
+    <input name='tulip2' value='tulip2'>
+    <button type='submit' id='bs2' formmethod="GET">submit</button>
+  </form>
+
+  <!-- check that when submitting a from from an element
+       which is not a submit control, @formaction isn't used -->
+  <form target='frame7' action="dummy_page.html" method="GET">
+    <input id='enter' name='input' value='enter' formmethod="POST">
+  </form>
+
+  <!-- If formmethod isn't set, it's default value shouldn't be used -->
+  <form target="frame8" action="dummy_page.html" method="POST">
+    <input name='tulip8' value='tulip8'>
+    <input type='submit' id='i8'>
+  </form>
+
+  <!-- If formmethod is set but has an invalid value, the default value should
+       be used. -->
+  <form target="frame9" action="dummy_page.html" method="POST">
+    <input name='tulip9' value='tulip9'>
+    <input type='submit' id='i9' formmethod="">
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 566160 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  setTimeout(runTests, 0);
+});
+
+const BASE_URI = `${location.origin}/tests/dom/html/test/dummy_page.html`;
+var gTestResults = {
+  frame1: BASE_URI + "?foo=foo",
+  frame2: BASE_URI + "?bar=bar&x=0&y=0",
+  frame3: BASE_URI + "?tulip=tulip",
+  frame3bis: BASE_URI + "?tulipbis=tulipbis",
+  frame4: BASE_URI + "?footulip=footulip",
+  frame5: BASE_URI + "?foobar=foobar&x=0&y=0",
+  frame6: BASE_URI + "?tulip2=tulip2",
+  frame7: BASE_URI + "?input=enter",
+  frame8: BASE_URI + "",
+  frame9: BASE_URI + "?tulip9=tulip9",
+};
+
+var gPendingLoad = 0; // Has to be set after depending on the frames number.
+
+function runTests()
+{
+  // We add a load event for the frames which will be called when the forms
+  // will be submitted.
+  var frames = [ document.getElementById('frame1'),
+                 document.getElementById('frame2'),
+                 document.getElementById('frame3'),
+                 document.getElementById('frame3bis'),
+                 document.getElementById('frame4'),
+                 document.getElementById('frame5'),
+                 document.getElementById('frame6'),
+                 document.getElementById('frame7'),
+                 document.getElementById('frame8'),
+                 document.getElementById('frame9'),
+               ];
+  gPendingLoad = frames.length;
+
+  for (var i=0; i<frames.length; i++) {
+    frames[i].setAttribute('onload', "frameLoaded(this);");
+  }
+
+  /**
+   * We are going to focus each element before interacting with either for
+   * simulating the ENTER key (synthesizeKey) or a click (synthesizeMouse) or
+   * using .click(). This because it may be needed (ENTER) and because we want
+   * to have the element visible in the iframe.
+   *
+   * Focusing the first element (id='is') is launching the tests.
+   */
+  document.getElementById('is').addEventListener('focus', function(aEvent) {
+    synthesizeMouse(document.getElementById('is'), 5, 5, {});
+    document.getElementById('ii').focus();
+  }, {once: true});
+
+  document.getElementById('ii').addEventListener('focus', function(aEvent) {
+    synthesizeMouse(document.getElementById('ii'), 5, 5, {});
+    document.getElementById('bs').focus();
+  }, {once: true});
+
+  document.getElementById('bs').addEventListener('focus', function(aEvent) {
+    synthesizeMouse(document.getElementById('bs'), 5, 5, {});
+    document.getElementById('bsbis').focus();
+  }, {once: true});
+
+  document.getElementById('bsbis').addEventListener('focus', function(aEvent) {
+    document.getElementById('bsbis').click();
+    document.getElementById('is2').focus();
+  }, {once: true});
+
+  document.getElementById('is2').addEventListener('focus', function(aEvent) {
+    synthesizeKey("KEY_Enter");
+    document.getElementById('ii2').focus();
+  }, {once: true});
+
+  document.getElementById('ii2').addEventListener('focus', function(aEvent) {
+    synthesizeKey("KEY_Enter");
+    document.getElementById('bs2').focus();
+  }, {once: true});
+
+  document.getElementById('bs2').addEventListener('focus', function(aEvent) {
+    synthesizeKey("KEY_Enter");
+    document.getElementById('enter').focus();
+  }, {once: true});
+
+  document.getElementById('enter').addEventListener('focus', function(aEvent) {
+    synthesizeKey("KEY_Enter");
+    document.getElementById('i8').focus();
+  }, {once: true});
+
+  document.getElementById('i8').addEventListener('focus', function(aEvent) {
+    synthesizeKey("KEY_Enter");
+    document.getElementById('i9').focus();
+  }, {once: true});
+
+  document.getElementById('i9').addEventListener('focus', function(aEvent) {
+    synthesizeKey("KEY_Enter");
+  }, {once: true});
+
+  document.getElementById('is').focus();
+}
+
+function frameLoaded(aFrame) {
+  // Check if formaction/action has the correct behavior.
+  is(aFrame.contentWindow.location.href, gTestResults[aFrame.name],
+     "the method/formmethod attribute doesn't have the correct behavior");
+
+  if (--gPendingLoad == 0) {
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

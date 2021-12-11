@@ -1,0 +1,56 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1142727 - Test that sandboxed iframes are not intercepted</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+<iframe id="normal-frame"></iframe>
+<iframe sandbox="allow-scripts" id="sandbox-frame"></iframe>
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var normalFrame;
+  var sandboxFrame;
+  function runTest() {
+    normalFrame = document.getElementById("normal-frame");
+    sandboxFrame = document.getElementById("sandbox-frame");
+    normalFrame.src = "/tests/dom/serviceworkers/test/fetch/sandbox/register.html";
+    window.onmessage = function(e) {
+      if (e.data.status == "ok") {
+        ok(e.data.result, e.data.message);
+      } else if (e.data.status == "registrationdone") {
+        normalFrame.src = "about:blank";
+        sandboxFrame.src = "/tests/dom/serviceworkers/test/fetch/sandbox/index.html";
+      } else if (e.data.status == "done") {
+        sandboxFrame.src = "about:blank";
+        normalFrame.src = "/tests/dom/serviceworkers/test/fetch/sandbox/unregister.html";
+      } else if (e.data.status == "unregistrationdone") {
+        normalFrame.src = "about:blank";
+        window.onmessage = null;
+        ok(true, "Test finished successfully");
+        SimpleTest.finish();
+      }
+    };
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ]}, runTest);
+  };
+</script>
+</pre>
+</body>
+</html>

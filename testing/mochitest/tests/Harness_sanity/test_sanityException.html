@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test that uncaught exceptions in mochitests cause failures</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=670817">Mozilla Bug 670817</a>
+<script>
+ok(true, "a call to ok");
+SimpleTest.expectUncaughtException();
+// eslint-disable-next-line no-throw-literal
+throw "an uncaught exception";
+</script>
+</body>
+</html>

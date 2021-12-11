@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Deferred tree</title>
+    <!--
+    PURPOSE: This is similar to the deferred-anim test case.  The animation
+    controller is not created for every web page, but only for those pages that
+    contain SMIL animatable content. But, if some SVG content containing
+    animation is added after the page is loaded, the animation should still run.
+    
+    OPERATION: There is a plain XHTML document, but later an SVG document is
+    added. This document contains a moving circle.
+
+    EXPECTED RESULTS: The SVG document fragment appears containing a circle that
+    is animated.
+    -->
+    <script>
+        var timeoutID;
+
+        function animate()
+        {
+          makeTree();
+          var svg = document.getElementById('created-svg');
+          var anim = svg.getElementsByTagName('animate')[0];
+          // We should pass quickly and fail slowly.
+          // In the pass case, we'll get an end event almost immediately.
+          // In the failure case, wait 30s before giving up.
+          timeoutID = window.setTimeout(giveUp, 30000);
+          anim.addEventListener('end', finish, true);
+        }
+
+        function giveUp() {
+          var svg = document.getElementById('created-svg');
+          var rect = svg.getElementsByTagName('rect')[0];
+          // It's possible we could arrive here after successfully running the
+          // animation but failing to fire the end event.
+          // Technically that's a pass as far as this test is concerned, but it
+          // will mean every test run is taking 30s longer than it should and
+          // we'd like to know about that so we'll make it a failure.
+          rect.setAttribute("fill", "red");
+          // We'll need to clear the animation for this to take effect
+          var anim = svg.getElementsByTagName('animate')[0];
+          anim.parentNode.removeChild(anim);
+          timeoutID = null;
+          finish();
+        }
+
+        function finish() {
+          if (timeoutID) {
+            window.clearTimeout(timeoutID);
+            timeoutID = null;
+          }
+          document.documentElement.removeAttribute('class');
+        }
+
+        function makeTree()
+        {
+          const svgns="http://www.w3.org/2000/svg";
+          var svg = document.createElementNS(svgns, 'svg');
+          svg.setAttribute('xmlns', svgns);
+          svg.setAttribute('width', '200px');
+          svg.setAttribute('height', '200px');
+          svg.setAttribute('id', 'created-svg');
+          var rect = document.createElementNS(svgns, 'rect');
+          rect.setAttribute('x', '0');
+          rect.setAttribute('y', '0');
+          rect.setAttribute('width', '199');
+          rect.setAttribute('height', '199');
+          var anim = document.createElementNS(svgns, 'animate');
+          anim.setAttribute('attributeName', 'fill');
+          anim.setAttribute('begin', '0s');
+          anim.setAttribute('from', 'red');
+          anim.setAttribute('to', 'green');
+          anim.setAttribute('dur', '0.001s');
+          anim.setAttribute('fill', 'freeze');
+          rect.appendChild(anim);
+          svg.appendChild(rect);
+          var target = document.getElementById('tree-container');
+          target.appendChild(svg);
+        }
+    </script>
+  </head>
+
+  <body onload="animate()">
+    <p id="tree-container"/>
+  </body>
+</html>

@@ -1,0 +1,542 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIWebProgress;
+interface nsIRequest;
+interface nsIURI;
+
+/**
+ * The nsIWebProgressListener interface is implemented by clients wishing to
+ * listen in on the progress associated with the loading of asynchronous
+ * requests in the context of a nsIWebProgress instance as well as any child
+ * nsIWebProgress instances.  nsIWebProgress.idl describes the parent-child
+ * relationship of nsIWebProgress instances.
+ */
+[scriptable, uuid(a9df523b-efe2-421e-9d8e-3d7f807dda4c)]
+interface nsIWebProgressListener : nsISupports
+{
+  /**
+   * State Transition Flags
+   *
+   * These flags indicate the various states that requests may transition
+   * through as they are being loaded.  These flags are mutually exclusive.
+   *
+   * For any given request, onStateChange is called once with the STATE_START
+   * flag, zero or more times with the STATE_TRANSFERRING flag or once with the
+   * STATE_REDIRECTING flag, and then finally once with the STATE_STOP flag.
+   * NOTE: For document requests, a second STATE_STOP is generated (see the
+   * description of STATE_IS_WINDOW for more details).
+   *
+   * STATE_START
+   *   This flag indicates the start of a request.  This flag is set when a
+   *   request is initiated.  The request is complete when onStateChange is
+   *   called for the same request with the STATE_STOP flag set.
+   *
+   * STATE_REDIRECTING
+   *   This flag indicates that a request is being redirected.  The request
+   *   passed to onStateChange is the request that is being redirected.  When a
+   *   redirect occurs, a new request is generated automatically to process the
+   *   new request.  Expect a corresponding STATE_START event for the new
+   *   request, and a STATE_STOP for the redirected request.
+   *
+   * STATE_TRANSFERRING
+   *   This flag indicates that data for a request is being transferred to an
+   *   end consumer.  This flag indicates that the request has been targeted,
+   *   and that the user may start seeing content corresponding to the request.
+   *
+   * STATE_NEGOTIATING
+   *   This flag is not used.
+   *
+   * STATE_STOP
+   *   This flag indicates the completion of a request.  The aStatus parameter
+   *   to onStateChange indicates the final status of the request.
+   */
+  const unsigned long STATE_START          = 0x00000001;
+  const unsigned long STATE_REDIRECTING    = 0x00000002;
+  const unsigned long STATE_TRANSFERRING   = 0x00000004;
+  const unsigned long STATE_NEGOTIATING    = 0x00000008;
+  const unsigned long STATE_STOP           = 0x00000010;
+
+
+  /**
+   * State Type Flags
+   *
+   * These flags further describe the entity for which the state transition is
+   * occuring.  These flags are NOT mutually exclusive (i.e., an onStateChange
+   * event may indicate some combination of these flags).
+   *
+   * STATE_IS_REQUEST
+   *   This flag indicates that the state transition is for a request, which
+   *   includes but is not limited to document requests.  (See below for a
+   *   description of document requests.)  Other types of requests, such as
+   *   requests for inline content (e.g., images and stylesheets) are
+   *   considered normal requests.
+   *
+   * STATE_IS_DOCUMENT
+   *   This flag indicates that the state transition is for a document request.
+   *   This flag is set in addition to STATE_IS_REQUEST.  A document request
+   *   supports the nsIChannel interface and its loadFlags attribute includes
+   *   the nsIChannel::LOAD_DOCUMENT_URI flag.
+   *
+   *   A document request does not complete until all requests associated with
+   *   the loading of its corresponding document have completed.  This includes
+   *   other document requests (e.g., corresponding to HTML <iframe> elements).
+   *   The document corresponding to a document request is available via the
+   *   DOMWindow attribute of onStateChange's aWebProgress parameter.
+   *
+   * STATE_IS_NETWORK
+   *   This flag indicates that the state transition corresponds to the start
+   *   or stop of activity in the indicated nsIWebProgress instance.  This flag
+   *   is accompanied by either STATE_START or STATE_STOP, and it may be
+   *   combined with other State Type Flags.
+   *
+   *   Unlike STATE_IS_WINDOW, this flag is only set when activity within the
+   *   nsIWebProgress instance being observed starts or stops.  If activity
+   *   only occurs in a child nsIWebProgress instance, then this flag will be
+   *   set to indicate the start and stop of that activity.
+   *
+   *   For example, in the case of navigation within a single frame of a HTML
+   *   frameset, a nsIWebProgressListener instance attached to the
+   *   nsIWebProgress of the frameset window will receive onStateChange calls
+   *   with the STATE_IS_NETWORK flag set to indicate the start and stop of
+   *   said navigation.  In other words, an observer of an outer window can
+   *   determine when activity, that may be constrained to a child window or
+   *   set of child windows, starts and stops.
+   *
+   * STATE_IS_WINDOW
+   *   This flag indicates that the state transition corresponds to the start
+   *   or stop of activity in the indicated nsIWebProgress instance.  This flag
+   *   is accompanied by either STATE_START or STATE_STOP, and it may be
+   *   combined with other State Type Flags.
+   *
+   *   This flag is similar to STATE_IS_DOCUMENT.  However, when a document
+   *   request completes, two onStateChange calls with STATE_STOP are
+   *   generated.  The document request is passed as aRequest to both calls.
+   *   The first has STATE_IS_REQUEST and STATE_IS_DOCUMENT set, and the second
+   *   has the STATE_IS_WINDOW flag set (and possibly the STATE_IS_NETWORK flag
+   *   set as well -- see above for a description of when the STATE_IS_NETWORK
+   *   flag may be set).  This second STATE_STOP event may be useful as a way
+   *   to partition the work that occurs when a document request completes.
+   *
+   * STATE_IS_REDIRECTED_DOCUMENT
+   *  Same as STATE_IS_DOCUMENT, but sent only after a redirect has occured.
+   *  Introduced in order not to confuse existing code with extra state change
+   *  events. See |nsDocLoader::OnStartRequest| for more info.
+   */
+  const unsigned long STATE_IS_REQUEST     = 0x00010000;
+  const unsigned long STATE_IS_DOCUMENT    = 0x00020000;
+  const unsigned long STATE_IS_NETWORK     = 0x00040000;
+  const unsigned long STATE_IS_WINDOW      = 0x00080000;
+  const unsigned long STATE_IS_REDIRECTED_DOCUMENT = 0x00100000;
+
+  /**
+   * State Modifier Flags
+   *
+   * These flags further describe the transition which is occuring.  These
+   * flags are NOT mutually exclusive (i.e., an onStateChange event may
+   * indicate some combination of these flags).
+   *
+   * STATE_RESTORING
+   *   This flag indicates that the state transition corresponds to the start
+   *   or stop of activity for restoring a previously-rendered presentation.
+   *   As such, there is no actual network activity associated with this
+   *   request, and any modifications made to the document or presentation
+   *   when it was originally loaded will still be present.
+   */
+  const unsigned long STATE_RESTORING      = 0x01000000;
+
+  /**
+   * State Security Flags
+   *
+   * These flags describe the security state reported by a call to the
+   * onSecurityChange method.  These flags are mutually exclusive.
+   *
+   * STATE_IS_INSECURE
+   *   This flag indicates that the data corresponding to the request
+   *   was received over an insecure channel.
+   *
+   * STATE_IS_BROKEN
+   *   This flag indicates an unknown security state.  This may mean that the
+   *   request is being loaded as part of a page in which some content was
+   *   received over an insecure channel.
+   *
+   * STATE_IS_SECURE
+   *   This flag indicates that the data corresponding to the request was
+   *   received over a secure channel.  The degree of security is expressed by
+   *   STATE_SECURE_HIGH, STATE_SECURE_MED, or STATE_SECURE_LOW.
+   */
+  const unsigned long STATE_IS_INSECURE     = 0x00000004;
+  const unsigned long STATE_IS_BROKEN       = 0x00000001;
+  const unsigned long STATE_IS_SECURE       = 0x00000002;
+
+  /**
+   * Mixed active content flags
+   *
+   * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
+   * nsSecureBrowserUIImpl::CheckForBlockedContent().
+   *
+   * May be set in addition to the State Security Flags, to indicate that
+   * mixed active content has been encountered.
+   *
+   * STATE_BLOCKED_MIXED_ACTIVE_CONTENT
+   *   Mixed active content has been blocked from loading.
+   *
+   * STATE_LOADED_MIXED_ACTIVE_CONTENT
+   *   Mixed active content has been loaded. State should be STATE_IS_BROKEN.
+   */
+  const unsigned long STATE_BLOCKED_MIXED_ACTIVE_CONTENT  = 0x00000010;
+  const unsigned long STATE_LOADED_MIXED_ACTIVE_CONTENT   = 0x00000020;
+
+  /**
+   * Mixed display content flags
+   *
+   * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
+   * nsSecureBrowserUIImpl::CheckForBlockedContent().
+   *
+   * May be set in addition to the State Security Flags, to indicate that
+   * mixed display content has been encountered.
+   *
+   * STATE_BLOCKED_MIXED_DISPLAY_CONTENT
+   *   Mixed display content has been blocked from loading.
+   *
+   * STATE_LOADED_MIXED_DISPLAY_CONTENT
+   *   Mixed display content has been loaded. State should be STATE_IS_BROKEN.
+   */
+  const unsigned long STATE_BLOCKED_MIXED_DISPLAY_CONTENT = 0x00000100;
+  const unsigned long STATE_LOADED_MIXED_DISPLAY_CONTENT  = 0x00000200;
+
+  /**
+    * State bits for EV == Extended Validation == High Assurance
+    *
+    * These flags describe the level of identity verification
+    * in a call to the onSecurityChange method.
+    *
+    * STATE_IDENTITY_EV_TOPLEVEL
+    *   The topmost document uses an EV cert.
+    *   NOTE: Available since Gecko 1.9
+    */
+
+  const unsigned long STATE_IDENTITY_EV_TOPLEVEL    = 0x00100000;
+
+  /**
+    * Broken state flags
+    *
+    * These flags describe the reason of the broken state.
+    *
+    * STATE_USES_SSL_3
+    *   The topmost document uses SSL 3.0.
+    *
+    * STATE_USES_WEAK_CRYPTO
+    *   The topmost document uses a weak cipher suite such as RC4.
+    *
+    * STATE_CERT_USER_OVERRIDDEN
+    *   The user has added a security exception for the site.
+    */
+  const unsigned long STATE_USES_SSL_3                = 0x01000000;
+  const unsigned long STATE_USES_WEAK_CRYPTO          = 0x02000000;
+  const unsigned long STATE_CERT_USER_OVERRIDDEN      = 0x04000000;
+
+  /**
+   * Content Blocking Event flags
+   *
+   * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
+   * nsSecureBrowserUIImpl::CheckForBlockedContent() AND UPDATE THE
+   * CORRESPONDING LIST IN ContentBlockingController.java
+   *
+   * These flags describe the reason of cookie jar rejection.
+   *
+   * STATE_BLOCKED_TRACKING_CONTENT
+   *   Tracking content has been blocked from loading.
+   *
+   * STATE_LOADED_LEVEL_1_TRACKING_CONTENT
+   *   Tracking content from the Disconnect Level 1 list has been loaded.
+   *
+   * STATE_LOADED_LEVEL_2_TRACKING_CONTENT
+   *   Tracking content from the Disconnect Level 2 list has been loaded.
+   *
+   * STATE_BLOCKED_FINGERPRINTING_CONTENT
+   *   Fingerprinting content has been blocked from loading.
+   *
+   * STATE_LOADED_FINGERPRINTING_CONTENT
+   *   Fingerprinting content has been loaded.
+   *
+   * STATE_BLOCKED_CRYPTOMINING_CONTENT
+   *   Cryptomining content has been blocked from loading.
+   *
+   * STATE_LOADED_CRYPTOMINING_CONTENT
+   *   Cryptomining content has been loaded.
+   *
+   * STATE_BLOCKED_UNSAFE_CONTENT
+   *   Content which againts SafeBrowsing list has been blocked from loading.
+   *
+   * STATE_COOKIES_LOADED
+   *   Performed a storage access check, which usually means something like a
+   *   cookie or a storage item was loaded/stored on the current tab.
+   *   Alternatively this could indicate that something in the current tab
+   *   attempted to communicate with its same-origin counterparts in other
+   *   tabs.
+   *
+   * STATE_COOKIES_LOADED_TRACKER
+   *   Similar to STATE_COOKIES_LOADED, but only sent if the subject of the
+   *   action was a third-party tracker when the active cookie policy imposes
+   *   restrictions on such content.
+   *
+   * STATE_COOKIES_LOADED_SOCIALTRACKER
+   *   Similar to STATE_COOKIES_LOADED, but only sent if the subject of the
+   *   action was a third-party social tracker when the active cookie policy
+   *   imposes restrictions on such content.
+   *
+   * STATE_COOKIES_BLOCKED_BY_PERMISSION
+   *   Rejected for custom site permission.
+   *
+   * STATE_COOKIES_BLOCKED_TRACKER
+   *   Rejected because the resource is a tracker and cookie policy doesn't
+   *   allow its loading.
+   *
+   * STATE_COOKIES_BLOCKED_SOCIALTRACKER
+   *   Rejected because the resource is a tracker from a social origin and
+   *   cookie policy doesn't allow its loading.
+   *
+   * STATE_COOKIES_PARTITIONED_FOREIGN
+   *   Rejected because the resource is a third-party and cookie policy forces
+   *   third-party resources to be partitioned.
+   *
+   * STATE_COOKIES_BLOCKED_ALL
+   *   Rejected because cookie policy blocks all cookies.
+   *
+   * STATE_COOKIES_BLOCKED_FOREIGN
+   *   Rejected because cookie policy blocks 3rd party cookies.
+   *
+   * STATE_BLOCKED_SOCIALTRACKING_CONTENT
+   *   SocialTracking content has been blocked from loading.
+   *
+   * STATE_LOADED_SOCIALTRACKING_CONTENT
+   *   SocialTracking content has been loaded.
+   *
+   * STATE_REPLACED_TRACKING_CONTENT
+   *   Tracking content which should be blocked from loading was replaced with a
+   *   shim.
+   *
+   * STATE_ALLOWED_TRACKING_CONTENT
+   *   Tracking content which should be blocked from loading was allowed.
+   */
+  const unsigned long STATE_BLOCKED_TRACKING_CONTENT        = 0x00001000;
+  const unsigned long STATE_LOADED_LEVEL_1_TRACKING_CONTENT = 0x00002000;
+  const unsigned long STATE_LOADED_LEVEL_2_TRACKING_CONTENT = 0x00100000;
+  const unsigned long STATE_BLOCKED_FINGERPRINTING_CONTENT  = 0x00000040;
+  const unsigned long STATE_LOADED_FINGERPRINTING_CONTENT   = 0x00000400;
+  const unsigned long STATE_BLOCKED_CRYPTOMINING_CONTENT    = 0x00000800;
+  const unsigned long STATE_LOADED_CRYPTOMINING_CONTENT     = 0x00200000;
+  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT          = 0x00004000;
+  const unsigned long STATE_COOKIES_LOADED                  = 0x00008000;
+  const unsigned long STATE_COOKIES_LOADED_TRACKER          = 0x00040000;
+  const unsigned long STATE_COOKIES_LOADED_SOCIALTRACKER    = 0x00080000;
+  const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION   = 0x10000000;
+  const unsigned long STATE_COOKIES_BLOCKED_TRACKER         = 0x20000000;
+  const unsigned long STATE_COOKIES_BLOCKED_SOCIALTRACKER   = 0x01000000;
+  const unsigned long STATE_COOKIES_BLOCKED_ALL             = 0x40000000;
+  const unsigned long STATE_COOKIES_PARTITIONED_FOREIGN     = 0x80000000;
+  const unsigned long STATE_COOKIES_BLOCKED_FOREIGN         = 0x00000080;
+  const unsigned long STATE_BLOCKED_SOCIALTRACKING_CONTENT  = 0x00010000;
+  const unsigned long STATE_LOADED_SOCIALTRACKING_CONTENT   = 0x00020000;
+  const unsigned long STATE_REPLACED_TRACKING_CONTENT       = 0x00000010;
+  const unsigned long STATE_ALLOWED_TRACKING_CONTENT        = 0x00000020;
+
+  /**
+   * Flag for HTTPS-Only Mode upgrades
+   *
+   * STATE_HTTPS_ONLY_MODE_UPGRADED
+   *   When a request has been upgraded by HTTPS-Only Mode
+   *
+   * STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED
+   *   When an upgraded request failed.
+   */
+  const unsigned long STATE_HTTPS_ONLY_MODE_UPGRADED        = 0x00400000;
+  const unsigned long STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED  = 0x00800000;
+
+  /**
+   * Notification indicating the state has changed for one of the requests
+   * associated with aWebProgress.
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification
+   * @param aRequest
+   *        The nsIRequest that has changed state.
+   * @param aStateFlags
+   *        Flags indicating the new state.  This value is a combination of one
+   *        of the State Transition Flags and one or more of the State Type
+   *        Flags defined above.  Any undefined bits are reserved for future
+   *        use.
+   * @param aStatus
+   *        Error status code associated with the state change.  This parameter
+   *        should be ignored unless aStateFlags includes the STATE_STOP bit.
+   *        The status code indicates success or failure of the request
+   *        associated with the state change.  NOTE: aStatus may be a success
+   *        code even for server generated errors, such as the HTTP 404 error.
+   *        In such cases, the request itself should be queried for extended
+   *        error information (e.g., for HTTP requests see nsIHttpChannel).
+   */
+  void onStateChange(in nsIWebProgress aWebProgress,
+                     in nsIRequest aRequest,
+                     in unsigned long aStateFlags,
+                     in nsresult aStatus);
+
+  /**
+   * Notification that the progress has changed for one of the requests
+   * associated with aWebProgress.  Progress totals are reset to zero when all
+   * requests in aWebProgress complete (corresponding to onStateChange being
+   * called with aStateFlags including the STATE_STOP and STATE_IS_WINDOW
+   * flags).
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification.
+   * @param aRequest
+   *        The nsIRequest that has new progress.
+   * @param aCurSelfProgress
+   *        The current progress for aRequest.
+   * @param aMaxSelfProgress
+   *        The maximum progress for aRequest.
+   * @param aCurTotalProgress
+   *        The current progress for all requests associated with aWebProgress.
+   * @param aMaxTotalProgress
+   *        The total progress for all requests associated with aWebProgress.
+   *
+   * NOTE: If any progress value is unknown, or if its value would exceed the
+   * maximum value of type long, then its value is replaced with -1.
+   *
+   * NOTE: If the object also implements nsIWebProgressListener2 and the caller
+   * knows about that interface, this function will not be called. Instead,
+   * nsIWebProgressListener2::onProgressChange64 will be called.
+   */
+  void onProgressChange(in nsIWebProgress aWebProgress,
+                        in nsIRequest aRequest,
+                        in long aCurSelfProgress,
+                        in long aMaxSelfProgress,
+                        in long aCurTotalProgress,
+                        in long aMaxTotalProgress);
+
+  /**
+   * Flags for onLocationChange
+   *
+   * LOCATION_CHANGE_SAME_DOCUMENT
+   *   This flag is on when |aWebProgress| did not load a new document.
+   *   For example, the location change is due to an anchor scroll or a
+   *   pushState/popState/replaceState.
+   *
+   * LOCATION_CHANGE_ERROR_PAGE
+   *   This flag is on when |aWebProgress| redirected from the requested
+   *   contents to an internal page to show error status, such as
+   *   <about:neterror>, <about:certerror> and so on.
+   *
+   *   Generally speaking, |aURI| and |aRequest| are the original data. DOM
+   *   |window.location.href| is also the original location, while
+   *   |document.documentURI| is the redirected location. Sometimes |aURI| is
+   *   <about:blank> and |aRequest| is null when the original data does not
+   +   remain.
+   *
+   *   |aWebProgress| does NOT set this flag when it did not try to load a new
+   *   document. In this case, it should set LOCATION_CHANGE_SAME_DOCUMENT.
+   *
+   * LOCATION_CHANGE_RELOAD
+   *   This flag is on when reloading the current page, either from
+   *   location.reload() or the browser UI.
+   *
+   * LOCATION_CHANGE_HASHCHANGE
+   *   This flag is on for same-document location changes where only the URI's
+   *   reference fragment has changed. This flag implies
+   *   LOCATION_CHANGE_SAME_DOCUMENT.
+   */
+  const unsigned long LOCATION_CHANGE_SAME_DOCUMENT   = 0x00000001;
+  const unsigned long LOCATION_CHANGE_ERROR_PAGE      = 0x00000002;
+  const unsigned long LOCATION_CHANGE_RELOAD          = 0x00000004;
+  const unsigned long LOCATION_CHANGE_HASHCHANGE      = 0x00000008;
+
+  /**
+   * Called when the location of the window being watched changes.  This is not
+   * when a load is requested, but rather once it is verified that the load is
+   * going to occur in the given window.  For instance, a load that starts in a
+   * window might send progress and status messages for the new site, but it
+   * will not send the onLocationChange until we are sure that we are loading
+   * this new page here.
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification.
+   * @param aRequest
+   *        The associated nsIRequest.  This may be null in some cases.
+   * @param aLocation
+   *        The URI of the location that is being loaded.
+   * @param aFlags
+   *        This is a value which explains the situation or the reason why
+   *        the location has changed.
+   */
+  void onLocationChange(in nsIWebProgress aWebProgress,
+                        in nsIRequest aRequest,
+                        in nsIURI aLocation,
+                        [optional] in unsigned long aFlags);
+
+  /**
+   * Notification that the status of a request has changed.  The status message
+   * is intended to be displayed to the user (e.g., in the status bar of the
+   * browser).
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification.
+   * @param aRequest
+   *        The nsIRequest that has new status.
+   * @param aStatus
+   *        This value is not an error code.  Instead, it is a numeric value
+   *        that indicates the current status of the request.  This interface
+   *        does not define the set of possible status codes.  NOTE: Some
+   *        status values are defined by nsITransport and nsISocketTransport.
+   * @param aMessage
+   *        Localized text corresponding to aStatus.
+   */
+  void onStatusChange(in nsIWebProgress aWebProgress,
+                      in nsIRequest aRequest,
+                      in nsresult aStatus,
+                      in wstring aMessage);
+
+  /**
+   * Notification called for security progress.  This method will be called on
+   * security transitions (eg HTTP -> HTTPS, HTTPS -> HTTP, FOO -> HTTPS) and
+   * after document load completion.  It might also be called if an error
+   * occurs during network loading.
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification.
+   * @param aRequest
+   *        The nsIRequest that has new security state.
+   * @param aState
+   *        A value composed of the Security State Flags and the Security
+   *        Strength Flags listed above.  Any undefined bits are reserved for
+   *        future use.
+   *
+   * NOTE: These notifications will only occur if a security package is
+   * installed.
+   */
+  void onSecurityChange(in nsIWebProgress aWebProgress,
+                        in nsIRequest aRequest,
+                        in unsigned long aState);
+
+  /**
+   * Notification called for content blocking events.  This method will be
+   * called when content gets allowed/blocked for various reasons per the
+   * Content Blocking rules.
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification.
+   * @param aRequest
+   *        The nsIRequest that has new security state.
+   * @param aEvent
+   *        A value composed of the Content Blocking Event Flags listed above.
+   *        Any undefined bits are reserved for future use.
+   */
+  void onContentBlockingEvent(in nsIWebProgress aWebProgress,
+                              in nsIRequest aRequest,
+                              in unsigned long aEvent);
+};

@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:m="http://www.w3.org/1998/Math/MathML">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("iframe").appendChild(document.createElement("span"));
+  document.getElementById("mrow").appendChild(document.createElement("span"));
+}
+
+</script>
+</head>
+<body onload="boom();"><m:mrow id="mrow"><iframe id="iframe"/></m:mrow></body>
+</html>

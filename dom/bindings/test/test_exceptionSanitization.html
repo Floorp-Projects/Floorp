@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1295322</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1295322">Mozilla Bug 1295322</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+  /* global TestFunctions */
+    SimpleTest.waitForExplicitFinish();
+    async function runTests() {
+      await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
+
+      var t = new TestFunctions();
+
+      try {
+        t.testThrowNsresult();
+      } catch (e) {
+        try {
+          is(e.name, "NS_BINDING_ABORTED", "Should have the right exception");
+          is(e.filename, location.href, "Should not be seeing where the exception really came from");
+        } catch (e2) {
+          ok(false, "Should be able to work with the exception");
+        }
+      }
+
+      try {
+        t.testThrowNsresultFromNative();
+      } catch (e) {
+        try {
+          is(e.name, "NS_ERROR_UNEXPECTED", "Should have the right exception");
+          is(e.filename, location.href, "Should not be seeing where the exception really came from");
+        } catch (e2) {
+          ok(false, "Should be able to work with the exception");
+        }
+      }
+
+      SimpleTest.finish();
+    }
+
+    runTests();
+  </script>
+</body>
+</html>

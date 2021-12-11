@@ -1,0 +1,341 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=619498
+-->
+<head>
+  <title>Test interpolation between different path segment types</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=619498">Mozilla Bug 619498</a>
+<svg xmlns="http://www.w3.org/2000/svg" id="svg" visibility="hidden"
+     onload="this.pauseAnimations()"/>
+<script type="application/javascript"><![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+var gSVG = document.getElementById("svg");
+
+// Array of all subtests to run.  This is populated by addTest.
+var gTests = [];
+
+// Array of all path segment types.
+var gTypes = "zMmLlCcQqAaHhVvSsTt".split("");
+
+// Property names on the SVGPathSeg objects for the given segment type, in the
+// order that they would appear in a path data string.
+var gArgumentNames = {
+  Z: [],
+  M: ["x", "y"],
+  L: ["x", "y"],
+  C: ["x1", "y1", "x2", "y2", "x", "y"],
+  Q: ["x1", "y1", "x", "y"],
+  A: ["r1", "r2", "angle", "largeArcFlag", "sweepFlag", "x", "y"],
+  H: ["x"],
+  V: ["y"],
+  S: ["x2", "y2", "x", "y"],
+  T: ["x", "y"],
+};
+
+// All of these prefixes leave the current point at 100,100.  Some of them
+// affect the implied control point if followed by a smooth quadratic or
+// cubic segment, but no valid interpolations depend on those control points.
+var gPrefixes = [
+  [1, "M100,100"],
+  [2, "M50,50 M100,100"],
+  [2, "M50,50 m50,50"],
+  [2, "M50,50 L100,100"],
+  [2, "M50,50 l50,50"],
+  [3, "M50,50 H100 V100"],
+  [3, "M50,50 h50 V100"],
+  [3, "M50,50 H100 v50"],
+  [2, "M50,50 A10,10,10,0,0,100,100"],
+  [2, "M50,50 a10,10,10,0,0,50,50"],
+  [4, "M50,50 l50,50 z m50,50"],
+
+  // These leave the quadratic implied control point at 125,125.
+  [2, "M50,50 Q75,75,100,100"],
+  [2, "M50,50 q25,25,50,50"],
+  [2, "M75,75 T100,100"],
+  [2, "M75,75 t25,25"],
+  [3, "M50,50 T62.5,62.5 t37.5,37.5"],
+  [3, "M50,50 T62.5,62.5 T100,100"],
+  [3, "M50,50 t12.5,12.5 t37.5,37.5"],
+  [3, "M50,50 t12.5,12.5 T100,100"],
+  [3, "M50,50 Q50,50,62.5,62.5 t37.5,37.5"],
+  [3, "M50,50 Q50,50,62.5,62.5 T100,100"],
+  [3, "M50,50 q0,0,12.5,12.5 t37.5,37.5"],
+  [3, "M50,50 q0,0,12.5,12.5 T100,100"],
+
+  // These leave the cubic implied control point at 125,125.
+  [2, "M50,50 C10,10,75,75,100,100"],
+  [2, "M50,50 c10,10,25,25,50,50"],
+  [2, "M50,50 S75,75,100,100"],
+  [2, "M50,50 s25,25,50,50"],
+  [3, "M50,50 S10,10,75,75 S75,75,100,100"],
+  [3, "M50,50 S10,10,75,75 s0,0,25,25"],
+  [3, "M50,50 s10,10,25,25 S75,75,100,100"],
+  [3, "M50,50 s10,10,25,25 s0,0,25,25"],
+  [3, "M50,50 C10,10,20,20,75,75 S75,75,100,100"],
+  [3, "M50,50 C10,10,20,20,75,75 s0,0,25,25"],
+  [3, "M50,50 c10,10,20,20,25,25 S75,75,100,100"],
+  [3, "M50,50 c10,10,20,20,25,25 s0,0,25,25"],
+];
+
+// These are all of the suffixes whose result is not dependent on whether the
+// preceding segment types are quadratic or cubic types.  Each entry is:
+//
+//   "<fromType><toType>": [fromArguments,
+//                          toArguments,
+//                          expectedArguments,
+//                          expectedArgumentsAdditive]
+//
+// As an example:
+//
+//   "Mm": [[10, 20], [30, 40], [-30, -20], [-120, -100]]
+//
+// This will testing interpolating between "M10,20" and "m30,40". All of the
+// these tests assume that the current point is left at 100,100.  So the above
+// entry represents two kinds of tests, one where additive and one not:
+//
+//   <path d="... M10,20">
+//     <animate attributeName="d" from="... M10,20" to="... m30,40"/>
+//   </path>
+//
+// and
+//
+//   <path d="... M10,20">
+//     <animate attributeName="d" from="... M10,20" to="... m30,40"
+//              additive="sum"/>
+//   </path>
+//
+// where the "..." is some prefix that leaves the current point at 100,100.
+// Each of the suffixes here in gSuffixes will be paired with each of the
+// prefixes in gPrefixes, all of which leave the current point at 100,100.
+// (Thus the above two tests for interpolating between "M" and "m" will be
+// performed many times, with different preceding commands.)
+//
+// The expected result of the non-additive test is "m-30,-20".  Since the
+// animation is from an absolute moveto to a relative moveto, we first
+// convert the "M10,20" into its relative form, which is "m-90,-80" due to the
+// current point being 100,100.  Half way through the animation between
+// "m-90,-80" and "m30,40" is thus "m-30,-20".
+//
+// The expected result of the additive test is "m-120,-100".  We take the
+// halfway value of the animation, "m-30,-20" and add it on to the underlying
+// value.  Since the underlying value "M10,20" is an absolute moveto, we first
+// convert it to relative, "m-90,-80", and then add the "m-30,-20" to it,
+// giving us the result "m-120,-100".
+var gSuffixes = {
+  // Same path segment type, no conversion required.
+  MM: [[10, 20], [30, 40], [20, 30], [30, 50]],
+  mm: [[10, 20], [30, 40], [20, 30], [30, 50]],
+  LL: [[10, 20], [30, 40], [20, 30], [30, 50]],
+  ll: [[10, 20], [30, 40], [20, 30], [30, 50]],
+  CC: [[10, 20, 30, 40, 50, 60], [70, 80, 90, 100, 110, 120],
+       [40, 50, 60, 70, 80, 90], [50, 70, 90, 110, 130, 150]],
+  cc: [[10, 20, 30, 40, 50, 60], [70, 80, 90, 100, 110, 120],
+       [40, 50, 60, 70, 80, 90], [50, 70, 90, 110, 130, 150]],
+  QQ: [[10, 20, 30, 40], [50, 60, 70, 80], [30, 40, 50, 60], [40, 60, 80, 100]],
+  qq: [[10, 20, 30, 40], [50, 60, 70, 80], [30, 40, 50, 60], [40, 60, 80, 100]],
+  AA: [[10, 20, 30, 0, 0, 40, 50], [60, 70, 80, 0, 0, 90, 100],
+       [35, 45, 55, 0, 0, 65, 75], [45, 65, 85, 0, 0, 105, 125]],
+  aa: [[10, 20, 30, 0, 0, 40, 50], [60, 70, 80, 0, 0, 90, 100],
+       [35, 45, 55, 0, 0, 65, 75], [45, 65, 85, 0, 0, 105, 125]],
+  HH: [[10], [20], [15], [25]],
+  hh: [[10], [20], [15], [25]],
+  VV: [[10], [20], [15], [25]],
+  vv: [[10], [20], [15], [25]],
+  SS: [[10, 20, 30, 40], [50, 60, 70, 80], [30, 40, 50, 60], [40, 60, 80, 100]],
+  ss: [[10, 20, 30, 40], [50, 60, 70, 80], [30, 40, 50, 60], [40, 60, 80, 100]],
+  TT: [[10, 20], [30, 40], [20, 30], [30, 50]],
+  tt: [[10, 20], [30, 40], [20, 30], [30, 50]],
+
+  // Relative <-> absolute conversion.
+  Mm: [[10, 20], [30, 40], [-30, -20], [-120, -100]],
+  mM: [[10, 20], [30, 40], [70, 80], [180, 200]],
+  Ll: [[10, 20], [30, 40], [-30, -20], [-120, -100]],
+  lL: [[10, 20], [30, 40], [70, 80], [180, 200]],
+  Cc: [[10, 20, 30, 40, 50, 60], [70, 80, 90, 100, 110, 120],
+       [-10, 0, 10, 20, 30, 40], [-100, -80, -60, -40, -20, 0]],
+  cC: [[10, 20, 30, 40, 50, 60], [70, 80, 90, 100, 110, 120],
+       [90, 100, 110, 120, 130, 140], [200, 220, 240, 260, 280, 300]],
+  Qq: [[10, 20, 30, 40], [50, 60, 70, 80],
+       [-20, -10, 0, 10], [-110, -90, -70, -50]],
+  qQ: [[10, 20, 30, 40], [50, 60, 70, 80],
+       [80, 90, 100, 110], [190, 210, 230, 250]],
+  Aa: [[10, 20, 30, 0, 0, 40, 50], [60, 70, 80, 0, 0, 90, 100],
+       [35, 45, 55, 0, 0, 15, 25], [45, 65, 85, 0, 0, -45, -25]],
+  aA: [[10, 20, 30, 0, 0, 40, 50], [60, 70, 80, 0, 0, 90, 100],
+       [35, 45, 55, 0, 0, 115, 125], [45, 65, 85, 0, 0, 255, 275]],
+  Hh: [[10], [20], [-35], [-125]],
+  hH: [[10], [20], [65], [175]],
+  Vv: [[10], [20], [-35], [-125]],
+  vV: [[10], [20], [65], [175]],
+  Tt: [[10, 20], [30, 40], [-30, -20], [-120, -100]],
+  tT: [[10, 20], [30, 40], [70, 80], [180, 200]],
+  Ss: [[10, 20, 30, 40], [50, 60, 70, 80],
+       [-20, -10, 0, 10], [-110, -90, -70, -50]],
+  sS: [[10, 20, 30, 40], [50, 60, 70, 80],
+       [80, 90, 100, 110], [190, 210, 230, 250]],
+};
+
+// Returns an array of property names that exist on an SVGPathSeg object
+// corresponding to the given segment type, in the order that they would
+// be present in a path data string.
+function argumentNames(aType) {
+  return gArgumentNames[aType.toUpperCase()];
+}
+
+// Creates and returns a new element and sets some attributes on it.
+function newElement(aNamespaceURI, aLocalName, aAttributes) {
+  var e = document.createElementNS(aNamespaceURI, aLocalName);
+  if (aAttributes) {
+    for (let [name, value] of Object.entries(aAttributes)) {
+      e.setAttribute(name, value);
+    }
+  }
+  return e;
+}
+
+// Creates and returns a new SVG element and sets some attributes on it.
+function newSVGElement(aLocalName, aAttributes) {
+  return newElement("http://www.w3.org/2000/svg", aLocalName, aAttributes);
+}
+
+// Creates a subtest and adds it to the document.
+//
+// * aPrefixLength/aPrefix              the prefix to use
+// * aFromType/aFromArguments           the segment to interpolate from
+// * aToType/aToArguments               the segment to interpolate to
+// * aExpectedType/aExpectedArguments   the expected result of the interpolated
+//                                        segment half way through the animation
+//                                        duration
+// * aAdditive                          whether the subtest is for an additive
+//                                        animation
+function addTest(aPrefixLength, aPrefix, aFromType, aFromArguments,
+                 aToType, aToArguments, aExpectedType, aExpectedArguments,
+                 aAdditive) {
+  var fromPath = aPrefix + aFromType + aFromArguments,
+      toPath = aPrefix + aToType + aToArguments;
+
+  var path = newSVGElement("path", { d: fromPath });
+  var animate =
+    newSVGElement("animate", { attributeName: "d",
+                               from: fromPath,
+                               to: toPath,
+                               dur: "8s",
+                               additive: aAdditive ? "sum" : "replace" });
+  path.appendChild(animate);
+  gSVG.appendChild(path);
+
+  gTests.push({ element: path,
+                prefixLength: aPrefixLength,
+                from: fromPath,
+                to: toPath,
+                toType: aToType,
+                expectedType: aExpectedType,
+                expected: aExpectedArguments,
+                usesAddition: aAdditive });
+}
+
+// Generates an array of path segment arguments for the given type.  aOffset
+// is a number to add on to all non-Boolean segment arguments.
+function generatePathSegmentArguments(aType, aOffset) {
+  var args = new Array(argumentNames(aType).length);
+  for (let i = 0; i < args.length; i++) {
+    args[i] = i * 10 + aOffset;
+  }
+  if (aType == "A" || aType == "a") {
+    args[3] = 0;
+    args[4] = 0;
+  }
+  return args;
+}
+
+// Returns whether interpolating between the two given types is valid.
+function isValidInterpolation(aFromType, aToType) {
+  return aFromType.toUpperCase() == aToType.toUpperCase();
+}
+
+// Runs the test.
+function run() {
+  for (let additive of [false, true]) {
+    let indexOfExpectedArguments = additive ? 3 : 2;
+
+    // Add subtests for each combination of prefix and suffix, and additive
+    // or not.
+    for (let [typePair, suffixEntry] of Object.entries(gSuffixes)) {
+      let fromType = typePair[0],
+          toType = typePair[1],
+          fromArguments = suffixEntry[0],
+          toArguments = suffixEntry[1],
+          expectedArguments = suffixEntry[indexOfExpectedArguments];
+
+      for (let prefixEntry of gPrefixes) {
+        let [prefixLength, prefix] = prefixEntry;
+        addTest(prefixLength, prefix, fromType, fromArguments,
+                toType, toArguments, toType, expectedArguments, additive);
+      }
+    }
+
+    // Test that differences in arc flag parameters cause the
+    // interpolation/addition not to occur.
+    addTest(1, "M100,100",
+            "A", [10, 20, 30, 0, 0, 40, 50],
+            "a", [60, 70, 80, 0, 1, 90, 100],
+            "a", [60, 70, 80, 0, 1, 90, 100], additive);
+    addTest(1, "M100,100",
+            "A", [10, 20, 30, 0, 0, 40, 50],
+            "a", [60, 70, 80, 1, 0, 90, 100],
+            "a", [60, 70, 80, 1, 0, 90, 100], additive);
+
+    // Test all pairs of segment types that cannot be interpolated between.
+    for (let fromType of gTypes) {
+      let fromArguments = generatePathSegmentArguments(fromType, 0);
+      for (let toType of gTypes) {
+        if (!isValidInterpolation(fromType, toType)) {
+          let toArguments = generatePathSegmentArguments(toType, 1000);
+          addTest(1, "M100,100", fromType, fromArguments,
+          toType, toArguments, toType, toArguments, additive);
+        }
+      }
+    }
+  }
+
+  // Move the document time to half way through the animations.
+  gSVG.setCurrentTime(4);
+
+  // Inspect the results of each subtest.
+  for (let test of gTests) {
+    let list = test.element.animatedPathSegList;
+    is(list.numberOfItems, test.prefixLength + 1,
+       "Length of animatedPathSegList for interpolation " +
+         (test.usesAddition ? "with addition " : "") +
+         " from " + test.from + " to " + test.to);
+
+    let seg = list.getItem(list.numberOfItems - 1);
+    let propertyNames = argumentNames(test.expectedType);
+
+    let actual = [];
+    for (let i = 0; i < test.expected.length; i++) {
+      actual.push(+seg[propertyNames[i]]);
+    }
+
+    is(seg.pathSegTypeAsLetter + actual, test.expectedType + test.expected,
+       "Path segment for interpolation " +
+         (test.usesAddition ? "with addition " : "") +
+         " from " + test.from + " to " + test.to);
+  }
+
+  // Clear all the tests. We have tons of them attached to the DOM and refresh driver tick will
+  // go through them all by calling animation controller.
+  gSVG.remove();
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run);
+]]></script>
+</body>
+</html>

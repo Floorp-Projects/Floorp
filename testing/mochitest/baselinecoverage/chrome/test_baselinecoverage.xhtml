@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("Baseline coverage stabilization delay.");
+
+    async function delayBaseline() {
+      SimpleTest.ok(true, "Collecting baseline coverage for XUL (.xul) file types.");
+      await new Promise((c) => setTimeout(c, 30 * 1000));
+      SimpleTest.finish();
+    }
+
+    delayBaseline();
+  ]]></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;" />
+</window>

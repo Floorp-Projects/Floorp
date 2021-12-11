@@ -1,0 +1,21 @@
+commit b60bd4bf29a9bcd0383f654cab59dd5dda649134
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Aug 26 17:14:18 2021 -0700
+
+    [oes-draw-buffers-indexed.html] Reset colorMask and blend disable.
+
+commit dbc420cd0ff865a6ccbf6d2e5fce7d95e3f5c38d
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Aug 11 16:01:51 2021 -0700
+
+    Simplify startPlayingAndWaitForVideo with modern async/await.
+
+Cherries picked
+================================================================================
+Merge base from: ups/main
+
+commit 7318622fa1bfa507f6e77b4bf38844f9d7c1af36
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Aug 18 23:17:18 2021 -0700
+
+    [video-rotation] Remember to finishTest() after e.g. !supports_vp9. (#3323)

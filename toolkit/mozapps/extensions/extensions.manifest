@@ -1,0 +1,8 @@
+#ifndef MOZ_WIDGET_ANDROID
+category update-timer addonManager @mozilla.org/addons/integration;1,getService,addon-background-update-timer,extensions.update.interval,86400
+#endif
+#ifndef MOZ_THUNDERBIRD
+#ifndef MOZ_WIDGET_ANDROID
+category addon-provider-module GMPProvider resource://gre/modules/addons/GMPProvider.jsm
+#endif
+#endif

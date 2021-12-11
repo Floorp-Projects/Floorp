@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <script>
+    function loaded() {
+      if (location.search == "") {
+        if (opener.loadedInitialPage) {
+          opener.ok(true, "got back to the initial page.");
+          opener.setTimeout("SimpleTest.finish();");
+          window.close();
+          return;
+        }
+        opener.loadedInitialPage = true;
+        opener.info("Loaded initial page.");
+        // Load another page (which is this same document, but different URL.)
+        location.href = location.href + "?anotherPage";
+      } else {
+        opener.info("Loaded the second page.");
+        location.hash = "1";
+        window.onhashchange = function() {
+          opener.info("hash: " + location.hash);
+          location.hash = "2";
+          window.onhashchange = function() {
+            opener.info("hash: " + location.hash);
+            var docShell = SpecialPowers.wrap(window).docShell;
+            var webNavigation =
+                SpecialPowers.do_QueryInterface(docShell, "nsIWebNavigation");
+            webNavigation.gotoIndex(history.length - 2);
+            window.onhashchange = function() {
+              opener.info("hash: " + location.hash);
+              webNavigation.gotoIndex(history.length - 4);
+            }
+          }
+        }
+      }
+    }
+    </script>
+  </head>
+  <body onpageshow="setTimeout(loaded)">
+    <a href="#1" name="1">1</a>
+    <a href="#2" name="2">2</a>
+  </body>
+</html>

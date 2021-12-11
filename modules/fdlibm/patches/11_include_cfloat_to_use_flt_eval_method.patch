@@ -1,0 +1,21 @@
+diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
+--- a/modules/fdlibm/src/math_private.h
++++ b/modules/fdlibm/src/math_private.h
+@@ -12,16 +12,17 @@
+ /*
+  * from: @(#)fdlibm.h 5.1 93/09/24
+  * $FreeBSD$
+  */
+ 
+ #ifndef _MATH_PRIVATE_H_
+ #define	_MATH_PRIVATE_H_
+ 
++#include <cfloat>
+ #include <stdint.h>
+ #include <sys/types.h>
+ 
+ #include "fdlibm.h"
+ 
+ #include "mozilla/EndianUtils.h"
+ 
+ /*

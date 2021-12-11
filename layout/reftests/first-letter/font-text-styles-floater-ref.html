@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testing first-letter handling of font/text styles</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+html { overflow: hidden; }
+body {
+  margin: 20px;
+  font-size: 600%;
+  line-height: 1.2em;
+  font-family: serif;
+}
+
+div { width: 5em; }
+p { width: 0.5em; margin: 0; font-style: italic; }
+span.boldnormal { font-weight: bold; font-style: normal; }
+p.floatingfirst::first-letter { float: left; }
+</style>
+
+</head>
+<body>
+<div>
+<p class="floatingfirst"><span class="boldnormal">G</span>onzo</p>
+</div>
+</body>
+</html>

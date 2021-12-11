@@ -1,0 +1,36 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += ["resources"]
+
+UNIFIED_SOURCES += [
+    "nsNSSDialogHelper.cpp",
+    "nsNSSDialogs.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+LOCAL_INCLUDES += [
+    "!/dist/public/nss",
+]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += [
+        "-Wextra",
+        # -Wextra enables this warning, but it's too noisy to be useful.
+        "-Wno-missing-field-initializers",
+    ]
+
+    # Gecko headers aren't warning-free enough for us to enable these warnings.
+    CXXFLAGS += [
+        "-Wno-unused-parameter",
+    ]
+
+REQUIRES_UNIFIED_BUILD = True

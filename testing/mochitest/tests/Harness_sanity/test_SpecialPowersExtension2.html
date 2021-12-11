@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers extension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<div id="content" class="testbody">
+  <script type="text/javascript">
+    dump("\nSPECIALPTEST2:::Loading test2 file now " + (new Date).getTime() + "\n");
+    is(SpecialPowers.sanityCheck(), "foo", "Special Powers top level");
+    ok(!SpecialPowers.Services.prefs.prefHasUserValue('testing.some_arbitrary_pref'),
+       "should not retain pref from previous test");
+  </script>
+  <iframe id="frame1" src="file_SpecialPowersFrame1.html">
+  </iframe>
+</div>
+</body>
+</html>

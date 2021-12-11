@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=540854
+-->
+<head>
+  <title>Test for Bug 540854</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=540854">Mozilla Bug 540854</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 540854 **/
+
+
+  var x;
+
+  function getUTF8() {
+    return unescape(encodeURIComponent('\0foo'));
+  }
+
+  function xload() {
+    is(this.responseText, getUTF8(), "Unexpected responseText!");
+    SimpleTest.finish();
+  }
+
+  function runTest() {
+    x = new XMLHttpRequest();
+    x.open("POST", "bug540854.sjs")
+    x.onload = xload;
+    x.send(getUTF8());
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(runTest);
+
+</script>
+</pre>
+</body>
+</html>

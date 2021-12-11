@@ -1,0 +1,47 @@
+@charset "UTF-8";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("resource://content-accessible/viewsource.css");
+
+#header {
+  background-color: #ccc;
+  border-bottom: 3px solid black;
+  padding: 0.5em;
+  margin-bottom: 1em;
+}
+
+#tree,
+.expandable-children {
+  margin-inline-start: 1em;
+}
+
+.expandable-body {
+  display: inline-block;
+}
+
+.expandable-body[open] {
+  display: block;
+}
+
+.expandable-opening {
+  list-style: '+' outside;
+}
+
+[open] > .expandable-opening {
+  list-style-type: '−';
+}
+
+.expandable-opening::marker {
+  cursor: pointer;
+  padding-inline-end: 2px;
+  /* Don't want to inherit the styling from pi and comment elements */
+  color: initial;
+  font: initial;
+}
+
+.comment {
+  font-family: monospace;
+  white-space: pre;
+}

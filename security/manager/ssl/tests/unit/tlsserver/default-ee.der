@@ -1,0 +1,3 @@
+This is now an unused file. It exists to ease the coordination between gecko
+development trees and the automation infrastructure that runs periodic updates.
+See bug 1203312 and bug 1205406.

@@ -1,0 +1,32 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = .
+DEPTH      = .
+
+IMPORTS =	nspr20/v4.8 \
+		$(NULL)
+
+RELEASE = nss
+
+DIRS = coreconf lib cmd cpputil gtests
+
+HAVE_ALL_TARGET := 1
+
+#
+# make sure all is the first (default) target
+#
+all: prepare_build
+	$(MAKE) libs
+
+prepare_build:
+	# no real way to encode these in any sensible way
+	$(MAKE) -C coreconf/nsinstall program
+	$(MAKE) export
+
+lib: coreconf
+cmd: lib
+cpputil: lib
+gtests: cmd cpputil
+

@@ -1,0 +1,279 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=238987
+-->
+<head>
+  <title>Test for Bug 238987</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=238987">Mozilla Bug 238987</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /** Test for Bug 238987 **/
+
+  var shouldStop = false;
+  var activateShift = false;
+  var expectedResult = "i1,i2,i3,i4,i5,i6,i7,i8,number,i9,i10,i11,i12";
+  var forwardFocusArray = expectedResult.split(",");
+  var backwardFocusArray = expectedResult.split(",");
+  var forwardBlurArray = expectedResult.split(",");
+  var backwardBlurArray = expectedResult.split(",");
+  // Adding 3 for "begin", "end", "begin" and one for the <a> in the Mochitest template,
+  var expectedWindowFocusCount = forwardFocusArray.length + backwardFocusArray.length + 4;
+  // but the last blur event goes to i1, not "begin".
+  var expectedWindowBlurCount = forwardFocusArray.length + backwardFocusArray.length + 3;
+
+  function handleFocus(e) {
+    if (e.target.id == "begin") {
+      // if the activateShift is set, the test is coming back from the end.
+      if (activateShift) {
+        shouldStop = true;
+      }
+    } else if (e.target.id == "end") {
+      activateShift = true;
+    } else if (activateShift) {
+      var expected = backwardFocusArray.pop();
+      ok(expected == e.target.id,
+         "(focus) Backward tabbing, expected [" +
+         expected + "], got [" + e.target.id + "]");
+    } else {
+      var expected = forwardFocusArray.shift();
+      is(e.target, document.activeElement, "Wrong activeElement!");
+      ok(expected == e.target.id,
+         "(focus) Forward tabbing, expected [" +
+         expected + "], got [" + e.target.id + "]");
+    }
+  }
+
+  function handleWindowFocus(e) {
+    --expectedWindowFocusCount;
+    var s = "target " + e.target;
+    if ("id" in e.target) {
+      s = s + ", id=\"" + e.target.id + "\"";
+    }
+    ok(e.eventPhase == Event.CAPTURING_PHASE,
+       "|window| should not have got a focus event, " + s);
+  }
+
+  function handleBlur(e) {
+    if (e.target.id == "begin" || e.target.id == "end") {
+      return;
+    } else if (activateShift) {
+      var expected = backwardBlurArray.pop();
+      ok(expected == e.target.id,
+         "(blur) backward tabbing, expected [" +
+         expected + "], got [" + e.target.id + "]");
+    } else {
+      var expected = forwardBlurArray.shift();
+      ok(expected == e.target.id,
+         "(blur) forward tabbing, expected [" +
+         expected + "], got [" + e.target.id + "]");
+    }
+  }
+
+  function handleWindowBlur(e) {
+    --expectedWindowBlurCount;
+    var s = "target " + e.target;
+    if ("id" in e.target) {
+      s = s + ", id=\"" + e.target.id + "\"";
+    }
+    ok(e.eventPhase == Event.CAPTURING_PHASE,
+       "|window| should not have got a blur event, " + s);
+  }
+
+  function tab() {
+    // Send tab key events.
+    synthesizeKey("KEY_Tab", {shiftKey: activateShift});
+    if (shouldStop) {
+      // Did focus handling succeed
+      is(forwardFocusArray.length, 0,
+         "Not all forward tabbing focus tests were run, " +
+         forwardFocusArray.toString());
+      is(backwardFocusArray.length, 0,
+         "Not all backward tabbing focus tests were run, " +
+         backwardFocusArray.toString());
+      is(expectedWindowFocusCount, 0,
+         "|window| didn't get the right amount of focus events");
+
+       // and blur.
+      is(forwardBlurArray.length, 0,
+         "Not all forward tabbing blur tests were run, " +
+         forwardBlurArray.toString());
+      is(backwardBlurArray.length, 0,
+         "Not all backward tabbing blur tests were run, " +
+         backwardBlurArray.toString());
+      is(expectedWindowBlurCount, 0,
+         "|window| didn't get the right amount of blur events");
+
+      // Cleanup
+      window.removeEventListener("focus", handleWindowFocus, true);
+      window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener("blur", handleWindowBlur, true);
+      window.removeEventListener("blur", handleWindowBlur);
+      var elements = document.getElementsByTagName("*");
+      for (var i = 0; i < elements.length; ++i) {
+        if (elements[i].hasAttribute("id")) {
+          elements[i].removeEventListener("focus", handleFocus);
+          elements[i].removeEventListener("blur", handleBlur);
+        }
+      }
+
+      SimpleTest.finish();
+    } else {
+      setTimeout(tab, 0);
+    }
+  }
+
+  function start() {
+    window.focus();
+    window.addEventListener("focus", handleWindowFocus, true);
+    window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener("blur", handleWindowBlur, true);
+    window.addEventListener("blur", handleWindowBlur);
+    var elements = document.getElementsByTagName("*");
+    for (var i = 0; i < elements.length; ++i) {
+      if (elements[i].hasAttribute("id")) {
+        elements[i].addEventListener("focus", handleFocus);
+        elements[i].addEventListener("blur", handleBlur);
+      }
+      if (elements[i].getAttribute("tabindex") == "1") {
+        elements[i].setAttribute("tabindex", "-1");
+      }
+    }
+    tab();
+  }
+
+  // accessibility.tabfocus must be set to value 7 before running test also
+  // on a mac.
+  function doTest() {
+    SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]}, start);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(doTest);
+
+</script>
+</pre>
+  <h4 tabindex="0" id="begin">Test:</h4>
+  <table>
+    <tbody>
+      <tr>
+        <td>type="text"</td><td><input type="text"  id="i1" value=""></td>
+      </tr>
+      <tr>
+        <td>type="button"</td><td><input type="button" id="i2" value="type='button'"></td>
+      </tr>
+      <tr>
+        <td>type="checkbox"</td><td><input type="checkbox" id="i3" ></td>
+      </tr>
+      <tr>
+        <td>type="radio" checked</td><td><input type="radio" id="i4" name="radio" checked>
+                                         <input type="radio" id="i4b" name="radio"></td>
+      </tr>
+      <tr>
+        <td>type="radio"</td><td><input type="radio" id="i5" name="radio2">
+                                 <input type="radio" id="i6" name="radio2"></td>
+      </tr>
+      <tr>
+        <td>type="password"</td><td><input type="password" id="i7"></td>
+      </tr>
+      <tr>
+        <td>type="file"</td><td><input type="file" id="i8"></td>
+      </tr>
+      <tr>
+        <td>type="number"</td><td><input type="number" id="number"></td>
+      </tr>
+      <tr>
+        <td>button</td><td><button id="i9">button</button></td>
+      </tr>
+      <tr>
+        <td>select</td><td><select id="i10"><option>select</option></select></td>
+      </tr>
+      <tr>
+        <td>a</td><td><a href="#radio" id="i11">a link</a></td>
+      </tr>
+      <tr>
+        <td>tabindex="0"</td><td><span tabindex="0" id="i12">span</span></td>
+      </tr>
+      
+      <tr>
+        <td><h3>Form elements with tabindex="-1"</h3></td>
+      </tr>
+      <tr>
+        <td>type="text"</td><td><input type="text"  tabindex="-1" value=""></td>
+      </tr>
+      <tr>
+        <td>type="button"</td><td><input type="button" tabindex="-1" value="type='button'"></td>
+      </tr>
+      <tr>
+        <td>type="checkbox"</td><td><input type="checkbox" tabindex="-1"></td>
+      </tr>
+      <tr>
+        <td>type="radio" checked</td><td><input type="radio" tabindex="-1" name="radio3" checked>
+                                         <input type="radio" tabindex="-1" name="radio3"></td>
+      </tr>
+      <tr>
+        <td>type="radio"</td><td><input type="radio" tabindex="-1" name="radio4">
+                                 <input type="radio" tabindex="-1" name="radio4"></td>
+      </tr>
+      <tr>
+        <td>type="password"</td><td><input type="password" tabindex="-1"></td>
+      </tr>
+      <tr>
+        <td>type="file"</td><td><input type="file" tabindex="-1"></td>
+      </tr>
+      <tr>
+        <td>button</td><td><button tabindex="-1">button</button></td>
+      </tr>
+      <tr>
+        <td>select</td><td><select tabindex="-1"><option>select</option></select></td>
+      </tr>
+      
+      <tr>
+        <td><h3>Form elements with .setAttribute("tabindex", "-1")</h3></td>
+      </tr>
+      <tr>
+        <td>type="text"</td><td><input type="text"  tabindex="1" value=""></td>
+      </tr>
+      <tr>
+        <td>type="button"</td><td><input type="button" tabindex="1" value="type='button'"></td>
+      </tr>
+      <tr>
+        <td>type="checkbox"</td><td><input type="checkbox" tabindex="1"></td>
+      </tr>
+      <tr>
+        <td>type="radio" checked</td><td><input type="radio" tabindex="1" name="radio5" checked>
+                                         <input type="radio" tabindex="1" name="radio5"></td>
+      </tr>
+      <tr>
+        <td>type="radio"</td><td><input type="radio" tabindex="1" name="radio6">
+                                 <input type="radio" tabindex="1" name="radio6"></td>
+      </tr>
+      <tr>
+        <td>type="password"</td><td><input type="password" tabindex="1"></td>
+      </tr>
+      <tr>
+        <td>type="file"</td><td><input type="file" tabindex="1"></td>
+      </tr>
+      <tr>
+        <td>button</td><td><button tabindex="1">button</button></td>
+      </tr>
+      <tr>
+        <td>select</td><td><select tabindex="1"><option>select</option></select></td>
+      </tr>
+      
+    </tbody>
+  </table>
+  <h4 tabindex="0" id="end">done.</h4>
+</body>
+</html>
+

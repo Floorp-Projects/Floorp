@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.getElementById('b').removeAttribute('begin');
+        document.getElementById('a').setAttribute('dur', '1s')">
+  <rect>
+    <animate attributeName="y" attributeType="XML" id="a"/>
+    <animate attributeName="fill" attributeType="CSS" id="b"
+      begin="a.end" dur="2s"/>
+  </rect>
+</svg>

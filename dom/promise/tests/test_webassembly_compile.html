@@ -1,0 +1,446 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>WebAssembly.compile Test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+const testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+const wasmIsSupported = SpecialPowers.unwrap(testingFunctions.wasmIsSupported);
+const wasmHasTier2CompilationCompleted = SpecialPowers.unwrap(testingFunctions.wasmHasTier2CompilationCompleted);
+const wasmLoadedFromCache = SpecialPowers.unwrap(testingFunctions.wasmLoadedFromCache);
+const isCachingEnabled = SpecialPowers.getBoolPref("javascript.options.wasm_caching");
+
+// The test_webassembly_compile_sample.wasm is a medium-sized module with 100
+// functions that call each other recursively, returning a computed sum.
+// Any other non-trivial module could be generated and used.
+var sampleCode;
+const sampleURL = "test_webassembly_compile_sample.wasm";
+const sampleFileSize = 16053;
+const sampleURLWithRandomQuery = () => sampleURL + "?id=" + String(Math.ceil(Math.random()*100000));
+const sampleExportName = "run";
+const sampleResult = 1275;
+
+function checkSampleModule(m) {
+  ok(m instanceof WebAssembly.Module, "got a module");
+  var i = new WebAssembly.Instance(m);
+  ok(i instanceof WebAssembly.Instance, "got an instance");
+  ok(i.exports[sampleExportName]() === sampleResult, "got result");
+}
+
+function checkSampleInstance(i) {
+  ok(i instanceof WebAssembly.Instance, "got a module");
+  ok(i.exports[sampleExportName]() === sampleResult, "got result");
+}
+
+function fetchSampleModuleCode() {
+  fetch(sampleURL)
+  .then(response => response.arrayBuffer())
+  .then(buffer => { sampleCode = buffer; runTest(); })
+  .catch(err => ok(false, String(err)));
+}
+
+function propertiesExist() {
+  if (!wasmIsSupported()) {
+    ok(!this.WebAssembly, "If the device doesn't support, there will be no WebAssembly object");
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(WebAssembly, "WebAssembly object should exist");
+  ok(WebAssembly.compile, "WebAssembly.compile function should exist");
+  runTest();
+}
+
+function compileFail() {
+  WebAssembly.compile().then(
+    () => { ok(false, "should have failed"); runTest(); }
+  ).catch(
+    err => { ok(err instanceof TypeError, "empty compile failed"); runTest(); }
+  );
+}
+
+function compileSuccess() {
+  WebAssembly.compile(sampleCode).then(
+    m => { checkSampleModule(m); runTest(); }
+  ).catch(
+    err => { ok(false, String(err)); runTest(); }
+  );
+}
+
+function compileManySuccess() {
+  const N = 100;
+
+  var arr = [];
+  for (var i = 0; i < N; i++)
+    arr.push(WebAssembly.compile(sampleCode));
+
+  SpecialPowers.gc();
+
+  Promise.all(arr).then(ms => {
+    ok(ms.length === N, "got the right number");
+    for (var j = 0; j < N; j++)
+      checkSampleModule(ms[j]);
+    runTest();
+  }).catch(
+    err => { ok(false, String(err)); runTest(); }
+  );
+}
+
+function terminateCompileInWorker() {
+    var w = new Worker(`data:text/plain,
+      var sampleCode;
+      function spawnWork() {
+        const N = 100;
+        var arr = [];
+        for (var i = 0; i < N; i++)
+          arr.push(WebAssembly.compile(sampleCode));
+        Promise.all(arr).then(spawnWork);
+      }
+      onmessage = e => {
+        sampleCode = e.data;
+        spawnWork();
+        postMessage("ok");
+      }
+    `);
+    w.postMessage(sampleCode);
+    w.onmessage = e => {
+      ok(e.data === "ok", "worker finished first step");
+      w.terminate();
+      runTest();
+    };
+}
+
+function instantiateFail() {
+  WebAssembly.instantiate().then(
+    () => { ok(false, "should have failed"); runTest(); }
+  ).catch(
+    err => { ok(err instanceof TypeError, "empty compile failed"); runTest(); }
+  );
+}
+
+function instantiateSuccess() {
+  WebAssembly.instantiate(sampleCode).then(
+    r => { checkSampleModule(r.module); checkSampleInstance(r.instance); runTest(); }
+  ).catch(
+    err => { ok(false, String(err)); runTest(); }
+  );
+}
+
+function chainSuccess() {
+  WebAssembly.compile(sampleCode).then(
+    m => WebAssembly.instantiate(m)
+  ).then(
+    i => { checkSampleInstance(i); runTest(); }
+  ).catch(
+    err => { ok(false, String(err)); runTest(); }
+  );
+}
+
+function compileStreamingNonResponse() {
+  WebAssembly.compileStreaming({})
+  .then(() => { ok(false); })
+  .catch(err => { ok(err instanceof TypeError, "rejected {}"); runTest(); });
+}
+
+function compileStreamingNoMime() {
+  WebAssembly.compileStreaming(new Response(new ArrayBuffer()))
+  .then(() => { ok(false); })
+  .catch(err => { ok(err instanceof TypeError, "rejected no MIME type"); runTest(); });
+}
+
+function compileStreamingBadMime() {
+  var badMimes = [
+    "",
+    "application/js",
+    "application/js;application/wasm",
+    "application/wasm;application/js",
+    "application/wasm;",
+    "application/wasm1",
+  ];
+  var promises = [];
+  for (let mimeType of badMimes) {
+    var init = { headers: { "Content-Type": mimeType } };
+    promises.push(
+      WebAssembly.compileStreaming(new Response(sampleCode, init))
+      .then(() => Promise.reject(), err => {
+        is(err.message,
+          `WebAssembly: Response has unsupported MIME type '${mimeType}' expected 'application/wasm'`,
+          "correct MIME type error message");
+        return Promise.resolve();
+      })
+    );
+  }
+  Promise.all(promises)
+  .then(() => { ok(true, "all bad MIME types rejected"); runTest(); });
+}
+
+function compileStreamingGoodMime() {
+  var badMimes = [
+    "application/wasm",
+    "   application/wasm ",
+    "application/wasm   ",
+  ];
+  var promises = [];
+  for (let mimeType of badMimes) {
+    var init = { headers: { "Content-Type": mimeType } };
+    promises.push(
+      WebAssembly.compileStreaming(new Response(sampleCode, init))
+    );
+  }
+  Promise.all(promises)
+  .then(() => { ok(true, "all good MIME types accepted"); runTest(); });
+}
+
+function compileStreamingDoubleUseFail() {
+  fetch(sampleURL)
+  .then(response => {
+      WebAssembly.compileStreaming(response)
+      .then(m => {
+        checkSampleModule(m);
+        return WebAssembly.compileStreaming(response);
+      })
+      .then(
+        () => ok(false, "should have failed on second use"),
+        err => { ok(true, "failed on second use"); runTest(); }
+      );
+  });
+}
+
+function compileStreamingNullBody() {
+  var init = { headers: { "Content-Type": "application/wasm" } };
+  WebAssembly.compileStreaming(new Response(undefined, init))
+  .then(() => { ok(false); })
+  .catch(err => { ok(err instanceof WebAssembly.CompileError, "null body"); runTest(); });
+}
+
+function compileStreamingFetch() {
+  WebAssembly.compileStreaming(fetch(sampleURL))
+  .then(m => { checkSampleModule(m); runTest(); })
+  .catch(err => { ok(false, String(err)); });
+}
+
+function compileCachedBasic() {
+  const url = sampleURLWithRandomQuery();
+  WebAssembly.compileStreaming(fetch(url))
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(module => {
+    checkSampleModule(module);
+    ok(wasmLoadedFromCache(module), "loaded from cache");
+  })
+  .then(() => runTest())
+  .catch(err => { ok(false, String(err)) });
+}
+
+function compileCachedCompressed() {
+  const url = sampleURLWithRandomQuery();
+
+  // It is a rough estimate that compilation code is about
+  // 2-4 times of the wasm file size. After it compression
+  // it will be less (about 60% ?)
+  const EstimatedCompilationArtifactSize = 2 * sampleFileSize;
+  const EstimatedCompressedArtifactSize = 0.6 * EstimatedCompilationArtifactSize;
+
+  // Set limit on cache entry so it will fail if it is not
+  // compressed.
+  const cleanup = () => {
+    SpecialPowers.clearUserPref("browser.cache.disk.max_entry_size")
+  };
+  Promise.resolve(SpecialPowers.setIntPref("browser.cache.disk.max_entry_size",
+    Math.round(EstimatedCompressedArtifactSize / 1024) /* kb */))
+  .then(() => WebAssembly.compileStreaming(fetch(url)))
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(module => {
+    checkSampleModule(module);
+    ok(wasmLoadedFromCache(module), "loaded from cache");
+  })
+  .then(() => { cleanup(); runTest() })
+  .catch(err => { cleanup(); ok(false, String(err)) });
+}
+
+function compileCachedTooLargeForCache() {
+  const url = sampleURLWithRandomQuery();
+  // Set unreasonable limit, caching will fail.
+  // Bug 1719508 can change name of pref, this and
+  // compileCachedCompressed tests will become invalid.
+  const cleanup = () => {
+    SpecialPowers.clearUserPref("browser.cache.disk.max_entry_size")
+  };
+  Promise.resolve(SpecialPowers.setIntPref("browser.cache.disk.max_entry_size", 1 /* kb */))
+  .then(() => WebAssembly.compileStreaming(fetch(url)))
+  .then(module => {
+    console.log(module)
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached (size limit)");
+  })
+  .then(() => { cleanup(); runTest() })
+  .catch(err => { cleanup(); ok(false, String(err)) });
+}
+
+const Original = "original";
+const Clone = "clone";
+
+function compileCachedBothClonesHitCache(which) {
+  const url = sampleURLWithRandomQuery();
+  WebAssembly.compileStreaming(fetch(url))
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return fetch(url);
+  })
+  .then(original => {
+    let clone = original.clone();
+    if (which === Clone) [clone, original] = [original, clone];
+    return Promise.all([
+      WebAssembly.compileStreaming(original),
+      WebAssembly.compileStreaming(clone)
+    ]);
+  })
+  .then(([m1, m2]) => {
+    checkSampleModule(m1);
+    ok(wasmLoadedFromCache(m1), "clone loaded from cache");
+    checkSampleModule(m2);
+    ok(wasmLoadedFromCache(m2), "original loaded from cache");
+  })
+  .then(() => runTest())
+  .catch(err => { ok(false, String(err)) });
+}
+
+function compileCachedCacheThroughClone(which) {
+  const url = sampleURLWithRandomQuery();
+  fetch(url)
+  .then(original => {
+    ok(true, "fun time");
+    let clone = original.clone();
+    if (which === Clone) [clone, original] = [original, clone];
+    return Promise.all([
+      WebAssembly.compileStreaming(original),
+      clone.arrayBuffer()
+    ]);
+  })
+  .then(([module, buffer]) => {
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    ok(buffer instanceof ArrayBuffer);
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(m => {
+    ok(wasmLoadedFromCache(m), "cache hit of " + which);
+  })
+  .then(() => runTest())
+  .catch(err => { ok(false, String(err)) });
+}
+
+function instantiateStreamingFetch() {
+  WebAssembly.instantiateStreaming(fetch(sampleURL))
+  .then(({module, instance}) => { checkSampleModule(module); checkSampleInstance(instance); runTest(); })
+  .catch(err => { ok(false, String(err)); });
+}
+
+function compileManyStreamingFetch() {
+  const N = 20;
+
+  var arr = [];
+  for (var i = 0; i < N; i++)
+    arr.push(WebAssembly.compileStreaming(fetch(sampleURL)));
+
+  SpecialPowers.gc();
+
+  Promise.all(arr).then(ms => {
+    ok(ms.length === N, "got the right number");
+    for (var j = 0; j < N; j++)
+      checkSampleModule(ms[j]);
+    runTest();
+  }).catch(
+    err => { ok(false, String(err)); runTest(); }
+  );
+}
+
+function runWorkerTests() {
+  var w = new Worker("test_webassembly_compile_worker.js");
+  w.postMessage(sampleCode);
+  w.onmessage = e => {
+    ok(e.data === "ok", "worker test: " + e.data);
+    runTest();
+  };
+}
+
+function terminateCompileStreamingInWorker() {
+  var w = new Worker("test_webassembly_compile_worker_terminate.js");
+  w.onmessage = e => {
+    ok(e.data === "ok", "worker streaming terminate test: " + e.data);
+    w.terminate();
+    runTest();
+  };
+}
+
+var tests = [ propertiesExist,
+              compileFail,
+              compileSuccess,
+              compileManySuccess,
+              terminateCompileInWorker,
+              instantiateFail,
+              instantiateSuccess,
+              chainSuccess,
+              compileStreamingNonResponse,
+              compileStreamingNoMime,
+              compileStreamingBadMime,
+              compileStreamingGoodMime,
+              compileStreamingDoubleUseFail,
+              compileStreamingNullBody,
+              compileStreamingFetch,
+              ...(isCachingEnabled ? [
+                compileCachedBasic,
+                compileCachedCompressed,
+                compileCachedTooLargeForCache,
+                compileCachedBothClonesHitCache.bind(Original),
+                compileCachedBothClonesHitCache.bind(Clone),
+                compileCachedCacheThroughClone.bind(Original),
+                compileCachedCacheThroughClone.bind(Clone),
+              ]: []),
+              instantiateStreamingFetch,
+              compileManyStreamingFetch,
+              runWorkerTests,
+              terminateCompileStreamingInWorker,
+            ];
+
+// This initialization must always run
+tests.unshift(fetchSampleModuleCode);
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+</script>
+</body>
+</html>

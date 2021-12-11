@@ -1,0 +1,280 @@
+From 81d61682a94d47be5b47fb7882ea7e7c7e6c3351 Mon Sep 17 00:00:00 2001
+From: George Wright <gwright@mozilla.com>
+Date: Fri, 18 May 2012 14:15:28 -0400
+Subject: [PATCH 04/10]     Bug 755869 - [7] Re-apply bug 722011 - Fix
+ trailing commas at end of enum lists r=mattwoodrow
+
+---
+ gfx/skia/include/core/SkAdvancedTypefaceMetrics.h |    8 ++++----
+ gfx/skia/include/core/SkBlitRow.h                 |    2 +-
+ gfx/skia/include/core/SkCanvas.h                  |    2 +-
+ gfx/skia/include/core/SkDevice.h                  |    2 +-
+ gfx/skia/include/core/SkDeviceProfile.h           |    4 ++--
+ gfx/skia/include/core/SkFlattenable.h             |    2 +-
+ gfx/skia/include/core/SkFontHost.h                |    4 ++--
+ gfx/skia/include/core/SkMaskFilter.h              |    2 +-
+ gfx/skia/include/core/SkPaint.h                   |    4 ++--
+ gfx/skia/include/core/SkScalerContext.h           |    9 +++++----
+ gfx/skia/include/core/SkTypes.h                   |    2 +-
+ gfx/skia/include/effects/SkLayerDrawLooper.h      |    2 +-
+ gfx/skia/src/core/SkBitmap.cpp                    |    2 +-
+ gfx/skia/src/core/SkGlyphCache.cpp                |    2 +-
+ 14 files changed, 24 insertions(+), 23 deletions(-)
+
+diff --git a/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h b/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h
+index 09fc9a9..5ffdb45 100644
+--- a/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h
++++ b/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h
+@@ -34,7 +34,7 @@ public:
+         kCFF_Font,
+         kTrueType_Font,
+         kOther_Font,
+-        kNotEmbeddable_Font,
++        kNotEmbeddable_Font
+     };
+     // The type of the underlying font program.  This field determines which
+     // of the following fields are valid.  If it is kOther_Font or
+@@ -56,7 +56,7 @@ public:
+         kItalic_Style      = 0x00040,
+         kAllCaps_Style     = 0x10000,
+         kSmallCaps_Style   = 0x20000,
+-        kForceBold_Style   = 0x40000,
++        kForceBold_Style   = 0x40000
+     };
+     uint16_t fStyle;        // Font style characteristics.
+     int16_t fItalicAngle;   // Counterclockwise degrees from vertical of the
+@@ -75,7 +75,7 @@ public:
+       kHAdvance_PerGlyphInfo   = 0x1, // Populate horizontal advance data.
+       kVAdvance_PerGlyphInfo   = 0x2, // Populate vertical advance data.
+       kGlyphNames_PerGlyphInfo = 0x4, // Populate glyph names (Type 1 only).
+-      kToUnicode_PerGlyphInfo  = 0x8, // Populate ToUnicode table, ignored
++      kToUnicode_PerGlyphInfo  = 0x8  // Populate ToUnicode table, ignored
+                                       // for Type 1 fonts
+     };
+ 
+@@ -84,7 +84,7 @@ public:
+         enum MetricType {
+             kDefault,  // Default advance: fAdvance.count = 1
+             kRange,    // Advances for a range: fAdvance.count = fEndID-fStartID
+-            kRun,      // fStartID-fEndID have same advance: fAdvance.count = 1
++            kRun       // fStartID-fEndID have same advance: fAdvance.count = 1
+         };
+         MetricType fType;
+         uint16_t fStartId;
+diff --git a/gfx/skia/include/core/SkBlitRow.h b/gfx/skia/include/core/SkBlitRow.h
+index 973ab4c..febc405 100644
+--- a/gfx/skia/include/core/SkBlitRow.h
++++ b/gfx/skia/include/core/SkBlitRow.h
+@@ -42,7 +42,7 @@ public:
+ 
+     enum Flags32 {
+         kGlobalAlpha_Flag32     = 1 << 0,
+-        kSrcPixelAlpha_Flag32   = 1 << 1,
++        kSrcPixelAlpha_Flag32   = 1 << 1
+     };
+ 
+     /** Function pointer that blends 32bit colors onto a 32bit destination.
+diff --git a/gfx/skia/include/core/SkCanvas.h b/gfx/skia/include/core/SkCanvas.h
+index 25cc94a..d942783 100644
+--- a/gfx/skia/include/core/SkCanvas.h
++++ b/gfx/skia/include/core/SkCanvas.h
+@@ -148,7 +148,7 @@ public:
+          * low byte to high byte: R, G, B, A.
+          */
+         kRGBA_Premul_Config8888,
+-        kRGBA_Unpremul_Config8888,
++        kRGBA_Unpremul_Config8888
+     };
+ 
+     /**
+diff --git a/gfx/skia/include/core/SkDevice.h b/gfx/skia/include/core/SkDevice.h
+index 1e4e0a3..b4d44bf 100644
+--- a/gfx/skia/include/core/SkDevice.h
++++ b/gfx/skia/include/core/SkDevice.h
+@@ -139,7 +139,7 @@ public:
+ protected:
+     enum Usage {
+        kGeneral_Usage,
+-       kSaveLayer_Usage, // <! internal use only
++       kSaveLayer_Usage  // <! internal use only
+     };
+ 
+     struct TextFlags {
+diff --git a/gfx/skia/include/core/SkDeviceProfile.h b/gfx/skia/include/core/SkDeviceProfile.h
+index 46b9781..f6a0bca 100644
+--- a/gfx/skia/include/core/SkDeviceProfile.h
++++ b/gfx/skia/include/core/SkDeviceProfile.h
+@@ -17,7 +17,7 @@ public:
+         kRGB_Horizontal_LCDConfig,
+         kBGR_Horizontal_LCDConfig,
+         kRGB_Vertical_LCDConfig,
+-        kBGR_Vertical_LCDConfig,
++        kBGR_Vertical_LCDConfig
+     };
+ 
+     enum FontHintLevel {
+@@ -25,7 +25,7 @@ public:
+         kSlight_FontHintLevel,
+         kNormal_FontHintLevel,
+         kFull_FontHintLevel,
+-        kAuto_FontHintLevel,
++        kAuto_FontHintLevel
+     };
+ 
+     /**
+diff --git a/gfx/skia/include/core/SkFlattenable.h b/gfx/skia/include/core/SkFlattenable.h
+index 5714f9d..dc115fc 100644
+--- a/gfx/skia/include/core/SkFlattenable.h
++++ b/gfx/skia/include/core/SkFlattenable.h
+@@ -272,7 +272,7 @@ public:
+          *  Instructs the writer to inline Factory names as there are seen the
+          *  first time (after that we store an index). The pipe code uses this.
+          */
+-        kInlineFactoryNames_Flag = 0x02,
++        kInlineFactoryNames_Flag = 0x02
+     };
+     Flags getFlags() const { return (Flags)fFlags; }
+     void setFlags(Flags flags) { fFlags = flags; }
+diff --git a/gfx/skia/include/core/SkFontHost.h b/gfx/skia/include/core/SkFontHost.h
+index 732de5c..10f9bdf 100644
+--- a/gfx/skia/include/core/SkFontHost.h
++++ b/gfx/skia/include/core/SkFontHost.h
+@@ -240,7 +240,7 @@ public:
+     */
+     enum LCDOrientation {
+         kHorizontal_LCDOrientation = 0,    //!< this is the default
+-        kVertical_LCDOrientation   = 1,
++        kVertical_LCDOrientation   = 1
+     };
+ 
+     static void SetSubpixelOrientation(LCDOrientation orientation);
+@@ -259,7 +259,7 @@ public:
+     enum LCDOrder {
+         kRGB_LCDOrder = 0,    //!< this is the default
+         kBGR_LCDOrder = 1,
+-        kNONE_LCDOrder = 2,
++        kNONE_LCDOrder = 2
+     };
+ 
+     static void SetSubpixelOrder(LCDOrder order);
+diff --git a/gfx/skia/include/core/SkMaskFilter.h b/gfx/skia/include/core/SkMaskFilter.h
+index 9a470a4..3422e27 100644
+--- a/gfx/skia/include/core/SkMaskFilter.h
++++ b/gfx/skia/include/core/SkMaskFilter.h
+@@ -61,7 +61,7 @@ public:
+         kNormal_BlurType,  //!< fuzzy inside and outside
+         kSolid_BlurType,   //!< solid inside, fuzzy outside
+         kOuter_BlurType,   //!< nothing inside, fuzzy outside
+-        kInner_BlurType,   //!< fuzzy inside, nothing outside
++        kInner_BlurType    //!< fuzzy inside, nothing outside
+     };
+ 
+     struct BlurInfo {
+diff --git a/gfx/skia/include/core/SkPaint.h b/gfx/skia/include/core/SkPaint.h
+index ff37d77..7c96e193 100644
+--- a/gfx/skia/include/core/SkPaint.h
++++ b/gfx/skia/include/core/SkPaint.h
+@@ -76,7 +76,7 @@ public:
+         kNo_Hinting            = 0,
+         kSlight_Hinting        = 1,
+         kNormal_Hinting        = 2,     //!< this is the default
+-        kFull_Hinting          = 3,
++        kFull_Hinting          = 3
+     };
+ 
+     Hinting getHinting() const {
+@@ -289,7 +289,7 @@ public:
+         kStroke_Style,          //!< stroke the geometry
+         kStrokeAndFill_Style,   //!< fill and stroke the geometry
+ 
+-        kStyleCount,
++        kStyleCount
+     };
+ 
+     /** Return the paint's style, used for controlling how primitives'
+diff --git a/gfx/skia/include/core/SkScalerContext.h b/gfx/skia/include/core/SkScalerContext.h
+index 2cb171b..3dbce27 100644
+--- a/gfx/skia/include/core/SkScalerContext.h
++++ b/gfx/skia/include/core/SkScalerContext.h
+@@ -182,21 +182,22 @@ public:
+         kGenA8FromLCD_Flag        = 0x0800,
+ 
+ #ifdef SK_USE_COLOR_LUMINANCE
+-        kLuminance_Bits           = 3,
++        kLuminance_Bits           = 3
+ #else
+         // luminance : 0 for black text, kLuminance_Max for white text
+         kLuminance_Shift          = 13, // shift to land in the high 3-bits of Flags
+-        kLuminance_Bits           = 3,  // ensure Flags doesn't exceed 16bits
++        kLuminance_Bits           = 3   // ensure Flags doesn't exceed 16bits
+ #endif
+     };
+     
+     // computed values
+     enum {
+-        kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag,
+ #ifdef SK_USE_COLOR_LUMINANCE
++        kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag
+ #else
++        kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag,
+         kLuminance_Max  = (1 << kLuminance_Bits) - 1,
+-        kLuminance_Mask = kLuminance_Max << kLuminance_Shift,
++        kLuminance_Mask = kLuminance_Max << kLuminance_Shift
+ #endif
+     };
+ 
+diff --git a/gfx/skia/include/core/SkTypes.h b/gfx/skia/include/core/SkTypes.h
+index 7963a7d..0c5c2d7 100644
+--- a/gfx/skia/include/core/SkTypes.h
++++ b/gfx/skia/include/core/SkTypes.h
+@@ -438,7 +438,7 @@ public:
+          *  current block is dynamically allocated, just return the old
+          *  block.
+          */
+-        kReuse_OnShrink,
++        kReuse_OnShrink
+     };
+ 
+     /**
+diff --git a/gfx/skia/include/effects/SkLayerDrawLooper.h b/gfx/skia/include/effects/SkLayerDrawLooper.h
+index 0bc4af2..6cb8ef6 100644
+--- a/gfx/skia/include/effects/SkLayerDrawLooper.h
++++ b/gfx/skia/include/effects/SkLayerDrawLooper.h
+@@ -41,7 +41,7 @@ public:
+          *  - Flags and Color are always computed using the LayerInfo's
+          *    fFlagsMask and fColorMode.
+          */
+-        kEntirePaint_Bits = -1,
++        kEntirePaint_Bits = -1
+         
+     };
+     typedef int32_t BitFlags;
+diff --git a/gfx/skia/src/core/SkBitmap.cpp b/gfx/skia/src/core/SkBitmap.cpp
+index 6b99145..aff52fd 100644
+--- a/gfx/skia/src/core/SkBitmap.cpp
++++ b/gfx/skia/src/core/SkBitmap.cpp
+@@ -1376,7 +1376,7 @@ enum {
+     SERIALIZE_PIXELTYPE_RAW_WITH_CTABLE,
+     SERIALIZE_PIXELTYPE_RAW_NO_CTABLE,
+     SERIALIZE_PIXELTYPE_REF_DATA,
+-    SERIALIZE_PIXELTYPE_REF_PTR,
++    SERIALIZE_PIXELTYPE_REF_PTR
+ };
+ 
+ /*
+diff --git a/gfx/skia/src/core/SkGlyphCache.cpp b/gfx/skia/src/core/SkGlyphCache.cpp
+index f3363cd..1fddc9d 100644
+--- a/gfx/skia/src/core/SkGlyphCache.cpp
++++ b/gfx/skia/src/core/SkGlyphCache.cpp
+@@ -417,7 +417,7 @@ class SkGlyphCache_Globals {
+ public:
+     enum UseMutex {
+         kNo_UseMutex,  // thread-local cache
+-        kYes_UseMutex, // shared cache
++        kYes_UseMutex  // shared cache
+     };
+ 
+     SkGlyphCache_Globals(UseMutex um) {
+-- 
+1.7.5.4
+

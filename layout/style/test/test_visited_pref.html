@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=147777
+-->
+<head>
+  <title>Test for visited link coloring pref Bug 147777</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  :link { float: left; }
+
+  :visited { float: right; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=147777">Mozilla Bug 147777</a>
+<iframe id="iframe" src="visited-pref-iframe.html" style="width: 10em; height: 5em"></iframe>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 147777 **/
+
+function reinsert_node(e) {
+  var sib = e.nextSibling;
+  var par = e.parentNode;
+  par.removeChild(e);
+  par.insertBefore(e, sib);
+}
+
+function get_pref()
+{
+    return SpecialPowers.getBoolPref("layout.css.visited_links_enabled");
+}
+
+function snapshotsEqual(snap1, snap2)
+{
+  return compareSnapshots(snap1, snap2, true)[0];
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+window.addEventListener("load", step1);
+
+var iframe, subdoc, subwin;
+var link;
+var start;
+var timeout;
+
+var unvisref; // reference image for unvisited style
+
+function step1()
+{
+  is(get_pref(), true, "pref defaults to true");
+
+  iframe = document.getElementById("iframe");
+  subdoc = iframe.contentDocument;
+  subwin = iframe.contentWindow;
+  link = subdoc.getElementById("link");
+
+  unvisref = snapshotWindow(subwin, false);
+
+  // Now set the href of the link to a location that's actually visited.
+  link.href = top.location;
+
+  start = Date.now();
+
+  // And wait for the link to get restyled when the history lets us
+  // know it is (asynchronously).
+  setTimeout(poll_for_visited_style, 100);
+}
+
+function poll_for_visited_style()
+{
+  var snapshot = snapshotWindow(subwin, false);
+  if (snapshotsEqual(unvisref, snapshot)) {
+    // hasn't been styled yet
+    setTimeout(poll_for_visited_style, 100);
+
+    // If it never gets styled correctly, this test will fail because
+    // this loop will never complete.
+  } else {
+    var end = Date.now();
+    timeout = 3 * Math.max(end - start, 300);
+    SpecialPowers.pushPrefEnv({"set":[["layout.css.visited_links_enabled", false]]}, step2);
+  }
+}
+
+function step2()
+{
+  // we don't handle dynamic changes of this pref; it only takes effect
+  // when a new page loads
+  reinsert_node(link);
+
+  setTimeout(step3, timeout);
+}
+
+function step3()
+{
+  var snapshot = snapshotWindow(subwin, false);
+  ok(snapshotsEqual(unvisref, snapshot),
+     ":visited selector does not apply given false preference");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

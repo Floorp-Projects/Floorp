@@ -1,0 +1,69 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIFile;
+
+/**
+ * Helper interface for nsIProfileMigrator.
+ *
+ * @provider Toolkit (Startup code)
+ * @client   Application (Profile-migration code)
+ * @obtainable nsIProfileMigrator.migrate
+ */
+[scriptable, uuid(048e5ca1-0eb7-4bb1-a9a2-a36f7d4e0e3c)]
+interface nsIProfileStartup : nsISupports
+{
+  /**
+   * The root directory of the semi-current profile, during profile migration.
+   * After nsIProfileMigrator.migrate has returned, this object will not be
+   * useful.
+   */
+  readonly attribute nsIFile directory;
+
+  /**
+   * Do profile-startup by setting NS_APP_USER_PROFILE_50_DIR in the directory
+   * service and notifying the profile-startup observer topics.
+   */
+  void doStartup();
+};
+
+/**
+ * Migrate application settings from an outside source.
+ *
+ * @provider Application (Profile-migration code)
+ * @client   Toolkit (Startup code)
+ * @obtainable service, contractid("@mozilla.org/toolkit/profile-migrator;1")
+ */
+[scriptable, uuid(3df284a5-2258-4d46-a664-761ecdc04c22)]
+interface nsIProfileMigrator : nsISupports
+{
+  /**
+   * Migrate data from an outside source, if possible.  Does nothing
+   * otherwise.
+   *
+   * When this method is called, a default profile has been created;
+   * XPCOM has been initialized such that compreg.dat is in the
+   * profile; the directory service does *not* return a key for
+   * NS_APP_USER_PROFILE_50_DIR or any of the keys depending on an active
+   * profile. To figure out the directory of the "current" profile, use
+   * aStartup.directory.
+   *
+   * If your migrator needs to access services that use the profile (to
+   * set profile prefs or bookmarks, for example), use aStartup.doStartup.
+   *
+   * @param  aStartup nsIProfileStartup object to use during migration.
+   * @param  aKey     optional key of a migrator to use to skip source selection.
+   * @param  aProfileName optional name of the profile to use for migration.
+   *
+   * @note The startup code ignores COM exceptions thrown from this method.
+   */
+  void migrate(in nsIProfileStartup aStartup, in ACString aKey,
+               [optional] in AUTF8String aProfileName);
+};
+
+%{C++
+#define NS_PROFILEMIGRATOR_CONTRACTID "@mozilla.org/toolkit/profile-migrator;1"
+%}

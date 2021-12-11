@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1303704
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1303704</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #scrollable {
+      height: 80px;
+      width: 200px;
+      overflow-y: scroll;
+      margin-bottom: 50px;
+      scroll-behavior: auto;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1303704">Mozilla Bug 1303704</a>
+<p id="display"></p>
+<a id="link1" href="http://www.google.com">Link 1</a>
+<div id="scrollable">
+<pre>
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+</pre>
+</div>
+<script type="text/javascript">
+
+/** Test for Bug 1303704 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  let link1 = window.document.getElementById("link1");
+  let mouseEvents = ["mousedown", "mouseup", "mousemove"];
+
+  link1.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    is(e.defaultPrevented, true, "defaultPrevented should be true");
+  });
+
+  mouseEvents.forEach((elm, index, arr) => {
+    link1.addEventListener(elm, () => {
+      ok(false, "Should not receive " + elm + " after preventDefault on pointerdown");
+    });
+  });
+
+  link1.addEventListener("click", (e) => {
+    e.preventDefault();
+  });
+
+  synthesizeMouseAtCenter(link1, { type: "mousedown",
+                                   inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+  synthesizeMouseAtCenter(link1, { type: "mousemove",
+                                   inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+  synthesizeMouseAtCenter(link1, { type: "mouseup",
+                                   inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+
+  if (navigator.userAgent.includes("Android") ||
+      navigator.userAgent.includes("Mac") ||
+      SpecialPowers.Cc["@mozilla.org/gfx/info;1"].
+        getService(SpecialPowers.Ci.nsIGfxInfo).isHeadless) {
+    SimpleTest.finish();
+    return;
+  }
+
+  async function scrollTest() {
+    var scrollable = document.getElementById("scrollable");
+    scrollable.addEventListener('pointerdown', function(ev) {
+      ev.preventDefault();
+    }, true);
+    var rect = scrollable.getBoundingClientRect();
+    var offsetX = rect.width - 5;
+    var offsetY = rect.height - 5;
+    synthesizeMouse(scrollable, offsetX, offsetY,
+                    { type: "mousedown",
+                      inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+
+    synthesizeMouse(scrollable, offsetX, offsetY,
+                    { type: "mousemove",
+                      inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+
+    synthesizeMouse(scrollable, offsetX, offsetY,
+                    { type: "mouseup",
+                      inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+
+    await waitToClearOutAnyPotentialScrolls(window);
+
+    if (scrollable.scrollTop != 0) {
+      isnot(scrollable.scrollTop, 0,
+          "Scrollable element should have been scrolled.");
+      SimpleTest.finish();
+    } else {
+      setTimeout(scrollTest);
+    }
+  }
+
+  setTimeout(() => {
+    var scrollable = document.getElementById("scrollable");
+    is(scrollable.scrollTop, 0,
+       "Scrollable element shouldn't be scrolled initially");
+    scrollTest();
+  });
+}
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, runTests);
+});
+
+</script>
+</body>
+</html>

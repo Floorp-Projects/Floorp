@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript">
+      function finishTest() {
+        document.documentElement.removeAttribute("class");
+      }
+      function runTest() {
+        var field = document.getElementById('field');
+        field.focus();
+        field.select();
+        setTimeout(finishTest, 0);
+       }
+    </script>
+  </head>
+  <body onload="runTest()">
+    <input id="field" type="text" value="1234">
+  </body>
+</html>

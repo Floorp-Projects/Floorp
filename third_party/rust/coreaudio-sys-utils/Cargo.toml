@@ -1,0 +1,14 @@
+[package]
+name = "coreaudio-sys-utils"
+version = "0.1.0"
+authors = ["Chun-Min Chang <chun.m.chang@gmail.com>"]
+edition = "2018"
+license = "ISC"
+
+[dependencies]
+core-foundation-sys = { version = "0.8" }
+
+[dependencies.coreaudio-sys]
+default-features = false
+features = ["audio_unit", "core_audio"]
+version = "0.2"

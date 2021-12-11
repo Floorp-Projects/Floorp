@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Bug 1482403</title>
+    <style type="text/css">
+    #col2 {
+        display: inline-block;
+        height: 35px;
+        background: orange;
+        filter: sepia(0.2);
+    }
+
+    #subnav {
+        display: block;
+        position: absolute;
+        top: 25px;
+        left: 0;
+    }
+    </style>
+</head>
+
+<body>
+    <div>Column 1</div>
+    <div id="col2">Column 2
+        <div id="subnav" style="">
+            <ul>
+                <li>Item 1</li>
+                <li>Item 2</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

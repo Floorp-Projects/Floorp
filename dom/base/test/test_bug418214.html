@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=418214
+-->
+<head>
+  <title>Test for Bug 418214</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418214">Mozilla Bug 418214</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var str = '<root xmlns:html="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg" xmlns:math="http://www.w3.org/1998/Math/MathML"><html:div id="d" style="border:: invalid"/><svg:svg id="s" style="border:: invalid"/><math:math id="m" style="border:: invalid"/></root>';
+
+/** Test for Bug 418214 **/
+var doc = (new DOMParser()).parseFromString(str, "text/xml");
+var d = doc.getElementById("d");
+var s = doc.getElementById("s");
+var m = doc.getElementById("m");
+
+is(d.getAttribute("style"), "border:: invalid",
+   "Shouldn't be parsing style on HTML in data documents");
+is(s.getAttribute("style"), "border:: invalid",
+   "Shouldn't be parsing style on SVG in data documents");
+is(m.getAttribute("style"), "border:: invalid",
+   "Shouldn't be parsing style on MathML in data documents");
+
+var d2 = d.cloneNode(true);
+var s2 = s.cloneNode(true);
+var m2 = m.cloneNode(true);
+
+is(d2.getAttribute("style"), "border:: invalid",
+   "Shouldn't be parsing style on HTML on clone");
+is(s2.getAttribute("style"), "border:: invalid",
+   "Shouldn't be parsing style on SVG on clone");
+is(m2.getAttribute("style"), "border:: invalid",
+   "Shouldn't be parsing style on MathML on clone");
+
+d2.style;
+s2.style;
+m2.style;
+
+is(d2.getAttribute("style"), "border:: invalid",
+   "Getting .style shouldn't affect style attribute on HTML");
+is(s2.getAttribute("style"), "border:: invalid",
+   "Getting .style shouldn't affect style attribute on SVG");
+is(m2.getAttribute("style"), "border:: invalid",
+   "Getting .style shouldn't affect style attribute on MathML");
+
+d2.style.color = "green";
+s2.style.color = "green";
+m2.style.color = "green";
+
+is(d2.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on HTML");
+is(s2.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on SVG");
+is(m2.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on MathML");
+
+d = document.adoptNode(d);
+s = document.adoptNode(s);
+m = document.adoptNode(m);
+
+is(d.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on HTML");
+is(s.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on SVG");
+is(m.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on MathML");
+
+$("display").appendChild(d);
+$("display").appendChild(s);
+$("display").appendChild(m);
+
+is(d.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on HTML");
+is(s.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on SVG");
+is(m.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on MathML");
+
+d.style.color = "green";
+s.style.color = "green";
+m.style.color = "green";
+
+is(d.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on HTML");
+is(s.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on SVG");
+is(m.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on MathML");
+
+</script>
+</pre>
+</body>
+</html>
+

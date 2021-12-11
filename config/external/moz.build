@@ -1,0 +1,80 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+external_dirs = []
+
+DIRS += [
+    "lgpllibs",
+    "rlbox",
+    "sqlite",
+]
+
+if CONFIG["MOZ_USING_WASM_SANDBOXING"]:
+    DIRS += [
+        "rlbox_wasm2c_sandbox",
+        "wasm2c_sandbox_compiler",
+    ]
+
+if not CONFIG["MOZ_SYSTEM_JPEG"]:
+    external_dirs += ["media/libjpeg"]
+
+DIRS += [
+    "/third_party/prio",
+    "/third_party/msgpack",
+    "/third_party/sipcc",
+]
+
+# There's no "native" brotli or woff2 yet, but probably in the future...
+external_dirs += ["modules/brotli"]
+external_dirs += ["modules/woff2"]
+
+external_dirs += ["modules/xz-embedded"]
+
+if CONFIG["MOZ_VORBIS"]:
+    external_dirs += ["media/libvorbis"]
+
+if CONFIG["MOZ_TREMOR"]:
+    external_dirs += ["media/libtremor"]
+
+if CONFIG["MOZ_WEBM_ENCODER"]:
+    external_dirs += ["media/libmkv"]
+
+if not CONFIG["MOZ_SYSTEM_LIBVPX"]:
+    external_dirs += ["media/libvpx"]
+
+if CONFIG["MOZ_AV1"]:
+    external_dirs += ["media/libaom"]
+    external_dirs += ["media/libdav1d"]
+
+if not CONFIG["MOZ_SYSTEM_PNG"]:
+    external_dirs += ["media/libpng"]
+
+if not CONFIG["MOZ_SYSTEM_WEBP"]:
+    external_dirs += ["media/libwebp"]
+
+if CONFIG["CPU_ARCH"] == "arm":
+    external_dirs += ["media/openmax_dl/dl"]
+
+if CONFIG["MOZ_FFVPX"]:
+    external_dirs += ["media/ffvpx"]
+
+if CONFIG["MOZ_JXL"]:
+    external_dirs += ["media/libjxl", "media/highway"]
+
+external_dirs += [
+    "media/kiss_fft",
+    "media/libcubeb",
+    "media/libnestegg",
+    "media/libogg",
+    "media/libopus",
+    "media/libtheora",
+    "media/libspeex_resampler",
+    "media/libsoundtouch",
+    "media/mp4parse-rust",
+    "media/psshparser",
+]
+
+DIRS += ["../../" + i for i in external_dirs]

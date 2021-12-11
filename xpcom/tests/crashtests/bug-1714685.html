@@ -1,0 +1,13 @@
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  let a = new PromiseRejectionEvent('rejectionhandled', {
+    'promise': new Promise(async (resolve, reject) => {
+      self.addEventListener('load', () => {
+        a.visible = false
+      });
+    }),
+    'reason':''
+  });
+  SpecialPowers.forceGC();
+})
+</script>

@@ -1,0 +1,256 @@
+<!-- Any copyright is dedicated to the Public Domain.
+  - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test gamepad</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+let ok = window.parent.ok;
+let is = window.parent.is;
+let SimpleTest = window.parent.SimpleTest;
+let SpecialPowers = window.parent.SpecialPowers;
+
+let tests = [
+  touchAdd,
+  touchcheck1,
+  touchAdd,
+  touchcheck2,
+  touchAdd,
+  touchcheck3
+];
+
+let gamepad_index;
+let testNum = 0;
+let touchData1 = [{touchId: 0, surfaceId: 0, pos: new Float32Array([-0.5, 0.5]), surf: new Float32Array([100, 100])},
+                  {touchId: 1, surfaceId: 0, pos: new Float32Array([-0.1, 1.0]), surf: new Float32Array([100, 100])}];
+let touchData2 = [{touchId: 2, surfaceId: 0, pos: new Float32Array([-0.2, 0.3]), surf: new Float32Array([120, 200])},
+                  {touchId: 3, surfaceId: 0, pos: new Float32Array([-0.4, 0.7]), surf: new Float32Array([120, 200])}];
+let touchData3 = [{touchId: 4, surfaceId: 0, pos: new Float32Array([-0.5, 0.6]), surf: new Float32Array([150, 100])},
+                  {touchId: 5, surfaceId: 0, pos: new Float32Array([-0.3, 0.8]), surf: new Float32Array([150, 100])}];
+
+let data = [
+  touchData1,
+  touchData2,
+  touchData3
+];
+let dataNum = 0;
+
+window.addEventListener("gamepadconnected", connecthandler);
+window.addEventListener("gamepadbuttondown", function() {
+  // Wait to ensure that all frames received the button press as well.
+  ok(true, "gamepadbuttondown");
+  SpecialPowers.executeSoon(tests[testNum++]);
+});
+
+async function pressButton() {
+  await GamepadService.newButtonEvent(gamepad_index, 0, true, true);
+  await GamepadService.newButtonEvent(gamepad_index, 0, false, false);
+}
+
+let frames_loaded = 0;
+async function startTest() {
+  frames_loaded++;
+  let promise = SpecialPowers.pushPrefEnv({ "set": [
+                              ["dom.gamepad.extensions.enabled", true],
+                              ["dom.gamepad.extensions.lightindicator", true],
+                              ["dom.gamepad.extensions.multitouch", true]] });
+  if (frames_loaded == 2) {
+    await promise;
+    // Add a gamepad
+    gamepad_index = await GamepadService.addGamepad("test gamepad", // id
+                        GamepadService.standardMapping,
+                        GamepadService.leftHand,
+                        4,
+                        2,
+                        1,
+                        1,
+                        2)
+    await gamepad_loaded();
+  }
+}
+
+let f1, f2;
+async function gamepad_loaded() {
+  f1 = document.getElementById('f1');
+  f2 = document.getElementById('f2');
+  await GamepadService.newButtonEvent(gamepad_index, 0, true, true);
+}
+
+function connecthandler(e) {
+  ok(e.gamepad.timestamp <= performance.now(),
+    "gamepad.timestamp should less than or equal to performance.now()");
+  is(e.gamepad.index, 0, "correct gamepad index");
+  is(e.gamepad.id, "test gamepad", "correct gamepad name");
+  is(e.gamepad.mapping, "standard", "standard mapping");
+  is(e.gamepad.hand, "left", "left hand");
+  is(e.gamepad.buttons.length, 4, "correct number of buttons");
+  is(e.gamepad.axes.length, 2, "correct number of axes");
+  is(e.gamepad.hapticActuators.length, 1, "correct number of haptics");
+  is(e.gamepad.lightIndicators.length, 1, "correct number of light indicators");
+  is(e.gamepad.touchEvents.length, 2, "correct number of touches");
+}
+
+function checkValueInFloat32Array(array1, array2) {
+  if (array1.length != array2.length) {
+    return false;
+  }
+  let index = 0;
+  while (index < array2.length) {
+    if (array1[index] != array2[index]) {
+      return false;
+    }
+    ++index;
+  }
+  return true;
+}
+
+function setFrameVisible(f, visible) {
+  SpecialPowers.wrap(f.contentWindow).browsingContext.isActive = visible;
+}
+
+async function touchAdd() {
+  for(let count = 0; count < data[dataNum].length; count++) {
+    const touch = data[dataNum][count];
+    await GamepadService.newTouch(gamepad_index, count, touch.touchId,
+                            touch.surfaceId, touch.pos,
+                            touch.surf);
+  }
+  ++dataNum;
+  await pressButton();
+}
+
+async function touchcheck1() {
+  let touches = f1.contentWindow.gamepad.touchEvents;
+  is(touches.length, touchData1.length, "f1 number of touches");
+
+  let count = 0;
+  touches.forEach(function(touch) {
+    is(touch.touchId, data[0][count].touchId,
+    "correct GamepadTouch touchId");
+    is(touch.surfaceId, data[0][count].surfaceId,
+    "correct GamepadTouch surfaceId");
+    is(checkValueInFloat32Array(touch.position, data[0][count].pos), true,
+      "correct touch position");
+    is(checkValueInFloat32Array(touch.surfaceDimensions, data[0][count].surf), true,
+      "correct touch surfaceDimensions");
+
+    ++count;
+  });
+
+  touches = f2.contentWindow.gamepad.touchEvents;
+  is(touches.length, data[0].length,"f2 number of touches");
+
+  count = 0;
+  touches.forEach(function(touch) {
+    is(touch.touchId, data[0][count].touchId,
+    "correct GamepadTouch touchId");
+    is(touch.surfaceId, data[0][count].surfaceId,
+    "correct GamepadTouch surfaceId");
+    is(checkValueInFloat32Array(touch.position, data[0][count].pos), true,
+      "correct touch position");
+    is(checkValueInFloat32Array(touch.surfaceDimensions, data[0][count].surf), true,
+      "correct touch surfaceDimensions");
+
+    ++count;
+  });
+  
+  // Making f2 to be at the background.
+  setFrameVisible(f2, false);
+  pressButton();
+}
+
+async function touchcheck2() {
+  let touches = f1.contentWindow.gamepad.touchEvents;
+  is(touches.length, data[1].length, "f1 number of touches");
+
+  let count = 0;
+  touches.forEach(function(touch) {
+    is(touch.touchId, data[1][count].touchId,
+    "correct GamepadTouch touchId");
+    is(touch.surfaceId, data[1][count].surfaceId,
+    "correct GamepadTouch surfaceId");
+    is(checkValueInFloat32Array(touch.position, data[1][count].pos), true,
+      "correct touch position");
+    is(checkValueInFloat32Array(touch.surfaceDimensions, data[1][count].surf), true,
+      "correct touch surfaceDimensions");
+
+    ++count;
+  });
+  
+  touches = f2.contentWindow.gamepad.touchEvents;
+  is(touches.length, touchData1.length,"f2 number of touches");
+
+  // When f2 is at the background, it will use the previous status.
+  count = 0;
+  touches.forEach(function(touch) {
+    is(touch.touchId, data[0][count].touchId,
+    "correct GamepadTouch touchId");
+    is(touch.surfaceId, data[0][count].surfaceId,
+    "correct GamepadTouch surfaceId");
+    is(checkValueInFloat32Array(touch.position, data[0][count].pos), true,
+      "correct touch position");
+    is(checkValueInFloat32Array(touch.surfaceDimensions, data[0][count].surf), true,
+      "correct touch surfaceDimensions");
+
+    ++count;
+  });
+  
+  setFrameVisible(f2, true);
+  pressButton();
+}
+
+async function touchcheck3() {
+  let touches = f1.contentWindow.gamepad.touchEvents;
+  is(touches.length, touchData3.length, "f1 number of touches");
+
+  let count = 0;
+  touches.forEach(function(touch) {
+    is(touch.touchId, data[2][count].touchId,
+      "correct GamepadTouch touchId");
+    is(touch.surfaceId, data[2][count].surfaceId,
+      "correct GamepadTouch surfaceId");
+    is(checkValueInFloat32Array(touch.position, data[2][count].pos), true,
+      "correct touch position");
+    is(checkValueInFloat32Array(touch.surfaceDimensions, data[2][count].surf), true,
+      "correct touch surfaceDimensions");
+
+    ++count;
+  });
+
+  touches = f2.contentWindow.gamepad.touchEvents;
+  is(touches.length, touchData3.length,"f2 number of touches");
+
+  count = 0;
+  touches.forEach(function(touch) {
+    // f2 was at the background so doesn't add touch events from data[1].
+    is(touch.touchId, data[2][count].touchId - data[1].length,
+      "correct GamepadTouch touchId");
+    is(touch.surfaceId, data[2][count].surfaceId,
+      "correct GamepadTouch surfaceId");
+    is(checkValueInFloat32Array(touch.position, data[2][count].pos), true,
+      "correct touch position");
+    is(checkValueInFloat32Array(touch.surfaceDimensions, data[2][count].surf), true,
+      "correct touch surfaceDimensions");
+
+    ++count;
+  });
+    
+  SpecialPowers.executeSoon(cleanup);
+}
+
+function cleanup(){
+  SpecialPowers.executeSoon(async function() {
+    await GamepadService.removeGamepad(gamepad_index);
+    SimpleTest.finish();
+  });
+}
+
+</script>
+<iframe id="f1" src="gamepad_frame_state.html" onload="runGamepadTest(startTest)"></iframe>
+<iframe id="f2" src="gamepad_frame_state.html" onload="runGamepadTest(startTest)"></iframe>
+</body>
+</html>

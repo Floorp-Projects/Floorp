@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>A simple hit testing test that doesn't involve any transforms</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .scrollable-content {
+      width: 200%;
+      height: 200%;
+    }
+    #layer1 {
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
+      background: blue;
+    }
+    #layer2 {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      width: 100px;
+      height: 100px;
+      background: red;
+    }
+    #layer3 {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      width: 100px;
+      height: 100px;
+      background: green;
+      overflow: hidden;
+    }
+    #layer4 {
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      width: 100px;
+      height: 100px;
+      background: yellow;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+ <div id="layer1"></div>
+ <div id="layer2"></div>
+ <div id="layer3">
+   <div class="scrollable-content"></div>
+ </div>
+ <div id="layer4">
+  <div class="scrollable-content"></div>
+ </div>
+ <div class="scrollable-content"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  let subframeHitInfo = APZHitResultFlags.VISIBLE;
+  if (!config.activateAllScrollFrames) {
+    subframeHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
+  }
+
+  // Initially, the only thing scrollable is the root.
+  checkHitResult(hitTest({x: 175, y: 175}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller");
+
+  // Make layer3 scrollable.
+  layer3.style.overflow = "auto";
+  await promiseApzFlushedRepaints();
+  checkHitResult(hitTest({x: 175, y: 175}),
+                 subframeHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(layer3)
+                                                 : utils.getViewId(document.scrollingElement)),
+                 utils.getLayersId(),
+                 "subframe layer3");
+
+  // At (125, 125), layer4 obscures layer3. layer4 is not scrollable yet,
+  // so we hit the root.
+  checkHitResult(hitTest({x: 125, y: 125}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller");
+
+  // Make layer4 scrollable as well. Now (125, 125) should hit it.
+  layer4.style.overflow = "auto";
+  await promiseApzFlushedRepaints();
+  checkHitResult(hitTest({x: 125, y: 125}),
+                 subframeHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(layer4)
+                                                 : utils.getViewId(document.scrollingElement)),
+                 utils.getLayersId(),
+                 "subframe layer4");
+
+  // Hit-test outside the reach of layer[3,4] but inside root.
+  checkHitResult(hitTest({x: 225, y: 225}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

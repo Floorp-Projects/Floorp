@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>William Shakespeare</string>
+	<key>Lines</key>
+	<array>
+		<string>It is a tale told by an idiot,</string>
+		<string>Full of sound and fury, signifying nothing.</string>
+	</array>
+	<key>Death</key>
+	<integer>1564</integer>
+	<key>Height</key>
+	<real>1.6</real>
+	<key>Data</key>
+	<data>
+		AAAAvgAAAA
+		MAAAAeAAAA
+	</data>
+	<key>Birthdate</key>
+	<date>1981-05-16T11:32:06Z</date>
+	<key>Blank</key>
+	<string></string>
+    <key>BiggestNumber</key>
+    <integer>18446744073709551615</integer>
+    <key>SmallestNumber</key>
+    <integer>-9223372036854775808</integer>
+    <key>HexademicalNumber</key>
+    <integer>0xDEADBEEF</integer>
+    <key>IsTrue</key>
+    <true/>
+    <key>IsNotFalse</key>
+    <false/>
+</dict>
+</plist>

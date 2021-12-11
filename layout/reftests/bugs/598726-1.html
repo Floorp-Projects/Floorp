@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-snapshot-all">
+  <head>
+    <style type="text/css">
+      input {
+          -webkit-transition: -webkit-transform 200ms ease-in-out;
+          transition: transform 200ms ease-in-out;
+      }
+      input:focus {
+          -webkit-transform: scale(1.05);
+          transform: scale(1.05);
+      }
+    </style>
+    <script>
+      function boom() {
+        var i = document.querySelector("input");
+        i.addEventListener("transitionend", function(aEvent) {
+          if (aEvent.propertyName != 'transform' &&
+              aEvent.propertyName != '-webkit-transform') {
+            return;
+          }
+          i.removeEventListener("transitionend", arguments.callee, true);
+          i.value = "test";
+          i.getClientRects();
+          i.value = "";
+          i.getClientRects();
+          i.addEventListener("transitionend", function(aEvent) {
+            if (aEvent.propertyName != 'transform' &&
+                aEvent.propertyName != '-webkit-transform') {
+              return;
+            }
+            i.removeEventListener("transitionend", arguments.callee, true);
+            i.getClientRects();
+            document.documentElement.setAttribute("class", "reftest-snapshot-all");
+          }, true);
+          i.blur();
+          i.getClientRects();
+        }, true);
+        i.focus();
+        i.getClientRects();
+      }
+    </script>
+  </head>
+  <body onload="boom()">
+    <input type="text" placeholder="foo">
+  </body>
+</html>

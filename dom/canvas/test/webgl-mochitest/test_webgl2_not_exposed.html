@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL test: WebGL2RenderingContext only exposed when appropriate</title>
+<script src='/tests/SimpleTest/SimpleTest.js'></script>
+<link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+</head>
+<body>
+<script>
+
+function ShouldExpose() {
+  try {
+    return SpecialPowers.getBoolPref('webgl.enable-webgl2');
+  } catch (e) {}
+
+  return false;
+}
+
+function DoesExpose() {
+  try {
+    null instanceof WebGL2RenderingContext;
+    return true;
+  } catch (e) {}
+
+  return false;
+}
+
+var doesExpose = DoesExpose();
+if (ShouldExpose()) {
+  ok(doesExpose, 'WebGL2RenderingContext should be exposed.');
+} else {
+  ok(!doesExpose, 'WebGL2RenderingContext should not be exposed.');
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1331351 - Block top level window data: URI navigations</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+SpecialPowers.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", true);
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
+});
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("have to test that top level data: URI navgiation is blocked");
+
+var testsToRun = {
+  test1: false,
+  test3: false,
+};
+
+// test1 and test3 event messages will not be received if toplevel data: URI
+// is blocked.
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  switch (event.data) {
+    case "test1":
+      testsToRun.test1 = true;
+      break;
+    case "test3":
+      testsToRun.test3 = true;
+      break;
+  }
+}
+
+function test1() {
+  // simple data: URI click navigation should be prevented
+  let TEST_FILE = "file_block_toplevel_data_navigation.html";
+  let win1 = window.open(TEST_FILE);
+  // testsToRun["test1"] will be false if toplevel data: URI is blocked
+  setTimeout(function () {
+    is(testsToRun.test1, false,
+      "toplevel data: URI navigation through click() should be blocked");
+    win1.close();
+    test2();
+  }, 1000);
+}
+
+function test2() {
+  // data: URI in iframe which opens data: URI in _blank should be blocked 
+  let win2 = window.open("file_block_toplevel_data_navigation2.html");
+  window.addEventListener("message", receiveMessage);
+  function receiveMessage(event) {
+    window.removeEventListener("message", receiveMessage);
+    is(event.data, "blocked",
+      "data: URI navigation using _blank from data: URI should be blocked");
+    win2.close();
+    test3();
+  }
+}
+
+function test3() {
+  // navigating to a data: URI using window.location.href should be blocked
+  let win3 = window.open("file_block_toplevel_data_navigation3.html");
+  // testsToRun["test3"] will be false if toplevel data: URI is blocked
+  setTimeout(function () {
+    is(testsToRun.test3, false,
+      "data: URI navigation through win.loc.href should be blocked");
+    win3.close();
+    test4();
+  }, 1000);
+}
+
+function test4() {
+  // navigating to a data: URI using window.open() should be blocked
+  let win4 = window.open("data:text/html,<body>toplevel data: URI navigations should be blocked</body>");
+  setTimeout(function () {
+    // Please note that the data: URI will be displayed in the URL-Bar but not
+    // loaded, hence we rather rely on document.body than document.location
+    // GeckoView displays an error page for invalid navigations,
+    // so catch the case where we're not allowed to access to (cross-origin)
+    // error document and treat that as blocked.
+    let body = "Error";
+    try {
+      body = win4.document.body.innerHTML;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "SecurityError") {
+        body = "";
+      } else {
+        throw e;
+      }
+    }
+    is(body, "", "navigating to a data: URI using window.open() should be blocked");
+    test5();
+  }, 1000);
+}
+
+function test5() {
+  // navigating to a URI which redirects to a data: URI using window.open() should be blocked
+  let win5 = window.open("file_block_toplevel_data_redirect.sjs");
+  setTimeout(function () {
+    // Please note that the data: URI will be displayed in the URL-Bar but not
+    // loaded, hence we rather rely on document.body than document.location
+    let body = "Error";
+    try {
+      body = win5.document.body.innerHTML;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "SecurityError") {
+        body = "";
+      } else {
+        throw e;
+      }
+    }
+    is(body, "", "navigating to URI which redirects to a data: URI using window.open() should be blocked");
+    win5.close();
+    test6();
+  }, 1000);
+}
+
+function test6() {
+  // navigating to a data: URI without a Content Type should be blocked
+  let win6 = window.open("data:DataURIsWithNoContentTypeShouldBeBlocked");
+  setTimeout(function () {
+    let body = "Error";
+    try {
+      body = win6.document.body.innerHTML;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "SecurityError") {
+        body = "";
+      } else {
+        throw e;
+      }
+    }
+    is(body, "", "navigating to a data: URI without a Content Type should be blocked");
+    win6.close();
+    SimpleTest.finish();
+  }, 1000);
+}
+
+// fire up the tests
+test1();
+
+</script>
+</body>
+</html>

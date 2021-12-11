@@ -1,0 +1,82 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/config.mk
+
+SUBMAKEFILES += \
+        $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
+        $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+        $(DEPTH)/mobile/locales/Makefile \
+        $(NULL)
+
+L10N_PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \
+                         $(srcdir)/en-US/mobile-l10n.js )
+L10N_PREF_JS_EXPORTS_PATH = $(FINAL_TARGET)/$(PREF_DIR)
+L10N_PREF_JS_EXPORTS_FLAGS = $(PREF_PPFLAGS) --silence-missing-directive-warnings
+PP_TARGETS += L10N_PREF_JS_EXPORTS
+
+include $(topsrcdir)/config/rules.mk
+
+# Required for l10n.mk - defines a list of app sub dirs that should
+# be included in langpack xpis.
+DIST_SUBDIRS = $(DIST_SUBDIR)
+
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
+
+include $(topsrcdir)/toolkit/locales/l10n.mk
+
+# For historical reasons, kill stage for repacks due to library moves
+# in PACKAGE and UNPACKAGE.
+clobber-stage:
+	$(RM) -rf $(STAGEDIST)
+
+# merge if we're not en-US, using conditional function as we need
+# the current value of AB_CD
+l10n-%: AB_CD=$*
+l10n-%:
+	$(if $(filter en-US,$(AB_CD)),, $(MAKE) merge-$*)
+	$(MAKE) -C $(DEPTH)/mobile/locales l10n-$*
+	$(MAKE) l10n AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
+	$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
+
+# Tailored target to just add the chrome processing for multi-locale builds
+# merge if we're not en-US, using conditional function as we need
+# the current value of AB_CD
+chrome-%: AB_CD=$*
+chrome-%: IS_LANGUAGE_REPACK=1
+chrome-%:
+	$(if $(filter en-US,$(AB_CD)),, $(MAKE) merge-$*)
+	$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
+	$(MAKE) chrome AB_CD=$*
+
+langpack: langpack-$(AB_CD)
+
+# This is a generic target that will make a langpack and repack tarball
+# builds. It is called from the tinderbox scripts. Alter it with caution.
+
+installers-%: IS_LANGUAGE_REPACK=1
+installers-%:
+	$(MAKE) clobber-stage
+	$(MAKE) l10n-$*
+	$(MAKE) package-langpack-$*
+	$(MAKE) repackage-zip-$*
+	@echo 'repackaging done'
+
+# When we unpack fennec on MacOS X the platform.ini and application.ini are in slightly
+# different locations that on all other platforms
+ifeq (Darwin, $(OS_ARCH))
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
+FENNEC_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
+else
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
+FENNEC_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
+endif
+
+ident:
+	@printf 'gecko_revision '
+	@$(PYTHON3) $(topsrcdir)/config/printconfigsetting.py $(GECKO_PLATFORM_INI_PATH) Build SourceStamp
+	@printf 'fennec_revision '
+	@$(PYTHON3) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
+	@printf 'buildid '
+	@$(PYTHON3) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID

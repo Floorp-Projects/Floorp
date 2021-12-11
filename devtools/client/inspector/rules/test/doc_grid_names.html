@@ -1,0 +1,17 @@
+<!doctype html>
+<style type='text/css'>
+  #grid {
+    display: grid;
+    grid-template-rows: [row1-start] auto [row2-start] auto [row2-end];
+    grid-template-columns: [col1-start] 100px [col2-start] 100px [col3-start] 100px [col3-end];
+  }
+  #cell3 {
+    grid-column: "col3-start";
+    grid-row: "row2-start";
+  }
+</style>
+<div id="grid">
+  <div>cell1</div>
+  <div id="cell2">cell2</div>
+  <div id="cell3">cell3</div>
+</div>

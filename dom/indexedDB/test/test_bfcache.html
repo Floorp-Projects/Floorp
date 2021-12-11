@@ -1,0 +1,39 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript">
+    function* testSteps()
+    {
+      window.onmessage = grabEventAndContinueHandler;
+
+      let testWin = window.open("bfcache_page1.html", "testWin");
+      var event = yield undefined;
+      is(event.data, "go", "set up database successfully");
+
+      testWin.location = "bfcache_page2.html";
+      let res = JSON.parse((yield).data);
+      is(res.version, 2, "version was set correctly");
+      is(res.storeCount, 1, "correct set of stores");
+      ok(!("blockedFired" in res), "blocked shouldn't fire");
+      is(res.value, JSON.stringify({ hello: "world" }),
+         "correct value found in store");
+
+      testWin.close();
+      finishTest();
+    }
+  </script>
+  <script type="text/javascript" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();">
+</body>
+
+</html>

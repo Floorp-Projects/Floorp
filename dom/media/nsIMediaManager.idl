@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIDOMWindow;
+interface nsIMediaDevice;
+
+%{C++
+#define NS_MEDIAMANAGERSERVICE_CID {0xabc622ea, 0x9655, 0x4123, {0x80, 0xd9, 0x22, 0x62, 0x1b, 0xdd, 0x54, 0x65}}
+#define MEDIAMANAGERSERVICE_CONTRACTID "@mozilla.org/mediaManagerService;1"
+%}
+
+[scriptable, builtinclass, uuid(24b23e01-33fd-401f-ba25-6e52658750b0)]
+interface nsIMediaManagerService : nsISupports
+{
+  /* return a array of inner windows that have active captures */
+  readonly attribute nsIArray activeMediaCaptureWindows;
+
+  /* possible states for camera and microphone capture */
+  const unsigned short STATE_NOCAPTURE = 0;
+  const unsigned short STATE_CAPTURE_ENABLED = 1;
+  const unsigned short STATE_CAPTURE_DISABLED = 2;
+
+  /* Get the capture state for the given window. This will not check
+   * descendants, such as iframes. Callers who need to check descendants should
+   * iterate descendants manually and call this on each.
+   */
+  void mediaCaptureWindowState(in nsIDOMWindow aWindow,
+                               out unsigned short aCamera,
+                               out unsigned short aMicrophone,
+                               out unsigned short aScreenShare,
+                               out unsigned short aWindowShare,
+                               out unsigned short aBrowserShare,
+                               out Array<nsIMediaDevice> devices);
+
+  /* Clear per-orgin list of persistent DeviceIds stored for enumerateDevices
+     sinceTime is milliseconds since 1 January 1970 00:00:00 UTC. 0 = clear all */
+  void sanitizeDeviceIds(in long long sinceWhen);
+};

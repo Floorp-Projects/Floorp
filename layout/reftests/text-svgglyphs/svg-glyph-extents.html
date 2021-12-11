@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<head>
+<style type="text/css">
+@font-face {
+  font-family: foo;
+  src: url(resources/svg-glyph-extents.otf);
+}
+body {
+  font-family: foo;
+  font-size: 10px;
+}
+@keyframes test {
+  from {
+    font-size: 100px;
+  }
+  to {
+    font-size: 10px;
+  }
+}
+#start-animation div {
+  display: inline-block;
+  height: 100px;
+  width: 100px;
+  animation-duration: 3s;
+  animation-name: test;
+}
+</style>
+<script type="text/javascript">
+function setup() {
+  var e = document.getElementById("watchme");
+  e.addEventListener("animationend", listener);
+
+  // Start the animation after the animationend listener has been subscribed
+  // (See Bug 1543639 Comment 25 for a rationale).
+  document.body.id = "start-animation";
+}
+function listener() {
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="setup()">
+<div>A</div>
+<div id="watchme">B</div>
+<div>C</div>
+<div>D</div>
+</body>
+</html>

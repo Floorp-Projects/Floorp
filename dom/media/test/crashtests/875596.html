@@ -1,0 +1,12 @@
+<script>
+try { o1 = new AudioContext(); } catch(e) {  }
+try { o6 = o1.createGain(); } catch(e) {  }
+try { o8 = o1.createBufferSource(); } catch(e) {  }
+try { o6.gain.setValueCurveAtTime(new Float32Array(7), 0, 0) } catch(e) {  }
+try { o8.connect(o6, 0, 0) } catch(e) {  }
+try { o8.buffer = function() { 
+    o19 = o1.createBuffer(1, 1, 76309);
+    for(var i=0; i<1; ++i) { }
+    return o19;
+}(); } catch(e) {  }
+</script>

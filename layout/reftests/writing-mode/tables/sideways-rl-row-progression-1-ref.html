@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<title>CSS Reference: sideways-rl Table Row/Rowgroup/Cell Ordering</title>
+<link rel="help" href="http://www.w3.org/TR/css-writing-modes-3/#writing-mode">
+<!-- based on equivalent testcase for vertical-rl mode by Elika J. Etemad -->
+
+<style>
+  .test {
+    writing-mode: sideways-rl;
+  }
+
+  table {
+    border-spacing: 0;
+    margin: 1em;
+  }
+  td {
+    width: 1em;
+    height: 1em;
+    border: solid gray;
+  }
+
+  .a { background: navy}
+  .b { background: blue }
+  .c { background: aqua }
+  .d { background: teal }
+  .e { background: purple }
+  .f { background: fuchsia }
+  .g { background: yellow }
+  .h { background: orange }
+</style>
+
+<table class="reference">
+  <tr>
+    <td rowspan=2>
+    <td class="h">
+    <td colspan=3">
+    <td class="a">
+  </tr>
+  <tr>
+    <td rowspan=3">
+    <td class="g">
+    <td class="f">
+    <td rowspan=2">
+    <td class="b">
+  </tr>
+  <tr>
+    <td class="c">
+    <td rowspan=2 colspan=2>
+    <td rowspan=2>
+  </tr>
+  <tr>
+    <td class="d">
+    <td class="e">
+  </tr>
+</table>

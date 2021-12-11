@@ -1,0 +1,10 @@
+[
+  {
+    "size": 6856444,
+    "visibility": "public",
+    "unpack": true,
+    "digest": "d68dd7d31b0153095ecf5cde5837fb1f95dc6e3f799d496fb764f7afeb9c6095c332467177c3aa54d3749b1901e0d6fa84c42162526e764e8a9d2196a0189861",
+    "algorithm": "sha512",
+    "filename": "jsshell.tar.xz"
+  }
+]

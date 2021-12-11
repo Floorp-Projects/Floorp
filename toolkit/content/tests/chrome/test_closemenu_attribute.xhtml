@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menu closemenu Attribute Tests"
+  onload="setTimeout(nextTest, 0);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<button id="menu" type="menu" label="Menu" onpopuphidden="popupHidden(event)">
+  <menupopup id="p1" onpopupshown="if (event.target == this) this.firstChild.open = true">
+    <menu id="l1" label="One">
+      <menupopup id="p2" onpopupshown="if (event.target == this) this.firstChild.open = true">
+        <menu id="l2" label="Two">
+          <menupopup id="p3" onpopupshown="executeMenuItem()">
+            <menuitem id="l3" label="Three"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+  </menupopup>
+</button>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gExpectedId = "p3";
+var gMode = -1;
+var gModes = ["", "auto", "single", "none"];
+
+function nextTest()
+{
+  gMode++;
+  if (gModes[gMode] != "none")
+    gExpectedId = "p3";
+
+  if (gMode != 0)
+    $("l3").setAttribute("closemenu", gModes[gMode]);
+  if (gModes[gMode] == "none")
+    $("l2").open = true;
+  else
+    $("menu").open = true;
+}
+
+function executeMenuItem()
+{
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
+  // after a couple of seconds, end the test, as the 'none' closemenu value
+  // should not hide any popups
+  if (gModes[gMode] == "none")
+    setTimeout(function() { $("menu").open = false; }, 2000);
+}
+
+function popupHidden(event)
+{
+  if (gModes[gMode] == "none") {
+    if (event.target.id == "p1")
+      SimpleTest.finish()
+    return;
+  }
+
+  is(event.target.id, gExpectedId,
+     "Expected event " + gModes[gMode] + " " + gExpectedId);
+
+  gExpectedId = "";
+  if (event.target.id == "p3") {
+    if (gModes[gMode] == "" || gModes[gMode] == "auto")
+      gExpectedId = "p2";
+  }
+  else if (event.target.id == "p2") {
+    if (gModes[gMode] == "" || gModes[gMode] == "auto")
+      gExpectedId = "p1";
+  }
+
+  if (!gExpectedId)
+    nextTest();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

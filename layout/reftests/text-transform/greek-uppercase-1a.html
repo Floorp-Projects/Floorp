@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for uppercasing of Greek (NFC)</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<style type="text/css">
+/* Note that this test depends on finding the same "serif" font for the
+   English- and Greek-tagged elements; on most platforms, our default prefs
+   provide that, but on Android they currently differ, hence the explicit
+   Droid Serif setting below. */
+div {
+  font: 150% "Droid Serif", serif; /* explicitly prefer Droid over Charis on Android */
+  text-transform: uppercase;
+  margin: 1em;
+}
+</style>
+</head>
+<body lang="en">
+<div>Πατάτα, Αέρας, Μάιος, άυλος, αϋπνία, Μαΐου, χούι</div>
+<div lang="el">Πατάτα, Αέρας, Μάιος, άυλος, αϋπνία, Μαΐου, χούι</div>
+</body>
+</html>

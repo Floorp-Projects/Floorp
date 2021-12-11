@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Cursor snapping test"
+  width="600" height="600"
+  onload="onload();"
+  onunload="onunload();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<dialog id="dialog"
+  buttons="accept,cancel">
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function ok(aCondition, aMessage)
+{
+  window.arguments[0].SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  window.arguments[0].SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+function canRetryTest()
+{
+  return window.arguments[0].canRetryTest();
+}
+
+function getTimeoutTime()
+{
+  return window.arguments[0].getTimeoutTime();
+}
+
+var gTimer;
+var gRetry;
+
+function finishByTimeout()
+{
+  var button = document.getElementById("dialog").getButton("accept");
+  if (button.disabled) {
+    ok(true, "cursor is NOT snapped to the disabled button (dialog)");
+  } else if (button.hidden) {
+    ok(true, "cursor is NOT snapped to the hidden button (dialog)");
+  } else if (!canRetryTest()) {
+    ok(false, "cursor is NOT snapped to the default button (dialog)");
+  } else {
+    // otherwise, this may be unexpected timeout, we should retry the test.
+    gRetry = true;
+  }
+  finish();
+}
+
+function finish()
+{
+  window.close();
+}
+
+function onMouseMove(aEvent)
+{
+  var button = document.getElementById("dialog").getButton("accept");
+  if (button.disabled)
+    ok(false, "cursor IS snapped to the disabled button (dialog)");
+  else if (button.hidden)
+    ok(false, "cursor IS snapped to the hidden button (dialog)");
+  else
+    ok(true, "cursor IS snapped to the default button (dialog)");
+  clearTimeout(gTimer);
+  finish();
+}
+
+function onload()
+{
+  var button = document.getElementById("dialog").getButton("accept");
+  button.addEventListener("mousemove", onMouseMove);
+
+  if (window.arguments[0].gDisable) {
+    button.disabled = true;
+  }
+  if (window.arguments[0].gHidden) {
+    button.hidden = true;
+  }
+  gRetry = false;
+  gTimer = setTimeout(finishByTimeout, getTimeoutTime());
+}
+
+function onunload()
+{
+  if (gRetry) {
+    window.arguments[0].retryCurrentTest();
+  } else {
+    window.arguments[0].runNextTest();
+  }
+}
+
+]]>
+</script>
+
+</dialog>
+</window>

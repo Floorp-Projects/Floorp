@@ -1,0 +1,274 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/MockDOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>    
+    <script type="text/javascript" src="../MochiKit/Selector.js"></script>    
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+    <style type="text/css">
+        p, #sequence {
+            display: none;
+        } 
+    </style>
+</head>
+<body>
+    <p>Test originally from <a href="http://simon.incutio.com/archive/2003/03/25/#getElementsBySelector" rel="bookmark">this blog entry</a>.</p>
+
+    <p>Here are some links in a normal paragraph: <a href="http://www.google.com/" title="Google!">Google</a>, <a href="http://groups.google.com/">Google Groups</a>. This link has <code>class="blog"</code>: <a href="http://diveintomark.org/" class="blog" fakeattribute="bla">diveintomark</a></p>
+    <div id="foo">
+    <p>Everything inside the red border is inside a div with <code>id="foo"</code>.</p>
+    <p>This is a normal link: <a href="http://www.yahoo.com/">Yahoo</a></p>
+    
+    <a style="display: none" href="http://www.example.com/outsidep">This a is not inside a p</a>
+
+    <p>This link has <code>class="blog"</code>: <a href="http://simon.incutio.com/" class="blog">Simon Willison's Weblog</a></p>
+    <p>This <span><a href="http://www.example.com/insidespan">link</a></span> is inside a span, not directly child of p</p>
+    <p lang="en-us">Nonninn</p>
+    <p lang="is-IS">Sniðugt</p>
+    <p>
+        <input type="button" name="enabled" value="enabled" id="enabled">
+        <input type="button" name="disabled" value="disabled" id="disabled" disabled="1" />
+        <input type="checkbox" name="checked" value="checked" id="checked" checked="1" />
+    </p>
+    </div>
+
+    <div id="sequence">
+        <a href="http://www.example.com/link1">Link 1</a>
+        <a href="http://www.example.com/link2">Link 2</a>
+        <a href="http://www.example.com/link3">Link 3</a>
+        <a href="http://www.example.com/link4">Link 4</a>
+        <p>Something else</p>
+        <a href="http://www.example.com/link5">Link 5</a>
+        <a href="http://www.example.com/link6">Link 6</a>
+        <a href="http://www.example.com/link7">Link 7</a>
+        <a href="http://www.example.com/link8">Link 8</a>
+    </div>
+    
+    <div id="multiclass" class="multiple classnames here"></div>
+<pre id="test">
+<script type="text/javascript">
+try {
+
+    var testExpected = function (res, exp, lbl) {
+        for (var i=0; i < res.length; i ++) {
+            is( res[i].href, exp[i], lbl + ' (' + i + ')');
+        }
+    };
+
+    var expected = ['http://simon.incutio.com/archive/2003/03/25/#getElementsBySelector',
+                    'http://www.google.com/',
+                    'http://groups.google.com/',
+                    'http://diveintomark.org/',
+                    'http://www.yahoo.com/',
+                    'http://www.example.com/outsidep',
+                    'http://simon.incutio.com/',
+                    'http://www.example.com/insidespan',
+                    'http://www.example.com/link1',
+                    'http://www.example.com/link2',
+                    'http://www.example.com/link3',
+                    'http://www.example.com/link4',
+                    'http://www.example.com/link5',
+                    'http://www.example.com/link6',
+                    'http://www.example.com/link7',
+                    'http://www.example.com/link8'];
+    var results = $$('a');
+    testExpected(results, expected, "'a' selector");
+
+    expected = ['http://diveintomark.org/', 'http://simon.incutio.com/'];
+    results = $$('p a.blog');    
+    testExpected(results, expected, "'p a.blog' selector");
+
+    expected = ['http://www.yahoo.com/',
+                'http://www.example.com/outsidep',
+                'http://simon.incutio.com/',
+                'http://www.example.com/insidespan',
+                'http://www.example.com/link1',
+                'http://www.example.com/link2',
+                'http://www.example.com/link3',
+                'http://www.example.com/link4',
+                'http://www.example.com/link5',
+                'http://www.example.com/link6',
+                'http://www.example.com/link7',
+                'http://www.example.com/link8'];
+    results = $$('div a');
+    testExpected(results, expected, "'div a' selector");
+
+    expected = ['http://www.yahoo.com/',
+                'http://www.example.com/outsidep',
+                'http://simon.incutio.com/',
+                'http://www.example.com/insidespan'];
+    results = $$('div#foo a');
+    testExpected(results, expected, "'div#foo a' selector");
+
+    expected = ['http://simon.incutio.com/',
+                'http://www.example.com/insidespan'];
+    results = $$('#foo a.blog');
+    testExpected(results, expected, "'#foo a.blog' selector");
+
+    expected = ['http://diveintomark.org/',
+                'http://simon.incutio.com/',
+                'http://www.example.com/insidespan'];
+    results = $$('.blog');
+    testExpected(results, expected, "'.blog' selector");
+
+    expected = ['http://www.google.com/',
+                'http://www.yahoo.com/',
+                'http://www.example.com/outsidep',
+                'http://www.example.com/insidespan',
+                'http://www.example.com/link1',
+                'http://www.example.com/link2',
+                'http://www.example.com/link3',
+                'http://www.example.com/link4',
+                'http://www.example.com/link5',
+                'http://www.example.com/link6',
+                'http://www.example.com/link7',
+                'http://www.example.com/link8'];
+    results = $$('a[href^="http://www"]');
+    testExpected(results, expected, "'a[href^=http://www]' selector");
+
+    expected = ['http://diveintomark.org/'];
+    results = $$('a[href$="org/"]');
+    testExpected(results, expected, "'a[href$=org/]' selector");
+
+    expected = ['http://www.google.com/',
+                'http://groups.google.com/'];
+    results = $$('a[href*="google"]');
+    testExpected(results, expected, "'a[href*=google]' selector");
+
+    expected = ['http://simon.incutio.com/archive/2003/03/25/#getElementsBySelector'];
+    results = $$('a[rel="bookmark"]');
+    testExpected(results, expected, "'a[rel=bookmark]' selector");
+
+    expected = ['http://diveintomark.org/'];
+    results = $$('a[fakeattribute]');
+    testExpected(results, expected, "'a[fakeattribute]' selector");
+
+    /* This doesn't work in IE due to silly DOM implementation
+    expected = ['http://www.google.com/'];
+    results = $$('a[title]');
+    testExpected(results, expected, "'a[title]' selector");
+    */
+
+    results = $$('p[lang|="en"]');
+    is( results[0].firstChild.nodeValue, 'Nonninn', "'p[lang|=en]' selector");
+
+    expected = ['http://simon.incutio.com/archive/2003/03/25/#getElementsBySelector',
+                'http://www.google.com/',
+                'http://groups.google.com/',
+                'http://diveintomark.org/',
+                'http://www.yahoo.com/',
+                'http://simon.incutio.com/',
+                'http://www.example.com/insidespan'];
+    results = $$('p > a');
+    testExpected(results, expected, "'p > a' selector");
+
+    expected = ['http://www.example.com/insidespan'];
+    results = $$('span > a');
+    testExpected(results, expected, "'span > a' selector");
+
+    expected = ['http://groups.google.com/',
+                'http://www.example.com/link2',
+                'http://www.example.com/link3',
+                'http://www.example.com/link4',
+                'http://www.example.com/link6',
+                'http://www.example.com/link7',
+                'http://www.example.com/link8'];
+    results = $$('a + a');
+    testExpected(results, expected, "'a + a' selector");
+
+    expected = ['http://www.example.com/link1',
+                'http://www.example.com/link3',
+                'http://www.example.com/link6',
+                'http://www.example.com/link8'];
+    results = $$('#sequence a:nth-child(odd)');
+    testExpected(results, expected, "'#sequence a:nth-child(odd)' selector");
+
+    expected = ['http://www.example.com/link1',
+                'http://www.example.com/link3',
+                'http://www.example.com/link5',
+                'http://www.example.com/link7'];
+    results = $$('#sequence a:nth-of-type(odd)');
+    testExpected(results, expected, "'#sequence a:nth-of-type(odd)' selector");
+    
+    expected = ['http://www.example.com/link1',
+                'http://www.example.com/link4',
+                'http://www.example.com/link7'];
+    results = $$('#sequence a:nth-of-type(3n+1)');
+    testExpected(results, expected, "'#sequence a:nth-of-type(3n+1)' selector");
+
+    expected = ['http://www.example.com/link5'];
+    results = $$('#sequence a:nth-child(6)');
+    testExpected(results, expected, "'#sequence a:nth-child(6)' selector");
+    
+    expected = ['http://www.example.com/link5'];
+    results = $$('#sequence a:nth-of-type(5)');
+    testExpected(results, expected, "'#sequence a:nth-of-type(5)' selector");
+    
+    expected =  [$('enabled'), $('checked')];
+    results = $$('body :enabled');
+    for (var i=0; i < results.length; i ++) {
+        is( results[i], expected[i], "'body :enabled" + ' (' + i + ')');
+    }
+    
+    expected =  [$('disabled')];
+    results = $$('body :disabled');
+    for (var i=0; i < results.length; i ++) {
+        is( results[i], expected[i], "'body :disabled" + ' (' + i + ')');
+    }
+
+    expected =  [$('checked')];
+    results = $$('body :checked');
+    for (var i=0; i < results.length; i ++) {
+        is( results[i], expected[i], "'body :checked" + ' (' + i + ')');
+    }
+    
+    expected = document.getElementsByTagName('p');
+    results = $$('a[href$=outsidep] ~ *');
+    for (var i=0; i < results.length; i ++) {
+        is( results[i], expected[i+4], "'a[href$=outsidep] ~ *' selector" + ' (' + i + ')');
+    }
+    
+    expected = [document.documentElement];
+    results = $$(':root');
+    for (var i=0; i < results.length; i ++) {
+        is( results[i], expected[i], "':root' selector" + ' (' + i + ')');
+    }
+    
+    expected = [$('multiclass')];
+    results = $$('[class~=classnames]');
+    for (var i=0; i < results.length; i ++) {
+        is( results[i], expected[i], "'~=' attribute test" + ' (' + i + ')');
+    }
+    
+    var doc = MochiKit.MockDOM.createDocument();
+    appendChildNodes(doc.body, A({"href": "http://www.example.com/insideAnotherDocument"}, "Inside a document"));
+    withDocument(doc, function(){
+        is( $$(":root")[0], doc, ":root on a different document" );
+        is( $$("a")[0], doc.body.firstChild, "a inside a different document" );
+    });
+
+    ok( true, "test suite finished!");
+    
+    
+} catch (err) {
+    
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+
+}
+</script>
+</pre>
+</body>
+</html>

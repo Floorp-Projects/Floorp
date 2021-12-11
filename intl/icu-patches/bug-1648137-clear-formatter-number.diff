@@ -1,0 +1,51 @@
+# Fully clear the decimal quantity before setting it to a new value.
+#
+# ICU bug: https://unicode-org.atlassian.net/browse/ICU-21674
+
+diff --git a/intl/icu/source/i18n/number_capi.cpp b/intl/icu/source/i18n/number_capi.cpp
+--- a/intl/icu/source/i18n/number_capi.cpp
++++ b/intl/icu/source/i18n/number_capi.cpp
+@@ -112,40 +112,43 @@ unumf_openForSkeletonAndLocaleWithError(
+ U_CAPI void U_EXPORT2
+ unumf_formatInt(const UNumberFormatter* uformatter, int64_t value, UFormattedNumber* uresult,
+                 UErrorCode* ec) {
+     const UNumberFormatterData* formatter = UNumberFormatterData::validate(uformatter, *ec);
+     auto* result = UFormattedNumberApiHelper::validate(uresult, *ec);
+     if (U_FAILURE(*ec)) { return; }
+ 
+     result->fData.getStringRef().clear();
++    result->fData.quantity.clear();
+     result->fData.quantity.setToLong(value);
+     formatter->fFormatter.formatImpl(&result->fData, *ec);
+ }
+ 
+ U_CAPI void U_EXPORT2
+ unumf_formatDouble(const UNumberFormatter* uformatter, double value, UFormattedNumber* uresult,
+                    UErrorCode* ec) {
+     const UNumberFormatterData* formatter = UNumberFormatterData::validate(uformatter, *ec);
+     auto* result = UFormattedNumberApiHelper::validate(uresult, *ec);
+     if (U_FAILURE(*ec)) { return; }
+ 
+     result->fData.getStringRef().clear();
++    result->fData.quantity.clear();
+     result->fData.quantity.setToDouble(value);
+     formatter->fFormatter.formatImpl(&result->fData, *ec);
+ }
+ 
+ U_CAPI void U_EXPORT2
+ unumf_formatDecimal(const UNumberFormatter* uformatter, const char* value, int32_t valueLen,
+                     UFormattedNumber* uresult, UErrorCode* ec) {
+     const UNumberFormatterData* formatter = UNumberFormatterData::validate(uformatter, *ec);
+     auto* result = UFormattedNumberApiHelper::validate(uresult, *ec);
+     if (U_FAILURE(*ec)) { return; }
+ 
+     result->fData.getStringRef().clear();
++    result->fData.quantity.clear();
+     result->fData.quantity.setToDecNumber({value, valueLen}, *ec);
+     if (U_FAILURE(*ec)) { return; }
+     formatter->fFormatter.formatImpl(&result->fData, *ec);
+ }
+ 
+ U_CAPI int32_t U_EXPORT2
+ unumf_resultToString(const UFormattedNumber* uresult, UChar* buffer, int32_t bufferCapacity,
+                      UErrorCode* ec) {

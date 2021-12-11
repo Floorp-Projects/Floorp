@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form autofill - preview and highlight with site prefill</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="../formautofill_common.js"></script>
+  <script type="text/javascript" src="../../../../../../toolkit/components/satchel/test/satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: preview and highlight field that has been filled by site
+
+<script>
+"use strict";
+
+const MOCK_STORAGE = [{
+  "cc-name": "Test Name",
+  "cc-number": "4929001587121045",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "5103059495477870",
+  "cc-exp-month": 12,
+  "cc-exp-year": 2022,
+}];
+
+const MOCK_STORAGE_PREVIEW = [{
+  "cc-name": "Test Name",
+  "cc-number": "************1045",
+  "cc-exp-month": "4",
+  "cc-exp-year": "2017",
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "************7870",
+  "cc-exp-month": "12",
+  "cc-exp-year": "2022",
+}];
+
+initPopupListener();
+
+add_task(async function setup_storage() {
+  await addCreditCard(MOCK_STORAGE[0]);
+  await addCreditCard(MOCK_STORAGE[1]);
+});
+
+add_task(async function check_preview() {
+  let canTest = await canTestOSKeyStoreLogin();
+  if (!canTest) {
+    todo(canTest, "Cannot test OS key store login on official builds.");
+    return;
+  }
+
+  let cardholderName = document.querySelector("#cc-name");
+  let sitePrefillValue = cardholderName.value;
+  let popup = expectPopup();
+  const focusedInput = await setInput("#cc-number", "");
+  await popup;
+  for (let i = 0; i < MOCK_STORAGE_PREVIEW.length; i++) {
+    synthesizeKey("KEY_ArrowDown");
+    await notifySelectedIndex(i);
+    await checkFormFieldsStyle(MOCK_STORAGE_PREVIEW[i]);
+  }
+
+  focusedInput.blur();
+  is(cardholderName.value, sitePrefillValue, "value should not have changed because previous value was a site prefill");
+});
+
+add_task(async function check_filled_highlight() {
+  let canTest = await canTestOSKeyStoreLogin();
+  if (!canTest) {
+    todo(canTest, "Cannot test OS key store login on official builds.");
+    return;
+  }
+  await triggerPopupAndHoverItem("#cc-number", 0);
+  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  // filled 1st credit card option
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+  await osKeyStoreLoginShown;
+  await checkFormFieldsStyle(MOCK_STORAGE[0], false);
+});
+</script>
+<p id="display"></p>
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic credit card form.</p>
+    <p>card number: <input id="cc-number" autocomplete="cc-number"></p>
+    <p>cardholder name: <input id="cc-name" autocomplete="cc-name" value="JOHN DOE"></p>
+    <p>expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></p>
+    <p>expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></p>
+  </form>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

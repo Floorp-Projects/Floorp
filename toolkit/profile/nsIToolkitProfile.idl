@@ -1,0 +1,99 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+interface nsIProfileUnlocker;
+
+/**
+ * Hold on to a profile lock. Once you release the last reference to this
+ * interface, the profile lock is released.
+ */
+[scriptable, uuid(7c58c703-d245-4864-8d75-9648ca4a6139)]
+interface nsIProfileLock : nsISupports
+{
+    /**
+     * The main profile directory.
+     */
+    readonly attribute nsIFile directory;
+
+    /**
+     * A directory corresponding to the main profile directory that exists for
+     * the purpose of storing data on the local filesystem, including cache
+     * files or other data files that may not represent critical user data.
+     * (e.g., this directory may not be included as part of a backup scheme.)
+     *
+     * In some cases, this directory may just be the main profile directory.
+     */
+    readonly attribute nsIFile localDirectory;
+
+    /**
+     * The timestamp of an existing profile lock at lock time.
+     */
+    readonly attribute PRTime replacedLockTime;
+
+    /**
+     * Unlock the profile.
+     */
+    void unlock();
+};
+
+/**
+ * A interface representing a profile.
+ * @note THIS INTERFACE SHOULD BE IMPLEMENTED BY THE TOOLKIT CODE ONLY! DON'T
+ *       EVEN THINK ABOUT IMPLEMENTING THIS IN JAVASCRIPT!
+ */
+[scriptable, builtinclass, uuid(7422b090-4a86-4407-972e-75468a625388)]
+interface nsIToolkitProfile : nsISupports
+{
+    /**
+     * The location of the profile directory.
+     */
+    readonly attribute nsIFile rootDir;
+
+    /**
+     * The location of the profile local directory, which may be the same as
+     * the root directory.  See nsIProfileLock::localDirectory.
+     */
+    readonly attribute nsIFile localDir;
+
+    /**
+     * The name of the profile.
+     */
+    attribute AUTF8String name;
+
+    /**
+     * Removes the profile from the registry of profiles.
+     *
+     * @param removeFiles
+     *        Indicates whether or not the profile directory should be
+     *        removed in addition.
+     */
+    void remove(in boolean removeFiles);
+
+    /**
+     * Removes the profile from the registry of profiles.
+     * The profile directory is removed in the stream transport thread.
+     *
+     * @param removeFiles
+     *        Indicates whether or not the profile directory should be
+     *        removed in addition.
+     */
+    void removeInBackground(in boolean removeFiles);
+
+    /**
+     * Lock this profile using platform-specific locking methods.
+     *
+     * @param lockFile If locking fails, this may return a lockFile object
+     *                 which can be used in platform-specific ways to
+     *                 determine which process has the file locked. Null
+     *                 may be passed.
+     * @return An interface which holds a profile lock as long as you reference
+     *         it.
+     * @throws NS_ERROR_FILE_ACCESS_DENIED if the profile was already locked.
+     */
+    nsIProfileLock lock(out nsIProfileUnlocker aUnlocker);
+};

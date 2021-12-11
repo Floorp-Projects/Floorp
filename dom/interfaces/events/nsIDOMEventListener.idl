@@ -1,0 +1,32 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+webidl Event;
+
+/**
+ * The nsIDOMEventListener interface is a callback interface for
+ * listening to events in the Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Events/
+ */
+
+[uuid(df31c120-ded6-11d1-bd85-00805f8ae3f4)]
+interface nsIDOMEventListener : nsISupports
+{
+  /**
+   * This method is called whenever an event occurs of the type for which
+   * the EventListener interface was registered.
+   *
+   * @param   evt The Event contains contextual information about the
+   *              event. It also contains the stopPropagation and
+   *              preventDefault methods which are used in determining the
+   *              event's flow and default action.
+   */
+  [can_run_script]
+  void                      handleEvent(in Event event);
+};

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=114649
+-->
+<head>
+  <title>Test for Bug 114649</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=114649">Mozilla Bug 114649</a>
+<iframe id="display" style="width: 500px; height: 500px;"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 114649 **/
+
+var gIFrame;
+var gCurrentWidth = 500;
+var gGotEventsAt = [];
+var gInterval;
+var gFinished = false;
+
+function run() {
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("Simulating dragging to resize a window");
+
+    gIFrame = document.getElementById("display");
+
+    var subdoc = gIFrame.contentDocument;
+    subdoc.open();
+    subdoc.write("<body onresize='window.parent.handle_resize_event()'>");
+    subdoc.close();
+
+    setTimeout(do_a_resize, 50);
+}
+
+function do_a_resize()
+{
+    // decrease the width by 10 until we hit 400, then stop
+    gCurrentWidth -= 10;
+    gIFrame.style.width = gCurrentWidth + "px";
+
+    if (gCurrentWidth > 400) {
+        setTimeout(do_a_resize, 50);
+    }
+}
+
+function handle_resize_event()
+{
+    gGotEventsAt.push(gCurrentWidth);
+
+    if (gCurrentWidth == 400) {
+        check_resize_events();
+    }
+}
+
+function check_resize_events()
+{
+    if (gFinished) {
+        // We can get here when the browser can't process the resizes and
+        // dispatch resize events as fast as we're doing the resizing.  We can
+        // then end up with multiple resize events queued up after we set our
+        // final size.  This return makes sure that in that case we avoid
+        // calling SimpleTest.finish() more than once.
+        return;
+    }
+    gFinished = true;
+    ok(gGotEventsAt.length >= 2, "We should get more than one event");
+    isnot(gGotEventsAt[0], 400, "The first event shouldn't be for the final size");
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

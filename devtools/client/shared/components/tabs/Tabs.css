@@ -1,0 +1,115 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Tabs General Styles */
+
+.tabs {
+  height: 100%;
+  background: var(--theme-sidebar-background);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hides the tab strip in the TabBar */
+div[hidetabs=true] .tabs .tabs-navigation {
+  display: none;
+}
+
+.tabs .tabs-navigation {
+  box-sizing: border-box;
+  display: flex;
+  /* Reserve 1px for the border */
+  height: calc(var(--theme-toolbar-height) + 1px);
+  position: relative;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background: var(--theme-tab-toolbar-background);
+}
+
+.tabs .tabs-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+/* The tab takes entire horizontal space and individual tabs
+  should stretch accordingly. Use flexbox for the behavior.
+  Use also `overflow: hidden` so, 'overflow' and 'underflow'
+  events are fired (it's utilized by the all-tabs-menu). */
+.tabs .tabs-navigation .tabs-menu {
+  overflow: hidden;
+  display: flex;
+}
+
+.tabs .tabs-menu-item {
+  display: inline-block;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  color: var(--theme-toolbar-color);
+}
+
+.tabs .tabs-menu-item.is-active {
+  color: var(--theme-toolbar-selected-color);
+}
+
+.tabs .tabs-menu-item:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.tabs .tabs-menu-item:hover:active:not(.is-active) {
+  background-color: var(--theme-toolbar-hover-active);
+}
+
+.tabs .tabs-menu-item a {
+  display: flex;
+  justify-content: center;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  line-height: 16px;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+  text-align: center;
+}
+
+/* Remove the outline focusring from tabs-menu-item. */
+.tabs .tabs-navigation .tabs-menu-item > a:-moz-focusring {
+  outline: none;
+}
+
+.tabs .tabs-menu-item .tab-badge {
+  color: var(--theme-highlight-blue);
+  font-size: 80%;
+  font-style: italic;
+  /* Tabs have a 15px padding start/end, so we set the margins here in order to center the
+     badge after the tab title, with a 5px effective margin. */
+  margin-inline-start: 5px;
+  margin-inline-end: -10px;
+}
+
+.tabs .tabs-menu-item.is-active .tab-badge {
+  /* Use the same color as the tab-item when active */
+  color: inherit;
+}
+
+/* To avoid "select all" commands from selecting content in hidden tabs */
+.tabs .hidden,
+.tabs .hidden * {
+  user-select: none !important;
+}
+
+/* Make sure panel content takes entire vertical space. */
+.tabs .panels {
+  flex: 1;
+  overflow: hidden;
+}
+
+.tabs .tab-panel {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}

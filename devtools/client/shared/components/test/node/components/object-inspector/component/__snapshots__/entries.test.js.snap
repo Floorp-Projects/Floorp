@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 1`] = `
+"
+▼ Map(11)
+|  ▶︎ <entries>
+"
+`;
+
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 2`] = `
+"
+  ▼ Map(11)
+[ |  ▼ <entries> ]
+  |  |  ▶︎ 0: \\"key-0\\" → \\"value-0\\"
+  |  |  ▶︎ 1: \\"key-1\\" → \\"value-1\\"
+  |  |  ▶︎ 2: \\"key-2\\" → \\"value-2\\"
+  |  |  ▶︎ 3: \\"key-3\\" → \\"value-3\\"
+  |  |  ▶︎ 4: \\"key-4\\" → \\"value-4\\"
+  |  |  ▶︎ 5: \\"key-5\\" → \\"value-5\\"
+  |  |  ▶︎ 6: \\"key-6\\" → \\"value-6\\"
+  |  |  ▶︎ 7: \\"key-7\\" → \\"value-7\\"
+  |  |  ▶︎ 8: \\"key-8\\" → \\"value-8\\"
+  |  |  ▶︎ 9: \\"key-9\\" → \\"value-9\\"
+  |  |  ▶︎ 10: \\"key-10\\" → \\"value-10\\"
+"
+`;
+
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 3`] = `
+"
+  ▼ Map(11)
+[ |  ▶︎ <entries> ]
+"
+`;
+
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 4`] = `
+"
+  ▼ Map(11)
+[ |  ▼ <entries> ]
+  |  |  ▶︎ 0: \\"key-0\\" → \\"value-0\\"
+  |  |  ▶︎ 1: \\"key-1\\" → \\"value-1\\"
+  |  |  ▶︎ 2: \\"key-2\\" → \\"value-2\\"
+  |  |  ▶︎ 3: \\"key-3\\" → \\"value-3\\"
+  |  |  ▶︎ 4: \\"key-4\\" → \\"value-4\\"
+  |  |  ▶︎ 5: \\"key-5\\" → \\"value-5\\"
+  |  |  ▶︎ 6: \\"key-6\\" → \\"value-6\\"
+  |  |  ▶︎ 7: \\"key-7\\" → \\"value-7\\"
+  |  |  ▶︎ 8: \\"key-8\\" → \\"value-8\\"
+  |  |  ▶︎ 9: \\"key-9\\" → \\"value-9\\"
+  |  |  ▶︎ 10: \\"key-10\\" → \\"value-10\\"
+"
+`;
+
+exports[`ObjectInspector - entries renders Object with entries as expected 1`] = `
+"
+▼ Map { Symbol(\\"a\\") → \\"value-a\\", Symbol(\\"b\\") → \\"value-b\\" }
+|    size: 2
+|  ▼ <entries>
+|  |  ▼ 0: \\"key-0\\" → \\"value-0\\"
+|  |  |    <key>: \\"key-0\\"
+|  |  |    <value>: \\"value-0\\"
+|  |  ▼ 1: \\"key-1\\" → \\"value-1\\"
+|  |  |    <key>: \\"key-1\\"
+|  |  |    <value>: \\"value-1\\"
+|  |  ▼ 2: \\"key-2\\" → \\"value-2\\"
+|  |  |    <key>: \\"key-2\\"
+|  |  |    <value>: \\"value-2\\"
+|  |  ▼ 3: \\"key-3\\" → \\"value-3\\"
+|  |  |    <key>: \\"key-3\\"
+|  |  |    <value>: \\"value-3\\"
+|  |  ▼ 4: \\"key-4\\" → \\"value-4\\"
+|  |  |    <key>: \\"key-4\\"
+|  |  |    <value>: \\"value-4\\"
+|  |  ▼ 5: \\"key-5\\" → \\"value-5\\"
+|  |  |    <key>: \\"key-5\\"
+|  |  |    <value>: \\"value-5\\"
+|  |  ▼ 6: \\"key-6\\" → \\"value-6\\"
+|  |  |    <key>: \\"key-6\\"
+|  |  |    <value>: \\"value-6\\"
+|  |  ▼ 7: \\"key-7\\" → \\"value-7\\"
+|  |  |    <key>: \\"key-7\\"
+|  |  |    <value>: \\"value-7\\"
+|  |  ▼ 8: \\"key-8\\" → \\"value-8\\"
+|  |  |    <key>: \\"key-8\\"
+|  |  |    <value>: \\"value-8\\"
+|  |  ▼ 9: \\"key-9\\" → \\"value-9\\"
+|  |  |    <key>: \\"key-9\\"
+|  |  |    <value>: \\"value-9\\"
+|  |  ▼ 10: \\"key-10\\" → \\"value-10\\"
+|  |  |    <key>: \\"key-10\\"
+|  |  |    <value>: \\"value-10\\"
+|  ▼ <prototype>: Object { … }
+|  |    <prototype>: Object {  }
+"
+`;

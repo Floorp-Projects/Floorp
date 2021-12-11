@@ -1,0 +1,81 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using layers::RGBDescriptor from "mozilla/layers/LayersSurfaces.h";
+using wr::ExternalImageId from "mozilla/webrender/WebRenderAPI.h";
+using RawId from "mozilla/webgpu/WebGPUTypes.h";
+using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
+using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
+using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
+using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
+
+include "mozilla/ipc/ByteBufUtils.h";
+include "mozilla/webgpu/WebGPUSerialize.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
+include protocol PCompositorBridge;
+
+namespace mozilla {
+namespace webgpu {
+
+/**
+ * Represents the connection between a WebGPUChild actor that issues WebGPU
+ * command from the content process, and a WebGPUParent in the compositor
+ * process that runs the commands.
+ */
+async protocol PWebGPU
+{
+  manager PCompositorBridge;
+
+parent:
+  async DeviceAction(RawId selfId, ByteBuf buf);
+  async TextureAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
+  async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
+  async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
+
+  async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
+  async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId);
+  async AdapterDestroy(RawId selfId);
+  async BufferReturnShmem(RawId selfId, Shmem shmem);
+  async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (Shmem sm);
+  async BufferUnmap(RawId selfId, Shmem shmem, bool flush, bool keepShmem);
+  async BufferDestroy(RawId selfId);
+  async TextureDestroy(RawId selfId);
+  async TextureViewDestroy(RawId selfId);
+  async SamplerDestroy(RawId selfId);
+  async DeviceDestroy(RawId selfId);
+
+  async CommandEncoderFinish(RawId selfId, RawId deviceId, GPUCommandBufferDescriptor desc);
+  async CommandEncoderDestroy(RawId selfId);
+  async CommandBufferDestroy(RawId selfId);
+  async RenderBundleDestroy(RawId selfId);
+  async QueueSubmit(RawId selfId, RawId aDeviceId, RawId[] commandBuffers);
+  async QueueWriteAction(RawId selfId, RawId aDeviceId, ByteBuf buf, Shmem shmem);
+
+  async BindGroupLayoutDestroy(RawId selfId);
+  async PipelineLayoutDestroy(RawId selfId);
+  async BindGroupDestroy(RawId selfId);
+  async ShaderModuleDestroy(RawId selfId);
+  async ComputePipelineDestroy(RawId selfId);
+  async RenderPipelineDestroy(RawId selfId);
+  async ImplicitLayoutDestroy(RawId implicitPlId, RawId[] implicitBglIds);
+  async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, ExternalImageId externalId);
+  async SwapChainPresent(ExternalImageId externalId, RawId textureId, RawId commandEncoderId);
+  async SwapChainDestroy(ExternalImageId externalId);
+
+  async DevicePushErrorScope(RawId selfId);
+  async DevicePopErrorScope(RawId selfId) returns (MaybeScopedError maybeError);
+
+  async Shutdown();
+
+child:
+  async DeviceUncapturedError(RawId aDeviceId, nsCString message);
+  async DropAction(ByteBuf buf);
+  async __delete__();
+};
+
+} // webgpu
+} // mozilla

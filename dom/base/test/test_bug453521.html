@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=453521
+-->
+<head>
+  <title>Test for Bug 453521</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=453521">Mozilla Bug 453521</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 453521 **/
+
+
+var r = document.createRange();
+r.setStart(document.documentElement, 0);
+r.setEnd(document.documentElement, 0);
+ok(r.extractContents() != null,
+   "range.extractContents() shouldn't return null.");
+is(r.extractContents().nodeType, Node.DOCUMENT_FRAGMENT_NODE,
+   "range.extractContents() should return a document fragment.");
+
+
+</script>
+</pre>
+</body>
+</html>
+

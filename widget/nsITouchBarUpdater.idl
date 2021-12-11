@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArray.idl"
+#include "nsIBaseWindow.idl"
+#include "nsISupports.idl"
+#include "nsITouchBarInput.idl"
+
+/**
+ * Front-to-backend communication to keep Touch Bar updated
+ */
+[scriptable, uuid(38f396e2-93c9-4a77-aaf7-2d50b9962186)]
+interface nsITouchBarUpdater : nsISupports
+{
+  /**
+   * Updates an array of nsITouchBarInputs in the specified window.
+   */
+  void updateTouchBarInputs(in nsIBaseWindow aWindow, in Array<nsITouchBarInput> aInputs);
+
+  /**
+   * Enter the native Touch Bar customization window.
+   */
+  void enterCustomizeMode();
+
+  /**
+   * Checks if the user is using a Touch Bar-compatible Mac.
+   */
+  boolean isTouchBarInitialized();
+
+  /**
+   * Sets whether the Touch Bar is initialized.
+   * NOTE: This method is for internal unit tests only! Normally, the system
+   * sets this value after a Touch Bar is initialized on compatible Macs.
+   */
+  void setTouchBarInitialized(in boolean aIsInitialized);
+
+  /**
+   * If aShowing is true, aPopover is shown. Otherwise, it is hidden.
+   */
+  void showPopover(in nsIBaseWindow aWindow, in nsITouchBarInput aPopover, in boolean aShowing);
+};

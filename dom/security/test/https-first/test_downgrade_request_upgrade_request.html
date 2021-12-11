@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title> Bug 1706126: Test https-first, downgrade first request and then upgrade redirection to subdomain</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ * First we request http://redirect-example.com which HTTPS-First upgrades to https://redirect-example.com.
+ * The request https://redirect-example.com doesn't receive an answer (timeout), so we send a background
+ * request.
+ * The background request receives an answer. So the request https://redirect-example.com gets downgraded
+ * to http://redirect-example.com by the exempt flag.
+ * The request http://redirect-example.com gets redirected to http://wwww.redirect-example.com. At that stage
+ * HTTPS-First should clear the exempt flag and upgrade the redirection to https://wwww.redirect-example.com.
+ *
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const REQUEST_URL =
+  "http://redirect-example.com/tests/dom/security/test/https-first/file_downgrade_request_upgrade_request.sjs";
+
+let testWin;
+window.addEventListener("message", receiveMessage);
+
+// Receive message and verify that it is from an https site.
+async function receiveMessage(event) {
+  let data = event.data;
+  ok(data.result === "upgraded", "Redirected successful to 'https' for subdomain ");
+  is(data.scheme,"https:", "scheme is 'https' for subdomain");
+  testWin.close();
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+async function runTest() {
+  testWin = window.open(REQUEST_URL, "_blank");
+}
+
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true]
+  ]}, runTest);
+
+</script>
+</body>
+</html>

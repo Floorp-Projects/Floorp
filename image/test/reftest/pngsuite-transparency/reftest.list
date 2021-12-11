@@ -1,0 +1,26 @@
+# PngSuite - Transparency
+
+# tbbn1g04 - transparent, black background chunk
+== wrapper.html?tbbn1g04.png tbbn1g04.html
+# tbbn2c16 - transparent, blue background chunk
+== wrapper.html?tbbn2c16.png tbbn2c16.html
+# tbbn3p08 - transparent, black background chunk
+== wrapper.html?tbbn3p08.png tbbn3p08.html
+# tbgn2c16 - transparent, green background chunk
+== wrapper.html?tbgn2c16.png tbgn2c16.html
+# tbgn3p08 - transparent, light-gray background chunk
+== wrapper.html?tbgn3p08.png tbgn3p08.html
+# tbrn2c08 - transparent, red background chunk
+== wrapper.html?tbrn2c08.png tbrn2c08.html
+# tbwn1g16 - transparent, white background chunk
+== wrapper.html?tbwn1g16.png tbwn1g16.html
+# tbwn3p08 - transparent, white background chunk
+== wrapper.html?tbwn3p08.png tbwn3p08.html
+# tbyn3p08 - transparent, yellow background chunk
+== wrapper.html?tbyn3p08.png tbyn3p08.html
+# tp0n1g08 - not transparent for reference (logo on gray)
+# tp0n2c08 - not transparent for reference (logo on gray)
+# tp0n3p08 - not transparent for reference (logo on gray)
+# ...these 3 not tested because they're not transparent.
+# tp1n3p08 - transparent, but no background chunk 
+== wrapper.html?tp1n3p08.png tp1n3p08.html

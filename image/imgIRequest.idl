@@ -1,0 +1,252 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIRequest.idl"
+#include "imgIContainer.idl"
+
+//interface imgIContainer;
+interface imgINotificationObserver;
+interface nsIURI;
+interface nsIPrincipal;
+
+/**
+ * imgIRequest interface
+ *
+ * @author Stuart Parmenter <stuart@mozilla.com>
+ * @version 0.1
+ * @see imagelib2
+ */
+[scriptable, builtinclass, uuid(db0a945c-3883-424a-98d0-2ee0523b0255)]
+interface imgIRequest : nsIRequest
+{
+  /**
+   * the image container...
+   * @return the image object associated with the request.
+   * @attention NEED DOCS
+   */
+  readonly attribute imgIContainer image;
+
+  /**
+   * Producer ID for image containers created by this image.
+   */
+  [infallible] readonly attribute unsigned long producerId;
+
+  /**
+   * Bits set in the return value from imageStatus
+   * @name statusflags
+   *
+   * Meanings:
+   *
+   * STATUS_NONE: Nothing to report.
+   *
+   * STATUS_SIZE_AVAILABLE: We received enough image data
+   * from the network or filesystem that we know the width
+   * and height of the image, and have thus called SetSize()
+   * on the container.
+   *
+   * STATUS_LOAD_COMPLETE: The data has been fully loaded
+   * to memory, but not necessarily fully decoded.
+   *
+   * STATUS_ERROR: An error occurred loading the image.
+   *
+   * STATUS_FRAME_COMPLETE: The first frame has been
+   * completely decoded.
+   *
+   * STATUS_DECODE_COMPLETE: The whole image has been decoded.
+   *
+   * STATUS_IS_ANIMATED: The image is animated.
+   *
+   * STATUS_HAS_TRANSPARENCY: The image is partially or completely transparent.
+   */
+  //@{
+  const long STATUS_NONE             = 0x0;
+  const long STATUS_SIZE_AVAILABLE   = 0x1;
+  const long STATUS_LOAD_COMPLETE    = 0x2;
+  const long STATUS_ERROR            = 0x4;
+  const long STATUS_FRAME_COMPLETE   = 0x8;
+  const long STATUS_DECODE_COMPLETE  = 0x10;
+  const long STATUS_IS_ANIMATED      = 0x20;
+  const long STATUS_HAS_TRANSPARENCY = 0x40;
+  //@}
+
+  /**
+   * Status flags of the STATUS_* variety.
+   */
+  readonly attribute unsigned long imageStatus;
+
+  /*
+   * Actual error code that generated a STATUS_ERROR imageStatus
+   * (see xpcom/base/ErrorList.h)
+   */
+  [noscript] readonly attribute nsresult imageErrorCode;
+
+  /**
+   * The URI the image load was started with.  Note that this might not be the
+   * actual URI for the image (e.g. if HTTP redirects happened during the
+   * load).
+   */
+  readonly attribute nsIURI URI;
+
+  /**
+   * The URI of the resource we ended up loading after all redirects, etc.
+   */
+  readonly attribute nsIURI finalURI;
+
+  readonly attribute imgINotificationObserver notificationObserver;
+
+  readonly attribute string mimeType;
+
+  /**
+   * Clone this request; the returned request will have aObserver as the
+   * observer.  aObserver will be notified synchronously (before the clone()
+   * call returns) with all the notifications that have already been dispatched
+   * for this image load.
+   */
+  imgIRequest clone(in imgINotificationObserver aObserver);
+
+  /**
+   * The principal gotten from the channel the image was loaded from.
+   */
+  readonly attribute nsIPrincipal imagePrincipal;
+
+  /**
+   * true if the loading of the image required cross-origin redirects.
+   */
+  readonly attribute bool hadCrossOriginRedirects;
+
+  /**
+   * Whether the request is multipart (ie, multipart/x-mixed-replace)
+   */
+  readonly attribute bool multipart;
+
+  /**
+   * The CORS mode that this image was loaded with (a mozilla::CORSMode).
+   */
+  readonly attribute long CORSMode;
+
+  /**
+   * Cancels this request as in nsIRequest::Cancel(); further, also nulls out
+   * decoderObserver so it gets no further notifications from us.
+   *
+   * NOTE: You should not use this in any new code; instead, use cancel(). Note
+   * that cancel() is asynchronous, which means that some time after you call
+   * it, the listener/observer will get an OnStopRequest(). This means that, if
+   * you're the observer, you can't call cancel() from your destructor.
+   */
+  void cancelAndForgetObserver(in nsresult aStatus);
+
+  /**
+   * Requests a synchronous decode for the image.
+   *
+   * imgIContainer has a startDecoding() method, but callers may want to request
+   * a decode before the container has necessarily been instantiated. Calling
+   * startDecoding() on the imgIRequest simply forwards along the request if the
+   * container already exists, or calls it once the container becomes available
+   * if it does not yet exist.
+   */
+  void startDecoding(in uint32_t aFlags);
+
+  /**
+   * Exactly like startDecoding above except returns whether the current frame
+   * of the image is complete or not.
+   *
+   * @param aFlags Flags of the FLAG_* variety. Only FLAG_ASYNC_NOTIFY
+   *               is accepted; all others are ignored.
+   */
+  [noscript, notxpcom] boolean startDecodingWithResult(in uint32_t aFlags);
+
+  /**
+   * This method triggers decoding for an image, but unlike startDecoding() it
+   * enables the caller to provide more detailed information about the decode
+   * request.
+   *
+   * @param aFlags Flags of the FLAG_* variety.
+   * @return DECODE_SURFACE_AVAILABLE if is a surface that satisfies the
+   *         request and it is fully decoded.
+   *         DECODE_REQUESTED if we requested a decode.
+   *         DECODE_REQUEST_FAILED if we failed to request a decode. This means
+   *         that either there is an error in the image or we cannot allocate a
+   *         surface that big.
+   */
+  [noscript, notxpcom] imgIContainer_DecodeResult requestDecodeWithResult(in uint32_t aFlags);
+/*%{C++
+  DecodeResult RequestDecodeWithResult(uint32_t aFlags);
+%}*/
+
+
+  /**
+   * Locks an image. If the image does not exist yet, locks it once it becomes
+   * available. The lock persists for the lifetime of the imgIRequest (until
+   * unlockImage is called) even if the underlying image changes.
+   *
+   * If you don't call unlockImage() by the time this imgIRequest goes away, it
+   * will be called for you automatically.
+   *
+   * @see imgIContainer::lockImage for documentation of the underlying call.
+   */
+  void lockImage();
+
+  /**
+   * Unlocks an image.
+   *
+   * @see imgIContainer::unlockImage for documentation of the underlying call.
+   */
+  void unlockImage();
+
+  /**
+   * If this image is unlocked, discard the image's decoded data.  If the image
+   * is locked or is already discarded, do nothing.
+   */
+  void requestDiscard();
+
+  /**
+   * If this request is for an animated image, the method creates a new
+   * request which contains the current frame of the image.
+   * Otherwise returns the same request.
+   */
+  imgIRequest getStaticRequest();
+
+  /**
+   * Requests that the image animate (if it has an animation).
+   *
+   * @see Image::IncrementAnimationConsumers for documentation of the
+   * underlying call.
+   */
+  void incrementAnimationConsumers();
+
+  /**
+   * Tell the image it can forget about a request that the image animate.
+   *
+   * @see Image::DecrementAnimationConsumers for documentation of the
+   * underlying call.
+   */
+  void decrementAnimationConsumers();
+
+  /**
+   * Request loading priority boost to requested category, each category
+   * of request increases priority only one time.
+   *
+   * CATEGORY_FRAME_INIT: increase priority when the imgRequest is associated
+   * with an nsImageFrame.
+   *
+   * CATEGORY_FRAME_STYLE: increase priority when the imgRequest is for a CSS
+   * background-image, list-style-image, etc. on a ComputedStyle, and a frame
+   * has been assigned this ComputedStyle.
+   *
+   * CATEGORY_SIZE_QUERY: increase priority when size decoding is necessary to
+   * determine the layout size of an associated nsImageFrame.
+   *
+   * CATEGORY_DISPLAY: increase priority when the image is about to be displayed
+   * in the viewport.
+   */
+  const uint32_t CATEGORY_FRAME_INIT  = 1 << 0;
+  const uint32_t CATEGORY_FRAME_STYLE = 1 << 1;
+  const uint32_t CATEGORY_SIZE_QUERY  = 1 << 2;
+  const uint32_t CATEGORY_DISPLAY     = 1 << 3;
+  void boostPriority(in uint32_t aCategory);
+};
+

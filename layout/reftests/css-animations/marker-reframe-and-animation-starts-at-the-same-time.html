@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+@keyframes anim {
+  from { background-color: rgb(255, 255, 255); }
+  to { background-color: rgb(255, 255, 255); }
+}
+#target::marker {
+  content: 'initial';
+  background-color: rgb(0, 0, 0);
+  height: 100px;
+  width: 100px;
+  position: absolute;
+}
+#target.hover::marker{
+  content: '';
+  animation: anim 100s steps(1, start);
+}
+#target {
+  display: list-item;
+  list-style-position: inside;
+}
+</style>
+<div id="target"></div>
+<script>
+window.addEventListener("load", () => {
+  target.className = 'hover';
+  target.addEventListener('animationstart', () => {
+    document.documentElement.classList.remove('reftest-wait');
+  });
+});
+</script>
+</html>

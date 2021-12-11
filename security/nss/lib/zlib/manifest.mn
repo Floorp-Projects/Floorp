@@ -1,0 +1,36 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../..
+
+MODULE = nss
+
+PRIVATE_EXPORTS = zlib.h zconf.h
+
+CSRCS =	adler32.c 	\
+	compress.c 	\
+	crc32.c 	\
+	deflate.c 	\
+	gzclose.c	\
+	gzlib.c		\
+	gzread.c	\
+	gzwrite.c	\
+	infback.c 	\
+	inffast.c	\
+	inflate.c 	\
+	inftrees.c 	\
+	trees.c 	\
+	uncompr.c 	\
+	zutil.c 	\
+	$(NULL)
+
+LIBRARY_NAME = zlib
+SHARED_LIBRARY = $(NULL)
+
+# Define verbose as -1 to turn off all zlib trace messages in
+# debug builds.
+DEFINES = -Dverbose=-1
+
+NO_MD_RELEASE = 1

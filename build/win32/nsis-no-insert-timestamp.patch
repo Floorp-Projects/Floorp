@@ -1,0 +1,27 @@
+diff -ur nsis-3.03-src/SCons/Config/gnu nsis-3.03-src.n/SCons/Config/gnu
+--- nsis-3.03-src/SCons/Config/gnu	2017-10-06 15:30:20.000000000 -0400
++++ nsis-3.03-src.n/SCons/Config/gnu	2018-06-17 13:26:05.945495151 -0400
+@@ -102,6 +102,7 @@
+ stub_env.Append(LINKFLAGS = ['$NODEFLIBS_FLAG'])    # no standard libraries
+ stub_env.Append(LINKFLAGS = ['$ALIGN_FLAG'])        # 512 bytes align
+ stub_env.Append(LINKFLAGS = ['$MAP_FLAG'])          # generate map file
++stub_env.Append(LINKFLAGS = ['-Wl,--no-insert-timestamp']) # remove timestamps for reproducible builds
+ 
+ stub_uenv = stub_env.Clone()
+ stub_uenv.Append(CPPDEFINES = ['_UNICODE', 'UNICODE'])
+@@ -142,6 +143,7 @@
+ plugin_env.Append(LINKFLAGS = ['$MAP_FLAG'])        # generate map file
+ plugin_env.Append(LINKFLAGS = ['-static-libgcc'])   # remove libgcc*.dll dependency
+ plugin_env.Append(LINKFLAGS = ['-static-libstdc++']) # remove libstdc++*.dll dependency
++plugin_env.Append(LINKFLAGS = ['-Wl,--no-insert-timestamp']) # remove timestamps for reproducible builds
+ 
+ plugin_uenv = plugin_env.Clone()
+ plugin_uenv.Append(CPPDEFINES = ['_UNICODE', 'UNICODE'])
+@@ -181,6 +183,7 @@
+ 
+ util_env.Append(LINKFLAGS = ['-mwindows'])          # build windows executables
+ util_env.Append(LINKFLAGS = ['$ALIGN_FLAG'])        # 512 bytes align
++util_env.Append(LINKFLAGS = ['-Wl,--no-insert-timestamp']) # remove timestamps for reproducible builds
+ 
+ 
+ conf = FlagsConfigure(util_env)

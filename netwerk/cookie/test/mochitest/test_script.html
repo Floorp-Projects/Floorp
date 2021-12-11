@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for cookies + script loading when the policy changes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="cookiesHelper.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+runTests(async (w, state) => {
+  w.document.cookie = "name=value";
+
+  let p = new w.Promise(resolve => { w.scriptLoaded = resolve; });
+  let script = document.createElement("script");
+  script.src = "cookie.sjs?script&" + Math.random();
+  w.document.body.appendChild(script);
+  await p;
+  await checkLastRequest("script", state);
+});
+
+</script>
+</body>
+</html>

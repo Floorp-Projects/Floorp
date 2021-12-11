@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(70bd93ff-88fa-4600-8af8-57c8d002dbac)]
+interface nsICrashService : nsISupports
+{
+  /**
+   * Records the occurrence of a crash.
+   *
+   * @param processType
+   *        One of the PROCESS_TYPE constants defined below.
+   * @param crashType
+   *        One of the CRASH_TYPE constants defined below.
+   * @param id
+   *        Crash ID. Likely a UUID.
+   *
+   * @return A promise that resolves after the crash has been stored
+   */
+  Promise addCrash(in long processType, in long crashType, in AString id);
+
+  // This list should be kept in sync with GeckoProcessTypes.h
+  const long PROCESS_TYPE_MAIN = 0;
+  const long PROCESS_TYPE_CONTENT = 2;
+  const long PROCESS_TYPE_IPDLUNITTEST = 3;
+  const long PROCESS_TYPE_GMPLUGIN = 4;
+  const long PROCESS_TYPE_GPU = 5;
+  const long PROCESS_TYPE_VR = 6;
+  const long PROCESS_TYPE_RDD = 7;
+  const long PROCESS_TYPE_SOCKET = 8;
+  const long PROCESS_TYPE_SANDBOX_BROKER = 9;
+  const long PROCESS_TYPE_FORKSERVER = 10;
+  // New process types should be added at the end of the above list.
+
+  const long CRASH_TYPE_CRASH = 0;
+  const long CRASH_TYPE_HANG = 1;
+};

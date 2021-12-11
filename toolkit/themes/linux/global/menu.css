@@ -1,0 +1,190 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== menu.css =======================================================
+  == Styles used by XUL menu-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: menu/menuitem ::::: */
+
+menupopup,
+menubar {
+  font: menu;
+}
+
+menuitem {
+  padding: 4px 6px;
+}
+
+menu,
+menuitem,
+menucaption {
+  appearance: auto;
+  -moz-default-appearance: menuitem;
+  -moz-box-align: center;
+  max-width: 42em;
+  list-style-image: none;
+  -moz-image-region: auto;
+
+  /* Specify our background to avoid triggering reflows on hover. This is an
+   * optimization, as backgrounds don't disable theming on XUL elements, but
+   * also papers over bug 1653832. */
+  background-color: initial;
+}
+
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
+  color: -moz-menuhovertext;
+  background-color: -moz-menuhover;
+}
+
+menuitem[customoptionstyling="true"] {
+  appearance: none;
+}
+
+menu[disabled="true"],
+menuitem[disabled="true"],
+menucaption[disabled="true"] {
+  color: GrayText;
+}
+
+menubar > menu {
+  padding: 0 4px;
+}
+
+menubar:-moz-lwtheme > menu {
+  text-shadow: none;
+}
+
+menubar:-moz-lwtheme > menu:not([open]) {
+  text-shadow: inherit;
+}
+
+menubar > menu:not([open], [disabled="true"]) {
+  color: inherit;
+}
+
+menubar > menu[open] {
+  color: -moz-menubarhovertext;
+  background-color: -moz-menuhover;
+}
+
+menuitem[default="true"],
+menuitem.spell-suggestion,
+menucaption {
+  font-weight: bold;
+}
+
+/* ::::: menu/menuitems in menulist popups ::::: */
+
+menulist > menupopup {
+  font: inherit;
+}
+
+menulist > menupopup > menuitem,
+menulist > menupopup > menucaption,
+menulist > menupopup > menu {
+  padding: 1px 5px;
+  max-width: none;
+}
+
+/* ..... internal content .... */
+
+.menu-text,
+.menu-iconic-left,
+.menu-iconic-text {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 2px !important;
+}
+
+.menu-text {
+  /* This is (18 + the size of end-padding on .menu-iconic-left)px */
+  margin-inline-start: 21px !important;
+}
+
+.menu-accel,
+.menu-iconic-accel {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-inline-start: 7px !important;
+}
+
+.menu-accel-container {
+  -moz-box-pack: end;
+}
+
+.menu-iconic-left {
+  width: 16px;
+  /* We can only hardcode this, to make the default GTK icon<->label spacing */
+  padding-inline-end: 3px !important;
+}
+
+.menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.menu-right {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-inline-start: 6px;
+  margin-inline-end: 0;
+  width: 1ex;
+  height: 1ex;
+  /* These next two rules are needed to prevent inheritance and thus ugliness */
+  list-style-image: none;
+  -moz-image-region: auto;
+  appearance: auto;
+  -moz-default-appearance: menuarrow;
+}
+
+.menubar-left {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 2px;
+}
+
+.menubar-text {
+  margin: 0 1px !important;
+}
+
+
+menulist > menupopup > menuitem > .menu-iconic-left,
+menulist > menupopup > menucaption > .menu-iconic-left,
+menulist > menupopup > menu > .menu-iconic-left {
+  display: none;
+}
+
+/* ::::: checkbox menuitem ::::: */
+
+menuitem[checked="true"] {
+  appearance: auto !important;
+  -moz-default-appearance: checkmenuitem !important;
+}
+
+menuitem[type="checkbox"] {
+  appearance: auto !important;
+  -moz-default-appearance: checkmenuitem !important;
+}
+
+/* ::::: radio menuitem ::::: */
+
+menuitem[type="radio"] {
+  appearance: auto !important;
+  -moz-default-appearance: radiomenuitem !important;
+}
+
+/* ::::: menuseparator ::::: */
+
+menuseparator {
+  appearance: auto !important;
+  -moz-default-appearance: menuseparator !important;
+}
+
+%include ../../shared/menu-scrolling.inc.css

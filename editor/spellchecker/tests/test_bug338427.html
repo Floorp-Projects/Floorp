@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=338427
+-->
+<head>
+  <title>Test for Bug 338427</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=338427">Mozilla Bug 338427</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="editor" lang="testing-XX" spellcheck="true"></textarea>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 338427 **/
+function init() {
+    var onSpellCheck =
+      SpecialPowers.Cu.import(
+        "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+                   .onSpellCheck;
+    var textarea = document.getElementById("editor");
+    var editor = SpecialPowers.wrap(textarea).editor;
+    var spellchecker = editor.getInlineSpellChecker(true);
+    spellchecker.enableRealTimeSpell = true;
+    textarea.focus();
+
+    onSpellCheck(textarea, function() {
+        var list = spellchecker.spellChecker.GetDictionaryList();
+        ok(list.length > 0, "At least one dictionary should be present");
+
+        var lang = list[0];
+        spellchecker.spellChecker.SetCurrentDictionary(lang);
+
+        onSpellCheck(textarea, function() {
+            try {
+                var dictionary =
+                    spellchecker.spellChecker.GetCurrentDictionary();
+            } catch (e) {}
+            is(dictionary, lang, "Unexpected spell check dictionary");
+
+            // This will clear the content preferences and reset "spellchecker.dictionary".
+            spellchecker.spellChecker.SetCurrentDictionary("");
+            SimpleTest.finish();
+        });
+    });
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(init);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Handling of unsafe bidi chars</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<iframe id="test"></iframe>
+<script type="text/javascript">
+var unsafeBidiChars = [
+  "\xe2\x80\xaa", // LRE
+  "\xe2\x80\xab", // RLE
+  "\xe2\x80\xac", // PDF
+  "\xe2\x80\xad", // LRO
+  "\xe2\x80\xae",  // RLO
+];
+
+var tests = [
+  "{1}.test",
+  "{1}File.test",
+  "Fi{1}le.test",
+  "File{1}.test",
+  "File.{1}test",
+  "File.te{1}st",
+  "File.test{1}",
+  "File.{1}",
+];
+
+function replace(name, x) {
+  return name.replace(/\{1\}/, x);
+}
+
+function sanitize(name) {
+  return replace(name, "_");
+}
+
+add_task(async function() {
+  function promiseMessage(messageName) {
+    return new Promise(resolve => {
+      chromeScript.addMessageListener(messageName, function listener(data) {
+        chromeScript.removeMessageListener(messageName, listener);
+        resolve(data);
+      });
+    });
+  }
+
+  let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
+  let chromeScript = SpecialPowers.loadChromeScript(url);
+
+  function wrongAPICallListener(msg) {
+    ok(
+      false,
+      `Called ${msg} when improvements pref was set to ${
+        Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        )
+      }, which shouldn't happen.`
+    );
+  }
+  chromeScript.addMessageListener("wrongAPICall", wrongAPICallListener);
+
+  for (let prefVal of [false, true]) {
+    await SpecialPowers.pushPrefEnv({set: [["browser.download.improvements_to_download_panel", prefVal]]});
+    for (let test of tests) {
+      for (let char of unsafeBidiChars) {
+        let promiseName = promiseMessage("suggestedFileName");
+        let name = replace(test, char);
+        let expected = sanitize(test);
+        document.getElementById("test").src =
+          "unsafeBidiFileName.sjs?name=" + encodeURIComponent(name);
+        is((await promiseName), expected, "got the expected sanitized name");
+      }
+    }
+  }
+
+  // Clean up.
+  let promise = promiseMessage("unregistered");
+  chromeScript.sendAsyncMessage("unregister");
+  await promise;
+
+  chromeScript.removeMessageListener("wrongAPICall", wrongAPICallListener);
+  chromeScript.destroy();
+});
+</script>
+</body>
+</html>

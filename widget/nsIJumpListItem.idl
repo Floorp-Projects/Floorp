@@ -1,0 +1,137 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsILocalHandlerApp;
+interface nsIMutableArray;
+
+/**
+ * Implements Win7 Taskbar jump list item interfaces.
+ *
+ * Note to consumers: it's reasonable to expect we'll need support for other types
+ * of jump list items (an audio file, an email message, etc.). To add types,
+ * create the specific interface here, add an implementation class to WinJumpListItem,
+ * and add support to addListBuild & removed items processing.
+ *
+ */
+
+[scriptable, uuid(ACB8FB3C-E1B0-4044-8A50-E52C3E7C1057)]
+interface nsIJumpListItem : nsISupports
+{
+  const short JUMPLIST_ITEM_EMPTY      = 0; // Empty list item
+  const short JUMPLIST_ITEM_SEPARATOR  = 1; // Separator
+  const short JUMPLIST_ITEM_LINK       = 2; // Web link item
+  const short JUMPLIST_ITEM_SHORTCUT   = 3; // Application shortcut
+
+  /**
+   * Retrieves the jump list item type.
+   */
+  readonly attribute short type;
+
+  /**
+   * Compare this item to another.
+   *
+   * Compares the type and other properties specific to this item's
+   * type.
+   *
+   * separator: type
+   * link: type, uri, title
+   * shortcut: type, handler app
+   */
+  boolean equals(in nsIJumpListItem item);
+};
+
+/**
+ * A menu separator.
+ */
+
+[scriptable, uuid(69A2D5C5-14DC-47da-925D-869E0BD64D27)]
+interface nsIJumpListSeparator : nsIJumpListItem
+{
+  /* nothing needed here */
+};
+
+/**
+ * A URI link jump list item.
+ *
+ * Note the application must be the registered protocol
+ * handler for the protocol of the link.
+ */
+
+[scriptable, uuid(76EA47B1-C797-49b3-9F18-5E740A688524)]
+interface nsIJumpListLink : nsIJumpListItem
+{
+  /**
+   * Set or get the uri for this link item.
+   */
+  attribute nsIURI uri;
+
+  /**
+   * Set or get the title for a link item.
+   */
+  attribute AString uriTitle;
+
+  /**
+   * Get a 'privacy safe' unique string hash of the uri's
+   * spec. Useful in tracking removed items using visible
+   * data stores such as prefs. Generates an MD5 hash of
+   * the URI spec using nsICryptoHash.
+   */
+  readonly attribute ACString uriHash;
+
+  /**
+   * Compare this item's hash to another uri.
+   *
+   * Generates a spec hash of the incoming uri and compares
+   * it to this item's uri spec hash.
+   */
+  boolean compareHash(in nsIURI uri);
+};
+
+/**
+ * A generic application shortcut with command line support.
+ */
+
+[scriptable, uuid(CBE3A37C-BCE1-4fec-80A5-5FFBC7F33EEA)]
+interface nsIJumpListShortcut : nsIJumpListItem
+{
+  /**
+   * Set or get the handler app for this shortcut item.
+   *
+   * The handler app may also be used along with iconIndex to generate an icon
+   * for the jump list item.
+   *
+   * @throw NS_ERROR_FILE_NOT_FOUND if the handler app can
+   * not be found on  the system.
+   *
+   * @see faviconPageUri
+   */
+  attribute nsILocalHandlerApp app;
+
+  /**
+   * Set or get the icon displayed with the jump list item.
+   *
+   * Indicates the resource index of the icon contained within the handler
+   * executable which may be used as the jump list icon.
+   *
+   * @see faviconPageUri
+   */
+  attribute long iconIndex;
+
+  /**
+   * Set or get the URI of a page whose favicon may be used as the icon.
+   *
+   * When a jump list build occurs, the favicon to be used for the item is
+   * obtained using the following steps:
+   * - First, attempt to use the asynchronously retrieved and scaled favicon
+   * associated with the faviconPageUri.
+   * - If faviconPageUri is null, or if retrieving the favicon fails, fall
+   * back to using the handler executable and iconIndex.
+   */
+  attribute nsIURI faviconPageUri;
+};
+

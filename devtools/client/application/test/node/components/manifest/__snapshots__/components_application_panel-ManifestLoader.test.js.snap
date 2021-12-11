@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestLoader renders a message when it is loading 1`] = `
+<aside
+  className="manifest-loader"
+>
+  <Localized
+    id="manifest-loading"
+  >
+    <p
+      className="manifest-loader__load js-manifest-loading"
+    />
+  </Localized>
+</aside>
+`;
+
+exports[`ManifestLoader renders a message when manifest has failed to load 1`] = `
+<aside
+  className="manifest-loader"
+>
+  <Localized
+    id="manifest-loaded-error"
+    key="manifest-error-label"
+  >
+    <h1
+      className="js-manifest-loaded-error app-page__title"
+    />
+  </Localized>
+  <p
+    className="technical-text"
+    key="manifest-error-message"
+  >
+    lorem ipsum
+  </p>
+</aside>
+`;
+
+exports[`ManifestLoader renders a message when manifest has loaded OK 1`] = `
+<aside
+  className="manifest-loader"
+>
+  <Localized
+    id="manifest-loaded-ok"
+  >
+    <p
+      className="js-manifest-loaded-ok"
+    />
+  </Localized>
+</aside>
+`;

@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Verify remote mode</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+  "use strict";
+  // This test ensures we are running with the proper settings.
+  const {WebExtensionPolicy} = SpecialPowers.Cu.getGlobalForObject(SpecialPowers.Services);
+  SimpleTest.ok(WebExtensionPolicy.useRemoteWebExtensions, "extensions running remote");
+  SimpleTest.ok(!WebExtensionPolicy.isExtensionProcess, "testing from remote process");
+</script>
+
+</body>
+</html>

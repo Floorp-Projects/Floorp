@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<style>
+.test { hyphens:auto; font:10px Ubuntu Mono, Courier New, Courier, monospace; border: 1px solid silver; }
+</style>
+<body>
+<p>All the columns should appear identical:</p>
+<div id="outer" style="columns:6">
+<script>
+let outer = document.getElementById("outer");
+for (i = 1; i <= 6; ++i) {
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "0ch";
+  div.innerHTML = "the<br>flow-<br>rel-<br>a-<br>tive";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "2ch";
+  div.innerHTML = "the<br>flow-<br>rel-<br>a-<br>tive";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "4ch";
+  div.innerHTML = "the<br>flow-<br>rel-<br>a-<br>tive";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "6ch";
+  div.innerHTML = "the<br>flow-<br>rela-<br>tive";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "8ch";
+  div.innerHTML = "the<br>flow-<br>relative";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "10ch";
+  div.innerHTML = "the flow-<br>relative";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "12ch";
+  div.innerHTML = "the flow-<br>relative";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "14ch";
+  div.innerHTML = "the flow-<br>relative";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "16ch";
+  div.innerHTML = "the flow-<br>relative";
+  outer.appendChild(div);
+
+  div = document.createElement("div");
+  div.className = "test";
+  div.style.width = "18ch";
+  div.innerHTML = "the flow-relative";
+  outer.appendChild(div);
+}
+</script>

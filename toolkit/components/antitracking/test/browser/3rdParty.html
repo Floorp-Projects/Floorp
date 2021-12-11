@@ -1,0 +1,53 @@
+<html>
+<head>
+  <title>3rd party content!</title>
+  <script type="text/javascript" src="https://example.com/browser/toolkit/components/antitracking/test/browser/storageAccessAPIHelpers.js"></script>
+</head>
+<body>
+<h1>Here the 3rd party content!</h1>
+<script>
+
+function info(msg) {
+  parent.postMessage({ type: "info", msg }, "*");
+}
+
+function ok(what, msg) {
+  parent.postMessage({ type: "ok", what: !!what, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+onmessage = function(e) {
+  let data = e.data;
+  if (data.includes("!!!")) {
+    // The data argument may be packed with information about whether we are on
+    // the allow list.  In that case, extract that information and prepare it
+    // for our callbacks to access it.
+    let parts = data.split("!!!");
+    // Only consider ourselves allow-listed when the cookie policy is set to
+    // 'block third-party trackers or 'block third-party trackers and partition
+    // third-party cookies', since otherwise we won't obtain storage access by
+    // default, which is what this data is used for in tests.
+    let cookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+      ? SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior.pbmode")
+      : SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior");
+    window.allowListed =
+      parts[0] === "true" &&
+      (cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||
+       cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN ||
+       (cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN &&
+        SpecialPowers.Services.prefs.getBoolPref("network.cookie.rejectForeignWithExceptions.enabled")));
+    data = parts[1];
+  }
+  let runnableStr = `(() => {return (${data});})();`;
+  let runnable = eval(runnableStr); // eslint-disable-line no-eval
+  runnable.call(this, /* Phase */ 1).then(_ => {
+    parent.postMessage({ type: "finish" }, "*");
+  });
+};
+
+</script>
+</body>
+</html>

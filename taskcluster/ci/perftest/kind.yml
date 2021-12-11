@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+    - build
+
+transforms:
+    - gecko_taskgraph.transforms.perftest:transforms
+    - gecko_taskgraph.transforms.source_test:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+jobs-from:
+    - android.yml
+    - linux.yml
+    - macosx.yml
+    - windows.yml
+
+job-defaults:
+    run-on-projects: []
+    treeherder:
+        kind: other
+        tier: 3
+    worker:
+        taskcluster-proxy: true
+        max-run-time: 10800
+        env:
+            USE_ARTIFACT: '1'
+        artifacts:
+            - type: directory
+              name: public/build
+              path: artifacts
+    run:
+        run-as-root: true
+        using: run-task
+        checkout: false

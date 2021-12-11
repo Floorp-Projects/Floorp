@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test mpadded</title>
+  </head>
+  <body>
+    <math>
+      <!--height in term of height should not depend on the characters-->
+      <mpadded mathbackground="red" height="100height" depth="0">
+        <mphantom>
+          <mtext style="font-family: monospace">_</mtext>
+        </mphantom>
+      </mpadded>
+    </math>
+    <math>
+      <mpadded mathbackground="red" height="100height" depth="0">
+        <mphantom>
+          <mtext mathvariant="monospace">i</mtext>
+        </mphantom>
+      </mpadded>
+    </math>
+  </body>
+</html>

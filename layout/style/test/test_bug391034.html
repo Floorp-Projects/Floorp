@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=391034
+-->
+<head>
+  <title>Test for Bug 391034</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=391034">Mozilla Bug 391034</a>
+<div id="display" style="width: 90px; height: 80px">
+  <div id="width-ref" style="width: 2ch"></div>
+  <div id="width-ref2" style="width: 5ch"></div>
+  <div id="one" style="position: relative; left: 2ch; bottom: 5ch"></div>  
+  <div id="two" style="position: relative; left: 10%; bottom: 20%"></div>  
+  <div id="three" style="position: relative; left: 10px; bottom: 6px"></div>
+</div>
+<div id="content" style="display: none">
+  <div id="four" style="position: relative; left: 10%; bottom: 20%"></div>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 391034 **/
+function getComp(id) {
+ return document.defaultView.getComputedStyle($(id));
+}
+
+is(getComp("one").top, "-" + getComp("width-ref2").width,
+   "Incorrect computed top offset if specified in ch")
+is(getComp("one").right, "-" + getComp("width-ref").width,
+   "Incorrect computed right offset if specified in ch")
+is(getComp("one").bottom, getComp("width-ref2").width,
+   "Incorrect computed bottom offset if specified in ch")
+is(getComp("one").left, getComp("width-ref").width,
+   "Incorrect computed left offset if specified in ch")
+
+is(getComp("two").top, "-16px",
+   "Incorrect computed top offset if specified in %")
+is(getComp("two").right, "-9px",
+   "Incorrect computed right offset if specified in %")
+is(getComp("two").bottom, "16px",
+   "Incorrect computed bottom offset if specified in %")
+is(getComp("two").left, "9px",
+   "Incorrect computed left offset if specified in %")
+
+is(getComp("three").top, "-6px",
+   "Incorrect computed top offset if specified in %")
+is(getComp("three").right, "-10px",
+   "Incorrect computed right offset if specified in %")
+is(getComp("three").bottom, "6px",
+   "Incorrect computed bottom offset if specified in %")
+is(getComp("three").left, "10px",
+   "Incorrect computed left offset if specified in %")
+
+is(getComp("four").top, "auto",
+   "Incorrect undisplayed computed top offset if specified in %")
+is(getComp("four").right, "auto",
+   "Incorrect undisplayed computed right offset if specified in %")
+is(getComp("four").bottom, "20%",
+   "Incorrect undisplayed computed bottom offset if specified in %")
+is(getComp("four").left, "10%",
+   "Incorrect undisplayed computed left offset if specified in %")
+
+</script>
+</pre>
+</body>
+</html>
+

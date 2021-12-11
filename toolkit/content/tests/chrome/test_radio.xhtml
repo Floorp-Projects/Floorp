@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for radio buttons
+  -->
+<window title="Radio Buttons" width="500" height="600"
+        onload="setTimeout(test_radio, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="application/javascript" src="xul_selectcontrol.js"/>
+
+<radiogroup id="radiogroup"/>
+
+<radiogroup id="radiogroup-initwithvalue" value="two">
+  <radio label="One" value="one"/>
+  <radio label="Two" value="two"/>
+  <radio label="Three" value="three"/>
+</radiogroup>
+<radiogroup id="radiogroup-initwithselected" value="two">
+  <radio id="one" label="One" value="one" accesskey="o"/>
+  <radio id="two" label="Two" value="two" accesskey="t"/>
+  <radio label="Three" value="three" selected="true"/>
+</radiogroup>
+
+<radiogroup id="radio-creation" hidden="true" />
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+async function test_radio()
+{
+  var element = document.getElementById("radiogroup");
+  test_nsIDOMXULSelectControlElement(element, "radio", null);
+  test_nsIDOMXULSelectControlElement_UI(element, null);
+
+  window.blur();
+
+  var accessKeyDetails = (navigator.platform.includes("Mac")) ?
+                         { altKey : true, ctrlKey : true } :
+                         { altKey : true, shiftKey: true };
+  synthesizeKey("t", accessKeyDetails);
+
+  var radiogroup = $("radiogroup-initwithselected");
+  is(document.activeElement, radiogroup, "accesskey focuses radiogroup");
+  is(radiogroup.selectedItem, $("two"), "accesskey selects radio");
+
+  $("radiogroup-initwithvalue").focus();
+
+  $("one").disabled = true;
+  synthesizeKey("o", accessKeyDetails);
+
+  is(document.activeElement, $("radiogroup-initwithvalue"), "accesskey on disabled radio doesn't focus");
+  is(radiogroup.selectedItem, $("two"), "accesskey on disabled radio doesn't change selection");
+
+  info("Testing appending child");
+  var dynamicRadiogroup = document.querySelector("#radio-creation");
+  var radio = document.createXULElement("radio");
+  radio.setAttribute("selected", "true");
+  radio.setAttribute("label", "one");
+  radio.setAttribute("value", "one");
+  dynamicRadiogroup.appendChild(radio);
+  dynamicRadiogroup.appendChild(document.createXULElement("radio"));
+
+  dynamicRadiogroup.hidden = false;
+  info("Waiting for condition");
+  await SimpleTest.promiseWaitForCondition(() => dynamicRadiogroup.value == "one",
+    "Value gets set once child is constructed");
+  is(dynamicRadiogroup._radioChildren.length, 2, "Correct number of children");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+</window>

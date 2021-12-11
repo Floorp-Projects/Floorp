@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for paste with middle button click</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="container"></div>
+
+<textarea id="toCopyPlaintext" style="display: none;"></textarea>
+<iframe id="toCopyHTMLContent" srcdoc="<body></body>" style="display: none;"></iframe>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+// TODO: This file should test complicated cases too.
+//       E.g., pasting into existing content, e.g., pasting invalid child
+//       element for the parent elements at insertion point.
+
+async function copyPlaintext(aText) {
+  return new Promise(resolve => {
+    SimpleTest.waitForClipboard(aText,
+      () => {
+        let element = document.getElementById("toCopyPlaintext");
+        element.style.display = "block";
+        element.focus();
+        element.value = aText;
+        synthesizeKey("a", {accelKey: true});
+        synthesizeKey("c", {accelKey: true});
+      },
+      () => {
+        ok(true, `Succeeded to copy "${aText}" to clipboard`);
+        let element = document.getElementById("toCopyPlaintext");
+        element.style.display = "none";
+        resolve();
+      },
+      () => {
+        ok(false, `Failed to copy "${aText}" to clipboard`);
+        SimpleTest.finish();
+      });
+  });
+}
+
+async function copyHTMLContent(aInnerHTML) {
+  let iframe = document.getElementById("toCopyHTMLContent");
+  iframe.style.display = "block";
+  iframe.contentDocument.body.scrollTop;
+  iframe.contentDocument.body.innerHTML = aInnerHTML;
+  iframe.contentWindow.focus();
+  iframe.contentWindow.getSelection().selectAllChildren(iframe.contentDocument.body);
+  return new Promise(resolve => {
+    SimpleTest.waitForClipboard(
+      () => { return true; },
+      () => {
+        synthesizeKey("c", {accelKey: true}, iframe.contentWindow);
+      },
+      () => {
+        ok(true, `Succeeded to copy "${aInnerHTML}" to clipboard as HTML`);
+        iframe.style.display = "none";
+        resolve();
+      },
+      () => {
+        ok(false, `Failed to copy "${aInnerHTML}" to clipboard`);
+        SimpleTest.finish();
+      },
+      "text/html");
+  });
+}
+
+function checkInputEvent(aEvent, aInputType, aData, aDataTransfer, aTargetRanges, aDescription) {
+  ok(aEvent instanceof InputEvent,
+     `"${aEvent.type}" event should be dispatched with InputEvent interface ${aDescription}`);
+  is(aEvent.cancelable, aEvent.type === "beforeinput",
+     `"${aEvent.type}" event should ${aEvent.type === "beforeinput" ? "be" : "be never"} cancelable ${aDescription}`);
+  is(aEvent.bubbles, true,
+     `"${aEvent.type}" event should always bubble ${aDescription}`);
+  is(aEvent.inputType, aInputType,
+     `inputType of "${aEvent.type}" event should be "${aInputType}" ${aDescription}`);
+  is(aEvent.data, aData,
+     `data of "${aEvent.type}" event should be ${aData} ${aDescription}`);
+  if (aDataTransfer === null) {
+    is(aEvent.dataTransfer, null,
+       `dataTransfer of "${aEvent.type}" event should be null ${aDescription}`);
+  } else {
+    for (let dataTransfer of aDataTransfer) {
+      is(aEvent.dataTransfer.getData(dataTransfer.type), dataTransfer.data,
+         `dataTransfer of "${aEvent.type}" should have "${dataTransfer.data}" whose type is "${dataTransfer.type}" ${aDescription}`);
+    }
+  }
+  let targetRanges = aEvent.getTargetRanges();
+  if (aTargetRanges.length === 0) {
+    is(targetRanges.length, 0,
+       `getTargetRange() of "${aEvent.type}" event should return empty array: ${aDescription}`);
+  } else {
+    is(targetRanges.length, aTargetRanges.length,
+       `getTargetRange() of "${aEvent.type}" event should return static range array: ${aDescription}`);
+    if (targetRanges.length == aTargetRanges.length) {
+      for (let i = 0; i < targetRanges.length; i++) {
+        is(targetRanges[i].startContainer, aTargetRanges[i].startContainer,
+           `startContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+        is(targetRanges[i].startOffset, aTargetRanges[i].startOffset,
+           `startOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+        is(targetRanges[i].endContainer, aTargetRanges[i].endContainer,
+           `endContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+        is(targetRanges[i].endOffset, aTargetRanges[i].endOffset,
+           `endOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+      }
+    }
+  }
+}
+
+async function doTextareaTests(aTextarea) {
+  let beforeInputEvents = [];
+  let inputEvents = [];
+  function onBeforeInput(aEvent) {
+    beforeInputEvents.push(aEvent);
+  }
+  function onInput(aEvent) {
+    inputEvents.push(aEvent);
+  }
+  aTextarea.addEventListener("beforeinput", onBeforeInput);
+  aTextarea.addEventListener("input", onInput);
+
+  await copyPlaintext("abc\ndef\nghi");
+  aTextarea.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1, ctrlKey: true});
+  is(aTextarea.value,
+     "> abc\n> def\n> ghi\n\n",
+     "Pasted each line should start with \"> \"");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired #1');
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\nghi", null, [], "#1");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired #1');
+  checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\nghi", null, [], "#1");
+  aTextarea.value = "";
+
+  await copyPlaintext("> abc\n> def\n> ghi");
+  aTextarea.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1, ctrlKey: true});
+  is(aTextarea.value,
+     ">> abc\n>> def\n>> ghi\n\n",
+     "Pasted each line should be start with \">> \" when already quoted one level");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired #2');
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n> ghi", null, [], "#2");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired #2');
+  checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n> ghi", null, [], "#2");
+  aTextarea.value = "";
+
+  await copyPlaintext("> abc\n> def\n\nghi");
+  aTextarea.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1, ctrlKey: true});
+  is(aTextarea.value,
+     ">> abc\n>> def\n> \n> ghi\n\n",
+     "Pasted each line should be start with \">> \" when already quoted one level");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired #3');
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n\nghi", null, [], "#3");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired #3');
+  checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n\nghi", null, [], "#3");
+  aTextarea.value = "";
+
+  await copyPlaintext("abc\ndef\n\n");
+  aTextarea.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1, ctrlKey: true});
+  is(aTextarea.value,
+     "> abc\n> def\n> \n",
+     "If pasted text ends with \"\\n\", only the last line should not started with \">\"");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired #4');
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, [], "#4");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired #4');
+  checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, [], "#4");
+  aTextarea.value = "";
+
+  await copyPlaintext("abc\ndef\n\n");
+  aTextarea.addEventListener("paste", (event) => { event.preventDefault(); }, {once: true});
+  aTextarea.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1, ctrlKey: true});
+  is(aTextarea.value, "",
+     'Pasting as quote should have been canceled if "paste" event was canceled');
+  is(beforeInputEvents.length, 0,
+     'No "beforeinput" event should be fired since "paste" event was canceled #5');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired since "paste" was canceled #5');
+  aTextarea.value = "";
+
+  await copyPlaintext("abc\ndef\n\n");
+  aTextarea.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
+  aTextarea.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1, ctrlKey: true});
+  is(aTextarea.value, "",
+     'Pasting as quote should have been canceled if "beforeinput" event was canceled');
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired #5');
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, [], "#6");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired since "beforeinput" was canceled #6');
+  aTextarea.value = "";
+
+  let pasteEventCount = 0;
+  function pasteEventLogger(event) {
+    pasteEventCount++;
+  }
+  aTextarea.addEventListener("paste", pasteEventLogger);
+
+  await copyPlaintext("abc");
+  aTextarea.focus();
+  document.body.addEventListener("click", (event) => { event.preventDefault(); }, {capture: true, once: true});
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1});
+  is(aTextarea.value, "abc",
+     "If 'click' event is consumed at capturing phase of the <body>, paste should not be canceled");
+  is(pasteEventCount, 1,
+     "If 'click' event is consumed at capturing phase of the <body>, 'paste' event should still be fired");
+  is(beforeInputEvents.length, 1,
+     '"beforeinput" event should be fired when the "click" event is canceled');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, [], 'when the "click" event is canceled');
+  is(inputEvents.length, 1,
+     '"input" event should be fired when the "click" event is canceled');
+  checkInputEvent(inputEvents[0], "insertFromPaste", "abc", null, [], 'when the "click" event is canceled');
+  aTextarea.value = "";
+
+  await copyPlaintext("abc");
+  aTextarea.focus();
+  aTextarea.addEventListener("mouseup", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1});
+  is(aTextarea.value, "abc",
+     "Even if 'mouseup' event is consumed, paste should be done");
+  is(pasteEventCount, 1,
+     "Even if 'mouseup' event is consumed, 'paste' event should be fired once");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired even if "mouseup" event is canceled');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, [], 'even if "mouseup" event is canceled');
+  is(inputEvents.length, 1,
+     'One "input" event should be fired even if "mouseup" event is canceled');
+  checkInputEvent(inputEvents[0], "insertFromPaste", "abc", null, [], 'even if "mouseup" event is canceled');
+  aTextarea.value = "";
+
+  await copyPlaintext("abc");
+  aTextarea.focus();
+  aTextarea.addEventListener("click", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1});
+  is(aTextarea.value, "abc",
+     "If 'click' event handler is added to the <textarea>, paste should not be canceled");
+  is(pasteEventCount, 1,
+     "If 'click' event handler is added to the <textarea>, 'paste' event should be fired once");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired even if "click" event is canceled in bubbling phase');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, [], 'even if "click" event is canceled in bubbling phase');
+  is(inputEvents.length, 1,
+     'One "input" event should be fired even if "click" event is canceled in bubbling phase');
+  checkInputEvent(inputEvents[0], "insertFromPaste", "abc", null, [], 'even if "click" event is canceled in bubbling phase');
+  aTextarea.value = "";
+
+  await copyPlaintext("abc");
+  aTextarea.focus();
+  aTextarea.addEventListener("auxclick", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1});
+  is(aTextarea.value, "",
+     "If 'auxclick' event is consumed, paste should be canceled");
+  is(pasteEventCount, 0,
+     "If 'auxclick' event is consumed, 'paste' event should not be fired once");
+  is(beforeInputEvents.length, 0,
+     'No "beforeinput" event should be fired if "auxclick" event is canceled');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "auxclick" event is canceled');
+  aTextarea.value = "";
+
+  await copyPlaintext("abc");
+  aTextarea.focus();
+  aTextarea.addEventListener("paste", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1});
+  is(aTextarea.value, "",
+     "If 'paste' event is consumed, paste should be canceled");
+  is(pasteEventCount, 1,
+     'One "paste" event should be fired for making it possible to consume');
+  is(beforeInputEvents.length, 0,
+     'No "beforeinput" event should be fired if "paste" event is canceled');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "paste" event is canceled');
+  aTextarea.value = "";
+
+  await copyPlaintext("abc");
+  aTextarea.focus();
+  aTextarea.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aTextarea, {button: 1});
+  is(aTextarea.value, "",
+     "If 'beforeinput' event is consumed, paste should be canceled");
+  is(pasteEventCount, 1,
+     'One "paste" event should be fired before "beforeinput" event is consumed');
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired for making it possible to consume');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, [], 'when "beforeinput" is canceled in bubbling phase');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "paste" event is canceled');
+  aTextarea.value = "";
+
+  aTextarea.removeEventListener("paste", pasteEventLogger);
+  aTextarea.removeEventListener("beforeinput", onBeforeInput);
+  aTextarea.removeEventListener("input", onInput);
+}
+
+async function doContenteditableTests(aEditableDiv) {
+  let beforeInputEvents = [];
+  let inputEvents = [];
+  let selectionRanges = [];
+  function onBeforeInput(aEvent) {
+    beforeInputEvents.push(aEvent);
+    let selection = document.getSelection();
+    selectionRanges = [];
+    for (let i = 0; i < selection.rangeCount; i++) {
+      let range = selection.getRangeAt(i);
+      selectionRanges.push({startContainer: range.startContainer, startOffset: range.startOffset,
+                            endContainer: range.endContainer, endOffset: range.endOffset});
+    }
+  }
+  function onInput(aEvent) {
+    inputEvents.push(aEvent);
+  }
+  aEditableDiv.addEventListener("beforeinput", onBeforeInput);
+  aEditableDiv.addEventListener("input", onInput);
+
+  await copyPlaintext("abc\ndef\nghi");
+  aEditableDiv.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1, ctrlKey: true});
+  is(aEditableDiv.innerHTML,
+     "<blockquote type=\"cite\">abc<br>def<br>ghi</blockquote>",
+     "Pasted plaintext should be in <blockquote> element and each linebreaker should be <br> element");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired on the editing host');
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", null,
+                  [{type: "text/plain", data: "abc\ndef\nghi"}], selectionRanges, "(contenteditable)");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired on the editing host');
+  checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", null,
+                  [{type: "text/plain", data: "abc\ndef\nghi"}], [], "(contenteditable)");
+  aEditableDiv.innerHTML = "";
+
+  let pasteEventCount = 0;
+  function pasteEventLogger(event) {
+    pasteEventCount++;
+  }
+  aEditableDiv.addEventListener("paste", pasteEventLogger);
+
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  window.addEventListener("click", (event) => { event.preventDefault(); }, {capture: true, once: true});
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "abc",
+     "If 'click' event is consumed at capturing phase of the window, paste should not be canceled");
+  is(pasteEventCount, 1,
+     "If 'click' event is consumed at capturing phase of the window, 'paste' event should be fired once");
+  is(beforeInputEvents.length, 1,
+     '"beforeinput" event should still be fired when the "click" event is canceled (contenteditable)');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null,
+                  [{type: "text/plain", data: "abc"}], selectionRanges, 'when the "click" event is canceled (contenteditable)');
+  is(inputEvents.length, 1,
+     '"input" event should still be fired when the "click" event is canceled (contenteditable)');
+  checkInputEvent(inputEvents[0], "insertFromPaste", null,
+                  [{type: "text/plain", data: "abc"}], [], 'when the "click" event is canceled (contenteditable)');
+  aEditableDiv.innerHTML = "";
+
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  aEditableDiv.addEventListener("mouseup", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "abc",
+     "Even if 'mouseup' event is consumed, paste should be done");
+  is(pasteEventCount, 1,
+     "Even if 'mouseup' event is consumed, 'paste' event should be fired once");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired even if "mouseup" event is canceled (contenteditable)');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}], selectionRanges,
+                  'even if "mouseup" event is canceled (contenteditable)');
+  is(inputEvents.length, 1,
+     'One "input" event should be fired even if "mouseup" event is canceled (contenteditable)');
+  checkInputEvent(inputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}], [],
+                  'even if "mouseup" event is canceled (contenteditable)');
+  aEditableDiv.innerHTML = "";
+
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  aEditableDiv.addEventListener("click", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "abc",
+     "Even if 'click' event handler is added to the editing host, paste should not be canceled");
+  is(pasteEventCount, 1,
+     "Even if 'click' event handler is added to the editing host, 'paste' event should be fired");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired even if "click" event is canceled in bubbling phase (contenteditable)');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}], selectionRanges,
+                  'even if "click" event is canceled in bubbling phase (contenteditable)');
+  is(inputEvents.length, 1,
+     'One "input" event should be fired even if "click" event is canceled in bubbling phase (contenteditable)');
+  checkInputEvent(inputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}], [],
+                  'even if "click" event is canceled in bubbling phase (contenteditable)');
+  aEditableDiv.innerHTML = "";
+
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  aEditableDiv.addEventListener("auxclick", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "",
+     "If 'auxclick' event is consumed, paste should be canceled");
+  is(pasteEventCount, 0,
+     "If 'auxclick' event is consumed, 'paste' event should not be fired");
+  is(beforeInputEvents.length, 0,
+     'No "beforeinput" event should be fired if "auxclick" event is canceled (contenteditable)');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "auxclick" event is canceled (contenteditable)');
+  aEditableDiv.innerHTML = "";
+
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  aEditableDiv.addEventListener("paste", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "",
+     "If 'paste' event is consumed, paste should be canceled");
+  is(pasteEventCount, 1,
+     'One "paste" event should be fired for making it possible to consume');
+  is(beforeInputEvents.length, 0,
+     'No "beforeinput" event should be fired if "paste" event is canceled (contenteditable)');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "paste" event is canceled (contenteditable)');
+  aEditableDiv.innerHTML = "";
+
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  aEditableDiv.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "",
+     "If 'paste' event is consumed, paste should be canceled");
+  is(pasteEventCount, 1,
+     'One "paste" event should be fired before "beforeinput" event');
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired for making it possible to consume (contenteditable)');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}], selectionRanges,
+                  'when "beforeinput" will be canceled (contenteditable)');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "beforeinput" event is canceled (contenteditable)');
+  aEditableDiv.innerHTML = "";
+
+  // If clipboard event is disabled, InputEvent.dataTransfer should have only empty string.
+  await SpecialPowers.pushPrefEnv({"set": [["dom.event.clipboardevents.enabled", false]]});
+  await copyPlaintext("abc");
+  aEditableDiv.focus();
+  pasteEventCount = 0;
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1});
+  is(aEditableDiv.innerHTML, "abc",
+     "Even if clipboard event is disabled, paste should be done");
+  is(pasteEventCount, 0,
+     "If clipboard event is disabled, 'paste' event shouldn't be fired once");
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired even if clipboard event is disabled (contenteditable)');
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: ""}], selectionRanges,
+                  "when clipboard event is disabled (contenteditable)");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired even if clipboard event is disabled (contenteditable)');
+  checkInputEvent(inputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: ""}], [],
+                  "when clipboard event is disabled (contenteditable)");
+  await SpecialPowers.pushPrefEnv({"set": [["dom.event.clipboardevents.enabled", true]]});
+  aEditableDiv.innerHTML = "";
+
+  aEditableDiv.removeEventListener("paste", pasteEventLogger);
+
+  // Oddly, copyHTMLContent fails randomly only on Linux.  Let's skip this.
+  if (navigator.platform.startsWith("Linux")) {
+    aEditableDiv.removeEventListener("input", onInput);
+    return;
+  }
+
+  await copyHTMLContent("<p>abc</p><p>def</p><p>ghi</p>");
+  aEditableDiv.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  synthesizeMouseAtCenter(aEditableDiv, {button: 1, ctrlKey: true});
+  if (!navigator.appVersion.includes("Android")) {
+    is(aEditableDiv.innerHTML,
+       "<blockquote type=\"cite\"><p>abc</p><p>def</p><p>ghi</p></blockquote>",
+       "Pasted HTML content should be set to the <blockquote>");
+  } else {
+    // Oddly, on Android, we use <br> elements for pasting <p> elements.
+    is(aEditableDiv.innerHTML,
+       "<blockquote type=\"cite\">abc<br><br>def<br><br>ghi</blockquote>",
+       "Pasted HTML content should be set to the <blockquote>");
+  }
+  // On windows, HTML clipboard includes extra data.
+  // The values are from widget/windows/nsDataObj.cpp.
+  const kHTMLPrefix = (navigator.platform.includes("Win")) ? kTextHtmlPrefixClipboardDataWindows : "";
+  const kHTMLPostfix = (navigator.platform.includes("Win")) ? kTextHtmlSuffixClipboardDataWindows : "";
+  is(beforeInputEvents.length, 1,
+     'One "beforeinput" event should be fired when pasting HTML');
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", null,
+                  [{type: "text/html",
+                    data: `${kHTMLPrefix}<p>abc</p><p>def</p><p>ghi</p>${kHTMLPostfix}`}],
+                  selectionRanges,
+                  "when pasting HTML");
+  is(inputEvents.length, 1,
+     'One "input" event should be fired when pasting HTML');
+  checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", null,
+                  [{type: "text/html",
+                    data: `${kHTMLPrefix}<p>abc</p><p>def</p><p>ghi</p>${kHTMLPostfix}`}],
+                  [],
+                  "when pasting HTML");
+  aEditableDiv.innerHTML = "";
+
+  aEditableDiv.removeEventListener("beforeinput", onBeforeInput);
+  aEditableDiv.removeEventListener("input", onInput);
+}
+
+async function doNestedEditorTests(aEditableDiv) {
+  await copyPlaintext("CLIPBOARD TEXT");
+  aEditableDiv.innerHTML = '<p id="p">foo</p><textarea id="textarea"></textarea>';
+  aEditableDiv.focus();
+  let textarea = document.getElementById("textarea");
+  let pasteTarget = null;
+  function onPaste(aEvent) {
+    pasteTarget = aEvent.target;
+  }
+  document.addEventListener("paste", onPaste);
+
+  synthesizeMouseAtCenter(textarea, {button: 1});
+  is(pasteTarget.getAttribute("id"), "textarea",
+     "Target of 'paste' event should be the clicked <textarea>");
+  is(textarea.value, "CLIPBOARD TEXT",
+     "Clicking in <textarea> in an editable <div> should paste the clipboard text into the <textarea>");
+  is(aEditableDiv.innerHTML, '<p id="p">foo</p><textarea id="textarea"></textarea>',
+     "Pasting in the <textarea> shouldn't be handled by the HTMLEditor");
+
+  textarea.value = "";
+  textarea.readOnly = true;
+  pasteTarget = null;
+  synthesizeMouseAtCenter(textarea, {button: 1});
+  is(pasteTarget, textarea,
+     "Target of 'paste' event should be the clicked <textarea> even if it's read-only");
+  is(textarea.value, "",
+     "Clicking in read-only <textarea> in an editable <div> should not paste the clipboard text into the read-only <textarea>");
+  // HTMLEditor thinks that read-only <textarea> is not modifiable.
+  // Therefore, HTMLEditor does not paste the text.
+  is(aEditableDiv.innerHTML, '<p id="p">foo</p><textarea id="textarea" readonly=""></textarea>',
+     "Clicking in read-only <textarea> shouldn't cause pasting the clipboard text into its parent HTMLEditor");
+
+  textarea.value = "";
+  textarea.readOnly = false;
+  textarea.disabled = true;
+  pasteTarget = null;
+  synthesizeMouseAtCenter(textarea, {button: 1});
+  // Although, this compares with <textarea>, I'm not sure it's proper event
+  // target because of disabled <textarea>.
+  todo_is(pasteTarget, textarea,
+          "Target of 'paste' event should be the clicked <textarea> even if it's disabled");
+  is(textarea.value, "",
+     "Clicking in disabled <textarea> in an editable <div> should not paste the clipboard text into the disabled <textarea>");
+  // HTMLEditor thinks that disabled <textarea> is not modifiable.
+  // Therefore, HTMLEditor does not paste the text.
+  is(aEditableDiv.innerHTML, '<p id="p">foo</p><textarea id="textarea" disabled=""></textarea>',
+     "Clicking in disabled <textarea> shouldn't cause pasting the clipboard text into its parent HTMLEditor");
+
+  document.removeEventListener("paste", onPaste);
+  aEditableDiv.innerHTML = "";
+}
+
+async function doAfterRemoveOfClickedElementTest(aEditableDiv) {
+  await copyPlaintext("CLIPBOARD TEXT");
+  aEditableDiv.innerHTML = '<p id="p">foo<span id="span">bar</span></p>';
+  aEditableDiv.focus();
+  let span = document.getElementById("span");
+  let pasteTarget = null;
+  document.addEventListener("paste", (aEvent) => { pasteTarget = aEvent.target; }, {once: true});
+  document.addEventListener("auxclick", (aEvent) => {
+    is(aEvent.target.getAttribute("id"), "span",
+       "Target of auxclick event should be the <span> element");
+    span.parentElement.removeChild(span);
+  }, {once: true});
+  synthesizeMouseAtCenter(span, {button: 1});
+  is(pasteTarget.getAttribute("id"), "p",
+     "Target of 'paste' event should be the <p> element since <span> has gone");
+  // XXX Currently, pasted to start of the <p> because EventStateManager
+  //     do not recompute event target frame.
+  todo_is(aEditableDiv.innerHTML, '<p id="p">fooCLIPBOARD TEXT</p>',
+          "Clipbpard text should looks like replacing the <span> element");
+  aEditableDiv.innerHTML = "";
+}
+
+async function doNotStartAutoscrollInContentEditable(aEditableDiv) {
+  await SpecialPowers.pushPrefEnv({"set": [["general.autoScroll", true]]});
+  await copyPlaintext("CLIPBOARD TEXT");
+  aEditableDiv.innerHTML = '<p id="p">foo<span id="span">bar</span></p>';
+  aEditableDiv.focus();
+  let span = document.getElementById("span");
+  synthesizeMouseAtCenter(span, {button: 1});
+  ok(aEditableDiv.innerHTML.includes("CLIPBOARD TEXT"),
+    "Clipbpard text should be inserted");
+  aEditableDiv.innerHTML = "";
+}
+
+async function doTests() {
+  await SpecialPowers.pushPrefEnv({"set": [["middlemouse.paste", true],
+                                           ["middlemouse.contentLoadURL", false],
+                                           ["dom.event.clipboardevents.enabled", true]]});
+  let container = document.getElementById("container");
+  container.innerHTML = "<textarea id=\"editor\"></textarea>";
+  await doTextareaTests(document.getElementById("editor"));
+  container.innerHTML = "<div id=\"editor\" contenteditable style=\"min-height: 1em;\"></div>";
+  await doContenteditableTests(document.getElementById("editor"));
+  await doNestedEditorTests(document.getElementById("editor"));
+  await doAfterRemoveOfClickedElementTest(document.getElementById("editor"));
+  // NOTE: The following test sets `general.autoScroll` to true.
+  await doNotStartAutoscrollInContentEditable(document.getElementById("editor"));
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(doTests);
+</script>
+</pre>
+</body>
+</html>

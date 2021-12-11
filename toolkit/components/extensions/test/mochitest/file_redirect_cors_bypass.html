@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>1450965 Skip Cors Check for Early WebExtention Redirects</title>
+</head>
+<body>
+  <pre id="c">
+    Fetching ...
+  </pre>
+  <script>
+    "use strict";
+    let c = document.querySelector("#c");
+    const channel = new BroadcastChannel("test_bus");
+    function l(t) { c.innerText += `${t}\n`; }
+
+    fetch("https://example.org/tests/toolkit/components/extensions/test/mochitest/file_cors_blocked.txt")
+      .then(r => r.text())
+      .then(t => {
+        // This Request should have been redirected to /file_sample.txt in
+        // onBeforeRequest. So the text should be 'Sample'
+        l(`Loaded: ${t}`);
+        channel.postMessage(t);
+      }).catch(e => {
+        // The Redirect Failed, most likly due to a CORS Error
+        l(`e`);
+        channel.postMessage(e.toString());
+      });
+  </script>
+</body>
+</html>

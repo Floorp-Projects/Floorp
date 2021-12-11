@@ -1,0 +1,158 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library("imagetest")
+
+UNIFIED_SOURCES = [
+    "Common.cpp",
+    "TestADAM7InterpolatingFilter.cpp",
+    "TestAnimationFrameBuffer.cpp",
+    "TestBlendAnimationFilter.cpp",
+    "TestContainers.cpp",
+    "TestCopyOnWrite.cpp",
+    "TestDeinterlacingFilter.cpp",
+    "TestFrameAnimator.cpp",
+    "TestLoader.cpp",
+    "TestRemoveFrameRectFilter.cpp",
+    "TestStreamingLexer.cpp",
+    "TestSurfaceSink.cpp",
+    "TestSwizzleFilter.cpp",
+]
+
+# skip the test on windows10-aarch64, aarch64 due to 1544961
+if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
+    UNIFIED_SOURCES += [
+        "TestDecoders.cpp",
+        "TestDecodersPerf.cpp",
+        "TestDecodeToSurface.cpp",
+        "TestMetadata.cpp",
+        "TestSourceBuffer.cpp",
+        "TestSurfaceCache.cpp",
+    ]
+
+UNIFIED_SOURCES += [
+    "TestDownscalingFilter.cpp",
+    "TestSurfacePipeIntegration.cpp",
+]
+
+TEST_HARNESS_FILES.gtest += [
+    "animated-with-extra-image-sub-blocks.gif",
+    "blend.gif",
+    "blend.png",
+    "blend.webp",
+    "bug-1655846.avif",
+    "corrupt-with-bad-bmp-height.ico",
+    "corrupt-with-bad-bmp-width.ico",
+    "corrupt-with-bad-ico-bpp.ico",
+    "corrupt.jpg",
+    "downscaled.avif",
+    "downscaled.bmp",
+    "downscaled.gif",
+    "downscaled.ico",
+    "downscaled.icon",
+    "downscaled.jpg",
+    "downscaled.jxl",
+    "downscaled.png",
+    "downscaled.webp",
+    "exif_resolution.jpg",
+    "first-frame-green.gif",
+    "first-frame-green.png",
+    "first-frame-green.webp",
+    "first-frame-padding.gif",
+    "gray-235-10bit-full-range-bt2020.avif",
+    "gray-235-10bit-full-range-bt601.avif",
+    "gray-235-10bit-full-range-bt709.avif",
+    "gray-235-10bit-full-range-grayscale.avif",
+    "gray-235-10bit-limited-range-bt2020.avif",
+    "gray-235-10bit-limited-range-bt601.avif",
+    "gray-235-10bit-limited-range-bt709.avif",
+    "gray-235-10bit-limited-range-grayscale.avif",
+    "gray-235-12bit-full-range-bt2020.avif",
+    "gray-235-12bit-full-range-bt601.avif",
+    "gray-235-12bit-full-range-bt709.avif",
+    "gray-235-12bit-full-range-grayscale.avif",
+    "gray-235-12bit-limited-range-bt2020.avif",
+    "gray-235-12bit-limited-range-bt601.avif",
+    "gray-235-12bit-limited-range-bt709.avif",
+    "gray-235-12bit-limited-range-grayscale.avif",
+    "gray-235-8bit-full-range-bt2020.avif",
+    "gray-235-8bit-full-range-bt601.avif",
+    "gray-235-8bit-full-range-bt709.avif",
+    "gray-235-8bit-full-range-grayscale.avif",
+    "gray-235-8bit-limited-range-bt2020.avif",
+    "gray-235-8bit-limited-range-bt601.avif",
+    "gray-235-8bit-limited-range-bt709.avif",
+    "gray-235-8bit-limited-range-grayscale.avif",
+    "green-1x1-truncated.gif",
+    "green-large-bmp.ico",
+    "green-large-png.ico",
+    "green-multiple-sizes.ico",
+    "green.avif",
+    "green.bmp",
+    "green.gif",
+    "green.icc_srgb.webp",
+    "green.ico",
+    "green.icon",
+    "green.jpg",
+    "green.jxl",
+    "green.png",
+    "green.webp",
+    "hdlr-nonzero-reserved-bug-1727033.avif",
+    "invalid-truncated-metadata.bmp",
+    "large.avif",
+    "large.jxl",
+    "large.webp",
+    "multilayer.avif",
+    "no-frame-delay.gif",
+    "perf_cmyk.jpg",
+    "perf_gray.jpg",
+    "perf_gray.png",
+    "perf_gray_alpha.png",
+    "perf_srgb.gif",
+    "perf_srgb.png",
+    "perf_srgb_alpha.png",
+    "perf_srgb_alpha_lossless.webp",
+    "perf_srgb_alpha_lossy.webp",
+    "perf_srgb_lossless.webp",
+    "perf_srgb_lossy.webp",
+    "perf_ycbcr.jpg",
+    "rle4.bmp",
+    "rle8.bmp",
+    "stackcheck.avif",
+    "transparent-green-50pct-10bit-yuv420.avif",
+    "transparent-green-50pct-10bit-yuv422.avif",
+    "transparent-green-50pct-10bit-yuv444.avif",
+    "transparent-green-50pct-12bit-yuv420.avif",
+    "transparent-green-50pct-12bit-yuv422.avif",
+    "transparent-green-50pct-12bit-yuv444.avif",
+    "transparent-green-50pct-8bit-yuv420.avif",
+    "transparent-green-50pct-8bit-yuv422.avif",
+    "transparent-green-50pct-8bit-yuv444.avif",
+    "transparent-ico-with-and-mask.ico",
+    "transparent-if-within-ico.bmp",
+    "transparent-no-alpha-header.webp",
+    "transparent.avif",
+    "transparent.gif",
+    "transparent.jxl",
+    "transparent.png",
+    "transparent.webp",
+    "valid-avif-colr-nclx-and-prof.avif",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/gfx/2d",
+    "/image",
+]
+
+LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+
+FINAL_LIBRARY = "xul-gtest"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase: splitting vertical writing-mode blocks</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1328095">
+  <link rel="help" href="http://dev.w3.org/csswg/css-break/#break-decoration">
+  <link rel="help" href="https://drafts.csswg.org/css-writing-modes-3/">
+  <link rel="match" href="vertical-wm-001-ref.html">
+<style type="text/css">
+body,html { padding:30px; margin:0; }
+.col {
+  columns: 2;
+  column-gap: 0;
+  column-fill: auto;
+
+  block-size: 90px;
+  inline-size: 140px;
+  border:1px solid;
+}
+.vl { writing-mode: vertical-lr; }
+
+.inner {
+  border-block-start: 25px solid blue;
+  border-block-end: 17px solid grey;
+  inline-size: 70px;
+}
+
+x {
+  display:block;
+  break-inside:avoid;
+  page-break-inside:avoid;
+  vertical-align: top;
+  inline-size: 20px;
+  block-size: 20px;
+  background:silver;
+}
+x:nth-of-type(2n) {background:purple;}
+</style>
+</head>
+<body>
+
+<div class="col vl">
+<div class="inner" style="margin-block-start:40px">
+<x></x><x></x>
+</div>
+</div>
+
+<div class="col">
+<div class="inner" style="margin-block-start:40px">
+<x></x><x></x>
+</div>
+</div>
+
+<div class="col vl">
+<div class="inner" style="margin-block-start:40px; block-size:90px">
+<x></x><x></x>
+</div>
+</div>
+
+<div class="col vl">
+<div class="inner" style="margin-block-start:40px; block-size:100px">
+<x></x><x></x>
+</div>
+</div>
+
+</body>
+</html>

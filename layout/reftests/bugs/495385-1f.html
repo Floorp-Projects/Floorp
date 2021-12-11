@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Test that 'white-space' creates text frames between blocks (dynamically) when necessary -->
+<head>
+<script>
+function loaded() {
+  document.body.offsetHeight;
+  document.body.style.whiteSpace = 'pre-wrap';
+}
+</script>
+</head>
+<body onload="loaded()" style="border:1px solid black;">  Hello<div></div>  Hello
+<div></div>
+Hello</body></html>

@@ -1,0 +1,241 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test Iterable Interface</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script class="testbody" type="application/javascript">
+    /* global TestInterfaceIterableSingle, TestInterfaceIterableDouble, TestInterfaceIterableDoubleUnion */
+
+     SimpleTest.waitForExplicitFinish();
+     SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
+       var base_properties = [["entries", "function", 0],
+                              ["keys", "function", 0],
+                              ["values", "function", 0],
+                              ["forEach", "function", 1]];
+       var testExistence = function testExistence(prefix, obj, properties) {
+         for (var [name, type, args] of properties) {
+           // Properties are somewhere up the proto chain, hasOwnProperty won't work
+           isnot(obj[name], undefined,
+                 `${prefix} object has property ${name}`);
+
+           is(typeof obj[name], type,
+              `${prefix} object property ${name} is a ${type}`);
+           // Check function length
+           if (type == "function") {
+             is(obj[name].length, args,
+                `${prefix} object property ${name} is length ${args}`);
+             is(obj[name].name, name,
+                `${prefix} object method name is ${name}`);
+           }
+
+           // Find where property is on proto chain, check for enumerablility there.
+           var owner = obj;
+           while (owner) {
+             var propDesc = Object.getOwnPropertyDescriptor(owner, name);
+             if (propDesc) {
+               ok(propDesc.enumerable,
+                  `${prefix} object property ${name} is enumerable`);
+               break;
+             }
+             owner = Object.getPrototypeOf(owner);
+           }
+         }
+       };
+
+       var itr;
+       info("IterableSingle: Testing simple iterable creation and functionality");
+       itr = new TestInterfaceIterableSingle();
+       testExistence("IterableSingle: ", itr, base_properties);
+       is(itr[Symbol.iterator], Array.prototype[Symbol.iterator],
+          "IterableSingle: Should be using %ArrayIterator% for @@iterator");
+       is(itr.keys, Array.prototype.keys,
+          "IterableSingle: Should be using %ArrayIterator% for 'keys'");
+       is(itr.entries, Array.prototype.entries,
+          "IterableSingle: Should be using %ArrayIterator% for 'entries'");
+       is(itr.values, itr[Symbol.iterator],
+          "IterableSingle: Should be using @@iterator for 'values'");
+       is(itr.forEach, Array.prototype.forEach,
+          "IterableSingle: Should be using %ArrayIterator% for 'forEach'");
+       var keys = [...itr.keys()];
+       var values = [...itr.values()];
+       var entries = [...itr.entries()];
+       var key_itr = itr.keys();
+       var value_itr = itr.values();
+       var entries_itr = itr.entries();
+       for (let i = 0; i < 3; ++i) {
+         let key = key_itr.next();
+         let value = value_itr.next();
+         let entry = entries_itr.next();
+         is(key.value, i, "IterableSingle: Key iterator value should be " + i);
+         is(key.value, keys[i],
+            "IterableSingle: Key iterator value should match destructuring " + i);
+         is(value.value, key.value, "IterableSingle: Value iterator value should be " + key.value);
+         is(value.value, values[i],
+            "IterableSingle: Value iterator value should match destructuring " + i);
+         is(entry.value[0], i, "IterableSingle: Entry iterator value 0 should be " + i);
+         is(entry.value[1], i, "IterableSingle: Entry iterator value 1 should be " + i);
+         is(entry.value[0], entries[i][0],
+            "IterableSingle: Entry iterator value 0 should match destructuring " + i);
+         is(entry.value[1], entries[i][1],
+            "IterableSingle: Entry iterator value 1 should match destructuring " + i);
+       }
+
+       var callsToForEachCallback = 0;
+       var thisArg = {};
+       itr.forEach(function(value1, index, obj) {
+         is(index, callsToForEachCallback,
+            `IterableSingle: Should have the right index at ${callsToForEachCallback} calls to forEach callback`);
+         is(value1, values[index],
+            `IterableSingle: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
+         is(this, thisArg,
+            "IterableSingle: Should have the right this value for forEach callback");
+         is(obj, itr,
+            "IterableSingle: Should have the right third arg for forEach callback");
+         ++callsToForEachCallback;
+       }, thisArg);
+       is(callsToForEachCallback, 3,
+          "IterableSingle: Should have right total number of calls to forEach callback");
+
+       let key = key_itr.next();
+       let value = value_itr.next();
+       let entry = entries_itr.next();
+       is(key.value, undefined, "IterableSingle: Key iterator value should be undefined");
+       is(key.done, true, "IterableSingle: Key iterator done should be true");
+       is(value.value, undefined, "IterableSingle: Value iterator value should be undefined");
+       is(value.done, true, "IterableSingle: Value iterator done should be true");
+       is(entry.value, undefined, "IterableDouble: Entry iterator value should be undefined");
+       is(entry.done, true, "IterableSingle: Entry iterator done should be true");
+       is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
+          "[object Array Iterator]",
+          "iterator prototype should have the right brand");
+
+       // Simple dual type iterable creation and functionality test
+       info("IterableDouble: Testing simple iterable creation and functionality");
+       itr = new TestInterfaceIterableDouble();
+       testExistence("IterableDouble: ", itr, base_properties);
+       is(itr.entries, itr[Symbol.iterator],
+          "IterableDouble: Should be using @@iterator for 'entries'");
+       var elements = [["a", "b"], ["c", "d"], ["e", "f"]];
+       keys = [...itr.keys()];
+       values = [...itr.values()];
+       entries = [...itr.entries()];
+       key_itr = itr.keys();
+       value_itr = itr.values();
+       entries_itr = itr.entries();
+       for (let i = 0; i < 3; ++i) {
+         key = key_itr.next();
+         value = value_itr.next();
+         entry = entries_itr.next();
+         is(key.value, elements[i][0], "IterableDouble: Key iterator value should be " + elements[i][0]);
+         is(key.value, keys[i],
+            "IterableDouble: Key iterator value should match destructuring " + i);
+         is(value.value, elements[i][1], "IterableDouble: Value iterator value should be " + elements[i][1]);
+         is(value.value, values[i],
+            "IterableDouble: Value iterator value should match destructuring " + i);
+         is(entry.value[0], elements[i][0], "IterableDouble: Entry iterator value 0 should be " + elements[i][0]);
+         is(entry.value[1], elements[i][1], "IterableDouble: Entry iterator value 1 should be " + elements[i][1]);
+         is(entry.value[0], entries[i][0],
+            "IterableDouble: Entry iterator value 0 should match destructuring " + i);
+         is(entry.value[1], entries[i][1],
+            "IterableDouble: Entry iterator value 1 should match destructuring " + i);
+       }
+
+       callsToForEachCallback = 0;
+       thisArg = {};
+       itr.forEach(function(value1, key1, obj) {
+         is(key1, keys[callsToForEachCallback],
+            `IterableDouble: Should have the right key at ${callsToForEachCallback} calls to forEach callback`);
+         is(value1, values[callsToForEachCallback],
+            `IterableDouble: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
+         is(this, thisArg,
+            "IterableDouble: Should have the right this value for forEach callback");
+         is(obj, itr,
+            "IterableSingle: Should have the right third arg for forEach callback");
+         ++callsToForEachCallback;
+       }, thisArg);
+       is(callsToForEachCallback, 3,
+          "IterableDouble: Should have right total number of calls to forEach callback");
+
+       key = key_itr.next();
+       value = value_itr.next();
+       entry = entries_itr.next();
+       is(key.value, undefined, "IterableDouble: Key iterator value should be undefined");
+       is(key.done, true, "IterableDouble: Key iterator done should be true");
+       is(value.value, undefined, "IterableDouble: Value iterator value should be undefined");
+       is(value.done, true, "IterableDouble: Value iterator done should be true");
+       is(entry.value, undefined, "IterableDouble: Entry iterator value should be undefined");
+       is(entry.done, true, "IterableDouble: Entry iterator done should be true");
+       is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
+          "[object TestInterfaceIterableDouble Iterator]",
+          "iterator prototype should have the right brand");
+
+       // Simple dual type iterable creation and functionality test
+       info("IterableDoubleUnion: Testing simple iterable creation and functionality");
+       itr = new TestInterfaceIterableDoubleUnion();
+       testExistence("IterableDoubleUnion: ", itr, base_properties);
+       is(itr.entries, itr[Symbol.iterator],
+          "IterableDoubleUnion: Should be using @@iterator for 'entries'");
+       elements = [["long", 1], ["string", "a"]];
+       keys = [...itr.keys()];
+       values = [...itr.values()];
+       entries = [...itr.entries()];
+       key_itr = itr.keys();
+       value_itr = itr.values();
+       entries_itr = itr.entries();
+       for (let i = 0; i < elements.length; ++i) {
+         key = key_itr.next();
+         value = value_itr.next();
+         entry = entries_itr.next();
+         is(key.value, elements[i][0], "IterableDoubleUnion: Key iterator value should be " + elements[i][0]);
+         is(key.value, keys[i],
+            "IterableDoubleUnion: Key iterator value should match destructuring " + i);
+         is(value.value, elements[i][1], "IterableDoubleUnion: Value iterator value should be " + elements[i][1]);
+         is(value.value, values[i],
+            "IterableDoubleUnion: Value iterator value should match destructuring " + i);
+         is(entry.value[0], elements[i][0], "IterableDoubleUnion: Entry iterator value 0 should be " + elements[i][0]);
+         is(entry.value[1], elements[i][1], "IterableDoubleUnion: Entry iterator value 1 should be " + elements[i][1]);
+         is(entry.value[0], entries[i][0],
+            "IterableDoubleUnion: Entry iterator value 0 should match destructuring " + i);
+         is(entry.value[1], entries[i][1],
+            "IterableDoubleUnion: Entry iterator value 1 should match destructuring " + i);
+       }
+
+       callsToForEachCallback = 0;
+       thisArg = {};
+       itr.forEach(function(value1, key1, obj) {
+         is(key1, keys[callsToForEachCallback],
+            `IterableDoubleUnion: Should have the right key at ${callsToForEachCallback} calls to forEach callback`);
+         is(value1, values[callsToForEachCallback],
+            `IterableDoubleUnion: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
+         is(this, thisArg,
+            "IterableDoubleUnion: Should have the right this value for forEach callback");
+         is(obj, itr,
+            "IterableSingle: Should have the right third arg for forEach callback");
+         ++callsToForEachCallback;
+       }, thisArg);
+       is(callsToForEachCallback, 2,
+          "IterableDoubleUnion: Should have right total number of calls to forEach callback");
+
+       key = key_itr.next();
+       value = value_itr.next();
+       entry = entries_itr.next();
+       is(key.value, undefined, "IterableDoubleUnion: Key iterator value should be undefined");
+       is(key.done, true, "IterableDoubleUnion: Key iterator done should be true");
+       is(value.value, undefined, "IterableDoubleUnion: Value iterator value should be undefined");
+       is(value.done, true, "IterableDoubleUnion: Value iterator done should be true");
+       is(entry.value, undefined, "IterableDoubleUnion: Entry iterator value should be undefined");
+       is(entry.done, true, "IterableDoubleUnion: Entry iterator done should be true");
+       is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
+          "[object TestInterfaceIterableDoubleUnion Iterator]",
+          "iterator prototype should have the right brand");
+
+       SimpleTest.finish();
+     });
+    </script>
+  </body>
+</html>

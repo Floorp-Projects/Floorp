@@ -1,0 +1,247 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.sources-panel {
+  background-color: var(--theme-sidebar-background);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.sources-panel * {
+  user-select: none;
+}
+
+.sources-clear-root {
+  padding: 4px 8px;
+  width: 100%;
+  text-align: start;
+  white-space: nowrap;
+  color: inherit;
+  display: flex;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.sources-clear-root .home {
+  background-color: var(--theme-icon-dimmed-color);
+}
+
+.sources-clear-root .breadcrumb {
+  width: 5px;
+  margin: 0 2px 0 6px;
+  vertical-align: bottom;
+  background: var(--theme-text-color-alt);
+}
+
+.sources-clear-root-label {
+  margin-left: 5px;
+  line-height: 16px;
+}
+
+.sources-pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.sources-list {
+  flex: 1;
+  display: flex;
+}
+
+.sources-list .managed-tree {
+  flex: 1;
+  display: flex;
+}
+
+.sources-list .managed-tree .tree {
+  padding: 4px 0;
+}
+
+.sources-list .managed-tree .tree .node {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 3px 8px 3px 6px;
+}
+
+.sources-list .managed-tree .tree .tree-node:not(.focused):hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+.sources-list .img {
+  margin-inline-end: 4px;
+}
+
+.sources-list .tree .focused .img {
+  background-color: #ffffff;
+}
+
+/* Use the same width as .img.arrow */
+.sources-list .tree .img.no-arrow {
+  width: 10px;
+  visibility: hidden;
+}
+
+.sources-list .tree .label .suffix {
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--theme-comment);
+}
+
+.sources-list .tree .focused .label .suffix {
+  color: inherit;
+}
+
+.theme-dark .source-list .node.focused {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.sources-list .tree .label {
+  display: inline-block;
+  line-height: 16px;
+}
+
+.no-sources-message {
+  width: 100%;
+  font-style: italic;
+  text-align: center;
+  padding: 0.5em;
+  font-size: 12px;
+  user-select: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.sources-panel .outline {
+  display: flex;
+  height: 100%;
+}
+
+.source-outline-tabs {
+  font-size: 12px;
+  width: 100%;
+  background: var(--theme-body-background);
+  display: flex;
+  user-select: none;
+  box-sizing: border-box;
+  height: var(--editor-header-height);
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.source-outline-tabs .tab {
+  align-items: center;
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-toolbar-color);
+  cursor: default;
+  display: inline-flex;
+  flex: 1;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4px 8px;
+  position: relative;
+}
+
+.source-outline-tabs .tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--tab-line-color, transparent);
+  transition: transform 250ms var(--animation-curve),
+    opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.source-outline-tabs .tab.active {
+  --tab-line-color: var(--tab-line-selected-color);
+  color: var(--theme-toolbar-selected-color);
+  border-bottom-color: transparent;
+}
+
+.source-outline-tabs .tab:not(.active):hover {
+  --tab-line-color: var(--tab-line-hover-color);
+  background-color: var(--theme-toolbar-hover);
+}
+
+.source-outline-tabs .tab:hover::before,
+.source-outline-tabs .tab.active::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.source-outline-panel {
+  flex: 1;
+  overflow: auto;
+}
+
+.source-outline-panel.has-root > div {
+  height: 100%;
+}
+
+.source-outline-panel.has-root .thread-header {
+  margin-top: 4px;
+}
+
+.sources-list .img.blackBox {
+  mask-size: 13px;
+  background-color: var(--theme-icon-checked-color);
+}
+
+/*
+  Custom root styles
+*/
+.sources-pane.sources-list-custom-root {
+  display: block;
+  position: relative;
+}
+
+.sources-list-custom-root .sources-pane {
+  display: block;
+}
+
+.sources-list-custom-root .no-sources-message {
+  position: absolute;
+  top: 26px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Removes start margin when a custom root is used */
+.sources-list-custom-root
+  .tree
+  > .tree-node[data-expandable="false"][aria-level="0"] {
+  padding-inline-start: 4px;
+}
+
+.sources-list .tree-node[data-expandable="false"] .tree-indent:last-of-type {
+  margin-inline-end: 0;
+}
+
+.thread-header {
+  margin-top: 10px;
+}
+
+.thread-header .img.worker,
+.thread-header .img.file {
+  margin-top: -1px;
+  margin-inline-end: 4px;
+  margin-inline-start: 2px;
+}
+
+.thread-header .img.file {
+  margin-top: -2px;
+}
+
+.thread-header .label {
+  line-height: 15px;
+}

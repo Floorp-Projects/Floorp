@@ -1,0 +1,182 @@
+
+NAME
+    symkeyutil - manage fixed keys in the database
+
+SYNOPSIS
+    symkeyutil -H
+    symkeyutil -L [std_opts] [-r]
+    symkeyutil -K [-n name] -t type [-s size] [-i id |-j id_file] [std_opts]
+    symkeyutil -D <[-n name | -i id | -j id_file> [std_opts]
+    symkeyutil -I [-n name] [-t type] [-i id | -j id_file] -k data_file [std_opts]
+    symkeyutil -E  <-nname | -i id | -j id_file> [-t type] -k data_file [-r] [std_opts]
+    symkeyutil -U [-n name] [-t type] [-i id | -j id_file] -k data_file <wrap_opts> [std_opts]
+    symkeyutil -W <-n name | -i id | -j id_file> [-t type] -k data_file [-r] <wrap_opts> [std_opts]
+    symkeyutil -M <-n name | -i id | -j id_file> -g target_token [std_opts]
+      std_opts -> [-d certdir] [-P dbprefix] [-p password] [-f passwordFile] [-h token]
+      wrap_opts -> <-w wrap_name | -x wrap_id | -y id_file>
+
+DESCRIPTION
+
+    NSS can store fixed keys as well as asymetric keys in the database. The
+    symkeyutil command can be used to manage these keys. 
+
+    As with certutil, symkeyutil takes two types of arguments, commands and
+    options. Most commands fall into one of two catagories: commands which
+    create keys and commands which extract or destroy keys. 
+
+    Exceptions to these catagories are listed first:
+
+    -H    takes no additional options. It lists a more detailed help message.
+    -L    takes the standard set of options. It lists all the keys in the 
+          specified token (NSS Internal DB Token is the default).  Only the 
+          -L option accepts the all option for tokens to list all the fixed 
+          keys.
+
+    Key Creation commands:
+    For these commands, the key type (-t) option is always required. 
+    In addition, the -s option may be required for certain key types.
+    The standard set of options may be specified.
+
+    -K   Create a new key using the token key gen function.
+    -I   Import a new key from the raw data specified in the data file,
+         specified with the -k options (required). This command may fail on 
+         some tokens that don't support direct import of key material. 
+    -U   Unwrap a new key from an encrypted data file specified with the -k
+         option. The -w, -x, or -y option specifies the unwrapping key.
+         The unwrapping algorithm is selected based on the type of the 
+         unwrapping key.
+
+    Key extraction/destruction options:
+    For these keys, one and only of of the -n, -i, or -j options must be 
+    specified. If more than one key matches the -n option, the 'first' key
+    matching will be used.  The standard set of options may be specified.
+
+    -D   Delete the key specified by the -n, -i, or -j options.
+    -E   Export the key specified by the -n, -i, or -j options and store the
+         contents to a file specified by the -k file (required). 
+         This command will seldom work on any token since most keys are 
+         protected from export.
+    -W   Wrap the key specified by the -n, -i, or -j options and store the
+         encrypted contents to a file specified by the -k file (required). 
+         The -w, -x, or -y option specifies the key used to wrap the 
+         target key. 
+    -M   Move the key specified by the -n, -i, or -j options to the token
+         specified by the -g option (required). The new key will have the
+         same attributes as the source key.
+
+OPTIONS
+
+    Standard options are those options that may be used by any command, and
+    whose meaning is the same for all commands.
+
+    -h token         Specify the token which the command will operate on. 
+                     If -h is not specified the internal token is presumed. In
+                     addition the special value 'all' may be used to specify 
+                     that all tokens should be used. This is only valid for 
+                     the '-L' command.
+    -d certdir       Specify the location of the NSS databases. The default
+                     value is platform dependent.
+    -P dbprefix      Specify the prefix for the NSS database. The default value
+                     is NULL.
+    -p password      Specify the password for the token. On the command line. 
+                     The -p and -f options are mutually exclusive. If 
+                     neither option is specified, the password would be 
+                     prompted from the user.
+    -f passwordFile  Specify a file that contains the password for the token.
+                     This option is mutually exclusive to the -p option.
+
+    In addition to the standard options are the following command specific 
+    options are.
+
+    -r               Opens the NSS databases Read/Write. By default the -L,
+                     -E, and -W commands open the database read only. Other
+                     commands automatically opens the databases Read/Write and
+                     igore this option if it is specified.
+
+    -n name          Specifies the nickname for the key.
+
+                     For the -K, -I, or -U options, name is the name for 
+                     the new key.  If -n is not specified, no name is 
+                     assumed. There is not check for duplicate names.
+
+                     For the -D, -E, -W, or -M, the name specifies the key to
+                     operate on. In this case one andy only one of the -n, -i
+                     or -j options should be specifed. It is possible that
+                     the -n options specifies and ambiguous key. In that case
+                     the 'first' valid key is used.
+
+                     For the -M option, the nickname for the new key is copied
+                     from it's original key, even if the original key is
+                     specified using -i or -j.
+
+    -i key id
+    -j key id file   These options are equivalent and mutually exclusive. 
+                     They specify the key id for the file. The -i option
+                     specifies the key id on the command line using a hex 
+                     string. The -j specifies a file to read the raw key
+                     id from.
+
+                     For the -K, -I, or -U options, key id is the key id for 
+                     the new key.  If -i or -j is not specified, no key id 
+                     is assumed.  Some tokens may generate their own unique 
+                     id for the key in this case (but it is not guarrenteed).
+
+                     For the -D, -E, -W, or -M, the key id specifies the key to
+                     operate on. In this case one andy only one of the -n, -i
+                     or -j options should be specifed. 
+
+   -t type           Specifies the key Type for the new key. This option is
+                     required for the -K, -I, and -U commands. Valid values
+                     are:
+			generic, rc2, rc4, des, des2, des3, cast, cast3,
+                        cast5, cast128, rc5, idea, skipjack, baton, juniper,
+                        cdmf, aes, camellia
+
+                     Not all tokens support all key types. The generic key
+                     type is usually used in MACing and key derivation 
+                     algorithms. Neither generic nor rc4 keys may be used
+                     to wrap other keys. Fixed rc4 keys are dangerous since
+                     multiple use of the same stream cipher key to encrypted
+                     different data can compromise all data encrypted with
+                     that key.
+
+   -s size           Specifies the key size. For most situations the key size
+                     is already known and need not be specified. For some 
+                     algorithms, however, it is necessary to specify the key
+                     size when generation or unwrapping the key.
+
+   -k key file       Specifies the name of a file that contains key data to
+                     import or unwrap (-I or -U), or the location to store
+                     key data or encrypted key data (-E or -W).
+
+   -g target token   Specifies the target token when moving a key (-M). This
+                     option is required for the -M command. It is invalid for
+                     all other commands.
+
+
+
+   -w wrap name
+   -x wrap key id
+   -y wrap key id file Specifies the wrapping key used int the -U and -W
+                      command. Exactly one of these must be specified for the
+                      -U or -W commands. Same semantics as the -n, -i, and -j
+                      options above.
+
+BUGS
+
+   There is no way display the key id of a key.
+
+   The -p and -f options only specifies one password. Multiple passwords may
+   be needed for the -L -h all command and the -M command.
+
+   Perhaps RC4 should not be supported as a key type. Use of these keys as
+   fixed keys is exceedingly dangerous.
+
+   The handling of multiple keys with the same nickname should be more 
+   deterministic than 'the first one'
+
+   There is no way to specify, or display the operation flags of a key. The
+   operation flags are not copied with the -M option as they should be.
+
+   There is no way to change the attributes of a key (nickname, id, operation
+   flags).

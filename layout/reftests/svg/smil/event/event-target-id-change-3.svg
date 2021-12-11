@@ -1,0 +1,16 @@
+<!-- Test that changes to ID assignments are reflected in event registration.
+     Test with end specifications. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(1);
+        document.getElementById('square').setAttribute('id', 'rect');
+        click('rect');
+        delayedSnapshot(2)">
+  <script xlink:href="event-util.js" type="text/javascript"/>
+  <rect width="100" height="100" fill="green" id="square"/>
+  <set xlink:href="#rect" attributeName="fill" attributeType="CSS" to="red"
+    begin="0s" end="click" dur="4s"/>
+</svg>

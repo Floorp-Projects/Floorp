@@ -1,0 +1,55 @@
+load 117307-1.html
+load 193710.html
+load 290162-1.html
+load 326615-1.html
+load 328553-1.html
+load 346258-1.html
+load 346512-1.xhtml
+load 382133-1.html
+load 386680-1.html
+load 394810-1.html
+load 400349-1.html
+load 403356-1.html
+load 418139-1.svg
+load 420513-1.html
+load 453935-1.html
+load 467693-1.html
+load 468552-1.html
+load 475185-1.html
+load 475291-1.html
+load 503286-1.html
+load 504000-1.html
+load 509075-1.html
+load 512815-1.html
+load 515726-1.html
+load 545291-1.html
+load 558979.html
+load 601284-1.html
+load 603146-1.html
+load 603858-1.html
+load 608963.html
+load 616930-1.html
+# This test has jit-related infinite recursion, which is slow enough to cause
+# timeouts on mac. See bug 908895.
+skip-if(cocoaWidget&&isDebugBuild) load 639737-1.html
+load 648206-1.html
+load 720305-1.html
+load 721910.html
+load 723465.html
+load 732870.html
+load 751995.html
+load 761831.html
+asserts(0-1) load 752038.html # We may hit bug 645229 here.
+load 753162.html
+load 754311.html
+asserts(0-1) load 786142.html # We may hit bug 645229 here.
+load 797583.html
+load 806751.html
+load 833856.html
+load 851418.html
+load 854139.html
+load 854604.html
+pref(dom.use_xbl_scopes_for_remote_xul,true) load 898939.html
+pref(security.fileuri.strict_origin_policy,false) load 938297.html
+load 977538.html
+load 1577573.html

@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <script>
+      onpageshow = function(pageShowEvent) {
+        var bc = new BroadcastChannel("evict_from_bfcache");
+        bc.onmessage = function(event) {
+          if (event.data == "nextpage") {
+            bc.close();
+            location.href += "?nextpage";
+          } else if (event.data == "back") {
+            bc.close();
+            history.back();
+          } else if (event.data == "forward") {
+            // Note, we don't close BroadcastChannel
+            history.forward();
+          } else if (event.data == "close") {
+            bc.postMessage("closed");
+            bc.close();
+            window.close();
+          }
+        }
+
+        bc.postMessage({ type: "pageshow", persisted: pageShowEvent.persisted});
+      };
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

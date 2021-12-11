@@ -1,0 +1,27 @@
+# HG changeset patch
+# Parent b12f9a408740aa5fd93c296a7d41e1b5f54c1b20
+Bug 974900 - #undef interface defined by windows headers - r=gw280
+
+diff --git a/gfx/skia/trunk/src/gpu/gl/GrGLCaps.h b/gfx/skia/trunk/src/gpu/gl/GrGLCaps.h
+--- a/gfx/skia/trunk/src/gpu/gl/GrGLCaps.h
++++ b/gfx/skia/trunk/src/gpu/gl/GrGLCaps.h
+@@ -9,16 +9,19 @@
+ #ifndef GrGLCaps_DEFINED
+ #define GrGLCaps_DEFINED
+ 
+ #include "GrDrawTargetCaps.h"
+ #include "GrGLStencilBuffer.h"
+ #include "SkTArray.h"
+ #include "SkTDArray.h"
+ 
++// defined in Windows headers
++#undef interface
++
+ class GrGLContextInfo;
+ 
+ /**
+  * Stores some capabilities of a GL context. Most are determined by the GL
+  * version and the extensions string. It also tracks formats that have passed
+  * the FBO completeness test.
+  */
+ class GrGLCaps : public GrDrawTargetCaps {

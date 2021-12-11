@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=610390
+-->
+<window title="Mozilla Bug 610390"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <iframe type="content"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      src="data:text/html,&lt;script&gt;var x=3&lt;/script&gt;"
+      onload="go()"
+      id="ifr">
+    </iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    function go() {
+      var w = $('ifr').contentWindow;
+      is(w.wrappedJSObject, w.wrappedJSObject, "wrappedJSObject identity not maintained");
+      SimpleTest.finish();
+    }
+  ]]></script>
+</window>

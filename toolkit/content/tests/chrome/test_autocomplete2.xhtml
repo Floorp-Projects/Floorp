@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Autocomplete Widget Test 2"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<html:input id="autocomplete"
+            is="autocomplete-input"
+            autocompletesearch="simple"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+// Set to indicate whether or not we want autoCompleteSimple to return a result
+var returnResult = false;
+
+const ACR = Ci.nsIAutoCompleteResult;
+
+// This result can't be constructed in-line, because otherwise we leak memory.
+function nsAutoCompleteSimpleResult(aString)
+{
+  this.searchString = aString;
+  if (returnResult) {
+    this.searchResult = ACR.RESULT_SUCCESS;
+    this.matchCount = 1;
+    this._param = "SUCCESS";
+  }
+}
+
+nsAutoCompleteSimpleResult.prototype = {
+ _param: "",
+ searchString: null,
+ searchResult: ACR.RESULT_FAILURE,
+ defaultIndex: -1,
+ errorDescription: null,
+ matchCount: 0,
+ getValueAt() { return this._param; },
+ getCommentAt() { return null; },
+ getStyleAt() { return null; },
+ getImageAtn() { return null; },
+ getFinalCompleteValueAt() { return this.getValueAt(); },
+ getLabelAt() { return null; },
+ removeValueAt() {}
+};
+
+// A basic autocomplete implementation that either returns one result or none
+var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
+var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
+var autoCompleteSimple = {
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIAutoCompleteSearch"]),
+
+  createInstance(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  startSearch(aString, aParam, aResult, aListener) {
+    var result = new nsAutoCompleteSimpleResult(aString);
+    aListener.onSearchResult(this, result);
+  },
+
+  stopSearch() {}
+};
+
+var componentManager = Components.manager
+                                 .QueryInterface(Ci.nsIComponentRegistrar);
+componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
+                                 autoCompleteSimpleName, autoCompleteSimple);
+
+var element = document.getElementById("autocomplete");
+
+// Create stub to intercept `onSearchComplete` event.
+element.onSearchComplete = function(original) {
+  return function() {
+    original.apply(this, arguments);
+    checkResult();
+  };
+}(element.onSearchComplete);
+
+// Test Bug 441530 - correctly setting "nomatch"
+// Test Bug 441526 - correctly setting style with "highlightnonmatches"
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(startTest, 0);
+
+function startTest() {
+  var autocomplete = $("autocomplete");
+
+  // Ensure highlightNonMatches can be set correctly.
+
+  // This should not be set by default.
+  is(autocomplete.hasAttribute("highlightnonmatches"), false,
+     "highlight nonmatches not set by default");
+
+  autocomplete.highlightNonMatches = "true";
+
+  is(autocomplete.getAttribute("highlightnonmatches"), "true",
+     "highlight non matches attribute set correctly");
+  is(autocomplete.highlightNonMatches, true,
+     "highlight non matches getter returned correctly");
+
+  autocomplete.highlightNonMatches = "false";
+
+  is(autocomplete.getAttribute("highlightnonmatches"), "false",
+     "highlight non matches attribute set to false correctly");
+  is(autocomplete.highlightNonMatches, false,
+     "highlight non matches getter returned false correctly");
+
+  check();
+}
+
+function check() {
+  var autocomplete = $("autocomplete");
+
+  // Toggle this value, so we can re-use the one function.
+  returnResult = !returnResult;
+
+  // blur the field to ensure that the popup is closed and that the previous
+  // search has stopped, then start a new search.
+  autocomplete.blur();
+  autocomplete.focus();
+  sendString("r");
+}
+
+function checkResult() {
+  var autocomplete = $("autocomplete");
+  var style = window.getComputedStyle(autocomplete);
+
+  if (returnResult) {
+    // Result was returned, so there should not be a nomatch attribute
+    is(autocomplete.hasAttribute("nomatch"), false,
+       "nomatch attribute shouldn't be present here");
+
+    // Ensure that the style is set correctly whichever way highlightNonMatches
+    // is set.
+    autocomplete.highlightNonMatches = "true";
+
+    isnot(style.color, "rgb(255, 0, 0)",
+          "not nomatch and highlightNonMatches - should not be red");
+
+    autocomplete.highlightNonMatches = "false";
+
+    isnot(style.color, "rgb(255, 0, 0)",
+          "not nomatch and not highlightNonMatches - should not be red");
+
+    setTimeout(check, 0);
+  }
+  else {
+    // No result was returned, so there should be nomatch attribute
+    is(autocomplete.getAttribute("nomatch"), "true",
+       "nomatch attribute not correctly set when expected");
+
+    // Ensure that the style is set correctly whichever way highlightNonMatches
+    // is set.
+    autocomplete.highlightNonMatches = "true";
+
+    is(style.color, "rgb(255, 0, 0)",
+       "nomatch and highlightNonMatches - should be red");
+
+    autocomplete.highlightNonMatches = "false";
+
+    isnot(style.color, "rgb(255, 0, 0)",
+          "nomatch and not highlightNonMatches - should not be red");
+
+    setTimeout(function() {
+      // Unregister the factory so that we don't get in the way of other tests
+      componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
+      SimpleTest.finish();
+    }, 0);
+  }
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

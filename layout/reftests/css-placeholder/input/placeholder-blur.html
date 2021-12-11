@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler()
+    {
+      document.getElementById('i').focus();
+    }
+    function focusHandler()
+    {
+      document.getElementById('i').blur();
+    }
+    function blurHandler()
+    {
+      document.getElementById('moz').focus();
+    }
+    function focusHandlerMoz()
+    {
+      document.getElementById('moz').blur();
+    }
+    function blurHandlerMoz()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='loadHandler();'>
+    <input id='i' placeholder='foo' onfocus='focusHandler();' onblur='blurHandler();'>
+    <input id='moz' placeholder='bar' onfocus='focusHandlerMoz();' onblur='blurHandlerMoz();'>
+  </body>
+</html>

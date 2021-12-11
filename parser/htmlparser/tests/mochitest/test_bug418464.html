@@ -1,0 +1,43 @@
+<form name="formGo" method="post">
+  <input type="hidden">
+</form>
+<script>
+  var form1 = document.formGo;
+</script>
+<form name="formGo2" method="post">
+  <input type="Hidden">
+</form>
+<script>
+  var form2 = document.formGo2;
+</script>
+  <!-- NOTE: The forms and scripts above this comment _must_ come first in this file-->
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=418464
+-->
+<head>
+  <title>Test for Bug 418464</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418464">Mozilla Bug 418464</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 418464 **/
+  is(form1 instanceof HTMLFormElement, true,
+     "Should have a form here");
+  is(form2 instanceof HTMLFormElement, true,
+     "Should have a form here");
+
+</script>
+</pre>
+</body>
+</html>
+

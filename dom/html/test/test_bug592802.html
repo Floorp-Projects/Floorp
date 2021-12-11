@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=592802
+-->
+<head>
+  <title>Test for Bug 592802</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=592802">Mozilla Bug 592802</a>
+<p id="display"></p>
+<div id="content">
+  <input id='a' type='file'>
+  <input id='a2' type='file'>
+</div>
+<button id='b' onclick="document.getElementById('a').click();">Show Filepicker</button>
+<button id='b2' onclick="document.getElementById('a2').click();">Show Filepicker</button>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 592802 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.init(window);
+
+var testData = [
+/* visibility | display | multiple */
+  [ "",       "",     false ],
+  [ "hidden", "",     false ],
+  [ "",       "none", false ],
+  [ "",       "",     true ],
+  [ "hidden", "",     true ],
+  [ "",       "none", true ],
+];
+
+var testCounter = 0;
+var testNb = testData.length;
+
+function finished()
+{
+  MockFilePicker.cleanup();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(function() {
+  // mockFilePicker will simulate a cancel for the first time the file picker will be shown.
+  MockFilePicker.returnValue = MockFilePicker.returnCancel;
+
+  var b2 = document.getElementById('b2');
+  b2.focus(); // Be sure the element is visible.
+  document.getElementById('b2').addEventListener("change", function(aEvent) {
+    ok(false, "When cancel is received, change should not fire");
+  }, {once: true});
+  b2.click();
+
+  // Now, we can launch tests when file picker isn't canceled.
+  MockFilePicker.useBlobFile();
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+  var b = document.getElementById('b');
+  b.focus(); // Be sure the element is visible.
+
+  document.getElementById('a').addEventListener("change", function(aEvent) {
+    ok(true, "change event correctly sent");
+    ok(aEvent.bubbles, "change event should bubble");
+    ok(!aEvent.cancelable, "change event should not be cancelable");
+    testCounter++;
+
+    if (testCounter >= testNb) {
+      aEvent.target.removeEventListener("change", arguments.callee);
+      SimpleTest.executeSoon(finished);
+    } else {
+      var data = testData[testCounter];
+      var a = document.getElementById('a');
+      a.style.visibility = data[0];
+      a.style.display = data[1];
+      a.multiple = data[2];
+
+      SimpleTest.executeSoon(function() {
+        b.click();
+      });
+    }
+  });
+
+  b.click();
+});
+
+</script>
+</pre>
+</body>
+</html>

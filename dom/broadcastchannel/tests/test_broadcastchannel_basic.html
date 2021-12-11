@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script type="application/javascript">
+
+function runTest() {
+  addEventListener("message", receiveMessage, false);
+  function receiveMessage(evt) {
+    if (evt.data.status == "OK") {
+      ok(true, evt.data.message);
+    } else if (evt.data.status == "KO") {
+      ok(false, evt.data.message);
+    } else {
+      ok(false, "Unknown message");
+    }
+  }
+
+  ok("BroadcastChannel" in window, "BroadcastChannel exists");
+
+  var bc = new BroadcastChannel("foobar");
+  ok(bc, "BroadcastChannel can be created");
+  is(bc.name, "foobar", "BroadcastChannel.name is foobar");
+
+  ok("postMessage" in bc, "BroadcastChannel has postMessage() method");
+
+  bc.onmessage = function(evt) {
+    ok(evt instanceof MessageEvent, "This is a MessageEvent");
+    is(evt.target, bc, "MessageEvent.target is bc");
+    is(evt.target.name, "foobar", "MessageEvent.target.name is foobar");
+    is(evt.target.name, bc.name, "MessageEvent.target.name == bc.name");
+    ok(evt.origin.indexOf("http://mochi.test:8888") == 0, "MessageEvent.origin is correct");
+    is(evt.data, "Hello world from the iframe!", "The message from the iframe has been received!");
+    SimpleTest.finish();
+  };
+
+  var div = document.getElementById("content");
+  ok(div, "Parent exists");
+
+  var ifr = document.createElement("iframe");
+  ifr.addEventListener("load", iframeLoaded);
+  ifr.setAttribute("src", "iframe_broadcastchannel.html");
+  div.appendChild(ifr);
+
+  function iframeLoaded() {
+    bc.postMessage("Hello world from the window!");
+  }
+
+  // A leak test
+  var dummyBc = new BroadcastChannel("dont_leak_this");
+  dummyBc.foo = "bar";
+  // don't add message listener!
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+</script>
+</body>
+</html>

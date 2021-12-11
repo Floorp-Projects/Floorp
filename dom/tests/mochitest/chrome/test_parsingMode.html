@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>CSSStyleSheet parsingMode test - bug 1230491</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  function sheetText(sheet) {
+    return [...sheet.cssRules].map(r => r.cssText).join();
+  }
+  function run() {
+    const sss = Cc["@mozilla.org/content/style-sheet-service;1"]
+      .getService(Ci.nsIStyleSheetService);
+    const utils = window.windowUtils;
+
+    const userUrl = encodeURI("data:text/css,body { color: seagreen; -moz-window-transform: none }");
+    utils.loadSheetUsingURIString(userUrl, sss.USER_SHEET);
+
+    const agentUrl = encodeURI("data:text/css,body { color: tomato; }");
+    utils.loadSheetUsingURIString(agentUrl, sss.AGENT_SHEET);
+
+    const authorUrl = "chrome://mochikit/content/tests/SimpleTest/test.css";
+
+    let results = [];
+    for (let sheet of InspectorUtils.getAllStyleSheets(document)) {
+      if (sheet.href === agentUrl) {
+        is(sheet.parsingMode, "agent", "agent sheet has expected mode");
+        results[sss.AGENT_SHEET] = 1;
+      } else if (sheet.href === userUrl) {
+        is(sheet.parsingMode, "user", "user sheet has expected mode");
+        is(sheet.cssRules[0].style.length, 2, "Chrome-only properties are parsed in user sheet")
+        results[sss.USER_SHEET] = 1;
+      } else if (sheet.href === authorUrl) {
+        is(sheet.parsingMode, "author", "author sheet has expected mode");
+        results[sss.AUTHOR_SHEET] = 1;
+      } else if (sheet.href === "about:PreferenceStyleSheet") {
+        is(sheet.parsingMode, "agent",
+           "about:PreferenceStyleSheet has agent mode");
+        continue;
+      } else {
+        // Ignore sheets we don't care about.
+        continue;
+      }
+
+      // Check that re-parsing preserves the mode.
+      let mode = sheet.parsingMode;
+      let text = sheetText(sheet);
+      InspectorUtils.parseStyleSheet(sheet, "body { color: chartreuse; }");
+      if (mode == "agent") {
+        is(sheetText(sheet), text,
+           "Reparsing should not have changed a UA sheet");
+      } else {
+        isnot(sheetText(sheet), text,
+           "Reparsing should have changed a non-UA sheet");
+      }
+      is(sheet.parsingMode, mode,
+         "check that re-parsing preserved mode " + mode);
+    }
+
+    ok(results[sss.AGENT_SHEET] && results[sss.USER_SHEET] &&
+      results[sss.AUTHOR_SHEET],
+      "all sheets seen");
+
+    SimpleTest.finish();
+  }
+</script>
+</head>
+<body onload="run()">
+  <div> What? </div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<html class="reftest-wait">
+<head>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var fourehdiv = document.getElementById("foureh");
+  var parent = fourehdiv.parentNode;
+
+  for (var i = 2; i <= 3; i++) {
+    var newdiv = document.createElement("div");
+    newdiv.appendChild(document.createTextNode(i + "a"));
+    parent.insertBefore(newdiv, fourehdiv);
+  }
+
+  var fourbeediv = document.getElementById("fourbee");
+  parent = fourbeediv.parentNode;
+
+  for (var i = 2; i <= 3; i++) {
+    var newdiv = document.createElement("div");
+    newdiv.appendChild(document.createTextNode(i + "b"));
+    parent.insertBefore(newdiv, fourbeediv);
+  }
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<div>
+  <div>1a</div>
+  <div id="foureh">4a</div>
+  <div>5a</div>
+</div>
+<div>
+  <div>1b</div>
+  <div id="fourbee">4b</div>
+  <div>5b</div>
+</div>
+</body>
+</html>

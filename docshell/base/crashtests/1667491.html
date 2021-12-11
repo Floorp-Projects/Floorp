@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+<script>
+  function go() {
+    let win = window.open("1667491_1.html");
+    win.finish = function() {
+      document.documentElement.removeAttribute("class");
+    };
+  }
+</script>
+</head>
+<body onload="go()">
+</body>
+</html>

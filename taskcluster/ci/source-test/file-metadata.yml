@@ -1,0 +1,153 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    platform: lint/opt
+    treeherder:
+        kind: other
+        tier: 1
+    worker-type: t-linux-xlarge-source
+    worker:
+        artifacts:
+            - type: directory
+              path: /builds/worker/artifacts
+              name: public
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+
+bugzilla-components:
+    description: Generate metadata about source files and Bugzilla
+    treeherder:
+        symbol: Bugzilla
+        tier: 2
+    index:
+        product: source
+        job-name: source-bugzilla-info
+    run:
+        mach: file-info bugzilla-automation /builds/worker/artifacts
+    worker:
+        max-run-time: 2700
+    run-on-projects: ['mozilla-central']
+    when:
+        files-changed:
+            - "**"
+
+test-info-fission:
+    description: Generate test manifest metadata for tests disabled on fission
+    treeherder:
+        symbol: test-info(fission)
+        tier: 2
+    index:
+        product: source
+        job-name: test-info-fission
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-clang-tidy
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >-
+            source taskcluster/scripts/misc/source-test-common.sh &&
+            ./mach test-info report --show-tests --show-summary --filter-keys=fail-if,fails-if,random-if,skip-if --filter-values='(?<!!)fission' --output-file /builds/worker/artifacts/test-info-fission.json
+
+test-info-xorigin:
+    description: Generate test manifest metadata for tests disabled on cross-origin
+    treeherder:
+        symbol: test-info(xorigin)
+        tier: 2
+    index:
+        product: source
+        job-name: test-info-xorigin
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-clang-tidy
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >-
+            source taskcluster/scripts/misc/source-test-common.sh &&
+            ./mach test-info report --show-tests --show-summary --filter-keys=fail-if,fails-if,random-if,skip-if --filter-values='(?<!!)xorigin' --output-file /builds/worker/artifacts/test-info-xorigin.json
+
+test-info-disabled-by-os:
+    description: Generate test manifest metadata for tests disabled on each operating system
+    treeherder:
+        symbol: test-info(disabled-by-os)
+        tier: 2
+    index:
+        product: source
+        job-name: test-info-disabled-by-os
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-clang-tidy
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >-
+            source taskcluster/scripts/misc/source-test-common.sh &&
+            ./mach test-info report --show-tests --show-summary --filter-keys=fail-if,fails-if,random-if,skip-if --filter-values='(?<!!)(android|android_version|Android|AndroidVersion|geckoview|emulator|device)' --output-file /builds/worker/artifacts/test-info-disabled-on-android.json &&
+            ./mach test-info report --show-tests --show-summary --filter-keys=fail-if,fails-if,random-if,skip-if --filter-values='(?<!!)(linux|Linux)' --output-file /builds/worker/artifacts/test-info-disabled-on-linux.json &&
+            ./mach test-info report --show-tests --show-summary --filter-keys=fail-if,fails-if,random-if,skip-if --filter-values='(?<!!)(osx|OSX|mac)' --output-file /builds/worker/artifacts/test-info-disabled-on-mac.json &&
+            ./mach test-info report --show-tests --show-summary --filter-keys=fail-if,fails-if,random-if,skip-if --filter-values='(?<!!)(win|Windows|WINNT)' --output-file /builds/worker/artifacts/test-info-disabled-on-windows.json
+
+test-info-all:
+    description: Generate global test manifest metadata
+    treeherder:
+        symbol: test-info(all)
+        tier: 2
+    index:
+        product: source
+        job-name: test-info-all
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+        max-run-time: 5400
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-clang-tidy
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >-
+            source taskcluster/scripts/misc/source-test-common.sh &&
+            ./mach test-info report --show-tests --show-summary --verbose --output-file /builds/worker/artifacts/test-info-all-tests.json &&
+            ./mach test-info report --show-annotations --output-file /builds/worker/artifacts/test-info-manifest-conditions.json

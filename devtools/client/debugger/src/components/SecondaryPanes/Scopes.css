@@ -1,0 +1,103 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.secondary-panes .map-scopes-header {
+  padding-inline-end: 3px;
+}
+
+.secondary-panes .header-buttons .img.shortcuts {
+  width: 14px;
+  height: 14px;
+  /* Better vertical centering of the icon */
+  margin-top: -2px;
+}
+
+.scopes-content .node.object-node {
+  padding-inline-start: 7px;
+}
+
+.scopes-content .pane.scopes-list {
+  font-family: var(--monospace-font-family);
+}
+
+.scopes-content .toggle-map-scopes a.mdn {
+  padding-inline-start: 3px;
+}
+
+.scopes-content .toggle-map-scopes .img.shortcuts {
+  background: var(--theme-comment);
+}
+
+.object-node.default-property {
+  opacity: 0.6;
+}
+
+.object-node {
+  padding-inline-start: 20px;
+}
+
+html[dir="rtl"] .object-node {
+  padding-right: 4px;
+}
+
+.object-label {
+  color: var(--theme-highlight-blue);
+}
+
+.objectBox-object,
+.objectBox-text,
+.objectBox-table,
+.objectLink-textNode,
+.objectLink-event,
+.objectLink-eventLog,
+.objectLink-regexp,
+.objectLink-object,
+.objectLink-Date,
+.theme-dark .objectBox-object,
+.theme-light .objectBox-object {
+  white-space: nowrap;
+}
+
+.scopes-pane ._content {
+  overflow: auto;
+}
+
+.scopes-list {
+  padding: 4px 0px;
+}
+
+.scopes-list .function-signature {
+  display: inline-block;
+}
+
+.scopes-list .scope-type-toggle {
+  text-align: center;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.scopes-list .scope-type-toggle button {
+  /* Override color so that the link doesn't turn purple */
+  color: var(--theme-body-color);
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.scopes-list .scope-type-toggle button:hover {
+  background: transparent;
+}
+
+.scopes-list .tree.object-inspector .node.object-node {
+  display: flex;
+}
+
+.scopes-list .tree.object-inspector .tree-node button.arrow,
+.scopes-list button.invoke-getter {
+  margin-top: 2px;
+}
+
+.scopes-list .tree {
+  line-height: 15px;
+}

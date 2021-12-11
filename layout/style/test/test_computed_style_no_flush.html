@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1363805: We only restyle as little as needed
+</title>
+<link rel="author" href="mailto:wpan@mozilla.com" title="Wei-Cheng Pan">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+.black {
+  background-color: black;
+}
+.black + div {
+  background-color: gray;
+}
+</style>
+<div id="container">
+  <div>
+    <div id="foo">
+    </div>
+    <div id="bar">
+    </div>
+  </div>
+</div>
+<script>
+function flushStyle () {
+  getComputedStyle(document.body).width;
+}
+
+SimpleTest.waitForExplicitFinish();
+const utils = SpecialPowers.getDOMWindowUtils(window);
+const container = document.querySelector('#container');
+const foo = document.querySelector('#foo');
+const bar = document.querySelector('#bar');
+
+flushStyle();
+let currentRestyleGeneration = utils.restyleGeneration;
+
+// No style changed, so we should not restyle.
+getComputedStyle(foo).backgroundColor;
+is(utils.restyleGeneration, currentRestyleGeneration,
+   "Shouldn't restyle anything if no style changed");
+
+// foo's parent has changed, must restyle.
+container.classList.toggle('black');
+getComputedStyle(foo).backgroundColor;
+isnot(utils.restyleGeneration, currentRestyleGeneration,
+      "Should have restyled something");
+
+currentRestyleGeneration = utils.restyleGeneration;
+
+// The change of foo should not affect its parent.
+foo.classList.toggle('black');
+getComputedStyle(container).backgroundColor;
+is(utils.restyleGeneration, currentRestyleGeneration,
+   "Shouldn't restyle anything if no style changed");
+
+// It should restyle for foo's later sibling.
+getComputedStyle(bar).backgroundColor;
+isnot(utils.restyleGeneration, currentRestyleGeneration,
+      "Should have restyled something");
+
+SimpleTest.finish();
+</script>

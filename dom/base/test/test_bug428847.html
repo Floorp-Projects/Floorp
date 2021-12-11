@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=428847
+-->
+<head>
+  <title>Test for Bug 428847</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runtests();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=428847">Mozilla Bug 428847</a>
+<script class="testbody" type="text/javascript">
+var iframe1Loaded = false;
+var iframe2Loaded = false;
+
+function runtests()
+{
+  todo(iframe1Loaded, true,
+       "Iframe with cross-origin xslt stylesheet failed to load");
+  is(iframe2Loaded, false,
+     "Iframe with invalid xslt stylesheet URI didn't fail to load");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+<iframe src="file_bug428847-1.xhtml">
+<iframe src="file_bug428847-2.xhtml">
+</body>
+</html>
+

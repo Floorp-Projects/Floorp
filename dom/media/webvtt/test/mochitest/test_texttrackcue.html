@@ -1,0 +1,298 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 833386 - HTMLTrackElement</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id="v" src="seek.webm" preload="metadata">
+  <track src="basic.vtt" kind="subtitles" id="default" default>
+</video>
+<script type="text/javascript">
+/**
+ * This test is used to test the VTTCue's different behaviors and check whether
+ * cues would be activatived correctly during video playback.
+ */
+var video = document.getElementById("v");
+var trackElement = document.getElementById("default");
+
+async function runTest() {
+  await waitUntiTrackLoaded();
+  checkCueDefinition();
+  checkFirstCueParsedContent();
+  checkCueStartTimeAndEndtime();
+  checkCueSizeAndPosition();
+  checkCueSnapToLines();
+  checkCueAlignmentAndWritingDirection();
+  checkCueLine();
+  checkCreatingNewCue();
+  checkRemoveNonExistCue();
+  checkActiveCues();
+  checkCueRegion();
+  await checkCActiveCuesDuringVideoPlaying();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
+                            runTest);
+/**
+ * The following are test helper functions.
+ */
+async function waitUntiTrackLoaded() {
+  if (trackElement.readyState != 2) {
+    info(`wait until the track finishes loading`);
+    await once(trackElement, "load");
+  }
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  is(trackElement.track.cues.length, 6, "Cue list length should be 6.");
+}
+
+function checkCueDefinition() {
+  // Check that the typedef of TextTrackCue works in Gecko.
+  isnot(window.TextTrackCue, undefined, "TextTrackCue should be defined.");
+  isnot(window.VTTCue, undefined, "VTTCue should be defined.");
+}
+
+function checkFirstCueParsedContent() {
+  // Check if first cue was parsed correctly.
+  const cue = trackElement.track.cues[0];
+  ok(cue instanceof TextTrackCue, "Cue should be an instanceof TextTrackCue.");
+  ok(cue instanceof VTTCue, "Cue should be an instanceof VTTCue.");
+  is(cue.id, "1", "Cue's ID should be 1.");
+  is(cue.startTime, 0.5, "Cue's start time should be 0.5.");
+  is(cue.endTime, 0.7, "Cue's end time should be 0.7.");
+  is(cue.pauseOnExit, false, "Cue's pause on exit flag should be false.");
+  is(cue.text, "This", "Cue's text should be set correctly.");
+  is(cue.track, trackElement.track, "Cue's track should be defined.");
+  cue.track = null;
+  isnot(cue.track, null, "Cue's track should not be able to be set.");
+}
+
+function checkCueStartTimeAndEndtime() {
+  const cueList = trackElement.track.cues;
+  // Check that all cue times were not rounded
+  is(cueList[1].startTime, 1.2, "Second cue's start time should be 1.2.");
+  is(cueList[1].endTime, 2.4, "Second cue's end time should be 2.4.");
+  is(cueList[2].startTime, 2, "Third cue's start time should be 2.");
+  is(cueList[2].endTime, 3.5, "Third cue's end time should be 3.5.");
+  is(cueList[3].startTime, 2.71, "Fourth cue's start time should be 2.71.");
+  is(cueList[3].endTime, 2.91, "Fourth cue's end time should be 2.91.");
+  is(cueList[4].startTime, 3.217, "Fifth cue's start time should be 3.217.");
+  is(cueList[4].endTime, 3.989, "Fifth cue's end time should be 3.989.");
+  is(cueList[5].startTime, 3.217, "Sixth cue's start time should be 3.217.");
+  is(cueList[5].endTime, 3.989, "Sixth cue's end time should be 3.989.");
+
+  // Check that Cue setters are working correctly.
+  const cue = trackElement.track.cues[0];
+  cue.id = "Cue 01";
+  is(cue.id, "Cue 01", "Cue's ID should be 'Cue 01'.");
+  cue.startTime = 0.51;
+  is(cue.startTime, 0.51, "Cue's start time should be 0.51.");
+  cue.endTime = 0.71;
+  is(cue.endTime, 0.71, "Cue's end time should be 0.71.");
+  cue.pauseOnExit = true;
+  is(cue.pauseOnExit, true, "Cue's pause on exit flag should be true.");
+  video.addEventListener("pause", function() {
+    video.play();
+  }, {once: true});
+}
+
+function checkCueSizeAndPosition() {
+  function checkPercentageValue(prop, initialVal) {
+    ok(prop in cue, prop + " should be a property on VTTCue.");
+    cue[prop] = initialVal;
+    is(cue[prop], initialVal, `Cue's ${prop} should initially be ${initialVal}`);
+    [ 101, -1 ].forEach(function(val) {
+      let exceptionHappened = false;
+      try {
+        cue[prop] = val;
+      } catch(e) {
+        exceptionHappened = true;
+        is(e.name, "IndexSizeError", "Should have thrown IndexSizeError.");
+      }
+      ok(exceptionHappened, "Exception should have happened.");
+    });
+  }
+
+  const cue = trackElement.track.cues[0];
+  checkPercentageValue("size", 100.0);
+  cue.size = 50.5;
+  is(cue.size, 50.5, "Cue's size should be 50.5.")
+
+  // Check cue.position
+  checkPercentageValue("position", "auto");
+  cue.position = 50.5;
+  is(cue.position, 50.5, "Cue's position value should now be 50.5.");
+}
+
+function checkCueSnapToLines() {
+  const cue = trackElement.track.cues[0];
+  ok(cue.snapToLines, "Cue's snapToLines should be set by set.");
+  cue.snapToLines = false;
+  ok(!cue.snapToLines, "Cue's snapToLines should not be set.");
+}
+
+function checkCueAlignmentAndWritingDirection() {
+  function checkEnumValue(prop, initialVal, acceptedValues) {
+    ok(prop in cue, `${prop} should be a property on VTTCue.`);
+    is(cue[prop], initialVal, `Cue's ${prop} should be ${initialVal}`);
+    cue[prop] = "bogus";
+    is(cue[prop], initialVal, `Cue's ${prop} should be ${initialVal}`);
+    acceptedValues.forEach(function(val) {
+      cue[prop] = val;
+      is(cue[prop], val, `Cue's ${prop} should be ${val}`);
+      if (typeof val === "string") {
+        cue[prop] = val.toUpperCase();
+        is(cue[prop], val, `Cue's ${prop} should be ${val}`);
+      }
+    });
+  }
+
+  const cue = trackElement.track.cues[0];
+  checkEnumValue("align", "center", [ "start", "left", "center", "right", "end" ]);
+  checkEnumValue("lineAlign", "start", [ "start", "center", "end" ]);
+  checkEnumValue("vertical", "", [ "", "lr", "rl" ]);
+
+  cue.lineAlign = "center";
+  is(cue.lineAlign, "center", "Cue's line align should be center.");
+  cue.lineAlign = "START";
+  is(cue.lineAlign, "center", "Cue's line align should be center.");
+  cue.lineAlign = "end";
+  is(cue.lineAlign, "end", "Cue's line align should be end.");
+
+  // Check that cue position align works properly
+  is(cue.positionAlign, "auto", "Cue's default position alignment should be auto.");
+
+  cue.positionAlign = "line-left";
+  is(cue.positionAlign, "line-left", "Cue's position align should be line-left.");
+  cue.positionAlign = "auto";
+  is(cue.positionAlign, "auto", "Cue's position align should be auto.");
+  cue.positionAlign = "line-right";
+  is(cue.positionAlign, "line-right", "Cue's position align should be line-right.");
+}
+
+function checkCueLine() {
+  const cue = trackElement.track.cues[0];
+  // Check cue.line
+  is(cue.line, "auto", "Cue's line value should initially be auto.");
+  cue.line = 0.5;
+  is(cue.line, 0.5, "Cue's line value should now be 0.5.");
+  cue.line = "auto";
+  is(cue.line, "auto", "Cue's line value should now be auto.");
+}
+
+function checkCreatingNewCue() {
+  const cueList = trackElement.track.cues;
+
+  // Check that we can create and add new VTTCues
+  let vttCue = new VTTCue(3.999, 4, "foo");
+  is(vttCue.track, null, "Cue's track should be null.");
+  trackElement.track.addCue(vttCue);
+  is(vttCue.track, trackElement.track, "Cue's track should be defined.");
+  is(cueList.length, 7, "Cue list length should now be 7.");
+
+  // Check that new VTTCue was added correctly
+  let cue = cueList[6];
+  is(cue.startTime, 3.999, "Cue's start time should be 3.999.");
+  is(cue.endTime, 4, "Cue's end time should be 4.");
+  is(cue.text, "foo", "Cue's text should be foo.");
+
+  // Adding the same cue again should not increase the cue count.
+  trackElement.track.addCue(vttCue);
+  is(cueList.length, 7, "Cue list length should be 7.");
+
+  // Check that we are able to remove cues.
+  trackElement.track.removeCue(cue);
+  is(cueList.length, 6, "Cue list length should be 6.");
+}
+
+function checkRemoveNonExistCue() {
+  is(trackElement.track.cues.length, 6, "Cue list length should be 6.");
+  let exceptionHappened = false;
+  try {
+    // We should not be able to remove a cue that is not in the list.
+    trackElement.track.removeCue(new VTTCue(1, 2, "foo"));
+  } catch (e) {
+    // "NotFoundError" should be thrown when trying to remove a cue that is
+    // not in the list.
+    is(e.name, "NotFoundError", "Should have thrown NotFoundError.");
+    exceptionHappened = true;
+  }
+  // If this is false then we did not throw an error and probably removed a cue
+  // when we shouln't have.
+  ok(exceptionHappened, "Exception should have happened.");
+  is(trackElement.track.cues.length, 6, "Cue list length should still be 6.");
+}
+
+function checkActiveCues() {
+  video.currentTime = 2;
+  isnot(trackElement.track.activeCues, null);
+
+  trackElement.track.mode = "disabled";
+  is(trackElement.track.activeCues, null, "No active cue when track is disabled.");
+  trackElement.track.mode = "showing";
+}
+
+function checkCueRegion() {
+  let regionInfo = [
+    { lines: 2, width: 30 },
+    { lines: 4, width: 20 },
+    { lines: 2, width: 30 }
+  ];
+
+  for (let i = 0; i < regionInfo.length; i++) {
+    let cue = trackElement.track.cues[i];
+    isnot(cue.region, null, `Cue at ${i} should have a region.`);
+    for (let key in regionInfo[i]) {
+      is(cue.region[key], regionInfo[i][key],
+         `Region should have a ${key} property with a value of ${regionInfo[i][key]}`);
+    }
+  }
+}
+
+async function checkCActiveCuesDuringVideoPlaying() {
+  // Test TextTrack::ActiveCues.
+  let cueInfo = [
+    { startTime: 0.51, endTime: 0.71, ids: ["Cue 01"] },
+    { startTime: 0.72, endTime: 1.19, ids: [] },
+    { startTime: 1.2, endTime: 1.9, ids: [2] },
+    { startTime: 2, endTime: 2.4, ids: [2, 2.5] },
+    { startTime: 2.41, endTime: 2.70, ids: [2.5] },
+    { startTime: 2.71, endTime: 2.91, ids: [2.5, 3] },
+    { startTime: 2.92, endTime: 3.216, ids: [2.5] },
+    { startTime: 3.217, endTime: 3.5, ids: [2.5, 4, 5] },
+    { startTime: 3.51, endTime: 3.989, ids: [4, 5] },
+    { startTime: 3.99, endTime: 4, ids: [] }
+  ];
+
+  video.addEventListener("timeupdate", function() {
+    let activeCues = trackElement.track.activeCues,
+        playbackTime = video.currentTime;
+
+    for (let i = 0; i < cueInfo.length; i++) {
+      let cue = cueInfo[i];
+      if (playbackTime >= cue.startTime && playbackTime < cue.endTime) {
+        is(activeCues.length, cue.ids.length, `There should be ${cue.ids.length} currently active cue(s).`);
+        for (let j = 0; j < cue.ids.length; j++) {
+          isnot(activeCues.getCueById(cue.ids[j]), undefined,
+                `The cue with ID ${cue.ids[j]} should be active.`);
+        }
+        break;
+      }
+    }
+  });
+
+  info(`start video from 0s.`);
+  video.currentTime = 0;
+  video.play();
+  await once(video, "playing");
+  info(`video starts playing.`);
+  await once(video, "ended");
+}
+
+</script>
+</body>
+</html>

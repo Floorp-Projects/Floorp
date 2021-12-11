@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1394758
+-->
+<head>
+  <title>Test for Bug1394758</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1394758">Mozilla Bug 1394758</a>
+<p id="display"></p>
+<div id="content">
+<div id="editable" contenteditable="true">
+  <span id="span" contenteditable="false">
+    Hello
+  </span>
+  World
+</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 611182 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var editable = document.getElementById("editable");
+  var span = document.getElementById("span");
+  var beforeSpan = span.textContent;
+
+  editable.focus();
+  window.getSelection().collapse(span.nextSibling, 0);
+
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Backspace");
+
+  is(span.textContent, beforeSpan,
+     "VK_BACK_SPACE should not modify non-editable area");
+  is(span.nextSibling.textContent.trim(), "rld",
+     "VK_BACK_SPACE should delete first 2 characters");
+
+  synthesizeKey("KEY_Delete");
+
+  is(span.textContent, beforeSpan,
+     "VK_DELETE should not modify non-editable area");
+  is(span.nextSibling.textContent.trim(), "ld",
+     "VK_DELETE should delete first character");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,64 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "id": "NativeManifest",
+        "description": "Represents a native manifest file",
+        "choices": [
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^\\w+(\\.\\w+)*$"
+              },
+              "description": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "pkcs11", "stdio"
+                ]
+              },
+              "allowed_extensions": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "manifest.ExtensionID"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "$ref": "manifest.ExtensionID"
+              },
+              "description": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "any"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "storage"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

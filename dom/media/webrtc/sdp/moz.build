@@ -1,0 +1,48 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    DEFINES["SIP_OS_WINDOWS"] = True
+elif CONFIG["OS_TARGET"] == "Darwin":
+    DEFINES["SIP_OS_OSX"] = True
+else:
+    DEFINES["SIP_OS_LINUX"] = True
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
+LOCAL_INCLUDES += [
+    "/dom/media/webrtc",
+    "/media/webrtc",
+    "/third_party/sipcc",
+]
+
+UNIFIED_SOURCES += [
+    "HybridSdpParser.cpp",
+    "ParsingResultComparer.cpp",
+    "SdpAttribute.cpp",
+    "SdpHelper.cpp",
+    "SdpLog.cpp",
+    "SdpMediaSection.cpp",
+    "SdpPref.cpp",
+    "SdpTelemetry.cpp",
+    "SipccSdp.cpp",
+    "SipccSdpAttributeList.cpp",
+    "SipccSdpMediaSection.cpp",
+    "SipccSdpParser.cpp",
+]
+
+SOURCES += [
+    # Building these as part of the unified build leads to multiply defined
+    # symbols on windows.
+    "RsdparsaSdp.cpp",
+    "RsdparsaSdpAttributeList.cpp",
+    "RsdparsaSdpGlue.cpp",
+    "RsdparsaSdpMediaSection.cpp",
+    "RsdparsaSdpParser.cpp",
+]
+
+FINAL_LIBRARY = "xul"

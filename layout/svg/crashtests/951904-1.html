@@ -1,0 +1,43 @@
+<body onload="go()">
+<svg>
+  <switch>
+    <text id="a">Bonjour</text>
+    <text id="b">Hello</text>
+    <a><text id="c">Hello</text></a>
+    <g>
+      <mask>
+        <text>Lundi</text>
+      </mask>
+    </g>
+    <switch>
+      <text id="d">Au revoir</text>
+      <g>
+        <mask>
+          <text>Mercredi</text>
+        </mask>
+      </g>
+      <text id="e">Goodbye</text>
+      <a><text id="f">Goodbye</text></a>
+    </switch>
+  </switch>
+</svg>
+<svg>
+  <switch>
+    <mask>
+      <text id="g">Vendredi</text>
+    </mask>
+    <a></a>
+  </switch>
+</svg>
+</body>
+<script>
+function go() {
+  a.getComputedTextLength();
+  b.getComputedTextLength();
+  c.getComputedTextLength();
+  d.getComputedTextLength();
+  e.getComputedTextLength();
+  f.getComputedTextLength();
+  g.getComputedTextLength();
+}
+</script>

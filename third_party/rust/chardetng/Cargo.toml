@@ -1,0 +1,23 @@
+[package]
+name = "chardetng"
+description = "A character encoding detector for legacy Web content"
+version = "0.1.9"
+authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+readme = "README.md"
+documentation = "https://docs.rs/chardetng/"
+homepage = "https://docs.rs/chardetng/"
+repository = "https://github.com/hsivonen/chardetng"
+keywords = ["encoding", "web", "unicode", "charset"]
+categories = ["text-processing", "encoding", "web-programming", "internationalization"]
+
+[dependencies]
+encoding_rs = "0.8.17"
+memchr = "2.2.0"
+
+[dev-dependencies]
+detone = "1.0.0"
+
+[features]
+testing-only-no-semver-guarantees-do-not-use = []

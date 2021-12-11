@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<body><div contenteditable="true"></div><div><input id="i"><div></div></input></div></body>
+
+<script id="s">
+<![CDATA[
+
+function boom()
+{
+  document.getElementById("i").focus();
+
+  try { document.execCommand("stylewithcss", false, "true") } catch(e) { }
+  try { document.execCommand("inserthtml", false, "<x>X</x>"); } catch(e) { }
+  try { document.execCommand("underline", false, null); } catch(e) { }
+  try { document.execCommand("justifyfull", false, null); } catch(e) { }
+  try { document.execCommand("underline", false, null); } catch(e) { }
+  try { document.execCommand("insertParagraph", false, null); } catch(e) { }
+  try { document.execCommand("delete", false, null); } catch(e) { }
+
+  try { document.execCommand("stylewithcss", false, "false") } catch(e) { }
+  try { document.execCommand("inserthtml", false, "<x>X</x>"); } catch(e) { }
+  try { document.execCommand("underline", false, null); } catch(e) { }
+  try { document.execCommand("justifyfull", false, null); } catch(e) { }
+  try { document.execCommand("underline", false, null); } catch(e) { }
+  try { document.execCommand("insertParagraph", false, null); } catch(e) { }
+  try { document.execCommand("delete", false, null); } catch(e) { }
+
+  document.documentElement.removeAttribute("class");
+}
+
+setTimeout(boom, 10);
+
+]]>
+</script>
+
+</html>

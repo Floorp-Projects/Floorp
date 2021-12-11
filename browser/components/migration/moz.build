@@ -1,0 +1,67 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+
+MARIONETTE_UNIT_MANIFESTS += ["tests/marionette/manifest.ini"]
+
+JAR_MANIFESTS += ["jar.mn"]
+
+XPIDL_SOURCES += [
+    "nsIBrowserProfileMigrator.idl",
+]
+
+XPIDL_MODULE = "migration"
+
+EXTRA_JS_MODULES += [
+    "ChromeMigrationUtils.jsm",
+    "ChromeProfileMigrator.jsm",
+    "FirefoxProfileMigrator.jsm",
+    "MigrationUtils.jsm",
+    "ProfileMigrator.jsm",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    if CONFIG["ENABLE_TESTS"]:
+        DIRS += [
+            "tests/unit/insertIEHistory",
+        ]
+    SOURCES += [
+        "nsIEHistoryEnumerator.cpp",
+    ]
+    EXTRA_JS_MODULES += [
+        "360seProfileMigrator.jsm",
+        "ChromeWindowsLoginCrypto.jsm",
+        "EdgeProfileMigrator.jsm",
+        "ESEDBReader.jsm",
+        "IEProfileMigrator.jsm",
+        "MSMigrationUtils.jsm",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    EXPORTS += [
+        "nsKeychainMigrationUtils.h",
+    ]
+    EXTRA_JS_MODULES += [
+        "ChromeMacOSLoginCrypto.jsm",
+        "SafariProfileMigrator.jsm",
+    ]
+    SOURCES += [
+        "nsKeychainMigrationUtils.mm",
+    ]
+    XPIDL_SOURCES += [
+        "nsIKeychainMigrationUtils.idl",
+    ]
+
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+FINAL_LIBRARY = "browsercomps"
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Migration")

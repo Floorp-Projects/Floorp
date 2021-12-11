@@ -1,0 +1,64 @@
+Division
+
+This describes the division algorithm used by the MPI library.
+
+Input:    a, b; a > b
+Compute:  Q, R; a = Qb + R
+
+The input numbers are normalized so that the high-order digit of b is
+at least half the radix.  This guarantees that we have a reasonable
+way to guess at the digits of the quotient (this method was taken from
+Knuth, vol. 2, with adaptations).
+
+To normalize, test the high-order digit of b.  If it is less than half
+the radix, multiply both a and b by d, where:
+
+             radix - 1
+	d = -----------
+              bmax + 1
+
+...where bmax is the high-order digit of b.  Otherwise, set d = 1.
+
+Given normalize values for a and b, let the notation a[n] denote the
+nth digit of a.  Let #a be the number of significant figures of a (not
+including any leading zeroes).
+
+	Let R = 0
+	Let p = #a - 1
+
+	while(p >= 0)
+	  do
+	    R = (R * radix) + a[p]
+	    p = p - 1
+	  while(R < b and p >= 0)
+
+	  if(R < b)
+	    break
+
+	  q = (R[#R - 1] * radix) + R[#R - 2]
+	  q = q / b[#b - 1]
+
+	  T = b * q
+
+	  while(T > L)
+	    q = q - 1
+	    T = T - b
+	  endwhile
+
+	  L = L - T
+
+	  Q = (Q * radix) + q
+
+	endwhile
+
+At this point, Q is the quotient, and R is the normalized remainder.
+To denormalize R, compute:
+
+	R = (R / d)
+
+At this point, you are finished.
+
+------------------------------------------------------------------
+ This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.

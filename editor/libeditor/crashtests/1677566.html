@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const table = document.getElementById('id_39')
+        const paragraph = document.getElementById('id_41')
+        document.documentElement.contentEditable = true
+        const selection = document.getSelection()
+        selection.setBaseAndExtent(document, 0, document.documentElement, 1)
+        paragraph.contentEditable = false
+        table.insertRow(0)
+        document.execCommand('forwardDelete', false, null)
+      })
+    </script>
+</head>
+<p id='id_41'>
+    <del>
+        <button contenteditable='true'>
+        </button>
+        <table id='id_39'>
+        </table>
+    </del>
+</p>
+</html>

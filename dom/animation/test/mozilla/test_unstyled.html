@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<style>
+div.pseudo::before {
+  animation: animation 1s;
+  content: 'content';
+}
+@keyframes animation {
+  to { opacity: 0 }
+}
+</style>
+<body>
+<div id="log"></div>
+<script>
+'use strict';
+
+// Tests for cases where we may not have style data for an element
+
+promise_test(async t => {
+  // Get a CSSPseudoElement
+  const div = addDiv(t, { class: 'pseudo' });
+  const cssAnim = document.getAnimations()[0];
+  const pseudoElem = cssAnim.effect.target;
+
+  // Drop pseudo from styles and flush styles
+  div.classList.remove('pseudo');
+  getComputedStyle(div, '::before').content;
+
+  // Try animating the pseudo's content attribute
+  const contentAnim = pseudoElem.animate(
+    { content: ['none', '"content"'] },
+    { duration: 100 * MS_PER_SEC, fill: 'both' }
+  );
+
+  // Check that the initial value is as expected
+  await contentAnim.ready;
+  assert_equals(getComputedStyle(div, '::before').content, 'none');
+
+  contentAnim.finish();
+
+  // Animating an obsolete pseudo element should NOT cause the pseudo element
+  // to be re-generated. That behavior might change in which case this test
+  // will need to be updated. The most important part of this test, however,
+  // is simply checking that nothing explodes if we try to animate such a
+  // pseudo element.
+
+  assert_equals(getComputedStyle(div, '::before').content, 'none');
+}, 'Animation on an obsolete pseudo element produces expected results');
+
+</script>
+</body>

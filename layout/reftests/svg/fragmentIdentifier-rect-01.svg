@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <style>
+      view:target + a rect {
+          fill: lime;
+      }
+  </style>
+
+  <view id="limeView" viewBox="0 200 100 100"/>
+
+  <rect fill="red" height="100%" width="100%"/>
+  <rect fill="lime" x="0" y="200" height="100" width="100"/>
+
+  <view id="view" viewBox="200 200 100 100"/>
+  <a xlink:href="#view">
+      <rect fill="red" x="200" y="200" height="100" width="100"/>
+  </a>
+</svg>

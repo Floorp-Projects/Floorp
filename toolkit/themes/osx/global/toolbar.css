@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+toolbox {
+  /* Setting -moz-default-appearance:toolbox causes sheets to attach under the
+   * toolbox and has no other effects. It doesn't render anything. */
+  appearance: auto;
+  -moz-default-appearance: toolbox;
+}
+
+toolbar {
+  min-width: 1px;
+  min-height: 20px;
+  appearance: auto;
+  -moz-default-appearance: toolbar;
+}
+
+toolbar:-moz-lwtheme {
+  appearance: none;
+}
+
+toolbarseparator {
+  appearance: auto;
+  -moz-default-appearance: separator;
+  margin: 3px 4px;
+}
+
+toolbarpaletteitem {
+  cursor: grab;
+}
+
+toolbarspacer {
+  min-width: 24px !important;
+}
+
+/* Drag and drop feedback */
+
+toolbarpaletteitem[place="toolbar"] {
+  margin-inline: -2px;
+  border-inline: 2px solid transparent;
+}
+
+toolbarpaletteitem[dragover="left"] {
+  border-left-color: #000000;
+}
+
+toolbarpaletteitem[dragover="right"] {
+  border-right-color: #000000;
+}

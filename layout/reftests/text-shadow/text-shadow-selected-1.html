@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+function onload() {
+  window.focus();
+  var range = document.createRange();
+  range.selectNodeContents(document.getElementById("selectMe"));
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+</script>
+<style type="text/css">
+body {
+  background: lightGray;
+}
+div {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font: 36px monospace;
+  color: white;
+}
+</style>
+</head>
+<!-- test for bug 692752 - paint text shadow on top of selection highlight -->
+<body onload="onload()">
+<div style="text-shadow:1px 1px 1px red;" id="selectMe">selected shadowed text</div>
+</body>
+</html>

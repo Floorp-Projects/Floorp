@@ -1,0 +1,21 @@
+<html>
+<head>
+<script type="application/javascript">
+
+function boom() {
+  // Don't crash when transplanting wrappers with cyclic references.
+  document.documentElement.dataset.xml = document.documentElement.dataset;
+  document.open();
+
+  // Tell the parent window that we're done.
+  window.parent.allDone();
+}
+
+// This needs to do a round-trip through the event loop to work right.
+window.onload = function() { setTimeout(boom, 0); };
+
+</script>
+</head>
+<body>
+</body>
+</html>

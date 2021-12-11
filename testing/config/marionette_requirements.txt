@@ -1,0 +1,12 @@
+-r mozbase_requirements.txt
+
+../tools/wptserve
+../tools/wpt_third_party/certifi
+../tools/wpt_third_party/enum ; python_version < '3'
+../tools/wpt_third_party/h2
+../tools/wpt_third_party/hyperframe
+../tools/wpt_third_party/hpack
+../tools/wpt_third_party/pywebsocket3
+
+../marionette/client
+../marionette/harness

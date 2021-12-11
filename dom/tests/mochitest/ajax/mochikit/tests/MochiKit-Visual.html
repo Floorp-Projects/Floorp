@@ -1,0 +1,190 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Async.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Signal.js"></script>
+    <script type="text/javascript" src="../MochiKit/Position.js"></script>
+    <script type="text/javascript" src="../MochiKit/Visual.js"></script>
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>     
+
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+    <style type="text/css">
+    #elt1, #elt2, #ctn1 {
+        visibility: hidden;
+        font-size: 1em;
+        margin: 2px;
+    }
+    #elt3 {
+        display: none;
+    }
+    #ctn1 {
+        height: 2px;
+    }
+    </style>
+</head>
+<body>
+
+<div id='elt1'>elt1</div>
+<div id='ctn1'><div id='elt2'></div></div>
+<div id='elt3'>elt3</div>
+<pre id="test">
+<script type="text/javascript">
+try {
+    var TestQueue = function () {
+    };
+
+    TestQueue.prototype = new MochiKit.Visual.ScopedQueue();
+    
+    MochiKit.Base.update(TestQueue.prototype, {
+        startLoop: function (func, interval) {
+            this.started = true;
+            var timePos = new Date().getTime();
+            while (this.started) {
+                timePos += interval;
+                MochiKit.Base.map(function (effect) {
+                    effect.loop(timePos);
+                }, this.effects);
+            }
+        },
+        stopLoop: function () {
+            this.started = false;
+        }
+    });
+    
+    var gl = new TestQueue();
+    MochiKit.Visual.Queues.instances['global'] = gl;
+    MochiKit.Visual.Queues.instances['elt1'] = gl;
+    MochiKit.Visual.Queues.instances['elt2'] = gl;
+    MochiKit.Visual.Queues.instances['elt3'] = gl;
+    MochiKit.Visual.Queues.instances['ctn1'] = gl;
+    MochiKit.Visual.Queue = gl;
+
+    pulsate("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display != 'none', true, "pulsate ok");
+    }});
+
+    pulsate("elt1", {pulses: 2, afterFinish: function () {
+        is(getElement('elt1').style.display != 'none', true, "pulsate with numbered pulses ok");
+    }});
+    
+    shake("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display != 'none', true, "shake ok");
+    }});
+    
+    fade("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "fade ok");
+    }});
+
+    appear("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display != 'none', true, "appear ok");
+    }});
+
+    toggle("elt1", "size", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "toggle size ok");
+    }});
+
+    toggle("elt1", "size", {afterFinish: function () {
+        is(getElement('elt1').style.display != 'none', true, "toggle size reverse ok");
+    }});
+
+    Morph("elt1", {"style": {"font-size": "2em"}, afterFinish: function () {
+        is(getStyle("elt1", "font-size"), "2em", "Morph OK");
+    }});
+
+    Morph("elt1", {"style": {"font-size": "1em", "margin-left": "4px"}, afterFinish: function () {
+        is(getStyle("elt1", "font-size"), "1em", "Morph multiple (font) OK");
+        is(getStyle("elt1", "margin-left"), "4px", "Morph multiple (margin) OK");
+    }});
+
+    switchOff("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "switchOff ok");
+    }});
+
+    grow("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display != 'none', true, "grow ok");
+    }});
+
+    shrink("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "shrink ok");
+    }});
+
+    showElement('elt1');
+    dropOut("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "dropOut ok");
+    }});
+
+    showElement('elt1');
+    puff("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "puff ok");
+    }});
+
+    showElement('elt1');
+    fold("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "fold ok");
+    }});
+
+    showElement('elt1');
+    squish("elt1", {afterFinish: function () {
+        is(getElement('elt1').style.display, 'none', "squish ok");
+    }});
+
+    slideUp("ctn1", {afterFinish: function () {
+        is(getElement('ctn1').style.display, 'none', "slideUp ok");
+    }});
+
+    slideDown("ctn1", {afterFinish: function () {
+        is(getElement('ctn1').style.display != 'none', true, "slideDown ok");
+    }});
+
+    blindDown("ctn1", {afterFinish: function () {
+        is(getElement('ctn1').style.display != 'none', true, "blindDown ok");
+    }});
+
+    blindUp("ctn1", {afterFinish: function () {
+        is(getElement('ctn1').style.display, 'none', "blindUp ok");
+    }});
+
+    multiple(["elt1", "ctn1"], appear, {afterFinish: function (effect) {
+        is(effect.element.style.display != 'none', true, "multiple ok");
+    }});
+
+    toggle("elt3", "size", {afterFinish: function () {
+        is(getElement('elt3').style.display != 'none', true, "toggle with css ok");
+    }});
+
+    toggle("elt3", "size", {afterFinish: function () {
+        is(getElement('elt3').style.display, 'none', "toggle with css ok");
+    }});
+
+    var toTests = [roundElement, roundClass, tagifyText, Opacity, Move, Scale, Highlight, ScrollTo, Morph];
+    for (var m in toTests) {
+        toTests[m]("elt1");
+        ok(true, toTests[m].NAME + " doesn't need 'new' keyword");
+    }
+    ok(true, "visual suite finished");
+
+} catch (err) {
+
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+    SimpleTest.finish();
+
+}
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,30 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "resource.h"
+#include <winresrc.h>
+#include <dlgs.h>
+
+IDC_GRAB                CURSOR  DISCARDABLE     "res/grab.cur"
+IDC_GRABBING            CURSOR  DISCARDABLE     "res/grabbing.cur"
+IDC_CELL                CURSOR  DISCARDABLE     "res/cell.cur"
+IDC_COPY                CURSOR  DISCARDABLE     "res/copy.cur"
+IDC_ALIAS               CURSOR  DISCARDABLE     "res/aliasb.cur"
+IDC_ZOOMIN              CURSOR  DISCARDABLE     "res/zoom_in.cur"
+IDC_ZOOMOUT             CURSOR  DISCARDABLE     "res/zoom_out.cur"
+IDC_COLRESIZE           CURSOR  DISCARDABLE     "res/col_resize.cur"
+IDC_ROWRESIZE           CURSOR  DISCARDABLE     "res/row_resize.cur"
+IDC_VERTICALTEXT        CURSOR  DISCARDABLE     "res/vertical_text.cur"
+IDC_NONE                CURSOR  DISCARDABLE     "res/none.cur"
+
+OPTPROPSHEET DIALOG DISCARDABLE  32, 32, 288, 226
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+END

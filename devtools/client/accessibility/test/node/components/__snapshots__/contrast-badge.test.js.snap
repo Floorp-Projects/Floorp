@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ContrastBadge component: error render 1`] = `null`;
+
+exports[`ContrastBadge component: fail render 1`] = `"<span class=\\"audit-badge badge\\" data-score=\\"FAIL\\" title=\\"Does not meet WCAG standards for accessible text.\\" aria-label=\\"contrast warning\\">contrast</span>"`;
+
+exports[`ContrastBadge component: success large text render 1`] = `null`;
+
+exports[`ContrastBadge component: success range render 1`] = `null`;
+
+exports[`ContrastBadge component: success render 1`] = `null`;

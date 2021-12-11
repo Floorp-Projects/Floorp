@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<title>Test for computation of CSS 'revert' on all properties</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="property_database.js"></script>
+<style id="stylesheet"></style>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<div id="inheritanceParent">
+  <div id="inherited"></div>
+</div>
+<div id="nonInherited"></div>
+<div id="noAuthorStyleApplied"></div>
+<pre id="test">
+<script class="testbody">
+
+const kSheet = document.getElementById("stylesheet").sheet;
+const kAllDifferentFromInitialRule = kSheet.cssRules[kSheet.insertRule("#inheritanceParent {}", kSheet.cssRules.length)];
+const kPrerequisites = kSheet.cssRules[kSheet.insertRule("#inherited, #inheritanceParent, #nonInherited, #noAuthorStyleApplied {}", kSheet.cssRules.length)];
+const kResetPropRule = kSheet.cssRules[kSheet.insertRule("#nonInherited {}", kSheet.cssRules.length)];
+
+const kInheritedDiv = document.getElementById("inherited");
+const kResetDiv = document.getElementById("nonInherited");
+const kNoAuthorStylesDiv = document.getElementById("noAuthorStyleApplied");
+
+function computedValue(node, property) {
+  return get_computed_value(getComputedStyle(node), property);
+}
+
+function getInitialValue(node, property) {
+  node.style.setProperty(property, "initial");
+  const initial = computedValue(node, property);
+  node.style.removeProperty(property);
+  return initial;
+}
+
+function testResetProperty(property, info) {
+  kResetPropRule.style.setProperty(property, info.other_values[0]);
+
+  const div = kResetDiv;
+  const initial = getInitialValue(div, property);
+  const computed = computedValue(div, property);
+
+  isnot(computed, initial, `${property}: Should get something non-initial to begin with`);
+
+  const defaultValue = computedValue(kNoAuthorStylesDiv, property);
+
+  div.style.setProperty(property, "revert");
+  const reverted = computedValue(div, property);
+  is(reverted, defaultValue, `${property}: Should behave as if there was no author style`);
+  div.style.removeProperty(property);
+  kResetPropRule.style.removeProperty(property);
+}
+
+function testInheritedProperty(property, info) {
+  // Given how line-height works, and that it always returns the used value, we
+  // cannot test it. The prerequisites for line-height makes getComputedStyle
+  // and getDefaultComputedStyle return the same, even though the computed value
+  // is different (normal vs. 19px).
+  if (property == "line-height")
+    return;
+
+  const div = kInheritedDiv;
+  const initial = getInitialValue(div, property);
+  const parentValue = computedValue(div.parentNode, property);
+
+  isnot(parentValue, initial, `${property}: Should inherit something non-initial to begin with`);
+
+  const inheritedValue = computedValue(div, property);
+  const hasUARule = inheritedValue != parentValue;
+
+  const defaultValue = computedValue(kNoAuthorStylesDiv, property);
+  (hasUARule ? is : isnot)(defaultValue, inheritedValue, `${property}: Should get the non-inherited value from somewhere (expected ${hasUARule ? "UA Rule" : "inheritance"} - inherited: ${inheritedValue} - parent: ${parentValue} - default: ${defaultValue})`);
+
+  div.style.setProperty(property, "revert");
+  const reverted = computedValue(div, property);
+  if (hasUARule)
+    is(reverted, defaultValue, `${property}: Should behave as if there was no author style`);
+  else
+    is(reverted, inheritedValue, `${property}: Should behave as if there was no author style`);
+  div.style.removeProperty(property);
+}
+
+function testProperty(property, info) {
+  if (info.prerequisites)
+    for (const prereq in info.prerequisites)
+      kPrerequisites.style.setProperty(prereq, info.prerequisites[prereq]);
+  if (info.inherited)
+    testInheritedProperty(property, info);
+  else
+    testResetProperty(property, info);
+  kPrerequisites.style = "";
+}
+
+for (const prop in gCSSProperties) {
+  const info = gCSSProperties[prop];
+  if (info.type != CSS_TYPE_LONGHAND)
+    continue;
+  kAllDifferentFromInitialRule.style.setProperty(prop, info.other_values[0]);
+}
+
+for (const prop in gCSSProperties)
+  testProperty(prop, gCSSProperties[prop]);
+</script>
+</pre>

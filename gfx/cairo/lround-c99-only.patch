@@ -1,0 +1,46 @@
+Only use lround in C99 programs.
+
+diff --git a/gfx/cairo/cairo/src/cairo-misc.c b/gfx/cairo/cairo/src/cairo-misc.c
+--- a/gfx/cairo/cairo/src/cairo-misc.c
++++ b/gfx/cairo/cairo/src/cairo-misc.c
+@@ -478,17 +478,17 @@ _cairo_operator_bounded_by_either (cairo
+     case CAIRO_OPERATOR_IN:
+     case CAIRO_OPERATOR_DEST_IN:
+     case CAIRO_OPERATOR_DEST_ATOP:
+ 	return 0;
+     }
+ 
+ }
+ 
+-#if DISABLE_SOME_FLOATING_POINT
++#if DISABLE_SOME_FLOATING_POINT || __STDC_VERSION__ < 199901L
+ /* This function is identical to the C99 function lround(), except that it
+  * performs arithmetic rounding (floor(d + .5) instead of away-from-zero rounding) and
+  * has a valid input range of (INT_MIN, INT_MAX] instead of
+  * [INT_MIN, INT_MAX]. It is much faster on both x86 and FPU-less systems
+  * than other commonly used methods for rounding (lround, round, rint, lrint
+  * or float (d + 0.5)).
+  *
+  * The reason why this function is much faster on x86 than other
+diff --git a/gfx/cairo/cairo/src/cairoint.h b/gfx/cairo/cairo/src/cairoint.h
+--- a/gfx/cairo/cairo/src/cairoint.h
++++ b/gfx/cairo/cairo/src/cairoint.h
+@@ -969,17 +969,17 @@ _cairo_restrict_value (double value, dou
+  * away from 0. _cairo_round rounds halfway cases toward negative infinity.
+  * This matches the rounding behaviour of _cairo_lround. */
+ static inline double cairo_const
+ _cairo_round (double r)
+ {
+     return floor (r + .5);
+ }
+ 
+-#if DISABLE_SOME_FLOATING_POINT
++#if DISABLE_SOME_FLOATING_POINT || __STDC_VERSION__ < 199901L
+ cairo_private int
+ _cairo_lround (double d) cairo_const;
+ #else
+ #define _cairo_lround lround
+ #endif
+ 
+ cairo_private uint16_t
+ _cairo_half_from_float (float f) cairo_const;

@@ -1,0 +1,81 @@
+<script>
+Logger = {}
+Logger.error = function(e) {}
+Logger.comment = function(e) {}
+
+try { o0 = document.createElement('audio'); } catch(e) { Logger.error(Logger.comment(e)); }
+try { (document.body || document.documentElement).appendChild(o0); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o1 = new AudioContext(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o2 = o1.createGain(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3 = o1.createBufferSource(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.buffer = function() { o4 = o1.createBuffer(1, 3, 52970);
+o5 = o4.getChannelData(0);
+for(var i=0; i<3; ++i) {
+o5[i] = Math.sin(i * 63);
+}
+return o4;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.buffer = function() { o6 = o1.createBuffer(1, 15, 41218);
+o7 = o6.getChannelData(0);
+for(var i=0; i<15; ++i) {
+o7[i] = Math.sin(i * 0);
+}
+return o6;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.buffer = function() { o8 = o1.createBuffer(1, 0, 49074);
+o9 = o8.getChannelData(0);
+for(var i=0; i<0; ++i) {
+o9[i] = Math.sin(i * 0);
+}
+return o8;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.buffer = function() { o10 = o1.createBuffer(1, 31, 86527);
+o11 = o10.getChannelData(0);
+for(var i=0; i<31; ++i) {
+o11[i] = Math.sin(i * 127);
+}
+return o10;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.stop(-1) } catch(e) { Logger.error(Logger.comment(e)); }
+/* [Exception... "An attempt was made to use an object that is not, or is no longer, usable"  code: "11" nsresult: "0x8053000b (InvalidStateError)"  location: "file:///Users/cdiehl/dev/projects/peach/Peach/Utilities/JS/undefined.js Line: 602"] */
+try { o3.channelCountMode = 'explicit'; } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12 = o1.createBiquadFilter(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.buffer = function() { o13 = o1.createBuffer(1, 63, 28347);
+o14 = o13.getChannelData(0);
+for(var i=0; i<63; ++i) {
+o14[i] = Math.sin(i * 15);
+}
+return o13;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.channelCount = 1; } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.connect(GainNode, 65536, 0) } catch(e) { Logger.error(Logger.comment(e)); }
+/* TypeError: Value does not implement interface AudioNode. */
+try { o3.buffer = function() { o15 = o1.createBuffer(1, 1, 72540);
+o16 = o15.getChannelData(0);
+for(var i=0; i<1; ++i) {
+o16[i] = Math.sin(i * 7);
+}
+return o15;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.getFrequencyResponse(new Float32Array(7), new Float32Array(127), new Float32Array(7)) } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.getFrequencyResponse(new Float32Array(15), new Float32Array(127), new Float32Array(7)) } catch(e) { Logger.error(Logger.comment(e)); }
+try { o17 = document.createElement('audio'); } catch(e) { Logger.error(Logger.comment(e)); }
+try { (document.body || document.documentElement).appendChild(o0); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.buffer = function() { o18 = o1.createBuffer(1, 7, 91261);
+o19 = o18.getChannelData(0);
+for(var i=0; i<7; ++i) {
+o19[i] = Math.sin(i * 7);
+}
+return o18;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.getFrequencyResponse(new Float32Array(31), new Float32Array(31), new Float32Array(127)) } catch(e) { Logger.error(Logger.comment(e)); }
+try { o20 = o1.createChannelSplitter(1, 2, 4, 16, 32); } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.channelCountMode = 'explicit'; } catch(e) { Logger.error(Logger.comment(e)); }
+try { o3.buffer = function() { o21 = o1.createBuffer(1, 0, 14451);
+o22 = o21.getChannelData(0);
+for(var i=0; i<0; ++i) {
+o22[i] = Math.sin(i * 63);
+}
+return o21;
+}(); } catch(e) { Logger.error(Logger.comment(e)); }
+</script>

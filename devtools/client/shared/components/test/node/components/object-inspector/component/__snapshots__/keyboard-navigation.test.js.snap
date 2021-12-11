@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - keyboard navigation works as expected 1`] = `
+"
+▶︎ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" }
+"
+`;
+
+exports[`ObjectInspector - keyboard navigation works as expected 2`] = `
+"
+[ ▶︎ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" } ]
+"
+`;
+
+exports[`ObjectInspector - keyboard navigation works as expected 3`] = `
+"
+[ ▼ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" } ]
+  |    <prototype>: Object {  }
+"
+`;
+
+exports[`ObjectInspector - keyboard navigation works as expected 4`] = `
+"
+  ▼ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" }
+[ |    <prototype>: Object {  } ]
+"
+`;
+
+exports[`ObjectInspector - keyboard navigation works as expected 5`] = `
+"
+[ ▼ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" } ]
+  |    <prototype>: Object {  }
+"
+`;
+
+exports[`ObjectInspector - keyboard navigation works as expected 6`] = `
+"
+  ▼ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" }
+[ |    <prototype>: Object {  } ]
+"
+`;
+
+exports[`ObjectInspector - keyboard navigation works as expected 7`] = `
+"
+[ ▼ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" } ]
+  |    <prototype>: Object {  }
+"
+`;
+
+exports[`ObjectInspector - keyboard navigation works as expected 8`] = `
+"
+▼ Object { a: \\"a\\", b: \\"b\\", c: \\"c\\" }
+|    <prototype>: Object {  }
+"
+`;

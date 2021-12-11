@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head>
+<title>Border-radius inheritance</title>
+<style>
+.div1 { width: 100px; height: 100px;
+      border: 10px solid black; 
+      border-radius: 10px;
+      left: 50px;
+      top: 50px;
+}
+
+div > div {
+  width: 40px; height: 40px;
+  border: 10px solid black;
+  position: absolute;
+  left: 40px;
+  top: 40px;
+}
+
+</style>
+</head>
+<body>
+  <div class="div1"><div></div></div>
+</body></html>

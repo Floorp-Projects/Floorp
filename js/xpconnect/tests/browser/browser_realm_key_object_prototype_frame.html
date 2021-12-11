@@ -1,0 +1,11 @@
+<script type="text/javascript">
+// Access to the top-level window property before getting access.
+// This will create an entry in cross-origin realm map.
+try {
+  window.top.Object;
+} catch (e) {}
+
+document.domain = "mochi.test";
+
+window.top.check();
+</script>

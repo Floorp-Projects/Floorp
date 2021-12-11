@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607529
+-->
+<head>
+  <title>Test for Bug 607529</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=607529">Mozilla Bug 607529</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  /* General idea: Open a new window (needed because we don't bfcache
+     subframes) that uses requestAnimationFrame, navigate it, navigate it
+     back, and verify that the animations are still running.  */
+
+  var doneOneLoad = false;
+  var done = false;
+
+  /** Test for Bug 607529 **/
+  var bc = new BroadcastChannel("bug607529");
+  var bc_1 = new BroadcastChannel("bug607529_1");
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    isnot(msg, "notcached", "Should never end up not being cached");
+    if (msg == "loaded") {
+      if (!doneOneLoad) {
+        doneOneLoad = true;
+        bc.postMessage("navigateToPage");
+      } else {
+        // This is unexpected, but it can happen on Android, probably when
+        // bfcache gets purged due to memory pressure. Hence, "soft fail" there.
+        var message = "onload handler shouldn't fire on restore from bfcache";
+        if (navigator.appVersion.includes("Android")) {
+          todo(false, message);
+        } else {
+          ok(false, message);
+        }
+        // In any case, more messages aren't coming, so finish up.
+        closeWindowAndFinish();
+      }
+    }
+    else if (msg == "revived") {
+      bc.postMessage("report");
+    }
+    else if (msg == "callbackHappened") {
+      // We might get this message more than once, if the other page queues up
+      // more than one callbackHappened message before we manage to close it.
+      // Protect against calling SimpleTest.finish() more than once.
+      if (!done) {
+        closeWindowAndFinish();
+        done = true;
+      }
+    } else if (msg == "closed") {
+      bc.close();
+      bc_1.close();
+      SimpleTest.finish();
+    } else {
+      try {
+        var jsonMsg = JSON.parse(msg);
+      } catch (ex) {
+        // In case JSON.parse throws, we pause to print the string that it
+        // choked on, and then resume throwing the exception.
+        ok(false, "JSON.parse threw, when passed string '" + jsonMsg + "'");
+        throw ex;
+      }
+      if (jsonMsg.error) {
+        window.onerror(jsonMsg.msg, jsonMsg.url, jsonMsg.line);
+      }
+    }
+  }
+  bc_1.onmessage = (msgEvent) => {
+    if (msgEvent.data == "goback") {
+      bc_1.postMessage("navigateBack");
+    }
+  }
+  function closeWindowAndFinish() {
+    bc.postMessage("close");
+  }
+
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    window.open("file_bug607529.html", "", "noopener");
+  });
+</script>
+</pre>
+</body>
+</html>

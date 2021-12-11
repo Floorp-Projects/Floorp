@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Test case for bug 399941.html</title>
+  <style type="text/css">
+   span.fake-first-letter {
+     color: lime;
+   }
+  </style>
+ </head>
+ <body>
+ <!-- Test SMP characters -->
+  <p><span class="fake-first-letter">&#x10900;</span>&#x10901;&#x10909; is Phoenician</p>
+ </body>
+</html>

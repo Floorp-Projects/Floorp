@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: audio output time doesn't match the input time on WMF</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer('audio/mp4;codecs=" mp4a.40.2"');
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("wmf_mismatchedaudiotime.mp4")));
+  ok(true, "appended data");
+
+  info(`if error doesn't occur, we should be able to receive 'seeked', otherwise 'error' would be dispatched`);
+  v.currentTime = 22.05;
+  ok(await Promise.race([
+    once(v, "seeked").then(_ => true),
+    once(v, "error").then(_ => false),
+  ]), "finished seeking without any error");
+  ok(!v.error, "should not get any error");
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>

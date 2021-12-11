@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: Test resume of server-dropped connections</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<audio preload="auto" id="a"></audio>
+<iframe id="f"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var key = Math.round(Math.random()*1000000000);
+var a = document.getElementById("a");
+var f = document.getElementById("f");
+
+function didEnd() {
+  ok(a.currentTime > 2.26, "Reached correct end time (got " + a.currentTime + ", expected > 2.26");
+  SimpleTest.finish();
+}
+
+function didSendCancel() {
+  a.addEventListener("ended", didEnd);
+  a.play();
+}
+
+function didSuspend() {
+  a.removeEventListener("suspend", didSuspend);
+
+  // Cache must have filled up, or something. Tell the Web server to drop
+  // our connection.
+  f.addEventListener("load", didSendCancel);
+  f.src = "cancellable_request.sjs?cancelkey=" + key;
+}
+
+if (!a.canPlayType("audio/wave")) {
+  todo(false, "Test requires support for audio/wave");
+} else {
+  a.addEventListener("suspend", didSuspend);
+  a.src = "cancellable_request.sjs?key=" + key;
+  SimpleTest.waitForExplicitFinish();
+}
+</script>
+</pre>
+</body>
+</html>

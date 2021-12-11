@@ -1,0 +1,38 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    "IPeerConnection.idl",
+]
+
+XPIDL_MODULE = "peerconnection"
+
+SOURCES += [
+    "MediaModule.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/media/webrtc/",
+    "/dom/media/webrtc/common/time_profiling",
+    "/dom/media/webrtc/jsapi",
+    "/dom/media/webrtc/libwebrtcglue",
+    "/dom/media/webrtc/transport",
+    "/dom/media/webrtc/transportbridge",
+    "/ipc/chromium/src",
+    "/media/webrtc/",
+    "/third_party/libwebrtc",
+    "/third_party/libwebrtc/webrtc",
+]
+
+if CONFIG["MOZ_WEBRTC"]:
+    XPCOM_MANIFESTS += [
+        "components.conf",
+    ]
+
+FINAL_LIBRARY = "xul"
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

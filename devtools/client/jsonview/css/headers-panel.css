@@ -1,0 +1,66 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* Headers Panel */
+
+.headersPanelBox {
+  height: 100%;
+}
+
+.headersPanelBox .netInfoHeadersTable {
+  overflow: auto;
+  height: 100%;
+}
+
+.headersPanelBox .netHeadersGroup {
+  padding: 10px;
+}
+
+.headersPanelBox td {
+  vertical-align: bottom;
+}
+
+.headersPanelBox .netInfoHeadersGroup {
+  color: var(--theme-toolbar-color);
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding-top: 8px;
+  padding-bottom: 4px;
+  font-weight: bold;
+  user-select: none;
+}
+
+.headersPanelBox .netInfoParamValue {
+  word-wrap: break-word;
+}
+
+.headersPanelBox .netInfoParamName {
+  padding: 2px 10px 0 0;
+  font-weight: bold;
+  vertical-align: top;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/******************************************************************************/
+/* Theme colors have been generated/copied from Network Panel's header view */
+
+/* Light Theme */
+.theme-light .netInfoParamName {
+  color: var(--theme-highlight-red);
+}
+
+.theme-light .netInfoParamValue {
+  color: var(--theme-highlight-purple);
+}
+
+/* Dark Theme */
+.theme-dark .netInfoParamName {
+  color: var(--theme-highlight-purple);
+}
+
+.theme-dark .netInfoParamValue {
+  color: var(--theme-highlight-gray);
+}

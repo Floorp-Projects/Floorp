@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<title>Reference for: position:fixed should not be clipped by the subframe clip, but it should be clipped by the "clip" clip, and the "clip" clip should be moved by the subframe.</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+.subframe {
+  margin-top: 300px;
+  width: 400px;
+  height: 400px;
+  overflow: auto;
+}
+
+.subframeScrolled {
+  height: 800px;
+}
+
+.greenSquare {
+  position: absolute;
+  top: 150px;
+  left: 100px;
+  width: 200px;
+  height: 200px;
+  background: lime;
+}
+
+</style>
+
+<div class="subframe">
+  <div class="subframeScrolled"></div>
+</div>
+
+<div class="greenSquare"></div>
+
+<script>
+
+document.documentElement.scrollTop = 50;
+document.querySelector('.subframe').scrollTop = 150;
+
+</script>

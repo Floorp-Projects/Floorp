@@ -1,0 +1,73 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+addons = {
+    "browsing-data": [
+        "background.js",
+        "manifest.json",
+    ],
+    "tabs-activate-remove": [
+        "background.js",
+        "manifest.json",
+    ],
+    "tabs-activate-remove-2": [
+        "background.js",
+        "manifest.json",
+    ],
+    "update-1": [
+        "borderify.js",
+        "manifest.json",
+    ],
+    "update-2": [
+        "borderify.js",
+        "manifest.json",
+    ],
+    "update-postpone-1": [
+        "background.js",
+        "borderify.js",
+        "manifest.json",
+    ],
+    "update-postpone-2": [
+        "borderify.js",
+        "manifest.json",
+    ],
+    "update-with-perms-1": [
+        "borderify.js",
+        "manifest.json",
+    ],
+    "update-with-perms-2": [
+        "borderify.js",
+        "manifest.json",
+    ],
+    "page-history": [
+        "page.html",
+        "manifest.json",
+    ],
+    "download-flags-true": [
+        "download.js",
+        "manifest.json",
+    ],
+    "download-flags-false": [
+        "download.js",
+        "manifest.json",
+    ],
+    "download-onChanged": [
+        "download.js",
+        "manifest.json",
+    ],
+}
+
+for addon, files in addons.items():
+    indir = "web_extensions/%s" % addon
+    xpi = "%s.xpi" % indir
+    inputs = [indir]
+    for file in files:
+        inputs.append("%s/%s" % (indir, file))
+    GeneratedFile(
+        xpi, script="/toolkit/mozapps/extensions/test/create_xpi.py", inputs=inputs
+    )
+
+    TEST_HARNESS_FILES.testing.mochitest.tests.junit += ["!%s" % xpi]

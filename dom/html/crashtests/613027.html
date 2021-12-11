@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var a = document.createElementNS("http://www.w3.org/1999/xhtml", "fieldset");
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", "legend");
+  var c = document.createElementNS("http://www.w3.org/1999/xhtml", "input");
+
+  a.appendChild(b);
+  a.appendChild(c);
+  a.removeChild(b);
+  c.expandoQ = a;
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

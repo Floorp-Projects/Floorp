@@ -1,0 +1,87 @@
+.collapsible-section {
+  padding: $section-vertical-padding $section-horizontal-padding;
+
+  .section-title-container {
+    margin: 0;
+  }
+
+  .section-title {
+    font-size: $section-title-font-size;
+    font-weight: 600;
+    color: var(--newtab-text-primary-color);
+
+    &.grey-title {
+      color: var(--newtab-text-primary-color);
+      display: inline-block;
+      fill: var(--newtab-text-primary-color);
+      vertical-align: middle;
+    }
+
+    .section-title-contents {
+      // Center "What's Pocket?" for "mobile" viewport
+      @media (max-width: $break-point-medium - 1) {
+        display: block;
+
+        .learn-more-link-wrapper {
+          display: block;
+          text-align: center;
+
+          .learn-more-link {
+            margin-inline-start: 0;
+          }
+        }
+      }
+
+      vertical-align: top;
+    }
+  }
+
+  .section-top-bar {
+    min-height: 19px;
+    margin-bottom: 13px;
+    position: relative;
+  }
+
+  &.active {
+    background: var(--newtab-element-hover-color);
+    border-radius: 4px;
+  }
+
+  .learn-more-link {
+    font-size: 13px;
+    margin-inline-start: 12px;
+
+    a {
+      color: var(--newtab-primary-action-background);
+    }
+  }
+
+  .section-body-fallback {
+    height: $card-height;
+  }
+
+  .section-body {
+    // This is so the top sites favicon and card dropshadows don't get clipped during animation:
+    $horizontal-padding: 7px;
+    margin: 0 (-$horizontal-padding);
+    padding: 0 $horizontal-padding;
+
+    &.animating {
+      overflow: hidden;
+      pointer-events: none;
+    }
+  }
+
+  &[data-section-id='topsites'] {
+    .section-top-bar {
+      display: none;
+    }
+  }
+
+  // Hide first story card for the medium breakpoint to prevent orphaned third story
+  &[data-section-id='topstories'] .card-outer:first-child {
+    @media (min-width: $break-point-medium) and (max-width: $break-point-large - 1) {
+      display: none;
+    }
+  }
+}

@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script>
+
+function boom()
+{
+  document.getElementById('A').setAttribute('colspan', 0);
+  document.getElementById('B').setAttribute('rowspan', 3);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();">
+
+<table>
+  <tr>
+    <td id="A">TD</td>
+    <td id="B" colspan="3">TD</td>
+  </tr>
+</table>
+
+</body>
+</html>

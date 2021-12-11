@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var d = document.getElementById("d");
+  var s = document.getElementById("s");
+  s.insertBefore(document.createTextNode("T"), s.firstChild);
+  d.appendChild(s);
+  s.appendChild(document.createTextNode("\n"));
+}
+
+</script>
+
+<style type="text/css"> 
+
+div::first-letter { float: left; } 
+
+</style>
+
+</head>
+
+<body onload="boom();"><div id="d"><span id="s">h</span></div></body>
+
+</html>

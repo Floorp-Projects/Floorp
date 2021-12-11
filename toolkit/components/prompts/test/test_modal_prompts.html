@@ -1,0 +1,1303 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Modal Prompts Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+</head>
+<body>
+Prompter tests: modal prompts
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* eslint-disable complexity */
+async function runTests(util) {
+  const { NetUtil } = SpecialPowers.Cu.import(
+    "resource://gre/modules/NetUtil.jsm"
+  );
+
+  let state, action, promptDone;
+
+  let checkVal = {};
+  let textVal = {};
+  let passVal = {};
+  let flags;
+  let isOK;
+
+  // =====
+  info("Starting test: Alert");
+  state = {
+    msg: "This is the alert text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the alert text."];
+  await util.prompt("alert", promptArgs);
+
+  await promptDone;
+
+  // =====
+  info("Starting test: AlertCheck (null checkbox label, so it's hidden)");
+  state = {
+    msg: "This is the alertCheck text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = [
+    "TestTitle",
+    "This is the alertCheck text.",
+    null,
+    util.useAsync ? false : {},
+  ];
+  util.prompt("alertCheck", promptArgs);
+
+  await promptDone;
+
+  // =====
+  info("Starting test: AlertCheck");
+  state = {
+    msg: "This is the alertCheck text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the alertCheck text.",
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  let result = await util.prompt("alertCheck", promptArgs);
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "checkbox was checked"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Confirm (ok)");
+  state = {
+    msg: "This is the confirm text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the confirm text."];
+  result = await util.prompt("confirm", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Confirm (cancel)");
+  state = {
+    msg: "This is the confirm text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = ["TestTitle", "This is the confirm text."];
+  result = await util.prompt("confirm", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (ok, null checkbox label)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    null,
+    util.useAsync ? false : {},
+  ];
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (cancel, null checkbox label)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    null,
+    util.useAsync ? false : {},
+  ];
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (ok)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmCheck (cancel)");
+  state = {
+    msg: "This is the confirmCheck text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (ok, no default text)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "bacon",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "";
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal , null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "bacon",
+    "checking expected text value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (ok, default text)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "kittens",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "kittens";
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal, null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "kittens",
+    "checking expected text value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (cancel, default text)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "puppies",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "puppies";
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal, null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "puppies",
+    "checking expected text value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (cancel, default text modified)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "puppies",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    textField: "bacon",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "puppies";
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal, null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "puppies",
+    "checking expected text value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (ok, with checkbox)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "tribbles",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "tribbles";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the prompt text.",
+    util.useAsync ? textVal.value : textVal,
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "tribbles",
+    "checking expected text value"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: Prompt (cancel, with checkbox)");
+  state = {
+    msg: "This is the prompt text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "tribbles",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+  };
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "tribbles";
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the prompt text.",
+    util.useAsync ? textVal.value : textVal,
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "tribbles",
+    "checking expected text value"
+  );
+  ok(
+    util.useAsync ? result.checked : !checkVal.value,
+    "expected checkbox setting"
+  );
+
+  await promptDone;
+
+  // =====
+  // Just two tests for this, since password manager already tests this extensively.
+  info("Starting test: PromptUsernameAndPassword (ok)");
+  state = {
+    msg: "This is the pUAP text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "usr",
+    passValue: "ssh",
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "newusr",
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "usr";
+  passVal.value = "ssh";
+  promptArgs = [
+    "TestTitle",
+    "This is the pUAP text.",
+    util.useAsync ? textVal.value : textVal,
+    util.useAsync ? passVal.value : passVal
+  ];
+  result = await util.prompt("promptUsernameAndPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.user : textVal.value,
+    "newusr",
+    "checking expected text value"
+  );
+  is(
+    util.useAsync ? result.pass : passVal.value,
+    "newssh",
+    "checking expected pass value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: PromptUsernameAndPassword (cancel)");
+  state = {
+    msg: "This is the pUAP text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "usr",
+    passValue: "ssh",
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    textField: "newusr",
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  textVal.value = "usr";
+  passVal.value = "ssh";
+  promptArgs = [
+    "TestTitle",
+    "This is the pUAP text.",
+    util.useAsync ? textVal.value : textVal,
+    util.useAsync ? passVal.value : passVal
+  ];
+  result = await util.prompt("promptUsernameAndPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  ok(
+    (util.useAsync && result.user == "newusr") || textVal.value == "usr",
+    "checking expected text value"
+  );
+  ok(
+    (util.useAsync && result.pass == "newpass") || passVal.value == "ssh",
+    "checking expected pass value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: PromptPassword (ok)");
+  state = {
+    msg: "This is the promptPassword text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "",
+    passValue: "ssh",
+    focused: "passField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  passVal.value = "ssh";
+  promptArgs = [
+    "TestTitle",
+    "This is the promptPassword text.",
+    util.useAsync ? passVal.value : passVal
+  ];
+  result = await util.prompt("promptPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.pass : passVal.value,
+    "newssh",
+    "checking expected pass value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: PromptPassword (cancel)");
+  state = {
+    msg: "This is the promptPassword text.",
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "",
+    passValue: "ssh",
+    focused: "passField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "cancel",
+    passField: "newssh",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  passVal.value = "ssh";
+  promptArgs = [
+    "TestTitle",
+    "This is the promptPassword text.",
+    util.useAsync ? passVal.value : passVal
+  ];
+  result = await util.prompt("promptPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  ok(
+    (util.useAsync && result.pass == "newssh") || passVal.value == "ssh",
+    "checking expected pass value"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (ok/cancel, ok)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+    butt0Label: "OK",
+    butt1Label: "Cancel",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  flags = Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    null,
+    null,
+    null,
+    null,
+    util.useAsync ? false : {},
+  ];
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    0,
+    "checked expected button num click"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (yes/no, cancel)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+    butt0Label: "Yes",
+    butt1Label: "No",
+  };
+  action = {
+    buttonClick: "cancel",
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  flags = Ci.nsIPromptService.STD_YES_NO_BUTTONS;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    null,
+    null,
+    null,
+    null,
+    util.useAsync ? false : {},
+  ];
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    1,
+    "checked expected button num click"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (buttons from args, checkbox, ok)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+    butt0Label: "butt0",
+    butt1Label: "butt1",
+    butt2Label: "butt2",
+  };
+  action = {
+    buttonClick: "ok",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+  flags =
+    b * Ci.nsIPromptService.BUTTON_POS_2 +
+    b * Ci.nsIPromptService.BUTTON_POS_1 +
+    b * Ci.nsIPromptService.BUTTON_POS_0;
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    "butt0",
+    "butt1",
+    "butt2",
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    0,
+    "checked expected button num click"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (buttons from args, checkbox, cancel)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button1", // Default changed!
+    defButton: "button1",
+    butt0Label: "butt0",
+    butt1Label: "butt1",
+    butt2Label: "butt2",
+  };
+  action = {
+    buttonClick: "cancel",
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+  flags =
+    b * Ci.nsIPromptService.BUTTON_POS_2 +
+    b * Ci.nsIPromptService.BUTTON_POS_1 +
+    b * Ci.nsIPromptService.BUTTON_POS_0;
+  flags ^= Ci.nsIPromptService.BUTTON_POS_1_DEFAULT;
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    "butt0",
+    "butt1",
+    "butt2",
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    1,
+    "checked expected button num click"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
+
+  await promptDone;
+
+  // =====
+  info("Starting test: ConfirmEx (buttons from args, checkbox, button3)");
+  state = {
+    msg: "This is the confirmEx text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: false,
+    textValue: "",
+    passValue: "",
+    checkMsg: "Check me out!",
+    checked: false,
+    focused: "button2", // Default changed!
+    defButton: "button2",
+    butt0Label: "butt0",
+    butt1Label: "butt1",
+    butt2Label: "butt2",
+  };
+  action = {
+    buttonClick: 2,
+    setCheckbox: true,
+  };
+
+  promptDone = handlePrompt(state, action);
+
+  b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+  flags =
+    b * Ci.nsIPromptService.BUTTON_POS_2 +
+    b * Ci.nsIPromptService.BUTTON_POS_1 +
+    b * Ci.nsIPromptService.BUTTON_POS_0;
+  flags ^= Ci.nsIPromptService.BUTTON_POS_2_DEFAULT;
+  checkVal.value = false;
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmEx text.",
+    flags,
+    "butt0",
+    "butt1",
+    "butt2",
+    "Check me out!",
+    util.useAsync ? checkVal.value : checkVal,
+  ];
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    2,
+    "checked expected button num click"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
+
+  await promptDone;
+
+  // =====
+  // (skipped for E10S and tabmodal tests: window is required)
+  info("Starting test: Alert, no window");
+  state = {
+    msg: "This is the alert text.",
+    title: "TestTitle",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
+  if (util.modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW && !isE10S) {
+    promptDone = handlePrompt(state, action);
+
+    promptArgs = ["TestTitle", "This is the alert text."];
+    await util.prompt("alert", promptArgs);
+
+    await promptDone;
+  }
+
+  // =====
+  // (skipped for tabmodal tests: delay not supported)
+  info("Starting test: ConfirmEx (delay, ok)");
+  state = {
+    msg: "This is the confirmEx delay text.",
+    title: "TestTitle",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: null, // nothing focused until after delay fires
+    defButton: "button0",
+    butt0Label: "OK",
+    butt1Label: "Cancel",
+    butt0Disabled: true,
+  };
+
+  // OS X doesn't initially focus the button, but rather the infoBody.
+  // The focus stays there even after the button-enable delay has fired.
+  if (isOSX) state.focused = "infoBody";
+
+  action = {
+    buttonClick: "pollOK",
+  };
+  if (util.modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW) {
+    promptDone = handlePrompt(state, action);
+
+    flags =
+      Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS |
+      Ci.nsIPromptService.BUTTON_DELAY_ENABLE;
+    promptArgs = [
+      "TestTitle",
+      "This is the confirmEx delay text.",
+      flags,
+      null,
+      null,
+      null,
+      null,
+      util.useAsync ? false : {},
+    ];
+    result = await util.prompt("confirmEx", promptArgs);
+    is(
+      util.useAsync ? result.buttonNumClicked : result,
+      0,
+      "checked expected button num click"
+    );
+
+    await promptDone;
+  }
+
+  // promptAuth already tested via password manager but do a few specific things here.
+  var channel = NetUtil.newChannel({
+    uri: "http://example.com",
+    loadUsingSystemPrincipal: true,
+  });
+
+  var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
+  var authinfo = {
+    username: "",
+    password: "",
+    domain: "",
+    flags: Ci.nsIAuthInformation.AUTH_HOST,
+    authenticationScheme: "basic",
+    realm: "",
+  };
+
+  let msg =
+    util.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB
+      ? "This site is asking you to sign in."
+      : "http://example.com is requesting your username and password.";
+  // =====
+  // (promptAuth is only accessible from the prompt service)
+  info("Starting test: promptAuth with empty realm");
+  state = {
+    msg,
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "",
+    passValue: "",
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "username",
+    passField: "password",
+  };
+  if (util.usePromptService && !util.useAsync) {
+    promptDone = handlePrompt(state, action);
+
+    promptArgs = [channel, level, authinfo];
+    isOK = await util.prompt("promptAuth", promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
+
+    await promptDone;
+  }
+
+  // =====
+  // (promptAuth is only accessible from the prompt service)
+  msg =
+    util.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB
+      ? "This site is asking you to sign in."
+      : "http://example.com is requesting your username and password. The site " +
+        "says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+        "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+        "abcdefghi \u2026\u201d";
+
+  info("Starting test: promptAuth with long realm");
+  state = {
+    msg,
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "",
+    passValue: "",
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "username",
+    passField: "password",
+  };
+  if (util.usePromptService && !util.useAsync) {
+    promptDone = handlePrompt(state, action);
+
+    var longString = "";
+    for (var i = 0; i < 20; i++) longString += "abcdefghi "; // 200 chars long
+    authinfo.realm = longString;
+    authinfo.username = "";
+    authinfo.password = "";
+    promptArgs = [channel, level, authinfo];
+    isOK = await util.prompt("promptAuth", promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
+
+    await promptDone;
+  }
+
+  msg =
+    util.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB
+      ? ("This site is asking you to sign in. Warning: Your login information " +
+        "will be shared with example.com, not the website you are currently visiting.")
+      : ("http://example.com is requesting your username and password. " +
+        "WARNING: Your password will not be sent to the website you are currently visiting!");
+  info("Starting test: promptAuth for a cross-origin and a empty realm");
+  authinfo = {
+    username: "",
+    password: "",
+    domain: "",
+    flags:
+      Ci.nsIAuthInformation.AUTH_HOST |
+      Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
+    authenticationScheme: "basic",
+    realm: "",
+  };
+  state = {
+    msg,
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "",
+    passValue: "",
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "username",
+    passField: "password",
+  };
+  if (util.usePromptService && !util.useAsync) {
+    promptDone = handlePrompt(state, action);
+    promptArgs = [channel, level, authinfo];
+    isOK = await util.prompt("promptAuth", promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
+
+    await promptDone;
+  }
+
+  info("Starting test: promptAuth for a cross-origin with realm");
+  authinfo = {
+    username: "",
+    password: "",
+    domain: "",
+    flags:
+      Ci.nsIAuthInformation.AUTH_HOST |
+      Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
+    authenticationScheme: "basic",
+    realm: "Something!!!",
+  };
+  state = {
+    msg, // Same as previous test, see above.
+    title: "TestTitle",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    textValue: "",
+    passValue: "",
+    focused: "textField",
+    defButton: "button0",
+  };
+  action = {
+    buttonClick: "ok",
+    textField: "username",
+    passField: "password",
+  };
+  if (util.usePromptService && !util.useAsync) {
+    promptDone = handlePrompt(state, action);
+
+    promptArgs = [channel, level, authinfo];
+    isOK = await util.prompt("promptAuth", promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(authinfo.username, "username", "checking filled username");
+    is(authinfo.password, "password", "checking filled password");
+
+    await promptDone;
+  }
+}
+
+let promptArgs;
+
+add_task(async function runPromptTests() {
+  await runPromptCombinations(window, runTests);
+});
+</script>
+</pre>
+</body>
+</html>

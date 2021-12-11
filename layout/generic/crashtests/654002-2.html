@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function expStr(s, n)
+{
+  for (var i = 0; i < n; ++i)
+    s += s;
+  return s;
+}
+
+function boom()
+{
+  var s = document.getElementById("s")
+  var t = document.createTextNode(expStr("x ", 15));
+  s.appendChild(t);
+  document.documentElement.offsetHeight;
+  s.removeChild(t);
+}
+  
+</script>
+</head>
+
+<body onload="boom();"><div style="width: 1px"><span id="s"></span></div></body>
+</html>

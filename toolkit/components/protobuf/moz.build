@@ -1,0 +1,145 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'General')
+
+EXPORTS.google.protobuf += [
+    'src/google/protobuf/any.h',
+    'src/google/protobuf/arena.h',
+    'src/google/protobuf/arena_impl.h',
+    'src/google/protobuf/arenastring.h',
+    'src/google/protobuf/extension_set.h',
+    'src/google/protobuf/extension_set_inl.h',
+    'src/google/protobuf/generated_enum_util.h',
+    'src/google/protobuf/generated_message_table_driven.h',
+    'src/google/protobuf/generated_message_table_driven_lite.h',
+    'src/google/protobuf/generated_message_util.h',
+    'src/google/protobuf/has_bits.h',
+    'src/google/protobuf/implicit_weak_message.h',
+    'src/google/protobuf/inlined_string_field.h',
+    'src/google/protobuf/map.h',
+    'src/google/protobuf/map_entry_lite.h',
+    'src/google/protobuf/map_field_lite.h',
+    'src/google/protobuf/map_type_handler.h',
+    'src/google/protobuf/message_lite.h',
+    'src/google/protobuf/metadata_lite.h',
+    'src/google/protobuf/parse_context.h',
+    'src/google/protobuf/port.h',
+    'src/google/protobuf/port_def.inc',
+    'src/google/protobuf/port_undef.inc',
+    'src/google/protobuf/repeated_field.h',
+    'src/google/protobuf/wire_format_lite.h',
+]
+
+EXPORTS.google.protobuf.io += [
+    'src/google/protobuf/io/coded_stream.h',
+    'src/google/protobuf/io/gzip_stream.h',
+    'src/google/protobuf/io/io_win32.h',
+    'src/google/protobuf/io/strtod.h',
+    'src/google/protobuf/io/zero_copy_stream.h',
+    'src/google/protobuf/io/zero_copy_stream_impl.h',
+    'src/google/protobuf/io/zero_copy_stream_impl_lite.h',
+]
+
+EXPORTS.google.protobuf.stubs += [
+    'src/google/protobuf/stubs/bytestream.h',
+    'src/google/protobuf/stubs/callback.h',
+    'src/google/protobuf/stubs/casts.h',
+    'src/google/protobuf/stubs/common.h',
+    'src/google/protobuf/stubs/fastmem.h',
+    'src/google/protobuf/stubs/hash.h',
+    'src/google/protobuf/stubs/int128.h',
+    'src/google/protobuf/stubs/logging.h',
+    'src/google/protobuf/stubs/macros.h',
+    'src/google/protobuf/stubs/map_util.h',
+    'src/google/protobuf/stubs/mutex.h',
+    'src/google/protobuf/stubs/once.h',
+    'src/google/protobuf/stubs/platform_macros.h',
+    'src/google/protobuf/stubs/port.h',
+    'src/google/protobuf/stubs/status.h',
+    'src/google/protobuf/stubs/statusor.h',
+    'src/google/protobuf/stubs/stl_util.h',
+    'src/google/protobuf/stubs/stringpiece.h',
+    'src/google/protobuf/stubs/stringprintf.h',
+    'src/google/protobuf/stubs/strutil.h',
+    'src/google/protobuf/stubs/time.h',
+]
+
+UNIFIED_SOURCES += [
+    'src/google/protobuf/any_lite.cc',
+    'src/google/protobuf/arena.cc',
+    'src/google/protobuf/io/strtod.cc',
+    'src/google/protobuf/io/zero_copy_stream.cc',
+    'src/google/protobuf/io/zero_copy_stream_impl_lite.cc',
+    'src/google/protobuf/stubs/stringpiece.cc',
+    'src/google/protobuf/stubs/structurally_valid.cc',
+    'src/google/protobuf/stubs/strutil.cc',
+]
+
+SOURCES += [
+    'src/google/protobuf/extension_set.cc', # port_def conflicts
+    'src/google/protobuf/generated_enum_util.cc', # port_def conflicts
+    'src/google/protobuf/generated_message_table_driven_lite.cc',
+    'src/google/protobuf/generated_message_util.cc', # port_def conflicts
+    'src/google/protobuf/implicit_weak_message.cc', # port_def conflicts
+    'src/google/protobuf/io/coded_stream.cc', # port_def conflicts
+    'src/google/protobuf/io/gzip_stream.cc', # technically not in libprotobuf_lite_la_SOURCES but devtools/shared/heapsnapshot/HeapSnapshot.cpp uses it.
+    'src/google/protobuf/io/io_win32.cc', # port_def conflicts
+    'src/google/protobuf/io/zero_copy_stream_impl.cc', # port_def conflicts
+    'src/google/protobuf/message_lite.cc', # port_def conflicts
+    'src/google/protobuf/parse_context.cc', # port_def conflicts
+    'src/google/protobuf/repeated_field.cc', # port_def conflicts
+    'src/google/protobuf/stubs/bytestream.cc', # port_def conflicts
+    'src/google/protobuf/stubs/common.cc', # port_def conflicts
+    'src/google/protobuf/stubs/int128.cc', # port_def conflicts
+    'src/google/protobuf/stubs/status.cc', # port_def conflicts
+    'src/google/protobuf/stubs/statusor.cc', # port_def conflicts
+    'src/google/protobuf/stubs/stringprintf.cc', # port_def conflicts
+    'src/google/protobuf/stubs/time.cc',  # GetCurrentTime conflict in winbase.h
+    'src/google/protobuf/wire_format_lite.cc', # port_def conflicts
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'xul'
+
+DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
+DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
+
+# Suppress warnings in third-party code.
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += [
+        '-Wno-ignored-qualifiers',
+        '-Wno-maybe-uninitialized',
+        '-Wno-return-type',
+        '-Wno-sign-compare',
+        '-Wno-subobject-linkage',
+        '-Wno-unused-function',
+    ]
+    if CONFIG['CC_TYPE'] == 'clang':
+        CXXFLAGS += [
+            '-Wno-comma',
+            '-Wno-null-conversion',
+            '-Wno-unused-local-typedef',
+        ]
+elif CONFIG['CC_TYPE'] == 'clang-cl':
+    CXXFLAGS += [
+        '-Wno-macro-redefined',  # 'WIN32_LEAN_AND_MEAN' : macro redefinition
+        '-Wno-sign-compare',
+    ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['NOGDI'] = True  # wingdi.h defines ERROR as 0 and conflicts with logging.h
+
+if CONFIG['MOZ_USE_PTHREADS']:
+    DEFINES['HAVE_PTHREAD'] = True
+
+# Needed for the gzip streams.
+DEFINES['HAVE_ZLIB'] = True
+
+CXXFLAGS += CONFIG['TK_CFLAGS']

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
+  <checkbox id="c1" checked="true"/>
+  <checkbox id="c2"/>
+  <script>
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        let c1 = document.getElementById("c1");
+        let c2 = document.getElementById("c2");
+        c1.removeAttribute("checked");
+        c2.setAttribute("checked", true);
+        document.documentElement.className = "";
+      });
+    });
+  </script>
+</window>

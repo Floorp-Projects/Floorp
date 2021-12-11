@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<window title="Test mozFrameType attribute"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="runTests();">
+
+  <html:iframe id="normalFrame"/>
+  <html:iframe id="typeContentFrame" mozframetype="content"/>
+
+  <script type="application/javascript" src="docshell_helpers.js" />
+  <script type="application/javascript"><![CDATA[
+    function runTests() {
+      let opener = window.arguments[0];
+      let SimpleTest = opener.SimpleTest;
+
+      function getDocShellType(frame) {
+        return frame.contentWindow.docShell.itemType;
+      }
+
+      var normalFrame = document.getElementById("normalFrame");
+      var typeContentFrame = document.getElementById("typeContentFrame");
+
+      SimpleTest.is(getDocShellType(normalFrame), Ci.nsIDocShellTreeItem.typeChrome,
+                    "normal iframe in chrome document is typeChrome");
+      SimpleTest.is(getDocShellType(typeContentFrame), Ci.nsIDocShellTreeItem.typeContent,
+                    "iframe with mozFrameType='content' in chrome document is typeContent");
+
+      SimpleTest.executeSoon(function () {
+        // First focus the parent window and then close this one.
+        SimpleTest.waitForFocus(function() {
+          let ww = SpecialPowers.Services.ww;
+          ww.registerNotification(function windowObs(subject, topic, data) {
+            if (topic == "domwindowclosed") {
+              ww.unregisterNotification(windowObs);
+
+              // Don't start the next test synchronously!
+              SimpleTest.executeSoon(function() {
+                SimpleTest.finish();
+              });
+            }
+          });
+
+          window.close();
+        }, opener);
+      });
+    }
+  ]]></script>
+</window>

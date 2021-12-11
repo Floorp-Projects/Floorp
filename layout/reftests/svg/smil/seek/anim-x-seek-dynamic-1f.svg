@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Check that dynamic times are reset during a backwards seek
+    var svg = document.documentElement;
+    var a = document.getElementById('a');
+    svg.pauseAnimations();
+    svg.setCurrentTime(1);
+    a.beginElement();    // First interval: 1s-2s
+    a.endElementAt(1);
+    a.beginElementAt(2); // Second interval: 3s-indef
+    svg.setCurrentTime(5);
+    a.endElementAt(1);   // Add end time at 6s
+    svg.setCurrentTime(4); // Perform backwards seek from 5s->4s
+    svg.setCurrentTime(6); // End time at 6s should have been cleared
+                           // and we should still be active
+                           // (See SMIL 3.0, 'Hyperlinks and timing' which has:
+                           //   Resolved end times associated with events,
+                           //   Repeat-values, Accesskey-values or added via DOM
+                           //   method calls are cleared when seeking to time
+                           //   earlier than the resolved end time.
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="100" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="15" begin="indefinite" dur="indefinite" id="a"/>
+  </rect>
+</svg>

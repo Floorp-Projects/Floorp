@@ -1,0 +1,93 @@
+# This pref enables high-contrast mode in the testcases here:
+defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true) test-pref(layout.css.forced-colors.enabled,true) test-pref(browser.display.foreground_color,"#000000") test-pref(browser.display.background_color,"#FFFFFF") pref(ui.use_standins_for_native_colors,true) pref(widget.non-native-theme.always-high-contrast,true)
+
+# There are several platform-specific fuzzy-if notations below due to
+# anti-aliasing, extra ink overflow, and slightly inacurate reftest
+# mocking. You can read more about the annotations and their specifics here:
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1539212#c25
+
+== backplate-select-001.html backplate-select-001-ref.html
+
+fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-001.html backplate-bg-image-001-ref.html # bug 1577028
+fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-002.html backplate-bg-image-002-ref.html
+fuzzy-if(cocoaWidget,255-255,4-4) == backplate-bg-image-003.html backplate-bg-image-003-ref.html
+fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-004.html backplate-bg-image-004-ref.html
+fuzzy-if(cocoaWidget,255-255,80-80) == backplate-bg-image-005.html backplate-bg-image-005-ref.html
+
+fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
+
+fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
+fuzzy-if(cocoaWidget,255-255,20-20) fuzzy-if(!cocoaWidget&&!nativeThemePref,0-21,0-6) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
+fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-009.html backplate-bg-image-009-ref.html
+fuzzy-if(cocoaWidget,255-255,1495-1495) fuzzy-if(winWidget,255-255,353-353) fuzzy-if(Android,255-255,700-700) == backplate-bg-image-010.html backplate-bg-image-010-ref.html
+random-if(useDrawSnapshot) fuzzy-if(cocoaWidget,255-255,284-320) == backplate-bg-image-011.html backplate-bg-image-011-ref.html
+fuzzy-if(cocoaWidget,255-255,16-16) == backplate-bg-image-012.html backplate-bg-image-012-ref.html
+
+test-pref(browser.display.suppress_canvas_background_image_on_forced_colors,true) == bg-image-root-001.html bg-image-root-001-ref.html
+test-pref(browser.display.suppress_canvas_background_image_on_forced_colors,false) != bg-image-root-001.html bg-image-root-001-ref.html
+
+== bg-image-div-001.html bg-image-div-001-ref.html
+== bg-image-div-002.html bg-image-div-002-ref.html
+
+needs-focus == selection-001.html selection-001-ref.html
+pref(browser.display.document_color_use,0) needs-focus != selection-001.html selection-001-ref.html
+
+== color-transparent-001.html about:blank
+!= color-transparent-002.html about:blank
+!= semi-transparent-overlay.html about:blank
+!= semi-transparent-overlay.html semi-transparent-background.html
+
+== links.html links-ref.html
+== links-2.html links-ref.html
+
+pref(browser.display.document_color_use,2) == non-themed-button-001.html non-themed-button-001-ref.html
+pref(browser.display.document_color_use,2) == non-themed-button-002.html non-themed-button-002-ref.html
+
+!= cascade-001.html about:blank
+
+pref(browser.display.document_color_use,2) == background-transparent-form-control.html background-transparent-form-control-ref.html
+
+# prefers-contrast media query:
+
+# Forced colors affects prefers-contrast.
+== prefers-contrast-001.html prefers-contrast-black-ref.html
+# high should match when an accessibility theme is used
+test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(ui.useAccessibilityTheme,1) == prefers-contrast-001.html prefers-contrast-black-ref.html
+
+# high should match when an accessibility theme is being used
+test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(ui.useAccessibilityTheme,1) == prefers-contrast-002.html prefers-contrast-black-ref.html
+
+# If RFP is on the media query stops evaluating contrast preferences and
+# defaults to no-preference.
+test-pref(privacy.resistFingerprinting,true) != prefers-contrast-001.html prefers-contrast-black-ref.html
+# high should not match when RFP is enabled.
+test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(privacy.resistFingerprinting,true) test-pref(ui.useAccessibilityTheme,1) != prefers-contrast-002.html prefers-contrast-black-ref.html
+
+# Should only be enabled behind preference.
+test-pref(layout.css.prefers-contrast.enabled,false) != prefers-contrast-001.html prefers-contrast-black-ref.html
+
+# a prefers-contrast value of no-preference should evaluate to false
+# in the boolean context
+test-pref(browser.display.document_color_use,0) != prefers-contrast-001.html prefers-contrast-black-ref.html
+
+# a prefers-contrast value of no-preference should match no-preference
+test-pref(browser.display.document_color_use,0) == prefers-contrast-005.html prefers-contrast-black-ref.html
+
+# forced-colors media query
+
+# active
+== forced-colors-000.html prefers-contrast-black-ref.html
+test-pref(browser.display.document_color_use,0) != forced-colors-000.html prefers-contrast-black-ref.html
+
+# none
+test-pref(browser.display.document_color_use,0) == forced-colors-002.html prefers-contrast-black-ref.html
+!= forced-colors-002.html prefers-contrast-black-ref.html
+
+# boolean context
+== forced-colors-001.html prefers-contrast-black-ref.html
+test-pref(browser.display.document_color_use,0) != forced-colors-001.html prefers-contrast-black-ref.html
+
+!= system-colors.html system-colors-notref.html
+
+!= border-color-transparent.html about:blank
+== border-color-transparent.html border-color-transparent-ref.html

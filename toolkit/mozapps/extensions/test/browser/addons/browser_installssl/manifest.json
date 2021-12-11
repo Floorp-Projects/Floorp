@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+
+  "applications": {
+    "gecko": {
+      "id": "sslinstall-1@tests.mozilla.org"
+    }
+  },
+
+  "name": "SSL Install Tests",
+  "version": "1.0"
+}

@@ -1,0 +1,1352 @@
+diff --git a/Makefile.am b/Makefile.am
+index 9a25d9d4..07206601 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -571,6 +571,8 @@ src_tools_linux_core2md_core2md_LDADD = \
+ 	src/client/linux/libbreakpad_client.a
+ 
+ src_tools_linux_dump_syms_dump_syms_SOURCES = \
++	src/common/arm_ex_reader.cc \
++	src/common/arm_ex_to_module.cc \
+ 	src/common/dwarf_cfi_to_module.cc \
+ 	src/common/dwarf_cu_to_module.cc \
+ 	src/common/dwarf_line_to_module.cc \
+@@ -660,6 +662,8 @@ src_tools_mac_dump_syms_dump_syms_mac_LDADD= \
+ 	$(RUST_DEMANGLE_LIBS)
+ 
+ src_common_dumper_unittest_SOURCES = \
++	src/common/arm_ex_reader.cc \
++	src/common/arm_ex_to_module.cc \
+ 	src/common/byte_cursor_unittest.cc \
+ 	src/common/convert_UTF.cc \
+ 	src/common/dwarf_cfi_to_module.cc \
+@@ -1348,6 +1352,10 @@ EXTRA_DIST = \
+ 	src/client/windows/sender/crash_report_sender.cc \
+ 	src/client/windows/sender/crash_report_sender.h \
+ 	src/client/windows/sender/crash_report_sender.gyp \
++	src/common/arm_ex_reader.cc \
++	src/common/arm_ex_reader.h \
++	src/common/arm_ex_to_module.cc \
++	src/common/arm_ex_to_module.h \
+ 	src/common/dwarf/dwarf2diehandler.h \
+ 	src/common/dwarf/dwarf2enums.h \
+ 	src/common/dwarf/line_state_machine.h \
+diff --git a/src/common/arm_ex_reader.cc b/src/common/arm_ex_reader.cc
+new file mode 100644
+index 00000000..2d1ed983
+--- /dev/null
++++ b/src/common/arm_ex_reader.cc
+@@ -0,0 +1,487 @@
++
++/* libunwind - a platform-independent unwind library
++   Copyright 2011 Linaro Limited
++
++This file is part of libunwind.
++
++Permission is hereby granted, free of charge, to any person obtaining
++a copy of this software and associated documentation files (the
++"Software"), to deal in the Software without restriction, including
++without limitation the rights to use, copy, modify, merge, publish,
++distribute, sublicense, and/or sell copies of the Software, and to
++permit persons to whom the Software is furnished to do so, subject to
++the following conditions:
++
++The above copyright notice and this permission notice shall be
++included in all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
++
++// Copyright (c) 2010 Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++
++// Derived from libunwind, with extensive modifications.
++
++
++#include "common/arm_ex_reader.h"
++
++#include <assert.h>
++#include <stdio.h>
++
++// This file, in conjunction with arm_ex_to_module.cc, translates
++// EXIDX unwind information into the same format that Breakpad uses
++// for CFI information.  Hence Breakpad's CFI unwinding abilities
++// also become usable for EXIDX.
++//
++// See: "Exception Handling ABI for the ARM Architecture", ARM IHI 0038A
++// http://infocenter.arm.com/help/topic/com.arm.doc.ihi0038a/IHI0038A_ehabi.pdf
++
++// EXIDX data is presented in two parts:
++//
++// * an index table.  This contains two words per routine,
++//   the first of which identifies the routine, and the second
++//   of which is a reference to the unwind bytecode.  If the
++//   bytecode is very compact -- 3 bytes or less -- it can be
++//   stored directly in the second word.
++//
++// * an area containing the unwind bytecodes.
++
++// General flow is: ExceptionTableInfo::Start iterates over all
++// of the index table entries (pairs).  For each entry, it:
++//
++// * calls ExceptionTableInfo::ExtabEntryExtract to copy the bytecode
++//   out into an intermediate buffer.
++
++// * uses ExceptionTableInfo::ExtabEntryDecode to parse the intermediate
++//   buffer.  Each bytecode instruction is bundled into a
++//   arm_ex_to_module::extab_data structure, and handed to ..
++//
++// * .. ARMExToModule::ImproveStackFrame, which in turn hands it to
++//   ARMExToModule::TranslateCmd, and that generates the pseudo-CFI
++//   records that Breakpad stores.
++
++#define ARM_EXIDX_CANT_UNWIND 0x00000001
++#define ARM_EXIDX_COMPACT     0x80000000
++#define ARM_EXTBL_OP_FINISH   0xb0
++#define ARM_EXIDX_TABLE_LIMIT (255*4)
++
++namespace arm_ex_reader {
++
++using arm_ex_to_module::ARM_EXIDX_CMD_FINISH;
++using arm_ex_to_module::ARM_EXIDX_CMD_SUB_FROM_VSP;
++using arm_ex_to_module::ARM_EXIDX_CMD_ADD_TO_VSP;
++using arm_ex_to_module::ARM_EXIDX_CMD_REG_POP;
++using arm_ex_to_module::ARM_EXIDX_CMD_REG_TO_SP;
++using arm_ex_to_module::ARM_EXIDX_CMD_VFP_POP;
++using arm_ex_to_module::ARM_EXIDX_CMD_WREG_POP;
++using arm_ex_to_module::ARM_EXIDX_CMD_WCGR_POP;
++using arm_ex_to_module::ARM_EXIDX_CMD_RESERVED;
++using arm_ex_to_module::ARM_EXIDX_CMD_REFUSED;
++using arm_ex_to_module::exidx_entry;
++using arm_ex_to_module::ARM_EXIDX_VFP_SHIFT_16;
++using arm_ex_to_module::ARM_EXIDX_VFP_FSTMD;
++using google_breakpad::MemoryRange;
++
++
++static void* Prel31ToAddr(const void* addr) {
++  uint32_t offset32 = *reinterpret_cast<const uint32_t*>(addr);
++  // sign extend offset32[30:0] to 64 bits -- copy bit 30 to positions
++  // 63:31 inclusive.
++  uint64_t offset64 = offset32;
++  if (offset64 & (1ULL << 30))
++    offset64 |= 0xFFFFFFFF80000000ULL;
++  else
++    offset64 &= 0x000000007FFFFFFFULL;
++  return ((char*)addr) + (uintptr_t)offset64;
++}
++
++
++// Extract unwind bytecode for the function denoted by |entry| into |buf|,
++// and return the number of bytes of |buf| written, along with a code
++// indicating the outcome.
++
++ExceptionTableInfo::ExExtractResult ExceptionTableInfo::ExtabEntryExtract(
++    const struct exidx_entry* entry,
++    uint8_t* buf, size_t buf_size,
++    size_t* buf_used) {
++  MemoryRange mr_out(buf, buf_size);
++
++  *buf_used = 0;
++
++# define PUT_BUF_U8(_byte) \
++  do { if (!mr_out.Covers(*buf_used, 1)) return ExOutBufOverflow; \
++       buf[(*buf_used)++] = (_byte); } while (0)
++
++# define GET_EX_U32(_lval, _addr, _sec_mr) \
++  do { if (!(_sec_mr).Covers(reinterpret_cast<const uint8_t*>(_addr) \
++                             - (_sec_mr).data(), 4)) \
++         return ExInBufOverflow; \
++       (_lval) = *(reinterpret_cast<const uint32_t*>(_addr)); } while (0)
++
++# define GET_EXIDX_U32(_lval, _addr) \
++            GET_EX_U32(_lval, _addr, mr_exidx_)
++# define GET_EXTAB_U32(_lval, _addr) \
++            GET_EX_U32(_lval, _addr, mr_extab_)
++
++  uint32_t data;
++  GET_EXIDX_U32(data, &entry->data);
++
++  // A function can be marked CANT_UNWIND if (eg) it is known to be
++  // at the bottom of the stack.
++  if (data == ARM_EXIDX_CANT_UNWIND)
++    return ExCantUnwind;
++
++  uint32_t  pers;          // personality number
++  uint32_t  extra;         // number of extra data words required
++  uint32_t  extra_allowed; // number of extra data words allowed
++  uint32_t* extbl_data;    // the handler entry, if not inlined
++
++  if (data & ARM_EXIDX_COMPACT) {
++    // The handler table entry has been inlined into the index table entry.
++    // In this case it can only be an ARM-defined compact model, since
++    // bit 31 is 1.  Only personalities 0, 1 and 2 are defined for the
++    // ARM compact model, but 1 and 2 are "Long format" and may require
++    // extra data words.  Hence the allowable personalities here are:
++    //   personality 0, in which case 'extra' has no meaning
++    //   personality 1, with zero extra words
++    //   personality 2, with zero extra words
++    extbl_data = NULL;
++    pers  = (data >> 24) & 0x0F;
++    extra = (data >> 16) & 0xFF;
++    extra_allowed = 0;
++  }
++  else {
++    // The index table entry is a pointer to the handler entry.  Note
++    // that Prel31ToAddr will read the given address, but we already
++    // range-checked above.
++    extbl_data = reinterpret_cast<uint32_t*>(Prel31ToAddr(&entry->data));
++    GET_EXTAB_U32(data, extbl_data);
++    if (!(data & ARM_EXIDX_COMPACT)) {
++      // This denotes a "generic model" handler.  That will involve
++      // executing arbitary machine code, which is something we
++      // can't represent here; hence reject it.
++      return ExCantRepresent;
++    }
++    // So we have a compact model representation.  Again, 3 possible
++    // personalities, but this time up to 255 allowable extra words.
++    pers  = (data >> 24) & 0x0F;
++    extra = (data >> 16) & 0xFF;
++    extra_allowed = 255;
++    extbl_data++;
++  }
++
++  // Now look at the the handler table entry.  The first word is
++  // |data| and subsequent words start at |*extbl_data|.  The number
++  // of extra words to use is |extra|, provided that the personality
++  // allows extra words.  Even if it does, none may be available --
++  // extra_allowed is the maximum number of extra words allowed. */
++  if (pers == 0) {
++    // "Su16" in the documentation -- 3 unwinding insn bytes
++    // |extra| has no meaning here; instead that byte is an unwind-info byte
++    PUT_BUF_U8(data >> 16);
++    PUT_BUF_U8(data >> 8);
++    PUT_BUF_U8(data);
++  }
++  else if ((pers == 1 || pers == 2) && extra <= extra_allowed) {
++    // "Lu16" or "Lu32" respectively -- 2 unwinding insn bytes,
++    // and up to 255 extra words.
++    PUT_BUF_U8(data >> 8);
++    PUT_BUF_U8(data);
++    for (uint32_t j = 0; j < extra; j++) {
++      GET_EXTAB_U32(data, extbl_data);
++      extbl_data++;
++      PUT_BUF_U8(data >> 24);
++      PUT_BUF_U8(data >> 16);
++      PUT_BUF_U8(data >> 8);
++      PUT_BUF_U8(data >> 0);
++    }
++  }
++  else {
++    // The entry is invalid.
++    return ExInvalid;
++  }
++
++  // Make sure the entry is terminated with "FINISH"
++  if (*buf_used > 0 && buf[(*buf_used) - 1] != ARM_EXTBL_OP_FINISH)
++    PUT_BUF_U8(ARM_EXTBL_OP_FINISH);
++
++  return ExSuccess;
++
++# undef GET_EXTAB_U32
++# undef GET_EXIDX_U32
++# undef GET_U32
++# undef PUT_BUF_U8
++}
++
++
++// Take the unwind information extracted by ExtabEntryExtract
++// and parse it into frame-unwind instructions.  These are as
++// specified in "Table 4, ARM-defined frame-unwinding instructions"
++// in the specification document detailed in comments at the top
++// of this file.
++//
++// This reads from |buf[0, +data_size)|.  It checks for overruns of
++// the input buffer and returns a negative value if that happens, or
++// for any other failure cases.  It returns zero in case of success.
++int ExceptionTableInfo::ExtabEntryDecode(const uint8_t* buf, size_t buf_size) {
++  if (buf == NULL || buf_size == 0)
++    return -1;
++
++  MemoryRange mr_in(buf, buf_size);
++  const uint8_t* buf_initially = buf;
++
++# define GET_BUF_U8(_lval) \
++  do { if (!mr_in.Covers(buf - buf_initially, 1)) return -1; \
++       (_lval) = *(buf++); } while (0)
++
++  const uint8_t* end = buf + buf_size;
++
++  while (buf < end) {
++    struct arm_ex_to_module::extab_data edata;
++    memset(&edata, 0, sizeof(edata));
++
++    uint8_t op;
++    GET_BUF_U8(op);
++    if ((op & 0xc0) == 0x00) {
++      // vsp = vsp + (xxxxxx << 2) + 4
++      edata.cmd = ARM_EXIDX_CMD_ADD_TO_VSP;
++      edata.data = (((int)op & 0x3f) << 2) + 4;
++    } else if ((op & 0xc0) == 0x40) {
++      // vsp = vsp - (xxxxxx << 2) - 4
++      edata.cmd = ARM_EXIDX_CMD_SUB_FROM_VSP;
++      edata.data = (((int)op & 0x3f) << 2) + 4;
++    } else if ((op & 0xf0) == 0x80) {
++      uint8_t op2;
++      GET_BUF_U8(op2);
++      if (op == 0x80 && op2 == 0x00) {
++        // Refuse to unwind
++        edata.cmd = ARM_EXIDX_CMD_REFUSED;
++      } else {
++        // Pop up to 12 integer registers under masks {r15-r12},{r11-r4}
++        edata.cmd = ARM_EXIDX_CMD_REG_POP;
++        edata.data = ((op & 0xf) << 8) | op2;
++        edata.data = edata.data << 4;
++      }
++    } else if ((op & 0xf0) == 0x90) {
++      if (op == 0x9d || op == 0x9f) {
++        // 9d: Reserved as prefix for ARM register to register moves
++        // 9f: Reserved as perfix for Intel Wireless MMX reg to reg moves
++        edata.cmd = ARM_EXIDX_CMD_RESERVED;
++      } else {
++        // Set vsp = r[nnnn]
++        edata.cmd = ARM_EXIDX_CMD_REG_TO_SP;
++        edata.data = op & 0x0f;
++      }
++    } else if ((op & 0xf0) == 0xa0) {
++      // Pop r4 to r[4+nnn],          or
++      // Pop r4 to r[4+nnn] and r14   or
++      unsigned end = (op & 0x07);
++      edata.data = (1 << (end + 1)) - 1;
++      edata.data = edata.data << 4;
++      if (op & 0x08) edata.data |= 1 << 14;
++      edata.cmd = ARM_EXIDX_CMD_REG_POP;
++    } else if (op == ARM_EXTBL_OP_FINISH) {
++      // Finish
++      edata.cmd = ARM_EXIDX_CMD_FINISH;
++      buf = end;
++    } else if (op == 0xb1) {
++      uint8_t op2;
++      GET_BUF_U8(op2);
++      if (op2 == 0 || (op2 & 0xf0)) {
++        // Spare
++        edata.cmd = ARM_EXIDX_CMD_RESERVED;
++      } else {
++        // Pop integer registers under mask {r3,r2,r1,r0}
++        edata.cmd = ARM_EXIDX_CMD_REG_POP;
++        edata.data = op2 & 0x0f;
++      }
++    } else if (op == 0xb2) {
++      // vsp = vsp + 0x204 + (uleb128 << 2)
++      uint64_t offset = 0;
++      uint8_t byte, shift = 0;
++      do {
++        GET_BUF_U8(byte);
++        offset |= (byte & 0x7f) << shift;
++        shift += 7;
++      } while ((byte & 0x80) && buf < end);
++      edata.data = offset * 4 + 0x204;
++      edata.cmd = ARM_EXIDX_CMD_ADD_TO_VSP;
++    } else if (op == 0xb3 || op == 0xc8 || op == 0xc9) {
++      // b3: Pop VFP regs D[ssss]    to D[ssss+cccc],    FSTMFDX-ishly
++      // c8: Pop VFP regs D[16+ssss] to D[16+ssss+cccc], FSTMFDD-ishly
++      // c9: Pop VFP regs D[ssss]    to D[ssss+cccc],    FSTMFDD-ishly
++      edata.cmd = ARM_EXIDX_CMD_VFP_POP;
++      GET_BUF_U8(edata.data);
++      if (op == 0xc8) edata.data |= ARM_EXIDX_VFP_SHIFT_16;
++      if (op != 0xb3) edata.data |= ARM_EXIDX_VFP_FSTMD;
++    } else if ((op & 0xf8) == 0xb8 || (op & 0xf8) == 0xd0) {
++      // b8: Pop VFP regs D[8] to D[8+nnn], FSTMFDX-ishly
++      // d0: Pop VFP regs D[8] to D[8+nnn], FSTMFDD-ishly
++      edata.cmd = ARM_EXIDX_CMD_VFP_POP;
++      edata.data = 0x80 | (op & 0x07);
++      if ((op & 0xf8) == 0xd0) edata.data |= ARM_EXIDX_VFP_FSTMD;
++    } else if (op >= 0xc0 && op <= 0xc5) {
++      // Intel Wireless MMX pop wR[10]-wr[10+nnn], nnn != 6,7
++      edata.cmd = ARM_EXIDX_CMD_WREG_POP;
++      edata.data = 0xa0 | (op & 0x07);
++    } else if (op == 0xc6) {
++      // Intel Wireless MMX pop wR[ssss] to wR[ssss+cccc]
++      edata.cmd = ARM_EXIDX_CMD_WREG_POP;
++      GET_BUF_U8(edata.data);
++    } else if (op == 0xc7) {
++      uint8_t op2;
++      GET_BUF_U8(op2);
++      if (op2 == 0 || (op2 & 0xf0)) {
++        // Spare
++        edata.cmd = ARM_EXIDX_CMD_RESERVED;
++      } else {
++        // Intel Wireless MMX pop wCGR registers under mask {wCGR3,2,1,0}
++        edata.cmd = ARM_EXIDX_CMD_WCGR_POP;
++        edata.data = op2 & 0x0f;
++      }
++    } else {
++      // Spare
++      edata.cmd = ARM_EXIDX_CMD_RESERVED;
++    }
++
++    int ret = handler_->ImproveStackFrame(&edata);
++    if (ret < 0)
++      return ret;
++  }
++  return 0;
++
++# undef GET_BUF_U8
++}
++
++void ExceptionTableInfo::Start() {
++  const struct exidx_entry* start
++    = reinterpret_cast<const struct exidx_entry*>(mr_exidx_.data());
++  const struct exidx_entry* end
++    = reinterpret_cast<const struct exidx_entry*>(mr_exidx_.data()
++                                                  + mr_exidx_.length());
++
++  // Iterate over each of the EXIDX entries (pairs of 32-bit words).
++  // These occupy the entire .exidx section.
++  for (const struct exidx_entry* entry = start; entry < end; ++entry) {
++    // Figure out the code address range that this table entry is
++    // associated with.
++    uint32_t addr = (reinterpret_cast<char*>(Prel31ToAddr(&entry->addr))
++                     - mapping_addr_ + loading_addr_) & 0x7fffffff;
++    uint32_t next_addr;
++    if (entry < end - 1) {
++      next_addr = (reinterpret_cast<char*>(Prel31ToAddr(&((entry + 1)->addr)))
++                   - mapping_addr_ + loading_addr_) & 0x7fffffff;
++    } else {
++      // This is the last EXIDX entry in the sequence, so we don't
++      // have an address for the start of the next function, to limit
++      // this one.  Instead use the address of the last byte of the
++      // text section associated with this .exidx section, that we
++      // have been given.  So as to avoid junking up the CFI unwind
++      // tables with absurdly large address ranges in the case where
++      // text_last_svma_ is wrong, only use the value if it is nonzero
++      // and within one page of |addr|.  Otherwise assume a length of 1.
++      //
++      // In some cases, gcc has been observed to finish the exidx
++      // section with an entry of length 1 marked CANT_UNWIND,
++      // presumably exactly for the purpose of giving a definite
++      // length for the last real entry, without having to look at
++      // text segment boundaries.
++      bool plausible = false;
++      next_addr = addr + 1;
++      if (text_last_svma_ != 0) {
++        uint32_t maybe_next_addr = text_last_svma_ + 1;
++        if (maybe_next_addr > addr && maybe_next_addr - addr <= 4096) {
++          next_addr = maybe_next_addr;
++          plausible = true;
++        }
++      }
++      if (!plausible) {
++        fprintf(stderr, "ExceptionTableInfo: implausible EXIDX last entry size "
++                "%d, using 1 instead.", (int32_t)(text_last_svma_ - addr));
++      }
++    }
++
++    // Extract the unwind info into |buf|.  This might fail for
++    // various reasons.  It involves reading both the .exidx and
++    // .extab sections.  All accesses to those sections are
++    // bounds-checked.
++    uint8_t buf[ARM_EXIDX_TABLE_LIMIT];
++    size_t buf_used = 0;
++    ExExtractResult res = ExtabEntryExtract(entry, buf, sizeof(buf), &buf_used);
++    if (res != ExSuccess) {
++      // Couldn't extract the unwind info, for some reason.  Move on.
++      switch (res) {
++        case ExInBufOverflow:
++          fprintf(stderr, "ExtabEntryExtract: .exidx/.extab section overrun");
++          break;
++        case ExOutBufOverflow:
++          fprintf(stderr, "ExtabEntryExtract: bytecode buffer overflow");
++          break;
++        case ExCantUnwind:
++          fprintf(stderr, "ExtabEntryExtract: function is marked CANT_UNWIND");
++          break;
++        case ExCantRepresent:
++          fprintf(stderr, "ExtabEntryExtract: bytecode can't be represented");
++          break;
++        case ExInvalid:
++          fprintf(stderr, "ExtabEntryExtract: index table entry is invalid");
++          break;
++        default:
++          fprintf(stderr, "ExtabEntryExtract: unknown error: %d", (int)res);
++          break;
++      }
++      continue;
++    }
++
++    // Finally, work through the unwind instructions in |buf| and
++    // create CFI entries that Breakpad can use.  This can also fail.
++    // First, add a new stack frame entry, into which ExtabEntryDecode
++    // will write the CFI entries.
++    if (!handler_->HasStackFrame(addr, next_addr - addr)) {
++      handler_->AddStackFrame(addr, next_addr - addr);
++      int ret = ExtabEntryDecode(buf, buf_used);
++      if (ret < 0) {
++	handler_->DeleteStackFrame();
++	fprintf(stderr, "ExtabEntryDecode: failed with error code: %d", ret);
++	continue;
++      }
++      handler_->SubmitStackFrame();
++    }
++
++  } /* iterating over .exidx */
++}
++
++}  // namespace arm_ex_reader
+diff --git a/src/common/arm_ex_reader.h b/src/common/arm_ex_reader.h
+new file mode 100644
+index 00000000..9b54e8a0
+--- /dev/null
++++ b/src/common/arm_ex_reader.h
+@@ -0,0 +1,114 @@
++/* libunwind - a platform-independent unwind library
++   Copyright 2011 Linaro Limited
++
++This file is part of libunwind.
++
++Permission is hereby granted, free of charge, to any person obtaining
++a copy of this software and associated documentation files (the
++"Software"), to deal in the Software without restriction, including
++without limitation the rights to use, copy, modify, merge, publish,
++distribute, sublicense, and/or sell copies of the Software, and to
++permit persons to whom the Software is furnished to do so, subject to
++the following conditions:
++
++The above copyright notice and this permission notice shall be
++included in all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
++
++// Copyright (c) 2010 Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++
++// Derived from libunwind, with extensive modifications.
++
++#ifndef COMMON_ARM_EX_READER_H__
++#define COMMON_ARM_EX_READER_H__
++
++#include "common/arm_ex_to_module.h"
++#include "common/memory_range.h"
++
++namespace arm_ex_reader {
++
++// This class is a reader for ARM unwind information
++// from .ARM.exidx and .ARM.extab sections.
++class ExceptionTableInfo {
++ public:
++  ExceptionTableInfo(const char* exidx, size_t exidx_size,
++                     const char* extab, size_t extab_size,
++                     uint32_t text_last_svma,
++                     arm_ex_to_module::ARMExToModule* handler,
++                     const char* mapping_addr,
++                     uint32_t loading_addr)
++      : mr_exidx_(google_breakpad::MemoryRange(exidx, exidx_size)),
++        mr_extab_(google_breakpad::MemoryRange(extab, extab_size)),
++        text_last_svma_(text_last_svma),
++        handler_(handler), mapping_addr_(mapping_addr),
++        loading_addr_(loading_addr) { }
++
++  ~ExceptionTableInfo() { }
++
++  // Parses the entries in .ARM.exidx and possibly
++  // in .ARM.extab tables, reports what we find to
++  // arm_ex_to_module::ARMExToModule.
++  void Start();
++
++ private:
++  google_breakpad::MemoryRange mr_exidx_;
++  google_breakpad::MemoryRange mr_extab_;
++  uint32_t text_last_svma_;
++  arm_ex_to_module::ARMExToModule* handler_;
++  const char* mapping_addr_;
++  uint32_t loading_addr_;
++
++  enum ExExtractResult {
++    ExSuccess,        // success
++    ExInBufOverflow,  // out-of-range while reading .exidx
++    ExOutBufOverflow, // output buffer is too small
++    ExCantUnwind,     // this function is marked CANT_UNWIND
++    ExCantRepresent,  // entry valid, but we can't represent it
++    ExInvalid         // entry is invalid
++  };
++  ExExtractResult
++    ExtabEntryExtract(const struct arm_ex_to_module::exidx_entry* entry,
++                      uint8_t* buf, size_t buf_size,
++                      size_t* buf_used);
++
++  int ExtabEntryDecode(const uint8_t* buf, size_t buf_size);
++};
++
++}  // namespace arm_ex_reader
++
++#endif // COMMON_ARM_EX_READER_H__
+diff --git a/src/common/arm_ex_to_module.cc b/src/common/arm_ex_to_module.cc
+new file mode 100644
+index 00000000..c326744f
+--- /dev/null
++++ b/src/common/arm_ex_to_module.cc
+@@ -0,0 +1,209 @@
++
++/* libunwind - a platform-independent unwind library
++   Copyright 2011 Linaro Limited
++
++This file is part of libunwind.
++
++Permission is hereby granted, free of charge, to any person obtaining
++a copy of this software and associated documentation files (the
++"Software"), to deal in the Software without restriction, including
++without limitation the rights to use, copy, modify, merge, publish,
++distribute, sublicense, and/or sell copies of the Software, and to
++permit persons to whom the Software is furnished to do so, subject to
++the following conditions:
++
++The above copyright notice and this permission notice shall be
++included in all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
++
++// Copyright (c) 2010 Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++
++// Derived from libunwind, with extensive modifications.
++
++#include "common/arm_ex_to_module.h"
++
++#include <stdio.h>
++#include <assert.h>
++
++// For big-picture comments on how the EXIDX reader works,
++// see arm_ex_reader.cc.
++
++#define ARM_EXBUF_START(x) (((x) >> 4) & 0x0f)
++#define ARM_EXBUF_COUNT(x) ((x) & 0x0f)
++#define ARM_EXBUF_END(x)   (ARM_EXBUF_START(x) + ARM_EXBUF_COUNT(x))
++
++using google_breakpad::Module;
++
++namespace arm_ex_to_module {
++
++static const char* const regnames[] = {
++ "r0", "r1", "r2",  "r3",  "r4",  "r5", "r6", "r7",
++ "r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc",
++ "f0", "f1", "f2",  "f3",  "f4",  "f5", "f6", "f7",
++ "fps", "cpsr"
++};
++
++// Translate command from extab_data to command for Module.
++int ARMExToModule::TranslateCmd(const struct extab_data* edata,
++                                Module::StackFrameEntry* entry, string& vsp) {
++  int ret = 0;
++  switch (edata->cmd) {
++    case ARM_EXIDX_CMD_FINISH:
++      /* Copy LR to PC if there isn't currently a rule for PC in force. */
++      if (entry->initial_rules.find("pc")
++          == entry->initial_rules.end()) {
++        if (entry->initial_rules.find("lr")
++            == entry->initial_rules.end()) {
++          entry->initial_rules["pc"] = "lr";
++        } else {
++          entry->initial_rules["pc"] = entry->initial_rules["lr"];
++        }
++      }
++      break;
++    case ARM_EXIDX_CMD_SUB_FROM_VSP:
++      {
++        char c[16];
++        sprintf(c, " %d -", edata->data);
++        vsp += c;
++      }
++      break;
++    case ARM_EXIDX_CMD_ADD_TO_VSP:
++      {
++        char c[16];
++        sprintf(c, " %d +", edata->data);
++        vsp += c;
++      }
++      break;
++    case ARM_EXIDX_CMD_REG_POP:
++      for (unsigned int i = 0; i < 16; i++) {
++        if (edata->data & (1 << i)) {
++          entry->initial_rules[regnames[i]]
++            = vsp + " ^";
++          vsp += " 4 +";
++        }
++      }
++      /* Set cfa in case the SP got popped. */
++      if (edata->data & (1 << 13)) {
++        vsp = entry->initial_rules["sp"];
++      }
++      break;
++    case ARM_EXIDX_CMD_REG_TO_SP: {
++      assert (edata->data < 16);
++      const char* const regname = regnames[edata->data];
++      if (entry->initial_rules.find(regname) == entry->initial_rules.end()) {
++        entry->initial_rules["sp"] = regname;
++      } else {
++        entry->initial_rules["sp"] = entry->initial_rules[regname];
++      }
++      vsp = entry->initial_rules["sp"];
++      break;
++    }
++    case ARM_EXIDX_CMD_VFP_POP:
++      /* Don't recover VFP registers, but be sure to adjust the stack
++         pointer. */
++      for (unsigned int i = ARM_EXBUF_START(edata->data);
++           i <= ARM_EXBUF_END(edata->data); i++) {
++        vsp += " 8 +";
++      }
++      if (!(edata->data & ARM_EXIDX_VFP_FSTMD)) {
++        vsp += " 4 +";
++      }
++      break;
++    case ARM_EXIDX_CMD_WREG_POP:
++      for (unsigned int i = ARM_EXBUF_START(edata->data);
++           i <= ARM_EXBUF_END(edata->data); i++) {
++        vsp += " 8 +";
++      }
++      break;
++    case ARM_EXIDX_CMD_WCGR_POP:
++      // Pop wCGR registers under mask {wCGR3,2,1,0}, hence "i < 4"
++      for (unsigned int i = 0; i < 4; i++) {
++        if (edata->data & (1 << i)) {
++          vsp += " 4 +";
++        }
++      }
++      break;
++    case ARM_EXIDX_CMD_REFUSED:
++    case ARM_EXIDX_CMD_RESERVED:
++      ret = -1;
++      break;
++  }
++  return ret;
++}
++
++bool ARMExToModule::HasStackFrame(uintptr_t addr, size_t size) {
++  // Invariant: the range [addr,covered) is covered by existing stack
++  // frame entries.
++  uintptr_t covered = addr;
++  while (covered < addr + size) {
++    const Module::StackFrameEntry *old_entry =
++      module_->FindStackFrameEntryByAddress(covered);
++    if (!old_entry) {
++      return false;
++    }
++    covered = old_entry->address + old_entry->size;
++  }
++  return true;
++}
++
++void ARMExToModule::AddStackFrame(uintptr_t addr, size_t size) {
++  stack_frame_entry_ = new Module::StackFrameEntry;
++  stack_frame_entry_->address = addr;
++  stack_frame_entry_->size = size;
++  stack_frame_entry_->initial_rules[".cfa"] = "sp";
++  vsp_ = "sp";
++}
++
++int ARMExToModule::ImproveStackFrame(const struct extab_data* edata) {
++  return TranslateCmd(edata, stack_frame_entry_, vsp_) ;
++}
++
++void ARMExToModule::DeleteStackFrame() {
++  delete stack_frame_entry_;
++}
++
++void ARMExToModule::SubmitStackFrame() {
++  // return address always winds up in pc
++  stack_frame_entry_->initial_rules[".ra"]
++    = stack_frame_entry_->initial_rules["pc"];
++  // the final value of vsp is the new value of sp
++  stack_frame_entry_->initial_rules["sp"] = vsp_;
++  module_->AddStackFrameEntry(stack_frame_entry_);
++}
++
++}  // namespace arm_ex_to_module
+diff --git a/src/common/arm_ex_to_module.h b/src/common/arm_ex_to_module.h
+new file mode 100644
+index 00000000..f413a16a
+--- /dev/null
++++ b/src/common/arm_ex_to_module.h
+@@ -0,0 +1,119 @@
++/* libunwind - a platform-independent unwind library
++   Copyright 2011 Linaro Limited
++
++This file is part of libunwind.
++
++Permission is hereby granted, free of charge, to any person obtaining
++a copy of this software and associated documentation files (the
++"Software"), to deal in the Software without restriction, including
++without limitation the rights to use, copy, modify, merge, publish,
++distribute, sublicense, and/or sell copies of the Software, and to
++permit persons to whom the Software is furnished to do so, subject to
++the following conditions:
++
++The above copyright notice and this permission notice shall be
++included in all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
++
++// Copyright (c) 2010 Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++
++// Derived from libunwind, with extensive modifications.
++
++#ifndef COMMON_ARM_EX_TO_MODULE__
++#define COMMON_ARM_EX_TO_MODULE__
++
++#include "common/module.h"
++
++#include <string.h>
++
++namespace arm_ex_to_module {
++
++using google_breakpad::Module;
++
++typedef enum extab_cmd {
++  ARM_EXIDX_CMD_FINISH,
++  ARM_EXIDX_CMD_SUB_FROM_VSP,
++  ARM_EXIDX_CMD_ADD_TO_VSP,
++  ARM_EXIDX_CMD_REG_POP,
++  ARM_EXIDX_CMD_REG_TO_SP,
++  ARM_EXIDX_CMD_VFP_POP,
++  ARM_EXIDX_CMD_WREG_POP,
++  ARM_EXIDX_CMD_WCGR_POP,
++  ARM_EXIDX_CMD_RESERVED,
++  ARM_EXIDX_CMD_REFUSED,
++} extab_cmd_t;
++
++struct exidx_entry {
++  uint32_t addr;
++  uint32_t data;
++};
++
++struct extab_data {
++  extab_cmd_t cmd;
++  uint32_t data;
++};
++
++enum extab_cmd_flags {
++  ARM_EXIDX_VFP_SHIFT_16 = 1 << 16,
++  ARM_EXIDX_VFP_FSTMD = 1 << 17, // distinguishes FSTMxxD from FSTMxxX
++};
++
++// Receives information from arm_ex_reader::ExceptionTableInfo
++// and adds it to the Module object
++class ARMExToModule {
++ public:
++  ARMExToModule(Module* module)
++      : module_(module) { }
++  ~ARMExToModule() { }
++  bool HasStackFrame(uintptr_t addr, size_t size);
++  void AddStackFrame(uintptr_t addr, size_t size);
++  int ImproveStackFrame(const struct extab_data* edata);
++  void DeleteStackFrame();
++  void SubmitStackFrame();
++ private:
++  Module* module_;
++  Module::StackFrameEntry* stack_frame_entry_;
++  string vsp_;
++  int TranslateCmd(const struct extab_data* edata,
++                   Module::StackFrameEntry* entry,
++                   string& vsp);
++};
++
++} // namespace arm_ex_to_module
++
++#endif // COMMON_ARM_EX_TO_MODULE__
+diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
+index 0eea2b54..e398f7b3 100644
+--- a/src/common/linux/dump_symbols.cc
++++ b/src/common/linux/dump_symbols.cc
+@@ -54,6 +54,7 @@
+ #include <utility>
+ #include <vector>
+ 
++#include "common/arm_ex_reader.h"
+ #include "common/dwarf/bytereader-inl.h"
+ #include "common/dwarf/dwarf2diehandler.h"
+ #include "common/dwarf_cfi_to_module.h"
+@@ -76,6 +77,11 @@
+ #endif
+ #include "common/using_std_string.h"
+ 
++#ifndef SHT_ARM_EXIDX
++// bionic and older glibc don't define this
++# define SHT_ARM_EXIDX (SHT_LOPROC + 1)
++#endif
++
+ // This namespace contains helper functions.
+ namespace {
+ 
+@@ -429,6 +435,52 @@ bool LoadDwarfCFI(const string& dwarf_filename,
+   return true;
+ }
+ 
++template<typename ElfClass>
++bool LoadARMexidx(const typename ElfClass::Ehdr* elf_header,
++                  const typename ElfClass::Shdr* exidx_section,
++                  const typename ElfClass::Shdr* extab_section,
++                  uint32_t loading_addr,
++                  Module* module) {
++  // To do this properly we need to know:
++  // * the bounds of the .ARM.exidx section in the mapped image
++  // * the bounds of the .ARM.extab section in the mapped image
++  // * the vma of the last byte in the text section associated with the .exidx
++  // The first two are easy.  The third is a bit tricky.  If we can't
++  // figure out what it is, just pass in zero.
++  const char *exidx_img
++    = GetOffset<ElfClass, char>(elf_header, exidx_section->sh_offset);
++  size_t exidx_size = exidx_section->sh_size;
++  const char *extab_img
++    = GetOffset<ElfClass, char>(elf_header, extab_section->sh_offset);
++  size_t extab_size = extab_section->sh_size;
++
++  // The sh_link field of the exidx section gives the section number
++  // for the associated text section.
++  uint32_t exidx_text_last_svma = 0;
++  int exidx_text_sno = exidx_section->sh_link;
++  typedef typename ElfClass::Shdr Shdr;
++  // |sections| points to the section header table
++  const Shdr* sections
++    = GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
++  const int num_sections = elf_header->e_shnum;
++  if (exidx_text_sno >= 0 && exidx_text_sno < num_sections) {
++    const Shdr* exidx_text_shdr = &sections[exidx_text_sno];
++    if (exidx_text_shdr->sh_size > 0) {
++      exidx_text_last_svma
++        = exidx_text_shdr->sh_addr + exidx_text_shdr->sh_size - 1;
++    }
++  }
++
++  arm_ex_to_module::ARMExToModule handler(module);
++  arm_ex_reader::ExceptionTableInfo
++    parser(exidx_img, exidx_size, extab_img, extab_size, exidx_text_last_svma,
++           &handler,
++           reinterpret_cast<const char*>(elf_header),
++           loading_addr);
++  parser.Start();
++  return true;
++}
++
+ bool LoadELF(const string& obj_file, MmapWrapper* map_wrapper,
+              void** elf_header) {
+   int obj_fd = open(obj_file.c_str(), O_RDONLY);
+@@ -846,6 +898,29 @@ bool LoadSymbols(const string& obj_file,
+     }
+   }
+ 
++  // ARM has special unwind tables that can be used.
++  const Shdr* arm_exidx_section =
++      FindElfSectionByName<ElfClass>(".ARM.exidx", SHT_ARM_EXIDX,
++                                     sections, names, names_end,
++                                     elf_header->e_shnum);
++  const Shdr* arm_extab_section =
++      FindElfSectionByName<ElfClass>(".ARM.extab", SHT_PROGBITS,
++                                     sections, names, names_end,
++                                     elf_header->e_shnum);
++  // Load information from these sections even if there is
++  // .debug_info, because some functions (e.g., hand-written or
++  // script-generated assembly) could have exidx entries but no DWARF.
++  // (For functions with both, the DWARF info that has already been
++  // parsed will take precedence.)
++  if (arm_exidx_section && arm_extab_section && options.symbol_data != NO_CFI) {
++    info->LoadedSection(".ARM.exidx");
++    info->LoadedSection(".ARM.extab");
++    bool result = LoadARMexidx<ElfClass>(elf_header,
++                                         arm_exidx_section, arm_extab_section,
++                                         loading_addr, module);
++    found_usable_info = found_usable_info || result;
++  }
++
+   if (!found_debug_info_section) {
+     fprintf(stderr, "%s: file contains no debugging information"
+             " (no \".stab\" or \".debug_info\" sections)\n",
+diff --git a/src/common/module.cc b/src/common/module.cc
+index aff22127..a3544029 100644
+--- a/src/common/module.cc
++++ b/src/common/module.cc
+@@ -64,7 +64,7 @@ Module::~Module() {
+        it != functions_.end(); ++it) {
+     delete *it;
+   }
+-  for (vector<StackFrameEntry *>::iterator it = stack_frame_entries_.begin();
++  for (StackFrameEntrySet::iterator it = stack_frame_entries_.begin();
+        it != stack_frame_entries_.end(); ++it) {
+     delete *it;
+   }
+@@ -130,12 +130,18 @@ void Module::AddFunctions(vector<Function *>::iterator begin,
+     AddFunction(*it);
+ }
+ 
+-void Module::AddStackFrameEntry(StackFrameEntry *stack_frame_entry) {
++void Module::AddStackFrameEntry(StackFrameEntry* stack_frame_entry) {
+   if (!AddressIsInModule(stack_frame_entry->address)) {
+     return;
+   }
+ 
+-  stack_frame_entries_.push_back(stack_frame_entry);
++  std::pair<StackFrameEntrySet::iterator,bool> ret =
++      stack_frame_entries_.insert(stack_frame_entry);
++  if (!ret.second) {
++    // Free the duplicate that was not inserted because this Module
++    // now owns it.
++    delete stack_frame_entry;
++  }
+ }
+ 
+ void Module::AddExtern(Extern *ext) {
+@@ -199,8 +205,25 @@ void Module::GetFiles(vector<File *> *vec) {
+     vec->push_back(it->second);
+ }
+ 
+-void Module::GetStackFrameEntries(vector<StackFrameEntry *> *vec) const {
+-  *vec = stack_frame_entries_;
++void Module::GetStackFrameEntries(vector<StackFrameEntry*>* vec) const {
++  vec->clear();
++  vec->insert(vec->begin(), stack_frame_entries_.begin(),
++              stack_frame_entries_.end());
++}
++
++Module::StackFrameEntry* Module::FindStackFrameEntryByAddress(Address address) {
++  StackFrameEntry search;
++  search.address = address;
++  StackFrameEntrySet::iterator it = stack_frame_entries_.upper_bound(&search);
++
++  if (it == stack_frame_entries_.begin())
++    return NULL;
++
++  it--;
++  if ((*it)->address <= address && address < (*it)->address + (*it)->size)
++    return *it;
++
++  return NULL;
+ }
+ 
+ void Module::AssignSourceIds() {
+@@ -331,7 +354,7 @@ bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
+ 
+   if (symbol_data != NO_CFI) {
+     // Write out 'STACK CFI INIT' and 'STACK CFI' records.
+-    vector<StackFrameEntry *>::const_iterator frame_it;
++    StackFrameEntrySet::const_iterator frame_it;
+     for (frame_it = stack_frame_entries_.begin();
+          frame_it != stack_frame_entries_.end(); ++frame_it) {
+       StackFrameEntry *entry = *frame_it;
+diff --git a/src/common/module.h b/src/common/module.h
+index 7309cedd..37758605 100644
+--- a/src/common/module.h
++++ b/src/common/module.h
+@@ -185,6 +185,13 @@ class Module {
+     }
+   };
+ 
++  struct StackFrameEntryCompare {
++    bool operator() (const StackFrameEntry* lhs,
++                     const StackFrameEntry* rhs) const {
++      return lhs->address < rhs->address;
++    }
++  };
++
+   // Create a new module with the given name, operating system,
+   // architecture, and ID string.
+   Module(const string &name, const string &os, const string &architecture,
+@@ -273,6 +280,10 @@ class Module {
+   // a more appropriate interface.)
+   void GetStackFrameEntries(vector<StackFrameEntry *> *vec) const;
+ 
++  // If this module has a StackFrameEntry whose address range covers
++  // ADDRESS, return it. Otherwise return NULL.
++  StackFrameEntry* FindStackFrameEntryByAddress(Address address);
++
+   // Find those files in this module that are actually referred to by
+   // functions' line number data, and assign them source id numbers.
+   // Set the source id numbers for all other files --- unused by the
+@@ -342,6 +353,9 @@ class Module {
+   // A set containing Extern structures, sorted by address.
+   typedef set<Extern *, ExternCompare> ExternSet;
+ 
++  // A set containing StackFrameEntry structures, sorted by address.
++  typedef set<StackFrameEntry*, StackFrameEntryCompare> StackFrameEntrySet;
++
+   // The module owns all the files and functions that have been added
+   // to it; destroying the module frees the Files and Functions these
+   // point to.
+@@ -350,7 +364,7 @@ class Module {
+ 
+   // The module owns all the call frame info entries that have been
+   // added to it.
+-  vector<StackFrameEntry *> stack_frame_entries_;
++  StackFrameEntrySet stack_frame_entries_;
+ 
+   // The module owns all the externs that have been added to it;
+   // destroying the module frees the Externs these point to.
+diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
+index 37fee5dd..b855f186 100644
+--- a/src/common/module_unittest.cc
++++ b/src/common/module_unittest.cc
+@@ -344,11 +344,6 @@ TEST(Construct, AddFrames) {
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+-               "STACK CFI INIT ddb5f41285aa7757 1486493370dc5073 \n"
+-               "STACK CFI INIT 8064f3af5e067e38 de2a5ee55509407"
+-               " .cfa: I think that I shall never see"
+-               " cannoli: a tree whose hungry mouth is prest"
+-               " stromboli: a poem lovely as a tree\n"
+                "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
+                " .cfa: Whose woods are these\n"
+                "STACK CFI 36682fad3763ffff"
+@@ -356,7 +351,12 @@ TEST(Construct, AddFrames) {
+                " stromboli: his house is in\n"
+                "STACK CFI 47ceb0f63c269d7f"
+                " calzone: the village though"
+-               " cannoli: he will not see me stopping here\n",
++               " cannoli: he will not see me stopping here\n"
++               "STACK CFI INIT 8064f3af5e067e38 de2a5ee55509407"
++               " .cfa: I think that I shall never see"
++               " cannoli: a tree whose hungry mouth is prest"
++               " stromboli: a poem lovely as a tree\n"
++               "STACK CFI INIT ddb5f41285aa7757 1486493370dc5073 \n",
+                contents.c_str());
+ 
+   // Check that GetStackFrameEntries works.
+@@ -364,10 +364,18 @@ TEST(Construct, AddFrames) {
+   m.GetStackFrameEntries(&entries);
+   ASSERT_EQ(3U, entries.size());
+   // Check first entry.
+-  EXPECT_EQ(0xddb5f41285aa7757ULL, entries[0]->address);
+-  EXPECT_EQ(0x1486493370dc5073ULL, entries[0]->size);
+-  ASSERT_EQ(0U, entries[0]->initial_rules.size());
+-  ASSERT_EQ(0U, entries[0]->rule_changes.size());
++  EXPECT_EQ(0x5e8d0db0a7075c6cULL, entries[0]->address);
++  EXPECT_EQ(0x1c7edb12a7aea229ULL, entries[0]->size);
++  Module::RuleMap entry1_initial;
++  entry1_initial[".cfa"] = "Whose woods are these";
++  EXPECT_THAT(entries[0]->initial_rules, ContainerEq(entry1_initial));
++  Module::RuleChangeMap entry1_changes;
++  entry1_changes[0x36682fad3763ffffULL][".cfa"] = "I think I know";
++  entry1_changes[0x36682fad3763ffffULL]["stromboli"] = "his house is in";
++  entry1_changes[0x47ceb0f63c269d7fULL]["calzone"] = "the village though";
++  entry1_changes[0x47ceb0f63c269d7fULL]["cannoli"] =
++    "he will not see me stopping here";
++  EXPECT_THAT(entries[0]->rule_changes, ContainerEq(entry1_changes));
+   // Check second entry.
+   EXPECT_EQ(0x8064f3af5e067e38ULL, entries[1]->address);
+   EXPECT_EQ(0x0de2a5ee55509407ULL, entries[1]->size);
+@@ -379,18 +387,10 @@ TEST(Construct, AddFrames) {
+   EXPECT_THAT(entries[1]->initial_rules, ContainerEq(entry2_initial));
+   ASSERT_EQ(0U, entries[1]->rule_changes.size());
+   // Check third entry.
+-  EXPECT_EQ(0x5e8d0db0a7075c6cULL, entries[2]->address);
+-  EXPECT_EQ(0x1c7edb12a7aea229ULL, entries[2]->size);
+-  Module::RuleMap entry3_initial;
+-  entry3_initial[".cfa"] = "Whose woods are these";
+-  EXPECT_THAT(entries[2]->initial_rules, ContainerEq(entry3_initial));
+-  Module::RuleChangeMap entry3_changes;
+-  entry3_changes[0x36682fad3763ffffULL][".cfa"] = "I think I know";
+-  entry3_changes[0x36682fad3763ffffULL]["stromboli"] = "his house is in";
+-  entry3_changes[0x47ceb0f63c269d7fULL]["calzone"] = "the village though";
+-  entry3_changes[0x47ceb0f63c269d7fULL]["cannoli"] =
+-    "he will not see me stopping here";
+-  EXPECT_THAT(entries[2]->rule_changes, ContainerEq(entry3_changes));
++  EXPECT_EQ(0xddb5f41285aa7757ULL, entries[2]->address);
++  EXPECT_EQ(0x1486493370dc5073ULL, entries[2]->size);
++  ASSERT_EQ(0U, entries[2]->initial_rules.size());
++  ASSERT_EQ(0U, entries[2]->rule_changes.size());
+ }
+ 
+ TEST(Construct, UniqueFiles) {
+@@ -612,5 +612,63 @@ TEST(Write, OutOfRangeAddresses) {
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "STACK CFI INIT 2000 100 \n",
+                s.str().c_str());
++}
++
++TEST(Lookup, StackFrameEntries) {
++  Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
++
++  // First STACK CFI entry, with no initial rules or deltas.
++  Module::StackFrameEntry *entry1 = new Module::StackFrameEntry();
++  entry1->address = 0x2000;
++  entry1->size = 0x900;
++  m.AddStackFrameEntry(entry1);
++
++  // Second STACK CFI entry, with initial rules but no deltas.
++  Module::StackFrameEntry *entry2 = new Module::StackFrameEntry();
++  entry2->address = 0x3000;
++  entry2->size = 0x900;
++  entry2->initial_rules[".cfa"] = "I think that I shall never see";
++  entry2->initial_rules["stromboli"] = "a poem lovely as a tree";
++  entry2->initial_rules["cannoli"] = "a tree whose hungry mouth is prest";
++  m.AddStackFrameEntry(entry2);
++
++  // Third STACK CFI entry, with initial rules and deltas.
++  Module::StackFrameEntry *entry3 = new Module::StackFrameEntry();
++  entry3->address = 0x1000;
++  entry3->size = 0x900;
++  entry3->initial_rules[".cfa"] = "Whose woods are these";
++  entry3->rule_changes[0x47ceb0f63c269d7fULL]["calzone"] =
++    "the village though";
++  entry3->rule_changes[0x47ceb0f63c269d7fULL]["cannoli"] =
++    "he will not see me stopping here";
++  entry3->rule_changes[0x36682fad3763ffffULL]["stromboli"] =
++    "his house is in";
++  entry3->rule_changes[0x36682fad3763ffffULL][".cfa"] =
++    "I think I know";
++  m.AddStackFrameEntry(entry3);
+ 
++  Module::StackFrameEntry* s = m.FindStackFrameEntryByAddress(0x1000);
++  EXPECT_EQ(entry3, s);
++  s = m.FindStackFrameEntryByAddress(0x18FF);
++  EXPECT_EQ(entry3, s);
++
++  s = m.FindStackFrameEntryByAddress(0x1900);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
++  s = m.FindStackFrameEntryByAddress(0x1A00);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
++
++  s = m.FindStackFrameEntryByAddress(0x2000);
++  EXPECT_EQ(entry1, s);
++  s = m.FindStackFrameEntryByAddress(0x28FF);
++  EXPECT_EQ(entry1, s);
++
++  s = m.FindStackFrameEntryByAddress(0x3000);
++  EXPECT_EQ(entry2, s);
++  s = m.FindStackFrameEntryByAddress(0x38FF);
++  EXPECT_EQ(entry2, s);
++
++  s = m.FindStackFrameEntryByAddress(0x3900);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
++  s = m.FindStackFrameEntryByAddress(0x3A00);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
+ }

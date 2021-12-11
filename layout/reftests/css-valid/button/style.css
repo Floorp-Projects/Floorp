@@ -1,0 +1,18 @@
+/* Override default style */
+button:invalid {
+  box-shadow: none;
+}
+
+button.notvalid {
+  background-color: green;
+}
+button.notvalid:valid {
+  background-color: red;
+}
+
+button.valid {
+  background-color: red;
+}
+button.valid:valid {
+  background-color: green;
+}

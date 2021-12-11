@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=430624
+-->
+<head>
+  <title>Test for Bug 430624</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=430624">Mozilla Bug 430624</a>
+<p id="display"></p>
+
+
+
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 430624 **/
+
+function onLoad() {
+  window.frames[0].frameElement.onload = onReload;
+  // eslint-disable-next-line no-self-assign
+  window.frames[0].frameElement.srcdoc = window.frames[0].frameElement.srcdoc;
+}
+
+function onReload() {
+  var iframe = window.frames[0].frameElement;
+  SimpleTest.waitForFocus(doTest, iframe.contentWindow);
+  iframe.contentDocument.body.focus();
+}
+
+function doTest() {
+  var bodyElement = window.frames[0].frameElement.contentDocument.body;
+  bodyElement.focus();
+  sendString("Still ", window.frames[0].frameElement.contentWindow);
+
+  is(bodyElement.innerHTML, "Still contentEditable", "Check we're contentEditable after reload");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+<iframe onload="onLoad()" srcdoc="<body contenteditable>contentEditable</body>"></iframe>
+
+</body>
+</html>
+

@@ -1,0 +1,49 @@
+<html>
+<head>
+<style>
+ th, td { background: #ddd; }
+ table { border-collapse: collapse; }
+</style>
+</head>
+<body>
+  
+ <table border="1">
+  <tr><th>x</th><th colspan="2" class="a1 a2">A</th></tr>
+  <tr><th>x</th><td class="a1">a1</td><td class="a2">a2</td></tr>
+ </table>
+
+ <script type="text/javascript">
+
+   function addCSSRule(selector, rule) {
+       var css = document.styleSheets[ document.styleSheets.length -1];
+       css.insertRule(selector+" {"+rule+"}", css.cssRules.length);
+   }
+
+   function removeCSSRule(selector, rule) {
+       rule = rule.split(':');
+       for (cssno=0; cssno<document.styleSheets.length;cssno++) {
+           var css = document.styleSheets[cssno];
+	   for (i=(css.cssRules.length-1);i>=0;i--) {
+	       var rule = css.cssRules[i];
+	       if (rule.selectorText == selector && rule.style[ rule[0] ] == rule[1])
+		   css.deleteRule(i);
+	   }
+       }
+   }
+
+   function setClassDisplay(display, classname) {
+       document.body.offsetWidth
+       if (display)
+	  removeCSSRule("."+classname, "display:none");
+       else
+	  addCSSRule("."+classname, "display:none");
+   }
+
+   setClassDisplay(false, 'a1');
+   setClassDisplay(false, 'a2');
+   setClassDisplay(true, 'a1');
+   setClassDisplay(true, 'a2');
+ </script>
+
+</body>
+</html>

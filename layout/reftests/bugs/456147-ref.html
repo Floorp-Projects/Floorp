@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><title>Colored strikethrough test</title>
+<style>
+/* In order to ensure consistency between the HTML reference and XUL
+   test case, we explicitly specify all relevant style properties.  */
+* {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  text-decoration-skip-ink: none;
+}
+body {
+  padding: 8px;
+  background-color: white;
+}
+span {
+  color: black;
+  font: normal normal normal 12pt/14pt serif;
+  display: block;
+  height: 30px;
+}
+div#under {
+  text-decoration: underline;
+  color: orange;
+}
+div#strike {
+  text-decoration: line-through;
+  color: blue;
+}
+</style>
+</head>
+<body>
+<div><span>The next three lines should all have:</span></div>
+<div id="under">
+<div id="strike">
+<span>No overline.</span>
+<span>Orange underline.</span>
+<span>Blue strikethrough.</span>
+</div>
+</div>
+</body></html>

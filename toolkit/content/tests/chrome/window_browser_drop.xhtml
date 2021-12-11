@@ -1,0 +1,250 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Browser Drop Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script>
+<![CDATA[
+
+const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+
+function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
+  ContentTask.setTestScope(window); // Need this so is/isnot/ok are available inside the contenttask
+  return ContentTask.spawn(browser, {data, shouldExpectStateChange}, async function({data, shouldExpectStateChange}) {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    if (!content.document.documentElement) {
+      // Wait until the testing document gets loaded.
+      await new Promise(resolve => {
+        let onload = function() {
+          content.window.removeEventListener("load", onload);
+          resolve();
+        };
+        content.window.addEventListener("load", onload);
+      });
+    }
+
+    let dataTransfer = new content.DataTransfer();
+    for (let i = 0; i < data.length; i++) {
+      let types = data[i];
+      for (let j = 0; j < types.length; j++) {
+        dataTransfer.mozSetDataAt(types[j].type, types[j].data, i);
+      }
+    }
+    let event = content.document.createEvent("DragEvent");
+    event.initDragEvent("drop", true, true, content, 0, 0, 0, 0, 0,
+                        false, false, false, false, 0, null, dataTransfer);
+    content.document.body.dispatchEvent(event);
+
+    let links = [];
+    try {
+      links = Services.droppedLinkHandler.dropLinks(event, true);
+    } catch (ex) {
+      if (shouldExpectStateChange) {
+        ok(false, "Should not have gotten an exception from the dropped link handler, but got: " + ex);
+        Cu.reportError(ex);
+      }
+    }
+
+    return links;
+  });
+}
+
+async function expectLink(browser, expectedLinks, data, testid, onbody=false) {
+  let lastLinks = [];
+  let lastLinksPromise = new Promise(resolve => {
+    browser.droppedLinkHandler = function(event, links) {
+      info(`droppedLinkHandler called, received links ${JSON.stringify(links)}`);
+      if (!expectedLinks.length) {
+        ok(false, `droppedLinkHandler called for ${JSON.stringify(links)} which we didn't expect.`);
+      }
+      lastLinks = links;
+      resolve(links);
+    };
+  });
+
+  function dropOnBrowserSync() {
+    let dropEl = onbody ? browser.contentDocument.body : browser;
+    synthesizeDrop(dropEl, dropEl, data, null, dropEl.ownerGlobal);
+  }
+  let links;
+  if (browser.isRemoteBrowser) {
+    let remoteLinks = await dropOnRemoteBrowserAsync(browser, data, expectedLinks.length);
+    is(remoteLinks.length, expectedLinks.length, testid + " remote links length");
+    for (let i = 0, length = remoteLinks.length; i < length; i++) {
+      is(remoteLinks[i].url, expectedLinks[i].url, testid + "[" + i + "] remote link");
+      is(remoteLinks[i].name, expectedLinks[i].name, testid + "[" + i + "] remote name");
+    }
+
+    if (!expectedLinks.length) {
+      // There is no way to check if nothing happens asynchronously.
+      return;
+    }
+
+    links = await lastLinksPromise;
+  } else {
+    dropOnBrowserSync();
+    links = lastLinks;
+  }
+
+  is(links.length, expectedLinks.length, testid + " links length");
+  for (let i = 0, length = links.length; i < length; i++) {
+    is(links[i].url, expectedLinks[i].url, testid + "[" + i + "] link");
+    is(links[i].name, expectedLinks[i].name, testid + "[" + i + "] name");
+  }
+};
+
+async function dropLinksOnBrowser(browser, type) {
+  // Dropping single text/plain item with single link should open single
+  // page.
+  await expectLink(browser,
+                    [ { url: "http://www.mozilla.org/",
+                        name: "http://www.mozilla.org/" } ],
+                    [ [ { type: "text/plain",
+                          data: "http://www.mozilla.org/" } ] ],
+                    "text/plain drop on browser " + type);
+
+  // Dropping single text/plain item with multiple links should open
+  // multiple pages.
+  await expectLink(browser,
+                    [ { url: "http://www.mozilla.org/",
+                        name: "http://www.mozilla.org/" },
+                      { url: "http://www.example.com/",
+                        name: "http://www.example.com/" } ],
+                    [ [ { type: "text/plain",
+                          data: "http://www.mozilla.org/\nhttp://www.example.com/" } ] ],
+                    "text/plain with 2 URLs drop on browser " + type);
+
+  // Dropping sinlge unsupported type item should not open anything.
+  await expectLink(browser,
+                    [],
+                    [ [ { type: "text/link",
+                          data: "http://www.mozilla.org/" } ] ],
+                    "text/link drop on browser " + type);
+
+  // Dropping single text/uri-list item with single link should open single
+  // page.
+  await expectLink(browser,
+                    [ { url: "http://www.example.com/",
+                        name: "http://www.example.com/" } ],
+                    [ [ { type: "text/uri-list",
+                          data: "http://www.example.com/" } ] ],
+                    "text/uri-list drop on browser " + type);
+
+  // Dropping single text/uri-list item with multiple links should open
+  // multiple pages.
+  await expectLink(browser,
+                    [ { url: "http://www.example.com/",
+                        name: "http://www.example.com/" },
+                      { url: "http://www.mozilla.org/",
+                        name: "http://www.mozilla.org/" }],
+                    [ [ { type: "text/uri-list",
+                          data: "http://www.example.com/\nhttp://www.mozilla.org/" } ] ],
+                    "text/uri-list with 2 URLs drop on browser " + type);
+
+  // Name in text/x-moz-url should be handled.
+  await expectLink(browser,
+                    [ { url: "http://www.example.com/",
+                        name: "Example.com" } ],
+                    [ [ { type: "text/x-moz-url",
+                          data: "http://www.example.com/\nExample.com" } ] ],
+                    "text/x-moz-url drop on browser " + type);
+
+  await expectLink(browser,
+                    [ { url: "http://www.mozilla.org/",
+                        name: "Mozilla.org" },
+                      { url: "http://www.example.com/",
+                        name: "Example.com" } ],
+                    [ [ { type: "text/x-moz-url",
+                          data: "http://www.mozilla.org/\nMozilla.org\nhttp://www.example.com/\nExample.com" } ] ],
+                    "text/x-moz-url with 2 URLs drop on browser " + type);
+
+  // Dropping single item with multiple types should open single page.
+  await expectLink(browser,
+                    [ { url: "http://www.example.org/",
+                        name: "Example.com" } ],
+                    [ [ { type: "text/plain",
+                          data: "http://www.mozilla.org/" },
+                        { type: "text/x-moz-url",
+                          data: "http://www.example.org/\nExample.com" } ] ],
+                    "text/plain and text/x-moz-url drop on browser " + type);
+
+  // Dropping javascript or data: URLs should fail:
+  await expectLink(browser,
+                    [],
+                    [ [ { type: "text/plain",
+                          data: "javascript:'bad'" } ] ],
+                    "text/plain javascript url drop on browser " + type);
+  await expectLink(browser,
+                    [],
+                    [ [ { type: "text/plain",
+                          data: "jAvascript:'also bad'" } ] ],
+                    "text/plain mixed-case javascript url drop on browser " + type);
+  await expectLink(browser,
+                    [],
+                    [ [ { type: "text/plain",
+                          data: "data:text/html,bad" } ] ],
+                    "text/plain data url drop on browser " + type);
+
+  // Dropping a chrome url should fail as we don't have a source node set,
+  // defaulting to a source of file:///
+  await expectLink(browser,
+                    [],
+                    [ [ { type: "text/x-moz-url",
+                          data: "chrome://browser/content/browser.xhtml" } ] ],
+                    "text/x-moz-url chrome url drop on browser " + type);
+
+  if (browser.type == "content") {
+    await SpecialPowers.spawn(browser, [], function() {
+      content.window.stopMode = true;
+    });
+
+    // stopPropagation should not prevent the browser link handling from occuring
+    await expectLink(browser,
+                      [ { url: "http://www.mozilla.org/",
+                          name: "http://www.mozilla.org/" } ],
+                      [ [ { type: "text/uri-list",
+                            data: "http://www.mozilla.org/" } ] ],
+                      "text/x-moz-url drop on browser with stopPropagation drop event", true);
+
+    await SpecialPowers.spawn(browser, [], function() {
+      content.window.cancelMode = true;
+    });
+
+    // Canceling the event, however, should prevent the link from being handled.
+    await expectLink(browser,
+                      [],
+                      [ [ { type: "text/uri-list", data: "http://www.mozilla.org/" } ] ],
+                      "text/x-moz-url drop on browser with cancelled drop event", true);
+  }
+}
+
+function info(msg) { window.arguments[0].SimpleTest.info(msg); }
+function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
+function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
+
+]]>
+</script>
+
+<html:style>
+  /* FIXME: This is just preserving behavior from before bug 1656081.
+   * Without this there's one subtest that fails, but the browser
+   * elements were zero-sized before so... */
+  browser {
+    width: 0;
+    height: 0;
+  }
+</html:style>
+
+<browser id="chromechild" src="about:blank"/>
+<browser id="contentchild" type="content" width="100" height="100"
+         src="data:text/html,&lt;html draggable='true'&gt;&lt;body draggable='true' style='width: 100px; height: 100px;' ondragover='event.preventDefault()' ondrop='if (window.stopMode) event.stopPropagation(); if (window.cancelMode) event.preventDefault();'&gt;&lt;/body&gt;&lt;/html&gt;"/>
+
+<browser id="remote-contentchild" type="content" width="100" height="100" remote="true"
+         src="data:text/html,&lt;html draggable='true'&gt;&lt;body draggable='true' style='width: 100px; height: 100px;' ondragover='event.preventDefault()' ondrop='if (window.stopMode) event.stopPropagation(); if (window.cancelMode) event.preventDefault();'&gt;&lt;/body&gt;&lt;/html&gt;"/>
+</window>

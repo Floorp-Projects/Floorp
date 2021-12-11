@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+SpecialPowers.pushPrefEnv({ 'set': [['canvas.filters.enabled', true]] }, function () {
+
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+
+  is(ctx.filter, 'none', 'filter should intialy be set to \'none\'');
+  ctx.filter = 'blur(5px)';
+  is(ctx.filter, 'blur(5px)', 'valid filter should round-trip');
+
+  ctx.save();
+  ctx.filter = 'none';
+  is(ctx.filter, 'none', 'none should unset the filter');
+  ctx.restore();
+  is(ctx.filter, 'blur(5px)', 'filter should be part of the state');
+
+  ctx.filter = 'blur(10)';
+  is(ctx.filter, 'blur(5px)', 'invalid filter should be ignored');
+  ctx.filter = 'blur 10px';
+  is(ctx.filter, 'blur(5px)', 'syntax error should be ignored');
+
+  ctx.filter = 'inherit';
+  is(ctx.filter, 'blur(5px)', 'inherit should be ignored');
+  ctx.filter = 'initial';
+  is(ctx.filter, 'blur(5px)', 'initial should be ignored');
+
+  ctx.filter = '';
+  is(ctx.filter, 'blur(5px)', 'empty string should be ignored and not unset the filter');
+  ctx.filter = null;
+  is(ctx.filter, 'blur(5px)', 'null should be ignored and not unset the filter');
+  ctx.filter = undefined;
+  is(ctx.filter, 'blur(5px)', 'undefined should be ignored and not unset the filter');
+
+  SimpleTest.finish();
+  
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>

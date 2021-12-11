@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: disable phase inversion in opus decoder</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<audio preload=none id="a" controls></audio>
+<audio preload=none id="b" controls></audio>
+<script class="testbody" type="text/javascript">
+/*
+  This test makes use of an (stereo) opus file with phase inversion of 180 degrees (right = -left => right + left = 0).
+  Firstly, the phase inversion is verified on a normal stereo playback.
+  Secondly, mono playback is forced which results in the phase inversion being disabled (Bug 1431810).
+*/
+SimpleTest.waitForExplicitFinish();
+
+/* global a, b */
+
+function areChannelsInverted(b1, b2) {
+  for (var i = 0; i < b1.length; i++) {
+    if (Math.abs(b1[i] + b2[i]) > 9e-2) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function areChannelsEqual(b1, b2) {
+  for (var i = 0; i < b1.length; i++) {
+    if (Math.abs(b1[i] - b2[i]) > 9e-3) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isSilent(b) {
+  for (var i = 0; i < b.length; i++) {
+    if (b[i] != 0.0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function mediaElementWithPhaseInversion(audioContext, mediaElement, success) {
+  let audio_source = audioContext.createMediaElementSource(mediaElement);
+  let script_processor = audioContext.createScriptProcessor();
+  audio_source.connect(script_processor);
+
+  mediaElement.onplay = () => {
+    script_processor.onaudioprocess = (e) => {
+      let right = e.inputBuffer.getChannelData(0);
+      let left = e.inputBuffer.getChannelData(1);
+
+      // This is leading or trailing silence
+      // produced by ScriptProcessor.
+      if (isSilent(right) && isSilent(left)) {
+        return;
+      }
+
+      ok(areChannelsInverted(right, left), "Channels must be inverted");
+    }
+  }
+
+  mediaElement.onended = () => {
+    ok(true, "End of file.");
+    mediaElement.onended = null;
+    script_processor.onaudioprocess = null;
+    success();
+  }
+
+  mediaElement.src = "test-stereo-phase-inversion-180.opus";
+  // Normal playback channels will by inverted
+  mediaElement.play();
+}
+
+function mediaElementWithPhaseInversionDisabled(audioContext, mediaElement, success) {
+  let audio_source = audioContext.createMediaElementSource(mediaElement);
+  let script_processor = audioContext.createScriptProcessor();
+  audio_source.connect(script_processor);
+
+  mediaElement.onplay = () => {
+    script_processor.onaudioprocess = (e) => {
+      let right = e.inputBuffer.getChannelData(0);
+      let left = e.inputBuffer.getChannelData(1);
+
+      // This is leading or trailing silence
+      // produced by ScriptProcessor.
+      if (isSilent(right) && isSilent(left)) {
+        return;
+      }
+
+      ok(!areChannelsInverted(right, left), "Channels must not be inverted");
+      ok(areChannelsEqual(right, left), "Channels must be equal");
+    }
+  }
+
+  mediaElement.onended = () => {
+    ok(true, "End of file.");
+    mediaElement.onended = null;
+    script_processor.onaudioprocess = null;
+    success();
+  }
+
+  mediaElement.src = "test-stereo-phase-inversion-180.opus";
+
+  // Downmix to mono will force to disable opus phase inversion
+  SpecialPowers.pushPrefEnv({"set": [["accessibility.monoaudio.enable", true]]})
+  .then(() => {
+    mediaElement.play();
+  });
+}
+
+let ac = new AudioContext();
+
+function testPhaseInversion(mediaElement) {
+  return new Promise((accept, reject) => {
+    mediaElementWithPhaseInversion(ac, a, accept);
+  });
+}
+
+function testPhaseInversionDisabled(mediaElement) {
+  return new Promise((accept, reject) => {
+    mediaElementWithPhaseInversionDisabled(ac, b, accept);
+  });
+}
+
+// Start testing
+testPhaseInversion(a)
+.then( () => testPhaseInversionDisabled(b) )
+.then( () => SimpleTest.finish() )
+
+</script>
+</pre>
+</body>
+</html>

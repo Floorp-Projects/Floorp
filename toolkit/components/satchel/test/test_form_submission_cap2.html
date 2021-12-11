@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Satchel Test for Form Submisstion Field Cap</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<!--
+   Test for bug 492701.
+   Only change field # numInputFields (= MAX_FIELDS_SAVED + 1)
+   and test that it is actually saved and the other (unmodified) ones are not.
+-->
+  <form id="form1" onsubmit="return checkSubmit(1)">
+    <input type="text" name="test1" value="1">
+    <input type="text" name="test2" value="2">
+    <input type="text" name="test3" value="3">
+    <input type="text" name="test4" value="4">
+    <input type="text" name="test5" value="5">
+    <input type="text" name="test6" value="6">
+    <input type="text" name="test7" value="7">
+    <input type="text" name="test8" value="8">
+    <input type="text" name="test9" value="9">
+    <input type="text" name="test10" value="10">
+    <input type="text" name="test11" value="11">
+    <input type="text" name="test12" value="12">
+    <input type="text" name="test13" value="13">
+    <input type="text" name="test14" value="14">
+    <input type="text" name="test15" value="15">
+    <input type="text" name="test16" value="16">
+    <input type="text" name="test17" value="17">
+    <input type="text" name="test18" value="18">
+    <input type="text" name="test19" value="19">
+    <input type="text" name="test20" value="20">
+    <input type="text" name="test21" value="21">
+    <input type="text" name="test22" value="22">
+    <input type="text" name="test23" value="23">
+    <input type="text" name="test24" value="24">
+    <input type="text" name="test25" value="25">
+    <input type="text" name="test26" value="26">
+    <input type="text" name="test27" value="27">
+    <input type="text" name="test28" value="28">
+    <input type="text" name="test29" value="29">
+    <input type="text" name="test30" value="30">
+    <input type="text" name="test31" value="31">
+    <input type="text" name="test32" value="32">
+    <input type="text" name="test33" value="33">
+    <input type="text" name="test34" value="34">
+    <input type="text" name="test35" value="35">
+    <input type="text" name="test36" value="36">
+    <input type="text" name="test37" value="37">
+    <input type="text" name="test38" value="38">
+    <input type="text" name="test39" value="39">
+    <input type="text" name="test40" value="40">
+    <input type="text" name="test41" value="41">
+    <input type="text" name="test42" value="42">
+    <input type="text" name="test43" value="43">
+    <input type="text" name="test44" value="44">
+    <input type="text" name="test45" value="45">
+    <input type="text" name="test46" value="46">
+    <input type="text" name="test47" value="47">
+    <input type="text" name="test48" value="48">
+    <input type="text" name="test49" value="49">
+    <input type="text" name="test50" value="50">
+    <input type="text" name="test51" value="51">
+    <input type="text" name="test52" value="52">
+    <input type="text" name="test53" value="53">
+    <input type="text" name="test54" value="54">
+    <input type="text" name="test55" value="55">
+    <input type="text" name="test56" value="56">
+    <input type="text" name="test57" value="57">
+    <input type="text" name="test58" value="58">
+    <input type="text" name="test59" value="59">
+    <input type="text" name="test60" value="60">
+    <input type="text" name="test61" value="61">
+    <input type="text" name="test62" value="62">
+    <input type="text" name="test63" value="63">
+    <input type="text" name="test64" value="64">
+    <input type="text" name="test65" value="65">
+    <input type="text" name="test66" value="66">
+    <input type="text" name="test67" value="67">
+    <input type="text" name="test68" value="68">
+    <input type="text" name="test69" value="69">
+    <input type="text" name="test70" value="70">
+    <input type="text" name="test71" value="71">
+    <input type="text" name="test72" value="72">
+    <input type="text" name="test73" value="73">
+    <input type="text" name="test74" value="74">
+    <input type="text" name="test75" value="75">
+    <input type="text" name="test76" value="76">
+    <input type="text" name="test77" value="77">
+    <input type="text" name="test78" value="78">
+    <input type="text" name="test79" value="79">
+    <input type="text" name="test80" value="80">
+    <input type="text" name="test81" value="81">
+    <input type="text" name="test82" value="82">
+    <input type="text" name="test83" value="83">
+    <input type="text" name="test84" value="84">
+    <input type="text" name="test85" value="85">
+    <input type="text" name="test86" value="86">
+    <input type="text" name="test87" value="87">
+    <input type="text" name="test88" value="88">
+    <input type="text" name="test89" value="89">
+    <input type="text" name="test90" value="90">
+    <input type="text" name="test91" value="91">
+    <input type="text" name="test92" value="92">
+    <input type="text" name="test93" value="93">
+    <input type="text" name="test94" value="94">
+    <input type="text" name="test95" value="95">
+    <input type="text" name="test96" value="96">
+    <input type="text" name="test97" value="97">
+    <input type="text" name="test98" value="98">
+    <input type="text" name="test99" value="99">
+    <input type="text" name="test100" value="100">
+    <input type="text" name="test101" value="101">
+    <button type="submit">Submit</button>
+  </form>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var numSubmittedForms = 0;
+var numInputFields = 101;
+
+function checkInitialState() {
+  countEntries(null, null,
+               function(num) {
+                 ok(!num, "checking for initially empty storage");
+                 startTest();
+               });
+}
+
+function startTest() {
+  // Fill in values for the various fields. We could just set the <input>'s
+  // value attribute, but we don't save default form values (and we want to
+  // ensure unsaved values are because of autocomplete=off or whatever).
+  $_(1, "test" + numInputFields).value = numInputFields + " changed";
+
+  // submit the first form.
+  let button = getFormSubmitButton(1);
+  button.click();
+}
+
+// Make sure that the first (numInputFields - 1) were not saved (as they were not changed).
+// Call done() when finished.
+function checkCountEntries(formNum, index, done) {
+  countEntries("test" + index, index,
+               function(num) {
+                 ok(!num, "checking unsaved value " + index);
+                 if (index < numInputFields) {
+                   checkCountEntries(formNum, index + 1, done);
+                 } else {
+                   done(formNum);
+                 }
+               });
+}
+
+/* exported checkSubmit */
+// Called by each form's onsubmit handler.
+function checkSubmit(formNum) {
+  ok(true, "form " + formNum + " submitted");
+  numSubmittedForms++;
+
+  // make sure that the field # numInputFields was saved
+  checkForSave("test" + numInputFields,
+               numInputFields + " changed",
+               "checking saved value " + numInputFields);
+
+  checkCountEntries(formNum, 1, checkSubmitCounted);
+
+  return false; // cancel current form submission
+}
+
+function checkSubmitCounted(formNum) {
+  is(numSubmittedForms, 1, "Ensuring all forms were submitted.");
+  SimpleTest.finish();
+  return false;
+}
+
+window.onload = checkInitialState;
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

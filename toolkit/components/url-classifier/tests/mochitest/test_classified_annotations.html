@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the URI Classifier</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var mainWindow = window.browsingContext.topChromeWindow;
+var contentPage = "http://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedFrame.html";
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+function testOnWindow() {
+  return new Promise((resolve, reject) => {
+    let win = mainWindow.OpenBrowserWindow();
+    win.addEventListener("load", function() {
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => {
+        win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+          if (win.content.location.href != contentPage) {
+            win.gBrowser.loadURI(contentPage, {
+              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+            });
+            return;
+          }
+          win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+
+          win.content.addEventListener("OnLoadComplete", function innerLoad2(e) {
+            win.content.removeEventListener("OnLoadComplete", innerLoad2);
+            SimpleTest.executeSoon(function() {
+              checkLoads(win, JSON.parse(e.detail));
+              resolve(win);
+            });
+          }, false, true);
+        }, true);
+        SimpleTest.executeSoon(function() {
+          win.gBrowser.loadURI(contentPage, {
+            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          });
+        });
+      });
+    }, {capture: true, once: true});
+  });
+}
+
+var badids = [
+  "badscript1",
+  "badscript2",
+  "badimage1",
+  "badimage2",
+  "badframe1",
+  "badframe2",
+  "badmedia1",
+  "badcss",
+];
+
+function checkLoads(aWindow, aData) {
+  var win = aWindow.content;
+
+  is(aData.scriptItem1, "untouched", "Should not load tracking javascript");
+  is(aData.scriptItem2, "untouched", "Should not load tracking javascript (2)");
+
+  is(aData.imageItem1, "untouched", "Should not load tracking images");
+  is(aData.imageItem2, "untouched", "Should not load tracking images (2)");
+
+  is(aData.frameItem1, "untouched", "Should not load tracking iframes");
+  is(aData.frameItem2, "untouched", "Should not load tracking iframes (2)");
+  is(aData.mediaItem1, "error", "Should not load tracking videos");
+  is(aData.xhrItem, "failed", "Should not load tracking XHRs");
+  is(aData.fetchItem, "error", "Should not fetch from tracking URLs");
+
+  var elt = win.document.getElementById("styleCheck");
+  var style = win.document.defaultView.getComputedStyle(elt);
+  isnot(style.visibility, "hidden", "Should not load tracking css");
+
+  is(win.document.blockedNodeByClassifierCount, badids.length,
+    "Should identify all tracking elements");
+
+  var blockedNodes = win.document.blockedNodesByClassifier;
+
+  // Make sure that every node in blockedNodes exists in the tree
+  // (that may not always be the case but do not expect any nodes to disappear
+  // from the tree here)
+  var allNodeMatch = true;
+  for (let i = 0; i < blockedNodes.length; i++) {
+    let nodeMatch = false;
+    for (let j = 0; j < badids.length && !nodeMatch; j++) {
+      nodeMatch = nodeMatch ||
+        (blockedNodes[i] == win.document.getElementById(badids[j]));
+    }
+
+    allNodeMatch = allNodeMatch && nodeMatch;
+  }
+  ok(allNodeMatch, "All annotated nodes are expected in the tree");
+
+  // Make sure that every node with a badid (see badids) is found in the
+  // blockedNodes. This tells us if we are neglecting to annotate
+  // some nodes
+  allNodeMatch = true;
+  for (let j = 0; j < badids.length; j++) {
+    let nodeMatch = false;
+    for (let i = 0; i < blockedNodes.length && !nodeMatch; i++) {
+      nodeMatch = nodeMatch ||
+        (blockedNodes[i] == win.document.getElementById(badids[j]));
+    }
+
+    if (!nodeMatch) {
+      console.log(badids[j] + " was not found in blockedNodes");
+    }
+    allNodeMatch = allNodeMatch && nodeMatch;
+  }
+  ok(allNodeMatch, "All tracking nodes are expected to be annotated as such");
+
+  // End (parent) test.
+}
+
+function cleanup() {
+  SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");
+  SpecialPowers.clearUserPref("channelclassifier.allowlist_example");
+  SpecialPowers.clearUserPref("privacy.trackingprotection.testing.report_blocked_node");
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set": [["urlclassifier.trackingTable", "moztest-track-simple"]]},
+  test);
+
+async function test() {
+  SimpleTest.registerCleanupFunction(cleanup);
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  await SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", true);
+  // Make sure chrome:// URIs are processed. This does not white-list
+  // any URIs unless 'https://allowlisted.example.com' is added in the
+  // permission manager (see test_allowlisted_annotations.html)
+  await SpecialPowers.setBoolPref("channelclassifier.allowlist_example", true);
+  await SpecialPowers.setBoolPref("privacy.trackingprotection.testing.report_blocked_node", true);
+
+  await testOnWindow().then(function(aWindow) {
+    aWindow.close();
+  });
+
+  SimpleTest.finish();
+}
+
+// Expected finish() call is in "classifiedAnnotatedFrame.html".
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+</body>
+</html>

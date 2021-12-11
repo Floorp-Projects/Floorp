@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<title>WebGL test: bug 958723</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<body>
+<script>
+
+function TestAttribs(attribs) {
+  ok(true, 'Testing attribs: ' + JSON.stringify(attribs));
+  var canvas = document.createElement('canvas');
+  var gl = canvas.getContext('experimental-webgl', attribs);
+  ok(gl, 'No tested attribs should result in failure to create a context');
+  if (!gl)
+    return;
+
+  var actual = gl.getContextAttributes();
+
+  ok(actual.alpha == attribs.alpha,
+     'Resulting `alpha` should match request.');
+  ok(actual.premultipliedAlpha == attribs.premultipliedAlpha,
+     'Resulting `premultipliedAlpha` should match request.');
+  ok(actual.preserveDrawingBuffer == attribs.preserveDrawingBuffer,
+     'Resulting `preserveDrawingBuffer` should match request.');
+
+  // "The depth, stencil and antialias attributes, when set to true, are
+  // requests, not requirements."
+  if (!attribs.antialias) {
+    ok(!actual.antialias, 'No `antialias` if not requested.');
+  }
+  if (!attribs.depth) {
+    ok(!actual.depth, 'No `depth` if not requested.');
+  }
+  if (!attribs.stencil) {
+    ok(!actual.stencil, 'No `stencil` if not requested.');
+  }
+
+  var hasAlpha = !!gl.getParameter(gl.ALPHA_BITS);
+  var hasDepth = !!gl.getParameter(gl.DEPTH_BITS);
+  var hasStencil = !!gl.getParameter(gl.STENCIL_BITS);
+  var hasAntialias = !!gl.getParameter(gl.SAMPLES);
+
+  ok(hasAlpha == actual.alpha, 'Bits should match `alpha` attrib.');
+  ok(hasAntialias == actual.antialias, 'Bits should match `antialias` attrib.');
+  ok(hasDepth == actual.depth, 'Bits should match `depth` attrib.');
+  ok(hasStencil == actual.stencil, 'Bits should match `stencil` attrib.');
+}
+
+function CloneAttribs(attribs) {
+  return {
+    alpha: attribs.alpha,
+    antialias: attribs.antialias,
+    depth: attribs.depth,
+    premultipliedAlpha: attribs.premultipliedAlpha,
+    preserveDrawingBuffer: attribs.preserveDrawingBuffer,
+    stencil: attribs.stencil,
+  };
+}
+
+function SplitForAttrib(list, attrib) {
+  var ret = [];
+
+  for (var i in list) {
+    var cur = list[i];
+    if (cur[attrib])
+      throw 'Attrib is already true.';
+
+    var clone = CloneAttribs(cur);
+    clone[attrib] = true;
+
+    ret.push(cur);
+    ret.push(clone);
+  }
+
+  return ret;
+}
+
+function GenAttribList() {
+  var base = {
+    alpha: false,
+    antialias: false,
+    depth: false,
+    premultipliedAlpha: false,
+    preserveDrawingBuffer: false,
+    stencil: false,
+  };
+  var list = [base];
+  list = SplitForAttrib(list, 'alpha');
+  list = SplitForAttrib(list, 'antialias');
+  list = SplitForAttrib(list, 'depth');
+  list = SplitForAttrib(list, 'premultipliedAlpha');
+  list = SplitForAttrib(list, 'preserveDrawingBuffer');
+  list = SplitForAttrib(list, 'stencil');
+
+  if (list.length != 1<<6)
+    throw 'Attribs list length wrong: ' + list.length;
+
+  return list;
+}
+
+var list = GenAttribList();
+for (var i in list) {
+  var attribs = list[i];
+  TestAttribs(attribs);
+}
+
+ok(true, 'Test complete.');
+
+</script>
+

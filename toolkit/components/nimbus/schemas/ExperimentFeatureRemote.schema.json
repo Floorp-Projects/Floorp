@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/Feature",
+  "definitions": {
+    "RemoteFeatureConfigurations": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Feature name for which the defaults are provided."
+        },
+        "configurations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string",
+                "description": "Configuration identifier that will be included in Telemetry."
+              },
+              "variables": {
+                "type": "object",
+                "description": "Key value pairs that should match the feature manifest definition.",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["enabled"]
+              },
+              "targeting": {
+                "type": "string",
+                "description": "Target the configuration only to specific clients."
+              },
+              "bucketConfig": {
+                "type": "object",
+                "properties": {
+                  "randomizationUnit": {
+                    "type": "string",
+                    "description": "A unique, stable identifier for the user used as an input to bucket hashing"
+                  },
+                  "namespace": {
+                    "type": "string",
+                    "description": "Additional inputs to the hashing function"
+                  },
+                  "start": {
+                    "type": "number",
+                    "description": "Index of start of the range of buckets"
+                  },
+                  "count": {
+                    "type": "number",
+                    "description": "Number of buckets to check"
+                  },
+                  "total": {
+                    "type": "number",
+                    "description": "Total number of buckets",
+                    "default": 10000
+                  }
+                },
+                "required": [
+                  "randomizationUnit",
+                  "namespace",
+                  "start",
+                  "count",
+                  "total"
+                ],
+                "additionalProperties": false,
+                "description": "Bucketing configuration"
+              },
+              "description": {
+                "type": "string",
+                "description": "Explanation for configuration and targeting"
+              }
+            },
+            "required": ["variables", "targeting", "bucketConfig", "slug"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["id", "configurations"],
+      "additionalProperties": false
+    },
+    "RemoteFeatureConfiguration": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "type": "string",
+          "description": "Configuration identifier that will be included in Telemetry."
+        },
+        "isEarlyStartup": {
+          "type": "boolean",
+          "description": "If the feature values should be cached in prefs for fast early startup."
+        },
+        "variables": {
+          "type": "object",
+          "description": "Key value pairs that should match the feature manifest definition.",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": ["enabled"]
+        },
+        "targeting": {
+          "type": "string",
+          "description": "Target the configuration only to specific clients."
+        },
+        "bucketConfig": {
+          "type": "object",
+          "properties": {
+            "randomizationUnit": {
+              "type": "string",
+              "description": "A unique, stable identifier for the user used as an input to bucket hashing"
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Additional inputs to the hashing function"
+            },
+            "start": {
+              "type": "number",
+              "description": "Index of start of the range of buckets"
+            },
+            "count": {
+              "type": "number",
+              "description": "Number of buckets to check"
+            },
+            "total": {
+              "type": "number",
+              "description": "Total number of buckets",
+              "default": 10000
+            }
+          },
+          "required": [
+            "randomizationUnit",
+            "namespace",
+            "start",
+            "count",
+            "total"
+          ],
+          "additionalProperties": false,
+          "description": "Bucketing configuration"
+        },
+        "description": {
+          "type": "string",
+          "description": "Explanation for configuration and targeting"
+        }
+      },
+      "required": ["variables", "targeting", "slug"],
+      "additionalProperties": false
+    }
+  }
+}

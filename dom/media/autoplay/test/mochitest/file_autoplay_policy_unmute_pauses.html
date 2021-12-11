@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy window</title>
+  <style>
+    video {
+      width: 50%;
+      height: 50%;
+    }
+  </style>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        window.is = window.opener.is;
+        window.info = window.opener.info;
+
+        function testAutoplayUnmutePauses(testCase, parent_window) {
+          return new Promise(function (resolve, reject) {
+
+            info("testAutoplayUnmutePauses: " + testCase.property);
+
+            let element = document.createElement("video");
+            element.preload = "auto";
+
+            // Make inaudible.
+            element[testCase.property] = testCase.inaudible;
+
+            // Once we've loaded, play, then make audible.
+            // Assert that the media is paused when we make it audible.
+            element.addEventListener("loadeddata", () => {
+              info("loadeddata");
+              element.play();
+              is(element.paused, false, testCase.property + "=" + testCase.inaudible + " - should be playing");
+              element[testCase.property] = testCase.audible;
+              is(element.paused, true, testCase.property + "=" + testCase.audible + " - should be paused.");
+              resolve();
+            });
+
+            element.src = "short.mp4";
+            element.id = "video";
+            document.body.appendChild(element);
+          });
+        }
+
+        nextWindowMessage().then(
+          (event) => {
+            testAutoplayUnmutePauses(event.data, event.source)
+              .then(() => {
+                event.source.postMessage("done", "*");
+              });
+          });
+
+      </script>
+    </pre>
+</body>
+
+</html>

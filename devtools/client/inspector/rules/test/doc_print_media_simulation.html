@@ -1,0 +1,27 @@
+<html>
+<head>
+  <title>test print media simulation</title>
+  <script type="application/javascript">
+
+  </script>
+  <style>
+    div {
+      width: 1000px;
+      height: 100px;
+      background-color: #f00;
+    }
+
+    @media print {
+      div {
+        background-color: #00f;
+      }
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<iframe
+  src='https://example.org/document-builder.sjs?html=<style>html { background-color: %23ff0;} @media print {html {background-color: %230ff;}}'>
+</iframe>
+</body>
+</html>

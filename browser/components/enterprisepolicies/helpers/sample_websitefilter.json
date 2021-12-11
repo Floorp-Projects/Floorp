@@ -1,0 +1,14 @@
+{
+  "policies": {
+    "WebsiteFilter": {
+      "Block": [
+        "*://*.mozilla.org/*",
+        "invalid_pattern"
+      ],
+
+      "Exceptions": [
+        "*://*.mozilla.org/*about*"
+      ]
+    }
+  }
+}

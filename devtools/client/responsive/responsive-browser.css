@@ -1,0 +1,140 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#appcontent[devtoolstheme="light"] {
+  --rdm-browser-container-background: #F5F5F6;
+  --rdm-browser-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+}
+
+#appcontent[devtoolstheme="dark"] {
+  --rdm-browser-container-background: #18181a; /* This should map to --theme-toolbar-background. */
+  --rdm-browser-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
+}
+
+.browserContainer.responsive-mode {
+  background-color: var(--rdm-browser-container-background);
+}
+
+.browserContainer.responsive-mode .browserStack > .rdm-toolbar {
+  border: none;
+  position: fixed;
+  z-index: 1;
+  height: 30px;
+  width: var(--rdm-stack-width);
+}
+
+.browserContainer.responsive-mode .browserStack > .rdm-toolbar.accomodate-ua {
+  height: 60px;
+}
+
+.browserContainer.responsive-mode > .browserStack {
+  --resizer-offset: 4px;
+  --browser-viewport-width: calc(var(--rdm-width) + var(--resizer-offset));
+  --browser-viewport-height: calc(var(--rdm-height) + var(--resizer-offset));
+  --rdm-zoomed-width: calc(var(--rdm-width) * var(--rdm-zoom));
+  --rdm-zoomed-height: calc(var(--rdm-height) * var(--rdm-zoom));
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  grid-template-columns: 15px 1fr [center-align] var(--browser-viewport-width) 1fr;
+  grid-template-rows: 65px [margin-top-offset] var(--browser-viewport-height);
+}
+
+.browserContainer.responsive-mode > .browserStack > * {
+  box-sizing: content-box; /* This is important to ensure that the pane has the
+                              precise number of pixels defined by --rdm-width
+                              and --rdm-height. */
+  height: var(--rdm-height);
+  width: var(--rdm-width);
+}
+
+.browserContainer.responsive-mode > .browserStack > *:not(.rdm-toolbar) {
+  grid-column: center-align;
+  grid-row: margin-top-offset;
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > *:not(.rdm-toolbar) {
+  grid-column: left-align;
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack {
+  grid-template-columns: 15px [left-align] var(--browser-viewport-width) 1fr;
+}
+
+html[dir="rtl"] .browserContainer.responsive-mode.left-aligned > .browserStack {
+  grid-template-columns: 1fr [left-align] var(--browser-viewport-width) 15px
+}
+
+.browserContainer.responsive-mode > .browserStack > browser {
+  border: 1px solid var(--devtools-splitter-color);
+  box-shadow: var(--rdm-browser-box-shadow);
+  transform-origin: 50% 0;
+  transform: scale(var(--rdm-zoom), var(--rdm-zoom));
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > browser {
+  transform-origin: 0 0;
+}
+
+/* Resize handles */
+
+.browserContainer.responsive-mode > .browserStack > .viewport-resize-handle {
+  width: 16px;
+  height: 16px;
+  background-image: url("./images/grippers.svg");
+  margin-inline-end: var(--resizer-offset);
+  margin-block-end: var(--resizer-offset);
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  cursor: nwse-resize;
+  align-self: end;
+  justify-self: right;
+  position: relative;
+  left: calc((var(--rdm-zoomed-width) - var(--rdm-width)) / 2);
+  top: calc(var(--rdm-zoomed-height) - var(--rdm-height));
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > .viewport-resize-handle {
+  left: calc(var(--rdm-zoomed-width) - var(--rdm-width));
+}
+
+.browserContainer.responsive-mode > .browserStack > .viewport-horizontal-resize-handle {
+  width: 5px;
+  height: calc(var(--rdm-zoomed-height) - 16px);
+  cursor: ew-resize;
+  justify-self: right;
+  position: relative;
+  left: calc((var(--rdm-zoomed-width) - var(--rdm-width)) / 2);
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > .viewport-horizontal-resize-handle {
+  left: calc(var(--rdm-zoomed-width) - var(--rdm-width));
+}
+
+.browserContainer.responsive-mode > .browserStack > .viewport-vertical-resize-handle {
+  width: calc(var(--rdm-zoomed-width) - 16px);
+  height: 5px;
+  cursor: ns-resize;
+  align-self: end;
+  position: relative;
+  top: calc(var(--rdm-zoomed-height) - var(--rdm-height));
+  left: calc((-1 * (var(--rdm-zoomed-width) - var(--rdm-width)) / 2));
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > .viewport-vertical-resize-handle {
+  left: 0;
+}
+
+/* tabdialogbox handling - it needs to not be treated as part of the grid: */
+.browserContainer.responsive-mode > .browserStack > .dialogStack {
+  position: fixed;
+  width: var(--rdm-stack-width);
+}
+
+/* handle height for tabdialogbox and RDM device modal. Both are position:fixed and so
+   are taken from the grid layout when RDM is opened. */
+.browserContainer.responsive-mode .browserStack.device-modal-opened > .rdm-toolbar,
+.browserContainer.responsive-mode > .browserStack > .dialogStack {
+  height: var(--rdm-stack-height);
+}

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=791278
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Simple PeerConnection Video Test - Invalid callback</title>
+  <script type="application/javascript">
+    var pc1 = new RTCPeerConnection();
+    pc1.setLocalDescription(function() {});
+
+    var pc2 = new RTCPeerConnection();
+    pc2.setRemoteDescription(function() {});
+  </script>
+</head>
+
+<body>
+</body>
+</html>

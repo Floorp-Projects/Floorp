@@ -1,0 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+  content/global/certviewer/certviewer.html           (content/certviewer.html)
+  content/global/certviewer/certviewer.css            (content/certviewer.css)
+  content/global/certviewer/certviewer.js             (content/certviewer.js)
+  content/global/certviewer/components/               (content/components/*.js)
+  content/global/certviewer/components/               (content/components/*.css)
+  content/global/certviewer/certDecoder.js            (content/certDecoder.js)
+  content/global/certviewer/pvutils_bundle.js         (content/vendor/pvutils_bundle.js)
+  content/global/certviewer/asn1js_bundle.js          (content/vendor/asn1js_bundle.js)
+  content/global/certviewer/pkijs_bundle.js           (content/vendor/pkijs_bundle.js)

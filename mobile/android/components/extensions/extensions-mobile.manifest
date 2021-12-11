@@ -1,0 +1,5 @@
+# modules
+category webextension-modules android chrome://geckoview/content/ext-android.json
+
+category webextension-scripts c-android chrome://geckoview/content/ext-android.js
+category webextension-scripts-addon android chrome://geckoview/content/ext-c-android.js

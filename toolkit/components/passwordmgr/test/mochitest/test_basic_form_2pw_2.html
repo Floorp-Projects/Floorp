@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for form fill with 2 password fields</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: form fill, 2 password fields
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: form fill, 2 password fields **/
+
+/*
+ * If a form has two password fields, other things may be going on....
+ *
+ * 1 - The user might be creating a new login (2nd field for typo checking)
+ * 2 - The user is changing a password (old and new password each have field)
+ *
+ * This test is for case #1.
+ */
+
+var numSubmittedForms = 0;
+var numStartingLogins = 0;
+
+function startTest() {
+  // Check for unfilled forms
+  is($_(1, "uname").value, "", "Checking username 1");
+  is($_(1, "pword").value, "", "Checking password 1A");
+  is($_(1, "qword").value, "", "Checking password 1B");
+
+  // Fill in the username and password fields, for account creation.
+  // Form 1
+  SpecialPowers.wrap($_(1, "uname")).setUserInput("newuser1");
+  SpecialPowers.wrap($_(1, "pword")).setUserInput("newpass1");
+  SpecialPowers.wrap($_(1, "qword")).setUserInput("newpass1");
+
+  // eslint-disable-next-line no-unused-vars
+  var button = getFormSubmitButton(1);
+
+  todo(false, "form submission disabled, can't auto-accept dialog yet");
+  SimpleTest.finish();
+}
+
+
+// Called by each form's onsubmit handler.
+function checkSubmit(formNum) {
+  numSubmittedForms++;
+
+  // End the test at the last form.
+  if (formNum == 999) {
+    is(numSubmittedForms, 999, "Ensuring all forms submitted for testing.");
+
+    (async () => {
+      var numEndingLogins = await LoginManager.countLogins("", "", "");
+
+      ok(numEndingLogins > 0, "counting logins at end");
+      is(numStartingLogins, numEndingLogins + 222, "counting logins at end");
+
+      SimpleTest.finish();
+    })();
+    return false; // return false to cancel current form submission
+  }
+
+  // submit the next form.
+  var button = getFormSubmitButton(formNum + 1);
+  button.click();
+
+  return false; // return false to cancel current form submission
+}
+
+
+function getFormSubmitButton(formNum) {
+  var form = $("form" + formNum); // by id, not name
+  ok(form != null, "getting form " + formNum);
+
+  // we can't just call form.submit(), because that doesn't seem to
+  // invoke the form onsubmit handler.
+  var button = form.firstChild;
+  while (button && button.type != "submit") {
+    button = button.nextSibling;
+  }
+  ok(button != null, "getting form submit button");
+
+  return button;
+}
+
+runChecksAfterCommonInit(startTest);
+
+</script>
+</pre>
+<div id="content" style="display: none">
+  <form id="form1" onsubmit="return checkSubmit(1)" action="http://newuser.com">
+    <input  type="text"     name="uname">
+    <input  type="password" name="pword">
+    <input  type="password" name="qword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+
+</body>
+</html>

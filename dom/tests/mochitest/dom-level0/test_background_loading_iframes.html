@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for background loading iframes</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var myLoadTime;
+var receivedPostMessage = [];
+
+window.addEventListener('message', function(event) {
+  receivedPostMessage.push(parseInt(event.data));
+  if (receivedPostMessage.length == 3) {
+    if (!myLoadTime){
+      ok(false, "Child iframes are loaded earlier than the parent document");
+    } else {
+      receivedPostMessage.forEach(function(iframeLoadTime, index) {
+        ok(iframeLoadTime, "Iframe load time should not be null");
+        ok(iframeLoadTime >= myLoadTime, "Parent document should be loaded earlier than child iframes");
+      })
+    }
+    SimpleTest.finish();
+  }
+})
+
+window.onload = function() {
+  myLoadTime = performance.now();
+}
+
+SpecialPowers.pushPrefEnv({"set":[["dom.background_loading_iframe", true]]}).then(async function () {
+  await SpecialPowers.promiseTimeout(0);
+
+  var iframe1 = document.createElement("iframe");
+  var iframe2 = document.createElement("iframe");
+  var iframe3 = document.createElement("iframe");
+
+  iframe1.src = "http://example.org:80/tests/dom/tests/mochitest/dom-level0/file_test_background_loading_iframes.html";
+  iframe2.src = "http://example.org:80/tests/dom/tests/mochitest/dom-level0/file_test_background_loading_iframes.html";
+  iframe3.src = "http://example.org:80/tests/dom/tests/mochitest/dom-level0/file_test_background_loading_iframes.html";
+
+  iframe1.onload = function() {
+    iframe1.contentWindow.postMessage("test", "*");
+  }
+
+  iframe2.onload = function() {
+    iframe2.contentWindow.postMessage("test", "*");
+  }
+
+  iframe3.onload = function() {
+    iframe3.contentWindow.postMessage("test", "*");
+  }
+
+  document.body.append(iframe1);
+  document.body.append(iframe2);
+  document.body.append(iframe3);
+
+});
+
+</script>
+</pre>
+</body>
+</html>

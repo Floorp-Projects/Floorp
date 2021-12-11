@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>states of document</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // Bug 566542: root accesible should expose active state when focused.
+      testStates(getRootAccessible(), 0, EXT_STATE_ACTIVE);
+
+      // Bug 509696, 607219.
+      testStates(document, STATE_READONLY, 0); // role=""
+
+      document.body.setAttribute("role", "application");
+      testStates(document, 0, 0, STATE_READONLY);
+      document.body.setAttribute("role", "foo"); // bogus role
+      testStates(document, STATE_READONLY);
+      document.body.removeAttribute("role");
+      testStates(document, STATE_READONLY);
+
+      // Bugs 454997 and 467387
+      testStates(document, STATE_READONLY);
+      testStates("document", STATE_READONLY);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+
+      testStates("p", 0, EXT_STATE_SELECTABLE_TEXT, 0, EXT_STATE_EDITABLE);
+      testStates("unselectable_p", 0, 0, 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
+      testStates("unselectable_link", 0, 0, 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
+
+      document.designMode = "on";
+
+      testStates(document, 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("p", 0, EXT_STATE_EDITABLE | EXT_STATE_SELECTABLE_TEXT, STATE_READONLY);
+      testStates("document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("unselectable_p", 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
+      testStates("unselectable_link", 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
+
+      document.designMode = "off";
+
+      testStates(document, STATE_READONLY);
+      testStates("document", STATE_READONLY);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body role="">
+
+  <a target="_blank"
+     title="<body contenteditable='true'> exposed incorrectly"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=454997">Mozilla Bug 454997</a>
+   <a target="_blank"
+     title="nsIAccessible states tests of editable document"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=467387">Mozilla Bug 467387</a>
+   <a target="_blank"
+     title="Role attribute on body with empty string causes DocAccessible not to have read-only state."
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=509696">Mozilla Bug 509696</a>
+  <a target="_blank"
+     title="Frame for firefox does not implement the state "active" when firefox is the active frame"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=566542">Mozilla Bug 566542</a>
+  <a target="_blank"
+     title="Dynamic role attribute change on body doesn't affect on document role"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=607219">Mozilla Bug 607219</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="p">hello</p>
+
+  <p id="unselectable_p" style="user-select: none;">unselectable <a id="unselectable_link" href="#">link</a></p>
+
+  <div id="document" role="document">document</div>
+  <div id="editable_document" role="document" contentEditable="true">editable document</doc>
+
+</body>
+</html>

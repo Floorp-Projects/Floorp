@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=318065
+-->
+
+<head>
+  <title>Test for Bug 318065</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=318065">Mozilla Bug 318065</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 318065 **/
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(function() {
+        var expectedValues = ["A", "", "A", "", "A", "", "A"];
+        var messages = ["Initial text inserted",
+                        "Initial text deleted",
+                        "Undo of deletion",
+                        "Redo of deletion",
+                        "Initial text typed",
+                        "Undo of typing",
+                        "Redo of typing"];
+        var step = 0;
+
+        function onInput() {
+          is(this.value, expectedValues[step], messages[step]);
+          step++;
+          if (step == expectedValues.length) {
+            this.removeEventListener("input", onInput);
+            SimpleTest.finish();
+          }
+        }
+
+        var input = document.getElementById("t1");
+        input.addEventListener("input", onInput);
+        var input2 = document.getElementById("t2");
+        input2.addEventListener("input", onInput);
+
+        input.focus();
+
+        // Tests 0 + 1: Input letter and delete it again
+        sendString("A");
+        synthesizeKey("KEY_Backspace");
+
+        // Test 2: Undo deletion. Value of input should be "A"
+        synthesizeKey("Z", {accelKey: true});
+
+        // Test 3: Redo deletion. Value of input should be ""
+        synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+        input2.focus();
+
+        // Test 4: Input letter
+        sendString("A");
+
+        // Test 5: Undo typing. Value of input should be ""
+        synthesizeKey("Z", {accelKey: true});
+
+        // Test 6: Redo typing. Value of input should be "A"
+        synthesizeKey("Z", {accelKey: true, shiftKey: true});
+      });
+   </script>
+  </pre>
+
+  <input type="text" value="" id="t1" />
+  <input type="text" value="" id="t2" />
+</body>
+</html>

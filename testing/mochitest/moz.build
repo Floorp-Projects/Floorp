@@ -1,0 +1,212 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "manifests",
+    "tests",
+    "ssltunnel",
+    "BrowserTestUtils",
+]
+
+XPI_NAME = "mochijar"
+
+USE_EXTENSION_MANIFEST = True
+
+FINAL_TARGET_FILES += [
+    "api.js",
+    "manifest.json",
+    "schema.json",
+]
+
+FINAL_TARGET_FILES.content += [
+    "browser-harness.xhtml",
+    "browser-test.js",
+    "chrome-harness.js",
+    "chunkifyTests.js",
+    "harness.xhtml",
+    "manifestLibrary.js",
+    "mochitest-e10s-utils.js",
+    "redirect.html",
+    "server.js",
+    "shutdown-leaks-collector.js",
+    "ShutdownLeaksCollector.jsm",
+]
+
+FINAL_TARGET_FILES.content.dynamic += [
+    "dynamic/getMyDirectory.sjs",
+]
+
+FINAL_TARGET_FILES.content.static += [
+    "static/harness.css",
+]
+
+FINAL_TARGET_FILES.content.tests.SimpleTest += [
+    "../../docshell/test/chrome/docshell_helpers.js",
+    "../modules/StructuredLog.jsm",
+    "tests/SimpleTest/AccessibilityUtils.js",
+    "tests/SimpleTest/EventUtils.js",
+    "tests/SimpleTest/ExtensionTestUtils.js",
+    "tests/SimpleTest/iframe-between-tests.html",
+    "tests/SimpleTest/LogController.js",
+    "tests/SimpleTest/MemoryStats.js",
+    "tests/SimpleTest/MockObjects.js",
+    "tests/SimpleTest/MozillaLogger.js",
+    "tests/SimpleTest/NativeKeyCodes.js",
+    "tests/SimpleTest/paint_listener.js",
+    "tests/SimpleTest/setup.js",
+    "tests/SimpleTest/SimpleTest.js",
+    "tests/SimpleTest/test.css",
+    "tests/SimpleTest/TestRunner.js",
+    "tests/SimpleTest/WindowSnapshot.js",
+    "tests/SimpleTest/WorkerHandler.js",
+    "tests/SimpleTest/WorkerSimpleTest.js",
+]
+
+FINAL_TARGET_FILES.content.tests.BrowserTestUtils += [
+    "BrowserTestUtils/content/content-about-page-utils.js",
+    "BrowserTestUtils/content/content-task.js",
+]
+
+MOCHITEST_MANIFESTS += [
+    "baselinecoverage/plain/mochitest.ini",
+    "tests/MochiKit-1.4.2/tests/mochitest.ini",
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    "baselinecoverage/chrome/chrome.ini",
+    "chrome/chrome.ini",
+]
+
+BROWSER_CHROME_MANIFESTS += ["baselinecoverage/browser_chrome/browser.ini"]
+
+TEST_HARNESS_FILES.testing.mochitest += [
+    "/build/pgo/server-locations.txt",
+    "/build/valgrind/cross-architecture.sup",
+    "/build/valgrind/i386-pc-linux-gnu.sup",
+    "/build/valgrind/x86_64-pc-linux-gnu.sup",
+    "/netwerk/test/httpserver/httpd.js",
+    "bisection.py",
+    "browser-harness.xhtml",
+    "browser-test.js",
+    "chrome-harness.js",
+    "chunkifyTests.js",
+    "document-builder.sjs",
+    "favicon.ico",
+    "harness.xhtml",
+    "leaks.py",
+    "mach_test_package_commands.py",
+    "manifest.webapp",
+    "manifestLibrary.js",
+    "mochitest_options.py",
+    "pywebsocket_wrapper.py",
+    "redirect.html",
+    "runjunit.py",
+    "runtests.py",
+    "runtestsremote.py",
+    "server.js",
+    "start_desktop.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.embed += [
+    "embed/Xm5i5kbIXzc",
+    "embed/Xm5i5kbIXzc^headers^",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.pywebsocket3.mod_pywebsocket += [
+    "pywebsocket3/mod_pywebsocket/__init__.py",
+    "pywebsocket3/mod_pywebsocket/_stream_exceptions.py",
+    "pywebsocket3/mod_pywebsocket/common.py",
+    "pywebsocket3/mod_pywebsocket/dispatch.py",
+    "pywebsocket3/mod_pywebsocket/extensions.py",
+    "pywebsocket3/mod_pywebsocket/fast_masking.i",
+    "pywebsocket3/mod_pywebsocket/http_header_util.py",
+    "pywebsocket3/mod_pywebsocket/memorizingfile.py",
+    "pywebsocket3/mod_pywebsocket/msgutil.py",
+    "pywebsocket3/mod_pywebsocket/request_handler.py",
+    "pywebsocket3/mod_pywebsocket/server_util.py",
+    "pywebsocket3/mod_pywebsocket/standalone.py",
+    "pywebsocket3/mod_pywebsocket/stream.py",
+    "pywebsocket3/mod_pywebsocket/util.py",
+    "pywebsocket3/mod_pywebsocket/websocket_server.py",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.pywebsocket3.mod_pywebsocket.handshake += [
+    "pywebsocket3/mod_pywebsocket/handshake/__init__.py",
+    "pywebsocket3/mod_pywebsocket/handshake/_base.py",
+    "pywebsocket3/mod_pywebsocket/handshake/hybi.py",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.dynamic += [
+    "dynamic/getMyDirectory.sjs",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.static += [
+    "static/harness.css",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.MochiKit += [
+    "MochiKit/__package__.js",
+    "MochiKit/Async.js",
+    "MochiKit/Base.js",
+    "MochiKit/Color.js",
+    "MochiKit/Controls.js",
+    "MochiKit/DateTime.js",
+    "MochiKit/DOM.js",
+    "MochiKit/DragAndDrop.js",
+    "MochiKit/Format.js",
+    "MochiKit/Iter.js",
+    "MochiKit/Logging.js",
+    "MochiKit/LoggingPane.js",
+    "MochiKit/MochiKit.js",
+    "MochiKit/MockDOM.js",
+    "MochiKit/New.js",
+    "MochiKit/Signal.js",
+    "MochiKit/Sortable.js",
+    "MochiKit/Style.js",
+    "MochiKit/Test.js",
+    "MochiKit/Visual.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.testing.mochitest.tests[
+    "MochiKit-1.4.2"
+].MochiKit += [
+    "tests/MochiKit-1.4.2/MochiKit/Async.js",
+    "tests/MochiKit-1.4.2/MochiKit/Base.js",
+    "tests/MochiKit-1.4.2/MochiKit/Color.js",
+    "tests/MochiKit-1.4.2/MochiKit/DateTime.js",
+    "tests/MochiKit-1.4.2/MochiKit/DOM.js",
+    "tests/MochiKit-1.4.2/MochiKit/DragAndDrop.js",
+    "tests/MochiKit-1.4.2/MochiKit/Format.js",
+    "tests/MochiKit-1.4.2/MochiKit/Iter.js",
+    "tests/MochiKit-1.4.2/MochiKit/Logging.js",
+    "tests/MochiKit-1.4.2/MochiKit/LoggingPane.js",
+    "tests/MochiKit-1.4.2/MochiKit/MochiKit.js",
+    "tests/MochiKit-1.4.2/MochiKit/MockDOM.js",
+    "tests/MochiKit-1.4.2/MochiKit/Position.js",
+    "tests/MochiKit-1.4.2/MochiKit/Selector.js",
+    "tests/MochiKit-1.4.2/MochiKit/Signal.js",
+    "tests/MochiKit-1.4.2/MochiKit/Sortable.js",
+    "tests/MochiKit-1.4.2/MochiKit/Style.js",
+    "tests/MochiKit-1.4.2/MochiKit/Test.js",
+    "tests/MochiKit-1.4.2/MochiKit/Visual.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.iceserver += [
+    "/testing/tools/iceserver/iceserver.py",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
+    "/testing/tools/websocketprocessbridge/websocketprocessbridge.py",
+    "/testing/tools/websocketprocessbridge/websocketprocessbridge_requirements.txt",
+    "/testing/tools/websocketprocessbridge/websocketprocessbridge_requirements_3.txt",
+]
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Mochitest")
+    SCHEDULES.exclusive = ["mochitest"]
+
+with Files("*remote*"):
+    BUG_COMPONENT = ("GeckoView", "General")

@@ -1,0 +1,24 @@
+. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
+
+if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
+    CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/windows && pwd)"
+
+    export LIB=$CLANG_LIB_DIR
+    export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
+
+    export MOZ_COPY_PDBS=1
+    export LLVM_SYMBOLIZER="$MOZ_FETCHES_DIR/llvm-symbolizer/llvm-symbolizer.exe"
+    export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
+fi
+
+# Enable ASan specific code and build workarounds
+ac_add_options --enable-address-sanitizer
+
+# Mandatory options required for ASan builds
+ac_add_options --enable-debug-symbols
+ac_add_options --disable-jemalloc
+ac_add_options --disable-crashreporter
+ac_add_options --disable-profiling
+
+. "$topsrcdir/build/mozconfig.clang-cl"
+. "$topsrcdir/build/mozconfig.lld-link"

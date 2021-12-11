@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+.hideradios input {
+  display: none;
+}
+
+input:checked + label {
+  background-color: yellow;
+}
+
+</style>
+
+<script type="text/javascript">
+
+function chooseSecondItems()
+{
+  document.getElementById("a2").checked = true;
+  document.getElementById("b2").checked = true;
+}
+
+</script>
+</head>
+
+<body onload="chooseSecondItems();">
+
+<div>
+<div><input type="radio" name="a" id="a1"><label for="a1">radio #a1</label></div>
+<div><input type="radio" name="a" id="a2"><label for="a2">radio #a2</label></div>
+<div><input type="radio" name="a" id="a3"><label for="a3">radio #a3</label></div>
+<div><input type="radio" name="a" id="a4" checked><label for="a4">radio #a4</label></div>
+<div><input type="radio" name="a" id="a5"><label for="a5">radio #a5</label></div>
+</div>
+
+<div class="hideradios">
+<div><input type="radio" name="b" id="b1"><label for="b1">radio #b1</label></div>
+<div><input type="radio" name="b" id="b2"><label for="b2">radio #b2</label></div>
+<div><input type="radio" name="b" id="b3"><label for="b3">radio #b3</label></div>
+<div><input type="radio" name="b" id="b4" checked><label for="b4">radio #b4</label></div>
+<div><input type="radio" name="b" id="b5"><label for="b5">radio #b5</label></div>
+</div>
+
+</body>
+</html>

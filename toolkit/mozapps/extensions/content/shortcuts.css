@@ -1,0 +1,138 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.shortcut.card {
+  margin-bottom: 16px;
+}
+
+.shortcut.card:first-of-type {
+  margin-top: 8px;
+}
+
+.shortcut.card:hover {
+  box-shadow: var(--card-shadow);
+}
+
+.shortcut.card .card-heading-icon {
+  width: 24px;
+  height: 24px;
+  margin-inline-end: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.card-heading {
+  display: flex;
+  font-weight: 600;
+}
+
+.shortcuts-empty-label {
+  margin-top: 16px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.shortcut.card:not([expanded]) > .shortcut-row[hide-before-expand] {
+  display: none;
+}
+
+.shortcut-label {
+  flex-grow: 1;
+}
+
+.shortcut-remove-button {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-width: 32px;
+}
+
+.shortcut-input[shortcut=""] + .shortcut-remove-button {
+  visibility: hidden;
+}
+
+.expand-row {
+  display: flex;
+  justify-content: center;
+}
+
+.expand-button {
+  margin: 8px 0 0;
+}
+
+.expand-button[warning]:not(:focus) {
+  outline: 2px solid var(--yellow-60);
+  outline-offset: -1px;
+  box-shadow: 0 0 0 4px var(--yellow-60-a30);
+}
+
+.shortcut-input {
+  /* Shortcuts should always be left-to-right. */
+  direction: ltr;
+  text-align: match-parent;
+}
+
+.extension-heading {
+  display: flex;
+}
+
+.error-message {
+  --error-background: var(--red-60);
+  --warning-background: var(--yellow-50);
+  --warning-text-color: var(--yellow-90);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  visibility: hidden;
+}
+
+.error-message-icon {
+  margin-inline-start: 10px;
+  width: 14px;
+  height: 8px;
+  fill: var(--error-background);
+  stroke: var(--error-background);
+  -moz-context-properties: fill, stroke;
+}
+
+.error-message[type="warning"] > .error-message-icon {
+  fill: var(--warning-background);
+  stroke: var(--warning-background);
+}
+
+.error-message-label {
+  background-color: var(--error-background);
+  border-radius: 2px;
+  margin: 0;
+  margin-inline-end: 8px;
+  max-width: 300px;
+  padding: 5px 10px;
+  word-wrap: break-word;
+}
+
+.error-message[type="warning"] > .error-message-label {
+  background-color: var(--warning-background);
+  color: var(--warning-text-color);
+}
+
+.error-message-arrow {
+  background-color: var(--error-background);
+  content: "";
+  max-height: 8px;
+  width: 8px;
+  transform: translate(4px, -6px) rotate(45deg);
+  position: absolute;
+}
+
+/* The margin between message bars. */
+message-bar-stack > * {
+  margin-bottom: 8px;
+}

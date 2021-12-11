@@ -1,0 +1,12 @@
+<html class="reftest-wait">
+<body style="background-color: red;"
+      onload="HandleLoad()">
+  <script>
+    function HandleLoad() {
+      setTimeout(function() {
+        document.body.style.backgroundColor = "green";
+        document.documentElement.className = "";
+      }, 100);
+    }
+  </script>
+</body>

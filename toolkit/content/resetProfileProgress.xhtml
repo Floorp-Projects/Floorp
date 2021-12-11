@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd" >
+%resetProfileDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/content/resetProfile.css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+
+<window id="resetProfileProgressDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="&refreshProfile.dialog.title;"
+        style="min-width: 30em;">
+  <vbox>
+    <description>&refreshProfile.cleaning.description;</description>
+    <html:progress/>
+  </vbox>
+</window>

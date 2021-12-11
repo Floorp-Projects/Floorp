@@ -1,0 +1,83 @@
+<!doctype html>
+
+<head>
+  <title>Form Autocomplete Tests</title>
+
+  <link rel="stylesheet"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script src="../common.js"></script>
+  <script src="../promisified-events.js"></script>
+  <script src="../role.js"></script>
+
+  <script type="application/javascript">
+    const { TestUtils } = ChromeUtils.import(
+      "resource://testing-common/TestUtils.jsm");
+
+    async function waitForFocusOnOptionWithname(name) {
+      let event = await waitForEvent(
+        EVENT_FOCUS,
+        evt => evt.accessible.role == ROLE_COMBOBOX_OPTION
+      );
+      if (!event.accessible.name) {
+        // Sometimes, the name is null for a very short time after the focus
+        // event.
+        await waitForEvent(EVENT_NAME_CHANGE, event.accessible);
+      }
+      is(event.accessible.name, name, "Got focus on option with name " + name);
+    }
+
+    async function doTests() {
+      const input = getNode("input");
+      info("Focusing the input");
+      let focused = waitForEvent(EVENT_FOCUS, input);
+      input.focus();
+      await focused;
+
+      let shown = waitForEvent(EVENT_SHOW, event =>
+        event.accessible.role == ROLE_GROUPING &&
+        event.accessible.firstChild.role == ROLE_COMBOBOX_LIST);
+      info("Pressing ArrowDown to open the popup");
+      synthesizeKey("KEY_ArrowDown");
+      await shown;
+      // The popup still doesn't seem to be ready even once it's fired an a11y
+      // show event!
+      const controller = Cc["@mozilla.org/autocomplete/controller;1"].
+        getService(Ci.nsIAutoCompleteController);
+      info("Waiting for popup to be fully open and ready");
+      await TestUtils.waitForCondition(() => controller.input.popupOpen);
+
+      focused = waitForFocusOnOptionWithname("a");
+      info("Pressing ArrowDown to focus first item");
+      synthesizeKey("KEY_ArrowDown");
+      await focused;
+
+      focused = waitForFocusOnOptionWithname("b");
+      info("Pressing ArrowDown to focus the second item");
+      synthesizeKey("KEY_ArrowDown");
+      await focused;
+
+      focused = waitForEvent(EVENT_FOCUS, input);
+      info("Pressing enter to select the second item");
+      synthesizeKey("KEY_Enter");
+      await focused;
+      is(input.value, "b", "input value filled with second item");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+<body>
+  <input id="input" list="list">
+  <datalist id="list">
+    <option id="a" value="a">
+    <option id="b" value="b">
+  </datalist>
+</body>
+</html>

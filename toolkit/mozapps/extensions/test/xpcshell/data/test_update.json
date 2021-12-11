@@ -1,0 +1,137 @@
+{
+  "addons": {
+    "addon1@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "1.0",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_min_version": "1"
+            }
+          }
+        },
+        {
+          "version": "1.0",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "strict_min_version": "2"
+            }
+          }
+        },
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/addons/test_update.xpi",
+          "update_info_url": "http://example.com/updateInfo.xhtml",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_min_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "addon2@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "1.0",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0",
+              "advisory_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "addon2@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "1.0",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0",
+              "advisory_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "addon3@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "1.0",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "3",
+              "advisory_max_version": "3"
+            }
+          }
+        }
+      ]
+    },
+
+    "addon4@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "5.0",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0",
+              "advisory_max_version": "0"
+            }
+          }
+        }
+      ]
+    },
+
+    "addon7@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "1.0",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0",
+              "advisory_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "addon8@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/addons/test_update8.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          }
+        }
+      ]
+    },
+
+    "addon12@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/addons/test_update12.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

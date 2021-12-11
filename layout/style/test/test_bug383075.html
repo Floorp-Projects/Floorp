@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=383075
+-->
+<head>
+  <title>Test for bug 383075</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; font-family: Arial;
+        }
+	
+
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=383075">Mozilla bug 383075</a>
+<p id="display">
+
+The X'es below should have the same size:<br>
+
+<span id="a1" style="font-size:72px;">X</span>
+<span id="a2" style="font-size:72px;">X</span>
+<span id="a3" style="font-size:72px;">X</span>
+<span id="a4" style="font-size:72px;">X</span>
+<span id="a5" style="font-size:72px;">X</span>
+<span id="a6" style="font-size:72px;">X</span>
+<span id="a7" style="font-size:24px;">X</span>
+<span id="a8" style="font-size:72px;">X</span>
+<span id="a9" style="font:24px Arial;">X</span>
+
+<br>
+
+<span id="b1" style="font-size:72px;">X</span>
+<span id="b2" style="font-size:72px;">X</span>
+<span id="b3" style="font-size:72px;">X</span>
+<span id="b4" style="font-size:72px;">X</span>
+<span id="b5" style="font-size:72px;">X</span>
+<span id="b6" style="font-size:72px;">X</span>
+<span id="b7" style="font-size:24px;">X</span>
+<span id="b8" style="font-size:72px;">X</span>
+<span id="b9" style="font:24px Arial;">X</span>
+</p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  document.getElementById("a1").style.fontSize = "illegal";
+  document.getElementById("a2").style.fontSize = "24px;";
+  document.getElementById("a3").style.fontSize = "24px; font-size-adjust:2";
+  document.getElementById("a4").style.fontSize = ";";
+  document.getElementById("a5").style.font = "24px Arial;";
+  document.getElementById("a6").style.font = "24px;";
+  document.getElementById("a7").style.fontSize = "  72px  ";   // correct
+  document.getElementById("a8").style.font = ";";
+  document.getElementById("a9").style.font = "  72px Arial  ";  // correct
+
+  document.getElementById("b1").style.setProperty("font-size", "illegal", null);
+  document.getElementById("b2").style.setProperty("font-size", "24px;", null);
+  document.getElementById("b3").style.setProperty("font-size", "24px; font-size-adjust:2", null);
+  document.getElementById("b4").style.setProperty("font-size", ";", null);
+  document.getElementById("b5").style.setProperty("font", "24px Arial;", null);
+  document.getElementById("b6").style.setProperty("font", "24px;", null);
+  document.getElementById("b7").style.setProperty("font-size", "  72px  ", null); // correct
+  document.getElementById("b8").style.setProperty("font", ";", null);
+  document.getElementById("b9").style.setProperty("font", "  72px Arial  ", null); // correct
+
+
+for (i=1; i <= 9; ++i)
+  is($('a'+i).style.fontSize, '72px', "font size");
+
+for (i=1; i <= 9; ++i)
+  is($('b'+i).style.fontSize, '72px', "font size");
+
+
+</script>
+</pre>
+
+</body>
+</html>
+

@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="fr" class="reftest-paged">
+<head>
+<style type="text/css">
+html, body {
+width: 100%;
+margin: 0;
+padding: 0;
+font-family: arial, helvetica, sans-serif;
+font-size: 11px;
+}
+
+body {
+background-color: #ddf;
+}
+
+table {
+font-family: inherit;
+font-size: 1em;
+/*border-collapse: collapse;*/
+}
+
+th {
+text-align: center;
+vertical-align: top;
+}
+
+td p, 
+th p {
+white-space: normal;
+margin: 0;
+}
+
+p + p {
+margin-top: 0.4em;
+}
+
+img {
+border: none;
+vertical-align: middle;
+}
+
+ul, ol {
+margin: 0;
+padding-left: 1.5em;
+line-height: 1.1;
+}
+
+h1, h2, h3 {
+font-weight: normal;
+}
+
+h1 {
+font-size: 1.6em;
+color: #444;
+margin: 10px 0;
+page-break-before: always;
+}
+
+h1:first-of-type {
+page-break-before: auto;
+}
+
+h1.no-break {
+page-break-before: auto;
+}
+
+h2 {
+font-size: 1.4em;
+color: #444;
+margin: 5px 10px;
+}
+
+h3 {
+font-size: 1.4em;
+color: #666;
+margin: 5px 20px;
+}
+
+hr {
+border: none;
+border-bottom: 1px solid #666;
+}
+
+table.main {
+width: 100%;
+border-spacing: 4px;
+}
+
+table.main td {
+vertical-align: top;
+}
+
+table.main td.button {
+text-align: center;
+}
+
+table.main td.top {
+vertical-align: top;
+}
+
+table.main tbody.viewported td.viewport {
+border: 1px solid #000;
+}
+
+th.title {
+color: #fff;
+font-size: 1.2em;
+font-weight: bold; 
+text-align: center;
+background: #888;
+border: 1px solid #ccc;
+}
+
+/* Standard table */
+table.tbl {
+width: 100%;
+border: 1px solid #ccc;
+border-spacing: 0;
+border-collapse: collapse;
+}
+
+
+table.tbl td,
+table.tbl th {
+border: 1px solid #ccc;
+}
+
+table.tbl td.empty,
+table.form td.empty,
+div.empty,
+li.empty,
+span.empty {
+font-style: italic;
+color: #999;
+}
+
+table.tbl td.button {
+text-align: center;
+vertical-align: middle;
+white-space: normal;
+line-height: 140%;
+}
+
+table.tbl tr.clear,
+table.tbl tr.clear a {
+background-color: #ddf;
+color: #000;
+}
+
+table.tbl tr.clear td,
+table.tbl tr.clear th {
+background-color: transparent;
+border: none;
+}
+
+/* Main -- table -- pane */
+#main {
+clear: both;
+width: 100%;
+border-spacing: 0
+}
+
+@font-face {
+font-family: opendyslexic;
+src: url()
+	 }
+
+/** Must not apply it to every tag, or it will break textareas behavior */
+td.text,
+th.text,
+legend.text,
+div.text {
+white-space: normal !important;
+/*word-wrap: break-word;*/
+}
+
+
+table.tbl td.left_day {
+border-left: 2px solid grey; 
+}
+
+table.tbl td.right_day {
+border-right: 2px solid grey;
+}
+
+table.tbl td.first_perf{background:red;}
+
+tr.in_progress_before, tr.in_progress_after {
+display: none !important;
+}
+
+</style>
+
+</head>
+
+<body class="
+desktop ">
+
+<table class="tbl" >
+<thead>
+<tr class="clear">
+<td colspan="19" class="button">
+<h3>
+<a href="#" onclick="window.print()">
+Mme FOO (BAR) Baz
+</a>
+</h3>
+</td>
+</tr>
+<tr class="clear">
+<td colspan="19">
+<table class="main">
+<tr>
+<td class="text" style="width: 25%; vertical-align: top;">
+Impression du lundi 05 janvier 2015 à 17h14 <br />
+
+<br />
+<strong>SERVICE :</strong>
+FOOO
+&mdash; <strong>LIT : </strong> 1223 P
+</td>
+<td style="width: 25%; vertical-align: top;">
+Civilité : Mme FOO (BAR) Baz
+(89 ans)
+(64.5 kg) (160 cm) <br />
+Né(e) le : 12/06/2025
+</td>
+<td style="vertical-align: top;">
+NDA : 1248744
+<br />
+Motif : foobar
+<br />
+Date d'entrée : 26/11/2014 à 15h56
+<br />
+Date de sortie : 23/01/2015 à 10h00
+</td>
+<td class="text" style="vertical-align: top">
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<th class="title" style="width: 20%" colspan="3">
+PRESCRIPTIONS </th>
+<th class="title" colspan="16">
+ADMINISTRATION
+</th>
+</tr>
+<tr>
+<th class="text" style="width: 7%" rowspan="2">
+Date signature
+</th>
+<th class="text" rowspan="2" style="width: 8%">
+Libellé médicament <br />
+Posologie <br />
+Commentaires <br />
+</th>
+<th style="width: 10%" rowspan="2">
+Commentaires
+</th>
+<th colspan="4">
+D <br />
+04/01
+</th>
+<th colspan="4">
+L <br />
+05/01
+</th>
+<th colspan="4">
+M <br />
+06/01
+</th>
+<th colspan="4">
+M <br />
+07/01
+</th>
+</tr>
+<tr>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">S</th>
+<th style="width: 4.6875%">N</th>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">S</th>
+<th style="width: 4.6875%">N</th>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">S</th>
+<th style="width: 4.6875%">N</th>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">M</th>
+<th style="width: 4.6875%">S</th>
+<th style="width: 4.6875%">N</th>
+</tr>
+</thead>
+
+<tbody class="line_print">
+<tr>
+<th colspan="19" class="section">Perfusions</th>
+</tr>
+</tbody>
+
+<tbody class="line_print">
+<tr>
+<td class="text first_perf " style="vertical-align: top;">
+30/12/2014 <br />
+<span class="mediuser" style="border-left-color: #CC0066;"
+onmouseover="ObjectTooltip.createEx(this, 'CMediusers-608')">
+FOO Bar</span>
+
+<div class="compact" style="white-space: nowrap !important;">
+<div>Du 30/12/2014 à 18h00</div>
+<div>
+au 24/01/2015 à 18h00
+</div>
+</div>
+</td>
+<td class="text first_perf " style="vertical-align: top;">
+BAH 40 MG PDR INJ (=BIH)
+<br />
+<strong>
+40 mg
+[mg]
+</strong>
+<br />
+Voie intraveineuse
+<div>
+</div>
+</td>
+<td style="vertical-align: top;" class="text first_perf ">
+<div class="compact">
+<em>
+<br />
+</em>
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching first_perf ">
+<div class="compact">
+40
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf ">
+<div class="compact">
+40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf ">
+<div class="compact">
+40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf ">
+<div class="compact">
+40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day first_perf ">
+<div class="compact">
+</div>
+</td>
+</tr>
+<tr>
+<td class="text last_perf" style="vertical-align: top;">
+</td>
+<td class="text last_perf" style="vertical-align: top;">
+NACL 0,9% SOL INJ PR PERF 500 ML (=CHLORURE de SODIUM)
+<br />
+<strong>
+50 ml
+</strong>
+<br />
+Voie intraveineuse
+<div>
+</div>
+</td>
+<td style="vertical-align: top;" class="text last_perf">
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching last_perf">
+<div class="compact">
+50
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" last_perf">
+<div class="compact">
+50 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" last_perf">
+<div class="compact">
+50 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" last_perf">
+<div class="compact">
+50 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day last_perf">
+<div class="compact">
+</div>
+</td>
+</tr>
+</tbody>
+
+<tbody class="line_print">
+<tr>
+<td class="text first_perf last_perf" style="vertical-align: top;">
+26/11/2014 <br />
+<span class="mediuser" style="border-left-color: #CC0066;"
+onmouseover="ObjectTooltip.createEx(this, 'CMediusers-2785')">
+BUH Boh</span>
+
+<div class="compact" style="white-space: nowrap !important;">
+<div>Du 26/11/2014 à 18h48</div>
+<div>
+au 23/01/2015 à 10h48
+</div>
+</div>
+</td>
+<td class="text first_perf last_perf" style="vertical-align: top;">
+ONDANSETRON 4 MG/2 ML, SOL INJ, AMP (=ZOPHREN)
+<br />
+<strong>
+8 mg (soit 4 ml)
+</strong>
+<br />
+Voie intraveineuse
+<div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAALCAYAAABhwJ3wAAAB4klEQVR4Xq2TzWsTURTFz3wkYCENUmopLmtLNyX/g25bIZsKtBvBjRv3Lt2UAiH7CVLNqlJBBcGdlQKRoJGBIKQBOklEExIkk1pImo+Z48wFHk1CwRYfHN57986bH/dcLnzd9Hzo7CPGE9zje83ic+0zLa3w3/QhefwJx9p9DmbnScMgdV12b2mJvZ0ddlotdjqda8lCge5vl7mnjsCQMYJA+YTddJqjtTWOECWhkQBpmhwkkzw7PLwOSJ0zeggyv40lz46O5OeMRARILVA0Sm91ld3dXZ46zpVA7XabGUOBVEIptK2bStFbXpbKwj6KFhbY397ma+zLm0CTAKVms8l6vS4ViXUToCngW7zgYGODfjwuMOkjDI4SCbE8i490XVcAreD7RqMh51qtRsdx/gk0lvtTKjGPJ2KjAHWB8hyz7G5t8QAH/FGtslKpCKhcLrMUvLEugBRsCqB2FRPf32GPvfV1+rGY6qWMycoKf6bTAioWi7RtewqkYJd7r3xX1tTyeX7FYw4XF6VCQoDs4Sabm5u0X+4LSAsHKvFsDncexWHO6Li4SML3fXieNyYVm7jP5HK4lc0iVihAC2KAhqF5A9+HD4BwasNmXUXWZZL8F77S39DGQ57iNj1EWJ2/++svxcQjnb2QKMgAAAAASUVORK5CYII=" />
+</div>
+</td>
+<td style="vertical-align: top;" class="text first_perf last_perf">
+<div class="compact">
+<em>
+<p>lorem ipsum</p>
+<br />
+</em>
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching first_perf last_perf">
+<div class="compact">
+0
+/ 8 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day first_perf last_perf">
+<div class="compact">
+0
+/ 8 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf last_perf">
+<div class="compact">
+8 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day first_perf last_perf">
+<div class="compact">
+8 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf last_perf">
+<div class="compact">
+8 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day first_perf last_perf">
+<div class="compact">
+8 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" first_perf last_perf">
+<div class="compact">
+8 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day first_perf last_perf">
+<div class="compact">
+</div>
+</td>
+</tr>
+</tbody>
+<tbody class="line_print">
+<tr>
+<th colspan="19" class="section">Injections</th>
+</tr>
+</tbody>
+
+<tbody class="line_print">
+<tr>
+<td class="text" style="vertical-align: top">
+13/12/2014 <br />
+<span class="mediuser" style="border-left-color: #CC0066;"
+onmouseover="ObjectTooltip.createEx(this, 'CMediusers-608')">
+FOO Bar</span>
+
+<div class="compact" style="white-space: nowrap !important;">
+<div>Du 13/12/2014 à 12h00</div>
+<div>
+à Fin du séjour
+</div>
+</div>
+</td>
+<td class="text" style="vertical-align: top">
+<strong>
+FUROSEMIDE 20 MG/2 ML, SOL INJ, AMP (=LASILIX) </strong>
+<br />
+Voie intraveineuse
+<div class="compact">
+40 mg (soit 4 ml) tous les 12 Heure(s)<br />
+</div>
+<div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAALCAYAAABhwJ3wAAABGklEQVR4XrWTwUqGQBDHx9UuXQp6he/eE/QQnXqBXqJjDxGgdOtUD9DV0xchG91EIAQDFJfY9RIoHzoxSyqzFBaW8GfGYZzfzl8V96dZHILE0Ps/EQMiIfH56hV1bbBpmj8THd68Gdxe5BYGkS9RK8MaRq0ETXkkCBQ8MYjTvBqktUZahkALQ9mmC5vzel3XWJbl50a+XAK5gC9rxhgblVJYVZXNi6LAPM8tSMDKq+97G9u2HSPLu64DBIAJdNZs4PbwhQHme65hGNyhNHCKVHPz0bpl77nvzBrKsyzDNE3Z80mS4EP8iKGQ6NE3fnx5BJvzAwj2uZOISKcne5ic2rc9u/ce1HUA+m4PgP5aelm/UfgTebNuTrbxB7es8hv2a5NUAAAAAElFTkSuQmCC" />
+</div>
+</td>
+<td style="vertical-align: top" class="text">
+<div class="compact">
+<em>
+<p>hahaha</p>
+<br />
+</em>
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+0
+/ 40
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+0
+/ 40
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+0
+/ 40
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+a/ 40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+a/ 40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+a/ 40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+a/ 40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+a/ 40 </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+</tr>
+</tbody>
+
+<tbody class="line_print">
+<tr>
+<td class="text" style="vertical-align: top">
+26/11/2014 <br />
+<span class="mediuser" style="border-left-color: #CC0066;"
+onmouseover="ObjectTooltip.createEx(this, 'CMediusers-2785')">
+BUH Boh</span>
+
+<div class="compact" style="white-space: nowrap !important;">
+<div>Du 26/11/2014 à 18h50</div>
+<div>
+à Fin du séjour
+</div>
+</div>
+</td>
+<td class="text" style="vertical-align: top">
+<strong>
+FONDAPARINUX SODIUM 2.5 MG/0.5 ML, SOL INJ, SRG (=ARIXTRA) <span style="color: red">(A risque)</span> </strong>
+<br />
+Voie sous-cutanée
+<div class="compact">
+2.5 mg (soit 0.5 ml) le soir<br />
+</div>
+<div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAYAAAB24g05AAABMElEQVR4XpWOsWrCUBSG/2Nqh0IltLWDQ2YnKxolk/QBHAqlD+DSN3Bw8w2c26G+QOlQXBy7RIQgZOxa6NAqJoOBxCT3ljNcRVKq/eDA+e9/zn8P9Z2+MfoYuc7c0QmEQ6kX637baF+R+WJ6URrpw+shqudVaKThL4QUmH5P0XnroJAv+EQPJO0bG9alBXrMXiDvJb/vaMb+stF6beGIRbPY3DF5gfstWc+8MMFwAHKUw3+I4xgiFSrgMJIkQZqmYKIo4n5/AA+pwfxTHszybokwDCHE7xcoQw1tAha3C9ab31fr1TZgtpiholfYyJzJS0qrQK7JfAIpJaj2XPOCJNAHjQEaZw1oUlODqnZ0EAdwPAfd9y5KxyWfenbPGH+OXddzdexBQqoG5ZOyb51a1R/M4MEXrGRJJgAAAABJRU5ErkJggg==" />
+</div>
+</td>
+<td style="vertical-align: top" class="text">
+<div class="compact">
+<em>
+<br />
+</em>
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+2.5
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+2.5
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+2.5
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+2.5
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+</tr>
+</tbody>
+<tbody class="line_print">
+<tr>
+<th colspan="19" class="section">Médicaments</th>
+</tr>
+</tbody>
+
+<tbody class="line_print">
+<tr>
+<td class="text" style="vertical-align: top">
+04/01/2015 <br />
+<span class="mediuser" style="border-left-color: #CC0066;"
+onmouseover="ObjectTooltip.createEx(this, 'CMediusers-608')">
+FOO Bar</span>
+
+<div class="compact" style="white-space: nowrap !important;">
+<div>Du 04/01/2015 à 10h00</div>
+<div>
+à Fin du séjour
+</div>
+</div>
+</td>
+<td class="text" style="vertical-align: top">
+<strong>
+MACROGOL(S) + POTASSIUM + SODIUM SS ARÔME, PDR PR SOL BUV, SACHET (=MOVICOL) </strong>
+<br />
+Voie orale
+<div class="compact">
+1 sachets le matin<br />
+</div>
+<div>
+</div>
+</td>
+<td style="vertical-align: top" class="text">
+<div class="compact">
+<em>
+<br />
+</em>
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+1
+/ - </div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+1
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+1
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+1
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+</tr>
+</tbody>
+
+<tbody class="line_print">
+<tr>
+<td class="text" style="vertical-align: top">
+01/01/2015 <br />
+<span class="mediuser" style="border-left-color: #CC0066;"
+onmouseover="ObjectTooltip.createEx(this, 'CMediusers-608')">
+FOO Bar</span>
+
+<div class="compact" style="white-space: nowrap !important;">
+<div>Du 01/01/2015 à 11h14</div>
+<div>
+à Fin du séjour
+</div>
+</div>
+</td>
+<td class="text" style="vertical-align: top">
+<strong>
+PREDNISOLONE 5 MG, CPR ORODISPERSIBLE (=SOLUPRED) </strong>
+<br />
+Voie orale
+<div class="compact">
+3 mg (soit 0.6 Comprimé orodispersible) le matin<br />
+</div>
+<div>
+</div>
+</td>
+<td style="vertical-align: top" class="text">
+<div class="compact">
+<em>
+<br />
+</em>
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+3
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+3
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+3
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+3
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+</tr>
+</tbody>
+
+<tbody class="line_print">
+<tr>
+<td class="text" style="vertical-align: top">
+01/01/2015 <br />
+<span class="mediuser" style="border-left-color: #CC0066;"
+onmouseover="ObjectTooltip.createEx(this, 'CMediusers-608')">
+FOO Bar</span>
+
+<div class="compact" style="white-space: nowrap !important;">
+<div>Du 01/01/2015 à 11h12</div>
+<div>
+à Fin du séjour
+</div>
+</div>
+</td>
+<td class="text" style="vertical-align: top">
+<strong>
+SEROPLEX 5 mg </strong>
+<br />
+Voie orale
+<div class="compact">
+10 mg (soit 2 Comprimé pelliculé) le matin<br />
+</div>
+<div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAYAAAB24g05AAABMElEQVR4XpWOsWrCUBSG/2Nqh0IltLWDQ2YnKxolk/QBHAqlD+DSN3Bw8w2c26G+QOlQXBy7RIQgZOxa6NAqJoOBxCT3ljNcRVKq/eDA+e9/zn8P9Z2+MfoYuc7c0QmEQ6kX637baF+R+WJ6URrpw+shqudVaKThL4QUmH5P0XnroJAv+EQPJO0bG9alBXrMXiDvJb/vaMb+stF6beGIRbPY3DF5gfstWc+8MMFwAHKUw3+I4xgiFSrgMJIkQZqmYKIo4n5/AA+pwfxTHszybokwDCHE7xcoQw1tAha3C9ab31fr1TZgtpiholfYyJzJS0qrQK7JfAIpJaj2XPOCJNAHjQEaZw1oUlODqnZ0EAdwPAfd9y5KxyWfenbPGH+OXddzdexBQqoG5ZOyb51a1R/M4MEXrGRJJgAAAABJRU5ErkJggg==" />
+</div>
+</td>
+<td style="vertical-align: top" class="text">
+<div class="compact">
+<em>
+<br />
+</em>
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+10
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching ">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class="hatching left_day">
+<div class="compact">
+10
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+10
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" left_day">
+<div class="compact">
+10
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+>
+<div class="compact">
+</div>
+</td>
+<td style="vertical-align: top; text-align: center;"
+class=" right_day">
+<div class="compact">
+</div>
+</td>
+</tr>
+</tbody>
+
+</table>
+</body>
+</html>

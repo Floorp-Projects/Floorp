@@ -1,0 +1,140 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')
+
+include('sources.mozbuild')
+
+if CONFIG['VPX_USE_NASM']:
+    USE_NASM = True
+
+# Linux, Mac and Win share file lists for x86* but not configurations.
+if CONFIG['CPU_ARCH'] == 'x86_64':
+    EXPORTS.vpx += files['X64_EXPORTS']
+    SOURCES += files['X64_SOURCES']
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/win/x64/' ]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/mac/x64/' ]
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/linux/x64/' ]
+elif CONFIG['CPU_ARCH'] == 'x86':
+    EXPORTS.vpx += files['IA32_EXPORTS']
+    SOURCES += files['IA32_SOURCES']
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/win/ia32/' ]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/mac/ia32/' ]
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/linux/ia32/' ]
+elif CONFIG['CPU_ARCH'] == 'arm':
+    EXPORTS.vpx += files['ARM_EXPORTS']
+    ASFLAGS += [
+        '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR,
+        '-I%s/libvpx' % OBJDIR,
+    ]
+    LOCAL_INCLUDES += [ '/media/libvpx/config/linux/arm/' ]
+
+    arm_asm_files = files['ARM_SOURCES']
+
+    if CONFIG['GNU_AS']:
+        SOURCES += sorted([
+            "!%s.S" % f if f.endswith('.asm') else f for f in arm_asm_files
+        ])
+    else:
+        SOURCES += sorted(arm_asm_files)
+
+    for f in SOURCES:
+        if f.endswith('.c') and 'neon' in f:
+            SOURCES[f].flags += CONFIG['VPX_ASFLAGS']
+
+    if CONFIG['OS_TARGET'] == 'Android':
+        # For cpu-features.h
+        LOCAL_INCLUDES += [
+            '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
+        ]
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
+    EXPORTS.vpx += files['ARM64_EXPORTS']
+    SOURCES += files['ARM64_SOURCES']
+    ASFLAGS += [ '-I%s/media/libvpx/config/win/aarch64/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libvpx/config/win/aarch64/' ]
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    EXPORTS.vpx += files['ARM64_EXPORTS']
+    SOURCES += files['ARM64_SOURCES']
+    ASFLAGS += [ '-I%s/media/libvpx/config/linux/arm64/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libvpx/config/linux/arm64/' ]
+else:
+    # Generic C-only configuration
+    EXPORTS.vpx += files['GENERIC_EXPORTS']
+    SOURCES += files['GENERIC_SOURCES']
+    ASFLAGS += [ '-I%s/media/libvpx/config/generic/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libvpx/config/generic/' ]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['HAVE_CONFIG_H'] = 'vpx_config.h'
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # Older versions of the Android NDK don't pre-define anything to indicate
+    # the OS they're on, so do it for them.
+    DEFINES['__linux__'] = True
+
+    SOURCES += [
+        '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
+    ]
+
+for f in SOURCES:
+    if f.endswith('.c'):
+        if 'mmx.c' in f:
+            SOURCES[f].flags += ['-mmmx']
+        if 'sse2.c' in f:
+            SOURCES[f].flags += CONFIG['SSE2_FLAGS']
+        if 'ssse3.c' in f:
+            SOURCES[f].flags += ['-mssse3']
+        if 'sse4.c' in f:
+            SOURCES[f].flags += ['-msse4.1']
+        if 'avx.c' in f:
+            SOURCES[f].flags += ['-mavx']
+        if 'avx2.c' in f:
+            SOURCES[f].flags += ['-mavx2']
+
+# Suppress warnings in third-party code.
+CFLAGS += [
+    '-Wno-sign-compare',
+    '-Wno-unused-function', # so many of these warnings; just ignore them
+]
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CFLAGS += [
+        '-Wno-unreachable-code',
+        '-Wno-unneeded-internal-declaration',
+    ]
+
+ASFLAGS += CONFIG['VPX_ASFLAGS']
+ASFLAGS += [
+    '-I./',
+    '-I%s/media/libvpx/libvpx/' % TOPSRCDIR,
+]
+
+LOCAL_INCLUDES += [
+    '/media/libvpx/config', # vpx_version.h
+    '/media/libvpx/libvpx',
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # For LIBVPX_RAND
+    ASFLAGS += [
+        '-D__ANDROID__'
+    ]

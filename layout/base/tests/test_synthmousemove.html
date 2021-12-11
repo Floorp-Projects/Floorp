@@ -1,0 +1,31 @@
+<!doctype html>
+<title>test synth mouse moves go to the right place with fission</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  window.open("file_synthmousemove.html", "_blank");
+}
+
+function reportSuccess() {
+  ok(true, "reportSuccess");
+  SimpleTest.finish();
+}
+
+var smoothScrollPref = "general.smoothScroll";
+function prepareTest() {
+  if (!SpecialPowers.getBoolPref("layout.reflow.synthMouseMove")) {
+  	ok(true, "layout.reflow.synthMouseMove is false, we can't run this test");
+    SimpleTest.finish();
+  	return;
+  }
+  window.requestAnimationFrame(function() {
+    SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
+  });
+}
+
+SimpleTest.waitForFocus(prepareTest);
+</script>

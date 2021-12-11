@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    var ac = new AudioContext();
+    // first "suspended" -> "running" transition
+    ac.onstatechange = function() {
+      ac.onstatechange = null;
+      ac.suspend();
+      ac.close();
+    }
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
+

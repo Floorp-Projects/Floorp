@@ -1,0 +1,30 @@
+# -*- makefile -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/config.mk
+
+USE_AUTOTARGETS_MK=1
+include $(topsrcdir)/config/makefiles/makeutils.mk
+
+$(call errorIfEmpty,MOZ_BRANDING_DIRECTORY)
+SUBMAKEFILES += \
+        $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
+        $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+        $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+l10n-%: AB_CD=$*
+l10n-%:
+	$(NSINSTALL) -D $(DIST)/install
+	@$(MAKE) -C $(DEPTH)/toolkit/locales l10n-$*
+	@$(MAKE) l10n AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
+
+# Tailored target to just add the chrome processing for multi-locale builds
+chrome-%: AB_CD=$*
+chrome-%:
+	@$(MAKE) chrome AB_CD=$*
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*

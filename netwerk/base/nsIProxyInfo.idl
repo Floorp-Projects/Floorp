@@ -1,0 +1,106 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface identifies a proxy server.
+ */
+[scriptable, uuid(63fff172-2564-4138-96c6-3ae7d245fbed)]
+interface nsIProxyInfo : nsISupports
+{
+  /**
+   * This attribute specifies the hostname of the proxy server.
+   */
+  readonly attribute AUTF8String host;
+
+  /**
+   * This attribute specifies the port number of the proxy server.
+   */
+  readonly attribute long port;
+
+  /**
+   * This attribute specifies the type of the proxy server as an ASCII string.
+   *
+   * Some special values for this attribute include (but are not limited to)
+   * the following:
+   *   "http"     HTTP proxy (or SSL CONNECT for HTTPS)
+   *   "https"    HTTP proxying over TLS connection to proxy
+   *   "socks"    SOCKS v5 proxy
+   *   "socks4"   SOCKS v4 proxy
+   *   "direct"   no proxy
+   *   "unknown"  unknown proxy (see nsIProtocolProxyService::resolve)
+   *
+   * A future version of this interface may define additional types.
+   */
+  readonly attribute ACString type;
+
+  /**
+   * This attribute specifies flags that modify the proxy type.  The value of
+   * this attribute is the bit-wise combination of the Proxy Flags defined
+   * below.  Any undefined bits are reserved for future use.
+   */
+  readonly attribute unsigned long flags;
+
+  /**
+   * This attribute specifies flags that were used by nsIProxyProtocolService when
+   * creating this ProxyInfo element.
+   */
+  readonly attribute unsigned long resolveFlags;
+
+  /**
+   * Specifies a proxy username.
+   */
+  readonly attribute ACString username;
+
+  /**
+   * Specifies a proxy password.
+   */
+  readonly attribute ACString password;
+
+  /**
+   * This attribute specifies the failover timeout in seconds for this proxy.
+   * If a nsIProxyInfo is reported as failed via nsIProtocolProxyService::
+   * getFailoverForProxy, then the failed proxy will not be used again for this
+   * many seconds.
+   */
+  readonly attribute unsigned long failoverTimeout;
+
+  /**
+   * This attribute specifies the proxy to failover to when this proxy fails.
+   */
+  attribute nsIProxyInfo failoverProxy;
+
+  /**
+   * Specifies an ID related to the source of this proxy configuration.  If
+   * it is created in response to an extension API, it will be the extension ID.
+   */
+  attribute ACString sourceId;
+
+  /**
+   * Any non-empty value will be passed directly as Proxy-Authorization header
+   * value for the CONNECT request attempt.  However, this header set on the
+   * resource request itself takes precedence.
+   */
+  readonly attribute ACString proxyAuthorizationHeader;
+
+  /**
+   * An optional key used for additional isolation of this proxy connection.
+   */
+  readonly attribute ACString connectionIsolationKey;
+
+  /****************************************************************************
+   * The following "Proxy Flags" may be bit-wise combined to construct the
+   * flags attribute defined on this interface.  All unspecified bits are
+   * reserved for future use.
+   */
+
+  /**
+   * This flag is set if the proxy is to perform name resolution itself.  If
+   * this is the case, the hostname is used in some fashion, and we shouldn't
+   * do any form of DNS lookup ourselves.
+   */
+  const unsigned short TRANSPARENT_PROXY_RESOLVES_HOST = 1 << 0;
+};

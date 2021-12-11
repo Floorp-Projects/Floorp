@@ -1,0 +1,18 @@
+{
+  "addons": {
+    "test_delay_update_complete@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://example.com/addons/test_delay_update_complete_v2.xpi"
+        }
+      ]
+    }
+  }
+}

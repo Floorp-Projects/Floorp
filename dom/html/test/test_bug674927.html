@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=674927
+-->
+<title>Test for Bug 674927</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<p><span>Hello</span></p>
+<div contenteditable>Contenteditable <i>is</i> splelchecked by default</div>
+<textarea>Textareas are spellchekced by default</textarea>
+<input value="Inputs are not spellcheckde by default">
+<script>
+// Test the effect of setting spellcheck on various elements
+[
+  "html",
+  "body",
+  "p",
+  "span",
+  "div",
+  "i",
+  "textarea",
+  "input",
+].forEach(function(query) {
+  var element = document.querySelector(query);
+
+  // First check what happens if no attributes are set
+  var defaultSpellcheck;
+  if (element.isContentEditable || element.tagName == "TEXTAREA") {
+    defaultSpellcheck = true;
+  } else {
+    defaultSpellcheck = false;
+  }
+  is(element.spellcheck, defaultSpellcheck,
+     "Default spellcheck for <" + element.tagName.toLowerCase() + ">");
+
+  // Now try setting spellcheck on ancestors
+  var ancestor = element;
+  do {
+    testSpellcheck(ancestor, element);
+    ancestor = ancestor.parentNode;
+  } while (ancestor.nodeType == Node.ELEMENT_NODE);
+});
+
+function testSpellcheck(ancestor, element) {
+  ancestor.spellcheck = true;
+  is(element.spellcheck, true,
+     ".spellcheck on <" + element.tagName.toLowerCase() + "> with " +
+     "spellcheck=true on <" + ancestor.tagName.toLowerCase() + ">");
+  ancestor.spellcheck = false;
+  is(element.spellcheck, false,
+     ".spellcheck on <" + element.tagName.toLowerCase() + "> with " +
+     "spellcheck=false on <" + ancestor.tagName.toLowerCase() + ">");
+  ancestor.removeAttribute("spellcheck");
+}
+</script>

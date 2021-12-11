@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { color: green }
+:default + span { color: red }
+span.reverse { color: red }
+:default + span.reverse { color: green }
+input { display: none }
+</style>
+</head>
+<body>
+<form>
+<div>
+  <input type="submit" checked="checked" id="foo"><span>There should be no red.</span>
+</div>
+<div>
+  <input type="submit"><span class="reverse">There should be no red.</span>
+</div>
+</form>
+<script>
+  var foo = document.body.offsetWidth;
+  document.getElementById("foo").removeAttribute("type");
+</script>
+</body>
+</html>

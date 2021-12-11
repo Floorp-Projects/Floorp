@@ -1,0 +1,2 @@
+@annotation
+class MyClass { }

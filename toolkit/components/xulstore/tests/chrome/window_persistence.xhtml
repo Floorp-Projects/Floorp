@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Persistence Tests"
+        onload="opened()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        persist="screenX screenY width height">
+
+<button id="button1" label="Button1" persist="value"/>
+<button id="button2" label="Button2" value="Normal" persist="value"/>
+
+<script>
+<![CDATA[
+
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const XULStore = Services.xulStore;
+let URI = "chrome://mochitests/content/chrome/toolkit/components/xulstore/tests/chrome/window_persistence.xhtml";
+
+function opened()
+{
+  runTest();
+}
+
+function runTest()
+{
+  var firstRun = window.arguments[0];
+  var button1 = document.getElementById("button1");
+  var button2 = document.getElementById("button2");
+  if (firstRun) {
+    button1.setAttribute("value", "Pressed");
+    button2.removeAttribute("value");
+
+    button2.setAttribute("foo", "bar");
+    XULStore.persist(button2, "foo");
+    is(XULStore.getValue(URI, "button2", "foo"), "bar", "attribute persisted");
+    button2.removeAttribute("foo");
+    XULStore.persist(button2, "foo");
+    is(XULStore.hasValue(URI, "button2", "foo"), false, "attribute removed");
+
+    window.close();
+    window.arguments[1].windowOpened();
+  }
+  else {
+    is(button1.getAttribute("value"), "Pressed",
+       "Attribute set");
+    is(button2.hasAttribute("value"), true,
+       "Attribute cleared");
+    is(button2.getAttribute("value"), "",
+       "Attribute cleared");
+    is(button2.hasAttribute("foo"), false,
+       "Attribute cleared");
+    is(button2.getAttribute("foo"), "",
+       "Attribute cleared");
+
+    window.close();
+    window.arguments[1].testDone();
+  }
+}
+
+function is(l, r, n) { window.arguments[1].SimpleTest.is(l,r,n); }
+
+]]></script>
+
+</window>

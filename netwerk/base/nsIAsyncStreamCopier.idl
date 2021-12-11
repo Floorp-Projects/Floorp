@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRequest.idl"
+
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIRequestObserver;
+interface nsIEventTarget;
+
+// You should prefer nsIAsyncStreamCopier2
+[scriptable, uuid(5a19ca27-e041-4aca-8287-eb248d4c50c0)]
+interface nsIAsyncStreamCopier : nsIRequest
+{
+    /**
+     * Initialize the stream copier.
+     *
+     * @param aSource
+     *        contains the data to be copied.
+     * @param aSink
+     *        specifies the destination for the data.
+     * @param aTarget
+     *        specifies the thread on which the copy will occur.  a null value
+     *        is permitted and will cause the copy to occur on an unspecified
+     *        background thread.
+     * @param aSourceBuffered
+     *        true if aSource implements ReadSegments.
+     * @param aSinkBuffered
+     *        true if aSink implements WriteSegments.
+     * @param aChunkSize
+     *        specifies how many bytes to read/write at a time.  this controls
+     *        the granularity of the copying.  it should match the segment size
+     *        of the "buffered" streams involved.
+     * @param aCloseSource
+     *        true if aSource should be closed after copying.
+     * @param aCloseSink
+     *        true if aSink should be closed after copying.
+     *
+     * NOTE: at least one of the streams must be buffered. If you do not know
+     * whether your streams are buffered, you should use nsIAsyncStreamCopier2
+     * instead.
+     */
+    void init(in nsIInputStream    aSource,
+              in nsIOutputStream   aSink,
+              in nsIEventTarget    aTarget,
+              in boolean           aSourceBuffered,
+              in boolean           aSinkBuffered,
+              in unsigned long     aChunkSize,
+              in boolean           aCloseSource,
+              in boolean           aCloseSink);
+
+    /**
+     * asyncCopy triggers the start of the copy.  The observer will be notified
+     * when the copy completes.
+     *
+     * @param aObserver
+     *        receives notifications.
+     * @param aObserverContext
+     *        passed to observer methods.
+     */
+    void asyncCopy(in nsIRequestObserver   aObserver,
+                   in nsISupports          aObserverContext);
+};

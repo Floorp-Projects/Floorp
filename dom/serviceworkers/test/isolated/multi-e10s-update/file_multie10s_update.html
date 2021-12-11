@@ -1,0 +1,40 @@
+<html>
+<body>
+<script>
+
+var bc = new BroadcastChannel('start');
+bc.onmessage = function(e) {
+  // This message is not for us.
+  if (e.data != 'go') {
+    return;
+  }
+
+  // It can happen that we don't have the registrations yet. Let's try with a
+  // timeout.
+  function proceed() {
+    return navigator.serviceWorker.getRegistrations().then(regs => {
+      if (regs.length == 0) {
+        setTimeout(proceed, 200);
+        return;
+      }
+
+      bc = new BroadcastChannel('result');
+      regs[0].update().then(() => {
+        bc.postMessage(0);
+      }, () => {
+        bc.postMessage(1);
+      });
+
+      // Tell the coordinating frame script that we've kicked off our update
+      // call so that the SW script can be released once both instances of us
+      // have triggered update() and 1 has failed.
+      const blockingChannel = new BroadcastChannel('update');
+      blockingChannel.postMessage(true);
+    });
+  }
+
+  proceed();
+}
+</script>
+</body>
+</html>

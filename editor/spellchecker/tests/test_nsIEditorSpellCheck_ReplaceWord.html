@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for nsIEditorSpellCheck.ReplaceWord()</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<div contenteditable spellcheck="true" lang="en-US"></div>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const { onSpellCheck } = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm");
+  const editor = document.querySelector("div[contenteditable]");
+  async function replaceWord(aMisspelledWord, aCorrectWord, aReplaceAll) {
+    const editorObj = SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+    const inlineSpellChecker = editorObj.getInlineSpellChecker(true);
+    await new Promise(resolve => onSpellCheck(editor, resolve));
+    const editorSpellCheck = inlineSpellChecker.spellChecker;
+    editorObj.beginTransaction();
+    try {
+      editorSpellCheck.ReplaceWord(aMisspelledWord, aCorrectWord, aReplaceAll);
+    } catch (e) {
+      ok(false, `Unexpected exception: ${e.message}`);
+    }
+    editorObj.endTransaction();
+    editorSpellCheck.GetNextMisspelledWord();
+  }
+
+  async function testReplaceAllMisspelledWords(aCorrectWord) {
+    editor.innerHTML = "<p>def abc def<br>abc def abc</p><p>abc def abc<br>def abc def</p>";
+    editor.focus();
+    editor.getBoundingClientRect();
+    await replaceWord("abc", aCorrectWord, true);
+    is(
+      editor.innerHTML,
+      `<p>def ${aCorrectWord} def<br>${aCorrectWord} def ${aCorrectWord}</p><p>${aCorrectWord} def ${aCorrectWord}<br>def ${aCorrectWord} def</p>`,
+      `nsIEditorSpellCheck.ReplaceWord(..., true) should replace all misspelled words with ${
+        (() => {
+          if (aCorrectWord.length > "abc".length) {
+            return "longer";
+          }
+          return aCorrectWord.length < "abc".length ? "shorter" : "same length"
+        })()
+      } correct word`
+    );
+    editor.blur();
+    editor.getBoundingClientRect();
+  }
+  await testReplaceAllMisspelledWords("ABC");
+  await testReplaceAllMisspelledWords("ABC!");
+  await testReplaceAllMisspelledWords("AB");
+
+  // TODO: Add tests for not all replacing cases.
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<body>
+<script>
+let callback = function(mutationsList, observer) {
+  for (let mutation of mutationsList) {
+    let [added] = mutation.addedNodes;
+    if (added instanceof HTMLIFrameElement && added.id == "firefox-screenshots-preview-iframe") {
+      added.srcdoc = "<html></html>";
+      // Now we have to wait for the doc to be populated.
+      let interval = setInterval(() => {
+        console.log(added.contentDocument.innerHTML);
+        if (added.contentDocument.body.innerHTML) {
+          clearInterval(interval);
+          window.responseHandler(added.contentDocument.body.innerHTML);
+        }
+      }, 100);
+      observer.disconnect();
+    }
+  }
+};
+var observer = new MutationObserver(callback);
+observer.observe(document.body, {childList: true});
+</script>
+</body>

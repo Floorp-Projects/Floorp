@@ -1,0 +1,11 @@
+<html>
+<head>
+<title>Bug 381152 - Hang with float, large padding and margin</title>
+</head>
+<body>
+<div style="float: left;padding-top: 9999999999px;">
+<div style="float: left;margin-top: 9999999999px;margin-bottom: -9999999px;">
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript">
+/* Hanging Framebuffer Test
+ *
+ * Clear the canvas to green, but create and bind a new framebuffer
+ * before returning. This will fail if we blindly read from the bound
+ * framebuffer, instead of binding to the screen and reading from that.
+ *
+ * How failure looks isn't well defined, since this is an empty framebuffer,
+ * thus is incomplete, and should cause errors if it's read from.
+ */
+
+"use strict";
+
+function renderGL(gl) {
+  gl.clearColor(0.0, 1.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+  gl.finish();
+}
+
+function renderFailure(canvas) {
+  // This will also trigger RAF for us.
+  var context = canvas.getContext("2d");
+  context.fillText('WebGL failed.', 64, 64);
+}
+
+function runTest() {
+  var canvas = document.getElementById("canvas");
+  var gl = initGL(canvas);
+
+  if (gl)
+    renderGL(gl);
+  else
+    renderFailure(canvas);
+
+  waitForComposite(testComplete);
+}
+
+function testComplete() {
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="rAF(runTest);">
+  <canvas id="canvas" width="256" height="256"></canvas>
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html reftest-zoom="2" class="reftest-wait">
+  <head>
+    <title>SVG page zoom test</title>
+    <style>
+      iframe, object, img {
+        width: 150px;
+        height: 100px;
+        border: none;
+      }
+      body {
+        background-color: lime;
+      }
+    </style>
+    <script>
+
+var expected = 3;
+var actual = 0;
+
+function process_load() {
+  ++actual;
+  if (actual == expected)
+    document.documentElement.removeAttribute("class");
+}
+
+    </script>
+  </head>
+  <body>
+    <div>
+      <iframe onload="process_load()" src="pass.svg"></iframe>
+    </div>
+    <div>
+      <object onload="process_load()" data="pass.svg"></object>
+    </div>
+    <div>
+      <img onload="process_load()" src="pass.svg">
+    </div>
+  </body>
+</html>

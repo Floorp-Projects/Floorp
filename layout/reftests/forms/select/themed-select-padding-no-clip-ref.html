@@ -1,0 +1,37 @@
+<!doctype html>
+<title>Bug 1561794 - padding-inline-end does not clip display text for themed comboboxes.</title>
+<style>
+  select, .unthemed {
+    font: 16px / 1 monospace;
+    width: 20ch;
+    display: block;
+  }
+  .unthemed {
+    box-sizing: border-box;
+    border: 1px solid grey;
+  }
+</style>
+<!--- Ensure the text isn't chopped -->
+<select><option>XXXXXXXXXXXX</option></select>
+<select><option>X XXXXXXXXXX</option></select>
+
+<!--- Test that the display text doesn't overflow the select. -->
+<select style="overflow: hidden"><option>XXXXXXXXXXXXXXXXXX</option></select>
+
+<!-- Test that this only affects themed comboboxes -->
+<div class="unthemed" style="padding-right: 15ch"><div style="padding: 1px 4px; overflow: hidden;">XXXXXXXXXX</div></div>
+
+<select id="src" style="padding-left: 10ch; padding-right: 10ch"><option>XXXXXXXXXX</option></select>
+<select id="ref" style="padding-left: 10ch;"><option>XXXXXXXXXX</option></select>
+<script>
+  // This one is a bit special, because we want `ref` to have the same size as
+  // `src`, which for some reason, with or without the patch for this bug,
+  // grows outside the specified width. Given this width depends on scrollbar,
+  // width, which is platform dependent, we just calculate it from `src`, and
+  // then hide it.
+  //
+  // We just really want to test that the padding right doesn't clip the text
+  // anyhow.
+  ref.style.width = getComputedStyle(src).width;
+  src.style.display = "none";
+</script>

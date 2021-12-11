@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Node;
+
+// Note: the iterator does not handle DOM mutations gracefully. So if
+// the underlying DOM we are iterating over is changed, the behavior
+// of the walker is undefined. (With the current implementation we
+// cache the siblings of the current node and this list is not updated
+// when a mutation occurs).
+
+[scriptable, uuid(6657e8eb-b646-48e7-993e-cfa6e96415b4)]
+interface inIDeepTreeWalker : nsISupports
+{
+  attribute boolean showAnonymousContent;
+  attribute boolean showSubDocuments;
+
+  // By default the walker skips document nodes from the iteration,
+  // by setting this flag to true this behavior can be altered.
+  attribute boolean showDocumentsAsNodes;
+
+  void init(in Node aRoot, in unsigned long aWhatToShow);
+
+  // Methods and attributes that look like TreeWalker.
+  // Note: normally parentNode cannot go further up on the tree once it reached
+  // the root, but setting currentNode does not have this limitation. If currentNode
+  // is set to a node that does not have the root as its ancestor the walk can be
+  // continued from there, and once we reach a node that is 'under' the root, the
+  // limitation for the parentNode will work again.
+  readonly attribute Node             root;
+  readonly attribute unsigned long    whatToShow;
+           attribute Node             currentNode;
+
+  Node         parentNode();
+  Node         firstChild();
+  Node         lastChild();
+  Node         previousSibling();
+  Node         nextSibling();
+  Node         previousNode();
+  Node         nextNode();
+};
+

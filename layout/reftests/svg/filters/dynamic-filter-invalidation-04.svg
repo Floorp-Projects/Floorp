@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <!--
+    From https://bugzilla.mozilla.org/show_bug.cgi?id=488702
+  -->
+  <title>Test that invalidation takes filters on ancestors into account</title>
+  <desc>
+    This test checks that when a container element changes, the area of
+    the screen that is invalidated and repainted takes account of any
+    filter effects on the ancestors of the changed element.
+  </desc>
+  <script type="text/javascript">//<![CDATA[
+
+function show_lime_rect()
+{
+  document.getElementById("g").setAttribute("opacity", "1");
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", show_lime_rect, false);
+setTimeout(show_lime_rect, 1000);
+
+  //]]></script>
+  <filter id="filter" filterUnits="userSpaceOnUse" x="0" y="0" width="200%" height="100%">
+    <feOffset dx="-20"/>
+  </filter>
+  <rect width="100%" height="100%" fill="red"/>
+  <g filter="url(#filter)">
+    <g id="g" opacity="0">
+      <rect x="20" width="100%" height="100%" fill="lime"/>
+    </g>
+  </g>
+</svg>

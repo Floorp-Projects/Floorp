@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body onload="boom()">
+<div id="target"></div>
+<script>
+    function boom() {
+        var io = new IntersectionObserver(function () { }, { });
+        io.observe(document.getElementById('target'));
+    }
+</script>
+</body>
+</html>

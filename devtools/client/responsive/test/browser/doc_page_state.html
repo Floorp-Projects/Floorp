@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Page State Test</title>
+    <style>
+      body {
+        height: 100vh;
+        background: red;
+      }
+      body.modified {
+        background: green;
+      }
+    </style>
+  </head>
+  <body onclick="this.classList.add('modified')"/>
+</html>

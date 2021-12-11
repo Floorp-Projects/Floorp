@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=688277
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for nondeterministicGetWeakMapKeys</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  /** Test for Bug 688277 **/
+
+  /* Fail gracefully if junk is passed in. */
+  is(SpecialPowers.nondeterministicGetWeakMapKeys(11), undefined,
+    "nondeterministicGetWeakMapKeys should return undefined for non-objects");
+  is(SpecialPowers.nondeterministicGetWeakMapKeys({}), undefined,
+    "nondeterministicGetWeakMapKeys should return undefined for non-weakmap objects");
+  is(SpecialPowers.nondeterministicGetWeakMapKeys(null), undefined,
+    "nondeterministicGetWeakMapKeys should return undefined for null");
+
+  /* return an empty array for an empty WeakMap */
+  let mempty = new WeakMap();
+  is(SpecialPowers.nondeterministicGetWeakMapKeys(mempty).length, 0,
+    "nondeterministicGetWeakMapKeys should return empty array for empty weakmap");
+
+  /* Test freeing/nonfreeing. */
+  let m = new WeakMap();
+  let liveKeys = new Array();
+
+  let add_elements = function () {
+    let k1 = {};
+    m.set(k1, "live1");
+    liveKeys.push(k1);
+
+    let k2 = {};
+    m.set(k2, "dead1");
+
+    let k = {};
+    m.set(k, k); /* simple cycle */
+  };
+
+  add_elements();
+
+  SpecialPowers.exactGC(function () {
+    let keys = SpecialPowers.nondeterministicGetWeakMapKeys(m);
+    is(liveKeys.length, 1, "Wrong number of live keys.");
+    is(keys.length, 1, "Should have one weak map key.");
+    is(m.get(keys[0]), "live1", "live1 should be live");
+    SimpleTest.finish();
+  });
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body>
+<p id="display"></p>
+</body>
+</html>

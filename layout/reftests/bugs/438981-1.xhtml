@@ -1,0 +1,11 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body id="realbody">
+</body>
+<body style="background:blue;">
+</body>
+<script>
+if (document.body != document.getElementById("realbody")) {
+  document.body.appendChild(document.createTextNode("FAIL"));
+}
+</script>
+</html>

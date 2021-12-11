@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf8">
+  <title>Test fission document</title>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test fission iframe</p>
+
+<script>
+  "use strict";
+  const iframe = document.createElement("iframe");
+  let iframeUrl = `https://example.org/browser/devtools/shared/commands/resource/tests/fission_iframe.html`;
+  if (document.location.search) {
+    iframeUrl += `?${new URLSearchParams(document.location.search)}`;
+  }
+  iframe.src = iframeUrl;
+  document.body.append(iframe);
+</script>
+</body>
+</html>

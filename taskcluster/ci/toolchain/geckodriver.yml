@@ -1,0 +1,123 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "geckodriver toolchain build"
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run-on-projects: ['trunk']
+    attributes:
+        build_type: opt
+        geckodriver: true
+        shippable: true
+        rebuild-on-release: true
+    run:
+        script: build-geckodriver.sh
+        toolchain-artifact: public/build/geckodriver.tar.gz
+        sparse-profile: null
+        resources:
+            - 'testing/geckodriver'
+            - 'testing/mozbase/rust'
+            - 'testing/webdriver'
+            # Changes to 'third_party/rust' should be captured by
+            # 'testing/geckodriver/Cargo.toml'.
+
+# For Linux platforms target "*-musl" so that the binary will be statically linked.
+
+linux32-geckodriver:
+    treeherder:
+        symbol: TL32(gd)
+        platform: linux32/opt
+    run:
+        arguments: ['i686-unknown-linux-musl']
+    attributes:
+        build_platform: linux-geckodriver
+    fetches:
+        toolchain:
+            - linux64-rust-static
+
+linux64-geckodriver:
+    treeherder:
+        symbol: TL(gd)
+        platform: linux64/opt
+    run:
+        arguments: ['x86_64-unknown-linux-musl']
+    attributes:
+        build_platform: linux64-geckodriver
+    fetches:
+        toolchain:
+            - linux64-rust-static
+
+macosx64-geckodriver:
+    treeherder:
+        symbol: TM(gd)
+        platform: macosx64/opt
+    run:
+        arguments: ['x86_64-apple-darwin']
+    attributes:
+        build_platform: macosx64-geckodriver
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-rust-macos
+            - macosx64-sdk-11.0
+
+macosx64-aarch64-geckodriver:
+    treeherder:
+        symbol: TM(gd)
+        platform: macosx64-aarch64/opt
+    run:
+        arguments: ['aarch64-apple-darwin']
+    attributes:
+        build_platform: macosx64-aarch64-geckodriver
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-rust-macos
+            - macosx64-sdk-11.0
+
+win32-geckodriver:
+    treeherder:
+        symbol: TW32(gd)
+        platform: win32/opt
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        arguments: ['i686-pc-windows-msvc']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
+        toolchain-artifact: public/build/geckodriver.zip
+        tooltool-downloads: internal
+    attributes:
+        build_platform: win32-geckodriver
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-liblowercase
+            - linux64-rust-windows
+
+win64-geckodriver:
+    treeherder:
+        symbol: TW64(gd)
+        platform: win64/opt
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
+        toolchain-artifact: public/build/geckodriver.zip
+        tooltool-downloads: internal
+    attributes:
+        build_platform: win64-geckodriver
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-liblowercase
+            - linux64-rust-windows

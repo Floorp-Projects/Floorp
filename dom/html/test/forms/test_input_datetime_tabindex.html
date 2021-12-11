@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
+-->
+<head>
+  <title>Test tabindex attribute for date/time input types</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288591">Mozilla Bug 1288591</a>
+<p id="display"></p>
+<div id="content">
+  <input id="time1" type="time" tabindex="0">
+  <input id="time2" type="time" tabindex="-1">
+  <input id="time3" type="time" tabindex="0">
+  <input id="date1" type="date" tabindex="0">
+  <input id="date2" type="date" tabindex="-1">
+  <input id="date3" type="date" tabindex="0">
+  <input id="datetime-local1" type="datetime-local" tabindex="0">
+  <input id="datetime-local2" type="datetime-local" tabindex="-1">
+  <input id="datetime-local3" type="datetime-local" tabindex="0">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1288591.
+ * This test checks whether date/time input types tabindex attribute works
+ * correctly.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function checkInnerTextboxTabindex(input, tabindex) {
+  let fields = SpecialPowers.wrap(input).openOrClosedShadowRoot.querySelectorAll(".datetime-edit-field");
+
+  for (let field of fields) {
+    is(field.tabIndex, tabindex, "tabIndex in the inner textbox should be correct");
+  }
+
+}
+
+function testTabindex(type) {
+  let input1 = document.getElementById(type + "1");
+  let input2 = document.getElementById(type + "2");
+  let input3 = document.getElementById(type + "3");
+
+  input1.focus();
+  is(document.activeElement, input1,
+     "input element with tabindex=0 is focusable");
+
+  let fieldCount = type == "datetime-local" ? 6 : 3;
+
+  // Advance through inner fields.
+  for (let i = 0; i < fieldCount - 1; ++i) {
+    synthesizeKey("KEY_Tab");
+    is(document.activeElement, input1,
+      "input element with tabindex=0 is tabbable");
+  }
+
+  // Advance to next element
+  synthesizeKey("KEY_Tab");
+  is(document.activeElement, input3,
+     "input element with tabindex=-1 is not tabbable");
+
+  input2.focus();
+  is(document.activeElement, input2,
+     "input element with tabindex=-1 is still focusable");
+
+  checkInnerTextboxTabindex(input1, 0);
+  checkInnerTextboxTabindex(input2, -1);
+  checkInnerTextboxTabindex(input3, 0);
+
+  // Changing the tabindex attribute dynamically.
+  input3.setAttribute("tabindex", "-1");
+  synthesizeKey("KEY_Tab"); // need only one TAB since input2 is not tabbable
+  isnot(document.activeElement, input3,
+        "element with tabindex changed to -1 should not be tabbable");
+
+  checkInnerTextboxTabindex(input3, -1);
+}
+
+function test() {
+  for (let inputType of ["time", "date", "datetime-local"]) {
+    testTabindex(inputType);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

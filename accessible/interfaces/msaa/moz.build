@@ -1,0 +1,57 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+GeckoSharedLibrary("AccessibleMarshal", linkage=None)
+
+# Missing here, is the notion that changes to the idl files included by
+# ISimpleDOM.idl (e.g. ISimpleDOMNode.idl) should rebuild the outputs.
+GeneratedFile(
+    "ISimpleDOM.h",
+    "ISimpleDOM_p.c",
+    "ISimpleDOM_i.c",
+    "ISimpleDOM_dlldata.c",
+    "ISimpleDOM.tlb",
+    inputs=["ISimpleDOM.idl"],
+    script="/build/midl.py",
+    entry_point="midl",
+    flags=["-I", SRCDIR, "-robust", "-dlldata", OBJDIR + "/ISimpleDOM_dlldata.c"],
+)
+
+SOURCES += [
+    "!ISimpleDOM_dlldata.c",
+    "!ISimpleDOM_i.c",
+    "!ISimpleDOM_p.c",
+    "AccessibleMarshalThunk.c",
+]
+
+EXPORTS += [
+    "!ISimpleDOM.h",
+    "!ISimpleDOM_i.c",
+]
+
+DEFINES["REGISTER_PROXY_DLL"] = True
+# The following line is required to preserve compatibility with older versions
+# of AccessibleMarshal.dll.
+DEFINES["PROXY_CLSID"] = "IID_ISimpleDOMNode"
+
+DEFFILE = "AccessibleMarshal.def"
+
+OS_LIBS += [
+    "kernel32",
+    "rpcrt4",
+    "oleaut32",
+]
+
+RCINCLUDE = "AccessibleMarshal.rc"
+
+# Suppress warnings from the MIDL generated code.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CFLAGS += [
+        "-Wno-extern-initializer",
+        "-Wno-incompatible-pointer-types",
+        "-Wno-missing-braces",
+        "-Wno-unused-const-variable",
+    ]

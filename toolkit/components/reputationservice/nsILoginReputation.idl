@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+webidl HTMLInputElement;
+
+[scriptable, uuid(6219f9da-297e-446d-8d47-ccdd8e72a1d5)]
+interface nsILoginReputationVerdictType : nsISupports {
+
+  const unsigned long UNSPECIFIED      = 0;
+  const unsigned long SAFE             = 1;
+  const unsigned long LOW_REPUTATION   = 2;
+  const unsigned long PHISHING         = 3;
+};
+
+[scriptable, uuid(c21ffe59-595f-46c8-9052-fefb639e196e)]
+interface nsILoginReputationQuery : nsISupports {
+  readonly attribute nsIURI formURI;
+};
+
+[scriptable, uuid(b527be1e-8fbb-41d9-bee4-267a71236368)]
+interface nsILoginReputationQueryCallback : nsISupports {
+  // aVerdict should be one of the const value defined in nsILoginReputationResult
+  // interface.
+  void onComplete(in nsresult aStatus,
+                  in unsigned long aVerdict);
+};
+
+[scriptable, uuid(1b3f1dfe-ce3a-486b-953e-ce5ac863eff9)]
+interface nsILoginReputationService : nsISupports {
+  void init();
+
+  // If QueryReputationAsync is called from child, it will make a IPC call
+  // to parent.
+  void queryReputationAsync(in HTMLInputElement aInput,
+                            in nsILoginReputationQueryCallback aCallback);
+
+  // QueryReputation can only be called from parent
+  void queryReputation(in nsILoginReputationQuery aQuery,
+                       in nsILoginReputationQueryCallback aCallback);
+};

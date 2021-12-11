@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1578070</title>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+window.onload = () => {
+  navigator.serviceWorker.ready.then(() => {
+    // Open and close a new window.
+    window.open("https://example.org/").close();
+
+    // If we make it here, then we didn't crash. Tell the worker we're done.
+    navigator.serviceWorker.controller.postMessage("DONE");
+
+    // We're done!
+    window.close();
+  });
+}
+</script>
+</pre>
+</body>
+</html>

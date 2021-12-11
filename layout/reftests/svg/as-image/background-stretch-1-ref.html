@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    div {
+      background-color: yellow;
+      height: 30px;
+    }
+    .container {
+      width: 100px;
+    }
+    .should-not-stretch {
+      width: 6px;
+      background-color: white;
+      display: inline-block;
+    }
+    .left-spacer {
+      width: 47px;
+      float: left;
+    }
+    .right-spacer {
+      width: 47px;
+      float: right;
+    }
+    body {
+      background-color: black;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-spacer"></div>
+    <div class="should-not-stretch"></div>
+    <div class="right-spacer"></div>
+  </div>
+</body>
+</html>

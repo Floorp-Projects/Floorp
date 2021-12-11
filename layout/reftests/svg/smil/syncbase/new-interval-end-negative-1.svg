@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test a dependency with a negative offset that occurs at the end of another
+    interval.
+
+    This is one of the most important tests in the suite.
+
+    REALLY IMPORTANT: Suppose we generate a new instance time, placed at a
+    particular instant during the previous interval. In fact, correct behavior
+    depends on *when* we generate this instance time. If we generate it AFTER
+    the previous interval has ended, then the new instance time will be
+    IGNORED. However, if we generate it BEFORE the previous interval has ended
+    (and if restart="always"), then a new interval will be generated, and the
+    animation will restart.
+    (To be absolutely clear: above, the words "AFTER" and "BEFORE" describe
+    *when the instance time is generated*, as opposed to *where on the timeline
+    the instance time is placed*).
+
+    So, if a new instance time is generated at the same time as an interval is
+    due to end what should happen? SMIL's endpoint-exclusive timing seems to
+    imply that interval ends should be processed first and hence the new
+    instance time should be ignored. Opera, WebKit and Batik seem to agree on
+    this.
+
+    Hence why this test is so important. It tests that we are actually
+    processing ends first.
+   -->
+  <rect width="100" height="100" fill="red">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="0s; 1.5s" dur="1.5s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="orange; green" fill="freeze"
+      begin="a.begin-0.5s" dur="2s"/>
+  </rect>
+</svg>

@@ -1,0 +1,1 @@
+[["warning", "nested redundant #ifdef; consider removing it", "readability-redundant-preprocessor"], {"reliability": "high"}]

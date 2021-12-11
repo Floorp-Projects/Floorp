@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+    var frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+    var frameLoc = frame.contentWindow.location;
+    document.body.removeChild(frame)
+    frameLoc.origin;
+    document.documentElement.removeAttribute('class');
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

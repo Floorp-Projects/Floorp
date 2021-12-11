@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>CSS Test: Fixed table layout</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="author" title="Adapted for vertical layout by Simon Montagu" href="http:/mozilla.org/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/tables.html#fixed-table-layout">
+        <meta name="flags" content="">
+        <meta name="assert" content="The height of a column-spanning cell (which determines column heights in fixed table layout) is divided over the columns it spans.">
+        <style type="text/css">
+            div.test { writing-mode: vertical-lr; }
+            table
+            {
+                border-collapse: collapse;
+                margin: 0;
+                table-layout: fixed;
+                height: 100px;
+            }
+            #cell1
+            {
+                background: black;
+                height: 98px;
+            }
+            td
+            {
+                width: 20px;
+                padding: 0;
+            }
+            #cell2
+            {
+                background: silver;
+            }
+            #cell3
+            {
+                background: orange;
+            }
+            #div1
+            {
+                background: blue;
+                width: 20px;
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+      <p>Test passes if the blue and black bars are the same height
+and the gray and orange boxes are half of that height.</p>
+      <div class="test">
+        <table>
+            <tr>
+                <td id="cell1" colspan="2"></td>
+           </tr>
+           <tr>
+                <td id="cell2"></td>
+                <td id="cell3"></td>
+           </tr>
+        </table>
+        <div id="div1"></div>
+      </test>
+    </body>
+</html>

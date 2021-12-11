@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:mathml="http://www.w3.org/1998/Math/MathML" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+<title>Testcase bug 354133 - Crash [@ nsBlockBandData::Init] with unminimised stirdom mathml/xul testcase</title>
+</head>
+<body>
+This page should not crash Mozilla
+<xul:scrollbar>
+<mathml:ms id="a">
+<mathml:sinh>
+<xul:box id="b"/>
+</mathml:sinh>
+</mathml:ms>
+</xul:scrollbar>
+
+<html:script>
+function stirdom(){
+document.getElementById('a').appendChild(document.getElementById('b'));
+}
+setTimeout(stirdom,200);
+</html:script>
+</body>
+</html>

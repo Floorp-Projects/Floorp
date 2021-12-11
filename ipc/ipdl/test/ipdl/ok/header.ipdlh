@@ -1,0 +1,15 @@
+using foo from "foo.h";
+using bar::baz from "foo.h";
+
+struct Outer { };
+
+namespace a { struct Inner1 { }; }
+
+namespace b { struct Inner2 { }; }
+
+namespace c {
+union X {
+    int32_t;
+    float;
+};
+}

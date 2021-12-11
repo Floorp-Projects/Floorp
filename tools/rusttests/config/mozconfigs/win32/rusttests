@@ -1,0 +1,3 @@
+ac_add_options --target=i686-pc-mingw32
+. "$topsrcdir/build/win32/mozconfig.vs-latest"
+. "$topsrcdir/tools/rusttests/config/mozconfigs/windows-common"
